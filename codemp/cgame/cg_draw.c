@@ -1175,6 +1175,539 @@ void CG_DrawForcePower( menuDef_t *menuHUD )
 	}
 }
 
+//[STYLEBAR]Stoiss
+#define STYLEBAR_H			15.0f								
+#define STYLEBAR_W			100.0f
+#define STYLEBAR_X			(SCREEN_WIDTH-STYLEBAR_W-2)			
+#define STYLEBAR_Y			440.0f								
+//[/STYLEBAR]Stoiss
+
+void CG_DrawSaberStyleBar(void)
+{
+	vec4_t aColor = { 0.f, 0.f, 0.f, 1.f };
+	//vec4_t bColor;
+	//vec4_t cColor;
+	float x = STYLEBAR_X;
+	float y = STYLEBAR_Y;
+
+	if (cg.snap->ps.weapon == WP_SABER)
+	{
+		switch (cg.snap->ps.fd.saberDrawAnimLevel)
+		{
+		case SS_FAST:
+		case SS_TAVION:
+		default:
+			// blue
+			aColor[0] = 0.f;
+			aColor[1] = 0.f;
+			aColor[2] = 1.f;
+			break;
+		case SS_MEDIUM:
+		case SS_STAFF:
+		case SS_DUAL:
+			// yellow
+			aColor[0] = 1.f;
+			aColor[1] = 1.f;
+			aColor[2] = 0.f;
+			break;
+		case SS_STRONG:
+		case SS_DESANN:
+			// red
+			aColor[0] = 1.f;
+			aColor[1] = 0.f;
+			aColor[2] = 0.f;
+			break;
+		}
+	}
+
+	//now draw the part to show how much health there is in the color specified
+	CG_FillRect(x + 1.0f + STYLEBAR_W, y + 1.0f, STYLEBAR_W - 1.0f, STYLEBAR_H - 1.0f, aColor);
+
+
+	//then draw the other part greyed out
+	CG_FillRect(x + 1.0f, y + 1.0f, STYLEBAR_W - 1.0f, STYLEBAR_H - 1.0f, aColor);
+
+	//draw the background (black)
+	CG_DrawRect(x, y, STYLEBAR_W, STYLEBAR_H, 1.0f, colorTable[CT_BLACK]);
+
+	cgs.media.currentBackground = trap->R_RegisterShader("gfx/hud/testhud2");
+	CG_DrawPic(x - 55.0f, y - 10, STYLEBAR_W + 75, STYLEBAR_H + 20, cgs.media.currentBackground);
+
+
+
+}
+
+
+//[FORCEBAR]Scooper
+#define FFUELBAR_H			15.0f								// These two decides the size of the fuel bar / Disse to bestemmer størrelsen på ... fuel bar'n =p
+#define FFUELBAR_W			115.0f
+#define FFUELBAR_X			(SCREEN_WIDTH-FFUELBAR_W-2)			// This here decides where on screen it's drawn. / Bestemmer hvor på skjermen det blir skrevet.
+#define FFUELBAR_Y			415.0f								// This too / Denne også, x and y
+//[/FORCEBAR]Scooper
+// Du må justere DFUELBAR_X og DFUELBAR_Y ovenfor for å flytte hvor den blir tegnet.
+
+void CG_DrawForceBar(void)										// Function that will draw the fuel bar 
+{
+	vec4_t aColor;
+	vec4_t bColor;
+	vec4_t cColor;
+	float x = FFUELBAR_X;
+	float y = FFUELBAR_Y;
+	float percent;		// Finds the percent of your current dodge level.
+	// So if you have 50 dodge, percent will be 50, representing 50%. And this will work even if you change the max dodge values. No need to change this in the future.
+	float forcePowerMax = 100;
+
+	if (cg.snap->ps.fd.forcePowerLevel[FP_SEE] >= FORCE_LEVEL_3)
+		forcePowerMax += 15;
+
+	percent = ((float)cg.snap->ps.fd.forcePower / forcePowerMax)*FFUELBAR_W;
+
+	if (percent > FFUELBAR_W)
+	{
+		return;
+	}
+
+	if (percent < 0.1f)
+	{
+		percent = 0.1f;
+	}
+
+	//color of the bar			This is the colors, you can change them as you want later. R G B A
+	//aColor[0] = 0.0f;			// Mengde rødt (Alle verdier fra 0.0 til 1.0) R G B ikke R B G xP
+	//aColor[1] = 0.0f;			// mengde grønt
+	//aColor[2] = 0.5f;			// mengde blått
+	//aColor[3] = 0.8f;			// gjennomsiktighet / transperency.
+	// Nå blir fargen blå, for force powers.
+
+	VectorCopy4(colorTable[CT_LTBLUE3], aColor);	// Nå får vi samme farge som teksten. nice
+
+	//color of the border
+	bColor[0] = 0.0f;
+	bColor[1] = 0.0f;
+	bColor[2] = 0.0f;
+	bColor[3] = 0.3f;
+
+	//color of greyed out "missing fuel"
+	cColor[0] = 0.5f;
+	cColor[1] = 0.5f;
+	cColor[2] = 0.5f;
+	cColor[3] = 0.1f;
+
+
+
+	//now draw the part to show how much health there is in the color specified
+	//CG_FillRect(x+1.0f, y+1.0f+(FFUELBAR_H-percent), FFUELBAR_W-1.0f, FFUELBAR_H-1.0f-(FFUELBAR_H-percent), aColor);
+	CG_FillRect(x + 1.0f + (FFUELBAR_W - percent), y + 1.0f/*+(FFUELBAR_H-percent)*/, FFUELBAR_W - 1.0f - (FFUELBAR_W - percent), FFUELBAR_H - 1.0f, aColor);
+
+	//draw the background (black)
+	CG_DrawRect(x, y, FFUELBAR_W, FFUELBAR_H, 1.0f, colorTable[CT_BLACK]);
+
+	//then draw the other part greyed out
+	CG_FillRect(x + 1.0f, y + 1.0f, FFUELBAR_W - percent, FFUELBAR_H - 1.0f, cColor);
+
+	cgs.media.currentBackground = trap->R_RegisterShader("gfx/hud/testhud2");
+	CG_DrawPic(x - 63.0f, y - 10, FFUELBAR_W + 90, FFUELBAR_H + 20, cgs.media.currentBackground);
+}
+
+//[HPEBAR]Stoiss
+#define HPFUELBAR_H			15.0f								// These two decides the size of the fuel bar / Disse to bestemmer størrelsen på ... fuel bar'n =p
+#define HPFUELBAR_W			115.0f
+#define HPFUELBAR_X			(HPFUELBAR_W-112)	    // This here decides where on screen it's drawn. / Bestemmer hvor på skjermen det blir skrevet.
+#define HPFUELBAR_Y			415.0f								// This too / Denne også, x and y
+//[/HPBAR]Stoiss
+// Du må justere DFUELBAR_X og DFUELBAR_Y ovenfor for å flytte hvor den blir tegnet.
+// Prøv nå =p
+void CG_DrawHPBar(void)										// Function that will draw the fuel bar 
+{
+	vec4_t aColor;
+	vec4_t bColor;
+	vec4_t cColor;
+	//	vec4_t oColor;	// overflow color
+	float x = HPFUELBAR_X;
+	float y = HPFUELBAR_Y;
+	float percent = ((float)cg.snap->ps.stats[STAT_HEALTH] / (float)cg.snap->ps.stats[STAT_MAX_HEALTH])*HPFUELBAR_W;		// Finds the percent of your current dodge level.
+	// So if you have 50 dodge, percent will be 50, representing 50%. And this will work even if you change the max dodge values. No need to change this in the future.
+	//float overflow = 0.0f;
+	//int i;
+
+
+	if (percent > HPFUELBAR_W)
+	{
+		percent = HPFUELBAR_W;
+	}
+
+	if (percent < 0.1f)
+	{
+		percent = 0.1f;
+	}
+
+	//color of the bar			This is the colors, you can change them as you want later. R G B A
+	/*	aColor[0] = 0.5f;			// Mengde rødt (Alle verdier fra 0.0 til 1.0) R G B ikke R B G xP
+	aColor[1] = 0.0f;			// mengde grønt
+	aColor[2] = 0.0f;			// mengde blått
+	aColor[3] = 0.8f;			// gjennomsiktighet / transperency.
+	*/
+	VectorCopy4(colorTable[CT_HUD_RED], aColor);
+
+	//	for(i = 0; i<3;++i)
+	//		oColor[i] = aColor[i]*1.1f;
+	//	oColor[3] = aColor[3];
+
+	//color of the border
+	bColor[0] = 0.0f;
+	bColor[1] = 0.0f;
+	bColor[2] = 0.0f;
+	bColor[3] = 0.3f;
+
+	//color of greyed out "missing fuel"
+	cColor[0] = 0.5f;
+	cColor[1] = 0.5f;
+	cColor[2] = 0.5f;
+	cColor[3] = 0.1f;
+
+
+
+	//now draw the part to show how much health there is in the color specified
+	//CG_FillRect(x+1.0f, y+1.0f+(HPFUELBAR_H-percent), HPFUELBAR_W-1.0f, HPFUELBAR_H-1.0f-(HPFUELBAR_H-percent), aColor);
+	CG_FillRect(x + 1.0f, y + 1.0f/*+(HPFUELBAR_H-percent)*/, HPFUELBAR_W - 1.0f - (HPFUELBAR_W - percent), HPFUELBAR_H - 1.0f, aColor);
+
+	//draw the background (black)//Stoiss add Moved it under here cis it was not showing the black line up right on the coler code
+	CG_DrawRect(x, y, HPFUELBAR_W, HPFUELBAR_H, 1.0f, colorTable[CT_BLACK]);
+
+	//then draw the other part greyed out
+	CG_FillRect(x + 1.0f + percent, y + 1.0f, HPFUELBAR_W - percent, HPFUELBAR_H - 1.0f, cColor);
+
+	cgs.media.currentBackground = trap->R_RegisterShader("gfx/hud/testhud");
+	CG_DrawPic(x - 40.0f, y - 10, HPFUELBAR_W + 88, HPFUELBAR_H + 20, cgs.media.currentBackground);
+
+}
+
+//[ARMOREBAR]Stoiss
+#define AFUELBAR_H			15.0f								// These two decides the size of the fuel bar / Disse to bestemmer størrelsen på ... fuel bar'n =p
+#define AFUELBAR_W			100.0f
+#define AFUELBAR_X		    (AFUELBAR_W-97)	    // This here decides where on screen it's drawn. / Bestemmer hvor på skjermen det blir skrevet.
+#define AFUELBAR_Y			440.0f								// This too / Denne også, x and y
+//[/ARMORBAR]Stoiss
+// Du må justere DFUELBAR_X og DFUELBAR_Y ovenfor for å flytte hvor den blir tegnet.
+// Prøv nå =p
+void CG_DrawArmorBar(void)										// Function that will draw the fuel bar 
+{
+	vec4_t aColor;
+	vec4_t bColor;
+	vec4_t cColor;
+	//	vec4_t oColor;	// overflow color
+	float x = AFUELBAR_X;
+	float y = AFUELBAR_Y;
+	float percent = ((float)cg.snap->ps.stats[STAT_ARMOR] / (float)cg.snap->ps.stats[STAT_MAX_HEALTH])*AFUELBAR_W;		// Finds the percent of your current dodge level.
+	// So if you have 50 dodge, percent will be 50, representing 50%. And this will work even if you change the max dodge values. No need to change this in the future.
+	//float overflow = 0.0f;
+	//int i;
+
+
+	if (percent > AFUELBAR_W)
+	{
+		percent = AFUELBAR_W;
+		//return;
+	}
+
+	if (percent < 0.1f)
+	{
+		percent = 0.1f;
+	}
+
+	//color of the bar			This is the colors, you can change them as you want later. R G B A
+	/*	aColor[0] = 0.5f;			// Mengde rødt (Alle verdier fra 0.0 til 1.0) R G B ikke R B G xP
+	aColor[1] = 0.0f;			// mengde grønt
+	aColor[2] = 0.0f;			// mengde blått
+	aColor[3] = 0.8f;			// gjennomsiktighet / transperency.
+	*/
+	VectorCopy4(colorTable[CT_HUD_GREEN], aColor);
+
+	//	for(i = 0; i<3;++i)
+	//		oColor[i] = aColor[i]*1.1f;
+	//	oColor[3] = aColor[3];
+
+	//color of the border
+	bColor[0] = 0.0f;
+	bColor[1] = 0.0f;
+	bColor[2] = 0.0f;
+	bColor[3] = 0.3f;
+
+	//color of greyed out "missing fuel"
+	cColor[0] = 0.5f;
+	cColor[1] = 0.5f;
+	cColor[2] = 0.5f;
+	cColor[3] = 0.1f;
+
+
+
+
+	//now draw the part to show how much health there is in the color specified
+	//CG_FillRect(x+1.0f, y+1.0f+(AFUELBAR_H-percent), AFUELBAR_W-1.0f, AFUELBAR_H-1.0f-(AFUELBAR_H-percent), aColor);
+	CG_FillRect(x + 1.0f, y + 1.0f/*+(AFUELBAR_H-percent)*/, AFUELBAR_W - 1.0f - (AFUELBAR_W - percent), AFUELBAR_H - 1.0f, aColor);
+
+	//draw the background (black)
+	CG_DrawRect(x, y, AFUELBAR_W, AFUELBAR_H, 1.0f, colorTable[CT_BLACK]);
+
+	//then draw the other part greyed out
+	CG_FillRect(x + 1.0f + percent, y + 1.0f, AFUELBAR_W - percent, AFUELBAR_H - 1.0f, cColor);
+
+	cgs.media.currentBackground = trap->R_RegisterShader("gfx/hud/testhud");
+	CG_DrawPic(x - 40.0f, y - 10, HPFUELBAR_W + 71, HPFUELBAR_H + 20, cgs.media.currentBackground);
+}
+
+
+////[EXPBAR]Stoiss
+//#define EXPFUELBAR_H			8.5f//15.0f//500.0f	//H : Højde i pixel.	// These two decides the size of the fuel bar / Disse to bestemmer størrelsen på ... fuel bar'n =p
+//#define EXPFUELBAR_W			500.0f//15.0f//W : Bredde i pixels. 
+//#define EXPFUELBAR_X		    64.0f //X : X-position. For eksempel angiver "x0 y0" ville position kontrol i øverste venstre hjørne af vinduet klient område, // This here decides where on screen it's drawn. / Bestemmer hvor på skjermen det blir skrevet.
+//#define EXPFUELBAR_Y			460.0f	//Y : Y-position. Hvis Y er udeladt, men ikke X , vil kontrollen blive placeret under alle de tidligere tilføjede kontrol, som kan opfattes som at starte en ny "række".
+//
+//// This too / Denne også, x and y
+////[/EXPBAR]Stoiss
+//// Du må justere DFUELBAR_X og DFUELBAR_Y ovenfor for å flytte hvor den blir tegnet.
+//// Prøv nå =p
+//void CG_DrawExpBar(void)										// Function that will draw the fuel bar 
+//{
+//	vec4_t aColor;
+//	vec4_t bColor;
+//	vec4_t cColor;
+////	vec4_t oColor;	// overflow color
+//	float x = EXPFUELBAR_X;
+//	float y = EXPFUELBAR_Y;
+//    float percent = ((float)cg.snap->ps.persistant[PERS_EXPERIANCE]/ /*cg.snap->ps.stats[PERS_EXPERIANCE_COUNT]*/cg.maxExperience)*EXPFUELBAR_W;		// Finds the percent of your current dodge level.
+//	// So if you have 50 dodge, percent will be 50, representing 50%. And this will work even if you change the max dodge values. No need to change this in the future.
+//
+//	//float overflow = 0.0f;
+//	//int i
+//
+//	if (percent > EXPFUELBAR_W)// We want it to go sideways, not upwards. So we will be using width instead of height.
+//	{
+////		overflow = percent-100.0f;//didnt work so well
+////		percent = 0.1f;
+//		return;
+//	}
+//
+//	if (percent < 0.1f)
+//	{
+//		percent = 0.1f;
+//	}
+//	//color of the bar			This is the colors, you can change them as you want later. R G B A
+///*	aColor[0] = 0.5f;			// Mengde rødt (Alle verdier fra 0.0 til 1.0) R G B ikke R B G xP
+//	aColor[1] = 0.0f;			// mengde grønt
+//	aColor[2] = 0.0f;			// mengde blått
+//	aColor[3] = 0.8f;			// gjennomsiktighet / transperency.
+//*/
+//	VectorCopy4(colorTable[CT_BLUE3],aColor);
+//
+////	for(i = 0; i<3;++i)
+////		oColor[i] = aColor[i]*1.1f;
+////	oColor[3] = aColor[3];
+//
+//	//color of the border
+//	bColor[0] = 0.0f;
+//	bColor[1] = 0.0f;
+//	bColor[2] = 0.0f;
+//	bColor[3] = 0.3f;
+//
+//	//color of greyed out "missing fuel"
+//	cColor[0] = 0.5f;
+//	cColor[1] = 0.5f;
+//	cColor[2] = 0.5f;
+//	cColor[3] = 0.1f;
+//
+
+//
+//	//now draw the part to show how much health there is in the color specified
+//	//CG_FillRect(x+1.0f, y+1.0f+(EXPFUELBAR_H-percent), EXPFUELBAR_W-1.0f, EXPFUELBAR_H-1.0f-(EXPFUELBAR_H-percent), aColor);
+////	CG_FillRect(x+1.0f/*+(EXPFUELBAR_W-percent)*/,y+1.0f,EXPFUELBAR_W-1.0f-(EXPFUELBAR_W-percent),EXPFUELBAR_H-1.0f,aColor);		// This should work.
+//	CG_FillRect(x+1.0f/*+(EXPFUELBAR_W-percent)*/,y+1.0f,EXPFUELBAR_W-1.0f-(EXPFUELBAR_W-percent),EXPFUELBAR_H-1.0f,aColor);
+//	
+////	if(overflow > 0.0f)
+////		CG_FillRect(x+1.0f, y+1.0f+HPFUELBAR_H+(HPFUELBAR_H-overflow), HPFUELBAR_W-1.0f, HPFUELBAR_H-1.0f-(HPFUELBAR_H-overflow), oColor);
+
+//	//draw the background (black)
+//	CG_DrawRect(x, y, EXPFUELBAR_W, EXPFUELBAR_H, 1.0f, colorTable[CT_BLACK]);
+//
+//
+//	//then draw the other part greyed out
+//	CG_FillRect(x+1.0f+percent, y+1.0f, EXPFUELBAR_W-percent, EXPFUELBAR_H-1.0f, cColor);
+//		
+//}
+
+//draw meter showing jetpack fuel when it's not full
+#define JPFUELBAR_H			100.0f
+#define JPFUELBAR_W			15.0f
+#define JPFUELBAR_X			(SCREEN_WIDTH-JPFUELBAR_W-620.0f)
+#define JPFUELBAR_Y			260.0f
+void CG_DrawJetPackBar(void)
+{
+	vec4_t aColor;
+	vec4_t bColor;
+	vec4_t cColor;
+	float x = JPFUELBAR_X;
+	float y = JPFUELBAR_Y;
+	float percent = ((float)cg.snap->ps.jetpackFuel / 100.0f)*JPFUELBAR_H;  // jetpack changed (-at-) "percent" => "height"
+	//float percent = ((float)cg.snap->ps.jetpackFuel/200.0f);  // jetpack changed (-at-) added for colors
+
+	if (percent > JPFUELBAR_H)
+	{
+		return;
+	}
+
+	if (percent < 0.1f)
+	{
+		percent = 0.1f;
+	}
+	VectorCopy4(colorTable[CT_HUD_ORANGE], aColor);
+
+	//color of the bar
+	/*aColor[0] = 0.5f;
+	aColor[1] = 0.0f;
+	aColor[2] = 0.0f;
+	aColor[3] = 0.8f;*/
+
+	//color of the border
+	bColor[0] = 0.0f;
+	bColor[1] = 0.0f;
+	bColor[2] = 0.0f;
+	bColor[3] = 0.3f;
+
+	//color of greyed out "missing fuel"
+	cColor[0] = 0.5f;
+	cColor[1] = 0.5f;
+	cColor[2] = 0.5f;
+	cColor[3] = 0.1f;
+
+
+
+	//now draw the part to show how much health there is in the color specified
+	CG_FillRect(x + 1.0f, y + 1.0f + (JPFUELBAR_H - percent), JPFUELBAR_W - 1.0f, JPFUELBAR_H - 1.0f - (JPFUELBAR_H - percent), aColor);
+
+	//draw the background (black)
+	CG_DrawRect(x, y, JPFUELBAR_W, JPFUELBAR_H, 1.0f, colorTable[CT_BLACK]);
+
+	//then draw the other part greyed out
+	CG_FillRect(x + 1.0f, y + 1.0f, JPFUELBAR_W - 1.0f, JPFUELBAR_H - percent, cColor);
+}
+//draw meter showing cloak fuel when it's not full
+#define CLFUELBAR_H			100.0f
+#define CLFUELBAR_W			20.0f
+#define CLFUELBAR_X			(SCREEN_WIDTH-CLFUELBAR_W-8.0f)
+#define CLFUELBAR_Y			240.0f
+void CG_DrawCloakFuel(void)
+{
+	vec4_t aColor;
+	vec4_t bColor;
+	vec4_t cColor;
+	float x = CLFUELBAR_X;
+	float y = CLFUELBAR_Y;
+	float percent = ((float)cg.snap->ps.cloakFuel / 100.0f)*CLFUELBAR_H;
+
+	if (percent > CLFUELBAR_H)
+	{
+		return;
+	}
+
+	if (cg.snap->ps.jetpackFuel < 100)
+	{//if drawing jetpack fuel bar too, then move this over...?
+		x -= (JPFUELBAR_W + 8.0f);
+	}
+
+	if (percent < 0.1f)
+	{
+		percent = 0.1f;
+	}
+
+	//color of the bar
+	aColor[0] = 0.0f;
+	aColor[1] = 0.0f;
+	aColor[2] = 0.6f;
+	aColor[3] = 0.8f;
+
+	//color of the border
+	bColor[0] = 0.0f;
+	bColor[1] = 0.0f;
+	bColor[2] = 0.0f;
+	bColor[3] = 0.3f;
+
+	//color of greyed out "missing fuel"
+	cColor[0] = 0.1f;
+	cColor[1] = 0.1f;
+	cColor[2] = 0.3f;
+	cColor[3] = 0.1f;
+
+	//draw the background (black)
+	CG_DrawRect(x, y, CLFUELBAR_W, CLFUELBAR_H, 1.0f, colorTable[CT_BLACK]);
+
+	//now draw the part to show how much fuel there is in the color specified
+	CG_FillRect(x + 1.0f, y + 1.0f + (CLFUELBAR_H - percent), CLFUELBAR_W - 1.0f, CLFUELBAR_H - 1.0f - (CLFUELBAR_H - percent), aColor);
+
+	//then draw the other part greyed out
+	CG_FillRect(x + 1.0f, y + 1.0f, CLFUELBAR_W - 1.0f, CLFUELBAR_H - percent, cColor);
+}
+
+//draw meter showing cloak fuel when it's not full
+#define CLFUELBAR_H			100.0f
+#define CLFUELBAR_W			15.0f
+#define CLFUELBAR_X			(SCREEN_WIDTH-CLFUELBAR_W-6.0f)
+#define CLFUELBAR_Y			260.0f
+void CG_DrawCloakBar(void)
+{
+	vec4_t aColor;
+	vec4_t bColor;
+	vec4_t cColor;
+	float x = CLFUELBAR_X;
+	float y = CLFUELBAR_Y;
+	float percent = ((float)cg.snap->ps.cloakFuel / 100.0f)*CLFUELBAR_H;
+
+	if (percent > CLFUELBAR_H)
+	{
+		return;
+	}
+
+	/*if ( cg.snap->ps.jetpackFuel < 100 )
+	{//if drawing jetpack fuel bar too, then move this over...?
+	x -= (JPFUELBAR_W+8.0f);
+	}*/
+
+	if (percent < 0.1f)
+	{
+		percent = 0.1f;
+	}
+
+	VectorCopy4(colorTable[CT_GREEN], aColor);
+
+	//color of the bar
+	/*aColor[0] = 0.5f;
+	aColor[1] = 0.0f;
+	aColor[2] = 0.0f;
+	aColor[3] = 0.8f;*/
+	//color of the border
+	bColor[0] = 0.0f;
+	bColor[1] = 0.0f;
+	bColor[2] = 0.0f;
+	bColor[3] = 0.3f;
+
+	//color of greyed out "missing fuel"
+	cColor[0] = 0.1f;
+	cColor[1] = 0.1f;
+	cColor[2] = 0.3f;
+	cColor[3] = 0.1f;
+
+
+
+	//now draw the part to show how much fuel there is in the color specified
+	CG_FillRect(x + 1.0f, y + 1.0f + (CLFUELBAR_H - percent), CLFUELBAR_W - 1.0f, CLFUELBAR_H - 1.0f - (CLFUELBAR_H - percent), aColor);
+
+	//draw the background (black)
+	CG_DrawRect(x, y, CLFUELBAR_W, CLFUELBAR_H, 1.0f, colorTable[CT_BLACK]);
+
+	//then draw the other part greyed out
+	CG_FillRect(x + 1.0f, y + 1.0f, CLFUELBAR_W - 1.0f, CLFUELBAR_H - percent, cColor);
+}
+
+
 /*
 ================
 CG_DrawHUD
@@ -1191,57 +1724,83 @@ void CG_DrawHUD(centity_t	*cent)
 	if (cg_hudFiles.integer)
 	{
 		int x = 0;
-		int y = SCREEN_HEIGHT-80;
+		int y = SCREEN_HEIGHT - 80;
 		char ammoString[64];
 		int weapX = x;
 
-		if (cg.predictedPlayerState.pm_type != PM_SPECTATOR)
+		CG_DrawScaledProportionalString(x + 122, y + 15, va("%i", cg.snap->ps.stats[STAT_HEALTH]),
+			UI_SMALLFONT | UI_DROPSHADOW, colorTable[CT_HUD_RED], 0.5f);
+
+		CG_DrawScaledProportionalString(x + 108, y + 54 - 14, va("%i", cg.snap->ps.stats[STAT_ARMOR]),
+			UI_SMALLFONT | UI_DROPSHADOW, colorTable[CT_HUD_GREEN], 0.5f);
+
+		if (cg.snap->ps.weapon == WP_SABER)
 		{
-			CG_DrawProportionalString( x+16, y+40, va( "%i", cg.snap->ps.stats[STAT_HEALTH] ), UI_SMALLFONT|UI_DROPSHADOW, colorTable[CT_HUD_RED] );
+			weapX += 16;
 
-			CG_DrawProportionalString( x+18+14, y+40+14, va( "%i", cg.snap->ps.stats[STAT_ARMOR] ), UI_SMALLFONT|UI_DROPSHADOW, colorTable[CT_HUD_GREEN] );
-
-			if (cg.snap->ps.weapon == WP_SABER)
+			if (cg.snap->ps.fd.saberDrawAnimLevel == SS_STAFF)
 			{
-				if (cg.snap->ps.fd.saberDrawAnimLevel == SS_DUAL)
-				{
-					Com_sprintf(ammoString, sizeof(ammoString), "AKIMBO");
-					weapX += 16;
-				}
-				else if (cg.snap->ps.fd.saberDrawAnimLevel == SS_STAFF)
-				{
-					Com_sprintf(ammoString, sizeof(ammoString), "STAFF");
-					weapX += 16;
-				}
-				else if (cg.snap->ps.fd.saberDrawAnimLevel == FORCE_LEVEL_3)
-				{
-					Com_sprintf(ammoString, sizeof(ammoString), "STRONG");
-					weapX += 16;
-				}
-				else if (cg.snap->ps.fd.saberDrawAnimLevel == FORCE_LEVEL_2)
-				{
-					Com_sprintf(ammoString, sizeof(ammoString), "MEDIUM");
-					weapX += 16;
-				}
-				else
-				{
-					Com_sprintf(ammoString, sizeof(ammoString), "FAST");
-				}
+				Com_sprintf(ammoString, sizeof(ammoString), "Juyo");
 			}
-			else if (weaponData[cent->currentState.weapon].energyPerShot == 0 && weaponData[cent->currentState.weapon].altEnergyPerShot == 0)
+			else if (cg.snap->ps.fd.saberDrawAnimLevel == SS_DUAL)
 			{
-				Q_strncpyz(ammoString, "--", sizeof(ammoString));
+				Com_sprintf(ammoString, sizeof(ammoString), "Niman");
 			}
-			else
+			else if (cg.snap->ps.fd.saberDrawAnimLevel == SS_TAVION)
 			{
-				Com_sprintf(ammoString, sizeof(ammoString), "%i", cg.snap->ps.ammo[weaponData[cent->currentState.weapon].ammoIndex]);
+				Com_sprintf(ammoString, sizeof(ammoString), "Djem So");
 			}
-
-			CG_DrawProportionalString( SCREEN_WIDTH-(weapX+16+32), y+40, va( "%s", ammoString ), UI_SMALLFONT|UI_DROPSHADOW, colorTable[CT_HUD_ORANGE] );
-
-			CG_DrawProportionalString( SCREEN_WIDTH-(x+18+14+32), y+40+14, va( "%i", cg.snap->ps.fd.forcePower), UI_SMALLFONT|UI_DROPSHADOW, colorTable[CT_ICON_BLUE] );
+			else if (cg.snap->ps.fd.saberDrawAnimLevel == SS_DESANN)
+			{
+				Com_sprintf(ammoString, sizeof(ammoString), "Ataru");
+			}
+			else if (cg.snap->ps.fd.saberDrawAnimLevel == SS_STRONG)
+			{
+				Com_sprintf(ammoString, sizeof(ammoString), "Soresu");
+			}
+			else if (cg.snap->ps.fd.saberDrawAnimLevel == SS_MEDIUM)
+			{
+				Com_sprintf(ammoString, sizeof(ammoString), "Shii-Cho");
+			}
+			else if (cg.snap->ps.fd.saberDrawAnimLevel == SS_FAST)
+			{
+				//UI_SMALLFONT|UI_DROPSHADOW, colorTable[CT_BLUE], 0.5f );
+				Com_sprintf(ammoString, sizeof(ammoString), "Makashi");
+			}
+		}
+		else
+		{
+			Com_sprintf(ammoString, sizeof(ammoString), "%i", cg.snap->ps.ammo[weaponData[cent->currentState.weapon].ammoIndex]);
 		}
 
+		CG_DrawScaledProportionalString(SCREEN_WIDTH - (weapX + 16 + 26), y + 57, va("%s", ammoString),
+			UI_SMALLFONT | UI_DROPSHADOW, colorTable[CT_HUD_ORANGE], 0.5f);
+
+		CG_DrawScaledProportionalString(SCREEN_WIDTH - (x + 18 + 14 + 106), y + 15, va("%i", cg.snap->ps.fd.forcePower),
+			UI_SMALLFONT | UI_DROPSHADOW, colorTable[CT_LTBLUE3], 0.5f);
+
+		//DP HUD in CG_HudFiles "1"
+		/*CG_DrawScaledProportionalString( SCREEN_WIDTH-(x+18+18+85), y+36, va( "%i", cg.snap->ps.stats[STAT_LOCKBLOCK_POINT]),
+		UI_SMALLFONT|UI_DROPSHADOW, colorTable[CT_HUD_RED], 0.5f );*/
+
+
+		//UI_DrawScaledProportionalString( SMALLCHAR_WIDTH-(x-300), y+50, va("^7XP ^2%i^7 / ^3%i", cg.snap->ps.persistant[PERS_EXPERIANCE], cg.maxExperience),
+		//UI_SMALLFONT|UI_DROPSHADOW, colorTable[CT_WHITE], 0.4f );
+
+		//[DODGEBAR]Scooper
+		// This will cause it to draw the fuel bar / dette vil gjøre at den tegner fuel bar'n =p
+		//CG_DrawDodgeBar();
+		CG_DrawSaberStyleBar();
+		CG_DrawForceBar();
+		CG_DrawHPBar();
+		CG_DrawArmorBar();
+		//CG_DrawExpBar();
+		//CG_DrawJetPackBar();
+		//CG_DrawCloakBar();
+
+		cgs.media.currentBackground = trap->R_RegisterShader("gfx/hud/skywalker");
+		CG_DrawPic(x + 518.0f, y + 37, STYLEBAR_W - 85, STYLEBAR_H + 5, cgs.media.currentBackground);
+		//[/DODGEBAR]Scooper
 		return;
 	}
 
@@ -6982,56 +7541,6 @@ void CG_DrawEWebHealth(void)
 
 	//then draw the other part greyed out
 	CG_FillRect(x+1.0f, y+1.0f, EWEBHEALTH_W-1.0f, EWEBHEALTH_H-percent, cColor);
-}
-
-//draw meter showing cloak fuel when it's not full
-#define CLFUELBAR_H			100.0f
-#define CLFUELBAR_W			20.0f
-#define CLFUELBAR_X			(SCREEN_WIDTH-CLFUELBAR_W-8.0f)
-#define CLFUELBAR_Y			260.0f
-void CG_DrawCloakFuel(void)
-{
-	vec4_t aColor;
-	vec4_t cColor;
-	float x = CLFUELBAR_X;
-	float y = CLFUELBAR_Y;
-	float percent = ((float)cg.snap->ps.cloakFuel/100.0f)*CLFUELBAR_H;
-
-	if (percent > CLFUELBAR_H)
-	{
-		return;
-	}
-
-	if ( cg.snap->ps.jetpackFuel < 100 )
-	{//if drawing jetpack fuel bar too, then move this over...?
-		x -= (JPFUELBAR_W+8.0f);
-	}
-
-	if (percent < 0.1f)
-	{
-		percent = 0.1f;
-	}
-
-	//color of the bar
-	aColor[0] = 0.0f;
-	aColor[1] = 0.0f;
-	aColor[2] = 0.6f;
-	aColor[3] = 0.8f;
-
-	//color of greyed out "missing fuel"
-	cColor[0] = 0.1f;
-	cColor[1] = 0.1f;
-	cColor[2] = 0.3f;
-	cColor[3] = 0.1f;
-
-	//draw the background (black)
-	CG_DrawRect(x, y, CLFUELBAR_W, CLFUELBAR_H, 1.0f, colorTable[CT_BLACK]);
-
-	//now draw the part to show how much fuel there is in the color specified
-	CG_FillRect(x+1.0f, y+1.0f+(CLFUELBAR_H-percent), CLFUELBAR_W-1.0f, CLFUELBAR_H-1.0f-(CLFUELBAR_H-percent), aColor);
-
-	//then draw the other part greyed out
-	CG_FillRect(x+1.0f, y+1.0f, CLFUELBAR_W-1.0f, CLFUELBAR_H-percent, cColor);
 }
 
 int cgRageTime = 0;

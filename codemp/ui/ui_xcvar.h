@@ -37,6 +37,14 @@ XCVAR_DEF( ui_browserShowEmpty,				"1",					NULL,				CVAR_ARCHIVE|CVAR_INTERNAL 
 XCVAR_DEF( ui_browserShowFull,				"1",					NULL,				CVAR_ARCHIVE|CVAR_INTERNAL )
 XCVAR_DEF( ui_browserShowPasswordProtected,	"1",					NULL,				CVAR_ARCHIVE|CVAR_INTERNAL )
 XCVAR_DEF( ui_bypassMainMenuLoad,			"0",					NULL,				CVAR_INTERNAL )
+//[RGBSabers]
+XCVAR_DEF(ui_sab1_r, "255", NULL, CVAR_INTERNAL)
+XCVAR_DEF(ui_sab1_g, "255", NULL, CVAR_INTERNAL)
+XCVAR_DEF(ui_sab1_b, "255", NULL, CVAR_INTERNAL)
+XCVAR_DEF(ui_sab2_r, "255", NULL, CVAR_INTERNAL)
+XCVAR_DEF(ui_sab2_g, "255", NULL, CVAR_INTERNAL)
+XCVAR_DEF(ui_sab2_b, "255", NULL, CVAR_INTERNAL)
+//[/RGBSabers]
 XCVAR_DEF( ui_captureLimit,					"5",					NULL,				CVAR_INTERNAL )
 XCVAR_DEF( ui_char_anim,					"BOTH_WALK1",			NULL,				CVAR_ROM|CVAR_INTERNAL )
 XCVAR_DEF( ui_char_color_blue,				"255",					NULL,				CVAR_ROM|CVAR_INTERNAL )

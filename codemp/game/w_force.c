@@ -1641,8 +1641,79 @@ void ForceLightning( gentity_t *self )
 	WP_ForcePowerStart( self, FP_LIGHTNING, 500 );
 }
 
+//[LightningBlockSys].
+qboolean JKG_SaberBlockLightning(gentity_t *attacker, gentity_t *defender, vec3_t impactPoint, int damage)
+{//Do a check of saberActionFlags to see if we can block lightning with Saber Defense powerlevel
+	qboolean BlockLightning = qtrue;
+
+	// If you don't have a saber, you shouldn't be blocking!
+	if (defender->s.weapon != WP_SABER)
+	{
+		return qfalse;
+	}
+
+	if (!(defender->client->ps.saberActionFlags & (1 << SAF_BLOCKING)))//when we hold block
+	{// Button for Blocking Lightning Attacks
+
+		if (defender->s.eType == ET_NPC)
+		{//NPC's just randomly block to make up for them not intelligently blocking
+			defender->client->ps.saberBlocked = BLOCKED_LIGHTNING;//npc block it:fixme its bugged
+			return qtrue;
+		}
+		else
+		{
+			return qfalse;
+		}
+	}
+
+	if (defender->client->ps.weapon != WP_SABER  //we are not using our saber
+		|| defender->client->ps.saberHolstered == 2 //Our sabers off	// this check is a bit invalid..possibly.
+		|| defender->client->ps.saberInFlight)  //saber not in a fight
+	{//If we are not useing our sabers then make a Knockdown.
+		BlockLightning = qfalse;
+	}
+	//check to see if we have any Blockpoints to block lightning with
+	if (defender->client->ps.forcePower < 0) // changed from 100, this would always fail otherwise --eez
+	{
+		// We don't have any force points
+		return qfalse;
+	}
+	//I put this code below all the other stuff, because they are tests that will go before our level check. Having no block points, or not having a lightsaber.
+
+	// The attackers lightning level is compared to the defenders saber defence level.
+	// If the lightning level is lower or equal to the defence level, the defender will block the lightning attack.
+	if (attacker->client->ps.fd.forcePowerLevel[FP_LIGHTNING] <= defender->client->ps.fd.forcePowerLevel[FP_SABER_DEFENSE])
+	{
+		BlockLightning = defender->client->ps.saberBlocked = BLOCKED_LIGHTNING; // This sets the blocked type, basically just copied this from eezstreets code below. I have no idea how this system works, so i'm just taking his word for it.
+
+		defender->client->blockingLightningAccumulation += 0.50 * attacker->client->ps.fd.forcePowerLevel[FP_LIGHTNING]; // You'll just have to try and change this number around a bit. Though there's a chance that it's not executing this code at all so...
+		if (defender->client->blockingLightningAccumulation > 1.0f)
+		{
+			defender->client->ps.fd.forcePower -= 1;
+			defender->client->blockingLightningAccumulation = 0;
+		}
+		if (defender->client->ps.fd.forcePowerMax > 50)
+		{
+			//defender->health -= 1;
+			defender->client->ps.stats[STAT_HEALTH] -= 1;
+		}
+
+		return qtrue; // Then return true to tell the calling function that we blocked the lightning
+	}
+
+	return qfalse; // If we didn't, we return false.
+
+}
+//[/LightningBlockSys]
+
+//[LightningBlockSys]
+extern int Jedi_ReCalcParryTime(gentity_t *self, evasionType_t evasionType);
+//[/LightNingBlockSys]
 void ForceLightningDamage( gentity_t *self, gentity_t *traceEnt, vec3_t dir, vec3_t impactPoint )
 {
+	//[LightNingBlockSys]
+	qboolean saberBlocked = qfalse;
+	//[/LightNingBlockSys]
 	self->client->dangerTime = level.time;
 	self->client->ps.eFlags &= ~EF_INVULNERABLE;
 	self->client->invulnerableTimer = 0;
@@ -1697,14 +1768,24 @@ void ForceLightningDamage( gentity_t *self, gentity_t *traceEnt, vec3_t dir, vec
 					}
 				}
 
-				if ( self->client->ps.weapon == WP_MELEE
-					&& self->client->ps.fd.forcePowerLevel[FP_LIGHTNING] > FORCE_LEVEL_2 )
-				{//2-handed lightning
+				//[2handLightNingSys]
+				if (self->client->ps.torsoAnim == BOTH_FORCE_2HANDEDLIGHTNING
+					|| self->client->ps.torsoAnim == BOTH_FORCE_2HANDEDLIGHTNING_START
+					|| self->client->ps.torsoAnim == BOTH_FORCE_2HANDEDLIGHTNING_HOLD
+					|| self->client->ps.torsoAnim == BOTH_FORCE_2HANDEDLIGHTNING_RELEASE
+					|| self->client->ps.weapon == WP_NONE
+					|| self->client->ps.weapon == WP_MELEE
+					|| self->client->ps.weapon == WP_SABER
+					&& self->client->ps.saberHolstered
+					&& self->client->ps.fd.forcePowerLevel[FP_LIGHTNING] > FORCE_LEVEL_2)
+				{//[/2handLightNingSys]
 					//jackin' 'em up, Palpatine-style
 					dmg *= 2;
 				}
 
-				if (dmg)
+				saberBlocked = JKG_SaberBlockLightning(self, traceEnt, impactPoint, dmg);
+
+				if (dmg && !saberBlocked)
 				{
 					//rww - Shields can now absorb lightning too.
 					G_Damage( traceEnt, self, self, dir, impactPoint, dmg, 0, MOD_FORCE_DARK );

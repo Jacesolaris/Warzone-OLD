@@ -292,6 +292,22 @@ typedef struct clientInfo_s {
 	float		facial_aux;			// time before next aux. If a minus value, we are in aux mode
 
 	int			superSmoothTime; //do crazy amount of smoothing
+	//[RGBSabers]
+	//[2] array cause there are 2 sabers :)
+
+	vec3_t	rgb1;
+	vec3_t	rgb2;
+	vec3_t	PimpColorFrom[2];
+	vec3_t	PimpColorTo[2];
+	int		PimpStartTime[2];
+	int		PimpEndTime[2];
+	vec3_t  ScriptedColors[10][2];
+	int		ScriptedTimes[10][2];
+	int		ScriptedNum[2]; //number of colors
+	int		ScriptedActualNum[2];
+	int		ScriptedStartTime[2];
+	int		ScriptedEndTime[2];
+	//[/RGBSabers]
 
 } clientInfo_t;
 
@@ -1119,6 +1135,69 @@ typedef struct cgMedia_s {
 	qhandle_t	blueSaberCoreShader;
 	qhandle_t	purpleSaberGlowShader;
 	qhandle_t	purpleSaberCoreShader;
+	//[RGBSabers]
+	qhandle_t	rgbSaberGlowShader;
+	qhandle_t	rgbSaberCoreShader;
+	qhandle_t	rgbSaberCore2Shader;
+	qhandle_t	blackSaberGlowShader;
+	qhandle_t	blackSaberTrail;
+	//[/RGBSabers]
+
+	//[SFXSabers]
+	qhandle_t sfxSaberTrailShader;
+	qhandle_t sfxSaberBladeShader;
+	qhandle_t sfxSaberBlade2Shader;
+	qhandle_t sfxSaberEndShader;
+	qhandle_t sfxSaberEnd2Shader;
+	//[/SFXSabers]
+
+	//[Movie Sabers]
+	//Original Trilogy Sabers
+	qhandle_t otSaberCoreShader;
+	qhandle_t redOTGlowShader;
+	qhandle_t orangeOTGlowShader;
+	qhandle_t yellowOTGlowShader;
+	qhandle_t greenOTGlowShader;
+	qhandle_t blueOTGlowShader;
+	qhandle_t purpleOTGlowShader;
+
+	//Episode I Sabers
+	qhandle_t ep1SaberCoreShader;
+	qhandle_t redEp1GlowShader;
+	qhandle_t orangeEp1GlowShader;
+	qhandle_t yellowEp1GlowShader;
+	qhandle_t greenEp1GlowShader;
+	qhandle_t blueEp1GlowShader;
+	qhandle_t purpleEp1GlowShader;
+
+	//Episode II Sabers
+	qhandle_t ep2SaberCoreShader;
+	qhandle_t whiteIgniteFlare;
+	qhandle_t blackIgniteFlare;
+	qhandle_t redEp2GlowShader;
+	qhandle_t orangeEp2GlowShader;
+	qhandle_t yellowEp2GlowShader;
+	qhandle_t greenEp2GlowShader;
+	qhandle_t blueEp2GlowShader;
+	qhandle_t purpleEp2GlowShader;
+
+	//Episode III Sabers
+	qhandle_t ep3SaberCoreShader;
+	qhandle_t whiteIgniteFlare02;
+	qhandle_t blackIgniteFlare02;
+	qhandle_t redIgniteFlare;
+	qhandle_t greenIgniteFlare;
+	qhandle_t purpleIgniteFlare;
+	qhandle_t blueIgniteFlare;
+	qhandle_t orangeIgniteFlare;
+	qhandle_t yellowIgniteFlare;
+	qhandle_t redEp3GlowShader;
+	qhandle_t orangeEp3GlowShader;
+	qhandle_t yellowEp3GlowShader;
+	qhandle_t greenEp3GlowShader;
+	qhandle_t blueEp3GlowShader;
+	qhandle_t purpleEp3GlowShader;
+	//[Movie Sabers]
 	qhandle_t	saberBlurShader;
 	qhandle_t	swordTrailShader;
 
@@ -1435,6 +1514,10 @@ typedef struct cgEffects_s {
 	//FORCE
 	fxHandle_t forceLightning;
 	fxHandle_t forceLightningWide;
+	//fxHandle_t forcelightningAbsorb;	
+	fxHandle_t forcelightningArc;
+	/*fxHandle_t forcelightningFlare;
+	fxHandle_t forcelightningImpact;*/
 
 	fxHandle_t forceDrain;
 	fxHandle_t forceDrainWide;
@@ -1644,7 +1727,10 @@ void CG_UpdateCvars( void );
 //
 const char *CG_ConfigString( int index );
 const char *CG_Argv( int arg );
-
+//[TrueView]
+void QDECL CG_Printf(const char *msg, ...);
+void QDECL CG_Error(const char *msg, ...);
+//[/TrueView]
 void CG_StartMusic( qboolean bForceStart );
 
 void CG_UpdateCvars( void );
@@ -1967,7 +2053,10 @@ void CG_InitSiegeMode(void);
 void CG_SiegeRoundOver(centity_t *ent, int won);
 void CG_SiegeObjectiveCompleted(centity_t *ent, int won, int objectivenum);
 
-
+//[TrueView]
+void CG_TrueViewInit(void);
+void CG_AdjustEyePos(const char *modelName);
+//[/TrueView]
 
 //===============================================
 

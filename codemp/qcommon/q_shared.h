@@ -426,7 +426,8 @@ typedef enum {
 	BLOCKED_UPPER_LEFT_PROJ,
 	BLOCKED_LOWER_RIGHT_PROJ,
 	BLOCKED_LOWER_LEFT_PROJ,
-	BLOCKED_TOP_PROJ
+	BLOCKED_TOP_PROJ,
+	BLOCKED_LIGHTNING,
 } saberBlockedType_t;
 
 
@@ -439,6 +440,13 @@ typedef enum
 	SABER_GREEN,
 	SABER_BLUE,
 	SABER_PURPLE,
+	//[RGBSabers]
+	SABER_WHITE,
+	SABER_BLACK,
+	SABER_RGB,
+	SABER_PIMP,
+	SABER_SCRIPTED,
+	//[/RGBSabers]
 	NUM_SABER_COLORS
 } saber_colors_t;
 
@@ -1788,6 +1796,11 @@ typedef struct playerState_s {
 	//keeps track of cloak fuel
 	int			cloakFuel;
 
+	//Keeps Trak of Block Point
+	int			blockPoints;
+	float		saberSwingSpeed;
+	signed short	forcePower;
+	short			saberActionFlags;
 	//rww - spare values specifically for use by mod authors.
 	//See psf_overrides.txt if you want to increase the send
 	//amount of any of these above 1 bit.
@@ -1840,6 +1853,10 @@ typedef struct siegePers_s
 #define BUTTON_FORCE_LIGHTNING	1024
 
 #define BUTTON_FORCE_DRAIN		2048
+
+#define BUTTON_SABERTHROW       4096        //+button12
+#define BUTTON_DODGE            8192        //+button13
+#define BUTTON_BLOCK            16384        //+button14
 
 // Here's an interesting bit.  The bots in TA used buttons to do additional gestures.
 // I ripped them out because I didn't want too many buttons given the fact that I was already adding some for JK2.
@@ -2372,5 +2389,13 @@ enum {
 	FONT_LARGE,
 	FONT_SMALL2
 };
+
+//[SaberSys]
+typedef enum {
+	SAF_BLOCKING,
+	SAF_KICK,
+	SAF_ENDBLOCK,
+} saberActionFlag_e;
+//[/SaberSys]
 
 void NET_AddrToString( char *out, size_t size, void *addr );

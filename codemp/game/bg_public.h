@@ -1668,6 +1668,10 @@ void BG_G2ATSTAngles(void *ghoul2, int time, vec3_t cent_lerpAngles );
 //BG anim utility functions:
 
 int BG_AnimLength( int index, animNumber_t anim );
+//[BugFix2]//[TrueView]
+float BG_GetTorsoAnimPoint(playerState_t * ps, int AnimIndex);
+float BG_GetLegsAnimPoint(playerState_t * ps, int AnimIndex);
+//[/BugFix2]//[/TrueView]
 
 qboolean BG_InSpecialJump( int anim );
 qboolean BG_InSaberStandAnim( int anim );
@@ -1695,7 +1699,11 @@ qboolean BG_InDeathAnim( int anim );
 qboolean BG_InSaberLockOld( int anim );
 qboolean BG_InSaberLock( int anim );
 
-void BG_SaberStartTransAnim( int clientNum, int saberAnimLevel, int weapon, int anim, float *animSpeed, int broken );
+//[FatigueSys]
+void BG_SaberStartTransAnim(int clientNum, int saberAnimLevel, int weapon, int anim,
+	float *animSpeed, int broken, int fatigued);
+//void BG_SaberStartTransAnim( int clientNum, int saberAnimLevel, int weapon, int anim, float *animSpeed, int broken );
+//[/FatigueSys]
 
 void BG_ForcePowerDrain( playerState_t *ps, forcePowers_t forcePower, int overrideAmt );
 

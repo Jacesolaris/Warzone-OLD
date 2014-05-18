@@ -559,7 +559,11 @@ Ghoul2 Insert End
 
 	// Do special charge bits
 	//-----------------------
-	if ( (ps || cg.renderingThirdPerson || cg.predictedPlayerState.clientNum != cent->currentState.number) &&
+	//[TrueView]
+	//Make the guns do their charging visual in True View.
+	if ((ps || cg.renderingThirdPerson || cg.predictedPlayerState.clientNum != cent->currentState.number || cg_trueguns.integer) &&
+		//if ( (ps || cg.renderingThirdPerson || cg.predictedPlayerState.clientNum != cent->currentState.number) &&
+		//[/TrueView]
 		( ( cent->currentState.modelindex2 == WEAPON_CHARGING_ALT && cent->currentState.weapon == WP_BRYAR_PISTOL ) ||
 		  ( cent->currentState.modelindex2 == WEAPON_CHARGING_ALT && cent->currentState.weapon == WP_BRYAR_OLD ) ||
 		  ( cent->currentState.weapon == WP_BOWCASTER && cent->currentState.modelindex2 == WEAPON_CHARGING ) ||
@@ -676,8 +680,10 @@ Ghoul2 Insert End
 		}
 	}
 
-	if ( ps || cg.renderingThirdPerson ||
-			cent->currentState.number != cg.predictedPlayerState.clientNum )
+	//[TrueView]
+	if (ps || cg.renderingThirdPerson || cg_trueguns.integer
+		|| cent->currentState.number != cg.predictedPlayerState.clientNum)
+		//[/TrueView] 
 	{	// Make sure we don't do the thirdperson model effects for the local player if we're in first person
 		vec3_t flashorigin, flashdir;
 		refEntity_t	flash;
@@ -765,16 +771,42 @@ void CG_AddViewWeapon( playerState_t *ps ) {
 	float		fovOffset;
 	vec3_t		angles;
 	weaponInfo_t	*weapon;
-	float cgFov = cg_fovViewmodel.integer ? cg_fovViewmodel.value : cg_fov.value;
+	//[TrueView]
+	float	cgFov;
+
+	if (!cg.renderingThirdPerson && (cg_trueguns.integer || cg.predictedPlayerState.weapon == WP_SABER
+		|| cg.predictedPlayerState.weapon == WP_MELEE) && cg_trueFOV.value
+		&& (cg.predictedPlayerState.pm_type != PM_SPECTATOR)
+		&& (cg.predictedPlayerState.pm_type != PM_INTERMISSION))
+	{
+		cgFov = cg_trueFOV.value;
+	}
+	else
+	{
+		cgFov = cg_fov.value;
+	}
+	//float	cgFov = cg_fov.value;
+	//[TrueView]
+
 
 	if (cgFov < 1)
+	{
 		cgFov = 1;
-	if (cgFov > 130)
-		cgFov = 130;
-
-	if ( ps->persistant[PERS_TEAM] == TEAM_SPECTATOR ) {
-		return;
 	}
+
+	//[TrueView]
+	//Allow larger Fields of View
+	if (cgFov > 180)
+	{
+		cgFov = 180;
+	}
+	/*
+	if (cgFov > 97)
+	{
+	cgFov = 97;
+	}
+	*/
+	//[TrueView]
 
 	if ( ps->pm_type == PM_INTERMISSION ) {
 		return;
@@ -787,7 +819,11 @@ void CG_AddViewWeapon( playerState_t *ps ) {
 	}
 
 	// allow the gun to be completely removed
-	if ( !cg_drawGun.integer || cg.predictedPlayerState.zoomMode) {
+	//[TrueView]
+	if (!cg_drawGun.integer || cg.predictedPlayerState.zoomMode || cg_trueguns.integer
+		|| cg.predictedPlayerState.weapon == WP_SABER || cg.predictedPlayerState.weapon == WP_MELEE) {
+		//if ( !cg_drawGun.integer || cg.predictedPlayerState.zoomMode) {
+		//[TrueView]
 		vec3_t		origin;
 
 		if ( cg.predictedPlayerState.eFlags & EF_FIRING ) {

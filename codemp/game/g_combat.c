@@ -2065,6 +2065,9 @@ extern void Rancor_DropVictim( gentity_t *self );
 
 extern qboolean g_dontFrickinCheck;
 extern qboolean g_endPDuel;
+//intializing checkforblowingup - Wahoo
+void G_CheckForblowingup(gentity_t *ent, gentity_t *enemy, vec3_t point, int damage, int deathAnim, qboolean postDeath);
+//[/FullDismemberment]
 extern qboolean g_noPDuelCheck;
 extern void saberReactivate(gentity_t *saberent, gentity_t *saberOwner);
 extern void saberBackToOwner(gentity_t *saberent);
@@ -2778,11 +2781,21 @@ extern void RunEmplacedWeapon( gentity_t *ent, usercmd_t **ucmd );
 
 			self->client->ps.pm_type = sPMType;
 
-			if (meansOfDeath == MOD_SABER || (meansOfDeath == MOD_MELEE && G_HeavyMelee( attacker )) )//saber or heavy melee (claws)
-			{ //update the anim on the actual skeleton (so bolt point will reflect the correct position) and then check for dismem
-				G_UpdateClientAnims(self, 1.0f);
-				G_CheckForDismemberment(self, attacker, self->pos1, damage, anim, qfalse);
-			}
+			// [FullDismemberment]
+				//weapon dismemberment so saber isn't the only one :)
+				if (meansOfDeath == MOD_SABER || (meansOfDeath == MOD_TURBLAST) || (meansOfDeath == MOD_FLECHETTE) || (meansOfDeath == MOD_FLECHETTE_ALT_SPLASH) || (meansOfDeath == MOD_CONC_ALT) || (meansOfDeath == MOD_THERMAL_SPLASH) || (meansOfDeath == MOD_TRIP_MINE_SPLASH) || (meansOfDeath == MOD_TIMED_MINE_SPLASH) || (meansOfDeath == MOD_TELEFRAG) || (meansOfDeath == MOD_CRUSH) || (meansOfDeath == MOD_MELEE && G_HeavyMelee(attacker)))//saber or heavy melee (claws)
+					//if (meansOfDeath == MOD_SABER || (meansOfDeath == MOD_MELEE && G_HeavyMelee( attacker )) )//saber or heavy melee (claws)
+				{ //update the anim on the actual skeleton (so bolt point will reflect the correct position) and then check for dismem
+					G_UpdateClientAnims(self, 1.0f);
+					G_CheckForDismemberment(self, attacker, self->pos1, damage, anim, qfalse);
+				}
+				//GIBBING!!! making use of g_checkforblowing up - Wahoo
+				if (meansOfDeath == MOD_ROCKET || (meansOfDeath == MOD_ROCKET_SPLASH) || (meansOfDeath == MOD_ROCKET_HOMING) || (meansOfDeath == MOD_ROCKET_HOMING_SPLASH) || (meansOfDeath == MOD_THERMAL) || (meansOfDeath == MOD_DET_PACK_SPLASH) || (meansOfDeath == MOD_TELEFRAG) || (meansOfDeath == MOD_TRIGGER_HURT) || (meansOfDeath == MOD_LAVA))
+				{
+					G_UpdateClientAnims(self, 1.0f);
+					G_CheckForblowingup(self, attacker, self->pos1, damage, anim, qfalse);
+				}
+				//[/FullDismemberment]
 		}
 		else if (self->NPC && self->client && self->client->NPC_class != CLASS_MARK1 &&
 			self->client->NPC_class != CLASS_VEHICLE)
@@ -4264,6 +4277,64 @@ void G_CheckForDismemberment(gentity_t *ent, gentity_t *enemy, vec3_t point, int
 	}
 	G_Dismember(ent, enemy, boltPoint, hitLocUse, 90, 0, deathAnim, postDeath);
 }
+
+//[FullDismemberment]
+//new function for blowing up dudes thanks to Wudan for his help :) - Wahoo
+void G_CheckForblowingup(gentity_t *ent, gentity_t *enemy, vec3_t point, int damage, int deathAnim, qboolean postDeath)
+{
+	vec3_t boltPoint;
+	int dismember = g_dismember.integer;
+
+	if (ent->localAnimIndex > 1)
+	{
+		if (!ent->NPC)
+		{
+			return;
+		}
+
+		if (ent->client->NPC_class != CLASS_PROTOCOL)
+		{ //this is the only non-humanoid allowed to do dismemberment.
+			return;
+		}
+	}
+
+	if (!dismember)
+	{
+		return;
+	}
+
+	if (gGAvoidDismember == 1)
+	{
+		return;
+	}
+
+	if (gGAvoidDismember != 2)
+	{ //this means do the dismemberment regardless of randomness and damage
+		if (Q_irand(0, 100) > dismember)
+		{
+			return;
+		}
+
+		if (damage < 5)
+		{
+			return;
+		}
+	}
+	G_GetDismemberBolt(ent, boltPoint, G2_MODELPART_HEAD);
+	G_Dismember(ent, enemy, boltPoint, G2_MODELPART_HEAD, 90, 0, deathAnim, postDeath);
+	G_GetDismemberBolt(ent, boltPoint, G2_MODELPART_LARM);
+	G_Dismember(ent, enemy, boltPoint, G2_MODELPART_LARM, 90, 0, deathAnim, postDeath);
+	G_GetDismemberBolt(ent, boltPoint, G2_MODELPART_RARM);
+	G_Dismember(ent, enemy, boltPoint, G2_MODELPART_RARM, 90, 0, deathAnim, postDeath);
+	G_GetDismemberBolt(ent, boltPoint, G2_MODELPART_LLEG);
+	G_Dismember(ent, enemy, boltPoint, G2_MODELPART_LLEG, 90, 0, deathAnim, postDeath);
+	G_GetDismemberBolt(ent, boltPoint, G2_MODELPART_RLEG);
+	G_Dismember(ent, enemy, boltPoint, G2_MODELPART_RLEG, 90, 0, deathAnim, postDeath);
+	G_GetDismemberBolt(ent, boltPoint, G2_MODELPART_WAIST);
+	G_Dismember(ent, enemy, boltPoint, G2_MODELPART_WAIST, 90, 0, deathAnim, postDeath);
+
+}
+//[/FullDismemberment]
 
 void G_LocationBasedDamageModifier(gentity_t *ent, vec3_t point, int mod, int dflags, int *damage)
 {

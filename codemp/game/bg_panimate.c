@@ -37,6 +37,11 @@ qboolean BG_SaberStanceAnim( int anim )
 	case BOTH_SABERSLOW_STANCE://single-saber, strong style
 	case BOTH_SABERSTAFF_STANCE://saber staff style
 	case BOTH_SABERDUAL_STANCE://dual saber style
+	//[SaberSys]
+	//dedicated stance animations for the hidden styles
+	case BOTH_SABERTAVION_STANCE:
+	case BOTH_SABERDESANN_STANCE:
+	//[/SaberSys]
 		return qtrue;
 		break;
 	}
@@ -128,15 +133,20 @@ qboolean BG_InSpecialJump( int anim )
 	return qfalse;
 }
 
-qboolean BG_InSaberStandAnim( int anim )
+qboolean BG_InSaberStandAnim(int anim)
 {
-	switch ( (anim) )
+	switch ((anim))
 	{
 	case BOTH_SABERFAST_STANCE:
 	case BOTH_STAND2:
 	case BOTH_SABERSLOW_STANCE:
 	case BOTH_SABERDUAL_STANCE:
 	case BOTH_SABERSTAFF_STANCE:
+		//[SaberSys]
+		//dedicated stance animations for the hidden styles
+	case BOTH_SABERTAVION_STANCE:
+	case BOTH_SABERDESANN_STANCE:
+		//[/SaberSys]
 		return qtrue;
 	default:
 		return qfalse;
@@ -757,13 +767,14 @@ int BG_BrokenParryForParry( int move )
 	return LS_NONE;
 }
 
-int BG_KnockawayForParry( int move )
+int BG_KnockawayForParry(int move)
 {
 	//FIXME: need actual anims for this
 	//FIXME: need to know which side of the saber was hit!  For now, we presume the saber gets knocked away from the center
-	switch ( move )
+	switch (move)
 	{
 	case BLOCKED_TOP://LS_PARRY_UP:
+	case BLOCKED_LIGHTNING:
 		return LS_K1_T_;//push up
 		break;
 	case BLOCKED_UPPER_RIGHT://LS_PARRY_UR:
@@ -1110,6 +1121,43 @@ int PM_SaberBounceForAttack( int move )
 	return LS_NONE;
 }
 
+//[SaberSys]
+int InvertQuad(int quad)
+{//Returns the reflection quad for the given quad.
+	//This is used for setting a player's block direction based on his attacker's move's start/end quad.
+	switch (quad)
+	{
+	case Q_B:
+		return Q_B;
+		break;
+	case Q_BR:
+		return Q_BL;
+		break;
+	case Q_R:
+		return Q_L;
+		break;
+	case Q_TR:
+		return Q_TL;
+		break;
+	case Q_T:
+		return Q_T;
+		break;
+	case Q_TL:
+		return Q_TR;
+		break;
+	case Q_L:
+		return Q_R;
+		break;
+	case Q_BL:
+		return Q_BR;
+		break;
+	default:
+		return quad;
+		break;
+	};
+}
+//[/SaberSys]
+
 int PM_SaberDeflectionForQuad( int quad )
 {
 	switch ( quad )
@@ -1160,6 +1208,34 @@ qboolean PM_SaberInParry( int move )
 	return qfalse;
 }
 
+//[SaberSys]
+qboolean BG_InWalk(int anim)
+{
+	switch (anim)
+	{
+	case BOTH_WALK1:
+	case BOTH_WALK1TALKCOMM1:
+	case BOTH_WALK2:
+	case BOTH_WALK5:
+	case BOTH_WALK6:
+	case BOTH_WALK7:
+	case BOTH_WALK_DUAL:
+	case BOTH_WALK_STAFF:
+	case BOTH_WALKBACK1:
+	case BOTH_WALKBACK2:
+	case BOTH_WALKBACK_DUAL:
+	case BOTH_WALKBACK_STAFF:
+		return qtrue;
+		break;
+
+	default:
+		return qfalse;
+		break;
+
+	};
+}
+//[/SaberSys]
+
 qboolean PM_SaberInKnockaway( int move )
 {
 	if ( move >= LS_K1_T_ && move <= LS_K1_BL )
@@ -1168,6 +1244,27 @@ qboolean PM_SaberInKnockaway( int move )
 	}
 	return qfalse;
 }
+
+//[SaberSys]
+qboolean PM_KnockawayAnim(int anim)
+{//animation based version of PM_SaberInKnockaway used for BG_SaberStartTransAnim
+	if (anim >= BOTH_K1_S1_T_ && anim <= BOTH_K1_S1_BR)
+	{//single saber
+		return qtrue;
+	}
+
+	if (anim >= BOTH_K6_S6_T_ && anim <= BOTH_K6_S6_BR)
+	{//dual saber
+		return qtrue;
+	}
+
+	if (anim >= BOTH_K7_S7_T_ && anim <= BOTH_K7_S7_BR)
+	{//staff saber
+		return qtrue;
+	}
+	return qfalse;
+}
+//[/SaberSys]
 
 qboolean PM_SaberInReflect( int move )
 {
@@ -1331,6 +1428,23 @@ qboolean PM_LandingAnim( int anim )
 	}
 	return qfalse;
 }
+
+//[SaberSys]
+qboolean PM_SaberReturnAnim(int anim)
+{
+	if ((anim >= BOTH_R1_B__S1 && anim <= BOTH_R1_TR_S1)
+		|| (anim >= BOTH_R2_B__S1 && anim <= BOTH_R2_TR_S1)
+		|| (anim >= BOTH_R3_B__S1 && anim <= BOTH_R3_TR_S1)
+		|| (anim >= BOTH_R4_B__S1 && anim <= BOTH_R4_TR_S1)
+		|| (anim >= BOTH_R5_B__S1 && anim <= BOTH_R5_TR_S1)
+		|| (anim >= BOTH_R6_B__S6 && anim <= BOTH_R6_TR_S6)
+		|| (anim >= BOTH_R7_B__S7 && anim <= BOTH_R7_TR_S7))
+	{
+		return qtrue;
+	}
+	return qfalse;
+}
+//[/SaberSys]
 
 qboolean PM_SpinningAnim( int anim )
 {
@@ -2676,7 +2790,16 @@ void PM_SetTorsoAnimTimer(int time )
 	BG_SetTorsoAnimTimer(pm->ps, time);
 }
 
-void BG_SaberStartTransAnim( int clientNum, int saberAnimLevel, int weapon, int anim, float *animSpeed, int broken )
+//[SaberSys]
+qboolean BG_BounceAnim(int anim);
+qboolean PM_SaberReturnAnim(int anim);
+//[/SaberSys]
+//[FatigueSys]
+//Made it so saber moves go slower if your fatigued
+void BG_SaberStartTransAnim(int clientNum, int saberAnimLevel, int weapon, int anim, float *animSpeed,
+	int broken, int fatigued)
+	//void BG_SaberStartTransAnim( int clientNum, int saberAnimLevel, int weapon, int anim, float *animSpeed, int broken )
+	//[/FatigueSys]
 {
 	if ( anim >= BOTH_A1_T__B_ && anim <= BOTH_ROLL_STAB )
 	{
@@ -2756,7 +2879,10 @@ void BG_SetAnimFinal(playerState_t *ps, animation_t *animations,
 	assert(anim > -1);
 	assert(animations[anim].firstFrame > 0 || animations[anim].numFrames > 0);
 
-	BG_SaberStartTransAnim(ps->clientNum, ps->fd.saberAnimLevel, ps->weapon, anim, &editAnimSpeed, ps->brokenLimbs);
+	//[FatigueSys]
+	BG_SaberStartTransAnim(ps->clientNum, ps->fd.saberAnimLevel, ps->weapon, anim, &editAnimSpeed, ps->brokenLimbs, ps->userInt3);
+	//BG_SaberStartTransAnim(ps->clientNum, ps->fd.saberAnimLevel, ps->weapon, anim, &editAnimSpeed, ps->brokenLimbs);
+	//[/FatigueSys]
 
 	// Set torso anim
 	if (setAnimParts & SETANIM_TORSO)
@@ -2979,4 +3105,118 @@ void PM_SetAnim(int setAnimParts,int anim,int setAnimFlags)
 {
 	BG_SetAnim(pm->ps, pm->animations, setAnimParts, anim, setAnimFlags);
 }
+//[AnimationSys]//[TrueView]
+//[BugFix2]
+//Fixed the logic problem with the timers
 
+//BG versions of the animation point functions
+
+//Get the point in the animation and return a percentage of the current point in the anim between 0 and the total anim length (0.0f - 1.0f)
+//This function assumes that your animation timer is set to the exact length of the animation
+float BG_GetTorsoAnimPoint(playerState_t * ps, int AnimIndex)
+{
+	float attackAnimLength = 0;
+	float currentPoint = 0;
+	float animSpeedFactor = 1.0f;
+	float animPercentage = 0;
+
+	//Be sure to scale by the proper anim speed just as if we were going to play the animation
+	BG_SaberStartTransAnim(ps->clientNum, ps->fd.saberAnimLevel, ps->weapon, ps->torsoAnim, &animSpeedFactor, ps->brokenLimbs, ps->userInt3);
+
+	if (animSpeedFactor > 0)
+	{
+		if (bgAllAnims[AnimIndex].anims[ps->torsoAnim].numFrames < 2)
+		{//single frame animations should just run with one frame worth of animation.
+			attackAnimLength = fabs((float)(bgAllAnims[AnimIndex].anims[ps->torsoAnim].frameLerp)) * (1 / animSpeedFactor);
+		}
+		else
+		{
+			attackAnimLength = (bgAllAnims[AnimIndex].anims[ps->torsoAnim].numFrames - 1) * fabs((float)(bgAllAnims[AnimIndex].anims[ps->torsoAnim].frameLerp)) * (1 / animSpeedFactor);
+		}
+
+		if (attackAnimLength > 1)
+		{
+			//set the timer to be one unit of time less than the actual animation time so the timer will expire on the frame at which the animation finishes.
+			attackAnimLength--;
+		}
+	}
+
+	currentPoint = ps->torsoTimer;
+
+	animPercentage = currentPoint / attackAnimLength;
+
+
+	//Com_Printf("%f\n", animPercentage);
+
+	return animPercentage;
+}
+
+
+float BG_GetLegsAnimPoint(playerState_t * ps, int AnimIndex)
+{
+	float attackAnimLength = 0;
+	float currentPoint = 0;
+	float animSpeedFactor = 1.0f;
+	float animPercentage = 0;
+
+	//Be sure to scale by the proper anim speed just as if we were going to play the animation
+	BG_SaberStartTransAnim(ps->clientNum, ps->fd.saberAnimLevel, ps->weapon, ps->legsAnim, &animSpeedFactor, ps->brokenLimbs, ps->userInt3);
+
+	if (animSpeedFactor > 0)
+	{
+		if (bgAllAnims[AnimIndex].anims[ps->legsAnim].numFrames < 2)
+		{//single frame animations should just run with one frame worth of animation.
+			attackAnimLength = fabs((float)(bgAllAnims[AnimIndex].anims[ps->legsAnim].frameLerp)) * (1 / animSpeedFactor);
+		}
+		else
+		{
+			attackAnimLength = (bgAllAnims[AnimIndex].anims[ps->legsAnim].numFrames - 1) * fabs((float)(bgAllAnims[AnimIndex].anims[ps->legsAnim].frameLerp)) * (1 / animSpeedFactor);
+		}
+
+		if (attackAnimLength > 1)
+		{
+			//set the timer to be one unit of time less than the actual animation time so the timer will expire on the frame at which the animation finishes.
+			attackAnimLength--;
+		}
+	}
+
+	currentPoint = ps->legsTimer;
+
+	animPercentage = currentPoint / attackAnimLength;
+
+	//Com_Printf("%f\n", animPercentage);
+
+	return animPercentage;
+}
+//[/BugFix2]
+//[/AnimationSys]//[/TrueView]
+
+//[SaberSys]
+qboolean BG_BounceAnim(int anim)
+{//check for saber bounce animation
+	if ((anim >= BOTH_B1_BR___ && anim <= BOTH_B1_BL___)
+		|| (anim >= BOTH_B2_BR___ && anim <= BOTH_B2_BL___)
+		|| (anim >= BOTH_B3_BR___ && anim <= BOTH_B3_BL___)
+		|| (anim >= BOTH_B4_BR___ && anim <= BOTH_B4_BL___)
+		|| (anim >= BOTH_B5_BR___ && anim <= BOTH_B5_BL___)
+		|| (anim >= BOTH_B6_BR___ && anim <= BOTH_B6_BL___)
+		|| (anim >= BOTH_B7_BR___ && anim <= BOTH_B7_BL___))
+	{
+		return qtrue;
+	}
+
+	return qfalse;
+}
+
+
+qboolean BG_BlockAnim(int anim)
+{//check for saber block animation
+	if ((anim >= BOTH_P1_S1_T_ && anim <= BOTH_P1_S1_BR)
+		|| (anim >= BOTH_P6_S6_T_ && anim <= BOTH_P6_S6_BR)
+		|| (anim >= BOTH_P7_S7_T_ && anim <= BOTH_P7_S7_BR))
+	{
+		return qtrue;
+	}
+	return qfalse;
+}
+//[/SaberSys]

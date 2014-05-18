@@ -559,6 +559,16 @@ typedef struct renderInfo_s
 	int			boltValidityTime;
 } renderInfo_t;
 
+//[SaberSys]
+typedef struct
+{
+	int EntityNum;
+	int Debounce;
+	int SaberNum;
+	int BladeNum;
+}  sabimpact_t;
+//[SaberSys]
+
 // this structure is cleared on each ClientSpawn(),
 // except for 'client->pers' and 'client->sess'
 struct gclient_s {
@@ -598,7 +608,9 @@ struct gclient_s {
 	int			buttons;
 	int			oldbuttons;
 	int			latched_buttons;
-
+	//[SaberSys]
+	int			saberBlockDebounce;
+	//[/SaberSys]
 	vec3_t		oldOrigin;
 
 	// sum up damage over an entire frame, so
@@ -650,7 +662,9 @@ struct gclient_s {
 
 	int			g2LastSurfaceHit; //index of surface hit during the most recent ghoul2 collision performed on this client.
 	int			g2LastSurfaceTime; //time when the surface index was set (to make sure it's up to date)
-
+	//[BUGFIX12]
+	int			g2LastSurfaceModel; //the index of the model on the ghoul2 that was hit during the lastest hit.
+	//[BUGFIX12]
 	int			corrTime;
 
 	vec3_t		lastHeadAngles;
@@ -774,6 +788,20 @@ struct gclient_s {
 		int		drainDebounce;
 		int		lightningDebounce;
 	} force;
+	//[SaberSys]
+	int			saberSaberBlockDebounce;
+	int			saberAttackWound;
+	int			saberIdleWound;
+	unsigned int	saberProjBlockTime;
+	unsigned int	saberBlockTime;
+	float		blockingLightningAccumulation;
+	//the SaberNum of the last enemy blade that you hit.
+	int			lastSaberCollided;
+	//the BladeNum of the last enemy blade that you hit.
+	int			lastBladeCollided;
+
+	sabimpact_t	sabimpact[MAX_SABERS][MAX_BLADES];
+	//[SaberSys]
 };
 
 //Interest points
@@ -1392,7 +1420,9 @@ gentity_t *G_PreDefSound(vec3_t org, int pdSound);
 qboolean HasSetSaberOnly(void);
 void WP_ForcePowerStop( gentity_t *self, forcePowers_t forcePower );
 void WP_SaberPositionUpdate( gentity_t *self, usercmd_t *ucmd );
-int WP_SaberCanBlock(gentity_t *self, vec3_t point, int dflags, int mod, qboolean projectile, int attackStr);
+//[SaberSys] qboolean instead of int
+qboolean WP_SaberCanBlock(gentity_t *self, vec3_t point, int dflags, int mod, qboolean projectile, int attackStr);
+//[/SaberSys] 
 void WP_SaberInitBladeData( gentity_t *ent );
 void WP_InitForcePowers( gentity_t *ent );
 void WP_SpawnInitForcePowers( gentity_t *ent );

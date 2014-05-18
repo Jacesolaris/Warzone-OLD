@@ -2092,6 +2092,13 @@ qboolean ClientUserinfoChanged( int clientNum ) {
 	qboolean modelChanged = qfalse;
 	gender_t gender = GENDER_MALE;
 
+	//[RGBSabers]
+	char	rgb1[MAX_INFO_STRING];
+	char	rgb2[MAX_INFO_STRING];
+	char	script1[MAX_INFO_STRING];
+	char	script2[MAX_INFO_STRING];
+	//[/RGBSabers]
+
 	trap->GetUserinfo( clientNum, userinfo, sizeof( userinfo ) );
 
 	// check for malformed or illegal info strings
@@ -2282,6 +2289,20 @@ qboolean ClientUserinfoChanged( int clientNum ) {
 	// colors
 	Q_strncpyz( color1, Info_ValueForKey( userinfo, "color1" ), sizeof( color1 ) );
 	Q_strncpyz( color2, Info_ValueForKey( userinfo, "color2" ), sizeof( color2 ) );
+
+	//[RGBSabers]
+	Q_strncpyz(rgb1, Info_ValueForKey(userinfo, "rgb_saber1"), sizeof(rgb1));
+	Q_strncpyz(rgb2, Info_ValueForKey(userinfo, "rgb_saber2"), sizeof(rgb2));
+
+	Q_strncpyz(script1, Info_ValueForKey(userinfo, "rgb_script1"), sizeof(script1));
+	Q_strncpyz(script2, Info_ValueForKey(userinfo, "rgb_script2"), sizeof(script2));
+
+
+	//	Com_Printf("game > newinfo update > sab1 \"%s\" sab2 \"%s\" \n",rgb1,rgb2);
+
+	// send over a subset of the userinfo keys so other clients can
+	// print scoreboards, display models, and play custom sounds
+	//[/RGBSabers]
 
 	// gender hints
 	s = Info_ValueForKey( userinfo, "sex" );
@@ -2891,7 +2912,10 @@ tryTorso:
 
 		f = torsoAnim;
 
-		BG_SaberStartTransAnim(self->s.number, self->client->ps.fd.saberAnimLevel, self->client->ps.weapon, f, &animSpeedScale, self->client->ps.brokenLimbs);
+		//[FatigueSys]
+		BG_SaberStartTransAnim(self->s.number, self->client->ps.fd.saberAnimLevel, self->client->ps.weapon, f, &animSpeedScale, self->client->ps.brokenLimbs, self->client->ps.userInt3);
+		//BG_SaberStartTransAnim(self->s.number, self->client->ps.fd.saberAnimLevel, self->client->ps.weapon, f, &animSpeedScale, self->client->ps.brokenLimbs);
+		//[/FatigueSys]
 
 		animSpeed = 50.0f / bgAllAnims[self->localAnimIndex].anims[f].frameLerp;
 		lAnimSpeedScale = (animSpeed *= animSpeedScale);
@@ -3497,7 +3521,23 @@ void ClientSpawn(gentity_t *ent) {
 			client->ps.weapon = WP_MELEE;
 		}
 	}
+	//[SaberSys] Melee To FFA
+	if (level.gametype == GT_FFA)
+	{
+		client->ps.stats[STAT_WEAPONS] &= (1 << WP_SABER);
+		client->ps.stats[STAT_WEAPONS] |= (1 << WP_MELEE);
+	}
 
+	if (client->ps.stats[STAT_WEAPONS] & (1 << WP_SABER))
+	{
+		client->ps.weapon = WP_SABER;
+	}
+	else if (client->ps.stats[STAT_WEAPONS] & (1 << WP_MELEE))
+	{
+		client->ps.weapon = WP_MELEE;
+
+	}
+	//[/SaberSys] Melee To FFA
 	/*
 	client->ps.stats[STAT_HOLDABLE_ITEMS] |= ( 1 << HI_BINOCULARS );
 	client->ps.stats[STAT_HOLDABLE_ITEM] = BG_GetItemIndexByTag(HI_BINOCULARS, IT_HOLDABLE);

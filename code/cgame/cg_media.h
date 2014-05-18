@@ -340,6 +340,11 @@ typedef struct
 	fxHandle_t	forceConfusion;
 	fxHandle_t	forceLightning;
 	fxHandle_t	forceLightningWide;
+	
+	fxHandle_t forcelightningArc;
+	/*fxHandle_t forcelightningAbsorb;
+	fxHandle_t forcelightningFlare;
+	fxHandle_t forcelightningImpact*/
 	//fxHandle_t	forceInvincibility;
 	fxHandle_t	forceHeal;
 

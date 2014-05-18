@@ -4850,6 +4850,9 @@ static const char *g_bindCommands[] = {
 	"use_seeker",
 	"use_sentry",
 	"voicechat",
+	//[SaberSys] Block Button
+	"+button14",
+	//[/SaberSys]Block Button
 	"weapon 1",
 	"weapon 10",
 	"weapon 11",

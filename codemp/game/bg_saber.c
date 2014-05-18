@@ -5,6 +5,9 @@
 
 extern qboolean BG_SabersOff( playerState_t *ps );
 saberInfo_t *BG_MySaber( int clientNum, int saberNum );
+#if defined(_CGAME)
+void CG_BlockLightningEffect();
+#endif
 
 int PM_irand_timesync(int val1, int val2)
 {
@@ -370,6 +373,9 @@ saberMoveName_t PM_AttackMoveForQuad( int quad )
 
 qboolean PM_SaberKataDone(int curmove, int newmove);
 
+//[SaberSys]
+int PM_ReturnforQuad(int quad);
+//[/SaberSys]
 int PM_SaberAnimTransitionAnim( int curmove, int newmove )
 {
 	int retmove = newmove;
@@ -408,6 +414,47 @@ int PM_SaberAnimTransitionAnim( int curmove, int newmove )
 				//transition is the return
 				retmove = LS_R_TL2BR + (newmove-LS_A_TL2BR);
 				break;
+				//[SaberSys]
+				//bounces
+			case LS_B1_BR:
+			case LS_B1__R:
+			case LS_B1_TR:
+			case LS_B1_T_:
+			case LS_B1_TL:
+			case LS_B1__L:
+			case LS_B1_BL:
+				//transitioning from a parry/reflection/knockaway/broken parry
+			case LS_PARRY_UP:
+			case LS_PARRY_UR:
+			case LS_PARRY_UL:
+			case LS_PARRY_LR:
+			case LS_PARRY_LL:
+			case LS_REFLECT_UP:
+			case LS_REFLECT_UR:
+			case LS_REFLECT_UL:
+			case LS_REFLECT_LR:
+			case LS_REFLECT_LL:
+			case LS_K1_T_:
+			case LS_K1_TR:
+			case LS_K1_TL:
+			case LS_K1_BR:
+			case LS_K1_BL:
+			case LS_V1_BR:
+			case LS_V1__R:
+			case LS_V1_TR:
+			case LS_V1_T_:
+			case LS_V1_TL:
+			case LS_V1__L:
+			case LS_V1_BL:
+			case LS_V1_B_:
+			case LS_H1_T_:
+			case LS_H1_TR:
+			case LS_H1_TL:
+			case LS_H1_BR:
+			case LS_H1_BL:
+				retmove = PM_ReturnforQuad(saberMoveData[curmove].endQuad);
+				break;
+				//[/SaberSys]
 			}
 			break;
 		//transitioning to an attack
@@ -465,6 +512,16 @@ int PM_SaberAnimTransitionAnim( int curmove, int newmove )
 				case LS_R_TR2BL:
 				case LS_R_T2B:
 				//transitioning from a bounce
+				//[SaberSys]
+				//bounces should transition to transitions before attacks.
+				case LS_B1_BR:
+				case LS_B1__R:
+				case LS_B1_TR:
+				case LS_B1_T_:
+				case LS_B1_TL:
+				case LS_B1__L:
+				case LS_B1_BL:
+					//[/SaberSys]
 				/*
 				case LS_BOUNCE_UL2LL:
 				case LS_BOUNCE_LL2UL:
@@ -2452,19 +2509,30 @@ saberMoveName_t PM_SaberAttackForMovement(saberMoveName_t curmove)
 				newmove = LS_A_T2B;
 			}
 		}
+		//[SaberSys]
+		else if (PM_SaberInBounce(curmove)
+			|| PM_SaberInParry(curmove)
+			|| PM_SaberInBrokenParry(curmove)
+			|| PM_SaberInKnockaway(curmove))
+		{//bounces, parries, etc return to the start position if a direction isn't given.
+			newmove = LS_READY;
+		}
+		/*
 		else if ( PM_SaberInBounce( curmove ) )
 		{//bounces should go to their default attack if you don't specify a direction but are attacking
-			newmove = saberMoveData[curmove].chain_attack;
+		newmove = saberMoveData[curmove].chain_attack;
 
-			if ( PM_SaberKataDone(curmove, newmove) )
-			{
-				newmove = saberMoveData[curmove].chain_idle;
-			}
-			else
-			{
-				newmove = saberMoveData[curmove].chain_attack;
-			}
+		if ( PM_SaberKataDone(curmove, newmove) )
+		{
+		newmove = saberMoveData[curmove].chain_idle;
 		}
+		else
+		{
+		newmove = saberMoveData[curmove].chain_attack;
+		}
+		}
+		*/
+		//[/SaberSys]
 		else if ( curmove == LS_READY )
 		{//Not moving at all, shouldn't have gotten here...?
 			//for now, just pick a random attack
@@ -2577,10 +2645,10 @@ int PM_KickMoveForConditions(void)
 	return kickMove;
 }
 
-qboolean BG_InSlopeAnim( int anim );
-qboolean PM_RunningAnim( int anim );
+qboolean PM_InSlopeAnim(int anim);
+qboolean PM_RunningAnim(int anim);
 
-qboolean PM_SaberMoveOkayForKata( void )
+qboolean PM_SaberMoveOkayForKata(void)
 {
 	if ( pm->ps->saberMove == LS_READY
 		|| PM_SaberInStart( pm->ps->saberMove ) )
@@ -2715,11 +2783,112 @@ While this is a little different than the Quake 3 code, there is no clean way of
 */
 // Ultimate goal is to set the sabermove to the proper next location
 // Note that if the resultant animation is NONE, then the animation is essentially "idle", and is set in WP_TorsoAnim
-qboolean PM_WalkingAnim( int anim );
-qboolean PM_SwimmingAnim( int anim );
-int PM_SaberBounceForAttack( int move );
-qboolean BG_SuperBreakLoseAnim( int anim );
-qboolean BG_SuperBreakWinAnim( int anim );
+qboolean PM_WalkingAnim(int anim);
+qboolean PM_SwimmingAnim(int anim);
+int PM_SaberBounceForAttack(int move);
+qboolean BG_SuperBreakLoseAnim(int anim);
+qboolean BG_SuperBreakWinAnim(int anim);
+//[SaberSys]
+int PM_SetBlock(void)
+{
+	int anim = BOTH_STAND2;
+
+	if (pm->ps->saberActionFlags & (1 << SAF_BLOCKING) && pm->cmd.forwardmove < 0)//this is the walking BACK BLOCK 
+	{//Upper Top block          
+		if (pm->cmd.rightmove < 0)
+		{//upper left block
+			pm->ps->saberBlocked = BLOCKED_UPPER_LEFT;
+		}
+		else if (pm->cmd.rightmove > 0)
+		{//upper right block
+			pm->ps->saberBlocked = BLOCKED_UPPER_RIGHT;
+		}
+		else
+		{//Top Block
+			pm->ps->saberBlocked = BLOCKED_TOP;
+		}
+	}
+	else if (pm->cmd.forwardmove > 0)//Walking Forward BLOCK 
+	{
+		if (pm->cmd.rightmove < 0)
+		{//lower left block
+			pm->ps->saberBlocked = BLOCKED_LOWER_LEFT;
+		}
+		else if (pm->cmd.rightmove > 0)
+		{//lower right block
+			pm->ps->saberBlocked = BLOCKED_LOWER_RIGHT;
+		}
+		else
+		{
+			pm->ps->saberBlocked = BLOCKED_TOP;
+		}
+	}
+	else
+	{
+		if (pm->cmd.rightmove < 0)//left block
+		{
+			pm->ps->saberBlocked = BLOCKED_UPPER_LEFT;
+		}
+		else if (pm->cmd.rightmove > 0)//right block
+		{
+			pm->ps->saberBlocked = BLOCKED_UPPER_RIGHT;
+		}
+		else
+		{//not moving just holding button block.
+			anim = BOTH_STAND2;
+		}
+	}
+	return anim;
+}
+
+int PM_ReturnforQuad(int quad)
+{
+	switch (quad)
+	{
+	case Q_BR:
+		return LS_R_TL2BR;
+		break;
+	case Q_R:
+		return LS_R_L2R;
+		break;
+	case Q_TR:
+		return LS_R_BL2TR;
+		break;
+	case Q_T:
+		//no attacks ever end here (IE no animation) so just wing it.
+		//[SaberSys]
+		//hack this to use a similar quad so that it had consistant animation timing.
+		return LS_R_BL2TR;
+		//return LS_READY;
+		//[/SaberSys]
+		break;
+	case Q_TL:
+		return LS_R_BR2TL;
+		break;
+	case Q_L:
+		return LS_R_R2L;
+		break;
+	case Q_BL:
+		return LS_R_TR2BL;
+		break;
+	case Q_B:
+		return LS_R_T2B;
+		break;
+	default:
+		return LS_READY;
+	};
+}
+//[/SaberSys]
+
+qboolean InSaberDelayAnimation(int move)
+{
+	if ((move >= 665 && move <= 669)
+		|| (move >= 690 && move <= 694)
+		|| (move >= 715 && move <= 719))
+		return qtrue;
+	return qfalse;
+}
+
 void PM_WeaponLightsaber(void)
 {
 	int			addTime;
@@ -2832,24 +3001,26 @@ void PM_WeaponLightsaber(void)
 		}
 	}
 
-	if (BG_SabersOff( pm->ps ))
+	if (BG_SabersOff(pm->ps))
 	{
 		if (pm->ps->saberMove != LS_READY)
 		{
-			PM_SetSaberMove( LS_READY );
+			PM_SetSaberMove(LS_READY);
 		}
-
-		if ((pm->ps->legsAnim) != (pm->ps->torsoAnim) && !BG_InSlopeAnim(pm->ps->legsAnim) &&
-			pm->ps->torsoTimer <= 0)
+		//[SaberSys]
+		if ((pm->ps->legsAnim) != (pm->ps->torsoAnim) && !PM_InSlopeAnim(pm->ps->legsAnim) &&
+			pm->ps->torsoTimer <= 0 && !(pm->ps->saberActionFlags & (1 << SAF_BLOCKING)))
 		{
-			PM_SetAnim(SETANIM_TORSO,(pm->ps->legsAnim),SETANIM_FLAG_OVERRIDE);
+			PM_SetAnim(SETANIM_TORSO, (pm->ps->legsAnim), SETANIM_FLAG_OVERRIDE);
 		}
-		else if (BG_InSlopeAnim(pm->ps->legsAnim) && pm->ps->torsoTimer <= 0)
+		else if ((PM_InSlopeAnim(pm->ps->legsAnim) || pm->ps->saberActionFlags & (1 << SAF_BLOCKING)) && pm->ps->torsoTimer <= 0 &&
+			!PM_SaberInParry(pm->ps->saberMove) && !PM_SaberInKnockaway(pm->ps->saberMove) &&
+			!PM_SaberInBrokenParry(pm->ps->saberMove) && !PM_SaberInReflect(pm->ps->saberMove))
 		{
-			PM_SetAnim(SETANIM_TORSO,PM_GetSaberStance(),SETANIM_FLAG_OVERRIDE);
+			PM_SetAnim(SETANIM_TORSO, PM_GetSaberStance(), SETANIM_FLAG_OVERRIDE);
 		}
-
-		if (pm->ps->weaponTime < 1 && ((pm->cmd.buttons & BUTTON_ALT_ATTACK) || (pm->cmd.buttons & BUTTON_ATTACK)))
+		//[/SaberSys]
+		if (pm->ps->weaponTime < 1 && (pm->cmd.buttons & BUTTON_ATTACK))
 		{
 			if (pm->ps->duelTime < pm->cmd.serverTime)
 			{
@@ -3044,12 +3215,15 @@ void PM_WeaponLightsaber(void)
 
 		pm->ps->weaponTime -= pml.msec;
 
-		//This was stupid and didn't work right. Looks like things are fine without it.
-	//	if (pm->ps->saberBlocked && pm->ps->torsoAnim != saberMoveData[pm->ps->saberMove].animToUse)
-	//	{ //rww - keep him in the blocking pose until he can attack again
-	//		PM_SetAnim(SETANIM_TORSO,saberMoveData[pm->ps->saberMove].animToUse,saberMoveData[pm->ps->saberMove].animSetFlags|SETANIM_FLAG_HOLD);
-	//		return;
-	//	}
+		//[SaberSys] add maunel BLock call		
+		if ((pm->ps->saberActionFlags & (1 << SAF_BLOCKING)
+			&& !(pm->ps->weaponstate == WEAPON_DROPPING
+			|| pm->ps->weaponstate == WEAPON_RAISING))
+			&& PM_SetBlock())
+		//[/SaberSys] 
+		{ //keep him in the blocking pose until he can attack again
+			return;
+		}
 	}
 	else
 	{
@@ -3058,7 +3232,9 @@ void PM_WeaponLightsaber(void)
 
 	// Now we react to a block action by the player's lightsaber.
 	if ( pm->ps->saberBlocked )
-	{
+	{//[SaberSys] 
+		qboolean wasAttackedByGun = qfalse;
+		//[/SaberSys] 
 		if ( pm->ps->saberBlocked >= BLOCKED_UPPER_RIGHT
 			&& pm->ps->saberBlocked < BLOCKED_UPPER_RIGHT_PROJ)
 		{//hold the parry for a bit
@@ -3147,46 +3323,64 @@ void PM_WeaponLightsaber(void)
 
 					pm->ps->weaponTime = pm->ps->torsoTimer;//+saberMoveData[bounceMove].blendTime+SABER_BLOCK_DUR;
 
-				}
+				}//[SaberSys] 
 				break;
 			case BLOCKED_UPPER_RIGHT:
-				PM_SetSaberMove( LS_PARRY_UR );
+				PM_SetSaberMove(LS_PARRY_UR);
 				break;
 			case BLOCKED_UPPER_RIGHT_PROJ:
-				PM_SetSaberMove( LS_REFLECT_UR );
+				PM_SetSaberMove(LS_REFLECT_UR);
+				wasAttackedByGun = qtrue;
 				break;
 			case BLOCKED_UPPER_LEFT:
-				PM_SetSaberMove( LS_PARRY_UL );
+				PM_SetSaberMove(LS_PARRY_UL);
 				break;
 			case BLOCKED_UPPER_LEFT_PROJ:
-				PM_SetSaberMove( LS_REFLECT_UL );
+				PM_SetSaberMove(LS_REFLECT_UL);
+				wasAttackedByGun = qtrue;
 				break;
 			case BLOCKED_LOWER_RIGHT:
-				PM_SetSaberMove( LS_PARRY_LR );
+				PM_SetSaberMove(LS_PARRY_LR);
 				break;
 			case BLOCKED_LOWER_RIGHT_PROJ:
-				PM_SetSaberMove( LS_REFLECT_LR );
+				PM_SetSaberMove(LS_REFLECT_LR);
+				wasAttackedByGun = qtrue;
 				break;
 			case BLOCKED_LOWER_LEFT:
-				PM_SetSaberMove( LS_PARRY_LL );
+				PM_SetSaberMove(LS_PARRY_LL);
 				break;
 			case BLOCKED_LOWER_LEFT_PROJ:
-				PM_SetSaberMove( LS_REFLECT_LL);
+				PM_SetSaberMove(LS_REFLECT_LL);
+				wasAttackedByGun = qtrue;
 				break;
 			case BLOCKED_TOP:
-				PM_SetSaberMove( LS_PARRY_UP );
+				PM_SetSaberMove(LS_PARRY_UP);
+				break;
+				//[LightningBlockSys]
+			case BLOCKED_LIGHTNING:
+				PM_SetSaberMove(LS_PARRY_UP);
+#if defined(_CGAME)
+				CG_BlockLightningEffect();
+#endif
+				//[/LightningBlockSys]
 				break;
 			case BLOCKED_TOP_PROJ:
-				PM_SetSaberMove( LS_REFLECT_UP );
+				PM_SetSaberMove(LS_REFLECT_UP);
+				wasAttackedByGun = qtrue;
 				break;
 			default:
 				pm->ps->saberBlocked = BLOCKED_NONE;
 				break;
+		}//[/SaberSys] 
+		if (InSaberDelayAnimation(pm->ps->torsoAnim) && (pm->cmd.buttons & BUTTON_ATTACK) && wasAttackedByGun)
+		{
+			pm->ps->weaponTime += 700;
+			pm->ps->torsoTimer += 1500;
 		}
-		if ( pm->ps->saberBlocked >= BLOCKED_UPPER_RIGHT
+		if (pm->ps->saberBlocked >= BLOCKED_UPPER_RIGHT
 			&& pm->ps->saberBlocked < BLOCKED_UPPER_RIGHT_PROJ)
 		{//hold the parry for a bit
-			if ( pm->ps->torsoTimer < pm->ps->weaponTime )
+			if (pm->ps->torsoTimer < pm->ps->weaponTime)
 			{
 				pm->ps->torsoTimer = pm->ps->weaponTime;
 			}
@@ -3466,7 +3660,10 @@ weapChecks:
 			newmove = LS_R_T2B;
 		}
 		// check for fire
-		else if ( !(pm->cmd.buttons & (BUTTON_ATTACK|BUTTON_ALT_ATTACK)) )
+		//Stoiss add BLOCK BUTTON here to make the mblock and attack bug go away
+		//Still need to think of a way to handle this better needs TESTting.
+		//else if ( !(pm->cmd.buttons & (BUTTON_ATTACK|BUTTON_ALT_ATTACK)) )
+		else if (!(pm->cmd.buttons & BUTTON_ATTACK) || (pm->cmd.buttons & BUTTON_BLOCK))
 		{//not attacking
 			pm->ps->weaponTime = 0;
 
@@ -3509,16 +3706,25 @@ weapChecks:
 		// ***************************************************
 		// Pressing attack, so we must look up the proper attack move.
 
-		if ( pm->ps->weaponTime > 0 )
+		if (pm->ps->weaponTime > 0)
 		{	// Last attack is not yet complete.
-			pm->ps->weaponstate = WEAPON_FIRING;
-			return;
+			// But it is if we're blocking!
+			if (pm->cmd.buttons & BUTTON_BLOCK)
+			{
+				PM_SetAnim(SETANIM_TORSO, PM_GetSaberStance(), SETANIM_FLAG_OVERRIDE);
+				return;
+			}
+			else
+			{
+				pm->ps->weaponstate = WEAPON_FIRING;
+				return;
+			}
 		}
 		else
 		{
 			int	both = qfalse;
-			if ( pm->ps->torsoAnim == BOTH_FORCELONGLEAP_ATTACK
-				|| pm->ps->torsoAnim == BOTH_FORCELONGLEAP_LAND )
+			if (pm->ps->torsoAnim == BOTH_FORCELONGLEAP_ATTACK
+				|| pm->ps->torsoAnim == BOTH_FORCELONGLEAP_LAND)
 			{//can't attack in these anims
 				return;
 			}
@@ -3623,30 +3829,37 @@ weapChecks:
 
 			}
 
-			if ( anim == -1)
+			if (anim == -1)
 			{
-				switch ( pm->ps->legsAnim )
+				if (!(pm->ps->saberActionFlags & (1 << SAF_BLOCKING)))
 				{
-				case BOTH_WALK1:
-				case BOTH_WALK2:
-				case BOTH_WALK_STAFF:
-				case BOTH_WALK_DUAL:
-				case BOTH_WALKBACK1:
-				case BOTH_WALKBACK2:
-				case BOTH_WALKBACK_STAFF:
-				case BOTH_WALKBACK_DUAL:
-				case BOTH_RUN1:
-				case BOTH_RUN2:
-				case BOTH_RUN_STAFF:
-				case BOTH_RUN_DUAL:
-				case BOTH_RUNBACK1:
-				case BOTH_RUNBACK2:
-				case BOTH_RUNBACK_STAFF:
-					anim = pm->ps->legsAnim;
-					break;
-				default:
+					switch (pm->ps->legsAnim)
+					{
+					case BOTH_WALK1:
+					case BOTH_WALK2:
+					case BOTH_WALK_STAFF:
+					case BOTH_WALK_DUAL:
+					case BOTH_WALKBACK1:
+					case BOTH_WALKBACK2:
+					case BOTH_WALKBACK_STAFF:
+					case BOTH_WALKBACK_DUAL:
+					case BOTH_RUN1:
+					case BOTH_RUN2:
+					case BOTH_RUN_STAFF:
+					case BOTH_RUN_DUAL:
+					case BOTH_RUNBACK1:
+					case BOTH_RUNBACK2:
+					case BOTH_RUNBACK_STAFF:
+						anim = pm->ps->legsAnim;
+						break;
+					default:
+						anim = PM_GetSaberStance();
+						break;
+					}
+				}
+				else
+				{
 					anim = PM_GetSaberStance();
-					break;
 				}
 
 //				if (PM_RunningAnim(anim) && !pm->cmd.forwardmove && !pm->cmd.rightmove)
@@ -3837,7 +4050,7 @@ void PM_SetSaberMove(short newMove)
 			anim = PM_GetSaberStance();
 		}
 
-		if (BG_InSlopeAnim( anim ))
+		if (PM_InSlopeAnim( anim ))
 		{
 			anim = PM_GetSaberStance();
 		}
@@ -3880,27 +4093,33 @@ void PM_SetSaberMove(short newMove)
 				|| newMove == LS_PULL_ATTACK_STAB
 				|| newMove == LS_PULL_ATTACK_SWING
 				|| BG_KickMove( newMove ) )
-		{
+		{//[SaberSys]
 			parts = SETANIM_BOTH;
 		}
-		else if ( BG_SpinningSaberAnim( anim ) )
+		else if (BG_SpinningSaberAnim(anim))
 		{//spins must be played on entire body
 			parts = SETANIM_BOTH;
 		}
-		else if ( (!pm->cmd.forwardmove&&!pm->cmd.rightmove&&!pm->cmd.upmove))
+		else if ((!pm->cmd.forwardmove&&!pm->cmd.rightmove&&!pm->cmd.upmove))
 		{//not trying to run, duck or jump
-			if ( !BG_FlippingAnim( pm->ps->legsAnim ) &&
-				!BG_InRoll( pm->ps, pm->ps->legsAnim ) &&
-				!PM_InKnockDown( pm->ps ) &&
-				!PM_JumpingAnim( pm->ps->legsAnim ) &&
-				!BG_InSpecialJump( pm->ps->legsAnim ) &&
+			if (pm->ps->saberActionFlags & (1 << SAF_BLOCKING) &&
+				!PM_SaberInParry(newMove) && !PM_SaberInKnockaway(newMove) && !PM_SaberInBrokenParry(newMove) && !PM_SaberInReflect(newMove) && !BG_SaberInSpecial(newMove))
+			{
+				parts = SETANIM_TORSO;
+				anim = PM_GetSaberStance();
+			}
+			else if (!BG_FlippingAnim(pm->ps->legsAnim) &&
+				!BG_InRoll(pm->ps, pm->ps->legsAnim) &&
+				!PM_InKnockDown(pm->ps) &&
+				!PM_JumpingAnim(pm->ps->legsAnim) &&
+				!BG_InSpecialJump(pm->ps->legsAnim) &&
 				anim != PM_GetSaberStance() &&
 				pm->ps->groundEntityNum != ENTITYNUM_NONE &&
 				!(pm->ps->pm_flags & PMF_DUCKED))
 			{
 				parts = SETANIM_BOTH;
-			}
-			else if ( !(pm->ps->pm_flags & PMF_DUCKED)
+			}//[/SaberSys]
+			else if (!(pm->ps->pm_flags & PMF_DUCKED)
 				&& ( newMove == LS_SPINATTACK_DUAL || newMove == LS_SPINATTACK ) )
 			{
 				parts = SETANIM_BOTH;
