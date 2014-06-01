@@ -2198,7 +2198,7 @@ qboolean ClientUserinfoChanged( int clientNum ) {
 	team = client->sess.sessionTeam;
 
 	//Set the siege class
-	if ( level.gametype == GT_SIEGE ) {
+	if ( /*level.gametype == GT_SIEGE*/qtrue ) {
 		Q_strncpyz( className, client->sess.siegeClass, sizeof( className ) );
 
 		//Now that the team is legal for sure, we'll go ahead and get an index for it.
@@ -3338,7 +3338,7 @@ void ClientSpawn(gentity_t *ent) {
 	client->airOutTime = level.time + 12000;
 
 	// set max health
-	if (level.gametype == GT_SIEGE && client->siegeClass != -1)
+	if (/*level.gametype == GT_SIEGE &&*/ client->siegeClass != -1)
 	{
 		siegeClass_t *scl = &bgSiegeClasses[client->siegeClass];
 		maxHealth = 100;
@@ -3543,7 +3543,7 @@ void ClientSpawn(gentity_t *ent) {
 	client->ps.stats[STAT_HOLDABLE_ITEM] = BG_GetItemIndexByTag(HI_BINOCULARS, IT_HOLDABLE);
 	*/
 
-	if (level.gametype == GT_SIEGE && client->siegeClass != -1 &&
+	if (/*level.gametype == GT_SIEGE &&*/ client->siegeClass != -1 &&
 		client->sess.sessionTeam != TEAM_SPECTATOR)
 	{ //well then, we will use a custom weaponset for our class
 		int m = 0;
@@ -3578,8 +3578,8 @@ void ClientSpawn(gentity_t *ent) {
 
 				if (m >= WP_BRYAR_PISTOL)
 				{ //Max his ammo out for all the weapons he has.
-					if ( level.gametype == GT_SIEGE
-						&& m == WP_ROCKET_LAUNCHER )
+					if ( /*level.gametype == GT_SIEGE
+						&&*/ m == WP_ROCKET_LAUNCHER )
 					{//don't give full ammo!
 						//FIXME: extern this and check it when getting ammo from supplier, pickups or ammo stations!
 						if ( client->siegeClass != -1 &&
@@ -3594,8 +3594,8 @@ void ClientSpawn(gentity_t *ent) {
 					}
 					else
 					{
-						if ( level.gametype == GT_SIEGE
-							&& client->siegeClass != -1
+						if ( /*level.gametype == GT_SIEGE
+							&&*/ client->siegeClass != -1
 							&& (bgSiegeClasses[client->siegeClass].classflags & (1<<CFL_EXTRA_AMMO)) )
 						{//double ammo
 							client->ps.ammo[weaponData[m].ammoIndex] = ammoData[weaponData[m].ammoIndex].max*2;
@@ -3612,7 +3612,7 @@ void ClientSpawn(gentity_t *ent) {
 		}
 	}
 
-	if (level.gametype == GT_SIEGE &&
+	if (/*level.gametype == GT_SIEGE &&*/
 		client->siegeClass != -1 &&
 		client->sess.sessionTeam != TEAM_SPECTATOR)
 	{ //use class-specified inventory
@@ -3625,7 +3625,7 @@ void ClientSpawn(gentity_t *ent) {
 		client->ps.stats[STAT_HOLDABLE_ITEM] = 0;
 	}
 
-	if (level.gametype == GT_SIEGE &&
+	if (/*level.gametype == GT_SIEGE &&*/
 		client->siegeClass != -1 &&
 		bgSiegeClasses[client->siegeClass].powerups &&
 		client->sess.sessionTeam != TEAM_SPECTATOR)
@@ -3691,7 +3691,7 @@ void ClientSpawn(gentity_t *ent) {
 	WP_SpawnInitForcePowers( ent );
 
 	// health will count down towards max_health
-	if (level.gametype == GT_SIEGE &&
+	if (/*level.gametype == GT_SIEGE &&*/
 		client->siegeClass != -1 &&
 		bgSiegeClasses[client->siegeClass].starthealth)
 	{ //class specifies a start health, so use it
@@ -3731,7 +3731,7 @@ void ClientSpawn(gentity_t *ent) {
 	}
 
 	// Start with a small amount of armor as well.
-	if (level.gametype == GT_SIEGE &&
+	if (/*level.gametype == GT_SIEGE &&*/
 		client->siegeClass != -1 /*&&
 		bgSiegeClasses[client->siegeClass].startarmor*/)
 	{ //class specifies a start armor amount, so use it
@@ -3810,7 +3810,7 @@ void ClientSpawn(gentity_t *ent) {
 	}
 
 	//set teams for NPCs to recognize
-	if (level.gametype == GT_SIEGE)
+	if (/*level.gametype == GT_SIEGE*/qtrue)
 	{ //Imperial (team1) team is allied with "enemy" NPCs in this mode
 		if (client->sess.sessionTeam == SIEGETEAM_TEAM1)
 		{

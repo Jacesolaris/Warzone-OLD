@@ -111,10 +111,10 @@ void InitSiegeMode(void)
 
 	objective[0] = '\0';
 
-	if (level.gametype != GT_SIEGE)
-	{
-		goto failure;
-	}
+	//if (level.gametype != GT_SIEGE)
+	//{
+	//	goto failure;
+	//}
 
 	//reset
 	SiegeSetCompleteData(0);
@@ -153,7 +153,11 @@ void InitSiegeMode(void)
 
 	if (!f || len >= MAX_SIEGE_INFO_SIZE)
 	{
-		goto failure;
+		len = trap->FS_Open("maps/mp/default.siege", &f, FS_READ);
+		if (!f || len >= MAX_SIEGE_INFO_SIZE)
+		{
+			goto failure;
+		}
 	}
 
 	trap->FS_Read(siege_info, len, f);

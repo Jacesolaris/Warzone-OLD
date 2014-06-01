@@ -494,7 +494,7 @@ void WP_SpawnInitForcePowers( gentity_t *ent )
 		i++;
 	}
 
-	if (level.gametype == GT_SIEGE &&
+	if (/*level.gametype == GT_SIEGE &&*/
 		ent->client->siegeClass != -1)
 	{ //Then use the powers for this class.
 		i = 0;

@@ -7129,10 +7129,10 @@ void UI_SetSiegeTeams(void)
 	gametype = atoi(Info_ValueForKey(info, "g_gametype"));
 
 	//If the server we are connected to is not siege we cannot choose a class anyway
-	if (gametype != GT_SIEGE)
-	{
-		return;
-	}
+	//if (gametype != GT_SIEGE)
+	//{
+	//	return;
+	//}
 
 	Com_sprintf(levelname, sizeof(levelname), "maps/%s.siege", mapname);
 
@@ -7145,7 +7145,11 @@ void UI_SetSiegeTeams(void)
 
 	if (!f || len >= MAX_SIEGE_INFO_SIZE)
 	{
-		return;
+		len = trap->FS_Open("maps/mp/default.siege", &f, FS_READ);
+		if (!f || len >= MAX_SIEGE_INFO_SIZE)
+		{
+			return;
+		}
 	}
 
 	trap->FS_Read(siege_info, len, f);

@@ -1190,10 +1190,10 @@ void Cmd_SiegeClass_f( gentity_t *ent )
 	int preScore;
 	qboolean startedAsSpec = qfalse;
 
-	if (level.gametype != GT_SIEGE)
-	{ //classes are only valid for this gametype
-		return;
-	}
+	//if (level.gametype != GT_SIEGE)
+	//{ //classes are only valid for this gametype
+	//	return;
+	//}
 
 	if (!ent->client)
 	{
@@ -1225,7 +1225,7 @@ void Cmd_SiegeClass_f( gentity_t *ent )
 		return;
 	}
 
-	if (ent->client->sess.sessionTeam != team)
+	if (ent->client->sess.sessionTeam != team && ent->client->sess.sessionTeam != TEAM_FREE)
 	{ //try changing it then
 		g_preventTeamBegin = qtrue;
 		if (team == TEAM_RED)

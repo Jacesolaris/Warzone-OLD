@@ -160,10 +160,10 @@ void CG_InitSiegeMode(void)
 	fileHandle_t	f;
 	char			teamIcon[128];
 
-	if (cgs.gametype != GT_SIEGE)
-	{
-		goto failure;
-	}
+	//if (cgs.gametype != GT_SIEGE)
+	//{
+	//	goto failure;
+	//}
 
 	Com_sprintf(levelname, sizeof(levelname), "%s.siege", cgs.rawmapname);
 
@@ -176,7 +176,11 @@ void CG_InitSiegeMode(void)
 
 	if (!f || len >= MAX_SIEGE_INFO_SIZE)
 	{
-		goto failure;
+		len = trap->FS_Open("maps/mp/default.siege", &f, FS_READ);
+		if (!f || len >= MAX_SIEGE_INFO_SIZE)
+		{
+			goto failure;
+		}
 	}
 
 	trap->FS_Read(siege_info, len, f);
@@ -1133,7 +1137,7 @@ void CG_AdjustEyePos(const char *modelName)
 
 		if (BG_SiegeGetPairedValue(true_view_info, (char*)modelName, eyepos))
 		{
-			CG_Printf("True View Eye Adjust Loaded for %s.\n", modelName);
+			trap->Print("True View Eye Adjust Loaded for %s.\n", modelName);
 			trap->Cvar_Set("cg_trueeyeposition", eyepos);
 		}
 		else
