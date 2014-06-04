@@ -1497,7 +1497,7 @@ void CG_DrawJetPackBar(void)
 	vec4_t cColor;
 	float x = JPFUELBAR_X;
 	float y = JPFUELBAR_Y;
-	float percent = ((float)cg.snap->ps.jetpackFuel / 100.0f)*JPFUELBAR_H;  // jetpack changed (-at-) "percent" => "height"
+	float percent = ((float)cg.snap->ps.jetpackFuel/100.0f)*JPFUELBAR_H;  // jetpack changed (-at-) "percent" => "height"
 	//float percent = ((float)cg.snap->ps.jetpackFuel/200.0f);  // jetpack changed (-at-) added for colors
 
 	if (percent > JPFUELBAR_H)
@@ -1509,7 +1509,7 @@ void CG_DrawJetPackBar(void)
 	{
 		percent = 0.1f;
 	}
-	VectorCopy4(colorTable[CT_HUD_ORANGE], aColor);
+	VectorCopy4(colorTable[CT_HUD_ORANGE],aColor);
 
 	//color of the bar
 	/*aColor[0] = 0.5f;
@@ -1529,16 +1529,16 @@ void CG_DrawJetPackBar(void)
 	cColor[2] = 0.5f;
 	cColor[3] = 0.1f;
 
-
+	
 
 	//now draw the part to show how much health there is in the color specified
-	CG_FillRect(x + 1.0f, y + 1.0f + (JPFUELBAR_H - percent), JPFUELBAR_W - 1.0f, JPFUELBAR_H - 1.0f - (JPFUELBAR_H - percent), aColor);
+	CG_FillRect(x+1.0f, y+1.0f+(JPFUELBAR_H-percent), JPFUELBAR_W-1.0f, JPFUELBAR_H-1.0f-(JPFUELBAR_H-percent), aColor);
 
 	//draw the background (black)
 	CG_DrawRect(x, y, JPFUELBAR_W, JPFUELBAR_H, 1.0f, colorTable[CT_BLACK]);
 
 	//then draw the other part greyed out
-	CG_FillRect(x + 1.0f, y + 1.0f, JPFUELBAR_W - 1.0f, JPFUELBAR_H - percent, cColor);
+	CG_FillRect(x+1.0f, y+1.0f, JPFUELBAR_W-1.0f, JPFUELBAR_H-percent, cColor);
 }
 //draw meter showing cloak fuel when it's not full
 #define CLFUELBAR_H			100.0f
@@ -1552,16 +1552,16 @@ void CG_DrawCloakFuel(void)
 	vec4_t cColor;
 	float x = CLFUELBAR_X;
 	float y = CLFUELBAR_Y;
-	float percent = ((float)cg.snap->ps.cloakFuel / 100.0f)*CLFUELBAR_H;
+	float percent = ((float)cg.snap->ps.cloakFuel/100.0f)*CLFUELBAR_H;
 
 	if (percent > CLFUELBAR_H)
 	{
 		return;
 	}
 
-	if (cg.snap->ps.jetpackFuel < 100)
+	if ( cg.snap->ps.jetpackFuel < 100 )
 	{//if drawing jetpack fuel bar too, then move this over...?
-		x -= (JPFUELBAR_W + 8.0f);
+		x -= (JPFUELBAR_W+8.0f);
 	}
 
 	if (percent < 0.1f)
@@ -1591,10 +1591,10 @@ void CG_DrawCloakFuel(void)
 	CG_DrawRect(x, y, CLFUELBAR_W, CLFUELBAR_H, 1.0f, colorTable[CT_BLACK]);
 
 	//now draw the part to show how much fuel there is in the color specified
-	CG_FillRect(x + 1.0f, y + 1.0f + (CLFUELBAR_H - percent), CLFUELBAR_W - 1.0f, CLFUELBAR_H - 1.0f - (CLFUELBAR_H - percent), aColor);
+	CG_FillRect(x+1.0f, y+1.0f+(CLFUELBAR_H-percent), CLFUELBAR_W-1.0f, CLFUELBAR_H-1.0f-(CLFUELBAR_H-percent), aColor);
 
 	//then draw the other part greyed out
-	CG_FillRect(x + 1.0f, y + 1.0f, CLFUELBAR_W - 1.0f, CLFUELBAR_H - percent, cColor);
+	CG_FillRect(x+1.0f, y+1.0f, CLFUELBAR_W-1.0f, CLFUELBAR_H-percent, cColor);
 }
 
 //draw meter showing cloak fuel when it's not full
@@ -1609,7 +1609,7 @@ void CG_DrawCloakBar(void)
 	vec4_t cColor;
 	float x = CLFUELBAR_X;
 	float y = CLFUELBAR_Y;
-	float percent = ((float)cg.snap->ps.cloakFuel / 100.0f)*CLFUELBAR_H;
+	float percent = ((float)cg.snap->ps.cloakFuel/100.0f)*CLFUELBAR_H;
 
 	if (percent > CLFUELBAR_H)
 	{
@@ -1618,7 +1618,7 @@ void CG_DrawCloakBar(void)
 
 	/*if ( cg.snap->ps.jetpackFuel < 100 )
 	{//if drawing jetpack fuel bar too, then move this over...?
-	x -= (JPFUELBAR_W+8.0f);
+		x -= (JPFUELBAR_W+8.0f);
 	}*/
 
 	if (percent < 0.1f)
@@ -1626,7 +1626,7 @@ void CG_DrawCloakBar(void)
 		percent = 0.1f;
 	}
 
-	VectorCopy4(colorTable[CT_GREEN], aColor);
+	VectorCopy4(colorTable[CT_GREEN],aColor);
 
 	//color of the bar
 	/*aColor[0] = 0.5f;
@@ -1645,16 +1645,16 @@ void CG_DrawCloakBar(void)
 	cColor[2] = 0.3f;
 	cColor[3] = 0.1f;
 
-
+	
 
 	//now draw the part to show how much fuel there is in the color specified
-	CG_FillRect(x + 1.0f, y + 1.0f + (CLFUELBAR_H - percent), CLFUELBAR_W - 1.0f, CLFUELBAR_H - 1.0f - (CLFUELBAR_H - percent), aColor);
+	CG_FillRect(x+1.0f, y+1.0f+(CLFUELBAR_H-percent), CLFUELBAR_W-1.0f, CLFUELBAR_H-1.0f-(CLFUELBAR_H-percent), aColor);
 
 	//draw the background (black)
 	CG_DrawRect(x, y, CLFUELBAR_W, CLFUELBAR_H, 1.0f, colorTable[CT_BLACK]);
 
 	//then draw the other part greyed out
-	CG_FillRect(x + 1.0f, y + 1.0f, CLFUELBAR_W - 1.0f, CLFUELBAR_H - percent, cColor);
+	CG_FillRect(x+1.0f, y+1.0f, CLFUELBAR_W-1.0f, CLFUELBAR_H-percent, cColor);
 }
 
 
@@ -8355,14 +8355,14 @@ static void CG_Draw2D( void ) {
 	{
 		CG_DrawActivePowers();
 	}
-
+	//Stoiss add Fuel bar edit
 	if (cg.snap->ps.jetpackFuel < 100)
 	{ //draw it as long as it isn't full
-        CG_DrawJetpackFuel();
+		CG_DrawJetPackBar();//CG_DrawJetpackFuel();        
 	}
 	if (cg.snap->ps.cloakFuel < 100)
 	{ //draw it as long as it isn't full
-		CG_DrawCloakFuel();
+		CG_DrawCloakBar();//CG_DrawCloakFuel();
 	}
 	if (cg.predictedPlayerState.emplacedIndex > 0)
 	{
