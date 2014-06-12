@@ -11,6 +11,12 @@ extern void G_VehicleSetDamageLocFlags( gentity_t *veh, int impactDir, int death
 extern void G_VehUpdateShields( gentity_t *targ );
 extern void G_LetGoOfWall( gentity_t *ent );
 extern void BG_ClearRocketLock( playerState_t *ps );
+//[EXPsys]
+extern void GiveExperiance(gentity_t *ent, int amount);
+extern void TakeExperiance(gentity_t *ent, int amount);
+extern void TradeExperiance(gentity_t *from, gentity_t *to, int amount);
+//[/EXPsys]
+
 //rww - pd
 void BotDamageNotification(gclient_t *bot, gentity_t *attacker);
 //end rww
@@ -2603,6 +2609,15 @@ extern void RunEmplacedWeapon( gentity_t *ent, usercmd_t **ucmd );
 			}
 			attacker->client->lastKillTime = level.time;
 
+			//[EXPsys]
+			if (g_gametype.integer == GT_TEAM && 200) {
+				GiveExperiance(attacker, 2); // give bonus money for a kill 
+			}
+
+			if (g_experianceEnabled.integer && g_experianceKillWorth.integer) {
+				GiveExperiance(attacker, g_experianceKillWorth.integer);
+			}
+			//[/EXPsys]
 		}
 	} else {
 		if (self->client && self->client->ps.isJediMaster)
@@ -4879,6 +4894,8 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker, vec3_
 					}
 				}
 			}
+
+			
 			else if (targ->inuse && targ->client &&
 				level.gametype >= GT_TEAM &&
 				attacker->s.number >= MAX_CLIENTS &&
@@ -5449,6 +5466,63 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker, vec3_
 				take /= (targ->client->ps.fd.forcePowerLevel[FP_RAGE]+1);
 			}
 		}
+		//[EXPsys]
+		// check g_experianceEnabled and if we have a valid attacker 
+		if ((g_experianceEnabled.integer) && (attacker) && (attacker->client) && (targ) && (targ->client) && (targ != attacker)) {
+			int earn = 0;
+
+			int maxHealth = targ->client->ps.stats[STAT_MAX_HEALTH];
+
+			if (targ->maxHealth) {
+				maxHealth = targ->maxHealth;
+			}
+
+			if (!maxHealth)
+			{
+				maxHealth = 10;
+			}
+
+			if (take > targ->health) { earn = targ->health; }
+			else { earn = take; }
+			if (targ->health > maxHealth) earn -= targ->health - maxHealth;
+
+			// earn for doing damage or killing 
+			if (earn > 0) {
+				// earn money for percent of total health
+				earn = (earn * g_experianceLifeWorth.integer) / maxHealth;
+
+				// earn bonus if killed
+				if (take >= targ->health) earn += g_experianceKillWorth.integer;
+
+				if (g_gametype.integer == GT_DUEL || g_gametype.integer == GT_POWERDUEL) {
+					if (g_gametype.integer == GT_POWERDUEL && attacker->client->sess.duelTeam == DUELTEAM_LONE) {
+						// lone duelists only earn 75%
+						earn -= (earn >> 2);
+					}
+					earn *= 5; // TODO: add a cvar for this 
+				}
+				else
+				{
+					// only 75% of money from saber attacks
+					if (mod == MOD_SABER) earn -= (earn >> 1);
+				}
+
+
+
+				// bonus for an uber kill (damage worth a one-hit-kill)
+				if (take >= maxHealth) earn += 5;
+
+				// bonus for doing twice the damage as the player had left
+				if (take > targ->health * 2) earn += 2;
+
+				if (g_experianceEconomy.integer) {
+					TradeExperiance(targ, attacker, earn);
+				}
+				else {
+					GiveExperiance(attacker, earn);
+				}
+			}
+		}//[/EXPsys]
 		targ->health = targ->health - take;
 
 		if ( (targ->flags&FL_UNDYING) )

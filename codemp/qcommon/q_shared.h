@@ -1874,6 +1874,23 @@ typedef struct siegePers_s
 #define	MOVE_RUN			120			// if forwardmove or rightmove are >= MOVE_RUN,
 										// then BUTTON_WALKING should be set
 
+//[SaberSys]
+//playerstate userint1
+//Bitmasks for view locking
+#define	LOCK_RIGHT			1
+#define	LOCK_LEFT			2
+#define LOCK_UP				4
+#define LOCK_DOWN			8
+
+//Bitmasks for move locking
+#define LOCK_MOVERIGHT		16
+#define LOCK_MOVELEFT		32
+#define LOCK_MOVEFORWARD	64
+#define LOCK_MOVEBACK		128
+#define LOCK_MOVEUP			256
+#define LOCK_MOVEDOWN		512
+//[/SaberSys]
+
 typedef enum
 {
 	GENCMD_SABERSWITCH = 1,

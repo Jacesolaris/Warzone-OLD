@@ -35,6 +35,8 @@ XCVAR_DEF( d_saberGhoul2Collision,		"1",			NULL,				CVAR_CHEAT,										qtrue )
 XCVAR_DEF( d_saberInterpolate,			"0",			NULL,				CVAR_CHEAT,										qtrue )
 XCVAR_DEF( d_saberKickTweak,			"1",			NULL,				CVAR_NONE,										qtrue )
 XCVAR_DEF( d_saberSPStyleDamage,		"1",			NULL,				CVAR_ARCHIVE,									qfalse )
+XCVAR_DEF( g_saberIdleDamage,			"0",			NULL,				CVAR_NONE,										qtrue )
+XCVAR_DEF( g_saberSystem,				"0",			NULL,				CVAR_NONE,										qtrue )
 XCVAR_DEF( d_saberStanceDebug,			"0",			NULL,				CVAR_NONE,										qfalse )
 XCVAR_DEF( d_siegeSeekerNPC,			"0",			NULL,				CVAR_CHEAT,										qtrue )
 XCVAR_DEF( dedicated,					"0",			NULL,				CVAR_NONE,										qfalse )
@@ -151,6 +153,16 @@ XCVAR_DEF( g_saberTraceSaberFirst,		"0",			NULL,				CVAR_ARCHIVE,									qtrue 
 XCVAR_DEF( g_saberWallDamageScale,		"0.4",			NULL,				CVAR_NONE,										qfalse )
 XCVAR_DEF( g_securityLog,				"1",			NULL,				CVAR_ARCHIVE,									qfalse )
 XCVAR_DEF( g_showDuelHealths,			"0",			NULL,				CVAR_SERVERINFO,								qfalse )
+//[EXPsys]
+XCVAR_DEF(g_experiancemax,				"50000",		NULL,				CVAR_ARCHIVE,									qtrue)//Max Exp
+XCVAR_DEF(g_experianceEnabled,			"1",			NULL,				CVAR_ARCHIVE,									qtrue)//EXP enabled
+XCVAR_DEF(g_experianceEconomy,			"10",			NULL,				CVAR_ARCHIVE,									qtrue)//Players take exp from targets when doing damage
+XCVAR_DEF(g_experianceLifeWorth,		"5",			NULL,				CVAR_ARCHIVE,									qtrue)//Exp earned for 100% of life
+XCVAR_DEF(g_experianceKillWorth,		"0",			NULL,				CVAR_ARCHIVE,									qtrue)//Additional experiance earned when killed
+XCVAR_DEF(g_experianceWinRound,			"0",			NULL,				CVAR_ARCHIVE,									qtrue)//Exp earned for winning a team round
+XCVAR_DEF(g_experianceLoseRound,		"0",			NULL,				CVAR_ARCHIVE,									qtrue)//Exp earned for losing a team round
+XCVAR_DEF(g_experianceInitial,			"0",			NULL,				CVAR_ARCHIVE,									qtrue)//Player starts with this amount of experiance
+//[/EXPsys]
 XCVAR_DEF( g_siegeRespawn,				"20",			NULL,				CVAR_ARCHIVE,									qtrue )
 XCVAR_DEF( g_siegeTeam1,				"none",			NULL,				CVAR_ARCHIVE|CVAR_SERVERINFO,					qfalse )
 XCVAR_DEF( g_siegeTeam2,				"none",			NULL,				CVAR_ARCHIVE|CVAR_SERVERINFO,					qfalse )

@@ -14,6 +14,1865 @@ void WP_SetSaber( int entNum, saberInfo_t *sabers, int saberNum, const char *sab
 void Cmd_NPC_f( gentity_t *ent );
 void SetTeamQuick(gentity_t *ent, int team, qboolean doBegin);
 
+//[EXPsys]
+// But remember to update this structure as well.
+int experienceLevel[NUM_EXP_LEVELS] = {			// Experience needed to proceed to next level.
+	//0,						// EXP_LEVEL_0
+	400,					// EXP_LEVEL_1
+	900,					// EXP_LEVEL_2
+	1333,					// EXP_LEVEL_3
+	2233,					// EXP_LEVEL_4
+	3566,					// EXP_LEVEL_5
+	5799,					// EXP_LEVEL_6
+	9365,					// EXP_LEVEL_7
+	15164,					// EXP_LEVEL_8
+	24529,					// EXP_LEVEL_9
+	39693,					// EXP_LEVEL_10
+};
+
+void LevelMessage(gentity_t *ent, char* message, qboolean silent, int level)
+{
+	if (!silent && ent->account.level == level)
+		trap->SendServerCommand(ent - g_entities, va("chat \"%s\n\"", message));
+}
+
+//[CLASSsys]
+//void UpdateTrooper1( gentity_t *ent, qboolean silent); // Now it is declared, so you could have the code below. And do this for all of them. But not needed anymore.
+
+// We'll make this the function to deal with leveling the character.
+/*
+void UpdateTrooper1(gentity_t *ent, qboolean silent)
+{
+	gclient_t *client = ent->client;
+
+	// Alle spillere kommer til å få "base-settings" når de joiner spillet. Her legger du bare inn forandringene som er nødvendige.
+	// Det er mulig at du kommer til å miste disse forandringene når spilleren dør nå. Det må vi i så fall fikse. Men la oss prøve nå.
+	// Du må legge inn forandringer per class her.
+	// Nå kommer spilleren alltid til å få alt ovenfor.
+	if (ent->account.level >= EXP_LEVEL_1)
+	{
+		LevelMessage(ent, "No Upgrade before Lvl 2", silent, EXP_LEVEL_1);
+		// Og her kan vi forandre på det som skal til for level 0/1
+		// ingen forandringer fra base-setting for level 0
+	}
+	if (ent->account.level >= EXP_LEVEL_2)
+	{
+		client->skillLevel[SK_PISTOL] = FORCE_LEVEL_2;
+		client->ps.ammo[AMMO_BLASTER] = 200;
+		LevelMessage(ent, "Your Pistol is now Lvl 2 in dmg, and a ammo upgrade from 150 to 200.", silent, EXP_LEVEL_2);
+	}
+	if (ent->account.level >= EXP_LEVEL_3)
+	{
+		client->skillLevel[SK_BLASTERRATEOFFIREUPGRADE] = FORCE_LEVEL_2;
+		client->skillLevel[SK_REPEATER] = FORCE_LEVEL_2;
+		LevelMessage(ent, "Your Pistol Fire rate is now Lvl 2, And your repeater is now Lvl 2 in dmg.", silent, EXP_LEVEL_3);
+	}
+	if (ent->account.level >= EXP_LEVEL_4)
+	{
+		LevelMessage(ent, "No Upgrade in Lvl 4 wait for next Lvlup", silent, EXP_LEVEL_4);
+	}
+	if (ent->account.level >= EXP_LEVEL_5)
+	{
+		client->ps.stats[SK_REPEATERUPGRADE] = FORCE_LEVEL_2;
+		client->skillLevel[SK_THERMAL] = FORCE_LEVEL_2;
+		client->ps.ammo[AMMO_THERMAL] = 1;
+		LevelMessage(ent, "Your Repeater Fire rate is now Lvl 2 and thermal is lvl 2 with ammo from 1 to 2.", silent, EXP_LEVEL_5);
+	}
+	if (ent->account.level >= EXP_LEVEL_6)
+	{
+		client->skillLevel[SK_DETPACK] = FORCE_LEVEL_2;
+		client->ps.ammo[AMMO_DETPACK] = 3;
+		client->skillLevel[SK_SENTRY] = FORCE_LEVEL_2;
+		LevelMessage(ent, "Your Detpack is now Lvl 3 with ammo upgrade from 1 to 3 and sentry gun is lvl 2", silent, EXP_LEVEL_6);
+	}
+	if (ent->account.level >= EXP_LEVEL_7)
+	{
+		LevelMessage(ent, "No Upgrade in Lvl 7 wait for next Lvlup.", silent, EXP_LEVEL_7);
+	}
+	if (ent->account.level >= EXP_LEVEL_8)
+	{
+		client->skillLevel[SK_REPEATER] = FORCE_LEVEL_3;
+		client->ps.ammo[AMMO_METAL_BOLTS] = 250;
+		client->skillLevel[SK_DETPACK] = FORCE_LEVEL_3;
+		client->ps.ammo[AMMO_DETPACK] = 5;
+		LevelMessage(ent, "Your Repeater and Detpack is now Lvl 3 with Metal bolt ammo upgrade and 2 more Detpack", silent, EXP_LEVEL_8);
+	}
+	if (ent->account.level >= EXP_LEVEL_9)
+	{
+		client->skillLevel[SK_BLASTERRATEOFFIREUPGRADE] = FORCE_LEVEL_3;
+		client->skillLevel[SK_PISTOL] = FORCE_LEVEL_3;
+		LevelMessage(ent, "Your Postol and Pistol fire rate Full upgrade to Lvl 3.", silent, EXP_LEVEL_9);
+	}
+	if (ent->account.level >= EXP_LEVEL_10)
+	{
+		client->ps.stats[SK_REPEATERUPGRADE] = FORCE_LEVEL_3;
+		client->ps.ammo[AMMO_METAL_BOLTS] = 300;
+		client->skillLevel[SK_THERMAL] = FORCE_LEVEL_3;
+		client->ps.ammo[AMMO_THERMAL] = 3;
+		client->skillLevel[SK_SENTRY] = FORCE_LEVEL_2;
+		LevelMessage(ent, "Your Repeater, Thermal, Sentry gun is now Lvl 3 with Metal Ammo on 300 Thermal ammo 3 \n Full Upgrade Class succesfull.", silent, EXP_LEVEL_10);
+	}
+}
+
+void UpdateTrooper2(gentity_t *ent, qboolean silent)
+{
+	gclient_t *client = ent->client; // When making a function, and not a function decleration, you do not add the ; here
+
+	// Nå kommer spilleren alltid til å få alt ovenfor.
+	if (ent->account.level >= EXP_LEVEL_1)
+	{
+		LevelMessage(ent, "EOC CLASS Lvl 1 UPDATED", silent, EXP_LEVEL_1);
+	}
+	if (ent->account.level >= EXP_LEVEL_2)
+	{
+		client->skillLevel[SK_PISTOL] = FORCE_LEVEL_2;
+		client->ps.ammo[AMMO_BLASTER] = 175;
+		LevelMessage(ent, "Your Pistol is now Lvl 2 and Ammo upgrade from 150 to 175.", silent, EXP_LEVEL_2);
+	}
+	if (ent->account.level >= EXP_LEVEL_3)
+	{
+		client->skillLevel[SK_SEEKER] = FORCE_LEVEL_2;
+		client->ps.stats[STAT_MAX_DODGE] = 60;
+		LevelMessage(ent, "Your seeker is now Lvl 2 and Dodge is Upgrade from 50 to 60.", silent, EXP_LEVEL_3);
+	}
+	if (ent->account.level >= EXP_LEVEL_4)
+	{
+		client->ps.stats[STAT_ARMOR] = 35;
+		client->skillLevel[SK_BLASTERRATEOFFIREUPGRADE] = FORCE_LEVEL_2;
+		LevelMessage(ent, "Your Pistol Fire rate is now Lvl 2 and amor Upgrade set to from 25 to 35.", silent, EXP_LEVEL_4);
+	}
+	if (ent->account.level >= EXP_LEVEL_5)
+	{
+		client->skillLevel[SK_DETPACK] = FORCE_LEVEL_2;
+		client->ps.ammo[AMMO_DETPACK] = 3;
+		LevelMessage(ent, "Your Detpack is now Lvl 2 Ammo Update from 1 to 3.", silent, EXP_LEVEL_5);
+	}
+	if (ent->account.level >= EXP_LEVEL_6)
+	{
+		client->ps.stats[STAT_MAX_DODGE] = 75;
+		client->skillLevel[SK_BLASTERRATEOFFIREUPGRADE] = FORCE_LEVEL_3;
+		LevelMessage(ent, "Your Pistol fire rate is now Lvl 3 and is full upgrade.", silent, EXP_LEVEL_7);
+	}
+	if (ent->account.level >= EXP_LEVEL_7)
+	{
+		LevelMessage(ent, "No Upgrade in Lvl 7 wait for next Lvlup.", silent, EXP_LEVEL_7);
+	}
+	if (ent->account.level >= EXP_LEVEL_8)
+	{
+		client->skillLevel[SK_PISTOL] = FORCE_LEVEL_3;
+		client->ps.stats[STAT_ARMOR] = 70;
+		LevelMessage(ent, "Your Pistol is now Lvl 3 And Amor set from 35 to 70.", silent, EXP_LEVEL_8);
+	}
+	if (ent->account.level >= EXP_LEVEL_9)
+	{
+		client->skillLevel[SK_SEEKER] = FORCE_LEVEL_3;
+		client->ps.stats[STAT_MAX_DODGE] = 85;
+		LevelMessage(ent, "Your Seeker is now Lvl 3 And Dodge set from 75 to 85.", silent, EXP_LEVEL_9);
+	}
+	if (ent->account.level >= EXP_LEVEL_10)
+	{
+		client->ps.stats[STAT_MAX_DODGE] = 100;
+		client->ps.stats[STAT_ARMOR] = 100;
+		LevelMessage(ent, "Amor and Dodge set to 100 Full Upgrade Class succesfull.", silent, EXP_LEVEL_10);
+	}
+
+}
+
+void UpdateTrooper3(gentity_t *ent, qboolean silent)
+{
+	gclient_t *client = ent->client;
+
+	// Nå kommer spilleren alltid til å få alt ovenfor.
+	if (ent->account.level >= EXP_LEVEL_1)
+	{
+		// Og her kan vi forandre på det som skal til for level 0/1
+		// ingen forandringer fra base-setting for level 0
+	}
+	if (ent->account.level >= EXP_LEVEL_2)
+	{
+		client->skillLevel[SK_PISTOL] = FORCE_LEVEL_2;
+		client->ps.stats[STAT_ARMOR] = 35;
+		LevelMessage(ent, "Your Pistol is now Updated Lvl 2 And Amor set from 25 to 35.", silent, EXP_LEVEL_2);
+	}
+	if (ent->account.level >= EXP_LEVEL_3)
+	{
+		client->skillLevel[SK_BLASTERRATEOFFIREUPGRADE] = FORCE_LEVEL_2;
+		client->skillLevel[SK_DISRUPTOR] = FORCE_LEVEL_2;
+		LevelMessage(ent, "Your Dirsuptor, Pistol fire rate is Updated to Lvl 2.", silent, EXP_LEVEL_3);
+	}
+	if (ent->account.level >= EXP_LEVEL_4)
+	{
+		client->ps.ammo[AMMO_POWERCELL] = 20;
+		client->ps.stats[STAT_MAX_DODGE] = 65;
+		LevelMessage(ent, "Your Dirsuptor Powercell Updated by 5 And Dodge set to 65.", silent, EXP_LEVEL_4);
+	}
+	if (ent->account.level >= EXP_LEVEL_5)
+	{
+		LevelMessage(ent, "No Upgrade in Lvl 5 wait for next Lvlup.", silent, EXP_LEVEL_5);
+	}
+	if (ent->account.level >= EXP_LEVEL_6)
+	{
+		client->skillLevel[SK_ROCKET] = FORCE_LEVEL_2;
+		client->skillLevel[SK_PISTOL] = FORCE_LEVEL_3;
+		LevelMessage(ent, "Your Rocket Lucher is Updated to Lvl 2 And Pistol Updated to Lvl 3.", silent, EXP_LEVEL_6);
+	}
+	if (ent->account.level >= EXP_LEVEL_7)
+	{
+		client->skillLevel[SK_BLASTERRATEOFFIREUPGRADE] = FORCE_LEVEL_3;
+		client->ps.stats[STAT_MAX_DODGE] = 75;
+		client->ps.stats[STAT_ARMOR] = 50;
+		LevelMessage(ent, "Your Pistol Fire rate updated is now Lvl 3 Dodge Updated set to 65 Amor set to 50.", silent, EXP_LEVEL_7);
+	}
+	if (ent->account.level >= EXP_LEVEL_8)
+	{
+		LevelMessage(ent, "No Upgrade in Lvl 9 wait for next Lvlup.", silent, EXP_LEVEL_8);
+	}
+	if (ent->account.level >= EXP_LEVEL_9)
+	{
+		client->skillLevel[SK_DISRUPTOR] = FORCE_LEVEL_3;
+		client->ps.ammo[AMMO_POWERCELL] = 25;
+		LevelMessage(ent, "Your Dirsuptor Rifel is now Lvl 3 irsuptor Powercell Updated by 5.", silent, EXP_LEVEL_9);
+	}
+	if (ent->account.level >= EXP_LEVEL_10)
+	{
+		client->skillLevel[SK_ROCKET] = FORCE_LEVEL_3;
+		client->ps.ammo[AMMO_ROCKETS] = 3;
+		client->ps.stats[STAT_MAX_DODGE] = 100;
+		client->ps.stats[STAT_ARMOR] = 75;
+		LevelMessage(ent, "Your Rocket Luncher is now Lvl 3 Ammo set to 3 Dodge set to 100 Amor 75\n Full Upgrade Class succesfull.", silent, EXP_LEVEL_10);
+	}
+}
+
+void UpdateJediKnight1(gentity_t *ent, qboolean silent)
+{
+	gclient_t *client = ent->client;
+
+	// Nå kommer spilleren alltid til å få alt ovenfor.
+	if (ent->account.level >= EXP_LEVEL_1)
+	{
+		// Og her kan vi forandre på det som skal til for level 0/1
+		// ingen forandringer fra base-setting for level 0
+	}
+	if (ent->account.level >= EXP_LEVEL_2)
+	{
+		client->ps.fd.forcePowerLevel[FP_SABER_DEFENSE] = 2;
+		client->ps.fd.forcePowerLevel[FP_PUSH] = 2;
+		client->ps.ammo[AMMO_FORCE] = 60;
+		LevelMessage(ent, "Your Force Push, Saber Defense is now Lvl 2 Your ForcePower Rate set to 60.", silent, EXP_LEVEL_2);
+	}
+	if (ent->account.level >= EXP_LEVEL_3)
+	{
+		client->ps.fd.forcePowerLevel[FP_PULL] = 2;
+		client->ps.fd.forcePowerLevel[FP_LEVITATION] = 2;
+		client->ps.fd.forcePowerLevel[FP_SABERTHROW] = 2;
+		LevelMessage(ent, "Your Pull, Jump, Saber Throw is now Lvl 2.", silent, EXP_LEVEL_3);
+	}
+	if (ent->account.level >= EXP_LEVEL_4)
+	{
+		client->ps.fd.forcePowerLevel[FP_SEE] = 2;
+		client->ps.fd.forcePowerLevel[FP_GRIP] = 2;
+		LevelMessage(ent, "Your Force Seeing, Grip is now Lvl 2.", silent, EXP_LEVEL_4);
+	}
+	if (ent->account.level >= EXP_LEVEL_5)
+	{
+		LevelMessage(ent, "No Upgrade in Lvl 5 wait for next Lvlup.", silent, EXP_LEVEL_5);
+	}
+	if (ent->account.level >= EXP_LEVEL_6)
+	{
+		client->ps.ammo[AMMO_FORCE] = 85;
+		client->ps.stats[STAT_MAX_DODGE] = 75;
+		client->ps.fd.forcePowerLevel[FP_SABERTHROW] = 3;
+		LevelMessage(ent, "Your Saber Throw is now Lvl 3 Force Power rate set to 85 Dodge Set to 75.", silent, EXP_LEVEL_6);
+	}
+	if (ent->account.level >= EXP_LEVEL_7)
+	{
+		client->ps.fd.forcePowerLevel[FP_PUSH] = 3;
+		client->ps.fd.forcePowerLevel[FP_LEVITATION] = 3;
+		LevelMessage(ent, "Your Force Push, Jump is now Lvl 3.", silent, EXP_LEVEL_7);
+	}
+	if (ent->account.level >= EXP_LEVEL_8)
+	{
+		client->ps.ammo[AMMO_FORCE] = 100;
+		client->ps.stats[STAT_MAX_DODGE] = 85;
+		LevelMessage(ent, "Your Forcepower rate set to 100 Dodge set to 85 is now Lvl 2.", silent, EXP_LEVEL_8);
+	}
+	if (ent->account.level >= EXP_LEVEL_9)
+	{
+		LevelMessage(ent, "No Upgrade in Lvl 9 wait for next Lvlup.", silent, EXP_LEVEL_9);
+	}
+	if (ent->account.level >= EXP_LEVEL_10)
+	{
+		client->ps.stats[STAT_MAX_DODGE] = 85;
+		client->ps.fd.forcePowerLevel[FP_SABER_DEFENSE] = 3;
+		client->ps.fd.forcePowerLevel[FP_SEE] = 3;
+		client->ps.fd.forcePowerLevel[FP_GRIP] = 3;
+		LevelMessage(ent, "Your Saber Defense, Seeing, Grip is now Lvl 3 And Dodge set Up to 100, Full Upgrade Class succesfull.", silent, EXP_LEVEL_10);
+	}
+}
+
+void UpdateJediKnight2(gentity_t *ent, qboolean silent)
+{
+	gclient_t *client = ent->client;
+	// Nå kommer spilleren alltid til å få alt ovenfor.
+	if (ent->account.level >= EXP_LEVEL_1)
+	{
+		// Og her kan vi forandre på det som skal til for level 0/1
+		// ingen forandringer fra base-setting for level 0
+	}
+	if (ent->account.level >= EXP_LEVEL_2)
+	{
+		client->ps.fd.forcePowerLevel[FP_SABERTHROW] = 2;
+		client->ps.fd.forcePowerLevel[FP_PUSH] = 2;
+		client->ps.stats[STAT_MAX_DODGE] = 65;
+		LevelMessage(ent, "Your force Push, saberthrow is now Lvl 2.", silent, EXP_LEVEL_2);
+	}
+	if (ent->account.level >= EXP_LEVEL_3)
+	{
+		LevelMessage(ent, "No Upgrade in Lvl 3 wait for next Lvlup.", silent, EXP_LEVEL_3);
+	}
+	if (ent->account.level >= EXP_LEVEL_4)
+	{
+		client->ps.fd.forcePowerLevel[FP_SABER_DEFENSE] = 2;
+		client->ps.ammo[AMMO_FORCE] = 65;
+		LevelMessage(ent, "Your saber defense is now Lvl 2 And forcepower rate set to 65.", silent, EXP_LEVEL_4);
+	}
+	if (ent->account.level >= EXP_LEVEL_5)
+	{
+		client->ps.fd.forcePowerLevel[FP_PULL] = 2;
+		client->ps.fd.forcePowerLevel[FP_SPEED] = 2;
+		client->ps.stats[STAT_MAX_DODGE] = 75;
+		LevelMessage(ent, "Your force Pull, Speed is now Lvl 2 Dodge set to 75.", silent, EXP_LEVEL_5);
+	}
+	if (ent->account.level >= EXP_LEVEL_6)
+	{
+		client->ps.fd.forcePowerLevel[FP_PUSH] = 3;
+		client->ps.fd.forcePowerLevel[FP_LEVITATION] = 3;
+		LevelMessage(ent, "Your force Push, Jump is now Lvl 3.", silent, EXP_LEVEL_6);
+	}
+	if (ent->account.level >= EXP_LEVEL_7)
+	{
+		client->ps.fd.forcePowerLevel[FP_SEE] = 2;
+		client->ps.ammo[AMMO_FORCE] = 75;
+		LevelMessage(ent, "Your force Seeing is now Lvl 2 ForcePower Rate is set to 75.", silent, EXP_LEVEL_7);
+	}
+	if (ent->account.level >= EXP_LEVEL_8)
+	{
+		LevelMessage(ent, "No Upgrade in Lvl 8 wait for next Lvlup.", silent, EXP_LEVEL_8);
+	}
+	if (ent->account.level >= EXP_LEVEL_9)
+	{
+		client->ps.fd.forcePowerLevel[FP_SPEED] = 3;
+		client->ps.fd.forcePowerLevel[FP_SABERTHROW] = 3;
+		LevelMessage(ent, "Your force Speed, Saber throw is now Lvl 3.", silent, EXP_LEVEL_9);
+	}
+	if (ent->account.level >= EXP_LEVEL_10)
+	{
+		client->ps.ammo[AMMO_FORCE] = 100;
+		client->ps.stats[STAT_MAX_DODGE] = 100;
+		client->ps.fd.forcePowerLevel[FP_PULL] = 3;
+		client->ps.fd.forcePowerLevel[FP_SABER_DEFENSE] = 2;
+
+		LevelMessage(ent, "Your force Pull, Saber defense is now Lvl 3 Forcepower rate and Dodge to 100, Full Upgrade Class succesfull.", silent, EXP_LEVEL_10);
+	}
+}
+
+void UpdateJediKnight3(gentity_t *ent, qboolean silent)
+{
+	gclient_t *client = ent->client;
+	// Nå kommer spilleren alltid til å få alt ovenfor.
+	if (ent->account.level >= EXP_LEVEL_1)
+	{
+		// Og her kan vi forandre på det som skal til for level 0/1
+		// ingen forandringer fra base-setting for level 0
+	}
+	if (ent->account.level >= EXP_LEVEL_2)
+	{
+		client->ps.fd.forcePowerLevel[FP_HEAL] = 2;
+		client->ps.fd.forcePowerLevel[FP_PUSH] = 2;
+		client->ps.fd.forcePowerLevel[FP_LEVITATION] = 2;
+		client->ps.stats[STAT_MAX_DODGE] = 65;
+		LevelMessage(ent, "Your force Healing, Push, Jump  is now Lvl 2.", silent, EXP_LEVEL_2);
+	}
+	if (ent->account.level >= EXP_LEVEL_3)
+	{
+		LevelMessage(ent, "No Upgrade in Lvl 3 wait for next Lvlup.", silent, EXP_LEVEL_3);
+	}
+	if (ent->account.level >= EXP_LEVEL_4)
+	{
+		client->ps.fd.forcePowerLevel[FP_PULL] = 2;
+		client->ps.fd.forcePowerLevel[FP_SABER_DEFENSE] = 2;
+		client->ps.ammo[AMMO_FORCE] = 75;
+		LevelMessage(ent, "Your force Pull, Saber Defense is now Lvl 2, Forcepower rate is 75.", silent, EXP_LEVEL_4);
+	}
+	if (ent->account.level >= EXP_LEVEL_5)
+	{
+		client->ps.fd.forcePowerLevel[FP_SEE] = 2;
+		client->ps.fd.forcePowerLevel[FP_SABERTHROW] = 2;
+		client->ps.fd.forcePowerLevel[FP_PUSH] = 3;
+		LevelMessage(ent, "Your Force Seeing, Saber Throw Is Lvl 2, Push Lvl 3.", silent, EXP_LEVEL_5);
+	}
+	if (ent->account.level >= EXP_LEVEL_6)
+	{
+
+		LevelMessage(ent, "No Upgrade in Lvl 6 wait for next Lvlup.", silent, EXP_LEVEL_6);
+	}
+	if (ent->account.level >= EXP_LEVEL_7)
+	{
+		client->ps.fd.forcePowerLevel[FP_HEAL] = 3;
+		client->ps.ammo[AMMO_FORCE] = 85;
+		client->ps.stats[STAT_MAX_DODGE] = 75;
+		LevelMessage(ent, "Your force Healing is now Lvl 3, ForcePower rate set to 85, Dodge set to 75.", silent, EXP_LEVEL_7);
+	}
+	if (ent->account.level >= EXP_LEVEL_8)
+	{
+		client->ps.fd.forcePowerLevel[FP_PULL] = 3;
+		client->ps.fd.forcePowerLevel[FP_LEVITATION] = 3;
+		LevelMessage(ent, "Your force Pull, Jump is now Lvl 3.", silent, EXP_LEVEL_8);
+	}
+	if (ent->account.level >= EXP_LEVEL_9)
+	{
+		client->ps.fd.forcePowerLevel[FP_SABER_OFFENSE] = 3;
+		client->ps.fd.forcePowerLevel[FP_SABERTHROW] = 3;
+		LevelMessage(ent, "Your Saber Offense, Saber Throw is now Lvl 3.", silent, EXP_LEVEL_9);
+	}
+	if (ent->account.level >= EXP_LEVEL_10)
+	{
+		client->ps.fd.forcePowerLevel[FP_SABER_DEFENSE] = 3;
+		client->ps.ammo[AMMO_FORCE] = 100;
+		client->ps.stats[STAT_MAX_DODGE] = 100;
+		LevelMessage(ent, "Your Saber Defense is now Lvl 3, ForcePower rate set to 100, Dodge set to 100 Full Upgrade Class succesfull.", silent, EXP_LEVEL_10);
+	}
+}
+
+void UpdateSmuggler1(gentity_t *ent, qboolean silent)
+{
+	gclient_t *client = ent->client;
+	// Nå kommer spilleren alltid til å få alt ovenfor.
+	if (ent->account.level >= EXP_LEVEL_1)
+	{
+		// Og her kan vi forandre på det som skal til for level 0/1
+		// ingen forandringer fra base-setting for level 0
+	}
+	if (ent->account.level >= EXP_LEVEL_2)
+	{
+		client->skillLevel[SK_PISTOL] = FORCE_LEVEL_2;
+		client->skillLevel[SK_THERMAL] = FORCE_LEVEL_2;
+		LevelMessage(ent, "Your Pistel|Thermal is now Lvl 2.", silent, EXP_LEVEL_2);
+	}
+	if (ent->account.level >= EXP_LEVEL_3)
+	{
+		client->ps.stats[STAT_ARMOR] = 35;
+		client->ps.stats[STAT_MAX_DODGE] = 35;
+		client->ps.ammo[AMMO_THERMAL] = 2;
+		LevelMessage(ent, "Your AMOR|DODGE has been increesed by 10 And Thermal Ammo Upgrade by 2", silent, EXP_LEVEL_3);
+	}
+	if (ent->account.level >= EXP_LEVEL_4)
+	{
+		client->skillLevel[SK_BLASTERRATEOFFIREUPGRADE] = FORCE_LEVEL_2;
+		client->skillLevel[SK_BLASTER] = FORCE_LEVEL_2;
+		LevelMessage(ent, "Your Blaster|Blaster fire rate is now Lvl 2.", silent, EXP_LEVEL_4);
+	}
+	if (ent->account.level >= EXP_LEVEL_5)
+	{
+		LevelMessage(ent, "There Is no Upgrade in This Lvl", silent, EXP_LEVEL_5);
+	}
+	if (ent->account.level >= EXP_LEVEL_6)
+	{
+		client->skillLevel[SK_BOWCASTER] = FORCE_LEVEL_2;
+		client->ps.ammo[AMMO_BLASTER] = 200;
+		client->skillLevel[SK_CLOAK] = FORCE_LEVEL_2;
+		client->ps.stats[STAT_ARMOR] = 50;
+		LevelMessage(ent, "Your BowCaster|Cloak Ablilty is now Lvl 2, and Ammo Upgrade by 50, Amor upgrade by 15", silent, EXP_LEVEL_6);
+	}
+	if (ent->account.level >= EXP_LEVEL_7)
+	{
+
+		client->ps.stats[STAT_MAX_DODGE] = 50;
+		client->skillLevel[SK_BLASTER] = FORCE_LEVEL_3;
+		client->skillLevel[SK_SEEKER] = FORCE_LEVEL_2;
+		LevelMessage(ent, "Your Balster is now Lvl 3 Seeker Lvl 2, Dodge Upgrade by 15", silent, EXP_LEVEL_7);
+	}
+	if (ent->account.level >= EXP_LEVEL_8)
+	{
+		LevelMessage(ent, "No Lvl Upgrade in this Lvl Here", silent, EXP_LEVEL_8);
+	}
+	if (ent->account.level >= EXP_LEVEL_9)
+	{
+		client->skillLevel[SK_BLASTERRATEOFFIREUPGRADE] = FORCE_LEVEL_3;
+		client->ps.ammo[AMMO_BLASTER] = 250;
+		client->ps.ammo[AMMO_THERMAL] = 5;
+		client->skillLevel[SK_SEEKER] = FORCE_LEVEL_3;
+		LevelMessage(ent, "Your Blaster fire rate|Seeker is now Lvl 3, Ammo Upgrade by 50|Thermal Upgrade by 2", silent, EXP_LEVEL_9);
+	}
+	if (ent->account.level >= EXP_LEVEL_10)
+	{
+		client->skillLevel[SK_PISTOL] = FORCE_LEVEL_3;
+		client->skillLevel[SK_BOWCASTER] = FORCE_LEVEL_3;
+		client->skillLevel[SK_CLOAK] = FORCE_LEVEL_3;
+		client->ps.stats[STAT_ARMOR] = 75;
+		client->ps.stats[STAT_MAX_DODGE] = 75;
+		LevelMessage(ent, "Your Pisto|Bowcaster|Cloak is now Lvl 3, Amor|Dodge Upgrade by 25 Full Upgrade Class succesfull.", silent, EXP_LEVEL_10);
+	}
+}
+
+void UpdateSmuggler2(gentity_t *ent, qboolean silent)
+{
+	gclient_t *client = ent->client;
+	// Nå kommer spilleren alltid til å få alt ovenfor.
+	if (ent->account.level >= EXP_LEVEL_1)
+	{
+		// Og her kan vi forandre på det som skal til for level 0/1
+		// ingen forandringer fra base-setting for level 0
+	}
+	if (ent->account.level >= EXP_LEVEL_2)
+	{
+		client->skillLevel[SK_PISTOL] = FORCE_LEVEL_2;
+		client->ps.stats[STAT_ARMOR] = 35;
+		client->ps.stats[STAT_MAX_DODGE] = 35;
+		LevelMessage(ent, "Your Pistol is now Lvl 2, Amor|Dodge Upgrade by 10.", silent, EXP_LEVEL_2);
+	}
+	if (ent->account.level >= EXP_LEVEL_3)
+	{
+		client->skillLevel[SK_DISRUPTOR] = FORCE_LEVEL_2;
+		client->ps.ammo[AMMO_POWERCELL] = 30;
+		LevelMessage(ent, "Your Disruptor is now Lvl 2, Ammo powercell upgrade by 10", silent, EXP_LEVEL_3);
+	}
+	if (ent->account.level >= EXP_LEVEL_4)
+	{
+		client->ps.ammo[AMMO_METAL_BOLTS] = 175;
+		client->skillLevel[SK_FLECHETTE] = FORCE_LEVEL_2;
+		LevelMessage(ent, "Your Flechette Gun is now Lvl 2, Ammo Metal bolts Upgrade by 25.", silent, EXP_LEVEL_4);
+	}
+	if (ent->account.level >= EXP_LEVEL_5)
+	{
+		client->skillLevel[SK_FORCEFIELD] = FORCE_LEVEL_2;
+		client->ps.stats[STAT_MAX_DODGE] = 45;
+		client->ps.stats[STAT_ARMOR] = 45;
+		LevelMessage(ent, "Your ForceField is now Lvl 2, Amor|Dodge Upgrade by 10.", silent, EXP_LEVEL_5);
+	}
+	if (ent->account.level >= EXP_LEVEL_6)
+	{
+		LevelMessage(ent, "No upgrade in this Lvl", silent, EXP_LEVEL_6);
+	}
+	if (ent->account.level >= EXP_LEVEL_7)
+	{
+		client->skillLevel[SK_PISTOL] = FORCE_LEVEL_3;
+		client->skillLevel[SK_DISRUPTOR] = FORCE_LEVEL_3;
+		client->ps.ammo[AMMO_POWERCELL] = 45;
+		LevelMessage(ent, "Your Sistol|Disruptor is now Lvl 3, Ammo Powercell Upgrade by 15.", silent, EXP_LEVEL_7);
+	}
+	if (ent->account.level >= EXP_LEVEL_8)
+	{
+		LevelMessage(ent, "No Upgrade in this Lvl", silent, EXP_LEVEL_8);
+	}
+	if (ent->account.level >= EXP_LEVEL_9)
+	{
+		client->skillLevel[SK_FORCEFIELD] = FORCE_LEVEL_3;
+		client->ps.ammo[AMMO_METAL_BOLTS] = 200;
+		LevelMessage(ent, "Your Forcefield now Lvl 3, Ammo Metal bolts Upgrade by 25.", silent, EXP_LEVEL_9);
+	}
+	if (ent->account.level >= EXP_LEVEL_10)
+	{
+		client->skillLevel[SK_FLECHETTE] = FORCE_LEVEL_3;
+		client->ps.stats[STAT_ARMOR] = 65;
+		client->ps.stats[STAT_MAX_DODGE] = 65;
+		client->ps.ammo[AMMO_POWERCELL] = 60;
+		client->ps.ammo[AMMO_METAL_BOLTS] = 250;
+		LevelMessage(ent, "Your Flechette Gun is now Lvl 3, Amor|Dodge upgrade by 20, Ammo Powercell upgrade by 15\n Ammo Metal bolts upgrade by 50 Full Upgrade Class succesfull.", silent, EXP_LEVEL_10);
+	}
+}
+//
+void UpdateSmuggler3(gentity_t *ent, qboolean silent)
+{
+	gclient_t *client = ent->client;
+	// Nå kommer spilleren alltid til å få alt ovenfor.
+	if (ent->account.level >= EXP_LEVEL_1)
+	{
+		// Og her kan vi forandre på det som skal til for level 0/1
+		// ingen forandringer fra base-setting for level 0
+	}
+	if (ent->account.level >= EXP_LEVEL_2)
+	{
+		client->skillLevel[SK_BLASTER] = FORCE_LEVEL_2;
+		client->skillLevel[SK_BLASTERRATEOFFIREUPGRADE] = FORCE_LEVEL_2;
+		client->ps.stats[STAT_ARMOR] = 45;
+		client->ps.stats[STAT_MAX_DODGE] = 35;
+		LevelMessage(ent, "Your Blaster|Blaster fire rate is now Lvl 2, Amor Upgrade by 20 doge by 10.", silent, EXP_LEVEL_2);
+	}
+	if (ent->account.level >= EXP_LEVEL_3)
+	{
+		client->ps.ammo[AMMO_BLASTER] = 125;
+		client->skillLevel[SK_THERMAL] = FORCE_LEVEL_2;
+		client->ps.ammo[AMMO_DETPACK] = 5;
+		LevelMessage(ent, "Your Thermal is now Lvl 2, Blaster ammo upgrade by 25 Detpack by 4.", silent, EXP_LEVEL_3);
+	}
+	if (ent->account.level >= EXP_LEVEL_4)
+	{
+		LevelMessage(ent, "No Upgrade in this Lvl.", silent, EXP_LEVEL_4);
+	}
+	if (ent->account.level >= EXP_LEVEL_5)
+	{
+		client->skillLevel[SK_PISTOL] = FORCE_LEVEL_2;
+		client->skillLevel[SK_THERMAL] = FORCE_LEVEL_2;
+		LevelMessage(ent, "Your Pistol|Thermal is now Lvl 2.", silent, EXP_LEVEL_5);
+	}
+	if (ent->account.level >= EXP_LEVEL_6)
+	{
+		client->skillLevel[SK_DETPACK] = FORCE_LEVEL_3;
+		client->ps.ammo[AMMO_DETPACK] = 7;
+		client->ps.ammo[AMMO_BLASTER] = 150;
+		LevelMessage(ent, "Your Detpack is now Lvl 3, Detpack ammo Upgrade by 2, Ammo blaster by 25.", silent, EXP_LEVEL_6);
+	}
+	if (ent->account.level >= EXP_LEVEL_7)
+	{
+		client->skillLevel[SK_SEEKER] = FORCE_LEVEL_2;
+		client->skillLevel[SK_SENTRY] = FORCE_LEVEL_2;
+		client->skillLevel[SK_BLASTERRATEOFFIREUPGRADE] = FORCE_LEVEL_3;
+		LevelMessage(ent, "Your Seeker|Sentry is now Lvl 2,Blaster fire rate is now Lvl 3.", silent, EXP_LEVEL_7);
+	}
+	if (ent->account.level >= EXP_LEVEL_8)
+	{
+		client->ps.stats[STAT_ARMOR] = 55;
+		client->ps.stats[STAT_MAX_DODGE] = 50;
+		client->ps.ammo[AMMO_BLASTER] = 175;
+		LevelMessage(ent, "Your Amor is Upgrade by 10 dodge by 15, Ammo blaster by 25.", silent, EXP_LEVEL_8);
+	}
+	if (ent->account.level >= EXP_LEVEL_9)
+	{
+		client->skillLevel[SK_PISTOL] = FORCE_LEVEL_3;
+		client->skillLevel[SK_THERMAL] = FORCE_LEVEL_3;
+		client->ps.ammo[AMMO_THERMAL] = 3;
+		client->ps.ammo[AMMO_DETPACK] = 10;
+		LevelMessage(ent, "Your Pistol|Thermal is now Lvl 3, Ammo Thermal Upgrade by 2, Detpack by 3.", silent, EXP_LEVEL_9);
+	}
+	if (ent->account.level >= EXP_LEVEL_10)
+	{
+		client->ps.stats[STAT_ARMOR] = 75;
+		client->ps.stats[STAT_MAX_DODGE] = 75;
+		client->skillLevel[SK_SEEKER] = FORCE_LEVEL_2;
+		client->skillLevel[SK_SENTRY] = FORCE_LEVEL_2;
+		client->ps.ammo[AMMO_BLASTER] = 225;
+		LevelMessage(ent, "Your Seeker|Sentry is now Lvl 3, Amor|Dodge Upgrade to Max Blaster Ammo by 25 Full Upgrade Class succesfull..", silent, EXP_LEVEL_10);
+	}
+}
+//
+void UpdateJediConsular1(gentity_t *ent, qboolean silent)
+{
+	gclient_t *client = ent->client;
+	// Nå kommer spilleren alltid til å få alt ovenfor.
+	if (ent->account.level >= EXP_LEVEL_1)
+	{
+		// Og her kan vi forandre på det som skal til for level 0/1
+		// ingen forandringer fra base-setting for level 0
+	}
+	if (ent->account.level >= EXP_LEVEL_2)
+	{
+		client->ps.fd.forcePowerLevel[FP_SABER_OFFENSE] = 2;
+		client->ps.fd.forcePowerLevel[FP_LEVITATION] = 2;
+		LevelMessage(ent, "Your SaberOffense|Jump is now Lvl 2.", silent, EXP_LEVEL_2);
+	}
+	if (ent->account.level >= EXP_LEVEL_3)
+	{
+		client->ps.fd.forcePowerLevel[FP_PUSH] = 2;
+		client->ps.stats[STAT_MAX_DODGE] = 55;
+		LevelMessage(ent, "Your Push now Lvl 2, Dodge has been Upgrade by 5.", silent, EXP_LEVEL_3);
+	}
+	if (ent->account.level >= EXP_LEVEL_4)
+	{
+		LevelMessage(ent, "No Upgrades in this Lvl", silent, EXP_LEVEL_4);
+	}
+	if (ent->account.level >= EXP_LEVEL_5)
+	{
+		client->ps.fd.forcePowerLevel[FP_TELEPATHY] = 2;
+		client->ps.fd.forcePowerLevel[FP_ABSORB] = 2;
+		client->ps.fd.forcePowerLevel[FP_TEAM_HEAL] = 2;
+		LevelMessage(ent, "Your Mindtrick|Absorb|Teamheal is now Lvl 2.", silent, EXP_LEVEL_5);
+	}
+	if (ent->account.level >= EXP_LEVEL_6)
+	{
+		client->ps.stats[STAT_MAX_DODGE] = 65;
+		client->ps.fd.forcePowerLevel[FP_SABER_DEFENSE] = 2;
+		client->ps.fd.forcePowerLevel[FP_SEE] = 2;
+		LevelMessage(ent, "Your SaberDefense|Seeing is now Lvl 2, Dodge Upgrade by 10.", silent, EXP_LEVEL_6);
+	}
+	if (ent->account.level >= EXP_LEVEL_7)
+	{
+		LevelMessage(ent, "NO Upgrades in this Lvl", silent, EXP_LEVEL_7);
+	}
+	if (ent->account.level >= EXP_LEVEL_8)
+	{
+		client->ps.fd.forcePowerLevel[FP_PUSH] = 3;
+		client->ps.fd.forcePowerLevel[FP_PULL] = 2;
+		LevelMessage(ent, "Your Push is now Lvl 3, Pull is Lvl 2.", silent, EXP_LEVEL_8);
+	}
+	if (ent->account.level >= EXP_LEVEL_9)
+	{
+		client->ps.fd.forcePowerLevel[FP_TELEPATHY] = 3;
+		client->ps.fd.forcePowerLevel[FP_PULL] = 3;
+		client->ps.stats[STAT_MAX_DODGE] = 70;
+		LevelMessage(ent, "Your Midtrick|Pull is now Lvl 3 Dodge Upgrade by 5.", silent, EXP_LEVEL_9);
+	}
+	if (ent->account.level >= EXP_LEVEL_10)
+	{
+		client->ps.fd.forcePowerLevel[FP_SABER_DEFENSE] = 1;
+		client->ps.fd.forcePowerLevel[FP_SEE] = 1;
+		client->ps.fd.forcePowerLevel[FP_ABSORB] = 1;
+		client->ps.fd.forcePowerLevel[FP_LEVITATION] = 1;
+		client->ps.stats[STAT_MAX_DODGE] = 75;
+		LevelMessage(ent, "Your SaberDefense|Seeing|Absorb|Jump is now Lvl 3, Dodge Upgrade by 5 Full Upgrade Class succesfull.", silent, EXP_LEVEL_10);
+	}
+}
+//
+void UpdateJediConsular2(gentity_t *ent, qboolean silent)
+{
+	gclient_t *client = ent->client;
+
+	// Nå kommer spilleren alltid til å få alt ovenfor.
+	if (ent->account.level >= EXP_LEVEL_1)
+	{
+		// Og her kan vi forandre på det som skal til for level 0/1
+		// ingen forandringer fra base-setting for level 0
+	}
+	if (ent->account.level >= EXP_LEVEL_2)
+	{
+		client->ps.fd.forcePowerLevel[FP_SABER_OFFENSE] = 2;
+		client->ps.fd.forcePowerLevel[FP_LEVITATION] = 2;
+		LevelMessage(ent, "Your SaberOffense|Jump is now Lvl 2.", silent, EXP_LEVEL_2);
+	}
+	if (ent->account.level >= EXP_LEVEL_3)
+	{
+		client->ps.fd.forcePowerLevel[FP_PUSH] = 2;
+		client->ps.stats[STAT_MAX_DODGE] = 55;
+		LevelMessage(ent, "Your Push now Lvl 2, Dodge has been Upgrade by 5.", silent, EXP_LEVEL_3);
+	}
+	if (ent->account.level >= EXP_LEVEL_4)
+	{
+		LevelMessage(ent, "No Upgrades in this Lvl", silent, EXP_LEVEL_4);
+	}
+	if (ent->account.level >= EXP_LEVEL_5)
+	{
+		client->ps.fd.forcePowerLevel[FP_TELEPATHY] = 2;
+		client->ps.fd.forcePowerLevel[FP_PROTECT] = 2;
+		client->ps.fd.forcePowerLevel[FP_TEAM_HEAL] = 2;
+		LevelMessage(ent, "Your Mindtrick|Protect|Teamheal is now Lvl 2.", silent, EXP_LEVEL_5);
+	}
+	if (ent->account.level >= EXP_LEVEL_6)
+	{
+		client->ps.stats[STAT_MAX_DODGE] = 65;
+		client->ps.fd.forcePowerLevel[FP_SABER_DEFENSE] = 2;
+		client->ps.fd.forcePowerLevel[FP_SEE] = 2;
+		LevelMessage(ent, "Your SaberDefense|Seeing is now Lvl 2, Dodge Upgrade by 10.", silent, EXP_LEVEL_6);
+	}
+	if (ent->account.level >= EXP_LEVEL_7)
+	{
+		LevelMessage(ent, "NO Upgrades in this Lvl", silent, EXP_LEVEL_7);
+	}
+	if (ent->account.level >= EXP_LEVEL_8)
+	{
+		client->ps.fd.forcePowerLevel[FP_PUSH] = 3;
+		client->ps.fd.forcePowerLevel[FP_PULL] = 2;
+		client->ps.fd.forcePowerLevel[FP_TEAM_HEAL] = 3;
+		LevelMessage(ent, "Your Push|TeamHeal is now Lvl 3, Pull is Lvl 2.", silent, EXP_LEVEL_8);
+	}
+	if (ent->account.level >= EXP_LEVEL_9)
+	{
+		client->ps.fd.forcePowerLevel[FP_TELEPATHY] = 3;
+		client->ps.fd.forcePowerLevel[FP_PULL] = 3;
+		client->ps.stats[STAT_MAX_DODGE] = 70;
+		LevelMessage(ent, "Your Midtrick|Pull is now Lvl 3 Dodge Upgrade by 5.", silent, EXP_LEVEL_9);
+	}
+	if (ent->account.level >= EXP_LEVEL_10)
+	{
+		client->ps.fd.forcePowerLevel[FP_SABER_DEFENSE] = 1;
+		client->ps.fd.forcePowerLevel[FP_SEE] = 1;
+		client->ps.fd.forcePowerLevel[FP_PROTECT] = 1;
+		client->ps.fd.forcePowerLevel[FP_LEVITATION] = 1;
+		client->ps.stats[STAT_MAX_DODGE] = 75;
+		LevelMessage(ent, "Your SaberDefense|Seeing|Protect|Jump is now Lvl 3, Dodge Upgrade by 5 Full Upgrade Class succesfull.", silent, EXP_LEVEL_10);
+	}
+}
+//
+void UpdateJediConsular3(gentity_t *ent, qboolean silent)
+{
+	gclient_t *client = ent->client;
+	// Nå kommer spilleren alltid til å få alt ovenfor.
+	if (ent->account.level >= EXP_LEVEL_1)
+	{
+		// Og her kan vi forandre på det som skal til for level 0/1
+		// ingen forandringer fra base-setting for level 0
+	}
+	if (ent->account.level >= EXP_LEVEL_2)
+	{
+		client->ps.fd.forcePowerLevel[FP_SABER_OFFENSE] = 2;
+		client->ps.fd.forcePowerLevel[FP_LEVITATION] = 2;
+		LevelMessage(ent, "Your SaberOffense|Jump is now Lvl 2.", silent, EXP_LEVEL_2);
+	}
+	if (ent->account.level >= EXP_LEVEL_3)
+	{
+		client->ps.fd.forcePowerLevel[FP_PUSH] = 2;
+		client->ps.stats[STAT_MAX_DODGE] = 55;
+		LevelMessage(ent, "Your Push now Lvl 2, Dodge has been Upgrade by 5.", silent, EXP_LEVEL_3);
+	}
+	if (ent->account.level >= EXP_LEVEL_4)
+	{
+		LevelMessage(ent, "No Upgrades in this Lvl", silent, EXP_LEVEL_4);
+	}
+	if (ent->account.level >= EXP_LEVEL_5)
+	{
+		client->ps.fd.forcePowerLevel[FP_SABERTHROW] = 2;
+		client->ps.fd.forcePowerLevel[FP_TEAM_FORCE] = 2;
+		client->ps.fd.forcePowerLevel[FP_TEAM_HEAL] = 2;
+		LevelMessage(ent, "Your SaberThrow|TeamForce|Teamheal is now Lvl 2.", silent, EXP_LEVEL_5);
+	}
+	if (ent->account.level >= EXP_LEVEL_6)
+	{
+		client->ps.stats[STAT_MAX_DODGE] = 65;
+		client->ps.fd.forcePowerLevel[FP_SABER_DEFENSE] = 2;
+		client->ps.fd.forcePowerLevel[FP_SEE] = 2;
+		LevelMessage(ent, "Your SaberDefense|Seeing is now Lvl 2, Dodge Upgrade by 10.", silent, EXP_LEVEL_6);
+	}
+	if (ent->account.level >= EXP_LEVEL_7)
+	{
+		LevelMessage(ent, "NO Upgrades in this Lvl", silent, EXP_LEVEL_7);
+	}
+	if (ent->account.level >= EXP_LEVEL_8)
+	{
+		client->ps.fd.forcePowerLevel[FP_PUSH] = 3;
+		client->ps.fd.forcePowerLevel[FP_PULL] = 2;
+		client->ps.fd.forcePowerLevel[FP_TEAM_HEAL] = 3;
+		LevelMessage(ent, "Your Push|TeamHeal is now Lvl 3, Pull is Lvl 2.", silent, EXP_LEVEL_8);
+	}
+	if (ent->account.level >= EXP_LEVEL_9)
+	{
+		client->ps.fd.forcePowerLevel[FP_SABERTHROW] = 3;
+		client->ps.fd.forcePowerLevel[FP_PULL] = 3;
+		client->ps.stats[STAT_MAX_DODGE] = 70;
+		LevelMessage(ent, "Your SaberThrow|Pull is now Lvl 3 Dodge Upgrade by 5.", silent, EXP_LEVEL_9);
+	}
+	if (ent->account.level >= EXP_LEVEL_10)
+	{
+		client->ps.fd.forcePowerLevel[FP_SABER_DEFENSE] = 1;
+		client->ps.fd.forcePowerLevel[FP_SEE] = 1;
+		client->ps.fd.forcePowerLevel[FP_TEAM_FORCE] = 1;
+		client->ps.fd.forcePowerLevel[FP_LEVITATION] = 1;
+		client->ps.stats[STAT_MAX_DODGE] = 75;
+		LevelMessage(ent, "Your SaberDefense|Seeing|TeamForce|Jump is now Lvl 3, Dodge Upgrade by 5 Full Upgrade Class succesfull.", silent, EXP_LEVEL_10);
+	}
+}
+
+void UpdateBountyhunter1(gentity_t *ent, qboolean silent)
+{
+	gclient_t *client = ent->client;
+	// Nå kommer spilleren alltid til å få alt ovenfor.
+	if (ent->account.level >= EXP_LEVEL_1)
+	{
+		// Og her kan vi forandre på det som skal til for level 0/1
+		// ingen forandringer fra base-setting for level 0
+	}
+	if (ent->account.level >= EXP_LEVEL_2)
+	{
+		client->skillLevel[SK_FLECHETTE] = FORCE_LEVEL_2;
+		client->ps.stats[STAT_ARMOR] = 30;
+		LevelMessage(ent, "Your Flechetter gun is now Lvl 2, Amor Upgrade by 5.", silent, EXP_LEVEL_2);
+	}
+	if (ent->account.level >= EXP_LEVEL_3)
+	{
+		client->ps.stats[STAT_MAX_DODGE] = 30;
+		client->skillLevel[SK_REPEATERUPGRADE] = FORCE_LEVEL_2;
+		client->ps.jetpackFuel = 50;
+		LevelMessage(ent, "Your Repeater fire rate is now Lvl 2, Dodge Upgrade by 5 JetFuel by 25.", silent, EXP_LEVEL_3);
+	}
+	if (ent->account.level >= EXP_LEVEL_4)
+	{
+		client->skillLevel[SK_REPEATER] = FORCE_LEVEL_2;
+		client->ps.ammo[AMMO_METAL_BOLTS] = 115;
+		client->ps.ammo[AMMO_THERMAL] = 2;
+		LevelMessage(ent, "Your Repeater is now Lvl 2, Repeater Metalbolts Upgrade by 15, Thermal Upgrade by 1.", silent, EXP_LEVEL_4);
+	}
+	if (ent->account.level >= EXP_LEVEL_5)
+	{
+		LevelMessage(ent, "NO Upgrades in this Lvl", silent, EXP_LEVEL_5);
+	}
+	if (ent->account.level >= EXP_LEVEL_6)
+	{
+		client->skillLevel[SK_DETPACK] = FORCE_LEVEL_2;
+		client->ps.ammo[AMMO_DETPACK] = 3;
+		client->ps.stats[STAT_MAX_DODGE] = 45;
+		client->ps.stats[STAT_ARMOR] = 45;
+		LevelMessage(ent, "Your Detpack is now Lvl 2, Detpack ammo Upgrade by 2 Dodge|Amor Upgrade by 15 .", silent, EXP_LEVEL_6);
+	}
+	if (ent->account.level >= EXP_LEVEL_7)
+	{
+		client->skillLevel[SK_JETPACK] = FORCE_LEVEL_2;
+		client->skillLevel[SK_FLAMETHROWER] = FORCE_LEVEL_2;
+		client->ps.jetpackFuel = 50;
+		client->ps.stats[STAT_MAX_DODGE] = 75;
+		client->ps.stats[STAT_ARMOR] = 75;
+		LevelMessage(ent, "Your Jetpack|FlameThrow is now Lvl 2 Fuel Upgrade by 25, Dodge|Amor upgrade by 30.", silent, EXP_LEVEL_7);
+	}
+	if (ent->account.level >= EXP_LEVEL_8)
+	{
+		client->ps.ammo[AMMO_METAL_BOLTS] = 200;
+		client->skillLevel[SK_THERMAL] = FORCE_LEVEL_3;
+		client->ps.ammo[AMMO_THERMAL] = 3;
+		client->skillLevel[SK_DETPACK] = FORCE_LEVEL_3;
+		client->ps.ammo[AMMO_DETPACK] = 5;
+		client->ps.jetpackFuel = 75;
+		LevelMessage(ent, "Your Thermal|Detpack is now Lvl 3, Thermal Upgrade by 1 Detpack By 3 JetFuel by 25.", silent, EXP_LEVEL_8);
+	}
+	if (ent->account.level >= EXP_LEVEL_9)
+	{
+		client->skillLevel[SK_FLECHETTE] = FORCE_LEVEL_3;
+		client->skillLevel[SK_FLAMETHROWER] = FORCE_LEVEL_3;
+		client->ps.ammo[AMMO_METAL_BOLTS] = 250;
+		LevelMessage(ent, "Your Flechetter|Flamethrow is now Lvl 3, MetalBolts Upgrade by 50.", silent, EXP_LEVEL_9);
+	}
+	if (ent->account.level >= EXP_LEVEL_10)
+	{
+		client->skillLevel[SK_REPEATERUPGRADE] = FORCE_LEVEL_3;
+		client->skillLevel[SK_REPEATER] = FORCE_LEVEL_3;
+		client->ps.jetpackFuel = 100;
+		client->ps.stats[STAT_MAX_DODGE] = 100;
+		client->ps.stats[STAT_ARMOR] = 100;
+		LevelMessage(ent, "Your Repeater|Repeater Fire rate is now Lvl 3, JetFuel Upgrade by 25 Dodge|Amor by 25 Full Upgrade Class succesfull.", silent, EXP_LEVEL_10);
+	}
+}
+//
+void UpdateBountyhunter2(gentity_t *ent, qboolean silent)
+{
+	gclient_t *client = ent->client;
+
+	// Nå kommer spilleren alltid til å få alt ovenfor.
+	if (ent->account.level >= EXP_LEVEL_1)
+	{
+		// Og her kan vi forandre på det som skal til for level 0/1
+		// ingen forandringer fra base-setting for level 0
+	}
+	if (ent->account.level >= EXP_LEVEL_2)
+	{
+		client->skillLevel[SK_PISTOL] = FORCE_LEVEL_2;
+		client->ps.stats[STAT_ARMOR] = 30;
+		LevelMessage(ent, "Your Pistol is now Lvl 2, Amor Upgrade by 5.", silent, EXP_LEVEL_2);
+	}
+	if (ent->account.level >= EXP_LEVEL_3)
+	{
+		client->ps.stats[STAT_MAX_DODGE] = 30;
+		client->skillLevel[SK_BLASTERRATEOFFIREUPGRADE] = FORCE_LEVEL_2;
+		client->ps.jetpackFuel = 50;
+		LevelMessage(ent, "Your Blaster fire rate is now Lvl 2, Dodge Upgrade by 5 JetFuel by 25.", silent, EXP_LEVEL_3);
+	}
+	if (ent->account.level >= EXP_LEVEL_4)
+	{
+		client->skillLevel[SK_BLASTER] = FORCE_LEVEL_2;
+		client->ps.ammo[AMMO_BLASTER] = 165;
+		LevelMessage(ent, "Your Repeater is now Lvl 2, Blaster Ammo Upgrade by 15, Thermal Upgrade by 1.", silent, EXP_LEVEL_4);
+	}
+	if (ent->account.level >= EXP_LEVEL_5)
+	{
+		LevelMessage(ent, "NO Upgrades in this Lvl", silent, EXP_LEVEL_5);
+	}
+	if (ent->account.level >= EXP_LEVEL_6)
+	{
+		client->skillLevel[SK_DETPACK] = FORCE_LEVEL_2;
+		client->ps.ammo[AMMO_DETPACK] = 3;
+		client->ps.stats[STAT_MAX_DODGE] = 45;
+		client->ps.stats[STAT_ARMOR] = 45;
+		LevelMessage(ent, "Your Detpack is now Lvl 2, Detpack ammo Upgrade by 2 Dodge|Amor Upgrade by 15 .", silent, EXP_LEVEL_6);
+	}
+	if (ent->account.level >= EXP_LEVEL_7)
+	{
+		client->skillLevel[SK_JETPACK] = FORCE_LEVEL_2;
+		client->skillLevel[SK_FORCEFIELD] = FORCE_LEVEL_2;
+		client->ps.jetpackFuel = 50;
+		client->ps.stats[STAT_MAX_DODGE] = 75;
+		client->ps.stats[STAT_ARMOR] = 75;
+		LevelMessage(ent, "Your Jetpack|Forcefield is now Lvl 2 Fuel Upgrade by 25, Dodge|Amor upgrade by 30.", silent, EXP_LEVEL_7);
+	}
+	if (ent->account.level >= EXP_LEVEL_8)
+	{
+		client->ps.ammo[AMMO_BLASTER] = 185;
+		client->skillLevel[SK_THERMAL] = FORCE_LEVEL_3;
+		client->skillLevel[SK_DETPACK] = FORCE_LEVEL_3;
+		client->ps.ammo[AMMO_DETPACK] = 5;
+		client->ps.jetpackFuel = 75;
+		LevelMessage(ent, "Your Thermal|Detpack is now Lvl 3, Blaster Ammo Updated by 20, Detpack By 3, JetFuel by 25.", silent, EXP_LEVEL_8);
+	}
+	if (ent->account.level >= EXP_LEVEL_9)
+	{
+		client->skillLevel[SK_FLECHETTE] = FORCE_LEVEL_3;
+		client->skillLevel[SK_FORCEFIELD] = FORCE_LEVEL_3;
+		client->ps.ammo[AMMO_BLASTER] = 200;
+		LevelMessage(ent, "Your Flechetter|Forcefield is now Lvl 3, Blaster Ammo Upgrade by 15.", silent, EXP_LEVEL_9);
+	}
+	if (ent->account.level >= EXP_LEVEL_10)
+	{
+		client->skillLevel[SK_BLASTERRATEOFFIREUPGRADE] = FORCE_LEVEL_3;
+		client->skillLevel[SK_PISTOL] = FORCE_LEVEL_3;
+		client->ps.jetpackFuel = 100;
+		client->ps.stats[STAT_MAX_DODGE] = 100;
+		client->ps.stats[STAT_ARMOR] = 100;
+		LevelMessage(ent, "Your Pistol|Blaster Fire rate is now Lvl 3, JetFuel Upgrade by 25 Dodge|Amor by 25 Full Upgrade Class succesfull.", silent, EXP_LEVEL_10);
+	}
+}
+
+void UpdateBountyhunter3(gentity_t *ent, qboolean silent)
+{
+	gclient_t *client = ent->client;
+
+	// Nå kommer spilleren alltid til å få alt ovenfor.
+	if (ent->account.level >= EXP_LEVEL_1)
+	{
+		// Og her kan vi forandre på det som skal til for level 0/1
+		// ingen forandringer fra base-setting for level 0
+	}
+	if (ent->account.level >= EXP_LEVEL_2)
+	{
+		client->skillLevel[SK_REPEATER] = FORCE_LEVEL_2;
+		client->ps.stats[STAT_ARMOR] = 40;
+		LevelMessage(ent, "Your Repeater gun is now Lvl 2, Amor Upgrade by 10.", silent, EXP_LEVEL_2);
+	}
+	if (ent->account.level >= EXP_LEVEL_3)
+	{
+		client->ps.stats[STAT_MAX_DODGE] = 40;
+		client->skillLevel[SK_REPEATERUPGRADE] = FORCE_LEVEL_2;
+		client->ps.jetpackFuel = 50;
+		LevelMessage(ent, "Your Repeater fire rate is now Lvl 2, Dodge Upgrade by 5, JetFuel by 25.", silent, EXP_LEVEL_3);
+	}
+	if (ent->account.level >= EXP_LEVEL_4)
+	{
+		client->skillLevel[SK_BLASTERRATEOFFIREUPGRADE] = FORCE_LEVEL_2;
+		client->ps.ammo[AMMO_METAL_BOLTS] = 150;
+		client->ps.ammo[SK_DETPACK] = 7;
+		client->skillLevel[SK_SENTRY] = FORCE_LEVEL_2;
+		LevelMessage(ent, "Your Blaster fire rate|Sentry Gun is now Lvl 2, Detpack Upgrade by 5, Metalbolts by 50 .", silent, EXP_LEVEL_4);
+	}
+	if (ent->account.level >= EXP_LEVEL_5)
+	{
+		client->skillLevel[SK_JETPACK] = FORCE_LEVEL_2;
+		client->skillLevel[SK_FLAMETHROWER] = FORCE_LEVEL_2;
+		client->ps.jetpackFuel = 50;
+		client->ps.stats[STAT_MAX_DODGE] = 75;
+		client->ps.stats[STAT_ARMOR] = 75;
+		LevelMessage(ent, "Your Jetpack|FlameThrow is now Lvl 2, Fuel Upgrade by 25, Dodge|Amor upgrade by 30", silent, EXP_LEVEL_5);
+	}
+	if (ent->account.level >= EXP_LEVEL_6)
+	{
+		client->skillLevel[SK_DETPACK] = FORCE_LEVEL_2;
+		client->ps.ammo[AMMO_DETPACK] = 3;
+		client->ps.stats[STAT_MAX_DODGE] = 45;
+		client->ps.stats[STAT_ARMOR] = 45;
+		client->ps.ammo[AMMO_METAL_BOLTS] = 200;
+		LevelMessage(ent, "Your Detpack is now Lvl 2, Detpack ammo Upgrade by 2 Dodge|Amor Upgrade by 15 MetalBolt 50.", silent, EXP_LEVEL_6);
+	}
+	if (ent->account.level >= EXP_LEVEL_7)
+	{
+		LevelMessage(ent, "NO Upgrades in this Lvl.", silent, EXP_LEVEL_);
+	}
+	if (ent->account.level >= EXP_LEVEL_8)
+	{
+		client->ps.ammo[AMMO_METAL_BOLTS] = 2;
+		client->skillLevel[SK_BLASTER] = FORCE_LEVEL_3;
+		client->ps.ammo[AMMO_THERMAL] = 3;
+		client->skillLevel[SK_DETPACK] = FORCE_LEVEL_3;
+		client->ps.ammo[AMMO_DETPACK] = 5;
+		client->ps.jetpackFuel = 75;
+		LevelMessage(ent, "Your Blaster Rifel is now Lvl 2, Thermal Upgrade by 1, Detpack By 3, JetFuel by 25.", silent, EXP_LEVEL_7);
+	}
+	if (ent->account.level >= EXP_LEVEL_9)
+	{
+		client->skillLevel[SK_SENTRY] = FORCE_LEVEL_3;
+		client->skillLevel[SK_FLAMETHROWER] = FORCE_LEVEL_3;
+		client->ps.ammo[AMMO_METAL_BOLTS] = 250;
+		LevelMessage(ent, "Your Sentry Gun|Flamethrow is now Lvl 3, MetalBolts Upgrade by 50.", silent, EXP_LEVEL_8);
+	}
+	if (ent->account.level >= EXP_LEVEL_10)
+	{
+		client->skillLevel[SK_REPEATERUPGRADE] = FORCE_LEVEL_3;
+		client->skillLevel[SK_REPEATER] = FORCE_LEVEL_3;
+		client->ps.jetpackFuel = 100;
+		client->ps.stats[STAT_MAX_DODGE] = 100;
+		client->ps.stats[STAT_ARMOR] = 100;
+		client->ps.ammo[AMMO_METAL_BOLTS] = 300;
+		LevelMessage(ent, "Your Repeater|Repeater Fire rate is now Lvl 3, JetFuel Upgrade by 25, MetalBolts by 50 Dodge|Amor by 25, Full Upgrade Class succesfull.", silent, EXP_LEVEL_10);
+	}
+}
+
+void UpdateSithworrior1(gentity_t *ent, qboolean silent)
+{
+	gclient_t *client = ent->client;
+	// Nå kommer spilleren alltid til å få alt ovenfor.
+	if (ent->account.level >= EXP_LEVEL_1)
+	{
+		LevelMessage(ent, "EOC CLASS LOADED FOR SITH WORRIOR CLASS 1", silent, EXP_LEVEL_1);
+	}
+	if (ent->account.level >= EXP_LEVEL_2)
+	{
+		client->ps.fd.forcePowerLevel[FP_SABER_DEFENSE] = 2;
+		client->ps.fd.forcePowerLevel[FP_PUSH] = 2;
+		client->ps.stats[STAT_MAX_DODGE] = 65;
+		LevelMessage(ent, "Your force Push, Saber Defense is now Lvl 2, Dodge set to 65.", silent, EXP_LEVEL_2);
+	}
+	if (ent->account.level >= EXP_LEVEL_3)
+	{
+		client->ps.fd.forcePowerLevel[FP_LEVITATION] = 2;
+		client->ps.fd.forcePowerLevel[FP_LIGHTNING] = 2;
+		client->ps.ammo[AMMO_FORCE] = 75;
+		LevelMessage(ent, "Your force Lightning, Jump is now Lvl 2.", silent, EXP_LEVEL_3);
+	}
+	if (ent->account.level >= EXP_LEVEL_4)
+	{
+		LevelMessage(ent, "No Upgrade in Lvl 4 wait for next Lvlup.", silent, EXP_LEVEL_4);
+	}
+	if (ent->account.level >= EXP_LEVEL_5)
+	{
+		client->ps.fd.forcePowerLevel[FP_GRIP] = 2;
+		client->ps.fd.forcePowerLevel[FP_SABERTHROW] = 2;
+		client->ps.fd.forcePowerLevel[FP_PULL] = 2;
+		LevelMessage(ent, "Your force Grip, Pull, Saber throw is now Lvl 2.", silent, EXP_LEVEL_5);
+	}
+	if (ent->account.level >= EXP_LEVEL_6)
+	{
+		client->ps.stats[STAT_MAX_DODGE] = 75;
+		client->ps.fd.forcePowerLevel[FP_LEVITATION] = 3;
+		LevelMessage(ent, "Your force Jump is now Lvl 3, Dodge set to 75.", silent, EXP_LEVEL_6);
+	}
+	if (ent->account.level >= EXP_LEVEL_7)
+	{
+		client->ps.stats[STAT_MAX_DODGE] = 75;
+		LevelMessage(ent, "No Upgrade in Lvl 7 wait for next Lvlup.", silent, EXP_LEVEL_7);
+	}
+	if (ent->account.level >= EXP_LEVEL_8)
+	{
+		client->ps.fd.forcePowerLevel[FP_SABER_DEFENSE] = 3;
+		client->ps.stats[STAT_MAX_DODGE] = 85;
+		LevelMessage(ent, "Your Saber Defense is now Lvl 3, Dodge set to 85.", silent, EXP_LEVEL_8);
+	}
+	if (ent->account.level >= EXP_LEVEL_9)
+	{
+		client->ps.fd.forcePowerLevel[FP_PUSH] = 3;
+		client->ps.fd.forcePowerLevel[FP_GRIP] = 3;
+		LevelMessage(ent, "Your force Push, Grip is now Lvl 3.", silent, EXP_LEVEL_9);
+	}
+	if (ent->account.level >= EXP_LEVEL_10)
+	{
+		client->ps.fd.forcePowerLevel[FP_SABERTHROW] = 3;
+		client->ps.fd.forcePowerLevel[FP_LIGHTNING] = 3;
+		client->ps.stats[STAT_MAX_DODGE] = 100;
+		client->ps.ammo[AMMO_FORCE] = 100;
+		LevelMessage(ent, "Your force Lightning, Saber Throw is now Lvl 3 Dodge set to 100 \n Full Upgrade Class succesfull.", silent, EXP_LEVEL_10);
+	}
+}
+
+void UpdateSithworrior2(gentity_t *ent, qboolean silent)
+{
+	gclient_t *client = ent->client;
+	// Nå kommer spilleren alltid til å få alt ovenfor.
+	if (ent->account.level >= EXP_LEVEL_1)
+	{
+		// Og her kan vi forandre på det som skal til for level 0/1
+		// ingen forandringer fra base-setting for level 0
+	}
+	if (ent->account.level >= EXP_LEVEL_2)
+	{
+		client->ps.fd.forcePowerLevel[FP_SABER_DEFENSE] = 2;
+		client->ps.fd.forcePowerLevel[FP_PUSH] = 2;
+		client->ps.stats[STAT_MAX_DODGE] = 65;
+		LevelMessage(ent, "Your force Push, Saber Defense is now Lvl 2, Dodge set to 65.", silent, EXP_LEVEL_2);
+	}
+	if (ent->account.level >= EXP_LEVEL_3)
+	{
+		client->ps.fd.forcePowerLevel[FP_LEVITATION] = 2;
+		client->ps.fd.forcePowerLevel[FP_LIGHTNING] = 2;
+		client->ps.ammo[AMMO_FORCE] = 75;
+		LevelMessage(ent, "Your force Lightning, Jump is now Lvl 2.", silent, EXP_LEVEL_3);
+	}
+	if (ent->account.level >= EXP_LEVEL_4)
+	{
+		LevelMessage(ent, "No Upgrade in Lvl 4 wait for next Lvlup.", silent, EXP_LEVEL_4);
+	}
+	if (ent->account.level >= EXP_LEVEL_5)
+	{
+		client->ps.fd.forcePowerLevel[FP_GRIP] = 2;
+		client->ps.fd.forcePowerLevel[FP_SABERTHROW] = 2;
+		client->ps.fd.forcePowerLevel[FP_PULL] = 2;
+		LevelMessage(ent, "Your force Grip, Pull, Saber throw is now Lvl 2.", silent, EXP_LEVEL_5);
+	}
+	if (ent->account.level >= EXP_LEVEL_6)
+	{
+		client->ps.stats[STAT_MAX_DODGE] = 75;
+		client->ps.fd.forcePowerLevel[FP_LEVITATION] = 3;
+		LevelMessage(ent, "Your force Jump is now Lvl 3, Dodge set to 75.", silent, EXP_LEVEL_6);
+	}
+	if (ent->account.level >= EXP_LEVEL_7)
+	{
+		LevelMessage(ent, "No Upgrade in Lvl 7 wait for next Lvlup.", silent, EXP_LEVEL_7);
+	}
+	if (ent->account.level >= EXP_LEVEL_8)
+	{
+		client->ps.fd.forcePowerLevel[FP_SABER_DEFENSE] = 3;
+		client->ps.stats[STAT_MAX_DODGE] = 85;
+		LevelMessage(ent, "Your Saber Defense is now Lvl 3, Dodge set to 85.", silent, EXP_LEVEL_8);
+	}
+	if (ent->account.level >= EXP_LEVEL_9)
+	{
+		client->ps.fd.forcePowerLevel[FP_PUSH] = 3;
+		client->ps.fd.forcePowerLevel[FP_GRIP] = 3;
+		LevelMessage(ent, "Your force Push, Grip is now Lvl 3.", silent, EXP_LEVEL_9);
+	}
+	if (ent->account.level >= EXP_LEVEL_10)
+	{
+		client->ps.fd.forcePowerLevel[FP_SABERTHROW] = 3;
+		client->ps.fd.forcePowerLevel[FP_LIGHTNING] = 3;
+		client->ps.stats[STAT_MAX_DODGE] = 100;
+		LevelMessage(ent, "Your force Lightning, Saber Throw is now Lvl 3, Dodge set to 100 \n Full Upgrade Class succesfull.", silent, EXP_LEVEL_10);
+	}
+}
+void UpdateSithworrior3(gentity_t *ent, qboolean silent)
+{
+	gclient_t *client = ent->client;
+
+	// Nå kommer spilleren alltid til å få alt ovenfor.
+	if (ent->account.level >= EXP_LEVEL_1)
+	{
+		// Og her kan vi forandre på det som skal til for level 0/1
+		// ingen forandringer fra base-setting for level 0
+	}
+	if (ent->account.level >= EXP_LEVEL_2)
+	{
+		client->ps.fd.forcePowerLevel[FP_SABER_DEFENSE] = 2;
+		client->ps.fd.forcePowerLevel[FP_PUSH] = 2;
+		client->ps.stats[STAT_MAX_DODGE] = 65;
+		LevelMessage(ent, "Your force Push, Saber Defense is now Lvl 2, Dodge set to 65.", silent, EXP_LEVEL_2);
+	}
+	if (ent->account.level >= EXP_LEVEL_3)
+	{
+		client->ps.fd.forcePowerLevel[FP_SPEED] = 2;
+		client->ps.fd.forcePowerLevel[FP_LIGHTNING] = 2;
+		client->ps.ammo[AMMO_FORCE] = 75;
+		LevelMessage(ent, "Your force Speed, Jump is now Lvl 2, ForcePower rate set to 75.", silent, EXP_LEVEL_3);
+	}
+	if (ent->account.level >= EXP_LEVEL_4)
+	{
+		LevelMessage(ent, "No Upgrade in Lvl 4 wait for next Lvlup.", silent, EXP_LEVEL_4);
+	}
+	if (ent->account.level >= EXP_LEVEL_5)
+	{
+		client->ps.fd.forcePowerLevel[FP_TELEPATHY] = 2;
+		client->ps.fd.forcePowerLevel[FP_SABERTHROW] = 2;
+		client->ps.fd.forcePowerLevel[FP_PULL] = 2;
+		LevelMessage(ent, "Your force MindTrick, Pull, Saber throw is now Lvl 2.", silent, EXP_LEVEL_5);
+	}
+	if (ent->account.level >= EXP_LEVEL_6)
+	{
+		client->ps.stats[STAT_MAX_DODGE] = 75;
+		client->ps.fd.forcePowerLevel[FP_LEVITATION] = 3;
+		client->ps.fd.forcePowerLevel[FP_SPEED] = 3;
+		LevelMessage(ent, "Your force Jump|Speed is now Lvl 3, Dodge set to 75.", silent, EXP_LEVEL_6);
+	}
+	if (ent->account.level >= EXP_LEVEL_7)
+	{
+		LevelMessage(ent, "No Upgrade in Lvl 7 wait for next Lvlup.", silent, EXP_LEVEL_7);
+	}
+	if (ent->account.level >= EXP_LEVEL_8)
+	{
+		client->ps.fd.forcePowerLevel[FP_SABER_DEFENSE] = 3;
+		client->ps.stats[STAT_MAX_DODGE] = 85;
+		LevelMessage(ent, "Your Saber Defense is now Lvl 3, Dodge set to 85.", silent, EXP_LEVEL_8);
+	}
+	if (ent->account.level >= EXP_LEVEL_9)
+	{
+		client->ps.fd.forcePowerLevel[FP_PUSH] = 3;
+		client->ps.fd.forcePowerLevel[FP_TELEPATHY] = 3;
+		client->ps.fd.forcePowerLevel[FP_GRIP] = 2;
+		LevelMessage(ent, "Your force Push, Mindtrick is now Lvl 3 Grip Lvl 2.", silent, EXP_LEVEL_9);
+	}
+	if (ent->account.level >= EXP_LEVEL_10)
+	{
+		client->ps.fd.forcePowerLevel[FP_SABERTHROW] = 3;
+		client->ps.fd.forcePowerLevel[FP_LIGHTNING] = 3;
+		client->ps.stats[STAT_MAX_DODGE] = 100;
+		client->ps.fd.forcePowerLevel[FP_GRIP] = 3;
+		LevelMessage(ent, "Your force Lightning, Saber Throw, Grip is now Lvl 3, Dodge set to 100 \n Full Upgrade Class succesfull.", silent, EXP_LEVEL_10);
+	}
+}
+
+void UpdateImperialAgent1(gentity_t *ent, qboolean silent)
+{
+	gclient_t *client = ent->client;
+
+	// Nå kommer spilleren alltid til å få alt ovenfor.
+	if (ent->account.level >= EXP_LEVEL_1)
+	{
+		// Og her kan vi forandre på det som skal til for level 0/1
+		// ingen forandringer fra base-setting for level 0
+	}
+	if (ent->account.level >= EXP_LEVEL_2)
+	{
+		client->skillLevel[SK_PISTOL] = FORCE_LEVEL_2;
+		client->skillLevel[SK_DETPACK] = FORCE_LEVEL_2;
+		client->ps.stats[STAT_ARMOR] = 35;
+		client->ps.stats[STAT_MAX_DODGE] = 35;
+		LevelMessage(ent, "Your Pistol|Detpack is now Lvl 2, Amor|Dodge Upgrade by 10.", silent, EXP_LEVEL_2);
+	}if (ent->account.level >= EXP_LEVEL_3)
+	{
+		client->ps.cloakFuel = 75;
+		client->skillLevel[SK_SENTRY] = FORCE_LEVEL_2;
+		client->ps.ammo[AMMO_BLASTER] = 150;
+		LevelMessage(ent, "Your Sentry Gun is now Lvl 2, Cloak Battery Upgrade by 25, Ammo Blaster by 100.", silent, EXP_LEVEL_3);
+	}if (ent->account.level >= EXP_LEVEL_4)
+	{
+		client->skillLevel[SK_BOWCASTER] = FORCE_LEVEL_2;
+		client->ps.ammo[AMMO_POWERCELL] = 150;
+		client->ps.ammo[AMMO_DETPACK] = 5;
+		LevelMessage(ent, "Your BowCaster is now Lvl 2, PowerCell Upgrade by 50, Detpack Ammo by 5.", silent, EXP_LEVEL_4);
+	}
+	if (ent->account.level >= EXP_LEVEL_5)
+	{
+		LevelMessage(ent, "No Upgrade In this Lvl.", silent, EXP_LEVEL_5);
+	}
+	if (ent->account.level >= EXP_LEVEL_6)
+	{
+		client->skillLevel[SK_PISTOL] = FORCE_LEVEL_3;
+		client->skillLevel[SK_CLOAK] = FORCE_LEVEL_3;
+		client->ps.stats[STAT_ARMOR] = 55;
+		client->ps.stats[STAT_MAX_DODGE] = 55;
+		LevelMessage(ent, "Your Pistol|Cloak is now Lvl 3, Amor|Dodge Upgrade by 20.", silent, EXP_LEVEL_6);
+	}
+	if (ent->account.level >= EXP_LEVEL_7)
+	{
+		client->skillLevel[SK_BLASTERRATEOFFIREUPGRADE] = FORCE_LEVEL_2;
+		client->skillLevel[SK_BOWCASTER] = FORCE_LEVEL_3;
+		client->ps.ammo[AMMO_POWERCELL] = 250;
+		client->skillLevel[SK_DETPACK] = FORCE_LEVEL_3;
+		client->ps.ammo[AMMO_DETPACK] = 8;
+		LevelMessage(ent, "Your BowCaster|Detpack is now Lvl 3, Blaster fire Rate Is Lvl 2, Ammo Powercell 50, Detpack Ammo by 3.", silent, EXP_LEVEL_7);
+	}
+	if (ent->account.level >= EXP_LEVEL_8)
+	{
+		client->ps.ammo[AMMO_BLASTER] = 150;
+		client->ps.stats[STAT_ARMOR] = 80;
+		client->ps.stats[STAT_MAX_DODGE] = 80;
+		LevelMessage(ent, "Your force Lightning is now Lvl 2 Amor|Dodge by 25.", silent, EXP_LEVEL_8);
+	}
+	if (ent->account.level >= EXP_LEVEL_9)
+	{
+		client->ps.fd.forcePowerLevel[FP_RAGE] = 2;
+		client->ps.ammo[AMMO_BLASTER] = 200;
+		client->ps.ammo[AMMO_POWERCELL] = 300;
+		LevelMessage(ent, "Your Streangt is now Lvl 2 Incress powerup for Fast Meleee Attack and Gun Shots, Ammo Blaster|Powercell upgrade by 50.", silent, EXP_LEVEL_9);
+	}
+	if (ent->account.level >= EXP_LEVEL_10)
+	{
+		client->ps.fd.forcePowerLevel[FP_RAGE] = 2;
+		client->skillLevel[SK_BLASTERRATEOFFIREUPGRADE] = FORCE_LEVEL_2;
+		client->skillLevel[SK_SENTRY] = FORCE_LEVEL_3;
+		LevelMessage(ent, "Your Strength Now Lvl 2, Blaster Fire rate|Sentry is now Lvl 3, Full Upgrade Class succesfull.", silent, EXP_LEVEL_10);
+	}
+}
+
+void UpdateImperialAgent2(gentity_t *ent, qboolean silent)
+{
+	gclient_t *client = ent->client;
+
+	// Nå kommer spilleren alltid til å få alt ovenfor.
+	if (ent->account.level >= EXP_LEVEL_1)
+	{
+		// Og her kan vi forandre på det som skal til for level 0/1
+		// ingen forandringer fra base-setting for level 0
+	}
+	if (ent->account.level >= EXP_LEVEL_2)
+	{
+		client->ps.stats[STAT_ARMOR] = 40;
+		client->ps.stats[STAT_MAX_DODGE] = 40;
+		client->skillLevel[SK_FORCEFIELD] = FORCE_LEVEL_2;
+		LevelMessage(ent, "Your Amor|Dodge Upgrade by 15 ForceField is now Lvl 2.", silent, EXP_LEVEL_2);
+	}
+	if (ent->account.level >= EXP_LEVEL_3)
+	{
+		client->skillLevel[SK_THERMAL] = FORCE_LEVEL_2;
+		client->ps.ammo[AMMO_THERMAL] = 3;
+		LevelMessage(ent, "Your Thermal is now Lvl 2, thermal Ammo Upgrade by 2.", silent, EXP_LEVEL_3);
+	}
+	if (ent->account.level >= EXP_LEVEL_4)
+	{
+		LevelMessage(ent, "No Upgrade in this Lvl.", silent, EXP_LEVEL_4);
+	}
+	if (ent->account.level >= EXP_LEVEL_5)
+	{
+		client->skillLevel[SK_PISTOL] = FORCE_LEVEL_2;
+		client->ps.ammo[AMMO_METAL_BOLTS] = 150;
+		LevelMessage(ent, "Your Pistol is now Lvl 2, Metalbolts Upgrade by 50.", silent, EXP_LEVEL_5);
+	}
+	if (ent->account.level >= EXP_LEVEL_6)
+	{
+		client->skillLevel[SK_FLECHETTE] = FORCE_LEVEL_2;
+		client->skillLevel[SK_SEEKER] = FORCE_LEVEL_2;
+		LevelMessage(ent, "Your Flechetter Gun|Seeker is now Lvl 2.", silent, EXP_LEVEL_6);
+	}
+	if (ent->account.level >= EXP_LEVEL_7)
+	{
+		client->ps.stats[STAT_ARMOR] = 80;
+		client->ps.stats[STAT_MAX_DODGE] = 80;
+		client->skillLevel[SK_FORCEFIELD] = FORCE_LEVEL_2;
+		LevelMessage(ent, "Your ForceFieald is now Lvl 2, Amor|Dodge Upgraded by 40.", silent, EXP_LEVEL_7);
+	}
+	if (ent->account.level >= EXP_LEVEL_8)
+	{
+		client->skillLevel[SK_PISTOL] = FORCE_LEVEL_3;
+		client->ps.ammo[AMMO_METAL_BOLTS] = 100;
+		client->skillLevel[SK_THERMAL] = FORCE_LEVEL_2;
+		client->ps.ammo[AMMO_THERMAL] = 2;
+		client->skillLevel[SK_DETPACK] = FORCE_LEVEL_3;
+		client->ps.ammo[AMMO_DETPACK] = 5;
+		LevelMessage(ent, "Your Pistol|Detpack is now Lvl 3, Thermal Lvl 2.", silent, EXP_LEVEL_8);
+	}
+	if (ent->account.level >= EXP_LEVEL_9)
+	{
+		client->ps.stats[STAT_ARMOR] = 85;
+		client->ps.stats[STAT_MAX_DODGE] = 85;
+		LevelMessage(ent, "Your Amor|Dodge upgrade by 5.", silent, EXP_LEVEL_9);
+	}
+	if (ent->account.level >= EXP_LEVEL_10)
+	{
+		client->skillLevel[SK_THERMAL] = FORCE_LEVEL_3;
+		client->skillLevel[SK_SEEKER] = FORCE_LEVEL_3;
+		client->skillLevel[SK_FORCEFIELD] = FORCE_LEVEL_3;
+		client->skillLevel[SK_FLECHETTE] = FORCE_LEVEL_3;
+		LevelMessage(ent, "Your Flechetter Gun|ForceField|Thermal Bombs|Seeker is now Lvl 3, Full Upgrade Class succesfull.", silent, EXP_LEVEL_10);
+	}
+}
+void UpdateImperialAgent3(gentity_t *ent, qboolean silent)
+{
+	gclient_t *client = ent->client;
+
+	// Nå kommer spilleren alltid til å få alt ovenfor.
+	if (ent->account.level >= EXP_LEVEL_1)
+	{
+		// Og her kan vi forandre på det som skal til for level 0/1
+		// ingen forandringer fra base-setting for level 0
+	}
+	if (ent->account.level >= EXP_LEVEL_2)
+	{
+		client->ps.ammo[AMMO_BLASTER] = 150;
+		client->skillLevel[SK_THERMAL] = FORCE_LEVEL_2;
+		client->ps.stats[STAT_ARMOR] = 35;
+		client->ps.stats[STAT_MAX_DODGE] = 35;
+		client->ps.ammo[AMMO_DETPACK] = 3;
+		LevelMessage(ent, "Your Thermal is now Lvl 2, Amor|Dodge Upgrade by 10 Ammo Blaster by 50, Detpack Ammo By 2.", silent, EXP_LEVEL_2);
+	}if (ent->account.level >= EXP_LEVEL_3)
+	{
+		LevelMessage(ent, "No Upgrade in this Lvl.", silent, EXP_LEVEL_3);
+	}
+	if (ent->account.level >= EXP_LEVEL_4)
+	{
+		client->ps.ammo[AMMO_BLASTER] = 250;
+		client->ps.stats[STAT_ARMOR] = 50;
+		client->ps.stats[STAT_MAX_DODGE] = 50;
+		LevelMessage(ent, "Your Amor|Dodge Upgrade by 15, Ammo Blaster Upgrade by 50", silent, EXP_LEVEL_4);
+	}
+	if (ent->account.level >= EXP_LEVEL_5)
+	{
+		client->skillLevel[SK_BLASTERRATEOFFIREUPGRADE] = FORCE_LEVEL_2;
+		client->skillLevel[SK_BLASTER] = FORCE_LEVEL_2;
+		client->ps.ammo[AMMO_BLASTER] = 300;
+		LevelMessage(ent, "Your Blaster|Blaster Fire Rate is now Lvl 2, Ammo Blaster Upgrade by 50.", silent, EXP_LEVEL_5);
+	}
+	if (ent->account.level >= EXP_LEVEL_6)
+	{
+		client->skillLevel[SK_CLOAK] = FORCE_LEVEL_2;
+		client->ps.cloakFuel = 50;
+		client->skillLevel[SK_SENTRY] = FORCE_LEVEL_2;
+		LevelMessage(ent, "Your Cloak|Sentry Gun is now Lvl 2 Cloak Battery Upgrade by 25.", silent, EXP_LEVEL_6);
+	}
+	if (ent->account.level >= EXP_LEVEL_7)
+	{
+		client->ps.ammo[AMMO_THERMAL] = 3;
+		client->skillLevel[SK_DETPACK] = FORCE_LEVEL_2;
+		client->ps.ammo[AMMO_DETPACK] = 5;
+		LevelMessage(ent, "Your Detpack is now Lvl 3, Thermal Ammo Upgrade by 2, Detpack by 2.", silent, EXP_LEVEL_7);
+	}
+	if (ent->account.level >= EXP_LEVEL_8)
+	{
+		client->skillLevel[SK_THERMAL] = FORCE_LEVEL_3;
+		client->ps.stats[STAT_ARMOR] = 75;
+		client->ps.stats[STAT_MAX_DODGE] = 75;
+		LevelMessage(ent, "Your Thermal is now Lvl 2´, Amor|Dodge Upgrade by 25.", silent, EXP_LEVEL_8);
+	}
+	if (ent->account.level >= EXP_LEVEL_9)
+	{
+		client->skillLevel[SK_CLOAK] = FORCE_LEVEL_3;
+		client->ps.cloakFuel = 75;
+		client->skillLevel[SK_SENTRY] = FORCE_LEVEL_3;
+		LevelMessage(ent, "Your Cloak|Sentry Gun is now Lvl 3, Cloak Battery Upgrade by 25.", silent, EXP_LEVEL_9);
+	}
+	if (ent->account.level >= EXP_LEVEL_10)
+	{
+		client->skillLevel[SK_BLASTERRATEOFFIREUPGRADE] = FORCE_LEVEL_3;
+		client->skillLevel[SK_BLASTER] = FORCE_LEVEL_3;
+		client->ps.ammo[AMMO_THERMAL] = 5;
+		client->skillLevel[SK_DETPACK] = FORCE_LEVEL_3;
+		client->ps.ammo[AMMO_DETPACK] = 7;
+		client->ps.cloakFuel = 100;
+		LevelMessage(ent, "Your Blaster|Blaster Fire rate|Detpack is now Lvl 3, Thermal Ammo|Detpack Upgrade by 2, Cloak Battery By 25, Upgrade Class succesfull.", silent, EXP_LEVEL_10);
+	}
+}
+void UpdateSithinquisitor1(gentity_t *ent, qboolean silent)
+{
+	gclient_t *client = ent->client;
+	// Nå kommer spilleren alltid til å få alt ovenfor.
+	if (ent->account.level >= EXP_LEVEL_1)
+	{
+		// Og her kan vi forandre på det som skal til for level 0/1
+		// ingen forandringer fra base-setting for level 0
+	}
+	if (ent->account.level >= EXP_LEVEL_2)
+	{
+		client->ps.fd.forcePowerLevel[FP_LIGHTNING] = 3;
+		client->ps.fd.forcePowerLevel[FP_TEAM_FORCE] = 2;
+		client->ps.fd.forcePowerLevel[FP_LEVITATION] = 2;
+		LevelMessage(ent, "Your force Lightning is now Lvl 3|TeamForce|Jump is now Lvl 2.", silent, EXP_LEVEL_2);
+	}
+	if (ent->account.level >= EXP_LEVEL_3)
+	{
+		client->ps.fd.forcePowerLevel[FP_PUSH] = 2;
+		client->ps.fd.forcePowerLevel[FP_PULL] = 2;
+		client->ps.fd.forcePowerLevel[FP_SEE] = 2;
+		LevelMessage(ent, "Your Push|Pull|Seeing is now Lvl 2.", silent, EXP_LEVEL_3);
+	}
+	if (ent->account.level >= EXP_LEVEL_4)
+	{
+		client->ps.fd.forcePowerLevel[FP_GRIP] = 2;
+		client->ps.fd.forcePowerLevel[FP_SABER_DEFENSE] = 2;
+		LevelMessage(ent, "Your SaberDefense|Grip is now Lvl 2.", silent, EXP_LEVEL_4);
+	}
+	if (ent->account.level >= EXP_LEVEL_5)
+	{
+		client->ps.fd.forcePowerLevel[FP_SABER_OFFENSE] = 3;
+		client->ps.fd.forcePowerLevel[FP_SABERTHROW] = 2;
+		LevelMessage(ent, "Your SaberOffense is now Lvl 3|Saberthrow Lvl 2.", silent, EXP_LEVEL_5);
+	}
+	if (ent->account.level >= EXP_LEVEL_6)
+	{
+		LevelMessage(ent, "No Upgrade in this Lvl.", silent, EXP_LEVEL_6);
+	}
+	if (ent->account.level >= EXP_LEVEL_7)
+	{
+		client->ps.fd.forcePowerLevel[FP_GRIP] = 3;
+		client->ps.fd.forcePowerLevel[FP_PULL] = 3;
+		LevelMessage(ent, "Your force Grip|Pull is now Lvl 3.", silent, EXP_LEVEL_7);
+	}
+	if (ent->account.level >= EXP_LEVEL_8)
+	{
+		client->ps.fd.forcePowerLevel[FP_RAGE] = 2;
+		client->ps.fd.forcePowerLevel[FP_PUSH] = 3;
+		LevelMessage(ent, "Your Push is now Lvl 3.", silent, EXP_LEVEL_8);
+	}
+	if (ent->account.level >= EXP_LEVEL_9)
+	{
+		client->ps.fd.forcePowerLevel[FP_SEE] = 3;
+		client->ps.fd.forcePowerLevel[FP_SABERTHROW] = 3;
+		LevelMessage(ent, "Your force Seeing|Saberthrow is now Lvl 3.", silent, EXP_LEVEL_9);
+	}
+	if (ent->account.level >= EXP_LEVEL_10)
+	{
+		client->ps.fd.forcePowerLevel[FP_SABER_DEFENSE] = 3;
+		client->ps.fd.forcePowerLevel[FP_TEAM_FORCE] = 3;
+		client->ps.fd.forcePowerLevel[FP_LEVITATION] = 3;
+		LevelMessage(ent, "Your SaberDefense|Jump|TeamForce is now Lvl 3, Upgrade Class succesfull.", silent, EXP_LEVEL_10);
+	}
+}
+void UpdateSithinquisitor2(gentity_t *ent, qboolean silent)
+{
+	gclient_t *client = ent->client;
+
+	// Nå kommer spilleren alltid til å få alt ovenfor.
+	if (ent->account.level >= EXP_LEVEL_1)
+	{
+		// Og her kan vi forandre på det som skal til for level 0/1
+		// ingen forandringer fra base-setting for level 0
+	}
+	if (ent->account.level >= EXP_LEVEL_2)
+	{
+		client->ps.fd.forcePowerLevel[FP_TEAM_HEAL] = 2;
+		client->ps.fd.forcePowerLevel[FP_TEAM_FORCE] = 2;
+		client->ps.fd.forcePowerLevel[FP_LEVITATION] = 2;
+		LevelMessage(ent, "Your TeamHeal|TeamForce|Jump is now Lvl 2.", silent, EXP_LEVEL_2);
+	}
+	if (ent->account.level >= EXP_LEVEL_3)
+	{
+		client->ps.fd.forcePowerLevel[FP_PUSH] = 2;
+		client->ps.fd.forcePowerLevel[FP_PULL] = 2;
+		client->ps.fd.forcePowerLevel[FP_SEE] = 2;
+		LevelMessage(ent, "Your Push|Pull|Seeing is now Lvl 2.", silent, EXP_LEVEL_3);
+	}
+	if (ent->account.level >= EXP_LEVEL_4)
+	{
+		client->ps.fd.forcePowerLevel[FP_DRAIN] = 2;
+		client->ps.fd.forcePowerLevel[FP_SABER_DEFENSE] = 2;
+		LevelMessage(ent, "Your SaberDefense|Draine is now Lvl 2.", silent, EXP_LEVEL_4);
+	}
+	if (ent->account.level >= EXP_LEVEL_5)
+	{
+		client->ps.fd.forcePowerLevel[FP_SABER_OFFENSE] = 3;
+		client->ps.fd.forcePowerLevel[FP_SABERTHROW] = 2;
+		LevelMessage(ent, "Your SaberOffense is now Lvl 3|Saberthrow Lvl 2.", silent, EXP_LEVEL_5);
+	}
+	if (ent->account.level >= EXP_LEVEL_6)
+	{
+		LevelMessage(ent, "No Upgrade in this Lvl.", silent, EXP_LEVEL_6);
+	}
+	if (ent->account.level >= EXP_LEVEL_7)
+	{
+		client->ps.fd.forcePowerLevel[FP_DRAIN] = 3;
+		client->ps.fd.forcePowerLevel[FP_PULL] = 3;
+		LevelMessage(ent, "Your force Draine|Pull is now Lvl 3.", silent, EXP_LEVEL_7);
+	}
+	if (ent->account.level >= EXP_LEVEL_8)
+	{
+		client->ps.fd.forcePowerLevel[FP_RAGE] = 2;
+		client->ps.fd.forcePowerLevel[FP_PUSH] = 3;
+		client->ps.fd.forcePowerLevel[FP_TEAM_HEAL] = 3;
+		LevelMessage(ent, "Your Push|TeamHeal is now Lvl 3.", silent, EXP_LEVEL_8);
+	}
+	if (ent->account.level >= EXP_LEVEL_9)
+	{
+		client->ps.fd.forcePowerLevel[FP_SEE] = 3;
+		client->ps.fd.forcePowerLevel[FP_SABERTHROW] = 3;
+		LevelMessage(ent, "Your force Seeing|Saberthrow is now Lvl 3.", silent, EXP_LEVEL_9);
+	}
+	if (ent->account.level >= EXP_LEVEL_10)
+	{
+		client->ps.fd.forcePowerLevel[FP_SABER_DEFENSE] = 3;
+		client->ps.fd.forcePowerLevel[FP_TEAM_FORCE] = 3;
+		client->ps.fd.forcePowerLevel[FP_LEVITATION] = 3;
+		LevelMessage(ent, "Your SaberDefense|Jump|TeamForce is now Lvl 3, Upgrade Class succesfull.", silent, EXP_LEVEL_10);
+	}
+}
+void UpdateSithinquisitor3(gentity_t *ent, qboolean silent)
+{
+	gclient_t *client = ent->client;
+
+	// Nå kommer spilleren alltid til å få alt ovenfor.
+	if (ent->account.level >= EXP_LEVEL_1)
+	{
+		// Og her kan vi forandre på det som skal til for level 0/1
+		// ingen forandringer fra base-setting for level 0
+	}
+	if (ent->account.level >= EXP_LEVEL_2)
+	{
+		client->ps.fd.forcePowerLevel[FP_TEAM_HEAL] = 2;
+		client->ps.fd.forcePowerLevel[FP_GRIP] = 2;
+		client->ps.fd.forcePowerLevel[FP_LEVITATION] = 2;
+		LevelMessage(ent, "Your TeamHeal|Grip|Jump is now Lvl 2.", silent, EXP_LEVEL_2);
+	}
+	if (ent->account.level >= EXP_LEVEL_3)
+	{
+		client->ps.fd.forcePowerLevel[FP_PUSH] = 2;
+		client->ps.fd.forcePowerLevel[FP_PULL] = 2;
+		client->ps.fd.forcePowerLevel[FP_SEE] = 2;
+		LevelMessage(ent, "Your Push|Pull|Seeing is now Lvl 2.", silent, EXP_LEVEL_3);
+	}
+	if (ent->account.level >= EXP_LEVEL_4)
+	{
+		client->ps.fd.forcePowerLevel[FP_DRAIN] = 2;
+		client->ps.fd.forcePowerLevel[FP_SABER_DEFENSE] = 2;
+		LevelMessage(ent, "Your SaberDefense|Draine is now Lvl 2.", silent, EXP_LEVEL_4);
+	}
+	if (ent->account.level >= EXP_LEVEL_5)
+	{
+		client->ps.fd.forcePowerLevel[FP_SABER_OFFENSE] = 3;
+		client->ps.fd.forcePowerLevel[FP_SABERTHROW] = 2;
+		LevelMessage(ent, "Your SaberOffense is now Lvl 3|Saberthrow Lvl 2.", silent, EXP_LEVEL_5);
+	}
+	if (ent->account.level >= EXP_LEVEL_6)
+	{
+		LevelMessage(ent, "No Upgrade in this Lvl.", silent, EXP_LEVEL_6);
+	}
+	if (ent->account.level >= EXP_LEVEL_7)
+	{
+		client->ps.fd.forcePowerLevel[FP_DRAIN] = 3;
+		client->ps.fd.forcePowerLevel[FP_PULL] = 3;
+		LevelMessage(ent, "Your force Draine|Pull is now Lvl 3.", silent, EXP_LEVEL_7);
+	}
+	if (ent->account.level >= EXP_LEVEL_8)
+	{
+		client->ps.fd.forcePowerLevel[FP_RAGE] = 2;
+		client->ps.fd.forcePowerLevel[FP_PUSH] = 3;
+		client->ps.fd.forcePowerLevel[FP_TEAM_HEAL] = 3;
+		LevelMessage(ent, "Your Push|TeamHeal is now Lvl 3.", silent, EXP_LEVEL_8);
+	}
+	if (ent->account.level >= EXP_LEVEL_9)
+	{
+		client->ps.fd.forcePowerLevel[FP_SEE] = 3;
+		client->ps.fd.forcePowerLevel[FP_SABERTHROW] = 3;
+		LevelMessage(ent, "Your force Seeing|Saberthrow is now Lvl 3.", silent, EXP_LEVEL_9);
+	}
+	if (ent->account.level >= EXP_LEVEL_10)
+	{
+		client->ps.fd.forcePowerLevel[FP_SABER_DEFENSE] = 3;
+		client->ps.fd.forcePowerLevel[FP_GRIP] = 3;
+		client->ps.fd.forcePowerLevel[FP_LEVITATION] = 3;
+		LevelMessage(ent, "Your SaberDefense|Jump|Grip is now Lvl 3, Upgrade Class succesfull.", silent, EXP_LEVEL_10);
+	}
+}
+
+void UpdateCharacter(gentity_t *ent, qboolean silent)
+{
+	switch (ent->account.playerclasses)
+
+	{
+	case PCLASS_TROOPER_1://Tank class to take alot of damage from npc's
+		UpdateTrooper1(ent, silent);
+		break;
+	case PCLASS_TROOPER_2://Tank class to take alot of damage from npc's
+		UpdateTrooper2(ent, silent);
+		break;
+	case PCLASS_TROOPER_3://Tank class to take alot of damage from npc's
+		UpdateTrooper3(ent, silent);
+		break;
+	case PCLASS_JEDIKNIGHT_1://Close DPS to do damage over time to help the team to take down and project the tank
+		UpdateJediKnight1(ent, silent);
+		break;
+	case PCLASS_JEDIKNIGHT_2://Close DPS to do damage over time to help the team to take down and project the tank
+		UpdateJediKnight2(ent, silent);
+		break;
+	case PCLASS_JEDIKNIGHT_3://Close DPS to do damage over time to help the team to take down and project the tank
+		UpdateJediKnight3(ent, silent);
+		break;
+	case PCLASS_SMUGGLER_1://Range DPS to do damage from long distions wiht lightning saber throw and more
+		UpdateSmuggler1(ent, silent);
+		break;
+	case PCLASS_SMUGGLER_2://Range DPS to do damage from long distions wiht lightning saber throw and more
+		UpdateSmuggler2(ent, silent);
+		break;
+	case PCLASS_SMUGGLER_3://Range DPS to do damage from long distions wiht lightning saber throw and more
+		UpdateSmuggler3(ent, silent);
+		break;
+	case PCLASS_JEDI_CONSULAR_1://Healer the importen one to heal Tank and dps from damage/Healing spec. Team healing/Dogde Healing and normal healing
+		UpdateJediConsular1(ent, silent);
+		break;
+	case PCLASS_JEDI_CONSULAR_2://Healer the importen one to heal Tank and dps from damage/Healing spec. Team healing/Dogde Healing and normal healing
+		UpdateJediConsular2(ent, silent);
+		break;
+	case PCLASS_JEDI_CONSULAR_3://Healer the importen one to heal Tank and dps from damage/Healing spec. Team healing/Dogde Healing and normal healing
+		UpdateJediConsular3(ent, silent);
+		break;
+	case PCLASS_BOUNTYHUNTER_1://Tank class to take alot of damage from npc's
+		UpdateBountyhunter1(ent, silent);
+		break;
+	case PCLASS_BOUNTYHUNTER_2:
+		UpdateBountyhunter2(ent, silent);
+		break;
+	case PCLASS_BOUNTYHUNTER_3:
+		UpdateBountyhunter3(ent, silent);
+		break;
+	case PCLASS_SITHWORRIOR_1://Close DPS to do damage over time to help the team to take down and project the tank
+		UpdateSithworrior1(ent, silent);
+		break;
+	case PCLASS_SITHWORRIOR_2://Close DPS to do damage over time to help the team to take down and project the tank
+		UpdateSithworrior2(ent, silent);
+		break;
+	case PCLASS_SITHWORRIOR_3:
+		UpdateSithworrior3(ent, silent);
+		break;
+	case PCLASS_IPPERIAL_AGENT_1://Range DPS to do damage from long distions wiht lightning saber throw and more
+		UpdateImperialAgent1(ent, silent);
+		break;
+	case PCLASS_IPPERIAL_AGENT_2:
+		UpdateImperialAgent2(ent, silent);
+		break;
+	case PCLASS_IPPERIAL_AGENT_3:
+		UpdateImperialAgent3(ent, silent);
+		break;
+	case PCLASS_SITH_INQUISITOR_1://Healer the importen one to heal Tank and dps from damage/Healing spec. Team healing/Dogde Healing and normal healing
+		UpdateSithinquisitor1(ent, silent);
+		break;
+	case PCLASS_SITH_INQUISITOR_2:
+		UpdateSithinquisitor2(ent, silent);
+		break;
+	case PCLASS_SITH_INQUISITOR_3:
+		UpdateSithinquisitor3(ent, silent);
+		break;
+	default:
+		break;
+
+	}
+
+}*/
+//[/CLASSsys]
+//[EXPsys]
+void GiveExperiance(gentity_t *ent, int amount) {
+	if (!ent->client) return;
+
+	if (!g_experianceEnabled.integer) return;
+
+	if (amount <= 0) return;
+
+	if (ent->account.level == NUM_EXP_LEVELS)	// We're already max level. No need to gain more experience 
+		return;
+
+	ent->client->ps.persistant[PERS_EXPERIANCE] += amount;
+
+	if (ent->client->ps.persistant[PERS_EXPERIANCE] >= experienceLevel[ent->account.level])
+	{
+		ent->account.level++;	// Increase level by 1
+		ent->client->ps.persistant[PERS_EXPERIANCE_COUNT] = experienceLevel[ent->account.level];	// Set the required experience for next level.
+		trap->SendServerCommand(ent - g_entities, va("maxexperience %i", ent->client->ps.persistant[PERS_EXPERIANCE_COUNT]));
+		ent->client->ps.persistant[PERS_EXPERIANCE] = 0;	// Reset experience to 0 to start on the next level.
+		trap->SendServerCommand(-1, va("print \"%s^7 has leveled up, and is now level %i!\n\"", ent->client->pers.netname, ent->account.level));
+		trap->SendServerCommand(-1, va("chat \"%s^7 has leveled up, and is now level %i!\n\"", ent->client->pers.netname, ent->account.level));
+		//UpdateCharacter(ent, qfalse);	// Update character, print the messages. so it's NOT silent (qfalse on silent)
+	}
+	//	ent->client->ps.persistant[PERS_EXPERIANCE_COUNT] += amount;
+
+	if (ent->r.svFlags & SVF_OLD_CLIENT) {
+		trap->SendServerCommand(ent - g_entities, va("print \"+%i experiance\n\"", amount));
+	}
+	else {
+		trap->SendServerCommand(ent - g_entities, va("experiance %i", ent->client->ps.persistant[PERS_EXPERIANCE]));
+	}
+}
+
+void TakeExperiance(gentity_t *ent, int amount) {
+	if (!ent->client) return;
+
+	if (!g_experianceEnabled.integer) return;
+
+	if (amount <= 0) return;
+
+	if (amount > ent->client->ps.persistant[PERS_EXPERIANCE])
+		ent->client->ps.persistant[PERS_EXPERIANCE] = 0;
+	else
+		ent->client->ps.persistant[PERS_EXPERIANCE] -= amount;
+
+	if (ent->r.svFlags & SVF_OLD_CLIENT) {
+		trap->SendServerCommand(ent - g_entities, va("print \"-%i experiance\n\"", amount));
+	}
+	else {
+		trap->SendServerCommand(ent - g_entities, va("experiance %i", ent->client->ps.persistant[PERS_EXPERIANCE]));
+	}
+}
+
+void TradeExperiance(gentity_t *from, gentity_t *to, int amount) {
+	if (!from->client) return;
+	if (!to->client) return;
+
+	if (!g_experianceEnabled.integer) return;
+
+	if (amount <= 0) return;
+
+	// we can't take more experiance than they have - no cheating!
+	if (amount > from->client->ps.persistant[PERS_EXPERIANCE])
+		amount = from->client->ps.persistant[PERS_EXPERIANCE];
+
+	from->client->ps.persistant[PERS_EXPERIANCE] -= amount;
+	to->client->ps.persistant[PERS_EXPERIANCE] += amount;
+
+	TakeExperiance(from, amount);
+	GiveExperiance(to, amount);
+}
+//[/EXPsys]
+
 /*
 ==================
 DeathmatchScoreboardMessage
@@ -63,6 +1922,10 @@ void DeathmatchScoreboardMessage( gentity_t *ent ) {
 			" %i %i %i %i %i %i %i %i %i %i %i %i %i %i", level.sortedClients[i],
 			cl->ps.persistant[PERS_SCORE], ping, (level.time - cl->pers.enterTime)/60000,
 			scoreFlags, g_entities[level.sortedClients[i]].s.powerups, accuracy,
+			//[EXPsys]
+			cl->ps.persistant[PERS_EXPERIANCE],
+			cl->ps.persistant[PERS_EXPERIANCE_COUNT],
+			//[/EXPsys]
 			cl->ps.persistant[PERS_IMPRESSIVE_COUNT],
 			cl->ps.persistant[PERS_EXCELLENT_COUNT],
 			cl->ps.persistant[PERS_GAUNTLET_FRAG_COUNT],
@@ -303,6 +2166,18 @@ void G_Give( gentity_t *ent, const char *name, const char *args, int argc )
 		return;
 	}
 
+	//[EXPsys]
+	/*if (Q_stricmp(name, "Experiance") == 0) {
+		int num = 10000;
+		if (trap_Argc() == 3 + baseArg) {
+			trap_Argv(2 + baseArg, arg, sizeof(arg));
+			num = atoi(arg);
+		}
+
+		ent->client->ps.persistant[PERS_EXPERIANCE] += num;
+		return;
+	}*/
+	//[/EXPsys]
 	// spawn a specific item right on the player
 	if ( !give_all ) {
 		it = BG_FindItem( name );
