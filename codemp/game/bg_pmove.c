@@ -4907,6 +4907,11 @@ qboolean PM_AdjustStandAnimForSlope( void )
 	case BOTH_STAND2:
 	case BOTH_SABERFAST_STANCE:
 	case BOTH_SABERSLOW_STANCE:
+	//[SaberSys]
+	//dedicated stance animations for the hidden styles
+	case BOTH_SABERTAVION_STANCE:
+	case BOTH_SABERDESANN_STANCE:
+	//[/SaberSys]
 	case BOTH_CROUCH1IDLE:
 	case BOTH_CROUCH1:
 	case LEGS_LEFTUP1:			//# On a slope with left foot 4 higher than right
@@ -5042,6 +5047,11 @@ qboolean PM_AdjustStandAnimForSlope( void )
 		case BOTH_STAND2:
 		case BOTH_SABERFAST_STANCE:
 		case BOTH_SABERSLOW_STANCE:
+		//[SaberSys]
+		//dedicated stance animations for the hidden styles
+		case BOTH_SABERTAVION_STANCE:
+		case BOTH_SABERDESANN_STANCE:
+		//[/SaberSys]
 		case BOTH_CROUCH1IDLE:
 			if ( destAnim >= LEGS_LEFTUP1 && destAnim <= LEGS_LEFTUP5 )
 			{//going into left side up
@@ -5190,22 +5200,36 @@ int PM_LegsSlopeBackTransition(int desiredAnim)
 PM_Footsteps
 ===============
 */
+//[SaberSys]
+extern qboolean PM_SaberInBrokenParry(int move);
+//[/SaberSys]
 static void PM_Footsteps( void ) {
 	float		bobmove;
 	int			old;
 	int			setAnimFlags = 0;
 
-	if ( (PM_InSaberAnim( (pm->ps->legsAnim) ) && !BG_SpinningSaberAnim( (pm->ps->legsAnim) ))
+	//[SaberSys]
+	//racc - Broken parries should play full body.
+	if ((PM_InSaberAnim((pm->ps->legsAnim))
+		&& !BG_SpinningSaberAnim(pm->ps->legsAnim)
+		&& !PM_SaberInBrokenParry(pm->ps->saberMove))
+		//if ( (PM_InSaberAnim( (pm->ps->legsAnim) ) && !BG_SpinningSaberAnim( (pm->ps->legsAnim) )) 
+		//[/SaberSys]
 		|| (pm->ps->legsAnim) == BOTH_STAND1
 		|| (pm->ps->legsAnim) == BOTH_STAND1TO2
 		|| (pm->ps->legsAnim) == BOTH_STAND2TO1
 		|| (pm->ps->legsAnim) == BOTH_STAND2
 		|| (pm->ps->legsAnim) == BOTH_SABERFAST_STANCE
 		|| (pm->ps->legsAnim) == BOTH_SABERSLOW_STANCE
+		//[SaberSys]
+		//dedicated stance animations for the hidden styles
+		|| (pm->ps->legsAnim) == BOTH_SABERTAVION_STANCE
+		|| (pm->ps->legsAnim) == BOTH_SABERDESANN_STANCE
+		//[/SaberSys]
 		|| (pm->ps->legsAnim) == BOTH_BUTTON_HOLD
 		|| (pm->ps->legsAnim) == BOTH_BUTTON_RELEASE
-		|| PM_LandingAnim( (pm->ps->legsAnim) )
-		|| PM_PainAnim( (pm->ps->legsAnim) ))
+		|| PM_LandingAnim((pm->ps->legsAnim))
+		|| PM_PainAnim((pm->ps->legsAnim)))
 	{//legs are in a saber anim, and not spinning, be sure to override it
 		setAnimFlags |= SETANIM_FLAG_OVERRIDE;
 	}
@@ -7875,6 +7899,9 @@ are being updated isntead of a full move
 void PM_UpdateViewAngles( playerState_t *ps, const usercmd_t *cmd ) {
 	short		temp;
 	int		i;
+	//[SaberSys]
+	short		angle;
+	//[/SaberSys]
 
 	if ( ps->pm_type == PM_INTERMISSION || ps->pm_type == PM_SPINTERMISSION) {
 		return;		// no view changes at all
@@ -7883,6 +7910,59 @@ void PM_UpdateViewAngles( playerState_t *ps, const usercmd_t *cmd ) {
 	if ( ps->pm_type != PM_SPECTATOR && ps->stats[STAT_HEALTH] <= 0 ) {
 		return;		// no view changes at all
 	}
+
+	//[SaberSys]
+	if ( ps->userInt1 )
+	{//have some sort of lock in place
+		if ( ps->userInt1 & LOCK_UP )
+		{
+			temp = cmd->angles[PITCH] + ps->delta_angles[PITCH];
+			angle = ANGLE2SHORT(ps->viewangles[PITCH]);
+
+			if ( temp < angle )
+			{//cancel out the cmd angles with the delta_angles if the resulting sum 
+				//is in the banned direction
+				ps->delta_angles[PITCH] = angle - cmd->angles[PITCH];
+			}
+		}
+
+		if ( ps->userInt1 & LOCK_DOWN )
+		{
+			temp = cmd->angles[PITCH] + ps->delta_angles[PITCH];
+			angle = ANGLE2SHORT(ps->viewangles[PITCH]);
+
+			if ( temp > angle )
+			{//cancel out the cmd angles with the delta_angles if the resulting sum 
+				//is in the banned direction
+				ps->delta_angles[PITCH] = angle - cmd->angles[PITCH];
+			}		
+		}
+
+		if (ps->userInt1 & LOCK_RIGHT)
+		{
+			temp = cmd->angles[YAW] + ps->delta_angles[YAW];
+			angle = ANGLE2SHORT(ps->viewangles[YAW]);
+
+			if (temp < angle)
+			{//cancel out the cmd angles with the delta_angles if the resulting sum 
+				//is in the banned direction
+				ps->delta_angles[YAW] = angle - cmd->angles[YAW];
+			}
+		}
+
+		if (ps->userInt1 & LOCK_LEFT)
+		{
+			temp = cmd->angles[YAW] + ps->delta_angles[YAW];
+			angle = ANGLE2SHORT(ps->viewangles[YAW]);
+
+			if (temp > angle)
+			{//cancel out the cmd angles with the delta_angles if the resulting sum 
+				//is in the banned direction
+				ps->delta_angles[YAW] = angle - cmd->angles[YAW];
+			}
+		}
+	}
+	//[/SaberSys]
 
 	// circularly clamp the angles with deltas
 	for (i=0 ; i<3 ; i++) {
@@ -9682,6 +9762,49 @@ static QINLINE void PM_CmdForSaberMoves(usercmd_t *ucmd)
 		//lock their viewangles during these attacks.
 		PM_SetPMViewAngle(pm->ps, pm->ps->viewangles, ucmd);
 	}
+	//[SaberSys]
+	else if (PM_SaberInBrokenParry(pm->ps->saberMove))
+	{//you can't move while stunned.
+
+		switch (pm->ps->torsoAnim)
+		{
+		case BOTH_H1_S1_T_:
+		case BOTH_H1_S1_TR:
+		case BOTH_H1_S1_TL:
+		case BOTH_H1_S1_BL:
+		case BOTH_H1_S1_B_:
+		case BOTH_H1_S1_BR:
+			//slight backwards stumble
+			if (BG_GetTorsoAnimPoint(pm->ps, pm_entSelf->localAnimIndex) >= .5f)
+			{//past the stumble part of the animation
+				ucmd->forwardmove = -46;
+			}
+			else
+			{
+				ucmd->forwardmove = 0;
+			}
+			break;
+
+		case BOTH_H6_S6_BL:
+			//slight back hop
+			ucmd->forwardmove = -30;
+			break;
+
+		case BOTH_H7_S7_T_:
+		case BOTH_H7_S7_TR:
+			//two small steps back
+			ucmd->forwardmove = -30;
+			break;
+
+		default:  //don't know this one.
+			ucmd->forwardmove = 0;
+			break;
+		};
+
+		ucmd->rightmove = 0;
+		ucmd->upmove = 0;
+	}
+	//[/SaberSys]
 }
 
 //constrain him based on the angles of his vehicle and the caps
@@ -10212,6 +10335,62 @@ void PM_MoveForKata(usercmd_t *ucmd)
 	}
 }
 
+//[SaberSys]
+void PM_MoveLock(void)
+{
+	if (pm->ps->userInt1)
+	{
+		if (pm->ps->userInt1 & LOCK_MOVERIGHT)
+		{
+			if (pm->cmd.rightmove > 0)
+			{
+				pm->cmd.rightmove = 0;
+			}
+		}
+
+		if (pm->ps->userInt1 & LOCK_MOVELEFT)
+		{
+			if (pm->cmd.rightmove < 0)
+			{
+				pm->cmd.rightmove = 0;
+			}
+		}
+
+		if (pm->ps->userInt1 & LOCK_MOVEFORWARD)
+		{
+			if (pm->cmd.forwardmove > 0)
+			{
+				pm->cmd.forwardmove = 0;
+			}
+		}
+
+		if (pm->ps->userInt1 & LOCK_MOVEBACK)
+		{
+			if (pm->cmd.forwardmove < 0)
+			{
+				pm->cmd.forwardmove = 0;
+			}
+		}
+
+		if (pm->ps->userInt1 & LOCK_MOVEUP)
+		{
+			if (pm->cmd.upmove > 0)
+			{
+				pm->cmd.upmove = 0;
+			}
+		}
+
+		if (pm->ps->userInt1 & LOCK_MOVEDOWN)
+		{
+			if (pm->cmd.upmove < 0)
+			{
+				pm->cmd.upmove = 0;
+			}
+		}
+	}
+}
+//[/SaberSys]
+
 void PmoveSingle (pmove_t *pmove) {
 	qboolean stiffenedUp = qfalse;
 	float gDist = 0;
@@ -10276,7 +10455,15 @@ void PmoveSingle (pmove_t *pmove) {
 			pm->cmd.upmove = 0;
 		}
 	}
-
+	//[SaberSys]
+	PM_MoveLock();
+	//[/SaberSys]
+	if (pm->ps->saberActionFlags & (1 << SAF_BLOCKING))
+	{
+		stiffenedUp = qtrue;
+		//PM_SetAnim( SETANIM_BOTH, BOTH_STAND1IDLE1, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD, 0 );
+		pm->ps->legsAnim = BOTH_STAND1IDLE1;
+	}
 	if (pm->ps->pm_type == PM_FLOAT)
 	{ //You get no control over where you go in grip movement
 		stiffenedUp = qtrue;
@@ -10297,15 +10484,26 @@ void PmoveSingle (pmove_t *pmove) {
 		pm->ps->saberMove == LS_A_FLIP_SLASH || pm->ps->saberMove == LS_A_JUMP_T__B_ ||
 		pm->ps->saberMove == LS_DUAL_LR || pm->ps->saberMove == LS_DUAL_FB)
 	{
-		if (pm->ps->legsAnim == BOTH_JUMPFLIPSTABDOWN ||
-			pm->ps->legsAnim == BOTH_JUMPFLIPSLASHDOWN1)
+		//[SaberSys]
+		//tweaked this so that the flip stab move doesn't overrotate during the move and end up facing right after the move.
+		if ((pm->ps->legsAnim == BOTH_JUMPFLIPSTABDOWN &&  pm->ps->legsTimer < 1600 && pm->ps->legsTimer > 1150)
+			|| (pm->ps->legsAnim == BOTH_JUMPFLIPSLASHDOWN1 &&  pm->ps->legsTimer < 1600 && pm->ps->legsTimer > 900))
 		{ //flipover medium stance attack
-			if (pm->ps->legsTimer < 1600 && pm->ps->legsTimer > 900)
-			{
-				pm->ps->viewangles[YAW] += pml.frametime*240.0f;
-				PM_SetPMViewAngle(pm->ps, pm->ps->viewangles, &pm->cmd);
-			}
+			pm->ps->viewangles[YAW] += pml.frametime*240.0f;
+			PM_SetPMViewAngle(pm->ps, pm->ps->viewangles, &pm->cmd);
 		}
+		/* basejka code
+		if (pm->ps->legsAnim == BOTH_JUMPFLIPSTABDOWN ||
+		pm->ps->legsAnim == BOTH_JUMPFLIPSLASHDOWN1)
+		{ //flipover medium stance attack
+		if (pm->ps->legsTimer < 1600 && pm->ps->legsTimer > 900)
+		{
+		pm->ps->viewangles[YAW] += pml.frametime*240.0f;
+		PM_SetPMViewAngle(pm->ps, pm->ps->viewangles, &pm->cmd);
+		}
+		}
+		*/
+		//[/SaberSys]
 		stiffenedUp = qtrue;
 	}
 	else if ((pm->ps->legsAnim) == (BOTH_A2_STABBACK1) ||
@@ -10433,6 +10631,12 @@ void PmoveSingle (pmove_t *pmove) {
 	{ //can't move while in a force land
 		stiffenedUp = qtrue;
 	}
+	//[SaberSys]
+	else if (BG_InSlowBounce(pm->ps))
+	{//can't move during a slow bounce
+		stiffenedUp = qtrue;
+	}
+	//[/SaberSys]
 
 	if ( pm->ps->saberMove == LS_A_LUNGE )
 	{//can't move during lunge

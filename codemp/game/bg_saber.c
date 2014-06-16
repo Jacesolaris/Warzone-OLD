@@ -116,7 +116,11 @@ qboolean BG_EnoughForcePowerForMove( int cost )
 #define AFLAG_IDLE	(SETANIM_FLAG_NORMAL)
 #define AFLAG_ACTIVE (SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD | SETANIM_FLAG_HOLDLESS)
 #define AFLAG_WAIT (SETANIM_FLAG_HOLD | SETANIM_FLAG_HOLDLESS)
-#define AFLAG_FINISH (SETANIM_FLAG_HOLD)
+//[SaberSys]
+//We probably shouldn't use SETANIM_FLAG_HOLD without SETANIM_FLAG_HOLDLESS because it doesn't account for animation speed differences.
+#define AFLAG_FINISH (SETANIM_FLAG_HOLD | SETANIM_FLAG_HOLDLESS)
+//#define AFLAG_FINISH (SETANIM_FLAG_HOLD)
+//[/SaberSys]
 
 //FIXME: add the alternate anims for each style?
 saberMoveData_t	saberMoveData[LS_MOVE_MAX] = {//							NB:randomized
@@ -1680,17 +1684,26 @@ saberMoveName_t PM_SaberFlipOverAttackMove(void)
 
 	PM_SetForceJumpZStart(pm->ps->origin[2]);//so we don't take damage if we land at same height
 
-	PM_AddEvent( EV_JUMP );
+	PM_AddEvent(EV_JUMP);
 	pm->ps->fd.forceJumpSound = 1;
 	pm->cmd.upmove = 0;
 
 	/*
 	if ( PM_irand_timesync( 0, 1 ) )
 	{
-		return LS_A_FLIP_STAB;
+	return LS_A_FLIP_STAB;
 	}
 	else
 	*/
+	//[SaberSys]
+	if (pm->ps->fd.saberAnimLevel == SS_FAST
+		|| pm->ps->fd.saberAnimLevel == SS_MEDIUM
+		|| pm->ps->fd.saberAnimLevel == SS_TAVION)
+	{
+		return LS_A_FLIP_STAB;
+	}
+	else
+		//[/SaberSys]
 	{
 		return LS_A_FLIP_SLASH;
 	}
@@ -1810,7 +1823,11 @@ saberMoveName_t PM_SaberLungeAttackMove( qboolean noSpecials )
 		return LS_A_T2B;//LS_NONE;
 	}
 	//just do it
-	if (pm->ps->fd.saberAnimLevel == SS_FAST)
+	//[SaberSys]
+	//all single saber styles can now do lunges.
+	if (pm->ps->fd.saberAnimLevel >= SS_FAST && pm->ps->fd.saberAnimLevel <= SS_TAVION)
+	//if (pm->ps->fd.saberAnimLevel == SS_FAST)
+	//[/SaberSys]
 	{
 		VectorCopy( pm->ps->viewangles, fwdAngles );
 		fwdAngles[PITCH] = fwdAngles[ROLL] = 0;
@@ -2182,10 +2199,17 @@ qboolean PM_InSecondaryStyle( void )
 	return qfalse;
 }
 
+//[SaberSys]
+extern qboolean PM_InCartwheel(int anim);
+//[/SaberSys]
 saberMoveName_t PM_SaberAttackForMovement(saberMoveName_t curmove)
 {
 	saberMoveName_t newmove = LS_NONE;
-	qboolean noSpecials = PM_InSecondaryStyle();
+	//[SaberSys]
+	//can't launch a special while in a cartwheel (prevents possible FP exploit)
+	qboolean noSpecials = PM_InSecondaryStyle() || PM_InCartwheel(pm->ps->legsAnim);
+	//qboolean noSpecials = PM_InSecondaryStyle();
+	//[/SaberSys]
 	qboolean allowCartwheels = qtrue;
 	saberMoveName_t overrideJumpRightAttackMove = LS_INVALID;
 	saberMoveName_t overrideJumpLeftAttackMove = LS_INVALID;
@@ -2401,7 +2425,12 @@ saberMoveName_t PM_SaberAttackForMovement(saberMoveName_t curmove)
 				}
 			}
 			else if (!noSpecials&&
-				pm->ps->fd.saberAnimLevel == SS_MEDIUM &&
+				//[SaberSys]
+				//all single saber styles now have an overhead slash move
+				(pm->ps->fd.saberAnimLevel >= SS_FAST &&
+				pm->ps->fd.saberAnimLevel <= SS_TAVION) &&
+				//pm->ps->fd.saberAnimLevel == SS_MEDIUM &&
+				//[/SaberSys]
 				pm->ps->velocity[2] > 100 &&
 				PM_GroundDistance() < 32 &&
 				!BG_InSpecialJump(pm->ps->legsAnim) &&
@@ -2440,7 +2469,11 @@ saberMoveName_t PM_SaberAttackForMovement(saberMoveName_t curmove)
 					}
 				}
 			}
-			else if ((pm->ps->fd.saberAnimLevel == SS_FAST || pm->ps->fd.saberAnimLevel == SS_DUAL || pm->ps->fd.saberAnimLevel == SS_STAFF) &&
+			//[SaberSys]
+			//all single saber styles can now do lunges.
+			else if (
+				//else if ((pm->ps->fd.saberAnimLevel == SS_FAST || pm->ps->fd.saberAnimLevel == SS_DUAL || pm->ps->fd.saberAnimLevel == SS_STAFF) &&
+				//[/SaberSys]
 				pm->ps->groundEntityNum != ENTITYNUM_NONE &&
 				(pm->ps->pm_flags & PMF_DUCKED) &&
 				pm->ps->weaponTime <= 0 &&
@@ -2702,6 +2735,54 @@ qboolean PM_CanDoKata( void )
 	return qfalse;
 }
 
+//[SaberSys]
+//ported from SP code
+qboolean PM_SaberThrowable(void)
+{
+	saberInfo_t *saber = BG_MySaber(pm->ps->clientNum, 0);
+	if (!saber)
+	{//this is bad, just drop out.
+		return qfalse;
+	}
+
+	/* racc - popped this off to see if we don't need it.
+	//ugh, hard-coding this is bad...
+	if ( pm->ps->saberAnimLevel == SS_STAFF )
+	{
+	return qfalse;
+	}
+	*/
+
+	if (!(saber->saberFlags&SFL_NOT_THROWABLE))
+	{//yes, this saber is always throwable
+		return qtrue;
+	}
+
+	//saber is not normally throwable
+	if ((saber->saberFlags&SFL_SINGLE_BLADE_THROWABLE))
+	{//it is throwable if only one blade is on
+		if (saber->numBlades > 1)
+		{//it has more than one blade
+			int i = 0;
+			int numBladesActive = 0;
+			for (; i < saber->numBlades; i++)
+			{
+				if (saber->blade[i].active)
+				{
+					numBladesActive++;
+				}
+			}
+			if (numBladesActive == 1)
+			{//only 1 blade is on
+				return qtrue;
+			}
+		}
+	}
+	//nope, can't throw it
+	return qfalse;
+}
+//[/SaberSys]
+
 qboolean PM_CheckAltKickAttack( void )
 {
 	if ( pm->ps->weapon == WP_SABER )
@@ -2876,6 +2957,41 @@ int PM_ReturnforQuad(int quad)
 		break;
 	default:
 		return LS_READY;
+	};
+}
+//[/SaberSys]
+
+//[SaberSys]
+int BlockedforQuad(int quad)
+{//returns the saberBlocked direction for given quad.
+	switch (quad)
+	{
+	case Q_BR:
+		return BLOCKED_LOWER_RIGHT;
+		break;
+	case Q_R:
+		return BLOCKED_UPPER_RIGHT;
+		break;
+	case Q_TR:
+		return BLOCKED_UPPER_RIGHT;
+		break;
+	case Q_T:
+		return BLOCKED_TOP;
+		break;
+	case Q_TL:
+		return BLOCKED_UPPER_LEFT;
+		break;
+	case Q_L:
+		return BLOCKED_UPPER_LEFT;
+		break;
+	case Q_BL:
+		return BLOCKED_LOWER_LEFT;
+		break;
+	case Q_B:
+		return BLOCKED_LOWER_LEFT;
+		break;
+	default:
+		return BLOCKED_TOP;
 	};
 }
 //[/SaberSys]

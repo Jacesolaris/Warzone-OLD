@@ -15,7 +15,11 @@ void WP_SaberAddG2Model( gentity_t *saberent, const char *saberModel, qhandle_t 
 void WP_SaberRemoveG2Model( gentity_t *saberent );
 extern qboolean WP_SaberStyleValidForSaber( saberInfo_t *saber1, saberInfo_t *saber2, int saberHolstered, int saberAnimLevel );
 extern qboolean WP_UseFirstValidSaberStyle( saberInfo_t *saber1, saberInfo_t *saber2, int saberHolstered, int *saberAnimLevel );
-
+//[EXPsys]
+extern void GiveExperiance(gentity_t *ent, int amount);
+extern void TakeExperiance(gentity_t *ent, int amount);
+extern void TradeExperiance(gentity_t *from, gentity_t *to, int amount);
+//[/EXPsys]
 forcedata_t Client_Force[MAX_CLIENTS];
 
 /*QUAKED info_player_duel (1 0 1) (-16 -16 -24) (16 16 32) initial
@@ -2578,6 +2582,13 @@ char *ClientConnect( int clientNum, qboolean firstTime, qboolean isBot ) {
 	te->r.svFlags |= SVF_BROADCAST;
 	te->s.eventParm = clientNum;
 
+	//[EXPsys]
+	client->ps.persistant[PERS_EXPERIANCE] = 0;
+	client->ps.persistant[PERS_EXPERIANCE_COUNT] = experienceLevel[ent->account.level];
+	trap->SendServerCommand(clientNum, va("maxexperience %i", ent->client->ps.persistant[PERS_EXPERIANCE_COUNT]));
+	GiveExperiance(ent, g_experianceInitial.integer); // call ui_experiance
+	//[/EXPsys]
+
 	// for statistics
 //	client->areabits = areabits;
 //	if ( !client->areabits )
@@ -2707,6 +2718,16 @@ void ClientBegin( int clientNum, qboolean allowTeamReset ) {
 	client->ps.persistant[PERS_SPAWN_COUNT] = spawnCount;
 
 	client->ps.hasDetPackPlanted = qfalse;
+
+	//[EXPsys]
+	if (client->ps.persistant[PERS_EXPERIANCE] == 0) {
+		client->ps.persistant[PERS_EXPERIANCE] = 0;
+		client->ps.persistant[PERS_EXPERIANCE_COUNT] = experienceLevel[ent->account.level];
+		trap->SendServerCommand(clientNum, va("maxexperience %i", ent->client->ps.persistant[PERS_EXPERIANCE_COUNT]));
+		GiveExperiance(ent, g_experianceInitial.integer); // call ui_experiance
+		//	client->ps.persistant[PERS_EXPERIANCE_COUNT] -= g_experianceInitial.integer; // starting money isn't earned 
+	}
+	//[/EXPsys]
 
 	//first-time force power initialization
 	WP_InitForcePowers( ent );

@@ -1024,6 +1024,12 @@ Ghoul2 Insert End
 	int numSpawnVarChars;
 	char spawnVarChars[MAX_SPAWN_VARS_CHARS];
 
+	//[EXPsys]
+	int					experianceEarned;
+	int					experianceTime;
+	int					maxExperience;
+	//[/EXPsys]
+
 } cg_t;
 
 #define MAX_TICS	14

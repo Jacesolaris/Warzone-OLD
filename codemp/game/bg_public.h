@@ -572,6 +572,10 @@ typedef enum {
 	PERS_ATTACKEE_ARMOR,			// health/armor of last person we attacked
 	PERS_KILLED,					// count of the number of times you died
 	// player awards tracking
+	//[EXPsys]
+	PERS_EXPERIANCE,
+	PERS_EXPERIANCE_COUNT,
+	//[/EXPsys]
 	PERS_IMPRESSIVE_COUNT,			// two railgun hits in a row
 	PERS_EXCELLENT_COUNT,			// two successive kills in a short amount of time
 	PERS_DEFEND_COUNT,				// defend awards
@@ -1698,6 +1702,10 @@ qboolean BG_InRoll( playerState_t *ps, int anim );
 qboolean BG_InDeathAnim( int anim );
 qboolean BG_InSaberLockOld( int anim );
 qboolean BG_InSaberLock( int anim );
+
+//[SaberSys]
+qboolean BG_InWalk(int anim);
+//[/SaberSys]
 
 //[FatigueSys]
 void BG_SaberStartTransAnim(int clientNum, int saberAnimLevel, int weapon, int anim,

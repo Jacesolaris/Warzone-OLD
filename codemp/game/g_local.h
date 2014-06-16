@@ -145,6 +145,52 @@ typedef enum
 	HL_MAX
 } hitLocation_t;
 
+//[Account System]
+// Account system structure
+#define ACCOUNT_VERSION  // Remember to change this each time we add something, any changes really :D
+typedef struct account_t
+{
+	char		username[64];
+	char		password[64]; // This should be hashed, but it's a pain to add quickly so maybe later.
+	int			playerclass;
+	int			playerclasses;
+	int			experience;	// Experience, only used for saving! Use ent->client->ps.persistent[PERS_EXPERIENCE] in code!
+	int			permissions; //Just an example variable
+	int			level;
+	// Add any other variables you need here later. Then it will save it automaticly and load them with the system i'll make.
+	// and you can access them with something like this: ent->account.<variable>; ent being the player entity (gentity_t)
+
+}account_t;
+
+qboolean hasAccount(account_t *account);
+qboolean UpdateAccount(account_t *account, gentity_t *ent);
+
+//[Linux]
+#ifndef __linux__
+typedef enum
+#else
+enum
+#endif
+//[/Linux]
+{
+	//EXP_LEVEL_0,
+	EXP_LEVEL_1,
+	EXP_LEVEL_2,
+	EXP_LEVEL_3,
+	EXP_LEVEL_4,
+	EXP_LEVEL_5,
+	EXP_LEVEL_6,
+	EXP_LEVEL_7,
+	EXP_LEVEL_8,
+	EXP_LEVEL_9,
+	EXP_LEVEL_10,
+	NUM_EXP_LEVELS				// You can add more levels here, by adding EXP_LEVEL_6, above the NUM_EXP_LEVELS etc.
+};
+#define EXP_LEVEL_ 0 // Denne må fjernes når du har fikset alt.
+
+extern int experienceLevel[NUM_EXP_LEVELS];
+//[/Account System]
+
 //============================================================================
 extern void *precachedKyle;
 extern void *g2SaberInstance;
@@ -379,7 +425,9 @@ struct gentity_s {
 	float		epGravFactor;
 
 	gitem_t		*item;			// for bonus items
-
+	//[Account System]
+	account_t	account;		// Only have an account if you are a player, is NULL if not a player. Might change this soon.
+	//[/Account System]
 	// OpenJK add
 	int			useDebounceTime;	// for cultist_destroyer
 };

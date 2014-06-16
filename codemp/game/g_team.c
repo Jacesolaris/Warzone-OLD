@@ -849,6 +849,17 @@ int Team_TouchOurFlag( gentity_t *ent, gentity_t *other, int team ) {
 				player->client->rewardTime = level.time + REWARD_SPRITE_TIME;
 			}
 		}
+		//SERENITY EXPERIANCE SYSTEM add for for winning or losing a round (-at-)
+		if (g_experianceEnabled.integer)
+		{
+			if ((player->client->sess.sessionTeam == cl->sess.sessionTeam)) {
+				GiveExperiance(player, g_experianceWinRound.integer);
+			}
+			else
+			{
+				GiveExperiance(player, g_experianceLoseRound.integer);
+			}
+		}
 	}
 	Team_ResetFlags();
 

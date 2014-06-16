@@ -1555,7 +1555,38 @@ static void CG_RemapShader_f( void ) {
 		trap->R_RemapShader( shader1, shader2, CG_Argv( 3 ) );
 	}
 }
+//[EXPsys]
+static void CG_Experiance_f( void ) {
+	char m[32];
+	int earn;
+	trap->Cvar_VariableStringBuffer("ui_experiance", m, sizeof(m));
+	earn = atoi(CG_Argv(1)) - atoi(m);
 
+	if (earn == 0)
+		return;
+	/*else if (earn > 0)
+		CG_Printf("", earn);
+	else
+		CG_Printf("", -earn);*/
+
+	if (cg.experianceTime < cg.time) {
+		cg.experianceEarned = earn;
+	}
+	else {
+		cg.experianceEarned += earn;
+	}
+
+	cg.experianceTime = cg.time + 2000;
+
+	trap->Cvar_Set("ui_experiance", CG_Argv(1));
+}
+
+static void CG_MaxExperience_f( void ) {
+	int max = atoi(CG_Argv(1));
+
+	cg.maxExperience = max;
+}
+//[/EXPsys]
 static void CG_ClientLevelShot_f( void ) {
 	// clientLevelShot is sent before taking a special screenshot for
 	// the menu system during development
@@ -1578,6 +1609,7 @@ static serverCommand_t	commands[] = {
 	{ "cp",					CG_CenterPrint_f },
 	{ "cps",				CG_CenterPrintSE_f },
 	{ "cs",					CG_ConfigStringModified },
+	{ "experiance",			CG_Experiance_f },//[EXPsys]
 	{ "ircg",				CG_RestoreClientGhoul_f },
 	{ "kg2",				CG_KillGhoul2_f },
 	{ "kls",				CG_KillLoopSounds_f },
@@ -1586,6 +1618,7 @@ static serverCommand_t	commands[] = {
 	{ "loaddefered",		CG_LoadDeferredPlayers }, // FIXME: spelled wrong, but not changing for demo
 	{ "ltchat",				CG_Chat_f },
 	{ "map_restart",		CG_MapRestart },
+	{ "maxexperience",		CG_MaxExperience_f },//[EXPsys]
 	{ "nfr",				CG_NewForceRank_f },
 	{ "print",				CG_Print_f },
 	{ "rcg",				CG_RestoreClientGhoul_f },

@@ -34,6 +34,7 @@
 											// hits it, it will still touch
 
 #define	SVF_ICARUS_FREEZE		0x00008000	// NPCs are frozen, ents don't execute ICARUS commands
+#define	SVF_OLD_CLIENT			0x00020000	// client has requested no new commands //Stoiss add.
 
 #define SVF_GLASS_BRUSH			0x08000000	// Ent is a glass brush
 

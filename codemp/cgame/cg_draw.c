@@ -1407,83 +1407,77 @@ void CG_DrawArmorBar(void)										// Function that will draw the fuel bar
 }
 
 
-////[EXPBAR]Stoiss
-//#define EXPFUELBAR_H			8.5f//15.0f//500.0f	//H : Højde i pixel.	// These two decides the size of the fuel bar / Disse to bestemmer størrelsen på ... fuel bar'n =p
-//#define EXPFUELBAR_W			500.0f//15.0f//W : Bredde i pixels. 
-//#define EXPFUELBAR_X		    64.0f //X : X-position. For eksempel angiver "x0 y0" ville position kontrol i øverste venstre hjørne af vinduet klient område, // This here decides where on screen it's drawn. / Bestemmer hvor på skjermen det blir skrevet.
-//#define EXPFUELBAR_Y			460.0f	//Y : Y-position. Hvis Y er udeladt, men ikke X , vil kontrollen blive placeret under alle de tidligere tilføjede kontrol, som kan opfattes som at starte en ny "række".
-//
-//// This too / Denne også, x and y
-////[/EXPBAR]Stoiss
-//// Du må justere DFUELBAR_X og DFUELBAR_Y ovenfor for å flytte hvor den blir tegnet.
-//// Prøv nå =p
-//void CG_DrawExpBar(void)										// Function that will draw the fuel bar 
-//{
-//	vec4_t aColor;
-//	vec4_t bColor;
-//	vec4_t cColor;
-////	vec4_t oColor;	// overflow color
-//	float x = EXPFUELBAR_X;
-//	float y = EXPFUELBAR_Y;
-//    float percent = ((float)cg.snap->ps.persistant[PERS_EXPERIANCE]/ /*cg.snap->ps.stats[PERS_EXPERIANCE_COUNT]*/cg.maxExperience)*EXPFUELBAR_W;		// Finds the percent of your current dodge level.
-//	// So if you have 50 dodge, percent will be 50, representing 50%. And this will work even if you change the max dodge values. No need to change this in the future.
-//
-//	//float overflow = 0.0f;
-//	//int i
-//
-//	if (percent > EXPFUELBAR_W)// We want it to go sideways, not upwards. So we will be using width instead of height.
-//	{
-////		overflow = percent-100.0f;//didnt work so well
-////		percent = 0.1f;
-//		return;
-//	}
-//
-//	if (percent < 0.1f)
-//	{
-//		percent = 0.1f;
-//	}
-//	//color of the bar			This is the colors, you can change them as you want later. R G B A
-///*	aColor[0] = 0.5f;			// Mengde rødt (Alle verdier fra 0.0 til 1.0) R G B ikke R B G xP
-//	aColor[1] = 0.0f;			// mengde grønt
-//	aColor[2] = 0.0f;			// mengde blått
-//	aColor[3] = 0.8f;			// gjennomsiktighet / transperency.
-//*/
-//	VectorCopy4(colorTable[CT_BLUE3],aColor);
-//
-////	for(i = 0; i<3;++i)
-////		oColor[i] = aColor[i]*1.1f;
-////	oColor[3] = aColor[3];
-//
-//	//color of the border
-//	bColor[0] = 0.0f;
-//	bColor[1] = 0.0f;
-//	bColor[2] = 0.0f;
-//	bColor[3] = 0.3f;
-//
-//	//color of greyed out "missing fuel"
-//	cColor[0] = 0.5f;
-//	cColor[1] = 0.5f;
-//	cColor[2] = 0.5f;
-//	cColor[3] = 0.1f;
-//
+//[EXPBAR]Stoiss
+#define EXPFUELBAR_H			8.5f//15.0f//500.0f	//H : Højde i pixel.	// These two decides the size of the fuel bar / Disse to bestemmer størrelsen på ... fuel bar'n =p
+#define EXPFUELBAR_W			500.0f//15.0f//W : Bredde i pixels. 
+#define EXPFUELBAR_X		    64.0f //X : X-position. For eksempel angiver "x0 y0" ville position kontrol i øverste venstre hjørne af vinduet klient område, // This here decides where on screen it's drawn. / Bestemmer hvor på skjermen det blir skrevet.
+#define EXPFUELBAR_Y			460.0f	//Y : Y-position. Hvis Y er udeladt, men ikke X , vil kontrollen blive placeret under alle de tidligere tilføjede kontrol, som kan opfattes som at starte en ny "række".
 
-//
-//	//now draw the part to show how much health there is in the color specified
-//	//CG_FillRect(x+1.0f, y+1.0f+(EXPFUELBAR_H-percent), EXPFUELBAR_W-1.0f, EXPFUELBAR_H-1.0f-(EXPFUELBAR_H-percent), aColor);
-////	CG_FillRect(x+1.0f/*+(EXPFUELBAR_W-percent)*/,y+1.0f,EXPFUELBAR_W-1.0f-(EXPFUELBAR_W-percent),EXPFUELBAR_H-1.0f,aColor);		// This should work.
-//	CG_FillRect(x+1.0f/*+(EXPFUELBAR_W-percent)*/,y+1.0f,EXPFUELBAR_W-1.0f-(EXPFUELBAR_W-percent),EXPFUELBAR_H-1.0f,aColor);
-//	
-////	if(overflow > 0.0f)
-////		CG_FillRect(x+1.0f, y+1.0f+HPFUELBAR_H+(HPFUELBAR_H-overflow), HPFUELBAR_W-1.0f, HPFUELBAR_H-1.0f-(HPFUELBAR_H-overflow), oColor);
+// This too / Denne også, x and y
+//[/EXPBAR]Stoiss
+// Du må justere DFUELBAR_X og DFUELBAR_Y ovenfor for å flytte hvor den blir tegnet.
+// Prøv nå =p
+void CG_DrawExpBar(void)										// Function that will draw the fuel bar 
+{
+	vec4_t aColor;
+	vec4_t bColor;
+	vec4_t cColor;
+	//	vec4_t oColor;	// overflow color
+	float x = EXPFUELBAR_X;
+	float y = EXPFUELBAR_Y;
+	float percent = ((float)cg.snap->ps.persistant[PERS_EXPERIANCE] / /*cg.snap->ps.stats[PERS_EXPERIANCE_COUNT]*/cg.maxExperience)*EXPFUELBAR_W;		// Finds the percent of your current dodge level.
+	// So if you have 50 dodge, percent will be 50, representing 50%. And this will work even if you change the max dodge values. No need to change this in the future.
 
-//	//draw the background (black)
-//	CG_DrawRect(x, y, EXPFUELBAR_W, EXPFUELBAR_H, 1.0f, colorTable[CT_BLACK]);
-//
-//
-//	//then draw the other part greyed out
-//	CG_FillRect(x+1.0f+percent, y+1.0f, EXPFUELBAR_W-percent, EXPFUELBAR_H-1.0f, cColor);
-//		
-//}
+	//float overflow = 0.0f;
+	//int i
+
+	if (percent > EXPFUELBAR_W)// We want it to go sideways, not upwards. So we will be using width instead of height.
+	{
+		//		overflow = percent-100.0f;//didnt work so well
+		//		percent = 0.1f;
+		return;
+	}
+
+	if (percent < 0.1f)
+	{
+		percent = 0.1f;
+	}
+	//color of the bar			This is the colors, you can change them as you want later. R G B A
+	/*	aColor[0] = 0.5f;			// Mengde rødt (Alle verdier fra 0.0 til 1.0) R G B ikke R B G xP
+	aColor[1] = 0.0f;			// mengde grønt
+	aColor[2] = 0.0f;			// mengde blått
+	aColor[3] = 0.8f;			// gjennomsiktighet / transperency.
+	*/
+	VectorCopy4(colorTable[CT_BLUE3], aColor);
+
+	//	for(i = 0; i<3;++i)
+	//		oColor[i] = aColor[i]*1.1f;
+	//	oColor[3] = aColor[3];
+
+	//color of the border
+	bColor[0] = 0.0f;
+	bColor[1] = 0.0f;
+	bColor[2] = 0.0f;
+	bColor[3] = 0.3f;
+
+	//color of greyed out "missing fuel"
+	cColor[0] = 0.5f;
+	cColor[1] = 0.5f;
+	cColor[2] = 0.5f;
+	cColor[3] = 0.1f;
+
+	//now draw the part to show how much health there is in the color specified
+	//CG_FillRect(x+1.0f, y+1.0f+(EXPFUELBAR_H-percent), EXPFUELBAR_W-1.0f, EXPFUELBAR_H-1.0f-(EXPFUELBAR_H-percent), aColor);
+	//	CG_FillRect(x+1.0f/*+(EXPFUELBAR_W-percent)*/,y+1.0f,EXPFUELBAR_W-1.0f-(EXPFUELBAR_W-percent),EXPFUELBAR_H-1.0f,aColor);		// This should work.
+	CG_FillRect(x + 1.0f/*+(EXPFUELBAR_W-percent)*/, y + 1.0f, EXPFUELBAR_W - 1.0f - (EXPFUELBAR_W - percent), EXPFUELBAR_H - 1.0f, aColor);
+
+	//draw the background (black)
+	CG_DrawRect(x, y, EXPFUELBAR_W, EXPFUELBAR_H, 1.0f, colorTable[CT_BLACK]);
+
+	//then draw the other part greyed out
+	CG_FillRect(x + 1.0f + percent, y + 1.0f, EXPFUELBAR_W - percent, EXPFUELBAR_H - 1.0f, cColor);
+
+}
 
 //draw meter showing jetpack fuel when it's not full
 #define JPFUELBAR_H			100.0f
@@ -1734,8 +1728,8 @@ void CG_DrawHUD(centity_t	*cent)
 		UI_SMALLFONT|UI_DROPSHADOW, colorTable[CT_HUD_RED], 0.5f );*/
 
 
-		//UI_DrawScaledProportionalString( SMALLCHAR_WIDTH-(x-300), y+50, va("^7XP ^2%i^7 / ^3%i", cg.snap->ps.persistant[PERS_EXPERIANCE], cg.maxExperience),
-		//UI_SMALLFONT|UI_DROPSHADOW, colorTable[CT_WHITE], 0.4f );
+		CG_DrawScaledProportionalString(SMALLCHAR_WIDTH - (x - 300), y + 50, va("^7XP ^2%i^7 / ^3%i", cg.snap->ps.persistant[PERS_EXPERIANCE], cg.maxExperience),
+		UI_SMALLFONT|UI_DROPSHADOW, colorTable[CT_WHITE], 0.4f );
 
 		//[DODGEBAR]Scooper
 		// This will cause it to draw the fuel bar / dette vil gjøre at den tegner fuel bar'n =p
@@ -1744,7 +1738,7 @@ void CG_DrawHUD(centity_t	*cent)
 		CG_DrawForceBar();
 		CG_DrawHPBar();
 		CG_DrawArmorBar();
-		//CG_DrawExpBar();
+		CG_DrawExpBar();
 		//CG_DrawJetPackBar();
 		//CG_DrawCloakBar();
 
@@ -1838,6 +1832,13 @@ void CG_DrawHUD(centity_t	*cent)
 		{	// Don't draw a bias.
 			scoreStr = va("%s: %i", CG_GetStringEdString("MP_INGAME", "SCORE"), cg.snap->ps.persistant[PERS_SCORE]);
 		}
+
+		{
+			//[EXPsys]
+			scoreStr = va("%s %s: %i ", scoreStr, CG_GetStringEdString("RJ_BASE", "EXP"), cg.snap->ps.persistant[PERS_EXPERIANCE], scoreBiasStr);	
+			//[/EXPsys]
+		}
+
 
 		menuHUD = Menus_FindByName("righthud");
 		Menu_Paint( menuHUD, qtrue );
