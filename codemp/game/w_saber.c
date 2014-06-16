@@ -9,6 +9,10 @@ extern bot_state_t *botstates[MAX_CLIENTS];
 extern qboolean InFront(vec3_t spot, vec3_t from, vec3_t fromAngles, float threshHold);
 extern void G_TestLine(vec3_t start, vec3_t end, int color, int time);
 
+//[SaberSys]
+qboolean G_FindClosestPointOnLineSegment(const vec3_t start, const vec3_t end, const vec3_t from, vec3_t result);
+//[/SaberSys]
+
 int saberSpinSound = 0;
 
 //would be cleaner if these were renamed to BG_ and proto'd in a header.
@@ -1056,7 +1060,6 @@ typedef enum
 #define LOCK_IDEAL_DIST_CIRCLE 48.0f
 
 #define SABER_HITDAMAGE 35
-//void WP_SaberBlockNonRandom( gentity_t *self, vec3_t hitloc, qboolean missileBlock );
 qboolean WP_SaberBlockNonRandom(gentity_t *self, gentity_t *other, vec3_t hitloc, qboolean missileBlock);
 
 int G_SaberLockAnim(int attackerSaberStyle, int defenderSaberStyle, int topOrSide, int lockOrBreakOrSuperBreak, int winOrLose)
@@ -4039,6 +4042,7 @@ void DebounceSaberImpact(gentity_t *self, gentity_t *otherSaberer,
 	}
 }
 
+extern qboolean BG_SaberInNonIdleDamageMove(playerState_t *ps, int AnimIndex);
 void DebounceSaberImpact(gentity_t *self, gentity_t *otherSaberer,
 	int rSaberNum, int rBladeNum, int sabimpactentitynum);
 static QINLINE qboolean CheckSaberDamage(gentity_t *self, int rSaberNum, int rBladeNum, vec3_t saberStart, vec3_t saberEnd, qboolean doInterpolate, int trMask, qboolean extrapolate)
@@ -4157,11 +4161,30 @@ static QINLINE qboolean CheckSaberDamage(gentity_t *self, int rSaberNum, int rBl
 		{//last impact was this saber.
 			return qtrue;
 		}
-	}//Stoiss end
+	}
 	//end saber impact debouncer stuff
+
+	if (otherOwner)
+	{//Do the saber clash effects here now.
+		saberDoClashEffect = qtrue;
+		VectorCopy(tr.endpos, saberClashPos);
+		VectorCopy(tr.plane.normal, saberClashNorm);
+		saberClashEventParm = 1;
+		if (!idleDamage
+			|| BG_SaberInNonIdleDamageMove(&otherOwner->client->ps, otherOwner->localAnimIndex))
+		{//only do viewlocks if one player or the other is in an attack move
+			saberClashOther = otherOwner->s.number;
+			//G_Printf("%i: %i: Saber-on-Saber Impact.\n", level.time, self->s.number);
+		}
+		else
+		{//make the saberClashOther be invalid
+			saberClashOther = -1;
+		}
+	}
 
 	while (!saberTraceDone)
 	{
+
 		vec3_t saberEndExtrapolated;
 		if (extrapolate)
 		{//extrapolate 16
@@ -4178,16 +4201,7 @@ static QINLINE qboolean CheckSaberDamage(gentity_t *self, int rSaberNum, int rBl
 
 		VectorCopy(saberStart, lastValidStart);
 		VectorCopy(saberEndExtrapolated, lastValidEnd);
-		/*
-		if ( tr.allsolid || tr.startsolid )
-		{
-		if ( tr.entityNum == ENTITYNUM_NONE )
-		{
-		qboolean whah = qtrue;
-		}
-		Com_Printf( "saber trace start/all solid - ent is %d\n", tr.entityNum );
-		}
-		*/
+		
 		if (tr.entityNum < MAX_CLIENTS)
 		{
 			G_G2TraceCollide(&tr, lastValidStart, lastValidEnd, saberTrMins, saberTrMaxs);
@@ -4516,15 +4530,26 @@ static QINLINE qboolean CheckSaberDamage(gentity_t *self, int rSaberNum, int rBl
 			attackStr = self->client->ps.fd.saberAnimLevel;
 		}
 	}
-	else if (self->client->ps.saberAttackWound < level.time &&
-		self->client->saberIdleWound < level.time)
-	{ //just touching, do minimal damage and only check for it every 200ms (mainly to cut down on network traffic for hit events)
-		if ((self->client->saber[0].saberFlags2&SFL2_NO_IDLE_EFFECT))
-		{//no idle damage or effects
-			return qtrue;//true cause even though we didn't get a hit, we don't want to do those extra traces because the debounce time says not to.
-		}
+	else if (self->client->ps.saberAttackWound < level.time && self->client->ps.saberIdleWound < level.time) {
+		// just touching, do minimal damage and only check for it every 200ms (mainly to cut down on network traffic for hit events)
+		// no idle damage or effects
+		if ((self->client->saber[0].saberFlags2 & SFL2_NO_IDLE_EFFECT))
+			return qtrue; // true cause even though we didn't get a hit, we don't want to do those extra traces because the debounce time says not to.
+
 		trMask &= ~CONTENTS_LIGHTSABER;
-		dmg = SABER_NONATTACK_DAMAGE;
+
+		if (d_saberSPStyleDamage.integer) {
+			if (BG_SaberInReturn(self->client->ps.saberMove) || g_saberIdleDamage.integer)
+				dmg = SABER_NONATTACK_DAMAGE;
+			else
+				dmg = 0;
+		}
+		else if (g_saberSystem.integer == SABERSYSTEMBEH && BG_SaberInReturn(self->client->ps.saberMove))
+			dmg = 10 * g_saberDamageScale.value;
+		else if (g_saberIdleDamage.integer)
+			dmg = SABER_NONATTACK_DAMAGE;
+		else
+			dmg = 0;
 		idleDamage = qtrue;
 	}
 	else
@@ -5343,7 +5368,8 @@ static QINLINE qboolean CheckSaberDamage(gentity_t *self, int rSaberNum, int rBl
 
 		self->client->ps.saberAttackWound = level.time + g_saberDmgDelay_Wound.integer;
 	}
-
+	//add saber impact debounce
+	DebounceSaberImpact(self, otherOwner, rSaberNum, rBladeNum, sabimpactentitynum);
 	return didHit;
 }
 QINLINE int VectorCompare2(const vec3_t v1, const vec3_t v2) {

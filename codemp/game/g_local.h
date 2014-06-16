@@ -1559,6 +1559,11 @@ extern	level_locals_t	level;
 extern	gentity_t		g_entities[MAX_GENTITIES];
 
 #define	FOFS(x) offsetof(gentity_t, x)
+//[SaberSys]
+typedef enum saberSystems_e {
+SABERSYSTEMBEH,
+} saberSystems_t;
+//[SaberSys]
 
 // userinfo validation bitflags
 // default is all except extended ascii

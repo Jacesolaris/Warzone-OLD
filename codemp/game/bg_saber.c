@@ -4317,6 +4317,49 @@ void PM_SetSaberMove(short newMove)
 	}
 }
 
+//saber status utility tools
+qboolean BG_SaberInFullDamageMove(playerState_t *ps, int AnimIndex)
+{//The player is attacking with a saber attack that does full damage
+	if ((BG_SaberInAttack(ps->saberMove) && !BG_KickMove(ps->saberMove) && !BG_InSaberLock(ps->torsoAnim))
+		|| BG_SuperBreakWinAnim(ps->torsoAnim))
+	{//in attack animation
+		if ((ps->saberMove == LS_A_FLIP_STAB || ps->saberMove == LS_A_FLIP_SLASH)
+			&& (BG_GetTorsoAnimPoint(ps, AnimIndex) <= .5 || BG_GetTorsoAnimPoint(ps, AnimIndex) >= .87)) //assumes that the dude is 
+		{//flip attacks shouldn't do damage during the whole move.
+			return qfalse;
+		}
+
+		if (ps->saberMove == BOTH_ROLL_STAB && BG_GetTorsoAnimPoint(ps, AnimIndex) <= .5)
+		{//don't do damage during the follow thru part of the roll stab.
+			return qfalse;
+		}
+
+		if (ps->saberBlocked == BLOCKED_NONE)
+		{//and not attempting to do some sort of block animation
+			return qtrue;
+		}
+	}
+	return qfalse;
+}
+
+qboolean BG_SaberInTransitionDamageMove(playerState_t *ps)
+{//player is in a saber move where it does transitional damage
+	if (PM_SaberInTransition(ps->saberMove))
+	{
+		if (ps->saberBlocked == BLOCKED_NONE)
+		{//and not attempting to do some sort of block animation
+			return qtrue;
+		}
+	}
+	return qfalse;
+}
+
+
+qboolean BG_SaberInNonIdleDamageMove(playerState_t *ps, int AnimIndex)
+{//player is in a saber move that does something more than idle saber damage
+	return BG_SaberInFullDamageMove(ps, AnimIndex);
+}
+
 saberInfo_t *BG_MySaber( int clientNum, int saberNum )
 {
 	//returns a pointer to the requested saberNum
