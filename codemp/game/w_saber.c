@@ -1061,7 +1061,6 @@ typedef enum
 
 #define SABER_HITDAMAGE 35
 qboolean WP_SaberBlockNonRandom(gentity_t *self, gentity_t *other, vec3_t hitloc, qboolean missileBlock);
-
 int G_SaberLockAnim(int attackerSaberStyle, int defenderSaberStyle, int topOrSide, int lockOrBreakOrSuperBreak, int winOrLose)
 {
 	int baseAnim = -1;
@@ -1383,6 +1382,12 @@ static QINLINE qboolean WP_SabersCheckLock2(gentity_t *attacker, gentity_t *defe
 	attacker->client->ps.saberLockEnemy = defender->s.number;
 	defender->client->ps.saberLockEnemy = attacker->s.number;
 	attacker->client->ps.weaponTime = defender->client->ps.weaponTime = Q_irand(1000, 3000);//delay 1 to 3 seconds before pushing
+	//[SaberLockSys]
+	//remove the attack fake flag from both players since the saberlock code operates outside the standard saber animation control.
+	//Without this, we were having trouble with cascading saberlocks when the saberlocks are cause directly by attack fakes.
+	attacker->client->ps.userInt3 &= ~(1 << FLAG_ATTACKFAKE);
+	defender->client->ps.userInt3 &= ~(1 << FLAG_ATTACKFAKE);
+	//[/SaberLockSys]
 
 	VectorSubtract(defender->r.currentOrigin, attacker->r.currentOrigin, defDir);
 	VectorCopy(attacker->client->ps.viewangles, attAngles);

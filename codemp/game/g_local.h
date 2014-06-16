@@ -531,6 +531,11 @@ typedef struct clientPersistant_s {
 	int			vote, teamvote; // 0 = none, 1 = yes, 2 = no
 
 	char		guid[33];
+	//[ClientPlugInDetect]
+	//this flag shows weither or not this client is running the right version of OJP on the client side.  
+	//This is used to determine if the visual weapon events can be sent or not.
+	qboolean ClientPlugIn;
+	//[/ClientPlugInDetect]
 } clientPersistant_t;
 
 typedef struct renderInfo_s

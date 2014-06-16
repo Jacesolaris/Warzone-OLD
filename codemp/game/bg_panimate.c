@@ -324,6 +324,60 @@ qboolean BG_InKataAnim(int anim)
 	return qfalse;
 }
 
+qboolean PM_SaberInDamageMove(int move)
+{
+	if (move >= LS_A_TL2BR && move <= LS_A_T2B)
+	{
+		return qtrue;
+	}
+	switch (move)
+	{
+	case LS_A_BACK:
+	case LS_A_BACK_CR:
+	case LS_A_BACKSTAB:
+	case LS_ROLL_STAB:
+	case LS_A_LUNGE:
+	case LS_A_JUMP_T__B_:
+	case LS_A_FLIP_STAB:
+	case LS_A_FLIP_SLASH:
+	case LS_JUMPATTACK_DUAL:
+	case LS_JUMPATTACK_ARIAL_LEFT:
+	case LS_JUMPATTACK_ARIAL_RIGHT:
+	case LS_JUMPATTACK_CART_LEFT:
+	case LS_JUMPATTACK_CART_RIGHT:
+	case LS_JUMPATTACK_STAFF_LEFT:
+	case LS_JUMPATTACK_STAFF_RIGHT:
+	case LS_BUTTERFLY_LEFT:
+	case LS_BUTTERFLY_RIGHT:
+	case LS_A_BACKFLIP_ATK:
+	case LS_SPINATTACK_DUAL:
+	case LS_SPINATTACK:
+	case LS_LEAP_ATTACK:
+	case LS_SWOOP_ATTACK_RIGHT:
+	case LS_SWOOP_ATTACK_LEFT:
+	case LS_TAUNTAUN_ATTACK_RIGHT:
+	case LS_TAUNTAUN_ATTACK_LEFT:
+	case LS_STABDOWN:
+	case LS_STABDOWN_STAFF:
+	case LS_STABDOWN_DUAL:
+	case LS_DUAL_SPIN_PROTECT:
+	case LS_STAFF_SOULCAL:
+	case LS_A1_SPECIAL:
+	case LS_A2_SPECIAL:
+	case LS_A3_SPECIAL:
+	case LS_UPSIDE_DOWN_ATTACK:
+	case LS_PULL_ATTACK_STAB:
+	case LS_PULL_ATTACK_SWING:
+	case LS_SPINATTACK_ALORA:
+	case LS_DUAL_FB:
+	case LS_DUAL_LR:
+	case LS_HILT_BASH:
+		return qtrue;
+		break;
+	}
+	return qfalse;
+}
+
 qboolean BG_SaberInSpecial( int move )
 {
 	switch( move )

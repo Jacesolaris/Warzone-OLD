@@ -1010,7 +1010,9 @@ typedef enum {
 	EV_GLOAT2,
 	EV_GLOAT3,
 	EV_PUSHFAIL,
-
+	//[VisualWeapons]
+	EV_WEAPINVCHANGE,
+	//[/VisualWeapons]
 	EV_SIEGESPEC,
 
 } entity_event_t;			// There is a maximum of 256 events (8 bits transmission, 2 high bits for uniqueness)

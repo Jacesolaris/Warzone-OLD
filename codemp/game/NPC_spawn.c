@@ -749,7 +749,9 @@ extern void ChangeWeapon( gentity_t *ent, int newWeapon );
 NPC_SetWeapons
 -------------------------
 */
-
+//[VisualWeapons]
+qboolean G_ClientPlugin(void);
+//[/VisualWeapons]
 void NPC_SetWeapons( gentity_t *ent )
 {
 	int			bestWeap = WP_NONE;
@@ -788,6 +790,14 @@ void NPC_SetWeapons( gentity_t *ent )
 	}
 
 	ent->client->ps.weapon = bestWeap;
+	//[VisualWeapons]
+	//update the weapon stats for this player since they have changed.
+	if (G_ClientPlugin())
+	{//don't send the weapon updates if someone isn't able to process this new event type (IE anyone without
+		//the OJP client plugin)
+		G_AddEvent(ent, EV_WEAPINVCHANGE, ent->client->ps.stats[STAT_WEAPONS]);
+	}
+	//[/VisualWeapons]
 }
 
 /*

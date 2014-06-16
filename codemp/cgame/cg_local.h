@@ -6,11 +6,17 @@
 #include "rd-common/tr_types.h"
 #include "game/bg_public.h"
 #include "cg_public.h"
+//[VisualWeapons]
+#include "cg_holster.h"
+//[/VisualWeapons]
 
 // The entire cgame module is unloaded and reloaded on each level change,
 // so there is NO persistant data between levels on the client side.
 // If you absolutely need something stored, it can either be kept
 // by the server in the server stored userinfos, or stashed in a cvar.
+
+
+
 
 #define	POWERUP_BLINKS		5
 
@@ -185,6 +191,10 @@ typedef struct clientInfo_s {
 	saberInfo_t		saber[MAX_SABERS];
 	void			*ghoul2Weapons[MAX_SABERS];
 
+	//[VisualWeapons]
+	void			*ghoul2HolsterWeapons[MAX_SABERS];  //The ghoul2 instances for our saber holster weapons
+	//[/VisualWeapons]
+
 	char			saberName[64];
 	char			saber2Name[64];
 
@@ -308,6 +318,44 @@ typedef struct clientInfo_s {
 	int		ScriptedStartTime[2];
 	int		ScriptedEndTime[2];
 	//[/RGBSabers]
+
+	//[VisualWeapons]
+	//Holster bolts.
+
+	//Primary Saber
+	qhandle_t	holster_saber;
+	qboolean	saber_holstered;
+
+	//Secondary Saber
+	qhandle_t	holster_saber2;
+	qboolean	saber2_holstered;
+
+	//Staff Saber
+	qhandle_t	holster_staff;
+	qboolean	staff_holstered;
+
+	//Primary Blaster
+	qhandle_t	holster_blaster;
+	int			blaster_holstered;
+
+	//Secondary Blaster
+	qhandle_t	holster_blaster2;
+	int			blaster2_holstered;
+
+	//Golan Holster
+	qhandle_t	holster_golan;
+	qboolean	golan_holstered;
+
+	//Launchers
+	qhandle_t	holster_launcher;
+	int			launcher_holstered;
+
+	//offset bolts
+	qhandle_t	bolt_rfemurYZ;  //right hip used for the holster offsetting method
+	qhandle_t	bolt_lfemurYZ;	//left hip used for the holster offsetting method
+
+	holster_t	holsterData[MAX_HOLSTER];
+	//[/VisualWeapons]
 
 } clientInfo_t;
 
@@ -452,6 +500,10 @@ typedef struct centity_s {
 	qboolean		cloaked;
 
 	int				vChatTime;
+	//[VisualWeapons]
+	//keeps track of everyone's weapon loadout so they are be displayed
+	int				weapons;
+	//[/VisualWeapons]
 } centity_t;
 
 
@@ -1733,10 +1785,6 @@ void CG_UpdateCvars( void );
 //
 const char *CG_ConfigString( int index );
 const char *CG_Argv( int arg );
-//[TrueView]
-void QDECL CG_Printf(const char *msg, ...);
-void QDECL CG_Error(const char *msg, ...);
-//[/TrueView]
 void CG_StartMusic( qboolean bForceStart );
 
 void CG_UpdateCvars( void );

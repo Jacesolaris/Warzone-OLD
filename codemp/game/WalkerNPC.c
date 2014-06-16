@@ -150,6 +150,10 @@ static void ProcessMoveCommands( Vehicle_t *pVeh )
 	{
 		parentPS->speed = fWalkSpeedMax;
 	}
+	else if (pVeh->m_ucmd.buttons & BUTTON_BLOCK && parentPS->speed > fWalkSpeedMax)
+	{
+		parentPS->speed = fWalkSpeedMax;
+	}
 	else if ( parentPS->speed > speedMax )
 	{
 		parentPS->speed = speedMax;

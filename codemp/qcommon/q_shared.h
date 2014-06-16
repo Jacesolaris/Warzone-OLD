@@ -1892,37 +1892,10 @@ typedef struct siegePers_s
 //[/SaberSys]
 
 //[SaberSys]
-//This flag indicates that the player should have a slower than usual bounce since they just avoided a mishap by
-//having enough FP/DP.
-#define FLAG_SLOWBOUNCE		1
-//This flag indicates at the player is going into a older, more vulnerable slow bounce animations
-//this must be used in conjunction with the FLAG_SLOWBOUNCE to work right.
-#define FLAG_OLDSLOWBOUNCE	2
-
-//this flag indicates that this player is supposed to win the current saberlock.
-#define FLAG_LOCKWINNER		3
-
-//[Flamethrower]
-//flag indicating that the player's flamethrower is active.
-#define FLAG_FLAMETHROWER	4
-//[/Flamethrower]
-
-//flag indicates that the player was parried.  
-//They won't be able to launch into a combo from the bounce.
-#define FLAG_PARRIED		5
-
-//flag indicates that this block is a pre-block and interruptable
-#define FLAG_PREBLOCK		6
-
-//[QuickParry]
-#define FLAG_QUICKPARRY		7
-//[/QuickParry]
-#define FLAG_BLOCKING       8
-
-//[SaberDefines]
-//scaler to the walkspeed
-#define WALKSPEED			1.75//1.35
-//[/SaberDefines]
+//indicates that the current attack/transition is
+//part of a fake.  This makes the attack much stronger
+//forbreaking thru other attacks and blocks.
+#define FLAG_ATTACKFAKE		3
 //[/SaberSys]
 
 typedef enum

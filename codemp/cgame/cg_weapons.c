@@ -2341,7 +2341,9 @@ Ghoul2 Insert Start
 
 // create one instance of all the weapons we are going to use so we can just copy this info into each clients gun ghoul2 object in fast way
 static void *g2WeaponInstances[MAX_WEAPONS];
-
+//[VisualWeapons]
+void *g2HolsterWeaponInstances[MAX_WEAPONS];
+//[/VisualWeapons]
 void CG_InitG2Weapons(void)
 {
 	int i = 0;
@@ -2355,6 +2357,10 @@ void CG_InitG2Weapons(void)
 
 			// initialise model
 			trap->G2API_InitGhoul2Model(&g2WeaponInstances[/*i*/item->giTag], item->world_model[0], 0, 0, 0, 0, 0);
+			//[VisualWeapons]
+			//init holster models at the same time.
+			trap->G2API_InitGhoul2Model(&g2HolsterWeaponInstances[item->giTag], item->world_model[0], 0, 0, 0, 0, 0);
+			//[/VisualWeapons
 //			trap->G2API_InitGhoul2Model(&g2WeaponInstances[i], item->world_model[0],G_ModelIndex( item->world_model[0] ) , 0, 0, 0, 0);
 			if (g2WeaponInstances[/*i*/item->giTag])
 			{
@@ -2388,6 +2394,9 @@ void CG_ShutDownG2Weapons(void)
 	for (i=0; i<MAX_WEAPONS; i++)
 	{
 		trap->G2API_CleanGhoul2Models(&g2WeaponInstances[i]);
+		//[VisualWeapons]
+		trap->G2API_CleanGhoul2Models(&g2HolsterWeaponInstances[i]);
+		//[/VisualWeapons]
 	}
 }
 
@@ -2430,6 +2439,59 @@ void *CG_G2WeaponInstance(centity_t *cent, int weapon)
 	//If no custom then just use the default.
 	return g2WeaponInstances[weapon];
 }
+
+//[VisualWeapons]
+void *CG_G2HolsterWeaponInstance(centity_t *cent, int weapon, qboolean secondSaber)
+{
+	clientInfo_t *ci = NULL;
+
+	if (weapon != WP_SABER)
+	{
+		return g2HolsterWeaponInstances[weapon];
+	}
+
+	if (cent->currentState.eType != ET_PLAYER &&
+		cent->currentState.eType != ET_NPC)
+	{
+		return g2HolsterWeaponInstances[weapon];
+	}
+
+	if (cent->currentState.eType == ET_NPC)
+	{
+		ci = cent->npcClient;
+	}
+	else
+	{
+		ci = &cgs.clientinfo[cent->currentState.number];
+	}
+
+	if (!ci)
+	{
+		return g2HolsterWeaponInstances[weapon];
+	}
+
+	//Try to return the custom saber instance if we can.
+	if(secondSaber)
+	{//return secondSaber instance
+		if (ci->saber[1].model[0] &&
+			ci->ghoul2HolsterWeapons[1])
+		{
+			return ci->ghoul2HolsterWeapons[1];
+		}
+	}
+	else
+	{//return first saber instance
+		if (ci->saber[0].model[0] &&
+			ci->ghoul2HolsterWeapons[0])
+		{
+			return ci->ghoul2HolsterWeapons[0];
+		}
+	}
+
+	//If no custom then just use the default.
+	return g2HolsterWeaponInstances[weapon];
+}
+//[/VisualWeapons]
 
 // what ghoul2 model do we want to copy ?
 void CG_CopyG2WeaponInstance(centity_t *cent, int weaponNum, void *toGhoul2)

@@ -1735,12 +1735,6 @@ typedef enum //# animNumber_e
 	//New anim as per Jarrod's request
 	LEGS_TURN180,
 
-	//[SaberSys]
-	//dedicated stance animations for the hidden styles
-	BOTH_SABERTAVION_STANCE,
-	BOTH_SABERDESANN_STANCE,
-	//[/SaberSys]
-
 	//======================================================
 	//cinematic anims
 	//======================================================

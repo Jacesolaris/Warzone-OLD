@@ -935,6 +935,13 @@ void CG_KillCEntityG2(int entNum)
 				trap->G2API_CleanGhoul2Models(&ci->ghoul2Weapons[j]);
 				ci->ghoul2Weapons[j] = NULL;
 			}
+			//[VisualWeapons]
+			if (ci->ghoul2HolsterWeapons[j] && trap->G2_HaveWeGhoul2Models(ci->ghoul2HolsterWeapons[j]))
+			{
+				trap->G2API_CleanGhoul2Models(&ci->ghoul2HolsterWeapons[j]);
+				ci->ghoul2HolsterWeapons[j] = NULL;
+			}
+			//[/VisualWeapons]
 
 			j++;
 		}
