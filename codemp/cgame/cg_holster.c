@@ -138,16 +138,20 @@ void InitHolsterData (clientInfo_t *ci)
 	}
 }
 
-
+extern char *BG_GetNextValueGroup(char *inbuf, char *outbuf);
 void CG_LoadHolsterData (clientInfo_t *ci)
 {//adjusts the manual holster positional data based on the holster.cfg file associated with the model or simply
 	//use the default values
 
 
+	int				i;
 	fileHandle_t	f;
 	int				fLen = 0;
 	char			fileBuffer[MAX_HOLSTER_INFO_SIZE];
+	char			holsterTypeValue[MAX_QPATH];
+	char			holsterTypeGroup[MAX_HOLSTER_INFO_SIZE];
 	char			*s;
+	vec3_t			vectorData;
 
 	InitHolsterData(ci);
 
@@ -191,11 +195,55 @@ void CG_LoadHolsterData (clientInfo_t *ci)
 	trap->FS_Close(f);
 
 	s = fileBuffer;
+	//parse file
+	while ((s = BG_GetNextValueGroup(s, holsterTypeGroup)) != NULL)
+	{
+		if (!BG_SiegeGetPairedValue(holsterTypeGroup, "holsterType", holsterTypeValue))
+		{//couldn't find holster type in group
+			trap->Print("Error:  The holster.cfg for %s appears to be missing a holsterType in one of its define groups.\n",
+				ci->modelName);
+			continue;
+		}
 
+		i = GetIDForString(holsterTypeTable, holsterTypeValue);
+
+		if (i == -1)
+		{//bad holster type
+			trap->Print("Error:  The holster.cfg for %s has a bad holsterType in one of the define groups.\n",
+				ci->modelName);
+			continue;
+		}
+
+		if (BG_SiegeGetPairedValue(holsterTypeGroup, "boneIndex", holsterTypeValue))
+		{//have bone index data for this holster type, use it
+			if (!Q_stricmp(holsterTypeValue, "disabled"))
+			{//disable the rendering of this holster type on this model
+				ci->holsterData[i].boneIndex = HOLSTER_NONE;
+			}
+			else
+			{
+				ci->holsterData[i].boneIndex = GetIDForString(holsterBoneTable, holsterTypeValue);
+			}
+		}
+
+		if (BG_SiegeGetPairedValue(holsterTypeGroup, "posOffset", holsterTypeValue))
+		{//parsing positional offset data
+			sscanf(holsterTypeValue, "%f, %f, %f", &vectorData[0], &vectorData[1], &vectorData[2]);
+			VectorCopy(vectorData, ci->holsterData[i].posOffset);
+
+			//&ci->holsterData[i].posOffset[0], &ci->holsterData[i].posOffset[1], 
+			//&ci->holsterData[i].posOffset[2]);
+		}
+
+		if (BG_SiegeGetPairedValue(holsterTypeGroup, "angOffset", holsterTypeValue))
+		{//parsing angular offset
+			sscanf(holsterTypeValue, "%f, %f, %f", &vectorData[0], &vectorData[1], &vectorData[2]);
+			VectorCopy(vectorData, ci->holsterData[i].angOffset);
+		}
+	}
 #ifdef _DEBUG
 	trap->Print("Holstered Weapon Data Loaded for %s.\n", ci->modelName);
 #endif
 }
 
 //[/VisualWeapons]
-

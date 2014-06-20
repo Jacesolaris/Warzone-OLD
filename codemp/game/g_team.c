@@ -3,7 +3,10 @@
 
 #include "g_local.h"
 #include "bg_saga.h"
-
+//[EXPSys]
+extern void GiveExperiance(gentity_t *ent, int amount);
+extern void TakeExperiance(gentity_t *ent, int amount);
+//[/EXPSys]
 
 typedef struct teamgame_s {
 	float			last_flag_capture;

@@ -147,13 +147,14 @@ typedef enum
 
 //[Account System]
 // Account system structure
-#define ACCOUNT_VERSION  // Remember to change this each time we add something, any changes really :D
+#define ACCOUNT_VERSION 5 // Remember to change this each time we add something, any changes really :D
 typedef struct account_t
 {
 	char		username[64];
 	char		password[64]; // This should be hashed, but it's a pain to add quickly so maybe later.
 	int			playerclass;
 	int			playerclasses;
+	int			adminclass;
 	int			experience;	// Experience, only used for saving! Use ent->client->ps.persistent[PERS_EXPERIENCE] in code!
 	int			permissions; //Just an example variable
 	int			level;

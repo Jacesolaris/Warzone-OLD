@@ -158,9 +158,9 @@ XCVAR_DEF(g_experiancemax,				"50000",		NULL,				CVAR_ARCHIVE,									qtrue)//M
 XCVAR_DEF(g_experianceEnabled,			"1",			NULL,				CVAR_ARCHIVE,									qtrue)//EXP enabled
 XCVAR_DEF(g_experianceEconomy,			"10",			NULL,				CVAR_ARCHIVE,									qtrue)//Players take exp from targets when doing damage
 XCVAR_DEF(g_experianceLifeWorth,		"5",			NULL,				CVAR_ARCHIVE,									qtrue)//Exp earned for 100% of life
-XCVAR_DEF(g_experianceKillWorth,		"0",			NULL,				CVAR_ARCHIVE,									qtrue)//Additional experiance earned when killed
-XCVAR_DEF(g_experianceWinRound,			"0",			NULL,				CVAR_ARCHIVE,									qtrue)//Exp earned for winning a team round
-XCVAR_DEF(g_experianceLoseRound,		"0",			NULL,				CVAR_ARCHIVE,									qtrue)//Exp earned for losing a team round
+XCVAR_DEF(g_experianceKillWorth,		"5",			NULL,				CVAR_ARCHIVE,									qtrue)//Additional experiance earned when killed
+XCVAR_DEF(g_experianceWinRound,			"2",			NULL,				CVAR_ARCHIVE,									qtrue)//Exp earned for winning a team round
+XCVAR_DEF(g_experianceLoseRound,		"2",			NULL,				CVAR_ARCHIVE,									qtrue)//Exp earned for losing a team round
 XCVAR_DEF(g_experianceInitial,			"0",			NULL,				CVAR_ARCHIVE,									qtrue)//Player starts with this amount of experiance
 //[/EXPsys]
 XCVAR_DEF( g_siegeRespawn,				"20",			NULL,				CVAR_ARCHIVE,									qtrue )

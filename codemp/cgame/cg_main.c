@@ -1112,6 +1112,10 @@ static void CG_RegisterSounds( void ) {
 
 	cgs.media.winnerSound = trap->S_RegisterSound( "sound/chars/protocol/misc/40MOM006" );
 	cgs.media.loserSound = trap->S_RegisterSound( "sound/chars/protocol/misc/40MOM010" );
+	// Weather
+	/*cgs.media.heavyRain = trap_S_RegisterSound("sound/ambient/rain_hard");
+	cgs.media.regularRain = trap_S_RegisterSound("sound/ambient/rain_mid");
+	cgs.media.lightRain = trap_S_RegisterSound("sound/ambient/rain_light");*/
 }
 
 
@@ -1310,7 +1314,7 @@ static void CG_RegisterGraphics( void ) {
 	cgs.effects.forceLightning		= trap->FX_RegisterEffect( "effects/force/lightning.efx" );
 	cgs.effects.forceLightningWide	= trap->FX_RegisterEffect( "effects/force/lightningwide.efx" );
 	//cgs.effects.forcelightningAbsorb	= trap->FX_RegisterEffect( "effects/force/lightning_absorb.efx" );
-	cgs.effects.forcelightningArc = trap->FX_RegisterEffect(" effects/force/lightning_arc.efx");
+	cgs.effects.saber_lightninghit = trap->FX_RegisterEffect(" effects/saber/saber_lightninghit.efx");
 	/*cgs.effects.forcelightningFlare	=trap->FX_RegisterEffect( " effects/force/lightning_flare.efx") ;
 	cgs.effects.forcelightningImpact	=trap->FX_RegisterEffect( " effects/force/lightning_impact.efx") ;*/
 	cgs.effects.forceDrain		= trap->FX_RegisterEffect( "effects/mp/drain.efx" );
@@ -1639,6 +1643,9 @@ Ghoul2 Insert End
 	cgs.media.halfShieldShader	= trap->R_RegisterShader( "halfShieldShell" );
 
 	trap->FX_RegisterEffect("force/force_touch");
+	//Weather
+	//cgs.effects.saberFizz = trap->FX_RegisterEffect("saber/fizz.efx");
+	//cgs.effects.rain = trap->FX_RegisterEffect("effects/rain");
 }
 
 const char *CG_GetStringEdString(char *refSection, char *refName)
@@ -3255,6 +3262,7 @@ Q_EXPORT intptr_t vmMain( int command, intptr_t arg0, intptr_t arg1, intptr_t ar
 	}
 	return -1;
 }
+//[LightningBlockSys]
 void CG_BlockLightningEffect()
 {
 	//if ( traceEnt->client->ps.weapon == WP_SABER )
@@ -3270,8 +3278,7 @@ void CG_BlockLightningEffect()
 		ang[2] = flrand(0, 360);
 
 		VectorMA(saber1->blade[rBladeNum].muzzlePoint, saber1->blade[rBladeNum].lengthMax*flrand(0, 1), saber1->blade[rBladeNum].muzzleDir, end2);
-		//trap->FX_PlayEffectID( "effects/saber/saber_lightninghit.efx",end2, ang );
-		trap->FX_PlayEffectID(cgs.effects.forcelightningArc, end2, ang, -1, -1, qfalse);
-		//trap->FX_PlayEffectID( cgs.effects.flechetteFleshImpactEffect, origin, normal, -1, -1, qfalse );
+		trap->FX_PlayEffectID(cgs.effects.saber_lightninghit, end2, ang, -1, -1, qfalse);
 	}
-}
+}//[/LightningBlockSys]
+// here is the function for the effect to be call and its shit as you can see it will be seeing in 

@@ -1480,21 +1480,21 @@ void CG_DrawExpBar(void)										// Function that will draw the fuel bar
 }
 
 //draw meter showing jetpack fuel when it's not full
-#define JPFUELBAR_H			100.0f
-#define JPFUELBAR_W			15.0f
-#define JPFUELBAR_X			(SCREEN_WIDTH-JPFUELBAR_W-620.0f)
-#define JPFUELBAR_Y			260.0f
+#define JETPACFUELBAR_H			100.0f
+#define JETPACFUELBAR_W			15.0f
+#define JETPACFUELBAR_X			(SCREEN_WIDTH-JETPACFUELBAR_W-620.0f)
+#define JETPACFUELBAR_Y			260.0f
 void CG_DrawJetPackBar(void)
 {
 	vec4_t aColor;
 	vec4_t bColor;
 	vec4_t cColor;
-	float x = JPFUELBAR_X;
-	float y = JPFUELBAR_Y;
-	float percent = ((float)cg.snap->ps.jetpackFuel/100.0f)*JPFUELBAR_H;  // jetpack changed (-at-) "percent" => "height"
+	float x = JETPACFUELBAR_X;
+	float y = JETPACFUELBAR_Y;
+	float percent = ((float)cg.snap->ps.jetpackFuel / 100.0f)*JETPACFUELBAR_H;  // jetpack changed (-at-) "percent" => "height"
 	//float percent = ((float)cg.snap->ps.jetpackFuel/200.0f);  // jetpack changed (-at-) added for colors
 
-	if (percent > JPFUELBAR_H)
+	if (percent > JETPACFUELBAR_H)
 	{
 		return;
 	}
@@ -1526,14 +1526,15 @@ void CG_DrawJetPackBar(void)
 	
 
 	//now draw the part to show how much health there is in the color specified
-	CG_FillRect(x+1.0f, y+1.0f+(JPFUELBAR_H-percent), JPFUELBAR_W-1.0f, JPFUELBAR_H-1.0f-(JPFUELBAR_H-percent), aColor);
+	CG_FillRect(x + 1.0f, y + 1.0f + (JETPACFUELBAR_H - percent), JETPACFUELBAR_W - 1.0f, JETPACFUELBAR_H - 1.0f - (JETPACFUELBAR_H - percent), aColor);
 
 	//draw the background (black)
-	CG_DrawRect(x, y, JPFUELBAR_W, JPFUELBAR_H, 1.0f, colorTable[CT_BLACK]);
+	CG_DrawRect(x, y, JETPACFUELBAR_W, JETPACFUELBAR_H, 1.0f, colorTable[CT_BLACK]);
 
 	//then draw the other part greyed out
-	CG_FillRect(x+1.0f, y+1.0f, JPFUELBAR_W-1.0f, JPFUELBAR_H-percent, cColor);
+	CG_FillRect(x + 1.0f, y + 1.0f, JETPACFUELBAR_W - 1.0f, JETPACFUELBAR_H - percent, cColor);
 }
+
 //draw meter showing cloak fuel when it's not full
 #define CLFUELBAR_H			100.0f
 #define CLFUELBAR_W			20.0f
@@ -1555,7 +1556,7 @@ void CG_DrawCloakFuel(void)
 
 	if ( cg.snap->ps.jetpackFuel < 100 )
 	{//if drawing jetpack fuel bar too, then move this over...?
-		x -= (JPFUELBAR_W+8.0f);
+		x -= (CLFUELBAR_W + 8.0f);
 	}
 
 	if (percent < 0.1f)
@@ -1592,20 +1593,20 @@ void CG_DrawCloakFuel(void)
 }
 
 //draw meter showing cloak fuel when it's not full
-#define CLFUELBAR_H			100.0f
-#define CLFUELBAR_W			15.0f
-#define CLFUELBAR_X			(SCREEN_WIDTH-CLFUELBAR_W-6.0f)
-#define CLFUELBAR_Y			260.0f
+#define CLOAKFUELBAR_H			100.0f
+#define CLOAKFUELBAR_W			15.0f
+#define CLOAKFUELBAR_X			(SCREEN_WIDTH-CLOAKFUELBAR_W-6.0f)
+#define CLOAKFUELBAR_Y			260.0f
 void CG_DrawCloakBar(void)
 {
 	vec4_t aColor;
 	vec4_t bColor;
 	vec4_t cColor;
-	float x = CLFUELBAR_X;
-	float y = CLFUELBAR_Y;
-	float percent = ((float)cg.snap->ps.cloakFuel/100.0f)*CLFUELBAR_H;
+	float x = CLOAKFUELBAR_X;
+	float y = CLOAKFUELBAR_Y;
+	float percent = ((float)cg.snap->ps.cloakFuel / 100.0f)*CLOAKFUELBAR_H;
 
-	if (percent > CLFUELBAR_H)
+	if (percent > CLOAKFUELBAR_H)
 	{
 		return;
 	}
@@ -1642,13 +1643,13 @@ void CG_DrawCloakBar(void)
 	
 
 	//now draw the part to show how much fuel there is in the color specified
-	CG_FillRect(x+1.0f, y+1.0f+(CLFUELBAR_H-percent), CLFUELBAR_W-1.0f, CLFUELBAR_H-1.0f-(CLFUELBAR_H-percent), aColor);
+	CG_FillRect(x + 1.0f, y + 1.0f + (CLOAKFUELBAR_H - percent), CLOAKFUELBAR_W - 1.0f, CLOAKFUELBAR_H - 1.0f - (CLOAKFUELBAR_H - percent), aColor);
 
 	//draw the background (black)
-	CG_DrawRect(x, y, CLFUELBAR_W, CLFUELBAR_H, 1.0f, colorTable[CT_BLACK]);
+	CG_DrawRect(x, y, CLOAKFUELBAR_W, CLOAKFUELBAR_H, 1.0f, colorTable[CT_BLACK]);
 
 	//then draw the other part greyed out
-	CG_FillRect(x+1.0f, y+1.0f, CLFUELBAR_W-1.0f, CLFUELBAR_H-percent, cColor);
+	CG_FillRect(x + 1.0f, y + 1.0f, CLOAKFUELBAR_W - 1.0f, CLOAKFUELBAR_H - percent, cColor);
 }
 
 
@@ -1835,7 +1836,7 @@ void CG_DrawHUD(centity_t	*cent)
 
 		{
 			//[EXPsys]
-			scoreStr = va("%s %s: %i ", scoreStr, CG_GetStringEdString("RJ_BASE", "EXP"), cg.snap->ps.persistant[PERS_EXPERIANCE], scoreBiasStr);	
+			scoreStr = va("%s %s: %i ", scoreStr, CG_GetStringEdString("EXPSYSTEM", "EXP"), cg.snap->ps.persistant[PERS_EXPERIANCE], scoreBiasStr);	
 			//[/EXPsys]
 		}
 

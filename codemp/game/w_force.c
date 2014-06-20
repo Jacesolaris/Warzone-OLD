@@ -1652,12 +1652,12 @@ qboolean JKG_SaberBlockLightning(gentity_t *attacker, gentity_t *defender, vec3_
 		return qfalse;
 	}
 
-	if (!(defender->client->ps.saberActionFlags & (1 << SAF_BLOCKING)))//when we hold block
+	if (!(defender->client->ps.saberActionFlags & (1 << SAF_BLOCKING)))//when we hold block// n
 	{// Button for Blocking Lightning Attacks
 
 		if (defender->s.eType == ET_NPC)
 		{//NPC's just randomly block to make up for them not intelligently blocking
-			defender->client->ps.saberBlocked = BLOCKED_LIGHTNING;//npc block it:fixme its bugged
+			defender->client->ps.saberBlocked = BLOCKED_LIGHTNING;//npc block it:fixme its bugged// here
 			return qtrue;
 		}
 		else
@@ -1782,9 +1782,9 @@ void ForceLightningDamage( gentity_t *self, gentity_t *traceEnt, vec3_t dir, vec
 					//jackin' 'em up, Palpatine-style
 					dmg *= 2;
 				}
-
+				//[LightningBlockSys]
 				saberBlocked = JKG_SaberBlockLightning(self, traceEnt, impactPoint, dmg);
-
+				//[/LightningBlockSys]
 				if (dmg && !saberBlocked)
 				{
 					//rww - Shields can now absorb lightning too.

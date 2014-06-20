@@ -3458,7 +3458,7 @@ void PM_WeaponLightsaber(void)
 			case BLOCKED_LIGHTNING:
 				PM_SetSaberMove(LS_PARRY_UP);
 #if defined(_CGAME)
-				CG_BlockLightningEffect();
+				CG_BlockLightningEffect();//here where it will be call from the blocked_lightning animation in 
 #endif
 				//[/LightningBlockSys]
 				break;

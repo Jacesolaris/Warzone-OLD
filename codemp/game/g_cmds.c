@@ -5289,6 +5289,191 @@ command_t commands[] = {
 	{ "vote",				Cmd_Vote_f,					CMD_NOINTERMISSION },
 	{ "where",				Cmd_Where_f,				CMD_NOINTERMISSION },
 };
+
+// Account system
+// Returns true if login successful,
+// returns false if login failed.
+qboolean Account_Login(int clientNum, char *user, char *pass, qboolean skipPass, account_t *storeAccount)
+{
+	gentity_t *ent = &g_entities[clientNum];	// Henter client entity.
+	qhandle_t fh;
+	char *fileData;
+	int *p;
+	int length;
+	qboolean result = qfalse;
+	account_t *account;
+
+	if (!ent || !ent->inuse)		// Sjekker om ent er NULL, eller om entity'n ikke er i bruk
+		return qfalse;			// Login failed
+
+
+	// Åpner fil som ligger i accounts folder. Filen skal ha navnet til kontoen/account
+	length = trap->FS_Open(va("accounts/%s.acc", user), &fh, FS_READ);
+
+	if (!fh || length <= 0)		// Noe feil skjedde med filen, fant ikke brukeren
+	{
+		trap->SendServerCommand(ent - g_entities, va("print \"Couldn't find user: %s\n\"", user));
+		trap->FS_Close(fh);
+		return qfalse;
+	}
+
+	if (length != (sizeof(account_t)+sizeof(int)))		// To prevent people from creating buffer overflow exploits with edited account files.
+	{
+		trap->SendServerCommand(ent - g_entities, va("print \"Corrupt save file.\n\""));
+		trap->FS_Close(fh);
+		return qfalse;
+	}
+
+	// Allokerer minne for å lese inn filen
+	fileData = (char*)malloc(length);
+
+	trap->FS_Read(fileData, length, fh); // Leser inn fra fil.
+	p = (int*)fileData;					// pointer får å jobbe på dataen.
+
+	if (*p != ACCOUNT_VERSION)			// Check save version. Currently no backwards compatability.
+	{
+		trap->SendServerCommand(ent - g_entities, va("print \"Savefile is version %i, needs to be version %i.\n\"", *p, ACCOUNT_VERSION));
+		free(fileData);
+		trap->FS_Close(fh);
+		return qfalse;
+	}
+	p++;
+	account = (account_t*)p;
+
+	if (skipPass || !Q_stricmp(account->password, pass))				// bare tester, vi regner med at passordet står først i filen.
+	{
+		// Her må vi legge inn mer for å gjøre kontoen brukbar
+		//return qtrue;					// Passordet er riktig, login successful.
+		result = qtrue;
+		ent->account = *account;			// Apply the account information.
+	}
+	else
+	{
+		result = qfalse;				// Passorder er feil, login failed.
+		memset(&ent->account, 0, sizeof(account_t));	// Clear the account information, just in case.
+	}
+
+	if (storeAccount)					// We are using the login function to read the account information into an additional storage container.
+		*storeAccount = *account;
+
+	free(fileData);						// Frigi minne, vi vil ikke ha memory leaks
+	trap->FS_Close(fh);				// Husk å lukk filer. Ellers vil spillet crashe, når man har åpnet 64 filer.
+
+	if (result)
+	{
+		// We have to load the experience manually into the PERS_EXPERIENCE. Hopefully you won't need to do this with anything else
+		// The playerclass is loaded automaticly, and with the changes to the code we made, it will be used correctly.
+		ent->client->ps.persistant[PERS_EXPERIANCE] = ent->account.experience;
+		ent->client->ps.persistant[PERS_EXPERIANCE_COUNT] = experienceLevel[ent->account.level];	// Set the required experience for next level.
+		trap->SendServerCommand(ent - g_entities, va("maxexperience %i", ent->client->ps.persistant[PERS_EXPERIANCE_COUNT]));
+		trap->SendServerCommand(clientNum, va("print \"Welcome %s, login successful.\n\"", user));
+	}
+	else trap->SendServerCommand(clientNum, "print \"Login failed.\n\"");
+
+	return result;						// Returner resultat
+}
+
+// Lage en konto
+qboolean Account_Register(int clientNum, char *user, char *pass)
+{
+	gentity_t *ent = &g_entities[clientNum];	// Henter client entity.
+	qhandle_t fh;
+	//char fileData[2048] = { 0 };				// Maks filstørrelse.
+	char *fileData;
+	int *p;
+	//int length;
+
+	if (!ent || !ent->inuse)		// Sjekker om ent er NULL, eller om entity'n ikke er i bruk
+		return qfalse;			// Login failed	
+
+	fileData = (char*)malloc(sizeof(account_t)+sizeof(int));
+	p = (int*)fileData;
+	*p = ACCOUNT_VERSION; // Version number for the save file. When you change the system, you will need to change this value.
+	p++;
+
+
+	// Åpner fil som ligger i accounts folder. Filen skal ha navnet til kontoen/account
+	trap->FS_Open(va("accounts/%s.acc", user), &fh, FS_WRITE); // Vis skal skrive denne gangen.
+
+	if (!fh)			// Noe feil skjedde med filen, fant ikke brukeren
+	{
+		trap->SendServerCommand(ent - g_entities, va("print \"Couldn't create user: %s\n\"", user));
+		//	trap_FS_FCloseFile(fh);
+		return qfalse;
+	}
+
+
+	// The initial setup of the account is done on register 
+	// So here we fill in basic information
+	Q_strncpyz(ent->account.username, user, 64);	// Account username
+	Q_strncpyz(ent->account.password, pass, 64);	// Account password	
+	ent->account.permissions = 1337;				// Account permissions, 32 bit, bitmask Currently testing with setting to 1337, should be set to 0 when not testing
+	ent->account.playerclass = 0;
+	ent->account.playerclasses = 0;
+	//	ent->account.playerclass, user;  <<-- wth is this o.o? lol was a try xD but i see it is 0 :P not good 
+	//
+	// When you add more to the account_t structure, you need to add their default values here:
+	// ent->account.<new value> = <default value>;
+
+	// And of course change the version number each time you add a new variable to the account_t structure.
+	// (At the moment this will 'break' all old accounts, we can add compatability next time)
+
+	memcpy(p, &ent->account, sizeof(account_t));
+
+	//trap_FS_Write(fileData, length, fh);	// Skriv informasjon til fil.
+	trap->FS_Write(fileData, sizeof(account_t)+sizeof(int), fh);
+	free(fileData); // Free memory to avoid memory leak
+
+	trap->FS_Close(fh);
+	return qtrue;
+}
+
+qboolean hasAccount(account_t *account)
+{
+	if (account->username[0] != 0)
+		return qtrue;
+	else return qfalse;
+}
+
+// Every time you change anything on an account, that has to be saved right away. Just do UpdateAccount(&ent->account);
+// It will return qtrue/1 if it succeeds, and qfalse/0 if it fails.
+qboolean UpdateAccount(account_t *account, gentity_t *ent)
+{
+	char *fileData;
+	int *p;
+	fileHandle_t fh;
+	account_t *p_account;
+
+	fileData = (char*)malloc(sizeof(account_t)+sizeof(int));
+	p = (int*)fileData;
+	*p = ACCOUNT_VERSION; // Version number for the save file. When you change the system, you will need to change this value.
+	p++;
+
+	if (!hasAccount(account))
+		return qfalse;
+
+	trap->FS_Open(va("accounts/%s.acc", account->username), &fh, FS_WRITE);
+
+	if (!fh)
+	{
+		trap->FS_Close(fh);
+		return qfalse;
+	}
+	memcpy(p, account, sizeof(account_t));
+	p_account = (account_t*)p;
+
+	// Add changes from active system.
+	p_account->experience = ent->client->ps.persistant[PERS_EXPERIANCE];
+
+
+	trap->FS_Write(fileData, sizeof(account_t)+sizeof(int), fh);
+	free(fileData); // Free memory to avoid memory leak
+	trap->FS_Close(fh);
+
+	return qtrue;
+}
+
+
 static const size_t numCommands = ARRAY_LEN( commands );
 
 void ClientCommand( int clientNum ) {
