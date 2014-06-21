@@ -2583,9 +2583,9 @@ char *ClientConnect( int clientNum, qboolean firstTime, qboolean isBot ) {
 	te->s.eventParm = clientNum;
 
 	//[EXPsys]
-	client->ps.persistant[PERS_EXPERIANCE] = 0;
-	client->ps.persistant[PERS_EXPERIANCE_COUNT] = experienceLevel[ent->account.level];
-	trap->SendServerCommand(clientNum, va("maxexperience %i", ent->client->ps.persistant[PERS_EXPERIANCE_COUNT]));
+	client->ps.stats[STAT_EXP] = 0;
+	client->ps.stats[STAT_MAX_EXP] = experienceLevel[ent->account.level];
+	trap->SendServerCommand(clientNum, va("maxexperience %i", ent->client->ps.stats[STAT_MAX_EXP]));
 	GiveExperiance(ent, g_experianceInitial.integer); // call ui_experiance
 	//[/EXPsys]
 
@@ -2720,10 +2720,10 @@ void ClientBegin( int clientNum, qboolean allowTeamReset ) {
 	client->ps.hasDetPackPlanted = qfalse;
 
 	//[EXPsys]
-	if (client->ps.persistant[PERS_EXPERIANCE] == 0) {
-		client->ps.persistant[PERS_EXPERIANCE] = 0;
-		client->ps.persistant[PERS_EXPERIANCE_COUNT] = experienceLevel[ent->account.level];
-		trap->SendServerCommand(clientNum, va("maxexperience %i", ent->client->ps.persistant[PERS_EXPERIANCE_COUNT]));
+	if (client->ps.stats[STAT_EXP] == 0) {
+		client->ps.stats[STAT_EXP] = 0;
+		client->ps.stats[STAT_MAX_EXP] = experienceLevel[ent->account.level];
+		trap->SendServerCommand(clientNum, va("maxexperience %i", ent->client->ps.stats[STAT_MAX_EXP]));
 		GiveExperiance(ent, g_experianceInitial.integer); // call ui_experiance
 		//	client->ps.persistant[PERS_EXPERIANCE_COUNT] -= g_experianceInitial.integer; // starting money isn't earned 
 	}

@@ -1811,14 +1811,14 @@ void GiveExperiance(gentity_t *ent, int amount) {
 	if (ent->account.level == NUM_EXP_LEVELS)	// We're already max level. No need to gain more experience 
 		return;
 
-	ent->client->ps.persistant[PERS_EXPERIANCE] += amount;
+	ent->client->ps.stats[STAT_EXP] += amount;
 
-	if (ent->client->ps.persistant[PERS_EXPERIANCE] >= experienceLevel[ent->account.level])
+	if (ent->client->ps.stats[STAT_EXP] >= experienceLevel[ent->account.level])
 	{
 		ent->account.level++;	// Increase level by 1
-		ent->client->ps.persistant[PERS_EXPERIANCE_COUNT] = experienceLevel[ent->account.level];	// Set the required experience for next level.
-		trap->SendServerCommand(ent - g_entities, va("maxexperience %i", ent->client->ps.persistant[PERS_EXPERIANCE_COUNT]));
-		ent->client->ps.persistant[PERS_EXPERIANCE] = 0;	// Reset experience to 0 to start on the next level.
+		ent->client->ps.stats[STAT_MAX_EXP] = experienceLevel[ent->account.level];	// Set the required experience for next level.
+		trap->SendServerCommand(ent - g_entities, va("maxexperience %i", ent->client->ps.stats[STAT_MAX_EXP]));
+		ent->client->ps.stats[STAT_EXP] = 0;	// Reset experience to 0 to start on the next level.
 		trap->SendServerCommand(-1, va("print \"%s^7 has leveled up, and is now level %i!\n\"", ent->client->pers.netname, ent->account.level));
 		trap->SendServerCommand(-1, va("chat \"%s^7 has leveled up, and is now level %i!\n\"", ent->client->pers.netname, ent->account.level));
 		//UpdateCharacter(ent, qfalse);	// Update character, print the messages. so it's NOT silent (qfalse on silent)
@@ -1829,7 +1829,7 @@ void GiveExperiance(gentity_t *ent, int amount) {
 		trap->SendServerCommand(ent - g_entities, va("print \"+%i experiance\n\"", amount));
 	}
 	else {
-		trap->SendServerCommand(ent - g_entities, va("experiance %i", ent->client->ps.persistant[PERS_EXPERIANCE]));
+		trap->SendServerCommand(ent - g_entities, va("experiance %i", ent->client->ps.stats[STAT_EXP]));
 	}
 }
 
@@ -1840,16 +1840,16 @@ void TakeExperiance(gentity_t *ent, int amount) {
 
 	if (amount <= 0) return;
 
-	if (amount > ent->client->ps.persistant[PERS_EXPERIANCE])
-		ent->client->ps.persistant[PERS_EXPERIANCE] = 0;
+	if (amount > ent->client->ps.stats[STAT_EXP])
+		ent->client->ps.stats[STAT_EXP] = 0;
 	else
-		ent->client->ps.persistant[PERS_EXPERIANCE] -= amount;
+		ent->client->ps.stats[STAT_EXP] -= amount;
 
 	if (ent->r.svFlags & SVF_OLD_CLIENT) {
 		trap->SendServerCommand(ent - g_entities, va("print \"-%i experiance\n\"", amount));
 	}
 	else {
-		trap->SendServerCommand(ent - g_entities, va("experiance %i", ent->client->ps.persistant[PERS_EXPERIANCE]));
+		trap->SendServerCommand(ent - g_entities, va("experiance %i", ent->client->ps.stats[STAT_EXP]));
 	}
 }
 
@@ -1862,11 +1862,11 @@ void TradeExperiance(gentity_t *from, gentity_t *to, int amount) {
 	if (amount <= 0) return;
 
 	// we can't take more experiance than they have - no cheating!
-	if (amount > from->client->ps.persistant[PERS_EXPERIANCE])
-		amount = from->client->ps.persistant[PERS_EXPERIANCE];
+	if (amount > from->client->ps.stats[STAT_EXP])
+		amount = from->client->ps.stats[STAT_EXP];
 
-	from->client->ps.persistant[PERS_EXPERIANCE] -= amount;
-	to->client->ps.persistant[PERS_EXPERIANCE] += amount;
+	from->client->ps.stats[STAT_EXP] -= amount;
+	to->client->ps.stats[STAT_EXP] += amount;
 
 	TakeExperiance(from, amount);
 	GiveExperiance(to, amount);
@@ -1923,8 +1923,8 @@ void DeathmatchScoreboardMessage( gentity_t *ent ) {
 			cl->ps.persistant[PERS_SCORE], ping, (level.time - cl->pers.enterTime)/60000,
 			scoreFlags, g_entities[level.sortedClients[i]].s.powerups, accuracy,
 			//[EXPsys]
-			cl->ps.persistant[PERS_EXPERIANCE],
-			cl->ps.persistant[PERS_EXPERIANCE_COUNT],
+			cl->ps.stats[STAT_EXP],
+			cl->ps.stats[STAT_MAX_EXP],
 			//[/EXPsys]
 			cl->ps.persistant[PERS_IMPRESSIVE_COUNT],
 			cl->ps.persistant[PERS_EXCELLENT_COUNT],
@@ -5363,8 +5363,8 @@ qboolean Account_Login(int clientNum, char *user, char *pass, qboolean skipPass,
 	{
 		// We have to load the experience manually into the PERS_EXPERIENCE. Hopefully you won't need to do this with anything else
 		// The playerclass is loaded automaticly, and with the changes to the code we made, it will be used correctly.
-		ent->client->ps.persistant[PERS_EXPERIANCE] = ent->account.experience;
-		ent->client->ps.persistant[PERS_EXPERIANCE_COUNT] = experienceLevel[ent->account.level];	// Set the required experience for next level.
+		ent->client->ps.stats[STAT_EXP] = ent->account.experience;
+		ent->client->ps.stats[STAT_MAX_EXP] = experienceLevel[ent->account.level];	// Set the required experience for next level.
 		trap->SendServerCommand(ent - g_entities, va("maxexperience %i", ent->client->ps.persistant[PERS_EXPERIANCE_COUNT]));
 		trap->SendServerCommand(clientNum, va("print \"Welcome %s, login successful.\n\"", user));
 	}
@@ -5463,7 +5463,7 @@ qboolean UpdateAccount(account_t *account, gentity_t *ent)
 	p_account = (account_t*)p;
 
 	// Add changes from active system.
-	p_account->experience = ent->client->ps.persistant[PERS_EXPERIANCE];
+	p_account->experience = ent->client->ps.stats[STAT_EXP];
 
 
 	trap->FS_Write(fileData, sizeof(account_t)+sizeof(int), fh);

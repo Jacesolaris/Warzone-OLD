@@ -1425,7 +1425,7 @@ void CG_DrawExpBar(void)										// Function that will draw the fuel bar
 	//	vec4_t oColor;	// overflow color
 	float x = EXPFUELBAR_X;
 	float y = EXPFUELBAR_Y;
-	float percent = ((float)cg.snap->ps.persistant[PERS_EXPERIANCE] / /*cg.snap->ps.stats[PERS_EXPERIANCE_COUNT]*/cg.maxExperience)*EXPFUELBAR_W;		// Finds the percent of your current dodge level.
+	float percent = ((float)cg.snap->ps.stats[STAT_EXP] / /*cg.snap->ps.stats[PERS_EXPERIANCE_COUNT]*/cg.maxExperience)*EXPFUELBAR_W;		// Finds the percent of your current dodge level.
 	// So if you have 50 dodge, percent will be 50, representing 50%. And this will work even if you change the max dodge values. No need to change this in the future.
 
 	//float overflow = 0.0f;
@@ -1729,7 +1729,7 @@ void CG_DrawHUD(centity_t	*cent)
 		UI_SMALLFONT|UI_DROPSHADOW, colorTable[CT_HUD_RED], 0.5f );*/
 
 
-		CG_DrawScaledProportionalString(SMALLCHAR_WIDTH - (x - 300), y + 50, va("^7XP ^2%i^7 / ^3%i", cg.snap->ps.persistant[PERS_EXPERIANCE], cg.maxExperience),
+		CG_DrawScaledProportionalString(SMALLCHAR_WIDTH - (x - 300), y + 50, va("^7XP ^2%i^7 / ^3%i", cg.snap->ps.stats[STAT_EXP], cg.maxExperience),
 		UI_SMALLFONT|UI_DROPSHADOW, colorTable[CT_WHITE], 0.4f );
 
 		//[DODGEBAR]Scooper
@@ -1836,7 +1836,7 @@ void CG_DrawHUD(centity_t	*cent)
 
 		{
 			//[EXPsys]
-			scoreStr = va("%s %s: %i ", scoreStr, CG_GetStringEdString("EXPSYSTEM", "EXP"), cg.snap->ps.persistant[PERS_EXPERIANCE], scoreBiasStr);	
+			scoreStr = va("%s %s: %i ", scoreStr, CG_GetStringEdString("EXPSYSTEM", "EXP"), cg.snap->ps.stats[STAT_EXP], scoreBiasStr);
 			//[/EXPsys]
 		}
 
