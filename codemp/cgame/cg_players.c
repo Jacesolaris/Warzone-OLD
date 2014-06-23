@@ -8238,6 +8238,9 @@ void CG_DoOTSaber(vec3_t blade_muz, vec3_t blade_tip, vec3_t trail_tip, vec3_t t
 	coreradius = ((radius * 0.4 * v2) + flrand(0.1f, 1.0f)/* * 0.1f*/)*radiusmult;
 
 	coreradius *= 0.5f;
+//Create a temporary ghoul2 instance and get the gla name so we can try loading animation data and sounds.
+void BG_GetVehicleModelName(char *modelName, const char *vehicleName, size_t len);
+void BG_GetVehicleSkinName(char *skinname, int len);
 
 	if (cg_saberTrail.integer == 2 && cg_shadows.integer != 2 && cgs.glconfig.stencilBits >= 4)
 	{
@@ -8271,6 +8274,13 @@ void CG_DoOTSaber(vec3_t blade_muz, vec3_t blade_tip, vec3_t trail_tip, vec3_t t
 			for (i = 0; i<3; i++)
 				saber.shaderRGBA[i] = rgb[i];
 			saber.shaderRGBA[3] = 255;
+	if (modelName[0] == '$')
+	{ //it's a vehicle name actually, let's precache the whole vehicle
+		BG_GetVehicleModelName(useModel, useModel, sizeof( useModel ) );
+		BG_GetVehicleSkinName(useSkin, sizeof( useSkin ) );
+		if ( useSkin[0] )
+		{ //use a custom skin
+			trap->R_RegisterSkin(va("models/players/%s/model_%s.skin", useModel, useSkin));
 		}
 		//[/RGBSabers]
 
@@ -8811,6 +8821,12 @@ void CG_DoSFXSaber(vec3_t blade_muz, vec3_t blade_tip, vec3_t trail_tip, vec3_t 
 			//[RGBSabers]
 			if (color != SABER_RGB && color != SABER_PIMP && color != SABER_WHITE && color != SABER_SCRIPTED)
 				saber.shaderRGBA[0] = saber.shaderRGBA[1] = saber.shaderRGBA[2] = saber.shaderRGBA[3] = 0xff * effectalpha;
+			BG_GetVehicleModelName(modelName, modelName, sizeof( modelName ) );
+			if (cent->m_pVehicle->m_pVehicleInfo->skin &&
+				cent->m_pVehicle->m_pVehicleInfo->skin[0])
+			{ //use a custom skin
+				skinID = trap->R_RegisterSkin(va("models/players/%s/model_%s.skin", modelName, cent->m_pVehicle->m_pVehicleInfo->skin));
+			}
 			else
 			{
 				for (i = 0; i<3; i++)
