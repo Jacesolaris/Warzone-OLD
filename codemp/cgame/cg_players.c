@@ -4,6 +4,8 @@
 #include "cg_local.h"
 #include "ghoul2/G2.h"
 #include "game/bg_saga.h"
+//#include "game/bg_class.h"
+
 
 //[TrueView]
 //True View Camera Position Check Function

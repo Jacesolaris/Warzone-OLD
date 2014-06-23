@@ -2,6 +2,8 @@
 //
 #include "g_local.h"
 #include "bg_saga.h"
+//#include "bg_class.h"
+
 
 #include "ui/menudef.h"			// for the voice chats
 
@@ -1718,7 +1720,7 @@ void UpdateSithinquisitor3(gentity_t *ent, qboolean silent)
 
 void UpdateCharacter(gentity_t *ent, qboolean silent)
 {
-	switch (ent->account.playerclasses)
+	switch (ent->account.playerclass)
 
 	{
 	case PCLASS_TROOPER_1://Tank class to take alot of damage from npc's
@@ -1816,8 +1818,8 @@ void GiveExperiance(gentity_t *ent, int amount) {
 	if (ent->client->ps.stats[STAT_EXP] >= experienceLevel[ent->account.level])
 	{
 		ent->account.level++;	// Increase level by 1
-		ent->client->ps.stats[STAT_MAX_EXP] = experienceLevel[ent->account.level];	// Set the required experience for next level.
-		trap->SendServerCommand(ent - g_entities, va("maxexperience %i", ent->client->ps.stats[STAT_MAX_EXP]));
+		ent->client->ps.stats[STAT_EXP_Count] = experienceLevel[ent->account.level];	// Set the required experience for next level.
+		trap->SendServerCommand(ent - g_entities, va("maxexperience %i", ent->client->ps.stats[STAT_EXP_Count]));
 		ent->client->ps.stats[STAT_EXP] = 0;	// Reset experience to 0 to start on the next level.
 		trap->SendServerCommand(-1, va("print \"%s^7 has leveled up, and is now level %i!\n\"", ent->client->pers.netname, ent->account.level));
 		trap->SendServerCommand(-1, va("chat \"%s^7 has leveled up, and is now level %i!\n\"", ent->client->pers.netname, ent->account.level));
@@ -1924,7 +1926,7 @@ void DeathmatchScoreboardMessage( gentity_t *ent ) {
 			scoreFlags, g_entities[level.sortedClients[i]].s.powerups, accuracy,
 			//[EXPsys]
 			cl->ps.stats[STAT_EXP],
-			cl->ps.stats[STAT_MAX_EXP],
+			cl->ps.stats[STAT_EXP_Count],
 			//[/EXPsys]
 			cl->ps.persistant[PERS_IMPRESSIVE_COUNT],
 			cl->ps.persistant[PERS_EXCELLENT_COUNT],
@@ -4228,6 +4230,194 @@ qboolean G_TeamVoteLeader( gentity_t *ent, int cs_offset, team_t team, int numAr
 	return qtrue;
 }
 
+//[ClassSyS]
+/*
+==================
+Cmd_ChangeClasses_f
+==================
+*/
+//void Cmd_ChangeClasses_f(gentity_t *ent)
+//{
+//	char *name;
+//	//   int i;
+//
+//	// Get second parameter// cmd to call from console :)
+//	name = ConcatArgs(1);
+//	//I'm not really sure about this one - I think it gets the value of the first argument.
+//	//if you passed 0 as an argument it would return the command itself i think...
+//
+//	Com_Printf("2nd parameter (%i chars) is %s\n", strlen(name), name);
+//	//this is just for debugging. remove it later when you feel it works properly.
+//
+//	// the next part is a massive if-then-else tree. like i said b4, if two strings are
+//	//equal, then the function Q_stricmp() should return 0. here, the argument of the 
+//	//changeclass command is checked against various names like scout, sniper, spy, etc. 
+//	//if any of the expressions evaluates to true, then the corresponding class is 
+//	//assigned to the player. Otherwise it continues checking until it finds a matching 
+//	//class.
+//	// if it finds that the class you want to change to doesn't exist, then it will give 
+//	//you a message "Invalid class " where is the class you gave.
+//
+//	if (Q_stricmp(name, "padawan") == 0) {
+//		ent->client->pers.nextplayerclasses = PCLASS_PLAYER;
+//	}
+//	else if (Q_stricmp(name, "trooper1") == 0) {
+//		ent->client->pers.nextplayerclasses = PCLASS_TROOPER_1;
+//		ent->account.playerclass || PCLASS_TROOPER_1;
+//		ent->client->ps.stats[STAT_HEALTH] = ent->health = 0;
+//		player_die(ent, ent, ent, 100000, MOD_SUICIDE);
+//	}
+//	else if (Q_stricmp(name, "trooper2") == 0) {
+//		ent->client->pers.nextplayerclasses = PCLASS_TROOPER_2;
+//		ent->account.playerclass || PCLASS_TROOPER_2;
+//		ent->client->ps.stats[STAT_HEALTH] = ent->health = 0;
+//		player_die(ent, ent, ent, 100000, MOD_SUICIDE);
+//	}
+//	else if (Q_stricmp(name, "trooper3") == 0) {
+//		ent->client->pers.nextplayerclasses = PCLASS_TROOPER_3;
+//		ent->account.playerclass || PCLASS_TROOPER_3;
+//		ent->client->ps.stats[STAT_HEALTH] = ent->health = 0;
+//		player_die(ent, ent, ent, 100000, MOD_SUICIDE);
+//	}
+//	else if (Q_stricmp(name, "jediknight1") == 0) {
+//		ent->client->pers.nextplayerclasses = PCLASS_JEDIKNIGHT_1;
+//		ent->account.playerclass || PCLASS_JEDIKNIGHT_1;
+//		ent->client->ps.stats[STAT_HEALTH] = ent->health = 0;
+//		player_die(ent, ent, ent, 100000, MOD_SUICIDE);
+//	}
+//	else if (Q_stricmp(name, "jediknight2") == 0) {
+//		ent->client->pers.nextplayerclasses = PCLASS_JEDIKNIGHT_2;
+//		ent->account.playerclass || PCLASS_JEDIKNIGHT_2;
+//		ent->client->ps.stats[STAT_HEALTH] = ent->health = 0;
+//		player_die(ent, ent, ent, 100000, MOD_SUICIDE);
+//	}
+//	else if (Q_stricmp(name, "jediknight3") == 0) {
+//		ent->client->pers.nextplayerclasses = PCLASS_JEDIKNIGHT_3;
+//		ent->account.playerclass || PCLASS_JEDIKNIGHT_3;
+//		ent->client->ps.stats[STAT_HEALTH] = ent->health = 0;
+//		player_die(ent, ent, ent, 100000, MOD_SUICIDE);
+//	}
+//	else if (Q_stricmp(name, "smuggler1") == 0) {
+//		ent->client->pers.nextplayerclasses = PCLASS_SMUGGLER_1;
+//		ent->account.playerclass || PCLASS_SMUGGLER_1;
+//		ent->client->ps.stats[STAT_HEALTH] = ent->health = 0;
+//		player_die(ent, ent, ent, 100000, MOD_SUICIDE);
+//	}
+//	else if (Q_stricmp(name, "smuggler2") == 0) {
+//		ent->client->pers.nextplayerclasses = PCLASS_SMUGGLER_2;
+//		ent->account.playerclass || PCLASS_SMUGGLER_2;
+//		ent->client->ps.stats[STAT_HEALTH] = ent->health = 0;
+//		player_die(ent, ent, ent, 100000, MOD_SUICIDE);
+//	}
+//	else if (Q_stricmp(name, "smuggler3") == 0) {
+//		ent->client->pers.nextplayerclasses = PCLASS_SMUGGLER_3;
+//		ent->account.playerclass || PCLASS_SMUGGLER_3,
+//		ent->client->ps.stats[STAT_HEALTH] = ent->health = 0;
+//		player_die(ent, ent, ent, 100000, MOD_SUICIDE);
+//	}
+//	else if (Q_stricmp(name, "jediconsular1") == 0) {
+//		ent->client->pers.nextplayerclasses = PCLASS_JEDI_CONSULAR_1;
+//		ent->account.playerclass || PCLASS_JEDI_CONSULAR_1;
+//		ent->client->ps.stats[STAT_HEALTH] = ent->health = 0;
+//		player_die(ent, ent, ent, 100000, MOD_SUICIDE);
+//	}
+//	else if (Q_stricmp(name, "jediconsular2") == 0) {
+//		ent->client->pers.nextplayerclasses = PCLASS_JEDI_CONSULAR_2;
+//		ent->account.playerclass || PCLASS_JEDI_CONSULAR_2;
+//		ent->client->ps.stats[STAT_HEALTH] = ent->health = 0;
+//		player_die(ent, ent, ent, 100000, MOD_SUICIDE);
+//	}
+//	else if (Q_stricmp(name, "jediconsular3") == 0) {
+//		ent->client->pers.nextplayerclasses = PCLASS_JEDI_CONSULAR_3;
+//		ent->account.playerclass || PCLASS_JEDI_CONSULAR_3;
+//		ent->client->ps.stats[STAT_HEALTH] = ent->health = 0;
+//		player_die(ent, ent, ent, 100000, MOD_SUICIDE);
+//	}
+//
+//	else if (Q_stricmp(name, "bountyhunter1") == 0) {
+//		ent->client->pers.nextplayerclasses = PCLASS_BOUNTYHUNTER_1;
+//		ent->account.playerclass || PCLASS_BOUNTYHUNTER_1;
+//		ent->client->ps.stats[STAT_HEALTH] = ent->health = 0;
+//		player_die(ent, ent, ent, 100000, MOD_SUICIDE);
+//	}
+//	else if (Q_stricmp(name, "bountyhunter2") == 0) {
+//		ent->client->pers.nextplayerclasses = PCLASS_BOUNTYHUNTER_2;
+//		ent->account.playerclass || PCLASS_BOUNTYHUNTER_2;
+//		ent->client->ps.stats[STAT_HEALTH] = ent->health = 0;
+//		player_die(ent, ent, ent, 100000, MOD_SUICIDE);
+//	}
+//	else if (Q_stricmp(name, "bountyhunter3") == 0) {
+//		ent->client->pers.nextplayerclasses = PCLASS_BOUNTYHUNTER_3;
+//		ent->account.playerclass || PCLASS_BOUNTYHUNTER_3;
+//		ent->client->ps.stats[STAT_HEALTH] = ent->health = 0;
+//		player_die(ent, ent, ent, 100000, MOD_SUICIDE);
+//	}
+//	else if (Q_stricmp(name, "sithworrior1") == 0) {
+//		ent->client->pers.nextplayerclasses = PCLASS_SITHWORRIOR_1;
+//		ent->account.playerclass || PCLASS_SITHWORRIOR_1;
+//		ent->client->ps.stats[STAT_HEALTH] = ent->health = 0;
+//		player_die(ent, ent, ent, 100000, MOD_SUICIDE);
+//	}
+//	else if (Q_stricmp(name, "sithworrior2") == 0) {
+//		ent->client->pers.nextplayerclasses = PCLASS_SITHWORRIOR_2;
+//		ent->account.playerclass || PCLASS_SITHWORRIOR_2;
+//		ent->client->ps.stats[STAT_HEALTH] = ent->health = 0;
+//		player_die(ent, ent, ent, 100000, MOD_SUICIDE);
+//	}
+//	else if (Q_stricmp(name, "sithworrior3") == 0) {
+//		ent->client->pers.nextplayerclasses = PCLASS_SITHWORRIOR_3;
+//		ent->account.playerclass || PCLASS_SITHWORRIOR_3;
+//		ent->client->ps.stats[STAT_HEALTH] = ent->health = 0;
+//		player_die(ent, ent, ent, 100000, MOD_SUICIDE);
+//	}
+//	else if (Q_stricmp(name, "ipperialagent1") == 0) {
+//		ent->client->pers.nextplayerclasses = PCLASS_IPPERIAL_AGENT_1;
+//		ent->account.playerclass || PCLASS_IPPERIAL_AGENT_1;
+//		ent->client->ps.stats[STAT_HEALTH] = ent->health = 0;
+//		player_die(ent, ent, ent, 100000, MOD_SUICIDE);
+//	}
+//	else if (Q_stricmp(name, "ipperialagent2") == 0) {
+//		ent->client->pers.nextplayerclasses = PCLASS_IPPERIAL_AGENT_2;
+//		ent->account.playerclass || PCLASS_IPPERIAL_AGENT_2;
+//		ent->client->ps.stats[STAT_HEALTH] = ent->health = 0;
+//		player_die(ent, ent, ent, 100000, MOD_SUICIDE);
+//	}
+//	else if (Q_stricmp(name, "ipperialagent3") == 0) {
+//		ent->client->pers.nextplayerclasses = PCLASS_IPPERIAL_AGENT_3;
+//		ent->account.playerclass || PCLASS_IPPERIAL_AGENT_3;
+//		ent->client->ps.stats[STAT_HEALTH] = ent->health = 0;
+//		player_die(ent, ent, ent, 100000, MOD_SUICIDE);
+//	}
+//	else if (Q_stricmp(name, "sithinquisitor1") == 0) {
+//		ent->client->pers.nextplayerclasses = PCLASS_SITH_INQUISITOR_1;
+//		ent->account.playerclass || PCLASS_SITH_INQUISITOR_1;
+//		ent->client->ps.stats[STAT_HEALTH] = ent->health = 0;
+//		player_die(ent, ent, ent, 100000, MOD_SUICIDE);
+//	}
+//	else if (Q_stricmp(name, "sithinquisitor2") == 0) {
+//		ent->client->pers.nextplayerclasses = PCLASS_SITH_INQUISITOR_2;
+//		ent->account.playerclass || PCLASS_SITH_INQUISITOR_2;
+//		ent->client->ps.stats[STAT_HEALTH] = ent->health = 0;
+//		player_die(ent, ent, ent, 100000, MOD_SUICIDE);
+//	}
+//	else if (Q_stricmp(name, "sithinquisitor3") == 0) {
+//		ent->client->pers.nextplayerclasses = PCLASS_SITH_INQUISITOR_3;
+//		ent->account.playerclass || PCLASS_SITH_INQUISITOR_3;
+//		ent->client->ps.stats[STAT_HEALTH] = ent->health = 0;
+//		player_die(ent, ent, ent, 100000, MOD_SUICIDE);
+//	}
+//	else {
+//		Com_Printf("Invalid class %s \n", name);
+//		return;
+//	}
+//
+//	Com_Printf("Your next player class is %s \n", name);
+//	//	ent->changeClass = qtrue;
+//	return;
+//}
+
+//[ClassSyS]
+
 /*
 ==================
 Cmd_CallTeamVote_f
@@ -5227,6 +5417,88 @@ void Cmd_AddBot_f( gentity_t *ent ) {
 	trap->SendServerCommand( ent-g_entities, va( "print \"%s.\n\"", G_GetStringEdString( "MP_SVGAME", "ONLY_ADD_BOTS_AS_SERVER" ) ) );
 }
 
+extern qboolean Account_Login(int clientNum, char *user, char *pass, qboolean skipPass, account_t *storeAccount);
+void Cmd_Alogin_f(gentity_t *ent)
+{
+	int clientNum = ent->s.number;
+	char		cmd[MAX_TOKEN_CHARS] = { 0 };
+	char	pass[MAX_STRING_CHARS]; // passord å logge inn med
+	char	user[MAX_STRING_CHARS]; // bruker å logge inn på
+
+	if (trap->Argc() != 3) // Må ha 3 argumenter, /aLogin user pass, alogin teller som 1, altså trenger vi 3
+	{
+		trap->SendServerCommand(clientNum, "print \"alogin <username> <password>\n\""); // Feilmelding, hvis man ikke gir riktig antall argumenter
+		return; // Avslutt kommandoen
+	}
+
+	trap->Argv(1, user, sizeof(user)); // username, leses inn i user variablen
+	trap->Argv(2, pass, sizeof(pass)); // password, leses inn i pass variablen
+
+	Account_Login(clientNum, user, pass, qfalse, NULL); // Meldinger gjøres i funksjonen.
+
+	return;
+}
+
+extern qboolean Account_Register(int clientNum, char *user, char *pass);
+void Cmd_Aregister_f(gentity_t *ent)
+{
+	int clientNum = ent->s.number;
+	char		cmd[MAX_TOKEN_CHARS] = { 0 };
+	char	pass[MAX_STRING_CHARS]; // passord å logge inn med
+	char	confirm[MAX_STRING_CHARS]; // confirm password xP
+	char	user[MAX_STRING_CHARS]; // bruker å logge inn på
+
+	if (trap->Argc() != 4) // Må ha 4 argumenter, /aRegister user pass <confirm pass>, aregister teller som 1, altså trenger vi 4
+	{
+		trap->SendServerCommand(clientNum, "print \"aregister <username> <password> <confirm password>\n\""); // Feilmelding, hvis man ikke gir riktig antall argumenter
+		return; // Avslutt kommandoen
+	}
+
+	trap->Argv(1, user, sizeof(user)); // username, leses inn i user variablen
+	trap->Argv(2, pass, sizeof(pass)); // password, leses inn i pass variablen
+	trap->Argv(3, confirm, sizeof(confirm)); // confirmation, leses inn i confirm variablen
+
+	if (Q_stricmp(pass, confirm))
+	{
+		trap->SendServerCommand(clientNum, "print \"Your password and confirmation password do not match.\n\""); // Feilmelding, hvis man ikke har skrevet riktig passord.
+		return;
+	}
+
+
+	if (Account_Register(clientNum, user, pass))
+	{
+		trap->SendServerCommand(clientNum, "print \"Registration successful.\n\"");
+		Account_Login(clientNum, user, pass, qfalse, NULL);	// Vi logger oss inn også =)
+	}
+	else trap->SendServerCommand(clientNum, "print \"Registration failed.\n\"");
+
+	return;
+}
+
+
+
+void Cmd_Acheckaccount_f(gentity_t *ent)
+{
+	int clientNum = ent->s.number;
+	char		cmd[MAX_TOKEN_CHARS] = { 0 };
+	account_t account;
+	char	user[MAX_STRING_CHARS];
+	
+	if (trap->Argc() != 2)
+	{
+		trap->SendServerCommand(clientNum, "print \"acheckaccount <username> <password> <confirm password>\n\""); // Feilmelding, hvis man ikke gir riktig antall argumenter
+
+		return; // Avslutt kommandoen
+	}
+
+	trap->Argv(1, user, sizeof(user)); // username, leses inn i user variablen
+
+	Account_Login(clientNum, user, NULL, qtrue, &account);
+
+	trap->SendServerCommand(clientNum, va("print \"Username: %s\nPassword: %s\nPermissions: %i\n\"", account.username, account.password, account.permissions));
+
+}
+
 /*
 =================
 ClientCommand
@@ -5250,6 +5522,9 @@ int cmdcmp( const void *a, const void *b ) {
 /* This array MUST be sorted correctly by alphabetical name field */
 command_t commands[] = {
 	{ "addbot",				Cmd_AddBot_f,				0 },
+	{ "alogin",				Cmd_Alogin_f,			    0 },
+	{ "aregister",			Cmd_Aregister_f,		    0 },
+	{ "acheckaccount",		Cmd_Acheckaccount_f,		0 },
 	{ "callteamvote",		Cmd_CallTeamVote_f,			CMD_NOINTERMISSION },
 	{ "callvote",			Cmd_CallVote_f,				CMD_NOINTERMISSION },
 	{ "debugBMove_Back",	Cmd_BotMoveBack_f,			CMD_CHEAT|CMD_ALIVE },
@@ -5288,6 +5563,7 @@ command_t commands[] = {
 	{ "voice_cmd",			Cmd_VoiceCommand_f,			CMD_NOINTERMISSION },
 	{ "vote",				Cmd_Vote_f,					CMD_NOINTERMISSION },
 	{ "where",				Cmd_Where_f,				CMD_NOINTERMISSION },
+
 };
 
 // Account system
@@ -5364,8 +5640,8 @@ qboolean Account_Login(int clientNum, char *user, char *pass, qboolean skipPass,
 		// We have to load the experience manually into the PERS_EXPERIENCE. Hopefully you won't need to do this with anything else
 		// The playerclass is loaded automaticly, and with the changes to the code we made, it will be used correctly.
 		ent->client->ps.stats[STAT_EXP] = ent->account.experience;
-		ent->client->ps.stats[STAT_MAX_EXP] = experienceLevel[ent->account.level];	// Set the required experience for next level.
-		trap->SendServerCommand(ent - g_entities, va("maxexperience %i", ent->client->ps.persistant[PERS_EXPERIANCE_COUNT]));
+		ent->client->ps.stats[STAT_EXP_Count] = experienceLevel[ent->account.level];	// Set the required experience for next level.
+		trap->SendServerCommand(ent - g_entities, va("maxexperience %i", ent->client->ps.stats[STAT_EXP_Count]));
 		trap->SendServerCommand(clientNum, va("print \"Welcome %s, login successful.\n\"", user));
 	}
 	else trap->SendServerCommand(clientNum, "print \"Login failed.\n\"");
@@ -5409,7 +5685,8 @@ qboolean Account_Register(int clientNum, char *user, char *pass)
 	Q_strncpyz(ent->account.password, pass, 64);	// Account password	
 	ent->account.permissions = 1337;				// Account permissions, 32 bit, bitmask Currently testing with setting to 1337, should be set to 0 when not testing
 	ent->account.playerclass = 0;
-	ent->account.playerclasses = 0;
+	//ent->account.playerclasses = 0;
+
 	//	ent->account.playerclass, user;  <<-- wth is this o.o? lol was a try xD but i see it is 0 :P not good 
 	//
 	// When you add more to the account_t structure, you need to add their default values here:

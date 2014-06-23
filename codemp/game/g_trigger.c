@@ -2,6 +2,8 @@
 //
 #include "g_local.h"
 #include "bg_saga.h"
+//#include "bg_class.h"
+
 
 int gTrigFallSound;
 

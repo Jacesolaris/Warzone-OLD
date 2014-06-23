@@ -6,6 +6,8 @@
 #include "cg_local.h"
 
 #include "game/bg_saga.h"
+//#include "game/bg_class.h"
+
 
 #include "ui/ui_shared.h"
 #include "ui/ui_public.h"

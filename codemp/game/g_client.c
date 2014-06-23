@@ -3,6 +3,8 @@
 #include "g_local.h"
 #include "ghoul2/G2.h"
 #include "bg_saga.h"
+//#include "bg_class.h"
+
 
 // g_client.c -- client functions that don't happen every frame
 
@@ -2584,8 +2586,8 @@ char *ClientConnect( int clientNum, qboolean firstTime, qboolean isBot ) {
 
 	//[EXPsys]
 	client->ps.stats[STAT_EXP] = 0;
-	client->ps.stats[STAT_MAX_EXP] = experienceLevel[ent->account.level];
-	trap->SendServerCommand(clientNum, va("maxexperience %i", ent->client->ps.stats[STAT_MAX_EXP]));
+	client->ps.stats[STAT_EXP_Count] = experienceLevel[ent->account.level];
+	trap->SendServerCommand(clientNum, va("maxexperience %i", ent->client->ps.stats[STAT_EXP_Count]));
 	GiveExperiance(ent, g_experianceInitial.integer); // call ui_experiance
 	//[/EXPsys]
 
@@ -2722,8 +2724,8 @@ void ClientBegin( int clientNum, qboolean allowTeamReset ) {
 	//[EXPsys]
 	if (client->ps.stats[STAT_EXP] == 0) {
 		client->ps.stats[STAT_EXP] = 0;
-		client->ps.stats[STAT_MAX_EXP] = experienceLevel[ent->account.level];
-		trap->SendServerCommand(clientNum, va("maxexperience %i", ent->client->ps.stats[STAT_MAX_EXP]));
+		client->ps.stats[STAT_EXP_Count] = experienceLevel[ent->account.level];
+		trap->SendServerCommand(clientNum, va("maxexperience %i", ent->client->ps.stats[STAT_EXP_Count]));
 		GiveExperiance(ent, g_experianceInitial.integer); // call ui_experiance
 		//	client->ps.persistant[PERS_EXPERIANCE_COUNT] -= g_experianceInitial.integer; // starting money isn't earned 
 	}
@@ -3795,6 +3797,78 @@ void ClientSpawn(gentity_t *ent) {
 	{
 		client->ps.stats[STAT_ARMOR] = client->ps.stats[STAT_MAX_HEALTH] * 0.25;
 	}
+	//[ClassSyS]
+	//if ((g_gametype.integer == GT_FFA || g_gametype.integer == GT_TEAM || g_gametype.integer == GT_SIEGE)/* && (ent->changeClass || ent->firstClass)*/)// this is where i have put it all up 
+	//{
+	//
+	//	//switch (client->pers.playerclasses) 
+	//	//  if(ent->firstClass)
+	//	//	   ent->firstClass = qfalse;
+
+	//	switch (ent->account.playerclass)
+	//	{
+	//	case PCLASS_PLAYER://default player when spawn ingame
+	//		//ChangeModel(&g_entities[client->ps.clientNum], "kyle", "default");
+	//		break;
+	//	case PCLASS_TROOPER_1://[ClassSyS]Rebel Class
+	//		//ChangeModel(&g_entities[client->ps.clientNum], "trooper1", "default");
+	//		break; 
+	//	case PCLASS_TROOPER_2:
+	//		//ChangeModel(&g_entities[client->ps.clientNum], "trooper2", "icon_default");
+	//		break;
+	//		//===TANK SPEC===//Focus on to be in air and shot down from the sky when Players is attacking from the ground
+	//	case PCLASS_TROOPER_3:
+	//		//ChangeModel(&g_entities[client->ps.clientNum], "trooper3", "default");
+	//		break;
+	//	case PCLASS_JEDIKNIGHT_1:
+	//		break;
+	//	case PCLASS_JEDIKNIGHT_2:
+	//		break;
+	//	case PCLASS_JEDIKNIGHT_3:
+	//		break;
+	//	case PCLASS_SMUGGLER_1:
+	//		break;
+	//	case PCLASS_SMUGGLER_2:
+	//		break;
+	//	case PCLASS_SMUGGLER_3:
+	//		break;
+	//	case PCLASS_JEDI_CONSULAR_1:
+	//		break;
+	//	case PCLASS_JEDI_CONSULAR_2:
+	//		break;
+	//	case PCLASS_JEDI_CONSULAR_3:
+	//		break;
+	//	case PCLASS_BOUNTYHUNTER_1:
+	//		break;
+	//	case PCLASS_BOUNTYHUNTER_2:
+	//		break;
+	//	case PCLASS_BOUNTYHUNTER_3:
+	//		break;
+	//	case PCLASS_SITHWORRIOR_1:
+	//		break;
+	//	case PCLASS_SITHWORRIOR_2:
+	//		break;
+	//	case PCLASS_SITHWORRIOR_3:
+	//		break;
+	//	case PCLASS_IPPERIAL_AGENT_1:
+	//		break;
+	//	case PCLASS_IPPERIAL_AGENT_3:
+	//		break;
+	//	case PCLASS_SITH_INQUISITOR_1:
+	//		break;
+	//	case PCLASS_SITH_INQUISITOR_2:
+	//		break;
+	//	case PCLASS_SITH_INQUISITOR_3:
+	//		
+	//		break;//[/ClassSyS] Empire Class
+	//	default:
+	//		client->ps.stats[STAT_WEAPONS] |= (1 << WP_MELEE);
+	//		break;
+	//	}
+	//	//ent->changeClass = qfalse;
+	//	UpdateCharacter(ent, qtrue);
+	//}//[/ClassSyS]
+
 
 	G_SetOrigin( ent, spawn_origin );
 	VectorCopy( spawn_origin, client->ps.origin );

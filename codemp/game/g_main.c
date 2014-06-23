@@ -5,6 +5,7 @@
 #include "g_ICARUScb.h"
 #include "g_nav.h"
 #include "bg_saga.h"
+//#include "bg_class.h"
 #include "b_local.h"
 
 level_locals_t	level;

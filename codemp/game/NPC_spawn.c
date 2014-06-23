@@ -4,6 +4,8 @@
 #include "anims.h"
 #include "w_saber.h"
 #include "bg_saga.h"
+//#include "bg_class.h"
+
 #include "bg_vehicles.h"
 #include "g_nav.h"
 

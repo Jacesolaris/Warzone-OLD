@@ -147,14 +147,14 @@ typedef enum
 
 //[Account System]
 // Account system structure
-#define ACCOUNT_VERSION 5 // Remember to change this each time we add something, any changes really :D
+#define ACCOUNT_VERSION 6 // Remember to change this each time we add something, any changes really :D
 typedef struct account_t
 {
 	char		username[64];
 	char		password[64]; // This should be hashed, but it's a pain to add quickly so maybe later.
 	int			playerclass;
-	int			playerclasses;
-	int			adminclass;
+	int         playerclasses;
+
 	int			experience;	// Experience, only used for saving! Use ent->client->ps.persistent[PERS_EXPERIENCE] in code!
 	int			permissions; //Just an example variable
 	int			level;
@@ -532,6 +532,10 @@ typedef struct clientPersistant_s {
 	int			vote, teamvote; // 0 = none, 1 = yes, 2 = no
 
 	char		guid[33];
+	//[ClassSyS]
+	//pclass_t    playerclasses;
+	//pclass_t    nextplayerclasses;
+	//[/ClassSyS]
 	//[ClientPlugInDetect]
 	//this flag shows weither or not this client is running the right version of OJP on the client side.  
 	//This is used to determine if the visual weapon events can be sent or not.

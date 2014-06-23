@@ -12,6 +12,7 @@
 #include "qcommon/q_shared.h"
 #include "bg_public.h"
 #include "bg_saga.h"
+//#include "bg_class.h"
 #include "bg_weapons.h"
 
 #ifdef _GAME

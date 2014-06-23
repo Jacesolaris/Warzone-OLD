@@ -3,6 +3,8 @@
 
 #include "g_local.h"
 #include "bg_saga.h"
+//#include "bg_class.h"
+
 //[EXPSys]
 extern void GiveExperiance(gentity_t *ent, int amount);
 extern void TakeExperiance(gentity_t *ent, int amount);
@@ -852,7 +854,7 @@ int Team_TouchOurFlag( gentity_t *ent, gentity_t *other, int team ) {
 				player->client->rewardTime = level.time + REWARD_SPRITE_TIME;
 			}
 		}
-		//SERENITY EXPERIANCE SYSTEM add for for winning or losing a round (-at-)
+		//[EXPsys]
 		if (g_experianceEnabled.integer)
 		{
 			if ((player->client->sess.sessionTeam == cl->sess.sessionTeam)) {
@@ -863,7 +865,7 @@ int Team_TouchOurFlag( gentity_t *ent, gentity_t *other, int team ) {
 				GiveExperiance(player, g_experianceLoseRound.integer);
 			}
 		}
-	}
+	}//[/EXPsys]
 	Team_ResetFlags();
 
 	CalculateRanks();
