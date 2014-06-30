@@ -1,4 +1,10 @@
 attribute vec2 attr_TexCoord0;
+uniform vec4   u_Local1; // 0, 0, 0, 0
+varying vec4	var_Local1; // 0, 0, 0, 0
+uniform vec4	u_Local2;
+varying vec4	var_Local2; // surfaceType, time, 0, 0
+uniform vec2	u_Dimensions;
+varying vec2   var_Dimensions;
 #if defined(USE_LIGHTMAP) || defined(USE_TCGEN)
 attribute vec2 attr_TexCoord1;
 #endif
@@ -89,6 +95,12 @@ varying vec3   var_ViewDir;
   #endif
 #endif
 
+#if !defined(USE_LIGHT)
+uniform vec3   u_ViewOrigin;
+varying vec3   var_Normal;
+varying vec3   var_ViewDir;
+#endif
+
 #if defined(USE_LIGHT) && !defined(USE_FAST_LIGHT)
 varying vec4   var_LightDir;
 #endif
@@ -102,7 +114,7 @@ vec2 GenTexCoords(int TCGen, vec3 position, vec3 normal, vec3 TCGenVector0, vec3
 {
 	vec2 tex = attr_TexCoord0.st;
 
-	if (TCGen >= TCGEN_LIGHTMAP && TCGen <= TCGEN_LIGHTMAP3)
+	if (TCGen == TCGEN_LIGHTMAP)
 	{
 		tex = attr_TexCoord1.st;
 	}
@@ -281,4 +293,14 @@ void main()
 	var_ViewDir = viewDir;
   #endif
 #endif
+
+#if !defined(USE_LIGHT)
+	vec3 viewDir = u_ViewOrigin - position;
+	var_Normal = normal;
+	var_ViewDir = viewDir;
+#endif
+
+	var_Local1 = u_Local1;
+	var_Local2 = u_Local2;
+	var_Dimensions = u_Dimensions;
 }

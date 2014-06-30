@@ -14,12 +14,17 @@ varying vec2      var_LightTex;
 
 varying vec4      var_Color;
 
+varying vec2	  var_Dimensions;
+
+out vec4 out_Glow;
 
 void main()
 {
 	vec4 color  = texture2D(u_DiffuseMap, var_DiffuseTex);
+
 #if defined(USE_LIGHTMAP)
 	vec4 color2 = texture2D(u_LightMap, var_LightTex);
+
   #if defined(RGBM_LIGHTMAP)
 	color2.rgb *= color2.a;
 	color2.a = 1.0;
@@ -42,4 +47,10 @@ void main()
 #endif
 
 	gl_FragColor = color * var_Color;
+
+#if defined(USE_GLOW_BUFFER)
+	out_Glow = gl_FragColor;
+#else
+	out_Glow = vec4(0.0);
+#endif
 }

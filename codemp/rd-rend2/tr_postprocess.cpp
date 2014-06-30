@@ -71,10 +71,7 @@ void RB_ToneMap(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox, in
 		color[0] = 
 		color[1] =
 		color[2] = 1.0f;
-		if (glRefConfig.textureFloat)
-			color[3] = 0.03f;
-		else
-			color[3] = 0.1f;
+		color[3] = 0.03f;
 
 		FBO_Blit(tr.targetLevelsFbo, srcBox, NULL, tr.calcLevelsFbo, NULL,  NULL, color, GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA);
 	}
@@ -113,114 +110,111 @@ void RB_BokehBlur(FBO_t *src, vec4i_t srcBox, FBO_t *dst, vec4i_t dstBox, float 
 	if (blur < 0.004f)
 		return;
 
-	if (glRefConfig.framebufferObject)
+	// bokeh blur
+	if (blur > 0.0f)
 	{
-		// bokeh blur
-		if (blur > 0.0f)
-		{
-			vec4i_t quarterBox;
+		vec4i_t quarterBox;
 
-			quarterBox[0] = 0;
-			quarterBox[1] = tr.quarterFbo[0]->height;
-			quarterBox[2] = tr.quarterFbo[0]->width;
-			quarterBox[3] = -tr.quarterFbo[0]->height;
+		quarterBox[0] = 0;
+		quarterBox[1] = tr.quarterFbo[0]->height;
+		quarterBox[2] = tr.quarterFbo[0]->width;
+		quarterBox[3] = -tr.quarterFbo[0]->height;
 
-			// create a quarter texture
-			//FBO_Blit(NULL, NULL, NULL, tr.quarterFbo[0], NULL, NULL, NULL, 0);
-			FBO_FastBlit(src, srcBox, tr.quarterFbo[0], quarterBox, GL_COLOR_BUFFER_BIT, GL_LINEAR);
-		}
-
-#ifndef HQ_BLUR
-		if (blur > 1.0f)
-		{
-			// create a 1/16th texture
-			//FBO_Blit(tr.quarterFbo[0], NULL, NULL, tr.textureScratchFbo[0], NULL, NULL, NULL, 0);
-			FBO_FastBlit(tr.quarterFbo[0], NULL, tr.textureScratchFbo[0], NULL, GL_COLOR_BUFFER_BIT, GL_LINEAR);
-		}
-#endif
-
-		if (blur > 0.0f && blur <= 1.0f)
-		{
-			// Crossfade original with quarter texture
-			VectorSet4(color, 1, 1, 1, blur);
-
-			FBO_Blit(tr.quarterFbo[0], NULL, NULL, dst, dstBox, NULL, color, GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA);
-		}
-#ifndef HQ_BLUR
-		// ok blur, but can see some pixelization
-		else if (blur > 1.0f && blur <= 2.0f)
-		{
-			// crossfade quarter texture with 1/16th texture
-			FBO_Blit(tr.quarterFbo[0], NULL, NULL, dst, dstBox, NULL, NULL, 0);
-
-			VectorSet4(color, 1, 1, 1, blur - 1.0f);
-
-			FBO_Blit(tr.textureScratchFbo[0], NULL, NULL, dst, dstBox, NULL, color, GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA);
-		}
-		else if (blur > 2.0f)
-		{
-			// blur 1/16th texture then replace
-			int i;
-
-			for (i = 0; i < 2; i++)
-			{
-				vec2_t blurTexScale;
-				float subblur;
-
-				subblur = ((blur - 2.0f) / 2.0f) / 3.0f * (float)(i + 1);
-
-				blurTexScale[0] =
-				blurTexScale[1] = subblur;
-
-				color[0] =
-				color[1] =
-				color[2] = 0.5f;
-				color[3] = 1.0f;
-
-				if (i != 0)
-					FBO_Blit(tr.textureScratchFbo[0], NULL, blurTexScale, tr.textureScratchFbo[1], NULL, &tr.bokehShader, color, GLS_SRCBLEND_ONE | GLS_DSTBLEND_ONE);
-				else
-					FBO_Blit(tr.textureScratchFbo[0], NULL, blurTexScale, tr.textureScratchFbo[1], NULL, &tr.bokehShader, color, 0);
-			}
-
-			FBO_Blit(tr.textureScratchFbo[1], NULL, NULL, dst, dstBox, &tr.textureColorShader, NULL, 0);
-		}
-#else // higher quality blur, but slower
-		else if (blur > 1.0f)
-		{
-			// blur quarter texture then replace
-			int i;
-
-			src = tr.quarterFbo[0];
-			dst = tr.quarterFbo[1];
-
-			VectorSet4(color, 0.5f, 0.5f, 0.5f, 1);
-
-			for (i = 0; i < 2; i++)
-			{
-				vec2_t blurTexScale;
-				float subblur;
-
-				subblur = (blur - 1.0f) / 2.0f * (float)(i + 1);
-
-				blurTexScale[0] =
-				blurTexScale[1] = subblur;
-
-				color[0] =
-				color[1] =
-				color[2] = 1.0f;
-				if (i != 0)
-					color[3] = 1.0f;
-				else
-					color[3] = 0.5f;
-
-				FBO_Blit(tr.quarterFbo[0], NULL, blurTexScale, tr.quarterFbo[1], NULL, &tr.bokehShader, color, GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA);
-			}
-
-			FBO_Blit(tr.quarterFbo[1], NULL, NULL, dst, dstBox, &tr.textureColorShader, NULL, 0);
-		}
-#endif
+		// create a quarter texture
+		//FBO_Blit(NULL, NULL, NULL, tr.quarterFbo[0], NULL, NULL, NULL, 0);
+		FBO_FastBlit(src, srcBox, tr.quarterFbo[0], quarterBox, GL_COLOR_BUFFER_BIT, GL_LINEAR);
 	}
+
+#ifndef HQ_BLUR
+	if (blur > 1.0f)
+	{
+		// create a 1/16th texture
+		//FBO_Blit(tr.quarterFbo[0], NULL, NULL, tr.textureScratchFbo[0], NULL, NULL, NULL, 0);
+		FBO_FastBlit(tr.quarterFbo[0], NULL, tr.textureScratchFbo[0], NULL, GL_COLOR_BUFFER_BIT, GL_LINEAR);
+	}
+#endif
+
+	if (blur > 0.0f && blur <= 1.0f)
+	{
+		// Crossfade original with quarter texture
+		VectorSet4(color, 1, 1, 1, blur);
+
+		FBO_Blit(tr.quarterFbo[0], NULL, NULL, dst, dstBox, NULL, color, GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA);
+	}
+#ifndef HQ_BLUR
+	// ok blur, but can see some pixelization
+	else if (blur > 1.0f && blur <= 2.0f)
+	{
+		// crossfade quarter texture with 1/16th texture
+		FBO_Blit(tr.quarterFbo[0], NULL, NULL, dst, dstBox, NULL, NULL, 0);
+
+		VectorSet4(color, 1, 1, 1, blur - 1.0f);
+
+		FBO_Blit(tr.textureScratchFbo[0], NULL, NULL, dst, dstBox, NULL, color, GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA);
+	}
+	else if (blur > 2.0f)
+	{
+		// blur 1/16th texture then replace
+		int i;
+
+		for (i = 0; i < 2; i++)
+		{
+			vec2_t blurTexScale;
+			float subblur;
+
+			subblur = ((blur - 2.0f) / 2.0f) / 3.0f * (float)(i + 1);
+
+			blurTexScale[0] =
+			blurTexScale[1] = subblur;
+
+			color[0] =
+			color[1] =
+			color[2] = 0.5f;
+			color[3] = 1.0f;
+
+			if (i != 0)
+				FBO_Blit(tr.textureScratchFbo[0], NULL, blurTexScale, tr.textureScratchFbo[1], NULL, &tr.bokehShader, color, GLS_SRCBLEND_ONE | GLS_DSTBLEND_ONE);
+			else
+				FBO_Blit(tr.textureScratchFbo[0], NULL, blurTexScale, tr.textureScratchFbo[1], NULL, &tr.bokehShader, color, 0);
+		}
+
+		FBO_Blit(tr.textureScratchFbo[1], NULL, NULL, dst, dstBox, &tr.textureColorShader, NULL, 0);
+	}
+#else // higher quality blur, but slower
+	else if (blur > 1.0f)
+	{
+		// blur quarter texture then replace
+		int i;
+
+		src = tr.quarterFbo[0];
+		dst = tr.quarterFbo[1];
+
+		VectorSet4(color, 0.5f, 0.5f, 0.5f, 1);
+
+		for (i = 0; i < 2; i++)
+		{
+			vec2_t blurTexScale;
+			float subblur;
+
+			subblur = (blur - 1.0f) / 2.0f * (float)(i + 1);
+
+			blurTexScale[0] =
+			blurTexScale[1] = subblur;
+
+			color[0] =
+			color[1] =
+			color[2] = 1.0f;
+			if (i != 0)
+				color[3] = 1.0f;
+			else
+				color[3] = 0.5f;
+
+			FBO_Blit(tr.quarterFbo[0], NULL, blurTexScale, tr.quarterFbo[1], NULL, &tr.bokehShader, color, GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA);
+		}
+
+		FBO_Blit(tr.quarterFbo[1], NULL, NULL, dst, dstBox, &tr.textureColorShader, NULL, 0);
+	}
+#endif
 }
 
 
@@ -282,8 +276,6 @@ static void RB_RadialBlur(FBO_t *srcFbo, FBO_t *dstFbo, int passes, float stretc
 static qboolean RB_UpdateSunFlareVis(void)
 {
 	GLuint sampleCount = 0;
-	if (!glRefConfig.occlusionQuery)
-		return qtrue;
 
 	tr.sunFlareQueryIndex ^= 1;
 	if (!tr.sunFlareQueryActive[tr.sunFlareQueryIndex])
@@ -296,7 +288,7 @@ static qboolean RB_UpdateSunFlareVis(void)
 		for (iter=0 ; ; ++iter)
 		{
 			GLint available = 0;
-			qglGetQueryObjectivARB(tr.sunFlareQuery[tr.sunFlareQueryIndex], GL_QUERY_RESULT_AVAILABLE_ARB, &available);
+			qglGetQueryObjectiv(tr.sunFlareQuery[tr.sunFlareQueryIndex], GL_QUERY_RESULT_AVAILABLE, &available);
 			if (available)
 				break;
 		}
@@ -304,7 +296,7 @@ static qboolean RB_UpdateSunFlareVis(void)
 		ri->Printf(PRINT_DEVELOPER, "Waited %d iterations\n", iter);
 	}
 	
-	qglGetQueryObjectuivARB(tr.sunFlareQuery[tr.sunFlareQueryIndex], GL_QUERY_RESULT_ARB, &sampleCount);
+	qglGetQueryObjectuiv(tr.sunFlareQuery[tr.sunFlareQueryIndex], GL_QUERY_RESULT, &sampleCount);
 	return (qboolean)(sampleCount > 0);
 }
 
@@ -471,53 +463,907 @@ static void RB_BlurAxis(FBO_t *srcFbo, FBO_t *dstFbo, float strength, qboolean h
 	}
 }
 
-static void RB_HBlur(FBO_t *srcFbo, FBO_t *dstFbo, float strength)
+void RB_HBlur(FBO_t *srcFbo, FBO_t *dstFbo, float strength)
 {
 	RB_BlurAxis(srcFbo, dstFbo, strength, qtrue);
 }
 
-static void RB_VBlur(FBO_t *srcFbo, FBO_t *dstFbo, float strength)
+void RB_VBlur(FBO_t *srcFbo, FBO_t *dstFbo, float strength)
 {
 	RB_BlurAxis(srcFbo, dstFbo, strength, qfalse);
 }
 
-void RB_GaussianBlur(float blur)
+void RB_GaussianBlur(FBO_t *srcFbo, FBO_t *intermediateFbo, FBO_t *dstFbo, float spread)
 {
-	//float mul = 1.f;
-	float factor = Com_Clamp(0.f, 1.f, blur);
+	// Blur X
+	vec2_t scale;
+	VectorSet2 (scale, spread, spread);
 
-	if (factor <= 0.f)
-		return;
+	FBO_Blit (srcFbo, NULL, scale, intermediateFbo, NULL, &tr.gaussianBlurShader[0], NULL, GLS_SRCBLEND_ONE | GLS_DSTBLEND_ZERO);
+
+	// Blur Y
+	FBO_Blit (intermediateFbo, NULL, scale, dstFbo, NULL, &tr.gaussianBlurShader[1], NULL, GLS_SRCBLEND_ONE | GLS_DSTBLEND_ZERO);
+}
+
+
+// ======================================================================================================================================
+//
+//
+//                                                      UniqueOne's Shaders...
+//
+//
+// ======================================================================================================================================
+
+
+void RB_DarkExpand(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
+{
+	vec4_t color;
+
+	// bloom
+	color[0] =
+		color[1] =
+		color[2] = pow(2, r_cameraExposure->value);
+	color[3] = 1.0f;
+
+	GLSL_BindProgram(&tr.darkexpandShader);
+
+	GL_BindToTMU(tr.fixedLevelsImage, TB_LEVELSMAP);
 
 	{
-		vec4i_t srcBox, dstBox;
-		vec4_t color;
-		vec2_t texScale;
+		vec2_t screensize;
+		screensize[0] = glConfig.vidWidth;
+		screensize[1] = glConfig.vidHeight;
 
-		texScale[0] = 
-		texScale[1] = 1.0f;
+		GLSL_SetUniformVec2(&tr.darkexpandShader, UNIFORM_DIMENSIONS, screensize);
+	}
 
-		VectorSet4(color, 1, 1, 1, 1);
+	FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.darkexpandShader, color, GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA);
+}
 
-		// first, downsample the framebuffer
-		FBO_FastBlit(NULL, NULL, tr.quarterFbo[0], NULL, GL_COLOR_BUFFER_BIT, GL_LINEAR);
-		FBO_FastBlit(tr.quarterFbo[0], NULL, tr.textureScratchFbo[0], NULL, GL_COLOR_BUFFER_BIT, GL_LINEAR);
+void RB_Bloom(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
+{
+	vec4_t	color;
+	vec4i_t halfBox;
+	vec2_t	texScale, texHalfScale, texDoubleScale;
 
-		// set the alpha channel
-		VectorSet4(srcBox, 0, 0, tr.whiteImage->width, tr.whiteImage->height);
-		VectorSet4(dstBox, 0, 0, tr.textureScratchFbo[0]->width, tr.textureScratchFbo[0]->height);
-		qglColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_TRUE);
-		FBO_BlitFromTexture(tr.whiteImage, srcBox, texScale, tr.textureScratchFbo[0], dstBox, &tr.textureColorShader, color, GLS_DEPTHTEST_DISABLE);
-		qglColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+	texScale[0] = texScale[1] = 1.0f;
+	texHalfScale[0] = texHalfScale[1] = texScale[0] / 2.0;
+	texDoubleScale[0] = texDoubleScale[1] = texScale[0] * 2.0;
 
-		// blur the tiny buffer horizontally and vertically
-		RB_HBlur(tr.textureScratchFbo[0], tr.textureScratchFbo[1], factor);
-		RB_VBlur(tr.textureScratchFbo[1], tr.textureScratchFbo[0], factor);
+	// bloom
+	color[0] =
+		color[1] =
+		color[2] = pow(2, r_cameraExposure->value);
+	color[3] = 1.0f;
 
-		// finally, merge back to framebuffer
-		VectorSet4(srcBox, 0, 0, tr.textureScratchFbo[0]->width, tr.textureScratchFbo[0]->height);
-		VectorSet4(dstBox, 0, 0, glConfig.vidWidth,              glConfig.vidHeight);
-		color[3] = factor;
-		FBO_Blit(tr.textureScratchFbo[0], srcBox, texScale, NULL, dstBox, &tr.textureColorShader, color, GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA);
+	halfBox[0] = backEnd.viewParms.viewportX      * tr.bloomRenderFBOImage[0]->width  / (float)glConfig.vidWidth;
+	halfBox[1] = backEnd.viewParms.viewportY      * tr.bloomRenderFBOImage[0]->height / (float)glConfig.vidHeight;
+	halfBox[2] = backEnd.viewParms.viewportWidth  * tr.bloomRenderFBOImage[0]->width  / (float)glConfig.vidWidth;
+	halfBox[3] = backEnd.viewParms.viewportHeight * tr.bloomRenderFBOImage[0]->height / (float)glConfig.vidHeight;
+
+	//
+	// Darken to VBO...
+	//
+	
+	GLSL_BindProgram(&tr.bloomDarkenShader);
+
+	GL_BindToTMU(tr.fixedLevelsImage, TB_DIFFUSEMAP);
+
+	{
+		vec2_t screensize;
+		screensize[0] = glConfig.vidWidth;
+		screensize[1] = glConfig.vidHeight;
+
+		GLSL_SetUniformVec2(&tr.bloomDarkenShader, UNIFORM_DIMENSIONS, screensize);
+	}
+
+	{
+		vec4_t local0;
+		VectorSet4(local0, r_bloomDarkenPower->value, 0.0, 0.0, 0.0);
+		GLSL_SetUniformVec4(&tr.bloomDarkenShader, UNIFORM_LOCAL0, local0);
+	}
+
+	FBO_Blit(hdrFbo, NULL, texHalfScale, tr.bloomRenderFBO[1], NULL, &tr.bloomDarkenShader, color, 0);
+	FBO_FastBlit(tr.bloomRenderFBO[1], NULL, tr.bloomRenderFBO[0], NULL, GL_COLOR_BUFFER_BIT, GL_LINEAR);
+
+	//
+	// Blur the new darken'ed VBO...
+	//
+
+	for ( int i = 0; i < r_bloomPasses->integer; i++ ) 
+	{
+#ifdef ___BLOOM_AXIS_UNCOMBINED_SHADER___
+		//
+		// Bloom X axis... (to VBO 1)
+		//
+
+		GLSL_BindProgram(&tr.bloomBlurShader);
+
+		GL_BindToTMU(tr.bloomRenderFBOImage[0], TB_DIFFUSEMAP);
+
+		{
+			vec2_t screensize;
+			screensize[0] = tr.bloomRenderFBOImage[0]->width;
+			screensize[1] = tr.bloomRenderFBOImage[0]->height;
+
+			GLSL_SetUniformVec2(&tr.bloomBlurShader, UNIFORM_DIMENSIONS, screensize);
+		}
+
+		{
+			vec4_t local0;
+			VectorSet4(local0, 1.0, 0.0, 0.0, 0.0);
+			GLSL_SetUniformVec4(&tr.bloomBlurShader, UNIFORM_LOCAL0, local0);
+		}
+
+		FBO_Blit(tr.bloomRenderFBO[0], NULL, NULL, tr.bloomRenderFBO[1], NULL, &tr.bloomBlurShader, color, 0);
+		FBO_FastBlit(tr.bloomRenderFBO[1], NULL, tr.bloomRenderFBO[0], NULL, GL_COLOR_BUFFER_BIT, GL_LINEAR);
+
+		//
+		// Bloom Y axis... (back to VBO 0)
+		//
+
+		GLSL_BindProgram(&tr.bloomBlurShader);
+
+		GL_BindToTMU(tr.bloomRenderFBOImage[1], TB_DIFFUSEMAP);
+
+		{
+			vec2_t screensize;
+			screensize[0] = tr.bloomRenderFBOImage[1]->width;
+			screensize[1] = tr.bloomRenderFBOImage[1]->height;
+
+			GLSL_SetUniformVec2(&tr.bloomBlurShader, UNIFORM_DIMENSIONS, screensize);
+		}
+
+		{
+			vec4_t local0;
+			VectorSet4(local0, 0.0, 1.0, 0.0, 0.0);
+			GLSL_SetUniformVec4(&tr.bloomBlurShader, UNIFORM_LOCAL0, local0);
+		}
+
+		FBO_Blit(tr.bloomRenderFBO[0], NULL, NULL, tr.bloomRenderFBO[1], NULL, &tr.bloomBlurShader, color, 0);
+		FBO_FastBlit(tr.bloomRenderFBO[1], NULL, tr.bloomRenderFBO[0], NULL, GL_COLOR_BUFFER_BIT, GL_LINEAR);
+#else //___BLOOM_AXIS_UNCOMBINED_SHADER___
+
+		//
+		// Bloom X and Y axis... (to VBO 1)
+		//
+
+		GLSL_BindProgram(&tr.bloomBlurShader);
+
+		GL_BindToTMU(tr.bloomRenderFBOImage[0], TB_DIFFUSEMAP);
+
+		{
+			vec2_t screensize;
+			screensize[0] = tr.bloomRenderFBOImage[0]->width;
+			screensize[1] = tr.bloomRenderFBOImage[0]->height;
+
+			GLSL_SetUniformVec2(&tr.bloomBlurShader, UNIFORM_DIMENSIONS, screensize);
+		}
+
+		{
+			vec4_t local0;
+			VectorSet4(local0, 0.0, 0.0, /* bloom width */ 3.0, 0.0);
+			GLSL_SetUniformVec4(&tr.bloomBlurShader, UNIFORM_LOCAL0, local0);
+		}
+
+		FBO_Blit(tr.bloomRenderFBO[0], NULL, NULL, tr.bloomRenderFBO[1], NULL, &tr.bloomBlurShader, color, 0);
+		FBO_FastBlit(tr.bloomRenderFBO[1], NULL, tr.bloomRenderFBO[0], NULL, GL_COLOR_BUFFER_BIT, GL_LINEAR);
+
+#endif //___BLOOM_AXIS_UNCOMBINED_SHADER___
+	}
+	
+	//
+	// Copy (and upscale) the bloom image to our full screen image...
+	//
+
+	FBO_Blit(tr.bloomRenderFBO[0], NULL, texDoubleScale, tr.bloomRenderFBO[2], NULL, &tr.bloomBlurShader, color, 0);
+
+	//
+	// Combine the screen with the bloom'ed VBO...
+	//
+	
+	
+	GLSL_BindProgram(&tr.bloomCombineShader);
+	
+	GL_BindToTMU(tr.fixedLevelsImage, TB_DIFFUSEMAP);
+
+	GLSL_SetUniformInt(&tr.bloomCombineShader, UNIFORM_DIFFUSEMAP,   TB_DIFFUSEMAP);
+	GLSL_SetUniformInt(&tr.bloomCombineShader, UNIFORM_NORMALMAP,   TB_NORMALMAP);
+
+	GL_BindToTMU(tr.bloomRenderFBOImage[2], TB_NORMALMAP);
+
+	{
+		vec4_t local0;
+		VectorSet4(local0, r_bloomScale->value, 0.0, 0.0, 0.0);
+		GLSL_SetUniformVec4(&tr.bloomCombineShader, UNIFORM_LOCAL0, local0);
+	}
+
+	FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.bloomCombineShader, color, GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA);
+
+	//
+	// Render the results now...
+	//
+
+	FBO_FastBlit(ldrFbo, NULL, hdrFbo, NULL, GL_COLOR_BUFFER_BIT, GL_LINEAR);
+}
+
+
+void RB_Anamorphic(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
+{
+	vec4_t	color;
+	vec4i_t halfBox;
+	vec2_t	texScale, texHalfScale, texDoubleScale;
+
+	texScale[0] = texScale[1] = 1.0f;
+	texHalfScale[0] = texHalfScale[1] = texScale[0] / 8.0;
+	texDoubleScale[0] = texDoubleScale[1] = texScale[0] * 8.0;
+
+	// bloom
+	color[0] =
+		color[1] =
+		color[2] = pow(2, r_cameraExposure->value);
+	color[3] = 1.0f;
+
+	halfBox[0] = backEnd.viewParms.viewportX      * tr.anamorphicRenderFBOImage[0]->width  / (float)glConfig.vidWidth;
+	halfBox[1] = backEnd.viewParms.viewportY      * tr.anamorphicRenderFBOImage[0]->height / (float)glConfig.vidHeight;
+	halfBox[2] = backEnd.viewParms.viewportWidth  * tr.anamorphicRenderFBOImage[0]->width  / (float)glConfig.vidWidth;
+	halfBox[3] = backEnd.viewParms.viewportHeight * tr.anamorphicRenderFBOImage[0]->height / (float)glConfig.vidHeight;
+
+	//
+	// Darken to VBO...
+	//
+	
+	GLSL_BindProgram(&tr.anamorphicDarkenShader);
+
+	GL_BindToTMU(tr.fixedLevelsImage, TB_DIFFUSEMAP);
+
+	{
+		vec2_t screensize;
+		screensize[0] = glConfig.vidWidth;
+		screensize[1] = glConfig.vidHeight;
+
+		GLSL_SetUniformVec2(&tr.anamorphicDarkenShader, UNIFORM_DIMENSIONS, screensize);
+	}
+
+	{
+		vec4_t local0;
+		VectorSet4(local0, r_anamorphicDarkenPower->value, 0.0, 0.0, 0.0);
+		GLSL_SetUniformVec4(&tr.anamorphicDarkenShader, UNIFORM_LOCAL0, local0);
+	}
+
+	FBO_Blit(hdrFbo, NULL, texHalfScale, tr.anamorphicRenderFBO[1], NULL, &tr.anamorphicDarkenShader, color, 0);
+	FBO_FastBlit(tr.anamorphicRenderFBO[1], NULL, tr.anamorphicRenderFBO[0], NULL, GL_COLOR_BUFFER_BIT, GL_LINEAR);
+
+	//
+	// Blur the new darken'ed VBO...
+	//
+
+	for ( int i = 0; i < /*r_bloomPasses->integer*/ 8; i++ ) 
+	{
+		//
+		// Bloom X axis... (to VBO 1)
+		//
+
+		//for (int width = 1; width < 12 ; width++)
+		{
+			GLSL_BindProgram(&tr.anamorphicBlurShader);
+
+			GL_BindToTMU(tr.anamorphicRenderFBOImage[0], TB_DIFFUSEMAP);
+
+			{
+				vec2_t screensize;
+				screensize[0] = tr.anamorphicRenderFBOImage[0]->width;
+				screensize[1] = tr.anamorphicRenderFBOImage[0]->height;
+
+				GLSL_SetUniformVec2(&tr.anamorphicBlurShader, UNIFORM_DIMENSIONS, screensize);
+			}
+
+			{
+				vec4_t local0;
+				//VectorSet4(local0, (float)width, 0.0, 0.0, 0.0);
+				VectorSet4(local0, 1.0, 0.0, 16.0, 0.0);
+				GLSL_SetUniformVec4(&tr.anamorphicBlurShader, UNIFORM_LOCAL0, local0);
+			}
+
+			FBO_Blit(tr.anamorphicRenderFBO[0], NULL, NULL, tr.anamorphicRenderFBO[1], NULL, &tr.anamorphicBlurShader, color, 0);
+			FBO_FastBlit(tr.anamorphicRenderFBO[1], NULL, tr.anamorphicRenderFBO[0], NULL, GL_COLOR_BUFFER_BIT, GL_LINEAR);
+		}
+	}
+	
+	//
+	// Copy (and upscale) the bloom image to our full screen image...
+	//
+
+	FBO_Blit(tr.anamorphicRenderFBO[0], NULL, texDoubleScale, tr.anamorphicRenderFBO[2], NULL, &tr.anamorphicBlurShader, color, 0);
+
+	//
+	// Combine the screen with the bloom'ed VBO...
+	//
+	
+	
+	GLSL_BindProgram(&tr.anamorphicCombineShader);
+	
+	GL_BindToTMU(tr.fixedLevelsImage, TB_DIFFUSEMAP);
+
+	GLSL_SetUniformInt(&tr.anamorphicCombineShader, UNIFORM_DIFFUSEMAP,   TB_DIFFUSEMAP);
+	GLSL_SetUniformInt(&tr.anamorphicCombineShader, UNIFORM_NORMALMAP,   TB_NORMALMAP);
+
+	GL_BindToTMU(tr.anamorphicRenderFBOImage[2], TB_NORMALMAP);
+
+	{
+		vec4_t local0;
+		VectorSet4(local0, /*r_bloomScale->value*/ /*glConfig.vidWidth*/ 0.6 /*glConfig.vidWidth / 2.3*/, 0.0, 0.0, 0.0);
+		GLSL_SetUniformVec4(&tr.anamorphicCombineShader, UNIFORM_LOCAL0, local0);
+	}
+
+	FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.anamorphicCombineShader, color, GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA);
+
+	//
+	// Render the results now...
+	//
+
+	FBO_FastBlit(ldrFbo, NULL, hdrFbo, NULL, GL_COLOR_BUFFER_BIT, GL_LINEAR);
+}
+
+
+void RB_LensFlare(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
+{
+	vec4_t color;
+
+	// bloom
+	color[0] =
+		color[1] =
+		color[2] = pow(2, r_cameraExposure->value);
+	color[3] = 1.0f;
+
+	GLSL_BindProgram(&tr.lensflareShader);
+
+	GL_BindToTMU(tr.fixedLevelsImage, TB_LEVELSMAP);
+
+	{
+		vec2_t screensize;
+		screensize[0] = glConfig.vidWidth;
+		screensize[1] = glConfig.vidHeight;
+
+		GLSL_SetUniformVec2(&tr.lensflareShader, UNIFORM_DIMENSIONS, screensize);
+	}
+
+	FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.lensflareShader, color, 0);
+}
+
+
+void RB_MultiPost(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
+{
+	vec4_t color;
+
+	// bloom
+	color[0] =
+		color[1] =
+		color[2] = pow(2, r_cameraExposure->value);
+	color[3] = 1.0f;
+
+	GLSL_BindProgram(&tr.multipostShader);
+
+	GL_BindToTMU(tr.fixedLevelsImage, TB_LEVELSMAP);
+
+	{
+		vec2_t screensize;
+		screensize[0] = glConfig.vidWidth;
+		screensize[1] = glConfig.vidHeight;
+
+		GLSL_SetUniformVec2(&tr.multipostShader, UNIFORM_DIMENSIONS, screensize);
+	}
+
+	FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.multipostShader, color, 0);
+}
+
+void RB_VolumetricDLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
+{
+	vec4_t color;
+
+	// bloom
+	color[0] =
+		color[1] =
+		color[2] = pow(2, r_cameraExposure->value);
+	color[3] = 1.0f;
+
+	if ( !backEnd.refdef.num_dlights ) {
+		return;
+	}
+
+	for ( int l = 0 ; l < backEnd.refdef.num_dlights ; l++ ) 
+	{
+		dlight_t	*dl = &backEnd.refdef.dlights[l];
+
+		GLSL_BindProgram(&tr.volumelightShader);
+
+		GL_BindToTMU(tr.fixedLevelsImage, TB_LEVELSMAP);
+
+		/*
+		matrix_t    matrix;
+		Matrix16Identity(matrix);
+		GL_SetModelviewMatrix(matrix);
+		Matrix16Ortho( backEnd.viewParms.viewportX, backEnd.viewParms.viewportX + backEnd.viewParms.viewportWidth,
+	               backEnd.viewParms.viewportY, backEnd.viewParms.viewportY + backEnd.viewParms.viewportHeight,
+	               -99999, 99999, matrix );
+		GL_SetProjectionMatrix(matrix);
+
+		GLSL_SetUniformMatrix16(&tr.volumelightShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
+		GLSL_SetUniformMatrix16(&tr.volumelightShader, UNIFORM_MODELMATRIX, backEnd.ori.transformMatrix);
+		*/
+
+
+		GL_SetModelviewMatrix( backEnd.viewParms.ori.modelMatrix );
+		GL_SetProjectionMatrix( backEnd.viewParms.projectionMatrix );
+
+
+		GLSL_SetUniformMatrix16(&tr.volumelightShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, backEnd.viewParms.projectionMatrix);
+		GLSL_SetUniformMatrix16(&tr.volumelightShader, UNIFORM_MODELMATRIX, backEnd.viewParms.ori.modelMatrix);
+
+		{
+			vec2_t screensize;
+			screensize[0] = glConfig.vidWidth;
+			screensize[1] = glConfig.vidHeight;
+
+			GLSL_SetUniformVec2(&tr.volumelightShader, UNIFORM_DIMENSIONS, screensize);
+		}
+
+		{
+			vec4_t local0;
+			local0[0] = dl->origin[0];
+			local0[1] = dl->origin[1];
+			local0[2] = dl->origin[2];
+			local0[3] = 0.0;
+
+			GLSL_SetUniformVec4(&tr.volumelightShader, UNIFORM_LOCAL0, local0);
+		}
+
+		{
+			vec4_t local1;
+			local1[0] = dl->color[0];
+			local1[1] = dl->color[1];
+			local1[2] = dl->color[2];
+			local1[3] = 0.0;
+
+			GLSL_SetUniformVec4(&tr.volumelightShader, UNIFORM_LOCAL1, local1);
+		}
+
+		FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.volumelightShader, color, 0);
 	}
 }
+
+void RB_HDR(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
+{
+	vec4_t color;
+
+	// bloom
+	color[0] =
+		color[1] =
+		color[2] = pow(2, r_cameraExposure->value);
+	color[3] = 1.0f;
+
+	GLSL_BindProgram(&tr.hdrShader);
+
+	GL_BindToTMU(tr.fixedLevelsImage, TB_LEVELSMAP);
+
+	{
+		vec4_t viewInfo;
+
+		float zmax = backEnd.viewParms.zFar;
+		float zmin = r_znear->value;
+
+		VectorSet4(viewInfo, zmax / zmin, zmax, 0.0, 0.0);
+		//VectorSet4(viewInfo, zmin, zmax, 0.0, 0.0);
+
+		GLSL_SetUniformVec4(&tr.hdrShader, UNIFORM_VIEWINFO, viewInfo);
+	}
+
+	{
+		vec2_t screensize;
+		screensize[0] = glConfig.vidWidth;
+		screensize[1] = glConfig.vidHeight;
+
+		GLSL_SetUniformVec2(&tr.hdrShader, UNIFORM_DIMENSIONS, screensize);
+
+		//ri->Printf(PRINT_WARNING, "Sent dimensions %f %f.\n", screensize[0], screensize[1]);
+	}
+
+	FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.hdrShader, color, GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA);
+}
+
+void RB_FakeDepth(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
+{
+	vec4_t color;
+
+	// bloom
+	color[0] =
+		color[1] =
+		color[2] = pow(2, r_cameraExposure->value);
+	color[3] = 1.0f;
+
+	GLSL_BindProgram(&tr.fakedepthShader);
+
+	GL_BindToTMU(tr.fixedLevelsImage, TB_LEVELSMAP);
+
+	//qglUseProgramObjectARB(tr.fakedepthShader.program);
+	
+	{
+		vec4_t viewInfo;
+
+		float zmax = backEnd.viewParms.zFar;
+		float zmin = r_znear->value;
+
+		VectorSet4(viewInfo, zmax / zmin, zmax, 0.0, 0.0);
+		//VectorSet4(viewInfo, zmin, zmax, 0.0, 0.0);
+
+		GLSL_SetUniformVec4(&tr.fakedepthShader, UNIFORM_VIEWINFO, viewInfo);
+	}
+
+	{
+		vec2_t screensize;
+		screensize[0] = glConfig.vidWidth;
+		screensize[1] = glConfig.vidHeight;
+
+		GLSL_SetUniformVec2(&tr.fakedepthShader, UNIFORM_DIMENSIONS, screensize);
+
+		//ri->Printf(PRINT_WARNING, "Sent dimensions %f %f.\n", screensize[0], screensize[1]);
+	}
+	
+	{
+		vec4_t local0;
+		VectorSet4(local0, r_depthScale->value, r_depthParallax->value, 0.0, 0.0);
+		GLSL_SetUniformVec4(&tr.fakedepthShader, UNIFORM_LOCAL0, local0);
+	}
+
+	FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.fakedepthShader, color, GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA);
+}
+
+void RB_FakeDepthParallax(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
+{
+	vec4_t color;
+
+	// bloom
+	color[0] =
+		color[1] =
+		color[2] = pow(2, r_cameraExposure->value);
+	color[3] = 1.0f;
+
+	GLSL_BindProgram(&tr.fakedepthSteepParallaxShader);
+
+	GL_BindToTMU(tr.fixedLevelsImage, TB_LEVELSMAP);
+
+	//qglUseProgramObjectARB(tr.fakedepthShader.program);
+	
+	{
+		vec4_t viewInfo;
+
+		float zmax = backEnd.viewParms.zFar;
+		float zmin = r_znear->value;
+
+		VectorSet4(viewInfo, zmax / zmin, zmax, 0.0, 0.0);
+		//VectorSet4(viewInfo, zmin, zmax, 0.0, 0.0);
+
+		GLSL_SetUniformVec4(&tr.fakedepthSteepParallaxShader, UNIFORM_VIEWINFO, viewInfo);
+	}
+
+	{
+		vec2_t screensize;
+		screensize[0] = glConfig.vidWidth;
+		screensize[1] = glConfig.vidHeight;
+
+		GLSL_SetUniformVec2(&tr.fakedepthSteepParallaxShader, UNIFORM_DIMENSIONS, screensize);
+
+		//ri->Printf(PRINT_WARNING, "Sent dimensions %f %f.\n", screensize[0], screensize[1]);
+	}
+	
+	{
+		vec4_t local0;
+		VectorSet4(local0, r_depthParallaxScale->value, r_depthParallaxMultiplier->value, 0.0, 0.0);
+		GLSL_SetUniformVec4(&tr.fakedepthSteepParallaxShader, UNIFORM_LOCAL0, local0);
+	}
+
+	{
+		vec4_t local1;
+		VectorSet4(local1, r_depthParallaxEyeX->value, r_depthParallaxEyeY->value, r_depthParallaxEyeZ->value, 0.0);
+		GLSL_SetUniformVec4(&tr.fakedepthSteepParallaxShader, UNIFORM_LOCAL1, local1);
+	}
+
+	//FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.fakedepthSteepParallaxShader, color, GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA);
+	FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.fakedepthSteepParallaxShader, color, 0);
+}
+
+void RB_Anaglyph(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
+{
+	vec4_t color;
+
+	// bloom
+	color[0] =
+		color[1] =
+		color[2] = pow(2, r_cameraExposure->value);
+	color[3] = 1.0f;
+
+	GLSL_BindProgram(&tr.anaglyphShader);
+
+	GL_BindToTMU(tr.fixedLevelsImage, TB_LEVELSMAP);
+
+	//qglUseProgramObjectARB(tr.fakedepthShader.program);
+	
+	{
+		vec4_t viewInfo;
+
+		float zmax = backEnd.viewParms.zFar;
+		float zmin = r_znear->value;
+
+		VectorSet4(viewInfo, zmax / zmin, zmax, 0.0, 0.0);
+		//VectorSet4(viewInfo, zmin, zmax, 0.0, 0.0);
+
+		GLSL_SetUniformVec4(&tr.anaglyphShader, UNIFORM_VIEWINFO, viewInfo);
+	}
+
+	{
+		vec2_t screensize;
+		screensize[0] = glConfig.vidWidth;
+		screensize[1] = glConfig.vidHeight;
+
+		GLSL_SetUniformVec2(&tr.anaglyphShader, UNIFORM_DIMENSIONS, screensize);
+
+		//ri->Printf(PRINT_WARNING, "Sent dimensions %f %f.\n", screensize[0], screensize[1]);
+	}
+	
+	{
+		vec4_t local0;
+		VectorSet4(local0, r_trueAnaglyphSeparation->value, r_trueAnaglyphRed->value, r_trueAnaglyphGreen->value, r_trueAnaglyphBlue->value);
+		GLSL_SetUniformVec4(&tr.anaglyphShader, UNIFORM_LOCAL0, local0);
+	}
+
+	FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.anaglyphShader, color, GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA);
+}
+
+
+void RB_SSAO2(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
+{
+	vec4_t color;
+
+	// bloom
+	color[0] =
+		color[1] =
+		color[2] = pow(2, r_cameraExposure->value);
+	color[3] = 1.0f;
+
+	GLSL_BindProgram(&tr.ssao2Shader);
+
+	GLSL_SetUniformMatrix16(&tr.ssao2Shader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
+	GLSL_SetUniformMatrix16(&tr.ssao2Shader, UNIFORM_MODELMATRIX, backEnd.ori.transformMatrix);
+
+	GL_BindToTMU(tr.fixedLevelsImage, TB_DIFFUSEMAP);
+
+	GLSL_SetUniformInt(&tr.ssao2Shader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
+	GLSL_SetUniformInt(&tr.ssao2Shader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
+	GLSL_SetUniformInt(&tr.ssao2Shader, UNIFORM_NORMALMAP, TB_NORMALMAP);
+
+	//GL_BindToTMU(tr.renderDepthImage, TB_NORMALMAP);
+	//GL_BindToTMU(tr.renderDepthImage, TB_DEPTHMAP);
+	GL_SelectTexture(1);
+	GL_Bind(tr.hdrDepthImage);
+	GL_SelectTexture(2);
+	GL_Bind(tr.hdrDepthImage);
+	GL_SelectTexture(0);
+
+	//qglUseProgramObjectARB(tr.ssao2Shader.program);
+	
+	{
+		vec4_t viewInfo;
+
+		float zmax = backEnd.viewParms.zFar;
+		float zmin = r_znear->value;
+
+		VectorSet4(viewInfo, zmax / zmin, zmax, 0.0, 0.0);
+		//VectorSet4(viewInfo, zmin, zmax, 0.0, 0.0);
+
+		GLSL_SetUniformVec4(&tr.ssao2Shader, UNIFORM_VIEWINFO, viewInfo);
+	}
+
+	{
+		vec2_t screensize;
+		screensize[0] = glConfig.vidWidth;
+		screensize[1] = glConfig.vidHeight;
+
+		GLSL_SetUniformVec2(&tr.ssao2Shader, UNIFORM_DIMENSIONS, screensize);
+
+		//ri->Printf(PRINT_WARNING, "Sent dimensions %f %f.\n", screensize[0], screensize[1]);
+	}
+
+	//FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.ssao2Shader, color, GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA);
+	FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.ssao2Shader, color, 0);
+}
+
+void RB_TextureClean(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
+{
+	vec4_t color;
+
+	color[0] =
+		color[1] =
+		color[2] = pow(2, r_cameraExposure->value);
+	color[3] = 1.0f;
+
+	GLSL_BindProgram(&tr.texturecleanShader);
+
+	GL_BindToTMU(tr.fixedLevelsImage, TB_LEVELSMAP);
+	
+	{
+		vec4_t viewInfo;
+
+		float zmax = backEnd.viewParms.zFar;
+		float zmin = r_znear->value;
+
+		VectorSet4(viewInfo, zmax / zmin, zmax, 0.0, 0.0);
+		//VectorSet4(viewInfo, zmin, zmax, 0.0, 0.0);
+
+		GLSL_SetUniformVec4(&tr.texturecleanShader, UNIFORM_VIEWINFO, viewInfo);
+	}
+
+	{
+		vec2_t screensize;
+		screensize[0] = glConfig.vidWidth;
+		screensize[1] = glConfig.vidHeight;
+
+		GLSL_SetUniformVec2(&tr.texturecleanShader, UNIFORM_DIMENSIONS, screensize);
+
+		//ri->Printf(PRINT_WARNING, "Sent dimensions %f %f.\n", screensize[0], screensize[1]);
+	}
+	
+	/*
+	cvar_t  *r_textureCleanSigma;
+	cvar_t  *r_textureCleanBSigma;
+	cvar_t  *r_textureCleanMSize;
+	*/
+	{
+		vec4_t local0;
+		VectorSet4(local0, r_textureCleanSigma->value, r_textureCleanBSigma->value, r_textureCleanMSize->value, 0);
+		GLSL_SetUniformVec4(&tr.texturecleanShader, UNIFORM_LOCAL0, local0);
+	}
+
+	//FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.texturecleanShader, color, GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA);
+	FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.texturecleanShader, color, 0);
+}
+
+void RB_ESharpening(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
+{
+	vec4_t color;
+
+	// bloom
+	color[0] =
+		color[1] =
+		color[2] = pow(2, r_cameraExposure->value);
+	color[3] = 1.0f;
+
+	GLSL_BindProgram(&tr.esharpeningShader);
+
+	GL_BindToTMU(tr.fixedLevelsImage, TB_LEVELSMAP);
+
+	//qglUseProgramObjectARB(tr.esharpeningShader.program);
+	
+	{
+		vec4_t viewInfo;
+
+		float zmax = backEnd.viewParms.zFar;
+		float zmin = r_znear->value;
+
+		VectorSet4(viewInfo, zmax / zmin, zmax, 0.0, 0.0);
+		//VectorSet4(viewInfo, zmin, zmax, 0.0, 0.0);
+
+		GLSL_SetUniformVec4(&tr.esharpeningShader, UNIFORM_VIEWINFO, viewInfo);
+	}
+
+	{
+		vec2_t screensize;
+		screensize[0] = glConfig.vidWidth;
+		screensize[1] = glConfig.vidHeight;
+
+		GLSL_SetUniformVec2(&tr.esharpeningShader, UNIFORM_DIMENSIONS, screensize);
+
+		//ri->Printf(PRINT_WARNING, "Sent dimensions %f %f.\n", screensize[0], screensize[1]);
+	}
+	
+	//{
+	//	vec4_t local0;
+	//	VectorSet4(local0, r_textureCleanSigma->value, r_textureCleanBSigma->value, 0, 0);
+	//	GLSL_SetUniformVec4(&tr.texturecleanShader, UNIFORM_LOCAL0, local0);
+	//}
+
+	//FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.esharpeningShader, color, GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA);
+	FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.esharpeningShader, color, 0);
+}
+
+
+void RB_ESharpening2(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
+{
+	vec4_t color;
+
+	// bloom
+	color[0] =
+		color[1] =
+		color[2] = pow(2, r_cameraExposure->value);
+	color[3] = 1.0f;
+
+	GLSL_BindProgram(&tr.esharpening2Shader);
+
+	GL_BindToTMU(tr.fixedLevelsImage, TB_LEVELSMAP);
+
+	{
+		vec4_t viewInfo;
+
+		float zmax = backEnd.viewParms.zFar;
+		float zmin = r_znear->value;
+
+		VectorSet4(viewInfo, zmax / zmin, zmax, 0.0, 0.0);
+
+		GLSL_SetUniformVec4(&tr.esharpening2Shader, UNIFORM_VIEWINFO, viewInfo);
+	}
+
+	{
+		vec2_t screensize;
+		screensize[0] = glConfig.vidWidth;
+		screensize[1] = glConfig.vidHeight;
+
+		GLSL_SetUniformVec2(&tr.esharpening2Shader, UNIFORM_DIMENSIONS, screensize);
+	}
+
+	FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.esharpeningShader, color, 0);
+}
+
+
+void RB_DOF(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
+{
+	vec4_t color;
+
+	// bloom
+	color[0] =
+		color[1] =
+		color[2] = pow(2, r_cameraExposure->value);
+	color[3] = 1.0f;
+
+	GLSL_BindProgram(&tr.dofShader);
+
+	GLSL_SetUniformMatrix16(&tr.dofShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
+	GLSL_SetUniformMatrix16(&tr.dofShader, UNIFORM_MODELMATRIX, backEnd.ori.transformMatrix);
+
+	GL_BindToTMU(tr.fixedLevelsImage, TB_DIFFUSEMAP);
+
+	GLSL_SetUniformInt(&tr.dofShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
+	GLSL_SetUniformInt(&tr.dofShader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
+
+	//GL_BindToTMU(tr.renderDepthImage, TB_NORMALMAP);
+	//GL_BindToTMU(tr.renderDepthImage, TB_DEPTHMAP);
+	GL_SelectTexture(1);
+	GL_Bind(tr.renderDepthImage);
+	GL_SelectTexture(0);
+
+	//qglUseProgramObjectARB(tr.dofShader.program);
+	
+	{
+		vec4_t viewInfo;
+
+		float zmax = backEnd.viewParms.zFar;
+		float zmin = r_znear->value;
+
+		VectorSet4(viewInfo, zmax / zmin, zmax, 0.0, 0.0);
+		//VectorSet4(viewInfo, zmin, zmax, 0.0, 0.0);
+
+		GLSL_SetUniformVec4(&tr.dofShader, UNIFORM_VIEWINFO, viewInfo);
+	}
+
+	{
+		vec2_t screensize;
+		screensize[0] = glConfig.vidWidth;
+		screensize[1] = glConfig.vidHeight;
+
+		GLSL_SetUniformVec2(&tr.dofShader, UNIFORM_DIMENSIONS, screensize);
+
+		//ri->Printf(PRINT_WARNING, "Sent dimensions %f %f.\n", screensize[0], screensize[1]);
+	}
+
+	//FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.ssao2Shader, color, GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA);
+	FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.dofShader, color, 0);
+}
+

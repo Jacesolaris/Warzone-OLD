@@ -25,70 +25,32 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 uint32_t R_VboPackTangent(vec4_t v)
 {
-	if (glRefConfig.packedNormalDataType == GL_UNSIGNED_INT_2_10_10_10_REV)
-	{
-		return (((uint32_t)(v[3] * 1.5f   + 2.0f  )) << 30)
-		     | (((uint32_t)(v[2] * 511.5f + 512.0f)) << 20)
-		     | (((uint32_t)(v[1] * 511.5f + 512.0f)) << 10)
-		     | (((uint32_t)(v[0] * 511.5f + 512.0f)));
-	}
-	else
-	{
-		return (((uint32_t)(v[3] * 127.5f + 128.0f)) << 24)
-		     | (((uint32_t)(v[2] * 127.5f + 128.0f)) << 16)
-		     | (((uint32_t)(v[1] * 127.5f + 128.0f)) << 8)
-		     | (((uint32_t)(v[0] * 127.5f + 128.0f)));
-	}
+	return (((uint32_t)(v[3] * 1.5f   + 2.0f  )) << 30)
+		    | (((uint32_t)(v[2] * 511.5f + 512.0f)) << 20)
+		    | (((uint32_t)(v[1] * 511.5f + 512.0f)) << 10)
+		    | (((uint32_t)(v[0] * 511.5f + 512.0f)));
 }
 
 uint32_t R_VboPackNormal(vec3_t v)
 {
-	if (glRefConfig.packedNormalDataType == GL_UNSIGNED_INT_2_10_10_10_REV)
-	{
-		return (((uint32_t)(v[2] * 511.5f + 512.0f)) << 20)
-		     | (((uint32_t)(v[1] * 511.5f + 512.0f)) << 10)
-		     | (((uint32_t)(v[0] * 511.5f + 512.0f)));
-	}
-	else
-	{
-		return (((uint32_t)(v[2] * 127.5f + 128.0f)) << 16)
-		     | (((uint32_t)(v[1] * 127.5f + 128.0f)) << 8)
-		     | (((uint32_t)(v[0] * 127.5f + 128.0f)));
-	}
+	return (((uint32_t)(v[2] * 511.5f + 512.0f)) << 20)
+		    | (((uint32_t)(v[1] * 511.5f + 512.0f)) << 10)
+		    | (((uint32_t)(v[0] * 511.5f + 512.0f)));
 }
 
 void R_VboUnpackTangent(vec4_t v, uint32_t b)
 {
-	if (glRefConfig.packedNormalDataType == GL_UNSIGNED_INT_2_10_10_10_REV)
-	{
-		v[0] = ((b)       & 0x3ff) * 1.0f/511.5f - 1.0f;
-		v[1] = ((b >> 10) & 0x3ff) * 1.0f/511.5f - 1.0f;
-		v[2] = ((b >> 20) & 0x3ff) * 1.0f/511.5f - 1.0f;
-		v[3] = ((b >> 30) & 0x3)   * 1.0f/1.5f   - 1.0f;
-	}
-	else
-	{
-		v[0] = ((b)       & 0xff) * 1.0f/127.5f - 1.0f;
-		v[1] = ((b >> 8)  & 0xff) * 1.0f/127.5f - 1.0f;
-		v[2] = ((b >> 16) & 0xff) * 1.0f/127.5f - 1.0f;
-		v[3] = ((b >> 24) & 0xff) * 1.0f/127.5f - 1.0f;
-	}
+	v[0] = ((b)       & 0x3ff) * 1.0f/511.5f - 1.0f;
+	v[1] = ((b >> 10) & 0x3ff) * 1.0f/511.5f - 1.0f;
+	v[2] = ((b >> 20) & 0x3ff) * 1.0f/511.5f - 1.0f;
+	v[3] = ((b >> 30) & 0x3)   * 1.0f/1.5f   - 1.0f;
 }
 
 void R_VboUnpackNormal(vec3_t v, uint32_t b)
 {
-	if (glRefConfig.packedNormalDataType == GL_UNSIGNED_INT_2_10_10_10_REV)
-	{
-		v[0] = ((b)       & 0x3ff) * 1.0f/511.5f - 1.0f;
-		v[1] = ((b >> 10) & 0x3ff) * 1.0f/511.5f - 1.0f;
-		v[2] = ((b >> 20) & 0x3ff) * 1.0f/511.5f - 1.0f;
-	}
-	else
-	{
-		v[0] = ((b)       & 0xff) * 1.0f/127.5f - 1.0f;
-		v[1] = ((b >> 8)  & 0xff) * 1.0f/127.5f - 1.0f;
-		v[2] = ((b >> 16) & 0xff) * 1.0f/127.5f - 1.0f;
-	}
+	v[0] = ((b)       & 0x3ff) * 1.0f/511.5f - 1.0f;
+	v[1] = ((b >> 10) & 0x3ff) * 1.0f/511.5f - 1.0f;
+	v[2] = ((b >> 20) & 0x3ff) * 1.0f/511.5f - 1.0f;
 }
 
 static GLenum GetGLBufferUsage ( vboUsage_t usage )
@@ -96,10 +58,10 @@ static GLenum GetGLBufferUsage ( vboUsage_t usage )
 	switch (usage)
 	{
 		case VBO_USAGE_STATIC:
-			return GL_STATIC_DRAW_ARB;
+			return GL_STATIC_DRAW;
 
 		case VBO_USAGE_DYNAMIC:
-			return GL_DYNAMIC_DRAW_ARB;
+			return GL_STREAM_DRAW;
 
 		default:
 			ri->Error (ERR_FATAL, "bad vboUsage_t given: %i", usage);
@@ -130,12 +92,12 @@ VBO_t *R_CreateVBO(byte * vertexes, int vertexesSize, vboUsage_t usage)
 
 	vbo->vertexesSize = vertexesSize;
 
-	qglGenBuffersARB(1, &vbo->vertexesVBO);
+	qglGenBuffers(1, &vbo->vertexesVBO);
 
-	qglBindBufferARB(GL_ARRAY_BUFFER_ARB, vbo->vertexesVBO);
-	qglBufferDataARB(GL_ARRAY_BUFFER_ARB, vertexesSize, vertexes, glUsage);
+	qglBindBuffer(GL_ARRAY_BUFFER, vbo->vertexesVBO);
+	qglBufferData(GL_ARRAY_BUFFER, vertexesSize, vertexes, glUsage);
 
-	qglBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
+	qglBindBuffer(GL_ARRAY_BUFFER, 0);
 
 	glState.currentVBO = NULL;
 
@@ -165,12 +127,12 @@ IBO_t *R_CreateIBO(byte * indexes, int indexesSize, vboUsage_t usage)
 
 	ibo->indexesSize = indexesSize;
 
-	qglGenBuffersARB(1, &ibo->indexesVBO);
+	qglGenBuffers(1, &ibo->indexesVBO);
 
-	qglBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, ibo->indexesVBO);
-	qglBufferDataARB(GL_ELEMENT_ARRAY_BUFFER_ARB, indexesSize, indexes, glUsage);
+	qglBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo->indexesVBO);
+	qglBufferData(GL_ELEMENT_ARRAY_BUFFER, indexesSize, indexes, glUsage);
 
-	qglBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, 0);
+	qglBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
 	glState.currentIBO = NULL;
 
@@ -193,11 +155,10 @@ void R_BindVBO(VBO_t * vbo)
 		return;
 	}
 
-/*	if(r_logFile->integer)
+	if(r_logFile->integer)
 	{
-		// don't just call LogComment, or we will get a call to va() every frame!
-		GLimp_LogComment(va("--- R_BindVBO( %s ) ---\n", vbo->name));
-	}						*/			// FIXME: REIMPLEMENT (wasn't implemented in ioq3 to begin with) --eez
+		GLimp_LogComment("--- R_BindVBO() ---\n");
+	}
 
 	if(glState.currentVBO != vbo)
 	{
@@ -212,7 +173,7 @@ void R_BindVBO(VBO_t * vbo)
 		glState.vertexAnimation = qfalse;
 		glState.skeletalAnimation = qfalse;
 
-		qglBindBufferARB(GL_ARRAY_BUFFER_ARB, vbo->vertexesVBO);
+		qglBindBuffer(GL_ARRAY_BUFFER, vbo->vertexesVBO);
 
 		backEnd.pc.c_vboVertexBuffers++;
 	}
@@ -225,11 +186,11 @@ R_BindNullVBO
 */
 void R_BindNullVBO(void)
 {
-//	GLimp_LogComment("--- R_BindNullVBO ---\n");		// FIXME: REIMPLEMENT (wasn't implemented in ioq3 to begin with) --eez
+	GLimp_LogComment("--- R_BindNullVBO ---\n");
 
 	if(glState.currentVBO)
 	{
-		qglBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
+		qglBindBuffer(GL_ARRAY_BUFFER, 0);
 		glState.currentVBO = NULL;
 	}
 
@@ -250,15 +211,14 @@ void R_BindIBO(IBO_t * ibo)
 		return;
 	}
 
-/*	if(r_logFile->integer)
+	if(r_logFile->integer)
 	{
-		// don't just call LogComment, or we will get a call to va() every frame!
-		GLimp_LogComment(va("--- R_BindIBO( %s ) ---\n", ibo->name));
-	}						*/		// FIXME: REIMPLEMENT (wasn't implemented in ioq3 to begin with) --eez
+		GLimp_LogComment("--- R_BindIBO() ---\n");
+	}
 
 	if(glState.currentIBO != ibo)
 	{
-		qglBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, ibo->indexesVBO);
+		qglBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo->indexesVBO);
 
 		glState.currentIBO = ibo;
 
@@ -273,11 +233,11 @@ R_BindNullIBO
 */
 void R_BindNullIBO(void)
 {
-//	GLimp_LogComment("--- R_BindNullIBO ---\n");		// FIXME: REIMPLEMENT (wasn't implemented in ioq3 to begin with) --eez
+	GLimp_LogComment("--- R_BindNullIBO ---\n");
 
 	if(glState.currentIBO)
 	{
-		qglBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, 0);
+		qglBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 		glState.currentIBO = NULL;
 		glState.vertexAttribPointersSet = 0;
 	}
@@ -365,7 +325,7 @@ void R_ShutdownVBOs(void)
 
 		if(vbo->vertexesVBO)
 		{
-			qglDeleteBuffersARB(1, &vbo->vertexesVBO);
+			qglDeleteBuffers(1, &vbo->vertexesVBO);
 		}
 
 		//ri->Free(vbo);
@@ -377,7 +337,7 @@ void R_ShutdownVBOs(void)
 
 		if(ibo->indexesVBO)
 		{
-			qglDeleteBuffersARB(1, &ibo->indexesVBO);
+			qglDeleteBuffers(1, &ibo->indexesVBO);
 		}
 
 		//ri->Free(ibo);
@@ -457,62 +417,64 @@ void RB_UpdateVBOs(unsigned int attribBits)
 	// update the default VBO
 	if(tess.numVertexes > 0 && tess.numVertexes <= SHADER_MAX_VERTEXES)
 	{
+		backEnd.pc.c_dynamicVboTotalSize += tess.numVertexes * (tess.vbo->vertexesSize / SHADER_MAX_VERTEXES);
+
 		R_BindVBO(tess.vbo);
 
 		// orphan old buffer so we don't stall on it
-		qglBufferDataARB(GL_ARRAY_BUFFER_ARB, tess.vbo->vertexesSize, NULL, GL_DYNAMIC_DRAW_ARB);
+		qglBufferData(GL_ARRAY_BUFFER, tess.vbo->vertexesSize, NULL, GL_STREAM_DRAW);
 
 		if(attribBits & ATTR_BITS)
 		{
 			if(attribBits & ATTR_POSITION)
 			{
 				//ri->Printf(PRINT_ALL, "offset %d, size %d\n", tess.vbo->ofs_xyz, tess.numVertexes * sizeof(tess.xyz[0]));
-				qglBufferSubDataARB(GL_ARRAY_BUFFER_ARB, tess.vbo->ofs_xyz,         tess.numVertexes * sizeof(tess.xyz[0]),              tess.xyz);
+				qglBufferSubData(GL_ARRAY_BUFFER, tess.vbo->ofs_xyz,         tess.numVertexes * sizeof(tess.xyz[0]),              tess.xyz);
 			}
 
 			if(attribBits & ATTR_TEXCOORD0 || attribBits & ATTR_TEXCOORD1)
 			{
 				// these are interleaved, so we update both if either need it
 				//ri->Printf(PRINT_ALL, "offset %d, size %d\n", tess.vbo->ofs_st, tess.numVertexes * sizeof(tess.texCoords[0][0]) * 2);
-				qglBufferSubDataARB(GL_ARRAY_BUFFER_ARB, tess.vbo->ofs_st,          tess.numVertexes * sizeof(tess.texCoords[0][0]) * 2, tess.texCoords);
+				qglBufferSubData(GL_ARRAY_BUFFER, tess.vbo->ofs_st,          tess.numVertexes * sizeof(tess.texCoords[0][0]) * 2, tess.texCoords);
 			}
 
 			if(attribBits & ATTR_NORMAL)
 			{
 				//ri->Printf(PRINT_ALL, "offset %d, size %d\n", tess.vbo->ofs_normal, tess.numVertexes * sizeof(tess.normal[0]));
-				qglBufferSubDataARB(GL_ARRAY_BUFFER_ARB, tess.vbo->ofs_normal,      tess.numVertexes * sizeof(tess.normal[0]),           tess.normal);
+				qglBufferSubData(GL_ARRAY_BUFFER, tess.vbo->ofs_normal,      tess.numVertexes * sizeof(tess.normal[0]),           tess.normal);
 			}
 
 #ifdef USE_VERT_TANGENT_SPACE
 			if(attribBits & ATTR_TANGENT)
 			{
 				//ri->Printf(PRINT_ALL, "offset %d, size %d\n", tess.vbo->ofs_tangent, tess.numVertexes * sizeof(tess.tangent[0]));
-				qglBufferSubDataARB(GL_ARRAY_BUFFER_ARB, tess.vbo->ofs_tangent,     tess.numVertexes * sizeof(tess.tangent[0]),          tess.tangent);
+				qglBufferSubData(GL_ARRAY_BUFFER, tess.vbo->ofs_tangent,     tess.numVertexes * sizeof(tess.tangent[0]),          tess.tangent);
 			}
 #endif
 
 			if(attribBits & ATTR_COLOR)
 			{
 				//ri->Printf(PRINT_ALL, "offset %d, size %d\n", tess.vbo->ofs_vertexcolor, tess.numVertexes * sizeof(tess.vertexColors[0]));
-				qglBufferSubDataARB(GL_ARRAY_BUFFER_ARB, tess.vbo->ofs_vertexcolor, tess.numVertexes * sizeof(tess.vertexColors[0]),     tess.vertexColors);
+				qglBufferSubData(GL_ARRAY_BUFFER, tess.vbo->ofs_vertexcolor, tess.numVertexes * sizeof(tess.vertexColors[0]),     tess.vertexColors);
 			}
 
 			if(attribBits & ATTR_LIGHTDIRECTION)
 			{
 				//ri->Printf(PRINT_ALL, "offset %d, size %d\n", tess.vbo->ofs_lightdir, tess.numVertexes * sizeof(tess.lightdir[0]));
-				qglBufferSubDataARB(GL_ARRAY_BUFFER_ARB, tess.vbo->ofs_lightdir,    tess.numVertexes * sizeof(tess.lightdir[0]),         tess.lightdir);
+				qglBufferSubData(GL_ARRAY_BUFFER, tess.vbo->ofs_lightdir,    tess.numVertexes * sizeof(tess.lightdir[0]),         tess.lightdir);
 			}
 		}
 		else
 		{
-			qglBufferSubDataARB(GL_ARRAY_BUFFER_ARB, tess.vbo->ofs_xyz,         tess.numVertexes * sizeof(tess.xyz[0]),              tess.xyz);
-			qglBufferSubDataARB(GL_ARRAY_BUFFER_ARB, tess.vbo->ofs_st,          tess.numVertexes * sizeof(tess.texCoords[0][0]) * 2, tess.texCoords);
-			qglBufferSubDataARB(GL_ARRAY_BUFFER_ARB, tess.vbo->ofs_normal,      tess.numVertexes * sizeof(tess.normal[0]),           tess.normal);
+			qglBufferSubData(GL_ARRAY_BUFFER, tess.vbo->ofs_xyz,         tess.numVertexes * sizeof(tess.xyz[0]),              tess.xyz);
+			qglBufferSubData(GL_ARRAY_BUFFER, tess.vbo->ofs_st,          tess.numVertexes * sizeof(tess.texCoords[0][0]) * 2, tess.texCoords);
+			qglBufferSubData(GL_ARRAY_BUFFER, tess.vbo->ofs_normal,      tess.numVertexes * sizeof(tess.normal[0]),           tess.normal);
 #ifdef USE_VERT_TANGENT_SPACE
-			qglBufferSubDataARB(GL_ARRAY_BUFFER_ARB, tess.vbo->ofs_tangent,     tess.numVertexes * sizeof(tess.tangent[0]),          tess.tangent);
+			qglBufferSubData(GL_ARRAY_BUFFER, tess.vbo->ofs_tangent,     tess.numVertexes * sizeof(tess.tangent[0]),          tess.tangent);
 #endif
-			qglBufferSubDataARB(GL_ARRAY_BUFFER_ARB, tess.vbo->ofs_vertexcolor, tess.numVertexes * sizeof(tess.vertexColors[0]),     tess.vertexColors);
-			qglBufferSubDataARB(GL_ARRAY_BUFFER_ARB, tess.vbo->ofs_lightdir,    tess.numVertexes * sizeof(tess.lightdir[0]),         tess.lightdir);
+			qglBufferSubData(GL_ARRAY_BUFFER, tess.vbo->ofs_vertexcolor, tess.numVertexes * sizeof(tess.vertexColors[0]),     tess.vertexColors);
+			qglBufferSubData(GL_ARRAY_BUFFER, tess.vbo->ofs_lightdir,    tess.numVertexes * sizeof(tess.lightdir[0]),         tess.lightdir);
 		}
 	}
 
@@ -522,8 +484,8 @@ void RB_UpdateVBOs(unsigned int attribBits)
 		R_BindIBO(tess.ibo);
 
 		// orphan old buffer so we don't stall on it
-		qglBufferDataARB(GL_ELEMENT_ARRAY_BUFFER_ARB, tess.ibo->indexesSize, NULL, GL_DYNAMIC_DRAW_ARB);
+		qglBufferData(GL_ELEMENT_ARRAY_BUFFER, tess.ibo->indexesSize, NULL, GL_STREAM_DRAW);
 
-		qglBufferSubDataARB(GL_ELEMENT_ARRAY_BUFFER_ARB, 0, tess.numIndexes * sizeof(tess.indexes[0]), tess.indexes);
+		qglBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, tess.numIndexes * sizeof(tess.indexes[0]), tess.indexes);
 	}
 }

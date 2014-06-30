@@ -1,4 +1,7 @@
 uniform sampler2D u_DiffuseMap;
+varying vec4	var_Local1; // surfaceType, 0, 0, 0
+varying vec4	var_Local2; // surfaceType, 0, 0, 0
+varying vec2	var_Dimensions;
 
 #if defined(USE_LIGHTMAP)
 uniform sampler2D u_LightMap;
@@ -21,6 +24,7 @@ uniform sampler2D u_ShadowMap;
 #endif
 
 #if defined(USE_CUBEMAP)
+#define textureCubeLod textureLod // UQ1: > ver 140 support
 uniform samplerCube u_CubeMap;
 #endif
 
@@ -66,6 +70,14 @@ varying vec3   var_ViewDir;
   #endif
 #endif
 
+#if !defined(USE_LIGHT)
+uniform vec4   u_NormalScale;
+varying vec3   var_Normal;
+varying vec3   var_ViewDir;
+#endif
+
+varying vec3 var_N;
+
 #if defined(USE_LIGHT) && !defined(USE_FAST_LIGHT)
 varying vec4      var_LightDir;
 #endif
@@ -74,18 +86,37 @@ varying vec4      var_LightDir;
 varying vec4      var_PrimaryLightDir;
 #endif
 
+out vec4 out_Glow;
 
 #define EPSILON 0.00000001
 
-#if defined(USE_PARALLAXMAP)
-float SampleDepth(sampler2D normalMap, vec2 t)
-{
-  #if defined(SWIZZLE_NORMALMAP)
-	return 1.0 - texture2D(normalMap, t).r;
-  #else
-	return 1.0 - texture2D(normalMap, t).a;
-  #endif
-}
+#if defined(USE_PARALLAXMAP) || defined(USE_PARALLAXMAP_NONORMALS)
+  #if defined(USE_PARALLAXMAP)
+	float SampleDepth(sampler2D normalMap, vec2 t)
+	{
+		#if defined(SWIZZLE_NORMALMAP)
+			return 1.0 - texture2D(normalMap, t).r;
+		#else
+			return 1.0 - texture2D(normalMap, t).a;
+		#endif
+	}
+  #endif //USE_PARALLAXMAP
+
+  #if defined(USE_PARALLAXMAP_NONORMALS)
+	float SampleDepth(sampler2D normalMap, vec2 t)
+	{
+		vec3 color = texture2D(u_DiffuseMap, t).rgb * 2.0;
+		color = clamp(color, 0.0, 1.0);
+	
+		float combined_color = color.r + color.g + color.b;
+		combined_color /= 4.0;
+		//if (combined_color > 3.0) combined_color /= 4.0;
+		//else if (combined_color > 2.0) combined_color /= 3.0;
+		//else if (combined_color > 1.0) combined_color /= 2.0;
+  
+		return clamp(1.0 - combined_color, 0.0, 1.0);
+	}
+  #endif //USE_PARALLAXMAP_NONORMALS
 
 float RayIntersectDisplaceMap(vec2 dp, vec2 ds, sampler2D normalMap)
 {
@@ -133,7 +164,7 @@ float RayIntersectDisplaceMap(vec2 dp, vec2 ds, sampler2D normalMap)
 
 	return bestDepth;
 }
-#endif
+#endif //USE_PARALLAXMAP || USE_PARALLAXMAP_NONORMALS
 
 vec3 EnvironmentBRDF(float gloss, float NE, vec3 specular)
 {
@@ -271,6 +302,12 @@ void main()
 	float sqrLightDist = dot(L, L);
 #endif
 
+#if !defined(USE_LIGHT)
+	mat3 tangentToWorld = cotangent_frame(var_Normal, -var_ViewDir, var_TexCoords.xy);
+	viewDir = var_ViewDir;
+	E = normalize(viewDir);
+#endif
+
 #if defined(USE_LIGHTMAP)
 	vec4 lightmapColor = texture2D(u_LightMap, var_TexCoords.zw);
   #if defined(RGBM_LIGHTMAP)
@@ -280,29 +317,39 @@ void main()
 
 	vec2 texCoords = var_TexCoords.xy;
 
-#if defined(USE_PARALLAXMAP)
+#if defined(USE_PARALLAXMAP) || defined(USE_PARALLAXMAP_NONORMALS)
 	vec3 offsetDir = normalize(E * tangentToWorld);
 
 	offsetDir.xy *= -u_NormalScale.a / offsetDir.z;
 
+  #if defined(USE_PARALLAXMAP)
 	texCoords += offsetDir.xy * RayIntersectDisplaceMap(texCoords, offsetDir.xy, u_NormalMap);
-#endif
+  #endif //USE_PARALLAXMAP
+  #if defined(USE_PARALLAXMAP_NONORMALS)
+	texCoords += offsetDir.xy * RayIntersectDisplaceMap(texCoords, offsetDir.xy, u_DiffuseMap);
+  #endif //USE_PARALLAXMAP_NONORMALS
+#endif //USE_PARALLAXMAP || USE_PARALLAXMAP_NONORMALS
 
 	vec4 diffuse = texture2D(u_DiffuseMap, texCoords);
 
+	
+#if defined(USE_GAMMA2_TEXTURES)
+	diffuse.rgb *= diffuse.rgb;
+#endif
+
+
 #if defined(USE_LIGHT) && !defined(USE_FAST_LIGHT)
-  #if defined(USE_LIGHTMAP)
-	lightColor	= lightmapColor.rgb * var_Color.rgb;
 	ambientColor = vec3 (0.0);
 	attenuation = 1.0;
+
+  #if defined(USE_LIGHTMAP)
+	lightColor	= lightmapColor.rgb * var_Color.rgb;
   #elif defined(USE_LIGHT_VECTOR)
 	lightColor	= u_DirectedLight * var_Color.rgb;
 	ambientColor = u_AmbientLight * var_Color.rgb;
 	attenuation = CalcLightAttenuation(float(var_LightDir.w > 0.0), var_LightDir.w / sqrLightDist);
   #elif defined(USE_LIGHT_VERTEX)
 	lightColor	= var_Color.rgb;
-	ambientColor = vec3 (0.0);
-	attenuation = 1.0;
   #endif
 
   #if defined(USE_NORMALMAP)
@@ -360,6 +407,9 @@ void main()
 
   #if defined(USE_SPECULARMAP)
 	vec4 specular = texture2D(u_SpecularMap, texCoords);
+    #if defined(USE_GAMMA2_TEXTURES)
+	specular.rgb *= specular.rgb;
+    #endif
   #else
 	vec4 specular = vec4(1.0);
   #endif
@@ -473,9 +523,13 @@ void main()
   #if defined(USE_LIGHTMAP) 
 	lightColor *= lightmapColor.rgb;
   #endif
-
-    gl_FragColor.rgb = diffuse.rgb * lightColor;
 #endif
 	
-	gl_FragColor.a = diffuse.a * var_Color.a;
+	gl_FragColor = vec4 (diffuse.rgb * lightColor, diffuse.a * var_Color.a);
+	
+#if defined(USE_GLOW_BUFFER)
+	out_Glow = gl_FragColor;
+#else
+	out_Glow = vec4(0.0);
+#endif
 }

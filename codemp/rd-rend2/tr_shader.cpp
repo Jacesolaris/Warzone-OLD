@@ -1410,8 +1410,8 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 				token = COM_ParseExt( text, qfalse );
 				if ( token[0] == 0 )
 					break;
-				strcat( buffer, token );
-				strcat( buffer, " " );
+				Q_strcat( buffer, sizeof( buffer ), token );
+				Q_strcat( buffer, sizeof( buffer ), " " );
 			}
 
 			ParseTexMod( buffer, stage );
@@ -1431,7 +1431,7 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 		// If this stage has glow...	GLOWXXX
 		else if ( Q_stricmp( token, "glow" ) == 0 )
 		{
-			//stage->glow = true;
+			stage->glow = qtrue;
 
 			continue;
 		}
@@ -1450,8 +1450,8 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 				token = COM_ParseExt( text, qfalse );
 				if ( token[0] == 0 )
 					break;
-				strcat( buffer, token );
-				strcat( buffer, " " );
+				Q_strcat( buffer, sizeof( buffer ), token );
+				Q_strcat( buffer, sizeof( buffer ), " " );
 			}
 
 			ParseSurfaceSprites( buffer, stage );*/
@@ -1483,8 +1483,8 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 				token = COM_ParseExt( text, qfalse );
 				if ( token[0] == 0 )
 					break;
-				strcat( buffer, token );
-				strcat( buffer, " " );
+				Q_strcat( buffer, sizeof( buffer ), token );
+				Q_strcat( buffer, sizeof( buffer ), " " );
 			}
 
 			ParseSurfaceSpritesOptional( param, buffer, stage );*/
@@ -2049,6 +2049,17 @@ static qboolean ParseShader( const char **text )
 			SkipRestOfLine( text );
 			continue;
 		}
+		// q3map_surfacelight deprecated as of 16 Jul 01
+		else if ( !Q_stricmp( token, "surfacelight" ) || !Q_stricmp( token, "q3map_surfacelight" ) )
+		{
+			SkipRestOfLine( text );
+			continue;
+		}
+		else if ( !Q_stricmp( token, "lightColor" ) )
+		{
+			SkipRestOfLine( text );
+			continue;
+		}
 		else if ( !Q_stricmp( token, "deformvertexes" ) || !Q_stricmp( token, "deform" ) ) {
 			ParseDeform( text );
 			continue;
@@ -2587,8 +2598,8 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 			image_t *normalImg;
 			int normalFlags = (diffuseImg->flags & ~(IMGFLAG_GENNORMALMAP | IMGFLAG_SRGB)) | IMGFLAG_NOLIGHTSCALE;
 
-			COM_StripExtension(diffuseImg->imgName, normalName, MAX_QPATH);
-			Q_strcat(normalName, MAX_QPATH, "_n");
+			COM_StripExtension( diffuseImg->imgName, normalName, sizeof( normalName ) );
+			Q_strcat( normalName, sizeof( normalName ), "_n" );
 
 			normalImg = R_FindImageFile(normalName, IMGTYPE_NORMAL, normalFlags);
 
@@ -2606,6 +2617,16 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 		}
 	}
 
+	if (r_parallaxMapping->integer && !(defs & LIGHTDEF_USE_PARALLAXMAP))
+	{
+		// UQ1: My parallax changes no longer require any normal map...
+		diffuse->bundle[TB_NORMALMAP] = diffuse->bundle[0];
+		diffuse->bundle[TB_NORMALMAP].numImageAnimations = 0;
+		diffuse->bundle[TB_NORMALMAP].image[0] = diffuse->bundle[TB_DIFFUSEMAP].image[0];
+
+		VectorSet4(diffuse->normalScale, r_baseNormalX->value, r_baseNormalY->value, 1.0f, r_baseParallax->value);
+	}
+
 	if (r_specularMapping->integer)
 	{
 		if (specular)
@@ -2620,6 +2641,9 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 	{
 		defs |= LIGHTDEF_USE_TCGEN_AND_TCMOD;
 	}
+
+	if (diffuse->glow)
+		defs |= LIGHTDEF_USE_GLOW_BUFFER;
 
 	//ri->Printf(PRINT_ALL, ".\n");
 
@@ -2791,6 +2815,9 @@ static qboolean CollapseStagesToGLSL(void)
 				shaderStage_t *pStage2 = &stages[j];
 
 				if (!pStage2->active)
+					continue;
+
+				if (pStage2->glow)
 					continue;
 
 				switch(pStage2->type)

@@ -42,40 +42,14 @@ R_DrawElements
 
 void R_DrawElementsVBO( int numIndexes, glIndex_t firstIndex, glIndex_t minIndex, glIndex_t maxIndex )
 {
-	if (glRefConfig.drawRangeElements)
-		qglDrawRangeElementsEXT(GL_TRIANGLES, minIndex, maxIndex, numIndexes, GL_INDEX_TYPE, BUFFER_OFFSET(firstIndex * sizeof(glIndex_t)));
-	else
-		qglDrawElements(GL_TRIANGLES, numIndexes, GL_INDEX_TYPE, BUFFER_OFFSET(firstIndex * sizeof(glIndex_t)));
-	
+	qglDrawRangeElements(GL_TRIANGLES, minIndex, maxIndex, numIndexes, GL_INDEX_TYPE, BUFFER_OFFSET(firstIndex * sizeof(glIndex_t)));
 }
 
 
 static void R_DrawMultiElementsVBO( int multiDrawPrimitives, glIndex_t *multiDrawMinIndex, glIndex_t *multiDrawMaxIndex, 
 	GLsizei *multiDrawNumIndexes, glIndex_t **multiDrawFirstIndex)
 {
-	if (glRefConfig.multiDrawArrays)
-	{
-		qglMultiDrawElementsEXT(GL_TRIANGLES, multiDrawNumIndexes, GL_INDEX_TYPE, (const GLvoid **)multiDrawFirstIndex, multiDrawPrimitives);
-	}
-	else
-	{
-		int i;
-
-		if (glRefConfig.drawRangeElements)
-		{
-			for (i = 0; i < multiDrawPrimitives; i++)
-			{
-				qglDrawRangeElementsEXT(GL_TRIANGLES, multiDrawMinIndex[i], multiDrawMaxIndex[i], multiDrawNumIndexes[i], GL_INDEX_TYPE, multiDrawFirstIndex[i]);
-			}
-		}
-		else
-		{
-			for (i = 0; i < multiDrawPrimitives; i++)
-			{
-				qglDrawElements(GL_TRIANGLES, multiDrawNumIndexes[i], GL_INDEX_TYPE, multiDrawFirstIndex[i]);
-			}
-		}
-	}
+	qglMultiDrawElements(GL_TRIANGLES, multiDrawNumIndexes, GL_INDEX_TYPE, (const GLvoid **)multiDrawFirstIndex, multiDrawPrimitives);
 }
 
 
@@ -376,7 +350,7 @@ static void ComputeDeformValues(int *deformGen, vec5_t deformParams)
 	}
 }
 
-
+#ifdef ___OLD_DLIGHT_CODE___
 static void ProjectDlightTexture( void ) {
 	int		l;
 	vec3_t	origin;
@@ -460,7 +434,113 @@ static void ProjectDlightTexture( void ) {
 		backEnd.pc.c_dlightVertexes += tess.numVertexes;
 	}
 }
+#else //!___OLD_DLIGHT_CODE___
 
+float DLIGHT_SIZE_MULTIPLIER = 5.0;
+
+static void ProjectDlightTexture( void ) {
+	int		l;
+	vec3_t	origin;
+	float	scale;
+	float	radius;
+	int deformGen;
+	vec5_t deformParams;
+	
+	if ( !backEnd.refdef.num_dlights ) {
+		return;
+	}
+
+	ComputeDeformValues(&deformGen, deformParams);
+
+	for ( l = 0 ; l < backEnd.refdef.num_dlights ; l++ ) {
+		dlight_t	*dl;
+		shaderProgram_t *sp;
+		vec4_t vector;
+
+		//if ( !( tess.dlightBits & ( 1 << l ) ) ) {
+		//	continue;	// this surface definately doesn't have any of this light
+		//}
+
+		dl = &backEnd.refdef.dlights[l];
+		VectorCopy( dl->transformed, origin );
+		radius = dl->radius * DLIGHT_SIZE_MULTIPLIER;
+		scale = 1.0f / radius;
+
+		sp = &tr.dlightShader[deformGen == DGEN_NONE ? 0 : 1];
+
+		backEnd.pc.c_dlightDraws++;
+
+		GLSL_BindProgram(sp);
+
+		GLSL_SetUniformMatrix16(sp, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
+
+		GLSL_SetUniformFloat(sp, UNIFORM_VERTEXLERP, glState.vertexAttribsInterpolation);
+		
+		GLSL_SetUniformInt(sp, UNIFORM_DEFORMGEN, deformGen);
+		if (deformGen != DGEN_NONE)
+		{
+			GLSL_SetUniformFloat5(sp, UNIFORM_DEFORMPARAMS, deformParams);
+			GLSL_SetUniformFloat(sp, UNIFORM_TIME, tess.shaderTime);
+		}
+
+		vector[0] = (dl->color[0]);
+		vector[1] = (dl->color[1]);
+		vector[2] = (dl->color[2]);
+		vector[3] = 0.2f;
+		GLSL_SetUniformVec4(sp, UNIFORM_LIGHTCOLOR, vector);
+
+		vector[0] = origin[0];
+		vector[1] = origin[1];
+		vector[2] = origin[2];
+		vector[3] = scale;
+		GLSL_SetUniformVec4(sp, UNIFORM_LIGHTORIGIN, vector);
+
+		GLSL_SetUniformFloat(sp, UNIFORM_LIGHTRADIUS, dl->radius);
+
+		{
+			vec4_t viewInfo;
+
+			float zmax = backEnd.viewParms.zFar;
+			float zmin = r_znear->value;
+			VectorSet4(viewInfo, zmax / zmin, zmax, 0.0, 0.0);
+			GLSL_SetUniformVec4(sp, UNIFORM_VIEWINFO, viewInfo);
+		}
+
+		{
+			vec2_t screensize;
+			screensize[0] = tr.dlightImage->width;
+			screensize[1] = tr.dlightImage->height;
+			
+			GLSL_SetUniformVec2(sp, UNIFORM_DIMENSIONS, screensize);
+		}
+	  
+		GL_Bind( tr.dlightImage );
+
+		// include GLS_DEPTHFUNC_EQUAL so alpha tested surfaces don't add light
+		// where they aren't rendered
+		if ( dl->additive ) {
+			GL_State( GLS_ATEST_GT_0 | GLS_SRCBLEND_ONE | GLS_DSTBLEND_ONE | GLS_DEPTHFUNC_EQUAL );
+		}
+		else {
+			GL_State( GLS_ATEST_GT_0 | GLS_SRCBLEND_DST_COLOR | GLS_DSTBLEND_ONE | GLS_DEPTHFUNC_EQUAL );
+		}
+
+		if (tess.multiDrawPrimitives)
+		{
+			shaderCommands_t *input = &tess;
+			R_DrawMultiElementsVBO(input->multiDrawPrimitives, input->multiDrawMinIndex, input->multiDrawMaxIndex, input->multiDrawNumIndexes, input->multiDrawFirstIndex);
+		}
+		else
+		{
+			R_DrawElementsVBO(tess.numIndexes, tess.firstIndex, tess.minIndex, tess.maxIndex);
+		}
+
+		backEnd.pc.c_totalIndexes += tess.numIndexes;
+		backEnd.pc.c_dlightIndexes += tess.numIndexes;
+		backEnd.pc.c_dlightVertexes += tess.numVertexes;
+	}
+}
+#endif //___OLD_DLIGHT_CODE___
 
 static void ComputeShaderColors( shaderStage_t *pStage, vec4_t baseColor, vec4_t vertColor, int blend, colorGen_t *forceRGBGen, alphaGen_t *forceAlphaGen )
 {
@@ -1300,10 +1380,17 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				} 
 			}
 
+#ifdef __DYNAMIC_SHADOWS__
+			if (index & LIGHTDEF_LIGHTTYPE_MASK)
+			{
+				index |= LIGHTDEF_USE_SHADOWMAP;
+			}
+#else //!__DYNAMIC_SHADOWS__
 			if (r_sunlightMode->integer && (backEnd.viewParms.flags & VPF_USESUNLIGHT) && (index & LIGHTDEF_LIGHTTYPE_MASK))
 			{
 				index |= LIGHTDEF_USE_SHADOWMAP;
 			}
+#endif //__DYNAMIC_SHADOWS__
 
 			if (r_lightmap->integer && index & LIGHTDEF_USE_LIGHTMAP)
 			{
@@ -1320,8 +1407,58 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 			backEnd.pc.c_genericDraws++;
 		}
+		
+		if (pStage->isWater)
+		{
+			sp = &tr.waterShader;
+			pStage->glslShaderGroup = &tr.waterShader;
+		}
 
 		GLSL_BindProgram(sp);
+
+		// ------------------------------------------------------------------
+		//                          STEEP PARALLAX
+		// ------------------------------------------------------------------
+
+		{
+			vec4_t viewInfo;
+
+			float zmax = backEnd.viewParms.zFar;
+			float zmin = r_znear->value;
+
+			VectorSet4(viewInfo, zmax / zmin, zmax, 0.0, 0.0);
+			//VectorSet4(viewInfo, zmin, zmax, 0.0, 0.0);
+
+			GLSL_SetUniformVec4(sp, UNIFORM_VIEWINFO, viewInfo);
+		}
+
+		{
+			vec4_t local1;
+			VectorSet4(local1, r_steepParallaxEyeX->value, r_steepParallaxEyeY->value, r_steepParallaxEyeZ->value, 0.0);
+			GLSL_SetUniformVec4(sp, UNIFORM_LOCAL1, local1);
+			//ri->Printf(PRINT_WARNING, "Local1 updated.\n");
+		}
+
+		{
+			vec2_t screensize;
+			screensize[0] = pStage->bundle[0].image[0]->width;
+			screensize[1] = pStage->bundle[0].image[0]->height;
+			
+			GLSL_SetUniformVec2(sp, UNIFORM_DIMENSIONS, screensize);
+		}
+
+		if (pStage->isWater)
+		{
+			GLSL_SetUniformFloat(sp, UNIFORM_TIME, tess.shaderTime);
+		}
+		else
+		{
+			GLSL_SetUniformFloat(sp, UNIFORM_TIME, backEnd.refdef.floatTime);
+		}
+
+		// ------------------------------------------------------------------
+		//                        END STEEP PARALLAX
+		// ------------------------------------------------------------------
 
 		GLSL_SetUniformMatrix16(sp, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
 		GLSL_SetUniformVec3(sp, UNIFORM_VIEWORIGIN, backEnd.viewParms.ori.origin);
@@ -1753,6 +1890,17 @@ void RB_StageIteratorGeneric( void )
 	GLSL_VertexAttribsState(vertexAttribs);
 
 	//
+	// UQ1: Set up any special shaders needed for this surface/contents type...
+	//
+	if ((tess.shader->contentFlags & CONTENTS_WATER)) 
+	{
+		if (input->xstages[0]->isWater != qtrue) // In case it is already set, no need looping more then once on the same shader...
+			for ( int stage = 0; stage < MAX_SHADER_STAGES; stage++ )
+				if (input->xstages[stage])
+					input->xstages[stage]->isWater = qtrue;
+	}
+
+	//
 	// render depth if in depthfill mode
 	//
 	if (backEnd.depthFill)
@@ -1796,10 +1944,11 @@ void RB_StageIteratorGeneric( void )
 	//
 	RB_IterateStagesGeneric( input );
 
+#ifdef ___OLD_DLIGHT_CODE___ // UQ1: <= SS_OPAQUE and dlightBits tracking is a joke - light is light. surfaces are surfaces! this makes absolutely no sense!
 	//
 	// pshadows!
 	//
-	if (glRefConfig.framebufferObject && r_shadows->integer == 4 && tess.pshadowBits &&
+	if (r_shadows->integer == 4 && tess.pshadowBits &&
 		tess.shader->sort <= SS_OPAQUE && !(tess.shader->surfaceFlags & (SURF_NODLIGHT | SURF_SKY))) {
 		ProjectPshadowVBOGLSL();
 	}
@@ -1820,6 +1969,36 @@ void RB_StageIteratorGeneric( void )
 			ProjectDlightTexture();
 		}
 	}
+#else //!___OLD_DLIGHT_CODE___
+	// 
+	// now do any dynamic lighting needed. UQ1: A generic method to rule them all... A SANE real world style lighting with a blacklist - not a whitelist!
+	//
+	if ( !(tess.shader->surfaceFlags & (/*SURF_NODLIGHT |*/ SURF_SKY)) ) 
+	{
+		switch(int(tess.shader->sort))
+		{
+		case SS_PORTAL:
+		case SS_ENVIRONMENT: // is this really always a skybox???
+		case SS_SEE_THROUGH:
+		//case SS_FOG: // hmm... these??? i sorta like the idea of lighting up fog particles myself...
+		case SS_BLEND0:
+		case SS_BLEND1:
+		case SS_BLEND2:
+		case SS_BLEND3:
+		case SS_BLEND6:
+			break;
+		default:
+			ProjectDlightTexture();
+
+			//
+			// pshadows!
+			//
+			if (r_shadows->integer == 4 && tess.pshadowBits && !(tess.shader->surfaceFlags & (/*SURF_NODLIGHT |*/ SURF_SKY)))
+				ProjectPshadowVBOGLSL();
+			break;
+		}
+	}
+#endif //___OLD_DLIGHT_CODE___
 
 	//
 	// now do fog

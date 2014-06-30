@@ -451,31 +451,28 @@ void RB_BeginDrawingView (void) {
 	// 2D images again
 	backEnd.projection2D = qfalse;
 
-	if (glRefConfig.framebufferObject)
+	// FIXME: HUGE HACK: render to the screen fbo if we've already postprocessed the frame and aren't drawing more world
+	// drawing more world check is in case of double renders, such as skyportals
+	if (backEnd.viewParms.targetFbo == NULL)
 	{
-		// FIXME: HUGE HACK: render to the screen fbo if we've already postprocessed the frame and aren't drawing more world
-		// drawing more world check is in case of double renders, such as skyportals
-		if (backEnd.viewParms.targetFbo == NULL)
+		if (!tr.renderFbo || (backEnd.framePostProcessed && (backEnd.refdef.rdflags & RDF_NOWORLDMODEL)))
 		{
-			if (!tr.renderFbo || (backEnd.framePostProcessed && (backEnd.refdef.rdflags & RDF_NOWORLDMODEL)))
-			{
-				FBO_Bind(NULL);
-			}
-			else
-			{
-				FBO_Bind(tr.renderFbo);
-			}
+			FBO_Bind(NULL);
 		}
 		else
 		{
-			FBO_Bind(backEnd.viewParms.targetFbo);
+			FBO_Bind(tr.renderFbo);
+		}
+	}
+	else
+	{
+		FBO_Bind(backEnd.viewParms.targetFbo);
 
-			// FIXME: hack for cubemap testing
-			if (tr.renderCubeFbo != NULL && backEnd.viewParms.targetFbo == tr.renderCubeFbo)
-			{
-				//qglFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_CUBE_MAP_POSITIVE_X + backEnd.viewParms.targetFboLayer, backEnd.viewParms.targetFbo->colorImage[0]->texnum, 0);
-				qglFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_CUBE_MAP_POSITIVE_X + backEnd.viewParms.targetFboLayer, tr.cubemaps[backEnd.viewParms.targetFboCubemapIndex]->texnum, 0);
-			}
+		// FIXME: hack for cubemap testing
+		if (tr.renderCubeFbo != NULL && backEnd.viewParms.targetFbo == tr.renderCubeFbo)
+		{
+			//qglFramebufferTexture2D(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X + backEnd.viewParms.targetFboLayer, backEnd.viewParms.targetFbo->colorImage[0]->texnum, 0);
+			qglFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X + backEnd.viewParms.targetFboLayer, tr.cubemaps[backEnd.viewParms.targetFboCubemapIndex]->texnum, 0);
 		}
 	}
 
@@ -493,6 +490,7 @@ void RB_BeginDrawingView (void) {
 	{
 		clearBits |= GL_STENCIL_BUFFER_BIT;
 	}
+
 	if ( r_fastsky->integer && !( backEnd.refdef.rdflags & RDF_NOWORLDMODEL ) )
 	{
 		clearBits |= GL_COLOR_BUFFER_BIT;	// FIXME: only if sky shaders have been used
@@ -518,6 +516,13 @@ void RB_BeginDrawingView (void) {
 	}
 
 	qglClear( clearBits );
+
+	if (backEnd.viewParms.targetFbo == NULL)
+	{
+		// Clear the glow target
+		float black[] = {0.0f, 0.0f, 0.0f, 1.0f};
+		qglClearBufferfv (GL_COLOR, 1, black);
+	}
 
 	if ( ( backEnd.refdef.rdflags & RDF_HYPERSPACE ) )
 	{
@@ -753,11 +758,10 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 	}
 
 	if (inQuery) {
-		qglEndQueryARB(GL_SAMPLES_PASSED_ARB);
+		qglEndQuery(GL_SAMPLES_PASSED);
 	}
 
-	if (glRefConfig.framebufferObject)
-		FBO_Bind(fbo);
+	FBO_Bind(fbo);
 
 	// go back to the world modelview matrix
 
@@ -876,16 +880,13 @@ void RE_StretchRaw (int x, int y, int w, int h, int cols, int rows, const byte *
 	}
 
 	// FIXME: HUGE hack
-	if (glRefConfig.framebufferObject)
+	if (!tr.renderFbo || backEnd.framePostProcessed)
 	{
-		if (!tr.renderFbo || backEnd.framePostProcessed)
-		{
-			FBO_Bind(NULL);
-		}
-		else
-		{
-			FBO_Bind(tr.renderFbo);
-		}
+		FBO_Bind(NULL);
+	}
+	else
+	{
+		FBO_Bind(tr.renderFbo);
 	}
 
 	RB_SetGL2D();
@@ -963,16 +964,13 @@ const void *RB_StretchPic ( const void *data ) {
 	cmd = (const stretchPicCommand_t *)data;
 
 	// FIXME: HUGE hack
-	if (glRefConfig.framebufferObject)
+	if (!tr.renderFbo || backEnd.framePostProcessed)
 	{
-		if (!tr.renderFbo || backEnd.framePostProcessed)
-		{
-			FBO_Bind(NULL);
-		}
-		else
-		{
-			FBO_Bind(tr.renderFbo);
-		}
+		FBO_Bind(NULL);
+	}
+	else
+	{
+		FBO_Bind(tr.renderFbo);
 	}
 
 	RB_SetGL2D();
@@ -1061,16 +1059,13 @@ const void *RB_RotatePic ( const void *data )
 	cmd = (const rotatePicCommand_t *)data;
 
 	// FIXME: HUGE hack
-	if (glRefConfig.framebufferObject)
+	if (!tr.renderFbo || backEnd.framePostProcessed)
 	{
-		if (!tr.renderFbo || backEnd.framePostProcessed)
-		{
-			FBO_Bind(NULL);
-		}
-		else
-		{
-			FBO_Bind(tr.renderFbo);
-		}
+		FBO_Bind(NULL);
+	}
+	else
+	{
+		FBO_Bind(tr.renderFbo);
 	}
 
 	RB_SetGL2D();
@@ -1162,16 +1157,13 @@ const void *RB_RotatePic2 ( const void *data )
 	cmd = (const rotatePicCommand_t *)data;
 
 	// FIXME: HUGE hack
-	if (glRefConfig.framebufferObject)
+	if (!tr.renderFbo || backEnd.framePostProcessed)
 	{
-		if (!tr.renderFbo || backEnd.framePostProcessed)
-		{
-			FBO_Bind(NULL);
-		}
-		else
-		{
-			FBO_Bind(tr.renderFbo);
-		}
+		FBO_Bind(NULL);
+	}
+	else
+	{
+		FBO_Bind(tr.renderFbo);
 	}
 
 	RB_SetGL2D();
@@ -1267,12 +1259,12 @@ const void	*RB_DrawSurfs( const void *data ) {
 	// clear the z buffer, set the modelview, etc
 	RB_BeginDrawingView ();
 
-	if (glRefConfig.framebufferObject && (backEnd.viewParms.flags & VPF_DEPTHCLAMP) && glRefConfig.depthClamp)
+	if (backEnd.viewParms.flags & VPF_DEPTHCLAMP)
 	{
 		qglEnable(GL_DEPTH_CLAMP);
 	}
 
-	if (glRefConfig.framebufferObject && !(backEnd.refdef.rdflags & RDF_NOWORLDMODEL) && (r_depthPrepass->integer || (backEnd.viewParms.flags & VPF_DEPTHSHADOW)))
+	if (!(backEnd.refdef.rdflags & RDF_NOWORLDMODEL) && (r_depthPrepass->integer || (backEnd.viewParms.flags & VPF_DEPTHSHADOW)))
 	{
 		FBO_t *oldFbo = glState.currentFBO;
 
@@ -1294,7 +1286,7 @@ const void	*RB_DrawSurfs( const void *data ) {
 			qglCopyTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, 0, 0, glConfig.vidWidth, glConfig.vidHeight, 0);
 		}
 
-		if (r_ssao->integer)
+		if (r_ssao->integer || r_ssao2->integer)
 		{
 			// need the depth in a texture we can do GL_LINEAR sampling on, so copy it to an HDR image
 			FBO_BlitFromTexture(tr.renderDepthImage, NULL, NULL, tr.hdrDepthFbo, NULL, NULL, NULL, 0);
@@ -1375,6 +1367,102 @@ const void	*RB_DrawSurfs( const void *data ) {
 
 			RB_InstantQuad2(quadVerts, texCoords); //, color, shaderProgram, invTexRes);
 		}
+
+#ifdef __DYNAMIC_SHADOWS__
+		//if (backEnd.viewParms.flags & VPF_USESUNLIGHT)
+		{
+			if ( backEnd.refdef.num_dlights )
+			{
+				for ( int l = 0 ; l < backEnd.refdef.num_dlights ; l++ ) {
+					dlight_t	*dl;
+					float radius, scale;
+					vec3_t origin;
+
+					if (l >= MAX_DYNAMIC_SHADOWS) break; // max
+
+					dl = &backEnd.refdef.dlights[l];
+					VectorCopy( dl->transformed, origin );
+					radius = dl->radius;
+					scale = 1.0f / radius;
+
+					if (!dl->activeShadows) continue;
+
+					vec4_t quadVerts[4];
+					vec2_t texCoords[4];
+					vec4_t box;
+
+					FBO_Bind(tr.screenShadowFbo);
+
+					box[0] = backEnd.viewParms.viewportX      * tr.screenShadowFbo->width  / (float)glConfig.vidWidth;
+					box[1] = backEnd.viewParms.viewportY      * tr.screenShadowFbo->height / (float)glConfig.vidHeight;
+					box[2] = backEnd.viewParms.viewportWidth  * tr.screenShadowFbo->width  / (float)glConfig.vidWidth;
+					box[3] = backEnd.viewParms.viewportHeight * tr.screenShadowFbo->height / (float)glConfig.vidHeight;
+
+					qglViewport(box[0], box[1], box[2], box[3]);
+					qglScissor(box[0], box[1], box[2], box[3]);
+
+					box[0] = backEnd.viewParms.viewportX               / (float)glConfig.vidWidth;
+					box[1] = backEnd.viewParms.viewportY               / (float)glConfig.vidHeight;
+					box[2] = box[0] + backEnd.viewParms.viewportWidth  / (float)glConfig.vidWidth;
+					box[3] = box[1] + backEnd.viewParms.viewportHeight / (float)glConfig.vidHeight;
+
+					texCoords[0][0] = box[0]; texCoords[0][1] = box[3];
+					texCoords[1][0] = box[2]; texCoords[1][1] = box[3];
+					texCoords[2][0] = box[2]; texCoords[2][1] = box[1];
+					texCoords[3][0] = box[0]; texCoords[3][1] = box[1];
+
+					box[0] = -1.0f;
+					box[1] = -1.0f;
+					box[2] =  1.0f;
+					box[3] =  1.0f;
+
+					VectorSet4(quadVerts[0], box[0], box[3], 0, 1);
+					VectorSet4(quadVerts[1], box[2], box[3], 0, 1);
+					VectorSet4(quadVerts[2], box[2], box[1], 0, 1);
+					VectorSet4(quadVerts[3], box[0], box[1], 0, 1);
+
+					GL_State( GLS_DEPTHTEST_DISABLE );
+
+					GLSL_BindProgram(&tr.shadowmaskShader);
+
+					GL_BindToTMU(tr.renderDepthImage, TB_COLORMAP);
+					GL_BindToTMU(tr.dlightShadowDepthImage[l][0], TB_SHADOWMAP);
+					GL_BindToTMU(tr.dlightShadowDepthImage[l][1], TB_SHADOWMAP2);
+					GL_BindToTMU(tr.dlightShadowDepthImage[l][2], TB_SHADOWMAP3);
+
+					GLSL_SetUniformMatrix16(&tr.shadowmaskShader, UNIFORM_SHADOWMVP,  backEnd.refdef.dlightShadowMvp[l][0]);
+					GLSL_SetUniformMatrix16(&tr.shadowmaskShader, UNIFORM_SHADOWMVP2, backEnd.refdef.dlightShadowMvp[l][1]);
+					GLSL_SetUniformMatrix16(&tr.shadowmaskShader, UNIFORM_SHADOWMVP3, backEnd.refdef.dlightShadowMvp[l][2]);
+
+					GLSL_SetUniformVec3(&tr.shadowmaskShader, UNIFORM_VIEWORIGIN,  backEnd.refdef.vieworg);
+					{
+						vec4_t viewInfo;
+						vec3_t viewVector;
+
+						float zmax = backEnd.viewParms.zFar;
+						float ymax = zmax * tan(backEnd.viewParms.fovY * M_PI / 360.0f);
+						float xmax = zmax * tan(backEnd.viewParms.fovX * M_PI / 360.0f);
+
+						float zmin = r_znear->value;
+
+						VectorScale(backEnd.refdef.viewaxis[0], zmax, viewVector);
+						GLSL_SetUniformVec3(&tr.shadowmaskShader, UNIFORM_VIEWFORWARD, viewVector);
+						VectorScale(backEnd.refdef.viewaxis[1], xmax, viewVector);
+						GLSL_SetUniformVec3(&tr.shadowmaskShader, UNIFORM_VIEWLEFT,    viewVector);
+						VectorScale(backEnd.refdef.viewaxis[2], ymax, viewVector);
+						GLSL_SetUniformVec3(&tr.shadowmaskShader, UNIFORM_VIEWUP,      viewVector);
+
+						VectorSet4(viewInfo, zmax / zmin, zmax, 0.0, 0.0);
+
+						GLSL_SetUniformVec4(&tr.shadowmaskShader, UNIFORM_VIEWINFO, viewInfo);
+					}
+
+
+					RB_InstantQuad2(quadVerts, texCoords); //, color, shaderProgram, invTexRes);
+				}
+			}
+		}
+#endif //__DYNAMIC_SHADOWS__
 
 		if (r_ssao->integer)
 		{
@@ -1470,7 +1558,7 @@ const void	*RB_DrawSurfs( const void *data ) {
 		SetViewportAndScissor();
 	}
 
-	if (glRefConfig.framebufferObject && (backEnd.viewParms.flags & VPF_DEPTHCLAMP) && glRefConfig.depthClamp)
+	if (backEnd.viewParms.flags & VPF_DEPTHCLAMP)
 	{
 		qglDisable(GL_DEPTH_CLAMP);
 	}
@@ -1492,18 +1580,12 @@ const void	*RB_DrawSurfs( const void *data ) {
 			qglClearColor( 0.0f, 0.0f, 0.0f, 1.0f );
 			qglClear( GL_COLOR_BUFFER_BIT );
 
-			if (glRefConfig.occlusionQuery)
-			{
-				tr.sunFlareQueryActive[tr.sunFlareQueryIndex] = qtrue;
-				qglBeginQueryARB(GL_SAMPLES_PASSED_ARB, tr.sunFlareQuery[tr.sunFlareQueryIndex]);
-			}
+			tr.sunFlareQueryActive[tr.sunFlareQueryIndex] = qtrue;
+			qglBeginQuery(GL_SAMPLES_PASSED, tr.sunFlareQuery[tr.sunFlareQueryIndex]);
 
 			RB_DrawSun(0.3, tr.sunFlareShader);
 
-			if (glRefConfig.occlusionQuery)
-			{
-				qglEndQueryARB(GL_SAMPLES_PASSED_ARB);
-			}
+			qglEndQuery(GL_SAMPLES_PASSED);
 
 			FBO_Bind(oldFbo);
 		}
@@ -1515,12 +1597,12 @@ const void	*RB_DrawSurfs( const void *data ) {
 		RB_RenderFlares();
 	}
 
-	if (glRefConfig.framebufferObject && tr.renderCubeFbo != NULL && backEnd.viewParms.targetFbo == tr.renderCubeFbo)
+	if (tr.renderCubeFbo != NULL && backEnd.viewParms.targetFbo == tr.renderCubeFbo)
 	{
 		FBO_Bind(NULL);
 		GL_SelectTexture(TB_CUBEMAP);
 		GL_BindToTMU(tr.cubemaps[backEnd.viewParms.targetFboCubemapIndex], TB_CUBEMAP);
-		qglGenerateMipmapEXT(GL_TEXTURE_CUBE_MAP);
+		qglGenerateMipmap(GL_TEXTURE_CUBE_MAP);
 		GL_SelectTexture(0);
 	}
 
@@ -1543,8 +1625,7 @@ const void	*RB_DrawBuffer( const void *data ) {
 	if(tess.numIndexes)
 		RB_EndSurface();
 
-	if (glRefConfig.framebufferObject)
-		FBO_Bind(NULL);
+	FBO_Bind(NULL);
 
 	qglDrawBuffer( cmd->buffer );
 
@@ -1630,14 +1711,11 @@ const void *RB_ColorMask(const void *data)
 	if(tess.numIndexes)
 		RB_EndSurface();
 
-	if (glRefConfig.framebufferObject)
-	{
-		// reverse color mask, so 0 0 0 0 is the default
-		backEnd.colorMask[0] = (qboolean)(!cmd->rgba[0]);
-		backEnd.colorMask[1] = (qboolean)(!cmd->rgba[1]);
-		backEnd.colorMask[2] = (qboolean)(!cmd->rgba[2]);
-		backEnd.colorMask[3] = (qboolean)(!cmd->rgba[3]);
-	}
+	// reverse color mask, so 0 0 0 0 is the default
+	backEnd.colorMask[0] = (qboolean)(!cmd->rgba[0]);
+	backEnd.colorMask[1] = (qboolean)(!cmd->rgba[1]);
+	backEnd.colorMask[2] = (qboolean)(!cmd->rgba[2]);
+	backEnd.colorMask[3] = (qboolean)(!cmd->rgba[3]);
 
 	qglColorMask(cmd->rgba[0], cmd->rgba[1], cmd->rgba[2], cmd->rgba[3]);
 	
@@ -1662,16 +1740,13 @@ const void *RB_ClearDepth(const void *data)
 	if (r_showImages->integer)
 		RB_ShowImages();
 
-	if (glRefConfig.framebufferObject)
+	if (!tr.renderFbo || backEnd.framePostProcessed)
 	{
-		if (!tr.renderFbo || backEnd.framePostProcessed)
-		{
-			FBO_Bind(NULL);
-		}
-		else
-		{
-			FBO_Bind(tr.renderFbo);
-		}
+		FBO_Bind(NULL);
+	}
+	else
+	{
+		FBO_Bind(tr.renderFbo);
 	}
 
 	qglClear(GL_DEPTH_BUFFER_BIT);
@@ -1727,20 +1802,17 @@ const void	*RB_SwapBuffers( const void *data ) {
 		ri->Hunk_FreeTempMemory( stencilReadback );
 	}
 
-	if (glRefConfig.framebufferObject)
+	if (!backEnd.framePostProcessed)
 	{
-		if (!backEnd.framePostProcessed)
+		if (tr.msaaResolveFbo && r_hdr->integer)
 		{
-			if (tr.msaaResolveFbo && r_hdr->integer)
-			{
-				// Resolving an RGB16F MSAA FBO to the screen messes with the brightness, so resolve to an RGB16F FBO first
-				FBO_FastBlit(tr.renderFbo, NULL, tr.msaaResolveFbo, NULL, GL_COLOR_BUFFER_BIT, GL_NEAREST);
-				FBO_FastBlit(tr.msaaResolveFbo, NULL, NULL, NULL, GL_COLOR_BUFFER_BIT, GL_NEAREST);
-			}
-			else if (tr.renderFbo)
-			{
-				FBO_FastBlit(tr.renderFbo, NULL, NULL, NULL, GL_COLOR_BUFFER_BIT, GL_NEAREST);
-			}
+			// Resolving an RGB16F MSAA FBO to the screen messes with the brightness, so resolve to an RGB16F FBO first
+			FBO_FastBlit(tr.renderFbo, NULL, tr.msaaResolveFbo, NULL, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+			FBO_FastBlit(tr.msaaResolveFbo, NULL, NULL, NULL, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+		}
+		else if (tr.renderFbo)
+		{
+			FBO_FastBlit(tr.renderFbo, NULL, NULL, NULL, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 		}
 	}
 
@@ -1814,7 +1886,7 @@ const void *RB_PostProcess(const void *data)
 	if(tess.numIndexes)
 		RB_EndSurface();
 
-	if (!glRefConfig.framebufferObject || !r_postProcess->integer || (tr.viewParms.flags & VPF_NOPOSTPROCESS))
+	if (!r_postProcess->integer || (tr.viewParms.flags & VPF_NOPOSTPROCESS))
 	{
 		// do nothing
 		return (const void *)(cmd + 1);
@@ -1833,6 +1905,11 @@ const void *RB_PostProcess(const void *data)
 		// Can't resolve just part of the MSAA FBO, so multiple views will suffer a performance hit here
 		FBO_FastBlit(tr.renderFbo, NULL, tr.msaaResolveFbo, NULL, GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT, GL_NEAREST);
 		srcFbo = tr.msaaResolveFbo;
+
+		if ( r_dynamicGlow->integer )
+		{
+			FBO_FastBlitIndexed(tr.renderFbo, tr.msaaResolveFbo, 1, 1, GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT, GL_NEAREST);
+		}
 	}
 
 	dstBox[0] = backEnd.viewParms.viewportX;
@@ -1854,6 +1931,32 @@ const void *RB_PostProcess(const void *data)
 		FBO_Blit(tr.screenSsaoFbo, srcBox, NULL, srcFbo, dstBox, NULL, NULL, GLS_SRCBLEND_DST_COLOR | GLS_DSTBLEND_ZERO);
 	}
 
+	if (r_dynamicGlow->integer)
+	{
+		// Downscale 8x
+		FBO_BlitFromTexture (tr.glowImage, NULL, NULL, tr.glowFboScaled[0], NULL, &tr.textureColorShader, NULL, GLS_SRCBLEND_ONE | GLS_DSTBLEND_ZERO);
+		FBO_FastBlit (tr.glowFboScaled[0], NULL, tr.glowFboScaled[1], NULL, GL_COLOR_BUFFER_BIT, GL_LINEAR);
+		FBO_FastBlit (tr.glowFboScaled[1], NULL, tr.glowFboScaled[2], NULL, GL_COLOR_BUFFER_BIT, GL_LINEAR);
+
+		// Blur a few times
+		float spread = 1.0f;
+		for ( int i = 0, numPasses = r_dynamicGlowPasses->integer; i < numPasses; i++ )
+		{
+			RB_GaussianBlur (tr.glowFboScaled[2], tr.glowFboScaled[3], tr.glowFboScaled[2], spread);
+
+			spread += r_dynamicGlowDelta->value * 0.25f;
+		}
+
+		// Upscale 4x
+		qglScissor (0, 0, tr.glowFboScaled[1]->width, tr.glowFboScaled[1]->height);
+		FBO_FastBlit (tr.glowFboScaled[2], NULL, tr.glowFboScaled[1], NULL, GL_COLOR_BUFFER_BIT, GL_LINEAR);
+
+		qglScissor (0, 0, tr.glowFboScaled[0]->width, tr.glowFboScaled[0]->height);
+		FBO_FastBlit (tr.glowFboScaled[1], NULL, tr.glowFboScaled[0], NULL, GL_COLOR_BUFFER_BIT, GL_LINEAR);
+
+		// Restore scissor rect
+		qglScissor (0, 0, glConfig.vidWidth, glConfig.vidHeight);
+	}
 	srcBox[0] = backEnd.viewParms.viewportX;
 	srcBox[1] = backEnd.viewParms.viewportY;
 	srcBox[2] = backEnd.viewParms.viewportWidth;
@@ -1861,6 +1964,121 @@ const void *RB_PostProcess(const void *data)
 
 	if (srcFbo)
 	{
+		//
+		// UQ1: Added...
+		//
+
+		if (r_darkexpand->integer)
+		{
+			for (int pass = 0; pass < 2; pass++)
+			{
+				RB_DarkExpand(srcFbo, srcBox, tr.genericFbo, dstBox);
+				FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+			}
+		}
+
+		if (r_textureClean->integer)
+		{
+			RB_TextureClean(srcFbo, srcBox, tr.genericFbo, dstBox);
+			FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+		}
+
+		if (r_esharpening->integer)
+		{
+			RB_ESharpening(srcFbo, srcBox, tr.genericFbo, dstBox);
+			FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+		}
+
+		if (r_esharpening2->integer)
+		{
+			RB_ESharpening2(srcFbo, srcBox, tr.genericFbo, dstBox);
+			FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+		}
+
+		if (r_multipost->integer)
+		{
+			RB_MultiPost(srcFbo, srcBox, tr.genericFbo, dstBox);
+			FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+		}
+
+		if (r_ssao2->integer)
+		{
+			RB_SSAO2(srcFbo, srcBox, tr.genericFbo, dstBox);
+			FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+		}
+
+		if (r_depth->integer)
+		{
+			// First run, before adding parallax and blooms, etc...
+			for (int i = 0; i < r_depthPasses->integer / 2; i++)
+			{
+				RB_FakeDepth(srcFbo, srcBox, tr.genericFbo, dstBox);
+				FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+			}
+		}
+
+		if (r_depthParallax->integer)
+		{
+			RB_FakeDepthParallax(srcFbo, srcBox, tr.genericFbo, dstBox);
+			FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+		}
+
+		if (r_truehdr->integer)
+		{
+			RB_HDR(srcFbo, srcBox, tr.genericFbo, dstBox);
+			FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+		}
+
+		if (r_bloom->integer)
+		{
+			RB_Bloom(srcFbo, srcBox, tr.genericFbo, dstBox);
+			FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+		}
+
+		if (r_anamorphic->integer)
+		{
+			RB_Anamorphic(srcFbo, srcBox, tr.genericFbo, dstBox);
+			FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+		}
+
+		if (r_lensflare->integer)
+		{
+			RB_LensFlare(srcFbo, srcBox, tr.genericFbo, dstBox);
+			FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+		}
+
+		if (r_volumelight->integer)
+		{
+			RB_VolumetricDLight(srcFbo, srcBox, tr.genericFbo, dstBox);
+			FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+		}
+
+		if (r_depth->integer)
+		{
+			// Second run, after adding parallax and blooms, etc...
+			for (int i = 0; i < r_depthPasses->integer / 2; i++)
+			{
+				RB_FakeDepth(srcFbo, srcBox, tr.genericFbo, dstBox);
+				FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+			}
+		}
+
+		if (r_dof->integer)
+		{
+			RB_DOF(srcFbo, srcBox, tr.genericFbo, dstBox);
+			FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+		}
+
+		if (r_trueAnaglyph->integer)
+		{
+			RB_Anaglyph(srcFbo, srcBox, tr.genericFbo, dstBox);
+			FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+		}
+
+		//
+		// End UQ1 Added...
+		//
+
 		if (r_hdr->integer && (r_toneMap->integer || r_forceToneMap->integer))
 		{
 			autoExposure = (qboolean)(r_autoExposure->integer || r_forceAutoExposure->integer);
@@ -1888,8 +2106,6 @@ const void *RB_PostProcess(const void *data)
 
 	if (1)
 		RB_BokehBlur(NULL, srcBox, NULL, dstBox, backEnd.refdef.blurFactor);
-	else
-		RB_GaussianBlur(backEnd.refdef.blurFactor);
 
 	if (0 && r_sunlightMode->integer)
 	{
@@ -1932,6 +2148,51 @@ const void *RB_PostProcess(const void *data)
 		}
 	}
 #endif
+
+#ifdef __DYNAMIC_SHADOWS__
+	//if (0)
+	{
+		vec4i_t dstBox;
+		VectorSet4(dstBox, 0, 0, 128, 128);
+		FBO_BlitFromTexture(tr.dlightShadowDepthImage[0][0], NULL, NULL, NULL, dstBox, NULL, NULL, 0);
+		VectorSet4(dstBox, 128, 0, 128, 128);
+		FBO_BlitFromTexture(tr.dlightShadowDepthImage[0][1], NULL, NULL, NULL, dstBox, NULL, NULL, 0);
+		VectorSet4(dstBox, 256, 0, 128, 128);
+		FBO_BlitFromTexture(tr.dlightShadowDepthImage[0][2], NULL, NULL, NULL, dstBox, NULL, NULL, 0);
+
+		VectorSet4(dstBox, 384, 0, 128, 128);
+		FBO_BlitFromTexture(tr.dlightShadowDepthImage[1][0], NULL, NULL, NULL, dstBox, NULL, NULL, 0);
+		VectorSet4(dstBox, 512, 0, 128, 128);
+		FBO_BlitFromTexture(tr.dlightShadowDepthImage[1][1], NULL, NULL, NULL, dstBox, NULL, NULL, 0);
+		VectorSet4(dstBox, 640, 0, 128, 128);
+		FBO_BlitFromTexture(tr.dlightShadowDepthImage[1][2], NULL, NULL, NULL, dstBox, NULL, NULL, 0);
+	}
+#endif //__DYNAMIC_SHADOWS__
+
+	if (r_dynamicGlow->integer != 0)
+	{
+		// Composite the glow/bloom texture
+		int blendFunc = 0;
+		vec4_t color = { 1.0f, 1.0f, 1.0f, 1.0f };
+
+		if ( r_dynamicGlow->integer == 2 )
+		{
+			// Debug output
+			blendFunc = GLS_SRCBLEND_ONE | GLS_DSTBLEND_ZERO;
+		}
+		else if ( r_dynamicGlowSoft->integer )
+		{
+			blendFunc = GLS_SRCBLEND_ONE | GLS_DSTBLEND_ONE_MINUS_SRC_COLOR;
+			color[0] = color[1] = color[2] = r_dynamicGlowIntensity->value;
+		}
+		else
+		{
+			blendFunc = GLS_SRCBLEND_ONE | GLS_DSTBLEND_ONE;
+			color[0] = color[1] = color[2] = r_dynamicGlowIntensity->value;
+		}
+
+		FBO_BlitFromTexture (tr.glowFboScaled[0]->colorImage[0], NULL, NULL, NULL, NULL, NULL, color, blendFunc);
+	}
 
 	backEnd.framePostProcessed = qtrue;
 

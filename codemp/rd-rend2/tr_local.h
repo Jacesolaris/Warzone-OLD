@@ -24,6 +24,11 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #ifndef TR_LOCAL_H
 #define TR_LOCAL_H
 
+//#define __DYNAMIC_SHADOWS__
+#ifdef __DYNAMIC_SHADOWS__
+#define MAX_DYNAMIC_SHADOWS 4
+#endif //__DYNAMIC_SHADOWS__
+
 #include "../qcommon/q_shared.h"
 #include "../qcommon/qfiles.h"
 #include "../qcommon/qcommon.h"
@@ -56,7 +61,12 @@ typedef unsigned int glIndex_t;
 #define SHADERNUM_BITS	14
 #define MAX_SHADERS		(1<<SHADERNUM_BITS)
 
-#define	MAX_FBOS      64
+#ifndef __DYNAMIC_SHADOWS__
+	#define	MAX_FBOS      64
+#else //__DYNAMIC_SHADOWS__
+	#define	MAX_FBOS      ((MAX_DYNAMIC_SHADOWS*4) + 64)
+#endif //__DYNAMIC_SHADOWS__
+
 #define MAX_VISCOUNTS 5
 #define MAX_VBOS      4096
 #define MAX_IBOS      4096
@@ -132,7 +142,6 @@ extern cvar_t	*r_ext_texture_filter_anisotropic;
 
 extern cvar_t  *r_ext_draw_range_elements;
 extern cvar_t  *r_ext_multi_draw_arrays;
-extern cvar_t  *r_ext_framebuffer_object;
 extern cvar_t  *r_ext_texture_float;
 extern cvar_t  *r_arb_half_float_pixel;
 extern cvar_t  *r_ext_framebuffer_multisample;
@@ -167,7 +176,6 @@ extern cvar_t  *r_specularMapping;
 extern cvar_t  *r_deluxeMapping;
 extern cvar_t  *r_parallaxMapping;
 extern cvar_t  *r_normalAmbient;
-extern cvar_t  *r_recalcMD3Normals;
 extern cvar_t  *r_mergeLightmaps;
 extern cvar_t  *r_dlightMode;
 extern cvar_t  *r_pshadowDist;
@@ -261,6 +269,54 @@ extern int		max_polys;
 extern cvar_t	*r_maxpolyverts;
 extern int		max_polyverts;
 
+
+//
+// UQ1: Added...
+//
+extern cvar_t	*r_steepParallaxEyeX;
+extern cvar_t	*r_steepParallaxEyeY;
+extern cvar_t	*r_steepParallaxEyeZ;
+extern cvar_t	*r_bloom;
+extern cvar_t	*r_bloomPasses;
+extern cvar_t	*r_bloomDarkenPower;
+extern cvar_t	*r_bloomScale;
+extern cvar_t	*r_lensflare;
+extern cvar_t	*r_volumelight;
+extern cvar_t	*r_anamorphic;
+extern cvar_t	*r_anamorphicDarkenPower;
+extern cvar_t	*r_depth;
+extern cvar_t	*r_depthParallax;
+extern cvar_t	*r_depthParallaxScale;
+extern cvar_t	*r_depthParallaxMultiplier;
+extern cvar_t	*r_depthParallaxEyeX;
+extern cvar_t	*r_depthParallaxEyeY;
+extern cvar_t	*r_depthParallaxEyeZ;
+extern cvar_t	*r_depthPasses;
+extern cvar_t	*r_depthScale;
+extern cvar_t	*r_darkexpand;
+extern cvar_t	*r_truehdr;
+extern cvar_t  *r_dof;
+extern cvar_t  *r_esharpening;
+extern cvar_t  *r_esharpening2;
+extern cvar_t  *r_multipost;
+extern cvar_t  *r_textureClean;
+extern cvar_t  *r_textureCleanSigma;
+extern cvar_t  *r_textureCleanBSigma;
+extern cvar_t  *r_textureCleanMSize;
+extern cvar_t  *r_ssao2;
+extern cvar_t	*r_steepParallax;
+extern cvar_t  *r_trueAnaglyph;
+extern cvar_t  *r_trueAnaglyphSeparation;
+extern cvar_t  *r_trueAnaglyphRed;
+extern cvar_t  *r_trueAnaglyphGreen;
+extern cvar_t  *r_trueAnaglyphBlue;
+
+//
+// UQ1: End Added...
+//
+
+
+
 /*
 Ghoul2 Insert Start
 */
@@ -318,6 +374,7 @@ typedef enum
 	IMGFLAG_CLAMPTOEDGE    = 0x0040,
 	IMGFLAG_SRGB           = 0x0080,
 	IMGFLAG_GENNORMALMAP   = 0x0100,
+	IMGFLAG_MUTABLE        = 0x0200,
 } imgFlags_t;
 
 typedef enum
@@ -351,6 +408,10 @@ typedef struct dlight_s {
 
 	vec3_t	transformed;		// origin in local coordinate system
 	int		additive;			// texture detail is lost tho when the lightmap is dark
+
+#ifdef __DYNAMIC_SHADOWS__
+	qboolean		activeShadows;
+#endif //__DYNAMIC_SHADOWS__
 } dlight_t;
 
 // a trRefEntity_t has all the information passed in by
@@ -680,6 +741,9 @@ typedef enum
 
 typedef struct {
 	qboolean		active;
+	qboolean		isDetail;
+	qboolean		isWater;
+	qboolean		glow;
 	
 	textureBundle_t	bundle[NUM_TEXTURE_BUNDLES];
 
@@ -695,7 +759,6 @@ typedef struct {
 
 	acff_t			adjustColorsForFog;
 
-	qboolean		isDetail;
 	int				lightmapStyle;
 
 	stageType_t     type;
@@ -956,8 +1019,9 @@ enum
 	GENERICDEF_USE_RGBAGEN          = 0x0010,
 	GENERICDEF_USE_LIGHTMAP         = 0x0020,
 	GENERICDEF_USE_SKELETAL_ANIMATION = 0x0040,
-	GENERICDEF_ALL                  = 0x007F,
-	GENERICDEF_COUNT                = 0x0080,
+	GENERICDEF_USE_GLOW_BUFFER      = 0x0080,
+	GENERICDEF_ALL                  = 0x00FF,
+	GENERICDEF_COUNT                = 0x0100,
 };
 
 enum
@@ -988,8 +1052,9 @@ enum
 	LIGHTDEF_USE_SHADOWMAP       = 0x0020,
 	LIGHTDEF_USE_VERTEX_ANIMATION= 0x0040,
 	LIGHTDEF_USE_SKELETAL_ANIMATION = 0x0080,
-	LIGHTDEF_ALL                 = 0x00FF,
-	LIGHTDEF_COUNT               = 0x0100
+	LIGHTDEF_USE_GLOW_BUFFER     = 0x0100,
+	LIGHTDEF_ALL                 = 0x01FF,
+	LIGHTDEF_COUNT               = 0x0200
 };
 
 enum
@@ -1050,6 +1115,7 @@ typedef enum
 	UNIFORM_LIGHTUP,
 	UNIFORM_LIGHTRIGHT,
 	UNIFORM_LIGHTORIGIN,
+	UNIFORM_LIGHTCOLOR,
 	UNIFORM_MODELLIGHTDIR,
 	UNIFORM_LIGHTRADIUS,
 	UNIFORM_AMBIENTLIGHT,
@@ -1090,6 +1156,18 @@ typedef enum
 
 	UNIFORM_BONE_MATRICES,
 
+	// UQ1: Added...
+	UNIFORM_DIMENSIONS,
+	UNIFORM_HEIGHTMAP,
+	UNIFORM_LOCAL0,
+	UNIFORM_LOCAL1,
+	UNIFORM_LOCAL2,
+	UNIFORM_LOCAL3,
+	UNIFORM_TEXTURE0,
+	UNIFORM_TEXTURE1,
+	UNIFORM_TEXTURE2,
+	UNIFORM_TEXTURE3,
+
 	UNIFORM_COUNT
 } uniform_t;
 
@@ -1099,9 +1177,9 @@ typedef struct shaderProgram_s
 {
 	char *name;
 
-	GLhandleARB     program;
-	GLhandleARB     vertexShader;
-	GLhandleARB     fragmentShader;
+	GLuint     program;
+	GLuint     vertexShader;
+	GLuint     fragmentShader;
 	uint32_t        attribs;	// vertex array attributes
 
 	// uniform parameters
@@ -1151,6 +1229,9 @@ typedef struct {
 	int         num_pshadows;
 	struct pshadow_s *pshadows;
 
+#ifdef __DYNAMIC_SHADOWS__
+	float       dlightShadowMvp[MAX_DYNAMIC_SHADOWS][3][16];
+#endif //__DYNAMIC_SHADOWS__
 	float       sunShadowMvp[3][16];
 	float       sunDir[4];
 	float       sunCol[4];
@@ -1843,36 +1924,17 @@ typedef enum {
 // We can't change glConfig_t without breaking DLL/vms compatibility, so
 // store extensions we have here.
 typedef struct {
-	qboolean    drawRangeElements;
-	qboolean    multiDrawArrays;
-	qboolean	occlusionQuery;
-
 	int glslMajorVersion;
 	int glslMinorVersion;
 
 	memInfo_t   memInfo;
 
-	qboolean framebufferObject;
 	int maxRenderbufferSize;
 	int maxColorAttachments;
 
-	qboolean textureNonPowerOfTwo;
-	qboolean textureFloat;
-	qboolean halfFloatPixel;
-	qboolean packedDepthStencil;
 	int textureCompression;
-	
-	qboolean framebufferMultisample;
-	qboolean framebufferBlit;
 
-	qboolean textureSrgb;
-	qboolean framebufferSrgb;
-	qboolean textureSrgbDecode;
-
-	qboolean depthClamp;
-	qboolean seamlessCubeMap;
-
-	GLenum packedNormalDataType;
+	qboolean immutableTextures;
 
 	qboolean floatLightmap;
 } glRefConfig_t;
@@ -1890,6 +1952,7 @@ typedef struct {
 
 	int     c_staticVboDraws;
 	int     c_dynamicVboDraws;
+	int		c_dynamicVboTotalSize;
 
 	int     c_multidraws;
 	int     c_multidrawsMerged;
@@ -1974,6 +2037,8 @@ typedef struct trGlobals_s {
 	
 
 	image_t					*renderImage;
+	image_t					*glowImage;
+	image_t					*glowImageScaled[4];
 	image_t					*sunRaysImage;
 	image_t					*renderDepthImage;
 	image_t					*pshadowMaps[MAX_DRAWN_PSHADOWS];
@@ -1984,6 +2049,11 @@ typedef struct trGlobals_s {
 	image_t					*fixedLevelsImage;
 	image_t					*sunShadowDepthImage[3];
 	image_t                 *screenShadowImage;
+#ifdef __DYNAMIC_SHADOWS__
+	image_t					*dlightShadowDepthImage[MAX_DYNAMIC_SHADOWS][3];
+//	image_t                 *screenDlightShadowImage;
+#endif //__DYNAMIC_SHADOWS__
+
 	image_t                 *screenSsaoImage;
 	image_t					*hdrDepthImage;
 	image_t                 *renderCubeImage;
@@ -1991,6 +2061,7 @@ typedef struct trGlobals_s {
 	image_t					*textureDepthImage;
 
 	FBO_t					*renderFbo;
+	FBO_t					*glowFboScaled[4];
 	FBO_t					*msaaResolveFbo;
 	FBO_t					*sunRaysFbo;
 	FBO_t					*depthFbo;
@@ -2001,6 +2072,10 @@ typedef struct trGlobals_s {
 	FBO_t					*targetLevelsFbo;
 	FBO_t					*sunShadowFbo[3];
 	FBO_t					*screenShadowFbo;
+#ifdef __DYNAMIC_SHADOWS__
+	FBO_t					*dlightShadowFbo[MAX_DYNAMIC_SHADOWS][3];
+//	FBO_t					*screenDlightShadowFbo;
+#endif //__DYNAMIC_SHADOWS__
 	FBO_t					*screenSsaoFbo;
 	FBO_t					*hdrDepthFbo;
 	FBO_t                   *renderCubeFbo;
@@ -2050,7 +2125,46 @@ typedef struct trGlobals_s {
 	shaderProgram_t ssaoShader;
 	shaderProgram_t depthBlurShader[2];
 	shaderProgram_t testcubeShader;
+	shaderProgram_t gaussianBlurShader[2];
+	shaderProgram_t glowCompositeShader;
 
+	//
+	// UQ1: Added shaders...
+	//
+
+	shaderProgram_t darkexpandShader;
+	shaderProgram_t hdrShader;
+	shaderProgram_t dofShader;
+	shaderProgram_t fakedepthShader;
+	shaderProgram_t fakedepthSteepParallaxShader;
+	shaderProgram_t anaglyphShader;
+	//shaderProgram_t uniqueskyShader;
+	shaderProgram_t waterShader;
+	shaderProgram_t ssao2Shader;
+	shaderProgram_t esharpeningShader;
+	shaderProgram_t esharpening2Shader;
+	shaderProgram_t texturecleanShader;
+	shaderProgram_t bloomDarkenShader;
+	shaderProgram_t bloomBlurShader;
+	shaderProgram_t bloomCombineShader;
+	shaderProgram_t lensflareShader;
+	shaderProgram_t multipostShader;
+	shaderProgram_t anamorphicDarkenShader;
+	shaderProgram_t anamorphicBlurShader;
+	shaderProgram_t anamorphicCombineShader;
+	shaderProgram_t volumelightShader;
+
+	image_t        *bloomRenderFBOImage[3];
+	image_t        *anamorphicRenderFBOImage[3];
+	image_t        *genericFBOImage;
+
+	FBO_t          *bloomRenderFBO[3];
+	FBO_t          *anamorphicRenderFBO[3];
+	FBO_t		   *genericFbo;
+
+	//
+	// UQ1: End Added shaders...
+	//
 
 	// -----------------------------------------
 
@@ -2303,6 +2417,60 @@ extern	cvar_t	*r_printShaders;
 
 extern cvar_t	*r_marksOnTriangleMeshes;
 
+extern cvar_t	*r_dynamicGlow;
+extern cvar_t	*r_dynamicGlowPasses;
+extern cvar_t	*r_dynamicGlowDelta;
+extern cvar_t	*r_dynamicGlowIntensity;
+extern cvar_t	*r_dynamicGlowSoft;
+extern cvar_t	*r_dynamicGlowWidth;
+extern cvar_t	*r_dynamicGlowHeight;
+
+
+//
+// UQ1: Added...
+//
+extern cvar_t	*r_steepParallaxEyeX;
+extern cvar_t	*r_steepParallaxEyeY;
+extern cvar_t	*r_steepParallaxEyeZ;
+extern cvar_t	*r_bloom;
+extern cvar_t	*r_bloomPasses;
+extern cvar_t	*r_bloomDarkenPower;
+extern cvar_t	*r_bloomScale;
+extern cvar_t	*r_lensflare;
+extern cvar_t	*r_volumelight;
+extern cvar_t	*r_anamorphic;
+extern cvar_t	*r_anamorphicDarkenPower;
+extern cvar_t	*r_depth;
+extern cvar_t	*r_depthParallax;
+extern cvar_t	*r_depthParallaxScale;
+extern cvar_t	*r_depthParallaxMultiplier;
+extern cvar_t	*r_depthParallaxEyeX;
+extern cvar_t	*r_depthParallaxEyeY;
+extern cvar_t	*r_depthParallaxEyeZ;
+extern cvar_t	*r_depthPasses;
+extern cvar_t	*r_depthScale;
+extern cvar_t	*r_darkexpand;
+extern cvar_t	*r_truehdr;
+extern cvar_t  *r_dof;
+extern cvar_t  *r_esharpening;
+extern cvar_t  *r_esharpening2;
+extern cvar_t  *r_multipost;
+extern cvar_t  *r_textureClean;
+extern cvar_t  *r_textureCleanSigma;
+extern cvar_t  *r_textureCleanBSigma;
+extern cvar_t  *r_textureCleanMSize;
+extern cvar_t  *r_ssao2;
+extern cvar_t	*r_steepParallax;
+extern cvar_t  *r_trueAnaglyph;
+extern cvar_t  *r_trueAnaglyphSeparation;
+extern cvar_t  *r_trueAnaglyphRed;
+extern cvar_t  *r_trueAnaglyphGreen;
+extern cvar_t  *r_trueAnaglyphBlue;
+
+//
+// UQ1: End Added...
+//
+
 //====================================================================
 
 void R_SwapBuffers( int );
@@ -2312,6 +2480,9 @@ void R_RenderDlightCubemaps(const refdef_t *fd);
 void R_RenderPshadowMaps(const refdef_t *fd);
 void R_RenderSunShadowMaps(const refdef_t *fd, int level);
 void R_RenderCubemapSide( int cubemapIndex, int cubemapSide, qboolean subscene );
+#ifdef __DYNAMIC_SHADOWS__
+void R_RenderDlightShadowMaps(const refdef_t *fd, int level);
+#endif //__DYNAMIC_SHADOWS__
 
 void R_AddMD3Surfaces( trRefEntity_t *e );
 void R_AddNullModelSurfaces( trRefEntity_t *e );
@@ -2328,8 +2499,9 @@ void R_AddDrawSurf( surfaceType_t *surface, shader_t *shader,
 				   int fogIndex, int dlightMap, int postRender, int cubemap );
 bool R_IsPostRenderEntity ( int refEntityNum, const trRefEntity_t *refEntity );
 
-void R_CalcTangentSpace(vec3_t tangent, vec3_t bitangent, vec3_t normal,
-                        const vec3_t v0, const vec3_t v1, const vec3_t v2, const vec2_t t0, const vec2_t t1, const vec2_t t2);
+void R_CalcTexDirs(vec3_t sdir, vec3_t tdir, const vec3_t v1, const vec3_t v2,
+					const vec3_t v3, const vec2_t w1, const vec2_t w2, const vec2_t w3);
+void R_CalcTbnFromNormalAndTexDirs(vec3_t tangent, vec3_t bitangent, vec3_t normal, vec3_t sdir, vec3_t tdir);
 qboolean R_CalcTangentVectors(srfVert_t * dv[3]);
 
 #define	CULL_IN		0		// completely unclipped

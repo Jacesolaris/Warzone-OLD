@@ -66,8 +66,9 @@ void R_PerformanceCounters( void ) {
 	}
 	else if (r_speeds->integer == 7 )
 	{
-		ri->Printf( PRINT_ALL, "VBO draws: static %i dynamic %i\nMultidraws: %i merged %i\n",
-			backEnd.pc.c_staticVboDraws, backEnd.pc.c_dynamicVboDraws, backEnd.pc.c_multidraws, backEnd.pc.c_multidrawsMerged );
+		ri->Printf( PRINT_ALL, "VBO draws: static %i dynamic %i (%.2fKB)\nMultidraws: %i merged %i\n",
+			backEnd.pc.c_staticVboDraws, backEnd.pc.c_dynamicVboDraws, backEnd.pc.c_dynamicVboTotalSize / (1024.0f),
+			backEnd.pc.c_multidraws, backEnd.pc.c_multidrawsMerged );
 		ri->Printf( PRINT_ALL, "GLSL binds: %i  draws: gen %i light %i fog %i dlight %i\n",
 			backEnd.pc.c_glslShaderBinds, backEnd.pc.c_genericDraws, backEnd.pc.c_lightallDraws, backEnd.pc.c_fogDraws, backEnd.pc.c_dlightDraws);
 	}
@@ -479,23 +480,20 @@ void RE_BeginFrame( stereoFrame_t stereoFrame ) {
 				backEnd.colorMask[3] = qfalse;
 				qglClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 								
-				if (glRefConfig.framebufferObject)
+				// clear all framebuffers
+				if (tr.msaaResolveFbo)
 				{
-					// clear all framebuffers
-					if (tr.msaaResolveFbo)
-					{
-						FBO_Bind(tr.msaaResolveFbo);
-						qglClear(GL_COLOR_BUFFER_BIT);
-					}
-
-					if (tr.renderFbo)
-					{
-						FBO_Bind(tr.renderFbo);
-						qglClear(GL_COLOR_BUFFER_BIT);
-					}
-
-					FBO_Bind(NULL);
+					FBO_Bind(tr.msaaResolveFbo);
+					qglClear(GL_COLOR_BUFFER_BIT);
 				}
+
+				if (tr.renderFbo)
+				{
+					FBO_Bind(tr.renderFbo);
+					qglClear(GL_COLOR_BUFFER_BIT);
+				}
+
+				FBO_Bind(NULL);
 
 				qglDrawBuffer(GL_FRONT);
 				qglClear(GL_COLOR_BUFFER_BIT);

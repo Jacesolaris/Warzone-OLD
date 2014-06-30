@@ -94,7 +94,6 @@ cvar_t	*r_ext_preferred_tc_method;
 
 cvar_t  *r_ext_draw_range_elements;
 cvar_t  *r_ext_multi_draw_arrays;
-cvar_t  *r_ext_framebuffer_object;
 cvar_t  *r_ext_texture_float;
 cvar_t  *r_arb_half_float_pixel;
 cvar_t  *r_ext_framebuffer_multisample;
@@ -138,7 +137,6 @@ cvar_t  *r_baseNormalY;
 cvar_t  *r_baseParallax;
 cvar_t  *r_baseSpecular;
 cvar_t  *r_baseGloss;
-cvar_t  *r_recalcMD3Normals;
 cvar_t  *r_mergeLightmaps;
 cvar_t  *r_dlightMode;
 cvar_t  *r_pshadowDist;
@@ -223,9 +221,53 @@ cvar_t	*r_debugSort;
 cvar_t	*r_printShaders;
 cvar_t	*r_saveFontData;
 
-/*
-Ghoul2 Insert Start
-*/
+
+//
+// UQ1: Added...
+//
+cvar_t	*r_steepParallaxEyeX;
+cvar_t	*r_steepParallaxEyeY;
+cvar_t	*r_steepParallaxEyeZ;
+cvar_t	*r_bloom;
+cvar_t	*r_bloomPasses;
+cvar_t	*r_bloomDarkenPower;
+cvar_t	*r_bloomScale;
+cvar_t	*r_lensflare;
+cvar_t	*r_volumelight;
+cvar_t	*r_anamorphic;
+cvar_t	*r_anamorphicDarkenPower;
+cvar_t	*r_depth;
+cvar_t	*r_depthParallax;
+cvar_t	*r_depthParallaxScale;
+cvar_t	*r_depthParallaxMultiplier;
+cvar_t	*r_depthParallaxEyeX;
+cvar_t	*r_depthParallaxEyeY;
+cvar_t	*r_depthParallaxEyeZ;
+cvar_t	*r_depthPasses;
+cvar_t	*r_depthScale;
+cvar_t	*r_darkexpand;
+cvar_t  *r_truehdr;
+cvar_t  *r_dof;
+cvar_t  *r_esharpening;
+cvar_t  *r_esharpening2;
+cvar_t  *r_multipost;
+cvar_t  *r_textureClean;
+cvar_t  *r_textureCleanSigma;
+cvar_t  *r_textureCleanBSigma;
+cvar_t  *r_textureCleanMSize;
+cvar_t  *r_ssao2;
+cvar_t	*r_steepParallax;
+cvar_t  *r_trueAnaglyph;
+cvar_t  *r_trueAnaglyphSeparation;
+cvar_t  *r_trueAnaglyphRed;
+cvar_t  *r_trueAnaglyphGreen;
+cvar_t  *r_trueAnaglyphBlue;
+
+//
+// UQ1: End Added...
+//
+
+
 #ifdef _DEBUG
 cvar_t	*r_noPrecacheGLA;
 #endif
@@ -253,10 +295,6 @@ cvar_t	*broadsword_effcorr=0;
 cvar_t	*broadsword_ragtobase=0;
 cvar_t	*broadsword_dircap=0;
 
-/*
-Ghoul2 Insert End
-*/
-
 cvar_t	*r_marksOnTriangleMeshes;
 
 cvar_t	*r_aviMotionJpegQuality;
@@ -267,6 +305,13 @@ int		max_polys;
 cvar_t	*r_maxpolyverts;
 int		max_polyverts;
 
+cvar_t	*r_dynamicGlow;
+cvar_t	*r_dynamicGlowPasses;
+cvar_t	*r_dynamicGlowDelta;
+cvar_t	*r_dynamicGlowIntensity;
+cvar_t	*r_dynamicGlowSoft;
+cvar_t	*r_dynamicGlowWidth;
+cvar_t	*r_dynamicGlowHeight;
 
 extern void	RB_SetGL2D (void);
 void R_Splash()
@@ -1011,10 +1056,10 @@ void GL_SetDefaultState( void )
 	glState.vertexAttribsState = 0;
 	glState.vertexAttribPointersSet = 0;
 	glState.currentProgram = 0;
-	qglUseProgramObjectARB(0);
+	qglUseProgram(0);
 
-	qglBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
-	qglBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, 0);
+	qglBindBuffer(GL_ARRAY_BUFFER, 0);
+	qglBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 	glState.currentVBO = NULL;
 	glState.currentIBO = NULL;
 
@@ -1025,8 +1070,7 @@ void GL_SetDefaultState( void )
 	qglDisable( GL_CULL_FACE );
 	qglDisable( GL_BLEND );
 
-	if (glRefConfig.seamlessCubeMap)
-		qglEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
+	qglEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
 }
 
 /*
@@ -1056,7 +1100,7 @@ void R_PrintLongString(const char *string) {
 GfxInfo_f
 ================
 */
-void GfxInfo_f( void ) 
+static void GfxInfo_f( void ) 
 {
 	const char *enablestrings[] =
 	{
@@ -1113,6 +1157,8 @@ void GfxInfo_f( void )
 	if ( r_finish->integer ) {
 		ri->Printf( PRINT_ALL, "Forcing glFinish\n" );
 	}
+
+	ri->Printf( PRINT_ALL, "Dynamic Glow: %s\n", enablestrings[r_dynamicGlow->integer != 0] );
 }
 
 /*
@@ -1192,13 +1238,20 @@ void R_Register( void )
 
 	r_ext_draw_range_elements = ri->Cvar_Get( "r_ext_draw_range_elements", "1", CVAR_ARCHIVE | CVAR_LATCH);
 	r_ext_multi_draw_arrays = ri->Cvar_Get( "r_ext_multi_draw_arrays", "1", CVAR_ARCHIVE | CVAR_LATCH);
-	r_ext_framebuffer_object = ri->Cvar_Get( "r_ext_framebuffer_object", "1", CVAR_ARCHIVE | CVAR_LATCH);
 	r_ext_texture_float = ri->Cvar_Get( "r_ext_texture_float", "1", CVAR_ARCHIVE | CVAR_LATCH);
 	r_arb_half_float_pixel = ri->Cvar_Get( "r_arb_half_float_pixel", "1", CVAR_ARCHIVE | CVAR_LATCH);
 	r_ext_framebuffer_multisample = ri->Cvar_Get( "r_ext_framebuffer_multisample", "0", CVAR_ARCHIVE | CVAR_LATCH);
 	r_arb_seamless_cube_map = ri->Cvar_Get( "r_arb_seamless_cube_map", "0", CVAR_ARCHIVE | CVAR_LATCH);
 	r_arb_vertex_type_2_10_10_10_rev = ri->Cvar_Get( "r_arb_vertex_type_2_10_10_10_rev", "1", CVAR_ARCHIVE | CVAR_LATCH);
 	r_ext_texture_filter_anisotropic = ri->Cvar_Get( "r_ext_texture_filter_anisotropic", "16", CVAR_ARCHIVE );
+
+	r_dynamicGlow						= ri->Cvar_Get( "r_dynamicGlow",			"1",		CVAR_ARCHIVE );
+	r_dynamicGlowPasses					= ri->Cvar_Get( "r_dynamicGlowPasses",		"5",		CVAR_ARCHIVE );
+	r_dynamicGlowDelta					= ri->Cvar_Get( "r_dynamicGlowDelta",		"1.2",		CVAR_ARCHIVE );
+	r_dynamicGlowIntensity				= ri->Cvar_Get( "r_dynamicGlowIntensity",	"3.0",	CVAR_ARCHIVE );
+	r_dynamicGlowSoft					= ri->Cvar_Get( "r_dynamicGlowSoft",		"1",		CVAR_ARCHIVE );
+	r_dynamicGlowWidth					= ri->Cvar_Get( "r_dynamicGlowWidth",		"320",		CVAR_ARCHIVE|CVAR_LATCH );
+	r_dynamicGlowHeight					= ri->Cvar_Get( "r_dynamicGlowHeight",		"240",		CVAR_ARCHIVE|CVAR_LATCH );
 
 	r_picmip = ri->Cvar_Get ("r_picmip", "0", CVAR_ARCHIVE | CVAR_LATCH );
 	ri->Cvar_CheckRange( r_picmip, 0, 16, qtrue );
@@ -1229,7 +1282,7 @@ void R_Register( void )
 	r_greyscale = ri->Cvar_Get("r_greyscale", "0", CVAR_ARCHIVE | CVAR_LATCH);
 	ri->Cvar_CheckRange(r_greyscale, 0, 1, qfalse);
 
-	r_hdr = ri->Cvar_Get( "r_hdr", "1", CVAR_ARCHIVE | CVAR_LATCH );
+	r_hdr = ri->Cvar_Get( "r_hdr", "0", CVAR_ARCHIVE | CVAR_LATCH );
 	r_floatLightmap = ri->Cvar_Get( "r_floatLightmap", "0", CVAR_ARCHIVE | CVAR_LATCH );
 	r_postProcess = ri->Cvar_Get( "r_postProcess", "1", CVAR_ARCHIVE );
 
@@ -1260,19 +1313,18 @@ void R_Register( void )
    	r_specularIsMetallic = ri->Cvar_Get( "r_specularIsMetallic", "0", CVAR_ARCHIVE | CVAR_LATCH ); 
 	r_baseNormalX = ri->Cvar_Get( "r_baseNormalX", "1.0", CVAR_ARCHIVE | CVAR_LATCH );
 	r_baseNormalY = ri->Cvar_Get( "r_baseNormalY", "1.0", CVAR_ARCHIVE | CVAR_LATCH );
-	r_baseParallax = ri->Cvar_Get( "r_baseParallax", "0.05", CVAR_ARCHIVE | CVAR_LATCH );
+	r_baseParallax = ri->Cvar_Get( "r_baseParallax", "0.001", CVAR_ARCHIVE | CVAR_LATCH );
    	r_baseSpecular = ri->Cvar_Get( "r_baseSpecular", "0.04", CVAR_ARCHIVE | CVAR_LATCH ); 
    	r_baseGloss = ri->Cvar_Get( "r_baseGloss", "0.1", CVAR_ARCHIVE | CVAR_LATCH );
 	r_dlightMode = ri->Cvar_Get( "r_dlightMode", "1", CVAR_ARCHIVE | CVAR_LATCH );
 	r_pshadowDist = ri->Cvar_Get( "r_pshadowDist", "128", CVAR_ARCHIVE );
-	r_recalcMD3Normals = ri->Cvar_Get( "r_recalcMD3Normals", "0", CVAR_ARCHIVE | CVAR_LATCH );
 	r_mergeLightmaps = ri->Cvar_Get( "r_mergeLightmaps", "0", CVAR_ARCHIVE | CVAR_LATCH );
 	r_imageUpsample = ri->Cvar_Get( "r_imageUpsample", "0", CVAR_ARCHIVE | CVAR_LATCH );
 	r_imageUpsampleMaxSize = ri->Cvar_Get( "r_imageUpsampleMaxSize", "1024", CVAR_ARCHIVE | CVAR_LATCH );
 	r_imageUpsampleType = ri->Cvar_Get( "r_imageUpsampleType", "1", CVAR_ARCHIVE | CVAR_LATCH );
 	r_genNormalMaps = ri->Cvar_Get( "r_genNormalMaps", "0", CVAR_ARCHIVE | CVAR_LATCH );
 
-	r_forceSun = ri->Cvar_Get( "r_forceSun", "0", CVAR_CHEAT );
+	r_forceSun = ri->Cvar_Get( "r_forceSun", "1", CVAR_ARCHIVE | CVAR_LATCH );
 	r_forceSunMapLightScale = ri->Cvar_Get( "r_forceSunMapLightScale", "1.0", CVAR_CHEAT );
 	r_forceSunLightScale = ri->Cvar_Get( "r_forceSunLightScale", "1.0", CVAR_CHEAT );
 	r_forceSunAmbientScale = ri->Cvar_Get( "r_forceSunAmbientScale", "0.5", CVAR_CHEAT );
@@ -1286,6 +1338,50 @@ void R_Register( void )
 	r_shadowCascadeZFar = ri->Cvar_Get( "r_shadowCascadeZFar", "3072", CVAR_ARCHIVE | CVAR_LATCH );
 	r_shadowCascadeZBias = ri->Cvar_Get( "r_shadowCascadeZBias", "-320", CVAR_ARCHIVE | CVAR_LATCH );
 	r_ignoreDstAlpha = ri->Cvar_Get( "r_ignoreDstAlpha", "1", CVAR_ARCHIVE | CVAR_LATCH );
+
+	//
+	// UQ1: Added...
+	//
+	r_steepParallaxEyeX = ri->Cvar_Get( "r_steepParallaxEyeX", "0.0000", CVAR_ARCHIVE );
+	r_steepParallaxEyeY = ri->Cvar_Get( "r_steepParallaxEyeY", "0.0002", CVAR_ARCHIVE );
+	r_steepParallaxEyeZ = ri->Cvar_Get( "r_steepParallaxEyeZ", "0.0004", CVAR_ARCHIVE );
+	r_bloom = ri->Cvar_Get( "r_bloom", "0", CVAR_ARCHIVE );
+	r_bloomPasses = ri->Cvar_Get( "r_bloomPasses", "4", CVAR_ARCHIVE );
+	r_bloomDarkenPower = ri->Cvar_Get( "r_bloomDarkenPower", "5.0", CVAR_ARCHIVE );
+	r_bloomScale = ri->Cvar_Get( "r_bloomScale", "1.0", CVAR_ARCHIVE );
+	r_lensflare = ri->Cvar_Get( "r_lensflare", "1", CVAR_ARCHIVE );
+	r_volumelight = ri->Cvar_Get( "r_volumelight", "0", CVAR_ARCHIVE );
+	r_anamorphic = ri->Cvar_Get( "r_anamorphic", "1", CVAR_ARCHIVE );
+	r_anamorphicDarkenPower = ri->Cvar_Get( "r_anamorphicDarkenPower", "256.0", CVAR_ARCHIVE );
+	r_depth = ri->Cvar_Get( "r_depth", "0", CVAR_ARCHIVE );
+	r_depthParallax = ri->Cvar_Get( "r_depthParallax", "0", CVAR_ARCHIVE );
+	r_depthParallaxScale = ri->Cvar_Get( "r_depthParallaxScale", "2.0", CVAR_ARCHIVE );
+	r_depthParallaxMultiplier = ri->Cvar_Get( "r_depthParallaxMultiplier", "5.0", CVAR_ARCHIVE );
+	r_depthParallaxEyeX = ri->Cvar_Get( "r_depthParallaxEyeX", "0.0001", CVAR_ARCHIVE );
+	r_depthParallaxEyeY = ri->Cvar_Get( "r_depthParallaxEyeY", "0.0001", CVAR_ARCHIVE );
+	r_depthParallaxEyeZ = ri->Cvar_Get( "r_depthParallaxEyeZ", "0.0001", CVAR_ARCHIVE );
+	r_depthPasses = ri->Cvar_Get( "r_depthPasses", "2", CVAR_ARCHIVE );
+	r_depthScale = ri->Cvar_Get( "r_depthScale", "4.0", CVAR_ARCHIVE );
+	r_darkexpand = ri->Cvar_Get( "r_darkexpand", "1", CVAR_ARCHIVE );
+	r_truehdr = ri->Cvar_Get( "r_truehdr", "1", CVAR_ARCHIVE );
+	r_dof = ri->Cvar_Get( "r_dof", "0", CVAR_ARCHIVE );
+	r_esharpening = ri->Cvar_Get( "r_esharpening", "1", CVAR_ARCHIVE );
+	r_esharpening2 = ri->Cvar_Get( "r_esharpening2", "1", CVAR_ARCHIVE );
+	r_multipost = ri->Cvar_Get( "r_multipost", "0", CVAR_ARCHIVE );
+	r_textureClean = ri->Cvar_Get( "r_textureClean", "0", CVAR_ARCHIVE );
+	r_textureCleanSigma = ri->Cvar_Get( "r_textureCleanSigma", "1.2", CVAR_ARCHIVE );
+	r_textureCleanBSigma = ri->Cvar_Get( "r_textureCleanBSigma", "0.1", CVAR_ARCHIVE );
+	r_textureCleanMSize = ri->Cvar_Get( "r_textureCleanMSize", "6.0", CVAR_ARCHIVE );
+	r_ssao2 = ri->Cvar_Get( "r_ssao2", "0", CVAR_ARCHIVE );
+	r_trueAnaglyph = ri->Cvar_Get( "r_trueAnaglyph", "0", CVAR_ARCHIVE );
+	r_trueAnaglyphSeparation = ri->Cvar_Get( "r_trueAnaglyphSeparation", "8.0", CVAR_ARCHIVE );
+	r_trueAnaglyphRed = ri->Cvar_Get( "r_trueAnaglyphRed", "0.0", CVAR_ARCHIVE );
+	r_trueAnaglyphGreen = ri->Cvar_Get( "r_trueAnaglyphGreen", "0.0", CVAR_ARCHIVE );
+	r_trueAnaglyphBlue = ri->Cvar_Get( "r_trueAnaglyphBlue", "0.0", CVAR_ARCHIVE );
+
+	//
+	// UQ1: End Added...
+	//
 
 	//
 	// temporary latched variables that can only change over a restart
@@ -1426,20 +1522,14 @@ Ghoul2 Insert End
 
 void R_InitQueries(void)
 {
-	if (!glRefConfig.occlusionQuery)
-		return;
-
 	if (r_drawSunRays->integer)
-		qglGenQueriesARB(ARRAY_LEN(tr.sunFlareQuery), tr.sunFlareQuery);
+		qglGenQueries(ARRAY_LEN(tr.sunFlareQuery), tr.sunFlareQuery);
 }
 
 void R_ShutDownQueries(void)
 {
-	if (!glRefConfig.occlusionQuery)
-		return;
-
 	if (r_drawSunRays->integer)
-		qglDeleteQueriesARB(ARRAY_LEN(tr.sunFlareQuery), tr.sunFlareQuery);
+		qglDeleteQueries(ARRAY_LEN(tr.sunFlareQuery), tr.sunFlareQuery);
 }
 
 void RE_SetLightStyle (int style, int color);
@@ -1523,8 +1613,7 @@ void R_Init( void ) {
 
 	R_InitImages();
 
-	if (glRefConfig.framebufferObject)
-		FBO_Init();
+	FBO_Init();
 
 	int shadersStartTime = GLSL_BeginLoadGPUShaders();
 
@@ -1582,8 +1671,7 @@ void RE_Shutdown( qboolean destroyWindow, qboolean restarting ) {
 	if ( tr.registered ) {
 		R_IssuePendingRenderCommands();
 		R_ShutDownQueries();
-		if (glRefConfig.framebufferObject)
-			FBO_Shutdown();
+		FBO_Shutdown();
 		R_DeleteTextures();
 		R_ShutdownVBOs();
 		GLSL_ShutdownGPUShaders();

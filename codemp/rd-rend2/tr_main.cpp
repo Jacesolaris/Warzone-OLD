@@ -296,13 +296,11 @@ void R_CalcTangentSpaceFast(vec3_t tangent, vec3_t bitangent, vec3_t normal,
 /*
 http://www.terathon.com/code/tangent.html
 */
-void R_CalcTBN(vec3_t tangent, vec3_t bitangent, vec3_t normal,
-						const vec3_t v1, const vec3_t v2, const vec3_t v3, const vec2_t w1, const vec2_t w2, const vec2_t w3)
+void R_CalcTexDirs(vec3_t sdir, vec3_t tdir, const vec3_t v1, const vec3_t v2,
+				   const vec3_t v3, const vec2_t w1, const vec2_t w2, const vec2_t w3)
 {
-	vec3_t          u, v;
 	float			x1, x2, y1, y2, z1, z2;
-	float			s1, s2, t1, t2;
-	float			r, dot;
+	float			s1, s2, t1, t2, r;
 
 	x1 = v2[0] - v1[0];
 	x2 = v3[0] - v1[0];
@@ -318,127 +316,28 @@ void R_CalcTBN(vec3_t tangent, vec3_t bitangent, vec3_t normal,
 
 	r = 1.0f / (s1 * t2 - s2 * t1);
 
-	VectorSet(tangent, (t2 * x1 - t1 * x2) * r, (t2 * y1 - t1 * y2) * r, (t2 * z1 - t1 * z2) * r);
-	VectorSet(bitangent, (s1 * x2 - s2 * x1) * r, (s1 * y2 - s2 * y1) * r, (s1 * z2 - s2 * z1) * r);
+	VectorSet(sdir, (t2 * x1 - t1 * x2) * r, (t2 * y1 - t1 * y2) * r, (t2 * z1 - t1 * z2) * r);
+	VectorSet(tdir, (s1 * x2 - s2 * x1) * r, (s1 * y2 - s2 * y1) * r, (s1 * z2 - s2 * z1) * r);
+}
 
-	// compute the face normal based on vertex points
-	VectorSubtract(v3, v1, u);
-	VectorSubtract(v2, v1, v);
-	CrossProduct(u, v, normal);
-
-	VectorNormalize(normal);
+void R_CalcTbnFromNormalAndTexDirs(vec3_t tangent, vec3_t bitangent, vec3_t normal, vec3_t sdir, vec3_t tdir)
+{
+	vec3_t n_cross_t;
+	float n_dot_t, handedness;
 
 	// Gram-Schmidt orthogonalize
-	//tangent[a] = (t - n * Dot(n, t)).Normalize();
-	dot = DotProduct(normal, tangent);
-	VectorMA(tangent, -dot, normal, tangent);
+	n_dot_t = DotProduct(normal, sdir);
+	VectorMA(sdir, -n_dot_t, normal, tangent);
 	VectorNormalize(tangent);
 
-	// B=NxT
-	//CrossProduct(normal, tangent, bitangent);
+	// Calculate handedness
+	CrossProduct(normal, sdir, n_cross_t);
+	handedness = (DotProduct(n_cross_t, tdir) < 0.0f) ? -1.0f : 1.0f;
+
+	// Calculate bitangent
+	CrossProduct(normal, tangent, bitangent);
+	VectorScale(bitangent, handedness, bitangent);
 }
-
-void R_CalcTBN2(vec3_t tangent, vec3_t bitangent, vec3_t normal,
-						const vec3_t v1, const vec3_t v2, const vec3_t v3, const vec2_t t1, const vec2_t t2, const vec2_t t3)
-{
-	vec3_t			v2v1;
-	vec3_t			v3v1;
-
-	float			c2c1_T;
-	float			c2c1_B;
-
-	float			c3c1_T;
-	float			c3c1_B;
-
-	float			denominator;
-	float			scale1, scale2;
-
-	vec3_t			T, B, N, C;
-
-
-	// Calculate the tangent basis for each vertex of the triangle
-	// UPDATE: In the 3rd edition of the accompanying article, the for-loop located here has
-	// been removed as it was redundant (the entire TBN matrix was calculated three times
-	// instead of just one).
-	//
-	// Please note, that this function relies on the fact that the input geometry are triangles
-	// and the tangent basis for each vertex thus is identical!
-	//
-
-	// Calculate the vectors from the current vertex to the two other vertices in the triangle
-	VectorSubtract(v2, v1, v2v1);
-	VectorSubtract(v3, v1, v3v1);
-
-	// The equation presented in the article states that:
-	// c2c1_T = V2.texcoord.x - V1.texcoord.x
-	// c2c1_B = V2.texcoord.y - V1.texcoord.y
-	// c3c1_T = V3.texcoord.x - V1.texcoord.x
-	// c3c1_B = V3.texcoord.y - V1.texcoord.y
-
-	// Calculate c2c1_T and c2c1_B
-	c2c1_T = t2[0] - t1[0];
-	c2c1_B = t2[1] - t2[1];
-
-	// Calculate c3c1_T and c3c1_B
-	c3c1_T = t3[0] - t1[0];
-	c3c1_B = t3[1] - t1[1];
-
-	denominator = c2c1_T * c3c1_B - c3c1_T * c2c1_B;
-	//if(ROUNDOFF(fDenominator) == 0.0f)
-	if(denominator == 0.0f)
-	{
-		// We won't risk a divide by zero, so set the tangent matrix to the identity matrix
-		VectorSet(tangent, 1, 0, 0);
-		VectorSet(bitangent, 0, 1, 0);
-		VectorSet(normal, 0, 0, 1);
-	}
-	else
-	{
-		// Calculate the reciprocal value once and for all (to achieve speed)
-		scale1 = 1.0f / denominator;
-
-		// T and B are calculated just as the equation in the article states
-		VectorSet(T, (c3c1_B * v2v1[0] - c2c1_B * v3v1[0]) * scale1,
-					 (c3c1_B * v2v1[1] - c2c1_B * v3v1[1]) * scale1,
-					 (c3c1_B * v2v1[2] - c2c1_B * v3v1[2]) * scale1);
-
-		VectorSet(B, (-c3c1_T * v2v1[0] + c2c1_T * v3v1[0]) * scale1,
-					 (-c3c1_T * v2v1[1] + c2c1_T * v3v1[1]) * scale1,
-					 (-c3c1_T * v2v1[2] + c2c1_T * v3v1[2]) * scale1);
-
-		// The normal N is calculated as the cross product between T and B
-		CrossProduct(T, B, N);
-
-#if 0
-		VectorCopy(T, tangent);
-		VectorCopy(B, bitangent);
-		VectorCopy(N, normal);
-#else
-		// Calculate the reciprocal value once and for all (to achieve speed)
-		scale2 = 1.0f / ((T[0] * B[1] * N[2] - T[2] * B[1] * N[0]) +
-					(B[0] * N[1] * T[2] - B[2] * N[1] * T[0]) +
-					(N[0] * T[1] * B[2] - N[2] * T[1] * B[0]));
-
-		// Calculate the inverse if the TBN matrix using the formula described in the article.
-		// We store the basis vectors directly in the provided TBN matrix: pvTBNMatrix
-		CrossProduct(B, N, C); tangent[0] = C[0] * scale2;
-		CrossProduct(N, T, C); tangent[1] = -C[0] * scale2;
-		CrossProduct(T, B, C); tangent[2] = C[0] * scale2;
-		VectorNormalize(tangent);
-
-		CrossProduct(B, N, C); bitangent[0] = -C[1] * scale2;
-		CrossProduct(N, T, C); bitangent[1] = C[1] * scale2;
-		CrossProduct(T, B, C); bitangent[2] = -C[1] * scale2;
-		VectorNormalize(bitangent);
-
-		CrossProduct(B, N, C); normal[0] = C[2] * scale2;
-		CrossProduct(N, T, C); normal[1] = -C[2] * scale2;
-		CrossProduct(T, B, C); normal[2] = C[2] * scale2;
-		VectorNormalize(normal);
-#endif
-	}
-}
-
 
 #ifdef USE_VERT_TANGENT_SPACE
 qboolean R_CalcTangentVectors(srfVert_t * dv[3])
@@ -2425,16 +2324,8 @@ void R_RenderPshadowMaps(const refdef_t *fd)
 
 		Com_Memset( &shadowParms, 0, sizeof( shadowParms ) );
 
-		if (glRefConfig.framebufferObject)
-		{
-			shadowParms.viewportX = 0;
-			shadowParms.viewportY = 0;
-		}
-		else
-		{
-			shadowParms.viewportX = tr.refdef.x;
-			shadowParms.viewportY = glConfig.vidHeight - ( tr.refdef.y + PSHADOW_MAP_SIZE );
-		}
+		shadowParms.viewportX = 0;
+		shadowParms.viewportY = 0;
 		shadowParms.viewportWidth = PSHADOW_MAP_SIZE;
 		shadowParms.viewportHeight = PSHADOW_MAP_SIZE;
 		shadowParms.isPortal = qfalse;
@@ -2443,8 +2334,7 @@ void R_RenderPshadowMaps(const refdef_t *fd)
 		shadowParms.fovX = 90;
 		shadowParms.fovY = 90;
 
-		if (glRefConfig.framebufferObject)
-			shadowParms.targetFbo = tr.pshadowFbos[i];
+		shadowParms.targetFbo = tr.pshadowFbos[i];
 
 		shadowParms.flags = (viewParmFlags_t)( VPF_SHADOWMAP | VPF_DEPTHSHADOW | VPF_NOVIEWMODEL );
 		shadowParms.zFar = shadow->lightRadius;
@@ -2534,9 +2424,6 @@ void R_RenderPshadowMaps(const refdef_t *fd)
 			}
 
 			R_SortDrawSurfs( tr.refdef.drawSurfs + firstDrawSurf, tr.refdef.numDrawSurfs - firstDrawSurf );
-
-			if (!glRefConfig.framebufferObject)
-				R_AddCapShadowmapCmd( i, -1 );
 		}
 	}
 }
@@ -2546,6 +2433,330 @@ static float CalcSplit(float n, float f, float i, float m)
 	return (n * pow(f / n, i / m) + (f - n) * i / m) / 2.0f;
 }
 
+
+#ifdef __DYNAMIC_SHADOWS__
+void R_RenderDlightShadowMaps(const refdef_t *fd, int level)
+{
+	if ( !backEnd.refdef.num_dlights ) {
+		return;
+	}
+
+	for ( int l = 0 ; l < MAX_DYNAMIC_SHADOWS ; l++ ) {
+		dlight_t	*dl = &backEnd.refdef.dlights[l];
+		dl->activeShadows = qfalse;
+	}
+
+	for ( int l = 0 ; l < backEnd.refdef.num_dlights ; l++ ) {
+		dlight_t	*dl;
+		float radius, scale;
+		vec3_t origin;
+
+
+		if (l >= MAX_DYNAMIC_SHADOWS) break; // max
+
+		dl = &backEnd.refdef.dlights[l];
+		VectorCopy( dl->transformed, origin );
+		radius = dl->radius;
+		scale = 1.0f / radius;
+
+
+		/*
+		if (Distance(fd->vieworg, dl->origin) > radius * 2.0)
+		{
+			dl->activeShadows = qfalse;
+			continue; // too far away?
+		}
+		*/
+
+		dl->activeShadows = qtrue;
+
+		viewParms_t		shadowParms;
+		vec4_t lightDir, lightCol;
+		vec3_t lightViewAxis[3];
+		vec3_t lightOrigin;
+		float splitZNear, splitZFar, splitBias;
+		float viewZNear, viewZFar;
+		vec3_t lightviewBounds[2];
+		qboolean lightViewIndependentOfCameraView = qtrue;
+
+		/*if (r_forceSun->integer == 2)
+		{
+			int scale = 32768;
+			float angle = (fd->time % scale) / (float)scale * M_PI;
+			lightDir[0] = cos(angle);
+			lightDir[1] = sin(35.0f * M_PI / 180.0f);
+			lightDir[2] = sin(angle) * cos(35.0f * M_PI / 180.0f);
+			lightDir[3] = 0.0f;
+
+			if (1) //((fd->time % (scale * 2)) < scale)
+			{
+				lightCol[0] = 
+					lightCol[1] = 
+					lightCol[2] = CLAMP(sin(angle) * 2.0f, 0.0f, 1.0f) * 2.0f;
+				lightCol[3] = 1.0f;
+			}
+			else
+			{
+				lightCol[0] = 
+					lightCol[1] = 
+					lightCol[2] = CLAMP(sin(angle) * 2.0f * 0.1f, 0.0f, 0.1f);
+				lightCol[3] = 1.0f;
+			}
+
+			VectorCopy4(lightDir, tr.refdef.sunDir);
+			VectorCopy4(lightCol, tr.refdef.sunCol);
+			VectorScale4(lightCol, 0.2f, tr.refdef.sunAmbCol);
+		}
+		else*/
+		{
+			//VectorCopy4(tr.refdef.sunDir, lightDir);
+			/*vec3_t dir, org;
+			//VectorSet(org, 65000.0, 65000.0, -65000.0);
+			
+			VectorSet(org, dl->origin[0]+1.0, dl->origin[1]+1.0, dl->origin[2]-1.0); // UQ1: I have no idea of the point we need a dir for...
+			VectorSubtract(dl->origin, org, dir);
+			VectorNormalize( dir );
+			lightDir[0] = dir[0];
+			lightDir[1] = dir[1];
+			lightDir[2] = dir[2];
+			lightDir[3] = 0.0f;*/
+
+			lightDir[0] = lightDir[1] = 0.0f;
+			lightDir[2] = 1.0f;
+			lightDir[3] = 1.0f;
+		}
+
+		viewZNear = r_shadowCascadeZNear->value;
+		viewZFar = r_shadowCascadeZFar->value;
+		splitBias = r_shadowCascadeZBias->value;
+
+		switch(level)
+		{
+		case 0:
+		default:
+			//splitZNear = r_znear->value;
+			//splitZFar  = 256;
+			splitZNear = viewZNear;
+			splitZFar = CalcSplit(viewZNear, viewZFar, 1, 3) + splitBias;
+			break;
+		case 1:
+			splitZNear = CalcSplit(viewZNear, viewZFar, 1, 3) + splitBias;
+			splitZFar = CalcSplit(viewZNear, viewZFar, 2, 3) + splitBias;
+			//splitZNear = 256;
+			//splitZFar  = 896;
+			break;
+		case 2:
+			splitZNear = CalcSplit(viewZNear, viewZFar, 2, 3) + splitBias;
+			splitZFar = viewZFar;
+			//splitZNear = 896;
+			//splitZFar  = 3072;
+			break;
+		}
+
+		//VectorCopy(fd->vieworg, lightOrigin);
+		VectorCopy(dl->origin, lightOrigin);
+		//VectorCopy(origin, lightOrigin);
+
+
+		// Make up a projection
+		VectorScale(lightDir, -1.0f, lightViewAxis[0]);
+
+		if (lightViewIndependentOfCameraView)
+		{
+			// Use world up as light view up
+			VectorSet(lightViewAxis[2], 0, 0, 1);
+		}
+		else if (level == 0)
+		{
+			// Level 0 tries to use a diamond texture orientation relative to camera view
+			// Use halfway between camera view forward and left for light view up
+			VectorAdd(fd->viewaxis[0], fd->viewaxis[1], lightViewAxis[2]);
+		}
+		else
+		{
+			// Use camera view up as light view up
+			VectorCopy(fd->viewaxis[2], lightViewAxis[2]);
+		}
+
+		// Check if too close to parallel to light direction
+		if (abs(DotProduct(lightViewAxis[2], lightViewAxis[0])) > 0.9f)
+		{
+			if (lightViewIndependentOfCameraView)
+			{
+				// Use world left as light view up
+				VectorSet(lightViewAxis[2], 0, 1, 0);
+			}
+			else if (level == 0)
+			{
+				// Level 0 tries to use a diamond texture orientation relative to camera view
+				// Use halfway between camera view forward and up for light view up
+				VectorAdd(fd->viewaxis[0], fd->viewaxis[2], lightViewAxis[2]);
+			}
+			else
+			{
+				// Use camera view left as light view up
+				VectorCopy(fd->viewaxis[1], lightViewAxis[2]);
+			}
+		}
+
+		// clean axes
+		CrossProduct(lightViewAxis[2], lightViewAxis[0], lightViewAxis[1]);
+		VectorNormalize(lightViewAxis[1]);
+		CrossProduct(lightViewAxis[0], lightViewAxis[1], lightViewAxis[2]);
+
+		// Create bounds for light projection using slice of view projection
+		{
+			matrix_t lightViewMatrix;
+			vec4_t point, base, lightViewPoint;
+			float lx, ly;
+
+			base[3] = 1;
+			point[3] = 1;
+			lightViewPoint[3] = 1;
+
+			Matrix16View(lightViewAxis, lightOrigin, lightViewMatrix);
+
+			ClearBounds(lightviewBounds[0], lightviewBounds[1]);
+
+			// add view near plane
+			lx = splitZNear * tan(fd->fov_x * M_PI / 360.0f);
+			ly = splitZNear * tan(fd->fov_y * M_PI / 360.0f);
+			VectorMA(fd->vieworg, splitZNear, fd->viewaxis[0], base);
+
+			VectorMA(base,   lx, fd->viewaxis[1], point);
+			VectorMA(point,  ly, fd->viewaxis[2], point);
+			Matrix16Transform(lightViewMatrix, point, lightViewPoint);
+			AddPointToBounds(lightViewPoint, lightviewBounds[0], lightviewBounds[1]);
+
+			VectorMA(base,  -lx, fd->viewaxis[1], point);
+			VectorMA(point,  ly, fd->viewaxis[2], point);
+			Matrix16Transform(lightViewMatrix, point, lightViewPoint);
+			AddPointToBounds(lightViewPoint, lightviewBounds[0], lightviewBounds[1]);
+
+			VectorMA(base,   lx, fd->viewaxis[1], point);
+			VectorMA(point, -ly, fd->viewaxis[2], point);
+			Matrix16Transform(lightViewMatrix, point, lightViewPoint);
+			AddPointToBounds(lightViewPoint, lightviewBounds[0], lightviewBounds[1]);
+
+			VectorMA(base,  -lx, fd->viewaxis[1], point);
+			VectorMA(point, -ly, fd->viewaxis[2], point);
+			Matrix16Transform(lightViewMatrix, point, lightViewPoint);
+			AddPointToBounds(lightViewPoint, lightviewBounds[0], lightviewBounds[1]);
+
+
+			// add view far plane
+			lx = splitZFar * tan(fd->fov_x * M_PI / 360.0f);
+			ly = splitZFar * tan(fd->fov_y * M_PI / 360.0f);
+			VectorMA(fd->vieworg, splitZFar, fd->viewaxis[0], base);
+
+			VectorMA(base,   lx, fd->viewaxis[1], point);
+			VectorMA(point,  ly, fd->viewaxis[2], point);
+			Matrix16Transform(lightViewMatrix, point, lightViewPoint);
+			AddPointToBounds(lightViewPoint, lightviewBounds[0], lightviewBounds[1]);
+
+			VectorMA(base,  -lx, fd->viewaxis[1], point);
+			VectorMA(point,  ly, fd->viewaxis[2], point);
+			Matrix16Transform(lightViewMatrix, point, lightViewPoint);
+			AddPointToBounds(lightViewPoint, lightviewBounds[0], lightviewBounds[1]);
+
+			VectorMA(base,   lx, fd->viewaxis[1], point);
+			VectorMA(point, -ly, fd->viewaxis[2], point);
+			Matrix16Transform(lightViewMatrix, point, lightViewPoint);
+			AddPointToBounds(lightViewPoint, lightviewBounds[0], lightviewBounds[1]);
+
+			VectorMA(base,  -lx, fd->viewaxis[1], point);
+			VectorMA(point, -ly, fd->viewaxis[2], point);
+			Matrix16Transform(lightViewMatrix, point, lightViewPoint);
+			AddPointToBounds(lightViewPoint, lightviewBounds[0], lightviewBounds[1]);
+
+			// Moving the Light in Texel-Sized Increments
+			// from http://msdn.microsoft.com/en-us/library/windows/desktop/ee416324%28v=vs.85%29.aspx
+			//
+			if (lightViewIndependentOfCameraView)
+			{
+				float cascadeBound, worldUnitsPerTexel, invWorldUnitsPerTexel;
+
+				cascadeBound = MAX(lightviewBounds[1][0] - lightviewBounds[0][0], lightviewBounds[1][1] - lightviewBounds[0][1]);
+				cascadeBound = MAX(cascadeBound, lightviewBounds[1][2] - lightviewBounds[0][2]);
+				worldUnitsPerTexel = cascadeBound / tr.dlightShadowFbo[l][level]->width;
+				invWorldUnitsPerTexel = 1.0f / worldUnitsPerTexel;
+
+				VectorScale(lightviewBounds[0], invWorldUnitsPerTexel, lightviewBounds[0]);
+				lightviewBounds[0][0] = floor(lightviewBounds[0][0]);
+				lightviewBounds[0][1] = floor(lightviewBounds[0][1]);
+				lightviewBounds[0][2] = floor(lightviewBounds[0][2]);
+				VectorScale(lightviewBounds[0], worldUnitsPerTexel, lightviewBounds[0]);
+
+				VectorScale(lightviewBounds[1], invWorldUnitsPerTexel, lightviewBounds[1]);
+				lightviewBounds[1][0] = floor(lightviewBounds[1][0]);
+				lightviewBounds[1][1] = floor(lightviewBounds[1][1]);
+				lightviewBounds[1][2] = floor(lightviewBounds[1][2]);
+				VectorScale(lightviewBounds[1], worldUnitsPerTexel, lightviewBounds[1]);
+			}
+
+			//ri->Printf(PRINT_ALL, "znear %f zfar %f\n", lightviewBounds[0][0], lightviewBounds[1][0]);		
+			//ri->Printf(PRINT_ALL, "fovx %f fovy %f xmin %f xmax %f ymin %f ymax %f\n", fd->fov_x, fd->fov_y, xmin, xmax, ymin, ymax);
+		}
+
+
+		{
+			int firstDrawSurf;
+
+			Com_Memset( &shadowParms, 0, sizeof( shadowParms ) );
+
+			shadowParms.viewportX = 0;
+			shadowParms.viewportY = 0;
+			shadowParms.viewportWidth  = tr.dlightShadowFbo[l][level]->width;
+			shadowParms.viewportHeight = tr.dlightShadowFbo[l][level]->height;
+			shadowParms.isPortal = qfalse;
+			shadowParms.isMirror = qfalse;
+
+			shadowParms.fovX = 90;
+			shadowParms.fovY = 90;
+
+			shadowParms.targetFbo = tr.dlightShadowFbo[l][level];
+
+			shadowParms.flags = (viewParmFlags_t)( VPF_DEPTHSHADOW | VPF_DEPTHCLAMP | VPF_ORTHOGRAPHIC | VPF_NOVIEWMODEL );
+			shadowParms.zFar = lightviewBounds[1][0];
+
+			VectorCopy(lightOrigin, shadowParms.ori.origin);
+
+			VectorCopy(lightViewAxis[0], shadowParms.ori.axis[0]);
+			VectorCopy(lightViewAxis[1], shadowParms.ori.axis[1]);
+			VectorCopy(lightViewAxis[2], shadowParms.ori.axis[2]);
+
+			VectorCopy(lightOrigin, shadowParms.pvsOrigin );
+
+			{
+				tr.viewCount++;
+
+				tr.viewParms = shadowParms;
+				tr.viewParms.frameSceneNum = tr.frameSceneNum;
+				tr.viewParms.frameCount = tr.frameCount;
+
+				firstDrawSurf = tr.refdef.numDrawSurfs;
+
+				tr.viewCount++;
+
+				// set viewParms.world
+				R_RotateForViewer ();
+
+				R_SetupProjectionOrtho(&tr.viewParms, lightviewBounds);
+
+				R_AddWorldSurfaces ();
+
+				R_AddPolygonSurfaces();
+
+				R_AddEntitySurfaces ();
+
+				R_SortDrawSurfs( tr.refdef.drawSurfs + firstDrawSurf, tr.refdef.numDrawSurfs - firstDrawSurf );
+			}
+
+			Matrix16Multiply(tr.viewParms.projectionMatrix, tr.viewParms.world.modelMatrix, tr.refdef.dlightShadowMvp[l][level]);
+		}
+	}
+}
+#endif //__DYNAMIC_SHADOWS__
 
 void R_RenderSunShadowMaps(const refdef_t *fd, int level)
 {
@@ -2732,9 +2943,6 @@ void R_RenderSunShadowMaps(const refdef_t *fd, int level)
 		Matrix16Transform(lightViewMatrix, point, lightViewPoint);
 		AddPointToBounds(lightViewPoint, lightviewBounds[0], lightviewBounds[1]);
 
-		if (!glRefConfig.depthClamp)
-			lightviewBounds[0][0] = lightviewBounds[1][0] - 8192;
-
 		// Moving the Light in Texel-Sized Increments
 		// from http://msdn.microsoft.com/en-us/library/windows/desktop/ee416324%28v=vs.85%29.aspx
 		//
@@ -2770,16 +2978,8 @@ void R_RenderSunShadowMaps(const refdef_t *fd, int level)
 
 		Com_Memset( &shadowParms, 0, sizeof( shadowParms ) );
 
-		if (glRefConfig.framebufferObject)
-		{
-			shadowParms.viewportX = 0;
-			shadowParms.viewportY = 0;
-		}
-		else
-		{
-			shadowParms.viewportX = tr.refdef.x;
-			shadowParms.viewportY = glConfig.vidHeight - ( tr.refdef.y + tr.sunShadowFbo[level]->height );
-		}
+		shadowParms.viewportX = 0;
+		shadowParms.viewportY = 0;
 		shadowParms.viewportWidth  = tr.sunShadowFbo[level]->width;
 		shadowParms.viewportHeight = tr.sunShadowFbo[level]->height;
 		shadowParms.isPortal = qfalse;
@@ -2788,8 +2988,7 @@ void R_RenderSunShadowMaps(const refdef_t *fd, int level)
 		shadowParms.fovX = 90;
 		shadowParms.fovY = 90;
 
-		if (glRefConfig.framebufferObject)
-			shadowParms.targetFbo = tr.sunShadowFbo[level];
+		shadowParms.targetFbo = tr.sunShadowFbo[level];
 
 		shadowParms.flags = (viewParmFlags_t)( VPF_DEPTHSHADOW | VPF_DEPTHCLAMP | VPF_ORTHOGRAPHIC | VPF_NOVIEWMODEL );
 		shadowParms.zFar = lightviewBounds[1][0];
@@ -2899,6 +3098,12 @@ void R_RenderCubemapSide( int cubemapIndex, int cubemapSide, qboolean subscene )
 		// fix involves changing r_FBufScale to fit smaller cubemap image size, or rendering cubemap to framebuffer first
 		if(0) //(glRefConfig.framebufferObject && r_sunlightMode->integer && (r_forceSun->integer || tr.sunShadows))
 		{
+#ifdef __DYNAMIC_SHADOWS__
+			R_RenderDlightShadowMaps(&refdef, 0);
+			R_RenderDlightShadowMaps(&refdef, 1);
+			R_RenderDlightShadowMaps(&refdef, 2);
+#endif //__DYNAMIC_SHADOWS__
+
 			R_RenderSunShadowMaps(&refdef, 0);
 			R_RenderSunShadowMaps(&refdef, 1);
 			R_RenderSunShadowMaps(&refdef, 2);
