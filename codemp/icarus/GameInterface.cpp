@@ -638,15 +638,18 @@ void Q3_TaskIDClear( int *taskID );
 void ICARUS_InitEnt( sharedEntity_t *ent )
 {
 	//Make sure this is a fresh ent
-	assert( iICARUS );
-	assert( gTaskManagers[ent->s.number] == NULL );
-	assert( gSequencers[ent->s.number] == NULL );
+	if (ent->s.NPC_class != CLASS_BOT_FAKE_NPC)
+	{// UQ1: But not for fake NPCs...
+		assert( iICARUS );
+		assert( gTaskManagers[ent->s.number] == NULL );
+		assert( gSequencers[ent->s.number] == NULL );
 
-	if ( gSequencers[ent->s.number] != NULL )
-		return;
+		if ( gSequencers[ent->s.number] != NULL )
+			return;
 
-	if ( gTaskManagers[ent->s.number] != NULL )
-		return;
+		if ( gTaskManagers[ent->s.number] != NULL )
+			return;
+	}
 
 	//Create the sequencer and setup the task manager
 	gSequencers[ent->s.number]		= iICARUS->GetSequencer( ent->s.number );

@@ -4296,7 +4296,7 @@ static qboolean Jedi_AttackDecide( int enemy_dist )
 		return qfalse;
 	}
 
-	if ( NPCS.NPC->client->ps.saberEventFlags&SEF_LOCK_WON )
+	if ( NPCS.NPC->client->ps.saberEventFlags & SEF_LOCK_WON )
 	{//we won a saber lock, press the advantage with an attack!
 		int	chance = 0;
 		if ( NPCS.NPC->client->NPC_class == CLASS_DESANN || NPCS.NPC->client->NPC_class == CLASS_LUKE || !Q_stricmp("Yoda",NPCS.NPC->NPC_type) )
@@ -4327,8 +4327,9 @@ static qboolean Jedi_AttackDecide( int enemy_dist )
 			return qtrue;
 		}
 	}
-
-	if ( NPCS.NPC->client->NPC_class == CLASS_TAVION ||
+	
+	if ( NPCS.NPC->client->NPC_class == CLASS_BOT_FAKE_NPC ||
+		NPCS.NPC->client->NPC_class == CLASS_TAVION ||
 		( NPCS.NPC->client->NPC_class == CLASS_REBORN && NPCS.NPCInfo->rank == RANK_LT_JG ) ||
 		( NPCS.NPC->client->NPC_class == CLASS_JEDI && NPCS.NPCInfo->rank == RANK_COMMANDER ) )
 	{//tavion, fencers, jedi trainer are all good at following up a parry with an attack
@@ -4355,12 +4356,12 @@ static qboolean Jedi_AttackDecide( int enemy_dist )
 		return qfalse;
 	}
 
-	if ( (NPCS.NPCInfo->scriptFlags&SCF_DONT_FIRE) )
+	if ( (NPCS.NPCInfo->scriptFlags & SCF_DONT_FIRE) )
 	{//not allowed to attack
 		return qfalse;
 	}
 
-	if ( !(NPCS.ucmd.buttons&BUTTON_ATTACK) && !(NPCS.ucmd.buttons&BUTTON_ALT_ATTACK) )
+	if ( !(NPCS.ucmd.buttons & BUTTON_ATTACK) && !(NPCS.ucmd.buttons & BUTTON_ALT_ATTACK) )
 	{//not already attacking
 		//Try to attack
 		WeaponThink( qtrue );
@@ -4373,7 +4374,7 @@ static qboolean Jedi_AttackDecide( int enemy_dist )
 	//FIXME: an attack debounce timer other than the phaser debounce time?
 	//		or base it on aggression?
 
-	if ( NPCS.ucmd.buttons&BUTTON_ATTACK )
+	if ( NPCS.ucmd.buttons & BUTTON_ATTACK )
 	{//attacking
 		/*
 		if ( enemy_dist > 32 && NPCInfo->stats.aggression >= 4 )
@@ -5098,6 +5099,8 @@ jump_unsafe:
 	NPCS.ucmd.upmove = 0;
 }
 
+extern void ST_TrackEnemy( gentity_t *self, vec3_t enemyPos );
+
 static void Jedi_Combat( void )
 {
 	vec3_t	enemy_dir, enemy_movedir, enemy_dest;
@@ -5166,7 +5169,7 @@ static void Jedi_Combat( void )
 					NPCS.NPC->client->ps.saberBlocked = BLOCKED_NONE;
 				}
 			}
-			if ( Jedi_Hunt() && !(NPCS.NPCInfo->aiFlags&NPCAI_BLOCKED) )//FIXME: have to do this because they can ping-pong forever
+			if ( Jedi_Hunt() && !(NPCS.NPCInfo->aiFlags & NPCAI_BLOCKED) )//FIXME: have to do this because they can ping-pong forever
 			{//can macro-navigate to him
 				if ( enemy_dist < 384 && !Q_irand( 0, 10 ) && NPCS.NPCInfo->blockedSpeechDebounceTime < level.time && jediSpeechDebounceTime[NPCS.NPC->client->playerTeam] < level.time && !NPC_ClearLOS4( NPCS.NPC->enemy ) )
 				{
@@ -5252,8 +5255,13 @@ static void Jedi_Combat( void )
 		//see if we can attack
 		if ( !Jedi_AttackDecide( enemy_dist ) )
 		{//we're not attacking, decide what else to do
-			Jedi_CombatIdle( enemy_dist );
+
+			//Jedi_CombatIdle( enemy_dist );
 			//FIXME: lower aggression when actually strike offensively?  Or just when do damage?
+
+			// UQ1: Hunt...
+			//ST_TrackEnemy( NPCS.NPC, NPCS.NPC->enemy->r.currentOrigin );
+			Jedi_Hunt();
 		}
 		else
 		{//we are attacking
@@ -5264,6 +5272,7 @@ static void Jedi_Combat( void )
 	else
 	{
 	}
+
 	if ( NPCS.NPC->client->NPC_class == CLASS_BOBAFETT )
 	{
 		Boba_FireDecide();
@@ -5271,8 +5280,10 @@ static void Jedi_Combat( void )
 
 	//Check for certain enemy special moves
 	Jedi_CheckEnemyMovement( enemy_dist );
+
 	//Make sure that we don't jump off ledges over long drops
 	Jedi_CheckJumps();
+
 	//Just make sure we don't strafe into walls or off cliffs
 	if ( !NPC_MoveDirClear( NPCS.ucmd.forwardmove, NPCS.ucmd.rightmove, qtrue ) )
 	{//uh-oh, we are going to fall or hit something
@@ -5672,6 +5683,43 @@ finish:
 	{//just picked one up
 		NPCS.NPCInfo->enemyCheckDebounceTime = level.time + Q_irand( 3000, 10000 );
 	}
+	else
+	{
+		// Find random entity targets...
+		if (!NPCS.NPCInfo->goalEntity)
+		{
+			// Make a list of possibilities...
+			int			NUM_TARGETS = 0;
+			gentity_t	*targets[MAX_GENTITIES];
+			int			i;
+
+			for ( i = 0; i < ENTITYNUM_WORLD; i++ )
+			{
+				gentity_t *target = &g_entities[i];
+
+				if ( target && target != NPCS.NPC && target->inuse )
+				{
+					targets[NUM_TARGETS] = target;
+					NUM_TARGETS++;
+				}
+			}
+
+			// Pick a random target from the list...
+			if (NUM_TARGETS > 0)
+			{
+				NPCS.NPCInfo->goalEntity = targets[irand(0, NUM_TARGETS-1)];
+				NPC_SetMoveGoal( NPCS.NPC, NPCS.NPCInfo->goalEntity->r.currentOrigin, 16, qtrue, -1, NULL );
+				NPCS.NPCInfo->goalTime = level.time + 100000;
+				NPC_MoveToGoal( qtrue );
+			}
+		}
+		else
+		{
+			// Have a goal. Move there...
+			NPCS.ucmd.buttons |= BUTTON_WALKING; // UQ1: Walk???
+			NPC_MoveToGoal( qtrue );
+		}
+	}
 }
 
 qboolean Jedi_CanPullBackSaber( gentity_t *self )
@@ -5997,6 +6045,7 @@ static void Jedi_Attack( void )
 			}
 		}
 	}
+
 	NPC_CheckEnemy( qtrue, qtrue, qtrue );
 
 	if ( !NPCS.NPC->enemy )
@@ -6008,6 +6057,7 @@ static void Jedi_Attack( void )
 			NPC_UpdateAngles( qtrue, qtrue );
 			return;
 		}
+
 		Jedi_Patrol();//was calling Idle... why?
 		return;
 	}
@@ -6017,7 +6067,7 @@ static void Jedi_Attack( void )
 
 	//Track the player and kill them if possible
 	Jedi_Combat();
-
+	
 	if ( !(NPCS.NPCInfo->scriptFlags&SCF_CHASE_ENEMIES)
 		|| ((NPCS.NPC->client->ps.fd.forcePowersActive&(1<<FP_HEAL))&&NPCS.NPC->client->ps.fd.forcePowerLevel[FP_HEAL]<FORCE_LEVEL_2))
 	{//this is really stupid, but okay...
@@ -6291,9 +6341,13 @@ void NPC_BSJedi_Default( void )
 				return;
 			}
 		}
+
 		Jedi_Attack();
+
 		//if we have multiple-jedi combat, probably need to keep checking (at certain debounce intervals) for a better (closer, more active) enemy and switch if needbe...
-		if ( ((!NPCS.ucmd.buttons&&!NPCS.NPC->client->ps.fd.forcePowersActive)||(NPCS.NPC->enemy&&NPCS.NPC->enemy->health<=0)) && NPCS.NPCInfo->enemyCheckDebounceTime < level.time )
+		if ( ((!NPCS.ucmd.buttons && !NPCS.NPC->client->ps.fd.forcePowersActive) 
+			|| (NPCS.NPC->enemy && NPCS.NPC->enemy->health <= 0)) 
+			&& NPCS.NPCInfo->enemyCheckDebounceTime < level.time )
 		{//not doing anything (or walking toward a vanquished enemy - fixme: always taunt the player?), not using force powers and it's time to look again
 			//FIXME: build a list of all local enemies (since we have to find best anyway) for other AI factors- like when to use group attacks, determine when to change tactics, when surrounded, when blocked by another in the enemy group, etc.  Should we build this group list or let the enemies maintain their own list and we just access it?
 			gentity_t *sav_enemy = NPCS.NPC->enemy;//FIXME: what about NPC->lastEnemy?

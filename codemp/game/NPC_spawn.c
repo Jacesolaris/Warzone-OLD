@@ -874,7 +874,7 @@ void NPC_Begin (gentity_t *ent)
 
 	memset( &ucmd, 0, sizeof( ucmd ) );
 
-	if ( !(ent->spawnflags & SFB_NOTSOLID) )
+	if ( !(ent->spawnflags & SFB_NOTSOLID) && !(ent->client->NPC_class == CLASS_BOT_FAKE_NPC) )
 	{//No NPCs should telefrag
 		if (NPC_SpotWouldTelefrag(ent))
 		{
@@ -920,7 +920,6 @@ void NPC_Begin (gentity_t *ent)
 	}
 	else if ( ent->NPC->stats.health )	// Was health supplied in NPC.cfg?
 	{
-
 		if ( ent->client->NPC_class != CLASS_REBORN
 			&& ent->client->NPC_class != CLASS_SHADOWTROOPER
 			//&& ent->client->NPC_class != CLASS_TAVION
@@ -995,6 +994,24 @@ void NPC_Begin (gentity_t *ent)
 			break;
 		}
 	}
+	else if ( ent->client->NPC_class == CLASS_BOT_FAKE_NPC )
+	{
+		switch ( g_npcspskill.integer )
+		{
+		case 0:
+			ent->NPC->stats.yawSpeed *= 1.05f;
+			ent->NPC->stats.aim = 1;
+			break;
+		case 1:
+			ent->NPC->stats.yawSpeed *= 1.25f;
+			ent->NPC->stats.aim = Q_irand( 2, 3 );
+			break;
+		case 2:
+			ent->NPC->stats.yawSpeed *= 1.5f;
+			ent->NPC->stats.aim = Q_irand( 3, 4 );
+			break;
+		}
+	}
 
 
 	ent->s.groundEntityNum = ENTITYNUM_NONE;
@@ -1025,7 +1042,9 @@ void NPC_Begin (gentity_t *ent)
 	*/
 	//rwwFIXMEFIXME: movetype support
 
-	ent->die = player_die;
+	if ( ent->client->NPC_class != CLASS_BOT_FAKE_NPC )
+		ent->die = player_die;
+
 	ent->waterlevel = 0;
 	ent->watertype = 0;
 	ent->client->ps.rocketLockIndex = ENTITYNUM_NONE;
@@ -1110,7 +1129,8 @@ void NPC_Begin (gentity_t *ent)
 	}
 
 	//ICARUS include
-	trap->ICARUS_InitEnt( (sharedEntity_t *)ent );
+	if ( ent->client->NPC_class != CLASS_BOT_FAKE_NPC ) // UQ1: Already set up for clients it seems...
+		trap->ICARUS_InitEnt( (sharedEntity_t *)ent );
 
 //==NPC initialization
 	SetNPCGlobals( ent );
@@ -1123,7 +1143,8 @@ void NPC_Begin (gentity_t *ent)
 
 //==Final NPC initialization
 	ent->pain  = NPC_PainFunc( ent ); //painF_NPC_Pain;
-	ent->touch = NPC_TouchFunc( ent ); //touchF_NPC_Touch;
+	if ( ent->client->NPC_class != CLASS_BOT_FAKE_NPC )
+		ent->touch = NPC_TouchFunc( ent ); //touchF_NPC_Touch;
 //	ent->NPC->side = 1;
 
 	ent->client->ps.ping = ent->NPC->stats.reactions * 50;
@@ -1135,9 +1156,12 @@ void NPC_Begin (gentity_t *ent)
 		ent->client->ps.persistant[PERS_TEAM] = ent->client->playerTeam;
 	}
 
-	ent->use   = NPC_Use;
-	ent->think = NPC_Think;
-	ent->nextthink = level.time + FRAMETIME + Q_irand(0, 100);
+	if ( ent->client->NPC_class != CLASS_BOT_FAKE_NPC )
+	{
+		ent->use   = NPC_Use;
+		ent->think = NPC_Think;
+		ent->nextthink = level.time + FRAMETIME + Q_irand(0, 100);
+	}
 
 	NPC_SetMiscDefaultData( ent );
 	if ( ent->health <= 0 )
@@ -1204,7 +1228,7 @@ void NPC_Begin (gentity_t *ent)
 	}
 	ent->waypoint = ent->NPC->homeWp = WAYPOINT_NONE;
 
-	if ( ent->m_pVehicle )
+	if ( ent->m_pVehicle && ent->client->NPC_class != CLASS_BOT_FAKE_NPC )
 	{//a vehicle
 		//check for droidunit
 		if ( ent->m_pVehicle->m_iDroidUnitTag != -1 )

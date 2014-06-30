@@ -40,7 +40,8 @@ void DOM_InitFakeNPC(gentity_t *bot)
 	//Assign the pointer for bg entity access
 	bot->playerState = &bot->client->ps;
 
-	bot->NPC_type = G_NewString("reborn");
+	//bot->NPC_type = G_NewString("reborn");
+	bot->NPC_type = G_NewString(bot->client->pers.netname);
 
 	//bot->flags |= FL_NO_KNOCKBACK;//don't fall off ledges
 
@@ -50,8 +51,9 @@ void DOM_InitFakeNPC(gentity_t *bot)
 
 	NPC_DefaultScriptFlags(bot);
 
+	bot->client->NPC_class = CLASS_BOT_FAKE_NPC;
 	NPC_Begin(bot);
-	bot->s.eType = ET_PLAYER;
+	bot->s.eType = ET_PLAYER; // Replace ET_NPC
 
 	// UQ1: Mark every NPC's spawn position. For patrolling that spot and stuff...
 	VectorCopy(bot->r.currentOrigin, bot->spawn_pos);
@@ -74,6 +76,46 @@ void DOM_InitFakeNPC(gentity_t *bot)
 	bot->client->playerTeam = NPCTEAM_ENEMY;
 }
 
+extern void BotChangeViewAngles(bot_state_t *bs, float thinktime);
+
+void DOM_FakeNPC_Parse_UCMD (bot_state_t *bs, gentity_t *bot)
+{
+	NPCS.NPC = bot;
+	NPCS.client = NPCS.NPC->client;
+	NPCS.NPCInfo = bot->NPC;
+	NPCS.ucmd = NPCS.NPC->client->pers.cmd;
+
+	// Set angles... Convert to ideal view angles then run the bot code...
+	VectorSet(bs->ideal_viewangles, SHORT2ANGLE(NPCS.ucmd.angles[PITCH] + NPCS.client->ps.delta_angles[PITCH]), SHORT2ANGLE(NPCS.ucmd.angles[YAW] + NPCS.client->ps.delta_angles[YAW]), SHORT2ANGLE(NPCS.ucmd.angles[ROLL] + NPCS.client->ps.delta_angles[ROLL]));
+	trap->EA_View(bs->client, bs->ideal_viewangles);
+
+	if (NPCS.ucmd.upmove > 0)
+		trap->EA_Jump(bs->client);
+
+	if (NPCS.ucmd.upmove < 0)
+		trap->EA_Crouch(bs->client);
+	
+	if (NPCS.ucmd.rightmove > 0)
+		trap->EA_MoveRight(bs->client);
+
+	if (NPCS.ucmd.rightmove < 0)
+		trap->EA_MoveLeft(bs->client);
+
+	if (NPCS.ucmd.forwardmove > 0)
+		trap->EA_MoveForward(bs->client);
+
+	if (NPCS.ucmd.forwardmove < 0)
+		trap->EA_MoveBack(bs->client);
+
+	if (NPCS.ucmd.buttons & BUTTON_ATTACK)
+		trap->EA_Attack(bs->client);
+
+	if (NPCS.ucmd.buttons & BUTTON_ALT_ATTACK)
+		trap->EA_Alt_Attack(bs->client);
+
+	if (NPCS.ucmd.buttons & BUTTON_USE)
+		trap->EA_Use(bs->client);
+}
 
 vec3_t oldMoveDir;
 
@@ -114,8 +156,11 @@ void DOM_StandardBotAI2(bot_state_t *bs, float thinktime)
 	//nextthink is set before this so something in here can override it
 	NPC_ExecuteBState(bot);
 
+	NPC_Think(bot); // test
+
 	NPC_UpdateAngles(qtrue, qtrue);
-	memcpy(&NPCS.ucmd, &NPCS.NPCInfo->last_ucmd, sizeof(usercmd_t));
+	//memcpy(&NPCS.ucmd, &NPCS.NPCInfo->last_ucmd, sizeof(usercmd_t));
+	DOM_FakeNPC_Parse_UCMD(bs, bot);
 	ClientThink(bot->s.number, &NPCS.ucmd);
 
 	trap->ICARUS_MaintainTaskManager(bot->s.number);
@@ -128,7 +173,7 @@ void DOM_StandardBotAI2(bot_state_t *bs, float thinktime)
 		bot->r.maxs[0] = 8;
 		bot->r.mins[1] = -8;
 		bot->r.mins[0] = -8;
-		//trap->LinkEntity(bot);
+		trap->LinkEntity((sharedEntity_t *)bot);
 	}
 	else if (!(bot->client->ps.pm_flags & PMF_DUCKED) && bot->r.maxs[2] < bot->client->ps.standheight)
 	{
@@ -137,7 +182,7 @@ void DOM_StandardBotAI2(bot_state_t *bs, float thinktime)
 		bot->r.maxs[0] = 10;
 		bot->r.mins[1] = -10;
 		bot->r.mins[0] = -10;
-		//trap->LinkEntity(bot);
+		trap->LinkEntity((sharedEntity_t *)bot);
 	}
 
 	//trap->Print(S_COLOR_RED "Bot [%s] is using NPC AI.\n", bot->client->pers.netname);

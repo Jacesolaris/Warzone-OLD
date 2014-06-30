@@ -1947,7 +1947,7 @@ static GLenum RawImage_GetFormat(const byte *data, int numPixels, qboolean light
 
 static int CalcNumMipmapLevels ( int width, int height )
 {
-	return static_cast<int>(ceil (log2 (max (width, height))) + 1);
+	return static_cast<int>(ceil ((double)log2 (max (width, height))) + 1);
 }
 
 static void RawImage_UploadTexture( byte *data, int x, int y, int width, int height, GLenum internalFormat, imgType_t type, int flags, qboolean subtexture )

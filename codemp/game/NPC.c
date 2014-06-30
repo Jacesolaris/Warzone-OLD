@@ -1383,6 +1383,10 @@ void NPC_RunBehavior( int team, int bState )
 		NPC_CheckCharmed();
 		return;
 	}
+	else if ( NPCS.NPC->client->NPC_class == CLASS_BOT_FAKE_NPC )
+	{//jedi - for now... might add subclasses later on...
+		NPC_BehaviorSet_Jedi( bState );
+	}
 //	else if ( NPCS.NPC->client->ps.weapon == WP_SABER )		// this is an _extremely_ shitty comparison.. FIXME: make a CLASS_CULTIST? --eez
 	else if ( NPCS.NPC->client->NPC_class == CLASS_JEDI ||
 		NPCS.NPC->client->NPC_class == CLASS_REBORN ||

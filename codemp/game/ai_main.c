@@ -709,6 +709,7 @@ int BotAI(int client, float thinktime) {
 	bot_state_t *bs;
 	char buf[1024], *args;
 	int j;
+	gentity_t *bot = &g_entities[client];
 #ifdef _DEBUG
 	int start = 0;
 	int end = 0;
@@ -769,8 +770,27 @@ int BotAI(int client, float thinktime) {
 #ifndef __DOMINANCE_AI__
 	StandardBotAI(bs, thinktime);
 #else //__DOMINANCE_AI__
-	DOM_StandardBotAI(bs, thinktime); // UQ1: Uses Dominance AI...
+	//DOM_StandardBotAI(bs, thinktime); // UQ1: Uses Dominance AI...
 	//DOM_StandardBotAI2(bs, thinktime); // UQ1: Uses Dominance NPC AI...
+
+	//NPC_CheckEnemy(qtrue, qfalse, qtrue);
+
+	// UQ1: For now use normal DOM AI until the NPC has an enemy. Then switch to NPC AI for the fight. :)
+	/*if (bot->enemy 
+		&& bot->enemy->client
+		&& bot->enemy->client->ps.stats[STAT_HEALTH] > 0
+		&& bot->enemy->health > 0
+		&& bs->enemySeenTime > level.time
+		&& bot->enemy->client->ps.pm_type != PM_DEAD)
+	{*/
+		DOM_StandardBotAI2(bs, thinktime); // UQ1: Uses Dominance NPC AI...
+		/*trap->Print("Bot %s is attacking with NPC AI.\n", bot->client->pers.netname);
+	}
+	else
+	{
+		DOM_StandardBotAI(bs, thinktime); // UQ1: Uses Dominance AI...
+		trap->Print("Bot %s is using DOM AI.\n", bot->client->pers.netname);
+	}*/
 #endif //__DOMINANCE_AI__
 #ifdef _DEBUG
 	end = trap->Milliseconds();
