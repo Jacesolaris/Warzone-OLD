@@ -6,6 +6,9 @@
 // q_shared.h -- included first by ALL program modules.
 // A user mod should never modify this file
 
+// Disable stupid warnings...
+#pragma warning( disable : 4996 )
+
 #define PRODUCT_NAME			"openjk"
 
 #define CLIENT_WINDOW_TITLE "OpenJK (MP)"
@@ -426,7 +429,8 @@ typedef enum {
 	BLOCKED_UPPER_LEFT_PROJ,
 	BLOCKED_LOWER_RIGHT_PROJ,
 	BLOCKED_LOWER_LEFT_PROJ,
-	BLOCKED_TOP_PROJ
+	BLOCKED_TOP_PROJ,
+	BLOCKED_LIGHTNING,
 } saberBlockedType_t;
 
 
@@ -439,6 +443,13 @@ typedef enum
 	SABER_GREEN,
 	SABER_BLUE,
 	SABER_PURPLE,
+	//[RGBSabers]
+	SABER_WHITE,
+	SABER_BLACK,
+	SABER_RGB,
+	SABER_PIMP,
+	SABER_SCRIPTED,
+	//[/RGBSabers]
 	NUM_SABER_COLORS
 } saber_colors_t;
 
@@ -609,7 +620,11 @@ typedef enum //# material_e
 } material_t;
 
 //rww - bot stuff that needs to be shared
+#ifdef __AUTOWAYPOINT__
+#define MAX_WPARRAY_SIZE 32000
+#else //!__AUTOWAYPOINT__
 #define MAX_WPARRAY_SIZE 4096
+#endif //__AUTOWAYPOINT__
 #define MAX_NEIGHBOR_SIZE 32
 
 #define MAX_NEIGHBOR_LINK_DISTANCE 128
@@ -621,6 +636,7 @@ typedef struct wpneighbor_s
 {
 	int num;
 	int forceJumpTo;
+	int cost;
 } wpneighbor_t;
 
 typedef struct wpobject_s
@@ -1788,6 +1804,12 @@ typedef struct playerState_s {
 	//keeps track of cloak fuel
 	int			cloakFuel;
 
+	//Keeps Trak of Block Point
+	int			blockPoints;
+	float		saberSwingSpeed;
+	signed short	forcePower;
+	short			saberActionFlags;
+
 	//rww - spare values specifically for use by mod authors.
 	//See psf_overrides.txt if you want to increase the send
 	//amount of any of these above 1 bit.
@@ -1841,6 +1863,10 @@ typedef struct siegePers_s
 
 #define BUTTON_FORCE_DRAIN		2048
 
+#define BUTTON_SABERTHROW       4096        //+button12
+#define BUTTON_DODGE            8192        //+button13
+#define BUTTON_BLOCK            16384        //+button14
+
 // Here's an interesting bit.  The bots in TA used buttons to do additional gestures.
 // I ripped them out because I didn't want too many buttons given the fact that I was already adding some for JK2.
 // We can always add some back in if we want though.
@@ -1856,6 +1882,40 @@ typedef struct siegePers_s
 
 #define	MOVE_RUN			120			// if forwardmove or rightmove are >= MOVE_RUN,
 										// then BUTTON_WALKING should be set
+
+//[SaberSys]
+//playerstate userint1
+//Bitmasks for view locking
+#define	LOCK_RIGHT			1
+#define	LOCK_LEFT			2
+#define LOCK_UP				4
+#define LOCK_DOWN			8
+
+//Bitmasks for move locking
+#define LOCK_MOVERIGHT		16
+#define LOCK_MOVELEFT		32
+#define LOCK_MOVEFORWARD	64
+#define LOCK_MOVEBACK		128
+#define LOCK_MOVEUP			256
+#define LOCK_MOVEDOWN		512
+
+//indicates that the current attack/transition is
+//part of a fake.  This makes the attack much stronger
+//forbreaking thru other attacks and blocks.
+#define FLAG_ATTACKFAKE		3
+//flag indicates that the player was parried.  
+//They won't be able to launch into a combo from the bounce.
+#define FLAG_PARRIED		8
+
+//flag indicates that this block is a pre-block and interruptable
+#define FLAG_PREBLOCK		9
+
+//[QuickParry]
+#define FLAG_QUICKPARRY		10
+//[/QuickParry]
+#define FLAG_BLOCKING       11
+//[/SaberSys]
+
 
 typedef enum
 {
@@ -2374,3 +2434,12 @@ enum {
 };
 
 void NET_AddrToString( char *out, size_t size, void *addr );
+
+//[SaberSys]
+typedef enum {
+	SAF_BLOCKING,
+	SAF_KICK,
+	SAF_ENDBLOCK,
+} saberActionFlag_e;
+//[/SaberSys]
+
