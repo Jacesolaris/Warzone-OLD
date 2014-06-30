@@ -1985,26 +1985,35 @@ gentity_t *NPC_CheckEnemy( qboolean findNew, qboolean tooFarOk, qboolean setEnem
 			{//If we're not chasing him, we need to lose him
 				//NOTE: since we no longer have bStates, really, this logic doesn't work, so never give him up
 
-				/*
-				switch( NPCInfo->behaviorState )
+				// UQ1: Uncommented this to test...
+				switch( NPCS.NPCInfo->behaviorState )
 				{
 				case BS_HUNT_AND_KILL:
 					//Okay to lose PVS, we're chasing them
-					break;
-				case BS_RUN_AND_SHOOT:
-				//FIXME: only do this if !(NPCInfo->scriptFlags&SCF_CHASE_ENEMY)
-					//If he's not our goalEntity, we're running somewhere else, so lose him
-					if ( NPC->enemy != NPCInfo->goalEntity )
+					if (NPCS.NPCInfo->enemyLastSeenTime < level.time + 60000) // UQ1: Added...
 					{
-						G_ClearEnemy( NPC );
+						NPCS.NPC->enemy = NPCS.NPCInfo->goalEntity = NULL;
+						G_ClearEnemy( NPCS.NPC );
 					}
 					break;
+				/*case BS_RUN_AND_SHOOT:
+				//FIXME: only do this if !(NPCInfo->scriptFlags&SCF_CHASE_ENEMY)
+					//If he's not our goalEntity, we're running somewhere else, so lose him
+					if ( NPCS.NPC->enemy != NPCS.NPCInfo->goalEntity )
+					{
+						G_ClearEnemy( NPCS.NPC );
+					}
+					break;*/
 				default:
 					//We're not chasing him, so lose him as an enemy
-					G_ClearEnemy( NPC );
+					if (NPCS.NPCInfo->enemyLastSeenTime < level.time + 20000) // UQ1: Added...
+					{
+						NPCS.NPC->enemy = NPCS.NPCInfo->goalEntity = NULL;
+						G_ClearEnemy( NPCS.NPC );
+					}
 					break;
 				}
-				*/
+				
 			}
 		}
 	}

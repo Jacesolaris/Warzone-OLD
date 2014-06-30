@@ -5670,12 +5670,14 @@ static void Jedi_Patrol( void )
 	}
 finish:
 	//If we have somewhere to go, then do that
+	/*
 	if ( UpdateGoal() )
 	{
 		NPCS.ucmd.buttons |= BUTTON_WALKING;
 		//Jedi_Move( NPCInfo->goalEntity );
 		NPC_MoveToGoal( qtrue );
 	}
+	*/
 
 	NPC_UpdateAngles( qtrue, qtrue );
 
@@ -5688,7 +5690,7 @@ finish:
 		// Find random entity targets...
 		if (!NPCS.NPCInfo->goalEntity)
 		{
-			// Make a list of possibilities...
+			// Make a list of possibilities... First try PLAYERS and NPCs...
 			int			NUM_TARGETS = 0;
 			gentity_t	*targets[MAX_GENTITIES];
 			int			i;
@@ -5697,8 +5699,12 @@ finish:
 			{
 				gentity_t *target = &g_entities[i];
 
-				if ( target && target != NPCS.NPC && target->inuse )
+				if ( target && target != NPCS.NPC && target->inuse && (target->s.eType == ET_NPC || target->s.eType == ET_PLAYER) )
 				{
+					if ((target->s.eType == ET_NPC || target->s.eType == ET_PLAYER)
+						&& (target->client->ps.pm_type == PM_SPECTATOR || target->client->sess.sessionTeam == TEAM_SPECTATOR))
+						continue;
+
 					targets[NUM_TARGETS] = target;
 					NUM_TARGETS++;
 				}
@@ -5708,16 +5714,56 @@ finish:
 			if (NUM_TARGETS > 0)
 			{
 				NPCS.NPCInfo->goalEntity = targets[irand(0, NUM_TARGETS-1)];
-				NPC_SetMoveGoal( NPCS.NPC, NPCS.NPCInfo->goalEntity->r.currentOrigin, 16, qtrue, -1, NULL );
+				NPCS.NPC->enemy = NPCS.NPCInfo->goalEntity; // Also set it as an enemy...
+				NPC_SetMoveGoal( NPCS.NPC, NPCS.NPCInfo->goalEntity->r.currentOrigin, 256/*16*/, qtrue, -1, NULL );
 				NPCS.NPCInfo->goalTime = level.time + 100000;
 				NPC_MoveToGoal( qtrue );
+				trap->Print("%s's goal is [%i] %s.\n", NPCS.client->pers.netname, NPCS.NPCInfo->goalEntity->s.number, NPCS.NPCInfo->goalEntity->classname);
+				return;
+			}
+
+			// Make a list of possibilities... Now try any entity...
+			NUM_TARGETS = 0;
+
+			for ( i = 0; i < ENTITYNUM_WORLD; i++ )
+			{
+				gentity_t *target = &g_entities[i];
+
+				if ( target && target != NPCS.NPC && target->inuse )
+				{
+					if ((target->s.eType == ET_NPC || target->s.eType == ET_PLAYER)
+						&& (target->client->ps.pm_type == PM_SPECTATOR || target->client->sess.sessionTeam == TEAM_SPECTATOR))
+						continue;
+
+					targets[NUM_TARGETS] = target;
+					NUM_TARGETS++;
+				}
+			}
+
+			// Pick a random target from the list...
+			if (NUM_TARGETS > 0)
+			{
+				NPCS.NPCInfo->goalEntity = targets[irand(0, NUM_TARGETS-1)];
+				NPC_SetMoveGoal( NPCS.NPC, NPCS.NPCInfo->goalEntity->r.currentOrigin, 256/*16*/, qtrue, -1, NULL );
+				NPCS.NPCInfo->goalTime = level.time + 100000;
+				NPC_MoveToGoal( qtrue );
+				trap->Print("%s's goal is [%i] %s.\n", NPCS.client->pers.netname, NPCS.NPCInfo->goalEntity->s.number, NPCS.NPCInfo->goalEntity->classname);
+				return;
 			}
 		}
 		else
 		{
 			// Have a goal. Move there...
-			NPCS.ucmd.buttons |= BUTTON_WALKING; // UQ1: Walk???
-			NPC_MoveToGoal( qtrue );
+			//NPCS.ucmd.buttons |= BUTTON_WALKING; // UQ1: Walk???
+			//NPC_MoveToGoal( qtrue );
+
+			if ( UpdateGoal() )
+			{
+				//NPCS.ucmd.buttons |= BUTTON_WALKING;
+				//Jedi_Move( NPCInfo->goalEntity );
+				//NPC_MoveToGoal( qtrue );
+				NPC_MoveToGoal( qfalse );
+			}
 		}
 	}
 }

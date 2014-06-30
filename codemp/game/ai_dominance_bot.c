@@ -145,6 +145,7 @@ void DOM_StandardBotAI2(bot_state_t *bs, float thinktime)
 			trap->EA_Attack(bs->client);
 		}
 
+		NPCS.NPC->enemy = NPCS.NPCInfo->goalEntity = NULL; // Clear enemy???
 		return;
 	}
 
