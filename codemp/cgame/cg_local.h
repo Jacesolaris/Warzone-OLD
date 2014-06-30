@@ -2,15 +2,25 @@
 
 // Copyright (C) 1999-2000 Id Software, Inc.
 //
+
+// Disable stupid warnings...
+#pragma warning( disable : 4996 )
+
 #include "qcommon/q_shared.h"
 #include "rd-common/tr_types.h"
 #include "game/bg_public.h"
 #include "cg_public.h"
+//[VisualWeapons]
+#include "cg_holster.h"
+//[/VisualWeapons]
 
 // The entire cgame module is unloaded and reloaded on each level change,
 // so there is NO persistant data between levels on the client side.
 // If you absolutely need something stored, it can either be kept
 // by the server in the server stored userinfos, or stashed in a cvar.
+
+
+
 
 #define	POWERUP_BLINKS		5
 
@@ -185,6 +195,10 @@ typedef struct clientInfo_s {
 	saberInfo_t		saber[MAX_SABERS];
 	void			*ghoul2Weapons[MAX_SABERS];
 
+	//[VisualWeapons]
+	void			*ghoul2HolsterWeapons[MAX_SABERS];  //The ghoul2 instances for our saber holster weapons
+	//[/VisualWeapons]
+
 	char			saberName[64];
 	char			saber2Name[64];
 
@@ -292,6 +306,60 @@ typedef struct clientInfo_s {
 	float		facial_aux;			// time before next aux. If a minus value, we are in aux mode
 
 	int			superSmoothTime; //do crazy amount of smoothing
+	//[RGBSabers]
+	//[2] array cause there are 2 sabers :)
+
+	vec3_t	rgb1;
+	vec3_t	rgb2;
+	vec3_t	PimpColorFrom[2];
+	vec3_t	PimpColorTo[2];
+	int		PimpStartTime[2];
+	int		PimpEndTime[2];
+	vec3_t  ScriptedColors[10][2];
+	int		ScriptedTimes[10][2];
+	int		ScriptedNum[2]; //number of colors
+	int		ScriptedActualNum[2];
+	int		ScriptedStartTime[2];
+	int		ScriptedEndTime[2];
+	//[/RGBSabers]
+
+	//[VisualWeapons]
+	//Holster bolts.
+
+	//Primary Saber
+	qhandle_t	holster_saber;
+	qboolean	saber_holstered;
+
+	//Secondary Saber
+	qhandle_t	holster_saber2;
+	qboolean	saber2_holstered;
+
+	//Staff Saber
+	qhandle_t	holster_staff;
+	qboolean	staff_holstered;
+
+	//Primary Blaster
+	qhandle_t	holster_blaster;
+	int			blaster_holstered;
+
+	//Secondary Blaster
+	qhandle_t	holster_blaster2;
+	int			blaster2_holstered;
+
+	//Golan Holster
+	qhandle_t	holster_golan;
+	qboolean	golan_holstered;
+
+	//Launchers
+	qhandle_t	holster_launcher;
+	int			launcher_holstered;
+
+	//offset bolts
+	qhandle_t	bolt_rfemurYZ;  //right hip used for the holster offsetting method
+	qhandle_t	bolt_lfemurYZ;	//left hip used for the holster offsetting method
+
+	holster_t	holsterData[MAX_HOLSTER];
+	//[/VisualWeapons]
 
 } clientInfo_t;
 
@@ -436,6 +504,10 @@ typedef struct centity_s {
 	qboolean		cloaked;
 
 	int				vChatTime;
+	//[VisualWeapons]
+	//keeps track of everyone's weapon loadout so they are be displayed
+	int				weapons;
+	//[/VisualWeapons]
 } centity_t;
 
 
@@ -1008,6 +1080,12 @@ Ghoul2 Insert End
 	int numSpawnVarChars;
 	char spawnVarChars[MAX_SPAWN_VARS_CHARS];
 
+	//[EXPsys]
+	int					experianceEarned;
+	int					experianceTime;
+	int					maxExperience;
+	//[/EXPsys]
+
 } cg_t;
 
 #define MAX_TICS	14
@@ -1119,6 +1197,69 @@ typedef struct cgMedia_s {
 	qhandle_t	blueSaberCoreShader;
 	qhandle_t	purpleSaberGlowShader;
 	qhandle_t	purpleSaberCoreShader;
+	//[RGBSabers]
+	qhandle_t	rgbSaberGlowShader;
+	qhandle_t	rgbSaberCoreShader;
+	qhandle_t	rgbSaberCore2Shader;
+	qhandle_t	blackSaberGlowShader;
+	qhandle_t	blackSaberTrail;
+	//[/RGBSabers]
+
+	//[SFXSabers]
+	qhandle_t sfxSaberTrailShader;
+	qhandle_t sfxSaberBladeShader;
+	qhandle_t sfxSaberBlade2Shader;
+	qhandle_t sfxSaberEndShader;
+	qhandle_t sfxSaberEnd2Shader;
+	//[/SFXSabers]
+
+	//[Movie Sabers]
+	//Original Trilogy Sabers
+	qhandle_t otSaberCoreShader;
+	qhandle_t redOTGlowShader;
+	qhandle_t orangeOTGlowShader;
+	qhandle_t yellowOTGlowShader;
+	qhandle_t greenOTGlowShader;
+	qhandle_t blueOTGlowShader;
+	qhandle_t purpleOTGlowShader;
+
+	//Episode I Sabers
+	qhandle_t ep1SaberCoreShader;
+	qhandle_t redEp1GlowShader;
+	qhandle_t orangeEp1GlowShader;
+	qhandle_t yellowEp1GlowShader;
+	qhandle_t greenEp1GlowShader;
+	qhandle_t blueEp1GlowShader;
+	qhandle_t purpleEp1GlowShader;
+
+	//Episode II Sabers
+	qhandle_t ep2SaberCoreShader;
+	qhandle_t whiteIgniteFlare;
+	qhandle_t blackIgniteFlare;
+	qhandle_t redEp2GlowShader;
+	qhandle_t orangeEp2GlowShader;
+	qhandle_t yellowEp2GlowShader;
+	qhandle_t greenEp2GlowShader;
+	qhandle_t blueEp2GlowShader;
+	qhandle_t purpleEp2GlowShader;
+
+	//Episode III Sabers
+	qhandle_t ep3SaberCoreShader;
+	qhandle_t whiteIgniteFlare02;
+	qhandle_t blackIgniteFlare02;
+	qhandle_t redIgniteFlare;
+	qhandle_t greenIgniteFlare;
+	qhandle_t purpleIgniteFlare;
+	qhandle_t blueIgniteFlare;
+	qhandle_t orangeIgniteFlare;
+	qhandle_t yellowIgniteFlare;
+	qhandle_t redEp3GlowShader;
+	qhandle_t orangeEp3GlowShader;
+	qhandle_t yellowEp3GlowShader;
+	qhandle_t greenEp3GlowShader;
+	qhandle_t blueEp3GlowShader;
+	qhandle_t purpleEp3GlowShader;
+	//[Movie Sabers]
 	qhandle_t	saberBlurShader;
 	qhandle_t	swordTrailShader;
 
@@ -1435,6 +1576,10 @@ typedef struct cgEffects_s {
 	//FORCE
 	fxHandle_t forceLightning;
 	fxHandle_t forceLightningWide;
+	//fxHandle_t forcelightningAbsorb;	
+	fxHandle_t saber_lightninghit;
+	/*fxHandle_t forcelightningFlare;
+	fxHandle_t forcelightningImpact;*/
 
 	fxHandle_t forceDrain;
 	fxHandle_t forceDrainWide;
@@ -1644,7 +1789,6 @@ void CG_UpdateCvars( void );
 //
 const char *CG_ConfigString( int index );
 const char *CG_Argv( int arg );
-
 void CG_StartMusic( qboolean bForceStart );
 
 void CG_UpdateCvars( void );
@@ -1967,7 +2111,10 @@ void CG_InitSiegeMode(void);
 void CG_SiegeRoundOver(centity_t *ent, int won);
 void CG_SiegeObjectiveCompleted(centity_t *ent, int won, int objectivenum);
 
-
+//[TrueView]
+void CG_TrueViewInit(void);
+void CG_AdjustEyePos(const char *modelName);
+//[/TrueView]
 
 //===============================================
 

@@ -1,8 +1,12 @@
 #pragma once
 
+
 // Copyright (C) 1999-2000 Id Software, Inc.
 //
 // g_local.h -- local definitions for game module
+
+// Disable stupid warnings...
+#pragma warning( disable : 4996 )
 
 #include "qcommon/q_shared.h"
 #include "bg_public.h"
@@ -144,6 +148,53 @@ typedef enum
 	HL_GENERIC6,
 	HL_MAX
 } hitLocation_t;
+
+//[Account System]
+// Account system structure
+#define ACCOUNT_VERSION 6 // Remember to change this each time we add something, any changes really :D
+typedef struct account_t
+{
+	char		username[64];
+	char		password[64]; // This should be hashed, but it's a pain to add quickly so maybe later.
+	int			playerclass;
+	int         playerclasses;
+
+	int			experience;	// Experience, only used for saving! Use ent->client->ps.persistent[PERS_EXPERIENCE] in code!
+	int			permissions; //Just an example variable
+	int			level;
+	// Add any other variables you need here later. Then it will save it automaticly and load them with the system i'll make.
+	// and you can access them with something like this: ent->account.<variable>; ent being the player entity (gentity_t)
+
+}account_t;
+
+qboolean hasAccount(account_t *account);
+qboolean UpdateAccount(account_t *account, gentity_t *ent);
+
+//[Linux]
+#ifndef __linux__
+typedef enum
+#else
+enum
+#endif
+//[/Linux]
+{
+	//EXP_LEVEL_0,
+	EXP_LEVEL_1,
+	EXP_LEVEL_2,
+	EXP_LEVEL_3,
+	EXP_LEVEL_4,
+	EXP_LEVEL_5,
+	EXP_LEVEL_6,
+	EXP_LEVEL_7,
+	EXP_LEVEL_8,
+	EXP_LEVEL_9,
+	EXP_LEVEL_10,
+	NUM_EXP_LEVELS				// You can add more levels here, by adding EXP_LEVEL_6, above the NUM_EXP_LEVELS etc.
+};
+#define EXP_LEVEL_ 0 // Denne må fjernes når du har fikset alt.
+
+extern int experienceLevel[NUM_EXP_LEVELS];
+//[/Account System]
 
 //============================================================================
 extern void *precachedKyle;
@@ -379,9 +430,42 @@ struct gentity_s {
 	float		epGravFactor;
 
 	gitem_t		*item;			// for bonus items
-
+	//[Account System]
+	account_t	account;		// Only have an account if you are a player, is NULL if not a player. Might change this soon.
+	//[/Account System]
 	// OpenJK add
 	int			useDebounceTime;	// for cultist_destroyer
+
+	// For NPC waypoint following..
+	int                     wpCurrent;
+	int                     wpNext;
+	int                     wpLast;
+	int                     wpSeenTime;
+	int                     wpTravelTime;
+	int                     longTermGoal; // For ASTAR pathing NPCs...
+	int                     coverpointGoal; // Coverpoint Waypoint...
+	int                     coverpointOFC; // Coverpoint Out-From-Cover Waypoint...
+	int                     coverpointOFCtime; // Coverpoint Out-From-Cover timer...
+	int                     coverpointHIDEtime; // Coverpoint HIDE timer...
+	int                     pathsize; // For ASTAR pathing NPCs...
+	int                     pathlist[MAX_WPARRAY_SIZE]; // For ASTAR pathing NPCs...
+	float           patrol_range;
+	qboolean        return_home;
+	vec3_t          spawn_pos;
+	vec3_t          move_vector;
+	int                     bot_strafe_left_timer;
+	int                     bot_strafe_right_timer;
+	int                     bot_strafe_crouch_timer;
+	int                     bot_strafe_jump_timer;
+	int                     bot_strafe_target_timer;
+	vec3_t          bot_strafe_target_position;
+	int                     npc_mover_start_pos;
+	int                     npc_dumb_route_time;
+
+	int                     next_weapon_switch;
+	int                     next_rifle_butt_time;
+	int                     next_flamer_time;
+	int                     next_kick_time;
 };
 
 #define DAMAGEREDIRECT_HEAD		1
@@ -483,6 +567,15 @@ typedef struct clientPersistant_s {
 	int			vote, teamvote; // 0 = none, 1 = yes, 2 = no
 
 	char		guid[33];
+	//[ClassSyS]
+	//pclass_t    playerclasses;
+	//pclass_t    nextplayerclasses;
+	//[/ClassSyS]
+	//[ClientPlugInDetect]
+	//this flag shows weither or not this client is running the right version of OJP on the client side.  
+	//This is used to determine if the visual weapon events can be sent or not.
+	qboolean ClientPlugIn;
+	//[/ClientPlugInDetect]
 } clientPersistant_t;
 
 typedef struct renderInfo_s
@@ -559,6 +652,16 @@ typedef struct renderInfo_s
 	int			boltValidityTime;
 } renderInfo_t;
 
+//[SaberSys]
+typedef struct
+{
+	int EntityNum;
+	int Debounce;
+	int SaberNum;
+	int BladeNum;
+}  sabimpact_t;
+//[SaberSys]
+
 // this structure is cleared on each ClientSpawn(),
 // except for 'client->pers' and 'client->sess'
 struct gclient_s {
@@ -598,7 +701,9 @@ struct gclient_s {
 	int			buttons;
 	int			oldbuttons;
 	int			latched_buttons;
-
+	//[SaberSys]
+	int			saberBlockDebounce;
+	//[/SaberSys]
 	vec3_t		oldOrigin;
 
 	// sum up damage over an entire frame, so
@@ -650,7 +755,9 @@ struct gclient_s {
 
 	int			g2LastSurfaceHit; //index of surface hit during the most recent ghoul2 collision performed on this client.
 	int			g2LastSurfaceTime; //time when the surface index was set (to make sure it's up to date)
-
+	//[BUGFIX12]
+	int			g2LastSurfaceModel; //the index of the model on the ghoul2 that was hit during the lastest hit.
+	//[BUGFIX12]
 	int			corrTime;
 
 	vec3_t		lastHeadAngles;
@@ -774,6 +881,21 @@ struct gclient_s {
 		int		drainDebounce;
 		int		lightningDebounce;
 	} force;
+	//[SaberSys]
+	int			saberSaberBlockDebounce;
+	int			saberAttackWound;
+	int			saberIdleWound;
+	unsigned int	saberProjBlockTime;
+	unsigned int	saberBlockTime;
+	float		blockingLightningAccumulation;
+	//the SaberNum of the last enemy blade that you hit.
+	int			lastSaberCollided;
+	//the BladeNum of the last enemy blade that you hit.
+	int			lastBladeCollided;
+
+	sabimpact_t	sabimpact[MAX_SABERS][MAX_BLADES];
+	//[SaberSys]
+	char          botSoundDir[MAX_QPATH];
 };
 
 //Interest points
@@ -1392,7 +1514,9 @@ gentity_t *G_PreDefSound(vec3_t org, int pdSound);
 qboolean HasSetSaberOnly(void);
 void WP_ForcePowerStop( gentity_t *self, forcePowers_t forcePower );
 void WP_SaberPositionUpdate( gentity_t *self, usercmd_t *ucmd );
-int WP_SaberCanBlock(gentity_t *self, vec3_t point, int dflags, int mod, qboolean projectile, int attackStr);
+//[SaberSys] qboolean instead of int
+qboolean WP_SaberCanBlock(gentity_t *self, vec3_t point, int dflags, int mod, qboolean projectile, int attackStr);
+//[/SaberSys] 
 void WP_SaberInitBladeData( gentity_t *ent );
 void WP_InitForcePowers( gentity_t *ent );
 void WP_SpawnInitForcePowers( gentity_t *ent );
@@ -1459,14 +1583,6 @@ int		InFieldOfVision	( vec3_t viewangles, float fov, vec3_t angles);
 void B_InitAlloc(void);
 void B_CleanupAlloc(void);
 
-//bot settings
-typedef struct bot_settings_s
-{
-	char personalityfile[MAX_FILEPATH];
-	float skill;
-	char team[MAX_FILEPATH];
-} bot_settings_t;
-
 int BotAISetup( int restart );
 int BotAIShutdown( int restart );
 int BotAILoadMap( int restart );
@@ -1481,6 +1597,11 @@ extern	level_locals_t	level;
 extern	gentity_t		g_entities[MAX_GENTITIES];
 
 #define	FOFS(x) offsetof(gentity_t, x)
+//[SaberSys]
+typedef enum saberSystems_e {
+SABERSYSTEMBEH,
+} saberSystems_t;
+//[SaberSys]
 
 // userinfo validation bitflags
 // default is all except extended ascii
@@ -1504,3 +1625,20 @@ void G_RegisterCvars( void );
 void G_UpdateCvars( void );
 
 extern gameImport_t *trap;
+
+
+
+/**************************************************
+* jkg_astar.cpp - New A* Routing Implementation.
+**************************************************/
+extern qboolean PATHING_IGNORE_FRAME_TIME;
+
+int ASTAR_FindPath(int from, int to, int *pathlist);
+int ASTAR_FindPathWithTimeLimit(int from, int to, int *pathlist);
+int ASTAR_FindPathFast(int from, int to, int *pathlist, qboolean shorten);
+
+void NPC_ClearLookTarget(gentity_t *self);
+void BG_VehicleLoadParms(void);
+
+// Refactored included functions
+void SetTeamQuick(gentity_t *ent, int team, qboolean doBegin);

@@ -11,6 +11,10 @@ if(WIN32)
 endif(WIN32)
 set(MPGameDefines ${MPSharedDefines} "_GAME" )
 set(MPGameGameFiles
+	"${MPDir}/game/ai_dominance.c"
+	"${MPDir}/game/ai_dominance_astar.c"
+	"${MPDir}/game/ai_dominance_bot.c"
+	"${MPDir}/game/ai_dominance_evasion.c"
 	"${MPDir}/game/ai_main.c"
 	"${MPDir}/game/ai_util.c"
 	"${MPDir}/game/ai_wpnav.c"
@@ -191,7 +195,12 @@ endif(NOT WIN32)
 if(WIN32)
 	install(TARGETS ${MPGame} RUNTIME DESTINATION "OpenJK")
 else(WIN32)
-	install(TARGETS ${MPGame} LIBRARY DESTINATION "OpenJK")
+	if(MakeApplicationBundles AND BuildMPEngine)
+		install(TARGETS ${MPGame} LIBRARY DESTINATION "${MPEngine}.app/Contents/MacOS/OpenJK")
+		install(TARGETS ${MPGame} LIBRARY DESTINATION "${MPEngine}.app/Contents/MacOS/base")
+	else(MakeApplicationBundles AND BuildMPEngine)
+		install(TARGETS ${MPGame} LIBRARY DESTINATION "OpenJK")
+	endif(MakeApplicationBundles AND BuildMPEngine)
 endif(WIN32)
 set_target_properties(${MPGame} PROPERTIES COMPILE_DEFINITIONS_RELWITHDEBINFO "${MPGameDefines};${ReleaseDefines}")
 set_target_properties(${MPGame} PROPERTIES COMPILE_DEFINITIONS_MINSIZEREL "${MPGameDefines};${ReleaseDefines}")

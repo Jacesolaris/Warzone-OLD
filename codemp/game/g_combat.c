@@ -4,6 +4,8 @@
 
 #include "b_local.h"
 #include "bg_saga.h"
+//#include "bg_class.h"
+
 
 extern int G_ShipSurfaceForSurfName( const char *surfaceName );
 extern qboolean G_FlyVehicleDestroySurface( gentity_t *veh, int surface );
@@ -11,6 +13,12 @@ extern void G_VehicleSetDamageLocFlags( gentity_t *veh, int impactDir, int death
 extern void G_VehUpdateShields( gentity_t *targ );
 extern void G_LetGoOfWall( gentity_t *ent );
 extern void BG_ClearRocketLock( playerState_t *ps );
+//[EXPsys]
+extern void GiveExperiance(gentity_t *ent, int amount);
+extern void TakeExperiance(gentity_t *ent, int amount);
+extern void TradeExperiance(gentity_t *from, gentity_t *to, int amount);
+//[/EXPsys]
+
 //rww - pd
 void BotDamageNotification(gclient_t *bot, gentity_t *attacker);
 //end rww
@@ -2065,6 +2073,9 @@ extern void Rancor_DropVictim( gentity_t *self );
 
 extern qboolean g_dontFrickinCheck;
 extern qboolean g_endPDuel;
+//intializing checkforblowingup - Wahoo
+void G_CheckForblowingup(gentity_t *ent, gentity_t *enemy, vec3_t point, int damage, int deathAnim, qboolean postDeath);
+//[/FullDismemberment]
 extern qboolean g_noPDuelCheck;
 extern void saberReactivate(gentity_t *saberent, gentity_t *saberOwner);
 extern void saberBackToOwner(gentity_t *saberent);
@@ -2600,6 +2611,15 @@ extern void RunEmplacedWeapon( gentity_t *ent, usercmd_t **ucmd );
 			}
 			attacker->client->lastKillTime = level.time;
 
+			//[EXPsys]
+			if (g_gametype.integer == GT_TEAM && 200) {
+				GiveExperiance(attacker, 2); // give bonus money for a kill 
+			}
+
+			if (g_experianceEnabled.integer && g_experianceKillWorth.integer) {
+				GiveExperiance(attacker, g_experianceKillWorth.integer);
+			}
+			//[/EXPsys]
 		}
 	} else {
 		if (self->client && self->client->ps.isJediMaster)
@@ -2778,11 +2798,21 @@ extern void RunEmplacedWeapon( gentity_t *ent, usercmd_t **ucmd );
 
 			self->client->ps.pm_type = sPMType;
 
-			if (meansOfDeath == MOD_SABER || (meansOfDeath == MOD_MELEE && G_HeavyMelee( attacker )) )//saber or heavy melee (claws)
-			{ //update the anim on the actual skeleton (so bolt point will reflect the correct position) and then check for dismem
-				G_UpdateClientAnims(self, 1.0f);
-				G_CheckForDismemberment(self, attacker, self->pos1, damage, anim, qfalse);
-			}
+			// [FullDismemberment]
+				//weapon dismemberment so saber isn't the only one :)
+				if (meansOfDeath == MOD_SABER || (meansOfDeath == MOD_TURBLAST) || (meansOfDeath == MOD_FLECHETTE) || (meansOfDeath == MOD_FLECHETTE_ALT_SPLASH) || (meansOfDeath == MOD_CONC_ALT) || (meansOfDeath == MOD_THERMAL_SPLASH) || (meansOfDeath == MOD_TRIP_MINE_SPLASH) || (meansOfDeath == MOD_TIMED_MINE_SPLASH) || (meansOfDeath == MOD_TELEFRAG) || (meansOfDeath == MOD_CRUSH) || (meansOfDeath == MOD_MELEE && G_HeavyMelee(attacker)))//saber or heavy melee (claws)
+					//if (meansOfDeath == MOD_SABER || (meansOfDeath == MOD_MELEE && G_HeavyMelee( attacker )) )//saber or heavy melee (claws)
+				{ //update the anim on the actual skeleton (so bolt point will reflect the correct position) and then check for dismem
+					G_UpdateClientAnims(self, 1.0f);
+					G_CheckForDismemberment(self, attacker, self->pos1, damage, anim, qfalse);
+				}
+				//GIBBING!!! making use of g_checkforblowing up - Wahoo
+				if (meansOfDeath == MOD_ROCKET || (meansOfDeath == MOD_ROCKET_SPLASH) || (meansOfDeath == MOD_ROCKET_HOMING) || (meansOfDeath == MOD_ROCKET_HOMING_SPLASH) || (meansOfDeath == MOD_THERMAL) || (meansOfDeath == MOD_DET_PACK_SPLASH) || (meansOfDeath == MOD_TELEFRAG) || (meansOfDeath == MOD_TRIGGER_HURT) || (meansOfDeath == MOD_LAVA))
+				{
+					G_UpdateClientAnims(self, 1.0f);
+					G_CheckForblowingup(self, attacker, self->pos1, damage, anim, qfalse);
+				}
+				//[/FullDismemberment]
 		}
 		else if (self->NPC && self->client && self->client->NPC_class != CLASS_MARK1 &&
 			self->client->NPC_class != CLASS_VEHICLE)
@@ -4265,6 +4295,64 @@ void G_CheckForDismemberment(gentity_t *ent, gentity_t *enemy, vec3_t point, int
 	G_Dismember(ent, enemy, boltPoint, hitLocUse, 90, 0, deathAnim, postDeath);
 }
 
+//[FullDismemberment]
+//new function for blowing up dudes thanks to Wudan for his help :) - Wahoo
+void G_CheckForblowingup(gentity_t *ent, gentity_t *enemy, vec3_t point, int damage, int deathAnim, qboolean postDeath)
+{
+	vec3_t boltPoint;
+	int dismember = g_dismember.integer;
+
+	if (ent->localAnimIndex > 1)
+	{
+		if (!ent->NPC)
+		{
+			return;
+		}
+
+		if (ent->client->NPC_class != CLASS_PROTOCOL)
+		{ //this is the only non-humanoid allowed to do dismemberment.
+			return;
+		}
+	}
+
+	if (!dismember)
+	{
+		return;
+	}
+
+	if (gGAvoidDismember == 1)
+	{
+		return;
+	}
+
+	if (gGAvoidDismember != 2)
+	{ //this means do the dismemberment regardless of randomness and damage
+		if (Q_irand(0, 100) > dismember)
+		{
+			return;
+		}
+
+		if (damage < 5)
+		{
+			return;
+		}
+	}
+	G_GetDismemberBolt(ent, boltPoint, G2_MODELPART_HEAD);
+	G_Dismember(ent, enemy, boltPoint, G2_MODELPART_HEAD, 90, 0, deathAnim, postDeath);
+	G_GetDismemberBolt(ent, boltPoint, G2_MODELPART_LARM);
+	G_Dismember(ent, enemy, boltPoint, G2_MODELPART_LARM, 90, 0, deathAnim, postDeath);
+	G_GetDismemberBolt(ent, boltPoint, G2_MODELPART_RARM);
+	G_Dismember(ent, enemy, boltPoint, G2_MODELPART_RARM, 90, 0, deathAnim, postDeath);
+	G_GetDismemberBolt(ent, boltPoint, G2_MODELPART_LLEG);
+	G_Dismember(ent, enemy, boltPoint, G2_MODELPART_LLEG, 90, 0, deathAnim, postDeath);
+	G_GetDismemberBolt(ent, boltPoint, G2_MODELPART_RLEG);
+	G_Dismember(ent, enemy, boltPoint, G2_MODELPART_RLEG, 90, 0, deathAnim, postDeath);
+	G_GetDismemberBolt(ent, boltPoint, G2_MODELPART_WAIST);
+	G_Dismember(ent, enemy, boltPoint, G2_MODELPART_WAIST, 90, 0, deathAnim, postDeath);
+
+}
+//[/FullDismemberment]
+
 void G_LocationBasedDamageModifier(gentity_t *ent, vec3_t point, int mod, int dflags, int *damage)
 {
 	int hitLoc = -1;
@@ -4808,6 +4896,8 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker, vec3_
 					}
 				}
 			}
+
+			
 			else if (targ->inuse && targ->client &&
 				level.gametype >= GT_TEAM &&
 				attacker->s.number >= MAX_CLIENTS &&
@@ -5378,6 +5468,63 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker, vec3_
 				take /= (targ->client->ps.fd.forcePowerLevel[FP_RAGE]+1);
 			}
 		}
+		//[EXPsys]
+		// check g_experianceEnabled and if we have a valid attacker 
+		if ((g_experianceEnabled.integer) && (attacker) && (attacker->client) && (targ) && (targ->client) && (targ != attacker)) {
+			int earn = 0;
+
+			int maxHealth = targ->client->ps.stats[STAT_MAX_HEALTH];
+
+			if (targ->maxHealth) {
+				maxHealth = targ->maxHealth;
+			}
+
+			if (!maxHealth)
+			{
+				maxHealth = 10;
+			}
+
+			if (take > targ->health) { earn = targ->health; }
+			else { earn = take; }
+			if (targ->health > maxHealth) earn -= targ->health - maxHealth;
+
+			// earn for doing damage or killing 
+			if (earn > 0) {
+				// earn money for percent of total health
+				earn = (earn * g_experianceLifeWorth.integer) / maxHealth;
+
+				// earn bonus if killed
+				if (take >= targ->health) earn += g_experianceKillWorth.integer;
+
+				if (g_gametype.integer == GT_DUEL || g_gametype.integer == GT_POWERDUEL) {
+					if (g_gametype.integer == GT_POWERDUEL && attacker->client->sess.duelTeam == DUELTEAM_LONE) {
+						// lone duelists only earn 75%
+						earn -= (earn >> 2);
+					}
+					earn *= 5; // TODO: add a cvar for this 
+				}
+				else
+				{
+					// only 75% of money from saber attacks
+					if (mod == MOD_SABER) earn -= (earn >> 1);
+				}
+
+
+
+				// bonus for an uber kill (damage worth a one-hit-kill)
+				if (take >= maxHealth) earn += 5;
+
+				// bonus for doing twice the damage as the player had left
+				if (take > targ->health * 2) earn += 2;
+
+				if (g_experianceEconomy.integer) {
+					TradeExperiance(targ, attacker, earn);
+				}
+				else {
+					GiveExperiance(attacker, earn);
+				}
+			}
+		}//[/EXPsys]
 		targ->health = targ->health - take;
 
 		if ( (targ->flags&FL_UNDYING) )

@@ -476,6 +476,7 @@ typedef struct pmove_s {
 	int			tracemask;			// collide against these types of surfaces
 	int			debugLevel;			// if set, diagnostic output will be printed
 	qboolean	noFootsteps;		// if the game is setup for no footsteps by the server
+	qboolean	gauntletHit;		// true if a gauntlet attack would actually hit something
 
 	int			framecount;
 
@@ -552,7 +553,11 @@ typedef enum {
 	STAT_ARMOR,
 	STAT_DEAD_YAW,					// look this direction when dead (FIXME: get rid of?)
 	STAT_CLIENTS_READY,				// bit mask of clients wishing to exit the intermission (FIXME: configstring?)
-	STAT_MAX_HEALTH					// health / armor limit, changable by handicap
+	STAT_MAX_HEALTH,					// health / armor limit, changable by 
+	//[EXPsys]
+	STAT_EXP,
+	STAT_EXP_Count
+	//[/EXPsys]
 } statIndex_t;
 
 
@@ -1005,7 +1010,9 @@ typedef enum {
 	EV_GLOAT2,
 	EV_GLOAT3,
 	EV_PUSHFAIL,
-
+	//[VisualWeapons]
+	EV_WEAPINVCHANGE,
+	//[/VisualWeapons]
 	EV_SIEGESPEC,
 
 } entity_event_t;			// There is a maximum of 256 events (8 bits transmission, 2 high bits for uniqueness)
@@ -1667,6 +1674,10 @@ void BG_G2ATSTAngles(void *ghoul2, int time, vec3_t cent_lerpAngles );
 //BG anim utility functions:
 
 int BG_AnimLength( int index, animNumber_t anim );
+//[BugFix2]//[TrueView]
+float BG_GetTorsoAnimPoint(playerState_t * ps, int AnimIndex);
+float BG_GetLegsAnimPoint(playerState_t * ps, int AnimIndex);
+//[/BugFix2]//[/TrueView]
 
 qboolean BG_InSpecialJump( int anim );
 qboolean BG_InSaberStandAnim( int anim );
@@ -1694,7 +1705,15 @@ qboolean BG_InDeathAnim( int anim );
 qboolean BG_InSaberLockOld( int anim );
 qboolean BG_InSaberLock( int anim );
 
-void BG_SaberStartTransAnim( int clientNum, int saberAnimLevel, int weapon, int anim, float *animSpeed, int broken );
+//[SaberSys]
+qboolean BG_InWalk(int anim);
+//[/SaberSys]
+
+//[FatigueSys]
+void BG_SaberStartTransAnim(int clientNum, int saberAnimLevel, int weapon, int anim,
+	float *animSpeed, int broken, int fatigued);
+//void BG_SaberStartTransAnim( int clientNum, int saberAnimLevel, int weapon, int anim, float *animSpeed, int broken );
+//[/FatigueSys]
 
 void BG_ForcePowerDrain( playerState_t *ps, forcePowers_t forcePower, int overrideAmt );
 

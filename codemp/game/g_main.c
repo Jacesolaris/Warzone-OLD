@@ -5,6 +5,7 @@
 #include "g_ICARUScb.h"
 #include "g_nav.h"
 #include "bg_saga.h"
+//#include "bg_class.h"
 #include "b_local.h"
 
 level_locals_t	level;
@@ -165,6 +166,7 @@ void G_InitGame( int levelTime, int randomSeed, int restart ) {
 	trap->Print ("------- Game Initialization -------\n");
 	trap->Print ("gamename: %s\n", GAMEVERSION);
 	trap->Print ("gamedate: %s\n", __DATE__);
+	trap->Print ("game mod: %s\n", GAME_VERSION);
 
 	srand( randomSeed );
 
@@ -2888,7 +2890,7 @@ qboolean G_PointInBounds( vec3_t point, vec3_t mins, vec3_t maxs );
 
 int g_siegeRespawnCheck = 0;
 void SetMoverState( gentity_t *ent, moverState_t moverState, int time );
-
+int FRAME_TIME = 0;
 void G_RunFrame( int levelTime ) {
 	int			i;
 	gentity_t	*ent;
@@ -2904,6 +2906,8 @@ void G_RunFrame( int levelTime ) {
 	void		*timer_GameChecks;
 	void		*timer_Queues;
 #endif
+	FRAME_TIME = trap->Milliseconds();
+
 
 	if (level.gametype == GT_SIEGE &&
 		g_siegeRespawn.integer &&
@@ -3216,8 +3220,8 @@ void G_RunFrame( int levelTime ) {
 				}
 			}
 
-#define JETPACK_DEFUEL_RATE		200 //approx. 20 seconds of idle use from a fully charged fuel amt
-#define JETPACK_REFUEL_RATE		150 //seems fair
+#define JETPACK_DEFUEL_RATE		350 //approx. 20 seconds of idle use from a fully charged fuel amt
+#define JETPACK_REFUEL_RATE		400 //seems fair
 			if (ent->client->jetPackOn)
 			{ //using jetpack, drain fuel
 				if (ent->client->jetPackDebReduce < level.time)

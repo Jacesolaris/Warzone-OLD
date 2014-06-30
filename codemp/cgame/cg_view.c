@@ -1139,16 +1139,40 @@ static int CG_CalcFov( void ) {
 	float	fov_x, fov_y;
 	float	f;
 	int		inwater;
-	float	cgFov = cg_fov.value;
+	//[TrueView]
+	float cgFov;
+	//float	cgFov = cg_fov.value;
+
+	if (!cg.renderingThirdPerson && (cg_trueguns.integer || cg.predictedPlayerState.weapon == WP_SABER
+		|| cg.predictedPlayerState.weapon == WP_MELEE) && cg_trueFOV.value
+		&& (cg.predictedPlayerState.pm_type != PM_SPECTATOR)
+		&& (cg.predictedPlayerState.pm_type != PM_INTERMISSION))
+	{
+		cgFov = cg_trueFOV.value;
+	}
+	else
+	{
+		cgFov = cg_fov.value;
+	}
+	//[/TrueView]
 
 	if (cgFov < 1)
 	{
 		cgFov = 1;
 	}
-	if (cgFov > 130)
+	//[TrueView]
+	//Allow larger Fields of View
+	if (cgFov > 180)
 	{
-		cgFov = 130;
+		cgFov = 180;
 	}
+	/*
+	if (cgFov > 97)
+	{
+	cgFov = 97;
+	}
+	*/
+	//[/TrueView]
 
 	if ( cg.predictedPlayerState.pm_type == PM_INTERMISSION ) {
 		// if in intermission, use a fixed value
@@ -1724,7 +1748,20 @@ void CG_DrawSkyBoxPortal(const char *cstr)
 
 	if (!fov_x)
 	{
-		fov_x = cg_fov.value;
+		//[TrueView]
+		if (!cg.renderingThirdPerson && (cg_trueguns.integer || cg.predictedPlayerState.weapon == WP_SABER
+			|| cg.predictedPlayerState.weapon == WP_MELEE) && cg_trueFOV.value
+			&& (cg.predictedPlayerState.pm_type != PM_SPECTATOR)
+			&& (cg.predictedPlayerState.pm_type != PM_INTERMISSION))
+		{
+			fov_x = cg_trueFOV.value;
+		}
+		else
+		{
+			fov_x = cg_fov.value;
+		}
+		//fov_x = cg_fov.value;
+		//[TrueView]
 	}
 
 	// setup fog the first time, ignore this part of the configstring after that
@@ -1737,11 +1774,35 @@ void CG_DrawSkyBoxPortal(const char *cstr)
 	if ( cg.predictedPlayerState.pm_type == PM_INTERMISSION )
 	{
 		// if in intermission, use a fixed value
-		fov_x = cg_fov.value;
+		//[TrueView]
+		if (!cg.renderingThirdPerson && (cg_trueguns.integer || cg.predictedPlayerState.weapon == WP_SABER
+			|| cg.predictedPlayerState.weapon == WP_MELEE) && cg_trueFOV.value)
+		{
+			fov_x = cg_trueFOV.value;
+		}
+		else
+		{
+			fov_x = cg_fov.value;
+		}
+		//fov_x = cg_fov.value;
+		//[TrueView]
 	}
 	else
 	{
-		fov_x = cg_fov.value;
+		//[TrueView]
+		if (!cg.renderingThirdPerson && (cg_trueguns.integer || cg.predictedPlayerState.weapon == WP_SABER
+			|| cg.predictedPlayerState.weapon == WP_MELEE) && cg_trueFOV.value
+			&& (cg.predictedPlayerState.pm_type != PM_SPECTATOR)
+			&& (cg.predictedPlayerState.pm_type != PM_INTERMISSION))
+		{
+			fov_x = cg_trueFOV.value;
+		}
+		else
+		{
+			fov_x = cg_fov.value;
+		}
+		//fov_x = cg_fov.value;
+		//[TrueView]
 		if ( fov_x < 1 )
 		{
 			fov_x = 1;
@@ -2563,20 +2624,37 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 		{ //force third person for e-web and emplaced use
 			cg.renderingThirdPerson = 1;
 		}
-		else if (cg.predictedPlayerState.weapon == WP_SABER || cg.predictedPlayerState.weapon == WP_MELEE ||
-			BG_InGrappleMove(cg.predictedPlayerState.torsoAnim) || BG_InGrappleMove(cg.predictedPlayerState.legsAnim) ||
-			cg.predictedPlayerState.forceHandExtend == HANDEXTEND_KNOCKDOWN || cg.predictedPlayerState.fallingToDeath ||
-			cg.predictedPlayerState.m_iVehicleNum || PM_InKnockDown(&cg.predictedPlayerState))
-		{
-			if (cg_fpls.integer && cg.predictedPlayerState.weapon == WP_SABER)
-			{ //force to first person for fpls
-				cg.renderingThirdPerson = 0;
-			}
-			else
-			{
-				cg.renderingThirdPerson = 1;
-			}
+		//[TrueView]
+		else if (cg_trueInvertSaber.integer == 2 && (cg.predictedPlayerState.weapon == WP_SABER || cg.predictedPlayerState.weapon == WP_MELEE))
+		{//force thirdperson for sabers/melee if in cg_trueinvertsaber.integer == 2
+			cg.renderingThirdPerson = 1;
 		}
+		else if (cg.predictedPlayerState.fallingToDeath || cg.predictedPlayerState.m_iVehicleNum
+			|| (cg_trueInvertSaber.integer == 1 && !cg_thirdPerson.integer && (cg.predictedPlayerState.weapon == WP_SABER || cg.predictedPlayerState.weapon == WP_MELEE)))
+		{
+			cg.renderingThirdPerson = 1;
+		}
+		else if (cg_trueInvertSaber.integer == 1 && cg_thirdPerson.integer && (cg.predictedPlayerState.weapon == WP_SABER || cg.predictedPlayerState.weapon == WP_MELEE))
+		{
+			cg.renderingThirdPerson = 0;
+		}
+		/*
+		else if (cg.predictedPlayerState.weapon == WP_SABER || cg.predictedPlayerState.weapon == WP_MELEE ||
+		BG_InGrappleMove(cg.predictedPlayerState.torsoAnim) || BG_InGrappleMove(cg.predictedPlayerState.legsAnim) ||
+		cg.predictedPlayerState.forceHandExtend == HANDEXTEND_KNOCKDOWN || cg.predictedPlayerState.fallingToDeath ||
+		cg.predictedPlayerState.m_iVehicleNum || PM_InKnockDown(&cg.predictedPlayerState))
+		{
+		if (cg_fpls.integer && cg.predictedPlayerState.weapon == WP_SABER)
+		{ //force to first person for fpls
+		cg.renderingThirdPerson = 0;
+		}
+		else
+		{
+		cg.renderingThirdPerson = 1;
+		}
+		}
+		*/
+		//[/TrueView]
 		else if (cg.snap->ps.zoomMode)
 		{ //always force first person when zoomed
 			cg.renderingThirdPerson = 0;
@@ -2714,3 +2792,17 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 	}
 }
 
+//[TrueView]
+//Checks to see if the current camera position is valid based on the last known safe location.  If it's not safe, place
+//the camera at the last position safe location
+void CheckCameraLocation(vec3_t OldeyeOrigin)
+{
+	trace_t			trace;
+
+	CG_Trace(&trace, OldeyeOrigin, cameramins, cameramaxs, cg.refdef.vieworg, cg.snap->ps.clientNum, MASK_CAMERACLIP);
+	if (trace.fraction <= 1.0)
+	{
+		VectorCopy(trace.endpos, cg.refdef.vieworg);
+	}
+}
+//[/TrueView]

@@ -61,6 +61,9 @@ set(MPCGameCgameFiles
 	"${MPDir}/cgame/cg_turret.c"
 	"${MPDir}/cgame/cg_view.c"
 	"${MPDir}/cgame/cg_weaponinit.c"
+	"${MPDir}/cgame/cg_weather.c"
+	"${MPDir}/cgame/cg_holster.c"
+	"${MPDir}/cgame/cg_holster.h"
 	"${MPDir}/cgame/cg_weapons.c"
 	"${MPDir}/cgame/fx_blaster.c"
 	"${MPDir}/cgame/fx_bowcaster.c"
@@ -123,7 +126,12 @@ endif(NOT WIN32)
 if(WIN32)
 	install(TARGETS ${MPCGame} RUNTIME DESTINATION "OpenJK")
 else(WIN32)
-	install(TARGETS ${MPCGame} LIBRARY DESTINATION "OpenJK")
+	if(MakeApplicationBundles AND BuildMPEngine)
+		install(TARGETS ${MPCGame} LIBRARY DESTINATION "${MPEngine}.app/Contents/MacOS/OpenJK")
+		install(TARGETS ${MPCGame} LIBRARY DESTINATION "${MPEngine}.app/Contents/MacOS/base")
+	else(MakeApplicationBundles AND BuildMPEngine)
+		install(TARGETS ${MPCGame} LIBRARY DESTINATION "OpenJK")
+	endif(MakeApplicationBundles AND BuildMPEngine)
 endif(WIN32)
 set_target_properties(${MPCGame} PROPERTIES COMPILE_DEFINITIONS_RELWITHDEBINFO "${MPCGameDefines};${ReleaseDefines}")
 set_target_properties(${MPCGame} PROPERTIES COMPILE_DEFINITIONS_MINSIZEREL "${MPCGameDefines};${ReleaseDefines}")

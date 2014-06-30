@@ -3,7 +3,12 @@
 
 #include "g_local.h"
 #include "bg_saga.h"
+//#include "bg_class.h"
 
+//[EXPSys]
+extern void GiveExperiance(gentity_t *ent, int amount);
+extern void TakeExperiance(gentity_t *ent, int amount);
+//[/EXPSys]
 
 typedef struct teamgame_s {
 	float			last_flag_capture;
@@ -849,7 +854,18 @@ int Team_TouchOurFlag( gentity_t *ent, gentity_t *other, int team ) {
 				player->client->rewardTime = level.time + REWARD_SPRITE_TIME;
 			}
 		}
-	}
+		//[EXPsys]
+		if (g_experianceEnabled.integer)
+		{
+			if ((player->client->sess.sessionTeam == cl->sess.sessionTeam)) {
+				GiveExperiance(player, g_experianceWinRound.integer);
+			}
+			else
+			{
+				GiveExperiance(player, g_experianceLoseRound.integer);
+			}
+		}
+	}//[/EXPsys]
 	Team_ResetFlags();
 
 	CalculateRanks();

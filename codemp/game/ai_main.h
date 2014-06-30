@@ -1,6 +1,13 @@
 #pragma once
 
+#include "g_local.h"
 #include "bg_saga.h"
+
+
+
+#define __DOMINANCE_AI__ // UnqueOne's AI.
+
+
 
 //#define FORCEJUMP_INSTANTMETHOD 1
 
@@ -33,6 +40,18 @@
 #define WPFLAG_CALCULATED		0x00400000 //don't calculate it again
 #define WPFLAG_NEVERONEWAY		0x00800000 //never flag it as one-way
 
+#define WPFLAG_DESTROY_FUNCBREAK	0x01000000 //destroy all the func_breakables in the area
+//before moving to this waypoint
+#define WPFLAG_REDONLY				0x02000000 //only bots on the red team will be able to
+//use this waypoint
+#define WPFLAG_BLUEONLY				0x04000000 //only bots on the blue team will be able to
+//use this waypoint
+#define WPFLAG_FORCEPUSH			0x08000000 //force push all the active func_doors in the
+//area before moving to this waypoint.
+#define WPFLAG_FORCEPULL			0x10000000 //force pull all the active func_doors in the
+//area before moving to this waypoint.	
+#define WPFLAG_COVER				0x20000000 //cover point
+
 #define LEVELFLAG_NOPOINTPREDICTION			1 //don't take waypoint beyond current into account when adjusting path view angles
 #define LEVELFLAG_IGNOREINFALLBACK			2 //ignore enemies when in a fallback navigation routine
 #define LEVELFLAG_IMUSTNTRUNAWAY			4 //don't be scared
@@ -50,6 +69,10 @@
 
 #define BOT_RUN_HEALTH				40
 #define BOT_WPTOUCH_DISTANCE		32
+
+//Distance at which a bot knows it touched the weapon/spawnpoint it was traveling to
+#define	BOT_WEAPTOUCH_DISTANCE		10
+
 #define ENEMY_FORGET_MS				10000
 //if our enemy isn't visible within 10000ms (aprx 10sec) then "forget" about him and treat him like every other threat, but still look for
 //more immediate threats while main enemy is not visible
@@ -111,7 +134,7 @@ typedef struct botattachment_s
 typedef struct nodeobject_s
 {
 	vec3_t origin;
-//	int index;
+	//	int index;
 	float weight;
 	int flags;
 	int neighbornum;
@@ -134,6 +157,18 @@ typedef struct botskills_s
 	float				maxturn;
 	int					perfectaim;
 } botskills_t;
+
+typedef int bot_route_t[MAX_WPARRAY_SIZE];
+
+#define MAX_BOTSETTINGS_FILEPATH			144
+
+//bot settings
+typedef struct bot_settings_s
+{
+	char personalityfile[MAX_BOTSETTINGS_FILEPATH];
+	float skill;
+	char team[MAX_BOTSETTINGS_FILEPATH];
+} bot_settings_t;
 
 //bot state
 typedef struct bot_state_s
@@ -186,6 +221,8 @@ typedef struct bot_state_s
 	int					lastDeadTime;
 
 	wpobject_t			*wpCurrent;
+	wpobject_t			*wpNext;
+	wpobject_t			*wpLast;
 	wpobject_t			*wpDestination;
 	wpobject_t			*wpStoreDest;
 	vec3_t				goalAngles;
@@ -208,7 +245,8 @@ typedef struct bot_state_s
 
 	float				timeToReact;
 
-	float				enemySeenTime;
+	int					enemySeenTime;
+	int					enemyScanTime;
 
 	float				chickenWussCalculationTime;
 
@@ -329,8 +367,146 @@ typedef struct bot_state_s
 	int					forceMove_Forward;
 	int					forceMove_Right;
 	int					forceMove_Up;
+
+	//bot's wp route path
+	bot_route_t			botRoute;
+
+	//Order level stuff
+	//bot's current order/behavior
+	int					botOrder;
+	//bot orderer's clientNum
+	int					ordererNum;
+	//order's relivent entity
+	gentity_t			*orderEntity;
+	//order siege objective
+	int					orderObjective;
+
+	//viewangles of enemy when you last saw him.
+	vec3_t				lastEnemyAngles;
+
+	//Tactical Level
+	int					currentTactic;
+	gentity_t			*tacticEntity;
+	//objective number
+	int					tacticObjective;
+	//objective type
+	int					objectiveType;
+
+	//Stuff to make the BOTORDER_KNEELBEFOREZOD work
+	qboolean			doZodKneel;
+	int					zodKneelTime;
+
+	//Visual scan behavior
+	qboolean			doVisualScan;
+	int					VisualScanTime;
+	vec3_t				VisualScanDir;
+
+	//current bot behavior
+	int					botBehave;
+
+	//evade direction
+	int					evadeTime;
+	int					evadeDir;
+
+	//Walk flag
+	qboolean			doWalk;
+
+	vec3_t				DestPosition;
+
+	//Used to prevent a whole much of destination checks when moving around
+	vec3_t				lastDestPosition;
+
+	//performing some sort of special action (destroying breakables, pushing switches, etc)
+	//Don't try to override this when this is occurring.
+	qboolean			wpSpecial;
+
+	//Do Jump Flag for the TAB Bot
+	qboolean			doJump;
+
+	//do Force Pull for this amount of time
+	int					doForcePull;
+
+	//position we were at when we first decided to go to this waypoint
+	vec3_t				wpCurrentLoc;
+
+	//This debounces the push pull to prevent the bots from push/pulling stuff for navigation
+	//purposes
+	int					DontSpamPushPull;
+
+	//debouncer for button presses, since this doesn't reset with wp point changes, be 
+	//careful not to set this too high
+	int					DontSpamButton;
+
+	//have you checked for an alternate route?
+	qboolean			AltRouteCheck;
+
+	//entity number you ignore for move traces.
+	int					DestIgnore;
+
+	//hold down the Use Button.
+	int					useTime;
+
+	//Debouncer for vchats to prevent the bots from spamming the hell out of them.
+	int					vchatTime;
+
+	//debouncer for the saberlock button presses.  So you can boost the bot fps without
+	//problems.
+	int					saberLockDebounce;
+
+#ifdef __NEW_ASTAR__
+	int					pathsize;
+#endif //__NEW_ASTAR__
+
+	int					next_path_calculate_time;
+	qboolean			ready_to_calculate_path;
 	//end rww
 } bot_state_t;
+
+//used for objective dependancy stuff
+#define		MAX_OBJECTIVES			6
+
+//max allowed objective dependancy
+#define		MAX_OBJECTIVEDEPENDANCY	6
+
+//TAB bot orders/tactical options
+#ifndef __linux__
+typedef enum {
+#else
+enum {
+#endif
+	BOTORDER_NONE,  //no order
+	BOTORDER_KNEELBEFOREZOD,  //Kneel before the ordered person
+	BOTORDER_SEARCHANDDESTROY,	//Attack mode.  If given an entity the bot will search for
+	//and then attack that entity.  If NULL, the bot will just
+	//hunt around and attack enemies.
+	BOTORDER_OBJECTIVE,	//Do objective play for seige.  Bot will defend or attack objective
+	//based on who's objective it is.
+	BOTORDER_SIEGECLASS_INFANTRY,
+	BOTORDER_SIEGECLASS_VANGUARD,
+	BOTORDER_SIEGECLASS_SUPPORT,
+	BOTORDER_SIEGECLASS_JEDI,
+	BOTORDER_SIEGECLASS_DEMOLITIONIST,
+	BOTORDER_SIEGECLASS_HEAVY_WEAPONS,
+	BOTORDER_MAX
+};
+
+#ifndef __linux__
+typedef enum {
+#else
+enum {
+#endif
+	//[/Linux]
+	OT_NONE,	//no OT selected or bad OT
+	OT_ATTACK,	//Attack this objective, for destroyable stationary objectives
+	OT_DEFEND,  //Defend this objective, for destroyable stationary objectives 
+	//or touch objectives
+	OT_CAPTURE,  //Capture this objective
+	OT_DEFENDCAPTURE,  //prevent capture of this objective
+	OT_TOUCH,
+	OT_VEHICLE,  //get this vehicle to the related trigger_once.
+	OT_WAIT		//This is used by the bots to while they are waiting for a vehicle to respawn
+
+};
 
 void *B_TempAlloc(int size);
 void B_TempFree(int size);
@@ -352,7 +528,7 @@ int BotIsAChickenWuss(bot_state_t *bs);
 int GetNearestVisibleWP(vec3_t org, int ignore);
 int GetBestIdleGoal(bot_state_t *bs);
 
-char *ConcatArgs( int start );
+char *ConcatArgs(int start);
 
 extern vmCvar_t bot_forcepowers;
 extern vmCvar_t bot_forgimmick;
@@ -396,3 +572,11 @@ extern int gLevelFlags;
 
 extern float floattime;
 #define FloatTime() floattime
+
+
+
+
+#ifdef __DOMINANCE_AI__
+extern void DOM_StandardBotAI(bot_state_t *bs, float thinktime);
+extern void DOM_StandardBotAI2(bot_state_t *bs, float thinktime);
+#endif //__DOMINANCE_AI__

@@ -2190,7 +2190,9 @@ int Pickup_Ammo (gentity_t *ent, gentity_t *other)
 
 //======================================================================
 
-
+//[VisualWeapons]
+qboolean G_ClientPlugin(void);
+//[/VisualWeapons]
 int Pickup_Weapon (gentity_t *ent, gentity_t *other) {
 	int		quantity;
 
@@ -2230,6 +2232,15 @@ int Pickup_Weapon (gentity_t *ent, gentity_t *other) {
 
 	// add the weapon
 	other->client->ps.stats[STAT_WEAPONS] |= ( 1 << ent->item->giTag );
+
+	//[VisualWeapons]
+	//update the weapon stats for this player since they have changed.
+	if (G_ClientPlugin())
+	{//don't send the weapon updates if someone isn't able to process this new event type (IE anyone without
+		//the OJP client plugin)
+		G_AddEvent(other, EV_WEAPINVCHANGE, other->client->ps.stats[STAT_WEAPONS]);
+	}
+	//[/VisualWeapons]
 
 	//Add_Ammo( other, ent->item->giTag, quantity );
 	Add_Ammo( other, weaponData[ent->item->giTag].ammoIndex, quantity );
@@ -2525,6 +2536,14 @@ void Touch_Item (gentity_t *ent, gentity_t *other, trace_t *trace) {
 			if (other && other->client && other->client->ps.ammo[weaponData[weapForAmmo].ammoIndex] > 0 )
 			{
 				other->client->ps.stats[STAT_WEAPONS] |= (1 << weapForAmmo);
+				//[VisualWeapons]
+				//update the weapon stats for this player since they have changed.
+				if (G_ClientPlugin())
+				{//don't send the weapon updates if someone isn't able to process this new event type (IE anyone without
+					//the OJP client plugin)
+					G_AddEvent(other, EV_WEAPINVCHANGE, other->client->ps.stats[STAT_WEAPONS]);
+				}
+				//[/VisualWeapons]
 			}
 		}
 //		predict = qfalse;

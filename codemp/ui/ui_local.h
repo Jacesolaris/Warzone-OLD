@@ -3,6 +3,9 @@
 // Copyright (C) 1999-2000 Id Software, Inc.
 //
 
+// Disable stupid warnings...
+#pragma warning( disable : 4996 )
+
 #include "qcommon/q_shared.h"
 #include "rd-common/tr_types.h"
 #include "ui_public.h"

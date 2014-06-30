@@ -57,6 +57,9 @@ extern int forcePowerNeeded[NUM_FORCE_POWER_LEVELS][NUM_FORCE_POWERS];
 //PM anim utility functions:
 qboolean PM_SaberInParry( int move );
 qboolean PM_SaberInKnockaway( int move );
+//[SaberSys]
+qboolean PM_KnockawayAnim(int anim);
+//[/SaberSys]
 qboolean PM_SaberInReflect( int move );
 qboolean PM_SaberInStart( int move );
 qboolean PM_InSaberAnim( int anim );

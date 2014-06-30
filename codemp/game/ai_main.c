@@ -33,6 +33,7 @@
 #include "chars.h"
 #include "inv.h"
 
+
 /*
 #define BOT_CTF_DEBUG	1
 */
@@ -722,26 +723,30 @@ int BotAI(int client, float thinktime) {
 	}
 
 	//retrieve the current client state
-	BotAI_GetClientState( client, &bs->cur_ps );
+	BotAI_GetClientState(client, &bs->cur_ps);
 
 	//retrieve any waiting server commands
-	while( trap->BotGetServerCommand(client, buf, sizeof(buf)) ) {
+	while (trap->BotGetServerCommand(client, buf, sizeof(buf))) {
 		//have buf point to the command and args to the command arguments
-		args = strchr( buf, ' ');
+		args = strchr(buf, ' ');
 		if (!args) continue;
 		*args++ = '\0';
 
 		//remove color espace sequences from the arguments
-		RemoveColorEscapeSequences( args );
+		RemoveColorEscapeSequences(args);
 
 		if (!Q_stricmp(buf, "cp "))
-			{ /*CenterPrintf*/ }
+		{ /*CenterPrintf*/
+		}
 		else if (!Q_stricmp(buf, "cs"))
-			{ /*ConfigStringModified*/ }
+		{ /*ConfigStringModified*/
+		}
 		else if (!Q_stricmp(buf, "scores"))
-			{ /*FIXME: parse scores?*/ }
+		{ /*FIXME: parse scores?*/
+		}
 		else if (!Q_stricmp(buf, "clientLevelShot"))
-			{ /*ignore*/ }
+		{ /*ignore*/
+		}
 	}
 	//add the delta angles to the bot's current view angles
 	for (j = 0; j < 3; j++) {
@@ -761,7 +766,12 @@ int BotAI(int client, float thinktime) {
 #ifdef _DEBUG
 	start = trap->Milliseconds();
 #endif
+#ifndef __DOMINANCE_AI__
 	StandardBotAI(bs, thinktime);
+#else //__DOMINANCE_AI__
+	DOM_StandardBotAI(bs, thinktime); // UQ1: Uses Dominance AI...
+	//DOM_StandardBotAI2(bs, thinktime); // UQ1: Uses Dominance NPC AI...
+#endif //__DOMINANCE_AI__
 #ifdef _DEBUG
 	end = trap->Milliseconds();
 

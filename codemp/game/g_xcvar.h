@@ -35,6 +35,8 @@ XCVAR_DEF( d_saberGhoul2Collision,		"1",			NULL,				CVAR_CHEAT,										qtrue )
 XCVAR_DEF( d_saberInterpolate,			"0",			NULL,				CVAR_CHEAT,										qtrue )
 XCVAR_DEF( d_saberKickTweak,			"1",			NULL,				CVAR_NONE,										qtrue )
 XCVAR_DEF( d_saberSPStyleDamage,		"1",			NULL,				CVAR_ARCHIVE,									qfalse )
+XCVAR_DEF( g_saberIdleDamage,			"0",			NULL,				CVAR_NONE,										qtrue )
+XCVAR_DEF( g_saberSystem,				"1",			NULL,				CVAR_NONE,										qtrue )
 XCVAR_DEF( d_saberStanceDebug,			"0",			NULL,				CVAR_NONE,										qfalse )
 XCVAR_DEF( d_siegeSeekerNPC,			"0",			NULL,				CVAR_CHEAT,										qtrue )
 XCVAR_DEF( dedicated,					"0",			NULL,				CVAR_NONE,										qfalse )
@@ -64,7 +66,7 @@ XCVAR_DEF( g_debugServerSkel,			"0",			NULL,				CVAR_CHEAT,										qfalse )
 #ifdef _DEBUG
 XCVAR_DEF( g_disableServerG2,			"0",			NULL,				CVAR_NONE,										qtrue )
 #endif
-XCVAR_DEF( g_dismember,					"0",			NULL,				CVAR_ARCHIVE,									qtrue )
+XCVAR_DEF( g_dismember,					"1000",			NULL,				CVAR_ARCHIVE,									qtrue )
 XCVAR_DEF( g_doWarmup,					"0",			NULL,				CVAR_NONE,										qtrue )
 //XCVAR_DEF( g_engineModifications,		"1",			NULL,				CVAR_ARCHIVE,									qfalse )
 XCVAR_DEF( g_ff_objectives,				"0",			NULL,				CVAR_CHEAT|CVAR_NORESTART,						qtrue )
@@ -104,6 +106,35 @@ XCVAR_DEF( g_randFix,					"1",			NULL,				CVAR_ARCHIVE,									qtrue )
 XCVAR_DEF( g_restarted,					"0",			NULL,				CVAR_ROM,										qfalse )
 XCVAR_DEF( g_saberBladeFaces,			"1",			NULL,				CVAR_NONE,										qtrue )
 XCVAR_DEF( g_saberDamageScale,			"1",			NULL,				CVAR_ARCHIVE,									qtrue )
+//[SaberSys] [ClanMod SaberDamage System]
+XCVAR_DEF(g_SaberDMGTwirl, "10", NULL, CVAR_ARCHIVE, qtrue)
+XCVAR_DEF(g_SaberDMGKick, "2", NULL, CVAR_ARCHIVE, qtrue)
+XCVAR_DEF(g_SaberDMGDualKata, "90", NULL, CVAR_ARCHIVE, qtrue)
+XCVAR_DEF(g_SaberDMGStaffKataMin, "60", NULL, CVAR_ARCHIVE, qtrue)
+XCVAR_DEF(g_SaberDMGStaffKataMax, "70", NULL, CVAR_ARCHIVE, qtrue)
+XCVAR_DEF(g_SaberDMGMultiMin, "2", NULL, CVAR_ARCHIVE, qtrue)
+XCVAR_DEF(g_SaberDMGMultiMax, "70", NULL, CVAR_ARCHIVE, qtrue)
+XCVAR_DEF(g_SaberDMGSpecialMin, "2", NULL, CVAR_ARCHIVE, qtrue)
+XCVAR_DEF(g_SaberDMGSpecialMax, "90", NULL, CVAR_ARCHIVE, qtrue)
+XCVAR_DEF(g_SaberDMGRedNormal, "100", NULL, CVAR_ARCHIVE, qtrue)
+XCVAR_DEF(g_SaberDMGRedNormalMin, "2", NULL, CVAR_ARCHIVE, qtrue)
+XCVAR_DEF(g_SaberDMGRedNormalMax, "120", NULL, CVAR_ARCHIVE, qtrue)
+XCVAR_DEF(g_SaberDMGRedDFAMin, "2", NULL, CVAR_ARCHIVE, qtrue)
+XCVAR_DEF(g_SaberDMGRedDFAMax, "180", NULL, CVAR_ARCHIVE, qtrue)
+XCVAR_DEF(g_SaberDMGRedBackMin, "2", NULL, CVAR_ARCHIVE, qtrue)
+XCVAR_DEF(g_SaberDMGRedBackMax, "30", NULL, CVAR_ARCHIVE, qtrue)
+XCVAR_DEF(g_SaberDMGYellowNormal, "60", NULL, CVAR_ARCHIVE, qtrue)
+XCVAR_DEF(g_SaberDMGYellowOverheadMin, "2", NULL, CVAR_ARCHIVE, qtrue)
+XCVAR_DEF(g_SaberDMGYellowOverheadMax, "80", NULL, CVAR_ARCHIVE, qtrue)
+XCVAR_DEF(g_SaberDMGYellowBackMin, "2", NULL, CVAR_ARCHIVE, qtrue)
+XCVAR_DEF(g_SaberDMGYellowBackMax, "25", NULL, CVAR_ARCHIVE, qtrue)
+XCVAR_DEF(g_SaberDMGBlueNormal, "35", NULL, CVAR_ARCHIVE, qtrue)
+XCVAR_DEF(g_SaberDMGBlueLungeMin, "2", NULL, CVAR_ARCHIVE, qtrue)
+XCVAR_DEF(g_SaberDMGBlueLungeMax, "30", NULL, CVAR_ARCHIVE, qtrue)
+XCVAR_DEF(g_SaberDMGBlueBackMin, "2", NULL, CVAR_ARCHIVE, qtrue)
+XCVAR_DEF(g_SaberDMGBlueBackMax, "30", NULL, CVAR_ARCHIVE, qtrue)
+XCVAR_DEF(g_customSaberDmgs, "1", NULL, CVAR_ARCHIVE, qtrue)
+//[/SaberSys] [ClanMod SaberDamage System]
 #ifdef DEBUG_SABER_BOX
 XCVAR_DEF( g_saberDebugBox,				"0",			NULL,				CVAR_CHEAT,										qfalse )
 #endif
@@ -122,6 +153,16 @@ XCVAR_DEF( g_saberTraceSaberFirst,		"0",			NULL,				CVAR_ARCHIVE,									qtrue 
 XCVAR_DEF( g_saberWallDamageScale,		"0.4",			NULL,				CVAR_NONE,										qfalse )
 XCVAR_DEF( g_securityLog,				"1",			NULL,				CVAR_ARCHIVE,									qfalse )
 XCVAR_DEF( g_showDuelHealths,			"0",			NULL,				CVAR_SERVERINFO,								qfalse )
+//[EXPsys]
+XCVAR_DEF(g_experiancemax,				"50000",		NULL,				CVAR_ARCHIVE,									qtrue)//Max Exp
+XCVAR_DEF(g_experianceEnabled,			"1",			NULL,				CVAR_ARCHIVE,									qtrue)//EXP enabled
+XCVAR_DEF(g_experianceEconomy,			"10",			NULL,				CVAR_ARCHIVE,									qtrue)//Players take exp from targets when doing damage
+XCVAR_DEF(g_experianceLifeWorth,		"5",			NULL,				CVAR_ARCHIVE,									qtrue)//Exp earned for 100% of life
+XCVAR_DEF(g_experianceKillWorth,		"5",			NULL,				CVAR_ARCHIVE,									qtrue)//Additional experiance earned when killed
+XCVAR_DEF(g_experianceWinRound,			"2",			NULL,				CVAR_ARCHIVE,									qtrue)//Exp earned for winning a team round
+XCVAR_DEF(g_experianceLoseRound,		"2",			NULL,				CVAR_ARCHIVE,									qtrue)//Exp earned for losing a team round
+XCVAR_DEF(g_experianceInitial,			"0",			NULL,				CVAR_ARCHIVE,									qtrue)//Player starts with this amount of experiance
+//[/EXPsys]
 XCVAR_DEF( g_siegeRespawn,				"20",			NULL,				CVAR_ARCHIVE,									qtrue )
 XCVAR_DEF( g_siegeTeam1,				"none",			NULL,				CVAR_ARCHIVE|CVAR_SERVERINFO,					qfalse )
 XCVAR_DEF( g_siegeTeam2,				"none",			NULL,				CVAR_ARCHIVE|CVAR_SERVERINFO,					qfalse )

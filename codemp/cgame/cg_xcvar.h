@@ -57,7 +57,7 @@ XCVAR_DEF( cg_debugSaber,						"0",					NULL,					CVAR_CHEAT )
 XCVAR_DEF( cg_debugPosition,					"0",					NULL,					CVAR_CHEAT )
 XCVAR_DEF( cg_debugEvents,						"0",					NULL,					CVAR_CHEAT )
 XCVAR_DEF( cg_duelHeadAngles,					"0",					NULL,					CVAR_NONE )
-XCVAR_DEF( cg_dismember,						"0",					NULL,					CVAR_ARCHIVE )
+XCVAR_DEF( cg_dismember,						"1000",					NULL,					CVAR_ARCHIVE )
 XCVAR_DEF( cg_deferPlayers,						"1",					NULL,					CVAR_ARCHIVE )
 XCVAR_DEF( cg_errorDecay,						"100",					NULL,					CVAR_NONE )
 XCVAR_DEF( cg_fallingBob,						"1",					NULL,					CVAR_ARCHIVE )
@@ -121,6 +121,15 @@ XCVAR_DEF( cg_thirdPersonTargetDamp,			"0.5",					NULL,					CVAR_ARCHIVE )
 XCVAR_DEF( cg_thirdPersonVertOffset,			"16",					NULL,					CVAR_ARCHIVE )
 XCVAR_DEF( cg_timescaleFadeEnd,					"1",					NULL,					CVAR_NONE )
 XCVAR_DEF( cg_timescaleFadeSpeed,				"0",					NULL,					CVAR_NONE )
+XCVAR_DEF(cg_trueEyePosition,				    "-2", NULL, CVAR_ARCHIVE)//[TrueView]
+XCVAR_DEF(cg_trueFlip,							"0", NULL, CVAR_ARCHIVE)//[TrueView]
+XCVAR_DEF(cg_trueFOV,							"110", NULL, CVAR_ARCHIVE)//[TrueView]
+XCVAR_DEF(cg_trueguns,							"0", NULL, CVAR_ARCHIVE)//[TrueView]
+XCVAR_DEF(cg_trueInvertSaber,					"0", NULL, CVAR_ARCHIVE)//[TrueView]
+XCVAR_DEF(cg_trueMoveRoll,						"1", NULL, CVAR_ARCHIVE)//[TrueView]
+XCVAR_DEF(cg_trueRoll,							"1", NULL, CVAR_ARCHIVE)//[TrueView]
+XCVAR_DEF(cg_trueSaberOnly,						"0", NULL, CVAR_ARCHIVE)//[TrueView]
+XCVAR_DEF(cg_trueSpin,							"1", NULL, CVAR_ARCHIVE)//[TrueView]
 XCVAR_DEF( cg_viewsize,							"100",					NULL,					CVAR_ARCHIVE )
 XCVAR_DEF( cg_weaponBob,						"1",					NULL,					CVAR_ARCHIVE )
 XCVAR_DEF( cl_paused,							"0",					NULL,					CVAR_ROM )
@@ -169,4 +178,24 @@ XCVAR_DEF( ui_tm2_c4_cnt,						"0",					NULL,					CVAR_ROM|CVAR_INTERNAL )
 XCVAR_DEF( ui_tm2_c5_cnt,						"0",					NULL,					CVAR_ROM|CVAR_INTERNAL )
 XCVAR_DEF( ui_tm2_cnt,							"0",					NULL,					CVAR_ROM|CVAR_INTERNAL )
 XCVAR_DEF( ui_tm3_cnt,							"0",					NULL,					CVAR_ROM|CVAR_INTERNAL )
+//[RGBSabers]
+XCVAR_DEF(rgb_saber1,							"0,150,150",			NULL, CVAR_USERINFO | CVAR_ARCHIVE)
+XCVAR_DEF(rgb_saber2,						    "150,0,150",			NULL, CVAR_USERINFO | CVAR_ARCHIVE)
+XCVAR_DEF(rgb_script1,							":255,0,255:500:0,0,255:500:", NULL, CVAR_USERINFO | CVAR_ARCHIVE)
+XCVAR_DEF(rgb_script2,							":0,255,255:500:0,255,0:500:", NULL, CVAR_USERINFO | CVAR_ARCHIVE)
+XCVAR_DEF(ojp_teamrgbsabers,					"0",					NULL, CVAR_ARCHIVE)
+//[/RGBSabers]
+//[SFXSabers]
+XCVAR_DEF(sfx_sabers,							"1",					NULL, CVAR_ARCHIVE)
+//[/SFXSabers]
+//[Movie Sabers]
+XCVAR_DEF(cg_MovieSaberType,					"3",					NULL, CVAR_ARCHIVE)
+//[/Movie Sabers]
+//[VisualWeapons]
+XCVAR_DEF(ojp_holsteredweapons,					"3",					NULL, CVAR_ARCHIVE)
+XCVAR_DEF(ojp_holsterdebug,						"0",					NULL, CVAR_ARCHIVE)
+XCVAR_DEF(ojp_holsterdebug_boneindex,			"3",					NULL, CVAR_ARCHIVE)
+XCVAR_DEF(ojp_holsterdebug_posoffset,			"0.0 0.0 0.0",			NULL, CVAR_ARCHIVE)
+XCVAR_DEF(ojp_holsterdebug_angoffset,			"0.0 0.0 0.0",			NULL, CVAR_ARCHIVE)
+//[/VisualWeapons]
 #undef XCVAR_DEF

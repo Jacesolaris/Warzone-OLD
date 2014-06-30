@@ -6,6 +6,8 @@
 #include "g_local.h"
 #include "botlib/be_aas.h"
 #include "bg_saga.h"
+//#include "bg_class.h"
+
 #include "ghoul2/G2.h"
 #include "qcommon/q_shared.h"
 

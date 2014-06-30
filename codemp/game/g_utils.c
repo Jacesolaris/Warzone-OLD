@@ -4,6 +4,8 @@
 
 #include "g_local.h"
 #include "bg_saga.h"
+//#include "bg_class.h"
+
 #include "qcommon/q_shared.h"
 
 typedef struct shaderRemap_s {

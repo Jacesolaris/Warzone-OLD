@@ -255,58 +255,103 @@ qboolean QINLINE PM_IsRocketTrooper(void)
 int PM_GetSaberStance(void)
 {
 	int anim = BOTH_STAND2;
-	saberInfo_t *saber1 = BG_MySaber( pm->ps->clientNum, 0 );
-	saberInfo_t *saber2 = BG_MySaber( pm->ps->clientNum, 1 );
+	saberInfo_t *saber1 = BG_MySaber(pm->ps->clientNum, 0);
+	saberInfo_t *saber2 = BG_MySaber(pm->ps->clientNum, 1);
 
 	if (!pm->ps->saberEntityNum)
 	{ //lost it
 		return BOTH_STAND1;
 	}
 
-	if ( BG_SabersOff( pm->ps ) )
+	if (BG_SabersOff(pm->ps))
 	{
 		return BOTH_STAND1;
 	}
 
-	if ( saber1
-		&& saber1->readyAnim != -1 )
+	if (saber1
+		&& saber1->readyAnim != -1)
 	{
 		return saber1->readyAnim;
 	}
 
-	if ( saber2
-		&& saber2->readyAnim != -1 )
+	if (saber2
+		&& saber2->readyAnim != -1)
 	{
 		return saber2->readyAnim;
 	}
 
-	if ( saber1
+	if (saber1
 		&& saber2
-		&& !pm->ps->saberHolstered )
+		&& !pm->ps->saberHolstered)
 	{//dual sabers, both on
 		return BOTH_SABERDUAL_STANCE;
 	}
 
-	switch ( pm->ps->fd.saberAnimLevel )
+	switch (pm->ps->fd.saberAnimLevel)
 	{
 	case SS_DUAL:
-		anim = BOTH_SABERDUAL_STANCE;
+		if (pm->cmd.buttons & BUTTON_BLOCK)
+		{
+			anim = BOTH_SABERDUAL_STANCE;
+		}
+		else
+			anim = BOTH_STAND1;
 		break;
 	case SS_STAFF:
-		anim = BOTH_SABERSTAFF_STANCE;
+		if (pm->cmd.buttons & BUTTON_BLOCK)
+		{
+			anim = BOTH_SABERSTAFF_STANCE;
+		}
+		else
+			anim = BOTH_STAND1;
 		break;
 	case SS_FAST:
-	case SS_TAVION:
-		anim = BOTH_SABERFAST_STANCE;
+		if (pm->cmd.buttons & BUTTON_BLOCK)
+		{
+			anim = BOTH_SABERFAST_STANCE;
+		}
+		else
+			anim = BOTH_STAND1;
 		break;
 	case SS_STRONG:
-		anim = BOTH_SABERSLOW_STANCE;
+		if (pm->cmd.buttons & BUTTON_BLOCK)
+		{
+			anim = BOTH_SABERSLOW_STANCE;
+		}
+		else
+			anim = BOTH_STAND1;
 		break;
-	case SS_NONE:
-	case SS_MEDIUM:
+	case SS_TAVION:
+		if (pm->cmd.buttons & BUTTON_BLOCK)
+		{
+			anim = BOTH_SABERTAVION_STANCE;
+		}
+		else
+			anim = BOTH_STAND1;
+		break;
 	case SS_DESANN:
+		if (pm->cmd.buttons & BUTTON_BLOCK)
+		{
+			anim = BOTH_SABERDESANN_STANCE;
+		}
+		else
+			anim = BOTH_STAND1;
+		break;
+	case SS_MEDIUM:
+		if (pm->cmd.buttons & BUTTON_BLOCK)
+		{
+			anim = BOTH_STAND2;
+		}
+		else
+			anim = BOTH_STAND1;
+	case SS_NONE:
 	default:
-		anim = BOTH_STAND2;
+		if (pm->cmd.buttons & BUTTON_BLOCK)
+		{
+			anim = BOTH_STAND2;
+		}
+		else
+			anim = BOTH_STAND1;
 		break;
 	}
 	return anim;
@@ -4712,9 +4757,9 @@ void PM_FootSlopeTrace( float *pDiff, float *pInterval )
 	}
 }
 
-qboolean BG_InSlopeAnim( int anim )
+qboolean PM_InSlopeAnim(int anim)
 {
-	switch ( anim )
+	switch (anim)
 	{
 	case LEGS_LEFTUP1:			//# On a slope with left foot 4 higher than right
 	case LEGS_LEFTUP2:			//# On a slope with left foot 8 higher than right
@@ -5288,8 +5333,18 @@ static void PM_Footsteps( void ) {
 
 		bobmove = 0.5;	// ducked characters bob much faster
 
-		if ( ( (PM_RunningAnim( pm->ps->legsAnim )&&VectorLengthSquared(pm->ps->velocity)>=40000/*200*200*/) || PM_CanRollFromSoulCal( pm->ps ) ) &&
-			!BG_InRoll(pm->ps, pm->ps->legsAnim) )
+		//if ( ( (PM_RunningAnim( pm->ps->legsAnim )&&VectorLengthSquared(pm->ps->velocity)>=40000/*200*200*/) || PM_CanRollFromSoulCal( pm->ps ) ) &&
+		//	!BG_InRoll(pm->ps, pm->ps->legsAnim) )
+		//{//roll!
+		//	rolled = PM_TryRoll();
+		//}
+		if (((PM_RunningAnim(pm->ps->legsAnim)
+			|| PM_CanRollFromSoulCal(pm->ps)
+			|| pm->ps->saberActionFlags & (1 << SAF_BLOCKING)
+			|| pm->cmd.buttons & BUTTON_BLOCK
+			|| pm->cmd.buttons & BUTTON_WALKING))
+			&& !BG_InRoll(pm->ps, pm->ps->legsAnim))
+			// simplified but more accurate at the same time
 		{//roll!
 			rolled = PM_TryRoll();
 		}
@@ -5596,7 +5651,7 @@ static void PM_Footsteps( void ) {
 				}
 #endif
 				else
-				{
+				{//[SaberSys]
 					switch (pm->ps->fd.saberAnimLevel)
 					{
 					case SS_STAFF:
@@ -5604,9 +5659,9 @@ static void PM_Footsteps( void ) {
 						{
 							desiredAnim = BOTH_WALK1;
 						}
-						else if ( pm->ps->saberHolstered )
+						else if (pm->cmd.buttons & BUTTON_BLOCK)
 						{
-							desiredAnim = BOTH_WALK2;
+							desiredAnim = BOTH_WALK1;
 						}
 						else
 						{
@@ -5618,9 +5673,9 @@ static void PM_Footsteps( void ) {
 						{
 							desiredAnim = BOTH_WALK1;
 						}
-						else if ( pm->ps->saberHolstered )
+						else if (pm->cmd.buttons & BUTTON_BLOCK)
 						{
-							desiredAnim = BOTH_WALK2;
+							desiredAnim = BOTH_WALK1;
 						}
 						else
 						{
@@ -5632,10 +5687,14 @@ static void PM_Footsteps( void ) {
 						{
 							desiredAnim = BOTH_WALK1;
 						}
+						else if (pm->cmd.buttons & BUTTON_BLOCK)
+						{
+							desiredAnim = BOTH_WALK1;
+						}
 						else
 						{
 							desiredAnim = BOTH_WALK2;
-						}
+						}//[/SaberSys]
 						break;
 					}
 				}
@@ -5793,6 +5852,13 @@ void PM_BeginWeaponChange( int weapon ) {
 		return;
 	}
 
+	//[SaberSys]
+	// Don't allow while in blocking mode for sabers, otherwise this fucks EVERYTHING up...
+	if (pm->ps->weapon == WP_SABER && pm->ps->saberActionFlags & (1 << SAF_BLOCKING))
+	{
+		return;
+	}
+	//[/SaberSys]
 	// turn of any kind of zooming when weapon switching.
 	if (pm->ps->zoomMode)
 	{
@@ -6795,8 +6861,9 @@ static void PM_Weapon( void )
 			}
 			else if ( (pm->ps->fd.forcePowersActive&(1<<FP_LIGHTNING)) )
 			{//lightning
-				if ( pm->ps->weapon == WP_MELEE
-					&& pm->ps->activeForcePass > FORCE_LEVEL_2 )
+				if (pm->ps->weapon == WP_MELEE ||
+					pm->ps->weapon == WP_NONE ||
+					pm->ps->weapon == WP_SABER && pm->ps->saberHolstered)
 				{//2-handed lightning
 					desiredAnim = BOTH_FORCE_2HANDEDLIGHTNING_HOLD;
 				}
@@ -6805,7 +6872,7 @@ static void PM_Weapon( void )
 					desiredAnim = BOTH_FORCELIGHTNING_HOLD;
 				}
 			}
-			else if ( (pm->ps->fd.forcePowersActive&(1<<FP_DRAIN)) )
+			else if ((pm->ps->fd.forcePowersActive&(1 << FP_DRAIN)))
 			{//draining
 				desiredAnim = BOTH_FORCEGRIP_HOLD;
 			}

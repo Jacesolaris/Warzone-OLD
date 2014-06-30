@@ -696,6 +696,69 @@ static void CG_RegisterSounds( void ) {
 	cgs.media.blueSaberCoreShader		= trap->R_RegisterShader( "gfx/effects/sabers/blue_line" );
 	cgs.media.purpleSaberGlowShader		= trap->R_RegisterShader( "gfx/effects/sabers/purple_glow" );
 	cgs.media.purpleSaberCoreShader		= trap->R_RegisterShader( "gfx/effects/sabers/purple_line" );
+	//[RGBSabers]
+	cgs.media.rgbSaberGlowShader = trap->R_RegisterShader("gfx/effects/sabers/rgb_glow");
+	cgs.media.rgbSaberCoreShader = trap->R_RegisterShader("gfx/effects/sabers/rgb_line");
+	cgs.media.rgbSaberCore2Shader = trap->R_RegisterShader("gfx/effects/sabers/rgb_core");
+	cgs.media.blackSaberGlowShader = trap->R_RegisterShader("gfx/effects/sabers/black_glow");
+	cgs.media.blackSaberTrail = trap->R_RegisterShader("gfx/effects/sabers/blacksaberBlur");
+	//[/RGBSabers]
+
+	//[SFXSabers]
+	cgs.media.sfxSaberTrailShader = trap->R_RegisterShader("SFX_Sabers/saber_trail");
+	cgs.media.sfxSaberBladeShader = trap->R_RegisterShader("SFX_Sabers/saber_blade");
+	cgs.media.sfxSaberBlade2Shader = trap->R_RegisterShader("SFX_Sabers/saber_blade_rgb");
+	cgs.media.sfxSaberEndShader = trap->R_RegisterShader("SFX_Sabers/saber_end");
+	cgs.media.sfxSaberEnd2Shader = trap->R_RegisterShader("SFX_Sabers/saber_end_rgb");
+	//[/SFXSabers]
+
+	//[Movie Sabers]
+	//Original Trilogy Sabers
+	cgs.media.otSaberCoreShader = trap->R_RegisterShader("OTsabers/ot_saberCore");
+	cgs.media.redOTGlowShader = trap->R_RegisterShader("OTsabers/ot_redGlow");
+	cgs.media.orangeOTGlowShader = trap->R_RegisterShader("OTsabers/ot_orangeGlow");
+	cgs.media.yellowOTGlowShader = trap->R_RegisterShader("OTsabers/ot_yellowGlow");
+	cgs.media.greenOTGlowShader = trap->R_RegisterShader("OTsabers/ot_greenGlow");
+	cgs.media.blueOTGlowShader = trap->R_RegisterShader("OTsabers/ot_blueGlow");
+	cgs.media.purpleOTGlowShader = trap->R_RegisterShader("OTsabers/ot_purpleGlow");
+
+	//Episode I Sabers
+	cgs.media.ep1SaberCoreShader = trap->R_RegisterShader("Ep1Sabers/saber_core");
+	cgs.media.redEp1GlowShader = trap->R_RegisterShader("Ep1Sabers/red_glowa");
+	cgs.media.orangeEp1GlowShader = trap->R_RegisterShader("Ep1Sabers/orange_glowa");
+	cgs.media.yellowEp1GlowShader = trap->R_RegisterShader("Ep1Sabers/yellow_glowa");
+	cgs.media.greenEp1GlowShader = trap->R_RegisterShader("Ep1Sabers/green_glowa");
+	cgs.media.blueEp1GlowShader = trap->R_RegisterShader("Ep1Sabers/blue_glowa");
+	cgs.media.purpleEp1GlowShader = trap->R_RegisterShader("Ep1Sabers/purple_glowa");
+
+	//Episode II Sabers
+	cgs.media.ep2SaberCoreShader = trap->R_RegisterShader("Ep2Sabers/saber_core");
+	cgs.media.whiteIgniteFlare = trap->R_RegisterShader("Ep2Sabers/white_ignite_flare");
+	cgs.media.blackIgniteFlare = trap->R_RegisterShader("Ep3Sabers/black_ignite_flare");
+	cgs.media.redEp2GlowShader = trap->R_RegisterShader("Ep2Sabers/red_glowa");
+	cgs.media.orangeEp2GlowShader = trap->R_RegisterShader("Ep2Sabers/orange_glowa");
+	cgs.media.yellowEp2GlowShader = trap->R_RegisterShader("Ep2Sabers/yellow_glowa");
+	cgs.media.greenEp2GlowShader = trap->R_RegisterShader("Ep2Sabers/green_glowa");
+	cgs.media.blueEp2GlowShader = trap->R_RegisterShader("Ep2Sabers/blue_glowa");
+	cgs.media.purpleEp2GlowShader = trap->R_RegisterShader("Ep2Sabers/purple_glowa");
+
+	//Episode III Sabers
+	cgs.media.ep3SaberCoreShader = trap->R_RegisterShader("Ep3Sabers/saber_core");
+	cgs.media.whiteIgniteFlare02 = trap->R_RegisterShader("Ep3Sabers/white_ignite_flare");
+	cgs.media.blackIgniteFlare02 = trap->R_RegisterShader("Ep3Sabers/black_ignite_flare");
+	cgs.media.redIgniteFlare = trap->R_RegisterShader("Ep3Sabers/red_ignite_flare");
+	cgs.media.greenIgniteFlare = trap->R_RegisterShader("Ep3Sabers/green_ignite_flare");
+	cgs.media.purpleIgniteFlare = trap->R_RegisterShader("Ep3Sabers/purple_ignite_flare");
+	cgs.media.blueIgniteFlare = trap->R_RegisterShader("Ep3Sabers/blue_ignite_flare");
+	cgs.media.orangeIgniteFlare = trap->R_RegisterShader("Ep3Sabers/orange_ignite_flare");
+	cgs.media.yellowIgniteFlare = trap->R_RegisterShader("Ep3Sabers/yellow_ignite_flare");
+	cgs.media.redEp3GlowShader = trap->R_RegisterShader("Ep3Sabers/red_glowa");
+	cgs.media.orangeEp3GlowShader = trap->R_RegisterShader("Ep3Sabers/orange_glowa");
+	cgs.media.yellowEp3GlowShader = trap->R_RegisterShader("Ep3Sabers/yellow_glowa");
+	cgs.media.greenEp3GlowShader = trap->R_RegisterShader("Ep3Sabers/green_glowa");
+	cgs.media.blueEp3GlowShader = trap->R_RegisterShader("Ep3Sabers/blue_glowa");
+	cgs.media.purpleEp3GlowShader = trap->R_RegisterShader("Ep3Sabers/purple_glowa");
+	//[Movie Sabers]
 	cgs.media.saberBlurShader			= trap->R_RegisterShader( "gfx/effects/sabers/saberBlur" );
 	cgs.media.swordTrailShader			= trap->R_RegisterShader( "gfx/effects/sabers/swordTrail" );
 
@@ -1049,6 +1112,10 @@ static void CG_RegisterSounds( void ) {
 
 	cgs.media.winnerSound = trap->S_RegisterSound( "sound/chars/protocol/misc/40MOM006" );
 	cgs.media.loserSound = trap->S_RegisterSound( "sound/chars/protocol/misc/40MOM010" );
+	// Weather
+	/*cgs.media.heavyRain = trap_S_RegisterSound("sound/ambient/rain_hard");
+	cgs.media.regularRain = trap_S_RegisterSound("sound/ambient/rain_mid");
+	cgs.media.lightRain = trap_S_RegisterSound("sound/ambient/rain_light");*/
 }
 
 
@@ -1246,6 +1313,10 @@ static void CG_RegisterGraphics( void ) {
 
 	cgs.effects.forceLightning		= trap->FX_RegisterEffect( "effects/force/lightning.efx" );
 	cgs.effects.forceLightningWide	= trap->FX_RegisterEffect( "effects/force/lightningwide.efx" );
+	//cgs.effects.forcelightningAbsorb	= trap->FX_RegisterEffect( "effects/force/lightning_absorb.efx" );
+	cgs.effects.saber_lightninghit = trap->FX_RegisterEffect(" effects/saber/saber_lightninghit.efx");
+	/*cgs.effects.forcelightningFlare	=trap->FX_RegisterEffect( " effects/force/lightning_flare.efx") ;
+	cgs.effects.forcelightningImpact	=trap->FX_RegisterEffect( " effects/force/lightning_impact.efx") ;*/
 	cgs.effects.forceDrain		= trap->FX_RegisterEffect( "effects/mp/drain.efx" );
 	cgs.effects.forceDrainWide	= trap->FX_RegisterEffect( "effects/mp/drainwide.efx" );
 	cgs.effects.forceDrained	= trap->FX_RegisterEffect( "effects/mp/drainhit.efx");
@@ -1572,6 +1643,9 @@ Ghoul2 Insert End
 	cgs.media.halfShieldShader	= trap->R_RegisterShader( "halfShieldShell" );
 
 	trap->FX_RegisterEffect("force/force_touch");
+	//Weather
+	//cgs.effects.saberFizz = trap->FX_RegisterEffect("saber/fizz.efx");
+	//cgs.effects.rain = trap->FX_RegisterEffect("effects/rain");
 }
 
 const char *CG_GetStringEdString(char *refSection, char *refName)
@@ -2636,7 +2710,9 @@ Ghoul2 Insert End
 
 	//make sure saber data is loaded before this! (so we can precache the appropriate hilts)
 	CG_InitSiegeMode();
-
+	//[TrueView]
+	CG_TrueViewInit();
+	//[/TrueView]
 	CG_RegisterSounds();
 
 //	CG_LoadingString( "graphics" );
@@ -3186,3 +3262,23 @@ Q_EXPORT intptr_t vmMain( int command, intptr_t arg0, intptr_t arg1, intptr_t ar
 	}
 	return -1;
 }
+//[LightningBlockSys]
+void CG_BlockLightningEffect()
+{
+	//if ( traceEnt->client->ps.weapon == WP_SABER )
+	{
+		int rBladeNum = 0;
+		vec3_t	end2;
+		vec3_t ang = { 0, 1, 2 };
+		clientInfo_t *ci = &cgs.clientinfo[pm->ps->clientNum];
+		saberInfo_t *saber1 = &ci->saber[0];
+
+		ang[0] = flrand(0, 360);
+		ang[1] = flrand(0, 360);
+		ang[2] = flrand(0, 360);
+
+		VectorMA(saber1->blade[rBladeNum].muzzlePoint, saber1->blade[rBladeNum].lengthMax*flrand(0, 1), saber1->blade[rBladeNum].muzzleDir, end2);
+		trap->FX_PlayEffectID(cgs.effects.saber_lightninghit, end2, ang, -1, -1, qfalse);
+	}
+}//[/LightningBlockSys]
+// here is the function for the effect to be call and its shit as you can see it will be seeing in 

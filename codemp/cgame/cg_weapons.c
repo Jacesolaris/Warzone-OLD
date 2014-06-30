@@ -559,7 +559,11 @@ Ghoul2 Insert End
 
 	// Do special charge bits
 	//-----------------------
-	if ( (ps || cg.renderingThirdPerson || cg.predictedPlayerState.clientNum != cent->currentState.number) &&
+	//[TrueView]
+	//Make the guns do their charging visual in True View.
+	if ((ps || cg.renderingThirdPerson || cg.predictedPlayerState.clientNum != cent->currentState.number || cg_trueguns.integer) &&
+		//if ( (ps || cg.renderingThirdPerson || cg.predictedPlayerState.clientNum != cent->currentState.number) &&
+		//[/TrueView]
 		( ( cent->currentState.modelindex2 == WEAPON_CHARGING_ALT && cent->currentState.weapon == WP_BRYAR_PISTOL ) ||
 		  ( cent->currentState.modelindex2 == WEAPON_CHARGING_ALT && cent->currentState.weapon == WP_BRYAR_OLD ) ||
 		  ( cent->currentState.weapon == WP_BOWCASTER && cent->currentState.modelindex2 == WEAPON_CHARGING ) ||
@@ -676,8 +680,10 @@ Ghoul2 Insert End
 		}
 	}
 
-	if ( ps || cg.renderingThirdPerson ||
-			cent->currentState.number != cg.predictedPlayerState.clientNum )
+	//[TrueView]
+	if (ps || cg.renderingThirdPerson || cg_trueguns.integer
+		|| cent->currentState.number != cg.predictedPlayerState.clientNum)
+		//[/TrueView] 
 	{	// Make sure we don't do the thirdperson model effects for the local player if we're in first person
 		vec3_t flashorigin, flashdir;
 		refEntity_t	flash;
@@ -765,16 +771,42 @@ void CG_AddViewWeapon( playerState_t *ps ) {
 	float		fovOffset;
 	vec3_t		angles;
 	weaponInfo_t	*weapon;
-	float cgFov = cg_fovViewmodel.integer ? cg_fovViewmodel.value : cg_fov.value;
+	//[TrueView]
+	float	cgFov;
+
+	if (!cg.renderingThirdPerson && (cg_trueguns.integer || cg.predictedPlayerState.weapon == WP_SABER
+		|| cg.predictedPlayerState.weapon == WP_MELEE) && cg_trueFOV.value
+		&& (cg.predictedPlayerState.pm_type != PM_SPECTATOR)
+		&& (cg.predictedPlayerState.pm_type != PM_INTERMISSION))
+	{
+		cgFov = cg_trueFOV.value;
+	}
+	else
+	{
+		cgFov = cg_fov.value;
+	}
+	//float	cgFov = cg_fov.value;
+	//[TrueView]
+
 
 	if (cgFov < 1)
+	{
 		cgFov = 1;
-	if (cgFov > 130)
-		cgFov = 130;
-
-	if ( ps->persistant[PERS_TEAM] == TEAM_SPECTATOR ) {
-		return;
 	}
+
+	//[TrueView]
+	//Allow larger Fields of View
+	if (cgFov > 180)
+	{
+		cgFov = 180;
+	}
+	/*
+	if (cgFov > 97)
+	{
+	cgFov = 97;
+	}
+	*/
+	//[TrueView]
 
 	if ( ps->pm_type == PM_INTERMISSION ) {
 		return;
@@ -787,7 +819,11 @@ void CG_AddViewWeapon( playerState_t *ps ) {
 	}
 
 	// allow the gun to be completely removed
-	if ( !cg_drawGun.integer || cg.predictedPlayerState.zoomMode) {
+	//[TrueView]
+	if (!cg_drawGun.integer || cg.predictedPlayerState.zoomMode || cg_trueguns.integer
+		|| cg.predictedPlayerState.weapon == WP_SABER || cg.predictedPlayerState.weapon == WP_MELEE) {
+		//if ( !cg_drawGun.integer || cg.predictedPlayerState.zoomMode) {
+		//[TrueView]
 		vec3_t		origin;
 
 		if ( cg.predictedPlayerState.eFlags & EF_FIRING ) {
@@ -2305,7 +2341,9 @@ Ghoul2 Insert Start
 
 // create one instance of all the weapons we are going to use so we can just copy this info into each clients gun ghoul2 object in fast way
 static void *g2WeaponInstances[MAX_WEAPONS];
-
+//[VisualWeapons]
+void *g2HolsterWeaponInstances[MAX_WEAPONS];
+//[/VisualWeapons]
 void CG_InitG2Weapons(void)
 {
 	int i = 0;
@@ -2319,6 +2357,10 @@ void CG_InitG2Weapons(void)
 
 			// initialise model
 			trap->G2API_InitGhoul2Model(&g2WeaponInstances[/*i*/item->giTag], item->world_model[0], 0, 0, 0, 0, 0);
+			//[VisualWeapons]
+			//init holster models at the same time.
+			trap->G2API_InitGhoul2Model(&g2HolsterWeaponInstances[item->giTag], item->world_model[0], 0, 0, 0, 0, 0);
+			//[/VisualWeapons
 //			trap->G2API_InitGhoul2Model(&g2WeaponInstances[i], item->world_model[0],G_ModelIndex( item->world_model[0] ) , 0, 0, 0, 0);
 			if (g2WeaponInstances[/*i*/item->giTag])
 			{
@@ -2352,6 +2394,9 @@ void CG_ShutDownG2Weapons(void)
 	for (i=0; i<MAX_WEAPONS; i++)
 	{
 		trap->G2API_CleanGhoul2Models(&g2WeaponInstances[i]);
+		//[VisualWeapons]
+		trap->G2API_CleanGhoul2Models(&g2HolsterWeaponInstances[i]);
+		//[/VisualWeapons]
 	}
 }
 
@@ -2394,6 +2439,59 @@ void *CG_G2WeaponInstance(centity_t *cent, int weapon)
 	//If no custom then just use the default.
 	return g2WeaponInstances[weapon];
 }
+
+//[VisualWeapons]
+void *CG_G2HolsterWeaponInstance(centity_t *cent, int weapon, qboolean secondSaber)
+{
+	clientInfo_t *ci = NULL;
+
+	if (weapon != WP_SABER)
+	{
+		return g2HolsterWeaponInstances[weapon];
+	}
+
+	if (cent->currentState.eType != ET_PLAYER &&
+		cent->currentState.eType != ET_NPC)
+	{
+		return g2HolsterWeaponInstances[weapon];
+	}
+
+	if (cent->currentState.eType == ET_NPC)
+	{
+		ci = cent->npcClient;
+	}
+	else
+	{
+		ci = &cgs.clientinfo[cent->currentState.number];
+	}
+
+	if (!ci)
+	{
+		return g2HolsterWeaponInstances[weapon];
+	}
+
+	//Try to return the custom saber instance if we can.
+	if(secondSaber)
+	{//return secondSaber instance
+		if (ci->saber[1].model[0] &&
+			ci->ghoul2HolsterWeapons[1])
+		{
+			return ci->ghoul2HolsterWeapons[1];
+		}
+	}
+	else
+	{//return first saber instance
+		if (ci->saber[0].model[0] &&
+			ci->ghoul2HolsterWeapons[0])
+		{
+			return ci->ghoul2HolsterWeapons[0];
+		}
+	}
+
+	//If no custom then just use the default.
+	return g2HolsterWeaponInstances[weapon];
+}
+//[/VisualWeapons]
 
 // what ghoul2 model do we want to copy ?
 void CG_CopyG2WeaponInstance(centity_t *cent, int weaponNum, void *toGhoul2)

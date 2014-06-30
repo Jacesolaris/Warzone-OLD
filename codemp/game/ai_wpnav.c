@@ -3,6 +3,9 @@
 #include "botlib/botlib.h"
 #include "ai_main.h"
 
+// Disable stupid warnings...
+#pragma warning( disable : 4996 )
+
 float gWPRenderTime = 0;
 float gDeactivated = 0;
 float gBotEdit = 0;

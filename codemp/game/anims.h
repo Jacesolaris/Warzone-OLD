@@ -975,6 +975,11 @@ typedef enum //# animNumber_e
 	BOTH_SABERSLOW_STANCE,
 	BOTH_SABERDUAL_STANCE,
 	BOTH_SABERSTAFF_STANCE,
+	//[SaberSys]
+	//dedicated stance animations for the hidden styles
+	BOTH_SABERTAVION_STANCE,
+	BOTH_SABERDESANN_STANCE,
+	//[/SaberSys]
 	BOTH_A2_STABBACK1,		//# Stab saber backward
 	BOTH_ATTACK_BACK,		//# Swing around backwards and attack
 	BOTH_JUMPFLIPSLASHDOWN1,//#
