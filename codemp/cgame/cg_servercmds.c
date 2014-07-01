@@ -513,38 +513,49 @@ void CG_PrecacheNPCSounds(const char *str)
 
 void CG_HandleNPCSounds(centity_t *cent)
 {
-	if (!cent->npcClient)
+	clientInfo_t *ci = cent->npcClient;
+
+	if (cent->currentState.number < MAX_CLIENTS
+		&& (cg_entities[cent->currentState.number].currentState.NPC_class == CLASS_BOT_FAKE_NPC || cg_entities[cent->currentState.number].currentState.eFlags & EF_FAKE_NPC_BOT))
+	{
+		ci = &cgs.clientinfo[cent->currentState.number];
+	}
+	else if (!cent->npcClient)
 	{
 		return;
 	}
 
-	//standard
-	if (cent->currentState.csSounds_Std)
+	if (cent->currentState.number < MAX_CLIENTS
+		&& (cg_entities[cent->currentState.number].currentState.NPC_class == CLASS_BOT_FAKE_NPC || cg_entities[cent->currentState.number].currentState.eFlags & EF_FAKE_NPC_BOT))
 	{
-		const char *s = CG_ConfigString( CS_SOUNDS + cent->currentState.csSounds_Std );
-
-		if (s && s[0])
+		//standard
+		if (cent->currentState.csSounds_Std)
 		{
-			char sEnd[MAX_QPATH];
-			int i = 2;
-			int j = 0;
+			const char *s = CG_ConfigString( CS_SOUNDS + cent->currentState.csSounds_Std );
 
-			//Parse past the initial "*" which indicates this is a custom sound, and the $ which indicates
-			//it is an NPC custom sound dir.
-			while (s[i])
+			if (s && s[0])
 			{
-				sEnd[j] = s[i];
-				j++;
-				i++;
-			}
-			sEnd[j] = 0;
+				char sEnd[MAX_QPATH];
+				int i = 2;
+				int j = 0;
 
-			CG_RegisterCustomSounds(cent->npcClient, 1, sEnd);
+				//Parse past the initial "*" which indicates this is a custom sound, and the $ which indicates
+				//it is an NPC custom sound dir.
+				while (s[i])
+				{
+					sEnd[j] = s[i];
+					j++;
+					i++;
+				}
+				sEnd[j] = 0;
+
+				CG_RegisterCustomSounds(ci, 1, sEnd);
+			}
 		}
-	}
-	else
-	{
-		memset(&cent->npcClient->sounds, 0, sizeof(cent->npcClient->sounds));
+		else
+		{
+			memset(&ci->sounds, 0, sizeof(ci->sounds));
+		}
 	}
 
 	//combat
@@ -568,12 +579,12 @@ void CG_HandleNPCSounds(centity_t *cent)
 			}
 			sEnd[j] = 0;
 
-			CG_RegisterCustomSounds(cent->npcClient, 2, sEnd);
+			CG_RegisterCustomSounds(ci, 2, sEnd);
 		}
 	}
 	else
 	{
-		memset(&cent->npcClient->combatSounds, 0, sizeof(cent->npcClient->combatSounds));
+		memset(&ci->combatSounds, 0, sizeof(ci->combatSounds));
 	}
 
 	//extra
@@ -597,12 +608,12 @@ void CG_HandleNPCSounds(centity_t *cent)
 			}
 			sEnd[j] = 0;
 
-			CG_RegisterCustomSounds(cent->npcClient, 3, sEnd);
+			CG_RegisterCustomSounds(ci, 3, sEnd);
 		}
 	}
 	else
 	{
-		memset(&cent->npcClient->extraSounds, 0, sizeof(cent->npcClient->extraSounds));
+		memset(&ci->extraSounds, 0, sizeof(ci->extraSounds));
 	}
 
 	//jedi
@@ -626,12 +637,12 @@ void CG_HandleNPCSounds(centity_t *cent)
 			}
 			sEnd[j] = 0;
 
-			CG_RegisterCustomSounds(cent->npcClient, 4, sEnd);
+			CG_RegisterCustomSounds(ci, 4, sEnd);
 		}
 	}
 	else
 	{
-		memset(&cent->npcClient->jediSounds, 0, sizeof(cent->npcClient->jediSounds));
+		memset(&ci->jediSounds, 0, sizeof(ci->jediSounds));
 	}
 }
 

@@ -31,7 +31,7 @@ extern qboolean NPC_UpdateAngles(qboolean doPitch, qboolean doYaw);
 extern void NPC_Begin(gentity_t *ent);
 extern void NPC_ExecuteBState(gentity_t *self);
 extern void SetNPCGlobals(gentity_t *ent);
-
+extern void NPC_Precache ( gentity_t *spawner );
 
 void DOM_InitFakeNPC(gentity_t *bot)
 {
@@ -50,6 +50,8 @@ void DOM_InitFakeNPC(gentity_t *bot)
 	NPC_ParseParms(bot->NPC_type, bot);
 
 	NPC_DefaultScriptFlags(bot);
+
+	NPC_Precache(bot);
 
 	bot->client->NPC_class = CLASS_BOT_FAKE_NPC;
 	NPC_Begin(bot);
@@ -74,6 +76,11 @@ void DOM_InitFakeNPC(gentity_t *bot)
 	bot->client->NPC_class = CLASS_BOT_FAKE_NPC;
 
 	bot->client->playerTeam = NPCTEAM_ENEMY;
+
+	if (!(bot->s.eFlags & EF_FAKE_NPC_BOT))
+		bot->s.eFlags |= EF_FAKE_NPC_BOT;
+	if (!(bot->client->ps.eFlags & EF_FAKE_NPC_BOT))
+		bot->client->ps.eFlags |= EF_FAKE_NPC_BOT;
 }
 
 extern void BotChangeViewAngles(bot_state_t *bs, float thinktime);
@@ -149,6 +156,11 @@ void DOM_StandardBotAI2(bot_state_t *bs, float thinktime)
 		return;
 	}
 
+	if (!(bot->s.eFlags & EF_FAKE_NPC_BOT))
+		bot->s.eFlags |= EF_FAKE_NPC_BOT;
+	if (!(bot->client->ps.eFlags & EF_FAKE_NPC_BOT))
+		bot->client->ps.eFlags |= EF_FAKE_NPC_BOT;
+
 	VectorCopy(oldMoveDir, bot->client->ps.moveDir);
 	//or use client->pers.lastCommand?
 
@@ -157,12 +169,10 @@ void DOM_StandardBotAI2(bot_state_t *bs, float thinktime)
 	//nextthink is set before this so something in here can override it
 	NPC_ExecuteBState(bot);
 
-	NPC_Think(bot); // test
-
 	NPC_UpdateAngles(qtrue, qtrue);
-	//memcpy(&NPCS.ucmd, &NPCS.NPCInfo->last_ucmd, sizeof(usercmd_t));
+
+	//G_UpdateClientAnims(bot, 0.5f);
 	DOM_FakeNPC_Parse_UCMD(bs, bot);
-	ClientThink(bot->s.number, &NPCS.ucmd);
 
 	trap->ICARUS_MaintainTaskManager(bot->s.number);
 	VectorCopy(bot->r.currentOrigin, bot->client->ps.origin);

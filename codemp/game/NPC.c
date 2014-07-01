@@ -5,6 +5,7 @@
 #include "anims.h"
 #include "say.h"
 #include "icarus/Q3_Interface.h"
+#include "ai_main.h"
 
 extern vec3_t playerMins;
 extern vec3_t playerMaxs;
@@ -1385,7 +1386,11 @@ void NPC_RunBehavior( int team, int bState )
 	}
 	else if ( NPCS.NPC->client->NPC_class == CLASS_BOT_FAKE_NPC )
 	{//jedi - for now... might add subclasses later on...
-		NPC_BehaviorSet_Jedi( bState );
+		if ( NPCS.NPC->client->ps.weapon == WP_SABER )
+			NPC_BehaviorSet_Jedi( bState );
+		else
+			NPC_BSDefault();
+			//NPC_BehaviorSet_Stormtrooper( bState );
 	}
 //	else if ( NPCS.NPC->client->ps.weapon == WP_SABER )		// this is an _extremely_ shitty comparison.. FIXME: make a CLASS_CULTIST? --eez
 	else if ( NPCS.NPC->client->NPC_class == CLASS_JEDI ||
@@ -2031,6 +2036,29 @@ void NPC_InitAnimTable( void )
 }
 */
 
+#ifdef __DOMINANCE_AI__
+extern void NPC_ShadowTrooper_Precache( void );
+extern void NPC_Gonk_Precache( void );
+extern void NPC_Mouse_Precache( void );
+extern void NPC_Seeker_Precache( void );
+extern void NPC_Remote_Precache( void );
+extern void	NPC_R2D2_Precache(void);
+extern void	NPC_R5D2_Precache(void);
+extern void NPC_Probe_Precache(void);
+extern void NPC_Interrogator_Precache(gentity_t *self);
+extern void NPC_MineMonster_Precache( void );
+extern void NPC_Howler_Precache( void );
+extern void NPC_ATST_Precache(void);
+extern void NPC_Sentry_Precache(void);
+extern void NPC_Mark1_Precache(void);
+extern void NPC_Mark2_Precache(void);
+extern void NPC_GalakMech_Precache( void );
+extern void NPC_GalakMech_Init( gentity_t *ent );
+extern void NPC_Protocol_Precache( void );
+extern void Boba_Precache( void );
+extern void NPC_Wampa_Precache( void );
+#endif //__DOMINANCE_AI__
+
 void NPC_InitGame( void )
 {
 //	globals.NPCs = (gNPC_t *) trap->TagMalloc(game.maxclients * sizeof(game.bots[0]), TAG_GAME);
@@ -2046,12 +2074,35 @@ void NPC_InitGame( void )
 		teamLastEnemyTime[team] = -10000;
 	}
 	*/
+
+#ifdef __DOMINANCE_AI__
+	NPC_ShadowTrooper_Precache();
+	NPC_Gonk_Precache();
+	NPC_Mouse_Precache();
+	NPC_Seeker_Precache();
+	NPC_Remote_Precache();
+	NPC_R2D2_Precache();
+	NPC_R5D2_Precache();
+	NPC_Probe_Precache();
+	//NPC_Interrogator_Precache(gentity_t *self);
+	NPC_MineMonster_Precache();
+	NPC_Howler_Precache();
+	NPC_ATST_Precache();
+	NPC_Sentry_Precache();
+	NPC_Mark1_Precache();
+	NPC_Mark2_Precache();
+	NPC_GalakMech_Precache();
+	NPC_Protocol_Precache();
+	Boba_Precache();
+	NPC_Wampa_Precache();
+#endif //__DOMINANCE_AI__
 }
 
 void NPC_SetAnim(gentity_t *ent, int setAnimParts, int anim, int setAnimFlags)
 {	// FIXME : once torsoAnim and legsAnim are in the same structure for NCP and Players
 	// rename PM_SETAnimFinal to PM_SetAnim and have both NCP and Players call PM_SetAnim
 	G_SetAnim(ent, NULL, setAnimParts, anim, setAnimFlags, 0);
+
 /*
 	if(ent->client)
 	{//Players, NPCs

@@ -5687,6 +5687,7 @@ finish:
 	}
 	else
 	{
+#ifdef ___NPC_NAV_WAYPOINTING___
 		// Find random entity targets...
 		if (!NPCS.NPCInfo->goalEntity)
 		{
@@ -5752,19 +5753,19 @@ finish:
 			}
 		}
 		else
+#endif //___NPC_NAV_WAYPOINTING___
 		{
 			// Have a goal. Move there...
 			//NPCS.ucmd.buttons |= BUTTON_WALKING; // UQ1: Walk???
 			//NPC_MoveToGoal( qtrue );
-
-			if ( UpdateGoal() )
-			{
-				//NPCS.ucmd.buttons |= BUTTON_WALKING;
-				//Jedi_Move( NPCInfo->goalEntity );
-				//NPC_MoveToGoal( qtrue );
-				NPC_MoveToGoal( qfalse );
-			}
 		}
+	}
+
+	if ( UpdateGoal() )
+	{
+		NPCS.ucmd.buttons |= BUTTON_WALKING;
+		//Jedi_Move( NPCS.NPCInfo->goalEntity, qfalse );
+		NPC_MoveToGoal( qtrue );
 	}
 }
 

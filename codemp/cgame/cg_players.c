@@ -274,6 +274,13 @@ sfxHandle_t	CG_CustomSound( int clientNum, const char *soundName ) {
 		}
 	}
 
+	/*
+	if (clientNum >= MAX_CLIENTS 
+		|| cg_entities[clientNum].currentState.NPC_class == CLASS_BOT_FAKE_NPC 
+		|| cg_entities[clientNum].currentState.eFlags & EF_FAKE_NPC_BOT)
+		trap->Print("NPC Sound.\n");
+	*/
+
 	for ( i = 0 ; i < MAX_CUSTOM_SOUNDS ; i++ )
 	{
 		if ( i < numCSounds && !strcmp( lSoundName, cg_customSoundNames[i] ) )
@@ -288,19 +295,54 @@ sfxHandle_t	CG_CustomSound( int clientNum, const char *soundName ) {
 		{ //siege only
 			return ci->duelSounds[i];
 		}
-		else if ( clientNum >= MAX_CLIENTS && i < numCComSounds && !strcmp( lSoundName, cg_customCombatSoundNames[i] ) )
+		else if ( i < numCComSounds && !strcmp( lSoundName, cg_customCombatSoundNames[i] ) )
 		{ //npc only
 			return ci->combatSounds[i];
 		}
-		else if ( clientNum >= MAX_CLIENTS && i < numCExSounds && !strcmp( lSoundName, cg_customExtraSoundNames[i] ) )
+		else if ( i < numCExSounds && !strcmp( lSoundName, cg_customExtraSoundNames[i] ) )
 		{ //npc only
 			return ci->extraSounds[i];
 		}
-		else if ( clientNum >= MAX_CLIENTS && i < numCJediSounds && !strcmp( lSoundName, cg_customJediSoundNames[i] ) )
+		else if ( i < numCJediSounds && !strcmp( lSoundName, cg_customJediSoundNames[i] ) )
 		{ //npc only
 			return ci->jediSounds[i];
 		}
 	}
+
+	/*
+	// UQ1: Try all known custom sounds...
+	if ( ci )
+	{
+		for ( i = 0 ; i < MAX_CUSTOM_SOUNDS && cg_customSoundNames[i] ; i++ ) 
+		{
+			if ( !Q_stricmp( soundName, cg_customSoundNames[i] ) ) 
+			{
+				return ci->sounds[i];
+			}
+		}
+		for ( i = 0 ; i < MAX_CUSTOM_COMBAT_SOUNDS && cg_customCombatSoundNames[i] ; i++ ) 
+		{
+			if ( !Q_stricmp( soundName, cg_customCombatSoundNames[i] ) ) 
+			{
+				return ci->sounds[i+MAX_CUSTOM_SOUNDS];
+			}
+		}
+		for ( i = 0 ; i < MAX_CUSTOM_EXTRA_SOUNDS && cg_customExtraSoundNames[i] ; i++ ) 
+		{
+			if ( !Q_stricmp( soundName, cg_customExtraSoundNames[i] ) ) 
+			{
+				return ci->sounds[i+MAX_CUSTOM_SOUNDS+MAX_CUSTOM_COMBAT_SOUNDS];
+			}
+		}
+		for ( i = 0 ; i < MAX_CUSTOM_JEDI_SOUNDS && cg_customJediSoundNames[i] ; i++ ) 
+		{
+			if ( !Q_stricmp( soundName, cg_customJediSoundNames[i] ) ) 
+			{
+				return ci->sounds[i+MAX_CUSTOM_SOUNDS+MAX_CUSTOM_COMBAT_SOUNDS+MAX_CUSTOM_EXTRA_SOUNDS];
+			}
+		}
+	}
+	*/
 
 	//trap->Error( ERR_DROP, "Unknown custom sound: %s", lSoundName );
 #ifndef FINAL_BUILD
@@ -1060,6 +1102,8 @@ This will usually be deferred to a safe time
 //[VisualWeapons]
 void CG_LoadHolsterData(clientInfo_t *ci);
 //[/VisualWeapons]
+extern void CG_HandleNPCSounds(centity_t *cent);
+
 void CG_LoadClientInfo( clientInfo_t *ci ) {
 	qboolean	modelloaded;
 	int			clientNum;
@@ -1208,6 +1252,11 @@ void CG_LoadClientInfo( clientInfo_t *ci ) {
 			CG_ResetPlayerEntity( &cg_entities[i] );
 		}
 	}
+
+	// UQ1: Load NPC sounds for players...
+	trap->S_Shutup(qtrue);
+	CG_HandleNPCSounds(&cg_entities[clientNum]); //handle sound loading here as well.
+	trap->S_Shutup(qfalse);
 }
 
 

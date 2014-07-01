@@ -38,7 +38,11 @@
 #define BOT_CTF_DEBUG	1
 */
 
+#ifndef __DOMINANCE_AI__
 #define BOT_THINK_TIME	0
+#else //__DOMINANCE_AI__
+#define BOT_THINK_TIME	100
+#endif //__DOMINANCE_AI__
 
 //bot states
 bot_state_t	*botstates[MAX_CLIENTS];
@@ -705,6 +709,17 @@ void RemoveColorEscapeSequences( char *text ) {
 BotAI
 ==============
 */
+
+#ifdef __DOMINANCE_AI__
+extern gentity_t *NPC_CheckEnemy( qboolean findNew, qboolean tooFarOk, qboolean setEnemy );
+
+#include "b_local.h"
+
+//Local Variables
+extern npcStatic_t NPCS;
+
+#endif //__DOMINANCE_AI__
+
 int BotAI(int client, float thinktime) {
 	bot_state_t *bs;
 	char buf[1024], *args;
@@ -770,27 +785,50 @@ int BotAI(int client, float thinktime) {
 #ifndef __DOMINANCE_AI__
 	StandardBotAI(bs, thinktime);
 #else //__DOMINANCE_AI__
-	//DOM_StandardBotAI(bs, thinktime); // UQ1: Uses Dominance AI...
-	//DOM_StandardBotAI2(bs, thinktime); // UQ1: Uses Dominance NPC AI...
+	NPCS.NPC = bot;
+	NPCS.client = NPCS.NPC->client;
+	NPCS.NPCInfo = bot->NPC;
+	NPCS.ucmd = NPCS.NPC->client->pers.cmd;
 
-	//NPC_CheckEnemy(qtrue, qfalse, qtrue);
+	if (bs->currentEnemy && !bot->enemy) 
+	{
+		bot->enemy = bs->currentEnemy;
+	}
 
+	if (NPCS.NPC && NPCS.NPCInfo)
+	{
+		NPC_CheckEnemy(qtrue, qfalse, qtrue);
+	}
+	
 	// UQ1: For now use normal DOM AI until the NPC has an enemy. Then switch to NPC AI for the fight. :)
-	/*if (bot->enemy 
+	if (bot->health > 0
+		&& bot->client->ps.stats[STAT_HEALTH] > 0
+		&& bot->client->ps.pm_type != PM_DEAD
+		&& bot->enemy 
 		&& bot->enemy->client
-		&& bot->enemy->client->ps.stats[STAT_HEALTH] > 0
 		&& bot->enemy->health > 0
-		&& bs->enemySeenTime > level.time
+		&& bot->enemy->client->ps.stats[STAT_HEALTH] > 0
+		&& (bs->frame_Enemy_Vis || bs->enemySeenTime > level.time)
 		&& bot->enemy->client->ps.pm_type != PM_DEAD)
-	{*/
+	{
+		// If we have an enemy, always use Dominance NPC AI...
+
 		DOM_StandardBotAI2(bs, thinktime); // UQ1: Uses Dominance NPC AI...
-		/*trap->Print("Bot %s is attacking with NPC AI.\n", bot->client->pers.netname);
+		//trap->Print("Bot %s is attacking with NPC AI.\n", bot->client->pers.netname);
+	}
+	else if (gWPNum > 0)
+	{
+		// If we have waypoints for this map then use StandardBotAI for non-combat...
+
+		//DOM_StandardBotAI(bs, thinktime); // UQ1: Uses Dominance AI...
+		//trap->Print("Bot %s is using DOM AI.\n", bot->client->pers.netname);
+		StandardBotAI(bs, thinktime);
 	}
 	else
 	{
-		DOM_StandardBotAI(bs, thinktime); // UQ1: Uses Dominance AI...
-		trap->Print("Bot %s is using DOM AI.\n", bot->client->pers.netname);
-	}*/
+		// Since we have no waypoints for this map, we may as well try to use NPC navigation...
+		DOM_StandardBotAI2(bs, thinktime); // UQ1: Uses Dominance NPC AI...
+	}
 #endif //__DOMINANCE_AI__
 #ifdef _DEBUG
 	end = trap->Milliseconds();

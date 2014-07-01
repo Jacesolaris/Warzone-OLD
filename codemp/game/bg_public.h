@@ -638,7 +638,7 @@ typedef enum {
 #define EF_JETPACK				(1<<29)		//rww - wearing a jetpack
 #define EF_JETPACK_FLAMING		(1<<30)		//rww - jetpack fire effect
 
-#define	EF_NOT_USED_5			(1<<31)		// not used
+#define	EF_FAKE_NPC_BOT			(1<<31)		// UQ1: Used to transmit that this bot is using NPC AI.
 
 //These new EF2_??? flags were added for NPCs, they really should not be used often.
 //NOTE: we only allow 10 of these!
