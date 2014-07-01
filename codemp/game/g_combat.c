@@ -2844,7 +2844,8 @@ extern void RunEmplacedWeapon( gentity_t *ent, usercmd_t **ucmd );
 		}
 
 		// the body can still be gibbed
-		if (!self->NPC)
+		//if (!self->NPC)
+		if (self->s.eType != ET_NPC)
 		{ //don't remove NPCs like this!
 			self->die = body_die;
 		}
@@ -2856,7 +2857,8 @@ extern void RunEmplacedWeapon( gentity_t *ent, usercmd_t **ucmd );
 		deathAnim = ( deathAnim + 1 ) % 3;
 	}
 
-	if ( self->NPC )
+	//if ( self->NPC )
+	if (self->s.eType == ET_NPC)
 	{//If an NPC, make sure we start running our scripts again- this gets set to infinite while we fall to our deaths
 		self->NPC->nextBStateThink = level.time;
 	}
@@ -2866,7 +2868,8 @@ extern void RunEmplacedWeapon( gentity_t *ent, usercmd_t **ucmd );
 		//deathScript = qtrue;
 	}
 
-	if ( self->NPC && (self->NPC->scriptFlags&SCF_FFDEATH) )
+	//if ( self->NPC && (self->NPC->scriptFlags&SCF_FFDEATH) )
+	if ( self->s.eType == ET_NPC && (self->NPC->scriptFlags&SCF_FFDEATH) )
 	{
 		if ( G_ActivateBehavior( self, BSET_FFDEATH ) )
 		{//FIXME: should running this preclude running the normal deathscript?
@@ -2891,13 +2894,15 @@ extern void RunEmplacedWeapon( gentity_t *ent, usercmd_t **ucmd );
 
 	trap->LinkEntity ((sharedEntity_t *)self);
 
-	if ( self->NPC )
+	//if ( self->NPC )
+	if (self->s.eType == ET_NPC)
 	{
 		self->NPC->timeOfDeath = level.time;//this will change - used for debouncing post-death events
 	}
 
 	// Start any necessary death fx for this entity
-	if ( self->NPC )
+	//if ( self->NPC )
+	if (self->s.eType == ET_NPC)
 		DeathFX( self );
 
 

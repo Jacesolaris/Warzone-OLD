@@ -218,7 +218,7 @@ sfxHandle_t	CG_CustomSound( int clientNum, const char *soundName ) {
 		}
 	}
 
-	if (clientNum >= MAX_CLIENTS)
+	//if (clientNum >= MAX_CLIENTS)
 	{ //these are only for npc's
 		for (i = 0; i < MAX_CUSTOM_SOUNDS; i++)
 		{
