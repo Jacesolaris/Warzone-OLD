@@ -3134,6 +3134,7 @@ Initializes all non-persistant parts of playerState
 //prototype
 qboolean G_ClientPlugin(void);
 //[/VisualWeapons]
+vmCvar_t	mapname;
 extern qboolean WP_HasForcePowers( const playerState_t *ps );
 void ClientSpawn(gentity_t *ent) {
 	int					i = 0, index = 0, saveSaberNum = ENTITYNUM_NONE, wDisable = 0, savedSiegeIndex = 0, maxHealth = 100;
@@ -3237,6 +3238,8 @@ void ClientSpawn(gentity_t *ent) {
 			ent->client->ps.fd.saberAnimLevel = ent->client->ps.fd.saberDrawAnimLevel = ent->client->sess.saberLevel = ent->client->ps.fd.forcePowerLevel[FP_SABER_OFFENSE];
 	}
 
+	trap->Cvar_Register( &mapname, "mapname", "", CVAR_SERVERINFO | CVAR_ROM );
+	
 	// find a spawn point
 	// do it before setting health back up, so farthest
 	// ranging doesn't count this client
@@ -3248,7 +3251,14 @@ void ClientSpawn(gentity_t *ent) {
 		spawnPoint = SelectCTFSpawnPoint (
 						client->sess.sessionTeam,
 						client->pers.teamState.state,
-						spawn_origin, spawn_angles, !!(ent->r.svFlags & SVF_BOT));
+						spawn_origin, spawn_angles, !(ent->r.svFlags & SVF_BOT));
+	} else if (level.gametype < GT_TEAM 
+		&& (!Q_stricmpn(mapname.string, "ctf", 3) || !Q_stricmpn(mapname.string, "mp/ctf", 6) || !Q_stricmpn(mapname.string, "mp\\ctf", 6))) {
+		// UQ1: this is a CTF map. always use CTF spawn points... - FFA compatibility!
+		spawnPoint = SelectCTFSpawnPoint (
+						(team_t)irand(1, 2),
+						client->pers.teamState.state,
+						spawn_origin, spawn_angles, !(ent->r.svFlags & SVF_BOT));
 	}
 	else if (level.gametype == GT_SIEGE)
 	{
@@ -3256,7 +3266,7 @@ void ClientSpawn(gentity_t *ent) {
 						client->siegeClass,
 						client->sess.sessionTeam,
 						client->pers.teamState.state,
-						spawn_origin, spawn_angles, !!(ent->r.svFlags & SVF_BOT));
+						spawn_origin, spawn_angles, !(ent->r.svFlags & SVF_BOT));
 	}
 	else {
 		if (level.gametype == GT_POWERDUEL)
