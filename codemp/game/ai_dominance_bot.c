@@ -35,6 +35,8 @@ extern void NPC_Precache ( gentity_t *spawner );
 
 void DOM_InitFakeNPC(gentity_t *bot)
 {
+	int i = 0;
+
 	bot->NPC = New_NPC_t(bot->s.number);
 
 	//Assign the pointer for bg entity access
@@ -42,6 +44,15 @@ void DOM_InitFakeNPC(gentity_t *bot)
 
 	//bot->NPC_type = G_NewString("reborn");
 	bot->NPC_type = G_NewString(bot->client->pers.netname);
+
+	// Convert the spaces in the bot name to _ to match npc names...
+	for (i = 0; i < strlen(bot->NPC_type); i++)
+	{
+		if (bot->NPC_type[i] == ' ') 
+			bot->NPC_type[i] = '_';
+	}
+
+	trap->Print("NPC_type is %s.\n", bot->NPC_type);
 
 	//bot->flags |= FL_NO_KNOCKBACK;//don't fall off ledges
 
