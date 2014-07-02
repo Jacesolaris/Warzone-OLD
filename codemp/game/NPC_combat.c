@@ -3069,9 +3069,12 @@ void NPC_SetPickUpGoal( gentity_t *foundWeap )
 	VectorCopy( foundWeap->r.currentOrigin, org );
 	org[2] += 24 - (foundWeap->r.mins[2]*-1);//adjust the origin so that I am on the ground
 	NPC_SetMoveGoal( NPCS.NPC, org, foundWeap->r.maxs[0]*0.75, qfalse, -1, foundWeap );
-	NPCS.NPCInfo->tempGoal->waypoint = foundWeap->waypoint;
-	NPCS.NPCInfo->tempBehavior = BS_DEFAULT;
-	NPCS.NPCInfo->squadState = SQUAD_TRANSITION;
+	if (NPCS.NPCInfo->tempGoal)
+	{
+		NPCS.NPCInfo->tempGoal->waypoint = foundWeap->waypoint;
+		NPCS.NPCInfo->tempBehavior = BS_DEFAULT;
+		NPCS.NPCInfo->squadState = SQUAD_TRANSITION;
+	}
 }
 
 void NPC_CheckGetNewWeapon( void )

@@ -1386,10 +1386,10 @@ void NPC_RunBehavior( int team, int bState )
 	}
 	else if ( NPCS.NPC->client->NPC_class == CLASS_BOT_FAKE_NPC )
 	{//jedi - for now... might add subclasses later on...
-		if ( NPCS.NPC->client->ps.weapon == WP_SABER )
+		//if ( NPCS.NPC->client->ps.weapon == WP_SABER )
 			NPC_BehaviorSet_Jedi( bState );
-		else
-			NPC_BSDefault();
+		//else
+			//NPC_BSDefault();
 			//NPC_BehaviorSet_Stormtrooper( bState );
 	}
 //	else if ( NPCS.NPC->client->ps.weapon == WP_SABER )		// this is an _extremely_ shitty comparison.. FIXME: make a CLASS_CULTIST? --eez
