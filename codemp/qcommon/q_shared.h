@@ -6,6 +6,8 @@
 // q_shared.h -- included first by ALL program modules.
 // A user mod should never modify this file
 
+#define __MMO__
+
 // Disable stupid warnings...
 #pragma warning( disable : 4996 )
 
@@ -1375,13 +1377,22 @@ typedef enum {
 //
 // per-level limits
 //
+#ifdef __MMO__
+#define	MAX_CLIENTS			256		// absolute limit
+#else //!__MMO__
 #define	MAX_CLIENTS			32		// absolute limit
+#endif //__MMO__
 #define MAX_RADAR_ENTITIES	MAX_GENTITIES
 #define MAX_TERRAINS		1//32 //rwwRMG: inserted
 #define MAX_LOCATIONS		64
 
+#ifdef __MMO__
+#define	GENTITYNUM_BITS	11		// don't need to send any more
+#define	MAX_GENTITIES	(1<<GENTITYNUM_BITS)
+#else //!__MMO__
 #define	GENTITYNUM_BITS	10		// don't need to send any more
 #define	MAX_GENTITIES	(1<<GENTITYNUM_BITS)
+#endif //__MMO__
 
 //I am reverting. I guess. For now.
 /*
@@ -1422,7 +1433,11 @@ Ghoul2 Insert End
 
 #define MAX_AMBIENT_SETS		256 //rww - ambient soundsets must be sent over in config strings.
 
+#ifdef __MMO__
+#define	MAX_CONFIGSTRINGS	6400 //this is getting pretty high. Try not to raise it anymore than it already is.
+#else //!__MMO__
 #define	MAX_CONFIGSTRINGS	1700 //this is getting pretty high. Try not to raise it anymore than it already is.
+#endif //__MMO__
 
 // these are the only configstrings that the system reserves, all the
 // other ones are strictly for servergame to clientgame communication
@@ -1431,7 +1446,12 @@ Ghoul2 Insert End
 
 #define	RESERVED_CONFIGSTRINGS	2	// game can't modify below this, only the system can
 
+#ifdef __MMO__
+#define	MAX_GAMESTATE_CHARS	64000
+#else //!__MMO__
 #define	MAX_GAMESTATE_CHARS	16000
+#endif //__MMO__
+
 typedef struct gameState_s {
 	int			stringOffsets[MAX_CONFIGSTRINGS];
 	char		stringData[MAX_GAMESTATE_CHARS];
