@@ -2300,7 +2300,7 @@ void player_die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int
 		}
 	}
 
-	if ( self->NPC )
+	if ( /*self->NPC*/ self->s.eType == ET_NPC )
 	{
 		if ( self->client && Jedi_WaitingAmbush( self ) )
 		{//ambushing trooper
@@ -2814,7 +2814,7 @@ extern void RunEmplacedWeapon( gentity_t *ent, usercmd_t **ucmd );
 				}
 				//[/FullDismemberment]
 		}
-		else if (self->NPC && self->client && self->client->NPC_class != CLASS_MARK1 &&
+		else if (self->s.eType == ET_NPC/*self->NPC*/ && self->client && self->client->NPC_class != CLASS_MARK1 &&
 			self->client->NPC_class != CLASS_VEHICLE)
 		{ //in this case if we're an NPC it's my guess that we want to get removed straight away.
 			self->think = G_FreeEntity;

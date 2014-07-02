@@ -56,6 +56,7 @@ void DOM_InitFakeNPC(gentity_t *bot)
 	bot->client->NPC_class = CLASS_BOT_FAKE_NPC;
 	NPC_Begin(bot);
 	bot->s.eType = ET_PLAYER; // Replace ET_NPC
+	bot->client->NPC_class = CLASS_BOT_FAKE_NPC;
 
 	// UQ1: Mark every NPC's spawn position. For patrolling that spot and stuff...
 	VectorCopy(bot->r.currentOrigin, bot->spawn_pos);
@@ -72,8 +73,6 @@ void DOM_InitFakeNPC(gentity_t *bot)
 
 	// Init enemy...
 	bot->enemy = NULL;
-
-	bot->client->NPC_class = CLASS_BOT_FAKE_NPC;
 
 	bot->client->playerTeam = NPCTEAM_ENEMY;
 
@@ -136,6 +135,11 @@ void DOM_StandardBotAI2(bot_state_t *bs, float thinktime)
 	NPCS.NPCInfo = bot->NPC;
 	NPCS.ucmd = NPCS.NPC->client->pers.cmd;
 
+	if (!(bot->s.eFlags & EF_FAKE_NPC_BOT))
+		bot->s.eFlags |= EF_FAKE_NPC_BOT;
+	if (!(bot->client->ps.eFlags & EF_FAKE_NPC_BOT))
+		bot->client->ps.eFlags |= EF_FAKE_NPC_BOT;
+
 	if (!bot->NPC)
 		DOM_InitFakeNPC(bot);
 
@@ -150,16 +154,12 @@ void DOM_StandardBotAI2(bot_state_t *bs, float thinktime)
 			(!bs->doChat || bs->chatTime < level.time))
 		{
 			trap->EA_Attack(bs->client);
+
+			NPCS.NPC->enemy = NPCS.NPCInfo->goalEntity = NULL; // Clear enemy???
 		}
 
-		NPCS.NPC->enemy = NPCS.NPCInfo->goalEntity = NULL; // Clear enemy???
 		return;
 	}
-
-	if (!(bot->s.eFlags & EF_FAKE_NPC_BOT))
-		bot->s.eFlags |= EF_FAKE_NPC_BOT;
-	if (!(bot->client->ps.eFlags & EF_FAKE_NPC_BOT))
-		bot->client->ps.eFlags |= EF_FAKE_NPC_BOT;
 
 	VectorCopy(oldMoveDir, bot->client->ps.moveDir);
 	//or use client->pers.lastCommand?
