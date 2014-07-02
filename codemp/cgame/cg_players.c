@@ -6,6 +6,7 @@
 #include "game/bg_saga.h"
 //#include "game/bg_class.h"
 
+extern void CG_HandleNPCSounds(centity_t *cent);
 
 //[TrueView]
 //True View Camera Position Check Function
@@ -274,12 +275,14 @@ sfxHandle_t	CG_CustomSound( int clientNum, const char *soundName ) {
 		}
 	}
 
-	/*
-	if (clientNum >= MAX_CLIENTS 
-		|| cg_entities[clientNum].currentState.NPC_class == CLASS_BOT_FAKE_NPC 
-		|| cg_entities[clientNum].currentState.eFlags & EF_FAKE_NPC_BOT)
-		trap->Print("NPC Sound.\n");
-	*/
+	// UQ1: Load NPC sounds for players/bots...
+	if (clientNum < MAX_CLIENTS && !ci->npc_sounds_registered)
+	{
+		trap->S_Shutup(qtrue);
+		CG_HandleNPCSounds(&cg_entities[clientNum]);
+		trap->S_Shutup(qfalse);
+		ci->npc_sounds_registered = qtrue;
+	}
 
 	for ( i = 0 ; i < MAX_CUSTOM_SOUNDS ; i++ )
 	{
@@ -297,52 +300,20 @@ sfxHandle_t	CG_CustomSound( int clientNum, const char *soundName ) {
 		}
 		else if ( i < numCComSounds && !strcmp( lSoundName, cg_customCombatSoundNames[i] ) )
 		{ //npc only
+			//trap->Print("NPC (%i) Combat Sound %s is %i.\n", clientNum, lSoundName, ci->combatSounds[i]);
 			return ci->combatSounds[i];
 		}
 		else if ( i < numCExSounds && !strcmp( lSoundName, cg_customExtraSoundNames[i] ) )
 		{ //npc only
+			//trap->Print("NPC (%i) Extra Sound %s is %i.\n", clientNum, lSoundName, ci->extraSounds[i]);
 			return ci->extraSounds[i];
 		}
 		else if ( i < numCJediSounds && !strcmp( lSoundName, cg_customJediSoundNames[i] ) )
 		{ //npc only
+			//trap->Print("NPC (%i) Jedi Sound %s is %i.\n", clientNum, lSoundName, ci->jediSounds[i]);
 			return ci->jediSounds[i];
 		}
 	}
-
-	/*
-	// UQ1: Try all known custom sounds...
-	if ( ci )
-	{
-		for ( i = 0 ; i < MAX_CUSTOM_SOUNDS && cg_customSoundNames[i] ; i++ ) 
-		{
-			if ( !Q_stricmp( soundName, cg_customSoundNames[i] ) ) 
-			{
-				return ci->sounds[i];
-			}
-		}
-		for ( i = 0 ; i < MAX_CUSTOM_COMBAT_SOUNDS && cg_customCombatSoundNames[i] ; i++ ) 
-		{
-			if ( !Q_stricmp( soundName, cg_customCombatSoundNames[i] ) ) 
-			{
-				return ci->sounds[i+MAX_CUSTOM_SOUNDS];
-			}
-		}
-		for ( i = 0 ; i < MAX_CUSTOM_EXTRA_SOUNDS && cg_customExtraSoundNames[i] ; i++ ) 
-		{
-			if ( !Q_stricmp( soundName, cg_customExtraSoundNames[i] ) ) 
-			{
-				return ci->sounds[i+MAX_CUSTOM_SOUNDS+MAX_CUSTOM_COMBAT_SOUNDS];
-			}
-		}
-		for ( i = 0 ; i < MAX_CUSTOM_JEDI_SOUNDS && cg_customJediSoundNames[i] ; i++ ) 
-		{
-			if ( !Q_stricmp( soundName, cg_customJediSoundNames[i] ) ) 
-			{
-				return ci->sounds[i+MAX_CUSTOM_SOUNDS+MAX_CUSTOM_COMBAT_SOUNDS+MAX_CUSTOM_EXTRA_SOUNDS];
-			}
-		}
-	}
-	*/
 
 	//trap->Error( ERR_DROP, "Unknown custom sound: %s", lSoundName );
 #ifndef FINAL_BUILD
@@ -1102,7 +1073,6 @@ This will usually be deferred to a safe time
 //[VisualWeapons]
 void CG_LoadHolsterData(clientInfo_t *ci);
 //[/VisualWeapons]
-extern void CG_HandleNPCSounds(centity_t *cent);
 
 void CG_LoadClientInfo( clientInfo_t *ci ) {
 	qboolean	modelloaded;
@@ -1255,6 +1225,7 @@ void CG_LoadClientInfo( clientInfo_t *ci ) {
 		}
 	}
 
+	/*
 	if (stored_clientNum >= 0 && stored_clientNum < MAX_CLIENTS)
 	{
 		// UQ1: Load NPC sounds for players...
@@ -1262,6 +1233,7 @@ void CG_LoadClientInfo( clientInfo_t *ci ) {
 		CG_HandleNPCSounds(&cg_entities[clientNum]); //handle sound loading here as well.
 		trap->S_Shutup(qfalse);
 	}
+	*/
 }
 
 
@@ -1716,6 +1688,8 @@ void CG_NewClientInfo( int clientNum, qboolean entitiesInitialized ) {
 	qboolean saberUpdate[MAX_SABERS];
 
 	ci = &cgs.clientinfo[clientNum];
+
+	ci->npc_sounds_registered = qfalse;
 
 	oldGhoul2 = ci->ghoul2Model;
 

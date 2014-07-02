@@ -51,12 +51,12 @@ void DOM_InitFakeNPC(gentity_t *bot)
 
 	NPC_DefaultScriptFlags(bot);
 
-	NPC_Precache(bot);
-
 	bot->client->NPC_class = CLASS_BOT_FAKE_NPC;
 	NPC_Begin(bot);
 	bot->s.eType = ET_PLAYER; // Replace ET_NPC
 	bot->client->NPC_class = CLASS_BOT_FAKE_NPC;
+
+	NPC_Precache(bot);
 
 	// UQ1: Mark every NPC's spawn position. For patrolling that spot and stuff...
 	VectorCopy(bot->r.currentOrigin, bot->spawn_pos);

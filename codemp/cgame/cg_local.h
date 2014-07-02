@@ -361,6 +361,7 @@ typedef struct clientInfo_s {
 	holster_t	holsterData[MAX_HOLSTER];
 	//[/VisualWeapons]
 
+	qboolean	npc_sounds_registered;
 } clientInfo_t;
 
 //rww - cheap looping sound struct

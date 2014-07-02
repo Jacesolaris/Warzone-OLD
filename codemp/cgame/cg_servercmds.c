@@ -426,6 +426,9 @@ static void CG_RegisterCustomSounds(clientInfo_t *ci, int setType, const char *p
 		s++;
 		hSFX = trap->S_RegisterSound( va("sound/chars/%s/misc/%s", psDir, s) );
 
+		if (hSFX)
+			trap->Print("Registered custom sound sound/chars/%s/misc/%s", psDir, s);
+
 		if (hSFX == 0)
 		{
 			char modifiedSound[MAX_QPATH];
@@ -451,6 +454,11 @@ static void CG_RegisterCustomSounds(clientInfo_t *ci, int setType, const char *p
 					strcat(modifiedSound, "1.wav");
 
 					hSFX = trap->S_RegisterSound( va("sound/chars/%s/misc/%s", psDir, modifiedSound) );
+
+					if (hSFX)
+						trap->Print("Registered custom sound sound/chars/%s/misc/%s", psDir, modifiedSound);
+					else
+						trap->Print("Failed to register custom sound sound/chars/%s/misc/%s", psDir, modifiedSound);
 				}
 			}
 		}
@@ -515,17 +523,20 @@ void CG_HandleNPCSounds(centity_t *cent)
 {
 	clientInfo_t *ci = NULL;
 
+	if (!cent) return;
+
 	if (cent && cent->npcClient)
 	{
 		ci = cent->npcClient;
 	}
-	else if (cent->currentState.number < MAX_CLIENTS
-		&& (cg_entities[cent->currentState.number].currentState.NPC_class == CLASS_BOT_FAKE_NPC || cg_entities[cent->currentState.number].currentState.eFlags & EF_FAKE_NPC_BOT))
+	else if (cent->currentState.clientNum < MAX_CLIENTS
+		&& (cent->currentState.NPC_class == CLASS_BOT_FAKE_NPC || cent->currentState.eFlags & EF_FAKE_NPC_BOT))
 	{
-		ci = &cgs.clientinfo[cent->currentState.number];
+		ci = &cgs.clientinfo[cent->currentState.clientNum];
 	}
 	else
 	{
+		//trap->Print("cent %i is not an NPC or FAKE_NPC.\n", cent->currentState.number);
 		return;
 	}
 
@@ -567,6 +578,8 @@ void CG_HandleNPCSounds(centity_t *cent)
 	{
 		const char *s = CG_ConfigString( CS_SOUNDS + cent->currentState.csSounds_Combat );
 
+		//trap->Print("CS_COMBAT: %s.\n" , s);
+
 		if (s && s[0])
 		{
 			char sEnd[MAX_QPATH];
@@ -588,6 +601,7 @@ void CG_HandleNPCSounds(centity_t *cent)
 	}
 	else
 	{
+		//trap->Print("cent->currentState.csSounds_Combat\n");
 		memset(&ci->combatSounds, 0, sizeof(ci->combatSounds));
 	}
 
@@ -595,6 +609,8 @@ void CG_HandleNPCSounds(centity_t *cent)
 	if (cent->currentState.csSounds_Extra)
 	{
 		const char *s = CG_ConfigString( CS_SOUNDS + cent->currentState.csSounds_Extra );
+
+		//trap->Print("CS_EXTRA: %s.\n" , s);
 
 		if (s && s[0])
 		{
@@ -617,6 +633,7 @@ void CG_HandleNPCSounds(centity_t *cent)
 	}
 	else
 	{
+		//trap->Print("cent->currentState.csSounds_Extra\n");
 		memset(&ci->extraSounds, 0, sizeof(ci->extraSounds));
 	}
 
@@ -624,6 +641,8 @@ void CG_HandleNPCSounds(centity_t *cent)
 	if (cent->currentState.csSounds_Jedi)
 	{
 		const char *s = CG_ConfigString( CS_SOUNDS + cent->currentState.csSounds_Jedi );
+
+		//trap->Print("CS_JEDI: %s.\n" , s);
 
 		if (s && s[0])
 		{
@@ -646,6 +665,7 @@ void CG_HandleNPCSounds(centity_t *cent)
 	}
 	else
 	{
+		//trap->Print("cent->currentState.csSounds_Jedi\n");
 		memset(&ci->jediSounds, 0, sizeof(ci->jediSounds));
 	}
 }

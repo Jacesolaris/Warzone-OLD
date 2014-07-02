@@ -611,6 +611,8 @@ void NPC_Precache ( gentity_t *spawner )
 	Com_sprintf( sessionName, sizeof(sessionName), "NPC_Precache(%s)", spawner->NPC_type );
 	COM_BeginParseSession(sessionName);
 
+	trap->Print("NPC_Precache(%s)\n", spawner->NPC_type );
+
 	// look for the right NPC
 	while ( p )
 	{
@@ -628,11 +630,13 @@ void NPC_Precache ( gentity_t *spawner )
 
 	if ( !p )
 	{
+		trap->Print("NPC_Precache !p\n" );
 		return;
 	}
 
 	if ( BG_ParseLiteral( &p, "{" ) )
 	{
+		trap->Print("NPC_Precache !{\n" );
 		return;
 	}
 
@@ -755,6 +759,7 @@ void NPC_Precache ( gentity_t *spawner )
 					*patch = 0;
 				}
 				spawner->s.csSounds_Std = G_SoundIndex( va("*$%s", sound) );
+				//trap->Print("NPC_Precache loaded sound %s\n", va("*$%s", sound) );
 			}
 			continue;
 		}
@@ -774,6 +779,7 @@ void NPC_Precache ( gentity_t *spawner )
 					*patch = 0;
 				}
 				spawner->s.csSounds_Combat = G_SoundIndex( va("*$%s", sound) );
+				//trap->Print("NPC_Precache loaded combat sound %s\n", va("*$%s", sound) );
 			}
 			continue;
 		}
@@ -793,6 +799,7 @@ void NPC_Precache ( gentity_t *spawner )
 					*patch = 0;
 				}
 				spawner->s.csSounds_Extra = G_SoundIndex( va("*$%s", sound) );
+				//trap->Print("NPC_Precache loaded extra sound %s\n", va("*$%s", sound) );
 			}
 			continue;
 		}
@@ -812,6 +819,7 @@ void NPC_Precache ( gentity_t *spawner )
 					*patch = 0;
 				}
 				spawner->s.csSounds_Jedi = G_SoundIndex( va("*$%s", sound) );
+				//trap->Print("NPC_Precache loaded jedi sound %s\n", va("*$%s", sound) );
 			}
 			continue;
 		}
