@@ -1057,7 +1057,7 @@ void BG_SiegeParseClassFile(const char *filename, siegeClassDesc_t *descBuffer)
 			bgSiegeClasses[bgNumSiegeClasses].classShader = trap->R_RegisterShaderNoMip(parseBuf);
 		#endif
 
-		//assert( bgSiegeClasses[bgNumSiegeClasses].classShader ); // UQ1: DISABLED! I don't have these files!
+		assert( bgSiegeClasses[bgNumSiegeClasses].classShader ); // UQ1: DISABLED! I don't have these files!
 
 		if ( !bgSiegeClasses[bgNumSiegeClasses].classShader )
 		{
