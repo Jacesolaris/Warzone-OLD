@@ -2836,18 +2836,18 @@ void BG_SetLegsAnimTimer(playerState_t *ps, int time)
 
 	//[CoOp] SP Code
 #ifdef QAGAME
-	if ( !ps->legsTimer && trap_ICARUS_TaskIDPending( &g_entities[ps->clientNum], TID_ANIM_LOWER ) )
+	if ( !ps->legsTimer && trap->ICARUS_TaskIDPending( &g_entities[ps->clientNum], TID_ANIM_LOWER ) )
 	{//Waiting for legsAnimTimer to complete, and it just got set to zero
-		if ( !trap_ICARUS_TaskIDPending( &g_entities[ps->clientNum], TID_ANIM_BOTH) )
+		if ( !trap->ICARUS_TaskIDPending( &g_entities[ps->clientNum], TID_ANIM_BOTH) )
 		{//Not waiting for top
-			trap_ICARUS_TaskIDComplete( &g_entities[ps->clientNum], TID_ANIM_LOWER );
+			trap->ICARUS_TaskIDComplete( &g_entities[ps->clientNum], TID_ANIM_LOWER );
 		}
 		else 
 		{//Waiting for both to finish before complete 
 			Q3_TaskIDClear( &g_entities[ps->clientNum].taskID[TID_ANIM_LOWER] );//Bottom is done, regardless
-			if ( !trap_ICARUS_TaskIDPending( &g_entities[ps->clientNum], TID_ANIM_UPPER) )
+			if ( !trap->ICARUS_TaskIDPending( &g_entities[ps->clientNum], TID_ANIM_UPPER) )
 			{//top is done and we're done
-				trap_ICARUS_TaskIDComplete( &g_entities[ps->clientNum], TID_ANIM_BOTH );
+				trap->ICARUS_TaskIDComplete( &g_entities[ps->clientNum], TID_ANIM_BOTH );
 			}
 		}
 	}
@@ -2890,16 +2890,16 @@ void BG_SetTorsoAnimTimer(playerState_t *ps, int time )
 #ifdef QAGAME
 	if ( !ps->torsoTimer && trap_ICARUS_TaskIDPending( &g_entities[ps->clientNum], TID_ANIM_UPPER ) )
 	{//Waiting for torsoAnimTimer to complete, and it just got set to zero
-		if ( !trap_ICARUS_TaskIDPending( &g_entities[ps->clientNum], TID_ANIM_BOTH) )
+		if ( !trap->ICARUS_TaskIDPending( &g_entities[ps->clientNum], TID_ANIM_BOTH) )
 		{//Not waiting for bottom
 			trap_ICARUS_TaskIDComplete( &g_entities[ps->clientNum], TID_ANIM_UPPER );
 		}
 		else 
 		{//Waiting for both to finish before complete 
 			Q3_TaskIDClear( &g_entities[ps->clientNum].taskID[TID_ANIM_UPPER] );//Top is done, regardless
-			if ( !trap_ICARUS_TaskIDPending( &g_entities[ps->clientNum], TID_ANIM_LOWER) )
+			if ( !trap->ICARUS_TaskIDPending( &g_entities[ps->clientNum], TID_ANIM_LOWER) )
 			{//lower is done and we're done
-				trap_ICARUS_TaskIDComplete( &g_entities[ps->clientNum], TID_ANIM_BOTH );
+				trap->ICARUS_TaskIDComplete( &g_entities[ps->clientNum], TID_ANIM_BOTH );
 			}
 		}
 	}
