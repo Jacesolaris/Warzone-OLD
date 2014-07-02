@@ -2098,20 +2098,40 @@ void NPC_InitGame( void )
 #endif //__DOMINANCE_AI__
 }
 
+extern void BG_SetAnim(playerState_t *ps, animation_t *animations, int setAnimParts,int anim,int setAnimFlags, int blendTime);
+extern void BG_SetAnimFinal(playerState_t *ps, animation_t *animations, int setAnimParts,int anim,int setAnimFlags);
+
 void NPC_SetAnim(gentity_t *ent, int setAnimParts, int anim, int setAnimFlags)
 {	// FIXME : once torsoAnim and legsAnim are in the same structure for NCP and Players
 	// rename PM_SETAnimFinal to PM_SetAnim and have both NCP and Players call PM_SetAnim
-	G_SetAnim(ent, NULL, setAnimParts, anim, setAnimFlags, 0);
+	//G_SetAnim(ent, NULL, setAnimParts, anim, setAnimFlags, 0);
+	//BG_SetAnimFinal(&ent->client->ps, bgAllAnims[ent->localAnimIndex].anims, setAnimParts, anim, setAnimFlags);
 
-/*
+
 	if(ent->client)
 	{//Players, NPCs
-		if (setAnimFlags&SETANIM_FLAG_OVERRIDE)
+		//if (setAnimFlags&SETANIM_FLAG_OVERRIDE)
 		{
+			pmove_t pmv;
+
+			assert(ent && ent->inuse && ent->client);
+
+			memset (&pmv, 0, sizeof(pmv));
+			pmv.ps = &ent->client->ps;
+			pmv.animations = bgAllAnims[ent->localAnimIndex].anims;
+			pmv.cmd = ent->client->pers.cmd;
+			pmv.trace = trap->Trace;
+			pmv.pointcontents = trap->PointContents;
+			pmv.gametype = level.gametype;
+
+			//don't need to bother with ghoul2 stuff, it's not even used in PM_SetAnim.
+			pm = &pmv;
+
 			if (setAnimParts & SETANIM_TORSO)
 			{
 				if( (setAnimFlags & SETANIM_FLAG_RESTART) || ent->client->ps.torsoAnim != anim )
 				{
+					//PM_SetTorsoAnimTimer( ent, &ent->client->ps.torsoTimer, 0 );
 					PM_SetTorsoAnimTimer( ent, &ent->client->ps.torsoTimer, 0 );
 				}
 			}
@@ -2119,15 +2139,19 @@ void NPC_SetAnim(gentity_t *ent, int setAnimParts, int anim, int setAnimFlags)
 			{
 				if( (setAnimFlags & SETANIM_FLAG_RESTART) || ent->client->ps.legsAnim != anim )
 				{
-					PM_SetLegsAnimTimer( ent, &ent->client->ps.legsAnimTimer, 0 );
+					//PM_SetLegsAnimTimer( ent, &ent->client->ps.legsAnimTimer, 0 );
+					PM_SetLegsAnimTimer( ent, &ent->client->ps.legsTimer, 0 );
 				}
 			}
 		}
 
-		PM_SetAnimFinal(&ent->client->ps.torsoAnim,&ent->client->ps.legsAnim,setAnimParts,anim,setAnimFlags,
-			&ent->client->ps.torsoAnimTimer,&ent->client->ps.legsAnimTimer,ent);
+		//PM_SetAnimFinal(&ent->client->ps.torsoAnim,&ent->client->ps.legsAnim,setAnimParts,anim,setAnimFlags,
+		//	&ent->client->ps.torsoAnimTimer,&ent->client->ps.legsAnimTimer,ent);
+
+		BG_SetAnimFinal(&ent->client->ps, bgAllAnims[ent->localAnimIndex].anims, setAnimParts, anim, setAnimFlags);
+		//ent->client->ps.torsoTimer
 	}
-	else
+	/*else
 	{//bodies, etc.
 		if (setAnimFlags&SETANIM_FLAG_OVERRIDE)
 		{
@@ -2149,6 +2173,9 @@ void NPC_SetAnim(gentity_t *ent, int setAnimParts, int anim, int setAnimFlags)
 
 		PM_SetAnimFinal(&ent->s.torsoAnim,&ent->s.legsAnim,setAnimParts,anim,setAnimFlags,
 			&ent->s.torsoAnimTimer,&ent->s.legsAnimTimer,ent);
+	}*/
+	else
+	{
+		BG_SetAnimFinal(&ent->client->ps, bgAllAnims[ent->localAnimIndex].anims, setAnimParts, anim, setAnimFlags);
 	}
-	*/
 }

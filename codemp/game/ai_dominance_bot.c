@@ -84,6 +84,33 @@ void DOM_InitFakeNPC(gentity_t *bot)
 
 extern void BotChangeViewAngles(bot_state_t *bs, float thinktime);
 
+//action flags
+#define ACTION_ATTACK			0x0000001
+#define ACTION_USE				0x0000002
+#define ACTION_RESPAWN			0x0000008
+#define ACTION_JUMP				0x0000010
+#define ACTION_MOVEUP			0x0000020
+#define ACTION_CROUCH			0x0000080
+#define ACTION_MOVEDOWN			0x0000100
+#define ACTION_MOVEFORWARD		0x0000200
+#define ACTION_MOVEBACK			0x0000800
+#define ACTION_MOVELEFT			0x0001000
+#define ACTION_MOVERIGHT		0x0002000
+#define ACTION_DELAYEDJUMP		0x0008000
+#define ACTION_TALK				0x0010000
+#define ACTION_GESTURE			0x0020000
+#define ACTION_WALK				0x0080000
+#define ACTION_FORCEPOWER		0x0100000
+#define ACTION_ALT_ATTACK		0x0200000
+/*
+#define ACTION_AFFIRMATIVE		0x0100000
+#define ACTION_NEGATIVE			0x0200000
+#define ACTION_GETFLAG			0x0800000
+#define ACTION_GUARDBASE		0x1000000
+#define ACTION_PATROL			0x2000000
+#define ACTION_FOLLOWME			0x8000000
+*/
+
 void DOM_FakeNPC_Parse_UCMD (bot_state_t *bs, gentity_t *bot)
 {
 	NPCS.NPC = bot;
@@ -114,16 +141,33 @@ void DOM_FakeNPC_Parse_UCMD (bot_state_t *bs, gentity_t *bot)
 		trap->EA_MoveBack(bs->client);
 
 	if (NPCS.ucmd.buttons & BUTTON_ATTACK)
+	{
+		/*
+		if (bot->client->ps.weapon == WP_SABER && NPCS.ucmd.rightmove == 0)
+		{
+			trap->EA_MoveLeft(bs->client); // UQ1: Also move left for a better animation then the plain one...
+
+			if (!(NPCS.ucmd.buttons & BUTTON_WALKING))
+				trap->EA_Action(bs->client, ACTION_WALK);
+		}
+		*/
+
 		trap->EA_Attack(bs->client);
+	}
 
 	if (NPCS.ucmd.buttons & BUTTON_ALT_ATTACK)
 		trap->EA_Alt_Attack(bs->client);
 
 	if (NPCS.ucmd.buttons & BUTTON_USE)
 		trap->EA_Use(bs->client);
+
+	if (NPCS.ucmd.buttons & BUTTON_WALKING)
+		trap->EA_Action(bs->client, ACTION_WALK);
 }
 
 vec3_t oldMoveDir;
+extern void ClientThink_real( gentity_t *ent );
+extern void NPC_ApplyRoff (void);
 
 // UQ1: Now lets see if bots can share NPC AI....
 void DOM_StandardBotAI2(bot_state_t *bs, float thinktime)
@@ -166,10 +210,28 @@ void DOM_StandardBotAI2(bot_state_t *bs, float thinktime)
 
 	NPCS.NPCInfo->last_ucmd.serverTime = level.time - 50;
 
+	/*
+	if ( !NPCS.NPC->next_roff_time || NPCS.NPC->next_roff_time < level.time )
+	{//If we were following a roff, we don't do normal pmoves.
+		//FIXME: firing angles (no aim offset) or regular angles?
+		NPC_UpdateAngles(qtrue, qtrue);
+		memcpy( &NPCS.ucmd, &NPCS.NPCInfo->last_ucmd, sizeof( usercmd_t ) );
+		ClientThink(NPCS.NPC->s.number, &NPCS.ucmd);
+	}
+	else
+	{
+		NPC_ApplyRoff();
+	}*/
+
+
+
 	//nextthink is set before this so something in here can override it
 	NPC_ExecuteBState(bot);
 
 	NPC_UpdateAngles(qtrue, qtrue);
+
+	//memcpy( &NPCS.ucmd, &NPCS.NPCInfo->last_ucmd, sizeof( usercmd_t ) );
+	//ClientThink(NPCS.NPC->s.number, &NPCS.ucmd);
 
 	//G_UpdateClientAnims(bot, 0.5f);
 	DOM_FakeNPC_Parse_UCMD(bs, bot);

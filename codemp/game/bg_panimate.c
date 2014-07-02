@@ -2779,7 +2779,7 @@ void BG_StartTorsoAnim( playerState_t *ps, int anim )
 {
 	if ( ps->pm_type >= PM_DEAD )
 	{
-		assert(!BG_InDeathAnim(anim));
+		//assert(!BG_InDeathAnim(anim));
 		//please let me know if this assert fires on you (ideally before you close/ignore it) -rww
 		return;
 	}
@@ -2809,6 +2809,7 @@ void PM_StartTorsoAnim( int anim )
 PM_SetLegsAnimTimer
 -------------------------
 */
+/*
 void BG_SetLegsAnimTimer(playerState_t *ps, int time)
 {
 	ps->legsTimer = time;
@@ -2817,6 +2818,41 @@ void BG_SetLegsAnimTimer(playerState_t *ps, int time)
 	{//Cap timer to 0 if was counting down, but let it be -1 if that was intentional.  NOTENOTE Yeah this seems dumb, but it mirrors SP.
 		ps->legsTimer = 0;
 	}
+}*/
+
+//[CoOp] SP Code
+#ifdef QAGAME
+extern void Q3_TaskIDClear( int *taskID );
+#endif
+//[/CoOp]
+void BG_SetLegsAnimTimer(playerState_t *ps, int time)
+{
+	ps->legsTimer = time;
+
+	if (ps->legsTimer < 0 && time != -1 )
+	{//Cap timer to 0 if was counting down, but let it be -1 if that was intentional.  NOTENOTE Yeah this seems dumb, but it mirrors SP.
+		ps->legsTimer = 0;
+	}
+
+	//[CoOp] SP Code
+#ifdef QAGAME
+	if ( !ps->legsTimer && trap_ICARUS_TaskIDPending( &g_entities[ps->clientNum], TID_ANIM_LOWER ) )
+	{//Waiting for legsAnimTimer to complete, and it just got set to zero
+		if ( !trap_ICARUS_TaskIDPending( &g_entities[ps->clientNum], TID_ANIM_BOTH) )
+		{//Not waiting for top
+			trap_ICARUS_TaskIDComplete( &g_entities[ps->clientNum], TID_ANIM_LOWER );
+		}
+		else 
+		{//Waiting for both to finish before complete 
+			Q3_TaskIDClear( &g_entities[ps->clientNum].taskID[TID_ANIM_LOWER] );//Bottom is done, regardless
+			if ( !trap_ICARUS_TaskIDPending( &g_entities[ps->clientNum], TID_ANIM_UPPER) )
+			{//top is done and we're done
+				trap_ICARUS_TaskIDComplete( &g_entities[ps->clientNum], TID_ANIM_BOTH );
+			}
+		}
+	}
+#endif
+	//[/CoOp] SP Code
 }
 
 void PM_SetLegsAnimTimer(int time)
@@ -2829,6 +2865,7 @@ void PM_SetLegsAnimTimer(int time)
 PM_SetTorsoAnimTimer
 -------------------------
 */
+/*
 void BG_SetTorsoAnimTimer(playerState_t *ps, int time )
 {
 	ps->torsoTimer = time;
@@ -2837,6 +2874,37 @@ void BG_SetTorsoAnimTimer(playerState_t *ps, int time )
 	{//Cap timer to 0 if was counting down, but let it be -1 if that was intentional.  NOTENOTE Yeah this seems dumb, but it mirrors SP.
 		ps->torsoTimer = 0;
 	}
+}
+*/
+
+void BG_SetTorsoAnimTimer(playerState_t *ps, int time )
+{
+	ps->torsoTimer = time;
+
+	if (ps->torsoTimer < 0 && time != -1 )
+	{//Cap timer to 0 if was counting down, but let it be -1 if that was intentional.  NOTENOTE Yeah this seems dumb, but it mirrors SP.
+		ps->torsoTimer = 0;
+	}
+
+	//[CoOp] SP code
+#ifdef QAGAME
+	if ( !ps->torsoTimer && trap_ICARUS_TaskIDPending( &g_entities[ps->clientNum], TID_ANIM_UPPER ) )
+	{//Waiting for torsoAnimTimer to complete, and it just got set to zero
+		if ( !trap_ICARUS_TaskIDPending( &g_entities[ps->clientNum], TID_ANIM_BOTH) )
+		{//Not waiting for bottom
+			trap_ICARUS_TaskIDComplete( &g_entities[ps->clientNum], TID_ANIM_UPPER );
+		}
+		else 
+		{//Waiting for both to finish before complete 
+			Q3_TaskIDClear( &g_entities[ps->clientNum].taskID[TID_ANIM_UPPER] );//Top is done, regardless
+			if ( !trap_ICARUS_TaskIDPending( &g_entities[ps->clientNum], TID_ANIM_LOWER) )
+			{//lower is done and we're done
+				trap_ICARUS_TaskIDComplete( &g_entities[ps->clientNum], TID_ANIM_BOTH );
+			}
+		}
+	}
+#endif
+	//[/CoOp]
 }
 
 void PM_SetTorsoAnimTimer(int time )
@@ -2930,8 +2998,9 @@ void BG_SetAnimFinal(playerState_t *ps, animation_t *animations,
 		return;
 	}
 
-	assert(anim > -1);
-	assert(animations[anim].firstFrame > 0 || animations[anim].numFrames > 0);
+	//assert(anim > -1);
+	//assert(animations[anim].firstFrame > 0 || animations[anim].numFrames > 0);
+	if (!(animations[anim].firstFrame > 0 || animations[anim].numFrames > 0)) return; // UQ1: hmmm... avoid crashing and just ignore the anim...
 
 	//[FatigueSys]
 	BG_SaberStartTransAnim(ps->clientNum, ps->fd.saberAnimLevel, ps->weapon, anim, &editAnimSpeed, ps->brokenLimbs, ps->userInt3);
