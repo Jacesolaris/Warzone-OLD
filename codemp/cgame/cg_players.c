@@ -1106,7 +1106,7 @@ extern void CG_HandleNPCSounds(centity_t *cent);
 
 void CG_LoadClientInfo( clientInfo_t *ci ) {
 	qboolean	modelloaded;
-	int			clientNum;
+	int			clientNum, stored_clientNum;
 	int			i;
 	char		teamname[MAX_QPATH];
 	char		*fallbackModel = DEFAULT_MODEL;
@@ -1120,6 +1120,8 @@ void CG_LoadClientInfo( clientInfo_t *ci ) {
 	{
 		clientNum = -1;
 	}
+
+	stored_clientNum = clientNum;
 
 	ci->deferred = qfalse;
 
@@ -1253,10 +1255,13 @@ void CG_LoadClientInfo( clientInfo_t *ci ) {
 		}
 	}
 
-	// UQ1: Load NPC sounds for players...
-	trap->S_Shutup(qtrue);
-	CG_HandleNPCSounds(&cg_entities[clientNum]); //handle sound loading here as well.
-	trap->S_Shutup(qfalse);
+	if (stored_clientNum >= 0 && stored_clientNum < MAX_CLIENTS)
+	{
+		// UQ1: Load NPC sounds for players...
+		trap->S_Shutup(qtrue);
+		CG_HandleNPCSounds(&cg_entities[clientNum]); //handle sound loading here as well.
+		trap->S_Shutup(qfalse);
+	}
 }
 
 
@@ -1436,6 +1441,11 @@ static void CG_CopyClientInfoModel( clientInfo_t *from, clientInfo_t *to )
 	memcpy( to->sounds, from->sounds, sizeof( to->sounds ) );
 	memcpy( to->siegeSounds, from->siegeSounds, sizeof( to->siegeSounds ) );
 	memcpy( to->duelSounds, from->duelSounds, sizeof( to->duelSounds ) );
+
+	// UQ1: Added for NPC sounds...
+	memcpy( to->combatSounds, from->combatSounds, sizeof( to->combatSounds ) );
+	memcpy( to->extraSounds, from->extraSounds, sizeof( to->extraSounds ) );
+	memcpy( to->jediSounds, from->jediSounds, sizeof( to->jediSounds ) );
 }
 
 /*

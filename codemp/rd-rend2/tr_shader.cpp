@@ -3672,7 +3672,7 @@ If found, it will return a valid shader
 static const char *FindShaderInShaderText( const char *shadername ) {
 
 	char *token;
-	const char *p;
+	const char *p = NULL;
 
 	int i, hash;
 

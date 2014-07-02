@@ -2440,6 +2440,10 @@ void RenderSurfaces(CRenderSurface &RS) //also ended up just ripping right from 
 		if ( !RS.personalModel ) 
 		{		// set the surface info to point at the where the transformed bone list is going to be for when the surface gets rendered out
 			CRenderableSurface *newSurf = new CRenderableSurface;
+			
+			// UQ1: ADDED - Something is wrong here! Not initialized/loaded???
+			assert(RS.currentModel->data.glm->vboModels);
+
 			newSurf->vboMesh = &RS.currentModel->data.glm->vboModels[RS.lod].vboMeshes[RS.surfaceNum];
 			assert (newSurf->vboMesh != NULL && RS.surfaceNum == surface->thisSurfaceIndex);
 			newSurf->surfaceData = surface;

@@ -513,14 +513,18 @@ void CG_PrecacheNPCSounds(const char *str)
 
 void CG_HandleNPCSounds(centity_t *cent)
 {
-	clientInfo_t *ci = cent->npcClient;
+	clientInfo_t *ci = NULL;
 
-	if (cent->currentState.number < MAX_CLIENTS
+	if (cent && cent->npcClient)
+	{
+		ci = cent->npcClient;
+	}
+	else if (cent->currentState.number < MAX_CLIENTS
 		&& (cg_entities[cent->currentState.number].currentState.NPC_class == CLASS_BOT_FAKE_NPC || cg_entities[cent->currentState.number].currentState.eFlags & EF_FAKE_NPC_BOT))
 	{
 		ci = &cgs.clientinfo[cent->currentState.number];
 	}
-	else if (!cent->npcClient)
+	else
 	{
 		return;
 	}

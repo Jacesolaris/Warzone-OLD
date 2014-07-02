@@ -2625,7 +2625,7 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, int flags )
 	byte	*pic;
 	long	hash;
 
-	if (!name) {
+	if (!name || ri->Cvar_VariableIntegerValue( "dedicated" )) {
 		return NULL;
 	}
 

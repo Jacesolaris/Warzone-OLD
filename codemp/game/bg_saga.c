@@ -1056,7 +1056,9 @@ void BG_SiegeParseClassFile(const char *filename, siegeClassDesc_t *descBuffer)
 		#elif defined(_UI)
 			bgSiegeClasses[bgNumSiegeClasses].classShader = trap->R_RegisterShaderNoMip(parseBuf);
 		#endif
-		assert( bgSiegeClasses[bgNumSiegeClasses].classShader );
+
+		//assert( bgSiegeClasses[bgNumSiegeClasses].classShader ); // UQ1: DISABLED! I don't have these files!
+
 		if ( !bgSiegeClasses[bgNumSiegeClasses].classShader )
 		{
 			//Com_Error( ERR_DROP, "ERROR: could not find class_shader %s for class %s\n", parseBuf, bgSiegeClasses[bgNumSiegeClasses].name );
