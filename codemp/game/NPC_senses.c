@@ -212,7 +212,14 @@ qboolean InVisrange ( gentity_t *ent )
 	vec3_t	eyes;
 	vec3_t	spot;
 	vec3_t	deltaVector;
+#ifdef __MMO__
 	float	visrange = (NPCS.NPCInfo->stats.visrange * NPCS.NPCInfo->stats.visrange);
+	float	visrange2 = (1024 * 1024);
+
+	if (visrange2 < visrange) visrange = visrange2;
+#else //!__MMO__
+	float	visrange = (NPCS.NPCInfo->stats.visrange * NPCS.NPCInfo->stats.visrange);
+#endif //__MMO__
 
 	CalcEntitySpot( NPCS.NPC, SPOT_HEAD_LEAN, eyes );
 

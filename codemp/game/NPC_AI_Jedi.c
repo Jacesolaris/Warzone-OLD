@@ -3,6 +3,8 @@
 #include "anims.h"
 #include "w_saber.h"
 
+#define __JEDI_TRACKING__
+
 extern qboolean BG_SabersOff( playerState_t *ps );
 
 extern void CG_DrawAlert( vec3_t origin, float rating );
@@ -1261,14 +1263,13 @@ static qboolean Jedi_Hunt( void )
 	return qfalse;
 }
 
-/*
 static qboolean Jedi_Track( void )
 {
 	//if we're at all interested in fighting, go after him
-	if ( NPCInfo->stats.aggression > 1 )
+	if ( NPCS.NPCInfo->stats.aggression > 1 )
 	{//approach enemy
-		NPCInfo->combatMove = qtrue;
-		NPC_SetMoveGoal( NPC, NPCInfo->enemyLastSeenLocation, 16, qtrue );
+		NPCS.NPCInfo->combatMove = qtrue;
+		NPC_SetMoveGoal( NPCS.NPC, NPCS.NPCInfo->enemyLastSeenLocation, 16, qtrue, 0, NPCS.NPC->enemy );
 		if ( NPC_MoveToGoal( qfalse ) )
 		{
 			NPC_UpdateAngles( qtrue, qtrue );
@@ -1277,7 +1278,7 @@ static qboolean Jedi_Track( void )
 	}
 	return qfalse;
 }
-*/
+
 
 static void Jedi_Retreat( void )
 {
@@ -4670,6 +4671,8 @@ static qboolean Jedi_Jump( vec3_t dest, int goalEntNum )
 static qboolean Jedi_TryJump( gentity_t *goal )
 {//FIXME: never does a simple short, regular jump...
 	//FIXME: I need to be on ground too!
+	qboolean jumped = qfalse;
+
 	if ( (NPCS.NPCInfo->scriptFlags&SCF_NO_ACROBATICS) )
 	{
 		return qfalse;
@@ -4796,6 +4799,7 @@ static qboolean Jedi_TryJump( gentity_t *goal )
 
 								TIMER_Set( NPCS.NPC, "forceJumpChasing", Q_irand( 2000, 3000 ) );
 								debounce = qtrue;
+								jumped = qtrue;
 							}
 						}
 					}
@@ -4812,6 +4816,9 @@ static qboolean Jedi_TryJump( gentity_t *goal )
 			}
 		}
 	}
+
+	if (jumped) return qtrue;
+
 	return qfalse;
 }
 
@@ -5158,6 +5165,10 @@ static void Jedi_Combat( void )
 				{//FIXME: what about jumping to his enemyLastSeenLocation?
 					return;
 				}
+				else
+				{
+					Jedi_Hunt(); // UQ1: FALLBACK - HUNT...
+				}
 			}
 
 			//Check for evasion
@@ -5180,12 +5191,13 @@ static void Jedi_Combat( void )
 				return;
 			}
 			//well, try to head for his last seen location
-	/*
+#ifdef __JEDI_TRACKING__
 			else if ( Jedi_Track() )
 			{
 				return;
 			}
-	*/		else
+#endif //__JEDI_TRACKING__
+			else
 			{//FIXME: try to find a waypoint that can see enemy, jump from there
 				if ( NPCS.NPCInfo->aiFlags & NPCAI_BLOCKED )
 				{//try to jump to the blockedDest
@@ -5197,6 +5209,11 @@ static void Jedi_Combat( void )
 						G_FreeEntity( tempGoal );
 						return;
 					}
+					else
+					{
+						Jedi_Move(tempGoal, qfalse); // UQ1: FALLBACK
+					}
+
 					G_FreeEntity( tempGoal );
 				}
 
@@ -5829,7 +5846,11 @@ void NPC_BSJedi_FollowLeader( void )
 						if ( !NPC_MoveToGoal( qtrue ) )//Jedi_Move( NPCInfo->goalEntity, qfalse );
 						{//can't nav to it, try jumping to it
 							NPC_FaceEntity( NPCS.NPCInfo->goalEntity, qtrue );
-							Jedi_TryJump( NPCS.NPCInfo->goalEntity );
+							if (!Jedi_TryJump( NPCS.NPCInfo->goalEntity ))
+							{
+								Jedi_Move(NPCS.NPCInfo->goalEntity, qfalse); // UQ1: FALLBACK
+								//Jedi_Hunt(); // UQ1: FALLBACK - HUNT...
+							}
 						}
 						NPC_UpdateAngles( qtrue, qtrue );
 						return;
@@ -5856,6 +5877,11 @@ void NPC_BSJedi_FollowLeader( void )
 				{//started a jump
 					return;
 				}
+				else
+				{
+					Jedi_Move(NPCS.NPCInfo->goalEntity, qfalse); // UQ1: FALLBACK
+					//Jedi_Hunt(); // UQ1: FALLBACK - HUNT...
+				}
 			}
 		}
 		if ( NPCS.NPCInfo->aiFlags & NPCAI_BLOCKED )
@@ -5870,6 +5896,11 @@ void NPC_BSJedi_FollowLeader( void )
 				{//going to jump to the dest
 					G_FreeEntity( tempGoal );
 					return;
+				}
+				else
+				{
+					Jedi_Move(tempGoal, qfalse); // UQ1: FALLBACK
+					//Jedi_Hunt(); // UQ1: FALLBACK - HUNT...
 				}
 				G_FreeEntity( tempGoal );
 			}

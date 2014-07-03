@@ -122,8 +122,10 @@ extern void BotChangeViewAngles(bot_state_t *bs, float thinktime);
 #define ACTION_FOLLOWME			0x8000000
 */
 
-void DOM_FakeNPC_Parse_UCMD (bot_state_t *bs, gentity_t *bot)
+qboolean DOM_FakeNPC_Parse_UCMD (bot_state_t *bs, gentity_t *bot)
 {
+	qboolean acted = qfalse;
+
 	NPCS.NPC = bot;
 	NPCS.client = NPCS.NPC->client;
 	NPCS.NPCInfo = bot->NPC;
@@ -134,22 +136,40 @@ void DOM_FakeNPC_Parse_UCMD (bot_state_t *bs, gentity_t *bot)
 	trap->EA_View(bs->client, bs->ideal_viewangles);
 
 	if (NPCS.ucmd.upmove > 0)
+	{
 		trap->EA_Jump(bs->client);
+		acted = qtrue;
+	}
 
 	if (NPCS.ucmd.upmove < 0)
+	{
 		trap->EA_Crouch(bs->client);
+		acted = qtrue;
+	}
 	
 	if (NPCS.ucmd.rightmove > 0)
+	{
 		trap->EA_MoveRight(bs->client);
+		acted = qtrue;
+	}
 
 	if (NPCS.ucmd.rightmove < 0)
+	{
 		trap->EA_MoveLeft(bs->client);
+		acted = qtrue;
+	}
 
 	if (NPCS.ucmd.forwardmove > 0)
+	{
 		trap->EA_MoveForward(bs->client);
+		acted = qtrue;
+	}
 
 	if (NPCS.ucmd.forwardmove < 0)
+	{
 		trap->EA_MoveBack(bs->client);
+		acted = qtrue;
+	}
 
 	if (NPCS.ucmd.buttons & BUTTON_ATTACK)
 	{
@@ -164,16 +184,28 @@ void DOM_FakeNPC_Parse_UCMD (bot_state_t *bs, gentity_t *bot)
 		*/
 
 		trap->EA_Attack(bs->client);
+		acted = qtrue;
 	}
 
 	if (NPCS.ucmd.buttons & BUTTON_ALT_ATTACK)
+	{
 		trap->EA_Alt_Attack(bs->client);
+		acted = qtrue;
+	}
 
 	if (NPCS.ucmd.buttons & BUTTON_USE)
+	{
 		trap->EA_Use(bs->client);
+		acted = qtrue;
+	}
 
 	if (NPCS.ucmd.buttons & BUTTON_WALKING)
+	{
 		trap->EA_Action(bs->client, ACTION_WALK);
+		acted = qtrue;
+	}
+
+	return acted;
 }
 
 vec3_t oldMoveDir;
@@ -227,7 +259,14 @@ void DOM_StandardBotAI2(bot_state_t *bs, float thinktime)
 	NPC_UpdateAngles(qtrue, qtrue);
 
 	//G_UpdateClientAnims(bot, 0.5f);
-	DOM_FakeNPC_Parse_UCMD(bs, bot);
+	if (!DOM_FakeNPC_Parse_UCMD(bs, bot))
+	{
+		// Failed to do anything this frame - fall back to standard AI...
+		//DOM_StandardBotAI(bs, thinktime); // UQ1: Uses Dominance AI...
+		StandardBotAI(bs, thinktime);
+		trap->ICARUS_MaintainTaskManager(bot->s.number);
+		return;
+	}
 
 	trap->ICARUS_MaintainTaskManager(bot->s.number);
 	VectorCopy(bot->r.currentOrigin, bot->client->ps.origin);

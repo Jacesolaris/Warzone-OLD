@@ -1361,7 +1361,7 @@ float NPC_MaxDistSquaredForWeapon (void)
 	case WP_DISRUPTOR://disruptor
 		if ( NPCS.NPCInfo->scriptFlags & SCF_ALT_FIRE )
 		{
-			return ( 4096 * 4096 );
+			return ( 1024 * 1024 );
 		}
 		else
 		{
