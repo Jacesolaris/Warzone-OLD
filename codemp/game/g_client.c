@@ -3524,7 +3524,9 @@ void ClientSpawn(gentity_t *ent) {
 			}
 			client->ps.stats[STAT_WEAPONS] &= ~(1 << WP_SABER);
 			client->ps.stats[STAT_WEAPONS] |= (1 << WP_MELEE);
+#ifndef __MMO__
 			client->ps.ammo[AMMO_POWERCELL] = ammoData[AMMO_POWERCELL].max;
+#endif //__MMO__
 			client->ps.weapon = WP_BRYAR_PISTOL;
 		}
 	}
@@ -3634,6 +3636,7 @@ void ClientSpawn(gentity_t *ent) {
 					}
 				}
 
+#ifndef __MMO__
 				if (m >= WP_BRYAR_PISTOL)
 				{ //Max his ammo out for all the weapons he has.
 					if ( /*level.gametype == GT_SIEGE
@@ -3665,6 +3668,7 @@ void ClientSpawn(gentity_t *ent) {
 						}
 					}
 				}
+#endif //__MMO__
 			}
 			m++;
 		}
@@ -3707,10 +3711,12 @@ void ClientSpawn(gentity_t *ent) {
 	}
 
 // nmckenzie: DESERT_SIEGE... or well, siege generally.  This was over-writing the max value, which was NOT good for siege.
+#ifndef __MMO__
 	if ( inSiegeWithClass == qfalse )
 	{
 		client->ps.ammo[AMMO_BLASTER] = 100; //ammoData[AMMO_BLASTER].max; //100 seems fair.
 	}
+#endif //__MMO__
 //	client->ps.ammo[AMMO_POWERCELL] = ammoData[AMMO_POWERCELL].max;
 //	client->ps.ammo[AMMO_FORCE] = ammoData[AMMO_FORCE].max;
 //	client->ps.ammo[AMMO_METAL_BOLTS] = ammoData[AMMO_METAL_BOLTS].max;

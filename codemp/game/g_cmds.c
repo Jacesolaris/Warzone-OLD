@@ -2166,8 +2166,10 @@ void G_Give( gentity_t *ent, const char *name, const char *args, int argc )
 		int num = 999;
 		if ( argc == 3 )
 			num = Com_Clampi( 0, 999, atoi( args ) );
+#ifndef __MMO__
 		for ( i=AMMO_BLASTER; i<AMMO_MAX; i++ )
 			ent->client->ps.ammo[i] = num;
+#endif //__MMO__
 		if ( !give_all )
 			return;
 	}

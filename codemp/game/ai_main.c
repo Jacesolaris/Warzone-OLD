@@ -3612,6 +3612,7 @@ int BotHasAssociated(bot_state_t *bs, wpobject_t *wp)
 
 		return 0;
 	}
+#ifndef __MMO__
 	else if (as->item->giType == IT_AMMO)
 	{
 		if (bs->cur_ps.ammo[as->item->giTag] > 10) //hack
@@ -3621,6 +3622,7 @@ int BotHasAssociated(bot_state_t *bs, wpobject_t *wp)
 
 		return 0;
 	}
+#endif //__MMO__
 
 	return 0;
 }
@@ -4868,10 +4870,12 @@ int ShouldSecondaryFire(bot_state_t *bs)
 
 	weap = bs->cur_ps.weapon;
 
+#ifndef __MMO__
 	if (bs->cur_ps.ammo[weaponData[weap].ammoIndex] < weaponData[weap].altEnergyPerShot)
 	{
 		return 0;
 	}
+#endif //__MMO__
 
 	if (bs->cur_ps.weaponstate == WEAPON_CHARGING_ALT && bs->cur_ps.weapon == WP_ROCKET_LAUNCHER)
 	{
@@ -5136,8 +5140,12 @@ int BotTryAnotherWeapon(bot_state_t *bs)
 
 	while (i < WP_NUM_WEAPONS)
 	{
+#ifndef __MMO__
 		if (bs->cur_ps.ammo[weaponData[i].ammoIndex] >= weaponData[i].energyPerShot &&
 			(bs->cur_ps.stats[STAT_WEAPONS] & (1 << i)))
+#else //__MMO__
+		if (bs->cur_ps.stats[STAT_WEAPONS] & (1 << i))
+#endif //__MMO__
 		{
 			bs->virtualWeapon = i;
 			BotSelectWeapon(bs->client, i);
@@ -5169,8 +5177,12 @@ qboolean BotWeaponSelectable(bot_state_t *bs, int weapon)
 		return qfalse;
 	}
 
+#ifndef __MMO__
 	if (bs->cur_ps.ammo[weaponData[weapon].ammoIndex] >= weaponData[weapon].energyPerShot &&
 		(bs->cur_ps.stats[STAT_WEAPONS] & (1 << weapon)))
+#else //__MMO__
+	if (bs->cur_ps.stats[STAT_WEAPONS] & (1 << weapon))
+#endif //__MMO__
 	{
 		return qtrue;
 	}
@@ -5189,9 +5201,14 @@ int BotSelectIdealWeapon(bot_state_t *bs)
 
 	while (i < WP_NUM_WEAPONS)
 	{
+#ifndef __MMO__
 		if (bs->cur_ps.ammo[weaponData[i].ammoIndex] >= weaponData[i].energyPerShot &&
 			bs->botWeaponWeights[i] > bestweight &&
 			(bs->cur_ps.stats[STAT_WEAPONS] & (1 << i)))
+#else //__MMO__
+		if (bs->botWeaponWeights[i] > bestweight &&
+			(bs->cur_ps.stats[STAT_WEAPONS] & (1 << i)))
+#endif //__MMO__
 		{
 			if (i == WP_THERMAL)
 			{ //special case..
@@ -5281,9 +5298,14 @@ int BotSelectChoiceWeapon(bot_state_t *bs, int weapon, int doselection)
 
 	while (i < WP_NUM_WEAPONS)
 	{
+#ifndef __MMO__
 		if (bs->cur_ps.ammo[weaponData[i].ammoIndex] > weaponData[i].energyPerShot &&
 			i == weapon &&
 			(bs->cur_ps.stats[STAT_WEAPONS] & (1 << i)))
+#else //__MMO__
+		if (i == weapon &&
+			(bs->cur_ps.stats[STAT_WEAPONS] & (1 << i)))
+#endif //__MMO__
 		{
 			hasit = 1;
 			break;
@@ -6394,6 +6416,7 @@ void StandardBotAI(bot_state_t *bs, float thinktime)
 		}
 	}
 
+#ifndef __MMO__
 	if (bs->cur_ps.ammo[weaponData[bs->cur_ps.weapon].ammoIndex] < weaponData[bs->cur_ps.weapon].energyPerShot)
 	{
 		if (BotTryAnotherWeapon(bs))
@@ -6402,6 +6425,7 @@ void StandardBotAI(bot_state_t *bs, float thinktime)
 		}
 	}
 	else
+#endif //__MMO__
 	{
 		if (bs->currentEnemy && bs->lastVisibleEnemyIndex == bs->currentEnemy->s.number &&
 			bs->frame_Enemy_Vis && bs->forceWeaponSelect /*&& bs->plantContinue < level.time*/)

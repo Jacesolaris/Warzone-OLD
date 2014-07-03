@@ -478,7 +478,9 @@ void TossClientWeapon(gentity_t *self, vec3_t direction, float speed)
 	gitem_t *item;
 	gentity_t *launched;
 	int weapon = self->s.weapon;
+#ifndef __MMO__
 	int ammoSub;
+#endif //__MMO__
 
 	if (level.gametype == GT_SIEGE)
 	{ //no dropping weaps
@@ -499,6 +501,7 @@ void TossClientWeapon(gentity_t *self, vec3_t direction, float speed)
 	// find the item type for this weapon
 	item = BG_FindItemForWeapon( weapon );
 
+#ifndef __MMO__
 	ammoSub = (self->client->ps.ammo[weaponData[weapon].ammoIndex] - bg_itemlist[BG_GetItemIndexByTag(weapon, IT_WEAPON)].quantity);
 
 	if (ammoSub < 0)
@@ -511,6 +514,7 @@ void TossClientWeapon(gentity_t *self, vec3_t direction, float speed)
 			return;
 		}
 	}
+#endif //__MMO__
 
 	vel[0] = direction[0]*speed;
 	vel[1] = direction[1]*speed;
@@ -523,6 +527,7 @@ void TossClientWeapon(gentity_t *self, vec3_t direction, float speed)
 
 	launched->count = bg_itemlist[BG_GetItemIndexByTag(weapon, IT_WEAPON)].quantity;
 
+#ifndef __MMO__
 	self->client->ps.ammo[weaponData[weapon].ammoIndex] -= bg_itemlist[BG_GetItemIndexByTag(weapon, IT_WEAPON)].quantity;
 
 	if (self->client->ps.ammo[weaponData[weapon].ammoIndex] < 0)
@@ -530,9 +535,14 @@ void TossClientWeapon(gentity_t *self, vec3_t direction, float speed)
 		launched->count -= (-self->client->ps.ammo[weaponData[weapon].ammoIndex]);
 		self->client->ps.ammo[weaponData[weapon].ammoIndex] = 0;
 	}
+#endif //__MMO__
 
+#ifndef __MMO__
 	if ((self->client->ps.ammo[weaponData[weapon].ammoIndex] < 1 && weapon != WP_DET_PACK) ||
 		(weapon != WP_THERMAL && weapon != WP_DET_PACK && weapon != WP_TRIP_MINE))
+#else //__MMO__
+	if (weapon != WP_THERMAL && weapon != WP_DET_PACK && weapon != WP_TRIP_MINE)
+#endif //__MMO__
 	{
 		int i = 0;
 		int weap = -1;
@@ -560,7 +570,9 @@ void TossClientWeapon(gentity_t *self, vec3_t direction, float speed)
 			self->client->ps.weapon = 0;
 		}
 
+#ifndef __MMO__
 		G_AddEvent(self, EV_NOAMMO, weapon);
+#endif //__MMO__
 	}
 }
 
@@ -603,8 +615,11 @@ void TossClientItems( gentity_t *self ) {
 
 	if ( weapon > WP_BRYAR_PISTOL &&
 		weapon != WP_EMPLACED_GUN &&
-		weapon != WP_TURRET &&
-		self->client->ps.ammo[ weaponData[weapon].ammoIndex ] ) {
+		weapon != WP_TURRET
+#ifndef __MMO__
+		&& self->client->ps.ammo[ weaponData[weapon].ammoIndex ] 
+#endif //__MMO__
+	) {
 		gentity_t *te;
 
 		// find the item type for this weapon

@@ -1055,11 +1055,13 @@ void CG_DrawIconBackground(void)
 
 qboolean CG_WeaponCheck(int weap)
 {
+#ifndef __MMO__
 	if (cg.snap->ps.ammo[weaponData[weap].ammoIndex] < weaponData[weap].energyPerShot &&
 		cg.snap->ps.ammo[weaponData[weap].ammoIndex] < weaponData[weap].altEnergyPerShot)
 	{
 		return qfalse;
 	}
+#endif //__MMO__
 
 	return qtrue;
 }
@@ -1078,6 +1080,7 @@ static qboolean CG_WeaponSelectable( int i ) {
 		return qfalse;
 	}
 
+#ifndef __MMO__
 	if (cg.predictedPlayerState.ammo[weaponData[i].ammoIndex] < weaponData[i].energyPerShot &&
 		cg.predictedPlayerState.ammo[weaponData[i].ammoIndex] < weaponData[i].altEnergyPerShot)
 	{
@@ -1089,6 +1092,7 @@ static qboolean CG_WeaponSelectable( int i ) {
 	{
 		return qfalse;
 	}
+#endif //__MMO__
 
 	if ( ! (cg.predictedPlayerState.stats[ STAT_WEAPONS ] & ( 1 << i ) ) ) {
 		return qfalse;

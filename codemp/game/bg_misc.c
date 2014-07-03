@@ -2093,6 +2093,7 @@ qboolean BG_CanItemBeGrabbed( int gametype, const entityState_t *ent, const play
 		{ //weaponstay stuff.. if this isn't dropped, and you already have it, you don't get it.
 			return qfalse;
 		}
+#ifndef __MMO__
 		if (item->giTag == WP_THERMAL || item->giTag == WP_TRIP_MINE || item->giTag == WP_DET_PACK)
 		{ //check to see if full on ammo for this, if so, then..
 			int ammoIndex = weaponData[item->giTag].ammoIndex;
@@ -2101,9 +2102,11 @@ qboolean BG_CanItemBeGrabbed( int gametype, const entityState_t *ent, const play
 				return qfalse;
 			}
 		}
+#endif //__MMO__
 		return qtrue;	// weapons are always picked up
 
 	case IT_AMMO:
+#ifndef __MMO__
 		if (item->giTag == -1)
 		{ //special case for "all ammo" packs
 			return qtrue;
@@ -2112,6 +2115,9 @@ qboolean BG_CanItemBeGrabbed( int gametype, const entityState_t *ent, const play
 			return qfalse;		// can't hold any more
 		}
 		return qtrue;
+#else //!__MMO__
+		return qfalse;
+#endif //__MMO__
 
 	case IT_ARMOR:
 		if ( ps->stats[STAT_ARMOR] >= ps->stats[STAT_MAX_HEALTH]/* * item->giTag*/ ) {

@@ -768,7 +768,9 @@ void NPC_SetWeapons( gentity_t *ent )
 			ent->client->ps.stats[STAT_WEAPONS] |= ( 1 << curWeap );
 //			RegisterItem( FindItemForWeapon( (weapon_t)(curWeap) ) );	//precache the weapon
 			//rwwFIXMEFIXME: Precache
+#ifndef __MMO__
 			ent->NPC->currentAmmo = ent->client->ps.ammo[weaponData[curWeap].ammoIndex] = 100;//FIXME: max ammo
+#endif //__MMO__
 
 			if ( bestWeap == WP_SABER )
 			{
@@ -1071,7 +1073,9 @@ void NPC_Begin (gentity_t *ent)
 		NPC_SetWeapons(ent);
 	}
 	//select the weapon
+#ifndef __MMO__
 	ent->NPC->currentAmmo = ent->client->ps.ammo[weaponData[ent->client->ps.weapon].ammoIndex];
+#endif //__MMO__
 	ent->client->ps.weaponstate = WEAPON_IDLE;
 	ChangeWeapon( ent, ent->client->ps.weapon );
 

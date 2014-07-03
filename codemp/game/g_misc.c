@@ -1360,6 +1360,7 @@ void shield_power_converter_use( gentity_t *self, gentity_t *other, gentity_t *a
 //dispense generic ammo
 void ammo_generic_power_converter_use( gentity_t *self, gentity_t *other, gentity_t *activator)
 {
+#ifndef __MMO__
 	int /*dif,*/ add;
 	//int ammoType;
 	int stop = 1;
@@ -1532,6 +1533,7 @@ void ammo_generic_power_converter_use( gentity_t *self, gentity_t *other, gentit
 			self->setTime = level.time + self->genericValue5+100;
 		}
 	}
+#endif //__MMO__
 }
 
 /*QUAKED misc_ammo_floor_unit (1 0 0) (-16 -16 0) (16 16 40)
@@ -1544,6 +1546,7 @@ Gives generic ammo when used
 */
 void SP_misc_ammo_floor_unit(gentity_t *ent)
 {
+#ifndef __MMO__
 	vec3_t dest;
 	trace_t tr;
 
@@ -1619,6 +1622,9 @@ void SP_misc_ammo_floor_unit(gentity_t *ent)
 		ent->s.eFlags |= EF_RADAROBJECT;
 		ent->s.genericenemyindex = G_IconIndex("gfx/mp/siegeicons/desert/weapon_recharge");
 	}
+#else //__MMO__
+	G_FreeEntity(ent); // UQ1: Hmmm we could reuse these for something else... but what???
+#endif //__MMO__
 }
 
 /*QUAKED misc_shield_floor_unit (1 0 0) (-16 -16 0) (16 16 40)
@@ -1782,6 +1788,7 @@ ammo_power_converter_use
 */
 void ammo_power_converter_use( gentity_t *self, gentity_t *other, gentity_t *activator)
 {
+#ifndef __MMO__
 	int			add = 0.0f;//,highest;
 //	int			difBlaster,difPowerCell,difMetalBolts;
 	int			stop = 1;
@@ -1877,6 +1884,7 @@ void ammo_power_converter_use( gentity_t *self, gentity_t *other, gentity_t *act
 		self->s.loopSound = 0;
 		self->s.loopIsSoundset = qfalse;
 	}
+#endif //__MMO__
 }
 
 
@@ -1890,6 +1898,7 @@ Gives ammo energy when used.
 //------------------------------------------------------------
 void SP_misc_model_ammo_power_converter( gentity_t *ent )
 {
+#ifndef __MMO__
 	if (!ent->health)
 	{
 		ent->health = 60;
@@ -1928,6 +1937,9 @@ void SP_misc_model_ammo_power_converter( gentity_t *ent )
 	trap->LinkEntity ((sharedEntity_t *)ent);
 
 	//G_SoundIndex("sound/movers/objects/useshieldstation.wav");
+#else //__MMO__
+	G_FreeEntity(ent); // UQ1: Hmmm what can we reuse this one for???
+#endif //__MMO__
 }
 
 /*

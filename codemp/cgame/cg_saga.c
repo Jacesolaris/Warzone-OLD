@@ -1035,10 +1035,15 @@ void CG_ParseSiegeExtendedDataEntry(const char *conStr)
 	cent = &cg_entities[clNum];
 
 	maxAmmo = ammoData[weaponData[cent->currentState.weapon].ammoIndex].max;
+
+#ifndef __MMO__
 	if ( (cent->currentState.eFlags & EF_DOUBLE_AMMO) )
 	{
 		maxAmmo *= 2.0f;
 	}
+#else //__MMO__
+	ammo = maxAmmo;
+#endif //__MMO__
 	if (ammo >= 0 && ammo <= maxAmmo )
 	{ //assure the weapon number is valid and not over max
 		//keep the weapon so if it changes before our next ext data update we'll know

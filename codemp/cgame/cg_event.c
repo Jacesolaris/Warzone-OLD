@@ -2090,6 +2090,7 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 
 		CG_FireWeapon( cent, qtrue );
 
+#ifndef __MMO__
 		//if you just exploded your detpacks and you have no ammo left for them, autoswitch
 		if ( cg.snap->ps.clientNum == cent->currentState.number &&
 			cg.snap->ps.weapon == WP_DET_PACK )
@@ -2099,6 +2100,7 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 				CG_OutOfAmmoChange(WP_DET_PACK);
 			}
 		}
+#endif //__MMO__
 
 		break;
 

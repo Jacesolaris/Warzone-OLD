@@ -2124,6 +2124,7 @@ int Pickup_Holdable( gentity_t *ent, gentity_t *other ) {
 
 void Add_Ammo (gentity_t *ent, int weapon, int count)
 {
+#ifndef __MMO__
 	int max = ammoData[weapon].max;
 
 	if (ent->client->ps.eFlags & EF_DOUBLE_AMMO)
@@ -2139,10 +2140,12 @@ void Add_Ammo (gentity_t *ent, int weapon, int count)
 			ent->client->ps.ammo[weapon] = max;
 		}
 	}
+#endif //__MMO__
 }
 
 int Pickup_Ammo (gentity_t *ent, gentity_t *other)
 {
+#ifndef __MMO__
 	int		quantity;
 
 	if ( ent->count ) {
@@ -2184,6 +2187,7 @@ int Pickup_Ammo (gentity_t *ent, gentity_t *other)
 	{
 		Add_Ammo (other, ent->item->giTag, quantity);
 	}
+#endif //__MMO__
 
 	return adjustRespawnTime(RESPAWN_AMMO, ent->item->giType, ent->item->giTag);
 }
@@ -2211,12 +2215,14 @@ int Pickup_Weapon (gentity_t *ent, gentity_t *other) {
 
 			// New method:  If the player has less than half the minimum, give them the minimum, else add 1/2 the min.
 
+#ifndef __MMO__
 			// drop the quantity if the already have over the minimum
 			if ( other->client->ps.ammo[ ent->item->giTag ] < quantity*0.5 ) {
 				quantity = quantity - other->client->ps.ammo[ ent->item->giTag ];
 			} else {
 				quantity = quantity*0.5;		// only add half the value.
 			}
+#endif //__MMO__
 
 			// Old method:  If the player has less than the minimum, give them the minimum, else just add 1.
 /*
@@ -2242,8 +2248,10 @@ int Pickup_Weapon (gentity_t *ent, gentity_t *other) {
 	}
 	//[/VisualWeapons]
 
+#ifndef __MMO__
 	//Add_Ammo( other, ent->item->giTag, quantity );
 	Add_Ammo( other, weaponData[ent->item->giTag].ammoIndex, quantity );
+#endif //__MMO__
 
 	G_LogWeaponPickup(other->s.number, ent->item->giTag);
 
@@ -2515,6 +2523,7 @@ void Touch_Item (gentity_t *ent, gentity_t *other, trace_t *trace) {
 		predict = qtrue;
 		break;
 	case IT_AMMO:
+#ifndef __MMO__
 		respawn = Pickup_Ammo(ent, other);
 		if (ent->item->giTag == AMMO_THERMAL || ent->item->giTag == AMMO_TRIPMINE || ent->item->giTag == AMMO_DETPACK)
 		{
@@ -2547,6 +2556,7 @@ void Touch_Item (gentity_t *ent, gentity_t *other, trace_t *trace) {
 			}
 		}
 //		predict = qfalse;
+#endif //__MMO__
 		predict = qtrue;
 		break;
 	case IT_ARMOR:

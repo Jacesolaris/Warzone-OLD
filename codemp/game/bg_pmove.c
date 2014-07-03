@@ -6136,7 +6136,10 @@ static qboolean PM_DoChargedWeapons( qboolean vehicleRocketLock, bgEntity_t *veh
 		//------------------
 		case WP_ROCKET_LAUNCHER:
 			if ( (pm->cmd.buttons & BUTTON_ALT_ATTACK)
-				&& pm->ps->ammo[weaponData[pm->ps->weapon].ammoIndex] >= weaponData[pm->ps->weapon].altEnergyPerShot )
+#ifndef __MMO__
+				&& pm->ps->ammo[weaponData[pm->ps->weapon].ammoIndex] >= weaponData[pm->ps->weapon].altEnergyPerShot 
+#endif //__MMO__
+				)
 			{
 				PM_RocketLock(2048,qfalse);
 				charging = qtrue;
@@ -6224,6 +6227,7 @@ static qboolean PM_DoChargedWeapons( qboolean vehicleRocketLock, bgEntity_t *veh
 					goto rest;
 				}
 			}
+#ifndef __MMO__
 			else if (pm->ps->ammo[weaponData[pm->ps->weapon].ammoIndex] < (weaponData[pm->ps->weapon].altChargeSub+weaponData[pm->ps->weapon].altEnergyPerShot))
 			{
 				pm->ps->weaponstate = WEAPON_CHARGING_ALT;
@@ -6238,6 +6242,7 @@ static qboolean PM_DoChargedWeapons( qboolean vehicleRocketLock, bgEntity_t *veh
 					pm->ps->weaponChargeSubtractTime = pm->cmd.serverTime + weaponData[pm->ps->weapon].altChargeSubTime;
 				}
 			}
+#endif //__MMO__
 		}
 		else
 		{
@@ -6262,6 +6267,7 @@ static qboolean PM_DoChargedWeapons( qboolean vehicleRocketLock, bgEntity_t *veh
 					goto rest;
 				}
 			}
+#ifndef __MMO__
 			else if (pm->ps->ammo[weaponData[pm->ps->weapon].ammoIndex] < (weaponData[pm->ps->weapon].chargeSub+weaponData[pm->ps->weapon].energyPerShot))
 			{
 				pm->ps->weaponstate = WEAPON_CHARGING;
@@ -6276,6 +6282,7 @@ static qboolean PM_DoChargedWeapons( qboolean vehicleRocketLock, bgEntity_t *veh
 					pm->ps->weaponChargeSubtractTime = pm->cmd.serverTime + weaponData[pm->ps->weapon].chargeSubTime;
 				}
 			}
+#endif //__MMO__
 		}
 
 		return qtrue; // short-circuit rest of weapon code
@@ -7223,6 +7230,7 @@ static void PM_Weapon( void )
 
 	amount = weaponData[pm->ps->weapon].energyPerShot;
 
+#ifndef __MMO__
 	// take an ammo away if not infinite
 	if ( pm->ps->weapon != WP_NONE &&
 		pm->ps->weapon == pm->cmd.weapon &&
@@ -7256,6 +7264,7 @@ static void PM_Weapon( void )
 			}
 		}
 	}
+#endif //__MMO__
 
 	// check for weapon change
 	// can't change if weapon is firing, but can change
@@ -7668,6 +7677,7 @@ static void PM_Weapon( void )
 
 	pm->ps->weaponstate = WEAPON_FIRING;
 
+#ifndef __MMO__
 	// take an ammo away if not infinite
 	if ( pm->ps->clientNum < MAX_CLIENTS && pm->ps->ammo[ weaponData[pm->ps->weapon].ammoIndex ] != -1 )
 	{
@@ -7690,6 +7700,7 @@ static void PM_Weapon( void )
 			return;
 		}
 	}
+#endif //__MMO__
 
 	if ( pm->cmd.buttons & BUTTON_ALT_ATTACK ) 	{
 		//if ( pm->ps->weapon == WP_BRYAR_PISTOL && pm->gametype != GT_SIEGE )
@@ -8097,7 +8108,9 @@ void PM_UpdateViewAngles( playerState_t *ps, const usercmd_t *cmd ) {
 void PM_AdjustAttackStates( pmove_t *pmove )
 //-------------------------------------------
 {
+#ifndef __MMO__
 	int amount;
+#endif //__MMO__
 
 	if (pm_entSelf->s.NPC_class!=CLASS_VEHICLE
 		&&pmove->ps->m_iVehicleNum)
@@ -8111,6 +8124,8 @@ void PM_AdjustAttackStates( pmove_t *pmove )
 			return;
 		}
 	}
+
+#ifndef __MMO__
 	// get ammo usage
 	if ( pmove->cmd.buttons & BUTTON_ALT_ATTACK )
 	{
@@ -8120,6 +8135,7 @@ void PM_AdjustAttackStates( pmove_t *pmove )
 	{
 		amount = pmove->ps->ammo[weaponData[ pmove->ps->weapon ].ammoIndex] - weaponData[pmove->ps->weapon].energyPerShot;
 	}
+#endif //__MMO__
 
 	// disruptor alt-fire should toggle the zoom mode, but only bother doing this for the player?
 	if ( pmove->ps->weapon == WP_DISRUPTOR && pmove->ps->weaponstate == WEAPON_READY )
@@ -8191,6 +8207,7 @@ void PM_AdjustAttackStates( pmove_t *pmove )
 		}
 		*/
 
+#ifndef __MMO__
 		if ( pmove->cmd.buttons & BUTTON_ATTACK )
 		{
 			// If we are zoomed, we should switch the ammo usage to the alt-fire, otherwise, we'll
@@ -8206,6 +8223,7 @@ void PM_AdjustAttackStates( pmove_t *pmove )
 			// alt-fire button pressing doesn't use any ammo
 			amount = 0;
 		}
+#endif //__MMO__
 	}
 	/*
 	else if (pmove->ps->weapon == WP_DISRUPTOR) //still perform certain checks, even if the weapon is not ready
@@ -8227,8 +8245,12 @@ void PM_AdjustAttackStates( pmove_t *pmove )
 	if ( !(pmove->ps->pm_flags & PMF_RESPAWNED) &&
 			pmove->ps->pm_type != PM_INTERMISSION &&
 			pmove->ps->pm_type != PM_NOCLIP &&
-			( pmove->cmd.buttons & (BUTTON_ATTACK|BUTTON_ALT_ATTACK)) &&
-			( amount >= 0 || pmove->ps->weapon == WP_SABER ))
+			( pmove->cmd.buttons & (BUTTON_ATTACK|BUTTON_ALT_ATTACK))
+#ifndef __MMO__
+			&& ( amount >= 0 || pmove->ps->weapon == WP_SABER ))
+#else //__MMO__
+			)
+#endif //__MMO__
 	{
 		if ( pmove->cmd.buttons & BUTTON_ALT_ATTACK )
 		{

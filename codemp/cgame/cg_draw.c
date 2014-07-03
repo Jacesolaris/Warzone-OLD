@@ -336,7 +336,7 @@ static void CG_DrawZoomMask( void )
 */
 		//max = ( cg_entities[0].gent->health / 100.0f );
 
-
+#ifndef __MMO__
 		if ( (cg.snap->ps.eFlags & EF_DOUBLE_AMMO) )
 		{
 			max = cg.snap->ps.ammo[weaponData[WP_DISRUPTOR].ammoIndex] / ((float)ammoData[weaponData[WP_DISRUPTOR].ammoIndex].max*2.0f);
@@ -349,6 +349,9 @@ static void CG_DrawZoomMask( void )
 		{
 			max = 1.0f;
 		}
+#else //__MMO__
+		max = 1.0f;
+#endif //__MMO__
 
 		color1[0] = (1.0f - max) * 2.0f;
 		color1[1] = max * 1.5f;
@@ -892,8 +895,10 @@ static void CG_DrawAmmo( centity_t	*cent,menuDef_t *menuHUD)
 
 	focusItem = Menu_FindItemByName(menuHUD, "ammoamount");
 
+#ifndef __MMO__
 	if (weaponData[cent->currentState.weapon].energyPerShot == 0 &&
 		weaponData[cent->currentState.weapon].altEnergyPerShot == 0)
+#endif //__MMO__
 	{ //just draw "infinite"
 		inc = 8 / MAX_HUD_TICS;
 		value = 8;
@@ -905,6 +910,7 @@ static void CG_DrawAmmo( centity_t	*cent,menuDef_t *menuHUD)
 			CG_DrawProportionalString(focusItem->window.rect.x, focusItem->window.rect.y, "--", NUM_FONT_SMALL, focusItem->window.foreColor);
 		}
 	}
+#ifndef __MMO__
 	else
 	{
 		focusItem = Menu_FindItemByName(menuHUD, "ammoamount");
@@ -960,6 +966,7 @@ static void CG_DrawAmmo( centity_t	*cent,menuDef_t *menuHUD)
 				qfalse);
 		}
 	}
+#endif //__MMO__
 
 	trap->R_SetColor( colorTable[CT_WHITE] );
 
@@ -997,7 +1004,6 @@ static void CG_DrawAmmo( centity_t	*cent,menuDef_t *menuHUD)
 
 		value -= inc;
 	}
-
 }
 
 /*
@@ -1715,10 +1721,12 @@ void CG_DrawHUD(centity_t	*cent)
 				Com_sprintf(ammoString, sizeof(ammoString), "Makashi");
 			}
 		}
+#ifndef __MMO__
 		else
 		{
 			Com_sprintf(ammoString, sizeof(ammoString), "%i", cg.snap->ps.ammo[weaponData[cent->currentState.weapon].ammoIndex]);
 		}
+#endif //__MMO__
 
 		CG_DrawScaledProportionalString(SCREEN_WIDTH - (weapX + 16 + 26), y + 57, va("%s", ammoString),
 			UI_SMALLFONT | UI_DROPSHADOW, colorTable[CT_HUD_ORANGE], 0.5f);
@@ -5074,7 +5082,7 @@ void CG_DrawSiegeInfo(centity_t *cent, float chX, float chY, float chW, float ch
 	//then draw the other part greyed out
 	CG_FillRect(x+percent, y+1.0f, HEALTH_WIDTH-percent-1.0f, HEALTH_HEIGHT-1.0f, cColor);
 
-
+#ifndef __MMO__
 	//now draw his ammo
 	ammoMax = ammoData[weaponData[cent->currentState.weapon].ammoIndex].max;
 	if ( (cent->currentState.eFlags & EF_DOUBLE_AMMO) )
@@ -5087,13 +5095,16 @@ void CG_DrawSiegeInfo(centity_t *cent, float chX, float chY, float chW, float ch
 
 	if (!weaponData[cent->currentState.weapon].energyPerShot &&
 		!weaponData[cent->currentState.weapon].altEnergyPerShot)
+#endif //__MMO__
 	{ //a weapon that takes no ammo, so show full
 		percent = HEALTH_WIDTH;
 	}
+#ifndef __MMO__
 	else
 	{
 		percent = ((float)se->ammo/(float)ammoMax)*HEALTH_WIDTH;
 	}
+#endif //__MMO__
 
 	//color of the bar
 	aColor[0] = 1.0f;

@@ -1445,6 +1445,7 @@ void G_UseDispenserOn(gentity_t *ent, int dispType, gentity_t *target)
 		target->client->isMedHealed = level.time + 500;
 		target->health = target->client->ps.stats[STAT_HEALTH];
 	}
+#ifndef __MMO__ // UQ1: Re-use me!!!
 	else if (dispType == HI_AMMODISP)
 	{
 		if (ent->client->medSupplyDebounce < level.time)
@@ -1462,6 +1463,7 @@ void G_UseDispenserOn(gentity_t *ent, int dispType, gentity_t *target)
 		}
 		target->client->isMedSupplied = level.time + 500;
 	}
+#endif //__MMO__
 }
 
 //see if this guy needs servicing from a specific type of dispenser
@@ -1483,6 +1485,7 @@ int G_CanUseDispOn(gentity_t *ent, int dispType)
 		//otherwise no
 		return 0;
 	}
+#ifndef __MMO__
 	else if (dispType == HI_AMMODISP)
 	{
 		if (ent->client->ps.weapon <= WP_NONE || ent->client->ps.weapon > LAST_USEABLE_WEAPON)
@@ -1498,6 +1501,7 @@ int G_CanUseDispOn(gentity_t *ent, int dispType)
 		//needs none
 		return 0;
 	}
+#endif //__MMO__
 
 	//invalid type?
 	return 0;

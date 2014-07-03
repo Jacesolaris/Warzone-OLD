@@ -134,7 +134,9 @@ typedef struct
 	int			eFlags;
 	int			aiFlags;
 
+#ifndef __MMO__
 	int			currentAmmo;		// this sucks, need to find a better way
+#endif //__MMO__
 	int			shotTime;
 	int			burstCount;
 	int			burstMin;

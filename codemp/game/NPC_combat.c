@@ -581,7 +581,9 @@ void ChangeWeapon( gentity_t *ent, int newWeapon )
 	ent->NPC->shotTime = 0;
 	ent->NPC->burstCount = 0;
 	ent->NPC->attackHold = 0;
+#ifndef __MMO__
 	ent->NPC->currentAmmo = ent->client->ps.ammo[weaponData[newWeapon].ammoIndex];
+#endif //__MMO__
 
 	switch ( newWeapon )
 	{
@@ -947,7 +949,9 @@ void ShootThink( void )
 
 	NPCS.ucmd.buttons |= BUTTON_ATTACK;
 
+#ifndef __MMO__
 	NPCS.NPCInfo->currentAmmo = NPCS.client->ps.ammo[weaponData[NPCS.client->ps.weapon].ammoIndex];	// checkme
+#endif //__MMO__
 
 	NPC_ApplyWeaponFireDelay();
 
@@ -1047,11 +1051,13 @@ void WeaponThink( qboolean inCombat )
 
 //MCG - Begin
 	//For now, no-one runs out of ammo
+#ifndef __MMO__
 	if(NPCS.NPC->client->ps.ammo[ weaponData[NPCS.client->ps.weapon].ammoIndex ] < 10)	// checkme
 //	if(NPC->client->ps.ammo[ client->ps.weapon ] < 10)
 	{
 		Add_Ammo (NPCS.NPC, NPCS.client->ps.weapon, 100);
 	}
+#endif //__MMO__
 
 	/*if ( NPC->playerTeam == TEAM_BORG )
 	{//HACK!!!

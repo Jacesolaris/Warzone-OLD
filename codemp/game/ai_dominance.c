@@ -3503,7 +3503,7 @@ int DOM_FindWeaponforRange(bot_state_t *bs, float range)
 			//weapdist = DOM_IdealAttackDistance[i] * 1.1;
 		}
 
-		if (range < weapdist /*&& bs->cur_ps.ammo[weaponData[i].ammoIndex] >= weaponData[i].energyPerShot*/ &&
+		if (range < weapdist &&
 			bs->botWeaponWeights[i] > bestfav &&
 			(bs->cur_ps.stats[STAT_WEAPONS] & (1 << i)))
 		{
@@ -5544,8 +5544,7 @@ int DOM_FavoriteWeapon(bot_state_t *bs, gentity_t *target)
 		//try to use explosives on breakables if we can.
 		if (strcmp(target->classname, "func_breakable") == 0)
 		{
-			if (/*bs->cur_ps.ammo[weaponData[i].ammoIndex] >= weaponData[i].energyPerShot
-				&&*/ bs->cur_ps.stats[STAT_WEAPONS] & (1 << i))
+			if (bs->cur_ps.stats[STAT_WEAPONS] & (1 << i))
 			{
 				if (i == WP_DET_PACK)
 				{
@@ -5569,8 +5568,7 @@ int DOM_FavoriteWeapon(bot_state_t *bs, gentity_t *target)
 				}
 			}
 		}
-		else if (/*bs->cur_ps.ammo[weaponData[i].ammoIndex] >= weaponData[i].energyPerShot &&*/
-			bs->botWeaponWeights[i] > bestweight &&
+		else if (bs->botWeaponWeights[i] > bestweight &&
 			(bs->cur_ps.stats[STAT_WEAPONS] & (1 << i)))
 		{
 			bestweight = bs->botWeaponWeights[i];

@@ -64,10 +64,14 @@ float CG_GetValue(int ownerDraw) {
 		return ps->stats[STAT_ARMOR];
 		break;
 	case CG_PLAYER_AMMO_VALUE:
+#ifdef __MMO__
+		return 100;
+#else //!__MMO__
 		if ( cent->currentState.weapon )
 		{
 			return ps->ammo[weaponData[cent->currentState.weapon].ammoIndex];
 		}
+#endif //__MMO__
 		break;
 	case CG_PLAYER_SCORE:
 		return cg.snap->ps.persistant[PERS_SCORE];
