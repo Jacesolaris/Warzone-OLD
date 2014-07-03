@@ -592,8 +592,13 @@ void G_CheckMinimumPlayers( void ) {
 	}
 
 	if (level.intermissiontime) return;
+#ifdef __MMO__
+	// UQ1: only check once each 100 milliseconds
+	if (checkminimumplayers_time > level.time - 100) {
+#else //!__MMO__
 	//only check once each 10 seconds
 	if (checkminimumplayers_time > level.time - 10000) {
+#endif //__MMO__
 		return;
 	}
 	checkminimumplayers_time = level.time;

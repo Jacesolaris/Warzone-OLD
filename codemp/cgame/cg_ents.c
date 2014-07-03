@@ -3276,10 +3276,10 @@ qboolean InFOV( vec3_t spot, vec3_t from, vec3_t fromAngles, int hFOV, int vFOV 
 int ENT_OrgVisible(vec3_t org1, vec3_t org2, int ignore)
 {
 	trace_t tr;
-	
+
 	CG_Trace(&tr, org1, NULL, NULL, org2, ignore, MASK_SOLID );
 
-	if (tr.fraction >= 0.8)
+	if (tr.fraction >= 0.8 || Distance(org1, tr.endpos) < 128)
 	{
 		return 1;
 	}
@@ -3345,9 +3345,22 @@ Ghoul2 Insert Start
 		&& cent->currentState.eType != ET_MISSILE
 		&& cent->currentState.eType != ET_PORTAL) // Don't cull these...
 	{
-		if (Distance( cent->lerpOrigin, cg.refdef.vieworg) > 2048
-			|| !InFOV( cent->lerpOrigin, cg.refdef.vieworg, cg.refdef.viewangles, cg.refdef.fov_x * 1.1, cg.refdef.fov_y * 1.1)
-			|| (Distance( cent->lerpOrigin, cg.refdef.vieworg) > 512 && !ENT_OrgVisible(cg.refdef.vieworg, cent->lerpOrigin, cg.clientNum)))
+		float dist = Distance( cent->lerpOrigin, cg.refdef.vieworg);
+
+		// Distance cull...
+		if (dist > 2048)
+		{
+			return;
+		}
+
+		// FOV cull...
+		if (!InFOV( cent->lerpOrigin, cg.refdef.vieworg, cg.refdef.viewangles, cg.refdef.fov_x * 1.1, cg.refdef.fov_y * 1.1))
+		{
+			return;
+		}
+
+		// Visibility cull...
+		if (dist > 256 && !ENT_OrgVisible(cg.refdef.vieworg, cent->lerpOrigin, cg.clientNum))
 		{
 			return;
 		}
