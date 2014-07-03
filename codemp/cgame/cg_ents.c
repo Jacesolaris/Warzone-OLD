@@ -3273,6 +3273,19 @@ qboolean InFOV( vec3_t spot, vec3_t from, vec3_t fromAngles, int hFOV, int vFOV 
 	return qfalse;
 }
 
+int ENT_OrgVisible(vec3_t org1, vec3_t org2, int ignore)
+{
+	trace_t tr;
+	
+	CG_Trace(&tr, org1, NULL, NULL, org2, ignore, MASK_SOLID );
+
+	if (tr.fraction >= 0.8)
+	{
+		return 1;
+	}
+
+	return 0;
+}
 
 /*
 ===============
@@ -3314,7 +3327,8 @@ static void CG_AddCEntity( centity_t *cent ) {
 #ifdef __MMO__
 	// UQ1: Only process objects in our FOV...
 	if (Distance( cent->lerpOrigin, cg.refdef.vieworg) > 2048
-		|| !InFOV( cent->lerpOrigin, cg.refdef.vieworg, cg.refdef.viewangles, cg.refdef.fov_x * 1.1, cg.refdef.fov_y * 1.1))
+		|| !InFOV( cent->lerpOrigin, cg.refdef.vieworg, cg.refdef.viewangles, cg.refdef.fov_x * 1.1, cg.refdef.fov_y * 1.1)
+		|| (Distance( cent->lerpOrigin, cg.refdef.vieworg) > 512 && !ENT_OrgVisible(cg.refdef.vieworg, cent->lerpOrigin, cg.clientNum)))
 	{
 		return;
 	}
