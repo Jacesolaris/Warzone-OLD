@@ -3324,18 +3324,6 @@ static void CG_AddCEntity( centity_t *cent ) {
 	// calculate the current origin
 	CG_CalcEntityLerpPositions( cent );
 
-#ifdef __MMO__
-	// UQ1: Only process objects in our FOV...
-	if (Distance( cent->lerpOrigin, cg.refdef.vieworg) > 2048
-		|| !InFOV( cent->lerpOrigin, cg.refdef.vieworg, cg.refdef.viewangles, cg.refdef.fov_x * 1.1, cg.refdef.fov_y * 1.1)
-		|| (Distance( cent->lerpOrigin, cg.refdef.vieworg) > 512 && !ENT_OrgVisible(cg.refdef.vieworg, cent->lerpOrigin, cg.clientNum)))
-	{
-		return;
-	}
-#endif //__MMO__
-
-	// add automatic effects
-	CG_EntityEffects( cent );
 /*
 Ghoul2 Insert Start
 */
@@ -3350,6 +3338,25 @@ Ghoul2 Insert Start
 			trap->S_AddLocalSet(soundSet, cg.refdef.vieworg, cent->lerpOrigin, cent->currentState.number, cg.time);
 		}
 	}
+
+#ifdef __MMO__
+	// UQ1: Only process objects in our FOV...
+	if (cent->currentState.eType != ET_MOVER
+		&& cent->currentState.eType != ET_MISSILE
+		&& cent->currentState.eType != ET_PORTAL) // Don't cull these...
+	{
+		if (Distance( cent->lerpOrigin, cg.refdef.vieworg) > 2048
+			|| !InFOV( cent->lerpOrigin, cg.refdef.vieworg, cg.refdef.viewangles, cg.refdef.fov_x * 1.1, cg.refdef.fov_y * 1.1)
+			|| (Distance( cent->lerpOrigin, cg.refdef.vieworg) > 512 && !ENT_OrgVisible(cg.refdef.vieworg, cent->lerpOrigin, cg.clientNum)))
+		{
+			return;
+		}
+	}
+#endif //__MMO__
+
+	// add automatic effects
+	CG_EntityEffects( cent ); // UQ1: Moved after sounds, so we don't cull ambient sounds...
+
 /*
 Ghoul2 Insert End
 */
