@@ -10876,12 +10876,14 @@ void CG_CacheG2AnimInfo(char *modelName)
 {
 	void *g2 = NULL;
 	char *slash;
-	char useModel[MAX_QPATH] = {0};
-	char useSkin[MAX_QPATH] = {0};
+	char useModel[MAX_QPATH];
+	char useSkin[MAX_QPATH];
 	int animIndex;
 
-	Q_strncpyz(useModel, modelName, sizeof( useModel ) );
-	Q_strncpyz(useSkin, modelName, sizeof( useSkin ) );
+	//Q_strncpyz(useModel, modelName, sizeof( useModel ) );
+	//Q_strncpyz(useSkin, modelName, sizeof( useSkin ) );
+	strcpy(useModel, modelName);
+	strcpy(useSkin, modelName);
 
 	if (modelName[0] == '$')
 	{ //it's a vehicle name actually, let's precache the whole vehicle
@@ -10895,7 +10897,8 @@ void CG_CacheG2AnimInfo(char *modelName)
 		{
 			trap->R_RegisterSkin(va("models/players/%s/model_default.skin", useModel));
 		}
-		Q_strncpyz(useModel, va("models/players/%s/model.glm", useModel), sizeof( useModel ) );
+		//Q_strncpyz(useModel, va("models/players/%s/model.glm", useModel), sizeof( useModel ) );
+		strcpy(useModel, va("models/players/%s/model.glm", useModel));
 	}
 
 	trap->G2API_InitGhoul2Model(&g2, useModel, 0, 0, 0, 0, 0);
@@ -10910,7 +10913,8 @@ void CG_CacheG2AnimInfo(char *modelName)
 		GLAName[0] = 0;
 		trap->G2API_GetGLAName(g2, 0, GLAName);
 
-		Q_strncpyz(originalModelName, useModel, sizeof( originalModelName ) );
+		//Q_strncpyz(originalModelName, useModel, sizeof( originalModelName ) );
+		strcpy(originalModelName, useModel);
 
 		slash = Q_strrchr( GLAName, '/' );
 		if ( slash )

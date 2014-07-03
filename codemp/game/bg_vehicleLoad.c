@@ -1408,11 +1408,11 @@ int BG_VehicleGetIndex( const char *vehicleName )
 //with a $ in front of it.
 //we are expected to then get the model for the
 //vehicle and stomp over modelname with it.
-void BG_GetVehicleModelName(char *modelName, const char *vehicleName, size_t len)
+void BG_GetVehicleModelName(char *modelName, size_t len)
 {
-	const char *vehName = &vehicleName[1];
+	const char *vehName = &modelName[1];
 	int vIndex = BG_VehicleGetIndex(vehName);
-	assert(vehicleName[0] == '$');
+	assert(modelName[0] == '$');
 
 	if (vIndex == VEHICLE_NONE)
 		Com_Error(ERR_DROP, "BG_GetVehicleModelName:  couldn't find vehicle %s", vehName);

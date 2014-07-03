@@ -2046,7 +2046,7 @@ void RB_StageIteratorGeneric( void )
 	//
 	// UQ1: Set up any special shaders needed for this surface/contents type...
 	//
-	if ((tess.shader->contentFlags & CONTENTS_WATER)) 
+	if ((tess.shader->contentFlags & CONTENTS_WATER) || (tess.shader->contentFlags & CONTENTS_LAVA)) 
 	{
 		if (input->xstages[0]->isWater != qtrue) // In case it is already set, no need looping more then once on the same shader...
 			for ( int stage = 0; stage < MAX_SHADER_STAGES; stage++ )

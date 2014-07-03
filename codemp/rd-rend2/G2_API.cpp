@@ -1825,7 +1825,7 @@ int G2API_AddBolt(CGhoul2Info_v &ghoul2, const int modelIndex, const char *boneN
 {
 //	assert(ghoul2.size()>modelIndex);
 
-	if (&ghoul2 && ghoul2.size()>modelIndex)
+	if (&ghoul2 /*&& ghoul2.size()>modelIndex*/)
 	{
 		CGhoul2Info *ghlInfo = &ghoul2[modelIndex];
 		if (G2_SetupModelPointers(ghlInfo))
