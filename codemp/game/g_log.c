@@ -1714,34 +1714,19 @@ void QDECL G_ClearClientLog(int client)
 	for (i = 0; i < WP_NUM_WEAPONS; i++)
 	{
 		G_WeaponLogPickups[client][i] = 0;
-	}
-	for (i = 0; i < WP_NUM_WEAPONS; i++)
-	{
 		G_WeaponLogFired[client][i] = 0;
+		G_WeaponLogDeaths[client][i] = 0;
+		G_WeaponLogTime[client][i] = 0;
 	}
 	for (i = 0; i < MOD_MAX; i++)
 	{
 		G_WeaponLogDamage[client][i] = 0;
-	}
-	for (i = 0; i < MOD_MAX; i++)
-	{
 		G_WeaponLogKills[client][i] = 0;
-	}
-	for (i = 0; i < WP_NUM_WEAPONS; i++)
-	{
-		G_WeaponLogDeaths[client][i] = 0;
 	}
 	for (i = 0; i < MAX_CLIENTS; i++)
 	{
 		G_WeaponLogFrags[client][i] = 0;
-	}
-	for (i = 0; i < MAX_CLIENTS; i++)
-	{
 		G_WeaponLogFrags[i][client] = 0;
-	}
-	for (i = 0; i < WP_NUM_WEAPONS; i++)
-	{
-		G_WeaponLogTime[client][i] = 0;
 	}
 	G_WeaponLogLastTime[client] = 0;
 	G_WeaponLogClientTouch[client] = qfalse;

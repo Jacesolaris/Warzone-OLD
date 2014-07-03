@@ -67,7 +67,7 @@ void DOM_InitFakeNPC(gentity_t *bot)
 	bot->s.eType = ET_PLAYER; // Replace ET_NPC
 	bot->client->NPC_class = CLASS_BOT_FAKE_NPC;
 
-	NPC_Precache(bot);
+	//NPC_Precache(bot); // Already run in NPC_Begin...
 
 	// UQ1: Mark every NPC's spawn position. For patrolling that spot and stuff...
 	VectorCopy(bot->r.currentOrigin, bot->spawn_pos);
@@ -221,28 +221,10 @@ void DOM_StandardBotAI2(bot_state_t *bs, float thinktime)
 
 	NPCS.NPCInfo->last_ucmd.serverTime = level.time - 50;
 
-	/*
-	if ( !NPCS.NPC->next_roff_time || NPCS.NPC->next_roff_time < level.time )
-	{//If we were following a roff, we don't do normal pmoves.
-		//FIXME: firing angles (no aim offset) or regular angles?
-		NPC_UpdateAngles(qtrue, qtrue);
-		memcpy( &NPCS.ucmd, &NPCS.NPCInfo->last_ucmd, sizeof( usercmd_t ) );
-		ClientThink(NPCS.NPC->s.number, &NPCS.ucmd);
-	}
-	else
-	{
-		NPC_ApplyRoff();
-	}*/
-
-
-
 	//nextthink is set before this so something in here can override it
 	NPC_ExecuteBState(bot);
 
 	NPC_UpdateAngles(qtrue, qtrue);
-
-	//memcpy( &NPCS.ucmd, &NPCS.NPCInfo->last_ucmd, sizeof( usercmd_t ) );
-	//ClientThink(NPCS.NPC->s.number, &NPCS.ucmd);
 
 	//G_UpdateClientAnims(bot, 0.5f);
 	DOM_FakeNPC_Parse_UCMD(bs, bot);

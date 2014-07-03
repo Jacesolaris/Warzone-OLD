@@ -247,6 +247,8 @@ typedef struct clientInfo_s {
 //	char			redTeam[MAX_TEAMNAME];
 //	char			blueTeam[MAX_TEAMNAME];
 
+	char			oldModelName[MAX_QPATH];
+
 	char			teamName[MAX_TEAMNAME];
 
 	int				corrTime;

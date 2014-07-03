@@ -436,6 +436,8 @@ static void ProjectDlightTexture( void ) {
 }
 #else //!___OLD_DLIGHT_CODE___
 
+//#define __MERGE_DLIGHTS__ // UQ1: Works but makes little difference to over all speed... Down to personal preference on looks if we use or not I guess...
+
 float DLIGHT_SIZE_MULTIPLIER = 5.0;
 
 static void ProjectDlightTexture( void ) {
@@ -451,6 +453,8 @@ static void ProjectDlightTexture( void ) {
 	}
 
 	ComputeDeformValues(&deformGen, deformParams);
+
+#ifndef __MERGE_DLIGHTS__
 
 	for ( l = 0 ; l < backEnd.refdef.num_dlights ; l++ ) {
 		dlight_t	*dl;
@@ -497,15 +501,7 @@ static void ProjectDlightTexture( void ) {
 
 		GLSL_SetUniformFloat(sp, UNIFORM_LIGHTRADIUS, dl->radius);
 
-		{
-			vec4_t viewInfo;
-
-			float zmax = backEnd.viewParms.zFar;
-			float zmin = r_znear->value;
-			VectorSet4(viewInfo, zmax / zmin, zmax, 0.0, 0.0);
-			GLSL_SetUniformVec4(sp, UNIFORM_VIEWINFO, viewInfo);
-		}
-
+		/*
 		{
 			vec2_t screensize;
 			screensize[0] = tr.dlightImage->width;
@@ -513,7 +509,8 @@ static void ProjectDlightTexture( void ) {
 			
 			GLSL_SetUniformVec2(sp, UNIFORM_DIMENSIONS, screensize);
 		}
-	  
+		*/
+
 		GL_Bind( tr.dlightImage );
 
 		// include GLS_DEPTHFUNC_EQUAL so alpha tested surfaces don't add light
@@ -539,6 +536,161 @@ static void ProjectDlightTexture( void ) {
 		backEnd.pc.c_dlightIndexes += tess.numIndexes;
 		backEnd.pc.c_dlightVertexes += tess.numVertexes;
 	}
+
+#else // __MERGE_DLIGHTS__
+
+	{
+		qboolean	SHOULD_MERGE[256];
+		qboolean	COMPLETED_MERGE[256];
+		dlight_t	MERGED_DLIGHTS[256];
+		int			MERGED_DLIGHT_COUNT[256];
+		int			NUM_MERGED_DLIGHTS = 0;
+		int			j = 0;
+
+		memset(&SHOULD_MERGE, qfalse, sizeof(qboolean)*256);
+		memset(&COMPLETED_MERGE, qfalse, sizeof(qboolean)*256);
+		memset(&MERGED_DLIGHT_COUNT, 0, sizeof(int)*256);
+
+		for ( l = 0; l < backEnd.refdef.num_dlights; l++ ) 
+		{
+			dlight_t	*dl = &backEnd.refdef.dlights[l];
+
+			// Start search for mergeable lights at the next light from this one...
+			for ( j = l+1; j < backEnd.refdef.num_dlights; j++ )
+			{
+				dlight_t	*dl2 = &backEnd.refdef.dlights[j];
+
+				if (Distance(dl2->origin, dl->origin) <= dl->radius * 2.0)
+				{
+					SHOULD_MERGE[j] = qtrue;
+				}
+			}
+		}
+
+		// Add all lights that should not be merged with another...
+		for ( l = 0; l < backEnd.refdef.num_dlights; l++ )
+		{
+			if (!SHOULD_MERGE[l])
+			{
+				dlight_t	*dl;
+
+				// Copy this dlight to our list...
+				memcpy(&MERGED_DLIGHTS[NUM_MERGED_DLIGHTS], &backEnd.refdef.dlights[l], sizeof(dlight_t));
+				MERGED_DLIGHT_COUNT[NUM_MERGED_DLIGHTS]++;
+
+				dl = &MERGED_DLIGHTS[NUM_MERGED_DLIGHTS];
+
+				// And merge any lights close enough with this one...
+				for ( j = l; j < backEnd.refdef.num_dlights; j++ ) 
+				{
+					dlight_t	*dl2 = &backEnd.refdef.dlights[j];
+
+					if (!SHOULD_MERGE[j] || COMPLETED_MERGE[j]) continue;
+
+					if (Distance(dl2->origin, dl->origin) <= dl->radius)
+					{
+						// Merge these two...
+						dl->color[0] += dl2->color[0];
+						dl->color[1] += dl2->color[1];
+						dl->color[2] += dl2->color[2];
+
+						// TODO: Move the light origin...
+
+						// mark this light as merged...
+						COMPLETED_MERGE[j] = qtrue;
+						// increase counter of how many lights have been added for this merged light...
+						MERGED_DLIGHT_COUNT[NUM_MERGED_DLIGHTS]++;
+					}
+				}
+
+				NUM_MERGED_DLIGHTS++;
+			}
+		}
+
+		// Finish up by adjusting merged lights color and radius...
+		for ( l = 0; l < NUM_MERGED_DLIGHTS; l++ )
+		{
+			dlight_t	*dl = &MERGED_DLIGHTS[l];
+
+			// Average out the colors...
+			dl->color[0] /= MERGED_DLIGHT_COUNT[l];
+			dl->color[1] /= MERGED_DLIGHT_COUNT[l];
+			dl->color[2] /= MERGED_DLIGHT_COUNT[l];
+
+			// Increase the radius...
+			dl->radius *= (MERGED_DLIGHT_COUNT[l]);
+		}
+
+		//ri->Printf(PRINT_WARNING, "%i dlights were merged into %i dlights.\n", backEnd.refdef.num_dlights, NUM_MERGED_DLIGHTS);
+
+		// Now display the merged lights...
+		for ( l = 0; l < NUM_MERGED_DLIGHTS; l++ ) {
+			shaderProgram_t *sp;
+			vec4_t vector;
+			dlight_t	*dl = &MERGED_DLIGHTS[l];
+
+			VectorCopy( dl->transformed, origin );
+			radius = dl->radius * DLIGHT_SIZE_MULTIPLIER;
+			scale = 1.0f / radius;
+
+			sp = &tr.dlightShader[deformGen == DGEN_NONE ? 0 : 1];
+
+			backEnd.pc.c_dlightDraws++;
+
+			GLSL_BindProgram(sp);
+
+			GLSL_SetUniformMatrix16(sp, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
+
+			GLSL_SetUniformFloat(sp, UNIFORM_VERTEXLERP, glState.vertexAttribsInterpolation);
+
+			GLSL_SetUniformInt(sp, UNIFORM_DEFORMGEN, deformGen);
+			if (deformGen != DGEN_NONE)
+			{
+				GLSL_SetUniformFloat5(sp, UNIFORM_DEFORMPARAMS, deformParams);
+				GLSL_SetUniformFloat(sp, UNIFORM_TIME, tess.shaderTime);
+			}
+
+			vector[0] = (dl->color[0]);
+			vector[1] = (dl->color[1]);
+			vector[2] = (dl->color[2]);
+			vector[3] = 0.2f;
+			GLSL_SetUniformVec4(sp, UNIFORM_LIGHTCOLOR, vector);
+
+			vector[0] = origin[0];
+			vector[1] = origin[1];
+			vector[2] = origin[2];
+			vector[3] = scale;
+			GLSL_SetUniformVec4(sp, UNIFORM_LIGHTORIGIN, vector);
+
+			GLSL_SetUniformFloat(sp, UNIFORM_LIGHTRADIUS, dl->radius);
+
+			GL_Bind( tr.dlightImage );
+
+			// include GLS_DEPTHFUNC_EQUAL so alpha tested surfaces don't add light
+			// where they aren't rendered
+			if ( dl->additive ) {
+				GL_State( GLS_ATEST_GT_0 | GLS_SRCBLEND_ONE | GLS_DSTBLEND_ONE | GLS_DEPTHFUNC_EQUAL );
+			}
+			else {
+				GL_State( GLS_ATEST_GT_0 | GLS_SRCBLEND_DST_COLOR | GLS_DSTBLEND_ONE | GLS_DEPTHFUNC_EQUAL );
+			}
+
+			if (tess.multiDrawPrimitives)
+			{
+				shaderCommands_t *input = &tess;
+				R_DrawMultiElementsVBO(input->multiDrawPrimitives, input->multiDrawMinIndex, input->multiDrawMaxIndex, input->multiDrawNumIndexes, input->multiDrawFirstIndex);
+			}
+			else
+			{
+				R_DrawElementsVBO(tess.numIndexes, tess.firstIndex, tess.minIndex, tess.maxIndex);
+			}
+
+			backEnd.pc.c_totalIndexes += tess.numIndexes;
+			backEnd.pc.c_dlightIndexes += tess.numIndexes;
+			backEnd.pc.c_dlightVertexes += tess.numVertexes;
+		}
+	}
+#endif //__MERGE_DLIGHTS__
 }
 #endif //___OLD_DLIGHT_CODE___
 
@@ -1420,6 +1572,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		//                          STEEP PARALLAX
 		// ------------------------------------------------------------------
 
+		/*
 		{
 			vec4_t viewInfo;
 
@@ -1431,6 +1584,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 			GLSL_SetUniformVec4(sp, UNIFORM_VIEWINFO, viewInfo);
 		}
+		*/
 
 		{
 			vec4_t local1;

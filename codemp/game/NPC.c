@@ -1874,6 +1874,8 @@ void NPC_Think ( gentity_t *self)//, int msec )
 	{
 		player = &g_entities[i];
 
+		if (player == self) continue;
+
 		if (player->inuse && player->client && player->client->sess.sessionTeam != TEAM_SPECTATOR &&
 			!(player->client->ps.pm_flags & PMF_FOLLOW))
 		{

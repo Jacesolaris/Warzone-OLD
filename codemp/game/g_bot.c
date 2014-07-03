@@ -948,6 +948,8 @@ static void G_AddBot( const char *name, float skill, const char *team, int delay
 
 	preTeam = bot->client->sess.sessionTeam;
 
+	bot->NPC = NULL;
+
 	// have it connect to the game as a normal client
 	if ( ClientConnect( clientNum, qtrue, qtrue ) )
 		return;

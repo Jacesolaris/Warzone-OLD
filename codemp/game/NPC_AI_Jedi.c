@@ -5431,6 +5431,8 @@ qboolean Jedi_CheckAmbushPlayer( void )
 	{
 		player = &g_entities[i];
 
+		if (player == NPCS.NPC) continue;
+
 		if ( !player || !player->client )
 		{
 			continue;

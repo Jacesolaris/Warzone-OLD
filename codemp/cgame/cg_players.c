@@ -275,6 +275,13 @@ sfxHandle_t	CG_CustomSound( int clientNum, const char *soundName ) {
 		}
 	}
 
+	// Does this client slot have a new model???
+	if (stricmp(ci->modelName, ci->oldModelName))
+	{
+		strcpy(ci->oldModelName, ci->modelName);
+		ci->npc_sounds_registered = qfalse;
+	}
+
 	// UQ1: Load NPC sounds for players/bots...
 	if (clientNum < MAX_CLIENTS && !ci->npc_sounds_registered)
 	{
@@ -1218,7 +1225,11 @@ void CG_LoadClientInfo( clientInfo_t *ci ) {
 	// reset any existing players and bodies, because they might be in bad
 	// frames for this new model
 	clientNum = ci - cgs.clientinfo;
+#ifdef __MMO__
+	for ( i = 0 ; i < MAX_CLIENTS ; i++ ) {
+#else //!__MMO__
 	for ( i = 0 ; i < MAX_GENTITIES ; i++ ) {
+#endif //__MMO__
 		if ( cg_entities[i].currentState.clientNum == clientNum
 			&& cg_entities[i].currentState.eType == ET_PLAYER ) {
 			CG_ResetPlayerEntity( &cg_entities[i] );
