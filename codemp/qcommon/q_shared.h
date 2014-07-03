@@ -1388,7 +1388,8 @@ typedef enum {
 
 #ifdef __MMO__
 #define	GENTITYNUM_BITS	11		// don't need to send any more
-#define	MAX_GENTITIES	(1<<GENTITYNUM_BITS)
+//#define	MAX_GENTITIES	(1<<GENTITYNUM_BITS)
+#define		MAX_GENTITIES	(1024+((MAX_CLIENTS*2)-1))
 #else //!__MMO__
 #define	GENTITYNUM_BITS	10		// don't need to send any more
 #define	MAX_GENTITIES	(1<<GENTITYNUM_BITS)
@@ -1434,7 +1435,7 @@ Ghoul2 Insert End
 #define MAX_AMBIENT_SETS		256 //rww - ambient soundsets must be sent over in config strings.
 
 #ifdef __MMO__
-#define	MAX_CONFIGSTRINGS	6400 //this is getting pretty high. Try not to raise it anymore than it already is.
+#define	MAX_CONFIGSTRINGS	3000 //this is getting pretty high. Try not to raise it anymore than it already is.
 #else //!__MMO__
 #define	MAX_CONFIGSTRINGS	1700 //this is getting pretty high. Try not to raise it anymore than it already is.
 #endif //__MMO__
@@ -1447,7 +1448,8 @@ Ghoul2 Insert End
 #define	RESERVED_CONFIGSTRINGS	2	// game can't modify below this, only the system can
 
 #ifdef __MMO__
-#define	MAX_GAMESTATE_CHARS	64000
+//#define	MAX_GAMESTATE_CHARS	64000
+#define	MAX_GAMESTATE_CHARS	32000
 #else //!__MMO__
 #define	MAX_GAMESTATE_CHARS	16000
 #endif //__MMO__

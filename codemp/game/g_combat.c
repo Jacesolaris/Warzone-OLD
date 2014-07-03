@@ -2468,6 +2468,8 @@ extern void RunEmplacedWeapon( gentity_t *ent, usercmd_t **ucmd );
 		killerName = "<world>";
 	}
 
+#ifndef __MMO__
+
 	if ( meansOfDeath < 0 || meansOfDeath >= sizeof( modNames ) / sizeof( modNames[0] ) ) {
 		obit = "<bad obituary>";
 	} else {
@@ -2485,6 +2487,9 @@ extern void RunEmplacedWeapon( gentity_t *ent, usercmd_t **ucmd );
 	}
 	else
 		Q_strcat( buf, sizeof( buf ), va( "%s by %s\n", self->client->pers.netname, obit ) );
+
+#endif //__MMO__
+
 	G_LogPrintf( "%s", buf );
 
 	if ( g_austrian.integer
@@ -2513,6 +2518,7 @@ extern void RunEmplacedWeapon( gentity_t *ent, usercmd_t **ucmd );
 		G_LogWeaponFrag(killer, self->s.number);
 	}
 
+#ifndef __MMO__ // UQ1: Don't need death spam about everyone that dies in a MMO... lol...
 	// broadcast the death event to everyone
 	if (self->s.eType != ET_NPC && !g_noPDuelCheck)
 	{
@@ -2523,6 +2529,7 @@ extern void RunEmplacedWeapon( gentity_t *ent, usercmd_t **ucmd );
 		ent->r.svFlags = SVF_BROADCAST;	// send to everyone
 		ent->s.isJediMaster = wasJediMaster;
 	}
+#endif //__MMO__
 
 	self->enemy = attacker;
 

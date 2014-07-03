@@ -3073,6 +3073,18 @@ int BG_ModelCache(const char *modelName, const char *skinName)
 	#endif // _GAME
 }
 
+#ifdef __MMO__
+
+#if defined(_GAME)
+	#define MAX_POOL_SIZE	300000000
+#elif defined(_CGAME) //don't need as much for cgame stuff. 2mb will be fine.
+	#define MAX_POOL_SIZE	204800000
+#elif defined(_UI) //And for the ui the only thing we'll be using this for anyway is allocating anim data for g2 menu models
+	#define MAX_POOL_SIZE	512000
+#endif
+
+#else //!__MMO__
+
 #if defined(_GAME)
 	#define MAX_POOL_SIZE	3000000 //1024000
 #elif defined(_CGAME) //don't need as much for cgame stuff. 2mb will be fine.
@@ -3080,6 +3092,8 @@ int BG_ModelCache(const char *modelName, const char *skinName)
 #elif defined(_UI) //And for the ui the only thing we'll be using this for anyway is allocating anim data for g2 menu models
 	#define MAX_POOL_SIZE	512000
 #endif
+
+#endif //__MMO__
 
 //I am using this for all the stuff like NPC client structures on server/client and
 //non-humanoid animations as well until/if I can get dynamic memory working properly

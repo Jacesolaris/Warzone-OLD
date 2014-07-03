@@ -1158,7 +1158,6 @@ NPC_BSNoClip
 
 void NPC_BSNoClip ( void )
 {
-
 	if ( UpdateGoal() )
 	{
 		vec3_t	dir, forward, right, angles, up = {0, 0, 1};

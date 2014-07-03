@@ -2760,11 +2760,13 @@ void ClientBegin( int clientNum, qboolean allowTeamReset ) {
 		ClientSpawn( ent );
 	}
 
+#ifndef __MMO__
 	if ( client->sess.sessionTeam != TEAM_SPECTATOR ) {
 		if ( level.gametype != GT_DUEL || level.gametype == GT_POWERDUEL ) {
 			trap->SendServerCommand( -1, va("print \"%s" S_COLOR_WHITE " %s\n\"", client->pers.netname, G_GetStringEdString("MP_SVGAME", "PLENTER")) );
 		}
 	}
+#endif //__MMO__
 
 	G_LogPrintf( "ClientBegin: %i\n", clientNum );
 

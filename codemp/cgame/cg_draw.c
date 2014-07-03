@@ -5007,7 +5007,9 @@ void CG_DrawSiegeInfo(centity_t *cent, float chX, float chY, float chW, float ch
 	float x;
 	float y;
 	float percent;
+#ifndef __MMO__
 	int ammoMax;
+#endif //__MMO__
 
 	assert(cent->currentState.number < MAX_CLIENTS);
 

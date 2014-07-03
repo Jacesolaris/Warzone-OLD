@@ -2483,6 +2483,7 @@ void BroadcastTeamChange( gclient_t *client, int oldTeam )
 		return;
 	}
 
+#ifndef __MMO__
 	if ( client->sess.sessionTeam == TEAM_RED ) {
 		trap->SendServerCommand( -1, va("cp \"%s" S_COLOR_WHITE " %s\n\"",
 			client->pers.netname, G_GetStringEdString("MP_SVGAME", "JOINEDTHEREDTEAM")) );
@@ -2517,6 +2518,7 @@ void BroadcastTeamChange( gclient_t *client, int oldTeam )
 			client->pers.netname, G_GetStringEdString("MP_SVGAME", "JOINEDTHEBATTLE")));
 		}
 	}
+#endif //__MMO__
 
 	G_LogPrintf( "ChangeTeam: %i [%s] (%s) \"%s^7\" %s -> %s\n", (int)(client - level.clients), client->sess.IP, client->pers.guid, client->pers.netname, TeamName( oldTeam ), TeamName( client->sess.sessionTeam ) );
 }
