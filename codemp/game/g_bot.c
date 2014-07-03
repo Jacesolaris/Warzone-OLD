@@ -394,6 +394,7 @@ G_AddRandomBot
 ===============
 */
 void G_AddRandomBot( int team ) {
+#ifndef __MMO__
 	int		i, n, num;
 	float	skill;
 	char	*value, netname[36], *teamstr;
@@ -473,6 +474,21 @@ void G_AddRandomBot( int team ) {
 			}
 		}
 	}
+#else //__MMO__
+	int		num = irand(0, level.bots.num-1);
+	float	skill;
+	char	*value, netname[36], *teamstr;
+
+	value = Info_ValueForKey( level.bots.infos[num], "name" );
+
+	skill = trap->Cvar_VariableIntegerValue( "g_npcspskill" );
+	if (team == TEAM_RED) teamstr = "red";
+	else if (team == TEAM_BLUE) teamstr = "blue";
+	else teamstr = "";
+	Q_strncpyz(netname, value, sizeof(netname));
+	Q_CleanStr(netname);
+	trap->SendConsoleCommand( EXEC_INSERT, va("addbot \"%s\" %.2f %s %i\n", netname, skill, teamstr, 0) );
+#endif //__MMO__
 }
 
 /*
