@@ -566,7 +566,9 @@ char *ClientConnect( int clientNum, qboolean firstTime, SavedGameJustLoaded_e eS
 
 		// don't do the "xxx connected" messages if they were caried over from previous level
 		if ( firstTime ) {
+#ifndef __MMO__
 			gi.SendServerCommand( -1, "print \"%s connected\n\"", client->pers.netname);
+#endif //__MMO__
 		}
 	}
 

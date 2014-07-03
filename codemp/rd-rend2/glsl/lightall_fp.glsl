@@ -43,10 +43,10 @@ uniform vec3  u_PrimaryLightColor;
 uniform vec3  u_PrimaryLightAmbient;
 #endif
 
-#if defined(USE_LIGHT) && !defined(USE_FAST_LIGHT)
+//#if defined(USE_LIGHT) && !defined(USE_FAST_LIGHT)
 uniform vec4      u_NormalScale;
 uniform vec4      u_SpecularScale;
-#endif
+//#endif
 
 #if defined(USE_LIGHT) && !defined(USE_FAST_LIGHT)
 #if defined(USE_CUBEMAP)
@@ -68,12 +68,15 @@ varying vec4   var_Bitangent;
 varying vec3   var_Normal;
 varying vec3   var_ViewDir;
   #endif
-#endif
-
-#if !defined(USE_LIGHT)
-uniform vec4   u_NormalScale;
+#else
+  #if defined(USE_VERT_TANGENT_SPACE)
+varying vec4   var_Normal;
+varying vec4   var_Tangent;
+varying vec4   var_Bitangent;
+  #else
 varying vec3   var_Normal;
 varying vec3   var_ViewDir;
+  #endif
 #endif
 
 varying vec3 var_N;
@@ -118,8 +121,11 @@ out vec4 out_Glow;
 	}
   #endif //USE_PARALLAXMAP_NONORMALS
 
+#define FAST_PARALLAX
+
 float RayIntersectDisplaceMap(vec2 dp, vec2 ds, sampler2D normalMap)
 {
+#if !defined(FAST_PARALLAX)
 	const int linearSearchSteps = 16;
 	const int binarySearchSteps = 6;
 
@@ -163,6 +169,12 @@ float RayIntersectDisplaceMap(vec2 dp, vec2 ds, sampler2D normalMap)
 	}
 
 	return bestDepth;
+#else //FAST_PARALLAX
+	//float depth = SampleDepth(normalMap, dp) * ds;
+	//float depth = SampleDepth(normalMap, dp) * 1.5;
+	float depth = ((SampleDepth(normalMap, dp) /** 1.5*/) * 2.0) - 1.0;
+	return depth;
+#endif //FAST_PARALLAX
 }
 #endif //USE_PARALLAXMAP || USE_PARALLAXMAP_NONORMALS
 
@@ -300,11 +312,14 @@ void main()
 	L += (texture2D(u_DeluxeMap, var_TexCoords.zw).xyz - vec3(0.5)) * u_EnableTextures.y;
   #endif
 	float sqrLightDist = dot(L, L);
-#endif
-
-#if !defined(USE_LIGHT)
+#else
+  #if defined(USE_VERT_TANGENT_SPACE)
+	mat3 tangentToWorld = mat3(var_Tangent.xyz, var_Bitangent.xyz, var_Normal.xyz);
+	viewDir = vec3(var_Normal.w, var_Tangent.w, var_Bitangent.w);
+  #else
 	mat3 tangentToWorld = cotangent_frame(var_Normal, -var_ViewDir, var_TexCoords.xy);
 	viewDir = var_ViewDir;
+  #endif
 	E = normalize(viewDir);
 #endif
 

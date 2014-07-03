@@ -1821,14 +1821,20 @@ void GiveExperiance(gentity_t *ent, int amount) {
 		ent->client->ps.stats[STAT_EXP_Count] = experienceLevel[ent->account.level];	// Set the required experience for next level.
 		trap->SendServerCommand(ent - g_entities, va("maxexperience %i", ent->client->ps.stats[STAT_EXP_Count]));
 		ent->client->ps.stats[STAT_EXP] = 0;	// Reset experience to 0 to start on the next level.
+#ifndef __MMO__
+		// UQ1: TODO - Make this an EVENT.
 		trap->SendServerCommand(-1, va("print \"%s^7 has leveled up, and is now level %i!\n\"", ent->client->pers.netname, ent->account.level));
 		trap->SendServerCommand(-1, va("chat \"%s^7 has leveled up, and is now level %i!\n\"", ent->client->pers.netname, ent->account.level));
+#endif //__MMO__
 		//UpdateCharacter(ent, qfalse);	// Update character, print the messages. so it's NOT silent (qfalse on silent)
 	}
 	//	ent->client->ps.persistant[PERS_EXPERIANCE_COUNT] += amount;
 
 	if (ent->r.svFlags & SVF_OLD_CLIENT) {
+#ifndef __MMO__
+		// UQ1: TODO - Make this an EVENT.
 		trap->SendServerCommand(ent - g_entities, va("print \"+%i experiance\n\"", amount));
+#endif //__MMO__
 	}
 	else {
 		trap->SendServerCommand(ent - g_entities, va("experiance %i", ent->client->ps.stats[STAT_EXP]));

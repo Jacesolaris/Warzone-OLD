@@ -414,7 +414,9 @@ void SV_DropClient( client_t *drop, const char *reason ) {
 	SV_CloseDownload( drop );
 
 	// tell everyone why they got dropped
+#ifndef __MMO__
 	SV_SendServerCommand( NULL, "print \"%s" S_COLOR_WHITE " %s\n\"", drop->name, reason );
+#endif //__MMO__
 
 	// call the prog function for removing a client
 	// this will remove the body, among other things

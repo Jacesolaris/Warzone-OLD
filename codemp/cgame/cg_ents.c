@@ -3255,6 +3255,24 @@ static void CG_FX( centity_t *cent )
 
 }
 
+qboolean InFOV( vec3_t spot, vec3_t from, vec3_t fromAngles, int hFOV, int vFOV )
+{
+	vec3_t	deltaVector, angles, deltaAngles;
+
+	VectorSubtract ( spot, from, deltaVector );
+	vectoangles ( deltaVector, angles );
+	
+	deltaAngles[PITCH]	= AngleDelta ( fromAngles[PITCH], angles[PITCH] );
+	deltaAngles[YAW]	= AngleDelta ( fromAngles[YAW], angles[YAW] );
+
+	if ( fabs ( deltaAngles[PITCH] ) <= vFOV && fabs ( deltaAngles[YAW] ) <= hFOV ) 
+	{
+		return qtrue;
+	}
+
+	return qfalse;
+}
+
 
 /*
 ===============
@@ -3292,6 +3310,15 @@ static void CG_AddCEntity( centity_t *cent ) {
 
 	// calculate the current origin
 	CG_CalcEntityLerpPositions( cent );
+
+#ifdef __MMO__
+	// UQ1: Only process objects in our FOV...
+	if (Distance( cent->lerpOrigin, cg.refdef.vieworg) > 2048
+		|| !InFOV( cent->lerpOrigin, cg.refdef.vieworg, cg.refdef.viewangles, cg.refdef.fov_x * 1.1, cg.refdef.fov_y * 1.1))
+	{
+		return;
+	}
+#endif //__MMO__
 
 	// add automatic effects
 	CG_EntityEffects( cent );
