@@ -3262,23 +3262,3 @@ Q_EXPORT intptr_t vmMain( int command, intptr_t arg0, intptr_t arg1, intptr_t ar
 	}
 	return -1;
 }
-//[LightningBlockSys]
-void CG_BlockLightningEffect(int clientNum)
-{
-	if ( cg_entities[clientNum].currentState.weapon == WP_SABER )
-	{
-		int rBladeNum = 0;
-		vec3_t	end2;
-		vec3_t ang = { 0, 1, 2 };
-		clientInfo_t *ci = &cgs.clientinfo[clientNum];
-		saberInfo_t *saber1 = &ci->saber[0];
-
-		ang[0] = flrand(0, 360);
-		ang[1] = flrand(0, 360);
-		ang[2] = flrand(0, 360);
-
-		VectorMA(saber1->blade[rBladeNum].muzzlePoint, saber1->blade[rBladeNum].lengthMax*flrand(0, 1), saber1->blade[rBladeNum].muzzleDir, end2);
-		trap->FX_PlayEffectID(cgs.effects.saber_lightninghit, end2, ang, -1, -1, qfalse);
-	}
-}//[/LightningBlockSys]
-// here is the function for the effect to be call and its shit as you can see it will be seeing in 

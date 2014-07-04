@@ -5700,6 +5700,27 @@ static void CG_RGBForSaberColor(saber_colors_t color, vec3_t rgb, int cnum, int 
 	//	Com_Printf("sabercolor %i %i %i ^1%i %i\n",(int)rgb[0],(int)rgb[1],(int)rgb[2],cnum,bnum);
 }
 
+//[LightningBlockSys]
+void CG_BlockLightningEffect(vec3_t muzzle, vec3_t muzzleDir, float length)
+{
+	int rBladeNum = 0;
+	vec3_t	end2;
+	vec3_t ang = { 0, 1, 2 };
+
+	ang[0] = flrand(0, 360);
+	ang[1] = flrand(0, 360);
+	ang[2] = flrand(0, 360);
+
+	VectorMA(muzzle, length*flrand(0, 1), muzzleDir, end2);
+	trap->FX_PlayEffectID(cgs.effects.saber_lightninghit, end2, ang, -1, -1, qfalse);
+
+	//trap->Print("Muzzle at %f %f %f\n", muzzle[0], muzzle[1], muzzle[2]);
+	//trap->Print("Muzzle dir %f %f %f\n", muzzleDir[0], muzzleDir[1], muzzleDir[2]);
+	//trap->Print("Saber Length %f\n", length);
+	//trap->Print("Lightning blocked at %f %f %f [%f %f %f]\n", end2[0], end2[1], end2[2], ang[0], ang[1], ang[2]);
+}//[/LightningBlockSys]
+// here is the function for the effect to be call and its shit as you can see it will be seeing in 
+
 //changed this from static so we can use it for rendering the saber blade for 
 void CG_DoSaberLight(saberInfo_t *saber, int cnum, int bnum)
 //static void CG_DoSaberLight( saberInfo_t *saber , int cnum, int bnum)
@@ -9732,6 +9753,11 @@ void CG_AddSaberBlade(centity_t *cent, centity_t *scent, refEntity_t *saber, int
 
 	VectorAdd(end, axis_[0], end);
 
+	VectorCopy(org_, client->saber[saberNum].blade[bladeNum].muzzlePoint); // UQ1
+	VectorCopy(org_, client->saber[saberNum].blade[bladeNum].muzzlePointOld); // UQ1
+	VectorCopy(axis_[0], client->saber[saberNum].blade[bladeNum].muzzleDir); // UQ1
+	VectorCopy(axis_[0], client->saber[saberNum].blade[bladeNum].muzzleDirOld); // UQ1
+
 	if (cent->currentState.eType == ET_NPC)
 	{
 		if (cent->currentState.boltToPlayer)
@@ -10374,7 +10400,6 @@ JustDoIt:
 		return;
 	}
 
-
 	//[Movie Sabers]
 	//BugFix - getting rid of this completely to remove bug where you could select a saber type that didn't exist
 
@@ -10478,6 +10503,11 @@ JustDoIt:
 		//[/Movie Sabers]
 	}
 	//[/SFXSabers]
+
+	//[LightningBlockSys]
+	if (cent->blockLightningTime > cg.time)
+		CG_BlockLightningEffect(client->saber[saberNum].blade[bladeNum].muzzlePoint, client->saber[saberNum].blade[bladeNum].muzzleDir, client->saber[saberNum].blade[bladeNum].length);
+	//[/LightningBlockSys]
 }
 
 int CG_IsMindTricked(int trickIndex1, int trickIndex2, int trickIndex3, int trickIndex4, int client)
