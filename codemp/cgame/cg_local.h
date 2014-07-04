@@ -1583,10 +1583,14 @@ typedef struct cgEffects_s {
 	//FORCE
 	fxHandle_t forceLightning;
 	fxHandle_t forceLightningWide;
-	//fxHandle_t forcelightningAbsorb;	
+	
+	//[LightningBlockSys]
+	fxHandle_t lightningarc;
+	fxHandle_t forcelightningAbsorb;	
 	fxHandle_t saber_lightninghit;
-	/*fxHandle_t forcelightningFlare;
-	fxHandle_t forcelightningImpact;*/
+	fxHandle_t forcelightningFlare;
+	fxHandle_t forcelightningImpact;
+	//[/LightningBlockSys]
 
 	fxHandle_t forceDrain;
 	fxHandle_t forceDrainWide;
