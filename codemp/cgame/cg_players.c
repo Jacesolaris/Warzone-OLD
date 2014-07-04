@@ -5714,7 +5714,7 @@ void CG_BlockLightningEffect(vec3_t muzzle, vec3_t muzzleDir, float length)
 	AngleVectors(ang, forward, NULL, NULL);
 
 	VectorMA(muzzle, length*flrand(0, 1), muzzleDir, end2);
-	//trap->FX_PlayEffectID(cgs.effects.saber_lightninghit, end2, forward, -1, -1, qfalse);
+	trap->FX_PlayEffectID(cgs.effects.saber_lightninghit, end2, forward, -1, -1, qfalse);
 	trap->FX_PlayEffectID(cgs.effects.forcelightningAbsorb, end2, forward, -1, -1, qfalse);
 	trap->FX_PlayEffectID(cgs.effects.forcelightningImpact, end2, forward, -1, -1, qfalse);
 	trap->FX_PlayEffectID(cgs.effects.forcelightningFlare, end2, forward, -1, -1, qfalse);
@@ -15063,19 +15063,7 @@ SkipTrueView:
 			trap->FX_PlayEntityEffectID(cgs.effects.forceLightning, efOrgL, axis, -1, -1, -1, -1);
 
 		}
-		/*if ( pm->ps->weapon == WP_SABER && pm->ps->saberHolstered )
-		{
-		trap->FX_PlayEntityEffectID(cgs.effects.forcelightningAbsorb, efOrgL, axis, -1, -1, -1, -1);
-		trap->FX_PlayEntityEffectID(cgs.effects.forcelightningArc, efOrgL, axis, -1, -1, -1, -1);
-		trap->FX_PlayEntityEffectID(cgs.effects.forcelightningFlare, efOrgL, axis, -1, -1, -1, -1);
-		trap->FX_PlayEntityEffectID(cgs.effects.forcelightningImpact, efOrgL, axis, -1, -1, -1, -1);
-
-		trap->FX_PlayEntityEffectID(cgs.effects.forcelightningAbsorb, efOrgR, axis, -1, -1, -1, -1);
-		trap->FX_PlayEntityEffectID(cgs.effects.forcelightningArc, efOrgR, axis, -1, -1, -1, -1);
-		trap->FX_PlayEntityEffectID(cgs.effects.forcelightningFlare, efOrgR, axis, -1, -1, -1, -1);
-		trap->FX_PlayEntityEffectID(cgs.effects.forcelightningImpact, efOrgR, axis, -1, -1, -1, -1);
-		}*/
-
+		
 		/*
 		if (cent->bolt4 < cg.time)
 		{
