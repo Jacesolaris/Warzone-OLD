@@ -1641,8 +1641,8 @@ void ForceLightning( gentity_t *self )
 	WP_ForcePowerStart( self, FP_LIGHTNING, 500 );
 }
 
-//[LightningBlockSys].
-qboolean JKG_SaberBlockLightning(gentity_t *attacker, gentity_t *defender, vec3_t impactPoint, int damage)
+//[LightningBlockSys]
+qboolean G_SaberBlockLightning(gentity_t *attacker, gentity_t *defender, vec3_t impactPoint, int damage)
 {//Do a check of saberActionFlags to see if we can block lightning with Saber Defense powerlevel
 	qboolean BlockLightning = qtrue;
 
@@ -1655,8 +1655,8 @@ qboolean JKG_SaberBlockLightning(gentity_t *attacker, gentity_t *defender, vec3_
 	if (!(defender->client->ps.saberActionFlags & (1 << SAF_BLOCKING)))//when we hold block// n
 	{// Button for Blocking Lightning Attacks
 
-		if (defender->s.eType == ET_NPC)
-		{//NPC's just randomly block to make up for them not intelligently blocking
+		if (defender->r.svFlags & SVF_BOT && defender->s.eType != ET_NPC)
+		{//NPC's and Bots just randomly block Lightning becours of therie stupid intelligently skillz
 			defender->client->ps.saberBlocked = BLOCKED_LIGHTNING;//npc block it:fixme its bugged// here
 			return qtrue;
 		}
@@ -1665,14 +1665,14 @@ qboolean JKG_SaberBlockLightning(gentity_t *attacker, gentity_t *defender, vec3_
 			return qfalse;
 		}
 	}
-
 	if (defender->client->ps.weapon != WP_SABER  //we are not using our saber
 		|| defender->client->ps.saberHolstered == 2 //Our sabers off	// this check is a bit invalid..possibly.
 		|| defender->client->ps.saberInFlight)  //saber not in a fight
-	{//If we are not useing our sabers then make a Knockdown.
+	{//If we are not useing our sabers then don't block it.
 		BlockLightning = qfalse;
 	}
-	//check to see if we have any Blockpoints to block lightning with
+
+	//check to see if we have any Forcepower to block lightning with
 	if (defender->client->ps.forcePower < 0) // changed from 100, this would always fail otherwise --eez
 	{
 		// We don't have any force points
@@ -1688,7 +1688,7 @@ qboolean JKG_SaberBlockLightning(gentity_t *attacker, gentity_t *defender, vec3_
 
 		defender->client->blockingLightningAccumulation += 0.50 * attacker->client->ps.fd.forcePowerLevel[FP_LIGHTNING]; // You'll just have to try and change this number around a bit. Though there's a chance that it's not executing this code at all so...
 		if (defender->client->blockingLightningAccumulation > 1.0f)
-		{
+		{//this used to be blockpoints this code here, its a little wierd but can be worked out later the problem is that the effect don't come on the saber when its used, scooper this this codes here
 			defender->client->ps.fd.forcePower -= 1;
 			defender->client->blockingLightningAccumulation = 0;
 		}
@@ -1783,7 +1783,7 @@ void ForceLightningDamage( gentity_t *self, gentity_t *traceEnt, vec3_t dir, vec
 					dmg *= 2;
 				}
 				//[LightningBlockSys]
-				saberBlocked = JKG_SaberBlockLightning(self, traceEnt, impactPoint, dmg);
+				saberBlocked = G_SaberBlockLightning(self, traceEnt, impactPoint, dmg);
 				//[/LightningBlockSys]
 				if (dmg && !saberBlocked)
 				{
