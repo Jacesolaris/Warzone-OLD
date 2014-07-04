@@ -171,7 +171,7 @@ public:
 	int					entNum;
 	int					modelIndex;
 	skin_t				*skin;
-#ifdef _WIN32
+#if defined (_WIN32) && !defined (__INTEL_COMPILER)
 	struct shader_t		*cust_shader;
 #else
     shader_t		*cust_shader;

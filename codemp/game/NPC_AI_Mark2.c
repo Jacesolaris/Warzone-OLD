@@ -33,10 +33,12 @@ void NPC_Mark2_Precache( void )
 	G_EffectIndex( "blaster/smoke_bolton" );
 	G_EffectIndex( "bryar/muzzle_flash" );
 
+#ifndef __MMO__
 	RegisterItem( BG_FindItemForWeapon( WP_BRYAR_PISTOL ));
 	RegisterItem( BG_FindItemForAmmo( 	AMMO_METAL_BOLTS));
 	RegisterItem( BG_FindItemForAmmo( AMMO_POWERCELL ));
 	RegisterItem( BG_FindItemForAmmo( AMMO_BLASTER ));
+#endif //__MMO__
 }
 
 /*

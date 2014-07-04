@@ -1293,6 +1293,7 @@ NOTENOTE This weapon is not yet complete.  Don't place it.
 		"@MENUS_THE_PLX_2M_IS_AN_EXTREMELY"					// description
 	},
 
+#ifndef __MMO__
 /*QUAKED ammo_thermal (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
 */
 	{
@@ -1345,6 +1346,7 @@ NOTENOTE This weapon is not yet complete.  Don't place it.
 /* sounds */ "",
 		"@MENUS_A_DETONATION_PACK_IS"					// description
 	},
+#endif //__MMO__
 
 /*QUAKED weapon_thermal (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
 */
@@ -1435,6 +1437,7 @@ NOTENOTE This weapon is not yet complete.  Don't place it.
 		""					// description
 	},
 
+#ifndef __MMO__
 	//
 	// AMMO ITEMS
 	//
@@ -1553,6 +1556,7 @@ dispensing ability
 /* sounds */ "",
 		""					// description
 	},
+#endif //__MMO__
 
 	//
 	// POWERUP ITEMS
@@ -1825,6 +1829,7 @@ BG_FindItemForAmmo
 ===============
 */
 gitem_t	*BG_FindItemForAmmo( ammo_t ammo ) {
+#ifndef __MMO__
 	gitem_t	*it;
 
 	for ( it = bg_itemlist + 1 ; it->classname ; it++) {
@@ -1834,6 +1839,7 @@ gitem_t	*BG_FindItemForAmmo( ammo_t ammo ) {
 	}
 
 	Com_Error( ERR_DROP, "Couldn't find item for ammo %i", ammo);
+#endif //__MMO__
 	return NULL;
 }
 

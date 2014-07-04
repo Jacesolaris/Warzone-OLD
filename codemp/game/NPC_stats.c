@@ -611,7 +611,7 @@ void NPC_Precache ( gentity_t *spawner )
 	Com_sprintf( sessionName, sizeof(sessionName), "NPC_Precache(%s)", spawner->NPC_type );
 	COM_BeginParseSession(sessionName);
 
-	trap->Print("NPC_Precache(%s)\n", spawner->NPC_type );
+	//trap->Print("NPC_Precache(%s)\n", spawner->NPC_type );
 
 	// look for the right NPC
 	while ( p )

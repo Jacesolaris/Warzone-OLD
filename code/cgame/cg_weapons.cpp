@@ -114,6 +114,7 @@ void CG_RegisterWeapon( int weaponNum ) {
 		weaponInfo->weaponIconNoAmmo = cgi_R_RegisterShaderNoMip( va("%s_na",weaponData[weaponNum].weaponIcon));
 	}
 
+#ifndef __MMO__
 	for ( ammo = bg_itemlist + 1 ; ammo->classname ; ammo++ ) {	
 		if ( ammo->giType == IT_AMMO && ammo->giTag == weaponData[weaponNum].ammoIndex) {
 			break;
@@ -123,6 +124,7 @@ void CG_RegisterWeapon( int weaponNum ) {
 	if ( ammo->classname && ammo->world_model ) {
 		weaponInfo->ammoModel = cgi_R_RegisterModel( ammo->world_model );
 	}
+#endif //__MMO__
 
 	for (i=0; i< weaponData[weaponNum].numBarrels; i++) {
 		Q_strncpyz( path, weaponData[weaponNum].weaponMdl, sizeof(path) );
@@ -655,6 +657,7 @@ void CG_RegisterItemVisuals( int itemNum ) {
 	}
 
 	// some ammo types are actually the weapon, like in the case of explosives
+#ifndef __MMO__
 	if ( item->giType == IT_AMMO ) 
 	{
 		switch( item->giTag )
@@ -670,7 +673,7 @@ void CG_RegisterItemVisuals( int itemNum ) {
 			break;
 		}
 	}
-
+#endif //__MMO__
 
 	if ( item->giType == IT_HOLDABLE )
 	{

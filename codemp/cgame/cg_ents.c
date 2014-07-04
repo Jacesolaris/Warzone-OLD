@@ -15,6 +15,20 @@ Ghoul2 Insert end
 extern qboolean CG_InFighter( void );
 static void CG_Missile( centity_t *cent );
 
+int CULL_OrgVisible(vec3_t org1, vec3_t org2, int ignore)
+{
+	trace_t tr;
+
+	CG_Trace(&tr, org1, NULL, NULL, org2, ignore, MASK_SOLID );
+
+	if (tr.fraction >= 0.7 || Distance(org1, tr.endpos) < 256)
+	{
+		return 1;
+	}
+
+	return 0;
+}
+
 /*
 ======================
 CG_PositionEntityOnTag
@@ -3273,19 +3287,6 @@ qboolean InFOV( vec3_t spot, vec3_t from, vec3_t fromAngles, int hFOV, int vFOV 
 	return qfalse;
 }
 
-int ENT_OrgVisible(vec3_t org1, vec3_t org2, int ignore)
-{
-	trace_t tr;
-
-	CG_Trace(&tr, org1, NULL, NULL, org2, ignore, MASK_SOLID );
-
-	if (tr.fraction >= 0.8 || Distance(org1, tr.endpos) < 128)
-	{
-		return 1;
-	}
-
-	return 0;
-}
 
 /*
 ===============
@@ -3348,7 +3349,7 @@ Ghoul2 Insert Start
 		float dist = Distance( cent->lerpOrigin, cg.refdef.vieworg);
 
 		// Distance cull...
-		if (dist > 2048)
+		if (dist > 3072)
 		{
 			return;
 		}
@@ -3360,7 +3361,7 @@ Ghoul2 Insert Start
 		}
 
 		// Visibility cull...
-		if (dist > 256 && !ENT_OrgVisible(cg.refdef.vieworg, cent->lerpOrigin, cg.clientNum))
+		if (dist > 256 && !CULL_OrgVisible(cg.refdef.vieworg, cent->lerpOrigin, cg.clientNum))
 		{
 			return;
 		}

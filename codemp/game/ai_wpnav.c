@@ -1920,10 +1920,12 @@ void CalculateWeightGoals(void)
 			{
 				weight = botGlobalNavWeaponWeights[ent->item->giTag];
 			}
+#ifndef __MMO__
 			else if (ent->item && ent->item->giType == IT_AMMO)
 			{
 				weight = 3;
 			}
+#endif //__MMO__
 		}
 
 		if (ent && weight)

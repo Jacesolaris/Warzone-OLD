@@ -52,7 +52,7 @@ void DOM_InitFakeNPC(gentity_t *bot)
 			bot->NPC_type[i] = '_';
 	}
 
-	trap->Print("NPC_type is %s.\n", bot->NPC_type);
+	//trap->Print("Adding NPC_Type %s.\n", bot->NPC_type);
 
 	//bot->flags |= FL_NO_KNOCKBACK;//don't fall off ledges
 

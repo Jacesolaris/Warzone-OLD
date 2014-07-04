@@ -87,7 +87,9 @@ enum
 
 void NPC_ShadowTrooper_Precache( void )
 {
+#ifndef __MMO__
 	RegisterItem( BG_FindItemForAmmo( AMMO_FORCE ) );
+#endif //__MMO__
 	G_SoundIndex( "sound/chars/shadowtrooper/cloak.wav" );
 	G_SoundIndex( "sound/chars/shadowtrooper/decloak.wav" );
 }

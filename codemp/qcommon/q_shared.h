@@ -1378,7 +1378,8 @@ typedef enum {
 // per-level limits
 //
 #ifdef __MMO__
-#define	MAX_CLIENTS			256		// absolute limit
+//#define	MAX_CLIENTS			256		// absolute limit
+#define	MAX_CLIENTS			128		// absolute limit - UQ1: Reducing to 128 for now...
 #else //!__MMO__
 #define	MAX_CLIENTS			32		// absolute limit
 #endif //__MMO__
@@ -1388,8 +1389,8 @@ typedef enum {
 
 #ifdef __MMO__
 #define	GENTITYNUM_BITS	11		// don't need to send any more
-//#define	MAX_GENTITIES	(1<<GENTITYNUM_BITS)
-#define		MAX_GENTITIES	(1024+((MAX_CLIENTS*2)-1))
+#define	MAX_GENTITIES	(1<<GENTITYNUM_BITS)
+//#define		MAX_GENTITIES	(1024+((MAX_CLIENTS*2)-1))
 #else //!__MMO__
 #define	GENTITYNUM_BITS	10		// don't need to send any more
 #define	MAX_GENTITIES	(1<<GENTITYNUM_BITS)

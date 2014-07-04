@@ -2615,28 +2615,31 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 	CG_PredictPlayerState();
 
 	// decide on third person view
-	cg.renderingThirdPerson = cg_thirdPerson.integer || (cg.snap->ps.stats[STAT_HEALTH] <= 0);
+	cg.renderingThirdPerson = qfalse;
+
+	if (cg_thirdPerson.integer || (cg.snap->ps.stats[STAT_HEALTH] <= 0))
+		cg.renderingThirdPerson = qtrue;
 
 	if (cg.snap->ps.stats[STAT_HEALTH] > 0)
 	{
 		if (cg.predictedPlayerState.weapon == WP_EMPLACED_GUN && cg.predictedPlayerState.emplacedIndex /*&&
 			cg_entities[cg.predictedPlayerState.emplacedIndex].currentState.weapon == WP_NONE*/)
 		{ //force third person for e-web and emplaced use
-			cg.renderingThirdPerson = 1;
+			cg.renderingThirdPerson = qtrue;
 		}
 		//[TrueView]
 		else if (cg_trueInvertSaber.integer == 2 && (cg.predictedPlayerState.weapon == WP_SABER || cg.predictedPlayerState.weapon == WP_MELEE))
 		{//force thirdperson for sabers/melee if in cg_trueinvertsaber.integer == 2
-			cg.renderingThirdPerson = 1;
+			cg.renderingThirdPerson = qtrue;
 		}
 		else if (cg.predictedPlayerState.fallingToDeath || cg.predictedPlayerState.m_iVehicleNum
 			|| (cg_trueInvertSaber.integer == 1 && !cg_thirdPerson.integer && (cg.predictedPlayerState.weapon == WP_SABER || cg.predictedPlayerState.weapon == WP_MELEE)))
 		{
-			cg.renderingThirdPerson = 1;
+			cg.renderingThirdPerson = qtrue;
 		}
 		else if (cg_trueInvertSaber.integer == 1 && cg_thirdPerson.integer && (cg.predictedPlayerState.weapon == WP_SABER || cg.predictedPlayerState.weapon == WP_MELEE))
 		{
-			cg.renderingThirdPerson = 0;
+			cg.renderingThirdPerson = qfalse;
 		}
 		/*
 		else if (cg.predictedPlayerState.weapon == WP_SABER || cg.predictedPlayerState.weapon == WP_MELEE ||
@@ -2646,29 +2649,29 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 		{
 		if (cg_fpls.integer && cg.predictedPlayerState.weapon == WP_SABER)
 		{ //force to first person for fpls
-		cg.renderingThirdPerson = 0;
+		cg.renderingThirdPerson = qfalse;
 		}
 		else
 		{
-		cg.renderingThirdPerson = 1;
+		cg.renderingThirdPerson = qtrue;
 		}
 		}
 		*/
 		//[/TrueView]
 		else if (cg.snap->ps.zoomMode)
 		{ //always force first person when zoomed
-			cg.renderingThirdPerson = 0;
+			cg.renderingThirdPerson = qfalse;
 		}
 	}
 
 	if (cg.predictedPlayerState.pm_type == PM_SPECTATOR)
 	{ //always first person for spec
-		cg.renderingThirdPerson = 0;
+		cg.renderingThirdPerson = qfalse;
 	}
 
 	if (cg.snap->ps.persistant[PERS_TEAM] == TEAM_SPECTATOR)
 	{
-		cg.renderingThirdPerson = 0;
+		cg.renderingThirdPerson = qfalse;
 	}
 
 	// build cg.refdef

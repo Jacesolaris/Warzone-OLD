@@ -5140,6 +5140,14 @@ QINLINE int VectorCompare2(const vec3_t v1, const vec3_t v2) {
 	return 1;
 }
 
+// UQ1: Added... this func is using 1/7 of all CPU time... Can we find a more acceptable compromise???
+#ifndef __MMO__
+#define SABER_TRACE_STEP_SIZE 8 // Default...
+#else //__MMO__
+//#define SABER_TRACE_STEP_SIZE 8 // Default...
+#define SABER_TRACE_STEP_SIZE 16
+#endif //__MMO__
+
 #define MAX_SABER_SWING_INC 0.33f
 void G_SPSaberDamageTraceLerped(gentity_t *self, int saberNum, int bladeNum, vec3_t baseNew, vec3_t endNew, int clipmask)
 {
@@ -5176,7 +5184,7 @@ void G_SPSaberDamageTraceLerped(gentity_t *self, int saberNum, int bladeNum, vec
 	}
 	else
 	{//saber moved, lerp
-		float step = 8, stepsize = 8;//aveLength, 
+		float step = SABER_TRACE_STEP_SIZE, stepsize = SABER_TRACE_STEP_SIZE;//aveLength, 
 		vec3_t	ma1, ma2, md2ang, curBase1, curBase2;
 		int	xx;
 		vec3_t curMD1, curMD2;//, mdDiff, dirDiff;

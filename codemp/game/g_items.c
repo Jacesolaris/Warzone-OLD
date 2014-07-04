@@ -2480,6 +2480,7 @@ void Touch_Item (gentity_t *ent, gentity_t *other, trace_t *trace) {
 			other->NPC->squadState = SQUAD_STAND_AND_SHOOT;
 		}
 	}
+#ifndef __MMO__
 	else if ( !(ent->spawnflags &  ITMSF_ALLOWNPC) )
 	{// NPCs cannot pick it up
 		if ( other->s.eType == ET_NPC )
@@ -2510,6 +2511,7 @@ void Touch_Item (gentity_t *ent, gentity_t *other, trace_t *trace) {
 			}
 		}
 	}
+#endif //__MMO__
 
 	G_LogPrintf( "Item: %i %s\n", other->s.number, ent->item->classname );
 
@@ -2826,6 +2828,14 @@ void FinishSpawningItem( gentity_t *ent ) {
 
 //	VectorSet( ent->r.mins, -ITEM_RADIUS, -ITEM_RADIUS, -ITEM_RADIUS );
 //	VectorSet( ent->r.maxs, ITEM_RADIUS, ITEM_RADIUS, ITEM_RADIUS );
+
+#ifdef __MMO__
+	if (ent->item->giType == IT_AMMO)
+	{
+		G_FreeEntity( ent );
+		return;
+	}
+#endif //__MMO__
 
 	if (level.gametype == GT_SIEGE)
 	{ //in siege remove all powerups
