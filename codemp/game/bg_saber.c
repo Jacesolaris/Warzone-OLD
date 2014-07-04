@@ -6,7 +6,7 @@
 extern qboolean BG_SabersOff( playerState_t *ps );
 saberInfo_t *BG_MySaber( int clientNum, int saberNum );
 #if defined(_CGAME)
-void CG_BlockLightningEffect();
+void CG_BlockLightningEffect(int clientNum);
 #endif
 
 int PM_irand_timesync(int val1, int val2)
@@ -3458,7 +3458,7 @@ void PM_WeaponLightsaber(void)
 			case BLOCKED_LIGHTNING:
 				PM_SetSaberMove(LS_PARRY_UP);
 #if defined(_CGAME)
-				CG_BlockLightningEffect();//here where it will be call from the blocked_lightning animation in 
+				CG_BlockLightningEffect(pm->ps->clientNum);//here where it will be call from the blocked_lightning animation in 
 #endif
 				//[/LightningBlockSys]
 				break;
