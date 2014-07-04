@@ -5,9 +5,6 @@
 
 extern qboolean BG_SabersOff( playerState_t *ps );
 saberInfo_t *BG_MySaber( int clientNum, int saberNum );
-#if defined(_CGAME)
-void CG_BlockLightningEffect(int clientNum);
-#endif
 
 int PM_irand_timesync(int val1, int val2)
 {

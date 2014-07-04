@@ -2099,7 +2099,7 @@ evasionType_t Jedi_CheckFlipEvasions( gentity_t *self, float rightdot, float zdi
 			self->client->ps.velocity[2] = 200;
 			self->client->ps.fd.forceJumpZStart = self->r.currentOrigin[2];//so we don't take damage if we land at same height
 			//self->client->ps.pm_flags |= PMF_JUMPING;
-			if ( /*self->client->NPC_class == CLASS_BOBAFETT*/ self->client->ps.weapon != WP_SABER )
+			if ( self->client->NPC_class == CLASS_BOBAFETT )
 			{
 				G_AddEvent( self, EV_JUMP, 0 );
 			}
@@ -2162,7 +2162,7 @@ evasionType_t Jedi_CheckFlipEvasions( gentity_t *self, float rightdot, float zdi
 								NPC_SetAnim( self, parts, anim, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD );
 								self->client->ps.fd.forceJumpZStart = self->r.currentOrigin[2];//so we don't take damage if we land at same height
 								//self->client->ps.pm_flags |= (PMF_JUMPING|PMF_SLOW_MO_FALL);
-								if ( /* self->client->NPC_class == CLASS_BOBAFETT */ self->client->ps.weapon != WP_SABER )
+								if ( self->client->NPC_class == CLASS_BOBAFETT )
 								{
 									G_AddEvent( self, EV_JUMP, 0 );
 								}
@@ -2239,7 +2239,7 @@ evasionType_t Jedi_CheckFlipEvasions( gentity_t *self, float rightdot, float zdi
 						NPC_SetAnim( self, parts, anim, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD );
 						self->client->ps.fd.forceJumpZStart = self->r.currentOrigin[2];//so we don't take damage if we land at same height
 						//self->client->ps.pm_flags |= (PMF_JUMPING|PMF_SLOW_MO_FALL);
-						if ( /*self->client->NPC_class == CLASS_BOBAFETT*/ self->client->ps.weapon != WP_SABER )
+						if ( self->client->NPC_class == CLASS_BOBAFETT )
 						{
 							G_AddEvent( self, EV_JUMP, 0 );
 						}
@@ -2875,7 +2875,7 @@ evasionType_t Jedi_SaberBlockGo( gentity_t *self, usercmd_t *cmd, vec3_t pHitloc
 						//	self->client->ps.pm_flags |= PMF_JUMPING|PMF_SLOW_MO_FALL;
 						//	self->client->ps.SaberActivateTrail( 300 );//FIXME: reset this when done!
 							//Ah well. No hacking from the server for now.
-							if ( /*self->client->NPC_class == CLASS_BOBAFETT*/ self->client->ps.weapon != WP_SABER )
+							if ( self->client->NPC_class == CLASS_BOBAFETT )
 							{
 								G_AddEvent( self, EV_JUMP, 0 );
 							}
@@ -3570,7 +3570,7 @@ static void Jedi_EvasionSaber( vec3_t enemy_movedir, float enemy_dist, vec3_t en
 						&& !Q_irand( 0, 5 ) )
 					{//FIXME: make this a function call?
 						//FIXME: check for clearance, safety of landing spot?
-						if ( /*NPCS.NPC->client->NPC_class == CLASS_BOBAFETT*/ NPCS.NPC->client->ps.weapon != WP_SABER )
+						if ( NPCS.NPC->client->NPC_class == CLASS_BOBAFETT )
 						{
 							NPCS.NPC->client->ps.fd.forceJumpCharge = 280;//FIXME: calc this intelligently?
 						}
@@ -4773,7 +4773,7 @@ static qboolean Jedi_TryJump( gentity_t *goal )
 								{//FIXME: make this a function call
 									int jumpAnim;
 									//FIXME: this should be more intelligent, like the normal force jump anim logic
-									if ( /*NPCS.NPC->client->NPC_class == CLASS_BOBAFETT*/ NPCS.NPC->client->ps.weapon != WP_SABER
+									if ( NPCS.NPC->client->NPC_class == CLASS_BOBAFETT
 										||( NPCS.NPCInfo->rank != RANK_CREWMAN && NPCS.NPCInfo->rank <= RANK_LT_JG ) )
 									{//can't do acrobatics
 										jumpAnim = BOTH_FORCEJUMP1;
@@ -6421,6 +6421,11 @@ void NPC_BSJedi_Default( void )
 				NPCS.NPCInfo->scriptFlags |= SCF_ALT_FIRE;
 				Boba_ChangeWeapon( WP_DISRUPTOR );
 				NPC_BSSniper_Default();
+				return;
+			}
+			else if ( DistanceSquared( NPCS.NPC->r.currentOrigin, NPCS.NPC->enemy->r.currentOrigin )>(96*96) )
+			{
+				Boba_ChangeWeapon( WP_SABER );
 				return;
 			}
 		}

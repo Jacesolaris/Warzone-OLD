@@ -1314,9 +1314,9 @@ static void CG_RegisterGraphics( void ) {
 	cgs.effects.forceLightning		= trap->FX_RegisterEffect( "effects/force/lightning.efx" );
 	cgs.effects.forceLightningWide	= trap->FX_RegisterEffect( "effects/force/lightningwide.efx" );
 	//cgs.effects.forcelightningAbsorb	= trap->FX_RegisterEffect( "effects/force/lightning_absorb.efx" );
-	cgs.effects.saber_lightninghit = trap->FX_RegisterEffect(" effects/saber/saber_lightninghit.efx");
-	/*cgs.effects.forcelightningFlare	=trap->FX_RegisterEffect( " effects/force/lightning_flare.efx") ;
-	cgs.effects.forcelightningImpact	=trap->FX_RegisterEffect( " effects/force/lightning_impact.efx") ;*/
+	cgs.effects.saber_lightninghit = trap->FX_RegisterEffect("effects/saber/saber_lightninghit.efx");
+	/*cgs.effects.forcelightningFlare	=trap->FX_RegisterEffect( "effects/force/lightning_flare.efx") ;
+	cgs.effects.forcelightningImpact	=trap->FX_RegisterEffect( "effects/force/lightning_impact.efx") ;*/
 	cgs.effects.forceDrain		= trap->FX_RegisterEffect( "effects/mp/drain.efx" );
 	cgs.effects.forceDrainWide	= trap->FX_RegisterEffect( "effects/mp/drainwide.efx" );
 	cgs.effects.forceDrained	= trap->FX_RegisterEffect( "effects/mp/drainhit.efx");

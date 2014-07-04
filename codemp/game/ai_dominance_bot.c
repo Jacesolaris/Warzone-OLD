@@ -266,6 +266,9 @@ void DOM_StandardBotAI2(bot_state_t *bs, float thinktime)
 	//nextthink is set before this so something in here can override it
 	NPC_ExecuteBState(bot);
 
+	if (bot->enemy)
+		NPC_FaceEnemy( qtrue );
+
 	NPC_UpdateAngles(qtrue, qtrue);
 
 	//G_UpdateClientAnims(bot, 0.5f);
