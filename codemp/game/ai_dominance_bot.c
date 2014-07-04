@@ -33,6 +33,8 @@ extern void NPC_ExecuteBState(gentity_t *self);
 extern void SetNPCGlobals(gentity_t *ent);
 extern void NPC_Precache ( gentity_t *spawner );
 
+#define __FAKE_NPC_LIGHTNING_SPAM__
+
 void DOM_InitFakeNPC(gentity_t *bot)
 {
 	int i = 0;
@@ -91,6 +93,14 @@ void DOM_InitFakeNPC(gentity_t *bot)
 		bot->s.eFlags |= EF_FAKE_NPC_BOT;
 	if (!(bot->client->ps.eFlags & EF_FAKE_NPC_BOT))
 		bot->client->ps.eFlags |= EF_FAKE_NPC_BOT;
+
+#ifdef __FAKE_NPC_LIGHTNING_SPAM__
+	bot->client->ps.fd.forcePowersKnown |= (1 << FP_LIGHTNING);
+	bot->client->ps.fd.forcePowerLevel[FP_LIGHTNING] = FORCE_LEVEL_3;
+#endif //__FAKE_NPC_LIGHTNING_SPAM__
+
+	bot->client->ps.fd.forcePowersKnown |= (1 << FP_DRAIN);
+	bot->client->ps.fd.forcePowerLevel[FP_DRAIN] = FORCE_LEVEL_3;
 }
 
 extern void BotChangeViewAngles(bot_state_t *bs, float thinktime);

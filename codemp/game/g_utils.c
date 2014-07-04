@@ -1021,7 +1021,9 @@ void G_FreeEntity( gentity_t *ed ) {
 		}
 
 		//make sure clientside loop sounds are killed on the tracker and client
+#ifndef __MMO__
 		trap->SendServerCommand(-1, va("kls %i %i", ed->s.trickedentindex, ed->s.number));
+#endif //__MMO__
 	}
 
 	memset (ed, 0, sizeof(*ed));

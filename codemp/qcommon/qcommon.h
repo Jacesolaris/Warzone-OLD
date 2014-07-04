@@ -98,7 +98,7 @@ NET
 
 #ifdef __MMO__
 #define	MAX_SNAPSHOT_ENTITIES	512
-#define	MAX_RELIABLE_COMMANDS	256			// max string commands buffered for restransmit
+#define	MAX_RELIABLE_COMMANDS	512			// max string commands buffered for restransmit
 #else //!__MMO__
 #define	MAX_SNAPSHOT_ENTITIES	256
 #define	MAX_RELIABLE_COMMANDS	128			// max string commands buffered for restransmit

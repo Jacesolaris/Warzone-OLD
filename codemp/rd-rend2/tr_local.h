@@ -3167,13 +3167,13 @@ typedef enum {
 // these are sort of arbitrary limits.
 // the limits apply to the sum of all scenes in a frame --
 // the main view, all the 3D icons, etc
-#ifdef __MMO__
-#define	MAX_POLYS		8000
-#define	MAX_POLYVERTS	32000
-#else //!__MMO__
+//#ifdef __MMO__
+//#define	MAX_POLYS		2400
+//#define	MAX_POLYVERTS	12000
+//#else //!__MMO__
 #define	MAX_POLYS		600
 #define	MAX_POLYVERTS	3000
-#endif //__MMO__
+//#endif //__MMO__
 
 // all of the information needed by the back end must be
 // contained in a backEndData_t.
