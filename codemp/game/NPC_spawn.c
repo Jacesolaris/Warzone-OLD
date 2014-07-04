@@ -899,8 +899,12 @@ void NPC_Begin (gentity_t *ent)
 			return;
 		}
 	}
-	//Spawn effect
-	NPC_SpawnEffect( ent );
+
+	if (!(ent->s.eFlags & EF_FAKE_NPC_BOT))
+	{
+		//Spawn effect
+		NPC_SpawnEffect( ent );
+	}
 
 	VectorCopy( ent->client->ps.origin, spawn_origin);
 	VectorCopy( ent->s.angles, spawn_angles);

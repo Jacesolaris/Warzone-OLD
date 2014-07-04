@@ -817,7 +817,7 @@ qboolean AI_RefreshGroup( AIGroupInfo_t *group )
 		member = &g_entities[group->member[i].number];
 
 		//Must be alive
-		if ( member->health <= 0 )
+		if ( member->health <= 0 || !member->NPC )
 		{
 			AI_DeleteGroupMember( group, i );
 			//keep marker at same place since we deleted this guy and shifted everyone up one

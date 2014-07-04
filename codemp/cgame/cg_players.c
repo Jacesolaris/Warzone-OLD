@@ -15722,14 +15722,14 @@ stillDoSaber:
 
 								if (tagBolt == -1)
 								{
-									assert(0);
+									//assert(0);
 								}
 								break;
 							}
 
 							if (tagBolt == -1)
 							{
-								assert(0);
+								//assert(0);
 								break;
 							}
 						}

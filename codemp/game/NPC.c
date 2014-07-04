@@ -1356,6 +1356,91 @@ void NPC_BehaviorSet_Rancor( int bState )
 	}
 }
 
+void ST_SelectBestWeapon( void )
+{
+	if (NPCS.NPC->next_weapon_switch > level.time) return;
+
+	NPC_ChangeWeapon( WP_BLASTER );
+}
+
+void Commando_SelectBestWeapon( void )
+{
+	if (NPCS.NPC->next_weapon_switch > level.time) return;
+
+	if (NPCS.NPC->client->ps.weapon != WP_DISRUPTOR 
+		&& DistanceSquared( NPCS.NPC->r.currentOrigin, NPCS.NPC->enemy->r.currentOrigin )>(700*700) )
+	{
+		NPC_ChangeWeapon( WP_DISRUPTOR );
+	}
+	else if ( NPCS.NPC->client->ps.weapon != WP_ROCKET_LAUNCHER 
+		&& DistanceSquared( NPCS.NPC->r.currentOrigin, NPCS.NPC->enemy->r.currentOrigin )>(600*600) )
+	{
+		NPC_ChangeWeapon( WP_ROCKET_LAUNCHER );
+	}
+	else if (NPCS.NPC->client->ps.weapon != WP_BLASTER 
+		&& DistanceSquared( NPCS.NPC->r.currentOrigin, NPCS.NPC->enemy->r.currentOrigin )>(300*300) )
+	{
+		NPC_ChangeWeapon( WP_BLASTER );
+	}
+}
+
+void Commando2_SelectBestWeapon( void )
+{
+	if (NPCS.NPC->next_weapon_switch > level.time) return;
+
+	if (NPCS.NPC->client->ps.weapon != WP_DISRUPTOR 
+		&& DistanceSquared( NPCS.NPC->r.currentOrigin, NPCS.NPC->enemy->r.currentOrigin )>(700*700) )
+	{
+		NPC_ChangeWeapon( WP_DISRUPTOR );
+	}
+	else if ( NPCS.NPC->client->ps.weapon != WP_DEMP2 
+		&& DistanceSquared( NPCS.NPC->r.currentOrigin, NPCS.NPC->enemy->r.currentOrigin )>(500*500) )
+	{
+		NPC_ChangeWeapon( WP_DEMP2 );
+	}
+	else if (NPCS.NPC->client->ps.weapon != WP_BLASTER 
+		&& DistanceSquared( NPCS.NPC->r.currentOrigin, NPCS.NPC->enemy->r.currentOrigin )>(300*300) )
+	{
+		NPC_ChangeWeapon( WP_THERMAL );
+	}
+	else
+	{
+		NPC_ChangeWeapon( WP_BLASTER );
+	}
+}
+
+void Sniper_SelectBestWeapon( void )
+{
+	if (NPCS.NPC->next_weapon_switch > level.time) return;
+
+	if (NPCS.NPC->client->ps.weapon != WP_DISRUPTOR 
+		&& DistanceSquared( NPCS.NPC->r.currentOrigin, NPCS.NPC->enemy->r.currentOrigin )>(700*700) )
+	{
+		NPC_ChangeWeapon( WP_DISRUPTOR );
+	}
+	else if ( NPCS.NPC->client->ps.weapon != WP_BLASTER 
+		&& DistanceSquared( NPCS.NPC->r.currentOrigin, NPCS.NPC->enemy->r.currentOrigin )>(300*300) )
+	{
+		NPC_ChangeWeapon( WP_BLASTER );
+	}
+}
+
+void Rocketer_SelectBestWeapon( void )
+{
+	if (NPCS.NPC->next_weapon_switch > level.time) return;
+
+	if ( NPCS.NPC->client->ps.weapon != WP_ROCKET_LAUNCHER 
+		&& DistanceSquared( NPCS.NPC->r.currentOrigin, NPCS.NPC->enemy->r.currentOrigin )>(600*600) )
+	{
+		NPC_ChangeWeapon( WP_ROCKET_LAUNCHER );
+	}
+	else if ( NPCS.NPC->client->ps.weapon != WP_BLASTER 
+		&& DistanceSquared( NPCS.NPC->r.currentOrigin, NPCS.NPC->enemy->r.currentOrigin )>(300*300) )
+	{
+		NPC_ChangeWeapon( WP_BLASTER );
+	}
+}
+
 /*
 -------------------------
 NPC_RunBehavior
@@ -1384,10 +1469,18 @@ void NPC_RunBehavior( int team, int bState )
 		NPC_CheckCharmed();
 		return;
 	}
-//	else if ( NPCS.NPC->client->ps.weapon == WP_SABER )		// this is an _extremely_ shitty comparison.. FIXME: make a CLASS_CULTIST? --eez
-	else if ( NPCS.NPC->client->NPC_class == CLASS_JEDI ||
-		NPCS.NPC->client->NPC_class == CLASS_REBORN ||
-		NPCS.NPC->client->ps.weapon == WP_SABER )
+	else if ( NPCS.NPC->client->NPC_class == CLASS_JEDI 
+		|| NPCS.NPC->client->NPC_class == CLASS_REBORN
+		|| NPCS.NPC->client->NPC_class == CLASS_TAVION
+		|| NPCS.NPC->client->NPC_class == CLASS_ALORA
+		|| NPCS.NPC->client->NPC_class == CLASS_DESANN
+		|| NPCS.NPC->client->NPC_class == CLASS_KYLE
+		|| NPCS.NPC->client->NPC_class == CLASS_LUKE
+		|| NPCS.NPC->client->NPC_class == CLASS_MORGANKATARN
+		|| NPCS.NPC->client->NPC_class == CLASS_MONMOTHA
+		|| NPCS.NPC->client->NPC_class == CLASS_SHADOWTROOPER
+		|| NPCS.NPC->client->NPC_class == CLASS_JAN
+		|| (NPCS.NPC->client->ps.eFlags & EF_FAKE_NPC_BOT) /* temporary */ )
 	{//jedi
 		NPC_BehaviorSet_Jedi( bState );
 	}
@@ -1422,20 +1515,14 @@ void NPC_RunBehavior( int team, int bState )
 	{
 		NPC_BSJedi_Default();
 	}
-	else if ( NPCS.NPCInfo->scriptFlags & SCF_FORCED_MARCH )
+	/*else if ( NPCS.NPCInfo->scriptFlags & SCF_FORCED_MARCH )
 	{//being forced to march
 		NPC_BSDefault();
-	}
+	}*/
 	else
 	{
 		switch( team )
 		{
-
-	//	case NPCTEAM_SCAVENGERS:
-	//	case NPCTEAM_IMPERIAL:
-	//	case NPCTEAM_KLINGON:
-	//	case NPCTEAM_HIROGEN:
-	//	case NPCTEAM_MALON:
 		// not sure if TEAM_ENEMY is appropriate here, I think I should be using NPC_class to check for behavior - dmv
 		case NPCTEAM_ENEMY:
 			// special cases for enemy droids
@@ -1471,11 +1558,75 @@ void NPC_RunBehavior( int team, int bState )
 			case CLASS_GALAKMECH:
 				NPC_BSGM_Default();
 				return;
+			case CLASS_TUSKEN:
+				Sniper_SelectBestWeapon();
+
+				if ( NPCS.NPC->client->ps.weapon == WP_DISRUPTOR && (NPCS.NPCInfo->scriptFlags & SCF_ALT_FIRE) )
+				{//a sniper
+					NPC_BehaviorSet_Sniper( bState );
+					return;
+				}
+				else
+				{
+					NPC_BehaviorSet_Stormtrooper( bState );
+					return;
+				}
+				return;
+			case CLASS_SABOTEUR:
+			case CLASS_HAZARD_TROOPER:
+			case CLASS_REELO:
+			case CLASS_COMMANDO:
+				Commando2_SelectBestWeapon();
+
+				if ( NPCS.NPC->client->ps.weapon == WP_DISRUPTOR && (NPCS.NPCInfo->scriptFlags & SCF_ALT_FIRE) )
+				{//a sniper
+					NPC_BehaviorSet_Sniper( bState );
+					return;
+				}
+				else
+				{
+					NPC_BehaviorSet_Stormtrooper( bState );
+					return;
+				}
+				return;
+			case CLASS_ASSASSIN_DROID:
+			case CLASS_IMPERIAL:
+			case CLASS_RODIAN:
+			case CLASS_TRANDOSHAN:
+				Commando_SelectBestWeapon();
+
+				if ( NPCS.NPC->client->ps.weapon == WP_DISRUPTOR && (NPCS.NPCInfo->scriptFlags & SCF_ALT_FIRE) )
+				{//a sniper
+					NPC_BehaviorSet_Sniper( bState );
+					return;
+				}
+				else
+				{
+					NPC_BehaviorSet_Stormtrooper( bState );
+					return;
+				}
+				return;
+			case CLASS_NOGHRI:
+			case CLASS_SABER_DROID:
+				//NPC_BehaviorSet_Jedi( bState );
+				NPC_BSJedi_Default();
+				return;
+			case CLASS_STORMTROOPER:
+				ST_SelectBestWeapon();
+				NPC_BehaviorSet_Stormtrooper( bState );
+				return;
+			case CLASS_ALORA:
+				NPC_BehaviorSet_Jedi( bState );
+				return;
+			case CLASS_ROCKETTROOPER:
+				Rocketer_SelectBestWeapon();
+				NPC_BehaviorSet_Stormtrooper( bState );
+				return;
 			default:
 				break;
 			}
 
-			if ( NPCS.NPC->enemy && NPCS.NPC->s.weapon == WP_NONE && bState != BS_HUNT_AND_KILL && !trap->ICARUS_TaskIDPending( (sharedEntity_t *)NPCS.NPC, TID_MOVE_NAV ) )
+			/*if ( NPCS.NPC->enemy && NPCS.NPC->s.weapon == WP_NONE && bState != BS_HUNT_AND_KILL && !trap->ICARUS_TaskIDPending( (sharedEntity_t *)NPCS.NPC, TID_MOVE_NAV ) )
 			{//if in battle and have no weapon, run away, fixme: when in BS_HUNT_AND_KILL, they just stand there
 				if ( bState != BS_FLEE )
 				{
@@ -1486,13 +1637,13 @@ void NPC_RunBehavior( int team, int bState )
 					NPC_BSFlee();
 				}
 				return;
-			}
+			}*/
 			/*else if ( NPCS.NPC->client->ps.weapon == WP_SABER )
 			{//special melee exception
 				NPC_BehaviorSet_Default( bState );
 				return;
 			}*/
-			else if ( NPCS.NPC->client->ps.weapon == WP_DISRUPTOR && (NPCS.NPCInfo->scriptFlags & SCF_ALT_FIRE) )
+			/*else*/ if ( NPCS.NPC->client->ps.weapon == WP_DISRUPTOR && (NPCS.NPCInfo->scriptFlags & SCF_ALT_FIRE) )
 			{//a sniper
 				NPC_BehaviorSet_Sniper( bState );
 				return;
@@ -1500,11 +1651,6 @@ void NPC_RunBehavior( int team, int bState )
 			else if ( NPCS.NPC->client->ps.weapon == WP_THERMAL || NPCS.NPC->client->ps.weapon == WP_STUN_BATON )//FIXME: separate AI for melee fighters
 			{//a grenadier
 				NPC_BehaviorSet_Grenadier( bState );
-				return;
-			}
-			else if ( (NPCS.NPC->s.eFlags & EF_FAKE_NPC_BOT) && NPCS.NPC->client->ps.weapon == WP_SABER )
-			{//jedi
-				NPC_BehaviorSet_Jedi( bState );
 				return;
 			}
 			else if ( NPCS.NPC->client->ps.weapon == WP_SABER )
@@ -1534,11 +1680,6 @@ void NPC_RunBehavior( int team, int bState )
 				// TODO: Add vehicle behaviors here.
 				NPC_UpdateAngles( qtrue, qtrue );//just face our spawn angles for now
 			}
-			else if ( (NPCS.NPC->s.eFlags & EF_FAKE_NPC_BOT) && NPCS.NPC->client->ps.weapon == WP_SABER )
-			{//jedi
-				NPC_BehaviorSet_Jedi( bState );
-				return;
-			}
 			else
 			{
 				// Just one of the average droids
@@ -1550,11 +1691,6 @@ void NPC_RunBehavior( int team, int bState )
 			if ( NPCS.NPC->client->NPC_class == CLASS_SEEKER )
 			{
 				NPC_BehaviorSet_Seeker(bState);
-			}
-			else if ( (NPCS.NPC->s.eFlags & EF_FAKE_NPC_BOT) && NPCS.NPC->client->ps.weapon == WP_SABER )
-			{//jedi
-				NPC_BehaviorSet_Jedi( bState );
-				return;
 			}
 			else
 			{

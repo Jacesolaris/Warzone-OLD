@@ -6390,22 +6390,32 @@ void Jedi_SelectBestWeapon( void )
 {
 	if (NPCS.NPC->next_weapon_switch > level.time) return;
 
-	if ( NPCS.NPC->client->ps.weapon != WP_DISRUPTOR 
+	if ( NPCS.NPC->client->NPC_class == CLASS_BOBAFETT
+		&& NPCS.NPC->client->ps.weapon != WP_DISRUPTOR 
 		&& DistanceSquared( NPCS.NPC->r.currentOrigin, NPCS.NPC->enemy->r.currentOrigin )>(700*700) )
 	{
 		Boba_ChangeWeapon( WP_DISRUPTOR );
 	}
-	else if ( NPCS.NPC->client->ps.weapon != WP_ROCKET_LAUNCHER 
+	else if ( NPCS.NPC->client->NPC_class == CLASS_BOBAFETT
+		&& NPCS.NPC->client->ps.weapon != WP_ROCKET_LAUNCHER 
 		&& DistanceSquared( NPCS.NPC->r.currentOrigin, NPCS.NPC->enemy->r.currentOrigin )>(600*600) )
 	{
 		Boba_ChangeWeapon( WP_ROCKET_LAUNCHER );
 	}
-	else if ( NPCS.NPC->client->ps.weapon != WP_BLASTER 
+	else if ( NPCS.NPC->client->NPC_class == CLASS_BOBAFETT
+		&& NPCS.NPC->client->ps.weapon != WP_BLASTER 
 		&& DistanceSquared( NPCS.NPC->r.currentOrigin, NPCS.NPC->enemy->r.currentOrigin )>(300*300) )
 	{
 		Boba_ChangeWeapon( WP_BLASTER );
 	}
-	else if ( NPCS.NPC->client->ps.weapon != WP_SABER 
+	/*else if ( NPCS.NPC->client->NPC_class != CLASS_BOBAFETT
+		&& NPCS.NPC->client->ps.weapon != WP_BLASTER 
+		&& DistanceSquared( NPCS.NPC->r.currentOrigin, NPCS.NPC->enemy->r.currentOrigin )>(500*500) )
+	{
+		Boba_ChangeWeapon( WP_BLASTER );
+	}*/
+	else if ( NPCS.NPC->client->NPC_class != CLASS_BOBAFETT
+		&& NPCS.NPC->client->ps.weapon != WP_SABER 
 		&& DistanceSquared( NPCS.NPC->r.currentOrigin, NPCS.NPC->enemy->r.currentOrigin )>(96*96) )
 	{
 		Boba_ChangeWeapon( WP_SABER );

@@ -1275,41 +1275,41 @@ static void CG_RegisterGraphics( void ) {
 
 	cgs.media.boltShader = trap->R_RegisterShader( "gfx/misc/blueLine" );
 
-	cgs.effects.turretShotEffect = trap->FX_RegisterEffect( "turret/shot" );
-	cgs.effects.mEmplacedDeadSmoke = trap->FX_RegisterEffect("emplaced/dead_smoke.efx");
-	cgs.effects.mEmplacedExplode = trap->FX_RegisterEffect("emplaced/explode.efx");
-	cgs.effects.mTurretExplode = trap->FX_RegisterEffect("turret/explode.efx");
-	cgs.effects.mSparkExplosion = trap->FX_RegisterEffect("sparks/spark_explosion.efx");
-	cgs.effects.mTripmineExplosion = trap->FX_RegisterEffect("tripMine/explosion.efx");
-	cgs.effects.mDetpackExplosion = trap->FX_RegisterEffect("detpack/explosion.efx");
-	cgs.effects.mFlechetteAltBlow = trap->FX_RegisterEffect("flechette/alt_blow.efx");
-	cgs.effects.mStunBatonFleshImpact = trap->FX_RegisterEffect("stunBaton/flesh_impact.efx");
-	cgs.effects.mAltDetonate = trap->FX_RegisterEffect("demp2/altDetonate.efx");
-	cgs.effects.mSparksExplodeNoSound = trap->FX_RegisterEffect("sparks/spark_exp_nosnd");
-	cgs.effects.mTripMineLaser = trap->FX_RegisterEffect("tripMine/laser.efx");
+	cgs.effects.turretShotEffect = trap->FX_RegisterEffect( "effects/turret/shot" );
+	cgs.effects.mEmplacedDeadSmoke = trap->FX_RegisterEffect("effects/emplaced/dead_smoke.efx");
+	cgs.effects.mEmplacedExplode = trap->FX_RegisterEffect("effects/emplaced/explode.efx");
+	cgs.effects.mTurretExplode = trap->FX_RegisterEffect("effects/turret/explode.efx");
+	cgs.effects.mSparkExplosion = trap->FX_RegisterEffect("effects/sparks/spark_explosion.efx");
+	cgs.effects.mTripmineExplosion = trap->FX_RegisterEffect("effects/tripMine/explosion.efx");
+	cgs.effects.mDetpackExplosion = trap->FX_RegisterEffect("effects/detpack/explosion.efx");
+	cgs.effects.mFlechetteAltBlow = trap->FX_RegisterEffect("effects/flechette/alt_blow.efx");
+	cgs.effects.mStunBatonFleshImpact = trap->FX_RegisterEffect("effects/stunBaton/flesh_impact.efx");
+	cgs.effects.mAltDetonate = trap->FX_RegisterEffect("effects/demp2/altDetonate.efx");
+	cgs.effects.mSparksExplodeNoSound = trap->FX_RegisterEffect("effects/sparks/spark_exp_nosnd");
+	cgs.effects.mTripMineLaser = trap->FX_RegisterEffect("effects/tripMine/laser.efx");
 	cgs.effects.mEmplacedMuzzleFlash = trap->FX_RegisterEffect( "effects/emplaced/muzzle_flash" );
-	cgs.effects.mConcussionAltRing = trap->FX_RegisterEffect("concussion/alt_ring");
+	cgs.effects.mConcussionAltRing = trap->FX_RegisterEffect("effects/concussion/alt_ring");
 
-	cgs.effects.mHyperspaceStars = trap->FX_RegisterEffect("ships/hyperspace_stars");
-	cgs.effects.mBlackSmoke = trap->FX_RegisterEffect( "volumetric/black_smoke" );
+	cgs.effects.mHyperspaceStars = trap->FX_RegisterEffect("effects/ships/hyperspace_stars");
+	cgs.effects.mBlackSmoke = trap->FX_RegisterEffect( "effects/volumetric/black_smoke" );
 	cgs.effects.mShipDestDestroyed = trap->FX_RegisterEffect("effects/ships/dest_destroyed.efx");
 	cgs.effects.mShipDestBurning = trap->FX_RegisterEffect("effects/ships/dest_burning.efx");
 	cgs.effects.mBobaJet = trap->FX_RegisterEffect("effects/boba/jet.efx");
 
 
-	cgs.effects.itemCone = trap->FX_RegisterEffect("mp/itemcone.efx");
+	cgs.effects.itemCone = trap->FX_RegisterEffect("effects/mp/itemcone.efx");
 	cgs.effects.mTurretMuzzleFlash = trap->FX_RegisterEffect("effects/turret/muzzle_flash.efx");
-	cgs.effects.mSparks = trap->FX_RegisterEffect("sparks/spark_nosnd.efx"); //sparks/spark.efx
-	cgs.effects.mSaberCut = trap->FX_RegisterEffect("saber/saber_cut.efx");
-	cgs.effects.mSaberBlock = trap->FX_RegisterEffect("saber/saber_block.efx");
-	cgs.effects.mSaberBloodSparks = trap->FX_RegisterEffect("saber/blood_sparks_mp.efx");
-	cgs.effects.mSaberBloodSparksSmall = trap->FX_RegisterEffect("saber/blood_sparks_25_mp.efx");
-	cgs.effects.mSaberBloodSparksMid = trap->FX_RegisterEffect("saber/blood_sparks_50_mp.efx");
-	cgs.effects.mSpawn = trap->FX_RegisterEffect("mp/spawn.efx");
-	cgs.effects.mJediSpawn = trap->FX_RegisterEffect("mp/jedispawn.efx");
-	cgs.effects.mBlasterDeflect = trap->FX_RegisterEffect("blaster/deflect.efx");
-	cgs.effects.mBlasterSmoke = trap->FX_RegisterEffect("blaster/smoke_bolton");
-	cgs.effects.mForceConfustionOld = trap->FX_RegisterEffect("force/confusion_old.efx");
+	cgs.effects.mSparks = trap->FX_RegisterEffect("effects/sparks/spark_nosnd.efx"); //sparks/spark.efx
+	cgs.effects.mSaberCut = trap->FX_RegisterEffect("effects/saber/saber_cut.efx");
+	cgs.effects.mSaberBlock = trap->FX_RegisterEffect("effects/saber/saber_block.efx");
+	cgs.effects.mSaberBloodSparks = trap->FX_RegisterEffect("effects/saber/blood_sparks_mp.efx");
+	cgs.effects.mSaberBloodSparksSmall = trap->FX_RegisterEffect("effects/saber/blood_sparks_25_mp.efx");
+	cgs.effects.mSaberBloodSparksMid = trap->FX_RegisterEffect("effects/saber/blood_sparks_50_mp.efx");
+	cgs.effects.mSpawn = trap->FX_RegisterEffect("effects/mp/spawn.efx");
+	cgs.effects.mJediSpawn = trap->FX_RegisterEffect("effects/mp/jedispawn.efx");
+	cgs.effects.mBlasterDeflect = trap->FX_RegisterEffect("effects/blaster/deflect.efx");
+	cgs.effects.mBlasterSmoke = trap->FX_RegisterEffect("effects/blaster/smoke_bolton");
+	cgs.effects.mForceConfustionOld = trap->FX_RegisterEffect("effects/force/confusion_old.efx");
 
 	cgs.effects.forceLightning		= trap->FX_RegisterEffect( "effects/force/lightning.efx" );
 	cgs.effects.forceLightningWide	= trap->FX_RegisterEffect( "effects/force/lightningwide.efx" );
@@ -1321,7 +1321,7 @@ static void CG_RegisterGraphics( void ) {
 	cgs.effects.forceDrainWide	= trap->FX_RegisterEffect( "effects/mp/drainwide.efx" );
 	cgs.effects.forceDrained	= trap->FX_RegisterEffect( "effects/mp/drainhit.efx");
 
-	cgs.effects.mDisruptorDeathSmoke = trap->FX_RegisterEffect("disruptor/death_smoke");
+	cgs.effects.mDisruptorDeathSmoke = trap->FX_RegisterEffect("effects/disruptor/death_smoke");
 
 	for ( i = 0 ; i < NUM_CROSSHAIRS ; i++ ) {
 		cgs.media.crosshairShader[i] = trap->R_RegisterShaderNoMip( va("gfx/2d/crosshair%c", 'a'+i) );

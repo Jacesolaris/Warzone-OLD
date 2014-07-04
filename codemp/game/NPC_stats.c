@@ -35,7 +35,6 @@ stringID_table_t ClassTable[] =
 	ENUM2STRING(CLASS_GONK),				// droid
 	ENUM2STRING(CLASS_GRAN),
 	ENUM2STRING(CLASS_HOWLER),
-//	ENUM2STRING(CLASS_RANCOR),
 	ENUM2STRING(CLASS_IMPERIAL),
 	ENUM2STRING(CLASS_IMPWORKER),
 	ENUM2STRING(CLASS_INTERROGATOR),		// droid
@@ -75,11 +74,22 @@ stringID_table_t ClassTable[] =
 	ENUM2STRING(CLASS_JAWA),
 	ENUM2STRING(CLASS_WEEQUAY),
 	ENUM2STRING(CLASS_BOBAFETT),
-	//ENUM2STRING(CLASS_ROCKETTROOPER),
-	//ENUM2STRING(CLASS_PLAYER),
 	ENUM2STRING(CLASS_VEHICLE),
 	ENUM2STRING(CLASS_RANCOR),
 	ENUM2STRING(CLASS_WAMPA),
+
+	// UQ1: Extras from SP...
+	ENUM2STRING(CLASS_SAND_CREATURE),
+	ENUM2STRING(CLASS_SABOTEUR),
+	ENUM2STRING(CLASS_NOGHRI),
+	ENUM2STRING(CLASS_ALORA),
+	ENUM2STRING(CLASS_TUSKEN),
+	ENUM2STRING(CLASS_ROCKETTROOPER),
+	ENUM2STRING(CLASS_SABER_DROID),
+	ENUM2STRING(CLASS_ASSASSIN_DROID),
+	ENUM2STRING(CLASS_HAZARD_TROOPER),
+
+	ENUM2STRING(CLASS_PLAYER),
 	{"",	-1}
 };
 
@@ -1847,6 +1857,8 @@ qboolean NPC_ParseParms( const char *NPCName, gentity_t *NPC )
 				}
 				NPC->client->NPC_class = (class_t)GetIDForString( ClassTable, value );
 				NPC->s.NPC_class = NPC->client->NPC_class; //we actually only need this value now, but at the moment I don't feel like changing the 200+ references to client->NPC_class.
+				
+				//trap->Print("Set %s for npc %s.\n", GetStringForID(ClassTable, NPC->client->NPC_class), NPCName);
 
 				// No md3's for vehicles.
 				if ( NPC->client->NPC_class == CLASS_VEHICLE )
@@ -2238,9 +2250,10 @@ qboolean NPC_ParseParms( const char *NPCName, gentity_t *NPC )
 				}
 				//FIXME: need to precache the weapon, too?  (in above func)
 				weap = GetIDForString( WPTable, value );
-				if ( weap >= WP_NONE && weap <= WP_NUM_WEAPONS )///*WP_BLASTER_PISTOL*/WP_SABER ) //?!
+				if ( weap >= WP_NONE && weap <= WP_NUM_WEAPONS )
 				{
 					NPC->client->ps.weapon = weap;
+					NPC_ChangeWeapon(weap);
 					NPC->client->ps.stats[STAT_WEAPONS] |= ( 1 << NPC->client->ps.weapon );
 #ifndef __MMO__
 					if ( weap > WP_NONE )

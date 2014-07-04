@@ -45,7 +45,7 @@ void DOM_InitFakeNPC(gentity_t *bot)
 	bot->playerState = &bot->client->ps;
 
 	//bot->NPC_type = G_NewString("reborn");
-	bot->NPC_type = G_NewString(bot->client->pers.netname);
+	bot->NPC_type = Q_strlwr( G_NewString(bot->client->pers.netname) );
 
 	// Convert the spaces in the bot name to _ to match npc names...
 	for (i = 0; i < strlen(bot->NPC_type); i++)
@@ -53,6 +53,24 @@ void DOM_InitFakeNPC(gentity_t *bot)
 		if (bot->NPC_type[i] == ' ') 
 			bot->NPC_type[i] = '_';
 	}
+
+	//set origin
+	bot->s.pos.trType = TR_INTERPOLATE;
+	bot->s.pos.trTime = level.time;
+	VectorCopy( bot->r.currentOrigin, bot->s.pos.trBase );
+	VectorClear( bot->s.pos.trDelta );
+	bot->s.pos.trDuration = 0;
+	//set angles
+	bot->s.apos.trType = TR_INTERPOLATE;
+	bot->s.apos.trTime = level.time;
+	//VectorCopy( newent->r.currentOrigin, newent->s.apos.trBase );
+	//Why was the origin being used as angles? Typo I'm assuming -rww
+	VectorCopy( bot->s.angles, bot->s.apos.trBase );
+
+	VectorClear( bot->s.apos.trDelta );
+	bot->s.apos.trDuration = 0;
+
+	bot->NPC->combatPoint = -1;
 
 	if (!(bot->s.eFlags & EF_FAKE_NPC_BOT))
 		bot->s.eFlags |= EF_FAKE_NPC_BOT;
@@ -63,9 +81,9 @@ void DOM_InitFakeNPC(gentity_t *bot)
 
 	bot->client->ps.weapon = WP_SABER;//init for later check in NPC_Begin
 
-	NPC_ParseParms(bot->NPC_type, bot);
-
 	NPC_DefaultScriptFlags(bot);
+
+	NPC_ParseParms(bot->NPC_type, bot);
 
 	NPC_Begin(bot);
 	bot->s.eType = ET_PLAYER; // Replace ET_NPC
