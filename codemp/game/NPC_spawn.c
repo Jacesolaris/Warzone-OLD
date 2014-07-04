@@ -876,7 +876,7 @@ void NPC_Begin (gentity_t *ent)
 
 	memset( &ucmd, 0, sizeof( ucmd ) );
 
-	if ( !(ent->spawnflags & SFB_NOTSOLID) && !(ent->client->NPC_class == CLASS_BOT_FAKE_NPC) )
+	if ( !(ent->spawnflags & SFB_NOTSOLID) && !(ent->s.eFlags & EF_FAKE_NPC_BOT) )
 	{//No NPCs should telefrag
 		if (NPC_SpotWouldTelefrag(ent))
 		{
@@ -996,7 +996,7 @@ void NPC_Begin (gentity_t *ent)
 			break;
 		}
 	}
-	else if ( ent->client->NPC_class == CLASS_BOT_FAKE_NPC )
+	else if ( ent->s.eFlags & EF_FAKE_NPC_BOT )
 	{
 		switch ( g_npcspskill.integer )
 		{
@@ -1044,7 +1044,7 @@ void NPC_Begin (gentity_t *ent)
 	*/
 	//rwwFIXMEFIXME: movetype support
 
-	if ( ent->client->NPC_class != CLASS_BOT_FAKE_NPC )
+	if ( !(ent->s.eFlags & EF_FAKE_NPC_BOT) )
 		ent->die = player_die;
 
 	ent->waterlevel = 0;
@@ -1133,7 +1133,7 @@ void NPC_Begin (gentity_t *ent)
 	}
 
 	//ICARUS include
-	if ( ent->client->NPC_class != CLASS_BOT_FAKE_NPC ) // UQ1: Already set up for clients it seems...
+	if ( !(ent->s.eFlags & EF_FAKE_NPC_BOT) ) // UQ1: Already set up for clients it seems...
 		trap->ICARUS_InitEnt( (sharedEntity_t *)ent );
 
 //==NPC initialization
@@ -1147,7 +1147,7 @@ void NPC_Begin (gentity_t *ent)
 
 //==Final NPC initialization
 	ent->pain  = NPC_PainFunc( ent ); //painF_NPC_Pain;
-	if ( ent->client->NPC_class != CLASS_BOT_FAKE_NPC )
+	if ( !(ent->s.eFlags & EF_FAKE_NPC_BOT) )
 		ent->touch = NPC_TouchFunc( ent ); //touchF_NPC_Touch;
 //	ent->NPC->side = 1;
 
@@ -1160,7 +1160,7 @@ void NPC_Begin (gentity_t *ent)
 		ent->client->ps.persistant[PERS_TEAM] = ent->client->playerTeam;
 	}
 
-	if ( ent->client->NPC_class != CLASS_BOT_FAKE_NPC )
+	if ( !(ent->s.eFlags & EF_FAKE_NPC_BOT) )
 	{
 		ent->use   = NPC_Use;
 		ent->think = NPC_Think;
@@ -1232,7 +1232,7 @@ void NPC_Begin (gentity_t *ent)
 	}
 	ent->waypoint = ent->NPC->homeWp = WAYPOINT_NONE;
 
-	if ( ent->m_pVehicle && ent->client->NPC_class != CLASS_BOT_FAKE_NPC )
+	if ( ent->m_pVehicle && !(ent->s.eFlags & EF_FAKE_NPC_BOT) )
 	{//a vehicle
 		//check for droidunit
 		if ( ent->m_pVehicle->m_iDroidUnitTag != -1 )

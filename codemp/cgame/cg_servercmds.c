@@ -529,8 +529,7 @@ void CG_HandleNPCSounds(centity_t *cent)
 	{
 		ci = cent->npcClient;
 	}
-	else if (cent->currentState.clientNum < MAX_CLIENTS
-		&& (cent->currentState.NPC_class == CLASS_BOT_FAKE_NPC || cent->currentState.eFlags & EF_FAKE_NPC_BOT))
+	else if (cent->currentState.clientNum < MAX_CLIENTS && (cent->currentState.eFlags & EF_FAKE_NPC_BOT))
 	{
 		ci = &cgs.clientinfo[cent->currentState.clientNum];
 	}
@@ -541,7 +540,7 @@ void CG_HandleNPCSounds(centity_t *cent)
 	}
 
 	if (cent->currentState.number < MAX_CLIENTS
-		&& (cg_entities[cent->currentState.number].currentState.NPC_class == CLASS_BOT_FAKE_NPC || cg_entities[cent->currentState.number].currentState.eFlags & EF_FAKE_NPC_BOT))
+		&& (cg_entities[cent->currentState.number].currentState.eFlags & EF_FAKE_NPC_BOT || cg_entities[cent->currentState.number].currentState.eFlags & EF_FAKE_NPC_BOT))
 	{
 		//standard
 		if (cent->currentState.csSounds_Std)

@@ -54,7 +54,10 @@ void DOM_InitFakeNPC(gentity_t *bot)
 			bot->NPC_type[i] = '_';
 	}
 
-	//trap->Print("Adding NPC_Type %s.\n", bot->NPC_type);
+	if (!(bot->s.eFlags & EF_FAKE_NPC_BOT))
+		bot->s.eFlags |= EF_FAKE_NPC_BOT;
+	if (!(bot->client->ps.eFlags & EF_FAKE_NPC_BOT))
+		bot->client->ps.eFlags |= EF_FAKE_NPC_BOT;
 
 	//bot->flags |= FL_NO_KNOCKBACK;//don't fall off ledges
 
@@ -64,12 +67,8 @@ void DOM_InitFakeNPC(gentity_t *bot)
 
 	NPC_DefaultScriptFlags(bot);
 
-	bot->client->NPC_class = CLASS_BOT_FAKE_NPC;
 	NPC_Begin(bot);
 	bot->s.eType = ET_PLAYER; // Replace ET_NPC
-	bot->client->NPC_class = CLASS_BOT_FAKE_NPC;
-
-	//NPC_Precache(bot); // Already run in NPC_Begin...
 
 	// UQ1: Mark every NPC's spawn position. For patrolling that spot and stuff...
 	VectorCopy(bot->r.currentOrigin, bot->spawn_pos);

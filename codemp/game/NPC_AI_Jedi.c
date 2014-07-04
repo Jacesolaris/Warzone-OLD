@@ -192,14 +192,21 @@ void Boba_Precache( void )
 
 extern void G_CreateG2AttachedWeaponModel( gentity_t *ent, const char *weaponModel, int boltNum, int weaponNum );
 extern void ChangeWeapon( gentity_t *ent, int newWeapon );
-void Boba_ChangeWeapon( int wp )
+qboolean Boba_ChangeWeapon( int wp )
 {
+	if (NPCS.NPC->next_weapon_switch > level.time) return qfalse;
+
 	if ( NPCS.NPC->s.weapon == wp )
 	{
-		return;
+		return qtrue;
 	}
+
 	NPC_ChangeWeapon( wp );
-	G_AddEvent( NPCS.NPC, EV_GENERAL_SOUND, G_SoundIndex( "sound/weapons/change.wav" ));
+
+	if ( NPCS.NPC->s.weapon != wp )
+		return qfalse;
+
+	return qtrue;
 }
 
 void WP_ResistForcePush( gentity_t *self, gentity_t *pusher, qboolean noPenalty )
@@ -517,11 +524,13 @@ void Boba_FireDecide( void )
 		if ( NPCS.NPC->health < NPCS.NPC->client->pers.maxHealth*0.5f )
 		{
 			NPCS.NPCInfo->scriptFlags |= SCF_ALT_FIRE;
-			Boba_ChangeWeapon( WP_BLASTER );
-			NPCS.NPCInfo->burstMin = 3;
-			NPCS.NPCInfo->burstMean = 12;
-			NPCS.NPCInfo->burstMax = 20;
-			NPCS.NPCInfo->burstSpacing = Q_irand( 300, 750 );//attack debounce
+			if (Boba_ChangeWeapon( WP_BLASTER ))
+			{
+				NPCS.NPCInfo->burstMin = 3;
+				NPCS.NPCInfo->burstMean = 12;
+				NPCS.NPCInfo->burstMax = 20;
+				NPCS.NPCInfo->burstSpacing = Q_irand( 300, 750 );//attack debounce
+			}
 		}
 		else
 		{
@@ -542,7 +551,8 @@ void Boba_FireDecide( void )
 		enemyInFOV = qtrue;
 	}
 
-	if ( (enemyDist < (128*128)&&enemyInFOV) || !TIMER_Done( NPCS.NPC, "flameTime" ) )
+	if ( NPCS.NPC->client->NPC_class == CLASS_BOBAFETT 
+		&& (enemyDist < (128*128)&&enemyInFOV) || !TIMER_Done( NPCS.NPC, "flameTime" ) )
 	{//flamethrower
 		Boba_DoFlameThrower( NPCS.NPC );
 		enemyCS = qfalse;
@@ -559,7 +569,7 @@ void Boba_FireDecide( void )
 			//FIXME: we can never go back to alt-fire this way since, after this, we don't know if we were initially supposed to use alt-fire or not...
 		}
 	}
-	else if ( enemyDist > 65536 )//256 squared
+	else if ( enemyDist > 256 * 256 )
 	{
 		if ( NPCS.NPC->client->ps.weapon == WP_DISRUPTOR )
 		{//sniping... should be assumed
@@ -1428,7 +1438,7 @@ static void Jedi_CombatDistance( int enemy_dist )
 		TIMER_Set( NPCS.NPC, "attackDelay", Q_irand( 0, 1000 ) );
 	}
 
-	if ( /*NPCS.NPC->client->NPC_class == CLASS_BOBAFETT*/ NPCS.NPC->client->ps.weapon != WP_SABER )
+	if ( NPCS.NPC->client->NPC_class == CLASS_BOBAFETT  )
 	{
 		if ( !TIMER_Done( NPCS.NPC, "flameTime" ) )
 		{
@@ -2473,7 +2483,7 @@ evasionType_t Jedi_SaberBlockGo( gentity_t *self, usercmd_t *cmd, vec3_t pHitloc
 		VectorCopy( incoming->r.currentOrigin, hitloc );
 		VectorNormalize2( incoming->s.pos.trDelta, hitdir );
 	}
-	if ( self->client && /*self->client->NPC_class == CLASS_BOBAFETT*/ self->client->ps.weapon != WP_SABER )
+	if ( self->client && self->client->NPC_class == CLASS_BOBAFETT )
 	{
 		saberBusy = qtrue;
 	}
@@ -2493,7 +2503,7 @@ evasionType_t Jedi_SaberBlockGo( gentity_t *self, usercmd_t *cmd, vec3_t pHitloc
 	if ( (dist>16&&(Q_irand( 0, 2 )||saberBusy))
 		|| self->client->ps.saberInFlight
 		|| BG_SabersOff( &self->client->ps )
-		|| /*self->client->NPC_class == CLASS_BOBAFETT*/ NPCS.NPC->client->ps.weapon == WP_SABER )
+		|| self->client->NPC_class == CLASS_BOBAFETT )
 	{//either it will miss by a bit (and 25% chance) OR our saber is not in-hand OR saber is off
 		if ( self->NPC && (self->NPC->rank == RANK_CREWMAN || self->NPC->rank >= RANK_LT_JG) )
 		{//acrobat or fencer or above
@@ -2502,7 +2512,7 @@ evasionType_t Jedi_SaberBlockGo( gentity_t *self, usercmd_t *cmd, vec3_t pHitloc
 				&& !BG_InRoll( &self->client->ps, self->client->ps.legsAnim )//not rolling
 				&& !PM_InKnockDown( &self->client->ps )//not knocked down
 				&& ( self->client->ps.saberInFlight ||
-					/*self->client->NPC_class == CLASS_BOBAFETT*/ self->client->ps.weapon != WP_SABER ||
+					self->client->NPC_class == CLASS_BOBAFETT ||
 					(!BG_SaberInAttack( self->client->ps.saberMove )//not attacking
 					&& !PM_SaberInStart( self->client->ps.saberMove )//not starting an attack
 					&& !BG_SpinningSaberAnim( self->client->ps.torsoAnim )//not in a saber spin
@@ -2534,7 +2544,7 @@ evasionType_t Jedi_SaberBlockGo( gentity_t *self, usercmd_t *cmd, vec3_t pHitloc
 			{//coming from right
 				if ( doDodge )
 				{
-					if ( /*self->client->NPC_class == CLASS_BOBAFETT*/ self->client->ps.weapon != WP_SABER && !Q_irand( 0, 2 ) )
+					if ( self->client->NPC_class == CLASS_BOBAFETT && !Q_irand( 0, 2 ) )
 					{//roll!
 						TIMER_Start( self, "duck", Q_irand( 500, 1500 ) );
 						TIMER_Start( self, "strafeLeft", Q_irand( 500, 1500 ) );
@@ -2582,7 +2592,7 @@ evasionType_t Jedi_SaberBlockGo( gentity_t *self, usercmd_t *cmd, vec3_t pHitloc
 			{//coming from left
 				if ( doDodge )
 				{
-					if ( /*self->client->NPC_class == CLASS_BOBAFETT*/ self->client->ps.weapon != WP_SABER && !Q_irand( 0, 2 ) )
+					if ( self->client->NPC_class == CLASS_BOBAFETT && !Q_irand( 0, 2 ) )
 					{//roll!
 						TIMER_Start( self, "duck", Q_irand( 500, 1500 ) );
 						TIMER_Start( self, "strafeRight", Q_irand( 500, 1500 ) );
@@ -2678,7 +2688,7 @@ evasionType_t Jedi_SaberBlockGo( gentity_t *self, usercmd_t *cmd, vec3_t pHitloc
 			{
 				if ( doDodge )
 				{
-					if ( /*self->client->NPC_class == CLASS_BOBAFETT*/ self->client->ps.weapon != WP_SABER && !Q_irand( 0, 2 ) )
+					if ( self->client->NPC_class == CLASS_BOBAFETT && !Q_irand( 0, 2 ) )
 					{//roll!
 						TIMER_Start( self, "strafeLeft", Q_irand( 500, 1500 ) );
 						TIMER_Set( self, "strafeRight", 0 );
@@ -2709,7 +2719,7 @@ evasionType_t Jedi_SaberBlockGo( gentity_t *self, usercmd_t *cmd, vec3_t pHitloc
 			{
 				if ( doDodge )
 				{
-					if ( /*self->client->NPC_class == CLASS_BOBAFETT*/ self->client->ps.weapon != WP_SABER && !Q_irand( 0, 2 ) )
+					if ( self->client->NPC_class == CLASS_BOBAFETT && !Q_irand( 0, 2 ) )
 					{//roll!
 						TIMER_Start( self, "strafeLeft", Q_irand( 500, 1500 ) );
 						TIMER_Set( self, "strafeRight", 0 );
@@ -2815,7 +2825,7 @@ evasionType_t Jedi_SaberBlockGo( gentity_t *self, usercmd_t *cmd, vec3_t pHitloc
 					&& self->client->ps.fd.forceRageRecoveryTime < level.time
 					&& !(self->client->ps.fd.forcePowersActive&(1<<FP_RAGE)) )
 				{
-					if ( /*self->client->NPC_class == CLASS_BOBAFETT*/ self->client->ps.weapon != WP_SABER && !Q_irand( 0, 1 ) )
+					if ( self->client->NPC_class == CLASS_BOBAFETT && !Q_irand( 0, 1 ) )
 					{//roll!
 						if ( rightdot > 0 )
 						{
@@ -3393,7 +3403,7 @@ static void Jedi_EvasionSaber( vec3_t enemy_movedir, float enemy_dist, vec3_t en
 		if ( flrand( 0.25, 1 ) < facingAmt )
 		{//coming at/facing me!
 			int whichDefense = 0;
-			if ( NPCS.NPC->client->ps.weaponTime || NPCS.NPC->client->ps.saberInFlight || /*NPCS.NPC->client->NPC_class == CLASS_BOBAFETT*/ NPCS.NPC->client->ps.weapon != WP_SABER )
+			if ( NPCS.NPC->client->ps.weaponTime || NPCS.NPC->client->ps.saberInFlight || NPCS.NPC->client->NPC_class == CLASS_BOBAFETT )
 			{//I'm attacking or recovering from a parry, can only try to strafe/jump right now
 				if ( Q_irand( 0, 10 ) < NPCS.NPCInfo->stats.aggression )
 				{
@@ -3744,7 +3754,7 @@ static void Jedi_FaceEnemy( qboolean doPitch )
 
 	CalcEntitySpot( NPCS.NPC->enemy, SPOT_HEAD, enemy_eyes );
 
-	if ( /*NPCS.NPC->client->NPC_class == CLASS_BOBAFETT*/ NPCS.NPC->client->ps.weapon != WP_SABER
+	if ( NPCS.NPC->client->NPC_class == CLASS_BOBAFETT
 		&& TIMER_Done( NPCS.NPC, "flameTime" )
 		&& NPCS.NPC->s.weapon != WP_NONE
 		&& NPCS.NPC->s.weapon != WP_DISRUPTOR
@@ -4235,7 +4245,7 @@ static void Jedi_CombatIdle( int enemy_dist )
 			{//FIXME: add more taunt behaviors
 				//FIXME: sometimes he turns it off, then turns it right back on again???
 				if ( enemy_dist > 200
-					&& /*NPCS.NPC->client->NPC_class != CLASS_BOBAFETT*/ NPCS.NPC->client->ps.weapon == WP_SABER
+					&& NPCS.NPC->client->NPC_class != CLASS_BOBAFETT
 					&& !NPCS.NPC->client->ps.saberHolstered
 					&& !Q_irand( 0, 5 ) )
 				{//taunt even more, turn off the saber
@@ -4332,7 +4342,7 @@ static qboolean Jedi_AttackDecide( int enemy_dist )
 		}
 	}
 	
-	if ( NPCS.NPC->client->NPC_class == CLASS_BOT_FAKE_NPC ||
+	if ( NPCS.NPC->s.eFlags & EF_FAKE_NPC_BOT ||
 		NPCS.NPC->client->NPC_class == CLASS_TAVION ||
 		( NPCS.NPC->client->NPC_class == CLASS_REBORN && NPCS.NPCInfo->rank == RANK_LT_JG ) ||
 		( NPCS.NPC->client->NPC_class == CLASS_JEDI && NPCS.NPCInfo->rank == RANK_COMMANDER ) )
@@ -4675,6 +4685,9 @@ static qboolean Jedi_TryJump( gentity_t *goal )
 {//FIXME: never does a simple short, regular jump...
 	//FIXME: I need to be on ground too!
 	qboolean jumped = qfalse;
+
+	if (NPCS.NPC->s.weapon != WP_SABER)
+		return qfalse;
 
 	if ( (NPCS.NPCInfo->scriptFlags&SCF_NO_ACROBATICS) )
 	{
@@ -5638,7 +5651,7 @@ static void Jedi_Patrol( void )
 						G_SetEnemy( NPCS.NPC, best_enemy );
 						NPCS.NPCInfo->stats.aggression = 3;
 					}
-					else if ( /*NPCS.NPC->client->NPC_class != CLASS_BOBAFETT*/ NPCS.NPC->client->ps.weapon == WP_SABER )
+					else if ( NPCS.NPC->client->NPC_class != CLASS_BOBAFETT )
 					{//the player, toy with him
 						//get progressively more interested over time
 						if ( TIMER_Done( NPCS.NPC, "watchTime" ) )
@@ -6031,7 +6044,7 @@ static void Jedi_Attack( void )
 		{//my enemy is dead and I killed him
 			NPCS.NPCInfo->enemyCheckDebounceTime = 0;//keep looking for others
 
-			if ( /*NPCS.NPC->client->NPC_class == CLASS_BOBAFETT*/ NPCS.NPC->client->ps.weapon != WP_SABER )
+			if ( NPCS.NPC->client->NPC_class == CLASS_BOBAFETT )
 			{
 				if ( NPCS.NPCInfo->walkDebounceTime < level.time && NPCS.NPCInfo->walkDebounceTime >= 0 )
 				{
@@ -6112,7 +6125,7 @@ static void Jedi_Attack( void )
 	}
 
 	//If we don't have an enemy, just idle
-	if ( NPCS.NPC->enemy->s.weapon == WP_TURRET && !Q_stricmp( "PAS", NPCS.NPC->enemy->classname ) )
+	if ( NPCS.NPC->enemy && NPCS.NPC->enemy->s.weapon == WP_TURRET && !Q_stricmp( "PAS", NPCS.NPC->enemy->classname ) )
 	{
 		if ( NPCS.NPC->enemy->count <= 0 )
 		{//it's out of ammo
@@ -6373,6 +6386,32 @@ qboolean Jedi_InSpecialMove( void )
 	return qfalse;
 }
 
+void Jedi_SelectBestWeapon( void )
+{
+	if (NPCS.NPC->next_weapon_switch > level.time) return;
+
+	if ( NPCS.NPC->client->ps.weapon != WP_DISRUPTOR 
+		&& DistanceSquared( NPCS.NPC->r.currentOrigin, NPCS.NPC->enemy->r.currentOrigin )>(700*700) )
+	{
+		Boba_ChangeWeapon( WP_DISRUPTOR );
+	}
+	else if ( NPCS.NPC->client->ps.weapon != WP_ROCKET_LAUNCHER 
+		&& DistanceSquared( NPCS.NPC->r.currentOrigin, NPCS.NPC->enemy->r.currentOrigin )>(600*600) )
+	{
+		Boba_ChangeWeapon( WP_ROCKET_LAUNCHER );
+	}
+	else if ( NPCS.NPC->client->ps.weapon != WP_BLASTER 
+		&& DistanceSquared( NPCS.NPC->r.currentOrigin, NPCS.NPC->enemy->r.currentOrigin )>(300*300) )
+	{
+		Boba_ChangeWeapon( WP_BLASTER );
+	}
+	else if ( NPCS.NPC->client->ps.weapon != WP_SABER 
+		&& DistanceSquared( NPCS.NPC->r.currentOrigin, NPCS.NPC->enemy->r.currentOrigin )>(96*96) )
+	{
+		Boba_ChangeWeapon( WP_SABER );
+	}
+}
+
 extern void NPC_BSST_Patrol( void );
 extern void NPC_BSSniper_Default( void );
 void NPC_BSJedi_Default( void )
@@ -6386,7 +6425,7 @@ void NPC_BSJedi_Default( void )
 
 	if( !NPCS.NPC->enemy )
 	{//don't have an enemy, look for one
-		if ( /*NPCS.NPC->client->NPC_class == CLASS_BOBAFETT*/ NPCS.NPC->client->ps.weapon != WP_SABER )
+		if ( NPCS.NPC->client->NPC_class == CLASS_BOBAFETT )
 		{
 			NPC_BSST_Patrol();
 		}
@@ -6414,20 +6453,13 @@ void NPC_BSJedi_Default( void )
 			NPCS.NPC->s.loopSound = G_SoundIndex( "sound/movers/objects/green_beam_lp2.wav" );//test/charm.wav" );
 		}
 
-		if ( /*NPCS.NPC->client->NPC_class == CLASS_BOBAFETT*/ NPCS.NPC->client->ps.weapon != WP_SABER )
+		Jedi_SelectBestWeapon();
+
+		if ( NPCS.NPC->client->ps.weapon == WP_DISRUPTOR )
 		{
-			if ( NPCS.NPC->enemy->enemy != NPCS.NPC && NPCS.NPC->health == NPCS.NPC->client->pers.maxHealth && DistanceSquared( NPCS.NPC->r.currentOrigin, NPCS.NPC->enemy->r.currentOrigin )>(800*800) )
-			{
-				NPCS.NPCInfo->scriptFlags |= SCF_ALT_FIRE;
-				Boba_ChangeWeapon( WP_DISRUPTOR );
-				NPC_BSSniper_Default();
-				return;
-			}
-			else if ( DistanceSquared( NPCS.NPC->r.currentOrigin, NPCS.NPC->enemy->r.currentOrigin )>(96*96) )
-			{
-				Boba_ChangeWeapon( WP_SABER );
-				return;
-			}
+			NPCS.NPCInfo->scriptFlags |= SCF_ALT_FIRE;
+			NPC_BSSniper_Default();
+			return;
 		}
 
 		Jedi_Attack();

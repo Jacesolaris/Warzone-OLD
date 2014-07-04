@@ -3361,10 +3361,10 @@ Ghoul2 Insert Start
 		}
 
 		// Visibility cull...
-		if (dist > 256 && !CULL_OrgVisible(cg.refdef.vieworg, cent->lerpOrigin, cg.clientNum))
+		/*if (dist > 256 && !CULL_OrgVisible(cg.refdef.vieworg, cent->lerpOrigin, cg.clientNum))
 		{
 			return;
-		}
+		}*/
 	}
 #endif //__MMO__
 

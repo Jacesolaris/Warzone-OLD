@@ -1384,14 +1384,6 @@ void NPC_RunBehavior( int team, int bState )
 		NPC_CheckCharmed();
 		return;
 	}
-	else if ( NPCS.NPC->client->NPC_class == CLASS_BOT_FAKE_NPC )
-	{//jedi - for now... might add subclasses later on...
-		//if ( NPCS.NPC->client->ps.weapon == WP_SABER )
-			NPC_BehaviorSet_Jedi( bState );
-		//else
-			//NPC_BSDefault();
-			//NPC_BehaviorSet_Stormtrooper( bState );
-	}
 //	else if ( NPCS.NPC->client->ps.weapon == WP_SABER )		// this is an _extremely_ shitty comparison.. FIXME: make a CLASS_CULTIST? --eez
 	else if ( NPCS.NPC->client->NPC_class == CLASS_JEDI ||
 		NPCS.NPC->client->NPC_class == CLASS_REBORN ||
@@ -1495,25 +1487,37 @@ void NPC_RunBehavior( int team, int bState )
 				}
 				return;
 			}
-			if ( NPCS.NPC->client->ps.weapon == WP_SABER )
+			/*else if ( NPCS.NPC->client->ps.weapon == WP_SABER )
 			{//special melee exception
 				NPC_BehaviorSet_Default( bState );
 				return;
-			}
-			if ( NPCS.NPC->client->ps.weapon == WP_DISRUPTOR && (NPCS.NPCInfo->scriptFlags & SCF_ALT_FIRE) )
+			}*/
+			else if ( NPCS.NPC->client->ps.weapon == WP_DISRUPTOR && (NPCS.NPCInfo->scriptFlags & SCF_ALT_FIRE) )
 			{//a sniper
 				NPC_BehaviorSet_Sniper( bState );
 				return;
 			}
-			if ( NPCS.NPC->client->ps.weapon == WP_THERMAL || NPCS.NPC->client->ps.weapon == WP_STUN_BATON )//FIXME: separate AI for melee fighters
+			else if ( NPCS.NPC->client->ps.weapon == WP_THERMAL || NPCS.NPC->client->ps.weapon == WP_STUN_BATON )//FIXME: separate AI for melee fighters
 			{//a grenadier
 				NPC_BehaviorSet_Grenadier( bState );
 				return;
 			}
-			if ( NPC_CheckSurrender() )
+			else if ( (NPCS.NPC->s.eFlags & EF_FAKE_NPC_BOT) && NPCS.NPC->client->ps.weapon == WP_SABER )
+			{//jedi
+				NPC_BehaviorSet_Jedi( bState );
+				return;
+			}
+			else if ( NPCS.NPC->client->ps.weapon == WP_SABER )
+			{//special melee exception
+				//NPC_BehaviorSet_Default( bState );
+				NPC_BehaviorSet_Jedi( bState );
+				return;
+			}
+			else if ( NPC_CheckSurrender() )
 			{
 				return;
 			}
+
 			NPC_BehaviorSet_Stormtrooper( bState );
 			break;
 
@@ -1530,6 +1534,11 @@ void NPC_RunBehavior( int team, int bState )
 				// TODO: Add vehicle behaviors here.
 				NPC_UpdateAngles( qtrue, qtrue );//just face our spawn angles for now
 			}
+			else if ( (NPCS.NPC->s.eFlags & EF_FAKE_NPC_BOT) && NPCS.NPC->client->ps.weapon == WP_SABER )
+			{//jedi
+				NPC_BehaviorSet_Jedi( bState );
+				return;
+			}
 			else
 			{
 				// Just one of the average droids
@@ -1541,6 +1550,11 @@ void NPC_RunBehavior( int team, int bState )
 			if ( NPCS.NPC->client->NPC_class == CLASS_SEEKER )
 			{
 				NPC_BehaviorSet_Seeker(bState);
+			}
+			else if ( (NPCS.NPC->s.eFlags & EF_FAKE_NPC_BOT) && NPCS.NPC->client->ps.weapon == WP_SABER )
+			{//jedi
+				NPC_BehaviorSet_Jedi( bState );
+				return;
 			}
 			else
 			{

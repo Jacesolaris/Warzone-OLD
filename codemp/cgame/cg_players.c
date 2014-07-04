@@ -5704,15 +5704,17 @@ static void CG_RGBForSaberColor(saber_colors_t color, vec3_t rgb, int cnum, int 
 void CG_BlockLightningEffect(vec3_t muzzle, vec3_t muzzleDir, float length)
 {
 	int rBladeNum = 0;
-	vec3_t	end2;
+	vec3_t	end2, forward;
 	vec3_t ang = { 0, 1, 2 };
 
-	ang[0] = flrand(0, 360);
-	ang[1] = flrand(0, 360);
-	ang[2] = flrand(0, 360);
+	ang[0] = (float)irand(0, 360);
+	ang[1] = (float)irand(0, 360);
+	ang[2] = (float)irand(0, 360);
+
+	AngleVectors(ang, forward, NULL, NULL);
 
 	VectorMA(muzzle, length*flrand(0, 1), muzzleDir, end2);
-	trap->FX_PlayEffectID(cgs.effects.saber_lightninghit, end2, ang, -1, -1, qfalse);
+	trap->FX_PlayEffectID(cgs.effects.saber_lightninghit, end2, forward, -1, -1, qfalse);
 
 	//trap->Print("Muzzle at %f %f %f\n", muzzle[0], muzzle[1], muzzle[2]);
 	//trap->Print("Muzzle dir %f %f %f\n", muzzleDir[0], muzzleDir[1], muzzleDir[2]);

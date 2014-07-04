@@ -638,7 +638,7 @@ void Q3_TaskIDClear( int *taskID );
 void ICARUS_InitEnt( sharedEntity_t *ent )
 {
 	//Make sure this is a fresh ent
-	if (ent->s.NPC_class != CLASS_BOT_FAKE_NPC)
+	if (!(ent->s.eFlags & EF_FAKE_NPC_BOT))
 	{// UQ1: But not for fake NPCs...
 		assert( iICARUS );
 		assert( gTaskManagers[ent->s.number] == NULL );

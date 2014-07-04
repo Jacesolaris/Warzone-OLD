@@ -578,6 +578,10 @@ void ChangeWeapon( gentity_t *ent, int newWeapon )
 
 	ent->client->ps.weapon = newWeapon;
 	ent->client->pers.cmd.weapon = newWeapon;
+
+	if (ent->client->ps.eFlags & EF_FAKE_NPC_BOT)
+		trap->EA_SelectWeapon(ent->s.number, newWeapon);
+
 	ent->NPC->shotTime = 0;
 	ent->NPC->burstCount = 0;
 	ent->NPC->attackHold = 0;
@@ -620,8 +624,16 @@ void ChangeWeapon( gentity_t *ent, int newWeapon )
 		*/
 
 	case WP_SABER:
+		/*
 		ent->NPC->aiFlags &= ~NPCAI_BURST_WEAPON;
 		ent->NPC->burstSpacing = 0;//attackdebounce
+		*/
+		ent->NPC->aiFlags |= NPCAI_BURST_WEAPON;
+		ent->NPC->burstMin = 5;//0.5 sec
+		ent->NPC->burstMean = 10;//1 second
+		ent->NPC->burstMax = 20;//3 seconds
+		ent->NPC->burstSpacing = 2000;//2 seconds
+		ent->NPC->attackHold = 1000;//Hold attack button for a 1-second burst
 		break;
 
 	case WP_DISRUPTOR:
@@ -847,6 +859,14 @@ void ChangeWeapon( gentity_t *ent, int newWeapon )
 
 void NPC_ChangeWeapon( int newWeapon )
 {
+	if (NPCS.NPC->next_weapon_switch > level.time) return;
+
+	NPCS.NPC->next_weapon_switch = level.time + 5000;
+
+	ChangeWeapon( NPCS.NPC, newWeapon );
+
+	G_AddEvent( NPCS.NPC, EV_GENERAL_SOUND, G_SoundIndex( "sound/weapons/change.wav" ));
+
 	/*
 	qboolean	changing = qfalse;
 	if ( newWeapon != NPC->client->ps.weapon )
