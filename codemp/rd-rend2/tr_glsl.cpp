@@ -1219,6 +1219,10 @@ int GLSL_BeginLoadGPUShaders(void)
 			else if (r_parallaxMapping->integer) // Parallax without normal maps...
 			{
 				Q_strcat(extradefines, 1024, "#define USE_PARALLAXMAP_NONORMALS\n");
+#ifdef USE_VERT_TANGENT_SPACE
+				Q_strcat(extradefines, 1024, "#define USE_VERT_TANGENT_SPACE\n");
+				attribs |= ATTR_TANGENT;
+#endif
 			}
 
 			if (r_specularMapping->integer)

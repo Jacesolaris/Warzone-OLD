@@ -59,24 +59,24 @@ varying vec4      var_TexCoords;
 
 varying vec4      var_Color;
 
+varying vec3   var_ViewDir;
+
 #if (defined(USE_LIGHT) && !defined(USE_FAST_LIGHT))
-  #if defined(USE_VERT_TANGENT_SPACE)
-varying vec4   var_Normal;
-varying vec4   var_Tangent;
-varying vec4   var_Bitangent;
-  #else
+//  #if defined(USE_VERT_TANGENT_SPACE)
+//varying vec4   var_Normal;
+//varying vec4   var_Tangent;
+//varying vec4   var_Bitangent;
+//  #else
 varying vec3   var_Normal;
-varying vec3   var_ViewDir;
-  #endif
+//  #endif
 #else
-  #if defined(USE_VERT_TANGENT_SPACE)
-varying vec4   var_Normal;
-varying vec4   var_Tangent;
-varying vec4   var_Bitangent;
-  #else
+//  #if defined(USE_VERT_TANGENT_SPACE)
+//varying vec4   var_Normal;
+//varying vec4   var_Tangent;
+//varying vec4   var_Bitangent;
+//  #else
 varying vec3   var_Normal;
-varying vec3   var_ViewDir;
-  #endif
+//  #endif
 #endif
 
 varying vec3 var_N;
@@ -108,16 +108,35 @@ out vec4 out_Glow;
   #if defined(USE_PARALLAXMAP_NONORMALS)
 	float SampleDepth(sampler2D normalMap, vec2 t)
 	{
-		vec3 color = texture2D(u_DiffuseMap, t).rgb * 2.0;
-		color = clamp(color, 0.0, 1.0);
+		vec3 color = texture2D(u_DiffuseMap, t).rgb;
+
+#define const_1 ( 16.0 / 255.0)
+#define const_2 (255.0 / 219.0)
+		color = ((color - const_1) * const_2);
+
+		vec3 orig_color = color * 2.0;
+		//color += 0.2;
+		//color = clamp(color, 0.0, 1.0);
+		//color -= vec3(0.4, 0.4, 0.4);
+		//color = clamp(color, 0.0, 1.0);
+		//color += vec3(0.2, 0.2, 0.2);
+		//color = clamp(color, 0.0, 1.0);
+		//color *= 1.8;
+		//color = clamp(color, 0.0, 1.0);
 	
-		float combined_color = color.r + color.g + color.b;
-		combined_color /= 4.0;
-		//if (combined_color > 3.0) combined_color /= 4.0;
-		//else if (combined_color > 2.0) combined_color /= 3.0;
-		//else if (combined_color > 1.0) combined_color /= 2.0;
+		//float combined_color = color.r + color.g + color.b;
+		//combined_color /= 3.0;
   
-		return clamp(1.0 - combined_color, 0.0, 1.0);
+		//return clamp(1.0 - combined_color, 0.0, 1.0);
+
+		orig_color = clamp(orig_color, 0.0, 1.0);
+		float combined_color2 = orig_color.r + orig_color.g + orig_color.b;
+		combined_color2 /= 4.0;
+
+		//float out_color = (clamp(1.0 - combined_color, 0.0, 1.0) + clamp(1.0 - combined_color2, 0.0, 1.0)) / 2.0;
+		//return out_color;
+
+		return clamp(1.0 - combined_color2, 0.0, 1.0);
 	}
   #endif //USE_PARALLAXMAP_NONORMALS
 
@@ -171,8 +190,9 @@ float RayIntersectDisplaceMap(vec2 dp, vec2 ds, sampler2D normalMap)
 	return bestDepth;
 #else //FAST_PARALLAX
 	//float depth = SampleDepth(normalMap, dp) * ds;
-	//float depth = SampleDepth(normalMap, dp) * 1.5;
-	float depth = ((SampleDepth(normalMap, dp) /** 1.5*/) * 2.0) - 1.0;
+	//float depth = SampleDepth(normalMap, dp)/* * 1.25*/;
+	//float depth = ((SampleDepth(normalMap, dp) /** 1.5*/) * 2.0) - 1.0;
+	float depth = ((SampleDepth(normalMap, dp) * 0.5) * 2.0) - 1.0;
 	return depth;
 #endif //FAST_PARALLAX
 }
@@ -297,13 +317,14 @@ void main()
 	float NL, NH, NE, EH, attenuation;
 
 #if defined(USE_LIGHT) && !defined(USE_FAST_LIGHT)
-  #if defined(USE_VERT_TANGENT_SPACE)
-	mat3 tangentToWorld = mat3(var_Tangent.xyz, var_Bitangent.xyz, var_Normal.xyz);
-	viewDir = vec3(var_Normal.w, var_Tangent.w, var_Bitangent.w);
-  #else
-	mat3 tangentToWorld = cotangent_frame(var_Normal, -var_ViewDir, var_TexCoords.xy);
+//  #if defined(USE_VERT_TANGENT_SPACE)
+//	mat3 tangentToWorld = mat3(var_Tangent.xyz, var_Bitangent.xyz, var_Normal.xyz);
+//	viewDir = vec3(var_Normal.w, var_Tangent.w, var_Bitangent.w);
+//  #else
+	mat3 tangentToWorld = cotangent_frame(var_Normal.xyz, -var_ViewDir, var_TexCoords.xy); // UQ1: THIS IS WRONG!!!
+	//mat3 tangentToWorld = mat3(1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0);
 	viewDir = var_ViewDir;
-  #endif
+//  #endif
 
 	E = normalize(viewDir);
 
@@ -313,13 +334,14 @@ void main()
   #endif
 	float sqrLightDist = dot(L, L);
 #else
-  #if defined(USE_VERT_TANGENT_SPACE)
-	mat3 tangentToWorld = mat3(var_Tangent.xyz, var_Bitangent.xyz, var_Normal.xyz);
-	viewDir = vec3(var_Normal.w, var_Tangent.w, var_Bitangent.w);
-  #else
-	mat3 tangentToWorld = cotangent_frame(var_Normal, -var_ViewDir, var_TexCoords.xy);
+//  #if defined(USE_VERT_TANGENT_SPACE)
+//	mat3 tangentToWorld = mat3(var_Tangent.xyz, var_Bitangent.xyz, var_Normal.xyz);
+//	viewDir = vec3(var_Normal.w, var_Tangent.w, var_Bitangent.w);
+//  #else
+	//mat3 tangentToWorld = cotangent_frame(var_Normal.xyz, -var_ViewDir, var_TexCoords.xy); // UQ1: THIS IS WRONG!!!
+	mat3 tangentToWorld = mat3(1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0);
 	viewDir = var_ViewDir;
-  #endif
+//  #endif
 	E = normalize(viewDir);
 #endif
 
@@ -347,7 +369,7 @@ void main()
 
 	vec4 diffuse = texture2D(u_DiffuseMap, texCoords);
 
-	
+
 #if defined(USE_GAMMA2_TEXTURES)
 	diffuse.rgb *= diffuse.rgb;
 #endif
