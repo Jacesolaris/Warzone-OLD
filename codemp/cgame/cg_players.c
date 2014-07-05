@@ -5700,6 +5700,25 @@ static void CG_RGBForSaberColor(saber_colors_t color, vec3_t rgb, int cnum, int 
 	//	Com_Printf("sabercolor %i %i %i ^1%i %i\n",(int)rgb[0],(int)rgb[1],(int)rgb[2],cnum,bnum);
 }
 
+//[NewLightningEFX]
+void CG_NewLightningActEffect(vec3_t muzzle, vec3_t muzzleDir, float length)
+{
+	int rBladeNum = 0;
+	vec3_t	end2, forward;
+	vec3_t ang = { 0, 1, 2 };
+
+	ang[0] = (float)irand(0, 90); // Needs to Say at Angle 90 to not do wide Spreed of Lightning when Bounce of the Saber
+	ang[1] = (float)irand(0, 360);
+	ang[2] = (float)irand(0, 360);
+
+	AngleVectors(ang, forward, NULL, NULL);
+
+	VectorMA(muzzle, length*flrand(0, 1), muzzleDir, end2);
+	/*trap->FX_PlayEffectID(cgs.effects.forcelightningAbsorb, end2, forward, -1, -1, qfalse);
+	trap->FX_PlayEffectID(cgs.effects.forcelightningFlare, end2, forward, -1, -1, qfalse);*/
+	trap->FX_PlayEffectID(cgs.effects.lightningarc, end2, forward, -1, -1, qfalse);
+}//[/NewLightningEFX]
+
 //[LightningBlockSys]
 void CG_BlockLightningEffect(vec3_t muzzle, vec3_t muzzleDir, float length)
 {
@@ -5707,18 +5726,15 @@ void CG_BlockLightningEffect(vec3_t muzzle, vec3_t muzzleDir, float length)
 	vec3_t	end2, forward;
 	vec3_t ang = { 0, 1, 2 };
 
-	ang[0] = (float)irand(0, 360);
+	ang[0] = (float)irand(0, 90); // Needs to Say at Angle 90 to not do wide Spreed of Lightning when Bounce of the Saber
 	ang[1] = (float)irand(0, 360);
 	ang[2] = (float)irand(0, 360);
 
 	AngleVectors(ang, forward, NULL, NULL);
 
 	VectorMA(muzzle, length*flrand(0, 1), muzzleDir, end2);
-	trap->FX_PlayEffectID(cgs.effects.saber_lightninghit, end2, forward, -1, -1, qfalse);
 	trap->FX_PlayEffectID(cgs.effects.forcelightningAbsorb, end2, forward, -1, -1, qfalse);
-	trap->FX_PlayEffectID(cgs.effects.forcelightningImpact, end2, forward, -1, -1, qfalse);
 	trap->FX_PlayEffectID(cgs.effects.forcelightningFlare, end2, forward, -1, -1, qfalse);
-	trap->FX_PlayEffectID(cgs.effects.lightningarc, end2, forward, -1, -1, qfalse);
 	trap->FX_PlayEffectID(cgs.effects.lightningarc, end2, forward, -1, -1, qfalse);
 	//trap->Print("Muzzle at %f %f %f\n", muzzle[0], muzzle[1], muzzle[2]);
 	//trap->Print("Muzzle dir %f %f %f\n", muzzleDir[0], muzzleDir[1], muzzleDir[2]);
@@ -10512,7 +10528,11 @@ JustDoIt:
 
 	//[LightningBlockSys]
 	if (cent->blockLightningTime > cg.time)
+	{
 		CG_BlockLightningEffect(client->saber[saberNum].blade[bladeNum].muzzlePoint, client->saber[saberNum].blade[bladeNum].muzzleDir, client->saber[saberNum].blade[bladeNum].length);
+		CG_BlockLightningEffect(client->saber[saberNum].blade[bladeNum].muzzlePoint, client->saber[saberNum].blade[bladeNum].muzzleDir, client->saber[saberNum].blade[bladeNum].length);
+		CG_BlockLightningEffect(client->saber[saberNum].blade[bladeNum].muzzlePoint, client->saber[saberNum].blade[bladeNum].muzzleDir, client->saber[saberNum].blade[bladeNum].length);
+	}
 	//[/LightningBlockSys]
 }
 
@@ -15051,9 +15071,16 @@ SkipTrueView:
 			//trap_FX_PlayEntityEffectID(cgs.effects.forceLightningWide, efOrg, axis, cent->boltInfo, cent->currentState.number, -1, -1);
 			if (pm->ps->weapon == WP_NONE || pm->ps->weapon == WP_MELEE || (pm->ps->weapon == WP_SABER && pm->ps->saberHolstered))
 			{
+				//[NewLightningEFX]
+				CG_NewLightningActEffect(efOrgR, fxDir, 0);
+				CG_NewLightningActEffect(efOrgR, fxDir, 0);
+				//[/NewLightningEFX]
 				trap->FX_PlayEntityEffectID(cgs.effects.forceLightningWide, efOrgR, axis, -1, -1, -1, -1); // thats the solution - we need to play the fx from two origins
 			}
-
+			//[NewLightningEFX]
+			CG_NewLightningActEffect(efOrgL, fxDir, 0);
+			CG_NewLightningActEffect(efOrgL, fxDir, 0);
+			//[/NewLightningEFX]
 			trap->FX_PlayEntityEffectID(cgs.effects.forceLightningWide, efOrgL, axis, -1, -1, -1, -1);
 		}
 		else
@@ -15064,13 +15091,13 @@ SkipTrueView:
 
 		}
 		
-		/*
+		//Stoiss readded this to give us the sounds of the lightning when it is doing sec effects
 		if (cent->bolt4 < cg.time)
 		{
-		cent->bolt4 = cg.time + 100;
-		trap_S_StartSound(NULL, cent->currentState.number, CHAN_AUTO, trap_S_RegisterSound("sound/weapons/force/lightning.wav") );
+		cent->bolt4 = cg.time + 10000;//Was 100
+		trap->S_StartSound(NULL, cent->currentState.number, CHAN_AUTO, trap->S_RegisterSound("sound/weapons/force/lightning.wav") );
 		}
-		*/
+		
 	}
 
 	//fullbody push effect
