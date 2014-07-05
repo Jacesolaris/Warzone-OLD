@@ -1992,6 +1992,8 @@ void NPC_SelectMoveAnimation()
 	if ((NPCS.ucmd.buttons & BUTTON_ATTACK) || (NPCS.ucmd.buttons & BUTTON_ALT_ATTACK)) 
 		return;
 
+	//trap->Print("fm: %i. rm: %i. v: %f.\n", NPCS.ucmd.forwardmove, NPCS.ucmd.rightmove, VectorLength(NPCS.NPC->client->ps.velocity));
+
 	/*
 	if (NPCS.NPC->client->ps.pm_flags & PMF_DUCKED && NPC->r.maxs[2] > NPC->client->ps.crouchheight)
 	{
@@ -2011,7 +2013,9 @@ void NPC_SelectMoveAnimation()
 	}
 	*/
 
-	if (VectorLength(NPCS.NPC->client->ps.velocity) < 4)
+	//if (VectorLength(NPCS.NPC->client->ps.velocity) < 4)
+	if (NPCS.ucmd.forwardmove == 0 && NPCS.ucmd.rightmove == 0 && NPCS.ucmd.upmove == 0
+		&& VectorLength(NPCS.NPC->client->ps.velocity) < 4)
 	{// Standing still...
 		if (NPCS.NPC->client->ps.pm_flags & PMF_DUCKED)
 		{
@@ -2030,7 +2034,8 @@ void NPC_SelectMoveAnimation()
 			NPC_SetAnim( NPCS.NPC, SETANIM_BOTH, BOTH_STAND1, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD );
 		}
 	}
-	else if (VectorLength(NPCS.NPC->client->ps.velocity) <= 100/*64*/)
+	else if (VectorLength(NPCS.NPC->client->ps.velocity) < 100)
+	//else if (NPCS.ucmd.forwardmove < 100 && NPCS.ucmd.rightmove < 100)
 	{// Use walking anims..
 		if (NPCS.ucmd.forwardmove < 0)
 		{
@@ -2041,13 +2046,14 @@ void NPC_SelectMoveAnimation()
 			else if (NPCS.NPC->client->ps.weapon == WP_SABER)
 			{// Walk with saber...
 				NPC_SetAnim( NPCS.NPC, SETANIM_BOTH, BOTH_WALKBACK1, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD );
-				//NPC_SetAnim( NPC, SETANIM_TORSO, TORSO_WEAPONREADY3, SETANIM_FLAG_NORMAL );
+				NPC_SetAnim( NPCS.NPC, SETANIM_TORSO, BOTH_WALKBACK1, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD );
 			}
 			else
 			{// Standard walk anim..
 				NPC_SetAnim( NPCS.NPC, SETANIM_LEGS, BOTH_WALKBACK2, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD );
 				NPC_SetAnim( NPCS.NPC, SETANIM_TORSO, TORSO_WEAPONREADY3, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD );
 			}
+			//trap->Print("Walking Back.\n");
 		}
 		else
 		{
@@ -2058,13 +2064,15 @@ void NPC_SelectMoveAnimation()
 			else if (NPCS.NPC->client->ps.weapon == WP_SABER)
 			{// Walk with saber...
 				NPC_SetAnim( NPCS.NPC, SETANIM_BOTH, BOTH_WALK1, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD );
-				//NPC_SetAnim( NPC, SETANIM_TORSO, TORSO_WEAPONREADY3, SETANIM_FLAG_NORMAL );
+				NPC_SetAnim( NPCS.NPC, SETANIM_TORSO, TORSO_WEAPONREADY3, SETANIM_FLAG_NORMAL );
 			}
 			else
 			{// Standard walk anim..
 				NPC_SetAnim( NPCS.NPC, SETANIM_LEGS, BOTH_WALK2, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD );
 				NPC_SetAnim( NPCS.NPC, SETANIM_TORSO, TORSO_WEAPONREADY3, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD );
 			}
+
+			//trap->Print("Walking Forward.\n");
 		}
 	}
 	else if ( NPCS.NPC->client->ps.eFlags2 & EF2_USE_ALT_ANIM )
@@ -2090,6 +2098,8 @@ void NPC_SelectMoveAnimation()
 			{
 				NPC_SetAnim( NPCS.NPC, SETANIM_BOTH, BOTH_RUNBACK2, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD );
 			}
+
+			//trap->Print("Running Back.\n");
 		}
 		else
 		{
@@ -2101,14 +2111,13 @@ void NPC_SelectMoveAnimation()
 			{
 				NPC_SetAnim( NPCS.NPC, SETANIM_BOTH, BOTH_RUN2, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD );
 			}
+
+			//trap->Print("Running Forward.\n");
 		}
 	}
 
-	//NPCS.NPC->client->ps.torsoTimer = 200;
-	//NPCS.NPC->client->ps.legsTimer = 200;
-
-	NPCS.NPC->client->ps.torsoTimer = 20;
-	NPCS.NPC->client->ps.legsTimer = 20;
+	NPCS.NPC->client->ps.torsoTimer = 200;
+	NPCS.NPC->client->ps.legsTimer = 200;
 }
 
 void NPC_PickRandomIdleAnimantionCivilian()
@@ -2490,7 +2499,7 @@ void NPC_AdjustforStrafe(vec3_t moveDir)
 		return;
 
 	vectoangles(moveDir, angles);
-	AngleVectors(angles /*NPC->client->ps.viewangles*/, NULL, right, NULL);
+	AngleVectors(angles, NULL, right, NULL);
 
 	//flaten up/down
 	right[2] = 0;
@@ -2513,10 +2522,17 @@ void NPC_AdjustforStrafe(vec3_t moveDir)
 // Routine      : UQ1_UcmdMoveForDir
 
 // Description  : Set a valid ucmd move for the current move direction... A working one, unlike raven's joke...
-void UQ1_UcmdMoveForDir ( gentity_t *self, usercmd_t *cmd, vec3_t dir )
+void UQ1_UcmdMoveForDir ( gentity_t *self, usercmd_t *cmd, vec3_t dir, qboolean walk )
 {
 	vec3_t	forward, right, up;
-	float	speed = 127.0f;
+
+	//float	speed = 127.0f;
+	float	speed = 100.0f;
+	//if (walk) speed = 64.0f;
+	if (walk) speed = 80.0f;
+
+	//if (NPCS.ucmd.buttons & BUTTON_WALKING) // BUTTON_WALKING does everything except what is meant to do.....
+	//	speed = 48.0f;
 
 	NPC_AdjustforStrafe(dir);
 	
@@ -2686,15 +2702,20 @@ qboolean NPC_PatrolArea( void )
 
 	//NPCS.ucmd.buttons |= BUTTON_WALKING;
 
+	NPCS.NPC->NPC->stats.walkSpeed = 64.0f;
+	NPCS.NPC->NPC->stats.runSpeed = 127.0f;
+	NPCS.NPC->client->ps.basespeed = 200.0f;
+	NPCS.NPC->NPC->desiredSpeed = NPCS.NPC->NPC->stats.walkSpeed;
+
 	NPC_FacePosition( gWPArray[NPC->wpCurrent]->origin, qfalse );
 	VectorSubtract( gWPArray[NPC->wpCurrent]->origin, NPC->r.currentOrigin, NPC->movedir );
-	UQ1_UcmdMoveForDir( NPC, &NPCS.ucmd, NPC->movedir );
+	UQ1_UcmdMoveForDir( NPC, &NPCS.ucmd, NPC->movedir, qtrue );
 	VectorCopy( NPC->movedir, NPC->client->ps.moveDir );
 
 	if (NPC->bot_strafe_right_timer > level.time)
-		NPCS.ucmd.rightmove = 127.0;
+		NPCS.ucmd.rightmove = 64.0;
 	else if (NPC->bot_strafe_left_timer > level.time)
-		NPCS.ucmd.rightmove = 127.0;
+		NPCS.ucmd.rightmove = 64.0;
 	
 	//DOM_FakeNPC_Parse_UCMD(NULL, NPC);
 	//NPC_MoveDirClear( NPCS.ucmd.forwardmove, NPCS.ucmd.rightmove, qfalse );
@@ -2882,10 +2903,12 @@ void NPC_Think ( gentity_t *self)//, int msec )
 			//FIXME: firing angles (no aim offset) or regular angles?
 			NPC_UpdateAngles(qtrue, qtrue);
 			memcpy( &NPCS.ucmd, &NPCS.NPCInfo->last_ucmd, sizeof( usercmd_t ) );
+
 			if (!self->enemy)
 			{
-				ClientThink(NPCS.NPC->s.number, &NPCS.ucmd);
+				NPC_PatrolArea();
 			}
+
 			ClientThink(NPCS.NPC->s.number, &NPCS.ucmd);
 		}
 		else
@@ -2899,8 +2922,6 @@ void NPC_Think ( gentity_t *self)//, int msec )
 		}
 		//VectorCopy(self->s.origin, self->s.origin2 );
 	}
-	//if (self->s.NPC_class != CLASS_VEHICLE || !self->m_pVehicle)
-	//	NPC_SelectMoveAnimation();
 
 	//must update icarus *every* frame because of certain animation completions in the pmove stuff that can leave a 50ms gap between ICARUS animation commands
 	trap->ICARUS_MaintainTaskManager(self->s.number);

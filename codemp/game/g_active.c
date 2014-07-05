@@ -1513,7 +1513,7 @@ static int NPC_GetWalkSpeed( gentity_t *ent )
 	{
 	case NPCTEAM_PLAYER:	//To shutup compiler, will add entries later (this is stub code)
 	default:
-		walkSpeed = ent->NPC->stats.walkSpeed;
+		walkSpeed = ent->NPC->stats.walkSpeed*1.1;
 		break;
 	}
 

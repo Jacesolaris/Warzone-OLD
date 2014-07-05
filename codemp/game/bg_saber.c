@@ -3455,7 +3455,7 @@ void PM_WeaponLightsaber(void)
 			case BLOCKED_LIGHTNING:
 				if (pm->cmd.buttons & BUTTON_BLOCK)
 				{
-					PM_GetSaberStance;
+					PM_GetSaberStance();
 				}
 				else
 					PM_SetSaberMove(LS_PARRY_UP);

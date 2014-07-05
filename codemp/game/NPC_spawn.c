@@ -2099,7 +2099,7 @@ void SP_NPC_spawner( gentity_t *self)
 	if (level.gametype == GT_INSTANCE)
 	{
 		// Spawn multiple...
-		vec3_t origin, testorg;
+		vec3_t origin;
 		vec3_t	playerMins = {-15, -15, DEFAULT_MINS_2};
 		vec3_t	playerMaxs = {15, 15, DEFAULT_MAXS_2};
 
