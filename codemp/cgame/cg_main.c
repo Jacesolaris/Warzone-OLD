@@ -1310,15 +1310,15 @@ static void CG_RegisterGraphics( void ) {
 	cgs.effects.mBlasterDeflect = trap->FX_RegisterEffect("effects/blaster/deflect.efx");
 	cgs.effects.mBlasterSmoke = trap->FX_RegisterEffect("effects/blaster/smoke_bolton");
 	cgs.effects.mForceConfustionOld = trap->FX_RegisterEffect("effects/force/confusion_old.efx");
-
 	cgs.effects.forceLightning		= trap->FX_RegisterEffect("effects/force/lightning.efx");
 	cgs.effects.forceLightningWide	= trap->FX_RegisterEffect("effects/force/lightningwide.efx");
+	//[NewLightningEFX]
 	cgs.effects.forcelightningAbsorb	= trap->FX_RegisterEffect("effects/force/lightning_absorb.efx");
 	cgs.effects.lightningarc		= trap->FX_RegisterEffect("effects/force/lightning_arc.efx");
-
 	cgs.effects.saber_lightninghit = trap->FX_RegisterEffect("effects/saber/saber_lightninghit.efx");
 	cgs.effects.forcelightningFlare	=trap->FX_RegisterEffect("effects/force/lightning_flare.efx");
 	cgs.effects.forcelightningImpact	=trap->FX_RegisterEffect("effects/force/lightning_impact.efx");
+	//[/NewLightningEFX]
 	cgs.effects.forceDrain		= trap->FX_RegisterEffect("effects/mp/drain.efx" );
 	cgs.effects.forceDrainWide	= trap->FX_RegisterEffect("effects/mp/drainwide.efx" );
 	cgs.effects.forceDrained	= trap->FX_RegisterEffect("effects/mp/drainhit.efx");

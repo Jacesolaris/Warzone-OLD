@@ -5714,8 +5714,6 @@ void CG_NewLightningActEffect(vec3_t muzzle, vec3_t muzzleDir, float length)
 	AngleVectors(ang, forward, NULL, NULL);
 
 	VectorMA(muzzle, length*flrand(0, 1), muzzleDir, end2);
-	/*trap->FX_PlayEffectID(cgs.effects.forcelightningAbsorb, end2, forward, -1, -1, qfalse);
-	trap->FX_PlayEffectID(cgs.effects.forcelightningFlare, end2, forward, -1, -1, qfalse);*/
 	trap->FX_PlayEffectID(cgs.effects.lightningarc, end2, forward, -1, -1, qfalse);
 }//[/NewLightningEFX]
 
@@ -15087,6 +15085,10 @@ SkipTrueView:
 		{//line
 			//trap_FX_PlayEffectID( cgs.effects.forceLightning, efOrg, fxDir );
 			//trap_FX_PlayEntityEffectID(cgs.effects.forceLightning, efOrg, axis, cent->boltInfo, cent->currentState.number, -1, -1);
+			//[NewLightningEFX]
+			CG_NewLightningActEffect(efOrgL, fxDir, 0);
+			CG_NewLightningActEffect(efOrgL, fxDir, 0);
+			//[/NewLightningEFX]
 			trap->FX_PlayEntityEffectID(cgs.effects.forceLightning, efOrgL, axis, -1, -1, -1, -1);
 
 		}

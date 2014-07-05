@@ -3457,6 +3457,9 @@ void PM_WeaponLightsaber(void)
 				{
 					PM_GetSaberStance;
 				}
+				else
+					PM_SetSaberMove(LS_PARRY_UP);
+
 #if defined(_CGAME)
 				//here where it will be call from the blocked_lightning animation in - UQ1: Changed this to set a timer in centity_t
 				cg_entities[pm->baseEnt->s.number].blockLightningTime = cg.time + 1000; // 1 sec (minimum)? - after lightning ends, it will continue this long...
