@@ -33,7 +33,7 @@ extern void NPC_ExecuteBState(gentity_t *self);
 extern void SetNPCGlobals(gentity_t *ent);
 extern void NPC_Precache ( gentity_t *spawner );
 
-#define __FAKE_NPC_LIGHTNING_SPAM__
+//#define __FAKE_NPC_LIGHTNING_SPAM__
 
 void DOM_InitFakeNPC(gentity_t *bot)
 {

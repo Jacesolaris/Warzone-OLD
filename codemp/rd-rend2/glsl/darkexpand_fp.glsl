@@ -61,5 +61,12 @@ void main()
     }
 #endif //BLUR_METHOD
 
+	// UQ1: Over-all dark/light enhancement maybe???
+////#define const_1 ( 16.0 / 255.0)
+////#define const_2 (255.0 / 219.0)
+//#define const_1 ( 4.0 / 255.0)
+//#define const_2 (255.0 / 242.0)
+//	gl_FragColor = ((gl_FragColor - const_1) * const_2);
+
 	gl_FragColor.a = 1.0;
 }

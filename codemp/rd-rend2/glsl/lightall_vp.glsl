@@ -12,16 +12,16 @@ attribute vec4 attr_Color;
 
 attribute vec3 attr_Position;
 attribute vec3 attr_Normal;
-#if defined(USE_VERT_TANGENT_SPACE)
-attribute vec4 attr_Tangent;
-#endif
+//#if defined(USE_VERT_TANGENT_SPACE)
+//attribute vec4 attr_Tangent;
+//#endif
 
 #if defined(USE_VERTEX_ANIMATION)
 attribute vec3 attr_Position2;
 attribute vec3 attr_Normal2;
-  #if defined(USE_VERT_TANGENT_SPACE)
-attribute vec4 attr_Tangent2;
-  #endif
+//  #if defined(USE_VERT_TANGENT_SPACE)
+//attribute vec4 attr_Tangent2;
+//  #endif
 #elif defined(USE_SKELETAL_ANIMATION)
 attribute vec4 attr_BoneIndexes;
 attribute vec4 attr_BoneWeights;
@@ -84,21 +84,20 @@ varying vec4   var_TexCoords;
 varying vec4   var_Color;
 
 varying vec3 var_N;
-#if defined(USE_LIGHT) && !defined(USE_FAST_LIGHT)
-  #if defined(USE_VERT_TANGENT_SPACE)
-varying vec4   var_Normal;
-varying vec4   var_Tangent;
-varying vec4   var_Bitangent;
-  #else
-varying vec3   var_Normal;
-varying vec3   var_ViewDir;
-  #endif
-#endif
 
-#if !defined(USE_LIGHT)
+varying vec3   var_ViewDir;
+
+#if defined(USE_LIGHT) && !defined(USE_FAST_LIGHT)
+//  #if defined(USE_VERT_TANGENT_SPACE)
+//varying vec4   var_Normal;
+//varying vec4   var_Tangent;
+//varying vec4   var_Bitangent;
+//  #else
+varying vec3   var_Normal;
+//  #endif
+#else
 uniform vec3   u_ViewOrigin;
 varying vec3   var_Normal;
-varying vec3   var_ViewDir;
 #endif
 
 #if defined(USE_LIGHT) && !defined(USE_FAST_LIGHT)
@@ -174,18 +173,18 @@ void main()
 #if defined(USE_VERTEX_ANIMATION)
 	vec3 position  = mix(attr_Position,    attr_Position2,    u_VertexLerp);
 	vec3 normal    = mix(attr_Normal,      attr_Normal2,      u_VertexLerp);
-  #if defined(USE_VERT_TANGENT_SPACE) && defined(USE_LIGHT) && !defined(USE_FAST_LIGHT)
-	vec3 tangent   = mix(attr_Tangent.xyz, attr_Tangent2.xyz, u_VertexLerp);
-  #endif
+//  #if defined(USE_VERT_TANGENT_SPACE) && defined(USE_LIGHT) && !defined(USE_FAST_LIGHT)
+//	vec3 tangent   = mix(attr_Tangent.xyz, attr_Tangent2.xyz, u_VertexLerp);
+//  #endif
 #elif defined(USE_SKELETAL_ANIMATION)
 	vec4 position4 = vec4(0.0);
 	vec4 normal4 = vec4(0.0);
 	vec4 originalPosition = vec4(attr_Position, 1.0);
 	vec4 originalNormal = vec4(attr_Normal - vec3 (0.5), 0.0);
-#if defined(USE_VERT_TANGENT_SPACE) && defined(USE_LIGHT) && !defined(USE_FAST_LIGHT)
-	vec4 tangent4 = vec4(0.0);
-	vec4 originalTangent = vec4(attr_Tangent.xyz, 0.0);
-#endif
+//#if defined(USE_VERT_TANGENT_SPACE) && defined(USE_LIGHT) && !defined(USE_FAST_LIGHT)
+//	vec4 tangent4 = vec4(0.0);
+//	vec4 originalTangent = vec4(attr_Tangent.xyz, 0.0);
+//#endif
 
 	for (int i = 0; i < 4; i++)
 	{
@@ -193,28 +192,28 @@ void main()
 
 		position4 += (u_BoneMatrices[boneIndex] * originalPosition) * attr_BoneWeights[i];
 		normal4 += (u_BoneMatrices[boneIndex] * originalNormal) * attr_BoneWeights[i];
-#if defined(USE_VERT_TANGENT_SPACE) && defined(USE_LIGHT) && !defined(USE_FAST_LIGHT)
-		tangent4 += (u_BoneMatrices[boneIndex] * originalTangent) * attr_BoneWeights[i];
-#endif
+//#if defined(USE_VERT_TANGENT_SPACE) && defined(USE_LIGHT) && !defined(USE_FAST_LIGHT)
+//		tangent4 += (u_BoneMatrices[boneIndex] * originalTangent) * attr_BoneWeights[i];
+//#endif
 	}
 
 	vec3 position = position4.xyz;
 	vec3 normal = normalize (normal4.xyz);
-#if defined(USE_VERT_TANGENT_SPACE) && defined(USE_LIGHT) && !defined(USE_FAST_LIGHT)
-	vec3 tangent = tangent4.xyz;
-#endif
+//#if defined(USE_VERT_TANGENT_SPACE) && defined(USE_LIGHT) && !defined(USE_FAST_LIGHT)
+//	vec3 tangent = tangent4.xyz;
+//#endif
 #else
 	vec3 position  = attr_Position;
 	vec3 normal    = attr_Normal;
-  #if defined(USE_VERT_TANGENT_SPACE) && defined(USE_LIGHT) && !defined(USE_FAST_LIGHT)
-	vec3 tangent   = attr_Tangent.xyz;
-  #endif
+//  #if defined(USE_VERT_TANGENT_SPACE) && defined(USE_LIGHT) && !defined(USE_FAST_LIGHT)
+//	vec3 tangent   = attr_Tangent.xyz;
+//  #endif
 #endif
 
 	normal  = normal  * 2.0 - vec3(1.0);
-#if defined(USE_VERT_TANGENT_SPACE) && defined(USE_LIGHT) && !defined(USE_FAST_LIGHT)
-	tangent = tangent * 2.0 - vec3(1.0);
-#endif
+//#if defined(USE_VERT_TANGENT_SPACE) && defined(USE_LIGHT) && !defined(USE_FAST_LIGHT)
+//	tangent = tangent * 2.0 - vec3(1.0);
+//#endif
 
 #if defined(USE_TCGEN)
 	vec2 texCoords = GenTexCoords(u_TCGen0, position, normal, u_TCGen0Vector0, u_TCGen0Vector1);
@@ -233,14 +232,14 @@ void main()
 #if defined(USE_MODELMATRIX)
 	position  = (u_ModelMatrix * vec4(position, 1.0)).xyz;
 	normal    = (u_ModelMatrix * vec4(normal,   0.0)).xyz;
-  #if defined(USE_VERT_TANGENT_SPACE) && defined(USE_LIGHT) && !defined(USE_FAST_LIGHT)
-	tangent   = (u_ModelMatrix * vec4(tangent,  0.0)).xyz;
-  #endif
+//  #if defined(USE_VERT_TANGENT_SPACE) && defined(USE_LIGHT) && !defined(USE_FAST_LIGHT)
+//	tangent   = (u_ModelMatrix * vec4(tangent,  0.0)).xyz;
+//  #endif
 #endif
 
-#if defined(USE_VERT_TANGENT_SPACE) && defined(USE_LIGHT) && !defined(USE_FAST_LIGHT)
-	vec3 bitangent = cross(normal, tangent) * (attr_Tangent.w * 2.0 - 1.0);
-#endif
+//#if defined(USE_VERT_TANGENT_SPACE) && defined(USE_LIGHT) && !defined(USE_FAST_LIGHT)
+//	vec3 bitangent = cross(normal, tangent) * (attr_Tangent.w * 2.0 - 1.0);
+//#endif
 
 #if defined(USE_LIGHT_VECTOR)
 	vec3 L = u_LightOrigin.xyz - (position * u_LightOrigin.w);
@@ -283,15 +282,16 @@ void main()
 
 #if defined(USE_LIGHT) && !defined(USE_FAST_LIGHT)
 	vec3 viewDir = u_ViewOrigin - position;
-  #if defined(USE_VERT_TANGENT_SPACE)
-	// store view direction in tangent space to save on varyings
-	var_Normal    = vec4(normal,    viewDir.x);
-	var_Tangent   = vec4(tangent,   viewDir.y);
-	var_Bitangent = vec4(bitangent, viewDir.z);
-  #else
+//  #if defined(USE_VERT_TANGENT_SPACE)
+//	// store view direction in tangent space to save on varyings
+//	var_Normal    = vec4(normal,    viewDir.x);
+//	var_Tangent   = vec4(tangent,   viewDir.y);
+//	var_Bitangent = vec4(bitangent, viewDir.z);
+//	var_ViewDir = viewDir;
+//  #else
 	var_Normal = normal;
 	var_ViewDir = viewDir;
-  #endif
+//  #endif
 #endif
 
 #if !defined(USE_LIGHT)
