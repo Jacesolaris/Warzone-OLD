@@ -193,6 +193,12 @@ void UI_LoadArenas( void ) {
 			if( strstr( type, "cty" ) ) {
 				uiInfo.mapList[uiInfo.mapCount].typeBits |= (1 << GT_CTY);
 			}
+			if( strstr( type, "coop" ) ) {
+				uiInfo.mapList[uiInfo.mapCount].typeBits |= (1 << GT_SINGLE_PLAYER);
+			}
+			if( strstr( type, "instance" ) ) {
+				uiInfo.mapList[uiInfo.mapCount].typeBits |= (1 << GT_INSTANCE);
+			}
 		} else {
 			uiInfo.mapList[uiInfo.mapCount].typeBits |= (1 << GT_FFA);
 			uiInfo.mapList[uiInfo.mapCount].typeBits |= (1 << GT_JEDIMASTER);

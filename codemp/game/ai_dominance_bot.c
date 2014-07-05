@@ -158,43 +158,46 @@ qboolean DOM_FakeNPC_Parse_UCMD (bot_state_t *bs, gentity_t *bot)
 	NPCS.NPCInfo = bot->NPC;
 	NPCS.ucmd = NPCS.NPC->client->pers.cmd;
 
-	// Set angles... Convert to ideal view angles then run the bot code...
-	VectorSet(bs->ideal_viewangles, SHORT2ANGLE(NPCS.ucmd.angles[PITCH] + NPCS.client->ps.delta_angles[PITCH]), SHORT2ANGLE(NPCS.ucmd.angles[YAW] + NPCS.client->ps.delta_angles[YAW]), SHORT2ANGLE(NPCS.ucmd.angles[ROLL] + NPCS.client->ps.delta_angles[ROLL]));
-	trap->EA_View(bs->client, bs->ideal_viewangles);
+	if (bs)
+	{
+		// Set angles... Convert to ideal view angles then run the bot code...
+		VectorSet(bs->ideal_viewangles, SHORT2ANGLE(NPCS.ucmd.angles[PITCH] + NPCS.client->ps.delta_angles[PITCH]), SHORT2ANGLE(NPCS.ucmd.angles[YAW] + NPCS.client->ps.delta_angles[YAW]), SHORT2ANGLE(NPCS.ucmd.angles[ROLL] + NPCS.client->ps.delta_angles[ROLL]));
+		trap->EA_View(bs->client, bs->ideal_viewangles);
+	}
 
 	if (NPCS.ucmd.upmove > 0)
 	{
-		trap->EA_Jump(bs->client);
+		trap->EA_Jump(bot->s.number);
 		acted = qtrue;
 	}
 
 	if (NPCS.ucmd.upmove < 0)
 	{
-		trap->EA_Crouch(bs->client);
+		trap->EA_Crouch(bot->s.number);
 		acted = qtrue;
 	}
 	
 	if (NPCS.ucmd.rightmove > 0)
 	{
-		trap->EA_MoveRight(bs->client);
+		trap->EA_MoveRight(bot->s.number);
 		acted = qtrue;
 	}
 
 	if (NPCS.ucmd.rightmove < 0)
 	{
-		trap->EA_MoveLeft(bs->client);
+		trap->EA_MoveLeft(bot->s.number);
 		acted = qtrue;
 	}
 
 	if (NPCS.ucmd.forwardmove > 0)
 	{
-		trap->EA_MoveForward(bs->client);
+		trap->EA_MoveForward(bot->s.number);
 		acted = qtrue;
 	}
 
 	if (NPCS.ucmd.forwardmove < 0)
 	{
-		trap->EA_MoveBack(bs->client);
+		trap->EA_MoveBack(bot->s.number);
 		acted = qtrue;
 	}
 
@@ -210,25 +213,25 @@ qboolean DOM_FakeNPC_Parse_UCMD (bot_state_t *bs, gentity_t *bot)
 		}
 		*/
 
-		trap->EA_Attack(bs->client);
+		trap->EA_Attack(bot->s.number);
 		acted = qtrue;
 	}
 
 	if (NPCS.ucmd.buttons & BUTTON_ALT_ATTACK)
 	{
-		trap->EA_Alt_Attack(bs->client);
+		trap->EA_Alt_Attack(bot->s.number);
 		acted = qtrue;
 	}
 
 	if (NPCS.ucmd.buttons & BUTTON_USE)
 	{
-		trap->EA_Use(bs->client);
+		trap->EA_Use(bot->s.number);
 		acted = qtrue;
 	}
 
 	if (NPCS.ucmd.buttons & BUTTON_WALKING)
 	{
-		trap->EA_Action(bs->client, ACTION_WALK);
+		trap->EA_Action(bot->s.number, ACTION_WALK);
 		acted = qtrue;
 	}
 

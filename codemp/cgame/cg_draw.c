@@ -7276,6 +7276,7 @@ static void CG_DrawWarmup( void ) {
 		else if ( cgs.gametype == GT_CTF )				s = CG_GetStringEdString("MENUS", "CAPTURE_THE_FLAG");//"Capture the Flag";
 		else if ( cgs.gametype == GT_CTY )				s = CG_GetStringEdString("MENUS", "CAPTURE_THE_YSALIMARI");//"Capture the Ysalamiri";
 		else if ( cgs.gametype == GT_SINGLE_PLAYER )	s = "Cooperative";
+		else if ( cgs.gametype == GT_INSTANCE )			s = "Group Instance";
 		else											s = "";
 		w = CG_Text_Width(s, 1.5f, FONT_MEDIUM);
 		CG_Text_Paint(320 - w / 2, 90, 1.5f, colorWhite, s, 0, 0, ITEM_TEXTSTYLE_SHADOWEDMORE,FONT_MEDIUM);

@@ -876,6 +876,9 @@ void NPC_Begin (gentity_t *ent)
 
 	memset( &ucmd, 0, sizeof( ucmd ) );
 
+	//if (ent->spawnflags & SFB_NOTSOLID) ent->spawnflags &= ~SFB_NOTSOLID;
+	ent->spawnflags = 0;
+
 	if ( !(ent->spawnflags & SFB_NOTSOLID) && !(ent->s.eFlags & EF_FAKE_NPC_BOT) )
 	{//No NPCs should telefrag
 		if (NPC_SpotWouldTelefrag(ent))
@@ -1771,7 +1774,7 @@ gentity_t *NPC_Spawn_Do( gentity_t *ent )
 		}
 		ent->targetname = NULL;
 		//why not remove me...?  Because of all the string pointers?  Just do G_NewStrings?
-		G_FreeEntity( ent );//bye!
+		//G_FreeEntity( ent );//bye!
 	}
 
 finish:
@@ -1990,11 +1993,10 @@ void NPC_PrecacheType( char *NPC_type )
 	}
 }
 
-void SP_NPC_spawner( gentity_t *self)
+void SP_NPC_spawner2( gentity_t *self)
 {
 	int t;
-
-	if (!g_allowNPC.integer)
+	if (!g_allowNPC.integer && level.gametype != GT_SINGLE_PLAYER && level.gametype != GT_INSTANCE)
 	{
 		self->think = G_FreeEntity;
 		self->nextthink = level.time;
@@ -2061,15 +2063,16 @@ void SP_NPC_spawner( gentity_t *self)
 	//rww - can't cheat and do this on the client like in SP, so I'm doing this.
 	NPC_Precache(self);
 
-	if ( self->targetname )
+	/*if ( self->targetname )
 	{//Wait for triggering
 		self->use = NPC_Spawn;
 	//	self->r.svFlags |= SVF_NPC_PRECACHE;//FIXME: precache my weapons somehow?
 
 		//NPC_PrecacheModels( self->NPC_type );
 	}
-	else
+	else*/
 	{
+		/*
 		//NOTE: auto-spawners never check for shy spawning
 		//if ( spawning )
 		if (1) //just gonna always do this I suppose.
@@ -2078,13 +2081,88 @@ void SP_NPC_spawner( gentity_t *self)
 			self->nextthink = level.time + START_TIME_REMOVE_ENTS + 50;
 		}
 		else
+		*/
 		{//else spawn right now
 			NPC_Spawn( self, self, self );
+			//NPC_Spawn_Do( self );
 		}
 	}
 
 	//FIXME: store cameraGroup somewhere else and apply to spawned NPCs' cameraGroup
 	//Or just don't include NPC_spawners in cameraGroupings
+}
+
+extern int OrgVisibleBox(vec3_t org1, vec3_t mins, vec3_t maxs, vec3_t org2, int ignore);
+
+void SP_NPC_spawner( gentity_t *self)
+{
+	if (level.gametype == GT_INSTANCE)
+	{
+		// Spawn multiple...
+		vec3_t origin, testorg;
+		vec3_t	playerMins = {-15, -15, DEFAULT_MINS_2};
+		vec3_t	playerMaxs = {15, 15, DEFAULT_MAXS_2};
+
+		self->s.origin[2] += 32;
+		VectorCopy(self->s.origin, origin);
+
+		
+		self->s.origin[0] += 16;
+		self->s.origin[1] += 16;
+		if (OrgVisibleBox(origin, playerMins, playerMaxs, self->s.origin, -1))
+		{
+			SP_NPC_spawner2( self );
+			VectorCopy(origin, self->s.origin);
+		}
+
+		self->s.origin[0] -= 16;
+		self->s.origin[1] -= 16;
+		if (OrgVisibleBox(origin, playerMins, playerMaxs, self->s.origin, -1))
+		{
+			SP_NPC_spawner2( self );
+			VectorCopy(origin, self->s.origin);
+		}
+
+		self->s.origin[0] += 16;
+		self->s.origin[1] -= 16;
+		if (OrgVisibleBox(origin, playerMins, playerMaxs, self->s.origin, -1))
+		{
+			SP_NPC_spawner2( self );
+			VectorCopy(origin, self->s.origin);
+		}
+
+		self->s.origin[0] -= 16;
+		self->s.origin[1] += 16;
+		if (OrgVisibleBox(origin, playerMins, playerMaxs, self->s.origin, -1))
+		{
+			SP_NPC_spawner2( self );
+			VectorCopy(origin, self->s.origin);
+		}
+
+		/*
+		self->s.origin[0] += 16;
+		if (OrgVisibleBox(origin, playerMins, playerMaxs, self->s.origin, -1))
+		{
+			SP_NPC_spawner2( self );
+			VectorCopy(origin, self->s.origin);
+		}
+
+		self->s.origin[0] -= 16;
+		if (OrgVisibleBox(origin, playerMins, playerMaxs, self->s.origin, -1))
+		{
+			SP_NPC_spawner2( self );
+			VectorCopy(origin, self->s.origin);
+		}
+		*/
+
+		//SP_NPC_spawner2( self );
+	}
+	else
+	{
+		SP_NPC_spawner2( self );
+	}
+
+	G_FreeEntity( self );//bye!
 }
 
 extern void G_VehicleSpawn( gentity_t *self );
@@ -3445,6 +3523,74 @@ void SP_NPC_ShadowTrooper( gentity_t *self)
 
 	SP_NPC_spawner( self );
 }
+
+/*QUAKED NPC_Saboteur(1 0 0) (-16 -16 -24) (16 16 40) SNIPER PISTOL x x CLOAKED CINEMATIC NOTSOLID STARTINSOLID SHY
+Has a blaster rifle, can cloak and roll
+
+SNIPER - Has a sniper rifle, no acrobatics, but can dodge
+PISTOL - Just has a pistol, can roll
+COMMANDO - Has 2 pistols and can roll & dodge
+
+CLOAKED - Starts cloaked
+CINEMATIC - Will spawn with no default AI (BS_CINEMATIC)
+NOTSOLID - Starts not solid
+STARTINSOLID - Don't try to fix if spawn in solid
+SHY - Spawner is shy
+*/
+void SP_NPC_Saboteur( gentity_t *self)
+{
+	/*
+	if ( !self->NPC_type )
+	{
+		if ( (self->spawnflags&1) )
+		{
+			self->NPC_type = "saboteursniper";
+		}
+		else if ( (self->spawnflags&2) )
+		{
+			self->NPC_type = "saboteurpistol";
+		}
+		else if ( (self->spawnflags&4) )
+		{
+			self->NPC_type = "saboteurcommando";
+		}
+		else
+		{
+			self->NPC_type = "saboteur";
+		}
+	}*/
+
+	if ( self->spawnflags & 8 )
+	{//rocketer
+		self->NPC_type = "rockettrooper";
+	}
+	else if ( self->spawnflags & 4 )
+	{//alt-officer
+		self->NPC_type = "stofficeralt";
+	}
+	else if ( self->spawnflags & 2 )
+	{//commander
+		self->NPC_type = "stcommander";
+	}
+	else if ( self->spawnflags & 1 )
+	{//officer
+		self->NPC_type = "stofficer";
+	}
+	else
+	{//regular trooper
+		if ( Q_irand( 0, 1 ) )
+		{
+			self->NPC_type = "StormTrooper";
+		}
+		else
+		{
+			self->NPC_type = "StormTrooper2";
+		}
+	}
+
+	SP_NPC_spawner( self );
+}
+
 //=============================================================================================
 //MONSTERS
 //=============================================================================================

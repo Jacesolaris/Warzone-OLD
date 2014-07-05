@@ -1389,8 +1389,8 @@ typedef enum {
 
 #ifdef __MMO__
 #define	GENTITYNUM_BITS	11		// don't need to send any more
-//#define	MAX_GENTITIES	(1<<GENTITYNUM_BITS)
-#define		MAX_GENTITIES	(1024+((MAX_CLIENTS*2)-1))
+#define	MAX_GENTITIES	(1<<GENTITYNUM_BITS)
+//#define		MAX_GENTITIES	(1024+((MAX_CLIENTS*2)-1))
 #else //!__MMO__
 #define	GENTITYNUM_BITS	10		// don't need to send any more
 #define	MAX_GENTITIES	(1<<GENTITYNUM_BITS)

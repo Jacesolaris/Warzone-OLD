@@ -1130,7 +1130,7 @@ void CalculateRanks( void ) {
 				level.clients[ level.sortedClients[i] ].ps.persistant[PERS_RANK] = rank | RANK_TIED_FLAG;
 			}
 			score = newScore;
-			if ( level.gametype == GT_SINGLE_PLAYER && level.numPlayingClients == 1 ) {
+			if ( (level.gametype == GT_SINGLE_PLAYER || level.gametype == GT_INSTANCE) && level.numPlayingClients == 1 ) {
 				level.clients[ level.sortedClients[i] ].ps.persistant[PERS_RANK] = rank | RANK_TIED_FLAG;
 			}
 		}

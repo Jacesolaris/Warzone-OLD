@@ -143,6 +143,12 @@ int G_GetMapTypeBits(char *type)
 		if( strstr( type, "cty" ) ) {
 			typeBits |= (1 << GT_CTY);
 		}
+		if( strstr( type, "coop" ) ) {
+			typeBits |= (1 << GT_SINGLE_PLAYER);
+		}
+		if( strstr( type, "instance" ) ) {
+			typeBits |= (1 << GT_INSTANCE);
+		}
 	} else {
 		typeBits |= (1 << GT_FFA);
 		typeBits |= (1 << GT_JEDIMASTER);
@@ -746,7 +752,7 @@ void G_CheckBotSpawn( void ) {
 		botSpawnQueue[n].spawnTime = 0;
 
 		/*
-		if( level.gametype == GT_SINGLE_PLAYER ) {
+		if( level.gametype == GT_SINGLE_PLAYER || level.gametype == GT_INSTANCE ) {
 			trap->GetUserinfo( botSpawnQueue[n].clientNum, userinfo, sizeof(userinfo) );
 			PlayerIntroSound( Info_ValueForKey (userinfo, "model") );
 		}

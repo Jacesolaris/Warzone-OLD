@@ -2542,7 +2542,7 @@ char *ClientConnect( int clientNum, qboolean firstTime, qboolean isBot ) {
 		client->sess.sessionTeam = TEAM_SPECTATOR;
 	}
 
-	if( isBot ) {
+	if( isBot && ent->s.eType != ET_NPC) {
 		ent->r.svFlags |= SVF_BOT;
 		ent->inuse = qtrue;
 		if( !G_BotConnect( clientNum, !firstTime ) ) {

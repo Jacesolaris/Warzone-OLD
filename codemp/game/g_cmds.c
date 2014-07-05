@@ -2355,7 +2355,7 @@ void Cmd_LevelShot_f( gentity_t *ent )
 	}
 
 	// doesn't work in single player
-	if ( level.gametype == GT_SINGLE_PLAYER )
+	if ( level.gametype == GT_SINGLE_PLAYER || level.gametype == GT_INSTANCE )
 	{
 		trap->SendServerCommand(ent-g_entities, "print \"Must not be in singleplayer mode for levelshot\n\"" );
 		return;
@@ -3850,10 +3850,10 @@ qboolean G_VoteGametype( gentity_t *ent, int numArgs, const char *arg1, const ch
 	}
 
 	// logically invalid gametypes, or gametypes not fully implemented in MP
-	if ( gt == GT_SINGLE_PLAYER ) {
+	/*if ( gt == GT_SINGLE_PLAYER ) {
 		trap->SendServerCommand( ent-g_entities, va( "print \"This gametype is not supported (%s).\n\"", arg2 ) );
 		return qfalse;
-	}
+	}*/
 
 	level.votingGametype = qtrue;
 	level.votingGametypeTo = gt;

@@ -394,6 +394,7 @@ void SP_NPC_Droid_Mouse( gentity_t *self );
 void SP_NPC_Droid_R2D2( gentity_t *self );
 void SP_NPC_Droid_R5D2( gentity_t *self );
 void SP_NPC_Droid_Protocol( gentity_t *self );
+void SP_NPC_Saboteur( gentity_t *self );
 
 void SP_NPC_Reborn_New( gentity_t *self);
 void SP_NPC_Cultist( gentity_t *self );
@@ -592,7 +593,8 @@ spawn_t	spawns[] = {
 	{ "npc_jan",							SP_NPC_Jan },
 	{ "npc_jawa",							SP_NPC_Jawa },
 	{ "npc_jedi",							SP_NPC_Jedi },
-	{ "npc_kyle",							SP_NPC_Kyle },
+	//{ "npc_kyle",							SP_NPC_Kyle },
+	{ "npc_kyle",							SP_NPC_Reborn },
 	{ "npc_lando",							SP_NPC_Lando },
 	{ "npc_luke",							SP_NPC_Luke },
 	{ "npc_manuel_vergara_rmg",				SP_NPC_Desann },
@@ -616,6 +618,7 @@ spawn_t	spawns[] = {
 	{ "npc_reborn_new",						SP_NPC_Reborn_New },
 	{ "npc_reelo",							SP_NPC_Reelo },
 	{ "npc_rodian",							SP_NPC_Rodian },
+	{ "npc_saboteur",						SP_NPC_Saboteur },
 	{ "npc_shadowtrooper",					SP_NPC_ShadowTrooper },
 	{ "npc_snowtrooper",					SP_NPC_Snowtrooper },
 	{ "npc_spawner",						SP_NPC_spawner },
@@ -734,7 +737,7 @@ qboolean G_CallSpawn( gentity_t *ent ) {
 	}
 
 	// check normal spawn functions
-	s = (spawn_t *)bsearch( ent->classname, spawns, ARRAY_LEN( spawns ), sizeof( spawn_t ), spawncmp );
+	s = (spawn_t *)bsearch( Q_strlwr(ent->classname), spawns, ARRAY_LEN( spawns ), sizeof( spawn_t ), spawncmp );
 	if ( s )
 	{// found it
 		if ( VALIDSTRING( ent->healingsound ) )
@@ -908,7 +911,7 @@ void G_SpawnGEntityFromSpawnVars( qboolean inSubBSP ) {
 	int			i;
 	gentity_t	*ent;
 	char		*s, *value, *gametypeName;
-	static char *gametypeNames[] = {"ffa", "holocron", "jedimaster", "duel", "powerduel", "single", "team", "siege", "ctf", "cty"};
+	static char *gametypeNames[] = {"ffa", "holocron", "jedimaster", "duel", "powerduel", "single", "instance", "team", "siege", "ctf", "cty"};
 
 	// get the next free entity
 	ent = G_Spawn();

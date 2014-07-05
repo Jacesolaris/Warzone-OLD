@@ -78,7 +78,10 @@ enum {
 	GT_JEDIMASTER,		// jedi master
 	GT_DUEL,		// one on one tournament
 	GT_POWERDUEL,
+	GT_INSTANCE,	//
 	GT_SINGLE_PLAYER,	// single player tournament
+
+	GT_NUM_FREE_TEAM_GAMETYPES = GT_SINGLE_PLAYER,	//
 
 	//-- team games go after this --
 

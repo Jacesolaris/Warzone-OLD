@@ -1211,6 +1211,8 @@ Adds an event+parm and twiddles the event counter
 void G_AddEvent( gentity_t *ent, int event, int eventParm ) {
 	int		bits;
 
+	if (!ent) return; // NPC weapons at loading...
+
 	if ( !event ) {
 		trap->Print( "G_AddEvent: zero event added for entity %i\n", ent->s.number );
 		return;

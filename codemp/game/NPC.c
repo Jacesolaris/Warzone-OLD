@@ -1360,12 +1360,20 @@ void ST_SelectBestWeapon( void )
 {
 	if (NPCS.NPC->next_weapon_switch > level.time) return;
 
+	if (!(NPCS.NPC->client->ps.eFlags & EF_FAKE_NPC_BOT)) return;
+
+	if (!NPCS.NPC->enemy) return;
+
 	NPC_ChangeWeapon( WP_BLASTER );
 }
 
 void Commando_SelectBestWeapon( void )
 {
 	if (NPCS.NPC->next_weapon_switch > level.time) return;
+
+	if (!(NPCS.NPC->client->ps.eFlags & EF_FAKE_NPC_BOT)) return;
+
+	if (!NPCS.NPC->enemy) return;
 
 	if (NPCS.NPC->client->ps.weapon != WP_DISRUPTOR 
 		&& DistanceSquared( NPCS.NPC->r.currentOrigin, NPCS.NPC->enemy->r.currentOrigin )>(700*700) )
@@ -1387,6 +1395,10 @@ void Commando_SelectBestWeapon( void )
 void Commando2_SelectBestWeapon( void )
 {
 	if (NPCS.NPC->next_weapon_switch > level.time) return;
+
+	if (!NPCS.NPC->enemy) return;
+
+	if (!(NPCS.NPC->client->ps.eFlags & EF_FAKE_NPC_BOT)) return;
 
 	if (NPCS.NPC->client->ps.weapon != WP_DISRUPTOR 
 		&& DistanceSquared( NPCS.NPC->r.currentOrigin, NPCS.NPC->enemy->r.currentOrigin )>(700*700) )
@@ -1413,6 +1425,10 @@ void Sniper_SelectBestWeapon( void )
 {
 	if (NPCS.NPC->next_weapon_switch > level.time) return;
 
+	if (!(NPCS.NPC->client->ps.eFlags & EF_FAKE_NPC_BOT)) return;
+
+	if (!NPCS.NPC->enemy) return;
+
 	if (NPCS.NPC->client->ps.weapon != WP_DISRUPTOR 
 		&& DistanceSquared( NPCS.NPC->r.currentOrigin, NPCS.NPC->enemy->r.currentOrigin )>(700*700) )
 	{
@@ -1428,6 +1444,10 @@ void Sniper_SelectBestWeapon( void )
 void Rocketer_SelectBestWeapon( void )
 {
 	if (NPCS.NPC->next_weapon_switch > level.time) return;
+
+	if (!(NPCS.NPC->client->ps.eFlags & EF_FAKE_NPC_BOT)) return;
+
+	if (!NPCS.NPC->enemy) return;
 
 	if ( NPCS.NPC->client->ps.weapon != WP_ROCKET_LAUNCHER 
 		&& DistanceSquared( NPCS.NPC->r.currentOrigin, NPCS.NPC->enemy->r.currentOrigin )>(600*600) )
@@ -1961,6 +1981,742 @@ void G_DroidSounds( gentity_t *self )
 	}
 }
 
+void NPC_SelectMoveAnimation()
+{
+	if (NPCS.NPC->client->ps.crouchheight <= 0)
+		NPCS.NPC->client->ps.crouchheight = CROUCH_MAXS_2;
+
+	if (NPCS.NPC->client->ps.standheight <= 0)
+		NPCS.NPC->client->ps.standheight = DEFAULT_MAXS_2;
+
+	if ((NPCS.ucmd.buttons & BUTTON_ATTACK) || (NPCS.ucmd.buttons & BUTTON_ALT_ATTACK)) 
+		return;
+
+	/*
+	if (NPCS.NPC->client->ps.pm_flags & PMF_DUCKED && NPC->r.maxs[2] > NPC->client->ps.crouchheight)
+	{
+		VectorCopy(playerMins, NPCS.NPC->r.mins);
+		VectorCopy(playerMaxs, NPCS.NPC->r.maxs);
+
+		NPCS.NPC->r.maxs[2] = NPCS.NPC->client->ps.crouchheight;
+		trap_LinkEntity(NPCS.NPC);
+	}
+	else if (!(NPCS.NPC->client->ps.pm_flags & PMF_DUCKED) && NPCS.NPC->r.maxs[2] < NPCS.NPC->client->ps.standheight)
+	{
+		VectorCopy(playerMins, NPCS.NPC->r.mins);
+		VectorCopy(playerMaxs, NPCS.NPC->r.maxs);
+
+		NPCS.NPC->r.maxs[2] = NPCS.NPC->client->ps.standheight;
+		trap_LinkEntity(NPCS.NPC);
+	}
+	*/
+
+	if (VectorLength(NPCS.NPC->client->ps.velocity) < 4)
+	{// Standing still...
+		if (NPCS.NPC->client->ps.pm_flags & PMF_DUCKED)
+		{
+			NPC_SetAnim(NPCS.NPC, SETANIM_BOTH, BOTH_CROUCH1, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD);
+		}
+		else if ( NPCS.NPC->client->ps.eFlags2 & EF2_USE_ALT_ANIM )
+		{//holding someone
+			NPC_SetAnim( NPCS.NPC, SETANIM_BOTH, BOTH_STAND4, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD );
+		}
+		else if ( NPCS.NPC->client->ps.eFlags2 & EF2_ALERTED )
+		{//have an enemy or have had one since we spawned
+			NPC_SetAnim( NPCS.NPC, SETANIM_BOTH, BOTH_STAND2, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD );
+		}
+		else
+		{//just stand there
+			NPC_SetAnim( NPCS.NPC, SETANIM_BOTH, BOTH_STAND1, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD );
+		}
+	}
+	else if (VectorLength(NPCS.NPC->client->ps.velocity) <= 100/*64*/)
+	{// Use walking anims..
+		if (NPCS.ucmd.forwardmove < 0)
+		{
+			if (NPCS.NPC->client->ps.pm_flags & PMF_DUCKED)
+			{
+				NPC_SetAnim(NPCS.NPC, SETANIM_BOTH, BOTH_CROUCH1WALKBACK, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD);
+			}
+			else if (NPCS.NPC->client->ps.weapon == WP_SABER)
+			{// Walk with saber...
+				NPC_SetAnim( NPCS.NPC, SETANIM_BOTH, BOTH_WALKBACK1, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD );
+				//NPC_SetAnim( NPC, SETANIM_TORSO, TORSO_WEAPONREADY3, SETANIM_FLAG_NORMAL );
+			}
+			else
+			{// Standard walk anim..
+				NPC_SetAnim( NPCS.NPC, SETANIM_LEGS, BOTH_WALKBACK2, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD );
+				NPC_SetAnim( NPCS.NPC, SETANIM_TORSO, TORSO_WEAPONREADY3, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD );
+			}
+		}
+		else
+		{
+			if (NPCS.NPC->client->ps.pm_flags & PMF_DUCKED)
+			{
+				NPC_SetAnim(NPCS.NPC, SETANIM_BOTH, BOTH_CROUCH1WALK, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD);
+			}
+			else if (NPCS.NPC->client->ps.weapon == WP_SABER)
+			{// Walk with saber...
+				NPC_SetAnim( NPCS.NPC, SETANIM_BOTH, BOTH_WALK1, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD );
+				//NPC_SetAnim( NPC, SETANIM_TORSO, TORSO_WEAPONREADY3, SETANIM_FLAG_NORMAL );
+			}
+			else
+			{// Standard walk anim..
+				NPC_SetAnim( NPCS.NPC, SETANIM_LEGS, BOTH_WALK2, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD );
+				NPC_SetAnim( NPCS.NPC, SETANIM_TORSO, TORSO_WEAPONREADY3, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD );
+			}
+		}
+	}
+	else if ( NPCS.NPC->client->ps.eFlags2 & EF2_USE_ALT_ANIM )
+	{//full on run, on all fours
+		if (NPCS.NPC->client->ps.pm_flags & PMF_DUCKED)
+		{
+			NPC_SetAnim( NPCS.NPC, SETANIM_BOTH, BOTH_CROUCH1WALK, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD);
+		}
+		else 
+		{
+			NPC_SetAnim( NPCS.NPC, SETANIM_BOTH, BOTH_RUN1, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD );
+		}
+	}
+	else
+	{//regular, upright run
+		if (NPCS.ucmd.forwardmove < 0)
+		{
+			if (NPCS.NPC->client->ps.pm_flags & PMF_DUCKED)
+			{
+				NPC_SetAnim(NPCS.NPC, SETANIM_BOTH, BOTH_CROUCH1WALKBACK, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD);
+			}
+			else 
+			{
+				NPC_SetAnim( NPCS.NPC, SETANIM_BOTH, BOTH_RUNBACK2, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD );
+			}
+		}
+		else
+		{
+			if (NPCS.NPC->client->ps.pm_flags & PMF_DUCKED)
+			{
+				NPC_SetAnim( NPCS.NPC, SETANIM_BOTH, BOTH_CROUCH1WALK, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD);
+			}
+			else 
+			{
+				NPC_SetAnim( NPCS.NPC, SETANIM_BOTH, BOTH_RUN2, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD );
+			}
+		}
+	}
+
+	//NPCS.NPC->client->ps.torsoTimer = 200;
+	//NPCS.NPC->client->ps.legsTimer = 200;
+
+	NPCS.NPC->client->ps.torsoTimer = 20;
+	NPCS.NPC->client->ps.legsTimer = 20;
+}
+
+void NPC_PickRandomIdleAnimantionCivilian()
+{
+	int randAnim = irand(0,10);
+	gentity_t *NPC = NPCS.NPC;
+
+	switch (randAnim)
+	{
+	case 0:
+		NPC_SetAnim(NPC, SETANIM_BOTH, BOTH_STAND1, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD);
+		break;
+	case 1:
+		NPC_SetAnim(NPC, SETANIM_BOTH, BOTH_STAND4, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD);
+		break;
+	case 2:
+		NPC_SetAnim(NPC, SETANIM_BOTH, BOTH_STAND6, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD);
+		break;
+	case 3:
+		NPC_SetAnim(NPC, SETANIM_BOTH, BOTH_STAND8, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD);
+		break;
+	case 4:
+		NPC_SetAnim(NPC, SETANIM_BOTH, BOTH_STAND9, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD);
+		break;
+	case 5:
+	case 6:
+		NPC_SetAnim(NPC, SETANIM_BOTH, BOTH_STAND9IDLE1, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD);
+		break;
+	case 7:
+	case 8:
+		NPC_SetAnim(NPC, SETANIM_BOTH, BOTH_GUARD_IDLE1, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD);
+		break;
+	case 9:
+	default:
+		NPC_SetAnim(NPC, SETANIM_BOTH, BOTH_GUARD_LOOKAROUND1, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD);
+		break;
+	}
+}
+
+void NPC_PickRandomIdleAnimantion()
+{
+	int randAnim = irand(0,10);
+	gentity_t *NPC = NPCS.NPC;
+
+	if (NPC->enemy) return; // No idle anims when we got an enemy...
+
+	if (NPC->client->lookTime > level.time) return; // Wait before next anim...
+
+	NPC->client->lookTime = level.time + irand(5000, 15000);
+
+	/*if (NPC->client->NPC_class == CLASS_CIVILIAN)
+	{
+		NPC_PickRandomIdleAnimantionCivilian();
+		return;
+	}*/
+
+	switch (randAnim)
+	{
+	case 0:
+		NPC_SetAnim(NPC, SETANIM_BOTH, BOTH_STAND3, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD);
+	case 1:
+		NPC_SetAnim(NPC, SETANIM_BOTH, BOTH_STAND4, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD);
+	case 2:
+		NPC_SetAnim(NPC, SETANIM_BOTH, BOTH_STAND6, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD);
+	case 3:
+		NPC_SetAnim(NPC, SETANIM_BOTH, BOTH_STAND8, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD);
+	case 4:
+		NPC_SetAnim(NPC, SETANIM_BOTH, BOTH_STAND9, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD);
+	case 5:
+	case 6:
+		NPC_SetAnim(NPC, SETANIM_BOTH, BOTH_STAND9IDLE1, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD);
+		break;
+	case 7:
+	case 8:
+		NPC_SetAnim(NPC, SETANIM_BOTH, BOTH_GUARD_IDLE1, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD);
+		break;
+	case 9:
+	default:
+		NPC_SetAnim(NPC, SETANIM_BOTH, BOTH_GUARD_LOOKAROUND1, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD);
+		break;
+	}
+}
+
+int NPC_GetPatrolWP(gentity_t *NPC, vec3_t org)
+{
+	int		i, NUM_FOUND = 0, FOUND_LIST[MAX_WPARRAY_SIZE];
+	float	PATROL_RANGE = NPC->patrol_range;
+	float	flLen;
+
+	i = 0;
+
+	while (i < gWPNum)
+	{
+		if (gWPArray[i] && gWPArray[i]->inuse)
+		{
+			vec3_t org, org2;
+
+			flLen = Distance(NPC->r.currentOrigin, gWPArray[i]->origin);
+
+			/*if (gWPArray[i]->origin[2] > NPC->spawn_pos[2]+8
+				|| gWPArray[i]->origin[2] < NPC->spawn_pos[2]-8)
+			{
+				i++;
+				continue; // Lets just keep them on flat ground... Avoid jumping...
+			}*/
+
+			if (flLen < PATROL_RANGE && flLen > PATROL_RANGE * 0.25)
+			{
+				VectorCopy(NPC->r.currentOrigin, org);
+				org[2]+=8;
+
+				VectorCopy(gWPArray[i]->origin, org2);
+				org2[2]+=8;
+
+				//if (DOM_NPC_ClearPathToSpot( NPC, gWPArray[i]->origin, NPC->s.number ))
+				if (OrgVisible(org, org2, NPC->s.number))
+				{
+					FOUND_LIST[NUM_FOUND] = i;
+					NUM_FOUND++;
+				}
+			}
+		}
+
+		i++;
+	}
+
+	if (NUM_FOUND <= 0)
+		return -1;
+
+	// Return a random one...
+	return FOUND_LIST[Q_irand(0, NUM_FOUND)];
+}
+
+qboolean NPC_FindNewPatrolWaypoint()
+{
+	gentity_t *NPC = NPCS.NPC;
+
+	NPC->patrol_range = 512.0;
+
+	if (NPC->noWaypointTime > level.time)
+	{// Only try to find a new waypoint every 25 seconds...
+		NPC_PickRandomIdleAnimantion();
+		return qfalse;
+	}
+
+	NPC->noWaypointTime = level.time + 15000 + irand (0, 30000); // 15 to 45 seconds before we try again... (it will run avoidance in the meantime)
+
+	NPC->wpCurrent = NPC_GetPatrolWP(NPC, NPC->spawn_pos);
+
+	if (NPC->wpCurrent <= 0 || NPC->wpCurrent >= gWPNum)
+	{
+		NPC_PickRandomIdleAnimantion();
+		return qfalse;
+	}
+
+	NPC->wpNext = NPC->wpCurrent;
+	NPC->longTermGoal = NPC->wpCurrent;
+
+	NPC->wpTravelTime = level.time + (Distance(gWPArray[NPC->wpCurrent]->origin, NPC->r.currentOrigin) / 24.0f) * 1000.0f;
+
+	if (NPC->wpSeenTime < NPC->noWaypointTime)
+		NPC->wpSeenTime = NPC->noWaypointTime; // also make sure we don't try to make a new route for the same length of time...
+
+	//G_Printf("NPC Waypointing Debug: NPC %i [%s] (spawn pos %f %f %f) found a patrol waypoint for itself at %f %f %f (patrol range %f).", NPC->s.number, NPC->NPC_type, NPC->spawn_pos[0], NPC->spawn_pos[1], NPC->spawn_pos[2], gWPArray[NPC->wpCurrent]->origin[0], gWPArray[NPC->wpCurrent]->origin[1], gWPArray[NPC->wpCurrent]->origin[2], NPC->patrol_range);
+	return qtrue; // all good, we have a new waypoint...
+}
+
+typedef enum
+{// Avoidance methods...
+	AVOIDANCE_NONE,
+	AVOIDANCE_STRAFE_RIGHT,
+	AVOIDANCE_STRAFE_LEFT,
+	AVOIDANCE_STRAFE_CROUCH,
+	AVOIDANCE_STRAFE_JUMP,
+} avoidanceMethods_t;
+
+vec3_t jumpLandPosition;
+
+qboolean NPC_NeedJump()
+{
+	trace_t		tr;
+	vec3_t		org1, org2;
+	vec3_t		forward;
+	gentity_t	*NPC = NPCS.NPC;
+
+	VectorCopy(NPC->r.currentOrigin, org1);
+
+	AngleVectors( NPC->r.currentAngles, forward, NULL, NULL );
+
+	// Check jump...
+	org1[2] += 8;
+	forward[PITCH] = forward[ROLL] = 0;
+	VectorMA( org1, 64, forward, org2 );
+
+	if (NPC->waterlevel > 0)
+	{// Always jump out of water...
+		VectorCopy(org2, jumpLandPosition);
+		return qtrue;
+	}
+
+	trap->Trace( &tr, org1, NULL, NULL, org2, NPC->s.number, MASK_PLAYERSOLID, 0, 0, 0 );
+
+	if (tr.fraction < 1.0f)
+	{// Looks like we might need to jump... Check if it would work...
+		VectorCopy(NPC->r.currentOrigin, org1);
+		org1[2] += 32;
+		VectorMA( org1, 64, forward, org2 );
+		trap->Trace( &tr, org1, NULL, NULL, org2, NPC->s.number, MASK_PLAYERSOLID, 0, 0, 0 );
+
+		if (tr.fraction >= 0.7f)
+		{// Close enough...
+			//G_Printf("need jump");
+			VectorCopy(org2, jumpLandPosition);
+			return qtrue;
+		}
+	}
+
+	return qfalse;
+}
+
+int NPC_SelectBestAvoidanceMethod()
+{// Just find the largest visible distance direction...
+	trace_t		tr;
+	vec3_t		org1, org2;
+	vec3_t		forward, right;
+	int			i = 0;
+	qboolean	SKIP_RIGHT = qfalse;
+	qboolean	SKIP_LEFT = qfalse;
+	gentity_t	*NPC = NPCS.NPC;
+
+	if (NPC->bot_strafe_right_timer > level.time)
+		return AVOIDANCE_STRAFE_RIGHT;
+
+	if (NPC->bot_strafe_left_timer > level.time)
+		return AVOIDANCE_STRAFE_LEFT;
+
+	if (NPC->bot_strafe_crouch_timer > level.time)
+		return AVOIDANCE_STRAFE_CROUCH;
+
+	if (NPC->bot_strafe_jump_timer > level.time)
+		return AVOIDANCE_STRAFE_JUMP;
+
+	//if (NPC_FindTemporaryWaypoint())
+	//	return AVOIDANCE_NONE;
+
+	VectorSubtract( gWPArray[NPC->wpCurrent]->origin, NPC->r.currentOrigin, NPC->movedir );
+	AngleVectors( NPC->move_vector, NPC->movedir, NULL, NULL );
+
+	VectorCopy(NPC->r.currentOrigin, org1);
+	org1[2] += STEPSIZE;
+
+	VectorCopy(gWPArray[NPC->wpCurrent]->origin, org2);
+	org2[2] += STEPSIZE;
+
+	trap->Trace( &tr, org1, NPC->r.mins, NPC->r.maxs, org2, NPC->s.number, MASK_PLAYERSOLID, 0, 0, 0 );
+		
+	if (tr.fraction == 1.0f)
+	{// It is accessable normally...
+		return AVOIDANCE_NONE;
+	}
+
+	// OK, our waypoint is not accessable normally, we need to select a strafe direction...
+	for (i = STEPSIZE; i <= STEPSIZE*4; i += STEPSIZE)
+	{// First one to make it is the winner... The race is on!
+		if (!SKIP_RIGHT)
+		{// Check right side...
+			VectorCopy(NPC->r.currentOrigin, org1);
+			org1[2] += STEPSIZE;
+			AngleVectors( NPC->move_vector, forward, right, NULL );
+			VectorMA( org1, i, right, org1 );
+
+			if (!OrgVisible(NPC->r.currentOrigin, org1, NPC->s.number)) 
+				SKIP_RIGHT = qtrue;
+
+			if (!SKIP_RIGHT)
+			{
+				trap->Trace( &tr, org1, NPC->r.mins, NPC->r.maxs, org2, NPC->s.number, MASK_PLAYERSOLID, 0, 0, 0 );
+		
+				if (tr.fraction == 1.0f)
+				{
+					//if (JKG_CheckBelowPoint(org1))
+					//{
+						return AVOIDANCE_STRAFE_RIGHT;
+					//}
+				}
+			}
+		}
+
+		if (!SKIP_LEFT)
+		{// Check left side...
+			VectorCopy(NPC->r.currentOrigin, org1);
+			org1[2] += STEPSIZE;
+			AngleVectors( NPC->move_vector, forward, right, NULL );
+			VectorMA( org1, 0 - i, right, org1 );
+		
+			if (!OrgVisible(NPC->r.currentOrigin, org1, NPC->s.number)) 
+				SKIP_LEFT = qtrue;
+
+			if (!SKIP_LEFT)
+			{
+				trap->Trace( &tr, org1, NPC->r.mins, NPC->r.maxs, org2, NPC->s.number, MASK_PLAYERSOLID, 0, 0, 0 );
+		
+				if (tr.fraction == 1.0f)
+				{
+					//if (JKG_CheckBelowPoint(org1))
+					//{
+						return AVOIDANCE_STRAFE_LEFT;
+					//}
+				}
+			}
+		}
+	}
+
+	return AVOIDANCE_NONE;
+}
+
+qboolean NPC_NPCBlockingPath()
+{
+	int			i;
+	int			BEST_METHOD = AVOIDANCE_NONE;
+	gentity_t	*NPC = NPCS.NPC;
+
+	VectorSubtract( gWPArray[NPC->wpCurrent]->origin, NPC->r.currentOrigin, NPC->movedir );
+	AngleVectors( NPC->move_vector, NPC->movedir, NULL, NULL );
+
+	for (i = 0; i < MAX_GENTITIES; i++)
+	{
+		gentity_t *ent = &g_entities[i];
+
+		if (!ent) continue;
+		if (ent == NPC) continue; // UQ1: OLD JKG Mod was missing this :)
+		if (ent->s.eType != ET_PLAYER && ent->s.eType != ET_NPC) continue;
+		if (Distance(ent->r.currentOrigin, NPC->r.currentOrigin) > 64) continue;
+
+		if (InFOV3( ent->r.currentOrigin, NPC->r.currentOrigin, NPC->move_vector, 90, 120 ))
+		{
+			if (InFOV3( NPC->r.currentOrigin, ent->r.currentOrigin, NPC->move_vector, 90, 120 ))
+				ent->bot_strafe_left_timer = level.time + 200;
+			else
+				ent->bot_strafe_right_timer = level.time + 200;
+
+			NPC->bot_strafe_left_timer = level.time + 200;
+			return qtrue;
+		}
+	}
+
+	BEST_METHOD = NPC_SelectBestAvoidanceMethod();
+	
+	switch (BEST_METHOD)
+	{
+	case AVOIDANCE_STRAFE_RIGHT:
+		NPC->bot_strafe_right_timer = level.time + 200;
+		return qtrue;
+		break;
+	case AVOIDANCE_STRAFE_LEFT:
+		NPC->bot_strafe_left_timer = level.time + 200;
+		return qtrue;
+		break;
+	case AVOIDANCE_STRAFE_CROUCH:
+		NPC->bot_strafe_crouch_timer = level.time + 200;
+		break;
+	case AVOIDANCE_STRAFE_JUMP:
+		break;
+	default:
+		break;
+	}
+
+	return qfalse;
+}
+
+//Adjusts the moveDir to account for strafing
+void NPC_AdjustforStrafe(vec3_t moveDir)
+{
+	vec3_t right, angles;
+	gentity_t	*NPC = NPCS.NPC;
+
+	if (!(NPC->bot_strafe_right_timer > level.time)
+		&& !(NPC->bot_strafe_left_timer > level.time))
+		return;
+
+	vectoangles(moveDir, angles);
+	AngleVectors(angles /*NPC->client->ps.viewangles*/, NULL, right, NULL);
+
+	//flaten up/down
+	right[2] = 0;
+
+	if (NPC->bot_strafe_left_timer > level.time)
+	{//strafing left
+		VectorScale(right, -64, right);
+	}
+	else if (NPC->bot_strafe_right_timer > level.time)
+	{//strafing right
+		VectorScale(right, 64, right);
+	}
+
+	//We assume that moveDir has been normalized before this function.
+	VectorAdd(moveDir, right, moveDir);
+	VectorNormalize(moveDir);
+}
+
+//===========================================================================
+// Routine      : UQ1_UcmdMoveForDir
+
+// Description  : Set a valid ucmd move for the current move direction... A working one, unlike raven's joke...
+void UQ1_UcmdMoveForDir ( gentity_t *self, usercmd_t *cmd, vec3_t dir )
+{
+	vec3_t	forward, right, up;
+	float	speed = 127.0f;
+
+	NPC_AdjustforStrafe(dir);
+	
+	//AngleVectors( self->client->ps.viewangles, forward, right, up );
+	AngleVectors( self->r.currentAngles, forward, right, up );
+
+	dir[2] = 0;
+	VectorNormalize( dir );
+	cmd->forwardmove = DotProduct( forward, dir ) * speed;
+	cmd->rightmove = DotProduct( right, dir ) * speed;
+
+	//cmd->upmove = abs(forward[3] ) * dir[3] * speed;
+
+	NPC_SelectMoveAnimation();
+}
+
+extern gentity_t *NPC_PickEnemyExt( qboolean checkAlerts );
+extern qboolean NPC_MoveDirClear( int forwardmove, int rightmove, qboolean reset );
+extern qboolean DOM_FakeNPC_Parse_UCMD (bot_state_t *bs, gentity_t *bot);
+extern void G_UcmdMoveForDir( gentity_t *self, usercmd_t *cmd, vec3_t dir );
+
+qboolean NPC_PatrolArea( void ) 
+{// Quick method of patroling...
+	gentity_t *NPC = NPCS.NPC;
+	vec3_t		velocity_vec;
+	float		velocity;
+	qboolean	ENEMY_VISIBLE = qfalse;
+	qboolean	HUNTING_ENEMY = qfalse;
+	qboolean	FORCED_COVERSPOT_FIND = qfalse;
+
+	if (gWPNum <= 0)
+	{// No waypoints available...
+		//trap->Print("PATROL: No waypoints.\n");
+		return qfalse;
+	}
+
+	if (NPC->enemy)
+	{// Chase them...
+		//trap->Print("PATROL: Have enemy.\n");
+		NPC->return_home = qtrue;
+		return qfalse;
+	}
+	else if (NPC->return_home)
+	{// Returning home after chase and kill...
+		//trap->Print("PATROL: Return home.\n");
+		return qfalse;
+	}
+
+	if ( !NPC->enemy )
+	{
+		switch (NPC->client->NPC_class)
+		{
+		/*case CLASS_CIVILIAN:
+		case CLASS_GENERAL_VENDOR:
+		case CLASS_WEAPONS_VENDOR:
+		case CLASS_ARMOR_VENDOR:
+		case CLASS_SUPPLIES_VENDOR:
+		case CLASS_FOOD_VENDOR:
+		case CLASS_MEDICAL_VENDOR:
+		case CLASS_GAMBLER_VENDOR:
+		case CLASS_TRADE_VENDOR:
+		case CLASS_ODDITIES_VENDOR:
+		case CLASS_DRUG_VENDOR:
+		case CLASS_TRAVELLING_VENDOR:
+			// These guys have no enemies...
+			break;*/
+		default:
+			if ( NPC->client->enemyTeam != NPCTEAM_NEUTRAL )
+			{
+				NPC->enemy = NPC_PickEnemyExt( qtrue );
+
+				if (NPC->enemy)
+				{
+					if (NPC->client->ps.weapon == WP_SABER)
+						G_AddVoiceEvent( NPC, Q_irand( EV_JDETECTED1, EV_JDETECTED3 ), 15000 + irand(0, 30000) );
+					else
+					{
+						G_AddVoiceEvent( NPC, Q_irand( EV_DETECTED1, EV_DETECTED5 ), 15000 + irand(0, 30000) );
+					}
+				}
+			}
+			break;
+		}
+	}
+
+	/*
+	if (NPC->NPC->conversationPartner)
+	{// Chatting with another NPC... Stay still!
+		NPC_NPCConversation();
+
+		if (NPC->NPC->conversationPartner)
+			NPC_FacePosition( NPC->NPC->conversationPartner->r.currentOrigin, qfalse );
+
+		return qfalse;
+	}
+
+	if (!NPC->enemy && !NPC->NPC->conversationPartner)
+	{// UQ1: Strange place to do this, but whatever... ;)
+		NPC_FindConversationPartner();
+	}
+
+	if (NPC->NPC->conversationPartner)
+	{// Chatting with another NPC... Stay still!
+		NPC_FacePosition( NPC->NPC->conversationPartner->r.currentOrigin, qfalse );
+		return qfalse;
+	}*/
+
+	VectorCopy(NPC->client->ps.velocity, velocity_vec);
+	velocity = VectorLength(velocity_vec);
+
+	if (!NPC->return_home
+		&& (NPC->r.currentOrigin[2] > NPC->spawn_pos[2]+24 || NPC->r.currentOrigin[2] < NPC->spawn_pos[2]-24))
+	{// We have fallen... Set this spot as our new patrol location...
+		VectorCopy(NPC->r.currentOrigin, NPC->spawn_pos);
+		NPC->longTermGoal = -1;
+		NPC->wpCurrent = -1;
+		NPC->pathsize = -1;
+	}
+
+	if (NPC->wpCurrent < 0 || NPC->wpCurrent >= gWPNum || NPC->wpTravelTime < level.time)
+	{// Patrol Point...
+		NPC_FindNewPatrolWaypoint();
+		NPC->return_home = qfalse;
+		//trap->Print("PATROL: New Waypoint [%i].\n", NPC->wpCurrent);
+		return qfalse; // next think...
+	}
+
+	if (Distance(gWPArray[NPC->wpCurrent]->origin, NPC->r.currentOrigin) < 64)
+	{// We're at out goal! Find a new goal...
+		NPC->longTermGoal = -1;
+		NPC->wpCurrent = -1;
+		NPC->pathsize = -1;
+		//trap->Print("PATROL: Hit goal.\n");
+		return qfalse; // next think...
+	}
+
+	//NPC_FacePosition( gWPArray[NPC->wpCurrent]->origin, qfalse );
+
+	/*
+	if ((velocity <= 16 && InFOV3( gWPArray[NPC->wpCurrent]->origin, NPC->r.currentOrigin, NPC->client->ps.viewangles, 30, 120 )) // InFOV so they don't do this while turning...
+		|| !DOM_NPC_ClearPathToSpot( NPC, gWPArray[NPC->wpCurrent]->origin, -1 ))
+	{// Trouble moving, need some (currently really really simple) avoidance stuff...
+		NPC_Avoidance();
+	}
+	*/
+
+	if (NPC->wpCurrent < 0 || NPC->wpCurrent >= gWPNum || NPC->longTermGoal < 0 || NPC->longTermGoal >= gWPNum)
+	{// FIXME: Try to roam out of problems...
+		//trap->Print("PATROL: Lost.\n");
+		return qfalse; // next think...
+	}
+
+	NPC_FacePosition( gWPArray[NPC->wpCurrent]->origin, qfalse );
+
+	if (NPC->bot_strafe_right_timer > level.time)
+	{
+		
+	}
+	else if (NPC->bot_strafe_left_timer > level.time)
+	{
+
+	}	
+	else
+	{
+		NPC_NPCBlockingPath();
+	}
+
+	//NPCS.ucmd.buttons |= BUTTON_WALKING;
+
+	NPC_FacePosition( gWPArray[NPC->wpCurrent]->origin, qfalse );
+	VectorSubtract( gWPArray[NPC->wpCurrent]->origin, NPC->r.currentOrigin, NPC->movedir );
+	UQ1_UcmdMoveForDir( NPC, &NPCS.ucmd, NPC->movedir );
+	VectorCopy( NPC->movedir, NPC->client->ps.moveDir );
+
+	if (NPC->bot_strafe_right_timer > level.time)
+		NPCS.ucmd.rightmove = 127.0;
+	else if (NPC->bot_strafe_left_timer > level.time)
+		NPCS.ucmd.rightmove = 127.0;
+	
+	//DOM_FakeNPC_Parse_UCMD(NULL, NPC);
+	//NPC_MoveDirClear( NPCS.ucmd.forwardmove, NPCS.ucmd.rightmove, qfalse );
+
+	/*
+	//Keep moving toward our tempGoal
+	{
+		gentity_t *te = G_Spawn();
+		te->inuse = qtrue;
+		VectorCopy(gWPArray[NPC->wpCurrent]->origin, te->s.origin);
+		VectorCopy(gWPArray[NPC->wpCurrent]->origin, te->r.currentOrigin);
+		NPCS.NPCInfo->goalEntity = NPCS.NPCInfo->tempGoal;
+		NPC_MoveToGoal( qtrue );
+		G_FreeEntity(te);
+	}
+	*/
+
+	//trap->Print("PATROL: Moved.\n");
+
+	return qtrue;
+}
+
 /*
 ===============
 NPC_Think
@@ -1975,7 +2731,7 @@ void NPC_Think ( gentity_t *self)//, int msec )
 {
 	vec3_t	oldMoveDir;
 	int i = 0;
-	gentity_t *player;
+	//gentity_t *player;
 
 	self->nextthink = level.time + FRAMETIME;
 
@@ -2019,7 +2775,8 @@ void NPC_Think ( gentity_t *self)//, int msec )
 
 	self->nextthink = level.time + FRAMETIME/2;
 
-
+	// UQ1: WTF - an empty loop??!?!?!?!?!?!!?!
+/*
 	while (i < MAX_CLIENTS)
 	{
 		player = &g_entities[i];
@@ -2045,6 +2802,7 @@ void NPC_Think ( gentity_t *self)//, int msec )
 		}
 		i++;
 	}
+*/
 
 	if ( self->client->NPC_class == CLASS_VEHICLE)
 	{
@@ -2089,11 +2847,18 @@ void NPC_Think ( gentity_t *self)//, int msec )
 			NPCS.NPCInfo->nextBStateThink = level.time + FRAMETIME;
 		}
 
+		memcpy( &NPCS.ucmd, &NPCS.NPCInfo->last_ucmd, sizeof( usercmd_t ) );
+
 		//nextthink is set before this so something in here can override it
 		if (self->s.NPC_class != CLASS_VEHICLE ||
 			!self->m_pVehicle)
 		{ //ok, let's not do this at all for vehicles.
 			NPC_ExecuteBState( self );
+
+			if (!self->enemy)
+			{
+				if (NPC_PatrolArea()) ClientThink(NPCS.NPC->s.number, &NPCS.ucmd);
+			}
 		}
 
 #if	AI_TIMERS
@@ -2104,10 +2869,12 @@ void NPC_Think ( gentity_t *self)//, int msec )
 		}
 		AITime += addTime;
 #endif//	AI_TIMERS
+
 	}
 	else
 	{
 		VectorCopy( oldMoveDir, self->client->ps.moveDir );
+
 		//or use client->pers.lastCommand?
 		NPCS.NPCInfo->last_ucmd.serverTime = level.time - 50;
 		if ( !NPCS.NPC->next_roff_time || NPCS.NPC->next_roff_time < level.time )
@@ -2115,14 +2882,26 @@ void NPC_Think ( gentity_t *self)//, int msec )
 			//FIXME: firing angles (no aim offset) or regular angles?
 			NPC_UpdateAngles(qtrue, qtrue);
 			memcpy( &NPCS.ucmd, &NPCS.NPCInfo->last_ucmd, sizeof( usercmd_t ) );
+			if (!self->enemy)
+			{
+				ClientThink(NPCS.NPC->s.number, &NPCS.ucmd);
+			}
 			ClientThink(NPCS.NPC->s.number, &NPCS.ucmd);
 		}
 		else
 		{
+			if (!self->enemy)
+			{
+				if (NPC_PatrolArea()) ClientThink(NPCS.NPC->s.number, &NPCS.ucmd);
+			}
+
 			NPC_ApplyRoff();
 		}
 		//VectorCopy(self->s.origin, self->s.origin2 );
 	}
+	//if (self->s.NPC_class != CLASS_VEHICLE || !self->m_pVehicle)
+	//	NPC_SelectMoveAnimation();
+
 	//must update icarus *every* frame because of certain animation completions in the pmove stuff that can leave a 50ms gap between ICARUS animation commands
 	trap->ICARUS_MaintainTaskManager(self->s.number);
 	VectorCopy(self->r.currentOrigin, self->client->ps.origin);

@@ -196,8 +196,10 @@ typedef enum {
 	GT_JEDIMASTER,		// jedi master
 	GT_DUEL,		// one on one tournament
 	GT_POWERDUEL,
-	GT_SINGLE_PLAYER,	// single player ffa
+	GT_INSTANCE,	//
+	GT_SINGLE_PLAYER,	// single player tournament
 
+	GT_NUM_FREE_TEAM_GAMETYPES = GT_SINGLE_PLAYER,	//
 	//-- team games go after this --
 
 	GT_TEAM,			// team deathmatch
@@ -214,13 +216,14 @@ typedef enum {
 #define GTB_JEDIMASTER		0x004 // jedi master
 #define GTB_DUEL			0x008 // one on one tournament
 #define GTB_POWERDUEL		0x010 // two on one tournament
-#define GTB_SINGLE_PLAYER	0x020 // single player ffa
-#define GTB_NOTTEAM			0x03F // **SPECIAL: All of the above gametypes, i.e. not team-based
-#define GTB_TEAM			0x040 // team deathmatch
-#define GTB_SIEGE			0x080 // siege
-#define GTB_CTF				0x100 // capture the flag
-#define GTB_CTY				0x200 // capture the ysalimiri
-#define GTB_ALL				0x1FF // all
+#define GTB_INSTANCE		0x020 // 
+#define GTB_SINGLE_PLAYER	0x040 // single player ffa
+#define GTB_NOTTEAM			0x07F // **SPECIAL: All of the above gametypes, i.e. not team-based
+#define GTB_TEAM			0x080 // team deathmatch
+#define GTB_SIEGE			0x100 // siege
+#define GTB_CTF				0x200 // capture the flag
+#define GTB_CTY				0x300 // capture the ysalimiri
+#define GTB_ALL				0x3FF // all
 
 typedef enum _flag_status {
 	FLAG_ATBASE = 0,

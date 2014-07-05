@@ -2379,7 +2379,7 @@ int BotIsAChickenWuss(bot_state_t *bs)
 		return 0;
 	}
 
-	if (level.gametype == GT_SINGLE_PLAYER)
+	if (level.gametype == GT_SINGLE_PLAYER || level.gametype == GT_INSTANCE)
 	{ //"coop" (not really)
 		return 0;
 	}
@@ -3956,7 +3956,7 @@ void GetIdealDestination(bot_state_t *bs)
 			{
 				bs->wpDestination = gWPArray[tempInt];
 
-				if (level.gametype == GT_SINGLE_PLAYER)
+				if (level.gametype == GT_SINGLE_PLAYER || level.gametype == GT_INSTANCE)
 				{ //be more aggressive
 					bs->wpDestSwitchTime = level.time + Q_irand(300, 1000);
 				}
@@ -7094,7 +7094,7 @@ void StandardBotAI(bot_state_t *bs, float thinktime)
 				}
 			}
 
-			if (level.gametype == GT_SINGLE_PLAYER)
+			if (level.gametype == GT_SINGLE_PLAYER || level.gametype == GT_INSTANCE)
 			{
 				saberRange *= 3;
 			}

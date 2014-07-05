@@ -203,8 +203,9 @@ qboolean OnSameTeam( gentity_t *ent1, gentity_t *ent2 ) {
 
 		return qfalse;
 	}
-
-	if (level.gametype == GT_SINGLE_PLAYER)
+	
+	/*
+	if (level.gametype == GT_SINGLE_PLAYER || level.gametype == GT_INSTANCE)
 	{
 		qboolean ent1IsBot = qfalse;
 		qboolean ent2IsBot = qfalse;
@@ -224,7 +225,8 @@ qboolean OnSameTeam( gentity_t *ent1, gentity_t *ent2 ) {
 		}
 		return qfalse;
 	}
-
+	*/
+	
 	if ( level.gametype < GT_TEAM ) {
 		return qfalse;
 	}

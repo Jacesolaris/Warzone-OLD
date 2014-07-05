@@ -859,9 +859,12 @@ void ChangeWeapon( gentity_t *ent, int newWeapon )
 
 void NPC_ChangeWeapon( int newWeapon )
 {
-	if (NPCS.NPC->next_weapon_switch > level.time) return;
+	if (NPCS.NPC) // UQ1: We also need to be able to set weapons at map loading...
+	{
+		if (NPCS.NPC->next_weapon_switch > level.time) return;
 
-	NPCS.NPC->next_weapon_switch = level.time + 5000;
+		NPCS.NPC->next_weapon_switch = level.time + 5000;
+	}
 
 	ChangeWeapon( NPCS.NPC, newWeapon );
 

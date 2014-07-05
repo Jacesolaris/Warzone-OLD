@@ -3206,7 +3206,8 @@ const char *BG_GetGametypeString( int gametype )
 		return "Power Duel";
 	case GT_SINGLE_PLAYER:
 		return "Cooperative";
-
+	case GT_INSTANCE:
+		return "Group Instance";
 	case GT_TEAM:
 		return "Team Deathmatch";
 	case GT_SIEGE:
@@ -3231,6 +3232,7 @@ int BG_GetGametypeForString( const char *gametype )
 	else if ( !Q_stricmp( gametype, "powerduel" ) )		return GT_POWERDUEL;
 	else if ( !Q_stricmp( gametype, "sp" )
 			||!Q_stricmp( gametype, "coop" ) )			return GT_SINGLE_PLAYER;
+	else if ( !Q_stricmp( gametype, "instance" ) )		return GT_INSTANCE;
 	else if ( !Q_stricmp( gametype, "tdm" )
 			||!Q_stricmp( gametype, "tffa" )
 			||!Q_stricmp( gametype, "team" ) )			return GT_TEAM;
