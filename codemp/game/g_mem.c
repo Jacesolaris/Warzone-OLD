@@ -21,7 +21,8 @@
   http://www.altdevblogaday.com/2011/02/12/alternatives-to-malloc-and-new/
 */
 
-#define POOLSIZE	(256 * 1024)
+//#define POOLSIZE	(256 * 1024)
+#define POOLSIZE	(256 * 1024 * 10)
 
 static char		memoryPool[POOLSIZE];
 static int		allocPoint;

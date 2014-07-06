@@ -884,7 +884,7 @@ void Use_BinaryMover( gentity_t *ent, gentity_t *other, gentity_t *activator )
 		return;
 	}
 
-	if ( ent->flags & FL_INACTIVE )
+	if ( ent->flags & FL_INACTIVE && g_gametype.integer != GT_INSTANCE )
 	{
 		return;
 	}
@@ -1027,8 +1027,19 @@ Blocked_Door
 */
 void Blocked_Door( gentity_t *ent, gentity_t *other )
 {
+	qboolean relock;
+
+	if (g_gametype.integer == GT_INSTANCE)
+	{
+		if ( ent->spawnflags & MOVER_LOCKED )
+		{//a locked door, unlock it
+			UnLockDoors(ent);
+		}
+	}
+
 	//determines if we need to relock after moving or not.
-	qboolean relock = (ent->spawnflags & MOVER_LOCKED) ? qtrue : qfalse;
+	relock = (ent->spawnflags & MOVER_LOCKED) ? qtrue : qfalse;
+
 	if ( ent->damage ) {
 		G_Damage( other, ent, ent, NULL, NULL, ent->damage, 0, MOD_CRUSH );
 	}
@@ -1120,9 +1131,17 @@ void Touch_DoorTrigger( gentity_t *ent, gentity_t *other, trace_t *trace )
 		}
 	}
 
-	if ( ent->flags & FL_INACTIVE )
+	if ( ent->flags & FL_INACTIVE && g_gametype.integer != GT_INSTANCE )
 	{
 		return;
+	}
+
+	if (g_gametype.integer == GT_INSTANCE)
+	{
+		if ( ent->parent->spawnflags & MOVER_LOCKED )
+		{//a locked door, unlock it
+			UnLockDoors(ent->parent);
+		}
 	}
 
 	if ( ent->parent->spawnflags & MOVER_LOCKED )
@@ -1346,6 +1365,13 @@ qboolean G_EntIsUnlockedDoor( int entityNum )
 				return qfalse;
 			}
 		}
+		if (g_gametype.integer == GT_INSTANCE)
+		{
+			if ( ent->spawnflags & MOVER_LOCKED )
+			{//a locked door, unlock it
+				UnLockDoors(ent);
+			}
+		}
 		if ( !(ent->flags & FL_INACTIVE) && //assumes that the reactivate trigger isn't right next to the door!
 			!ent->health &&
 			!(ent->spawnflags & MOVER_PLAYER_USE) &&
@@ -1468,7 +1494,8 @@ void SP_func_door (gentity_t *ent)
 			ent->takedamage = qtrue;
 		}
 
-		if ( !(ent->spawnflags&MOVER_LOCKED) && (ent->targetname || health || ent->spawnflags & MOVER_PLAYER_USE || ent->spawnflags & MOVER_FORCE_ACTIVATE) )
+		if ( (!(ent->spawnflags&MOVER_LOCKED) 
+			&& (ent->targetname || health || ent->spawnflags & MOVER_PLAYER_USE || ent->spawnflags & MOVER_FORCE_ACTIVATE)))
 		{
 			// non touch/shoot doors
 			ent->think = Think_MatchTeam;

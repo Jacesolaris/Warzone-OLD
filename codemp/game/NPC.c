@@ -2559,14 +2559,10 @@ void UQ1_UcmdMoveForDir ( gentity_t *self, usercmd_t *cmd, vec3_t dir, qboolean 
 	float	speed = 100.0f;
 	//if (walk) speed = 64.0f;
 	//if (walk) speed = 80.0f;
-	if (walk) speed = 48.0f;
-
-	//if (NPCS.ucmd.buttons & BUTTON_WALKING) // BUTTON_WALKING does everything except what is meant to do.....
-	//	speed = 48.0f;
+	//if (walk) speed = 48.0f;
 
 	NPC_AdjustforStrafe(dir);
 	
-	//AngleVectors( self->client->ps.viewangles, forward, right, up );
 	AngleVectors( self->r.currentAngles, forward, right, up );
 
 	dir[2] = 0;
@@ -2733,7 +2729,9 @@ qboolean NPC_PatrolArea( void )
 
 	//if (NPCS.ucmd.buttons & BUTTON_WALKING)
 	//	NPCS.ucmd.buttons &= ~BUTTON_WALKING;
-	//NPCS.ucmd.buttons = BUTTON_WALKING;
+
+	//if (!(NPCS.ucmd.buttons & BUTTON_WALKING))
+	//	NPCS.ucmd.buttons |= BUTTON_WALKING;
 
 	//if (NPCS.NPC->client->ps.pm_flags & PMF_DUCKED)
 	//	NPCS.NPC->client->ps.pm_flags &= ~PMF_DUCKED;
@@ -2749,11 +2747,10 @@ qboolean NPC_PatrolArea( void )
 	VectorCopy( NPC->movedir, NPC->client->ps.moveDir );
 
 	if (NPC->bot_strafe_right_timer > level.time)
-		NPCS.ucmd.rightmove = 64.0;
+		NPCS.ucmd.rightmove = 48.0;
 	else if (NPC->bot_strafe_left_timer > level.time)
-		NPCS.ucmd.rightmove = 64.0;
+		NPCS.ucmd.rightmove = 48.0;
 	
-	//DOM_FakeNPC_Parse_UCMD(NULL, NPC);
 	//NPC_MoveDirClear( NPCS.ucmd.forwardmove, NPCS.ucmd.rightmove, qfalse );
 
 	/*
@@ -4285,7 +4282,10 @@ qboolean NPC_FollowRoutes( void )
 
 	//if (NPCS.ucmd.buttons & BUTTON_WALKING)
 	//	NPCS.ucmd.buttons &= ~BUTTON_WALKING;
-	//if (!NPC->enemy) NPCS.ucmd.buttons = BUTTON_WALKING;
+	
+	//if (!(NPCS.ucmd.buttons & BUTTON_WALKING))
+	//	if (!NPC_HaveValidEnemy()) 
+	//		NPCS.ucmd.buttons |= BUTTON_WALKING;
 
 	//if (NPCS.NPC->client->ps.pm_flags & PMF_DUCKED)
 	//	NPCS.NPC->client->ps.pm_flags &= ~PMF_DUCKED;
@@ -4296,9 +4296,9 @@ qboolean NPC_FollowRoutes( void )
 	VectorCopy( NPC->movedir, NPC->client->ps.moveDir );
 
 	if (NPC->bot_strafe_right_timer > level.time)
-		NPCS.ucmd.rightmove = 64.0;
+		NPCS.ucmd.rightmove = 48.0;
 	else if (NPC->bot_strafe_left_timer > level.time)
-		NPCS.ucmd.rightmove = 64.0;
+		NPCS.ucmd.rightmove = 48.0;
 
 	//trap->Print("NPC PF DEBUG: MOVING!\n");
 
@@ -4443,8 +4443,98 @@ void NPC_Think ( gentity_t *self)//, int msec )
 		{ //ok, let's not do this at all for vehicles.
 			if (!self->enemy)
 			{
-				if (NPC_FollowRoutes()) ClientThink(NPCS.NPC->s.number, &NPCS.ucmd);
-				else if (NPC_PatrolArea()) ClientThink(NPCS.NPC->s.number, &NPCS.ucmd);
+				if (g_gametype.integer != GT_INSTANCE 
+					&& g_gametype.integer != GT_SINGLE_PLAYER 
+					&& NPC_FollowRoutes()) 
+				{
+					if ( NPCS.client->ps.weaponstate == WEAPON_READY )
+					{
+						NPCS.client->ps.weaponstate = WEAPON_IDLE;
+					}
+
+					if ( NPCS.NPC->s.torsoAnim == TORSO_WEAPONREADY1 || NPCS.NPC->s.torsoAnim == TORSO_WEAPONREADY3 )
+					{//we look ready for action, using one of the first 2 weapon, let's rest our weapon on our shoulder
+						NPC_SetAnim(NPCS.NPC,SETANIM_TORSO,TORSO_WEAPONIDLE3,SETANIM_FLAG_NORMAL);
+					}
+
+					NPC_CheckAttackHold();
+					NPC_ApplyScriptFlags();
+
+					//cliff and wall avoidance
+					NPC_AvoidWallsAndCliffs();
+
+					// run the bot through the server like it was a real client
+					//=== Save the ucmd for the second no-think Pmove ============================
+					NPCS.ucmd.serverTime = level.time - 50;
+					memcpy( &NPCS.NPCInfo->last_ucmd, &NPCS.ucmd, sizeof( usercmd_t ) );
+					if ( !NPCS.NPCInfo->attackHoldTime )
+					{
+						NPCS.NPCInfo->last_ucmd.buttons &= ~(BUTTON_ATTACK|BUTTON_ALT_ATTACK);//so we don't fire twice in one think
+					}
+					//============================================================================
+					NPC_CheckAttackScript();
+					NPC_KeepCurrentFacing();
+
+					if ( !NPCS.NPC->next_roff_time || NPCS.NPC->next_roff_time < level.time )
+					{//If we were following a roff, we don't do normal pmoves.
+						ClientThink( NPCS.NPC->s.number, &NPCS.ucmd );
+					}
+					else
+					{
+						NPC_ApplyRoff();
+					}
+
+					// end of thinking cleanup
+					NPCS.NPCInfo->touchedByPlayer = NULL;
+
+					NPC_CheckPlayerAim();
+					NPC_CheckAllClear();
+				}
+				else if (NPC_PatrolArea())
+				{
+					if ( NPCS.client->ps.weaponstate == WEAPON_READY )
+					{
+						NPCS.client->ps.weaponstate = WEAPON_IDLE;
+					}
+
+					if ( NPCS.NPC->s.torsoAnim == TORSO_WEAPONREADY1 || NPCS.NPC->s.torsoAnim == TORSO_WEAPONREADY3 )
+					{//we look ready for action, using one of the first 2 weapon, let's rest our weapon on our shoulder
+						NPC_SetAnim(NPCS.NPC,SETANIM_TORSO,TORSO_WEAPONIDLE3,SETANIM_FLAG_NORMAL);
+					}
+
+					NPC_CheckAttackHold();
+					NPC_ApplyScriptFlags();
+
+					//cliff and wall avoidance
+					NPC_AvoidWallsAndCliffs();
+
+					// run the bot through the server like it was a real client
+					//=== Save the ucmd for the second no-think Pmove ============================
+					NPCS.ucmd.serverTime = level.time - 50;
+					memcpy( &NPCS.NPCInfo->last_ucmd, &NPCS.ucmd, sizeof( usercmd_t ) );
+					if ( !NPCS.NPCInfo->attackHoldTime )
+					{
+						NPCS.NPCInfo->last_ucmd.buttons &= ~(BUTTON_ATTACK|BUTTON_ALT_ATTACK);//so we don't fire twice in one think
+					}
+					//============================================================================
+					NPC_CheckAttackScript();
+					NPC_KeepCurrentFacing();
+
+					if ( !NPCS.NPC->next_roff_time || NPCS.NPC->next_roff_time < level.time )
+					{//If we were following a roff, we don't do normal pmoves.
+						ClientThink( NPCS.NPC->s.number, &NPCS.ucmd );
+					}
+					else
+					{
+						NPC_ApplyRoff();
+					}
+
+					// end of thinking cleanup
+					NPCS.NPCInfo->touchedByPlayer = NULL;
+
+					NPC_CheckPlayerAim();
+					NPC_CheckAllClear();
+				}
 			}
 			else
 			{
@@ -4471,24 +4561,12 @@ void NPC_Think ( gentity_t *self)//, int msec )
 		if ( !NPCS.NPC->next_roff_time || NPCS.NPC->next_roff_time < level.time )
 		{//If we were following a roff, we don't do normal pmoves.
 			//FIXME: firing angles (no aim offset) or regular angles?
-			NPC_UpdateAngles(qtrue, qtrue);
+			if (self->enemy) NPC_UpdateAngles(qtrue, qtrue);
 			memcpy( &NPCS.ucmd, &NPCS.NPCInfo->last_ucmd, sizeof( usercmd_t ) );
-
-			if (!self->enemy)
-			{
-				if (!NPC_FollowRoutes()) NPC_PatrolArea();
-			}
-
 			ClientThink(NPCS.NPC->s.number, &NPCS.ucmd);
 		}
 		else
 		{
-			if (!self->enemy)
-			{
-				if (NPC_FollowRoutes()) ClientThink(NPCS.NPC->s.number, &NPCS.ucmd);
-				else if (NPC_PatrolArea()) ClientThink(NPCS.NPC->s.number, &NPCS.ucmd);
-			}
-
 			NPC_ApplyRoff();
 		}
 		//VectorCopy(self->s.origin, self->s.origin2 );
