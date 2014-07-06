@@ -36,7 +36,7 @@
 
 #ifdef __AUTOWAYPOINT__
 
-#pragma warning( disable : 4133 )	// signed/unsigned mismatch
+//#pragma warning( disable : 4133 )	// signed/unsigned mismatch
 
 #define MOD_DIRECTORY "OJK"
 
@@ -2738,7 +2738,7 @@ AIMOD_NODES_LoadNodes ( void )
 	trap->FS_Read( &fix_aas_nodes, sizeof(short int), f );
 	trap->FS_Close( f );							//close the file
 	trap->Print( "^1*** ^3%s^5: Successfully loaded %i waypoints from waypoint file ^7nodes/%s.bwp^5.\n", GAME_VERSION,
-			  number_of_nodes, filename );
+			  number_of_nodes, mapname.string );
 	nodes_loaded = qtrue;
 
 	return;
@@ -2786,6 +2786,8 @@ AIMOD_NODES_SaveNodes_Autowaypointed ( void )
 			nodes[i].links[j].flags = 0;
 			nodes[i].objectNum[0] = nodes[i].objectNum[1] = nodes[i].objectNum[2] = ENTITYNUM_NONE;
 		}
+
+		trap->Print("Waypoint %i is at %f %f %f.\n", i, nodes[i].origin[0], nodes[i].origin[1], nodes[i].origin[2]);
 	}
 
 //	RemoveDoorsAndDestroyablesForSave();
@@ -5068,7 +5070,10 @@ void AIMod_AutoWaypoint_StandardMethod( void )
 					//trap->Print("^4*** ^3AUTO-WAYPOINTER^4: ^5Adding temp waypoint ^3%i ^7at ^7%f %f %f^5. (^3%.2f^5%% complete)\n", areas, org[0], org[1], org[2], (float)((float)((float)final_tests/(float)total_tests)*100.0f));
 					strcpy( last_node_added_string, va("^5Adding temp waypoint ^3%i ^5at ^7%f %f %f^5.", areas/*+areas2+areas3*/, org[0], org[1], org[2]) );
 
-					VectorCopy( org, arealist[areas] );
+					//VectorCopy( org, arealist[areas] );
+					arealist[areas][0] = org[0];
+					arealist[areas][1] = org[1];
+					arealist[areas][2] = org[2];
 					areas++;
 				}
 				else
@@ -5102,7 +5107,10 @@ void AIMod_AutoWaypoint_StandardMethod( void )
 
 						while (temp_org[2] <= temp_org2[2])
 						{// Add waypoints all the way up!
-							VectorCopy( temp_org, arealist[areas] );
+							//VectorCopy( temp_org, arealist[areas] );
+							arealist[areas][0] = temp_org[0];
+							arealist[areas][1] = temp_org[1];
+							arealist[areas][2] = temp_org[2];
 							areas++;
 							temp_org[2] += 24;
 						}
@@ -5119,7 +5127,10 @@ void AIMod_AutoWaypoint_StandardMethod( void )
 
 						while (temp_org[2] >= temp_org2[2])
 						{// Add waypoints all the way up!
-							VectorCopy( temp_org, arealist[areas] );
+							//VectorCopy( temp_org, arealist[areas] );
+							arealist[areas][0] = temp_org[0];
+							arealist[areas][1] = temp_org[1];
+							arealist[areas][2] = temp_org[2];
 							areas++;
 							temp_org[2] -= 24;
 						}
@@ -8170,14 +8181,14 @@ void DrawWaypoints()
 		int		link = 0;
 		vec3_t	delta;
 
-		if (!InFOV( nodes[node].origin, cg.refdef.vieworg, cg.refdef.viewangles, 120, 120 ))
+		if (!InFOV( nodes[node].origin, cg.refdef.vieworg, cg.refdef.viewangles, cg.refdef.fov_x + 20, cg.refdef.fov_y + 20 ))
 			continue;
 
 		VectorSubtract( nodes[node].origin, cg.refdef.vieworg, delta );
 		len = VectorLength( delta );
 		
 		if ( len < 20 ) continue;
-		if ( len > 512 ) continue;
+		if ( len > 400/*512*/ ) continue;
 
 		//if (VectorDistance(cg_entities[cg.clientNum].lerpOrigin, nodes[node].origin) > 2048) continue;
 

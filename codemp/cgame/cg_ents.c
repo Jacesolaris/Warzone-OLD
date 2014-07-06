@@ -3434,6 +3434,10 @@ void CG_ManualEntityRender(centity_t *cent)
 	CG_AddCEntity(cent);
 }
 
+//[AUTOWAYPOINT]
+void DrawWaypoints();
+//[/AUTOWAYPOINT]
+
 /*
 ===============
 CG_AddPacketEntities
@@ -3444,6 +3448,10 @@ void CG_AddPacketEntities( qboolean isPortal ) {
 	int					num;
 	centity_t			*cent;
 	playerState_t		*ps;
+
+//[AUTOWAYPOINT]
+	DrawWaypoints();
+//[/AUTOWAYPOINT]
 
 	if (isPortal)
 	{

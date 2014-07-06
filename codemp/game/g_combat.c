@@ -2095,11 +2095,17 @@ extern qboolean g_noPDuelCheck;
 extern void saberReactivate(gentity_t *saberent, gentity_t *saberOwner);
 extern void saberBackToOwner(gentity_t *saberent);
 void player_die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int damage, int meansOfDeath ) {
+#ifndef __MMO__
 	gentity_t	*ent;
+#endif //__MMO__
 	int			anim;
 	int			killer;
 	int			i;
+#ifndef __MMO__
 	char		*killerName, *obit;
+#else //__MMO__
+	char		*killerName;
+#endif //__MMO__
 	qboolean	wasJediMaster = qfalse;
 	int			sPMType = 0;
 	char		buf[512] = {0};
