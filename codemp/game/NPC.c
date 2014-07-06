@@ -1999,6 +1999,107 @@ void G_DroidSounds( gentity_t *self )
 	}
 }
 
+void NPC_PickRandomIdleAnimantionCivilian(gentity_t *NPC)
+{
+	int randAnim = irand(0,10);
+
+	switch (randAnim)
+	{
+	case 0:
+		NPC_SetAnim(NPC, SETANIM_BOTH, BOTH_STAND1, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD);
+		break;
+	case 1:
+		NPC_SetAnim(NPC, SETANIM_BOTH, BOTH_STAND4, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD);
+		break;
+	case 2:
+		NPC_SetAnim(NPC, SETANIM_BOTH, BOTH_STAND6, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD);
+		break;
+	case 3:
+		NPC_SetAnim(NPC, SETANIM_BOTH, BOTH_STAND8, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD);
+		break;
+	case 4:
+		NPC_SetAnim(NPC, SETANIM_BOTH, BOTH_STAND9, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD);
+		break;
+	case 5:
+	case 6:
+		NPC_SetAnim(NPC, SETANIM_BOTH, BOTH_STAND9IDLE1, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD);
+		break;
+	case 7:
+	case 8:
+		NPC_SetAnim(NPC, SETANIM_BOTH, BOTH_GUARD_IDLE1, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD);
+		break;
+	case 9:
+	default:
+		NPC_SetAnim(NPC, SETANIM_BOTH, BOTH_GUARD_LOOKAROUND1, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD);
+		break;
+	}
+}
+
+void NPC_PickRandomIdleAnimantion(gentity_t *NPC)
+{
+	int randAnim = irand(0,10);
+
+	if (NPC->enemy) return; // No idle anims when we got an enemy...
+
+	switch (NPC->client->ps.legsAnim)
+	{
+		case BOTH_STAND1:
+		case BOTH_STAND2:
+		case BOTH_STAND3:
+		case BOTH_STAND4:
+		case BOTH_STAND5:
+		case BOTH_STAND6:
+		case BOTH_STAND8:
+		case BOTH_STAND9:
+		case BOTH_STAND10:
+		case BOTH_STAND9IDLE1:
+		case BOTH_GUARD_IDLE1:
+		case BOTH_GUARD_LOOKAROUND1:
+			// Check torso also...
+			if (NPC->client->ps.torsoAnim == NPC->client->ps.legsAnim)
+				return; // Already running an idle animation...
+		break;
+	default:
+		break;
+	}
+
+	if (NPC->client->lookTime > level.time) return; // Wait before next anim...
+
+	NPC->client->lookTime = level.time + irand(5000, 15000);
+
+	if (NPC->client->NPC_class == CLASS_CIVILIAN)
+	{
+		NPC_PickRandomIdleAnimantionCivilian(NPC);
+		return;
+	}
+
+	switch (randAnim)
+	{
+	case 0:
+		NPC_SetAnim(NPC, SETANIM_BOTH, BOTH_STAND3, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD);
+	case 1:
+		NPC_SetAnim(NPC, SETANIM_BOTH, BOTH_STAND4, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD);
+	case 2:
+		NPC_SetAnim(NPC, SETANIM_BOTH, BOTH_STAND6, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD);
+	case 3:
+		NPC_SetAnim(NPC, SETANIM_BOTH, BOTH_STAND8, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD);
+	case 4:
+		NPC_SetAnim(NPC, SETANIM_BOTH, BOTH_STAND9, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD);
+	case 5:
+	case 6:
+		NPC_SetAnim(NPC, SETANIM_BOTH, BOTH_STAND9IDLE1, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD);
+		break;
+	case 7:
+	case 8:
+		NPC_SetAnim(NPC, SETANIM_BOTH, BOTH_GUARD_IDLE1, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD);
+		break;
+	case 9:
+	default:
+		NPC_SetAnim(NPC, SETANIM_BOTH, BOTH_GUARD_LOOKAROUND1, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD);
+		break;
+	}
+}
+
 void NPC_SelectMoveAnimation(qboolean walk)
 {
 	if (NPCS.NPC->client->ps.crouchheight <= 0)
@@ -2010,29 +2111,9 @@ void NPC_SelectMoveAnimation(qboolean walk)
 	if ((NPCS.ucmd.buttons & BUTTON_ATTACK) || (NPCS.ucmd.buttons & BUTTON_ALT_ATTACK)) 
 		return;
 
-	//trap->Print("fm: %i. rm: %i. v: %f.\n", NPCS.ucmd.forwardmove, NPCS.ucmd.rightmove, VectorLength(NPCS.NPC->client->ps.velocity));
-
-	/*
-	if (NPCS.NPC->client->ps.pm_flags & PMF_DUCKED && NPC->r.maxs[2] > NPC->client->ps.crouchheight)
-	{
-		VectorCopy(playerMins, NPCS.NPC->r.mins);
-		VectorCopy(playerMaxs, NPCS.NPC->r.maxs);
-
-		NPCS.NPC->r.maxs[2] = NPCS.NPC->client->ps.crouchheight;
-		trap->LinkEntity(NPCS.NPC);
-	}
-	else if (!(NPCS.NPC->client->ps.pm_flags & PMF_DUCKED) && NPCS.NPC->r.maxs[2] < NPCS.NPC->client->ps.standheight)
-	{
-		VectorCopy(playerMins, NPCS.NPC->r.mins);
-		VectorCopy(playerMaxs, NPCS.NPC->r.maxs);
-
-		NPCS.NPC->r.maxs[2] = NPCS.NPC->client->ps.standheight;
-		trap->LinkEntity(NPCS.NPC);
-	}
-	*/
-
-	//if (VectorLength(NPCS.NPC->client->ps.velocity) < 4)
-	if (NPCS.ucmd.forwardmove == 0 && NPCS.ucmd.rightmove == 0 && NPCS.ucmd.upmove == 0
+	if (NPCS.ucmd.forwardmove == 0 
+		&& NPCS.ucmd.rightmove == 0 
+		&& NPCS.ucmd.upmove == 0
 		&& VectorLength(NPCS.NPC->client->ps.velocity) < 4)
 	{// Standing still...
 		if (NPCS.NPC->client->ps.pm_flags & PMF_DUCKED)
@@ -2049,14 +2130,13 @@ void NPC_SelectMoveAnimation(qboolean walk)
 		}
 		else
 		{//just stand there
-			NPC_SetAnim( NPCS.NPC, SETANIM_BOTH, BOTH_STAND1, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD );
+			//NPC_SetAnim( NPCS.NPC, SETANIM_BOTH, BOTH_STAND1, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD );
+			NPC_PickRandomIdleAnimantion(NPCS.NPC);
 		}
 
 		NPCS.NPC->client->ps.torsoTimer = 200;
 		NPCS.NPC->client->ps.legsTimer = 200;
 	}
-
-	/*
 	else if (walk)
 	{// Use walking anims..
 		if (NPCS.ucmd.forwardmove < 0)
@@ -2146,89 +2226,11 @@ void NPC_SelectMoveAnimation(qboolean walk)
 		NPCS.NPC->client->ps.torsoTimer = 200;
 		NPCS.NPC->client->ps.legsTimer = 200;
 	}
-	*/
+	
 }
 
-void NPC_PickRandomIdleAnimantionCivilian()
-{
-	int randAnim = irand(0,10);
-	gentity_t *NPC = NPCS.NPC;
-
-	switch (randAnim)
-	{
-	case 0:
-		NPC_SetAnim(NPC, SETANIM_BOTH, BOTH_STAND1, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD);
-		break;
-	case 1:
-		NPC_SetAnim(NPC, SETANIM_BOTH, BOTH_STAND4, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD);
-		break;
-	case 2:
-		NPC_SetAnim(NPC, SETANIM_BOTH, BOTH_STAND6, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD);
-		break;
-	case 3:
-		NPC_SetAnim(NPC, SETANIM_BOTH, BOTH_STAND8, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD);
-		break;
-	case 4:
-		NPC_SetAnim(NPC, SETANIM_BOTH, BOTH_STAND9, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD);
-		break;
-	case 5:
-	case 6:
-		NPC_SetAnim(NPC, SETANIM_BOTH, BOTH_STAND9IDLE1, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD);
-		break;
-	case 7:
-	case 8:
-		NPC_SetAnim(NPC, SETANIM_BOTH, BOTH_GUARD_IDLE1, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD);
-		break;
-	case 9:
-	default:
-		NPC_SetAnim(NPC, SETANIM_BOTH, BOTH_GUARD_LOOKAROUND1, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD);
-		break;
-	}
-}
-
-void NPC_PickRandomIdleAnimantion()
-{
-	int randAnim = irand(0,10);
-	gentity_t *NPC = NPCS.NPC;
-
-	if (NPC->enemy) return; // No idle anims when we got an enemy...
-
-	if (NPC->client->lookTime > level.time) return; // Wait before next anim...
-
-	NPC->client->lookTime = level.time + irand(5000, 15000);
-
-	/*if (NPC->client->NPC_class == CLASS_CIVILIAN)
-	{
-		NPC_PickRandomIdleAnimantionCivilian();
-		return;
-	}*/
-
-	switch (randAnim)
-	{
-	case 0:
-		NPC_SetAnim(NPC, SETANIM_BOTH, BOTH_STAND3, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD);
-	case 1:
-		NPC_SetAnim(NPC, SETANIM_BOTH, BOTH_STAND4, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD);
-	case 2:
-		NPC_SetAnim(NPC, SETANIM_BOTH, BOTH_STAND6, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD);
-	case 3:
-		NPC_SetAnim(NPC, SETANIM_BOTH, BOTH_STAND8, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD);
-	case 4:
-		NPC_SetAnim(NPC, SETANIM_BOTH, BOTH_STAND9, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD);
-	case 5:
-	case 6:
-		NPC_SetAnim(NPC, SETANIM_BOTH, BOTH_STAND9IDLE1, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD);
-		break;
-	case 7:
-	case 8:
-		NPC_SetAnim(NPC, SETANIM_BOTH, BOTH_GUARD_IDLE1, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD);
-		break;
-	case 9:
-	default:
-		NPC_SetAnim(NPC, SETANIM_BOTH, BOTH_GUARD_LOOKAROUND1, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD);
-		break;
-	}
-}
+qboolean DOM_NPC_ClearPathToSpot( gentity_t *NPC, vec3_t dest, int impactEntNum );
+extern int DOM_GetRandomCloseVisibleWP(gentity_t *ent, vec3_t org, int ignoreEnt, int badwp);
 
 int NPC_GetPatrolWP(gentity_t *NPC, vec3_t org)
 {
@@ -2240,7 +2242,10 @@ int NPC_GetPatrolWP(gentity_t *NPC, vec3_t org)
 
 	while (i < gWPNum)
 	{
-		if (gWPArray[i] && gWPArray[i]->inuse)
+		if (gWPArray[i] 
+			&& gWPArray[i]->inuse 
+			&& HeightDistance(gWPArray[i]->origin, NPC->r.currentOrigin) <= 24.0
+			&& HeightDistance(gWPArray[i]->origin, org) <= 24.0)
 		{
 			vec3_t org, org2;
 
@@ -2261,8 +2266,8 @@ int NPC_GetPatrolWP(gentity_t *NPC, vec3_t org)
 				VectorCopy(gWPArray[i]->origin, org2);
 				org2[2]+=8;
 
-				//if (DOM_NPC_ClearPathToSpot( NPC, gWPArray[i]->origin, NPC->s.number ))
-				if (OrgVisible(org, org2, NPC->s.number))
+				if (DOM_NPC_ClearPathToSpot( NPC, gWPArray[i]->origin, NPC->s.number ))
+				//if (OrgVisible(org, org2, NPC->s.number))
 				{
 					FOUND_LIST[NUM_FOUND] = i;
 					NUM_FOUND++;
@@ -2284,11 +2289,12 @@ qboolean NPC_FindNewPatrolWaypoint()
 {
 	gentity_t *NPC = NPCS.NPC;
 
-	NPC->patrol_range = 512.0;
+	//NPC->patrol_range = 512.0;
+	NPC->patrol_range = 384.0;
 
 	if (NPC->noWaypointTime > level.time)
 	{// Only try to find a new waypoint every 25 seconds...
-		NPC_PickRandomIdleAnimantion();
+		NPC_PickRandomIdleAnimantion(NPC);
 		return qfalse;
 	}
 
@@ -2298,7 +2304,7 @@ qboolean NPC_FindNewPatrolWaypoint()
 
 	if (NPC->wpCurrent <= 0 || NPC->wpCurrent >= gWPNum)
 	{
-		NPC_PickRandomIdleAnimantion();
+		NPC_PickRandomIdleAnimantion(NPC);
 		return qfalse;
 	}
 
@@ -2573,6 +2579,49 @@ void UQ1_UcmdMoveForDir ( gentity_t *self, usercmd_t *cmd, vec3_t dir, qboolean 
 	//cmd->upmove = abs(forward[3] ) * dir[3] * speed;
 
 	NPC_SelectMoveAnimation(walk);
+
+	// Adjust the NPC's bbox size to make it smaller and let it move around easier...
+	if (self->r.maxs[0] > 8)
+	{// UQ1: Assuming HUMANOID NPCs... Exceptions may need to be made...
+		self->r.maxs[0] = 8;
+		self->r.maxs[1] = 8;
+	
+		self->r.mins[0] = -8;
+		self->r.mins[1] = -8;
+		trap->LinkEntity((sharedEntity_t *)self);
+	}
+}
+
+qboolean NPC_OrgVisible(vec3_t org1, vec3_t org2, int ignore)
+{
+	trace_t tr;
+	vec3_t	from, to;
+
+	VectorCopy(org1, from);
+	from[2] += 32;
+	VectorCopy(org2, to);
+	to[2] += 18;
+
+	trap->Trace(&tr, from, NULL, NULL, to, ignore, MASK_SOLID, 0, 0, 0);
+
+	if (tr.fraction == 1)
+	{
+		return qtrue;
+	}
+
+	return qfalse;
+}
+
+qboolean NPC_HaveValidEnemy( void )
+{
+	gentity_t	*NPC = NPCS.NPC;
+
+	if (NPC->enemy 
+		&& NPC->enemy->health > 0
+		&& !(NPC->enemy->s.eFlags & EF_DEAD))
+		return qtrue;
+
+	return qfalse;
 }
 
 extern gentity_t *NPC_PickEnemyExt( qboolean checkAlerts );
@@ -2592,6 +2641,7 @@ qboolean NPC_PatrolArea( void )
 	if (gWPNum <= 0)
 	{// No waypoints available...
 		//trap->Print("PATROL: No waypoints.\n");
+		NPC_PickRandomIdleAnimantion(NPC);
 		return qfalse;
 	}
 
@@ -2611,7 +2661,7 @@ qboolean NPC_PatrolArea( void )
 	{
 		switch (NPC->client->NPC_class)
 		{
-		/*case CLASS_CIVILIAN:
+		case CLASS_CIVILIAN:
 		case CLASS_GENERAL_VENDOR:
 		case CLASS_WEAPONS_VENDOR:
 		case CLASS_ARMOR_VENDOR:
@@ -2624,7 +2674,7 @@ qboolean NPC_PatrolArea( void )
 		case CLASS_DRUG_VENDOR:
 		case CLASS_TRAVELLING_VENDOR:
 			// These guys have no enemies...
-			break;*/
+			break;
 		default:
 			if ( NPC->client->enemyTeam != NPCTEAM_NEUTRAL )
 			{
@@ -2682,6 +2732,7 @@ qboolean NPC_PatrolArea( void )
 		NPC_FindNewPatrolWaypoint();
 		NPC->return_home = qfalse;
 		//trap->Print("PATROL: New Waypoint [%i].\n", NPC->wpCurrent);
+		NPC_PickRandomIdleAnimantion(NPC);
 		return qfalse; // next think...
 	}
 
@@ -2691,6 +2742,7 @@ qboolean NPC_PatrolArea( void )
 		NPC->wpCurrent = -1;
 		NPC->pathsize = -1;
 		//trap->Print("PATROL: Hit goal.\n");
+		NPC_PickRandomIdleAnimantion(NPC);
 		return qfalse; // next think...
 	}
 
@@ -2722,9 +2774,19 @@ qboolean NPC_PatrolArea( void )
 	{
 
 	}	
-	else
+	else if (NPC_NPCBlockingPath())
 	{
-		NPC_NPCBlockingPath();
+		
+	}
+	else if (!DOM_NPC_ClearPathToSpot( NPC, gWPArray[NPC->wpCurrent]->origin, NPC->s.number ))
+	//else if (!NPC_OrgVisible(gWPArray[NPC->wpCurrent]->origin, NPC->r.currentOrigin, NPC->s.number))
+	{// Something in the way... Stand idle...
+		NPC->longTermGoal = -1;
+		NPC->wpCurrent = -1;
+		NPC->pathsize = -1;
+		//trap->Print("PATROL: Hit goal.\n");
+		NPC_PickRandomIdleAnimantion(NPC);
+		return qfalse; // next think...
 	}
 
 	//if (NPCS.ucmd.buttons & BUTTON_WALKING)
@@ -2746,10 +2808,10 @@ qboolean NPC_PatrolArea( void )
 	UQ1_UcmdMoveForDir( NPC, &NPCS.ucmd, NPC->movedir, qfalse/*qtrue*/ );
 	VectorCopy( NPC->movedir, NPC->client->ps.moveDir );
 
-	if (NPC->bot_strafe_right_timer > level.time)
-		NPCS.ucmd.rightmove = 48.0;
-	else if (NPC->bot_strafe_left_timer > level.time)
-		NPCS.ucmd.rightmove = 48.0;
+	//if (NPC->bot_strafe_right_timer > level.time)
+	//	NPCS.ucmd.rightmove = 48.0;
+	//else if (NPC->bot_strafe_left_timer > level.time)
+	//	NPCS.ucmd.rightmove = 48.0;
 	
 	//NPC_MoveDirClear( NPCS.ucmd.forwardmove, NPCS.ucmd.rightmove, qfalse );
 
@@ -2769,38 +2831,6 @@ qboolean NPC_PatrolArea( void )
 	//trap->Print("PATROL: Moved.\n");
 
 	return qtrue;
-}
-
-qboolean NPC_OrgVisible(vec3_t org1, vec3_t org2, int ignore)
-{
-	trace_t tr;
-	vec3_t	from, to;
-
-	VectorCopy(org1, from);
-	from[2] += 32;
-	VectorCopy(org2, to);
-	to[2] += 18;
-
-	trap->Trace(&tr, from, NULL, NULL, to, ignore, MASK_SOLID, 0, 0, 0);
-
-	if (tr.fraction == 1)
-	{
-		return qtrue;
-	}
-
-	return qfalse;
-}
-
-qboolean NPC_HaveValidEnemy( void )
-{
-	gentity_t	*NPC = NPCS.NPC;
-
-	if (NPC->enemy 
-		&& NPC->enemy->health > 0
-		&& !(NPC->enemy->s.eFlags & EF_DEAD))
-		return qtrue;
-
-	return qfalse;
 }
 
 /*///////////////////////////////////////////////////
@@ -2856,11 +2886,11 @@ qboolean NPC_FindNewWaypoint()
 
 	//if (NPC->noWaypointTime > level.time)
 	//{// Only try to find a new waypoint every 5 seconds...
-	//	NPC_PickRandomIdleAnimantion();
+	//	NPC_PickRandomIdleAnimantion(NPC);
 	//	return qfalse;
 	//}
 
-	NPC->wpCurrent = DOM_GetRandomCloseWP/*DOM_GetNearestVisibleWP*//*DOM_GetBestWaypoint*/(NPC->r.currentOrigin, NPC->s.number, -1);
+	NPC->wpCurrent = DOM_GetRandomCloseVisibleWP(NPC, NPC->r.currentOrigin, NPC->s.number, -1);
 	//NPC->noWaypointTime = level.time + 3000; // 3 seconds before we try again... (it will run avoidance in the meantime)
 
 	//if (NPC->wpSeenTime < NPC->noWaypointTime)
@@ -2868,7 +2898,7 @@ qboolean NPC_FindNewWaypoint()
 
 	if (NPC->wpCurrent < 0 || NPC->wpCurrent >= gWPNum)
 	{
-		NPC_PickRandomIdleAnimantion();
+		NPC_PickRandomIdleAnimantion(NPC);
 		//G_Printf("NPC Waypointing Debug: NPC %i (%s) failed to find a waypoint for itself.", NPC->s.number, NPC->NPC_type);
 		return qfalse; // failed... try again after som avoidance code...
 	}
@@ -2901,7 +2931,7 @@ void NPC_SetEnemyGoal()
 	{// Should we find a cover point???
 		if (NPC->enemy->wpCurrent <= 0 || NPC->enemy->wpCurrent < gWPNum)
 		{// Find a new waypoint for them...
-			NPC->enemy->wpCurrent = DOM_GetRandomCloseWP/*DOM_GetNearestVisibleWP*/(NPC->enemy->r.currentOrigin, NPC->enemy->s.number, -1);
+			NPC->enemy->wpCurrent = DOM_GetRandomCloseVisibleWP(NPC->enemy, NPC->enemy->r.currentOrigin, NPC->enemy->s.number, -1);
 		}
 
 		if (NPC->enemy->wpCurrent > 0 
@@ -2973,17 +3003,17 @@ void NPC_SetEnemyGoal()
 
 			if (NPC->longTermGoal <= 0)
 			{// Fallback...
-				NPC->longTermGoal = DOM_GetRandomCloseWP/*DOM_GetNearestVisibleWP_Goal*/(NPC->enemy->r.currentOrigin, NPC->enemy->s.number, -1);
+				NPC->longTermGoal = DOM_GetRandomCloseVisibleWP(NPC->enemy, NPC->enemy->r.currentOrigin, NPC->enemy->s.number, -1);
 			}
 		}
 		else
 		{// Just head toward them....
-			NPC->longTermGoal = DOM_GetRandomCloseWP/*DOM_GetNearestVisibleWP_Goal*/(NPC->enemy->r.currentOrigin, NPC->enemy->s.number, -1);
+			NPC->longTermGoal = DOM_GetRandomCloseVisibleWP(NPC->enemy, NPC->enemy->r.currentOrigin, NPC->enemy->s.number, -1);
 		}
 	}
 	else
 	{
-		NPC->longTermGoal = DOM_GetRandomCloseWP/*DOM_GetNearestVisibleWP_Goal*/(NPC->enemy->r.currentOrigin, NPC->enemy->s.number, -1);
+		NPC->longTermGoal = DOM_GetRandomCloseVisibleWP(NPC->enemy, NPC->enemy->r.currentOrigin, NPC->enemy->s.number, -1);
 	}
 
 	if (NPC->longTermGoal > 0)
@@ -3191,7 +3221,7 @@ void NPC_SetNewGoalAndPath()
 
 	if (NPC->wpSeenTime > level.time)
 	{
-		NPC_PickRandomIdleAnimantion();
+		NPC_PickRandomIdleAnimantion(NPC);
 		return; // wait for next route creation...
 	}
 
@@ -3202,7 +3232,7 @@ void NPC_SetNewGoalAndPath()
 
 	if (NPC->return_home)
 	{// Returning home...
-		NPC->longTermGoal = DOM_GetRandomCloseWP/*DOM_GetNearestVisibleWP_Goal*/(NPC->spawn_pos, NPC->s.number, -1);
+		NPC->longTermGoal = DOM_GetRandomCloseVisibleWP(NPC, NPC->spawn_pos, NPC->s.number, -1);
 	}
 	else
 	{// Find a new generic goal...
@@ -3228,7 +3258,7 @@ void NPC_SetNewGoalAndPath()
 			//G_Printf("NPC Waypointing Debug: NPC %i failed to create a route between waypoints %i and %i.", NPC->s.number, NPC->wpCurrent, NPC->longTermGoal);
 			// Delay before next route creation...
 			NPC->wpSeenTime = level.time + 1000;//30000;
-			NPC_PickRandomIdleAnimantion();
+			NPC_PickRandomIdleAnimantion(NPC);
 			return;
 		}
 	}
@@ -3238,7 +3268,7 @@ void NPC_SetNewGoalAndPath()
 
 		// Delay before next route creation...
 		NPC->wpSeenTime = level.time + 1000;//30000;
-		NPC_PickRandomIdleAnimantion();
+		NPC_PickRandomIdleAnimantion(NPC);
 		return;
 	}
 
@@ -3271,7 +3301,7 @@ void NPC_SetNewWarzoneGoalAndPath()
 
 	if (NPC->wpSeenTime > level.time)
 	{
-		NPC_PickRandomIdleAnimantion();
+		NPC_PickRandomIdleAnimantion(NPC);
 		return; // wait for next route creation...
 	}
 
@@ -3302,7 +3332,7 @@ void NPC_SetNewWarzoneGoalAndPath()
 			//G_Printf("NPC Waypointing Debug: NPC %i failed to create a route between waypoints %i and %i.", NPC->s.number, NPC->wpCurrent, NPC->longTermGoal);
 			// Delay before next route creation...
 			NPC->wpSeenTime = level.time + 1000;//30000;
-			NPC_PickRandomIdleAnimantion();
+			NPC_PickRandomIdleAnimantion(NPC);
 			return;
 		}
 	}
@@ -3312,7 +3342,7 @@ void NPC_SetNewWarzoneGoalAndPath()
 
 		// Delay before next route creation...
 		NPC->wpSeenTime = level.time + 1000;//30000;
-		NPC_PickRandomIdleAnimantion();
+		NPC_PickRandomIdleAnimantion(NPC);
 		return;
 	}
 
@@ -3342,17 +3372,20 @@ qboolean DOM_NPC_ClearPathToSpot( gentity_t *NPC, vec3_t dest, int impactEntNum 
 
 	//Offset the step height
 	//vec3_t	mins = {-18, -18, -24};
-	vec3_t	mins = {-8, -8, -6};
+	//vec3_t	mins = {-8, -8, -6};
+	vec3_t	mins = {-10, -10, -6};
 	//vec3_t	maxs = {18, 18, 48};
-	vec3_t	maxs = {8, 8, NPC->client->ps.crouchheight};
+	//vec3_t	maxs = {8, 8, NPC->client->ps.crouchheight};
+	//vec3_t	maxs = {8, 8, 16};
+	vec3_t	maxs = {10, 10, 16};
 
 	VectorCopy(NPC->s.origin, org);
 	//org[2]+=STEPSIZE;
-	org[2]+=8;
+	org[2]+=16;
 
 	VectorCopy(dest, destorg);
 	//destorg[2]+=STEPSIZE;
-	destorg[2]+=8;
+	destorg[2]+=16;
 
 	trap->Trace( &trace, org, NULL/*mins*/, NULL/*maxs*/, destorg, NPC->s.number, MASK_PLAYERSOLID/*NPC->clipmask*/, 0, 0, 0 );
 
@@ -3857,7 +3890,7 @@ qboolean NPC_FollowRoutes( void )
 	if ( !NPC->enemy )
 	{
 		switch (NPC->client->NPC_class)
-		{/*
+		{
 		case CLASS_CIVILIAN:
 		case CLASS_GENERAL_VENDOR:
 		case CLASS_WEAPONS_VENDOR:
@@ -3871,7 +3904,7 @@ qboolean NPC_FollowRoutes( void )
 		case CLASS_DRUG_VENDOR:
 		case CLASS_TRAVELLING_VENDOR:
 			// These guys have no enemies...
-			break;*/
+			break;
 		default:
 			if ( NPC->client->enemyTeam != NPCTEAM_NEUTRAL )
 			{
@@ -3907,7 +3940,7 @@ qboolean NPC_FollowRoutes( void )
 
 		if (NPC->enemy->wpCurrent <= 0 || NPC->enemy->wpCurrent >= gWPNum || Distance(gWPArray[NPC->enemy->wpCurrent]->origin, NPC->enemy->r.currentOrigin) > 256)
 		{// Make sure an enemy always has a waypoint to calculate cover from...
-			NPC->enemy->wpCurrent = DOM_GetRandomCloseWP(NPC->enemy->r.currentOrigin, NPC->enemy->s.number, -1);
+			NPC->enemy->wpCurrent = DOM_GetRandomCloseVisibleWP(NPC->enemy, NPC->enemy->r.currentOrigin, NPC->enemy->s.number, -1);
 		}
 	}
 
@@ -3948,6 +3981,7 @@ qboolean NPC_FollowRoutes( void )
 	if (gWPNum <= 0)
 	{// No waypoints available...
 		//trap->Print("NPC PF DEBUG: NO WP!\n");
+		NPC_PickRandomIdleAnimantion(NPC);
 		return qfalse;
 	}
 
@@ -4109,6 +4143,7 @@ qboolean NPC_FollowRoutes( void )
 	if (NPC->wpCurrent < 0 || NPC->wpCurrent >= gWPNum || NPC->longTermGoal < 0 || NPC->longTermGoal >= gWPNum)
 	{// Try again to find a path. This time it should ignore wpCurrent and find another start waypoint...
 		//trap->Print("NPC PF DEBUG: NO WPCURRENT!\n");
+		NPC_PickRandomIdleAnimantion(NPC);
 		return qfalse; // next think...
 	}
 
@@ -4133,6 +4168,8 @@ qboolean NPC_FollowRoutes( void )
 		}
 		*/
 
+		NPC_PickRandomIdleAnimantion(NPC);
+
 		//trap->Print("NPC PF DEBUG: AT GOAL!\n");
 		return qfalse; // next think...
 	}
@@ -4148,6 +4185,8 @@ qboolean NPC_FollowRoutes( void )
 
 		NPC->wpSeenTime = 0;
 
+		NPC_PickRandomIdleAnimantion(NPC);
+
 		//trap->Print("NPC PF DEBUG: AT GOAL 2!\n");
 		return qfalse; // next think...
 	}
@@ -4155,6 +4194,7 @@ qboolean NPC_FollowRoutes( void )
 	if (NPC->wpCurrent < 0 || NPC->wpCurrent >= gWPNum || NPC->longTermGoal < 0 || NPC->longTermGoal >= gWPNum)
 	{// FIXME: Try to roam out of problems...
 		//trap->Print("NPC PF DEBUG: NO WPCURRENT 2!\n");
+		NPC_PickRandomIdleAnimantion(NPC);
 		return qfalse; // next think...
 	}
 
@@ -4202,6 +4242,7 @@ qboolean NPC_FollowRoutes( void )
 	if (NPC->wpCurrent < 0 || NPC->wpCurrent >= gWPNum || NPC->longTermGoal < 0 || NPC->longTermGoal >= gWPNum)
 	{// FIXME: Try to roam out of problems...
 		//trap->Print("NPC PF DEBUG: NO WPCURRENT 3!\n");
+		NPC_PickRandomIdleAnimantion(NPC);
 		return qfalse; // next think...
 	}
 
@@ -4241,6 +4282,7 @@ qboolean NPC_FollowRoutes( void )
 	if (NPC->wpCurrent < 0 || NPC->wpCurrent >= gWPNum || NPC->longTermGoal < 0 || NPC->longTermGoal >= gWPNum)
 	{// FIXME: Try to roam out of problems...
 		//trap->Print("NPC PF DEBUG: NO WPCURRENT 4!\n");
+		NPC_PickRandomIdleAnimantion(NPC);
 		return qfalse; // next think...
 	}
 
@@ -4275,9 +4317,19 @@ qboolean NPC_FollowRoutes( void )
 	{
 
 	}	
-	else
+	else if (NPC_NPCBlockingPath())
 	{
-		NPC_NPCBlockingPath();
+		
+	}
+	//else if (!NPC_OrgVisible(gWPArray[NPC->wpCurrent]->origin, NPC->r.currentOrigin, NPC->s.number))
+	else if (!DOM_NPC_ClearPathToSpot( NPC, gWPArray[NPC->wpCurrent]->origin, NPC->s.number ))
+	{// Something in the way... Stand idle...
+		//NPC->longTermGoal = -1;
+		//NPC->wpCurrent = -1;
+		//NPC->pathsize = -1;
+		//trap->Print("PATROL: Hit goal.\n");
+		NPC_PickRandomIdleAnimantion(NPC);
+		return qfalse; // next think...
 	}
 
 	//if (NPCS.ucmd.buttons & BUTTON_WALKING)
@@ -4295,10 +4347,10 @@ qboolean NPC_FollowRoutes( void )
 	UQ1_UcmdMoveForDir( NPC, &NPCS.ucmd, NPC->movedir, qfalse/*NPC_HaveValidEnemy()*/ );
 	VectorCopy( NPC->movedir, NPC->client->ps.moveDir );
 
-	if (NPC->bot_strafe_right_timer > level.time)
-		NPCS.ucmd.rightmove = 48.0;
-	else if (NPC->bot_strafe_left_timer > level.time)
-		NPCS.ucmd.rightmove = 48.0;
+	//if (NPC->bot_strafe_right_timer > level.time)
+	//	NPCS.ucmd.rightmove = 48.0;
+	//else if (NPC->bot_strafe_left_timer > level.time)
+	//	NPCS.ucmd.rightmove = 48.0;
 
 	//trap->Print("NPC PF DEBUG: MOVING!\n");
 
@@ -4501,6 +4553,61 @@ void NPC_Think ( gentity_t *self)//, int msec )
 					{//we look ready for action, using one of the first 2 weapon, let's rest our weapon on our shoulder
 						NPC_SetAnim(NPCS.NPC,SETANIM_TORSO,TORSO_WEAPONIDLE3,SETANIM_FLAG_NORMAL);
 					}
+
+					NPC_CheckAttackHold();
+					NPC_ApplyScriptFlags();
+
+					//cliff and wall avoidance
+					NPC_AvoidWallsAndCliffs();
+
+					// run the bot through the server like it was a real client
+					//=== Save the ucmd for the second no-think Pmove ============================
+					NPCS.ucmd.serverTime = level.time - 50;
+					memcpy( &NPCS.NPCInfo->last_ucmd, &NPCS.ucmd, sizeof( usercmd_t ) );
+					if ( !NPCS.NPCInfo->attackHoldTime )
+					{
+						NPCS.NPCInfo->last_ucmd.buttons &= ~(BUTTON_ATTACK|BUTTON_ALT_ATTACK);//so we don't fire twice in one think
+					}
+					//============================================================================
+					NPC_CheckAttackScript();
+					NPC_KeepCurrentFacing();
+
+					if ( !NPCS.NPC->next_roff_time || NPCS.NPC->next_roff_time < level.time )
+					{//If we were following a roff, we don't do normal pmoves.
+						ClientThink( NPCS.NPC->s.number, &NPCS.ucmd );
+					}
+					else
+					{
+						NPC_ApplyRoff();
+					}
+
+					// end of thinking cleanup
+					NPCS.NPCInfo->touchedByPlayer = NULL;
+
+					NPC_CheckPlayerAim();
+					NPC_CheckAllClear();
+				}
+				else
+				{
+					NPCS.ucmd.forwardmove = 0;
+					NPCS.ucmd.rightmove = 0;
+					NPCS.ucmd.upmove = 0;
+					NPCS.ucmd.buttons = 0;
+
+					if (!NPCS.NPC->NPC->conversationPartner)
+					{// Not chatting with another NPC... Set idle animation...
+						NPC_PickRandomIdleAnimantion(NPCS.NPC);
+					}
+
+					if ( NPCS.client->ps.weaponstate == WEAPON_READY )
+					{
+						NPCS.client->ps.weaponstate = WEAPON_IDLE;
+					}
+
+					//if ( NPCS.NPC->s.torsoAnim == TORSO_WEAPONREADY1 || NPCS.NPC->s.torsoAnim == TORSO_WEAPONREADY3 )
+					//{//we look ready for action, using one of the first 2 weapon, let's rest our weapon on our shoulder
+					//	NPC_SetAnim(NPCS.NPC,SETANIM_TORSO,TORSO_WEAPONIDLE3,SETANIM_FLAG_NORMAL);
+					//}
 
 					NPC_CheckAttackHold();
 					NPC_ApplyScriptFlags();

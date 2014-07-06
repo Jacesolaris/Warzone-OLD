@@ -2463,3 +2463,4 @@ typedef enum {
 } saberActionFlag_e;
 //[/SaberSys]
 
+qboolean StringContainsWord(const char *haystack, const char *needle);

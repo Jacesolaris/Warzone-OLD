@@ -315,6 +315,96 @@ int DOM_GetRandomCloseWP(vec3_t org, int badwp, int unused)
 	return GOOD_LIST[irand(0, NUM_GOOD - 1)];
 }
 
+extern qboolean DOM_NPC_ClearPathToSpot( gentity_t *NPC, vec3_t dest, int impactEntNum );
+
+int DOM_GetRandomCloseVisibleWP(gentity_t *ent, vec3_t org, int ignoreEnt, int badwp)
+{
+	int		i;
+	float	bestdist;
+	float	flLen;
+	vec3_t	a;
+	int		GOOD_LIST[MAX_WPARRAY_SIZE];
+	int		NUM_GOOD = 0;
+
+	i = 0;
+	if (RMG.integer)
+	{
+		bestdist = 300;
+	}
+	else
+	{
+		//We're not doing traces!
+		bestdist = 128.0f;
+
+	}
+
+	while (i < gWPNum)
+	{
+		if (gWPArray[i] && gWPArray[i]->inuse && i != badwp)
+		{
+			VectorSubtract(org, gWPArray[i]->origin, a);
+			flLen = VectorLength(a);
+
+			if (flLen < bestdist && DOM_NPC_ClearPathToSpot( ent, gWPArray[i]->origin, ent->s.number ))
+			{
+				GOOD_LIST[NUM_GOOD] = i;
+				NUM_GOOD++;
+			}
+		}
+
+		i++;
+	}
+
+	if (NUM_GOOD <= 0)
+	{// Try further...
+		bestdist = 256.0f;
+
+		while (i < gWPNum)
+		{
+			if (gWPArray[i] && gWPArray[i]->inuse && i != badwp)
+			{
+				VectorSubtract(org, gWPArray[i]->origin, a);
+				flLen = VectorLength(a);
+
+				if (flLen < bestdist && DOM_NPC_ClearPathToSpot( ent, gWPArray[i]->origin, ent->s.number ))
+				{
+					GOOD_LIST[NUM_GOOD] = i;
+					NUM_GOOD++;
+				}
+			}
+
+			i++;
+		}
+	}
+
+	if (NUM_GOOD <= 0)
+	{// Try further... last chance...
+		bestdist = 512.0f;
+
+		while (i < gWPNum)
+		{
+			if (gWPArray[i] && gWPArray[i]->inuse && i != badwp)
+			{
+				VectorSubtract(org, gWPArray[i]->origin, a);
+				flLen = VectorLength(a);
+
+				if (flLen < bestdist && DOM_NPC_ClearPathToSpot( ent, gWPArray[i]->origin, ent->s.number ))
+				{
+					GOOD_LIST[NUM_GOOD] = i;
+					NUM_GOOD++;
+				}
+			}
+
+			i++;
+		}
+	}
+
+	if (NUM_GOOD <= 0)
+		return -1;
+
+	return GOOD_LIST[irand(0, NUM_GOOD - 1)];
+}
+
 
 //just like GetNearestVisibleWP except without visiblity checks
 int DOM_GetNearestWP(vec3_t org, int badwp)

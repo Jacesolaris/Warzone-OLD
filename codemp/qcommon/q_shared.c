@@ -48,6 +48,39 @@ const char *GetStringForID( stringID_table_t *table, int id )
 	return NULL;
 }
 
+#include <stdio.h>
+#include <ctype.h>
+
+qboolean StringContainsWord(const char *haystack, const char *needle)
+{
+	if ( !*needle )
+	{
+		return qfalse;
+	}
+	for ( ; *haystack; ++haystack )
+	{
+		if ( toupper(*haystack) == toupper(*needle) )
+		{
+			/*
+			* Matched starting char -- loop through remaining chars.
+			*/
+			const char *h, *n;
+			for ( h = haystack, n = needle; *h && *n; ++h, ++n )
+			{
+				if ( toupper(*h) != toupper(*n) )
+				{
+					break;
+				}
+			}
+			if ( !*n ) /* matched all of 'needle' to null termination */
+			{
+				return qtrue; /* return the start of the match */
+			}
+		}
+	}
+	return qfalse;
+}
+
 int Com_Clampi( int min, int max, int value )
 {
 	if ( value < min )

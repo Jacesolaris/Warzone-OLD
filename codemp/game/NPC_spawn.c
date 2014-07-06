@@ -80,6 +80,136 @@ extern void TurretPain					(gentity_t *self, gentity_t *attacker, int damage);
 extern void NPC_Wampa_Pain				(gentity_t *self, gentity_t *attacker, int damage);
 extern void NPC_Rancor_Pain				(gentity_t *self, gentity_t *attacker, int damage);
 
+//--------------------------------------------------------------
+
+qboolean HumanNamesLoaded = qfalse;
+
+typedef struct
+{// FIXME: Add other species name files...
+	char	HumanNames[MAX_QPATH];
+} name_list_t;
+
+name_list_t NPC_NAME_LIST[8000];
+
+int NUM_HUMAN_NAMES = 0;
+
+/* */
+void
+Load_NPC_Names ( void )
+{				// Load bot first names from external file.
+	char			*s, *t;
+	int				len;
+	fileHandle_t	f;
+	char			*buf;
+	char			*loadPath;
+	int				num = 0;
+
+	if (HumanNamesLoaded)
+		return;
+
+	loadPath = va( "npc_names_list.dat" );
+
+	len = trap->FS_Open( loadPath, &f, FS_READ );
+
+	HumanNamesLoaded = qtrue;
+
+	if ( !f )
+	{
+		return;
+	}
+
+	if ( !len )
+	{			//empty file
+		trap->FS_Close( f );
+		return;
+	}
+
+	if ( (buf = (char *)malloc( len + 1)) == 0 )
+	{			//alloc memory for buffer
+		trap->FS_Close( f );
+		return;
+	}
+
+	trap->FS_Read( buf, len, f );
+	buf[len] = 0;
+	trap->FS_Close( f );
+
+	strcpy( NPC_NAME_LIST[NUM_HUMAN_NAMES].HumanNames, "NONAME");
+	NUM_HUMAN_NAMES++;
+	strcpy( NPC_NAME_LIST[NUM_HUMAN_NAMES].HumanNames, "R2D2 Droid");
+	NUM_HUMAN_NAMES++;
+	strcpy( NPC_NAME_LIST[NUM_HUMAN_NAMES].HumanNames, "R5D2 Droid");
+	NUM_HUMAN_NAMES++;
+	strcpy( NPC_NAME_LIST[NUM_HUMAN_NAMES].HumanNames, "Protocol Droid");
+	NUM_HUMAN_NAMES++;
+	strcpy( NPC_NAME_LIST[NUM_HUMAN_NAMES].HumanNames, "Weequay");
+	NUM_HUMAN_NAMES++;
+
+	for ( t = s = buf; *t; /* */ )
+	{
+		num++;
+		s = strchr( s, '\n' );
+		if ( !s || num > len )
+		{
+			break;
+		}
+
+		while ( *s == '\n' )
+		{
+			*s++ = 0;
+		}
+
+		if ( *t )
+		{
+			if ( !Q_strncmp( "//", va( "%s", t), 2) == 0 && strlen( va( "%s", t)) > 0 )
+			{	// Not a comment either... Record it in our list...
+				Q_strncpyz( NPC_NAME_LIST[NUM_HUMAN_NAMES].HumanNames, va( "%s", t), strlen( va( "%s", t)) );
+				NUM_HUMAN_NAMES++;
+			}
+		}
+
+		t = s;
+	}
+
+	NUM_HUMAN_NAMES--;
+
+	trap->Print( "^4*** ^3%s^4: ^5There are ^7%i^5 NPC names in the database.\n", GAME_VERSION, NUM_HUMAN_NAMES );
+}
+
+void SelectNPCNameFromList( gentity_t *NPC )
+{
+	// Load names on first check...
+	Load_NPC_Names();
+
+	if (StringContainsWord(NPC->NPC_type, "r2d2"))
+	{
+		NPC->s.generic1 = 1; // Init the NPC name...
+		NPC->client->ps.generic1 = NPC->s.generic1; // Init the NPC name...
+	}
+	else if (StringContainsWord(NPC->NPC_type, "r5d2"))
+	{
+		NPC->s.generic1 = 2; // Init the NPC name...
+		NPC->client->ps.generic1 = NPC->s.generic1; // Init the NPC name...
+	}
+	else if (StringContainsWord(NPC->NPC_type, "protocol"))
+	{
+		NPC->s.generic1 = 3; // Init the NPC name...
+		NPC->client->ps.generic1 = NPC->s.generic1; // Init the NPC name...
+	}
+	else if (StringContainsWord(NPC->NPC_type, "weequay"))
+	{
+		NPC->s.generic1 = 4; // Init the NPC name...
+		NPC->client->ps.generic1 = NPC->s.generic1; // Init the NPC name...
+	}
+	else
+	{
+		NPC->s.generic1 = irand(4, NUM_HUMAN_NAMES); // Init the NPC name...
+		NPC->client->ps.generic1 = NPC->s.generic1; // Init the NPC name...
+	}
+}
+
+//--------------------------------------------------------------
+
 int WP_SetSaberModel( gclient_t *client, class_t npcClass )
 {
 	//rwwFIXMEFIXME: Do something here, need to let the client know.
@@ -866,6 +996,8 @@ qboolean NPC_SpotWouldTelefrag( gentity_t *npc )
 	return qfalse;
 }
 
+extern void NPC_PickRandomIdleAnimantion();
+
 //--------------------------------------------------------------
 void NPC_Begin (gentity_t *ent)
 {
@@ -912,6 +1044,49 @@ void NPC_Begin (gentity_t *ent)
 	VectorCopy( ent->client->ps.origin, spawn_origin);
 	VectorCopy( ent->s.angles, spawn_angles);
 	spawn_angles[YAW] = ent->NPC->desiredYaw;
+
+	// UQ1: Mark every NPC's spawn position. For patrolling that spot and stuff...
+	VectorCopy(ent->client->ps.origin, ent->spawn_pos);
+
+	// UQ1: Give them a name (for kills)...
+	//strcpy(ent->client->pers.netname, va("a %s NPC", ent->NPC_type));
+	
+	if (ent->s.generic1 <= 0)
+	{// UQ1: Find their name type to send to an id to the client for names...
+//		int i;
+
+		ent->s.generic1 = 0; // Init the type...
+		ent->client->ps.generic1 = 0; // Init the type...
+
+		switch( ent->client->NPC_class )
+		{
+		case CLASS_STORMTROOPER:
+		case CLASS_SWAMPTROOPER:
+		case CLASS_IMPWORKER:
+		case CLASS_SHADOWTROOPER:
+			ent->s.generic1 = ent->client->ps.generic1 = irand(100, 999);
+			strcpy(ent->client->pers.netname, va("TK-%i", ent->client->ps.generic1));
+			break;
+		default:
+			SelectNPCNameFromList(ent);
+			strcpy(ent->client->pers.netname, va("%s", NPC_NAME_LIST[ent->client->ps.generic1].HumanNames));
+		}
+
+		//if (StringContainsWord(ent->NPC_type, NPC_NAMES[i]))
+		//trap->Print("NPC %i given name %s.\n", ent->s.number, NPC_NAMES[ent->s.generic1]);
+	}
+
+	// Init patrol range...
+	if (ent->patrol_range <= 0) ent->patrol_range = 512.0f;
+
+	// Init waypoints...
+	ent->wpCurrent = -1;
+	ent->wpNext = -1;
+	ent->wpLast = -1;
+	ent->longTermGoal = -1;
+
+	// Init enemy...
+	ent->enemy = NULL;
 
 	client = ent->client;
 
@@ -1130,7 +1305,8 @@ void NPC_Begin (gentity_t *ent)
 	// set default animations
 	if ( ent->client->NPC_class != CLASS_VEHICLE )
 	{
-		NPC_SetAnim( ent, SETANIM_BOTH, BOTH_STAND1, SETANIM_FLAG_NORMAL );
+		//NPC_SetAnim( ent, SETANIM_BOTH, BOTH_STAND1, SETANIM_FLAG_NORMAL );
+		NPC_PickRandomIdleAnimantion();
 	}
 
 	if( spawnPoint )

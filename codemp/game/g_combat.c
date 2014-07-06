@@ -4542,6 +4542,62 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker, vec3_
 	if (!targ)
 		return;
 
+	if (targ
+		&& targ->client
+		&& targ->s.eType == ET_NPC 
+		&& (attacker && (attacker->s.eType == ET_PLAYER || attacker->s.eType == ET_NPC)))
+	{// UQ1: Civilians don't take damage from players or other NPCs.
+
+		switch( targ->client->NPC_class)
+		{// UQ1: Vendor types... Stand still for now...
+		case CLASS_CIVILIAN:
+		case CLASS_GENERAL_VENDOR:
+		case CLASS_WEAPONS_VENDOR:
+		case CLASS_ARMOR_VENDOR:
+		case CLASS_SUPPLIES_VENDOR:
+		case CLASS_FOOD_VENDOR:
+		case CLASS_MEDICAL_VENDOR:
+		case CLASS_GAMBLER_VENDOR:
+		case CLASS_TRADE_VENDOR:
+		case CLASS_ODDITIES_VENDOR:
+		case CLASS_DRUG_VENDOR:
+		case CLASS_TRAVELLING_VENDOR:
+			{
+				targ->enemy = NULL; // Make sure civilians never have an enemy... (no AI for it, no weapon for it)
+
+				if (attacker && attacker->s.eType == ET_NPC)
+					attacker->enemy = NULL; // Make sure this does not happen again...
+
+				return;
+			}
+			break;
+		default:
+			break;
+		}
+	}
+
+	if (targ
+		&& targ->client
+		&& targ->s.eType == ET_NPC 
+		&& attacker 
+		&& attacker->s.eType == ET_PLAYER
+		&& OnSameTeam( targ, attacker)
+		&& targ != attacker)
+	{// UQ1: NPCs don't take damage from same team players (unless they suicide somehow, like falling).
+		return;
+	}
+
+	if (targ
+		&& targ->client
+		&& targ->s.eType == ET_NPC 
+		&& attacker 
+		&& attacker->s.eType == ET_NPC
+		&& attacker->client->playerTeam == targ->client->playerTeam
+		&& targ != attacker)
+	{// UQ1: NPCs don't take damage from other same team NPCs (unless they suicide somehow, like falling).
+		return;
+	}
+
 	if (targ && targ->damageRedirect)
 	{
 		G_Damage(&g_entities[targ->damageRedirectTo], inflictor, attacker, dir, point, damage, dflags, mod);
