@@ -1093,6 +1093,9 @@ Ghoul2 Insert End
 	int					maxExperience;
 	//[/EXPsys]
 
+	vec3_t		mapcoordsMins;
+	vec3_t		mapcoordsMaxs;
+	qboolean	mapcoordsValid;
 } cg_t;
 
 #define MAX_TICS	14

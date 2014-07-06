@@ -250,6 +250,16 @@ static void CG_SiegeCompleteCvarUpdate_f(void)
 	CG_SiegeBriefingDisplay(SIEGETEAM_TEAM2, 1);
 }
 
+//[AUTOWAYPOINT]
+extern void AIMod_AutoWaypoint ( void );
+extern void AIMod_AutoWaypoint_Clean ( void );
+extern void AIMod_MarkBadHeight ( void );
+extern void AIMod_AddRemovalPoint ( void );
+extern void AIMod_AWC_MarkBadHeight ( void );
+extern void CG_ShowSurface ( void );
+extern void CG_ShowSlope ( void );
+//[/AUTOWAYPOINT]
+
 typedef struct consoleCommand_s {
 	const char	*cmd;
 	void		(*func)(void);
@@ -289,6 +299,17 @@ static consoleCommand_t	commands[] = {
 	{ "weapon",						CG_Weapon_f },
 	{ "weaponclean",				CG_WeaponClean_f },
 	{ "weapprev",					CG_PrevWeapon_f },
+	//[AUTOWAYPOINT]
+	{ "awp",						AIMod_AutoWaypoint },
+	{ "autowaypoint",				AIMod_AutoWaypoint },
+	{ "awc",						AIMod_AutoWaypoint_Clean },
+	{ "autowaypointclean",			AIMod_AutoWaypoint_Clean },
+	{ "showsurface",				CG_ShowSurface },
+	{ "showslope",					CG_ShowSlope },
+	{ "aw_badheight",				AIMod_MarkBadHeight },
+	{ "awc_addremovalspot",			AIMod_AddRemovalPoint },
+	{ "awc_addbadheight",			AIMod_AWC_MarkBadHeight },
+	//[/AUTOWAYPOINT]
 };
 
 static const size_t numCommands = ARRAY_LEN( commands );

@@ -1642,3 +1642,6 @@ void BG_VehicleLoadParms(void);
 
 // Refactored included functions
 void SetTeamQuick(gentity_t *ent, int team, qboolean doBegin);
+
+float VectorDistanceNoHeight ( vec3_t v1, vec3_t v2 );
+float HeightDistance ( vec3_t v1, vec3_t v2 );

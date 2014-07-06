@@ -86,6 +86,7 @@ set(MPGameGameFiles
 	"${MPDir}/game/NPC_AI_Wampa.c"
 	"${MPDir}/game/NPC_behavior.c"
 	"${MPDir}/game/NPC_combat.c"
+	"${MPDir}/game/NPC_Conversations.c"
 	"${MPDir}/game/NPC_goal.c"
 	"${MPDir}/game/NPC_misc.c"
 	"${MPDir}/game/NPC_move.c"

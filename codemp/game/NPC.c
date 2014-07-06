@@ -7,6 +7,8 @@
 #include "icarus/Q3_Interface.h"
 #include "ai_main.h"
 
+#define WAYPOINT_NONE -1
+
 extern vec3_t playerMins;
 extern vec3_t playerMaxs;
 extern void G_SoundOnEnt( gentity_t *ent, soundChannel_t channel, const char *soundPath );
@@ -28,6 +30,11 @@ extern void NPC_BSGM_Default( void );
 extern void NPC_CheckCharmed( void );
 extern qboolean Boba_Flying( gentity_t *self );
 
+// Conversations...
+extern void NPC_NPCConversation();
+extern void NPC_FindConversationPartner();
+extern void NPC_StormTrooperConversation();
+
 //Local Variables
 npcStatic_t NPCS;
 
@@ -36,6 +43,17 @@ void pitch_roll_for_slope( gentity_t *forwhom, vec3_t pass_slope );
 extern void GM_Dying( gentity_t *self );
 
 extern int eventClearTime;
+
+float VectorDistanceNoHeight ( vec3_t v1, vec3_t v2 )
+{
+	vec3_t	dir;
+	vec3_t	v1a, v2a;
+	VectorCopy( v1, v1a );
+	VectorCopy( v2, v2a );
+	v2a[2] = v1a[2];
+	VectorSubtract( v2a, v1a, dir );
+	return ( VectorLength( dir) );
+}
 
 void CorpsePhysics( gentity_t *self )
 {
@@ -1981,7 +1999,7 @@ void G_DroidSounds( gentity_t *self )
 	}
 }
 
-void NPC_SelectMoveAnimation()
+void NPC_SelectMoveAnimation(qboolean walk)
 {
 	if (NPCS.NPC->client->ps.crouchheight <= 0)
 		NPCS.NPC->client->ps.crouchheight = CROUCH_MAXS_2;
@@ -2001,7 +2019,7 @@ void NPC_SelectMoveAnimation()
 		VectorCopy(playerMaxs, NPCS.NPC->r.maxs);
 
 		NPCS.NPC->r.maxs[2] = NPCS.NPC->client->ps.crouchheight;
-		trap_LinkEntity(NPCS.NPC);
+		trap->LinkEntity(NPCS.NPC);
 	}
 	else if (!(NPCS.NPC->client->ps.pm_flags & PMF_DUCKED) && NPCS.NPC->r.maxs[2] < NPCS.NPC->client->ps.standheight)
 	{
@@ -2009,7 +2027,7 @@ void NPC_SelectMoveAnimation()
 		VectorCopy(playerMaxs, NPCS.NPC->r.maxs);
 
 		NPCS.NPC->r.maxs[2] = NPCS.NPC->client->ps.standheight;
-		trap_LinkEntity(NPCS.NPC);
+		trap->LinkEntity(NPCS.NPC);
 	}
 	*/
 
@@ -2033,9 +2051,13 @@ void NPC_SelectMoveAnimation()
 		{//just stand there
 			NPC_SetAnim( NPCS.NPC, SETANIM_BOTH, BOTH_STAND1, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD );
 		}
+
+		NPCS.NPC->client->ps.torsoTimer = 200;
+		NPCS.NPC->client->ps.legsTimer = 200;
 	}
-	else if (VectorLength(NPCS.NPC->client->ps.velocity) < 100)
-	//else if (NPCS.ucmd.forwardmove < 100 && NPCS.ucmd.rightmove < 100)
+
+	/*
+	else if (walk)
 	{// Use walking anims..
 		if (NPCS.ucmd.forwardmove < 0)
 		{
@@ -2074,6 +2096,9 @@ void NPC_SelectMoveAnimation()
 
 			//trap->Print("Walking Forward.\n");
 		}
+
+		NPCS.NPC->client->ps.torsoTimer = 200;
+		NPCS.NPC->client->ps.legsTimer = 200;
 	}
 	else if ( NPCS.NPC->client->ps.eFlags2 & EF2_USE_ALT_ANIM )
 	{//full on run, on all fours
@@ -2085,6 +2110,9 @@ void NPC_SelectMoveAnimation()
 		{
 			NPC_SetAnim( NPCS.NPC, SETANIM_BOTH, BOTH_RUN1, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD );
 		}
+
+		NPCS.NPC->client->ps.torsoTimer = 200;
+		NPCS.NPC->client->ps.legsTimer = 200;
 	}
 	else
 	{//regular, upright run
@@ -2114,10 +2142,11 @@ void NPC_SelectMoveAnimation()
 
 			//trap->Print("Running Forward.\n");
 		}
-	}
 
-	NPCS.NPC->client->ps.torsoTimer = 200;
-	NPCS.NPC->client->ps.legsTimer = 200;
+		NPCS.NPC->client->ps.torsoTimer = 200;
+		NPCS.NPC->client->ps.legsTimer = 200;
+	}
+	*/
 }
 
 void NPC_PickRandomIdleAnimantionCivilian()
@@ -2529,7 +2558,8 @@ void UQ1_UcmdMoveForDir ( gentity_t *self, usercmd_t *cmd, vec3_t dir, qboolean 
 	//float	speed = 127.0f;
 	float	speed = 100.0f;
 	//if (walk) speed = 64.0f;
-	if (walk) speed = 80.0f;
+	//if (walk) speed = 80.0f;
+	if (walk) speed = 48.0f;
 
 	//if (NPCS.ucmd.buttons & BUTTON_WALKING) // BUTTON_WALKING does everything except what is meant to do.....
 	//	speed = 48.0f;
@@ -2546,7 +2576,7 @@ void UQ1_UcmdMoveForDir ( gentity_t *self, usercmd_t *cmd, vec3_t dir, qboolean 
 
 	//cmd->upmove = abs(forward[3] ) * dir[3] * speed;
 
-	NPC_SelectMoveAnimation();
+	NPC_SelectMoveAnimation(walk);
 }
 
 extern gentity_t *NPC_PickEnemyExt( qboolean checkAlerts );
@@ -2618,7 +2648,6 @@ qboolean NPC_PatrolArea( void )
 		}
 	}
 
-	/*
 	if (NPC->NPC->conversationPartner)
 	{// Chatting with another NPC... Stay still!
 		NPC_NPCConversation();
@@ -2638,7 +2667,7 @@ qboolean NPC_PatrolArea( void )
 	{// Chatting with another NPC... Stay still!
 		NPC_FacePosition( NPC->NPC->conversationPartner->r.currentOrigin, qfalse );
 		return qfalse;
-	}*/
+	}
 
 	VectorCopy(NPC->client->ps.velocity, velocity_vec);
 	velocity = VectorLength(velocity_vec);
@@ -2687,6 +2716,8 @@ qboolean NPC_PatrolArea( void )
 
 	NPC_FacePosition( gWPArray[NPC->wpCurrent]->origin, qfalse );
 
+	//NPCS.NPC->client->ps.pm_flags = 0;
+
 	if (NPC->bot_strafe_right_timer > level.time)
 	{
 		
@@ -2700,16 +2731,21 @@ qboolean NPC_PatrolArea( void )
 		NPC_NPCBlockingPath();
 	}
 
-	//NPCS.ucmd.buttons |= BUTTON_WALKING;
+	//if (NPCS.ucmd.buttons & BUTTON_WALKING)
+	//	NPCS.ucmd.buttons &= ~BUTTON_WALKING;
+	//NPCS.ucmd.buttons = BUTTON_WALKING;
 
-	NPCS.NPC->NPC->stats.walkSpeed = 64.0f;
-	NPCS.NPC->NPC->stats.runSpeed = 127.0f;
-	NPCS.NPC->client->ps.basespeed = 200.0f;
-	NPCS.NPC->NPC->desiredSpeed = NPCS.NPC->NPC->stats.walkSpeed;
+	//if (NPCS.NPC->client->ps.pm_flags & PMF_DUCKED)
+	//	NPCS.NPC->client->ps.pm_flags &= ~PMF_DUCKED;
+
+	//NPCS.NPC->NPC->stats.walkSpeed = 64.0f;
+	//NPCS.NPC->NPC->stats.runSpeed = 127.0f;
+	//NPCS.NPC->client->ps.basespeed = 200.0f;
+	//NPCS.NPC->NPC->desiredSpeed = NPCS.NPC->NPC->stats.walkSpeed;
 
 	NPC_FacePosition( gWPArray[NPC->wpCurrent]->origin, qfalse );
 	VectorSubtract( gWPArray[NPC->wpCurrent]->origin, NPC->r.currentOrigin, NPC->movedir );
-	UQ1_UcmdMoveForDir( NPC, &NPCS.ucmd, NPC->movedir, qtrue );
+	UQ1_UcmdMoveForDir( NPC, &NPCS.ucmd, NPC->movedir, qfalse/*qtrue*/ );
 	VectorCopy( NPC->movedir, NPC->client->ps.moveDir );
 
 	if (NPC->bot_strafe_right_timer > level.time)
@@ -2734,6 +2770,1537 @@ qboolean NPC_PatrolArea( void )
 	*/
 
 	//trap->Print("PATROL: Moved.\n");
+
+	return qtrue;
+}
+
+qboolean NPC_OrgVisible(vec3_t org1, vec3_t org2, int ignore)
+{
+	trace_t tr;
+	vec3_t	from, to;
+
+	VectorCopy(org1, from);
+	from[2] += 32;
+	VectorCopy(org2, to);
+	to[2] += 18;
+
+	trap->Trace(&tr, from, NULL, NULL, to, ignore, MASK_SOLID, 0, 0, 0);
+
+	if (tr.fraction == 1)
+	{
+		return qtrue;
+	}
+
+	return qfalse;
+}
+
+qboolean NPC_HaveValidEnemy( void )
+{
+	gentity_t	*NPC = NPCS.NPC;
+
+	if (NPC->enemy 
+		&& NPC->enemy->health > 0
+		&& !(NPC->enemy->s.eFlags & EF_DEAD))
+		return qtrue;
+
+	return qfalse;
+}
+
+/*///////////////////////////////////////////////////
+NPC_GetNextNode
+if the bot has reached a node, this function selects the next node
+that he will go to, and returns it
+right now it's being developed, feel free to experiment
+*////////////////////////////////////////////////////
+
+int NPC_GetNextNode(gentity_t *NPC)
+{
+	short int node = WAYPOINT_NONE;
+
+	//we should never call this in BOTSTATE_MOVE with no goal
+	//setup the goal/path in HandleIdleState
+	if (NPC->longTermGoal == WAYPOINT_NONE)
+	{
+		return WAYPOINT_NONE;
+	}
+
+	if (NPC->pathsize <= 0)	//if the bot is at the end of his path, this shouldn't have been called
+	{
+		//NPC->longTermGoal = WAYPOINT_NONE;	//reset to having no goal
+		return WAYPOINT_NONE;
+	}
+
+	node = NPC->pathlist[NPC->pathsize-1];	//pathlist is in reverse order
+	NPC->pathsize--;	//mark that we've moved another node
+
+	if (NPC->pathsize <= 0)
+	{
+		if (NPC->wpCurrent < 0)
+		{
+			NPC->wpCurrent = NPC->longTermGoal;
+		}
+		else
+		{
+			node = NPC->longTermGoal;
+		}
+	}
+	return node;
+}
+
+//extern qboolean NPC_CoverpointVisible ( gentity_t *NPC, int coverWP );
+extern int DOM_GetRandomCloseWP(vec3_t org, int badwp, int unused);
+extern int DOM_GetNearestVisibleWP(vec3_t org, int ignore, int badwp);
+extern int DOM_GetNearestVisibleWP_Goal(vec3_t org, int ignore, int badwp);
+extern int DOM_GetNearestVisibleWP_NOBOX(vec3_t org, int ignore, int badwp);
+
+qboolean NPC_FindNewWaypoint()
+{
+	gentity_t	*NPC = NPCS.NPC;
+
+	//if (NPC->noWaypointTime > level.time)
+	//{// Only try to find a new waypoint every 5 seconds...
+	//	NPC_PickRandomIdleAnimantion();
+	//	return qfalse;
+	//}
+
+	NPC->wpCurrent = DOM_GetRandomCloseWP/*DOM_GetNearestVisibleWP*//*DOM_GetBestWaypoint*/(NPC->r.currentOrigin, NPC->s.number, -1);
+	//NPC->noWaypointTime = level.time + 3000; // 3 seconds before we try again... (it will run avoidance in the meantime)
+
+	//if (NPC->wpSeenTime < NPC->noWaypointTime)
+	//	NPC->wpSeenTime = NPC->noWaypointTime; // also make sure we don't try to make a new route for the same length of time...
+
+	if (NPC->wpCurrent < 0 || NPC->wpCurrent >= gWPNum)
+	{
+		NPC_PickRandomIdleAnimantion();
+		//G_Printf("NPC Waypointing Debug: NPC %i (%s) failed to find a waypoint for itself.", NPC->s.number, NPC->NPC_type);
+		return qfalse; // failed... try again after som avoidance code...
+	}
+
+	return qtrue; // all good, we have a new waypoint...
+}
+
+void NPC_SetEnemyGoal()
+{
+	qboolean IS_COVERPOINT = qfalse;
+	int			COVERPOINT_WP = -1;
+	int			COVERPOINT_OFC_WP = -1;
+	gentity_t	*NPC = NPCS.NPC;
+
+	//if (NPC->wpSeenTime > level.time)
+	//	return; // wait for next route creation...
+
+	/*
+	if (NPC->wpTravelTime < level.time)
+		G_Printf("wp travel time\n");
+	else 
+		G_Printf("Bad wps (lt: %i) (ps: %i) (wc: %i) (wn: %i)\n", NPC->longTermGoal, NPC->pathsize, NPC->wpCurrent, NPC->wpNext);
+	*/
+
+	if (!NPC_FindNewWaypoint())
+		return; // wait before trying to get a new waypoint...
+
+	// UQ1: Gunner NPCs find cover...
+	if (NPC->client->ps.weapon != WP_SABER)
+	{// Should we find a cover point???
+		if (NPC->enemy->wpCurrent <= 0 || NPC->enemy->wpCurrent < gWPNum)
+		{// Find a new waypoint for them...
+			NPC->enemy->wpCurrent = DOM_GetRandomCloseWP/*DOM_GetNearestVisibleWP*/(NPC->enemy->r.currentOrigin, NPC->enemy->s.number, -1);
+		}
+
+		if (NPC->enemy->wpCurrent > 0 
+			&& NPC->enemy->wpCurrent < gWPNum
+			&& Distance(gWPArray[NPC->enemy->wpCurrent]->origin, NPC->enemy->r.currentOrigin) <= 256)
+		{
+			/*int i = 0;
+
+			for (i = 0; i < num_cover_spots; i++)
+			{
+				qboolean BAD = qfalse;
+
+				if (Distance(NPC->r.currentOrigin, gWPArray[cover_nodes[i]]->origin) <= 2048.0f
+					&& Distance(NPC->enemy->r.currentOrigin, gWPArray[cover_nodes[i]]->origin) <= 2048.0f)
+				{// Range looks good from both places...
+					int thisWP = cover_nodes[i];
+					
+					// OK, looking good so far... Let's see how the visibility is...
+					if (NPC_IsCoverpointFor(thisWP, NPC->enemy))
+					{// Looks good for a cover point...
+						int j = 0;
+						int z = 0;
+
+						for (z = 0; z < MAX_GENTITIES; z++)
+						{// Now just check to make sure noone else is using it... 30 stormies behind a barrel anyone???
+							gentity_t *ent = &g_entities[z];
+
+							if (!ent) continue;
+							if (!ent->inuse) continue;
+
+							if (ent->coverpointGoal == thisWP
+								|| ent->wpCurrent == thisWP
+								|| ent->wpNext == thisWP)
+							{// Meh, he already claimed it!
+								BAD = qtrue;
+								break;
+							}
+						}
+
+						// Twas a stormie barrel... *sigh*
+						if (BAD) continue;
+
+						// So far, so good... Now check if a link from it can see the enemy.. (to dip in and out of cover to/from)
+						for (j = 0; j < gWPArray[thisWP]->neighbornum; j++)
+						{
+							int lookWP = gWPArray[thisWP]->neighbors[j].num;
+
+							if (!NPC_IsCoverpointFor(lookWP, NPC->enemy))
+							{// Yes! Found one!
+								COVERPOINT_WP = thisWP;
+								COVERPOINT_OFC_WP = lookWP;
+								IS_COVERPOINT = qtrue;
+								break;
+							}
+						}
+
+						if (IS_COVERPOINT) break; // We got one!
+					}
+				}
+
+				if (IS_COVERPOINT) break; // We got one!
+			}
+
+			if (IS_COVERPOINT)
+			{// WooHoo!!!! We got one! *dance*
+				NPC->longTermGoal = NPC->coverpointGoal = COVERPOINT_WP;
+				NPC->coverpointOFC = COVERPOINT_OFC_WP;
+			}*/
+
+			if (NPC->longTermGoal <= 0)
+			{// Fallback...
+				NPC->longTermGoal = DOM_GetRandomCloseWP/*DOM_GetNearestVisibleWP_Goal*/(NPC->enemy->r.currentOrigin, NPC->enemy->s.number, -1);
+			}
+		}
+		else
+		{// Just head toward them....
+			NPC->longTermGoal = DOM_GetRandomCloseWP/*DOM_GetNearestVisibleWP_Goal*/(NPC->enemy->r.currentOrigin, NPC->enemy->s.number, -1);
+		}
+	}
+	else
+	{
+		NPC->longTermGoal = DOM_GetRandomCloseWP/*DOM_GetNearestVisibleWP_Goal*/(NPC->enemy->r.currentOrigin, NPC->enemy->s.number, -1);
+	}
+
+	if (NPC->longTermGoal > 0)
+	{
+		memset(NPC->pathlist, WAYPOINT_NONE, MAX_WPARRAY_SIZE);
+		NPC->pathsize = ASTAR_FindPathFast(NPC->wpCurrent, NPC->longTermGoal, NPC->pathlist, qfalse);
+
+		//if (NPC->pathsize <= 0) // Use the alternate (older) A* pathfinding code as alternative/fallback...
+			//NPC->pathsize = DOM_FindIdealPathtoWP(NULL, NPC->wpCurrent, NPC->longTermGoal, -1, NPC->pathlist);
+			//NPC->pathsize = ASTAR_FindPathFast(NPC->wpCurrent, NPC->longTermGoal, NPC->pathlist, qtrue);
+		
+		if (NPC->pathsize > 0)
+		{
+			/*
+			if (NPC->enemy->s.eType == ET_PLAYER)
+			{
+				if (IS_COVERPOINT)
+					G_Printf("NPC Waypointing Debug: NPC %i (%s) created a %i waypoint COVERPOINT path between waypoints %i and %i for enemy player %s.", NPC->s.number, NPC->NPC_type, NPC->pathsize, NPC->wpCurrent, NPC->longTermGoal, NPC->enemy->client->pers.netname);
+				else
+					G_Printf("NPC Waypointing Debug: NPC %i (%s) created a %i waypoint path between waypoints %i and %i for enemy player %s.", NPC->s.number, NPC->NPC_type, NPC->pathsize, NPC->wpCurrent, NPC->longTermGoal, NPC->enemy->client->pers.netname);
+			}
+			else
+			{
+				if (IS_COVERPOINT)
+					G_Printf("NPC Waypointing Debug: NPC %i (%s) created a %i waypoint COVERPOINT path between waypoints %i and %i for enemy %s.", NPC->s.number, NPC->NPC_type, NPC->pathsize, NPC->wpCurrent, NPC->longTermGoal, NPC->enemy->classname);
+				else
+					G_Printf("NPC Waypointing Debug: NPC %i (%s) created a %i waypoint path between waypoints %i and %i for enemy %s.", NPC->s.number, NPC->NPC_type, NPC->pathsize, NPC->wpCurrent, NPC->longTermGoal, NPC->enemy->classname);
+			}
+			*/
+
+			NPC->wpLast = NPC->wpCurrent;
+			NPC->wpNext = NPC_GetNextNode(NPC);		//move to this node first, since it's where our path starts from
+
+			//G_Printf("New: wps (lt: %i) (ps: %i) (wc: %i) (wn: %i)\n", NPC->longTermGoal, NPC->pathsize, NPC->wpCurrent, NPC->wpNext);
+
+			if (NPC->client->ps.weapon == WP_SABER)
+			{
+				G_AddVoiceEvent( NPC, Q_irand( EV_JCHASE1, EV_JCHASE3 ), 15000 + irand(0, 30000) );
+			}
+			else
+			{
+				int choice = irand(0,13);
+
+				switch (choice)
+				{
+				case 0:
+					G_AddVoiceEvent( NPC, EV_OUTFLANK1, 15000 + irand(0, 30000) );
+					break;
+				case 1:
+					G_AddVoiceEvent( NPC, EV_OUTFLANK2, 15000 + irand(0, 30000) );
+					break;
+				case 2:
+					G_AddVoiceEvent( NPC, EV_CHASE1, 15000 + irand(0, 30000) );
+					break;
+				case 3:
+					G_AddVoiceEvent( NPC, EV_CHASE2, 15000 + irand(0, 30000) );
+					break;
+				case 4:
+					G_AddVoiceEvent( NPC, EV_CHASE3, 15000 + irand(0, 30000) );
+					break;
+				case 5:
+					G_AddVoiceEvent( NPC, EV_COVER1, 15000 + irand(0, 30000) );
+					break;
+				case 6:
+					G_AddVoiceEvent( NPC, EV_COVER2, 15000 + irand(0, 30000) );
+					break;
+				case 7:
+					G_AddVoiceEvent( NPC, EV_COVER3, 15000 + irand(0, 30000) );
+					break;
+				case 8:
+					G_AddVoiceEvent( NPC, EV_COVER4, 15000 + irand(0, 30000) );
+					break;
+				case 9:
+					G_AddVoiceEvent( NPC, EV_COVER5, 15000 + irand(0, 30000) );
+					break;
+				case 10:
+					G_AddVoiceEvent( NPC, EV_ESCAPING1, 15000 + irand(0, 30000) );
+					break;
+				case 11:
+					G_AddVoiceEvent( NPC, EV_ESCAPING2, 15000 + irand(0, 30000) );
+					break;
+				case 12:
+					G_AddVoiceEvent( NPC, EV_ESCAPING3, 15000 + irand(0, 30000) );
+					break;
+				default:
+					G_AddVoiceEvent( NPC, EV_COVER5, 15000 + irand(0, 30000) );
+					break;
+				}
+			}
+		}
+		else if (NPC->enemy->s.eType == ET_PLAYER)
+		{
+			//G_Printf("NPC Waypointing Debug: NPC %i (%s) failed to create a route between waypoints %i and %i for enemy player %s.", NPC->s.number, NPC->NPC_type, NPC->wpCurrent, NPC->longTermGoal, NPC->enemy->client->pers.netname);
+			NPC->longTermGoal = NPC->coverpointOFC = NPC->coverpointGoal = -1;
+			// Delay before next route creation...
+			NPC->wpSeenTime = level.time + 2000;
+			return;
+		}
+	}
+	else
+	{
+		//if (NPC->enemy->s.eType == ET_PLAYER)
+		//	G_Printf("NPC Waypointing Debug: NPC %i (%s) failed to find a waypoint for enemy player %s.", NPC->s.number, NPC->NPC_type, NPC->enemy->client->pers.netname);
+
+		NPC->longTermGoal = NPC->coverpointOFC = NPC->coverpointGoal = -1;
+
+		// Delay before next route creation...
+		NPC->wpSeenTime = level.time + 2000;
+		return;
+	}
+
+	// Delay before next route creation...
+	NPC->wpSeenTime = level.time + 2000;
+	// Delay before giving up on this new waypoint/route...
+	//NPC->wpTravelTime = level.time + 5000;
+
+	if (NPC->wpCurrent > 0 && NPC->wpCurrent < gWPNum)
+	{
+		float dist = Distance(gWPArray[NPC->wpCurrent]->origin, NPC->r.currentOrigin);
+
+		if (dist < 1) dist = 1;
+
+		NPC->wpTravelTime = level.time + (dist / 24.0f) * 1000.0f;
+	}
+	else
+		NPC->wpTravelTime = level.time + 10000; // Give him more time to get to the new wp...
+}
+
+qboolean NPC_CopyPathFromNearbyNPC()
+{
+	gentity_t	*NPC = NPCS.NPC;
+	int i = 0;
+
+	for (i = MAX_CLIENTS; i < MAX_GENTITIES; i++)
+	{
+		gentity_t *test = &g_entities[i];
+
+		if (i == NPC->s.number) continue;
+		if (!test) continue;
+		if (!test->inuse) continue;
+		if (test->s.eType != ET_NPC) continue;
+		if (test->pathsize <= 0) continue;
+		if (test->client->NPC_class != NPC->client->NPC_class) continue; // Only copy from same NPC classes???
+		if (Distance(NPC->r.currentOrigin, test->r.currentOrigin) > 128) continue;
+		if (test->wpCurrent <= 0) continue;
+		if (test->longTermGoal <= 0) continue;
+		if (test->npc_dumb_route_time > level.time) continue;
+		
+		// Don't let them be copied again for 2 seconds...
+		test->npc_dumb_route_time = level.time + 2000;
+
+		// Seems we found one!
+		memcpy(NPC->pathlist, test->pathlist, sizeof(int)*test->pathsize);
+		NPC->pathsize = test->pathsize;
+		NPC->wpCurrent = test->wpCurrent;
+		NPC->wpNext = test->wpNext;
+		NPC->wpLast = test->wpLast;
+		NPC->longTermGoal = test->longTermGoal;
+		
+		// Delay before next route creation...
+		NPC->wpSeenTime = level.time + 2000;
+		// Delay before giving up on this new waypoint/route...
+		//NPC->wpTravelTime = level.time + 15000;
+		if (NPC->wpCurrent > 0 && NPC->wpCurrent < gWPNum)
+		{
+			float dist = Distance(gWPArray[NPC->wpCurrent]->origin, NPC->r.currentOrigin);
+
+			if (dist < 1) dist = 1;
+
+			NPC->wpTravelTime = level.time + (dist / 24.0f) * 1000.0f;
+		}
+		else
+			NPC->wpTravelTime = level.time + 10000; // Give him more time to get to the new wp...
+
+		// Don't let me be copied for 5 seconds...
+		NPC->npc_dumb_route_time = level.time + 5000;
+
+		//G_Printf("NPC Waypointing Debug: NPC %i (%s) copied a %i waypoint path between waypoints %i and %i from %i (%s).", NPC->s.number, NPC->NPC_type, NPC->pathsize, NPC->wpCurrent, NPC->longTermGoal, test->s.number, test->NPC_type);
+		return qtrue;
+	}
+
+	return qfalse;
+}
+
+int NPC_FindGoal( gentity_t *NPC )
+{
+	int waypoint = irand(0, gWPNum-1);
+
+	if (gWPArray[waypoint]->inuse == qfalse)
+	{
+		gWPArray[waypoint]->inuse = qfalse; // set it bad!
+		return -1; // Try again on next check...
+	}
+
+	return waypoint;
+}
+
+void NPC_SetNewGoalAndPath()
+{
+	gentity_t	*NPC = NPCS.NPC;
+
+	//if (NPC->client->NPC_class != CLASS_TRAVELLING_VENDOR)
+		if (NPC_CopyPathFromNearbyNPC()) 
+			return;
+
+	if (NPC->wpSeenTime > level.time)
+	{
+		NPC_PickRandomIdleAnimantion();
+		return; // wait for next route creation...
+	}
+
+	if (!NPC_FindNewWaypoint())
+	{
+		return; // wait before trying to get a new waypoint...
+	}
+
+	if (NPC->return_home)
+	{// Returning home...
+		NPC->longTermGoal = DOM_GetRandomCloseWP/*DOM_GetNearestVisibleWP_Goal*/(NPC->spawn_pos, NPC->s.number, -1);
+	}
+	else
+	{// Find a new generic goal...
+		NPC->longTermGoal = NPC_FindGoal( NPC );
+	}
+
+	if (NPC->longTermGoal >= 0)
+	{
+		memset(NPC->pathlist, WAYPOINT_NONE, sizeof(int)*MAX_WPARRAY_SIZE);
+		NPC->pathsize = ASTAR_FindPathFast(NPC->wpCurrent, NPC->longTermGoal, NPC->pathlist, qtrue);
+
+		//if (NPC->pathsize <= 0) // Use the alternate (older) A* pathfinding code as alternative/fallback...
+		//	NPC->pathsize = DOM_FindIdealPathtoWP(NULL, NPC->wpCurrent, NPC->longTermGoal, -1, NPC->pathlist);
+
+		if (NPC->pathsize > 0)
+		{
+			//G_Printf("NPC Waypointing Debug: NPC %i created a %i waypoint path for a random goal between waypoints %i and %i.", NPC->s.number, NPC->pathsize, NPC->wpCurrent, NPC->longTermGoal);
+			NPC->wpLast = -1;
+			NPC->wpNext = NPC_GetNextNode(NPC);		//move to this node first, since it's where our path starts from
+		}
+		else
+		{
+			//G_Printf("NPC Waypointing Debug: NPC %i failed to create a route between waypoints %i and %i.", NPC->s.number, NPC->wpCurrent, NPC->longTermGoal);
+			// Delay before next route creation...
+			NPC->wpSeenTime = level.time + 1000;//30000;
+			NPC_PickRandomIdleAnimantion();
+			return;
+		}
+	}
+	else
+	{
+		//G_Printf("NPC Waypointing Debug: NPC %i failed to find a goal waypoint.", NPC->s.number);
+
+		// Delay before next route creation...
+		NPC->wpSeenTime = level.time + 1000;//30000;
+		NPC_PickRandomIdleAnimantion();
+		return;
+	}
+
+	// Delay before next route creation...
+	NPC->wpSeenTime = level.time + 1000;//30000;
+	// Delay before giving up on this new waypoint/route...
+	//NPC->wpTravelTime = level.time + 15000;
+	if (NPC->wpCurrent > 0 && NPC->wpCurrent < gWPNum)
+	{
+		float dist = Distance(gWPArray[NPC->wpCurrent]->origin, NPC->r.currentOrigin);
+
+		if (dist < 1) dist = 1;
+
+		NPC->wpTravelTime = level.time + (dist / 24.0f) * 1000.0f;
+	}
+	else
+		NPC->wpTravelTime = level.time + 10000; // Give him more time to get to the new wp...
+}
+
+/*
+void NPC_SetNewWarzoneGoalAndPath()
+{
+	gentity_t	*NPC = NPCS.NPC;
+
+	//if (NPC->client->NPC_class == CLASS_TRAVELLING_VENDOR)
+	//{
+	//	NPC_SetNewGoalAndPath(); // Use normal waypointing...
+	//	return;
+	//}
+
+	if (NPC->wpSeenTime > level.time)
+	{
+		NPC_PickRandomIdleAnimantion();
+		return; // wait for next route creation...
+	}
+
+	if (!NPC_FindNewWaypoint())
+	{
+		return; // wait before trying to get a new waypoint...
+	}
+
+	// Find a new warzone goal...
+	NPC->longTermGoal = NPC_FindWarzoneGoal( NPC );
+
+	if (NPC->longTermGoal <= 0) // Backup - Find a new generic goal...
+		NPC->longTermGoal = NPC_FindGoal( NPC );
+
+	if (NPC->longTermGoal >= 0)
+	{
+		memset(NPC->pathlist, WAYPOINT_NONE, sizeof(int)*MAX_WPARRAY_SIZE);
+		NPC->pathsize = ASTAR_FindPathFast(NPC->wpCurrent, NPC->longTermGoal, NPC->pathlist, qtrue);
+
+		if (NPC->pathsize > 0)
+		{
+			//G_Printf("NPC Waypointing Debug: NPC %i created a %i waypoint path for a random goal between waypoints %i and %i.", NPC->s.number, NPC->pathsize, NPC->wpCurrent, NPC->longTermGoal);
+			NPC->wpLast = -1;
+			NPC->wpNext = NPC_GetNextNode(NPC);		//move to this node first, since it's where our path starts from
+		}
+		else
+		{
+			//G_Printf("NPC Waypointing Debug: NPC %i failed to create a route between waypoints %i and %i.", NPC->s.number, NPC->wpCurrent, NPC->longTermGoal);
+			// Delay before next route creation...
+			NPC->wpSeenTime = level.time + 1000;//30000;
+			NPC_PickRandomIdleAnimantion();
+			return;
+		}
+	}
+	else
+	{
+		//G_Printf("NPC Waypointing Debug: NPC %i failed to find a goal waypoint.", NPC->s.number);
+
+		// Delay before next route creation...
+		NPC->wpSeenTime = level.time + 1000;//30000;
+		NPC_PickRandomIdleAnimantion();
+		return;
+	}
+
+	// Delay before next route creation...
+	NPC->wpSeenTime = level.time + 1000;//30000;
+	// Delay before giving up on this new waypoint/route...
+	//NPC->wpTravelTime = level.time + 15000;
+	if (NPC->wpCurrent > 0 && NPC->wpCurrent < gWPNum)
+	{
+		float dist = Distance(gWPArray[NPC->wpCurrent]->origin, NPC->r.currentOrigin);
+
+		if (dist < 1) dist = 1;
+
+		NPC->wpTravelTime = level.time + (dist / 24.0f) * 1000.0f;
+	}
+	else
+		NPC->wpTravelTime = level.time + 10000; // Give him more time to get to the new wp...
+}
+*/
+
+qboolean DOM_NPC_ClearPathToSpot( gentity_t *NPC, vec3_t dest, int impactEntNum )
+{
+	trace_t	trace;
+	vec3_t	/*start, end, dir,*/ org, destorg;
+//	float	dist, drop;
+//	float	i;
+
+	//Offset the step height
+	//vec3_t	mins = {-18, -18, -24};
+	vec3_t	mins = {-8, -8, -6};
+	//vec3_t	maxs = {18, 18, 48};
+	vec3_t	maxs = {8, 8, NPC->client->ps.crouchheight};
+
+	VectorCopy(NPC->s.origin, org);
+	//org[2]+=STEPSIZE;
+	org[2]+=8;
+
+	VectorCopy(dest, destorg);
+	//destorg[2]+=STEPSIZE;
+	destorg[2]+=8;
+
+	trap->Trace( &trace, org, NULL/*mins*/, NULL/*maxs*/, destorg, NPC->s.number, MASK_PLAYERSOLID/*NPC->clipmask*/, 0, 0, 0 );
+
+	//Do a simple check
+	if ( trace.allsolid || trace.startsolid )
+	{//inside solid
+		//G_Printf("SOLID!\n");
+		return qfalse;
+	}
+
+	/*
+	if ( trace.fraction < 1.0f )
+	{//hit something
+		if ( (impactEntNum != ENTITYNUM_NONE && trace.entityNum == impactEntNum ))
+		{//hit what we're going after
+			//G_Printf("OK!\n");
+			return qtrue;
+		}
+		else
+		{
+			//G_Printf("TRACE FAIL! - NPC %i hit entity %i (%s).\n", NPC->s.number, trace.entityNum, g_entities[trace.entityNum].classname);
+			return qfalse;
+		}
+	}
+	*/
+
+	if ( trace.fraction < 1.0f )
+		return qfalse;
+
+	/*
+	//otherwise, clear path in a straight line.  
+	//Now at intervals of my size, go along the trace and trace down STEPSIZE to make sure there is a solid floor.
+	VectorSubtract( dest, NPC->r.currentOrigin, dir );
+	dist = VectorNormalize( dir );
+	if ( dest[2] > NPC->r.currentOrigin[2] )
+	{//going up, check for steps
+		drop = STEPSIZE;
+	}
+	else
+	{//going down or level, check for moderate drops
+		drop = 64;
+	}
+	for ( i = NPC->r.maxs[0]*2; i < dist; i += NPC->r.maxs[0]*2 )
+	{//FIXME: does this check the last spot, too?  We're assuming that should be okay since the enemy is there?
+		VectorMA( NPC->r.currentOrigin, i, dir, start );
+		VectorCopy( start, end );
+		end[2] -= drop;
+		trap->Trace( &trace, start, mins, NPC->r.maxs, end, NPC->s.number, NPC->clipmask );//NPC->r.mins?
+		if ( trace.fraction < 1.0f || trace.allsolid || trace.startsolid )
+		{//good to go
+			continue;
+		}
+		G_Printf("FLOOR!\n");
+		//no floor here! (or a long drop?)
+		return qfalse;
+	}*/
+	//we made it!
+	return qtrue;
+}
+
+qboolean NPC_ClearPathToJump( gentity_t *NPC, vec3_t dest, int impactEntNum )
+{
+	trace_t	trace;
+	vec3_t	mins, start, end, dir;
+	float	dist, drop;
+	float	i;
+
+	//Offset the step height
+	VectorSet( mins, NPC->r.mins[0], NPC->r.mins[1], NPC->r.mins[2] + STEPSIZE );
+	
+	trap->Trace( &trace, NPC->r.currentOrigin, mins, NPC->r.maxs, dest, NPC->s.number, NPC->clipmask, 0, 0, 0 );
+
+	//Do a simple check
+	if ( trace.allsolid || trace.startsolid )
+	{//inside solid
+		return qfalse;
+	}
+
+	if ( trace.fraction < 1.0f )
+	{//hit something
+		if ( impactEntNum != ENTITYNUM_NONE && trace.entityNum == impactEntNum )
+		{//hit what we're going after
+			return qtrue;
+		}
+		else
+		{
+			return qfalse;
+		}
+	}
+
+	//otherwise, clear path in a straight line.  
+	//Now at intervals of my size, go along the trace and trace down STEPSIZE to make sure there is a solid floor.
+	VectorSubtract( dest, NPC->r.currentOrigin, dir );
+	dist = VectorNormalize( dir );
+	if ( dest[2] > NPC->r.currentOrigin[2] )
+	{//going up, check for steps
+		drop = STEPSIZE;
+	}
+	else
+	{//going down or level, check for moderate drops
+		drop = 64;
+	}
+	for ( i = NPC->r.maxs[0]*2; i < dist; i += NPC->r.maxs[0]*2 )
+	{//FIXME: does this check the last spot, too?  We're assuming that should be okay since the enemy is there?
+		VectorMA( NPC->r.currentOrigin, i, dir, start );
+		VectorCopy( start, end );
+		end[2] -= drop;
+		trap->Trace( &trace, start, mins, NPC->r.maxs, end, NPC->s.number, NPC->clipmask, 0, 0, 0 );//NPC->r.mins?
+		if ( trace.fraction < 1.0f || trace.allsolid || trace.startsolid )
+		{//good to go
+			continue;
+		}
+		//no floor here! (or a long drop?)
+		return qfalse;
+	}
+	//we made it!
+	return qtrue;
+}
+
+//#define	APEX_HEIGHT		200.0f
+#define	APEX_HEIGHT		128.0f
+#define	PARA_WIDTH		128.0f
+//#define	PARA_WIDTH		(sqrt(APEX_HEIGHT)+sqrt(APEX_HEIGHT))
+//#define	JUMP_SPEED		200.0f
+#define	JUMP_SPEED		128.0f
+
+static qboolean NPC_Jump( gentity_t *NPC, vec3_t dest )
+{//FIXME: if land on enemy, knock him down & jump off again
+	if ( 1 )
+	{
+		float	targetDist, shotSpeed = 300, travelTime, impactDist, bestImpactDist = Q3_INFINITE;//fireSpeed, 
+		vec3_t	targetDir, shotVel, failCase; 
+		trace_t	trace;
+		trajectory_t	tr;
+		qboolean	blocked;
+		int		elapsedTime, timeStep = 500, hitCount = 0, maxHits = 7;
+		vec3_t	lastPos, testPos, bottom;
+
+		while ( hitCount < maxHits )
+		{
+			VectorSubtract( dest, NPC->r.currentOrigin, targetDir );
+			targetDist = VectorNormalize( targetDir );
+
+			VectorScale( targetDir, shotSpeed, shotVel );
+			travelTime = targetDist/shotSpeed;
+			shotVel[2] += travelTime * 0.5 * NPC->client->ps.gravity;
+
+			if ( !hitCount )		
+			{//save the first one as the worst case scenario
+				VectorCopy( shotVel, failCase );
+			}
+
+			if ( 1 )//tracePath )
+			{//do a rough trace of the path
+				blocked = qfalse;
+
+				VectorCopy( NPC->r.currentOrigin, tr.trBase );
+				VectorCopy( shotVel, tr.trDelta );
+				tr.trType = TR_GRAVITY;
+				tr.trTime = level.time;
+				travelTime *= 1000.0f;
+				VectorCopy( NPC->r.currentOrigin, lastPos );
+				
+				//This may be kind of wasteful, especially on long throws... use larger steps?  Divide the travelTime into a certain hard number of slices?  Trace just to apex and down?
+				for ( elapsedTime = timeStep; elapsedTime < floor(travelTime)+timeStep; elapsedTime += timeStep )
+				{
+					if ( (float)elapsedTime > travelTime )
+					{//cap it
+						elapsedTime = floor( travelTime );
+					}
+					BG_EvaluateTrajectory( &tr, level.time + elapsedTime, testPos );
+					if ( testPos[2] < lastPos[2] )
+					{//going down, ignore botclip
+						trap->Trace( &trace, lastPos, NPC->r.mins, NPC->r.maxs, testPos, NPC->s.number, NPC->clipmask, 0, 0, 0 );
+					}
+					else
+					{//going up, check for botclip
+						trap->Trace( &trace, lastPos, NPC->r.mins, NPC->r.maxs, testPos, NPC->s.number, NPC->clipmask|CONTENTS_BOTCLIP, 0, 0, 0 );
+					}
+
+					if ( trace.allsolid || trace.startsolid )
+					{
+						blocked = qtrue;
+						break;
+					}
+					if ( trace.fraction < 1.0f )
+					{//hit something
+						if ( Distance( trace.endpos, dest ) < 96 )
+						{//hit the spot, that's perfect!
+							//Hmm, don't want to land on him, though...
+							break;
+						}
+						else 
+						{
+							if ( trace.contents & CONTENTS_BOTCLIP )
+							{//hit a do-not-enter brush
+								blocked = qtrue;
+								break;
+							}
+							if ( trace.plane.normal[2] > 0.7 && DistanceSquared( trace.endpos, dest ) < 4096 )//hit within 64 of desired location, should be okay
+							{//close enough!
+								break;
+							}
+							else
+							{//FIXME: maybe find the extents of this brush and go above or below it on next try somehow?
+								impactDist = DistanceSquared( trace.endpos, dest );
+								if ( impactDist < bestImpactDist )
+								{
+									bestImpactDist = impactDist;
+									VectorCopy( shotVel, failCase );
+								}
+								blocked = qtrue;
+								break;
+							}
+						}
+					}
+					if ( elapsedTime == floor( travelTime ) )
+					{//reached end, all clear
+						if ( trace.fraction >= 1.0f )
+						{//hmm, make sure we'll land on the ground...
+							//FIXME: do we care how far below ourselves or our dest we'll land?
+							VectorCopy( trace.endpos, bottom );
+							bottom[2] -= 128;
+							trap->Trace( &trace, trace.endpos, NPC->r.mins, NPC->r.maxs, bottom, NPC->s.number, NPC->clipmask, 0, 0, 0 );
+							if ( trace.fraction >= 1.0f )
+							{//would fall too far
+								blocked = qtrue;
+							}
+						}
+						break;
+					}
+					else
+					{
+						//all clear, try next slice
+						VectorCopy( testPos, lastPos );
+					}
+				}
+				if ( blocked )
+				{//hit something, adjust speed (which will change arc)
+					hitCount++;
+					shotSpeed = 300 + ((hitCount-2) * 100);//from 100 to 900 (skipping 300)
+					if ( hitCount >= 2 )
+					{//skip 300 since that was the first value we tested
+						shotSpeed += 100;
+					}
+				}
+				else
+				{//made it!
+					break;
+				}
+			}
+			else
+			{//no need to check the path, go with first calc
+				break;
+			}
+		}
+
+		if ( hitCount >= maxHits )
+		{//NOTE: worst case scenario, use the one that impacted closest to the target (or just use the first try...?)
+			//NOTE: or try failcase?
+			VectorCopy( failCase, NPC->client->ps.velocity );
+		}
+		VectorCopy( shotVel, NPC->client->ps.velocity );
+	}
+	else
+	{//a more complicated jump
+		vec3_t		dir, p1, p2, apex;
+		float		time, height, forward, z, xy, dist, apexHeight;
+
+		if ( NPC->r.currentOrigin[2] > dest[2] )//NPCInfo->goalEntity->r.currentOrigin
+		{
+			VectorCopy( NPC->r.currentOrigin, p1 );
+			VectorCopy( dest, p2 );//NPCInfo->goalEntity->r.currentOrigin
+		}
+		else if ( NPC->r.currentOrigin[2] < dest[2] )//NPCInfo->goalEntity->r.currentOrigin
+		{
+			VectorCopy( dest, p1 );//NPCInfo->goalEntity->r.currentOrigin
+			VectorCopy( NPC->r.currentOrigin, p2 );
+		}
+		else
+		{
+			VectorCopy( NPC->r.currentOrigin, p1 );
+			VectorCopy( dest, p2 );//NPCInfo->goalEntity->r.currentOrigin
+		}
+
+		//z = xy*xy
+		VectorSubtract( p2, p1, dir );
+		dir[2] = 0;
+
+		//Get xy and z diffs
+		xy = VectorNormalize( dir );
+		z = p1[2] - p2[2];
+
+		apexHeight = APEX_HEIGHT/2;
+
+		//Determine most desirable apex height
+		//FIXME: length of xy will change curve of parabola, need to account for this
+		//somewhere... PARA_WIDTH
+		/*
+		apexHeight = (APEX_HEIGHT * PARA_WIDTH/xy) + (APEX_HEIGHT * z/128);
+		if ( apexHeight < APEX_HEIGHT * 0.5 )
+		{
+			apexHeight = APEX_HEIGHT*0.5;
+		}
+		else if ( apexHeight > APEX_HEIGHT * 2 )
+		{
+			apexHeight = APEX_HEIGHT*2;
+		}
+		*/
+
+		z = (sqrt(apexHeight + z) - sqrt(apexHeight));
+
+		assert(z >= 0);
+
+//		Com_Printf("apex is %4.2f percent from p1: ", (xy-z)*0.5/xy*100.0f);
+
+		xy -= z;
+		xy *= 0.5;
+		
+		assert(xy > 0);
+
+		VectorMA( p1, xy, dir, apex );
+		apex[2] += apexHeight;
+
+		VectorCopy(apex, NPC->pos1);
+		
+		//Now we have the apex, aim for it
+		height = apex[2] - NPC->r.currentOrigin[2];
+		time = sqrt( height / ( .5 * NPC->client->ps.gravity ) );//was 0.5, but didn't work well for very long jumps
+		if ( !time ) 
+		{
+			//Com_Printf( S_COLOR_RED"ERROR: no time in jump\n" );
+			return qfalse;
+		}
+
+		VectorSubtract ( apex, NPC->r.currentOrigin, NPC->client->ps.velocity );
+		NPC->client->ps.velocity[2] = 0;
+		dist = VectorNormalize( NPC->client->ps.velocity );
+
+		forward = dist / time * 1.25;//er... probably bad, but...
+		VectorScale( NPC->client->ps.velocity, forward, NPC->client->ps.velocity );
+
+		//FIXME:  Uh.... should we trace/EvaluateTrajectory this to make sure we have clearance and we land where we want?
+		NPC->client->ps.velocity[2] = time * NPC->client->ps.gravity;
+
+		//Com_Printf("Jump Velocity: %4.2f, %4.2f, %4.2f\n", NPC->client->ps.velocity[0], NPC->client->ps.velocity[1], NPC->client->ps.velocity[2] );
+	}
+	return qtrue;
+}
+
+//extern void G_SoundOnEnt( gentity_t *ent, int channel, const char *soundPath );
+extern qboolean PM_InKnockDown( playerState_t *ps );
+
+static qboolean NPC_TryJump( gentity_t *NPC, vec3_t goal )
+{//FIXME: never does a simple short, regular jump...
+	usercmd_t	ucmd = NPCS.ucmd;
+
+	if ( TIMER_Done( NPC, "jumpChaseDebounce" ) )
+	{
+		{
+			if ( !PM_InKnockDown( &NPC->client->ps ) && !BG_InRoll( &NPC->client->ps, NPC->client->ps.legsAnim ) )
+			{//enemy is on terra firma
+				vec3_t goal_diff;
+				float goal_z_diff;
+				float goal_xy_dist;
+				VectorSubtract( goal, NPC->r.currentOrigin, goal_diff );
+				goal_z_diff = goal_diff[2];
+				goal_diff[2] = 0;
+				goal_xy_dist = VectorNormalize( goal_diff );
+				if ( goal_xy_dist < 550 && goal_z_diff > -400/*was -256*/ )//for now, jedi don't take falling damage && (NPC->health > 20 || goal_z_diff > 0 ) && (NPC->health >= 100 || goal_z_diff > -128 ))//closer than @512
+				{
+					qboolean debounce = qfalse;
+					if ( NPC->health < 150 && ((NPC->health < 30 && goal_z_diff < 0) || goal_z_diff < -128 ) )
+					{//don't jump, just walk off... doesn't help with ledges, though
+						debounce = qtrue;
+					}
+					else if ( goal_z_diff < 32 && goal_xy_dist < 200 )
+					{//what is their ideal jump height?
+						
+						ucmd.upmove = 127;
+						debounce = qtrue;
+					}
+					else
+					{
+						/*
+						//NO!  All Jedi can jump-navigate now...
+						if ( NPCInfo->rank != RANK_CREWMAN && NPCInfo->rank <= RANK_LT_JG )
+						{//can't do acrobatics
+							return qfalse;
+						}
+						*/
+						if ( goal_z_diff > 0 || goal_xy_dist > 128 )
+						{//Fake a force-jump
+							//Screw it, just do my own calc & throw
+							vec3_t dest;
+							VectorCopy( goal, dest );
+							
+							{
+								int	sideTry = 0;
+								while( sideTry < 10 )
+								{//FIXME: make it so it doesn't try the same spot again?
+									trace_t	trace;
+									vec3_t	bottom;
+
+									VectorCopy( dest, bottom );
+									bottom[2] -= 128;
+									trap->Trace( &trace, dest, NPC->r.mins, NPC->r.maxs, bottom, NPC->s.number, NPC->clipmask, 0, 0, 0 );
+									if ( trace.fraction < 1.0f )
+									{//hit floor, okay to land here
+										break;
+									}
+									sideTry++;
+								}
+								if ( sideTry >= 10 )
+								{//screw it, just jump right at him?
+									VectorCopy( goal, dest );
+								}
+							}
+
+							if ( NPC_Jump( NPC, dest ) )
+							{
+								//Com_Printf( "(%d) pre-checked force jump\n", level.time );
+
+								//FIXME: store the dir we;re going in in case something gets in the way of the jump?
+								//? = vectoyaw( NPC->client->ps.velocity );
+								/*
+								if ( NPC->client->ps.velocity[2] < 320 )
+								{
+									NPC->client->ps.velocity[2] = 320;
+								}
+								else
+								*/
+								{//FIXME: make this a function call
+									int jumpAnim;
+									//FIXME: this should be more intelligent, like the normal force jump anim logic
+									//if ( NPC->client->NPC_class == CLASS_BOBAFETT 
+									//	||( NPCInfo->rank != RANK_CREWMAN && NPCInfo->rank <= RANK_LT_JG ) )
+									//{//can't do acrobatics
+									//	jumpAnim = BOTH_FORCEJUMP1;
+									//}
+									//else
+									//{
+										jumpAnim = BOTH_FLIP_F;
+									//}
+									G_SetAnim( NPC, &ucmd, SETANIM_BOTH, jumpAnim, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD, 0 );
+								}
+
+								NPC->client->ps.fd.forceJumpZStart = NPC->r.currentOrigin[2];
+								//NPC->client->ps.pm_flags |= PMF_JUMPING;
+
+								NPC->client->ps.weaponTime = NPC->client->ps.torsoTimer;
+								NPC->client->ps.fd.forcePowersActive |= ( 1 << FP_LEVITATION );
+								
+								//if ( NPC->client->NPC_class == CLASS_BOBAFETT )
+								//{
+								//	G_SoundOnEnt( NPC, CHAN_ITEM, "sound/boba/jeton.wav" );
+								//	NPC->client->jetPackTime = level.time + Q_irand( 1000, 15000 + irand(0, 30000) );
+								//}
+								//else
+								//{
+								//	G_SoundOnEnt( NPC, CHAN_BODY, "sound/weapons/force/jump.wav" );
+								//}
+
+								TIMER_Set( NPC, "forceJumpChasing", Q_irand( 2000, 3000 ) );
+								debounce = qtrue;
+							}
+						}
+					}
+
+					if ( debounce )
+					{
+						//Don't jump again for another 2 to 5 seconds
+						TIMER_Set( NPC, "jumpChaseDebounce", Q_irand( 2000, 5000 ) );
+						ucmd.forwardmove = 127;
+						VectorClear( NPC->client->ps.moveDir );
+						TIMER_Set( NPC, "duck", -level.time );
+						return qtrue;
+					}
+				}
+			}
+		}
+	}
+
+	return qfalse;
+}
+
+qboolean NPC_FollowRoutes( void ) 
+{// Quick method of following bot routes...
+	vec3_t		velocity_vec;//, fwd;
+	float		velocity;
+	qboolean	ENEMY_VISIBLE = qfalse;
+	qboolean	HUNTING_ENEMY = qfalse;
+	qboolean	FORCED_COVERSPOT_FIND = qfalse;
+	gentity_t	*NPC = NPCS.NPC;
+	usercmd_t	ucmd = NPCS.ucmd;
+
+	//if (NPC->client->NPC_class == CLASS_TRAVELLING_VENDOR && NPC->NPC->walkDebounceTime >= level.time)
+	//{// UQ1: Wait before moving...
+	//	return qfalse;
+	//}
+
+	if ( !NPC->enemy )
+	{
+		switch (NPC->client->NPC_class)
+		{/*
+		case CLASS_CIVILIAN:
+		case CLASS_GENERAL_VENDOR:
+		case CLASS_WEAPONS_VENDOR:
+		case CLASS_ARMOR_VENDOR:
+		case CLASS_SUPPLIES_VENDOR:
+		case CLASS_FOOD_VENDOR:
+		case CLASS_MEDICAL_VENDOR:
+		case CLASS_GAMBLER_VENDOR:
+		case CLASS_TRADE_VENDOR:
+		case CLASS_ODDITIES_VENDOR:
+		case CLASS_DRUG_VENDOR:
+		case CLASS_TRAVELLING_VENDOR:
+			// These guys have no enemies...
+			break;*/
+		default:
+			if ( NPC->client->enemyTeam != NPCTEAM_NEUTRAL )
+			{
+				NPC->enemy = NPC_PickEnemyExt( qtrue );
+
+				if (NPC->enemy)
+				{
+					if (NPC->client->ps.weapon == WP_SABER)
+						G_AddVoiceEvent( NPC, Q_irand( EV_JDETECTED1, EV_JDETECTED3 ), 15000 + irand(0, 30000) );
+					else
+					{
+						G_AddVoiceEvent( NPC, Q_irand( EV_DETECTED1, EV_DETECTED5 ), 15000 + irand(0, 30000) );
+					}
+				}
+			}
+			break;
+		}
+	}
+
+	if (NPC->enemy && !NPC_HaveValidEnemy())
+	{// Enemy not valid any more... Initialize...
+		NPC->enemy = NULL;
+	}
+
+	if (NPC_HaveValidEnemy() && NPC->client->ps.weapon != WP_SABER)
+	{
+		/*
+		if ( NPC->wpCurrent < 0 || NPC->wpCurrent >= gWPNum )
+		{
+			FORCED_COVERSPOT_FIND = qtrue;
+		}
+		*/
+
+		if (NPC->enemy->wpCurrent <= 0 || NPC->enemy->wpCurrent >= gWPNum || Distance(gWPArray[NPC->enemy->wpCurrent]->origin, NPC->enemy->r.currentOrigin) > 256)
+		{// Make sure an enemy always has a waypoint to calculate cover from...
+			NPC->enemy->wpCurrent = DOM_GetRandomCloseWP(NPC->enemy->r.currentOrigin, NPC->enemy->s.number, -1);
+		}
+	}
+
+	if ( NPC_HaveValidEnemy() )
+	{// UQ1: Main visibility handling...
+		// UQ1: Saber wielders should get up close and personal, even if the enemy is visible already...
+		if (NPC->client->ps.weapon != WP_SABER
+			|| (NPC->client->ps.weapon == WP_SABER && Distance(NPC->r.currentOrigin, NPC->enemy->r.currentOrigin) < 96))
+		{
+			/*if (NPC->client->ps.weapon != WP_SABER
+				&& NPC->coverpointGoal > 0 && NPC->coverpointGoal <= gWPNum
+				&& NPC->coverpointOFC > 0 && NPC->coverpointOFC <= gWPNum
+				&& NPC_IsCoverpointFor( NPC->coverpointGoal, NPC->enemy )
+				&& Distance(gWPArray[NPC->coverpointGoal]->origin, NPC->r.currentOrigin) >= 24)
+			{// Keep moving to cover...
+				//if (NPC->coverpointHIDEtime > level.time)
+				//	G_Printf("NPC DEBUG: NPC %i [%s] is travelling to his cover point (ps: %i. distance: %f).\n", NPC->s.number, NPC->client->pers.netname, NPC->pathsize, Distance(gWPArray[NPC->coverpointGoal]->origin, NPC->r.currentOrigin));
+
+				//NPC->coverpointHIDEtime = level.time + irand(3000, 8000);
+				//NPC->wpTravelTime = level.time + 20000;
+				HUNTING_ENEMY = qtrue;
+			}
+			else*/ if (/*NPC->client->ps.weapon == WP_SABER 
+				&&*/ trap->InPVS(NPC->enemy->r.currentOrigin, NPC->r.currentOrigin) 
+				&& NPC_CheckVisibility( NPC->enemy, CHECK_360|CHECK_FOV|CHECK_VISRANGE ) == VIS_FOV)
+			{// Ignore cover points...
+				ENEMY_VISIBLE = qtrue;
+			}
+		}
+	}
+
+	if (ENEMY_VISIBLE /*&& NPC->client->ps.weapon == WP_SABER*/)
+	{// This sith/jedi is in range... Let normal attack code run...
+		//trap->Print("NPC PF DEBUG: ENEMY VIS!\n");
+		return qfalse;
+	}
+
+	if (gWPNum <= 0)
+	{// No waypoints available...
+		//trap->Print("NPC PF DEBUG: NO WP!\n");
+		return qfalse;
+	}
+
+	if (NPC->NPC->conversationPartner)
+	{// Chatting with another NPC... Stay still!
+		NPC_FacePosition( NPC->NPC->conversationPartner->r.currentOrigin, qfalse );
+		NPC_NPCConversation();
+		return qfalse;
+	}
+
+	if (!NPC->enemy && !NPC->NPC->conversationPartner)
+	{// UQ1: Strange place to do this, but whatever... ;)
+		NPC_FindConversationPartner();
+	}
+
+	if (NPC->NPC->conversationPartner)
+	{// Chatting with another NPC... Stay still!
+		NPC_FacePosition( NPC->NPC->conversationPartner->r.currentOrigin, qfalse );
+		return qfalse;
+	}
+
+	VectorCopy(NPC->client->ps.velocity, velocity_vec);
+	velocity = VectorLength(velocity_vec);
+
+	if ( NPC_HaveValidEnemy()
+		&& !(NPC->client->ps.weapon != WP_SABER && (NPC->coverpointGoal > 0 || NPC->coverpointGoal < gWPNum))
+		&& (Distance(NPC->enemy->r.currentOrigin, NPC->r.currentOrigin) > 128.0f || !ENEMY_VISIBLE || (NPC->client->ps.weapon == WP_SABER && Distance(NPC->r.currentOrigin, NPC->enemy->r.currentOrigin) >= 96)) )
+	{// Chasing them around the map...
+		HUNTING_ENEMY = qtrue;
+	}
+
+	if (HUNTING_ENEMY 
+		&& (Distance(NPC->r.currentOrigin, NPC->spawn_pos) > 4096.0f || (NPC->longTermGoal > 0 && NPC->longTermGoal < gWPNum && Distance(gWPArray[NPC->longTermGoal]->origin, NPC->spawn_pos) > 4096.0f))
+		&& NPC->client->NPC_class == CLASS_STORMTROOPER)
+	{// Moved too far from our start position... Return home...
+		NPC->enemy = NULL;
+		NPC->longTermGoal = -1;
+		NPC->wpCurrent = -1;
+		NPC->wpNext = -1;
+		NPC->longTermGoal = NPC->coverpointOFC = NPC->coverpointGoal = -1;
+		NPC->return_home = qtrue;
+
+		if (NPC->client->ps.weapon == WP_SABER)
+			G_AddVoiceEvent( NPC, Q_irand( EV_JLOST1, EV_JLOST3 ), 15000 + irand(0, 30000) );
+		else
+		{
+			int choice = irand(0,4);
+
+			switch (choice)
+			{
+			case 0:
+				G_AddVoiceEvent( NPC, EV_GIVEUP1, 15000 + irand(0, 30000) );
+				break;
+			case 1:
+				G_AddVoiceEvent( NPC, EV_GIVEUP2, 15000 + irand(0, 30000) );
+				break;
+			case 2:
+				G_AddVoiceEvent( NPC, EV_GIVEUP3, 15000 + irand(0, 30000) );
+				break;
+			case 3:
+				G_AddVoiceEvent( NPC, EV_GIVEUP4, 15000 + irand(0, 30000) );
+				break;
+			default:
+				G_AddVoiceEvent( NPC, EV_LOST1, 15000 + irand(0, 30000) );
+				break;
+			}
+		}
+		//G_Printf("Enemy too far away. Returning home...\n");
+	}
+
+	/*
+	if (NPC_HaveValidEnemy()
+		&& NPC->wpCurrent > 0 
+		&& NPC->wpCurrent < gWPNum
+		&& NPC->coverpointGoal > 0 
+		&& NPC->coverpointGoal < gWPNum)
+	{
+		if (NPC->enemy && !NPC_IsCoverpointFor( NPC->coverpointGoal, NPC->enemy ))
+		{
+			//G_Printf("!NPC_IsCoverpointFor\n");
+			FORCED_COVERSPOT_FIND = qtrue;
+		}
+	}
+	*/
+
+	if ( NPC->wpCurrent < 0 
+		|| NPC->wpCurrent >= gWPNum 
+		|| NPC->longTermGoal < 0 
+		|| NPC->longTermGoal >= gWPNum 
+		|| FORCED_COVERSPOT_FIND
+		|| (NPC->wpTravelTime < level.time && velocity < 16)
+		/*|| (NPC->enemy && (NPC->coverpointGoal <= 0 || NPC->coverpointGoal >= gWPNum))*/ )
+	{// We hit a problem in route, or don't have one yet.. Find a new goal and path...
+		//VectorSet(NPC->bot_strafe_target_position, 0, 0, 0); // init avoidance temporary waypoint...
+		
+		/*
+		if (NPC->enemy)
+		{
+			if (FORCED_COVERSPOT_FIND)
+				G_Printf("FORCED_COVERSPOT_FIND\n");
+			else if (NPC->wpCurrent < 0 || NPC->wpCurrent >= gWPNum)
+				G_Printf("wpCurrent\n");
+			else if (NPC->longTermGoal < 0 || NPC->longTermGoal >= gWPNum)
+				G_Printf("longTermGoal\n");
+			else if (NPC->wpTravelTime < level.time && velocity < 16)
+				G_Printf("travel Time\n");
+			//else if (NPC->enemy && (NPC->coverpointGoal <= 0 || NPC->coverpointGoal >= gWPNum))
+			//	G_Printf("NPC->coverpointGoal\n");
+		}
+		*/
+
+		NPC->wpCurrent = -1;
+		NPC->wpNext = -1;
+		NPC->longTermGoal = NPC->coverpointOFC = NPC->coverpointGoal = -1;
+
+		if (NPC->enemy)
+			NPC_SetEnemyGoal();
+		//else if (g_gametype.integer == GT_WARZONE)
+		//	NPC_SetNewWarzoneGoalAndPath();
+		else
+			NPC_SetNewGoalAndPath();
+
+		if (NPC->wpCurrent < 0 || NPC->wpCurrent >= gWPNum || NPC->longTermGoal < 0 || NPC->longTermGoal >= gWPNum)
+		{
+			if (NPC->enemy)
+			{
+				NPC->enemy = NULL; // UQ1: Added this to stop massive lag spikes when the player hides somewhere they can't go...
+
+				if (NPC->client->ps.weapon == WP_SABER)
+					G_AddVoiceEvent( NPC, Q_irand( EV_JLOST1, EV_JLOST3 ), 15000 + irand(0, 30000) );
+				else
+				{
+					int choice = irand(0,4);
+
+					switch (choice)
+					{
+					case 0:
+						G_AddVoiceEvent( NPC, EV_GIVEUP1, 15000 + irand(0, 30000) );
+						break;
+					case 1:
+						G_AddVoiceEvent( NPC, EV_GIVEUP2, 15000 + irand(0, 30000) );
+						break;
+					case 2:
+						G_AddVoiceEvent( NPC, EV_GIVEUP3, 15000 + irand(0, 30000) );
+						break;
+					case 3:
+						G_AddVoiceEvent( NPC, EV_GIVEUP4, 15000 + irand(0, 30000) );
+						break;
+					default:
+						G_AddVoiceEvent( NPC, EV_LOST1, 15000 + irand(0, 30000) );
+						break;
+					}
+				}
+			}
+			return qfalse; // next think...
+		}
+	}
+
+	if (NPC->wpCurrent < 0 || NPC->wpCurrent >= gWPNum || NPC->longTermGoal < 0 || NPC->longTermGoal >= gWPNum)
+	{// Try again to find a path. This time it should ignore wpCurrent and find another start waypoint...
+		//trap->Print("NPC PF DEBUG: NO WPCURRENT!\n");
+		return qfalse; // next think...
+	}
+
+	if ( (NPC->coverpointGoal > 0 && NPC->coverpointGoal < gWPNum)
+		&& VectorDistanceNoHeight(gWPArray[NPC->coverpointGoal]->origin, NPC->r.currentOrigin) < 24/*24*/)
+	{// We're at out goal! Find a new goal...
+		//G_Printf("NPC %i hit it's COVERPOINT goal waypoint!!!\n", NPC->s.number);
+		/*
+		NPC->wpTravelTime = level.time + 20000;
+		NPC->longTermGoal = NPC->wpCurrent = NPC->wpNext = NPC->coverpointOFC;
+		NPC->coverpointOFC = level.time + irand(5000, 15000);
+		*/
+		
+		/*
+		// Find another cover spot and move there while firing... This *should* hopefully have the affect of making them duck from cover to cover...
+		NPC_SetEnemyGoal();
+
+		if (NPC->wpCurrent < 0 || NPC->wpCurrent >= gWPNum || NPC->longTermGoal < 0 || NPC->longTermGoal >= gWPNum)
+		{
+			NPC->enemy = NULL; // UQ1: Added this to stop massive lag spikes when the player hides somewhere they can't go...
+			return qfalse; // next think...
+		}
+		*/
+
+		//trap->Print("NPC PF DEBUG: AT GOAL!\n");
+		return qfalse; // next think...
+	}
+	else if (VectorDistanceNoHeight(gWPArray[NPC->longTermGoal]->origin, NPC->r.currentOrigin) < 32/*24*/
+		|| (NPC->bot_strafe_right_timer > level.time && VectorDistanceNoHeight(gWPArray[NPC->longTermGoal]->origin, NPC->r.currentOrigin) < /*48*/64)
+		|| (NPC->bot_strafe_left_timer > level.time && VectorDistanceNoHeight(gWPArray[NPC->longTermGoal]->origin, NPC->r.currentOrigin) < /*48*/64))
+	{// We're at out goal! Find a new goal...
+		//G_Printf("NPC %i hit it's goal waypoint!!!\n", NPC->s.number);
+		NPC->longTermGoal = -1;
+		NPC->wpCurrent = -1;
+		NPC->pathsize = -1;
+		NPC->longTermGoal = NPC->coverpointOFC = NPC->coverpointGoal = -1;
+
+		NPC->wpSeenTime = 0;
+
+		//trap->Print("NPC PF DEBUG: AT GOAL 2!\n");
+		return qfalse; // next think...
+	}
+
+	if (NPC->wpCurrent < 0 || NPC->wpCurrent >= gWPNum || NPC->longTermGoal < 0 || NPC->longTermGoal >= gWPNum)
+	{// FIXME: Try to roam out of problems...
+		//trap->Print("NPC PF DEBUG: NO WPCURRENT 2!\n");
+		return qfalse; // next think...
+	}
+
+	if ((VectorDistanceNoHeight(gWPArray[NPC->wpCurrent]->origin, NPC->r.currentOrigin) < 32/*24*/
+		|| (NPC->bot_strafe_right_timer > level.time && VectorDistanceNoHeight(gWPArray[NPC->wpCurrent]->origin, NPC->r.currentOrigin) < /*48*/64)
+		|| (NPC->bot_strafe_left_timer > level.time && VectorDistanceNoHeight(gWPArray[NPC->wpCurrent]->origin, NPC->r.currentOrigin) < /*48*/64))
+		&& NPC->wpNext > 0
+		&& (NPC_OrgVisible(gWPArray[NPC->wpNext]->origin, NPC->r.currentOrigin, NPC->s.number) || VectorDistanceNoHeight(gWPArray[NPC->wpCurrent]->origin, NPC->r.currentOrigin) < 24)
+		/*&& NPC_Humanoid_ClearPathToSpot( gWPArray[NPC->wpNext]->origin, NPC->s.number )*/)
+	{// At current node.. Pick next in the list...
+		NPC->wpLast = NPC->wpCurrent;
+		NPC->wpCurrent = NPC->wpNext;
+		NPC->wpNext = NPC_GetNextNode(NPC);
+
+		if (NPC->wpNext < 0 
+			&& NPC->wpCurrent != NPC->longTermGoal
+			&& NPC->wpNext != NPC->longTermGoal)
+			NPC->wpNext = NPC->longTermGoal;
+
+		/*
+		if (NPC_HaveValidEnemy())
+		{
+			G_Printf("Next wps: (lt: %i) (ps: %i) (wc: %i) (wn: %i)\n", NPC->longTermGoal, NPC->pathsize, NPC->wpCurrent, NPC->wpNext);
+			if (NPC->wpCurrent > 0 && NPC->wpCurrent <= gWPNum)
+				G_Printf("NPC %i hit a waypoint. Pathsize is now %i. Next wp is %i dist is %f.\n", NPC->s.number, NPC->pathsize, NPC->wpCurrent, Distance(NPC->r.currentOrigin, gWPArray[NPC->wpCurrent]->origin));
+		}
+		*/
+
+		//NPC->wpTravelTime = level.time + 15000; // maximum of 10 seconds to traverse to the next waypoint...
+		if (NPC->wpCurrent > 0 && NPC->wpCurrent < gWPNum)
+		{
+			float dist = Distance(gWPArray[NPC->wpCurrent]->origin, NPC->r.currentOrigin);
+
+			if (dist < 1) dist = 1;
+
+			NPC->wpTravelTime = level.time + (dist / 24.0f) * 1000.0f;
+		}
+		else
+			NPC->wpTravelTime = level.time + 15000; // maximum of 10 seconds to traverse to the next waypoint...
+
+		if (NPC_HaveValidEnemy())
+			NPC->wpTravelTime = level.time + 5000; // maximum of 5 seconds to traverse to the next waypoint...
+	}
+
+	if (NPC->wpCurrent < 0 || NPC->wpCurrent >= gWPNum || NPC->longTermGoal < 0 || NPC->longTermGoal >= gWPNum)
+	{// FIXME: Try to roam out of problems...
+		//trap->Print("NPC PF DEBUG: NO WPCURRENT 3!\n");
+		return qfalse; // next think...
+	}
+
+	if ( NPC_HaveValidEnemy() )
+	{// Shoot on the run :)
+		NPC_FacePosition( NPC->enemy->r.currentOrigin, qtrue );
+
+		if (trap->InPVS(NPC->enemy->r.currentOrigin, NPC->r.currentOrigin) && NPC_CheckVisibility( NPC->enemy, CHECK_360|CHECK_FOV|CHECK_VISRANGE ) == VIS_FOV )
+			ucmd.buttons |= BUTTON_ATTACK;
+	}
+	else
+	{// Look toward our waypoint and keep moving...
+		NPC_FacePosition( gWPArray[NPC->wpCurrent]->origin, qfalse );
+	}
+
+	if ((velocity <= 16 && InFOV3( gWPArray[NPC->wpCurrent]->origin, NPC->r.currentOrigin, NPC->client->ps.viewangles, 30, 180 )) // InFOV so they don't do this while turning...
+		|| !DOM_NPC_ClearPathToSpot( NPC, gWPArray[NPC->wpCurrent]->origin, -1 ))
+	{// Trouble moving, need some (currently really really simple) avoidance stuff...
+		if (NPC->client->ps.weapon == WP_SABER 
+			&& gWPArray[NPC->wpCurrent]->origin[2] > NPC->r.currentOrigin[2]+32
+			&& NPC_ClearPathToJump( NPC, gWPArray[NPC->wpCurrent]->origin, -1 ))
+		{
+			if (!NPC_TryJump( NPC, gWPArray[NPC->wpCurrent]->origin ))
+			{
+				if (!NPC_TryJump( NPC, jumpLandPosition ))
+				{
+					//NPC_Avoidance();
+				}
+			}
+		}
+		else
+		{
+			//NPC_Avoidance();
+		}
+	}
+
+	if (NPC->wpCurrent < 0 || NPC->wpCurrent >= gWPNum || NPC->longTermGoal < 0 || NPC->longTermGoal >= gWPNum)
+	{// FIXME: Try to roam out of problems...
+		//trap->Print("NPC PF DEBUG: NO WPCURRENT 4!\n");
+		return qfalse; // next think...
+	}
+
+	if ( NPC_HaveValidEnemy() )
+	{// Shoot on the run :)
+		NPC_FacePosition( NPC->enemy->r.currentOrigin, qtrue );
+		
+		if (trap->InPVS(NPC->enemy->r.currentOrigin, NPC->r.currentOrigin) && NPC_CheckVisibility( NPC->enemy, CHECK_360|CHECK_FOV|CHECK_VISRANGE ) == VIS_FOV )
+			ucmd.buttons |= BUTTON_ATTACK;
+	}
+	else
+	{// Look toward our waypoint and keep moving...
+		NPC_FacePosition( gWPArray[NPC->wpCurrent]->origin, qfalse );
+	}
+
+	//NPC->client->ps.pm_flags = 0;
+
+	//if (NPC->client->ps.pm_flags & PMF_JUMP_HELD)
+	//{// Clear any previous flags...
+	//	NPC->client->ps.pm_flags &= ~PMF_JUMP_HELD;
+	//}
+
+	//
+	// UQ1: Note that (ucmd) NPC jumping causes wierd screen shaking in JKA... Best avoided if possible...
+	//
+
+	if (NPC->bot_strafe_right_timer > level.time)
+	{
+		
+	}
+	else if (NPC->bot_strafe_left_timer > level.time)
+	{
+
+	}	
+	else
+	{
+		NPC_NPCBlockingPath();
+	}
+
+	//if (NPCS.ucmd.buttons & BUTTON_WALKING)
+	//	NPCS.ucmd.buttons &= ~BUTTON_WALKING;
+	//if (!NPC->enemy) NPCS.ucmd.buttons = BUTTON_WALKING;
+
+	//if (NPCS.NPC->client->ps.pm_flags & PMF_DUCKED)
+	//	NPCS.NPC->client->ps.pm_flags &= ~PMF_DUCKED;
+
+	NPC_FacePosition( gWPArray[NPC->wpCurrent]->origin, qfalse );
+	VectorSubtract( gWPArray[NPC->wpCurrent]->origin, NPC->r.currentOrigin, NPC->movedir );
+	UQ1_UcmdMoveForDir( NPC, &NPCS.ucmd, NPC->movedir, qfalse/*NPC_HaveValidEnemy()*/ );
+	VectorCopy( NPC->movedir, NPC->client->ps.moveDir );
+
+	if (NPC->bot_strafe_right_timer > level.time)
+		NPCS.ucmd.rightmove = 64.0;
+	else if (NPC->bot_strafe_left_timer > level.time)
+		NPCS.ucmd.rightmove = 64.0;
+
+	//trap->Print("NPC PF DEBUG: MOVING!\n");
 
 	return qtrue;
 }
@@ -2874,11 +4441,14 @@ void NPC_Think ( gentity_t *self)//, int msec )
 		if (self->s.NPC_class != CLASS_VEHICLE ||
 			!self->m_pVehicle)
 		{ //ok, let's not do this at all for vehicles.
-			NPC_ExecuteBState( self );
-
 			if (!self->enemy)
 			{
-				if (NPC_PatrolArea()) ClientThink(NPCS.NPC->s.number, &NPCS.ucmd);
+				if (NPC_FollowRoutes()) ClientThink(NPCS.NPC->s.number, &NPCS.ucmd);
+				else if (NPC_PatrolArea()) ClientThink(NPCS.NPC->s.number, &NPCS.ucmd);
+			}
+			else
+			{
+				NPC_ExecuteBState( self );
 			}
 		}
 
@@ -2906,7 +4476,7 @@ void NPC_Think ( gentity_t *self)//, int msec )
 
 			if (!self->enemy)
 			{
-				NPC_PatrolArea();
+				if (!NPC_FollowRoutes()) NPC_PatrolArea();
 			}
 
 			ClientThink(NPCS.NPC->s.number, &NPCS.ucmd);
@@ -2915,7 +4485,8 @@ void NPC_Think ( gentity_t *self)//, int msec )
 		{
 			if (!self->enemy)
 			{
-				if (NPC_PatrolArea()) ClientThink(NPCS.NPC->s.number, &NPCS.ucmd);
+				if (NPC_FollowRoutes()) ClientThink(NPCS.NPC->s.number, &NPCS.ucmd);
+				else if (NPC_PatrolArea()) ClientThink(NPCS.NPC->s.number, &NPCS.ucmd);
 			}
 
 			NPC_ApplyRoff();

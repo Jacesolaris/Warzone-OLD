@@ -3269,7 +3269,7 @@ static void CG_FX( centity_t *cent )
 
 }
 
-qboolean InFOV( vec3_t spot, vec3_t from, vec3_t fromAngles, int hFOV, int vFOV )
+qboolean CG_InFOV( vec3_t spot, vec3_t from, vec3_t fromAngles, int hFOV, int vFOV )
 {
 	vec3_t	deltaVector, angles, deltaAngles;
 
@@ -3355,7 +3355,7 @@ Ghoul2 Insert Start
 		}
 
 		// FOV cull...
-		if (!InFOV( cent->lerpOrigin, cg.refdef.vieworg, cg.refdef.viewangles, cg.refdef.fov_x * 1.1, cg.refdef.fov_y * 1.1))
+		if (!CG_InFOV( cent->lerpOrigin, cg.refdef.vieworg, cg.refdef.viewangles, cg.refdef.fov_x * 1.1, cg.refdef.fov_y * 1.1))
 		{
 			return;
 		}

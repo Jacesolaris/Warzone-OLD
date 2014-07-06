@@ -260,6 +260,14 @@ typedef struct
 	int			ffireCount;		//sigh... you'd think I'd be able to find a way to do this without having to use 3 int fields, but...
 	int			ffireDebounce;
 	int			ffireFadeDebounce;
+
+	int			conversationSearchTime;
+	int			conversationRole;
+	gentity_t	*conversationPartner;
+	int			conversationSection;
+	int			conversationPart;
+	int			conversationReplyTime;
+	int			conversationAvailable;
 } gNPC_t;
 
 void G_SquadPathsInit(void);

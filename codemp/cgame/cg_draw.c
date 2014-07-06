@@ -12,6 +12,11 @@
 #include "ui/ui_shared.h"
 #include "ui/ui_public.h"
 
+//[AUTOWAYPOINT]
+extern float aw_percent_complete;
+extern void AIMod_AutoWaypoint_DrawProgress( void );
+//[/AUTOWAYPOINT]
+
 extern float CG_RadiusForCent( centity_t *cent );
 qboolean CG_WorldCoordToScreenCoordFloat(vec3_t worldCoord, float *x, float *y);
 qboolean CG_CalcMuzzlePoint( int entityNum, vec3_t muzzle );
@@ -4514,6 +4519,11 @@ static void CG_DrawUpperRight( void ) {
 	y = CG_DrawMiniScoreboard ( y );
 
 	CG_DrawPowerupIcons(y);
+
+//[AUTOWAYPOINT]
+	if (aw_percent_complete > 0)
+		AIMod_AutoWaypoint_DrawProgress();
+//[/AUTOWAYPOINT]
 }
 
 /*

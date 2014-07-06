@@ -18,13 +18,6 @@ option(BuildMPGame "Whether to create projects for the MP server-side gamecode (
 option(BuildMPCGame "Whether to create projects for the MP clientside gamecode (cgamex86.dll)" ON)
 option(BuildMPUI "Whether to create projects for the MP UI code (uix86.dll)" ON)
 option(BuildMPRend2 "Whether to create projects for the EXPERIMENTAL MP rend2 renderer (rd-rend2_x86.dll)" ON)
-option(BuildSPEngine "Whether to create projects for the SP engine (openjk_sp.exe)" ON)
-option(BuildSPGame "Whether to create projects for the SP gamecode (jagamex86.dll)" ON)
-option(BuildSPRdVanilla "Whether to create projects for the SP default renderer (rdsp-vanilla_x86.dll)" ON)
-
-option(BuildJK2SPEngine "Whether to create projects for the jk2 SP engine (openjo_sp.exe)" OFF)
-option(BuildJK2SPGame "Whether to create projects for the jk2 sp gamecode mod (jk2gamex86.dll)" OFF)
-option(BuildJK2SPRdVanilla "Whether to create projects for the jk2 sp renderer (rdjosp-vanilla_x86.dll)" OFF)
 
 # Customizable libraries
 if(WIN32)
@@ -79,9 +72,6 @@ get_git_head_revision(GIT_REFSPEC GIT_SHA1)
 message("Git revision is ${GIT_SHA1}")
 
 # Binary names
-set(SPEngine "openjk_sp.${Architecture}")
-set(SPGame "jagame${Architecture}")
-set(SPRDVanillaRenderer "rdsp-vanilla_${Architecture}")
 set(MPEngine "openjk.${Architecture}")
 set(MPVanillaRenderer "rd-vanilla_${Architecture}")
 set(MPDed "openjkded.${Architecture}")
@@ -89,16 +79,11 @@ set(MPGame "jampgame${Architecture}")
 set(MPCGame "cgame${Architecture}")
 set(MPUI "ui${Architecture}")
 set(MPRend2 "rd-rend2_${Architecture}")
-set(JK2SPEngine "openjo_sp.${Architecture}")
-set(JK2SPGame "jospgame${Architecture}")
-set(JK2SPVanillaRenderer "rdjosp-vanilla_${Architecture}")
 # Library names
 set(MPBotLib "botlib")
 
 # Paths
-set(SPDir "${CMAKE_SOURCE_DIR}/code")
 set(MPDir "${CMAKE_SOURCE_DIR}/codemp")
-set(JK2SPDir "${CMAKE_SOURCE_DIR}/codeJK2")
 
 # Common settings
 if(WIN32)
@@ -192,10 +177,6 @@ endif()
 set(ReleaseDefines "FINAL_BUILD")
 
 # Add projects
-add_subdirectory(${SPDir})
-if(BuildJK2SPGame)
-	add_subdirectory("${JK2SPDir}/game")
-endif()
 add_subdirectory(${MPDir})
 
 # CPack for installer creation

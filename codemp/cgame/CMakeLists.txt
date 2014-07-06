@@ -74,6 +74,7 @@ set(MPCGameCgameFiles
 	"${MPDir}/cgame/fx_force.c"
 	"${MPDir}/cgame/fx_heavyrepeater.c"
 	"${MPDir}/cgame/fx_rocketlauncher.c"
+	"${MPDir}/cgame/jkg_unique_autowaypoint.c"
 	"${MPDir}/cgame/animtable.h"
 	"${MPDir}/cgame/cg_local.h"
 	"${MPDir}/cgame/cg_public.h"
