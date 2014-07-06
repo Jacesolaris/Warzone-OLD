@@ -4868,7 +4868,18 @@ static const char *g_bindCommands[] = {
 	"weapon 8",
 	"weapon 9",
 	"weapprev",
-	"zoom"
+	"zoom",
+	//[AUTOWAYPOINT]
+	"awp",
+	"autowaypoint",
+	"awc",
+	"autowaypointclean",
+	"showsurface",
+	"showslope",
+	"aw_badheight",
+	"awc_addremovalspot",
+	"awc_addbadheight",
+	//[/AUTOWAYPOINT]
 };
 
 #define g_bindCount ARRAY_LEN(g_bindCommands)

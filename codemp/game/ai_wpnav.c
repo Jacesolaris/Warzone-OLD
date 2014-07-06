@@ -2065,6 +2065,9 @@ void CreateNewWP_FromAWPNode(int index, vec3_t origin, int flags, int weight, in
 		oFlagBlue = flagBlue;
 	}
 
+	//trap->Print("Added WP %i at %f %f %f. It has %i links.\n", gWPNum, gWPArray[gWPNum]->origin[0], gWPArray[gWPNum]->origin[1], 
+	//	gWPArray[gWPNum]->origin[2], gWPArray[gWPNum]->neighbornum);
+
 	gWPNum++;
 }
 

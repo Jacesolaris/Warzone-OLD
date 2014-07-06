@@ -1797,14 +1797,17 @@ AIMOD_SaveCoverPoints ( void )
 	fileHandle_t	f;
 	int				i;
 
+	vmCvar_t mapname;
+	trap->Cvar_Register( &mapname, "mapname", "", CVAR_SERVERINFO | CVAR_ROM );
+
 	trap->Print( "^3*** ^3%s: ^7Saving cover point table.\n", "AUTO-WAYPOINTER" );
 
 	///////////////////
 	//try to open the output file, return if it failed
-	trap->FS_Open( va( "nodes/%s.cpw", cgs.rawmapname), &f, FS_WRITE );
+	trap->FS_Open( va( "nodes/%s.cpw", mapname.string), &f, FS_WRITE );
 	if ( !f )
 	{
-		trap->Print( "^1*** ^3ERROR^5: Error opening cover point file ^7/nodes/%s.cpw^5!!!\n", "AUTO-WAYPOINTER", cgs.rawmapname );
+		trap->Print( "^1*** ^3ERROR^5: Error opening cover point file ^7/nodes/%s.cpw^5!!!\n", "AUTO-WAYPOINTER", mapname.string);
 		return;
 	}
 
@@ -1832,7 +1835,7 @@ AIMOD_SaveCoverPoints ( void )
 
 	trap->FS_Close( f );		
 
-	trap->Print( "^3*** ^3%s: ^5Cover point table saved to file ^7/nodes/%s.cpw^5.\n", "AUTO-WAYPOINTER", cgs.rawmapname );
+	trap->Print( "^3*** ^3%s: ^5Cover point table saved to file ^7/nodes/%s.cpw^5.\n", "AUTO-WAYPOINTER", mapname.string);
 }
 
 qboolean
@@ -1843,17 +1846,20 @@ AIMOD_LoadCoverPoints2 ( void )
 	int				i = 0;
 	int				num_map_waypoints = 0;
 
+	vmCvar_t mapname;
+	trap->Cvar_Register( &mapname, "mapname", "", CVAR_SERVERINFO | CVAR_ROM );
+
 	// Init...
 	num_cover_spots = 0;
 
 	trap->Cvar_Register( &fs_homepath, "fs_homepath", "", CVAR_SERVERINFO | CVAR_ROM );
 	trap->Cvar_Register( &fs_game, "fs_game", "", CVAR_SERVERINFO | CVAR_ROM );
 	
-	f = fopen( va("%s/%s/nodes/%s.cpw", fs_homepath.string, fs_game.string, cgs.rawmapname), "rb" );
+	f = fopen( va("%s/%s/nodes/%s.cpw", fs_homepath.string, fs_game.string, mapname.string), "rb" );
 
 	if ( !f )
 	{
-		trap->Print( "^1*** ^3%s^5: Reading coverpoints from ^7/nodes/%s.cpw^3 failed^5!!!\n", GAME_VERSION, cgs.rawmapname );
+		trap->Print( "^1*** ^3%s^5: Reading coverpoints from ^7/nodes/%s.cpw^3 failed^5!!!\n", GAME_VERSION, mapname.string);
 		return qfalse;
 	}
 
@@ -1861,7 +1867,7 @@ AIMOD_LoadCoverPoints2 ( void )
 
 	if (num_map_waypoints != number_of_nodes)
 	{// Is an old file! We need to make a new one!
-		trap->Print( "^1*** ^3%s^5: Reading coverpoints from ^7/nodes/%s.cpw^3 failed ^5(old coverpoint file: map wpNum %i - cpw wpNum: %i)^5!!!\n", GAME_VERSION, cgs.rawmapname, number_of_nodes, num_map_waypoints );
+		trap->Print( "^1*** ^3%s^5: Reading coverpoints from ^7/nodes/%s.cpw^3 failed ^5(old coverpoint file: map wpNum %i - cpw wpNum: %i)^5!!!\n", GAME_VERSION, mapname.string, number_of_nodes, num_map_waypoints );
 		fclose( f );
 		return qfalse;
 	}
@@ -1893,7 +1899,7 @@ AIMOD_LoadCoverPoints2 ( void )
 
 	fclose( f );
 
-	trap->Print( "^1*** ^3%s^5: Successfully loaded %i cover points from file ^7/nodes/%s.cpw^5.\n", GAME_VERSION, num_cover_spots, cgs.rawmapname);
+	trap->Print( "^1*** ^3%s^5: Successfully loaded %i cover points from file ^7/nodes/%s.cpw^5.\n", GAME_VERSION, num_cover_spots, mapname.string);
 
 	return qtrue;
 }
@@ -1906,10 +1912,13 @@ AIMOD_LoadCoverPoints ( void )
 	fileHandle_t	f;
 	int				num_map_waypoints = 0;
 
+	vmCvar_t mapname;
+	trap->Cvar_Register( &mapname, "mapname", "", CVAR_SERVERINFO | CVAR_ROM );
+
 	// Init...
 	num_cover_spots = 0;
 
-	trap->FS_Open( va( "nodes/%s.cpw", cgs.rawmapname), &f, FS_READ );
+	trap->FS_Open( va( "nodes/%s.cpw", mapname.string), &f, FS_READ );
 
 	if (!f)
 	{
@@ -1920,7 +1929,7 @@ AIMOD_LoadCoverPoints ( void )
 
 	if (num_map_waypoints != number_of_nodes)
 	{// Is an old file! We need to make a new one!
-		trap->Print( "^1*** ^3%s^5: Reading coverpoints from ^7/nodes/%s.cpw^3 failed ^5(old coverpoint file)^5!!!\n", GAME_VERSION, cgs.rawmapname );
+		trap->Print( "^1*** ^3%s^5: Reading coverpoints from ^7/nodes/%s.cpw^3 failed ^5(old coverpoint file)^5!!!\n", GAME_VERSION, mapname.string);
 		trap->FS_Close( f );
 		return qfalse;
 	}
@@ -1952,7 +1961,7 @@ AIMOD_LoadCoverPoints ( void )
 
 	trap->FS_Close( f );
 
-	trap->Print( "^1*** ^3%s^5: Successfully loaded %i cover points from file ^7/nodes/%s.cpw^5.\n", GAME_VERSION, num_cover_spots, cgs.rawmapname);
+	trap->Print( "^1*** ^3%s^5: Successfully loaded %i cover points from file ^7/nodes/%s.cpw^5.\n", GAME_VERSION, num_cover_spots, mapname.string);
 
 	return qtrue;
 }
@@ -2050,7 +2059,7 @@ void AIMOD_Generate_Cover_Spots ( void )
 			{
 				trap->Print( "^1*** ^3%s^1: ^5 Generated ^7%i^5 coverspot waypoints.\n", "AUTO-WAYPOINTER", num_cover_spots );
 			}
-
+			
 			// Save them for fast loading next time!
 			AIMOD_SaveCoverPoints();
 		}
@@ -2529,22 +2538,25 @@ AIMOD_NODES_LoadNodes2 ( void )
 	/*short*/ int		numberNodes;
 	short int		temp, fix_aas_nodes;
 
-	i = 0;
+	vmCvar_t mapname;
+	trap->Cvar_Register( &mapname, "mapname", "", CVAR_SERVERINFO | CVAR_ROM );
 
 	trap->Cvar_Register( &fs_homepath, "fs_homepath", "", CVAR_SERVERINFO | CVAR_ROM );
 	trap->Cvar_Register( &fs_game, "fs_game", "", CVAR_SERVERINFO | CVAR_ROM );
+
+	i = 0;
 	
-	f = fopen( va("%s/%s/nodes/%s.bwp", fs_homepath.string, fs_game.string, cgs.rawmapname), "rb" );
+	f = fopen( va("%s/%s/nodes/%s.bwp", fs_homepath.string, fs_game.string, mapname.string), "rb" );
 
 	if ( !f )
 	{
-		trap->Print( "^1*** ^3WARNING^5: Reading from ^7nodes/%s.bwp^3 failed^5!!!\n", cgs.rawmapname );
+		trap->Print( "^1*** ^3WARNING^5: Reading from ^7nodes/%s.bwp^3 failed^5!!!\n", mapname.string);
 		trap->Print( "^1*** ^3       ^5  You need to make bot routes for this map.\n" );
 		trap->Print( "^1*** ^3       ^5  Bots will move randomly for this map.\n" );
 		return;
 	}
 
-	strcpy( mp, cgs.rawmapname );
+	strcpy( mp, mapname.string);
 
 	fread( &nm, strlen( name) + 1, 1, f);
 
@@ -2552,16 +2564,16 @@ AIMOD_NODES_LoadNodes2 ( void )
 
 	if ( version != NOD_VERSION && version != 1.0f)
 	{
-		trap->Print( "^1*** ^3WARNING^5: Reading from ^7nodes/%s.bwp^3 failed^5!!!\n", cgs.rawmapname );
+		trap->Print( "^1*** ^3WARNING^5: Reading from ^7nodes/%s.bwp^3 failed^5!!!\n", mapname.string);
 		trap->Print( "^1*** ^3       ^5  Old node file detected.\n" );
 		fclose(f);
 		return;
 	}
 
 	fread( &map, strlen( mp) + 1, 1, f);
-	if ( Q_stricmp( map, cgs.rawmapname) != 0 )
+	if ( Q_stricmp( map, mapname.string) != 0 )
 	{
-		trap->Print( "^1*** ^3WARNING^5: Reading from ^7nodes/%s.bwp^3 failed^5!!!\n", cgs.rawmapname );
+		trap->Print( "^1*** ^3WARNING^5: Reading from ^7nodes/%s.bwp^3 failed^5!!!\n", mapname.string);
 		trap->Print( "^1*** ^3       ^5  Node file is not for this map!\n" );
 		fclose(f);
 		return;
@@ -2615,7 +2627,7 @@ AIMOD_NODES_LoadNodes2 ( void )
 
 	fclose(f);
 	trap->Print( "^1*** ^3%s^5: Successfully loaded %i waypoints from waypoint file ^7nodes/%s.bwp^5.\n", GAME_VERSION,
-			  number_of_nodes, cgs.rawmapname );
+			  number_of_nodes, mapname.string);
 
 	nodes_loaded = qtrue;
 
@@ -2644,18 +2656,21 @@ AIMOD_NODES_LoadNodes ( void )
 	/*short*/ int		numberNodes;
 	short int		temp, fix_aas_nodes;
 
+	vmCvar_t mapname;
+	trap->Cvar_Register( &mapname, "mapname", "", CVAR_SERVERINFO | CVAR_ROM );
+
 	i = 0;
 
 	///////////////////
 	//open the node file for reading, return false on error
-	trap->FS_Open( va( "nodes/%s.bwp", cgs.rawmapname), &f, FS_READ );
+	trap->FS_Open( va( "nodes/%s.bwp", mapname.string), &f, FS_READ );
 	if ( !f )
 	{
 		AIMOD_NODES_LoadNodes2();
 		return;
 	}
 
-	strcpy( mp, cgs.rawmapname );
+	strcpy( mp, mapname.string);
 	trap->FS_Read( &nm, strlen( name) + 1, f );									//read in a string the size of the mod name (+1 is because all strings end in hex '00')
 	trap->FS_Read( &version, sizeof(float), f );			//read and make sure the version is the same
 
@@ -2742,16 +2757,19 @@ AIMOD_NODES_SaveNodes_Autowaypointed ( void )
 	char			map[64] = "";
 	char			filename[60];
 	/*short*/ int		num_nodes = number_of_nodes;
+
+	vmCvar_t mapname;
+	trap->Cvar_Register( &mapname, "mapname", "", CVAR_SERVERINFO | CVAR_ROM );
 	
 	aw_num_nodes = number_of_nodes;
 	strcpy( filename, "nodes/" );
 
 	///////////////////
 	//try to open the output file, return if it failed
-	trap->FS_Open( va( "nodes/%s.bwp", cgs.rawmapname), &f, FS_WRITE );
+	trap->FS_Open( va( "nodes/%s.bwp", mapname.string), &f, FS_WRITE );
 	if ( !f )
 	{
-		trap->Print( "^1*** ^3ERROR^5: Error opening node file ^7nodes/%s.bwp^5!!!\n", cgs.rawmapname/*filename*/ );
+		trap->Print( "^1*** ^3ERROR^5: Error opening node file ^7nodes/%s.bwp^5!!!\n", mapname.string/*filename*/ );
 		return;
 	}
 
@@ -2787,7 +2805,7 @@ AIMOD_NODES_SaveNodes_Autowaypointed ( void )
 	}
 	
 	//trap->Cvar_Register( &mapname, "mapname", "", CVAR_SERVERINFO | CVAR_ROM );	//get the map name
-	strcpy( map, cgs.rawmapname );
+	strcpy( map, mapname.string);
 	trap->FS_Write( &name, strlen( name) + 1, f );								//write the mod name to the file
 	trap->FS_Write( &version, sizeof(float), f );								//write the version of this file
 	trap->FS_Write( &map, strlen( map) + 1, f );									//write the map name
@@ -2814,7 +2832,7 @@ AIMOD_NODES_SaveNodes_Autowaypointed ( void )
 	}
 
 	trap->FS_Close( f );													//close the file
-	trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^5Successfully saved node file ^7nodes/%s.bwp^5.\n", cgs.rawmapname/*filename*/ );
+	trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^5Successfully saved node file ^7nodes/%s.bwp^5.\n", mapname.string/*filename*/ );
 }
 
 //

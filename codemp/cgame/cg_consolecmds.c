@@ -273,6 +273,13 @@ int cmdcmp( const void *a, const void *b ) {
 static consoleCommand_t	commands[] = {
 	{ "+scores",					CG_ScoresDown_f },
 	{ "-scores",					CG_ScoresUp_f },
+	{ "autowaypoint",				AIMod_AutoWaypoint },
+	{ "autowaypointclean",			AIMod_AutoWaypoint_Clean },
+	{ "aw_badheight",				AIMod_MarkBadHeight },
+	{ "awc",						AIMod_AutoWaypoint_Clean },
+	{ "awc_addbadheight",			AIMod_AWC_MarkBadHeight },
+	{ "awc_addremovalspot",			AIMod_AddRemovalPoint },
+	{ "awp",						AIMod_AutoWaypoint },
 	{ "briefing",					CG_SiegeBriefing_f },
 	{ "clientlist",					CG_ClientList_f },
 	{ "forcenext",					CG_NextForcePower_f },
@@ -284,6 +291,8 @@ static consoleCommand_t	commands[] = {
 	{ "nextskin",					CG_TestModelNextSkin_f },
 	{ "prevframe",					CG_TestModelPrevFrame_f },
 	{ "prevskin",					CG_TestModelPrevSkin_f },
+	{ "showslope",					CG_ShowSlope },
+	{ "showsurface",				CG_ShowSurface },
 	{ "siegeCompleteCvarUpdate",	CG_SiegeCompleteCvarUpdate_f },
 	{ "siegeCvarUpdate",			CG_SiegeCvarUpdate_f },
 	{ "sizedown",					CG_SizeDown_f },
@@ -299,17 +308,6 @@ static consoleCommand_t	commands[] = {
 	{ "weapon",						CG_Weapon_f },
 	{ "weaponclean",				CG_WeaponClean_f },
 	{ "weapprev",					CG_PrevWeapon_f },
-	//[AUTOWAYPOINT]
-	{ "awp",						AIMod_AutoWaypoint },
-	{ "autowaypoint",				AIMod_AutoWaypoint },
-	{ "awc",						AIMod_AutoWaypoint_Clean },
-	{ "autowaypointclean",			AIMod_AutoWaypoint_Clean },
-	{ "showsurface",				CG_ShowSurface },
-	{ "showslope",					CG_ShowSlope },
-	{ "aw_badheight",				AIMod_MarkBadHeight },
-	{ "awc_addremovalspot",			AIMod_AddRemovalPoint },
-	{ "awc_addbadheight",			AIMod_AWC_MarkBadHeight },
-	//[/AUTOWAYPOINT]
 };
 
 static const size_t numCommands = ARRAY_LEN( commands );
