@@ -1482,6 +1482,21 @@ void NPC_Begin (gentity_t *ent)
 			}
 		}
 	}
+
+	if (g_gametype.integer == GT_INSTANCE)
+	{
+		// More health for instance enemies... This is meant to be run as a team...
+		if (ent->client->ps.weapon == WP_SABER)
+		{// Bosses... TODO: Sub-types...
+			ent->NPC->stats.health *= 20;
+		}
+		else
+		{// TODO: Sub-types...
+			ent->NPC->stats.health *= 7;
+		}
+
+		ent->health = ent->maxHealth = client->pers.maxHealth = client->ps.stats[STAT_MAX_HEALTH] = client->ps.stats[STAT_HEALTH] = ent->NPC->stats.health;
+	}
 }
 
 gNPC_t *gNPCPtrs[MAX_GENTITIES];
@@ -2299,21 +2314,21 @@ void SP_NPC_spawner( gentity_t *self)
 			VectorCopy(origin, self->s.origin);
 		}
 
-		self->s.origin[0] += 16;
-		self->s.origin[1] -= 16;
-		if (OrgVisibleBox(origin, playerMins, playerMaxs, self->s.origin, -1))
-		{
-			SP_NPC_spawner2( self );
-			VectorCopy(origin, self->s.origin);
-		}
+		//self->s.origin[0] += 16;
+		//self->s.origin[1] -= 16;
+		//if (OrgVisibleBox(origin, playerMins, playerMaxs, self->s.origin, -1))
+		//{
+		//	SP_NPC_spawner2( self );
+		//	VectorCopy(origin, self->s.origin);
+		//}
 
-		self->s.origin[0] -= 16;
-		self->s.origin[1] += 16;
-		if (OrgVisibleBox(origin, playerMins, playerMaxs, self->s.origin, -1))
-		{
-			SP_NPC_spawner2( self );
-			VectorCopy(origin, self->s.origin);
-		}
+		//self->s.origin[0] -= 16;
+		//self->s.origin[1] += 16;
+		//if (OrgVisibleBox(origin, playerMins, playerMaxs, self->s.origin, -1))
+		//{
+		//	SP_NPC_spawner2( self );
+		//	VectorCopy(origin, self->s.origin);
+		//}
 
 		/*
 		self->s.origin[0] += 16;

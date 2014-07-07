@@ -1145,6 +1145,11 @@ void G_CheckMinimumNpcs( void ) {
 	int			botplayers = 0, i;
 	static int	checkminimumplayers_time;
 
+	if (g_gametype.integer == GT_INSTANCE)
+	{
+		return;
+	}
+
 	if (gWPNum <= 0)
 	{
 		return;

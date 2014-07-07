@@ -2039,6 +2039,8 @@ void NPC_PickRandomIdleAnimantion(gentity_t *NPC)
 {
 	int randAnim = irand(0,10);
 
+	if (!NPC || !NPC->client) return;
+
 	if (NPC->enemy) return; // No idle anims when we got an enemy...
 
 	switch (NPC->client->ps.legsAnim)

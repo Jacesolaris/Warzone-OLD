@@ -88,6 +88,7 @@ static int G_FindConfigstringIndex( const char *name, int start, int max, qboole
 	}
 
 	if ( i == max ) {
+		assert(0);
 		trap->Error( ERR_DROP, "G_FindConfigstringIndex: overflow" );
 	}
 

@@ -3355,18 +3355,873 @@ static float CG_DrawMiniScoreboard ( float y )
 	return y;
 }
 
+
+//
+//
+//
+//  NPC NAMES
+//
+//
+//
+
+qboolean HumanNamesLoaded = qfalse;
+
+typedef struct
+{// FIXME: Add other species name files...
+	char	HumanNames[MAX_QPATH];
+} name_list_t;
+
+name_list_t NPC_NAME_LIST[8000];
+
+int NUM_HUMAN_NAMES = 0;
+
+int			next_vischeck[MAX_GENTITIES];
+qboolean	currently_visible[MAX_GENTITIES];
+
+qboolean CG_CheckClientVisibility ( centity_t *cent )
+{
+	trace_t		trace;
+	vec3_t		start, end;//, forward, right, up;
+	centity_t	*traceEnt = NULL;
+
+	if (next_vischeck[cent->currentState.number] > cg.time)
+	{
+		return currently_visible[cent->currentState.number];
+	}
+
+	next_vischeck[cent->currentState.number] = cg.time + 500 + Q_irand(500, 1000);
+
+	VectorCopy(cg.refdef.vieworg, start);
+	start[2]+=42;
+
+	VectorCopy(cent->lerpOrigin, end);
+	end[2]+=42;
+
+	CG_Trace( &trace, start, NULL, NULL, end, cg.clientNum, MASK_PLAYERSOLID/*MASK_SHOT*/ );
+
+	traceEnt = &cg_entities[trace.entityNum];
+
+	if (traceEnt == cent || trace.fraction == 1.0f)
+	{
+		currently_visible[cent->currentState.number] = qtrue;
+		return qtrue;
+	}
+
+	currently_visible[cent->currentState.number] = qfalse;
+	return qfalse;
+}
+
+/* */
+void
+Load_NPC_Names ( void )
+{				// Load bot first names from external file.
+	char			*s, *t;
+	int				len;
+	fileHandle_t	f;
+	char			*buf;
+	char			*loadPath;
+	int				num = 0;
+
+	if (HumanNamesLoaded)
+		return;
+
+	loadPath = va( "npc_names_list.dat" );
+
+	len = trap->FS_Open( loadPath, &f, FS_READ );
+
+	HumanNamesLoaded = qtrue;
+
+	if ( !f )
+	{
+		return;
+	}
+
+	if ( !len )
+	{			//empty file
+		trap->FS_Close( f );
+		return;
+	}
+
+	if ( (buf = (char *)malloc( len + 1)) == 0 )
+	{			//alloc memory for buffer
+		trap->FS_Close( f );
+		return;
+	}
+
+	trap->FS_Read( buf, len, f );
+	buf[len] = 0;
+	trap->FS_Close( f );
+
+	strcpy( NPC_NAME_LIST[NUM_HUMAN_NAMES].HumanNames, "NONAME");
+	NUM_HUMAN_NAMES++;
+	strcpy( NPC_NAME_LIST[NUM_HUMAN_NAMES].HumanNames, "R2D2 Droid");
+	NUM_HUMAN_NAMES++;
+	strcpy( NPC_NAME_LIST[NUM_HUMAN_NAMES].HumanNames, "R5D2 Droid");
+	NUM_HUMAN_NAMES++;
+	strcpy( NPC_NAME_LIST[NUM_HUMAN_NAMES].HumanNames, "Protocol Droid");
+	NUM_HUMAN_NAMES++;
+	strcpy( NPC_NAME_LIST[NUM_HUMAN_NAMES].HumanNames, "Weequay");
+	NUM_HUMAN_NAMES++;
+
+	for ( t = s = buf; *t; /* */ )
+	{
+		num++;
+		s = strchr( s, '\n' );
+		if ( !s || num > len )
+		{
+			break;
+		}
+
+		while ( *s == '\n' )
+		{
+			*s++ = 0;
+		}
+
+		if ( *t )
+		{
+			if ( !Q_strncmp( "//", va( "%s", t), 2) == 0 && strlen( va( "%s", t)) > 0 )
+			{	// Not a comment either... Record it in our list...
+				Q_strncpyz( NPC_NAME_LIST[NUM_HUMAN_NAMES].HumanNames, va( "%s", t), strlen( va( "%s", t)) );
+				NUM_HUMAN_NAMES++;
+			}
+		}
+
+		t = s;
+	}
+
+	NUM_HUMAN_NAMES--;
+}
+
+void CG_SanitizeString( char *in, char *out )
+{
+	int i = 0;
+	int r = 0;
+
+	while (in[i])
+	{
+		if (i >= 128-1)
+		{ //the ui truncates the name here..
+			break;
+		}
+
+		if (in[i] == '^')
+		{
+			if (in[i+1] >= 48 && //'0'
+				in[i+1] <= 57) //'9'
+			{ //only skip it if there's a number after it for the color
+				i += 2;
+				continue;
+			}
+			else
+			{ //just skip the ^
+				i++;
+				continue;
+			}
+		}
+
+		if (in[i] < 32)
+		{
+			i++;
+			continue;
+		}
+
+		out[r] = in[i];
+		r++;
+		i++;
+	}
+	out[r] = 0;
+}
+
+
 /*
 ================
 CG_DrawEnemyInfo
 ================
 */
+
+//void CG_DrawHealthBar(centity_t *cent, float chX, float chY, float chW, float chH);
+extern void CG_DrawRect_FixedBorder( float x, float y, float width, float height, int border, const float *color );
+extern void CG_FilledBar(float x, float y, float w, float h, float *startColor, float *endColor, const float *bgColor, float frac, int flags);
+
+//vec4_t	uqBG			=	{0.f,0.f,0.f,0.3f};
+vec4_t	uqBG			=	{0.f,0.f,0.f,0.7f};
+vec4_t	uqBorder		=	{0.28f,0.28f,0.28f,1.f};
+vec4_t	uqHover			=	{0.3f,0.3f,0.3f,1.f};
+vec4_t	uqText			=	{1.f,1.f,1.f,1.f};
+vec4_t	uqLime			=	{0.f,1.f,0.f,0.7f};
+vec4_t	uqCyan			=	{0.f,1.f,1.f,0.7f};
+vec4_t	uqRed			=	{1.f,0.f,0.f,0.7f};
+vec4_t	uqBlue			=	{0.f,0.f,1.f,0.7f};
+vec4_t	uqOrange		=	{1.f,0.63f,0.1f,0.7f};
+vec4_t	uqDefaultGrey	=	{0.38f,0.38f,0.38f,1.0f};
+vec4_t	uqLightGrey		=	{0.5f,0.5f,0.5f,1.0f};
+vec4_t	uqDarkGrey		=	{0.33f,0.33f,0.33f,1.0f};
+vec4_t	uqAlmostWhite	=	{0.83f,0.81f,0.71f,1.0f};
+vec4_t	uqAlmostBlack	=	{0.16f,0.16f,0.16f,1.0f};
+
+void CG_DrawMyStatus( void )
+{
+	int				y = 0;
+	char			*str1, *str2;
+	vec4_t			tclr, tclr2;
+	float			boxX, boxXmid, sizeX, sizeY, healthPerc, forcePerc;
+	int				flags = 64|128;
+	centity_t		*crosshairEnt;
+	clientInfo_t	*ci;
+
+	// Select our crosshair entity for stats...
+	crosshairEnt = &cg_entities[cg.clientNum];
+	ci = &cgs.clientinfo[cg.clientNum];
+
+	if (!crosshairEnt)
+	{
+		return; // nothing to show...
+	}
+
+	//str1 = ci->name;
+	str1 = ci->cleanname;
+	str2 = va("< Jedi >"); // UQ1: FIXME - Selected Player Class Name...
+	tclr[0] = 0.125f;
+	tclr[1] = 0.325f;
+	tclr[2] = 0.7f;
+	tclr[3] = 1.0f;
+
+	tclr2[0] = 0.125f;
+	tclr2[1] = 0.325f;
+	tclr2[2] = 0.7f;
+	tclr2[3] = 1.0f;
+
+	/*
+	str2 = va("< Sith >");
+	tclr[0] = 1.0f;
+	tclr[1] = 0.325f;
+	tclr[2] = 0.125f;
+	tclr[3] = 1.0f;
+
+	tclr2[0] = 1.0f;
+	tclr2[1] = 0.325f;
+	tclr2[2] = 0.125f;
+	tclr2[3] = 1.0f;
+	*/
+
+	y = 5;
+
+	sizeX = 160;
+	sizeY = 38;
+
+	boxX = 5;
+	boxXmid = (boxX += sizeY + 2) + (sizeX/2);
+
+	// Draw a transparent box background...
+	CG_FillRect( boxX, y, sizeX, sizeY, uqBG );
+
+	// Draw the border...
+	//CG_DrawRect_FixedBorder( boxX, y, sizeX, sizeY, 1, uqBorder );
+
+	y += 2;
+
+	if ( ci->modelIcon )
+	{
+		CG_DrawPic( boxX + 2, y, sizeY-4, sizeY-4, ci->modelIcon );
+	}
+
+	boxX += sizeY + 2;
+
+	// Draw their name...
+	CG_Text_Paint( boxXmid - (CG_Text_Width ( str1, 0.4f, FONT_SMALL ) * 0.5), y, 0.4f, colorWhite/*tclr*/, str1, 0, 0, 0, FONT_SMALL );
+	y += 10;
+
+	// Draw their type...
+	CG_Text_Paint( boxXmid - (CG_Text_Width ( str2, 0.35f, FONT_SMALL ) * 0.5), y, 0.35f, colorWhite/*tclr2*/, str2, 0, 0, 0, FONT_SMALL );
+	y += 12;
+
+	// Draw their health bar...
+	if (crosshairEnt->currentState.health == 0 || crosshairEnt->currentState.maxhealth == 0)
+		healthPerc = 100; // No health data yet. Assume 100%.
+	else
+		healthPerc = ((float)crosshairEnt->currentState.health / (float)crosshairEnt->currentState.maxhealth);
+
+	CG_FilledBar( boxX + 2, y, sizeX-sizeY-4-6, 5, uqRed, NULL, NULL, healthPerc, flags );
+	//CG_DrawRect_FixedBorder( boxX + 2, y, sizeX-sizeY-4-8, 5, 1, uqBorder );
+
+	//trap->Print("HEALTH: %i. MAX: %i. PERC: %i.\n", crosshairEnt->currentState.health, crosshairEnt->currentState.maxhealth, (int)healthPerc);
+
+	y += 7;
+
+	// Draw their force bar...
+	if (!crosshairEnt->playerState || crosshairEnt->playerState->fd.forcePower == 0 || crosshairEnt->playerState->fd.forcePowerMax == 0)
+		forcePerc = 100; // No force/power data yet. Assume 100%.
+	else
+		forcePerc = ((float)crosshairEnt->playerState->fd.forcePower / (float)crosshairEnt->playerState->fd.forcePowerMax);
+
+	CG_FilledBar( boxX + 2, y, sizeX-sizeY-4-6, 5, uqBlue, NULL, NULL, forcePerc, flags );
+	//CG_DrawRect_FixedBorder( boxX + 2, y, sizeX-sizeY-4-8, 5, 1, uqBorder );
+
+	y += 7;
+}
+
+int currentCrosshairEntity = -1;
+
+void CG_DrawEnemyStatus( void )
+{
+	int				y = 0;
+	char			*str1, *str2;
+	vec4_t			tclr, tclr2;
+	float			boxX, boxXmid, sizeX, sizeY, healthPerc, forcePerc;
+	int				flags = 64|128;
+	centity_t		*crosshairEnt;
+
+	if ( cg.crosshairClientNum >= 0/*MAX_CLIENTS*/ && cg.crosshairClientNum != currentCrosshairEntity ) // player
+	//if ( cg.crosshairVehNum != currentCrosshairEntity ) // npc
+	{
+		// Store current (last looked at) target if it changes...
+		currentCrosshairEntity = cg.crosshairClientNum; // player
+		//currentCrosshairEntity = cg.crosshairVehNum; // npc
+	}
+
+	// Select our crosshair entity for stats...
+	crosshairEnt = &cg_entities[currentCrosshairEntity];
+
+	//CG_DrawHealthBar(cent, x3, y3, w, 100);
+	if (!crosshairEnt)
+	{
+		return; // nothing to show...
+	}
+
+	if (crosshairEnt->currentState.eType != ET_NPC && crosshairEnt->currentState.eType != ET_PLAYER)
+	{
+		return; // nothing to show... FIXME: Add players???
+	}
+
+	if (crosshairEnt->currentState.eFlags & EF_DEAD)
+	{
+		return;
+	}
+
+	if (crosshairEnt->currentState.eType == ET_NPC)
+	{
+	// Load the list on first check...
+	Load_NPC_Names();
+
+	if (crosshairEnt->currentState.generic1 > 0)
+	{// Was assigned a full name already! Yay!
+		switch( crosshairEnt->currentState.NPC_class )
+		{// UQ1: Supported Class Types...
+		case CLASS_CIVILIAN:
+		case CLASS_GENERAL_VENDOR:
+		case CLASS_WEAPONS_VENDOR:
+		case CLASS_ARMOR_VENDOR:
+		case CLASS_SUPPLIES_VENDOR:
+		case CLASS_FOOD_VENDOR:
+		case CLASS_MEDICAL_VENDOR:
+		case CLASS_GAMBLER_VENDOR:
+		case CLASS_TRADE_VENDOR:
+		case CLASS_ODDITIES_VENDOR:
+		case CLASS_DRUG_VENDOR:
+		case CLASS_TRAVELLING_VENDOR:
+		case CLASS_LUKE:
+		case CLASS_JEDI:
+		case CLASS_KYLE:
+		case CLASS_JAN:
+		case CLASS_MONMOTHA:			
+		case CLASS_MORGANKATARN:
+		case CLASS_TAVION:
+		case CLASS_REBORN:
+		case CLASS_DESANN:
+		case CLASS_BOBAFETT:
+		case CLASS_COMMANDO:
+		case CLASS_WEEQUAY:
+		case CLASS_BARTENDER:
+		case CLASS_BESPIN_COP:
+		case CLASS_GALAK:
+		case CLASS_GRAN:
+		case CLASS_LANDO:			
+		case CLASS_REBEL:
+		case CLASS_REELO:
+		case CLASS_MURJJ:
+		case CLASS_PRISONER:
+		case CLASS_RODIAN:
+		case CLASS_TRANDOSHAN:
+		case CLASS_UGNAUGHT:
+		case CLASS_JAWA:
+			str1 = va("%s", NPC_NAME_LIST[crosshairEnt->currentState.generic1].HumanNames);
+			break;
+		case CLASS_STORMTROOPER:
+		case CLASS_SWAMPTROOPER:
+		case CLASS_IMPWORKER:
+		case CLASS_IMPERIAL:
+		case CLASS_SHADOWTROOPER:
+			str1 = va("TK-%i", crosshairEnt->currentState.generic1);	// EVIL. for a number of reasons --eez
+			break;
+		case CLASS_ATST:				// technically droid...
+			str1 = va("AT-ST");
+			break;
+		case CLASS_CLAW:
+			str1 = va("Claw");
+			break;
+		case CLASS_FISH:
+			str1 = va("Sea Creature");
+			break;
+		case CLASS_FLIER2:
+			str1 = va("Flier");
+			break;
+		case CLASS_GLIDER:
+			str1 = va("Glider");
+			break;
+		case CLASS_HOWLER:
+			str1 = va("Howler");
+			break;
+		case CLASS_LIZARD:
+			str1 = va("Lizard");
+			break;
+		case CLASS_MINEMONSTER:
+			str1 = va("Mine Monster");
+			break;
+		case CLASS_SWAMP:
+			str1 = va("Swamp Monster");
+			break;
+		case CLASS_RANCOR:
+			str1 = va("Rancor");
+			break;
+		case CLASS_WAMPA:
+			str1 = va("Wampa");
+			break;
+		case CLASS_VEHICLE:
+			return;
+			break;
+		default:
+			//CG_Printf("NPC %i is not a civilian or vendor (class %i).\n", cent->currentState.number, cent->currentState.NPC_class);
+			return;
+			break;
+		}
+	}
+
+	switch( crosshairEnt->currentState.NPC_class )
+	{// UQ1: Supported Class Types...
+	case CLASS_CIVILIAN:
+		str2 = va("< Civilian >");
+		tclr[0] = 0.125f;
+		tclr[1] = 0.125f;
+		tclr[2] = 0.7f;
+		tclr[3] = 1.0f;
+
+		tclr2[0] = 0.125f;
+		tclr2[1] = 0.125f;
+		tclr2[2] = 0.7f;
+		tclr2[3] = 1.0f;
+		break;
+	case CLASS_REBEL:
+		str2 = va("< Rebel >");
+		tclr[0] = 0.125f;
+		tclr[1] = 0.125f;
+		tclr[2] = 0.7f;
+		tclr[3] = 1.0f;
+
+		tclr2[0] = 0.125f;
+		tclr2[1] = 0.125f;
+		tclr2[2] = 0.7f;
+		tclr2[3] = 1.0f;
+		break;
+	case CLASS_JEDI:
+	case CLASS_KYLE:
+	case CLASS_LUKE:
+	case CLASS_JAN:
+	case CLASS_MONMOTHA:			
+	case CLASS_MORGANKATARN:
+		str2 = va("< Jedi >");
+		tclr[0] = 0.125f;
+		tclr[1] = 0.325f;
+		tclr[2] = 0.7f;
+		tclr[3] = 1.0f;
+
+		tclr2[0] = 0.125f;
+		tclr2[1] = 0.325f;
+		tclr2[2] = 0.7f;
+		tclr2[3] = 1.0f;
+		break;
+	case CLASS_GENERAL_VENDOR:
+		str2 = va("< General Vendor >");
+		tclr[0] = 0.525f;
+		tclr[1] = 0.525f;
+		tclr[2] = 1.0f;
+		tclr[3] = 1.0f;
+
+		tclr2[0] = 0.525f;
+		tclr2[1] = 0.525f;
+		tclr2[2] = 1.0f;
+		tclr2[3] = 1.0f;
+		break;
+	case CLASS_WEAPONS_VENDOR:
+		str2 = va("< Weapons Vendor >");
+		tclr[0] = 0.525f;
+		tclr[1] = 0.525f;
+		tclr[2] = 1.0f;
+		tclr[3] = 1.0f;
+
+		tclr2[0] = 0.525f;
+		tclr2[1] = 0.525f;
+		tclr2[2] = 1.0f;
+		tclr2[3] = 1.0f;
+		break;
+	case CLASS_ARMOR_VENDOR:
+		str2 = va("< Armor Vendor >");
+		tclr[0] = 0.525f;
+		tclr[1] = 0.525f;
+		tclr[2] = 1.0f;
+		tclr[3] = 1.0f;
+
+		tclr2[0] = 0.525f;
+		tclr2[1] = 0.525f;
+		tclr2[2] = 1.0f;
+		tclr2[3] = 1.0f;
+		break;
+	case CLASS_SUPPLIES_VENDOR:
+		str2 = va("< Supplies Vendor >");
+		tclr[0] = 0.525f;
+		tclr[1] = 0.525f;
+		tclr[2] = 1.0f;
+		tclr[3] = 1.0f;
+
+		tclr2[0] = 0.525f;
+		tclr2[1] = 0.525f;
+		tclr2[2] = 1.0f;
+		tclr2[3] = 1.0f;
+		break;
+	case CLASS_FOOD_VENDOR:
+		str2 = va("< Food Vendor >");
+		tclr[0] = 0.525f;
+		tclr[1] = 0.525f;
+		tclr[2] = 1.0f;
+		tclr[3] = 1.0f;
+
+		tclr2[0] = 0.525f;
+		tclr2[1] = 0.525f;
+		tclr2[2] = 1.0f;
+		tclr2[3] = 1.0f;
+		break;
+	case CLASS_MEDICAL_VENDOR:
+		str2 = va("< Medical Vendor >");
+		tclr[0] = 0.525f;
+		tclr[1] = 0.525f;
+		tclr[2] = 1.0f;
+		tclr[3] = 1.0f;
+
+		tclr2[0] = 0.525f;
+		tclr2[1] = 0.525f;
+		tclr2[2] = 1.0f;
+		tclr2[3] = 1.0f;
+		break;
+	case CLASS_GAMBLER_VENDOR:
+		str2 = va("< Gambling Vendor >");
+		tclr[0] = 0.525f;
+		tclr[1] = 0.525f;
+		tclr[2] = 1.0f;
+		tclr[3] = 1.0f;
+
+		tclr2[0] = 0.525f;
+		tclr2[1] = 0.525f;
+		tclr2[2] = 1.0f;
+		tclr2[3] = 1.0f;
+		break;
+	case CLASS_TRADE_VENDOR:
+		str2 = va("< Trade Vendor >");
+		tclr[0] = 0.525f;
+		tclr[1] = 0.525f;
+		tclr[2] = 1.0f;
+		tclr[3] = 1.0f;
+
+		tclr2[0] = 0.525f;
+		tclr2[1] = 0.525f;
+		tclr2[2] = 1.0f;
+		tclr2[3] = 1.0f;
+		break;
+	case CLASS_ODDITIES_VENDOR:
+		str2 = va("< Oddities Vendor >");
+		tclr[0] = 0.525f;
+		tclr[1] = 0.525f;
+		tclr[2] = 1.0f;
+		tclr[3] = 1.0f;
+
+		tclr2[0] = 0.525f;
+		tclr2[1] = 0.525f;
+		tclr2[2] = 1.0f;
+		tclr2[3] = 1.0f;
+		break;
+	case CLASS_DRUG_VENDOR:
+		str2 = va("< Drug Vendor >");
+		tclr[0] = 0.525f;
+		tclr[1] = 0.525f;
+		tclr[2] = 1.0f;
+		tclr[3] = 1.0f;
+
+		tclr2[0] = 0.525f;
+		tclr2[1] = 0.525f;
+		tclr2[2] = 1.0f;
+		tclr2[3] = 1.0f;
+		break;
+	case CLASS_TRAVELLING_VENDOR:
+		str2 = va("< Travelling Vendor >");
+		tclr[0] = 0.525f;
+		tclr[1] = 0.525f;
+		tclr[2] = 1.0f;
+		tclr[3] = 1.0f;
+
+		tclr2[0] = 0.525f;
+		tclr2[1] = 0.525f;
+		tclr2[2] = 1.0f;
+		tclr2[3] = 1.0f;
+		break;
+	case CLASS_STORMTROOPER:
+	case CLASS_SWAMPTROOPER:
+	case CLASS_IMPWORKER:
+	case CLASS_IMPERIAL:
+	case CLASS_SHADOWTROOPER:
+	case CLASS_COMMANDO:
+		str2 = va("< Imperial >");
+		tclr[0] = 1.0f;
+		tclr[1] = 0.125f;
+		tclr[2] = 0.125f;
+		tclr[3] = 1.0f;
+
+		tclr2[0] = 1.0f;
+		tclr2[1] = 0.125f;
+		tclr2[2] = 0.125f;
+		tclr2[3] = 1.0f;
+		break;
+	case CLASS_TAVION:
+	case CLASS_REBORN:
+	case CLASS_DESANN:
+		str2 = va("< Sith >");
+		tclr[0] = 1.0f;
+		tclr[1] = 0.325f;
+		tclr[2] = 0.125f;
+		tclr[3] = 1.0f;
+
+		tclr2[0] = 1.0f;
+		tclr2[1] = 0.325f;
+		tclr2[2] = 0.125f;
+		tclr2[3] = 1.0f;
+		break;
+	case CLASS_BOBAFETT:
+		str2 = va("< Bounty Hunter >");
+		tclr[0] = 1.0f;
+		tclr[1] = 0.225f;
+		tclr[2] = 0.125f;
+		tclr[3] = 1.0f;
+
+		tclr2[0] = 1.0f;
+		tclr2[1] = 0.225f;
+		tclr2[2] = 0.125f;
+		tclr2[3] = 1.0f;
+		break;
+	case CLASS_ATST:
+		str2 = va("< Vehicle >");
+		tclr[0] = 1.0f;
+		tclr[1] = 0.225f;
+		tclr[2] = 0.125f;
+		tclr[3] = 1.0f;
+
+		tclr2[0] = 1.0f;
+		tclr2[1] = 0.225f;
+		tclr2[2] = 0.125f;
+		tclr2[3] = 1.0f;
+		break;
+	case CLASS_CLAW:
+	case CLASS_FISH:
+	case CLASS_FLIER2:
+	case CLASS_GLIDER:
+	case CLASS_HOWLER:
+	case CLASS_LIZARD:
+	case CLASS_MINEMONSTER:
+	case CLASS_SWAMP:
+	case CLASS_RANCOR:
+	case CLASS_WAMPA:
+		str2 = va("< Animal >");
+		tclr[0] = 1.0f;
+		tclr[1] = 0.125f;
+		tclr[2] = 0.125f;
+		tclr[3] = 1.0f;
+
+		tclr2[0] = 1.0f;
+		tclr2[1] = 0.125f;
+		tclr2[2] = 0.125f;
+		tclr2[3] = 1.0f;
+		break;
+	case CLASS_VEHICLE:
+		str2 = va("< Vehicle >");
+		tclr[0] = 1.0f;
+		tclr[1] = 0.125f;
+		tclr[2] = 0.125f;
+		tclr[3] = 1.0f;
+
+		tclr2[0] = 1.0f;
+		tclr2[1] = 0.125f;
+		tclr2[2] = 0.125f;
+		tclr2[3] = 1.0f;
+		break;
+	case CLASS_BESPIN_COP:
+	case CLASS_LANDO:
+	case CLASS_PRISONER:
+		str2 = va("< Rebel >");
+		tclr[0] = 0.125f;
+		tclr[1] = 0.125f;
+		tclr[2] = 0.7f;
+		tclr[3] = 1.0f;
+
+		tclr2[0] = 0.125f;
+		tclr2[1] = 0.125f;
+		tclr2[2] = 0.7f;
+		tclr2[3] = 1.0f;
+		break;
+	case CLASS_GALAK:
+	case CLASS_GRAN:
+	case CLASS_REELO:
+	case CLASS_MURJJ:
+	case CLASS_RODIAN:
+	case CLASS_TRANDOSHAN:
+	case CLASS_UGNAUGHT:
+	case CLASS_WEEQUAY:
+	case CLASS_BARTENDER:
+	case CLASS_JAWA:
+		if (crosshairEnt->playerState->persistant[PERS_TEAM] == NPCTEAM_ENEMY)
+		{
+			str2 = va("< Thug >");
+			tclr[0] = 0.5f;
+			tclr[1] = 0.5f;
+			tclr[2] = 0.125f;
+			tclr[3] = 1.0f;
+
+			tclr2[0] = 0.5f;
+			tclr2[1] = 0.5f;
+			tclr2[2] = 0.125f;
+			tclr2[3] = 1.0f;
+		}
+		else if (crosshairEnt->playerState->persistant[PERS_TEAM] == NPCTEAM_PLAYER)
+		{
+			str2 = va("< Rebel >");
+			tclr[0] = 0.125f;
+			tclr[1] = 0.125f;
+			tclr[2] = 0.7f;
+			tclr[3] = 1.0f;
+
+			tclr2[0] = 0.125f;
+			tclr2[1] = 0.125f;
+			tclr2[2] = 0.7f;
+			tclr2[3] = 1.0f;
+		}
+		else
+		{
+			str2 = va("< Civilian >");
+			tclr[0] = 0.7f;
+			tclr[1] = 0.7f;
+			tclr[2] = 0.125f;
+			tclr[3] = 1.0f;
+
+			tclr2[0] = 0.7f;
+			tclr2[1] = 0.7f;
+			tclr2[2] = 0.125f;
+			tclr2[3] = 1.0f;
+		}
+		break;
+
+	default:
+		//CG_Printf("NPC %i is not a civilian or vendor (class %i).\n", cent->currentState.number, cent->currentState.NPC_class);
+		str2 = va("");
+		break;
+	}
+	}
+
+	y = 5;
+
+	sizeX = 160;
+	sizeY = 38;
+
+	boxX = 5 + sizeX + 5;
+	boxXmid = (boxX += sizeY + 2) + (sizeX/2);
+
+	// Draw a transparent box background...
+	CG_FillRect( boxX, y, sizeX, sizeY, uqBG );
+
+	// Draw the border...
+	//CG_DrawRect_FixedBorder( boxX, y, sizeX, sizeY, 1, uqBorder );
+
+	y += 2;
+
+	if (crosshairEnt->currentState.eType == ET_PLAYER)
+	{
+		clientInfo_t *ci = &cgs.clientinfo[currentCrosshairEntity];
+
+		// FIXME: NPC icons??? And then the bars/name on the right of it like other MMOs???
+		if ( ci->modelIcon )
+		{
+			CG_DrawPic( boxX + 2, y, sizeY-4, sizeY-4, ci->modelIcon );
+		}
+
+		str1 = ci->cleanname;
+		str2 = va("< Jedi >"); // UQ1: FIXME - Selected Player Class Name...
+		tclr[0] = 0.125f;
+		tclr[1] = 0.325f;
+		tclr[2] = 0.7f;
+		tclr[3] = 1.0f;
+
+		tclr2[0] = 0.125f;
+		tclr2[1] = 0.325f;
+		tclr2[2] = 0.7f;
+		tclr2[3] = 1.0f;
+	}
+	else
+	{
+		// FIXME: NPC icons??? And then the bars/name on the right of it like other MMOs???
+		if ( crosshairEnt->npcClient->modelIcon )
+		{
+			CG_DrawPic( boxX + 2, y, sizeY-4, sizeY-4, crosshairEnt->npcClient->modelIcon );
+		}
+	}
+
+	boxX += sizeY + 2;
+
+	// Draw their name...
+	CG_Text_Paint( boxXmid - (CG_Text_Width ( str1, 0.4f, FONT_SMALL ) * 0.5), y, 0.4f, tclr, str1, 0, 0, 0, FONT_SMALL );
+	y += 10;
+
+	// Draw their type...
+	CG_Text_Paint( boxXmid - (CG_Text_Width ( str2, 0.35f, FONT_SMALL ) * 0.5), y, 0.35f, tclr2, str2, 0, 0, 0, FONT_SMALL );
+	y += 12;
+
+	// Draw their health bar...
+	if (crosshairEnt->currentState.health == 0 || crosshairEnt->currentState.maxhealth == 0)
+		healthPerc = 100; // No health data yet. Assume 100%.
+	else
+		healthPerc = ((float)crosshairEnt->currentState.health / (float)crosshairEnt->currentState.maxhealth);
+
+	CG_FilledBar( boxX + 2, y, sizeX-sizeY-4-6, 5, uqRed, NULL, NULL, healthPerc, flags );
+	//CG_DrawRect_FixedBorder( boxX + 2, y, sizeX-sizeY-4-6, 5, 1, uqBorder );
+
+	//trap->Print("HEALTH: %i. MAX: %i. PERC: %i.\n", crosshairEnt->currentState.health, crosshairEnt->currentState.maxhealth, (int)healthPerc);
+
+	y += 7;
+
+	// Draw their force bar...
+	if (!crosshairEnt->playerState || crosshairEnt->playerState->fd.forcePower == 0 || crosshairEnt->playerState->fd.forcePowerMax == 0)
+		forcePerc = 100; // No force/power data yet. Assume 100%.
+	else
+		forcePerc = ((float)crosshairEnt->playerState->fd.forcePower / (float)crosshairEnt->playerState->fd.forcePowerMax);
+
+	CG_FilledBar( boxX + 2, y, sizeX-sizeY-4-6, 5, uqBlue, NULL, NULL, forcePerc, flags );
+	//CG_DrawRect_FixedBorder( boxX + 2, y, sizeX-sizeY-4-6, 5, 1, uqBorder );
+
+	y += 7;
+}
+
 static float CG_DrawEnemyInfo ( float y )
 {
-	float		size;
-	int			clientNum;
-	const char	*title;
+	float			size;
+	int				clientNum;
+	const char		*title;
 	clientInfo_t	*ci;
-	int xOffset = 0;
+	int				xOffset = 0;
+
+	CG_DrawMyStatus();
 
 	if (!cg.snap)
 	{
@@ -3388,7 +4243,524 @@ static float CG_DrawEnemyInfo ( float y )
 		return y;
 	}
 
-	if ( cgs.gametype == GT_JEDIMASTER )
+#ifndef __MMO__
+	if (cgs.gametype == GT_INSTANCE)
+#else //__MMO__
+	if (cgs.gametype != GT_DUEL) // In MMO mode, we ALWAYS show target stats - ALL GAMETYPES except for GT_DUEL!
+#endif //__MMO__
+	{
+		CG_DrawEnemyStatus();
+		/*
+		char	*str1, *str2;
+		vec4_t	tclr, tclr2;
+		float	boxX, boxXmid, sizeX, sizeY, healthPerc, forcePerc;
+		int		flags = 64|128;
+
+		//CG_DrawHealthBar(cent, x3, y3, w, 100);
+		if (!crosshairEnt)
+		{
+			return y; // nothing to show...
+		}
+
+		if (crosshairEnt->currentState.eType != ET_NPC)
+		{
+			return y; // nothing to show... FIXME: Add players???
+		}
+
+		if (crosshairEnt->currentState.eFlags & EF_DEAD)
+		{
+			return y;
+		}
+
+		// Load the list on first check...
+		Load_NPC_Names();
+
+		if (crosshairEnt->currentState.generic1 > 0)
+		{// Was assigned a full name already! Yay!
+			switch( crosshairEnt->currentState.NPC_class )
+			{// UQ1: Supported Class Types...
+			case CLASS_CIVILIAN:
+			case CLASS_GENERAL_VENDOR:
+			case CLASS_WEAPONS_VENDOR:
+			case CLASS_ARMOR_VENDOR:
+			case CLASS_SUPPLIES_VENDOR:
+			case CLASS_FOOD_VENDOR:
+			case CLASS_MEDICAL_VENDOR:
+			case CLASS_GAMBLER_VENDOR:
+			case CLASS_TRADE_VENDOR:
+			case CLASS_ODDITIES_VENDOR:
+			case CLASS_DRUG_VENDOR:
+			case CLASS_TRAVELLING_VENDOR:
+			case CLASS_LUKE:
+			case CLASS_JEDI:
+			case CLASS_KYLE:
+			case CLASS_JAN:
+			case CLASS_MONMOTHA:			
+			case CLASS_MORGANKATARN:
+			case CLASS_TAVION:
+			case CLASS_REBORN:
+			case CLASS_DESANN:
+			case CLASS_BOBAFETT:
+			case CLASS_COMMANDO:
+			case CLASS_WEEQUAY:
+			case CLASS_BARTENDER:
+			case CLASS_BESPIN_COP:
+			case CLASS_GALAK:
+			case CLASS_GRAN:
+			case CLASS_LANDO:			
+			case CLASS_REBEL:
+			case CLASS_REELO:
+			case CLASS_MURJJ:
+			case CLASS_PRISONER:
+			case CLASS_RODIAN:
+			case CLASS_TRANDOSHAN:
+			case CLASS_UGNAUGHT:
+			case CLASS_JAWA:
+				str1 = va("%s", NPC_NAME_LIST[crosshairEnt->currentState.generic1].HumanNames);
+				break;
+			case CLASS_STORMTROOPER:
+			case CLASS_SWAMPTROOPER:
+			case CLASS_IMPWORKER:
+			case CLASS_IMPERIAL:
+			case CLASS_SHADOWTROOPER:
+				str1 = va("TK-%i", crosshairEnt->currentState.generic1);	// EVIL. for a number of reasons --eez
+				break;
+			case CLASS_ATST:				// technically droid...
+				str1 = va("AT-ST");
+				break;
+			case CLASS_CLAW:
+				str1 = va("Claw");
+				break;
+			case CLASS_FISH:
+				str1 = va("Sea Creature");
+				break;
+			case CLASS_FLIER2:
+				str1 = va("Flier");
+				break;
+			case CLASS_GLIDER:
+				str1 = va("Glider");
+				break;
+			case CLASS_HOWLER:
+				str1 = va("Howler");
+				break;
+			case CLASS_LIZARD:
+				str1 = va("Lizard");
+				break;
+			case CLASS_MINEMONSTER:
+				str1 = va("Mine Monster");
+				break;
+			case CLASS_SWAMP:
+				str1 = va("Swamp Monster");
+				break;
+			case CLASS_RANCOR:
+				str1 = va("Rancor");
+				break;
+			case CLASS_WAMPA:
+				str1 = va("Wampa");
+				break;
+			case CLASS_VEHICLE:
+				return y;
+				break;
+			default:
+				//CG_Printf("NPC %i is not a civilian or vendor (class %i).\n", cent->currentState.number, cent->currentState.NPC_class);
+				return y;
+				break;
+			}
+		}
+
+		switch( crosshairEnt->currentState.NPC_class )
+		{// UQ1: Supported Class Types...
+		case CLASS_CIVILIAN:
+			str2 = va("< Civilian >");
+			tclr[0] = 0.125f;
+			tclr[1] = 0.125f;
+			tclr[2] = 0.7f;
+			tclr[3] = 1.0f;
+
+			tclr2[0] = 0.125f;
+			tclr2[1] = 0.125f;
+			tclr2[2] = 0.7f;
+			tclr2[3] = 1.0f;
+			break;
+		case CLASS_REBEL:
+			str2 = va("< Rebel >");
+			tclr[0] = 0.125f;
+			tclr[1] = 0.125f;
+			tclr[2] = 0.7f;
+			tclr[3] = 1.0f;
+
+			tclr2[0] = 0.125f;
+			tclr2[1] = 0.125f;
+			tclr2[2] = 0.7f;
+			tclr2[3] = 1.0f;
+			break;
+		case CLASS_JEDI:
+		case CLASS_KYLE:
+		case CLASS_LUKE:
+		case CLASS_JAN:
+		case CLASS_MONMOTHA:			
+		case CLASS_MORGANKATARN:
+			str2 = va("< Jedi >");
+			tclr[0] = 0.125f;
+			tclr[1] = 0.325f;
+			tclr[2] = 0.7f;
+			tclr[3] = 1.0f;
+
+			tclr2[0] = 0.125f;
+			tclr2[1] = 0.325f;
+			tclr2[2] = 0.7f;
+			tclr2[3] = 1.0f;
+			break;
+		case CLASS_GENERAL_VENDOR:
+			str2 = va("< General Vendor >");
+			tclr[0] = 0.525f;
+			tclr[1] = 0.525f;
+			tclr[2] = 1.0f;
+			tclr[3] = 1.0f;
+
+			tclr2[0] = 0.525f;
+			tclr2[1] = 0.525f;
+			tclr2[2] = 1.0f;
+			tclr2[3] = 1.0f;
+			break;
+		case CLASS_WEAPONS_VENDOR:
+			str2 = va("< Weapons Vendor >");
+			tclr[0] = 0.525f;
+			tclr[1] = 0.525f;
+			tclr[2] = 1.0f;
+			tclr[3] = 1.0f;
+
+			tclr2[0] = 0.525f;
+			tclr2[1] = 0.525f;
+			tclr2[2] = 1.0f;
+			tclr2[3] = 1.0f;
+			break;
+		case CLASS_ARMOR_VENDOR:
+			str2 = va("< Armor Vendor >");
+			tclr[0] = 0.525f;
+			tclr[1] = 0.525f;
+			tclr[2] = 1.0f;
+			tclr[3] = 1.0f;
+
+			tclr2[0] = 0.525f;
+			tclr2[1] = 0.525f;
+			tclr2[2] = 1.0f;
+			tclr2[3] = 1.0f;
+			break;
+		case CLASS_SUPPLIES_VENDOR:
+			str2 = va("< Supplies Vendor >");
+			tclr[0] = 0.525f;
+			tclr[1] = 0.525f;
+			tclr[2] = 1.0f;
+			tclr[3] = 1.0f;
+
+			tclr2[0] = 0.525f;
+			tclr2[1] = 0.525f;
+			tclr2[2] = 1.0f;
+			tclr2[3] = 1.0f;
+			break;
+		case CLASS_FOOD_VENDOR:
+			str2 = va("< Food Vendor >");
+			tclr[0] = 0.525f;
+			tclr[1] = 0.525f;
+			tclr[2] = 1.0f;
+			tclr[3] = 1.0f;
+
+			tclr2[0] = 0.525f;
+			tclr2[1] = 0.525f;
+			tclr2[2] = 1.0f;
+			tclr2[3] = 1.0f;
+			break;
+		case CLASS_MEDICAL_VENDOR:
+			str2 = va("< Medical Vendor >");
+			tclr[0] = 0.525f;
+			tclr[1] = 0.525f;
+			tclr[2] = 1.0f;
+			tclr[3] = 1.0f;
+
+			tclr2[0] = 0.525f;
+			tclr2[1] = 0.525f;
+			tclr2[2] = 1.0f;
+			tclr2[3] = 1.0f;
+			break;
+		case CLASS_GAMBLER_VENDOR:
+			str2 = va("< Gambling Vendor >");
+			tclr[0] = 0.525f;
+			tclr[1] = 0.525f;
+			tclr[2] = 1.0f;
+			tclr[3] = 1.0f;
+
+			tclr2[0] = 0.525f;
+			tclr2[1] = 0.525f;
+			tclr2[2] = 1.0f;
+			tclr2[3] = 1.0f;
+			break;
+		case CLASS_TRADE_VENDOR:
+			str2 = va("< Trade Vendor >");
+			tclr[0] = 0.525f;
+			tclr[1] = 0.525f;
+			tclr[2] = 1.0f;
+			tclr[3] = 1.0f;
+
+			tclr2[0] = 0.525f;
+			tclr2[1] = 0.525f;
+			tclr2[2] = 1.0f;
+			tclr2[3] = 1.0f;
+			break;
+		case CLASS_ODDITIES_VENDOR:
+			str2 = va("< Oddities Vendor >");
+			tclr[0] = 0.525f;
+			tclr[1] = 0.525f;
+			tclr[2] = 1.0f;
+			tclr[3] = 1.0f;
+
+			tclr2[0] = 0.525f;
+			tclr2[1] = 0.525f;
+			tclr2[2] = 1.0f;
+			tclr2[3] = 1.0f;
+			break;
+		case CLASS_DRUG_VENDOR:
+			str2 = va("< Drug Vendor >");
+			tclr[0] = 0.525f;
+			tclr[1] = 0.525f;
+			tclr[2] = 1.0f;
+			tclr[3] = 1.0f;
+
+			tclr2[0] = 0.525f;
+			tclr2[1] = 0.525f;
+			tclr2[2] = 1.0f;
+			tclr2[3] = 1.0f;
+			break;
+		case CLASS_TRAVELLING_VENDOR:
+			str2 = va("< Travelling Vendor >");
+			tclr[0] = 0.525f;
+			tclr[1] = 0.525f;
+			tclr[2] = 1.0f;
+			tclr[3] = 1.0f;
+
+			tclr2[0] = 0.525f;
+			tclr2[1] = 0.525f;
+			tclr2[2] = 1.0f;
+			tclr2[3] = 1.0f;
+			break;
+		case CLASS_STORMTROOPER:
+		case CLASS_SWAMPTROOPER:
+		case CLASS_IMPWORKER:
+		case CLASS_IMPERIAL:
+		case CLASS_SHADOWTROOPER:
+		case CLASS_COMMANDO:
+			str2 = va("< Imperial >");
+			tclr[0] = 1.0f;
+			tclr[1] = 0.125f;
+			tclr[2] = 0.125f;
+			tclr[3] = 1.0f;
+
+			tclr2[0] = 1.0f;
+			tclr2[1] = 0.125f;
+			tclr2[2] = 0.125f;
+			tclr2[3] = 1.0f;
+			break;
+		case CLASS_TAVION:
+		case CLASS_REBORN:
+		case CLASS_DESANN:
+			str2 = va("< Sith >");
+			tclr[0] = 1.0f;
+			tclr[1] = 0.325f;
+			tclr[2] = 0.125f;
+			tclr[3] = 1.0f;
+
+			tclr2[0] = 1.0f;
+			tclr2[1] = 0.325f;
+			tclr2[2] = 0.125f;
+			tclr2[3] = 1.0f;
+			break;
+		case CLASS_BOBAFETT:
+			str2 = va("< Bounty Hunter >");
+			tclr[0] = 1.0f;
+			tclr[1] = 0.225f;
+			tclr[2] = 0.125f;
+			tclr[3] = 1.0f;
+
+			tclr2[0] = 1.0f;
+			tclr2[1] = 0.225f;
+			tclr2[2] = 0.125f;
+			tclr2[3] = 1.0f;
+			break;
+		case CLASS_ATST:
+			str2 = va("< Vehicle >");
+			tclr[0] = 1.0f;
+			tclr[1] = 0.225f;
+			tclr[2] = 0.125f;
+			tclr[3] = 1.0f;
+
+			tclr2[0] = 1.0f;
+			tclr2[1] = 0.225f;
+			tclr2[2] = 0.125f;
+			tclr2[3] = 1.0f;
+			break;
+		case CLASS_CLAW:
+		case CLASS_FISH:
+		case CLASS_FLIER2:
+		case CLASS_GLIDER:
+		case CLASS_HOWLER:
+		case CLASS_LIZARD:
+		case CLASS_MINEMONSTER:
+		case CLASS_SWAMP:
+		case CLASS_RANCOR:
+		case CLASS_WAMPA:
+			str2 = va("< Animal >");
+			tclr[0] = 1.0f;
+			tclr[1] = 0.125f;
+			tclr[2] = 0.125f;
+			tclr[3] = 1.0f;
+
+			tclr2[0] = 1.0f;
+			tclr2[1] = 0.125f;
+			tclr2[2] = 0.125f;
+			tclr2[3] = 1.0f;
+			break;
+		case CLASS_VEHICLE:
+			str2 = va("< Vehicle >");
+			tclr[0] = 1.0f;
+			tclr[1] = 0.125f;
+			tclr[2] = 0.125f;
+			tclr[3] = 1.0f;
+
+			tclr2[0] = 1.0f;
+			tclr2[1] = 0.125f;
+			tclr2[2] = 0.125f;
+			tclr2[3] = 1.0f;
+			break;
+		case CLASS_BESPIN_COP:
+		case CLASS_LANDO:
+		case CLASS_PRISONER:
+			str2 = va("< Rebel >");
+			tclr[0] = 0.125f;
+			tclr[1] = 0.125f;
+			tclr[2] = 0.7f;
+			tclr[3] = 1.0f;
+
+			tclr2[0] = 0.125f;
+			tclr2[1] = 0.125f;
+			tclr2[2] = 0.7f;
+			tclr2[3] = 1.0f;
+			break;
+		case CLASS_GALAK:
+		case CLASS_GRAN:
+		case CLASS_REELO:
+		case CLASS_MURJJ:
+		case CLASS_RODIAN:
+		case CLASS_TRANDOSHAN:
+		case CLASS_UGNAUGHT:
+		case CLASS_WEEQUAY:
+		case CLASS_BARTENDER:
+		case CLASS_JAWA:
+			if (crosshairEnt->playerState->persistant[PERS_TEAM] == NPCTEAM_ENEMY)
+			{
+				str2 = va("< Thug >");
+				tclr[0] = 0.5f;
+				tclr[1] = 0.5f;
+				tclr[2] = 0.125f;
+				tclr[3] = 1.0f;
+
+				tclr2[0] = 0.5f;
+				tclr2[1] = 0.5f;
+				tclr2[2] = 0.125f;
+				tclr2[3] = 1.0f;
+			}
+			else if (crosshairEnt->playerState->persistant[PERS_TEAM] == NPCTEAM_PLAYER)
+			{
+				str2 = va("< Rebel >");
+				tclr[0] = 0.125f;
+				tclr[1] = 0.125f;
+				tclr[2] = 0.7f;
+				tclr[3] = 1.0f;
+
+				tclr2[0] = 0.125f;
+				tclr2[1] = 0.125f;
+				tclr2[2] = 0.7f;
+				tclr2[3] = 1.0f;
+			}
+			else
+			{
+				str2 = va("< Civilian >");
+				tclr[0] = 0.7f;
+				tclr[1] = 0.7f;
+				tclr[2] = 0.125f;
+				tclr[3] = 1.0f;
+
+				tclr2[0] = 0.7f;
+				tclr2[1] = 0.7f;
+				tclr2[2] = 0.125f;
+				tclr2[3] = 1.0f;
+			}
+			break;
+		
+		default:
+			//CG_Printf("NPC %i is not a civilian or vendor (class %i).\n", cent->currentState.number, cent->currentState.NPC_class);
+			str2 = va("");
+			break;
+		}
+
+		title = str1;
+
+		y += 5;
+
+		sizeX = 160;
+		sizeY = 38;
+
+		boxX = 640 - sizeX - 5 + xOffset;
+		boxXmid = boxX + (sizeX/2);
+
+		// Draw a transparent box background...
+		CG_FillRect( boxX, y, sizeX, sizeY, uqBG );
+
+		// Draw the border...
+		CG_DrawRect_FixedBorder( boxX, y, sizeX, sizeY, 1, uqBorder );
+
+		//y += 2;
+
+		// FIXME: NPC icons??? And then the bars/name on the right of it like other MMOs???
+		//if ( ci->modelIcon )
+		//{
+		//	CG_DrawPic( boxX + 2, y, sizeY-4, sizeY-4, ci->modelIcon );
+		//}
+
+		// Draw their name...
+		CG_Text_Paint( boxXmid - (CG_Text_Width ( title, 0.4f, FONT_SMALL ) * 0.5), y, 0.4f, tclr, title, 0, 0, 0, FONT_SMALL );
+		y += 10;
+
+		// Draw their type...
+		CG_Text_Paint( boxXmid - (CG_Text_Width ( str2, 0.35f, FONT_SMALL ) * 0.5), y, 0.35f, tclr2, str2, 0, 0, 0, FONT_SMALL );
+		y += 12;
+
+		// Draw their health bar...
+		if (crosshairEnt->currentState.health == 0 || crosshairEnt->currentState.maxhealth == 0)
+			healthPerc = 100; // No health data yet. Assume 100%.
+		else
+			healthPerc = ((float)crosshairEnt->currentState.health / (float)crosshairEnt->currentState.maxhealth);
+
+		CG_FilledBar( boxX + 2, y, sizeX-4, 5, uqRed, NULL, NULL, healthPerc, flags );
+		CG_DrawRect_FixedBorder( boxX + 2, y, sizeX-4, 5, 1, uqBorder );
+
+		//trap->Print("HEALTH: %i. MAX: %i. PERC: %i.\n", crosshairEnt->currentState.health, crosshairEnt->currentState.maxhealth, (int)healthPerc);
+
+		y += 7;
+
+		// Draw their force bar...
+		if (!crosshairEnt->playerState || crosshairEnt->playerState->fd.forcePower == 0 || crosshairEnt->playerState->fd.forcePowerMax == 0)
+			forcePerc = 100; // No force/power data yet. Assume 100%.
+		else
+			forcePerc = ((float)crosshairEnt->playerState->fd.forcePower / (float)crosshairEnt->playerState->fd.forcePowerMax);
+
+		CG_FilledBar( boxX + 2, y, sizeX-4, 5, uqBlue, NULL, NULL, forcePerc, flags );
+		CG_DrawRect_FixedBorder( boxX + 2, y, sizeX-4, 5, 1, uqBorder );
+
+		y += 7;
+		*/
+		return y;
+	}
+	else if ( cgs.gametype == GT_JEDIMASTER )
 	{
 		//title = "Jedi Master";
 		title = CG_GetStringEdString("MP_INGAME", "MASTERY7");
@@ -5666,7 +7038,7 @@ static void CG_DrawCrosshair( vec3_t worldPoint, int chEntValid ) {
 	if (crossEnt &&
 		crossEnt->currentState.maxhealth)
 	{
-		CG_DrawHealthBar(crossEnt, chX, chY, w, h);
+		//CG_DrawHealthBar(crossEnt, chX, chY, w, h);
 		chY += HEALTH_HEIGHT*2;
 	}
 	else if (crossEnt && crossEnt->currentState.number < MAX_CLIENTS)
@@ -6498,182 +7870,6 @@ void CG_CalcEWebMuzzlePoint(centity_t *cent, vec3_t start, vec3_t d_f, vec3_t d_
 	}
 }
 
-//
-//
-//
-//  NPC NAMES
-//
-//
-//
-
-qboolean HumanNamesLoaded = qfalse;
-
-typedef struct
-{// FIXME: Add other species name files...
-	char	HumanNames[MAX_QPATH];
-} name_list_t;
-
-name_list_t NPC_NAME_LIST[8000];
-
-int NUM_HUMAN_NAMES = 0;
-
-int			next_vischeck[MAX_GENTITIES];
-qboolean	currently_visible[MAX_GENTITIES];
-
-qboolean CG_CheckClientVisibility ( centity_t *cent )
-{
-	trace_t		trace;
-	vec3_t		start, end;//, forward, right, up;
-	centity_t	*traceEnt = NULL;
-
-	if (next_vischeck[cent->currentState.number] > cg.time)
-	{
-		return currently_visible[cent->currentState.number];
-	}
-
-	next_vischeck[cent->currentState.number] = cg.time + 500 + Q_irand(500, 1000);
-
-	VectorCopy(cg.refdef.vieworg, start);
-	start[2]+=42;
-
-	VectorCopy(cent->lerpOrigin, end);
-	end[2]+=42;
-
-	CG_Trace( &trace, start, NULL, NULL, end, cg.clientNum, MASK_PLAYERSOLID/*MASK_SHOT*/ );
-
-	traceEnt = &cg_entities[trace.entityNum];
-
-	if (traceEnt == cent || trace.fraction == 1.0f)
-	{
-		currently_visible[cent->currentState.number] = qtrue;
-		return qtrue;
-	}
-
-	currently_visible[cent->currentState.number] = qfalse;
-	return qfalse;
-}
-
-/* */
-void
-Load_NPC_Names ( void )
-{				// Load bot first names from external file.
-	char			*s, *t;
-	int				len;
-	fileHandle_t	f;
-	char			*buf;
-	char			*loadPath;
-	int				num = 0;
-
-	if (HumanNamesLoaded)
-		return;
-
-	loadPath = va( "npc_names_list.dat" );
-
-	len = trap->FS_Open( loadPath, &f, FS_READ );
-
-	HumanNamesLoaded = qtrue;
-
-	if ( !f )
-	{
-		return;
-	}
-
-	if ( !len )
-	{			//empty file
-		trap->FS_Close( f );
-		return;
-	}
-
-	if ( (buf = (char *)malloc( len + 1)) == 0 )
-	{			//alloc memory for buffer
-		trap->FS_Close( f );
-		return;
-	}
-
-	trap->FS_Read( buf, len, f );
-	buf[len] = 0;
-	trap->FS_Close( f );
-
-	strcpy( NPC_NAME_LIST[NUM_HUMAN_NAMES].HumanNames, "NONAME");
-	NUM_HUMAN_NAMES++;
-	strcpy( NPC_NAME_LIST[NUM_HUMAN_NAMES].HumanNames, "R2D2 Droid");
-	NUM_HUMAN_NAMES++;
-	strcpy( NPC_NAME_LIST[NUM_HUMAN_NAMES].HumanNames, "R5D2 Droid");
-	NUM_HUMAN_NAMES++;
-	strcpy( NPC_NAME_LIST[NUM_HUMAN_NAMES].HumanNames, "Protocol Droid");
-	NUM_HUMAN_NAMES++;
-	strcpy( NPC_NAME_LIST[NUM_HUMAN_NAMES].HumanNames, "Weequay");
-	NUM_HUMAN_NAMES++;
-
-	for ( t = s = buf; *t; /* */ )
-	{
-		num++;
-		s = strchr( s, '\n' );
-		if ( !s || num > len )
-		{
-			break;
-		}
-
-		while ( *s == '\n' )
-		{
-			*s++ = 0;
-		}
-
-		if ( *t )
-		{
-			if ( !Q_strncmp( "//", va( "%s", t), 2) == 0 && strlen( va( "%s", t)) > 0 )
-			{	// Not a comment either... Record it in our list...
-				Q_strncpyz( NPC_NAME_LIST[NUM_HUMAN_NAMES].HumanNames, va( "%s", t), strlen( va( "%s", t)) );
-				NUM_HUMAN_NAMES++;
-			}
-		}
-
-		t = s;
-	}
-
-	NUM_HUMAN_NAMES--;
-}
-
-void CG_SanitizeString( char *in, char *out )
-{
-	int i = 0;
-	int r = 0;
-
-	while (in[i])
-	{
-		if (i >= 128-1)
-		{ //the ui truncates the name here..
-			break;
-		}
-
-		if (in[i] == '^')
-		{
-			if (in[i+1] >= 48 && //'0'
-				in[i+1] <= 57) //'9'
-			{ //only skip it if there's a number after it for the color
-				i += 2;
-				continue;
-			}
-			else
-			{ //just skip the ^
-				i++;
-				continue;
-			}
-		}
-
-		if (in[i] < 32)
-		{
-			i++;
-			continue;
-		}
-
-		out[r] = in[i];
-		r++;
-		i++;
-	}
-	out[r] = 0;
-}
-
 void CG_DrawNPCNames( void )
 {// Float a NPC name above their head!
 	int				i;
@@ -6687,7 +7883,7 @@ void CG_DrawNPCNames( void )
 		centity_t		*cent = &cg_entities[i];
 		char			*str1, *str2;
 		int				w, w2;
-		float			size, x, y, x2, y2, dist;
+		float			size, x, y, x2, y2/*, x3, y3*/, dist;
 		vec4_t			tclr =	{ 0.325f,	0.325f,	1.0f,	1.0f	};
 		vec4_t			tclr2 = { 0.325f,	0.325f,	1.0f,	1.0f	};
 		char			sanitized1[1024], sanitized2[1024];
@@ -7218,16 +8414,22 @@ void CG_DrawNPCNames( void )
 
 		size *= 0.3;
 
+		//y3 = y;
+
 		w = CG_Text_Width(sanitized1, size*2, FONT_SMALL);
 		y = y + CG_Text_Height(sanitized1, size*2, FONT_SMALL);
 		x -= (w * 0.5f);
 		
-		w2 = CG_Text_Width(sanitized2, size*1.5, /*FONT_SMALL3*/FONT_SMALL2);
+		w2 = CG_Text_Width(sanitized2, size*1.5, /*FONT_SMALL3*/FONT_SMALL);
 		x2 -= (w2 * 0.5f);
-		y2 = y + 10/*6*/ + CG_Text_Height(sanitized1, size*2, /*FONT_SMALL*/FONT_SMALL2);
+		y2 = y + 10/*6*/ + CG_Text_Height(sanitized1, size*2, /*FONT_SMALL*/FONT_SMALL);
 
 		CG_Text_Paint( x, (y*(1-size))+((30*(1-size))*(1-size))+sqrt(sqrt((1-size)*30))+((1-multiplier)*30), size*2, tclr, sanitized1, 0, 0, ITEM_TEXTSTYLE_SHADOWED, FONT_SMALL);
-		CG_Text_Paint( x2, (y2*(1-size))+((30*(1-size))*(1-size))+sqrt(sqrt((1-size)*30))+((1-multiplier)*30), size*1.5, tclr2, sanitized2, 0, 0, ITEM_TEXTSTYLE_SHADOWED, /*FONT_SMALL3*/FONT_SMALL2);
+		CG_Text_Paint( x2, (y2*(1-size))+((30*(1-size))*(1-size))+sqrt(sqrt((1-size)*30))+((1-multiplier)*30), size*1.5, tclr2, sanitized2, 0, 0, ITEM_TEXTSTYLE_SHADOWED, /*FONT_SMALL3*/FONT_SMALL);
+
+		//x3 = x;
+
+		//CG_DrawHealthBar(cent, x3, y3, w, 100);
 
 		//CG_Printf("Draw %s - %s as size %f.\n", sanitized1, sanitized2, size);
 	}
