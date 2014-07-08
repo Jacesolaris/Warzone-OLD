@@ -173,6 +173,7 @@ Load_NPC_Names ( void )
 
 	NUM_HUMAN_NAMES--;
 
+	free(buf);
 	trap->Print( "^4*** ^3%s^4: ^5There are ^7%i^5 NPC names in the database.\n", GAME_VERSION, NUM_HUMAN_NAMES );
 }
 
@@ -1007,6 +1008,9 @@ void NPC_Begin (gentity_t *ent)
 	gentity_t	*spawnPoint = NULL;
 
 	memset( &ucmd, 0, sizeof( ucmd ) );
+
+	ent->last_move_time = 0;
+	VectorClear(ent->npc_previous_pos);
 
 	//if (ent->spawnflags & SFB_NOTSOLID) ent->spawnflags &= ~SFB_NOTSOLID;
 	ent->spawnflags = 0;

@@ -83,7 +83,14 @@ int ASTAR_FindPathFast(int from, int to, int *pathlist, qboolean shorten)
 
 	for (i = 0; i < gWPNum; i++)
 	{
+		float ht = 0;
 		gcost[i] = Distance(gWPArray[i]->origin, gWPArray[to]->origin);
+
+		// UQ1: Prefer flat...
+		ht = gWPArray[i]->origin - gWPArray[to]->origin;
+		if (ht < 0) ht *= -1.0f;
+		if (ht > STEPSIZE)
+			gcost[i] *= (ht / 17);
 	}
 
 	openlist[gWPNum + 1] = 0;

@@ -919,6 +919,11 @@ void PM_StepSlideMove( qboolean gravity ) {
 			up[2] += 64.0f;
 			isGiant = qtrue;
 		}
+		else if ( pEnt && pEnt->s.eType == ET_NPC )
+		{//also can step up high - UQ1: All NPCs can now step high... Just to help with pathing...
+			up[2] += 64.0f;
+			isGiant = qtrue;
+		}
 		else
 		{
 			up[2] += STEPSIZE;

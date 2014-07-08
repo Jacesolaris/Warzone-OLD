@@ -4124,6 +4124,19 @@ static void PM_GroundTraceMissed( void ) {
 	pml.walking = qfalse;
 }
 
+void NPC_SetNormalBBox ( void ) {
+	pm->mins[0] = -8;
+	pm->mins[1] = -8;
+	pm->maxs[0] = 8;
+	pm->maxs[1] = 8;
+}
+
+void NPC_SetNoBBox ( void ) {
+	pm->mins[0] = 0;
+	pm->mins[1] = 0;
+	pm->maxs[0] = 0;
+	pm->maxs[1] = 0;
+}
 
 /*
 =============
@@ -4134,6 +4147,12 @@ static void PM_GroundTrace( void ) {
 	vec3_t		point;
 	trace_t		trace;
 	float minNormal = (float)MIN_WALK_NORMAL;
+	qboolean PATHING_NPC = qfalse;
+
+	if (pm->mins[0] == 0 && pm->mins[1] == 0 && pm->maxs[0] == 0 && pm->maxs[1] == 0)
+	{// UQ1: A pathing NPC...
+		PATHING_NPC = qtrue;
+	}
 
 	if ( pm->ps->clientNum >= MAX_CLIENTS)
 	{
@@ -4155,7 +4174,9 @@ static void PM_GroundTrace( void ) {
 	// do something corrective if the trace starts in a solid...
 	if ( trace.allsolid ) {
 		if ( !PM_CorrectAllSolid(&trace) )
+		{
 			return;
+		}
 	}
 
 	if (pm->ps->pm_type == PM_FLOAT || pm->ps->pm_type == PM_JETPACK)

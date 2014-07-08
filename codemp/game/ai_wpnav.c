@@ -2020,8 +2020,7 @@ void CreateNewWP_FromAWPNode(int index, vec3_t origin, int flags, int weight, in
 
 	if (!gWPArray[gWPNum])
 	{
-		//gWPArray[gWPNum] = (wpobject_t *)malloc(sizeof(wpobject_t));
-		gWPArray[gWPNum] = (wpobject_t *)malloc(sizeof(wpobject_t));
+		gWPArray[gWPNum] = (wpobject_t *)B_Alloc(sizeof(wpobject_t));
 	}
 
 	if (!gWPArray[gWPNum])

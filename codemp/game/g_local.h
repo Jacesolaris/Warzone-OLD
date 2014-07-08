@@ -461,6 +461,7 @@ struct gentity_s {
 	vec3_t          bot_strafe_target_position;
 	int                     npc_mover_start_pos;
 	int                     npc_dumb_route_time;
+	vec3_t                  npc_previous_pos;
 
 	int                     next_weapon_switch;
 	int                     next_rifle_butt_time;
