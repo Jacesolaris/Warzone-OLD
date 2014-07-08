@@ -1416,9 +1416,9 @@ int NodeVisible( vec3_t from, vec3_t dest, int ignore )
 
 	//Offset the step height
 	//vec3_t	mins = {-18, -18, -24};
-	vec3_t	mins = {-8, -8, -6};
+	vec3_t	mins = {-10, -10, 0};
 	//vec3_t	maxs = {18, 18, 48};
-	vec3_t	maxs = {8, 8, 48-STEPSIZE};
+	vec3_t	maxs = {10, 10, 48-STEPSIZE};
 
 	VectorCopy(from, org);
 	org[2]+=STEPSIZE;

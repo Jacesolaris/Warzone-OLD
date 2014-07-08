@@ -7,6 +7,7 @@
 #include "b_local.h"
 
 #define __DOMINANCE_NPC__
+//#define __NPC_CONVERSATIONS__
 
 #ifdef __DOMINANCE_NPC__
 
@@ -18,6 +19,7 @@ extern void G_SoundOnEnt( gentity_t *ent, int channel, const char *soundPath );
 
 void NPC_EndConversation()
 {
+#ifdef __NPC_CONVERSATIONS__
 	gentity_t	*NPC = NPCS.NPC;
 
 	NPC->NPC->conversationRole = 0;
@@ -32,22 +34,26 @@ void NPC_EndConversation()
 
 	NPC->NPC->conversationPartner->NPC->conversationPartner = NULL;
 	NPC->NPC->conversationPartner = NULL;
+#endif //__NPC_CONVERSATIONS__
 }
 
 void NPC_SetStormtrooperConversationReplyTimer()
 {
+#ifdef __NPC_CONVERSATIONS__
 	gentity_t	*NPC = NPCS.NPC;
 
 	NPC->NPC->conversationPart++;
 	NPC->NPC->conversationPartner->NPC->conversationPart++;
 	NPC->NPC->conversationReplyTime = level.time + 14000;
 	NPC->NPC->conversationPartner->NPC->conversationReplyTime = level.time + 7000;
+#endif //__NPC_CONVERSATIONS__
 }
 
 extern void NPC_SetAnim(gentity_t *ent, int setAnimParts, int anim, int setAnimFlags);
 
 void NPC_ConversationAnimation(gentity_t *NPC)
 {
+#ifdef __NPC_CONVERSATIONS__
 	int randAnim = irand(1,10);
 
 	switch (randAnim)
@@ -67,10 +73,12 @@ void NPC_ConversationAnimation(gentity_t *NPC)
 		NPC_SetAnim(NPC, SETANIM_BOTH, BOTH_TALK1, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD);
 		break;
 	}
+#endif //__NPC_CONVERSATIONS__
 }
 
 void NPC_StormTrooperConversation()
 {
+#ifdef __NPC_CONVERSATIONS__
 	gentity_t	*NPC = NPCS.NPC;
 
 	int				role = NPC->NPC->conversationRole;
@@ -162,10 +170,12 @@ void NPC_StormTrooperConversation()
 	G_SoundOnEnt( NPC, CHAN_VOICE_ATTEN/*CHAN_AUTO*/, filename );
 	NPC_SetStormtrooperConversationReplyTimer();
 	NPC_ConversationAnimation(NPC);
+#endif //__NPC_CONVERSATIONS__
 }
 
 void NPC_StormtrooperFindConversationPartner()
 {
+#ifdef __NPC_CONVERSATIONS__
 	gentity_t	*NPC = NPCS.NPC;
 
 	if (NPC->client->NPC_class != CLASS_STORMTROOPER) return;
@@ -227,10 +237,12 @@ void NPC_StormtrooperFindConversationPartner()
 			return;
 		}
 	}
+#endif //__NPC_CONVERSATIONS__
 }
 
 qboolean NPC_HasConversationSounds(gentity_t *conversationalist)
 {
+#ifdef __NPC_CONVERSATIONS__
 	gentity_t	*NPC = NPCS.NPC;
 
 	fileHandle_t	f;
@@ -258,11 +270,13 @@ qboolean NPC_HasConversationSounds(gentity_t *conversationalist)
 
 	conversationalist->NPC->conversationAvailable = 2; // checked and has some!
 	//trap->Print("%s has conversation sounds.\n", conversationalist->NPC_type);
+#endif //__NPC_CONVERSATIONS__
 	return qtrue;
 }
 
 qboolean NPC_VendorHasConversationSounds(gentity_t *conversationalist)
 {
+#ifdef __NPC_CONVERSATIONS__
 	gentity_t	*NPC = NPCS.NPC;
 
 	fileHandle_t	f;
@@ -290,11 +304,13 @@ qboolean NPC_VendorHasConversationSounds(gentity_t *conversationalist)
 
 	conversationalist->NPC->conversationAvailable = 2; // checked and has some!
 	//trap->Print("%s has conversation sounds.\n", conversationalist->NPC_type);
+#endif //__NPC_CONVERSATIONS__
 	return qtrue;
 }
 
 qboolean NPC_VendorHasVendorSound(gentity_t *conversationalist, char *name)
 {
+#ifdef __NPC_CONVERSATIONS__
 	gentity_t	*NPC = NPCS.NPC;
 
 	fileHandle_t	f;
@@ -311,22 +327,25 @@ qboolean NPC_VendorHasVendorSound(gentity_t *conversationalist, char *name)
 	}
 
 	trap->FS_Close( f );
-
+#endif //__NPC_CONVERSATIONS__
 	return qtrue;
 }
 
 void NPC_SetConversationReplyTimer()
 {
+#ifdef __NPC_CONVERSATIONS__
 	gentity_t	*NPC = NPCS.NPC;
 
 	NPC->NPC->conversationPart++;
 	NPC->NPC->conversationPartner->NPC->conversationPart++;
 	NPC->NPC->conversationReplyTime = level.time + 10000;//18000;
 	NPC->NPC->conversationPartner->NPC->conversationReplyTime = level.time + 5000;//8000;
+#endif //__NPC_CONVERSATIONS__
 }
 
 void NPC_NPCConversation()
 {
+#ifdef __NPC_CONVERSATIONS__
 	gentity_t	*NPC = NPCS.NPC;
 
 	int				part = NPC->NPC->conversationPart-1;
@@ -385,10 +404,12 @@ void NPC_NPCConversation()
 
 	if (NPC->NPC->conversationPart > 50)
 		NPC_EndConversation();
+#endif //__NPC_CONVERSATIONS__
 }
 
 void NPC_FindConversationPartner()
 {
+#ifdef __NPC_CONVERSATIONS__
 	gentity_t	*NPC = NPCS.NPC;
 
 	if (NPC->NPC->conversationSearchTime > level.time) return;
@@ -464,6 +485,7 @@ void NPC_FindConversationPartner()
 			return;
 		}
 	}
+#endif //__NPC_CONVERSATIONS__
 }
 
 #endif //__DOMINANCE_NPC__
