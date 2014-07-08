@@ -295,7 +295,7 @@ int PM_GetSaberStance(void)
 			anim = BOTH_SABERDUAL_STANCE;
 		}
 		else
-			anim = BOTH_STAND9;
+			anim = BOTH_STAND1;
 		break;
 	case SS_STAFF:
 		if (pm->cmd.buttons & BUTTON_BLOCK)
@@ -303,7 +303,7 @@ int PM_GetSaberStance(void)
 			anim = BOTH_SABERSTAFF_STANCE;
 		}
 		else
-			anim = BOTH_STAND9;
+			anim = BOTH_STAND1;
 		break;
 	case SS_FAST:
 		if (pm->cmd.buttons & BUTTON_BLOCK)
@@ -311,7 +311,7 @@ int PM_GetSaberStance(void)
 			anim = BOTH_SABERFAST_STANCE;
 		}
 		else
-			anim = BOTH_STAND9;
+			anim = BOTH_STAND1;
 		break;
 	case SS_STRONG:
 		if (pm->cmd.buttons & BUTTON_BLOCK)
@@ -319,7 +319,7 @@ int PM_GetSaberStance(void)
 			anim = BOTH_SABERSLOW_STANCE;
 		}
 		else
-			anim = BOTH_STAND9;
+			anim = BOTH_STAND1;
 		break;
 	case SS_TAVION:
 		if (pm->cmd.buttons & BUTTON_BLOCK)
@@ -327,7 +327,7 @@ int PM_GetSaberStance(void)
 			anim = BOTH_SABERTAVION_STANCE;
 		}
 		else
-			anim = BOTH_STAND9;
+			anim = BOTH_STAND1;
 		break;
 	case SS_DESANN:
 		if (pm->cmd.buttons & BUTTON_BLOCK)
@@ -335,7 +335,7 @@ int PM_GetSaberStance(void)
 			anim = BOTH_SABERDESANN_STANCE;
 		}
 		else
-			anim = BOTH_STAND9;
+			anim = BOTH_STAND1;
 		break;
 	case SS_MEDIUM:
 		if (pm->cmd.buttons & BUTTON_BLOCK)
@@ -343,7 +343,7 @@ int PM_GetSaberStance(void)
 			anim = BOTH_STAND2;
 		}
 		else
-			anim = BOTH_STAND9;
+			anim = BOTH_STAND1;
 	case SS_NONE:
 	default:
 		if (pm->cmd.buttons & BUTTON_BLOCK)
@@ -351,7 +351,7 @@ int PM_GetSaberStance(void)
 			anim = BOTH_STAND2;
 		}
 		else
-			anim = BOTH_STAND9;
+			anim = BOTH_STAND1;
 		break;
 	}
 	return anim;
