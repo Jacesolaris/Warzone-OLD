@@ -1733,8 +1733,8 @@ void CG_DrawHUD(centity_t	*cent)
 		}
 #endif //__MMO__
 
-		CG_DrawScaledProportionalString(SCREEN_WIDTH - (weapX + 16 + 26), y + 57, va("%s", ammoString),
-			UI_SMALLFONT | UI_DROPSHADOW, colorTable[CT_HUD_ORANGE], 0.5f);
+		/*CG_DrawScaledProportionalString(SCREEN_WIDTH - (weapX + 16 + 26), y + 57, va("%s", ammoString),
+			UI_SMALLFONT | UI_DROPSHADOW, colorTable[CT_HUD_ORANGE], 0.5f);*/
 
 		CG_DrawScaledProportionalString(SCREEN_WIDTH - (x + 18 + 14 + 106), y + 15, va("%i", cg.snap->ps.fd.forcePower),
 			UI_SMALLFONT | UI_DROPSHADOW, colorTable[CT_LTBLUE3], 0.5f);

@@ -4070,9 +4070,6 @@ void PM_SetSaberMove(short newMove)
 	int	anim = saberMoveData[newMove].animToUse;
 	int parts = SETANIM_TORSO;
 
-	//[SaberSys]
-	//removed the attackchain requirements for saber moves.
-	/*
 	if ( newMove == LS_READY || newMove == LS_A_FLIP_STAB || newMove == LS_A_FLIP_SLASH )
 	{//finished with a kata (or in a special move) reset attack counter
 	pm->ps->saberAttackChainCount = 0;
@@ -4086,8 +4083,6 @@ void PM_SetSaberMove(short newMove)
 	{ //for the sake of being able to send the value over the net within a reasonable bit count
 	pm->ps->saberAttackChainCount = 16;
 	}
-	*/
-	//[SaberSys]
 
 	if ( newMove == LS_DRAW )
 	{
