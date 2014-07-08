@@ -6017,7 +6017,7 @@ qboolean wp_optimize_memory_initialized = qfalse;
 
 void AIMod_AutoWaypoint_Optimize_Init_Memory ( void )
 {
-	//if (wp_memory_initialized == qfalse)
+	if (wp_optimize_memory_initialized == qfalse)
 	{
 		optimized_nodes = malloc( (sizeof(node_t)+1)*MAX_NODES );
 		wp_optimize_memory_initialized = qtrue;
@@ -6026,7 +6026,7 @@ void AIMod_AutoWaypoint_Optimize_Init_Memory ( void )
 
 void AIMod_AutoWaypoint_Optimize_Free_Memory ( void )
 {
-	//if (wp_memory_initialized == qtrue)
+	if (wp_optimize_memory_initialized == qtrue)
 	{
 		free(optimized_nodes);
 		wp_optimize_memory_initialized = qfalse;
