@@ -3672,12 +3672,10 @@ void CG_DrawEnemyStatus( void )
 	int				flags = 64|128;
 	centity_t		*crosshairEnt;
 
-	if ( cg.crosshairClientNum >= 0/*MAX_CLIENTS*/ && cg.crosshairClientNum != currentCrosshairEntity ) // player
-	//if ( cg.crosshairVehNum != currentCrosshairEntity ) // npc
+	if ( cg.crosshairClientNum >= 0 && cg.crosshairClientNum != currentCrosshairEntity ) // player
 	{
 		// Store current (last looked at) target if it changes...
 		currentCrosshairEntity = cg.crosshairClientNum; // player
-		//currentCrosshairEntity = cg.crosshairVehNum; // npc
 	}
 
 	// Select our crosshair entity for stats...
@@ -3701,7 +3699,7 @@ void CG_DrawEnemyStatus( void )
 
 	if (crosshairEnt->currentState.eType == ET_NPC)
 	{
-		if (crosshairEnt->currentState.health <= 0) return;
+		//if (crosshairEnt->currentState.health <= 0) return;
 
 		// Load the list on first check...
 		Load_NPC_Names();
