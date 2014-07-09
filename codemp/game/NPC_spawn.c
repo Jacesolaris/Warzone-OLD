@@ -1487,7 +1487,7 @@ void NPC_Begin (gentity_t *ent)
 		}
 	}
 
-	if (g_gametype.integer == GT_INSTANCE)
+	//if (g_gametype.integer == GT_INSTANCE) // UQ1: Screw it. Will do this for all gametypes.
 	{
 		// More health for instance enemies... This is meant to be run as a team...
 		if (ent->client->ps.weapon == WP_SABER)
