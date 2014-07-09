@@ -7,7 +7,7 @@
 #include "icarus/Q3_Interface.h"
 #include "ai_main.h"
 
-//#define __NPC_STRAFE__
+#define __NPC_STRAFE__
 #define __NPC_BBOX_ADJUST__
 
 #define WAYPOINT_NONE -1
@@ -2316,7 +2316,7 @@ qboolean NPC_FindNewPatrolWaypoint()
 	NPC->wpNext = NPC->wpCurrent;
 	NPC->longTermGoal = NPC->wpCurrent;
 
-	NPC->wpTravelTime = level.time + (Distance(gWPArray[NPC->wpCurrent]->origin, NPC->r.currentOrigin) / 24.0f) * 1000.0f;
+	NPC->wpTravelTime = level.time + 10000;
 
 	if (NPC->wpSeenTime < NPC->noWaypointTime)
 		NPC->wpSeenTime = NPC->noWaypointTime; // also make sure we don't try to make a new route for the same length of time...
@@ -2492,18 +2492,18 @@ qboolean NPC_NPCBlockingPath()
 		if (ent->s.eType != ET_PLAYER && ent->s.eType != ET_NPC) continue;
 		if (Distance(ent->r.currentOrigin, NPC->r.currentOrigin) > 64) continue;
 
-		if (InFOV3( ent->r.currentOrigin, NPC->r.currentOrigin, NPC->move_vector, 90, 120 ))
+		//if (InFOV3( ent->r.currentOrigin, NPC->r.currentOrigin, NPC->move_vector, 90, 120 ))
+		if (trap->InPVS(NPC->r.currentOrigin, ent->r.currentOrigin) && InFOV2(ent->r.currentOrigin, NPC, 90, 180))
 		{
-			if (InFOV3( NPC->r.currentOrigin, ent->r.currentOrigin, NPC->move_vector, 90, 120 ))
-				ent->bot_strafe_left_timer = level.time + 200;
-			else
-				ent->bot_strafe_right_timer = level.time + 200;
-
 			NPC->bot_strafe_left_timer = level.time + 200;
 			return qtrue;
 		}
 	}
 
+	NPC->bot_strafe_left_timer = 0;
+	NPC->bot_strafe_right_timer = 0;
+
+	/*
 	BEST_METHOD = NPC_SelectBestAvoidanceMethod();
 	
 	switch (BEST_METHOD)
@@ -2524,6 +2524,7 @@ qboolean NPC_NPCBlockingPath()
 	default:
 		break;
 	}
+	*/
 
 	return qfalse;
 }
@@ -2537,6 +2538,19 @@ void NPC_AdjustforStrafe(vec3_t moveDir)
 	if (!(NPC->bot_strafe_right_timer > level.time)
 		&& !(NPC->bot_strafe_left_timer > level.time))
 		return;
+
+	if (NPC->bot_strafe_right_timer > level.time + 2000)
+	{
+		// Obviously incorrect...
+		NPC->bot_strafe_right_timer = 0;
+		return;
+	}
+	else if (NPC->bot_strafe_left_timer > level.time + 2000)
+	{
+		// Obviously incorrect...
+		NPC->bot_strafe_left_timer = 0;
+		return;
+	}
 
 	vectoangles(moveDir, angles);
 	AngleVectors(angles, NULL, right, NULL);
@@ -2571,21 +2585,25 @@ void UQ1_UcmdMoveForDir ( gentity_t *self, usercmd_t *cmd, vec3_t dir, qboolean 
 	//if (walk) speed = 64.0f;
 	//if (walk) speed = 80.0f;
 	//if (walk) speed = 48.0f;
+	if (walk) speed = 56.0f;
 
-#ifdef __NPC_STRAFE__
-	NPC_AdjustforStrafe(dir);
-#endif //__NPC_STRAFE__
-	
 	AngleVectors( self->r.currentAngles, forward, right, up );
 
 	dir[2] = 0;
 	VectorNormalize( dir );
+
 	cmd->forwardmove = DotProduct( forward, dir ) * speed;
 	cmd->rightmove = DotProduct( right, dir ) * speed;
 
+#ifdef __NPC_STRAFE__
+	NPC_NPCBlockingPath();
+	//NPC_AdjustforStrafe(dir);
+	if (self->bot_strafe_left_timer > level.time) cmd->rightmove -= 48.0;
+#endif //__NPC_STRAFE__
+
 	//cmd->upmove = abs(forward[3] ) * dir[3] * speed;
 
-	NPC_SelectMoveAnimation(walk);
+	//NPC_SelectMoveAnimation(walk);
 
 #ifdef __NPC_BBOX_ADJUST__
 	// Adjust the NPC's bbox size to make it smaller and let it move around easier...
@@ -2775,7 +2793,7 @@ qboolean NPC_PatrolArea( void )
 
 	//NPCS.NPC->client->ps.pm_flags = 0;
 
-#ifdef __NPC_STRAFE__
+/*#ifdef __NPC_STRAFE__
 	if (NPC->bot_strafe_right_timer > level.time)
 	{
 		
@@ -2798,7 +2816,7 @@ qboolean NPC_PatrolArea( void )
 		NPC_PickRandomIdleAnimantion(NPC);
 		return qfalse; // next think...
 	}
-#endif //__NPC_STRAFE__
+#endif //__NPC_STRAFE__*/
 
 	//if (NPCS.ucmd.buttons & BUTTON_WALKING)
 	//	NPCS.ucmd.buttons &= ~BUTTON_WALKING;
@@ -2817,7 +2835,7 @@ qboolean NPC_PatrolArea( void )
 	NPC_FacePosition( gWPArray[NPC->wpCurrent]->origin, qfalse );
 	VectorSubtract( gWPArray[NPC->wpCurrent]->origin, NPC->r.currentOrigin, NPC->movedir );
 	//VectorNormalize(NPC->movedir);
-	UQ1_UcmdMoveForDir( NPC, &NPCS.ucmd, NPC->movedir, qfalse/*qtrue*/ );
+	UQ1_UcmdMoveForDir( NPC, &NPCS.ucmd, NPC->movedir, qtrue );
 	VectorCopy( NPC->movedir, NPC->client->ps.moveDir );
 
 	//if (NPC->bot_strafe_right_timer > level.time)
@@ -2841,6 +2859,8 @@ qboolean NPC_PatrolArea( void )
 	*/
 
 	//trap->Print("PATROL: Moved.\n");
+
+	NPC_SelectMoveAnimation(qtrue);
 
 	return qtrue;
 }
@@ -3141,18 +3161,7 @@ void NPC_SetEnemyGoal()
 	// Delay before next route creation...
 	NPC->wpSeenTime = level.time + 2000;
 	// Delay before giving up on this new waypoint/route...
-	//NPC->wpTravelTime = level.time + 5000;
-
-	if (NPC->wpCurrent > 0 && NPC->wpCurrent < gWPNum)
-	{
-		float dist = Distance(gWPArray[NPC->wpCurrent]->origin, NPC->r.currentOrigin);
-
-		if (dist < 1) dist = 1;
-
-		NPC->wpTravelTime = level.time + (dist / 24.0f) * 1000.0f;
-	}
-	else
-		NPC->wpTravelTime = level.time + 10000; // Give him more time to get to the new wp...
+	NPC->wpTravelTime = level.time + 10000;
 }
 
 qboolean NPC_CopyPathFromNearbyNPC()
@@ -3189,18 +3198,8 @@ qboolean NPC_CopyPathFromNearbyNPC()
 		// Delay before next route creation...
 		NPC->wpSeenTime = level.time + 2000;
 		// Delay before giving up on this new waypoint/route...
-		//NPC->wpTravelTime = level.time + 15000;
-		if (NPC->wpCurrent > 0 && NPC->wpCurrent < gWPNum)
-		{
-			float dist = Distance(gWPArray[NPC->wpCurrent]->origin, NPC->r.currentOrigin);
-
-			if (dist < 1) dist = 1;
-
-			NPC->wpTravelTime = level.time + (dist / 24.0f) * 1000.0f;
-		}
-		else
-			NPC->wpTravelTime = level.time + 10000; // Give him more time to get to the new wp...
-
+		NPC->wpTravelTime = level.time + 10000;
+		
 		// Don't let me be copied for 5 seconds...
 		NPC->npc_dumb_route_time = level.time + 5000;
 
@@ -3295,18 +3294,7 @@ void NPC_SetNewGoalAndPath()
 	// Delay before next route creation...
 	NPC->wpSeenTime = level.time + 1000;//30000;
 	// Delay before giving up on this new waypoint/route...
-	//NPC->wpTravelTime = level.time + 15000;
-	if (NPC->wpCurrent > 0 && NPC->wpCurrent < gWPNum)
-	{
-		//float dist = Distance(gWPArray[NPC->wpCurrent]->origin, NPC->r.currentOrigin);
-
-		//if (dist < 1) dist = 1;
-
-		//NPC->wpTravelTime = level.time + (dist / 24.0f) * 1000.0f;
-		NPC->wpTravelTime = level.time + 5000;
-	}
-	else
-		NPC->wpTravelTime = level.time + 10000; // Give him more time to get to the new wp...
+	NPC->wpTravelTime = level.time + 10000;
 }
 
 /*
@@ -3370,17 +3358,7 @@ void NPC_SetNewWarzoneGoalAndPath()
 	// Delay before next route creation...
 	NPC->wpSeenTime = level.time + 1000;//30000;
 	// Delay before giving up on this new waypoint/route...
-	//NPC->wpTravelTime = level.time + 15000;
-	if (NPC->wpCurrent > 0 && NPC->wpCurrent < gWPNum)
-	{
-		float dist = Distance(gWPArray[NPC->wpCurrent]->origin, NPC->r.currentOrigin);
-
-		if (dist < 1) dist = 1;
-
-		NPC->wpTravelTime = level.time + (dist / 24.0f) * 1000.0f;
-	}
-	else
-		NPC->wpTravelTime = level.time + 10000; // Give him more time to get to the new wp...
+	//NPC->wpTravelTime = level.time + 10000;
 }
 */
 
@@ -3994,7 +3972,7 @@ qboolean NPC_FollowRoutes( void )
 				//	G_Printf("NPC DEBUG: NPC %i [%s] is travelling to his cover point (ps: %i. distance: %f).\n", NPC->s.number, NPC->client->pers.netname, NPC->pathsize, Distance(gWPArray[NPC->coverpointGoal]->origin, NPC->r.currentOrigin));
 
 				//NPC->coverpointHIDEtime = level.time + irand(3000, 8000);
-				//NPC->wpTravelTime = level.time + 20000;
+				//NPC->wpTravelTime = level.time + 10000;
 				HUNTING_ENEMY = qtrue;
 			}
 			else*/ if (/*NPC->client->ps.weapon == WP_SABER 
@@ -4254,18 +4232,8 @@ qboolean NPC_FollowRoutes( void )
 		}
 		*/
 
-		//NPC->wpTravelTime = level.time + 15000; // maximum of 10 seconds to traverse to the next waypoint...
-		if (NPC->wpCurrent >= 0 && NPC->wpCurrent < gWPNum)
-		{
-			float dist = Distance(gWPArray[NPC->wpCurrent]->origin, NPC->r.currentOrigin);
-
-			if (dist < 1) dist = 1;
-
-			NPC->wpTravelTime = level.time + (dist / 24.0f) * 1000.0f;
-		}
-		else
-			NPC->wpTravelTime = level.time + 15000; // maximum of 10 seconds to traverse to the next waypoint...
-
+		NPC->wpTravelTime = level.time + 10000;
+		
 		if (NPC_HaveValidEnemy())
 			NPC->wpTravelTime = level.time + 5000; // maximum of 5 seconds to traverse to the next waypoint...
 	}
@@ -4339,6 +4307,8 @@ qboolean NPC_FollowRoutes( void )
 		case CLASS_ODDITIES_VENDOR:
 		case CLASS_DRUG_VENDOR:
 		case CLASS_TRAVELLING_VENDOR:
+			NPC->r.contents = 0;
+			NPC->clipmask = MASK_NPCSOLID&~CONTENTS_BODY;
 			// These guys have no enemies...
 			break;
 		default:
@@ -4365,7 +4335,7 @@ qboolean NPC_FollowRoutes( void )
 	G_ClearEnemy(NPC);
 	NPC->enemy = NULL;
 
-	if (Distance(NPC->r.currentOrigin, NPC->npc_previous_pos) > 2)
+	if (VectorDistanceNoHeight(NPC->r.currentOrigin, NPC->npc_previous_pos) > 3)
 	{
 		NPC->last_move_time = level.time;
 		VectorCopy(NPC->r.currentOrigin, NPC->npc_previous_pos);
@@ -4407,12 +4377,7 @@ qboolean NPC_FollowRoutes( void )
 
 		if (!(NPC->wpCurrent < 0 || NPC->wpCurrent >= gWPNum || NPC->longTermGoal < 0 || NPC->longTermGoal >= gWPNum))
 		{
-			/*float dist = Distance(gWPArray[NPC->wpCurrent]->origin, NPC->r.currentOrigin);
-
-			if (dist < 1) dist = 1;
-
-			NPC->wpTravelTime = level.time + ((dist / 24.0f) * 2.0f);*/
-			NPC->wpTravelTime = level.time + 5000;
+			NPC->wpTravelTime = level.time + 10000;
 			NPC->wpSeenTime = level.time;
 			NPC->last_move_time = level.time;
 		}
@@ -4428,7 +4393,7 @@ qboolean NPC_FollowRoutes( void )
 		return qfalse; // next think...
 	}
 
-	if (Distance(gWPArray[NPC->longTermGoal]->origin, NPC->r.currentOrigin) < 32)
+	if (VectorDistanceNoHeight(gWPArray[NPC->longTermGoal]->origin, NPC->r.currentOrigin) < 32)
 	{// We're at out goal! Find a new goal...
 		NPC_ClearPathData(NPC);
 		ucmd.forwardmove = 0;
@@ -4438,7 +4403,7 @@ qboolean NPC_FollowRoutes( void )
 		return qfalse; // next think...
 	}
 
-	if (Distance(gWPArray[NPC->wpCurrent]->origin, NPC->r.currentOrigin) < 32)
+	if (VectorDistanceNoHeight(gWPArray[NPC->wpCurrent]->origin, NPC->r.currentOrigin) < 32)
 	{// At current node.. Pick next in the list...
 		NPC->wpLast = NPC->wpCurrent;
 		NPC->wpCurrent = NPC->wpNext;
@@ -4454,14 +4419,7 @@ qboolean NPC_FollowRoutes( void )
 			return qfalse; // next think...
 		}
 
-		/*dist = Distance(gWPArray[NPC->wpCurrent]->origin, NPC->r.currentOrigin);
-
-		if (dist < 1) dist = 1;
-
-		NPC->wpTravelTime = level.time + ((dist / 24.0f) * 2.0f);
-		NPC->wpSeenTime = level.time;*/
-
-		NPC->wpTravelTime = level.time + 5000;
+		NPC->wpTravelTime = level.time + 10000;
 		NPC->wpSeenTime = level.time;
 	}
 
@@ -4477,14 +4435,6 @@ qboolean NPC_FollowRoutes( void )
 		if (OrgVisible(upOrg, upOrg2, NPC->s.number))
 		{
 			NPC->wpSeenTime = level.time;
-		}
-		else
-		{
-			ucmd.forwardmove = 0;
-			ucmd.rightmove = 0;
-			ucmd.upmove = 0;
-			NPC_PickRandomIdleAnimantion(NPC);
-			return qfalse;
 		}
 	}
 
@@ -4508,28 +4458,6 @@ qboolean NPC_FollowRoutes( void )
 	// UQ1: Note that (ucmd) NPC jumping causes wierd screen shaking in JKA... Best avoided if possible...
 	//
 
-#ifdef __NPC_STRAFE__
-	if (NPC->bot_strafe_right_timer > level.time)
-	{
-		
-	}
-	else if (NPC->bot_strafe_left_timer > level.time)
-	{
-
-	}	
-	else if (NPC_NPCBlockingPath())
-	{
-		
-	}
-#endif //__NPC_STRAFE__
-	/*
-	else if (!DOM_NPC_ClearPathToSpot( NPC, gWPArray[NPC->wpCurrent]->origin, NPC->s.number ))
-	{// Something in the way... Stand idle...
-		NPC_PickRandomIdleAnimantion(NPC);
-		return qfalse; // next think...
-	}
-	*/
-
 	//if (NPCS.ucmd.buttons & BUTTON_WALKING)
 	//	NPCS.ucmd.buttons &= ~BUTTON_WALKING;
 	
@@ -4543,7 +4471,7 @@ qboolean NPC_FollowRoutes( void )
 	NPC_FacePosition( gWPArray[NPC->wpCurrent]->origin, qfalse );
 	VectorSubtract( gWPArray[NPC->wpCurrent]->origin, NPC->r.currentOrigin, NPC->movedir );
 	//VectorNormalize(NPC->movedir);
-	UQ1_UcmdMoveForDir( NPC, &NPCS.ucmd, NPC->movedir, qfalse/*NPC_HaveValidEnemy()*/ );
+	UQ1_UcmdMoveForDir( NPC, &NPCS.ucmd, NPC->movedir, !NPC_HaveValidEnemy() );
 	VectorCopy( NPC->movedir, NPC->client->ps.moveDir );
 
 	//if (NPC->bot_strafe_right_timer > level.time)
@@ -4552,6 +4480,8 @@ qboolean NPC_FollowRoutes( void )
 	//	NPCS.ucmd.rightmove = 48.0;
 
 	//trap->Print("NPC PF DEBUG: MOVING!\n");
+
+	NPC_SelectMoveAnimation(!NPC_HaveValidEnemy());
 
 	return qtrue;
 }
@@ -5044,10 +4974,10 @@ void NPC_Trace( trace_t *results, const vec3_t start, const vec3_t mins, const v
 void NPC_SetAnim(gentity_t *ent, int setAnimParts, int anim, int setAnimFlags)
 {	// FIXME : once torsoAnim and legsAnim are in the same structure for NCP and Players
 	// rename PM_SETAnimFinal to PM_SetAnim and have both NCP and Players call PM_SetAnim
-	//G_SetAnim(ent, NULL, setAnimParts, anim, setAnimFlags, 0);
+	G_SetAnim(ent, NULL, setAnimParts, anim, setAnimFlags, 0);
 	//BG_SetAnimFinal(&ent->client->ps, bgAllAnims[ent->localAnimIndex].anims, setAnimParts, anim, setAnimFlags);
 
-
+#ifdef __NEW__
 	if(ent && ent->inuse && ent->client)
 	{//Players, NPCs
 		//if (setAnimFlags&SETANIM_FLAG_OVERRIDE)
@@ -5116,4 +5046,5 @@ void NPC_SetAnim(gentity_t *ent, int setAnimParts, int anim, int setAnimFlags)
 	{
 		G_SetAnim(ent, NULL, setAnimParts, anim, setAnimFlags, 0);
 	}
+#endif //__NEW__
 }
