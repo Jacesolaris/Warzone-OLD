@@ -7,7 +7,7 @@
 
 #define __NPC_MINPLAYERS__
 #define __ALWAYS_TWO_TRAVELLINGVENDORS
-//#define __CHECK_ROUTING_BEFORE_WAYPOINT_SPAWNS__
+#define __WAYPOINTS_PRECHECKED__
 
 
 #define BOT_BEGIN_DELAY_BASE		2000
@@ -804,20 +804,27 @@ extern int DOM_GetBestWaypoint(vec3_t org, int ignore, int badwp);
 extern int DOM_FindIdealPathtoWP(bot_state_t *bs, int from, int to, int badwp2, int *pathlist);
 qboolean JKG_CheckRoutingFrom( int wp )
 {
-#ifdef __CHECK_ROUTING_BEFORE_WAYPOINT_SPAWNS__
 	gentity_t *spot = NULL;
 
-	/*while ((spot = G_Find (spot, FOFS(classname), "info_player_deathmatch")) != NULL) {
-		if ( spot->spawnflags & 1 ) {
-			break;
-		}
-	}*/
+	if (gWPArray[wp]->wpIsBadChecked)
+	{
+		if (gWPArray[wp]->wpIsBad)
+			return qfalse; // This spot has already been checked and is bad...
+		else
+			return qtrue; // This spot has already been checked and is good...
+	}
 
 	// Check for routing to a spawnpoint from a (spawn) waypoint...
 	spot = G_Find(spot, FOFS(classname), "info_player_deathmatch");
 
+	if (!spot) trap->Print("WAYPOINT REACHABILITY CHECK: Failed to find a spawnpoint!\n");
+
 	if (spot->wpCurrent <= 0) // Should only need to do this part once...
+	{
 		spot->wpCurrent = DOM_GetBestWaypoint(spot->s.origin, -1, -1);
+
+		if (!spot->wpCurrent) trap->Print("WAYPOINT REACHABILITY CHECK: Failed to find a waypoint for spawnpoint!\n");
+	}
 
 	spot->longTermGoal = wp;
 
@@ -825,19 +832,17 @@ qboolean JKG_CheckRoutingFrom( int wp )
 	
 	spot->pathsize = ASTAR_FindPathFast(spot->wpCurrent, spot->longTermGoal, spot->pathlist, qfalse);
 
-	//if (spot->pathsize <= 0) // Alt A* Pathing...
-		//spot->pathsize = DOM_FindIdealPathtoWP(NULL, spot->wpCurrent, spot->longTermGoal, -1, spot->pathlist);
+	gWPArray[wp]->wpIsBadChecked = qtrue;
 
 	if (spot->pathsize > 0)
 	{
 		//trap->Print("Routing was %i. Spot is at %f %f %f.\n", spot->pathsize, spot->s.origin[0], spot->s.origin[1], spot->s.origin[2]);
+		gWPArray[wp]->wpIsBad = qfalse;
 		return qtrue; // Found a route... This waypoint looks good to spawn NPCs at!
 	}
 
+	gWPArray[wp]->wpIsBad = qtrue;
 	return qfalse;
-#else //!__CHECK_ROUTING_BEFORE_WAYPOINT_SPAWNS__
-	return qtrue;
-#endif //__CHECK_ROUTING_BEFORE_WAYPOINT_SPAWNS__
 }
 
 void G_CheckVendorNPCs( void )
@@ -911,7 +916,11 @@ void G_CheckVendorNPCs( void )
 		int			random = irand(0,36);
 		int			tries = 0;
 
-		while (gWPArray[waypoint]->inuse == qfalse || !JKG_CheckBelowWaypoint(waypoint) || !JKG_CheckRoutingFrom( waypoint ))
+		while (gWPArray[waypoint]->inuse == qfalse || gWPArray[waypoint]->wpIsBad == qtrue 
+#ifndef __WAYPOINTS_PRECHECKED__
+			|| !JKG_CheckBelowWaypoint(waypoint) || !JKG_CheckRoutingFrom( waypoint )
+#endif //__WAYPOINTS_PRECHECKED__
+			)
 		{
 			gWPArray[waypoint]->inuse = qfalse; // set it bad!
 
@@ -980,7 +989,11 @@ void G_CheckCivilianNPCs( void )
 		int			random = irand(0,36);
 		int			tries = 0;
 
-		while (gWPArray[waypoint]->inuse == qfalse || !JKG_CheckBelowWaypoint(waypoint) || !JKG_CheckRoutingFrom( waypoint ))
+		while (gWPArray[waypoint]->inuse == qfalse || gWPArray[waypoint]->wpIsBad == qtrue 
+#ifndef __WAYPOINTS_PRECHECKED__
+			|| !JKG_CheckBelowWaypoint(waypoint) || !JKG_CheckRoutingFrom( waypoint )
+#endif //__WAYPOINTS_PRECHECKED__
+			)
 		{
 			gWPArray[waypoint]->inuse = qfalse; // set it bad!
 
@@ -1491,7 +1504,11 @@ void G_CheckMinimumNpcs( void ) {
 
 			if (NPC_SPAWNPOINT[0] == 0 && NPC_SPAWNPOINT[1] == 0 && NPC_SPAWNPOINT[2] == 0)
 			{// Bad spot returned... Fallback to normal waypoint spawn...
-				while (gWPArray[waypoint]->inuse == qfalse || !JKG_CheckBelowWaypoint(waypoint) || !JKG_CheckRoutingFrom( waypoint ))
+				while (gWPArray[waypoint]->inuse == qfalse || gWPArray[waypoint]->wpIsBad == qtrue 
+#ifndef __WAYPOINTS_PRECHECKED__
+			|| !JKG_CheckBelowWaypoint(waypoint) || !JKG_CheckRoutingFrom( waypoint )
+#endif //__WAYPOINTS_PRECHECKED__
+			)
 				{
 					gWPArray[waypoint]->inuse = qfalse; // set it bad!
 
@@ -1528,7 +1545,11 @@ void G_CheckMinimumNpcs( void ) {
 		}
 		else*/
 		{
-			while (gWPArray[waypoint]->inuse == qfalse || !JKG_CheckBelowWaypoint(waypoint) /*|| !JKG_CheckRoutingFrom( waypoint )*/)
+			while (gWPArray[waypoint]->inuse == qfalse || gWPArray[waypoint]->wpIsBad == qtrue 
+#ifndef __WAYPOINTS_PRECHECKED__
+			|| !JKG_CheckBelowWaypoint(waypoint) || !JKG_CheckRoutingFrom( waypoint )
+#endif //__WAYPOINTS_PRECHECKED__
+			)
 			{
 				gWPArray[waypoint]->inuse = qfalse; // set it bad!
 

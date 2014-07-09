@@ -2430,6 +2430,59 @@ AIMOD_NODES_LoadNodes ( void )
 	return qtrue;
 }
 
+extern qboolean JKG_CheckRoutingFrom( int wp );
+extern qboolean JKG_CheckBelowWaypoint( int wp );
+extern qboolean PATHING_IGNORE_FRAME_TIME;
+
+void JKG_WaypointCheck ( void )
+{
+/*
+	//
+	// Checks auto-waypointed files waypoints for a path to a spawnpoint... Disables any waypoints with no valid path... Also checks for bad surfaces...
+	//
+
+	int i = 0;
+	int NUM_GOOD = 0;
+	int NUM_BAD = 0;
+
+	PATHING_IGNORE_FRAME_TIME = qtrue;
+
+	for (i = 0; i < gWPNum; i++)
+	{
+		qboolean wpOK = qtrue;
+
+		gWPArray[i]->wpIsBadChecked = qfalse;
+		gWPArray[i]->wpIsBad = qfalse;
+		gWPArray[i]->inuse = qtrue;
+
+		wpOK = JKG_CheckRoutingFrom( i );
+		if (wpOK) wpOK = JKG_CheckBelowWaypoint( i );
+
+		if (wpOK)
+		{
+			// Found a route to spawnpoint. Mark it as good...
+			gWPArray[i]->inuse = qtrue;
+			gWPArray[i]->wpIsBadChecked = qtrue;
+			gWPArray[i]->wpIsBad = qfalse;
+			NUM_GOOD++;
+		}
+		else
+		{
+			// No route to spawnpoint. Mark it as bad...
+			gWPArray[i]->inuse = qfalse;
+			gWPArray[i]->wpIsBadChecked = qtrue;
+			gWPArray[i]->wpIsBad = qtrue;
+			NUM_BAD++;
+		}
+	}
+
+	PATHING_IGNORE_FRAME_TIME = qfalse;
+
+	trap->Print( "^1*** ^3WAYPOINT REACHABILITY CHECK^5: Total %i waypoints. %i waypoints marked GOOD and %i waypoints marked BAD.\n", 
+			  gWPNum, NUM_GOOD, NUM_BAD );
+*/
+}
+
 int LoadPathData(const char *filename)
 {
 	fileHandle_t f;
@@ -2441,7 +2494,11 @@ int LoadPathData(const char *filename)
 	int i, i_cv;
 	int nei_num;
 
-	if (AIMOD_NODES_LoadNodes()) return 1; // UQ1: Load/Convert Auto-Waypoint Nodes... (Now default)
+	if (AIMOD_NODES_LoadNodes()) 
+	{
+		JKG_WaypointCheck();
+		return 1; // UQ1: Load/Convert Auto-Waypoint Nodes... (Now default)
+	}
 
 	i = 0;
 	i_cv = 0;

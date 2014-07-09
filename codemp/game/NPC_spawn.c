@@ -1307,7 +1307,7 @@ void NPC_Begin (gentity_t *ent)
 	}
 
 	// set default animations
-	if ( ent->client->NPC_class != CLASS_VEHICLE )
+	if ( !(ent->s.eFlags & EF_FAKE_NPC_BOT) && ent->client->NPC_class != CLASS_VEHICLE )
 	{
 		//NPC_SetAnim( ent, SETANIM_BOTH, BOTH_STAND1, SETANIM_FLAG_NORMAL );
 		NPC_PickRandomIdleAnimantion();

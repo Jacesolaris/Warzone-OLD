@@ -295,8 +295,8 @@ void DOM_StandardBotAI2(bot_state_t *bs, float thinktime)
 	if (!DOM_FakeNPC_Parse_UCMD(bs, bot))
 	{
 		// Failed to do anything this frame - fall back to standard AI...
-		//DOM_StandardBotAI(bs, thinktime); // UQ1: Uses Dominance AI...
-		StandardBotAI(bs, thinktime);
+		DOM_StandardBotAI(bs, thinktime); // UQ1: Uses Dominance AI...
+		//StandardBotAI(bs, thinktime);
 		trap->ICARUS_MaintainTaskManager(bot->s.number);
 		return;
 	}

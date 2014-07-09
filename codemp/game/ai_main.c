@@ -820,9 +820,9 @@ int BotAI(int client, float thinktime) {
 	{
 		// If we have waypoints for this map then use StandardBotAI for non-combat...
 
-		//DOM_StandardBotAI(bs, thinktime); // UQ1: Uses Dominance AI...
+		DOM_StandardBotAI(bs, thinktime); // UQ1: Uses Dominance AI...
 		//trap->Print("Bot %s is using DOM AI.\n", bot->client->pers.netname);
-		StandardBotAI(bs, thinktime);
+		//StandardBotAI(bs, thinktime);
 	}
 	else
 	{

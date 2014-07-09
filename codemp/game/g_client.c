@@ -3249,8 +3249,15 @@ void ClientSpawn(gentity_t *ent) {
 	// do it before setting health back up, so farthest
 	// ranging doesn't count this client
 	if ( client->sess.sessionTeam == TEAM_SPECTATOR ) {
-		spawnPoint = SelectSpectatorSpawnPoint (
-						spawn_origin, spawn_angles);
+			spawnPoint = SelectSpectatorSpawnPoint (spawn_origin, spawn_angles);
+			
+			if (ent->client->pers.localClient)
+			{
+				// UQ1: For AUTO-WAYPOINTER - If local client, also send dm spawn origin for use by /AWC...
+				gentity_t *AW_SPAWN = NULL;
+				AW_SPAWN = G_Find(AW_SPAWN, FOFS(classname), "info_player_deathmatch");
+				trap->SendServerCommand( client - level.clients, va("awps %f %f %f", AW_SPAWN->s.origin[0], AW_SPAWN->s.origin[1], AW_SPAWN->s.origin[2]) );
+			}
 	} else if (level.gametype == GT_CTF || level.gametype == GT_CTY) {
 		// all base oriented team games use the CTF spawn points
 		spawnPoint = SelectCTFSpawnPoint (

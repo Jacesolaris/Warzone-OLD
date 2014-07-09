@@ -651,6 +651,10 @@ typedef struct wpobject_s
 	int forceJumpTo;
 
 	int neighbornum;
+
+	qboolean wpIsBadChecked;
+	qboolean wpIsBad;
+
 	wpneighbor_t neighbors[MAX_NEIGHBOR_SIZE];
 } wpobject_t;
 

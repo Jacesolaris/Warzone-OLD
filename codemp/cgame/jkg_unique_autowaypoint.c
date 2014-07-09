@@ -2787,7 +2787,7 @@ AIMOD_NODES_SaveNodes_Autowaypointed ( void )
 			nodes[i].objectNum[0] = nodes[i].objectNum[1] = nodes[i].objectNum[2] = ENTITYNUM_NONE;
 		}
 
-		trap->Print("Waypoint %i is at %f %f %f.\n", i, nodes[i].origin[0], nodes[i].origin[1], nodes[i].origin[2]);
+		//trap->Print("Waypoint %i is at %f %f %f.\n", i, nodes[i].origin[0], nodes[i].origin[1], nodes[i].origin[2]);
 	}
 
 //	RemoveDoorsAndDestroyablesForSave();
@@ -5518,6 +5518,7 @@ void AIMod_AutoWaypoint_Clean ( void )
 		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3/awc <method>^5.\n" );
 		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^5Available methods are:\n" );
 		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3\"relink\" ^5- Just do relinking.\n");
+		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3\"pathtest\" ^5- Remove waypoints with no path to server's first spawnpoint.\n");
 		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3\"clean\" ^5- Do a full clean.\n");
 		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3\"multipass\" ^5- Do a multi-pass full clean (max optimize).\n");
 		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3\"extra\" ^5- Do a full clean (but remove more - good if the number is still too high after optimization).\n");
@@ -5532,19 +5533,23 @@ void AIMod_AutoWaypoint_Clean ( void )
 	
 	if ( Q_stricmp( str, "relink") == 0 )
 	{
-		AIMod_AutoWaypoint_Cleaner(qtrue, qtrue, qtrue, qfalse, qfalse, qfalse, qfalse, qfalse);
+		AIMod_AutoWaypoint_Cleaner(qtrue, qfalse, qtrue, qfalse, qfalse, qfalse, qfalse, qfalse);
 	}
-	else if ( Q_stricmp( str, "clean") == 0 )
+	else if ( Q_stricmp( str, "pathtest") == 0 )
 	{
 		AIMod_AutoWaypoint_Cleaner(qtrue, qtrue, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse);
 	}
+	else if ( Q_stricmp( str, "clean") == 0 )
+	{
+		AIMod_AutoWaypoint_Cleaner(qtrue, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse);
+	}
 	else if ( Q_stricmp( str, "multipass") == 0 )
 	{
-		AIMod_AutoWaypoint_Cleaner(qtrue, qtrue, qfalse, qtrue, qfalse, qfalse, qfalse, qfalse);
+		AIMod_AutoWaypoint_Cleaner(qtrue, qfalse, qfalse, qtrue, qfalse, qfalse, qfalse, qfalse);
 	}
 	else if ( Q_stricmp( str, "extra") == 0 )
 	{
-		AIMod_AutoWaypoint_Cleaner(qtrue, qtrue, qfalse, qtrue, qfalse, qtrue, qfalse, qfalse);
+		AIMod_AutoWaypoint_Cleaner(qtrue, qfalse, qfalse, qtrue, qfalse, qtrue, qfalse, qfalse);
 	}
 	else if ( Q_stricmp( str, "markedlocations") == 0 )
 	{
@@ -5552,7 +5557,7 @@ void AIMod_AutoWaypoint_Clean ( void )
 	}
 	else if ( Q_stricmp( str, "extrareach") == 0 )
 	{
-		AIMod_AutoWaypoint_Cleaner(qtrue, qtrue, qfalse, qfalse, qfalse, qfalse, qtrue, qtrue);
+		AIMod_AutoWaypoint_Cleaner(qtrue, qfalse, qtrue, qfalse, qfalse, qfalse, qtrue, qtrue);
 	}
 	else if ( Q_stricmp( str, "cover") == 0 )
 	{
@@ -6997,7 +7002,7 @@ AIMod_AutoWaypoint_Cleaner_OLD ( qboolean quiet, qboolean null_links_only, qbool
 
 	start_wp_total = number_of_nodes;
 
-	areas = malloc( (sizeof(int)+1)*512000 );
+	areas = (int *)malloc( (sizeof(int)+1)*512000 );
 
 	//AIMod_GetMapBounts( mapMins, mapMaxs );
 	AIMod_GetMapBounts();
@@ -7395,6 +7400,398 @@ void AIMod_AWC_MarkBadHeight ( void )
 	trap->Print( va( "^4*** ^3AUTO-WAYPOINTER^4: ^5Height %f marked as bad for waypoints.\n", cg.refdef.vieworg[2]) );
 }
 
+int BOT_GetFCost(int to, int num, int parentNum, float *gcost)
+{
+	float	gc = 0;
+	float	hc = 0;
+	vec3_t	v;
+	float	height_diff = 0;
+
+	if (gcost[num] == -1)
+	{
+		if (parentNum != -1)
+		{
+			gc = gcost[parentNum];
+			VectorSubtract(nodes[num].origin, nodes[parentNum].origin, v);
+			gc += VectorLength(v);
+
+			gc += HeightDistance(nodes[num].origin, nodes[parentNum].origin) * 4;
+
+			if (gc > 64000)
+				gc = 64000.0f;
+		}
+
+		gcost[num] = gc;
+	}
+	else
+	{
+		gc = gcost[num];
+	}
+
+	hc = Distance(nodes[num].origin, nodes[parentNum].origin);
+	height_diff = HeightDistance(nodes[num].origin, nodes[parentNum].origin);
+	hc += (height_diff * height_diff); // Squared for massive preferance to staying at same plane...
+
+	return (int)((gc*0.1) + (hc*0.1));
+}
+
+int ASTAR_FindPathFast(int from, int to, int *pathlist, qboolean shorten)
+{
+	//all the data we have to hold...since we can't do dynamic allocation, has to be MAX_WPARRAY_SIZE
+	//we can probably lower this later - eg, the open list should never have more than at most a few dozen items on it
+	int			badwp = -1;
+	int			numOpen = 0;
+	int			atNode, temp, newnode = -1;
+	qboolean	found = qfalse;
+	int			count = -1;
+	float		gc;
+	int			i, j, u, v, m;
+	int			gWPNum = number_of_nodes;
+
+	int			*openlist;					//add 1 because it's a binary heap, and they don't use 0 - 1 is the first used index
+	float		*gcost;
+	int			*fcost;
+	char		*list;						//0 is neither, 1 is open, 2 is closed - char because it's the smallest data type
+	int			*parent;
+
+	if ((from == NODE_INVALID) || (to == NODE_INVALID) || (from >= gWPNum) || (to >= gWPNum) || (from == to))
+	{
+		//trap->Print("Bad from or to node.\n");
+		return (-1);
+	}
+
+	// Check if memory needs to be allocated...
+	openlist = (int *)malloc(sizeof(int)*(MAX_WPARRAY_SIZE));
+	gcost = (float *)malloc(sizeof(float)*(MAX_WPARRAY_SIZE));
+	fcost = (int *)malloc(sizeof(int)*(MAX_WPARRAY_SIZE));
+	list = (char *)malloc(sizeof(char)*(MAX_WPARRAY_SIZE));
+	parent = (int *)malloc(sizeof(int)*(MAX_WPARRAY_SIZE));
+
+	memset(openlist, 0, (sizeof(int)* (gWPNum + 1)));
+	memset(gcost, 0, (sizeof(float)* gWPNum));
+	memset(fcost, 0, (sizeof(int)* gWPNum));
+	memset(list, 0, (sizeof(char)* gWPNum));
+	memset(parent, 0, (sizeof(int)* gWPNum));
+
+	for (i = 0; i < gWPNum; i++)
+	{
+		float ht = 0;
+		gcost[i] = Distance(nodes[i].origin, nodes[to].origin);
+
+		// UQ1: Prefer flat...
+		ht = nodes[i].origin - nodes[to].origin;
+		if (ht < 0) ht *= -1.0f;
+		if (ht > STEPSIZE)
+			gcost[i] *= (ht / 17);
+	}
+
+	openlist[gWPNum + 1] = 0;
+
+	openlist[1] = from;																	//add the starting node to the open list
+	numOpen++;
+	gcost[from] = 0;																	//its f and g costs are obviously 0
+	fcost[from] = 0;
+
+	while (1)
+	{
+		if (numOpen != 0)																//if there are still items in the open list
+		{
+			//pop the top item off of the list
+			atNode = openlist[1];
+			list[atNode] = 2;															//put the node on the closed list so we don't check it again
+			numOpen--;
+			openlist[1] = openlist[numOpen + 1];										//move the last item in the list to the top position
+			v = 1;
+
+			//this while loop reorders the list so that the new lowest fcost is at the top again
+			while (1)
+			{
+				u = v;
+				if ((2 * u + 1) < numOpen)											//if both children exist
+				{
+					if (fcost[openlist[u]] >= fcost[openlist[2 * u]])
+					{
+						v = 2 * u;
+					}
+
+					if (fcost[openlist[v]] >= fcost[openlist[2 * u + 1]])
+					{
+						v = 2 * u + 1;
+					}
+				}
+				else
+				{
+					if ((2 * u) < numOpen)											//if only one child exists
+					{
+						if (fcost[openlist[u]] >= fcost[openlist[2 * u]])
+						{
+							v = 2 * u;
+						}
+					}
+				}
+
+				if (u != v)															//if they're out of order, swap this item with its parent
+				{
+					temp = openlist[u];
+					openlist[u] = openlist[v];
+					openlist[v] = temp;
+				}
+				else
+				{
+					break;
+				}
+			}
+
+			for (i = 0; i < nodes[atNode].enodenum && i < MAX_NODELINKS; i++)								//loop through all the links for this node
+			{
+				newnode = nodes[atNode].links[i].targetNode;
+
+				if (newnode > gWPNum)
+					continue;
+
+				if (newnode < 0)
+					continue;
+
+				if (list[newnode] == 2)
+				{																		//if this node is on the closed list, skip it
+					continue;
+				}
+
+				if (list[newnode] != 1)												//if this node is not already on the open list
+				{
+					openlist[++numOpen] = newnode;										//add the new node to the open list
+					list[newnode] = 1;
+					parent[newnode] = atNode;											//record the node's parent
+
+					if (newnode == to)
+					{																	//if we've found the goal, don't keep computing paths!
+						break;															//this will break the 'for' and go all the way to 'if (list[to] == 1)'
+					}
+
+					fcost[newnode] = BOT_GetFCost(to, newnode, parent[newnode], gcost);	//store it's f cost value
+
+					//this loop re-orders the heap so that the lowest fcost is at the top
+					m = numOpen;
+
+					while (m != 1)													//while this item isn't at the top of the heap already
+					{
+						if (fcost[openlist[m]] <= fcost[openlist[m / 2]])				//if it has a lower fcost than its parent
+						{
+							temp = openlist[m / 2];
+							openlist[m / 2] = openlist[m];
+							openlist[m] = temp;											//swap them
+							m /= 2;
+						}
+						else
+						{
+							break;
+						}
+					}
+				}
+				else										//if this node is already on the open list
+				{
+					gc = gcost[atNode];
+
+					if (nodes[atNode].links[i].cost > 0 && nodes[atNode].links[i].cost < 9999)
+					{// UQ1: Already have a cost value, skip the calculations!
+						gc += nodes[atNode].links[i].cost;
+					}
+					else
+					{
+						vec3_t	vec;
+
+						VectorSubtract(nodes[newnode].origin, nodes[atNode].origin, vec);
+						gc += VectorLength(vec);				//calculate what the gcost would be if we reached this node along the current path
+						nodes[atNode].links[i].cost = VectorLength(vec);
+					}
+
+					if (gc < gcost[newnode])				//if the new gcost is less (ie, this path is shorter than what we had before)
+					{
+						parent[newnode] = atNode;			//set the new parent for this node
+						gcost[newnode] = gc;				//and the new g cost
+
+						for (j = 1; j < numOpen; j++)		//loop through all the items on the open list
+						{
+							if (openlist[j] == newnode)	//find this node in the list
+							{
+								//calculate the new fcost and store it
+								fcost[newnode] = BOT_GetFCost(to, newnode, parent[newnode], gcost);
+
+								//reorder the list again, with the lowest fcost item on top
+								m = j;
+
+								while (m != 1)
+								{
+									if (fcost[openlist[m]] < fcost[openlist[m / 2]])	//if the item has a lower fcost than it's parent
+									{
+										temp = openlist[m / 2];
+										openlist[m / 2] = openlist[m];
+										openlist[m] = temp;								//swap them
+										m /= 2;
+									}
+									else
+									{
+										break;
+									}
+								}
+								break;													//exit the 'for' loop because we already changed this node
+							}															//if
+						}																//for
+					}											//if (gc < gcost[newnode])
+				}												//if (list[newnode] != 1) --> else
+			}													//for (loop through links)
+		}														//if (numOpen != 0)
+		else
+		{
+			found = qfalse;										//there is no path between these nodes
+			break;
+		}
+
+		if (list[to] == 1)									//if the destination node is on the open list, we're done
+		{
+			found = qtrue;
+			break;
+		}
+	}															//while (1)
+
+	if (found == qtrue)							//if we found a path, and are trying to store the pathlist...
+	{
+		count = 0;
+		temp = to;												//start at the end point
+
+		while (temp != from)									//travel along the path (backwards) until we reach the starting point
+		{
+			if (count + 1 >= MAX_WPARRAY_SIZE)
+			{
+				trap->Print("ERROR: pathlist count > MAX_WPARRAY_SIZE.\n");
+				return -1; // UQ1: Added to stop crash if path is too long for the memory allocation...
+			}
+
+			pathlist[count++] = temp;							//add the node to the pathlist and increment the count
+			temp = parent[temp];								//move to the parent of this node to continue the path
+		}
+
+		pathlist[count++] = from;								//add the beginning node to the end of the pathlist
+
+
+
+
+		free(openlist);
+		free(gcost);
+		free(fcost);
+		free(list);
+		free(parent);
+
+
+		//trap->Print("Pathsize is %i.\n", count);
+		return (count);
+	}
+
+	free(openlist);
+	free(gcost);
+	free(fcost);
+	free(list);
+	free(parent);
+
+	//trap->Print("Failed to find path.\n");
+	return (-1);											//return the number of nodes in the path, -1 if not found
+}
+
+vec3_t AWC_SPAWNPOINT;
+
+void AIMod_AWC_GetSpawnPoint_f( void ) 
+{
+	int			indexNum = 0;
+	int			argNum = trap->Cmd_Argc();
+
+	if ( argNum < 3 ) {
+		assert( 0 );
+		return;
+	}
+
+	AWC_SPAWNPOINT[0] = atof( CG_Argv( 1 ) );
+	AWC_SPAWNPOINT[1] = atof( CG_Argv( 2 ) );
+	AWC_SPAWNPOINT[2] = atof( CG_Argv( 3 ) );
+
+	trap->Print("AUTOWAYPOINTER: Recieved a spawnpoint from server at %f %f %f.\n", AWC_SPAWNPOINT[0], AWC_SPAWNPOINT[1], AWC_SPAWNPOINT[2]);
+}
+
+qboolean JKG_CheckBelowWaypoint( int wp )
+{
+	trace_t tr;
+	vec3_t org, org2;
+
+	VectorCopy(nodes[wp].origin, org);
+	VectorCopy(nodes[wp].origin, org2);
+	org2[2] = -65536.0f;//org[2] - 256;
+
+	CG_Trace( &tr, org, NULL, NULL, org2, -1, MASK_PLAYERSOLID|CONTENTS_TRIGGER);
+	
+	if ( tr.startsolid )
+	{
+		//trap->Print("Waypoint %i is in solid.\n", wp);
+		return qfalse;
+	}
+
+	if ( tr.allsolid )
+	{
+		//trap->Print("Waypoint %i is in solid.\n", wp);
+		return qfalse;
+	}
+
+	if ( tr.fraction == 1 )
+	{
+		//trap->Print("Waypoint %i is too high above ground.\n", wp);
+		return qfalse;
+	}
+
+	if ( tr.contents & CONTENTS_LAVA )
+	{
+		//trap->Print("Waypoint %i is in lava.\n", wp);
+		return qfalse;
+	}
+	
+	if ( tr.contents & CONTENTS_SLIME )
+	{
+		//trap->Print("Waypoint %i is in slime.\n", wp);
+		return qfalse;
+	}
+
+	if ( tr.contents & CONTENTS_TRIGGER )
+	{
+		//trap->Print("Waypoint %i is in trigger.\n", wp);
+		return qfalse;
+	}
+
+	return qtrue;
+}
+
+qboolean JKG_CheckRoutingFrom( int wp )
+{
+	centity_t *spot = NULL;
+	int wpCurrent = -1;
+	int goal = wp;
+	int pathsize = 0;
+	int pathlist[MAX_WPARRAY_SIZE];
+
+	// Check for routing to a spawnpoint from a (spawn) waypoint...
+
+	wpCurrent = ClosestNodeTo(AWC_SPAWNPOINT, qfalse);
+
+	if (!wpCurrent) trap->Print("WAYPOINT REACHABILITY CHECK: Failed to find a waypoint for spawnpoint at %f %f %f!\n", AWC_SPAWNPOINT[0], AWC_SPAWNPOINT[1], AWC_SPAWNPOINT[2]);
+
+	memset(pathlist, -1, MAX_WPARRAY_SIZE);
+	
+	pathsize = ASTAR_FindPathFast(wpCurrent, goal, pathlist, qfalse);
+
+	if (pathsize > 0)
+	{
+		return qtrue; // Found a route... This waypoint looks good to spawn NPCs at!
+	}
+
+	return qfalse;
+}
+
 /* */
 void
 AIMod_AutoWaypoint_Cleaner ( qboolean quiet, qboolean null_links_only, qboolean relink_only, qboolean multipass, qboolean initial_pass, qboolean extra, qboolean marked_locations, qboolean extra_reach )
@@ -7413,6 +7810,7 @@ AIMod_AutoWaypoint_Cleaner ( qboolean quiet, qboolean null_links_only, qboolean 
 //	int	node_disable_ticker = 0;
 	int	num_disabled_nodes = 0;
 	int num_nolink_nodes = 0;
+	int num_noroute_nodes = 0;
 	int num_trigger_hurt_nodes = 0;
 	int num_this_location_nodes = 0;
 	int num_marked_height_nodes = 0;
@@ -7586,6 +7984,7 @@ AIMod_AutoWaypoint_Cleaner ( qboolean quiet, qboolean null_links_only, qboolean 
 		calculations_complete = 0;
 		node_clean_ticker = 0;
 		num_nolink_nodes = 0;
+		num_noroute_nodes = 0;
 		num_disabled_nodes = 0;
 		num_trigger_hurt_nodes = 0;
 		num_dupe_nodes = 0;
@@ -7678,6 +8077,13 @@ AIMod_AutoWaypoint_Cleaner ( qboolean quiet, qboolean null_links_only, qboolean 
 				continue;
 			}
 
+			if (!JKG_CheckRoutingFrom( i ) || !JKG_CheckBelowWaypoint( i ))
+			{// Removes all waypoints without any route to the server's specified spawnpoint location...
+				nodes[i].objectNum[0] = 1;
+				num_noroute_nodes++;
+				continue;
+			}
+
 			if (marked_locations)
 			{
 				int z = 0;
@@ -7703,6 +8109,9 @@ AIMod_AutoWaypoint_Cleaner ( qboolean quiet, qboolean null_links_only, qboolean 
 			}
 
 			if (relink_only)
+				continue;
+
+			if (null_links_only)
 				continue;
 
 			/*
@@ -7879,12 +8288,13 @@ AIMod_AutoWaypoint_Cleaner ( qboolean quiet, qboolean null_links_only, qboolean 
 		trap->Print("^4*** ^3AUTO-WAYPOINTER^4: ^5Disabled ^3%i^5 bad surfaces.\n", aw_num_bad_surfaces);
 		trap->Print("^4*** ^3AUTO-WAYPOINTER^4: ^5Disabled ^3%i^5 trigger hurt waypoints.\n", num_trigger_hurt_nodes);
 		trap->Print("^4*** ^3AUTO-WAYPOINTER^4: ^5Disabled ^3%i^5 waypoints without links.\n", num_nolink_nodes);
+		trap->Print("^4*** ^3AUTO-WAYPOINTER^4: ^5Disabled ^3%i^5 waypoints without valid routes.\n", num_noroute_nodes);
 		trap->Print("^4*** ^3AUTO-WAYPOINTER^4: ^5Disabled ^3%i^5 waypoints with duplicate links to a neighbor.\n", num_dupe_nodes);
 		trap->Print("^4*** ^3AUTO-WAYPOINTER^4: ^5Disabled ^3%i^5 waypoints in over-waypointed areas.\n", num_skiped_nodes);
 		trap->Print("^4*** ^3AUTO-WAYPOINTER^4: ^5Disabled ^3%i^5 waypoints at your marked locations (removal spots).\n", num_this_location_nodes);
 		trap->Print("^4*** ^3AUTO-WAYPOINTER^4: ^5Disabled ^3%i^5 waypoints at your given bad heights (bad height spots).\n", num_marked_height_nodes);
 
-		total_removed = num_skiped_nodes + num_dupe_nodes + num_disabled_nodes + aw_num_bad_surfaces + num_nolink_nodes + num_trigger_hurt_nodes + num_this_location_nodes + num_marked_height_nodes;
+		total_removed = num_skiped_nodes + num_dupe_nodes + num_disabled_nodes + aw_num_bad_surfaces + num_nolink_nodes + num_noroute_nodes + num_trigger_hurt_nodes + num_this_location_nodes + num_marked_height_nodes;
 
 		trap->Print("^4*** ^3AUTO-WAYPOINTER^4: ^5Disabled ^3%i^5 total waypoints in this run.\n", total_removed);
 
