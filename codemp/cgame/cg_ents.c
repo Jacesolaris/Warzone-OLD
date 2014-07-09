@@ -900,7 +900,7 @@ static void CG_General( centity_t *cent ) {
 		if (!CG_RenderTimeEntBolt(cent))
 		{ //If this function returns qfalse we shouldn't render this ent at all.
 			if (cent->currentState.boltToPlayer > 0 &&
-				cent->currentState.boltToPlayer <= MAX_CLIENTS)
+				(cent->currentState.boltToPlayer <= MAX_CLIENTS || cent->currentState.eType == ET_NPC))
 			{
 				VectorCopy(pl->lerpOrigin, cent->lerpOrigin);
 

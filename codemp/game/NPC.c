@@ -2585,7 +2585,8 @@ void UQ1_UcmdMoveForDir ( gentity_t *self, usercmd_t *cmd, vec3_t dir, qboolean 
 	//if (walk) speed = 64.0f;
 	//if (walk) speed = 80.0f;
 	//if (walk) speed = 48.0f;
-	if (walk) speed = 56.0f;
+	//if (walk) speed = 56.0f;
+	if (walk) speed = 64.0f;
 
 	AngleVectors( self->r.currentAngles, forward, right, up );
 
@@ -4506,6 +4507,8 @@ void NPC_Think ( gentity_t *self)//, int msec )
 
 	SetNPCGlobals( self );
 
+	if (!(self->s.eFlags & EF_CLIENTSMOOTH)) self->s.eFlags |= EF_CLIENTSMOOTH;
+
 	memset( &NPCS.ucmd, 0, sizeof( NPCS.ucmd ) );
 
 	VectorCopy( self->client->ps.moveDir, oldMoveDir );
@@ -4940,6 +4943,7 @@ void NPC_InitGame( void )
 	}
 	*/
 
+	/*
 #ifdef __DOMINANCE_AI__
 	NPC_ShadowTrooper_Precache();
 	NPC_Gonk_Precache();
@@ -4961,6 +4965,7 @@ void NPC_InitGame( void )
 	Boba_Precache();
 	NPC_Wampa_Precache();
 #endif //__DOMINANCE_AI__
+	*/
 }
 
 extern void BG_SetAnim(playerState_t *ps, animation_t *animations, int setAnimParts,int anim,int setAnimFlags, int blendTime);

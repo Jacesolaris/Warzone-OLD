@@ -1237,7 +1237,7 @@ void Com_Init( char *commandLine ) {
 		sv_paused = Cvar_Get ("sv_paused", "0", CVAR_ROM);
 		com_sv_running = Cvar_Get ("sv_running", "0", CVAR_ROM);
 		com_cl_running = Cvar_Get ("cl_running", "0", CVAR_ROM);
-		com_buildScript = Cvar_Get( "com_buildScript", "0", 0 );
+		com_buildScript = Cvar_Get( "com_buildScript", "1", 0 );
 
 #ifdef G2_PERFORMANCE_ANALYSIS
 		com_G2Report = Cvar_Get("com_G2Report", "0", 0);

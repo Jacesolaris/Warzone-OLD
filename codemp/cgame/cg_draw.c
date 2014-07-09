@@ -3611,7 +3611,7 @@ void CG_DrawMyStatus( void )
 	sizeY = 38;
 
 	boxX = 5;
-	boxXmid = (boxX += sizeY + 2) + (sizeX/2);
+	boxXmid = (boxX + sizeY - 4) + ((sizeX - (boxX + sizeY - 4))/2);
 
 	// Draw a transparent box background...
 	CG_FillRect( boxX, y, sizeX, sizeY, uqBG );
@@ -4138,7 +4138,7 @@ void CG_DrawEnemyStatus( void )
 	sizeY = 38;
 
 	boxX = 5 + sizeX + 5;
-	boxXmid = (boxX += sizeY + 2) + (sizeX/2);
+	boxXmid = (boxX + sizeY - 4) + ((sizeX - (boxX + sizeY - 4))/2);
 
 	// Draw a transparent box background...
 	CG_FillRect( boxX, y, sizeX, sizeY, uqBG );

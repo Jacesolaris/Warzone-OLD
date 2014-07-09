@@ -133,7 +133,7 @@ XCVAR_DEF(cg_trueSpin,							"1", NULL, CVAR_ARCHIVE)//[TrueView]
 XCVAR_DEF( cg_viewsize,							"100",					NULL,					CVAR_ARCHIVE )
 XCVAR_DEF( cg_weaponBob,						"1",					NULL,					CVAR_ARCHIVE )
 XCVAR_DEF( cl_paused,							"0",					NULL,					CVAR_ROM )
-XCVAR_DEF( com_buildScript,						"0",					NULL,					CVAR_NONE )
+XCVAR_DEF( com_buildScript,						"1",					NULL,					CVAR_NONE )
 XCVAR_DEF( com_cameraMode,						"0",					NULL,					CVAR_CHEAT )
 XCVAR_DEF( com_optvehtrace,						"0",					NULL,					CVAR_NONE )
 XCVAR_DEF( debugBB,								"0",					NULL,					CVAR_NONE )

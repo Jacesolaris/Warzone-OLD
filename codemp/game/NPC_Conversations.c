@@ -7,7 +7,7 @@
 #include "b_local.h"
 
 #define __DOMINANCE_NPC__
-//#define __NPC_CONVERSATIONS__
+#define __NPC_CONVERSATIONS__
 
 #ifdef __DOMINANCE_NPC__
 
