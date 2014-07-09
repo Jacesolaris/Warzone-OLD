@@ -3668,7 +3668,7 @@ void CG_DrawEnemyStatus( void )
 	int				y = 0;
 	char			*str1, *str2;
 	vec4_t			tclr, tclr2;
-	float			boxX, boxXmid, sizeX, sizeY, healthPerc, forcePerc;
+	float			boxX, boxXmid, sizeX, sizeY, healthPerc, forcePerc, ShieldPerc;
 	int				flags = 64|128;
 	centity_t		*crosshairEnt;
 
@@ -4134,11 +4134,11 @@ void CG_DrawEnemyStatus( void )
 
 	y = 5;
 
-	sizeX = 160;
+	sizeX = 180;
 	sizeY = 38;
 
 	boxX = 5 + sizeX + 5;
-	boxXmid = (boxX + sizeY - 4) + ((sizeX - (boxX + sizeY - 4))/2);
+	boxXmid = (boxX + sizeY - 4) + ((sizeX - (boxX + sizeY - 180))/2);
 
 	// Draw a transparent box background...
 	CG_FillRect( boxX, y, sizeX, sizeY, uqBG );
@@ -4196,6 +4196,8 @@ void CG_DrawEnemyStatus( void )
 		healthPerc = ((float)crosshairEnt->currentState.health / (float)crosshairEnt->currentState.maxhealth);
 
 	CG_FilledBar( boxX + 2, y, sizeX-sizeY-4-6, 5, uqRed, NULL, NULL, healthPerc, flags );
+
+
 	//CG_DrawRect_FixedBorder( boxX + 2, y, sizeX-sizeY-4-6, 5, 1, uqBorder );
 
 	//trap->Print("HEALTH: %i. MAX: %i. PERC: %i.\n", crosshairEnt->currentState.health, crosshairEnt->currentState.maxhealth, (int)healthPerc);
@@ -4212,6 +4214,19 @@ void CG_DrawEnemyStatus( void )
 	//CG_DrawRect_FixedBorder( boxX + 2, y, sizeX-sizeY-4-6, 5, 1, uqBorder );
 
 	y += 7;
+
+	// Draw their Shield bar...
+	//if (crosshairEnt->currentState.Shield == 0 || crosshairEnt->currentState.maxShield == 0)
+	//	ShieldPerc = 100; // No health data yet. Assume 100%.
+	//else
+	//	ShieldPerc = ((float)crosshairEnt->currentState.Shield / (float)crosshairEnt->currentState.maxShield);
+
+	//CG_FilledBar(boxX + 2, y, sizeX - sizeY - 4 - 6, 5, uqOrange, NULL, NULL, ShieldPerc, flags);
+	////CG_DrawRect_FixedBorder( boxX + 2, y, sizeX-sizeY-4-6, 5, 1, uqBorder );
+
+	////trap->Print("HEALTH: %i. MAX: %i. PERC: %i.\n", crosshairEnt->currentState.health, crosshairEnt->currentState.maxhealth, (int)healthPerc);
+
+	//y += 7;
 }
 
 static float CG_DrawEnemyInfo ( float y )

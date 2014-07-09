@@ -2229,6 +2229,8 @@ typedef struct entityState_s {
 	//only ones we want health knowledge about on cgame (like siege objective breakables) -rww
 	int			health;
 	int			maxhealth; //so I know how to draw the stupid health bar
+	int			Shield;
+	int			maxShield;	//Shieldbar
 
 	//NPC-SPECIFIC FIELDS
 	//------------------------------------------------------------
