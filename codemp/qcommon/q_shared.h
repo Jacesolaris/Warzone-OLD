@@ -2229,8 +2229,11 @@ typedef struct entityState_s {
 	//only ones we want health knowledge about on cgame (like siege objective breakables) -rww
 	int			health;
 	int			maxhealth; //so I know how to draw the stupid health bar
-	int			Shield;
-	int			maxShield;	//Shieldbar
+
+	//int			Shield;
+	//int			maxShield;	// Shieldbar -- UQ1: Stois, you can't add fields to entityState_t. 
+								// It has to remain at it's original exact size as the engine sends only that size of data.
+								// We may be better off forgetting shields and just increasing HP.
 
 	//NPC-SPECIFIC FIELDS
 	//------------------------------------------------------------

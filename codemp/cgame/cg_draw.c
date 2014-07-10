@@ -3638,11 +3638,13 @@ void CG_DrawMyStatus( void )
 
 	// Draw their health bar...
 	if (crosshairEnt->currentState.health == 0 || crosshairEnt->currentState.maxhealth == 0)
-		healthPerc = 100; // No health data yet. Assume 100%.
+		healthPerc = 1; // No health data yet. Assume 100%.
 	else
 		healthPerc = ((float)crosshairEnt->currentState.health / (float)crosshairEnt->currentState.maxhealth);
 
 	CG_FilledBar( boxX + 2, y, sizeX-sizeY-4-6, 5, uqRed, NULL, NULL, healthPerc, flags );
+	// Write "XXX%" over the bar in white...
+	CG_Text_Paint( boxXmid - (CG_Text_Width ( va("%i\%", (int)(healthPerc*100)), 0.35f, FONT_SMALL ) * 0.5), y-2, 0.35f, colorWhite, va("%i\%", (int)(healthPerc*100)), 0, 0, 0, FONT_SMALL );
 	//CG_DrawRect_FixedBorder( boxX + 2, y, sizeX-sizeY-4-8, 5, 1, uqBorder );
 
 	//trap->Print("HEALTH: %i. MAX: %i. PERC: %i.\n", crosshairEnt->currentState.health, crosshairEnt->currentState.maxhealth, (int)healthPerc);
@@ -3651,11 +3653,13 @@ void CG_DrawMyStatus( void )
 
 	// Draw their force bar...
 	if (!crosshairEnt->playerState || crosshairEnt->playerState->fd.forcePower == 0 || crosshairEnt->playerState->fd.forcePowerMax == 0)
-		forcePerc = 100; // No force/power data yet. Assume 100%.
+		forcePerc = 1; // No force/power data yet. Assume 100%.
 	else
 		forcePerc = ((float)crosshairEnt->playerState->fd.forcePower / (float)crosshairEnt->playerState->fd.forcePowerMax);
 
 	CG_FilledBar( boxX + 2, y, sizeX-sizeY-4-6, 5, uqBlue, NULL, NULL, forcePerc, flags );
+	// Write "XXX%" over the bar in white...
+	CG_Text_Paint( boxXmid - (CG_Text_Width ( va("%i\%", (int)(forcePerc*100)), 0.35f, FONT_SMALL ) * 0.5), y-2, 0.35f, colorWhite, va("%i\%", (int)(forcePerc*100)), 0, 0, 0, FONT_SMALL );
 	//CG_DrawRect_FixedBorder( boxX + 2, y, sizeX-sizeY-4-8, 5, 1, uqBorder );
 
 	y += 7;
@@ -4191,12 +4195,13 @@ void CG_DrawEnemyStatus( void )
 
 	// Draw their health bar...
 	if (crosshairEnt->currentState.health == 0 || crosshairEnt->currentState.maxhealth == 0)
-		healthPerc = 100; // No health data yet. Assume 100%.
+		healthPerc = 1; // No health data yet. Assume 100%.
 	else
 		healthPerc = ((float)crosshairEnt->currentState.health / (float)crosshairEnt->currentState.maxhealth);
 
 	CG_FilledBar( boxX + 2, y, sizeX-sizeY-4-6, 5, uqRed, NULL, NULL, healthPerc, flags );
-
+	// Write "XXX%" over the bar in white...
+	CG_Text_Paint( boxXmid - (CG_Text_Width ( va("%i\%", (int)(healthPerc*100)), 0.35f, FONT_SMALL ) * 0.5), y-2, 0.35f, colorWhite, va("%i\%", (int)(healthPerc*100)), 0, 0, 0, FONT_SMALL );
 
 	//CG_DrawRect_FixedBorder( boxX + 2, y, sizeX-sizeY-4-6, 5, 1, uqBorder );
 
@@ -4206,11 +4211,13 @@ void CG_DrawEnemyStatus( void )
 
 	// Draw their force bar...
 	if (!crosshairEnt->playerState || crosshairEnt->playerState->fd.forcePower == 0 || crosshairEnt->playerState->fd.forcePowerMax == 0)
-		forcePerc = 100; // No force/power data yet. Assume 100%.
+		forcePerc = 1; // No force/power data yet. Assume 100%.
 	else
 		forcePerc = ((float)crosshairEnt->playerState->fd.forcePower / (float)crosshairEnt->playerState->fd.forcePowerMax);
 
 	CG_FilledBar( boxX + 2, y, sizeX-sizeY-4-6, 5, uqBlue, NULL, NULL, forcePerc, flags );
+	// Write "XXX%" over the bar in white...
+	CG_Text_Paint( boxXmid - (CG_Text_Width ( va("%i\%", (int)(forcePerc*100)), 0.35f, FONT_SMALL ) * 0.5), y-2, 0.35f, colorWhite, va("%i\%", (int)(forcePerc*100)), 0, 0, 0, FONT_SMALL );
 	//CG_DrawRect_FixedBorder( boxX + 2, y, sizeX-sizeY-4-6, 5, 1, uqBorder );
 
 	y += 7;
