@@ -8,7 +8,7 @@
 #include "ai_main.h"
 
 #define __NPC_STRAFE__
-#define __NPC_BBOX_ADJUST__
+//#define __NPC_BBOX_ADJUST__
 
 #define WAYPOINT_NONE -1
 
@@ -3244,7 +3244,8 @@ void NPC_SetNewGoalAndPath()
 	if (!NPC_FindNewWaypoint())
 	{
 		//trap->Print("Unable to find waypoint.\n");
-		NPC->die;
+		//NPC->die;
+		player_die(NPC, NPC, NPC, 99999, MOD_CRUSH);
 		return; // wait before trying to get a new waypoint...
 	}
 
@@ -4976,11 +4977,14 @@ void NPC_Trace( trace_t *results, const vec3_t start, const vec3_t mins, const v
 	trap->Trace(results, start, mins, maxs, end, passEntityNum, contentmask, 0, 0, 0);
 }
 
+//#define __NEW__
+
 void NPC_SetAnim(gentity_t *ent, int setAnimParts, int anim, int setAnimFlags)
 {	// FIXME : once torsoAnim and legsAnim are in the same structure for NCP and Players
 	// rename PM_SETAnimFinal to PM_SetAnim and have both NCP and Players call PM_SetAnim
+#ifndef __NEW__
 	G_SetAnim(ent, NULL, setAnimParts, anim, setAnimFlags, 0);
-	//BG_SetAnimFinal(&ent->client->ps, bgAllAnims[ent->localAnimIndex].anims, setAnimParts, anim, setAnimFlags);
+#endif //__NEW__
 
 #ifdef __NEW__
 	if(ent && ent->inuse && ent->client)

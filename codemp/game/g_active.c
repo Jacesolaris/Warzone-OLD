@@ -2889,7 +2889,7 @@ void ClientThink_real( gentity_t *ent ) {
 			{
 				player_die(ent, ent, ent, 100000, MOD_FALLING);
 				ent->client->ps.fallingToDeath = 0;
-				ent->think = G_FreeEntity;
+				//ent->think = G_FreeEntity;
 			}
 			else // UQ1: This messes up all sorts of stuff...
 			{
