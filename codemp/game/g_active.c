@@ -2613,8 +2613,11 @@ void ClientThink_real( gentity_t *ent ) {
 	}
 
 	//[SaberSys]
-	if (ent->client->ps.weapon == WP_SABER &&
-		!ent->NPC && !BG_SabersOff(&ent->client->ps))								// NPCs don't use this method, they do it on their own terms --eez
+	if (ent->client->ps.weapon == WP_SABER 
+#ifndef __NPC_USE_SABER_BLOCKING__
+		&& ent->s.eType != ET_NPC 
+#endif //__NPC_USE_SABER_BLOCKING__
+		&& !BG_SabersOff(&ent->client->ps))								// NPCs don't use this method, they do it on their own terms --eez
 	{
 		if (ent->client->pers.cmd.buttons & BUTTON_BLOCK &&			// holding Block button	
 			(ent->client->ps.torsoTimer <= 0 || ent->client->saberBlockDebounce >= level.time || // NOT ATTACKING (swingblocks not permitted, period)
@@ -3675,6 +3678,12 @@ void ClientThink( int clientNum, usercmd_t *ucmd ) {
 	if (clientNum < MAX_CLIENTS)
 	{
 		trap->GetUsercmd( clientNum, &ent->client->pers.cmd );
+	}
+
+	if (ent->client && !ent->s.eType == ET_NPC) // UQ1: NPCs clear the value in npc_think
+	{
+		ent->client->ps.damageCrit = qtrue;
+		ent->client->ps.damageValue = 0;
 	}
 
 	// mark the time we got info, so we can display the

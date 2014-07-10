@@ -1258,7 +1258,12 @@ netField_t	playerStateFields[] =
 { PSF(torsoAnim), 16 },			// Maximum number of animation sequences is 2048.  Top bit is reserved for the togglebit
 { PSF(groundEntityNum), GENTITYNUM_BITS },
 { PSF(eFlags), 32 },
+#ifdef __MMO__
+{ PSF(fd.forcePower), 32 },
+{ PSF(fd.forcePowerMax), 32 }, // UQ1: We need this field...
+#else //!__MMO__
 { PSF(fd.forcePower), 8 },
+#endif //__MMO__
 { PSF(eventSequence), 16 },
 { PSF(torsoTimer), 16 },
 { PSF(legsTimer), 16 },
@@ -1281,6 +1286,10 @@ netField_t	playerStateFields[] =
 { PSF(pm_flags), 16 },
 { PSF(jetpackFuel), 8 },
 { PSF(cloakFuel), 8 },
+#ifdef __MMO__
+{ PSF(damageCrit), 1 },
+{ PSF(damageValue), 32 },
+#endif //__MMO__
 { PSF(pm_time), -16 },
 { PSF(customRGBA[1]), 8 }, //0-255
 { PSF(clientNum), GENTITYNUM_BITS },
@@ -1440,6 +1449,10 @@ netField_t	pilotPlayerStateFields[] =
 { PSF(legsTimer), 16 },
 { PSF(jetpackFuel), 8 },
 { PSF(cloakFuel), 8 },
+#ifdef __MMO__
+{ PSF(damageCrit), 1 },
+{ PSF(damageValue), 32 },
+#endif //__MMO__
 { PSF(saberCanThrow), 1 },
 { PSF(fd.forcePowerDebounce[FP_LEVITATION]), 32 },
 { PSF(torsoFlip), 1 },
@@ -1455,7 +1468,12 @@ netField_t	pilotPlayerStateFields[] =
 { PSF(fd.sentryDeployed), 1 },
 { PSF(fd.forcePowerLevel[FP_SEE]), 2 }, //needed for knowing when to display players through walls
 { PSF(holocronBits), 32 },
+#ifdef __MMO__
+{ PSF(fd.forcePower), 32 },
+{ PSF(fd.forcePowerMax), 32 }, // UQ1: We need this field...
+#else //!__MMO__
 { PSF(fd.forcePower), 8 },
+#endif //__MMO__
 
 //===THE REST OF THESE SHOULD NOT BE RELEVANT, BUT, FOR SAFETY, INCLUDE THEM ANYWAY, JUST AT THE BOTTOM===============================================================
 { PSF(velocity[0]), 0 },
@@ -2195,6 +2213,18 @@ void MSG_WriteDeltaPlayerstate( msg_t *msg, struct playerState_s *from, struct p
 		{
 			if (statsbits & (1<<i) )
 			{
+#ifdef __MMO__
+#define MAX_STAT_BITS 32
+				if (i == STAT_WEAPONS || i == STAT_HEALTH || i == STAT_MAX_HEALTH || i == STAT_ARMOR || i == STAT_EXP || i == STAT_EXP_COUNT)
+				{ //ugly.. but we're gonna need it anyway -rww
+					//(just send this one in MAX_WEAPONS bits, so that we can add up to MAX_WEAPONS weaps without hassle)
+					MSG_WriteBits(msg, to->stats[i], MAX_STAT_BITS);
+				}
+				else
+				{
+					MSG_WriteShort (msg, to->stats[i]);
+				}
+#else //!__MMO__
 				if (i == STAT_WEAPONS)
 				{ //ugly.. but we're gonna need it anyway -rww
 					//(just send this one in MAX_WEAPONS bits, so that we can add up to MAX_WEAPONS weaps without hassle)
@@ -2204,6 +2234,7 @@ void MSG_WriteDeltaPlayerstate( msg_t *msg, struct playerState_s *from, struct p
 				{
 					MSG_WriteShort (msg, to->stats[i]);
 				}
+#endif //__MMO__
 			}
 		}
 	} else {
@@ -2397,6 +2428,17 @@ void MSG_ReadDeltaPlayerstate (msg_t *msg, playerState_t *from, playerState_t *t
 			for (i=0 ; i<MAX_STATS ; i++) {
 				if (bits & (1<<i) )
 				{
+#ifdef __MMO__
+					if (i == STAT_WEAPONS || i == STAT_HEALTH || i == STAT_MAX_HEALTH || i == STAT_ARMOR || i == STAT_EXP || i == STAT_EXP_COUNT)
+					{ //ugly.. but we're gonna need it anyway -rww
+						//(just send this one in MAX_WEAPONS bits, so that we can add up to MAX_WEAPONS weaps without hassle)
+						to->stats[i] = MSG_ReadBits(msg, MAX_STAT_BITS);
+					}
+					else
+					{
+						to->stats[i] = MSG_ReadShort(msg);
+					}
+#else //!__MMO__
 					if (i == STAT_WEAPONS)
 					{ //ugly.. but we're gonna need it anyway -rww
 						to->stats[i] = MSG_ReadBits(msg, MAX_WEAPONS);
@@ -2405,6 +2447,7 @@ void MSG_ReadDeltaPlayerstate (msg_t *msg, playerState_t *from, playerState_t *t
 					{
 						to->stats[i] = MSG_ReadShort(msg);
 					}
+#endif //__MMO__
 				}
 			}
 		}

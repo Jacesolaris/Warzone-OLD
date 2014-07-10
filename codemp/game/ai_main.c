@@ -1829,6 +1829,11 @@ int PassStandardEnemyChecks(bot_state_t *bs, gentity_t *en)
 		return 0;
 	}
 
+	if (!NPC_IsValidNPCEnemy(en))
+	{// Civilian NPC...
+		return 0;
+	}
+
 	if (!en->client)
 	{ //not a client, don't care about him
 		return 0;

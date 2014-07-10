@@ -11,6 +11,35 @@ int	teamCounter[TEAM_NUM_TEAMS];
 #define	VALID_ATTACK_CONE	2.0f	//Degrees
 extern void G_DebugPrint( int level, const char *format, ... );
 
+qboolean NPC_IsValidNPCEnemy ( gentity_t *NPC )
+{
+	if (!NPC || !NPC->client) return;
+	if (NPC->s.eType != ET_NPC) return qtrue;
+
+	switch (NPC->client->NPC_class)
+	{
+		case CLASS_CIVILIAN:
+		case CLASS_GENERAL_VENDOR:
+		case CLASS_WEAPONS_VENDOR:
+		case CLASS_ARMOR_VENDOR:
+		case CLASS_SUPPLIES_VENDOR:
+		case CLASS_FOOD_VENDOR:
+		case CLASS_MEDICAL_VENDOR:
+		case CLASS_GAMBLER_VENDOR:
+		case CLASS_TRADE_VENDOR:
+		case CLASS_ODDITIES_VENDOR:
+		case CLASS_DRUG_VENDOR:
+		case CLASS_TRAVELLING_VENDOR:
+			// These guys have no enemies...
+			return qfalse;
+			break;
+		default:
+			break;
+	}
+
+	return qtrue;
+}
+
 /*
 void CalcEntitySpot ( gentity_t *ent, spot_t spot, vec3_t point )
 
@@ -1091,6 +1120,10 @@ NPC_ValidEnemy
 qboolean NPC_ValidEnemy( gentity_t *ent )
 {
 	int entTeam = TEAM_FREE;
+
+	// Must not be a civilian NPC...
+	if (!NPC_IsValidNPCEnemy(ent))
+		return qfalse;
 
 	//Must be a valid pointer
 	if ( ent == NULL )

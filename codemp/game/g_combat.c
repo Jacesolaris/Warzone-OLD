@@ -5741,6 +5741,12 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker, vec3_
 			targ->enemy = attacker;
 			targ->die (targ, inflictor, attacker, take, mod);
 			G_ActivateBehavior( targ, BSET_DEATH );
+
+			// UQ1: Added - parsing damage values to client...
+			if (targ && targ->client)
+			{
+				targ->client->ps.damageValue = take;
+			}
 			return;
 		}
 		else
@@ -5773,6 +5779,11 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker, vec3_
 		G_LogWeaponDamage(attacker->s.number, mod, take);
 	}
 
+	// UQ1: Added - parsing damage values to client...
+	if (targ && targ->client)
+	{
+		targ->client->ps.damageValue = take;
+	}
 }
 
 

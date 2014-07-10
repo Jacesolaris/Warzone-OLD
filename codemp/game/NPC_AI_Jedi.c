@@ -2465,7 +2465,7 @@ evasionType_t Jedi_SaberBlockGo( gentity_t *self, usercmd_t *cmd, vec3_t pHitloc
 			saberBusy = qtrue;
 		}
 		else if ( Jedi_QuickReactions( self ) )
-		{//jedi trainer and tavion are must faster at parrying and can do it whenever they like
+		{//jedi trainer and tavion are much faster at parrying and can do it whenever they like
 			//Also, on medium, all level 3 people can parry any time and on hard, all level 2 or 3 people can parry any time
 		}
 		else
@@ -3012,6 +3012,11 @@ evasionType_t Jedi_SaberBlockGo( gentity_t *self, usercmd_t *cmd, vec3_t pHitloc
 
 	if ( evasionType == EVASION_NONE )
 	{
+#ifdef __NPC_USE_SABER_BLOCKING__
+		// UQ1: Fall back to using the block button like players...
+		if (!NPCS.ucmd.buttons & BUTTON_BLOCK) NPCS.ucmd.buttons |= BUTTON_BLOCK;
+#endif //__NPC_USE_SABER_BLOCKING__
+
 		return EVASION_NONE;
 	}
 	//stop taunting
@@ -3614,7 +3619,6 @@ static qboolean Jedi_Flee( void )
 }
 */
 
-
 /*
 ==========================================================================================
 INTERNAL AI ROUTINES
@@ -3665,6 +3669,10 @@ gentity_t *Jedi_FindEnemyInCone( gentity_t *self, gentity_t *fallback, float min
 		}
 		if ( check->health <= 0 )
 		{//dead
+			continue;
+		}
+		if ( !NPC_IsValidNPCEnemy(check) )
+		{// civilian
 			continue;
 		}
 
@@ -3765,7 +3773,7 @@ static void Jedi_FaceEnemy( qboolean doPitch )
 		&& NPCS.NPC->s.weapon != WP_STUN_BATON
 		/*&& NPC->s.weapon != WP_MELEE*/ )
 	{//boba leads his enemy
-		if ( NPCS.NPC->health < NPCS.NPC->client->pers.maxHealth*0.5f )
+		if ( NPCS.NPC->enemy && NPCS.NPC->enemy->client && NPCS.NPC->health < NPCS.NPC->client->pers.maxHealth*0.5f )
 		{//lead
 			float missileSpeed = WP_SpeedOfMissileForWeapon( NPCS.NPC->s.weapon, ((qboolean)(NPCS.NPCInfo->scriptFlags&SCF_ALT_FIRE)) );
 			if ( missileSpeed )

@@ -1490,18 +1490,22 @@ void NPC_Begin (gentity_t *ent)
 	//if (g_gametype.integer == GT_INSTANCE) // UQ1: Screw it. Will do this for all gametypes.
 	{
 		if (ent->NPC->stats.health <= 0) ent->NPC->stats.health = 30; // UQ1: Because not all NPC files have a health value...
+		if (ent->client->ps.fd.forcePowerMax <= 0) ent->client->ps.fd.forcePowerMax = 500;
 
 		// More health for instance enemies... This is meant to be run as a team...
 		if (ent->client->ps.weapon == WP_SABER)
 		{// Bosses... TODO: Sub-types...
 			ent->NPC->stats.health *= 10;
+			ent->client->ps.fd.forcePowerMax *= 10;
 		}
 		else
 		{// TODO: Sub-types...
 			ent->NPC->stats.health *= 6;
+			ent->client->ps.fd.forcePowerMax *= 6;
 		}
 
 		ent->health = ent->maxHealth = client->pers.maxHealth = client->ps.stats[STAT_MAX_HEALTH] = client->ps.stats[STAT_HEALTH] = ent->NPC->stats.health;
+		ent->client->ps.fd.forcePower = ent->client->ps.fd.forcePowerMax;
 	}
 }
 

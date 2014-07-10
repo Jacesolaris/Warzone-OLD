@@ -1081,7 +1081,11 @@ void ForceHeal( gentity_t *self )
 
 	if (self->client->ps.fd.forcePowerLevel[FP_HEAL] == FORCE_LEVEL_3)
 	{
+#ifdef __MMO__
+		self->health += 500;
+#else //!__MMO__
 		self->health += 25; //This was 50, but that angered the Balance God.
+#endif //__MMO__
 
 		if (self->health > self->client->ps.stats[STAT_MAX_HEALTH])
 		{
@@ -1091,7 +1095,11 @@ void ForceHeal( gentity_t *self )
 	}
 	else if (self->client->ps.fd.forcePowerLevel[FP_HEAL] == FORCE_LEVEL_2)
 	{
+#ifdef __MMO__
+		self->health += 225;
+#else //!__MMO__
 		self->health += 10;
+#endif //__MMO__
 
 		if (self->health > self->client->ps.stats[STAT_MAX_HEALTH])
 		{
@@ -1101,7 +1109,11 @@ void ForceHeal( gentity_t *self )
 	}
 	else
 	{
+#ifdef __MMO__
+		self->health += 100;
+#else //!__MMO__
 		self->health += 5;
+#endif //__MMO__
 
 		if (self->health > self->client->ps.stats[STAT_MAX_HEALTH])
 		{
@@ -1206,15 +1218,27 @@ void ForceTeamHeal( gentity_t *self )
 
 	if (numpl == 1)
 	{
+#ifdef __MMO__
+		healthadd = 500;
+#else //!__MMO__
 		healthadd = 50;
+#endif //__MMO__
 	}
 	else if (numpl == 2)
 	{
+#ifdef __MMO__
+		healthadd = 225;
+#else //!__MMO__
 		healthadd = 33;
+#endif //__MMO__
 	}
 	else
 	{
+#ifdef __MMO__
+		healthadd = 100;
+#else //!__MMO__
 		healthadd = 25;
+#endif //__MMO__
 	}
 
 	self->client->ps.fd.forcePowerDebounce[FP_TEAM_HEAL] = level.time + 2000;
@@ -1311,15 +1335,27 @@ void ForceTeamForceReplenish( gentity_t *self )
 
 	if (numpl == 1)
 	{
+#ifdef __MMO__
+		poweradd = 500;
+#else //!__MMO__
 		poweradd = 50;
+#endif //__MMO__
 	}
 	else if (numpl == 2)
 	{
+#ifdef __MMO__
+		poweradd = 225;
+#else //!__MMO__
 		poweradd = 33;
+#endif //__MMO__
 	}
 	else
 	{
+#ifdef __MMO__
+		poweradd = 100;
+#else //!__MMO__
 		poweradd = 25;
+#endif //__MMO__
 	}
 	self->client->ps.fd.forcePowerDebounce[FP_TEAM_FORCE] = level.time + 2000;
 
@@ -1740,9 +1776,20 @@ void ForceLightningDamage( gentity_t *self, gentity_t *traceEnt, vec3_t dir, vec
 			}
 			if (ForcePowerUsableOn(self, traceEnt, FP_LIGHTNING))
 			{
-				int	dmg = Q_irand(1,2); //Q_irand( 1, 3 );
-
 				int modPowerLevel = -1;
+#ifdef __MMO__
+				int	dmg = Q_irand(2,8);
+
+				if (dmg >= 8) // crit!
+				{
+					dmg *= Q_irand(2, 3);
+					
+					if (traceEnt->client)
+						traceEnt->client->ps.damageCrit = qtrue;
+				}
+#else //!__MMO__
+				int	dmg = Q_irand(1,2); //Q_irand( 1, 3 );
+#endif //__MMO__
 
 				if (traceEnt->client)
 				{
@@ -1758,12 +1805,20 @@ void ForceLightningDamage( gentity_t *self, gentity_t *traceEnt, vec3_t dir, vec
 					}
 					else if (modPowerLevel == 1)
 					{
+#ifdef __MMO__
+						dmg /= 3;
+#else //!__MMO__
 						dmg = 1;
+#endif //__MMO__
 						traceEnt->client->noLightningTime = level.time + 300;
 					}
 					else if (modPowerLevel == 2)
 					{
+#ifdef __MMO__
+						dmg /= 5;
+#else //!__MMO__
 						dmg = 1;
+#endif //__MMO__
 						traceEnt->client->noLightningTime = level.time + 100;
 					}
 				}
@@ -1994,15 +2049,27 @@ void ForceDrainDamage( gentity_t *self, gentity_t *traceEnt, vec3_t dir, vec3_t 
 				int	dmg = 0; //Q_irand( 1, 3 );
 				if (self->client->ps.fd.forcePowerLevel[FP_DRAIN] == FORCE_LEVEL_1)
 				{
+#ifdef __MMO__
+					dmg = Q_irand(10, 30);
+#else //!__MMO__
 					dmg = 2; //because it's one-shot
+#endif //__MMO__
 				}
 				else if (self->client->ps.fd.forcePowerLevel[FP_DRAIN] == FORCE_LEVEL_2)
 				{
+#ifdef __MMO__
+					dmg = Q_irand(15, 50);
+#else //!__MMO__
 					dmg = 3;
+#endif //__MMO__
 				}
 				else if (self->client->ps.fd.forcePowerLevel[FP_DRAIN] == FORCE_LEVEL_3)
 				{
+#ifdef __MMO__
+					dmg = Q_irand(25, 100);
+#else //!__MMO__
 					dmg = 4;
+#endif //__MMO__
 				}
 
 				if (traceEnt->client)
@@ -2018,11 +2085,19 @@ void ForceDrainDamage( gentity_t *self, gentity_t *traceEnt, vec3_t dir, vec3_t 
 					}
 					else if (modPowerLevel == 1)
 					{
+#ifdef __MMO__
+						dmg /= 3;
+#else //!__MMO__
 						dmg = 1;
+#endif //__MMO__
 					}
 					else if (modPowerLevel == 2)
 					{
-						dmg = 2;
+#ifdef __MMO__
+						dmg /= 5;
+#else //!__MMO__
+						dmg = 1;
+#endif //__MMO__
 					}
 				}
 				//G_Damage( traceEnt, self, self, dir, impactPoint, dmg, 0, MOD_FORCE_DARK );
@@ -3928,8 +4003,22 @@ void DoGripAction(gentity_t *self, forcePowers_t forcePower)
 
 	if (self->client->ps.fd.forcePowerDebounce[FP_GRIP] < level.time)
 	{ //2 damage per second while choking, resulting in 10 damage total (not including The Squeeze<tm>)
+#ifdef __MMO__
+		int damage = Q_irand(5, 20);
+		if (damage >= 20) 
+		{
+			damage *= Q_irand(2, 4); // crit
+
+			if (gripEnt->client)
+				gripEnt->client->ps.damageCrit = qtrue;
+		}
+
+		self->client->ps.fd.forcePowerDebounce[FP_GRIP] = level.time + 1000;
+		G_Damage(gripEnt, self, self, NULL, NULL, damage, DAMAGE_NO_ARMOR, MOD_FORCE_DARK);
+#else //!__MMO__
 		self->client->ps.fd.forcePowerDebounce[FP_GRIP] = level.time + 1000;
 		G_Damage(gripEnt, self, self, NULL, NULL, 2, DAMAGE_NO_ARMOR, MOD_FORCE_DARK);
+#endif //__MMO__
 	}
 
 	Jetpack_Off(gripEnt); //make sure the guy being gripped has his jetpack off.
@@ -3964,8 +4053,15 @@ void DoGripAction(gentity_t *self, forcePowers_t forcePower)
 
 		if ((level.time - gripEnt->client->ps.fd.forceGripStarted) > 3000 && !self->client->ps.fd.forceGripDamageDebounceTime)
 		{ //if we managed to lift him into the air for 2 seconds, give him a crack
+#ifdef __MMO__
+			int damage = Q_irand(50, 225);
+			if (damage >= 480) damage *= Q_irand(2, 4); // crit
+			self->client->ps.fd.forceGripDamageDebounceTime = 1;
+			G_Damage(gripEnt, self, self, NULL, NULL, damage, DAMAGE_NO_ARMOR, MOD_FORCE_DARK);
+#else //!__MMO__
 			self->client->ps.fd.forceGripDamageDebounceTime = 1;
 			G_Damage(gripEnt, self, self, NULL, NULL, 20, DAMAGE_NO_ARMOR, MOD_FORCE_DARK);
+#endif //__MMO__
 
 			//Must play custom sounds on the actual entity. Don't use G_Sound (it creates a temp entity for the sound)
 			G_EntitySound( gripEnt, CHAN_VOICE, G_SoundIndex(va( "*choke%d.wav", Q_irand( 1, 3 ) )) );
@@ -4050,8 +4146,15 @@ void DoGripAction(gentity_t *self, forcePowers_t forcePower)
 
 		if ((level.time - gripEnt->client->ps.fd.forceGripStarted) > 3000 && !self->client->ps.fd.forceGripDamageDebounceTime)
 		{ //if we managed to lift him into the air for 2 seconds, give him a crack
+#ifdef __MMO__
+			int damage = Q_irand(100, 500);
+			if (damage >= 480) damage *= Q_irand(2, 4); // crit
+			self->client->ps.fd.forceGripDamageDebounceTime = 1;
+			G_Damage(gripEnt, self, self, NULL, NULL, damage, DAMAGE_NO_ARMOR, MOD_FORCE_DARK);
+#else //!__MMO__
 			self->client->ps.fd.forceGripDamageDebounceTime = 1;
 			G_Damage(gripEnt, self, self, NULL, NULL, 40, DAMAGE_NO_ARMOR, MOD_FORCE_DARK);
+#endif //__MMO__
 
 			//Must play custom sounds on the actual entity. Don't use G_Sound (it creates a temp entity for the sound)
 			G_EntitySound( gripEnt, CHAN_VOICE, G_SoundIndex(va( "*choke%d.wav", Q_irand( 1, 3 ) )) );

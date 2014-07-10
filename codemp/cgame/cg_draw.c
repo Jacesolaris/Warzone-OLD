@@ -1665,6 +1665,161 @@ void CG_DrawCloakBar(void)
 	CG_FillRect(x + 1.0f, y + 1.0f, CLOAKFUELBAR_W - 1.0f, CLOAKFUELBAR_H - percent, cColor);
 }
 
+#define MAX_SHOWPOWERS NUM_FORCE_POWERS
+
+qboolean ForcePower_Valid(int i)
+{
+	if (i == FP_LEVITATION ||
+		i == FP_SABER_OFFENSE ||
+		i == FP_SABER_DEFENSE ||
+		i == FP_SABERTHROW)
+	{
+		return qfalse;
+	}
+
+	if (cg.snap->ps.fd.forcePowersKnown & (1 << i))
+	{
+		return qtrue;
+	}
+
+	return qfalse;
+}
+
+void CG_DrawForceQuickBar( void )
+{
+	int		i;
+	int		count;
+	int		smallIconSize,bigIconSize;
+	int		holdX, x, y, pad;
+	int		sideLeftIconCnt,sideRightIconCnt;
+	int		sideMax,holdCount,iconCnt;
+	int		yOffset = 0;
+
+	if (!cg.snap->ps.fd.forcePowersKnown)
+	{
+		return;
+	}
+
+	// count the number of powers owned
+	count = 0;
+
+	for (i=0;i < NUM_FORCE_POWERS;++i)
+	{
+		if (ForcePower_Valid(i))
+		{
+			count++;
+		}
+	}
+
+	if (count == 0)	// If no force powers, don't display
+	{
+		return;
+	}
+
+	sideMax = 3;	// Max number of icons on the side
+
+	// Calculate how many icons will appear to either side of the center one
+	holdCount = count - 1;	// -1 for the center icon
+	if (holdCount == 0)			// No icons to either side
+	{
+		sideLeftIconCnt = 0;
+		sideRightIconCnt = 0;
+	}
+	else if (count > (2*sideMax))	// Go to the max on each side
+	{
+		sideLeftIconCnt = sideMax;
+		sideRightIconCnt = sideMax;
+	}
+	else							// Less than max, so do the calc
+	{
+		sideLeftIconCnt = holdCount/2;
+		sideRightIconCnt = holdCount - sideLeftIconCnt;
+	}
+
+	smallIconSize = 30;
+	bigIconSize = 30;
+	pad = 12;
+
+	x = 320;
+	y = 425;
+	//y = 450;
+
+	i = BG_ProperForceIndex(cg.forceSelect) - 1;
+	if (i < 0)
+	{
+		i = MAX_SHOWPOWERS - 1;
+	}
+
+	trap->R_SetColor(NULL);
+	// Work backwards from current icon
+	holdX = x - ((bigIconSize/2) + pad + smallIconSize);
+	for (iconCnt=1;iconCnt<(sideLeftIconCnt+1);i--)
+	{
+		if (i < 0)
+		{
+			i = MAX_SHOWPOWERS - 1;
+		}
+
+		if (!ForcePower_Valid(forcePowerSorted[i]))	// Does he have this power?
+		{
+			continue;
+		}
+
+		++iconCnt;					// Good icon
+
+		if (cgs.media.forcePowerIcons[forcePowerSorted[i]])
+		{
+			CG_DrawPic( holdX, y + yOffset, smallIconSize, smallIconSize, cgs.media.forcePowerIcons[forcePowerSorted[i]] );
+			CG_DrawProportionalString(holdX, y + yOffset, va("F%i", iconCnt), UI_CENTER | UI_SMALLFONT, colorTable[CT_ICON_BLUE]);
+			holdX -= (smallIconSize+pad);
+		}
+	}
+
+	if (ForcePower_Valid(cg.forceSelect))
+	{
+		// Current Center Icon
+		if (cgs.media.forcePowerIcons[cg.forceSelect])
+		{
+			CG_DrawPic( x-(bigIconSize/2), (y-((bigIconSize-smallIconSize)/2)) + yOffset, bigIconSize, bigIconSize, cgs.media.forcePowerIcons[cg.forceSelect] ); //only cache the icon for display
+			CG_DrawProportionalString(holdX, y + yOffset, va("F%i", iconCnt), UI_CENTER | UI_SMALLFONT, colorTable[CT_ICON_BLUE]);
+		}
+	}
+
+	i = BG_ProperForceIndex(cg.forceSelect) + 1;
+	if (i>=MAX_SHOWPOWERS)
+	{
+		i = 0;
+	}
+
+	// Work forwards from current icon
+	holdX = x + (bigIconSize/2) + pad;
+	for (iconCnt=1;iconCnt<(sideRightIconCnt+1);i++)
+	{
+		if (i>=MAX_SHOWPOWERS)
+		{
+			i = 0;
+		}
+
+		if (!ForcePower_Valid(forcePowerSorted[i]))	// Does he have this power?
+		{
+			continue;
+		}
+
+		++iconCnt;					// Good icon
+
+		if (cgs.media.forcePowerIcons[forcePowerSorted[i]])
+		{
+			CG_DrawPic( holdX, y + yOffset, smallIconSize, smallIconSize, cgs.media.forcePowerIcons[forcePowerSorted[i]] ); //only cache the icon for display
+			CG_DrawProportionalString(holdX, y + yOffset, va("F%i", iconCnt), UI_CENTER | UI_SMALLFONT, colorTable[CT_ICON_BLUE]);
+			holdX += (smallIconSize+pad);
+		}
+	}
+
+	//if ( showPowersName[cg.forceSelect] )
+	//{
+	//	CG_DrawProportionalString(320, y + 30 + yOffset, CG_GetStringEdString("SP_INGAME", showPowersName[cg.forceSelect]), UI_CENTER | UI_SMALLFONT, colorTable[CT_ICON_BLUE]);
+	//}
+}
 
 /*
 ================
@@ -1673,14 +1828,17 @@ CG_DrawHUD
 */
 void CG_DrawHUD(centity_t	*cent)
 {
+#ifdef __OLD_UI__
 	menuDef_t	*menuHUD = NULL;
 	itemDef_t	*focusItem = NULL;
 	const char *scoreStr = NULL;
 	int	scoreBias;
 	char scoreBiasStr[16];
+#endif //__OLD_UI__
 
 	if (cg_hudFiles.integer)
 	{
+#ifdef __OLD_UI__
 		int x = 0;
 		int y = SCREEN_HEIGHT - 80;
 		char ammoString[64];
@@ -1746,24 +1904,31 @@ void CG_DrawHUD(centity_t	*cent)
 
 		CG_DrawScaledProportionalString(SMALLCHAR_WIDTH - (x - 300), y + 50, va("^7XP ^2%i^7 / ^3%i", cg.snap->ps.stats[STAT_EXP], cg.maxExperience),
 		UI_SMALLFONT|UI_DROPSHADOW, colorTable[CT_WHITE], 0.4f );
+#endif //__OLD_UI__
 
 		//[DODGEBAR]Scooper
 		// This will cause it to draw the fuel bar / dette vil gjøre at den tegner fuel bar'n =p
+#ifdef __OLD_UI__		
 		//CG_DrawDodgeBar();
 		CG_DrawSaberStyleBar();
 		CG_DrawForceBar();
 		CG_DrawHPBar();
 		CG_DrawArmorBar();
+#endif //__OLD_UI__
+		//CG_DrawForceQuickBar();
 		CG_DrawExpBar();
 		//CG_DrawJetPackBar();
 		//CG_DrawCloakBar();
 
+#ifdef __OLD_UI__
 		cgs.media.currentBackground = trap->R_RegisterShader("gfx/hud/skywalker");
 		CG_DrawPic(x + 518.0f, y + 37, STYLEBAR_W - 85, STYLEBAR_H + 5, cgs.media.currentBackground);
+#endif //__OLD_UI__
 		//[/DODGEBAR]Scooper
 		return;
 	}
 
+#ifdef __OLD_UI__
 	if (cg.predictedPlayerState.pm_type != PM_SPECTATOR)
 	{
 		// Draw the left HUD
@@ -1920,26 +2085,7 @@ void CG_DrawHUD(centity_t	*cent)
 			//trap->Error( ERR_DROP, "CG_ChatBox_ArrayInsert: unable to locate HUD menu file ");
 		}
 	}
-}
-
-#define MAX_SHOWPOWERS NUM_FORCE_POWERS
-
-qboolean ForcePower_Valid(int i)
-{
-	if (i == FP_LEVITATION ||
-		i == FP_SABER_OFFENSE ||
-		i == FP_SABER_DEFENSE ||
-		i == FP_SABERTHROW)
-	{
-		return qfalse;
-	}
-
-	if (cg.snap->ps.fd.forcePowersKnown & (1 << i))
-	{
-		return qtrue;
-	}
-
-	return qfalse;
+#endif //__OLD_UI__
 }
 
 /*
@@ -3580,6 +3726,8 @@ void CG_DrawMyStatus( void )
 		return; // nothing to show...
 	}
 
+	if (crosshairEnt->playerState->fd.forcePowerMax <= 0) crosshairEnt->playerState->fd.forcePowerMax = 100;
+
 	//str1 = ci->name;
 	str1 = ci->cleanname;
 	str2 = va("< Jedi >"); // UQ1: FIXME - Selected Player Class Name...
@@ -3659,7 +3807,7 @@ void CG_DrawMyStatus( void )
 
 	CG_FilledBar( boxX + 2, y, sizeX-sizeY-4-6, 2, uqCyan, NULL, NULL, armorPerc, flags );
 	// Write "XXX%/XXX%" over the bar in white...
-	CG_Text_Paint( boxXmid - (CG_Text_Width ( va("%i\%/%i\%", (int)(armorPerc*100), (int)(healthPerc*100)), 0.35f, FONT_SMALL ) * 0.5), y-2, 0.35f, colorWhite, va("%i\%/%i\%", (int)(armorPerc*100), (int)(healthPerc*100)), 0, 0, 0, FONT_SMALL );
+	CG_Text_Paint( boxXmid - (CG_Text_Width ( va("%i/%i", (int)(armorPerc*100), (int)(healthPerc*100)), 0.35f, FONT_SMALL ) * 0.5), y-2, 0.35f, colorWhite, va("%i/%i", (int)(armorPerc*100), (int)(healthPerc*100)), 0, 0, 0, FONT_SMALL );
 
 	y += 7;
 
@@ -3671,7 +3819,7 @@ void CG_DrawMyStatus( void )
 
 	CG_FilledBar( boxX + 2, y, sizeX-sizeY-4-6, 5, uqBlue, NULL, NULL, forcePerc, flags );
 	// Write "XXX%" over the bar in white...
-	CG_Text_Paint( boxXmid - (CG_Text_Width ( va("%i\%", (int)(forcePerc*100)), 0.35f, FONT_SMALL ) * 0.5), y-2, 0.35f, colorWhite, va("%i\%", (int)(forcePerc*100)), 0, 0, 0, FONT_SMALL );
+	CG_Text_Paint( boxXmid - (CG_Text_Width ( va("%i", (int)(forcePerc*100)), 0.35f, FONT_SMALL ) * 0.5), y-2, 0.35f, colorWhite, va("%i", (int)(forcePerc*100)), 0, 0, 0, FONT_SMALL );
 	//CG_DrawRect_FixedBorder( boxX + 2, y, sizeX-sizeY-4-8, 5, 1, uqBorder );
 
 	y += 7;
@@ -3712,6 +3860,8 @@ void CG_DrawEnemyStatus( void )
 	{
 		return;
 	}
+
+	if (crosshairEnt->playerState->fd.forcePowerMax <= 0) crosshairEnt->playerState->fd.forcePowerMax = 100;
 
 	if (crosshairEnt->currentState.eType == ET_NPC)
 	{
@@ -4232,7 +4382,7 @@ void CG_DrawEnemyStatus( void )
 
 	CG_FilledBar( boxX + 2, y, sizeX-sizeY-4-6, 2, uqCyan, NULL, NULL, armorPerc, flags );
 	// Write "XXX%/XXX%" over the bar in white...
-	CG_Text_Paint( boxXmid - (CG_Text_Width ( va("%i\%/%i\%", (int)(armorPerc*100), (int)(healthPerc*100)), 0.35f, FONT_SMALL ) * 0.5), y-2, 0.35f, colorWhite, va("%i\%/%i\%", (int)(armorPerc*100), (int)(healthPerc*100)), 0, 0, 0, FONT_SMALL );
+	CG_Text_Paint( boxXmid - (CG_Text_Width ( va("%i/%i", (int)(armorPerc*100), (int)(healthPerc*100)), 0.35f, FONT_SMALL ) * 0.5), y-2, 0.35f, colorWhite, va("%i/%i", (int)(armorPerc*100), (int)(healthPerc*100)), 0, 0, 0, FONT_SMALL );
 
 
 	y += 7;
@@ -4245,7 +4395,7 @@ void CG_DrawEnemyStatus( void )
 
 	CG_FilledBar( boxX + 2, y, sizeX-sizeY-4-6, 5, uqBlue, NULL, NULL, forcePerc, flags );
 	// Write "XXX%" over the bar in white...
-	CG_Text_Paint( boxXmid - (CG_Text_Width ( va("%i\%", (int)(forcePerc*100)), 0.35f, FONT_SMALL ) * 0.5), y-2, 0.35f, colorWhite, va("%i\%", (int)(forcePerc*100)), 0, 0, 0, FONT_SMALL );
+	CG_Text_Paint( boxXmid - (CG_Text_Width ( va("%i", (int)(forcePerc*100)), 0.35f, FONT_SMALL ) * 0.5), y-2, 0.35f, colorWhite, va("%i", (int)(forcePerc*100)), 0, 0, 0, FONT_SMALL );
 	//CG_DrawRect_FixedBorder( boxX + 2, y, sizeX-sizeY-4-6, 5, 1, uqBorder );
 
 	y += 7;
@@ -8473,6 +8623,139 @@ void CG_DrawNPCNames( void )
 	}
 }
 
+int			damage_show_time[MAX_GENTITIES];
+int			damage_show_value[MAX_GENTITIES];
+qboolean	damage_show_crit[MAX_GENTITIES];
+
+void CG_DrawDamage( void )
+{// Float damage value above their heads!
+	int				i;
+
+	for (i = 0; i < MAX_GENTITIES; i++)
+	{// Cycle through them...
+		vec3_t			origin;
+		centity_t		*cent = &cg_entities[i];
+		int				w;
+		float			size, x, y, dist;
+		vec4_t			tclr =	{ 0.825f,	0.825f,	0.0f,	1.0f	};
+		vec4_t			tclr2 =	{ 1.0f,	1.0f,	0.0f,	1.0f	};
+		int				baseColor = CT_BLUE;
+		float			multiplier = 1.0f;
+
+		if (!cent)
+			continue;
+
+		if (cent->currentState.eType != ET_PLAYER && cent->currentState.eType != ET_NPC)
+			continue;
+
+		if (!cent->ghoul2)
+			continue;
+
+		if (cent->playerState->damageValue <= 0)
+		{
+			if (damage_show_time[i] >= cg.time)
+			{
+				// Continue showing last damage value...
+			}
+			else
+			{
+				// Nothing to show...
+				damage_show_time[i] = 0;
+				damage_show_value[i] = 0;
+				damage_show_crit[i] = qfalse;
+				continue;
+			}
+		}
+		else
+		{
+			damage_show_time[i] = cg.time + 2000;
+			damage_show_value[i] = cent->playerState->damageValue;
+			damage_show_crit[i] = cent->playerState->damageCrit;
+		}
+
+		if (cent->cloaked)
+			continue;
+
+		if (cent->currentState.eFlags & EF_DEAD)
+		{
+			continue;
+		}
+
+		if (cent->currentState.eFlags & EF_NODRAW)
+		{
+			continue;
+		}
+
+		VectorCopy( cent->lerpOrigin, origin );
+		origin[2] += 50;//30;
+
+		// Account for ducking
+		if ( cent->playerState->pm_flags & PMF_DUCKED )
+			origin[2] -= 18;
+	
+		// Draw the NPC name!
+		if (!CG_WorldCoordToScreenCoordFloat(origin, &x, &y))
+		{
+			//CG_Printf("FAILED %i screen coords are %fx%f. (%f %f %f)\n", cent->currentState.number, x, y, origin[0], origin[1], origin[2]);
+			continue;
+		}
+
+		if (x < 0 || x > 640 || y < 0 || y > 480)
+		{
+			//CG_Printf("FAILED2 %i screen coords are %fx%f. (%f %f %f)\n", cent->currentState.number, x, y, origin[0], origin[1], origin[2]);
+			continue;
+		}
+
+		VectorCopy( cent->lerpOrigin, origin );
+		origin[2] += 45;//25;
+
+		// Account for ducking
+		if ( cent->playerState->pm_flags & PMF_DUCKED )
+			origin[2] -= 18;
+
+		dist = Distance(cg.snap->ps.origin, origin);
+		
+		if (dist > 1024.0f/*2500.0f*/) continue; // Too far...
+		if (dist < 192.0f/*d_roff.value*//*350.0f*/) multiplier = 200.0f/*d_poff.value*//dist; // Cap short ranges...
+
+		if (!CG_CheckClientVisibility(cent))
+		{
+			//CG_Printf("NPC is NOT visible.\n");
+			continue;
+		}
+
+		size = dist * 0.0002;
+		
+		if (size > 0.99f) size = 0.99f;
+		if (size < 0.01f) size = 0.01f;
+
+		size = 1 - size;
+
+		size *= 0.3;
+
+		if (damage_show_crit[i])
+			size *= 2.0; // crit!
+		/*
+		damage_show_time[i] = 0;
+		damage_show_value[i] = 0;
+		damage_show_crit[i] = qfalse;
+		*/
+
+		w = CG_Text_Width(va("%i", damage_show_value[i]), size*2, FONT_SMALL);
+		y = y + CG_Text_Height(va("%i", damage_show_value[i]), size*2, FONT_SMALL);
+		x -= (w * 0.5f);
+
+		y -= (cg.time - damage_show_time[i]) / 50;
+
+		if (y < 0) continue; // now off screen...
+		
+		if (damage_show_crit[i]) // bright yellow
+			CG_Text_Paint( x, (y*(1-size))+((30*(1-size))*(1-size))+sqrt(sqrt((1-size)*30))+((1-multiplier)*30), size*2, tclr2, va("%i", damage_show_value[i]), 0, 0, ITEM_TEXTSTYLE_SHADOWED, FONT_SMALL);
+		else // darker yellow
+			CG_Text_Paint( x, (y*(1-size))+((30*(1-size))*(1-size))+sqrt(sqrt((1-size)*30))+((1-multiplier)*30), size*2, tclr, va("%i", damage_show_value[i]), 0, 0, ITEM_TEXTSTYLE_SHADOWED, FONT_SMALL);
+	}
+}
+
 /*
 =================
 CG_`Entity
@@ -10505,6 +10788,8 @@ static void CG_Draw2D( void ) {
 
 	// UQ1: Added. Draw NPC civilian names over their heads...
 	CG_DrawNPCNames();
+	// Draw damages above head...
+	CG_DrawDamage();
 
 	CG_DrawVote();
 	CG_DrawTeamVote();

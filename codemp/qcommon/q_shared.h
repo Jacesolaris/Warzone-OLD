@@ -7,6 +7,7 @@
 // A user mod should never modify this file
 
 #define __MMO__
+#define __NPC_USE_SABER_BLOCKING__
 
 // Disable stupid warnings...
 #pragma warning( disable : 4996 )
@@ -1543,12 +1544,21 @@ typedef enum {
 } itemUseFail_t;
 
 // bit field limits
+#ifdef __MMO__
+#define	MAX_STATS				16
+#define	MAX_PERSISTANT			16
+#define	MAX_POWERUPS			16
+#define	MAX_WEAPONS				32
+#define MAX_AMMO_TRANSMIT		16 // This is needed because the ammo array is 19 but only 16 sized array is networked
+#define MAX_AMMO				MAX_WEAPONS
+#else //!
 #define	MAX_STATS				16
 #define	MAX_PERSISTANT			16
 #define	MAX_POWERUPS			16
 #define	MAX_WEAPONS				19
 #define MAX_AMMO_TRANSMIT		16 // This is needed because the ammo array is 19 but only 16 sized array is networked
 #define MAX_AMMO				MAX_WEAPONS
+#endif //__MMO__
 
 #define	MAX_PS_EVENTS			2
 
@@ -1827,6 +1837,10 @@ typedef struct playerState_s {
 
 	//keeps track of cloak fuel
 	int			cloakFuel;
+
+	//UQ1: Added - to display damage stats on client...
+	qboolean	damageCrit;
+	int			damageValue;
 
 	//Keeps Trak of Block Point
 	int			blockPoints;

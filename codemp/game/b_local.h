@@ -179,6 +179,7 @@ extern qboolean NPC_ParseParms( const char *NPCName, gentity_t *NPC );
 extern void NPC_LoadParms( void );
 
 //NPC_utils
+extern qboolean NPC_IsValidNPCEnemy ( gentity_t *NPC );
 extern int	teamNumbers[TEAM_NUM_TEAMS];
 extern int	teamStrength[TEAM_NUM_TEAMS];
 extern int	teamCounter[TEAM_NUM_TEAMS];
