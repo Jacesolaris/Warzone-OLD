@@ -4503,12 +4503,6 @@ void NPC_Think ( gentity_t *self)//, int msec )
 	int i = 0;
 	//gentity_t *player;
 
-	if (self->client)
-	{
-		self->client->ps.damageCrit = qtrue;
-		self->client->ps.damageValue = 0;
-	}
-
 	self->nextthink = level.time + FRAMETIME;
 
 	SetNPCGlobals( self );

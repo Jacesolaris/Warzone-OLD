@@ -3680,12 +3680,6 @@ void ClientThink( int clientNum, usercmd_t *ucmd ) {
 		trap->GetUsercmd( clientNum, &ent->client->pers.cmd );
 	}
 
-	if (ent->client && !ent->s.eType == ET_NPC) // UQ1: NPCs clear the value in npc_think
-	{
-		ent->client->ps.damageCrit = qtrue;
-		ent->client->ps.damageValue = 0;
-	}
-
 	// mark the time we got info, so we can display the
 	// phone jack if they don't get any for a while
 	ent->client->lastCmdTime = level.time;

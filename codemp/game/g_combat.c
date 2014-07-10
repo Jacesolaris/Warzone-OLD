@@ -5530,6 +5530,12 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker, vec3_
 		}
 	}
 
+	// UQ1: Added - parsing damage values to client...
+	if (targ && targ->client)
+	{
+		targ->client->ps.damageValue = take;
+	}
+
 	// do the damage
 	if (take)
 	{

@@ -953,6 +953,11 @@ netField_t	entityStateFields[] =
 { NETF(boneAngles4[1]), 0 },
 { NETF(boneAngles4[2]), 0 },
 
+#ifdef __MMO__
+{ NETF(damageCrit), 1 },
+{ NETF(damageValue), 32 },
+#endif //__MMO__
+
 //rww - for use by mod authors only
 { NETF(userInt1), 1 },
 { NETF(userInt2), 1 },

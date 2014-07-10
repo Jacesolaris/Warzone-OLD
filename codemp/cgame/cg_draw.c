@@ -8623,9 +8623,11 @@ void CG_DrawNPCNames( void )
 	}
 }
 
-int			damage_show_time[MAX_GENTITIES];
-int			damage_show_value[MAX_GENTITIES];
-qboolean	damage_show_crit[MAX_GENTITIES];
+#define		NUM_DAMAGES 16
+int			damage_value_last[MAX_GENTITIES];
+int			damage_show_time[MAX_GENTITIES][NUM_DAMAGES];
+int			damage_show_value[MAX_GENTITIES][NUM_DAMAGES];
+qboolean	damage_show_crit[MAX_GENTITIES][NUM_DAMAGES];
 
 void CG_DrawDamage( void )
 {// Float damage value above their heads!
@@ -8635,12 +8637,18 @@ void CG_DrawDamage( void )
 	{// Cycle through them...
 		vec3_t			origin;
 		centity_t		*cent = &cg_entities[i];
-		int				w;
+		int				w, j;
 		float			size, x, y, dist;
-		vec4_t			tclr =	{ 0.825f,	0.825f,	0.0f,	1.0f	};
-		vec4_t			tclr2 =	{ 1.0f,	1.0f,	0.0f,	1.0f	};
+		vec4_t			colorMiss =	{ 0.625f,	0.625f,	0.625f,	1.0f	};
+		vec4_t			colorNormal =	{ 0.825f,	0.825f,	0.0f,	1.0f	};
+		vec4_t			colorCrit =	{ 1.0f,	1.0f,	0.0f,	1.0f	};
 		int				baseColor = CT_BLUE;
 		float			multiplier = 1.0f;
+		int				LOWEST_SLOT = -1;
+		int				LOWEST_TIME = cg.time + 5000;
+		int				NUM_DAMAGES_THIS_FRAME = 0;
+		int				NUM_DAMAGES_DRAWN = 0;
+		qboolean		found = qfalse;
 
 		if (!cent)
 			continue;
@@ -8648,30 +8656,8 @@ void CG_DrawDamage( void )
 		if (cent->currentState.eType != ET_PLAYER && cent->currentState.eType != ET_NPC)
 			continue;
 
-		if (!cent->ghoul2)
-			continue;
-
-		if (cent->playerState->damageValue <= 0)
-		{
-			if (damage_show_time[i] >= cg.time)
-			{
-				// Continue showing last damage value...
-			}
-			else
-			{
-				// Nothing to show...
-				damage_show_time[i] = 0;
-				damage_show_value[i] = 0;
-				damage_show_crit[i] = qfalse;
-				continue;
-			}
-		}
-		else
-		{
-			damage_show_time[i] = cg.time + 2000;
-			damage_show_value[i] = cent->playerState->damageValue;
-			damage_show_crit[i] = cent->playerState->damageCrit;
-		}
+		//if (!cent->ghoul2)
+		//	continue;
 
 		if (cent->cloaked)
 			continue;
@@ -8686,73 +8672,150 @@ void CG_DrawDamage( void )
 			continue;
 		}
 
+		if (!CG_CheckClientVisibility(cent))
+		{
+			continue;
+		}
+
 		VectorCopy( cent->lerpOrigin, origin );
-		origin[2] += 50;//30;
+		origin[2] += 35;//30;
 
 		// Account for ducking
 		if ( cent->playerState->pm_flags & PMF_DUCKED )
 			origin[2] -= 18;
-	
+
 		// Draw the NPC name!
 		if (!CG_WorldCoordToScreenCoordFloat(origin, &x, &y))
 		{
-			//CG_Printf("FAILED %i screen coords are %fx%f. (%f %f %f)\n", cent->currentState.number, x, y, origin[0], origin[1], origin[2]);
 			continue;
 		}
 
 		if (x < 0 || x > 640 || y < 0 || y > 480)
 		{
-			//CG_Printf("FAILED2 %i screen coords are %fx%f. (%f %f %f)\n", cent->currentState.number, x, y, origin[0], origin[1], origin[2]);
 			continue;
 		}
-
-		VectorCopy( cent->lerpOrigin, origin );
-		origin[2] += 45;//25;
-
-		// Account for ducking
-		if ( cent->playerState->pm_flags & PMF_DUCKED )
-			origin[2] -= 18;
 
 		dist = Distance(cg.snap->ps.origin, origin);
-		
-		if (dist > 1024.0f/*2500.0f*/) continue; // Too far...
-		if (dist < 192.0f/*d_roff.value*//*350.0f*/) multiplier = 200.0f/*d_poff.value*//dist; // Cap short ranges...
 
-		if (!CG_CheckClientVisibility(cent))
+		if (dist > 1024.0f) continue; // Too far...
+		if (dist < 192.0f) multiplier = 200.0f/dist; // Cap short ranges...
+
+		
+		// UQ1: Clean the list...
+		for (j = 0; j < NUM_DAMAGES; j++)
 		{
-			//CG_Printf("NPC is NOT visible.\n");
-			continue;
+			int k = 0;
+
+			// Is this still valid? If not then initialize...
+			if (damage_show_time[i][j] < cg.time)
+			{
+				damage_show_time[i][j] = 0;
+				damage_show_value[i][j] = 0;
+				damage_show_crit[i][j] = qfalse;
+			}
 		}
 
-		size = dist * 0.0002;
-		
-		if (size > 0.99f) size = 0.99f;
-		if (size < 0.01f) size = 0.01f;
+		// How many are in use???
+		for (j = 0; j < NUM_DAMAGES; j++)
+		{
+			if (damage_show_time[i][j] >= cg.time)
+				NUM_DAMAGES_THIS_FRAME++;
+		}
 
-		size = 1 - size;
+		// UQ1: Sort the list...
+		while (found)
+		{
+			for (j = 0; j < NUM_DAMAGES; j++)
+			{
+				int k = 0;
 
-		size *= 0.3;
+				// Find a value to move up the list...
+				for (k = 0; k < NUM_DAMAGES; k++)
+				{
+					if (damage_show_time[i][k] > damage_show_time[i][j])
+					{
+						// We found one, move it up...
+						int temp_time = damage_show_time[i][j];
+						int temp_value = damage_show_value[i][j];
+						qboolean temp_crit = damage_show_crit[i][j];
 
-		if (damage_show_crit[i])
-			size *= 2.0; // crit!
-		/*
-		damage_show_time[i] = 0;
-		damage_show_value[i] = 0;
-		damage_show_crit[i] = qfalse;
-		*/
+						damage_show_time[i][j] = damage_show_time[i][k];
+						damage_show_value[i][j] = damage_show_value[i][k];
+						damage_show_crit[i][j] = damage_show_crit[i][k];
 
-		w = CG_Text_Width(va("%i", damage_show_value[i]), size*2, FONT_SMALL);
-		y = y + CG_Text_Height(va("%i", damage_show_value[i]), size*2, FONT_SMALL);
-		x -= (w * 0.5f);
+						damage_show_time[i][k] = temp_time;
+						damage_show_value[i][k] = temp_value;
+						damage_show_crit[i][k] = temp_crit;
 
-		y -= (cg.time - damage_show_time[i]) / 50;
+						found = qtrue;
+					}
+				}
+			}
+		}
 
-		if (y < 0) continue; // now off screen...
-		
-		if (damage_show_crit[i]) // bright yellow
-			CG_Text_Paint( x, (y*(1-size))+((30*(1-size))*(1-size))+sqrt(sqrt((1-size)*30))+((1-multiplier)*30), size*2, tclr2, va("%i", damage_show_value[i]), 0, 0, ITEM_TEXTSTYLE_SHADOWED, FONT_SMALL);
-		else // darker yellow
-			CG_Text_Paint( x, (y*(1-size))+((30*(1-size))*(1-size))+sqrt(sqrt((1-size)*30))+((1-multiplier)*30), size*2, tclr, va("%i", damage_show_value[i]), 0, 0, ITEM_TEXTSTYLE_SHADOWED, FONT_SMALL);
+		// Find where we can add another value if needed...
+		for (j = 0; j < NUM_DAMAGES; j++)
+		{
+			if (damage_show_time[i][j] <= LOWEST_TIME)
+			{
+				LOWEST_SLOT = j;
+				LOWEST_TIME = damage_show_time[i][j];
+			}
+		}
+
+		//
+		// Now they should be in order of longest time to display remaining...
+		//
+
+		if (cent->currentState.damageValue >= 0 && cent->currentState.damageValue != damage_value_last[i])
+		{
+			// Replace the lowest time...
+			damage_show_time[i][LOWEST_SLOT] = cg.time + 5000;
+			damage_show_value[i][LOWEST_SLOT] = cent->currentState.damageValue;
+			damage_show_crit[i][LOWEST_SLOT] = cent->currentState.damageCrit;
+			damage_value_last[i] = cent->currentState.damageValue;
+		}
+
+		// The list has now been sorted... Now show all values...
+		for (j = LOWEST_SLOT; j >= 0; j--)
+		{
+			int x2 = x;
+			int y2 = y;
+
+			if (damage_show_time[i][j] < cg.time) continue;
+
+			size = dist * 0.0002;
+
+			if (size > 0.99f) size = 0.99f;
+			if (size < 0.01f) size = 0.01f;
+
+			size = 1 - size;
+
+			size *= 0.3;
+
+			//if (damage_show_crit[i][j])
+			//	size *= 2.0; // crit!
+
+			if (damage_show_value[i][j] == 0)
+				w = CG_Text_Width("MISS", size*2, FONT_SMALL2);
+			else
+				w = CG_Text_Width(va("%i", damage_show_value[i][j]), size*2, FONT_SMALL2);
+			
+			x2 -= (w * 0.5f);
+
+			y2 -= (j * 12);
+			y2 += y2 - ((cg.time - damage_show_time[i][j]) / 10);
+
+			if (x2 < 0 || x2 > 640) continue; // now off screen...
+			if (y2 < 0 || y2 > 480) continue; // now off screen...
+
+			if (damage_show_value[i][j] == 0) // grey
+				CG_Text_Paint( x2, y2, size*2, colorMiss, "MISS", 0, 0, ITEM_TEXTSTYLE_SHADOWED, FONT_SMALL2);
+			else if (damage_show_crit[i][j]) // bright yellow
+				CG_Text_Paint( x2, y2, size*2, colorCrit, va("%i", damage_show_value[i][j]), 0, 0, ITEM_TEXTSTYLE_SHADOWED, FONT_SMALL2);
+			else // darker yellow
+				CG_Text_Paint( x2, y2, size*2, colorNormal, va("%i", damage_show_value[i][j]), 0, 0, ITEM_TEXTSTYLE_SHADOWED, FONT_SMALL2);
+		}
 	}
 }
 

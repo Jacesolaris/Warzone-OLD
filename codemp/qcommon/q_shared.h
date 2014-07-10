@@ -1838,7 +1838,7 @@ typedef struct playerState_s {
 	//keeps track of cloak fuel
 	int			cloakFuel;
 
-	//UQ1: Added - to display damage stats on client...
+	// UQ1: Added - to display damage stats on client...
 	qboolean	damageCrit;
 	int			damageValue;
 
@@ -2288,6 +2288,10 @@ typedef struct entityState_s {
 
 	//If non-0, this is the index of the vehicle a player/NPC is riding.
 	int		m_iVehicleNum;
+
+// UQ1: Added - to display damage stats on client...
+	qboolean	damageCrit;
+	int			damageValue;
 
 	//rww - spare values specifically for use by mod authors.
 	//See netf_overrides.txt if you want to increase the send

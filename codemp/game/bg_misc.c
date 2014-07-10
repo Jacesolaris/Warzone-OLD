@@ -2885,6 +2885,10 @@ void BG_PlayerStateToEntityState( playerState_t *ps, entityState_t *s, qboolean 
 	s->customRGBA[3] = ps->customRGBA[3];
 
 	s->m_iVehicleNum = ps->m_iVehicleNum;
+
+	// UQ1: Added - to display damage stats on client...
+	s->damageCrit = ps->damageCrit;
+	s->damageValue = ps->damageValue;
 }
 
 /*
@@ -3037,6 +3041,10 @@ void BG_PlayerStateToEntityStateExtraPolate( playerState_t *ps, entityState_t *s
 	s->customRGBA[3] = ps->customRGBA[3];
 
 	s->m_iVehicleNum = ps->m_iVehicleNum;
+
+	// UQ1: Added - to display damage stats on client...
+	s->damageCrit = ps->damageCrit;
+	s->damageValue = ps->damageValue;
 }
 
 /*
