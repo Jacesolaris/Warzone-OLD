@@ -2590,8 +2590,8 @@ char *ClientConnect( int clientNum, qboolean firstTime, qboolean isBot ) {
 
 	//[EXPsys]
 	client->ps.stats[STAT_EXP] = 0;
-	client->ps.stats[STAT_EXP_Count] = experienceLevel[ent->account.level];
-	trap->SendServerCommand(clientNum, va("maxexperience %i", ent->client->ps.stats[STAT_EXP_Count]));
+	client->ps.stats[STAT_EXP_COUNT] = experienceLevel[ent->account.level];
+	trap->SendServerCommand(clientNum, va("maxexperience %i", ent->client->ps.stats[STAT_EXP_COUNT]));
 	GiveExperiance(ent, g_experianceInitial.integer); // call ui_experiance
 	//[/EXPsys]
 
@@ -2728,8 +2728,8 @@ void ClientBegin( int clientNum, qboolean allowTeamReset ) {
 	//[EXPsys]
 	if (client->ps.stats[STAT_EXP] == 0) {
 		client->ps.stats[STAT_EXP] = 0;
-		client->ps.stats[STAT_EXP_Count] = experienceLevel[ent->account.level];
-		trap->SendServerCommand(clientNum, va("maxexperience %i", ent->client->ps.stats[STAT_EXP_Count]));
+		client->ps.stats[STAT_EXP_COUNT] = experienceLevel[ent->account.level];
+		trap->SendServerCommand(clientNum, va("maxexperience %i", ent->client->ps.stats[STAT_EXP_COUNT]));
 		GiveExperiance(ent, g_experianceInitial.integer); // call ui_experiance
 		//	client->ps.persistant[PERS_EXPERIANCE_COUNT] -= g_experianceInitial.integer; // starting money isn't earned 
 	}

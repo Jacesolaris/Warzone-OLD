@@ -1492,11 +1492,11 @@ void NPC_Begin (gentity_t *ent)
 		// More health for instance enemies... This is meant to be run as a team...
 		if (ent->client->ps.weapon == WP_SABER)
 		{// Bosses... TODO: Sub-types...
-			ent->NPC->stats.health *= 20;
+			ent->NPC->stats.health *= 10;
 		}
 		else
 		{// TODO: Sub-types...
-			ent->NPC->stats.health *= 7;
+			ent->NPC->stats.health *= 6;
 		}
 
 		ent->health = ent->maxHealth = client->pers.maxHealth = client->ps.stats[STAT_MAX_HEALTH] = client->ps.stats[STAT_HEALTH] = ent->NPC->stats.health;

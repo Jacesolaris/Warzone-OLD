@@ -563,7 +563,7 @@ typedef enum {
 	STAT_MAX_HEALTH,					// health / armor limit, changable by 
 	//[EXPsys]
 	STAT_EXP,
-	STAT_EXP_Count
+	STAT_EXP_COUNT,
 	//[/EXPsys]
 } statIndex_t;
 

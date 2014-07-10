@@ -3552,6 +3552,7 @@ vec4_t	uqText			=	{1.f,1.f,1.f,1.f};
 vec4_t	uqLime			=	{0.f,1.f,0.f,0.7f};
 vec4_t	uqCyan			=	{0.f,1.f,1.f,0.7f};
 vec4_t	uqRed			=	{1.f,0.f,0.f,0.7f};
+vec4_t	uqGreen			=	{0.f,1.f,0.f,0.7f};
 vec4_t	uqBlue			=	{0.f,0.f,1.f,0.7f};
 vec4_t	uqOrange		=	{1.f,0.63f,0.1f,0.7f};
 vec4_t	uqDefaultGrey	=	{0.38f,0.38f,0.38f,1.0f};
@@ -3565,7 +3566,7 @@ void CG_DrawMyStatus( void )
 	int				y = 0;
 	char			*str1, *str2;
 	vec4_t			tclr, tclr2;
-	float			boxX, boxXmid, sizeX, sizeY, healthPerc, forcePerc;
+	float			boxX, boxXmid, sizeX, sizeY, healthPerc, forcePerc, armorPerc;
 	int				flags = 64|128;
 	centity_t		*crosshairEnt;
 	clientInfo_t	*ci;
@@ -3637,17 +3638,28 @@ void CG_DrawMyStatus( void )
 	y += 12;
 
 	// Draw their health bar...
-	if (crosshairEnt->currentState.health == 0 || crosshairEnt->currentState.maxhealth == 0)
+	//if (crosshairEnt->currentState.health == 0 || crosshairEnt->currentState.maxhealth == 0)
+	//	healthPerc = 1; // No health data yet. Assume 100%.
+	//else
+	//	healthPerc = ((float)crosshairEnt->currentState.health / (float)crosshairEnt->currentState.maxhealth);
+
+	if (crosshairEnt->playerState->stats[STAT_HEALTH] == 0 || crosshairEnt->playerState->stats[STAT_MAX_HEALTH] == 0)
 		healthPerc = 1; // No health data yet. Assume 100%.
 	else
-		healthPerc = ((float)crosshairEnt->currentState.health / (float)crosshairEnt->currentState.maxhealth);
+		healthPerc = ((float)crosshairEnt->playerState->stats[STAT_HEALTH] / (float)crosshairEnt->playerState->stats[STAT_MAX_HEALTH]);
 
 	CG_FilledBar( boxX + 2, y, sizeX-sizeY-4-6, 5, uqRed, NULL, NULL, healthPerc, flags );
-	// Write "XXX%" over the bar in white...
-	CG_Text_Paint( boxXmid - (CG_Text_Width ( va("%i\%", (int)(healthPerc*100)), 0.35f, FONT_SMALL ) * 0.5), y-2, 0.35f, colorWhite, va("%i\%", (int)(healthPerc*100)), 0, 0, 0, FONT_SMALL );
 	//CG_DrawRect_FixedBorder( boxX + 2, y, sizeX-sizeY-4-8, 5, 1, uqBorder );
 
-	//trap->Print("HEALTH: %i. MAX: %i. PERC: %i.\n", crosshairEnt->currentState.health, crosshairEnt->currentState.maxhealth, (int)healthPerc);
+	// Draw their armor bar...
+	if (crosshairEnt->playerState->stats[STAT_ARMOR] == 0 || crosshairEnt->playerState->stats[STAT_MAX_HEALTH] == 0)
+		armorPerc = 0; // No health data yet. Assume 0%.
+	else
+		armorPerc = ((float)crosshairEnt->playerState->stats[STAT_ARMOR] / (float)crosshairEnt->playerState->stats[STAT_MAX_HEALTH]);
+
+	CG_FilledBar( boxX + 2, y, sizeX-sizeY-4-6, 2, uqCyan, NULL, NULL, armorPerc, flags );
+	// Write "XXX%/XXX%" over the bar in white...
+	CG_Text_Paint( boxXmid - (CG_Text_Width ( va("%i\%/%i\%", (int)(armorPerc*100), (int)(healthPerc*100)), 0.35f, FONT_SMALL ) * 0.5), y-2, 0.35f, colorWhite, va("%i\%/%i\%", (int)(armorPerc*100), (int)(healthPerc*100)), 0, 0, 0, FONT_SMALL );
 
 	y += 7;
 
@@ -3672,7 +3684,7 @@ void CG_DrawEnemyStatus( void )
 	int				y = 0;
 	char			*str1, *str2;
 	vec4_t			tclr, tclr2;
-	float			boxX, boxXmid, sizeX, sizeY, healthPerc, forcePerc, ShieldPerc;
+	float			boxX, boxXmid, sizeX, sizeY, healthPerc, forcePerc, armorPerc;
 	int				flags = 64|128;
 	centity_t		*crosshairEnt;
 
@@ -4194,18 +4206,34 @@ void CG_DrawEnemyStatus( void )
 	y += 12;
 
 	// Draw their health bar...
-	if (crosshairEnt->currentState.health == 0 || crosshairEnt->currentState.maxhealth == 0)
-		healthPerc = 1; // No health data yet. Assume 100%.
+	if (crosshairEnt->currentState.eType == ET_NPC)
+	{
+		if (crosshairEnt->currentState.health == 0 || crosshairEnt->currentState.maxhealth == 0)
+			healthPerc = 1; // No health data yet. Assume 100%.
+		else
+			healthPerc = ((float)crosshairEnt->currentState.health / (float)crosshairEnt->currentState.maxhealth);
+	}
 	else
-		healthPerc = ((float)crosshairEnt->currentState.health / (float)crosshairEnt->currentState.maxhealth);
+	{
+		if (crosshairEnt->playerState->stats[STAT_HEALTH] == 0 || crosshairEnt->playerState->stats[STAT_MAX_HEALTH] == 0)
+			healthPerc = 1; // No health data yet. Assume 100%.
+		else
+			healthPerc = ((float)crosshairEnt->playerState->stats[STAT_HEALTH] / (float)crosshairEnt->playerState->stats[STAT_MAX_HEALTH]);
+	}
 
 	CG_FilledBar( boxX + 2, y, sizeX-sizeY-4-6, 5, uqRed, NULL, NULL, healthPerc, flags );
-	// Write "XXX%" over the bar in white...
-	CG_Text_Paint( boxXmid - (CG_Text_Width ( va("%i\%", (int)(healthPerc*100)), 0.35f, FONT_SMALL ) * 0.5), y-2, 0.35f, colorWhite, va("%i\%", (int)(healthPerc*100)), 0, 0, 0, FONT_SMALL );
+	//CG_DrawRect_FixedBorder( boxX + 2, y, sizeX-sizeY-4-8, 5, 1, uqBorder );
 
-	//CG_DrawRect_FixedBorder( boxX + 2, y, sizeX-sizeY-4-6, 5, 1, uqBorder );
+	// Draw their armor bar...
+	if (crosshairEnt->playerState->stats[STAT_ARMOR] == 0 || crosshairEnt->playerState->stats[STAT_MAX_HEALTH] == 0)
+		armorPerc = 0; // No health data yet. Assume 0%.
+	else
+		armorPerc = ((float)crosshairEnt->playerState->stats[STAT_ARMOR] / (float)crosshairEnt->playerState->stats[STAT_MAX_HEALTH]);
 
-	//trap->Print("HEALTH: %i. MAX: %i. PERC: %i.\n", crosshairEnt->currentState.health, crosshairEnt->currentState.maxhealth, (int)healthPerc);
+	CG_FilledBar( boxX + 2, y, sizeX-sizeY-4-6, 2, uqCyan, NULL, NULL, armorPerc, flags );
+	// Write "XXX%/XXX%" over the bar in white...
+	CG_Text_Paint( boxXmid - (CG_Text_Width ( va("%i\%/%i\%", (int)(armorPerc*100), (int)(healthPerc*100)), 0.35f, FONT_SMALL ) * 0.5), y-2, 0.35f, colorWhite, va("%i\%/%i\%", (int)(armorPerc*100), (int)(healthPerc*100)), 0, 0, 0, FONT_SMALL );
+
 
 	y += 7;
 
@@ -4221,19 +4249,6 @@ void CG_DrawEnemyStatus( void )
 	//CG_DrawRect_FixedBorder( boxX + 2, y, sizeX-sizeY-4-6, 5, 1, uqBorder );
 
 	y += 7;
-
-	// Draw their Shield bar...
-	//if (crosshairEnt->currentState.Shield == 0 || crosshairEnt->currentState.maxShield == 0)
-	//	ShieldPerc = 100; // No health data yet. Assume 100%.
-	//else
-	//	ShieldPerc = ((float)crosshairEnt->currentState.Shield / (float)crosshairEnt->currentState.maxShield);
-
-	//CG_FilledBar(boxX + 2, y, sizeX - sizeY - 4 - 6, 5, uqOrange, NULL, NULL, ShieldPerc, flags);
-	////CG_DrawRect_FixedBorder( boxX + 2, y, sizeX-sizeY-4-6, 5, 1, uqBorder );
-
-	////trap->Print("HEALTH: %i. MAX: %i. PERC: %i.\n", crosshairEnt->currentState.health, crosshairEnt->currentState.maxhealth, (int)healthPerc);
-
-	//y += 7;
 }
 
 static float CG_DrawEnemyInfo ( float y )

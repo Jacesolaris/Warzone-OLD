@@ -1818,8 +1818,8 @@ void GiveExperiance(gentity_t *ent, int amount) {
 	if (ent->client->ps.stats[STAT_EXP] >= experienceLevel[ent->account.level])
 	{
 		ent->account.level++;	// Increase level by 1
-		ent->client->ps.stats[STAT_EXP_Count] = experienceLevel[ent->account.level];	// Set the required experience for next level.
-		trap->SendServerCommand(ent - g_entities, va("maxexperience %i", ent->client->ps.stats[STAT_EXP_Count]));
+		ent->client->ps.stats[STAT_EXP_COUNT] = experienceLevel[ent->account.level];	// Set the required experience for next level.
+		trap->SendServerCommand(ent - g_entities, va("maxexperience %i", ent->client->ps.stats[STAT_EXP_COUNT]));
 		ent->client->ps.stats[STAT_EXP] = 0;	// Reset experience to 0 to start on the next level.
 #ifndef __MMO__
 		// UQ1: TODO - Make this an EVENT.
@@ -1932,7 +1932,7 @@ void DeathmatchScoreboardMessage( gentity_t *ent ) {
 			scoreFlags, g_entities[level.sortedClients[i]].s.powerups, accuracy,
 			//[EXPsys]
 			cl->ps.stats[STAT_EXP],
-			cl->ps.stats[STAT_EXP_Count],
+			cl->ps.stats[STAT_EXP_COUNT],
 			//[/EXPsys]
 			cl->ps.persistant[PERS_IMPRESSIVE_COUNT],
 			cl->ps.persistant[PERS_EXCELLENT_COUNT],
@@ -5650,8 +5650,8 @@ qboolean Account_Login(int clientNum, char *user, char *pass, qboolean skipPass,
 		// We have to load the experience manually into the PERS_EXPERIENCE. Hopefully you won't need to do this with anything else
 		// The playerclass is loaded automaticly, and with the changes to the code we made, it will be used correctly.
 		ent->client->ps.stats[STAT_EXP] = ent->account.experience;
-		ent->client->ps.stats[STAT_EXP_Count] = experienceLevel[ent->account.level];	// Set the required experience for next level.
-		trap->SendServerCommand(ent - g_entities, va("maxexperience %i", ent->client->ps.stats[STAT_EXP_Count]));
+		ent->client->ps.stats[STAT_EXP_COUNT] = experienceLevel[ent->account.level];	// Set the required experience for next level.
+		trap->SendServerCommand(ent - g_entities, va("maxexperience %i", ent->client->ps.stats[STAT_EXP_COUNT]));
 		trap->SendServerCommand(clientNum, va("print \"Welcome %s, login successful.\n\"", user));
 	}
 	else trap->SendServerCommand(clientNum, "print \"Login failed.\n\"");
