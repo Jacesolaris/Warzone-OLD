@@ -1326,9 +1326,9 @@ void G_CheckMinimumNpcs( void ) {
 				case 4:
 					//npc->NPC_type = "rebornacrobat";
 					//break;
-				case 5:
-					npc->NPC_type = "rebornchiss";
-					break;
+				//case 5:
+				//	npc->NPC_type = "rebornchiss";
+				//	break;
 				case 6:
 					//npc->NPC_type = "rebornfencer";
 					//break;

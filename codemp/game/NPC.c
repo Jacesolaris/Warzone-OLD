@@ -2597,12 +2597,12 @@ void UQ1_UcmdMoveForDir ( gentity_t *self, usercmd_t *cmd, vec3_t dir, qboolean 
 	cmd->rightmove = DotProduct( right, dir ) * speed;
 
 #ifdef __NPC_STRAFE__
-	NPC_NPCBlockingPath();
+	if (self->wpCurrent >= 0) NPC_NPCBlockingPath();
 	//NPC_AdjustforStrafe(dir);
 	if (self->bot_strafe_left_timer > level.time) cmd->rightmove -= 48.0;
 #endif //__NPC_STRAFE__
 
-	//cmd->upmove = abs(forward[3] ) * dir[3] * speed;
+	cmd->upmove = abs(forward[3] ) * dir[3] * speed;
 
 	//NPC_SelectMoveAnimation(walk);
 
@@ -3244,8 +3244,7 @@ void NPC_SetNewGoalAndPath()
 	if (!NPC_FindNewWaypoint())
 	{
 		//trap->Print("Unable to find waypoint.\n");
-		//NPC->die;
-		player_die(NPC, NPC, NPC, 99999, MOD_CRUSH);
+		//player_die(NPC, NPC, NPC, 99999, MOD_CRUSH);
 		return; // wait before trying to get a new waypoint...
 	}
 
@@ -4508,11 +4507,13 @@ void NPC_Think ( gentity_t *self)//, int msec )
 
 	SetNPCGlobals( self );
 
-	if (!(self->s.eFlags & EF_CLIENTSMOOTH)) self->s.eFlags |= EF_CLIENTSMOOTH;
+	//if (!(self->s.eFlags & EF_CLIENTSMOOTH)) self->s.eFlags |= EF_CLIENTSMOOTH;
 
 	memset( &NPCS.ucmd, 0, sizeof( NPCS.ucmd ) );
 
 	VectorCopy( self->client->ps.moveDir, oldMoveDir );
+
+	// UQ1: Testing with this removed...
 	if (self->s.NPC_class != CLASS_VEHICLE)
 	{ //YOU ARE BREAKING MY PREDICTION. Bad clear.
 		VectorClear( self->client->ps.moveDir );
@@ -4805,7 +4806,12 @@ void NPC_Think ( gentity_t *self)//, int msec )
 #endif //__NPC_BBOX_ADJUST__
 
 				NPC_ExecuteBState( self );
+				//UQ1_UcmdMoveForDir( self, &NPCS.ucmd, self->movedir, ( NPCS.ucmd.buttons & BUTTON_WALKING ) );
 			}
+		}
+		else
+		{
+			//UQ1_UcmdMoveForDir( self, &NPCS.ucmd, self->movedir, ( NPCS.ucmd.buttons & BUTTON_WALKING ) );
 		}
 
 #if	AI_TIMERS
@@ -4829,18 +4835,19 @@ void NPC_Think ( gentity_t *self)//, int msec )
 			//FIXME: firing angles (no aim offset) or regular angles?
 			if (self->enemy) NPC_UpdateAngles(qtrue, qtrue);
 			memcpy( &NPCS.ucmd, &NPCS.NPCInfo->last_ucmd, sizeof( usercmd_t ) );
+			//UQ1_UcmdMoveForDir( self, &NPCS.ucmd, self->movedir, ( NPCS.ucmd.buttons & BUTTON_WALKING ) );
 			ClientThink(NPCS.NPC->s.number, &NPCS.ucmd);
 		}
 		else
 		{
+			//UQ1_UcmdMoveForDir( self, &NPCS.ucmd, self->movedir, ( NPCS.ucmd.buttons & BUTTON_WALKING ) );
 			NPC_ApplyRoff();
 		}
 		//VectorCopy(self->s.origin, self->s.origin2 );
 	}
 
 	//must update icarus *every* frame because of certain animation completions in the pmove stuff that can leave a 50ms gap between ICARUS animation commands
-	//if (self->enemy)
-		trap->ICARUS_MaintainTaskManager(self->s.number);
+	trap->ICARUS_MaintainTaskManager(self->s.number);
 
 	VectorCopy(self->r.currentOrigin, self->client->ps.origin);
 }
