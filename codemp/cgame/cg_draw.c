@@ -1898,6 +1898,7 @@ void CG_DrawHUD(centity_t	*cent)
 		//[DODGEBAR]Scooper
 		// This will cause it to draw the fuel bar / dette vil gjøre at den tegner fuel bar'n =p
 #ifdef __OLD_UI__		
+
 		//CG_DrawDodgeBar();
 		CG_DrawSaberStyleBar();
 		CG_DrawForceBar();
@@ -3688,6 +3689,7 @@ vec4_t	uqLime			=	{0.f,1.f,0.f,0.7f};
 vec4_t	uqCyan			=	{0.f,1.f,1.f,0.7f};
 vec4_t	uqRed			=	{1.f,0.f,0.f,0.7f};
 vec4_t	uqGreen			=	{0.f,1.f,0.f,0.7f};
+vec4_t	uqYellow		=	{1.0, 1.0, 0.0, 1.0};
 vec4_t	uqBlue			=	{0.f,0.f,1.f,0.7f};
 vec4_t	uqOrange		=	{1.f,0.63f,0.1f,0.7f};
 vec4_t	uqDefaultGrey	=	{0.38f,0.38f,0.38f,1.0f};
