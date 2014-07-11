@@ -1438,16 +1438,10 @@ void CG_DrawExpBar(void)										// Function that will draw the fuel bar
 	//	vec4_t oColor;	// overflow color
 	float x = EXPFUELBAR_X;
 	float y = EXPFUELBAR_Y;
-	float percent = ((float)cg.snap->ps.stats[STAT_EXP] / /*cg.snap->ps.stats[PERS_EXPERIANCE_COUNT]*/cg.maxExperience)*EXPFUELBAR_W;		// Finds the percent of your current dodge level.
-	// So if you have 50 dodge, percent will be 50, representing 50%. And this will work even if you change the max dodge values. No need to change this in the future.
-
-	//float overflow = 0.0f;
-	//int i
+	float percent = ((float)cg.snap->ps.stats[STAT_EXP] / /*cg.snap->ps.stats[PERS_EXPERIANCE_COUNT]*/cg.maxExperience)*EXPFUELBAR_W;
 
 	if (percent > EXPFUELBAR_W)// We want it to go sideways, not upwards. So we will be using width instead of height.
 	{
-		//		overflow = percent-100.0f;//didnt work so well
-		//		percent = 0.1f;
 		return;
 	}
 
@@ -1463,10 +1457,6 @@ void CG_DrawExpBar(void)										// Function that will draw the fuel bar
 	*/
 	VectorCopy4(colorTable[CT_BLUE3], aColor);
 
-	//	for(i = 0; i<3;++i)
-	//		oColor[i] = aColor[i]*1.1f;
-	//	oColor[3] = aColor[3];
-
 	//color of the border
 	bColor[0] = 0.0f;
 	bColor[1] = 0.0f;
@@ -1480,15 +1470,14 @@ void CG_DrawExpBar(void)										// Function that will draw the fuel bar
 	cColor[3] = 0.1f;
 
 	//now draw the part to show how much health there is in the color specified
-	//CG_FillRect(x+1.0f, y+1.0f+(EXPFUELBAR_H-percent), EXPFUELBAR_W-1.0f, EXPFUELBAR_H-1.0f-(EXPFUELBAR_H-percent), aColor);
-	//	CG_FillRect(x+1.0f/*+(EXPFUELBAR_W-percent)*/,y+1.0f,EXPFUELBAR_W-1.0f-(EXPFUELBAR_W-percent),EXPFUELBAR_H-1.0f,aColor);		// This should work.
-	CG_FillRect(x + 1.0f/*+(EXPFUELBAR_W-percent)*/, y + 1.0f, EXPFUELBAR_W - 1.0f - (EXPFUELBAR_W - percent), EXPFUELBAR_H - 1.0f, aColor);
+	CG_FillRect(x + 1.0f, y + 1.0f, EXPFUELBAR_W - 1.0f - (EXPFUELBAR_W - percent), EXPFUELBAR_H - 1.0f, aColor);
+
+	//then draw the other part greyed out
+	CG_FillRect(x + 1.0f + percent, y + 1.0f, EXPFUELBAR_W - percent, EXPFUELBAR_H - 1.0f, cColor);
 
 	//draw the background (black)
 	CG_DrawRect(x, y, EXPFUELBAR_W, EXPFUELBAR_H, 1.0f, colorTable[CT_BLACK]);
 
-	//then draw the other part greyed out
-	CG_FillRect(x + 1.0f + percent, y + 1.0f, EXPFUELBAR_W - percent, EXPFUELBAR_H - 1.0f, cColor);
 
 }
 
@@ -3805,7 +3794,7 @@ void CG_DrawMyStatus( void )
 	else
 		armorPerc = ((float)crosshairEnt->playerState->stats[STAT_ARMOR] / (float)crosshairEnt->playerState->stats[STAT_MAX_HEALTH]);
 
-	CG_FilledBar( boxX + 2, y, sizeX-sizeY-4-6, 2, uqCyan, NULL, NULL, armorPerc, flags );
+	CG_FilledBar(boxX + 2, y, sizeX - sizeY - 4 - 6, 2, uqGreen, NULL, NULL, armorPerc, flags);
 	// Write "XXX%/XXX%" over the bar in white...
 	CG_Text_Paint( boxXmid - (CG_Text_Width ( va("%i/%i", (int)(armorPerc*100), (int)(healthPerc*100)), 0.35f, FONT_SMALL ) * 0.5), y-2, 0.35f, colorWhite, va("%i/%i", (int)(armorPerc*100), (int)(healthPerc*100)), 0, 0, 0, FONT_SMALL );
 
@@ -4380,7 +4369,7 @@ void CG_DrawEnemyStatus( void )
 	else
 		armorPerc = ((float)crosshairEnt->playerState->stats[STAT_ARMOR] / (float)crosshairEnt->playerState->stats[STAT_MAX_HEALTH]);
 
-	CG_FilledBar( boxX + 2, y, sizeX-sizeY-4-6, 2, uqCyan, NULL, NULL, armorPerc, flags );
+	CG_FilledBar(boxX + 2, y, sizeX - sizeY - 4 - 6, 2, uqGreen, NULL, NULL, armorPerc, flags);
 	// Write "XXX%/XXX%" over the bar in white...
 	CG_Text_Paint( boxXmid - (CG_Text_Width ( va("%i/%i", (int)(armorPerc*100), (int)(healthPerc*100)), 0.35f, FONT_SMALL ) * 0.5), y-2, 0.35f, colorWhite, va("%i/%i", (int)(armorPerc*100), (int)(healthPerc*100)), 0, 0, 0, FONT_SMALL );
 
