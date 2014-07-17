@@ -1,0 +1,260 @@
+repeatDelay				100
+
+Particle
+{
+	name				Sparks
+
+	flags				useBBox
+
+	spawnFlags			rgbComponentInterpolation
+
+	count				3 5
+
+	life				1500 2000
+
+	delay				0.1
+
+	cullrange			1100
+
+	intensity			0.25 0.4
+
+	origin				2 -2 -2 2 2 2
+
+	rotation			-180 180
+
+	velocity			10 -70 -70 50 70 70
+
+	acceleration		-30 0 0
+
+	gravity				-70 -100
+
+	rgb
+	{
+		start			0.9961 0.6431 0.4039 0.9922 0.5725 0.3922
+		end				0.7098 0.08627 0.01569 0.8078 0.1412 0.02353
+		flags			linear
+	}
+
+	size
+	{
+		start			0.3 0.5
+		end				0.1
+		flags			linear
+	}
+
+	shaders
+	[
+		gfx/misc/exp01_1
+	]
+}
+
+Particle
+{
+	name				SmokepuffwhiteThick
+
+	flags				useAlpha
+
+	spawnFlags			rgbComponentInterpolation
+
+	count				2
+
+	life				400 500
+
+	intensity			0.1
+
+	origin				1 0 0
+
+	wind				5 40
+
+	rotation			-180 180
+
+	rotationDelta		-18 18
+
+	velocity			2 -3 -3 3 3 3
+
+	gravity				5 6
+
+	rgb
+	{
+		start			0 0 0 0.7765 0.7765 0.8157
+		end				0.302 0.302 0.3686
+		parm			200 0
+		flags			linear nonlinear
+	}
+
+	alpha
+	{
+		start			0.7 0.5
+		end				0
+		flags			linear
+	}
+
+	size
+	{
+		end				15 20
+		flags			linear
+	}
+
+	shaders
+	[
+		gfx/effects/puffa1
+	]
+}
+
+Light
+{
+	name				LightFlash
+
+	rgb
+	{
+		start			1 0.502 0
+		end				0.1294 0.04706 0.02745
+	}
+
+	size
+	{
+		start			0.7
+		end				0
+		flags			linear
+	}
+}
+
+Particle
+{
+	name				Flare
+
+	count				2
+
+	life				50 100
+
+	origin				1 0 0
+
+	rgb
+	{
+		start			1 0.5922 0.6
+	}
+
+	alpha
+	{
+		end				0
+		flags			linear
+	}
+
+	size
+	{
+		start			45 65
+		end				10
+		flags			linear
+	}
+
+	shaders
+	[
+		gfx/misc/colflare
+	]
+}
+
+Particle
+{
+	name				Copy of Flare
+
+	life				200
+
+	delay				110
+
+	origin				1 0 0
+
+	rotation			0 360
+
+	rotationDelta		-125 -75
+
+	rgb
+	{
+		start			1 0.9255 0.7686
+	}
+
+	alpha
+	{
+		end				0
+		flags			linear
+	}
+
+	size
+	{
+		start			100
+		end				30
+		flags			linear
+	}
+
+	shaders
+	[
+		gfx/misc/colflare
+	]
+}
+
+Light
+{
+	name				Copy of LightFlash
+
+	life				100
+
+	delay				100
+
+	rgb
+	{
+		end				0.1294 0.04706 0.02745
+	}
+
+	size
+	{
+		end				0
+		flags			linear
+	}
+}
+
+Sound
+{
+	sounds
+	[
+		sound/weapons/saber/saberbodyhit1.mp3
+		sound/weapons/saber/saberbodyhit2.mp3
+		sound/weapons/saber/saberbodyhit3.mp3
+	]
+}
+
+Particle
+{
+	name				Copy of Copy of Flare
+
+	life				100
+
+	delay				110
+
+	origin				1 0 0
+
+	rotation			0 360
+
+	rotationDelta		75 125
+
+	rgb
+	{
+		start			1 0.9255 0.7686
+	}
+
+	alpha
+	{
+		end				0
+		flags			linear
+	}
+
+	size
+	{
+		start			100
+		end				30
+		flags			linear
+	}
+
+	shaders
+	[
+		gfx/misc/colflare
+	]
+}
