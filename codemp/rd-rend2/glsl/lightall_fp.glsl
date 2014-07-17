@@ -555,14 +555,15 @@ void main()
 	gl_FragColor.rgb += lightColor * reflectance * NL2;
   #endif
 
+  gl_FragColor.a = diffuse.a * var_Color.a;
 #else
 	lightColor = var_Color.rgb;
   #if defined(USE_LIGHTMAP) 
 	lightColor *= lightmapColor.rgb;
   #endif
+
+  gl_FragColor = vec4 (diffuse.rgb * lightColor, diffuse.a * var_Color.a);
 #endif
-	
-	gl_FragColor = vec4 (diffuse.rgb * lightColor, diffuse.a * var_Color.a);
 	
 #if defined(USE_GLOW_BUFFER)
 	out_Glow = gl_FragColor;
