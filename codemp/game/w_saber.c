@@ -9018,7 +9018,7 @@ nextStep:
 
 				//do hit effects
 				//[SaberSys]
-				//WP_SaberDoHit(self, rSaberNum, rBladeNum);
+				WP_SaberDoHit(self, rSaberNum, rBladeNum);
 				//[/SaberSys]
 				WP_SaberDoClash(self, rSaberNum, rBladeNum);
 

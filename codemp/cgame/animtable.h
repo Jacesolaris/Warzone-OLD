@@ -880,105 +880,105 @@ stringID_table_t animTable [MAX_ANIMATIONS+1] =
 	ENUM2STRING(BOTH_LK_DL_DL_T_B_1_W),	//normal break I won
 	ENUM2STRING(BOTH_LK_DL_DL_T_L_1),	//lock if I'm using dual vs. dual and I initiated
 	ENUM2STRING(BOTH_LK_DL_DL_T_SB_1_L),	//super break I lost
-	ENUM2STRING(BOTH_LK_DL_DL_T_SB_1_W),	//super break I won
+ENUM2STRING(BOTH_LK_DL_DL_T_SB_1_W),	//super break I won
 //DUAL vs. STAFF
-	//side locks
-	ENUM2STRING(BOTH_LK_DL_ST_S_B_1_L),	//normal break I lost
-	ENUM2STRING(BOTH_LK_DL_ST_S_B_1_W),	//normal break I won
-	ENUM2STRING(BOTH_LK_DL_ST_S_L_1),	//lock if I'm using dual vs. a staff
-	ENUM2STRING(BOTH_LK_DL_ST_S_SB_1_L),	//super break I lost
-	ENUM2STRING(BOTH_LK_DL_ST_S_SB_1_W),	//super break I won
-	//top locks
-	ENUM2STRING(BOTH_LK_DL_ST_T_B_1_L),	//normal break I lost
-	ENUM2STRING(BOTH_LK_DL_ST_T_B_1_W),	//normal break I won
-	ENUM2STRING(BOTH_LK_DL_ST_T_L_1),	//lock if I'm using dual vs. a staff
-	ENUM2STRING(BOTH_LK_DL_ST_T_SB_1_L),	//super break I lost
-	ENUM2STRING(BOTH_LK_DL_ST_T_SB_1_W),	//super break I won
+//side locks
+ENUM2STRING(BOTH_LK_DL_ST_S_B_1_L),	//normal break I lost
+ENUM2STRING(BOTH_LK_DL_ST_S_B_1_W),	//normal break I won
+ENUM2STRING(BOTH_LK_DL_ST_S_L_1),	//lock if I'm using dual vs. a staff
+ENUM2STRING(BOTH_LK_DL_ST_S_SB_1_L),	//super break I lost
+ENUM2STRING(BOTH_LK_DL_ST_S_SB_1_W),	//super break I won
+//top locks
+ENUM2STRING(BOTH_LK_DL_ST_T_B_1_L),	//normal break I lost
+ENUM2STRING(BOTH_LK_DL_ST_T_B_1_W),	//normal break I won
+ENUM2STRING(BOTH_LK_DL_ST_T_L_1),	//lock if I'm using dual vs. a staff
+ENUM2STRING(BOTH_LK_DL_ST_T_SB_1_L),	//super break I lost
+ENUM2STRING(BOTH_LK_DL_ST_T_SB_1_W),	//super break I won
 //DUAL vs. SINGLE
-	//side locks
-	ENUM2STRING(BOTH_LK_DL_S_S_B_1_L),	//normal break I lost
-	ENUM2STRING(BOTH_LK_DL_S_S_B_1_W),	//normal break I won
-	ENUM2STRING(BOTH_LK_DL_S_S_L_1),		//lock if I'm using dual vs. a single
-	ENUM2STRING(BOTH_LK_DL_S_S_SB_1_L),	//super break I lost
-	ENUM2STRING(BOTH_LK_DL_S_S_SB_1_W),	//super break I won
-	//top locks
-	ENUM2STRING(BOTH_LK_DL_S_T_B_1_L),	//normal break I lost
-	ENUM2STRING(BOTH_LK_DL_S_T_B_1_W),	//normal break I won
-	ENUM2STRING(BOTH_LK_DL_S_T_L_1),		//lock if I'm using dual vs. a single
-	ENUM2STRING(BOTH_LK_DL_S_T_SB_1_L),	//super break I lost
-	ENUM2STRING(BOTH_LK_DL_S_T_SB_1_W),	//super break I won
+//side locks
+ENUM2STRING(BOTH_LK_DL_S_S_B_1_L),	//normal break I lost
+ENUM2STRING(BOTH_LK_DL_S_S_B_1_W),	//normal break I won
+ENUM2STRING(BOTH_LK_DL_S_S_L_1),		//lock if I'm using dual vs. a single
+ENUM2STRING(BOTH_LK_DL_S_S_SB_1_L),	//super break I lost
+ENUM2STRING(BOTH_LK_DL_S_S_SB_1_W),	//super break I won
+//top locks
+ENUM2STRING(BOTH_LK_DL_S_T_B_1_L),	//normal break I lost
+ENUM2STRING(BOTH_LK_DL_S_T_B_1_W),	//normal break I won
+ENUM2STRING(BOTH_LK_DL_S_T_L_1),		//lock if I'm using dual vs. a single
+ENUM2STRING(BOTH_LK_DL_S_T_SB_1_L),	//super break I lost
+ENUM2STRING(BOTH_LK_DL_S_T_SB_1_W),	//super break I won
 //===Saber Staff locks==================================================================
 //STAFF vs. DUAL
-	//side locks
-	ENUM2STRING(BOTH_LK_ST_DL_S_B_1_L),	//normal break I lost
-	ENUM2STRING(BOTH_LK_ST_DL_S_B_1_W),	//normal break I won
-	ENUM2STRING(BOTH_LK_ST_DL_S_L_1),	//lock if I'm using staff vs. dual
-	ENUM2STRING(BOTH_LK_ST_DL_S_SB_1_L),	//super break I lost
-	ENUM2STRING(BOTH_LK_ST_DL_S_SB_1_W),	//super break I won
-	//top locks
-	ENUM2STRING(BOTH_LK_ST_DL_T_B_1_L),	//normal break I lost
-	ENUM2STRING(BOTH_LK_ST_DL_T_B_1_W),	//normal break I won
-	ENUM2STRING(BOTH_LK_ST_DL_T_L_1),	//lock if I'm using staff vs. dual
-	ENUM2STRING(BOTH_LK_ST_DL_T_SB_1_L),	//super break I lost
-	ENUM2STRING(BOTH_LK_ST_DL_T_SB_1_W),	//super break I won
+//side locks
+ENUM2STRING(BOTH_LK_ST_DL_S_B_1_L),	//normal break I lost
+ENUM2STRING(BOTH_LK_ST_DL_S_B_1_W),	//normal break I won
+ENUM2STRING(BOTH_LK_ST_DL_S_L_1),	//lock if I'm using staff vs. dual
+ENUM2STRING(BOTH_LK_ST_DL_S_SB_1_L),	//super break I lost
+ENUM2STRING(BOTH_LK_ST_DL_S_SB_1_W),	//super break I won
+//top locks
+ENUM2STRING(BOTH_LK_ST_DL_T_B_1_L),	//normal break I lost
+ENUM2STRING(BOTH_LK_ST_DL_T_B_1_W),	//normal break I won
+ENUM2STRING(BOTH_LK_ST_DL_T_L_1),	//lock if I'm using staff vs. dual
+ENUM2STRING(BOTH_LK_ST_DL_T_SB_1_L),	//super break I lost
+ENUM2STRING(BOTH_LK_ST_DL_T_SB_1_W),	//super break I won
 //STAFF vs. STAFF
-	//side locks
-	ENUM2STRING(BOTH_LK_ST_ST_S_B_1_L),	//normal break I lost
-	ENUM2STRING(BOTH_LK_ST_ST_S_B_1_W),	//normal break I won
-	ENUM2STRING(BOTH_LK_ST_ST_S_L_1),	//lock if I'm using staff vs. a staff and I initiated
-	ENUM2STRING(BOTH_LK_ST_ST_S_SB_1_L),	//super break I lost
-	ENUM2STRING(BOTH_LK_ST_ST_S_SB_1_W),	//super break I won
-	//top locks
-	ENUM2STRING(BOTH_LK_ST_ST_T_B_1_L),	//normal break I lost
-	ENUM2STRING(BOTH_LK_ST_ST_T_B_1_W),	//normal break I won
-	ENUM2STRING(BOTH_LK_ST_ST_T_L_1),	//lock if I'm using staff vs. a staff and I initiated
-	ENUM2STRING(BOTH_LK_ST_ST_T_SB_1_L),	//super break I lost
-	ENUM2STRING(BOTH_LK_ST_ST_T_SB_1_W),	//super break I won
+//side locks
+ENUM2STRING(BOTH_LK_ST_ST_S_B_1_L),	//normal break I lost
+ENUM2STRING(BOTH_LK_ST_ST_S_B_1_W),	//normal break I won
+ENUM2STRING(BOTH_LK_ST_ST_S_L_1),	//lock if I'm using staff vs. a staff and I initiated
+ENUM2STRING(BOTH_LK_ST_ST_S_SB_1_L),	//super break I lost
+ENUM2STRING(BOTH_LK_ST_ST_S_SB_1_W),	//super break I won
+//top locks
+ENUM2STRING(BOTH_LK_ST_ST_T_B_1_L),	//normal break I lost
+ENUM2STRING(BOTH_LK_ST_ST_T_B_1_W),	//normal break I won
+ENUM2STRING(BOTH_LK_ST_ST_T_L_1),	//lock if I'm using staff vs. a staff and I initiated
+ENUM2STRING(BOTH_LK_ST_ST_T_SB_1_L),	//super break I lost
+ENUM2STRING(BOTH_LK_ST_ST_T_SB_1_W),	//super break I won
 //STAFF vs. SINGLE
-	//side locks
-	ENUM2STRING(BOTH_LK_ST_S_S_B_1_L),	//normal break I lost
-	ENUM2STRING(BOTH_LK_ST_S_S_B_1_W),	//normal break I won
-	ENUM2STRING(BOTH_LK_ST_S_S_L_1),		//lock if I'm using staff vs. a single
-	ENUM2STRING(BOTH_LK_ST_S_S_SB_1_L),	//super break I lost
-	ENUM2STRING(BOTH_LK_ST_S_S_SB_1_W),	//super break I won
-	//top locks
-	ENUM2STRING(BOTH_LK_ST_S_T_B_1_L),	//normal break I lost
-	ENUM2STRING(BOTH_LK_ST_S_T_B_1_W),	//normal break I won
-	ENUM2STRING(BOTH_LK_ST_S_T_L_1),		//lock if I'm using staff vs. a single
-	ENUM2STRING(BOTH_LK_ST_S_T_SB_1_L),	//super break I lost
-	ENUM2STRING(BOTH_LK_ST_S_T_SB_1_W),	//super break I won
+//side locks
+ENUM2STRING(BOTH_LK_ST_S_S_B_1_L),	//normal break I lost
+ENUM2STRING(BOTH_LK_ST_S_S_B_1_W),	//normal break I won
+ENUM2STRING(BOTH_LK_ST_S_S_L_1),		//lock if I'm using staff vs. a single
+ENUM2STRING(BOTH_LK_ST_S_S_SB_1_L),	//super break I lost
+ENUM2STRING(BOTH_LK_ST_S_S_SB_1_W),	//super break I won
+//top locks
+ENUM2STRING(BOTH_LK_ST_S_T_B_1_L),	//normal break I lost
+ENUM2STRING(BOTH_LK_ST_S_T_B_1_W),	//normal break I won
+ENUM2STRING(BOTH_LK_ST_S_T_L_1),		//lock if I'm using staff vs. a single
+ENUM2STRING(BOTH_LK_ST_S_T_SB_1_L),	//super break I lost
+ENUM2STRING(BOTH_LK_ST_S_T_SB_1_W),	//super break I won
 //Special cases for same saber style vs. each other (won't fit in nice 5-anim size lists above)
-	ENUM2STRING(BOTH_LK_S_S_S_L_2),		//lock if I'm using single vs. a single and other intitiated
-	ENUM2STRING(BOTH_LK_S_S_T_L_2),		//lock if I'm using single vs. a single and other initiated
-	ENUM2STRING(BOTH_LK_DL_DL_S_L_2),	//lock if I'm using dual vs. dual and other initiated
-	ENUM2STRING(BOTH_LK_DL_DL_T_L_2),	//lock if I'm using dual vs. dual and other initiated
-	ENUM2STRING(BOTH_LK_ST_ST_S_L_2),	//lock if I'm using staff vs. a staff and other initiated
-	ENUM2STRING(BOTH_LK_ST_ST_T_L_2),	//lock if I'm using staff vs. a staff and other initiated
+ENUM2STRING(BOTH_LK_S_S_S_L_2),		//lock if I'm using single vs. a single and other intitiated
+ENUM2STRING(BOTH_LK_S_S_T_L_2),		//lock if I'm using single vs. a single and other initiated
+ENUM2STRING(BOTH_LK_DL_DL_S_L_2),	//lock if I'm using dual vs. dual and other initiated
+ENUM2STRING(BOTH_LK_DL_DL_T_L_2),	//lock if I'm using dual vs. dual and other initiated
+ENUM2STRING(BOTH_LK_ST_ST_S_L_2),	//lock if I'm using staff vs. a staff and other initiated
+ENUM2STRING(BOTH_LK_ST_ST_T_L_2),	//lock if I'm using staff vs. a staff and other initiated
 //===End Saber locks==================================================================
-	ENUM2STRING(BOTH_BF2RETURN),	//#
-	ENUM2STRING(BOTH_BF2BREAK),	//#
-	ENUM2STRING(BOTH_BF2LOCK),	//#
-	ENUM2STRING(BOTH_BF1RETURN),	//#
-	ENUM2STRING(BOTH_BF1BREAK),	//#
-	ENUM2STRING(BOTH_BF1LOCK),	//#
-	ENUM2STRING(BOTH_CWCIRCLE_R2__R_S1),	//#
-	ENUM2STRING(BOTH_CCWCIRCLE_R2__L_S1),	//#
-	ENUM2STRING(BOTH_CWCIRCLE_A2__L__R),	//#
-	ENUM2STRING(BOTH_CCWCIRCLE_A2__R__L),	//#
-	ENUM2STRING(BOTH_CWCIRCLEBREAK),	//#
-	ENUM2STRING(BOTH_CCWCIRCLEBREAK),	//#
-	ENUM2STRING(BOTH_CWCIRCLELOCK),	//#
-	ENUM2STRING(BOTH_CCWCIRCLELOCK),	//#
-	//other saber anims/attacks
-	ENUM2STRING(BOTH_SABERFAST_STANCE),
-	ENUM2STRING(BOTH_SABERSLOW_STANCE),
-	ENUM2STRING(BOTH_SABERDUAL_STANCE),
-	ENUM2STRING(BOTH_SABERSTAFF_STANCE),
-	//[SaberSys]
-	//dedicated stance animations for the hidden styles
-	ENUM2STRING(BOTH_SABERTAVION_STANCE),
-	ENUM2STRING(BOTH_SABERDESANN_STANCE),
-	//[/SaberSys]
+ENUM2STRING(BOTH_BF2RETURN),	//#
+ENUM2STRING(BOTH_BF2BREAK),	//#
+ENUM2STRING(BOTH_BF2LOCK),	//#
+ENUM2STRING(BOTH_BF1RETURN),	//#
+ENUM2STRING(BOTH_BF1BREAK),	//#
+ENUM2STRING(BOTH_BF1LOCK),	//#
+ENUM2STRING(BOTH_CWCIRCLE_R2__R_S1),	//#
+ENUM2STRING(BOTH_CCWCIRCLE_R2__L_S1),	//#
+ENUM2STRING(BOTH_CWCIRCLE_A2__L__R),	//#
+ENUM2STRING(BOTH_CCWCIRCLE_A2__R__L),	//#
+ENUM2STRING(BOTH_CWCIRCLEBREAK),	//#
+ENUM2STRING(BOTH_CCWCIRCLEBREAK),	//#
+ENUM2STRING(BOTH_CWCIRCLELOCK),	//#
+ENUM2STRING(BOTH_CCWCIRCLELOCK),	//#
+//other saber anims/attacks
+ENUM2STRING(BOTH_SABERFAST_STANCE),
+ENUM2STRING(BOTH_SABERSLOW_STANCE),
+ENUM2STRING(BOTH_SABERDUAL_STANCE),
+ENUM2STRING(BOTH_SABERSTAFF_STANCE),
+//[SaberSys]
+//dedicated stance animations for the hidden styles
+ENUM2STRING(BOTH_TAVION_STANCE),
+ENUM2STRING(BOTH_DESANN_STANCE),
+//[/SaberSys]
 	ENUM2STRING(BOTH_A2_STABBACK1),		//# Stab saber backward
 	ENUM2STRING(BOTH_ATTACK_BACK),		//# Swing around backwards and attack
 	ENUM2STRING(BOTH_JUMPFLIPSLASHDOWN1),//#
@@ -1788,6 +1788,78 @@ stringID_table_t animTable [MAX_ANIMATIONS+1] =
 	ENUM2STRING(BOTH_CIN_48),		//# Level specific cinematic
 	ENUM2STRING(BOTH_CIN_49),		//# Level specific cinematic
 	ENUM2STRING(BOTH_CIN_50),		//# Level specific cinematic
+	
+	//[NewANIM]
+	ENUM2STRING(BOTH_DESANN_BL),
+	ENUM2STRING(BOTH_DESANN_BR),
+	ENUM2STRING(BOTH_DESANN_T),
+	ENUM2STRING(BOTH_DESANN_TL),
+	ENUM2STRING(BOTH_DESANN_TR),
+	ENUM2STRING(BOTH_360PUSH),
+	ENUM2STRING(BOTH_360PUSHFALL),
+	ENUM2STRING(BOTH_DOOKU_STANCE),
+	ENUM2STRING(BOTH_DOOKU_TAUNT),
+	ENUM2STRING(BOTH_SUPERPUSH),
+	ENUM2STRING(BOTH_TAVION_BL),
+	ENUM2STRING(BOTH_TAVION_BR),
+	ENUM2STRING(BOTH_TAVION_T),
+	ENUM2STRING(BOTH_TAVION_TL),
+	ENUM2STRING(BOTH_TAVION_TR),
+	ENUM2STRING(BOTH_TWO_PISTOLS),
+	ENUM2STRING(BOTH_WOOKRAGE),
+	ENUM2STRING(DC15_FIRE),
+	ENUM2STRING(DC15_READY),
+	ENUM2STRING(DC15_TRANSITION),
+	ENUM2STRING(DC15_TRANSITION2),
+	ENUM2STRING(DUAL_DRAW),
+	ENUM2STRING(DUAL_PISTOLS_FIRE_LEFT),
+	ENUM2STRING(DUAL_PISTOLS_FIRE_RIGHT),
+	ENUM2STRING(DUAL_PISTOLS_READY),
+	ENUM2STRING(DUAL_RUNNING_FIRE_LEFT),
+	ENUM2STRING(DUAL_RUNNING_FIRE_RIGHT),
+	ENUM2STRING(HEROPISTOLFIRE),
+	ENUM2STRING(HEROPISTOLIDLE),
+	ENUM2STRING(JET_BACK),
+	ENUM2STRING(JET_FORWARD),
+	ENUM2STRING(JET_LEFT),
+	ENUM2STRING(JET_RIGHT),
+	ENUM2STRING(MAND_FLAME),
+	ENUM2STRING(MAND_PISTOLS_JETPACK),
+	ENUM2STRING(MAND_PISTOLS_READY),
+	ENUM2STRING(MAND_SPISTOL),
+	ENUM2STRING(MAND_SPISTOL_FIRE),
+	ENUM2STRING(MELEE_STAND),
+	ENUM2STRING(MINIGUN_FIRE),
+	ENUM2STRING(MINIGUN_READY),
+	ENUM2STRING(MINIGUN_TRANSITION),
+	ENUM2STRING(MINIGUN_TRANSITION2),
+	ENUM2STRING(NADE_SECONDARY),
+	ENUM2STRING(PLX1_FIRE),
+	ENUM2STRING(PLX1_IDLE),
+	ENUM2STRING(PLX1_IDLE2READY),
+	ENUM2STRING(PLX1_RELOAD),
+	ENUM2STRING(PLX1_WEAPONREADY),
+	ENUM2STRING(BOTH_RAGEMELEE1),
+	ENUM2STRING(BOTH_RAGEMELEE2),
+	ENUM2STRING(BOTH_RAGERUN),
+	ENUM2STRING(BOTH_RAGESTAND),
+	ENUM2STRING(BOTH_PUNCH1),
+	ENUM2STRING(BOTH_PUNCH2),
+	ENUM2STRING(BOTH_PUNCH2TOMELEE),
+	ENUM2STRING(BOTH_PUNCH3),
+	ENUM2STRING(BOTH_PUNCH3TOMELEE),
+	ENUM2STRING(BOTH_PUNCH4),
+	ENUM2STRING(BOTH_PUNCH4TOMELEE),
+	ENUM2STRING(BOTH_PALPATINE_DFA),
+	ENUM2STRING(BOTH_MAUL_TAUNT),
+	ENUM2STRING(BOTH_MELEEPOSE),
+	ENUM2STRING(BOTH_MELEE_BACKHAND),
+	ENUM2STRING(BOTH_MELEE_BACKKICK),
+	ENUM2STRING(BOTH_MELEE_SPINKICK),
+	ENUM2STRING(BOTH_MELEE_WOOKIEE),
+	ENUM2STRING(BOTH_LEGSWEEP),
+	//[/NewANIM]
+
 
 	//must be terminated
 	{NULL,-1}

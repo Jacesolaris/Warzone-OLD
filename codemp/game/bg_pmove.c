@@ -295,7 +295,7 @@ int PM_GetSaberStance(void)
 			anim = BOTH_SABERDUAL_STANCE;
 		}
 		else
-			anim = BOTH_STAND1;
+			anim = BOTH_STAND1IDLE1;
 		break;
 	case SS_STAFF:
 		if (pm->cmd.buttons & BUTTON_BLOCK)
@@ -303,7 +303,7 @@ int PM_GetSaberStance(void)
 			anim = BOTH_SABERSTAFF_STANCE;
 		}
 		else
-			anim = BOTH_STAND1;
+			anim = BOTH_STAND1IDLE1;
 		break;
 	case SS_FAST:
 		if (pm->cmd.buttons & BUTTON_BLOCK)
@@ -311,31 +311,31 @@ int PM_GetSaberStance(void)
 			anim = BOTH_SABERFAST_STANCE;
 		}
 		else
-			anim = BOTH_STAND1;
+			anim = BOTH_STAND1IDLE1;
 		break;
 	case SS_STRONG:
 		if (pm->cmd.buttons & BUTTON_BLOCK)
 		{
-			anim = BOTH_SABERSLOW_STANCE;
+			anim = BOTH_STAND2IDLE2;
 		}
 		else
-			anim = BOTH_STAND1;
+			anim = BOTH_STAND1IDLE1;
 		break;
 	case SS_TAVION:
 		if (pm->cmd.buttons & BUTTON_BLOCK)
 		{
-			anim = BOTH_SABERTAVION_STANCE;
+			anim = BOTH_TAVION_STANCE;
 		}
 		else
-			anim = BOTH_STAND1;
+			anim = BOTH_STAND1IDLE1;
 		break;
 	case SS_DESANN:
 		if (pm->cmd.buttons & BUTTON_BLOCK)
 		{
-			anim = BOTH_SABERDESANN_STANCE;
+			anim = BOTH_DESANN_STANCE;
 		}
 		else
-			anim = BOTH_STAND1;
+			anim = BOTH_STAND1IDLE1;
 		break;
 	case SS_MEDIUM:
 		if (pm->cmd.buttons & BUTTON_BLOCK)
@@ -343,7 +343,7 @@ int PM_GetSaberStance(void)
 			anim = BOTH_STAND2;
 		}
 		else
-			anim = BOTH_STAND1;
+			anim = BOTH_STAND1IDLE1;
 	case SS_NONE:
 	default:
 		if (pm->cmd.buttons & BUTTON_BLOCK)
@@ -351,7 +351,7 @@ int PM_GetSaberStance(void)
 			anim = BOTH_STAND2;
 		}
 		else
-			anim = BOTH_STAND1;
+			anim = BOTH_STAND1IDLE1;
 		break;
 	}
 	return anim;
@@ -4928,6 +4928,11 @@ qboolean PM_AdjustStandAnimForSlope( void )
 	case BOTH_STAND2:
 	case BOTH_SABERFAST_STANCE:
 	case BOTH_SABERSLOW_STANCE:
+		//[SaberSys]
+		//dedicated stance animations for the hidden styles
+	case BOTH_TAVION_STANCE:
+	case BOTH_DESANN_STANCE:
+		//[/SaberSys]
 	case BOTH_CROUCH1IDLE:
 	case BOTH_CROUCH1:
 	case LEGS_LEFTUP1:			//# On a slope with left foot 4 higher than right
@@ -5063,6 +5068,11 @@ qboolean PM_AdjustStandAnimForSlope( void )
 		case BOTH_STAND2:
 		case BOTH_SABERFAST_STANCE:
 		case BOTH_SABERSLOW_STANCE:
+			//[SaberSys]
+			//dedicated stance animations for the hidden styles
+		case BOTH_TAVION_STANCE:
+		case BOTH_DESANN_STANCE:
+			//[/SaberSys]
 		case BOTH_CROUCH1IDLE:
 			if ( destAnim >= LEGS_LEFTUP1 && destAnim <= LEGS_LEFTUP5 )
 			{//going into left side up
@@ -5223,6 +5233,11 @@ static void PM_Footsteps( void ) {
 		|| (pm->ps->legsAnim) == BOTH_STAND2
 		|| (pm->ps->legsAnim) == BOTH_SABERFAST_STANCE
 		|| (pm->ps->legsAnim) == BOTH_SABERSLOW_STANCE
+		//[SaberSys]
+		//dedicated stance animations for the hidden styles
+		|| (pm->ps->legsAnim) == BOTH_TAVION_STANCE
+		|| (pm->ps->legsAnim) == BOTH_DESANN_STANCE
+		//[/SaberSys]
 		|| (pm->ps->legsAnim) == BOTH_BUTTON_HOLD
 		|| (pm->ps->legsAnim) == BOTH_BUTTON_RELEASE
 		|| PM_LandingAnim( (pm->ps->legsAnim) )
@@ -6863,7 +6878,16 @@ static void PM_Weapon( void )
 		switch(pm->ps->forceHandExtend)
 		{
 		case HANDEXTEND_FORCEPUSH:
-			desiredAnim = BOTH_FORCEPUSH;
+			if (pm->ps->weapon == WP_MELEE ||
+				pm->ps->weapon == WP_NONE ||
+				pm->ps->weapon == WP_SABER && pm->ps->saberHolstered)
+			{//2-handed PUSH
+				desiredAnim = BOTH_SUPERPUSH;
+			}
+			else
+			{
+				desiredAnim = BOTH_FORCEPUSH;
+			}
 			break;
 		case HANDEXTEND_FORCEPULL:
 			desiredAnim = BOTH_FORCEPULL;

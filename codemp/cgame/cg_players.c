@@ -5717,7 +5717,7 @@ void CG_NewLightningActEffect(vec3_t muzzle, vec3_t muzzleDir, float length)
 	trap->FX_PlayEffectID(cgs.effects.lightningarc, end2, forward, -1, -1, qfalse);
 }//[/NewLightningEFX]
 
-//[LightningBlockSys]
+//[NewLightningEFX]
 void CG_BlockLightningEffect(vec3_t muzzle, vec3_t muzzleDir, float length)
 {
 	int rBladeNum = 0;
@@ -5738,7 +5738,8 @@ void CG_BlockLightningEffect(vec3_t muzzle, vec3_t muzzleDir, float length)
 	//trap->Print("Muzzle dir %f %f %f\n", muzzleDir[0], muzzleDir[1], muzzleDir[2]);
 	//trap->Print("Saber Length %f\n", length);
 	//trap->Print("Lightning blocked at %f %f %f [%f %f %f]\n", end2[0], end2[1], end2[2], ang[0], ang[1], ang[2]);
-}//[/LightningBlockSys]
+}	//[/NewLightningEFX]
+
 // here is the function for the effect to be call and its shit as you can see it will be seeing in 
 
 //changed this from static so we can use it for rendering the saber blade for 
@@ -10524,14 +10525,14 @@ JustDoIt:
 	}
 	//[/SFXSabers]
 
-	//[LightningBlockSys]
+	//[NewLightningEFX]
 	if (cent->blockLightningTime > cg.time)
 	{
 		CG_BlockLightningEffect(client->saber[saberNum].blade[bladeNum].muzzlePoint, client->saber[saberNum].blade[bladeNum].muzzleDir, client->saber[saberNum].blade[bladeNum].length);
 		CG_BlockLightningEffect(client->saber[saberNum].blade[bladeNum].muzzlePoint, client->saber[saberNum].blade[bladeNum].muzzleDir, client->saber[saberNum].blade[bladeNum].length);
 		CG_BlockLightningEffect(client->saber[saberNum].blade[bladeNum].muzzlePoint, client->saber[saberNum].blade[bladeNum].muzzleDir, client->saber[saberNum].blade[bladeNum].length);
 	}
-	//[/LightningBlockSys]
+	//[/NewLightningEFX]
 }
 
 int CG_IsMindTricked(int trickIndex1, int trickIndex2, int trickIndex3, int trickIndex4, int client)

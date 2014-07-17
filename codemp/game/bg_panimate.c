@@ -39,8 +39,8 @@ qboolean BG_SaberStanceAnim( int anim )
 	case BOTH_SABERDUAL_STANCE://dual saber style
 	//[SaberSys]
 	//dedicated stance animations for the hidden styles
-	case BOTH_SABERTAVION_STANCE:
-	case BOTH_SABERDESANN_STANCE:
+	case BOTH_TAVION_STANCE:
+	case BOTH_DESANN_STANCE:
 	//[/SaberSys]
 		return qtrue;
 		break;
@@ -144,8 +144,8 @@ qboolean BG_InSaberStandAnim(int anim)
 	case BOTH_SABERSTAFF_STANCE:
 		//[SaberSys]
 		//dedicated stance animations for the hidden styles
-	case BOTH_SABERTAVION_STANCE:
-	case BOTH_SABERDESANN_STANCE:
+	case BOTH_TAVION_STANCE:
+	case BOTH_DESANN_STANCE:
 		//[/SaberSys]
 		return qtrue;
 	default:

@@ -512,9 +512,10 @@ typedef struct centity_s {
 	int				weapons;
 	//[/VisualWeapons]
 
-	//[LightningBlockSys]
+	//[NewLightningEFX]
 	int				blockLightningTime;
-	//[/LightningBlockSys]
+	//[/NewLightningEFX]
+
 } centity_t;
 
 
@@ -1587,13 +1588,14 @@ typedef struct cgEffects_s {
 	fxHandle_t forceLightning;
 	fxHandle_t forceLightningWide;
 	
-	//[LightningBlockSys]
+	//[NewLightningEFX]
 	fxHandle_t lightningarc;
 	fxHandle_t forcelightningAbsorb;	
 	fxHandle_t saber_lightninghit;
 	fxHandle_t forcelightningFlare;
 	fxHandle_t forcelightningImpact;
-	//[/LightningBlockSys]
+	fxHandle_t Lightning_body_smoke;
+	//[/NewLightningEFX]
 
 	fxHandle_t forceDrain;
 	fxHandle_t forceDrainWide;
