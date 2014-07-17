@@ -189,9 +189,6 @@ float RayIntersectDisplaceMap(vec2 dp, vec2 ds, sampler2D normalMap)
 
 	return bestDepth;
 #else //FAST_PARALLAX
-	//float depth = SampleDepth(normalMap, dp) * ds;
-	//float depth = SampleDepth(normalMap, dp)/* * 1.25*/;
-	//float depth = ((SampleDepth(normalMap, dp) /** 1.5*/) * 2.0) - 1.0;
 	float depth = ((SampleDepth(normalMap, dp) * 0.5) * 2.0) - 1.0;
 	return depth;
 #endif //FAST_PARALLAX

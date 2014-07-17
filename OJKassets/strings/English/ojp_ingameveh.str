@@ -66,11 +66,6 @@ LANG_ENGLISH        "zigged when they should have zagged."
 REFERENCE           DIED_ASTEROID3
 LANG_ENGLISH        "failed Navigation 101."
 
-//[SeekerItemNPC]
-REFERENCE           KILLED_SEEKER
-LANG_ENGLISH        "was seekered by"
-//[/SeekerItemNPC]
-
 ENDMARKER
 
 

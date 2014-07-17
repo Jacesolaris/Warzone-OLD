@@ -3,6 +3,7 @@ civilian_bartender
 	playerModel	chiss
 	weapon		WP_MELEE
 	//customRGBA	random1
+	health		100
 	snd			bartender
 	reactions	3
 	aim			1
@@ -66,6 +67,7 @@ civilian_merchant
 	weapon	WP_MELEE
 	customRGBA	random1
 	customSkin	merchant
+	health		100
 	reactions	3
 	aim			1
 	move		3
@@ -94,6 +96,7 @@ civilian_protocol
 	playerModel	protocol
 	weapon		WP_MELEE
 	//customRGBA	random1
+	health		100
 	reactions	3
 	aim			1
 	move		3
@@ -120,6 +123,7 @@ civilian_r2d2
 	playermodel		r2d2
 	weapon		WP_MELEE
 	//customRGBA	random1
+	health		100
 	headYawRangeLeft	180
 	headYawRangeRight	180
 	headPitchRangeUp	0
@@ -153,6 +157,7 @@ civilian_r5d2
 	playerModel r5d2
 	weapon		WP_MELEE
 	//customRGBA	random1
+	health		100
 	headYawRangeLeft		180
 	headYawRangeRight		180
 	headPitchRangeUp		0
