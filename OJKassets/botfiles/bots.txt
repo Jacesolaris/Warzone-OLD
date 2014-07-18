@@ -357,7 +357,6 @@ personality	/botfiles/Jeditrainer.jkb
 }
 
 {
-name		"Kyle Katarn"
 model		kyle
 color1		4
 color2		4
@@ -427,7 +426,6 @@ personality	/botfiles/Luke.jkb
 }
 
 {
-name		"Rosh Penin"
 model		rosh_penin
 color1		2
 color2		2
