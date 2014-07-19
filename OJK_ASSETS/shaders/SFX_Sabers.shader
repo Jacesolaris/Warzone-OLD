@@ -1,4 +1,4 @@
-sfx_sabers/saber_trail
+gfx/effects/sfx_sabers/saber_trail
 {
 	cull	twosided
     {
@@ -8,45 +8,45 @@ sfx_sabers/saber_trail
     }
 }
 
-sfx_sabers/saber_blade
+gfx/effects/sfx_sabers/saber_blade
 {
 	notc
 	cull	twosided
     {
-        map sfx_sabers/saber_blade
+        map gfx/effects/sfx_sabers/saber_blade
         blendFunc GL_ONE GL_ONE
         rgbGen vertex
     }
 }
 
-sfx_sabers/saber_blade_rgb
+gfx/effects/sfx_sabers/saber_blade_rgb
 {
 	notc
 	cull	twosided
     {
-        map sfx_sabers/saber_blade
+        map gfx/effects/sfx_sabers/saber_blade
         blendFunc GL_ONE GL_ONE
         rgbGen identity
     }
 }
 
-sfx_sabers/saber_end
+gfx/effects/sfx_sabers/saber_end
 {
 	notc
 	cull	twosided
     {
-        map sfx_sabers/saber_end
+        map gfx/effects/sfx_sabers/saber_end
         blendFunc GL_ONE GL_ONE
         rgbGen vertex
     }
 }
 
-sfx_sabers/saber_end_rgb
+gfx/effects/sfx_sabers/saber_end_rgb
 {
 	notc
 	cull	twosided
     {
-        map sfx_sabers/saber_end
+        map gfx/effects/sfx_sabers/saber_end
         blendFunc GL_ONE GL_ONE
         rgbGen identity
     }
