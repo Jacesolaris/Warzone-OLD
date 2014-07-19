@@ -1,6 +1,6 @@
 attribute vec2 attr_TexCoord0;
-uniform vec4   u_Local1; // 0, 0, 0, 0
-varying vec4	var_Local1; // 0, 0, 0, 0
+uniform vec4   u_Local1; // parallaxScale, 0, 0, 0
+varying vec4	var_Local1; // parallaxScale, 0, 0, 0
 uniform vec4	u_Local2;
 varying vec4	var_Local2; // surfaceType, time, 0, 0
 uniform vec2	u_Dimensions;

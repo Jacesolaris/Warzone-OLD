@@ -1424,6 +1424,22 @@ static void UpdateTexCoords ( const shaderStage_t *stage )
 	}
 }
 
+void RB_SetParallaxScale(shaderProgram_t *sp, float scale)
+{
+	vec4_t local1;
+	VectorSet4(local1, scale, 0.0, 0.0, 0.0);
+	GLSL_SetUniformVec4(sp, UNIFORM_LOCAL1, local1);
+}
+
+void RB_SetStageImageDimensions(shaderProgram_t *sp, shaderStage_t *pStage)
+{
+	vec2_t dimensions;
+	dimensions[0] = pStage->bundle[0].image[0]->width;
+	dimensions[1] = pStage->bundle[0].image[0]->height;
+
+	GLSL_SetUniformVec2(sp, UNIFORM_DIMENSIONS, dimensions);
+}
+
 static void RB_IterateStagesGeneric( shaderCommands_t *input )
 {
 	int stage;
@@ -1559,60 +1575,114 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 			backEnd.pc.c_genericDraws++;
 		}
-		
+
 		if (pStage->isWater)
 		{
 			sp = &tr.waterShader;
 			pStage->glslShaderGroup = &tr.waterShader;
-		}
-
-		GLSL_BindProgram(sp);
-
-		// ------------------------------------------------------------------
-		//                          STEEP PARALLAX
-		// ------------------------------------------------------------------
-
-		/*
-		{
-			vec4_t viewInfo;
-
-			float zmax = backEnd.viewParms.zFar;
-			float zmin = r_znear->value;
-
-			VectorSet4(viewInfo, zmax / zmin, zmax, 0.0, 0.0);
-			//VectorSet4(viewInfo, zmin, zmax, 0.0, 0.0);
-
-			GLSL_SetUniformVec4(sp, UNIFORM_VIEWINFO, viewInfo);
-		}
-		*/
-
-		{
-			vec4_t local1;
-			VectorSet4(local1, r_steepParallaxEyeX->value, r_steepParallaxEyeY->value, r_steepParallaxEyeZ->value, 0.0);
-			GLSL_SetUniformVec4(sp, UNIFORM_LOCAL1, local1);
-			//ri->Printf(PRINT_WARNING, "Local1 updated.\n");
-		}
-
-		{
-			vec2_t screensize;
-			screensize[0] = pStage->bundle[0].image[0]->width;
-			screensize[1] = pStage->bundle[0].image[0]->height;
-			
-			GLSL_SetUniformVec2(sp, UNIFORM_DIMENSIONS, screensize);
-		}
-
-		if (pStage->isWater)
-		{
+			GLSL_BindProgram(sp);
 			GLSL_SetUniformFloat(sp, UNIFORM_TIME, tess.shaderTime);
+			// RB_SetParallaxScale(sp, 3.0); // unused
 		}
 		else
 		{
-			GLSL_SetUniformFloat(sp, UNIFORM_TIME, backEnd.refdef.floatTime);
+			//check for foot-steppable surface flag
+			switch( tess.shader->surfaceFlags & MATERIAL_MASK )
+			{
+				case MATERIAL_WATER:			// 13			// light covering of water on a surface
+					sp = &tr.waterShader;
+					pStage->glslShaderGroup = &tr.waterShader;
+					GLSL_BindProgram(sp);
+					GLSL_SetUniformFloat(sp, UNIFORM_TIME, tess.shaderTime);
+					// RB_SetParallaxScale(sp, 3.0); // unused
+					break;
+				case MATERIAL_SHORTGRASS:		// 5			// manicured lawn
+					GLSL_BindProgram(sp);
+					GLSL_SetUniformFloat(sp, UNIFORM_TIME, backEnd.refdef.floatTime);
+					RB_SetParallaxScale(sp, 3.0);
+					break;
+				case MATERIAL_LONGGRASS:		// 6			// long jungle grass
+					GLSL_BindProgram(sp);
+					GLSL_SetUniformFloat(sp, UNIFORM_TIME, backEnd.refdef.floatTime);
+					RB_SetParallaxScale(sp, 3.0);
+					break;
+				case MATERIAL_SAND:				// 8			// sandy beach
+				case MATERIAL_CARPET:			// 27			// lush carpet
+					GLSL_BindProgram(sp);
+					GLSL_SetUniformFloat(sp, UNIFORM_TIME, backEnd.refdef.floatTime);
+					RB_SetParallaxScale(sp, 3.0);
+					break;
+				case MATERIAL_GRAVEL:			// 9			// lots of small stones
+					GLSL_BindProgram(sp);
+					GLSL_SetUniformFloat(sp, UNIFORM_TIME, backEnd.refdef.floatTime);
+					RB_SetParallaxScale(sp, 4.0);
+					break;
+				case MATERIAL_ROCK:				// 23			//
+					GLSL_BindProgram(sp);
+					GLSL_SetUniformFloat(sp, UNIFORM_TIME, backEnd.refdef.floatTime);
+					RB_SetParallaxScale(sp, 6.0);
+					break;
+				case MATERIAL_TILES:			// 26			// tiled floor
+					GLSL_BindProgram(sp);
+					GLSL_SetUniformFloat(sp, UNIFORM_TIME, backEnd.refdef.floatTime);
+					RB_SetParallaxScale(sp, 4.0);
+					break;
+				case MATERIAL_SOLIDWOOD:		// 1			// freshly cut timber
+				case MATERIAL_HOLLOWWOOD:		// 2			// termite infested creaky wood
+				case MATERIAL_SOLIDMETAL:		// 3			// solid girders
+				case MATERIAL_HOLLOWMETAL:		// 4			// hollow metal machines
+					GLSL_BindProgram(sp);
+					GLSL_SetUniformFloat(sp, UNIFORM_TIME, backEnd.refdef.floatTime);
+					RB_SetParallaxScale(sp, 4.0);
+					break;
+				case MATERIAL_DRYLEAVES:		// 19			// dried up leaves on the floor
+				case MATERIAL_GREENLEAVES:		// 20			// fresh leaves still on a tree
+					GLSL_BindProgram(sp);
+					GLSL_SetUniformFloat(sp, UNIFORM_TIME, backEnd.refdef.floatTime);
+					RB_SetParallaxScale(sp, 4.0);
+					break;
+				case MATERIAL_FABRIC:			// 21			// Cotton sheets
+				case MATERIAL_CANVAS:			// 22			// tent material
+					GLSL_BindProgram(sp);
+					GLSL_SetUniformFloat(sp, UNIFORM_TIME, backEnd.refdef.floatTime);
+					RB_SetParallaxScale(sp, 3.0);
+					break;
+				case MATERIAL_MARBLE:			// 12			// marble floors
+					GLSL_BindProgram(sp);
+					GLSL_SetUniformFloat(sp, UNIFORM_TIME, backEnd.refdef.floatTime);
+					RB_SetParallaxScale(sp, 2.0);
+					break;
+				case MATERIAL_SNOW:				// 14			// freshly laid snow
+					GLSL_BindProgram(sp);
+					GLSL_SetUniformFloat(sp, UNIFORM_TIME, backEnd.refdef.floatTime);
+					RB_SetParallaxScale(sp, 3.0);
+					break;
+				case MATERIAL_MUD:				// 17			// wet soil
+					GLSL_BindProgram(sp);
+					GLSL_SetUniformFloat(sp, UNIFORM_TIME, backEnd.refdef.floatTime);
+					RB_SetParallaxScale(sp, 4.0);
+					break;
+				case MATERIAL_DIRT:				// 7			// hard mud
+				case MATERIAL_GLASS:			// 10			//
+				case MATERIAL_CONCRETE:			// 11			// hardened concrete pavement
+				case MATERIAL_ICE:				// 15			// packed snow/solid ice
+				case MATERIAL_FLESH:			// 16			// hung meat, corpses in the world
+				case MATERIAL_BPGLASS:			// 18			// bulletproof glass
+				case MATERIAL_RUBBER:			// 24			// hard tire like rubber
+				case MATERIAL_PLASTIC:			// 25			//
+				case MATERIAL_PLASTER:			// 28			// drywall style plaster
+				case MATERIAL_SHATTERGLASS:		// 29			// glass with the Crisis Zone style shattering
+				case MATERIAL_ARMOR:			// 30			// body armor
+				case MATERIAL_COMPUTER:			// 31			// computers/electronic equipment
+				default:
+					GLSL_BindProgram(sp);
+					GLSL_SetUniformFloat(sp, UNIFORM_TIME, backEnd.refdef.floatTime);
+					RB_SetParallaxScale(sp, 1.0);
+					break;
+			}
 		}
-
-		// ------------------------------------------------------------------
-		//                        END STEEP PARALLAX
-		// ------------------------------------------------------------------
+		
+		RB_SetStageImageDimensions(sp, pStage);
 
 		GLSL_SetUniformMatrix16(sp, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
 		GLSL_SetUniformVec3(sp, UNIFORM_VIEWORIGIN, backEnd.viewParms.ori.origin);
@@ -2046,6 +2116,7 @@ void RB_StageIteratorGeneric( void )
 	//
 	// UQ1: Set up any special shaders needed for this surface/contents type...
 	//
+
 	if ((tess.shader->contentFlags & CONTENTS_WATER) || (tess.shader->contentFlags & CONTENTS_LAVA)) 
 	{
 		if (input->xstages[0]->isWater != qtrue) // In case it is already set, no need looping more then once on the same shader...

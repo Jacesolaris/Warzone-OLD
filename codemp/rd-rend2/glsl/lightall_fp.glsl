@@ -1,6 +1,8 @@
+#define FAST_PARALLAX
+
 uniform sampler2D u_DiffuseMap;
-varying vec4	var_Local1; // surfaceType, 0, 0, 0
-varying vec4	var_Local2; // surfaceType, 0, 0, 0
+varying vec4	var_Local1; // parallaxScale, 0, 0, 0
+varying vec4	var_Local2; // 0, 0, 0, 0
 varying vec2	var_Dimensions;
 
 #if defined(USE_LIGHTMAP)
@@ -140,7 +142,6 @@ out vec4 out_Glow;
 	}
   #endif //USE_PARALLAXMAP_NONORMALS
 
-#define FAST_PARALLAX
 
 float RayIntersectDisplaceMap(vec2 dp, vec2 ds, sampler2D normalMap)
 {
@@ -187,10 +188,10 @@ float RayIntersectDisplaceMap(vec2 dp, vec2 ds, sampler2D normalMap)
 		depth += size;
 	}
 
-	return bestDepth;
+	return bestDepth * var_Local1.x;
 #else //FAST_PARALLAX
 	float depth = ((SampleDepth(normalMap, dp) * 0.5) * 2.0) - 1.0;
-	return depth;
+	return depth * var_Local1.x;
 #endif //FAST_PARALLAX
 }
 #endif //USE_PARALLAXMAP || USE_PARALLAXMAP_NONORMALS
