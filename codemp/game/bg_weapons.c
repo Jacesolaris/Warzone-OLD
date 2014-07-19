@@ -222,10 +222,10 @@ weaponData_t weaponData[WP_NUM_WEAPONS] =
 		AMMO_ROCKETS,			//	int		ammoIndex;			// Index to proper ammo slot
 		5,						//	int		ammoLow;			// Count when ammo is low
 		1,						//	int		energyPerShot;		// Amount of energy used per shot
-		900,					//	int		fireTime;			// Amount of time between firings
+		3000,					//	int		fireTime;			// Amount of time between firings
 		8192,					//	int		range;				// Range of weapon
 		2,						//	int		altEnergyPerShot;	// Amount of energy used for alt-fire
-		1200,					//	int		altFireTime;		// Amount of time between alt-firings
+		5000,					//	int		altFireTime;		// Amount of time between alt-firings
 		8192,					//	int		altRange;			// Range of alt-fire
 		0,						//	int		chargeSubTime;		// ms interval for subtracting ammo during charge
 		0,						//	int		altChargeSubTime;	// above for secondary

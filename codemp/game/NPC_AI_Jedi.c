@@ -1326,6 +1326,7 @@ static void Jedi_AdjustSaberAnimLevel( gentity_t *self, int newLevel )
 	{
 		return;
 	}
+#ifdef __FUCK_THIS__
 	//FIXME: each NPC shold have a unique pattern of behavior for the order in which they
 	if ( self->client->NPC_class == CLASS_TAVION )
 	{//special attacks
@@ -1387,6 +1388,9 @@ static void Jedi_AdjustSaberAnimLevel( gentity_t *self, int newLevel )
 			break;
 		}
 	}
+#endif //__FUCK_THIS__
+
+	Cmd_SaberAttackCycle_f(self);
 }
 
 static void Jedi_CheckDecreaseSaberAnimLevel( void )
@@ -1715,7 +1719,7 @@ static void Jedi_CombatDistance( int enemy_dist )
 				&& enemy_dist < 500
 				&& (Q_irand( 0, chanceScale*10 )<5 || (NPCS.NPC->enemy->client && NPCS.NPC->enemy->client->ps.weapon != WP_SABER && !Q_irand( 0, chanceScale ) ) ) )
 			{//else, randomly try some kind of attack every now and then
-				if ( ((NPCS.NPCInfo->rank == RANK_ENSIGN || NPCS.NPCInfo->rank > RANK_LT_JG) && !Q_irand( 0, 1 )) || NPCS.NPC->s.weapon != WP_SABER )
+				if ( ((NPCS.NPCInfo->rank == RANK_ENSIGN || NPCS.NPCInfo->rank > RANK_LT_JG) && !Q_irand( 0, 1 )) || NPCS.NPC->enemy->client->ps.weapon != WP_SABER )
 				{
 					if ( WP_ForcePowerUsable( NPCS.NPC, FP_PULL ) && !Q_irand( 0, 2 ) )
 					{
@@ -3013,23 +3017,26 @@ evasionType_t Jedi_SaberBlockGo( gentity_t *self, usercmd_t *cmd, vec3_t pHitloc
 	if ( evasionType == EVASION_NONE )
 	{
 #ifdef __NPC_USE_SABER_BLOCKING__
-		// UQ1: Fall back to using the block button like players...
-		if (NPCS.NPC->blockToggleTime > level.time)
-		{// Toggled less then a second ago.. Ignore...
+		if ( !saberBusy )
+		{
+			// UQ1: Fall back to using the block button like players...
+			if (NPCS.NPC->blockToggleTime > level.time)
+			{// Toggled less then a second ago.. Ignore...
 
-		}
-		else if (!NPCS.NPC->client->ps.powerups[PW_BLOCK])
-		{// BLOCK pressed, but PW_BLOCK not active. Turn it ON...
-			NPCS.NPC->client->ps.powerups[PW_BLOCK] = INT_MAX; // This *could* be a time in the future instead if you want block to last X milliseconds...
-			NPCS.NPC->blockToggleTime = level.time + 250; // 250 ms between toggles...
+			}
+			else if (!NPCS.NPC->client->ps.powerups[PW_BLOCK])
+			{// BLOCK pressed, but PW_BLOCK not active. Turn it ON...
+				NPCS.NPC->client->ps.powerups[PW_BLOCK] = INT_MAX; // This *could* be a time in the future instead if you want block to last X milliseconds...
+				NPCS.NPC->blockToggleTime = level.time + 250; // 250 ms between toggles...
 
-			if (!(NPCS.ucmd.buttons & BUTTON_WALKING))
-				NPCS.ucmd.buttons |= BUTTON_WALKING;
-		}
-		else
-		{// BLOCK pressed, and PW_BLOCK is active. Turn it OFF...
-			NPCS.NPC->client->ps.powerups[PW_BLOCK] = 0;
-			NPCS.NPC->blockToggleTime = level.time + 250; // 250 ms between toggles...
+				if (!(NPCS.ucmd.buttons & BUTTON_WALKING))
+					NPCS.ucmd.buttons |= BUTTON_WALKING;
+			}
+			else
+			{// BLOCK pressed, and PW_BLOCK is active. Turn it OFF...
+				NPCS.NPC->client->ps.powerups[PW_BLOCK] = 0;
+				NPCS.NPC->blockToggleTime = level.time + 250; // 250 ms between toggles...
+			}
 		}
 #endif //__NPC_USE_SABER_BLOCKING__
 
@@ -3138,6 +3145,13 @@ static qboolean Jedi_SaberBlock( int saberNum, int bladeNum ) //saberNum = 0, bl
 	{//don't keep blocking him once he's dead (or if not a client)
 		return qfalse;
 	}
+
+	if ( Distance(NPCS.NPC->r.currentOrigin, NPCS.NPC->enemy->r.currentOrigin) > 64
+		|| !(NPCS.NPC->enemy->client->pers.cmd.buttons & BUTTON_ATTACK))
+	{// UQ1: They were doing evasion WAY too far away... And when the enemy isn't even attacking...
+		return qfalse;
+	}
+
 	/*
 	//VectorMA( NPC->enemy->client->renderInfo.muzzlePoint, NPC->enemy->client->ps.saberLength, NPC->enemy->client->renderInfo.muzzleDir, saberTip );
 	//VectorMA( NPC->enemy->client->renderInfo.muzzlePointNext, NPC->enemy->client->ps.saberLength, NPC->enemy->client->renderInfo.muzzleDirNext, saberTipNext );
@@ -3967,7 +3981,7 @@ static void Jedi_DebounceDirectionChanges( void )
 
 static void Jedi_TimersApply( void )
 {
-	if ( !NPCS.ucmd.rightmove )
+	if ( NPCS.ucmd.rightmove == 0 )
 	{//only if not already strafing
 		//FIXME: if enemy behind me and turning to face enemy, don't strafe in that direction, too
 		if ( !TIMER_Done( NPCS.NPC, "strafeLeft" ) )
@@ -3991,6 +4005,10 @@ static void Jedi_TimersApply( void )
 				NPCS.ucmd.rightmove = 127;
 				VectorClear( NPCS.NPC->client->ps.moveDir );
 			}
+		}
+		else
+		{
+			NPCS.ucmd.rightmove = 0;
 		}
 	}
 
@@ -4849,7 +4867,7 @@ static qboolean Jedi_TryJump( gentity_t *goal )
 						TIMER_Set( NPCS.NPC, "jumpChaseDebounce", Q_irand( 2000, 5000 ) );
 						NPCS.ucmd.forwardmove = 127;
 						VectorClear( NPCS.NPC->client->ps.moveDir );
-						TIMER_Set( NPCS.NPC, "duck", -level.time );
+						TIMER_Set( NPCS.NPC, "duck", -level.time ); // UQ1: WTF?? -level.time????
 						return qtrue;
 					}
 				}
@@ -6497,6 +6515,8 @@ void NPC_BSJedi_Default( void )
 		}
 
 		Jedi_Attack();
+
+		if ( TIMER_Done( NPCS.NPC, "duck" ) && NPCS.ucmd.upmove < 0) NPCS.ucmd.upmove = 0;
 
 		//if we have multiple-jedi combat, probably need to keep checking (at certain debounce intervals) for a better (closer, more active) enemy and switch if needbe...
 		if ( ((!NPCS.ucmd.buttons && !NPCS.NPC->client->ps.fd.forcePowersActive) 

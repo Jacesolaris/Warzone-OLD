@@ -2602,7 +2602,11 @@ void UQ1_UcmdMoveForDir ( gentity_t *self, usercmd_t *cmd, vec3_t dir, qboolean 
 	if (self->bot_strafe_left_timer > level.time) cmd->rightmove -= 48.0;
 #endif //__NPC_STRAFE__
 
-	cmd->upmove = abs(forward[3] ) * dir[3] * speed;
+	//cmd->upmove = abs(forward[3] ) * dir[3] * speed;
+	/*if (NPCS.NPCInfo->jumpState == JS_CROUCHING || (self->NPC->scriptFlags & SCF_CROUCHED))
+		cmd->upmove = -64.0;
+	else if (NPCS.NPCInfo->jumpState == JS_JUMPING)
+		cmd->upmove = 64.0;*/
 
 	//NPC_SelectMoveAnimation(walk);
 
@@ -4622,6 +4626,7 @@ void NPC_Think ( gentity_t *self)//, int msec )
 		}
 
 		memcpy( &NPCS.ucmd, &NPCS.NPCInfo->last_ucmd, sizeof( usercmd_t ) );
+		NPCS.ucmd.buttons = 0; // init buttons...
 
 		//nextthink is set before this so something in here can override it
 		if (self->s.NPC_class != CLASS_VEHICLE ||
