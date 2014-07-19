@@ -2937,6 +2937,7 @@ int PM_DoFake(int curmove)
 		}
 		else
 		{//Not moving at all
+			newQuad = Q_T; // UQ1: Still use forward move...
 		}
 	}
 
@@ -2977,9 +2978,10 @@ int PM_DoFake(int curmove)
 
 void PM_WeaponLightsaber(void)
 {
-	int			addTime;
-	qboolean	delayed_fire = qfalse;
-	int			anim=-1, curmove, newmove=LS_NONE;
+	int					addTime;
+	qboolean			delayed_fire = qfalse;
+	int					anim = -1;
+	saberMoveName_t		curmove, newmove = LS_NONE;
 
 	qboolean checkOnlyWeap = qfalse;
 
@@ -3172,7 +3174,6 @@ void PM_WeaponLightsaber(void)
 	//preblocks can be interrupted
 	if (PM_SaberInParry(pm->ps->saberMove) && pm->ps->saberActionFlags & (1 << SAF_BLOCKING) // in a block
 		&& ((pm->cmd.buttons & BUTTON_ALT_ATTACK) || (pm->cmd.buttons & BUTTON_ATTACK))) //and attempting an attack
-
 	{//interrupting a preblock
 		pm->ps->weaponTime = 0;
 		pm->ps->torsoTimer = 0;
@@ -3749,7 +3750,7 @@ weapChecks:
 		// Start with the current move, and cross index it with the current control states.
 		if ( pm->ps->saberMove > LS_NONE && pm->ps->saberMove < LS_MOVE_MAX )
 		{
-			curmove = pm->ps->saberMove;
+			curmove = (saberMoveName_t)pm->ps->saberMove;
 		}
 		else
 		{
@@ -3954,6 +3955,10 @@ weapChecks:
 				{//get attack move from movement command
 					//racc - determine where we want to go next.
 					newmove = PM_SaberAttackForMovement(curmove);
+
+					// UQ1: Found this by mistake. These could probably be used as a secondary version of each stance if we wanted...
+					// newmove = PM_SaberAttackForMovement(saberMoveData[curmove].animToUse);
+					// newmove = PM_SaberAttackForMovement(saberMoveData[curmove].chain_attack);
 
 					//[SaberSys]
 					if ((PM_SaberInBounce(curmove) || PM_SaberInParry(curmove))

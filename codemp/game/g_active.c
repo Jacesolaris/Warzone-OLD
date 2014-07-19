@@ -2661,7 +2661,13 @@ void ClientThink_real( gentity_t *ent ) {
 #endif //__NPC_USE_SABER_BLOCKING__
 		&& !BG_SabersOff(&ent->client->ps))								// NPCs don't use this method, they do it on their own terms --eez
 	{
-		if (ent->client->ps.powerups[PW_BLOCK] &&			// holding Block button	
+		if (ent->client->pers.cmd.buttons & BUTTON_ATTACK)
+		{
+			// UQ1: You can't block and attack at the same time... lol...
+			ent->client->ps.saberActionFlags &= ~(1 << SAF_BLOCKING);
+			ent->client->blockingLightningAccumulation = 0;
+		}
+		else if (ent->client->ps.powerups[PW_BLOCK] &&			// holding Block button	
 			(ent->client->ps.torsoTimer <= 0 || ent->client->saberBlockDebounce >= level.time || // NOT ATTACKING (swingblocks not permitted, period)
 			(ent->client->ps.saberMove >= LS_R_TL2BR && ent->client->ps.saberMove <= LS_R_T2B &&
 			ent->client->ps.torsoTimer < 400)))														// OR, we're returning from an attack (slight delay)
