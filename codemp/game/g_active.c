@@ -1304,10 +1304,6 @@ qboolean G_ActionButtonPressed(int buttons)
 	else if (buttons & BUTTON_FORCE_LIGHTNING)
 	{
 		return qtrue;
-	}//[SaberSys]
-	else if (buttons & BUTTON_BLOCK)
-	{//[/SaberSys]
-		return qtrue;
 	}
 	else if (buttons & BUTTON_FORCE_DRAIN)
 	{
@@ -1315,6 +1311,36 @@ qboolean G_ActionButtonPressed(int buttons)
 	}
 
 	return qfalse;
+}
+
+void G_CheckToggleBlock(gentity_t *ent, usercmd_t *ucmd)
+{
+	if (!ent || !ent->client)
+	{
+		return;
+	}
+
+	if (ent->health <= 0 || ent->client->ps.stats[STAT_HEALTH] <= 0 ||
+		ent->client->sess.sessionTeam == TEAM_SPECTATOR || (ent->client->ps.pm_flags & PMF_FOLLOW))
+	{
+		ent->client->ps.powerups[PW_BLOCK] = 0;
+		return;
+	}
+
+	if (ucmd->buttons & BUTTON_BLOCK)
+	{
+		if (!ent->client->ps.powerups[PW_BLOCK])
+		{// BLOCK pressed, but PW_BLOCK not active. Turn it ON...
+			ent->client->ps.powerups[PW_BLOCK] = INT_MAX; // This *could* be a time in the future instead if you want block to last X milliseconds...
+			
+			if (!(ucmd->buttons & BUTTON_WALKING))
+				ucmd->buttons |= BUTTON_WALKING;
+		}
+		else
+		{// BLOCK pressed, and PW_BLOCK is active. Turn it OFF...
+			ent->client->ps.powerups[PW_BLOCK] = 0;
+		}
+	}
 }
 
 void G_CheckClientIdle( gentity_t *ent, usercmd_t *ucmd )
@@ -1970,6 +1996,12 @@ void ClientThink_real( gentity_t *ent ) {
 		return;
 	}
 
+	// mark the time, so the connection sprite can be removed
+	ucmd = &ent->client->pers.cmd;
+
+	//check if we need to toggle the block powerup on/off..
+	G_CheckToggleBlock(ent, ucmd); // moved up here to make sure it always gets called... (eg: no return; 's before it gets to the check)
+
 	// This code was moved here from clientThink to fix a problem with g_synchronousClients
 	// being set to 1 when in vehicles.
 	if ( ent->s.number < MAX_CLIENTS && ent->client->ps.m_iVehicleNum )
@@ -2074,9 +2106,6 @@ void ClientThink_real( gentity_t *ent ) {
 			}
 		}
 	}
-
-	// mark the time, so the connection sprite can be removed
-	ucmd = &ent->client->pers.cmd;
 
 	if ( client && (client->ps.eFlags2&EF2_HELD_BY_MONSTER) )
 	{
@@ -2619,7 +2648,7 @@ void ClientThink_real( gentity_t *ent ) {
 #endif //__NPC_USE_SABER_BLOCKING__
 		&& !BG_SabersOff(&ent->client->ps))								// NPCs don't use this method, they do it on their own terms --eez
 	{
-		if (ent->client->pers.cmd.buttons & BUTTON_BLOCK &&			// holding Block button	
+		if (ent->client->ps.powerups[PW_BLOCK] &&			// holding Block button	
 			(ent->client->ps.torsoTimer <= 0 || ent->client->saberBlockDebounce >= level.time || // NOT ATTACKING (swingblocks not permitted, period)
 			(ent->client->ps.saberMove >= LS_R_TL2BR && ent->client->ps.saberMove <= LS_R_T2B &&
 			ent->client->ps.torsoTimer < 400)))														// OR, we're returning from an attack (slight delay)
@@ -2632,7 +2661,7 @@ void ClientThink_real( gentity_t *ent ) {
 
 		}
 		else if (ent->client->ps.weaponTime >= 0 && ent->client->ps.saberActionFlags & (1 << SAF_BLOCKING) &&
-			ent->client->pers.cmd.buttons & BUTTON_BLOCK &&
+			ent->client->ps.powerups[PW_BLOCK] &&
 			ent->client->ps.groundEntityNum != ENTITYNUM_NONE)
 		{
 			// FIXME

@@ -3312,7 +3312,7 @@ void PM_WeaponLightsaber(void)
 		pm->ps->weaponTime -= pml.msec;
 
 		//[SaberSys] add maunel BLock call		
-		if (pm->cmd.buttons & BUTTON_BLOCK
+		if (pm->ps->powerups[PW_BLOCK]
 			&& !(pm->ps->weaponstate == WEAPON_DROPPING
 			|| pm->ps->weaponstate == WEAPON_RAISING))
 		//[/SaberSys] 
@@ -3453,7 +3453,7 @@ void PM_WeaponLightsaber(void)
 				break;
 				//[NewLightningEFX]
 			case BLOCKED_LIGHTNING:
-				if (pm->cmd.buttons & BUTTON_BLOCK)
+				if (pm->ps->powerups[PW_BLOCK])
 				{
 					PM_GetSaberStance();
 				}

@@ -1891,7 +1891,7 @@ typedef struct siegePers_s
 										// won't generate footsteps
 #define	BUTTON_USE				32			// the ol' use key returns!
 #define BUTTON_FORCEGRIP		64			//
-#define BUTTON_ALT_ATTACK		128
+#define BUTTON_BLOCK			128
 
 #define	BUTTON_ANY				256			// any key whatsoever
 
@@ -1903,7 +1903,7 @@ typedef struct siegePers_s
 
 #define BUTTON_SABERTHROW       4096        //+button12
 #define BUTTON_DODGE            8192        //+button13
-#define BUTTON_BLOCK            16384        //+button14
+#define BUTTON_ALT_ATTACK       16384        //+button14
 
 // Here's an interesting bit.  The bots in TA used buttons to do additional gestures.
 // I ripped them out because I didn't want too many buttons given the fact that I was already adding some for JK2.

@@ -2043,7 +2043,7 @@ static QINLINE qboolean G_ClientIdleInWorld(gentity_t *ent)
 		!(ent->client->pers.cmd.buttons & BUTTON_ALT_ATTACK) &&
 		!(ent->client->pers.cmd.buttons & BUTTON_FORCEPOWER) &&
 		!(ent->client->pers.cmd.buttons & BUTTON_FORCE_LIGHTNING) &&
-		!(ent->client->pers.cmd.buttons & BUTTON_BLOCK) &&
+		//!(ent->client->ps.powerups[PW_BLOCK]) && // Prob don't need to check this... Since its a buff now...
 		!(ent->client->pers.cmd.buttons & BUTTON_FORCE_DRAIN) &&
 		!(ent->client->pers.cmd.buttons & BUTTON_ATTACK))
 		return qtrue;

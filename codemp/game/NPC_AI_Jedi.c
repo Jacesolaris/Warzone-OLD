@@ -3014,7 +3014,7 @@ evasionType_t Jedi_SaberBlockGo( gentity_t *self, usercmd_t *cmd, vec3_t pHitloc
 	{
 #ifdef __NPC_USE_SABER_BLOCKING__
 		// UQ1: Fall back to using the block button like players...
-		if (!NPCS.ucmd.buttons & BUTTON_BLOCK) NPCS.ucmd.buttons |= BUTTON_BLOCK;
+		//if (!NPCS.ucmd.buttons & BUTTON_BLOCK) NPCS.ucmd.buttons |= BUTTON_BLOCK;
 #endif //__NPC_USE_SABER_BLOCKING__
 
 		return EVASION_NONE;

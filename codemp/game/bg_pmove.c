@@ -290,7 +290,7 @@ int PM_GetSaberStance(void)
 	switch (pm->ps->fd.saberAnimLevel)
 	{
 	case SS_DUAL:
-		if (pm->cmd.buttons & BUTTON_BLOCK)
+		if (pm->ps->powerups[PW_BLOCK])
 		{
 			anim = BOTH_SABERDUAL_STANCE;
 		}
@@ -298,7 +298,7 @@ int PM_GetSaberStance(void)
 			anim = BOTH_STAND1IDLE1;
 		break;
 	case SS_STAFF:
-		if (pm->cmd.buttons & BUTTON_BLOCK)
+		if (pm->ps->powerups[PW_BLOCK])
 		{
 			anim = BOTH_SABERSTAFF_STANCE;
 		}
@@ -306,7 +306,7 @@ int PM_GetSaberStance(void)
 			anim = BOTH_STAND1IDLE1;
 		break;
 	case SS_FAST:
-		if (pm->cmd.buttons & BUTTON_BLOCK)
+		if (pm->ps->powerups[PW_BLOCK])
 		{
 			anim = BOTH_SABERFAST_STANCE;
 		}
@@ -314,7 +314,7 @@ int PM_GetSaberStance(void)
 			anim = BOTH_STAND1IDLE1;
 		break;
 	case SS_STRONG:
-		if (pm->cmd.buttons & BUTTON_BLOCK)
+		if (pm->ps->powerups[PW_BLOCK])
 		{
 			anim = BOTH_STAND2IDLE2;
 		}
@@ -322,7 +322,7 @@ int PM_GetSaberStance(void)
 			anim = BOTH_STAND1IDLE1;
 		break;
 	case SS_TAVION:
-		if (pm->cmd.buttons & BUTTON_BLOCK)
+		if (pm->ps->powerups[PW_BLOCK])
 		{
 			anim = BOTH_TAVION_STANCE;
 		}
@@ -330,7 +330,7 @@ int PM_GetSaberStance(void)
 			anim = BOTH_STAND1IDLE1;
 		break;
 	case SS_DESANN:
-		if (pm->cmd.buttons & BUTTON_BLOCK)
+		if (pm->ps->powerups[PW_BLOCK])
 		{
 			anim = BOTH_DESANN_STANCE;
 		}
@@ -338,7 +338,7 @@ int PM_GetSaberStance(void)
 			anim = BOTH_STAND1IDLE1;
 		break;
 	case SS_MEDIUM:
-		if (pm->cmd.buttons & BUTTON_BLOCK)
+		if (pm->ps->powerups[PW_BLOCK])
 		{
 			anim = BOTH_STAND2;
 		}
@@ -346,7 +346,7 @@ int PM_GetSaberStance(void)
 			anim = BOTH_STAND1IDLE1;
 	case SS_NONE:
 	default:
-		if (pm->cmd.buttons & BUTTON_BLOCK)
+		if (pm->ps->powerups[PW_BLOCK])
 		{
 			anim = BOTH_STAND2;
 		}
@@ -5377,7 +5377,7 @@ static void PM_Footsteps( void ) {
 		if (((PM_RunningAnim(pm->ps->legsAnim)
 			|| PM_CanRollFromSoulCal(pm->ps)
 			|| pm->ps->saberActionFlags & (1 << SAF_BLOCKING)
-			|| pm->cmd.buttons & BUTTON_BLOCK
+			|| pm->ps->powerups[PW_BLOCK]
 			|| pm->cmd.buttons & BUTTON_WALKING))
 			&& !BG_InRoll(pm->ps, pm->ps->legsAnim))
 			// simplified but more accurate at the same time
@@ -5681,7 +5681,7 @@ static void PM_Footsteps( void ) {
 						{
 							desiredAnim = BOTH_WALK1;
 						}
-						else if (pm->cmd.buttons & BUTTON_BLOCK)
+						else if (pm->ps->powerups[PW_BLOCK])
 						{
 							desiredAnim = BOTH_WALK1;
 						}
@@ -5695,7 +5695,7 @@ static void PM_Footsteps( void ) {
 						{
 							desiredAnim = BOTH_WALK1;
 						}
-						else if (pm->cmd.buttons & BUTTON_BLOCK)
+						else if (pm->ps->powerups[PW_BLOCK])
 						{
 							desiredAnim = BOTH_WALK1;
 						}
@@ -5709,7 +5709,7 @@ static void PM_Footsteps( void ) {
 						{
 							desiredAnim = BOTH_WALK1;
 						}
-						else if (pm->cmd.buttons & BUTTON_BLOCK)
+						else if (pm->ps->powerups[PW_BLOCK])
 						{
 							desiredAnim = BOTH_WALK1;
 						}
