@@ -1843,10 +1843,12 @@ typedef struct playerState_s {
 	int			damageValue;
 
 	//Keeps Trak of Block Point
-	int			blockPoints;
-	float		saberSwingSpeed;
+	int				blockPoints;
+	float			saberSwingSpeed;
 	signed short	forcePower;
 	short			saberActionFlags;
+
+	int				saberMoveStyle;
 
 	//rww - spare values specifically for use by mod authors.
 	//See psf_overrides.txt if you want to increase the send
@@ -2292,6 +2294,8 @@ typedef struct entityState_s {
 // UQ1: Added - to display damage stats on client...
 	qboolean	damageCrit;
 	int			damageValue;
+
+	int			saberMoveStyle;
 
 	//rww - spare values specifically for use by mod authors.
 	//See netf_overrides.txt if you want to increase the send

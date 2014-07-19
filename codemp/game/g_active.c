@@ -2082,6 +2082,7 @@ void ClientThink_real( gentity_t *ent ) {
 		}
 		else if (client->saber[0].model[0] && client->saber[1].model[0])
 		{ //with two sabs always use akimbo style
+			/*
 			if ( client->ps.saberHolstered == 1 )
 			{//one saber should be off, adjust saberAnimLevel accordinly
 				client->ps.fd.saberAnimLevelBase = SS_DUAL;
@@ -2096,7 +2097,17 @@ void ClientThink_real( gentity_t *ent ) {
 				}
 				client->ps.fd.saberDrawAnimLevel = client->ps.fd.saberAnimLevel;
 			}
+			*/
+
+			client->ps.fd.saberAnimLevelBase = SS_DUAL;
+			client->ps.fd.saberDrawAnimLevel = client->ps.fd.saberAnimLevel;
 		}
+		else if ( ent->client->saber[0].numBlades > 1 )
+		{// Dualblade.
+			client->ps.fd.saberAnimLevelBase = SS_STAFF;
+			client->ps.fd.saberDrawAnimLevel = client->ps.fd.saberAnimLevel;
+		}
+		/*
 		else
 		{
 			if (client->saber[0].stylesLearned == (1<<SS_STAFF) )
@@ -2117,7 +2128,7 @@ void ClientThink_real( gentity_t *ent ) {
 					client->ps.fd.saberDrawAnimLevel = client->ps.fd.saberAnimLevel;
 				}
 			}
-		}
+		}*/
 	}
 
 	if ( client && (client->ps.eFlags2&EF2_HELD_BY_MONSTER) )

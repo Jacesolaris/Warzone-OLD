@@ -956,6 +956,7 @@ netField_t	entityStateFields[] =
 #ifdef __MMO__
 { NETF(damageCrit), 1 },
 { NETF(damageValue), 32 },
+{ NETF(saberMoveStyle), 8 },
 #endif //__MMO__
 
 //rww - for use by mod authors only
@@ -1294,6 +1295,7 @@ netField_t	playerStateFields[] =
 #ifdef __MMO__
 { PSF(damageCrit), 1 },
 { PSF(damageValue), 32 },
+{ PSF(saberMoveStyle), 8 },
 #endif //__MMO__
 { PSF(pm_time), -16 },
 { PSF(customRGBA[1]), 8 }, //0-255
@@ -1457,6 +1459,7 @@ netField_t	pilotPlayerStateFields[] =
 #ifdef __MMO__
 { PSF(damageCrit), 1 },
 { PSF(damageValue), 32 },
+{ PSF(saberMoveStyle), 8 },
 #endif //__MMO__
 { PSF(saberCanThrow), 1 },
 { PSF(fd.forcePowerDebounce[FP_LEVITATION]), 32 },

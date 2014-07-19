@@ -3447,6 +3447,31 @@ void ClientSpawn(gentity_t *ent) {
 	client->ps.standheight = DEFAULT_MAXS_2;
 
 	client->ps.clientNum = index;
+
+	//AIMod - Initialize the client's anim style.
+	client->ps.saberMoveStyle = 0;
+	ent->s.saberMoveStyle = 0;
+
+	if ((ent->client->saber[0].saberFlags&SFL_TWO_HANDED))
+	{// Dualblade.
+		if ( !WP_SaberStyleValidForSaber( &client->saber[0], &client->saber[1], client->ps.saberHolstered, client->ps.fd.saberAnimLevel ) )
+		{//only use dual style if the style we're trying to use isn't valid
+			client->ps.fd.saberAnimLevelBase = client->ps.fd.saberAnimLevel = SS_STAFF;
+		}
+		client->ps.saberMoveStyle = 0;
+		ent->s.saberMoveStyle = 0;
+		client->ps.fd.saberAnimLevelBase = client->ps.fd.saberAnimLevel = SS_STAFF;
+	}
+
+	if (ent->client->saber[0].model[0] &&
+		ent->client->saber[1].model[0])
+	{ //dual saber
+		client->ps.saberMoveStyle = 0;
+		ent->s.saberMoveStyle = 0;
+		client->ps.saberHolstered = 0;
+		client->ps.fd.saberAnimLevelBase = client->ps.fd.saberAnimLevel = client->ps.fd.saberDrawAnimLevel = SS_DUAL;
+	}
+
 	//give default weapons
 	client->ps.stats[STAT_WEAPONS] = ( 1 << WP_NONE );
 

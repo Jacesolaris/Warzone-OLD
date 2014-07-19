@@ -13,7 +13,7 @@ extern void G_DebugPrint( int level, const char *format, ... );
 
 qboolean NPC_IsValidNPCEnemy ( gentity_t *NPC )
 {
-	if (!NPC || !NPC->client) return;
+	if (!NPC || !NPC->client) return qfalse;
 	if (NPC->s.eType != ET_NPC) return qtrue;
 
 	switch (NPC->client->NPC_class)

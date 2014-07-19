@@ -2889,6 +2889,9 @@ void BG_PlayerStateToEntityState( playerState_t *ps, entityState_t *s, qboolean 
 	// UQ1: Added - to display damage stats on client...
 	s->damageCrit = ps->damageCrit;
 	s->damageValue = ps->damageValue;
+
+	// UQ1: Added - saber move styles...
+	s->saberMoveStyle = ps->saberMoveStyle;
 }
 
 /*
@@ -3045,6 +3048,9 @@ void BG_PlayerStateToEntityStateExtraPolate( playerState_t *ps, entityState_t *s
 	// UQ1: Added - to display damage stats on client...
 	s->damageCrit = ps->damageCrit;
 	s->damageValue = ps->damageValue;
+
+	// UQ1: Added - saber move styles...
+	s->saberMoveStyle = ps->saberMoveStyle;
 }
 
 /*

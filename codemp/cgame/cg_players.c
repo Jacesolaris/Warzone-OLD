@@ -9980,7 +9980,7 @@ CheckTrail:
 	if (cg_MovieSaberType.integer == 0)
 		//[/Movie Sabers]
 	{// Use Raven's superior sabers.
-		saberTrail->duration = saberMoveData[cent->currentState.saberMove].trailLength;
+		saberTrail->duration = saberMoveData[cent->currentState.saberMoveStyle][cent->currentState.saberMove].trailLength;
 
 		trailDur = (saberTrail->duration / 5.0f);
 		if (!trailDur)
@@ -10001,7 +10001,7 @@ CheckTrail:
 		{
 			if (!dontDraw)
 			{
-				if ((BG_SuperBreakWinAnim(cent->currentState.torsoAnim) || saberMoveData[cent->currentState.saberMove].trailLength > 0 || ((cent->currentState.powerups & (1 << PW_SPEED) && cg_speedTrail.integer)) || (cent->currentState.saberInFlight && saberNum == 0)) && cg.time < saberTrail->lastTime + 2000) // if we have a stale segment, don't draw until we have a fresh one
+				if ((BG_SuperBreakWinAnim(cent->currentState.torsoAnim) || saberMoveData[cent->currentState.saberMoveStyle][cent->currentState.saberMove].trailLength > 0 || ((cent->currentState.powerups & (1 << PW_SPEED) && cg_speedTrail.integer)) || (cent->currentState.saberInFlight && saberNum == 0)) && cg.time < saberTrail->lastTime + 2000) // if we have a stale segment, don't draw until we have a fresh one
 				{
 #if 0
 					if (cg_saberTrail.integer == 2 && cg_shadows.integer != 2 && cgs.glconfig.stencilBits >= 4)
@@ -10285,7 +10285,7 @@ CheckTrail:
 			dirlen1 = VectorLength(dir1);
 			dirlen2 = VectorLength(dir2);
 
-			if (saberMoveData[cent->currentState.saberMove].trailLength == 0)
+			if (saberMoveData[cent->currentState.saberMoveStyle][cent->currentState.saberMove].trailLength == 0)
 			{
 				dirlen0 *= 0.5;
 				dirlen1 *= 0.3;

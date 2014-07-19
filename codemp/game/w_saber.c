@@ -1455,7 +1455,6 @@ static QINLINE qboolean WP_SabersCheckLock2(gentity_t *attacker, gentity_t *defe
 
 //[SaberLockSys]
 //racc - redesigned most of WP_SabersCheckLock function. Credit OJP
-extern saberMoveData_t	saberMoveData[LS_MOVE_MAX];
 qboolean WP_SabersCheckLock(gentity_t *ent1, gentity_t *ent2)
 {
 	float dist;
@@ -1573,11 +1572,11 @@ qboolean WP_SabersCheckLock(gentity_t *ent1, gentity_t *ent2)
 	if (PM_SaberInParry(ent1->client->ps.saberMove)  //parries should always use their end quad
 		/*|| BG_GetTorsoAnimPoint(&ent1->client->ps, ent1->localAnimIndex) < .5*/)
 	{//use the endquad of the move
-		lockQuad = saberMoveData[ent1->client->ps.saberMove].endQuad;
+		lockQuad = saberMoveData[ent1->client->ps.saberMoveStyle][ent1->client->ps.saberMove].endQuad;
 	}
 	else
 	{//use the startquad of the move
-		lockQuad = saberMoveData[ent1->client->ps.saberMove].startQuad;
+		lockQuad = saberMoveData[ent1->client->ps.saberMoveStyle][ent1->client->ps.saberMove].startQuad;
 	}
 
 	switch (lockQuad)
@@ -1689,9 +1688,9 @@ static QINLINE qboolean WP_GetSaberDeflectionAngle(gentity_t *attacker, gentity_
 	if (animBasedDeflection)
 	{
 		//Hmm, let's try just basing it off the anim
-		int attQuadStart = saberMoveData[attacker->client->ps.saberMove].startQuad;
-		int attQuadEnd = saberMoveData[attacker->client->ps.saberMove].endQuad;
-		int defQuad = saberMoveData[defender->client->ps.saberMove].endQuad;
+		int attQuadStart = saberMoveData[attacker->client->ps.saberMoveStyle][attacker->client->ps.saberMove].startQuad;
+		int attQuadEnd = saberMoveData[attacker->client->ps.saberMoveStyle][attacker->client->ps.saberMove].endQuad;
+		int defQuad = saberMoveData[attacker->client->ps.saberMoveStyle][defender->client->ps.saberMove].endQuad;
 		int quadDiff = fabs((float)(defQuad - attQuadStart));
 
 		if (defender->client->ps.saberMove == LS_READY)
@@ -1746,9 +1745,9 @@ static QINLINE qboolean WP_GetSaberDeflectionAngle(gentity_t *attacker, gentity_
 			if (g_saberDebugPrint.integer)
 			{
 				Com_Printf("attack %s vs. parry %s bounced to %s\n",
-					animTable[saberMoveData[attMove].animToUse].name,
-					animTable[saberMoveData[defender->client->ps.saberMove].animToUse].name,
-					animTable[saberMoveData[attacker->client->ps.saberMove].animToUse].name);
+					animTable[saberMoveData[attacker->client->ps.saberMoveStyle][attMove].animToUse].name,
+					animTable[saberMoveData[defender->client->ps.saberMoveStyle][defender->client->ps.saberMove].animToUse].name,
+					animTable[saberMoveData[attacker->client->ps.saberMoveStyle][attacker->client->ps.saberMove].animToUse].name);
 			}
 #endif
 			attacker->client->ps.saberBlocked = BLOCKED_ATK_BOUNCE;
@@ -1801,9 +1800,9 @@ static QINLINE qboolean WP_GetSaberDeflectionAngle(gentity_t *attacker, gentity_
 				if (g_saberDebugPrint.integer)
 				{
 					Com_Printf("attack %s vs. parry %s bounced to %s\n",
-						animTable[saberMoveData[attMove].animToUse].name,
-						animTable[saberMoveData[defender->client->ps.saberMove].animToUse].name,
-						animTable[saberMoveData[attacker->client->ps.saberMove].animToUse].name);
+						animTable[saberMoveData[attacker->client->ps.saberMoveStyle][attMove].animToUse].name,
+						animTable[saberMoveData[defender->client->ps.saberMoveStyle][defender->client->ps.saberMove].animToUse].name,
+						animTable[saberMoveData[attacker->client->ps.saberMoveStyle][attacker->client->ps.saberMove].animToUse].name);
 				}
 #endif
 				attacker->client->ps.saberBlocked = BLOCKED_ATK_BOUNCE;
@@ -1820,9 +1819,9 @@ static QINLINE qboolean WP_GetSaberDeflectionAngle(gentity_t *attacker, gentity_
 				if (g_saberDebugPrint.integer)
 				{
 					Com_Printf("attack %s vs. parry %s deflected to %s\n",
-						animTable[saberMoveData[attMove].animToUse].name,
-						animTable[saberMoveData[defender->client->ps.saberMove].animToUse].name,
-						animTable[saberMoveData[attacker->client->ps.saberMove].animToUse].name);
+						animTable[saberMoveData[attacker->client->ps.saberMoveStyle][attMove].animToUse].name,
+						animTable[saberMoveData[defender->client->ps.saberMoveStyle][defender->client->ps.saberMove].animToUse].name,
+						animTable[saberMoveData[attacker->client->ps.saberMoveStyle][attacker->client->ps.saberMove].animToUse].name);
 				}
 #endif
 				attacker->client->ps.saberBlocked = BLOCKED_BOUNCE_MOVE;
@@ -4412,7 +4411,7 @@ static QINLINE qboolean CheckSaberDamage(gentity_t *self, int rSaberNum, int rBl
 			self->client->ps.saberBlocked = BLOCKED_PARRY_BROKEN;
 			if (self->client->ps.torsoAnim == self->client->ps.legsAnim)
 			{ //set anim now on both parts
-				int anim = saberMoveData[self->client->ps.saberMove].animToUse;
+				int anim = saberMoveData[self->client->ps.saberMoveStyle][self->client->ps.saberMove].animToUse;
 				G_SetAnim(self, &self->client->pers.cmd, SETANIM_BOTH, anim, SETANIM_FLAG_OVERRIDE | SETANIM_FLAG_HOLD, 0);
 			}
 

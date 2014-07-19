@@ -11,6 +11,8 @@
 #include "anims.h"
 #include "bg_vehicles.h"
 
+#define STYLE_MAX 7 // Max SP Anim Styles. MP used to use just 1.. lol. - DarkTide.
+
 //these two defs are shared now because we do clientside ent parsing
 #define	MAX_SPAWN_VARS			64
 #define	MAX_SPAWN_VARS_CHARS	4096
@@ -1472,7 +1474,8 @@ typedef struct saberMoveData_s {
 	saberMoveName_t chain_attack;		// What move to call if the attack button (and nothing else) is pressed
 	qboolean trailLength;
 } saberMoveData_t;
-extern saberMoveData_t	saberMoveData[LS_MOVE_MAX];
+
+extern saberMoveData_t	saberMoveData[STYLE_MAX][LS_MOVE_MAX];
 
 
 typedef enum saberType_e {
