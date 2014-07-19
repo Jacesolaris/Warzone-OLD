@@ -1324,22 +1324,35 @@ void G_CheckToggleBlock(gentity_t *ent, usercmd_t *ucmd)
 		ent->client->sess.sessionTeam == TEAM_SPECTATOR || (ent->client->ps.pm_flags & PMF_FOLLOW))
 	{
 		ent->client->ps.powerups[PW_BLOCK] = 0;
+		ent->blockToggleTime = 0;
 		return;
 	}
 
 	if (ucmd->buttons & BUTTON_BLOCK)
 	{
-		if (!ent->client->ps.powerups[PW_BLOCK])
+		if (ent->blockToggleTime > level.time)
+		{// Toggled less then a second ago.. Ignore...
+
+		}
+		else if (!ent->client->ps.powerups[PW_BLOCK])
 		{// BLOCK pressed, but PW_BLOCK not active. Turn it ON...
 			ent->client->ps.powerups[PW_BLOCK] = INT_MAX; // This *could* be a time in the future instead if you want block to last X milliseconds...
-			
+			ent->blockToggleTime = level.time + 250; // 250 ms between toggles...
+
 			if (!(ucmd->buttons & BUTTON_WALKING))
 				ucmd->buttons |= BUTTON_WALKING;
 		}
 		else
 		{// BLOCK pressed, and PW_BLOCK is active. Turn it OFF...
 			ent->client->ps.powerups[PW_BLOCK] = 0;
+			ent->blockToggleTime = level.time + 250; // 250 ms between toggles...
 		}
+	}
+
+	if (ent->client->ps.powerups[PW_BLOCK])
+	{// PW_BLOCK is active. Walk...
+		if (!(ucmd->buttons & BUTTON_WALKING))
+			ucmd->buttons |= BUTTON_WALKING;
 	}
 }
 
