@@ -3836,41 +3836,41 @@ weapChecks:
 			}
 		}
 
-		//[SaberSys]
-		else if ((pm->cmd.buttons & BUTTON_ALT_ATTACK) && (pm->cmd.buttons & BUTTON_ATTACK))
-		{//do some fancy faking stuff.
-			if (pm->ps->weaponstate != WEAPON_READY)
-			{
-				pm->ps->weaponstate = WEAPON_IDLE;
-			}
+		//[SaberSys] wont need this for now, it fucks up the saber attack code
+		//else if ((pm->cmd.buttons & BUTTON_ALT_ATTACK) && (pm->cmd.buttons & BUTTON_ATTACK))
+		//{//do some fancy faking stuff.
+		//	if (pm->ps->weaponstate != WEAPON_READY)
+		//	{
+		//		pm->ps->weaponstate = WEAPON_IDLE;
+		//	}
 
-			//Check for finishing an anim if necc.
-			if (curmove >= LS_S_TL2BR && curmove <= LS_S_T2B)
-			{//allow the player to fake into another transition
-				newmove = PM_DoFake(curmove);
-				if (newmove == LS_NONE)
-				{//no movement, just do the attack
-					newmove = LS_A_TL2BR + (curmove - LS_S_TL2BR);
-				}
-			}
-			else if (curmove >= LS_A_TL2BR && curmove <= LS_A_T2B)
-			{//finished attack, let attack code handle the next step.
-			}
-			else if (PM_SaberInTransition(curmove))
-			{//in a transition, must play sequential attack
-				newmove = PM_DoFake(curmove);
-				if (newmove == LS_NONE)
-				{//no movement, just let the normal attack code handle it
-					newmove = saberMoveData[curmove].chain_attack;
-				}
-			}
-			else if (PM_SaberInBounce(curmove))
-			{//in a bounce
-			}
-			else
-			{//returning from a parry I think.
-			}
-		}
+		//	//Check for finishing an anim if necc.
+		//	if (curmove >= LS_S_TL2BR && curmove <= LS_S_T2B)
+		//	{//allow the player to fake into another transition
+		//		newmove = PM_DoFake(curmove);
+		//		if (newmove == LS_NONE)
+		//		{//no movement, just do the attack
+		//			newmove = LS_A_TL2BR + (curmove - LS_S_TL2BR);
+		//		}
+		//	}
+		//	else if (curmove >= LS_A_TL2BR && curmove <= LS_A_T2B)
+		//	{//finished attack, let attack code handle the next step.
+		//	}
+		//	else if (PM_SaberInTransition(curmove))
+		//	{//in a transition, must play sequential attack
+		//		newmove = PM_DoFake(curmove);
+		//		if (newmove == LS_NONE)
+		//		{//no movement, just let the normal attack code handle it
+		//			newmove = saberMoveData[curmove].chain_attack;
+		//		}
+		//	}
+		//	else if (PM_SaberInBounce(curmove))
+		//	{//in a bounce
+		//	}
+		//	else
+		//	{//returning from a parry I think.
+		//	}
+		//}
 		//[/SaberSys]
 		// ***************************************************
 		// Pressing attack, so we must look up the proper attack move.
