@@ -3316,13 +3316,16 @@ void G_RunFrame( int levelTime ) {
 					ent->client->ps.powerups[ j ] = 0;
 				}
 			}
+		}
 
+		G_RunThink( ent );
+
+		if (ent->s.eType == ET_NPC)
+		{
 			WP_ForcePowersUpdate(ent, &ent->client->pers.cmd );
 			WP_SaberPositionUpdate(ent, &ent->client->pers.cmd);
 			WP_SaberStartMissileBlockCheck(ent, &ent->client->pers.cmd);
 		}
-
-		G_RunThink( ent );
 
 		if (g_allowNPC.integer)
 		{

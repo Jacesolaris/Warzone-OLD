@@ -755,7 +755,7 @@ int BG_BrokenParryForAttack( int move )
 	//Our attack was knocked away by a knockaway parry
 	//FIXME: need actual anims for this
 	//FIXME: need to know which side of the saber was hit!  For now, we presume the saber gets knocked away from the center
-	switch ( saberMoveData[0/*pm->ps->saberMoveStyle*/][move].startQuad ) // UQ1: FIXME - looks like this sometimes gets called before client has connected...
+	switch ( saberMoveData[0/*pm->ps->saberMoveStyle*/][move].startQuad ) // SP_SaberDamage causes it to crash here due to no pm-> info...
 	{
 	case Q_B:
 		return LS_V1_B_;
@@ -1147,7 +1147,7 @@ qboolean BG_StabDownAnim( int anim )
 
 int PM_SaberBounceForAttack( int move )
 {
-	switch ( saberMoveData[pm->ps->saberMoveStyle][move].startQuad )
+	switch ( saberMoveData[0/*pm->ps->saberMoveStyle*/][move].startQuad ) // SP_SaberDamage causes it to crash here due to no pm-> info...
 	{
 	case Q_B:
 	case Q_BR:

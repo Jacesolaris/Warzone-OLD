@@ -4806,12 +4806,15 @@ void NPC_Think ( gentity_t *self)//, int msec )
 #endif //__NPC_BBOX_ADJUST__
 
 				NPC_ExecuteBState( self );
-				//UQ1_UcmdMoveForDir( self, &NPCS.ucmd, self->movedir, ( NPCS.ucmd.buttons & BUTTON_WALKING ) );
+				
+				// UQ1: Always force move to any goal they might have...
+				NPC_MoveToGoal( qtrue );
 			}
 		}
 		else
 		{
-			//UQ1_UcmdMoveForDir( self, &NPCS.ucmd, self->movedir, ( NPCS.ucmd.buttons & BUTTON_WALKING ) );
+			// UQ1: Always force move to any goal they might have...
+			NPC_MoveToGoal( qtrue );
 		}
 
 #if	AI_TIMERS
