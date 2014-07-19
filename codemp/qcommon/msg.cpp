@@ -957,6 +957,7 @@ netField_t	entityStateFields[] =
 { NETF(damageCrit), 1 },
 { NETF(damageValue), 32 },
 { NETF(saberMoveStyle), 8 },
+{ NETF(NPC_NAME_ID), 8 },
 #endif //__MMO__
 
 //rww - for use by mod authors only

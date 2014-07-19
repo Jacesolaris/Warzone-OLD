@@ -2297,6 +2297,8 @@ typedef struct entityState_s {
 
 	int			saberMoveStyle;
 
+	int			NPC_NAME_ID;
+
 	//rww - spare values specifically for use by mod authors.
 	//See netf_overrides.txt if you want to increase the send
 	//amount of any of these above 1 bit.

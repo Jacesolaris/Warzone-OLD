@@ -3861,7 +3861,7 @@ void CG_DrawEnemyStatus( void )
 		// Load the list on first check...
 		Load_NPC_Names();
 
-		if (crosshairEnt->currentState.generic1 > 0)
+		if (crosshairEnt->currentState.NPC_NAME_ID > 0)
 		{// Was assigned a full name already! Yay!
 			switch( crosshairEnt->currentState.NPC_class )
 			{// UQ1: Supported Class Types...
@@ -3902,14 +3902,14 @@ void CG_DrawEnemyStatus( void )
 			case CLASS_TRANDOSHAN:
 			case CLASS_UGNAUGHT:
 			case CLASS_JAWA:
-				str1 = va("%s", NPC_NAME_LIST[crosshairEnt->currentState.generic1].HumanNames);
+				str1 = va("%s", NPC_NAME_LIST[crosshairEnt->currentState.NPC_NAME_ID].HumanNames);
 				break;
 			case CLASS_STORMTROOPER:
 			case CLASS_SWAMPTROOPER:
 			case CLASS_IMPWORKER:
 			case CLASS_IMPERIAL:
 			case CLASS_SHADOWTROOPER:
-				str1 = va("TK-%i", crosshairEnt->currentState.generic1);	// EVIL. for a number of reasons --eez
+				str1 = va("TK-%i", crosshairEnt->currentState.NPC_NAME_ID);	// EVIL. for a number of reasons --eez
 				break;
 			case CLASS_ATST:				// technically droid...
 				str1 = va("AT-ST");
@@ -4454,7 +4454,7 @@ static float CG_DrawEnemyInfo ( float y )
 		// Load the list on first check...
 		Load_NPC_Names();
 
-		if (crosshairEnt->currentState.generic1 > 0)
+		if (crosshairEnt->currentState.NPC_NAME_ID > 0)
 		{// Was assigned a full name already! Yay!
 			switch( crosshairEnt->currentState.NPC_class )
 			{// UQ1: Supported Class Types...
@@ -4495,14 +4495,14 @@ static float CG_DrawEnemyInfo ( float y )
 			case CLASS_TRANDOSHAN:
 			case CLASS_UGNAUGHT:
 			case CLASS_JAWA:
-				str1 = va("%s", NPC_NAME_LIST[crosshairEnt->currentState.generic1].HumanNames);
+				str1 = va("%s", NPC_NAME_LIST[crosshairEnt->currentState.NPC_NAME_ID].HumanNames);
 				break;
 			case CLASS_STORMTROOPER:
 			case CLASS_SWAMPTROOPER:
 			case CLASS_IMPWORKER:
 			case CLASS_IMPERIAL:
 			case CLASS_SHADOWTROOPER:
-				str1 = va("TK-%i", crosshairEnt->currentState.generic1);	// EVIL. for a number of reasons --eez
+				str1 = va("TK-%i", crosshairEnt->currentState.NPC_NAME_ID);	// EVIL. for a number of reasons --eez
 				break;
 			case CLASS_ATST:				// technically droid...
 				str1 = va("AT-ST");
@@ -8418,7 +8418,7 @@ void CG_DrawNPCNames( void )
 			break;
 		}
 
-		if (cent->currentState.generic1 > 0)
+		if (cent->currentState.NPC_NAME_ID > 0)
 		{// Was assigned a full name already! Yay!
 			switch( cent->currentState.NPC_class )
 			{// UQ1: Supported Class Types...
@@ -8459,14 +8459,14 @@ void CG_DrawNPCNames( void )
 			case CLASS_TRANDOSHAN:
 			case CLASS_UGNAUGHT:
 			case CLASS_JAWA:
-				str1 = va("%s", NPC_NAME_LIST[cent->currentState.generic1].HumanNames);
+				str1 = va("%s", NPC_NAME_LIST[cent->currentState.NPC_NAME_ID].HumanNames);
 				break;
 			case CLASS_STORMTROOPER:
 			case CLASS_SWAMPTROOPER:
 			case CLASS_IMPWORKER:
 			case CLASS_IMPERIAL:
 			case CLASS_SHADOWTROOPER:
-				str1 = va("TK-%i", cent->currentState.generic1);	// EVIL. for a number of reasons --eez
+				str1 = va("TK-%i", cent->currentState.NPC_NAME_ID);	// EVIL. for a number of reasons --eez
 				break;
 			case CLASS_ATST:				// technically droid...
 				str1 = va("AT-ST");

@@ -182,30 +182,25 @@ void SelectNPCNameFromList( gentity_t *NPC )
 	// Load names on first check...
 	Load_NPC_Names();
 
-	if (StringContainsWord(NPC->NPC_type, "r2d2"))
+	if (NPC->client->NPC_class == CLASS_R2D2)
 	{
-		NPC->s.generic1 = 1; // Init the NPC name...
-		NPC->client->ps.generic1 = NPC->s.generic1; // Init the NPC name...
+		NPC->s.NPC_NAME_ID = 1; // Init the NPC name...
 	}
-	else if (StringContainsWord(NPC->NPC_type, "r5d2"))
+	else if (NPC->client->NPC_class == CLASS_R5D2)
 	{
-		NPC->s.generic1 = 2; // Init the NPC name...
-		NPC->client->ps.generic1 = NPC->s.generic1; // Init the NPC name...
+		NPC->s.NPC_NAME_ID = 2; // Init the NPC name...
 	}
-	else if (StringContainsWord(NPC->NPC_type, "protocol"))
+	else if (NPC->client->NPC_class == CLASS_PROTOCOL)
 	{
-		NPC->s.generic1 = 3; // Init the NPC name...
-		NPC->client->ps.generic1 = NPC->s.generic1; // Init the NPC name...
+		NPC->s.NPC_NAME_ID = 3; // Init the NPC name...
 	}
-	else if (StringContainsWord(NPC->NPC_type, "weequay"))
+	else if (NPC->client->NPC_class == CLASS_WEEQUAY)
 	{
-		NPC->s.generic1 = 4; // Init the NPC name...
-		NPC->client->ps.generic1 = NPC->s.generic1; // Init the NPC name...
+		NPC->s.NPC_NAME_ID = 4; // Init the NPC name...
 	}
 	else
 	{
-		NPC->s.generic1 = irand(4, NUM_HUMAN_NAMES); // Init the NPC name...
-		NPC->client->ps.generic1 = NPC->s.generic1; // Init the NPC name...
+		NPC->s.NPC_NAME_ID = irand(5, NUM_HUMAN_NAMES); // Init the NPC name...
 	}
 }
 
@@ -1055,31 +1050,6 @@ void NPC_Begin (gentity_t *ent)
 	// UQ1: Give them a name (for kills)...
 	//strcpy(ent->client->pers.netname, va("a %s NPC", ent->NPC_type));
 	
-	if (ent->s.generic1 <= 0)
-	{// UQ1: Find their name type to send to an id to the client for names...
-//		int i;
-
-		ent->s.generic1 = 0; // Init the type...
-		ent->client->ps.generic1 = 0; // Init the type...
-
-		switch( ent->client->NPC_class )
-		{
-		case CLASS_STORMTROOPER:
-		case CLASS_SWAMPTROOPER:
-		case CLASS_IMPWORKER:
-		case CLASS_SHADOWTROOPER:
-			ent->s.generic1 = ent->client->ps.generic1 = irand(100, 999);
-			strcpy(ent->client->pers.netname, va("TK-%i", ent->client->ps.generic1));
-			break;
-		default:
-			SelectNPCNameFromList(ent);
-			strcpy(ent->client->pers.netname, va("%s", NPC_NAME_LIST[ent->client->ps.generic1].HumanNames));
-		}
-
-		//if (StringContainsWord(ent->NPC_type, NPC_NAMES[i]))
-		//trap->Print("NPC %i given name %s.\n", ent->s.number, NPC_NAMES[ent->s.generic1]);
-	}
-
 	// Init patrol range...
 	if (ent->patrol_range <= 0) ent->patrol_range = 512.0f;
 
@@ -1506,6 +1476,27 @@ void NPC_Begin (gentity_t *ent)
 
 		ent->health = ent->maxHealth = client->pers.maxHealth = client->ps.stats[STAT_MAX_HEALTH] = client->ps.stats[STAT_HEALTH] = ent->NPC->stats.health;
 		ent->client->ps.fd.forcePower = ent->client->ps.fd.forcePowerMax;
+	}
+
+	//if (ent->s.NPC_NAME_ID <= 0)
+	{// UQ1: Find their name type to send to an id to the client for names...
+		ent->s.NPC_NAME_ID = 0; // Init the type...
+
+		switch( ent->client->NPC_class )
+		{
+		case CLASS_STORMTROOPER:
+		case CLASS_SWAMPTROOPER:
+		case CLASS_IMPWORKER:
+		case CLASS_SHADOWTROOPER:
+			ent->s.NPC_NAME_ID = irand(100, 999);
+			strcpy(ent->client->pers.netname, va("TK-%i", ent->s.NPC_NAME_ID));
+			break;
+		default:
+			SelectNPCNameFromList(ent);
+			strcpy(ent->client->pers.netname, va("%s", NPC_NAME_LIST[ent->s.NPC_NAME_ID].HumanNames));
+		}
+
+		//trap->Print("NPC %i given name %s.\n", ent->s.number, NPC_NAMES[ent->s.NPC_NAME_ID]);
 	}
 }
 
