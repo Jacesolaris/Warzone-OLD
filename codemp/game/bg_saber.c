@@ -3835,7 +3835,7 @@ weapChecks:
 			}
 		}
 
-		//[SaberSys]
+		//[SaberSys] wont need this for now, it fucks up the saber attack code
 		//else if ((pm->cmd.buttons & BUTTON_ALT_ATTACK) && (pm->cmd.buttons & BUTTON_ATTACK))
 		//{//do some fancy faking stuff.
 		//	if (pm->ps->weaponstate != WEAPON_READY)
