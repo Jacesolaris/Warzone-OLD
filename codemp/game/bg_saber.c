@@ -3210,6 +3210,7 @@ saberMoveName_t PM_CheckPullAttack( void )
 
 qboolean PM_InSecondaryStyle( void )
 {
+	/*
 	if ( pm->ps->fd.saberAnimLevelBase == SS_STAFF
 		|| pm->ps->fd.saberAnimLevelBase == SS_DUAL )
 	{
@@ -3218,6 +3219,7 @@ qboolean PM_InSecondaryStyle( void )
 			return qtrue;
 		}
 	}
+	*/
 	return qfalse;
 }
 
@@ -3419,6 +3421,7 @@ saberMoveName_t PM_SaberAttackForMovement(saberMoveName_t curmove)
 		if ( pm->cmd.forwardmove > 0 )
 		{//forward= T2B slash
 			if (!noSpecials&&
+				pm->ps->saberMoveStyle == 0 &&
 				(pm->ps->fd.saberAnimLevel == SS_DUAL || pm->ps->fd.saberAnimLevel == SS_STAFF) &&
 				pm->ps->fd.forceRageRecoveryTime < pm->cmd.serverTime &&
 				//pm->ps->fd.forcePowerLevel[FP_LEVITATION] > FORCE_LEVEL_1 &&
@@ -3440,6 +3443,7 @@ saberMoveName_t PM_SaberAttackForMovement(saberMoveName_t curmove)
 				}
 			}
 			else if (!noSpecials&&
+				pm->ps->saberMoveStyle == 0 &&
 				pm->ps->fd.saberAnimLevel == SS_MEDIUM &&
 				pm->ps->velocity[2] > 100 &&
 				PM_GroundDistance() < 32 &&
@@ -3460,6 +3464,7 @@ saberMoveName_t PM_SaberAttackForMovement(saberMoveName_t curmove)
 				}
 			}
 			else if (!noSpecials&&
+				pm->ps->saberMoveStyle == 0 &&
 				pm->ps->fd.saberAnimLevel == SS_STRONG &&
 				pm->ps->velocity[2] > 100 &&
 				PM_GroundDistance() < 32 &&
@@ -3480,6 +3485,7 @@ saberMoveName_t PM_SaberAttackForMovement(saberMoveName_t curmove)
 				}
 			}
 			else if ((pm->ps->fd.saberAnimLevel == SS_FAST || pm->ps->fd.saberAnimLevel == SS_DUAL || pm->ps->fd.saberAnimLevel == SS_STAFF) &&
+				pm->ps->saberMoveStyle == 0 &&
 				pm->ps->groundEntityNum != ENTITYNUM_NONE &&
 				(pm->ps->pm_flags & PMF_DUCKED) &&
 				pm->ps->weaponTime <= 0 &&
@@ -3495,51 +3501,144 @@ saberMoveName_t PM_SaberAttackForMovement(saberMoveName_t curmove)
 			}
 			else if (!noSpecials&&
 				pm->ps->saberMoveStyle > 0 &&
-				pm->ps->velocity[2] > 100 &&
-				PM_GroundDistance() < 32 &&
-				!BG_InSpecialJump(pm->ps->legsAnim) &&
+				pm->ps->groundEntityNum != ENTITYNUM_NONE &&
+				(pm->ps->pm_flags & PMF_DUCKED) &&
+				pm->ps->weaponTime <= 0 &&
 				!BG_SaberInSpecialAttack(pm->ps->torsoAnim)&&
 				BG_EnoughForcePowerForMove(SABER_ALT_ATTACK_POWER_FB))
 			{//New jump moves. AIMod.
+				/*
+				SS_FAST,
+				SS_MEDIUM,
+				SS_STRONG,
+				SS_DESANN,
+				SS_TAVION,
+				SS_DUAL,
+				SS_STAFF,
+				*/
+
 				trace_t tr;
 
-				if (PM_SomeoneInFront(&tr))
+				qboolean inFront = PM_SomeoneInFront(&tr);
+
+				switch (pm->ps->saberMoveStyle)
 				{
-					if (pm->ps->saberMoveStyle == 2 
-						&& pm->ps->fd.saberAnimLevel == 5)
+				case 0:
+				case 3:
+					switch (pm->ps->fd.saberAnimLevel)
 					{
-						newmove = PM_SaberFlipStab(&tr);
-					}
-					else if (pm->ps->saberMoveStyle == 3 
-						&& pm->ps->fd.saberAnimLevel == 4)
-					{
+					case SS_FAST:
+						if (pm->ps->fd.saberAnimLevelBase == SS_FAST)
+							newmove = PM_SaberLungeAttackMove( noSpecials );
+						else
+							newmove = PM_SaberFlipOverAttackMove();
+						break;
+					case SS_MEDIUM:
+						newmove = PM_SaberJumpAttackMove();
+						break;
+					case SS_STRONG:
 						newmove = PM_SaberJumpAttackMove2();
+						break;
+					case SS_DESANN:
+						if (inFront)
+							newmove = PM_SaberDanceMove(&tr);
+						else
+							newmove = PM_SaberFlipOverAttackMove();
+						break;
+					case SS_TAVION:
+						newmove = PM_SaberFlipOverAttackMove();
+						break;
+					case SS_DUAL:
+						if (inFront)
+							newmove = PM_SaberDanceMove(&tr);
+						else
+							newmove = PM_SaberJumpAttackMove();
+						break;
+					case SS_STAFF:
+						newmove = PM_SaberJumpAttackMove2();
+						break;
 					}
-					else
+					break;
+				case 1:
+				case 4:
+					switch (pm->ps->fd.saberAnimLevel)
 					{
-						newmove = PM_SaberDanceMove(&tr);
+					case SS_FAST:
+						if (pm->ps->fd.saberAnimLevelBase == SS_FAST)
+							newmove = PM_SaberLungeAttackMove( noSpecials );
+						else
+							newmove = PM_SaberJumpAttackMove();
+						break;
+					case SS_MEDIUM:
+						if (inFront)
+							newmove = PM_SaberDanceMove(&tr);
+						else
+							newmove = PM_SaberJumpAttackMove();
+						break;
+					case SS_STRONG:
+						newmove = PM_SaberFlipOverAttackMove();
+						break;
+					case SS_DESANN:
+						newmove = PM_SaberJumpAttackMove();
+						break;
+					case SS_TAVION:
+						if (inFront)
+							newmove = PM_SaberDanceMove(&tr);
+						else
+							newmove = PM_SaberJumpAttackMove2();
+						break;
+					case SS_DUAL:
+						newmove = PM_SaberFlipOverAttackMove();
+						break;
+					case SS_STAFF:
+						newmove = PM_SaberJumpAttackMove2();
+						break;
 					}
-					
-					if ( newmove != LS_A_T2B
-						&& newmove != LS_NONE )
+					break;
+				case 2:
+				default:
+					switch (pm->ps->fd.saberAnimLevel)
 					{
-						BG_ForcePowerDrain(pm->ps, FP_GRIP, SABER_ALT_ATTACK_POWER_FB);
+					case SS_FAST:
+						if (pm->ps->fd.saberAnimLevelBase == SS_FAST)
+							newmove = PM_SaberLungeAttackMove( noSpecials );
+						else if (inFront)
+							newmove = PM_SaberDanceMove(&tr);
+						else
+							newmove = PM_SaberJumpAttackMove();
+						break;
+					case SS_MEDIUM:
+						newmove = PM_SaberJumpAttackMove2();
+						break;
+					case SS_STRONG:
+						newmove = PM_SaberJumpAttackMove();
+						break;
+					case SS_DESANN:
+						newmove = PM_SaberFlipOverAttackMove();
+						break;
+					case SS_TAVION:
+						if (inFront)
+							newmove = PM_SaberDanceMove(&tr);
+						else
+							newmove = PM_SaberJumpAttackMove2();
+						break;
+					case SS_DUAL:
+						newmove = PM_SaberJumpAttackMove2();
+						break;
+					case SS_STAFF:
+						if (inFront)
+							newmove = PM_SaberDanceMove(&tr);
+						else
+							newmove = PM_SaberFlipOverAttackMove();
+						break;
 					}
+					break;
 				}
-				else
+
+				if ( newmove != LS_A_T2B
+					&& newmove != LS_NONE )
 				{
-					newmove = PM_SaberJumpAttackMove2();
-
-					if ( newmove != LS_A_T2B
-						&& newmove != LS_NONE )
-					{
-						BG_ForcePowerDrain(pm->ps, FP_GRIP, SABER_ALT_ATTACK_POWER_FB);
-					}
-
-					/*if (rand()%2 <= 1)
-						newmove = LS_JUMPATTACK_STAFF_RIGHT;
-					else
-						newmove = LS_JUMPATTACK_STAFF_LEFT;*/
+					BG_ForcePowerDrain(pm->ps, FP_GRIP, SABER_ALT_ATTACK_POWER_FB);
 				}
 			}
 			else if ( !noSpecials )
@@ -3751,10 +3850,12 @@ qboolean PM_SaberMoveOkayForKata(void)
 
 qboolean PM_CanDoKata( void )
 {
+	/*
 	if ( PM_InSecondaryStyle() )
 	{
 		return qfalse;
 	}
+	*/
 
 	if ( !pm->ps->saberInFlight//not throwing saber
 		&& PM_SaberMoveOkayForKata()
@@ -3774,6 +3875,7 @@ qboolean PM_CanDoKata( void )
 		&& BG_EnoughForcePowerForMove(SABER_ALT_ATTACK_POWER) )// have enough power
 	{//FIXME: check rage, etc...
 		saberInfo_t *saber = BG_MySaber( pm->ps->clientNum, 0 );
+		/*
 		if ( saber
 			&& saber->kataMove == LS_NONE )
 		{//kata move has been overridden in a way that should stop you from doing it at all
@@ -3785,6 +3887,7 @@ qboolean PM_CanDoKata( void )
 		{//kata move has been overridden in a way that should stop you from doing it at all
 			return qfalse;
 		}
+		*/
 		return qtrue;
 	}
 	return qfalse;
@@ -4650,28 +4753,122 @@ weapChecks:
 				overrideMove = LS_NONE;
 			}
 		}
+
+		if (pm->ps->saberMoveStyle > 0)
+			overrideMove = LS_INVALID; // Force it to select one...
+
 		if ( overrideMove == LS_INVALID )
 		{//not overridden
-			//FIXME: make sure to turn on saber(s)!
-			switch ( pm->ps->fd.saberAnimLevel )
+			if (pm->ps->saberMoveStyle == 0)
 			{
-			case SS_FAST:
-			case SS_TAVION:
-				PM_SetSaberMove( LS_A1_SPECIAL );
-				break;
-			case SS_MEDIUM:
-				PM_SetSaberMove( LS_A2_SPECIAL );
-				break;
-			case SS_STRONG:
-			case SS_DESANN:
-				PM_SetSaberMove( LS_A3_SPECIAL );
-				break;
-			case SS_DUAL:
-				PM_SetSaberMove( LS_DUAL_SPIN_PROTECT );//PM_CheckDualSpinProtect();
-				break;
-			case SS_STAFF:
-				PM_SetSaberMove( LS_STAFF_SOULCAL );
-				break;
+				//FIXME: make sure to turn on saber(s)!
+				switch ( pm->ps->fd.saberAnimLevel )
+				{
+				case SS_FAST:
+				case SS_TAVION:
+					PM_SetSaberMove( LS_A1_SPECIAL );
+					break;
+				case SS_MEDIUM:
+					PM_SetSaberMove( LS_A2_SPECIAL );
+					break;
+				case SS_STRONG:
+				case SS_DESANN:
+					PM_SetSaberMove( LS_A3_SPECIAL );
+					break;
+				case SS_DUAL:
+					PM_SetSaberMove( LS_DUAL_SPIN_PROTECT );//PM_CheckDualSpinProtect();
+					break;
+				case SS_STAFF:
+					PM_SetSaberMove( LS_STAFF_SOULCAL );
+					break;
+				default:
+					PM_SetSaberMove( LS_DUAL_SPIN_PROTECT );
+					break;
+				}
+			}
+			else
+			{
+				switch (pm->ps->saberMoveStyle)
+				{
+				case 0:
+				case 3:
+					switch ( pm->ps->fd.saberAnimLevel )
+					{
+					case SS_FAST:
+					case SS_TAVION:
+						PM_SetSaberMove( LS_A2_SPECIAL );
+						break;
+					case SS_MEDIUM:
+						PM_SetSaberMove( LS_A1_SPECIAL );
+						break;
+					case SS_STRONG:
+					case SS_DESANN:
+						PM_SetSaberMove( LS_DUAL_SPIN_PROTECT );//PM_CheckDualSpinProtect();
+						break;
+					case SS_DUAL:
+						PM_SetSaberMove( LS_A3_SPECIAL );
+						break;
+					case SS_STAFF:
+						PM_SetSaberMove( LS_DUAL_SPIN_PROTECT );
+						break;
+					default:
+						PM_SetSaberMove( LS_STAFF_SOULCAL );
+						break;
+					}
+					break;
+				case 1:
+				case 4:
+					switch ( pm->ps->fd.saberAnimLevel )
+					{
+					case SS_FAST:
+					case SS_TAVION:
+						PM_SetSaberMove( LS_DUAL_SPIN_PROTECT );
+						break;
+					case SS_MEDIUM:
+						PM_SetSaberMove( LS_STAFF_SOULCAL );
+						break;
+					case SS_STRONG:
+					case SS_DESANN:
+						PM_SetSaberMove( LS_DUAL_SPIN_PROTECT );
+						break;
+					case SS_DUAL:
+						PM_SetSaberMove( LS_A1_SPECIAL );
+						break;
+					case SS_STAFF:
+						PM_SetSaberMove( LS_A2_SPECIAL );
+						break;
+					default:
+						PM_SetSaberMove( LS_A3_SPECIAL );
+						break;
+					}
+					break;
+				case 2:
+				default:
+					switch ( pm->ps->fd.saberAnimLevel )
+					{
+					case SS_FAST:
+					case SS_TAVION:
+						PM_SetSaberMove( LS_DUAL_SPIN_PROTECT );
+						break;
+					case SS_MEDIUM:
+						PM_SetSaberMove( LS_STAFF_SOULCAL );
+						break;
+					case SS_STRONG:
+					case SS_DESANN:
+						PM_SetSaberMove( LS_DUAL_SPIN_PROTECT );
+						break;
+					case SS_DUAL:
+						PM_SetSaberMove( LS_A3_SPECIAL );
+						break;
+					case SS_STAFF:
+						PM_SetSaberMove( LS_A2_SPECIAL );
+						break;
+					default:
+						PM_SetSaberMove( LS_A1_SPECIAL );
+						break;
+					}
+					break;
+				}
 			}
 			pm->ps->weaponstate = WEAPON_FIRING;
 			//G_DrainPowerForSpecialMove( pm->gent, FP_SABER_OFFENSE, SABER_ALT_ATTACK_POWER );//FP_SPEED, SINGLE_SPECIAL_POWER );
