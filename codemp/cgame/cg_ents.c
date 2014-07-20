@@ -3078,9 +3078,17 @@ void CG_CalcEntityLerpPositions( centity_t *cent ) {
 	if ( !cg_smoothClients.integer ) {
 		// make sure the clients use TR_INTERPOLATE
 		if ( (cent->currentState.number != cg.clientNum && cent->currentState.number < MAX_CLIENTS) || cent->currentState.eType == ET_NPC ) {
-			cent->currentState.pos.trType = TR_INTERPOLATE;
+			//cent->currentState.pos.trType = TR_INTERPOLATE;
 			cent->nextState.pos.trType = TR_INTERPOLATE;
+			cent->currentState.pos.trType = TR_LINEAR_STOP;
 		}
+	}
+
+	if ( cg.nextSnap && cent->currentState.eType == ET_NPC )
+	{// UQ1: If we have a snapshot, and this is an NPC, interpolate to stop jitter!
+		cent->currentState.pos.trType = TR_INTERPOLATE;
+		cent->nextState.pos.trType = TR_INTERPOLATE;
+		cent->interpolate = qtrue;
 	}
 
 	if (cg.predictedPlayerState.m_iVehicleNum &&
