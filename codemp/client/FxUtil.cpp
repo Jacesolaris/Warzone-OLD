@@ -1082,7 +1082,8 @@ CFlash *FX_AddFlash( vec3_t origin,
 
 	if (!shader)
 	{ //yeah..this is bad, I guess, but SP seems to handle it by not drawing the flash, so I will too.
-		assert(shader);
+		//assert(shader);
+		Com_Printf( S_COLOR_RED "WARNING: FX_AddFlash Tried to draw a non-existant shader.\n" ); // UQ1: Don't want this crashing...
 		return 0;
 	}
 
