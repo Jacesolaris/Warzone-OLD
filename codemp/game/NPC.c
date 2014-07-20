@@ -4353,6 +4353,24 @@ qboolean NPC_FollowRoutes( void )
 		}
 	}
 
+	if (NPC->NPC->conversationPartner)
+	{// Chatting with another NPC... Stay still!
+		NPC_FacePosition( NPC->NPC->conversationPartner->r.currentOrigin, qfalse );
+		NPC_NPCConversation();
+		return qfalse;
+	}
+
+	if (!NPC->enemy && !NPC->NPC->conversationPartner)
+	{// UQ1: Strange place to do this, but whatever... ;)
+		NPC_FindConversationPartner();
+	}
+
+	if (NPC->NPC->conversationPartner)
+	{// Chatting with another NPC... Stay still!
+		NPC_FacePosition( NPC->NPC->conversationPartner->r.currentOrigin, qfalse );
+		return qfalse;
+	}
+
 	G_ClearEnemy(NPC);
 	NPC->enemy = NULL;
 
