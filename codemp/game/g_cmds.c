@@ -4829,6 +4829,10 @@ void Cmd_ToggleSaber_f(gentity_t *ent)
 extern vmCvar_t		d_saberStanceDebug;
 
 extern qboolean WP_SaberCanTurnOffSomeBlades( saberInfo_t *saber );
+
+//#define __TEST_ALL_STANCES__ // Enable this to test all stances...
+//#define __TEST_ORIGINAL_STANCES__ // Enable this to test old stances...
+
 void Cmd_SaberAttackCycle_f(gentity_t *ent)
 {
 	int selectLevel = 0;
@@ -4855,6 +4859,173 @@ void Cmd_SaberAttackCycle_f(gentity_t *ent)
 	// FIXME - remove ALL trap->SendServerCommand and add CGAME display...
 	//
 
+#ifdef __TEST_ALL_STANCES__
+	ent->client->ps.fd.saberAnimLevelBase = SS_FAST;
+
+	/*
+	SS_NONE=0,
+	SS_FAST,
+	SS_MEDIUM,
+	SS_STRONG,
+	SS_DESANN,
+	SS_TAVION,
+	SS_DUAL,
+	SS_STAFF,
+	SS_NUM_SABER_STYLES
+	*/
+
+	selectLevel = ent->client->ps.fd.saberAnimLevel;
+
+	selectLevel++;
+
+	if (selectLevel >= SS_NUM_SABER_STYLES)
+	{
+		selectLevel = SS_FAST;
+		ANIM_STYLE++;
+	}
+
+	if (ANIM_STYLE > 5) ANIM_STYLE = 0;
+
+	trap->SendServerCommand( ent->client->ps.clientNum, va("cp \"^3Saber Stance Change:\n\n^7STYLE #%i - STANCE #%i^5.\n\"", ANIM_STYLE, selectLevel));
+
+	if (ent->client->ps.weaponTime <= 0)
+	{ //not busy, set it now
+		ent->client->ps.fd.saberAnimLevelBase = ent->client->ps.fd.saberAnimLevel = selectLevel;
+	}
+	else
+	{ //can't set it now or we might cause unexpected chaining, so queue it
+		ent->client->ps.fd.saberAnimLevelBase = ent->client->saberCycleQueue = selectLevel;
+	}
+
+	ent->client->ps.saberMoveStyle = ANIM_STYLE;
+	return;
+
+#else //!__TEST_ALL_STANCES__
+
+#ifndef __TEST_ORIGINAL_STANCES__
+	if (ent->client->saber[0].model[0] && ent->client->saber[1].model[0])
+	{ //dual sabers
+		//
+		// Dual Sabers...
+		//
+
+		ent->client->ps.fd.saberAnimLevelBase = SS_DUAL;
+
+		if (ANIM_STYLE == 1
+			&& ent->client->ps.fd.saberAnimLevel == SS_DESANN)
+		{// Cycle to #5.
+			ent->client->ps.saberHolstered = 1; // Turn OFF one saber...
+			ANIM_STYLE = 0;
+			selectLevel = SS_MEDIUM;
+			trap->SendServerCommand( ent->client->ps.clientNum, va("cp \"^3Saber Stance Change:\n\n^7SINGLE SABER^5.\n\""));
+		}
+		else if (ANIM_STYLE == 1
+			&& ent->client->ps.fd.saberAnimLevel == SS_TAVION)
+		{// Cycle to #4.
+			ANIM_STYLE = 1;
+			selectLevel = SS_DESANN;
+			trap->SendServerCommand( ent->client->ps.clientNum, va("cp \"^3Saber Stance Change:\n\n^7DUAL SABER #4^5.\n\""));
+		}
+		else if (ANIM_STYLE == 2
+			&& ent->client->ps.fd.saberAnimLevel == SS_DESANN)
+		{// Cycle to #3.
+			ANIM_STYLE = 1;
+			selectLevel = SS_TAVION;
+			trap->SendServerCommand( ent->client->ps.clientNum, va("cp \"^3Saber Stance Change:\n\n^7DUAL SABER #3^5.\n\""));
+		}
+		else if (ANIM_STYLE == 0
+			&& ent->client->ps.fd.saberAnimLevel == SS_DUAL)
+		{// Cycle to #2.
+			ANIM_STYLE = 2;
+			selectLevel = SS_DESANN;
+			trap->SendServerCommand( ent->client->ps.clientNum, va("cp \"^3Saber Stance Change:\n\n^7DUAL SABER #2^5.\n\""));
+		}
+		else
+		{// Cycle to #1. (Original)
+			ent->client->ps.saberHolstered = 0; // Turn ON both sabers...
+			ANIM_STYLE = 0;
+			selectLevel = SS_DUAL;
+			trap->SendServerCommand( ent->client->ps.clientNum, va("cp \"^3Saber Stance Change:\n\n^7DUAL SABER #1^5.\n\""));
+		}
+
+		if (ent->client->ps.weaponTime <= 0)
+		{ //not busy, set it now
+			ent->client->ps.fd.saberAnimLevelBase = ent->client->ps.fd.saberAnimLevel = selectLevel;
+		}
+		else
+		{ //can't set it now or we might cause unexpected chaining, so queue it
+			ent->client->ps.fd.saberAnimLevelBase = ent->client->saberCycleQueue = selectLevel;
+		}
+
+		ent->client->ps.saberMoveStyle = ANIM_STYLE;
+
+		//				G_Printf("^1*** ^3Saber Stance Change:^5 Player ^7%s^5 changed to animation style #^7%i^5, saber level #^7%i^5.\n", ent->client->pers.netname, 
+		//					ANIM_STYLE, selectLevel);
+
+		return;
+	}
+	else if (ent->client->saber[0].numBlades > 1)
+	{ //use staff stance then. -- (dual blade)
+		//
+		// Dual Blade Saber...
+		//
+
+		ent->client->ps.fd.saberAnimLevelBase = SS_STAFF;
+
+		if (ANIM_STYLE == 1
+			&& ent->client->ps.fd.saberAnimLevel == SS_TAVION)
+		{// Cycle to #5.
+			ANIM_STYLE = 1;
+			selectLevel = SS_DESANN;
+			trap->SendServerCommand( ent->client->ps.clientNum, va("cp \"^3Saber Stance Change:\n\n^7SINGLE BLADE #2^5.\n\""));
+		}
+		else if (ANIM_STYLE == 0
+			&& ent->client->ps.fd.saberAnimLevel == SS_DUAL)
+		{// Cycle to #4.
+			ent->client->ps.saberHolstered = 1; // Turn OFF one blade...
+			ANIM_STYLE = 1;
+			selectLevel = SS_TAVION;
+			trap->SendServerCommand( ent->client->ps.clientNum, va("cp \"^3Saber Stance Change:\n\n^7SINGLE BLADE #1^5.\n\""));
+		}
+		else if (ANIM_STYLE == 0
+			&& ent->client->ps.fd.saberAnimLevel == SS_TAVION)
+		{// Cycle to #3.
+			ANIM_STYLE = 0;
+			selectLevel = SS_DUAL;
+			trap->SendServerCommand( ent->client->ps.clientNum, va("cp \"^3Saber Stance Change:\n\n^7DUALBLADE #3^5.\n\""));
+		}
+		else if (ANIM_STYLE == 0
+			&& ent->client->ps.fd.saberAnimLevel == SS_STAFF)
+		{// Cycle to #2.
+			ANIM_STYLE = 0;
+			selectLevel = SS_TAVION;
+			trap->SendServerCommand( ent->client->ps.clientNum, va("cp \"^3Saber Stance Change:\n\n^7DUALBLADE #2^5.\n\""));
+		}
+		else
+		{// Cycle to #1. (Original)
+			ent->client->ps.saberHolstered = 0; // Turn ON both blades...
+			ANIM_STYLE = 0;
+			selectLevel = SS_STAFF;
+			trap->SendServerCommand( ent->client->ps.clientNum, va("cp \"^3Saber Stance Change:\n\n^7DUALBLADE #1^5.\n\""));
+		}
+
+		if (ent->client->ps.weaponTime <= 0)
+		{ //not busy, set it now
+			ent->client->ps.fd.saberAnimLevelBase = ent->client->ps.fd.saberAnimLevel = selectLevel;
+		}
+		else
+		{ //can't set it now or we might cause unexpected chaining, so queue it
+			ent->client->ps.fd.saberAnimLevelBase = ent->client->saberCycleQueue = selectLevel;
+		}
+
+		ent->client->ps.saberMoveStyle = ANIM_STYLE;
+
+		//				G_Printf("^1*** ^3Saber Stance Change:^5 Player ^7%s^5 changed to animation style #^7%i^5, saber level #^7%i^5.\n", ent->client->pers.netname, 
+		//					ANIM_STYLE, selectLevel);
+
+		return;
+	}
+#else //__TEST_ORIGINAL_STANCES__
 	if (ent->client->saber[0].model[0] && ent->client->saber[1].model[0])
 	{ //dual sabers
 		//
@@ -5138,6 +5309,7 @@ void Cmd_SaberAttackCycle_f(gentity_t *ent)
 			return;
 		}
 	}
+#endif //__TEST_ORIGINAL_STANCES__
 
 	if (ent->client->saberCycleQueue)
 	{ //resume off of the queue if we haven't gotten a chance to update it yet
@@ -5184,6 +5356,7 @@ void Cmd_SaberAttackCycle_f(gentity_t *ent)
 		// Single Saber...
 		//
 
+#ifdef __TEST_ORIGINAL_STANCES__
 		if (ANIM_STYLE == 3
 			&& ent->client->ps.fd.saberAnimLevel == SS_STRONG)
 		{// Cycle to #10.
@@ -5265,6 +5438,63 @@ void Cmd_SaberAttackCycle_f(gentity_t *ent)
 
 		ent->client->ps.saberMoveStyle = ANIM_STYLE;
 
+#else //!__TEST_ORIGINAL_STANCES__
+		// UQ1: These are all (except db stance) the original stances... Enough for now...
+		if (ANIM_STYLE == 0
+			&& ent->client->ps.fd.saberAnimLevel == SS_DESANN)
+		{// Cycle to #6.
+			ANIM_STYLE = 0;
+			selectLevel = SS_TAVION;
+			trap->SendServerCommand( ent->client->ps.clientNum, va("cp \"^3Saber Stance Change:\n\n^7SINGLE SABER #6^5.\n\""));
+		}
+		else if (ANIM_STYLE == 0
+			&& ent->client->ps.fd.saberAnimLevel == SS_DUAL)
+		{// Cycle to #5.
+			ANIM_STYLE = 0;
+			selectLevel = SS_DESANN;
+			trap->SendServerCommand( ent->client->ps.clientNum, va("cp \"^3Saber Stance Change:\n\n^7SINGLE SABER #5^5.\n\""));
+		}
+		else if (ANIM_STYLE == 0
+			&& ent->client->ps.fd.saberAnimLevel == SS_STRONG)
+		{// Cycle to #4.
+			ANIM_STYLE = 0;
+			selectLevel = SS_DUAL;
+			trap->SendServerCommand( ent->client->ps.clientNum, va("cp \"^3Saber Stance Change:\n\n^7SINGLE SABER #4^5.\n\""));
+		}
+		else if (ANIM_STYLE == 0
+			&& ent->client->ps.fd.saberAnimLevel == SS_MEDIUM)
+		{// Cycle to #3.
+			ANIM_STYLE = 0;
+			selectLevel = SS_STRONG;
+			trap->SendServerCommand( ent->client->ps.clientNum, va("cp \"^3Saber Stance Change:\n\n^7SINGLE SABER #3^5.\n\""));
+		}
+		else if (ANIM_STYLE == 0
+			&& ent->client->ps.fd.saberAnimLevel == SS_FAST)
+		{// Cycle to #2.
+			ANIM_STYLE = 0;
+			selectLevel = SS_MEDIUM;
+			trap->SendServerCommand( ent->client->ps.clientNum, va("cp \"^3Saber Stance Change:\n\n^7SINGLE SABER #2^5.\n\""));
+		}
+		else
+		{// Cycle to #1. (Original)
+			ANIM_STYLE = 0;
+			selectLevel = SS_FAST;
+			trap->SendServerCommand( ent->client->ps.clientNum, va("cp \"^3Saber Stance Change:\n\n^7SINGLE SABER #1^5.\n\""));
+		}
+
+		if (ent->client->ps.weaponTime <= 0)
+		{ //not busy, set it now
+			ent->client->ps.fd.saberAnimLevelBase = ent->client->ps.fd.saberAnimLevel = selectLevel;
+		}
+		else
+		{ //can't set it now or we might cause unexpected chaining, so queue it
+			ent->client->ps.fd.saberAnimLevelBase = ent->client->saberCycleQueue = selectLevel;
+		}
+
+		ent->client->ps.saberMoveStyle = ANIM_STYLE;
+
+#endif //__TEST_ORIGINAL_STANCES__
+
 		//				G_Printf("^1*** ^3Saber Stance Change:^5 Player ^7%s^5 changed to animation style #^7%i^5, saber level #^7%i^5.\n", ent->client->pers.netname, 
 		//					ANIM_STYLE, selectLevel);
 
@@ -5300,6 +5530,7 @@ void Cmd_SaberAttackCycle_f(gentity_t *ent)
 	{ //can't set it now or we might cause unexpected chaining, so queue it
 		ent->client->ps.fd.saberAnimLevelBase = ent->client->saberCycleQueue = selectLevel;
 	}
+#endif //__TEST_ALL_STANCES__
 }
 
 qboolean G_OtherPlayersDueling(void)
