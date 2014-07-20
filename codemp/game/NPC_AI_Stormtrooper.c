@@ -14,6 +14,7 @@ extern void NPC_CheckGetNewWeapon( void );
 extern int GetTime ( int lastTime );
 extern void NPC_AimAdjust( int change );
 extern qboolean FlyingCreature( gentity_t *ent );
+extern qboolean NPC_CanUseAdvancedFighting();
 
 #define	MAX_VIEW_DIST		1024
 #define MAX_VIEW_SPEED		250
@@ -2432,6 +2433,9 @@ void NPC_BSST_Attack( void )
 		return;
 	}
 
+	// UQ1: Added evasion...
+	NPC_CheckEvasion();
+
 	//NPC_CheckEnemy( qtrue, qfalse );
 	//If we don't have an enemy, just idle
 	if ( NPC_CheckEnemyExt(qfalse) == qfalse )//!NPC->enemy )//
@@ -2737,7 +2741,6 @@ void NPC_BSST_Attack( void )
 	}
 }
 
-
 void NPC_BSST_Default( void )
 {
 	if( NPCS.NPCInfo->scriptFlags & SCF_FIRE_WEAPON )
@@ -2751,7 +2754,14 @@ void NPC_BSST_Default( void )
 	}
 	else //if ( NPC->enemy )
 	{//have an enemy
-		NPC_CheckGetNewWeapon();
-		NPC_BSST_Attack();
+		if (NPC_CanUseAdvancedFighting())
+		{
+			NPC_BSJedi_Default();
+		}
+		else
+		{
+			NPC_CheckGetNewWeapon();
+			NPC_BSST_Attack();
+		}
 	}
 }

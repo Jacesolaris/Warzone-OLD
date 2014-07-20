@@ -4,6 +4,385 @@
 
 extern qboolean NPC_SomeoneLookingAtMe(gentity_t *ent);
 
+extern void Jedi_SetEnemyInfo( vec3_t enemy_dest, vec3_t enemy_dir, float *enemy_dist, vec3_t enemy_movedir, float *enemy_movespeed, int prediction );
+extern void Jedi_EvasionSaber( vec3_t enemy_movedir, float enemy_dist, vec3_t enemy_dir );
+
+qboolean NPC_IsHumanoid ( gentity_t *self )
+{
+	switch (self->client->NPC_class)
+	{
+	//case CLASS_ATST:
+	case CLASS_BARTENDER:
+	case CLASS_BESPIN_COP:		
+	case CLASS_CLAW:
+	case CLASS_COMMANDO:
+	case CLASS_DESANN:		
+	//case CLASS_FISH:
+	//case CLASS_FLIER2:
+	case CLASS_GALAK:
+	//case CLASS_GLIDER:
+	//case CLASS_GONK:				// droid
+	case CLASS_GRAN:
+	//case CLASS_HOWLER:
+	case CLASS_IMPERIAL:
+	case CLASS_IMPWORKER:
+	//case CLASS_INTERROGATOR:		// droid 
+	case CLASS_JAN:				
+	case CLASS_JEDI:
+	case CLASS_KYLE:				
+	case CLASS_LANDO:			
+	//case CLASS_LIZARD:
+	case CLASS_LUKE:				// UQ1: TODO - maybe should be allowed to switch to pistol/blaster???
+	//case CLASS_MARK1:			// droid
+	//case CLASS_MARK2:			// droid
+	//case CLASS_GALAKMECH:		// droid
+	//case CLASS_MINEMONSTER:
+	case CLASS_MONMOTHA:			
+	case CLASS_MORGANKATARN:
+	//case CLASS_MOUSE:			// droid
+	//case CLASS_MURJJ:
+	case CLASS_PRISONER:
+	//case CLASS_PROBE:			// droid
+	case CLASS_PROTOCOL:			// droid
+	//case CLASS_R2D2:				// droid
+	//case CLASS_R5D2:				// droid
+	case CLASS_REBEL:
+	case CLASS_REBORN:
+	case CLASS_REELO:
+	//case CLASS_REMOTE:
+	case CLASS_RODIAN:
+	//case CLASS_SEEKER:			// droid
+	//case CLASS_SENTRY:
+	case CLASS_SHADOWTROOPER:
+	case CLASS_STORMTROOPER:
+	case CLASS_SWAMP:
+	case CLASS_SWAMPTROOPER:
+	case CLASS_TAVION:
+	case CLASS_TRANDOSHAN:
+	case CLASS_UGNAUGHT:
+	case CLASS_JAWA:
+	case CLASS_WEEQUAY:
+	case CLASS_BOBAFETT:
+	//case CLASS_VEHICLE:
+	//case CLASS_RANCOR:
+	//case CLASS_WAMPA:
+	case CLASS_CIVILIAN:			// UQ1: Random civilian NPCs...
+	case CLASS_GENERAL_VENDOR:
+	case CLASS_WEAPONS_VENDOR:
+	case CLASS_ARMOR_VENDOR:
+	case CLASS_SUPPLIES_VENDOR:
+	case CLASS_FOOD_VENDOR:
+	case CLASS_MEDICAL_VENDOR:
+	case CLASS_GAMBLER_VENDOR:
+	case CLASS_TRADE_VENDOR:
+	case CLASS_ODDITIES_VENDOR:
+	case CLASS_DRUG_VENDOR:
+	case CLASS_TRAVELLING_VENDOR:
+		// Humanoid...
+		return qtrue;
+		break;
+	default:
+		// NOT Humanoid...
+		break;
+	}
+
+	return qfalse;
+}
+
+qboolean NPC_IsJedi ( gentity_t *self )
+{
+	switch (self->client->NPC_class)
+	{
+	//case CLASS_ATST:
+	//case CLASS_BARTENDER:
+	//case CLASS_BESPIN_COP:		
+	//case CLASS_CLAW:
+	//case CLASS_COMMANDO:
+	case CLASS_DESANN:		
+	//case CLASS_FISH:
+	//case CLASS_FLIER2:
+	//case CLASS_GALAK:
+	//case CLASS_GLIDER:
+	//case CLASS_GONK:				// droid
+	//case CLASS_GRAN:
+	//case CLASS_HOWLER:
+	//case CLASS_IMPERIAL:
+	//case CLASS_IMPWORKER:
+	//case CLASS_INTERROGATOR:		// droid 
+	//case CLASS_JAN:				
+	case CLASS_JEDI:
+	case CLASS_KYLE:				
+	//case CLASS_LANDO:			
+	//case CLASS_LIZARD:
+	case CLASS_LUKE:				// UQ1: TODO - maybe should be allowed to switch to pistol/blaster???
+	//case CLASS_MARK1:			// droid
+	//case CLASS_MARK2:			// droid
+	//case CLASS_GALAKMECH:		// droid
+	//case CLASS_MINEMONSTER:
+	case CLASS_MONMOTHA:			
+	case CLASS_MORGANKATARN:
+	//case CLASS_MOUSE:			// droid
+	//case CLASS_MURJJ:
+	//case CLASS_PRISONER:
+	//case CLASS_PROBE:			// droid
+	//case CLASS_PROTOCOL:			// droid
+	//case CLASS_R2D2:				// droid
+	//case CLASS_R5D2:				// droid
+	//case CLASS_REBEL:
+	case CLASS_REBORN:
+	//case CLASS_REELO:
+	//case CLASS_REMOTE:
+	//case CLASS_RODIAN:
+	//case CLASS_SEEKER:			// droid
+	//case CLASS_SENTRY:
+	case CLASS_SHADOWTROOPER:
+	//case CLASS_STORMTROOPER:
+	//case CLASS_SWAMP:
+	//case CLASS_SWAMPTROOPER:
+	case CLASS_TAVION:
+	//case CLASS_TRANDOSHAN:
+	//case CLASS_UGNAUGHT:
+	//case CLASS_JAWA:
+	//case CLASS_WEEQUAY:
+	//case CLASS_BOBAFETT:
+	//case CLASS_VEHICLE:
+	//case CLASS_RANCOR:
+	//case CLASS_WAMPA:
+	//case CLASS_CIVILIAN:			// UQ1: Random civilian NPCs...
+	//case CLASS_GENERAL_VENDOR:
+	//case CLASS_WEAPONS_VENDOR:
+	//case CLASS_ARMOR_VENDOR:
+	//case CLASS_SUPPLIES_VENDOR:
+	//case CLASS_FOOD_VENDOR:
+	//case CLASS_MEDICAL_VENDOR:
+	//case CLASS_GAMBLER_VENDOR:
+	//case CLASS_TRADE_VENDOR:
+	//case CLASS_ODDITIES_VENDOR:
+	//case CLASS_DRUG_VENDOR:
+	//case CLASS_TRAVELLING_VENDOR:
+	//case CLASS_BOT_FAKE_NPC:
+		// Is Jedi...
+		return qtrue;
+		break;
+	default:
+		// NOT Jedi...
+		break;
+	}
+
+	return qfalse;
+}
+
+qboolean NPC_IsBountyHunter ( gentity_t *self )
+{
+	switch (self->client->NPC_class)
+	{
+	//case CLASS_ATST:
+	//case CLASS_BARTENDER:
+	//case CLASS_BESPIN_COP:		
+	//case CLASS_CLAW:
+	case CLASS_COMMANDO:
+	//case CLASS_DESANN:		
+	//case CLASS_FISH:
+	//case CLASS_FLIER2:
+	//case CLASS_GALAK:
+	//case CLASS_GLIDER:
+	//case CLASS_GONK:				// droid
+	//case CLASS_GRAN:
+	//case CLASS_HOWLER:
+	//case CLASS_IMPERIAL:
+	//case CLASS_IMPWORKER:
+	//case CLASS_INTERROGATOR:		// droid 
+	//case CLASS_JAN:				
+	//case CLASS_JEDI:
+	//case CLASS_KYLE:				
+	//case CLASS_LANDO:			
+	//case CLASS_LIZARD:
+	//case CLASS_LUKE:				// UQ1: TODO - maybe should be allowed to switch to pistol/blaster???
+	//case CLASS_MARK1:			// droid
+	//case CLASS_MARK2:			// droid
+	//case CLASS_GALAKMECH:		// droid
+	//case CLASS_MINEMONSTER:
+	//case CLASS_MONMOTHA:			
+	//case CLASS_MORGANKATARN:
+	//case CLASS_MOUSE:			// droid
+	//case CLASS_MURJJ:
+	//case CLASS_PRISONER:
+	//case CLASS_PROBE:			// droid
+	//case CLASS_PROTOCOL:			// droid
+	//case CLASS_R2D2:				// droid
+	//case CLASS_R5D2:				// droid
+	//case CLASS_REBEL:
+	//case CLASS_REBORN:
+	//case CLASS_REELO:
+	//case CLASS_REMOTE:
+	//case CLASS_RODIAN:
+	//case CLASS_SEEKER:			// droid
+	//case CLASS_SENTRY:
+	//case CLASS_SHADOWTROOPER:
+	//case CLASS_STORMTROOPER:
+	//case CLASS_SWAMP:
+	//case CLASS_SWAMPTROOPER:
+	//case CLASS_TAVION:
+	//case CLASS_TRANDOSHAN:
+	//case CLASS_UGNAUGHT:
+	//case CLASS_JAWA:
+	//case CLASS_WEEQUAY:
+	case CLASS_BOBAFETT:
+	//case CLASS_VEHICLE:
+	//case CLASS_RANCOR:
+	//case CLASS_WAMPA:
+		// Is Bounty Hunter...
+		return qtrue;
+		break;
+	default:
+		// NOT Bounty Hunter...
+		break;
+	}
+
+	return qfalse;
+}
+
+void NPC_CheckEvasion(void)
+{
+	vec3_t		enemy_dir, enemy_movedir, enemy_dest;
+	float		enemy_dist, enemy_movespeed;
+	gentity_t	*NPC = NPCS.NPC;
+
+	if ( !NPC->enemy || !NPC->enemy->inuse || (NPC->enemy->NPC && NPC->enemy->health <= 0) )
+	{
+		return;
+	}
+
+	// Who can evade???
+	switch (NPC->client->NPC_class)
+	{
+	//case CLASS_ATST:
+	case CLASS_BARTENDER:
+	case CLASS_BESPIN_COP:		
+	case CLASS_CLAW:
+	case CLASS_COMMANDO:
+	case CLASS_DESANN:		
+	//case CLASS_FISH:
+	//case CLASS_FLIER2:
+	case CLASS_GALAK:
+	//case CLASS_GLIDER:
+	//case CLASS_GONK:				// droid
+	case CLASS_GRAN:
+	//case CLASS_HOWLER:
+	case CLASS_IMPERIAL:
+	case CLASS_IMPWORKER:
+	//case CLASS_INTERROGATOR:		// droid 
+	case CLASS_JAN:				
+	case CLASS_JEDI:
+	case CLASS_KYLE:				
+	case CLASS_LANDO:			
+	//case CLASS_LIZARD:
+	case CLASS_LUKE:				
+	case CLASS_MARK1:			// droid
+	case CLASS_MARK2:			// droid
+	//case CLASS_GALAKMECH:		// droid
+	//case CLASS_MINEMONSTER:
+	case CLASS_MONMOTHA:			
+	case CLASS_MORGANKATARN:
+	//case CLASS_MOUSE:			// droid
+	case CLASS_MURJJ:
+	case CLASS_PRISONER:
+	//case CLASS_PROBE:			// droid
+	case CLASS_PROTOCOL:			// droid
+	//case CLASS_R2D2:				// droid
+	//case CLASS_R5D2:				// droid
+	case CLASS_REBEL:
+	case CLASS_REBORN:
+	case CLASS_REELO:
+	//case CLASS_REMOTE:
+	case CLASS_RODIAN:
+	//case CLASS_SEEKER:			// droid
+	//case CLASS_SENTRY:
+	case CLASS_SHADOWTROOPER:
+	case CLASS_STORMTROOPER:
+	case CLASS_SWAMP:
+	case CLASS_SWAMPTROOPER:
+	case CLASS_TAVION:
+	case CLASS_TRANDOSHAN:
+	case CLASS_UGNAUGHT:
+	case CLASS_JAWA:
+	case CLASS_WEEQUAY:
+	case CLASS_BOBAFETT:
+	//case CLASS_VEHICLE:
+	//case CLASS_RANCOR:
+	//case CLASS_WAMPA:
+		// OK... EVADE AWAY!!!
+		break;
+	default:
+		// NOT OK...
+		return;
+		break;
+	}
+
+	//See where enemy will be 300 ms from now
+	Jedi_SetEnemyInfo( enemy_dest, enemy_dir, &enemy_dist, enemy_movedir, &enemy_movespeed, 300 );
+
+	if ( NPC->enemy->s.weapon == WP_SABER )
+	{
+		Jedi_EvasionSaber( enemy_movedir, enemy_dist, enemy_dir );
+	}
+	else
+	{//do we need to do any evasion for other kinds of enemies?
+		if (NPC->enemy->client)
+		{
+			vec3_t shotDir, ang;
+
+			VectorSubtract(NPC->r.currentOrigin, NPC->enemy->r.currentOrigin, shotDir);
+			vectoangles(shotDir, ang);
+
+			if (NPC->enemy->client->ps.rocketLockTime != 0 && InFieldOfVision(NPC->enemy->client->ps.viewangles, /*60*/90, ang))
+			{// They are about to shoot a rocket at us! Evade!!!
+				Jedi_EvasionSaber( enemy_movedir, enemy_dist, enemy_dir );
+			}
+			else if (NPC->enemy->client->ps.weaponstate == WEAPON_FIRING && InFieldOfVision(NPC->enemy->client->ps.viewangles, /*60*/90, ang))
+			{// They are shooting at us. Evade!!!
+				Jedi_EvasionSaber( enemy_movedir, enemy_dist, enemy_dir );
+			}
+			else if (/*irand(0,100) <= 50 &&*/ InFieldOfVision(NPC->enemy->client->ps.viewangles, 60/*40*/, ang))
+			{// Randomly (when they are targetting us)... Evade!!!
+				Jedi_EvasionSaber( enemy_movedir, enemy_dist, enemy_dir );
+			}
+			else
+			{// Check for nearby missiles/grenades to evade...
+				int i;
+				int entities[MAX_GENTITIES];
+				int numEnts = 0;//trap_EntitiesInBox(ent->r.absmin, ent->r.absmax, entities, MAX_GENTITIES);
+
+				vec3_t mins;
+				vec3_t maxs;
+				int e = 0;
+
+				for ( e = 0 ; e < 3 ; e++ ) 
+				{
+					mins[e] = NPC->r.currentOrigin[e] - 256;
+					maxs[e] = NPC->r.currentOrigin[e] + 256;
+				}
+
+				numEnts = trap->EntitiesInBox(mins, maxs, entities, MAX_GENTITIES);
+
+				for (i = 0; i < numEnts; i++)
+				{
+					gentity_t * missile = &g_entities[i];
+
+					if (!missile) continue;
+					if (!missile->inuse) continue;
+
+					if (missile->s.eType == ET_MISSILE)
+					{// Missile incoming!!! Evade!!!
+						Jedi_EvasionSaber( enemy_movedir, enemy_dist, enemy_dir );
+						return;
+					}
+				}
+			}
+		}
+	}
+}
+
 /*
 void NPC_LostEnemyDecideChase(void)
 
@@ -231,6 +610,9 @@ void NPC_BSHuntAndKill( void )
 	visibility_t	oEVis;
 	int			curAnim;
 
+	// UQ1: Added evasion...
+	NPC_CheckEvasion();
+
 	NPC_CheckEnemy( NPCS.NPCInfo->tempBehavior != BS_HUNT_AND_KILL, qfalse, qtrue );//don't find new enemy if this is tempbehav
 
 	if ( NPCS.NPC->enemy )
@@ -305,6 +687,9 @@ void NPC_BSStandAndShoot (void)
 
 	//FIXME:
 	//When they're all dead, go to some script or wander off to sickbay?
+
+	// UQ1: Added evasion...
+	NPC_CheckEvasion();
 
 	if(NPCS.NPC->client->playerTeam && NPCS.NPC->client->enemyTeam)
 	{
@@ -405,6 +790,9 @@ void NPC_BSRunAndShoot (void)
 	//Moved that check into NPC_MoveToGoal
 	//NPCInfo->combatMove = qtrue;
 
+	// UQ1: Added evasion...
+	NPC_CheckEvasion();
+
 	NPC_CheckEnemy( qtrue, qfalse, qtrue );
 
 	if ( NPCS.NPCInfo->duckDebounceTime > level.time ) // && NPCInfo->hidingGoal )
@@ -504,7 +892,11 @@ void NPC_BSPointShoot (qboolean shoot)
 	{//FIXME: should still keep shooting for a second or two after they actually die...
 		trap->ICARUS_TaskIDComplete( (sharedEntity_t *)NPCS.NPC, TID_BSTATE );
 		goto finished;
+		return;
 	}
+
+	// UQ1: Added evasion...
+	NPC_CheckEvasion();
 
 	CalcEntitySpot(NPCS.NPC, SPOT_WEAPON, muzzle);
 	CalcEntitySpot(NPCS.NPC->enemy, SPOT_HEAD, org);//Was spot_org
@@ -610,7 +1002,11 @@ void NPC_BSMove(void)
 {
 	gentity_t	*goal = NULL;
 
+	// UQ1: Added evasion...
+	NPC_CheckEvasion();
+
 	NPC_CheckEnemy(qtrue, qfalse, qtrue);
+
 	if(NPCS.NPC->enemy)
 	{
 		NPC_CheckCanAttack(1.0, qfalse);
@@ -637,6 +1033,9 @@ Move in a direction, face another
 void NPC_BSShoot(void)
 {
 //	NPC_BSMove();
+
+	// UQ1: Added evasion...
+	NPC_CheckEvasion();
 
 	NPCS.enemyVisibility = VIS_SHOOT;
 

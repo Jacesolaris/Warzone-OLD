@@ -74,6 +74,10 @@ extern void NPC_BSStandAndShoot (void);
 extern void NPC_BSRunAndShoot (void);
 extern void NPC_BSWait( void );
 extern void NPC_BSDefault( void );
+extern void NPC_CheckEvasion(void);
+extern qboolean NPC_IsHumanoid ( gentity_t *self );
+extern qboolean NPC_IsJedi ( gentity_t *self );
+extern qboolean NPC_IsBountyHunter ( gentity_t *self );
 
 //NPC_behavior
 extern void NPC_BSAdvanceFight (void);

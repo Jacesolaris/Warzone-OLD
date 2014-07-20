@@ -935,6 +935,77 @@ void NPC_KeepCurrentFacing(void)
 	}
 }
 
+qboolean NPC_CanUseAdvancedFighting()
+{// UQ1: Evasion/Weapon Switching/etc...
+	// Who can evade???
+	switch (NPCS.NPC->client->NPC_class)
+	{
+	//case CLASS_ATST:
+	case CLASS_BARTENDER:
+	case CLASS_BESPIN_COP:		
+	case CLASS_CLAW:
+	case CLASS_COMMANDO:
+	case CLASS_DESANN:		
+	//case CLASS_FISH:
+	//case CLASS_FLIER2:
+	case CLASS_GALAK:
+	//case CLASS_GLIDER:
+	//case CLASS_GONK:				// droid
+	case CLASS_GRAN:
+	//case CLASS_HOWLER:
+	case CLASS_IMPERIAL:
+	case CLASS_IMPWORKER:
+	//case CLASS_INTERROGATOR:		// droid 
+	case CLASS_JAN:				
+	case CLASS_JEDI:
+	case CLASS_KYLE:				
+	case CLASS_LANDO:			
+	//case CLASS_LIZARD:
+	case CLASS_LUKE:				
+	case CLASS_MARK1:			// droid
+	case CLASS_MARK2:			// droid
+	//case CLASS_GALAKMECH:		// droid
+	//case CLASS_MINEMONSTER:
+	case CLASS_MONMOTHA:			
+	case CLASS_MORGANKATARN:
+	//case CLASS_MOUSE:			// droid
+	case CLASS_MURJJ:
+	case CLASS_PRISONER:
+	//case CLASS_PROBE:			// droid
+	case CLASS_PROTOCOL:			// droid
+	//case CLASS_R2D2:				// droid
+	//case CLASS_R5D2:				// droid
+	case CLASS_REBEL:
+	case CLASS_REBORN:
+	case CLASS_REELO:
+	//case CLASS_REMOTE:
+	case CLASS_RODIAN:
+	//case CLASS_SEEKER:			// droid
+	//case CLASS_SENTRY:
+	case CLASS_SHADOWTROOPER:
+	case CLASS_STORMTROOPER:
+	case CLASS_SWAMP:
+	case CLASS_SWAMPTROOPER:
+	case CLASS_TAVION:
+	case CLASS_TRANDOSHAN:
+	case CLASS_UGNAUGHT:
+	case CLASS_JAWA:
+	case CLASS_WEEQUAY:
+	case CLASS_BOBAFETT:
+	//case CLASS_VEHICLE:
+	//case CLASS_RANCOR:
+	//case CLASS_WAMPA:
+		// OK... EVADE AWAY!!!
+		break;
+	default:
+		// NOT OK...
+		return qfalse;
+		break;
+	}
+
+	return qtrue;
+}
+
 /*
 -------------------------
 NPC_BehaviorSet_Charmed
@@ -974,6 +1045,15 @@ NPC_BehaviorSet_Default
 
 void NPC_BehaviorSet_Default( int bState )
 {
+	if ( NPCS.NPC->enemy && NPCS.NPC->enemy->inuse && NPCS.NPC->enemy->health > 0)
+	{// UQ1: Have an anemy... Check if we should use advanced fighting for this NPC...
+		if ( NPC_CanUseAdvancedFighting() )
+		{// UQ1: This NPC can use advanced tactics... Use them!!!
+			NPC_BSJedi_Default();
+			return;
+		}
+	}
+
 	switch( bState )
 	{
 	case BS_ADVANCE_FIGHT://head toward captureGoal, shoot anything that gets in the way
@@ -4845,9 +4925,26 @@ void NPC_Think ( gentity_t *self)//, int msec )
 #endif //__NPC_BBOX_ADJUST__
 
 				NPC_ExecuteBState( self );
-				
-				// UQ1: Always force move to any goal they might have...
-				NPC_MoveToGoal( qtrue );
+
+				if (self->enemy 
+					&& NPC_IsJedi(self) 
+					&& Distance(self->r.currentOrigin, self->enemy->r.currentOrigin) > 32)
+				{
+					// UQ1: Always force move to any goal they might have...
+					NPCS.NPCInfo->goalEntity = NPCS.NPC->enemy;
+					
+					if (UpdateGoal())
+						NPC_MoveToGoal( qtrue );
+				}
+				else if (NPC_CheckVisibility ( NPCS.NPC->enemy, CHECK_360|CHECK_VISRANGE ) < VIS_FOV)
+				{
+					// UQ1: Enemy is not in our view, move toward it...
+					NPCS.NPCInfo->goalEntity = NPCS.NPC->enemy;
+					
+					if (UpdateGoal())
+						if (!NPC_MoveToGoal( qfalse ))
+							NPC_MoveToGoal( qtrue );
+				}
 			}
 		}
 		else
