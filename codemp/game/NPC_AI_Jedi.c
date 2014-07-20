@@ -10,6 +10,7 @@ extern qboolean BG_SabersOff( playerState_t *ps );
 extern void CG_DrawAlert( vec3_t origin, float rating );
 extern void G_AddVoiceEvent( gentity_t *self, int event, int speakDebounceTime );
 extern void ForceJump( gentity_t *self, usercmd_t *ucmd );
+extern void WP_FireMelee( gentity_t *ent, qboolean alt_fire );
 
 #define	MAX_VIEW_DIST		2048
 #define MAX_VIEW_SPEED		100
@@ -508,7 +509,25 @@ void Boba_FireDecide( void )
 		return;
 	}
 
-	if (NPC_IsBountyHunter(NPCS.NPC))
+	if ( Distance(NPCS.NPC->enemy->r.currentOrigin, NPCS.NPC->r.currentOrigin) <= 64 
+		&& !NPC_IsJedi(NPCS.NPC) 
+		&& NPCS.NPC->client->NPC_class != CLASS_BOBAFETT // BOBA kicks like a jedi now...
+		/*&& !(NPCS.NPC->client->NPC_class == CLASS_BOBAFETT && (!TIMER_Done( NPCS.NPC, "nextAttackDelay" ) || !TIMER_Done( NPCS.NPC, "flameTime" )))*/)
+	{// Close range - switch to melee... TODO: Make jedi/sith kick...
+		if (NPCS.NPC->next_rifle_butt_time > level.time)
+		{// Wait for anim to play out...
+			return;
+		}
+		else
+		{// Hit them again...
+			NPCS.NPCInfo->scriptFlags &= ~SCF_ALT_FIRE;
+			NPC_SetAnim( NPCS.NPC, SETANIM_BOTH, BOTH_MELEE2, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD ); // UQ1: Better anim?????
+			WP_FireMelee(NPCS.NPC, qfalse);
+			NPCS.NPC->next_rifle_butt_time = level.time + 1000;
+			return;
+		}
+	}
+	else if (NPC_IsBountyHunter(NPCS.NPC))
 	{
 		/*
 		if ( NPC->enemy->enemy != NPC && NPC->health == NPC->client->pers.maxHealth )
@@ -5374,6 +5393,48 @@ static void Jedi_Combat( void )
 		Boba_FireDecide();
 	}
 
+	if ( NPCS.NPC->enemy 
+		&& Distance(NPCS.NPC->enemy->r.currentOrigin, NPCS.NPC->r.currentOrigin) <= 64 
+		&& (NPC_IsJedi(NPCS.NPC) || NPCS.NPC->client->NPC_class == CLASS_BOBAFETT)
+		&& !(NPCS.NPC->client->NPC_class == CLASS_BOBAFETT && (!TIMER_Done( NPCS.NPC, "nextAttackDelay" ) || !TIMER_Done( NPCS.NPC, "flameTime" )))
+		&& NPCS.NPC->next_kick_time <= level.time )
+	{// Close range - switch to melee... TODO: Make jedi/sith kick...
+		//G_Printf("Debug: NPC kicking...\n");
+		NPCS.NPCInfo->scriptFlags &= ~SCF_ALT_FIRE;
+		NPC_SetAnim( NPCS.NPC, SETANIM_BOTH, BOTH_A7_KICK_F, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD ); // UQ1: Better anim?????
+		WP_FireMelee( NPCS.NPC, qfalse );
+		G_AddVoiceEvent( NPCS.NPC, Q_irand( EV_TAUNT1, EV_TAUNT3 ), 3000 );
+		NPCS.NPC->next_rifle_butt_time = level.time + 1000;
+		NPCS.NPC->next_kick_time = level.time + 15000;
+
+		if (irand(0, 100) <= 25)
+		{// 25% of the time, knock them over...
+			vec3_t	smackDir;
+			VectorSubtract( NPCS.NPC->enemy->r.currentOrigin, NPCS.NPC->r.currentOrigin, smackDir );
+			smackDir[2] += 30;
+			VectorNormalize( smackDir );
+			
+			//hurt them
+			G_Damage( NPCS.NPC->enemy, NPCS.NPC, NPCS.NPC, smackDir, NPCS.NPC->r.currentOrigin, (g_npcspskill.integer+1)*Q_irand( 5, 10), DAMAGE_NO_ARMOR|DAMAGE_NO_KNOCKBACK, MOD_CRUSH ); 
+
+			//throw them
+			G_Throw( NPCS.NPC->enemy, smackDir, 64 );
+
+			//make them backflip
+			NPC_SetAnim( NPCS.NPC->enemy, SETANIM_BOTH, BOTH_KNOCKDOWN5, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD );
+		}
+
+		//return;
+	}
+	else if (NPCS.NPC->enemy
+		&& Distance(NPCS.NPC->enemy->r.currentOrigin, NPCS.NPC->r.currentOrigin) <= 64 
+		&& (NPC_IsJedi(NPCS.NPC) || NPCS.NPC->client->NPC_class == CLASS_BOBAFETT)
+		&& !(NPCS.NPC->client->NPC_class == CLASS_BOBAFETT && (!TIMER_Done( NPCS.NPC, "nextAttackDelay" ) || !TIMER_Done( NPCS.NPC, "flameTime" )))
+		&& NPCS.NPC->next_rifle_butt_time <= level.time)
+	{// Jedi still kicking.... Wait for anim to play out...
+		//return;
+	}
+
 	//Check for certain enemy special moves
 	Jedi_CheckEnemyMovement( enemy_dist );
 
@@ -6099,6 +6160,7 @@ static void Jedi_Attack( void )
 			}
 		}
 	}
+
 	//see if our enemy was killed by us, gloat and turn off saber after cool down.
 	//FIXME: don't do this if we have other enemies to fight...?
 	if ( NPCS.NPC->enemy )

@@ -7687,7 +7687,16 @@ static void PM_Weapon( void )
 	{
 		PM_StartTorsoAnim( BOTH_ATTACK4 );
 	}
+#ifndef QAGAME
 	else if (pm->ps->weapon == WP_MELEE)
+#else //!QAGAME
+	else if (pm->ps->weapon == WP_MELEE
+		// UQ1: NPCs can hit you with their rifle butt at close range...
+		|| (g_entities[pm->ps->clientNum].s.eType == ET_NPC 
+			&& pm->ps->weapon != WP_SABER 
+			&& g_entities[pm->ps->clientNum].enemy
+			&& Distance(g_entities[pm->ps->clientNum].enemy->r.currentOrigin, g_entities[pm->ps->clientNum].r.currentOrigin) <= 72))
+#endif //QAGAME
 	{ //special anims for standard melee attacks
 		//Alternate between punches and use the anim length as weapon time.
 		if (!pm->ps->m_iVehicleNum)
@@ -7820,6 +7829,14 @@ static void PM_Weapon( void )
 				int desTAnim = BOTH_MELEE1;
 				if (pm->ps->torsoAnim == BOTH_MELEE1)
 				{
+#ifdef QAGAME
+				if (!(pm->ps->weapon == WP_MELEE
+					// UQ1: NPCs can hit you with their rifle butt at close range...
+					|| (g_entities[pm->ps->clientNum].s.eType == ET_NPC 
+						&& pm->ps->weapon != WP_SABER 
+						&& g_entities[pm->ps->clientNum].enemy
+						&& Distance(g_entities[pm->ps->clientNum].enemy->r.currentOrigin, g_entities[pm->ps->clientNum].r.currentOrigin) <= 72)))
+#endif //QAGAME
 					desTAnim = BOTH_MELEE2;
 				}
 				PM_StartTorsoAnim( desTAnim );

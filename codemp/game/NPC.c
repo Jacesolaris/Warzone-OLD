@@ -1241,7 +1241,8 @@ void NPC_BehaviorSet_Sniper( int bState )
 	case BS_STAND_AND_SHOOT:
 	case BS_HUNT_AND_KILL:
 	case BS_DEFAULT:
-		NPC_BSSniper_Default();
+		//NPC_BSSniper_Default();
+		NPC_BSST_Default();
 		break;
 
 	default:
@@ -4928,18 +4929,20 @@ void NPC_Think ( gentity_t *self)//, int msec )
 
 				if (self->enemy 
 					&& NPC_IsJedi(self) 
-					&& Distance(self->r.currentOrigin, self->enemy->r.currentOrigin) > 32)
+					&& Distance(self->r.currentOrigin, self->enemy->r.currentOrigin) > 64)
 				{
 					// UQ1: Always force move to any goal they might have...
-					NPCS.NPCInfo->goalEntity = NPCS.NPC->enemy;
+					NPCS.NPCInfo->goalEntity = self->enemy;
 					
 					if (UpdateGoal())
 						NPC_MoveToGoal( qtrue );
 				}
-				else if (NPC_CheckVisibility ( NPCS.NPC->enemy, CHECK_360|CHECK_VISRANGE ) < VIS_FOV)
+				else if (self->enemy 
+					&& Distance(self->r.currentOrigin, self->enemy->r.currentOrigin) > 64
+					&& NPC_CheckVisibility ( NPCS.NPC->enemy, CHECK_360|CHECK_VISRANGE ) < VIS_FOV)
 				{
 					// UQ1: Enemy is not in our view, move toward it...
-					NPCS.NPCInfo->goalEntity = NPCS.NPC->enemy;
+					NPCS.NPCInfo->goalEntity = self->enemy;
 					
 					if (UpdateGoal())
 						if (!NPC_MoveToGoal( qfalse ))

@@ -3457,7 +3457,14 @@ void WP_FireMelee( gentity_t *ent, qboolean alt_fire )
 	vec3_t		mins, maxs, end;
 	vec3_t		muzzlePunch;
 
-	if (ent->client && ent->client->ps.torsoAnim == BOTH_MELEE2)
+	if ( ent->s.eType == ET_NPC 
+		&& ent->s.weapon != WP_SABER 
+		&& ent->enemy
+		&& Distance(ent->enemy->r.currentOrigin, ent->r.currentOrigin) <= 72)
+	{// UQ1: Added... At close range NPCs can hit you with their rifle butt...
+	
+	}
+	else if (ent->client && ent->client->ps.torsoAnim == BOTH_MELEE2)
 	{ //right
 		if (ent->client->ps.brokenLimbs & (1 << BROKENLIMB_RARM))
 		{
@@ -3528,6 +3535,9 @@ void WP_FireMelee( gentity_t *ent, qboolean alt_fire )
 			{ //2x damage for heavy melee class
 				dmg *= 2;
 			}
+
+			if ( ent->s.weapon != WP_MELEE )
+				dmg *= 4; // UQ1: (NPCs) Hitting with rifle but does more damage...
 
 			G_Damage( tr_ent, ent, ent, forward, tr.endpos, dmg, DAMAGE_NO_ARMOR, MOD_MELEE );
 		}
@@ -4552,6 +4562,15 @@ void FireWeapon( gentity_t *ent, qboolean altFire ) {
 		}
 
 		CalcMuzzlePoint ( ent, forward, vright, up, muzzle );
+
+		if ( ent->s.eType == ET_NPC 
+			&& ent->s.weapon != WP_SABER 
+			&& ent->enemy
+			&& Distance(ent->enemy->r.currentOrigin, ent->r.currentOrigin) <= 72)
+		{// UQ1: Added... At close range NPCs can hit you with their rifle butt...
+			WP_FireMelee( ent, (qboolean)irand(0,1) /*altFire*/);
+			return;
+		}
 
 		// fire the specific weapon
 		switch( ent->s.weapon ) {
