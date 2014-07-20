@@ -4313,6 +4313,9 @@ qboolean DOM_BotBehave_CheckBackstab(bot_state_t *bs)
 	if (OnSameTeam(&g_entities[bs->client], enemy))
 		return qfalse;
 
+	if (enemy->s.eType == ET_NPC && !NPC_IsValidNPCEnemy(enemy))
+		return qfalse;
+
 	// OK. We have a target. First make it not happen constantly with some randomization!
 	//if (irand(0, 100) > 50)
 	//	return qfalse;
@@ -4368,6 +4371,9 @@ qboolean DOM_BotBehave_CheckUseKata(bot_state_t *bs)
 	if (OnSameTeam(&g_entities[bs->client], enemy))
 		return qfalse;
 
+	if (enemy->s.eType == ET_NPC && !NPC_IsValidNPCEnemy(enemy))
+		return qfalse;
+
 	// OK. We have a target. First make it not happen constantly with some randomization!
 	if (irand(0, 200) > 50)
 		return qfalse;
@@ -4410,6 +4416,9 @@ qboolean DOM_BotBehave_CheckUseCrouchAttack(bot_state_t *bs)
 		return qfalse;
 
 	if (OnSameTeam(&g_entities[bs->client], enemy))
+		return qfalse;
+
+	if (enemy->s.eType == ET_NPC && !NPC_IsValidNPCEnemy(enemy))
 		return qfalse;
 
 	// OK. We have a target. First make it not happen constantly with some randomization!
@@ -4989,6 +4998,9 @@ void DOM_ScanforEnemies(bot_state_t *bs)
 
 	for (i = 0; i <= level.num_entities; i++)
 	{
+		if (g_entities[i].s.eType == ET_NPC && !NPC_IsValidNPCEnemy(&g_entities[i]))
+			continue;
+
 		if (i != bs->client
 			&& ((g_entities[i].client && !OnSameTeam(&g_entities[bs->client], &g_entities[i]) && PassStandardEnemyChecks(bs, &g_entities[i]) && PassLovedOneCheck(bs, &g_entities[i]))
 			|| (g_entities[i].s.eType == ET_NPC && g_entities[i].s.NPC_class != CLASS_VEHICLE && g_entities[i].health > 0 && !(g_entities[i].s.eFlags & EF_DEAD))

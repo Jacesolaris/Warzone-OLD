@@ -977,7 +977,11 @@ void G_CheckCivilianNPCs( void )
 
 		if (!npc) continue;
 		if (npc->s.eType != ET_NPC) continue;
-		if (npc->client->NPC_class != CLASS_CIVILIAN) continue;
+		if (!(npc->client->NPC_class == CLASS_CIVILIAN
+			|| npc->client->NPC_class == CLASS_CIVILIAN_R2D2
+			|| npc->client->NPC_class == CLASS_CIVILIAN_R5D2
+			|| npc->client->NPC_class == CLASS_CIVILIAN_PROTOCOL
+			|| npc->client->NPC_class == CLASS_CIVILIAN_WEEQUAY)) continue;
 
 		botplayers++;
 	}
@@ -1214,6 +1218,10 @@ void G_CheckMinimumNpcs( void ) {
 		if (!npc) continue;
 		if (npc->s.eType != ET_NPC) continue;
 		if (npc->client->NPC_class == CLASS_CIVILIAN
+			|| npc->client->NPC_class == CLASS_CIVILIAN_R2D2
+			|| npc->client->NPC_class == CLASS_CIVILIAN_R5D2
+			|| npc->client->NPC_class == CLASS_CIVILIAN_PROTOCOL
+			|| npc->client->NPC_class == CLASS_CIVILIAN_WEEQUAY
 			|| npc->client->NPC_class == CLASS_PRISONER) continue;
 
 		botplayers++;
@@ -1238,7 +1246,11 @@ void G_CheckMinimumNpcs( void ) {
 
 				if (!npc) continue;
 				if (npc->s.eType != ET_NPC) continue;
-				if (npc->client->NPC_class == CLASS_CIVILIAN) continue;
+				if (npc->client->NPC_class == CLASS_CIVILIAN
+					|| npc->client->NPC_class == CLASS_CIVILIAN_R2D2
+					|| npc->client->NPC_class == CLASS_CIVILIAN_R5D2
+					|| npc->client->NPC_class == CLASS_CIVILIAN_PROTOCOL
+					|| npc->client->NPC_class == CLASS_CIVILIAN_WEEQUAY) continue;
 
 				if (npc->client->playerTeam == NPCTEAM_ENEMY)
 					RED_NPCS++;

@@ -2072,7 +2072,11 @@ void NPC_PickRandomIdleAnimantion(gentity_t *NPC)
 
 	NPC->client->lookTime = level.time + irand(5000, 15000);
 
-	if (NPC->client->NPC_class == CLASS_CIVILIAN)
+	if (NPC->client->NPC_class == CLASS_CIVILIAN
+		|| NPC->client->NPC_class == CLASS_CIVILIAN_R2D2
+		|| NPC->client->NPC_class == CLASS_CIVILIAN_R5D2
+		|| NPC->client->NPC_class == CLASS_CIVILIAN_PROTOCOL
+		|| NPC->client->NPC_class == CLASS_CIVILIAN_WEEQUAY)
 	{
 		NPC_PickRandomIdleAnimantionCivilian(NPC);
 		return;
@@ -2694,6 +2698,10 @@ qboolean NPC_PatrolArea( void )
 		switch (NPC->client->NPC_class)
 		{
 		case CLASS_CIVILIAN:
+		case CLASS_CIVILIAN_R2D2:
+		case CLASS_CIVILIAN_R5D2:
+		case CLASS_CIVILIAN_PROTOCOL:
+		case CLASS_CIVILIAN_WEEQUAY:
 		case CLASS_GENERAL_VENDOR:
 		case CLASS_WEAPONS_VENDOR:
 		case CLASS_ARMOR_VENDOR:
@@ -3909,6 +3917,10 @@ qboolean NPC_FollowRoutes( void )
 		switch (NPC->client->NPC_class)
 		{
 		case CLASS_CIVILIAN:
+		case CLASS_CIVILIAN_R2D2:
+		case CLASS_CIVILIAN_R5D2:
+		case CLASS_CIVILIAN_PROTOCOL:
+		case CLASS_CIVILIAN_WEEQUAY:
 		case CLASS_GENERAL_VENDOR:
 		case CLASS_WEAPONS_VENDOR:
 		case CLASS_ARMOR_VENDOR:
@@ -4301,6 +4313,10 @@ qboolean NPC_FollowRoutes( void )
 		switch (NPC->client->NPC_class)
 		{
 		case CLASS_CIVILIAN:
+		case CLASS_CIVILIAN_R2D2:
+		case CLASS_CIVILIAN_R5D2:
+		case CLASS_CIVILIAN_PROTOCOL:
+		case CLASS_CIVILIAN_WEEQUAY:
 		case CLASS_GENERAL_VENDOR:
 		case CLASS_WEAPONS_VENDOR:
 		case CLASS_ARMOR_VENDOR:

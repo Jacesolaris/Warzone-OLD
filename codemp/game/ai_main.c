@@ -805,6 +805,7 @@ int BotAI(int client, float thinktime) {
 		&& bot->client->ps.stats[STAT_HEALTH] > 0
 		&& bot->client->ps.pm_type != PM_DEAD
 		&& bot->enemy 
+		&& !(bot->enemy->s.eType == ET_NPC && !NPC_IsValidNPCEnemy(bot->enemy))
 		&& bot->enemy->client
 		&& bot->enemy->health > 0
 		&& bot->enemy->client->ps.stats[STAT_HEALTH] > 0

@@ -4551,6 +4551,10 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker, vec3_
 		switch( targ->client->NPC_class)
 		{// UQ1: Vendor types... Stand still for now...
 		case CLASS_CIVILIAN:
+		case CLASS_CIVILIAN_R2D2:
+		case CLASS_CIVILIAN_R5D2:
+		case CLASS_CIVILIAN_PROTOCOL:
+		case CLASS_CIVILIAN_WEEQUAY:
 		case CLASS_GENERAL_VENDOR:
 		case CLASS_WEAPONS_VENDOR:
 		case CLASS_ARMOR_VENDOR:

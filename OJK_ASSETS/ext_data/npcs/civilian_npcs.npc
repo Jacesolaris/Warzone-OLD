@@ -106,7 +106,7 @@ civilian_protocol
 	playerTeam	TEAM_NEUTRAL
 	enemyTeam	TEAM_NEUTRAL
 //	race		bot
-	class		CLASS_CIVILIAN
+	class		CLASS_CIVILIAN_PROTOCOL
 	snd			protocol
 	yawSpeed	60
 	runSpeed	150
@@ -141,7 +141,7 @@ civilian_r2d2
 	playerTeam	TEAM_NEUTRAL
 	enemyTeam	TEAM_NEUTRAL
 //	race			bot
-	class			CLASS_CIVILIAN
+	class			CLASS_CIVILIAN_R2D2
 	yawSpeed		120
 	runSpeed		150
 	walkSpeed		50
@@ -175,7 +175,7 @@ civilian_r5d2
 	playerTeam	TEAM_NEUTRAL
 	enemyTeam	TEAM_NEUTRAL
 //	race		bot
-	class		CLASS_CIVILIAN
+	class		CLASS_CIVILIAN_R5D2
 	yawSpeed	60
 	runSpeed	150
 	walkSpeed	50
@@ -361,7 +361,7 @@ civilian_weequay
 	rank		crewman
 	playerTeam	TEAM_NEUTRAL
 	enemyTeam	TEAM_NEUTRAL
-	class		CLASS_CIVILIAN
+	class		CLASS_CIVILIAN_WEEQUAY
 	snd			weequay
 	sndcombat	weequay
 	sndextra	weequay
@@ -393,7 +393,7 @@ civilian_weequay2
 	rank		crewman
 	playerTeam	TEAM_NEUTRAL
 	enemyTeam	TEAM_NEUTRAL
-	class		CLASS_CIVILIAN
+	class		CLASS_CIVILIAN_WEEQUAY
 	snd			weequay
 	sndcombat	weequay
 	sndextra	weequay
@@ -425,7 +425,7 @@ civilian_weequay3
 	rank		crewman
 	playerTeam	TEAM_NEUTRAL
 	enemyTeam	TEAM_NEUTRAL
-	class		CLASS_CIVILIAN
+	class		CLASS_CIVILIAN_WEEQUAY
 	snd			weequay
 	sndcombat	weequay
 	sndextra	weequay
@@ -457,7 +457,7 @@ civilian_weequay4
 	rank		crewman
 	playerTeam	TEAM_NEUTRAL
 	enemyTeam	TEAM_NEUTRAL
-	class		CLASS_CIVILIAN
+	class		CLASS_CIVILIAN_WEEQUAY
 	snd			weequay
 	sndcombat	weequay
 	sndextra	weequay

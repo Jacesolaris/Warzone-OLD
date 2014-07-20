@@ -19,6 +19,10 @@ qboolean NPC_IsValidNPCEnemy ( gentity_t *NPC )
 	switch (NPC->client->NPC_class)
 	{
 		case CLASS_CIVILIAN:
+		case CLASS_CIVILIAN_R2D2:
+		case CLASS_CIVILIAN_R5D2:
+		case CLASS_CIVILIAN_PROTOCOL:
+		case CLASS_CIVILIAN_WEEQUAY:
 		case CLASS_GENERAL_VENDOR:
 		case CLASS_WEAPONS_VENDOR:
 		case CLASS_ARMOR_VENDOR:

@@ -136,14 +136,14 @@ Load_NPC_Names ( void )
 
 	strcpy( NPC_NAME_LIST[NUM_HUMAN_NAMES].HumanNames, "NONAME");
 	NUM_HUMAN_NAMES++;
-	strcpy( NPC_NAME_LIST[NUM_HUMAN_NAMES].HumanNames, "R2D2 Droid");
+	/*strcpy( NPC_NAME_LIST[NUM_HUMAN_NAMES].HumanNames, "R2D2 Droid");
 	NUM_HUMAN_NAMES++;
 	strcpy( NPC_NAME_LIST[NUM_HUMAN_NAMES].HumanNames, "R5D2 Droid");
 	NUM_HUMAN_NAMES++;
 	strcpy( NPC_NAME_LIST[NUM_HUMAN_NAMES].HumanNames, "Protocol Droid");
 	NUM_HUMAN_NAMES++;
 	strcpy( NPC_NAME_LIST[NUM_HUMAN_NAMES].HumanNames, "Weequay");
-	NUM_HUMAN_NAMES++;
+	NUM_HUMAN_NAMES++;*/
 
 	for ( t = s = buf; *t; /* */ )
 	{
@@ -182,26 +182,7 @@ void SelectNPCNameFromList( gentity_t *NPC )
 	// Load names on first check...
 	Load_NPC_Names();
 
-	if (NPC->client->NPC_class == CLASS_R2D2)
-	{
-		NPC->s.NPC_NAME_ID = 1; // Init the NPC name...
-	}
-	else if (NPC->client->NPC_class == CLASS_R5D2)
-	{
-		NPC->s.NPC_NAME_ID = 2; // Init the NPC name...
-	}
-	else if (NPC->client->NPC_class == CLASS_PROTOCOL)
-	{
-		NPC->s.NPC_NAME_ID = 3; // Init the NPC name...
-	}
-	else if (NPC->client->NPC_class == CLASS_WEEQUAY)
-	{
-		NPC->s.NPC_NAME_ID = 4; // Init the NPC name...
-	}
-	else
-	{
-		NPC->s.NPC_NAME_ID = irand(5, NUM_HUMAN_NAMES); // Init the NPC name...
-	}
+	NPC->s.NPC_NAME_ID = irand(1, NUM_HUMAN_NAMES); // Init the NPC name...
 }
 
 //--------------------------------------------------------------
@@ -1478,11 +1459,10 @@ void NPC_Begin (gentity_t *ent)
 		ent->client->ps.fd.forcePower = ent->client->ps.fd.forcePowerMax;
 	}
 
-	//if (ent->s.NPC_NAME_ID <= 0)
 	{// UQ1: Find their name type to send to an id to the client for names...
 		ent->s.NPC_NAME_ID = 0; // Init the type...
 
-		switch( ent->client->NPC_class )
+		switch( ent->s.NPC_class )
 		{
 		case CLASS_STORMTROOPER:
 		case CLASS_SWAMPTROOPER:
@@ -1491,9 +1471,26 @@ void NPC_Begin (gentity_t *ent)
 			ent->s.NPC_NAME_ID = irand(100, 999);
 			strcpy(ent->client->pers.netname, va("TK-%i", ent->s.NPC_NAME_ID));
 			break;
+		case CLASS_R2D2:
+			ent->s.NPC_NAME_ID = 0;
+			strcpy(ent->client->pers.netname, va("R2D2 Droid"));
+			break;
+		case CLASS_R5D2:
+			ent->s.NPC_NAME_ID = 0;
+			strcpy(ent->client->pers.netname, va("R5D2 Droid"));
+			break;
+		case CLASS_PROTOCOL:
+			ent->s.NPC_NAME_ID = 0;
+			strcpy(ent->client->pers.netname, va("Protocol Droid"));
+			break;
+		case CLASS_WEEQUAY:
+			ent->s.NPC_NAME_ID = 0;
+			strcpy(ent->client->pers.netname, va("Weequay"));
+			break;
 		default:
 			SelectNPCNameFromList(ent);
 			strcpy(ent->client->pers.netname, va("%s", NPC_NAME_LIST[ent->s.NPC_NAME_ID].HumanNames));
+			break;
 		}
 
 		//trap->Print("NPC %i given name %s.\n", ent->s.number, NPC_NAMES[ent->s.NPC_NAME_ID]);
@@ -1766,7 +1763,7 @@ gentity_t *NPC_Spawn_Do( gentity_t *ent )
 		//cache all the assets
 		newent->m_pVehicle->m_pVehicleInfo->RegisterAssets( newent->m_pVehicle );
 		//set the class
-		newent->client->NPC_class = CLASS_VEHICLE;
+		newent->client->NPC_class = newent->s.NPC_class = CLASS_VEHICLE;
 		if ( g_vehicleInfo[iVehIndex].type == VH_FIGHTER )
 		{//FIXME: EXTERN!!!
 			newent->flags |= (FL_NO_KNOCKBACK|FL_SHIELDED|FL_DMG_BY_HEAVY_WEAP_ONLY);//don't get pushed around, blasters bounce off, only damage from heavy weaps
