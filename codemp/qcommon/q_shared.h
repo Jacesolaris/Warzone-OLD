@@ -1420,8 +1420,13 @@ typedef enum {
 
 
 // these are also in be_aas_def.h - argh (rjr)
+#ifdef __MMO__
+#define	MAX_MODELS			1024	// these are sent over the net as -12 bits
+#define	MAX_SOUNDS			1024	// so they cannot be blindly increased
+#else //!__MMO__
 #define	MAX_MODELS			512		// these are sent over the net as -12 bits
 #define	MAX_SOUNDS			256		// so they cannot be blindly increased
+#endif //__MMO__
 #define MAX_ICONS			64		// max registered icons you can have per map
 #define MAX_FX				64		// max effects strings, I'm hoping that 64 will be plenty
 
@@ -1438,7 +1443,7 @@ Ghoul2 Insert End
 #define MAX_AMBIENT_SETS		256 //rww - ambient soundsets must be sent over in config strings.
 
 #ifdef __MMO__
-#define	MAX_CONFIGSTRINGS	3000 //this is getting pretty high. Try not to raise it anymore than it already is.
+#define	MAX_CONFIGSTRINGS	3500 //this is getting pretty high. Try not to raise it anymore than it already is.
 #else //!__MMO__
 #define	MAX_CONFIGSTRINGS	1700 //this is getting pretty high. Try not to raise it anymore than it already is.
 #endif //__MMO__
