@@ -423,9 +423,22 @@ qboolean NPC_MoveToGoal( qboolean tryStraight )
 
 	//FIXME: still getting ping-ponging in certain cases... !!!  Nav/avoidance error?  WTF???!!!
 	//If in combat move, then move directly towards our goal
-	if ( NPC_CheckCombatMove() )
+	if ( NPC_CheckCombatMove() || NPCS.NPC->s.eType == ET_PLAYER )
 	{//keep current facing
 		G_UcmdMoveForDir( NPCS.NPC, &NPCS.ucmd, dir );
+
+		if (NPCS.NPC->s.eType == ET_PLAYER)
+		{
+			if (NPCS.ucmd.buttons & BUTTON_WALKING)
+			{
+				//trap->EA_Action(NPCS.NPC->s.number, 0x0080000);
+				trap->EA_Move(NPCS.NPC->s.number, dir, 5000.0);
+			}
+			else
+			{
+				trap->EA_Move(NPCS.NPC->s.number, dir, 5000.0);
+			}
+		}
 	}
 	else
 	{//face our goal

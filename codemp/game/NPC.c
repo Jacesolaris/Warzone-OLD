@@ -2687,6 +2687,25 @@ void UQ1_UcmdMoveForDir ( gentity_t *self, usercmd_t *cmd, vec3_t dir, qboolean 
 	if (self->bot_strafe_left_timer > level.time) cmd->rightmove -= 48.0;
 #endif //__NPC_STRAFE__
 
+	if (NPCS.NPC->s.eType == ET_PLAYER)
+	{
+		if (NPCS.ucmd.buttons & BUTTON_WALKING)
+		{
+			trap->EA_Action(NPCS.NPC->s.number, 0x0080000);
+			trap->EA_Move(NPCS.NPC->s.number, dir, 5000.0);
+
+			if (self->bot_strafe_left_timer > level.time)
+				trap->EA_MoveLeft(NPCS.NPC->s.number);
+		}
+		else
+		{
+			trap->EA_Move(NPCS.NPC->s.number, dir, 5000.0);
+
+			if (self->bot_strafe_left_timer > level.time)
+				trap->EA_MoveLeft(NPCS.NPC->s.number);
+		}
+	}
+
 	//cmd->upmove = abs(forward[3] ) * dir[3] * speed;
 	/*if (NPCS.NPCInfo->jumpState == JS_CROUCHING || (self->NPC->scriptFlags & SCF_CROUCHED))
 		cmd->upmove = -64.0;
@@ -4726,7 +4745,7 @@ void NPC_Think ( gentity_t *self)//, int msec )
 #if	AI_TIMERS
 		int	startTime = GetTime(0);
 #endif//	AI_TIMERS
-		if ( NPCS.NPC->s.eType != ET_NPC )
+		if ( NPCS.NPC->s.eType != ET_NPC && NPCS.NPC->s.eType != ET_PLAYER )
 		{//Something drastic happened in our script
 			return;
 		}

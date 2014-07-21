@@ -42,6 +42,8 @@
 #define BOT_THINK_TIME	0
 #else //__DOMINANCE_AI__
 #define BOT_THINK_TIME	100
+
+extern void NPC_Think ( gentity_t *self);
 #endif //__DOMINANCE_AI__
 
 //bot states
@@ -805,12 +807,7 @@ int BotAI(int client, float thinktime) {
 		&& bot->client->ps.stats[STAT_HEALTH] > 0
 		&& bot->client->ps.pm_type != PM_DEAD
 		&& bot->enemy 
-		&& !(bot->enemy->s.eType == ET_NPC && !NPC_IsValidNPCEnemy(bot->enemy))
-		&& bot->enemy->client
-		&& bot->enemy->health > 0
-		&& bot->enemy->client->ps.stats[STAT_HEALTH] > 0
-		&& (bs->frame_Enemy_Vis || bs->enemySeenTime > level.time)
-		&& bot->enemy->client->ps.pm_type != PM_DEAD)
+		&& NPC_IsValidNPCEnemy(bot->enemy))
 	{
 		// If we have an enemy, always use Dominance NPC AI...
 
@@ -820,10 +817,13 @@ int BotAI(int client, float thinktime) {
 	else if (gWPNum > 0)
 	{
 		// If we have waypoints for this map then use StandardBotAI for non-combat...
-
+		bot->enemy = NULL;
 		DOM_StandardBotAI(bs, thinktime); // UQ1: Uses Dominance AI...
 		//trap->Print("Bot %s is using DOM AI.\n", bot->client->pers.netname);
 		//StandardBotAI(bs, thinktime);
+
+		//NPC_Think(bot);
+		//DOM_StandardBotAI2(bs, thinktime); // UQ1: Uses Dominance NPC AI...
 	}
 	else
 	{

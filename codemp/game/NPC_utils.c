@@ -14,7 +14,18 @@ extern void G_DebugPrint( int level, const char *format, ... );
 qboolean NPC_IsValidNPCEnemy ( gentity_t *NPC )
 {
 	if (!NPC || !NPC->client) return qfalse;
-	if (NPC->s.eType != ET_NPC) return qtrue;
+
+	if (!(NPC 
+		&& NPC->client
+		&& NPC->health > 0
+		&& (NPC->s.eType == ET_NPC || NPC->s.eType == ET_PLAYER)
+		&& NPC->client->ps.stats[STAT_HEALTH] > 0
+		&& NPC->client->ps.pm_type != PM_DEAD
+		&& NPC->client->ps.pm_type != PM_SPECTATOR
+		&& NPC->client->sess.sessionTeam != TEAM_SPECTATOR))
+		return qfalse;
+
+	if (NPC->s.eType == ET_PLAYER) return qtrue;
 
 	switch (NPC->client->NPC_class)
 	{

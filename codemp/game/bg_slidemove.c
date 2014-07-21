@@ -904,7 +904,7 @@ void PM_StepSlideMove( qboolean gravity ) {
 
 	VectorCopy (start_o, up);
 
-	if (pm->ps->clientNum >= MAX_CLIENTS)
+	if (pm->ps->clientNum >= MAX_CLIENTS || (pEnt->s.eFlags & EF_FAKE_NPC_BOT))
 	{
 		// apply ground friction, even if on ladder
 		if (pEnt &&
@@ -921,6 +921,11 @@ void PM_StepSlideMove( qboolean gravity ) {
 		}
 		else if ( pEnt && pEnt->s.eType == ET_NPC )
 		{//also can step up high - UQ1: All NPCs can now step high... Just to help with pathing...
+			up[2] += 64.0f;
+			isGiant = qtrue;
+		}
+		else if ( pEnt && pEnt->s.eFlags & EF_FAKE_NPC_BOT )
+		{//also can step up high - UQ1: All Fake NPCs can now step high... Just to help with pathing...
 			up[2] += 64.0f;
 			isGiant = qtrue;
 		}

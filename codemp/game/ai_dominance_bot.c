@@ -157,20 +157,71 @@ qboolean DOM_FakeNPC_Parse_UCMD (bot_state_t *bs, gentity_t *bot)
 	NPCS.client = NPCS.NPC->client;
 	NPCS.NPCInfo = bot->NPC;
 	NPCS.ucmd = NPCS.NPC->client->pers.cmd;
-
+	
 	if (bs)
 	{
 		// Set angles... Convert to ideal view angles then run the bot code...
 		VectorSet(bs->ideal_viewangles, SHORT2ANGLE(NPCS.ucmd.angles[PITCH] + NPCS.client->ps.delta_angles[PITCH]), SHORT2ANGLE(NPCS.ucmd.angles[YAW] + NPCS.client->ps.delta_angles[YAW]), SHORT2ANGLE(NPCS.ucmd.angles[ROLL] + NPCS.client->ps.delta_angles[ROLL]));
+		VectorCopy(bs->ideal_viewangles, bs->viewangles);
+		VectorCopy(bs->ideal_viewangles, bot->client->ps.viewangles);
+		//VectorCopy(bs->ideal_viewangles, bot->r.currentAngles);
+		//VectorCopy(bs->ideal_viewangles, bot->s.angles);
 		trap->EA_View(bs->client, bs->ideal_viewangles);
 	}
 
+	/*
+	if (NPCS.NPCInfo->goalEntity)
+	{
+		vec3_t dir;
+		VectorSubtract(NPCS.NPCInfo->goalEntity->r.currentOrigin, bot->r.currentOrigin, dir);
+		VectorCopy(dir, bot->client->ps.moveDir);
+	}
+
+	if (NPCS.ucmd.buttons & BUTTON_WALKING)
+	{
+		trap->EA_Action(bot->s.number, ACTION_WALK);
+		trap->EA_Move(bot->s.number, bot->client->ps.moveDir, 5000.0);
+	}
+	else
+	{
+		trap->EA_Move(bot->s.number, bot->client->ps.moveDir, 5000.0);
+	}
+	*/
+
+	if (NPCS.NPC->enemy && Distance(NPCS.NPC->r.currentOrigin, NPCS.NPC->enemy->r.currentOrigin) > 64)
+	{
+		vec3_t dir;
+
+		NPCS.NPCInfo->goalEntity = NPCS.NPC->enemy;
+		
+		/*
+		VectorSubtract(NPCS.NPCInfo->goalEntity->r.currentOrigin, bot->r.currentOrigin, dir);
+		VectorCopy(dir, bot->client->ps.moveDir);
+
+		if (NPCS.ucmd.buttons & BUTTON_WALKING)
+		{
+			trap->EA_Action(bot->s.number, ACTION_WALK);
+			trap->EA_Move(bot->s.number, bot->client->ps.moveDir, 5000.0);
+			acted = qtrue;
+		}
+		else
+		{
+			trap->EA_Move(bot->s.number, bot->client->ps.moveDir, 5000.0);
+			acted = qtrue;
+		}
+		*/
+
+		NPC_MoveToGoal(qtrue);
+		acted = qtrue;
+	}
+
+	/*
 	if (NPCS.ucmd.upmove > 0)
 	{
 		trap->EA_Jump(bot->s.number);
 		acted = qtrue;
 	}
-
+	
 	if (NPCS.ucmd.upmove < 0)
 	{
 		trap->EA_Crouch(bot->s.number);
@@ -200,6 +251,7 @@ qboolean DOM_FakeNPC_Parse_UCMD (bot_state_t *bs, gentity_t *bot)
 		trap->EA_MoveBack(bot->s.number);
 		acted = qtrue;
 	}
+	*/
 
 	if (NPCS.ucmd.buttons & BUTTON_ATTACK)
 	{
@@ -229,11 +281,13 @@ qboolean DOM_FakeNPC_Parse_UCMD (bot_state_t *bs, gentity_t *bot)
 		acted = qtrue;
 	}
 
+	/*
 	if (NPCS.ucmd.buttons & BUTTON_WALKING)
 	{
 		trap->EA_Action(bot->s.number, ACTION_WALK);
 		acted = qtrue;
 	}
+	*/
 
 	return acted;
 }
@@ -241,6 +295,9 @@ qboolean DOM_FakeNPC_Parse_UCMD (bot_state_t *bs, gentity_t *bot)
 vec3_t oldMoveDir;
 extern void ClientThink_real( gentity_t *ent );
 extern void NPC_ApplyRoff (void);
+extern void NPC_Think ( gentity_t *self);
+
+//#define __FULL_BOT_NPC_AI__
 
 // UQ1: Now lets see if bots can share NPC AI....
 void DOM_StandardBotAI2(bot_state_t *bs, float thinktime)
@@ -283,15 +340,21 @@ void DOM_StandardBotAI2(bot_state_t *bs, float thinktime)
 
 	NPCS.NPCInfo->last_ucmd.serverTime = level.time - 50;
 
+#ifdef __FULL_BOT_NPC_AI__
+	NPC_Think(bot);
+	if (bot->enemy) NPC_FaceEnemy( qtrue );
+	NPC_UpdateAngles(qtrue, qtrue);
+	DOM_FakeNPC_Parse_UCMD(bs, bot);
+	//ClientThink(bot->s.number, &NPCS.ucmd);
+	VectorCopy(bot->r.currentOrigin, bot->client->ps.origin);
+#else //!__FULL_BOT_NPC_AI__
 	//nextthink is set before this so something in here can override it
 	NPC_ExecuteBState(bot);
 
-	if (bot->enemy)
-		NPC_FaceEnemy( qtrue );
+	if (bot->enemy) NPC_FaceEnemy( qtrue );
 
 	NPC_UpdateAngles(qtrue, qtrue);
 
-	//G_UpdateClientAnims(bot, 0.5f);
 	if (!DOM_FakeNPC_Parse_UCMD(bs, bot))
 	{
 		// Failed to do anything this frame - fall back to standard AI...
@@ -303,6 +366,7 @@ void DOM_StandardBotAI2(bot_state_t *bs, float thinktime)
 
 	trap->ICARUS_MaintainTaskManager(bot->s.number);
 	VectorCopy(bot->r.currentOrigin, bot->client->ps.origin);
+#endif //__FULL_BOT_NPC_AI__
 
 	if (bot->client->ps.pm_flags & PMF_DUCKED && bot->r.maxs[2] > bot->client->ps.crouchheight)
 	{
@@ -313,7 +377,7 @@ void DOM_StandardBotAI2(bot_state_t *bs, float thinktime)
 		bot->r.mins[0] = -8;
 		trap->LinkEntity((sharedEntity_t *)bot);
 	}
-	else if (!(bot->client->ps.pm_flags & PMF_DUCKED) && bot->r.maxs[2] < bot->client->ps.standheight)
+	else if (!(bot->client->ps.pm_flags & PMF_DUCKED) && (bot->r.maxs[2] < bot->client->ps.standheight || bot->r.maxs[1] > 10))
 	{
 		bot->r.maxs[2] = bot->client->ps.standheight;
 		bot->r.maxs[1] = 10;

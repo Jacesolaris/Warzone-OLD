@@ -3419,7 +3419,7 @@ void DOM_BotMoveto(bot_state_t *bs, qboolean strafe)
 		if (g_entities[bs->client].pathsize > 0)
 		{
 #ifdef _DEBUG
-			trap->Print("BOT DEBUG: Bot %s found a %i waypoint path from wp %i to wp %i.\n", g_entities[bs->client].client->pers.netname, g_entities[bs->client].pathsize, bs->wpCurrent->index, bs->wpDestination->index);
+			//trap->Print("BOT DEBUG: Bot %s found a %i waypoint path from wp %i to wp %i.\n", g_entities[bs->client].client->pers.netname, g_entities[bs->client].pathsize, bs->wpCurrent->index, bs->wpDestination->index);
 #endif
 			bs->wpNext = gWPArray[DOM_GetNextWaypoint(bs)];
 			DOM_ResetWPTimers(bs);
@@ -3427,7 +3427,7 @@ void DOM_BotMoveto(bot_state_t *bs, qboolean strafe)
 		else
 		{
 #ifdef _DEBUG
-			trap->Print("BOT DEBUG: Bot %s failed to find a path from wp %i to wp %i.\n", g_entities[bs->client].client->pers.netname, bs->wpCurrent->index, bs->wpDestination->index);
+			//trap->Print("BOT DEBUG: Bot %s failed to find a path from wp %i to wp %i.\n", g_entities[bs->client].client->pers.netname, bs->wpCurrent->index, bs->wpDestination->index);
 #endif
 		}
 
@@ -5238,6 +5238,31 @@ int DOM_PickWARZONEGoalType(bot_state_t *bs)
 void DOM_StandardBotAI(bot_state_t *bs, float thinktime)
 {
 	qboolean UsetheForce = qfalse;
+	gentity_t *bot = &g_entities[bs->client];
+
+	if (bot->client->ps.pm_flags & PMF_DUCKED && bot->r.maxs[2] > bot->client->ps.crouchheight)
+	{
+		bot->r.maxs[2] = bot->client->ps.crouchheight;
+		bot->r.maxs[1] = 8;
+		bot->r.maxs[0] = 8;
+		bot->r.mins[1] = -8;
+		bot->r.mins[0] = -8;
+		trap->LinkEntity((sharedEntity_t *)bot);
+	}
+	else if (!(bot->client->ps.pm_flags & PMF_DUCKED) && (bot->r.maxs[2] < bot->client->ps.standheight || bot->r.maxs[1] > 10))
+	{
+		bot->r.maxs[2] = bot->client->ps.standheight;
+		bot->r.maxs[1] = 10;
+		bot->r.maxs[0] = 10;
+		bot->r.mins[1] = -10;
+		bot->r.mins[0] = -10;
+		trap->LinkEntity((sharedEntity_t *)bot);
+	}
+
+	if (!(bot->s.eFlags & EF_FAKE_NPC_BOT))
+		bot->s.eFlags |= EF_FAKE_NPC_BOT;
+	if (!(bot->client->ps.eFlags & EF_FAKE_NPC_BOT))
+		bot->client->ps.eFlags |= EF_FAKE_NPC_BOT;
 
 #ifdef __BASIC_RANDOM_MOVEMENT_AI__
 	bs->ideal_viewangles[PITCH] = bs->ideal_viewangles[ROLL] = 0;
