@@ -121,15 +121,15 @@ XCVAR_DEF( cg_thirdPersonTargetDamp,			"0.5",					NULL,					CVAR_ARCHIVE )
 XCVAR_DEF( cg_thirdPersonVertOffset,			"16",					NULL,					CVAR_ARCHIVE )
 XCVAR_DEF( cg_timescaleFadeEnd,					"1",					NULL,					CVAR_NONE )
 XCVAR_DEF( cg_timescaleFadeSpeed,				"0",					NULL,					CVAR_NONE )
-XCVAR_DEF(cg_trueEyePosition,				    "-2", NULL, CVAR_ARCHIVE)//[TrueView]
-XCVAR_DEF(cg_trueFlip,							"0", NULL, CVAR_ARCHIVE)//[TrueView]
-XCVAR_DEF(cg_trueFOV,							"110", NULL, CVAR_ARCHIVE)//[TrueView]
-XCVAR_DEF(cg_trueguns,							"0", NULL, CVAR_ARCHIVE)//[TrueView]
-XCVAR_DEF(cg_trueInvertSaber,					"0", NULL, CVAR_ARCHIVE)//[TrueView]
-XCVAR_DEF(cg_trueMoveRoll,						"1", NULL, CVAR_ARCHIVE)//[TrueView]
-XCVAR_DEF(cg_trueRoll,							"1", NULL, CVAR_ARCHIVE)//[TrueView]
-XCVAR_DEF(cg_trueSaberOnly,						"0", NULL, CVAR_ARCHIVE)//[TrueView]
-XCVAR_DEF(cg_trueSpin,							"1", NULL, CVAR_ARCHIVE)//[TrueView]
+XCVAR_DEF(cg_trueEyePosition,				    "-2",					NULL,					CVAR_ARCHIVE)	//[TrueView]
+XCVAR_DEF(cg_trueFlip,							"0",					NULL,					CVAR_ARCHIVE)//[TrueView]
+XCVAR_DEF(cg_trueFOV,							"110",					NULL,					CVAR_ARCHIVE)//[TrueView]
+XCVAR_DEF(cg_trueguns,							"0",					NULL,					CVAR_ARCHIVE)//[TrueView]
+XCVAR_DEF(cg_trueInvertSaber,					"0",					NULL,					CVAR_ARCHIVE)//[TrueView]
+XCVAR_DEF(cg_trueMoveRoll,						"1",					NULL,					CVAR_ARCHIVE)//[TrueView]
+XCVAR_DEF(cg_trueRoll,							"1",					NULL,					CVAR_ARCHIVE)//[TrueView]
+XCVAR_DEF(cg_trueSaberOnly,						"0",					NULL,					CVAR_ARCHIVE)//[TrueView]
+XCVAR_DEF(cg_trueSpin,							"1",					NULL,					CVAR_ARCHIVE)//[TrueView]
 XCVAR_DEF( cg_viewsize,							"100",					NULL,					CVAR_ARCHIVE )
 XCVAR_DEF( cg_weaponBob,						"1",					NULL,					CVAR_ARCHIVE )
 XCVAR_DEF( cl_paused,							"0",					NULL,					CVAR_ROM )

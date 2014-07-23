@@ -375,7 +375,7 @@ void G_InitGame( int levelTime, int randomSeed, int restart ) {
 
 	//[Create Dungeon]
 	if (g_gametype.integer == GT_SINGLE_PLAYER || g_gametype.integer == GT_INSTANCE)
-	{//load Up all the Npc In a Dungeon
+	{//load Up all the Npc In a Dungeon by where they have been placed ingame and load it up
 		Load_Dungeon();
 	}
 	//[/Create Dungeon]

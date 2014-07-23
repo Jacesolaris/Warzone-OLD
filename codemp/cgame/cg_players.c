@@ -5377,62 +5377,55 @@ void CG_PlayerShieldHit(int entitynum, vec3_t dir, int amount)
 	}
 }
 
+//void CG_DrawPlayerShield(centity_t *cent, vec3_t origin)
+//{
+//	refEntity_t ent;
+//	int			alpha;
+//	float		scale;
+//
+//	// Don't draw the shield when the player is dead.
+//	if (cent->currentState.eFlags & EF_DEAD)
+//	{
+//		return;
+//	}
+//
+//	memset(&ent, 0, sizeof(ent));
+//
+//	VectorCopy(origin, ent.origin);
+//	ent.origin[2] += 10.0;
+//	AnglesToAxis(cent->damageAngles, ent.axis);
+//
+//	alpha = 255.0 * ((cent->damageTime - cg.time) / MIN_SHIELD_TIME) + random() * 16;
+//	if (alpha>255)
+//		alpha = 255;
+//
+//	// Make it bigger, but tighter if more solid
+//	scale = 1.4 - ((float)alpha*(0.4 / 255.0));		// Range from 1.0 to 1.4
+//	VectorScale(ent.axis[0], scale, ent.axis[0]);
+//	VectorScale(ent.axis[1], scale, ent.axis[1]);
+//	VectorScale(ent.axis[2], scale, ent.axis[2]);
+//
+//	ent.hModel = cgs.media.halfShieldModel;
+//	ent.customShader = cgs.media.halfShieldShader;
+//	ent.shaderRGBA[0] = alpha;
+//	ent.shaderRGBA[1] = alpha;
+//	ent.shaderRGBA[2] = alpha;
+//	ent.shaderRGBA[3] = 255;
+//	trap->R_AddRefEntityToScene(&ent);
+//}
 
-//[SPShield]
-/*
-void CG_DrawPlayerShield(centity_t *cent, vec3_t origin)
-{
-refEntity_t ent;
-int			alpha;
-float		scale;
-
-// Don't draw the shield when the player is dead.
-if (cent->currentState.eFlags & EF_DEAD)
-{
-return;
-}
-
-memset( &ent, 0, sizeof( ent ) );
-
-VectorCopy( origin, ent.origin );
-ent.origin[2] += 10.0;
-AnglesToAxis( cent->damageAngles, ent.axis );
-
-alpha = 255.0 * ((cent->damageTime - cg.time) / MIN_SHIELD_TIME) + random()*16;
-if (alpha>255)
-alpha=255;
-
-// Make it bigger, but tighter if more solid
-scale = 1.4 - ((float)alpha*(0.4/255.0));		// Range from 1.0 to 1.4
-VectorScale( ent.axis[0], scale, ent.axis[0] );
-VectorScale( ent.axis[1], scale, ent.axis[1] );
-VectorScale( ent.axis[2], scale, ent.axis[2] );
-
-ent.hModel = cgs.media.halfShieldModel;
-ent.customShader = cgs.media.halfShieldShader;
-ent.shaderRGBA[0] = alpha;
-ent.shaderRGBA[1] = alpha;
-ent.shaderRGBA[2] = alpha;
-ent.shaderRGBA[3] = 255;
-trap_R_AddRefEntityToScene( &ent );
-}
-*/
-//[/SPShield]
-
-
+extern void CG_NewLightningActEffect(vec3_t muzzle, vec3_t muzzleDir, float length);
 void CG_PlayerHitFX(centity_t *cent)
 {
 	// only do the below fx if the cent in question is...uh...me, and it's first person.
 	if (cent->currentState.clientNum != cg.predictedPlayerState.clientNum || cg.renderingThirdPerson)
 	{
 		if (cent->damageTime > cg.time
-			&& cent->currentState.NPC_class != CLASS_VEHICLE )
+			&& cent->currentState.NPC_class != CLASS_VEHICLE)
 		{
-			//[SPShield]
-			//Raz - we're now using a flag, instead of a function.
-			cent->currentState.eFlags2 |= EF2_PLAYERHIT;
+			cent->currentState.eFlags |= EF2_PLAYERHIT;
+			CG_NewLightningActEffect;
 			//CG_DrawPlayerShield(cent, cent->lerpOrigin);
-			//[/SPShield]
 		}
 
 		return;
@@ -14335,11 +14328,18 @@ void CG_Player( centity_t *cent ) {
 	renderfx = 0;
 	if ( cent->currentState.number == cg.snap->ps.clientNum) {
 		if (!cg.renderingThirdPerson) {
-#if 0
-			if (!cg_fpls.integer || cent->currentState.weapon != WP_SABER)
-#else
-			if (cent->currentState.weapon != WP_SABER)
-#endif
+			//[TrueView]
+			if ( ( !cg_trueguns.integer && cg.predictedPlayerState.weapon != WP_SABER 
+				&& cg.predictedPlayerState.weapon != WP_MELEE)
+				|| (cg.predictedPlayerState.weapon == WP_SABER && cg_trueSaberOnly.integer)
+				|| cg.predictedPlayerState.zoomMode)
+				/*
+				#if 0
+				if (!cg_fpls.integer || cent->currentState.weapon != WP_SABER)
+				#else
+				if (cent->currentState.weapon != WP_SABER)
+				#endif
+				*/
 			{
 				renderfx = RF_THIRD_PERSON;			// only draw in mirrors
 			}
@@ -15540,9 +15540,13 @@ SkipTrueView:
 		CG_DrawPlayerSphere(cent, cent->lerpOrigin, 2.0f, cgs.media.enlightenmentShader );
 	}
 
+	//[TrueView]
+
 	if (cent->currentState.eFlags & EF_INVULNERABLE)
 	{
-		CG_DrawPlayerSphere(cent, cent->lerpOrigin, 1.0f, cgs.media.invulnerabilityShader );
+		// Jedi Knight Galaxies
+		cent->currentState.powerups |= (1 << PW_SHIELDHIT); // Do a shieldhit effect here (processed later in this function)
+		//CG_DrawPlayerSphere(cent, cent->lerpOrigin, 1.0f, cgs.media.invulnerabilityShader );
 	}
 stillDoSaber:
 	if ((cent->currentState.eFlags & EF_DEAD) && cent->currentState.weapon == WP_SABER)
@@ -16468,6 +16472,33 @@ stillDoSaber:
 	}
 	// add powerups floating behind the player
 	CG_PlayerPowerups( cent, &legs );
+	//[TrueView]
+	if (cent->damageTime > cg.time && cent->currentState.NPC_class != CLASS_VEHICLE &&
+		(cg.renderingThirdPerson || cent->currentState.number != cg.snap->ps.clientNum
+		|| cg_trueguns.integer || cg.predictedPlayerState.weapon == WP_SABER
+		|| cg.predictedPlayerState.weapon == WP_MELEE))
+		//[/TrueView]
+	{
+		int alpha = 255.0 * ((cent->damageTime - cg.time) / MIN_SHIELD_TIME) + random() * 16;
+		if (alpha>255)
+			alpha = 255;
+
+		legs.shaderRGBA[0] = legs.shaderRGBA[1] = legs.shaderRGBA[2] = alpha;
+		legs.shaderRGBA[3] = 255;
+		legs.renderfx &= ~RF_FORCE_ENT_ALPHA;
+		legs.renderfx &= ~RF_MINLIGHT;
+		legs.renderfx &= ~RF_RGB_TINT;
+
+		legs.customShader = cgs.media.playerShieldDamage;
+
+#ifdef __EXPERIMENTAL_SHADOWS__
+		CG_AddRefEntityToSceneWithShadows(cent, legs);	//draw the shell
+#else //!__EXPERIMENTAL_SHADOWS__
+		trap->R_AddRefEntityToScene(&legs);	//draw the shell
+#endif //__EXPERIMENTAL_SHADOWS__
+	}
+
+	// =======================
 
 	//[TrueView]
 	if ((cent->currentState.forcePowersActive & (1 << FP_RAGE)) &&

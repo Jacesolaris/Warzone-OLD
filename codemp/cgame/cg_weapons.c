@@ -823,7 +823,7 @@ void CG_AddViewWeapon( playerState_t *ps ) {
 	if (!cg_drawGun.integer || cg.predictedPlayerState.zoomMode || cg_trueguns.integer
 		|| cg.predictedPlayerState.weapon == WP_SABER || cg.predictedPlayerState.weapon == WP_MELEE) {
 		//if ( !cg_drawGun.integer || cg.predictedPlayerState.zoomMode) {
-		//[TrueView]
+		//[/TrueView]
 		vec3_t		origin;
 
 		if ( cg.predictedPlayerState.eFlags & EF_FIRING ) {
