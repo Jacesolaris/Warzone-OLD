@@ -16490,11 +16490,7 @@ stillDoSaber:
 
 		legs.customShader = cgs.media.playerShieldDamage;
 
-#ifdef __EXPERIMENTAL_SHADOWS__
-		CG_AddRefEntityToSceneWithShadows(cent, legs);	//draw the shell
-#else //!__EXPERIMENTAL_SHADOWS__
-		trap->R_AddRefEntityToScene(&legs);	//draw the shell
-#endif //__EXPERIMENTAL_SHADOWS__
+		trap->R_AddRefEntityToScene(&legs);
 	}
 
 	// =======================
