@@ -3152,6 +3152,8 @@ void *BG_AllocUnaligned ( int size )
 	return &bg_pool[bg_poolSize-size];
 }
 
+/*
+// UQ1: NEVER use these! They get corrupted!!!
 void *BG_TempAlloc( int size )
 {
 	size = ((size + 0x00000003) & 0xfffffffc);
@@ -3178,6 +3180,7 @@ void BG_TempFree( int size )
 
 	bg_poolTail += size;
 }
+*/
 
 char *BG_StringAlloc ( const char *source )
 {
