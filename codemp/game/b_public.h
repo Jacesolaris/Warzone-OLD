@@ -268,6 +268,7 @@ typedef struct
 	int			conversationPart;
 	int			conversationReplyTime;
 	int			conversationAvailable;
+	qboolean	isVehicle; // we need a sure way to tell.
 } gNPC_t;
 
 void G_SquadPathsInit(void);

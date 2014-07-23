@@ -1087,6 +1087,9 @@ typedef struct level_locals_s {
 	char		*mTargetAdjust;
 
 	char		mTeamFilter[MAX_QPATH];
+	//[dungeonMapName]
+	char		dungeonmapfiles[MAX_QPATH];
+	//[/dungeonMapName]
 
 	struct {
 		fileHandle_t	log;
@@ -1495,6 +1498,12 @@ extern qboolean G_ClearLOS2( gentity_t *self, gentity_t *ent, const vec3_t end )
 extern qboolean G_ClearLOS3( gentity_t *self, const vec3_t start, gentity_t *ent );
 extern qboolean G_ClearLOS4( gentity_t *self, gentity_t *ent );
 extern qboolean G_ClearLOS5( gentity_t *self, const vec3_t end );
+
+//[Create Dungeon]
+void Clear_Dungeon();
+void Load_Dungeon();
+void Save_Dungeon();
+//[/Create Dungeon]
 
 //
 // g_bot.c

@@ -373,6 +373,13 @@ void G_InitGame( int levelTime, int randomSeed, int restart ) {
 		}
 	}
 
+	//[Create Dungeon]
+	if (g_gametype.integer == GT_SINGLE_PLAYER || g_gametype.integer == GT_INSTANCE)
+	{//load Up all the Npc In a Dungeon
+		Load_Dungeon();
+	}
+	//[/Create Dungeon]
+
 	if ( level.gametype == GT_JEDIMASTER ) {
 		gentity_t *ent = NULL;
 		int i=0;

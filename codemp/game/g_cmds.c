@@ -6009,6 +6009,21 @@ void Cmd_Acheckaccount_f(gentity_t *ent)
 
 }
 
+//[Create Dungeon]
+void Cmd_Clear_Dungeon_F(gentity_t *ent){
+
+	Clear_Dungeon();
+}
+void Cmd_Save_Dungeon_F(gentity_t *ent){
+
+	Save_Dungeon();
+}
+void Cmd_Load_Dungeon_F(gentity_t *ent){
+
+	Load_Dungeon();
+}
+//[/Create Dungeon]
+
 /*
 =================
 ClientCommand
@@ -6032,6 +6047,9 @@ int cmdcmp( const void *a, const void *b ) {
 /* This array MUST be sorted correctly by alphabetical name field */
 command_t commands[] = {
 	{ "addbot",				Cmd_AddBot_f,				0 },
+	{ "d_clear",			Cmd_Clear_Dungeon_F,		CMD_CHEAT | CMD_ALIVE },//[Create Dungeon]
+	{ "d_save",				Cmd_Save_Dungeon_F,			CMD_CHEAT | CMD_ALIVE },
+	{ "d_load",				Cmd_Load_Dungeon_F,			CMD_CHEAT | CMD_ALIVE },//[/Create Dungeon]
 	{ "alogin",				Cmd_Alogin_f,			    0 },
 	{ "aregister",			Cmd_Aregister_f,		    0 },
 	{ "acheckaccount",		Cmd_Acheckaccount_f,		0 },
@@ -6075,6 +6093,166 @@ command_t commands[] = {
 	{ "where",				Cmd_Where_f,				CMD_NOINTERMISSION },
 
 };
+
+//[Create Dungeon]
+//the max autosave file size define
+#define MAX_AUTOSAVE_FILESIZE 1024
+// We will be using Dungeons/<mapname>.DungeonsDataFiles for our save files
+// I guess we can call them missions? ofc :P
+void Save_Dungeon()
+{
+	fileHandle_t	f;
+	char			lineBuf[MAX_QPATH];
+	char			fileBuf[MAX_AUTOSAVE_FILESIZE];
+	char			loadPath[MAX_QPATH];
+	int				len;
+	gentity_t*		npc;
+
+	fileBuf[0] = '\0';
+
+	trap->Print("^5Saving Dungeons File Data...");
+
+	//Com_sprintf(loadPath, MAX_QPATH, "maps/%s.autosp", mapname.string);
+	Com_sprintf(loadPath, sizeof(loadPath), "dungeons/%s.DungeonsDataFiles", level.dungeonmapfiles);
+
+	len = trap->FS_Open(loadPath, &f, FS_WRITE);
+	if (!f)
+	{
+		trap->Print("^5Couldn't create Dungeon Data File.\n");
+		return;
+	}
+
+	//newent->targetname = ent->NPC_targetname;
+	//newent->classname = "NPC";
+	//newent->NPC_type = ent->NPC_type;
+
+	//find all npc's
+	npc = &g_entities[0];
+	for (; npc - g_entities < MAX_GENTITIES; npc++)
+	{
+		if (!npc->inuse)
+			continue;
+		if (npc->NPC || npc->s.eType == ET_NPC)
+		{
+			//if(!Q_stricmp("vehicle", npc->NPC_type))
+			//	isVehicle = 1;
+
+
+			Com_sprintf(lineBuf, MAX_QPATH, "%f %f %f %i %s\n",
+				npc->r.currentOrigin[0], npc->r.currentOrigin[1],
+				npc->r.currentOrigin[2], npc->NPC->isVehicle, npc->NPC_type);
+			strcat(fileBuf, lineBuf);
+		}
+	}
+
+	if (fileBuf[0] != '\0')
+	{//actually written something
+		trap->FS_Write(fileBuf, strlen(fileBuf), f);
+	}
+	trap->FS_Close(f);
+	trap->Print("^5Done.\n");
+
+}
+
+gentity_t *NPC_SpawnType(gentity_t *ent, char *npc_type, char *targetname, qboolean isVehicle, qboolean load, vec3_t positionData);
+void Load_Dungeon()
+{
+	char			*s;
+	int				len;
+	fileHandle_t	f;
+	char			buf[MAX_AUTOSAVE_FILESIZE];
+	char			loadPath[MAX_QPATH];
+	char			targetname[MAX_INFO_STRING];
+	vec3_t			positionData;
+	int				isVehicle;
+	char			*npc_type;
+
+	trap->Print("^5Loading Dungeon File Data...");
+
+	//Com_sprintf(loadPath, MAX_QPATH, "maps/%s.autosp", mapname.string);
+	Com_sprintf(loadPath, sizeof(loadPath), "dungeons/%s.DungeonsDataFiles", level.dungeonmapfiles);
+	//[/RawMapName]
+
+	len = trap->FS_Open(loadPath, &f, FS_READ);
+	if (!f)
+	{
+		trap->Print("^5No Dungeon Data File Found.\n");
+		return;
+	}
+	if (!len)
+	{ //empty file
+		trap->Print("^5Empty Dungeon file!\n");
+		trap->FS_Close(f);
+		return;
+	}
+
+	//	Mission_Clear(); // Prepare map for loading, by removing all current npcs.
+	//NPC_SpawnType
+
+
+	trap->FS_Read(buf, len, f);
+	trap->FS_Close(f);
+
+	s = buf;
+
+	while (*s != '\0' && s - buf < len)
+	{
+		if (*s == '\n')
+		{//hop over newlines
+			s++;
+			continue;
+		}
+
+		sscanf(s, "%f %f %f %i %s", &positionData[0], &positionData[1], &positionData[2], &isVehicle, targetname);
+
+		//Create_Autosave( positionData, sizeData, teleportPlayers );
+		//	if(isVehicle)
+		//	{
+		//		npc_type = "vehicle";
+		//	}else 
+		npc_type = targetname;
+
+		NPC_SpawnType(NULL, npc_type, targetname, isVehicle, qtrue, positionData);
+
+		//advance to the end of the linehead
+		while (*s != '\n' && *s != '\0' && s - buf < len)
+		{
+			s++;
+		}
+	}
+
+	trap->Print("^5Done.\n");
+
+}
+
+void Clear_Dungeon()
+{
+	gentity_t *npc = &g_entities[0];
+	// This function/cmd, will remove all npcs on the map and all npc spawners, so that the npcs won't come back.
+
+	for (; npc - g_entities < MAX_GENTITIES; npc++)
+	{
+		if (npc->inuse)
+		{
+			if (npc->NPC || npc->s.eType == ET_NPC)
+			{
+				npc->health = 0;
+				npc->client->ps.stats[STAT_HEALTH] = 0;
+				if (npc->die)
+				{
+					npc->die(npc, npc, npc, 100, MOD_UNKNOWN);
+				}
+			}
+			else if (npc->NPC_type && npc->classname && npc->classname[0] && Q_stricmp("NPC_starfleet", npc->classname) != 0)
+			{//A spawner, remove it
+				//	Com_Printf( S_COLOR_GREEN"Removing NPC spawner %s with NPC named %s\n", player->NPC_type, player->NPC_targetname );
+				G_FreeEntity(npc);
+				//FIXME: G_UseTargets2(player, player, player->NPC_target & player->target);?
+			}
+		}
+	}
+}
+//[/Create Dungeon]
 
 // Account system
 // Returns true if login successful,
