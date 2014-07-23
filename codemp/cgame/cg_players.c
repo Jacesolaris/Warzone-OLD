@@ -5376,7 +5376,7 @@ void CG_PlayerShieldHit(int entitynum, vec3_t dir, int amount)
 		vectoangles(dir, cent->damageAngles);
 	}
 }
-
+//[SPShield]
 //void CG_DrawPlayerShield(centity_t *cent, vec3_t origin)
 //{
 //	refEntity_t ent;
@@ -5412,9 +5412,9 @@ void CG_PlayerShieldHit(int entitynum, vec3_t dir, int amount)
 //	ent.shaderRGBA[2] = alpha;
 //	ent.shaderRGBA[3] = 255;
 //	trap->R_AddRefEntityToScene(&ent);
-//}
+//}//[/SPShield]
 
-extern void CG_NewLightningActEffect(vec3_t muzzle, vec3_t muzzleDir, float length);
+
 void CG_PlayerHitFX(centity_t *cent)
 {
 	// only do the below fx if the cent in question is...uh...me, and it's first person.
@@ -5422,11 +5422,10 @@ void CG_PlayerHitFX(centity_t *cent)
 	{
 		if (cent->damageTime > cg.time
 			&& cent->currentState.NPC_class != CLASS_VEHICLE)
-		{
+		{//[SPShield]
 			cent->currentState.eFlags |= EF2_PLAYERHIT;
-			CG_NewLightningActEffect;
 			//CG_DrawPlayerShield(cent, cent->lerpOrigin);
-		}
+		}//[/SPShield]
 
 		return;
 	}
