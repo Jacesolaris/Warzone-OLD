@@ -650,6 +650,10 @@ qboolean	PM_SlideMove( qboolean gravity ) {
 
 	if ( gravity ) {
 		endVelocity[2] -= pm->ps->gravity * pml.frametime;
+		//[JetpackChange1.3]
+		if (pm->ps->pm_type == PM_JETPACK && pm->cmd.upmove <= 0 && !(pm->ps->pm_flags & PMF_DUCKED))
+			endVelocity[2] -= endVelocity[2] / 100 * 20;
+		//[/JetpackChange1.3]
 		pm->ps->velocity[2] = ( pm->ps->velocity[2] + endVelocity[2] ) * 0.5;
 		primal_velocity[2] = endVelocity[2];
 		if ( pml.groundPlane ) {

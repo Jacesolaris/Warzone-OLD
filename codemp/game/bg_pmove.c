@@ -2212,6 +2212,18 @@ static qboolean PM_CheckJump( void )
 				pm->cmd.upmove = 0;
 				return qfalse;
 			}
+			//[JetpackSys]
+			else if (pm->cmd.upmove > 0 && pm->ps->velocity[2] < -10)
+			{//can't keep jumping, turn on jetpack?
+#ifdef QAGAME
+				if (g_entities[pm->ps->clientNum].client && pm->ps->stats[STAT_HOLDABLE_ITEMS] & (1 << HI_JETPACK)
+					&& !g_entities[pm->ps->clientNum].client->jetPackOn)
+				{
+					ItemUse_Jetpack(&g_entities[pm->ps->clientNum]);
+				}
+#endif
+			}
+			//[/JetpackSys]
 		}
 	}
 
@@ -3362,20 +3374,31 @@ static void PM_AirMove( void ) {
 	}
 	else if (pm->ps->pm_type == PM_JETPACK)
 	{ //reduced air control while not jetting
-		for ( i = 0 ; i < 2 ; i++ )
-		{
-			wishvel[i] = pml.forward[i]*fmove + pml.right[i]*smove;
-		}
-		wishvel[2] = 0;
-
-		if (pm->cmd.upmove <= 0)
-		{
-            VectorScale(wishvel, 0.8f, wishvel);
+		//[JetpackSys]
+		if (!scale)
+		{//just up/down movement
+			wishvel[0] = 0;
+			wishvel[1] = 0;
+			wishvel[2] = pm->ps->speed * (pm->cmd.upmove / 127.0f) * 1.5;//Was 3, [HeavyJetpack]
 		}
 		else
-		{ //if we are jetting then we have more control than usual
-            VectorScale(wishvel, 2.0f, wishvel);
+		{//some x/y movement
+			for (i = 0; i<3; i++) {
+				if (i == 2)//1.3
+					wishvel[i] = scale * pml.forward[i] * pm->cmd.forwardmove + scale * pml.right[i] * pm->cmd.rightmove * 0.5;//[HeavyJetpack] -- Added * 1.5
+				else
+					wishvel[i] = scale * pml.forward[i] * pm->cmd.forwardmove + scale * pml.right[i] * pm->cmd.rightmove * 0.9;//[HeavyJetpack] -- Added * 1.5
+
+				//wishvel[i]-=(wishvel[i]/100*20);
+
+			}
+
+			wishvel[2] += scale * pm->cmd.upmove;
+			//wishvel[2]=0;
 		}
+
+		VectorScale(wishvel, 1.5f, wishvel);
+		//[/JetpackSys]
 	}
 	else
 	{
@@ -3388,7 +3411,12 @@ static void PM_AirMove( void ) {
 
 	VectorCopy (wishvel, wishdir);
 	wishspeed = VectorNormalize(wishdir);
-	wishspeed *= scale;
+	//[JetpackSys]
+	if (pm->ps->pm_type != PM_JETPACK || scale)
+	{
+		wishspeed *= scale;
+	}
+	//[/JetpackSys]
 
 	accelerate = pm_airaccelerate;
 	if ( pVeh && pVeh->m_pVehicleInfo->type == VH_SPEEDER )
@@ -3972,6 +4000,12 @@ static void PM_CrashLand( void ) {
 		{
 			PM_StartTorsoAnim( TORSO_WEAPONREADY4 );
 		}
+		//[BowcasterScope]
+		else if (pm->ps->weapon == WP_BOWCASTER && pm->ps->zoomMode)
+		{
+			PM_StartTorsoAnim(TORSO_WEAPONREADY4);
+		}
+		//[/BowcasterScope]
 		else
 		{
 			if (pm->ps->weapon == WP_EMPLACED_GUN)
@@ -4318,7 +4352,11 @@ static void PM_GroundTrace( void ) {
 		}
 	}
 
-	if (pm->ps->pm_type == PM_FLOAT || pm->ps->pm_type == PM_JETPACK)
+	//[JetpackSys]
+	//jetpacks now land on ground instead of hovering over it.
+	if (pm->ps->pm_type == PM_FLOAT)
+	//if (pm->ps->pm_type == PM_FLOAT || pm->ps->pm_type == PM_JETPACK)
+	//[/JetpackSys]
 	{
 		PM_GroundTraceMissed();
 		pml.groundPlane = qfalse;
@@ -4367,6 +4405,15 @@ static void PM_GroundTrace( void ) {
 
 	pml.groundPlane = qtrue;
 	pml.walking = qtrue;
+
+	//[JetpackSys]
+#ifdef QAGAME
+	if (pm->ps->pm_type == PM_JETPACK && g_entities[pm->ps->clientNum].client || (pm->cmd.buttons & BUTTON_USE))
+	{//turn off jetpack if we touch the ground.
+		Jetpack_Off(&g_entities[pm->ps->clientNum]);
+	}
+#endif
+	//[/JetpackSys]
 
 	// hitting solid ground will end a waterjump
 	if (pm->ps->pm_flags & PMF_TIME_WATERJUMP)
@@ -5467,6 +5514,14 @@ static void PM_Footsteps( void ) {
 					//yeah.. the anim has a valid pose for the legs, it uses it (you can't move while using disruptor)
 					PM_ContinueLegsAnim( TORSO_WEAPONREADY4 );
 				}
+				//[BowcasterScope]
+				if (pm->ps->weapon == WP_BOWCASTER && pm->ps->zoomMode)
+				{
+					///????  continue legs anim on a torso anim...??!!!
+					//yeah.. the anim has a valid pose for the legs, it uses it (you can't move while using disruptor)
+					PM_ContinueLegsAnim(TORSO_WEAPONREADY4);
+				}
+				//[/BowcasterScope]
 				else
 				{
 					if (pm->ps->weapon == WP_SABER && BG_SabersOff( pm->ps ) )
@@ -6986,6 +7041,12 @@ static void PM_Weapon( void )
 				//PM_StartTorsoAnim( TORSO_WEAPONREADY4 );
 				PM_StartTorsoAnim( TORSO_RAISEWEAP1);
 			}
+			//[BowcasterScope]
+			else if(pm->ps->weapon == WP_BOWCASTER && pm->ps->zoomMode)
+			{
+				PM_StartTorsoAnim( TORSO_WEAPONREADY4 );
+			}
+			//[/BowcasterScope]
 			else
 			{
 				if (pm->ps->weapon == WP_EMPLACED_GUN)
@@ -7577,6 +7638,15 @@ static void PM_Weapon( void )
 	{
 		PM_StartTorsoAnim( TORSO_WEAPONREADY4 );
 	}
+	//[BowcasterScope]
+	else if (((pm->ps->torsoAnim) != TORSO_WEAPONREADY4 &&
+		(pm->ps->torsoAnim) != BOTH_ATTACK4) &&
+		PM_CanSetWeaponAnims() &&
+		(pm->ps->weapon == WP_BOWCASTER && pm->ps->zoomMode))
+	{
+		PM_StartTorsoAnim(TORSO_WEAPONREADY4);
+	}
+	//[/BowcasterScope]
 
 	if (pm->ps->clientNum >= MAX_CLIENTS &&
 		pm_entSelf &&
@@ -7687,6 +7757,12 @@ static void PM_Weapon( void )
 	{
 		PM_StartTorsoAnim( BOTH_ATTACK4 );
 	}
+	//[BowcasterScope]
+	else if (pm->ps->weapon == WP_BOWCASTER && pm->ps->zoomMode)
+	{
+		PM_StartTorsoAnim(BOTH_ATTACK4);
+	}
+	//[/BowcasterScope]
 #ifndef QAGAME
 	else if (pm->ps->weapon == WP_MELEE)
 #else //!QAGAME
@@ -10975,14 +11051,24 @@ void PmoveSingle (pmove_t *pmove) {
 		gDist = PM_GroundDistance();
 		savedGravity = pm->ps->gravity;
 
+		//[JetpackSys]
+		//no gravity while boosting
+		if (pm->cmd.rightmove || pm->cmd.forwardmove || pm->cmd.upmove)
+		{
+			pm->ps->gravity = 0.0f;
+		}
+
+		/*
 		if (gDist < JETPACK_HOVER_HEIGHT+64)
 		{
-			pm->ps->gravity *= 0.1f;
+		pm->ps->gravity *= 0.1f;
 		}
 		else
 		{
-			pm->ps->gravity *= 0.25f;
+		pm->ps->gravity *= 0.25f;
 		}
+		*/
+		//[/JetpackSys]
 	}
 	else if (gPMDoSlowFall)
 	{
@@ -10991,27 +11077,46 @@ void PmoveSingle (pmove_t *pmove) {
 	}
 
 	//if we're in jetpack mode then see if we should be jetting around
+	/*JET_BACK,
+		JET_FORWARD,
+		JET_LEFT,
+		JET_RIGHT,*/
 	if (pm->ps->pm_type == PM_JETPACK)
 	{
 		if (pm->cmd.rightmove > 0)
 		{
-			PM_ContinueLegsAnim(BOTH_INAIRRIGHT1);
+			//[JetpackSys]
+			PM_ContinueLegsAnim(JET_RIGHT);
+			//PM_ContinueLegsAnim(BOTH_INAIRRIGHT1);
+			//[/JetpackSys]
 		}
 		else if (pm->cmd.rightmove < 0)
 		{
-            PM_ContinueLegsAnim(BOTH_INAIRLEFT1);
+			//[JetpackSys]
+			PM_ContinueLegsAnim(JET_LEFT);
+			//PM_ContinueLegsAnim(BOTH_INAIRLEFT1);
+			//[/JetpackSys]
 		}
 		else if (pm->cmd.forwardmove > 0)
 		{
-			PM_ContinueLegsAnim(BOTH_INAIR1);
+			//[JetpackSys]
+			PM_ContinueLegsAnim(JET_FORWARD);
+			//PM_ContinueLegsAnim(BOTH_INAIR1);
+			//[/JetpackSys]
 		}
 		else if (pm->cmd.forwardmove < 0)
 		{
-			PM_ContinueLegsAnim(BOTH_INAIRBACK1);
+			//[JetpackSys]
+			PM_ContinueLegsAnim(JET_BACK);
+			//PM_ContinueLegsAnim(BOTH_INAIRBACK1);
+			//[/JetpackSys]
 		}
 		else
 		{
-			PM_ContinueLegsAnim(BOTH_INAIR1);
+			//[JetpackSys]
+			PM_ContinueLegsAnim(JET_FORWARD);
+			//PM_ContinueLegsAnim(BOTH_INAIR1);
+			//[/JetpackSys]
 		}
 
 		if (pm->ps->weapon == WP_SABER &&
@@ -11021,36 +11126,43 @@ void PmoveSingle (pmove_t *pmove) {
 			pm->ps->velocity[1] += Q_irand(-100, 100);
 		}
 
-		if (pm->cmd.upmove > 0 && pm->ps->velocity[2] < 256)
+		//[JetpackSys]
+		if (pm->cmd.upmove || pm->cmd.rightmove || pm->cmd.forwardmove /*&& pm->ps->velocity[2] < 256*/)
+			//if (pm->cmd.upmove > 0 && pm->ps->velocity[2] < 256)
+			//[/JetpackSys]
 		{ //cap upward velocity off at 256. Seems reasonable.
-			float addIn = 12.0f;
+			//[JetpackSys]
+			//float addIn = 12.0f;
 
-/*
+			/*
 			//Add based on our distance to the ground if we're already travelling upward
 			if (pm->ps->velocity[2] > 0)
 			{
-				while (gDist > 64)
-				{ //subtract 1 for every 64 units off the ground we get
-					addIn--;
+			while (gDist > 64)
+			{ //subtract 1 for every 64 units off the ground we get
+			addIn--;
 
-					gDist -= 64;
+			gDist -= 64;
 
-					if (addIn <= 0)
-					{ //break out if we're not even going to add anything
-						break;
-					}
-				}
+			if (addIn <= 0)
+			{ //break out if we're not even going to add anything
+			break;
 			}
-*/
+			}
+			}
+			*/
+			/*
 			if (pm->ps->velocity[2] > 0)
 			{
-				addIn = 12.0f - (gDist / 64.0f);
+			addIn = 12.0f - (gDist / 64.0f);
 			}
 
 			if (addIn > 0.0f)
 			{
-				pm->ps->velocity[2] += addIn;
+			pm->ps->velocity[2] += addIn;
 			}
+			*/
+			//[/JetpackSys]
 
 			pm->ps->eFlags |= EF_JETPACK_FLAMING; //going up
 		}
@@ -11058,17 +11170,21 @@ void PmoveSingle (pmove_t *pmove) {
 		{
 			pm->ps->eFlags &= ~EF_JETPACK_FLAMING; //idling
 
+			//[JetpackSys]
+			/*
 			if (pm->ps->velocity[2] < 256)
 			{
-				if (pm->ps->velocity[2] < -100)
-				{
-					pm->ps->velocity[2] = -100;
-				}
-				if (gDist < JETPACK_HOVER_HEIGHT)
-				{ //make sure we're always hovering off the ground somewhat while jetpack is active
-					pm->ps->velocity[2] += 2;
-				}
+			if (pm->ps->velocity[2] < -100)
+			{
+			pm->ps->velocity[2] = -100;
 			}
+			if (gDist < JETPACK_HOVER_HEIGHT)
+			{ //make sure we're always hovering off the ground somewhat while jetpack is active
+			pm->ps->velocity[2] += 2;
+			}
+			}
+			*/
+			//[/JetpackSys]
 		}
 	}
 

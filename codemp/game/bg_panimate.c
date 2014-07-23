@@ -3011,12 +3011,21 @@ void BG_SetAnimFinal(playerState_t *ps, animation_t *animations,
 	if (setAnimParts & SETANIM_TORSO)
 	{
 		// Don't reset if it's already running the anim
-		if( !(setAnimFlags & SETANIM_FLAG_RESTART) && (ps->torsoAnim) == anim )
+		//[AnimationSys]
+		//added SETANIM_FLAG_PACE flag
+		if ((ps->torsoAnim) == anim && !(setAnimFlags & SETANIM_FLAG_RESTART) && !(setAnimFlags & SETANIM_FLAG_PACE))
+			//if( !(setAnimFlags & SETANIM_FLAG_RESTART) && (ps->torsoAnim) == anim )
+			//[/AnimationSys]
 		{
 			goto setAnimLegs;
 		}
 		// or if a more important anim is running
-		if( !(setAnimFlags & SETANIM_FLAG_OVERRIDE) && ((ps->torsoTimer > 0)||(ps->torsoTimer == -1)) )
+		//[AnimationSys]
+		if (((ps->torsoTimer > 0) || (ps->torsoTimer == -1)) &&
+			(((setAnimFlags & SETANIM_FLAG_PACE) && (ps->torsoAnim) == anim)
+			|| !(setAnimFlags & SETANIM_FLAG_OVERRIDE)))
+			//if( !(setAnimFlags & SETANIM_FLAG_OVERRIDE) && ((ps->torsoTimer > 0)||(ps->torsoTimer == -1)) )
+			//[/AnimationSys]
 		{
 			goto setAnimLegs;
 		}
@@ -3059,15 +3068,25 @@ setAnimLegs:
 	if (setAnimParts & SETANIM_LEGS)
 	{
 		// Don't reset if it's already running the anim
-		if( !(setAnimFlags & SETANIM_FLAG_RESTART) && (ps->legsAnim) == anim )
+		//[AnimationSys]
+		//added SETANIM_FLAG_PACE flag
+		if ((ps->legsAnim) == anim && !(setAnimFlags & SETANIM_FLAG_RESTART) && !(setAnimFlags & SETANIM_FLAG_PACE))
+			//if( !(setAnimFlags & SETANIM_FLAG_RESTART) && (ps->legsAnim) == anim )
+			//[/AnimationSys]
 		{
 			goto setAnimDone;
 		}
 		// or if a more important anim is running
-		if( !(setAnimFlags & SETANIM_FLAG_OVERRIDE) && ((ps->legsTimer > 0)||(ps->legsTimer == -1)) )
+		//[AnimationSys]
+		if (((ps->legsTimer > 0) || (ps->legsTimer == -1)) &&
+			(((setAnimFlags & SETANIM_FLAG_PACE) && (ps->legsAnim) == anim)
+			|| !(setAnimFlags & SETANIM_FLAG_OVERRIDE)))
+			//if( !(setAnimFlags & SETANIM_FLAG_OVERRIDE) && ((ps->legsTimer > 0)||(ps->legsTimer == -1)) )
+
 		{
 			goto setAnimDone;
 		}
+		//[/AnimationSys]
 
 		BG_StartLegsAnim(ps, anim);
 

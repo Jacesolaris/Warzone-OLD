@@ -5378,42 +5378,46 @@ void CG_PlayerShieldHit(int entitynum, vec3_t dir, int amount)
 }
 
 
+//[SPShield]
+/*
 void CG_DrawPlayerShield(centity_t *cent, vec3_t origin)
 {
-	refEntity_t ent;
-	int			alpha;
-	float		scale;
+refEntity_t ent;
+int			alpha;
+float		scale;
 
-	// Don't draw the shield when the player is dead.
-	if (cent->currentState.eFlags & EF_DEAD)
-	{
-		return;
-	}
-
-	memset( &ent, 0, sizeof( ent ) );
-
-	VectorCopy( origin, ent.origin );
-	ent.origin[2] += 10.0;
-	AnglesToAxis( cent->damageAngles, ent.axis );
-
-	alpha = 255.0 * ((cent->damageTime - cg.time) / MIN_SHIELD_TIME) + random()*16;
-	if (alpha>255)
-		alpha=255;
-
-	// Make it bigger, but tighter if more solid
-	scale = 1.4 - ((float)alpha*(0.4/255.0));		// Range from 1.0 to 1.4
-	VectorScale( ent.axis[0], scale, ent.axis[0] );
-	VectorScale( ent.axis[1], scale, ent.axis[1] );
-	VectorScale( ent.axis[2], scale, ent.axis[2] );
-
-	ent.hModel = cgs.media.halfShieldModel;
-	ent.customShader = cgs.media.halfShieldShader;
-	ent.shaderRGBA[0] = alpha;
-	ent.shaderRGBA[1] = alpha;
-	ent.shaderRGBA[2] = alpha;
-	ent.shaderRGBA[3] = 255;
-	trap->R_AddRefEntityToScene( &ent );
+// Don't draw the shield when the player is dead.
+if (cent->currentState.eFlags & EF_DEAD)
+{
+return;
 }
+
+memset( &ent, 0, sizeof( ent ) );
+
+VectorCopy( origin, ent.origin );
+ent.origin[2] += 10.0;
+AnglesToAxis( cent->damageAngles, ent.axis );
+
+alpha = 255.0 * ((cent->damageTime - cg.time) / MIN_SHIELD_TIME) + random()*16;
+if (alpha>255)
+alpha=255;
+
+// Make it bigger, but tighter if more solid
+scale = 1.4 - ((float)alpha*(0.4/255.0));		// Range from 1.0 to 1.4
+VectorScale( ent.axis[0], scale, ent.axis[0] );
+VectorScale( ent.axis[1], scale, ent.axis[1] );
+VectorScale( ent.axis[2], scale, ent.axis[2] );
+
+ent.hModel = cgs.media.halfShieldModel;
+ent.customShader = cgs.media.halfShieldShader;
+ent.shaderRGBA[0] = alpha;
+ent.shaderRGBA[1] = alpha;
+ent.shaderRGBA[2] = alpha;
+ent.shaderRGBA[3] = 255;
+trap_R_AddRefEntityToScene( &ent );
+}
+*/
+//[/SPShield]
 
 
 void CG_PlayerHitFX(centity_t *cent)
@@ -5424,7 +5428,11 @@ void CG_PlayerHitFX(centity_t *cent)
 		if (cent->damageTime > cg.time
 			&& cent->currentState.NPC_class != CLASS_VEHICLE )
 		{
-			CG_DrawPlayerShield(cent, cent->lerpOrigin);
+			//[SPShield]
+			//Raz - we're now using a flag, instead of a function.
+			cent->currentState.eFlags2 |= EF2_PLAYERHIT;
+			//CG_DrawPlayerShield(cent, cent->lerpOrigin);
+			//[/SPShield]
 		}
 
 		return;
@@ -16156,6 +16164,14 @@ stillDoSaber:
 		legs.shaderRGBA[2] = 0;
 		legs.renderfx |= RF_MINLIGHT;
 	}
+	
+	//[SPShield]
+	if (cent->currentState.eFlags2 & EF2_PLAYERHIT)
+	{
+		trap->R_AddRefEntityToScene(&legs);
+		legs.customShader = cgs.media.playerShieldDamage;
+	}
+	//[/SPShield]
 
 	if (cg.snap->ps.duelInProgress /*&& cent->currentState.number != cg.snap->ps.clientNum*/)
 	{ //I guess go ahead and glow your own client too in a duel
