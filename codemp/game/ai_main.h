@@ -508,8 +508,8 @@ enum {
 
 };
 
-void *B_TempAlloc(int size);
-void B_TempFree(int size);
+//void *B_TempAlloc(int size);
+//void B_TempFree(int size);
 
 void *B_Alloc(int size);
 void B_Free(void *ptr);

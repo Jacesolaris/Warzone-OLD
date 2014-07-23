@@ -76,9 +76,9 @@ enum {
 	GT_FFA,				// free for all
 	GT_HOLOCRON,		// holocron match
 	GT_JEDIMASTER,		// jedi master
-	GT_DUEL,		// one on one tournament
-	GT_POWERDUEL,
-	GT_INSTANCE,	//
+	GT_DUEL,			// one on one tournament
+	GT_POWERDUEL,		// two on one tournament
+	GT_INSTANCE,		// instance system
 	GT_SINGLE_PLAYER,	// single player tournament
 
 	GT_NUM_FREE_TEAM_GAMETYPES = GT_SINGLE_PLAYER,	//
@@ -88,7 +88,9 @@ enum {
 	GT_TEAM,			// team deathmatch
 	GT_SIEGE,			// siege
 	GT_CTF,				// capture the flag
-	GT_CTY,
+	GT_CTY,				// capture the ysalimari
+	GT_WARZONE,			// warzone system
+
 	GT_MAX_GAME_TYPE
 };
 typedef int gametype_t;

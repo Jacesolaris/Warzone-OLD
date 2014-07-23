@@ -25,6 +25,7 @@
 #ifdef __DOMINANCE_AI__
 
 #define MAX_NODELINKS       32
+#define NODE_INVALID -1
 
 extern int FRAME_TIME;
 extern int gWPNum;
@@ -36,9 +37,6 @@ extern int DOM_FindIdealPathtoWP(bot_state_t *bs, int from, int to, int badwp2, 
 qboolean PATHING_IGNORE_FRAME_TIME = qfalse;
 
 extern int BOT_GetFCost(gentity_t *bot, int to, int num, int parentNum, float *gcost);
-
-#define NODE_INVALID -1
-#define MAX_NODELINKS 32
 
 extern int			*openlist;					//add 1 because it's a binary heap, and they don't use 0 - 1 is the first used index
 extern float		*gcost;

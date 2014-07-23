@@ -3096,9 +3096,9 @@ int BG_ModelCache(const char *modelName, const char *skinName)
 #ifdef __MMO__
 
 #if defined(_GAME)
-	#define MAX_POOL_SIZE	300000000
+	#define MAX_POOL_SIZE	20480000
 #elif defined(_CGAME) //don't need as much for cgame stuff. 2mb will be fine.
-	#define MAX_POOL_SIZE	204800000
+	#define MAX_POOL_SIZE	20480000
 #elif defined(_UI) //And for the ui the only thing we'll be using this for anyway is allocating anim data for g2 menu models
 	#define MAX_POOL_SIZE	512000
 #endif
@@ -3152,6 +3152,8 @@ void *BG_AllocUnaligned ( int size )
 	return &bg_pool[bg_poolSize-size];
 }
 
+/*
+// UQ1: NEVER use these! They get corrupted!!!
 void *BG_TempAlloc( int size )
 {
 	size = ((size + 0x00000003) & 0xfffffffc);
@@ -3178,6 +3180,7 @@ void BG_TempFree( int size )
 
 	bg_poolTail += size;
 }
+*/
 
 char *BG_StringAlloc ( const char *source )
 {
@@ -3197,6 +3200,7 @@ const char *gametypeStringShort[GT_MAX_GAME_TYPE] = {
 	"JM",
 	"1v1",
 	"2v1",
+	"INSTANCE",
 	"SP",
 	"TDM",
 	"SAGA",
@@ -3230,6 +3234,8 @@ const char *BG_GetGametypeString( int gametype )
 		return "Capture The Flag";
 	case GT_CTY:
 		return "Capture The Ysalimiri";
+	case GT_WARZONE:
+		return "War Zone";
 
 	default:
 		return "Unknown Gametype";
@@ -3253,5 +3259,6 @@ int BG_GetGametypeForString( const char *gametype )
 	else if ( !Q_stricmp( gametype, "siege" ) )			return GT_SIEGE;
 	else if ( !Q_stricmp( gametype, "ctf" ) )			return GT_CTF;
 	else if ( !Q_stricmp( gametype, "cty" ) )			return GT_CTY;
+	else if ( !Q_stricmp( gametype, "warzone" ) )		return GT_WARZONE;
 	else												return -1;
 }

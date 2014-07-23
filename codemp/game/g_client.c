@@ -1541,7 +1541,7 @@ void *g2SaberInstance = NULL;
 
 qboolean BG_IsValidCharacterModel(const char *modelName, const char *skinName);
 qboolean BG_ValidateSkinForTeam( const char *modelName, char *skinName, int team, float *colors );
-void BG_GetVehicleModelName(char *modelName, const char *vehicleName, size_t len);
+void BG_GetVehicleModelName(char *modelName, size_t len);
 
 void SetupGameGhoul2Model(gentity_t *ent, char *modelname, char *skinName)
 {
@@ -1604,7 +1604,8 @@ void SetupGameGhoul2Model(gentity_t *ent, char *modelname, char *skinName)
 				char realModelName[MAX_QPATH];
 
 				Q_strncpyz( vehicleName, modelname, sizeof( vehicleName ) );
-				BG_GetVehicleModelName(realModelName, modelname, sizeof( realModelName ));
+				strcpy(realModelName, vehicleName);
+				BG_GetVehicleModelName(realModelName, sizeof( realModelName ));
 				strcpy(truncModelName, realModelName);
 				skin[0] = 0;
 				if ( ent->m_pVehicle

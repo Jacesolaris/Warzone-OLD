@@ -1663,21 +1663,34 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 					RB_SetParallaxScale(sp, 4.0);
 					break;
 				case MATERIAL_DIRT:				// 7			// hard mud
-				case MATERIAL_GLASS:			// 10			//
 				case MATERIAL_CONCRETE:			// 11			// hardened concrete pavement
-				case MATERIAL_ICE:				// 15			// packed snow/solid ice
 				case MATERIAL_FLESH:			// 16			// hung meat, corpses in the world
-				case MATERIAL_BPGLASS:			// 18			// bulletproof glass
 				case MATERIAL_RUBBER:			// 24			// hard tire like rubber
 				case MATERIAL_PLASTIC:			// 25			//
 				case MATERIAL_PLASTER:			// 28			// drywall style plaster
 				case MATERIAL_SHATTERGLASS:		// 29			// glass with the Crisis Zone style shattering
-				case MATERIAL_ARMOR:			// 30			// body armor
-				case MATERIAL_COMPUTER:			// 31			// computers/electronic equipment
-				default:
 					GLSL_BindProgram(sp);
 					GLSL_SetUniformFloat(sp, UNIFORM_TIME, backEnd.refdef.floatTime);
 					RB_SetParallaxScale(sp, 1.0);
+					break;
+				case MATERIAL_ARMOR:			// 30			// body armor
+				case MATERIAL_ICE:				// 15			// packed snow/solid ice
+					GLSL_BindProgram(sp);
+					GLSL_SetUniformFloat(sp, UNIFORM_TIME, backEnd.refdef.floatTime);
+					RB_SetParallaxScale(sp, 4.0);
+					break;
+				case MATERIAL_GLASS:			// 10			//
+				case MATERIAL_BPGLASS:			// 18			// bulletproof glass
+				case MATERIAL_COMPUTER:			// 31			// computers/electronic equipment
+					GLSL_BindProgram(sp);
+					GLSL_SetUniformFloat(sp, UNIFORM_TIME, backEnd.refdef.floatTime);
+					RB_SetParallaxScale(sp, 1.0);
+					break;
+				default:
+					GLSL_BindProgram(sp);
+					GLSL_SetUniformFloat(sp, UNIFORM_TIME, backEnd.refdef.floatTime);
+					//RB_SetParallaxScale(sp, 1.0);
+					RB_SetParallaxScale(sp, 2.0);
 					break;
 			}
 		}

@@ -120,7 +120,14 @@ void CG_ImpactMark( qhandle_t markShader, const vec3_t origin, const vec3_t dir,
 	vec3_t			markPoints[MAX_MARK_POINTS];
 	vec3_t			projection;
 
-	assert(markShader);
+	if (!markShader)
+	{
+#ifdef _DEBUG
+		trap->Print("CG_ImpactMark called with no shader.\n");
+		//assert(markShader);
+#endif //_DEBUG
+		return;
+	}
 
 	if ( !cg_marks.integer ) {
 		return;

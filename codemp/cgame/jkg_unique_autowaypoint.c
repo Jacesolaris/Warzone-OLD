@@ -1137,12 +1137,7 @@ NodeIsOnMover ( vec3_t org1 )
 	VectorCopy( org1, newOrgDown );
 	newOrgDown[2] = -64000.0f;
 
-	CG_Trace( &tr, newOrg, NULL, NULL, newOrgDown, -1, MASK_PLAYERSOLID );
-	
-	if ( tr.fraction == 1 )
-	{
-		return ( qfalse );
-	}
+	CG_Trace( &tr, newOrg, NULL, NULL, newOrgDown, cg.clientNum, MASK_PLAYERSOLID );
 
 	if ( tr.fraction != 1 
 		&& tr.entityNum != ENTITYNUM_NONE 
@@ -1150,6 +1145,11 @@ NodeIsOnMover ( vec3_t org1 )
 	{
 		if (cg_entities[tr.entityNum].currentState.eType == ET_MOVER)
 			return ( qtrue );
+	}
+
+	if ( tr.fraction == 1 )
+	{
+		return ( qfalse );
 	}
 
 	return ( qfalse );
@@ -2066,42 +2066,85 @@ void AIMOD_Generate_Cover_Spots ( void )
 	}
 }
 
+#define NUM_SLOPE_CHECKS 16
 
 qboolean AIMod_Check_Slope_Between ( vec3_t org1, vec3_t org2 ) {  
-	/*int i;
-	vec3_t	orgA, orgB;
+	int		j;
+	float	dist, last_height;
+	vec3_t	orgA, orgB, originalOrgB, forward, dir, testangles;
 	trace_t tr;
-	vec3_t	forward, right, up, start, end, dir;
-	vec3_t	angles;
-	vec3_t	testangles;
-	vec3_t	boxMins= {-8, -8, -8}; // @fixme , tune this to be more smooth on delailed terrian (eg. railroad )
-	vec3_t	boxMaxs= {8, 8, 8};
-	float	pitch, roll, yaw, roof;
-	vec3_t	slopeangles;
+	//vec3_t	boxMins= {-8, -8, -8}; // @fixme , tune this to be more smooth on delailed terrian (eg. railroad )
+	//vec3_t	boxMaxs= {8, 8, 8};
 
-	VectorCopy(org1, orgA);
-	VectorSubtract(org2, org1, dir);
-	vectoangles(dir, testangles);
-	AngleVectors( testangles, forward, right, up );
-	VectorMA(orgA, (VectorDistanceNoHeight(org1, org2)*0.5), forward, orgA);
+	if (org1[2] > org2[2])
+	{
+		VectorCopy(org1, orgA);
+		VectorCopy(org2, orgB);
+	}
+	else
+	{
+		VectorCopy(org2, orgA);
+		VectorCopy(org1, orgB);
+	}
 
-	roof = RoofHeightAt( orgA );
-	roof -= 16;
-	orgA[2] = roof;
+	VectorCopy(orgB, originalOrgB);
 
-	VectorCopy(orgA, orgB);
-	orgB[2] = -65000;
-	
-	CG_Trace( &tr, orgA, boxMins, boxMaxs, orgB, -1, MASK_PLAYERSOLID );
-	
-	if (tr.endpos[2]+64 < org1[2])
-		return qfalse;
+	last_height = orgA[2];
 
-	if (tr.endpos[2]-48 > org1[2])
-		return qfalse;
+	orgA[2] += 18.0;
+	orgB[2] = orgA[2];
 
-	if ( tr.fraction == 1 || (tr.contents & CONTENTS_LAVA) )
-		return qfalse;*/
+	dist = VectorDistanceNoHeight(orgA, orgB);
+
+	for (j = dist/NUM_SLOPE_CHECKS; j < dist-((dist/NUM_SLOPE_CHECKS)+1.0); j+=dist/NUM_SLOPE_CHECKS)
+	{
+		if (org1[2] > org2[2])
+		{
+			VectorCopy(org1, orgA);
+			VectorCopy(org2, orgB);
+		}
+		else
+		{
+			VectorCopy(org2, orgA);
+			VectorCopy(org1, orgB);
+		}
+
+		orgA[2] += 18.0;
+		orgB[2] = orgA[2];
+
+		VectorSubtract(orgB, orgA, dir);
+		vectoangles(dir, testangles);
+		AngleVectors( testangles, forward, NULL, NULL );
+		VectorMA(orgA, j, forward, orgA);
+
+		orgB[2] = -65000;
+
+		CG_Trace( &tr, orgA, NULL/*boxMins*/, NULL/*boxMaxs*/, orgB, -1, MASK_PLAYERSOLID );
+
+		if (tr.contents & CONTENTS_LAVA)
+		{
+			return qfalse; // Hit LAVA. BAD!
+		}
+		else if (tr.entityNum != ENTITYNUM_NONE 
+			&& tr.entityNum < ENTITYNUM_MAX_NORMAL
+			&& VisibleAllowEntType(cg_entities[tr.entityNum].currentState.eType, 0)) 
+		{// Movers are always OK...
+			continue;
+		}
+		else
+		{
+			//if (tr.endpos[2] < originalOrgB[2] - 18.0)
+			//	return qfalse; // Too much of a drop...
+
+			if (tr.endpos[2] < last_height - 18.0 || tr.endpos[2] > last_height + 18.0)
+			{
+				//trap->Print("A: %f %f %f - B: %f %f %f - EP: %f - LAST: %f.\n", orgA[0], orgA[1], orgA[2], orgB[0], orgB[1], orgB[2], tr.endpos[2], last_height - 18.0);
+				return qfalse; // Too much of a drop...
+			}
+		}
+
+		last_height = tr.endpos[2];
+	}
 
 	return qtrue;
 }
@@ -2140,7 +2183,7 @@ AIMOD_MAPPING_CreateNodeLinks ( int node )
 			//3 = door entity in the way.
 			if ( visCheck == 1 || visCheck == 2 || visCheck == 3 /*|| loop == node - 1*/ )
 			{
-				//if (AIMod_Check_Slope_Between(nodes[node].origin, nodes[loop].origin))
+				if (AIMod_Check_Slope_Between(nodes[node].origin, nodes[loop].origin))
 				{
 					nodes[node].links[linknum].targetNode = loop;
 					nodes[node].links[linknum].cost = VectorDistance(nodes[loop].origin, nodes[node].origin) + (HeightDistance(nodes[loop].origin, nodes[node].origin)*HeightDistance(nodes[loop].origin, nodes[node].origin));
@@ -2978,7 +3021,7 @@ float GroundHeightAt ( vec3_t org )
 
 	if (tr.endpos[2] < -65000)
 		return -65536.0f;
-
+	/*
 	if ( tr.fraction != 1 
 		&& tr.entityNum != ENTITYNUM_NONE 
 		&& tr.entityNum < ENTITYNUM_MAX_NORMAL )
@@ -2994,7 +3037,7 @@ float GroundHeightAt ( vec3_t org )
 		{// Hit a mover... Add waypoints at all of them!
 			return tr.endpos[2];
 		}
-	}
+	}*/
 
 //	if ( (tr.surfaceFlags & SURF_NODRAW) && (tr.surfaceFlags & SURF_NOMARKS) 
 //		/*&& !Waypoint_FloorSurfaceOK(tr.surfaceFlags) 
@@ -3095,6 +3138,7 @@ qboolean BadHeightNearby( vec3_t org )
 }
 
 qboolean aw_floor_trace_hit_mover = qfalse;
+int aw_floor_trace_hit_ent = -1;
 
 float FloorHeightAt ( vec3_t org )
 {
@@ -3117,6 +3161,30 @@ float FloorHeightAt ( vec3_t org )
 
 	CG_Trace( &tr, org1, NULL, NULL, org2, -1, MASK_PLAYERSOLID );//CONTENTS_PLAYERCLIP | MASK_SHOT /*| MASK_OPAQUE*/ | MASK_WATER );
 	
+	/*if (HasPortalFlags(tr.surfaceFlags, tr.contents))
+	{
+		aw_floor_trace_hit_mover = qtrue;
+		aw_floor_trace_hit_ent = tr.entityNum;
+		return tr.endpos[2];
+	}
+	else*/ if ( tr.fraction != 1 
+		&& tr.entityNum != ENTITYNUM_NONE 
+		&& tr.entityNum < ENTITYNUM_MAX_NORMAL )
+	{
+		if (cg_entities[tr.entityNum].currentState.eType == ET_MOVER 
+			|| cg_entities[tr.entityNum].currentState.eType == ET_PUSH_TRIGGER
+			|| cg_entities[tr.entityNum].currentState.eType == ET_PORTAL
+			|| cg_entities[tr.entityNum].currentState.eType == ET_TELEPORT_TRIGGER
+			|| cg_entities[tr.entityNum].currentState.eType == ET_TEAM
+			|| cg_entities[tr.entityNum].currentState.eType == ET_TERRAIN
+			|| cg_entities[tr.entityNum].currentState.eType == ET_FX)
+		{// Hit a mover... Add waypoints at all of them!
+			aw_floor_trace_hit_mover = qtrue;
+			aw_floor_trace_hit_ent = tr.entityNum;
+			return tr.endpos[2];
+		}
+	}
+
 	if (tr.endpos[2] < -65000)
 		return -65536.0f;
 
@@ -3217,14 +3285,16 @@ float FloorHeightAt ( vec3_t org )
 		return -65536.0f;
 	}
 	
+#ifdef __MORE_SURFACE_CULLING__
 	if ( tr.surfaceFlags & SURF_NOMISCENTS )
 	{// Sky...
 		//trap->Print("SURF_NOMISCENTS\n");
 		return 65536.0f;
 	}
+#endif //__MORE_SURFACE_CULLING__
 
 	if ( tr.contents & CONTENTS_LAVA )
-	{// Sky...
+	{// Lava...
 		//trap->Print("CONTENTS_LAVA\n");
 		return 65536.0f;
 	}
@@ -3249,6 +3319,7 @@ float FloorHeightAt ( vec3_t org )
 		return 65536.0f;
 	}*/
 
+#ifdef __MORE_SURFACE_CULLING__
 	if ( ((tr.contents & CONTENTS_TRANSLUCENT) && (tr.surfaceFlags & SURF_NOMARKS) && !(tr.contents & CONTENTS_PLAYERCLIP)) )
 	{// Sky...
 		//trap->Print("((tr.contents & CONTENTS_TRANSLUCENT) && (tr.surfaceFlags & SURF_NOMARKS))\n");
@@ -3280,26 +3351,19 @@ float FloorHeightAt ( vec3_t org )
 		//trap->Print("((tr.contents & CONTENTS_OPAQUE) && (tr.contents & CONTENTS_SOLID))\n");
 		return 65536.0f;
 	}*/
+#endif //__MORE_SURFACE_CULLING__
 
-	if ( tr.fraction != 1 
-		&& tr.entityNum != ENTITYNUM_NONE 
-		&& tr.entityNum < ENTITYNUM_MAX_NORMAL )
-	{
-		if (cg_entities[tr.entityNum].currentState.eType == ET_MOVER 
-			|| cg_entities[tr.entityNum].currentState.eType == ET_PUSH_TRIGGER
-			|| cg_entities[tr.entityNum].currentState.eType == ET_PORTAL
-			|| cg_entities[tr.entityNum].currentState.eType == ET_TELEPORT_TRIGGER
-			|| cg_entities[tr.entityNum].currentState.eType == ET_TEAM
-			|| cg_entities[tr.entityNum].currentState.eType == ET_TERRAIN
-			|| cg_entities[tr.entityNum].currentState.eType == ET_FX
-			|| HasPortalFlags(tr.surfaceFlags, tr.contents))
-		{// Hit a mover... Add waypoints at all of them!
-			aw_floor_trace_hit_mover = qtrue;
-			return tr.endpos[2];
-		}
+	/*
+	if (tr.contents & CONTENTS_TRIGGER)
+	{// Mover???
+		aw_floor_trace_hit_mover = qtrue;
+		aw_floor_trace_hit_ent = tr.entityNum;
+		return tr.endpos[2];
 	}
+	*/
 
 	aw_floor_trace_hit_mover = qfalse;
+	aw_floor_trace_hit_ent = -1;
 
 	// Added -- Check slope...
 	vectoangles( tr.plane.normal, slopeangles );
@@ -3428,10 +3492,11 @@ void CG_ShowSurface ( void )
 	VectorCopy(cg_entities[cg.clientNum].lerpOrigin, org);
 	VectorCopy(cg_entities[cg.clientNum].lerpOrigin, down_org);
 	//down_org[2]-=48;
-	down_org[2] = -65000;
-
+	//down_org[2] = -65000;
+	down_org[2] = -65536.0f;
+	
 	// Do forward test...
-	CG_Trace( &tr, org, NULL, NULL, down_org, -1, MASK_PLAYERSOLID/*MASK_ALL*/ );
+	CG_Trace( &tr, org, NULL, NULL, down_org, cg.clientNum, MASK_PLAYERSOLID/*MASK_ALL*/ );
 
 	//
 	// Surface
@@ -3573,6 +3638,8 @@ void CG_ShowSurface ( void )
 
 	// UQ1: May as well show the slope as well...
 	CG_ShowSlope();
+
+	trap->Print("ENTITY: %i - Type %i.\n", tr.entityNum, cg_entities[tr.entityNum].currentState.eType);
 }
 
 qboolean AIMod_AutoWaypoint_Check_Stepps ( vec3_t org )
@@ -4921,6 +4988,67 @@ void AIMod_AutoWaypoint_StandardMethod( void )
 				// Draw a nice little progress bar ;)
 				aw_percent_complete = (float)((float)((float)final_tests/(float)total_tests)*100.0f);
 
+				//
+				// Movers...
+				//
+				if (org[2] >= -65536.0f && org[2] <= 65536.0f && (aw_floor_trace_hit_mover /*|| NodeIsOnMover( org )*/))
+				{// Need to generate waypoints to the top/bottom of the mover...
+					float temp_roof, temp_ground;
+					vec3_t temp_org, temp_org2;
+					//
+					// Well... this is fucked... Seems OpenJK can only trace movers your player is standing at... WHY???
+					//
+
+					//trap->Print("Mover at %f %f %f.\n", org[0], org[1], org[2]);
+
+					VectorCopy(org, temp_org2);
+					VectorCopy(org, temp_org);
+					temp_org[2] += waypoint_scatter_distance; // Start above the lift...
+					temp_roof = RoofHeightAt(temp_org);
+
+					VectorCopy(org, temp_org);
+					temp_org[2] -= waypoint_scatter_distance*2; // Start below the lift...
+					temp_ground = GroundHeightAt(temp_org);
+
+					temp_org2[2] = temp_roof;
+					
+					if (temp_roof <= mapMaxs[2] && HeightDistance(temp_org, temp_org2) >= 128)
+					{// Looks like it goes up!
+						int z = 0;
+
+						VectorCopy(org, temp_org);
+						temp_org[2] += waypoint_scatter_distance;
+
+						while (temp_org[2] <= temp_org2[2])
+						{// Add waypoints all the way up!
+							arealist[areas][0] = temp_org[0];
+							arealist[areas][1] = temp_org[1];
+							arealist[areas][2] = temp_org[2];
+							areas++;
+							temp_org[2] += waypoint_scatter_distance;
+						}
+					}
+
+					temp_org2[2] = temp_ground;
+
+					if (temp_roof >= mapMins[2] && HeightDistance(temp_org, temp_org2) >= 128)
+					{// Looks like it goes down!
+						int z = 0;
+
+						VectorCopy(org, temp_org);
+						temp_org[2] -= waypoint_scatter_distance;
+
+						while (temp_org[2] >= temp_org2[2])
+						{// Add waypoints all the way up!
+							arealist[areas][0] = temp_org[0];
+							arealist[areas][1] = temp_org[1];
+							arealist[areas][2] = temp_org[2];
+							areas++;
+							temp_org[2] -= waypoint_scatter_distance;
+						}
+					}
+				}
+
 				if (org[2] >= 65536.0f)
 				{// Marks a start-solid or on top of the sky... Skip...
 					// since we failed, decrease modifier...
@@ -5026,6 +5154,7 @@ void AIMod_AutoWaypoint_StandardMethod( void )
 					continue;
 				}
 
+//#if 0
 				if (!AIMod_AutoWaypoint_Check_PlayerWidth(org))
 				{// Not wide enough for a player to fit!
 					// since we failed, decrease modifier...
@@ -5060,6 +5189,7 @@ void AIMod_AutoWaypoint_StandardMethod( void )
 					startz -= waypoint_scatter_distance * waypoint_scatter_realtime_modifier;
 					continue;
 				}
+//#endif //0
 
 				// Raise node a little to add it...(for visibility)
 				if (org[2] >= -65536.0f && org[2] <= 65536.0f)
@@ -5082,60 +5212,7 @@ void AIMod_AutoWaypoint_StandardMethod( void )
 					org[2] += 8;
 				}
 
-				if (org[2] >= -65536.0f && org[2] <= 65536.0f && aw_floor_trace_hit_mover)
-				{// Need to generate waypoints to the top/bottom of the mover...
-					float temp_roof, temp_ground;
-					vec3_t temp_org, temp_org2;
-
-					VectorCopy(org, temp_org2);
-					VectorCopy(org, temp_org);
-					temp_org[2] += 24; // Start above the lift...
-					temp_roof = RoofHeightAt(temp_org);
-
-					VectorCopy(org, temp_org);
-					temp_org[2] -= 24; // Start below the lift...
-					temp_ground = GroundHeightAt(temp_org);
-
-					temp_org2[2] = temp_roof;
-
-					if (temp_roof <= mapMaxs[2]/*< 64000*/ && HeightDistance(temp_org, temp_org2) >= 128)
-					{// Looks like it goes up!
-						int z = 0;
-
-						VectorCopy(org, temp_org);
-						temp_org[2] += 24;
-
-						while (temp_org[2] <= temp_org2[2])
-						{// Add waypoints all the way up!
-							//VectorCopy( temp_org, arealist[areas] );
-							arealist[areas][0] = temp_org[0];
-							arealist[areas][1] = temp_org[1];
-							arealist[areas][2] = temp_org[2];
-							areas++;
-							temp_org[2] += 24;
-						}
-					}
-
-					temp_org2[2] = temp_ground;
-
-					if (temp_roof >= mapMins[2]/*> -64000*/ && HeightDistance(temp_org, temp_org2) >= 128)
-					{// Looks like it goes up!
-						int z = 0;
-
-						VectorCopy(org, temp_org);
-						temp_org[2] -= 24;
-
-						while (temp_org[2] >= temp_org2[2])
-						{// Add waypoints all the way up!
-							//VectorCopy( temp_org, arealist[areas] );
-							arealist[areas][0] = temp_org[0];
-							arealist[areas][1] = temp_org[1];
-							arealist[areas][2] = temp_org[2];
-							areas++;
-							temp_org[2] -= 24;
-						}
-					}
-				}
+				
 
 				// Lower current org a back to where it was before raising it above...
 				org[2] = orig_floor;
@@ -5211,6 +5288,35 @@ void AIMod_AutoWaypoint_StandardMethod( void )
 		starty = orig_starty;
 		startx -= waypoint_scatter_distance;
 	}
+
+	/*
+	for (i = 0; i < MAX_GENTITIES;i++)
+	{
+		centity_t *cent = &cg_entities[i];
+		vec3_t mins, maxs;
+
+		if (!cent || cent->currentState.eType != ET_MOVER) continue;
+		trap->R_ModelBounds(cent->currentState.modelindex, mins, maxs);
+		//trap->Print("DOOR at %f %f %f.\n", cent->currentState.origin[0], cent->currentState.origin[1], cent->currentState.origin[2]);
+		trap->Print("DOOR at %f %f %f - %f %f %f.\n", mins[0], mins[1], mins[2], maxs[0], maxs[1], maxs[2]);
+
+		{// Looks like it goes up!
+			int z = 0;
+			vec3_t temp_org;
+
+			VectorCopy(mins, temp_org);
+
+			while (temp_org[2] <= maxs[2])
+			{// Add waypoints all the way up!
+				arealist[areas][0] = temp_org[0];
+				arealist[areas][1] = temp_org[1];
+				arealist[areas][2] = temp_org[2];
+				areas++;
+				temp_org[2] += waypoint_scatter_distance;
+			}
+		}
+	}
+	*/
 
 	if (areas < 32000)
 	{// UQ1: Can use them all!
@@ -7768,6 +7874,7 @@ qboolean JKG_CheckBelowWaypoint( int wp )
 
 qboolean JKG_CheckRoutingFrom( int wp )
 {
+	int i;
 	centity_t *spot = NULL;
 	int wpCurrent = -1;
 	int goal = wp;
@@ -7787,6 +7894,33 @@ qboolean JKG_CheckRoutingFrom( int wp )
 	if (pathsize > 0)
 	{
 		return qtrue; // Found a route... This waypoint looks good to spawn NPCs at!
+	}
+
+	// Try other ents...
+	for (i = MAX_CLIENTS; i < MAX_GENTITIES;i++)
+	{
+		centity_t *cent = &cg_entities[i];
+
+		if (!cent) continue;
+
+		if (!(cent->currentState.eType == ET_ITEM
+			|| cent->currentState.eType == ET_HOLOCRON
+			|| cent->currentState.eType == ET_PORTAL
+			|| cent->currentState.eType == ET_PUSH_TRIGGER
+			|| cent->currentState.eType == ET_TELEPORT_TRIGGER))
+		continue;
+		
+		wpCurrent = ClosestNodeTo(cent->currentState.origin, qfalse);
+		
+		if (wpCurrent)
+		{
+			pathsize = ASTAR_FindPathFast(wpCurrent, goal, pathlist, qfalse);
+
+			if (pathsize > 0)
+			{
+				return qtrue; // Found a route... This waypoint looks good to spawn NPCs at!
+			}
+		}
 	}
 
 	return qfalse;

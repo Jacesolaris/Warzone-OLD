@@ -485,11 +485,13 @@ static const char *gameTypes[] = {
 	"JediMaster",
 	"Duel",
 	"PowerDuel",
-	"SP",
+	"Instance",
+	"Cooperative",
 	"Team FFA",
 	"Siege",
 	"CTF",
 	"CTY",
+	"War Zone",
 };
 static const int numGameTypes = ARRAY_LEN( gameTypes );
 
@@ -1534,15 +1536,16 @@ static const char* UI_GetGameTypeName(int gtEnum)
 	case GT_HOLOCRON:
 		return UI_GetStringEdString("MENUS", "HOLOCRON_FFA");//"Holocron FFA";
 	case GT_JEDIMASTER:
-		return UI_GetStringEdString("MENUS", "SAGA");//"Jedi Master";??
-	case GT_SINGLE_PLAYER:
-		return "Cooperative";
-	case GT_INSTANCE:
-		return "Group Instance";
+		//return UI_GetStringEdString("MENUS", "SAGA");//"Jedi Master";??
+		return "Jedi Master";
 	case GT_DUEL:
 		return UI_GetStringEdString("MENUS", "DUEL");//"Team FFA";
 	case GT_POWERDUEL:
 		return UI_GetStringEdString("MENUS", "POWERDUEL");//"Team FFA";
+	case GT_INSTANCE:
+		return "Group Instance";
+	case GT_SINGLE_PLAYER:
+		return "Cooperative";
 	case GT_TEAM:
 		return UI_GetStringEdString("MENUS", "TEAM_FFA");//"Team FFA";
 	case GT_SIEGE:
@@ -1551,6 +1554,8 @@ static const char* UI_GetGameTypeName(int gtEnum)
 		return UI_GetStringEdString("MENUS", "CAPTURE_THE_FLAG");//"Capture the Flag";
 	case GT_CTY:
 		return UI_GetStringEdString("MENUS", "CAPTURE_THE_YSALIMARI");//"Capture the Ysalamiri";
+	case GT_WARZONE:
+		return "War Zone";
 	}
 	return UI_GetStringEdString("MENUS", "SAGA");//"Team FFA";
 }
@@ -9149,10 +9154,12 @@ static qboolean GameType_Parse(char **p, qboolean join) {
 				if (!String_Parse(p, &uiInfo.joinGameTypes[uiInfo.numJoinGameTypes].gameType) || !Int_Parse(p, &uiInfo.joinGameTypes[uiInfo.numJoinGameTypes].gtEnum)) {
 					return qfalse;
 				}
+				//trap->Print("JOIN: [%i] - %s.\n", uiInfo.joinGameTypes[uiInfo.numJoinGameTypes].gtEnum, uiInfo.joinGameTypes[uiInfo.numJoinGameTypes].gameType);
 			} else {
 				if (!String_Parse(p, &uiInfo.gameTypes[uiInfo.numGameTypes].gameType) || !Int_Parse(p, &uiInfo.gameTypes[uiInfo.numGameTypes].gtEnum)) {
 					return qfalse;
 				}
+				//trap->Print(": [%i] - %s.\n", uiInfo.gameTypes[uiInfo.numGameTypes].gtEnum, uiInfo.gameTypes[uiInfo.numGameTypes].gameType);
 			}
 
 			if (join) {

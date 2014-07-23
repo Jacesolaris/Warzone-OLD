@@ -21,12 +21,13 @@ int nodenum; //so we can connect broken trails
 
 int gLevelFlags = 0;
 
+#ifdef __BUGGY_MEM_MANAGEMENT__
 char *GetFlagStr( int flags )
 {
 	char *flagstr;
 	int i;
 
-	flagstr = (char *)B_TempAlloc(128);
+	flagstr = (char *)B_Alloc(128);
 	i = 0;
 
 	if (!flags)
@@ -207,6 +208,7 @@ char *GetFlagStr( int flags )
 fend:
 	return flagstr;
 }
+#endif //__BUGGY_MEM_MANAGEMENT__
 
 void G_TestLine(vec3_t start, vec3_t end, int color, int time)
 {
@@ -220,6 +222,7 @@ void G_TestLine(vec3_t start, vec3_t end, int color, int time)
 	te->r.svFlags |= SVF_BROADCAST;
 }
 
+#ifdef __BUGGY_MEM_MANAGEMENT__
 void BotWaypointRender(void)
 {
 	int i, n;
@@ -344,6 +347,7 @@ checkprint:
 		gLastPrintedIndex = -1;
 	}
 }
+#endif //__BUGGY_MEM_MANAGEMENT__
 
 void TransferWPData(int from, int to)
 {
@@ -2503,13 +2507,13 @@ int LoadPathData(const char *filename)
 	i = 0;
 	i_cv = 0;
 
-	routePath = (char *)B_TempAlloc(1024);
+	routePath = (char *)malloc(1024);
 
 	Com_sprintf(routePath, 1024, "botroutes/%s.wnt\0", filename);
 
 	len = trap->FS_Open(routePath, &f, FS_READ);
 
-	B_TempFree(1024); //routePath
+	free(routePath); //routePath
 
 	if (!f)
 	{
@@ -2523,8 +2527,8 @@ int LoadPathData(const char *filename)
 		return 0;
 	}
 
-	fileString = (char *)B_TempAlloc(524288);
-	currentVar = (char *)B_TempAlloc(2048);
+	fileString = (char *)malloc(524288);
+	currentVar = (char *)malloc(2048);
 
 	trap->FS_Read(fileString, len, f);
 
@@ -2713,8 +2717,8 @@ int LoadPathData(const char *filename)
 		i++;
 	}
 
-	B_TempFree(524288); //fileString
-	B_TempFree(2048); //currentVar
+	free(fileString); //fileString
+	free(currentVar); //currentVar
 
 	trap->FS_Close(f);
 
@@ -2871,13 +2875,13 @@ int SavePathData(const char *filename)
 		return 0;
 	}
 
-	routePath = (char *)B_TempAlloc(1024);
+	routePath = (char *)malloc(1024);
 
 	Com_sprintf(routePath, 1024, "botroutes/%s.wnt\0", filename);
 
 	trap->FS_Open(routePath, &f, FS_WRITE);
 
-	B_TempFree(1024); //routePath
+	free(routePath); //routePath
 
 	if (!f)
 	{
@@ -2895,8 +2899,8 @@ int SavePathData(const char *filename)
 
 	FlagObjects(); //currently only used for flagging waypoints nearest CTF flags
 
-	fileString = (char *)B_TempAlloc(524288);
-	storeString = (char *)B_TempAlloc(4096);
+	fileString = (char *)malloc(524288);
+	storeString = (char *)malloc(4096);
 
 	Com_sprintf(fileString, 524288, "%i %i %f (%f %f %f) { ", gWPArray[i]->index, gWPArray[i]->flags, gWPArray[i]->weight, gWPArray[i]->origin[0], gWPArray[i]->origin[1], gWPArray[i]->origin[2]);
 
@@ -2972,8 +2976,8 @@ int SavePathData(const char *filename)
 
 	trap->FS_Write(fileString, strlen(fileString), f);
 
-	B_TempFree(524288); //fileString
-	B_TempFree(4096); //storeString
+	free(fileString); //fileString
+	free(storeString); //storeString
 
 	trap->FS_Close(f);
 

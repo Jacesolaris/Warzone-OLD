@@ -2117,7 +2117,7 @@ void G2API_ListBones(CGhoul2Info *ghlInfo, int frame)
 qboolean G2API_HaveWeGhoul2Models(CGhoul2Info_v &ghoul2)
 {
 	int i;
-	if (&ghoul2 && ghoul2.size())
+	if (&ghoul2)
 	{
 		for (i=0; i<ghoul2.size();i++)
 		{

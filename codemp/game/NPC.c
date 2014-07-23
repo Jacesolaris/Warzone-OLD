@@ -4609,8 +4609,12 @@ qboolean NPC_FollowRoutes( void )
 
 	NPC_FacePosition( gWPArray[NPC->wpCurrent]->origin, qfalse );
 	VectorSubtract( gWPArray[NPC->wpCurrent]->origin, NPC->r.currentOrigin, NPC->movedir );
-	//VectorNormalize(NPC->movedir);
-	UQ1_UcmdMoveForDir( NPC, &NPCS.ucmd, NPC->movedir, !NPC_HaveValidEnemy() );
+	
+	if (g_gametype.integer == GT_WARZONE)
+		UQ1_UcmdMoveForDir( NPC, &NPCS.ucmd, NPC->movedir, qfalse );
+	else 
+		UQ1_UcmdMoveForDir( NPC, &NPCS.ucmd, NPC->movedir, !NPC_HaveValidEnemy() );
+
 	VectorCopy( NPC->movedir, NPC->client->ps.moveDir );
 
 	//if (NPC->bot_strafe_right_timer > level.time)
@@ -4620,7 +4624,10 @@ qboolean NPC_FollowRoutes( void )
 
 	//trap->Print("NPC PF DEBUG: MOVING!\n");
 
-	NPC_SelectMoveAnimation(!NPC_HaveValidEnemy());
+	if (g_gametype.integer == GT_WARZONE)
+		NPC_SelectMoveAnimation(qfalse);
+	else
+		NPC_SelectMoveAnimation(!NPC_HaveValidEnemy());
 
 	return qtrue;
 }

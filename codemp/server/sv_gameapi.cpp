@@ -1428,6 +1428,7 @@ static int SV_PC_SourceFileAndLine( int handle, char *filename, int *line ) {
 }
 
 static qhandle_t SV_RE_RegisterSkin( const char *name ) {
+	if (!re) return 0; // UQ1: Fix for OpenJK not registerring re functions...
 	return re->RegisterServerSkin( name );
 }
 
@@ -1438,31 +1439,38 @@ static int SV_CM_RegisterTerrain( const char *config ) {
 static void SV_RMG_Init( void ) { }
 
 static void SV_G2API_ListModelSurfaces( void *ghlInfo ) {
+	if (!re) return; // UQ1: Fix for OpenJK not registerring re functions...
 	re->G2API_ListSurfaces( (CGhoul2Info *)ghlInfo );
 }
 
 static void SV_G2API_ListModelBones( void *ghlInfo, int frame ) {
+	if (!re) return; // UQ1: Fix for OpenJK not registerring re functions...
 	re->G2API_ListBones( (CGhoul2Info *)ghlInfo, frame );
 }
 
 static void SV_G2API_SetGhoul2ModelIndexes( void *ghoul2, qhandle_t *modelList, qhandle_t *skinList ) {
+	if (!re) return; // UQ1: Fix for OpenJK not registerring re functions...
 	re->G2API_SetGhoul2ModelIndexes( *((CGhoul2Info_v *)ghoul2), modelList, skinList );
 }
 
 static qboolean SV_G2API_HaveWeGhoul2Models( void *ghoul2) {
+	if (!re) return qfalse; // UQ1: Fix for OpenJK not registerring re functions...
 	return re->G2API_HaveWeGhoul2Models( *((CGhoul2Info_v *)ghoul2) );
 }
 
 static qboolean SV_G2API_GetBoltMatrix( void *ghoul2, const int modelIndex, const int boltIndex, mdxaBone_t *matrix, const vec3_t angles, const vec3_t position, const int frameNum, qhandle_t *modelList, vec3_t scale ) {
+	if (!re) return qfalse; // UQ1: Fix for OpenJK not registerring re functions...
 	return re->G2API_GetBoltMatrix( *((CGhoul2Info_v *)ghoul2), modelIndex, boltIndex, matrix, angles, position, frameNum, modelList, scale );
 }
 
 static qboolean SV_G2API_GetBoltMatrix_NoReconstruct( void *ghoul2, const int modelIndex, const int boltIndex, mdxaBone_t *matrix, const vec3_t angles, const vec3_t position, const int frameNum, qhandle_t *modelList, vec3_t scale ) {
+	if (!re) return qfalse; // UQ1: Fix for OpenJK not registerring re functions...
 	re->G2API_BoltMatrixReconstruction( qfalse );
 	return re->G2API_GetBoltMatrix( *((CGhoul2Info_v *)ghoul2), modelIndex, boltIndex, matrix, angles, position, frameNum, modelList, scale );
 }
 
 static qboolean SV_G2API_GetBoltMatrix_NoRecNoRot( void *ghoul2, const int modelIndex, const int boltIndex, mdxaBone_t *matrix, const vec3_t angles, const vec3_t position, const int frameNum, qhandle_t *modelList, vec3_t scale ) {
+	if (!re) return qfalse; // UQ1: Fix for OpenJK not registerring re functions...
 	re->G2API_BoltMatrixReconstruction( qfalse );
 	re->G2API_BoltMatrixSPMethod( qtrue );
 	return re->G2API_GetBoltMatrix( *((CGhoul2Info_v *)ghoul2), modelIndex, boltIndex, matrix, angles, position, frameNum, modelList, scale );
@@ -1472,19 +1480,23 @@ static int SV_G2API_InitGhoul2Model( void **ghoul2Ptr, const char *fileName, int
 #ifdef _FULL_G2_LEAK_CHECKING
 		g_G2AllocServer = 1;
 #endif
+	if (!re) return 0; // UQ1: Fix for OpenJK not registerring re functions...
 	return re->G2API_InitGhoul2Model( (CGhoul2Info_v **)ghoul2Ptr, fileName, modelIndex, customSkin, customShader, modelFlags, lodBias );
 }
 
 static qboolean SV_G2API_SetSkin( void *ghoul2, int modelIndex, qhandle_t customSkin, qhandle_t renderSkin ) {
+	if (!re) return qfalse; // UQ1: Fix for OpenJK not registerring re functions...
 	CGhoul2Info_v &g2 = *((CGhoul2Info_v *)ghoul2);
 	return re->G2API_SetSkin( g2, modelIndex, customSkin, renderSkin );
 }
 
 static void SV_G2API_CollisionDetect( CollisionRecord_t *collRecMap, void* ghoul2, const vec3_t angles, const vec3_t position, int frameNumber, int entNum, vec3_t rayStart, vec3_t rayEnd, vec3_t scale, int traceFlags, int useLod, float fRadius ) {
+	if (!re) return; // UQ1: Fix for OpenJK not registerring re functions...
 	re->G2API_CollisionDetect( collRecMap, *((CGhoul2Info_v *)ghoul2), angles, position, frameNumber, entNum, rayStart, rayEnd, scale, G2VertSpaceServer, traceFlags, useLod, fRadius );
 }
 
 static void SV_G2API_CollisionDetectCache( CollisionRecord_t *collRecMap, void* ghoul2, const vec3_t angles, const vec3_t position, int frameNumber, int entNum, vec3_t rayStart, vec3_t rayEnd, vec3_t scale, int traceFlags, int useLod, float fRadius ) {
+	if (!re) return; // UQ1: Fix for OpenJK not registerring re functions...
 	re->G2API_CollisionDetectCache( collRecMap, *((CGhoul2Info_v *)ghoul2), angles, position, frameNumber, entNum, rayStart, rayEnd, scale, G2VertSpaceServer, traceFlags, useLod, fRadius );
 }
 
@@ -1492,32 +1504,39 @@ static void SV_G2API_CleanGhoul2Models( void **ghoul2Ptr ) {
 #ifdef _FULL_G2_LEAK_CHECKING
 		g_G2AllocServer = 1;
 #endif
+	if (!re) return; // UQ1: Fix for OpenJK not registerring re functions...
 	re->G2API_CleanGhoul2Models( (CGhoul2Info_v **)ghoul2Ptr );
 }
 
 static qboolean SV_G2API_SetBoneAngles( void *ghoul2, int modelIndex, const char *boneName, const vec3_t angles, const int flags, const int up, const int right, const int forward, qhandle_t *modelList, int blendTime , int currentTime ) {
+	if (!re) return qfalse; // UQ1: Fix for OpenJK not registerring re functions...
 	return re->G2API_SetBoneAngles( *((CGhoul2Info_v *)ghoul2), modelIndex, boneName, angles, flags, (const Eorientations)up, (const Eorientations)right, (const Eorientations)forward, modelList, blendTime , currentTime );
 }
 
 static qboolean SV_G2API_SetBoneAnim( void *ghoul2, const int modelIndex, const char *boneName, const int startFrame, const int endFrame, const int flags, const float animSpeed, const int currentTime, const float setFrame, const int blendTime ) {
+	if (!re) return qfalse; // UQ1: Fix for OpenJK not registerring re functions...
 	return re->G2API_SetBoneAnim( *((CGhoul2Info_v *)ghoul2), modelIndex, boneName, startFrame, endFrame, flags, animSpeed, currentTime, setFrame, blendTime );
 }
 
 static qboolean SV_G2API_GetBoneAnim( void *ghoul2, const char *boneName, const int currentTime, float *currentFrame, int *startFrame, int *endFrame, int *flags, float *animSpeed, int *modelList, const int modelIndex ) {
+	if (!re) return qfalse; // UQ1: Fix for OpenJK not registerring re functions...
 	CGhoul2Info_v &g2 = *((CGhoul2Info_v *)ghoul2);
 	return re->G2API_GetBoneAnim( g2, modelIndex, boneName, currentTime, currentFrame, startFrame, endFrame, flags, animSpeed, modelList );
 }
 
 static void SV_G2API_GetGLAName( void *ghoul2, int modelIndex, char *fillBuf ) {
+	if (!re) return; // UQ1: Fix for OpenJK not registerring re functions...
 	char *tmp = re->G2API_GetGLAName( *((CGhoul2Info_v *)ghoul2), modelIndex );
 	strcpy( fillBuf, tmp );
 }
 
 static int SV_G2API_CopyGhoul2Instance( void *g2From, void *g2To, int modelIndex ) {
+	if (!re) return 0; // UQ1: Fix for OpenJK not registerring re functions...
 	return re->G2API_CopyGhoul2Instance( *((CGhoul2Info_v *)g2From), *((CGhoul2Info_v *)g2To), modelIndex );
 }
 
 static void SV_G2API_CopySpecificGhoul2Model( void *g2From, int modelFrom, void *g2To, int modelTo ) {
+	if (!re) return; // UQ1: Fix for OpenJK not registerring re functions...
 	re->G2API_CopySpecificG2Model( *((CGhoul2Info_v *)g2From), modelFrom, *((CGhoul2Info_v *)g2To), modelTo );
 }
 
@@ -1525,10 +1544,12 @@ static void SV_G2API_DuplicateGhoul2Instance( void *g2From, void **g2To ) {
 #ifdef _FULL_G2_LEAK_CHECKING
 		g_G2AllocServer = 1;
 #endif
+	if (!re) return; // UQ1: Fix for OpenJK not registerring re functions...
 	re->G2API_DuplicateGhoul2Instance( *((CGhoul2Info_v *)g2From), (CGhoul2Info_v **)g2To );
 }
 
 static qboolean SV_G2API_HasGhoul2ModelOnIndex( void *ghlInfo, int modelIndex ) {
+	if (!re) return qfalse; // UQ1: Fix for OpenJK not registerring re functions...
 	return re->G2API_HasGhoul2ModelOnIndex( (CGhoul2Info_v **)ghlInfo, modelIndex );
 }
 
@@ -1536,6 +1557,7 @@ static qboolean SV_G2API_RemoveGhoul2Model( void *ghlInfo, int modelIndex ) {
 #ifdef _FULL_G2_LEAK_CHECKING
 		g_G2AllocServer = 1;
 #endif
+	if (!re) return qfalse; // UQ1: Fix for OpenJK not registerring re functions...
 	return re->G2API_RemoveGhoul2Model( (CGhoul2Info_v **)ghlInfo, modelIndex );
 }
 
@@ -1543,44 +1565,54 @@ static qboolean SV_G2API_RemoveGhoul2Models( void *ghlInfo ) {
 #ifdef _FULL_G2_LEAK_CHECKING
 	g_G2AllocServer = 1;
 #endif
+	if (!re) return qfalse; // UQ1: Fix for OpenJK not registerring re functions...
 	return re->G2API_RemoveGhoul2Models( (CGhoul2Info_v **)ghlInfo );
 }
 
 static int SV_G2API_Ghoul2Size( void *ghlInfo ) {
+	if (!re) return 0; // UQ1: Fix for OpenJK not registerring re functions...
 	return re->G2API_Ghoul2Size( *((CGhoul2Info_v *)ghlInfo) );
 }
 
 static int SV_G2API_AddBolt( void *ghoul2, int modelIndex, const char *boneName ) {
+	if (!re) return 0; // UQ1: Fix for OpenJK not registerring re functions...
 	return re->G2API_AddBolt( *((CGhoul2Info_v *)ghoul2), modelIndex, boneName );
 }
 
 static void SV_G2API_SetBoltInfo( void *ghoul2, int modelIndex, int boltInfo ) {
+	if (!re) return; // UQ1: Fix for OpenJK not registerring re functions...
 	re->G2API_SetBoltInfo( *((CGhoul2Info_v *)ghoul2), modelIndex, boltInfo );
 }
 
 static qboolean SV_G2API_SetRootSurface( void *ghoul2, const int modelIndex, const char *surfaceName ) {
+	if (!re) return qfalse; // UQ1: Fix for OpenJK not registerring re functions...
 	return re->G2API_SetRootSurface( *((CGhoul2Info_v *)ghoul2), modelIndex, surfaceName );
 }
 
 static qboolean SV_G2API_SetSurfaceOnOff( void *ghoul2, const char *surfaceName, const int flags ) {
+	if (!re) return qfalse; // UQ1: Fix for OpenJK not registerring re functions...
 	return re->G2API_SetSurfaceOnOff( *((CGhoul2Info_v *)ghoul2), surfaceName, flags );
 }
 
 static qboolean SV_G2API_SetNewOrigin( void *ghoul2, const int boltIndex ) {
+	if (!re) return qfalse; // UQ1: Fix for OpenJK not registerring re functions...
 	return re->G2API_SetNewOrigin( *((CGhoul2Info_v *)ghoul2), boltIndex );
 }
 
 static qboolean SV_G2API_DoesBoneExist( void *ghoul2, int modelIndex, const char *boneName ) {
+	if (!re) return qfalse; // UQ1: Fix for OpenJK not registerring re functions...
 	CGhoul2Info_v &g2 = *((CGhoul2Info_v *)ghoul2);
 	return re->G2API_DoesBoneExist( g2, modelIndex, boneName );
 }
 
 static int SV_G2API_GetSurfaceRenderStatus( void *ghoul2, const int modelIndex, const char *surfaceName ) {
+	if (!re) return 0; // UQ1: Fix for OpenJK not registerring re functions...
 	CGhoul2Info_v &g2 = *((CGhoul2Info_v *)ghoul2);
 	return re->G2API_GetSurfaceRenderStatus( g2, modelIndex, surfaceName );
 }
 
 static void SV_G2API_AbsurdSmoothing( void *ghoul2, qboolean status ) {
+	if (!re) return; // UQ1: Fix for OpenJK not registerring re functions...
 	CGhoul2Info_v &g2 = *((CGhoul2Info_v *)ghoul2);
 	re->G2API_AbsurdSmoothing( g2, status );
 }
@@ -1589,6 +1621,7 @@ static void SV_G2API_SetRagDoll( void *ghoul2, sharedRagDollParams_t *params ) {
 	CRagDollParams rdParams;
 
 	if ( !params ) {
+		if (!re) return; // UQ1: Fix for OpenJK not registerring re functions...
 		re->G2API_ResetRagDoll( *((CGhoul2Info_v *)ghoul2) );
 		return;
 	}
@@ -1612,6 +1645,7 @@ static void SV_G2API_SetRagDoll( void *ghoul2, sharedRagDollParams_t *params ) {
 	rdParams.RagPhase = (CRagDollParams::ERagPhase)params->RagPhase;
 	rdParams.effectorsToTurnOff = (CRagDollParams::ERagEffector)params->effectorsToTurnOff;
 
+	if (!re) return; // UQ1: Fix for OpenJK not registerring re functions...
 	re->G2API_SetRagDoll( *((CGhoul2Info_v *)ghoul2), &rdParams );
 }
 
@@ -1629,64 +1663,79 @@ static void SV_G2API_AnimateG2Models( void *ghoul2, int time, sharedRagDollUpdat
 	rduParams.me = params->me;
 	rduParams.settleFrame = params->settleFrame;
 
+	if (!re) return; // UQ1: Fix for OpenJK not registerring re functions...
 	re->G2API_AnimateG2ModelsRag( *((CGhoul2Info_v *)ghoul2), time, &rduParams );
 }
 
 static qboolean SV_G2API_RagPCJConstraint( void *ghoul2, const char *boneName, vec3_t min, vec3_t max ) {
+	if (!re) return qfalse; // UQ1: Fix for OpenJK not registerring re functions...
 	return re->G2API_RagPCJConstraint( *((CGhoul2Info_v *)ghoul2), boneName, min, max );
 }
 
 static qboolean SV_G2API_RagPCJGradientSpeed( void *ghoul2, const char *boneName, const float speed ) {
+	if (!re) return qfalse; // UQ1: Fix for OpenJK not registerring re functions...
 	return re->G2API_RagPCJGradientSpeed( *((CGhoul2Info_v *)ghoul2), boneName, speed );
 }
 
 static qboolean SV_G2API_RagEffectorGoal( void *ghoul2, const char *boneName, vec3_t pos ) {
+	if (!re) return qfalse; // UQ1: Fix for OpenJK not registerring re functions...
 	return re->G2API_RagEffectorGoal( *((CGhoul2Info_v *)ghoul2), boneName, pos );
 }
 
 static qboolean SV_G2API_GetRagBonePos( void *ghoul2, const char *boneName, vec3_t pos, vec3_t entAngles, vec3_t entPos, vec3_t entScale ) {
+	if (!re) return qfalse; // UQ1: Fix for OpenJK not registerring re functions...
 	return re->G2API_GetRagBonePos( *((CGhoul2Info_v *)ghoul2), boneName, pos, entAngles, entPos, entScale );
 }
 
 static qboolean SV_G2API_RagEffectorKick( void *ghoul2, const char *boneName, vec3_t velocity ) {
+	if (!re) return qfalse; // UQ1: Fix for OpenJK not registerring re functions...
 	return re->G2API_RagEffectorKick( *((CGhoul2Info_v *)ghoul2), boneName, velocity );
 }
 
 static qboolean SV_G2API_RagForceSolve( void *ghoul2, qboolean force ) {
+	if (!re) return qfalse; // UQ1: Fix for OpenJK not registerring re functions...
 	return re->G2API_RagForceSolve( *((CGhoul2Info_v *)ghoul2), force );
 }
 
 static qboolean SV_G2API_SetBoneIKState( void *ghoul2, int time, const char *boneName, int ikState, sharedSetBoneIKStateParams_t *params ) {
+	if (!re) return qfalse; // UQ1: Fix for OpenJK not registerring re functions...
 	return re->G2API_SetBoneIKState( *((CGhoul2Info_v *)ghoul2), time, boneName, ikState, params );
 }
 
 static qboolean SV_G2API_IKMove( void *ghoul2, int time, sharedIKMoveParams_t *params ) {
+	if (!re) return qfalse; // UQ1: Fix for OpenJK not registerring re functions...
 	return re->G2API_IKMove( *((CGhoul2Info_v *)ghoul2), time, params );
 }
 
 static qboolean SV_G2API_RemoveBone( void *ghoul2, const char *boneName, int modelIndex ) {
+	if (!re) return qfalse; // UQ1: Fix for OpenJK not registerring re functions...
 	CGhoul2Info_v &g2 = *((CGhoul2Info_v *)ghoul2);
 	return re->G2API_RemoveBone( g2, modelIndex, boneName );
 }
 
 static void SV_G2API_AttachInstanceToEntNum( void *ghoul2, int entityNum, qboolean server ) {
+	if (!re) return; // UQ1: Fix for OpenJK not registerring re functions...
 	re->G2API_AttachInstanceToEntNum( *((CGhoul2Info_v *)ghoul2), entityNum, server );
 }
 
 static void SV_G2API_ClearAttachedInstance( int entityNum ) {
+	if (!re) return; // UQ1: Fix for OpenJK not registerring re functions...
 	re->G2API_ClearAttachedInstance( entityNum );
 }
 
 static void SV_G2API_CleanEntAttachments( void ) {
+	if (!re) return; // UQ1: Fix for OpenJK not registerring re functions...
 	re->G2API_CleanEntAttachments();
 }
 
 static qboolean SV_G2API_OverrideServer( void *serverInstance ) {
+	if (!re) return qfalse; // UQ1: Fix for OpenJK not registerring re functions...
 	CGhoul2Info_v &g2 = *((CGhoul2Info_v *)serverInstance);
 	return re->G2API_OverrideServerWithClientData( g2, 0 );
 }
 
 static void SV_G2API_GetSurfaceName( void *ghoul2, int surfNumber, int modelIndex, char *fillBuf ) {
+	if (!re) return; // UQ1: Fix for OpenJK not registerring re functions...
 	CGhoul2Info_v &g2 = *((CGhoul2Info_v *)ghoul2);
 	char *tmp = re->G2API_GetSurfaceName( g2, modelIndex, surfNumber );
 	strcpy( fillBuf, tmp );
@@ -2532,31 +2581,39 @@ intptr_t SV_GameSystemCalls( intptr_t *args ) {
 		return botlib_export->ai.GeneticParentsAndChildSelection(args[1], (float *)VMA(2), (int *)VMA(3), (int *)VMA(4), (int *)VMA(5));
 
 	case G_R_REGISTERSKIN:
+		if (!re) return 0; // UQ1: Fix for OpenJK not registerring re functions...
 		return re->RegisterServerSkin((const char *)VMA(1));
 
 	case G_G2_LISTBONES:
+		if (!re) return 0; // UQ1: Fix for OpenJK not registerring re functions...
 		re->G2API_ListBones( (CGhoul2Info *) VMA(1), args[2]);
 		return 0;
 
 	case G_G2_LISTSURFACES:
+		if (!re) return 0; // UQ1: Fix for OpenJK not registerring re functions...
 		re->G2API_ListSurfaces( (CGhoul2Info *) args[1] );
 		return 0;
 
 	case G_G2_HAVEWEGHOULMODELS:
+		if (!re) return 0; // UQ1: Fix for OpenJK not registerring re functions...
 		return re->G2API_HaveWeGhoul2Models( *((CGhoul2Info_v *)args[1]) );
 
 	case G_G2_SETMODELS:
+		if (!re) return 0; // UQ1: Fix for OpenJK not registerring re functions...
 		re->G2API_SetGhoul2ModelIndexes( *((CGhoul2Info_v *)args[1]),(qhandle_t *)VMA(2),(qhandle_t *)VMA(3));
 		return 0;
 
 	case G_G2_GETBOLT:
+		if (!re) return 0; // UQ1: Fix for OpenJK not registerring re functions...
 		return re->G2API_GetBoltMatrix(*((CGhoul2Info_v *)args[1]), args[2], args[3], (mdxaBone_t *)VMA(4), (const float *)VMA(5),(const float *)VMA(6), args[7], (qhandle_t *)VMA(8), (float *)VMA(9));
 
 	case G_G2_GETBOLT_NOREC:
+		if (!re) return 0; // UQ1: Fix for OpenJK not registerring re functions...
 		re->G2API_BoltMatrixReconstruction( qfalse );//gG2_GBMNoReconstruct = qtrue;
 		return re->G2API_GetBoltMatrix(*((CGhoul2Info_v *)args[1]), args[2], args[3], (mdxaBone_t *)VMA(4), (const float *)VMA(5),(const float *)VMA(6), args[7], (qhandle_t *)VMA(8), (float *)VMA(9));
 
 	case G_G2_GETBOLT_NOREC_NOROT:
+		if (!re) return 0; // UQ1: Fix for OpenJK not registerring re functions...
 		re->G2API_BoltMatrixReconstruction( qfalse );//gG2_GBMNoReconstruct = qtrue;
 		re->G2API_BoltMatrixSPMethod( qtrue );//gG2_GBMUseSPMethod = qtrue;
 		return re->G2API_GetBoltMatrix(*((CGhoul2Info_v *)args[1]), args[2], args[3], (mdxaBone_t *)VMA(4), (const float *)VMA(5),(const float *)VMA(6), args[7], (qhandle_t *)VMA(8), (float *)VMA(9));
@@ -2565,6 +2622,7 @@ intptr_t SV_GameSystemCalls( intptr_t *args ) {
 #ifdef _FULL_G2_LEAK_CHECKING
 		g_G2AllocServer = 1;
 #endif
+		if (!re) return 0; // UQ1: Fix for OpenJK not registerring re functions...
 		return	re->G2API_InitGhoul2Model((CGhoul2Info_v **)VMA(1), (const char *)VMA(2), args[3], (qhandle_t) args[4],
 									  (qhandle_t) args[5], args[6], args[7]);
 
@@ -2573,30 +2631,37 @@ intptr_t SV_GameSystemCalls( intptr_t *args ) {
 			CGhoul2Info_v &g2 = *((CGhoul2Info_v *)args[1]);
 			int modelIndex = args[2];
 
+			if (!re) return 0; // UQ1: Fix for OpenJK not registerring re functions...
 			return re->G2API_SetSkin(g2, modelIndex, args[3], args[4]);
 		}
 
 	case G_G2_SIZE:
+		if (!re) return 0; // UQ1: Fix for OpenJK not registerring re functions...
 		return re->G2API_Ghoul2Size ( *((CGhoul2Info_v *)args[1]) );
 		break;
 
 	case G_G2_ADDBOLT:
+		if (!re) return 0; // UQ1: Fix for OpenJK not registerring re functions...
 		return	re->G2API_AddBolt(*((CGhoul2Info_v *)args[1]), args[2], (const char *)VMA(3));
 
 	case G_G2_SETBOLTINFO:
+		if (!re) return 0; // UQ1: Fix for OpenJK not registerring re functions...
 		re->G2API_SetBoltInfo(*((CGhoul2Info_v *)args[1]), args[2], args[3]);
 		return 0;
 
 	case G_G2_ANGLEOVERRIDE:
+		if (!re) return 0; // UQ1: Fix for OpenJK not registerring re functions...
 		return re->G2API_SetBoneAngles(*((CGhoul2Info_v *)args[1]), args[2], (const char *)VMA(3), (float *)VMA(4), args[5],
 							 (const Eorientations) args[6], (const Eorientations) args[7], (const Eorientations) args[8],
 							 (qhandle_t *)VMA(9), args[10], args[11] );
 
 	case G_G2_PLAYANIM:
+		if (!re) return 0; // UQ1: Fix for OpenJK not registerring re functions...
 		return re->G2API_SetBoneAnim(*((CGhoul2Info_v *)args[1]), args[2], (const char *)VMA(3), args[4], args[5],
 								args[6], VMF(7), args[8], VMF(9), args[10]);
 
 	case G_G2_GETBONEANIM:
+		if (!re) return 0; // UQ1: Fix for OpenJK not registerring re functions...
 		{
 			CGhoul2Info_v &g2 = *((CGhoul2Info_v *)args[1]);
 			int modelIndex = args[10];
@@ -2606,6 +2671,7 @@ intptr_t SV_GameSystemCalls( intptr_t *args ) {
 		}
 
 	case G_G2_GETGLANAME:
+		if (!re) return 0; // UQ1: Fix for OpenJK not registerring re functions...
 		//return (int)G2API_GetGLAName(*((CGhoul2Info_v *)args[1]), args[2]);
 		{ //Since returning a pointer in such a way to a VM seems to cause MASSIVE FAILURE<tm>, we will shove data into the pointer the vm passes instead
 			char *point = ((char *)VMA(3));
@@ -2620,9 +2686,11 @@ intptr_t SV_GameSystemCalls( intptr_t *args ) {
 		return 0;
 
 	case G_G2_COPYGHOUL2INSTANCE:
+		if (!re) return 0; // UQ1: Fix for OpenJK not registerring re functions...
 		return (int)re->G2API_CopyGhoul2Instance(*((CGhoul2Info_v *)args[1]), *((CGhoul2Info_v *)args[2]), args[3]);
 
 	case G_G2_COPYSPECIFICGHOUL2MODEL:
+		if (!re) return 0; // UQ1: Fix for OpenJK not registerring re functions...
 		re->G2API_CopySpecificG2Model(*((CGhoul2Info_v *)args[1]), args[2], *((CGhoul2Info_v *)args[3]), args[4]);
 		return 0;
 
@@ -2630,10 +2698,12 @@ intptr_t SV_GameSystemCalls( intptr_t *args ) {
 #ifdef _FULL_G2_LEAK_CHECKING
 		g_G2AllocServer = 1;
 #endif
+		if (!re) return 0; // UQ1: Fix for OpenJK not registerring re functions...
 		re->G2API_DuplicateGhoul2Instance(*((CGhoul2Info_v *)args[1]), (CGhoul2Info_v **)VMA(2));
 		return 0;
 
 	case G_G2_HASGHOUL2MODELONINDEX:
+		if (!re) return 0; // UQ1: Fix for OpenJK not registerring re functions...
 		//return (int)G2API_HasGhoul2ModelOnIndex((CGhoul2Info_v **)args[1], args[2]);
 		return (int)re->G2API_HasGhoul2ModelOnIndex((CGhoul2Info_v **)VMA(1), args[2]);
 
@@ -2641,6 +2711,7 @@ intptr_t SV_GameSystemCalls( intptr_t *args ) {
 #ifdef _FULL_G2_LEAK_CHECKING
 		g_G2AllocServer = 1;
 #endif
+		if (!re) return 0; // UQ1: Fix for OpenJK not registerring re functions...
 		//return (int)G2API_RemoveGhoul2Model((CGhoul2Info_v **)args[1], args[2]);
 		return (int)re->G2API_RemoveGhoul2Model((CGhoul2Info_v **)VMA(1), args[2]);
 
@@ -2648,6 +2719,7 @@ intptr_t SV_GameSystemCalls( intptr_t *args ) {
 #ifdef _FULL_G2_LEAK_CHECKING
 		g_G2AllocServer = 1;
 #endif
+		if (!re) return 0; // UQ1: Fix for OpenJK not registerring re functions...
 		//return (int)G2API_RemoveGhoul2Models((CGhoul2Info_v **)args[1]);
 		return (int)re->G2API_RemoveGhoul2Models((CGhoul2Info_v **)VMA(1));
 
@@ -2655,35 +2727,44 @@ intptr_t SV_GameSystemCalls( intptr_t *args ) {
 #ifdef _FULL_G2_LEAK_CHECKING
 		g_G2AllocServer = 1;
 #endif
+		if (!re) return 0; // UQ1: Fix for OpenJK not registerring re functions...
 		re->G2API_CleanGhoul2Models((CGhoul2Info_v **)VMA(1));
 	//	re->G2API_CleanGhoul2Models((CGhoul2Info_v **)args[1]);
 		return 0;
 
 	case G_G2_COLLISIONDETECT:
+		if (!re) return 0; // UQ1: Fix for OpenJK not registerring re functions...
 		re->G2API_CollisionDetect ( (CollisionRecord_t*)VMA(1), *((CGhoul2Info_v *)args[2]), (const float*)VMA(3), (const float*)VMA(4), args[5], args[6], (float*)VMA(7), (float*)VMA(8), (float*)VMA(9), G2VertSpaceServer, args[10], args[11], VMF(12) );
 		return 0;
 
 	case G_G2_COLLISIONDETECTCACHE:
+		if (!re) return 0; // UQ1: Fix for OpenJK not registerring re functions...
 		re->G2API_CollisionDetectCache ( (CollisionRecord_t*)VMA(1), *((CGhoul2Info_v *)args[2]), (const float*)VMA(3), (const float*)VMA(4), args[5], args[6], (float*)VMA(7), (float*)VMA(8), (float*)VMA(9), G2VertSpaceServer, args[10], args[11], VMF(12) );
 		return 0;
 
 	case G_G2_SETROOTSURFACE:
+		if (!re) return 0; // UQ1: Fix for OpenJK not registerring re functions...
 		return re->G2API_SetRootSurface(*((CGhoul2Info_v *)args[1]), args[2], (const char *)VMA(3));
 
 	case G_G2_SETSURFACEONOFF:
+		if (!re) return 0; // UQ1: Fix for OpenJK not registerring re functions...
 		return re->G2API_SetSurfaceOnOff(*((CGhoul2Info_v *)args[1]), (const char *)VMA(2), /*(const int)VMA(3)*/args[3]);
 
 	case G_G2_SETNEWORIGIN:
+		if (!re) return 0; // UQ1: Fix for OpenJK not registerring re functions...
 		return re->G2API_SetNewOrigin(*((CGhoul2Info_v *)args[1]), /*(const int)VMA(2)*/args[2]);
 
 	case G_G2_DOESBONEEXIST:
 		{
+			if (!re) return 0; // UQ1: Fix for OpenJK not registerring re functions...
 			CGhoul2Info_v &g2 = *((CGhoul2Info_v *)args[1]);
 			return re->G2API_DoesBoneExist(g2, args[2], (const char *)VMA(3));
 		}
 
 	case G_G2_GETSURFACERENDERSTATUS:
 	{
+		if (!re) return 0; // UQ1: Fix for OpenJK not registerring re functions...
+
 		CGhoul2Info_v &g2 = *((CGhoul2Info_v *)args[1]);
 
 		return re->G2API_GetSurfaceRenderStatus(g2, args[2], (const char *)VMA(3));
@@ -2691,6 +2772,8 @@ intptr_t SV_GameSystemCalls( intptr_t *args ) {
 
 	case G_G2_ABSURDSMOOTHING:
 		{
+			if (!re) return 0; // UQ1: Fix for OpenJK not registerring re functions...
+
 			CGhoul2Info_v &g2 = *((CGhoul2Info_v *)args[1]);
 
 			re->G2API_AbsurdSmoothing(g2, (qboolean)args[2]);
@@ -2705,6 +2788,7 @@ intptr_t SV_GameSystemCalls( intptr_t *args ) {
 
 			if (!rdParamst)
 			{
+				if (!re) return 0; // UQ1: Fix for OpenJK not registerring re functions...
 				re->G2API_ResetRagDoll(*((CGhoul2Info_v *)args[1]));
 				return 0;
 			}
@@ -2728,6 +2812,7 @@ intptr_t SV_GameSystemCalls( intptr_t *args ) {
 			rdParams.RagPhase = (CRagDollParams::ERagPhase)rdParamst->RagPhase;
 			rdParams.effectorsToTurnOff = (CRagDollParams::ERagEffector)rdParamst->effectorsToTurnOff;
 
+			if (!re) return 0; // UQ1: Fix for OpenJK not registerring re functions...
 			re->G2API_SetRagDoll(*((CGhoul2Info_v *)args[1]), &rdParams);
 		}
 		return 0;
@@ -2750,6 +2835,7 @@ intptr_t SV_GameSystemCalls( intptr_t *args ) {
 			rduParams.me = rduParamst->me;
 			rduParams.settleFrame = rduParamst->settleFrame;
 
+			if (!re) return 0; // UQ1: Fix for OpenJK not registerring re functions...
 			re->G2API_AnimateG2ModelsRag(*((CGhoul2Info_v *)args[1]), args[2], &rduParams);
 		}
 		return 0;
@@ -2757,42 +2843,56 @@ intptr_t SV_GameSystemCalls( intptr_t *args ) {
 
 	//additional ragdoll options -rww
 	case G_G2_RAGPCJCONSTRAINT:
+		if (!re) return 0; // UQ1: Fix for OpenJK not registerring re functions...
 		return re->G2API_RagPCJConstraint(*((CGhoul2Info_v *)args[1]), (const char *)VMA(2), (float *)VMA(3), (float *)VMA(4));
 	case G_G2_RAGPCJGRADIENTSPEED:
+		if (!re) return 0; // UQ1: Fix for OpenJK not registerring re functions...
 		return re->G2API_RagPCJGradientSpeed(*((CGhoul2Info_v *)args[1]), (const char *)VMA(2), VMF(3));
 	case G_G2_RAGEFFECTORGOAL:
+		if (!re) return 0; // UQ1: Fix for OpenJK not registerring re functions...
 		return re->G2API_RagEffectorGoal(*((CGhoul2Info_v *)args[1]), (const char *)VMA(2), (float *)VMA(3));
 	case G_G2_GETRAGBONEPOS:
+		if (!re) return 0; // UQ1: Fix for OpenJK not registerring re functions...
 		return re->G2API_GetRagBonePos(*((CGhoul2Info_v *)args[1]), (const char *)VMA(2), (float *)VMA(3), (float *)VMA(4), (float *)VMA(5), (float *)VMA(6));
 	case G_G2_RAGEFFECTORKICK:
+		if (!re) return 0; // UQ1: Fix for OpenJK not registerring re functions...
 		return re->G2API_RagEffectorKick(*((CGhoul2Info_v *)args[1]), (const char *)VMA(2), (float *)VMA(3));
 	case G_G2_RAGFORCESOLVE:
+		if (!re) return 0; // UQ1: Fix for OpenJK not registerring re functions...
 		return re->G2API_RagForceSolve(*((CGhoul2Info_v *)args[1]), (qboolean)args[2]);
 
 	case G_G2_SETBONEIKSTATE:
+		if (!re) return 0; // UQ1: Fix for OpenJK not registerring re functions...
 		return re->G2API_SetBoneIKState(*((CGhoul2Info_v *)args[1]), args[2], (const char *)VMA(3), args[4], (sharedSetBoneIKStateParams_t *)VMA(5));
 	case G_G2_IKMOVE:
+		if (!re) return 0; // UQ1: Fix for OpenJK not registerring re functions...
 		return re->G2API_IKMove(*((CGhoul2Info_v *)args[1]), args[2], (sharedIKMoveParams_t *)VMA(3));
 
 	case G_G2_REMOVEBONE:
 		{
+			if (!re) return 0; // UQ1: Fix for OpenJK not registerring re functions...
+
 			CGhoul2Info_v &g2 = *((CGhoul2Info_v *)args[1]);
 
 			return re->G2API_RemoveBone(g2, args[3], (const char *)VMA(2));
 		}
 
 	case G_G2_ATTACHINSTANCETOENTNUM:
+		if (!re) return 0; // UQ1: Fix for OpenJK not registerring re functions...
 		{
 			re->G2API_AttachInstanceToEntNum(*((CGhoul2Info_v *)args[1]), args[2], (qboolean)args[3]);
 		}
 		return 0;
 	case G_G2_CLEARATTACHEDINSTANCE:
+		if (!re) return 0; // UQ1: Fix for OpenJK not registerring re functions...
 		re->G2API_ClearAttachedInstance(args[1]);
 		return 0;
 	case G_G2_CLEANENTATTACHMENTS:
+		if (!re) return 0; // UQ1: Fix for OpenJK not registerring re functions...
 		re->G2API_CleanEntAttachments();
 		return 0;
 	case G_G2_OVERRIDESERVER:
+		if (!re) return 0; // UQ1: Fix for OpenJK not registerring re functions...
 		{
 			CGhoul2Info_v &g2 = *((CGhoul2Info_v *)args[1]);
 			return re->G2API_OverrideServerWithClientData(g2, 0);
@@ -2803,6 +2903,8 @@ intptr_t SV_GameSystemCalls( intptr_t *args ) {
 			char *point = ((char *)VMA(4));
 			char *local;
 			int modelindex = args[3];
+
+			if (!re) return 0; // UQ1: Fix for OpenJK not registerring re functions...
 
 			CGhoul2Info_v &g2 = *((CGhoul2Info_v *)args[1]);
 
@@ -2848,6 +2950,7 @@ void SV_InitGame( qboolean restart ) {
 
 	// clear level pointers
 	sv.entityParsePoint = CM_EntityString();
+
 	for ( i=0, cl=svs.clients; i<sv_maxclients->integer; i++, cl++ )
 		cl->gentity = NULL;
 

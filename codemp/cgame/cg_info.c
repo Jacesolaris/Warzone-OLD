@@ -309,6 +309,7 @@ void CG_DrawInformation( void ) {
 		break;
 	case GT_SINGLE_PLAYER:
 	case GT_INSTANCE:
+	case GT_WARZONE:
 		break;
 	case GT_DUEL:
 		CG_DrawProportionalString( 320, y, va( "%s", (char *)CG_GetStringEdString("MP_INGAME", "RULES_DUEL_1")), UI_CENTER|UI_INFOFONT|UI_DROPSHADOW, colorWhite );

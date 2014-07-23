@@ -2355,7 +2355,7 @@ void Cmd_LevelShot_f( gentity_t *ent )
 	}
 
 	// doesn't work in single player
-	if ( level.gametype == GT_SINGLE_PLAYER || level.gametype == GT_INSTANCE )
+	if ( level.gametype == GT_SINGLE_PLAYER )
 	{
 		trap->SendServerCommand(ent-g_entities, "print \"Must not be in singleplayer mode for levelshot\n\"" );
 		return;

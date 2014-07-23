@@ -4442,7 +4442,7 @@ static float CG_DrawEnemyInfo ( float y )
 	}
 
 #ifndef __MMO__
-	if (cgs.gametype == GT_INSTANCE)
+	if (cgs.gametype == GT_INSTANCE || cgs.gametype == GT_WARZONE)
 #else //__MMO__
 	if (cgs.gametype != GT_DUEL) // In MMO mode, we ALWAYS show target stats - ALL GAMETYPES except for GT_DUEL!
 #endif //__MMO__
@@ -8811,10 +8811,13 @@ static void CG_DrawVote(void) {
 		else if ( !Q_stricmp( "Duel", cgs.voteString+11 ) )						sParm = CG_GetStringEdString( "MENUS", "DUEL" );
 		else if ( !Q_stricmp( "Holocron FFA", cgs.voteString+11 ) )				sParm = CG_GetStringEdString( "MENUS", "HOLOCRON_FFA" );
 		else if ( !Q_stricmp( "Power Duel", cgs.voteString+11 ) )				sParm = CG_GetStringEdString( "MENUS", "POWERDUEL" );
+		else if ( !Q_stricmp( "Instance", cgs.voteString+11 ) )					sParm = CG_GetStringEdString( "MENUS", "INSTANCE" );
+		else if ( !Q_stricmp( "Cooperative", cgs.voteString+11 ) )				sParm = CG_GetStringEdString( "MENUS", "SINGLE_PLAYER" );
 		else if ( !Q_stricmp( "Team FFA", cgs.voteString+11 ) ) 				sParm = CG_GetStringEdString( "MENUS", "TEAM_FFA" );
 		else if ( !Q_stricmp( "Siege", cgs.voteString+11 ) )					sParm = CG_GetStringEdString( "MENUS", "SIEGE" );
 		else if ( !Q_stricmp( "Capture the Flag", cgs.voteString+11 )  )		sParm = CG_GetStringEdString( "MENUS", "CAPTURE_THE_FLAG" );
 		else if ( !Q_stricmp( "Capture the Ysalamiri", cgs.voteString+11 ) )	sParm = CG_GetStringEdString( "MENUS", "CAPTURE_THE_YSALIMARI" );
+		else if ( !Q_stricmp( "War Zone", cgs.voteString+11 ) )					sParm = CG_GetStringEdString( "MENUS", "WARZONE" );
 	}
 	else if ( !Q_strncmp( cgs.voteString, "map", 3 ) ) {
 		trap->SE_GetStringTextString( "MENUS_NEW_MAP", sCmd, sizeof( sCmd ) );
@@ -9129,6 +9132,7 @@ static void CG_DrawWarmup( void ) {
 		else if ( cgs.gametype == GT_CTY )				s = CG_GetStringEdString("MENUS", "CAPTURE_THE_YSALIMARI");//"Capture the Ysalamiri";
 		else if ( cgs.gametype == GT_SINGLE_PLAYER )	s = "Cooperative";
 		else if ( cgs.gametype == GT_INSTANCE )			s = "Group Instance";
+		else if ( cgs.gametype == GT_WARZONE )			s = "War Zone";
 		else											s = "";
 		w = CG_Text_Width(s, 1.5f, FONT_MEDIUM);
 		CG_Text_Paint(320 - w / 2, 90, 1.5f, colorWhite, s, 0, 0, ITEM_TEXTSTYLE_SHADOWEDMORE,FONT_MEDIUM);

@@ -2385,7 +2385,7 @@ int BotIsAChickenWuss(bot_state_t *bs)
 		return 0;
 	}
 
-	if (level.gametype == GT_SINGLE_PLAYER || level.gametype == GT_INSTANCE)
+	if (level.gametype == GT_SINGLE_PLAYER || level.gametype == GT_INSTANCE || level.gametype == GT_WARZONE)
 	{ //"coop" (not really)
 		return 0;
 	}
@@ -3962,7 +3962,7 @@ void GetIdealDestination(bot_state_t *bs)
 			{
 				bs->wpDestination = gWPArray[tempInt];
 
-				if (level.gametype == GT_SINGLE_PLAYER || level.gametype == GT_INSTANCE)
+				if (level.gametype == GT_SINGLE_PLAYER || level.gametype == GT_INSTANCE || level.gametype == GT_WARZONE)
 				{ //be more aggressive
 					bs->wpDestSwitchTime = level.time + Q_irand(300, 1000);
 				}
@@ -7100,7 +7100,7 @@ void StandardBotAI(bot_state_t *bs, float thinktime)
 				}
 			}
 
-			if (level.gametype == GT_SINGLE_PLAYER || level.gametype == GT_INSTANCE)
+			if (level.gametype == GT_SINGLE_PLAYER || level.gametype == GT_INSTANCE || level.gametype == GT_WARZONE)
 			{
 				saberRange *= 3;
 			}
@@ -7599,12 +7599,14 @@ int BotAIStartFrame(int time) {
 
 	G_CheckBotSpawn();
 
+#ifdef __BUGGY_MEM_MANAGEMENT__
 	//rww - addl bot frame functions
 	if (gBotEdit)
 	{
 		trap->Cvar_Update(&bot_wp_info);
 		BotWaypointRender();
 	}
+#endif //__BUGGY_MEM_MANAGEMENT__
 
 	UpdateEventTracker();
 	//end rww

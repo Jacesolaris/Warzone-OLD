@@ -435,7 +435,8 @@ void G_CreateFakeClient(int entNum, gclient_t **cl)
 	//trap->TrueMalloc((void **)cl, sizeof(gclient_t));
 	if (!gClPtrs[entNum])
 	{
-		gClPtrs[entNum] = (gclient_t *) BG_Alloc(sizeof(gclient_t));
+		//gClPtrs[entNum] = (gclient_t *) BG_Alloc(sizeof(gclient_t));
+		gClPtrs[entNum] = (gclient_t *) G_Alloc(sizeof(gclient_t));
 	}
 	*cl = gClPtrs[entNum];
 }

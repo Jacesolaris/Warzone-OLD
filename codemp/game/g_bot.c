@@ -144,6 +144,7 @@ int G_GetMapTypeBits(char *type)
 		if( strstr( type, "ctf" ) ) {
 			typeBits |= (1 << GT_CTF);
 			typeBits |= (1 << GT_CTY);
+			typeBits |= (1 << GT_WARZONE);
 		}
 		if( strstr( type, "cty" ) ) {
 			typeBits |= (1 << GT_CTY);
@@ -153,6 +154,9 @@ int G_GetMapTypeBits(char *type)
 		}
 		if( strstr( type, "instance" ) ) {
 			typeBits |= (1 << GT_INSTANCE);
+		}
+		if( strstr( type, "warzone" ) ) {
+			typeBits |= (1 << GT_WARZONE);
 		}
 	} else {
 		typeBits |= (1 << GT_FFA);
@@ -1234,7 +1238,6 @@ void G_CheckMinimumNpcs( void ) {
 		int			random = irand(0,12);
 		int			tries = 0;
 
-		/*
 		if (g_gametype.integer == GT_WARZONE)
 		{// Who (which team) needs this NPC???
 			int RED_NPCS = 0;
@@ -1271,7 +1274,6 @@ void G_CheckMinimumNpcs( void ) {
 				NPC_SPAWN_TEAM = TEAM_RED;
 			}
 		}
-		*/
 
 		npc = G_Spawn();
 
@@ -1557,28 +1559,38 @@ void G_CheckMinimumNpcs( void ) {
 		}
 		else*/
 		{
-			while (gWPArray[waypoint]->inuse == qfalse || gWPArray[waypoint]->wpIsBad == qtrue 
-#ifndef __WAYPOINTS_PRECHECKED__
-			|| !JKG_CheckBelowWaypoint(waypoint) || !JKG_CheckRoutingFrom( waypoint )
-#endif //__WAYPOINTS_PRECHECKED__
-			)
+			if ( g_gametype.integer == GT_WARZONE )
 			{
-				gWPArray[waypoint]->inuse = qfalse; // set it bad!
-
-				if (tries > 10)
+				// New War Zone Instances (not JKG style)... Get CTF spawnpoints...
+				gentity_t spawnPoint = *SelectCTFSpawnPoint ( (team_t)NPC_SPAWN_TEAM, 0, npc->s.origin, npc->s.angles, qtrue );
+				VectorCopy(spawnPoint.s.origin, npc->s.origin);
+				npc->s.origin[2]+=32; // Drop down...
+			}
+			else
+			{
+				while (gWPArray[waypoint]->inuse == qfalse || gWPArray[waypoint]->wpIsBad == qtrue 
+#ifndef __WAYPOINTS_PRECHECKED__
+					|| !JKG_CheckBelowWaypoint(waypoint) || !JKG_CheckRoutingFrom( waypoint )
+#endif //__WAYPOINTS_PRECHECKED__
+					)
 				{
-					return; // Try again on next check...
+					gWPArray[waypoint]->inuse = qfalse; // set it bad!
+
+					if (tries > 10)
+					{
+						return; // Try again on next check...
+					}
+
+					// Find a new one... This is probably a bad waypoint...
+					waypoint = irand(0, gWPNum-1);
+					tries++;
 				}
 
-				// Find a new one... This is probably a bad waypoint...
-				waypoint = irand(0, gWPNum-1);
-				tries++;
+				VectorCopy(gWPArray[waypoint]->origin, npc->s.origin);
+				npc->s.origin[2]+=32; // Drop down...
+
+				trap->Print(va("[%i/%i] Spawning (enemy NPC) %s at waypoint %i.\n", botplayers+1, minplayers, npc->NPC_type, waypoint));
 			}
-
-			VectorCopy(gWPArray[waypoint]->origin, npc->s.origin);
-			npc->s.origin[2]+=32; // Drop down...
-
-			trap->Print(va("[%i/%i] Spawning (enemy NPC) %s at waypoint %i.\n", botplayers+1, minplayers, npc->NPC_type, waypoint));
 		}
 
 		npc->s.angles[PITCH] = 0;
@@ -1615,7 +1627,7 @@ void G_CheckBotSpawn( void ) {
 		botSpawnQueue[n].spawnTime = 0;
 
 		/*
-		if( level.gametype == GT_SINGLE_PLAYER || level.gametype == GT_INSTANCE ) {
+		if( level.gametype == GT_SINGLE_PLAYER || level.gametype == GT_INSTANCE || level.gametype == GT_WARZONE ) {
 			trap->GetUserinfo( botSpawnQueue[n].clientNum, userinfo, sizeof(userinfo) );
 			PlayerIntroSound( Info_ValueForKey (userinfo, "model") );
 		}

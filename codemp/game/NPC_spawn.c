@@ -2185,7 +2185,7 @@ void NPC_PrecacheType( char *NPC_type )
 void SP_NPC_spawner2( gentity_t *self)
 {
 	int t;
-	if (!g_allowNPC.integer && level.gametype != GT_SINGLE_PLAYER && level.gametype != GT_INSTANCE)
+	if (!g_allowNPC.integer && level.gametype != GT_SINGLE_PLAYER && level.gametype != GT_INSTANCE && level.gametype != GT_WARZONE)
 	{
 		self->think = G_FreeEntity;
 		self->nextthink = level.time;
@@ -2285,7 +2285,7 @@ extern int OrgVisibleBox(vec3_t org1, vec3_t mins, vec3_t maxs, vec3_t org2, int
 
 void SP_NPC_spawner( gentity_t *self)
 {
-	if (level.gametype == GT_INSTANCE)
+	if (level.gametype == GT_INSTANCE || level.gametype == GT_WARZONE)
 	{
 		// Spawn multiple...
 		vec3_t origin;
