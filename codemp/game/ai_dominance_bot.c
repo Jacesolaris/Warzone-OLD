@@ -190,7 +190,7 @@ qboolean DOM_FakeNPC_Parse_UCMD (bot_state_t *bs, gentity_t *bot)
 
 	if (NPCS.NPC->enemy && Distance(NPCS.NPC->r.currentOrigin, NPCS.NPC->enemy->r.currentOrigin) > 64)
 	{
-		vec3_t dir;
+		//vec3_t dir;
 
 		NPCS.NPCInfo->goalEntity = NPCS.NPC->enemy;
 		

@@ -2386,13 +2386,13 @@ qboolean NPC_ParseParms( const char *NPCName, gentity_t *NPC )
 					continue;
 				}
 
-				saberName = (char *)BG_TempAlloc(4096);//G_NewString( value );
+				saberName = (char *)malloc(4096);//G_NewString( value );
 				strcpy(saberName, value);
 
 				WP_SaberParseParms( saberName, &NPC->client->saber[0] );
 				npcSaber1 = G_ModelIndex(va("@%s", saberName));
 
-				BG_TempFree(4096);
+				free(saberName);
 				continue;
 			}
 
@@ -2406,7 +2406,7 @@ qboolean NPC_ParseParms( const char *NPCName, gentity_t *NPC )
 
 				if ( !(NPC->client->saber[0].saberFlags&SFL_TWO_HANDED) )
 				{//can't use a second saber if first one is a two-handed saber...?
-					char *saberName = (char *)BG_TempAlloc(4096);//G_NewString( value );
+					char *saberName = (char *)malloc(4096);//G_NewString( value );
 					strcpy(saberName, value);
 
 					WP_SaberParseParms( saberName, &NPC->client->saber[1] );
@@ -2419,7 +2419,7 @@ qboolean NPC_ParseParms( const char *NPCName, gentity_t *NPC )
 						//NPC->client->ps.dualSabers = qtrue;
 						npcSaber2 = G_ModelIndex(va("@%s", saberName));
 					}
-					BG_TempFree(4096);
+					free(saberName);
 				}
 				continue;
 			}

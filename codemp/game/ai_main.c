@@ -7599,12 +7599,14 @@ int BotAIStartFrame(int time) {
 
 	G_CheckBotSpawn();
 
+#ifdef __BUGGY_MEM_MANAGEMENT__
 	//rww - addl bot frame functions
 	if (gBotEdit)
 	{
 		trap->Cvar_Update(&bot_wp_info);
 		BotWaypointRender();
 	}
+#endif //__BUGGY_MEM_MANAGEMENT__
 
 	UpdateEventTracker();
 	//end rww

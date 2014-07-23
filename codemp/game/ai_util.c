@@ -11,6 +11,7 @@ void *BAllocList[MAX_BALLOC];
 
 char gBotChatBuffer[MAX_CLIENTS][MAX_CHAT_BUFFER_SIZE];
 
+/*
 void *B_TempAlloc(int size)
 {
 	return BG_TempAlloc(size);
@@ -20,6 +21,7 @@ void B_TempFree(int size)
 {
 	BG_TempFree(size);
 }
+*/
 
 
 void *B_Alloc(int size)
@@ -356,13 +358,13 @@ int BotDoChat(bot_state_t *bs, char *section, int always)
 
 	bs->chatTeam = 0;
 
-	chatgroup = (char *)B_TempAlloc(MAX_CHAT_BUFFER_SIZE);
+	chatgroup = (char *)malloc(MAX_CHAT_BUFFER_SIZE);
 
 	rVal = GetValueGroup(gBotChatBuffer[bs->client], section, chatgroup);
 
 	if (!rVal) //the bot has no group defined for the specified chat event
 	{
-		B_TempFree(MAX_CHAT_BUFFER_SIZE); //chatgroup
+		free(chatgroup); //chatgroup
 		return 0;
 	}
 
@@ -395,7 +397,7 @@ int BotDoChat(bot_state_t *bs, char *section, int always)
 
 	if (!lines)
 	{
-		B_TempFree(MAX_CHAT_BUFFER_SIZE); //chatgroup
+		free(chatgroup); //chatgroup
 		return 0;
 	}
 
@@ -450,7 +452,7 @@ int BotDoChat(bot_state_t *bs, char *section, int always)
 
 	if (strlen(chatgroup) > MAX_CHAT_LINE_SIZE)
 	{
-		B_TempFree(MAX_CHAT_BUFFER_SIZE); //chatgroup
+		free(chatgroup); //chatgroup
 		return 0;
 	}
 
@@ -506,7 +508,7 @@ int BotDoChat(bot_state_t *bs, char *section, int always)
 	bs->chatTime_stored = (strlen(bs->currentChat)*45)+Q_irand(1300, 1500);
 	bs->chatTime = level.time + bs->chatTime_stored;
 
-	B_TempFree(MAX_CHAT_BUFFER_SIZE); //chatgroup
+	free(chatgroup); //chatgroup
 
 	return 1;
 }
@@ -615,7 +617,7 @@ void BotUtilizePersonality(bot_state_t *bs)
 	int failed;
 	int i;
 	//char buf[131072];
-	char *buf = (char *)B_TempAlloc(131072);
+	char *buf = (char *)malloc(131072);
 	char *readbuf, *group;
 
 	len = trap->FS_Open(bs->settings.personalityfile, &f, FS_READ);
@@ -625,14 +627,14 @@ void BotUtilizePersonality(bot_state_t *bs)
 	if (!f)
 	{
 		trap->Print(S_COLOR_RED "Error: Specified personality not found\n");
-		B_TempFree(131072); //buf
+		free(buf); //buf
 		return;
 	}
 
 	if (len >= 131072)
 	{
 		trap->Print(S_COLOR_RED "Personality file exceeds maximum length\n");
-		B_TempFree(131072); //buf
+		free(buf); //buf
 		return;
 	}
 
@@ -648,8 +650,8 @@ void BotUtilizePersonality(bot_state_t *bs)
 
 	len = rlen;
 
-	readbuf = (char *)B_TempAlloc(1024);
-	group = (char *)B_TempAlloc(65536);
+	readbuf = (char *)malloc(1024);
+	group = (char *)malloc(65536);
 
 	if (!GetValueGroup(buf, "GeneralBotInfo", group))
 	{
@@ -857,8 +859,8 @@ void BotUtilizePersonality(bot_state_t *bs)
 		ParseEmotionalAttachments(bs, group);
 	}
 
-	B_TempFree(131072); //buf
-	B_TempFree(1024); //readbuf
-	B_TempFree(65536); //group
+	free(buf); //buf
+	free(readbuf); //readbuf
+	free(group); //group
 	trap->FS_Close(f);
 }

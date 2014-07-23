@@ -1277,7 +1277,7 @@ void BG_VehWeaponLoadParms( void )
 
 	holdChar = vehWeaponExtensionListBuf;
 
-	tempReadBuffer = (char *)BG_TempAlloc(MAX_VEH_WEAPON_DATA_SIZE);
+	tempReadBuffer = (char *)malloc(MAX_VEH_WEAPON_DATA_SIZE);
 
 	// NOTE: Not use TempAlloc anymore...
 	//Make ABSOLUTELY CERTAIN that BG_Alloc/etc. is not used before
@@ -1319,7 +1319,7 @@ void BG_VehWeaponLoadParms( void )
 		}
 	}
 
-	BG_TempFree(MAX_VEH_WEAPON_DATA_SIZE);
+	free(tempReadBuffer);
 }
 
 void BG_VehicleLoadParms( void )
@@ -1343,7 +1343,7 @@ void BG_VehicleLoadParms( void )
 
 	holdChar = vehExtensionListBuf;
 
-	tempReadBuffer = (char *)BG_TempAlloc(MAX_VEHICLE_DATA_SIZE);
+	tempReadBuffer = (char *)malloc(MAX_VEHICLE_DATA_SIZE);
 
 	// NOTE: Not use TempAlloc anymore...
 	//Make ABSOLUTELY CERTAIN that BG_Alloc/etc. is not used before
@@ -1385,7 +1385,7 @@ void BG_VehicleLoadParms( void )
 		}
 	}
 
-	BG_TempFree(MAX_VEHICLE_DATA_SIZE);
+	free(tempReadBuffer);
 
 	numVehicles = 1;//first one is null/default
 	//set the first vehicle to default data
@@ -1397,6 +1397,7 @@ void BG_VehicleLoadParms( void )
 
 	//Load the Vehicle Weapons data, too
 	BG_VehWeaponLoadParms();
+
 }
 
 int BG_VehicleGetIndex( const char *vehicleName )

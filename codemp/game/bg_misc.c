@@ -3096,9 +3096,9 @@ int BG_ModelCache(const char *modelName, const char *skinName)
 #ifdef __MMO__
 
 #if defined(_GAME)
-	#define MAX_POOL_SIZE	300000000
+	#define MAX_POOL_SIZE	20480000
 #elif defined(_CGAME) //don't need as much for cgame stuff. 2mb will be fine.
-	#define MAX_POOL_SIZE	204800000
+	#define MAX_POOL_SIZE	20480000
 #elif defined(_UI) //And for the ui the only thing we'll be using this for anyway is allocating anim data for g2 menu models
 	#define MAX_POOL_SIZE	512000
 #endif
@@ -3197,6 +3197,7 @@ const char *gametypeStringShort[GT_MAX_GAME_TYPE] = {
 	"JM",
 	"1v1",
 	"2v1",
+	"INSTANCE",
 	"SP",
 	"TDM",
 	"SAGA",

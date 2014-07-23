@@ -22,7 +22,7 @@
 */
 
 //#define POOLSIZE	(256 * 1024)
-#define POOLSIZE	(256 * 1024 * 10)
+#define POOLSIZE	(2560 * 1024)
 
 static char		memoryPool[POOLSIZE];
 static int		allocPoint;
