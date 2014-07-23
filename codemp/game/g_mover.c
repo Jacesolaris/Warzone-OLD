@@ -595,6 +595,7 @@ void SetMoverState( gentity_t *ent, moverState_t moverState, int time ) {
 		//ent->s.eFlags &= ~EF_BLOCKED_MOVER;
 		break;
 	}
+
 	BG_EvaluateTrajectory( &ent->s.pos, level.time, ent->r.currentOrigin );
 	trap->LinkEntity( (sharedEntity_t *)ent );
 }
@@ -987,6 +988,14 @@ void InitMover( gentity_t *ent )
 		}
 		ent->s.constantLight = r | ( g << 8 ) | ( b << 16 ) | ( i << 24 );
 	}
+
+	//ent->r.contents = CONTENTS_SOLID; // UQ1: Testing
+	//trap->Print("Mover at %f %f %f.\n", ent->r.currentOrigin[0], ent->r.currentOrigin[1], ent->r.currentOrigin[2]);
+	/*{
+		vec3_t pos;
+		VectorSubtract(ent->r.maxs, ent->r.mins, pos);
+		VectorCopy(pos, ent->s.origin);
+	}*/
 
 	ent->use = Use_BinaryMover;
 	ent->reached = Reached_BinaryMover;
@@ -1480,6 +1489,8 @@ void SP_func_door (gentity_t *ent)
 		ent->s.frame = 0;//first stage of anim
 	}
 	InitMover( ent );
+
+	//trap->Print("DOOR at %f %f %f to %f %f %f.\n", ent->r.mins[0], ent->r.mins[1], ent->r.mins[2], ent->r.maxs[0], ent->r.maxs[1], ent->r.maxs[2]);
 
 	ent->nextthink = level.time + FRAMETIME;
 

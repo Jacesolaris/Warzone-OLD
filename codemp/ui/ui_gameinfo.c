@@ -189,6 +189,7 @@ void UI_LoadArenas( void ) {
 			if( strstr( type, "ctf" ) ) {
 				uiInfo.mapList[uiInfo.mapCount].typeBits |= (1 << GT_CTF);
 				uiInfo.mapList[uiInfo.mapCount].typeBits |= (1 << GT_CTY);
+				uiInfo.mapList[uiInfo.mapCount].typeBits |= (1 << GT_WARZONE);
 			}
 			if( strstr( type, "cty" ) ) {
 				uiInfo.mapList[uiInfo.mapCount].typeBits |= (1 << GT_CTY);
@@ -198,6 +199,9 @@ void UI_LoadArenas( void ) {
 			}
 			if( strstr( type, "instance" ) ) {
 				uiInfo.mapList[uiInfo.mapCount].typeBits |= (1 << GT_INSTANCE);
+			}
+			if( strstr( type, "warzone" ) ) {
+				uiInfo.mapList[uiInfo.mapCount].typeBits |= (1 << GT_WARZONE);
 			}
 		} else {
 			uiInfo.mapList[uiInfo.mapCount].typeBits |= (1 << GT_FFA);
