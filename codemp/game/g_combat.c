@@ -4545,6 +4545,9 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker, vec3_
 	if (targ
 		&& targ->client
 		&& targ->s.eType == ET_NPC 
+		&& attacker != targ
+		&& mod != MOD_CRUSH
+		&& mod != MOD_FALLING
 		&& (attacker && (attacker->s.eType == ET_PLAYER || attacker->s.eType == ET_NPC)))
 	{// UQ1: Civilians don't take damage from players or other NPCs.
 
@@ -4586,6 +4589,8 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker, vec3_
 		&& attacker 
 		&& attacker->s.eType == ET_PLAYER
 		&& OnSameTeam( targ, attacker)
+		&& mod != MOD_CRUSH
+		&& mod != MOD_FALLING
 		&& targ != attacker)
 	{// UQ1: NPCs don't take damage from same team players (unless they suicide somehow, like falling).
 		return;
@@ -4596,6 +4601,8 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker, vec3_
 		&& targ->s.eType == ET_NPC 
 		&& attacker 
 		&& attacker->s.eType == ET_NPC
+		&& mod != MOD_CRUSH
+		&& mod != MOD_FALLING
 		&& attacker->client->playerTeam == targ->client->playerTeam
 		&& targ != attacker)
 	{// UQ1: NPCs don't take damage from other same team NPCs (unless they suicide somehow, like falling).
