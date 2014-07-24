@@ -1186,14 +1186,18 @@ BAD_WP_Height ( vec3_t start, vec3_t end )
 
 /* */
 qboolean
-BAD_WP_Distance ( vec3_t start, vec3_t end )
+BAD_WP_Distance ( vec3_t start, vec3_t end, qboolean double_distance )
 {
 	qboolean hitsmover = qfalse;
 	float distance = VectorDistance( start, end );
 	float height_diff = HeightDistance(start, end);
 	float length_diff = VectorDistanceNoHeight(start, end);
+	float double_mod = 1.0;
 
-	if (distance > waypoint_scatter_distance*waypoint_distance_multiplier)
+	if (double_distance) double_mod = 2.0;
+
+	if (distance > waypoint_scatter_distance * waypoint_distance_multiplier * double_mod
+		|| (double_distance && distance <= waypoint_scatter_distance * waypoint_distance_multiplier) )
 	{
 		return ( qtrue );
 	}
@@ -2154,7 +2158,7 @@ int
 AIMOD_MAPPING_CreateNodeLinks ( int node )
 {
 	vec3_t	tmp;
-	int		loop = 0;
+	int		loop, dist_loop = 0;
 	int		linknum = 0;
 	//vec3_t	tankMaxsSize = {96, 96, 0};
 	//vec3_t	tankMinsSize = {-96, -96, 0};
@@ -2162,38 +2166,49 @@ AIMOD_MAPPING_CreateNodeLinks ( int node )
 	VectorCopy( nodes[node].origin, tmp );
 	tmp[2]+=8;
 
-	for ( loop = 0; loop < number_of_nodes; loop++ )
+	for ( dist_loop = 0; dist_loop < 2; dist_loop++)
 	{
-		if (loop == node)
-			continue;
+		qboolean double_range = qfalse;
 
-		if ( linknum >= MAX_NODELINKS )
+		if (dist_loop == 1)
 		{
-			break;
+			double_range = qtrue;
+
+			if (nodes[node].enodenum >= MAX_NODELINKS)
+				break; // Already have enough links for this one...
 		}
 
-		if ( !BAD_WP_Distance( nodes[node].origin, nodes[loop].origin) )
-		//if (VectorDistance(nodes[node].origin, nodes[loop].origin) < 512)
+		for ( loop = 0; loop < number_of_nodes; loop++ )
 		{
-			int visCheck = NodeVisible( nodes[loop].origin, tmp, -1 );
+			if (loop == node)
+				continue;
 
-			//0 = wall in way
-			//1 = player or no obstruction
-			//2 = useable door in the way.
-			//3 = door entity in the way.
-			if ( visCheck == 1 || visCheck == 2 || visCheck == 3 /*|| loop == node - 1*/ )
+			if ( linknum >= MAX_NODELINKS )
 			{
-				if (AIMod_Check_Slope_Between(nodes[node].origin, nodes[loop].origin))
-				{
-					nodes[node].links[linknum].targetNode = loop;
-					nodes[node].links[linknum].cost = VectorDistance(nodes[loop].origin, nodes[node].origin) + (HeightDistance(nodes[loop].origin, nodes[node].origin)*HeightDistance(nodes[loop].origin, nodes[node].origin));
-					nodes[node].links[linknum].flags = 0;
-
-					linknum++;
-				}
+				break;
 			}
-/*			else
-			{// Look for jump node links...
+
+			if ( !BAD_WP_Distance( nodes[node].origin, nodes[loop].origin, double_range) )
+			{
+				int visCheck = NodeVisible( nodes[loop].origin, tmp, -1 );
+
+				//0 = wall in way
+				//1 = player or no obstruction
+				//2 = useable door in the way.
+				//3 = door entity in the way.
+				if ( visCheck == 1 || visCheck == 2 || visCheck == 3 /*|| loop == node - 1*/ )
+				{
+					if (AIMod_Check_Slope_Between(nodes[node].origin, nodes[loop].origin))
+					{
+						nodes[node].links[linknum].targetNode = loop;
+						nodes[node].links[linknum].cost = VectorDistance(nodes[loop].origin, nodes[node].origin) + (HeightDistance(nodes[loop].origin, nodes[node].origin)*HeightDistance(nodes[loop].origin, nodes[node].origin));
+						nodes[node].links[linknum].flags = 0;
+
+						linknum++;
+					}
+				}
+				/*			else
+				{// Look for jump node links...
 				visCheck = NodeVisibleJump( nodes[loop].origin, tmp, -1 );
 
 				//0 = wall in way
@@ -2202,36 +2217,37 @@ AIMOD_MAPPING_CreateNodeLinks ( int node )
 				//3 = door entity in the way.
 				if ( visCheck == 1 || visCheck == 2 || visCheck == 3 )
 				{
-					if (AIMod_Check_Slope_Between(nodes[node].origin, nodes[loop].origin))
-					{
-						nodes[node].links[linknum].targetNode = loop;
-						nodes[node].links[linknum].cost = VectorDistance( nodes[loop].origin, nodes[node].origin ) + (HeightDistance( nodes[loop].origin, nodes[node].origin )*16);
-						nodes[node].links[linknum].flags |= PATH_JUMP;
+				if (AIMod_Check_Slope_Between(nodes[node].origin, nodes[loop].origin))
+				{
+				nodes[node].links[linknum].targetNode = loop;
+				nodes[node].links[linknum].cost = VectorDistance( nodes[loop].origin, nodes[node].origin ) + (HeightDistance( nodes[loop].origin, nodes[node].origin )*16);
+				nodes[node].links[linknum].flags |= PATH_JUMP;
 
-						linknum++;
-					}
+				linknum++;
+				}
 				}
 				else
 				{// Look for crouch node links...
-					visCheck = NodeVisibleCrouch( nodes[loop].origin, tmp, -1 );
+				visCheck = NodeVisibleCrouch( nodes[loop].origin, tmp, -1 );
 
-					//0 = wall in way
-					//1 = player or no obstruction
-					//2 = useable door in the way.
-					//3 = door entity in the way.
-					if ( visCheck == 1 || visCheck == 2 || visCheck == 3 )
-					{
-						if (AIMod_Check_Slope_Between(nodes[node].origin, nodes[loop].origin))
-						{
-							nodes[node].links[linknum].targetNode = loop;
-							nodes[node].links[linknum].cost = VectorDistance( nodes[loop].origin, nodes[node].origin ) + (HeightDistance( nodes[loop].origin, nodes[node].origin )*16);
-							nodes[node].links[linknum].flags |= PATH_CROUCH;
+				//0 = wall in way
+				//1 = player or no obstruction
+				//2 = useable door in the way.
+				//3 = door entity in the way.
+				if ( visCheck == 1 || visCheck == 2 || visCheck == 3 )
+				{
+				if (AIMod_Check_Slope_Between(nodes[node].origin, nodes[loop].origin))
+				{
+				nodes[node].links[linknum].targetNode = loop;
+				nodes[node].links[linknum].cost = VectorDistance( nodes[loop].origin, nodes[node].origin ) + (HeightDistance( nodes[loop].origin, nodes[node].origin )*16);
+				nodes[node].links[linknum].flags |= PATH_CROUCH;
 
-							linknum++;
-						}
-					}
+				linknum++;
 				}
-			}*/
+				}
+				}
+				}*/
+			}
 		}
 	}
 
@@ -3185,7 +3201,10 @@ float FloorHeightAt ( vec3_t org )
 		}
 	}
 
-	if (tr.endpos[2] < -65000)
+	if (tr.endpos[2] > cg.mapcoordsMaxs[2]+2000)
+		return 65536.0f;
+
+	if (tr.endpos[2] < -65000 || tr.endpos[2] < cg.mapcoordsMins[2]-2000)
 		return -65536.0f;
 
 	if ( tr.surfaceFlags & SURF_SKY )
@@ -6206,7 +6225,7 @@ int ClosestNodeTo(vec3_t origin, qboolean isEntity)
 {
 	int		i;
 	float	AREA_SEPERATION = DEFAULT_AREA_SEPERATION;
-	float	closest_dist = AREA_SEPERATION*1.5;
+	float	closest_dist = 1024.0f;//AREA_SEPERATION*1.5;
 	int		closest_node = -1;
 
 	for (i = 0; i < number_of_nodes; i++)
@@ -7567,17 +7586,17 @@ int ASTAR_FindPathFast(int from, int to, int *pathlist, qboolean shorten)
 	}
 
 	// Check if memory needs to be allocated...
-	openlist = (int *)malloc(sizeof(int)*(MAX_WPARRAY_SIZE));
-	gcost = (float *)malloc(sizeof(float)*(MAX_WPARRAY_SIZE));
-	fcost = (int *)malloc(sizeof(int)*(MAX_WPARRAY_SIZE));
-	list = (char *)malloc(sizeof(char)*(MAX_WPARRAY_SIZE));
-	parent = (int *)malloc(sizeof(int)*(MAX_WPARRAY_SIZE));
+	openlist = (int *)malloc(sizeof(int)*(MAX_NODES + 1));
+	gcost = (float *)malloc(sizeof(float)*(MAX_NODES));
+	fcost = (int *)malloc(sizeof(int)*(MAX_NODES));
+	list = (char *)malloc(sizeof(char)*(MAX_NODES));
+	parent = (int *)malloc(sizeof(int)*(MAX_NODES));
 
-	memset(openlist, 0, (sizeof(int)* (gWPNum + 1)));
-	memset(gcost, 0, (sizeof(float)* gWPNum));
-	memset(fcost, 0, (sizeof(int)* gWPNum));
-	memset(list, 0, (sizeof(char)* gWPNum));
-	memset(parent, 0, (sizeof(int)* gWPNum));
+	memset(openlist, 0, (sizeof(int)* (MAX_NODES + 1)));
+	memset(gcost, 0, (sizeof(float)* MAX_NODES));
+	memset(fcost, 0, (sizeof(int)* MAX_NODES));
+	memset(list, 0, (sizeof(char)* MAX_NODES));
+	memset(parent, 0, (sizeof(int)* MAX_NODES));
 
 	for (i = 0; i < gWPNum; i++)
 	{
@@ -7879,7 +7898,7 @@ qboolean JKG_CheckRoutingFrom( int wp )
 	int wpCurrent = -1;
 	int goal = wp;
 	int pathsize = 0;
-	int pathlist[MAX_WPARRAY_SIZE];
+	int pathlist[MAX_NODES];
 
 	// Check for routing to a spawnpoint from a (spawn) waypoint...
 
@@ -7887,7 +7906,7 @@ qboolean JKG_CheckRoutingFrom( int wp )
 
 	if (!wpCurrent) trap->Print("WAYPOINT REACHABILITY CHECK: Failed to find a waypoint for spawnpoint at %f %f %f!\n", AWC_SPAWNPOINT[0], AWC_SPAWNPOINT[1], AWC_SPAWNPOINT[2]);
 
-	memset(pathlist, -1, MAX_WPARRAY_SIZE);
+	memset(pathlist, -1, MAX_NODES);
 	
 	pathsize = ASTAR_FindPathFast(wpCurrent, goal, pathlist, qfalse);
 
@@ -7907,7 +7926,8 @@ qboolean JKG_CheckRoutingFrom( int wp )
 			|| cent->currentState.eType == ET_HOLOCRON
 			|| cent->currentState.eType == ET_PORTAL
 			|| cent->currentState.eType == ET_PUSH_TRIGGER
-			|| cent->currentState.eType == ET_TELEPORT_TRIGGER))
+			|| cent->currentState.eType == ET_TELEPORT_TRIGGER
+			|| cent->currentState.eType == ET_NPC))
 		continue;
 		
 		wpCurrent = ClosestNodeTo(cent->currentState.origin, qfalse);
