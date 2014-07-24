@@ -5922,6 +5922,73 @@ void Cmd_BotMoveUp_f( gentity_t *ent ) {
 	Bot_SetForcedMovement( bCl, -1, -1, arg );
 }
 
+extern void SpecialItemThink(gentity_t *ent);
+
+void Cmd_DropItem_f( gentity_t *pent ) {
+	// UQ1: Added this command to drop items on a map for the AWP system to pathtest to...
+	gentity_t *ent = G_Spawn();
+	int wDisable = 0;
+#define DISP_HEALTH_ITEM		"item_medpak_instant"
+#define TOSSED_ITEM_OWNER_NOTOUCH_DUR	20000
+	gitem_t *item = BG_FindItem(DISP_HEALTH_ITEM);
+
+	ent->random = 0;
+	ent->wait = 0;
+
+	G_SetOrigin(ent, pent->r.currentOrigin);
+	VectorCopy(pent->r.currentOrigin, ent->s.origin);
+	VectorCopy(pent->r.currentOrigin, ent->r.currentOrigin);
+
+	ent->s.eType = ET_ITEM;
+
+	RegisterItem( item );
+
+	ent->item = item;
+	// some movers spawn on the second frame, so delay item
+	// spawns until the third frame so they can ride trains
+	ent->nextthink = level.time + FRAMETIME * 2;
+	//ent->think = FinishSpawningItem;
+
+	ent->physicsBounce = 0.50;		// items are bouncy
+
+	
+
+	RegisterItem( item );
+	ent->item = item;
+
+	//go away if no one wants me
+	ent->genericValue5 = level.time + 600000;
+	ent->think = SpecialItemThink;
+	ent->nextthink = level.time + 50;
+	ent->clipmask = MASK_SOLID;
+
+	ent->physicsBounce = 0.50;		// items are bouncy
+	VectorSet (ent->r.mins, -8, -8, -0);
+	VectorSet (ent->r.maxs, 8, 8, 16);
+
+	ent->s.eType = ET_ITEM;
+	ent->s.modelindex = ent->item - bg_itemlist;		// store item number in modelindex
+
+	ent->r.contents = CONTENTS_TRIGGER;
+	ent->touch = Touch_Item;
+
+	//can't touch owner for x seconds
+	ent->genericValue11 = ent->r.ownerNum;
+	ent->genericValue10 = level.time + TOSSED_ITEM_OWNER_NOTOUCH_DUR;
+
+	//so we know to remove when picked up, not respawn
+	ent->genericValue9 = 1;
+
+	//kind of a lame value to use, but oh well. This means don't
+	//pick up this item clientside with prediction, because we
+	//aren't sending over all the data necessary for the player
+	//to know if he can.
+	ent->s.brokenLimbs = 1;
+
+	//since it uses my server-only physics
+	ent->s.eFlags |= EF_CLIENTSMOOTH;
+}
+
 void Cmd_AddBot_f( gentity_t *ent ) {
 	//because addbot isn't a recognized command unless you're the server, but it is in the menus regardless
 	trap->SendServerCommand( ent-g_entities, va( "print \"%s.\n\"", G_GetStringEdString( "MP_SVGAME", "ONLY_ADD_BOTS_AS_SERVER" ) ) );
@@ -6060,6 +6127,7 @@ command_t commands[] = {
 	{ "debugBMove_Left",	Cmd_BotMoveLeft_f,			CMD_CHEAT|CMD_ALIVE },
 	{ "debugBMove_Right",	Cmd_BotMoveRight_f,			CMD_CHEAT|CMD_ALIVE },
 	{ "debugBMove_Up",		Cmd_BotMoveUp_f,			CMD_CHEAT|CMD_ALIVE },
+	{ "dropitem",			Cmd_DropItem_f,				CMD_CHEAT|CMD_ALIVE },
 	{ "duelteam",			Cmd_DuelTeam_f,				CMD_NOINTERMISSION },
 	{ "follow",				Cmd_Follow_f,				CMD_NOINTERMISSION },
 	{ "follownext",			Cmd_FollowNext_f,			CMD_NOINTERMISSION },

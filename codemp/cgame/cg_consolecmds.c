@@ -255,6 +255,7 @@ extern void AIMod_AutoWaypoint ( void );
 extern void AIMod_AutoWaypoint_Clean ( void );
 extern void AIMod_MarkBadHeight ( void );
 extern void AIMod_AddRemovalPoint ( void );
+extern void AIMod_AddLiftPoint ( void );
 extern void AIMod_AWC_MarkBadHeight ( void );
 extern void CG_ShowSurface ( void );
 extern void CG_ShowSlope ( void );
@@ -278,6 +279,7 @@ static consoleCommand_t	commands[] = {
 	{ "aw_badheight",				AIMod_MarkBadHeight },
 	{ "awc",						AIMod_AutoWaypoint_Clean },
 	{ "awc_addbadheight",			AIMod_AWC_MarkBadHeight },
+	{ "awc_addlift",				AIMod_AddLiftPoint },
 	{ "awc_addremovalspot",			AIMod_AddRemovalPoint },
 	{ "awp",						AIMod_AutoWaypoint },
 	{ "briefing",					CG_SiegeBriefing_f },

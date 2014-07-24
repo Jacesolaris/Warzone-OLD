@@ -7507,6 +7507,86 @@ qboolean CheckIfTooManyLinksRemoved ( int node, qboolean extra )
 	return qtrue;
 }
 
+vec3_t	LIFT_POINTS[MAX_NODES];
+int		NUM_LIFT_POINTS = 0;
+
+void AIMod_AddLiftPoint ( void )
+{
+	VectorCopy(cg.refdef.vieworg, LIFT_POINTS[NUM_LIFT_POINTS]);
+	trap->Print( va( "^4*** ^3AUTO-WAYPOINTER^4: ^5Lift Point added at %f %f %f...\n", LIFT_POINTS[NUM_LIFT_POINTS][0], LIFT_POINTS[NUM_LIFT_POINTS][1], LIFT_POINTS[NUM_LIFT_POINTS][2]) );
+	trap->Print( va( "^4*** ^3AUTO-WAYPOINTER^4: ^5Run a /awc relink to complete all lift additions...\n") );
+	NUM_LIFT_POINTS++;
+}
+
+void AIMod_AddLifts ( void )
+{
+	int liftNum = 0;
+	int orig_num_nodes = number_of_nodes;
+
+	if (NUM_LIFT_POINTS <= 0) return;
+
+	if (!cg.mapcoordsValid) 
+		AIMod_GetMapBounts();
+
+	trap->Print( va( "^4*** ^3AUTO-WAYPOINTER^4: ^5Adding %i lifts...\n", NUM_LIFT_POINTS) );
+
+	//
+	// Movers...
+	//
+	for (liftNum = 0; liftNum < NUM_LIFT_POINTS; liftNum++)
+	{// Need to generate waypoints to the top/bottom of the mover...
+		float temp_roof, temp_ground;
+		vec3_t temp_org, temp_org2;
+
+		VectorCopy(LIFT_POINTS[liftNum], temp_org2);
+		VectorCopy(LIFT_POINTS[liftNum], temp_org);
+		temp_org[2] += waypoint_scatter_distance; // Start above the lift...
+		temp_roof = RoofHeightAt(temp_org);
+
+		VectorCopy(LIFT_POINTS[liftNum], temp_org);
+		temp_org[2] -= waypoint_scatter_distance*2; // Start below the lift...
+		temp_ground = GroundHeightAt(temp_org);
+
+		temp_org2[2] = temp_roof;
+		
+		if (/*temp_roof <= cg.mapcoordsMaxs[2] &&*/ HeightDistance(temp_org, temp_org2) >= 128)
+		{// Looks like it goes up!
+			int z = 0;
+
+			VectorCopy(LIFT_POINTS[liftNum], temp_org);
+			temp_org[2] += waypoint_scatter_distance;
+
+			while (temp_org[2] <= temp_org2[2])
+			{// Add waypoints all the way up!
+				VectorCopy(temp_org, nodes[number_of_nodes].origin);
+				number_of_nodes++;
+				temp_org[2] += waypoint_scatter_distance;
+			}
+		}
+
+		temp_org2[2] = temp_ground;
+
+		if (/*temp_roof >= cg.mapcoordsMins[2] &&*/ HeightDistance(temp_org, temp_org2) >= 128)
+		{// Looks like it goes down!
+			int z = 0;
+
+			VectorCopy(LIFT_POINTS[liftNum], temp_org);
+			temp_org[2] -= waypoint_scatter_distance;
+
+			while (temp_org[2] >= temp_org2[2])
+			{// Add waypoints all the way up!
+				VectorCopy(temp_org, nodes[number_of_nodes].origin);
+				number_of_nodes++;
+				temp_org[2] -= waypoint_scatter_distance;
+			}
+		}
+	}
+
+	trap->Print( va( "^4*** ^3AUTO-WAYPOINTER^4: ^5Finished adding %i waypoints for %i lifts...\n", number_of_nodes - orig_num_nodes, NUM_LIFT_POINTS) );
+
+	NUM_LIFT_POINTS = 0;
+}
+
 vec3_t	REMOVAL_POINTS[MAX_NODES];
 int		NUM_REMOVAL_POINTS = 0;
 
@@ -7899,6 +7979,7 @@ qboolean JKG_CheckRoutingFrom( int wp )
 	int goal = wp;
 	int pathsize = 0;
 	int pathlist[MAX_NODES];
+	int tests_completed = 0;
 
 	// Check for routing to a spawnpoint from a (spawn) waypoint...
 
@@ -7930,6 +8011,11 @@ qboolean JKG_CheckRoutingFrom( int wp )
 			|| cent->currentState.eType == ET_NPC))
 		continue;
 		
+		if (tests_completed > 10) break;
+		if (tests_completed > 5 && Distance(cent->currentState.origin, nodes[goal].origin) > 128) continue;
+		if (tests_completed > 3 && Distance(cent->currentState.origin, nodes[goal].origin) > 256) continue;
+		if (tests_completed > 1 && Distance(cent->currentState.origin, nodes[goal].origin) > 512) continue;
+
 		wpCurrent = ClosestNodeTo(cent->currentState.origin, qfalse);
 		
 		if (wpCurrent)
@@ -7941,6 +8027,8 @@ qboolean JKG_CheckRoutingFrom( int wp )
 				return qtrue; // Found a route... This waypoint looks good to spawn NPCs at!
 			}
 		}
+
+		tests_completed++;
 	}
 
 	return qfalse;
@@ -8127,6 +8215,11 @@ AIMod_AutoWaypoint_Cleaner ( qboolean quiet, qboolean null_links_only, qboolean 
 	// Set out distance multiplier...
 	original_wp_scatter_multiplier = waypoint_distance_multiplier;
 	waypoint_distance_multiplier = original_wp_max_distance/waypoint_scatter_distance;
+
+	if (relink_only)
+	{
+		AIMod_AddLifts();
+	}
 
 	while (1)
 	{
