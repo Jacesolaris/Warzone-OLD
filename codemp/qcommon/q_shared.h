@@ -1953,15 +1953,13 @@ typedef struct siegePers_s
 //They won't be able to launch into a combo from the bounce.
 #define FLAG_PARRIED		8
 
-//flag indicates that this block is a pre-block and interruptable
-#define FLAG_PREBLOCK		9
-
-//[QuickParry]
-#define FLAG_QUICKPARRY		10
-//[/QuickParry]
 #define FLAG_BLOCKING       11
 //[/SaberSys]
-
+//[SaberDefines]
+//scaler to the walkspeed
+#define WALKSPEED			1.75//1.35
+//[/SaberDefines]
+//[/SaberSys]
 
 typedef enum
 {

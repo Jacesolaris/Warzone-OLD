@@ -4821,12 +4821,12 @@ void PM_WeaponLightsaber(void)
 		pm->ps->weaponTime -= pml.msec;
 
 		//[SaberSys] add manuel Block call		
-		if (pm->ps->powerups[PW_BLOCK] && !(pm->cmd.buttons & BUTTON_ATTACK)
-			&& !(pm->ps->weaponstate == WEAPON_DROPPING || pm->ps->weaponstate == WEAPON_RAISING))
+		/*if (pm->ps->powerups[PW_BLOCK] && !(pm->cmd.buttons & BUTTON_ATTACK)
+			&& !(pm->ps->weaponstate == WEAPON_DROPPING || pm->ps->weaponstate == WEAPON_RAISING))*/
 		//[/SaberSys] 
-		{ //keep him in the blocking pose until he can attack again
-			return;
-		}
+		//{ //keep him in the blocking pose until he can attack again
+		//	return;
+		//}
 	}
 	else
 	{
@@ -5838,16 +5838,8 @@ void PM_SetSaberMove(short newMove)
 	if (!PM_SaberInBounce(newMove) && !PM_SaberInReturn(newMove)) //or new move isn't slowbounce move
 	{//switched away from a slow bounce move, remove the flags.
 		pm->ps->userInt3 &= ~(1 << FLAG_PARRIED);
-		//[QuickParry]
-		pm->ps->userInt3 &= ~(1 << FLAG_QUICKPARRY);
-		//[/QuickParry]
-	}
-	if (!PM_SaberInParry(newMove))
-	{//cancel out pre-block flag
-		pm->ps->userInt3 &= ~(1 << FLAG_PREBLOCK);
 	}
 	//[/SaberSys]
-
 	if ( (pm->ps->torsoAnim) == anim )
 	{//successfully changed anims
 	//special check for *starting* a saber swing
