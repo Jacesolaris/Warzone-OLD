@@ -4484,96 +4484,6 @@ qboolean InSaberDelayAnimation(int move)
 	return qfalse;
 }
 
-int PM_DoFake(int curmove)
-{
-	int newQuad = -1;
-
-	if (pm->ps->userInt3 & (1 << FLAG_ATTACKFAKE))
-	{//already attack faking, can't do another one until this one is over.
-		return LS_NONE;
-	}
-
-	if (pm->cmd.rightmove > 0)
-	{//moving right
-		if (pm->cmd.forwardmove > 0)
-		{//forward right = TL2BR slash
-			newQuad = Q_TL;
-		}
-		else if (pm->cmd.forwardmove < 0)
-		{//backward right = BL2TR uppercut
-			newQuad = Q_BL;
-		}
-		else
-		{//just right is a left slice
-			newQuad = Q_L;
-		}
-	}
-	else if (pm->cmd.rightmove < 0)
-	{//moving left
-		if (pm->cmd.forwardmove > 0)
-		{//forward left = TR2BL slash
-			newQuad = Q_TR;
-		}
-		else if (pm->cmd.forwardmove < 0)
-		{//backward left = BR2TL uppercut
-			newQuad = Q_BR;
-		}
-		else
-		{//just left is a right slice
-			newQuad = Q_R;
-		}
-	}
-	else
-	{//not moving left or right
-		if (pm->cmd.forwardmove > 0)
-		{//forward= T2B slash
-			newQuad = Q_T;
-		}
-		else if (pm->cmd.forwardmove < 0)
-		{//backward= T2B slash	//or B2T uppercut?
-			newQuad = Q_T;
-		}
-		else
-		{//Not moving at all
-			newQuad = Q_T; // UQ1: Still use forward move...
-		}
-	}
-
-	if (newQuad == -1)
-	{//assume that we're trying to fake in our current direction so we'll automatically fake 
-		//in the completely opposite direction.  This allows the player to do a fake while standing still.
-		newQuad = saberMoveData[pm->ps->saberMoveStyle][curmove].endQuad;
-	}
-
-	if (newQuad == saberMoveData[pm->ps->saberMoveStyle][curmove].endQuad)
-	{//player is attempting to do a fake move to the same quadrant 
-		//as such, fake to the completely opposite quad
-		newQuad += 4;
-		if (newQuad > Q_B)
-		{//rotated past Q_B, shift back to get the proper quadrant
-			newQuad -= Q_NUM_QUADS;
-		}
-	}
-
-	if (newQuad == Q_B)
-	{//attacks can't be launched from this quad, just randomly fake to the bottom left/right
-		if (PM_irand_timesync(0, 9) <= 4)
-		{
-			newQuad = Q_BL;
-		}
-		else
-		{
-			newQuad = Q_BR;
-		}
-
-	}
-
-	//add faking flag
-	pm->ps->userInt3 |= (1 << FLAG_ATTACKFAKE);
-	return transitionMove[saberMoveData[pm->ps->saberMoveStyle][curmove].endQuad][newQuad];
-}
-
-
 void PM_WeaponLightsaber(void)
 {
 	int					addTime;
@@ -5449,50 +5359,27 @@ weapChecks:
 			curmove = LS_READY;
 		}
 
-		if ( curmove == LS_A_JUMP_T__B_ || pm->ps->torsoAnim == BOTH_FORCELEAP2_T__B_ )
+		if (curmove == LS_A_JUMP_T__B_ || pm->ps->torsoAnim == BOTH_FORCELEAP2_T__B_)
 		{//must transition back to ready from this anim
 			newmove = LS_R_T2B;
 		}
 		// check for fire
-		//[SaberSys]
-		//Cleaning up the faking code.  This section dictates want happens when you
-		//quit holding down attack.
-		else if (!(pm->cmd.buttons & (BUTTON_ATTACK)))
-			//else if ( !(pm->cmd.buttons & (BUTTON_ATTACK|BUTTON_ALT_ATTACK)) )
-			//[/SaberSys]
+		else if (!(pm->cmd.buttons & (BUTTON_ATTACK | BUTTON_ALT_ATTACK)))
 		{//not attacking
-			//[SaberSys]
-			if (pm->ps->weaponstate != WEAPON_READY)
-				/* redundant code?  We already know that the weaponTime is 0.
-				pm->ps->weaponTime = 0;
+			pm->ps->weaponTime = 0;
 
-				if ( pm->ps->weaponTime > 0 )
-				{//Still firing
+			if (pm->ps->weaponTime > 0)
+			{//Still firing
 				pm->ps->weaponstate = WEAPON_FIRING;
-				}
-				else if ( pm->ps->weaponstate != WEAPON_READY )
-				*/
-				//[/SaberSys]
+			}
+			else if (pm->ps->weaponstate != WEAPON_READY)
 			{
 				pm->ps->weaponstate = WEAPON_IDLE;
 			}
-
-			//[SaberSys]
-			//return to ready if not pressing button
 			//Check for finishing an anim if necc.
 			if (curmove >= LS_S_TL2BR && curmove <= LS_S_T2B)
 			{//started a swing, must continue from here
-#ifdef QAGAME
-				if (pm_entSelf->s.NPC_class != CLASS_NONE)
-				{//NPCs never do attack fakes, just follow thru with attack.
-					newmove = LS_A_TL2BR + (curmove - LS_S_TL2BR);
-				}
-				else
-#endif
-				{//perform attack fake
-					newmove = PM_ReturnforQuad(saberMoveData[pm->ps->saberMoveStyle][curmove].endQuad);
-				}
-				//newmove = LS_A_TL2BR + (curmove-LS_S_TL2BR);
+				newmove = LS_A_TL2BR + (curmove - LS_S_TL2BR);
 			}
 			else if (curmove >= LS_A_TL2BR && curmove <= LS_A_T2B)
 			{//finished an attack, must continue from here
@@ -5500,18 +5387,7 @@ weapChecks:
 			}
 			else if (PM_SaberInTransition(curmove))
 			{//in a transition, must play sequential attack
-#ifdef QAGAME
-				if (pm_entSelf->s.NPC_class != CLASS_NONE)
-				{//NPCs never stop attacking mid-attack, just follow thru with attack.
-					newmove = saberMoveData[curmove].chain_attack;
-				}
-				else
-#endif
-				{//exit out of transition without attacking
-					newmove = PM_ReturnforQuad(saberMoveData[pm->ps->saberMoveStyle][curmove].endQuad);
-				}
-				//newmove = saberMoveData[curmove].chain_attack;
-				//[/SaberSys]
+				newmove = saberMoveData[pm->ps->saberMoveStyle][curmove].chain_attack;
 			}
 			else if (PM_SaberInBounce(curmove))
 			{//in a bounce
@@ -5522,48 +5398,11 @@ weapChecks:
 				//PM_SetSaberMove( LS_READY );
 				//if ( pm->ps->saberBlockingTime > pm->cmd.serverTime )
 				{
-					PM_SetSaberMove( LS_READY );
+					PM_SetSaberMove(LS_READY);
 				}
 				return;
 			}
 		}
-
-		//[SaberSys] wont need this for now, it fucks up the saber attack code
-		//else if ((pm->cmd.buttons & BUTTON_ALT_ATTACK) && (pm->cmd.buttons & BUTTON_ATTACK))
-		//{//do some fancy faking stuff.
-		//	if (pm->ps->weaponstate != WEAPON_READY)
-		//	{
-		//		pm->ps->weaponstate = WEAPON_IDLE;
-		//	}
-
-		//	//Check for finishing an anim if necc.
-		//	if (curmove >= LS_S_TL2BR && curmove <= LS_S_T2B)
-		//	{//allow the player to fake into another transition
-		//		newmove = PM_DoFake(curmove);
-		//		if (newmove == LS_NONE)
-		//		{//no movement, just do the attack
-		//			newmove = LS_A_TL2BR + (curmove - LS_S_TL2BR);
-		//		}
-		//	}
-		//	else if (curmove >= LS_A_TL2BR && curmove <= LS_A_T2B)
-		//	{//finished attack, let attack code handle the next step.
-		//	}
-		//	else if (PM_SaberInTransition(curmove))
-		//	{//in a transition, must play sequential attack
-		//		newmove = PM_DoFake(curmove);
-		//		if (newmove == LS_NONE)
-		//		{//no movement, just let the normal attack code handle it
-		//			newmove = saberMoveData[curmove].chain_attack;
-		//		}
-		//	}
-		//	else if (PM_SaberInBounce(curmove))
-		//	{//in a bounce
-		//	}
-		//	else
-		//	{//returning from a parry I think.
-		//	}
-		//}
-		//[/SaberSys]
 		// ***************************************************
 		// Pressing attack, so we must look up the proper attack move.
 
@@ -5660,10 +5499,7 @@ weapChecks:
 						{//can't attack in the same direction
 							newmove = LS_READY;
 						}
-					
 					}
-					//starting a new attack, as such, remove the attack fake flag.
-					pm->ps->userInt3 &= ~( 1 << FLAG_ATTACKFAKE );
 				}
 				
 				if ( newmove != LS_NONE )
@@ -5755,10 +5591,6 @@ weapChecks:
 	}
 	pm->ps->weaponTime = addTime;
 }
-
-//[SaberSys]
-void PM_SaberFakeFlagUpdate(playerState_t *ps, int newMove, int currentMove);
-//[/SaberSys]
 
 void PM_SetSaberMove(short newMove)
 {
@@ -6003,9 +5835,6 @@ void PM_SetSaberMove(short newMove)
 	}
 
 	//[SaberSys]
-	//update the attack fake flag
-	PM_SaberFakeFlagUpdate(pm->ps, newMove, anim);
-
 	if (!PM_SaberInBounce(newMove) && !PM_SaberInReturn(newMove)) //or new move isn't slowbounce move
 	{//switched away from a slow bounce move, remove the flags.
 		pm->ps->userInt3 &= ~(1 << FLAG_PARRIED);
@@ -6081,16 +5910,6 @@ void PM_SetSaberMove(short newMove)
 	}
 }
 
-//[SaberSys]
-qboolean BG_SaberInNonIdleDamageMove(playerState_t *ps, int AnimIndex);
-extern qboolean BG_SaberInAttackPure(int move);
-void PM_SaberFakeFlagUpdate(playerState_t *ps, int newMove, int currentMove)
-{//checks to see if the attack fake flag needs to be removed.
-	if(!PM_SaberInTransition(newMove) && !PM_SaberInStart(newMove) && !BG_SaberInAttackPure(newMove))
-	{//not going into an attack move, clear the flag
-		pm->ps->userInt3 &= ~( 1 << FLAG_ATTACKFAKE );
-	}
-}
 //saber status utility tools
 qboolean BG_SaberInFullDamageMove(playerState_t *ps, int AnimIndex)
 {//The player is attacking with a saber attack that does full damage

@@ -1948,7 +1948,7 @@ typedef struct siegePers_s
 //indicates that the current attack/transition is
 //part of a fake.  This makes the attack much stronger
 //forbreaking thru other attacks and blocks.
-#define FLAG_ATTACKFAKE		3
+//#define FLAG_ATTACKFAKE		3
 //flag indicates that the player was parried.  
 //They won't be able to launch into a combo from the bounce.
 #define FLAG_PARRIED		8
