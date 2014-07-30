@@ -652,13 +652,13 @@ static inline bool R_AverageTessXYZ(vec3_t dest)
 
 void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 	shader_t		*shader, *oldShader;
-	int64_t			fogNum, oldFogNum;
-	int64_t			entityNum, oldEntityNum;
-	int64_t			dlighted, oldDlighted;
+	int				fogNum, oldFogNum;
+	int				entityNum, oldEntityNum;
+	int				dlighted, oldDlighted;
 	int				depthRange, oldDepthRange;
 	int				i;
 	drawSurf_t		*drawSurf;
-	uint64_t		oldSort;
+	unsigned int	oldSort;
 	float			originalTime;
 	trRefEntity_t	*curEnt;
 	postRender_t	*pRender;
@@ -682,7 +682,7 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 	oldFogNum = -1;
 	oldDepthRange = qfalse;
 	oldDlighted = qfalse;
-	oldSort = (uint64_t)-1;
+	oldSort = (unsigned int) -1;
 	depthRange = qfalse;
 
 	backEnd.pc.c_surfaces += numDrawSurfs;
