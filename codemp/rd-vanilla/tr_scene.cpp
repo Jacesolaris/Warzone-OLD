@@ -14,7 +14,7 @@ static	int			r_firstSceneDrawSurf;
 static	int			r_numdlights;
 static	int			r_firstSceneDlight;
 
-static	int			r_numentities;
+static	int64_t		r_numentities;
 static	int			r_firstSceneEntity;
 static	int			r_numminientities;
 static	int			r_firstSceneMiniEntity;

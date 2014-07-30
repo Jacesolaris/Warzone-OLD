@@ -569,15 +569,15 @@ RB_RenderDrawSurfList
 */
 void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 	shader_t		*shader, *oldShader;
-	int				fogNum, oldFogNum;
-	int				entityNum, oldEntityNum;
-	int				dlighted, oldDlighted;
-	int				postRender, oldPostRender;
+	int64_t			fogNum, oldFogNum;
+	int64_t			entityNum, oldEntityNum;
+	int64_t			dlighted, oldDlighted;
+	int64_t			postRender, oldPostRender;
 	int             cubemapIndex, oldCubemapIndex;
 	int		depthRange, oldDepthRange;
 	int				i;
 	drawSurf_t		*drawSurf;
-	int				oldSort;
+	uint64_t			oldSort;
 	float			originalTime;
 	FBO_t*			fbo = NULL;
 	qboolean		inQuery = qfalse;
@@ -599,7 +599,7 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 	oldDlighted = 0;
 	oldPostRender = 0;
 	oldCubemapIndex = -1;
-	oldSort = -1;
+	oldSort = (uint64_t) -1;
 
 	depth[0] = 0.f;
 	depth[1] = 1.f;
