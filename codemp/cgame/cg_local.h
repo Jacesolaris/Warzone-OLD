@@ -512,10 +512,6 @@ typedef struct centity_s {
 	int				weapons;
 	//[/VisualWeapons]
 
-	//[NewLightningEFX]
-	int				blockLightningTime;
-	//[/NewLightningEFX]
-
 } centity_t;
 
 

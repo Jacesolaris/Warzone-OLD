@@ -1714,7 +1714,6 @@ qboolean G_SaberBlockLightning(gentity_t *attacker, gentity_t *defender, vec3_t 
 		// We don't have any force points
 		return qfalse;
 	}
-	//I put this code below all the other stuff, because they are tests that will go before our level check. Having no block points, or not having a lightsaber.
 
 	// The attackers lightning level is compared to the defenders saber defence level.
 	// If the lightning level is lower or equal to the defence level, the defender will block the lightning attack.
