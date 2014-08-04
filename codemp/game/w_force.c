@@ -1688,12 +1688,14 @@ qboolean G_SaberBlockLightning(gentity_t *attacker, gentity_t *defender, vec3_t 
 		return qfalse;
 	}
 
-	if (!(defender->client->ps.saberActionFlags & (1 << SAF_BLOCKING)))//when we hold block// n
+	/*if (!(defender->client->ps.saberActionFlags & (1 << SAF_BLOCKING)))*///when we hold block// n
+	if (!(defender->client->ps.saberActionFlags & (1 << SAF_BLOCKING)))
 	{// Button for Blocking Lightning Attacks
 
-		if (defender->r.svFlags & SVF_BOT || defender->s.eType & ET_NPC)
+		if (defender->r.svFlags & SVF_BOT && defender->s.eType & ET_NPC)
 		{//NPC's and Bots just randomly block Lightning becours of therie stupid intelligently skillz
-			BlockLightning = defender->client->ps.saberBlocked = BLOCKED_LIGHTNING;//npc block it:fixme its bugged// here
+			defender->client->ps.saberBlocked = BLOCKED_LIGHTNING;//npc block it:fixme its bugged// here
+
 			return qtrue;
 		}
 		else

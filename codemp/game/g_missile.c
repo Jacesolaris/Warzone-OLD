@@ -790,6 +790,12 @@ killProj:
 	trap->LinkEntity( (sharedEntity_t *)ent );
 }
 
+//[RealTrace]
+extern int G_RealTrace(gentity_t *SaberAttacker, trace_t *tr, vec3_t start, vec3_t mins,
+	vec3_t maxs, vec3_t end, int passEntityNum,
+	int contentmask, int rSaberNum, int rBladeNum);
+//[/RealTrace]
+
 /*
 ================
 G_RunMissile
@@ -827,36 +833,41 @@ void G_RunMissile( gentity_t *ent ) {
 			passent = ent->r.ownerNum;
 		}
 	}
+	//[RealTrace]
+	G_RealTrace(ent, &tr, ent->r.currentOrigin, ent->r.mins, ent->r.maxs, origin, passent, ent->clipmask, -1, -1);
 	// trace a line from the previous position to the current position
-	if (d_projectileGhoul2Collision.integer)
-	{
-		trap->Trace( &tr, ent->r.currentOrigin, ent->r.mins, ent->r.maxs, origin, passent, ent->clipmask, qfalse, G2TRFLAG_DOGHOULTRACE|G2TRFLAG_GETSURFINDEX|G2TRFLAG_THICK|G2TRFLAG_HITCORPSES, g_g2TraceLod.integer );
+	//if (d_projectileGhoul2Collision.integer)
+	//{
+	//	trap->Trace( &tr, ent->r.currentOrigin, ent->r.mins, ent->r.maxs, origin, passent, ent->clipmask, qfalse, G2TRFLAG_DOGHOULTRACE|G2TRFLAG_GETSURFINDEX|G2TRFLAG_THICK|G2TRFLAG_HITCORPSES, g_g2TraceLod.integer );
 
-		if (tr.fraction != 1.0 && tr.entityNum < ENTITYNUM_WORLD)
-		{
-			gentity_t *g2Hit = &g_entities[tr.entityNum];
+	//	if (tr.fraction != 1.0 && tr.entityNum < ENTITYNUM_WORLD)
+	//	{
+	//		gentity_t *g2Hit = &g_entities[tr.entityNum];
 
-			if (g2Hit->inuse && g2Hit->client && g2Hit->ghoul2)
-			{ //since we used G2TRFLAG_GETSURFINDEX, tr.surfaceFlags will actually contain the index of the surface on the ghoul2 model we collided with.
-				g2Hit->client->g2LastSurfaceHit = tr.surfaceFlags;
-				g2Hit->client->g2LastSurfaceTime = level.time;
-			}
+	//		if (g2Hit->inuse && g2Hit->client && g2Hit->ghoul2)
+	//		{ //since we used G2TRFLAG_GETSURFINDEX, tr.surfaceFlags will actually contain the index of the surface on the ghoul2 model we collided with.
+	//			g2Hit->client->g2LastSurfaceHit = tr.surfaceFlags;
+	//			g2Hit->client->g2LastSurfaceTime = level.time;
+	//		}
 
-			if (g2Hit->ghoul2)
-			{
-				tr.surfaceFlags = 0; //clear the surface flags after, since we actually care about them in here.
-			}
-		}
-	}
-	else
-	{
-		trap->Trace( &tr, ent->r.currentOrigin, ent->r.mins, ent->r.maxs, origin, passent, ent->clipmask, qfalse, 0, 0 );
-	}
+	//		if (g2Hit->ghoul2)
+	//		{
+	//			tr.surfaceFlags = 0; //clear the surface flags after, since we actually care about them in here.
+	//		}
+	//	}
+	//}
+	//else
+	//{
+	//	trap->Trace( &tr, ent->r.currentOrigin, ent->r.mins, ent->r.maxs, origin, passent, ent->clipmask, qfalse, 0, 0 );
+	//}
+	//[/RealTrace]
 
 	if ( tr.startsolid || tr.allsolid ) {
 		// make sure the tr.entityNum is set to the entity we're stuck in
-		trap->Trace( &tr, ent->r.currentOrigin, ent->r.mins, ent->r.maxs, ent->r.currentOrigin, passent, ent->clipmask, qfalse, 0, 0 );
-		tr.fraction = 0;
+		//[RealTrace]
+		/*trap->Trace( &tr, ent->r.currentOrigin, ent->r.mins, ent->r.maxs, ent->r.currentOrigin, passent, ent->clipmask, qfalse, 0, 0 );
+		tr.fraction = 0;*/
+		//[/RealTrace]
 	}
 	else {
 		VectorCopy( tr.endpos, ent->r.currentOrigin );

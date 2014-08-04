@@ -10528,12 +10528,10 @@ JustDoIt:
 	//[NewLightningEFX]
 	if (cent->currentState.emplacedOwner + 1000 > cg.time)
 	{
-		if (cent->currentState.powerups & (1 << PW_BLOCK))
-		{
 			CG_BlockLightningEffect(client->saber[saberNum].blade[bladeNum].muzzlePoint, client->saber[saberNum].blade[bladeNum].muzzleDir, client->saber[saberNum].blade[bladeNum].length);
 			CG_BlockLightningEffect(client->saber[saberNum].blade[bladeNum].muzzlePoint, client->saber[saberNum].blade[bladeNum].muzzleDir, client->saber[saberNum].blade[bladeNum].length);
 			CG_BlockLightningEffect(client->saber[saberNum].blade[bladeNum].muzzlePoint, client->saber[saberNum].blade[bladeNum].muzzleDir, client->saber[saberNum].blade[bladeNum].length);
-		}
+		
 	}
 	//[/NewLightningEFX]
 }

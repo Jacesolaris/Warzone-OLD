@@ -4475,6 +4475,41 @@ int PM_ReturnforQuad(int quad)
 }
 //[/SaberSys]
 
+//[SaberSys]
+int BlockedforQuad(int quad)
+{//returns the saberBlocked direction for given quad.
+	switch (quad)
+	{
+	case Q_BR:
+		return BLOCKED_LOWER_RIGHT;
+		break;
+	case Q_R:
+		return BLOCKED_UPPER_RIGHT;
+		break;
+	case Q_TR:
+		return BLOCKED_UPPER_RIGHT;
+		break;
+	case Q_T:
+		return BLOCKED_TOP;
+		break;
+	case Q_TL:
+		return BLOCKED_UPPER_LEFT;
+		break;
+	case Q_L:
+		return BLOCKED_UPPER_LEFT;
+		break;
+	case Q_BL:
+		return BLOCKED_LOWER_LEFT;
+		break;
+	case Q_B:
+		return BLOCKED_LOWER_LEFT;
+		break;
+	default:
+		return BLOCKED_TOP;
+	};
+}
+//[/SaberSys]
+
 qboolean InSaberDelayAnimation(int move)
 {
 	if ((move >= 665 && move <= 669)

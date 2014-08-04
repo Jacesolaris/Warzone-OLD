@@ -10,6 +10,7 @@ extern qboolean InFront(vec3_t spot, vec3_t from, vec3_t fromAngles, float thres
 extern void G_TestLine(vec3_t start, vec3_t end, int color, int time);
 
 //[SaberSys]
+extern float VectorDistances(vec3_t v1, vec3_t v2);
 qboolean G_FindClosestPointOnLineSegment(const vec3_t start, const vec3_t end, const vec3_t from, vec3_t result);
 //[/SaberSys]
 
@@ -2043,6 +2044,33 @@ static QINLINE qboolean G_ClientIdleInWorld(gentity_t *ent)
 	return qfalse;
 }
 
+//[SaberSys]
+float CalcTraceFraction(vec3_t Start, vec3_t End, vec3_t Endpos)
+{
+	float fulldist;
+	float dist;
+
+	fulldist = VectorDistances(Start, End);
+	dist = VectorDistances(Start, Endpos);
+
+	if (fulldist > 0)
+	{
+		if (dist > 0)
+		{
+			return dist / fulldist;
+		}
+		else
+		{
+			return 0;
+		}
+	}
+	else
+	{
+		//I'm going to let it return 1 when the EndPos = End = Start
+		return 1;
+	}
+}
+//[/SaberSys]
 
 static QINLINE qboolean G_G2TraceCollide(trace_t *tr, vec3_t lastValidStart, vec3_t lastValidEnd, vec3_t traceMins, vec3_t traceMaxs)
 { //Hit the ent with the normal trace, try the collision trace.
@@ -2123,6 +2151,10 @@ static QINLINE qboolean G_G2TraceCollide(trace_t *tr, vec3_t lastValidStart, vec
 		{ //The ghoul2 trace result matches, so copy the collision position into the trace endpos and send it back.
 			VectorCopy(G2Trace[0].mCollisionPosition, tr->endpos);
 			VectorCopy(G2Trace[0].mCollisionNormal, tr->plane.normal);
+			//[SaberSys]
+			//Calculate the fraction point to keep all the code working correctly
+			tr->fraction = CalcTraceFraction(lastValidStart, lastValidEnd, tr->endpos);
+			//[/SaberSys]
 
 			if (g2Hit->client)
 			{
@@ -2482,9 +2514,35 @@ qboolean G_BlockIsParry(gentity_t *self, gentity_t *attacker, vec3_t hitLoc)
 
 //[/SaberSys]
 
+//[SaberSys]
+//Copies all the important data from one trace_t to another.  Please note that this doesn't transfer ALL
+//of the trace_t data.
+void TraceCopy(trace_t *a, trace_t *b)
+{
+	b->allsolid = a->allsolid;
+	b->contents = a->contents;
+	VectorCopy(a->endpos, b->endpos);
+	b->entityNum = a->entityNum;
+	b->fraction = a->fraction;
+	//This is the only thing that's ever really used from the plane data.
+	VectorCopy(a->plane.normal, b->plane.normal);
+	b->startsolid = a->startsolid;
+	b->surfaceFlags = a->surfaceFlags;
+}
+
+
+//Reset the trace to be "blank".
+static QINLINE void TraceClear(trace_t *tr, vec3_t end)
+{
+	tr->fraction = 1;
+	VectorCopy(end, tr->endpos);
+	tr->entityNum = ENTITYNUM_NONE;
+}
+//[/SaberSys]
+
 //check for collision of 2 blades -rww
 static QINLINE qboolean G_SaberCollide(gentity_t *atk, gentity_t *def, vec3_t atkStart,
-	vec3_t atkEnd, vec3_t atkMins, vec3_t atkMaxs, vec3_t impactPoint)
+	vec3_t atkEnd, vec3_t atkMins, vec3_t atkMaxs, trace_t *tr /*vec3_t impactPoint*/)
 {
 	static int i, j;
 
@@ -2493,10 +2551,24 @@ static QINLINE qboolean G_SaberCollide(gentity_t *atk, gentity_t *def, vec3_t at
 		return qtrue;
 	}
 
-	if (!atk->inuse || !atk->client || !def->inuse || !def->client)
+	//[SaberSys]
+	//Removed the atk gentity requirements for the function so my saber trace will work with
+	//atk gentity checks.
+	if (!def->inuse || !def->client)
+		//if (!atk->inuse || !atk->client || !def->inuse || !def->client)
 	{ //must have 2 clients and a valid saber entity
+		TraceClear(tr, atkEnd);
+		return qfalse;
+		//[/SaberSys]
+	}
+
+	//[BugFix26]
+	if (def->client->ps.saberHolstered == 2)
+	{//no sabers on.
+		TraceClear(tr, atkEnd);
 		return qfalse;
 	}
+	//[/BugFix26]
 
 	i = 0;
 	while (i < MAX_SABERS)
@@ -2546,9 +2618,18 @@ static QINLINE qboolean G_SaberCollide(gentity_t *atk, gentity_t *def, vec3_t at
 							fList = l;
 						}
 #endif
-
-						if (G_SaberFaceCollisionCheck(fNum, fList, atkStart, atkEnd, atkMins, atkMaxs, impactPoint))
+						//[SaberSys]
+						if (G_SaberFaceCollisionCheck(fNum, fList, atkStart, atkEnd, atkMins, atkMaxs, tr->endpos))
+							//if (G_SaberFaceCollisionCheck(fNum, fList, atkStart, atkEnd, atkMins, atkMaxs, impactPoint))
 						{ //collided
+							//determine the plane of impact for the viewlocking stuff.
+							vec3_t result;
+
+							tr->fraction = CalcTraceFraction(atkStart, atkEnd, tr->endpos);
+
+							G_FindClosestPointOnLineSegment(base, tip, tr->endpos, result);
+							VectorSubtract(tr->endpos, result, result);
+							VectorCopy(result, tr->plane.normal);
 							if (atk && atk->client)
 							{
 								atk->client->lastSaberCollided = i;
@@ -2565,6 +2646,10 @@ static QINLINE qboolean G_SaberCollide(gentity_t *atk, gentity_t *def, vec3_t at
 		i++;
 	}
 
+	//[SaberSys]
+	//Make sure the trace has the correct trace data
+	TraceClear(tr, atkEnd);
+	//[SaberSys]
 	return qfalse;
 }
 
@@ -3488,6 +3573,285 @@ void WP_SaberDoHit(gentity_t *self, int saberNum, int bladeNum)
 	}
 }
 
+//[SaberSys]
+//Number of objects that a RealTrace can passthru when the ghoul2 trace fails. 
+#define MAX_REAL_PASSTHRU 1
+
+//struct for saveing the 
+typedef struct content_s
+{
+	int			content;
+	int			entNum;
+} content_t;
+
+content_t	RealTraceContent[MAX_REAL_PASSTHRU];
+
+#define REALTRACEDATADEFAULT	-2
+
+void InitRealTraceContent(void)
+{
+	int i;
+	for (i = 0; i<MAX_REAL_PASSTHRU; i++)
+	{
+		RealTraceContent[i].content = REALTRACEDATADEFAULT;
+		RealTraceContent[i].entNum = REALTRACEDATADEFAULT;
+	}
+}
+
+
+//returns true on success
+qboolean AddRealTraceContent(int entityNum)
+{
+	int i;
+
+	if (entityNum == ENTITYNUM_WORLD || entityNum == ENTITYNUM_NONE)
+	{//can't blank out the world.  Give an error.
+		trap->Print("Error: AddRealTraceContent was passed an bad EntityNum.\n");
+		return qtrue;
+	}
+
+	for (i = 0; i < MAX_REAL_PASSTHRU; i++)
+	{
+		if (RealTraceContent[i].content == REALTRACEDATADEFAULT && RealTraceContent[i].entNum == REALTRACEDATADEFAULT)
+		{//found an empty slot.  Use it.
+			//Stored Data
+			RealTraceContent[i].entNum = entityNum;
+			RealTraceContent[i].content = g_entities[entityNum].r.contents;
+
+			//Blank it.
+			g_entities[entityNum].r.contents = 0;
+			return qtrue;
+		}
+	}
+
+	//All slots already used. 
+	return qfalse;
+}
+
+
+//Restored all the entities that have been blanked out in the RealTrace
+void RestoreRealTraceContent(void)
+{
+	int i;
+	for (i = 0; i < MAX_REAL_PASSTHRU; i++)
+	{
+		if (RealTraceContent[i].entNum != REALTRACEDATADEFAULT)
+		{
+			if (RealTraceContent[i].content != REALTRACEDATADEFAULT)
+			{
+				g_entities[RealTraceContent[i].entNum].r.contents = RealTraceContent[i].content;
+
+				//Let's clean things out to be sure.
+				RealTraceContent[i].entNum = REALTRACEDATADEFAULT;
+				RealTraceContent[i].content = REALTRACEDATADEFAULT;
+			}
+			else
+			{
+				trap->Print("Error: RestoreRealTraceContent: The stored Real Trace contents was the empty default!\n");
+			}
+		}
+		else
+		{//This data slot is blank.  This should mean that the rest are empty as well.
+			break;
+		}
+	}
+}
+
+
+#define REALTRACE_MISS				0 //didn't hit anything
+#define REALTRACE_HIT				1 //hit object normally
+#define REALTRACE_SABERBLOCKHIT		2 //hit a player who used a bounding box dodge saber block
+static QINLINE int Finish_RealTrace(trace_t *results, trace_t *closestTrace, vec3_t start, vec3_t end)
+{//this function reverts the real trace content removals and finishs up the realtrace
+	//restore all the entities we blanked out.
+	RestoreRealTraceContent();
+
+	if (VectorCompare(closestTrace->endpos, end))
+	{//No hit. Make sure that tr is correct.
+		TraceClear(results, end);
+		return REALTRACE_MISS;
+	}
+
+	TraceCopy(closestTrace, results);
+	return REALTRACE_HIT;
+}
+
+
+//This function is setup to give much more realistic traces for saber attack traces.
+//It's not 100% perfect, but the situations where this won't work right are very rare and
+//probably not worth the additional hassle.
+//
+//gentity_t attacker is an optional input variable to give information about the attacker.  This is used to give the attacker 
+//		information about which saber blade they hit (if any) and to see if the victim should use a bounding box saber block.
+//		Not providing an attacker will make the function just return REALTRACE_MISS or REALTRACE_HIT.
+
+//return:	REALTRACE_MISS = didn't hit anything	
+//			REALTRACE_HIT = hit object normally
+//			REALTRACE_SABERBLOCKHIT = hit a player who used a bounding box dodge saber block
+int G_RealTrace(gentity_t *attacker, trace_t *tr, vec3_t start, vec3_t mins,
+	vec3_t maxs, vec3_t end, int passEntityNum,
+	int contentmask, int rSaberNum, int rBladeNum)
+{
+	//the current start position of the traces.  
+	//This is advanced to the edge of each bound box after each saber/ghoul2 entity is processed.
+	vec3_t currentStart;
+	trace_t closestTrace; 		//this is the trace struct of the closest successful trace.
+	float closestFraction = 1.1; 	//the fraction of the closest trace so far.  Initially set higher than one so that we have an actualy tr even if the tr is clear.
+	int misses = 0;
+	qboolean atkIsSaberer = (attacker && attacker->client && attacker->client->ps.weapon == WP_SABER) ? qtrue : qfalse;
+	InitRealTraceContent();
+
+	if (atkIsSaberer)
+	{//attacker is using a saber to attack us, blank out their saber/blade data so we have a fresh start for this trace.
+		attacker->client->lastSaberCollided = -1;
+		attacker->client->lastBladeCollided = -1;
+	}
+
+	//make the default closestTrace be nothing
+	TraceClear(&closestTrace, end);
+
+	VectorCopy(start, currentStart);
+
+	for (misses = 0; misses < MAX_REAL_PASSTHRU; misses++)
+	{
+		vec3_t currentEndPos;
+		int currentEntityNum;
+		gentity_t *currentEnt;
+
+		//Fire a standard trace and see what we find.
+		//trap->Trace(&tr, saberStart, saberTrMins, saberTrMaxs, saberEndExtrapolated, self->s.number, trMask, qfalse, 0, 0);
+		trap->Trace(tr, currentStart, mins, maxs, end, passEntityNum, contentmask, qfalse, 0, 0);
+
+		//save the point where we hit.  This is either our end point or the point where we hit our next bounding box.
+		VectorCopy(tr->endpos, currentEndPos);
+
+		//also save the storedEntityNum since the internal traces normally blank out the trace_t if they fail.
+		currentEntityNum = tr->entityNum;
+
+		if (tr->startsolid)
+		{//make sure that tr->endpos is at the start point as it should be for startsolid.
+			VectorCopy(currentStart, tr->endpos);
+		}
+
+		if (tr->entityNum == ENTITYNUM_NONE)
+		{//We've run out of things to hit so we're done.
+			if (!VectorCompare(start, currentStart))
+			{//didn't do trace with original start point.  Recalculate the real fraction before we do our comparision.
+				tr->fraction = CalcTraceFraction(start, end, tr->endpos);
+			}
+
+			if (tr->fraction < closestFraction)
+			{//this is the closest hit, make it so.
+				TraceCopy(tr, &closestTrace);
+				closestFraction = tr->fraction;
+			}
+			return Finish_RealTrace(tr, &closestTrace, start, end);
+		}
+
+		//set up a pointer to the entity we hit.
+		currentEnt = &g_entities[tr->entityNum];
+
+		if (currentEnt->inuse && currentEnt->client)
+		{//initial trace hit a humanoid
+			//[OJPSABERBLOCK/if(attacker && OJP_SaberCanBlock(currentEnt, attacker, qtrue, tr->endpos, rSaberNum, rBladeNum))
+			{//hit victim is willing to bbox block with their jedi saber abilities.  Can only do this if we have data on the attacker.
+				if (!VectorCompare(start, currentStart))
+				{//didn't do trace with original start point.  Recalculate the real fraction before we do our comparision.
+					tr->fraction = CalcTraceFraction(start, end, tr->endpos);
+				}
+
+				if (tr->fraction < closestFraction)
+				{//this is the closest known hit object for this trace, so go ahead and count the bbox block as the closest impact.
+					RestoreRealTraceContent();
+
+					//act like the saber was hit instead of us.
+					tr->entityNum = currentEnt->client->saberStoredIndex;
+					return REALTRACE_SABERBLOCKHIT;
+				}
+				else
+				{//something else ghoul2 related was already hit and was closer, skip to end of function
+					return Finish_RealTrace(tr, &closestTrace, start, end);
+				}
+			}
+
+			//ok, no bbox block this time.  So, try a ghoul2 trace then.
+			G_G2TraceCollide(tr, currentStart, end, mins, maxs);
+		}
+		else if ((currentEnt->r.contents & CONTENTS_LIGHTSABER) &&
+			currentEnt->r.contents != -1 &&
+			currentEnt->inuse)
+		{//hit a lightsaber, do the approprate collision detection checks.
+			gentity_t* saberOwner = &g_entities[currentEnt->r.ownerNum];
+
+			G_SaberCollide((atkIsSaberer ? attacker : NULL), saberOwner, currentStart, end, mins, maxs, tr);
+		}
+		else if (tr->entityNum < ENTITYNUM_WORLD)
+		{
+			if (currentEnt->inuse && currentEnt->ghoul2)
+			{ //hit a non-client entity with a g2 instance
+				G_G2TraceCollide(tr, currentStart, end, mins, maxs);
+			}
+			else
+			{//this object doesn't have a ghoul2 or saber internal trace.  
+				if (!VectorCompare(start, currentStart))
+				{//didn't do trace with original start point.  Recalculate the real fraction before we do our comparision.
+					tr->fraction = CalcTraceFraction(start, end, tr->endpos);
+				}
+
+				//As such, it's the last trace on our layered trace.
+				if (tr->fraction < closestFraction)
+				{//this is the closest hit, make it so.
+					TraceCopy(tr, &closestTrace);
+					closestFraction = tr->fraction;
+				}
+				return Finish_RealTrace(tr, &closestTrace, start, end);
+			}
+		}
+		else
+		{//world hit.  We either hit something closer or this is the final trace of our layered tracing.
+			if (!VectorCompare(start, currentStart))
+			{//didn't do trace with original start point.  Recalculate the real fraction before we do our comparision.
+				tr->fraction = CalcTraceFraction(start, end, tr->endpos);
+			}
+
+			if (tr->fraction < closestFraction)
+			{//this is the closest hit, make it so.
+				TraceCopy(tr, &closestTrace);
+				closestFraction = tr->fraction;
+			}
+			return Finish_RealTrace(tr, &closestTrace, start, end);
+		}
+
+		//ok, we're just completed an internal ghoul2 or saber internal trace on an entity.  
+		//At this point, we need to make this the closest impact if it was and continue scanning.
+		//We do this since this ghoul2/saber entities have true impact positions that aren't the same as their bounding box
+		//exterier impact position.  As such, another entity could be slightly inside that bounding box but have a closest
+		//actual impact position.
+		if (!VectorCompare(start, currentStart))
+		{//didn't do trace with original start point.  Recalculate the real fraction before we do our comparision.
+			tr->fraction = CalcTraceFraction(start, end, tr->endpos);
+		}
+
+		if (tr->fraction < closestFraction)
+		{//current impact was the closest impact.
+			TraceCopy(tr, &closestTrace);
+			closestFraction = tr->fraction;
+		}
+
+		//remove the last hit entity from the trace and try again.
+		if (!AddRealTraceContent(currentEntityNum))
+		{//crap!  The data structure is full.  We're done.
+			break;
+		}
+
+		//move our start trace point up to the point where we hit the bbox for the last ghoul2/saber object.
+		VectorCopy(currentEndPos, currentStart);
+	}
+
+	return Finish_RealTrace(tr, &closestTrace, start, end);
+}
+//[/SaberSys]
+
 extern qboolean G_EntIsBreakable(int entityNum);
 extern void G_Knockdown(gentity_t *victim);
 void WP_SaberRadiusDamage(gentity_t *ent, vec3_t point, float radius, int damage, float knockBack)
@@ -3818,9 +4182,18 @@ static QINLINE qboolean CheckSaberDamage(gentity_t *self, int rSaberNum, int rBl
 	qboolean otherUnblockable = qfalse;
 	qboolean tryDeflectAgain = qfalse;
 	qboolean saberHitWall = qfalse;
+	qboolean hitSaberBlade = qfalse;
 	//boxscale for blockbox
 	float boxScale = 10;
+	//passthru flag.  Saber passthru only occurs if you successful chopped the target
+	//to death, in half, etc.
+	qboolean	passthru = qfalse;
 
+	//holds the return code from our realTrace.  This is used to help 
+	//determine if you actually it the saber blade for hitSaberBlade
+	int realTraceResult;
+
+	//sabimpactdebounce
 	int sabimpactdebounce;
 	int sabimpactentitynum;
 
@@ -3837,6 +4210,9 @@ static QINLINE qboolean CheckSaberDamage(gentity_t *self, int rSaberNum, int rBl
 	VectorSet(saberTrMins, -saberBoxSize*boxScale, -saberBoxSize*boxScale, -saberBoxSize*boxScale);
 	VectorSet(saberTrMaxs, saberBoxSize*boxScale, saberBoxSize*boxScale, saberBoxSize*boxScale);
 	boxScale *= 0.5;
+
+	realTraceResult = G_RealTrace(self, &tr, saberStart, saberTrMins, saberTrMaxs, saberEnd,
+		self->s.number, trMask, rSaberNum, rBladeNum);
 
 	if (self->client->ps.weaponTime <= 0)
 	{ //if not doing any attacks or anything, just use point traces.
@@ -3872,7 +4248,18 @@ static QINLINE qboolean CheckSaberDamage(gentity_t *self, int rSaberNum, int rBl
 		VectorSet(saberTrMins, -saberBoxSize*boxScale, -saberBoxSize*boxScale, -saberBoxSize*boxScale);
 		VectorSet(saberTrMaxs, saberBoxSize*boxScale, saberBoxSize*boxScale, saberBoxSize*boxScale);
 		boxScale *= 0.5;
+
 	}//Stoiss end
+
+	//if (realTraceResult == REALTRACE_SABERBLOCKHIT)
+	//{//this is actually a faked lightsaber hit to make the bounding box saber blocking work.
+	//	//As such, we know that the player can block, set the approprate block position for this attack.
+	//	WP_SaberBlockNonRandom(otherOwner, self, tr.endpos, qfalse);
+	//}
+	//else if (realTraceResult == REALTRACE_HIT)
+	//{//successfully hit another player's saber blade directly
+	//	hitSaberBlade = qtrue;
+	//}
 
 	//saber impact debouncer stuff
 	if (idleDamage)
@@ -4602,15 +4989,16 @@ static QINLINE qboolean CheckSaberDamage(gentity_t *self, int rSaberNum, int rBl
 					return qfalse;
 				}
 			}
-			else
-			{//MP-style
-				if (!G_SaberCollide(self, otherOwner, lastValidStart,
-					lastValidEnd, saberTrMins, saberTrMaxs, tr.endpos))
-				{ //detailed collision did not produce results...
-					return qfalse;
-				}
-			}
 		}
+		//	else
+		//	{//MP-style
+		//		if (!G_SaberCollide(self, otherOwner, lastValidStart,
+		//			lastValidEnd, saberTrMins, saberTrMaxs, tr.endpos))
+		//		{ //detailed collision did not produce results...
+		//			return qfalse;
+		//		}
+		//	}
+		//}
 
 		if (OnSameTeam(self, otherOwner) &&
 			!g_friendlySaber.integer)
@@ -4813,7 +5201,16 @@ static QINLINE qboolean CheckSaberDamage(gentity_t *self, int rSaberNum, int rBl
 				WP_SaberBlockNonRandom(otherOwner, self, tr.endpos, qfalse);
 				otherOwner->client->ps.saberMove = BG_KnockawayForParry(otherOwner->client->ps.saberBlocked);
 				otherOwner->client->ps.saberBlocked = BLOCKED_BOUNCE_MOVE;
+			}//[SaberSys]realtrace test
+			else if (realTraceResult == REALTRACE_SABERBLOCKHIT)
+			{//this is actually a faked lightsaber hit to make the bounding box saber blocking work.
+				//As such, we know that the player can block, set the approprate block position for this attack.
+				WP_SaberBlockNonRandom(otherOwner,self, tr.endpos, qfalse);
 			}
+			else if (realTraceResult == REALTRACE_HIT)
+			{//successfully hit another player's saber blade directly
+				hitSaberBlade = qtrue;
+			}//[/SaberSys]realtrace test
 			else
 			{
 				otherOwner->client->ps.saberMove = G_KnockawayForParry(otherOwner->client->ps.saberMove); //BG_KnockawayForParry( otherOwner->client->ps.saberBlocked );
@@ -5346,8 +5743,18 @@ qboolean Jedi_WaitingAmbush(gentity_t *self);
 void Jedi_Ambush(gentity_t *self);
 evasionType_t Jedi_SaberBlockGo(gentity_t *self, usercmd_t *cmd, vec3_t pHitloc, vec3_t phitDir, gentity_t *incoming, float dist);
 void NPC_SetLookTarget(gentity_t *self, int entNum, int clearTime);
+//[SaberSys]
+int BlockedforQuad(int quad);
+int InvertQuad(int quad);
+//[/SaberSys]
 void WP_SaberStartMissileBlockCheck(gentity_t *self, usercmd_t *ucmd)
 {
+	//[SaberSys]
+	qboolean	swingBlock;
+	qboolean	closestSwingBlock = qfalse;  //default setting makes the compiler happy.
+	int 		swingBlockQuad = Q_T;
+	int			closestSwingQuad = Q_T;
+	//[/SaberSys]
 	float		dist;
 	gentity_t	*ent, *incoming = NULL;
 	int			entityList[MAX_GENTITIES];
@@ -5459,6 +5866,9 @@ void WP_SaberStartMissileBlockCheck(gentity_t *self, usercmd_t *ucmd)
 	for (e = 0; e < numListedEntities; e++)
 	{
 		ent = &g_entities[entityList[e]];
+		//[SaberSys]
+		swingBlock = qfalse;
+		//[/SaberSys]
 
 		if (ent == self)
 			continue;
@@ -5529,6 +5939,27 @@ void WP_SaberStartMissileBlockCheck(gentity_t *self, usercmd_t *ucmd)
 				continue;
 			}
 
+			//[SaberSys]
+			//allow the blocking of normal saber swings
+			if (!pOwner->client->ps.saberInFlight)
+			{//active saber blade, treat differently.
+				swingBlock = qtrue;
+				if (BG_SaberInNonIdleDamageMove(&pOwner->client->ps, pOwner->localAnimIndex))
+				{//attacking
+					
+					swingBlockQuad = InvertQuad(saberMoveData[pOwner->client->ps.saberMoveStyle][pOwner->client->ps.saberMove].startQuad);
+				}
+				else if (PM_SaberInStart(pOwner->client->ps.saberMove)
+					|| PM_SaberInTransition(pOwner->client->ps.saberMove))
+				{//preparing to attack
+					swingBlockQuad = InvertQuad(saberMoveData[pOwner->client->ps.saberMoveStyle][pOwner->client->ps.saberMove].endQuad);
+				}
+				else
+				{//not attacking
+					continue;
+				}
+			}
+			//[/SaberSys]
 			//If we get here then it's ok to be treated as a thrown saber, I guess.
 		}
 		else
@@ -5542,6 +5973,14 @@ void WP_SaberStartMissileBlockCheck(gentity_t *self, usercmd_t *ucmd)
 		//see if they're in front of me
 		VectorSubtract(ent->r.currentOrigin, self->r.currentOrigin, dir);
 		dist = VectorNormalize(dir);
+
+		//[SaberSys]
+		if (dist > 150 && swingBlock)
+		{//don't block swings that are too far away.
+			continue;
+		}
+		//[/SaberSys]
+
 		//FIXME: handle detpacks, proximity mines and tripmines
 		if (ent->s.weapon == WP_THERMAL)
 		{//thermal detonator!
@@ -5632,17 +6071,30 @@ void WP_SaberStartMissileBlockCheck(gentity_t *self, usercmd_t *ucmd)
 			if ((dot1 = DotProduct(dir, forward)) < SABER_REFLECT_MISSILE_CONE)
 				continue;
 		}
-		else if (self->s.eType == ET_PLAYER)
+		//[SaberSys]
+		/* racc - don't want this with the swing blocking
+		else if ( self->s.eType == ET_PLAYER )
 		{//player never auto-blocks thrown sabers
-			continue;
+		continue;
 		}//NPCs always try to block sabers coming from behind!
+		*/
 
 		//see if they're heading towards me
-		VectorCopy(ent->s.pos.trDelta, missile_dir);
-		VectorNormalize(missile_dir);
-		if ((dot2 = DotProduct(dir, missile_dir)) > 0)
-			continue;
+		if (!swingBlock)
+		{
+			VectorCopy(ent->s.pos.trDelta, missile_dir);
+			VectorNormalize(missile_dir);
+			if ((dot2 = DotProduct(dir, missile_dir)) > 0)
+				continue;
+		}
 
+		/* basejka
+		VectorCopy( ent->s.pos.trDelta, missile_dir );
+		VectorNormalize( missile_dir );
+		if ( (dot2 = DotProduct( dir, missile_dir )) > 0 )
+		continue;
+		*/
+		//[/SaberSys]
 		//FIXME: must have a clear trace to me, too...
 		if (dist < closestDist)
 		{
@@ -5673,6 +6125,10 @@ void WP_SaberStartMissileBlockCheck(gentity_t *self, usercmd_t *ucmd)
 			//FIXME: if NPC, predict the intersection between my current velocity/path and the missile's, see if it intersects my bounding box (+/-saberLength?), don't try to deflect unless it does?
 			closestDist = dist;
 			incoming = ent;
+			//[SaberSys]
+			closestSwingBlock = swingBlock;
+			closestSwingQuad = swingBlockQuad;
+			//[/SaberSys]
 		}
 	}
 
@@ -5734,7 +6190,17 @@ void WP_SaberStartMissileBlockCheck(gentity_t *self, usercmd_t *ucmd)
 		{
 			gentity_t *owner = &g_entities[incoming->r.ownerNum];
 
-			WP_SaberBlockNonRandom(self, NULL, incoming->r.currentOrigin, qtrue);
+			//[SaberSys]
+			if (closestSwingBlock && owner->health > 0)//&& !self->client->ps.duelInProgress)
+			{
+				self->client->ps.saberBlocked = BlockedforQuad(closestSwingQuad);
+				self->client->ps.saberActionFlags |= (1 << SAF_BLOCKING);
+			}
+			else if (owner->health > 0)//!self->client->ps.duelInProgress)
+			{
+				WP_SaberBlockNonRandom(self, NULL, incoming->r.currentOrigin, qtrue);
+			}
+			//[/SaberSys]
 			if (owner && owner->client && (!self->enemy || self->enemy->s.weapon != WP_SABER))//keep enemy jedi over shooters
 			{
 				self->enemy = owner;
