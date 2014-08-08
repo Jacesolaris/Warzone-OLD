@@ -3573,9 +3573,200 @@ void WP_SaberDoHit(gentity_t *self, int saberNum, int bladeNum)
 	}
 }
 
+qboolean BG_SuperBreakWinAnim( int anim );
+
+//saber status utility tools
+qboolean BG_SaberInFullDamageMove( playerState_t *ps, int AnimIndex )
+{//The player is attacking with a saber attack that does full damage
+	if( (BG_SaberInAttack(ps->saberMove) && !BG_KickMove(ps->saberMove)) 
+		|| BG_SuperBreakWinAnim(ps->torsoAnim) )
+	{//in attack animation
+		if( (ps->saberMove == LS_A_FLIP_STAB || ps->saberMove == LS_A_FLIP_SLASH)
+			&& (BG_GetTorsoAnimPoint(ps, AnimIndex) <= .5 || BG_GetTorsoAnimPoint(ps, AnimIndex) >= .87)) //assumes that the dude is 
+		{//flip attacks shouldn't do damage during the whole move.
+			return qfalse;
+		}
+
+		if(ps->saberMove == BOTH_ROLL_STAB && BG_GetTorsoAnimPoint(ps, AnimIndex) <= .5)
+		{//don't do damage during the follow thru part of the roll stab.
+			return qfalse;
+		}
+
+		if(ps->saberBlocked == BLOCKED_NONE)
+		{//and not attempting to do some sort of block animation
+			return qtrue;
+		}
+	}
+	return qfalse;
+}
+qboolean BG_SaberInNonIdleDamageMove(playerState_t *ps, int AnimIndex) 
+{//player is in a saber move that does something more than idle saber damage
+	return BG_SaberInFullDamageMove(ps, AnimIndex);
+}
+qboolean OJP_UsingDualSaberAsPrimary(playerState_t *ps)
+{//indicates that the player is in the very special case of using their dual saber
+	//as their primary saber when their primary saber is dropped.
+	if(ps->fd.saberAnimLevel == SS_DUAL 
+		&& ps->saberInFlight
+		&& ps->saberHolstered)
+	{
+		return qtrue;
+	}
+
+	return qfalse;
+}
+extern qboolean BG_SuperBreakWinAnim( int anim );
+
+extern qboolean BG_SaberInNonIdleDamageMove(playerState_t *ps, int AnimIndex);
+extern qboolean BG_SuperBreakWinAnim(int anim);
+extern qboolean QINLINE WalkCheck(gentity_t * self);
+int G_SaberDoBlockBox(gentity_t *self, gentity_t *atk, qboolean checkBBoxBlock, vec3_t point, int rSaberNum, int rBladeNum)
+{//similar to WP_SaberCanBlock but without the same sorts of restrictions.
+	vec3_t bodyMin, bodyMax, closestBodyPoint, dirToBody, saberMoveDir;
+
+	if (!self || !self->client || !atk)
+	{
+		return 0;
+	}
+
+	if (atk && atk->s.eType == ET_MISSILE //is a missile
+		&& (atk->s.weapon == WP_ROCKET_LAUNCHER ||
+		atk->s.weapon == WP_THERMAL ||
+		atk->s.weapon == WP_TRIP_MINE ||
+		atk->s.weapon == WP_DET_PACK ||
+		atk->methodOfDeath == MOD_REPEATER_ALT ||
+		atk->methodOfDeath == MOD_FLECHETTE_ALT_SPLASH ||
+		atk->methodOfDeath == MOD_CONC ||
+		atk->methodOfDeath == MOD_CONC_ALT ||
+		atk->methodOfDeath == MOD_BRYAR_PISTOL_ALT))
+	{//can't block this stuff with a saber
+		return 0;
+	}
+
+	if (BG_InGrappleMove(self->client->ps.torsoAnim))
+	{//you can't block while doing a melee move.
+		return 0;
+	}
+
+	if (BG_KickMove(self->client->ps.saberMove))
+	{
+		return 0;
+	}
+
+	if (BG_SabersOff(&self->client->ps))
+	{
+		return 0;
+	}
+
+	if (self->client->ps.weapon != WP_SABER)
+	{
+		return 0;
+	}
+
+	if (self->client->ps.weaponstate == WEAPON_RAISING)
+	{
+		return 0;
+	}
+
+	if (self->client->ps.forceHandExtend != HANDEXTEND_NONE)
+	{
+		if (atk && atk->client && atk->client->ps.weapon == WP_SABER)
+		{//can't block while using forceHandExtend except if their using a saber
+			return 1;
+		}
+		else
+		{//can't block while using forceHandExtend
+
+			return 0;
+		}
+	}
+	if (!WalkCheck(self) && self->client->ps.fd.forcePowersActive & (1 << FP_SPEED))
+	{//can't block while running in force speed.
+		return 0;
+	}
+
+	if (PM_InKnockDown(&self->client->ps))
+	{//can't block while knocked down or getting up from knockdown.
+		return 0;
+	}
+
+	if (atk && atk->client && atk->client->ps.weapon == WP_SABER)
+	{//player is attacking with saber
+		if (!BG_SaberInNonIdleDamageMove(&atk->client->ps, atk->localAnimIndex))
+		{//saber attacker isn't in a real damaging move
+			return 0;
+		}
+
+		if ((atk->client->ps.saberMove == LS_A_LUNGE
+			|| atk->client->ps.saberMove == LS_SPINATTACK
+			|| atk->client->ps.saberMove == LS_SPINATTACK_DUAL))
+		{//saber attacker, we can't block lunge attacks. 
+			return 0;
+		}
+
+		if (!WalkCheck(self)
+			&& (!InFront(atk->client->ps.origin, self->client->ps.origin, self->client->ps.viewangles, -.7f)
+			|| BG_SaberInAttack(self->client->ps.saberMove)
+			|| PM_SaberInStart(self->client->ps.saberMove)))
+		{//can't block saber swings while running and hit from behind or in swing.
+			if (self->NPC)
+			{
+				return 1;
+			}
+			else
+			{
+				return 0;
+			}
+		}
+
+	}
+
+	if (!checkBBoxBlock)
+	{//don't do the additional checkBBoxBlock checks.  As such, we're safe to saber block.
+		return 1;
+	}
+
+	if (atk && atk->client && atk->client->ps.weapon == WP_SABER && BG_SuperBreakWinAnim(atk->client->ps.torsoAnim))
+	{//never box block saberlock super break wins, it looks weird.
+		return 0;
+	}
+
+	if (VectorCompare(point, vec3_origin))
+	{//no hit position given, can't do blade movement check.
+		return 0;
+	}
+
+	if (atk && atk->client && rSaberNum != -1 && rBladeNum != -1)
+	{//player attacker, if they are here they're using their saber to attack.  
+		//Check to make sure that we only block the blade if it is moving towards the player
+
+		//create a line seqment thru the center of the player.
+		VectorCopy(self->client->ps.origin, bodyMin);
+		VectorCopy(self->client->ps.origin, bodyMax);
+
+		bodyMax[2] += self->r.maxs[2];
+		bodyMin[2] -= self->r.mins[2];
+
+		//find dirToBody
+		G_FindClosestPointOnLineSegment(bodyMin, bodyMax, point, closestBodyPoint);
+		VectorSubtract(closestBodyPoint, point, dirToBody);
+
+		//find current saber movement direction of the attacker
+		VectorSubtract(atk->client->saber[rSaberNum].blade[rBladeNum].muzzlePoint,
+			atk->client->saber[rSaberNum].blade[rBladeNum].muzzlePointOld, saberMoveDir);
+
+		if (DotProduct(dirToBody, saberMoveDir) < 0)
+		{//saber is moving away from defender
+			return 0;
+		}
+	}
+
+	return 1;
+}
+
 //[SaberSys]
 //Number of objects that a RealTrace can passthru when the ghoul2 trace fails. 
-#define MAX_REAL_PASSTHRU 1
+#define MAX_REAL_PASSTHRU 8
 
 //struct for saveing the 
 typedef struct content_s
@@ -3753,7 +3944,7 @@ int G_RealTrace(gentity_t *attacker, trace_t *tr, vec3_t start, vec3_t mins,
 
 		if (currentEnt->inuse && currentEnt->client)
 		{//initial trace hit a humanoid
-			//[OJPSABERBLOCK/if(attacker && OJP_SaberCanBlock(currentEnt, attacker, qtrue, tr->endpos, rSaberNum, rBladeNum))
+			if (attacker && G_SaberDoBlockBox(currentEnt, attacker, qtrue, tr->endpos, rSaberNum, rBladeNum))
 			{//hit victim is willing to bbox block with their jedi saber abilities.  Can only do this if we have data on the attacker.
 				if (!VectorCompare(start, currentStart))
 				{//didn't do trace with original start point.  Recalculate the real fraction before we do our comparision.
@@ -3946,8 +4137,59 @@ void WP_SaberRadiusDamage(gentity_t *ent, vec3_t point, float radius, int damage
 		}
 	}
 }
+//[SaberSys]
+qboolean PM_RunningAnim(int anim);
+//Check to see if the player is actually walking or just standing
+qboolean QINLINE WalkCheck(gentity_t * self)
+{
+	if (PM_RunningAnim(self->client->ps.legsAnim))
+	{
+		return qfalse;
+	}
 
-static void G_SetViewLock(gentity_t *self, vec3_t impactPos, vec3_t impactNormal)
+	/* old method.  seems to have issues failing players when they're walking diagonally. :|
+	float velocity = VectorLength(self->client->ps.velocity);
+	if (velocity == 0)
+	{
+	return qtrue;
+	}
+
+	if( self->client->ps.groundEntityNum == ENTITYNUM_NONE )
+	{//count as walking!
+	return qtrue;
+	}
+
+	if(velocity >= (g_speed.value * (.37)) )
+	{//on the ground and moving at run speeds.
+	//G_Printf("Player %i is running: %f\n", self->s.number, velocity);
+	return qfalse;
+	}
+	*/
+
+	return qtrue;
+}
+//[/SaberSys]
+
+//[SaberSys]
+static QINLINE void G_SetViewLockDebounce(gentity_t *self)
+{
+	if (!WalkCheck(self))
+	{//running pauses you longer
+		self->client->viewLockTime = level.time + 500;
+	}
+	else if (PM_SaberInParry(G_GetParryForBlock(self->client->ps.saberBlocked)) //normal block (not a parry)
+		|| (!PM_SaberInKnockaway(self->client->ps.saberMove))) //didn't parry
+		
+	{//normal block or attacked with less than %50 DP
+		self->client->viewLockTime = level.time + 300;
+	}
+	else
+	{
+		self->client->viewLockTime = level.time;
+	}
+}
+
+static QINLINE void G_SetViewLock(gentity_t *self, vec3_t impactPos, vec3_t impactNormal)
 {//Sets the view/movement lock flags based on the given information
 	vec3_t	cross;
 	vec3_t	length;
@@ -4041,7 +4283,8 @@ static vec3_t saberClashNorm = { 0 };
 static int saberClashEventParm = 1;
 //[SaberSys]
 static int saberClashOther = -1;  //the clientNum for the other player involved in the saber clash.
-static  void G_SetViewLock(gentity_t *self, vec3_t impactPos, vec3_t impactNormal);
+static QINLINE void G_SetViewLock(gentity_t *self, vec3_t impactPos, vec3_t impactNormal);
+static QINLINE void G_SetViewLockDebounce(gentity_t *self);
 //[/SaberSys]
 void WP_SaberDoClash(gentity_t *self, int saberNum, int bladeNum)
 {
@@ -4064,8 +4307,10 @@ void WP_SaberDoClash(gentity_t *self, int saberNum, int bladeNum)
 			otherOwner = &g_entities[saberClashOther];
 
 			G_SetViewLock(self, saberClashPos, saberClashNorm);
+			G_SetViewLockDebounce(self);
 
 			G_SetViewLock(otherOwner, saberClashPos, saberClashNorm);
+			G_SetViewLockDebounce(otherOwner);
 			
 		}
 		//[/SaberSys]
@@ -4250,16 +4495,6 @@ static QINLINE qboolean CheckSaberDamage(gentity_t *self, int rSaberNum, int rBl
 		boxScale *= 0.5;
 
 	}//Stoiss end
-
-	//if (realTraceResult == REALTRACE_SABERBLOCKHIT)
-	//{//this is actually a faked lightsaber hit to make the bounding box saber blocking work.
-	//	//As such, we know that the player can block, set the approprate block position for this attack.
-	//	WP_SaberBlockNonRandom(otherOwner, self, tr.endpos, qfalse);
-	//}
-	//else if (realTraceResult == REALTRACE_HIT)
-	//{//successfully hit another player's saber blade directly
-	//	hitSaberBlade = qtrue;
-	//}
 
 	//saber impact debouncer stuff
 	if (idleDamage)
@@ -4473,7 +4708,6 @@ static QINLINE qboolean CheckSaberDamage(gentity_t *self, int rSaberNum, int rBl
 			{
 			Com_Printf("CL %i SABER DMG: %i, anim %s, torsoTimer %i\n", self->s.number, dmg, animTable[self->client->ps.torsoAnim].name, self->client->ps.torsoTimer );
 			}*/
-
 			if (self->client->ps.torsoAnim == BOTH_A1_SPECIAL
 				|| self->client->ps.torsoAnim == BOTH_A2_SPECIAL
 				|| self->client->ps.torsoAnim == BOTH_A3_SPECIAL)
@@ -4684,6 +4918,16 @@ static QINLINE qboolean CheckSaberDamage(gentity_t *self, int rSaberNum, int rBl
 		}
 		else if (g_saberSystem.integer == SABERSYSTEMBEH && BG_SaberInReturn(self->client->ps.saberMove))
 			dmg = 10 * g_saberDamageScale.value;
+		//[SaberSys]realtrace test
+		else if (realTraceResult == REALTRACE_SABERBLOCKHIT)
+		{//this is actually a faked lightsaber hit to make the bounding box saber blocking work.
+			//As such, we know that the player can block, set the approprate block position for this attack.
+			WP_SaberBlockNonRandom(otherOwner, self, tr.endpos, qfalse);
+		}
+		else if (realTraceResult == REALTRACE_HIT)
+		{//successfully hit another player's saber blade directly
+			hitSaberBlade = qtrue;
+		}//[/SaberSys]realtrace test
 		else if (g_saberIdleDamage.integer)
 			dmg = SABER_NONATTACK_DAMAGE;
 		else
@@ -5201,16 +5445,7 @@ static QINLINE qboolean CheckSaberDamage(gentity_t *self, int rSaberNum, int rBl
 				WP_SaberBlockNonRandom(otherOwner, self, tr.endpos, qfalse);
 				otherOwner->client->ps.saberMove = BG_KnockawayForParry(otherOwner->client->ps.saberBlocked);
 				otherOwner->client->ps.saberBlocked = BLOCKED_BOUNCE_MOVE;
-			}//[SaberSys]realtrace test
-			else if (realTraceResult == REALTRACE_SABERBLOCKHIT)
-			{//this is actually a faked lightsaber hit to make the bounding box saber blocking work.
-				//As such, we know that the player can block, set the approprate block position for this attack.
-				WP_SaberBlockNonRandom(otherOwner,self, tr.endpos, qfalse);
 			}
-			else if (realTraceResult == REALTRACE_HIT)
-			{//successfully hit another player's saber blade directly
-				hitSaberBlade = qtrue;
-			}//[/SaberSys]realtrace test
 			else
 			{
 				otherOwner->client->ps.saberMove = G_KnockawayForParry(otherOwner->client->ps.saberMove); //BG_KnockawayForParry( otherOwner->client->ps.saberBlocked );
@@ -5580,6 +5815,7 @@ void G_SPSaberDamageTraceLerped(gentity_t *self, int saberNum, int bladeNum, vec
 		float dirInc, curDirFrac;
 		vec3_t baseDiff, bladePointOld, bladePointNew;
 		qboolean extrapolate = qtrue;
+		
 
 		//do the trace at the base first
 		VectorCopy(baseOld, bladePointOld);
@@ -5589,6 +5825,16 @@ void G_SPSaberDamageTraceLerped(gentity_t *self, int saberNum, int bladeNum, vec
 		//if hit a saber, shorten rest of traces to match
 		if (saberHitFraction < 1.0f)
 		{
+			vec3_t tmp_ma1, tmp_ma2;
+			vec3_t *outma1, *outma2;
+			if (g_saberSystem.integer == SABERSYSTEMBEH) {
+				outma1 = &ma1;
+				outma2 = &ma2;
+			}
+			else {
+				outma1 = &tmp_ma1;
+				outma2 = &tmp_ma2;
+			}
 			//adjust muzzleDir...
 			vectoangles(md1, ma1);
 			vectoangles(md2, ma2);
@@ -5784,6 +6030,13 @@ void WP_SaberStartMissileBlockCheck(gentity_t *self, usercmd_t *ucmd)
 	{
 		doFullRoutine = qfalse;
 	}
+
+	if (!WalkCheck(self)
+		&& (BG_SaberInAttack(self->client->ps.saberMove)
+		|| PM_SaberInStart(self->client->ps.saberMove)))
+	{//this was put in to help bolts stop swings a bit. I dont knwo why it helps but it does :p
+		doFullRoutine = qfalse;
+	}
 	else if (self->client->ps.fd.forcePowersActive&(1 << FP_LIGHTNING))
 	{//can't block while zapping
 		doFullRoutine = qfalse;
@@ -5801,7 +6054,11 @@ void WP_SaberStartMissileBlockCheck(gentity_t *self, usercmd_t *ucmd)
 		doFullRoutine = qfalse;
 	}
 
-	if (self->client->ps.weaponTime > 0)
+	//[SaberSys]
+	//you should be able to update block positioning if you're already in a block.
+	if (self->client->ps.weaponTime > 0 && !PM_SaberInParry(self->client->ps.saberMove))
+		//if (self->client->ps.weaponTime > 0)
+		//[/SaberSys]
 	{ //don't autoblock while busy with stuff
 		return;
 	}
@@ -9941,7 +10198,7 @@ qboolean G_InAttackParry(gentity_t *self)
 		return qfalse;
 	}
 
-	if (self->client->ps.userInt3 & (1 << FLAG_PARRIED))
+	if (self->client->ps.powerups[PW_BLOCK])
 	{//can't attack parry when parried.
 		return qfalse;
 	}
@@ -9954,3 +10211,4 @@ qboolean G_InAttackParry(gentity_t *self)
 	return qfalse;
 }
 //[/SaberSys]
+

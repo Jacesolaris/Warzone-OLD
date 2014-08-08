@@ -43,6 +43,7 @@ float	pm_stopspeed = 100.0f;
 float	pm_duckScale = 0.50f;
 float	pm_swimScale = 0.50f;
 float	pm_wadeScale = 0.70f;
+float	pm_saberwalkScale = 0.50f;
 
 float	pm_vehicleaccelerate = 36.0f;
 float	pm_accelerate = 10.0f;
@@ -3577,6 +3578,18 @@ static void PM_WalkMove( void ) {
 			wishspeed = pm->ps->speed * pm_duckScale;
 		}
 	}
+	else if ((pm->ps->powerups[PW_BLOCK])
+		|| (pm->ps->fd.forcePowersActive&(1 << FP_LIGHTNING))
+		|| (pm->ps->fd.forcePowersActive&(1 << FP_GRIP))
+		|| (pm->ps->fd.forcePowersActive&(1 << FP_DRAIN)))
+	{
+		//Defending AND NOT sprinting
+		if (wishspeed > pm->ps->speed * pm_saberwalkScale)
+		{
+			//Defending - which means we go walking speed
+			wishspeed = pm->ps->speed * pm_saberwalkScale;
+		}
+	}
 
 	// clamp the speed lower if wading or walking on the bottom
 	if ( pm->waterlevel ) {
@@ -5653,7 +5666,10 @@ static void PM_Footsteps( void ) {
 		{ //let it finish first
 			bobmove = 0.2f;
 		}
-		else if ( !( pm->cmd.buttons & BUTTON_WALKING ) )
+		else if (!(pm->cmd.buttons & BUTTON_WALKING) && !(pm->ps->powerups[PW_BLOCK]) &&
+			!(pm->ps->fd.forcePowersActive&(1 << FP_LIGHTNING)) &&
+			!(pm->ps->fd.forcePowersActive&(1 << FP_GRIP)) &&
+			!(pm->ps->fd.forcePowersActive&(1 << FP_DRAIN)))
 		{//running
 			bobmove = 0.4f;	// faster speeds bob faster
 			if ( pm->ps->clientNum >= MAX_CLIENTS &&

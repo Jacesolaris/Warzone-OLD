@@ -3280,12 +3280,14 @@ static void CG_FX( centity_t *cent )
 qboolean CG_InFOV( vec3_t spot, vec3_t from, vec3_t fromAngles, int hFOV, int vFOV )
 {
 	vec3_t	deltaVector, angles, deltaAngles;
+	vec3_t	fromAnglesCopy;
 
 	VectorSubtract ( spot, from, deltaVector );
 	vectoangles ( deltaVector, angles );
+	VectorCopy(fromAngles, fromAnglesCopy);
 	
-	deltaAngles[PITCH]	= AngleDelta ( fromAngles[PITCH], angles[PITCH] );
-	deltaAngles[YAW]	= AngleDelta ( fromAngles[YAW], angles[YAW] );
+	deltaAngles[PITCH]	= AngleDelta ( fromAnglesCopy[PITCH], angles[PITCH] );
+	deltaAngles[YAW]	= AngleDelta ( fromAnglesCopy[YAW], angles[YAW] );
 
 	if ( fabs ( deltaAngles[PITCH] ) <= vFOV && fabs ( deltaAngles[YAW] ) <= hFOV ) 
 	{
@@ -3363,10 +3365,11 @@ Ghoul2 Insert Start
 		}
 
 		// FOV cull...
-		if (!CG_InFOV( cent->lerpOrigin, cg.refdef.vieworg, cg.refdef.viewangles, cg.refdef.fov_x * 1.1, cg.refdef.fov_y * 1.1))
+		/* your friend should fix this magic */
+/*		if (!CG_InFOV( cent->lerpOrigin, cg.refdef.vieworg, cg.refdef.viewangles, cg.refdef.fov_x * 1.1, cg.refdef.fov_y * 1.1))
 		{
 			return;
-		}
+		}*/
 
 		// Visibility cull...
 		/*if (dist > 256 && !CULL_OrgVisible(cg.refdef.vieworg, cent->lerpOrigin, cg.clientNum))

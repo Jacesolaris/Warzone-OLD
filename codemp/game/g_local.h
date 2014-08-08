@@ -897,6 +897,8 @@ struct gclient_s {
 	int			lastBladeCollided;
 
 	sabimpact_t	sabimpact[MAX_SABERS][MAX_BLADES];
+	//used for debouncing saber viewlock
+	int			viewLockTime;
 	//[SaberSys]
 	char          botSoundDir[MAX_QPATH];
 };

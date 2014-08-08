@@ -4206,7 +4206,7 @@ int PM_KickMoveForConditions(void)
 	{
 		//if (pm->cmd.buttons & BUTTON_ATTACK)
 		//if (pm->ps->pm_flags & PMF_JUMP_HELD)
-		if (0)
+		if (1)
 		{ //ok, let's try some fancy kicks
 			//qboolean is actually of type int anyway, but just for safeness.
 			int front = (int)PM_CheckEnemyPresence( DIR_FRONT, 100.0f );
@@ -4384,57 +4384,59 @@ int PM_SaberBounceForAttack(int move);
 qboolean BG_SuperBreakLoseAnim(int anim);
 qboolean BG_SuperBreakWinAnim(int anim);
 //[SaberSys]
-int PM_SetBlock(void)
-{
-	int anim = BOTH_STAND2;
+//void PM_SetBlock(void)
+//{//Added check to Manual Blocking W:I:P
+//	pm->ps->saberBlocked = BLOCKED_LOWER_RIGHT;//this is the stance when holding block+attack together //serenity        
+//	if (pm->cmd.forwardmove < 0)
+//	{//Upper Top block
+//
+//		if (pm->cmd.rightmove < 0)
+//		{//upper left block
+//			pm->ps->saberBlocked = BLOCKED_UPPER_LEFT;
+//		}
+//		else if (pm->cmd.rightmove > 0)
+//		{//upper right block
+//			pm->ps->saberBlocked = BLOCKED_UPPER_RIGHT;
+//		}
+//		else
+//		{//Top Block
+//			pm->ps->saberBlocked = BLOCKED_TOP;//this is the BACK BLOCK //serenity
+//		}
+//	}
+//	else if (pm->cmd.forwardmove > 0)
+//	{
+//		if (pm->cmd.rightmove < 0)
+//		{//lower left block
+//			pm->ps->saberBlocked = BLOCKED_LOWER_LEFT;
+//		}
+//		else if (pm->cmd.rightmove > 0)
+//		{//lower right block
+//			pm->ps->saberBlocked = BLOCKED_LOWER_RIGHT;
+//		}
+//		else
+//		{//This would be a bottom block, but that doesn't exist at the moment.  Just 
+//			//do nothing
+//			pm->ps->saberBlocked = BLOCKED_TOP;
+//		}
+//	}
+//	else
+//	{
+//		if (pm->cmd.rightmove < 0)
+//		{//left block doesn't exist so we just use the upper blocks for now.
+//			pm->ps->saberBlocked = BLOCKED_UPPER_LEFT;
+//		}
+//		else if (pm->cmd.rightmove > 0)
+//		{//right block doesn't exist so we just use the upper blocks for now.
+//			pm->ps->saberBlocked = BLOCKED_UPPER_RIGHT;
+//		}
+//		else
+//		{//centered block.  This is the center block now.//serenity
+//			//pm->ps->saberMove = LS_READY;
+//			pm->ps->saberBlocked = BLOCKED_LOWER_LEFT;//       BLOCKED_TOP_PROJ
+//		}
+//	}
+//}
 
-	if (pm->ps->saberActionFlags & (1 << SAF_BLOCKING) )//this is the walking BACK BLOCK 
-	{//Upper Top block          
-		if (pm->cmd.rightmove < 0)
-		{//upper left block
-			pm->ps->saberBlocked = BLOCKED_UPPER_LEFT;
-		}
-		else if (pm->cmd.rightmove > 0)
-		{//upper right block
-			pm->ps->saberBlocked = BLOCKED_UPPER_RIGHT;
-		}
-		else
-		{//Top Block
-			pm->ps->saberBlocked = BLOCKED_TOP;
-		}
-	}
-	else if (pm->cmd.forwardmove > 0)//Walking Forward BLOCK 
-	{
-		if (pm->cmd.rightmove < 0)
-		{//lower left block
-			pm->ps->saberBlocked = BLOCKED_LOWER_LEFT;
-		}
-		else if (pm->cmd.rightmove > 0)
-		{//lower right block
-			pm->ps->saberBlocked = BLOCKED_LOWER_RIGHT;
-		}
-		else
-		{
-			pm->ps->saberBlocked = BLOCKED_TOP;
-		}
-	}
-	else
-	{
-		if (pm->cmd.rightmove < 0)//left block
-		{
-			pm->ps->saberBlocked = BLOCKED_UPPER_LEFT;
-		}
-		else if (pm->cmd.rightmove > 0)//right block
-		{
-			pm->ps->saberBlocked = BLOCKED_UPPER_RIGHT;
-		}
-		else
-		{//not moving just holding button block.
-			anim = BOTH_STAND2;
-		}
-	}
-	return anim;
-}
 
 int PM_ReturnforQuad(int quad)
 {
@@ -4715,12 +4717,17 @@ void PM_WeaponLightsaber(void)
 
 	//[SaberSys]
 	//preblocks can be interrupted
-	if (PM_SaberInParry(pm->ps->saberMove) && pm->ps->saberActionFlags & (1 << SAF_BLOCKING) // in a block
-		&& ((pm->cmd.buttons & BUTTON_ALT_ATTACK) || (pm->cmd.buttons & BUTTON_ATTACK))) //and attempting an attack
-	{//interrupting a preblock
-		pm->ps->weaponTime = 0;
-		pm->ps->torsoTimer = 0;
-	}
+	//if (PM_SaberInParry(pm->ps->saberMove) && pm->ps->saberActionFlags & (1 << SAF_BLOCKING) // in a block
+	//	&& ((pm->cmd.buttons & BUTTON_ALT_ATTACK) || (pm->cmd.buttons & BUTTON_ATTACK))) //and attempting an attack
+	//{//interrupting a preblock
+	//	pm->ps->weaponTime = 0;
+	//	pm->ps->torsoTimer = 0;
+	//}
+	//if (pm->ps->powerups[PW_BLOCK] && (pm->cmd.buttons & BUTTON_ATTACK))
+	//{
+	//	//pm->ps->saberMove = LS_READY;
+	//	PM_SetBlock();
+	//}
 
 	if ( (pm->cmd.buttons & BUTTON_ALT_ATTACK) )
 	{ //might as well just check for a saber throw right here
@@ -5935,49 +5942,6 @@ void PM_SetSaberMove(short newMove)
 			pm->ps->saberBlocked = BLOCKED_NONE;
 		}
 	}
-}
-
-//saber status utility tools
-qboolean BG_SaberInFullDamageMove(playerState_t *ps, int AnimIndex)
-{//The player is attacking with a saber attack that does full damage
-	if ((BG_SaberInAttack(ps->saberMove) && !BG_KickMove(ps->saberMove) && !BG_InSaberLock(ps->torsoAnim))
-		|| BG_SuperBreakWinAnim(ps->torsoAnim))
-	{//in attack animation
-		if ((ps->saberMove == LS_A_FLIP_STAB || ps->saberMove == LS_A_FLIP_SLASH)
-			&& (BG_GetTorsoAnimPoint(ps, AnimIndex) <= .5 || BG_GetTorsoAnimPoint(ps, AnimIndex) >= .87)) //assumes that the dude is 
-		{//flip attacks shouldn't do damage during the whole move.
-			return qfalse;
-		}
-
-		if (ps->saberMove == BOTH_ROLL_STAB && BG_GetTorsoAnimPoint(ps, AnimIndex) <= .5)
-		{//don't do damage during the follow thru part of the roll stab.
-			return qfalse;
-		}
-
-		if (ps->saberBlocked == BLOCKED_NONE)
-		{//and not attempting to do some sort of block animation
-			return qtrue;
-		}
-	}
-	return qfalse;
-}
-
-qboolean BG_SaberInTransitionDamageMove(playerState_t *ps)
-{//player is in a saber move where it does transitional damage
-	if (PM_SaberInTransition(ps->saberMove))
-	{
-		if (ps->saberBlocked == BLOCKED_NONE)
-		{//and not attempting to do some sort of block animation
-			return qtrue;
-		}
-	}
-	return qfalse;
-}
-
-
-qboolean BG_SaberInNonIdleDamageMove(playerState_t *ps, int AnimIndex)
-{//player is in a saber move that does something more than idle saber damage
-	return BG_SaberInFullDamageMove(ps, AnimIndex);
 }
 
 saberInfo_t *BG_MySaber( int clientNum, int saberNum )
