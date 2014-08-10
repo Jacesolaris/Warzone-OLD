@@ -2891,7 +2891,7 @@ void ClearNPCGlobals( void );
 void AI_UpdateGroups( void );
 void ClearPlayerAlertEvents( void );
 void SiegeCheckTimers(void);
-void WP_SaberStartMissileBlockCheck( gentity_t *self, usercmd_t *ucmd );
+void WP_SaberStartMissileBlockCheck(gentity_t *self, usercmd_t *ucmd);
 extern void Jedi_Decloak( gentity_t *self );
 qboolean G_PointInBounds( vec3_t point, vec3_t mins, vec3_t maxs );
 

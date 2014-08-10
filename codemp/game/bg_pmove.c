@@ -253,23 +253,230 @@ qboolean QINLINE PM_IsRocketTrooper(void)
 	return qfalse;
 }
 
-int PM_GetSaberStance(void)
+int PM_GetSaberStance()
 {
 	int anim = BOTH_STAND2;
 	saberInfo_t *saber1 = BG_MySaber(pm->ps->clientNum, 0);
 	saberInfo_t *saber2 = BG_MySaber(pm->ps->clientNum, 1);
+
+	signed char forwardmove = pm->cmd.forwardmove;
+	signed char rightmove = pm->cmd.rightmove;
+
+	int nSaberStance = pm->ps->fd.saberAnimLevel;
 
 	if (!pm->ps->saberEntityNum)
 	{ //lost it
 		return BOTH_STAND1;
 	}
 
-	if (BG_SabersOff(pm->ps))
+	if (pm->ps->weaponstate == WEAPON_RAISING)
+	{
+		if (pm->ps->fd.saberAnimLevel == SS_STAFF)
+		{
+			return BOTH_S1_S7;
+		}
+		else if (pm->ps->fd.saberAnimLevel != SS_DUAL)
+		{
+			return BOTH_STAND1TO2;
+		}
+	}
+
+	if (!(pm->ps->powerups[PW_BLOCK])
+		&& !(pm->ps->weaponstate == WEAPON_DROPPING
+		|| pm->ps->weaponstate == WEAPON_RAISING))
 	{
 		return BOTH_STAND1;
 	}
 
-	/*
+	if (BG_SabersOff(pm->ps) && !(pm->ps->weaponstate == WEAPON_DROPPING
+		|| pm->ps->weaponstate == WEAPON_RAISING))
+	{
+		return BOTH_STAND1;
+	}
+
+	//if ((pm->cmd.buttons&BUTTON_ATTACK) && !(pm->ps->powerups[PW_BLOCK]))
+	if ((pm->ps->powerups[PW_BLOCK]) && !(pm->cmd.buttons&BUTTON_ATTACK))
+	{//for now I'll assume that we're using an inverted control system.
+		if (forwardmove < 0)
+		{
+			if (rightmove < 0)
+			{//upper left block
+				if (nSaberStance == SS_DUAL)
+				{
+					return BOTH_P6_S6_TL;
+				}
+				else if (nSaberStance == SS_STAFF)
+				{
+					return BOTH_P7_S7_TL;
+				}
+#ifdef BLOCKING_STANCE_TAVION
+				else if (nSaberStance == SS_TAVION)
+				{
+					return BOTH_TAVION_TL;
+				}
+#endif
+				else
+				{
+					return BOTH_P1_S1_TL;
+				}
+			}
+			else if (rightmove > 0)
+			{//upper right block
+				if (nSaberStance == SS_DUAL)
+				{
+					return BOTH_P6_S6_TR;
+				}
+				else if (nSaberStance == SS_STAFF)
+				{
+					return BOTH_P7_S7_TR;
+				}
+#ifdef BLOCKING_STANCE_TAVION
+				else if (nSaberStance == SS_TAVION)
+				{
+					return BOTH_TAVION_TR;
+				}
+#endif
+				else
+				{
+					return BOTH_P1_S1_TR;
+				}
+			}
+			else
+			{//Top Block
+				if (nSaberStance == SS_DUAL)
+				{
+					return BOTH_P6_S6_T_;
+				}
+				else if (nSaberStance == SS_STAFF)
+				{
+					return BOTH_P7_S7_T_;
+				}
+#ifdef BLOCKING_STANCE_TAVION
+				else if (nSaberStance == SS_TAVION)
+				{
+					return BOTH_TAVION_T;
+				}
+#endif
+				else
+				{
+					return BOTH_P1_S1_T_;
+				}
+			}
+		}
+		else if (forwardmove > 0)
+		{
+			if (rightmove < 0)
+			{//lower left block
+				if (nSaberStance == SS_DUAL)
+				{
+					return BOTH_P6_S6_BL;
+				}
+				else if (nSaberStance == SS_STAFF)
+				{
+					return BOTH_P7_S7_BL;
+				}
+#ifdef BLOCKING_STANCE_TAVION
+				else if (nSaberStance == SS_TAVION)
+				{
+					return BOTH_TAVION_BL;
+				}
+#endif
+				else
+				{
+					return BOTH_P1_S1_BL;
+				}
+			}
+			else if (rightmove > 0)
+			{//lower right block
+				if (nSaberStance == SS_DUAL)
+				{
+					return BOTH_P6_S6_BR;
+				}
+				else if (nSaberStance == SS_STAFF)
+				{
+					return BOTH_P7_S7_BR;
+				}
+#ifdef BLOCKING_STANCE_TAVION
+				else if (nSaberStance == SS_TAVION)
+				{
+					return BOTH_TAVION_BR;
+				}
+#endif
+				else
+				{
+					return BOTH_P1_S1_BR;
+				}
+			}
+			else
+			{
+				//Top Block
+				if (nSaberStance == SS_DUAL)
+				{
+					return BOTH_P6_S6_T_;
+				}
+				else if (nSaberStance == SS_STAFF)
+				{
+					return BOTH_P7_S7_T_;
+				}
+#ifdef BLOCKING_STANCE_TAVION
+				else if (nSaberStance == SS_TAVION)
+				{
+					return BOTH_TAVION_T;
+				}
+#endif
+				else
+				{
+					return BOTH_P1_S1_T_;
+				}
+			}
+		}
+		else
+		{
+			if (rightmove < 0)
+			{//left block doesn't exist so we just use the upper blocks for now.
+				if (nSaberStance == SS_DUAL)
+				{
+					return BOTH_P6_S6_TL;
+				}
+				else if (nSaberStance == SS_STAFF)
+				{
+					return BOTH_P7_S7_TL;
+				}
+#ifdef BLOCKING_STANCE_TAVION
+				else if (nSaberStance == SS_TAVION)
+				{
+					return BOTH_TAVION_TL;
+				}
+#endif
+				else
+				{
+					return BOTH_P1_S1_TL;
+				}
+			}
+			else if (rightmove > 0)
+			{//right block doesn't exist so we just use the upper blocks for now.
+				if (nSaberStance == SS_DUAL)
+				{
+					return BOTH_P6_S6_TR;
+				}
+				else if (nSaberStance == SS_STAFF)
+				{
+					return BOTH_P7_S7_TR;
+				}
+#ifdef BLOCKING_STANCE_TAVION
+				else if (nSaberStance == SS_TAVION)
+				{
+					return BOTH_TAVION_TR;
+				}
+#endif
+				else
+				{
+					return BOTH_P1_S1_TR;
+				}
+			}
+		}
+	}
+
 	if (saber1
 		&& saber1->readyAnim != -1)
 	{
@@ -288,212 +495,40 @@ int PM_GetSaberStance(void)
 	{//dual sabers, both on
 		return BOTH_SABERDUAL_STANCE;
 	}
-	*/
+	
 
-	switch (pm->ps->saberMoveStyle)
+	switch (pm->ps->fd.saberAnimLevel)
 	{
-	case 1:
-		switch ( pm->ps->fd.saberAnimLevel )
-		{
-		case SS_DUAL:
-			anim = BOTH_SABERDUAL_STANCE;
-			break;
-		case SS_STAFF:
-			anim = BOTH_SABERSTAFF_STANCE;
-			break;
-		case SS_FAST:
-			//anim = BOTH_STAND1;
-			anim = BOTH_B6__R___;
-			break;
-		case SS_TAVION: // OK
-			anim = BOTH_P1_S1_TR;
-			break;
-		case SS_STRONG: // OK
-			anim = BOTH_STAND3;
-			break;
-		case SS_NONE:
-		case SS_MEDIUM: // OK
-			anim = BOTH_STAND8;
-			break;
-		case SS_DESANN: // OK
-			//anim = BOTH_STAND5;
-			//anim = BOTH_D7_TL___;
-			anim = BOTH_D6__R___;
-			break;
-		default:
-			anim = BOTH_STAND2;
-			break;
-		}
+	case SS_DUAL:
+		anim = BOTH_SABERDUAL_STANCE;
 		break;
-	case 2:
-		switch ( pm->ps->fd.saberAnimLevel )
-		{
-		case SS_DUAL:
-			anim = BOTH_SABERDUAL_STANCE;
-			break;
-		case SS_STAFF:
-			anim = BOTH_SABERSTAFF_STANCE;
-			break;
-		case SS_FAST:
-			//anim = BOTH_STAND8;
-			//anim = BOTH_B7_TL___;
-			//anim = BOTH_D7_TR___;
-			anim = BOTH_B6__L___;
-			break;
-		case SS_TAVION: // OK
-			//anim = BOTH_P6_S6_TL;
-			anim = BOTH_D7__R___;
-			break;
-		case SS_STRONG: // OK
-			anim = BOTH_P1_S1_T_;
-			break;
-		case SS_NONE:
-		case SS_MEDIUM: // OK
-			//anim = BOTH_STAND9;
-			//anim = BOTH_B7_TR___;
-			anim = BOTH_D6__L___;
-			break;
-		case SS_DESANN: // OK
-			//anim = BOTH_P1_S1_TL;
-			anim = BOTH_P7_S7_TR;
-			break;
-		default:
-			anim = BOTH_STAND2;
-			break;
-		}
+	case SS_STAFF:
+		anim = BOTH_SABERSTAFF_STANCE;
 		break;
-	case 3:
-		switch ( pm->ps->fd.saberAnimLevel )
-		{
-		case SS_DUAL:
-			anim = BOTH_SABERDUAL_STANCE;
-			break;
-		case SS_STAFF:
-			anim = BOTH_SABERSTAFF_STANCE;
-			break;
-		case SS_FAST:
-			//anim = BOTH_P6_S6_TR;
-			//anim = BOTH_D7__L___;
-			anim = BOTH_B7__L___;
-			break;
-		case SS_TAVION: // OK
-			anim = BOTH_P6_S6_T_;
-			break;
-		case SS_STRONG: // OK
-			anim = BOTH_P7_S7_TL;
-			break;
-		case SS_NONE:
-		case SS_MEDIUM: // OK
-			//anim = BOTH_STAND6;
-			anim = BOTH_B7_T____;
-			break;
-		case SS_DESANN: // OK
-			anim = BOTH_P7_S7_T_;
-			break;
-		default:
-			anim = BOTH_STAND2;
-			break;
-		}
+	case SS_FAST:
+		anim = BOTH_SABERFAST_STANCE;
 		break;
-	case 4:
-		switch ( pm->ps->fd.saberAnimLevel )
-		{
-		case SS_DUAL:
-			anim = BOTH_SABERDUAL_STANCE;
-			break;
-		case SS_STAFF:
-			anim = BOTH_SABERSTAFF_STANCE;
-			break;
-		case SS_FAST:
-			anim = 254;
-			break;
-		case SS_TAVION: // OK
-			anim = 211;
-			break;
-		case SS_STRONG: // OK
-			anim = 292;
-			break;
-		case SS_NONE:
-		case SS_MEDIUM: // OK
-			anim = 188;
-			break;
-		case SS_DESANN: // OK
-			anim = 167;
-			break;
-		default:
-			anim = BOTH_STAND2;
-			break;
-		}
+	case SS_TAVION:
+		anim = BOTH_SABERFAST_STANCE;
+		//#endif
 		break;
+	case SS_STRONG:
+		anim = BOTH_SABERSLOW_STANCE;
+		break;
+	case SS_DESANN:
+#ifdef BLOCKING_STANCE_DESANN
+		anim = BOTH_DESANN_STANCE;
+#else
+		anim = BOTH_STAND2;
+#endif
+		break;
+	case SS_NONE:
+	case SS_MEDIUM:
 	default:
-		switch (pm->ps->fd.saberAnimLevel)
-		{
-		case SS_DUAL:
-			if (!(pm->cmd.buttons & BUTTON_ATTACK) && pm->ps->powerups[PW_BLOCK])
-			{
-				anim = BOTH_SABERDUAL_STANCE;
-			}
-			else
-				anim = BOTH_STAND1IDLE1;
-			break;
-		case SS_STAFF:
-			if (!(pm->cmd.buttons & BUTTON_ATTACK) && pm->ps->powerups[PW_BLOCK])
-			{
-				anim = BOTH_SABERSTAFF_STANCE;
-			}
-			else
-				anim = BOTH_STAND1IDLE1;
-			break;
-		case SS_FAST:
-			if (!(pm->cmd.buttons & BUTTON_ATTACK) && pm->ps->powerups[PW_BLOCK])
-			{
-				anim = BOTH_SABERFAST_STANCE;
-			}
-			else
-				anim = BOTH_STAND1IDLE1;
-			break;
-		case SS_STRONG:
-			if (!(pm->cmd.buttons & BUTTON_ATTACK) && pm->ps->powerups[PW_BLOCK])
-			{
-				anim = BOTH_STAND2IDLE2;
-			}
-			else
-				anim = BOTH_STAND1IDLE1;
-			break;
-		case SS_TAVION:
-			if (!(pm->cmd.buttons & BUTTON_ATTACK) && pm->ps->powerups[PW_BLOCK])
-			{
-				anim = BOTH_TAVION_STANCE;
-			}
-			else
-				anim = BOTH_STAND1IDLE1;
-			break;
-		case SS_DESANN:
-			if (!(pm->cmd.buttons & BUTTON_ATTACK) && pm->ps->powerups[PW_BLOCK])
-			{
-				anim = BOTH_DESANN_STANCE;
-			}
-			else
-				anim = BOTH_STAND1IDLE1;
-			break;
-		case SS_MEDIUM:
-			if (!(pm->cmd.buttons & BUTTON_ATTACK) && pm->ps->powerups[PW_BLOCK])
-			{
-				anim = BOTH_STAND2;
-			}
-			else
-				anim = BOTH_STAND1IDLE1;
-		case SS_NONE:
-		default:
-			if (!(pm->cmd.buttons & BUTTON_ATTACK) && pm->ps->powerups[PW_BLOCK])
-			{
-				anim = BOTH_STAND2;
-			}
-			else
-				anim = BOTH_STAND1IDLE1;
-			break;
-		}
+		anim = BOTH_STAND2;
+		break;
 	}
+	
 	return anim;
 }
 
@@ -6542,7 +6577,7 @@ rest:
 
 		// dumb, but since we shoot a charged weapon on button-up, we need to repress this button for now
 		pm->cmd.buttons |= BUTTON_ALT_ATTACK;
-		pm->ps->eFlags |= (EF_FIRING|EF_ALT_FIRING);
+		pm->ps->eFlags |= (EF_FIRING|EF_ALT_FIRING/*|EF_BUTTON_BLOCK*/);
 	}
 
 	return qfalse; // continue with the rest of the weapon code
@@ -8880,6 +8915,61 @@ qboolean BG_InRollAnim( entityState_t *cent )
 	case BOTH_ROLL_L:
 		return qtrue;
 	}
+	return qfalse;
+}
+
+qboolean BG_InGetUpAnim(playerState_t *ps)
+{
+	switch ((ps->legsAnim))
+	{
+	case BOTH_GETUP1:
+	case BOTH_GETUP2:
+	case BOTH_GETUP3:
+	case BOTH_GETUP4:
+	case BOTH_GETUP5:
+	case BOTH_FORCE_GETUP_F1:
+	case BOTH_FORCE_GETUP_F2:
+	case BOTH_FORCE_GETUP_B1:
+	case BOTH_FORCE_GETUP_B2:
+	case BOTH_FORCE_GETUP_B3:
+	case BOTH_FORCE_GETUP_B4:
+	case BOTH_FORCE_GETUP_B5:
+	case BOTH_GETUP_BROLL_B:
+	case BOTH_GETUP_BROLL_F:
+	case BOTH_GETUP_BROLL_L:
+	case BOTH_GETUP_BROLL_R:
+	case BOTH_GETUP_FROLL_B:
+	case BOTH_GETUP_FROLL_F:
+	case BOTH_GETUP_FROLL_L:
+	case BOTH_GETUP_FROLL_R:
+		return qtrue;
+	}
+
+	switch ((ps->torsoAnim))
+	{
+	case BOTH_GETUP1:
+	case BOTH_GETUP2:
+	case BOTH_GETUP3:
+	case BOTH_GETUP4:
+	case BOTH_GETUP5:
+	case BOTH_FORCE_GETUP_F1:
+	case BOTH_FORCE_GETUP_F2:
+	case BOTH_FORCE_GETUP_B1:
+	case BOTH_FORCE_GETUP_B2:
+	case BOTH_FORCE_GETUP_B3:
+	case BOTH_FORCE_GETUP_B4:
+	case BOTH_FORCE_GETUP_B5:
+	case BOTH_GETUP_BROLL_B:
+	case BOTH_GETUP_BROLL_F:
+	case BOTH_GETUP_BROLL_L:
+	case BOTH_GETUP_BROLL_R:
+	case BOTH_GETUP_FROLL_B:
+	case BOTH_GETUP_FROLL_F:
+	case BOTH_GETUP_FROLL_L:
+	case BOTH_GETUP_FROLL_R:
+		return qtrue;
+	}
+
 	return qfalse;
 }
 

@@ -3362,3 +3362,40 @@ qboolean BG_BlockAnim(int anim)
 	return qfalse;
 }
 //[/SaberSys]
+
+
+//[SaberSys]
+qboolean PM_InStaggerAnimation(int anim)
+{//animation based version of PM_SaberInKnockaway used for BG_SaberStartTransAnim
+	if (anim >= BOTH_K1_S1_T_ && anim <= BOTH_K1_S1_BR)
+	{//single saber
+		return qtrue;
+	}
+
+	if (anim >= BOTH_K6_S6_T_ && anim <= BOTH_K6_S6_BR)
+	{//dual saber
+		return qtrue;
+	}
+
+	if (anim >= BOTH_K7_S7_T_ && anim <= BOTH_K7_S7_BR)
+	{//staff saber
+		return qtrue;
+	}
+	return qfalse;
+}
+//[/SaberSys]
+
+qboolean PM_InGetUpAnimation(int anim)
+{
+switch (anim)
+{
+case BOTH_GETUP_BROLL_B:
+case BOTH_GETUP_BROLL_F:
+case BOTH_GETUP_FROLL_B:
+case BOTH_GETUP_FROLL_F:
+	return qtrue;
+	break;
+}
+return qfalse;
+}
+

@@ -4383,59 +4383,84 @@ qboolean PM_SwimmingAnim(int anim);
 int PM_SaberBounceForAttack(int move);
 qboolean BG_SuperBreakLoseAnim(int anim);
 qboolean BG_SuperBreakWinAnim(int anim);
+qboolean BG_SaberLockBreakAnim(int anim);
+
 //[SaberSys]
-//void PM_SetBlock(void)
-//{//Added check to Manual Blocking W:I:P
-//	pm->ps->saberBlocked = BLOCKED_LOWER_RIGHT;//this is the stance when holding block+attack together //serenity        
-//	if (pm->cmd.forwardmove < 0)
-//	{//Upper Top block
-//
-//		if (pm->cmd.rightmove < 0)
-//		{//upper left block
-//			pm->ps->saberBlocked = BLOCKED_UPPER_LEFT;
-//		}
-//		else if (pm->cmd.rightmove > 0)
-//		{//upper right block
-//			pm->ps->saberBlocked = BLOCKED_UPPER_RIGHT;
-//		}
-//		else
-//		{//Top Block
-//			pm->ps->saberBlocked = BLOCKED_TOP;//this is the BACK BLOCK //serenity
-//		}
-//	}
-//	else if (pm->cmd.forwardmove > 0)
-//	{
-//		if (pm->cmd.rightmove < 0)
-//		{//lower left block
-//			pm->ps->saberBlocked = BLOCKED_LOWER_LEFT;
-//		}
-//		else if (pm->cmd.rightmove > 0)
-//		{//lower right block
-//			pm->ps->saberBlocked = BLOCKED_LOWER_RIGHT;
-//		}
-//		else
-//		{//This would be a bottom block, but that doesn't exist at the moment.  Just 
-//			//do nothing
-//			pm->ps->saberBlocked = BLOCKED_TOP;
-//		}
-//	}
-//	else
-//	{
-//		if (pm->cmd.rightmove < 0)
-//		{//left block doesn't exist so we just use the upper blocks for now.
-//			pm->ps->saberBlocked = BLOCKED_UPPER_LEFT;
-//		}
-//		else if (pm->cmd.rightmove > 0)
-//		{//right block doesn't exist so we just use the upper blocks for now.
-//			pm->ps->saberBlocked = BLOCKED_UPPER_RIGHT;
-//		}
-//		else
-//		{//centered block.  This is the center block now.//serenity
-//			//pm->ps->saberMove = LS_READY;
-//			pm->ps->saberBlocked = BLOCKED_LOWER_LEFT;//       BLOCKED_TOP_PROJ
-//		}
-//	}
-//}
+//Sets your saber block position based on your current movement commands.
+//Be careful as this assumes that you have already done all the nessicary prechecks.
+void PM_SetBlock(void)
+{
+#if 0
+	signed char forwardmove = pm->cmd.forwardmove;
+	signed char rightmove = pm->cmd.rightmove;
+
+	if ((pm->ps->fd.saberAnimLevel == SS_FAST ||
+		pm->ps->fd.saberAnimLevel == SS_MEDIUM ||
+		pm->ps->fd.saberAnimLevel == SS_STRONG) &&
+		forwardmove > 0)
+	{
+		//Swap forward and back movement values - looks a bit wierd with the 'proper' stances
+		forwardmove = -forwardmove;
+	}
+
+	//for now I'll assume that we're using an inverted control system.
+	if (forwardmove < 0)
+	{
+		if (rightmove < 0)
+		{//upper left block
+			pm->ps->saberBlocked = BLOCKED_UPPER_LEFT;
+		}
+		else if (rightmove > 0)
+		{//upper right block
+			pm->ps->saberBlocked = BLOCKED_UPPER_RIGHT;
+		}
+		else
+		{//Top Block
+			if (pm->ps->fd.saberAnimLevel == SS_FAST ||
+				pm->ps->fd.saberAnimLevel == SS_MEDIUM ||
+				pm->ps->fd.saberAnimLevel == SS_STRONG)
+			{
+				pm->ps->saberBlocked = BLOCKED_NORMAL_STANCE;
+			}
+			else
+			{
+				pm->ps->saberBlocked = BLOCKED_TOP;
+			}
+		}
+	}
+	else if (forwardmove > 0)
+	{
+		if (rightmove < 0)
+		{//lower left block
+			pm->ps->saberBlocked = BLOCKED_LOWER_LEFT;
+		}
+		else if (rightmove > 0)
+		{//lower right block
+			pm->ps->saberBlocked = BLOCKED_LOWER_RIGHT;
+		}
+		else
+		{//This would be a bottom block, but that doesn't exist at the moment.  Just 
+			//do nothing
+			pm->ps->saberBlocked = BLOCKED_NORMAL_STANCE;
+		}
+	}
+	else
+	{
+		if (rightmove < 0)
+		{//left block doesn't exist so we just use the upper blocks for now.
+			pm->ps->saberBlocked = BLOCKED_UPPER_LEFT;
+		}
+		else if (rightmove > 0)
+		{//right block doesn't exist so we just use the upper blocks for now.
+			pm->ps->saberBlocked = BLOCKED_UPPER_RIGHT;
+		}
+		else
+		{//centered block.  This is just the ready stance I guess.
+			pm->ps->saberBlocked = BLOCKED_NORMAL_STANCE;
+		}
+	}
+#endif
+}
 
 
 int PM_ReturnforQuad(int quad)
@@ -4788,7 +4813,6 @@ void PM_WeaponLightsaber(void)
 			}
 		}
 	}
-
 	if ( pm->ps->saberInFlight && pm->ps->saberEntityNum )
 	{//guiding saber
 		if ( (pm->ps->fd.saberAnimLevel != SS_DUAL //not using 2 sabers

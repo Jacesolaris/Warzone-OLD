@@ -885,11 +885,14 @@ struct gclient_s {
 		int		lightningDebounce;
 	} force;
 	//[SaberSys]
+	int			blockInLock;
 	int			saberSaberBlockDebounce;
 	int			saberAttackWound;
+	int			SaberAttackWoundTimer[MAX_CLIENTS];
 	int			saberIdleWound;
 	unsigned int	saberProjBlockTime;
 	unsigned int	saberBlockTime;
+	unsigned int StaggerTimer;
 	float		blockingLightningAccumulation;
 	//the SaberNum of the last enemy blade that you hit.
 	int			lastSaberCollided;
@@ -897,12 +900,17 @@ struct gclient_s {
 	int			lastBladeCollided;
 
 	sabimpact_t	sabimpact[MAX_SABERS][MAX_BLADES];
+		
 	//used for debouncing saber viewlock
 	int			viewLockTime;
+	int ParryWithOurSaber;
+	unsigned int DoParryStartTimer;
+	int GiveUsSaberStyles;
 	//[SaberSys]
 	char          botSoundDir[MAX_QPATH];
+	
 };
-
+#define MAX_REAL_PASSTHRU 8
 //Interest points
 
 #define MAX_INTEREST_POINTS		64
@@ -959,6 +967,14 @@ typedef struct alertEvent_s
 	int					ID;			//unique... if get a ridiculous number, this will repeat, but should not be a problem as it's just comparing it to your lastAlertID
 	int					timestamp;	//when it was created
 } alertEvent_t;
+
+typedef struct realTraceResults_s{
+
+	int realTraceResults[MAX_REAL_PASSTHRU];
+	trace_t tr;
+	int result;
+	gentity_t def;
+} realTraceResults_t;
 
 //
 // this structure is cleared as each map is entered

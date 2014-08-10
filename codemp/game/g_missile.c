@@ -340,7 +340,7 @@ G_MissileImpact
 ================
 */
 //[SaberSys]
-qboolean WP_SaberBlockNonRandom(gentity_t *self, gentity_t *other, vec3_t hitloc, qboolean missileBlock);
+void WP_SaberBlockNonRandom(gentity_t *self, vec3_t hitloc, qboolean missileBlock);
 void WP_flechette_alt_blow( gentity_t *ent );
 void G_MissileImpact( gentity_t *ent, trace_t *trace ) {
 	gentity_t		*other;
@@ -570,7 +570,7 @@ void G_MissileImpact( gentity_t *ent, trace_t *trace ) {
 			//WP_SaberCanBlock(otherOwner, ent->r.currentOrigin, 0, 0, qtrue, 0);
 			if (otherOwner->client && otherOwner->client->ps.weaponTime <= 0)
 			{
-				WP_SaberBlockNonRandom(otherOwner, NULL, ent->r.currentOrigin, qtrue);		// <-- ??? --eez
+				WP_SaberBlockNonRandom(otherOwner, ent->r.currentOrigin, qtrue);
 			}
 
 			te = G_TempEntity( ent->r.currentOrigin, EV_SABER_BLOCK );
@@ -834,32 +834,32 @@ void G_RunMissile( gentity_t *ent ) {
 		}
 	}
 	//[RealTrace]
-	G_RealTrace(ent, &tr, ent->r.currentOrigin, ent->r.mins, ent->r.maxs, origin, passent, ent->clipmask, -1, -1);
+	//G_RealTrace(ent, &tr, ent->r.currentOrigin, ent->r.mins, ent->r.maxs, origin, passent, ent->clipmask, -1, -1);
 	// trace a line from the previous position to the current position
-	//if (d_projectileGhoul2Collision.integer)
-	//{
-	//	trap->Trace( &tr, ent->r.currentOrigin, ent->r.mins, ent->r.maxs, origin, passent, ent->clipmask, qfalse, G2TRFLAG_DOGHOULTRACE|G2TRFLAG_GETSURFINDEX|G2TRFLAG_THICK|G2TRFLAG_HITCORPSES, g_g2TraceLod.integer );
+	if (d_projectileGhoul2Collision.integer)
+	{
+		trap->Trace( &tr, ent->r.currentOrigin, ent->r.mins, ent->r.maxs, origin, passent, ent->clipmask, qfalse, G2TRFLAG_DOGHOULTRACE|G2TRFLAG_GETSURFINDEX|G2TRFLAG_THICK|G2TRFLAG_HITCORPSES, g_g2TraceLod.integer );
 
-	//	if (tr.fraction != 1.0 && tr.entityNum < ENTITYNUM_WORLD)
-	//	{
-	//		gentity_t *g2Hit = &g_entities[tr.entityNum];
+		if (tr.fraction != 1.0 && tr.entityNum < ENTITYNUM_WORLD)
+		{
+			gentity_t *g2Hit = &g_entities[tr.entityNum];
 
-	//		if (g2Hit->inuse && g2Hit->client && g2Hit->ghoul2)
-	//		{ //since we used G2TRFLAG_GETSURFINDEX, tr.surfaceFlags will actually contain the index of the surface on the ghoul2 model we collided with.
-	//			g2Hit->client->g2LastSurfaceHit = tr.surfaceFlags;
-	//			g2Hit->client->g2LastSurfaceTime = level.time;
-	//		}
+			if (g2Hit->inuse && g2Hit->client && g2Hit->ghoul2)
+			{ //since we used G2TRFLAG_GETSURFINDEX, tr.surfaceFlags will actually contain the index of the surface on the ghoul2 model we collided with.
+				g2Hit->client->g2LastSurfaceHit = tr.surfaceFlags;
+				g2Hit->client->g2LastSurfaceTime = level.time;
+			}
 
-	//		if (g2Hit->ghoul2)
-	//		{
-	//			tr.surfaceFlags = 0; //clear the surface flags after, since we actually care about them in here.
-	//		}
-	//	}
-	//}
-	//else
-	//{
-	//	trap->Trace( &tr, ent->r.currentOrigin, ent->r.mins, ent->r.maxs, origin, passent, ent->clipmask, qfalse, 0, 0 );
-	//}
+			if (g2Hit->ghoul2)
+			{
+				tr.surfaceFlags = 0; //clear the surface flags after, since we actually care about them in here.
+			}
+		}
+	}
+	else
+	{
+		trap->Trace( &tr, ent->r.currentOrigin, ent->r.mins, ent->r.maxs, origin, passent, ent->clipmask, qfalse, 0, 0 );
+	}
 	//[/RealTrace]
 
 	if ( tr.startsolid || tr.allsolid ) {
