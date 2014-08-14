@@ -627,8 +627,8 @@ typedef enum {
 #define	EF_FIRING				(1<<9)		// for lightning gun
 #define EF_ALT_FIRING			(1<<10)		// for alt-fires, mostly for lightning guns though
 #define	EF_JETPACK_ACTIVE		(1<<11)		//jetpack is activated
-#define EF_BUTTON_BLOCK			(1<<12)
-//#define EF_NOT_USED_1			(1<<12)		// not used
+
+#define EF_NOT_USED_1			(1<<12)		// not used
 
 #define	EF_TALK					(1<<13)		// draw a talk balloon
 #define	EF_CONNECTION			(1<<14)		// draw a connection trouble sprite
@@ -1729,8 +1729,6 @@ qboolean BG_InSaberLock( int anim );
 
 //[SaberSys]
 qboolean BG_InWalk(int anim);
-qboolean PM_InStaggerAnimation(int anim);
-qboolean PM_InGetUpAnimation(int anim);
 //[/SaberSys]
 
 //[FatigueSys]

@@ -5714,7 +5714,7 @@ void CG_NewLightningActEffect(vec3_t muzzle, vec3_t muzzleDir, float length)
 	AngleVectors(ang, forward, NULL, NULL);
 
 	VectorMA(muzzle, length*flrand(0, 1), muzzleDir, end2);
-	trap->FX_PlayEffectID(cgs.effects.forceLightningArc, end2, forward, -1, -1, qfalse);
+	trap->FX_PlayEffectID(cgs.effects.lightningarc, end2, forward, -1, -1, qfalse);
 }//[/NewLightningEFX]
 
 //[NewLightningEFX]
@@ -5733,7 +5733,7 @@ void CG_BlockLightningEffect(vec3_t muzzle, vec3_t muzzleDir, float length)
 	VectorMA(muzzle, length*flrand(0, 1), muzzleDir, end2);
 	trap->FX_PlayEffectID(cgs.effects.forcelightningAbsorb, end2, forward, -1, -1, qfalse);
 	trap->FX_PlayEffectID(cgs.effects.forcelightningFlare, end2, forward, -1, -1, qfalse);
-	trap->FX_PlayEffectID(cgs.effects.forceLightningArc, end2, forward, -1, -1, qfalse);
+	trap->FX_PlayEffectID(cgs.effects.lightningarc, end2, forward, -1, -1, qfalse);
 	//trap->Print("Muzzle at %f %f %f\n", muzzle[0], muzzle[1], muzzle[2]);
 	//trap->Print("Muzzle dir %f %f %f\n", muzzleDir[0], muzzleDir[1], muzzleDir[2]);
 	//trap->Print("Saber Length %f\n", length);
@@ -9680,6 +9680,7 @@ void CG_SaberCompWork(vec3_t start, vec3_t end, centity_t *owner, int saberNum, 
 		doneWithTraces = qtrue; //disabling backwards tr for now, sometimes it just makes too many effects.
 	}
 }
+
 #define SABER_TRAIL_TIME	40.0f
 #define FX_USE_ALPHA		0x08000000
 
