@@ -2065,7 +2065,7 @@ const void *RB_PostProcess(const void *data)
 
 		if (r_testshader->integer)
 		{
-			for (int pass_num = 0; pass_num < 7; pass_num++)
+			for (int pass_num = 0; pass_num < 6; pass_num++)
 			{
 				RB_TestShader(srcFbo, srcBox, tr.genericFbo, dstBox, pass_num);
 				FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_NEAREST);
@@ -2074,11 +2074,17 @@ const void *RB_PostProcess(const void *data)
 
 		if (r_dof->integer)
 		{
-			for (int pass_num = 0; pass_num < 3; pass_num++)
+			for (int pass_num = 0; pass_num < 3; pass_num++) // FIXME: Add passes cvar? - 3 is best though!
 			{
 				RB_DOF(srcFbo, srcBox, tr.genericFbo, dstBox);
 				FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 			}
+		}
+
+		if (r_vibrancy->value > 0.0)
+		{
+			RB_Vibrancy(srcFbo, srcBox, tr.genericFbo, dstBox);
+			FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 		}
 
 		if (r_trueAnaglyph->integer)

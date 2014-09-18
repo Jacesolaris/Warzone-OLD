@@ -100,6 +100,8 @@ extern const char *fallbackShader_lensflare_vp;
 extern const char *fallbackShader_lensflare_fp;
 extern const char *fallbackShader_multipost_vp;
 extern const char *fallbackShader_multipost_fp;
+extern const char *fallbackShader_vibrancy_vp;
+extern const char *fallbackShader_vibrancy_fp;
 extern const char *fallbackShader_testshader_vp;
 extern const char *fallbackShader_testshader_fp;
 
@@ -1543,6 +1545,14 @@ int GLSL_BeginLoadGPUShaders(void)
 	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
 	extradefines[0] = '\0';
 
+	if (!GLSL_BeginLoadGPUShader(&tr.vibrancyShader, "vibrancy", attribs, qtrue, extradefines, qtrue, fallbackShader_vibrancy_vp, fallbackShader_vibrancy_fp))
+	{
+		ri->Error(ERR_FATAL, "Could not load vibrancy shader!");
+	}
+
+	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
+	extradefines[0] = '\0';
+
 	if (!GLSL_BeginLoadGPUShader(&tr.texturecleanShader, "textureclean", attribs, qtrue, extradefines, qtrue, fallbackShader_textureclean_vp, fallbackShader_textureclean_fp))
 	{
 		ri->Error(ERR_FATAL, "Could not load textureclean shader!");
@@ -2232,6 +2242,60 @@ void GLSL_EndLoadGPUShaders ( int startTime )
 	
 	numEtcShaders++;
 
+	if (!GLSL_EndLoadGPUShader(&tr.vibrancyShader))
+	{
+		ri->Error(ERR_FATAL, "Could not load vibrancy shader!");
+	}
+	
+	GLSL_InitUniforms(&tr.vibrancyShader);
+
+	qglUseProgram(tr.vibrancyShader.program);
+
+	GLSL_SetUniformInt(&tr.vibrancyShader, UNIFORM_LEVELSMAP,  TB_LEVELSMAP);
+	
+	{
+		vec2_t screensize;
+		screensize[0] = glConfig.vidWidth;
+		screensize[1] = glConfig.vidHeight;
+
+		GLSL_SetUniformVec2(&tr.vibrancyShader, UNIFORM_DIMENSIONS, screensize);
+	}
+
+	qglUseProgram(0);
+
+#if defined(_DEBUG)
+	GLSL_FinishGPUShader(&tr.vibrancyShader);
+#endif
+	
+	numEtcShaders++;
+
+	if (!GLSL_EndLoadGPUShader(&tr.testshaderShader))
+	{
+		ri->Error(ERR_FATAL, "Could not load testshader shader!");
+	}
+	
+	GLSL_InitUniforms(&tr.testshaderShader);
+
+	qglUseProgram(tr.testshaderShader.program);
+
+	GLSL_SetUniformInt(&tr.testshaderShader, UNIFORM_LEVELSMAP,  TB_LEVELSMAP);
+	
+	{
+		vec2_t screensize;
+		screensize[0] = glConfig.vidWidth;
+		screensize[1] = glConfig.vidHeight;
+
+		GLSL_SetUniformVec2(&tr.testshaderShader, UNIFORM_DIMENSIONS, screensize);
+	}
+
+	qglUseProgram(0);
+
+#if defined(_DEBUG)
+	GLSL_FinishGPUShader(&tr.testshaderShader);
+#endif
+	
+	numEtcShaders++;
+
 	//esharpeningShader
 	if (!GLSL_EndLoadGPUShader(&tr.esharpeningShader))
 	{
@@ -2507,37 +2571,6 @@ void GLSL_EndLoadGPUShaders ( int startTime )
 
 #if defined(_DEBUG)
 	GLSL_FinishGPUShader(&tr.anaglyphShader);
-#endif
-	
-	numEtcShaders++;
-
-
-	if (!GLSL_EndLoadGPUShader(&tr.testshaderShader))
-	{
-		ri->Error(ERR_FATAL, "Could not load testshader shader!");
-	}
-	
-	GLSL_InitUniforms(&tr.testshaderShader);
-
-	qglUseProgram(tr.testshaderShader.program);
-
-	GLSL_SetUniformInt(&tr.testshaderShader, UNIFORM_TEXTUREMAP, TB_COLORMAP);
-	GLSL_SetUniformInt(&tr.testshaderShader, UNIFORM_SCREENDEPTHMAP,  TB_LIGHTMAP);
-	
-	{
-		vec2_t screensize;
-		screensize[0] = glConfig.vidWidth;
-		screensize[1] = glConfig.vidHeight;
-
-		GLSL_SetUniformVec2(&tr.testshaderShader, UNIFORM_DIMENSIONS, screensize);
-
-		//ri->Printf(PRINT_WARNING, "Sent dimensions %f %f.\n", screensize[0], screensize[1]);
-	}
-
-	qglUseProgram(0);
-
-#if defined(_DEBUG)
-	GLSL_FinishGPUShader(&tr.testshaderShader);
 #endif
 	
 	numEtcShaders++;

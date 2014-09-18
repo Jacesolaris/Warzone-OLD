@@ -77,9 +77,6 @@ float	GrainMotion = 0.004;
 float	GrainSaturation = 1.0;
 float	GrainIntensity = 0.004;
 
-bool	use_vibrance = true;
-float	Vibrance = 1.0;
-
 //////////////////
 // HELPER FUNCS //
 //////////////////
@@ -406,26 +403,6 @@ float4 PS_ProcessSharpen2()
 	return color;
 
 }
-
-float4 PS_ProcessVibrance()
-{
-	float4	res;
-	//float3	origcolor = tex2D(u_LevelsMap, texCoord.xy).rgb;
-	float3	origcolor = tex2D(u_TextureMap, texCoord.xy).rgb;
-	float3	lumCoeff = float3(0.212656, 0.715158, 0.072186);  				//Calculate luma with these values
-	
-	float	max_color = max(origcolor.r, max(origcolor.g,origcolor.b)); 	//Find the strongest color
-	float	min_color = min(origcolor.r, min(origcolor.g,origcolor.b)); 	//Find the weakest color
-
-	float	color_saturation = max_color - min_color; 						//Saturation is the difference between min and max
-
-	float	luma = dot(lumCoeff, origcolor.rgb); 							//Calculate luma (grey)
-
-	res.rgb = lerp(vec3(luma), origcolor.rgb, (1.0 + (Vibrance * (1.0 - (sign(Vibrance) * color_saturation))))); 	//Extrapolate between luma and original by 1 + (1-saturation) - current
-	
-	res.w=1.0;
-	return res;
-}
 		
 float4 PS_ProcessAfterFX()
 {
@@ -470,24 +447,23 @@ void main()
 	vec4 color;
 
 	if (CURRENT_PASS_NUMBER == 0) {
-		color = PS_ProcessGaussianH();
-		//color = tex2D(u_TextureMap, texCoord.xy);
+		//color = PS_ProcessGaussianH();
+		color = tex2D(u_TextureMap, texCoord.xy);
 	} else if (CURRENT_PASS_NUMBER == 1) {
-		color = PS_ProcessGaussianV();
-		//color = tex2D(u_TextureMap, texCoord.xy);
+		//color = PS_ProcessGaussianV();
+		color = tex2D(u_TextureMap, texCoord.xy);
 	} else if (CURRENT_PASS_NUMBER == 2) {
 		color = PS_ProcessEdges();
 		//color = tex2D(u_TextureMap, texCoord.xy);
 	} else if (CURRENT_PASS_NUMBER == 3) {
 		color = PS_ProcessSharpen1();
+		//color = tex2D(u_TextureMap, texCoord.xy);
 	} else if (CURRENT_PASS_NUMBER == 4) {
 		color = PS_ProcessSharpen2();
+		//color = tex2D(u_TextureMap, texCoord.xy);
 	} else if (CURRENT_PASS_NUMBER == 5) {
-		//color = PS_ProcessVibrance();
-		color = tex2D(u_TextureMap, texCoord.xy);
-	} else if (CURRENT_PASS_NUMBER == 6) {
-		//color = PS_ProcessAfterFX();
-		color = tex2D(u_TextureMap, texCoord.xy);
+		color = PS_ProcessAfterFX();
+		//color = tex2D(u_TextureMap, texCoord.xy);
 	}
 
 	gl_FragColor.rgb = color.rgb;

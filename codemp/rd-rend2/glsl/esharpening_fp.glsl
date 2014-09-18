@@ -41,6 +41,7 @@ float height = viewHeight;
 float SamplingRange=1.0; //sharpening or blurring range
 //float SharpeningAmount=1.3;
 float SharpeningAmount=2.3;
+//float SharpeningAmount=3.3;
 //float SharpeningAmount=4.3;
 float ScanLineAmount=0.0;
 float ScanLineRepeat=0.0; //0.5, 0.3333, 0.25, 0.125, so on

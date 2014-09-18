@@ -310,6 +310,7 @@ extern cvar_t  *r_trueAnaglyphSeparation;
 extern cvar_t  *r_trueAnaglyphRed;
 extern cvar_t  *r_trueAnaglyphGreen;
 extern cvar_t  *r_trueAnaglyphBlue;
+extern cvar_t  *r_vibrancy;
 extern cvar_t  *r_testshader;
 
 //
@@ -2154,6 +2155,7 @@ typedef struct trGlobals_s {
 	shaderProgram_t anamorphicBlurShader;
 	shaderProgram_t anamorphicCombineShader;
 	shaderProgram_t volumelightShader;
+	shaderProgram_t vibrancyShader;
 	shaderProgram_t testshaderShader;
 
 	image_t        *bloomRenderFBOImage[3];
@@ -2468,6 +2470,7 @@ extern cvar_t  *r_trueAnaglyphSeparation;
 extern cvar_t  *r_trueAnaglyphRed;
 extern cvar_t  *r_trueAnaglyphGreen;
 extern cvar_t  *r_trueAnaglyphBlue;
+extern cvar_t  *r_vibrancy;
 extern cvar_t  *r_testshader;
 
 //
