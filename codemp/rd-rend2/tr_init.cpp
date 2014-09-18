@@ -262,6 +262,7 @@ cvar_t  *r_trueAnaglyphSeparation;
 cvar_t  *r_trueAnaglyphRed;
 cvar_t  *r_trueAnaglyphGreen;
 cvar_t  *r_trueAnaglyphBlue;
+cvar_t  *r_testshader;
 
 //
 // UQ1: End Added...
@@ -1378,6 +1379,7 @@ void R_Register( void )
 	r_trueAnaglyphRed = ri->Cvar_Get( "r_trueAnaglyphRed", "0.0", CVAR_ARCHIVE );
 	r_trueAnaglyphGreen = ri->Cvar_Get( "r_trueAnaglyphGreen", "0.0", CVAR_ARCHIVE );
 	r_trueAnaglyphBlue = ri->Cvar_Get( "r_trueAnaglyphBlue", "0.0", CVAR_ARCHIVE );
+	r_testshader = ri->Cvar_Get( "r_testshader", "0", CVAR_ARCHIVE );
 
 	//
 	// UQ1: End Added...
