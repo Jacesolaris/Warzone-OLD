@@ -248,6 +248,7 @@ cvar_t	*r_depthScale;
 cvar_t	*r_darkexpand;
 cvar_t  *r_truehdr;
 cvar_t  *r_dof;
+cvar_t  *r_testvalue;
 cvar_t  *r_esharpening;
 cvar_t  *r_esharpening2;
 cvar_t  *r_multipost;
@@ -1367,6 +1368,7 @@ void R_Register( void )
 	r_darkexpand = ri->Cvar_Get( "r_darkexpand", "1", CVAR_ARCHIVE );
 	r_truehdr = ri->Cvar_Get( "r_truehdr", "1", CVAR_ARCHIVE );
 	r_dof = ri->Cvar_Get( "r_dof", "0", CVAR_ARCHIVE );
+	r_testvalue = ri->Cvar_Get( "r_testvalue", "0", 0 );
 	r_esharpening = ri->Cvar_Get( "r_esharpening", "1", CVAR_ARCHIVE );
 	r_esharpening2 = ri->Cvar_Get( "r_esharpening2", "1", CVAR_ARCHIVE );
 	r_multipost = ri->Cvar_Get( "r_multipost", "0", CVAR_ARCHIVE );

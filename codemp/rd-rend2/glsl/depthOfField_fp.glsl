@@ -7,7 +7,7 @@ varying vec2		var_TexCoords;
 varying vec2		var_Dimensions;
 varying vec4		var_ViewInfo; // znear, zfar, zfar / znear, 0
 
-varying vec4		var_Local0; // CURRENT_PASS_NUMBER, 0, 0, 0
+varying vec4		var_Local0; // test, 0, 0, 0
 
 //smooth vec2 texcoord;
 vec2 texcoord = var_TexCoords;
@@ -76,6 +76,10 @@ float maxblur = 1.0; //clamp value of max blur (0.0 = no blur,1.0 default)
 
 bool blur_distant_only = false; // only blur distant objects, not the objects closer to the camera then the focus point.
 bool blur_less_close = true; // blur objects close to the camera less.
+
+bool constant_distant_blur = true; // Blur all distant objects.
+float constant_distant_blur_depth = 0.01578; // UQ1: JKA Optimized value.
+float constant_distant_blur_strength = -0.011; // UQ1: JKA Optimized value.
 
 //float threshold = 0.7; //highlight threshold;
 float threshold = 5.7; //highlight threshold;
@@ -244,7 +248,7 @@ void main()
 		fDepth = linearize(texture2D(u_ScreenDepthMap,focus).x * 255);
 	}
 
-	if (blur_distant_only && depth <= fDepth)
+	if (blur_distant_only && depth <= fDepth && (constant_distant_blur && 0.0 - depth > constant_distant_blur_depth))
 	{
 		gl_FragColor.rgb = texture(u_TextureMap, texcoord.xy).rgb;
 		gl_FragColor.a = 1.0;
@@ -283,6 +287,15 @@ void main()
 	{
 		float blur_dist = (depth / fDepth);
 		blur *= ((blur_dist + blur_dist) / 3.0);//1.5;
+	}
+
+	if (constant_distant_blur && 0.0 - depth <= constant_distant_blur_depth)
+	{
+		float blur2 = 0.5;
+		float blur_dist = constant_distant_blur_strength / depth;
+		blur2 *= blur_dist;
+
+		if (blur2 > blur) blur = blur2;
 	}
 
 	blur = clamp(blur,0.0,1.0);
