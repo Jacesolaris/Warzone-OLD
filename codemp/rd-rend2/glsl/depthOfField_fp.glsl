@@ -7,7 +7,7 @@ varying vec2		var_TexCoords;
 varying vec2		var_Dimensions;
 varying vec4		var_ViewInfo; // znear, zfar, zfar / znear, 0
 
-varying vec4		var_Local0; // test, 0, 0, 0
+varying vec4		var_Local0; // dofValue, 0, 0, 0
 
 //smooth vec2 texcoord;
 vec2 texcoord = var_TexCoords;
@@ -27,8 +27,12 @@ uniform float focalLength; //focal length in mm
 uniform float fstop; //f-stop value
 uniform bool showFocus; //show debug focus point and focal range (red = focal point, green = focal range)
 */
-float focalDepth = 1.5;
+//float focalDepth = 1.5;
+//float focalDepth = -0.01587;
+float focalDepth = -0.01581;
 float focalLength = 12.0;
+//float focalDepth = var_Local0.x;
+//float focalLength = var_Local0.y;
 float fstop = 2.0;
 bool showFocus = false;
 //bool showFocus = true;
@@ -68,8 +72,8 @@ float vignout = 1.3; //vignetting outer border
 float vignin = 0.0; //vignetting inner border
 float vignfade = 22.0; //f-stops till vignete fades
 
-//bool autofocus = false; //use autofocus in shader? disable if you use external focalDepth value
-bool autofocus = true; //use autofocus in shader? disable if you use external focalDepth value
+bool autofocus = false; //use autofocus in shader? disable if you use external focalDepth value
+//bool autofocus = true; //use autofocus in shader? disable if you use external focalDepth value
 vec2 focus = vec2(0.5,0.5); // autofocus point on screen (0.0,0.0 - left lower corner, 1.0,1.0 - upper right)
 float maxblur = 1.0; //clamp value of max blur (0.0 = no blur,1.0 default)
 //float maxblur = 2.0; //clamp value of max blur (0.0 = no blur,1.0 default)
@@ -230,6 +234,8 @@ float vignette()
 
 void main() 
 {
+	if (var_Local0.x >= 2.0) autofocus = true;
+
 	//scene depth calculation
 	
 	float depth = linearize(texture2D(u_ScreenDepthMap,texcoord.xy).x * 255);
@@ -248,7 +254,13 @@ void main()
 		fDepth = linearize(texture2D(u_ScreenDepthMap,focus).x * 255);
 	}
 
-	if (blur_distant_only && depth <= fDepth && (constant_distant_blur && 0.0 - depth > constant_distant_blur_depth))
+	if (!autofocus && depth <= fDepth)
+	{
+		gl_FragColor.rgb = texture(u_TextureMap, texcoord.xy).rgb;
+		gl_FragColor.a = 1.0;
+		return;
+	}
+	else if (autofocus && blur_distant_only && depth <= fDepth && (constant_distant_blur && 0.0 - depth > constant_distant_blur_depth))
 	{
 		gl_FragColor.rgb = texture(u_TextureMap, texcoord.xy).rgb;
 		gl_FragColor.a = 1.0;
@@ -283,13 +295,18 @@ void main()
 	{
 		blur /= 12.0;
 	}
+	else if (!autofocus)
+	{
+		float blur_dist = (depth / fDepth);
+		blur *= ((blur_dist + blur_dist) / 1.5);
+	}
 	else
 	{
 		float blur_dist = (depth / fDepth);
-		blur *= ((blur_dist + blur_dist) / 3.0);//1.5;
+		blur *= ((blur_dist + blur_dist) / 3.0);
 	}
 
-	if (constant_distant_blur && 0.0 - depth <= constant_distant_blur_depth)
+	if (autofocus && constant_distant_blur && 0.0 - depth <= constant_distant_blur_depth)
 	{
 		float blur2 = 0.5;
 		float blur_dist = constant_distant_blur_strength / depth;

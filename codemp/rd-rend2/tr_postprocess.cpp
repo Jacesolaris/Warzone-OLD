@@ -1350,12 +1350,11 @@ void RB_DOF(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 		GLSL_SetUniformVec4(&tr.dofShader, UNIFORM_VIEWINFO, viewInfo);
 	}
 
-	/*
 	{
 		vec4_t info;
 
-		info[0] = r_testvalue->value;
-		info[1] = 0.0;
+		info[0] = r_dof->value;
+		info[1] = 0.0;//r_testvalue0->value;
 		info[2] = 0.0;
 		info[3] = 0.0;
 
@@ -1363,7 +1362,6 @@ void RB_DOF(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 
 		GLSL_SetUniformVec4(&tr.dofShader, UNIFORM_LOCAL0, info);
 	}
-	*/
 
 	FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.dofShader, color, GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA);
 }
