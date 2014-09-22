@@ -1137,19 +1137,23 @@ void RB_SSAO2(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 
 	GL_BindToTMU(tr.fixedLevelsImage, TB_DIFFUSEMAP);
 
-	GLSL_SetUniformInt(&tr.ssao2Shader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
-	GLSL_SetUniformInt(&tr.ssao2Shader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
-	GLSL_SetUniformInt(&tr.ssao2Shader, UNIFORM_NORMALMAP, TB_NORMALMAP);
+	//GLSL_SetUniformInt(&tr.ssao2Shader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
+	//GLSL_SetUniformInt(&tr.ssao2Shader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
+	//GLSL_SetUniformInt(&tr.ssao2Shader, UNIFORM_NORMALMAP, TB_NORMALMAP);
 
-	//GL_BindToTMU(tr.renderDepthImage, TB_NORMALMAP);
-	//GL_BindToTMU(tr.renderDepthImage, TB_DEPTHMAP);
-	GL_SelectTexture(1);
-	GL_Bind(tr.hdrDepthImage);
-	GL_SelectTexture(2);
-	GL_Bind(tr.hdrDepthImage);
-	GL_SelectTexture(0);
+	//GL_SelectTexture(1);
+	//GL_Bind(tr.hdrDepthImage);
+	//GL_SelectTexture(2);
+	//GL_Bind(tr.hdrDepthImage);
+	//GL_SelectTexture(0);
 
 	//qglUseProgramObjectARB(tr.ssao2Shader.program);
+
+	GLSL_SetUniformInt(&tr.ssao2Shader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
+	GLSL_SetUniformInt(&tr.ssao2Shader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
+	//GLSL_SetUniformInt(&tr.ssao2Shader, UNIFORM_NORMALMAP, TB_NORMALMAP);
+	GL_BindToTMU(tr.renderDepthImage, TB_LIGHTMAP);
+	//GL_BindToTMU(tr.whiteImage, TB_NORMALMAP);
 	
 	{
 		vec4_t viewInfo;
