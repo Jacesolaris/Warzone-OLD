@@ -1,8 +1,9 @@
-uniform sampler2D u_ScreenDepthMap;
+uniform sampler2D	u_DiffuseMap;
+uniform sampler2D	u_ScreenDepthMap;
 
-uniform vec4   u_ViewInfo; // zfar / znear, zfar
-
-varying vec2   var_ScreenTex;
+varying vec2		var_ScreenTex;
+varying vec2		var_Dimensions;
+varying vec4		var_ViewInfo; // zfar / znear, zfar, znear, zfar
 
 vec2 poissonDisc[9] = vec2[9](
 vec2(-0.7055767, 0.196515),    vec2(0.3524343, -0.7791386),
@@ -41,6 +42,7 @@ float getLinearDepth(sampler2D depthMap, const vec2 tex, const float zFarDivZNea
 {
 		float sampleZDivW = texture2D(depthMap, tex).r;
 		return 1.0 / mix(zFarDivZNear, 1.0, sampleZDivW);
+		//return -var_ViewInfo.a * var_ViewInfo.z / (sampleZDivW * (var_ViewInfo.a - var_ViewInfo.z) - var_ViewInfo.a);
 }
 
 float ambientOcclusion(sampler2D depthMap, const vec2 tex, const float zFarDivZNear, const float zFar)
@@ -73,14 +75,40 @@ float ambientOcclusion(sampler2D depthMap, const vec2 tex, const float zFarDivZN
 		}
 	}
 	
-	result *= 0.33333;
+	//result *= 0.33333;
+	result *= 0.5;
 	
 	return result;
 }
 
 void main()
 {
-	float result = ambientOcclusion(u_ScreenDepthMap, var_ScreenTex, u_ViewInfo.x, u_ViewInfo.y);
-			
-	gl_FragColor = vec4(vec3(result), 1.0);
+	//float result = ambientOcclusion(u_ScreenDepthMap, var_ScreenTex, var_ViewInfo.x, var_ViewInfo.y);
+	
+	//gl_FragColor = vec4(vec3(result), 1.0);
+
+	// UQ1: Blur!
+	vec2 offset = vec2(1.0 / var_Dimensions.x, 1.0 / var_Dimensions.y);
+	vec3 ao = vec3(0.0);
+	vec3 color = vec3(0.0);
+
+	/*
+	for (float x = -2.0; x <= 2.0; x++)
+	{
+		for (float y = -2.0; y <= 2.0; y++)
+		{
+			ao += ambientOcclusion(u_ScreenDepthMap, var_ScreenTex + vec2(offset.x*y, offset.x*y), var_ViewInfo.x, var_ViewInfo.y);
+		}
+	}
+
+	ao.rgb /= (5*5);
+	ao.rgb = clamp(ao.rgb, 0.85, 1.0);
+	*/
+	ao.rgb = vec3(ambientOcclusion(u_ScreenDepthMap, var_ScreenTex, var_ViewInfo.x, var_ViewInfo.y));
+	ao.rgb = clamp(ao.rgb, 0.85, 1.0);
+
+	color = texture2D(u_DiffuseMap, var_ScreenTex).rgb;
+
+	gl_FragColor = vec4(color * ao, 1.0);
+	//gl_FragColor = vec4(color, 1.0);
 }

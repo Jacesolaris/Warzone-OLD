@@ -1119,6 +1119,48 @@ void RB_Anaglyph(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 	FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.anaglyphShader, color, GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA);
 }
 
+void RB_SSAO(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
+{
+	vec4_t color;
+
+	// bloom
+	color[0] =
+		color[1] =
+		color[2] = pow(2, r_cameraExposure->value);
+	color[3] = 1.0f;
+
+	GLSL_BindProgram(&tr.ssaoShader);
+
+	GLSL_SetUniformMatrix16(&tr.ssaoShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
+	GLSL_SetUniformMatrix16(&tr.ssaoShader, UNIFORM_MODELMATRIX, backEnd.ori.transformMatrix);
+
+	GL_BindToTMU(tr.fixedLevelsImage, TB_DIFFUSEMAP);
+
+	GLSL_SetUniformInt(&tr.ssaoShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
+	GLSL_SetUniformInt(&tr.ssaoShader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
+	GL_BindToTMU(tr.renderDepthImage, TB_LIGHTMAP);
+	
+	{
+		vec4_t viewInfo;
+
+		float zmax = backEnd.viewParms.zFar;
+		float zmin = r_znear->value;
+
+		VectorSet4(viewInfo, zmax / zmin, zmax, zmin, zmax);
+
+		GLSL_SetUniformVec4(&tr.ssaoShader, UNIFORM_VIEWINFO, viewInfo);
+	}
+
+	{
+		vec2_t screensize;
+		screensize[0] = glConfig.vidWidth;
+		screensize[1] = glConfig.vidHeight;
+
+		GLSL_SetUniformVec2(&tr.ssaoShader, UNIFORM_DIMENSIONS, screensize);
+	}
+
+	FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.ssaoShader, color, 0);
+}
 
 void RB_SSAO2(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 {
@@ -1137,23 +1179,9 @@ void RB_SSAO2(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 
 	GL_BindToTMU(tr.fixedLevelsImage, TB_DIFFUSEMAP);
 
-	//GLSL_SetUniformInt(&tr.ssao2Shader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
-	//GLSL_SetUniformInt(&tr.ssao2Shader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
-	//GLSL_SetUniformInt(&tr.ssao2Shader, UNIFORM_NORMALMAP, TB_NORMALMAP);
-
-	//GL_SelectTexture(1);
-	//GL_Bind(tr.hdrDepthImage);
-	//GL_SelectTexture(2);
-	//GL_Bind(tr.hdrDepthImage);
-	//GL_SelectTexture(0);
-
-	//qglUseProgramObjectARB(tr.ssao2Shader.program);
-
 	GLSL_SetUniformInt(&tr.ssao2Shader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
 	GLSL_SetUniformInt(&tr.ssao2Shader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
-	//GLSL_SetUniformInt(&tr.ssao2Shader, UNIFORM_NORMALMAP, TB_NORMALMAP);
 	GL_BindToTMU(tr.renderDepthImage, TB_LIGHTMAP);
-	//GL_BindToTMU(tr.whiteImage, TB_NORMALMAP);
 	
 	{
 		vec4_t viewInfo;
@@ -1162,7 +1190,6 @@ void RB_SSAO2(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 		float zmin = r_znear->value;
 
 		VectorSet4(viewInfo, zmax / zmin, zmax, 0.0, 0.0);
-		//VectorSet4(viewInfo, zmin, zmax, 0.0, 0.0);
 
 		GLSL_SetUniformVec4(&tr.ssao2Shader, UNIFORM_VIEWINFO, viewInfo);
 	}
@@ -1173,11 +1200,8 @@ void RB_SSAO2(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 		screensize[1] = glConfig.vidHeight;
 
 		GLSL_SetUniformVec2(&tr.ssao2Shader, UNIFORM_DIMENSIONS, screensize);
-
-		//ri->Printf(PRINT_WARNING, "Sent dimensions %f %f.\n", screensize[0], screensize[1]);
 	}
 
-	//FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.ssao2Shader, color, GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA);
 	FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.ssao2Shader, color, 0);
 }
 

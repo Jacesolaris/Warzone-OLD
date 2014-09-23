@@ -298,7 +298,9 @@ void main()
 	else if (!autofocus)
 	{
 		float blur_dist = (depth / fDepth);
-		blur *= ((blur_dist + blur_dist) / 1.5);
+		//blur *= ((blur_dist + blur_dist) / 1.5);
+		float mult = ((blur_dist + blur_dist) / 0.5);
+		blur *= (mult / blur_dist);
 	}
 	else
 	{

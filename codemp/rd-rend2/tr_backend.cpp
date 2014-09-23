@@ -1464,6 +1464,7 @@ const void	*RB_DrawSurfs( const void *data ) {
 		}
 #endif //__DYNAMIC_SHADOWS__
 
+		/*
 		if (r_ssao->integer)
 		{
 			vec4_t quadVerts[4];
@@ -1499,6 +1500,14 @@ const void	*RB_DrawSurfs( const void *data ) {
 				VectorSet4(viewInfo, zmax / zmin, zmax, 0.0, 0.0);
 
 				GLSL_SetUniformVec4(&tr.ssaoShader, UNIFORM_VIEWINFO, viewInfo);
+			}
+
+			{
+				vec2_t screensize;
+				screensize[0] = tr.quarterFbo[0]->width;
+				screensize[1] = tr.quarterFbo[0]->height;
+
+				GLSL_SetUniformVec2(&tr.ssaoShader, UNIFORM_DIMENSIONS, screensize);
 			}
 
 			RB_InstantQuad2(quadVerts, texCoords); //, color, shaderProgram, invTexRes);
@@ -1548,10 +1557,8 @@ const void	*RB_DrawSurfs( const void *data ) {
 
 				GLSL_SetUniformVec4(&tr.depthBlurShader[1], UNIFORM_VIEWINFO, viewInfo);
 			}
-
-
-			RB_InstantQuad2(quadVerts, texCoords); //, color, shaderProgram, invTexRes);
 		}
+		*/
 
 		// reset viewport and scissor
 		FBO_Bind(oldFbo);
@@ -1917,6 +1924,7 @@ const void *RB_PostProcess(const void *data)
 	dstBox[2] = backEnd.viewParms.viewportWidth;
 	dstBox[3] = backEnd.viewParms.viewportHeight;
 
+	/*
 	if (r_ssao->integer)
 	{
 		srcBox[0] = backEnd.viewParms.viewportX      * tr.screenSsaoImage->width  / (float)glConfig.vidWidth;
@@ -1930,6 +1938,7 @@ const void *RB_PostProcess(const void *data)
 
 		FBO_Blit(tr.screenSsaoFbo, srcBox, NULL, srcFbo, dstBox, NULL, NULL, GLS_SRCBLEND_DST_COLOR | GLS_DSTBLEND_ZERO);
 	}
+	*/
 
 	if (r_dynamicGlow->integer)
 	{
@@ -1998,6 +2007,12 @@ const void *RB_PostProcess(const void *data)
 		if (r_multipost->integer)
 		{
 			RB_MultiPost(srcFbo, srcBox, tr.genericFbo, dstBox);
+			FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+		}
+
+		if (r_ssao->integer)
+		{
+			RB_SSAO(srcFbo, srcBox, tr.genericFbo, dstBox);
 			FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 		}
 

@@ -1306,7 +1306,7 @@ void R_Register( void )
 	r_srgb = ri->Cvar_Get( "r_srgb", "0", CVAR_ARCHIVE | CVAR_LATCH );
 
 	r_depthPrepass = ri->Cvar_Get( "r_depthPrepass", "1", CVAR_ARCHIVE );
-	r_ssao = ri->Cvar_Get( "r_ssao", "0", CVAR_LATCH | CVAR_ARCHIVE );
+	r_ssao = ri->Cvar_Get( "r_ssao", "0", /*CVAR_LATCH |*/ CVAR_ARCHIVE );
 
 	r_normalMapping = ri->Cvar_Get( "r_normalMapping", "1", CVAR_ARCHIVE | CVAR_LATCH );
 	r_specularMapping = ri->Cvar_Get( "r_specularMapping", "1", CVAR_ARCHIVE | CVAR_LATCH );
