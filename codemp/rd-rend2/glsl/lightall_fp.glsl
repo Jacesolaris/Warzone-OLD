@@ -64,21 +64,21 @@ varying vec4      var_Color;
 varying vec3   var_ViewDir;
 
 #if (defined(USE_LIGHT) && !defined(USE_FAST_LIGHT))
-//  #if defined(USE_VERT_TANGENT_SPACE)
-//varying vec4   var_Normal;
-//varying vec4   var_Tangent;
-//varying vec4   var_Bitangent;
-//  #else
+  #if defined(USE_VERT_TANGENT_SPACE)
+varying vec4   var_Normal;
+varying vec4   var_Tangent;
+varying vec4   var_Bitangent;
+  #else
 varying vec3   var_Normal;
-//  #endif
+  #endif
 #else
-//  #if defined(USE_VERT_TANGENT_SPACE)
-//varying vec4   var_Normal;
-//varying vec4   var_Tangent;
-//varying vec4   var_Bitangent;
-//  #else
+  #if defined(USE_VERT_TANGENT_SPACE)
+varying vec4   var_Normal;
+varying vec4   var_Tangent;
+varying vec4   var_Bitangent;
+  #else
 varying vec3   var_Normal;
-//  #endif
+  #endif
 #endif
 
 varying vec3 var_N;
@@ -315,14 +315,14 @@ void main()
 	float NL, NH, NE, EH, attenuation;
 
 #if defined(USE_LIGHT) && !defined(USE_FAST_LIGHT)
-//  #if defined(USE_VERT_TANGENT_SPACE)
-//	mat3 tangentToWorld = mat3(var_Tangent.xyz, var_Bitangent.xyz, var_Normal.xyz);
-//	viewDir = vec3(var_Normal.w, var_Tangent.w, var_Bitangent.w);
-//  #else
+  #if defined(USE_VERT_TANGENT_SPACE)
+	mat3 tangentToWorld = mat3(var_Tangent.xyz, var_Bitangent.xyz, var_Normal.xyz);
+	viewDir = vec3(var_Normal.w, var_Tangent.w, var_Bitangent.w);
+  #else
 	mat3 tangentToWorld = cotangent_frame(var_Normal.xyz, -var_ViewDir, var_TexCoords.xy); // UQ1: THIS IS WRONG!!!
 	//mat3 tangentToWorld = mat3(1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0);
 	viewDir = var_ViewDir;
-//  #endif
+  #endif
 
 	E = normalize(viewDir);
 
@@ -332,14 +332,14 @@ void main()
   #endif
 	float sqrLightDist = dot(L, L);
 #else
-//  #if defined(USE_VERT_TANGENT_SPACE)
-//	mat3 tangentToWorld = mat3(var_Tangent.xyz, var_Bitangent.xyz, var_Normal.xyz);
-//	viewDir = vec3(var_Normal.w, var_Tangent.w, var_Bitangent.w);
-//  #else
+  #if defined(USE_VERT_TANGENT_SPACE)
+	mat3 tangentToWorld = mat3(var_Tangent.xyz, var_Bitangent.xyz, var_Normal.xyz);
+	viewDir = vec3(var_Normal.w, var_Tangent.w, var_Bitangent.w);
+  #else
 	//mat3 tangentToWorld = cotangent_frame(var_Normal.xyz, -var_ViewDir, var_TexCoords.xy); // UQ1: THIS IS WRONG!!!
 	mat3 tangentToWorld = mat3(1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0);
 	viewDir = var_ViewDir;
-//  #endif
+  #endif
 	E = normalize(viewDir);
 #endif
 
@@ -516,7 +516,7 @@ void main()
 
 	vec3 cubeLightColor = textureCubeLod(u_CubeMap, R + parallax, 7.0 - gloss * 7.0).rgb * u_EnableTextures.w;
 
-	gl_FragColor.rgb = cubeLightColor * reflectance;
+	gl_FragColor.rgb += cubeLightColor * reflectance;
   #endif
 
   #if defined(USE_PRIMARY_LIGHT)

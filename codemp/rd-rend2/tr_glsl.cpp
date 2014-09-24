@@ -1174,6 +1174,20 @@ int GLSL_BeginLoadGPUShaders(void)
 		if (r_hdr->integer && !glRefConfig.floatLightmap)
 			Q_strcat(extradefines, 1024, "#define RGBM_LIGHTMAP\n");
 
+		{// Testing
+			//Q_strcat(extradefines, 1024, "#define USE_MODELMATRIX\n");
+			//attribs |= ATTR_POSITION2 | ATTR_NORMAL2;
+
+			//if (!lightType) lightType = LIGHTDEF_USE_LIGHT_VERTEX;
+
+			//Q_strcat(extradefines, 1024, "#define USE_VERT_TANGENT_SPACE\n");
+			//attribs |= ATTR_TANGENT;
+
+			//Q_strcat(extradefines, 1024, "#define USE_TCGEN\n");
+			//Q_strcat(extradefines, 1024, "#define USE_TCMOD\n");
+		}
+		
+
 		if (lightType)
 		{
 			Q_strcat(extradefines, 1024, "#define USE_LIGHT\n");

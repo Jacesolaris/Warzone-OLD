@@ -23,12 +23,13 @@ void main()
 	var_TexCoords = attr_TexCoord0.st;
 	var_ViewInfo = u_ViewInfo;
 	var_Dimensions = u_Dimensions.st;
+	//var_Local0 = u_Local0.rgba;
 	var_Local1 = u_Local1.rgba;
 	
 	vec4 transformedPos = var_Local0; // usually just the typical multiplications with modelview and projection matrices.
 	vec4 NDC = transformedPos / transformedPos.w;
-	//vec2 normalizedScreenPosAsYouDefined = NDC.xy * 0.5 + 0.5; // 0:0 is bottom left, flip y (ie. 1-y) if you want it to be top-left, which is quite freakish - but you might prefer it coming from DX.
+	vec2 normalizedScreenPosAsYouDefined = NDC.xy * 0.5 + 0.5; // 0:0 is bottom left, flip y (ie. 1-y) if you want it to be top-left, which is quite freakish - but you might prefer it coming from DX.
 
-	//var_LightScreenPos = normalizedScreenPosAsYouDefined;
+	var_LightScreenPos = normalizedScreenPosAsYouDefined;
 	var_LightOrg = NDC;
 }
