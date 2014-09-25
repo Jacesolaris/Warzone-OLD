@@ -682,7 +682,7 @@ void RB_Bloom(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 	{
 		vec4_t local0;
 		VectorSet4(local0, r_bloomScale->value, 0.0, 0.0, 0.0);
-		//if (r_dynamicGlow->integer) VectorSet4(local0, 2.0 * r_bloomScale->value, 0.0, 0.0, 0.0);
+		if (r_dynamicGlow->integer) VectorSet4(local0, 0.5 * r_bloomScale->value, 0.0, 0.0, 0.0); // Account for already added glow...
 		GLSL_SetUniformVec4(&tr.bloomCombineShader, UNIFORM_LOCAL0, local0);
 	}
 
@@ -809,7 +809,8 @@ void RB_Anamorphic(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 		vec4_t local0;
 		VectorSet4(local0, 0.6, 0.0, 0.0, 0.0);
 
-		if (r_dynamicGlow->integer) VectorSet4(local0, 1.5, 0.0, 0.0, 0.0);
+		//if (r_dynamicGlow->integer) VectorSet4(local0, 1.5, 0.0, 0.0, 0.0);
+		if (r_dynamicGlow->integer) VectorSet4(local0, 1.0, 0.0, 0.0, 0.0); // Account for already added glow...
 
 		GLSL_SetUniformVec4(&tr.anamorphicCombineShader, UNIFORM_LOCAL0, local0);
 	}

@@ -698,6 +698,366 @@ static const char *animMapNames[] = {
 	"oneshotanimMap"
 };
 
+char *StringContains(char *str1, char *str2, int casesensitive)
+{
+	int len, i, j;
+
+	len = strlen(str1) - strlen(str2);
+	for (i = 0; i <= len; i++, str1++) {
+		for (j = 0; str2[j]; j++) {
+			if (casesensitive) {
+				if (str1[j] != str2[j]) {
+					break;
+				}
+			}
+			else {
+				if (toupper(str1[j]) != toupper(str2[j])) {
+					break;
+				}
+			}
+		}
+		if (!str2[j]) {
+			return str1;
+		}
+	}
+	return NULL;
+} //end of the function StringContains
+
+qboolean ForceGlow ( char *shader )
+{
+	if (!shader) return qfalse;
+
+	// UQ1: Testing - Force glow to obvious glow components...
+	// Note that this is absolutely a complete HACK... But the only other option is to remake every other map ever made for JKA...
+	// Worst case, we end up with a little extra glow - oh dear! the horror!!! :)
+	if (StringContains(shader, "glw", 0))
+	{
+		return qtrue;
+	}
+	else if (StringContains(shader, "glow", 0))
+	{
+		return qtrue;
+	}
+	//else if (StringContains(shader, "light", 0))
+	//{
+	//	return qtrue;
+	//}
+	else if (StringContains(shader, "pulse", 0))
+	{
+		return qtrue;
+	}
+	else if (StringContains(shader, "pls", 0))
+	{
+		return qtrue;
+	}
+	else if (StringContains(shader, "mp/s_flat", 0))
+	{
+		return qtrue;
+	}
+	else if (StringContains(shader, "blend", 0))
+	{
+		return qtrue;
+	}
+	else if (StringContains(shader, "onoffr", 0))
+	{
+		return qtrue;
+	}
+	else if (StringContains(shader, "onoffg", 0))
+	{
+		return qtrue;
+	}
+	else if (StringContains(shader, "neon", 0))
+	{
+		return qtrue;
+	}
+	else if (StringContains(shader, "flare", 0))
+	{
+		return qtrue;
+	}
+	else if (StringContains(shader, "comp_panel", 0)) // doomgiver
+	{
+		return qtrue;
+	}
+	else if (StringContains(shader, "d_switch", 0)) // doomgiver
+	{
+		return qtrue;
+	}
+	else if (StringContains(shader, "doom_display", 0)) // doomgiver
+	{
+		return qtrue;
+	}
+	else if (StringContains(shader, "door1_red", 0)) // doomgiver
+	{
+		return qtrue;
+	}
+	else if (StringContains(shader, "mapd", 0)) // doomgiver - may cause issues?
+	{
+		return qtrue;
+	}
+	else if (StringContains(shader, "screen0", 0)) // doomgiver - may cause issues?
+	{
+		return qtrue;
+	}
+	else if (StringContains(shader, "_energy", 0)) // doomgiver - may cause issues?
+	{
+		return qtrue;
+	}
+	else if (StringContains(shader, "_display", 0)) // h_evil - may cause issues?
+	{
+		return qtrue;
+	}
+	else if (StringContains(shader, "switch_off", 0)) // for h_evil/switch_off
+	{
+		return qtrue;
+	}
+	else if (StringContains(shader, "switch_on", 0)) // for h_evil/switch_on
+	{
+		return qtrue;
+	}
+	else if (StringContains(shader, "_screen_", 0)) // for hoth
+	{
+		return qtrue;
+	}
+	else if (StringContains(shader, "switch_lift", 0)) // for hoth
+	{
+		return qtrue;
+	}
+	else if (StringContains(shader, "lava", 0))
+	{
+		return qtrue;
+	}
+	else if (StringContains(shader, "_grn", 0))
+	{
+		return qtrue;
+	}
+	else if (StringContains(shader, "_red", 0))
+	{
+		return qtrue;
+	}
+	else if (StringContains(shader, "static_field3", 0))
+	{
+		return qtrue;
+	}
+	else if (StringContains(shader, "power222", 0))
+	{
+		return qtrue;
+	}
+	else if (StringContains(shader, "ggoo", 0))
+	{
+		return qtrue;
+	}
+	else if (StringContains(shader, "blink", 0))
+	{
+		return qtrue;
+	}
+	else if (StringContains(shader, "_blb", 0))
+	{
+		return qtrue;
+	}
+	else if (StringContains(shader, "imp_mine/tanklight", 0))
+	{
+		return qtrue;
+	}
+	else if (StringContains(shader, "cache_panel_anim", 0))
+	{
+		return qtrue;
+	}
+	else if (StringContains(shader, "switch_on", 0))
+	{
+		return qtrue;
+	}
+	else if (StringContains(shader, "switch_off", 0))
+	{
+		return qtrue;
+	}
+	else if (StringContains(shader, "switch_open", 0))
+	{
+		return qtrue;
+	}
+	else if (StringContains(shader, "switch_locked", 0) && !StringContains(shader, "s_switch_locked", 0))
+	{
+		return qtrue;
+	}
+	else if (StringContains(shader, "door_switch_", 0)) // for desert/door_switch_red.png - testing loose check in case of other switch's - may cause bad results
+	{
+		return qtrue;
+	}
+	else if (StringContains(shader, "impdetention/doortrim01", 0))
+	{
+		return qtrue;
+	}
+	else if (StringContains(shader, "holotarget", 0))
+	{
+		return qtrue;
+	}
+	else if (StringContains(shader, "eleswitcha", 0)) // ns_streets
+	{
+		return qtrue;
+	}
+	else if (StringContains(shader, "eleswitchb", 0)) // ns_streets
+	{
+		return qtrue;
+	}
+	else if (StringContains(shader, "_crystal", 0)) // rift
+	{
+		return qtrue;
+	}
+	else if (StringContains(shader, "rocky_ruins/screen", 0)) // rocky_ruins
+	{
+		return qtrue;
+	}
+	else if (StringContains(shader, "rooftop/screen", 0)) // rooftop
+	{
+		return qtrue;
+	}
+	else if (StringContains(shader, "vjun/screen", 0)) // vjun
+	{
+		return qtrue;
+	}
+	else if (StringContains(shader, "white", 0))
+	{
+		return qtrue;
+	}
+	else if (StringContains(shader, "symbol", 0) && StringContains(shader, "fx", 0)) // rift
+	{
+		return qtrue;
+	}
+	else if (StringContains(shader, "deathconlight", 0))
+	{
+		return qtrue;
+	}
+	else if (StringContains(shader, "impgarrison/light_panel_01", 0))
+	{
+		return qtrue;
+	}
+	else if (StringContains(shader, "reclame", 0)) // SJC
+	{
+		return qtrue;
+	}
+	else if (StringContains(shader, "flash", 0)) // GFX
+	{
+		return qtrue;
+	}
+	else if (StringContains(shader, "fire", 0)) // GFX
+	{
+		return qtrue;
+	}
+	else if (StringContains(shader, "flame", 0)) // GFX
+	{
+		return qtrue;
+	}
+	else if (StringContains(shader, "gfx/", 0) && StringContains(shader, "cmuzzle", 0)) // GFX
+	{
+		return qtrue;
+	}
+	else if (StringContains(shader, "gfx/", 0) && StringContains(shader, "ftail", 0)) // GFX
+	{
+		return qtrue;
+	}
+	else if (StringContains(shader, "gfx/", 0) && StringContains(shader, "shot", 0)) // GFX
+	{
+		return qtrue;
+	}
+	else if (StringContains(shader, "gfx/", 0) && StringContains(shader, "lightcone", 0)) // GFX - hmm ???
+	{
+		return qtrue;
+	}
+	else if (StringContains(shader, "gfx/", 0) && StringContains(shader, "spikeb", 0)) // GFX
+	{
+		return qtrue;
+	}
+	else if (StringContains(shader, "gfx/", 0) && StringContains(shader, "stunpass", 0)) // GFX
+	{
+		return qtrue;
+	}
+	else if (StringContains(shader, "gfx/", 0) && StringContains(shader, "solidwhite", 0)) // GFX
+	{
+		return qtrue;
+	}
+	else if (StringContains(shader, "gfx/", 0) && StringContains(shader, "wookie1", 0)) // GFX
+	{
+		return qtrue;
+	}
+	else if (StringContains(shader, "gfx/", 0) && StringContains(shader, "plasma", 0)) // GFX
+	{
+		return qtrue;
+	}
+	else if (StringContains(shader, "gfx/", 0) && StringContains(shader, "plume", 0)) // GFX
+	{
+		return qtrue;
+	}
+	else if (StringContains(shader, "gfx/", 0) && StringContains(shader, "blueline", 0)) // GFX
+	{
+		return qtrue;
+	}
+	else if (StringContains(shader, "gfx/", 0) && StringContains(shader, "redline", 0)) // GFX
+	{
+		return qtrue;
+	}
+	else if (StringContains(shader, "gfx/", 0) && StringContains(shader, "embers", 0)) // GFX
+	{
+		return qtrue;
+	}
+	else if (StringContains(shader, "gfx/", 0) && StringContains(shader, "burst", 0)) // GFX
+	{
+		return qtrue;
+	}
+	else if (StringContains(shader, "gfx/", 0) && StringContains(shader, "blob", 0)) // GFX
+	{
+		return qtrue;
+	}
+	else if (StringContains(shader, "gfx/", 0) && StringContains(shader, "burn", 0)) // GFX
+	{
+		return qtrue;
+	}
+	else if (StringContains(shader, "gfx/", 0) && StringContains(shader, "caustic", 0)) // GFX
+	{
+		return qtrue;
+	}
+	else if (StringContains(shader, "gfx/", 0) && StringContains(shader, "bolt", 0)) // GFX
+	{
+		return qtrue;
+	}
+	else if (StringContains(shader, "gfx/", 0) && StringContains(shader, "exp0", 0)) // GFX
+	{
+		return qtrue;
+	}
+	else if (StringContains(shader, "gfx/", 0) && StringContains(shader, "lightning", 0)) // GFX
+	{
+		return qtrue;
+	}
+	else if (StringContains(shader, "gfx/", 0) && StringContains(shader, "mine", 0)) // GFX
+	{
+		return qtrue;
+	}
+	else if (StringContains(shader, "gfx/", 0) && StringContains(shader, "redring", 0)) // GFX
+	{
+		return qtrue;
+	}
+	else if (StringContains(shader, "gfx/", 0) && StringContains(shader, "rline", 0)) // GFX
+	{
+		return qtrue;
+	}
+	else if (StringContains(shader, "gfx/", 0) && StringContains(shader, "spark", 0)) // GFX
+	{
+		return qtrue;
+	}
+	else if (StringContains(shader, "gfx/", 0) && StringContains(shader, "sun", 0)) // GFX
+	{
+		return qtrue;
+	}
+	else if (StringContains(shader, "gfx/", 0) && StringContains(shader, "whiteline", 0)) // GFX
+	{
+		return qtrue;
+	}
+	else if (StringContains(shader, "gfx/exp/", 0)) // GFX
+	{
+		return qtrue;
+	}
+
+	return qfalse;
+}
+
 /*
 ===================
 ParseStage
@@ -739,6 +1099,14 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 			if ( !Q_stricmp( token, "$whiteimage" ) )
 			{
 				stage->bundle[0].image[0] = tr.whiteImage;
+
+				// UQ1: Testing - Force glow to obvious glow components...
+				if (ForceGlow(stage->bundle[0].image[0]->imgName))
+				{
+					ri->Printf (PRINT_WARNING, "%s forcably marked as a glow shader.\n", stage->bundle[0].image[0]->imgName);
+					stage->glow = qtrue;
+				}
+				//UQ1: END - Testing - Force glow to obvious glow components...
 				continue;
 			}
 			else if ( !Q_stricmp( token, "$lightmap" ) )
@@ -752,6 +1120,15 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 				} else {
 					stage->bundle[0].image[0] = tr.lightmaps[shader.lightmapIndex[0]];
 				}
+
+				// UQ1: Testing - Force glow to obvious glow components...
+				if (ForceGlow(stage->bundle[0].image[0]->imgName))
+				{
+					ri->Printf (PRINT_WARNING, "%s forcably marked as a glow shader.\n", stage->bundle[0].image[0]->imgName);
+					stage->glow = qtrue;
+				}
+				//UQ1: END - Testing - Force glow to obvious glow components...
+
 				continue;
 			}
 			else if ( !Q_stricmp( token, "$deluxemap" ) )
@@ -768,6 +1145,14 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 				} else {
 					stage->bundle[0].image[0] = tr.deluxemaps[shader.lightmapIndex[0]];
 				}
+
+				// UQ1: Testing - Force glow to obvious glow components...
+				if (ForceGlow(stage->bundle[0].image[0]->imgName))
+				{
+					ri->Printf (PRINT_WARNING, "%s forcably marked as a glow shader.\n", stage->bundle[0].image[0]->imgName);
+					stage->glow = qtrue;
+				}
+				//UQ1: END - Testing - Force glow to obvious glow components...
 				continue;
 			}
 			else
@@ -802,6 +1187,14 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 				}
 
 				stage->bundle[0].image[0] = R_FindImageFile( token, type, flags );
+
+				// UQ1: Testing - Force glow to obvious glow components...
+				if (ForceGlow(stage->bundle[0].image[0]->imgName))
+				{
+					ri->Printf (PRINT_WARNING, "%s forcably marked as a glow shader.\n", stage->bundle[0].image[0]->imgName);
+					stage->glow = qtrue;
+				}
+				//UQ1: END - Testing - Force glow to obvious glow components...
 
 				if ( !stage->bundle[0].image[0] )
 				{
@@ -853,6 +1246,15 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 
 
 			stage->bundle[0].image[0] = R_FindImageFile( token, type, flags );
+
+			// UQ1: Testing - Force glow to obvious glow components...
+			if (ForceGlow(stage->bundle[0].image[0]->imgName))
+			{
+				ri->Printf (PRINT_WARNING, "%s forcably marked as a glow shader.\n", stage->bundle[0].image[0]->imgName);
+				stage->glow = qtrue;
+			}
+			//UQ1: END - Testing - Force glow to obvious glow components...
+
 			if ( !stage->bundle[0].image[0] )
 			{
 				ri->Printf( PRINT_WARNING, "WARNING: R_FindImageFile could not find '%s' in shader '%s'\n", token, shader.name );
@@ -899,6 +1301,15 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 						flags |= IMGFLAG_NO_COMPRESSION;
 
 					stage->bundle[0].image[num] = R_FindImageFile( token, IMGTYPE_COLORALPHA, flags );
+
+					// UQ1: Testing - Force glow to obvious glow components...
+					if (ForceGlow(stage->bundle[0].image[num]->imgName))
+					{
+						ri->Printf (PRINT_WARNING, "%s forcably marked as a glow shader.\n", stage->bundle[0].image[num]->imgName);
+						stage->glow = qtrue;
+					}
+					//UQ1: END - Testing - Force glow to obvious glow components...
+
 					if ( !stage->bundle[0].image[num] )
 					{
 						ri->Printf( PRINT_WARNING, "WARNING: R_FindImageFile could not find '%s' in shader '%s'\n", token, shader.name );
