@@ -2594,16 +2594,23 @@ unsigned int CNavigator::GetPathCost( int startID, int endID )
 			}
 		}
 
-		pathCost += bestCost;
-
-		//Take a new best node
-		moveNode = m_nodes[ bestNode ];
 		dontScrewUp++;
 
 		if (dontScrewUp > 40000)
 		{ //ok, I think something probably screwed up.
 			break;
 		}
+
+		if (bestNode < 0)
+		{// UQ1: moveNode->GetNumEdges() == 0 ???
+			return Q3_INFINITE; // return 0;
+			//continue;
+		}
+
+		pathCost += bestCost;
+
+		//Take a new best node
+		moveNode = m_nodes[ bestNode ];
 	}
 
 	return pathCost;
