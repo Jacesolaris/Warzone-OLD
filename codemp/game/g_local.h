@@ -1116,6 +1116,10 @@ typedef struct level_locals_s {
 	gametype_t	gametype;
 } level_locals_t;
 
+typedef struct {
+	char		botName[MAX_QPATH];
+	int			scale;
+} model_scale_list_t;
 
 //
 // g_spawn.c

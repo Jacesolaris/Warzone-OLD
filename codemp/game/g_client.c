@@ -11,6 +11,10 @@
 static vec3_t	playerMins = {-15, -15, DEFAULT_MINS_2};
 static vec3_t	playerMaxs = {15, 15, DEFAULT_MAXS_2};
 
+extern model_scale_list_t model_scale_list[512];
+extern int num_scale_models;
+extern qboolean scale_models_loaded;
+
 extern int g_siegeRespawnCheck;
 
 void WP_SaberAddG2Model( gentity_t *saberent, const char *saberModel, qhandle_t saberSkin );
@@ -2175,6 +2179,58 @@ qboolean ClientUserinfoChanged( int clientNum ) {
 		client->ps.customRGBA[0] = client->ps.customRGBA[1] = client->ps.customRGBA[2] = 255;
 
 	client->ps.customRGBA[3]=255;
+
+	if (scale_models_loaded)
+	{
+		int			loop = 0;
+		qboolean	found = qfalse;
+		vec3_t		playerMaxs = {15, 15, DEFAULT_MAXS_2};
+
+		/*
+		if ( Q_stricmp( model, client->modelname ) ) {
+			Q_strncpyz( client->modelname, model, sizeof( client->modelname ) );
+			modelChanged = qtrue;
+		}
+		*/
+
+		for (loop = 0; loop < num_scale_models; loop++)
+		{
+			if (!Q_stricmp(model_scale_list[loop].botName, model) && ent->modelScale[2] != model_scale_list[loop].scale/100.0f)
+			{// A match! Set the scale!
+				ent->modelScale[0] = ent->modelScale[1] = ent->modelScale[2] = model_scale_list[loop].scale/100.0f;
+				client->ps.iModelScale = model_scale_list[loop].scale;
+				ent->s.iModelScale = model_scale_list[loop].scale;
+
+				ent->r.maxs[0] = playerMaxs[0] * ent->modelScale[0];
+				ent->r.maxs[1] = playerMaxs[1] * ent->modelScale[1];
+				ent->r.maxs[2] = playerMaxs[2] * ent->modelScale[2];
+
+				ent->client->ps.standheight = DEFAULT_MAXS_2 * ent->modelScale[2];
+				ent->client->ps.crouchheight = CROUCH_MAXS_2 * ent->modelScale[2];
+
+				found = qtrue;
+
+				trap->Print("^4*** ^3JKG^4: ^5Scale set to ^7%f^5x normal for model %s.\n", model_scale_list[loop].scale/100.0f, model);
+				break;
+			}
+		}
+
+		if (!found)
+		{
+			ent->modelScale[0] = ent->modelScale[1] = ent->modelScale[2] = 1.0f;
+			client->ps.iModelScale = ent->modelScale[0] * 100;
+			ent->s.iModelScale = ent->modelScale[0] * 100;
+
+			ent->r.maxs[0] = playerMaxs[0] * ent->modelScale[0];
+			ent->r.maxs[1] = playerMaxs[1] * ent->modelScale[1];
+			ent->r.maxs[2] = playerMaxs[2] * ent->modelScale[2];
+
+			ent->client->ps.standheight = DEFAULT_MAXS_2 * ent->modelScale[2];
+			ent->client->ps.crouchheight = CROUCH_MAXS_2 * ent->modelScale[2];
+
+			trap->Print("^4*** ^3JKG^4: ^5Scale set to ^7%f^5x normal for model %s.\n", model_scale_list[loop].scale/100.0f, model);
+		}
+	}
 
 	Q_strncpyz( forcePowers, Info_ValueForKey( userinfo, "forcepowers" ), sizeof( forcePowers ) );
 

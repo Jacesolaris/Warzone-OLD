@@ -447,3 +447,16 @@ personality	/botfiles/ugnaught.jkb
 }
 
 
+
+
+{
+name		"youngrosh"
+model		youngrosh
+color1		1
+color2		1
+saber1		"single_3"
+saber2		"none"
+personality	/botfiles/youngrosh.jkb
+}
+
+

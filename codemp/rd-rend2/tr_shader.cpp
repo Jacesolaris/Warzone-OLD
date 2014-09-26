@@ -1103,7 +1103,7 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 				// UQ1: Testing - Force glow to obvious glow components...
 				if (ForceGlow(stage->bundle[0].image[0]->imgName))
 				{
-					ri->Printf (PRINT_WARNING, "%s forcably marked as a glow shader.\n", stage->bundle[0].image[0]->imgName);
+					//ri->Printf (PRINT_WARNING, "%s forcably marked as a glow shader.\n", stage->bundle[0].image[0]->imgName);
 					stage->glow = qtrue;
 				}
 				//UQ1: END - Testing - Force glow to obvious glow components...
@@ -1124,7 +1124,7 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 				// UQ1: Testing - Force glow to obvious glow components...
 				if (ForceGlow(stage->bundle[0].image[0]->imgName))
 				{
-					ri->Printf (PRINT_WARNING, "%s forcably marked as a glow shader.\n", stage->bundle[0].image[0]->imgName);
+					//ri->Printf (PRINT_WARNING, "%s forcably marked as a glow shader.\n", stage->bundle[0].image[0]->imgName);
 					stage->glow = qtrue;
 				}
 				//UQ1: END - Testing - Force glow to obvious glow components...
@@ -1149,7 +1149,7 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 				// UQ1: Testing - Force glow to obvious glow components...
 				if (ForceGlow(stage->bundle[0].image[0]->imgName))
 				{
-					ri->Printf (PRINT_WARNING, "%s forcably marked as a glow shader.\n", stage->bundle[0].image[0]->imgName);
+					//ri->Printf (PRINT_WARNING, "%s forcably marked as a glow shader.\n", stage->bundle[0].image[0]->imgName);
 					stage->glow = qtrue;
 				}
 				//UQ1: END - Testing - Force glow to obvious glow components...
@@ -1191,7 +1191,7 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 				// UQ1: Testing - Force glow to obvious glow components...
 				if (ForceGlow(stage->bundle[0].image[0]->imgName))
 				{
-					ri->Printf (PRINT_WARNING, "%s forcably marked as a glow shader.\n", stage->bundle[0].image[0]->imgName);
+					//ri->Printf (PRINT_WARNING, "%s forcably marked as a glow shader.\n", stage->bundle[0].image[0]->imgName);
 					stage->glow = qtrue;
 				}
 				//UQ1: END - Testing - Force glow to obvious glow components...
@@ -1250,7 +1250,7 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 			// UQ1: Testing - Force glow to obvious glow components...
 			if (ForceGlow(stage->bundle[0].image[0]->imgName))
 			{
-				ri->Printf (PRINT_WARNING, "%s forcably marked as a glow shader.\n", stage->bundle[0].image[0]->imgName);
+				//ri->Printf (PRINT_WARNING, "%s forcably marked as a glow shader.\n", stage->bundle[0].image[0]->imgName);
 				stage->glow = qtrue;
 			}
 			//UQ1: END - Testing - Force glow to obvious glow components...
@@ -1305,7 +1305,7 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 					// UQ1: Testing - Force glow to obvious glow components...
 					if (ForceGlow(stage->bundle[0].image[num]->imgName))
 					{
-						ri->Printf (PRINT_WARNING, "%s forcably marked as a glow shader.\n", stage->bundle[0].image[num]->imgName);
+						//ri->Printf (PRINT_WARNING, "%s forcably marked as a glow shader.\n", stage->bundle[0].image[num]->imgName);
 						stage->glow = qtrue;
 					}
 					//UQ1: END - Testing - Force glow to obvious glow components...

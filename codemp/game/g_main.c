@@ -131,6 +131,98 @@ void G_CacheGametype( void )
 	trap->Cvar_Set( "g_gametype", va( "%i", level.gametype ) );
 }
 
+model_scale_list_t model_scale_list[512];
+
+int num_scale_models = -1;
+qboolean scale_models_loaded = qfalse;
+
+void Load_Model_Scales( void )
+{// Load model scales from external file.
+	char *s, *t;
+	int len;
+	fileHandle_t	f;
+	char *buf;
+	qboolean alt = qfalse;
+
+	len = trap->FS_Open( "modelscale.cfg\0", &f, FS_READ );
+
+	if ( !f )
+	{
+		trap->Print("^1*** ^3WARNING^5: No model scale file.\n", "modelscale.cfg");
+		return;
+	}
+
+	if ( !len )
+	{ //empty file
+		trap->FS_Close( f );
+		return;
+	}
+
+	if ( (buf = malloc(len+1)) == 0 )
+	{//alloc memory for buffer
+		return;
+	}
+
+	trap->FS_Read( buf, len, f );
+	trap->FS_Close( f );
+
+	trap->Print("^4*** ^3JKG^4: ^5Loading player model scales database from file ^7%s^5.\n", "modelscale.cfg");
+
+	for (t = s = buf; *t; /* */ ) 
+	{
+		if (!alt) // Space between first & second options.
+			s = strchr(s, ' ' );
+		else
+			s = strchr(s, '\n');
+
+		if (!s)
+			break;
+
+		if (!alt)
+		{ // Space between first & second options.
+			while (*s == ' ')
+				*s++ = 0;
+		}
+		else
+		{	
+			while (*s == '\n')
+				*s++ = 0;
+		}
+
+		if (*t)
+		{
+			if ( !Q_strncmp( "//", va("%s", t), 2 ) == 0 
+				&& strlen(va("%s", t)) > 1)
+			{// Not a comment either... Record it in our list...
+				if (!alt)
+				{// First value...
+					strcpy(model_scale_list[num_scale_models].botName, va("%s", t));
+					alt = qtrue;
+					//G_Printf("^5%s ", model_scale_list[num_scale_models].botName);
+				}
+				else
+				{// The scale value itself...
+					model_scale_list[num_scale_models].scale = 100*atof(t);
+					num_scale_models++;
+					alt = qfalse;
+					//G_Printf("Scale %f.\n", atof(t));
+				}
+			}
+		}
+
+		t = s;
+	}
+
+	num_scale_models--;
+
+	trap->Print("^4*** ^3JKG^4: ^5There are ^7%i^5 player model scales in the current database.\n", num_scale_models);
+
+	if (num_scale_models > 0)
+		scale_models_loaded = qtrue;
+
+	free(buf);
+}
+
 /*
 ============
 G_InitGame
@@ -402,6 +494,8 @@ void G_InitGame( int levelTime, int randomSeed, int restart ) {
 			SP_info_jedimaster_start( ent );
 		}
 	}
+
+	Load_Model_Scales();
 }
 
 

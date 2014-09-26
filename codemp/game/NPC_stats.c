@@ -1000,6 +1000,10 @@ void NPC_BuildRandom( gentity_t *NPC )
 }
 #endif
 
+extern model_scale_list_t model_scale_list[512];
+extern int num_scale_models;
+extern qboolean scale_models_loaded;
+
 extern void SetupGameGhoul2Model(gentity_t *ent, char *modelname, char *skinName);
 qboolean NPC_ParseParms( const char *NPCName, gentity_t *NPC )
 {
@@ -3535,6 +3539,24 @@ qboolean NPC_ParseParms( const char *NPCName, gentity_t *NPC )
 				Com_Printf( "WARNING: unknown keyword '%s' while parsing '%s'\n", token, NPCName );
 			}
 			SkipRestOfLine( &p );
+		}
+	}
+
+	if (scale_models_loaded && NPC->modelScale[0] <= 1)
+	{
+		int loop;
+		strcpy(NPC->client->modelname, playerModel);
+
+		for (loop = 0; loop < num_scale_models; loop++)
+		{
+			//G_Printf("Checking %s against %s.\n", model_scale_list[loop].botName, NPC->client->modelname);
+
+			if (!Q_stricmp(model_scale_list[loop].botName, NPC->client->modelname))
+			{// A match! Set the scale!
+				NPC->modelScale[0] = NPC->modelScale[1] = NPC->modelScale[2] = model_scale_list[loop].scale/100.0f;
+				NPC->client->ps.iModelScale = model_scale_list[loop].scale;
+				NPC->s.iModelScale = model_scale_list[loop].scale;
+			}
 		}
 	}
 

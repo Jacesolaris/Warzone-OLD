@@ -1987,6 +1987,7 @@ If "g_synchronousClients 1" is set, this will be called exactly
 once for each server frame, which makes for smooth demo recording.
 ==============
 */
+
 void ClientThink_real( gentity_t *ent ) {
 	gclient_t	*client;
 	pmove_t		pmove;
@@ -2008,6 +2009,10 @@ void ClientThink_real( gentity_t *ent ) {
 	if (client->pers.connected != CON_CONNECTED && !isNPC) {
 		return;
 	}
+
+	// UQ1: Always update scales. I think icarus keeps overwriting it...
+	client->ps.iModelScale = ent->modelScale[0] * 100.0f;
+	ent->s.iModelScale = ent->modelScale[0] * 100.0f;
 
 	// mark the time, so the connection sprite can be removed
 	ucmd = &ent->client->pers.cmd;
