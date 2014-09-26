@@ -851,6 +851,7 @@ qboolean JKG_CheckRoutingFrom( int wp )
 
 void G_CheckVendorNPCs( void )
 {
+#if 0
 	//
 	// We always should have some vendors on maps...
 	//
@@ -957,6 +958,7 @@ void G_CheckVendorNPCs( void )
 		SP_NPC_spawner( npc );
 	}
 #endif // __ALWAYS_TWO_TRAVELLINGVENDORS
+#endif //0
 }
 
 void G_CheckCivilianNPCs( void )

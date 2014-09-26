@@ -468,6 +468,7 @@ local anim index into account and make the call -rww
 =============
 */
 void BG_SetAnim(playerState_t *ps, animation_t *animations, int setAnimParts,int anim,int setAnimFlags, int blendTime);
+extern qboolean NPC_IsCivilianHumanoid(gentity_t *NPC);
 
 void G_SetAnim(gentity_t *ent, usercmd_t *ucmd, int setAnimParts, int anim, int setAnimFlags, int blendTime)
 {

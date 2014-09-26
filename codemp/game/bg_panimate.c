@@ -2923,6 +2923,8 @@ void BG_SaberStartTransAnim(int clientNum, int saberAnimLevel, int weapon, int a
 	//void BG_SaberStartTransAnim( int clientNum, int saberAnimLevel, int weapon, int anim, float *animSpeed, int broken )
 	//[/FatigueSys]
 {
+	if (weapon != WP_SABER) return; // UQ1: Hmmm why are we doing this with non-sabers at all???
+
 	if ( anim >= BOTH_A1_T__B_ && anim <= BOTH_ROLL_STAB )
 	{
 		if ( weapon == WP_SABER )

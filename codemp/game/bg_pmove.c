@@ -5870,15 +5870,11 @@ static void PM_Footsteps( void ) {
 			}
 			else
 			{
-				if ( pm->ps->weapon == WP_MELEE )
+				if ( pm->ps->weapon != WP_SABER )
 				{
 					desiredAnim = BOTH_WALK1;
 				}
 				else if ( BG_SabersOff( pm->ps ) )
-				{
-					desiredAnim = BOTH_WALK1;
-				}
-				else if ( pm->ps->weapon != WP_SABER )
 				{
 					desiredAnim = BOTH_WALK1;
 				}
@@ -5966,6 +5962,16 @@ static void PM_Footsteps( void ) {
 			// no sound when completely underwater
 		}
 	}
+
+	/*
+	if (pm->ps->clientNum >= MAX_CLIENTS &&
+		pm_entSelf &&
+		pm_entSelf->s.NPC_class == CLASS_CIVILIAN)
+	{
+		PM_SetAnim(SETANIM_TORSO, BOTH_STAND9IDLE1, setAnimFlags);
+		pm->ps->torsoAnim = BOTH_STAND9IDLE1;
+	}
+	*/
 }
 
 /*
@@ -6946,6 +6952,22 @@ PM_Weapon
 Generates weapon events and modifes the weapon counter
 ==============
 */
+
+#if 0
+qboolean BG_NPC_IsCivilianHumanoid(void)
+{
+	if (pm->ps->clientNum >= MAX_CLIENTS && pm_entSelf)
+	{
+		if (pm_entSelf->s.NPC_class == CLASS_CIVILIAN || pm_entSelf->s.NPC_class == CLASS_CIVILIAN_WEEQUAY)
+		{
+			return qtrue;
+		}
+	}
+
+	return qfalse;
+}
+#endif //0
+
 extern int PM_KickMoveForConditions(void);
 static void PM_Weapon( void )
 {
@@ -6955,11 +6977,13 @@ static void PM_Weapon( void )
 	bgEntity_t *veh = NULL;
 	qboolean vehicleRocketLock = qfalse;
 
+#if 0 // UQ1: WTF? This overrides ALL NPC anims... Took forever to track this damn code down...
 #ifdef _GAME
 	if (pm->ps->clientNum >= MAX_CLIENTS &&
 		pm->ps->weapon == WP_NONE &&
 		pm->cmd.weapon == WP_NONE &&
-		pm_entSelf)
+		pm_entSelf &&
+		!BG_NPC_IsCivilianHumanoid())
 	{ //npc with no weapon
 		gentity_t *gent = (gentity_t *)pm_entSelf;
 		if (gent->inuse && gent->client &&
@@ -6971,6 +6995,7 @@ static void PM_Weapon( void )
 		}
 	}
 #endif
+#endif //0
 
 	if (!pm->ps->emplacedIndex &&
 		pm->ps->weapon == WP_EMPLACED_GUN)

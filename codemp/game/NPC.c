@@ -2083,6 +2083,31 @@ void G_DroidSounds( gentity_t *self )
 	}
 }
 
+qboolean NPC_IsCivilian(gentity_t *NPC)
+{
+	if (NPC->client->NPC_class == CLASS_CIVILIAN
+		|| NPC->client->NPC_class == CLASS_CIVILIAN_R2D2
+		|| NPC->client->NPC_class == CLASS_CIVILIAN_R5D2
+		|| NPC->client->NPC_class == CLASS_CIVILIAN_PROTOCOL
+		|| NPC->client->NPC_class == CLASS_CIVILIAN_WEEQUAY)
+	{
+		return qtrue;
+	}
+
+	return qfalse;
+}
+
+qboolean NPC_IsCivilianHumanoid(gentity_t *NPC)
+{
+	if (NPC->client->NPC_class == CLASS_CIVILIAN
+		|| NPC->client->NPC_class == CLASS_CIVILIAN_WEEQUAY)
+	{
+		return qtrue;
+	}
+
+	return qfalse;
+}
+
 void NPC_PickRandomIdleAnimantionCivilian(gentity_t *NPC)
 {
 	int randAnim = irand(0,10);
@@ -2153,11 +2178,7 @@ void NPC_PickRandomIdleAnimantion(gentity_t *NPC)
 
 	NPC->client->lookTime = level.time + irand(5000, 15000);
 
-	if (NPC->client->NPC_class == CLASS_CIVILIAN
-		|| NPC->client->NPC_class == CLASS_CIVILIAN_R2D2
-		|| NPC->client->NPC_class == CLASS_CIVILIAN_R5D2
-		|| NPC->client->NPC_class == CLASS_CIVILIAN_PROTOCOL
-		|| NPC->client->NPC_class == CLASS_CIVILIAN_WEEQUAY)
+	if (NPC_IsCivilian(NPC))
 	{
 		NPC_PickRandomIdleAnimantionCivilian(NPC);
 		return;
@@ -2190,6 +2211,27 @@ void NPC_PickRandomIdleAnimantion(gentity_t *NPC)
 	}
 }
 
+qboolean NPC_SetCivilianMoveAnim( void )
+{
+	if (NPC_IsCivilianHumanoid(NPCS.NPC))
+	{// Set better torso anims when not holding a weapon.
+		if (NPCS.ucmd.forwardmove < 0) 
+			NPC_SetAnim( NPCS.NPC, SETANIM_LEGS, BOTH_WALKBACK2, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD );
+		else 
+			NPC_SetAnim( NPCS.NPC, SETANIM_LEGS, BOTH_WALK2, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD );
+
+		NPC_SetAnim(NPCS.NPC, SETANIM_TORSO, BOTH_STAND9IDLE1, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD);
+
+		NPCS.NPC->client->ps.legsTimer = 200;
+		NPCS.NPC->client->ps.torsoTimer = 200;
+
+		//trap->Print("Civilian %s NPC anim set. Weapon %i.\n", NPCS.NPC->client->modelname, NPCS.NPC->client->ps.weapon);
+		return qtrue;
+	}
+
+	return qfalse;
+}
+
 void NPC_SelectMoveAnimation(qboolean walk)
 {
 	if (NPCS.NPC->client->ps.crouchheight <= 0)
@@ -2198,8 +2240,15 @@ void NPC_SelectMoveAnimation(qboolean walk)
 	if (NPCS.NPC->client->ps.standheight <= 0)
 		NPCS.NPC->client->ps.standheight = DEFAULT_MAXS_2;
 
-	if ((NPCS.ucmd.buttons & BUTTON_ATTACK) || (NPCS.ucmd.buttons & BUTTON_ALT_ATTACK)) 
+	if (NPC_SetCivilianMoveAnim()) 
+	{
 		return;
+	}
+
+	if ((NPCS.ucmd.buttons & BUTTON_ATTACK) || (NPCS.ucmd.buttons & BUTTON_ALT_ATTACK)) 
+	{
+		return;
+	}
 
 	if (NPCS.ucmd.forwardmove == 0 
 		&& NPCS.ucmd.rightmove == 0 
@@ -2237,7 +2286,7 @@ void NPC_SelectMoveAnimation(qboolean walk)
 			}
 			else if (NPCS.NPC->client->ps.weapon == WP_SABER)
 			{// Walk with saber...
-				NPC_SetAnim( NPCS.NPC, SETANIM_BOTH, BOTH_WALKBACK1, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD );
+				NPC_SetAnim( NPCS.NPC, SETANIM_LEGS, BOTH_WALKBACK1, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD );
 				NPC_SetAnim( NPCS.NPC, SETANIM_TORSO, BOTH_WALKBACK1, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD );
 			}
 			else
@@ -2255,7 +2304,7 @@ void NPC_SelectMoveAnimation(qboolean walk)
 			}
 			else if (NPCS.NPC->client->ps.weapon == WP_SABER)
 			{// Walk with saber...
-				NPC_SetAnim( NPCS.NPC, SETANIM_BOTH, BOTH_WALK1, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD );
+				NPC_SetAnim( NPCS.NPC, SETANIM_LEGS, BOTH_WALK1, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD );
 				NPC_SetAnim( NPCS.NPC, SETANIM_TORSO, TORSO_WEAPONREADY3, SETANIM_FLAG_NORMAL );
 			}
 			else
@@ -2316,7 +2365,6 @@ void NPC_SelectMoveAnimation(qboolean walk)
 		NPCS.NPC->client->ps.torsoTimer = 200;
 		NPCS.NPC->client->ps.legsTimer = 200;
 	}
-	
 }
 
 qboolean DOM_NPC_ClearPathToSpot( gentity_t *NPC, vec3_t dest, int impactEntNum );
@@ -4806,6 +4854,13 @@ void NPC_Think ( gentity_t *self)//, int msec )
 					NPC_CheckAttackScript();
 					NPC_KeepCurrentFacing();
 
+					if ( NPC_IsCivilianHumanoid(NPCS.NPC) )
+					{// Set better torso anims when not holding a weapon.
+						NPC_SetAnim(NPCS.NPC, SETANIM_TORSO, BOTH_STAND9IDLE1, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD);
+						NPCS.NPC->client->ps.torsoTimer = 200;
+						//trap->Print(va("%s set torso anim.\n", NPCS.client->modelname));
+					}
+
 					if ( !NPCS.NPC->next_roff_time || NPCS.NPC->next_roff_time < level.time )
 					{//If we were following a roff, we don't do normal pmoves.
 						ClientThink( NPCS.NPC->s.number, &NPCS.ucmd );
@@ -4851,6 +4906,13 @@ void NPC_Think ( gentity_t *self)//, int msec )
 					//============================================================================
 					NPC_CheckAttackScript();
 					NPC_KeepCurrentFacing();
+
+					if ( NPC_IsCivilianHumanoid(NPCS.NPC) )
+					{// Set better torso anims when not holding a weapon.
+						NPC_SetAnim(NPCS.NPC, SETANIM_TORSO, BOTH_STAND9IDLE1, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD);
+						NPCS.NPC->client->ps.torsoTimer = 200;
+						//trap->Print(va("%s set torso anim.\n", NPCS.client->modelname));
+					}
 
 					if ( !NPCS.NPC->next_roff_time || NPCS.NPC->next_roff_time < level.time )
 					{//If we were following a roff, we don't do normal pmoves.
