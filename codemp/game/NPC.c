@@ -2609,24 +2609,32 @@ int NPC_SelectBestAvoidanceMethod()
 
 qboolean NPC_NPCBlockingPath()
 {
-	int			i;
+	int			i, num;
+	int			touch[MAX_GENTITIES];
+	vec3_t		mins, maxs;
+	vec3_t		range = { 128, 128, 128 };
 	int			BEST_METHOD = AVOIDANCE_NONE;
 	gentity_t	*NPC = NPCS.NPC;
 
-	VectorSubtract( gWPArray[NPC->wpCurrent]->origin, NPC->r.currentOrigin, NPC->movedir );
-	AngleVectors( NPC->move_vector, NPC->movedir, NULL, NULL );
+	//VectorSubtract( gWPArray[NPC->wpCurrent]->origin, NPC->r.currentOrigin, NPC->movedir );
+	//AngleVectors( NPC->move_vector, NPC->movedir, NULL, NULL );
 
-	for (i = 0; i < MAX_GENTITIES; i++)
+	VectorSubtract( NPC->r.currentOrigin, range, mins );
+	VectorAdd( NPC->r.currentOrigin, range, maxs );
+
+	num = trap->EntitiesInBox( mins, maxs, touch, MAX_GENTITIES );
+
+	for (i = 0; i < num; i++)
 	{
-		gentity_t *ent = &g_entities[i];
+		gentity_t *ent = &g_entities[touch[i]];
 
 		if (!ent) continue;
 		if (ent == NPC) continue; // UQ1: OLD JKG Mod was missing this :)
 		if (ent->s.eType != ET_PLAYER && ent->s.eType != ET_NPC) continue;
-		if (Distance(ent->r.currentOrigin, NPC->r.currentOrigin) > 64) continue;
+		//if (Distance(ent->r.currentOrigin, NPC->r.currentOrigin) > 64) continue;
 
 		//if (InFOV3( ent->r.currentOrigin, NPC->r.currentOrigin, NPC->move_vector, 90, 120 ))
-		if (trap->InPVS(NPC->r.currentOrigin, ent->r.currentOrigin) && InFOV2(ent->r.currentOrigin, NPC, 90, 180))
+		if (/*trap->InPVS(NPC->r.currentOrigin, ent->r.currentOrigin) &&*/ InFOV2(ent->r.currentOrigin, NPC, 90, 180))
 		{
 			NPC->bot_strafe_left_timer = level.time + 200;
 			return qtrue;

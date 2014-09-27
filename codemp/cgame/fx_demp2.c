@@ -1,6 +1,19 @@
 // DEMP2 Weapon
 
 #include "cg_local.h"
+#include "fx_local.h"
+
+void FX_DEMP2AddLight ( vec3_t org )
+{
+	vec4_t color = { 0.5, 0.5, 1.0, 70.0 }; // r, g, b, intensity
+	trap->R_AddLightToScene( org, color[3], color[0], color[1], color[2] );
+}
+
+void FX_DEMP2AddExplodeLight ( vec3_t org )
+{
+	vec4_t color = { 0.5, 0.5, 1.0, 100.0 }; // r, g, b, intensity
+	trap->R_AddLightToScene( org, color[3], color[0], color[1], color[2] );
+}
 
 /*
 ---------------------------
@@ -18,6 +31,8 @@ void FX_DEMP2_ProjectileThink( centity_t *cent, const struct weaponInfo_s *weapo
 	}
 
 	trap->FX_PlayEffectID( cgs.effects.demp2ProjectileEffect, cent->lerpOrigin, forward, -1, -1, qfalse );
+
+	FX_DEMP2AddLight(cent->lerpOrigin);
 }
 
 /*
@@ -234,6 +249,23 @@ void FX_DEMP2_AltBeam( vec3_t start, vec3_t end, vec3_t normal, //qboolean spark
 	FX_AddSprite( targ2, NULL, NULL, 8.0f + crandom() * 2, 0.0f, 1.0f, 0.0f, chaos, chaos, random() * 360, 0.0f, 10,
 						trap->R_RegisterShader( "gfx/misc/lightningFlash" ));
 */
+	static vec3_t WHITE	={1.0f,1.0f,1.0f};
+	static vec3_t BRIGHT={0.75f,0.5f,1.0f};
+
+	// UQ1: Let's at least give it something...
+	//"concussion/beam"
+	trap->FX_AddLine( start, end, 0.3f, 15.0f, 0.0f,
+							1.0f, 0.0f, 0.0f,
+							WHITE, WHITE, 0.0f,
+							175, trap->R_RegisterShader( "gfx/misc/lightningFlash"/*"gfx/effects/blueLine"*/ ),
+							FX_SIZE_LINEAR | FX_ALPHA_LINEAR );
+
+	// add some beef
+	trap->FX_AddLine( start, end, 0.3f, 11.0f, 0.0f,
+						1.0f, 0.0f, 0.0f,
+						BRIGHT, BRIGHT, 0.0f,
+						150, trap->R_RegisterShader( "gfx/misc/electric2"/*"gfx/misc/whiteline2"*/ ),
+						FX_SIZE_LINEAR | FX_ALPHA_LINEAR );
 }
 
 //---------------------------------------------
@@ -256,4 +288,6 @@ void FX_DEMP2_AltDetonate( vec3_t org, float size )
 	VectorCopy( org, ex->refEntity.origin );
 
 	ex->color[0] = ex->color[1] = ex->color[2] = 255.0f;
+
+	FX_DEMP2AddExplodeLight(ex->refEntity.origin);
 }

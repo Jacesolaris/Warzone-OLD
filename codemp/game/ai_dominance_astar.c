@@ -58,6 +58,7 @@ int ASTAR_FindPathFast(int from, int to, int *pathlist, qboolean shorten)
 	float		gc;
 	int			i, j, u, v, m;
 	gentity_t	*bot = NULL;
+	//int			debug_max_threads = 0;
 
 	if (!PATHING_IGNORE_FRAME_TIME && trap->Milliseconds() - FRAME_TIME > 300)
 	{// Never path on an already long frame time...
@@ -79,17 +80,31 @@ int ASTAR_FindPathFast(int from, int to, int *pathlist, qboolean shorten)
 	memset(list, 0, (sizeof(char)* gWPNum));
 	memset(parent, 0, (sizeof(int)* gWPNum));
 
-	for (i = 0; i < gWPNum; i++)
-	{
-		float ht = 0;
-		gcost[i] = Distance(gWPArray[i]->origin, gWPArray[to]->origin);
+	//omp_set_dynamic(1);
+	//omp_set_num_threads(8);
+	//omp_set_nested(1);
 
-		// UQ1: Prefer flat...
-		ht = gWPArray[i]->origin - gWPArray[to]->origin;
-		if (ht < 0) ht *= -1.0f;
-		if (ht > STEPSIZE)
-			gcost[i] *= (ht / 17);
+#pragma omp parallel //num_threads(8)
+	{
+#pragma omp parallel for
+		for (i = 0; i < gWPNum; i++)
+		{
+			float ht = 0;
+
+			//trap->Print("PARALLEL DEBUG: Hello from thread %i. Num threads %i. In Parallel: %i\n", omp_get_thread_num(), omp_get_num_threads(), omp_in_parallel());
+			//if (omp_get_num_threads() > debug_max_threads) debug_max_threads = omp_get_num_threads();
+
+			gcost[i] = Distance(gWPArray[i]->origin, gWPArray[to]->origin);
+
+			// UQ1: Prefer flat...
+			ht = gWPArray[i]->origin - gWPArray[to]->origin;
+			if (ht < 0) ht *= -1.0f;
+			if (ht > STEPSIZE)
+				gcost[i] *= (ht / 17);
+		}
 	}
+
+	//trap->Print("PARALLEL DEBUG: Max threads used: %i\n", debug_max_threads);
 
 	openlist[gWPNum + 1] = 0;
 

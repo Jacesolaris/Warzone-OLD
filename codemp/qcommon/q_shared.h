@@ -1,5 +1,7 @@
 #pragma once
 
+#include <omp.h>
+
 // Copyright (C) 1999-2000 Id Software, Inc.
 //
 

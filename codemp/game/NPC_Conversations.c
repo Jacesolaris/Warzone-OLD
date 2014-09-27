@@ -23,16 +23,16 @@ void NPC_EndConversation()
 	gentity_t	*NPC = NPCS.NPC;
 
 	NPC->NPC->conversationRole = 0;
-	NPC->NPC->conversationPartner->NPC->conversationRole = 0;
+	if (NPC->NPC->conversationPartner) NPC->NPC->conversationPartner->NPC->conversationRole = 0;
 	NPC->NPC->conversationSection = 1;
-	NPC->NPC->conversationPartner->NPC->conversationSection = 1;
+	if (NPC->NPC->conversationPartner) NPC->NPC->conversationPartner->NPC->conversationSection = 1;
 	NPC->NPC->conversationPart = 1;
-	NPC->NPC->conversationPartner->NPC->conversationPart = 1;
+	if (NPC->NPC->conversationPartner) NPC->NPC->conversationPartner->NPC->conversationPart = 1;
 
 	NPC->NPC->conversationReplyTime = level.time + 60000;
-	NPC->NPC->conversationPartner->NPC->conversationReplyTime = level.time + 45000;
+	if (NPC->NPC->conversationPartner) NPC->NPC->conversationPartner->NPC->conversationReplyTime = level.time + 45000;
 
-	NPC->NPC->conversationPartner->NPC->conversationPartner = NULL;
+	if (NPC->NPC->conversationPartner) NPC->NPC->conversationPartner->NPC->conversationPartner = NULL;
 	NPC->NPC->conversationPartner = NULL;
 #endif //__NPC_CONVERSATIONS__
 }
@@ -42,10 +42,17 @@ void NPC_SetStormtrooperConversationReplyTimer()
 #ifdef __NPC_CONVERSATIONS__
 	gentity_t	*NPC = NPCS.NPC;
 
-	NPC->NPC->conversationPart++;
-	NPC->NPC->conversationPartner->NPC->conversationPart++;
-	NPC->NPC->conversationReplyTime = level.time + 14000;
-	NPC->NPC->conversationPartner->NPC->conversationReplyTime = level.time + 7000;
+	if (NPC->NPC->conversationPartner)
+	{
+		NPC->NPC->conversationPart++;
+		NPC->NPC->conversationPartner->NPC->conversationPart++;
+		NPC->NPC->conversationReplyTime = level.time + 14000;
+		NPC->NPC->conversationPartner->NPC->conversationReplyTime = level.time + 7000;
+	}
+	else
+	{
+		NPC_EndConversation();
+	}
 #endif //__NPC_CONVERSATIONS__
 }
 
@@ -88,7 +95,7 @@ void NPC_StormTrooperConversation()
 	fileHandle_t	f;
 	char			filename[256];
 
-	if (NPC->enemy || NPC->NPC->conversationPartner->enemy)
+	if (NPC->enemy || !NPC->NPC->conversationPartner || NPC->NPC->conversationPartner->enemy)
 	{// Exit early if they get a target...
 		NPC_EndConversation();
 		return;

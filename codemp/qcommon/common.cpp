@@ -1446,7 +1446,12 @@ Com_Frame
 =================
 */
 void Com_Frame( void ) {
+	omp_set_dynamic(1);
+	omp_set_num_threads(16);
+	omp_set_nested(1);
 
+	#pragma omp parallel num_threads(1)
+	{
 	try
 	{
 #ifdef G2_PERFORMANCE_ANALYSIS
@@ -1610,9 +1615,9 @@ void Com_Frame( void ) {
 	catch (int code) {
 		Com_CatchError (code);
 		Com_Printf ("%s\n", Com_ErrorString (code));
-		return;
+		//return;
 	}
-
+	}
 #ifdef G2_PERFORMANCE_ANALYSIS
 	G2Time_PreciseFrame += G2PerformanceTimer_PreciseFrame.End();
 

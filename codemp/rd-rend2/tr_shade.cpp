@@ -1440,6 +1440,9 @@ void RB_SetStageImageDimensions(shaderProgram_t *sp, shaderStage_t *pStage)
 	GLSL_SetUniformVec2(sp, UNIFORM_DIMENSIONS, dimensions);
 }
 
+extern qboolean modelviewProjectionChanged;
+extern qboolean modelviewChanged;
+
 static void RB_IterateStagesGeneric( shaderCommands_t *input )
 {
 	int stage;
@@ -1703,7 +1706,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 		if (glState.skeletalAnimation)
 		{
-			GLSL_SetUniformMatrix16 (sp, UNIFORM_BONE_MATRICES, &glState.boneMatrices[0][0], glState.numBones);
+			GLSL_SetUniformMatrix16(sp, UNIFORM_BONE_MATRICES, &glState.boneMatrices[0][0], glState.numBones);
 		}
 
 		GLSL_SetUniformFloat(sp, UNIFORM_VERTEXLERP, glState.vertexAttribsInterpolation);

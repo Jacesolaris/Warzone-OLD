@@ -2077,6 +2077,8 @@ qboolean AIMod_Check_Slope_Between ( vec3_t org1, vec3_t org2 ) {
 	float	dist, last_height;
 	vec3_t	orgA, orgB, originalOrgB, forward, dir, testangles;
 	trace_t tr;
+	vec3_t		boxMins = { -1, -1, -1 };
+	vec3_t		boxMaxs = { 1, 1, 1 };
 	//vec3_t	boxMins= {-8, -8, -8}; // @fixme , tune this to be more smooth on delailed terrian (eg. railroad )
 	//vec3_t	boxMaxs= {8, 8, 8};
 
@@ -2121,9 +2123,10 @@ qboolean AIMod_Check_Slope_Between ( vec3_t org1, vec3_t org2 ) {
 		AngleVectors( testangles, forward, NULL, NULL );
 		VectorMA(orgA, j, forward, orgA);
 
-		orgB[2] = -65000;
+		//orgB[2] = -65000;
+		orgB[2] = -4000;
 
-		CG_Trace( &tr, orgA, NULL/*boxMins*/, NULL/*boxMaxs*/, orgB, -1, MASK_PLAYERSOLID );
+		CG_Trace( &tr, orgA, boxMins, boxMaxs, orgB, -1, MASK_PLAYERSOLID );
 
 		if (tr.contents & CONTENTS_LAVA)
 		{
@@ -2441,7 +2444,6 @@ AIMOD_MAPPING_MakeLinks ( void )
 
 	//number_of_nodes = total_good_count;
 	
-//#pragma omp parallel for
 	for ( loop = 0; loop < number_of_nodes; loop++ )
 	{// Do links...
 		nodes[loop].enodenum = 0;
@@ -2541,6 +2543,7 @@ Load_AddNode ( vec3_t origin, int fl, short int *ents, int objFl )
 	nodes[number_of_nodes].objectNum[1] = ents[1];			//only applies to objects linked to the unreachable flag
 	nodes[number_of_nodes].objectNum[2] = ents[2];
 	nodes[number_of_nodes].objFlags = objFl;				//set the objective flags
+
 	if ( nodes[number_of_nodes].type & NODE_AXIS_UNREACHABLE )
 	{
 		if ( AlliedOnlyFirstNode < 0 )
@@ -2803,6 +2806,261 @@ AIMOD_NODES_LoadNodes ( void )
 	return;
 }
 
+void AIMOD_NODES_LoadOldJKAPathData( void )
+{
+	fileHandle_t	f;
+	char			*fileString;
+	char			*currentVar;
+	char			*routePath;
+	wpobject_t		thiswp;
+	int				len;
+	int				i, i_cv;
+	int				nei_num;
+	vmCvar_t		mapname;
+	int				gLevelFlags;
+	short int		objNum[3] = { 0, 0, 0 };
+	
+	trap->Cvar_Register( &mapname, "mapname", "", CVAR_SERVERINFO | CVAR_ROM );
+
+	i = 0;
+	i_cv = 0;
+
+	routePath = (char *)malloc(1024);
+
+	Com_sprintf(routePath, 1024, "botroutes/%s.wnt\0", mapname.string);
+
+	len = trap->FS_Open(routePath, &f, FS_READ);
+
+	free(routePath); //routePath
+
+	if (!f)
+	{
+		trap->Print(S_COLOR_YELLOW "Bot route data not found for %s\n", mapname.string);
+		return;
+	}
+
+	if (len >= 524288)
+	{
+		trap->Print(S_COLOR_RED "Route file exceeds maximum length\n");
+		return;
+	}
+
+	fileString = (char *)malloc(524288);
+	currentVar = (char *)malloc(2048);
+
+	trap->FS_Read(fileString, len, f);
+
+	if (fileString[i] == 'l')
+	{ //contains a "levelflags" entry..
+		char readLFlags[64];
+		i_cv = 0;
+
+		while (fileString[i] != ' ')
+		{
+			i++;
+		}
+		i++;
+		while (fileString[i] != '\n')
+		{
+			readLFlags[i_cv] = fileString[i];
+			i_cv++;
+			i++;
+		}
+		readLFlags[i_cv] = 0;
+		i++;
+
+		gLevelFlags = atoi(readLFlags);
+	}
+	else
+	{
+		gLevelFlags = 0;
+	}
+
+	while (i < len)
+	{
+		int n = 0;
+
+		i_cv = 0;
+
+		thiswp.index = 0;
+		thiswp.flags = 0;
+		thiswp.inuse = 0;
+		thiswp.neighbornum = 0;
+		thiswp.origin[0] = 0;
+		thiswp.origin[1] = 0;
+		thiswp.origin[2] = 0;
+		thiswp.weight = 0;
+		thiswp.associated_entity = ENTITYNUM_NONE;
+		thiswp.forceJumpTo = 0;
+		thiswp.disttonext = 0;
+		nei_num = 0;
+
+		while (nei_num < MAX_NEIGHBOR_SIZE)
+		{
+			thiswp.neighbors[nei_num].num = 0;
+			thiswp.neighbors[nei_num].forceJumpTo = 0;
+
+			nei_num++;
+		}
+
+		while (fileString[i] != ' ')
+		{
+			currentVar[i_cv] = fileString[i];
+			i_cv++;
+			i++;
+		}
+		currentVar[i_cv] = '\0';
+
+		thiswp.index = atoi(currentVar);
+
+		i_cv = 0;
+		i++;
+
+		while (fileString[i] != ' ')
+		{
+			currentVar[i_cv] = fileString[i];
+			i_cv++;
+			i++;
+		}
+		currentVar[i_cv] = '\0';
+
+		thiswp.flags = atoi(currentVar);
+
+		i_cv = 0;
+		i++;
+
+		while (fileString[i] != ' ')
+		{
+			currentVar[i_cv] = fileString[i];
+			i_cv++;
+			i++;
+		}
+		currentVar[i_cv] = '\0';
+
+		thiswp.weight = atof(currentVar);
+
+		i_cv = 0;
+		i++;
+		i++;
+
+		while (fileString[i] != ' ')
+		{
+			currentVar[i_cv] = fileString[i];
+			i_cv++;
+			i++;
+		}
+		currentVar[i_cv] = '\0';
+
+		thiswp.origin[0] = atof(currentVar);
+
+		i_cv = 0;
+		i++;
+
+		while (fileString[i] != ' ')
+		{
+			currentVar[i_cv] = fileString[i];
+			i_cv++;
+			i++;
+		}
+		currentVar[i_cv] = '\0';
+
+		thiswp.origin[1] = atof(currentVar);
+
+		i_cv = 0;
+		i++;
+
+		while (fileString[i] != ')')
+		{
+			currentVar[i_cv] = fileString[i];
+			i_cv++;
+			i++;
+		}
+		currentVar[i_cv] = '\0';
+
+		thiswp.origin[2] = atof(currentVar);
+
+		thiswp.origin[2] += 8.0;
+		thiswp.origin[2] = FloorHeightAt( thiswp.origin );
+		trap->Print("Added wp at %f %f %f.\n", thiswp.origin[0], thiswp.origin[1], thiswp.origin[2]);
+		Load_AddNode( thiswp.origin, 0, objNum, 0 );	//add the node
+		nodes[thiswp.index].enodenum = 0;
+
+		i += 4;
+
+		while (fileString[i] != '}')
+		{
+			i_cv = 0;
+			while (fileString[i] != ' ' && fileString[i] != '-')
+			{
+				currentVar[i_cv] = fileString[i];
+				i_cv++;
+				i++;
+			}
+			currentVar[i_cv] = '\0';
+
+			thiswp.neighbors[thiswp.neighbornum].num = atoi(currentVar);
+
+			if (fileString[i] == '-')
+			{
+				i_cv = 0;
+				i++;
+
+				while (fileString[i] != ' ')
+				{
+					currentVar[i_cv] = fileString[i];
+					i_cv++;
+					i++;
+				}
+				currentVar[i_cv] = '\0';
+
+				thiswp.neighbors[thiswp.neighbornum].forceJumpTo = 999; //atoi(currentVar); //FJSR
+			}
+			else
+			{
+				thiswp.neighbors[thiswp.neighbornum].forceJumpTo = 0;
+			}
+
+			thiswp.neighbornum++;
+
+			i++;
+		}
+
+		i_cv = 0;
+		i++;
+		i++;
+
+		while (fileString[i] != '\n')
+		{
+			currentVar[i_cv] = fileString[i];
+			i_cv++;
+			i++;
+		}
+		currentVar[i_cv] = '\0';
+
+		thiswp.disttonext = atof(currentVar);
+
+		
+		// Set node objective flags..
+		AIMOD_NODES_SetObjectiveFlags( thiswp.index );
+
+		for (n = 0; n < thiswp.neighbornum; n++)
+			ConnectNodes( thiswp.index, thiswp.neighbors[n].num, 0 );				//convert connections
+
+		i++;
+	}
+
+	free(fileString); //fileString
+	free(currentVar); //currentVar
+
+	trap->FS_Close(f);
+
+	trap->Print( "^1*** ^3%s^5: Successfully loaded %i waypoints from JKA waypoint file ^7botroutes/%s.wnt^5.\n", GAME_VERSION,
+			  number_of_nodes, mapname.string );
+	nodes_loaded = qtrue;
+
+	return;
+}
+
 /* */
 void
 AIMOD_NODES_SaveNodes_Autowaypointed ( void )
@@ -2832,12 +3090,10 @@ AIMOD_NODES_SaveNodes_Autowaypointed ( void )
 		return;
 	}
 
-//#pragma omp parallel for
 	for ( i = 0; i < aw_num_nodes/*num_nodes*/; i++ )
 	{
 		nodes[i].enodenum = 0;
 
-//#pragma omp parallel for
 		for ( j = 0; j < MAX_NODELINKS; j++ )
 		{
 			nodes[i].links[j].targetNode = INVALID;
@@ -2858,7 +3114,6 @@ AIMOD_NODES_SaveNodes_Autowaypointed ( void )
 
 	num_nodes = aw_num_nodes;
 
-//#pragma omp parallel for
 	for ( i = 0; i < aw_num_nodes/*num_nodes*/; i++ )
 	{
 		// Set node objective flags..
@@ -2874,6 +3129,8 @@ AIMOD_NODES_SaveNodes_Autowaypointed ( void )
 	
 	for ( i = 0; i < aw_num_nodes/*num_nodes*/; i++ )											//loop through all the nodes
 	{
+		trap->Print("Saved wp at %f %f %f.\n", nodes[i].origin[0], nodes[i].origin[1], nodes[i].origin[2]);
+
 		//write all the node data to the file
 		trap->FS_Write( &(nodes[i].origin), sizeof(vec3_t), f );
 		trap->FS_Write( &(nodes[i].type), sizeof(int), f );
@@ -4734,7 +4991,6 @@ void AIMod_AutoWaypoint_StandardMethod( void )
 	starty = orig_starty;
 	startz = orig_startz;
 
-//#pragma omp parallel
 	while ( startx > mapMins[0]-2048 )
 	{
 		while ( starty > mapMins[1]-2048 )
@@ -4769,10 +5025,8 @@ void AIMod_AutoWaypoint_StandardMethod( void )
 	strcpy( task_string3, va("^5First pass. Finding temporary waypoints...") );
 	trap->UpdateScreen();
 
-	//#pragma omp parallel
 	while ( startx > mapMins[0]-2048 )
 	{
-		//#pragma omp parallel
 		while ( starty > mapMins[1]-2048 )
 		{
 			vec3_t last_org, new_org;
@@ -4785,7 +5039,6 @@ void AIMod_AutoWaypoint_StandardMethod( void )
 
 			if (floor == -65536.0f || floor <= mapMins[2]-2048)
 			{// Can skip this one!
-				//#pragma omp parallel
 				while (startz > floor && startz > mapMins[2]-2048)
 				{// We can skip some checks, until we get to our hit position...
 					startz -= waypoint_scatter_distance;
@@ -4875,7 +5128,6 @@ void AIMod_AutoWaypoint_StandardMethod( void )
 				floor = FloorHeightAt(new_org);
 			}
 
-			//#pragma omp parallel
 			while ( startz > mapMins[2]-2048 )
 			{
 				vec3_t org;
@@ -4884,7 +5136,6 @@ void AIMod_AutoWaypoint_StandardMethod( void )
 
 				if (current_floor == -65536.0f || current_floor <= mapMins[2]-2048)
 				{// Can skip this one!
-					//#pragma omp parallel
 					while (startz > floor && startz > mapMins[2]-2048)
 					{// We can skip some checks, until we get to our hit position...
 						startz -= waypoint_scatter_distance;
@@ -4950,7 +5201,6 @@ void AIMod_AutoWaypoint_StandardMethod( void )
 
 				if (org[2] <= -65536.0f)
 				{
-					//#pragma omp parallel
 					while (startz > floor && startz > mapMins[2]-2048)
 					{// We can skip some checks, until we get to our hit position...
 						startz -= waypoint_scatter_distance;
@@ -5281,7 +5531,6 @@ void AIMod_AutoWaypoint_StandardMethod( void )
 
 				startz -= waypoint_scatter_distance * waypoint_scatter_realtime_modifier;
 
-//#pragma omp parallel
 				while (startz > floor && startz > mapMins[2]-2048)
 				{// We can skip some checks, until we get to our current floor height...
 					startz -= waypoint_scatter_distance * waypoint_scatter_realtime_modifier;
@@ -5345,7 +5594,6 @@ void AIMod_AutoWaypoint_StandardMethod( void )
 
 		total_areas = areas;
 
-//#pragma omp parallel for
 		for ( i = 0; i < areas; i++ )
 		{
 			vec3_t		area_org;
@@ -5458,7 +5706,6 @@ void AIMod_AutoWaypoint_StandardMethod( void )
 	strcpy( task_string3, va("^5Second (repair) pass. Adjusting waypoint positions...") );
 	trap->UpdateScreen();
 
-//#pragma omp parallel for
 	for ( i = 0; i < areas; i++ )
 	{
 		vec3_t original_position = { arealist[i][0], arealist[i][1], arealist[i][2] };
@@ -5490,7 +5737,6 @@ void AIMod_AutoWaypoint_StandardMethod( void )
 	strcpy( task_string3, va("^5Final (cleanup) pass. Building final waypoints...") );
 	trap->UpdateScreen();
 
-//#pragma omp parallel for
 	for ( i = 0; i < areas; i++ )
 	{
 		vec3_t		area_org;
@@ -5518,7 +5764,6 @@ void AIMod_AutoWaypoint_StandardMethod( void )
 			continue;
 		}
 
-//#pragma omp parallel
 		for (j = 0; j < number_of_nodes; j++)
 		{
 			vec3_t area_org2;
@@ -5631,7 +5876,7 @@ void AIMod_AutoWaypoint_Free_Memory ( void )
 void AIMod_AutoWaypoint_Init_Memory ( void ); // below...
 void AIMod_AutoWaypoint_Optimizer ( void ); // below...
 //void AIMod_AutoWaypoint_Cleaner ( qboolean quiet, qboolean null_links_only, qboolean relink_only ); // below...
-void AIMod_AutoWaypoint_Cleaner ( qboolean quiet, qboolean null_links_only, qboolean relink_only, qboolean multipass, qboolean initial_pass, qboolean extra, qboolean marked_locations, qboolean extra_reach );
+void AIMod_AutoWaypoint_Cleaner ( qboolean quiet, qboolean null_links_only, qboolean relink_only, qboolean multipass, qboolean initial_pass, qboolean extra, qboolean marked_locations, qboolean extra_reach, qboolean reset_reach, qboolean convert_old );
 
 void AIMod_AutoWaypoint_Clean ( void )
 {
@@ -5642,6 +5887,7 @@ void AIMod_AutoWaypoint_Clean ( void )
 		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^7Usage:\n" );
 		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3/awc <method>^5.\n" );
 		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^5Available methods are:\n" );
+		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3\"convert\" ^5- Convert old JKA wp file to JKG format.\n");
 		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3\"relink\" ^5- Just do relinking.\n");
 		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3\"pathtest\" ^5- Remove waypoints with no path to server's first spawnpoint.\n");
 		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3\"clean\" ^5- Do a full clean.\n");
@@ -5649,6 +5895,7 @@ void AIMod_AutoWaypoint_Clean ( void )
 		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3\"extra\" ^5- Do a full clean (but remove more - good if the number is still too high after optimization).\n");
 		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3\"markedlocations\" ^5- Remove waypoints nearby your marked locations (awc_addremovalspot & awc_addbadheight).\n");
 		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3\"extrareach\" ^5- Remove waypoints nearby your marked locations (awc_addremovalspot & awc_addbadheight) and add extra reachability (wp link ranges).\n");
+		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3\"resetreach\" ^5- Remove waypoints with no path to server's first spawnpoint and reset max link ranges.\n");
 		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3\"cover\" ^5- Just generate coverpoints.\n");
 		trap->UpdateScreen();
 		return;
@@ -5656,33 +5903,41 @@ void AIMod_AutoWaypoint_Clean ( void )
 
 	trap->Cmd_Argv( 1, str, sizeof(str) );
 	
-	if ( Q_stricmp( str, "relink") == 0 )
+	if ( Q_stricmp( str, "convert") == 0 )
 	{
-		AIMod_AutoWaypoint_Cleaner(qtrue, qfalse, qtrue, qfalse, qfalse, qfalse, qfalse, qfalse);
+		AIMod_AutoWaypoint_Cleaner(qtrue, qfalse, qtrue, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse, qtrue);
+	}
+	else if ( Q_stricmp( str, "relink") == 0 )
+	{
+		AIMod_AutoWaypoint_Cleaner(qtrue, qfalse, qtrue, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse);
 	}
 	else if ( Q_stricmp( str, "pathtest") == 0 )
 	{
-		AIMod_AutoWaypoint_Cleaner(qtrue, qtrue, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse);
+		AIMod_AutoWaypoint_Cleaner(qtrue, qtrue, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse);
 	}
 	else if ( Q_stricmp( str, "clean") == 0 )
 	{
-		AIMod_AutoWaypoint_Cleaner(qtrue, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse);
+		AIMod_AutoWaypoint_Cleaner(qtrue, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse);
 	}
 	else if ( Q_stricmp( str, "multipass") == 0 )
 	{
-		AIMod_AutoWaypoint_Cleaner(qtrue, qfalse, qfalse, qtrue, qfalse, qfalse, qfalse, qfalse);
+		AIMod_AutoWaypoint_Cleaner(qtrue, qfalse, qfalse, qtrue, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse);
 	}
 	else if ( Q_stricmp( str, "extra") == 0 )
 	{
-		AIMod_AutoWaypoint_Cleaner(qtrue, qfalse, qfalse, qtrue, qfalse, qtrue, qfalse, qfalse);
+		AIMod_AutoWaypoint_Cleaner(qtrue, qfalse, qfalse, qtrue, qfalse, qtrue, qfalse, qfalse, qfalse, qfalse);
 	}
 	else if ( Q_stricmp( str, "markedlocations") == 0 )
 	{
-		AIMod_AutoWaypoint_Cleaner(qtrue, qtrue, qfalse, qfalse, qfalse, qfalse, qtrue, qfalse);
+		AIMod_AutoWaypoint_Cleaner(qtrue, qtrue, qfalse, qfalse, qfalse, qfalse, qtrue, qfalse, qfalse, qfalse);
 	}
 	else if ( Q_stricmp( str, "extrareach") == 0 )
 	{
-		AIMod_AutoWaypoint_Cleaner(qtrue, qfalse, qtrue, qfalse, qfalse, qfalse, qtrue, qtrue);
+		AIMod_AutoWaypoint_Cleaner(qtrue, qfalse, qtrue, qfalse, qfalse, qfalse, qtrue, qtrue, qfalse, qfalse);
+	}
+	else if ( Q_stricmp( str, "resetreach") == 0 )
+	{
+		AIMod_AutoWaypoint_Cleaner(qtrue, qtrue, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse, qtrue, qfalse);
 	}
 	else if ( Q_stricmp( str, "cover") == 0 )
 	{
@@ -8036,7 +8291,7 @@ qboolean JKG_CheckRoutingFrom( int wp )
 
 /* */
 void
-AIMod_AutoWaypoint_Cleaner ( qboolean quiet, qboolean null_links_only, qboolean relink_only, qboolean multipass, qboolean initial_pass, qboolean extra, qboolean marked_locations, qboolean extra_reach )
+AIMod_AutoWaypoint_Cleaner ( qboolean quiet, qboolean null_links_only, qboolean relink_only, qboolean multipass, qboolean initial_pass, qboolean extra, qboolean marked_locations, qboolean extra_reach, qboolean reset_reach, qboolean convert_old )
 {
 	int i = 0;//, j = 0;//, k = 0, l = 0;//, m = 0;
 	int	total_calculations = 0;
@@ -8103,7 +8358,14 @@ AIMod_AutoWaypoint_Cleaner ( qboolean quiet, qboolean null_links_only, qboolean 
 		}
 	}
 
-	AIMOD_NODES_LoadNodes();
+	if (convert_old)
+	{
+		AIMOD_NODES_LoadOldJKAPathData();
+	}
+	else
+	{
+		AIMOD_NODES_LoadNodes();
+	}
 
 	if (number_of_nodes <= 0)
 	{
@@ -8159,7 +8421,11 @@ AIMod_AutoWaypoint_Cleaner ( qboolean quiet, qboolean null_links_only, qboolean 
 	AIMOD_AI_InitNodeContentsFlags();
 	AIMod_AutoWaypoint_Trigger_Hurt_List_Setup();
 
-	if (number_of_nodes > 40000)
+	if (number_of_nodes > 160000)
+		node_disable_ratio = 15;
+	else if (number_of_nodes > 80000)
+		node_disable_ratio = 12;
+	else if (number_of_nodes > 40000)
 		node_disable_ratio = 10;
 	else if (number_of_nodes > 36000)
 		node_disable_ratio = 9;
@@ -8211,12 +8477,102 @@ AIMod_AutoWaypoint_Cleaner ( qboolean quiet, qboolean null_links_only, qboolean 
 	{// 1.5x?
 		original_wp_max_distance *= 1.5f;
 	}
+	else if (convert_old)
+	{
+		original_wp_max_distance = 4096.0f;
+	}
+	else if (reset_reach)
+	{
+		original_wp_max_distance = 96.0f;
+	}
+
+	if (convert_old)
+	{
+		aw_num_nodes = number_of_nodes;
+
+		// Save the new list...
+		{
+			fileHandle_t	f;
+			int				i;
+			/*short*/ int		j;
+			float			version = NOD_VERSION;										//version is 1.0 for now
+			char			name[] = BOT_MOD_NAME;
+			//vmCvar_t		mapname;
+			char			map[64] = "";
+			char			filename[60];
+			/*short*/ int		num_nodes = number_of_nodes;
+
+			vmCvar_t mapname;
+			trap->Cvar_Register( &mapname, "mapname", "", CVAR_SERVERINFO | CVAR_ROM );
+
+			aw_num_nodes = number_of_nodes;
+			strcpy( filename, "nodes/" );
+
+			///////////////////
+			//try to open the output file, return if it failed
+			trap->FS_Open( va( "nodes/%s.bwp", mapname.string), &f, FS_WRITE );
+			if ( !f )
+			{
+				trap->Print( "^1*** ^3ERROR^5: Error opening node file ^7nodes/%s.bwp^5!!!\n", mapname.string/*filename*/ );
+				return;
+			}
+
+			for ( i = 0; i < aw_num_nodes/*num_nodes*/; i++ )
+			{
+				nodes[i].enodenum = 0;
+
+				for ( j = 0; j < MAX_NODELINKS; j++ )
+				{
+					nodes[i].links[j].flags = 0;
+					nodes[i].objectNum[0] = nodes[i].objectNum[1] = nodes[i].objectNum[2] = ENTITYNUM_NONE;
+				}
+			}
+
+			num_nodes = aw_num_nodes;
+
+			//trap->Cvar_Register( &mapname, "mapname", "", CVAR_SERVERINFO | CVAR_ROM );	//get the map name
+			strcpy( map, mapname.string);
+			trap->FS_Write( &name, strlen( name) + 1, f );								//write the mod name to the file
+			trap->FS_Write( &version, sizeof(float), f );								//write the version of this file
+			trap->FS_Write( &map, strlen( map) + 1, f );									//write the map name
+			trap->FS_Write( &num_nodes, sizeof(/*short*/ int), f );							//write the number of nodes in the map
+
+			for ( i = 0; i < aw_num_nodes/*num_nodes*/; i++ )											//loop through all the nodes
+			{
+				trap->Print("Saved wp at %f %f %f.\n", nodes[i].origin[0], nodes[i].origin[1], nodes[i].origin[2]);
+
+				//write all the node data to the file
+				trap->FS_Write( &(nodes[i].origin), sizeof(vec3_t), f );
+				trap->FS_Write( &(nodes[i].type), sizeof(int), f );
+				trap->FS_Write( &(nodes[i].objectNum), sizeof(short int) * 3, f );
+				trap->FS_Write( &(nodes[i].objFlags), sizeof(short int), f );
+				trap->FS_Write( &(nodes[i].enodenum), sizeof(short int), f );
+				for ( j = 0; j < nodes[i].enodenum; j++ )
+				{
+					trap->FS_Write( &(nodes[i].links[j].targetNode), sizeof(/*short*/ int), f );
+					trap->FS_Write( &(nodes[i].links[j].flags), sizeof(short int), f );
+				}
+			}
+			{
+				//short int	fix = 1;
+				short int	fix = 0;
+				trap->FS_Write( &fix, sizeof(short int), f );
+			}
+
+			trap->FS_Close( f );													//close the file
+			trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^5Successfully saved node file ^7nodes/%s.bwp^5.\n", mapname.string/*filename*/ );
+		}
+
+		AIMod_AutoWaypoint_Free_Memory();
+		AIMod_AutoWaypoint_Optimize_Free_Memory();
+		return;
+	}
 
 	// Set out distance multiplier...
 	original_wp_scatter_multiplier = waypoint_distance_multiplier;
 	waypoint_distance_multiplier = original_wp_max_distance/waypoint_scatter_distance;
 
-	if (relink_only)
+	if (relink_only || convert_old)
 	{
 		AIMod_AddLifts();
 	}
@@ -8285,7 +8641,7 @@ AIMod_AutoWaypoint_Cleaner ( qboolean quiet, qboolean null_links_only, qboolean 
 		}
 
 		// Disable some ice/water ndoes...
-		if (!relink_only)
+		if (!relink_only && !convert_old)
 		for (i = 0; i < number_of_nodes; i++)
 		{
 			node_clean_ticker++;

@@ -2,6 +2,12 @@
 
 #include "cg_local.h"
 
+void FX_BowcasterAddLight ( vec3_t org )
+{
+	vec4_t color = { 0.3, 1.0, 0.3, 100.0 }; // r, g, b, intensity
+	trap->R_AddLightToScene( org, color[3], color[0], color[1], color[2] );
+}
+
 /*
 ---------------------------
 FX_BowcasterProjectileThink
@@ -18,6 +24,8 @@ void FX_BowcasterProjectileThink( centity_t *cent, const struct weaponInfo_s *we
 	}
 
 	trap->FX_PlayEffectID( cgs.effects.bowcasterShotEffect, cent->lerpOrigin, forward, -1, -1, qfalse );
+
+	FX_BowcasterAddLight(cent->lerpOrigin);
 }
 
 /*
@@ -58,5 +66,7 @@ void FX_BowcasterAltProjectileThink( centity_t *cent, const struct weaponInfo_s 
 	}
 
 	trap->FX_PlayEffectID( cgs.effects.bowcasterShotEffect, cent->lerpOrigin, forward, -1, -1, qfalse );
+
+	FX_BowcasterAddLight(cent->lerpOrigin);
 }
 

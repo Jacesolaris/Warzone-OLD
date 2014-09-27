@@ -144,6 +144,8 @@ void Load_Model_Scales( void )
 	char *buf;
 	qboolean alt = qfalse;
 
+	if (scale_models_loaded) return;
+
 	len = trap->FS_Open( "modelscale.cfg\0", &f, FS_READ );
 
 	if ( !f )
@@ -158,8 +160,11 @@ void Load_Model_Scales( void )
 		return;
 	}
 
-	if ( (buf = malloc(len+1)) == 0 )
+	buf = (char *)G_Alloc(len+1);
+
+	if ( buf == NULL )
 	{//alloc memory for buffer
+		trap->FS_Close( f );
 		return;
 	}
 
@@ -217,10 +222,10 @@ void Load_Model_Scales( void )
 
 	trap->Print("^4*** ^3JKG^4: ^5There are ^7%i^5 player model scales in the current database.\n", num_scale_models);
 
-	if (num_scale_models > 0)
-		scale_models_loaded = qtrue;
+	//if (num_scale_models > 0)
+	scale_models_loaded = qtrue;
 
-	free(buf);
+	//free(buf);
 }
 
 /*

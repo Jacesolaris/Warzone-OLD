@@ -3,6 +3,12 @@
 #include "cg_local.h"
 #include "fx_local.h"
 
+void FX_BryarAddLight ( vec3_t org )
+{
+	vec4_t color = { 0.7, 0.7, 0.0, 50.0 }; // r, g, b, intensity
+	trap->R_AddLightToScene( org, color[3], color[0], color[1], color[2] );
+}
+
 /*
 -------------------------
 
@@ -22,6 +28,8 @@ void FX_BryarProjectileThink(  centity_t *cent, const struct weaponInfo_s *weapo
 	}
 
 	trap->FX_PlayEffectID( cgs.effects.bryarShotEffect, cent->lerpOrigin, forward, -1, -1, qfalse );
+
+	FX_BryarAddLight(cent->lerpOrigin);
 }
 
 /*
@@ -81,6 +89,8 @@ void FX_BryarAltProjectileThink(  centity_t *cent, const struct weaponInfo_s *we
 	//	for ( int t = 1; t < cent->gent->count; t++ )	// The single player stores the charge in count, which isn't accessible on the client
 
 	trap->FX_PlayEffectID( cgs.effects.bryarShotEffect, cent->lerpOrigin, forward, -1, -1, qfalse );
+
+	FX_BryarAddLight(cent->lerpOrigin);
 }
 
 /*
@@ -127,6 +137,13 @@ void FX_BryarAltHitPlayer( vec3_t origin, vec3_t normal, qboolean humanoid )
 
 
 //TURRET
+
+void FX_TurretAddLight ( vec3_t org )
+{
+	vec4_t color = { 0.9, 0.7, 0.0, 60.0 }; // r, g, b, intensity
+	trap->R_AddLightToScene( org, color[3], color[0], color[1], color[2] );
+}
+
 /*
 -------------------------
 FX_TurretProjectileThink
@@ -142,6 +159,8 @@ void FX_TurretProjectileThink(  centity_t *cent, const struct weaponInfo_s *weap
 	}
 
 	trap->FX_PlayEffectID( cgs.effects.turretShotEffect, cent->lerpOrigin, forward, -1, -1, qfalse );
+
+	FX_TurretAddLight(cent->lerpOrigin);
 }
 
 /*
@@ -174,6 +193,13 @@ void FX_TurretHitPlayer( vec3_t origin, vec3_t normal, qboolean humanoid )
 
 
 //CONCUSSION (yeah, should probably make a new file for this.. or maybe just move all these stupid semi-redundant fx_ functions into one file)
+
+void FX_ConcussionAddLight ( vec3_t org )
+{
+	vec4_t color = { 0.5, 0.5, 1.0, 60.0 }; // r, g, b, intensity
+	trap->R_AddLightToScene( org, color[3], color[0], color[1], color[2] );
+}
+
 /*
 -------------------------
 FX_ConcussionHitWall
@@ -209,6 +235,8 @@ void FX_ConcussionProjectileThink(  centity_t *cent, const struct weaponInfo_s *
 	}
 
 	trap->FX_PlayEffectID( cgs.effects.concussionShotEffect, cent->lerpOrigin, forward, -1, -1, qfalse );
+
+	FX_ConcussionAddLight(cent->lerpOrigin);
 }
 
 /*

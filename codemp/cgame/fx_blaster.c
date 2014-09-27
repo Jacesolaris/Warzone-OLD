@@ -2,6 +2,12 @@
 
 #include "cg_local.h"
 
+void FX_BlasterAddLight ( vec3_t org )
+{
+	vec4_t color = { 1.0, 0.2, 0.0, 100.0 }; // r, g, b, intensity
+	trap->R_AddLightToScene( org, color[3], color[0], color[1], color[2] );
+}
+
 /*
 -------------------------
 FX_BlasterProjectileThink
@@ -18,6 +24,8 @@ void FX_BlasterProjectileThink( centity_t *cent, const struct weaponInfo_s *weap
 	}
 
 	trap->FX_PlayEffectID( cgs.effects.blasterShotEffect, cent->lerpOrigin, forward, -1, -1, qfalse );
+
+	FX_BlasterAddLight(cent->lerpOrigin);
 }
 
 /*
@@ -35,6 +43,8 @@ void FX_BlasterAltFireThink( centity_t *cent, const struct weaponInfo_s *weapon 
 	}
 
 	trap->FX_PlayEffectID( cgs.effects.blasterShotEffect, cent->lerpOrigin, forward, -1, -1, qfalse );
+
+	FX_BlasterAddLight(cent->lerpOrigin);
 }
 
 /*

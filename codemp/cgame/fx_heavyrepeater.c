@@ -2,6 +2,24 @@
 
 #include "cg_local.h"
 
+void FX_RepeaterAddLight ( vec3_t org )
+{
+	vec4_t color = { 0.8, 0.8, 0.0, 50.0 }; // r, g, b, intensity
+	trap->R_AddLightToScene( org, color[3], color[0], color[1], color[2] );
+}
+
+void FX_RepeaterAltAddLight ( vec3_t org )
+{
+	vec4_t color = { 0.5, 0.5, 1.0, 50.0 }; // r, g, b, intensity
+	trap->R_AddLightToScene( org, color[3], color[0], color[1], color[2] );
+}
+
+void FX_RepeaterAltAddExplodeLight ( vec3_t org )
+{
+	vec4_t color = { 0.5, 0.5, 1.0, 100.0 }; // r, g, b, intensity
+	trap->R_AddLightToScene( org, color[3], color[0], color[1], color[2] );
+}
+
 /*
 ---------------------------
 FX_RepeaterProjectileThink
@@ -18,6 +36,8 @@ void FX_RepeaterProjectileThink( centity_t *cent, const struct weaponInfo_s *wea
 	}
 
 	trap->FX_PlayEffectID( cgs.effects.repeaterProjectileEffect, cent->lerpOrigin, forward, -1, -1, qfalse );
+
+	FX_RepeaterAddLight(cent->lerpOrigin);
 }
 
 /*
@@ -108,6 +128,8 @@ static void CG_DistortionOrb( centity_t *cent )
 #endif
 
 	trap->R_AddRefEntityToScene( &ent );
+
+	FX_RepeaterAltAddExplodeLight(cent->lerpOrigin);
 }
 
 /*
@@ -130,6 +152,8 @@ void FX_RepeaterAltProjectileThink( centity_t *cent, const struct weaponInfo_s *
 		CG_DistortionOrb(cent);
 	}
 	trap->FX_PlayEffectID( cgs.effects.repeaterAltProjectileEffect, cent->lerpOrigin, forward, -1, -1, qfalse );
+
+	FX_RepeaterAltAddLight(cent->lerpOrigin);
 }
 
 /*

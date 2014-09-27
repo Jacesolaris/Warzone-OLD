@@ -3485,6 +3485,7 @@ void RB_SurfaceGhoul( CRenderableSurface *surf )
 	tess.firstIndex = surface->indexOffset;
 
 	int *boneReferences = (int *)((byte *)surfData + surfData->ofsBoneReferences);
+
 	for ( int i = 0; i < surfData->numBoneReferences; i++ )
 	{
 		const mdxaBone_t& bone = surf->boneCache->EvalRender (boneReferences[i]);
