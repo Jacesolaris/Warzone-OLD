@@ -1177,6 +1177,12 @@ qboolean NPC_ValidEnemy( gentity_t *ent )
 	if ( ent->flags & FL_NOTARGET )
 		return qfalse;
 
+	if (level.gametype < GT_TEAM 
+		&& (ent->r.svFlags & SVF_BOT)) 
+	{// In non-team games all BotNPCs are enemies to eachother...
+		return qtrue;
+	}
+
 	//Must be an NPC
 	if ( ent->client == NULL )
 	{

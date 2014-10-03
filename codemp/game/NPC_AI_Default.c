@@ -91,6 +91,9 @@ qboolean NPC_IsHumanoid ( gentity_t *self )
 
 qboolean NPC_IsJedi ( gentity_t *self )
 {
+	//if (self->client->ps.weapon == WP_SABER) return qtrue;
+	//if (self->client->ps.weapon == WP_MELEE) return qtrue;
+
 	switch (self->client->NPC_class)
 	{
 	//case CLASS_ATST:

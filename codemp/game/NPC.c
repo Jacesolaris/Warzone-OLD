@@ -3343,7 +3343,8 @@ void NPC_SetNewGoalAndPath()
 	}
 	else
 	{// Find a new generic goal...
-		NPC->longTermGoal = NPC_FindGoal( NPC );
+		//NPC->longTermGoal = NPC_FindGoal( NPC );
+		NPC->longTermGoal = DOM_GetRandomCloseWP(NPC->r.currentOrigin, NPC->wpCurrent, -1);
 	}
 
 	if (NPC->longTermGoal >= 0)
@@ -4141,6 +4142,181 @@ qboolean NPC_FollowRoutes( void )
 		NPC_SelectMoveAnimation(qfalse);
 	else
 		NPC_SelectMoveAnimation(!NPC_HaveValidEnemy());
+
+	return qtrue;
+}
+
+void NPC_SetNewEnemyGoalAndPath()
+{
+	gentity_t	*NPC = NPCS.NPC;
+
+	if (NPC->wpSeenTime > level.time)
+	{
+		NPC_PickRandomIdleAnimantion(NPC);
+		return; // wait for next route creation...
+	}
+
+	if (!NPC_FindNewWaypoint())
+	{
+		return; // wait before trying to get a new waypoint...
+	}
+
+	//NPC->longTermGoal = DOM_GetRandomCloseVisibleWP(NPC, NPC->enemy->r.currentOrigin, NPC->s.number, -1);
+	NPC->longTermGoal = DOM_GetRandomCloseWP(NPCS.NPCInfo->goalEntity->r.currentOrigin, NPC->wpCurrent, -1);
+
+	if (NPC->longTermGoal >= 0)
+	{
+		memset(NPC->pathlist, WAYPOINT_NONE, sizeof(int)*MAX_WPARRAY_SIZE);
+		NPC->pathsize = ASTAR_FindPathFast(NPC->wpCurrent, NPC->longTermGoal, NPC->pathlist, qtrue);
+
+		if (NPC->pathsize > 0)
+		{
+			//G_Printf("NPC Waypointing Debug: NPC %i created a %i waypoint path for a random goal between waypoints %i and %i.", NPC->s.number, NPC->pathsize, NPC->wpCurrent, NPC->longTermGoal);
+			NPC->wpLast = -1;
+			NPC->wpNext = NPC_GetNextNode(NPC);		//move to this node first, since it's where our path starts from
+		}
+		else
+		{
+			//G_Printf("NPC Waypointing Debug: NPC %i failed to create a route between waypoints %i and %i.", NPC->s.number, NPC->wpCurrent, NPC->longTermGoal);
+			// Delay before next route creation...
+			NPC->wpSeenTime = level.time + 1000;//30000;
+			NPC_PickRandomIdleAnimantion(NPC);
+			return;
+		}
+	}
+	else
+	{
+		//G_Printf("NPC Waypointing Debug: NPC %i failed to find a goal waypoint.", NPC->s.number);
+		
+		trap->Print("Unable to find goal waypoint.\n");
+
+		// Delay before next route creation...
+		NPC->wpSeenTime = level.time + 1000;//30000;
+		NPC_PickRandomIdleAnimantion(NPC);
+		return;
+	}
+
+	// Delay before next route creation...
+	NPC->wpSeenTime = level.time + 1000;//30000;
+	// Delay before giving up on this new waypoint/route...
+	NPC->wpTravelTime = level.time + 10000;
+}
+
+qboolean NPC_FollowEnemyRoute( void ) 
+{// Quick method of following bot routes...
+	gentity_t	*NPC = NPCS.NPC;
+	usercmd_t	ucmd = NPCS.ucmd;
+
+	if ( !NPC_HaveValidEnemy() )
+	{
+		return qfalse;
+	}
+
+	if ((NPC->client->ps.weapon == WP_SABER || NPC->client->ps.weapon == WP_MELEE)
+		&& Distance(NPC->r.currentOrigin, NPCS.NPCInfo->goalEntity->r.currentOrigin) <= 48)
+	{// Close enough already... Don't move...
+		//trap->Print("close!\n");
+		return qfalse;
+	}
+	else if ( !(NPC->client->ps.weapon == WP_SABER || NPC->client->ps.weapon == WP_MELEE)
+		&& NPC_ClearLOS4( NPCS.NPCInfo->goalEntity ))
+	{// Already visible to sloot... Don't move...
+		//trap->Print("close wp!\n");
+		return qfalse;
+	}
+
+	if (VectorDistanceNoHeight(NPC->r.currentOrigin, NPC->npc_previous_pos) > 3)
+	{
+		NPC->last_move_time = level.time;
+		VectorCopy(NPC->r.currentOrigin, NPC->npc_previous_pos);
+	}
+
+	if (NPC->wpSeenTime > level.time)
+	{
+
+	}
+	else if ( NPC->wpCurrent < 0 || NPC->wpCurrent >= gWPNum 
+		|| NPC->longTermGoal < 0 || NPC->longTermGoal >= gWPNum 
+		|| Distance(gWPArray[NPC->wpCurrent]->origin, NPC->r.currentOrigin) > 512
+		|| NPC->wpSeenTime < level.time - 5000
+		|| NPC->wpTravelTime < level.time 
+		|| NPC->last_move_time < level.time - 5000
+		|| Distance(gWPArray[NPC->longTermGoal]->origin, NPC->enemy->r.currentOrigin) > 128.0)
+	{// We hit a problem in route, or don't have one yet.. Find a new goal and path...
+		NPC_ClearPathData(NPC);
+		NPC_SetNewEnemyGoalAndPath();
+
+		if (!(NPC->wpCurrent < 0 || NPC->wpCurrent >= gWPNum || NPC->longTermGoal < 0 || NPC->longTermGoal >= gWPNum))
+		{
+			NPC->wpTravelTime = level.time + 10000;
+			NPC->wpSeenTime = level.time;
+			NPC->last_move_time = level.time;
+		}
+	}
+
+	if (NPC->wpCurrent < 0 || NPC->wpCurrent >= gWPNum || NPC->longTermGoal < 0 || NPC->longTermGoal >= gWPNum)
+	{// FIXME: Try to roam out of problems...
+		NPC_ClearPathData(NPC);
+		ucmd.forwardmove = 0;
+		ucmd.rightmove = 0;
+		ucmd.upmove = 0;
+		NPC_PickRandomIdleAnimantion(NPC);
+		//trap->Print("NO WP!\n");
+		return qfalse; // next think...
+	}
+
+	if (VectorDistanceNoHeight(gWPArray[NPC->longTermGoal]->origin, NPC->r.currentOrigin) < 32)
+	{// We're at out goal! Find a new goal...
+		NPC_ClearPathData(NPC);
+		ucmd.forwardmove = 0;
+		ucmd.rightmove = 0;
+		ucmd.upmove = 0;
+		NPC_PickRandomIdleAnimantion(NPC);
+		//trap->Print("AT DEST!\n");
+		return qfalse; // next think...
+	}
+
+	if (VectorDistanceNoHeight(gWPArray[NPC->wpCurrent]->origin, NPC->r.currentOrigin) < 32)
+	{// At current node.. Pick next in the list...
+		NPC->wpLast = NPC->wpCurrent;
+		NPC->wpCurrent = NPC->wpNext;
+		NPC->wpNext = NPC_GetNextNode(NPC);
+
+		if (NPC->wpCurrent < 0 || NPC->wpCurrent >= gWPNum || NPC->longTermGoal < 0 || NPC->longTermGoal >= gWPNum)
+		{// FIXME: Try to roam out of problems...
+			NPC_ClearPathData(NPC);
+			ucmd.forwardmove = 0;
+			ucmd.rightmove = 0;
+			ucmd.upmove = 0;
+			NPC_PickRandomIdleAnimantion(NPC);
+			//trap->Print("????\n");
+			return qfalse; // next think...
+		}
+
+		NPC->wpTravelTime = level.time + 10000;
+		NPC->wpSeenTime = level.time;
+	}
+
+	{
+		vec3_t upOrg, upOrg2;
+
+		VectorCopy(NPC->r.currentOrigin, upOrg);
+		upOrg[2]+=18;
+
+		VectorCopy(gWPArray[NPC->wpCurrent]->origin, upOrg2);
+		upOrg2[2]+=18;
+
+		if (OrgVisible(upOrg, upOrg2, NPC->s.number))
+		{
+			NPC->wpSeenTime = level.time;
+		}
+	}
+
+	NPC_FacePosition( gWPArray[NPC->wpCurrent]->origin, qfalse );
+	VectorSubtract( gWPArray[NPC->wpCurrent]->origin, NPC->r.currentOrigin, NPC->movedir );
+	UQ1_UcmdMoveForDir( NPC, &NPCS.ucmd, NPC->movedir, qfalse );
+	VectorCopy( NPC->movedir, NPC->client->ps.moveDir );
+	NPC_SelectMoveAnimation(qfalse);
 
 	return qtrue;
 }
