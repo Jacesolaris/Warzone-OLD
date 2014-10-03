@@ -17,22 +17,249 @@ extern npcStatic_t NPCS;
 extern qboolean NPC_FacePosition( vec3_t position, qboolean doPitch );
 extern void G_SoundOnEnt( gentity_t *ent, int channel, const char *soundPath );
 
+int			NUM_REGISTERED_CONVO_FILES = 0;
+char		REGISTERED_CONVO_FILES[1024][256];
+qboolean	REGISTERED_CONVO_EXISTS[1024];
+
+qboolean G_ConversationExists ( char *filename )
+{
+	fileHandle_t	f;
+	int				i;
+
+	// Better then disk accessing...
+	for (i = 0; i < NUM_REGISTERED_CONVO_FILES; i++)
+	{
+		if (!Q_stricmp(filename, REGISTERED_CONVO_FILES[i])) 
+		{
+			if (REGISTERED_CONVO_EXISTS[i])
+			{
+				//trap->Print("Convo %s exists.\n", filename);
+				return qtrue;
+			}
+			else
+			{
+				//trap->Print("Convo %s does not exist.\n", filename);
+				return qfalse;
+			}
+		}
+	}
+
+	trap->FS_Open( filename, &f, FS_READ );
+
+	if ( !f )
+	{
+		trap->FS_Close( f );
+
+		REGISTERED_CONVO_EXISTS[NUM_REGISTERED_CONVO_FILES] = qfalse;
+		sprintf(REGISTERED_CONVO_FILES[NUM_REGISTERED_CONVO_FILES], filename);
+		NUM_REGISTERED_CONVO_FILES++;
+
+		//trap->Print("Convo %s set as not exist.\n", filename);
+		return qfalse;
+	}
+
+	trap->FS_Close( f );
+
+	REGISTERED_CONVO_EXISTS[NUM_REGISTERED_CONVO_FILES] = qtrue;
+	sprintf(REGISTERED_CONVO_FILES[NUM_REGISTERED_CONVO_FILES], filename);
+	NUM_REGISTERED_CONVO_FILES++;
+
+	//trap->Print("Convo %s set as exist.\n", filename);
+	return qtrue;
+}
+
+qboolean CONVO_SOUNDS_REGISTERED = qfalse;
+
+void G_InitNPCConversationSounds ( void )
+{
+	int				section = 0;
+	int				part = 0;
+	char			filename[256];
+
+	//
+	// Stormies...
+	//
+
+	for (section = 1; section < 15; section++)
+	{
+		for (part = 1; part < 15; part++)
+		{
+			if (section < 10)
+			{
+				if (part < 10)
+					sprintf(filename, va("sound/conversation/stormtrooper/MST_0%iL0%i.mp3", section, part));
+				else
+					sprintf(filename, va("sound/conversation/stormtrooper/MST_0%iL%i.mp3", section, part));
+			}
+			else
+			{
+				if (part < 10)
+					sprintf(filename, va("sound/conversation/stormtrooper/MST_%iL0%i.mp3", section, part));
+				else
+					sprintf(filename, va("sound/conversation/stormtrooper/MST_%iL%i.mp3", section, part));
+			}
+
+			if ( !G_ConversationExists(filename) ) continue;
+
+			G_SoundIndex( filename );
+		}
+	}
+
+	//
+	// Civilians...
+	//
+
+	for (part = 1; part < 15; part++)
+	{
+		if (part < 10)
+			sprintf(filename, va("sound/conversation/%s/conversation0%i.mp3", "civilian_gran", part));
+		else
+			sprintf(filename, va("sound/conversation/%s/conversation%i.mp3", "civilian_gran", part));
+
+		if ( !G_ConversationExists(filename) ) continue;
+
+		G_SoundIndex( filename );
+	}
+
+	for (part = 1; part < 15; part++)
+	{
+		if (part < 10)
+			sprintf(filename, va("sound/conversation/%s/conversation0%i.mp3", "civilian_protocol", part));
+		else
+			sprintf(filename, va("sound/conversation/%s/conversation%i.mp3", "civilian_protocol", part));
+
+		if ( !G_ConversationExists(filename) ) continue;
+
+		G_SoundIndex( filename );
+	}
+
+	for (part = 1; part < 15; part++)
+	{
+		if (part < 10)
+			sprintf(filename, va("sound/conversation/%s/conversation0%i.mp3", "civilian_r2d2", part));
+		else
+			sprintf(filename, va("sound/conversation/%s/conversation%i.mp3", "civilian_r2d2", part));
+
+		if ( !G_ConversationExists(filename) ) continue;
+
+		G_SoundIndex( filename );
+	}
+
+	for (part = 1; part < 15; part++)
+	{
+		if (part < 10)
+			sprintf(filename, va("sound/conversation/%s/conversation0%i.mp3", "civilian_r5d2", part));
+		else
+			sprintf(filename, va("sound/conversation/%s/conversation%i.mp3", "civilian_r5d2", part));
+
+		if ( !G_ConversationExists(filename) ) continue;
+
+		G_SoundIndex( filename );
+	}
+
+	for (part = 1; part < 15; part++)
+	{
+		if (part < 10)
+			sprintf(filename, va("sound/conversation/%s/conversation0%i.mp3", "civilian_rodian", part));
+		else
+			sprintf(filename, va("sound/conversation/%s/conversation%i.mp3", "civilian_rodian", part));
+
+		if ( !G_ConversationExists(filename) ) continue;
+
+		G_SoundIndex( filename );
+	}
+
+	for (part = 1; part < 15; part++)
+	{
+		if (part < 10)
+			sprintf(filename, va("sound/conversation/%s/conversation0%i.mp3", "civilian_rodian2", part));
+		else
+			sprintf(filename, va("sound/conversation/%s/conversation%i.mp3", "civilian_rodian2", part));
+
+		if ( !G_ConversationExists(filename) ) continue;
+
+		G_SoundIndex( filename );
+	}
+
+	for (part = 1; part < 15; part++)
+	{
+		if (part < 10)
+			sprintf(filename, va("sound/conversation/%s/conversation0%i.mp3", "civilian_trandoshan", part));
+		else
+			sprintf(filename, va("sound/conversation/%s/conversation%i.mp3", "civilian_trandoshan", part));
+
+		if ( !G_ConversationExists(filename) ) continue;
+
+		G_SoundIndex( filename );
+	}
+
+	for (part = 1; part < 15; part++)
+	{
+		if (part < 10)
+			sprintf(filename, va("sound/conversation/%s/conversation0%i.mp3", "civilian_weequay", part));
+		else
+			sprintf(filename, va("sound/conversation/%s/conversation%i.mp3", "civilian_weequay", part));
+
+		if ( !G_ConversationExists(filename) ) continue;
+
+		G_SoundIndex( filename );
+	}
+
+	for (part = 1; part < 15; part++)
+	{
+		if (part < 10)
+			sprintf(filename, va("sound/conversation/%s/conversation0%i.mp3", "civilian_weequay2", part));
+		else
+			sprintf(filename, va("sound/conversation/%s/conversation%i.mp3", "civilian_weequay2", part));
+
+		if ( !G_ConversationExists(filename) ) continue;
+
+		G_SoundIndex( filename );
+	}
+
+	for (part = 1; part < 15; part++)
+	{
+		if (part < 10)
+			sprintf(filename, va("sound/conversation/%s/conversation0%i.mp3", "civilian_weequay3", part));
+		else
+			sprintf(filename, va("sound/conversation/%s/conversation%i.mp3", "civilian_weequay3", part));
+
+		if ( !G_ConversationExists(filename) ) continue;
+
+		G_SoundIndex( filename );
+	}
+
+	for (part = 1; part < 15; part++)
+	{
+		if (part < 10)
+			sprintf(filename, va("sound/conversation/%s/conversation0%i.mp3", "civilian_weequay4", part));
+		else
+			sprintf(filename, va("sound/conversation/%s/conversation%i.mp3", "civilian_weequay4", part));
+
+		if ( !G_ConversationExists(filename) ) continue;
+
+		G_SoundIndex( filename );
+	}
+
+	CONVO_SOUNDS_REGISTERED = qtrue;
+}
+
 void NPC_EndConversation()
 {
 #ifdef __NPC_CONVERSATIONS__
 	gentity_t	*NPC = NPCS.NPC;
 
 	NPC->NPC->conversationRole = 0;
-	if (NPC->NPC->conversationPartner) NPC->NPC->conversationPartner->NPC->conversationRole = 0;
+	if (NPC->NPC->conversationPartner && NPC->NPC->conversationPartner->NPC) NPC->NPC->conversationPartner->NPC->conversationRole = 0;
 	NPC->NPC->conversationSection = 1;
-	if (NPC->NPC->conversationPartner) NPC->NPC->conversationPartner->NPC->conversationSection = 1;
+	if (NPC->NPC->conversationPartner && NPC->NPC->conversationPartner->NPC) NPC->NPC->conversationPartner->NPC->conversationSection = 1;
 	NPC->NPC->conversationPart = 1;
-	if (NPC->NPC->conversationPartner) NPC->NPC->conversationPartner->NPC->conversationPart = 1;
+	if (NPC->NPC->conversationPartner && NPC->NPC->conversationPartner->NPC) NPC->NPC->conversationPartner->NPC->conversationPart = 1;
 
 	NPC->NPC->conversationReplyTime = level.time + 60000;
-	if (NPC->NPC->conversationPartner) NPC->NPC->conversationPartner->NPC->conversationReplyTime = level.time + 45000;
+	if (NPC->NPC->conversationPartner && NPC->NPC->conversationPartner->NPC) NPC->NPC->conversationPartner->NPC->conversationReplyTime = level.time + 45000;
 
-	if (NPC->NPC->conversationPartner) NPC->NPC->conversationPartner->NPC->conversationPartner = NULL;
+	if (NPC->NPC->conversationPartner && NPC->NPC->conversationPartner->NPC) NPC->NPC->conversationPartner->NPC->conversationPartner = NULL;
 	NPC->NPC->conversationPartner = NULL;
 #endif //__NPC_CONVERSATIONS__
 }
@@ -42,7 +269,7 @@ void NPC_SetStormtrooperConversationReplyTimer()
 #ifdef __NPC_CONVERSATIONS__
 	gentity_t	*NPC = NPCS.NPC;
 
-	if (NPC->NPC->conversationPartner)
+	if (NPC->NPC->conversationPartner && NPC->NPC->conversationPartner->NPC)
 	{
 		NPC->NPC->conversationPart++;
 		NPC->NPC->conversationPartner->NPC->conversationPart++;
@@ -87,12 +314,10 @@ void NPC_StormTrooperConversation()
 {
 #ifdef __NPC_CONVERSATIONS__
 	gentity_t	*NPC = NPCS.NPC;
-
 	int				role = NPC->NPC->conversationRole;
 	int				section = NPC->NPC->conversationSection;
 	int				part = NPC->NPC->conversationPart;
 	vec3_t			origin, angles;
-	fileHandle_t	f;
 	char			filename[256];
 
 	if (NPC->enemy || !NPC->NPC->conversationPartner || NPC->NPC->conversationPartner->enemy)
@@ -115,24 +340,20 @@ void NPC_StormTrooperConversation()
 	if (section < 10)
 	{
 		if (part < 10)
-			strcpy(filename, va("sound/conversation/stormtrooper/MST_0%iL0%i.mp3", section, part));
+			sprintf(filename, va("sound/conversation/stormtrooper/MST_0%iL0%i.mp3", section, part));
 		else
-			strcpy(filename, va("sound/conversation/stormtrooper/MST_0%iL%i.mp3", section, part));
+			sprintf(filename, va("sound/conversation/stormtrooper/MST_0%iL%i.mp3", section, part));
 	}
 	else
 	{
 		if (part < 10)
-			strcpy(filename, va("sound/conversation/stormtrooper/MST_%iL0%i.mp3", section, part));
+			sprintf(filename, va("sound/conversation/stormtrooper/MST_%iL0%i.mp3", section, part));
 		else
-			strcpy(filename, va("sound/conversation/stormtrooper/MST_%iL%i.mp3", section, part));
+			sprintf(filename, va("sound/conversation/stormtrooper/MST_%iL%i.mp3", section, part));
 	}
 
-	trap->FS_Open( filename, &f, FS_READ );
-
-	if ( !f )
+	if ( !G_ConversationExists(filename) )
 	{
-		trap->FS_Close( f );
-
 		//trap->Print("File %s does not exist.\n", filename);
 
 		NPC->NPC->conversationSection++;
@@ -143,24 +364,20 @@ void NPC_StormTrooperConversation()
 		if (section < 10)
 		{
 			if (part < 10)
-				strcpy(filename, va("sound/conversation/stormtrooper/MST_0%iL0%i.mp3", section, part));
+				sprintf(filename, va("sound/conversation/stormtrooper/MST_0%iL0%i.mp3", section, part));
 			else
-				strcpy(filename, va("sound/conversation/stormtrooper/MST_0%iL%i.mp3", section, part));
+				sprintf(filename, va("sound/conversation/stormtrooper/MST_0%iL%i.mp3", section, part));
 		}
 		else
 		{
 			if (part < 10)
-				strcpy(filename, va("sound/conversation/stormtrooper/MST_%iL0%i.mp3", section, part));
+				sprintf(filename, va("sound/conversation/stormtrooper/MST_%iL0%i.mp3", section, part));
 			else
-				strcpy(filename, va("sound/conversation/stormtrooper/MST_%iL%i.mp3", section, part));
+				sprintf(filename, va("sound/conversation/stormtrooper/MST_%iL%i.mp3", section, part));
 		}
 
-		trap->FS_Open( filename, &f, FS_READ );
-
-		if ( !f )
+		if ( !G_ConversationExists(filename) )
 		{// End of conversation...
-			trap->FS_Close( f );
-
 			//trap->Print("File %s does not exist. Aborting conversation.\n", filename);
 
 			if (NPC->NPC->conversationSection > 15)
@@ -170,7 +387,6 @@ void NPC_StormTrooperConversation()
 		}
 	}
 	//CHAN_VOICE_ATTEN
-	trap->FS_Close( f );
 
 	//trap->Print("NPC %i playing sound file %s.\n", NPC->s.number, filename);
 
@@ -251,8 +467,6 @@ qboolean NPC_HasConversationSounds(gentity_t *conversationalist)
 {
 #ifdef __NPC_CONVERSATIONS__
 	gentity_t	*NPC = NPCS.NPC;
-
-	fileHandle_t	f;
 	char			filename[256];
 
 	// For faster checking without FS wear...
@@ -261,19 +475,14 @@ qboolean NPC_HasConversationSounds(gentity_t *conversationalist)
 
 	//trap->Print("Testing %s for conversation sounds.\n", conversationalist->NPC_type);
 
-	strcpy(filename, va("sound/conversation/%s/conversation00.mp3", conversationalist->NPC_type));
+	sprintf(filename, va("sound/conversation/%s/conversation00.mp3", conversationalist->NPC_type));
 
-	trap->FS_Open( filename, &f, FS_READ );
-
-	if ( !f )
+	if ( !G_ConversationExists(filename) )
 	{// End of conversation...
-		trap->FS_Close( f );
 		conversationalist->NPC->conversationAvailable = 1; // checked but has none!
 		//trap->Print("%s has NO conversation sounds.\n", conversationalist->NPC_type);
 		return qfalse;
 	}
-
-	trap->FS_Close( f );
 
 	conversationalist->NPC->conversationAvailable = 2; // checked and has some!
 	//trap->Print("%s has conversation sounds.\n", conversationalist->NPC_type);
@@ -285,8 +494,6 @@ qboolean NPC_VendorHasConversationSounds(gentity_t *conversationalist)
 {
 #ifdef __NPC_CONVERSATIONS__
 	gentity_t	*NPC = NPCS.NPC;
-
-	fileHandle_t	f;
 	char			filename[256];
 
 	// For faster checking without FS wear...
@@ -295,19 +502,14 @@ qboolean NPC_VendorHasConversationSounds(gentity_t *conversationalist)
 
 	//trap->Print("Testing %s for conversation sounds.\n", conversationalist->NPC_type);
 
-	strcpy(filename, va("sound/conversation/civilian_%s/conversation00.mp3", conversationalist->NPC_type));
+	sprintf(filename, va("sound/conversation/civilian_%s/conversation00.mp3", conversationalist->NPC_type));
 
-	trap->FS_Open( filename, &f, FS_READ );
-
-	if ( !f )
+	if ( !G_ConversationExists(filename) )
 	{// End of conversation...
-		trap->FS_Close( f );
 		conversationalist->NPC->conversationAvailable = 1; // checked but has none!
 		//trap->Print("%s has NO conversation sounds.\n", conversationalist->NPC_type);
 		return qfalse;
 	}
-
-	trap->FS_Close( f );
 
 	conversationalist->NPC->conversationAvailable = 2; // checked and has some!
 	//trap->Print("%s has conversation sounds.\n", conversationalist->NPC_type);
@@ -319,21 +521,15 @@ qboolean NPC_VendorHasVendorSound(gentity_t *conversationalist, char *name)
 {
 #ifdef __NPC_CONVERSATIONS__
 	gentity_t	*NPC = NPCS.NPC;
-
-	fileHandle_t	f;
 	char			filename[256];
 
-	strcpy(filename, va("sound/vendor/%s/%s.mp3", conversationalist->NPC_type, name));
+	sprintf(filename, va("sound/vendor/%s/%s.mp3", conversationalist->NPC_type, name));
 
-	trap->FS_Open( filename, &f, FS_READ );
-
-	if ( !f )
+	if ( !G_ConversationExists(filename) )
 	{// End of conversation...
-		trap->FS_Close( f );
 		return qfalse;
 	}
 
-	trap->FS_Close( f );
 #endif //__NPC_CONVERSATIONS__
 	return qtrue;
 }
@@ -357,7 +553,6 @@ void NPC_NPCConversation()
 
 	int				part = NPC->NPC->conversationPart-1;
 //	vec3_t			origin, angles;
-	fileHandle_t	f;
 	char			filename[256];
 
 	if (NPC->client->NPC_class == CLASS_STORMTROOPER)
@@ -384,16 +579,12 @@ void NPC_NPCConversation()
 		return; // Wait...
 
 	if (part < 10)
-		strcpy(filename, va("sound/conversation/%s/conversation0%i.mp3", NPC->NPC_type, part));
+		sprintf(filename, va("sound/conversation/%s/conversation0%i.mp3", NPC->NPC_type, part));
 	else
-		strcpy(filename, va("sound/conversation/%s/conversation%i.mp3", NPC->NPC_type, part));
+		sprintf(filename, va("sound/conversation/%s/conversation%i.mp3", NPC->NPC_type, part));
 
-	trap->FS_Open( filename, &f, FS_READ );
-
-	if ( !f )
+	if ( !G_ConversationExists(filename) )
 	{
-		trap->FS_Close( f );
-
 		//trap->Print("File %s does not exist. Aborting conversation.\n", filename);
 
 		NPC_EndConversation();
@@ -401,7 +592,6 @@ void NPC_NPCConversation()
 		return;
 	}
 	//CHAN_VOICE_ATTEN
-	trap->FS_Close( f );
 
 	//trap->Print("NPC %i (%s) playing sound file %s.\n", NPC->s.number, NPC->NPC_type, filename);
 
@@ -418,6 +608,8 @@ void NPC_FindConversationPartner()
 {
 #ifdef __NPC_CONVERSATIONS__
 	gentity_t	*NPC = NPCS.NPC;
+
+	if (!CONVO_SOUNDS_REGISTERED) G_InitNPCConversationSounds();
 
 	if (NPC->NPC->conversationSearchTime > level.time) return;
 

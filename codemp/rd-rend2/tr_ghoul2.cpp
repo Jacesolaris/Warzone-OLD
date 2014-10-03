@@ -4667,8 +4667,10 @@ qboolean R_LoadMDXM( model_t *mod, void *buffer, const char *mod_name, qboolean 
 		VBO_t *vbo = R_CreateVBO (data, dataSize, VBO_USAGE_STATIC);
 
 		ri->Hunk_FreeTempMemory (data);
+#ifdef USE_VERT_TANGENT_SPACE
 		ri->Hunk_FreeTempMemory (tangentsf);
 		ri->Hunk_FreeTempMemory (bitangentsf);
+#endif //USE_VERT_TANGENT_SPACE
 
 		vbo->ofs_xyz = ofsPosition;
 		vbo->ofs_normal = ofsNormals;

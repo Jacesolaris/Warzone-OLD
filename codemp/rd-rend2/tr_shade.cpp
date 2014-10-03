@@ -438,7 +438,8 @@ static void ProjectDlightTexture( void ) {
 
 //#define __MERGE_DLIGHTS__ // UQ1: Works but makes little difference to over all speed... Down to personal preference on looks if we use or not I guess...
 
-float DLIGHT_SIZE_MULTIPLIER = 5.0;
+//float DLIGHT_SIZE_MULTIPLIER = 5.0;
+float DLIGHT_SIZE_MULTIPLIER = 2.5;
 
 static void ProjectDlightTexture( void ) {
 	int		l;

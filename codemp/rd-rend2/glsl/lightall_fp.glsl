@@ -319,7 +319,7 @@ void main()
 	mat3 tangentToWorld = mat3(var_Tangent.xyz, var_Bitangent.xyz, var_Normal.xyz);
 	viewDir = vec3(var_Normal.w, var_Tangent.w, var_Bitangent.w);
   #else
-	mat3 tangentToWorld = cotangent_frame(var_Normal.xyz, -var_ViewDir, var_TexCoords.xy); // UQ1: THIS IS WRONG!!!
+	mat3 tangentToWorld = cotangent_frame(var_Normal.xyz, -var_ViewDir, var_TexCoords.xy);
 	//mat3 tangentToWorld = mat3(1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0);
 	viewDir = var_ViewDir;
   #endif
@@ -336,8 +336,8 @@ void main()
 	mat3 tangentToWorld = mat3(var_Tangent.xyz, var_Bitangent.xyz, var_Normal.xyz);
 	viewDir = vec3(var_Normal.w, var_Tangent.w, var_Bitangent.w);
   #else
-	//mat3 tangentToWorld = cotangent_frame(var_Normal.xyz, -var_ViewDir, var_TexCoords.xy); // UQ1: THIS IS WRONG!!!
-	mat3 tangentToWorld = mat3(1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0);
+	mat3 tangentToWorld = cotangent_frame(var_Normal.xyz, -var_ViewDir, var_TexCoords.xy);
+	//mat3 tangentToWorld = mat3(1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0);
 	viewDir = var_ViewDir;
   #endif
 	E = normalize(viewDir);

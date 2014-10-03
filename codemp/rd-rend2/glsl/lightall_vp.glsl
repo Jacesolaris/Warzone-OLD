@@ -1,10 +1,12 @@
 attribute vec2 attr_TexCoord0;
+
 uniform vec4   u_Local1; // parallaxScale, 0, 0, 0
 varying vec4	var_Local1; // parallaxScale, 0, 0, 0
 uniform vec4	u_Local2;
 varying vec4	var_Local2; // surfaceType, time, 0, 0
 uniform vec2	u_Dimensions;
 varying vec2   var_Dimensions;
+
 #if defined(USE_LIGHTMAP) || defined(USE_TCGEN)
 attribute vec2 attr_TexCoord1;
 #endif
@@ -84,9 +86,6 @@ varying vec4   var_TexCoords;
 varying vec4   var_Color;
 
 varying vec3 var_N;
-
-varying vec3   var_ViewDir;
-
 #if defined(USE_LIGHT) && !defined(USE_FAST_LIGHT)
   #if defined(USE_VERT_TANGENT_SPACE)
 varying vec4   var_Normal;
@@ -94,10 +93,8 @@ varying vec4   var_Tangent;
 varying vec4   var_Bitangent;
   #else
 varying vec3   var_Normal;
+varying vec3   var_ViewDir;
   #endif
-#else
-uniform vec3   u_ViewOrigin;
-varying vec3   var_Normal;
 #endif
 
 #if defined(USE_LIGHT) && !defined(USE_FAST_LIGHT)
@@ -113,7 +110,7 @@ vec2 GenTexCoords(int TCGen, vec3 position, vec3 normal, vec3 TCGenVector0, vec3
 {
 	vec2 tex = attr_TexCoord0.st;
 
-	if (TCGen == TCGEN_LIGHTMAP)
+	if (TCGen >= TCGEN_LIGHTMAP && TCGen <= TCGEN_LIGHTMAP3)
 	{
 		tex = attr_TexCoord1.st;
 	}
@@ -200,7 +197,7 @@ void main()
 	vec3 position = position4.xyz;
 	vec3 normal = normalize (normal4.xyz);
 #if defined(USE_VERT_TANGENT_SPACE) && defined(USE_LIGHT) && !defined(USE_FAST_LIGHT)
-	vec3 tangent = normalize(tangent4.xyz);
+	vec3 tangent = normalize (tangent4.xyz);
 #endif
 #else
 	vec3 position  = attr_Position;
@@ -210,9 +207,11 @@ void main()
   #endif
 #endif
 
+#if !defined(USE_SKELETAL_ANIMATION)
 	normal  = normal  * 2.0 - vec3(1.0);
-#if defined(USE_VERT_TANGENT_SPACE) && defined(USE_LIGHT) && !defined(USE_FAST_LIGHT)
+  #if defined(USE_VERT_TANGENT_SPACE) && defined(USE_LIGHT) && !defined(USE_FAST_LIGHT)
 	tangent = tangent * 2.0 - vec3(1.0);
+  #endif
 #endif
 
 #if defined(USE_TCGEN)
@@ -287,20 +286,13 @@ void main()
 	var_Normal    = vec4(normal,    viewDir.x);
 	var_Tangent   = vec4(tangent,   viewDir.y);
 	var_Bitangent = vec4(bitangent, viewDir.z);
-	var_ViewDir = viewDir;
   #else
 	var_Normal = normal;
 	var_ViewDir = viewDir;
   #endif
-#endif
 
-#if !defined(USE_LIGHT)
-	vec3 viewDir = u_ViewOrigin - position;
-	var_Normal = normal;
-	var_ViewDir = viewDir;
+  var_Dimensions = u_Dimensions;
+  var_Local1 = u_Local1;
+  var_Local2 = u_Local2;
 #endif
-
-	var_Local1 = u_Local1;
-	var_Local2 = u_Local2;
-	var_Dimensions = u_Dimensions;
 }

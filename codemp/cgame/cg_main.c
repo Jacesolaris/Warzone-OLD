@@ -1168,6 +1168,225 @@ static void CG_RegisterEffects( void )
 
 //===================================================================================
 
+#if 0
+int			NUM_REGISTERED_CONVO_FILES = 0;
+char		REGISTERED_CONVO_FILES[1024][256];
+qboolean	REGISTERED_CONVO_EXISTS[1024];
+
+qboolean CG_ConversationExists ( char *filename )
+{
+	fileHandle_t	f;
+	int				i;
+
+	// Better then disk accessing...
+	for (i = 0; i < NUM_REGISTERED_CONVO_FILES; i++)
+	{
+		if (!Q_stricmp(filename, REGISTERED_CONVO_FILES[i])) 
+		{
+			if (REGISTERED_CONVO_EXISTS[i])
+			{
+				return qtrue;
+			}
+			else
+			{
+				return qfalse;
+			}
+		}
+	}
+
+	trap->FS_Open( filename, &f, FS_READ );
+
+	if ( !f )
+	{
+		trap->FS_Close( f );
+
+		REGISTERED_CONVO_EXISTS[NUM_REGISTERED_CONVO_FILES] = qfalse;
+		sprintf(REGISTERED_CONVO_FILES[NUM_REGISTERED_CONVO_FILES], filename);
+		NUM_REGISTERED_CONVO_FILES++;
+		return qfalse;
+	}
+
+	trap->FS_Close( f );
+
+	REGISTERED_CONVO_EXISTS[NUM_REGISTERED_CONVO_FILES] = qtrue;
+	sprintf(REGISTERED_CONVO_FILES[NUM_REGISTERED_CONVO_FILES], filename);
+	NUM_REGISTERED_CONVO_FILES++;
+	return qtrue;
+}
+
+void CG_InitNPCConversationSounds ( void )
+{
+	int				section = 0;
+	int				part = 0;
+	char			filename[256];
+
+	//
+	// Stormies...
+	//
+
+	for (section = 1; section < 15; section++)
+	{
+		for (part = 1; part < 15; part++)
+		{
+			if (section < 10)
+			{
+				if (part < 10)
+					sprintf(filename, va("sound/conversation/stormtrooper/MST_0%iL0%i.mp3", section, part));
+				else
+					sprintf(filename, va("sound/conversation/stormtrooper/MST_0%iL%i.mp3", section, part));
+			}
+			else
+			{
+				if (part < 10)
+					sprintf(filename, va("sound/conversation/stormtrooper/MST_%iL0%i.mp3", section, part));
+				else
+					sprintf(filename, va("sound/conversation/stormtrooper/MST_%iL%i.mp3", section, part));
+			}
+
+			if ( !CG_ConversationExists(filename) ) continue;
+
+			trap->S_RegisterSound( filename );
+		}
+	}
+
+	//
+	// Civilians...
+	//
+
+	for (part = 1; part < 15; part++)
+	{
+		if (part < 10)
+			sprintf(filename, va("sound/conversation/%s/conversation0%i.mp3", "civilian_gran", part));
+		else
+			sprintf(filename, va("sound/conversation/%s/conversation%i.mp3", "civilian_gran", part));
+
+		if ( !CG_ConversationExists(filename) ) continue;
+
+		trap->S_RegisterSound( filename );
+	}
+
+	for (part = 1; part < 15; part++)
+	{
+		if (part < 10)
+			sprintf(filename, va("sound/conversation/%s/conversation0%i.mp3", "civilian_protocol", part));
+		else
+			sprintf(filename, va("sound/conversation/%s/conversation%i.mp3", "civilian_protocol", part));
+
+		if ( !CG_ConversationExists(filename) ) continue;
+
+		trap->S_RegisterSound( filename );
+	}
+
+	for (part = 1; part < 15; part++)
+	{
+		if (part < 10)
+			sprintf(filename, va("sound/conversation/%s/conversation0%i.mp3", "civilian_r2d2", part));
+		else
+			sprintf(filename, va("sound/conversation/%s/conversation%i.mp3", "civilian_r2d2", part));
+
+		if ( !CG_ConversationExists(filename) ) continue;
+
+		trap->S_RegisterSound( filename );
+	}
+
+	for (part = 1; part < 15; part++)
+	{
+		if (part < 10)
+			sprintf(filename, va("sound/conversation/%s/conversation0%i.mp3", "civilian_r5d2", part));
+		else
+			sprintf(filename, va("sound/conversation/%s/conversation%i.mp3", "civilian_r5d2", part));
+
+		if ( !CG_ConversationExists(filename) ) continue;
+
+		trap->S_RegisterSound( filename );
+	}
+
+	for (part = 1; part < 15; part++)
+	{
+		if (part < 10)
+			sprintf(filename, va("sound/conversation/%s/conversation0%i.mp3", "civilian_rodian", part));
+		else
+			sprintf(filename, va("sound/conversation/%s/conversation%i.mp3", "civilian_rodian", part));
+
+		if ( !CG_ConversationExists(filename) ) continue;
+
+		trap->S_RegisterSound( filename );
+	}
+
+	for (part = 1; part < 15; part++)
+	{
+		if (part < 10)
+			sprintf(filename, va("sound/conversation/%s/conversation0%i.mp3", "civilian_rodian2", part));
+		else
+			sprintf(filename, va("sound/conversation/%s/conversation%i.mp3", "civilian_rodian2", part));
+
+		if ( !CG_ConversationExists(filename) ) continue;
+
+		trap->S_RegisterSound( filename );
+	}
+
+	for (part = 1; part < 15; part++)
+	{
+		if (part < 10)
+			sprintf(filename, va("sound/conversation/%s/conversation0%i.mp3", "civilian_trandoshan", part));
+		else
+			sprintf(filename, va("sound/conversation/%s/conversation%i.mp3", "civilian_trandoshan", part));
+
+		if ( !CG_ConversationExists(filename) ) continue;
+
+		trap->S_RegisterSound( filename );
+	}
+
+	for (part = 1; part < 15; part++)
+	{
+		if (part < 10)
+			sprintf(filename, va("sound/conversation/%s/conversation0%i.mp3", "civilian_weequay", part));
+		else
+			sprintf(filename, va("sound/conversation/%s/conversation%i.mp3", "civilian_weequay", part));
+
+		if ( !CG_ConversationExists(filename) ) continue;
+
+		trap->S_RegisterSound( filename );
+	}
+
+	for (part = 1; part < 15; part++)
+	{
+		if (part < 10)
+			sprintf(filename, va("sound/conversation/%s/conversation0%i.mp3", "civilian_weequay2", part));
+		else
+			sprintf(filename, va("sound/conversation/%s/conversation%i.mp3", "civilian_weequay2", part));
+
+		if ( !CG_ConversationExists(filename) ) continue;
+
+		trap->S_RegisterSound( filename );
+	}
+
+	for (part = 1; part < 15; part++)
+	{
+		if (part < 10)
+			sprintf(filename, va("sound/conversation/%s/conversation0%i.mp3", "civilian_weequay3", part));
+		else
+			sprintf(filename, va("sound/conversation/%s/conversation%i.mp3", "civilian_weequay3", part));
+
+		if ( !CG_ConversationExists(filename) ) continue;
+
+		trap->S_RegisterSound( filename );
+	}
+
+	for (part = 1; part < 15; part++)
+	{
+		if (part < 10)
+			sprintf(filename, va("sound/conversation/%s/conversation0%i.mp3", "civilian_weequay4", part));
+		else
+			sprintf(filename, va("sound/conversation/%s/conversation%i.mp3", "civilian_weequay4", part));
+
+		if ( !CG_ConversationExists(filename) ) continue;
+
+		trap->S_RegisterSound( filename );
+	}
+}
+#endif //0
+
 extern char *forceHolocronModels[];
 int CG_HandleAppendedSkin(char *modelName);
 void CG_CacheG2AnimInfo(char *modelName);
@@ -1462,6 +1681,9 @@ static void CG_RegisterGraphics( void ) {
 	cgs.media.crateBreakSound[0]	= trap->S_RegisterSound("sound/weapons/explosions/crateBust1" );
 	cgs.media.crateBreakSound[1]	= trap->S_RegisterSound("sound/weapons/explosions/crateBust2" );
 
+#if 0
+	CG_InitNPCConversationSounds(); // UQ1: Register stormie convo sounds...
+#endif //0
 /*
 Ghoul2 Insert Start
 */

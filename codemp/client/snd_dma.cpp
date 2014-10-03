@@ -787,6 +787,7 @@ sfx_t *S_FindName( const char *name ) {
 
 	char sSoundNameNoExt[MAX_QPATH];
 	COM_StripExtension(name,sSoundNameNoExt, sizeof( sSoundNameNoExt ));
+	Q_strlwr(sSoundNameNoExt);//UQ1: force it down low before hashing too?!?!?!?!
 
 	hash = S_HashSFXName(sSoundNameNoExt);
 

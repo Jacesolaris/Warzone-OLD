@@ -297,8 +297,6 @@ extern void ClientThink_real( gentity_t *ent );
 extern void NPC_ApplyRoff (void);
 extern void NPC_Think ( gentity_t *self);
 
-//#define __FULL_BOT_NPC_AI__
-
 // UQ1: Now lets see if bots can share NPC AI....
 void DOM_StandardBotAI2(bot_state_t *bs, float thinktime)
 {
@@ -340,33 +338,11 @@ void DOM_StandardBotAI2(bot_state_t *bs, float thinktime)
 
 	NPCS.NPCInfo->last_ucmd.serverTime = level.time - 50;
 
-#ifdef __FULL_BOT_NPC_AI__
 	NPC_Think(bot);
-	if (bot->enemy) NPC_FaceEnemy( qtrue );
-	NPC_UpdateAngles(qtrue, qtrue);
 	DOM_FakeNPC_Parse_UCMD(bs, bot);
-	//ClientThink(bot->s.number, &NPCS.ucmd);
-	VectorCopy(bot->r.currentOrigin, bot->client->ps.origin);
-#else //!__FULL_BOT_NPC_AI__
-	//nextthink is set before this so something in here can override it
-	NPC_ExecuteBState(bot);
-
-	if (bot->enemy) NPC_FaceEnemy( qtrue );
-
-	NPC_UpdateAngles(qtrue, qtrue);
-
-	if (!DOM_FakeNPC_Parse_UCMD(bs, bot))
-	{
-		// Failed to do anything this frame - fall back to standard AI...
-		//DOM_StandardBotAI(bs, thinktime); // UQ1: Uses Dominance AI...
-		StandardBotAI(bs, thinktime);
-		trap->ICARUS_MaintainTaskManager(bot->s.number);
-		return;
-	}
 
 	trap->ICARUS_MaintainTaskManager(bot->s.number);
 	VectorCopy(bot->r.currentOrigin, bot->client->ps.origin);
-#endif //__FULL_BOT_NPC_AI__
 
 	if (bot->client->ps.pm_flags & PMF_DUCKED && bot->r.maxs[2] > bot->client->ps.crouchheight)
 	{

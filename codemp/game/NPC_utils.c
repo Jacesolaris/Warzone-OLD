@@ -14,18 +14,35 @@ extern void G_DebugPrint( int level, const char *format, ... );
 qboolean NPC_IsValidNPCEnemy ( gentity_t *NPC )
 {
 	if (!NPC || !NPC->client) return qfalse;
-
-	if (!(NPC 
-		&& NPC->client
-		&& NPC->health > 0
-		&& (NPC->s.eType == ET_NPC || NPC->s.eType == ET_PLAYER)
-		&& NPC->client->ps.stats[STAT_HEALTH] > 0
-		&& NPC->client->ps.pm_type != PM_DEAD
-		&& NPC->client->ps.pm_type != PM_SPECTATOR
-		&& NPC->client->sess.sessionTeam != TEAM_SPECTATOR))
+	if (!(NPC->s.eType == ET_NPC || NPC->s.eType == ET_PLAYER)) {
+		//trap->Print("ENT_TYPE\n");
 		return qfalse;
+	}
+	if (NPC->health <= 0) {
+		//trap->Print("%s HEALTH\n", NPC->NPC_type);
+		return qfalse;
+	}
+	if (NPC->client->sess.sessionTeam == TEAM_SPECTATOR) {
+		//trap->Print("%s T_SPEC\n", NPC->NPC_type);
+		return qfalse;
+	}
+	if (NPC->client->ps.stats[STAT_HEALTH] <= 0) {
+		trap->Print("%s S_HEALTH\n", NPC->NPC_type);
+		return qfalse;
+	}
+	/*if (NPC->client->ps.pm_type == PM_DEAD) {
+		trap->Print("%s DEAD\n", NPC->NPC_type);
+		return qfalse;
+	}*/
+	if (NPC->client->ps.pm_type == PM_SPECTATOR) {
+		//trap->Print("%s PM_SPEC\n", NPC->NPC_type);
+		return qfalse;
+	}
 
-	if (NPC->s.eType == ET_PLAYER) return qtrue;
+	if (NPC->s.eType == ET_PLAYER)
+	{// UQ1: Fixme - same as NPC enemy selection...
+		return qtrue;
+	}
 
 	switch (NPC->client->NPC_class)
 	{
@@ -1316,6 +1333,7 @@ int NPC_FindNearestEnemy( gentity_t *ent )
 	for ( i = 0; i < numEnts; i++ )
 	{
 		radEnt = &g_entities[iradiusEnts[i]];
+
 		//Don't consider self
 		if ( radEnt == ent )
 			continue;
@@ -1365,7 +1383,7 @@ gentity_t *NPC_PickEnemyExt( qboolean checkAlerts )
 	int entID = NPC_FindNearestEnemy( NPCS.NPC );
 
 	//If we have a valid enemy, use it
-	if ( entID >= 0 )
+	if ( entID >= 0 && entID != NPCS.NPC->s.number )
 		return &g_entities[entID];
 
 	if ( checkAlerts )
@@ -1395,6 +1413,7 @@ gentity_t *NPC_PickEnemyExt( qboolean checkAlerts )
 		}
 	}
 
+	G_ClearEnemy(NPCS.NPC);
 	return NULL;
 }
 

@@ -792,6 +792,7 @@ int BotAI(int client, float thinktime) {
 	NPCS.NPCInfo = bot->NPC;
 	NPCS.ucmd = NPCS.NPC->client->pers.cmd;
 
+	/*
 	if (bs->currentEnemy && !bot->enemy) 
 	{
 		bot->enemy = bs->currentEnemy;
@@ -801,7 +802,11 @@ int BotAI(int client, float thinktime) {
 	{
 		NPC_CheckEnemy(qtrue, qfalse, qtrue);
 	}
+	*/
 	
+	DOM_StandardBotAI2(bs, thinktime); // UQ1: Uses Dominance NPC AI...
+
+#if 0
 	// UQ1: For now use normal DOM AI until the NPC has an enemy. Then switch to NPC AI for the fight. :)
 	if (bot->health > 0
 		&& bot->client->ps.stats[STAT_HEALTH] > 0
@@ -830,6 +835,7 @@ int BotAI(int client, float thinktime) {
 		// Since we have no waypoints for this map, we may as well try to use NPC navigation...
 		DOM_StandardBotAI2(bs, thinktime); // UQ1: Uses Dominance NPC AI...
 	}
+#endif //0
 #endif //__DOMINANCE_AI__
 #ifdef _DEBUG
 	end = trap->Milliseconds();

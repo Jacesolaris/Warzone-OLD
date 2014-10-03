@@ -3,7 +3,7 @@
 #include "anims.h"
 #include "w_saber.h"
 
-#define __JEDI_TRACKING__
+//#define __JEDI_TRACKING__
 
 extern qboolean BG_SabersOff( playerState_t *ps );
 
@@ -1020,8 +1020,8 @@ static qboolean Jedi_BattleTaunt( void )
 		if ( event != -1 )
 		{
 			G_AddVoiceEvent( NPCS.NPC, event, 3000 );
-			jediSpeechDebounceTime[NPCS.NPC->client->playerTeam] = NPCS.NPCInfo->blockedSpeechDebounceTime = level.time + 6000;
-			TIMER_Set( NPCS.NPC, "chatter", Q_irand( 5000, 10000 ) );
+			jediSpeechDebounceTime[NPCS.NPC->client->playerTeam] = NPCS.NPCInfo->blockedSpeechDebounceTime = level.time + 10000;
+			TIMER_Set( NPCS.NPC, "chatter", Q_irand( 10000, 15000 ) );
 
 			if ( NPCS.NPC->enemy && NPCS.NPC->enemy->NPC && NPCS.NPC->enemy->s.weapon == WP_SABER && NPCS.NPC->enemy->client && NPCS.NPC->enemy->client->NPC_class == CLASS_JEDI )
 			{//Have the enemy jedi say something in response when I'm done?
@@ -1496,8 +1496,8 @@ static void Jedi_CombatDistance( int enemy_dist )
 			Jedi_Advance();
 		}
 	}
-	else if ( NPCS.NPC->client->ps.saberInFlight &&
-		!PM_SaberInBrokenParry( NPCS.NPC->client->ps.saberMove )
+	else if ( NPCS.NPC->client->ps.saberInFlight
+		&& !PM_SaberInBrokenParry( NPCS.NPC->client->ps.saberMove )
 		&& NPCS.NPC->client->ps.saberBlocked != BLOCKED_PARRY_BROKEN )
 	{//maintain distance
 		if ( enemy_dist < NPCS.NPC->client->ps.saberEntityDist )
@@ -1558,7 +1558,7 @@ static void Jedi_CombatDistance( int enemy_dist )
 		TIMER_Set( NPCS.NPC, "strafeRight", -1 );
 	}
 	else if ( NPCS.NPC->enemy->client
-		&& NPCS.NPC->enemy->s.weapon == WP_SABER
+		&& (NPCS.NPC->enemy->s.weapon == WP_SABER || NPCS.NPC->enemy->s.weapon == WP_MELEE)
 		&& NPCS.NPC->enemy->client->ps.saberLockTime > level.time
 		&& NPCS.NPC->client->ps.saberLockTime < level.time )
 	{//enemy is in a saberLock and we are not
@@ -1602,18 +1602,14 @@ static void Jedi_CombatDistance( int enemy_dist )
 		Jedi_Advance();
 		return;
 	}
-	else if ( enemy_dist <= -16 )
-	{//we're too damn close!
-		Jedi_Retreat();
-	}
-	else if ( enemy_dist <= 0 )
+/*	else if ( enemy_dist <= 0 )
 	{//we're within striking range
 		//if we are attacking, see if we should stop
 		if ( NPCS.NPCInfo->stats.aggression < 4 )
 		{//back off and defend
 			Jedi_Retreat();
 		}
-	}
+	}*/
 	else if ( enemy_dist > 256 )
 	{//we're way out of range
 		qboolean usedForce = qfalse;
@@ -1658,9 +1654,9 @@ static void Jedi_CombatDistance( int enemy_dist )
 			{
 				if ( NPC_ClearLOS4( NPCS.NPC->enemy ) )
 				{
-					G_AddVoiceEvent( NPCS.NPC, Q_irand( EV_JCHASE1, EV_JCHASE3 ), 3000 );
+					G_AddVoiceEvent( NPCS.NPC, Q_irand( EV_JCHASE1, EV_JCHASE3 ), 10000 );
 				}
-				jediSpeechDebounceTime[NPCS.NPC->client->playerTeam] = NPCS.NPCInfo->blockedSpeechDebounceTime = level.time + 3000;
+				jediSpeechDebounceTime[NPCS.NPC->client->playerTeam] = NPCS.NPCInfo->blockedSpeechDebounceTime = level.time + 10000;
 			}
 		}
 		//Unless we're totally hiding, go after him
@@ -1671,6 +1667,17 @@ static void Jedi_CombatDistance( int enemy_dist )
 				Jedi_Advance();
 			}
 		}
+	}
+	//else if ( enemy_dist <= -16 ) // UQ1: -16??? wtf
+	else if ( (NPCS.NPC->enemy->s.weapon == WP_SABER || NPCS.NPC->enemy->s.weapon == WP_MELEE)
+		&& enemy_dist <= 24 )
+	{//we're too damn close!
+		Jedi_Retreat();
+	}
+	else if ( (NPCS.NPC->enemy->s.weapon == WP_SABER || NPCS.NPC->enemy->s.weapon == WP_MELEE)
+		&& enemy_dist > 48 )
+	{//we're too damn far!
+		Jedi_Advance();
 	}
 	//FIXME: enemy_dist calc needs to include all blade lengths, and include distance from hand to start of blade....
 	else if ( enemy_dist > 50 )//FIXME: not hardcoded- base on our reach (modelScale?) and saberLengthMax
@@ -1707,8 +1714,8 @@ static void Jedi_CombatDistance( int enemy_dist )
 			//taunt
 			if ( TIMER_Done( NPCS.NPC, "chatter" ) && jediSpeechDebounceTime[NPCS.NPC->client->playerTeam] < level.time && NPCS.NPCInfo->blockedSpeechDebounceTime < level.time )
 			{
-				G_AddVoiceEvent( NPCS.NPC, Q_irand( EV_TAUNT1, EV_TAUNT3 ), 3000 );
-				jediSpeechDebounceTime[NPCS.NPC->client->playerTeam] = NPCS.NPCInfo->blockedSpeechDebounceTime = level.time + 3000;
+				G_AddVoiceEvent( NPCS.NPC, Q_irand( EV_TAUNT1, EV_TAUNT3 ), 10000 );
+				jediSpeechDebounceTime[NPCS.NPC->client->playerTeam] = NPCS.NPCInfo->blockedSpeechDebounceTime = level.time + 10000;
 				TIMER_Set( NPCS.NPC, "chatter", 3000 );
 			}
 
@@ -1793,8 +1800,8 @@ static void Jedi_CombatDistance( int enemy_dist )
 							//taunt
 							if ( TIMER_Done( NPCS.NPC, "chatter" ) && jediSpeechDebounceTime[NPCS.NPC->client->playerTeam] < level.time && NPCS.NPCInfo->blockedSpeechDebounceTime < level.time )
 							{
-								G_AddVoiceEvent( NPCS.NPC, Q_irand( EV_TAUNT1, EV_TAUNT3 ), 3000 );
-								jediSpeechDebounceTime[NPCS.NPC->client->playerTeam] = NPCS.NPCInfo->blockedSpeechDebounceTime = level.time + 3000;
+								G_AddVoiceEvent( NPCS.NPC, Q_irand( EV_TAUNT1, EV_TAUNT3 ), 10000 );
+								jediSpeechDebounceTime[NPCS.NPC->client->playerTeam] = NPCS.NPCInfo->blockedSpeechDebounceTime = level.time + 10000;
 								TIMER_Set( NPCS.NPC, "chatter", 3000 );
 							}
 
@@ -4213,8 +4220,8 @@ static void Jedi_CombatTimersUpdate( int enemy_dist )
 					&& jediSpeechDebounceTime[NPCS.NPC->client->playerTeam] < level.time
 					&& NPCS.NPC->painDebounceTime < level.time - 1000 )
 				{
-					G_AddVoiceEvent( NPCS.NPC, Q_irand( EV_GLOAT1, EV_GLOAT3 ), 3000 );
-					jediSpeechDebounceTime[NPCS.NPC->client->playerTeam] = NPCS.NPCInfo->blockedSpeechDebounceTime = level.time + 3000;
+					G_AddVoiceEvent( NPCS.NPC, Q_irand( EV_GLOAT1, EV_GLOAT3 ), 10000 );
+					jediSpeechDebounceTime[NPCS.NPC->client->playerTeam] = NPCS.NPCInfo->blockedSpeechDebounceTime = level.time + 10000;
 				}
 			}
 			if ( !Q_irand( 0, 2 ) )
@@ -4534,7 +4541,7 @@ static qboolean Jedi_Jump( vec3_t dest, int goalEntNum )
 	}
 	else
 	*/
-	if ( 1 )
+	if ( 0 ) // UQ1: Trying other jump instead...
 	{
 		float	targetDist, shotSpeed = 300, travelTime, impactDist, bestImpactDist = Q3_INFINITE;//fireSpeed,
 		vec3_t	targetDir, shotVel, failCase;
@@ -5222,43 +5229,14 @@ static void Jedi_Combat( void )
 			//Com_Printf( "No Clear Path\n" );
 			if ( (NPC_ClearLOS4( NPCS.NPC->enemy )||NPCS.NPCInfo->enemyLastSeenTime>level.time-500) && NPC_FaceEnemy( qtrue ) )//( NPCInfo->rank == RANK_CREWMAN || NPCInfo->rank > RANK_LT_JG ) &&
 			{
-				//try to jump to him?
-				/*
-				vec3_t end;
-				VectorCopy( NPC->r.currentOrigin, end );
-				end[2] += 36;
-				trap->Trace( &trace, NPC->r.currentOrigin, NPC->r.mins, NPC->r.maxs, end, NPC->s.number, NPC->clipmask|CONTENTS_BOTCLIP );
-				if ( !trace.allsolid && !trace.startsolid && trace.fraction >= 1.0 )
-				{
-					vec3_t angles, forward;
-					VectorCopy( NPC->client->ps.viewangles, angles );
-					angles[0] = 0;
-					AngleVectors( angles, forward, NULL, NULL );
-					VectorMA( end, 64, forward, end );
-					trap->Trace( &trace, NPC->r.currentOrigin, NPC->r.mins, NPC->r.maxs, end, NPC->s.number, NPC->clipmask|CONTENTS_BOTCLIP );
-					if ( !trace.allsolid && !trace.startsolid )
-					{
-						if ( trace.fraction >= 1.0 || trace.plane.normal[2] > 0 )
-						{
-							ucmd.upmove = 127;
-							ucmd.forwardmove = 127;
-							return;
-						}
-					}
-				}
-				*/
-				//FIXME: about every 1 second calc a velocity,
-				//run a loop of traces with evaluate trajectory
-				//for gravity with my size, see if it makes it...
-				//this will also catch misacalculations that send you off ledges!
-				//Com_Printf( "Considering Jump\n" );
 				if ( Jedi_TryJump( NPCS.NPC->enemy ) )
 				{//FIXME: what about jumping to his enemyLastSeenLocation?
 					return;
 				}
 				else
 				{
-					Jedi_Hunt(); // UQ1: FALLBACK - HUNT...
+					//Jedi_Hunt(); // UQ1: FALLBACK - HUNT...
+					Jedi_Advance();
 				}
 			}
 
@@ -5275,8 +5253,8 @@ static void Jedi_Combat( void )
 			{//can macro-navigate to him
 				if ( enemy_dist < 384 && !Q_irand( 0, 10 ) && NPCS.NPCInfo->blockedSpeechDebounceTime < level.time && jediSpeechDebounceTime[NPCS.NPC->client->playerTeam] < level.time && !NPC_ClearLOS4( NPCS.NPC->enemy ) )
 				{
-					G_AddVoiceEvent( NPCS.NPC, Q_irand( EV_JLOST1, EV_JLOST3 ), 3000 );
-					jediSpeechDebounceTime[NPCS.NPC->client->playerTeam] = NPCS.NPCInfo->blockedSpeechDebounceTime = level.time + 3000;
+					G_AddVoiceEvent( NPCS.NPC, Q_irand( EV_JLOST1, EV_JLOST3 ), 10000 );
+					jediSpeechDebounceTime[NPCS.NPC->client->playerTeam] = NPCS.NPCInfo->blockedSpeechDebounceTime = level.time + 10000;
 				}
 
 				return;
@@ -5303,6 +5281,7 @@ static void Jedi_Combat( void )
 					else
 					{
 						Jedi_Move(tempGoal, qfalse); // UQ1: FALLBACK
+						return;
 					}
 
 					G_FreeEntity( tempGoal );
@@ -5376,7 +5355,8 @@ static void Jedi_Combat( void )
 
 			// UQ1: Hunt...
 			//ST_TrackEnemy( NPCS.NPC, NPCS.NPC->enemy->r.currentOrigin );
-			Jedi_Hunt();
+			//Jedi_Hunt();
+			Jedi_Advance();
 		}
 		else
 		{//we are attacking
@@ -5403,7 +5383,7 @@ static void Jedi_Combat( void )
 		NPCS.NPCInfo->scriptFlags &= ~SCF_ALT_FIRE;
 		NPC_SetAnim( NPCS.NPC, SETANIM_BOTH, BOTH_A7_KICK_F, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD ); // UQ1: Better anim?????
 		WP_FireMelee( NPCS.NPC, qfalse );
-		G_AddVoiceEvent( NPCS.NPC, Q_irand( EV_TAUNT1, EV_TAUNT3 ), 3000 );
+		G_AddVoiceEvent( NPCS.NPC, Q_irand( EV_TAUNT1, EV_TAUNT3 ), 10000 );
 		NPCS.NPC->next_rifle_butt_time = level.time + 1000;
 		NPCS.NPC->next_kick_time = level.time + 15000;
 
@@ -5539,7 +5519,7 @@ void NPC_Jedi_Pain(gentity_t *self, gentity_t *attacker, int damage)
 
 	if ( !damage && self->health > 0 )
 	{//FIXME: better way to know I was pushed
-		G_AddVoiceEvent( self, Q_irand(EV_PUSHED1, EV_PUSHED3), 2000 );
+		G_AddVoiceEvent( self, Q_irand(EV_PUSHED1, EV_PUSHED3), 10000 );
 	}
 
 	//drop me from the ceiling if I'm on it
@@ -5789,10 +5769,10 @@ static void Jedi_Patrol( void )
 							{//okay, we've ignored him, now start to notice him
 								if ( !NPCS.NPCInfo->investigateCount )
 								{
-									G_AddVoiceEvent( NPCS.NPC, Q_irand( EV_JDETECTED1, EV_JDETECTED3 ), 3000 );
+									G_AddVoiceEvent( NPCS.NPC, Q_irand( EV_JDETECTED1, EV_JDETECTED3 ), 10000 );
 								}
 								NPCS.NPCInfo->investigateCount++;
-								TIMER_Set( NPCS.NPC, "watchTime", Q_irand( 4000, 10000 ) );
+								TIMER_Set( NPCS.NPC, "watchTime", Q_irand( 9000, 15000 ) );
 							}
 						}
 						//while we're waiting, do what we need to do
@@ -6192,8 +6172,8 @@ static void Jedi_Attack( void )
 				else if ( NPCS.NPCInfo->walkDebounceTime == -1 )
 				{
 					NPCS.NPCInfo->walkDebounceTime = -2;
-					G_AddVoiceEvent( NPCS.NPC, Q_irand( EV_VICTORY1, EV_VICTORY3 ), 3000 );
-					jediSpeechDebounceTime[NPCS.NPC->client->playerTeam] = level.time + 3000;
+					G_AddVoiceEvent( NPCS.NPC, Q_irand( EV_VICTORY1, EV_VICTORY3 ), 10000 );
+					jediSpeechDebounceTime[NPCS.NPC->client->playerTeam] = level.time + 10000;
 					NPCS.NPCInfo->desiredPitch = 0;
 					NPCS.NPCInfo->goalEntity = NULL;
 				}
@@ -6217,8 +6197,8 @@ static void Jedi_Attack( void )
 					Jedi_AggressionErosion(-3);
 					if ( BG_SabersOff( &NPCS.NPC->client->ps ) && !NPCS.NPC->client->ps.saberInFlight )
 					{//turned off saber (in hand), gloat
-						G_AddVoiceEvent( NPCS.NPC, Q_irand( EV_VICTORY1, EV_VICTORY3 ), 3000 );
-						jediSpeechDebounceTime[NPCS.NPC->client->playerTeam] = level.time + 3000;
+						G_AddVoiceEvent( NPCS.NPC, Q_irand( EV_VICTORY1, EV_VICTORY3 ), 10000 );
+						jediSpeechDebounceTime[NPCS.NPC->client->playerTeam] = level.time + 10000;
 						NPCS.NPCInfo->desiredPitch = 0;
 						NPCS.NPCInfo->goalEntity = NULL;
 					}

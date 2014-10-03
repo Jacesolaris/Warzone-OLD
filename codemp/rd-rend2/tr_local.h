@@ -1371,9 +1371,9 @@ typedef struct
 	vec2_t          st;
 	vec2_t          lightmap[MAXLIGHTMAPS];
 	vec3_t          normal;
-#ifdef USE_VERT_TANGENT_SPACE
+//#ifdef USE_VERT_TANGENT_SPACE
 	vec4_t          tangent;
-#endif
+//#endif
 	vec3_t          lightdir;
 	vec4_t			vertexColors[MAXLIGHTMAPS];
 

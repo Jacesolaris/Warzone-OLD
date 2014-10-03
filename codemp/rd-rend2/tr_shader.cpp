@@ -3034,6 +3034,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 		diffuse->bundle[TB_NORMALMAP] = diffuse->bundle[0];
 		diffuse->bundle[TB_NORMALMAP].numImageAnimations = 0;
 		diffuse->bundle[TB_NORMALMAP].image[0] = diffuse->bundle[TB_DIFFUSEMAP].image[0];
+		//diffuse->bundle[TB_NORMALMAP].image[0] = tr.whiteImage;
 
 		VectorSet4(diffuse->normalScale, r_baseNormalX->value, r_baseNormalY->value, 1.0f, r_baseParallax->value);
 	}
