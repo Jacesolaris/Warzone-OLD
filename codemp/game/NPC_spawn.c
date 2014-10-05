@@ -1465,11 +1465,20 @@ void NPC_Begin (gentity_t *ent)
 		switch( ent->s.NPC_class )
 		{
 		case CLASS_STORMTROOPER:
-		case CLASS_SWAMPTROOPER:
-		case CLASS_IMPWORKER:
-		case CLASS_SHADOWTROOPER:
 			ent->s.NPC_NAME_ID = irand(100, 999);
 			strcpy(ent->client->pers.netname, va("TK-%i", ent->s.NPC_NAME_ID));
+			break;
+		case CLASS_SWAMPTROOPER:
+			ent->s.NPC_NAME_ID = irand(100, 999);
+			strcpy(ent->client->pers.netname, va("TS-%i", ent->s.NPC_NAME_ID));
+			break;
+		case CLASS_IMPWORKER:
+			ent->s.NPC_NAME_ID = irand(100, 999);
+			strcpy(ent->client->pers.netname, va("IW-%i", ent->s.NPC_NAME_ID));
+			break;
+		case CLASS_SHADOWTROOPER:
+			ent->s.NPC_NAME_ID = irand(100, 999);
+			strcpy(ent->client->pers.netname, va("ST-%i", ent->s.NPC_NAME_ID));
 			break;
 		case CLASS_R2D2:
 			ent->s.NPC_NAME_ID = 0;

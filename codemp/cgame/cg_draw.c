@@ -3904,11 +3904,19 @@ void CG_DrawEnemyStatus( void )
 				str1 = va("%s", NPC_NAME_LIST[crosshairEnt->currentState.NPC_NAME_ID].HumanNames);
 				break;
 			case CLASS_STORMTROOPER:
-			case CLASS_SWAMPTROOPER:
-			case CLASS_IMPWORKER:
-			case CLASS_IMPERIAL:
-			case CLASS_SHADOWTROOPER:
 				str1 = va("TK-%i", crosshairEnt->currentState.NPC_NAME_ID);	// EVIL. for a number of reasons --eez
+				break;
+			case CLASS_SWAMPTROOPER:
+				str1 = va("TS-%i", crosshairEnt->currentState.NPC_NAME_ID);	// EVIL. for a number of reasons --eez
+				break;
+			case CLASS_IMPWORKER:
+				str1 = va("IW-%i", crosshairEnt->currentState.NPC_NAME_ID);	// EVIL. for a number of reasons --eez
+				break;
+			case CLASS_SHADOWTROOPER:
+				str1 = va("ST-%i", crosshairEnt->currentState.NPC_NAME_ID);	// EVIL. for a number of reasons --eez
+				break;
+			case CLASS_IMPERIAL:
+				str1 = va("Commander %s", NPC_NAME_LIST[crosshairEnt->currentState.NPC_NAME_ID].HumanNames);	// EVIL. for a number of reasons --eez
 				break;
 			case CLASS_ATST:				// technically droid...
 				str1 = va("AT-ST");
@@ -7976,11 +7984,19 @@ void CG_DrawNPCNames( void )
 				str1 = va("%s", NPC_NAME_LIST[cent->currentState.NPC_NAME_ID].HumanNames);
 				break;
 			case CLASS_STORMTROOPER:
-			case CLASS_SWAMPTROOPER:
-			case CLASS_IMPWORKER:
-			case CLASS_IMPERIAL:
-			case CLASS_SHADOWTROOPER:
 				str1 = va("TK-%i", cent->currentState.NPC_NAME_ID);	// EVIL. for a number of reasons --eez
+				break;
+			case CLASS_SWAMPTROOPER:
+				str1 = va("TS-%i", cent->currentState.NPC_NAME_ID);	// EVIL. for a number of reasons --eez
+				break;
+			case CLASS_IMPWORKER:
+				str1 = va("IW-%i", cent->currentState.NPC_NAME_ID);	// EVIL. for a number of reasons --eez
+				break;
+			case CLASS_SHADOWTROOPER:
+				str1 = va("ST-%i", cent->currentState.NPC_NAME_ID);	// EVIL. for a number of reasons --eez
+				break;
+			case CLASS_IMPERIAL:
+				str1 = va("Commander %s", NPC_NAME_LIST[cent->currentState.NPC_NAME_ID].HumanNames);	// EVIL. for a number of reasons --eez
 				break;
 			case CLASS_ATST:				// technically droid...
 				str1 = va("AT-ST");
