@@ -3590,7 +3590,11 @@ Ghoul2 Insert Start
 			strcpy(truncModelName, playerModel);
 			strcpy(useSkinName, va("models/players/%s/model_%s.skin", truncModelName, customSkin));
 
-			if (!BG_FileExists(useSkinName))
+			if (strchr(customSkin, '|'))
+			{//three part skin. OK!
+
+			}
+			else if (!BG_FileExists(useSkinName))
 			{// hmm missing this custom skin. use default...
 				trap->Print("Skin %s is missing. Using default.\n", useSkinName);
 				strcpy(customSkin, "default");

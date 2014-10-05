@@ -2969,6 +2969,39 @@ qboolean NPC_PatrolArea( void )
 	return qtrue;
 }
 
+void NPC_ShortenPath(gentity_t *NPC)
+{
+	qboolean	found = qfalse;
+	int			position = -1;
+	int			x = 0;
+
+	for (x = 0; x < gWPArray[NPC->wpCurrent]->neighbornum; x++)
+	{
+		if (gWPArray[NPC->wpCurrent]->neighbors[x].num == NPC->longTermGoal)
+		{// Our current wp links direct to our goal!
+			//int shortenedBy = NPC->pathsize;
+			//trap->Print("%s found a shorter (direct to goal! - shortened by %i) path.\n", NPC->NPC_type, shortenedBy);
+			NPC->pathsize = 0;
+			found = qtrue;
+			break;
+		}
+
+		for (position = 0; position < NPC->pathsize; position++)
+		{
+			if (gWPArray[NPC->wpCurrent]->neighbors[x].num == NPC->pathlist[position])
+			{// The current wp links direct to this node!
+				//int shortenedBy = NPC->pathsize - position;
+				//trap->Print("%s found a shorter (shortened by %i) path.\n", NPC->NPC_type, shortenedBy);
+				NPC->pathsize = position;
+				found = qtrue;
+				break;
+			}
+		}
+
+		if (found) break;
+	}
+}
+
 /*///////////////////////////////////////////////////
 NPC_GetNextNode
 if the bot has reached a node, this function selects the next node
@@ -2986,6 +3019,14 @@ int NPC_GetNextNode(gentity_t *NPC)
 	{
 		return WAYPOINT_NONE;
 	}
+
+	if (NPC->pathsize <= 0)	//if the bot is at the end of his path, this shouldn't have been called
+	{
+		//NPC->longTermGoal = WAYPOINT_NONE;	//reset to having no goal
+		return WAYPOINT_NONE;
+	}
+
+	NPC_ShortenPath(NPC);
 
 	if (NPC->pathsize <= 0)	//if the bot is at the end of his path, this shouldn't have been called
 	{
@@ -3330,6 +3371,52 @@ int NPC_FindGoal( gentity_t *NPC )
 	return waypoint;
 }
 
+int NPC_FindTeamGoal( gentity_t *NPC )
+{
+	int waypoint = -1;
+	int i;
+	//char enemy_name[64];
+
+	for ( i = 0; i < MAX_GENTITIES; i++)
+	{
+		gentity_t *ent = &g_entities[i];
+
+		if (!ent) continue;
+		if (ent == NPC) continue;
+		if (ent->s.eType != ET_NPC && ent->s.eType != ET_PLAYER) continue;
+		if (!ent->client) continue;
+		if (!NPC_ValidEnemy(ent)) continue;
+
+		if (ent->s.eType == ET_PLAYER)
+		{
+			if (ent->wpCurrent < 0 || ent->wpCurrent >= gWPNum
+				|| Distance(ent->r.currentOrigin, gWPArray[ent->wpCurrent]->origin) > 128.0)
+			{// Their current waypoint is invalid. Find one for them...
+				ent->wpCurrent = DOM_GetRandomCloseVisibleWP(ent, ent->r.currentOrigin, ent->s.number, -1);
+			}
+		}
+
+		if (ent->wpCurrent <= 0 || ent->wpCurrent >= gWPNum) continue;
+
+		// Looks ok...
+		waypoint = ent->wpCurrent;
+		//strcpy(enemy_name, ent->NPC_type);
+		break;
+	}
+
+	if (waypoint < 0) 
+	{// If nothing found then wander...
+		waypoint = NPC_FindGoal( NPC );
+		//trap->Print("%s failed to find enemy goal.\n", NPC->NPC_type);
+	}
+	else
+	{
+		//trap->Print("%s found enemy (%s) goal.\n", NPC->NPC_type, enemy_name);
+	}
+
+	return waypoint;
+}
+
 void NPC_SetNewGoalAndPath()
 {
 	gentity_t	*NPC = NPCS.NPC;
@@ -3357,7 +3444,10 @@ void NPC_SetNewGoalAndPath()
 	}
 	else
 	{// Find a new generic goal...
-		NPC->longTermGoal = NPC_FindGoal( NPC );
+		if (g_gametype.integer >= GT_TEAM)
+			NPC->longTermGoal = NPC_FindTeamGoal( NPC );
+		else
+			NPC->longTermGoal = NPC_FindGoal( NPC );
 	}
 
 	if (NPC->longTermGoal >= 0)
@@ -3993,6 +4083,8 @@ qboolean NPC_FollowRoutes( void )
 	usercmd_t	ucmd = NPCS.ucmd;
 	float		wpDist = 0.0;
 
+	NPCS.NPCInfo->combatMove = qtrue;
+
 	if ( !NPC_HaveValidEnemy() )
 	{
 		switch (NPC->client->NPC_class)
@@ -4106,7 +4198,7 @@ qboolean NPC_FollowRoutes( void )
 
 		if (!(NPC->wpCurrent < 0 || NPC->wpCurrent >= gWPNum || NPC->longTermGoal < 0 || NPC->longTermGoal >= gWPNum))
 		{
-			NPC->wpTravelTime = level.time + 10000;
+			NPC->wpTravelTime = level.time + 15000;
 			NPC->wpSeenTime = level.time;
 			NPC->last_move_time = level.time;
 		}
@@ -4236,6 +4328,8 @@ qboolean NPC_FollowEnemyRoute( void )
 {// Quick method of following bot routes...
 	gentity_t	*NPC = NPCS.NPC;
 	usercmd_t	ucmd = NPCS.ucmd;
+
+	NPCS.NPCInfo->combatMove = qtrue;
 
 	if ( !NPC_HaveValidEnemy() )
 	{
@@ -4532,7 +4626,7 @@ void NPC_Think ( gentity_t *self)//, int msec )
 			if (!self->enemy)
 			{
 				if (g_gametype.integer != GT_INSTANCE && g_gametype.integer != GT_SINGLE_PLAYER 
-					&& (NPC_IsCivilian(self) || self->r.svFlags & SVF_BOT) // UQ1: Changed - only NPC bots and civilians roam now... Maybe add jedi/sith later...
+					&& (NPC_IsCivilian(self) || self->r.svFlags & SVF_BOT || g_gametype.integer == GT_WARZONE) // UQ1: Changed - only NPC bots and civilians roam now... Maybe add jedi/sith later...
 					&& NPC_FollowRoutes()) 
 				{
 					//trap->Print("NPCBOT DEBUG: NPC is following routes.\n");

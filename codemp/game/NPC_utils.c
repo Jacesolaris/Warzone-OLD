@@ -27,7 +27,7 @@ qboolean NPC_IsValidNPCEnemy ( gentity_t *NPC )
 		return qfalse;
 	}
 	if (NPC->client->ps.stats[STAT_HEALTH] <= 0) {
-		trap->Print("%s S_HEALTH\n", NPC->NPC_type);
+		//trap->Print("%s S_HEALTH\n", NPC->NPC_type);
 		return qfalse;
 	}
 	/*if (NPC->client->ps.pm_type == PM_DEAD) {

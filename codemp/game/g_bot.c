@@ -1564,7 +1564,13 @@ void G_CheckMinimumNpcs( void ) {
 			if ( g_gametype.integer == GT_WARZONE )
 			{
 				// New War Zone Instances (not JKG style)... Get CTF spawnpoints...
-				gentity_t spawnPoint = *SelectCTFSpawnPoint ( (team_t)NPC_SPAWN_TEAM, 0, npc->s.origin, npc->s.angles, qtrue );
+				team_t SPAWN_TEAM = TEAM_FREE;
+				gentity_t spawnPoint;
+
+				if (NPC_SPAWN_TEAM == TEAM_BLUE) SPAWN_TEAM = TEAM_RED;
+				if (NPC_SPAWN_TEAM == TEAM_RED) SPAWN_TEAM = TEAM_BLUE;
+
+				spawnPoint = *SelectCTFSpawnPoint ( SPAWN_TEAM, 0, npc->s.origin, npc->s.angles, qtrue );
 				VectorCopy(spawnPoint.s.origin, npc->s.origin);
 				npc->s.origin[2]+=32; // Drop down...
 			}

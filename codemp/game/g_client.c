@@ -3373,6 +3373,13 @@ void ClientSpawn(gentity_t *ent) {
 						client->pers.teamState.state,
 						spawn_origin, spawn_angles, !(ent->r.svFlags & SVF_BOT));
 	}
+	else if (level.gametype >= GT_TEAM) {
+		// all base oriented team games use the CTF spawn points
+		spawnPoint = SelectCTFSpawnPoint (
+						client->sess.sessionTeam,
+						client->pers.teamState.state,
+						spawn_origin, spawn_angles, !(ent->r.svFlags & SVF_BOT));
+	}
 	else {
 		if (level.gametype == GT_POWERDUEL)
 		{
