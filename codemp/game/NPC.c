@@ -3343,8 +3343,7 @@ void NPC_SetNewGoalAndPath()
 	}
 	else
 	{// Find a new generic goal...
-		//NPC->longTermGoal = NPC_FindGoal( NPC );
-		NPC->longTermGoal = DOM_GetRandomCloseWP(NPC->r.currentOrigin, NPC->wpCurrent, -1);
+		NPC->longTermGoal = NPC_FindGoal( NPC );
 	}
 
 	if (NPC->longTermGoal >= 0)
@@ -3969,7 +3968,7 @@ void NPC_ClearPathData ( gentity_t *NPC )
 	NPC->pathsize = -1;
 	NPC->longTermGoal = NPC->coverpointOFC = NPC->coverpointGoal = -1;
 
-	NPC->wpSeenTime = 0;
+	//NPC->wpSeenTime = 0;
 }
 
 //#define __OLD_NPC_WAYPOINTING__
@@ -3978,6 +3977,7 @@ qboolean NPC_FollowRoutes( void )
 {// Quick method of following bot routes...
 	gentity_t	*NPC = NPCS.NPC;
 	usercmd_t	ucmd = NPCS.ucmd;
+	float		wpDist = 0.0;
 
 	if ( !NPC_HaveValidEnemy() )
 	{
@@ -4050,19 +4050,44 @@ qboolean NPC_FollowRoutes( void )
 		VectorCopy(NPC->r.currentOrigin, NPC->npc_previous_pos);
 	}
 
-	if (NPC->wpSeenTime > level.time)
+	if ( NPC->wpCurrent >= 0 && NPC->wpCurrent < gWPNum )
+	{
+		vec3_t upOrg, upOrg2;
+
+		VectorCopy(NPC->r.currentOrigin, upOrg);
+		upOrg[2]+=18;
+
+		VectorCopy(gWPArray[NPC->wpCurrent]->origin, upOrg2);
+		upOrg2[2]+=18;
+
+		if (OrgVisible(upOrg, upOrg2, NPC->s.number))
+		{
+			NPC->wpSeenTime = level.time;
+		}
+
+		wpDist = Distance(gWPArray[NPC->wpCurrent]->origin, NPC->r.currentOrigin);
+	}
+
+	if (NPC->wpSeenTime >= level.time - 5000
+		&& NPC->wpCurrent >= 0 
+		&& NPC->wpCurrent < gWPNum
+		&& wpDist > 512)
 	{
 
 	}
 	else if ( NPC->wpCurrent < 0 || NPC->wpCurrent >= gWPNum 
 		|| NPC->longTermGoal < 0 || NPC->longTermGoal >= gWPNum 
-		|| Distance(gWPArray[NPC->wpCurrent]->origin, NPC->r.currentOrigin) > 512
+		|| wpDist > 512
 		|| NPC->wpSeenTime < level.time - 5000
 		|| NPC->wpTravelTime < level.time 
 		|| NPC->last_move_time < level.time - 5000 )
 	{// We hit a problem in route, or don't have one yet.. Find a new goal and path...
-		NPC_ClearPathData(NPC);
+		if (wpDist > 512) trap->Print("wpCurrent too far.\n");
+		if (NPC->wpSeenTime < level.time - 5000) trap->Print("wpSeenTime.\n");
+		if (NPC->wpTravelTime < level.time) trap->Print("wpTravelTime.\n");
+		if (NPC->last_move_time < level.time - 5000) trap->Print("last_move_time.\n");
 
+		NPC_ClearPathData(NPC);
 		NPC_SetNewGoalAndPath();
 
 		if (!(NPC->wpCurrent < 0 || NPC->wpCurrent >= gWPNum || NPC->longTermGoal < 0 || NPC->longTermGoal >= gWPNum))
@@ -4085,6 +4110,7 @@ qboolean NPC_FollowRoutes( void )
 
 	if (VectorDistanceNoHeight(gWPArray[NPC->longTermGoal]->origin, NPC->r.currentOrigin) < 32)
 	{// We're at out goal! Find a new goal...
+		trap->Print("HIT GOAL!\n");
 		NPC_ClearPathData(NPC);
 		ucmd.forwardmove = 0;
 		ucmd.rightmove = 0;
@@ -4095,6 +4121,8 @@ qboolean NPC_FollowRoutes( void )
 
 	if (VectorDistanceNoHeight(gWPArray[NPC->wpCurrent]->origin, NPC->r.currentOrigin) < 32)
 	{// At current node.. Pick next in the list...
+		trap->Print("HIT WP %i. Next WP is %i.\n", NPC->wpCurrent, NPC->wpNext);
+
 		NPC->wpLast = NPC->wpCurrent;
 		NPC->wpCurrent = NPC->wpNext;
 		NPC->wpNext = NPC_GetNextNode(NPC);
@@ -4111,21 +4139,6 @@ qboolean NPC_FollowRoutes( void )
 
 		NPC->wpTravelTime = level.time + 10000;
 		NPC->wpSeenTime = level.time;
-	}
-
-	{
-		vec3_t upOrg, upOrg2;
-
-		VectorCopy(NPC->r.currentOrigin, upOrg);
-		upOrg[2]+=18;
-
-		VectorCopy(gWPArray[NPC->wpCurrent]->origin, upOrg2);
-		upOrg2[2]+=18;
-
-		if (OrgVisible(upOrg, upOrg2, NPC->s.number))
-		{
-			NPC->wpSeenTime = level.time;
-		}
 	}
 
 	NPC_FacePosition( gWPArray[NPC->wpCurrent]->origin, qfalse );
