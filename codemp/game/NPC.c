@@ -4465,18 +4465,14 @@ void NPC_Think ( gentity_t *self)//, int msec )
 		if (self->s.NPC_class != CLASS_VEHICLE ||
 			!self->m_pVehicle)
 		{ //ok, let's not do this at all for vehicles.
-			if (/*(self->r.svFlags & SVF_BOT) 
-				&&*/ self->enemy 
-				//&& (!NPC_HaveValidEnemy() || !ValidEnemy(self->enemy)))
-				&& !NPC_IsValidNPCEnemy(self->enemy))
-			{// If NPC Bot's enemy is invalid (eg: a dead NPC), clear it!
+			if (self->enemy 
+				&& (!NPC_IsValidNPCEnemy(self->enemy) || Distance(self->r.currentOrigin, self->enemy->r.currentOrigin) > 2048.0))
+			{// If NPC Bot's enemy is invalid (eg: a dead NPC) or too far away, clear it!
 				G_ClearEnemy(self);
 			}
 
-			if (/*(self->r.svFlags & SVF_BOT) 
-				&&*/ !self->enemy)
+			if (!self->enemy)
 			{
-				//self->enemy = NPC_PickEnemyExt( qtrue );
 				NPC_FindEnemy( qtrue );
 			}
 
