@@ -4788,10 +4788,11 @@ static void CG_PlayerFloatSprite( centity_t *cent, qhandle_t shader ) {
 
 	memset( &ent, 0, sizeof( ent ) );
 	VectorCopy( cent->lerpOrigin, ent.origin );
-	ent.origin[2] += 48;
+	//ent.origin[2] += 48;
+	ent.origin[2] += 96;
 	ent.reType = RT_SPRITE;
 	ent.customShader = shader;
-	ent.radius = 10;
+	ent.radius = 6;//10;
 	ent.renderfx = rf;
 	ent.shaderRGBA[0] = 255;
 	ent.shaderRGBA[1] = 255;
@@ -14476,6 +14477,7 @@ void CG_Player( centity_t *cent ) {
 		cent->currentState.number != cg.snap->ps.clientNum &&
 		cent->currentState.eType != ET_NPC)
 	{	// If the view is either a spectator or on the same team as this character, show a symbol above their head.
+#if 0 // UQ1: Disabled because we now have NPC/Player name tags...
 		if ((cg.snap->ps.persistant[PERS_TEAM] == TEAM_SPECTATOR || cg.snap->ps.persistant[PERS_TEAM] == team) &&
 			!(cent->currentState.eFlags & EF_DEAD))
 		{
@@ -14489,7 +14491,7 @@ void CG_Player( centity_t *cent ) {
 					}
 					else
 					{ //if there isn't one fallback to default
-						CG_PlayerFloatSprite( cent, cgs.media.teamRedShader);
+						CG_PlayerFloatSprite( cent, cgs.media.teamRedShader); // UQ1: Disabled because we now have NPC/Player name tags...
 					}
 				}
 				else
@@ -14500,7 +14502,7 @@ void CG_Player( centity_t *cent ) {
 					}
 					else
 					{ //if there isn't one fallback to default
-						CG_PlayerFloatSprite( cent, cgs.media.teamBlueShader);
+						CG_PlayerFloatSprite( cent, cgs.media.teamBlueShader); // UQ1: Disabled because we now have NPC/Player name tags...
 					}
 				}
 			}
@@ -14508,14 +14510,15 @@ void CG_Player( centity_t *cent ) {
 			{ //generic teamplay
 				if (team == TEAM_RED)
 				{
-					CG_PlayerFloatSprite( cent, cgs.media.teamRedShader);
+					CG_PlayerFloatSprite( cent, cgs.media.teamRedShader); // UQ1: Disabled because we now have NPC/Player name tags...
 				}
 				else	// if (team == TEAM_BLUE)
 				{
-					CG_PlayerFloatSprite( cent, cgs.media.teamBlueShader);
+					CG_PlayerFloatSprite( cent, cgs.media.teamBlueShader); // UQ1: Disabled because we now have NPC/Player name tags...
 				}
 			}
 		}
+#endif //0
 	}
 	else if (cgs.gametype == GT_POWERDUEL && cg_drawFriend.integer &&
 		cent->currentState.number != cg.snap->ps.clientNum)

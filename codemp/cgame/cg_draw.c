@@ -10480,6 +10480,7 @@ static void CG_Draw2D( void ) {
 
 	// UQ1: Added. Draw NPC civilian names over their heads...
 	CG_DrawNPCNames();
+
 	// Draw damages above head...
 	CG_DrawDamage();
 
