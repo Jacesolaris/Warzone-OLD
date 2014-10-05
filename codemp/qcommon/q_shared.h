@@ -1955,10 +1955,6 @@ typedef struct siegePers_s
 //They won't be able to launch into a combo from the bounce.
 #define FLAG_PARRIED		1
 #define FLAG_BLOCKING       2
-#define PARRY_TIME			3
-#define BLOCK_SLOW_BOUNCE	4
-#define BLOCK_DISARM		1
-#define BLOCK_STAGGER		2
 //[/SaberSys]
 //[SaberDefines]
 //scaler to the walkspeed

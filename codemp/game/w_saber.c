@@ -4277,10 +4277,17 @@ static QINLINE void G_SetViewLock(gentity_t *self, vec3_t impactPos, vec3_t impa
 }
 
 
+
 static qboolean saberDoClashEffect = qfalse;
+
 static vec3_t saberClashPos = { 0 };
 static vec3_t saberClashNorm = { 0 };
 static int saberClashEventParm = 1;
+
+static qboolean saberDoBodyHitEffect = qfalse;
+static vec3_t saberBodyHitPos = { 0 };
+static vec3_t saberBodyHitNorm = { 0 };
+static int saberBodyHitEventParm = 0;
 //[SaberSys]
 static int saberClashOther = -1;  //the clientNum for the other player involved in the saber clash.
 static QINLINE void G_SetViewLock(gentity_t *self, vec3_t impactPos, vec3_t impactNormal);
@@ -4300,6 +4307,17 @@ void WP_SaberDoClash(gentity_t *self, int saberNum, int bladeNum)
 		te->s.otherEntityNum2 = self->s.number;
 		te->s.weapon = saberNum;
 		te->s.legsAnim = bladeNum;
+
+		if (saberDoBodyHitEffect)
+		{
+			gentity_t *te = G_TempEntity(saberBodyHitPos, EV_SABER_BODY_HIT);
+			VectorCopy(saberBodyHitPos, te->s.origin);
+			VectorCopy(saberBodyHitNorm, te->s.angles);
+			te->s.eventParm = saberBodyHitEventParm;
+			te->s.otherEntityNum2 = self->s.number;
+			te->s.weapon = saberNum;
+			te->s.legsAnim = bladeNum;
+		}
 
 		//[SaberSys]
 		if (saberClashOther != -1 && PM_SaberInParry(g_entities[saberClashOther].client->ps.saberMove))

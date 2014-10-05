@@ -2350,6 +2350,32 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 		}
 		break;
 
+	case EV_SABER_BODY_HIT:
+		DEBUGNAME("EV_SABER_BODY_BLOCK");
+		{
+			if (es->eventParm)
+			{// Hit body
+				vec3_t fxDir;
+				VectorCopy(es->angles, fxDir);
+				if (!fxDir[0] && !fxDir[1] && !fxDir[2])
+				{
+					fxDir[1] = 1;
+				}
+				trap->FX_PlayEffectID(cgs.effects.mSaberBodyHit, es->origin, fxDir, -1, -1, qfalse);
+			}
+			else
+			{// Hit bbox
+				vec3_t fxDir;
+				VectorCopy(es->angles, fxDir);
+				if (!fxDir[0] && !fxDir[1] && !fxDir[2])
+				{
+					fxDir[1] = 1;
+				}
+				trap->FX_PlayEffectID(cgs.effects.mSaberBodyHit, es->origin, fxDir, -1, -1, qfalse);
+			}
+		}
+		break;
+
 	case EV_SABER_CLASHFLARE:
 		DEBUGNAME("EV_SABER_CLASHFLARE");
 		{

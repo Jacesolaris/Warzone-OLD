@@ -1521,6 +1521,7 @@ static void CG_RegisterGraphics( void ) {
 	cgs.effects.mSparks = trap->FX_RegisterEffect("effects/sparks/spark_nosnd.efx"); //sparks/spark.efx
 	cgs.effects.mSaberCut = trap->FX_RegisterEffect("effects/saber/saber_cut.efx");
 	cgs.effects.mSaberBlock = trap->FX_RegisterEffect("effects/saber/saber_block.efx");
+	cgs.effects.mSaberBodyHit = trap->FX_RegisterEffect("saber/saber_bodyhit.efx");
 	cgs.effects.mSaberBloodSparks = trap->FX_RegisterEffect("effects/saber/blood_sparks_mp.efx");
 	cgs.effects.mSaberBloodSparksSmall = trap->FX_RegisterEffect("effects/saber/blood_sparks_25_mp.efx");
 	cgs.effects.mSaberBloodSparksMid = trap->FX_RegisterEffect("effects/saber/blood_sparks_50_mp.efx");

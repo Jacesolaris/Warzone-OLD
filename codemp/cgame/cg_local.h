@@ -1607,6 +1607,7 @@ typedef struct cgEffects_s {
 	fxHandle_t	mSaberCut;
 	fxHandle_t	mTurretMuzzleFlash;
 	fxHandle_t	mSaberBlock;
+	fxHandle_t	mSaberBodyHit;
 	fxHandle_t	mSaberBloodSparks;
 	fxHandle_t	mSaberBloodSparksSmall;
 	fxHandle_t	mSaberBloodSparksMid;
