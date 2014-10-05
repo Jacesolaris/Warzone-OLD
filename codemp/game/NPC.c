@@ -4082,10 +4082,10 @@ qboolean NPC_FollowRoutes( void )
 		|| NPC->wpTravelTime < level.time 
 		|| NPC->last_move_time < level.time - 5000 )
 	{// We hit a problem in route, or don't have one yet.. Find a new goal and path...
-		if (wpDist > 512) trap->Print("wpCurrent too far.\n");
-		if (NPC->wpSeenTime < level.time - 5000) trap->Print("wpSeenTime.\n");
-		if (NPC->wpTravelTime < level.time) trap->Print("wpTravelTime.\n");
-		if (NPC->last_move_time < level.time - 5000) trap->Print("last_move_time.\n");
+		//if (wpDist > 512) trap->Print("wpCurrent too far.\n");
+		//if (NPC->wpSeenTime < level.time - 5000) trap->Print("wpSeenTime.\n");
+		//if (NPC->wpTravelTime < level.time) trap->Print("wpTravelTime.\n");
+		//if (NPC->last_move_time < level.time - 5000) trap->Print("last_move_time.\n");
 
 		NPC_ClearPathData(NPC);
 		NPC_SetNewGoalAndPath();
@@ -4110,7 +4110,7 @@ qboolean NPC_FollowRoutes( void )
 
 	if (VectorDistanceNoHeight(gWPArray[NPC->longTermGoal]->origin, NPC->r.currentOrigin) < 32)
 	{// We're at out goal! Find a new goal...
-		trap->Print("HIT GOAL!\n");
+		//trap->Print("HIT GOAL!\n");
 		NPC_ClearPathData(NPC);
 		ucmd.forwardmove = 0;
 		ucmd.rightmove = 0;
@@ -4121,7 +4121,7 @@ qboolean NPC_FollowRoutes( void )
 
 	if (VectorDistanceNoHeight(gWPArray[NPC->wpCurrent]->origin, NPC->r.currentOrigin) < 32)
 	{// At current node.. Pick next in the list...
-		trap->Print("HIT WP %i. Next WP is %i.\n", NPC->wpCurrent, NPC->wpNext);
+		//trap->Print("HIT WP %i. Next WP is %i.\n", NPC->wpCurrent, NPC->wpNext);
 
 		NPC->wpLast = NPC->wpCurrent;
 		NPC->wpCurrent = NPC->wpNext;
