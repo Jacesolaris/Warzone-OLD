@@ -8,6 +8,7 @@ extern qboolean NPCsPrecached;
 
 extern qboolean WP_SaberParseParms( const char *SaberName, saberInfo_t *saber );
 extern void WP_RemoveSaber( saberInfo_t *sabers, int saberNum );
+extern qboolean BG_FileExists(const char *fileName);
 
 stringID_table_t TeamTable[] =
 {
@@ -88,6 +89,7 @@ stringID_table_t ClassTable[] =
 	ENUM2STRING(CLASS_SABER_DROID),
 	ENUM2STRING(CLASS_ASSASSIN_DROID),
 	ENUM2STRING(CLASS_HAZARD_TROOPER),
+	ENUM2STRING(CLASS_MERC),
 
 	// UQ1: Civilians...
 	ENUM2STRING(CLASS_CIVILIAN),
@@ -3580,12 +3582,27 @@ Ghoul2 Insert Start
 		{
 			strcpy(customSkin, "default");
 		}
+		else if (customSkin[0])
+		{// UQ1: Check if the skin exists. If not, force default...
+			char useSkinName[256], truncModelName[64];
+			int skinHandle = -1;
+
+			strcpy(truncModelName, playerModel);
+			strcpy(useSkinName, va("models/players/%s/model_%s.skin", truncModelName, customSkin));
+
+			if (!BG_FileExists(useSkinName))
+			{// hmm missing this custom skin. use default...
+				trap->Print("Skin %s is missing. Using default.\n", useSkinName);
+				strcpy(customSkin, "default");
+			}
+		}
 
 		if ( NPC->client && NPC->client->NPC_class == CLASS_VEHICLE )
 		{ //vehicles want their names fed in as models
 			//we put the $ in front to indicate a name and not a model
 			strcpy(playerModel, va("$%s", NPCName));
 		}
+
 		SetupGameGhoul2Model(NPC, playerModel, customSkin);
 
 		if (!NPC->NPC_type)

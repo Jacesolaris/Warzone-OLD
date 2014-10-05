@@ -14,7 +14,7 @@ human_merc
 	rank		crewman
 	playerTeam	TEAM_ENEMY
 	enemyTeam	TEAM_PLAYER
-	class		CLASS_STORMTROOPER
+	class		CLASS_MERC
 	height		64
 	crouchheight 48
 	walkSpeed	51
@@ -48,7 +48,7 @@ human_merc_bow
 	rank		crewman
 	playerTeam	TEAM_ENEMY
 	enemyTeam	TEAM_PLAYER
-	class		CLASS_STORMTROOPER
+	class		CLASS_MERC
 	height		64
 	crouchheight 48
 	walkSpeed	51
@@ -82,7 +82,7 @@ human_merc_rep
 	rank		crewman
 	playerTeam	TEAM_ENEMY
 	enemyTeam	TEAM_PLAYER
-	class		CLASS_STORMTROOPER
+	class		CLASS_MERC
 	height		64
 	crouchheight 48
 	walkSpeed	51
@@ -116,7 +116,7 @@ human_merc_flc
 	rank		crewman
 	playerTeam	TEAM_ENEMY
 	enemyTeam	TEAM_PLAYER
-	class		CLASS_STORMTROOPER
+	class		CLASS_MERC
 	height		64
 	crouchheight 48
 	walkSpeed	51
@@ -150,7 +150,7 @@ human_merc_cnc
 	rank		crewman
 	playerTeam	TEAM_ENEMY
 	enemyTeam	TEAM_PLAYER
-	class		CLASS_STORMTROOPER
+	class		CLASS_MERC
 	height		64
 	crouchheight 48
 	walkSpeed	51
@@ -184,7 +184,7 @@ human_merc
 	rank		crewman
 	playerTeam	TEAM_ENEMY
 	enemyTeam	TEAM_PLAYER
-	class		CLASS_STORMTROOPER
+	class		CLASS_MERC
 	height		64
 	crouchheight 48
 	walkSpeed	51
@@ -218,7 +218,7 @@ human_merc_bow
 	rank		crewman
 	playerTeam	TEAM_ENEMY
 	enemyTeam	TEAM_PLAYER
-	class		CLASS_STORMTROOPER
+	class		CLASS_MERC
 	height		64
 	crouchheight 48
 	walkSpeed	51
@@ -252,7 +252,7 @@ human_merc_rep
 	rank		crewman
 	playerTeam	TEAM_ENEMY
 	enemyTeam	TEAM_PLAYER
-	class		CLASS_STORMTROOPER
+	class		CLASS_MERC
 	height		64
 	crouchheight 48
 	walkSpeed	51
@@ -286,7 +286,7 @@ human_merc_flc
 	rank		crewman
 	playerTeam	TEAM_ENEMY
 	enemyTeam	TEAM_PLAYER
-	class		CLASS_STORMTROOPER
+	class		CLASS_MERC
 	height		64
 	crouchheight 48
 	walkSpeed	51
@@ -321,7 +321,7 @@ lannik_racto
 	rank		captain
 	playerTeam	TEAM_ENEMY
 	enemyTeam	TEAM_PLAYER
-	class		CLASS_STORMTROOPER
+	class		CLASS_MERC
 	height		64
 	crouchheight 48
 	snd			lannik
@@ -353,7 +353,7 @@ human_merc_key
 	rank		crewman
 	playerTeam	TEAM_ENEMY
 	enemyTeam	TEAM_PLAYER
-	class		CLASS_STORMTROOPER
+	class		CLASS_MERC
 	height		64
 	crouchheight 48
 	walkSpeed	51

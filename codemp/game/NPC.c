@@ -1694,6 +1694,20 @@ void NPC_RunBehavior( int team, int bState )
 					return;
 				}
 				return;
+			case CLASS_MERC:
+				Commando2_SelectBestWeapon();
+
+				if ( NPCS.NPC->client->ps.weapon == WP_DISRUPTOR && (NPCS.NPCInfo->scriptFlags & SCF_ALT_FIRE) )
+				{//a sniper
+					NPC_BehaviorSet_Sniper( bState );
+					return;
+				}
+				else
+				{
+					NPC_BehaviorSet_Stormtrooper( bState );
+					return;
+				}
+				return;
 			case CLASS_SABOTEUR:
 			case CLASS_HAZARD_TROOPER:
 			case CLASS_REELO:

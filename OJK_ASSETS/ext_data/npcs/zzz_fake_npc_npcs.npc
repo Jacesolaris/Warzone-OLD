@@ -37,7 +37,7 @@ lannik_racto
 	rank		crewman
 	playerTeam	TEAM_ENEMY
 	enemyTeam	TEAM_PLAYER
-	class		CLASS_STORMTROOPER
+	class		CLASS_MERC
 	height		64
 	crouchheight 48
 	walkSpeed	51
@@ -525,7 +525,7 @@ mercenary
 	rank		crewman
 	playerTeam	TEAM_ENEMY
 	enemyTeam	TEAM_PLAYER
-	class		CLASS_STORMTROOPER
+	class		CLASS_MERC
 	height		64
 	crouchheight 48
 	walkSpeed	51

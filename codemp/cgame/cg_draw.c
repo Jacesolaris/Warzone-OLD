@@ -3888,6 +3888,7 @@ void CG_DrawEnemyStatus( void )
 			case CLASS_DESANN:
 			case CLASS_BOBAFETT:
 			case CLASS_COMMANDO:
+			case CLASS_MERC:
 			case CLASS_BARTENDER:
 			case CLASS_BESPIN_COP:
 			case CLASS_GALAK:
@@ -4154,6 +4155,18 @@ void CG_DrawEnemyStatus( void )
 			tclr2[0] = 0.525f;
 			tclr2[1] = 0.525f;
 			tclr2[2] = 1.0f;
+			tclr2[3] = 1.0f;
+			break;
+		case CLASS_MERC:
+			str2 = va("< Mercenary >");
+			tclr[0] = 1.0f;
+			tclr[1] = 0.125f;
+			tclr[2] = 0.125f;
+			tclr[3] = 1.0f;
+
+			tclr2[0] = 1.0f;
+			tclr2[1] = 0.125f;
+			tclr2[2] = 0.125f;
 			tclr2[3] = 1.0f;
 			break;
 		case CLASS_STORMTROOPER:
@@ -7862,6 +7875,18 @@ void CG_DrawNPCNames( void )
 				tclr2[0] = 0.525f;
 				tclr2[1] = 0.525f;
 				tclr2[2] = 1.0f;
+				tclr2[3] = 1.0f;
+				break;
+			case CLASS_MERC:
+				str2 = va("< Mercenary >");
+				tclr[0] = 1.0f;
+				tclr[1] = 0.125f;
+				tclr[2] = 0.125f;
+				tclr[3] = 1.0f;
+
+				tclr2[0] = 1.0f;
+				tclr2[1] = 0.125f;
+				tclr2[2] = 0.125f;
 				tclr2[3] = 1.0f;
 				break;
 			case CLASS_STORMTROOPER:
