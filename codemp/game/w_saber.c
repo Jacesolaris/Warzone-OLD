@@ -2515,6 +2515,111 @@ qboolean G_BlockIsParry(gentity_t *self, gentity_t *attacker, vec3_t hitLoc)
 //[/SaberSys]
 
 //[SaberSys]
+extern qboolean BG_SaberInNonIdleDamageMove(playerState_t *ps, int AnimIndex);
+extern qboolean BG_SuperBreakWinAnim(int anim);
+extern qboolean OJP_UsingDualSaberAsPrimary(playerState_t *ps);
+int G_SaberDoBlockBox(gentity_t *self, gentity_t *atk, qboolean checkBBoxBlock, vec3_t point, int rSaberNum, int rBladeNum)
+{//similar to WP_SaberCanBlock but without the same sorts of restrictions.
+	vec3_t bodyMin, bodyMax, closestBodyPoint, dirToBody, saberMoveDir;
+	
+	if (!self || !self->client)
+	{
+		return 0;
+	}
+
+	if (BG_InGrappleMove(self->client->ps.torsoAnim))
+	{//you can't block while doing a melee move.
+		return 0;
+	}
+
+	if (!self->client->ps.saberEntityNum || self->client->ps.saberInFlight)
+	{//our saber is currently dropped or in flight.
+		if (!OJP_UsingDualSaberAsPrimary(&self->client->ps))
+		{//don't have a saber to block with
+			return 0;
+		}
+	}
+
+	if (BG_SabersOff(&self->client->ps))
+	{
+		return 0;
+	}
+
+	if (self->client->ps.weapon != WP_SABER)
+	{
+		return 0;
+	}
+
+	if (self->client->ps.weaponstate == WEAPON_RAISING)
+	{
+		return 0;
+	}
+
+	if (self->client->ps.forceHandExtend != HANDEXTEND_NONE)
+	{//can't block while using forceHandExtend
+
+		return 0;
+	}
+
+	if (PM_InKnockDown(&self->client->ps))
+	{//can't block while knocked down or getting up from knockdown.
+		return 0;
+	}
+
+	if (atk && atk->client && atk->client->ps.weapon == WP_SABER)
+	{//player is attacking with saber
+		if (!BG_SaberInNonIdleDamageMove(&atk->client->ps, atk->localAnimIndex))
+		{//saber attacker isn't in a real damaging move
+			return 0;
+		}
+
+	}
+
+	if (!checkBBoxBlock)
+	{//don't do the additional checkBBoxBlock checks.  As such, we're safe to saber block.
+		return 1;
+	}
+
+	if (atk && atk->client && atk->client->ps.weapon == WP_SABER && BG_SuperBreakWinAnim(atk->client->ps.torsoAnim))
+	{//never box block saberlock super break wins, it looks weird.
+		return 0;
+	}
+
+	if (VectorCompare(point, vec3_origin))
+	{//no hit position given, can't do blade movement check.
+		return 0;
+	}
+
+	if (atk && atk->client && rSaberNum != -1 && rBladeNum != -1)
+	{//player attacker, if they are here they're using their saber to attack.  
+		//Check to make sure that we only block the blade if it is moving towards the player
+
+		//create a line seqment thru the center of the player.
+		VectorCopy(self->client->ps.origin, bodyMin);
+		VectorCopy(self->client->ps.origin, bodyMax);
+
+		bodyMax[2] += self->r.maxs[2];
+		bodyMin[2] -= self->r.mins[2];
+
+		//find dirToBody
+		G_FindClosestPointOnLineSegment(bodyMin, bodyMax, point, closestBodyPoint);
+		VectorSubtract(closestBodyPoint, point, dirToBody);
+
+		//find current saber movement direction of the attacker
+		VectorSubtract(atk->client->saber[rSaberNum].blade[rBladeNum].muzzlePoint,
+			atk->client->saber[rSaberNum].blade[rBladeNum].muzzlePointOld, saberMoveDir);
+
+		if (DotProduct(dirToBody, saberMoveDir) < 0)
+		{//saber is moving away from defender
+			return 0;
+		}
+	}
+
+	return 1;
+}
+//[/SaberSys]
+
+//[SaberSys]
 //Copies all the important data from one trace_t to another.  Please note that this doesn't transfer ALL
 //of the trace_t data.
 void TraceCopy(trace_t *a, trace_t *b)
@@ -3614,154 +3719,6 @@ qboolean OJP_UsingDualSaberAsPrimary(playerState_t *ps)
 	}
 
 	return qfalse;
-}
-extern qboolean BG_SuperBreakWinAnim( int anim );
-
-extern qboolean BG_SaberInNonIdleDamageMove(playerState_t *ps, int AnimIndex);
-extern qboolean BG_SuperBreakWinAnim(int anim);
-extern qboolean QINLINE WalkCheck(gentity_t * self);
-int G_SaberDoBlockBox(gentity_t *self, gentity_t *atk, qboolean checkBBoxBlock, vec3_t point, int rSaberNum, int rBladeNum)
-{//similar to WP_SaberCanBlock but without the same sorts of restrictions.
-	vec3_t bodyMin, bodyMax, closestBodyPoint, dirToBody, saberMoveDir;
-
-	if (!self || !self->client || !atk)
-	{
-		return 0;
-	}
-
-	if (atk && atk->s.eType == ET_MISSILE //is a missile
-		&& (atk->s.weapon == WP_ROCKET_LAUNCHER ||
-		atk->s.weapon == WP_THERMAL ||
-		atk->s.weapon == WP_TRIP_MINE ||
-		atk->s.weapon == WP_DET_PACK ||
-		atk->methodOfDeath == MOD_REPEATER_ALT ||
-		atk->methodOfDeath == MOD_FLECHETTE_ALT_SPLASH ||
-		atk->methodOfDeath == MOD_CONC ||
-		atk->methodOfDeath == MOD_CONC_ALT ||
-		atk->methodOfDeath == MOD_BRYAR_PISTOL_ALT))
-	{//can't block this stuff with a saber
-		return 0;
-	}
-
-	if (BG_InGrappleMove(self->client->ps.torsoAnim))
-	{//you can't block while doing a melee move.
-		return 0;
-	}
-
-	if (BG_KickMove(self->client->ps.saberMove))
-	{
-		return 0;
-	}
-
-	if (BG_SabersOff(&self->client->ps))
-	{
-		return 0;
-	}
-
-	if (self->client->ps.weapon != WP_SABER)
-	{
-		return 0;
-	}
-
-	if (self->client->ps.weaponstate == WEAPON_RAISING)
-	{
-		return 0;
-	}
-
-	if (self->client->ps.forceHandExtend != HANDEXTEND_NONE)
-	{
-		if (atk && atk->client && atk->client->ps.weapon == WP_SABER)
-		{//can't block while using forceHandExtend except if their using a saber
-			return 1;
-		}
-		else
-		{//can't block while using forceHandExtend
-
-			return 0;
-		}
-	}
-	if (!WalkCheck(self) && self->client->ps.fd.forcePowersActive & (1 << FP_SPEED))
-	{//can't block while running in force speed.
-		return 0;
-	}
-
-	if (PM_InKnockDown(&self->client->ps))
-	{//can't block while knocked down or getting up from knockdown.
-		return 0;
-	}
-
-	if (atk && atk->client && atk->client->ps.weapon == WP_SABER)
-	{//player is attacking with saber
-		if (!BG_SaberInNonIdleDamageMove(&atk->client->ps, atk->localAnimIndex))
-		{//saber attacker isn't in a real damaging move
-			return 0;
-		}
-
-		if ((atk->client->ps.saberMove == LS_A_LUNGE
-			|| atk->client->ps.saberMove == LS_SPINATTACK
-			|| atk->client->ps.saberMove == LS_SPINATTACK_DUAL))
-		{//saber attacker, we can't block lunge attacks. 
-			return 0;
-		}
-
-		if (!WalkCheck(self)
-			&& (!InFront(atk->client->ps.origin, self->client->ps.origin, self->client->ps.viewangles, -.7f)
-			|| BG_SaberInAttack(self->client->ps.saberMove)
-			|| PM_SaberInStart(self->client->ps.saberMove)))
-		{//can't block saber swings while running and hit from behind or in swing.
-			if (self->NPC)
-			{
-				return 1;
-			}
-			else
-			{
-				return 0;
-			}
-		}
-
-	}
-
-	if (!checkBBoxBlock)
-	{//don't do the additional checkBBoxBlock checks.  As such, we're safe to saber block.
-		return 1;
-	}
-
-	if (atk && atk->client && atk->client->ps.weapon == WP_SABER && BG_SuperBreakWinAnim(atk->client->ps.torsoAnim))
-	{//never box block saberlock super break wins, it looks weird.
-		return 0;
-	}
-
-	if (VectorCompare(point, vec3_origin))
-	{//no hit position given, can't do blade movement check.
-		return 0;
-	}
-
-	if (atk && atk->client && rSaberNum != -1 && rBladeNum != -1)
-	{//player attacker, if they are here they're using their saber to attack.  
-		//Check to make sure that we only block the blade if it is moving towards the player
-
-		//create a line seqment thru the center of the player.
-		VectorCopy(self->client->ps.origin, bodyMin);
-		VectorCopy(self->client->ps.origin, bodyMax);
-
-		bodyMax[2] += self->r.maxs[2];
-		bodyMin[2] -= self->r.mins[2];
-
-		//find dirToBody
-		G_FindClosestPointOnLineSegment(bodyMin, bodyMax, point, closestBodyPoint);
-		VectorSubtract(closestBodyPoint, point, dirToBody);
-
-		//find current saber movement direction of the attacker
-		VectorSubtract(atk->client->saber[rSaberNum].blade[rBladeNum].muzzlePoint,
-			atk->client->saber[rSaberNum].blade[rBladeNum].muzzlePointOld, saberMoveDir);
-
-		if (DotProduct(dirToBody, saberMoveDir) < 0)
-		{//saber is moving away from defender
-			return 0;
-		}
-	}
-
-	return 1;
 }
 
 //[SaberSys]
