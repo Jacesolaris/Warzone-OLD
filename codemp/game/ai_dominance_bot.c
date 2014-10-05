@@ -32,8 +32,63 @@ extern void NPC_Begin(gentity_t *ent);
 extern void NPC_ExecuteBState(gentity_t *self);
 extern void SetNPCGlobals(gentity_t *ent);
 extern void NPC_Precache ( gentity_t *spawner );
+extern char *G_ValidateUserinfo( const char *userinfo );
+
+extern void Load_NPC_Names ( void );
+extern void SelectNPCNameFromList( gentity_t *NPC );
+extern char *Get_NPC_Name ( int NAME_ID );
 
 //#define __FAKE_NPC_LIGHTNING_SPAM__
+
+void DOM_SetFakeNPCName(gentity_t *ent)
+{// UQ1: Find their name type to send to an id to the client for names...
+	if (ent->s.NPC_NAME_ID > 0) return;
+
+	// Load names on first check...
+	Load_NPC_Names();
+
+	switch( ent->s.NPC_class )
+	{
+	case CLASS_STORMTROOPER:
+		ent->s.NPC_NAME_ID = irand(100, 999);
+		strcpy(ent->client->pers.netname, va("TK-%i", ent->s.NPC_NAME_ID));
+		break;
+	case CLASS_SWAMPTROOPER:
+		ent->s.NPC_NAME_ID = irand(100, 999);
+		strcpy(ent->client->pers.netname, va("TS-%i", ent->s.NPC_NAME_ID));
+		break;
+	case CLASS_IMPWORKER:
+		ent->s.NPC_NAME_ID = irand(100, 999);
+		strcpy(ent->client->pers.netname, va("IW-%i", ent->s.NPC_NAME_ID));
+		break;
+	case CLASS_SHADOWTROOPER:
+		ent->s.NPC_NAME_ID = irand(100, 999);
+		strcpy(ent->client->pers.netname, va("ST-%i", ent->s.NPC_NAME_ID));
+		break;
+	default:
+		SelectNPCNameFromList(ent);
+		strcpy(ent->client->pers.netname, Get_NPC_Name(ent->s.NPC_NAME_ID));
+		break;
+	}
+
+	{
+		char *s, userinfo[MAX_INFO_STRING];
+
+		trap->GetUserinfo( ent->s.number, userinfo, sizeof( userinfo ) );
+
+		// check for malformed or illegal info strings
+		s = G_ValidateUserinfo( userinfo );
+		if ( s && *s ) {
+			return;
+		}
+
+		Info_SetValueForKey( userinfo, "name", ent->client->pers.netname );
+
+		//trap->Print("NPC %i given name %s.\n", ent->s.number, ent->client->pers.netname);
+
+		ClientUserinfoChanged( ent->s.number );
+	}
+}
 
 void DOM_InitFakeNPC(gentity_t *bot)
 {
@@ -314,6 +369,8 @@ void DOM_StandardBotAI2(bot_state_t *bs, float thinktime)
 
 	if (!bot->NPC)
 		DOM_InitFakeNPC(bot);
+
+	DOM_SetFakeNPCName(bot); // Make sure they have a name...
 
 	SetNPCGlobals(bot);
 

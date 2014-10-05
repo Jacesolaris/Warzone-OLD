@@ -93,6 +93,11 @@ name_list_t NPC_NAME_LIST[8000];
 
 int NUM_HUMAN_NAMES = 0;
 
+char *Get_NPC_Name ( int NAME_ID )
+{
+	return NPC_NAME_LIST[NAME_ID].HumanNames;
+}
+
 /* */
 void
 Load_NPC_Names ( void )
@@ -1459,6 +1464,7 @@ void NPC_Begin (gentity_t *ent)
 		ent->client->ps.fd.forcePower = ent->client->ps.fd.forcePowerMax;
 	}
 
+	if (ent->s.eType == ET_NPC && !(ent->s.eFlags & EF_FAKE_NPC_BOT))
 	{// UQ1: Find their name type to send to an id to the client for names...
 		ent->s.NPC_NAME_ID = 0; // Init the type...
 
@@ -1503,6 +1509,10 @@ void NPC_Begin (gentity_t *ent)
 		}
 
 		//trap->Print("NPC %i given name %s.\n", ent->s.number, NPC_NAMES[ent->s.NPC_NAME_ID]);
+	}
+	else
+	{
+		ent->s.NPC_NAME_ID = 0;
 	}
 }
 

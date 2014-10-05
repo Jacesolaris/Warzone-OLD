@@ -77,7 +77,7 @@ qboolean Jedi_WaitingAmbush( gentity_t *self );
 
 extern int bg_parryDebounce[];
 
-static int	jediSpeechDebounceTime[TEAM_NUM_TEAMS];//used to stop several jedi from speaking all at once
+int	jediSpeechDebounceTime[TEAM_NUM_TEAMS];//used to stop several jedi from speaking all at once
 //Local state enums
 enum
 {
@@ -1447,6 +1447,8 @@ static void Jedi_CheckDecreaseSaberAnimLevel( void )
 extern void ForceDrain( gentity_t *self );
 static void Jedi_CombatDistance( int enemy_dist )
 {//FIXME: for many of these checks, what we really want is horizontal distance to enemy
+	if (!NPCS.NPC->enemy) return;
+
 	if ( NPCS.NPC->client->ps.fd.forcePowersActive&(1<<FP_GRIP) &&
 		NPCS.NPC->client->ps.fd.forcePowerLevel[FP_GRIP] > FORCE_LEVEL_1 )
 	{//when gripping, don't move
@@ -1700,7 +1702,8 @@ static void Jedi_CombatDistance( int enemy_dist )
 		TIMER_Set( NPCS.NPC, "strafeLeft", -1 );
 		TIMER_Set( NPCS.NPC, "strafeRight", -1 );
 	}
-	else if ( NPCS.NPC->enemy->client
+	else if ( NPCS.NPC->enemy
+		&& NPCS.NPC->enemy->client
 		&& (NPCS.NPC->enemy->s.weapon == WP_SABER || NPCS.NPC->enemy->s.weapon == WP_MELEE)
 		&& NPCS.NPC->enemy->client->ps.saberLockTime > level.time
 		&& NPCS.NPC->client->ps.saberLockTime < level.time )
@@ -5519,12 +5522,18 @@ static void Jedi_Combat( void )
 	}
 	//else, we can see him or we can't track him at all
 
+	if (!NPCS.NPC->enemy) return;
+
 	//every few seconds, decide if we should we advance or retreat?
 	Jedi_CombatTimersUpdate( enemy_dist );
+
+	if (!NPCS.NPC->enemy) return;
 
 	//We call this even if lost enemy to keep him moving and to update the taunting behavior
 	//maintain a distance from enemy appropriate for our aggression level
 	Jedi_CombatDistance( enemy_dist );
+
+	if (!NPCS.NPC->enemy) return;
 
 	if ( !enemy_lost )
 	{

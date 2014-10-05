@@ -2095,6 +2095,8 @@ char *G_ValidateUserinfo( const char *userinfo ) {
 	return NULL;
 }
 
+extern void DOM_SetFakeNPCName(gentity_t *ent);
+
 qboolean ClientUserinfoChanged( int clientNum ) {
 	gentity_t *ent = g_entities + clientNum;
 	gclient_t *client = ent->client;
@@ -2134,11 +2136,23 @@ qboolean ClientUserinfoChanged( int clientNum ) {
 	else				client->pers.predictItemPickup = qtrue;
 
 	// set name
-	Q_strncpyz( oldname, client->pers.netname, sizeof( oldname ) );
-	s = Info_ValueForKey( userinfo, "name" );
-	ClientCleanName( s, client->pers.netname, sizeof( client->pers.netname ) );
-	Q_strncpyz( client->pers.netname_nocolor, client->pers.netname, sizeof( client->pers.netname_nocolor ) );
-	Q_StripColor( client->pers.netname_nocolor );
+
+	if (ent->s.eFlags & EF_FAKE_NPC_BOT)
+	{
+		s = Info_ValueForKey( userinfo, "name" );
+		ClientCleanName( s, oldname, sizeof( oldname ) );
+		ClientCleanName( client->pers.netname, client->pers.netname_nocolor, sizeof( client->pers.netname_nocolor ) );
+		Q_strncpyz( client->pers.netname_nocolor, client->pers.netname, sizeof( client->pers.netname_nocolor ) );
+		Q_StripColor( client->pers.netname_nocolor );
+	}
+	else
+	{
+		Q_strncpyz( oldname, client->pers.netname, sizeof( oldname ) );
+		s = Info_ValueForKey( userinfo, "name" );
+		ClientCleanName( s, client->pers.netname, sizeof( client->pers.netname ) );
+		Q_strncpyz( client->pers.netname_nocolor, client->pers.netname, sizeof( client->pers.netname_nocolor ) );
+		Q_StripColor( client->pers.netname_nocolor );
+	}
 
 	if ( client->sess.sessionTeam == TEAM_SPECTATOR && client->sess.spectatorState == SPECTATOR_SCOREBOARD ) {
 		Q_strncpyz( client->pers.netname, "scoreboard", sizeof( client->pers.netname ) );
@@ -2146,19 +2160,37 @@ qboolean ClientUserinfoChanged( int clientNum ) {
 	}
 
 	if ( client->pers.connected == CON_CONNECTED && strcmp( oldname, client->pers.netname ) ) {
-		if ( client->pers.netnameTime > level.time ) {
-			trap->SendServerCommand( clientNum, va( "print \"%s\n\"", G_GetStringEdString( "MP_SVGAME", "NONAMECHANGE" ) ) );
-
-			Info_SetValueForKey( userinfo, "name", oldname );
-			trap->SetUserinfo( clientNum, userinfo );
-			Q_strncpyz( client->pers.netname, oldname, sizeof( client->pers.netname ) );
-			Q_strncpyz( client->pers.netname_nocolor, oldname, sizeof( client->pers.netname_nocolor ) );
+		if (ent->s.eFlags & EF_FAKE_NPC_BOT)
+		{
+			s = Info_ValueForKey( userinfo, "name" );
+			ClientCleanName( s, oldname, sizeof( oldname ) );
+			ClientCleanName( client->pers.netname, client->pers.netname_nocolor, sizeof( client->pers.netname_nocolor ) );
+			Q_strncpyz( client->pers.netname_nocolor, client->pers.netname, sizeof( client->pers.netname_nocolor ) );
 			Q_StripColor( client->pers.netname_nocolor );
-		}
-		else {
+
+			Info_SetValueForKey( userinfo, "name", client->pers.netname );
+			trap->SetUserinfo( clientNum, userinfo );
+
 			trap->SendServerCommand( -1, va( "print \"%s"S_COLOR_WHITE" %s %s\n\"", oldname, G_GetStringEdString( "MP_SVGAME", "PLRENAME" ), client->pers.netname ) );
 			G_LogPrintf( "ClientRename: %i [%s] (%s) \"%s^7\" -> \"%s^7\"\n", clientNum, ent->client->sess.IP, ent->client->pers.guid, oldname, ent->client->pers.netname );
 			client->pers.netnameTime = level.time + 5000;
+		}
+		else
+		{
+			if ( client->pers.netnameTime > level.time ) {
+				trap->SendServerCommand( clientNum, va( "print \"%s\n\"", G_GetStringEdString( "MP_SVGAME", "NONAMECHANGE" ) ) );
+
+				Info_SetValueForKey( userinfo, "name", oldname );
+				trap->SetUserinfo( clientNum, userinfo );
+				Q_strncpyz( client->pers.netname, oldname, sizeof( client->pers.netname ) );
+				Q_strncpyz( client->pers.netname_nocolor, oldname, sizeof( client->pers.netname_nocolor ) );
+				Q_StripColor( client->pers.netname_nocolor );
+			}
+			else {
+				trap->SendServerCommand( -1, va( "print \"%s"S_COLOR_WHITE" %s %s\n\"", oldname, G_GetStringEdString( "MP_SVGAME", "PLRENAME" ), client->pers.netname ) );
+				G_LogPrintf( "ClientRename: %i [%s] (%s) \"%s^7\" -> \"%s^7\"\n", clientNum, ent->client->sess.IP, ent->client->pers.guid, oldname, ent->client->pers.netname );
+				client->pers.netnameTime = level.time + 5000;
+			}
 		}
 	}
 
@@ -2487,6 +2519,10 @@ char *ClientConnect( int clientNum, qboolean firstTime, qboolean isBot ) {
 
 	ent->s.number = clientNum;
 	ent->classname = "connecting";
+
+	{// Free any NPC data they have...
+		ent->s.NPC_NAME_ID = 0; // Init the type...
+	}
 
 	trap->GetUserinfo( clientNum, userinfo, sizeof( userinfo ) );
 
@@ -4153,6 +4189,10 @@ void ClientDisconnect( int clientNum ) {
 	gentity_t	*ent;
 	gentity_t	*tent;
 	int			i;
+	
+	{// Free any NPC data they have...
+		ent->s.NPC_NAME_ID = 0; // Init the type...
+	}
 
 	// cleanup if we are kicking a bot that
 	// hasn't spawned yet

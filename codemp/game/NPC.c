@@ -4188,7 +4188,7 @@ void NPC_SetNewEnemyGoalAndPath()
 	{
 		//G_Printf("NPC Waypointing Debug: NPC %i failed to find a goal waypoint.", NPC->s.number);
 		
-		trap->Print("Unable to find goal waypoint.\n");
+		//trap->Print("Unable to find goal waypoint.\n");
 
 		// Delay before next route creation...
 		NPC->wpSeenTime = level.time + 1000;//30000;
@@ -4201,6 +4201,9 @@ void NPC_SetNewEnemyGoalAndPath()
 	// Delay before giving up on this new waypoint/route...
 	NPC->wpTravelTime = level.time + 10000;
 }
+
+extern int jediSpeechDebounceTime[TEAM_NUM_TEAMS];//used to stop several jedi AI from speaking all at once
+extern int groupSpeechDebounceTime[TEAM_NUM_TEAMS];//used to stop several group AI from speaking all at once
 
 qboolean NPC_FollowEnemyRoute( void ) 
 {// Quick method of following bot routes...
@@ -4245,6 +4248,24 @@ qboolean NPC_FollowEnemyRoute( void )
 	{// We hit a problem in route, or don't have one yet.. Find a new goal and path...
 		NPC_ClearPathData(NPC);
 		NPC_SetNewEnemyGoalAndPath();
+		G_ClearEnemy(NPC); // UQ1: Give up...
+
+		if (NPC_IsJedi(NPCS.NPC))
+		{
+			if ( !Q_irand( 0, 10 ) && NPCS.NPCInfo->blockedSpeechDebounceTime < level.time && jediSpeechDebounceTime[NPCS.NPC->client->playerTeam] < level.time )
+			{
+				G_AddVoiceEvent( NPCS.NPC, Q_irand( EV_JLOST1, EV_JLOST3 ), 10000 );
+				jediSpeechDebounceTime[NPCS.NPC->client->playerTeam] = NPCS.NPCInfo->blockedSpeechDebounceTime = level.time + 10000;
+			}
+		}
+		else
+		{
+			if ( !Q_irand( 0, 10 ) && NPCS.NPCInfo->blockedSpeechDebounceTime < level.time && groupSpeechDebounceTime[NPCS.NPC->client->playerTeam] < level.time )
+			{
+				G_AddVoiceEvent( NPCS.NPC, Q_irand( EV_GIVEUP1, EV_GIVEUP4 ), 10000 );
+				groupSpeechDebounceTime[NPCS.NPC->client->playerTeam] = NPCS.NPCInfo->blockedSpeechDebounceTime = level.time + 10000;
+			}
+		}
 
 		if (!(NPC->wpCurrent < 0 || NPC->wpCurrent >= gWPNum || NPC->longTermGoal < 0 || NPC->longTermGoal >= gWPNum))
 		{
