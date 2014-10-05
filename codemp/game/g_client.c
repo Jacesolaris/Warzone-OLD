@@ -4190,10 +4190,6 @@ void ClientDisconnect( int clientNum ) {
 	gentity_t	*tent;
 	int			i;
 	
-	{// Free any NPC data they have...
-		ent->s.NPC_NAME_ID = 0; // Init the type...
-	}
-
 	// cleanup if we are kicking a bot that
 	// hasn't spawned yet
 	G_RemoveQueuedBotBegin( clientNum );
@@ -4201,6 +4197,10 @@ void ClientDisconnect( int clientNum ) {
 	ent = g_entities + clientNum;
 	if ( !ent->client || ent->client->pers.connected == CON_DISCONNECTED ) {
 		return;
+	}
+
+	{// Free any NPC data they have...
+		ent->s.NPC_NAME_ID = 0; // Init the type...
 	}
 
 	i = 0;

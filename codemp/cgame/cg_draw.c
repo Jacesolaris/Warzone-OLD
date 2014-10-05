@@ -4343,16 +4343,46 @@ void CG_DrawEnemyStatus( void )
 		}
 
 		str1 = ci->cleanname;
-		str2 = va("< Player >"); // UQ1: FIXME - Selected Player Class Name...
-		tclr[0] = 0.125f;
-		tclr[1] = 0.325f;
-		tclr[2] = 0.7f;
-		tclr[3] = 1.0f;
+		
+		if (cgs.clientinfo[currentCrosshairEntity].team == TEAM_RED)
+		{
+			str2 = va("< Imperial >");
+			tclr[0] = 0.5f;
+			tclr[1] = 0.5f;
+			tclr[2] = 0.125f;
+			tclr[3] = 1.0f;
 
-		tclr2[0] = 0.125f;
-		tclr2[1] = 0.325f;
-		tclr2[2] = 0.7f;
-		tclr2[3] = 1.0f;
+			tclr2[0] = 0.5f;
+			tclr2[1] = 0.5f;
+			tclr2[2] = 0.125f;
+			tclr2[3] = 1.0f;
+		}
+		else if (cgs.clientinfo[currentCrosshairEntity].team == TEAM_BLUE)
+		{
+			str2 = va("< Rebel >");
+			tclr[0] = 0.125f;
+			tclr[1] = 0.125f;
+			tclr[2] = 0.7f;
+			tclr[3] = 1.0f;
+
+			tclr2[0] = 0.125f;
+			tclr2[1] = 0.125f;
+			tclr2[2] = 0.7f;
+			tclr2[3] = 1.0f;
+		}
+		else
+		{
+			str2 = va("< Player >");
+			tclr[0] = 0.7f;
+			tclr[1] = 0.7f;
+			tclr[2] = 0.125f;
+			tclr[3] = 1.0f;
+
+			tclr2[0] = 0.7f;
+			tclr2[1] = 0.7f;
+			tclr2[2] = 0.125f;
+			tclr2[3] = 1.0f;
+		}
 	}
 	else
 	{
@@ -7606,19 +7636,52 @@ void CG_DrawNPCNames( void )
 		if (cent->cloaked)
 			continue;
 
-		if (cent->currentState.eType == ET_PLAYER && !(cent->currentState.eFlags & EF_FAKE_NPC_BOT))
-		{
-			str2 = va("< Player >"); // UQ1: FIXME - Add class names when we have them!
-			tclr[0] = 0.125f;
-			tclr[1] = 0.325f;
-			tclr[2] = 0.7f;
-			tclr[3] = 1.0f;
+		if (cent->currentState.eType == ET_PLAYER && cgs.clientinfo[i].team == TEAM_SPECTATOR)
+			continue;
 
-			tclr2[0] = 0.125f;
-			tclr2[1] = 0.325f;
-			tclr2[2] = 0.7f;
-			tclr2[3] = 1.0f;
-			str1 = cgs.clientinfo[ cent->currentState.number ].name;
+		if (cent->currentState.eType == ET_PLAYER)
+		{
+			if (cgs.clientinfo[i].team == TEAM_RED)
+			{
+				str2 = va("< Imperial >");
+				tclr[0] = 0.5f;
+				tclr[1] = 0.5f;
+				tclr[2] = 0.125f;
+				tclr[3] = 1.0f;
+
+				tclr2[0] = 0.5f;
+				tclr2[1] = 0.5f;
+				tclr2[2] = 0.125f;
+				tclr2[3] = 1.0f;
+			}
+			else if (cgs.clientinfo[i].team == TEAM_BLUE)
+			{
+				str2 = va("< Rebel >");
+				tclr[0] = 0.125f;
+				tclr[1] = 0.125f;
+				tclr[2] = 0.7f;
+				tclr[3] = 1.0f;
+
+				tclr2[0] = 0.125f;
+				tclr2[1] = 0.125f;
+				tclr2[2] = 0.7f;
+				tclr2[3] = 1.0f;
+			}
+			else
+			{
+				str2 = va("< Player >");
+				tclr[0] = 0.7f;
+				tclr[1] = 0.7f;
+				tclr[2] = 0.125f;
+				tclr[3] = 1.0f;
+
+				tclr2[0] = 0.7f;
+				tclr2[1] = 0.7f;
+				tclr2[2] = 0.125f;
+				tclr2[3] = 1.0f;
+			}
+
+			str1 = cgs.clientinfo[ i ].cleanname;
 		}
 		else
 		{
