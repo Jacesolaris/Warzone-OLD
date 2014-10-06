@@ -10405,6 +10405,7 @@ static void CG_Draw2D( void ) {
 			CG_DrawAmmoWarning();
 
 			//CG_DrawCrosshairNames(); // UQ1: Now use NPC style display of names...
+			CG_ScanForCrosshairEntity(); // UQ1: ADDED because of ^^^ to still show the crosshair...
 
 			if (cg_drawStatus.integer)
 			{
