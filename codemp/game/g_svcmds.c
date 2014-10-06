@@ -315,6 +315,9 @@ void	Svcmd_EntityList_f (void) {
 		case ET_MOVER:
 			trap->Print("ET_MOVER            ");
 			break;
+		case ET_MOVER_MARKER:
+			trap->Print("ET_MOVER_MARKER     ");
+			break;
 		case ET_BEAM:
 			trap->Print("ET_BEAM             ");
 			break;

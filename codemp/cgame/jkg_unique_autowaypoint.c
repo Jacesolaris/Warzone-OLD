@@ -1124,9 +1124,75 @@ HeightDistance ( vec3_t v1, vec3_t v2 )
 	return ( VectorLength( dir) );
 }
 
+
+qboolean	MOVER_LIST_GENERATED = qfalse;
+vec3_t		MOVER_LIST[1024];
+vec3_t		MOVER_LIST_TOP[1024];
+int			MOVER_LIST_NUM = 0;
+
+void GenerateMoverList ( void )
+{
+	int i = 0;
+
+	if (MOVER_LIST_GENERATED) return;
+
+	trap->Print("Generating mover list.\n");
+
+	for (i = 0; i < MAX_GENTITIES; i++)
+	{
+		centity_t *cent = &cg_entities[i];
+		vec3_t mover_org;
+		trace_t tr;
+		vec3_t	newOrgDown;
+
+		if (!cent) continue;
+		if (cent->currentState.eType != ET_MOVER_MARKER) continue;
+		
+		VectorCopy(cent->currentState.origin, mover_org);
+		mover_org[2] += 128.0; // Look from up a little...
+
+		VectorCopy( mover_org, newOrgDown );
+		newOrgDown[2] = -64000.0f;
+
+		CG_Trace( &tr, mover_org, NULL, NULL, newOrgDown, cg.clientNum, MASK_PLAYERSOLID );
+
+		if ( tr.fraction < 1 )
+		{
+			VectorCopy( tr.endpos, mover_org );
+			mover_org[2]+=16.0;
+			VectorCopy(mover_org, MOVER_LIST[MOVER_LIST_NUM]);
+			VectorCopy(cent->currentState.origin2, MOVER_LIST_TOP[MOVER_LIST_NUM]);
+			MOVER_LIST_TOP[MOVER_LIST_NUM][2]+=128.0;
+			MOVER_LIST_NUM++;
+			trap->Print("Mover found at %f %f %f.\n", mover_org[0], mover_org[1], mover_org[2]);
+		}
+	}
+
+	trap->Print("There are %i movers.\n", MOVER_LIST_NUM);
+
+	MOVER_LIST_GENERATED = qtrue;
+}
+
+qboolean NearMoverEntityLocation( vec3_t org )
+{
+	int i = 0;
+
+	GenerateMoverList(); // init the mover list on first check...
+
+	for (i = 0; i < MOVER_LIST_NUM; i++)
+	{
+		if (VectorDistanceNoHeight(org, MOVER_LIST[i]) >= 68.0) continue;
+
+		return qtrue;
+	}
+
+	return qfalse;
+}
+
 qboolean
 NodeIsOnMover ( vec3_t org1 )
 {
+	/*
 	trace_t tr;
 	vec3_t	newOrg, newOrgDown;
 
@@ -1146,11 +1212,15 @@ NodeIsOnMover ( vec3_t org1 )
 		if (cg_entities[tr.entityNum].currentState.eType == ET_MOVER)
 			return ( qtrue );
 	}
+	*/
+	if (NearMoverEntityLocation(org1)) return qtrue;
 
+	/*
 	if ( tr.fraction == 1 )
 	{
 		return ( qfalse );
 	}
+	*/
 
 	return ( qfalse );
 }
@@ -2081,16 +2151,22 @@ qboolean AIMod_Check_Slope_Between ( vec3_t org1, vec3_t org2 ) {
 	vec3_t		boxMaxs = { 1, 1, 1 };
 	//vec3_t	boxMins= {-8, -8, -8}; // @fixme , tune this to be more smooth on delailed terrian (eg. railroad )
 	//vec3_t	boxMaxs= {8, 8, 8};
+	int		incrument;
 
 	if (org1[2] > org2[2])
 	{
-		VectorCopy(org1, orgA);
-		VectorCopy(org2, orgB);
+		VectorSet(orgA, org1[0], org1[1], org1[2]);
+		VectorSet(orgB, org2[0], org2[1], org2[2]);
 	}
 	else
 	{
-		VectorCopy(org2, orgA);
-		VectorCopy(org1, orgB);
+		VectorSet(orgB, org1[0], org1[1], org1[2]);
+		VectorSet(orgA, org2[0], org2[1], org2[2]);
+	}
+
+	if (NearMoverEntityLocation(orgA) || NearMoverEntityLocation(orgB))
+	{// Movers are always OK...
+		return qtrue;
 	}
 
 	VectorCopy(orgB, originalOrgB);
@@ -2102,17 +2178,20 @@ qboolean AIMod_Check_Slope_Between ( vec3_t org1, vec3_t org2 ) {
 
 	dist = VectorDistanceNoHeight(orgA, orgB);
 
-	for (j = dist/NUM_SLOPE_CHECKS; j < dist-((dist/NUM_SLOPE_CHECKS)+1.0); j+=dist/NUM_SLOPE_CHECKS)
+	incrument = dist/NUM_SLOPE_CHECKS;
+	if (incrument < 1) incrument = 1; // since j is an integer, set minimum incument to 1 to avoid endless loops...
+
+	for (j = incrument; j < dist-(incrument+1.0); j+=incrument)
 	{
 		if (org1[2] > org2[2])
 		{
-			VectorCopy(org1, orgA);
-			VectorCopy(org2, orgB);
+			VectorSet(orgA, org1[0], org1[1], org1[2]);
+			VectorSet(orgB, org2[0], org2[1], org2[2]);
 		}
 		else
 		{
-			VectorCopy(org2, orgA);
-			VectorCopy(org1, orgB);
+			VectorSet(orgB, org1[0], org1[1], org1[2]);
+			VectorSet(orgA, org2[0], org2[1], org2[2]);
 		}
 
 		orgA[2] += 18.0;
@@ -2123,8 +2202,8 @@ qboolean AIMod_Check_Slope_Between ( vec3_t org1, vec3_t org2 ) {
 		AngleVectors( testangles, forward, NULL, NULL );
 		VectorMA(orgA, j, forward, orgA);
 
-		//orgB[2] = -65000;
-		orgB[2] = -4000;
+		orgB[2] = -65000;
+		//orgB[2] = -4000;
 
 		CG_Trace( &tr, orgA, boxMins, boxMaxs, orgB, -1, MASK_PLAYERSOLID );
 
@@ -3129,7 +3208,7 @@ AIMOD_NODES_SaveNodes_Autowaypointed ( void )
 	
 	for ( i = 0; i < aw_num_nodes/*num_nodes*/; i++ )											//loop through all the nodes
 	{
-		trap->Print("Saved wp at %f %f %f.\n", nodes[i].origin[0], nodes[i].origin[1], nodes[i].origin[2]);
+		//trap->Print("Saved wp at %f %f %f.\n", nodes[i].origin[0], nodes[i].origin[1], nodes[i].origin[2]);
 
 		//write all the node data to the file
 		trap->FS_Write( &(nodes[i].origin), sizeof(vec3_t), f );
@@ -3294,6 +3373,22 @@ float GroundHeightAt ( vec3_t org )
 
 	if (tr.endpos[2] < -65000)
 		return -65536.0f;
+
+	// UQ1: MOVER TEST
+	if ( tr.fraction != 1 
+		&& tr.entityNum != ENTITYNUM_NONE 
+		&& tr.entityNum < ENTITYNUM_MAX_NORMAL )
+	{
+		if (NearMoverEntityLocation( tr.endpos ))
+		{
+			return tr.endpos[2];
+		}
+		
+		if (cg_entities[tr.entityNum].currentState.eType == ET_MOVER)
+		{// Hit a mover... Add waypoints at all of them!
+			return tr.endpos[2];
+		}
+	}
 	/*
 	if ( tr.fraction != 1 
 		&& tr.entityNum != ENTITYNUM_NONE 
@@ -3444,6 +3539,14 @@ float FloorHeightAt ( vec3_t org )
 		&& tr.entityNum != ENTITYNUM_NONE 
 		&& tr.entityNum < ENTITYNUM_MAX_NORMAL )
 	{
+		if (NearMoverEntityLocation( tr.endpos ))
+		{
+			// Hit a mover... Add waypoints at all of them!
+			aw_floor_trace_hit_mover = qtrue;
+			aw_floor_trace_hit_ent = tr.entityNum;
+			return tr.endpos[2];
+		}
+
 		if (cg_entities[tr.entityNum].currentState.eType == ET_MOVER 
 			|| cg_entities[tr.entityNum].currentState.eType == ET_PUSH_TRIGGER
 			|| cg_entities[tr.entityNum].currentState.eType == ET_PORTAL
@@ -5260,6 +5363,9 @@ void AIMod_AutoWaypoint_StandardMethod( void )
 				//
 				// Movers...
 				//
+				// UQ1: MOVER TEST
+#if 0
+				//if (org[2] >= -65536.0f && org[2] <= 65536.0f && (aw_floor_trace_hit_mover || NodeIsOnMover( org )))
 				if (org[2] >= -65536.0f && org[2] <= 65536.0f && (aw_floor_trace_hit_mover /*|| NodeIsOnMover( org )*/))
 				{// Need to generate waypoints to the top/bottom of the mover...
 					float temp_roof, temp_ground;
@@ -5317,6 +5423,7 @@ void AIMod_AutoWaypoint_StandardMethod( void )
 						}
 					}
 				}
+#endif
 
 				if (org[2] >= 65536.0f)
 				{// Marks a start-solid or on top of the sky... Skip...
@@ -5555,6 +5662,74 @@ void AIMod_AutoWaypoint_StandardMethod( void )
 
 		starty = orig_starty;
 		startx -= waypoint_scatter_distance;
+	}
+
+	//
+	// Add nodes for all movers...
+	//
+	GenerateMoverList(); // init the mover list on first check...
+
+	for (i = 0; i < MOVER_LIST_NUM; i++)
+	{
+		int count = 0;
+		float temp_roof, temp_ground;
+		vec3_t temp_org;
+
+		VectorCopy(MOVER_LIST[i], temp_org);
+
+		//temp_org[2] += waypoint_scatter_distance; // Start above the lift...
+		//temp_roof = RoofHeightAt(temp_org);
+		temp_roof = MOVER_LIST_TOP[i][2];
+
+		//VectorCopy(org, temp_org);
+		//temp_org[2] -= waypoint_scatter_distance*2; // Start below the lift...
+		//temp_ground = GroundHeightAt(temp_org);
+		temp_ground = MOVER_LIST[i][2];
+
+		//temp_org[2] += waypoint_scatter_distance;
+
+		while (temp_org[2] <= temp_roof)
+		{// Add waypoints all the way up!
+			arealist[areas][0] = temp_org[0];
+			arealist[areas][1] = temp_org[1];
+			arealist[areas][2] = temp_org[2];
+			areas++;
+
+			arealist[areas][0] = temp_org[0]+64.0;
+			arealist[areas][1] = temp_org[1];
+			arealist[areas][2] = temp_org[2];
+			areas++;
+
+			arealist[areas][0] = temp_org[0];
+			arealist[areas][1] = temp_org[1]+64.0;
+			arealist[areas][2] = temp_org[2];
+			areas++;
+
+			arealist[areas][0] = temp_org[0]+64.0;
+			arealist[areas][1] = temp_org[1]+64.0;
+			arealist[areas][2] = temp_org[2];
+			areas++;
+
+			arealist[areas][0] = temp_org[0]-64.0;
+			arealist[areas][1] = temp_org[1];
+			arealist[areas][2] = temp_org[2];
+			areas++;
+
+			arealist[areas][0] = temp_org[0];
+			arealist[areas][1] = temp_org[1]-64.0;
+			arealist[areas][2] = temp_org[2];
+			areas++;
+
+			arealist[areas][0] = temp_org[0]-64.0;
+			arealist[areas][1] = temp_org[1]-64.0;
+			arealist[areas][2] = temp_org[2];
+			areas++;
+
+			temp_org[2] += waypoint_scatter_distance;
+			count++;
+		}
+
+		trap->Print("Added %i waypoints for mover %i.\n", count, i);
 	}
 
 	/*
@@ -7311,321 +7486,6 @@ qboolean AIMod_AutoWaypoint_Cleaner_NodeHasLinkWithFewLinks ( int node )
 	return qfalse;
 }
 
-/* */
-void
-AIMod_AutoWaypoint_Cleaner_OLD ( qboolean quiet, qboolean null_links_only, qboolean relink_only )
-{
-	int i = 0;//, j = 0;//, k = 0, l = 0;//, m = 0;
-	int	total_calculations = 0;
-	int	calculations_complete = 0;
-	int	*areas;//[16550];
-//	int num_areas = 0;
-	float map_size;
-	vec3_t mapMins, mapMaxs;
-	float temp;
-//	float AREA_SEPERATION = DEFAULT_AREA_SEPERATION;
-//	int screen_update_timer = 0;
-//	int entities_start = 0;
-	int	node_disable_ticker = 0;
-	int	num_disabled_nodes = 0;
-	int num_nolink_nodes = 0;
-	int num_trigger_hurt_nodes = 0;
-	int num_skiped_nodes = 0;
-	int	node_disable_ratio = 2;
-//	qboolean	bad_surfaces_only = qfalse;
-	qboolean	noiceremove = qfalse;
-	qboolean	nowaterremove = qfalse;
-	int			skip = 0;
-//	int			skip_threshold = 2;
-	qboolean	reducecount = qtrue;
-	int			start_wp_total = 0;
-
-	aw_num_bad_surfaces = 0;
-
-	trap->Cvar_Set("jkg_waypoint_render", "0");
-	trap->UpdateScreen();
-	trap->UpdateScreen();
-	trap->UpdateScreen();
-
-	// UQ1: Check if we have an SSE CPU.. It can speed up our memory allocation by a lot!
-	if (!CPU_CHECKED)
-		UQ_Get_CPU_Info();
-
-	AIMod_AutoWaypoint_Init_Memory();
-	AIMod_AutoWaypoint_Optimize_Init_Memory();
-
-	if (number_of_nodes > 0)
-	{// UQ1: Init nodes list!
-		number_of_nodes = 0; 
-		optimized_number_of_nodes = 0;
-		
-		if (SSE_CPU)
-		{
-			sse_memset( nodes, 0, ((sizeof(node_t)+1)*MAX_NODES)/8 );
-			sse_memset( optimized_nodes, 0, ((sizeof(node_t)+1)*MAX_NODES)/8 );
-		}
-		else
-		{
-			memset( nodes, 0, ((sizeof(node_t)+1)*MAX_NODES) );
-			memset( optimized_nodes, 0, ((sizeof(node_t)+1)*MAX_NODES) );
-		}
-	}
-
-	AIMOD_NODES_LoadNodes();
-
-	if (number_of_nodes <= 0)
-	{
-		AIMod_AutoWaypoint_Free_Memory();
-		AIMod_AutoWaypoint_Optimize_Free_Memory();
-		return;
-	}
-
-	start_wp_total = number_of_nodes;
-
-	areas = (int *)malloc( (sizeof(int)+1)*512000 );
-
-	//AIMod_GetMapBounts( mapMins, mapMaxs );
-	AIMod_GetMapBounts();
-	VectorCopy(cg.mapcoordsMins, mapMins);
-	VectorCopy(cg.mapcoordsMaxs, mapMaxs);
-
-	if (mapMaxs[0] < mapMins[0])
-	{
-		temp = mapMins[0];
-		mapMins[0] = mapMaxs[0];
-		mapMaxs[0] = temp;
-	}
-
-	if (mapMaxs[1] < mapMins[1])
-	{
-		temp = mapMins[1];
-		mapMins[1] = mapMaxs[1];
-		mapMaxs[1] = temp;
-	}
-
-	if (mapMaxs[2] < mapMins[2])
-	{
-		temp = mapMins[2];
-		mapMins[2] = mapMaxs[2];
-		mapMaxs[2] = temp;
-	}
-
-	map_size = VectorDistance(mapMins, mapMaxs);
-
-	trap->Print( va( "^4*** ^3AUTO-WAYPOINTER^4: ^5Map bounds (^7%f %f %f ^5by ^7%f %f %f^5).\n", mapMins[0], mapMins[1], mapMins[2], mapMaxs[0], mapMaxs[1], mapMaxs[2]) );
-
-	trap->Print( va( "^4*** ^3AUTO-WAYPOINTER^4: ^5Cleaning waypoint list...\n") );
-	strcpy( task_string1, va("^7Cleaning waypoint list....") );
-	trap->UpdateScreen();
-
-	trap->Print( va( "^4*** ^3AUTO-WAYPOINTER^4: ^7This should not take too long...\n") );
-	strcpy( task_string2, va("^7This should not take too long...") );
-	trap->UpdateScreen();
-
-	// UQ1: Set node types..
-	AIMOD_AI_InitNodeContentsFlags();
-//	AIMod_AutoWaypoint_Trigger_Hurt_List_Setup();
-
-	if (number_of_nodes > 32000)
-		node_disable_ratio = 8;
-	else if (number_of_nodes > 24000)
-		node_disable_ratio = 6;
-	else if (number_of_nodes > 16000)
-		node_disable_ratio = 4;
-	else if (number_of_nodes > 8000)
-		node_disable_ratio = 2;
-
-/*	if (number_of_nodes > 64000)
-		skip_threshold = 4;
-	else if (number_of_nodes > 48000)
-		skip_threshold = 3;
-	else if (number_of_nodes > 32000)
-		skip_threshold = 2;
-	else if (number_of_nodes > 10000)
-		skip_threshold = 2;
-	else
-	{
-		skip_threshold = 0;
-		reducecount = qfalse;
-	}*/
-
-	// Disable some ice/water ndoes...
-	if (!relink_only)
-	for (i = 0; i < number_of_nodes; i++)
-	{
-		if (nodes[i].enodenum <= 0)
-		{// Remove all waypoints without any links...
-			nodes[i].objectNum[0] = 1;
-			num_nolink_nodes++;
-			continue;
-		}
-
-		if (relink_only)
-			continue;
-
-/*		if (nodes[i].enodenum > 2 && LocationIsNearTriggerHurt(nodes[i].origin))
-		{// Lots of links, but also seems to be located close to barb wire (or other damage entity). Remove it!
-			nodes[i].objectNum[0] = 1;
-			num_trigger_hurt_nodes++;
-			continue;
-		}*/
-
-		if (nodes[i].enodenum <= 8/*4*/ || AIMod_AutoWaypoint_Cleaner_NodeHasLinkWithFewLinks(i))
-			continue;
-
-		if (reducecount)
-		{
-			if (skip == 0)
-			{
-				skip = 1;
-			}
-			else
-			{
-				nodes[i].objectNum[0] = 1;
-				num_skiped_nodes++;
-
-				skip = 0;
-			}
-		}
-
-		if ((!nowaterremove && (nodes[i].type & NODE_WATER)) || (!noiceremove && (nodes[i].type & NODE_ICE)))
-		{
-			if (node_disable_ticker < node_disable_ratio)
-			{// Remove 2 out of every (node_disable_ratio)..
-				nodes[i].objectNum[0] = 1;
-				num_disabled_nodes++;
-				node_disable_ticker++;
-			}
-			else
-			{
-				node_disable_ticker = 0;
-			}
-		}
-	}
-
-	trap->Print("^4*** ^3AUTO-WAYPOINTER^4: ^5Disabled ^3%i^5 water/ice waypoints.\n", num_disabled_nodes);
-	trap->Print("^4*** ^3AUTO-WAYPOINTER^4: ^5Disabled ^3%i^5 bad surfaces.\n", aw_num_bad_surfaces);
-	trap->Print("^4*** ^3AUTO-WAYPOINTER^4: ^5Disabled ^3%i^5 trigger hurt waypoints.\n", num_trigger_hurt_nodes);
-	trap->Print("^4*** ^3AUTO-WAYPOINTER^4: ^5Disabled ^3%i^5 waypoints without links.\n", num_nolink_nodes);
-
-	if (reducecount)
-		trap->Print("^4*** ^3AUTO-WAYPOINTER^4: ^5Disabled ^3%i^5 random waypoints to reduce count.\n", num_skiped_nodes);
-
-	if (num_disabled_nodes == 0 && aw_num_bad_surfaces == 0 && num_nolink_nodes == 0 && num_trigger_hurt_nodes == 0 && num_skiped_nodes == 0 && !relink_only)
-	{// No point relinking and saving...
-		free(areas);
-		AIMod_AutoWaypoint_Free_Memory();
-		AIMod_AutoWaypoint_Optimize_Free_Memory();
-		return;
-	}
-
-	trap->Print( va( "^4*** ^3AUTO-WAYPOINTER^4: ^5Creating waypoints... Please wait...\n") );
-	strcpy( task_string3, va("^5Creating waypoints... Please wait...") );
-	trap->UpdateScreen();
-
-	total_calculations = number_of_nodes;
-	calculations_complete = 0;
-
-	for (i = 0; i < number_of_nodes; i++)
-	{
-		int				num_nodes_added = 0;
-		short int		objNum[3] = { 0, 0, 0 };
-
-		if (nodes[i].objEntity != 1 && nodes[i].objectNum[0] != 1)
-		{
-			strcpy( last_node_added_string, va("^5Adding waypoint ^3%i ^5at ^7%f %f %f^5.", optimized_number_of_nodes, nodes[i].origin[0], nodes[i].origin[1], nodes[i].origin[2]) );
-			num_nodes_added++;
-
-			if (num_nodes_added > 100)
-			{
-				trap->UpdateScreen();
-				num_nodes_added = 0;
-			}
-
-			Optimize_AddNode( nodes[i].origin, 0, objNum, 0 );	//add the node
-			nodes[i].objEntity = 1;
-		}
-	}
-
-	aw_percent_complete = 0.0f;
-	trap->UpdateScreen();
-
-	free(areas);
-
-	trap->Print( va( "^4*** ^3AUTO-WAYPOINTER^4: ^5Waypoint list reduced from ^3%i^5 waypoints to ^3%i^5 waypoints.\n", number_of_nodes, optimized_number_of_nodes) );
-
-	// Work out the best scatter distance to use for this map size...
-	/*if (map_size > 96000)
-	{
-		waypoint_scatter_distance *= 5;
-	}
-	else if (map_size > 32768)
-	{
-		waypoint_scatter_distance *= 4;
-	}
-	else if (map_size > 24000)
-	{
-		waypoint_scatter_distance *= 3;
-	}
-	else if (map_size > 20000)
-	{
-		waypoint_scatter_distance *= 2;
-	}
-	else if (map_size > 16550)
-	{
-		waypoint_scatter_distance *= 1.5;
-	}
-	else if (map_size > 8192)
-	{
-		waypoint_scatter_distance *= 1.12;
-	}*/
-	
-	/*if (number_of_nodes < 20000)
-	{
-		waypoint_distance_multiplier = 1.5f;
-	}
-	else if (number_of_nodes < 32000)
-	{
-		waypoint_distance_multiplier = 2.0f;
-	}
-	else
-	{
-		waypoint_distance_multiplier = 2.5f;
-	}*/
-
-	number_of_nodes = 0;
-
-	// Copy over the new list!
-	memcpy(nodes, optimized_nodes, (sizeof(node_t)*MAX_NODES)+1);
-	number_of_nodes = optimized_number_of_nodes;
-
-	aw_num_nodes = number_of_nodes;
-
-	// Save the new list...
-	AIMOD_NODES_SaveNodes_Autowaypointed();
-
-	aw_percent_complete = 0.0f;
-	trap->UpdateScreen();
-
-	// Remake cover spots...
-	if (start_wp_total != number_of_nodes)
-		AIMOD_Generate_Cover_Spots();
-
-	aw_percent_complete = 0.0f;
-	trap->UpdateScreen();
-
-	AIMod_AutoWaypoint_Free_Memory();
-	AIMod_AutoWaypoint_Optimize_Free_Memory();
-
-	trap->SendConsoleCommand( "!loadAWPnodes\n" );
-}
-
-//
-//
-//
-//
-//
-
 int			trigger_hurt_counter = 0;
 centity_t	*trigger_hurt_list[MAX_GENTITIES];
 
@@ -8468,8 +8328,8 @@ AIMod_AutoWaypoint_Cleaner ( qboolean quiet, qboolean null_links_only, qboolean 
 		{
 			float dist = VectorDistance(nodes[i].origin, nodes[nodes[i].links[j].targetNode].origin);
 
-			if (dist > original_wp_max_distance)
-				original_wp_max_distance = dist;
+			if (dist*0.5 > original_wp_max_distance)
+				original_wp_max_distance = dist*0.5;
 		}
 	}
 
@@ -8539,7 +8399,7 @@ AIMod_AutoWaypoint_Cleaner ( qboolean quiet, qboolean null_links_only, qboolean 
 
 			for ( i = 0; i < aw_num_nodes/*num_nodes*/; i++ )											//loop through all the nodes
 			{
-				trap->Print("Saved wp at %f %f %f.\n", nodes[i].origin[0], nodes[i].origin[1], nodes[i].origin[2]);
+				//trap->Print("Saved wp at %f %f %f.\n", nodes[i].origin[0], nodes[i].origin[1], nodes[i].origin[2]);
 
 				//write all the node data to the file
 				trap->FS_Write( &(nodes[i].origin), sizeof(vec3_t), f );

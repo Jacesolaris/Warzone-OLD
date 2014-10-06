@@ -3353,6 +3353,7 @@ Ghoul2 Insert Start
 #ifdef __MMO__
 	// UQ1: Only process objects in our FOV...
 	if (cent->currentState.eType != ET_MOVER
+		&& cent->currentState.eType != ET_MOVER_MARKER
 		&& cent->currentState.eType != ET_MISSILE
 		&& cent->currentState.eType != ET_PORTAL) // Don't cull these...
 	{
@@ -3436,6 +3437,8 @@ Ghoul2 Insert End
 		break;
 	case ET_BODY:
 		CG_General( cent );
+		break;
+	case ET_MOVER_MARKER:
 		break;
 	}
 }

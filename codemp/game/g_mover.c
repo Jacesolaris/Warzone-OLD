@@ -1015,6 +1015,31 @@ void InitMover( gentity_t *ent )
 	trap->LinkEntity( (sharedEntity_t *)ent );
 
 	InitMoverTrData( ent );
+
+	// UQ1: Create a mover marker entity for this mover... (for auto-waypointer)
+	{
+		vec3_t pos, pos_top, diff;
+		gentity_t *MOVER_MARKER = G_Spawn();
+		
+		VectorSubtract(ent->r.maxs, ent->r.mins, diff);
+		VectorCopy(ent->r.mins, pos);
+		pos[0] += (diff[0] * 0.5);
+		pos[1] += (diff[1] * 0.5);
+		//pos[2] += (diff[2] * 0.5);
+
+		VectorCopy(pos, pos_top);
+		pos_top[2] = ent->r.maxs[2];
+		
+		MOVER_MARKER->r.contents = CONTENTS_NONE;
+		VectorCopy(pos, MOVER_MARKER->s.origin);
+		VectorCopy(pos_top, MOVER_MARKER->s.origin2);
+		strcpy(MOVER_MARKER->classname, "mover_marker");
+		MOVER_MARKER->s.eType = ET_MOVER_MARKER;
+		MOVER_MARKER->r.svFlags |= SVF_BROADCAST;
+		trap->LinkEntity((sharedEntity_t *)MOVER_MARKER);
+
+		//trap->Print("Mover at %f %f %f.\n", MOVER_MARKER->s.origin[0], MOVER_MARKER->s.origin[1], MOVER_MARKER->s.origin[2]);
+	}
 }
 
 

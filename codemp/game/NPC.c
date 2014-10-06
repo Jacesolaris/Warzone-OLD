@@ -2522,6 +2522,448 @@ qboolean NPC_NeedJump()
 	return qfalse;
 }
 
+qboolean NPC_ClearPathToJump( gentity_t *NPC, vec3_t dest, int impactEntNum )
+{
+	trace_t	trace;
+	vec3_t	mins, start, end, dir;
+	float	dist, drop;
+	float	i;
+
+	//Offset the step height
+	VectorSet( mins, NPC->r.mins[0], NPC->r.mins[1], NPC->r.mins[2] + STEPSIZE );
+	
+	trap->Trace( &trace, NPC->r.currentOrigin, mins, NPC->r.maxs, dest, NPC->s.number, NPC->clipmask, 0, 0, 0 );
+
+	//Do a simple check
+	if ( trace.allsolid || trace.startsolid )
+	{//inside solid
+		return qfalse;
+	}
+
+	if ( trace.fraction < 1.0f )
+	{//hit something
+		if ( impactEntNum != ENTITYNUM_NONE && trace.entityNum == impactEntNum )
+		{//hit what we're going after
+			return qtrue;
+		}
+		else
+		{
+			return qfalse;
+		}
+	}
+
+	//otherwise, clear path in a straight line.  
+	//Now at intervals of my size, go along the trace and trace down STEPSIZE to make sure there is a solid floor.
+	VectorSubtract( dest, NPC->r.currentOrigin, dir );
+	dist = VectorNormalize( dir );
+	if ( dest[2] > NPC->r.currentOrigin[2] )
+	{//going up, check for steps
+		drop = STEPSIZE;
+	}
+	else
+	{//going down or level, check for moderate drops
+		drop = 64;
+	}
+	for ( i = NPC->r.maxs[0]*2; i < dist; i += NPC->r.maxs[0]*2 )
+	{//FIXME: does this check the last spot, too?  We're assuming that should be okay since the enemy is there?
+		VectorMA( NPC->r.currentOrigin, i, dir, start );
+		VectorCopy( start, end );
+		end[2] -= drop;
+		trap->Trace( &trace, start, mins, NPC->r.maxs, end, NPC->s.number, NPC->clipmask, 0, 0, 0 );//NPC->r.mins?
+		if ( trace.fraction < 1.0f || trace.allsolid || trace.startsolid )
+		{//good to go
+			continue;
+		}
+		//no floor here! (or a long drop?)
+		return qfalse;
+	}
+	//we made it!
+	return qtrue;
+}
+
+//#define	APEX_HEIGHT		200.0f
+#define	APEX_HEIGHT		128.0f
+#define	PARA_WIDTH		128.0f
+//#define	PARA_WIDTH		(sqrt(APEX_HEIGHT)+sqrt(APEX_HEIGHT))
+//#define	JUMP_SPEED		200.0f
+#define	JUMP_SPEED		128.0f
+
+static qboolean NPC_Jump( gentity_t *NPC, vec3_t dest )
+{//FIXME: if land on enemy, knock him down & jump off again
+	//if ( 1 )
+	{
+		float	targetDist, shotSpeed = 300, travelTime, impactDist, bestImpactDist = Q3_INFINITE;//fireSpeed, 
+		vec3_t	targetDir, shotVel, failCase; 
+		trace_t	trace;
+		trajectory_t	tr;
+		qboolean	blocked;
+		int		elapsedTime, timeStep = 500, hitCount = 0, maxHits = 7;
+		vec3_t	lastPos, testPos, bottom;
+
+		while ( hitCount < maxHits )
+		{
+			VectorSubtract( dest, NPC->r.currentOrigin, targetDir );
+			targetDist = VectorNormalize( targetDir );
+
+			VectorScale( targetDir, shotSpeed, shotVel );
+			travelTime = targetDist/shotSpeed;
+			shotVel[2] += travelTime * 0.5 * NPC->client->ps.gravity;
+
+			if ( !hitCount )		
+			{//save the first one as the worst case scenario
+				VectorCopy( shotVel, failCase );
+			}
+
+			if ( 1 )//tracePath )
+			{//do a rough trace of the path
+				blocked = qfalse;
+
+				VectorCopy( NPC->r.currentOrigin, tr.trBase );
+				VectorCopy( shotVel, tr.trDelta );
+				tr.trType = TR_GRAVITY;
+				tr.trTime = level.time;
+				travelTime *= 1000.0f;
+				VectorCopy( NPC->r.currentOrigin, lastPos );
+				
+				//This may be kind of wasteful, especially on long throws... use larger steps?  Divide the travelTime into a certain hard number of slices?  Trace just to apex and down?
+				for ( elapsedTime = timeStep; elapsedTime < floor(travelTime)+timeStep; elapsedTime += timeStep )
+				{
+					if ( (float)elapsedTime > travelTime )
+					{//cap it
+						elapsedTime = floor( travelTime );
+					}
+					BG_EvaluateTrajectory( &tr, level.time + elapsedTime, testPos );
+					if ( testPos[2] < lastPos[2] )
+					{//going down, ignore botclip
+						trap->Trace( &trace, lastPos, NPC->r.mins, NPC->r.maxs, testPos, NPC->s.number, NPC->clipmask, 0, 0, 0 );
+					}
+					else
+					{//going up, check for botclip
+						trap->Trace( &trace, lastPos, NPC->r.mins, NPC->r.maxs, testPos, NPC->s.number, NPC->clipmask|CONTENTS_BOTCLIP, 0, 0, 0 );
+					}
+
+					if ( trace.allsolid || trace.startsolid )
+					{
+						blocked = qtrue;
+						break;
+					}
+					if ( trace.fraction < 1.0f )
+					{//hit something
+						if ( Distance( trace.endpos, dest ) < 96 )
+						{//hit the spot, that's perfect!
+							//Hmm, don't want to land on him, though...
+							break;
+						}
+						else 
+						{
+							if ( trace.contents & CONTENTS_BOTCLIP )
+							{//hit a do-not-enter brush
+								blocked = qtrue;
+								break;
+							}
+							if ( trace.plane.normal[2] > 0.7 && DistanceSquared( trace.endpos, dest ) < 4096 )//hit within 64 of desired location, should be okay
+							{//close enough!
+								break;
+							}
+							else
+							{//FIXME: maybe find the extents of this brush and go above or below it on next try somehow?
+								impactDist = DistanceSquared( trace.endpos, dest );
+								if ( impactDist < bestImpactDist )
+								{
+									bestImpactDist = impactDist;
+									VectorCopy( shotVel, failCase );
+								}
+								blocked = qtrue;
+								break;
+							}
+						}
+					}
+					if ( elapsedTime == floor( travelTime ) )
+					{//reached end, all clear
+						if ( trace.fraction >= 1.0f )
+						{//hmm, make sure we'll land on the ground...
+							//FIXME: do we care how far below ourselves or our dest we'll land?
+							VectorCopy( trace.endpos, bottom );
+							//bottom[2] -= 128;
+							bottom[2] -= 64; // UQ1: Try less fall...
+							trap->Trace( &trace, trace.endpos, NPC->r.mins, NPC->r.maxs, bottom, NPC->s.number, NPC->clipmask, 0, 0, 0 );
+							if ( trace.fraction >= 1.0f )
+							{//would fall too far
+								blocked = qtrue;
+							}
+						}
+						break;
+					}
+					else
+					{
+						//all clear, try next slice
+						VectorCopy( testPos, lastPos );
+					}
+				}
+				if ( blocked )
+				{//hit something, adjust speed (which will change arc)
+					hitCount++;
+					shotSpeed = 300 + ((hitCount-2) * 100);//from 100 to 900 (skipping 300)
+					if ( hitCount >= 2 )
+					{//skip 300 since that was the first value we tested
+						shotSpeed += 100;
+					}
+				}
+				else
+				{//made it!
+					break;
+				}
+			}
+			else
+			{//no need to check the path, go with first calc
+				break;
+			}
+		}
+
+		/*
+		if ( hitCount >= maxHits )
+		{//NOTE: worst case scenario, use the one that impacted closest to the target (or just use the first try...?)
+			//NOTE: or try failcase?
+			//VectorCopy( failCase, NPC->client->ps.velocity );
+			return qfalse;
+		}
+		VectorCopy( shotVel, NPC->client->ps.velocity );
+		return qtrue;
+		*/
+
+		if ( hitCount < maxHits )
+		{//NOTE: all good...
+			VectorCopy( shotVel, NPC->client->ps.velocity );
+			return qtrue;
+		}
+	}
+
+
+	{//a more complicated jump
+		vec3_t		dir, p1, p2, apex;
+		float		time, height, forward, z, xy, dist, apexHeight;
+
+		if ( NPC->r.currentOrigin[2] > dest[2] )//NPCInfo->goalEntity->r.currentOrigin
+		{
+			VectorCopy( NPC->r.currentOrigin, p1 );
+			VectorCopy( dest, p2 );//NPCInfo->goalEntity->r.currentOrigin
+		}
+		else if ( NPC->r.currentOrigin[2] < dest[2] )//NPCInfo->goalEntity->r.currentOrigin
+		{
+			VectorCopy( dest, p1 );//NPCInfo->goalEntity->r.currentOrigin
+			VectorCopy( NPC->r.currentOrigin, p2 );
+		}
+		else
+		{
+			VectorCopy( NPC->r.currentOrigin, p1 );
+			VectorCopy( dest, p2 );//NPCInfo->goalEntity->r.currentOrigin
+		}
+
+		//z = xy*xy
+		VectorSubtract( p2, p1, dir );
+		dir[2] = 0;
+
+		//Get xy and z diffs
+		xy = VectorNormalize( dir );
+		z = p1[2] - p2[2];
+
+		apexHeight = APEX_HEIGHT/2;
+
+		//Determine most desirable apex height
+		//FIXME: length of xy will change curve of parabola, need to account for this
+		//somewhere... PARA_WIDTH
+		/*
+		apexHeight = (APEX_HEIGHT * PARA_WIDTH/xy) + (APEX_HEIGHT * z/128);
+		if ( apexHeight < APEX_HEIGHT * 0.5 )
+		{
+			apexHeight = APEX_HEIGHT*0.5;
+		}
+		else if ( apexHeight > APEX_HEIGHT * 2 )
+		{
+			apexHeight = APEX_HEIGHT*2;
+		}
+		*/
+
+		z = (sqrt(apexHeight + z) - sqrt(apexHeight));
+
+		if (z <= 0) return qfalse;
+		//assert(z >= 0);
+
+//		Com_Printf("apex is %4.2f percent from p1: ", (xy-z)*0.5/xy*100.0f);
+
+		xy -= z;
+		xy *= 0.5;
+		
+		if (xy <= 0) return qfalse;
+		//assert(xy > 0);
+
+		VectorMA( p1, xy, dir, apex );
+		apex[2] += apexHeight;
+
+		VectorCopy(apex, NPC->pos1);
+		
+		//Now we have the apex, aim for it
+		height = apex[2] - NPC->r.currentOrigin[2];
+		time = sqrt( height / ( .5 * NPC->client->ps.gravity ) );//was 0.5, but didn't work well for very long jumps
+
+		if ( !time ) 
+		{
+			//Com_Printf( S_COLOR_RED"ERROR: no time in jump\n" );
+			return qfalse;
+		}
+
+		VectorSubtract ( apex, NPC->r.currentOrigin, NPC->client->ps.velocity );
+		NPC->client->ps.velocity[2] = 0;
+		dist = VectorNormalize( NPC->client->ps.velocity );
+
+		forward = dist / time * 1.25;//er... probably bad, but...
+		VectorScale( NPC->client->ps.velocity, forward, NPC->client->ps.velocity );
+
+		//FIXME:  Uh.... should we trace/EvaluateTrajectory this to make sure we have clearance and we land where we want?
+		NPC->client->ps.velocity[2] = time * NPC->client->ps.gravity;
+
+		//Com_Printf("Jump Velocity: %4.2f, %4.2f, %4.2f\n", NPC->client->ps.velocity[0], NPC->client->ps.velocity[1], NPC->client->ps.velocity[2] );
+	}
+
+	return qtrue;
+}
+
+//extern void G_SoundOnEnt( gentity_t *ent, int channel, const char *soundPath );
+extern qboolean PM_InKnockDown( playerState_t *ps );
+
+static qboolean NPC_TryJump( gentity_t *NPC, vec3_t goal )
+{//FIXME: never does a simple short, regular jump...
+	usercmd_t	ucmd = NPCS.ucmd;
+
+	if ( TIMER_Done( NPC, "jumpChaseDebounce" ) )
+	{
+		{
+			if ( !PM_InKnockDown( &NPC->client->ps ) && !BG_InRoll( &NPC->client->ps, NPC->client->ps.legsAnim ) )
+			{//enemy is on terra firma
+				vec3_t goal_diff;
+				float goal_z_diff;
+				float goal_xy_dist;
+				VectorSubtract( goal, NPC->r.currentOrigin, goal_diff );
+				goal_z_diff = goal_diff[2];
+				goal_diff[2] = 0;
+				goal_xy_dist = VectorNormalize( goal_diff );
+				if ( goal_xy_dist < 550 && goal_z_diff > -400/*was -256*/ )//for now, jedi don't take falling damage && (NPC->health > 20 || goal_z_diff > 0 ) && (NPC->health >= 100 || goal_z_diff > -128 ))//closer than @512
+				{
+					qboolean debounce = qfalse;
+					if ( NPC->health < 150 && ((NPC->health < 30 && goal_z_diff < 0) || goal_z_diff < -128 ) )
+					{//don't jump, just walk off... doesn't help with ledges, though
+						debounce = qtrue;
+					}
+					else if ( goal_z_diff < 32 && goal_xy_dist < 200 )
+					{//what is their ideal jump height?
+						
+						ucmd.upmove = 127;
+						debounce = qtrue;
+					}
+					else
+					{
+						/*
+						//NO!  All Jedi can jump-navigate now...
+						if ( NPCInfo->rank != RANK_CREWMAN && NPCInfo->rank <= RANK_LT_JG )
+						{//can't do acrobatics
+							return qfalse;
+						}
+						*/
+						if ( goal_z_diff > 0 || goal_xy_dist > 128 )
+						{//Fake a force-jump
+							//Screw it, just do my own calc & throw
+							vec3_t dest;
+							VectorCopy( goal, dest );
+							
+							{
+								int	sideTry = 0;
+								while( sideTry < 10 )
+								{//FIXME: make it so it doesn't try the same spot again?
+									trace_t	trace;
+									vec3_t	bottom;
+
+									VectorCopy( dest, bottom );
+									bottom[2] -= 128;
+									trap->Trace( &trace, dest, NPC->r.mins, NPC->r.maxs, bottom, NPC->s.number, NPC->clipmask, 0, 0, 0 );
+									if ( trace.fraction < 1.0f )
+									{//hit floor, okay to land here
+										break;
+									}
+									sideTry++;
+								}
+								if ( sideTry >= 10 )
+								{//screw it, just jump right at him?
+									VectorCopy( goal, dest );
+								}
+							}
+
+							if ( NPC_Jump( NPC, dest ) )
+							{
+								//Com_Printf( "(%d) pre-checked force jump\n", level.time );
+
+								//FIXME: store the dir we;re going in in case something gets in the way of the jump?
+								//? = vectoyaw( NPC->client->ps.velocity );
+								/*
+								if ( NPC->client->ps.velocity[2] < 320 )
+								{
+									NPC->client->ps.velocity[2] = 320;
+								}
+								else
+								*/
+								{//FIXME: make this a function call
+									int jumpAnim;
+									//FIXME: this should be more intelligent, like the normal force jump anim logic
+									//if ( NPC->client->NPC_class == CLASS_BOBAFETT 
+									//	||( NPCInfo->rank != RANK_CREWMAN && NPCInfo->rank <= RANK_LT_JG ) )
+									//{//can't do acrobatics
+									//	jumpAnim = BOTH_FORCEJUMP1;
+									//}
+									//else
+									//{
+										jumpAnim = BOTH_FLIP_F;
+									//}
+									G_SetAnim( NPC, &ucmd, SETANIM_BOTH, jumpAnim, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD, 0 );
+								}
+
+								NPC->client->ps.fd.forceJumpZStart = NPC->r.currentOrigin[2];
+								//NPC->client->ps.pm_flags |= PMF_JUMPING;
+
+								NPC->client->ps.weaponTime = NPC->client->ps.torsoTimer;
+								NPC->client->ps.fd.forcePowersActive |= ( 1 << FP_LEVITATION );
+								
+								//if ( NPC->client->NPC_class == CLASS_BOBAFETT )
+								//{
+								//	G_SoundOnEnt( NPC, CHAN_ITEM, "sound/boba/jeton.wav" );
+								//	NPC->client->jetPackTime = level.time + Q_irand( 1000, 15000 + irand(0, 30000) );
+								//}
+								//else
+								//{
+								//	G_SoundOnEnt( NPC, CHAN_BODY, "sound/weapons/force/jump.wav" );
+								//}
+
+								TIMER_Set( NPC, "forceJumpChasing", Q_irand( 2000, 3000 ) );
+								debounce = qtrue;
+							}
+						}
+					}
+
+					if ( debounce )
+					{
+						//Don't jump again for another 2 to 5 seconds
+						TIMER_Set( NPC, "jumpChaseDebounce", Q_irand( 2000, 5000 ) );
+						ucmd.forwardmove = 127;
+						VectorClear( NPC->client->ps.moveDir );
+						TIMER_Set( NPC, "duck", -level.time );
+						return qtrue;
+					}
+				}
+			}
+		}
+	}
+
+	return qfalse;
+}
+
 int NPC_SelectBestAvoidanceMethod()
 {// Just find the largest visible distance direction...
 	trace_t		tr;
@@ -2724,35 +3166,145 @@ void NPC_AdjustforStrafe(vec3_t moveDir)
 	VectorNormalize(moveDir);
 }
 
+qboolean NPC_CheckFallPositionOK(gentity_t *NPC, vec3_t position)
+{
+	trace_t		tr;
+	vec3_t testPos, downPos;
+	
+	VectorCopy(position, testPos);
+	VectorCopy(position, downPos);
+
+	downPos[2] -= 56.0;
+	testPos[2] += 8.0;
+
+	trap->Trace( &tr, testPos, NULL/*NPC->r.mins*/, NULL/*NPC->r.maxs*/, downPos, NPC->s.number, MASK_PLAYERSOLID, 0, 0, 0 );
+
+	if (tr.entityNum != ENTITYNUM_NONE)
+	{
+		return qtrue;
+	}
+	else if (tr.fraction == 1.0f)
+	{
+		//trap->Print("%s is holding position to not fall!\n", NPC->client->pers.netname);
+		return qfalse;
+	}
+
+	return qtrue;
+}
+
+qboolean NPC_CheckFall(gentity_t *NPC, vec3_t dir)
+{
+	vec3_t forwardPos;
+
+	VectorMA( NPC->r.currentOrigin, 18, dir, forwardPos );
+
+	if (OrgVisible(NPC->r.currentOrigin, forwardPos, NPC->s.number) && !NPC_CheckFallPositionOK(NPC, forwardPos))
+	{
+		return qtrue;
+	}
+
+	VectorMA( NPC->r.currentOrigin, 32, dir, forwardPos );
+
+	if (OrgVisible(NPC->r.currentOrigin, forwardPos, NPC->s.number) && !NPC_CheckFallPositionOK(NPC, forwardPos))
+	{
+		return qtrue;
+	}
+
+	VectorMA( NPC->r.currentOrigin, 64, dir, forwardPos );
+
+	if (OrgVisible(NPC->r.currentOrigin, forwardPos, NPC->s.number) && !NPC_CheckFallPositionOK(NPC, forwardPos))
+	{
+		return qtrue;
+	}
+
+	return qfalse;
+}
+
+int NPC_CheckFallJump(gentity_t *NPC, vec3_t dest, usercmd_t *cmd)
+{
+	float MAX_JUMP_DISTANCE = 256.0;
+	float dist = Distance(dest, NPC->r.currentOrigin);
+	float noheight_dist = VectorDistanceNoHeight(dest, NPC->r.currentOrigin);
+	float height_dist = dest[2] - NPC->r.currentOrigin[2];//HeightDistance(dest, NPC->r.currentOrigin);
+
+	if (!NPC_CheckFallPositionOK(NPC, dest)) return qfalse;
+		
+	if (NPC_IsJedi(NPC)) MAX_JUMP_DISTANCE = 512.0; // Jedi can jump further...
+
+	if (dist <= MAX_JUMP_DISTANCE && NPC_TryJump( NPC, dest ))
+	{// Looks like we can jump there... Let's do that instead of failing!
+		return 2; // next think...
+	}
+	else if (dist <= 128.0)//MAX_JUMP_DISTANCE)
+	{
+		if (height_dist <= 0 && noheight_dist > 0 - height_dist && NPC->client->ps.groundEntityNum == ENTITYNUM_NONE)
+		{// If our height is lower then the flat distance, keep jumping...
+			return 1; // next think...
+		}
+		else if (height_dist > 0 && noheight_dist > height_dist && NPC->client->ps.groundEntityNum == ENTITYNUM_NONE)
+		{// If our height is lower then the flat distance, keep jumping...
+			return 1; // next think...
+		}
+		else if (NPC->client->ps.groundEntityNum != ENTITYNUM_NONE)
+		{// If we have not yet jumped, jump...
+			return 1; // next think...
+		}
+	}
+
+	return 0;
+}
+
 //===========================================================================
 // Routine      : UQ1_UcmdMoveForDir
 
 // Description  : Set a valid ucmd move for the current move direction... A working one, unlike raven's joke...
-void UQ1_UcmdMoveForDir ( gentity_t *self, usercmd_t *cmd, vec3_t dir, qboolean walk )
+qboolean UQ1_UcmdMoveForDir ( gentity_t *self, usercmd_t *cmd, vec3_t dir, qboolean walk, vec3_t dest )
 {
 	vec3_t	forward, right, up;
 
-	//float	speed = 127.0f;
-	float	speed = 100.0f;
+	float	speed = 127.0f;
+	//float	speed = 100.0f;
 	//if (walk) speed = 64.0f;
 	//if (walk) speed = 80.0f;
 	//if (walk) speed = 48.0f;
 	//if (walk) speed = 56.0f;
 	if (walk) speed = 64.0f;
 
-	AngleVectors( self->r.currentAngles, forward, right, up );
+	AngleVectors( self->client->ps.viewangles/*self->r.currentAngles*/, forward, right, up );
 
 	dir[2] = 0;
 	VectorNormalize( dir );
 
-	cmd->forwardmove = DotProduct( forward, dir ) * speed;
-	cmd->rightmove = DotProduct( right, dir ) * speed;
-
 #ifdef __NPC_STRAFE__
 	if (self->wpCurrent >= 0) NPC_NPCBlockingPath();
 	//NPC_AdjustforStrafe(dir);
-	if (self->bot_strafe_left_timer > level.time) cmd->rightmove -= 48.0;
+	if (self->bot_strafe_left_timer > level.time) cmd->rightmove -= 127.0;
 #endif //__NPC_STRAFE__
+
+	if (/*self->client->ps.groundEntityNum == ENTITYNUM_NONE ||*/ NPC_CheckFall(self, dir))
+	{
+		int JUMP_RESULT = NPC_CheckFallJump(self, dest, cmd);
+
+		if (JUMP_RESULT == 2)
+		{// We can jump there... JKA method...
+			return qfalse;
+		}
+		else if (JUMP_RESULT == 1)
+		{// We can jump there... My method...
+			cmd->upmove = 127.0;
+			if (NPCS.NPC->s.eType == ET_PLAYER) trap->EA_Jump(NPCS.NPC->s.number);
+		}
+		else
+		{// Moving here would cause us to fall... Wait!
+			cmd->forwardmove = 0;
+			cmd->rightmove = 0;
+			cmd->upmove = 0;
+			return qfalse;
+		}
+	}
+
+	cmd->forwardmove = DotProduct( forward, dir ) * speed;
+	cmd->rightmove = DotProduct( right, dir ) * speed;
 
 	if (NPCS.NPC->s.eType == ET_PLAYER)
 	{
@@ -2793,6 +3345,8 @@ void UQ1_UcmdMoveForDir ( gentity_t *self, usercmd_t *cmd, vec3_t dir, qboolean 
 		trap->LinkEntity((sharedEntity_t *)self);
 	}
 #endif //__NPC_BBOX_ADJUST__
+
+	return qtrue;
 }
 
 qboolean NPC_OrgVisible(vec3_t org1, vec3_t org2, int ignore)
@@ -2961,12 +3515,28 @@ qboolean NPC_PatrolArea( void )
 
 	NPC_FacePosition( gWPArray[NPC->wpCurrent]->origin, qfalse );
 	VectorSubtract( gWPArray[NPC->wpCurrent]->origin, NPC->r.currentOrigin, NPC->movedir );
-	UQ1_UcmdMoveForDir( NPC, &NPCS.ucmd, NPC->movedir, qtrue );
+	if (!UQ1_UcmdMoveForDir( NPC, &NPCS.ucmd, NPC->movedir, qtrue, gWPArray[NPC->wpCurrent]->origin )) { NPC_PickRandomIdleAnimantion(NPC); return qtrue; }
 	VectorCopy( NPC->movedir, NPC->client->ps.moveDir );
 
 	NPC_SelectMoveAnimation(qtrue);
 
 	return qtrue;
+}
+
+qboolean NPC_ShortenJump(gentity_t *NPC, int node)
+{
+	float MAX_JUMP_DISTANCE = 192.0;
+		
+	if (NPC_IsJedi(NPC)) MAX_JUMP_DISTANCE = 512.0; // Jedi can jump further...
+
+	if (Distance(gWPArray[node]->origin, NPC->r.currentOrigin) <= MAX_JUMP_DISTANCE
+		&& NPC_TryJump( NPC, gWPArray[node]->origin ))
+	{// Looks like we can jump there... Let's do that instead of failing!
+		//trap->Print("%s is shortening path using jump.\n", NPC->client->pers.netname);
+		return qtrue; // next think...
+	}
+
+	return qfalse;
 }
 
 void NPC_ShortenPath(gentity_t *NPC)
@@ -2994,6 +3564,15 @@ void NPC_ShortenPath(gentity_t *NPC)
 				//trap->Print("%s found a shorter (shortened by %i) path.\n", NPC->NPC_type, shortenedBy);
 				NPC->pathsize = position;
 				found = qtrue;
+				break;
+			}
+
+			if (NPC_ShortenJump(NPC, NPC->pathlist[position]))
+			{// Can we jump to a position closer to the end goal?
+				//int shortenedBy = NPC->pathsize - position;
+				NPC->pathsize = position;
+				found = qtrue;
+				//trap->Print("%s found a shorter path using jump (shortened by %i).\n", NPC->NPC_type, shortenedBy);
 				break;
 			}
 		}
@@ -3460,13 +4039,13 @@ void NPC_SetNewGoalAndPath()
 
 		if (NPC->pathsize > 0)
 		{
-			//G_Printf("NPC Waypointing Debug: NPC %i created a %i waypoint path for a random goal between waypoints %i and %i.", NPC->s.number, NPC->pathsize, NPC->wpCurrent, NPC->longTermGoal);
+			//trap->Print("NPC Waypointing Debug: NPC %i created a %i waypoint path for a random goal between waypoints %i and %i.\n", NPC->s.number, NPC->pathsize, NPC->wpCurrent, NPC->longTermGoal);
 			NPC->wpLast = -1;
 			NPC->wpNext = NPC_GetNextNode(NPC);		//move to this node first, since it's where our path starts from
 		}
 		else
 		{
-			//G_Printf("NPC Waypointing Debug: NPC %i failed to create a route between waypoints %i and %i.", NPC->s.number, NPC->wpCurrent, NPC->longTermGoal);
+			//trap->Print("NPC Waypointing Debug: NPC %i failed to create a route between waypoints %i and %i.\n", NPC->s.number, NPC->wpCurrent, NPC->longTermGoal);
 			// Delay before next route creation...
 			NPC->wpSeenTime = level.time + 1000;//30000;
 			NPC_PickRandomIdleAnimantion(NPC);
@@ -3477,7 +4056,7 @@ void NPC_SetNewGoalAndPath()
 	{
 		//G_Printf("NPC Waypointing Debug: NPC %i failed to find a goal waypoint.", NPC->s.number);
 		
-		trap->Print("Unable to find goal waypoint.\n");
+		//trap->Print("Unable to find goal waypoint.\n");
 
 		// Delay before next route creation...
 		NPC->wpSeenTime = level.time + 1000;//30000;
@@ -3639,432 +4218,6 @@ qboolean DOM_NPC_ClearPathToSpot( gentity_t *NPC, vec3_t dest, int impactEntNum 
 	return qtrue;
 }
 
-qboolean NPC_ClearPathToJump( gentity_t *NPC, vec3_t dest, int impactEntNum )
-{
-	trace_t	trace;
-	vec3_t	mins, start, end, dir;
-	float	dist, drop;
-	float	i;
-
-	//Offset the step height
-	VectorSet( mins, NPC->r.mins[0], NPC->r.mins[1], NPC->r.mins[2] + STEPSIZE );
-	
-	trap->Trace( &trace, NPC->r.currentOrigin, mins, NPC->r.maxs, dest, NPC->s.number, NPC->clipmask, 0, 0, 0 );
-
-	//Do a simple check
-	if ( trace.allsolid || trace.startsolid )
-	{//inside solid
-		return qfalse;
-	}
-
-	if ( trace.fraction < 1.0f )
-	{//hit something
-		if ( impactEntNum != ENTITYNUM_NONE && trace.entityNum == impactEntNum )
-		{//hit what we're going after
-			return qtrue;
-		}
-		else
-		{
-			return qfalse;
-		}
-	}
-
-	//otherwise, clear path in a straight line.  
-	//Now at intervals of my size, go along the trace and trace down STEPSIZE to make sure there is a solid floor.
-	VectorSubtract( dest, NPC->r.currentOrigin, dir );
-	dist = VectorNormalize( dir );
-	if ( dest[2] > NPC->r.currentOrigin[2] )
-	{//going up, check for steps
-		drop = STEPSIZE;
-	}
-	else
-	{//going down or level, check for moderate drops
-		drop = 64;
-	}
-	for ( i = NPC->r.maxs[0]*2; i < dist; i += NPC->r.maxs[0]*2 )
-	{//FIXME: does this check the last spot, too?  We're assuming that should be okay since the enemy is there?
-		VectorMA( NPC->r.currentOrigin, i, dir, start );
-		VectorCopy( start, end );
-		end[2] -= drop;
-		trap->Trace( &trace, start, mins, NPC->r.maxs, end, NPC->s.number, NPC->clipmask, 0, 0, 0 );//NPC->r.mins?
-		if ( trace.fraction < 1.0f || trace.allsolid || trace.startsolid )
-		{//good to go
-			continue;
-		}
-		//no floor here! (or a long drop?)
-		return qfalse;
-	}
-	//we made it!
-	return qtrue;
-}
-
-//#define	APEX_HEIGHT		200.0f
-#define	APEX_HEIGHT		128.0f
-#define	PARA_WIDTH		128.0f
-//#define	PARA_WIDTH		(sqrt(APEX_HEIGHT)+sqrt(APEX_HEIGHT))
-//#define	JUMP_SPEED		200.0f
-#define	JUMP_SPEED		128.0f
-
-static qboolean NPC_Jump( gentity_t *NPC, vec3_t dest )
-{//FIXME: if land on enemy, knock him down & jump off again
-	if ( 1 )
-	{
-		float	targetDist, shotSpeed = 300, travelTime, impactDist, bestImpactDist = Q3_INFINITE;//fireSpeed, 
-		vec3_t	targetDir, shotVel, failCase; 
-		trace_t	trace;
-		trajectory_t	tr;
-		qboolean	blocked;
-		int		elapsedTime, timeStep = 500, hitCount = 0, maxHits = 7;
-		vec3_t	lastPos, testPos, bottom;
-
-		while ( hitCount < maxHits )
-		{
-			VectorSubtract( dest, NPC->r.currentOrigin, targetDir );
-			targetDist = VectorNormalize( targetDir );
-
-			VectorScale( targetDir, shotSpeed, shotVel );
-			travelTime = targetDist/shotSpeed;
-			shotVel[2] += travelTime * 0.5 * NPC->client->ps.gravity;
-
-			if ( !hitCount )		
-			{//save the first one as the worst case scenario
-				VectorCopy( shotVel, failCase );
-			}
-
-			if ( 1 )//tracePath )
-			{//do a rough trace of the path
-				blocked = qfalse;
-
-				VectorCopy( NPC->r.currentOrigin, tr.trBase );
-				VectorCopy( shotVel, tr.trDelta );
-				tr.trType = TR_GRAVITY;
-				tr.trTime = level.time;
-				travelTime *= 1000.0f;
-				VectorCopy( NPC->r.currentOrigin, lastPos );
-				
-				//This may be kind of wasteful, especially on long throws... use larger steps?  Divide the travelTime into a certain hard number of slices?  Trace just to apex and down?
-				for ( elapsedTime = timeStep; elapsedTime < floor(travelTime)+timeStep; elapsedTime += timeStep )
-				{
-					if ( (float)elapsedTime > travelTime )
-					{//cap it
-						elapsedTime = floor( travelTime );
-					}
-					BG_EvaluateTrajectory( &tr, level.time + elapsedTime, testPos );
-					if ( testPos[2] < lastPos[2] )
-					{//going down, ignore botclip
-						trap->Trace( &trace, lastPos, NPC->r.mins, NPC->r.maxs, testPos, NPC->s.number, NPC->clipmask, 0, 0, 0 );
-					}
-					else
-					{//going up, check for botclip
-						trap->Trace( &trace, lastPos, NPC->r.mins, NPC->r.maxs, testPos, NPC->s.number, NPC->clipmask|CONTENTS_BOTCLIP, 0, 0, 0 );
-					}
-
-					if ( trace.allsolid || trace.startsolid )
-					{
-						blocked = qtrue;
-						break;
-					}
-					if ( trace.fraction < 1.0f )
-					{//hit something
-						if ( Distance( trace.endpos, dest ) < 96 )
-						{//hit the spot, that's perfect!
-							//Hmm, don't want to land on him, though...
-							break;
-						}
-						else 
-						{
-							if ( trace.contents & CONTENTS_BOTCLIP )
-							{//hit a do-not-enter brush
-								blocked = qtrue;
-								break;
-							}
-							if ( trace.plane.normal[2] > 0.7 && DistanceSquared( trace.endpos, dest ) < 4096 )//hit within 64 of desired location, should be okay
-							{//close enough!
-								break;
-							}
-							else
-							{//FIXME: maybe find the extents of this brush and go above or below it on next try somehow?
-								impactDist = DistanceSquared( trace.endpos, dest );
-								if ( impactDist < bestImpactDist )
-								{
-									bestImpactDist = impactDist;
-									VectorCopy( shotVel, failCase );
-								}
-								blocked = qtrue;
-								break;
-							}
-						}
-					}
-					if ( elapsedTime == floor( travelTime ) )
-					{//reached end, all clear
-						if ( trace.fraction >= 1.0f )
-						{//hmm, make sure we'll land on the ground...
-							//FIXME: do we care how far below ourselves or our dest we'll land?
-							VectorCopy( trace.endpos, bottom );
-							bottom[2] -= 128;
-							trap->Trace( &trace, trace.endpos, NPC->r.mins, NPC->r.maxs, bottom, NPC->s.number, NPC->clipmask, 0, 0, 0 );
-							if ( trace.fraction >= 1.0f )
-							{//would fall too far
-								blocked = qtrue;
-							}
-						}
-						break;
-					}
-					else
-					{
-						//all clear, try next slice
-						VectorCopy( testPos, lastPos );
-					}
-				}
-				if ( blocked )
-				{//hit something, adjust speed (which will change arc)
-					hitCount++;
-					shotSpeed = 300 + ((hitCount-2) * 100);//from 100 to 900 (skipping 300)
-					if ( hitCount >= 2 )
-					{//skip 300 since that was the first value we tested
-						shotSpeed += 100;
-					}
-				}
-				else
-				{//made it!
-					break;
-				}
-			}
-			else
-			{//no need to check the path, go with first calc
-				break;
-			}
-		}
-
-		if ( hitCount >= maxHits )
-		{//NOTE: worst case scenario, use the one that impacted closest to the target (or just use the first try...?)
-			//NOTE: or try failcase?
-			VectorCopy( failCase, NPC->client->ps.velocity );
-		}
-		VectorCopy( shotVel, NPC->client->ps.velocity );
-	}
-	else
-	{//a more complicated jump
-		vec3_t		dir, p1, p2, apex;
-		float		time, height, forward, z, xy, dist, apexHeight;
-
-		if ( NPC->r.currentOrigin[2] > dest[2] )//NPCInfo->goalEntity->r.currentOrigin
-		{
-			VectorCopy( NPC->r.currentOrigin, p1 );
-			VectorCopy( dest, p2 );//NPCInfo->goalEntity->r.currentOrigin
-		}
-		else if ( NPC->r.currentOrigin[2] < dest[2] )//NPCInfo->goalEntity->r.currentOrigin
-		{
-			VectorCopy( dest, p1 );//NPCInfo->goalEntity->r.currentOrigin
-			VectorCopy( NPC->r.currentOrigin, p2 );
-		}
-		else
-		{
-			VectorCopy( NPC->r.currentOrigin, p1 );
-			VectorCopy( dest, p2 );//NPCInfo->goalEntity->r.currentOrigin
-		}
-
-		//z = xy*xy
-		VectorSubtract( p2, p1, dir );
-		dir[2] = 0;
-
-		//Get xy and z diffs
-		xy = VectorNormalize( dir );
-		z = p1[2] - p2[2];
-
-		apexHeight = APEX_HEIGHT/2;
-
-		//Determine most desirable apex height
-		//FIXME: length of xy will change curve of parabola, need to account for this
-		//somewhere... PARA_WIDTH
-		/*
-		apexHeight = (APEX_HEIGHT * PARA_WIDTH/xy) + (APEX_HEIGHT * z/128);
-		if ( apexHeight < APEX_HEIGHT * 0.5 )
-		{
-			apexHeight = APEX_HEIGHT*0.5;
-		}
-		else if ( apexHeight > APEX_HEIGHT * 2 )
-		{
-			apexHeight = APEX_HEIGHT*2;
-		}
-		*/
-
-		z = (sqrt(apexHeight + z) - sqrt(apexHeight));
-
-		assert(z >= 0);
-
-//		Com_Printf("apex is %4.2f percent from p1: ", (xy-z)*0.5/xy*100.0f);
-
-		xy -= z;
-		xy *= 0.5;
-		
-		assert(xy > 0);
-
-		VectorMA( p1, xy, dir, apex );
-		apex[2] += apexHeight;
-
-		VectorCopy(apex, NPC->pos1);
-		
-		//Now we have the apex, aim for it
-		height = apex[2] - NPC->r.currentOrigin[2];
-		time = sqrt( height / ( .5 * NPC->client->ps.gravity ) );//was 0.5, but didn't work well for very long jumps
-		if ( !time ) 
-		{
-			//Com_Printf( S_COLOR_RED"ERROR: no time in jump\n" );
-			return qfalse;
-		}
-
-		VectorSubtract ( apex, NPC->r.currentOrigin, NPC->client->ps.velocity );
-		NPC->client->ps.velocity[2] = 0;
-		dist = VectorNormalize( NPC->client->ps.velocity );
-
-		forward = dist / time * 1.25;//er... probably bad, but...
-		VectorScale( NPC->client->ps.velocity, forward, NPC->client->ps.velocity );
-
-		//FIXME:  Uh.... should we trace/EvaluateTrajectory this to make sure we have clearance and we land where we want?
-		NPC->client->ps.velocity[2] = time * NPC->client->ps.gravity;
-
-		//Com_Printf("Jump Velocity: %4.2f, %4.2f, %4.2f\n", NPC->client->ps.velocity[0], NPC->client->ps.velocity[1], NPC->client->ps.velocity[2] );
-	}
-	return qtrue;
-}
-
-//extern void G_SoundOnEnt( gentity_t *ent, int channel, const char *soundPath );
-extern qboolean PM_InKnockDown( playerState_t *ps );
-
-static qboolean NPC_TryJump( gentity_t *NPC, vec3_t goal )
-{//FIXME: never does a simple short, regular jump...
-	usercmd_t	ucmd = NPCS.ucmd;
-
-	if ( TIMER_Done( NPC, "jumpChaseDebounce" ) )
-	{
-		{
-			if ( !PM_InKnockDown( &NPC->client->ps ) && !BG_InRoll( &NPC->client->ps, NPC->client->ps.legsAnim ) )
-			{//enemy is on terra firma
-				vec3_t goal_diff;
-				float goal_z_diff;
-				float goal_xy_dist;
-				VectorSubtract( goal, NPC->r.currentOrigin, goal_diff );
-				goal_z_diff = goal_diff[2];
-				goal_diff[2] = 0;
-				goal_xy_dist = VectorNormalize( goal_diff );
-				if ( goal_xy_dist < 550 && goal_z_diff > -400/*was -256*/ )//for now, jedi don't take falling damage && (NPC->health > 20 || goal_z_diff > 0 ) && (NPC->health >= 100 || goal_z_diff > -128 ))//closer than @512
-				{
-					qboolean debounce = qfalse;
-					if ( NPC->health < 150 && ((NPC->health < 30 && goal_z_diff < 0) || goal_z_diff < -128 ) )
-					{//don't jump, just walk off... doesn't help with ledges, though
-						debounce = qtrue;
-					}
-					else if ( goal_z_diff < 32 && goal_xy_dist < 200 )
-					{//what is their ideal jump height?
-						
-						ucmd.upmove = 127;
-						debounce = qtrue;
-					}
-					else
-					{
-						/*
-						//NO!  All Jedi can jump-navigate now...
-						if ( NPCInfo->rank != RANK_CREWMAN && NPCInfo->rank <= RANK_LT_JG )
-						{//can't do acrobatics
-							return qfalse;
-						}
-						*/
-						if ( goal_z_diff > 0 || goal_xy_dist > 128 )
-						{//Fake a force-jump
-							//Screw it, just do my own calc & throw
-							vec3_t dest;
-							VectorCopy( goal, dest );
-							
-							{
-								int	sideTry = 0;
-								while( sideTry < 10 )
-								{//FIXME: make it so it doesn't try the same spot again?
-									trace_t	trace;
-									vec3_t	bottom;
-
-									VectorCopy( dest, bottom );
-									bottom[2] -= 128;
-									trap->Trace( &trace, dest, NPC->r.mins, NPC->r.maxs, bottom, NPC->s.number, NPC->clipmask, 0, 0, 0 );
-									if ( trace.fraction < 1.0f )
-									{//hit floor, okay to land here
-										break;
-									}
-									sideTry++;
-								}
-								if ( sideTry >= 10 )
-								{//screw it, just jump right at him?
-									VectorCopy( goal, dest );
-								}
-							}
-
-							if ( NPC_Jump( NPC, dest ) )
-							{
-								//Com_Printf( "(%d) pre-checked force jump\n", level.time );
-
-								//FIXME: store the dir we;re going in in case something gets in the way of the jump?
-								//? = vectoyaw( NPC->client->ps.velocity );
-								/*
-								if ( NPC->client->ps.velocity[2] < 320 )
-								{
-									NPC->client->ps.velocity[2] = 320;
-								}
-								else
-								*/
-								{//FIXME: make this a function call
-									int jumpAnim;
-									//FIXME: this should be more intelligent, like the normal force jump anim logic
-									//if ( NPC->client->NPC_class == CLASS_BOBAFETT 
-									//	||( NPCInfo->rank != RANK_CREWMAN && NPCInfo->rank <= RANK_LT_JG ) )
-									//{//can't do acrobatics
-									//	jumpAnim = BOTH_FORCEJUMP1;
-									//}
-									//else
-									//{
-										jumpAnim = BOTH_FLIP_F;
-									//}
-									G_SetAnim( NPC, &ucmd, SETANIM_BOTH, jumpAnim, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD, 0 );
-								}
-
-								NPC->client->ps.fd.forceJumpZStart = NPC->r.currentOrigin[2];
-								//NPC->client->ps.pm_flags |= PMF_JUMPING;
-
-								NPC->client->ps.weaponTime = NPC->client->ps.torsoTimer;
-								NPC->client->ps.fd.forcePowersActive |= ( 1 << FP_LEVITATION );
-								
-								//if ( NPC->client->NPC_class == CLASS_BOBAFETT )
-								//{
-								//	G_SoundOnEnt( NPC, CHAN_ITEM, "sound/boba/jeton.wav" );
-								//	NPC->client->jetPackTime = level.time + Q_irand( 1000, 15000 + irand(0, 30000) );
-								//}
-								//else
-								//{
-								//	G_SoundOnEnt( NPC, CHAN_BODY, "sound/weapons/force/jump.wav" );
-								//}
-
-								TIMER_Set( NPC, "forceJumpChasing", Q_irand( 2000, 3000 ) );
-								debounce = qtrue;
-							}
-						}
-					}
-
-					if ( debounce )
-					{
-						//Don't jump again for another 2 to 5 seconds
-						TIMER_Set( NPC, "jumpChaseDebounce", Q_irand( 2000, 5000 ) );
-						ucmd.forwardmove = 127;
-						VectorClear( NPC->client->ps.moveDir );
-						TIMER_Set( NPC, "duck", -level.time );
-						return qtrue;
-					}
-				}
-			}
-		}
-	}
-
-	return qfalse;
-}
-
 void NPC_ClearPathData ( gentity_t *NPC )
 {
 	NPC->longTermGoal = -1;
@@ -4174,6 +4327,21 @@ qboolean NPC_FollowRoutes( void )
 		wpDist = Distance(gWPArray[NPC->wpCurrent]->origin, NPC->r.currentOrigin);
 	}
 
+	if ( (NPC->wpCurrent >= 0 && NPC->wpCurrent < gWPNum && NPC->longTermGoal >= 0 && NPC->longTermGoal < gWPNum && wpDist <= 512)
+		&& (NPC->wpSeenTime < level.time - 1000 || NPC->wpTravelTime < level.time || NPC->last_move_time < level.time - 1000) )
+	{// Try this for 2 seconds before giving up...
+		float MAX_JUMP_DISTANCE = 192.0;
+		
+		if (NPC_IsJedi(NPC)) MAX_JUMP_DISTANCE = 512.0; // Jedi can jump further...
+
+		if (Distance(gWPArray[NPC->wpCurrent]->origin, NPC->r.currentOrigin) <= MAX_JUMP_DISTANCE
+			&& NPC_TryJump( NPC, gWPArray[NPC->wpCurrent]->origin ))
+		{// Looks like we can jump there... Let's do that instead of failing!
+			//trap->Print("%s is jumping to waypoint.\n", NPC->client->pers.netname);
+			return qtrue; // next think...
+		}
+	}
+
 	if (NPC->wpSeenTime >= level.time - 5000
 		&& NPC->wpCurrent >= 0 
 		&& NPC->wpCurrent < gWPNum
@@ -4214,7 +4382,8 @@ qboolean NPC_FollowRoutes( void )
 		return qfalse; // next think...
 	}
 
-	if (VectorDistanceNoHeight(gWPArray[NPC->longTermGoal]->origin, NPC->r.currentOrigin) < 32)
+	if (Distance(gWPArray[NPC->longTermGoal]->origin, NPC->r.currentOrigin) < 24
+		|| VectorDistanceNoHeight(gWPArray[NPC->longTermGoal]->origin, NPC->r.currentOrigin) < 16)
 	{// We're at out goal! Find a new goal...
 		//trap->Print("HIT GOAL!\n");
 		NPC_ClearPathData(NPC);
@@ -4225,7 +4394,8 @@ qboolean NPC_FollowRoutes( void )
 		return qfalse; // next think...
 	}
 
-	if (VectorDistanceNoHeight(gWPArray[NPC->wpCurrent]->origin, NPC->r.currentOrigin) < 32)
+	if (Distance(gWPArray[NPC->wpCurrent]->origin, NPC->r.currentOrigin) < 24
+		|| VectorDistanceNoHeight(gWPArray[NPC->wpCurrent]->origin, NPC->r.currentOrigin) < 16)
 	{// At current node.. Pick next in the list...
 		//trap->Print("HIT WP %i. Next WP is %i.\n", NPC->wpCurrent, NPC->wpNext);
 
@@ -4251,9 +4421,9 @@ qboolean NPC_FollowRoutes( void )
 	VectorSubtract( gWPArray[NPC->wpCurrent]->origin, NPC->r.currentOrigin, NPC->movedir );
 	
 	if (g_gametype.integer == GT_WARZONE || (NPC->r.svFlags & SVF_BOT))
-		UQ1_UcmdMoveForDir( NPC, &NPCS.ucmd, NPC->movedir, qfalse );
+		if (!UQ1_UcmdMoveForDir( NPC, &NPCS.ucmd, NPC->movedir, qfalse, gWPArray[NPC->wpCurrent]->origin )) { NPC_PickRandomIdleAnimantion(NPC); return qtrue; }
 	else 
-		UQ1_UcmdMoveForDir( NPC, &NPCS.ucmd, NPC->movedir, !NPC_HaveValidEnemy() );
+		if (!UQ1_UcmdMoveForDir( NPC, &NPCS.ucmd, NPC->movedir, !NPC_HaveValidEnemy(), gWPArray[NPC->wpCurrent]->origin )) { NPC_PickRandomIdleAnimantion(NPC); return qtrue; }
 
 	VectorCopy( NPC->movedir, NPC->client->ps.moveDir );
 
@@ -4456,7 +4626,7 @@ qboolean NPC_FollowEnemyRoute( void )
 
 	NPC_FacePosition( gWPArray[NPC->wpCurrent]->origin, qfalse );
 	VectorSubtract( gWPArray[NPC->wpCurrent]->origin, NPC->r.currentOrigin, NPC->movedir );
-	UQ1_UcmdMoveForDir( NPC, &NPCS.ucmd, NPC->movedir, qfalse );
+	if (!UQ1_UcmdMoveForDir( NPC, &NPCS.ucmd, NPC->movedir, qfalse, gWPArray[NPC->wpCurrent]->origin )) { NPC_PickRandomIdleAnimantion(NPC); return qtrue; }
 	VectorCopy( NPC->movedir, NPC->client->ps.moveDir );
 	NPC_SelectMoveAnimation(qfalse);
 
@@ -4591,6 +4761,7 @@ void NPC_Think ( gentity_t *self)//, int msec )
 			return;
 		}
 
+		/*
 		if ( NPCS.NPC->s.weapon == WP_SABER && g_npcspskill.integer >= 2 && NPCS.NPCInfo->rank > RANK_LT_JG )
 		{//Jedi think faster on hard difficulty, except low-rank (reborn)
 			NPCS.NPCInfo->nextBStateThink = level.time + FRAMETIME/2;
@@ -4599,6 +4770,10 @@ void NPC_Think ( gentity_t *self)//, int msec )
 		{//Maybe even 200 ms?
 			NPCS.NPCInfo->nextBStateThink = level.time + FRAMETIME;
 		}
+		*/
+
+		// UQ1: Think more often!
+		NPCS.NPCInfo->nextBStateThink = level.time + FRAMETIME/2;
 
 		memcpy( &NPCS.ucmd, &NPCS.NPCInfo->last_ucmd, sizeof( usercmd_t ) );
 		NPCS.ucmd.buttons = 0; // init buttons...

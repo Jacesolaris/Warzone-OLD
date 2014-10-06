@@ -572,28 +572,13 @@ int BOT_GetFCost(gentity_t *bot, int to, int num, int parentNum, float *gcost)
 #define NODE_INVALID -1
 #define MAX_NODELINKS 32
 
-int			*openlist;												//add 1 because it's a binary heap, and they don't use 0 - 1 is the first used index
-float		*gcost;
-int			*fcost;
-char		*list;														//0 is neither, 1 is open, 2 is closed - char because it's the smallest data type
-int			*parent;
+extern int			*openlist;					//add 1 because it's a binary heap, and they don't use 0 - 1 is the first used index
+extern float		*gcost;
+extern int			*fcost;
+extern char			*list;						//0 is neither, 1 is open, 2 is closed - char because it's the smallest data type
+extern int			*parent;
 
 //#define __DISABLED_OLD_ASTAR__
-
-qboolean PATHFINDING_MEMORY_ALLOCATED = qfalse;
-
-void AllocatePathFindingMemory()
-{
-	if (PATHFINDING_MEMORY_ALLOCATED) return;
-
-	openlist = (int *)G_Alloc(sizeof(int)*(MAX_WPARRAY_SIZE));
-	gcost = (float *)G_Alloc(sizeof(float)*(MAX_WPARRAY_SIZE));
-	fcost = (int *)G_Alloc(sizeof(int)*(MAX_WPARRAY_SIZE));
-	list = (char *)G_Alloc(sizeof(char)*(MAX_WPARRAY_SIZE));
-	parent = (int *)G_Alloc(sizeof(int)*(MAX_WPARRAY_SIZE));
-
-	PATHFINDING_MEMORY_ALLOCATED = qtrue;
-}
 
 int DOM_FindIdealPathtoWP(bot_state_t *bs, int from, int to, int badwp2, int *pathlist)
 {

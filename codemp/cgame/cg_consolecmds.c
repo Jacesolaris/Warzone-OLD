@@ -259,6 +259,26 @@ extern void AIMod_AddLiftPoint ( void );
 extern void AIMod_AWC_MarkBadHeight ( void );
 extern void CG_ShowSurface ( void );
 extern void CG_ShowSlope ( void );
+
+void CG_ShowLifts ( void )
+{
+	int i = 0;
+	int count = 0;
+
+	for (i = 0; i < MAX_GENTITIES; i++)
+	{
+		centity_t *cent = &cg_entities[i];
+
+		if (!cent) continue;
+		if (cent->currentState.eType != ET_MOVER_MARKER) continue;
+		
+		count++;
+		trap->Print("Mover found at %f %f %f (top %f %f %f).\n", cent->currentState.origin[0], cent->currentState.origin[1], cent->currentState.origin[2]
+		, cent->currentState.origin2[0], cent->currentState.origin2[1], cent->currentState.origin2[2]);
+	}
+
+	trap->Print("There are %i movers.\n", count);
+}
 //[/AUTOWAYPOINT]
 
 typedef struct consoleCommand_s {
@@ -293,6 +313,7 @@ static consoleCommand_t	commands[] = {
 	{ "nextskin",					CG_TestModelNextSkin_f },
 	{ "prevframe",					CG_TestModelPrevFrame_f },
 	{ "prevskin",					CG_TestModelPrevSkin_f },
+	{ "showlifts",					CG_ShowLifts },
 	{ "showslope",					CG_ShowSlope },
 	{ "showsurface",				CG_ShowSurface },
 	{ "siegeCompleteCvarUpdate",	CG_SiegeCompleteCvarUpdate_f },

@@ -36,15 +36,90 @@ extern int DOM_FindIdealPathtoWP(bot_state_t *bs, int from, int to, int badwp2, 
 
 qboolean PATHING_IGNORE_FRAME_TIME = qfalse;
 
-extern int BOT_GetFCost(gentity_t *bot, int to, int num, int parentNum, float *gcost);
+int			*openlist;												//add 1 because it's a binary heap, and they don't use 0 - 1 is the first used index
+float		*gcost;
+int			*fcost;
+char		*list;														//0 is neither, 1 is open, 2 is closed - char because it's the smallest data type
+int			*parent;
 
-extern int			*openlist;					//add 1 because it's a binary heap, and they don't use 0 - 1 is the first used index
-extern float		*gcost;
-extern int			*fcost;
-extern char			*list;						//0 is neither, 1 is open, 2 is closed - char because it's the smallest data type
-extern int			*parent;
+qboolean PATHFINDING_MEMORY_ALLOCATED = qfalse;
 
-extern void AllocatePathFindingMemory();
+void AllocatePathFindingMemory()
+{
+	if (PATHFINDING_MEMORY_ALLOCATED) return;
+
+	openlist = (int *)G_Alloc(sizeof(int)*(MAX_WPARRAY_SIZE));
+	gcost = (float *)G_Alloc(sizeof(float)*(MAX_WPARRAY_SIZE));
+	fcost = (int *)G_Alloc(sizeof(int)*(MAX_WPARRAY_SIZE));
+	list = (char *)G_Alloc(sizeof(char)*(MAX_WPARRAY_SIZE));
+	parent = (int *)G_Alloc(sizeof(int)*(MAX_WPARRAY_SIZE));
+
+	PATHFINDING_MEMORY_ALLOCATED = qtrue;
+}
+
+qboolean ASTAR_COSTS_DONE = qfalse;
+
+void ASTAR_InitWaypointCosts ( void )
+{
+	int i, j;
+
+	if (ASTAR_COSTS_DONE || gWPNum <= 0) return;
+
+#pragma omp parallel //num_threads(8)
+	{
+#pragma omp parallel for
+		// Init the waypoint link costs...
+		for (i = 0; i < gWPNum; i++)
+		{
+#pragma omp parallel for
+			for (j = 0; j < gWPArray[i]->neighbornum; j++)
+			{
+				float ht = 0, hd = 0;
+
+				gWPArray[i]->neighbors[j].cost = Distance(gWPArray[i]->origin, gWPArray[gWPArray[i]->neighbors[j].num]->origin);
+
+				// UQ1: Prefer flat...
+				ht = gWPArray[i]->origin[2] - gWPArray[gWPArray[i]->neighbors[j].num]->origin[2];
+				
+				if (ht < 0) ht *= -1.0f;
+
+				ht += 1.0;
+
+				gWPArray[i]->neighbors[j].cost *= ht;
+			}
+		}
+	}
+
+	ASTAR_COSTS_DONE = qtrue;
+}
+
+int ASTAR_GetFCost(gentity_t *bot, int to, int num, int parentNum, float *gcost)
+{
+	float	gc = 0;
+	float	hc = 0;
+	vec3_t	v;
+	float	height_diff = 0;
+
+	if (gcost[num] == -1)
+	{
+		if (parentNum != -1)
+		{
+			gc = gcost[parentNum];
+			gc += Distance(gWPArray[num]->origin, gWPArray[parentNum]->origin);
+		}
+
+		gcost[num] = gc;
+	}
+	else
+	{
+		gc = gcost[num];
+	}
+
+	hc = Distance(gWPArray[to]->origin, gWPArray[num]->origin);
+
+	return (int)((gc*0.1) + (hc*0.1));
+	//return (int)(gc + hc);
+}
 
 int ASTAR_FindPathFast(int from, int to, int *pathlist, qboolean shorten)
 {
@@ -74,37 +149,23 @@ int ASTAR_FindPathFast(int from, int to, int *pathlist, qboolean shorten)
 	// Check if memory needs to be allocated...
 	AllocatePathFindingMemory();
 
+	// Init waypoint link costs if needed...
+	ASTAR_InitWaypointCosts();
+
 	memset(openlist, 0, (sizeof(int)* (gWPNum + 1)));
 	memset(gcost, 0, (sizeof(float)* gWPNum));
 	memset(fcost, 0, (sizeof(int)* gWPNum));
 	memset(list, 0, (sizeof(char)* gWPNum));
 	memset(parent, 0, (sizeof(int)* gWPNum));
 
-	//omp_set_dynamic(1);
-	//omp_set_num_threads(8);
-	//omp_set_nested(1);
-
 #pragma omp parallel //num_threads(8)
 	{
 #pragma omp parallel for
 		for (i = 0; i < gWPNum; i++)
 		{
-			float ht = 0;
-
-			//trap->Print("PARALLEL DEBUG: Hello from thread %i. Num threads %i. In Parallel: %i\n", omp_get_thread_num(), omp_get_num_threads(), omp_in_parallel());
-			//if (omp_get_num_threads() > debug_max_threads) debug_max_threads = omp_get_num_threads();
-
 			gcost[i] = Distance(gWPArray[i]->origin, gWPArray[to]->origin);
-
-			// UQ1: Prefer flat...
-			ht = gWPArray[i]->origin[2] - gWPArray[to]->origin[2];
-			if (ht < 0) ht *= -1.0f;
-			if (ht > STEPSIZE)
-				gcost[i] *= (ht / 17);
 		}
 	}
-
-	//trap->Print("PARALLEL DEBUG: Max threads used: %i\n", debug_max_threads);
 
 	openlist[gWPNum + 1] = 0;
 
@@ -167,14 +228,11 @@ int ASTAR_FindPathFast(int from, int to, int *pathlist, qboolean shorten)
 			{
 				newnode = gWPArray[atNode]->neighbors[i].num;
 
-				if (newnode > gWPNum)
+				if (newnode >= gWPNum)
 					continue;
 
 				if (newnode < 0)
 					continue;
-
-				//if (nodes[newnode].objectNum[0] == 1)
-				//	continue; // Skip water/ice disabled node!
 
 				if (list[newnode] == 2)
 				{																		//if this node is on the closed list, skip it
@@ -192,7 +250,12 @@ int ASTAR_FindPathFast(int from, int to, int *pathlist, qboolean shorten)
 						break;															//this will break the 'for' and go all the way to 'if (list[to] == 1)'
 					}
 
-					fcost[newnode] = BOT_GetFCost(bot, to, newnode, parent[newnode], gcost);	//store it's f cost value
+					fcost[newnode] = ASTAR_GetFCost(bot, to, newnode, parent[newnode], gcost);	//store it's f cost value
+					
+					if (fcost[newnode] <= 0 && newnode != from)
+					{
+						trap->Print("ASTAR WARNING: Missing fcost for node %i. This should not happen!\n", newnode);
+					}
 
 					//this loop re-orders the heap so that the lowest fcost is at the top
 					m = numOpen;
@@ -216,7 +279,7 @@ int ASTAR_FindPathFast(int from, int to, int *pathlist, qboolean shorten)
 				{
 					gc = gcost[atNode];
 
-					if (gWPArray[atNode]->neighbors[i].cost > 0 && gWPArray[atNode]->neighbors[i].cost < 9999)
+					if (gWPArray[atNode]->neighbors[i].cost > 0)// && gWPArray[atNode]->neighbors[i].cost < 32768/*9999*/)
 					{// UQ1: Already have a cost value, skip the calculations!
 						gc += gWPArray[atNode]->neighbors[i].cost;
 					}
@@ -227,20 +290,7 @@ int ASTAR_FindPathFast(int from, int to, int *pathlist, qboolean shorten)
 						VectorSubtract(gWPArray[newnode]->origin, gWPArray[atNode]->origin, vec);
 						gc += VectorLength(vec);				//calculate what the gcost would be if we reached this node along the current path
 						gWPArray[atNode]->neighbors[i].cost = VectorLength(vec);
-
-						/*
-						float height_diff = 0.0f;
-						float cost = 0.0f;
-
-						cost = Distance(gWPArray[newnode]->origin, gWPArray[atNode]->origin);
-
-						height_diff = HeightDistance(gWPArray[newnode]->origin, gWPArray[atNode]->origin);
-						cost += (height_diff * height_diff); // Squared for massive preferance to staying at same plane...
-
-						gWPArray[atNode]->neighbors[i].cost = cost;
-
-						gc += cost;
-						*/
+						trap->Print("ASTAR WARNING: Missing cost for node %i neighbour %i. This should not happen!\n", atNode, i);
 					}
 
 					if (gc < gcost[newnode])				//if the new gcost is less (ie, this path is shorter than what we had before)
@@ -253,7 +303,7 @@ int ASTAR_FindPathFast(int from, int to, int *pathlist, qboolean shorten)
 							if (openlist[j] == newnode)	//find this node in the list
 							{
 								//calculate the new fcost and store it
-								fcost[newnode] = BOT_GetFCost(bot, to, newnode, parent[newnode], gcost);
+								fcost[newnode] = ASTAR_GetFCost(bot, to, newnode, parent[newnode], gcost);
 
 								//reorder the list again, with the lowest fcost item on top
 								m = j;
@@ -301,7 +351,7 @@ int ASTAR_FindPathFast(int from, int to, int *pathlist, qboolean shorten)
 		{
 			if (count + 1 >= MAX_WPARRAY_SIZE)
 			{
-				trap->Print("ERROR: pathlist count > MAX_WPARRAY_SIZE.\n");
+				trap->Print("ASTAR WARNING: pathlist count > MAX_WPARRAY_SIZE.\n");
 				return -1; // UQ1: Added to stop crash if path is too long for the memory allocation...
 			}
 
@@ -311,7 +361,14 @@ int ASTAR_FindPathFast(int from, int to, int *pathlist, qboolean shorten)
 
 		pathlist[count++] = from;								//add the beginning node to the end of the pathlist
 
-		//trap->Print("Pathsize is %i.\n", count);
+		// Debug output the pathlist...
+		/*trap->Print("Pathsize is [%i]. Path [", count);
+		for (i = 0; i < count; i++)
+		{
+			trap->Print(" %i", pathlist[i]);
+		}
+		trap->Print(" ]\n");*/
+
 		return (count);
 	}
 
