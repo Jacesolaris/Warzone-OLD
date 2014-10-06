@@ -1561,7 +1561,8 @@ void G_CheckMinimumNpcs( void ) {
 		}
 		else*/
 		{
-			if ( g_gametype.integer == GT_WARZONE )
+			//if ( g_gametype.integer == GT_WARZONE )
+			if ( g_gametype.integer >= GT_TEAM )
 			{
 				// New War Zone Instances (not JKG style)... Get CTF spawnpoints...
 				team_t SPAWN_TEAM = TEAM_FREE;

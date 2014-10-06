@@ -93,6 +93,7 @@ void DOM_SetFakeNPCName(gentity_t *ent)
 void DOM_InitFakeNPC(gentity_t *bot)
 {
 	int i = 0;
+	team_t orig_team = bot->client->sess.sessionTeam;
 
 	bot->NPC = New_NPC_t(bot->s.number);
 
@@ -173,6 +174,15 @@ void DOM_InitFakeNPC(gentity_t *bot)
 
 	bot->client->ps.fd.forcePowersKnown |= (1 << FP_DRAIN);
 	bot->client->ps.fd.forcePowerLevel[FP_DRAIN] = FORCE_LEVEL_3;
+
+	
+	if ( g_gametype.integer >= GT_TEAM )
+	{
+		bot->client->sess.sessionTeam = orig_team;
+
+		if (orig_team == TEAM_RED) bot->client->playerTeam = bot->s.teamowner = NPCTEAM_ENEMY;
+		else bot->client->playerTeam = bot->s.teamowner = NPCTEAM_PLAYER;
+	}
 }
 
 extern void BotChangeViewAngles(bot_state_t *bs, float thinktime);
