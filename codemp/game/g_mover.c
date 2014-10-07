@@ -14,6 +14,7 @@ PUSHMOVE
 */
 
 void MatchTeam( gentity_t *teamLeader, int moverState, int time );
+gentity_t *G_FindDoorTrigger( gentity_t *ent );
 
 typedef struct pushed_s {
 	gentity_t	*ent;
@@ -644,9 +645,22 @@ Reached_BinaryMover
 
 void Reached_BinaryMover( gentity_t *ent )
 {
+	gentity_t *trigger = G_FindDoorTrigger( ent );
+
 	// stop the looping sound
 	ent->s.loopSound = 0;
 	ent->s.loopIsSoundset = qfalse;
+
+	if ( !(ent->moverState == MOVER_POS1 || ent->moverState == MOVER_POS2) )
+	{// Moving. Start debounce time clock...
+		trigger->useDebounceTime = level.time + 5100; // about 5 secs wait at each point???
+	}
+	else if ((ent->moverState == MOVER_POS1 || ent->moverState == MOVER_POS2)
+		&& trigger
+		&& trigger->useDebounceTime > level.time)
+	{// Wait at this position for the remainder of the debounce time...
+		return;
+	}
 
 	if ( ent->moverState == MOVER_1TO2 )
 	{//reached open
@@ -873,8 +887,21 @@ Use_BinaryMover
 */
 void Use_BinaryMover( gentity_t *ent, gentity_t *other, gentity_t *activator )
 {
+	gentity_t *trigger = G_FindDoorTrigger( ent );
+
 	if ( !ent->use )
 	{//I cannot be used anymore, must be a door with a wait of -1 that's opened.
+		return;
+	}
+
+	if ( !(ent->moverState == MOVER_POS1 || ent->moverState == MOVER_POS2) )
+	{// Moving. Start debounce time clock...
+		trigger->useDebounceTime = level.time + 5100; // about 5 secs wait at each point???
+	}
+	else if ((ent->moverState == MOVER_POS1 || ent->moverState == MOVER_POS2)
+		&& trigger
+		&& trigger->useDebounceTime > level.time)
+	{// Wait at this position for the remainder of the debounce time...
 		return;
 	}
 
@@ -1147,6 +1174,30 @@ void Touch_DoorTrigger( gentity_t *ent, gentity_t *other, trace_t *trace )
 {
 	gentity_t *relockEnt = NULL;
 
+	if ( other->client )
+	{// UQ1: let's use a timer to get it to wait at top and bottom positions...
+		if ( !(ent->parent->moverState == MOVER_POS1 || ent->parent->moverState == MOVER_POS2) )
+		{// Moving. Start debounce time clock...
+			ent->useDebounceTime = level.time + 5100; // about 5 secs wait at each point???
+		}
+
+		if ((ent->parent->moverState == MOVER_POS1 || ent->parent->moverState == MOVER_POS2)
+			&& ent->useDebounceTime > level.time)
+		{// Wait at this position for the remainder of the debounce time...
+			return;
+		}
+	}
+
+	if ( other->client )
+	{
+		if ( ent->parent->moverState == MOVER_1TO2
+			|| ent->parent->moverState == MOVER_2TO1
+			|| ent->parent->moverState == MOVER_POS2 )
+		{// UQ1: Since I enabled triggers at top of elevator, this will make it go down again...
+			return;
+		}
+	}
+
 	if ( other->client && other->client->sess.sessionTeam == TEAM_SPECTATOR )
 	{
 		// if the door is not open and not opening
@@ -1286,7 +1337,7 @@ void Think_SpawnNewDoorTrigger( gentity_t *ent )
 	other->classname = "trigger_door";
 	// remember the thinnest axis
 	other->count = best;
-
+	
 	MatchTeam( ent, ent->moverState, level.time );
 }
 
@@ -1478,6 +1529,12 @@ void SP_func_door (gentity_t *ent)
 	// default wait of 2 seconds
 	if (!ent->wait)
 		ent->wait = 2;
+
+	if (ent->wait < 5)
+	{// UQ1: Override now we have trigger up top as well... Give people/AI time to get on!!!
+		ent->wait = 5;
+	}
+
 	ent->wait *= 1000;
 
 	ent->delay *= 1000;
@@ -1552,9 +1609,18 @@ void SP_func_door (gentity_t *ent)
 		}
 		else
 		{//locked doors still spawn a trigger
-			ent->think = Think_SpawnNewDoorTrigger;
+			//ent->think = Think_SpawnNewDoorTrigger;
 		}
 	}
+	
+	// UQ1: Increase trigger size to allow activations at both ends...
+	ent->r.absmin[0] -= 128.0;
+	ent->r.absmin[1] -= 128.0;
+	ent->r.absmin[2] = -65000;
+	ent->r.absmax[0] += 128.0;
+	ent->r.absmax[1] += 128.0;
+	ent->r.absmax[2] = 65000;
+	ent->think = Think_SpawnNewDoorTrigger;
 }
 
 /*
