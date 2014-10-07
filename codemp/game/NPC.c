@@ -4244,6 +4244,25 @@ qboolean DOM_NPC_ClearPathToSpot( gentity_t *NPC, vec3_t dest, int impactEntNum 
 	return qtrue;
 }
 
+// Recorded in g_mover.c
+extern vec3_t		MOVER_LIST[1024];
+extern vec3_t		MOVER_LIST_TOP[1024];
+extern int			MOVER_LIST_NUM;
+
+qboolean NPC_PointIsMoverLocation( vec3_t org )
+{// Never spawn near a mover location...
+	int i = 0;
+
+	for (i = 0; i < MOVER_LIST_NUM; i++)
+	{
+		if (VectorDistanceNoHeight(org, MOVER_LIST[i]) >= 128.0) continue;
+
+		return qtrue;
+	}
+
+	return qfalse;
+}
+
 void NPC_ClearPathData ( gentity_t *NPC )
 {
 	NPC->longTermGoal = -1;
@@ -4445,6 +4464,17 @@ qboolean NPC_FollowRoutes( void )
 
 	NPC_FacePosition( gWPArray[NPC->wpCurrent]->origin, qfalse );
 	VectorSubtract( gWPArray[NPC->wpCurrent]->origin, NPC->r.currentOrigin, NPC->movedir );
+
+	if (HeightDistance(gWPArray[NPC->wpCurrent]->origin, NPC->r.currentOrigin) > 24
+		&& VectorDistanceNoHeight(gWPArray[NPC->wpCurrent]->origin, NPC->r.currentOrigin) <= 48
+		&& NPC_PointIsMoverLocation(gWPArray[NPC->wpCurrent]->origin))
+	{// Most likely on an elevator... Idle...
+		NPCS.ucmd.forwardmove = 0;
+		NPCS.ucmd.rightmove = 0;
+		NPCS.ucmd.upmove = 0;
+		NPC_PickRandomIdleAnimantion(NPC);
+		return qtrue;
+	}
 	
 	if (g_gametype.integer == GT_WARZONE || (NPC->r.svFlags & SVF_BOT))
 		if (!UQ1_UcmdMoveForDir( NPC, &NPCS.ucmd, NPC->movedir, qfalse, gWPArray[NPC->wpCurrent]->origin )) { NPC_PickRandomIdleAnimantion(NPC); return qtrue; }
@@ -4691,6 +4721,18 @@ qboolean NPC_FollowEnemyRoute( void )
 
 	NPC_FacePosition( gWPArray[NPC->wpCurrent]->origin, qfalse );
 	VectorSubtract( gWPArray[NPC->wpCurrent]->origin, NPC->r.currentOrigin, NPC->movedir );
+
+	if (HeightDistance(gWPArray[NPC->wpCurrent]->origin, NPC->r.currentOrigin) > 24
+		&& VectorDistanceNoHeight(gWPArray[NPC->wpCurrent]->origin, NPC->r.currentOrigin) <= 48
+		&& NPC_PointIsMoverLocation(gWPArray[NPC->wpCurrent]->origin))
+	{// Most likely on an elevator... Idle...
+		NPCS.ucmd.forwardmove = 0;
+		NPCS.ucmd.rightmove = 0;
+		NPCS.ucmd.upmove = 0;
+		NPC_PickRandomIdleAnimantion(NPC);
+		return qtrue;
+	}
+
 	if (!UQ1_UcmdMoveForDir( NPC, &NPCS.ucmd, NPC->movedir, qfalse, gWPArray[NPC->wpCurrent]->origin )) { NPC_PickRandomIdleAnimantion(NPC); return qtrue; }
 	VectorCopy( NPC->movedir, NPC->client->ps.moveDir );
 	NPC_SelectMoveAnimation(qfalse);
@@ -4717,7 +4759,8 @@ void NPC_Think ( gentity_t *self)//, int msec )
 	int i = 0;
 	//gentity_t *player;
 
-	self->nextthink = level.time + FRAMETIME;
+	//self->nextthink = level.time + FRAMETIME;
+	self->nextthink = level.time;
 
 	SetNPCGlobals( self );
 
@@ -4761,7 +4804,7 @@ void NPC_Think ( gentity_t *self)//, int msec )
 		return;
 	}
 
-	self->nextthink = level.time + FRAMETIME/2;
+	//self->nextthink = level.time + FRAMETIME/2;
 
 	// UQ1: WTF - an empty loop??!?!?!?!?!?!!?!
 /*
@@ -4839,6 +4882,7 @@ void NPC_Think ( gentity_t *self)//, int msec )
 
 		// UQ1: Think more often!
 		NPCS.NPCInfo->nextBStateThink = level.time + FRAMETIME/2;
+		//NPCS.NPCInfo->nextBStateThink = level.time;
 
 		memcpy( &NPCS.ucmd, &NPCS.NPCInfo->last_ucmd, sizeof( usercmd_t ) );
 		NPCS.ucmd.buttons = 0; // init buttons...
@@ -5112,20 +5156,17 @@ void NPC_Think ( gentity_t *self)//, int msec )
 
 		//or use client->pers.lastCommand?
 		NPCS.NPCInfo->last_ucmd.serverTime = level.time - 50;
-		if ( !NPCS.NPC->next_roff_time || NPCS.NPC->next_roff_time < level.time )
+		//if ( !NPCS.NPC->next_roff_time || NPCS.NPC->next_roff_time < level.time )
 		{//If we were following a roff, we don't do normal pmoves.
 			//FIXME: firing angles (no aim offset) or regular angles?
-			if (self->enemy) NPC_UpdateAngles(qtrue, qtrue);
+			//if (self->enemy) NPC_UpdateAngles(qtrue, qtrue);
 			memcpy( &NPCS.ucmd, &NPCS.NPCInfo->last_ucmd, sizeof( usercmd_t ) );
-			//UQ1_UcmdMoveForDir( self, &NPCS.ucmd, self->movedir, ( NPCS.ucmd.buttons & BUTTON_WALKING ) );
 			ClientThink(NPCS.NPC->s.number, &NPCS.ucmd);
 		}
-		else
-		{
-			//UQ1_UcmdMoveForDir( self, &NPCS.ucmd, self->movedir, ( NPCS.ucmd.buttons & BUTTON_WALKING ) );
-			NPC_ApplyRoff();
-		}
-		//VectorCopy(self->s.origin, self->s.origin2 );
+		//else
+		//{
+		//	NPC_ApplyRoff();
+		//}
 	}
 
 	//must update icarus *every* frame because of certain animation completions in the pmove stuff that can leave a 50ms gap between ICARUS animation commands

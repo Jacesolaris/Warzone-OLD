@@ -781,6 +781,25 @@ extern void SP_NPC_spawner( gentity_t *self);
 
 int checkminimumnpcs_time = 0;
 
+// Recorded in g_mover.c
+extern vec3_t		MOVER_LIST[1024];
+extern vec3_t		MOVER_LIST_TOP[1024];
+extern int			MOVER_LIST_NUM;
+
+qboolean JKG_SpawnpointNearMoverEntityLocation( vec3_t org )
+{// Never spawn near a mover location...
+	int i = 0;
+
+	for (i = 0; i < MOVER_LIST_NUM; i++)
+	{
+		if (VectorDistanceNoHeight(org, MOVER_LIST[i]) >= 256.0) continue;
+
+		return qtrue;
+	}
+
+	return qfalse;
+}
+
 qboolean JKG_CheckBelowWaypoint( int wp )
 {
 	trace_t tr;
@@ -949,7 +968,7 @@ void G_CheckVendorNPCs( void )
 		int			random = irand(0,36);
 		int			tries = 0;
 
-		while (gWPArray[waypoint]->inuse == qfalse || gWPArray[waypoint]->wpIsBad == qtrue 
+		while (gWPArray[waypoint]->inuse == qfalse || gWPArray[waypoint]->wpIsBad == qtrue || JKG_SpawnpointNearMoverEntityLocation(gWPArray[waypoint]->origin)
 #ifndef __WAYPOINTS_PRECHECKED__
 			|| !JKG_CheckBelowWaypoint(waypoint) || !JKG_CheckRoutingFrom( waypoint )
 #endif //__WAYPOINTS_PRECHECKED__
@@ -1027,7 +1046,7 @@ void G_CheckCivilianNPCs( void )
 		int			random = irand(0,36);
 		int			tries = 0;
 
-		while (gWPArray[waypoint]->inuse == qfalse || gWPArray[waypoint]->wpIsBad == qtrue 
+		while (gWPArray[waypoint]->inuse == qfalse || gWPArray[waypoint]->wpIsBad == qtrue || JKG_SpawnpointNearMoverEntityLocation(gWPArray[waypoint]->origin)
 #ifndef __WAYPOINTS_PRECHECKED__
 			|| !JKG_CheckBelowWaypoint(waypoint) || !JKG_CheckRoutingFrom( waypoint )
 #endif //__WAYPOINTS_PRECHECKED__
@@ -1548,7 +1567,7 @@ void G_CheckMinimumNpcs( void ) {
 
 			if (NPC_SPAWNPOINT[0] == 0 && NPC_SPAWNPOINT[1] == 0 && NPC_SPAWNPOINT[2] == 0)
 			{// Bad spot returned... Fallback to normal waypoint spawn...
-				while (gWPArray[waypoint]->inuse == qfalse || gWPArray[waypoint]->wpIsBad == qtrue 
+				while (gWPArray[waypoint]->inuse == qfalse || gWPArray[waypoint]->wpIsBad == qtrue || JKG_SpawnpointNearMoverEntityLocation(gWPArray[waypoint]->origin)
 #ifndef __WAYPOINTS_PRECHECKED__
 			|| !JKG_CheckBelowWaypoint(waypoint) || !JKG_CheckRoutingFrom( waypoint )
 #endif //__WAYPOINTS_PRECHECKED__
@@ -1605,7 +1624,7 @@ void G_CheckMinimumNpcs( void ) {
 			}
 			else
 			{
-				while (gWPArray[waypoint]->inuse == qfalse || gWPArray[waypoint]->wpIsBad == qtrue 
+				while (gWPArray[waypoint]->inuse == qfalse || gWPArray[waypoint]->wpIsBad == qtrue || JKG_SpawnpointNearMoverEntityLocation(gWPArray[waypoint]->origin)
 #ifndef __WAYPOINTS_PRECHECKED__
 					|| !JKG_CheckBelowWaypoint(waypoint) || !JKG_CheckRoutingFrom( waypoint )
 #endif //__WAYPOINTS_PRECHECKED__

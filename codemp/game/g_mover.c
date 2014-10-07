@@ -944,6 +944,10 @@ void InitMoverTrData( gentity_t *ent )
 	}
 }
 
+vec3_t		MOVER_LIST[1024];
+vec3_t		MOVER_LIST_TOP[1024];
+int			MOVER_LIST_NUM = 0;
+
 void InitMover( gentity_t *ent )
 {
 	float		light;
@@ -1037,6 +1041,11 @@ void InitMover( gentity_t *ent )
 		MOVER_MARKER->s.eType = ET_MOVER_MARKER;
 		MOVER_MARKER->r.svFlags |= SVF_BROADCAST;
 		trap->LinkEntity((sharedEntity_t *)MOVER_MARKER);
+
+		// Record this mover position for spawnpoint checking...
+		VectorCopy(MOVER_MARKER->s.origin, MOVER_LIST[MOVER_LIST_NUM]);
+		VectorCopy(MOVER_MARKER->s.origin2, MOVER_LIST_TOP[MOVER_LIST_NUM]);
+		MOVER_LIST_NUM++;
 
 		//trap->Print("Mover at %f %f %f.\n", MOVER_MARKER->s.origin[0], MOVER_MARKER->s.origin[1], MOVER_MARKER->s.origin[2]);
 	}
