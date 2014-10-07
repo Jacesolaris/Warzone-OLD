@@ -3198,7 +3198,12 @@ qboolean NPC_CheckFall(gentity_t *NPC, vec3_t dir)
 
 	VectorMA( NPC->r.currentOrigin, 18, dir, forwardPos );
 
-	if (OrgVisible(NPC->r.currentOrigin, forwardPos, NPC->s.number) && !NPC_CheckFallPositionOK(NPC, forwardPos))
+	if (!OrgVisible(NPC->r.currentOrigin, forwardPos, NPC->s.number)) 
+	{// If we can't see 18 forward, we can't move there at all... Blocked...
+		return qtrue;
+	}
+
+	if (!NPC_CheckFallPositionOK(NPC, forwardPos))
 	{
 		return qtrue;
 	}
@@ -3235,7 +3240,7 @@ int NPC_CheckFallJump(gentity_t *NPC, vec3_t dest, usercmd_t *cmd)
 	{// Looks like we can jump there... Let's do that instead of failing!
 		return 2; // next think...
 	}
-	else if (dist <= 128.0)//MAX_JUMP_DISTANCE)
+	/*else if (dist <= 128.0)//MAX_JUMP_DISTANCE)
 	{
 		if (height_dist <= 0 && noheight_dist > 0 - height_dist && NPC->client->ps.groundEntityNum == ENTITYNUM_NONE)
 		{// If our height is lower then the flat distance, keep jumping...
@@ -3249,7 +3254,7 @@ int NPC_CheckFallJump(gentity_t *NPC, vec3_t dest, usercmd_t *cmd)
 		{// If we have not yet jumped, jump...
 			return 1; // next think...
 		}
-	}
+	}*/
 
 	return 0;
 }
@@ -3261,8 +3266,11 @@ int NPC_CheckFallJump(gentity_t *NPC, vec3_t dest, usercmd_t *cmd)
 qboolean UQ1_UcmdMoveForDir ( gentity_t *self, usercmd_t *cmd, vec3_t dir, qboolean walk, vec3_t dest )
 {
 	vec3_t	forward, right, up;
+	float forwardSpeed = 0.0;
+	float rightSpeed = 0.0;
 
-	float	speed = 127.0f;
+	float	speed = 500.0f;
+	//float	speed = 127.0f;
 	//float	speed = 100.0f;
 	//if (walk) speed = 64.0f;
 	//if (walk) speed = 80.0f;
@@ -3270,7 +3278,8 @@ qboolean UQ1_UcmdMoveForDir ( gentity_t *self, usercmd_t *cmd, vec3_t dir, qbool
 	//if (walk) speed = 56.0f;
 	if (walk) speed = 64.0f;
 
-	AngleVectors( self->client->ps.viewangles/*self->r.currentAngles*/, forward, right, up );
+	//AngleVectors( self->client->ps.viewangles/*self->r.currentAngles*/, forward, right, up );
+	AngleVectors( self->r.currentAngles, forward, right, up );
 
 	dir[2] = 0;
 	VectorNormalize( dir );
@@ -3281,7 +3290,7 @@ qboolean UQ1_UcmdMoveForDir ( gentity_t *self, usercmd_t *cmd, vec3_t dir, qbool
 	if (self->bot_strafe_left_timer > level.time) cmd->rightmove -= 127.0;
 #endif //__NPC_STRAFE__
 
-	if (/*self->client->ps.groundEntityNum == ENTITYNUM_NONE ||*/ NPC_CheckFall(self, dir))
+	if (NPC_CheckFall(self, dir))
 	{
 		int JUMP_RESULT = NPC_CheckFallJump(self, dest, cmd);
 
@@ -3295,7 +3304,7 @@ qboolean UQ1_UcmdMoveForDir ( gentity_t *self, usercmd_t *cmd, vec3_t dir, qbool
 			if (NPCS.NPC->s.eType == ET_PLAYER) trap->EA_Jump(NPCS.NPC->s.number);
 		}
 		else
-		{// Moving here would cause us to fall... Wait!
+		{// Moving here would cause us to fall (or 18 forward is blocked)... Wait!
 			cmd->forwardmove = 0;
 			cmd->rightmove = 0;
 			cmd->upmove = 0;
@@ -3303,8 +3312,19 @@ qboolean UQ1_UcmdMoveForDir ( gentity_t *self, usercmd_t *cmd, vec3_t dir, qbool
 		}
 	}
 
-	cmd->forwardmove = DotProduct( forward, dir ) * speed;
-	cmd->rightmove = DotProduct( right, dir ) * speed;
+	forwardSpeed = DotProduct( forward, dir ) * speed;
+	rightSpeed = DotProduct( right, dir ) * speed;
+
+	if (forwardSpeed < 16.0 
+		&& forwardSpeed > -16.0 
+		&& rightSpeed < 16.0
+		&& rightSpeed > -16.0)
+	{// Not moving fast enough. Do idle anim...
+		return qfalse;
+	}
+
+	cmd->forwardmove = forwardSpeed;
+	cmd->rightmove = rightSpeed;
 
 	if (NPCS.NPC->s.eType == ET_PLAYER)
 	{
@@ -3605,7 +3625,7 @@ int NPC_GetNextNode(gentity_t *NPC)
 		return WAYPOINT_NONE;
 	}
 
-	NPC_ShortenPath(NPC);
+	//NPC_ShortenPath(NPC);
 
 	if (NPC->pathsize <= 0)	//if the bot is at the end of his path, this shouldn't have been called
 	{
@@ -4327,6 +4347,7 @@ qboolean NPC_FollowRoutes( void )
 		wpDist = Distance(gWPArray[NPC->wpCurrent]->origin, NPC->r.currentOrigin);
 	}
 
+#if 0
 	if ( (NPC->wpCurrent >= 0 && NPC->wpCurrent < gWPNum && NPC->longTermGoal >= 0 && NPC->longTermGoal < gWPNum && wpDist <= 512)
 		&& (NPC->wpSeenTime < level.time - 1000 || NPC->wpTravelTime < level.time || NPC->last_move_time < level.time - 1000) )
 	{// Try this for 2 seconds before giving up...
@@ -4341,6 +4362,7 @@ qboolean NPC_FollowRoutes( void )
 			return qtrue; // next think...
 		}
 	}
+#endif
 
 	if (NPC->wpSeenTime >= level.time - 5000
 		&& NPC->wpCurrent >= 0 
@@ -4382,8 +4404,8 @@ qboolean NPC_FollowRoutes( void )
 		return qfalse; // next think...
 	}
 
-	if (Distance(gWPArray[NPC->longTermGoal]->origin, NPC->r.currentOrigin) < 24
-		|| VectorDistanceNoHeight(gWPArray[NPC->longTermGoal]->origin, NPC->r.currentOrigin) < 16)
+	if (/*Distance(gWPArray[NPC->longTermGoal]->origin, NPC->r.currentOrigin) < 64//24
+		||*/ VectorDistanceNoHeight(gWPArray[NPC->longTermGoal]->origin, NPC->r.currentOrigin) < 48)//16)
 	{// We're at out goal! Find a new goal...
 		//trap->Print("HIT GOAL!\n");
 		NPC_ClearPathData(NPC);
@@ -4394,8 +4416,8 @@ qboolean NPC_FollowRoutes( void )
 		return qfalse; // next think...
 	}
 
-	if (Distance(gWPArray[NPC->wpCurrent]->origin, NPC->r.currentOrigin) < 24
-		|| VectorDistanceNoHeight(gWPArray[NPC->wpCurrent]->origin, NPC->r.currentOrigin) < 16)
+	if (/*Distance(gWPArray[NPC->wpCurrent]->origin, NPC->r.currentOrigin) < 64//24
+		||*/ VectorDistanceNoHeight(gWPArray[NPC->wpCurrent]->origin, NPC->r.currentOrigin) < 48)//16)
 	{// At current node.. Pick next in the list...
 		//trap->Print("HIT WP %i. Next WP is %i.\n", NPC->wpCurrent, NPC->wpNext);
 
