@@ -3279,8 +3279,8 @@ qboolean UQ1_UcmdMoveForDir ( gentity_t *self, usercmd_t *cmd, vec3_t dir, qbool
 	VectorNormalize( dir );
 
 #ifdef __NPC_STRAFE__
-	if (self->wpCurrent >= 0) NPC_NPCBlockingPath();
-	NPC_AdjustforStrafe(dir);
+	//if (self->wpCurrent >= 0) NPC_NPCBlockingPath();
+	//NPC_AdjustforStrafe(dir);
 	//if (self->bot_strafe_left_timer > level.time) cmd->rightmove -= 127.0;
 #endif //__NPC_STRAFE__
 
