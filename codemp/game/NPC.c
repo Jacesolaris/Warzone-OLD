@@ -4404,8 +4404,7 @@ qboolean NPC_FollowRoutes( void )
 		return qfalse; // next think...
 	}
 
-	if (/*Distance(gWPArray[NPC->longTermGoal]->origin, NPC->r.currentOrigin) < 64//24
-		||*/ VectorDistanceNoHeight(gWPArray[NPC->longTermGoal]->origin, NPC->r.currentOrigin) < 48)//16)
+	if (VectorDistanceNoHeight(gWPArray[NPC->longTermGoal]->origin, NPC->r.currentOrigin) < 48)//16)
 	{// We're at out goal! Find a new goal...
 		//trap->Print("HIT GOAL!\n");
 		NPC_ClearPathData(NPC);
@@ -4416,8 +4415,7 @@ qboolean NPC_FollowRoutes( void )
 		return qfalse; // next think...
 	}
 
-	if (/*Distance(gWPArray[NPC->wpCurrent]->origin, NPC->r.currentOrigin) < 64//24
-		||*/ VectorDistanceNoHeight(gWPArray[NPC->wpCurrent]->origin, NPC->r.currentOrigin) < 48)//16)
+	if (VectorDistanceNoHeight(gWPArray[NPC->wpCurrent]->origin, NPC->r.currentOrigin) < 48)//16)
 	{// At current node.. Pick next in the list...
 		//trap->Print("HIT WP %i. Next WP is %i.\n", NPC->wpCurrent, NPC->wpNext);
 
@@ -4520,6 +4518,7 @@ qboolean NPC_FollowEnemyRoute( void )
 {// Quick method of following bot routes...
 	gentity_t	*NPC = NPCS.NPC;
 	usercmd_t	ucmd = NPCS.ucmd;
+	float		wpDist = 0.0;
 
 	NPCS.NPCInfo->combatMove = qtrue;
 
@@ -4536,7 +4535,7 @@ qboolean NPC_FollowEnemyRoute( void )
 	}
 	else if ( !(NPC->client->ps.weapon == WP_SABER || NPC->client->ps.weapon == WP_MELEE)
 		&& NPC_ClearLOS4( NPCS.NPCInfo->goalEntity ))
-	{// Already visible to sloot... Don't move...
+	{// Already visible to shoot... Don't move...
 		//trap->Print("close wp!\n");
 		return qfalse;
 	}
@@ -4547,16 +4546,54 @@ qboolean NPC_FollowEnemyRoute( void )
 		VectorCopy(NPC->r.currentOrigin, NPC->npc_previous_pos);
 	}
 
-	if (NPC->wpSeenTime > level.time)
+	if ( NPC->wpCurrent >= 0 && NPC->wpCurrent < gWPNum )
+	{
+		vec3_t upOrg, upOrg2;
+
+		VectorCopy(NPC->r.currentOrigin, upOrg);
+		upOrg[2]+=18;
+
+		VectorCopy(gWPArray[NPC->wpCurrent]->origin, upOrg2);
+		upOrg2[2]+=18;
+
+		if (OrgVisible(upOrg, upOrg2, NPC->s.number))
+		{
+			NPC->wpSeenTime = level.time;
+		}
+
+		wpDist = Distance(gWPArray[NPC->wpCurrent]->origin, NPC->r.currentOrigin);
+	}
+
+#if 0
+	if ( (NPC->wpCurrent >= 0 && NPC->wpCurrent < gWPNum && NPC->longTermGoal >= 0 && NPC->longTermGoal < gWPNum && wpDist <= 512)
+		&& (NPC->wpSeenTime < level.time - 1000 || NPC->wpTravelTime < level.time || NPC->last_move_time < level.time - 1000) )
+	{// Try this for 2 seconds before giving up...
+		float MAX_JUMP_DISTANCE = 192.0;
+		
+		if (NPC_IsJedi(NPC)) MAX_JUMP_DISTANCE = 512.0; // Jedi can jump further...
+
+		if (Distance(gWPArray[NPC->wpCurrent]->origin, NPC->r.currentOrigin) <= MAX_JUMP_DISTANCE
+			&& NPC_TryJump( NPC, gWPArray[NPC->wpCurrent]->origin ))
+		{// Looks like we can jump there... Let's do that instead of failing!
+			//trap->Print("%s is jumping to waypoint.\n", NPC->client->pers.netname);
+			return qtrue; // next think...
+		}
+	}
+#endif
+
+	if (NPC->wpSeenTime >= level.time - 5000
+		&& NPC->wpCurrent >= 0 
+		&& NPC->wpCurrent < gWPNum
+		&& wpDist > 512)
 	{
 
 	}
 	else if ( NPC->wpCurrent < 0 || NPC->wpCurrent >= gWPNum 
 		|| NPC->longTermGoal < 0 || NPC->longTermGoal >= gWPNum 
-		|| Distance(gWPArray[NPC->wpCurrent]->origin, NPC->r.currentOrigin) > 512
+		|| wpDist > 512
 		|| NPC->wpSeenTime < level.time - 5000
 		|| NPC->wpTravelTime < level.time 
-		|| NPC->last_move_time < level.time - 5000
+		|| NPC->last_move_time < level.time - 5000 
 		|| Distance(gWPArray[NPC->longTermGoal]->origin, NPC->enemy->r.currentOrigin) > 128.0)
 	{// We hit a problem in route, or don't have one yet.. Find a new goal and path...
 		NPC_ClearPathData(NPC);
@@ -4599,7 +4636,7 @@ qboolean NPC_FollowEnemyRoute( void )
 		return qfalse; // next think...
 	}
 
-	if (VectorDistanceNoHeight(gWPArray[NPC->longTermGoal]->origin, NPC->r.currentOrigin) < 32)
+	if (VectorDistanceNoHeight(gWPArray[NPC->longTermGoal]->origin, NPC->r.currentOrigin) < 43)//32)
 	{// We're at out goal! Find a new goal...
 		NPC_ClearPathData(NPC);
 		ucmd.forwardmove = 0;
@@ -4610,7 +4647,7 @@ qboolean NPC_FollowEnemyRoute( void )
 		return qfalse; // next think...
 	}
 
-	if (VectorDistanceNoHeight(gWPArray[NPC->wpCurrent]->origin, NPC->r.currentOrigin) < 32)
+	if (VectorDistanceNoHeight(gWPArray[NPC->wpCurrent]->origin, NPC->r.currentOrigin) < 48)//32)
 	{// At current node.. Pick next in the list...
 		NPC->wpLast = NPC->wpCurrent;
 		NPC->wpCurrent = NPC->wpNext;

@@ -477,6 +477,156 @@ qboolean NPC_MoveToGoal( qboolean tryStraight )
 	return qtrue;
 }
 
+extern qboolean NPC_CheckFall(gentity_t *NPC, vec3_t dir);
+extern int NPC_CheckFallJump(gentity_t *NPC, vec3_t dest, usercmd_t *cmd);
+
+qboolean NPC_CombatMoveToGoal( qboolean tryStraight, qboolean retreat )
+{
+	float	distance;
+	vec3_t	dir;
+
+#if	AI_TIMERS
+	int	startTime = GetTime(0);
+#endif//	AI_TIMERS
+	//If taking full body pain, don't move
+	if ( PM_InKnockDown( &NPCS.NPC->client->ps ) || ( ( NPCS.NPC->s.legsAnim >= BOTH_PAIN1 ) && ( NPCS.NPC->s.legsAnim <= BOTH_PAIN18 ) ) )
+	{
+		return qtrue;
+	}
+
+	/*
+	if( NPC->s.eFlags & EF_LOCKED_TO_WEAPON )
+	{//If in an emplaced gun, never try to navigate!
+		return qtrue;
+	}
+	*/
+	//rwwFIXMEFIXME: emplaced support
+
+	//FIXME: if can't get to goal & goal is a target (enemy), try to find a waypoint that has line of sight to target, at least?
+	//Get our movement direction
+#if 1
+	if ( NPC_GetMoveDirectionAltRoute( dir, &distance, tryStraight ) == qfalse )
+#else
+	if ( NPC_GetMoveDirection( dir, &distance ) == qfalse )
+#endif
+		return qfalse;
+
+	NPCS.NPCInfo->distToGoal		= distance;
+
+	//Convert the move to angles
+	vectoangles( dir, NPCS.NPCInfo->lastPathAngles );
+
+	if (retreat)
+	{
+		dir[0] *= -1.0;
+		dir[1] *= -1.0;
+		dir[2] *= -1.0;
+	}
+
+	if ( (NPCS.ucmd.buttons&BUTTON_WALKING) )
+	{
+		NPCS.NPC->client->ps.speed = NPCS.NPCInfo->stats.walkSpeed;
+	}
+	else
+	{
+		NPCS.NPC->client->ps.speed = NPCS.NPCInfo->stats.runSpeed;
+	}
+
+	// UQ1: Actually check if this would make us fall!!!
+	if (NPC_CheckFall(NPCS.NPC, dir))
+	{
+		int JUMP_RESULT = 0;
+		
+		if (!retreat && NPCS.NPCInfo->goalEntity)
+		{// Can only ever jump if we have a goal and are not retreating...
+			JUMP_RESULT = NPC_CheckFallJump(NPCS.NPC, NPCS.NPCInfo->goalEntity->r.currentOrigin, &NPCS.ucmd);
+		}
+
+		if (JUMP_RESULT == 2)
+		{// We can jump there... JKA method...
+			return;
+		}
+		else if (JUMP_RESULT == 1)
+		{// We can jump there... My method...
+			NPCS.ucmd.upmove = 127.0;
+			if (NPCS.NPC->s.eType == ET_PLAYER) trap->EA_Jump(NPCS.NPC->s.number);
+		}
+		else
+		{// Moving here would cause us to fall (or 18 forward is blocked)... Wait!
+			NPCS.ucmd.forwardmove = 0;
+			NPCS.ucmd.rightmove = 0;
+			NPCS.ucmd.upmove = 0;
+			return qfalse;
+		}
+	}
+
+	//FIXME: still getting ping-ponging in certain cases... !!!  Nav/avoidance error?  WTF???!!!
+	//If in combat move, then move directly towards our goal
+	if ( NPC_CheckCombatMove() || NPCS.NPC->s.eType == ET_PLAYER )
+	{//keep current facing
+		G_UcmdMoveForDir( NPCS.NPC, &NPCS.ucmd, dir );
+
+		if (NPCS.NPC->s.eType == ET_PLAYER)
+		{
+			if (NPCS.ucmd.buttons & BUTTON_WALKING)
+			{
+				//trap->EA_Action(NPCS.NPC->s.number, 0x0080000);
+				trap->EA_Move(NPCS.NPC->s.number, dir, 5000.0);
+			}
+			else
+			{
+				trap->EA_Move(NPCS.NPC->s.number, dir, 5000.0);
+			}
+		}
+	}
+	else
+	{//face our goal
+		//FIXME: strafe instead of turn if change in dir is small and temporary
+		NPCS.NPCInfo->desiredPitch	= 0.0f;
+		NPCS.NPCInfo->desiredYaw		= AngleNormalize360( NPCS.NPCInfo->lastPathAngles[YAW] );
+
+		//Pitch towards the goal and also update if flying or swimming
+		if ( (NPCS.NPC->client->ps.eFlags2&EF2_FLYING) )//moveType == MT_FLYSWIM )
+		{
+			NPCS.NPCInfo->desiredPitch = AngleNormalize360( NPCS.NPCInfo->lastPathAngles[PITCH] );
+
+			if ( dir[2] )
+			{
+				float scale = (dir[2] * distance);
+				if ( scale > 64 )
+				{
+					scale = 64;
+				}
+				else if ( scale < -64 )
+				{
+					scale = -64;
+				}
+				NPCS.NPC->client->ps.velocity[2] = scale;
+				//NPC->client->ps.velocity[2] = (dir[2] > 0) ? 64 : -64;
+			}
+		}
+
+		//Set any final info
+		NPCS.ucmd.forwardmove = 127;
+
+		if (retreat)
+		{
+			NPCS.ucmd.forwardmove = -127;
+		}
+	}
+
+#if	AI_TIMERS
+	navTime += GetTime( startTime );
+#endif//	AI_TIMERS
+
+	if (retreat)
+	{
+		VectorScale( NPCS.NPC->client->ps.moveDir, -1, NPCS.NPC->client->ps.moveDir );
+	}
+
+	return qtrue;
+}
+
 /*
 -------------------------
 void NPC_SlideMoveToGoal( void )

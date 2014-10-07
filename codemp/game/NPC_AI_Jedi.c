@@ -11,6 +11,7 @@ extern void CG_DrawAlert( vec3_t origin, float rating );
 extern void G_AddVoiceEvent( gentity_t *self, int event, int speakDebounceTime );
 extern void ForceJump( gentity_t *self, usercmd_t *ucmd );
 extern void WP_FireMelee( gentity_t *ent, qboolean alt_fire );
+extern qboolean NPC_CombatMoveToGoal( qboolean tryStraight, qboolean retreat );
 
 #define	MAX_VIEW_DIST		2048
 #define MAX_VIEW_SPEED		100
@@ -1240,17 +1241,18 @@ static void Jedi_Move( gentity_t *goal, qboolean retreat )
 	qboolean	moved;
 	navInfo_t	info;
 
-	if (!NPC_IsJedi(NPCS.NPC) && !NPC_IsBountyHunter(NPCS.NPC)) 
-	{
-		// UQ1: We don't want to use jedi movement for normal gunners... They get too close all the time...
-		return;
-	}
+	//if (!NPC_IsJedi(NPCS.NPC) && !NPC_IsBountyHunter(NPCS.NPC)) 
+	//{
+	//	// UQ1: We don't want to use jedi movement for normal gunners... They get too close all the time...
+	//	return;
+	//}
 
 	NPCS.NPCInfo->combatMove = qtrue;
 	NPCS.NPCInfo->goalEntity = goal;
 
-	moved = NPC_MoveToGoal( qtrue );
+	moved = NPC_CombatMoveToGoal( qtrue, retreat );
 
+#if 0
 	//FIXME: temp retreat behavior- should really make this toward a safe spot or maybe to outflank enemy
 	if ( retreat )
 	{//FIXME: should we trace and make sure we can go this way?  Or somehow let NPC_MoveToGoal know we want to retreat and have it handle it?
@@ -1258,6 +1260,7 @@ static void Jedi_Move( gentity_t *goal, qboolean retreat )
 		NPCS.ucmd.rightmove *= -1;
 		VectorScale( NPCS.NPC->client->ps.moveDir, -1, NPCS.NPC->client->ps.moveDir );
 	}
+#endif
 
 	//Get the move info
 	NAV_GetLastMove( &info );
