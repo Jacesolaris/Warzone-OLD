@@ -1131,6 +1131,8 @@ void Blocked_Door( gentity_t *ent, gentity_t *other )
 Touch_DoorTriggerSpectator
 ================
 */
+extern qboolean G_PointInBounds( vec3_t point, vec3_t mins, vec3_t maxs );
+
 static vec3_t doorangles = { 10000000.0, 0, 0 };
 static void Touch_DoorTriggerSpectator( gentity_t *ent, gentity_t *other, trace_t *trace ) {
 	int axis;
@@ -1138,10 +1140,18 @@ static void Touch_DoorTriggerSpectator( gentity_t *ent, gentity_t *other, trace_
 	vec3_t origin, pMins, pMaxs;
 	trace_t tr;
 
+	if (!G_PointInBounds( other->client->ps.origin, ent->trigger_orig_mins, ent->trigger_orig_maxs ))
+	{// UQ1: Not in original bounds. Do not activate for spectators...
+		return;
+	}
+
 	axis = ent->count;
 	// the constants below relate to constants in Think_SpawnNewDoorTrigger()
-	doorMin = ent->r.absmin[axis] + 100;
-	doorMax = ent->r.absmax[axis] - 100;
+	//doorMin = ent->r.absmin[axis] + 100;
+	//doorMax = ent->r.absmax[axis] - 100;
+	// UQ1: Use original bounds...
+	doorMin = ent->trigger_orig_mins[axis] + 100;
+	doorMax = ent->trigger_orig_maxs[axis] - 100;
 
 	VectorCopy(other->client->ps.origin, origin);
 
@@ -1614,6 +1624,8 @@ void SP_func_door (gentity_t *ent)
 	}
 	
 	// UQ1: Increase trigger size to allow activations at both ends...
+	VectorCopy(ent->r.mins, ent->trigger_orig_mins);
+	VectorCopy(ent->r.maxs, ent->trigger_orig_maxs);
 	ent->r.absmin[0] -= 128.0;
 	ent->r.absmin[1] -= 128.0;
 	ent->r.absmin[2] = -65000;

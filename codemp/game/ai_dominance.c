@@ -384,7 +384,6 @@ int DOM_GetRandomCloseVisibleWP(gentity_t *ent, vec3_t org, int ignoreEnt, int b
 	{
 		//We're not doing traces!
 		bestdist = 128.0f;
-
 	}
 
 	while (i < gWPNum)
@@ -473,7 +472,6 @@ int DOM_GetNearestWP(vec3_t org, int badwp)
 	{
 		//We're not doing traces!
 		bestdist = 99999;
-
 	}
 	bestindex = -1;
 
@@ -523,7 +521,8 @@ int DOM_GetNearestVisibleWP_Goal(vec3_t org, int ignore, int badwp)
 	}
 	else
 	{
-		bestdist = 800;//99999;
+		//bestdist = 800;//99999;
+		bestdist = 128;//99999;
 		//don't trace over 800 units away to avoid GIANT HORRIBLE SPEED HITS ^_^
 	}
 	bestindex = -1;
@@ -583,7 +582,8 @@ int DOM_GetNearestVisibleWP(vec3_t org, int ignore, int badwp)
 	}
 	else
 	{
-		bestdist = 800;//99999;
+		//bestdist = 800;//99999;
+		bestdist = 128;//99999;
 		//don't trace over 800 units away to avoid GIANT HORRIBLE SPEED HITS ^_^
 	}
 	bestindex = -1;
@@ -640,7 +640,8 @@ int DOM_GetNearestVisibleWP_NOBOX(vec3_t org, int ignore, int badwp)
 	}
 	else
 	{
-		bestdist = 800;//99999;
+		//bestdist = 800;//99999;
+		bestdist = 128;//99999;
 		//don't trace over 800 units away to avoid GIANT HORRIBLE SPEED HITS ^_^
 	}
 	bestindex = -1;

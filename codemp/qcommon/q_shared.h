@@ -947,6 +947,8 @@ float RadiusFromBounds( const vec3_t mins, const vec3_t maxs );
 void ClearBounds( vec3_t mins, vec3_t maxs );
 float DistanceHorizontal( const vec3_t p1, const vec3_t p2 );
 float DistanceHorizontalSquared( const vec3_t p1, const vec3_t p2 );
+float DistanceVertical( const vec3_t p1, const vec3_t p2 );
+float DistanceVerticalSquared( const vec3_t p1, const vec3_t p2 );
 void AddPointToBounds( const vec3_t v, vec3_t mins, vec3_t maxs );
 void VectorRotate( const vec3_t in, matrix3_t matrix, vec3_t out );
 int Q_log2(int val);

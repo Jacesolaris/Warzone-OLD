@@ -32,6 +32,7 @@ extern int GetTime ( int lastTime );
 extern void NPC_BSGM_Default( void );
 extern void NPC_CheckCharmed( void );
 extern qboolean Boba_Flying( gentity_t *self );
+extern int DOM_GetNearestWP(vec3_t org, int badwp);
 
 // Conversations...
 extern void NPC_NPCConversation();
@@ -46,17 +47,6 @@ void pitch_roll_for_slope( gentity_t *forwhom, vec3_t pass_slope );
 extern void GM_Dying( gentity_t *self );
 
 extern int eventClearTime;
-
-float VectorDistanceNoHeight ( vec3_t v1, vec3_t v2 )
-{
-	vec3_t	dir;
-	vec3_t	v1a, v2a;
-	VectorCopy( v1, v1a );
-	VectorCopy( v2, v2a );
-	v2a[2] = v1a[2];
-	VectorSubtract( v2a, v1a, dir );
-	return ( VectorLength( dir) );
-}
 
 void CorpsePhysics( gentity_t *self )
 {
@@ -2394,8 +2384,8 @@ int NPC_GetPatrolWP(gentity_t *NPC)
 	{
 		if (gWPArray[i] 
 			&& gWPArray[i]->inuse 
-			&& HeightDistance(gWPArray[i]->origin, NPC->r.currentOrigin) <= 32.0//24.0
-			&& HeightDistance(gWPArray[i]->origin, NPC->spawn_pos) <= 32.0)//24.0)
+			&& DistanceVertical(gWPArray[i]->origin, NPC->r.currentOrigin) <= 32.0//24.0
+			&& DistanceVertical(gWPArray[i]->origin, NPC->spawn_pos) <= 32.0)//24.0)
 		{
 			vec3_t org, org2;
 
@@ -3176,6 +3166,10 @@ qboolean NPC_CheckFallPositionOK(gentity_t *NPC, vec3_t position)
 {
 	trace_t		tr;
 	vec3_t testPos, downPos;
+	vec3_t mins, maxs;
+
+	VectorSet(mins, -8, -8, -1);
+	VectorSet(maxs, 8, 8, 1);
 	
 	VectorCopy(position, testPos);
 	VectorCopy(position, downPos);
@@ -3183,7 +3177,8 @@ qboolean NPC_CheckFallPositionOK(gentity_t *NPC, vec3_t position)
 	downPos[2] -= 56.0;
 	testPos[2] += 8.0;
 
-	trap->Trace( &tr, testPos, NULL/*NPC->r.mins*/, NULL/*NPC->r.maxs*/, downPos, NPC->s.number, MASK_PLAYERSOLID, 0, 0, 0 );
+	//trap->Trace( &tr, testPos, NULL/*NPC->r.mins*/, NULL/*NPC->r.maxs*/, downPos, NPC->s.number, MASK_PLAYERSOLID, 0, 0, 0 );
+	trap->Trace( &tr, testPos, mins, maxs, downPos, NPC->s.number, MASK_PLAYERSOLID, 0, 0, 0 );
 
 	if (tr.entityNum != ENTITYNUM_NONE)
 	{
@@ -3235,8 +3230,8 @@ int NPC_CheckFallJump(gentity_t *NPC, vec3_t dest, usercmd_t *cmd)
 {
 	float MAX_JUMP_DISTANCE = 256.0;
 	float dist = Distance(dest, NPC->r.currentOrigin);
-	float noheight_dist = VectorDistanceNoHeight(dest, NPC->r.currentOrigin);
-	float height_dist = dest[2] - NPC->r.currentOrigin[2];//HeightDistance(dest, NPC->r.currentOrigin);
+	float noheight_dist = DistanceHorizontal(dest, NPC->r.currentOrigin);
+	float height_dist = dest[2] - NPC->r.currentOrigin[2];//DistanceVertical(dest, NPC->r.currentOrigin);
 
 	if (!NPC_CheckFallPositionOK(NPC, dest)) return qfalse;
 		
@@ -3267,33 +3262,21 @@ int NPC_CheckFallJump(gentity_t *NPC, vec3_t dest, usercmd_t *cmd)
 
 //===========================================================================
 // Routine      : UQ1_UcmdMoveForDir
-
 // Description  : Set a valid ucmd move for the current move direction... A working one, unlike raven's joke...
 qboolean UQ1_UcmdMoveForDir ( gentity_t *self, usercmd_t *cmd, vec3_t dir, qboolean walk, vec3_t dest )
 {
-	vec3_t	forward, right, up;
-	float forwardSpeed = 0.0;
-	float rightSpeed = 0.0;
+	vec3_t	forward, right;
+	float	fDot, rDot;
 
-	float	speed = 500.0f;
-	//float	speed = 127.0f;
-	//float	speed = 100.0f;
-	//if (walk) speed = 64.0f;
-	//if (walk) speed = 80.0f;
-	//if (walk) speed = 48.0f;
-	//if (walk) speed = 56.0f;
-	if (walk) speed = 64.0f;
-
-	//AngleVectors( self->client->ps.viewangles/*self->r.currentAngles*/, forward, right, up );
-	AngleVectors( self->r.currentAngles, forward, right, up );
+	AngleVectors( self->r.currentAngles, forward, right, NULL );
 
 	dir[2] = 0;
 	VectorNormalize( dir );
 
 #ifdef __NPC_STRAFE__
 	if (self->wpCurrent >= 0) NPC_NPCBlockingPath();
-	//NPC_AdjustforStrafe(dir);
-	if (self->bot_strafe_left_timer > level.time) cmd->rightmove -= 127.0;
+	NPC_AdjustforStrafe(dir);
+	//if (self->bot_strafe_left_timer > level.time) cmd->rightmove -= 127.0;
 #endif //__NPC_STRAFE__
 
 	if (NPC_CheckFall(self, dir))
@@ -3318,19 +3301,32 @@ qboolean UQ1_UcmdMoveForDir ( gentity_t *self, usercmd_t *cmd, vec3_t dir, qbool
 		}
 	}
 
-	forwardSpeed = DotProduct( forward, dir ) * speed;
-	rightSpeed = DotProduct( right, dir ) * speed;
+	//NPCs cheat and store this directly because converting movement into a ucmd loses precision
+	VectorCopy( dir, self->client->ps.moveDir );
 
-	if (forwardSpeed < 16.0 
-		&& forwardSpeed > -16.0 
-		&& rightSpeed < 16.0
-		&& rightSpeed > -16.0)
-	{// Not moving fast enough. Do idle anim...
-		return qfalse;
+	fDot = DotProduct( forward, dir ) * 127.0f;
+	rDot = DotProduct( right, dir ) * 127.0f;
+
+	//Must clamp this because DotProduct is not guaranteed to return a number within -1 to 1, and that would be bad when we're shoving this into a signed byte
+	if ( fDot > 127.0f )
+	{
+		fDot = 127.0f;
+	}
+	if ( fDot < -127.0f )
+	{
+		fDot = -127.0f;
+	}
+	if ( rDot > 127.0f )
+	{
+		rDot = 127.0f;
+	}
+	if ( rDot < -127.0f )
+	{
+		rDot = -127.0f;
 	}
 
-	cmd->forwardmove = forwardSpeed;
-	cmd->rightmove = rightSpeed;
+	cmd->forwardmove = floor(fDot);
+	cmd->rightmove = floor(rDot);
 
 	if (NPCS.NPC->s.eType == ET_PLAYER)
 	{
@@ -3350,14 +3346,6 @@ qboolean UQ1_UcmdMoveForDir ( gentity_t *self, usercmd_t *cmd, vec3_t dir, qbool
 				trap->EA_MoveLeft(NPCS.NPC->s.number);
 		}
 	}
-
-	//cmd->upmove = abs(forward[3] ) * dir[3] * speed;
-	/*if (NPCS.NPCInfo->jumpState == JS_CROUCHING || (self->NPC->scriptFlags & SCF_CROUCHED))
-		cmd->upmove = -64.0;
-	else if (NPCS.NPCInfo->jumpState == JS_JUMPING)
-		cmd->upmove = 64.0;*/
-
-	//NPC_SelectMoveAnimation(walk);
 
 #ifdef __NPC_BBOX_ADJUST__
 	// Adjust the NPC's bbox size to make it smaller and let it move around easier...
@@ -3541,10 +3529,10 @@ qboolean NPC_PatrolArea( void )
 
 	NPC_FacePosition( gWPArray[NPC->wpCurrent]->origin, qfalse );
 	VectorSubtract( gWPArray[NPC->wpCurrent]->origin, NPC->r.currentOrigin, NPC->movedir );
-	if (!UQ1_UcmdMoveForDir( NPC, &NPCS.ucmd, NPC->movedir, qtrue, gWPArray[NPC->wpCurrent]->origin )) { NPC_PickRandomIdleAnimantion(NPC); return qtrue; }
+	if (!UQ1_UcmdMoveForDir( NPC, &NPCS.ucmd, NPC->movedir, qtrue, gWPArray[NPC->wpCurrent]->origin )) { /*NPC_PickRandomIdleAnimantion(NPC);*/ return qtrue; }
 	VectorCopy( NPC->movedir, NPC->client->ps.moveDir );
 
-	NPC_SelectMoveAnimation(qtrue);
+	//NPC_SelectMoveAnimation(qtrue);
 
 	return qtrue;
 }
@@ -3997,7 +3985,8 @@ int NPC_FindTeamGoal( gentity_t *NPC )
 			if (ent->wpCurrent < 0 || ent->wpCurrent >= gWPNum
 				|| Distance(ent->r.currentOrigin, gWPArray[ent->wpCurrent]->origin) > 128.0)
 			{// Their current waypoint is invalid. Find one for them...
-				ent->wpCurrent = DOM_GetRandomCloseVisibleWP(ent, ent->r.currentOrigin, ent->s.number, -1);
+				//ent->wpCurrent = DOM_GetRandomCloseVisibleWP(ent, ent->r.currentOrigin, ent->s.number, -1);
+				ent->wpCurrent = DOM_GetNearestWP(ent->r.currentOrigin, ent->wpCurrent);
 			}
 		}
 
@@ -4045,7 +4034,8 @@ void NPC_SetNewGoalAndPath()
 
 	if (NPC->return_home)
 	{// Returning home...
-		NPC->longTermGoal = DOM_GetRandomCloseVisibleWP(NPC, NPC->spawn_pos, NPC->s.number, -1);
+		//NPC->longTermGoal = DOM_GetRandomCloseVisibleWP(NPC, NPC->spawn_pos, NPC->s.number, -1);
+		NPC->longTermGoal = DOM_GetNearestWP(NPC->spawn_pos, NPC->wpCurrent);
 	}
 	else
 	{// Find a new generic goal...
@@ -4059,9 +4049,6 @@ void NPC_SetNewGoalAndPath()
 	{
 		memset(NPC->pathlist, WAYPOINT_NONE, sizeof(int)*MAX_WPARRAY_SIZE);
 		NPC->pathsize = ASTAR_FindPathFast(NPC->wpCurrent, NPC->longTermGoal, NPC->pathlist, qtrue);
-
-		//if (NPC->pathsize <= 0) // Use the alternate (older) A* pathfinding code as alternative/fallback...
-		//	NPC->pathsize = DOM_FindIdealPathtoWP(NULL, NPC->wpCurrent, NPC->longTermGoal, -1, NPC->pathlist);
 
 		if (NPC->pathsize > 0)
 		{
@@ -4255,7 +4242,7 @@ qboolean NPC_PointIsMoverLocation( vec3_t org )
 
 	for (i = 0; i < MOVER_LIST_NUM; i++)
 	{
-		if (VectorDistanceNoHeight(org, MOVER_LIST[i]) >= 128.0) continue;
+		if (DistanceHorizontal(org, MOVER_LIST[i]) >= 128.0) continue;
 
 		return qtrue;
 	}
@@ -4348,7 +4335,7 @@ qboolean NPC_FollowRoutes( void )
 
 	G_ClearEnemy(NPC);
 
-	if (VectorDistanceNoHeight(NPC->r.currentOrigin, NPC->npc_previous_pos) > 3)
+	if (DistanceHorizontal(NPC->r.currentOrigin, NPC->npc_previous_pos) > 3)
 	{
 		NPC->last_move_time = level.time;
 		VectorCopy(NPC->r.currentOrigin, NPC->npc_previous_pos);
@@ -4392,13 +4379,13 @@ qboolean NPC_FollowRoutes( void )
 	if (NPC->wpSeenTime >= level.time - 5000
 		&& NPC->wpCurrent >= 0 
 		&& NPC->wpCurrent < gWPNum
-		&& wpDist > 512)
+		&& wpDist <= 256)
 	{
 
 	}
 	else if ( NPC->wpCurrent < 0 || NPC->wpCurrent >= gWPNum 
 		|| NPC->longTermGoal < 0 || NPC->longTermGoal >= gWPNum 
-		|| wpDist > 512
+		|| wpDist > 256
 		|| NPC->wpSeenTime < level.time - 5000
 		|| NPC->wpTravelTime < level.time 
 		|| NPC->last_move_time < level.time - 5000 )
@@ -4428,8 +4415,8 @@ qboolean NPC_FollowRoutes( void )
 		NPC_PickRandomIdleAnimantion(NPC);
 		return qfalse; // next think...
 	}
-
-	if (VectorDistanceNoHeight(gWPArray[NPC->longTermGoal]->origin, NPC->r.currentOrigin) < 48)//16)
+	
+	if (Distance(gWPArray[NPC->longTermGoal]->origin, NPC->r.currentOrigin) < 48)
 	{// We're at out goal! Find a new goal...
 		//trap->Print("HIT GOAL!\n");
 		NPC_ClearPathData(NPC);
@@ -4440,7 +4427,7 @@ qboolean NPC_FollowRoutes( void )
 		return qfalse; // next think...
 	}
 
-	if (VectorDistanceNoHeight(gWPArray[NPC->wpCurrent]->origin, NPC->r.currentOrigin) < 48)//16)
+	if (wpDist < 48)
 	{// At current node.. Pick next in the list...
 		//trap->Print("HIT WP %i. Next WP is %i.\n", NPC->wpCurrent, NPC->wpNext);
 
@@ -4464,9 +4451,9 @@ qboolean NPC_FollowRoutes( void )
 
 	NPC_FacePosition( gWPArray[NPC->wpCurrent]->origin, qfalse );
 	VectorSubtract( gWPArray[NPC->wpCurrent]->origin, NPC->r.currentOrigin, NPC->movedir );
-
-	if (HeightDistance(gWPArray[NPC->wpCurrent]->origin, NPC->r.currentOrigin) > 24
-		&& VectorDistanceNoHeight(gWPArray[NPC->wpCurrent]->origin, NPC->r.currentOrigin) <= 48
+	
+	if (DistanceHorizontal(gWPArray[NPC->wpCurrent]->origin, NPC->r.currentOrigin) < 48
+		&& wpDist > 96
 		&& NPC_PointIsMoverLocation(gWPArray[NPC->wpCurrent]->origin))
 	{// Most likely on an elevator... Idle...
 		NPCS.ucmd.forwardmove = 0;
@@ -4477,16 +4464,18 @@ qboolean NPC_FollowRoutes( void )
 	}
 	
 	if (g_gametype.integer == GT_WARZONE || (NPC->r.svFlags & SVF_BOT))
-		if (!UQ1_UcmdMoveForDir( NPC, &NPCS.ucmd, NPC->movedir, qfalse, gWPArray[NPC->wpCurrent]->origin )) { NPC_PickRandomIdleAnimantion(NPC); return qtrue; }
+		if (!UQ1_UcmdMoveForDir( NPC, &NPCS.ucmd, NPC->movedir, qfalse, gWPArray[NPC->wpCurrent]->origin )) { if (NPC_IsCivilianHumanoid(NPC)) NPC_PickRandomIdleAnimantion(NPC); return qtrue; }
 	else 
-		if (!UQ1_UcmdMoveForDir( NPC, &NPCS.ucmd, NPC->movedir, !NPC_HaveValidEnemy(), gWPArray[NPC->wpCurrent]->origin )) { NPC_PickRandomIdleAnimantion(NPC); return qtrue; }
+		if (!UQ1_UcmdMoveForDir( NPC, &NPCS.ucmd, NPC->movedir, !NPC_HaveValidEnemy(), gWPArray[NPC->wpCurrent]->origin )) { if (NPC_IsCivilianHumanoid(NPC)) NPC_PickRandomIdleAnimantion(NPC); return qtrue; }
 
 	VectorCopy( NPC->movedir, NPC->client->ps.moveDir );
 
+	/*
 	if (g_gametype.integer == GT_WARZONE || (NPC->r.svFlags & SVF_BOT))
 		NPC_SelectMoveAnimation(qfalse);
 	else
 		NPC_SelectMoveAnimation(!NPC_HaveValidEnemy());
+		*/
 
 	return qtrue;
 }
@@ -4576,7 +4565,7 @@ qboolean NPC_FollowEnemyRoute( void )
 		return qfalse;
 	}
 
-	if (VectorDistanceNoHeight(NPC->r.currentOrigin, NPC->npc_previous_pos) > 3)
+	if (DistanceHorizontal(NPC->r.currentOrigin, NPC->npc_previous_pos) > 3)
 	{
 		NPC->last_move_time = level.time;
 		VectorCopy(NPC->r.currentOrigin, NPC->npc_previous_pos);
@@ -4620,17 +4609,17 @@ qboolean NPC_FollowEnemyRoute( void )
 	if (NPC->wpSeenTime >= level.time - 5000
 		&& NPC->wpCurrent >= 0 
 		&& NPC->wpCurrent < gWPNum
-		&& wpDist > 512)
+		&& wpDist <= 256)
 	{
 
 	}
 	else if ( NPC->wpCurrent < 0 || NPC->wpCurrent >= gWPNum 
 		|| NPC->longTermGoal < 0 || NPC->longTermGoal >= gWPNum 
-		|| wpDist > 512
+		|| wpDist > 256
 		|| NPC->wpSeenTime < level.time - 5000
 		|| NPC->wpTravelTime < level.time 
 		|| NPC->last_move_time < level.time - 5000 
-		|| Distance(gWPArray[NPC->longTermGoal]->origin, NPC->enemy->r.currentOrigin) > 128.0)
+		|| Distance(gWPArray[NPC->longTermGoal]->origin, NPC->enemy->r.currentOrigin) > 256.0)
 	{// We hit a problem in route, or don't have one yet.. Find a new goal and path...
 		NPC_ClearPathData(NPC);
 		NPC_SetNewEnemyGoalAndPath();
@@ -4672,7 +4661,7 @@ qboolean NPC_FollowEnemyRoute( void )
 		return qfalse; // next think...
 	}
 
-	if (VectorDistanceNoHeight(gWPArray[NPC->longTermGoal]->origin, NPC->r.currentOrigin) < 43)//32)
+	if (Distance(gWPArray[NPC->longTermGoal]->origin, NPC->r.currentOrigin) < 48)
 	{// We're at out goal! Find a new goal...
 		NPC_ClearPathData(NPC);
 		ucmd.forwardmove = 0;
@@ -4683,7 +4672,7 @@ qboolean NPC_FollowEnemyRoute( void )
 		return qfalse; // next think...
 	}
 
-	if (VectorDistanceNoHeight(gWPArray[NPC->wpCurrent]->origin, NPC->r.currentOrigin) < 48)//32)
+	if (wpDist < 48)
 	{// At current node.. Pick next in the list...
 		NPC->wpLast = NPC->wpCurrent;
 		NPC->wpCurrent = NPC->wpNext;
@@ -4722,8 +4711,8 @@ qboolean NPC_FollowEnemyRoute( void )
 	NPC_FacePosition( gWPArray[NPC->wpCurrent]->origin, qfalse );
 	VectorSubtract( gWPArray[NPC->wpCurrent]->origin, NPC->r.currentOrigin, NPC->movedir );
 
-	if (HeightDistance(gWPArray[NPC->wpCurrent]->origin, NPC->r.currentOrigin) > 24
-		&& VectorDistanceNoHeight(gWPArray[NPC->wpCurrent]->origin, NPC->r.currentOrigin) <= 48
+	if (DistanceHorizontal(gWPArray[NPC->wpCurrent]->origin, NPC->r.currentOrigin) < 48
+		&& wpDist > 96
 		&& NPC_PointIsMoverLocation(gWPArray[NPC->wpCurrent]->origin))
 	{// Most likely on an elevator... Idle...
 		NPCS.ucmd.forwardmove = 0;
@@ -4733,9 +4722,9 @@ qboolean NPC_FollowEnemyRoute( void )
 		return qtrue;
 	}
 
-	if (!UQ1_UcmdMoveForDir( NPC, &NPCS.ucmd, NPC->movedir, qfalse, gWPArray[NPC->wpCurrent]->origin )) { NPC_PickRandomIdleAnimantion(NPC); return qtrue; }
+	if (!UQ1_UcmdMoveForDir( NPC, &NPCS.ucmd, NPC->movedir, qfalse, gWPArray[NPC->wpCurrent]->origin )) { /*NPC_PickRandomIdleAnimantion(NPC);*/ return qtrue; }
 	VectorCopy( NPC->movedir, NPC->client->ps.moveDir );
-	NPC_SelectMoveAnimation(qfalse);
+	//NPC_SelectMoveAnimation(qfalse);
 
 	return qtrue;
 }

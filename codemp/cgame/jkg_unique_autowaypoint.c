@@ -1096,35 +1096,6 @@ qboolean AW_Map_Has_Waypoints ( void )
 }
 
 
-/* */
-float
-VectorDistanceNoHeight ( vec3_t v1, vec3_t v2 )
-{
-	vec3_t	dir;
-	vec3_t	v1a, v2a;
-	VectorCopy( v1, v1a );
-	VectorCopy( v2, v2a );
-	v2a[2] = v1a[2];
-	VectorSubtract( v2a, v1a, dir );
-	return ( VectorLength( dir) );
-}
-
-
-/* */
-float
-HeightDistance ( vec3_t v1, vec3_t v2 )
-{
-	vec3_t	dir;
-	vec3_t	v1a, v2a;
-	VectorCopy( v1, v1a );
-	VectorCopy( v2, v2a );
-	v2a[0] = v1a[0];
-	v2a[1] = v1a[1];
-	VectorSubtract( v2a, v1a, dir );
-	return ( VectorLength( dir) );
-}
-
-
 qboolean	MOVER_LIST_GENERATED = qfalse;
 vec3_t		MOVER_LIST[1024];
 vec3_t		MOVER_LIST_TOP[1024];
@@ -1181,7 +1152,7 @@ qboolean NearMoverEntityLocation( vec3_t org )
 
 	for (i = 0; i < MOVER_LIST_NUM; i++)
 	{
-		if (VectorDistanceNoHeight(org, MOVER_LIST[i]) >= 68.0) continue;
+		if (DistanceHorizontal(org, MOVER_LIST[i]) >= 68.0) continue;
 
 		return qtrue;
 	}
@@ -1229,8 +1200,8 @@ NodeIsOnMover ( vec3_t org1 )
 qboolean
 BAD_WP_Height ( vec3_t start, vec3_t end )
 {
-	/*float distance = VectorDistanceNoHeight(start, end);
-	float height_diff = HeightDistance(start, end);
+	/*float distance = DistanceHorizontal(start, end);
+	float height_diff = DistanceVertical(start, end);
 
 	if (distance > 8)
 	{// < 8 is probebly a ladder...
@@ -1245,7 +1216,7 @@ BAD_WP_Height ( vec3_t start, vec3_t end )
 			return qtrue;
 	}*/
 
-	if (HeightDistance(start, end) > 64 && start[2] < end[2])
+	if (DistanceVertical(start, end) > 64 && start[2] < end[2])
 	{
 		if (!NodeIsOnMover(start))
 			return qtrue;
@@ -1260,8 +1231,8 @@ BAD_WP_Distance ( vec3_t start, vec3_t end, qboolean double_distance )
 {
 	qboolean hitsmover = qfalse;
 	float distance = VectorDistance( start, end );
-	float height_diff = HeightDistance(start, end);
-	float length_diff = VectorDistanceNoHeight(start, end);
+	float height_diff = DistanceVertical(start, end);
+	float length_diff = DistanceHorizontal(start, end);
 	float double_mod = 1.0;
 
 	if (double_distance) double_mod = 2.0;
@@ -2176,7 +2147,7 @@ qboolean AIMod_Check_Slope_Between ( vec3_t org1, vec3_t org2 ) {
 	orgA[2] += 18.0;
 	orgB[2] = orgA[2];
 
-	dist = VectorDistanceNoHeight(orgA, orgB);
+	dist = DistanceHorizontal(orgA, orgB);
 
 	incrument = dist/NUM_SLOPE_CHECKS;
 	if (incrument < 1) incrument = 1; // since j is an integer, set minimum incument to 1 to avoid endless loops...
@@ -2283,7 +2254,7 @@ AIMOD_MAPPING_CreateNodeLinks ( int node )
 					if (AIMod_Check_Slope_Between(nodes[node].origin, nodes[loop].origin))
 					{
 						nodes[node].links[linknum].targetNode = loop;
-						nodes[node].links[linknum].cost = VectorDistance(nodes[loop].origin, nodes[node].origin) + (HeightDistance(nodes[loop].origin, nodes[node].origin)*HeightDistance(nodes[loop].origin, nodes[node].origin));
+						nodes[node].links[linknum].cost = VectorDistance(nodes[loop].origin, nodes[node].origin) + (DistanceVertical(nodes[loop].origin, nodes[node].origin)*DistanceVertical(nodes[loop].origin, nodes[node].origin));
 						nodes[node].links[linknum].flags = 0;
 
 						linknum++;
@@ -2302,7 +2273,7 @@ AIMOD_MAPPING_CreateNodeLinks ( int node )
 				if (AIMod_Check_Slope_Between(nodes[node].origin, nodes[loop].origin))
 				{
 				nodes[node].links[linknum].targetNode = loop;
-				nodes[node].links[linknum].cost = VectorDistance( nodes[loop].origin, nodes[node].origin ) + (HeightDistance( nodes[loop].origin, nodes[node].origin )*16);
+				nodes[node].links[linknum].cost = VectorDistance( nodes[loop].origin, nodes[node].origin ) + (DistanceVertical( nodes[loop].origin, nodes[node].origin )*16);
 				nodes[node].links[linknum].flags |= PATH_JUMP;
 
 				linknum++;
@@ -2321,7 +2292,7 @@ AIMOD_MAPPING_CreateNodeLinks ( int node )
 				if (AIMod_Check_Slope_Between(nodes[node].origin, nodes[loop].origin))
 				{
 				nodes[node].links[linknum].targetNode = loop;
-				nodes[node].links[linknum].cost = VectorDistance( nodes[loop].origin, nodes[node].origin ) + (HeightDistance( nodes[loop].origin, nodes[node].origin )*16);
+				nodes[node].links[linknum].cost = VectorDistance( nodes[loop].origin, nodes[node].origin ) + (DistanceVertical( nodes[loop].origin, nodes[node].origin )*16);
 				nodes[node].links[linknum].flags |= PATH_CROUCH;
 
 				linknum++;
@@ -4610,7 +4581,7 @@ void AIMod_AutoWaypoint_Check_For_Ladders ( vec3_t org )
 
 	for ( i = 0; i < aw_num_ladder_positions; i++)
 	{// Do a quick check to make sure we do not do the same ladder twice!
-		if (VectorDistanceNoHeight(org, aw_ladder_positions[i]) < 128)
+		if (DistanceHorizontal(org, aw_ladder_positions[i]) < 128)
 			return;
 	}
 
@@ -5387,7 +5358,7 @@ void AIMod_AutoWaypoint_StandardMethod( void )
 
 					temp_org2[2] = temp_roof;
 					
-					if (temp_roof <= mapMaxs[2] && HeightDistance(temp_org, temp_org2) >= 128)
+					if (temp_roof <= mapMaxs[2] && DistanceVertical(temp_org, temp_org2) >= 128)
 					{// Looks like it goes up!
 						int z = 0;
 
@@ -5406,7 +5377,7 @@ void AIMod_AutoWaypoint_StandardMethod( void )
 
 					temp_org2[2] = temp_ground;
 
-					if (temp_roof >= mapMins[2] && HeightDistance(temp_org, temp_org2) >= 128)
+					if (temp_roof >= mapMins[2] && DistanceVertical(temp_org, temp_org2) >= 128)
 					{// Looks like it goes down!
 						int z = 0;
 
@@ -6670,7 +6641,7 @@ int ClosestNodeTo(vec3_t origin, qboolean isEntity)
 
 		if (isEntity)
 		{
-			if (HeightDistance(origin, nodes[i].origin) > 64)
+			if (DistanceVertical(origin, nodes[i].origin) > 64)
 				continue;
 		}
 
@@ -7664,7 +7635,7 @@ void AIMod_AddLifts ( void )
 
 		temp_org2[2] = temp_roof;
 		
-		if (/*temp_roof <= cg.mapcoordsMaxs[2] &&*/ HeightDistance(temp_org, temp_org2) >= 128)
+		if (/*temp_roof <= cg.mapcoordsMaxs[2] &&*/ DistanceVertical(temp_org, temp_org2) >= 128)
 		{// Looks like it goes up!
 			int z = 0;
 
@@ -7681,7 +7652,7 @@ void AIMod_AddLifts ( void )
 
 		temp_org2[2] = temp_ground;
 
-		if (/*temp_roof >= cg.mapcoordsMins[2] &&*/ HeightDistance(temp_org, temp_org2) >= 128)
+		if (/*temp_roof >= cg.mapcoordsMins[2] &&*/ DistanceVertical(temp_org, temp_org2) >= 128)
 		{// Looks like it goes down!
 			int z = 0;
 
@@ -7735,7 +7706,7 @@ int BOT_GetFCost(int to, int num, int parentNum, float *gcost)
 			VectorSubtract(nodes[num].origin, nodes[parentNum].origin, v);
 			gc += VectorLength(v);
 
-			gc += HeightDistance(nodes[num].origin, nodes[parentNum].origin) * 4;
+			gc += DistanceVertical(nodes[num].origin, nodes[parentNum].origin) * 4;
 
 			if (gc > 64000)
 				gc = 64000.0f;
@@ -7749,7 +7720,7 @@ int BOT_GetFCost(int to, int num, int parentNum, float *gcost)
 	}
 
 	hc = Distance(nodes[num].origin, nodes[parentNum].origin);
-	height_diff = HeightDistance(nodes[num].origin, nodes[parentNum].origin);
+	height_diff = DistanceVertical(nodes[num].origin, nodes[parentNum].origin);
 	hc += (height_diff * height_diff); // Squared for massive preferance to staying at same plane...
 
 	return (int)((gc*0.1) + (hc*0.1));

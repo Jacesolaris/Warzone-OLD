@@ -4743,7 +4743,7 @@ qboolean Jedi_Jump( vec3_t dest, int goalEntNum )
 		trajectory_t	tr;
 		qboolean	blocked;
 		int		elapsedTime, timeStep = 500, hitCount = 0, maxHits = 7;
-		vec3_t	lastPos, testPos, bottom;
+		vec3_t	lastPos, testPos;//, bottom;
 
 		while ( hitCount < maxHits )
 		{

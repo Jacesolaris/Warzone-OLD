@@ -317,6 +317,9 @@ struct gentity_s {
 	gentity_t	*prevTrain;
 	vec3_t		pos1, pos2;
 
+	vec3_t		trigger_orig_mins;
+	vec3_t		trigger_orig_maxs;
+
 	//for npc's
 	vec3_t		pos3;
 
@@ -1660,6 +1663,3 @@ void BG_VehicleLoadParms(void);
 
 // Refactored included functions
 void SetTeamQuick(gentity_t *ent, int team, qboolean doBegin);
-
-float VectorDistanceNoHeight ( vec3_t v1, vec3_t v2 );
-float HeightDistance ( vec3_t v1, vec3_t v2 );

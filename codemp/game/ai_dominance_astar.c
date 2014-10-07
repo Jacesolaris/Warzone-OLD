@@ -31,9 +31,6 @@ extern int FRAME_TIME;
 extern int gWPNum;
 extern wpobject_t *gWPArray[MAX_WPARRAY_SIZE];
 
-extern float HeightDistance(vec3_t v1, vec3_t v2);
-extern int DOM_FindIdealPathtoWP(bot_state_t *bs, int from, int to, int badwp2, int *pathlist);
-
 qboolean PATHING_IGNORE_FRAME_TIME = qfalse;
 
 int			*openlist;												//add 1 because it's a binary heap, and they don't use 0 - 1 is the first used index
@@ -84,6 +81,8 @@ void ASTAR_InitWaypointCosts ( void )
 				if (ht < 0) ht *= -1.0f;
 
 				ht += 1.0;
+
+				if (ht < 1.0) ht = 1.0;
 
 				gWPArray[i]->neighbors[j].cost *= ht;
 			}
@@ -149,7 +148,7 @@ int ASTAR_FindPathFast(int from, int to, int *pathlist, qboolean shorten)
 	AllocatePathFindingMemory();
 
 	// Init waypoint link costs if needed...
-	ASTAR_InitWaypointCosts();
+	//ASTAR_InitWaypointCosts();
 
 	memset(openlist, 0, (sizeof(int)* (gWPNum + 1)));
 	memset(gcost, 0, (sizeof(float)* gWPNum));
@@ -289,7 +288,7 @@ int ASTAR_FindPathFast(int from, int to, int *pathlist, qboolean shorten)
 						VectorSubtract(gWPArray[newnode]->origin, gWPArray[atNode]->origin, vec);
 						gc += VectorLength(vec);				//calculate what the gcost would be if we reached this node along the current path
 						gWPArray[atNode]->neighbors[i].cost = VectorLength(vec);
-						trap->Print("ASTAR WARNING: Missing cost for node %i neighbour %i. This should not happen!\n", atNode, i);
+						//trap->Print("ASTAR WARNING: Missing cost for node %i neighbour %i. This should not happen!\n", atNode, i);
 					}
 
 					if (gc < gcost[newnode])				//if the new gcost is less (ie, this path is shorter than what we had before)
@@ -423,11 +422,7 @@ void AIMod_TimeMapPaths()
 
 		longTermGoal = DOM_GetBestWaypoint(goal->s.origin, -1, -1);
 
-		//pathsize = ASTAR_FindPath(current_wp, longTermGoal, pathlist);
-		//pathsize = ASTAR_FindPathWithTimeLimit(current_wp, longTermGoal, pathlist);
-		//pathsize = ASTAR_FindPathFast(current_wp, longTermGoal, pathlist, qtrue);
 		pathsize = ASTAR_FindPathFast(current_wp, longTermGoal, pathlist, qfalse);
-		//pathsize = DOM_FindIdealPathtoWP(NULL, current_wp, longTermGoal, -1, pathlist);
 
 		if (pathsize > 0)
 		{

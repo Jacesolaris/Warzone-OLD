@@ -656,6 +656,20 @@ void ClearBounds( vec3_t mins, vec3_t maxs ) {
 	maxs[0] = maxs[1] = maxs[2] = -99999;
 }
 
+float DistanceVertical( const vec3_t p1, const vec3_t p2 ) {
+	vec3_t	v;
+
+	VectorSubtract( p2, p1, v );
+	return sqrt( v[2]*v[2] ); //Leave off the z component
+}
+
+float DistanceVerticalSquared( const vec3_t p1, const vec3_t p2 ) {
+	vec3_t	v;
+
+	VectorSubtract( p2, p1, v );
+	return v[2]*v[2];	//Leave off the z component
+}
+
 float DistanceHorizontal( const vec3_t p1, const vec3_t p2 ) {
 	vec3_t	v;
 
