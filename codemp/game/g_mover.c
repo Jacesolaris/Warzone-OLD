@@ -651,7 +651,7 @@ void Reached_BinaryMover( gentity_t *ent )
 	ent->s.loopSound = 0;
 	ent->s.loopIsSoundset = qfalse;
 
-	if ( !(ent->moverState == MOVER_POS1 || ent->moverState == MOVER_POS2) )
+	if ( trigger && !(ent->moverState == MOVER_POS1 || ent->moverState == MOVER_POS2) )
 	{// Moving. Start debounce time clock...
 		trigger->useDebounceTime = level.time + 5100; // about 5 secs wait at each point???
 	}
@@ -894,11 +894,11 @@ void Use_BinaryMover( gentity_t *ent, gentity_t *other, gentity_t *activator )
 		return;
 	}
 
-	if ( !(ent->moverState == MOVER_POS1 || ent->moverState == MOVER_POS2) )
+	if ( trigger && !(ent->moverState == MOVER_POS1 || ent->moverState == MOVER_POS2) )
 	{// Moving. Start debounce time clock...
 		trigger->useDebounceTime = level.time + 5100; // about 5 secs wait at each point???
 	}
-	else if ((ent->moverState == MOVER_POS1 || ent->moverState == MOVER_POS2)
+	else if (trigger && (ent->moverState == MOVER_POS1 || ent->moverState == MOVER_POS2)
 		&& trigger
 		&& trigger->useDebounceTime > level.time)
 	{// Wait at this position for the remainder of the debounce time...
