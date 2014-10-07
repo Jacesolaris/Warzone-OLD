@@ -3309,8 +3309,16 @@ qboolean UQ1_UcmdMoveForDir ( gentity_t *self, usercmd_t *cmd, vec3_t dir, qbool
 	//NPCs cheat and store this directly because converting movement into a ucmd loses precision
 	VectorCopy( dir, self->client->ps.moveDir );
 
-	fDot = DotProduct( forward, dir ) * 127.0f;
-	rDot = DotProduct( right, dir ) * 127.0f;
+	if (walk)
+	{
+		fDot = DotProduct( forward, dir ) * 32.0;//self->NPC->stats.walkSpeed*1.1;
+		rDot = DotProduct( right, dir ) * 32.0;//self->NPC->stats.walkSpeed*1.1;
+	}
+	else
+	{
+		fDot = DotProduct( forward, dir ) * 127.0f;
+		rDot = DotProduct( right, dir ) * 127.0f;
+	}
 
 	//Must clamp this because DotProduct is not guaranteed to return a number within -1 to 1, and that would be bad when we're shoving this into a signed byte
 	if ( fDot > 127.0f )
@@ -3529,15 +3537,16 @@ qboolean NPC_PatrolArea( void )
 	if (NPC->wpCurrent < 0 || NPC->wpCurrent >= gWPNum || NPC->longTermGoal < 0 || NPC->longTermGoal >= gWPNum)
 	{// FIXME: Try to roam out of problems...
 		//trap->Print("PATROL: Lost.\n");
+		NPC_PickRandomIdleAnimantion(NPC);
 		return qfalse; // next think...
 	}
 
 	NPC_FacePosition( gWPArray[NPC->wpCurrent]->origin, qfalse );
 	VectorSubtract( gWPArray[NPC->wpCurrent]->origin, NPC->r.currentOrigin, NPC->movedir );
-	if (!UQ1_UcmdMoveForDir( NPC, &NPCS.ucmd, NPC->movedir, qtrue, gWPArray[NPC->wpCurrent]->origin )) { /*NPC_PickRandomIdleAnimantion(NPC);*/ return qtrue; }
+	if (!UQ1_UcmdMoveForDir( NPC, &NPCS.ucmd, NPC->movedir, qtrue, gWPArray[NPC->wpCurrent]->origin )) { if (NPC_IsCivilianHumanoid(NPC)) NPC_PickRandomIdleAnimantion(NPC); return qtrue; }
 	VectorCopy( NPC->movedir, NPC->client->ps.moveDir );
 
-	//NPC_SelectMoveAnimation(qtrue);
+	NPC_SelectMoveAnimation(qtrue);
 
 	return qtrue;
 }
@@ -4313,6 +4322,7 @@ qboolean NPC_FollowRoutes( void )
 						G_AddVoiceEvent( NPC, Q_irand( EV_DETECTED1, EV_DETECTED5 ), 15000 + irand(0, 30000) );
 					}
 
+					//trap->Print("Found enemy!\n");
 					return qfalse;
 				}
 			}
@@ -4470,10 +4480,36 @@ qboolean NPC_FollowRoutes( void )
 		return qtrue;
 	}
 	
-	if (g_gametype.integer == GT_WARZONE || (NPC->r.svFlags & SVF_BOT))
-		if (!UQ1_UcmdMoveForDir( NPC, &NPCS.ucmd, NPC->movedir, qfalse, gWPArray[NPC->wpCurrent]->origin )) { if (NPC_IsCivilianHumanoid(NPC)) NPC_PickRandomIdleAnimantion(NPC); return qtrue; }
+	if (NPC_IsCivilianHumanoid(NPC))
+	{
+		if (!UQ1_UcmdMoveForDir( NPC, &NPCS.ucmd, NPC->movedir, qtrue, gWPArray[NPC->wpCurrent]->origin )) 
+		{ 
+			if (NPC->client->ps.groundEntityNum != ENTITYNUM_NONE)
+				NPC_PickRandomIdleAnimantion(NPC);
+
+			return qtrue; 
+		}
+
+		NPC_SelectMoveAnimation(qtrue);
+	}
+	else if (g_gametype.integer == GT_WARZONE || (NPC->r.svFlags & SVF_BOT))
+	{
+		if (!UQ1_UcmdMoveForDir( NPC, &NPCS.ucmd, NPC->movedir, qfalse, gWPArray[NPC->wpCurrent]->origin )) 
+		{ 
+			return qtrue; 
+		}
+	}
 	else 
-		if (!UQ1_UcmdMoveForDir( NPC, &NPCS.ucmd, NPC->movedir, !NPC_HaveValidEnemy(), gWPArray[NPC->wpCurrent]->origin )) { if (NPC_IsCivilianHumanoid(NPC)) NPC_PickRandomIdleAnimantion(NPC); return qtrue; }
+	{
+		qboolean walk = qtrue;
+
+		if (NPC_HaveValidEnemy()) walk = qfalse;
+
+		if (!UQ1_UcmdMoveForDir( NPC, &NPCS.ucmd, NPC->movedir, walk, gWPArray[NPC->wpCurrent]->origin )) 
+		{
+			return qtrue; 
+		}
+	}
 
 	VectorCopy( NPC->movedir, NPC->client->ps.moveDir );
 
@@ -4887,13 +4923,26 @@ void NPC_Think ( gentity_t *self)//, int msec )
 		if (self->s.NPC_class != CLASS_VEHICLE ||
 			!self->m_pVehicle)
 		{ //ok, let's not do this at all for vehicles.
+			qboolean is_civilian = NPC_IsCivilian(self);
+			qboolean is_jedi = NPC_IsJedi(self);
+			qboolean is_bot = (self->s.eType == ET_PLAYER);
+			qboolean use_pathing = qfalse;
+
+			if (is_civilian || is_jedi || is_bot) use_pathing = qtrue;
+			if (g_gametype.integer >= GT_TEAM) use_pathing = qtrue;
+
 			if (self->enemy 
 				&& (!NPC_IsValidNPCEnemy(self->enemy) || Distance(self->r.currentOrigin, self->enemy->r.currentOrigin) > 2048.0))
 			{// If NPC Bot's enemy is invalid (eg: a dead NPC) or too far away, clear it!
 				G_ClearEnemy(self);
 			}
 
-			if (!self->enemy)
+			if (is_civilian) 
+			{
+				G_ClearEnemy(self);
+			}
+
+			if (!self->enemy && !is_civilian)
 			{
 				NPC_FindEnemy( qtrue );
 			}
@@ -4905,9 +4954,7 @@ void NPC_Think ( gentity_t *self)//, int msec )
 
 			if (!self->enemy)
 			{
-				if (g_gametype.integer != GT_INSTANCE && g_gametype.integer != GT_SINGLE_PLAYER 
-					&& (NPC_IsCivilian(self) || self->r.svFlags & SVF_BOT || g_gametype.integer == GT_WARZONE) // UQ1: Changed - only NPC bots and civilians roam now... Maybe add jedi/sith later...
-					&& NPC_FollowRoutes()) 
+				if (use_pathing && NPC_FollowRoutes()) 
 				{
 					//trap->Print("NPCBOT DEBUG: NPC is following routes.\n");
 
@@ -4961,8 +5008,7 @@ void NPC_Think ( gentity_t *self)//, int msec )
 					NPC_CheckPlayerAim();
 					NPC_CheckAllClear();
 				}
-				else if ((g_gametype.integer == GT_INSTANCE || g_gametype.integer == GT_SINGLE_PLAYER || !NPC_IsCivilian(self))
-					&& NPC_PatrolArea())
+				else if (!use_pathing && NPC_PatrolArea())
 				{
 					//trap->Print("NPCBOT DEBUG: NPC is patroling.\n");
 
