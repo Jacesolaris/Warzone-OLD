@@ -1034,7 +1034,7 @@ extern void NPC_ApplyRoff (void);
 extern void NPC_Think ( gentity_t *self);
 
 // UQ1: Now lets see if bots can share NPC AI....
-void DOM_StandardBotAI2(bot_state_t *bs, float thinktime)
+void DOM_StandardBotAI(bot_state_t *bs, float thinktime)
 {
 	gentity_t *bot = &g_entities[bs->client];
 
@@ -1537,7 +1537,7 @@ int BotAI(int client, float thinktime) {
 	NPCS.NPCInfo = bot->NPC;
 	NPCS.ucmd = NPCS.NPC->client->pers.cmd;
 
-	DOM_StandardBotAI2(bs, thinktime); // UQ1: Uses Dominance NPC AI...
+	DOM_StandardBotAI(bs, thinktime); // UQ1: Uses Dominance NPC AI...
 
 #ifdef _DEBUG
 	end = trap->Milliseconds();

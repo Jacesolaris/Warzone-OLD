@@ -1255,7 +1255,7 @@ static void Jedi_Move( gentity_t *goal, qboolean retreat )
 #if 0
 	//FIXME: temp retreat behavior- should really make this toward a safe spot or maybe to outflank enemy
 	if ( retreat )
-	{//FIXME: should we trace and make sure we can go this way?  Or somehow let NPC_MoveToGoal know we want to retreat and have it handle it?
+	{//FIXME: should we trace and make sure we can go this way?  Or somehow let NPC_CombatMoveToGoal know we want to retreat and have it handle it?
 		NPCS.ucmd.forwardmove *= -1;
 		NPCS.ucmd.rightmove *= -1;
 		VectorScale( NPCS.NPC->client->ps.moveDir, -1, NPCS.NPC->client->ps.moveDir );
@@ -1299,7 +1299,7 @@ static qboolean Jedi_Hunt( void )
 				NPCS.NPCInfo->goalEntity = NPCS.NPC->enemy;
 			}
 			//Jedi_Move( NPC->enemy, qfalse );
-			if ( NPC_MoveToGoal( qfalse ) )
+			if ( NPC_CombatMoveToGoal( qfalse, qfalse ) )
 			{
 				NPC_UpdateAngles( qtrue, qtrue );
 				return qtrue;
@@ -1318,7 +1318,7 @@ static qboolean Jedi_Track( void )
 	{//approach enemy
 		NPCS.NPCInfo->combatMove = qtrue;
 		NPC_SetMoveGoal( NPCS.NPC, NPCS.NPCInfo->enemyLastSeenLocation, 16, qtrue, 0, NPCS.NPC->enemy );
-		if ( NPC_MoveToGoal( qfalse ) )
+		if ( NPC_CombatMoveToGoal( qfalse, qfalse ) )
 		{
 			NPC_UpdateAngles( qtrue, qtrue );
 			return qtrue;
@@ -4710,31 +4710,32 @@ static qboolean Jedi_AttackDecide( int enemy_dist )
 #define	PARA_WIDTH		(sqrt(APEX_HEIGHT)+sqrt(APEX_HEIGHT))
 #define	JUMP_SPEED		200.0f
 
-static qboolean Jedi_Jump( vec3_t dest, int goalEntNum )
+extern qboolean NPC_CheckFallPositionOK(gentity_t *NPC, vec3_t position);
+
+qboolean Jedi_Jump( vec3_t dest, int goalEntNum )
 {//FIXME: if land on enemy, knock him down & jump off again
-	/*
-	if ( dest[2] - NPC->r.currentOrigin[2] < 64 && DistanceHorizontal( NPC->r.currentOrigin, dest ) > 256 )
-	{//a pretty horizontal jump, easy to fake:
-		vec3_t enemy_diff;
+	//
+	// First type of jump...
+	//
 
-		VectorSubtract( dest, NPC->r.currentOrigin, enemy_diff );
-		float enemy_z_diff = enemy_diff[2];
-		enemy_diff[2] = 0;
-		float enemy_xy_diff = VectorNormalize( enemy_diff );
+	if (goalEntNum != ENTITYNUM_NONE)
+	{
+		gentity_t *goal = &g_entities[goalEntNum];
 
-		VectorScale( enemy_diff, enemy_xy_diff*0.8, NPC->client->ps.velocity );
-		if ( enemy_z_diff < 64 )
-		{
-			NPC->client->ps.velocity[2] = enemy_xy_diff;
+		if (!goal) 
+		{// Invalid entity. Never jump there...
+			return qfalse;
 		}
-		else
+
+		if (goal->s.eType == ET_NPC || goal->s.eType == ET_PLAYER)
 		{
-			NPC->client->ps.velocity[2] = enemy_z_diff*2+enemy_xy_diff/2;
+			if (goal->client->ps.groundEntityNum == ENTITYNUM_NONE)
+			{// Goal is in mid-air - Never jump there (we not end up where we want and most likely fall)...
+				return qfalse;
+			}
 		}
 	}
-	else
-	*/
-	if ( 0 ) // UQ1: Trying other jump instead...
+
 	{
 		float	targetDist, shotSpeed = 300, travelTime, impactDist, bestImpactDist = Q3_INFINITE;//fireSpeed,
 		vec3_t	targetDir, shotVel, failCase;
@@ -4791,11 +4792,24 @@ static qboolean Jedi_Jump( vec3_t dest, int goalEntNum )
 						blocked = qtrue;
 						break;
 					}
+					
 					if ( trace.fraction < 1.0f )
 					{//hit something
-						if ( trace.entityNum == goalEntNum )
+						/*if ( goalEntNum != ENTITYNUM_NONE && trace.entityNum == goalEntNum && NPC_CheckFallPositionOK(NPCS.NPC, trace.endpos) )
 						{//hit the enemy, that's perfect!
 							//Hmm, don't want to land on him, though...
+							break;
+						}
+						else*/ if ( goalEntNum != ENTITYNUM_NONE 
+							&& (trace.entityNum == ENTITYNUM_NONE || trace.entityNum == ENTITYNUM_WORLD) 
+							&& Distance( trace.endpos, dest ) < 128/*96*/ && NPC_CheckFallPositionOK(NPCS.NPC, trace.endpos) )
+						{//hit the spot, that's perfect!
+							break;
+						}
+						else if ( goalEntNum == ENTITYNUM_NONE 
+							&& Distance( trace.endpos, dest ) < 128/*96*/ 
+							&& NPC_CheckFallPositionOK(NPCS.NPC, trace.endpos) )
+						{//hit the spot, that's perfect!
 							break;
 						}
 						else
@@ -4822,15 +4836,24 @@ static qboolean Jedi_Jump( vec3_t dest, int goalEntNum )
 							}
 						}
 					}
+
 					if ( elapsedTime == floor( travelTime ) )
 					{//reached end, all clear
 						if ( trace.fraction >= 1.0f )
 						{//hmm, make sure we'll land on the ground...
+							/*
 							//FIXME: do we care how far below ourselves or our dest we'll land?
 							VectorCopy( trace.endpos, bottom );
-							bottom[2] -= 128;
+							//bottom[2] -= 128;
+							bottom[2] -= 64; // UQ1: Try less fall...
 							trap->Trace( &trace, trace.endpos, NPCS.NPC->r.mins, NPCS.NPC->r.maxs, bottom, NPCS.NPC->s.number, NPCS.NPC->clipmask, qfalse, 0, 0 );
 							if ( trace.fraction >= 1.0f )
+							{//would fall too far
+								blocked = qtrue;
+							}
+							*/
+
+							if (!NPC_CheckFallPositionOK(NPCS.NPC, trace.endpos))
 							{//would fall too far
 								blocked = qtrue;
 							}
@@ -4843,6 +4866,7 @@ static qboolean Jedi_Jump( vec3_t dest, int goalEntNum )
 						VectorCopy( testPos, lastPos );
 					}
 				}
+
 				if ( blocked )
 				{//hit something, adjust speed (which will change arc)
 					hitCount++;
@@ -4863,14 +4887,27 @@ static qboolean Jedi_Jump( vec3_t dest, int goalEntNum )
 			}
 		}
 
+		/*
 		if ( hitCount >= maxHits )
 		{//NOTE: worst case scenario, use the one that impacted closest to the target (or just use the first try...?)
 			//NOTE: or try failcase?
 			VectorCopy( failCase, NPCS.NPC->client->ps.velocity );
 		}
 		VectorCopy( shotVel, NPCS.NPC->client->ps.velocity );
+		*/
+
+		if ( hitCount < maxHits )
+		{//NOTE: all good...
+			VectorCopy( shotVel, NPCS.NPC->client->ps.velocity );
+			return qtrue;
+		}
 	}
-	else
+
+	//
+	// Try a second type of jump...
+	//
+
+#if 0
 	{//a more complicated jump
 		vec3_t		dir, p1, p2, apex;
 		float		time, height, forward, z, xy, dist, apexHeight;
@@ -4918,14 +4955,16 @@ static qboolean Jedi_Jump( vec3_t dest, int goalEntNum )
 
 		z = (sqrt(apexHeight + z) - sqrt(apexHeight));
 
-		assert(z >= 0);
+		//assert(z >= 0);
+		if (z <= 0) return qfalse;
 
 //		Com_Printf("apex is %4.2f percent from p1: ", (xy-z)*0.5/xy*100.0f);
 
 		xy -= z;
 		xy *= 0.5;
 
-		assert(xy > 0);
+		//assert(xy > 0);
+		if (xy <= 0) return qfalse;
 
 		VectorMA( p1, xy, dir, apex );
 		apex[2] += apexHeight;
@@ -4935,25 +4974,57 @@ static qboolean Jedi_Jump( vec3_t dest, int goalEntNum )
 		//Now we have the apex, aim for it
 		height = apex[2] - NPCS.NPC->r.currentOrigin[2];
 		time = sqrt( height / ( .5 * NPCS.NPC->client->ps.gravity ) );//was 0.5, but didn't work well for very long jumps
-		if ( !time )
+
+		if ( time )
 		{
-			//Com_Printf( S_COLOR_RED"ERROR: no time in jump\n" );
-			return qfalse;
+			VectorSubtract ( apex, NPCS.NPC->r.currentOrigin, NPCS.NPC->client->ps.velocity );
+			NPCS.NPC->client->ps.velocity[2] = 0;
+			dist = VectorNormalize( NPCS.NPC->client->ps.velocity );
+
+			forward = dist / time * 1.25;//er... probably bad, but...
+			VectorScale( NPCS.NPC->client->ps.velocity, forward, NPCS.NPC->client->ps.velocity );
+
+			//FIXME:  Uh.... should we trace/EvaluateTrajectory this to make sure we have clearance and we land where we want?
+			NPCS.NPC->client->ps.velocity[2] = time * NPCS.NPC->client->ps.gravity;
+
+			//Com_Printf("Jump Velocity: %4.2f, %4.2f, %4.2f\n", NPC->client->ps.velocity[0], NPC->client->ps.velocity[1], NPC->client->ps.velocity[2] );
+
+			return qtrue;
+		}
+	}
+#endif //0
+
+	//
+	// Try a third type of jump...
+	//
+
+#if 0
+	if ( dest[2] - NPCS.NPC->r.currentOrigin[2] < 64 && DistanceHorizontal( NPCS.NPC->r.currentOrigin, dest ) > 256 )
+	{//a pretty horizontal jump, easy to fake:
+		vec3_t enemy_diff;
+		float enemy_z_diff, enemy_xy_diff;
+
+		VectorSubtract( dest, NPCS.NPC->r.currentOrigin, enemy_diff );
+		enemy_z_diff = enemy_diff[2];
+		enemy_diff[2] = 0;
+		enemy_xy_diff = VectorNormalize( enemy_diff );
+
+		VectorScale( enemy_diff, enemy_xy_diff*0.8, NPCS.NPC->client->ps.velocity );
+
+		if ( enemy_z_diff < 64 )
+		{
+			NPCS.NPC->client->ps.velocity[2] = enemy_xy_diff;
+		}
+		else
+		{
+			NPCS.NPC->client->ps.velocity[2] = enemy_z_diff*2+enemy_xy_diff/2;
 		}
 
-		VectorSubtract ( apex, NPCS.NPC->r.currentOrigin, NPCS.NPC->client->ps.velocity );
-		NPCS.NPC->client->ps.velocity[2] = 0;
-		dist = VectorNormalize( NPCS.NPC->client->ps.velocity );
-
-		forward = dist / time * 1.25;//er... probably bad, but...
-		VectorScale( NPCS.NPC->client->ps.velocity, forward, NPCS.NPC->client->ps.velocity );
-
-		//FIXME:  Uh.... should we trace/EvaluateTrajectory this to make sure we have clearance and we land where we want?
-		NPCS.NPC->client->ps.velocity[2] = time * NPCS.NPC->client->ps.gravity;
-
-		//Com_Printf("Jump Velocity: %4.2f, %4.2f, %4.2f\n", NPC->client->ps.velocity[0], NPC->client->ps.velocity[1], NPC->client->ps.velocity[2] );
+		return qtrue;
 	}
-	return qtrue;
+#endif //0
+
+	return qfalse;
 }
 
 static qboolean Jedi_TryJump( gentity_t *goal )
@@ -5078,6 +5149,7 @@ static qboolean Jedi_TryJump( gentity_t *goal )
 
 								NPCS.NPC->client->ps.weaponTime = NPCS.NPC->client->ps.torsoTimer;
 								NPCS.NPC->client->ps.fd.forcePowersActive |= ( 1 << FP_LEVITATION );
+
 								if ( NPC_IsBountyHunter(NPCS.NPC) )
 								{
 									G_SoundOnEnt( NPCS.NPC, CHAN_ITEM, "sound/boba/jeton.wav" );
@@ -5663,7 +5735,7 @@ static void Jedi_Combat( void )
 		NAV_GetLastMove( &info );
 		if ( !(info.flags & NIF_MACRO_NAV) )
 		{//micro-navigation told us to step off a ledge, try using macronav for now
-			NPC_MoveToGoal( qfalse );
+			NPC_CombatMoveToGoal( qfalse, qfalse );
 		}
 		//reset the timers.
 		TIMER_Set( NPCS.NPC, "strafeLeft", 0 );
@@ -6048,7 +6120,7 @@ finish:
 	{
 		NPCS.ucmd.buttons |= BUTTON_WALKING;
 		//Jedi_Move( NPCInfo->goalEntity );
-		NPC_MoveToGoal( qtrue );
+		NPC_CombatMoveToGoal( qtrue );
 	}
 	*/
 
@@ -6091,7 +6163,7 @@ finish:
 				NPCS.NPC->enemy = NPCS.NPCInfo->goalEntity; // Also set it as an enemy...
 				NPC_SetMoveGoal( NPCS.NPC, NPCS.NPCInfo->goalEntity->r.currentOrigin, 256/*16*/, qtrue, -1, NULL );
 				NPCS.NPCInfo->goalTime = level.time + 100000;
-				NPC_MoveToGoal( qtrue );
+				NPC_CombatMoveToGoal( qtrue );
 				trap->Print("%s's goal is [%i] %s.\n", NPCS.client->pers.netname, NPCS.NPCInfo->goalEntity->s.number, NPCS.NPCInfo->goalEntity->classname);
 				return;
 			}
@@ -6120,7 +6192,7 @@ finish:
 				NPCS.NPCInfo->goalEntity = targets[irand(0, NUM_TARGETS-1)];
 				NPC_SetMoveGoal( NPCS.NPC, NPCS.NPCInfo->goalEntity->r.currentOrigin, 256/*16*/, qtrue, -1, NULL );
 				NPCS.NPCInfo->goalTime = level.time + 100000;
-				NPC_MoveToGoal( qtrue );
+				NPC_CombatMoveToGoal( qtrue );
 				trap->Print("%s's goal is [%i] %s.\n", NPCS.client->pers.netname, NPCS.NPCInfo->goalEntity->s.number, NPCS.NPCInfo->goalEntity->classname);
 				return;
 			}
@@ -6130,7 +6202,7 @@ finish:
 		{
 			// Have a goal. Move there...
 			//NPCS.ucmd.buttons |= BUTTON_WALKING; // UQ1: Walk???
-			//NPC_MoveToGoal( qtrue );
+			//NPC_CombatMoveToGoal( qtrue );
 		}
 	}
 
@@ -6138,7 +6210,7 @@ finish:
 	{
 		NPCS.ucmd.buttons |= BUTTON_WALKING;
 		//Jedi_Move( NPCS.NPCInfo->goalEntity, qfalse );
-		NPC_MoveToGoal( qtrue );
+		NPC_CombatMoveToGoal( qtrue, qfalse );
 	}
 }
 
@@ -6197,7 +6269,7 @@ void NPC_BSJedi_FollowLeader( void )
 					NPCS.ucmd.buttons |= BUTTON_ATTACK;
 					if ( NPCS.NPC->enemy && NPCS.NPC->enemy->health > 0 )
 					{//get our saber back NOW!
-						if ( !NPC_MoveToGoal( qtrue ) )//Jedi_Move( NPCInfo->goalEntity, qfalse );
+						if ( !NPC_CombatMoveToGoal( qtrue, qfalse ) )//Jedi_Move( NPCInfo->goalEntity, qfalse );
 						{//can't nav to it, try jumping to it
 							NPC_FaceEntity( NPCS.NPCInfo->goalEntity, qtrue );
 							if (!Jedi_TryJump( NPCS.NPCInfo->goalEntity ))

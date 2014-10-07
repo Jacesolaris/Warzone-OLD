@@ -369,113 +369,14 @@ void G_UcmdMoveForDir( gentity_t *self, usercmd_t *cmd, vec3_t dir )
 
 /*
 -------------------------
-NPC_MoveToGoal
+NPC_CombatMoveToGoal
 
-  Now assumes goal is goalEntity, was no reason for it to be otherwise
+  Now assumes goal is goalEntity, was no reason for it to be otherwise - UQ1: This version checks for falling and reachability...
 -------------------------
 */
 #if	AI_TIMERS
 extern int navTime;
 #endif//	AI_TIMERS
-qboolean NPC_MoveToGoal( qboolean tryStraight )
-{
-	float	distance;
-	vec3_t	dir;
-
-#if	AI_TIMERS
-	int	startTime = GetTime(0);
-#endif//	AI_TIMERS
-	//If taking full body pain, don't move
-	if ( PM_InKnockDown( &NPCS.NPC->client->ps ) || ( ( NPCS.NPC->s.legsAnim >= BOTH_PAIN1 ) && ( NPCS.NPC->s.legsAnim <= BOTH_PAIN18 ) ) )
-	{
-		return qtrue;
-	}
-
-	/*
-	if( NPC->s.eFlags & EF_LOCKED_TO_WEAPON )
-	{//If in an emplaced gun, never try to navigate!
-		return qtrue;
-	}
-	*/
-	//rwwFIXMEFIXME: emplaced support
-
-	//FIXME: if can't get to goal & goal is a target (enemy), try to find a waypoint that has line of sight to target, at least?
-	//Get our movement direction
-#if 1
-	if ( NPC_GetMoveDirectionAltRoute( dir, &distance, tryStraight ) == qfalse )
-#else
-	if ( NPC_GetMoveDirection( dir, &distance ) == qfalse )
-#endif
-		return qfalse;
-
-	NPCS.NPCInfo->distToGoal		= distance;
-
-	//Convert the move to angles
-	vectoangles( dir, NPCS.NPCInfo->lastPathAngles );
-	if ( (NPCS.ucmd.buttons&BUTTON_WALKING) )
-	{
-		NPCS.NPC->client->ps.speed = NPCS.NPCInfo->stats.walkSpeed;
-	}
-	else
-	{
-		NPCS.NPC->client->ps.speed = NPCS.NPCInfo->stats.runSpeed;
-	}
-
-	//FIXME: still getting ping-ponging in certain cases... !!!  Nav/avoidance error?  WTF???!!!
-	//If in combat move, then move directly towards our goal
-	if ( NPC_CheckCombatMove() || NPCS.NPC->s.eType == ET_PLAYER )
-	{//keep current facing
-		G_UcmdMoveForDir( NPCS.NPC, &NPCS.ucmd, dir );
-
-		if (NPCS.NPC->s.eType == ET_PLAYER)
-		{
-			if (NPCS.ucmd.buttons & BUTTON_WALKING)
-			{
-				//trap->EA_Action(NPCS.NPC->s.number, 0x0080000);
-				trap->EA_Move(NPCS.NPC->s.number, dir, 5000.0);
-			}
-			else
-			{
-				trap->EA_Move(NPCS.NPC->s.number, dir, 5000.0);
-			}
-		}
-	}
-	else
-	{//face our goal
-		//FIXME: strafe instead of turn if change in dir is small and temporary
-		NPCS.NPCInfo->desiredPitch	= 0.0f;
-		NPCS.NPCInfo->desiredYaw		= AngleNormalize360( NPCS.NPCInfo->lastPathAngles[YAW] );
-
-		//Pitch towards the goal and also update if flying or swimming
-		if ( (NPCS.NPC->client->ps.eFlags2&EF2_FLYING) )//moveType == MT_FLYSWIM )
-		{
-			NPCS.NPCInfo->desiredPitch = AngleNormalize360( NPCS.NPCInfo->lastPathAngles[PITCH] );
-
-			if ( dir[2] )
-			{
-				float scale = (dir[2] * distance);
-				if ( scale > 64 )
-				{
-					scale = 64;
-				}
-				else if ( scale < -64 )
-				{
-					scale = -64;
-				}
-				NPCS.NPC->client->ps.velocity[2] = scale;
-				//NPC->client->ps.velocity[2] = (dir[2] > 0) ? 64 : -64;
-			}
-		}
-
-		//Set any final info
-		NPCS.ucmd.forwardmove = 127;
-	}
-
-#if	AI_TIMERS
-	navTime += GetTime( startTime );
-#endif//	AI_TIMERS
-	return qtrue;
-}
 
 extern qboolean NPC_CheckFall(gentity_t *NPC, vec3_t dir);
 extern int NPC_CheckFallJump(gentity_t *NPC, vec3_t dest, usercmd_t *cmd);
@@ -625,6 +526,118 @@ qboolean NPC_CombatMoveToGoal( qboolean tryStraight, qboolean retreat )
 	}
 
 	return qtrue;
+}
+
+/*
+-------------------------
+NPC_MoveToGoal
+
+  Now assumes goal is goalEntity, was no reason for it to be otherwise
+-------------------------
+*/
+
+qboolean NPC_MoveToGoal( qboolean tryStraight )
+{
+#if 0
+	float	distance;
+	vec3_t	dir;
+
+#if	AI_TIMERS
+	int	startTime = GetTime(0);
+#endif//	AI_TIMERS
+	//If taking full body pain, don't move
+	if ( PM_InKnockDown( &NPCS.NPC->client->ps ) || ( ( NPCS.NPC->s.legsAnim >= BOTH_PAIN1 ) && ( NPCS.NPC->s.legsAnim <= BOTH_PAIN18 ) ) )
+	{
+		return qtrue;
+	}
+
+	/*
+	if( NPC->s.eFlags & EF_LOCKED_TO_WEAPON )
+	{//If in an emplaced gun, never try to navigate!
+		return qtrue;
+	}
+	*/
+	//rwwFIXMEFIXME: emplaced support
+
+	//FIXME: if can't get to goal & goal is a target (enemy), try to find a waypoint that has line of sight to target, at least?
+	//Get our movement direction
+#if 1
+	if ( NPC_GetMoveDirectionAltRoute( dir, &distance, tryStraight ) == qfalse )
+#else
+	if ( NPC_GetMoveDirection( dir, &distance ) == qfalse )
+#endif
+		return qfalse;
+
+	NPCS.NPCInfo->distToGoal		= distance;
+
+	//Convert the move to angles
+	vectoangles( dir, NPCS.NPCInfo->lastPathAngles );
+	if ( (NPCS.ucmd.buttons&BUTTON_WALKING) )
+	{
+		NPCS.NPC->client->ps.speed = NPCS.NPCInfo->stats.walkSpeed;
+	}
+	else
+	{
+		NPCS.NPC->client->ps.speed = NPCS.NPCInfo->stats.runSpeed;
+	}
+
+	//FIXME: still getting ping-ponging in certain cases... !!!  Nav/avoidance error?  WTF???!!!
+	//If in combat move, then move directly towards our goal
+	if ( NPC_CheckCombatMove() || NPCS.NPC->s.eType == ET_PLAYER )
+	{//keep current facing
+		G_UcmdMoveForDir( NPCS.NPC, &NPCS.ucmd, dir );
+
+		if (NPCS.NPC->s.eType == ET_PLAYER)
+		{
+			if (NPCS.ucmd.buttons & BUTTON_WALKING)
+			{
+				//trap->EA_Action(NPCS.NPC->s.number, 0x0080000);
+				trap->EA_Move(NPCS.NPC->s.number, dir, 5000.0);
+			}
+			else
+			{
+				trap->EA_Move(NPCS.NPC->s.number, dir, 5000.0);
+			}
+		}
+	}
+	else
+	{//face our goal
+		//FIXME: strafe instead of turn if change in dir is small and temporary
+		NPCS.NPCInfo->desiredPitch	= 0.0f;
+		NPCS.NPCInfo->desiredYaw		= AngleNormalize360( NPCS.NPCInfo->lastPathAngles[YAW] );
+
+		//Pitch towards the goal and also update if flying or swimming
+		if ( (NPCS.NPC->client->ps.eFlags2&EF2_FLYING) )//moveType == MT_FLYSWIM )
+		{
+			NPCS.NPCInfo->desiredPitch = AngleNormalize360( NPCS.NPCInfo->lastPathAngles[PITCH] );
+
+			if ( dir[2] )
+			{
+				float scale = (dir[2] * distance);
+				if ( scale > 64 )
+				{
+					scale = 64;
+				}
+				else if ( scale < -64 )
+				{
+					scale = -64;
+				}
+				NPCS.NPC->client->ps.velocity[2] = scale;
+				//NPC->client->ps.velocity[2] = (dir[2] > 0) ? 64 : -64;
+			}
+		}
+
+		//Set any final info
+		NPCS.ucmd.forwardmove = 127;
+	}
+
+#if	AI_TIMERS
+	navTime += GetTime( startTime );
+#endif//	AI_TIMERS
+	return qtrue;
+#endif //0
+
+	return NPC_CombatMoveToGoal( tryStraight, qfalse ); // UQ1: Check for falling...
 }
 
 /*

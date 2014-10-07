@@ -2581,6 +2581,8 @@ qboolean NPC_ClearPathToJump( gentity_t *NPC, vec3_t dest, int impactEntNum )
 	return qtrue;
 }
 
+extern qboolean Jedi_Jump( vec3_t dest, int goalEntNum );
+
 //#define	APEX_HEIGHT		200.0f
 #define	APEX_HEIGHT		128.0f
 #define	PARA_WIDTH		128.0f
@@ -2590,6 +2592,7 @@ qboolean NPC_ClearPathToJump( gentity_t *NPC, vec3_t dest, int impactEntNum )
 
 static qboolean NPC_Jump( gentity_t *NPC, vec3_t dest )
 {//FIXME: if land on enemy, knock him down & jump off again
+#if 0
 	//if ( 1 )
 	{
 		float	targetDist, shotSpeed = 300, travelTime, impactDist, bestImpactDist = Q3_INFINITE;//fireSpeed, 
@@ -2826,6 +2829,9 @@ static qboolean NPC_Jump( gentity_t *NPC, vec3_t dest )
 	}
 
 	return qtrue;
+#endif //0
+
+	return Jedi_Jump( dest, ENTITYNUM_NONE );
 }
 
 //extern void G_SoundOnEnt( gentity_t *ent, int channel, const char *soundPath );
