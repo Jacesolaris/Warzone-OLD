@@ -29,6 +29,34 @@ float trap_Cvar_VariableValue( const char *var_name ) {
 	return atof(buf);
 }
 
+/* */
+float
+DistanceNoHeight(vec3_t v1, vec3_t v2)
+{
+	vec3_t	dir;
+	vec3_t	v1a, v2a;
+	VectorCopy(v1, v1a);
+	VectorCopy(v2, v2a);
+	v2a[2] = v1a[2];
+	VectorSubtract(v2a, v1a, dir);
+	return (VectorLength(dir));
+}
+
+
+/* */
+float
+HeightDistance(vec3_t v1, vec3_t v2)
+{
+	vec3_t	dir;
+	vec3_t	v1a, v2a;
+	VectorCopy(v1, v1a);
+	VectorCopy(v2, v2a);
+	v2a[0] = v1a[0];
+	v2a[1] = v1a[1];
+	VectorSubtract(v2a, v1a, dir);
+	return (VectorLength(dir));
+}
+
 /*
 ===============
 G_ParseInfos

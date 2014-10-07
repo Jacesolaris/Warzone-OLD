@@ -97,7 +97,6 @@ int ASTAR_GetFCost(gentity_t *bot, int to, int num, int parentNum, float *gcost)
 {
 	float	gc = 0;
 	float	hc = 0;
-	vec3_t	v;
 	float	height_diff = 0;
 
 	if (gcost[num] == -1)

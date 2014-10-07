@@ -544,7 +544,7 @@ qboolean NPC_CombatMoveToGoal( qboolean tryStraight, qboolean retreat )
 
 		if (JUMP_RESULT == 2)
 		{// We can jump there... JKA method...
-			return;
+			return qtrue;
 		}
 		else if (JUMP_RESULT == 1)
 		{// We can jump there... My method...

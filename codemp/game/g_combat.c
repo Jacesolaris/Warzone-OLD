@@ -5404,6 +5404,7 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker, vec3_
 			client->damage_fromWorld = qtrue;
 		}
 
+#if 0
 		if (attacker && attacker->client)
 		{
 			BotDamageNotification(client, attacker);
@@ -5412,6 +5413,7 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker, vec3_
 		{
 			BotDamageNotification(client, inflictor);
 		}
+#endif //0
 	}
 
 	// See if it's the player hurting the emeny flag carrier

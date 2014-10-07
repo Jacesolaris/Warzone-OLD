@@ -7,10 +7,6 @@
 
 #include "ui/menudef.h"			// for the voice chats
 
-//rww - for getting bot commands...
-int AcceptBotCommand(char *cmd, gentity_t *pl);
-//end rww
-
 void WP_SetSaber( int entNum, saberInfo_t *sabers, int saberNum, const char *saberName );
 
 void Cmd_NPC_f( gentity_t *ent );
@@ -6521,11 +6517,6 @@ void ClientCommand( int clientNum ) {
 	}
 
 	trap->Argv( 0, cmd, sizeof( cmd ) );
-
-	//rww - redirect bot commands
-	if ( strstr( cmd, "bot_" ) && AcceptBotCommand( cmd, ent ) )
-		return;
-	//end rww
 
 	command = (command_t *)bsearch( cmd, commands, numCommands, sizeof( commands[0] ), cmdcmp );
 	if ( !command )

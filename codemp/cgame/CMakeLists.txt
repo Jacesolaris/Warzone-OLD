@@ -11,7 +11,10 @@ if(WIN32)
 endif(WIN32)
 set(MPCGameDefines ${MPSharedDefines} "_CGAME" )
 set(MPCGameGameFiles
-	"${MPDir}/game/AnimalNPC.c"
+	"${MPDir}/game/NPC_AI_Animal.c"
+  "${MPDir}/game/NPC_AI_Fighter.c"
+	"${MPDir}/game/NPC_AI_Speeder.c"
+	"${MPDir}/game/NPC_AI_Walker.c"
 	"${MPDir}/game/bg_g2_utils.c"
 	"${MPDir}/game/bg_misc.c"
 	"${MPDir}/game/bg_panimate.c"
@@ -22,9 +25,6 @@ set(MPCGameGameFiles
 	"${MPDir}/game/bg_slidemove.c"
 	"${MPDir}/game/bg_vehicleLoad.c"
 	"${MPDir}/game/bg_weapons.c"
-	"${MPDir}/game/FighterNPC.c"
-	"${MPDir}/game/SpeederNPC.c"
-	"${MPDir}/game/WalkerNPC.c"
 	"${MPDir}/game/anims.h"
 	"${MPDir}/game/bg_local.h"
 	"${MPDir}/game/bg_public.h"
