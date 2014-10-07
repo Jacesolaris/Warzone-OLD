@@ -3174,8 +3174,8 @@ qboolean NPC_CheckFallPositionOK(gentity_t *NPC, vec3_t position)
 	VectorCopy(position, testPos);
 	VectorCopy(position, downPos);
 
-	downPos[2] -= 56.0;
-	testPos[2] += 8.0;
+	downPos[2] -= 64.0;
+	testPos[2] += 96.0;
 
 	//trap->Trace( &tr, testPos, NULL/*NPC->r.mins*/, NULL/*NPC->r.maxs*/, downPos, NPC->s.number, MASK_PLAYERSOLID, 0, 0, 0 );
 	trap->Trace( &tr, testPos, mins, maxs, downPos, NPC->s.number, MASK_PLAYERSOLID, 0, 0, 0 );
@@ -3198,6 +3198,7 @@ qboolean NPC_CheckFall(gentity_t *NPC, vec3_t dir)
 	vec3_t forwardPos;
 
 	VectorMA( NPC->r.currentOrigin, 18, dir, forwardPos );
+	forwardPos[2]+=16.0;
 
 	if (!OrgVisible(NPC->r.currentOrigin, forwardPos, NPC->s.number)) 
 	{// If we can't see 18 forward, we can't move there at all... Blocked...
@@ -3210,18 +3211,22 @@ qboolean NPC_CheckFall(gentity_t *NPC, vec3_t dir)
 	}
 
 	VectorMA( NPC->r.currentOrigin, 32, dir, forwardPos );
+	forwardPos[2]+=16.0;
 
 	if (OrgVisible(NPC->r.currentOrigin, forwardPos, NPC->s.number) && !NPC_CheckFallPositionOK(NPC, forwardPos))
 	{
 		return qtrue;
 	}
 
+	/*
 	VectorMA( NPC->r.currentOrigin, 64, dir, forwardPos );
+	forwardPos[2]+=16.0;
 
 	if (OrgVisible(NPC->r.currentOrigin, forwardPos, NPC->s.number) && !NPC_CheckFallPositionOK(NPC, forwardPos))
 	{
 		return qtrue;
 	}
+	*/
 
 	return qfalse;
 }
@@ -4357,6 +4362,8 @@ qboolean NPC_FollowRoutes( void )
 		}
 
 		wpDist = Distance(gWPArray[NPC->wpCurrent]->origin, NPC->r.currentOrigin);
+
+		//if (wpDist > 512) trap->Print("To far! (%f)\n", wpDist);
 	}
 
 #if 0
@@ -4379,13 +4386,13 @@ qboolean NPC_FollowRoutes( void )
 	if (NPC->wpSeenTime >= level.time - 5000
 		&& NPC->wpCurrent >= 0 
 		&& NPC->wpCurrent < gWPNum
-		&& wpDist <= 256)
+		&& wpDist <= 512)
 	{
 
 	}
 	else if ( NPC->wpCurrent < 0 || NPC->wpCurrent >= gWPNum 
 		|| NPC->longTermGoal < 0 || NPC->longTermGoal >= gWPNum 
-		|| wpDist > 256
+		|| wpDist > 512
 		|| NPC->wpSeenTime < level.time - 5000
 		|| NPC->wpTravelTime < level.time 
 		|| NPC->last_move_time < level.time - 5000 )
@@ -4609,13 +4616,13 @@ qboolean NPC_FollowEnemyRoute( void )
 	if (NPC->wpSeenTime >= level.time - 5000
 		&& NPC->wpCurrent >= 0 
 		&& NPC->wpCurrent < gWPNum
-		&& wpDist <= 256)
+		&& wpDist <= 512)
 	{
 
 	}
 	else if ( NPC->wpCurrent < 0 || NPC->wpCurrent >= gWPNum 
 		|| NPC->longTermGoal < 0 || NPC->longTermGoal >= gWPNum 
-		|| wpDist > 256
+		|| wpDist > 512
 		|| NPC->wpSeenTime < level.time - 5000
 		|| NPC->wpTravelTime < level.time 
 		|| NPC->last_move_time < level.time - 5000 
