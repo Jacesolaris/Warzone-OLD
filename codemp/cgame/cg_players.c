@@ -185,6 +185,10 @@ sfxHandle_t	CG_CustomSound( int clientNum, const char *soundName ) {
 	int			numCDuelSounds = 0;
 	char		lSoundName[MAX_QPATH];
 
+	if ( !soundName[0] ) {
+		return NULL; // UQ1: Seems to happen occasionally...
+	}
+
 	if ( soundName[0] != '*' ) {
 		return trap->S_RegisterSound( soundName );
 	}

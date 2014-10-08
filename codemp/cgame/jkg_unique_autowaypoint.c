@@ -28,6 +28,7 @@
 */
 
 #define __AUTOWAYPOINT__
+//#define __COVER_SPOTS__ // UQ1: Not used because we now have NPC bot evasion/cover/etc...
 
 #include "../qcommon/q_shared.h"
 #include "../cgame/cg_local.h"
@@ -66,7 +67,7 @@ float area_distance_multiplier = 1.5f;
 
 //int waypoint_scatter_distance = 192;
 //int waypoint_scatter_distance = 150;
-int waypoint_scatter_distance = 96;//128;
+int waypoint_scatter_distance = 48;//96;//128;
 //int waypoint_scatter_distance = 32;
 int outdoor_waypoint_scatter_distance = 192;
 
@@ -1836,6 +1837,7 @@ OrgVisible ( vec3_t org1, vec3_t org2, int ignore )
 	return ( 0 );
 }
 
+#ifdef __COVER_SPOTS__
 void
 AIMOD_SaveCoverPoints ( void )
 {
@@ -2110,6 +2112,8 @@ void AIMOD_Generate_Cover_Spots ( void )
 		}
 	}
 }
+#endif //__COVER_SPOTS__
+
 
 #define NUM_SLOPE_CHECKS 16
 
@@ -2206,6 +2210,209 @@ qboolean AIMod_Check_Slope_Between ( vec3_t org1, vec3_t org2 ) {
 	return qtrue;
 }
 
+#define Q3_INFINITE			16777216
+
+qboolean AWP_CheckFallPositionOK(vec3_t position)
+{
+	trace_t		tr;
+	vec3_t testPos, downPos;
+	vec3_t mins, maxs;
+
+	VectorSet(mins, -8, -8, -1);
+	VectorSet(maxs, 8, 8, 1);
+	
+	VectorCopy(position, testPos);
+	VectorCopy(position, downPos);
+
+	downPos[2] -= 64.0;
+	testPos[2] += 96.0;
+
+	//trap->Trace( &tr, testPos, NULL/*NPC->r.mins*/, NULL/*NPC->r.maxs*/, downPos, NPC->s.number, MASK_PLAYERSOLID, 0, 0, 0 );
+	CG_Trace( &tr, testPos, mins, maxs, downPos, -1, MASK_PLAYERSOLID );
+
+	if (tr.entityNum != ENTITYNUM_NONE)
+	{
+		return qtrue;
+	}
+	else if (tr.fraction == 1.0f)
+	{
+		//trap->Print("%s is holding position to not fall!\n", NPC->client->pers.netname);
+		return qfalse;
+	}
+
+	return qtrue;
+}
+
+qboolean AWP_Jump( vec3_t start, vec3_t dest )
+{//FIXME: if land on enemy, knock him down & jump off again
+	{
+		float	targetDist, shotSpeed = 300, travelTime, impactDist, bestImpactDist = Q3_INFINITE;//fireSpeed,
+		vec3_t	targetDir, shotVel, failCase;
+		trace_t	trace;
+		trajectory_t	tr;
+		qboolean	blocked;
+		int		elapsedTime, timeStep = 500, hitCount = 0, maxHits = 7;
+		vec3_t	lastPos, testPos, bottom, mins, maxs;
+
+		//VectorSet(mins, -15, -15, DEFAULT_MINS_2);
+		//VectorSet(maxs, 15, 15, DEFAULT_MAXS_2);
+		VectorSet(mins, -8, -8, -1);
+		VectorSet(maxs, 8, 8, 1);
+
+		while ( hitCount < maxHits )
+		{
+			VectorSubtract( dest, start, targetDir );
+			targetDist = VectorNormalize( targetDir );
+
+			VectorScale( targetDir, shotSpeed, shotVel );
+			travelTime = targetDist/shotSpeed;
+			shotVel[2] += travelTime * 0.5 * /*NPCS.NPC->client->ps.gravity*/ 1.0;
+
+			if ( !hitCount )
+			{//save the first one as the worst case scenario
+				VectorCopy( shotVel, failCase );
+			}
+
+			if ( 1 )//tracePath )
+			{//do a rough trace of the path
+				blocked = qfalse;
+
+				VectorCopy( start, tr.trBase );
+				VectorCopy( shotVel, tr.trDelta );
+				tr.trType = TR_GRAVITY;
+				tr.trTime = cg.time;
+				travelTime *= 1000.0f;
+				VectorCopy( start, lastPos );
+
+				//This may be kind of wasteful, especially on long throws... use larger steps?  Divide the travelTime into a certain hard number of slices?  Trace just to apex and down?
+				for ( elapsedTime = timeStep; elapsedTime < floor(travelTime)+timeStep; elapsedTime += timeStep )
+				{
+					if ( (float)elapsedTime > travelTime )
+					{//cap it
+						elapsedTime = floor( travelTime );
+					}
+					BG_EvaluateTrajectory( &tr, cg.time + elapsedTime, testPos );
+					if ( testPos[2] < lastPos[2] )
+					{//going down, ignore botclip
+						CG_Trace( &trace, lastPos, mins, maxs, testPos, -1, MASK_PLAYERSOLID);
+					}
+					else
+					{//going up, check for botclip
+						CG_Trace( &trace, lastPos, mins, maxs, testPos, -1, MASK_PLAYERSOLID|CONTENTS_BOTCLIP);
+					}
+
+					if ( trace.allsolid || trace.startsolid )
+					{
+						blocked = qtrue;
+						break;
+					}
+					
+					if ( trace.fraction < 1.0f )
+					{//hit something
+						if ( Distance( trace.endpos, dest ) < 128/*96*/ 
+							&& AWP_CheckFallPositionOK(trace.endpos) )
+						{//hit the spot, that's perfect!
+							break;
+						}
+						else
+						{
+							if ( trace.contents & CONTENTS_BOTCLIP )
+							{//hit a do-not-enter brush
+								blocked = qtrue;
+								break;
+							}
+							if ( trace.plane.normal[2] > 0.7 && DistanceSquared( trace.endpos, dest ) < 4096 )//hit within 64 of desired location, should be okay
+							{//close enough!
+								break;
+							}
+							else
+							{//FIXME: maybe find the extents of this brush and go above or below it on next try somehow?
+								impactDist = DistanceSquared( trace.endpos, dest );
+								if ( impactDist < bestImpactDist )
+								{
+									bestImpactDist = impactDist;
+									VectorCopy( shotVel, failCase );
+								}
+								blocked = qtrue;
+								break;
+							}
+						}
+					}
+
+					if ( elapsedTime == floor( travelTime ) )
+					{//reached end, all clear
+						if ( trace.fraction >= 1.0f )
+						{//hmm, make sure we'll land on the ground...
+							//FIXME: do we care how far below ourselves or our dest we'll land?
+							VectorCopy( trace.endpos, bottom );
+							//bottom[2] -= 128;
+							bottom[2] -= 64; // UQ1: Try less fall...
+							CG_Trace( &trace, trace.endpos, mins, maxs, bottom, -1, MASK_PLAYERSOLID);
+							if ( trace.fraction >= 1.0f )
+							{//would fall too far
+								blocked = qtrue;
+							}
+						}
+						break;
+					}
+					else
+					{
+						//all clear, try next slice
+						VectorCopy( testPos, lastPos );
+					}
+				}
+
+				if ( blocked )
+				{//hit something, adjust speed (which will change arc)
+					hitCount++;
+					shotSpeed = 300 + ((hitCount-2) * 100);//from 100 to 900 (skipping 300)
+					if ( hitCount >= 2 )
+					{//skip 300 since that was the first value we tested
+						shotSpeed += 100;
+					}
+				}
+				else
+				{//made it!
+					break;
+				}
+			}
+			else
+			{//no need to check the path, go with first calc
+				break;
+			}
+		}
+
+		if ( hitCount < maxHits )
+		{//NOTE: all good...
+			return qtrue;
+		}
+	}
+
+	// UQ1: A more simple check...
+	{
+		vec3_t start2, end, mins, maxs;
+		trace_t	trace;
+
+		VectorSet(mins, -8, -8, -1);
+		VectorSet(maxs, 8, 8, 1);
+
+		VectorCopy(start, end);
+		end[2] += 256.0;
+
+		CG_Trace( &trace, start, mins, maxs, end, -1, MASK_PLAYERSOLID);
+
+		VectorCopy(trace.endpos, start2);
+		start2[2] -= 8.0;
+
+		if (OrgVisible(start, dest, -1))
+		{// Destination is visible from here!
+			return qtrue;
+		}
+	}
+
+	return qfalse;
+}
+
 /* */
 int
 AIMOD_MAPPING_CreateNodeLinks ( int node )
@@ -2259,47 +2466,15 @@ AIMOD_MAPPING_CreateNodeLinks ( int node )
 
 						linknum++;
 					}
-				}
-				/*			else
-				{// Look for jump node links...
-				visCheck = NodeVisibleJump( nodes[loop].origin, tmp, -1 );
+					else if (/*double_range &&*/ AWP_Jump( nodes[node].origin, nodes[loop].origin ))
+					{// Can jump there!
+						nodes[node].links[linknum].targetNode = loop;
+						nodes[node].links[linknum].cost = VectorDistance(nodes[loop].origin, nodes[node].origin) + (DistanceVertical(nodes[loop].origin, nodes[node].origin)*DistanceVertical(nodes[loop].origin, nodes[node].origin));
+						nodes[node].links[linknum].flags |= NODE_JUMP;
 
-				//0 = wall in way
-				//1 = player or no obstruction
-				//2 = useable door in the way.
-				//3 = door entity in the way.
-				if ( visCheck == 1 || visCheck == 2 || visCheck == 3 )
-				{
-				if (AIMod_Check_Slope_Between(nodes[node].origin, nodes[loop].origin))
-				{
-				nodes[node].links[linknum].targetNode = loop;
-				nodes[node].links[linknum].cost = VectorDistance( nodes[loop].origin, nodes[node].origin ) + (DistanceVertical( nodes[loop].origin, nodes[node].origin )*16);
-				nodes[node].links[linknum].flags |= PATH_JUMP;
-
-				linknum++;
+						linknum++;
+					}
 				}
-				}
-				else
-				{// Look for crouch node links...
-				visCheck = NodeVisibleCrouch( nodes[loop].origin, tmp, -1 );
-
-				//0 = wall in way
-				//1 = player or no obstruction
-				//2 = useable door in the way.
-				//3 = door entity in the way.
-				if ( visCheck == 1 || visCheck == 2 || visCheck == 3 )
-				{
-				if (AIMod_Check_Slope_Between(nodes[node].origin, nodes[loop].origin))
-				{
-				nodes[node].links[linknum].targetNode = loop;
-				nodes[node].links[linknum].cost = VectorDistance( nodes[loop].origin, nodes[node].origin ) + (DistanceVertical( nodes[loop].origin, nodes[node].origin )*16);
-				nodes[node].links[linknum].flags |= PATH_CROUCH;
-
-				linknum++;
-				}
-				}
-				}
-				}*/
 			}
 		}
 	}
@@ -4630,6 +4805,7 @@ AIMod_GetMapBounts ( void )
 	int		i;
 	float	startx = -MAX_MAP_SIZE, starty = -MAX_MAP_SIZE, startz = -MAX_MAP_SIZE;
 	float	highest_z_point = -MAX_MAP_SIZE;
+	float	INCRUMENT = 128.0; //64.0;// 256.0
 	trace_t tr;
 	vec3_t	org1;
 	vec3_t	org2;
@@ -4654,26 +4830,26 @@ AIMod_GetMapBounts ( void )
 			if ( tr.endpos[2] < mapMins[2] )
 			{
 				mapMins[2] = tr.endpos[2];
-				starty += 256;
+				starty += INCRUMENT;
 				continue;
 			}
 
 			if ( tr.startsolid || tr.allsolid )
 			{
-				starty += 256;
+				starty += INCRUMENT;
 				continue;
 			}
 
 			if (!ContentsOK(tr.contents) && !HasPortalFlags(tr.surfaceFlags, tr.contents))
 			{
-				starty += 256;
+				starty += INCRUMENT;
 				continue;
 			}
 
-			starty += 256;
+			starty += INCRUMENT;
 		}
 
-		startx += 256;
+		startx += INCRUMENT;
 		starty = -MAX_MAP_SIZE;
 	}
 
@@ -4695,20 +4871,20 @@ AIMod_GetMapBounts ( void )
 			if ( tr.endpos[2] > mapMaxs[2] )
 			{
 				mapMaxs[2] = tr.endpos[2];
-				starty -= 256;
+				starty -= INCRUMENT;
 				continue;
 			}
 
 			if ( tr.startsolid || tr.allsolid )
 			{
-				starty -= 256;
+				starty -= INCRUMENT;
 				continue;
 			}
 
-			starty -= 256;
+			starty -= INCRUMENT;
 		}
 
-		startx -= 256;
+		startx -= INCRUMENT;
 		starty = MAX_MAP_SIZE;
 	}
 
@@ -4733,27 +4909,27 @@ AIMod_GetMapBounts ( void )
 			CG_Trace( &tr, org1, NULL, NULL, org2, ENTITYNUM_NONE, MASK_SHOT | MASK_WATER );
 			if ( tr.endpos[0] < mapMins[0] )
 			{
-				starty += 256;
+				starty += INCRUMENT;
 				mapMins[0] = tr.endpos[0];
 				continue;
 			}
 
 			if ( tr.startsolid || tr.allsolid )
 			{
-				starty += 256;
+				starty += INCRUMENT;
 				continue;
 			}
 
 			if (!ContentsOK(tr.contents) && !HasPortalFlags(tr.surfaceFlags, tr.contents))
 			{
-				starty += 256;
+				starty += INCRUMENT;
 				continue;
 			}
 
-			starty += 256;
+			starty += INCRUMENT;
 		}
 
-		startz += 256;
+		startz += INCRUMENT;
 		starty = -MAX_MAP_SIZE;
 	}
 
@@ -4775,26 +4951,26 @@ AIMod_GetMapBounts ( void )
 			if ( tr.endpos[0] > mapMaxs[0] )
 			{
 				mapMaxs[0] = tr.endpos[0];
-				starty -= 256;
+				starty -= INCRUMENT;
 				continue;
 			}
 
 			if ( tr.startsolid || tr.allsolid )
 			{
-				starty -= 256;
+				starty -= INCRUMENT;
 				continue;
 			}
 
 			if (!ContentsOK(tr.contents) && !HasPortalFlags(tr.surfaceFlags, tr.contents))
 			{
-				starty -= 256;
+				starty -= INCRUMENT;
 				continue;
 			}
 
-			starty -= 256;
+			starty -= INCRUMENT;
 		}
 
-		startz -= 256;
+		startz -= INCRUMENT;
 		starty = MAX_MAP_SIZE;
 	}
 
@@ -4820,26 +4996,26 @@ AIMod_GetMapBounts ( void )
 			if ( tr.endpos[1] < mapMins[1] )
 			{
 				mapMins[1] = tr.endpos[1];
-				startx += 256;
+				startx += INCRUMENT;
 				continue;
 			}
 
 			if ( tr.startsolid || tr.allsolid )
 			{
-				startx += 256;
+				startx += INCRUMENT;
 				continue;
 			}
 
 			if (!ContentsOK(tr.contents) && !HasPortalFlags(tr.surfaceFlags, tr.contents))
 			{
-				startx += 256;
+				startx += INCRUMENT;
 				continue;
 			}
 
-			startx += 256;
+			startx += INCRUMENT;
 		}
 
-		startz += 256;
+		startz += INCRUMENT;
 		startx = -MAX_MAP_SIZE;
 	}
 
@@ -4861,26 +5037,26 @@ AIMod_GetMapBounts ( void )
 			if ( tr.endpos[1] > mapMaxs[1] )
 			{
 				mapMaxs[1] = tr.endpos[1];
-				startx -= 256;
+				startx -= INCRUMENT;
 				continue;
 			}
 
 			if ( tr.startsolid || tr.allsolid )
 			{
-				startx -= 256;
+				startx -= INCRUMENT;
 				continue;
 			}
 
 			if (!ContentsOK(tr.contents) && !HasPortalFlags(tr.surfaceFlags, tr.contents))
 			{
-				startx -= 256;
+				startx -= INCRUMENT;
 				continue;
 			}
 
-			startx -= 256;
+			startx -= INCRUMENT;
 		}
 
-		startz -= 256;
+		startz -= INCRUMENT;
 		startx = MAX_MAP_SIZE;
 	}
 
@@ -4906,27 +5082,27 @@ AIMod_GetMapBounts ( void )
 			CG_Trace( &tr, org1, NULL, NULL, org2, ENTITYNUM_NONE, MASK_SHOT | MASK_WATER );
 			if ( tr.startsolid || tr.allsolid )
 			{
-				starty -= 128;
+				starty -= INCRUMENT;
 				continue;
 			}
 
 			if (!ContentsOK(tr.contents) && !HasPortalFlags(tr.surfaceFlags, tr.contents))
 			{
-				starty -= 128;
+				starty -= INCRUMENT;
 				continue;
 			}
 
 			if ( tr.endpos[2] > highest_z_point )
 			{
 				highest_z_point = tr.endpos[2];
-				starty -= 128;
+				starty -= INCRUMENT;
 				continue;
 			}
 
-			starty -= 64 /*128*/ ;
+			starty -= INCRUMENT / 4.0; //64 /*128*/ ;
 		}
 
-		startx -= 64 /*128*/ ;
+		startx -= INCRUMENT / 4.0; //64 /*128*/ ;
 		starty = mapMaxs[1];
 	}
 
@@ -4988,6 +5164,7 @@ void AIMod_AutoWaypoint_StandardMethod( void )
 	float		waypoint_scatter_realtime_modifier = 1.0f;
 	float		waypoint_scatter_realtime_modifier_alt = 0.5f; // 0.3f;
 	int			wp_loop = 0;
+	int			remove_ratio = 1.0;
 
 	trap->Cvar_Set("jkg_waypoint_render", "0");
 	trap->UpdateScreen();
@@ -5003,7 +5180,7 @@ void AIMod_AutoWaypoint_StandardMethod( void )
 		return;
 	}
 
-	arealist = malloc((sizeof(intvec3_t)+1)*512000);
+	arealist = malloc((sizeof(intvec3_t)+1)*2048000/*512000*/);
 
 	VectorCopy(cg.mapcoordsMins, mapMins);
 	VectorCopy(cg.mapcoordsMaxs, mapMaxs);
@@ -5098,6 +5275,10 @@ void AIMod_AutoWaypoint_StandardMethod( void )
 	trap->Print( va( "^4*** ^3AUTO-WAYPOINTER^4: ^5First pass. Finding temporary waypoints...\n") );
 	strcpy( task_string3, va("^5First pass. Finding temporary waypoints...") );
 	trap->UpdateScreen();
+
+	//
+	// Create bulk temporary nodes...
+	//
 
 	while ( startx > mapMins[0]-2048 )
 	{
@@ -5638,6 +5819,7 @@ void AIMod_AutoWaypoint_StandardMethod( void )
 	//
 	// Add nodes for all movers...
 	//
+
 	GenerateMoverList(); // init the mover list on first check...
 
 	for (i = 0; i < MOVER_LIST_NUM; i++)
@@ -5703,34 +5885,9 @@ void AIMod_AutoWaypoint_StandardMethod( void )
 		trap->Print("Added %i waypoints for mover %i.\n", count, i);
 	}
 
-	/*
-	for (i = 0; i < MAX_GENTITIES;i++)
-	{
-		centity_t *cent = &cg_entities[i];
-		vec3_t mins, maxs;
-
-		if (!cent || cent->currentState.eType != ET_MOVER) continue;
-		trap->R_ModelBounds(cent->currentState.modelindex, mins, maxs);
-		//trap->Print("DOOR at %f %f %f.\n", cent->currentState.origin[0], cent->currentState.origin[1], cent->currentState.origin[2]);
-		trap->Print("DOOR at %f %f %f - %f %f %f.\n", mins[0], mins[1], mins[2], maxs[0], maxs[1], maxs[2]);
-
-		{// Looks like it goes up!
-			int z = 0;
-			vec3_t temp_org;
-
-			VectorCopy(mins, temp_org);
-
-			while (temp_org[2] <= maxs[2])
-			{// Add waypoints all the way up!
-				arealist[areas][0] = temp_org[0];
-				arealist[areas][1] = temp_org[1];
-				arealist[areas][2] = temp_org[2];
-				areas++;
-				temp_org[2] += waypoint_scatter_distance;
-			}
-		}
-	}
-	*/
+	//
+	// Check for cleaning...
+	//
 
 	if (areas < 32000)
 	{// UQ1: Can use them all!
@@ -5819,8 +5976,10 @@ void AIMod_AutoWaypoint_StandardMethod( void )
 		trap->UpdateScreen();
 
 		waypoint_scatter_distance = original_waypoint_scatter_distance;
-		
+
+#ifdef __COVER_SPOTS__
 		AIMOD_Generate_Cover_Spots(); // UQ1: Want to add these to JKA???
+#endif //__COVER_SPOTS__
 
 		free(arealist);
 
@@ -5832,56 +5991,19 @@ void AIMod_AutoWaypoint_StandardMethod( void )
 		return;
 	}
 
+	//
+	// OK. We created more then 32000 temporary nodes. We need to do some clearning to reduce the number to below 32000...
+	//
+
 	total_areas = areas;
-
-	/*if (total_areas < 40000)
-	{
-		waypoint_distance_multiplier = 1.5f;
-	}
-	else if (total_areas < 64000)
-	{
-		waypoint_distance_multiplier = 2.0f;
-	}
-	else
-	{
-		waypoint_distance_multiplier = 2.5f;
-	}*/
-
-#ifdef __AW_UNUSED__
-	aw_percent_complete = 0.0f;
-	strcpy( task_string3, va("^5Second (repair) pass. Adjusting waypoint positions...") );
-	trap->UpdateScreen();
-
-	for ( i = 0; i < areas; i++ )
-	{
-		vec3_t original_position = { arealist[i][0], arealist[i][1], arealist[i][2] };
-
-		// Draw a nice little progress bar ;)
-		aw_percent_complete = (float)((float)((float)i/(float)total_areas)*100.0f);
-		
-		update_timer++;
-
-		if (update_timer >= 500)
-		{
-			trap->UpdateScreen();
-			update_timer = 0;
-		}
-
-		RepairPosition( arealist[i] );
-
-		if (VectorDistance(fixed_position, original_position) > 0)
-		{// New position.. Fix it!
-			strcpy( last_node_added_string, va("^5Temp waypoint ^3%i ^5moved to ^7%f %f %f^5.", i, fixed_position[0], fixed_position[1], fixed_position[2]) );
-			arealist[i][0] = fixed_position[0];
-			arealist[i][1] = fixed_position[1];
-			arealist[i][2] = fixed_position[2];
-		}
-	}
-#endif //__AW_UNUSED__
 
 	aw_percent_complete = 0.0f;
 	strcpy( task_string3, va("^5Final (cleanup) pass. Building final waypoints...") );
 	trap->UpdateScreen();
+
+	remove_ratio = (areas / MAX_WPARRAY_SIZE);
+	remove_ratio -= 1;
+	if (remove_ratio < 1) remove_ratio = 1;
 
 	for ( i = 0; i < areas; i++ )
 	{
@@ -5918,7 +6040,7 @@ void AIMod_AutoWaypoint_StandardMethod( void )
 			area_org2[1] = nodes[j].origin[1];
 			area_org2[2] = nodes[j].origin[2];
 
-			if (VectorDistance(area_org, area_org2) < waypoint_scatter_distance*area_distance_multiplier)
+			if (VectorDistance(area_org, area_org2) < (waypoint_scatter_distance*area_distance_multiplier) * remove_ratio)
 			{
 				bad = qtrue;
 				break;
@@ -5966,7 +6088,9 @@ void AIMod_AutoWaypoint_StandardMethod( void )
 	number_of_nodes = total_waypoints;
 	AIMOD_NODES_SaveNodes_Autowaypointed();
 
+#ifdef __COVER_SPOTS__
 	AIMOD_Generate_Cover_Spots(); // UQ1: Want to add these to JKA???
+#endif //__COVER_SPOTS__
 
 	trap->Print( va( "^4*** ^3AUTO-WAYPOINTER^4: ^5Waypoint database created successfully in ^3%.2f ^5seconds with ^7%i ^5waypoints.\n",
 				 (float) ((trap->Milliseconds() - start_time) / 1000), total_waypoints) );
@@ -6114,7 +6238,9 @@ void AIMod_AutoWaypoint_Clean ( void )
 			return;
 		}
 
+#ifdef __COVER_SPOTS__
 		AIMOD_Generate_Cover_Spots();
+#endif //__COVER_SPOTS__
 
 		AIMod_AutoWaypoint_Free_Memory();
 	}
@@ -6268,10 +6394,12 @@ GetFCost ( centity_t *bot, int to, int num, int parentNum, float *gcost )
 			if (gc > 65000)
 				gc = 65000.0f;
 
+#ifdef __COVER_SPOTS__
 			/*if (nodes[num].type & NODE_COVER)
 			{// Encorage the use of cover spots!
 				gc = 0.0f;
 			}*/
+#endif //__COVER_SPOTS__
 		}
 
 		gcost[num] = gc;
@@ -6294,10 +6422,12 @@ GetFCost ( centity_t *bot, int to, int num, int parentNum, float *gcost )
 		hc*=4;
 	}*/
 
+#ifdef __COVER_SPOTS__
 	/*if (nodes[num].type & NODE_COVER)
 	{// Encorage the use of cover spots!
 		hc *= 0.5;
 	}*/
+#endif //__COVER_SPOTS__
 
 	return (int) ( gc + hc );
 }
@@ -6319,15 +6449,6 @@ CreatePathAStar ( centity_t *bot, int from, int to, int *pathlist )
 	float		gc;
 	int			i, j, u, v, m;
 	vec3_t		vec;
-
-	/*for (i = 0; i < MAX_NODES; i++)
-	{
-		gcost[i] = -1.0f;
-		fcost[i] = 0;
-		openlist[i] = 0;
-		parent[i] = 0;
-		list[i] = 0;
-	}*/
 
 	//clear out all the arrays - UQ1: Added - only allocate total nodes for map for speed...
 	if (SSE_CPU)
@@ -7400,8 +7521,10 @@ AIMod_AutoWaypoint_Optimizer ( void )
 	aw_percent_complete = 0.0f;
 	trap->UpdateScreen();
 
+#ifdef __COVER_SPOTS__
 	// Remake cover spots...
 	AIMOD_Generate_Cover_Spots(); // UQ1: Want to add these to JKA???
+#endif //__COVER_SPOTS__
 
 	aw_percent_complete = 0.0f;
 	trap->UpdateScreen();
@@ -8851,9 +8974,11 @@ AIMod_AutoWaypoint_Cleaner ( qboolean quiet, qboolean null_links_only, qboolean 
 		total_removed = 0;
 	}
 
+#ifdef __COVER_SPOTS__
 	// Remake cover spots...
 	if (start_wp_total != number_of_nodes)
 		AIMOD_Generate_Cover_Spots();
+#endif //__COVER_SPOTS__
 
 	aw_percent_complete = 0.0f;
 	trap->UpdateScreen();
@@ -8922,7 +9047,7 @@ qboolean LinkCanReachMe ( int wp_from, int wp_to )
 	return qfalse;
 }
 
-void CG_AddWaypointLinkLine( int wp_from, int wp_to )
+void CG_AddWaypointLinkLine( int wp_from, int wp_to, int link_flags )
 {
 	refEntity_t		re;
 
@@ -8931,11 +9056,21 @@ void CG_AddWaypointLinkLine( int wp_from, int wp_to )
 	re.reType = RT_LINE;
 	re.radius = 1;
 
+#ifdef __COVER_SPOTS__
 	if (nodes[wp_from].type & NODE_COVER)
 	{// Cover spots show as yellow...
 		re.shaderRGBA[0] = 0xff;
 		re.shaderRGBA[1] = 0xff;
 		re.shaderRGBA[2] = 0x00;
+		re.shaderRGBA[3] = 0xff;
+	}
+	else 
+#endif //__COVER_SPOTS__
+	if (link_flags & NODE_JUMP)
+	{// This is a jump-to link... Display in blue..
+		re.shaderRGBA[0] = 0x00;
+		re.shaderRGBA[1] = 0x00;
+		re.shaderRGBA[2] = 0xff;
 		re.shaderRGBA[3] = 0xff;
 	}
 	else if (LinkCanReachMe( wp_from, wp_to ))
@@ -9004,7 +9139,9 @@ void DrawWaypoints()
 		AIMod_AutoWaypoint_Init_Memory();
 
 		AIMOD_NODES_LoadNodes(); // Load node file on first check...
+#ifdef __COVER_SPOTS__
 		AIMOD_LoadCoverPoints();
+#endif //__COVER_SPOTS__
 
 		if (number_of_nodes <= 0)
 		{
@@ -9032,7 +9169,7 @@ void DrawWaypoints()
 		len = VectorLength( delta );
 		
 		if ( len < 20 ) continue;
-		if ( len > 400/*512*/ ) continue;
+		if ( len > 512/*400*//*512*/ ) continue;
 
 		//if (VectorDistance(cg_entities[cg.clientNum].lerpOrigin, nodes[node].origin) > 2048) continue;
 
@@ -9040,7 +9177,7 @@ void DrawWaypoints()
 
 		for (link = 0; link < nodes[node].enodenum; link++)
 		{
-			CG_AddWaypointLinkLine( node, nodes[node].links[link].targetNode );
+			CG_AddWaypointLinkLine( node, nodes[node].links[link].targetNode, nodes[node].links[link].flags );
 		}
 	}
 }

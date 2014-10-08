@@ -3246,6 +3246,10 @@ int NPC_CheckFallJump(gentity_t *NPC, vec3_t dest, usercmd_t *cmd)
 	{// Looks like we can jump there... Let's do that instead of failing!
 		return 2; // next think...
 	}
+	else if (dist <= MAX_JUMP_DISTANCE && NPC_RoutingSimpleJump( NPC->wpLast, NPC->wpCurrent ))
+	{// UQ1: Testing new jump...
+		return 2;
+	}
 	/*else if (dist <= 128.0)//MAX_JUMP_DISTANCE)
 	{
 		if (height_dist <= 0 && noheight_dist > 0 - height_dist && NPC->client->ps.groundEntityNum == ENTITYNUM_NONE)
@@ -4274,6 +4278,82 @@ void NPC_ClearPathData ( gentity_t *NPC )
 	//NPC->wpSeenTime = 0;
 }
 
+qboolean NPC_RoutingJumpWaypoint ( int wpLast, int wpCurrent )
+{
+	int			link = 0;
+	qboolean	found = qfalse;
+
+	if (wpLast < 0 || wpLast > gWPNum) return qfalse;
+
+	for (link = 0; link < gWPArray[wpLast]->neighbornum; link++)
+	{
+		if (gWPArray[wpLast]->neighbors[link].num == wpCurrent) 
+		{// found it!
+			found = qtrue;
+			break;
+		}
+	}
+
+	if (found && gWPArray[wpLast]->neighbors[link].forceJumpTo > 0)
+	{
+		return qtrue;
+	}
+
+	return qfalse;
+}
+
+qboolean NPC_RoutingSimpleJump ( int wpLast, int wpCurrent )
+{
+	int			link = 0;
+	qboolean	found = qfalse;
+
+	if (wpLast < 0 || wpLast > gWPNum) return qfalse;
+
+	for (link = 0; link < gWPArray[wpLast]->neighbornum; link++)
+	{
+		if (gWPArray[wpLast]->neighbors[link].num == wpCurrent) 
+		{// found it!
+			found = qtrue;
+			break;
+		}
+	}
+
+	if (found)
+	{
+		float apexHeight = gWPArray[wpCurrent]->origin[2];
+		float currentWpDist = DistanceHorizontal(NPCS.NPC->r.currentOrigin, gWPArray[wpCurrent]->origin);
+		float lastWpDist = DistanceHorizontal(NPCS.NPC->r.currentOrigin, gWPArray[wpLast]->origin);
+		float distBetweenWp = DistanceHorizontal(gWPArray[wpCurrent]->origin, gWPArray[wpLast]->origin);
+
+		if (gWPArray[wpLast]->origin[2] > apexHeight) apexHeight = gWPArray[wpLast]->origin[2];
+		apexHeight += /*96.0*/distBetweenWp / 2.0;
+
+		if ((lastWpDist * 0.5 < currentWpDist || NPCS.NPC->r.currentOrigin[2] < gWPArray[wpCurrent]->origin[2]) 
+			&& currentWpDist > 48 && apexHeight > NPCS.NPC->r.currentOrigin[2])
+		{
+			VectorSubtract( gWPArray[NPCS.NPC->wpCurrent]->origin, NPCS.NPC->r.currentOrigin, NPCS.NPC->movedir );
+			NPCS.NPC->client->ps.velocity[0] = NPCS.NPC->movedir[0] * 2.0;
+			NPCS.NPC->client->ps.velocity[1] = NPCS.NPC->movedir[1] * 2.0;
+			//NPCS.NPC->client->ps.velocity[2] = 100.0;
+			NPCS.ucmd.upmove = 127.0;
+		}
+		else
+		{
+			VectorSubtract( gWPArray[NPCS.NPC->wpCurrent]->origin, NPCS.NPC->r.currentOrigin, NPCS.NPC->movedir );
+			NPCS.NPC->client->ps.velocity[0] = NPCS.NPC->movedir[0] * 2.0;
+			NPCS.NPC->client->ps.velocity[1] = NPCS.NPC->movedir[1] * 2.0;
+			//NPCS.NPC->client->ps.velocity[2] = NPCS.NPC->movedir[2];
+			NPCS.ucmd.upmove = 0;
+		}
+
+		NPC_FacePosition( gWPArray[NPCS.NPC->wpCurrent]->origin, qfalse );
+
+		return qtrue;
+	}
+
+	return qfalse;
+}
+
 //#define __OLD_NPC_WAYPOINTING__
 
 qboolean NPC_FollowRoutes( void ) 
@@ -4444,6 +4524,28 @@ qboolean NPC_FollowRoutes( void )
 		return qfalse; // next think...
 	}
 
+	if (wpDist > 58 
+		&& DistanceHorizontal(gWPArray[NPC->wpCurrent]->origin, NPC->r.currentOrigin) < 48
+		&& NPC_PointIsMoverLocation(gWPArray[NPC->wpCurrent]->origin))
+	{// Most likely on an elevator... Allow hitting waypoints all the way up/down...
+		NPC->wpLast = NPC->wpCurrent;
+		NPC->wpCurrent = NPC->wpNext;
+		NPC->wpNext = NPC_GetNextNode(NPC);
+
+		if (NPC->wpCurrent < 0 || NPC->wpCurrent >= gWPNum || NPC->longTermGoal < 0 || NPC->longTermGoal >= gWPNum)
+		{// FIXME: Try to roam out of problems...
+			NPC_ClearPathData(NPC);
+			ucmd.forwardmove = 0;
+			ucmd.rightmove = 0;
+			ucmd.upmove = 0;
+			NPC_PickRandomIdleAnimantion(NPC);
+			return qfalse; // next think...
+		}
+
+		NPC->wpTravelTime = level.time + 10000;
+		NPC->wpSeenTime = level.time;
+	}
+
 	if (wpDist < 48)
 	{// At current node.. Pick next in the list...
 		//trap->Print("HIT WP %i. Next WP is %i.\n", NPC->wpCurrent, NPC->wpNext);
@@ -4479,10 +4581,35 @@ qboolean NPC_FollowRoutes( void )
 		NPC_PickRandomIdleAnimantion(NPC);
 		return qtrue;
 	}
-	
+
+	if (NPC_RoutingJumpWaypoint( NPC->wpLast, NPC->wpCurrent ))
+	{// We need to jump to get to this waypoint...
+		/*if (NPC_Jump(NPC, gWPArray[NPC->wpCurrent]->origin))
+		{
+			VectorCopy( NPC->movedir, NPC->client->ps.moveDir );
+			return qtrue;
+		}
+		else*/ if (NPC_RoutingSimpleJump( NPC->wpLast, NPC->wpCurrent ))
+		{// UQ1: Testing new jump...
+			return qtrue;
+		}
+	}
+
 	if (NPC_IsCivilianHumanoid(NPC))
 	{
-		if (!UQ1_UcmdMoveForDir( NPC, &NPCS.ucmd, NPC->movedir, qtrue, gWPArray[NPC->wpCurrent]->origin )) 
+		if (NPC_PointIsMoverLocation(gWPArray[NPC->wpCurrent]->origin))
+		{// When nearby a mover, run!
+			if (!UQ1_UcmdMoveForDir( NPC, &NPCS.ucmd, NPC->movedir, qfalse, gWPArray[NPC->wpCurrent]->origin )) 
+			{ 
+				if (NPC->client->ps.groundEntityNum != ENTITYNUM_NONE)
+					NPC_PickRandomIdleAnimantion(NPC);
+
+				return qtrue; 
+			}
+
+			NPC_SelectMoveAnimation(qtrue);
+		}
+		else if (!UQ1_UcmdMoveForDir( NPC, &NPCS.ucmd, NPC->movedir, qtrue, gWPArray[NPC->wpCurrent]->origin )) 
 		{ 
 			if (NPC->client->ps.groundEntityNum != ENTITYNUM_NONE)
 				NPC_PickRandomIdleAnimantion(NPC);
@@ -4715,6 +4842,28 @@ qboolean NPC_FollowEnemyRoute( void )
 		return qfalse; // next think...
 	}
 
+	if (wpDist > 58 
+		&& DistanceHorizontal(gWPArray[NPC->wpCurrent]->origin, NPC->r.currentOrigin) < 48
+		&& NPC_PointIsMoverLocation(gWPArray[NPC->wpCurrent]->origin))
+	{// Most likely on an elevator... Allow hitting waypoints all the way up/down...
+		NPC->wpLast = NPC->wpCurrent;
+		NPC->wpCurrent = NPC->wpNext;
+		NPC->wpNext = NPC_GetNextNode(NPC);
+
+		if (NPC->wpCurrent < 0 || NPC->wpCurrent >= gWPNum || NPC->longTermGoal < 0 || NPC->longTermGoal >= gWPNum)
+		{// FIXME: Try to roam out of problems...
+			NPC_ClearPathData(NPC);
+			ucmd.forwardmove = 0;
+			ucmd.rightmove = 0;
+			ucmd.upmove = 0;
+			NPC_PickRandomIdleAnimantion(NPC);
+			return qfalse; // next think...
+		}
+
+		NPC->wpTravelTime = level.time + 10000;
+		NPC->wpSeenTime = level.time;
+	}
+
 	if (wpDist < 48)
 	{// At current node.. Pick next in the list...
 		NPC->wpLast = NPC->wpCurrent;
@@ -4763,6 +4912,19 @@ qboolean NPC_FollowEnemyRoute( void )
 		NPCS.ucmd.upmove = 0;
 		NPC_PickRandomIdleAnimantion(NPC);
 		return qtrue;
+	}
+
+	if (NPC_RoutingJumpWaypoint( NPC->wpLast, NPC->wpCurrent ))
+	{// We need to jump to get to this waypoint...
+		/*if (NPC_Jump(NPC, gWPArray[NPC->wpCurrent]->origin))
+		{
+			VectorCopy( NPC->movedir, NPC->client->ps.moveDir );
+			return qtrue;
+		}
+		else*/ if (NPC_RoutingSimpleJump( NPC->wpLast, NPC->wpCurrent ))
+		{// UQ1: Testing new jump...
+			return qtrue;
+		}
 	}
 
 	if (!UQ1_UcmdMoveForDir( NPC, &NPCS.ucmd, NPC->movedir, qfalse, gWPArray[NPC->wpCurrent]->origin )) { /*NPC_PickRandomIdleAnimantion(NPC);*/ return qtrue; }

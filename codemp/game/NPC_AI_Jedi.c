@@ -6339,7 +6339,8 @@ void NPC_BSJedi_FollowLeader( void )
 			{
 				//trap->Print("ROUTE!\n");
 
-				if ( Distance(NPCS.NPC->r.currentOrigin, NPCS.NPCInfo->goalEntity->r.currentOrigin) < 384 
+				if ( NPCS.NPCInfo->goalEntity
+					&& Distance(NPCS.NPC->r.currentOrigin, NPCS.NPCInfo->goalEntity->r.currentOrigin) < 384 
 					&& !Q_irand( 0, 10 ) && NPCS.NPCInfo->blockedSpeechDebounceTime < level.time 
 					&& jediSpeechDebounceTime[NPCS.NPC->client->playerTeam] < level.time && !NPC_ClearLOS4( NPCS.NPC->enemy ) )
 				{

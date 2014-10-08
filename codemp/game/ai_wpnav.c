@@ -67,9 +67,12 @@ void CreateNewWP_FromAWPNode(int index, vec3_t origin, int flags, int weight, in
 	while (i >= 0)
 	{
 		gWPArray[gWPNum]->neighbors[i].num = links[i];
-		//if (link_flags & WPFLAG_JUMP)
-		//	gWPArray[gWPNum]->neighbors[i].forceJumpTo = 1;
-		//else
+		
+#define	NODE_JUMP					1024
+
+		if (link_flags[i] & NODE_JUMP)
+			gWPArray[gWPNum]->neighbors[i].forceJumpTo = 1;
+		else
 			gWPArray[gWPNum]->neighbors[i].forceJumpTo = 0;
 		
 		i--;

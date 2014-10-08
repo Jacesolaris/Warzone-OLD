@@ -85,6 +85,9 @@ void ASTAR_InitWaypointCosts ( void )
 				if (ht < 1.0) ht = 1.0;
 
 				gWPArray[i]->neighbors[j].cost *= ht;
+
+				if (gWPArray[i]->neighbors[j].forceJumpTo > 0)
+					gWPArray[i]->neighbors[j].cost *= 5.0;
 			}
 		}
 	}
@@ -288,6 +291,10 @@ int ASTAR_FindPathFast(int from, int to, int *pathlist, qboolean shorten)
 						VectorSubtract(gWPArray[newnode]->origin, gWPArray[atNode]->origin, vec);
 						gc += VectorLength(vec);				//calculate what the gcost would be if we reached this node along the current path
 						gWPArray[atNode]->neighbors[i].cost = VectorLength(vec);
+
+						if (gWPArray[atNode]->neighbors[i].forceJumpTo > 0)
+							gWPArray[atNode]->neighbors[i].cost *= 5.0;
+
 						//trap->Print("ASTAR WARNING: Missing cost for node %i neighbour %i. This should not happen!\n", atNode, i);
 					}
 

@@ -3826,6 +3826,7 @@ void CG_DrawEnemyStatus( void )
 	float			boxX, boxXmid, sizeX, sizeY, healthPerc, forcePerc, armorPerc;
 	int				flags = 64|128;
 	centity_t		*crosshairEnt;
+	clientInfo_t	*ci = NULL;
 
 	if ( cg.crosshairClientNum >= 0 && cg.crosshairClientNum != currentCrosshairEntity ) // player
 	{
@@ -3848,6 +3849,30 @@ void CG_DrawEnemyStatus( void )
 	}
 
 	if (crosshairEnt->currentState.eFlags & EF_DEAD)
+	{
+		return;
+	}
+	
+	if (!crosshairEnt->ghoul2)
+	{
+		return;
+	}
+
+	if (crosshairEnt->currentState.number < MAX_CLIENTS)
+	{
+		ci = &cgs.clientinfo[crosshairEnt->currentState.number];
+	}
+	else
+	{
+		ci = crosshairEnt->npcClient;
+	}
+
+	if (!ci)
+	{
+		return;
+	}
+
+	if (ci->team == TEAM_SPECTATOR)
 	{
 		return;
 	}
@@ -7630,6 +7655,7 @@ void CG_DrawNPCNames( void )
 		char			sanitized1[1024], sanitized2[1024];
 		int				baseColor = CT_BLUE;
 		float			multiplier = 1.0f;
+		clientInfo_t	*ci = NULL;
 
 		if (!cent)
 			continue;
@@ -7651,6 +7677,25 @@ void CG_DrawNPCNames( void )
 
 		if (cent->currentState.eType == ET_PLAYER && cgs.clientinfo[i].team == TEAM_SPECTATOR)
 			continue;
+
+		if (cent->currentState.number < MAX_CLIENTS)
+		{
+			ci = &cgs.clientinfo[cent->currentState.number];
+		}
+		else
+		{
+			ci = cent->npcClient;
+		}
+
+		if (!ci)
+		{
+			continue;
+		}
+
+		if (ci->team == TEAM_SPECTATOR)
+		{
+			continue;
+		}
 
 		if (cent->currentState.eType == ET_PLAYER)
 		{

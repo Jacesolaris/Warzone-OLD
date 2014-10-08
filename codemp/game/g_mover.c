@@ -662,6 +662,19 @@ void Reached_BinaryMover( gentity_t *ent )
 		return;
 	}
 
+	{// UQ1: let's use a timer to get it to wait at top and bottom positions...
+		if ( !(ent->moverState == MOVER_POS1 || ent->moverState == MOVER_POS2) )
+		{// Moving. Start debounce time clock...
+			ent->useDebounceTime = level.time + 5100; // about 5 secs wait at each point???
+		}
+
+		if ((ent->moverState == MOVER_POS1 || ent->moverState == MOVER_POS2)
+			&& ent->useDebounceTime > level.time)
+		{// Wait at this position for the remainder of the debounce time...
+			return;
+		}
+	}
+
 	if ( ent->moverState == MOVER_1TO2 )
 	{//reached open
 		vec3_t	doorcenter;
@@ -887,13 +900,14 @@ Use_BinaryMover
 */
 void Use_BinaryMover( gentity_t *ent, gentity_t *other, gentity_t *activator )
 {
-	gentity_t *trigger = G_FindDoorTrigger( ent );
+	//gentity_t *trigger = G_FindDoorTrigger( ent );
 
 	if ( !ent->use )
 	{//I cannot be used anymore, must be a door with a wait of -1 that's opened.
 		return;
 	}
 
+	/*
 	if ( trigger && !(ent->moverState == MOVER_POS1 || ent->moverState == MOVER_POS2) )
 	{// Moving. Start debounce time clock...
 		trigger->useDebounceTime = level.time + 5100; // about 5 secs wait at each point???
@@ -903,6 +917,20 @@ void Use_BinaryMover( gentity_t *ent, gentity_t *other, gentity_t *activator )
 		&& trigger->useDebounceTime > level.time)
 	{// Wait at this position for the remainder of the debounce time...
 		return;
+	}*/
+	
+	if ( other->client )
+	{// UQ1: let's use a timer to get it to wait at top and bottom positions...
+		if ((ent->parent->moverState == MOVER_POS1 || ent->parent->moverState == MOVER_POS2)
+			&& ent->useDebounceTime > level.time)
+		{// Wait at this position for the remainder of the debounce time...
+			return;
+		}
+
+		if ( !(ent->parent->moverState == MOVER_POS1 || ent->parent->moverState == MOVER_POS2) )
+		{// Moving. Start debounce time clock...
+			ent->useDebounceTime = level.time + 5100; // about 5 secs wait at each point???
+		}
 	}
 
 	// only the master should be used
@@ -927,6 +955,7 @@ void Use_BinaryMover( gentity_t *ent, gentity_t *other, gentity_t *activator )
 
 	ent->enemy = other;
 	ent->activator = activator;
+
 	if(ent->delay)
 	{
 		ent->think = Use_BinaryMover_Go;
@@ -1184,15 +1213,15 @@ void Touch_DoorTrigger( gentity_t *ent, gentity_t *other, trace_t *trace )
 {
 	gentity_t *relockEnt = NULL;
 
-	if ( other->client )
+	//if ( other->client )
 	{// UQ1: let's use a timer to get it to wait at top and bottom positions...
 		if ( !(ent->parent->moverState == MOVER_POS1 || ent->parent->moverState == MOVER_POS2) )
 		{// Moving. Start debounce time clock...
-			ent->useDebounceTime = level.time + 5100; // about 5 secs wait at each point???
+			ent->parent->useDebounceTime = level.time + 5100; // about 5 secs wait at each point???
 		}
 
 		if ((ent->parent->moverState == MOVER_POS1 || ent->parent->moverState == MOVER_POS2)
-			&& ent->useDebounceTime > level.time)
+			&& ent->parent->useDebounceTime > level.time)
 		{// Wait at this position for the remainder of the debounce time...
 			return;
 		}
@@ -1521,8 +1550,11 @@ INACTIVE	must be used by a target_activate before it can be used
 	2 - blue
 "vehopen"	if non-0, vehicles/players riding vehicles can open
 */
+void SP_func_plat (gentity_t *ent);
+
 void SP_func_door (gentity_t *ent)
 {
+//#if 0
 	vec3_t	abs_movedir;
 	float	distance;
 	vec3_t	size;
@@ -1532,9 +1564,13 @@ void SP_func_door (gentity_t *ent)
 
 	ent->blocked = Blocked_Door;
 
+	/*
 	// default speed of 400
 	if (!ent->speed)
-		ent->speed = 400;
+		ent->speed = 400;*/
+
+	// UQ1: default speed of 200
+	ent->speed = 200;
 
 	// default wait of 2 seconds
 	if (!ent->wait)
@@ -1624,15 +1660,18 @@ void SP_func_door (gentity_t *ent)
 	}
 	
 	// UQ1: Increase trigger size to allow activations at both ends...
-	VectorCopy(ent->r.mins, ent->trigger_orig_mins);
-	VectorCopy(ent->r.maxs, ent->trigger_orig_maxs);
-	ent->r.absmin[0] -= 128.0;
-	ent->r.absmin[1] -= 128.0;
+	VectorCopy(ent->r.absmin, ent->trigger_orig_mins);
+	VectorCopy(ent->r.absmax, ent->trigger_orig_maxs);
+	ent->r.absmin[0] -= 12.0;
+	ent->r.absmin[1] -= 12.0;
 	ent->r.absmin[2] = -65000;
-	ent->r.absmax[0] += 128.0;
-	ent->r.absmax[1] += 128.0;
+	ent->r.absmax[0] += 12.0;
+	ent->r.absmax[1] += 12.0;
 	ent->r.absmax[2] = 65000;
 	ent->think = Think_SpawnNewDoorTrigger;
+//#endif //0
+
+	//SP_func_plat(ent);
 }
 
 /*
@@ -1655,6 +1694,29 @@ void Touch_Plat( gentity_t *ent, gentity_t *other, trace_t *trace ) {
 		return;
 	}
 
+	{// UQ1: let's use a timer to get it to wait at top and bottom positions...
+		if ( !(ent->parent->moverState == MOVER_POS1 || ent->parent->moverState == MOVER_POS2) )
+		{// Moving. Start debounce time clock...
+			ent->useDebounceTime = level.time + 5100; // about 5 secs wait at each point???
+		}
+
+		if ((ent->parent->moverState == MOVER_POS1 || ent->parent->moverState == MOVER_POS2)
+			&& ent->useDebounceTime > level.time)
+		{// Wait at this position for the remainder of the debounce time...
+			return;
+		}
+	}
+
+	if ( other->client )
+	{
+		if ( ent->parent->moverState == MOVER_1TO2
+			|| ent->parent->moverState == MOVER_2TO1
+			|| ent->parent->moverState == MOVER_POS2 )
+		{// UQ1: Since I enabled triggers at top of elevator, this will make it go down again...
+			return;
+		}
+	}
+
 	// delay return-to-pos1 by one second
 	if ( ent->moverState == MOVER_POS2 ) {
 		ent->nextthink = level.time + 1000;
@@ -1669,8 +1731,32 @@ If the plat is at the bottom position, start it going up
 ===============
 */
 void Touch_PlatCenterTrigger(gentity_t *ent, gentity_t *other, trace_t *trace ) {
-	if ( !other->client ) {
+	if ( !other->client || other->client->ps.stats[STAT_HEALTH] <= 0 ) {
 		return;
+	}
+
+	{// UQ1: let's use a timer to get it to wait at top and bottom positions...
+		if ( !(ent->parent->moverState == MOVER_POS1 || ent->parent->moverState == MOVER_POS2) )
+		{// Moving. Start debounce time clock...
+			ent->useDebounceTime = level.time + 5100; // about 5 secs wait at each point???
+			return;
+		}
+
+		if ((ent->parent->moverState == MOVER_POS1 || ent->parent->moverState == MOVER_POS2)
+			&& ent->useDebounceTime > level.time)
+		{// Wait at this position for the remainder of the debounce time...
+			return;
+		}
+	}
+
+	if ( other->client )
+	{
+		if ( ent->parent->moverState == MOVER_1TO2
+			|| ent->parent->moverState == MOVER_2TO1
+			|| ent->parent->moverState == MOVER_POS2 )
+		{// UQ1: Since I enabled triggers at top of elevator, this will make it go down again...
+			return;
+		}
 	}
 
 	if ( ent->parent->moverState == MOVER_POS1 ) {
@@ -1699,6 +1785,7 @@ void SpawnPlatTrigger( gentity_t *ent ) {
 	trigger->r.contents = CONTENTS_TRIGGER;
 	trigger->parent = ent;
 
+	trap->Print("mins: %f %f %f. maxs: %f %f %f.\n", ent->r.mins[0], ent->r.mins[1], ent->r.mins[2], ent->r.maxs[0], ent->r.maxs[1], ent->r.maxs[2]);
 	tmin[0] = ent->pos1[0] + ent->r.mins[0] + 33;
 	tmin[1] = ent->pos1[1] + ent->r.mins[1] + 33;
 	tmin[2] = ent->pos1[2] + ent->r.mins[2];
@@ -1718,6 +1805,16 @@ void SpawnPlatTrigger( gentity_t *ent ) {
 
 	VectorCopy (tmin, trigger->r.mins);
 	VectorCopy (tmax, trigger->r.maxs);
+
+	// UQ1: Increase trigger size to allow activations at both ends...
+	VectorCopy(trigger->r.mins, ent->trigger_orig_mins);
+	VectorCopy(trigger->r.maxs, ent->trigger_orig_maxs);
+	trigger->r.mins[0] -= 48.0;
+	trigger->r.mins[1] -= 48.0;
+	trigger->r.mins[2] = -65000;
+	trigger->r.maxs[0] += 48.0;
+	trigger->r.maxs[1] += 48.0;
+	trigger->r.maxs[2] = 65000;
 
 	trap->LinkEntity ((sharedEntity_t *)trigger);
 }
@@ -1745,12 +1842,15 @@ void SP_func_plat (gentity_t *ent) {
 
 	VectorClear (ent->s.angles);
 
-	G_SpawnFloat( "speed", "200", &ent->speed );
+	G_SpawnFloat( "speed", "100", &ent->speed );
 	G_SpawnInt( "dmg", "2", &ent->damage );
 	G_SpawnFloat( "wait", "1", &ent->wait );
 	G_SpawnFloat( "lip", "8", &lip );
 
-	ent->wait = 1000;
+	if (ent->speed > 200) ent->speed = 200; // UQ1: Forced max!
+
+	//ent->wait = 1000;
+	ent->wait = 5000;
 
 	// create second position
 	trap->SetBrushModel( (sharedEntity_t *)ent, ent->model );
@@ -1775,9 +1875,9 @@ void SP_func_plat (gentity_t *ent) {
 	ent->parent = ent;	// so it can be treated as a door
 
 	// spawn the trigger if one hasn't been custom made
-	if ( !ent->targetname ) {
+	//if ( !ent->targetname ) {
 		SpawnPlatTrigger(ent);
-	}
+	//}
 }
 
 /*
