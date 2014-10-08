@@ -466,6 +466,10 @@ struct gentity_s {
 	int                     npc_dumb_route_time;
 	vec3_t                  npc_previous_pos;
 
+	qboolean				npc_jumping;
+	vec3_t					npc_jump_start;
+	vec3_t					npc_jump_dest;
+
 	int                     next_weapon_switch;
 	int                     next_rifle_butt_time;
 	int                     next_flamer_time;

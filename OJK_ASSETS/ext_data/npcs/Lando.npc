@@ -1,7 +1,7 @@
 Lando
 {
 	playerModel	lando
-	weapon		WP_BLASTER
+	weapon		WP_DISRUPTOR
 	rank		captain
 	altFire		1
 	snd			lando

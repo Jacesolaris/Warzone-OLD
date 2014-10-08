@@ -320,7 +320,7 @@ void NPC_StormTrooperConversation()
 	vec3_t			origin, angles;
 	char			filename[256];
 
-	if (NPC->enemy || !NPC->NPC->conversationPartner || NPC->NPC->conversationPartner->enemy)
+	if (NPC->enemy || !NPC->NPC->conversationPartner || NPC->NPC->conversationPartner->enemy || NPC->NPC->conversationPartner->NPC)
 	{// Exit early if they get a target...
 		NPC_EndConversation();
 		return;
@@ -358,8 +358,17 @@ void NPC_StormTrooperConversation()
 
 		NPC->NPC->conversationSection++;
 		NPC->NPC->conversationPart = 1;
-		NPC->NPC->conversationPartner->NPC->conversationSection++;
-		NPC->NPC->conversationPartner->NPC->conversationPart = 1;
+
+		if (NPC->NPC->conversationPartner->NPC)
+		{
+			NPC->NPC->conversationPartner->NPC->conversationSection++;
+			NPC->NPC->conversationPartner->NPC->conversationPart = 1;
+		}
+		else
+		{
+			NPC_EndConversation();
+			return;
+		}
 
 		if (section < 10)
 		{
@@ -417,6 +426,7 @@ void NPC_StormtrooperFindConversationPartner()
 			if (partner == NPC) continue;
 			if (partner->s.eType != ET_NPC) continue;
 			if (!partner->client) continue;
+			if (!partner->NPC) continue;
 			if (partner->client->NPC_class != CLASS_STORMTROOPER) continue;
 			if (partner->NPC->conversationPartner || partner->NPC->conversationReplyTime > level.time)
 				if (Distance(partner->r.currentOrigin, NPC->r.currentOrigin) < 2048)
@@ -433,6 +443,7 @@ void NPC_StormtrooperFindConversationPartner()
 			if (!partner->client) continue;
 			if (partner->client->NPC_class != CLASS_STORMTROOPER) continue;
 			if (VectorLength(partner->client->ps.velocity) > 16) continue;
+			if (!partner->NPC) continue;
 
 			if (partner->NPC->conversationPartner || partner->NPC->conversationReplyTime > level.time)
 			{// this one already in a convo...
@@ -448,15 +459,26 @@ void NPC_StormtrooperFindConversationPartner()
 			NPC->NPC->conversationSection = 1;
 			NPC->NPC->conversationRole = 1;
 			NPC->NPC->conversationPart = 1;
-			NPC->NPC->conversationPartner = partner;
-			NPC->NPC->conversationPartner->NPC->conversationPartner = NPC;
-			NPC->NPC->conversationPartner->NPC->conversationRole = 2;
-			NPC->NPC->conversationPartner->NPC->conversationSection = 1;
-			NPC->NPC->conversationPartner->NPC->conversationPart = 1;
-			NPC->NPC->conversationPartner->NPC->conversationReplyTime = level.time + 8000;
 
-			trap->Print(">> NPC %i (%s) enterred a conversation with NPC %i.\n", NPC->s.number, NPC->NPC_type, NPC->NPC->conversationPartner->s.number);
-			NPC_StormTrooperConversation();
+			if (partner->NPC)
+				NPC->NPC->conversationPartner = partner;
+
+			if (NPC->NPC->conversationPartner->NPC)
+			{
+				NPC->NPC->conversationPartner->NPC->conversationPartner = NPC;
+				NPC->NPC->conversationPartner->NPC->conversationRole = 2;
+				NPC->NPC->conversationPartner->NPC->conversationSection = 1;
+				NPC->NPC->conversationPartner->NPC->conversationPart = 1;
+				NPC->NPC->conversationPartner->NPC->conversationReplyTime = level.time + 8000;
+
+				trap->Print(">> NPC %i (%s) enterred a conversation with NPC %i.\n", NPC->s.number, NPC->NPC_type, NPC->NPC->conversationPartner->s.number);
+				NPC_StormTrooperConversation();
+			}
+			else
+			{
+				NPC_EndConversation();
+				continue;
+			}
 			return;
 		}
 	}
@@ -540,9 +562,11 @@ void NPC_SetConversationReplyTimer()
 	gentity_t	*NPC = NPCS.NPC;
 
 	NPC->NPC->conversationPart++;
-	NPC->NPC->conversationPartner->NPC->conversationPart++;
+	if (NPC->NPC->conversationPartner->NPC)
+		NPC->NPC->conversationPartner->NPC->conversationPart++;
 	NPC->NPC->conversationReplyTime = level.time + 10000;//18000;
-	NPC->NPC->conversationPartner->NPC->conversationReplyTime = level.time + 5000;//8000;
+	if (NPC->NPC->conversationPartner->NPC)
+		NPC->NPC->conversationPartner->NPC->conversationReplyTime = level.time + 5000;//8000;
 #endif //__NPC_CONVERSATIONS__
 }
 
@@ -638,6 +662,7 @@ void NPC_FindConversationPartner()
 			if (partner == NPC) continue;
 			if (partner->s.eType != ET_NPC) continue;
 			if (!partner->client) continue;
+			if (!partner->NPC) continue;
 			if (partner->client->NPC_class == CLASS_STORMTROOPER) continue;
 			//if (!Q_stricmpn(partner->NPC_type, NPC->NPC_type, strlen(partner->NPC_type)-1)) continue; // never talk to the same race... (they would repeat eachother)
 			if (partner->NPC->conversationPartner || partner->NPC->conversationReplyTime > level.time)
@@ -653,6 +678,7 @@ void NPC_FindConversationPartner()
 			if (partner == NPC) continue;
 			if (partner->s.eType != ET_NPC) continue;
 			if (!partner->client) continue;
+			if (!partner->NPC) continue;
 			if (partner->client->NPC_class == CLASS_STORMTROOPER) continue;
 			//if (!Q_stricmpn(partner->NPC_type, NPC->NPC_type, strlen(partner->NPC_type)-1)) continue; // never talk to the same race... (they would repeat eachother)
 			if (VectorLength(partner->client->ps.velocity) > 16) continue;
@@ -672,15 +698,26 @@ void NPC_FindConversationPartner()
 			NPC->NPC->conversationSection = 1;
 			NPC->NPC->conversationRole = 1;
 			NPC->NPC->conversationPart = 1;
-			NPC->NPC->conversationPartner = partner;
-			NPC->NPC->conversationPartner->NPC->conversationPartner = NPC;
-			NPC->NPC->conversationPartner->NPC->conversationRole = 2;
-			NPC->NPC->conversationPartner->NPC->conversationSection = 1;
-			NPC->NPC->conversationPartner->NPC->conversationPart = 1;
-			NPC->NPC->conversationPartner->NPC->conversationReplyTime = level.time + 8000;
 
-			trap->Print(">> NPC %i (%s) enterred a conversation with NPC %i (%s).\n", NPC->s.number, NPC->NPC_type, NPC->NPC->conversationPartner->s.number, NPC->NPC->conversationPartner->NPC_type);
-			NPC_NPCConversation();
+			if (partner->NPC)
+				NPC->NPC->conversationPartner = partner;
+
+			if (NPC->NPC->conversationPartner->NPC)
+			{
+				NPC->NPC->conversationPartner->NPC->conversationPartner = NPC;
+				NPC->NPC->conversationPartner->NPC->conversationRole = 2;
+				NPC->NPC->conversationPartner->NPC->conversationSection = 1;
+				NPC->NPC->conversationPartner->NPC->conversationPart = 1;
+				NPC->NPC->conversationPartner->NPC->conversationReplyTime = level.time + 8000;
+
+				trap->Print(">> NPC %i (%s) enterred a conversation with NPC %i (%s).\n", NPC->s.number, NPC->NPC_type, NPC->NPC->conversationPartner->s.number, NPC->NPC->conversationPartner->NPC_type);
+				NPC_NPCConversation();
+			}
+			else
+			{
+				NPC_EndConversation();
+				continue;
+			}
 			return;
 		}
 	}

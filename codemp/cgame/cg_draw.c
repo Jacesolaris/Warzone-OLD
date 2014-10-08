@@ -3848,15 +3848,16 @@ void CG_DrawEnemyStatus( void )
 		return; // nothing to show...
 	}
 
-	if (crosshairEnt->currentState.eFlags & EF_DEAD)
-	{
-		return;
-	}
-	
 	if (!crosshairEnt->ghoul2)
 	{
 		return;
 	}
+
+	if (crosshairEnt->currentState.eFlags & EF_DEAD)
+		return;
+
+	if (crosshairEnt->playerState->pm_type == PM_DEAD)
+		return;
 
 	if (crosshairEnt->currentState.number < MAX_CLIENTS)
 	{
@@ -3871,11 +3872,19 @@ void CG_DrawEnemyStatus( void )
 	{
 		return;
 	}
+	
+	if (!ci->infoValid)
+	{
+		return;
+	}
 
 	if (ci->team == TEAM_SPECTATOR)
 	{
 		return;
 	}
+
+	if (crosshairEnt->playerState->persistant[PERS_TEAM] == TEAM_SPECTATOR)
+		return;
 
 	if (crosshairEnt->playerState->fd.forcePowerMax <= 0) crosshairEnt->playerState->fd.forcePowerMax = 100;
 
@@ -7678,6 +7687,12 @@ void CG_DrawNPCNames( void )
 		if (cent->currentState.eType == ET_PLAYER && cgs.clientinfo[i].team == TEAM_SPECTATOR)
 			continue;
 
+		if (cent->currentState.eFlags & EF_DEAD)
+			continue;
+
+		if (cent->playerState->pm_type == PM_DEAD)
+			continue;
+
 		if (cent->currentState.number < MAX_CLIENTS)
 		{
 			ci = &cgs.clientinfo[cent->currentState.number];
@@ -7692,10 +7707,18 @@ void CG_DrawNPCNames( void )
 			continue;
 		}
 
+		if (!ci->infoValid)
+		{
+			continue;
+		}
+
 		if (ci->team == TEAM_SPECTATOR)
 		{
 			continue;
 		}
+
+		if (cent->playerState->persistant[PERS_TEAM] == TEAM_SPECTATOR)
+			continue;
 
 		if (cent->currentState.eType == ET_PLAYER)
 		{

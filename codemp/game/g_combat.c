@@ -2118,6 +2118,15 @@ void player_die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int
 		return;
 	}
 
+	self->s.eFlags |= EF_DEAD;
+	if (self->client)
+	{
+		self->client->ps.pm_type = PM_DEAD;
+
+		if (self->s.eType == ET_NPC)
+			self->client->ps.persistant[PERS_TEAM] = TEAM_SPECTATOR;
+	}
+
 	if ( !attacker )
 		return;
 

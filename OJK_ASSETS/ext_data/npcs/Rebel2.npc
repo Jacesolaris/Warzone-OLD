@@ -1,7 +1,8 @@
 Rebel2
 {
 	playerModel rebel
-	weapon		WP_BLASTER
+//	weapon		WP_BLASTER
+	weapon		WP_DEMP2
 	reactions	3
 	aim			1
 	move		3

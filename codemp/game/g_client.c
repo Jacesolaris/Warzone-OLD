@@ -4202,6 +4202,14 @@ void ClientDisconnect( int clientNum ) {
 	G_RemoveQueuedBotBegin( clientNum );
 
 	ent = g_entities + clientNum;
+
+	ent->s.eFlags |= EF_DEAD;
+	if (ent->client) 
+	{
+		ent->client->ps.pm_type = PM_DEAD;
+		ent->client->ps.persistant[PERS_TEAM] = TEAM_SPECTATOR;
+	}
+
 	if ( !ent->client || ent->client->pers.connected == CON_DISCONNECTED ) {
 		return;
 	}

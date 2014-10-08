@@ -1310,10 +1310,6 @@ void G_CheckMinimumNpcs( void ) {
 			}
 			else if (random >= 4)
 			{
-				npc->NPC_type = "rockettrooper";
-			}
-			else if (random >= 3)
-			{
 				npc->NPC_type = "stcommander";
 			}
 			else if (random >= 2)
@@ -1335,6 +1331,9 @@ void G_CheckMinimumNpcs( void ) {
 					break;
 				case 4:
 					npc->NPC_type = "imperial";
+					break;
+				case 5:
+					npc->NPC_type = "rockettrooper";
 					break;
 				default:
 					npc->NPC_type = "impworker";
@@ -1388,9 +1387,9 @@ void G_CheckMinimumNpcs( void ) {
 				case 13:
 					npc->NPC_type = "tavion_new";
 					break;
-				case 14:
-					npc->NPC_type = "shadowtrooper";
-					break;
+				//case 14: // UQ1: Disabled until cloak is fixed...
+				//	npc->NPC_type = "shadowtrooper";
+				//	break;
 				case 15:
 					//npc->NPC_type = "saber_droid";
 					//break;
@@ -1416,31 +1415,27 @@ void G_CheckMinimumNpcs( void ) {
 		}
 		else
 		{// Rebel NPCs...
-			if (random >= 8)
+			if (random >= 10)
 			{
 				npc->NPC_type = "rebel";
 			}
-			else if (random >= 5)
+			else if (random >= 7)
 			{
 				npc->NPC_type = "rebel2";
 			}
-			else if (random >= 3)
+			else if (random >= 4)
 			{
-				npc->NPC_type = "prisoner";
-			}
-			else if (random >= 2)
-			{// Officers/Specials...
 				int rnd2 = irand(0,7);
 				switch (rnd2)
 				{
 				case 0:
-					npc->NPC_type = "jan";
+					npc->NPC_type = "prisoner";
 					break;
 				case 1:
-					npc->NPC_type = "lando";
+					npc->NPC_type = "prisoner";
 					break;
 				case 2:
-					npc->NPC_type = "chewie";
+					npc->NPC_type = "prisoner";
 					break;
 				case 3:
 					npc->NPC_type = "bespincop";
@@ -1453,6 +1448,22 @@ void G_CheckMinimumNpcs( void ) {
 					break;
 				default:
 					npc->NPC_type = "bespincop2";
+					break;
+				}
+			}
+			else if (random >= 2)
+			{// Officers/Specials...
+				int rnd2 = irand(0,4);
+				switch (rnd2)
+				{
+				case 0:
+					npc->NPC_type = "jan";
+					break;
+				case 1:
+					npc->NPC_type = "lando";
+					break;
+				default:
+					npc->NPC_type = "chewie";
 					break;
 				}
 			}

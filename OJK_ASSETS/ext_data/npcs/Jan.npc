@@ -1,7 +1,7 @@
 Jan
 {
 	playerModel	jan
-	weapon		WP_BLASTER
+	weapon		WP_CONCUSSION
 	altFire		1
 	rank		lt
 	reactions	3

@@ -1921,6 +1921,8 @@ qboolean NPC_ParseParms( const char *NPCName, gentity_t *NPC )
 					if ( NPC->NPC )
 					{
 						stats->aim = n;
+
+						if (n < 4) n = 4; // UQ1: Nothing should shoot that badly!
 					}
 					continue;
 				}

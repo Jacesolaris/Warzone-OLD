@@ -2119,31 +2119,31 @@ void NPC_PickRandomIdleAnimantionCivilian(gentity_t *NPC)
 	switch (randAnim)
 	{
 	case 0:
-		NPC_SetAnim(NPC, SETANIM_BOTH, BOTH_STAND1, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD);
+		NPC_SetAnim(NPC, SETANIM_BOTH, BOTH_STAND1, /*SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD*/0);
 		break;
 	case 1:
-		NPC_SetAnim(NPC, SETANIM_BOTH, BOTH_STAND4, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD);
+		NPC_SetAnim(NPC, SETANIM_BOTH, BOTH_STAND4, /*SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD*/0);
 		break;
 	case 2:
-		NPC_SetAnim(NPC, SETANIM_BOTH, BOTH_STAND6, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD);
+		NPC_SetAnim(NPC, SETANIM_BOTH, BOTH_STAND6, /*SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD*/0);
 		break;
 	case 3:
-		NPC_SetAnim(NPC, SETANIM_BOTH, BOTH_STAND8, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD);
+		NPC_SetAnim(NPC, SETANIM_BOTH, BOTH_STAND8, /*SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD*/0);
 		break;
 	case 4:
-		NPC_SetAnim(NPC, SETANIM_BOTH, BOTH_STAND9, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD);
+		NPC_SetAnim(NPC, SETANIM_BOTH, BOTH_STAND9, /*SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD*/0);
 		break;
 	case 5:
 	case 6:
-		NPC_SetAnim(NPC, SETANIM_BOTH, BOTH_STAND9IDLE1, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD);
+		NPC_SetAnim(NPC, SETANIM_BOTH, BOTH_STAND9IDLE1, /*SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD*/0);
 		break;
 	case 7:
 	case 8:
-		NPC_SetAnim(NPC, SETANIM_BOTH, BOTH_GUARD_IDLE1, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD);
+		NPC_SetAnim(NPC, SETANIM_BOTH, BOTH_GUARD_IDLE1, /*SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD*/0);
 		break;
 	case 9:
 	default:
-		NPC_SetAnim(NPC, SETANIM_BOTH, BOTH_GUARD_LOOKAROUND1, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD);
+		NPC_SetAnim(NPC, SETANIM_BOTH, BOTH_GUARD_LOOKAROUND1, /*SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD*/0);
 		break;
 	}
 }
@@ -2191,26 +2191,26 @@ void NPC_PickRandomIdleAnimantion(gentity_t *NPC)
 	switch (randAnim)
 	{
 	case 0:
-		NPC_SetAnim(NPC, SETANIM_BOTH, BOTH_STAND3, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD);
+		NPC_SetAnim(NPC, SETANIM_BOTH, BOTH_STAND3, /*SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD*/0);
 	case 1:
-		NPC_SetAnim(NPC, SETANIM_BOTH, BOTH_STAND4, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD);
+		NPC_SetAnim(NPC, SETANIM_BOTH, BOTH_STAND4, /*SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD*/0);
 	case 2:
-		NPC_SetAnim(NPC, SETANIM_BOTH, BOTH_STAND6, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD);
+		NPC_SetAnim(NPC, SETANIM_BOTH, BOTH_STAND6, /*SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD*/0);
 	case 3:
-		NPC_SetAnim(NPC, SETANIM_BOTH, BOTH_STAND8, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD);
+		NPC_SetAnim(NPC, SETANIM_BOTH, BOTH_STAND8, /*SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD*/0);
 	case 4:
-		NPC_SetAnim(NPC, SETANIM_BOTH, BOTH_STAND9, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD);
+		NPC_SetAnim(NPC, SETANIM_BOTH, BOTH_STAND9, /*SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD*/0);
 	case 5:
 	case 6:
-		NPC_SetAnim(NPC, SETANIM_BOTH, BOTH_STAND9IDLE1, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD);
+		NPC_SetAnim(NPC, SETANIM_BOTH, BOTH_STAND9IDLE1, /*SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD*/0);
 		break;
 	case 7:
 	case 8:
-		NPC_SetAnim(NPC, SETANIM_BOTH, BOTH_GUARD_IDLE1, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD);
+		NPC_SetAnim(NPC, SETANIM_BOTH, BOTH_GUARD_IDLE1, /*SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD*/0);
 		break;
 	case 9:
 	default:
-		NPC_SetAnim(NPC, SETANIM_BOTH, BOTH_GUARD_LOOKAROUND1, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD);
+		NPC_SetAnim(NPC, SETANIM_BOTH, BOTH_GUARD_LOOKAROUND1, /*SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD*/0);
 		break;
 	}
 }
@@ -2220,11 +2220,11 @@ qboolean NPC_SetCivilianMoveAnim( void )
 	if (NPC_IsCivilianHumanoid(NPCS.NPC))
 	{// Set better torso anims when not holding a weapon.
 		if (NPCS.ucmd.forwardmove < 0) 
-			NPC_SetAnim( NPCS.NPC, SETANIM_LEGS, BOTH_WALKBACK2, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD );
+			NPC_SetAnim( NPCS.NPC, SETANIM_LEGS, BOTH_WALKBACK2, /*SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD*/0 );
 		else 
-			NPC_SetAnim( NPCS.NPC, SETANIM_LEGS, BOTH_WALK2, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD );
+			NPC_SetAnim( NPCS.NPC, SETANIM_LEGS, BOTH_WALK2, /*SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD*/0 );
 
-		NPC_SetAnim(NPCS.NPC, SETANIM_TORSO, BOTH_STAND9IDLE1, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD);
+		NPC_SetAnim(NPCS.NPC, SETANIM_TORSO, BOTH_STAND9IDLE1, /*SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD*/0);
 
 		NPCS.NPC->client->ps.legsTimer = 200;
 		NPCS.NPC->client->ps.torsoTimer = 200;
@@ -2261,19 +2261,19 @@ void NPC_SelectMoveAnimation(qboolean walk)
 	{// Standing still...
 		if (NPCS.NPC->client->ps.pm_flags & PMF_DUCKED)
 		{
-			NPC_SetAnim(NPCS.NPC, SETANIM_BOTH, BOTH_CROUCH1, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD);
+			NPC_SetAnim(NPCS.NPC, SETANIM_BOTH, BOTH_CROUCH1, /*SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD*/0);
 		}
 		else if ( NPCS.NPC->client->ps.eFlags2 & EF2_USE_ALT_ANIM )
 		{//holding someone
-			NPC_SetAnim( NPCS.NPC, SETANIM_BOTH, BOTH_STAND4, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD );
+			NPC_SetAnim( NPCS.NPC, SETANIM_BOTH, BOTH_STAND4, /*SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD*/0 );
 		}
 		else if ( NPCS.NPC->client->ps.eFlags2 & EF2_ALERTED )
 		{//have an enemy or have had one since we spawned
-			NPC_SetAnim( NPCS.NPC, SETANIM_BOTH, BOTH_STAND2, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD );
+			NPC_SetAnim( NPCS.NPC, SETANIM_BOTH, BOTH_STAND2, /*SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD*/0 );
 		}
 		else
 		{//just stand there
-			//NPC_SetAnim( NPCS.NPC, SETANIM_BOTH, BOTH_STAND1, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD );
+			//NPC_SetAnim( NPCS.NPC, SETANIM_BOTH, BOTH_STAND1, /*SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD*/0 );
 			NPC_PickRandomIdleAnimantion(NPCS.NPC);
 		}
 
@@ -2286,17 +2286,17 @@ void NPC_SelectMoveAnimation(qboolean walk)
 		{
 			if (NPCS.NPC->client->ps.pm_flags & PMF_DUCKED)
 			{
-				NPC_SetAnim(NPCS.NPC, SETANIM_BOTH, BOTH_CROUCH1WALKBACK, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD);
+				NPC_SetAnim(NPCS.NPC, SETANIM_BOTH, BOTH_CROUCH1WALKBACK, /*SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD*/0);
 			}
 			else if (NPCS.NPC->client->ps.weapon == WP_SABER)
 			{// Walk with saber...
-				NPC_SetAnim( NPCS.NPC, SETANIM_LEGS, BOTH_WALKBACK1, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD );
-				NPC_SetAnim( NPCS.NPC, SETANIM_TORSO, BOTH_WALKBACK1, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD );
+				NPC_SetAnim( NPCS.NPC, SETANIM_LEGS, BOTH_WALKBACK1, /*SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD*/0 );
+				NPC_SetAnim( NPCS.NPC, SETANIM_TORSO, BOTH_WALKBACK1, /*SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD*/0 );
 			}
 			else
 			{// Standard walk anim..
-				NPC_SetAnim( NPCS.NPC, SETANIM_LEGS, BOTH_WALKBACK2, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD );
-				NPC_SetAnim( NPCS.NPC, SETANIM_TORSO, TORSO_WEAPONREADY3, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD );
+				NPC_SetAnim( NPCS.NPC, SETANIM_LEGS, BOTH_WALKBACK2, /*SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD*/0 );
+				NPC_SetAnim( NPCS.NPC, SETANIM_TORSO, TORSO_WEAPONREADY3, /*SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD*/0 );
 			}
 			//trap->Print("Walking Back.\n");
 		}
@@ -2304,17 +2304,17 @@ void NPC_SelectMoveAnimation(qboolean walk)
 		{
 			if (NPCS.NPC->client->ps.pm_flags & PMF_DUCKED)
 			{
-				NPC_SetAnim(NPCS.NPC, SETANIM_BOTH, BOTH_CROUCH1WALK, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD);
+				NPC_SetAnim(NPCS.NPC, SETANIM_BOTH, BOTH_CROUCH1WALK, /*SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD*/0);
 			}
 			else if (NPCS.NPC->client->ps.weapon == WP_SABER)
 			{// Walk with saber...
-				NPC_SetAnim( NPCS.NPC, SETANIM_LEGS, BOTH_WALK1, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD );
+				NPC_SetAnim( NPCS.NPC, SETANIM_LEGS, BOTH_WALK1, /*SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD*/0 );
 				NPC_SetAnim( NPCS.NPC, SETANIM_TORSO, TORSO_WEAPONREADY3, SETANIM_FLAG_NORMAL );
 			}
 			else
 			{// Standard walk anim..
-				NPC_SetAnim( NPCS.NPC, SETANIM_LEGS, BOTH_WALK2, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD );
-				NPC_SetAnim( NPCS.NPC, SETANIM_TORSO, TORSO_WEAPONREADY3, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD );
+				NPC_SetAnim( NPCS.NPC, SETANIM_LEGS, BOTH_WALK2, /*SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD*/0 );
+				NPC_SetAnim( NPCS.NPC, SETANIM_TORSO, TORSO_WEAPONREADY3, /*SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD*/0 );
 			}
 
 			//trap->Print("Walking Forward.\n");
@@ -2327,11 +2327,11 @@ void NPC_SelectMoveAnimation(qboolean walk)
 	{//full on run, on all fours
 		if (NPCS.NPC->client->ps.pm_flags & PMF_DUCKED)
 		{
-			NPC_SetAnim( NPCS.NPC, SETANIM_BOTH, BOTH_CROUCH1WALK, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD);
+			NPC_SetAnim( NPCS.NPC, SETANIM_BOTH, BOTH_CROUCH1WALK, /*SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD*/0);
 		}
 		else 
 		{
-			NPC_SetAnim( NPCS.NPC, SETANIM_BOTH, BOTH_RUN1, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD );
+			NPC_SetAnim( NPCS.NPC, SETANIM_BOTH, BOTH_RUN1, /*SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD*/0 );
 		}
 
 		NPCS.NPC->client->ps.torsoTimer = 200;
@@ -2343,11 +2343,11 @@ void NPC_SelectMoveAnimation(qboolean walk)
 		{
 			if (NPCS.NPC->client->ps.pm_flags & PMF_DUCKED)
 			{
-				NPC_SetAnim(NPCS.NPC, SETANIM_BOTH, BOTH_CROUCH1WALKBACK, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD);
+				NPC_SetAnim(NPCS.NPC, SETANIM_BOTH, BOTH_CROUCH1WALKBACK, /*SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD*/0);
 			}
 			else 
 			{
-				NPC_SetAnim( NPCS.NPC, SETANIM_BOTH, BOTH_RUNBACK2, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD );
+				NPC_SetAnim( NPCS.NPC, SETANIM_BOTH, BOTH_RUNBACK2, /*SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD*/0 );
 			}
 
 			//trap->Print("Running Back.\n");
@@ -2356,11 +2356,11 @@ void NPC_SelectMoveAnimation(qboolean walk)
 		{
 			if (NPCS.NPC->client->ps.pm_flags & PMF_DUCKED)
 			{
-				NPC_SetAnim( NPCS.NPC, SETANIM_BOTH, BOTH_CROUCH1WALK, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD);
+				NPC_SetAnim( NPCS.NPC, SETANIM_BOTH, BOTH_CROUCH1WALK, /*SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD*/0);
 			}
 			else 
 			{
-				NPC_SetAnim( NPCS.NPC, SETANIM_BOTH, BOTH_RUN2, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD );
+				NPC_SetAnim( NPCS.NPC, SETANIM_BOTH, BOTH_RUN2, /*SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD*/0 );
 			}
 
 			//trap->Print("Running Forward.\n");
@@ -2572,6 +2572,7 @@ qboolean NPC_ClearPathToJump( gentity_t *NPC, vec3_t dest, int impactEntNum )
 }
 
 extern qboolean Jedi_Jump( vec3_t dest, int goalEntNum );
+extern qboolean NPC_SimpleJump( vec3_t from, vec3_t to );
 
 //#define	APEX_HEIGHT		200.0f
 #define	APEX_HEIGHT		128.0f
@@ -2820,6 +2821,15 @@ static qboolean NPC_Jump( gentity_t *NPC, vec3_t dest )
 
 	return qtrue;
 #endif //0
+
+	if (NPCS.NPC->npc_jumping && NPC_SimpleJump( NPCS.NPC->npc_jump_start, NPCS.NPC->npc_jump_dest ))
+	{
+		return qtrue;
+	}
+	else
+	{
+		NPCS.NPC->npc_jumping = qfalse;
+	}
 
 	return Jedi_Jump( dest, ENTITYNUM_NONE );
 }
@@ -3315,8 +3325,8 @@ qboolean UQ1_UcmdMoveForDir ( gentity_t *self, usercmd_t *cmd, vec3_t dir, qbool
 
 	if (walk)
 	{
-		fDot = DotProduct( forward, dir ) * 32.0;//self->NPC->stats.walkSpeed*1.1;
-		rDot = DotProduct( right, dir ) * 32.0;//self->NPC->stats.walkSpeed*1.1;
+		fDot = DotProduct( forward, dir ) * 48.0;//64.0;//32.0;//self->NPC->stats.walkSpeed*1.1;
+		rDot = DotProduct( right, dir ) * 48.0;//64.0;//32.0;//self->NPC->stats.walkSpeed*1.1;
 	}
 	else
 	{
@@ -4336,6 +4346,7 @@ qboolean NPC_RoutingSimpleJump ( int wpLast, int wpCurrent )
 			NPCS.NPC->client->ps.velocity[1] = NPCS.NPC->movedir[1] * 2.0;
 			//NPCS.NPC->client->ps.velocity[2] = 100.0;
 			NPCS.ucmd.upmove = 127.0;
+			if (NPCS.NPC->s.eType == ET_PLAYER) trap->EA_Jump(NPCS.NPC->s.number);
 		}
 		else
 		{
@@ -4601,28 +4612,33 @@ qboolean NPC_FollowRoutes( void )
 		{// When nearby a mover, run!
 			if (!UQ1_UcmdMoveForDir( NPC, &NPCS.ucmd, NPC->movedir, qfalse, gWPArray[NPC->wpCurrent]->origin )) 
 			{ 
-				if (NPC->client->ps.groundEntityNum != ENTITYNUM_NONE)
-					NPC_PickRandomIdleAnimantion(NPC);
+				//if (NPC->client->ps.groundEntityNum != ENTITYNUM_NONE)
+				//	NPC_PickRandomIdleAnimantion(NPC);
+				//else
+					//NPC_SelectMoveAnimation(qfalse);
 
 				return qtrue; 
 			}
 
-			NPC_SelectMoveAnimation(qtrue);
+			//NPC_SelectMoveAnimation(qtrue);
 		}
 		else if (!UQ1_UcmdMoveForDir( NPC, &NPCS.ucmd, NPC->movedir, qtrue, gWPArray[NPC->wpCurrent]->origin )) 
-		{ 
-			if (NPC->client->ps.groundEntityNum != ENTITYNUM_NONE)
-				NPC_PickRandomIdleAnimantion(NPC);
+		{
+			//if (NPC->client->ps.groundEntityNum != ENTITYNUM_NONE)
+			//	NPC_PickRandomIdleAnimantion(NPC);
+			//else
+				//NPC_SelectMoveAnimation(qtrue);
 
 			return qtrue; 
 		}
 
-		NPC_SelectMoveAnimation(qtrue);
+		//NPC_SelectMoveAnimation(qtrue);
 	}
 	else if (g_gametype.integer == GT_WARZONE || (NPC->r.svFlags & SVF_BOT))
 	{
 		if (!UQ1_UcmdMoveForDir( NPC, &NPCS.ucmd, NPC->movedir, qfalse, gWPArray[NPC->wpCurrent]->origin )) 
 		{ 
+			//NPC_SelectMoveAnimation(qfalse);
 			return qtrue; 
 		}
 	}
@@ -4634,6 +4650,7 @@ qboolean NPC_FollowRoutes( void )
 
 		if (!UQ1_UcmdMoveForDir( NPC, &NPCS.ucmd, NPC->movedir, walk, gWPArray[NPC->wpCurrent]->origin )) 
 		{
+			//NPC_SelectMoveAnimation(walk);
 			return qtrue; 
 		}
 	}
@@ -4979,6 +4996,9 @@ void NPC_Think ( gentity_t *self)//, int msec )
 	//FIXME: this breaks deathscripts
 	if ( self->health <= 0 )
 	{
+		self->s.eFlags |= EF_DEAD;
+		self->client->ps.pm_type = PM_DEAD;
+
 		DeadThink();
 		if ( NPCS.NPCInfo->nextBStateThink <= level.time )
 		{
