@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ai.h"
+#include "ai_dominance.h"
 
 #define NPCAI_CHECK_WEAPON		0x00000001
 #define NPCAI_BURST_WEAPON		0x00000002

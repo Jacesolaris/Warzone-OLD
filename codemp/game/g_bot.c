@@ -3,7 +3,7 @@
 // g_bot.c
 
 #include "g_local.h"
-#include "ai_main.h"
+#include "ai_dominance_main.h"
 
 #define __NPC_MINPLAYERS__
 #define __ALWAYS_TWO_TRAVELLINGVENDORS

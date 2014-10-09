@@ -253,8 +253,6 @@ void G_InitGame( int levelTime, int randomSeed, int restart ) {
 
 	BG_InitAnimsets(); //clear it out
 
-	B_InitAlloc(); //make sure everything is clean
-
 	trap->SV_RegisterSharedMemory( gSharedBuffer.raw );
 
 	//Load external vehicle data
@@ -585,8 +583,6 @@ void G_ShutdownGame( int restart ) {
 	if ( trap->Cvar_VariableIntegerValue( "bot_enable" ) ) {
 		BotAIShutdown( restart );
 	}
-
-	B_CleanupAlloc(); //clean up all allocations made with B_Alloc
 }
 
 /*

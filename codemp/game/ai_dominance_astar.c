@@ -20,7 +20,7 @@
 // Disable stupid warnings...
 #pragma warning( disable : 4710 )
 
-#include "ai_main.h"
+#include "ai_dominance_main.h"
 
 #ifdef __DOMINANCE_AI__
 

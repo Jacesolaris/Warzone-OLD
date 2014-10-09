@@ -12,9 +12,10 @@ endif(WIN32)
 set(MPGameDefines ${MPSharedDefines} "_GAME" )
 set(MPGameGameFiles
 	"${MPDir}/game/ai_dominance.c"
+	"${MPDir}/game/ai_dominance.h"
 	"${MPDir}/game/ai_dominance_astar.c"
-	"${MPDir}/game/ai_util.c"
-	"${MPDir}/game/ai_wpnav.c"
+	"${MPDir}/game/ai_dominance_main.h"
+	"${MPDir}/game/ai_dominance_wpnav.c"
 	"${MPDir}/game/bg_g2_utils.c"
 	"${MPDir}/game/bg_misc.c"
 	"${MPDir}/game/bg_panimate.c"
@@ -99,8 +100,6 @@ set(MPGameGameFiles
 	"${MPDir}/game/tri_coll_test.c"
 	"${MPDir}/game/w_force.c"
 	"${MPDir}/game/w_saber.c"
-	"${MPDir}/game/ai.h"
-	"${MPDir}/game/ai_main.h"
 	"${MPDir}/game/anims.h"
 	"${MPDir}/game/b_local.h"
 	"${MPDir}/game/b_public.h"

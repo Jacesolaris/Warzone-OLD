@@ -11,7 +11,7 @@
 #include "botlib/be_ai_move.h"
 #include "botlib/be_ai_weap.h"
 //
-#include "ai_main.h"
+#include "ai_dominance_main.h"
 #include "w_saber.h"
 //
 #include "chars.h"
@@ -1608,7 +1608,7 @@ BotAISetupClient
 int BotAISetupClient(int client, struct bot_settings_s *settings, qboolean restart) {
 	bot_state_t *bs;
 
-	if (!botstates[client]) botstates[client] = (bot_state_t *) B_Alloc(sizeof(bot_state_t)); //G_Alloc(sizeof(bot_state_t));
+	if (!botstates[client]) botstates[client] = (bot_state_t *) G_Alloc(sizeof(bot_state_t));
 																			  //rww - G_Alloc bad! B_Alloc good.
 
 	memset(botstates[client], 0, sizeof(bot_state_t));
@@ -1641,8 +1641,6 @@ int BotAISetupClient(int client, struct bot_settings_s *settings, qboolean resta
 	bs->botWeaponWeights[WP_DET_PACK] = 0;
 	bs->botWeaponWeights[WP_MELEE] = 1;
 
-	BotUtilizePersonality(bs);
-
 	if (level.gametype == GT_DUEL || level.gametype == GT_POWERDUEL)
 	{
 		bs->botWeaponWeights[WP_SABER] = 13;
@@ -1663,11 +1661,6 @@ int BotAISetupClient(int client, struct bot_settings_s *settings, qboolean resta
 
 	//NOTE: reschedule the bot thinking
 	BotScheduleBotThink();
-
-	if (PlayersInGame())
-	{ //don't talk to yourself
-		BotDoChat(bs, "GeneralGreetings", 0);
-	}
 
 	return qtrue;
 }

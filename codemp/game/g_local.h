@@ -1605,9 +1605,6 @@ void	BotOrder		( gentity_t *ent, int clientnum, int ordernum);
 int		InFieldOfVision	( vec3_t viewangles, float fov, vec3_t angles);
 
 // ai_util.c
-void B_InitAlloc(void);
-void B_CleanupAlloc(void);
-
 int BotAISetup( int restart );
 int BotAIShutdown( int restart );
 int BotAILoadMap( int restart );

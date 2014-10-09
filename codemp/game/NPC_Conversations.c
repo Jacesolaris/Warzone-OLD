@@ -1,5 +1,5 @@
 #include "g_local.h"
-#include "ai_main.h"
+#include "ai_dominance_main.h"
 #include "g_nav.h"
 #include "anims.h"
 #include "w_saber.h"

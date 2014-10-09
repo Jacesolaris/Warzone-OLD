@@ -1,7 +1,7 @@
 #include "g_local.h"
 #include "qcommon/q_shared.h"
 #include "botlib/botlib.h"
-#include "ai_main.h"
+#include "ai_dominance_main.h"
 
 // Disable stupid warnings...
 #pragma warning( disable : 4996 )
@@ -42,7 +42,7 @@ void CreateNewWP_FromAWPNode(int index, vec3_t origin, int flags, int weight, in
 
 	if (!gWPArray[gWPNum])
 	{
-		gWPArray[gWPNum] = (wpobject_t *)B_Alloc(sizeof(wpobject_t));
+		gWPArray[gWPNum] = (wpobject_t *)G_Alloc(sizeof(wpobject_t));
 	}
 
 	if (!gWPArray[gWPNum])

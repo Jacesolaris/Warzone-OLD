@@ -5,7 +5,7 @@
 #include "anims.h"
 #include "say.h"
 #include "icarus/Q3_Interface.h"
-#include "ai_main.h"
+#include "ai_dominance_main.h"
 
 #define __NPC_STRAFE__
 //#define __NPC_BBOX_ADJUST__
@@ -3173,6 +3173,59 @@ void NPC_AdjustforStrafe(vec3_t moveDir)
 	//VectorNormalize(moveDir);
 }
 
+qboolean NPC_RoutingSimpleJump ( int wpLast, int wpCurrent )
+{
+	int			link = 0;
+	qboolean	found = qfalse;
+
+	if (wpLast < 0 || wpLast > gWPNum) return qfalse;
+
+	for (link = 0; link < gWPArray[wpLast]->neighbornum; link++)
+	{
+		if (gWPArray[wpLast]->neighbors[link].num == wpCurrent) 
+		{// found it!
+			found = qtrue;
+			break;
+		}
+	}
+
+	if (found)
+	{
+		float apexHeight = gWPArray[wpCurrent]->origin[2];
+		float currentWpDist = DistanceHorizontal(NPCS.NPC->r.currentOrigin, gWPArray[wpCurrent]->origin);
+		float lastWpDist = DistanceHorizontal(NPCS.NPC->r.currentOrigin, gWPArray[wpLast]->origin);
+		float distBetweenWp = DistanceHorizontal(gWPArray[wpCurrent]->origin, gWPArray[wpLast]->origin);
+
+		if (gWPArray[wpLast]->origin[2] > apexHeight) apexHeight = gWPArray[wpLast]->origin[2];
+		apexHeight += /*96.0*/distBetweenWp / 2.0;
+
+		if ((lastWpDist * 0.5 < currentWpDist || NPCS.NPC->r.currentOrigin[2] < gWPArray[wpCurrent]->origin[2]) 
+			&& currentWpDist > 48 && apexHeight > NPCS.NPC->r.currentOrigin[2])
+		{
+			VectorSubtract( gWPArray[NPCS.NPC->wpCurrent]->origin, NPCS.NPC->r.currentOrigin, NPCS.NPC->movedir );
+			NPCS.NPC->client->ps.velocity[0] = NPCS.NPC->movedir[0] * 2.0;
+			NPCS.NPC->client->ps.velocity[1] = NPCS.NPC->movedir[1] * 2.0;
+			//NPCS.NPC->client->ps.velocity[2] = 100.0;
+			NPCS.ucmd.upmove = 127.0;
+			if (NPCS.NPC->s.eType == ET_PLAYER) trap->EA_Jump(NPCS.NPC->s.number);
+		}
+		else
+		{
+			VectorSubtract( gWPArray[NPCS.NPC->wpCurrent]->origin, NPCS.NPC->r.currentOrigin, NPCS.NPC->movedir );
+			NPCS.NPC->client->ps.velocity[0] = NPCS.NPC->movedir[0] * 2.0;
+			NPCS.NPC->client->ps.velocity[1] = NPCS.NPC->movedir[1] * 2.0;
+			//NPCS.NPC->client->ps.velocity[2] = NPCS.NPC->movedir[2];
+			NPCS.ucmd.upmove = 0;
+		}
+
+		NPC_FacePosition( gWPArray[NPCS.NPC->wpCurrent]->origin, qfalse );
+
+		return qtrue;
+	}
+
+	return qfalse;
+}
+
 qboolean NPC_CheckFallPositionOK(gentity_t *NPC, vec3_t position)
 {
 	trace_t		tr;
@@ -4307,59 +4360,6 @@ qboolean NPC_RoutingJumpWaypoint ( int wpLast, int wpCurrent )
 
 	if (found && gWPArray[wpLast]->neighbors[link].forceJumpTo > 0)
 	{
-		return qtrue;
-	}
-
-	return qfalse;
-}
-
-qboolean NPC_RoutingSimpleJump ( int wpLast, int wpCurrent )
-{
-	int			link = 0;
-	qboolean	found = qfalse;
-
-	if (wpLast < 0 || wpLast > gWPNum) return qfalse;
-
-	for (link = 0; link < gWPArray[wpLast]->neighbornum; link++)
-	{
-		if (gWPArray[wpLast]->neighbors[link].num == wpCurrent) 
-		{// found it!
-			found = qtrue;
-			break;
-		}
-	}
-
-	if (found)
-	{
-		float apexHeight = gWPArray[wpCurrent]->origin[2];
-		float currentWpDist = DistanceHorizontal(NPCS.NPC->r.currentOrigin, gWPArray[wpCurrent]->origin);
-		float lastWpDist = DistanceHorizontal(NPCS.NPC->r.currentOrigin, gWPArray[wpLast]->origin);
-		float distBetweenWp = DistanceHorizontal(gWPArray[wpCurrent]->origin, gWPArray[wpLast]->origin);
-
-		if (gWPArray[wpLast]->origin[2] > apexHeight) apexHeight = gWPArray[wpLast]->origin[2];
-		apexHeight += /*96.0*/distBetweenWp / 2.0;
-
-		if ((lastWpDist * 0.5 < currentWpDist || NPCS.NPC->r.currentOrigin[2] < gWPArray[wpCurrent]->origin[2]) 
-			&& currentWpDist > 48 && apexHeight > NPCS.NPC->r.currentOrigin[2])
-		{
-			VectorSubtract( gWPArray[NPCS.NPC->wpCurrent]->origin, NPCS.NPC->r.currentOrigin, NPCS.NPC->movedir );
-			NPCS.NPC->client->ps.velocity[0] = NPCS.NPC->movedir[0] * 2.0;
-			NPCS.NPC->client->ps.velocity[1] = NPCS.NPC->movedir[1] * 2.0;
-			//NPCS.NPC->client->ps.velocity[2] = 100.0;
-			NPCS.ucmd.upmove = 127.0;
-			if (NPCS.NPC->s.eType == ET_PLAYER) trap->EA_Jump(NPCS.NPC->s.number);
-		}
-		else
-		{
-			VectorSubtract( gWPArray[NPCS.NPC->wpCurrent]->origin, NPCS.NPC->r.currentOrigin, NPCS.NPC->movedir );
-			NPCS.NPC->client->ps.velocity[0] = NPCS.NPC->movedir[0] * 2.0;
-			NPCS.NPC->client->ps.velocity[1] = NPCS.NPC->movedir[1] * 2.0;
-			//NPCS.NPC->client->ps.velocity[2] = NPCS.NPC->movedir[2];
-			NPCS.ucmd.upmove = 0;
-		}
-
-		NPC_FacePosition( gWPArray[NPCS.NPC->wpCurrent]->origin, qfalse );
-
 		return qtrue;
 	}
 

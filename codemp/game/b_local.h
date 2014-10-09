@@ -7,7 +7,7 @@
 #include "b_public.h"
 #include "say.h"
 
-#include "ai.h"
+#include "ai_dominance.h"
 
 #define	AI_TIMERS 0//turn on to see print-outs of AI/nav timing
 //

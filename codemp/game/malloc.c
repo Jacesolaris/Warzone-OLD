@@ -1,3 +1,12 @@
+#include "..\game\g_local.h"
+#if defined (QAGAME) || defined (CGAMEDLL) || defined(_GAME)
+//#define Com_Printf2(x, ...) trap->Print("%s(%u): " x "\n", __FILE__, __LINE__, ##__VA_ARGS__)
+#define Com_Printf2(x, ...) trap->Print( x, ##__VA_ARGS__)
+#else
+//#define Com_Printf2(x, ...) ri->Printf(PRINT_ALL, x, ##__VA_ARGS__)
+#define Com_Printf2(x, ...) NULL
+#endif
+
 /*
   This is a version (aka dlmalloc) of malloc/free/realloc written by
   Doug Lea and released to the public domain.  Use, modify, and
@@ -1587,12 +1596,12 @@ static void checkZones(unsigned char *p, int bytes)
   int i;
   for (i=0; i<ZONE_SIZE; i++) {
     if (p[bytes - 1 - i] != 0xAA) {
-      fprintf(stderr, "trashed %d bytes\n", ZONE_SIZE-i);
+      Com_Printf2("trashed %d bytes\n", ZONE_SIZE-i);
       assert(!"right allocated zone trashed");
     }
 
     if (p[sizeof(size_t) + i] != 0xAA) {
-      fprintf(stderr, "trashed %d bytes\n", ZONE_SIZE-i);
+      Com_Printf2("trashed %d bytes\n", ZONE_SIZE-i);
       assert(!"left allocated zone trashed");
     }
   }
@@ -1657,7 +1666,7 @@ Void_t* public_rEALLOc(Void_t* m, size_t bytes) {
       // don't deallocate
 
       #ifdef TRACE_MALLOC_CALLS
-        fprintf(stderr, "realloc(%p, %d) (prevSize=%d) yielded %p\n",
+        Com_Printf2("realloc(%p, %d) (prevSize=%d) yielded %p\n",
                         m, bytes, prevSize, newMem);
       #endif
 
@@ -3361,9 +3370,9 @@ Void_t* mALLOc(size_t bytes)
 
   /* sm: my stuff */
   #ifdef TRACE_MALLOC_CALLS
-    fprintf(stderr, "malloc(%d) ", bytes);
+    Com_Printf2("malloc(%d) ", bytes);
     #define RETURN(val)             \
-      fprintf(stderr, "yielded %p\n", val);  \
+      Com_Printf2("yielded %p\n", val);  \
       return val
   #else
     #define RETURN(val) return val
@@ -3744,7 +3753,7 @@ void fREe(mem) Void_t* mem;
 
   /* sm: my stuff */
   #ifdef TRACE_MALLOC_CALLS
-  fprintf(stderr, "free(%p)\n", mem);
+  Com_Printf2("free(%p)\n", mem);
   #endif
   av->numFreeCalls++;
 
@@ -4735,28 +4744,28 @@ void mSTATs()
   {
     unsigned long free, reserved, committed;
     vminfo (&free, &reserved, &committed);
-    fprintf(stderr, "free bytes       = %10lu\n",
+    Com_Printf2("free bytes       = %10lu\n",
             free);
-    fprintf(stderr, "reserved bytes   = %10lu\n", 
+    Com_Printf2("reserved bytes   = %10lu\n", 
             reserved);
-    fprintf(stderr, "committed bytes  = %10lu\n", 
+    Com_Printf2("committed bytes  = %10lu\n", 
             committed);
   }
 #endif
 
 
-  fprintf(stderr, "max system bytes = %10lu\n",
+  Com_Printf2("max system bytes = %10lu\n",
           (unsigned long)(mi.usmblks));
-  fprintf(stderr, "system bytes     = %10lu\n",
+  Com_Printf2("system bytes     = %10lu\n",
           (unsigned long)(mi.arena + mi.hblkhd));
-  fprintf(stderr, "in use bytes     = %10lu\n",
+  Com_Printf2("in use bytes     = %10lu\n",
           (unsigned long)(mi.uordblks + mi.hblkhd));
 
   /* sm: my stats */
   {
     mstate av = get_malloc_state();
-    fprintf(stderr, "total malloc calls = %u\n", av->numMallocCalls);
-    fprintf(stderr, "total free calls = %u\n", av->numFreeCalls);
+    Com_Printf2("total malloc calls = %u\n", av->numMallocCalls);
+    Com_Printf2("total free calls = %u\n", av->numFreeCalls);
   }
 
 
@@ -4764,9 +4773,9 @@ void mSTATs()
   {
     unsigned long kernel, user;
     if (cpuinfo (TRUE, &kernel, &user)) {
-      fprintf(stderr, "kernel ms        = %10lu\n",
+      Com_Printf2("kernel ms        = %10lu\n",
               kernel);
-      fprintf(stderr, "user ms          = %10lu\n",
+      Com_Printf2("user ms          = %10lu\n",
               user);
     }
   }

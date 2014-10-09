@@ -187,6 +187,7 @@ void RE_AddPolyToScene( qhandle_t hShader, int numVerts, const polyVert_t *verts
 
 //=================================================================================
 
+//#define __PVS_CULL__ // UQ1: Testing...
 
 /*
 =====================
@@ -216,6 +217,16 @@ void RE_AddRefEntityToScene( const refEntity_t *ent ) {
 		ri->Error( ERR_DROP, "RE_AddRefEntityToScene: bad reType %i", ent->reType );
 	}
 
+#ifdef __PVS_CULL__
+	{
+		byte mask;
+
+		if (!R_inPVS( tr.refdef.vieworg, ent->origin, &mask )) {
+			return;
+		}
+	}
+#endif //__PVS_CULL__
+
 	backEndData->entities[r_numentities].e = *ent;
 	backEndData->entities[r_numentities].lightingCalculated = qfalse;
 
@@ -238,6 +249,18 @@ void RE_AddMiniRefEntityToScene( const miniRefEntity_t *miniRefEnt ) {
 		return;
 	if(!miniRefEnt)
 		return;
+
+#ifdef __PVS_CULL__
+	{
+		byte mask;
+
+		if (!R_inPVS( tr.refdef.vieworg, miniRefEnt->origin, &mask )) {
+			//PVS_CULL_COUNT++;
+			return;
+		}
+	}
+#endif //__PVS_CULL__
+
 	memset(&entity, 0, sizeof(entity));
 	memcpy(&entity, miniRefEnt, sizeof(*miniRefEnt));
 	RE_AddRefEntityToScene(&entity);
