@@ -6353,7 +6353,7 @@ qboolean Account_Login(int clientNum, char *user, char *pass, qboolean skipPass,
 	}
 
 	// Allokerer minne for å lese inn filen
-	fileData = (char*)malloc(length);
+	fileData = (char*)dlmalloc(length);
 
 	trap->FS_Read(fileData, length, fh); // Leser inn fra fil.
 	p = (int*)fileData;					// pointer får å jobbe på dataen.
@@ -6361,7 +6361,7 @@ qboolean Account_Login(int clientNum, char *user, char *pass, qboolean skipPass,
 	if (*p != ACCOUNT_VERSION)			// Check save version. Currently no backwards compatability.
 	{
 		trap->SendServerCommand(ent - g_entities, va("print \"Savefile is version %i, needs to be version %i.\n\"", *p, ACCOUNT_VERSION));
-		free(fileData);
+		dlfree(fileData);
 		trap->FS_Close(fh);
 		return qfalse;
 	}
@@ -6384,7 +6384,7 @@ qboolean Account_Login(int clientNum, char *user, char *pass, qboolean skipPass,
 	if (storeAccount)					// We are using the login function to read the account information into an additional storage container.
 		*storeAccount = *account;
 
-	free(fileData);						// Frigi minne, vi vil ikke ha memory leaks
+	dlfree(fileData);						// Frigi minne, vi vil ikke ha memory leaks
 	trap->FS_Close(fh);				// Husk å lukk filer. Ellers vil spillet crashe, når man har åpnet 64 filer.
 
 	if (result)
@@ -6414,7 +6414,7 @@ qboolean Account_Register(int clientNum, char *user, char *pass)
 	if (!ent || !ent->inuse)		// Sjekker om ent er NULL, eller om entity'n ikke er i bruk
 		return qfalse;			// Login failed	
 
-	fileData = (char*)malloc(sizeof(account_t)+sizeof(int));
+	fileData = (char*)dlmalloc(sizeof(account_t)+sizeof(int));
 	p = (int*)fileData;
 	*p = ACCOUNT_VERSION; // Version number for the save file. When you change the system, you will need to change this value.
 	p++;
@@ -6425,6 +6425,7 @@ qboolean Account_Register(int clientNum, char *user, char *pass)
 
 	if (!fh)			// Noe feil skjedde med filen, fant ikke brukeren
 	{
+		dlfree(fileData);
 		trap->SendServerCommand(ent - g_entities, va("print \"Couldn't create user: %s\n\"", user));
 		//	trap_FS_FCloseFile(fh);
 		return qfalse;
@@ -6451,7 +6452,7 @@ qboolean Account_Register(int clientNum, char *user, char *pass)
 
 	//trap_FS_Write(fileData, length, fh);	// Skriv informasjon til fil.
 	trap->FS_Write(fileData, sizeof(account_t)+sizeof(int), fh);
-	free(fileData); // Free memory to avoid memory leak
+	dlfree(fileData); // Free memory to avoid memory leak
 
 	trap->FS_Close(fh);
 	return qtrue;
@@ -6473,18 +6474,22 @@ qboolean UpdateAccount(account_t *account, gentity_t *ent)
 	fileHandle_t fh;
 	account_t *p_account;
 
-	fileData = (char*)malloc(sizeof(account_t)+sizeof(int));
+	fileData = (char*)dlmalloc(sizeof(account_t)+sizeof(int));
 	p = (int*)fileData;
 	*p = ACCOUNT_VERSION; // Version number for the save file. When you change the system, you will need to change this value.
 	p++;
 
 	if (!hasAccount(account))
+	{
+		dlfree(fileData);
 		return qfalse;
+	}
 
 	trap->FS_Open(va("accounts/%s.acc", account->username), &fh, FS_WRITE);
 
 	if (!fh)
 	{
+		dlfree(fileData);
 		trap->FS_Close(fh);
 		return qfalse;
 	}
@@ -6496,12 +6501,11 @@ qboolean UpdateAccount(account_t *account, gentity_t *ent)
 
 
 	trap->FS_Write(fileData, sizeof(account_t)+sizeof(int), fh);
-	free(fileData); // Free memory to avoid memory leak
+	dlfree(fileData); // Free memory to avoid memory leak
 	trap->FS_Close(fh);
 
 	return qtrue;
 }
-
 
 static const size_t numCommands = ARRAY_LEN( commands );
 

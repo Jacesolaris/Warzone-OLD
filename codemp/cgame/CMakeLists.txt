@@ -80,6 +80,8 @@ set(MPCGameCgameFiles
 	"${MPDir}/cgame/cg_public.h"
 	"${MPDir}/cgame/cg_xcvar.h"
 	"${MPDir}/cgame/fx_local.h"
+	"${MPDir}/game/ckheap.h"
+	"${MPDir}/game/malloc.c"
 	)
 source_group("cgame" FILES ${MPCGameCgameFiles})
 set(MPCGameFiles ${MPCGameFiles} ${MPCGameCgameFiles})

@@ -3350,6 +3350,7 @@ Ghoul2 Insert Start
 		}
 	}
 
+#if 0
 #ifdef __MMO__
 	// UQ1: Only process objects in our FOV...
 	if (cent->currentState.eType != ET_MOVER
@@ -3379,6 +3380,7 @@ Ghoul2 Insert Start
 		}*/
 	}
 #endif //__MMO__
+#endif //0
 
 	// add automatic effects
 	CG_EntityEffects( cent ); // UQ1: Moved after sounds, so we don't cull ambient sounds...

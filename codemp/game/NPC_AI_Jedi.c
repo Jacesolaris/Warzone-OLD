@@ -3252,22 +3252,22 @@ evasionType_t Jedi_SaberBlockGo( gentity_t *self, usercmd_t *cmd, vec3_t pHitloc
 		if ( !saberBusy )
 		{
 			// UQ1: Fall back to using the block button like players...
-			if (NPCS.NPC->blockToggleTime > level.time)
+			if (self->blockToggleTime > level.time)
 			{// Toggled less then a second ago.. Ignore...
 
 			}
-			else if (!NPCS.NPC->client->ps.powerups[PW_BLOCK])
+			else if (!self->client->ps.powerups[PW_BLOCK])
 			{// BLOCK pressed, but PW_BLOCK not active. Turn it ON...
-				NPCS.NPC->client->ps.powerups[PW_BLOCK] = INT_MAX; // This *could* be a time in the future instead if you want block to last X milliseconds...
-				NPCS.NPC->blockToggleTime = level.time + 250; // 250 ms between toggles...
+				self->client->ps.powerups[PW_BLOCK] = INT_MAX; // This *could* be a time in the future instead if you want block to last X milliseconds...
+				self->blockToggleTime = level.time + 250; // 250 ms between toggles...
 
-				if (!(NPCS.ucmd.buttons & BUTTON_WALKING))
-					NPCS.ucmd.buttons |= BUTTON_WALKING;
+				//if (!(NPCS.ucmd.buttons & BUTTON_WALKING))
+				//	NPCS.ucmd.buttons |= BUTTON_WALKING;
 			}
 			else
 			{// BLOCK pressed, and PW_BLOCK is active. Turn it OFF...
-				NPCS.NPC->client->ps.powerups[PW_BLOCK] = 0;
-				NPCS.NPC->blockToggleTime = level.time + 250; // 250 ms between toggles...
+				self->client->ps.powerups[PW_BLOCK] = 0;
+				self->blockToggleTime = level.time + 250; // 250 ms between toggles...
 			}
 		}
 #endif //__NPC_USE_SABER_BLOCKING__
@@ -3934,7 +3934,7 @@ gentity_t *Jedi_FindEnemyInCone( gentity_t *self, gentity_t *fallback, float min
 		{//dead
 			continue;
 		}
-		if ( !NPC_IsValidNPCEnemy(check) )
+		if ( !NPC_ValidEnemy(check) )
 		{// civilian
 			continue;
 		}

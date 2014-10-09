@@ -1604,6 +1604,11 @@ void G_CheckMinimumNpcs( void ) {
 				spawnPoint = *SelectCTFSpawnPoint ( SPAWN_TEAM, 0, npc->s.origin, npc->s.angles, qtrue );
 				VectorCopy(spawnPoint.s.origin, npc->s.origin);
 				npc->s.origin[2]+=32; // Drop down...
+
+				if (SPAWN_TEAM == TEAM_BLUE)
+					trap->Print(va("[%i/%i] Spawning REBEL %s.\n", botplayers+1, minplayers, npc->NPC_type));
+				else
+					trap->Print(va("[%i/%i] Spawning IMPERIAL %s.\n", botplayers+1, minplayers, npc->NPC_type));
 			}
 			else
 			{

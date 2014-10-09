@@ -3578,7 +3578,7 @@ Load_NPC_Names ( void )
 		return;
 	}
 
-	if ( (buf = (char *)malloc( len + 1)) == 0 )
+	if ( (buf = (char *)dlmalloc( len + 1)) == 0 )
 	{			//alloc memory for buffer
 		trap->FS_Close( f );
 		return;
@@ -3625,7 +3625,7 @@ Load_NPC_Names ( void )
 		t = s;
 	}
 
-	free(buf);
+	dlfree(buf);
 	NUM_HUMAN_NAMES--;
 }
 

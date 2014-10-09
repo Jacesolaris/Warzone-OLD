@@ -796,7 +796,7 @@ char *G_NewString_Safe( const char *string )
 	int i=0, len=0;
 
 	len = strlen( string )+1;
-	new_p = newb = (char *)malloc( len );
+	new_p = newb = (char *)dlmalloc( len );
 
 	if ( !new_p )
 		return NULL;
@@ -1417,8 +1417,15 @@ void SP_worldspawn( void )
 
 	//I want to "cull" entities out of net sends to clients to reduce
 	//net traffic on our larger open maps -rww
+#ifdef __MMO__
+	// UQ1: In MMO mode, we ALWAYS cull to less then 3072.0...
+	G_SpawnFloat("distanceCull", "3072.0", &g_cullDistance);
+	if (g_cullDistance > 3072.0) g_cullDistance = 3072.0;
+	trap->SetServerCull(g_cullDistance);
+#else //!__MMO__
 	G_SpawnFloat("distanceCull", "6000.0", &g_cullDistance);
 	trap->SetServerCull(g_cullDistance);
+#endif //__MMO__
 
 	G_SpawnString( "classname", "", &text );
 	if ( Q_stricmp( text, "worldspawn" ) ) {

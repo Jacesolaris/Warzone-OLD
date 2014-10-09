@@ -3071,9 +3071,11 @@ qboolean NPC_NPCBlockingPath()
 	int			i, num;
 	int			touch[MAX_GENTITIES];
 	vec3_t		mins, maxs;
-	vec3_t		range = { 128, 128, 128 };
+	vec3_t		range = { 64, 64, 64 };
 	int			BEST_METHOD = AVOIDANCE_NONE;
 	gentity_t	*NPC = NPCS.NPC;
+
+	if (NPC->bot_strafe_left_timer > level.time) return qtrue;
 
 	//VectorSubtract( gWPArray[NPC->wpCurrent]->origin, NPC->r.currentOrigin, NPC->movedir );
 	//AngleVectors( NPC->move_vector, NPC->movedir, NULL, NULL );
@@ -3093,9 +3095,9 @@ qboolean NPC_NPCBlockingPath()
 		//if (Distance(ent->r.currentOrigin, NPC->r.currentOrigin) > 64) continue;
 
 		//if (InFOV3( ent->r.currentOrigin, NPC->r.currentOrigin, NPC->move_vector, 90, 120 ))
-		if (/*trap->InPVS(NPC->r.currentOrigin, ent->r.currentOrigin) &&*/ InFOV2(ent->r.currentOrigin, NPC, 90, 180))
+		if (/*trap->InPVS(NPC->r.currentOrigin, ent->r.currentOrigin) &&*/ InFOV2(ent->r.currentOrigin, NPC, 60, 180))
 		{
-			NPC->bot_strafe_left_timer = level.time + 200;
+			NPC->bot_strafe_left_timer = level.time + 1000;
 			return qtrue;
 		}
 	}
@@ -3135,8 +3137,7 @@ void NPC_AdjustforStrafe(vec3_t moveDir)
 	vec3_t right, angles;
 	gentity_t	*NPC = NPCS.NPC;
 
-	if (!(NPC->bot_strafe_right_timer > level.time)
-		&& !(NPC->bot_strafe_left_timer > level.time))
+	if (NPC->bot_strafe_right_timer < level.time && NPC->bot_strafe_left_timer < level.time)
 		return;
 
 	if (NPC->bot_strafe_right_timer > level.time + 2000)
@@ -3169,7 +3170,7 @@ void NPC_AdjustforStrafe(vec3_t moveDir)
 
 	//We assume that moveDir has been normalized before this function.
 	VectorAdd(moveDir, right, moveDir);
-	VectorNormalize(moveDir);
+	//VectorNormalize(moveDir);
 }
 
 qboolean NPC_CheckFallPositionOK(gentity_t *NPC, vec3_t position)
@@ -3288,15 +3289,15 @@ qboolean UQ1_UcmdMoveForDir ( gentity_t *self, usercmd_t *cmd, vec3_t dir, qbool
 	float	fDot, rDot;
 
 	AngleVectors( self->r.currentAngles, forward, right, NULL );
+	
+#ifdef __NPC_STRAFE__
+	if (self->wpCurrent >= 0) NPC_NPCBlockingPath();
+	NPC_AdjustforStrafe(right);
+	//if (self->bot_strafe_left_timer > level.time) cmd->rightmove -= 127.0;
+#endif //__NPC_STRAFE__
 
 	dir[2] = 0;
 	VectorNormalize( dir );
-
-#ifdef __NPC_STRAFE__
-	//if (self->wpCurrent >= 0) NPC_NPCBlockingPath();
-	//NPC_AdjustforStrafe(dir);
-	//if (self->bot_strafe_left_timer > level.time) cmd->rightmove -= 127.0;
-#endif //__NPC_STRAFE__
 
 	if (NPC_CheckFall(self, dir))
 	{
@@ -4484,14 +4485,14 @@ qboolean NPC_FollowRoutes( void )
 	}
 #endif
 
-	if (NPC->wpSeenTime >= level.time - 5000
+	/*if (NPC->wpSeenTime >= level.time - 5000
 		&& NPC->wpCurrent >= 0 
 		&& NPC->wpCurrent < gWPNum
 		&& wpDist <= 512)
 	{
 
 	}
-	else if ( NPC->wpCurrent < 0 || NPC->wpCurrent >= gWPNum 
+	else*/ if ( NPC->wpCurrent < 0 || NPC->wpCurrent >= gWPNum 
 		|| NPC->longTermGoal < 0 || NPC->longTermGoal >= gWPNum 
 		|| wpDist > 512
 		|| NPC->wpSeenTime < level.time - 5000
@@ -4793,14 +4794,14 @@ qboolean NPC_FollowEnemyRoute( void )
 	}
 #endif
 
-	if (NPC->wpSeenTime >= level.time - 5000
+	/*if (NPC->wpSeenTime >= level.time - 5000
 		&& NPC->wpCurrent >= 0 
 		&& NPC->wpCurrent < gWPNum
 		&& wpDist <= 512)
 	{
 
 	}
-	else if ( NPC->wpCurrent < 0 || NPC->wpCurrent >= gWPNum 
+	else*/ if ( NPC->wpCurrent < 0 || NPC->wpCurrent >= gWPNum 
 		|| NPC->longTermGoal < 0 || NPC->longTermGoal >= gWPNum 
 		|| wpDist > 512
 		|| NPC->wpSeenTime < level.time - 5000
@@ -5114,7 +5115,7 @@ void NPC_Think ( gentity_t *self)//, int msec )
 			if (g_gametype.integer >= GT_TEAM) use_pathing = qtrue;
 
 			if (self->enemy 
-				&& (!NPC_IsValidNPCEnemy(self->enemy) || Distance(self->r.currentOrigin, self->enemy->r.currentOrigin) > 2048.0))
+				&& (!NPC_ValidEnemy(self->enemy) || Distance(self->r.currentOrigin, self->enemy->r.currentOrigin) > 2048.0))
 			{// If NPC Bot's enemy is invalid (eg: a dead NPC) or too far away, clear it!
 				G_ClearEnemy(self);
 			}

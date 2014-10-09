@@ -5968,6 +5968,7 @@ void NPC_SetLookTarget(gentity_t *self, int entNum, int clearTime);
 int BlockedforQuad(int quad);
 int InvertQuad(int quad);
 //[/SaberSys]
+
 void WP_SaberStartMissileBlockCheck(gentity_t *self, usercmd_t *ucmd)
 {
 	//[SaberSys]
@@ -6390,9 +6391,9 @@ void WP_SaberStartMissileBlockCheck(gentity_t *self, usercmd_t *ucmd)
 	{
 		if (self->NPC /*&& !G_ControlledByPlayer( self )*/)
 		{
-			if (Jedi_WaitingAmbush(self))
+			if (Jedi_WaitingAmbush(self)) // UQ1: Calling Jedi_ functions here is really bad. Most require NPCS.NPC to be setup - it is not here!!!
 			{
-				Jedi_Ambush(self);
+				Jedi_Ambush(self); // UQ1: Calling Jedi_ functions here is really bad. Most require NPCS.NPC to be setup - it is not here!!!
 			}
 			if (self->client->NPC_class == CLASS_BOBAFETT
 				&& (self->client->ps.eFlags2&EF2_FLYING)//moveType == MT_FLYSWIM
@@ -6409,7 +6410,7 @@ void WP_SaberStartMissileBlockCheck(gentity_t *self, usercmd_t *ucmd)
 					self->client->ps.fd.forcePowerDebounce[FP_SABER_DEFENSE] = level.time + Q_irand(1000, 2000);
 				}
 			}
-			else if (Jedi_SaberBlockGo(self, &self->NPC->last_ucmd, NULL, NULL, incoming, 0.0f) != EVASION_NONE)
+			else if (Jedi_SaberBlockGo(self, &self->NPC->last_ucmd, NULL, NULL, incoming, 0.0f) != EVASION_NONE) // UQ1: Calling Jedi_ functions here is really bad. Most require NPCS.NPC to be setup - it is not here!!!
 			{//make sure to turn on your saber if it's not on
 				if (self->client->NPC_class != CLASS_BOBAFETT)
 				{

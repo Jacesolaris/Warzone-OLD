@@ -922,7 +922,7 @@ void SV_Init (void) {
 	sv_privateClients = Cvar_Get ("sv_privateClients", "0", CVAR_SERVERINFO);
 	Cvar_CheckRange( sv_privateClients, 0, MAX_CLIENTS, qtrue );
 	sv_hostname = Cvar_Get ("sv_hostname", "*Jedi*", CVAR_SERVERINFO | CVAR_ARCHIVE );
-	sv_maxclients = Cvar_Get ("sv_maxclients", "8", CVAR_SERVERINFO | CVAR_LATCH);
+	sv_maxclients = Cvar_Get ("sv_maxclients", "128", CVAR_SERVERINFO | CVAR_LATCH);
 	sv_maxRate = Cvar_Get ("sv_maxRate", "0", CVAR_ARCHIVE | CVAR_SERVERINFO );
 	sv_minPing = Cvar_Get ("sv_minPing", "0", CVAR_ARCHIVE | CVAR_SERVERINFO );
 	sv_maxPing = Cvar_Get ("sv_maxPing", "0", CVAR_ARCHIVE | CVAR_SERVERINFO );
@@ -939,9 +939,15 @@ void SV_Init (void) {
 	// server vars
 	sv_rconPassword = Cvar_Get ("rconPassword", "", CVAR_TEMP );
 	sv_privatePassword = Cvar_Get ("sv_privatePassword", "", CVAR_TEMP );
+#ifdef __MMO__
+	sv_snapsMin = Cvar_Get ("sv_snapsMin", "5", CVAR_ARCHIVE ); // 1 <=> sv_snapsMax
+	sv_snapsMax = Cvar_Get ("sv_snapsMax", "20", CVAR_ARCHIVE ); // sv_snapsMin <=> sv_fps
+	sv_fps = Cvar_Get ("sv_fps", "20", CVAR_SERVERINFO );
+#else //!__MMO__
 	sv_snapsMin = Cvar_Get ("sv_snapsMin", "10", CVAR_ARCHIVE ); // 1 <=> sv_snapsMax
 	sv_snapsMax = Cvar_Get ("sv_snapsMax", "40", CVAR_ARCHIVE ); // sv_snapsMin <=> sv_fps
 	sv_fps = Cvar_Get ("sv_fps", "40", CVAR_SERVERINFO );
+#endif //__MMO__
 	sv_timeout = Cvar_Get ("sv_timeout", "200", CVAR_TEMP );
 	sv_zombietime = Cvar_Get ("sv_zombietime", "2", CVAR_TEMP );
 	Cvar_Get ("nextmap", "", CVAR_TEMP );

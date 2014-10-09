@@ -54,6 +54,8 @@ set(MPRend2Files
 	"${MPDir}/rd-rend2/tr_surface.cpp"
 	"${MPDir}/rd-rend2/tr_vbo.cpp"
 	"${MPDir}/rd-rend2/tr_world.cpp"
+	"${MPDir}/game/ckheap.h"
+	"${MPDir}/game/malloc.c"
 	)
 source_group("renderer" FILES ${MPRend2Files})
 

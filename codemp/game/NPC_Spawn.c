@@ -129,7 +129,7 @@ Load_NPC_Names ( void )
 		return;
 	}
 
-	if ( (buf = (char *)malloc( len + 1)) == 0 )
+	if ( (buf = (char *)dlmalloc( len + 1)) == 0 )
 	{			//alloc memory for buffer
 		trap->FS_Close( f );
 		return;
@@ -178,7 +178,7 @@ Load_NPC_Names ( void )
 
 	NUM_HUMAN_NAMES--;
 
-	free(buf);
+	dlfree(buf);
 	trap->Print( "^4*** ^3%s^4: ^5There are ^7%i^5 NPC names in the database.\n", GAME_VERSION, NUM_HUMAN_NAMES );
 }
 
@@ -1669,6 +1669,7 @@ gentity_t *NPC_Spawn_Do( gentity_t *ent )
 	//newent->client = (gclient_s *)G_Alloc (sizeof(gclient_s));
 	G_CreateFakeClient(newent->s.number, &newent->client);
 
+#if 0
 	newent->NPC->tempGoal = G_Spawn();
 
 	if ( newent->NPC->tempGoal == NULL )
@@ -1681,6 +1682,7 @@ gentity_t *NPC_Spawn_Do( gentity_t *ent )
 	newent->NPC->tempGoal->classname = "NPC_goal";
 	newent->NPC->tempGoal->parent = newent;
 	newent->NPC->tempGoal->r.svFlags |= SVF_NOCLIENT;
+#endif //0
 
 	if ( newent->client == NULL )
 	{

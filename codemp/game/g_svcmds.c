@@ -450,6 +450,27 @@ void Svcmd_Say_f( void ) {
 	trap->SendServerCommand( -1, va("print \"server: %s\n\"", text ) );
 }
 
+void DL_MemStats( void )
+{
+	/*
+	#define public_cALLOc    dlcalloc
+#define public_fREe      dlfree
+#define public_cFREe     dlcfree
+#define public_mALLOc    dlmalloc
+#define public_mEMALIGn  dlmemalign
+#define public_rEALLOc   dlrealloc
+#define public_vALLOc    dlvalloc
+#define public_pVALLOc   dlpvalloc
+#define public_mALLINFo  dlmallinfo
+#define public_mALLOPt   dlmallopt
+#define public_mTRIm     dlmalloc_trim
+#define public_mSTATs    dlmalloc_stats
+#define public_mUSABLe   dlmalloc_usable_size
+#define public_iCALLOc   dlindependent_calloc
+#define public_iCOMALLOc dlindependent_comalloc*/
+	dlmalloc_stats();
+}
+
 typedef struct svcmd_s {
 	const char	*name;
 	void		(*func)(void);
@@ -470,6 +491,7 @@ svcmd_t svcmds[] = {
 	{ "botlist",					Svcmd_BotList_f,					qfalse },
 	{ "checkfields",				G_CheckFields,						qfalse },
 	{ "checkspawns",				G_CheckSpawns,						qfalse },
+	{ "dlmemstats",					DL_MemStats,						qfalse },
 	{ "entitylist",					Svcmd_EntityList_f,					qfalse },
 	{ "forceteam",					Svcmd_ForceTeam_f,					qfalse },
 	{ "game_memory",				Svcmd_GameMem_f,					qfalse },

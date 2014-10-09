@@ -358,13 +358,13 @@ int BotDoChat(bot_state_t *bs, char *section, int always)
 
 	bs->chatTeam = 0;
 
-	chatgroup = (char *)malloc(MAX_CHAT_BUFFER_SIZE);
+	chatgroup = (char *)dlmalloc(MAX_CHAT_BUFFER_SIZE);
 
 	rVal = GetValueGroup(gBotChatBuffer[bs->client], section, chatgroup);
 
 	if (!rVal) //the bot has no group defined for the specified chat event
 	{
-		free(chatgroup); //chatgroup
+		dlfree(chatgroup); //chatgroup
 		return 0;
 	}
 
@@ -397,7 +397,7 @@ int BotDoChat(bot_state_t *bs, char *section, int always)
 
 	if (!lines)
 	{
-		free(chatgroup); //chatgroup
+		dlfree(chatgroup); //chatgroup
 		return 0;
 	}
 
@@ -452,7 +452,7 @@ int BotDoChat(bot_state_t *bs, char *section, int always)
 
 	if (strlen(chatgroup) > MAX_CHAT_LINE_SIZE)
 	{
-		free(chatgroup); //chatgroup
+		dlfree(chatgroup); //chatgroup
 		return 0;
 	}
 
@@ -508,7 +508,7 @@ int BotDoChat(bot_state_t *bs, char *section, int always)
 	bs->chatTime_stored = (strlen(bs->currentChat)*45)+Q_irand(1300, 1500);
 	bs->chatTime = level.time + bs->chatTime_stored;
 
-	free(chatgroup); //chatgroup
+	dlfree(chatgroup); //chatgroup
 
 	return 1;
 }
@@ -617,7 +617,7 @@ void BotUtilizePersonality(bot_state_t *bs)
 	int failed;
 	int i;
 	//char buf[131072];
-	char *buf = (char *)malloc(131072);
+	char *buf = (char *)dlmalloc(131072);
 	char *readbuf, *group;
 
 	len = trap->FS_Open(bs->settings.personalityfile, &f, FS_READ);
@@ -627,14 +627,14 @@ void BotUtilizePersonality(bot_state_t *bs)
 	if (!f)
 	{
 		trap->Print(S_COLOR_RED "Error: Specified personality not found\n");
-		free(buf); //buf
+		dlfree(buf); //buf
 		return;
 	}
 
 	if (len >= 131072)
 	{
 		trap->Print(S_COLOR_RED "Personality file exceeds maximum length\n");
-		free(buf); //buf
+		dlfree(buf); //buf
 		return;
 	}
 
@@ -650,8 +650,8 @@ void BotUtilizePersonality(bot_state_t *bs)
 
 	len = rlen;
 
-	readbuf = (char *)malloc(1024);
-	group = (char *)malloc(65536);
+	readbuf = (char *)dlmalloc(1024);
+	group = (char *)dlmalloc(65536);
 
 	if (!GetValueGroup(buf, "GeneralBotInfo", group))
 	{
@@ -859,8 +859,8 @@ void BotUtilizePersonality(bot_state_t *bs)
 		ParseEmotionalAttachments(bs, group);
 	}
 
-	free(buf); //buf
-	free(readbuf); //readbuf
-	free(group); //group
+	dlfree(buf); //buf
+	dlfree(readbuf); //readbuf
+	dlfree(group); //group
 	trap->FS_Close(f);
 }

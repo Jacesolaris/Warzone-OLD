@@ -1177,20 +1177,19 @@ qboolean NPC_ValidEnemy( gentity_t *ent )
 	if ( ent->flags & FL_NOTARGET )
 		return qfalse;
 
-	if (level.gametype < GT_TEAM && (ent->r.svFlags & SVF_BOT)) 
-	{// In non-team games all BotNPCs are enemies to eachother...
-		return qtrue;
-	}
-
 	if ( ent->client && ent->client->sess.sessionTeam == TEAM_SPECTATOR )
 	{//don't go after spectators
 		return qfalse;
+	}
+	else if (level.gametype < GT_TEAM && ent->s.eType == ET_PLAYER) 
+	{// In non-team games all BotNPCs/Players are enemies to eachother...
+		return qtrue;
 	}
 	else if (level.gametype >= GT_TEAM 
 		&& NPCS.NPC
 		&& NPCS.NPC->client
 		&& ent->client 
-		&& (ent->r.svFlags & SVF_BOT)) 
+		 && ent->s.eType == ET_PLAYER) 
 	{// In team games all BotNPCs are enemies to other team...
 		if ( ent->client->sess.sessionTeam == TEAM_BLUE && NPCS.NPC->client->sess.sessionTeam == TEAM_RED )
 		{
@@ -1199,6 +1198,10 @@ qboolean NPC_ValidEnemy( gentity_t *ent )
 		else if ( ent->client->sess.sessionTeam == TEAM_RED && NPCS.NPC->client->sess.sessionTeam == TEAM_BLUE )
 		{
 			return qtrue;
+		}
+		else
+		{
+			return qfalse;
 		}
 	}
 	//Must be an NPC

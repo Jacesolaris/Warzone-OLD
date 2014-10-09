@@ -2916,18 +2916,28 @@ void BG_PlayerStateToEntityStateExtraPolate( playerState_t *ps, entityState_t *s
 	s->number = ps->clientNum;
 
 	s->pos.trType = TR_LINEAR_STOP;
+
 	VectorCopy( ps->origin, s->pos.trBase );
 	if ( snap ) {
 		SnapVector( s->pos.trBase );
 	}
+
 	// set the trDelta for flag direction and linear prediction
 	VectorCopy( ps->velocity, s->pos.trDelta );
+
 	// set the time for linear prediction
-	s->pos.trTime = time;
+	//s->pos.trTime = time;
+#ifdef CGAMEDLL
+	s->pos.trTime = cg.time - 100; // UQ1: NPC think time...
+#else //!CGAMEDLL
+	s->pos.trTime = 0;
+#endif //CGAMEDLL
+
 	// set maximum extra polation time
 	s->pos.trDuration = 50; // 1000 / sv_fps (default = 20)
 
 	s->apos.trType = TR_INTERPOLATE;
+
 	VectorCopy( ps->viewangles, s->apos.trBase );
 	if ( snap ) {
 		SnapVector( s->apos.trBase );
