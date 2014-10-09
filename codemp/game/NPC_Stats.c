@@ -572,44 +572,12 @@ void NPC_PrecacheAnimationCFG( const char *NPC_type )
 extern int NPC_WeaponsForTeam( team_t team, int spawnflags, const char *NPC_type );
 void NPC_PrecacheWeapons( team_t playerTeam, int spawnflags, char *NPCtype )
 {
-	int weapons = NPC_WeaponsForTeam( playerTeam, spawnflags, NPCtype );
 	int curWeap;
 
 	for ( curWeap = WP_SABER; curWeap < WP_NUM_WEAPONS; curWeap++ )
 	{
-		if (weapons & (1 << curWeap))
-		{
-			RegisterItem(BG_FindItemForWeapon((weapon_t)curWeap));
-		}
+		RegisterItem(BG_FindItemForWeapon((weapon_t)curWeap));
 	}
-
-#if 0 //rwwFIXMEFIXME: actually precache weapons here
-	int weapons = NPC_WeaponsForTeam( playerTeam, spawnflags, NPCtype );
-	gitem_t	*item;
-	for ( int curWeap = WP_SABER; curWeap < WP_NUM_WEAPONS; curWeap++ )
-	{
-		if ( (weapons & ( 1 << curWeap )) )
-		{
-			item = FindItemForWeapon( ((weapon_t)(curWeap)) );	//precache the weapon
-			CG_RegisterItemSounds( (item-bg_itemlist) );
-			CG_RegisterItemVisuals( (item-bg_itemlist) );
-			//precache the in-hand/in-world ghoul2 weapon model
-
-			char weaponModel[64];
-
-			strcpy (weaponModel, weaponData[curWeap].weaponMdl);
-			if (char *spot = strstr(weaponModel, ".md3") ) {
-				*spot = 0;
-				spot = strstr(weaponModel, "_w");//i'm using the in view weapon array instead of scanning the item list, so put the _w back on
-				if (!spot) {
-					strcat (weaponModel, "_w");
-				}
-				strcat (weaponModel, ".glm");	//and change to ghoul2
-			}
-			trap->G2API_PrecacheGhoul2Model( weaponModel ); // correct way is item->world_model
-		}
-	}
-#endif
 }
 
 /*
@@ -2599,14 +2567,11 @@ qboolean NPC_ParseParms( const char *NPCName, gentity_t *NPC )
 				{
 					NPC->client->ps.weapon = weap;
 					NPC_ChangeWeapon(weap);
-					NPC->client->ps.stats[STAT_WEAPONS] |= ( 1 << NPC->client->ps.weapon );
-#ifndef __MMO__
-					if ( weap > WP_NONE )
-					{
-					//	RegisterItem( FindItemForWeapon( (weapon_t)(NPC->client->ps.weapon) ) );	//precache the weapon
-						NPC->client->ps.ammo[weaponData[NPC->client->ps.weapon].ammoIndex] = 100;//FIXME: max ammo!
-					}
-#endif //__MMO__
+
+					if (NPC->client->ps.primaryWeapon <= WP_NONE) NPC->client->ps.primaryWeapon = weap;
+					else if (NPC->client->ps.secondaryWeapon <= WP_NONE) NPC->client->ps.secondaryWeapon = weap;
+					else if (NPC->client->ps.temporaryWeapon <= WP_NONE) NPC->client->ps.temporaryWeapon = weap;
+					else trap->Print("WARNING: NPC %s has more then 3 weapons in it's script. Ignoring extras.\n", NPC->NPC_type);
 				}
 				continue;
 			}

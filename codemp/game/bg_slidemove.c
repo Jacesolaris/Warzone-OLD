@@ -15,6 +15,8 @@
 	#include "ui/ui_local.h"
 #endif
 
+extern qboolean BG_HaveWeapon ( const playerState_t *ps, int weapon );
+
 /*
 
 input: origin, velocity, bounds, groundPlane, trace function

@@ -3333,13 +3333,141 @@ int NPC_CheckFallJump(gentity_t *NPC, vec3_t dest, usercmd_t *cmd)
 	return 0;
 }
 
+qboolean UQ_MoveDirClear( int forwardmove, int rightmove, qboolean reset )
+{
+	vec3_t	forward, right, testPos, angles, mins;
+	trace_t	trace;
+	float	fwdDist, rtDist;
+	float	bottom_max = -STEPSIZE*4 - 1;
+
+	if ( !forwardmove && !rightmove )
+	{//not even moving
+		//Com_Printf( "%d skipping walk-cliff check (not moving)\n", level.time );
+		return qtrue;
+	}
+
+	if ( NPCS.ucmd.upmove > 0 || NPCS.NPC->client->ps.fd.forceJumpCharge )
+	{//Going to jump
+		//Com_Printf( "%d skipping walk-cliff check (going to jump)\n", level.time );
+		return qtrue;
+	}
+
+	if ( NPCS.NPC->client->ps.groundEntityNum == ENTITYNUM_NONE )
+	{//in the air
+		//Com_Printf( "%d skipping walk-cliff check (in air)\n", level.time );
+		return qtrue;
+	}
+	/*
+	if ( fabs( AngleDelta( NPC->r.currentAngles[YAW], NPCInfo->desiredYaw ) ) < 5.0 )//!ucmd.angles[YAW] )
+	{//Not turning much, don't do this
+		//NOTE: Should this not happen only if you're not turning AT ALL?
+		//	You could be turning slowly but moving fast, so that would
+		//	still let you walk right off a cliff...
+		//NOTE: Or maybe it is a good idea to ALWAYS do this, regardless
+		//	of whether ot not we're turning?  But why would we be walking
+		//  straight into a wall or off	a cliff unless we really wanted to?
+		return;
+	}
+	*/
+
+	//FIXME: to really do this right, we'd have to actually do a pmove to predict where we're
+	//going to be... maybe this should be a flag and pmove handles it and sets a flag so AI knows
+	//NEXT frame?  Or just incorporate current velocity, runspeed and possibly friction?
+	VectorCopy( NPCS.NPC->r.mins, mins );
+	mins[2] += STEPSIZE;
+	angles[PITCH] = angles[ROLL] = 0;
+	angles[YAW] = NPCS.NPC->client->ps.viewangles[YAW];//Add ucmd.angles[YAW]?
+	AngleVectors( angles, forward, right, NULL );
+	fwdDist = ((float)forwardmove)/2.0f;
+	rtDist = ((float)rightmove)/2.0f;
+	VectorMA( NPCS.NPC->r.currentOrigin, fwdDist, forward, testPos );
+	VectorMA( testPos, rtDist, right, testPos );
+	trap->Trace( &trace, NPCS.NPC->r.currentOrigin, mins, NPCS.NPC->r.maxs, testPos, NPCS.NPC->s.number, NPCS.NPC->clipmask|CONTENTS_BOTCLIP, qfalse, 0, 0 );
+	if ( trace.allsolid || trace.startsolid )
+	{//hmm, trace started inside this brush... how do we decide if we should continue?
+		//FIXME: what do we do if we start INSIDE a CONTENTS_BOTCLIP? Try the trace again without that in the clipmask?
+		if ( reset )
+		{
+			trace.fraction = 1.0f;
+		}
+		VectorCopy( testPos, trace.endpos );
+		//return qtrue;
+	}
+#if 0
+	if ( trace.fraction < 0.6 )
+	{//Going to bump into something very close, don't move, just turn
+		if ( (NPCS.NPC->enemy && trace.entityNum == NPCS.NPC->enemy->s.number) || (NPCS.NPCInfo->goalEntity && trace.entityNum == NPCS.NPCInfo->goalEntity->s.number) )
+		{//okay to bump into enemy or goal
+			//Com_Printf( "%d bump into enemy/goal okay\n", level.time );
+			return qtrue;
+		}
+		else if ( reset )
+		{//actually want to screw with the ucmd
+			//Com_Printf( "%d avoiding walk into wall (entnum %d)\n", level.time, trace.entityNum );
+			NPCS.ucmd.forwardmove = 0;
+			NPCS.ucmd.rightmove = 0;
+			VectorClear( NPCS.NPC->client->ps.moveDir );
+		}
+		return qfalse;
+	}
+#endif
+
+	if ( NPCS.NPCInfo->goalEntity )
+	{
+		qboolean enemy_in_air = qfalse;
+
+		if (NPCS.NPCInfo->goalEntity->client)
+		{
+			if (NPCS.NPCInfo->goalEntity->client->ps.groundEntityNum == ENTITYNUM_NONE)
+				enemy_in_air = qtrue;
+		}
+
+		if ( NPCS.NPCInfo->goalEntity->r.currentOrigin[2] < NPCS.NPC->r.currentOrigin[2] )
+		{//goal is below me, okay to step off at least that far plus stepheight
+			if (!enemy_in_air)
+				bottom_max += NPCS.NPCInfo->goalEntity->r.currentOrigin[2] - NPCS.NPC->r.currentOrigin[2];
+		}
+	}
+	VectorCopy( trace.endpos, testPos );
+	testPos[2] += bottom_max;
+
+	trap->Trace( &trace, trace.endpos, mins, NPCS.NPC->r.maxs, testPos, NPCS.NPC->s.number, NPCS.NPC->clipmask, qfalse, 0, 0 );
+
+	//FIXME:Should we try to see if we can still get to our goal using the waypoint network from this trace.endpos?
+	//OR: just put NPC clip brushes on these edges (still fall through when die)
+
+	if ( trace.allsolid || trace.startsolid )
+	{//Not going off a cliff
+		//Com_Printf( "%d walk off cliff okay (droptrace in solid)\n", level.time );
+		return qtrue;
+	}
+
+	if ( trace.fraction < 1.0 )
+	{//Not going off a cliff
+		//FIXME: what if plane.normal is sloped?  We'll slide off, not land... plus this doesn't account for slide-movement...
+		//Com_Printf( "%d walk off cliff okay will hit entnum %d at dropdist of %4.2f\n", level.time, trace.entityNum, (trace.fraction*bottom_max) );
+		return qtrue;
+	}
+
+	//going to fall at least bottom_max, don't move, just turn... is this bad, though?  What if we want them to drop off?
+	if ( reset )
+	{//actually want to screw with the ucmd
+		//Com_Printf( "%d avoiding walk off cliff\n", level.time );
+		NPCS.ucmd.forwardmove *= -1.0;//= 0;
+		NPCS.ucmd.rightmove *= -1.0;//= 0;
+		VectorScale( NPCS.NPC->client->ps.moveDir, -1, NPCS.NPC->client->ps.moveDir );
+	}
+	return qfalse;
+}
+
 //===========================================================================
 // Routine      : UQ1_UcmdMoveForDir
 // Description  : Set a valid ucmd move for the current move direction... A working one, unlike raven's joke...
 qboolean UQ1_UcmdMoveForDir ( gentity_t *self, usercmd_t *cmd, vec3_t dir, qboolean walk, vec3_t dest )
 {
-	vec3_t	forward, right;
-	float	fDot, rDot;
+	vec3_t		forward, right;
+	float		fDot, rDot;
+	qboolean	jumping = qfalse;
 
 	AngleVectors( self->r.currentAngles, forward, right, NULL );
 	
@@ -3364,6 +3492,7 @@ qboolean UQ1_UcmdMoveForDir ( gentity_t *self, usercmd_t *cmd, vec3_t dir, qbool
 		{// We can jump there... My method...
 			cmd->upmove = 127.0;
 			if (NPCS.NPC->s.eType == ET_PLAYER) trap->EA_Jump(NPCS.NPC->s.number);
+			jumping = qtrue;
 		}
 		else
 		{// Moving here would cause us to fall (or 18 forward is blocked)... Wait!
@@ -3408,6 +3537,13 @@ qboolean UQ1_UcmdMoveForDir ( gentity_t *self, usercmd_t *cmd, vec3_t dir, qbool
 
 	cmd->forwardmove = floor(fDot);
 	cmd->rightmove = floor(rDot);
+
+	if (!jumping && !UQ_MoveDirClear( cmd->forwardmove, cmd->rightmove, qfalse ))
+	{// Dir not clear, or we would fall!
+		cmd->forwardmove = 0;
+		cmd->rightmove = 0;
+		return qfalse;
+	}
 
 	if (NPCS.NPC->s.eType == ET_PLAYER)
 	{
@@ -3479,7 +3615,7 @@ qboolean NPC_HaveValidEnemy( void )
 extern gentity_t *NPC_PickEnemyExt( qboolean checkAlerts );
 extern qboolean NPC_MoveDirClear( int forwardmove, int rightmove, qboolean reset );
 extern qboolean DOM_FakeNPC_Parse_UCMD (bot_state_t *bs, gentity_t *bot);
-extern void G_UcmdMoveForDir( gentity_t *self, usercmd_t *cmd, vec3_t dir );
+extern void G_UcmdMoveForDir( gentity_t *self, usercmd_t *cmd, vec3_t dir, vec3_t dest );
 
 qboolean NPC_PatrolArea( void ) 
 {// Quick method of patroling...

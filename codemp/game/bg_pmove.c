@@ -16,6 +16,8 @@
 	#include "ui/ui_local.h"
 #endif
 
+extern qboolean BG_HaveWeapon ( const playerState_t *ps, int weapon );
+
 #define MAX_WEAPON_CHARGE_TIME 5000
 
 #ifdef _GAME
@@ -6082,7 +6084,7 @@ void PM_BeginWeaponChange( int weapon ) {
 		return;
 	}
 
-	if ( !( pm->ps->stats[STAT_WEAPONS] & ( 1 << weapon ) ) ) {
+	if ( !( BG_HaveWeapon(pm->ps, weapon ) ) ) {
 		return;
 	}
 
@@ -6127,7 +6129,7 @@ void PM_FinishWeaponChange( void ) {
 		weapon = WP_NONE;
 	}
 
-	if ( !( pm->ps->stats[STAT_WEAPONS] & ( 1 << weapon ) ) ) {
+	if ( !( BG_HaveWeapon(pm->ps, weapon ) ) ) {
 		weapon = WP_NONE;
 	}
 
@@ -7005,7 +7007,7 @@ static void PM_Weapon( void )
 
 		while (i < WP_NUM_WEAPONS)
 		{
-			if ((pm->ps->stats[STAT_WEAPONS] & (1 << i)) && i != WP_NONE)
+			if ((BG_HaveWeapon(pm->ps, i)) && i != WP_NONE)
 			{ //this one's good
 				weap = i;
 				break;
@@ -7304,15 +7306,6 @@ static void PM_Weapon( void )
 		BG_InRoll(pm->ps, pm->ps->legsAnim) ||
 		PM_InRollComplete(pm->ps, pm->ps->legsAnim))
 	{
-		/*
-		if (pm->cmd.weapon != WP_MELEE &&
-			pm->ps->weapon != WP_MELEE &&
-			(pm->ps->stats[STAT_WEAPONS] & (1<<WP_SABER)))
-		{ //it's alright also if we are melee
-			pm->cmd.weapon = WP_SABER;
-			pm->ps->weapon = WP_SABER;
-		}
-		*/
 		if (pm->ps->weaponTime < pm->ps->legsTimer)
 		{
 			pm->ps->weaponTime = pm->ps->legsTimer;
@@ -7496,7 +7489,7 @@ static void PM_Weapon( void )
 
 		if (pm->ps->isJediMaster || pm->ps->trueJedi)
 		{
-			pm->ps->stats[STAT_WEAPONS] = (1 << WP_SABER);
+			pm->ps->temporaryWeapon = WP_SABER;
 		}
 	}
 
@@ -10137,7 +10130,7 @@ int PM_GetOkWeaponForVehicle(void)
 
 	while (i < WP_NUM_WEAPONS)
 	{
-		if ((pm->ps->stats[STAT_WEAPONS] & (1 << i)) &&
+		if ((BG_HaveWeapon(pm->ps, i)) &&
 			PM_WeaponOkOnVehicle(i))
 		{ //this one's good
 			return i;

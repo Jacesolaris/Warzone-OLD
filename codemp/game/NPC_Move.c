@@ -319,8 +319,11 @@ qboolean NPC_GetMoveDirectionAltRoute( vec3_t out, float *distance, qboolean try
 	return qtrue;
 }
 
-void G_UcmdMoveForDir( gentity_t *self, usercmd_t *cmd, vec3_t dir )
+extern qboolean UQ1_UcmdMoveForDir ( gentity_t *self, usercmd_t *cmd, vec3_t dir, qboolean walk, vec3_t dest );
+
+void G_UcmdMoveForDir( gentity_t *self, usercmd_t *cmd, vec3_t dir, vec3_t dest )
 {
+#if 0
 	vec3_t	forward, right;
 	float	fDot, rDot;
 
@@ -365,6 +368,14 @@ void G_UcmdMoveForDir( gentity_t *self, usercmd_t *cmd, vec3_t dir )
 		Com_Printf( "PRECISION LOSS: %s != %s\n", vtos(wishvel), vtos(dir) );
 	}
 	*/
+#else
+	// UQ1: Use my method instead to check for falling, etc...
+	qboolean walk = qfalse;
+
+	if (NPCS.ucmd.buttons&BUTTON_WALKING) walk = qtrue;
+
+	UQ1_UcmdMoveForDir( self, &NPCS.ucmd, dir, walk, dest );
+#endif
 }
 
 /*
@@ -465,7 +476,7 @@ qboolean NPC_CombatMoveToGoal( qboolean tryStraight, qboolean retreat )
 	//If in combat move, then move directly towards our goal
 	if ( NPC_CheckCombatMove() || NPCS.NPC->s.eType == ET_PLAYER )
 	{//keep current facing
-		G_UcmdMoveForDir( NPCS.NPC, &NPCS.ucmd, dir );
+		G_UcmdMoveForDir( NPCS.NPC, &NPCS.ucmd, dir, NPCS.NPCInfo->goalEntity->r.currentOrigin );
 
 		if (NPCS.NPC->s.eType == ET_PLAYER)
 		{

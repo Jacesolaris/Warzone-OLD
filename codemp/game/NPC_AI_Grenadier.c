@@ -516,7 +516,7 @@ void NPC_BSGrenadier_Attack( void )
 	}
 	else if ( enemyDist3 > 65536 || (NPCS.NPC->enemy->client && NPCS.NPC->enemy->client->ps.weapon == WP_SABER && !NPCS.NPC->enemy->client->ps.saberHolstered) )//256
 	{//enemy is far or using saber
-		if ( NPCS.NPC->client->ps.weapon == WP_STUN_BATON && (NPCS.NPC->client->ps.stats[STAT_WEAPONS]&(1<<WP_THERMAL)) )
+		if ( NPCS.NPC->client->ps.weapon == WP_STUN_BATON && HaveWeapon(&NPCS.NPC->client->ps, WP_THERMAL) )
 		{//fisticuffs, make switch to thermal if have it
 			//reset fire-timing variables
 			NPC_ChangeWeapon( WP_THERMAL );
@@ -653,7 +653,6 @@ void NPC_BSGrenadier_Attack( void )
 				WeaponThink( qtrue );
 				TIMER_Set( NPCS.NPC, "attackDelay", NPCS.NPCInfo->shotTime-level.time );
 			}
-
 		}
 	}
 }

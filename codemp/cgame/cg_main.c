@@ -2827,7 +2827,7 @@ Ghoul2 Insert End
 	cg.forceHUDNextFlashTime = 0;
 
 	i = WP_NONE+1;
-	while (i <= LAST_USEABLE_WEAPON)
+	while (i <= WP_NUM_USEABLE)
 	{
 		item = BG_FindItemForWeapon(i);
 

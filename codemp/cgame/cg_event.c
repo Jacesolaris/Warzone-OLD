@@ -1942,51 +1942,6 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 	//
 	case EV_NOAMMO:
 		DEBUGNAME("EV_NOAMMO");
-//		trap->S_StartSound (NULL, es->number, CHAN_AUTO, cgs.media.noAmmoSound );
-		if ( es->number == cg.snap->ps.clientNum )
-		{
-			if ( CG_InFighter() || CG_InATST() || cg.snap->ps.weapon == WP_NONE )
-			{//just letting us know our vehicle is out of ammo
-				//FIXME: flash something on HUD or give some message so we know we have no ammo
-				centity_t *localCent = &cg_entities[cg.snap->ps.clientNum];
-				if ( localCent->m_pVehicle
-					&& localCent->m_pVehicle->m_pVehicleInfo
-					&& localCent->m_pVehicle->m_pVehicleInfo->weapon[es->eventParm].soundNoAmmo )
-				{//play the "no Ammo" sound for this weapon
-					trap->S_StartSound (NULL, cg.snap->ps.clientNum, CHAN_AUTO, localCent->m_pVehicle->m_pVehicleInfo->weapon[es->eventParm].soundNoAmmo );
-				}
-				else
-				{//play the default "no ammo" sound
-					trap->S_StartSound (NULL, cg.snap->ps.clientNum, CHAN_AUTO, cgs.media.noAmmoSound );
-				}
-				//flash the HUD so they associate the sound with the visual indicator that they don't have enough ammo
-				if ( cg_vehicleAmmoWarningTime < cg.time
-					|| cg_vehicleAmmoWarning != es->eventParm )
-				{//if there's already one going, don't interrupt it (unless they tried to fire another weapon that's out of ammo)
-					cg_vehicleAmmoWarning = es->eventParm;
-					cg_vehicleAmmoWarningTime = cg.time+500;
-				}
-			}
-			else if ( cg.snap->ps.weapon == WP_SABER )
-			{
-				cg.forceHUDTotalFlashTime = cg.time + 1000;
-			}
-			else
-			{
-				int weap = 0;
-
-				if (es->eventParm && es->eventParm < WP_NUM_WEAPONS)
-				{
-					cg.snap->ps.stats[STAT_WEAPONS] &= ~(1 << es->eventParm);
-					weap = cg.snap->ps.weapon;
-				}
-				else if (es->eventParm)
-				{
-					weap = (es->eventParm-WP_NUM_WEAPONS);
-				}
-				CG_OutOfAmmoChange(weap);
-			}
-		}
 		break;
 	case EV_CHANGE_WEAPON:
 		DEBUGNAME("EV_CHANGE_WEAPON");

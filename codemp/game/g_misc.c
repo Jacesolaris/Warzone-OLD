@@ -887,19 +887,6 @@ void HolocronTouch(gentity_t *self, gentity_t *other, trace_t *trace)
 	if (g_maxHolocronCarry.integer && othercarrying >= g_maxHolocronCarry.integer)
 	{ //make the oldest holocron carried by the player pop out to make room for this one
 		other->client->ps.holocronsCarried[index_lowest] = 0;
-
-		/*
-		if (index_lowest == FP_SABER_OFFENSE && !HasSetSaberOnly())
-		{ //you lost your saberattack holocron, so no more saber for you
-			other->client->ps.stats[STAT_WEAPONS] |= (1 << WP_STUN_BATON);
-			other->client->ps.stats[STAT_WEAPONS] &= ~(1 << WP_SABER);
-
-			if (other->client->ps.weapon == WP_SABER)
-			{
-				forceReselect = WP_SABER;
-			}
-		}
-		*/
 		//NOTE: No longer valid as we are now always giving a force level 1 saber attack level in holocron
 	}
 
@@ -912,19 +899,6 @@ void HolocronTouch(gentity_t *self, gentity_t *other, trace_t *trace)
 
 	self->pos2[0] = 1;
 	self->pos2[1] = level.time + HOLOCRON_RESPAWN_TIME;
-
-	/*
-	if (self->count == FP_SABER_OFFENSE && !HasSetSaberOnly())
-	{ //player gets a saber
-		other->client->ps.stats[STAT_WEAPONS] |= (1 << WP_SABER);
-		other->client->ps.stats[STAT_WEAPONS] &= ~(1 << WP_STUN_BATON);
-
-		if (other->client->ps.weapon == WP_STUN_BATON)
-		{
-			forceReselect = WP_STUN_BATON;
-		}
-	}
-	*/
 
 	if (forceReselect != WP_NONE)
 	{
@@ -1360,180 +1334,6 @@ void shield_power_converter_use( gentity_t *self, gentity_t *other, gentity_t *a
 //dispense generic ammo
 void ammo_generic_power_converter_use( gentity_t *self, gentity_t *other, gentity_t *activator)
 {
-#ifndef __MMO__
-	int /*dif,*/ add;
-	//int ammoType;
-	int stop = 1;
-
-	if (!activator || !activator->client)
-	{
-		return;
-	}
-
-	if (self->setTime < level.time)
-	{
-		qboolean gaveSome = qfalse;
-		/*
-		while (i < 3)
-		{
-			if (!self->s.loopSound)
-			{
-				self->s.loopSound = G_SoundIndex("sound/interface/ammocon_run");
-				self->s.loopIsSoundset = qfalse;
-			}
-			self->setTime = level.time + 100;
-
-			//dif = activator->client->ps.stats[STAT_MAX_HEALTH] - activator->client->ps.stats[STAT_ARMOR];
-			switch (i)
-			{ //don't give rockets I guess
-			case 0:
-				ammoType = AMMO_BLASTER;
-				break;
-			case 1:
-				ammoType = AMMO_POWERCELL;
-				break;
-			case 2:
-				ammoType = AMMO_METAL_BOLTS;
-				break;
-			default:
-				ammoType = -1;
-				break;
-			}
-
-			if (ammoType != -1)
-			{
-				dif = ammoData[ammoType].max - activator->client->ps.ammo[ammoType];
-			}
-			else
-			{
-				dif = 0;
-			}
-
-			if (dif > 0)
-			{ //only give if not full
-				if (dif > MAX_AMMO_GIVE)
-				{
-					add = MAX_AMMO_GIVE;
-				}
-				else
-				{
-					add = dif;
-				}
-
-				if (self->count<add)
-				{
-					add = self->count;
-				}
-
-				self->count -= add;
-				if (self->count <= 0)
-				{
-					self->setTime = 0;
-					break;
-				}
-				stop = 0;
-
-				self->fly_sound_debounce_time = level.time + 500;
-				self->activator = activator;
-
-				activator->client->ps.ammo[ammoType] += add;
-			}
-
-			i++;
-		}
-		*/
-		int i = AMMO_BLASTER;
-		if (!self->s.loopSound)
-		{
-			self->s.loopSound = G_SoundIndex("sound/interface/ammocon_run");
-			self->s.loopIsSoundset = qfalse;
-		}
-		//self->setTime = level.time + 100;
-		self->fly_sound_debounce_time = level.time + 500;
-		self->activator = activator;
-		while (i < AMMO_MAX)
-		{
-			add = ammoData[i].max*0.05;
-			if (add < 1)
-			{
-				add = 1;
-			}
-			if ( ( (activator->client->ps.eFlags & EF_DOUBLE_AMMO) && (activator->client->ps.ammo[i] < ammoData[i].max*2)) ||
-				( activator->client->ps.ammo[i] < ammoData[i].max ) )
-			{
-				gaveSome = qtrue;
-				if ( level.gametype == GT_SIEGE  && i == AMMO_ROCKETS && activator->client->ps.ammo[i] >= 10 )
-				{ //this stuff is already a freaking mess, so..
-					gaveSome = qfalse;
-				}
-				activator->client->ps.ammo[i] += add;
-				if ( level.gametype == GT_SIEGE  && i == AMMO_ROCKETS && activator->client->ps.ammo[i] >= 10 )
-				{	// fixme - this should SERIOUSLY be externed.
-					activator->client->ps.ammo[i] = 10;
-				}
-				else if ( activator->client->ps.eFlags & EF_DOUBLE_AMMO )
-				{
-					if (activator->client->ps.ammo[i] >= ammoData[i].max * 2)
-					{	// yuck.
-						activator->client->ps.ammo[i] = ammoData[i].max * 2;
-					}
-					else
-					{
-						stop = 0;
-					}
-				}
-				else
-				{
-					if (activator->client->ps.ammo[i] >= ammoData[i].max)
-					{
-						activator->client->ps.ammo[i] = ammoData[i].max;
-					}
-					else
-					{
-						stop = 0;
-					}
-				}
-			}
-			i++;
-			if (!self->genericValue12 && gaveSome)
-			{
-				int sub = (add*0.2);
-				if (sub < 1)
-				{
-					sub = 1;
-				}
-				self->count -= sub;
-				if (self->count <= 0)
-				{
-					self->count = 0;
-					stop = 1;
-					break;
-				}
-			}
-		}
-	}
-
-	if (stop || self->count <= 0)
-	{
-		if (self->s.loopSound && self->setTime < level.time)
-		{
-			if (self->count <= 0)
-			{
-				G_Sound(self, CHAN_AUTO, G_SoundIndex("sound/interface/ammocon_empty"));
-			}
-			else
-			{
-				G_Sound(self, CHAN_AUTO, self->genericValue7);
-			}
-		}
-		self->s.loopSound = 0;
-		self->s.loopIsSoundset = qfalse;
-		if (self->setTime < level.time)
-		{
-			self->setTime = level.time + self->genericValue5+100;
-		}
-	}
-#endif //__MMO__
 }
 
 /*QUAKED misc_ammo_floor_unit (1 0 0) (-16 -16 0) (16 16 40)
@@ -1546,9 +1346,16 @@ Gives generic ammo when used
 */
 void SP_misc_ammo_floor_unit(gentity_t *ent)
 {
-#ifndef __MMO__
 	vec3_t dest;
 	trace_t tr;
+
+	if (level.gametype != GT_CTF &&
+		level.gametype != GT_CTY &&
+		level.gametype != GT_SIEGE)
+	{
+		G_FreeEntity( ent );
+		return;
+	}
 
 	VectorSet( ent->r.mins, -16, -16, 0 );
 	VectorSet( ent->r.maxs, 16, 16, 40 );
@@ -1560,7 +1367,7 @@ void SP_misc_ammo_floor_unit(gentity_t *ent)
 	trap->Trace( &tr, ent->s.origin, ent->r.mins, ent->r.maxs, dest, ent->s.number, MASK_SOLID, qfalse, 0, 0 );
 	if ( tr.startsolid )
 	{
-		trap->Print ("SP_misc_ammo_floor_unit: misc_ammo_floor_unit startsolid at %s\n", vtos(ent->s.origin));
+		trap->Print ("SP_misc_shield_floor_unit: misc_shield_floor_unit startsolid at %s\n", vtos(ent->s.origin));
 		G_FreeEntity( ent );
 		return;
 	}
@@ -1580,7 +1387,7 @@ void SP_misc_ammo_floor_unit(gentity_t *ent)
 
 	if (!ent->model || !ent->model[0])
 	{
-		ent->model = "/models/items/a_pwr_converter.md3";
+		ent->model = "/models/items/a_shield_converter.md3";
 	}
 
 	ent->s.modelindex = G_ModelIndex( ent->model );
@@ -1597,7 +1404,7 @@ void SP_misc_ammo_floor_unit(gentity_t *ent)
 
 	G_SpawnInt("nodrain", "0", &ent->genericValue12);
 
-	if (!ent->genericValue12)
+    if (!ent->genericValue12)
 	{
 		ent->s.maxhealth = ent->s.health = ent->count;
 	}
@@ -1607,24 +1414,21 @@ void SP_misc_ammo_floor_unit(gentity_t *ent)
 
 	ent->nextthink = level.time + 200;// + STATION_RECHARGE_TIME;
 
-	ent->use = ammo_generic_power_converter_use;
+	ent->use = shield_power_converter_use;
 
 	VectorCopy( ent->s.angles, ent->s.apos.trBase );
 	trap->LinkEntity ((sharedEntity_t *)ent);
 
-	G_SoundIndex("sound/interface/ammocon_run");
-	ent->genericValue7 = G_SoundIndex("sound/interface/ammocon_done");
-	G_SoundIndex("sound/interface/ammocon_empty");
+	G_SoundIndex("sound/interface/shieldcon_run");
+	ent->genericValue7 = G_SoundIndex("sound/interface/shieldcon_done");
+	G_SoundIndex("sound/interface/shieldcon_empty");
 
 	if (level.gametype == GT_SIEGE)
 	{ //show on radar from everywhere
 		ent->r.svFlags |= SVF_BROADCAST;
 		ent->s.eFlags |= EF_RADAROBJECT;
-		ent->s.genericenemyindex = G_IconIndex("gfx/mp/siegeicons/desert/weapon_recharge");
+		ent->s.genericenemyindex = G_IconIndex("gfx/mp/siegeicons/desert/shield_recharge");
 	}
-#else //__MMO__
-	G_FreeEntity(ent); // UQ1: Hmmm we could reuse these for something else... but what???
-#endif //__MMO__
 }
 
 /*QUAKED misc_shield_floor_unit (1 0 0) (-16 -16 0) (16 16 40)
@@ -1788,105 +1592,11 @@ ammo_power_converter_use
 */
 void ammo_power_converter_use( gentity_t *self, gentity_t *other, gentity_t *activator)
 {
-#ifndef __MMO__
-	int			add = 0.0f;//,highest;
-//	int			difBlaster,difPowerCell,difMetalBolts;
-	int			stop = 1;
 
-	if (!activator || !activator->client)
-	{
-		return;
-	}
-
-	if (self->setTime < level.time)
-	{
-		if (!self->s.loopSound)
-		{
-			self->s.loopSound = G_SoundIndex("sound/player/pickupshield.wav");
-		}
-
-		self->setTime = level.time + 100;
-
-		if (self->count)	// Has it got any power left?
-		{
-			int i = AMMO_BLASTER;
-			while (i < AMMO_MAX)
-			{
-				add = ammoData[i].max*0.1;
-				if (add < 1)
-				{
-					add = 1;
-				}
-				if (activator->client->ps.ammo[i] < ammoData[i].max)
-				{
-					activator->client->ps.ammo[i] += add;
-					if (activator->client->ps.ammo[i] > ammoData[i].max)
-					{
-						activator->client->ps.ammo[i] = ammoData[i].max;
-					}
-				}
-				i++;
-			}
-			if (!self->genericValue12)
-			{
-				self->count -= add;
-			}
-			stop = 0;
-
-			self->fly_sound_debounce_time = level.time + 500;
-			self->activator = activator;
-
-			/*
-			if (self->count > MAX_AMMO_GIVE)
-			{
-				add = MAX_AMMO_GIVE;
-			}
-			else if (self->count<0)
-			{
-				add = 0;
-			}
-			else
-			{
-				add = self->count;
-			}
-
-			activator->client->ps.ammo[AMMO_BLASTER] += add;
-			activator->client->ps.ammo[AMMO_POWERCELL] += add;
-			activator->client->ps.ammo[AMMO_METAL_BOLTS] += add;
-
-			self->count -= add;
-			stop = 0;
-
-			self->fly_sound_debounce_time = level.time + 500;
-			self->activator = activator;
-
-			difBlaster = activator->client->ps.ammo[AMMO_BLASTER] - ammoData[AMMO_BLASTER].max;
-			difPowerCell = activator->client->ps.ammo[AMMO_POWERCELL] - ammoData[AMMO_POWERCELL].max;
-			difMetalBolts = activator->client->ps.ammo[AMMO_METAL_BOLTS] - ammoData[AMMO_METAL_BOLTS].max;
-
-			// Find the highest one
-			highest = difBlaster;
-			if (difPowerCell>difBlaster)
-			{
-				highest = difPowerCell;
-			}
-
-			if (difMetalBolts > highest)
-			{
-				highest = difMetalBolts;
-			}
-			*/
-		}
-	}
-
-	if (stop)
-	{
-		self->s.loopSound = 0;
-		self->s.loopIsSoundset = qfalse;
-	}
-#endif //__MMO__
 }
 
+void health_power_converter_use( gentity_t *self, gentity_t *other, gentity_t *activator);
+void EnergyHealthStationSettings(gentity_t *ent);
 
 /*QUAKED misc_model_ammo_power_converter (1 0 0) (-16 -16 -16) (16 16 16)
 model="models/items/power_converter.md3"
@@ -1898,7 +1608,6 @@ Gives ammo energy when used.
 //------------------------------------------------------------
 void SP_misc_model_ammo_power_converter( gentity_t *ent )
 {
-#ifndef __MMO__
 	if (!ent->health)
 	{
 		ent->health = 60;
@@ -1914,18 +1623,14 @@ void SP_misc_model_ammo_power_converter( gentity_t *ent )
 	ent->r.contents = CONTENTS_SOLID;
 	ent->clipmask = MASK_SOLID;
 
-	G_SpawnInt("nodrain", "0", &ent->genericValue12);
-	ent->use = ammo_power_converter_use;
+	ent->use = health_power_converter_use;
 
-	EnergyAmmoStationSettings(ent);
+	EnergyHealthStationSettings(ent);
 
 	ent->genericValue4 = ent->count; //initial value
 	ent->think = check_recharge;
 
-	if (!ent->genericValue12)
-	{
-		ent->s.maxhealth = ent->s.health = ent->count;
-	}
+	//ent->s.maxhealth = ent->s.health = ent->count;
 	ent->s.shouldtarget = qtrue;
 	ent->s.teamowner = 0;
 	ent->s.owner = ENTITYNUM_NONE;
@@ -1937,9 +1642,15 @@ void SP_misc_model_ammo_power_converter( gentity_t *ent )
 	trap->LinkEntity ((sharedEntity_t *)ent);
 
 	//G_SoundIndex("sound/movers/objects/useshieldstation.wav");
-#else //__MMO__
-	G_FreeEntity(ent); // UQ1: Hmmm what can we reuse this one for???
-#endif //__MMO__
+	G_SoundIndex("sound/player/pickuphealth.wav");
+	ent->genericValue7 = G_SoundIndex("sound/interface/shieldcon_done");
+
+	if (level.gametype == GT_SIEGE)
+	{ //show on radar from everywhere
+		ent->r.svFlags |= SVF_BROADCAST;
+		ent->s.eFlags |= EF_RADAROBJECT;
+		ent->s.genericenemyindex = G_IconIndex("gfx/mp/siegeicons/desert/bacta");
+	}
 }
 
 /*

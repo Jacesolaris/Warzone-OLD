@@ -5,6 +5,7 @@
 
 extern qboolean BG_SabersOff( playerState_t *ps );
 saberInfo_t *BG_MySaber( int clientNum, int saberNum );
+extern qboolean BG_HaveWeapon ( const playerState_t *ps, int weapon );
 
 int PM_irand_timesync(int val1, int val2)
 {

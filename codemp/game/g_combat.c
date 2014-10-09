@@ -482,6 +482,11 @@ void TossClientWeapon(gentity_t *self, vec3_t direction, float speed)
 	int ammoSub;
 #endif //__MMO__
 
+	if (weapon != self->client->ps.temporaryWeapon)
+	{//can only ever drop our temporary weapon...
+		return;
+	}
+
 	if (level.gametype == GT_SIEGE)
 	{ //no dropping weaps
 		return;
@@ -501,21 +506,6 @@ void TossClientWeapon(gentity_t *self, vec3_t direction, float speed)
 	// find the item type for this weapon
 	item = BG_FindItemForWeapon( weapon );
 
-#ifndef __MMO__
-	ammoSub = (self->client->ps.ammo[weaponData[weapon].ammoIndex] - bg_itemlist[BG_GetItemIndexByTag(weapon, IT_WEAPON)].quantity);
-
-	if (ammoSub < 0)
-	{
-		int ammoQuan = item->quantity;
-		ammoQuan -= (-ammoSub);
-
-		if (ammoQuan <= 0)
-		{ //no ammo
-			return;
-		}
-	}
-#endif //__MMO__
-
 	vel[0] = direction[0]*speed;
 	vel[1] = direction[1]*speed;
 	vel[2] = direction[2]*speed;
@@ -527,31 +517,17 @@ void TossClientWeapon(gentity_t *self, vec3_t direction, float speed)
 
 	launched->count = bg_itemlist[BG_GetItemIndexByTag(weapon, IT_WEAPON)].quantity;
 
-#ifndef __MMO__
-	self->client->ps.ammo[weaponData[weapon].ammoIndex] -= bg_itemlist[BG_GetItemIndexByTag(weapon, IT_WEAPON)].quantity;
 
-	if (self->client->ps.ammo[weaponData[weapon].ammoIndex] < 0)
-	{
-		launched->count -= (-self->client->ps.ammo[weaponData[weapon].ammoIndex]);
-		self->client->ps.ammo[weaponData[weapon].ammoIndex] = 0;
-	}
-#endif //__MMO__
-
-#ifndef __MMO__
-	if ((self->client->ps.ammo[weaponData[weapon].ammoIndex] < 1 && weapon != WP_DET_PACK) ||
-		(weapon != WP_THERMAL && weapon != WP_DET_PACK && weapon != WP_TRIP_MINE))
-#else //__MMO__
 	if (weapon != WP_THERMAL && weapon != WP_DET_PACK && weapon != WP_TRIP_MINE)
-#endif //__MMO__
 	{
 		int i = 0;
 		int weap = -1;
 
-		self->client->ps.stats[STAT_WEAPONS] &= ~(1 << weapon);
+		self->client->ps.temporaryWeapon = 0;
 
 		while (i < WP_NUM_WEAPONS)
 		{
-			if ((self->client->ps.stats[STAT_WEAPONS] & (1 << i)) && i != WP_NONE)
+			if (HaveWeapon(&self->client->ps, i) && i != WP_NONE)
 			{ //this one's good
 				weap = i;
 				break;
@@ -569,10 +545,6 @@ void TossClientWeapon(gentity_t *self, vec3_t direction, float speed)
 			self->s.weapon = 0;
 			self->client->ps.weapon = 0;
 		}
-
-#ifndef __MMO__
-		G_AddEvent(self, EV_NOAMMO, weapon);
-#endif //__MMO__
 	}
 }
 
@@ -606,7 +578,7 @@ void TossClientItems( gentity_t *self ) {
 		if ( self->client->ps.weaponstate == WEAPON_DROPPING ) {
 			weapon = self->client->pers.cmd.weapon;
 		}
-		if ( !( self->client->ps.stats[STAT_WEAPONS] & ( 1 << weapon ) ) ) {
+		if ( !( HaveWeapon(&self->client->ps, weapon ) ) ) {
 			weapon = WP_NONE;
 		}
 	}

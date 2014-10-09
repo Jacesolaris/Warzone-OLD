@@ -614,83 +614,62 @@ NPC_WeaponsForTeam
 -------------------------
 */
 
-int NPC_WeaponsForTeam( team_t team, int spawnflags, const char *NPC_type )
+int NPC_PrimaryWeaponForTeam( team_t team, int spawnflags, const char *NPC_type )
 {
 	//*** not sure how to handle this, should I pass in class instead of team and go from there? - dmv
 	switch(team)
 	{
-	// no longer exists
-//	case TEAM_BORG:
-//		break;
-
-//	case TEAM_HIROGEN:
-//		if( Q_stricmp( "hirogenalpha", NPC_type ) == 0 )
-//			return ( 1 << WP_BLASTER);
-		//Falls through
-
-//	case TEAM_KLINGON:
-
-		//NOTENOTE: Falls through
-
-//	case TEAM_IMPERIAL:
 	case NPCTEAM_ENEMY:
 		if ( Q_stricmp( "tavion", NPC_type ) == 0 ||
 			Q_strncmp( "reborn", NPC_type, 6 ) == 0 ||
 			Q_stricmp( "desann", NPC_type ) == 0 ||
 			Q_strncmp( "shadowtrooper", NPC_type, 13 ) == 0 )
-			return ( 1 << WP_SABER);
-//			return ( 1 << WP_IMPERIAL_BLADE);
-		//NOTENOTE: Falls through if not a knife user
+			return WP_SABER;
 
-//	case TEAM_SCAVENGERS:
-//	case TEAM_MALON:
 		//FIXME: default weapon in npc config?
 		if ( Q_strncmp( "stofficer", NPC_type, 9 ) == 0 )
 		{
-			return ( 1 << WP_FLECHETTE);
+			return WP_FLECHETTE;
 		}
 		if ( Q_stricmp( "stcommander", NPC_type ) == 0 )
 		{
-			return ( 1 << WP_REPEATER);
+			return WP_REPEATER;
 		}
 		if ( Q_stricmp( "swamptrooper", NPC_type ) == 0 )
 		{
-			return ( 1 << WP_FLECHETTE);
+			return WP_FLECHETTE;
 		}
 		if ( Q_stricmp( "swamptrooper2", NPC_type ) == 0 )
 		{
-			return ( 1 << WP_REPEATER);
+			return WP_REPEATER;
 		}
 		if ( Q_stricmp( "rockettrooper", NPC_type ) == 0 )
 		{
-			return ( 1 << WP_ROCKET_LAUNCHER);
+			return WP_ROCKET_LAUNCHER;
 		}
 		if ( Q_strncmp( "shadowtrooper", NPC_type, 13 ) == 0 )
 		{
-			return ( 1 << WP_SABER);//|( 1 << WP_RAPID_CONCUSSION)?
+			return WP_SABER;
 		}
 		if ( Q_stricmp( "imperial", NPC_type ) == 0 )
 		{
-			//return ( 1 << WP_BLASTER_PISTOL);
-			return ( 1 << WP_BLASTER);
+			return WP_BLASTER;
 		}
 		if ( Q_strncmp( "impworker", NPC_type, 9 ) == 0 )
 		{
-			//return ( 1 << WP_BLASTER_PISTOL);
-			return ( 1 << WP_BLASTER);
+			return WP_BLASTER;
 		}
 		if ( Q_stricmp( "stormpilot", NPC_type ) == 0 )
 		{
-			//return ( 1 << WP_BLASTER_PISTOL);
-			return ( 1 << WP_BLASTER);
+			return WP_BLASTER;
 		}
 		if ( Q_stricmp( "galak", NPC_type ) == 0 )
 		{
-			return ( 1 << WP_BLASTER);
+			return WP_BLASTER;
 		}
 		if ( Q_stricmp( "galak_mech", NPC_type ) == 0 )
 		{
-			return ( 1 << WP_REPEATER);
+			return WP_REPEATER;
 		}
 		if ( Q_strncmp( "ugnaught", NPC_type, 8 ) == 0 )
 		{
@@ -698,23 +677,23 @@ int NPC_WeaponsForTeam( team_t team, int spawnflags, const char *NPC_type )
 		}
 		if ( Q_stricmp( "granshooter", NPC_type ) == 0 )
 		{
-			return ( 1 << WP_BLASTER);
+			return WP_BLASTER;
 		}
 		if ( Q_stricmp( "granboxer", NPC_type ) == 0 )
 		{
-			return ( 1 << WP_STUN_BATON);
+			return WP_STUN_BATON;
 		}
 		if ( Q_strncmp( "gran", NPC_type, 4 ) == 0 )
 		{
-			return (( 1 << WP_THERMAL)|( 1 << WP_STUN_BATON));
+			return WP_THERMAL;
 		}
 		if ( Q_stricmp( "rodian", NPC_type ) == 0 )
 		{
-			return ( 1 << WP_DISRUPTOR);
+			return WP_DISRUPTOR;
 		}
 		if ( Q_stricmp( "rodian2", NPC_type ) == 0 )
 		{
-			return ( 1 << WP_BLASTER);
+			return WP_BLASTER;
 		}
 
 		if (( Q_stricmp( "interrogator",NPC_type) == 0) || ( Q_stricmp( "sentry",NPC_type) == 0) || (Q_strncmp( "protocol",NPC_type,8) == 0) )
@@ -724,71 +703,61 @@ int NPC_WeaponsForTeam( team_t team, int spawnflags, const char *NPC_type )
 
 		if ( Q_strncmp( "weequay", NPC_type, 7 ) == 0 )
 		{
-			return ( 1 << WP_BOWCASTER);//|( 1 << WP_STAFF )(FIXME: new weap?)
+			return WP_BOWCASTER;
 		}
 		if ( Q_stricmp( "impofficer", NPC_type ) == 0 )
 		{
-			return ( 1 << WP_BLASTER);
+			return WP_BLASTER;
 		}
 		if ( Q_stricmp( "impcommander", NPC_type ) == 0 )
 		{
-			return ( 1 << WP_BLASTER);
+			return WP_BLASTER;
 		}
 		if (( Q_stricmp( "probe", NPC_type ) == 0 ) || ( Q_stricmp( "seeker", NPC_type ) == 0 ))
 		{
-			//return ( 1 << WP_BOT_LASER);
 			return 0;
 		}
 		if ( Q_stricmp( "remote", NPC_type ) == 0 )
 		{
-			//return ( 1 << WP_BOT_LASER );
 			return 0;
 		}
 		if ( Q_stricmp( "trandoshan", NPC_type ) == 0 )
 		{
-			return (1<<WP_REPEATER);
+			return WP_REPEATER;
 		}
 		if ( Q_stricmp( "atst", NPC_type ) == 0 )
 		{
-			//return (( 1 << WP_ATST_MAIN)|( 1 << WP_ATST_SIDE));
 			return 0;
 		}
 		if ( Q_stricmp( "mark1", NPC_type ) == 0 )
 		{
-			//return ( 1 << WP_BOT_LASER);
 			return 0;
 		}
 		if ( Q_stricmp( "mark2", NPC_type ) == 0 )
 		{
-			//return ( 1 << WP_BOT_LASER);
 			return 0;
 		}
 		if ( Q_stricmp( "minemonster", NPC_type ) == 0 )
 		{
-			return (( 1 << WP_STUN_BATON));
+			return WP_STUN_BATON;
 		}
 		if ( Q_stricmp( "howler", NPC_type ) == 0 )
 		{
-			return (( 1 << WP_STUN_BATON));
+			return WP_STUN_BATON;
 		}
 		//Stormtroopers, etc.
-		return ( 1 << WP_BLASTER);
+		return WP_BLASTER;
 		break;
 
 	case NPCTEAM_PLAYER:
-
-//		if(spawnflags & SFB_TRICORDER)
-//			return ( 1 << WP_TRICORDER);
-
 		if(spawnflags & SFB_RIFLEMAN)
-			return ( 1 << WP_REPEATER);
+			return WP_REPEATER;
 
 		if(spawnflags & SFB_PHASER)
-			//return ( 1 << WP_BLASTER_PISTOL);
-			return ( 1 << WP_BLASTER);
+			return WP_BLASTER;
 
 		if ( Q_strncmp( "jedi", NPC_type, 4 ) == 0 || Q_stricmp( "luke", NPC_type ) == 0 )
-			return ( 1 << WP_SABER);
+			return WP_SABER;
 
 		if ( Q_strncmp( "prisoner", NPC_type, 8 ) == 0 )
 		{
@@ -796,8 +765,7 @@ int NPC_WeaponsForTeam( team_t team, int spawnflags, const char *NPC_type )
 		}
 		if ( Q_strncmp( "bespincop", NPC_type, 9 ) == 0 )
 		{
-			//return ( 1 << WP_BLASTER_PISTOL);
-			return ( 1 << WP_BLASTER);
+			return WP_BLASTER;
 		}
 
 		if ( Q_stricmp( "MonMothma", NPC_type ) == 0 )
@@ -806,7 +774,7 @@ int NPC_WeaponsForTeam( team_t team, int spawnflags, const char *NPC_type )
 		}
 
 		//rebel
-		return ( 1 << WP_BLASTER);
+		return WP_BLASTER;
 		break;
 
 	case NPCTEAM_NEUTRAL:
@@ -833,22 +801,28 @@ int NPC_WeaponsForTeam( team_t team, int spawnflags, const char *NPC_type )
 		}
 
 		break;
+	default:
+		break;
+	}
 
-	// these no longer exist
-//	case TEAM_FORGE:
-//		return ( 1 << WP_STUN_BATON);
-//		break;
+	return WP_NONE;
+}
 
-//	case TEAM_STASIS:
-//		return ( 1 << WP_STUN_BATON);
-//		break;
-
-//	case TEAM_PARASITE:
-//		break;
-
-//	case TEAM_8472:
-//		break;
-
+int NPC_SecondaryWeaponForTeam( team_t team, int spawnflags, const char *NPC_type )
+{
+	//*** not sure how to handle this, should I pass in class instead of team and go from there? - dmv
+	switch(team)
+	{
+	case NPCTEAM_ENEMY:
+		if ( Q_strncmp( "gran", NPC_type, 4 ) == 0 )
+		{
+			return WP_STUN_BATON;
+		}
+		break;
+	case NPCTEAM_PLAYER:
+		break;
+	case NPCTEAM_NEUTRAL:
+		break;
 	default:
 		break;
 	}
@@ -863,27 +837,18 @@ extern void ChangeWeapon( gentity_t *ent, int newWeapon );
 NPC_SetWeapons
 -------------------------
 */
-//[VisualWeapons]
-qboolean G_ClientPlugin(void);
-//[/VisualWeapons]
+
 void NPC_SetWeapons( gentity_t *ent )
 {
-	int			bestWeap = WP_NONE;
-	int			curWeap;
-	int			weapons = NPC_WeaponsForTeam( (team_t)ent->client->playerTeam, ent->spawnflags, ent->NPC_type );
-
-	ent->client->ps.stats[STAT_WEAPONS] = 0;
+	int bestWeap = WP_NONE;
+	int curWeap = WP_NONE;
+	int primary = NPC_PrimaryWeaponForTeam( (team_t)ent->client->playerTeam, ent->spawnflags, ent->NPC_type );
+	int secondary = NPC_SecondaryWeaponForTeam( (team_t)ent->client->playerTeam, ent->spawnflags, ent->NPC_type );
+	
 	for ( curWeap = WP_SABER; curWeap < WP_NUM_WEAPONS; curWeap++ )
 	{
-		if ( (weapons & ( 1 << curWeap )) )
+		if ( primary == curWeap || secondary == curWeap )
 		{
-			ent->client->ps.stats[STAT_WEAPONS] |= ( 1 << curWeap );
-//			RegisterItem( FindItemForWeapon( (weapon_t)(curWeap) ) );	//precache the weapon
-			//rwwFIXMEFIXME: Precache
-#ifndef __MMO__
-			ent->NPC->currentAmmo = ent->client->ps.ammo[weaponData[curWeap].ammoIndex] = 100;//FIXME: max ammo
-#endif //__MMO__
-
 			if ( bestWeap == WP_SABER )
 			{
 				// still want to register other weapons -- force saber to be best weap
@@ -906,14 +871,11 @@ void NPC_SetWeapons( gentity_t *ent )
 	}
 
 	ent->client->ps.weapon = bestWeap;
-	//[VisualWeapons]
-	//update the weapon stats for this player since they have changed.
-	if (G_ClientPlugin())
-	{//don't send the weapon updates if someone isn't able to process this new event type (IE anyone without
-		//the OJP client plugin)
-		G_AddEvent(ent, EV_WEAPINVCHANGE, ent->client->ps.stats[STAT_WEAPONS]);
-	}
-	//[/VisualWeapons]
+
+	ent->client->ps.primaryWeapon = bestWeap;
+	if (bestWeap == primary) ent->client->ps.secondaryWeapon = secondary;
+	else ent->client->ps.secondaryWeapon = primary;
+	ent->client->ps.temporaryWeapon = 0;
 }
 
 /*
@@ -1215,9 +1177,7 @@ void NPC_Begin (gentity_t *ent)
 		NPC_SetWeapons(ent);
 	}
 	//select the weapon
-#ifndef __MMO__
-	ent->NPC->currentAmmo = ent->client->ps.ammo[weaponData[ent->client->ps.weapon].ammoIndex];
-#endif //__MMO__
+
 	ent->client->ps.weaponstate = WEAPON_IDLE;
 	ChangeWeapon( ent, ent->client->ps.weapon );
 
@@ -1463,6 +1423,9 @@ void NPC_Begin (gentity_t *ent)
 		ent->health = ent->maxHealth = client->pers.maxHealth = client->ps.stats[STAT_MAX_HEALTH] = client->ps.stats[STAT_HEALTH] = ent->NPC->stats.health;
 		ent->client->ps.fd.forcePower = ent->client->ps.fd.forcePowerMax;
 	}
+
+	// UQ1: Init original weapon info...
+	ent->NPC->originalWeapon = ent->client->ps.weapon;
 
 	if (ent->s.eType == ET_NPC && !(ent->s.eFlags & EF_FAKE_NPC_BOT))
 	{// UQ1: Find their name type to send to an id to the client for names...

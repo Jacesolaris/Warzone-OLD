@@ -1860,6 +1860,12 @@ typedef struct playerState_s {
 
 	int				saberMoveStyle;
 
+	int				playerClass;
+
+	int				primaryWeapon;
+	int				secondaryWeapon;
+	int				temporaryWeapon;
+
 	//rww - spare values specifically for use by mod authors.
 	//See psf_overrides.txt if you want to increase the send
 	//amount of any of these above 1 bit.
@@ -2304,6 +2310,12 @@ typedef struct entityState_s {
 
 	int			saberMoveStyle;
 
+	int			playerClass;
+
+	int			primaryWeapon;
+	int			secondaryWeapon;
+	int			temporaryWeapon;
+
 	int			NPC_NAME_ID;
 
 	//rww - spare values specifically for use by mod authors.
@@ -2504,3 +2516,5 @@ typedef enum {
 //[/SaberSys]
 
 qboolean StringContainsWord(const char *haystack, const char *needle);
+qboolean HaveWeapon( playerState_t *ps, int weapon );
+

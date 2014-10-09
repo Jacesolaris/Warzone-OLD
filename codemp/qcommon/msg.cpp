@@ -958,6 +958,10 @@ netField_t	entityStateFields[] =
 { NETF(damageValue), 32 },
 { NETF(saberMoveStyle), 8 },
 { NETF(NPC_NAME_ID), 8 },
+{ NETF(playerClass), 32 },
+{ NETF(primaryWeapon), 32 },
+{ NETF(secondaryWeapon), 32 },
+{ NETF(temporaryWeapon), 32 },
 #endif //__MMO__
 
 //rww - for use by mod authors only
@@ -1297,6 +1301,10 @@ netField_t	playerStateFields[] =
 { PSF(damageCrit), 1 },
 { PSF(damageValue), 32 },
 { PSF(saberMoveStyle), 8 },
+{ PSF(playerClass), 32 },
+{ PSF(primaryWeapon), 32 },
+{ PSF(secondaryWeapon), 32 },
+{ PSF(temporaryWeapon), 32 },
 #endif //__MMO__
 { PSF(pm_time), -16 },
 { PSF(customRGBA[1]), 8 }, //0-255
@@ -1461,6 +1469,10 @@ netField_t	pilotPlayerStateFields[] =
 { PSF(damageCrit), 1 },
 { PSF(damageValue), 32 },
 { PSF(saberMoveStyle), 8 },
+{ PSF(playerClass), 32 },
+{ PSF(primaryWeapon), 32 },
+{ PSF(secondaryWeapon), 32 },
+{ PSF(temporaryWeapon), 32 },
 #endif //__MMO__
 { PSF(saberCanThrow), 1 },
 { PSF(fd.forcePowerDebounce[FP_LEVITATION]), 32 },

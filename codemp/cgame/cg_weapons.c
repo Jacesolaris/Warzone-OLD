@@ -1055,14 +1055,6 @@ void CG_DrawIconBackground(void)
 
 qboolean CG_WeaponCheck(int weap)
 {
-#ifndef __MMO__
-	if (cg.snap->ps.ammo[weaponData[weap].ammoIndex] < weaponData[weap].energyPerShot &&
-		cg.snap->ps.ammo[weaponData[weap].ammoIndex] < weaponData[weap].altEnergyPerShot)
-	{
-		return qfalse;
-	}
-#endif //__MMO__
-
 	return qtrue;
 }
 
@@ -1072,29 +1064,13 @@ CG_WeaponSelectable
 ===============
 */
 static qboolean CG_WeaponSelectable( int i ) {
-	/*if ( !cg.snap->ps.ammo[weaponData[i].ammoIndex] ) {
-		return qfalse;
-	}*/
 	if (!i)
 	{
 		return qfalse;
 	}
 
-#ifndef __MMO__
-	if (cg.predictedPlayerState.ammo[weaponData[i].ammoIndex] < weaponData[i].energyPerShot &&
-		cg.predictedPlayerState.ammo[weaponData[i].ammoIndex] < weaponData[i].altEnergyPerShot)
+	if (!HaveWeapon(&cg.predictedPlayerState, i))
 	{
-		return qfalse;
-	}
-
-	if (i == WP_DET_PACK && cg.predictedPlayerState.ammo[weaponData[i].ammoIndex] < 1 &&
-		!cg.predictedPlayerState.hasDetPackPlanted)
-	{
-		return qfalse;
-	}
-#endif //__MMO__
-
-	if ( ! (cg.predictedPlayerState.stats[ STAT_WEAPONS ] & ( 1 << i ) ) ) {
 		return qfalse;
 	}
 
@@ -1108,22 +1084,19 @@ CG_DrawWeaponSelect
 */
 void CG_DrawWeaponSelect( void ) {
 	int				i;
-	int				bits;
 	int				count;
 	int				smallIconSize,bigIconSize;
 	int				holdX,x,y,pad;
 	int				sideLeftIconCnt,sideRightIconCnt;
 	int				sideMax,holdCount,iconCnt;
-//	int				height;
-	int		yOffset = 0;
-	qboolean drewConc = qfalse;
+	int				yOffset = 0;
 
 	if (cg.predictedPlayerState.emplacedIndex)
 	{ //can't cycle when on a weapon
 		cg.weaponSelectTime = 0;
 	}
 
-	if ((cg.weaponSelectTime+WEAPON_SELECT_TIME)<cg.time)	// Time is up for the HUD to display
+	if ((cg.weaponSelectTime+WEAPON_SELECT_TIME) < cg.time)	// Time is up for the HUD to display
 	{
 		return;
 	}
@@ -1137,27 +1110,14 @@ void CG_DrawWeaponSelect( void ) {
 	// showing weapon select clears pickup item display, but not the blend blob
 	cg.itemPickupTime = 0;
 
-	bits = cg.predictedPlayerState.stats[ STAT_WEAPONS ];
-
 	// count the number of weapons owned
 	count = 0;
 
-	if ( !CG_WeaponSelectable(cg.weaponSelect) &&
-		(cg.weaponSelect == WP_THERMAL || cg.weaponSelect == WP_TRIP_MINE) )
-	{ //display this weapon that we don't actually "have" as unhighlighted until it's deselected
-	  //since it's selected we must increase the count to display the proper number of valid selectable weapons
-		count++;
-	}
-
 	for ( i = 1 ; i < WP_NUM_WEAPONS ; i++ )
 	{
-		if ( bits & ( 1 << i ) )
+		if (HaveWeapon(&cg.predictedPlayerState, i))
 		{
-			if ( CG_WeaponSelectable(i) ||
-				(i != WP_THERMAL && i != WP_TRIP_MINE) )
-			{
-				count++;
-			}
+			count++;
 		}
 	}
 
@@ -1170,6 +1130,7 @@ void CG_DrawWeaponSelect( void ) {
 
 	// Calculate how many icons will appear to either side of the center one
 	holdCount = count - 1;	// -1 for the center icon
+
 	if (holdCount == 0)			// No icons to either side
 	{
 		sideLeftIconCnt = 0;
@@ -1186,17 +1147,11 @@ void CG_DrawWeaponSelect( void ) {
 		sideRightIconCnt = holdCount - sideLeftIconCnt;
 	}
 
-	if ( cg.weaponSelect == WP_CONCUSSION )
+	i = cg.weaponSelect - 1;
+
+	if ( i < WP_FIRST_USEABLE )
 	{
-		i = WP_FLECHETTE;
-	}
-	else
-	{
-		i = cg.weaponSelect - 1;
-	}
-	if (i<1)
-	{
-		i = LAST_USEABLE_WEAPON;
+		i = WP_NUM_USEABLE;
 	}
 
 	smallIconSize = 40;
@@ -1215,78 +1170,47 @@ void CG_DrawWeaponSelect( void ) {
 	trap->R_SetColor(colorTable[CT_WHITE]);
 	// Work backwards from current icon
 	holdX = x - ((bigIconSize/2) + pad + smallIconSize);
-//	height = smallIconSize * 1;//cg.iconHUDPercent;
-	drewConc = qfalse;
 
-	for (iconCnt=1;iconCnt<(sideLeftIconCnt+1);i--)
+	for (iconCnt = 1; iconCnt < (sideLeftIconCnt +1 ); i--)
 	{
-		if ( i == WP_CONCUSSION )
+		if ( i < WP_FIRST_USEABLE )
 		{
-			i--;
-		}
-		else if ( i == WP_FLECHETTE && !drewConc && cg.weaponSelect != WP_CONCUSSION )
-		{
-			i = WP_CONCUSSION;
-		}
-		if (i<1)
-		{
-			//i = 13;
-			//...don't ever do this.
-			i = LAST_USEABLE_WEAPON;
+			i = WP_NUM_USEABLE;
 		}
 
-		if ( !(bits & ( 1 << i )))	// Does he have this weapon?
+		if ( !HaveWeapon(&cg.predictedPlayerState, i) )	// Does he have this weapon?
 		{
-			if ( i == WP_CONCUSSION )
-			{
-				drewConc = qtrue;
-				i = WP_ROCKET_LAUNCHER;
-			}
 			continue;
 		}
 
-		if ( !CG_WeaponSelectable(i) &&
-			(i == WP_THERMAL || i == WP_TRIP_MINE) )
-		{ //Don't show thermal and tripmine when out of them
-			continue;
-		}
-
-		++iconCnt;					// Good icon
+		iconCnt++;					// Good icon
 
 		if (cgs.media.weaponIcons[i])
 		{
-		//	weaponInfo_t	*weaponInfo;
 			CG_RegisterWeapon( i );
-		//	weaponInfo = &cg_weapons[i];
 
 			trap->R_SetColor(colorTable[CT_WHITE]);
+
 			if (!CG_WeaponCheck(i))
 			{
-				CG_DrawPic( holdX, y+10+yOffset, smallIconSize, smallIconSize, /*weaponInfo->weaponIconNoAmmo*/cgs.media.weaponIcons_NA[i] );
+				CG_DrawPic( holdX, y+10+yOffset, smallIconSize, smallIconSize, cgs.media.weaponIcons_NA[i] );
 			}
 			else
 			{
-				CG_DrawPic( holdX, y+10+yOffset, smallIconSize, smallIconSize, /*weaponInfo->weaponIcon*/cgs.media.weaponIcons[i] );
+				CG_DrawPic( holdX, y+10+yOffset, smallIconSize, smallIconSize, cgs.media.weaponIcons[i] );
 			}
 
 			holdX -= (smallIconSize+pad);
 		}
-		if ( i == WP_CONCUSSION )
-		{
-			drewConc = qtrue;
-			i = WP_ROCKET_LAUNCHER;
-		}
 	}
 
 	// Current Center Icon
-//	height = bigIconSize * cg.iconHUDPercent;
 	if (cgs.media.weaponIcons[cg.weaponSelect])
 	{
-	//	weaponInfo_t	*weaponInfo;
 		CG_RegisterWeapon( cg.weaponSelect );
-	//	weaponInfo = &cg_weapons[cg.weaponSelect];
 
 		trap->R_SetColor( colorTable[CT_WHITE]);
+
 		if (!CG_WeaponCheck(cg.weaponSelect))
 		{
 			CG_DrawPic( x-(bigIconSize/2), (y-((bigIconSize-smallIconSize)/2))+10+yOffset, bigIconSize, bigIconSize, cgs.media.weaponIcons_NA[cg.weaponSelect] );
@@ -1297,63 +1221,38 @@ void CG_DrawWeaponSelect( void ) {
 		}
 	}
 
-	if ( cg.weaponSelect == WP_CONCUSSION )
+	i = cg.weaponSelect + 1;
+
+	if ( i > WP_NUM_USEABLE)
 	{
-		i = WP_ROCKET_LAUNCHER;
-	}
-	else
-	{
-		i = cg.weaponSelect + 1;
-	}
-	if (i> LAST_USEABLE_WEAPON)
-	{
-		i = 1;
+		i = WP_FIRST_USEABLE;
 	}
 
 	// Right side ICONS
 	// Work forwards from current icon
 	holdX = x + (bigIconSize/2) + pad;
-//	height = smallIconSize * cg.iconHUDPercent;
-	for (iconCnt=1;iconCnt<(sideRightIconCnt+1);i++)
+
+	for (iconCnt = 1; iconCnt < (sideRightIconCnt +1 ); i++)
 	{
-		if ( i == WP_CONCUSSION )
+		if ( i > WP_NUM_USEABLE)
 		{
-			i++;
-		}
-		else if ( i == WP_ROCKET_LAUNCHER && !drewConc && cg.weaponSelect != WP_CONCUSSION )
-		{
-			i = WP_CONCUSSION;
-		}
-		if (i>LAST_USEABLE_WEAPON)
-		{
-			i = 1;
+			i = WP_FIRST_USEABLE;
 		}
 
-		if ( !(bits & ( 1 << i )))	// Does he have this weapon?
+		if ( !HaveWeapon(&cg.predictedPlayerState, i) )	// Does he have this weapon?
 		{
-			if ( i == WP_CONCUSSION )
-			{
-				drewConc = qtrue;
-				i = WP_FLECHETTE;
-			}
 			continue;
 		}
 
-		if ( !CG_WeaponSelectable(i) &&
-			(i == WP_THERMAL || i == WP_TRIP_MINE) )
-		{ //Don't show thermal and tripmine when out of them
-			continue;
-		}
+		iconCnt++;					// Good icon
 
-		++iconCnt;					// Good icon
-
-		if (/*weaponData[i].weaponIcon[0]*/cgs.media.weaponIcons[i])
+		if (cgs.media.weaponIcons[i])
 		{
-		//	weaponInfo_t	*weaponInfo;
 			CG_RegisterWeapon( i );
-		//	weaponInfo = &cg_weapons[i];
+
 			// No ammo for this weapon?
 			trap->R_SetColor( colorTable[CT_WHITE]);
+
 			if (!CG_WeaponCheck(i))
 			{
 				CG_DrawPic( holdX, y+10+yOffset, smallIconSize, smallIconSize, cgs.media.weaponIcons_NA[i] );
@@ -1366,23 +1265,18 @@ void CG_DrawWeaponSelect( void ) {
 
 			holdX += (smallIconSize+pad);
 		}
-		if ( i == WP_CONCUSSION )
-		{
-			drewConc = qtrue;
-			i = WP_FLECHETTE;
-		}
 	}
 
 	// draw the selected name
 	if ( cg_weapons[ cg.weaponSelect ].item )
 	{
-		vec4_t			textColor = { .875f, .718f, .121f, 1.0f };
-		char	text[1024];
-		char	upperKey[1024];
+		vec4_t		textColor = { .875f, .718f, .121f, 1.0f };
+		char		text[1024];
+		char		upperKey[1024];
 
 		strcpy(upperKey, cg_weapons[ cg.weaponSelect ].item->classname);
 
-		if ( trap->SE_GetStringTextString( va("SP_INGAME_%s",Q_strupr(upperKey)), text, sizeof( text )))
+		if ( trap->SE_GetStringTextString( va("SP_INGAME_%s", Q_strupr(upperKey)), text, sizeof( text )))
 		{
 			CG_DrawProportionalString(320, y+45+yOffset, text, UI_CENTER|UI_SMALLFONT, textColor);
 		}
@@ -1427,28 +1321,11 @@ void CG_NextWeapon_f( void ) {
 
 	for ( i = 0 ; i < WP_NUM_WEAPONS ; i++ ) {
 		//*SIGH*... Hack to put concussion rifle before rocketlauncher
-		if ( cg.weaponSelect == WP_FLECHETTE )
-		{
-			cg.weaponSelect = WP_CONCUSSION;
-		}
-		else if ( cg.weaponSelect == WP_CONCUSSION )
-		{
-			cg.weaponSelect = WP_ROCKET_LAUNCHER;
-		}
-		else if ( cg.weaponSelect == WP_DET_PACK )
-		{
-			cg.weaponSelect = WP_BRYAR_OLD;
-		}
-		else
-		{
-			cg.weaponSelect++;
-		}
-		if ( cg.weaponSelect == WP_NUM_WEAPONS ) {
+		cg.weaponSelect++;
+
+		if ( cg.weaponSelect == WP_NUM_USEABLE ) {
 			cg.weaponSelect = 0;
 		}
-	//	if ( cg.weaponSelect == WP_STUN_BATON ) {
-	//		continue;		// never cycle to gauntlet
-	//	}
 		if ( CG_WeaponSelectable( cg.weaponSelect ) ) {
 			break;
 		}
@@ -1492,29 +1369,12 @@ void CG_PrevWeapon_f( void ) {
 	original = cg.weaponSelect;
 
 	for ( i = 0 ; i < WP_NUM_WEAPONS ; i++ ) {
-		//*SIGH*... Hack to put concussion rifle before rocketlauncher
-		if ( cg.weaponSelect == WP_ROCKET_LAUNCHER )
-		{
-			cg.weaponSelect = WP_CONCUSSION;
-		}
-		else if ( cg.weaponSelect == WP_CONCUSSION )
-		{
-			cg.weaponSelect = WP_FLECHETTE;
-		}
-		else if ( cg.weaponSelect == WP_BRYAR_OLD )
-		{
-			cg.weaponSelect = WP_DET_PACK;
-		}
-		else
-		{
-			cg.weaponSelect--;
-		}
+		cg.weaponSelect--;
+		
 		if ( cg.weaponSelect == -1 ) {
 			cg.weaponSelect = WP_NUM_WEAPONS-1;
 		}
-	//	if ( cg.weaponSelect == WP_STUN_BATON ) {
-	//		continue;		// never cycle to gauntlet
-	//	}
+
 		if ( CG_WeaponSelectable( cg.weaponSelect ) ) {
 			break;
 		}
@@ -1550,7 +1410,7 @@ void CG_Weapon_f( void ) {
 
 	num = atoi( CG_Argv( 1 ) );
 
-	if ( num < 1 || num > LAST_USEABLE_WEAPON ) {
+	if ( num < 1 || num > WP_NUM_USEABLE ) {
 		return;
 	}
 
@@ -1572,7 +1432,7 @@ void CG_Weapon_f( void ) {
 	}
 	else
 	{
-		if (cg.snap->ps.stats[STAT_WEAPONS] & (1 << WP_SABER))
+		if (HaveWeapon(&cg.snap->ps, WP_SABER))
 		{
 			num = WP_SABER;
 		}
@@ -1582,7 +1442,7 @@ void CG_Weapon_f( void ) {
 		}
 	}
 
-	if (num > LAST_USEABLE_WEAPON+1)
+	if (num > WP_NUM_USEABLE+1)
 	{ //other weapons are off limits due to not actually being weapon weapons
 		return;
 	}
@@ -1629,13 +1489,13 @@ void CG_Weapon_f( void ) {
 
 	cg.weaponSelectTime = cg.time;
 
-	if ( ! ( cg.snap->ps.stats[STAT_WEAPONS] & ( 1 << num ) ) )
+	if (!HaveWeapon(&cg.snap->ps, num))
 	{
 		if (num == WP_SABER)
 		{ //don't have saber, try melee on the same slot
 			num = WP_MELEE;
 
-			if ( ! ( cg.snap->ps.stats[STAT_WEAPONS] & ( 1 << num ) ) )
+			if (!HaveWeapon(&cg.snap->ps, num))
 			{
 				return;
 			}
@@ -1674,7 +1534,7 @@ void CG_WeaponClean_f( void ) {
 
 	num = atoi( CG_Argv( 1 ) );
 
-	if ( num < 1 || num > LAST_USEABLE_WEAPON ) {
+	if ( num < 1 || num > WP_NUM_USEABLE ) {
 		return;
 	}
 
@@ -1687,8 +1547,9 @@ void CG_WeaponClean_f( void ) {
 		return;
 	}
 
-	if(num == WP_STUN_BATON) {
-		if (cg.snap->ps.stats[STAT_WEAPONS] & (1 << WP_SABER))
+	if(num == WP_STUN_BATON) 
+	{
+		if (HaveWeapon(&cg.snap->ps, WP_SABER))
 		{
 			num = WP_SABER;
 		}
@@ -1698,7 +1559,7 @@ void CG_WeaponClean_f( void ) {
 		}
 	}
 
-	if (num > LAST_USEABLE_WEAPON+1)
+	if (num > WP_NUM_USEABLE+1)
 	{ //other weapons are off limits due to not actually being weapon weapons
 		return;
 	}
@@ -1745,13 +1606,13 @@ void CG_WeaponClean_f( void ) {
 
 	cg.weaponSelectTime = cg.time;
 
-	if ( ! ( cg.snap->ps.stats[STAT_WEAPONS] & ( 1 << num ) ) )
+	if (HaveWeapon(&cg.snap->ps, num))
 	{
 		if (num == WP_SABER)
 		{ //don't have saber, try melee on the same slot
 			num = WP_MELEE;
 
-			if ( ! ( cg.snap->ps.stats[STAT_WEAPONS] & ( 1 << num ) ) )
+			if (!HaveWeapon(&cg.snap->ps, num))
 			{
 				return;
 			}
@@ -1785,7 +1646,7 @@ void CG_OutOfAmmoChange( int oldWeapon )
 
 	cg.weaponSelectTime = cg.time;
 
-	for ( i = LAST_USEABLE_WEAPON ; i > 0 ; i-- )	//We don't want the emplaced or turret
+	for ( i = WP_NUM_USEABLE ; i > 0 ; i-- )	//We don't want the emplaced or turret
 	{
 		if ( CG_WeaponSelectable( i ) )
 		{

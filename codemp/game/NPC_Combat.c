@@ -489,26 +489,6 @@ void G_SetEnemy( gentity_t *self, gentity_t *enemy )
 		G_AttackDelay( self, enemy );
 
 		//rwwFIXMEFIXME: Deal with this some other way.
-		/*
-		//FIXME: this is a disgusting hack that is supposed to make the Imperials start with their weapon holstered- need a better way
-		if ( self->client->ps.weapon == WP_NONE && !Q_strncmp( self->NPC_type, "imp", 3 ) && !(self->NPC->scriptFlags & SCF_FORCED_MARCH)  )
-		{
-			if ( self->client->ps.stats[STAT_WEAPONS] & ( 1 << WP_BLASTER ) )
-			{
-				ChangeWeapon( self, WP_BLASTER );
-				self->client->ps.weapon = WP_BLASTER;
-				self->client->ps.weaponstate = WEAPON_READY;
-				G_CreateG2AttachedWeaponModel( self, weaponData[WP_BLASTER].weaponMdl, self->handRBolt, 0 );
-			}
-			else if ( self->client->ps.stats[STAT_WEAPONS] & ( 1 << WP_BLASTER_PISTOL ) )
-			{
-				ChangeWeapon( self, WP_BLASTER_PISTOL );
-				self->client->ps.weapon = WP_BLASTER_PISTOL;
-				self->client->ps.weaponstate = WEAPON_READY;
-				G_CreateG2AttachedWeaponModel( self, weaponData[WP_BLASTER_PISTOL].weaponMdl, self->handRBolt, 0 );
-			}
-		}
-		*/
 		return;
 	}
 
@@ -523,51 +503,6 @@ void G_SetEnemy( gentity_t *self, gentity_t *enemy )
 	G_ClearEnemy(self);
 	self->enemy = enemy;
 }
-
-/*
-int ChooseBestWeapon( void )
-{
-	int		n;
-	int		weapon;
-
-	// check weapons in the NPC's weapon preference order
-	for ( n = 0; n < MAX_WEAPONS; n++ )
-	{
-		weapon = NPCInfo->weaponOrder[n];
-
-		if ( weapon == WP_NONE )
-		{
-			break;
-		}
-
-		if ( !HaveWeapon( weapon ) )
-		{
-			continue;
-		}
-
-		if ( client->ps.ammo[weaponData[weapon].ammoIndex] )
-		{
-			return weapon;
-		}
-	}
-
-	// check weapons serially (mainly in case a weapon is not on the NPC's list)
-	for ( weapon = 1; weapon < WP_NUM_WEAPONS; weapon++ )
-	{
-		if ( !HaveWeapon( weapon ) )
-		{
-			continue;
-		}
-
-		if ( client->ps.ammo[weaponData[weapon].ammoIndex] )
-		{
-			return weapon;
-		}
-	}
-
-	return client->ps.weapon;
-}
-*/
 
 void ChangeWeapon( gentity_t *ent, int newWeapon )
 {
@@ -1072,75 +1007,8 @@ void WeaponThink( qboolean inCombat )
 		return;
 	}
 
-//MCG - Begin
-	//For now, no-one runs out of ammo
-#ifndef __MMO__
-	if(NPCS.NPC->client->ps.ammo[ weaponData[NPCS.client->ps.weapon].ammoIndex ] < 10)	// checkme
-//	if(NPC->client->ps.ammo[ client->ps.weapon ] < 10)
-	{
-		Add_Ammo (NPCS.NPC, NPCS.client->ps.weapon, 100);
-	}
-#endif //__MMO__
-
-	/*if ( NPC->playerTeam == TEAM_BORG )
-	{//HACK!!!
-		if(!(NPC->client->ps.stats[STAT_WEAPONS] & ( 1 << WP_BORG_WEAPON )))
-			NPC->client->ps.stats[STAT_WEAPONS] |= ( 1 << WP_BORG_WEAPON );
-
-		if ( client->ps.weapon != WP_BORG_WEAPON )
-		{
-			NPC_ChangeWeapon( WP_BORG_WEAPON );
-			Add_Ammo (NPC, client->ps.weapon, 10);
-			NPCInfo->currentAmmo = client->ps.ammo[client->ps.weapon];
-		}
-	}
-	else */
-
-	/*if ( NPC->client->playerTeam == TEAM_SCAVENGERS )
-	{//HACK!!!
-		if(!(NPC->client->ps.stats[STAT_WEAPONS] & ( 1 << WP_BLASTER )))
-			NPC->client->ps.stats[STAT_WEAPONS] |= ( 1 << WP_BLASTER );
-
-		if ( client->ps.weapon != WP_BLASTER )
-
-		{
-			NPC_ChangeWeapon( WP_BLASTER );
-			Add_Ammo (NPC, client->ps.weapon, 10);
-//			NPCInfo->currentAmmo = client->ps.ammo[client->ps.weapon];
-			NPCInfo->currentAmmo = client->ps.ammo[weaponData[client->ps.weapon].ammoIndex];	// checkme
-		}
-	}
-	else*/
-//MCG - End
-	{
-		// if the gun in our hands is out of ammo, we need to change
-		/*if ( client->ps.ammo[client->ps.weapon] == 0 )
-		{
-			NPCInfo->aiFlags |= NPCAI_CHECK_WEAPON;
-		}
-
-		if ( NPCInfo->aiFlags & NPCAI_CHECK_WEAPON )
-		{
-			NPCInfo->aiFlags &= ~NPCAI_CHECK_WEAPON;
-			bestWeapon = ChooseBestWeapon();
-			if ( bestWeapon != client->ps.weapon )
-			{
-				NPC_ChangeWeapon( bestWeapon );
-			}
-		}*/
-	}
-
 	NPCS.ucmd.weapon = NPCS.client->ps.weapon;
 	ShootThink();
-}
-
-/*
-HaveWeapon
-*/
-
-qboolean HaveWeapon( int weapon )
-{
-	return ( NPCS.client->ps.stats[STAT_WEAPONS] & ( 1 << weapon ) );
 }
 
 qboolean EntIsGlass (gentity_t *check)

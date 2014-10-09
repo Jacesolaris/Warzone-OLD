@@ -14,6 +14,8 @@
 	#include "ui/ui_local.h"
 #endif
 
+extern qboolean BG_HaveWeapon ( const playerState_t *ps, int weapon );
+
 extern stringID_table_t animTable[MAX_ANIMATIONS+1];
 
 int BG_SoundIndex( const char *sound ) {

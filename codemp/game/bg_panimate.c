@@ -16,6 +16,8 @@
 #endif
 
 extern saberInfo_t *BG_MySaber( int clientNum, int saberNum );
+extern qboolean BG_HaveWeapon ( const playerState_t *ps, int weapon );
+
 /*
 ==============================================================================
 BEGIN: Animation utility functions (sequence checking)

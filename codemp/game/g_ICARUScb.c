@@ -3332,7 +3332,7 @@ static void Q3_SetWeapon (int entID, const char *wp_name)
 	gentity_t	*ent  = &g_entities[entID];
 	int		wp = GetIDForString( WPTable, wp_name );
 
-	ent->client->ps.stats[STAT_WEAPONS] = (1<<wp);
+	ent->client->ps.temporaryWeapon = wp;
 	ChangeWeapon( ent, wp );
 }
 

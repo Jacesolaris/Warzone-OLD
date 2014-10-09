@@ -23,6 +23,8 @@
 	#include "ui/ui_local.h"
 #endif
 
+extern qboolean BG_HaveWeapon ( const playerState_t *ps, int weapon );
+
 #define SIEGECHAR_TAB 9 //perhaps a bit hacky, but I don't think there's any define existing for "tab"
 
 char		siege_info[MAX_SIEGE_INFO_SIZE];
@@ -69,13 +71,84 @@ stringID_table_t StanceTable[] =
 stringID_table_t WPTable[] =
 {
 	{"NULL",WP_NONE},
+
+	// =================================================================
+	//
+	// Melee weapons...
+	//
+	// =================================================================
+
+	// START: Do not change anything between these 2 comments...
+	ENUM2STRING(WP_STUN_BATON),
+	// END: ^^^ Do not change...
+
+	ENUM2STRING(WP_MELEE),
+	// Add new melee weapons here...
+
+
+
+	// START: Do not change anything between these 2 comments...
+	ENUM2STRING(WP_SABER),
+	// END: ^^^ Do not change...
+
+	// =================================================================
+	//
+	// Guns...
+	//
+	// =================================================================
+
+	ENUM2STRING(WP_BRYAR_PISTOL),
+	ENUM2STRING(WP_BRYAR_OLD),
+	ENUM2STRING(WP_BLASTER),
+	ENUM2STRING(WP_DISRUPTOR),
+	ENUM2STRING(WP_BOWCASTER),
+	ENUM2STRING(WP_REPEATER),
+	ENUM2STRING(WP_DEMP2),
+	ENUM2STRING(WP_FLECHETTE),
+	ENUM2STRING(WP_CONCUSSION),
+	// Add new guns here...
+
+
+
+	// START: Do not change anything between these 2 comments...
+	ENUM2STRING(WP_ROCKET_LAUNCHER),
+	// END: ^^^ Do not change...
+
+	// =================================================================
+	//
+	// Grenades and explosives here...
+	//
+	// =================================================================
+
+	ENUM2STRING(WP_THERMAL),
+	ENUM2STRING(WP_TRIP_MINE),
+	// Add new grenades/explosives here...
+
+
+
+	// START: Do not change anything between these 2 comments...
+	ENUM2STRING(WP_DET_PACK),
+	// END: ^^^ Do not change...
+
+	// =================================================================
+	//
+	// Special weapons - do not add normal guns or melee weapons here...
+	//
+	// =================================================================
+
+	ENUM2STRING(WP_EMPLACED_GUN),
+	ENUM2STRING(WP_TURRET),
+
+	{"", 0}
+
+	/*
 	ENUM2STRING(WP_NONE),
 	// Player weapons
 	ENUM2STRING(WP_STUN_BATON),
 	ENUM2STRING(WP_MELEE),
 	ENUM2STRING(WP_SABER),
 	ENUM2STRING(WP_BRYAR_PISTOL),
-	{"WP_BLASTER_PISTOL", WP_BRYAR_PISTOL},
+	ENUM2STRING(WP_BRYAR_OLD),
 	ENUM2STRING(WP_BLASTER),
 	ENUM2STRING(WP_DISRUPTOR),
 	ENUM2STRING(WP_BOWCASTER),
@@ -87,10 +160,11 @@ stringID_table_t WPTable[] =
 	ENUM2STRING(WP_TRIP_MINE),
 	ENUM2STRING(WP_DET_PACK),
 	ENUM2STRING(WP_CONCUSSION),
-	ENUM2STRING(WP_BRYAR_OLD),
+	
 	ENUM2STRING(WP_EMPLACED_GUN),
 	ENUM2STRING(WP_TURRET),
-	{"", 0}
+	*/
+	
 };
 
 stringID_table_t FPTable[] =

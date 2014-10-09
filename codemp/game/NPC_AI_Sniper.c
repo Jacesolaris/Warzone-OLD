@@ -2,6 +2,8 @@
 #include "g_nav.h"
 #include "anims.h"
 
+//#define __SNIPER_DEBUG__
+
 extern void G_AddVoiceEvent( gentity_t *self, int event, int speakDebounceTime );
 extern void G_SoundOnEnt( gentity_t *ent, soundChannel_t channel, const char *soundPath );
 extern void NPC_TempLookTarget( gentity_t *self, int lookEntNum, int minLookTime, int maxLookTime );
@@ -653,18 +655,27 @@ void NPC_BSSniper_Attack( void )
 	{
 		NPCS.NPC->enemy = NULL;
 		NPC_BSSniper_Patrol();//FIXME: or patrol?
+#ifdef __SNIPER_DEBUG__
+		trap->Print("SNIPER DEBUG: %s has no enemy.\n", NPCS.NPC->client->pers.netname);
+#endif //__SNIPER_DEBUG__
 		return;
 	}
 
 	if ( TIMER_Done( NPCS.NPC, "flee" ) && NPC_CheckForDanger( NPC_CheckAlertEvents( qtrue, qtrue, -1, qfalse, AEL_DANGER ) ) )
 	{//going to run
 		NPC_UpdateAngles( qtrue, qtrue );
+#ifdef __SNIPER_DEBUG__
+		trap->Print("SNIPER DEBUG: %s should be fleeing.\n", NPCS.NPC->client->pers.netname);
+#endif //__SNIPER_DEBUG__
 		return;
 	}
 
 	if ( !NPCS.NPC->enemy )
 	{//WTF?  somehow we lost our enemy?
 		NPC_BSSniper_Patrol();//FIXME: or patrol?
+#ifdef __SNIPER_DEBUG__
+		trap->Print("SNIPER DEBUG: %s has lost it's enemy.\n", NPCS.NPC->client->pers.netname);
+#endif //__SNIPER_DEBUG__
 		return;
 	}
 
@@ -673,6 +684,7 @@ void NPC_BSSniper_Attack( void )
 	faceEnemy2 = qfalse;
 	shoot2 = qfalse;
 	enemyDist2 = DistanceSquared( NPCS.NPC->r.currentOrigin, NPCS.NPC->enemy->r.currentOrigin );
+	
 	if ( enemyDist2 < 16384 )//128 squared
 	{//too close, so switch to primary fire
 		if ( NPCS.NPC->client->ps.weapon == WP_DISRUPTOR )
@@ -687,6 +699,9 @@ void NPC_BSSniper_Attack( void )
 					//reset fire-timing variables
 					NPC_ChangeWeapon( WP_DISRUPTOR );
 					NPC_UpdateAngles( qtrue, qtrue );
+#ifdef __SNIPER_DEBUG__
+					trap->Print("SNIPER DEBUG: %s disabled alt fire.\n", NPCS.NPC->client->pers.netname);
+#endif //__SNIPER_DEBUG__
 					return;
 				}
 			}
@@ -703,12 +718,16 @@ void NPC_BSSniper_Attack( void )
 				//reset fire-timing variables
 				NPC_ChangeWeapon( WP_DISRUPTOR );
 				NPC_UpdateAngles( qtrue, qtrue );
+#ifdef __SNIPER_DEBUG__
+				trap->Print("SNIPER DEBUG: %s enabled alt fire.\n", NPCS.NPC->client->pers.netname);
+#endif //__SNIPER_DEBUG__
 				return;
 			}
 		}
 	}
 
 	Sniper_UpdateEnemyPos();
+
 	//can we see our target?
 	if ( NPC_ClearLOS4( NPCS.NPC->enemy ) )//|| (NPCInfo->stats.aim >= 5 && trap->inPVS( NPC->client->renderInfo.eyePoint, NPC->enemy->currentOrigin )) )
 	{
@@ -766,10 +785,23 @@ void NPC_BSSniper_Attack( void )
 
 	if ( move2 )
 	{//move toward goal
+#if 1
 		if ( NPCS.NPCInfo->goalEntity )//&& ( NPCInfo->goalEntity != NPC->enemy || enemyDist2 > 10000 ) )//100 squared
 		{
 			move2 = Sniper_Move();
+#ifdef __SNIPER_DEBUG__
+			trap->Print("SNIPER DEBUG: %s is moving.\n", NPCS.NPC->client->pers.netname);
+#endif //__SNIPER_DEBUG__
 		}
+#else //!0
+		if (enemyDist2 < 256*256 && NPCS.NPCInfo->goalEntity)
+		{// UQ1: How about only when they are too close???
+			move2 = Sniper_Move();
+#ifdef __SNIPER_DEBUG__
+			trap->Print("SNIPER DEBUG: %s is moving.\n", NPCS.NPC->client->pers.netname);
+#endif //__SNIPER_DEBUG__
+		}
+#endif //0
 		else
 		{
 			move2 = qfalse;
@@ -822,7 +854,7 @@ void NPC_BSSniper_Attack( void )
 		Sniper_FaceEnemy();
 	}
 
-	if ( NPCS.NPCInfo->scriptFlags&SCF_DONT_FIRE )
+	if ( NPCS.NPCInfo->scriptFlags & SCF_DONT_FIRE )
 	{
 		shoot2 = qfalse;
 	}
@@ -833,16 +865,23 @@ void NPC_BSSniper_Attack( void )
 		if ( TIMER_Done( NPCS.NPC, "attackDelay" ) )
 		{
 			WeaponThink( qtrue );
-			if ( NPCS.ucmd.buttons&(BUTTON_ATTACK|BUTTON_ALT_ATTACK) )
+
+			if ( NPCS.ucmd.buttons & (BUTTON_ATTACK|BUTTON_ALT_ATTACK) )
 			{
 				G_SoundOnEnt( NPCS.NPC, CHAN_WEAPON, "sound/null.wav" );
+#ifdef __SNIPER_DEBUG__
+				trap->Print("SNIPER DEBUG: %s has shot at enemy.\n", NPCS.NPC->client->pers.netname);
+#endif //__SNIPER_DEBUG__
 			}
 
 			//took a shot, now hide
-			if ( !(NPCS.NPC->spawnflags&SPF_NO_HIDE) && !Q_irand( 0, 1 ) )
+			if ( !(NPCS.NPC->spawnflags & SPF_NO_HIDE) && !Q_irand( 0, 1 ) )
 			{
 				//FIXME: do this if in combat point and combat point has duck-type cover... also handle lean-type cover
 				Sniper_StartHide();
+#ifdef __SNIPER_DEBUG__
+				trap->Print("SNIPER DEBUG: %s should take cover.\n", NPCS.NPC->client->pers.netname);
+#endif //__SNIPER_DEBUG__
 			}
 			else
 			{

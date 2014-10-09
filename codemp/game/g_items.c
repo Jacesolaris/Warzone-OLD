@@ -1436,11 +1436,11 @@ void EWebDisattach(gentity_t *owner, gentity_t *eweb)
 	owner->client->ps.emplacedIndex = 0;
 	if (owner->health > 0)
 	{
-		owner->client->ps.stats[STAT_WEAPONS] = eweb->genericValue11;
+		owner->client->ps.temporaryWeapon = eweb->genericValue11;
 	}
 	else
 	{
-		owner->client->ps.stats[STAT_WEAPONS] = 0;
+		owner->client->ps.temporaryWeapon = 0; // ????
 	}
 	eweb->think = G_FreeEntity;
 	eweb->nextthink = level.time;
@@ -1815,7 +1815,7 @@ void EWebThink(gentity_t *self)
 				owner->client->ps.viewangles[YAW] = yaw;
 			}
 			owner->client->ps.weapon = WP_EMPLACED_GUN;
-			owner->client->ps.stats[STAT_WEAPONS] = WP_EMPLACED_GUN;
+			owner->client->ps.temporaryWeapon = WP_EMPLACED_GUN;
 
 			if (self->genericValue8 < level.time)
 			{ //make sure the anim timer is done
@@ -1973,7 +1973,7 @@ gentity_t *EWeb_Create(gentity_t *spawner)
 	trap->LinkEntity((sharedEntity_t *)ent);
 
 	//store off the owner's current weapons, we will be forcing him to use the "emplaced" weapon
-	ent->genericValue11 = spawner->client->ps.stats[STAT_WEAPONS];
+	ent->genericValue11 = spawner->client->ps.temporaryWeapon;
 
 	//start the "unfolding" anim
 	EWeb_SetBoneAnim(ent, 4, 20);
@@ -2124,79 +2124,15 @@ int Pickup_Holdable( gentity_t *ent, gentity_t *other ) {
 
 void Add_Ammo (gentity_t *ent, int weapon, int count)
 {
-#ifndef __MMO__
-	int max = ammoData[weapon].max;
-
-	if (ent->client->ps.eFlags & EF_DOUBLE_AMMO)
-	{ // fix: double ammo for siege
-		max *= 2;
-	}
-
-	if ( ent->client->ps.ammo[weapon] < max )
-	{
-		ent->client->ps.ammo[weapon] += count;
-		if ( ent->client->ps.ammo[weapon] > max )
-		{
-			ent->client->ps.ammo[weapon] = max;
-		}
-	}
-#endif //__MMO__
 }
 
 int Pickup_Ammo (gentity_t *ent, gentity_t *other)
 {
-#ifndef __MMO__
-	int		quantity;
-
-	if ( ent->count ) {
-		quantity = ent->count;
-	} else {
-		quantity = ent->item->quantity;
-	}
-
-	if (ent->item->giTag == -1)
-	{ //an ammo_all, give them a bit of everything
-		if ( level.gametype == GT_SIEGE )	// complaints that siege tech's not giving enough ammo.  Does anything else use ammo all?
-		{
-			Add_Ammo(other, AMMO_BLASTER, 100);
-			Add_Ammo(other, AMMO_POWERCELL, 100);
-			Add_Ammo(other, AMMO_METAL_BOLTS, 100);
-			Add_Ammo(other, AMMO_ROCKETS, 5);
-			if (other->client->ps.stats[STAT_WEAPONS] & (1<<WP_DET_PACK))
-			{
-				Add_Ammo(other, AMMO_DETPACK, 2);
-			}
-			if (other->client->ps.stats[STAT_WEAPONS] & (1<<WP_THERMAL))
-			{
-				Add_Ammo(other, AMMO_THERMAL, 2);
-			}
-			if (other->client->ps.stats[STAT_WEAPONS] & (1<<WP_TRIP_MINE))
-			{
-				Add_Ammo(other, AMMO_TRIPMINE, 2);
-			}
-		}
-		else
-		{
-			Add_Ammo(other, AMMO_BLASTER, 50);
-			Add_Ammo(other, AMMO_POWERCELL, 50);
-			Add_Ammo(other, AMMO_METAL_BOLTS, 50);
-			Add_Ammo(other, AMMO_ROCKETS, 2);
-		}
-	}
-	else
-	{
-		Add_Ammo (other, ent->item->giTag, quantity);
-	}
-#endif //__MMO__
-
 	return adjustRespawnTime(RESPAWN_AMMO, ent->item->giType, ent->item->giTag);
 }
 
 //======================================================================
 
-//[VisualWeapons]
-qboolean G_ClientPlugin(void);
-//[/VisualWeapons]
 int Pickup_Weapon (gentity_t *ent, gentity_t *other) {
 	int		quantity;
 
@@ -2208,50 +2144,15 @@ int Pickup_Weapon (gentity_t *ent, gentity_t *other) {
 		} else {
 			quantity = ent->item->quantity;
 		}
-
-		// dropped items and teamplay weapons always have full ammo
-		if ( ! (ent->flags & FL_DROPPED_ITEM) && level.gametype != GT_TEAM ) {
-			// respawning rules
-
-			// New method:  If the player has less than half the minimum, give them the minimum, else add 1/2 the min.
-
-#ifndef __MMO__
-			// drop the quantity if the already have over the minimum
-			if ( other->client->ps.ammo[ ent->item->giTag ] < quantity*0.5 ) {
-				quantity = quantity - other->client->ps.ammo[ ent->item->giTag ];
-			} else {
-				quantity = quantity*0.5;		// only add half the value.
-			}
-#endif //__MMO__
-
-			// Old method:  If the player has less than the minimum, give them the minimum, else just add 1.
-/*
-			// drop the quantity if the already have over the minimum
-			if ( other->client->ps.ammo[ ent->item->giTag ] < quantity ) {
-				quantity = quantity - other->client->ps.ammo[ ent->item->giTag ];
-			} else {
-				quantity = 1;		// only add a single shot
-			}
-			*/
-		}
 	}
 
 	// add the weapon
-	other->client->ps.stats[STAT_WEAPONS] |= ( 1 << ent->item->giTag );
-
-	//[VisualWeapons]
-	//update the weapon stats for this player since they have changed.
-	if (G_ClientPlugin())
-	{//don't send the weapon updates if someone isn't able to process this new event type (IE anyone without
-		//the OJP client plugin)
-		G_AddEvent(other, EV_WEAPINVCHANGE, other->client->ps.stats[STAT_WEAPONS]);
+	if (other->client->ps.temporaryWeapon == other->client->ps.weapon)
+	{// He was holding his old temp weapon. Replace the one in his hand too...
+		other->client->ps.weapon = ent->item->giTag;
 	}
-	//[/VisualWeapons]
 
-#ifndef __MMO__
-	//Add_Ammo( other, ent->item->giTag, quantity );
-	Add_Ammo( other, weaponData[ent->item->giTag].ammoIndex, quantity );
-#endif //__MMO__
+	other->client->ps.temporaryWeapon = ent->item->giTag;
 
 	G_LogWeaponPickup(other->s.number, ent->item->giTag);
 
@@ -2520,45 +2421,15 @@ void Touch_Item (gentity_t *ent, gentity_t *other, trace_t *trace) {
 	// call the item-specific pickup function
 	switch( ent->item->giType ) {
 	case IT_WEAPON:
+		if (!(other->client->pers.cmd.buttons & BUTTON_USE))
+		{// Only pick up weapons when the USE button is held down...
+			return;
+		}
 		respawn = Pickup_Weapon(ent, other);
 //		predict = qfalse;
 		predict = qtrue;
 		break;
 	case IT_AMMO:
-#ifndef __MMO__
-		respawn = Pickup_Ammo(ent, other);
-		if (ent->item->giTag == AMMO_THERMAL || ent->item->giTag == AMMO_TRIPMINE || ent->item->giTag == AMMO_DETPACK)
-		{
-			int weapForAmmo = 0;
-
-			if (ent->item->giTag == AMMO_THERMAL)
-			{
-				weapForAmmo = WP_THERMAL;
-			}
-			else if (ent->item->giTag == AMMO_TRIPMINE)
-			{
-				weapForAmmo = WP_TRIP_MINE;
-			}
-			else
-			{
-				weapForAmmo = WP_DET_PACK;
-			}
-
-			if (other && other->client && other->client->ps.ammo[weaponData[weapForAmmo].ammoIndex] > 0 )
-			{
-				other->client->ps.stats[STAT_WEAPONS] |= (1 << weapForAmmo);
-				//[VisualWeapons]
-				//update the weapon stats for this player since they have changed.
-				if (G_ClientPlugin())
-				{//don't send the weapon updates if someone isn't able to process this new event type (IE anyone without
-					//the OJP client plugin)
-					G_AddEvent(other, EV_WEAPINVCHANGE, other->client->ps.stats[STAT_WEAPONS]);
-				}
-				//[/VisualWeapons]
-			}
-		}
-//		predict = qfalse;
-#endif //__MMO__
 		predict = qtrue;
 		break;
 	case IT_ARMOR:

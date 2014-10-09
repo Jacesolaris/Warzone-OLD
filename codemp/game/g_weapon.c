@@ -4828,7 +4828,7 @@ void emplaced_gun_use( gentity_t *self, gentity_t *other, trace_t *trace )
 	// swap the users weapon with the emplaced gun
 	activator->client->ps.weapon = self->s.weapon;
 	activator->client->ps.weaponstate = WEAPON_READY;
-	activator->client->ps.stats[STAT_WEAPONS] |= ( 1 << WP_EMPLACED_GUN );
+	activator->client->ps.temporaryWeapon = WP_EMPLACED_GUN;
 
 	activator->client->ps.emplacedIndex = self->s.number;
 
@@ -4954,7 +4954,7 @@ void emplaced_gun_update(gentity_t *self)
 	if ((self->activator && self->activator->client) &&
 		(!self->activator->inuse || self->activator->client->ps.emplacedIndex != self->s.number || self->genericValue4 || ownLen > 64))
 	{ //get the user off of me then
-		self->activator->client->ps.stats[STAT_WEAPONS] &= ~(1<<WP_EMPLACED_GUN);
+		self->activator->client->ps.temporaryWeapon = WP_NONE;
 
 		oldWeap = self->activator->client->ps.weapon;
 		self->activator->client->ps.weapon = self->s.weapon;

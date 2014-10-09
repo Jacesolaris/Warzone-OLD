@@ -6,6 +6,8 @@
 #include "bg_public.h"
 #include "bg_local.h"
 
+qboolean BG_HaveWeapon ( const playerState_t *ps, int weapon );
+
 // Muzzle point table...
 vec3_t WP_MuzzlePoint[WP_NUM_WEAPONS] =
 {//	Fwd,	right,	up.
@@ -14,18 +16,18 @@ vec3_t WP_MuzzlePoint[WP_NUM_WEAPONS] =
 	{0	,	8,		0	},	// WP_MELEE,
 	{8	,	16,		0	},	// WP_SABER,
 	{12,	6,		-6	},	// WP_BRYAR_PISTOL,
+	{12,	6,		-6	},	// WP_BRYAR_OLD,
 	{12,	6,		-6	},	// WP_BLASTER,
 	{12,	6,		-6	},	// WP_DISRUPTOR,
 	{12,	2,		-6	},	// WP_BOWCASTER,
 	{12,	4.5,	-6	},	// WP_REPEATER,
 	{12,	6,		-6	},	// WP_DEMP2,
 	{12,	6,		-6	},	// WP_FLECHETTE,
+	{12,	6,		-6	},	// WP_CONCUSSION
 	{12,	8,		-4	},	// WP_ROCKET_LAUNCHER,
 	{12,	0,		-4	},	// WP_THERMAL,
 	{12,	0,		-10	},	// WP_TRIP_MINE,
 	{12,	0,		-4	},	// WP_DET_PACK,
-	{12,	6,		-6	},	// WP_CONCUSSION
-	{12,	6,		-6	},	// WP_BRYAR_OLD,
 };
 
 weaponData_t weaponData[WP_NUM_WEAPONS] =
@@ -114,6 +116,23 @@ weaponData_t weaponData[WP_NUM_WEAPONS] =
 		0,//1,						//int		altChargeSub;		// above for secondary
 		0,						//	int		maxCharge;			// stop subtracting once charged for this many ms
 		0,//1500					//	int		altMaxCharge;		// above for secondary
+	},
+	{	// WP_BRYAR_OLD,
+//		"Bryar Pistol",			//	char	classname[32];		// Spawning name
+		AMMO_BLASTER,			//	int		ammoIndex;			// Index to proper ammo slot
+		15,						//	int		ammoLow;			// Count when ammo is low
+		2,						//	int		energyPerShot;		// Amount of energy used per shot
+		400,					//	int		fireTime;			// Amount of time between firings
+		8192,					//	int		range;				// Range of weapon
+		2,						//	int		altEnergyPerShot;	// Amount of energy used for alt-fire
+		400,					//	int		altFireTime;		// Amount of time between alt-firings
+		8192,					//	int		altRange;			// Range of alt-fire
+		0,						//	int		chargeSubTime;		// ms interval for subtracting ammo during charge
+		200,					//	int		altChargeSubTime;	// above for secondary
+		0,						//	int		chargeSub;			// amount to subtract during charge on each interval
+		1,						//int		altChargeSub;		// above for secondary
+		0,						//	int		maxCharge;			// stop subtracting once charged for this many ms
+		1500					//	int		altMaxCharge;		// above for secondary
 	},
 	{	// WP_BLASTER
 //		"E11 Blaster Rifle",	//	char	classname[32];		// Spawning name
@@ -217,6 +236,23 @@ weaponData_t weaponData[WP_NUM_WEAPONS] =
 		0,						//	int		maxCharge;			// stop subtracting once charged for this many ms
 		0						//	int		altMaxCharge;		// above for secondary
 	},
+	{	// WP_CONCUSSION
+//		"Concussion Rifle",		//	char	classname[32];		// Spawning name
+		AMMO_METAL_BOLTS,		//	int		ammoIndex;			// Index to proper ammo slot
+		40,						//	int		ammoLow;			// Count when ammo is low
+		40,						//	int		energyPerShot;		// Amount of energy used per shot
+		800,					//	int		fireTime;			// Amount of time between firings
+		8192,					//	int		range;				// Range of weapon
+		50,						//	int		altEnergyPerShot;	// Amount of energy used for alt-fire
+		1200,					//	int		altFireTime;		// Amount of time between alt-firings
+		8192,					//	int		altRange;			// Range of alt-fire
+		0,						//	int		chargeSubTime;		// ms interval for subtracting ammo during charge
+		0,						//	int		altChargeSubTime;	// above for secondary
+		0,						//	int		chargeSub;			// amount to subtract during charge on each interval
+		0,						//	int		altChargeSub;		// above for secondary
+		0,						//	int		maxCharge;			// stop subtracting once charged for this many ms
+		0						//	int		altMaxCharge;		// above for secondary
+	},
 	{	// WP_ROCKET_LAUNCHER
 //		"Merr-Sonn Missile System",	//	char	classname[32];		// Spawning name
 		AMMO_ROCKETS,			//	int		ammoIndex;			// Index to proper ammo slot
@@ -285,40 +321,6 @@ weaponData_t weaponData[WP_NUM_WEAPONS] =
 		0,						//	int		maxCharge;			// stop subtracting once charged for this many ms
 		0						//	int		altMaxCharge;		// above for secondary
 	},
-	{	// WP_CONCUSSION
-//		"Concussion Rifle",		//	char	classname[32];		// Spawning name
-		AMMO_METAL_BOLTS,		//	int		ammoIndex;			// Index to proper ammo slot
-		40,						//	int		ammoLow;			// Count when ammo is low
-		40,						//	int		energyPerShot;		// Amount of energy used per shot
-		800,					//	int		fireTime;			// Amount of time between firings
-		8192,					//	int		range;				// Range of weapon
-		50,						//	int		altEnergyPerShot;	// Amount of energy used for alt-fire
-		1200,					//	int		altFireTime;		// Amount of time between alt-firings
-		8192,					//	int		altRange;			// Range of alt-fire
-		0,						//	int		chargeSubTime;		// ms interval for subtracting ammo during charge
-		0,						//	int		altChargeSubTime;	// above for secondary
-		0,						//	int		chargeSub;			// amount to subtract during charge on each interval
-		0,						//	int		altChargeSub;		// above for secondary
-		0,						//	int		maxCharge;			// stop subtracting once charged for this many ms
-		0						//	int		altMaxCharge;		// above for secondary
-	},
-	{	// WP_BRYAR_OLD,
-//		"Bryar Pistol",			//	char	classname[32];		// Spawning name
-		AMMO_BLASTER,			//	int		ammoIndex;			// Index to proper ammo slot
-		15,						//	int		ammoLow;			// Count when ammo is low
-		2,						//	int		energyPerShot;		// Amount of energy used per shot
-		400,					//	int		fireTime;			// Amount of time between firings
-		8192,					//	int		range;				// Range of weapon
-		2,						//	int		altEnergyPerShot;	// Amount of energy used for alt-fire
-		400,					//	int		altFireTime;		// Amount of time between alt-firings
-		8192,					//	int		altRange;			// Range of alt-fire
-		0,						//	int		chargeSubTime;		// ms interval for subtracting ammo during charge
-		200,					//	int		altChargeSubTime;	// above for secondary
-		0,						//	int		chargeSub;			// amount to subtract during charge on each interval
-		1,						//int		altChargeSub;		// above for secondary
-		0,						//	int		maxCharge;			// stop subtracting once charged for this many ms
-		1500					//	int		altMaxCharge;		// above for secondary
-	},
 	{	// WP_EMPLCACED_GUN
 //		"Emplaced Gun",			//	char	classname[32];		// Spawning name
 		/*AMMO_BLASTER*/0,			//	int		ammoIndex;			// Index to proper ammo slot
@@ -355,48 +357,23 @@ weaponData_t weaponData[WP_NUM_WEAPONS] =
 	}
 };
 
-ammoData_t ammoData[AMMO_MAX] =
+
+qboolean BG_HaveWeapon ( const playerState_t *ps, int weapon )
 {
-	{	// AMMO_NONE
-//		"",				//	char	icon[32];	// Name of ammo icon file
-		0				//	int		max;		// Max amount player can hold of ammo
-	},
-	{	// AMMO_FORCE
-//		"",				//	char	icon[32];	// Name of ammo icon file
-		100				//	int		max;		// Max amount player can hold of ammo
-	},
-	{	// AMMO_BLASTER
-//		"",				//	char	icon[32];	// Name of ammo icon file
-		300				//	int		max;		// Max amount player can hold of ammo
-	},
-	{	// AMMO_POWERCELL
-//		"",				//	char	icon[32];	// Name of ammo icon file
-		300				//	int		max;		// Max amount player can hold of ammo
-	},
-	{	// AMMO_METAL_BOLTS
-//		"",				//	char	icon[32];	// Name of ammo icon file
-		300				//	int		max;		// Max amount player can hold of ammo
-	},
-	{	// AMMO_ROCKETS
-//		"",				//	char	icon[32];	// Name of ammo icon file
-		25				//	int		max;		// Max amount player can hold of ammo
-	},
-	{	// AMMO_EMPLACED
-//		"",				//	char	icon[32];	// Name of ammo icon file
-		800				//	int		max;		// Max amount player can hold of ammo
-	},
-	{	// AMMO_THERMAL
-//		"",				//	char	icon[32];	// Name of ammo icon file
-		10				//	int		max;		// Max amount player can hold of ammo
-	},
-	{	// AMMO_TRIPMINE
-//		"",				//	char	icon[32];	// Name of ammo icon file
-		10				//	int		max;		// Max amount player can hold of ammo
-	},
-	{	// AMMO_DETPACK
-//		"",				//	char	icon[32];	// Name of ammo icon file
-		10				//	int		max;		// Max amount player can hold of ammo
-	}
-};
+	if (ps->primaryWeapon == weapon && weapon <= WP_NUM_USEABLE) return qtrue;
+	if (ps->secondaryWeapon == weapon && weapon <= WP_NUM_USEABLE) return qtrue;
+	if (ps->temporaryWeapon == weapon && weapon <= WP_NUM_USEABLE) return qtrue;
+	if (ps->temporaryWeapon == WP_ALL_WEAPONS && weapon <= WP_NUM_USEABLE) return qtrue;
 
+	return qfalse;
+}
 
+qboolean HaveWeapon ( playerState_t *ps, int weapon )
+{
+	if (ps->primaryWeapon == weapon && weapon <= WP_NUM_USEABLE) return qtrue;
+	if (ps->secondaryWeapon == weapon && weapon <= WP_NUM_USEABLE) return qtrue;
+	if (ps->temporaryWeapon == weapon && weapon <= WP_NUM_USEABLE) return qtrue;
+	if (ps->temporaryWeapon == WP_ALL_WEAPONS && weapon <= WP_NUM_USEABLE) return qtrue;
+
+	return qfalse;
+}

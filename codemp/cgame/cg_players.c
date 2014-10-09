@@ -186,7 +186,7 @@ sfxHandle_t	CG_CustomSound( int clientNum, const char *soundName ) {
 	char		lSoundName[MAX_QPATH];
 
 	if ( !soundName[0] ) {
-		return NULL; // UQ1: Seems to happen occasionally...
+		return (sfxHandle_t)NULL; // UQ1: Seems to happen occasionally...
 	}
 
 	if ( soundName[0] != '*' ) {
@@ -13131,12 +13131,13 @@ void CG_HolsteredWeaponRender(centity_t *cent, clientInfo_t *ci, int holsterType
 
 void CG_VisualWeaponsUpdate(centity_t *cent, clientInfo_t *ci)
 {//renders holstered weapons on players.
+#if 0 // UQ1: TODO - Convert to new system later...
 	//flag to indicate that 
 	//used to make sure that 
 	qboolean backInUse = (cent->currentState.eFlags & EF_JETPACK) ? qtrue : qfalse;
 	int rightHipInUse = 0; //the weapon currently holstered on the right hip.
 	int leftHipInUse = 0;
-	int weapInv;
+	int weapInv = 0;
 
 	if (cg.snap && cg.snap->ps.clientNum == cent->currentState.number)
 	{//this cent is the client, use playerstate data
@@ -13871,6 +13872,7 @@ void CG_VisualWeaponsUpdate(centity_t *cent, clientInfo_t *ci)
 		*/
 
 	}
+#endif //0
 }
 //[/VisualWeapons]
 

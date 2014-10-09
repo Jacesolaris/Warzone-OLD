@@ -13,6 +13,8 @@
 	#include "ui/ui_local.h"
 #endif
 
+extern qboolean BG_HaveWeapon ( const playerState_t *ps, int weapon );
+
 const char *bgToggleableSurfaces[BG_NUM_TOGGLEABLE_SURFACES] =
 {
 	"l_arm_key",					//0
@@ -225,23 +227,38 @@ int WeaponReadyAnim[WP_NUM_WEAPONS] =
 {
 	TORSO_DROPWEAP1,//WP_NONE,
 
+	//
+	// Melee...
+	//
 	TORSO_WEAPONREADY3,//WP_STUN_BATON,
 	TORSO_WEAPONREADY3,//WP_MELEE,
 	BOTH_STAND2,//WP_SABER,
+
+	//
+	// Guns...
+	//
 	TORSO_WEAPONREADY2,//WP_BRYAR_PISTOL,
+	TORSO_WEAPONREADY2,//WP_BRYAR_OLD,
 	TORSO_WEAPONREADY3,//WP_BLASTER,
 	TORSO_WEAPONREADY3,//TORSO_WEAPONREADY4,//WP_DISRUPTOR,
 	TORSO_WEAPONREADY3,//TORSO_WEAPONREADY5,//WP_BOWCASTER,
 	TORSO_WEAPONREADY3,//TORSO_WEAPONREADY6,//WP_REPEATER,
 	TORSO_WEAPONREADY3,//TORSO_WEAPONREADY7,//WP_DEMP2,
 	TORSO_WEAPONREADY3,//TORSO_WEAPONREADY8,//WP_FLECHETTE,
+	TORSO_WEAPONREADY3,//WP_CONCUSSION
 	TORSO_WEAPONREADY3,//TORSO_WEAPONREADY9,//WP_ROCKET_LAUNCHER,
+
+	//
+	// Grenades + Explosives...
+	//
 	TORSO_WEAPONREADY10,//WP_THERMAL,
 	TORSO_WEAPONREADY10,//TORSO_WEAPONREADY11,//WP_TRIP_MINE,
 	TORSO_WEAPONREADY10,//TORSO_WEAPONREADY12,//WP_DET_PACK,
-	TORSO_WEAPONREADY3,//WP_CONCUSSION
-	TORSO_WEAPONREADY2,//WP_BRYAR_OLD,
 
+
+	//
+	// Specials (vehicle weapons, emplaced, turret etc) ONLY!
+	//
 	//NOT VALID (e.g. should never really be used):
 	BOTH_STAND1,//WP_EMPLACED_GUN,
 	TORSO_WEAPONREADY1//WP_TURRET,
@@ -251,23 +268,37 @@ int WeaponReadyLegsAnim[WP_NUM_WEAPONS] =
 {
 	BOTH_STAND1,//WP_NONE,
 
+	//
+	// Melee...
+	//
 	BOTH_STAND1,//WP_STUN_BATON,
 	BOTH_STAND1,//WP_MELEE,
 	BOTH_STAND2,//WP_SABER,
+
+	//
+	// Guns...
+	//
 	BOTH_STAND1,//WP_BRYAR_PISTOL,
+	BOTH_STAND1,//WP_BRYAR_OLD,
 	BOTH_STAND1,//WP_BLASTER,
 	BOTH_STAND1,//TORSO_WEAPONREADY4,//WP_DISRUPTOR,
 	BOTH_STAND1,//TORSO_WEAPONREADY5,//WP_BOWCASTER,
 	BOTH_STAND1,//TORSO_WEAPONREADY6,//WP_REPEATER,
 	BOTH_STAND1,//TORSO_WEAPONREADY7,//WP_DEMP2,
 	BOTH_STAND1,//TORSO_WEAPONREADY8,//WP_FLECHETTE,
+	BOTH_STAND1,//WP_CONCUSSION
 	BOTH_STAND1,//TORSO_WEAPONREADY9,//WP_ROCKET_LAUNCHER,
+
+	//
+	// Grenades + Explosives...
+	//
 	BOTH_STAND1,//WP_THERMAL,
 	BOTH_STAND1,//TORSO_WEAPONREADY11,//WP_TRIP_MINE,
 	BOTH_STAND1,//TORSO_WEAPONREADY12,//WP_DET_PACK,
-	BOTH_STAND1,//WP_CONCUSSION
-	BOTH_STAND1,//WP_BRYAR_OLD,
 
+	//
+	// Specials (vehicle weapons, emplaced, turret etc) ONLY!
+	//
 	//NOT VALID (e.g. should never really be used):
 	BOTH_STAND1,//WP_EMPLACED_GUN,
 	BOTH_STAND1//WP_TURRET,
@@ -277,25 +308,37 @@ int WeaponAttackAnim[WP_NUM_WEAPONS] =
 {
 	BOTH_ATTACK1,//WP_NONE, //(shouldn't happen)
 
+	//
+	// Melee...
+	//
 	BOTH_ATTACK3,//WP_STUN_BATON,
 	BOTH_ATTACK3,//WP_MELEE,
 	BOTH_STAND2,//WP_SABER, //(has its own handling)
+
+	//
+	// Guns...
+	//
 	BOTH_ATTACK2,//WP_BRYAR_PISTOL,
+	BOTH_ATTACK2,//WP_BRYAR_OLD,
 	BOTH_ATTACK3,//WP_BLASTER,
 	BOTH_ATTACK3,//BOTH_ATTACK4,//WP_DISRUPTOR,
 	BOTH_ATTACK3,//BOTH_ATTACK5,//WP_BOWCASTER,
 	BOTH_ATTACK3,//BOTH_ATTACK6,//WP_REPEATER,
 	BOTH_ATTACK3,//BOTH_ATTACK7,//WP_DEMP2,
 	BOTH_ATTACK3,//BOTH_ATTACK8,//WP_FLECHETTE,
+	BOTH_ATTACK3,//WP_CONCUSSION,
 	BOTH_ATTACK3,//BOTH_ATTACK9,//WP_ROCKET_LAUNCHER,
+
+	//
+	// Grenades + Explosives...
+	//
 	BOTH_THERMAL_THROW,//WP_THERMAL,
 	BOTH_ATTACK3,//BOTH_ATTACK11,//WP_TRIP_MINE,
 	BOTH_ATTACK3,//BOTH_ATTACK12,//WP_DET_PACK,
-	#ifndef BASE_COMPAT
-		BOTH_ATTACK3,//WP_CONCUSSION,
-	#endif // BASE_COMPAT
-	BOTH_ATTACK2,//WP_BRYAR_OLD,
 
+	//
+	// Specials (vehicle weapons, emplaced, turret etc) ONLY!
+	//
 	//NOT VALID (e.g. should never really be used):
 	BOTH_STAND1,//WP_EMPLACED_GUN,
 	BOTH_ATTACK1//WP_TURRET,
@@ -2094,36 +2137,15 @@ qboolean BG_CanItemBeGrabbed( int gametype, const entityState_t *ent, const play
 		{
 			return qfalse;
 		}
-		if (!(ent->eFlags & EF_DROPPEDWEAPON) && (ps->stats[STAT_WEAPONS] & (1 << item->giTag)) &&
+		if (!(ent->eFlags & EF_DROPPEDWEAPON) && BG_HaveWeapon(ps, item->giTag) &&
 			item->giTag != WP_THERMAL && item->giTag != WP_TRIP_MINE && item->giTag != WP_DET_PACK)
 		{ //weaponstay stuff.. if this isn't dropped, and you already have it, you don't get it.
 			return qfalse;
 		}
-#ifndef __MMO__
-		if (item->giTag == WP_THERMAL || item->giTag == WP_TRIP_MINE || item->giTag == WP_DET_PACK)
-		{ //check to see if full on ammo for this, if so, then..
-			int ammoIndex = weaponData[item->giTag].ammoIndex;
-			if (ps->ammo[ammoIndex] >= ammoData[ammoIndex].max)
-			{ //don't need it
-				return qfalse;
-			}
-		}
-#endif //__MMO__
 		return qtrue;	// weapons are always picked up
 
 	case IT_AMMO:
-#ifndef __MMO__
-		if (item->giTag == -1)
-		{ //special case for "all ammo" packs
-			return qtrue;
-		}
-		if ( ps->ammo[item->giTag] >= ammoData[item->giTag].max) {
-			return qfalse;		// can't hold any more
-		}
-		return qtrue;
-#else //!__MMO__
 		return qfalse;
-#endif //__MMO__
 
 	case IT_ARMOR:
 		if ( ps->stats[STAT_ARMOR] >= ps->stats[STAT_MAX_HEALTH]/* * item->giTag*/ ) {
@@ -2892,6 +2914,14 @@ void BG_PlayerStateToEntityState( playerState_t *ps, entityState_t *s, qboolean 
 
 	// UQ1: Added - saber move styles...
 	s->saberMoveStyle = ps->saberMoveStyle;
+
+	// UQ1: Added - secondary weapon...
+	s->playerClass = ps->playerClass;
+
+	// UQ1: Added - weapons...
+	s->primaryWeapon = ps->primaryWeapon;
+	s->secondaryWeapon = ps->secondaryWeapon;
+	s->temporaryWeapon = ps->temporaryWeapon;
 }
 
 /*
@@ -3061,6 +3091,14 @@ void BG_PlayerStateToEntityStateExtraPolate( playerState_t *ps, entityState_t *s
 
 	// UQ1: Added - saber move styles...
 	s->saberMoveStyle = ps->saberMoveStyle;
+
+	// UQ1: Added - secondary weapon...
+	s->playerClass = ps->playerClass;
+
+	// UQ1: Added - weapons...
+	s->primaryWeapon = ps->primaryWeapon;
+	s->secondaryWeapon = ps->secondaryWeapon;
+	s->temporaryWeapon = ps->temporaryWeapon;
 }
 
 /*

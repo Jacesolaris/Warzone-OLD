@@ -412,7 +412,7 @@ void JMSaberTouch(gentity_t *self, gentity_t *other, trace_t *trace)
 		return;
 	}
 
-	if (other->client->ps.stats[STAT_WEAPONS] & (1 << WP_SABER))
+	if (HaveWeapon(&other->client->ps, WP_SABER))
 	{
 		return;
 	}
@@ -423,7 +423,7 @@ void JMSaberTouch(gentity_t *self, gentity_t *other, trace_t *trace)
 	}
 
 	self->enemy = other;
-	other->client->ps.stats[STAT_WEAPONS] = (1 << WP_SABER);
+	other->client->ps.temporaryWeapon = WP_SABER;
 	other->client->ps.weapon = WP_SABER;
 	other->s.weapon = WP_SABER;
 	other->client->ps.zoomMode = 0;
@@ -1240,7 +1240,9 @@ void ClientRespawn( gentity_t *ent ) {
 				ent->health = ent->client->ps.stats[STAT_HEALTH] = 1;
 				ent->waterlevel = ent->watertype = 0;
 				ent->client->ps.weapon = WP_NONE;
-				ent->client->ps.stats[STAT_WEAPONS] = 0;
+				ent->client->ps.primaryWeapon = 0;
+				ent->client->ps.secondaryWeapon = 0;
+				ent->client->ps.temporaryWeapon = 0;
 				ent->client->ps.stats[STAT_HOLDABLE_ITEMS] = 0;
 				ent->client->ps.stats[STAT_HOLDABLE_ITEM] = 0;
 				ent->takedamage = qfalse;
@@ -3573,7 +3575,9 @@ void ClientSpawn(gentity_t *ent) {
 	}
 
 	//give default weapons
-	client->ps.stats[STAT_WEAPONS] = ( 1 << WP_NONE );
+	client->ps.primaryWeapon = WP_NONE;
+	client->ps.secondaryWeapon = WP_NONE;
+	client->ps.temporaryWeapon = WP_NONE;
 
 	if (level.gametype == GT_DUEL || level.gametype == GT_POWERDUEL)
 	{
@@ -3638,30 +3642,15 @@ void ClientSpawn(gentity_t *ent) {
 			client->ps.trueJedi = qtrue;
 			//make sure they only use the saber
 			client->ps.weapon = WP_SABER;
-			client->ps.stats[STAT_WEAPONS] = (1 << WP_SABER);
+			client->ps.primaryWeapon = WP_SABER;
+			client->ps.secondaryWeapon = WP_BRYAR_PISTOL;
 		}
 		else
 		{//no force powers set
 			client->ps.trueNonJedi = qtrue;
 			client->ps.trueJedi = qfalse;
-			if (!wDisable || !(wDisable & (1 << WP_BRYAR_PISTOL)))
-			{
-				client->ps.stats[STAT_WEAPONS] |= ( 1 << WP_BRYAR_PISTOL );
-			}
-			if (!wDisable || !(wDisable & (1 << WP_BLASTER)))
-			{
-				client->ps.stats[STAT_WEAPONS] |= ( 1 << WP_BLASTER );
-			}
-			if (!wDisable || !(wDisable & (1 << WP_BOWCASTER)))
-			{
-				client->ps.stats[STAT_WEAPONS] |= ( 1 << WP_BOWCASTER );
-			}
-			client->ps.stats[STAT_WEAPONS] &= ~(1 << WP_SABER);
-			client->ps.stats[STAT_WEAPONS] |= (1 << WP_MELEE);
-#ifndef __MMO__
-			client->ps.ammo[AMMO_POWERCELL] = ammoData[AMMO_POWERCELL].max;
-#endif //__MMO__
-			client->ps.weapon = WP_BRYAR_PISTOL;
+			client->ps.primaryWeapon = WP_MELEE;
+			client->ps.secondaryWeapon = WP_BRYAR_PISTOL;
 		}
 	}
 	else
@@ -3670,43 +3659,35 @@ void ClientSpawn(gentity_t *ent) {
 		if (level.gametype == GT_HOLOCRON)
 		{
 			//always get free saber level 1 in holocron
-			client->ps.stats[STAT_WEAPONS] |= ( 1 << WP_SABER );	//these are precached in g_items, ClearRegisteredItems()
+			client->ps.primaryWeapon = WP_SABER;
 		}
 		else
 		{
 			if (client->ps.fd.forcePowerLevel[FP_SABER_OFFENSE])
 			{
-				client->ps.stats[STAT_WEAPONS] |= ( 1 << WP_SABER );	//these are precached in g_items, ClearRegisteredItems()
+				client->ps.primaryWeapon = WP_SABER;
 			}
 			else
 			{ //if you don't have saber attack rank then you don't get a saber
-				client->ps.stats[STAT_WEAPONS] |= (1 << WP_MELEE);
+				client->ps.primaryWeapon = WP_MELEE;
 			}
 		}
 
 		if (level.gametype != GT_SIEGE)
 		{
-			if (!wDisable || !(wDisable & (1 << WP_BRYAR_PISTOL)))
-			{
-				client->ps.stats[STAT_WEAPONS] |= ( 1 << WP_BRYAR_PISTOL );
-			}
-			else if (level.gametype == GT_JEDIMASTER)
-			{
-				client->ps.stats[STAT_WEAPONS] |= ( 1 << WP_BRYAR_PISTOL );
-			}
+			client->ps.secondaryWeapon = WP_BRYAR_PISTOL;
 		}
 
 		if (level.gametype == GT_JEDIMASTER)
 		{
-			client->ps.stats[STAT_WEAPONS] &= ~(1 << WP_SABER);
-			client->ps.stats[STAT_WEAPONS] |= (1 << WP_MELEE);
+			client->ps.primaryWeapon = WP_MELEE;
 		}
 
-		if (client->ps.stats[STAT_WEAPONS] & (1 << WP_SABER))
+		if (HaveWeapon(&client->ps, WP_SABER))
 		{
 			client->ps.weapon = WP_SABER;
 		}
-		else if (client->ps.stats[STAT_WEAPONS] & (1 << WP_BRYAR_PISTOL))
+		else if (HaveWeapon(&client->ps, WP_BRYAR_PISTOL))
 		{
 			client->ps.weapon = WP_BRYAR_PISTOL;
 		}
@@ -3718,18 +3699,16 @@ void ClientSpawn(gentity_t *ent) {
 	//[SaberSys] Melee To FFA
 	if (level.gametype == GT_FFA)
 	{
-		client->ps.stats[STAT_WEAPONS] &= (1 << WP_SABER);
-		client->ps.stats[STAT_WEAPONS] |= (1 << WP_MELEE);
+		client->ps.primaryWeapon = WP_MELEE;
 	}
 
-	if (client->ps.stats[STAT_WEAPONS] & (1 << WP_SABER))
+	if (HaveWeapon(&client->ps, WP_SABER))
 	{
 		client->ps.weapon = WP_SABER;
 	}
-	else if (client->ps.stats[STAT_WEAPONS] & (1 << WP_MELEE))
+	else if (HaveWeapon(&client->ps, WP_MELEE))
 	{
 		client->ps.weapon = WP_MELEE;
-
 	}
 	//[/SaberSys] Melee To FFA
 	/*
@@ -3742,13 +3721,15 @@ void ClientSpawn(gentity_t *ent) {
 	{ //well then, we will use a custom weaponset for our class
 		int m = 0;
 
-		client->ps.stats[STAT_WEAPONS] = bgSiegeClasses[client->siegeClass].weapons;
+		// UQ1: TODO: Fix class weapons... --- bgSiegeClasses[client->siegeClass].weapons;
+		client->ps.primaryWeapon = WP_SABER; // temporary
+		client->ps.secondaryWeapon = WP_BRYAR_PISTOL; // temporary
 
-		if (client->ps.stats[STAT_WEAPONS] & (1 << WP_SABER))
+		if (HaveWeapon(&client->ps, WP_SABER))
 		{
 			client->ps.weapon = WP_SABER;
 		}
-		else if (client->ps.stats[STAT_WEAPONS] & (1 << WP_BRYAR_PISTOL))
+		else if (HaveWeapon(&client->ps, WP_BRYAR_PISTOL))
 		{
 			client->ps.weapon = WP_BRYAR_PISTOL;
 		}
@@ -3756,11 +3737,12 @@ void ClientSpawn(gentity_t *ent) {
 		{
 			client->ps.weapon = WP_MELEE;
 		}
+
 		inSiegeWithClass = qtrue;
 
 		while (m < WP_NUM_WEAPONS)
 		{
-			if (client->ps.stats[STAT_WEAPONS] & (1 << m))
+			if (HaveWeapon(&client->ps, m))
 			{
 				if (client->ps.weapon != WP_SABER)
 				{ //try to find the highest ranking weapon we have
@@ -3769,40 +3751,6 @@ void ClientSpawn(gentity_t *ent) {
 						client->ps.weapon = m;
 					}
 				}
-
-#ifndef __MMO__
-				if (m >= WP_BRYAR_PISTOL)
-				{ //Max his ammo out for all the weapons he has.
-					if ( /*level.gametype == GT_SIEGE
-						&&*/ m == WP_ROCKET_LAUNCHER )
-					{//don't give full ammo!
-						//FIXME: extern this and check it when getting ammo from supplier, pickups or ammo stations!
-						if ( client->siegeClass != -1 &&
-							(bgSiegeClasses[client->siegeClass].classflags & (1<<CFL_SINGLE_ROCKET)) )
-						{
-							client->ps.ammo[weaponData[m].ammoIndex] = 1;
-						}
-						else
-						{
-							client->ps.ammo[weaponData[m].ammoIndex] = 10;
-						}
-					}
-					else
-					{
-						if ( /*level.gametype == GT_SIEGE
-							&&*/ client->siegeClass != -1
-							&& (bgSiegeClasses[client->siegeClass].classflags & (1<<CFL_EXTRA_AMMO)) )
-						{//double ammo
-							client->ps.ammo[weaponData[m].ammoIndex] = ammoData[weaponData[m].ammoIndex].max*2;
-							client->ps.eFlags |= EF_DOUBLE_AMMO;
-						}
-						else
-						{
-							client->ps.ammo[weaponData[m].ammoIndex] = ammoData[weaponData[m].ammoIndex].max;
-						}
-					}
-				}
-#endif //__MMO__
 			}
 			m++;
 		}
@@ -3839,30 +3787,15 @@ void ClientSpawn(gentity_t *ent) {
 
 	if ( client->sess.sessionTeam == TEAM_SPECTATOR )
 	{
-		client->ps.stats[STAT_WEAPONS] = 0;
+		client->ps.primaryWeapon = 0;
+		client->ps.secondaryWeapon = 0;
+		client->ps.temporaryWeapon = 0;
 		client->ps.stats[STAT_HOLDABLE_ITEMS] = 0;
 		client->ps.stats[STAT_HOLDABLE_ITEM] = 0;
 	}
 
 // nmckenzie: DESERT_SIEGE... or well, siege generally.  This was over-writing the max value, which was NOT good for siege.
-#ifndef __MMO__
-	if ( inSiegeWithClass == qfalse )
-	{
-		client->ps.ammo[AMMO_BLASTER] = 100; //ammoData[AMMO_BLASTER].max; //100 seems fair.
-	}
-#endif //__MMO__
-//	client->ps.ammo[AMMO_POWERCELL] = ammoData[AMMO_POWERCELL].max;
-//	client->ps.ammo[AMMO_FORCE] = ammoData[AMMO_FORCE].max;
-//	client->ps.ammo[AMMO_METAL_BOLTS] = ammoData[AMMO_METAL_BOLTS].max;
-//	client->ps.ammo[AMMO_ROCKETS] = ammoData[AMMO_ROCKETS].max;
-/*
-	client->ps.stats[STAT_WEAPONS] = ( 1 << WP_BRYAR_PISTOL);
-	if ( level.gametype == GT_TEAM ) {
-		client->ps.ammo[WP_BRYAR_PISTOL] = 50;
-	} else {
-		client->ps.ammo[WP_BRYAR_PISTOL] = 100;
-	}
-*/
+
 	client->ps.rocketLockIndex = ENTITYNUM_NONE;
 	client->ps.rocketLockTime = 0;
 
@@ -3876,15 +3809,6 @@ void ClientSpawn(gentity_t *ent) {
 	//because entity state value is derived from player state data or some
 	//such)
 	client->ps.genericEnemyIndex = -1;
-
-	//[VisualWeapons]
-	//update the weapon stats for this player since they have changed.
-	if (G_ClientPlugin())
-	{//don't send the weapon updates if someone isn't able to process this new event type (IE anyone without
-		//the OJK client
-		G_AddEvent(ent, EV_WEAPINVCHANGE, client->ps.stats[STAT_WEAPONS]);
-	}
-	//[/VisualWeapons]
 
 	client->ps.isJediMaster = qfalse;
 
@@ -4017,7 +3941,7 @@ void ClientSpawn(gentity_t *ent) {
 	//		
 	//		break;//[/ClassSyS] Empire Class
 	//	default:
-	//		client->ps.stats[STAT_WEAPONS] |= (1 << WP_MELEE);
+	//		client->ps.primaryWeapon = WP_MELEE;
 	//		break;
 	//	}
 	//	//ent->changeClass = qfalse;

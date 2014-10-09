@@ -821,12 +821,10 @@ getItOutOfMe:
 	if ( ent->client->ps.weapon == WP_NONE )
 	{//FIXME: check against this vehicle's gun from the g_vehicleInfo table
 		//remove the vehicle's weapon from me
-		//ent->client->ps.stats[STAT_WEAPONS] &= ~( 1 << WP_EMPLACED_GUN );
-		//ent->client->ps.ammo[weaponData[WP_EMPLACED_GUN].ammoIndex] = 0;//maybe store this ammo on the vehicle before clearing it?
 		//switch back to a normal weapon we're carrying
 
 		//FIXME: store the weapon we were using when we got on and restore that when hop off
-/*		if ( (ent->client->ps.stats[STAT_WEAPONS]&(1<<WP_SABER)) )
+/*		if ( HaveWeapon(&ent->client->ps, WP_SABER) )
 		{
 			CG_ChangeWeapon( WP_SABER );
 		}
@@ -834,7 +832,7 @@ getItOutOfMe:
 		{//go through all weapons and switch to highest held
 			for ( int checkWp = WP_NUM_WEAPONS-1; checkWp > WP_NONE; checkWp-- )
 			{
-				if ( (ent->client->ps.stats[STAT_WEAPONS]&(1<<checkWp)) )
+				if ( HaveWeapon(&ent->client->ps, checkWp) )
 				{
 					CG_ChangeWeapon( checkWp );
 				}
@@ -1142,7 +1140,7 @@ qboolean Initialize( Vehicle_t *pVeh )
 	//initialize to blaster, just since it's a basic weapon and there's no lightsaber crap...?
 	parent->client->ps.weapon = WP_BLASTER;
 	parent->client->ps.weaponstate = WEAPON_READY;
-	parent->client->ps.stats[STAT_WEAPONS] |= (1<<WP_BLASTER);
+	parent->client->ps.temporaryWeapon = WP_BLASTER;
 
 	//Initialize to landed (wings closed, gears down) animation
 	{

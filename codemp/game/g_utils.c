@@ -1452,25 +1452,6 @@ void G_UseDispenserOn(gentity_t *ent, int dispType, gentity_t *target)
 		target->client->isMedHealed = level.time + 500;
 		target->health = target->client->ps.stats[STAT_HEALTH];
 	}
-#ifndef __MMO__ // UQ1: Re-use me!!!
-	else if (dispType == HI_AMMODISP)
-	{
-		if (ent->client->medSupplyDebounce < level.time)
-		{ //do the next increment
-			//increment based on the amount of ammo used per normal shot.
-			target->client->ps.ammo[weaponData[target->client->ps.weapon].ammoIndex] += weaponData[target->client->ps.weapon].energyPerShot;
-
-			if (target->client->ps.ammo[weaponData[target->client->ps.weapon].ammoIndex] > ammoData[weaponData[target->client->ps.weapon].ammoIndex].max)
-			{ //cap it off
-				target->client->ps.ammo[weaponData[target->client->ps.weapon].ammoIndex] = ammoData[weaponData[target->client->ps.weapon].ammoIndex].max;
-			}
-
-			//base the next supply time on how long the weapon takes to fire. Seems fair enough.
-			ent->client->medSupplyDebounce = level.time + weaponData[target->client->ps.weapon].fireTime;
-		}
-		target->client->isMedSupplied = level.time + 500;
-	}
-#endif //__MMO__
 }
 
 //see if this guy needs servicing from a specific type of dispenser
@@ -1492,23 +1473,6 @@ int G_CanUseDispOn(gentity_t *ent, int dispType)
 		//otherwise no
 		return 0;
 	}
-#ifndef __MMO__
-	else if (dispType == HI_AMMODISP)
-	{
-		if (ent->client->ps.weapon <= WP_NONE || ent->client->ps.weapon > LAST_USEABLE_WEAPON)
-		{ //not a player-useable weapon
-			return 0;
-		}
-
-		if (ent->client->ps.ammo[weaponData[ent->client->ps.weapon].ammoIndex] < ammoData[weaponData[ent->client->ps.weapon].ammoIndex].max)
-		{ //needs more ammo for current weapon
-			return 1;
-		}
-
-		//needs none
-		return 0;
-	}
-#endif //__MMO__
 
 	//invalid type?
 	return 0;
