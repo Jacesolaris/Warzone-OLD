@@ -1671,7 +1671,8 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				case MATERIAL_SNOW:				// 14			// freshly laid snow
 					GLSL_BindProgram(sp);
 					GLSL_SetUniformFloat(sp, UNIFORM_TIME, backEnd.refdef.floatTime);
-					RB_SetParallaxScale(sp, 3.0);
+					//RB_SetParallaxScale(sp, 3.0);
+					RB_SetParallaxScale(sp, 5.0);
 					break;
 				case MATERIAL_MUD:				// 17			// wet soil
 					GLSL_BindProgram(sp);
@@ -1694,7 +1695,8 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				case MATERIAL_ICE:				// 15			// packed snow/solid ice
 					GLSL_BindProgram(sp);
 					GLSL_SetUniformFloat(sp, UNIFORM_TIME, backEnd.refdef.floatTime);
-					RB_SetParallaxScale(sp, 4.0);
+					//RB_SetParallaxScale(sp, 4.0);
+					RB_SetParallaxScale(sp, 2.0);
 					break;
 				case MATERIAL_GLASS:			// 10			//
 				case MATERIAL_BPGLASS:			// 18			// bulletproof glass
