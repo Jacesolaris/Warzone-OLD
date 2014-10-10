@@ -223,6 +223,55 @@ void CG_RegisterWeapon( int weaponNum) {
 
 		break;
 
+	case WP_A280: // UQ1: Example. Should have it's own fx...
+		weaponInfo->selectSound			= trap->S_RegisterSound("sound/weapons/disruptor/select.wav");
+
+		weaponInfo->flashSound[0]		= trap->S_RegisterSound( "sound/weapons/disruptor/fire.wav");
+		weaponInfo->firingSound			= NULL_SOUND;
+		weaponInfo->chargeSound			= NULL_SOUND;
+		weaponInfo->muzzleEffect		= trap->FX_RegisterEffect( "disruptor/muzzle_flash" );
+		weaponInfo->missileModel		= NULL_HANDLE;
+		weaponInfo->missileSound		= NULL_SOUND;
+		weaponInfo->missileDlight		= 0;
+//		weaponInfo->missileDlightColor	= {0,0,0};
+		weaponInfo->missileHitSound		= NULL_SOUND;
+		weaponInfo->missileTrailFunc	= 0;
+
+		weaponInfo->altFlashSound[0]	= trap->S_RegisterSound( "sound/weapons/disruptor/alt_fire.wav");
+		weaponInfo->altFiringSound		= NULL_SOUND;
+		weaponInfo->altChargeSound		= trap->S_RegisterSound("sound/weapons/disruptor/altCharge.wav");
+		weaponInfo->altMuzzleEffect		= trap->FX_RegisterEffect( "disruptor/muzzle_flash" );
+		weaponInfo->altMissileModel		= NULL_HANDLE;
+		weaponInfo->altMissileSound		= NULL_SOUND;
+		weaponInfo->altMissileDlight	= 0;
+//		weaponInfo->altMissileDlightColor= {0,0,0};
+		weaponInfo->altMissileHitSound	= NULL_SOUND;
+		weaponInfo->altMissileTrailFunc = 0;
+
+		cgs.effects.disruptorRingsEffect		= trap->FX_RegisterEffect( "disruptor/rings" );
+		cgs.effects.disruptorProjectileEffect	= trap->FX_RegisterEffect( "disruptor/projectile" );
+		cgs.effects.disruptorWallImpactEffect	= trap->FX_RegisterEffect( "disruptor/wall_impact" );
+		cgs.effects.disruptorFleshImpactEffect	= trap->FX_RegisterEffect( "disruptor/flesh_impact" );
+		cgs.effects.disruptorAltMissEffect		= trap->FX_RegisterEffect( "disruptor/alt_miss" );
+		cgs.effects.disruptorAltHitEffect		= trap->FX_RegisterEffect( "disruptor/alt_hit" );
+
+		trap->R_RegisterShader( "gfx/effects/redLine" );
+		trap->R_RegisterShader( "gfx/misc/whiteline2" );
+		trap->R_RegisterShader( "gfx/effects/smokeTrail" );
+
+		trap->S_RegisterSound("sound/weapons/disruptor/zoomstart.wav");
+		trap->S_RegisterSound("sound/weapons/disruptor/zoomend.wav");
+
+		// Disruptor gun zoom interface
+		cgs.media.disruptorMask			= trap->R_RegisterShader( "gfx/2d/cropCircle2");
+		cgs.media.disruptorInsert		= trap->R_RegisterShader( "gfx/2d/cropCircle");
+		cgs.media.disruptorLight		= trap->R_RegisterShader( "gfx/2d/cropCircleGlow" );
+		cgs.media.disruptorInsertTick	= trap->R_RegisterShader( "gfx/2d/insertTick" );
+		cgs.media.disruptorChargeShader	= trap->R_RegisterShaderNoMip("gfx/2d/crop_charge");
+
+		cgs.media.disruptorZoomLoop		= trap->S_RegisterSound( "sound/weapons/disruptor/zoomloop.wav" );
+		break;
+
 	case WP_BLASTER:
 	case WP_EMPLACED_GUN: //rww - just use the same as this for now..
 		weaponInfo->selectSound			= trap->S_RegisterSound("sound/weapons/blaster/select.wav");

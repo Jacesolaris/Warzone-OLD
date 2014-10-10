@@ -2517,4 +2517,6 @@ typedef enum {
 
 qboolean StringContainsWord(const char *haystack, const char *needle);
 qboolean HaveWeapon( playerState_t *ps, int weapon );
+qboolean IsSniperRifle ( int weapon );
+
 

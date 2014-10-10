@@ -1898,6 +1898,10 @@ void CG_MissileHitWall(int weapon, int clientNum, vec3_t origin, vec3_t dir, imp
 		FX_TurretHitWall( origin, dir );
 		break;
 
+	case WP_A280:
+		FX_DisruptorAltMiss( origin, dir ); // UQ1: Example... Should have it's own fx...
+		break;
+
 	case WP_BLASTER:
 		FX_BlasterWeaponHitWall( origin, dir );
 		break;
@@ -2018,6 +2022,10 @@ void CG_MissileHitPlayer(int weapon, vec3_t origin, vec3_t dir, int entityNum, q
 		FX_TurretHitPlayer( origin, dir, humanoid );
 		break;
 
+	case WP_A280:
+		FX_DisruptorAltHit( origin, dir); // UQ1: Example... Should have it's own fx...
+		break;
+
 	case WP_BLASTER:
 		FX_BlasterWeaponHitPlayer( origin, dir, humanoid );
 		break;
@@ -2112,7 +2120,7 @@ qboolean CG_CalcMuzzlePoint( int entityNum, vec3_t muzzle ) {
 
 		VectorCopy(WP_MuzzlePoint[weapontype], weaponMuzzle);
 
-		if (weapontype == WP_DISRUPTOR || weapontype == WP_STUN_BATON || weapontype == WP_MELEE || weapontype == WP_SABER)
+		if (weapontype == WP_DISRUPTOR || weapontype == WP_A280 || weapontype == WP_STUN_BATON || weapontype == WP_MELEE || weapontype == WP_SABER)
 		{
 			VectorClear(weaponMuzzle);
 		}

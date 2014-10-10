@@ -4604,6 +4604,10 @@ void FireWeapon( gentity_t *ent, qboolean altFire ) {
 			WP_FireBlaster( ent, altFire );
 			break;
 
+		case WP_A280: // UQ1: Example. Should have it's own code...
+			WP_FireDisruptor( ent, altFire );
+			break;
+
 		case WP_DISRUPTOR:
 			WP_FireDisruptor( ent, altFire );
 			break;

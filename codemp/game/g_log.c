@@ -1,6 +1,6 @@
 #include "g_local.h"
 
-#define LOGGING_WEAPONS
+//#define LOGGING_WEAPONS
 
 // Weapon statistic logging.
 // Nothing super-fancy here, I just want to keep track of, per player:
@@ -77,9 +77,9 @@ char *weaponNameFromIndex[WP_NUM_WEAPONS] =
 	"No Weapon",
 	"Stun Baton",
 	"Saber",
-	"Bryar Pistol",
+	"Pistol",
 	"Blaster",
-	"Disruptor",
+	"Sniper Rifle",
 	"Bowcaster",
 	"Repeater",
 	"Demp2",
@@ -1709,6 +1709,7 @@ int GetFavoriteWeaponForClient(int nClient)
 // kef -- if a client leaves the game, clear out all counters he may have set
 void QDECL G_ClearClientLog(int client)
 {
+#ifdef LOGGING_WEAPONS
 	int i = 0;
 
 	for (i = 0; i < WP_NUM_WEAPONS; i++)
@@ -1738,5 +1739,6 @@ void QDECL G_ClearClientLog(int client)
 	{
 		G_WeaponLogItems[client][i] = 0;
 	}
+#endif //LOGGING_WEAPONS
 }
 

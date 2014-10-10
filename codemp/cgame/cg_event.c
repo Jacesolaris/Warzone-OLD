@@ -1085,6 +1085,7 @@ void CG_G2MarkEvent(entityState_t *es)
 	case WP_BRYAR_PISTOL:
 	case WP_CONCUSSION:
 	case WP_BRYAR_OLD:
+	case WP_A280:
 	case WP_BLASTER:
 	case WP_DISRUPTOR:
 	case WP_BOWCASTER:
@@ -3371,6 +3372,10 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 			trap->S_StartSound(NULL, es->number, CHAN_WEAPON, cg_weapons[es->eventParm].chargeSound);
 		}
 		else if (es->eventParm == WP_DISRUPTOR)
+		{
+			trap->S_StartSound(NULL, es->number, CHAN_WEAPON, cgs.media.disruptorZoomLoop);
+		}
+		else if (es->eventParm == WP_A280)
 		{
 			trap->S_StartSound(NULL, es->number, CHAN_WEAPON, cgs.media.disruptorZoomLoop);
 		}

@@ -245,6 +245,7 @@ void G_AttackDelay( gentity_t *self, gentity_t *enemy )
 //			attDelay -= Q_irand( 500, 1500 );
 //			break;
 			//rwwFIXMEFIXME: Have this weapon for NPCs?
+		case WP_A280:
 		case WP_DISRUPTOR://sniper's don't delay?
 			return;
 			break;
@@ -571,6 +572,7 @@ void ChangeWeapon( gentity_t *ent, int newWeapon )
 		ent->NPC->attackHold = 1000;//Hold attack button for a 1-second burst
 		break;
 
+	case WP_A280:
 	case WP_DISRUPTOR:
 		ent->NPC->aiFlags &= ~NPCAI_BURST_WEAPON;
 		if ( ent->NPC->scriptFlags & SCF_ALT_FIRE )
@@ -1255,6 +1257,7 @@ float NPC_MaxDistSquaredForWeapon (void)
 		break;
 		*/
 
+	case WP_A280:
 	case WP_DISRUPTOR://disruptor
 		if ( NPCS.NPCInfo->scriptFlags & SCF_ALT_FIRE )
 		{

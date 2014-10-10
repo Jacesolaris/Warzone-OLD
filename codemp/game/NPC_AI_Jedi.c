@@ -674,7 +674,7 @@ void Boba_FireDecide( void )
 	}
 	else if ( enemyDist > 256 * 256 )
 	{
-		if ( NPCS.NPC->client->ps.weapon == WP_DISRUPTOR )
+		if ( IsSniperRifle(NPCS.NPC->client->ps.weapon) )
 		{//sniping... should be assumed
 			if ( !(NPCS.NPCInfo->scriptFlags&SCF_ALT_FIRE) )
 			{//use primary fire
@@ -3788,7 +3788,7 @@ static void Jedi_FaceEnemy( qboolean doPitch )
 	if ( NPC_IsBountyHunter(NPCS.NPC)
 		&& TIMER_Done( NPCS.NPC, "flameTime" )
 		&& NPCS.NPC->s.weapon != WP_NONE
-		&& NPCS.NPC->s.weapon != WP_DISRUPTOR
+		&& !IsSniperRifle(NPCS.NPC->s.weapon)
 		&& (NPCS.NPC->s.weapon != WP_ROCKET_LAUNCHER||!(NPCS.NPCInfo->scriptFlags&SCF_ALT_FIRE))
 		&& NPCS.NPC->s.weapon != WP_THERMAL
 		&& NPCS.NPC->s.weapon != WP_TRIP_MINE
@@ -4089,6 +4089,7 @@ static void Jedi_CombatTimersUpdate( int enemy_dist )
 			case WP_BLASTER:
 			case WP_BRYAR_PISTOL:
 			case WP_DISRUPTOR:
+			case WP_A280:
 			case WP_BOWCASTER:
 			case WP_REPEATER:
 			case WP_DEMP2:
@@ -6637,10 +6638,10 @@ void BountyHunter_SelectBestWeapon( void )
 	{
 		Boba_ChangeWeapon( WP_ROCKET_LAUNCHER );
 	}
-	else if ( NPCS.NPC->client->ps.weapon != WP_DISRUPTOR 
+	else if ( NPCS.NPC->client->ps.weapon != WP_A280
 		&& Distance( NPCS.NPC->r.currentOrigin, NPCS.NPC->enemy->r.currentOrigin ) > 500 )
 	{
-		Boba_ChangeWeapon( WP_DISRUPTOR );
+		Boba_ChangeWeapon( WP_A280 );
 	}
 	else if ( NPCS.NPC->client->ps.weapon != WP_REPEATER )
 	{
@@ -6788,7 +6789,7 @@ void NPC_BSJedi_Default( void )
 
 		NPC_SelectBestWeapon();
 
-		if ( NPCS.NPC->client->ps.weapon == WP_DISRUPTOR )
+		if ( IsSniperRifle(NPCS.NPC->client->ps.weapon) )
 		{// Using sniper rifle... Use sniper AI...
 			//NPCS.NPCInfo->scriptFlags |= SCF_ALT_FIRE;
 			NPC_BSSniper_Default();

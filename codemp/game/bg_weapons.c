@@ -19,6 +19,7 @@ vec3_t WP_MuzzlePoint[WP_NUM_WEAPONS] =
 	{12,	6,		-6	},	// WP_BRYAR_OLD,
 	{12,	6,		-6	},	// WP_BLASTER,
 	{12,	6,		-6	},	// WP_DISRUPTOR,
+	{12,	6,		-6	},	// WP_A280,
 	{12,	2,		-6	},	// WP_BOWCASTER,
 	{12,	4.5,	-6	},	// WP_REPEATER,
 	{12,	6,		-6	},	// WP_DEMP2,
@@ -160,6 +161,23 @@ weaponData_t weaponData[WP_NUM_WEAPONS] =
 		8192,					//	int		range;				// Range of weapon
 		6,						//	int		altEnergyPerShot;	// Amount of energy used for alt-fire
 		1300,					//	int		altFireTime;		// Amount of time between alt-firings
+		8192,					//	int		altRange;			// Range of alt-fire
+		0,						//	int		chargeSubTime;		// ms interval for subtracting ammo during charge
+		200,					//	int		altChargeSubTime;	// above for secondary
+		0,						//	int		chargeSub;			// amount to subtract during charge on each interval
+		3,						//int		altChargeSub;		// above for secondary
+		0,						//	int		maxCharge;			// stop subtracting once charged for this many ms
+		1700					//	int		altMaxCharge;		// above for secondary
+	},
+	{	// WP_A280
+//		"A280",	//	char	classname[32];		// Spawning name
+		AMMO_POWERCELL,			//	int		ammoIndex;			// Index to proper ammo slot
+		5,						//	int		ammoLow;			// Count when ammo is low
+		5,						//	int		energyPerShot;		// Amount of energy used per shot
+		500,					//	int		fireTime;			// Amount of time between firings
+		8192,					//	int		range;				// Range of weapon
+		6,						//	int		altEnergyPerShot;	// Amount of energy used for alt-fire
+		1500,					//	int		altFireTime;		// Amount of time between alt-firings
 		8192,					//	int		altRange;			// Range of alt-fire
 		0,						//	int		chargeSubTime;		// ms interval for subtracting ammo during charge
 		200,					//	int		altChargeSubTime;	// above for secondary
@@ -357,6 +375,19 @@ weaponData_t weaponData[WP_NUM_WEAPONS] =
 	}
 };
 
+qboolean IsSniperRifle ( int weapon )
+{
+	switch (weapon)
+	{
+	case WP_DISRUPTOR:
+	case WP_A280:
+		return qtrue;
+	default:
+		break;
+	}
+
+	return qfalse;
+}
 
 qboolean BG_HaveWeapon ( const playerState_t *ps, int weapon )
 {

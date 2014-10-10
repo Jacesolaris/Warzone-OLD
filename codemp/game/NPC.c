@@ -1467,10 +1467,10 @@ void Commando_SelectBestWeapon( void )
 
 	if (!NPCS.NPC->enemy) return;
 
-	if (NPCS.NPC->client->ps.weapon != WP_DISRUPTOR 
+	if (NPCS.NPC->client->ps.weapon != WP_A280 
 		&& DistanceSquared( NPCS.NPC->r.currentOrigin, NPCS.NPC->enemy->r.currentOrigin )>(700*700) )
 	{
-		NPC_ChangeWeapon( WP_DISRUPTOR );
+		NPC_ChangeWeapon( WP_A280 );
 	}
 	else if ( NPCS.NPC->client->ps.weapon != WP_ROCKET_LAUNCHER 
 		&& DistanceSquared( NPCS.NPC->r.currentOrigin, NPCS.NPC->enemy->r.currentOrigin )>(600*600) )
@@ -1521,10 +1521,10 @@ void Sniper_SelectBestWeapon( void )
 
 	if (!NPCS.NPC->enemy) return;
 
-	if (NPCS.NPC->client->ps.weapon != WP_DISRUPTOR 
+	if (NPCS.NPC->client->ps.weapon != WP_A280 
 		&& DistanceSquared( NPCS.NPC->r.currentOrigin, NPCS.NPC->enemy->r.currentOrigin )>(700*700) )
 	{
-		NPC_ChangeWeapon( WP_DISRUPTOR );
+		NPC_ChangeWeapon( WP_A280 );
 	}
 	else if ( NPCS.NPC->client->ps.weapon != WP_BLASTER 
 		&& DistanceSquared( NPCS.NPC->r.currentOrigin, NPCS.NPC->enemy->r.currentOrigin )>(300*300) )

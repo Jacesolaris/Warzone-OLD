@@ -687,7 +687,7 @@ void NPC_BSSniper_Attack( void )
 	
 	if ( enemyDist2 < 16384 )//128 squared
 	{//too close, so switch to primary fire
-		if ( NPCS.NPC->client->ps.weapon == WP_DISRUPTOR )
+		if ( IsSniperRifle(NPCS.NPC->client->ps.weapon) )
 		{//sniping... should be assumed
 			if ( NPCS.NPCInfo->scriptFlags & SCF_ALT_FIRE )
 			{//use primary fire
@@ -697,7 +697,7 @@ void NPC_BSSniper_Attack( void )
 				{//he can get right to me
 					NPCS.NPCInfo->scriptFlags &= ~SCF_ALT_FIRE;
 					//reset fire-timing variables
-					NPC_ChangeWeapon( WP_DISRUPTOR );
+					NPC_ChangeWeapon( NPCS.NPC->client->ps.weapon );
 					NPC_UpdateAngles( qtrue, qtrue );
 #ifdef __SNIPER_DEBUG__
 					trap->Print("SNIPER DEBUG: %s disabled alt fire.\n", NPCS.NPC->client->pers.netname);
@@ -710,13 +710,13 @@ void NPC_BSSniper_Attack( void )
 	}
 	else if ( enemyDist2 > 65536 )//256 squared
 	{
-		if ( NPCS.NPC->client->ps.weapon == WP_DISRUPTOR )
+		if ( IsSniperRifle(NPCS.NPC->client->ps.weapon) )
 		{//sniping... should be assumed
 			if ( !(NPCS.NPCInfo->scriptFlags&SCF_ALT_FIRE) )
 			{//use primary fire
 				NPCS.NPCInfo->scriptFlags |= SCF_ALT_FIRE;
 				//reset fire-timing variables
-				NPC_ChangeWeapon( WP_DISRUPTOR );
+				NPC_ChangeWeapon( NPCS.NPC->client->ps.weapon );
 				NPC_UpdateAngles( qtrue, qtrue );
 #ifdef __SNIPER_DEBUG__
 				trap->Print("SNIPER DEBUG: %s enabled alt fire.\n", NPCS.NPC->client->pers.netname);

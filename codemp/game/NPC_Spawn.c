@@ -427,6 +427,7 @@ void NPC_SetMiscDefaultData( gentity_t *ent )
 			{
 			case WP_BRYAR_PISTOL://FIXME: new weapon: imp blaster pistol
 	//		case WP_BLASTER_PISTOL:
+			case WP_A280:
 			case WP_DISRUPTOR:
 			case WP_BOWCASTER:
 			case WP_REPEATER:
@@ -524,6 +525,7 @@ void NPC_SetMiscDefaultData( gentity_t *ent )
 					break;
 		//		case WP_BLASTER_PISTOL:
 		//			break;
+				case WP_A280:
 				case WP_DISRUPTOR:
 					//Sniper
 					//ent->NPC->scriptFlags |= SCF_ALT_FIRE;//FIXME: use primary fire sometimes?  Up close?  Different class of NPC?

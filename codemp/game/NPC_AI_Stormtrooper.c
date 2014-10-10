@@ -2530,13 +2530,13 @@ void NPC_BSST_Attack( void )
 	}
 	else if ( enemyDist > 65536 )//256 squared
 	{
-		if ( NPCS.NPC->client->ps.weapon == WP_DISRUPTOR )
+		if ( IsSniperRifle(NPCS.NPC->client->ps.weapon) )
 		{//sniping... should be assumed
 			if ( !(NPCS.NPCInfo->scriptFlags&SCF_ALT_FIRE) )
 			{//use primary fire
 				NPCS.NPCInfo->scriptFlags |= SCF_ALT_FIRE;
 				//reset fire-timing variables
-				NPC_ChangeWeapon( WP_DISRUPTOR );
+				NPC_ChangeWeapon( NPCS.NPC->client->ps.weapon );
 				NPC_UpdateAngles( qtrue, qtrue );
 				return;
 			}
