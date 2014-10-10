@@ -13131,13 +13131,14 @@ void CG_HolsteredWeaponRender(centity_t *cent, clientInfo_t *ci, int holsterType
 
 void CG_VisualWeaponsUpdate(centity_t *cent, clientInfo_t *ci)
 {//renders holstered weapons on players.
-#if 0 // UQ1: TODO - Convert to new system later...
 	//flag to indicate that 
 	//used to make sure that 
 	qboolean backInUse = (cent->currentState.eFlags & EF_JETPACK) ? qtrue : qfalse;
 	int rightHipInUse = 0; //the weapon currently holstered on the right hip.
 	int leftHipInUse = 0;
-	int weapInv = 0;
+	int primaryWeapon = 0;
+	int secondaryWeapon = 0;
+	int temporaryWeapon = 0;
 
 	if (cg.snap && cg.snap->ps.clientNum == cent->currentState.number)
 	{//this cent is the client, use playerstate data
@@ -13146,7 +13147,9 @@ void CG_VisualWeaponsUpdate(centity_t *cent, clientInfo_t *ci)
 			return;
 		}
 
-		weapInv = cg.snap->ps.stats[STAT_WEAPONS];
+		primaryWeapon = cg.snap->ps.primaryWeapon;
+		secondaryWeapon = cg.snap->ps.secondaryWeapon;
+		temporaryWeapon = cg.snap->ps.temporaryWeapon;
 	}
 	else
 	{//use event generated data.  Note that this data won't be updated if not all of the clients have the OJP client plugin.
@@ -13163,7 +13166,9 @@ void CG_VisualWeaponsUpdate(centity_t *cent, clientInfo_t *ci)
 			return;
 		}
 
-		weapInv = cent->weapons;
+		primaryWeapon = cent->currentState.primaryWeapon;
+		secondaryWeapon = cent->currentState.primaryWeapon;
+		temporaryWeapon = cent->currentState.primaryWeapon;
 	}
 
 	if (cent->ghoul2 &&
@@ -13176,7 +13181,7 @@ void CG_VisualWeaponsUpdate(centity_t *cent, clientInfo_t *ci)
 		&& cg.snap)
 	{//this player can have holstered weapons
 		//sabers
-		if (weapInv & (1 << WP_SABER))
+		if (primaryWeapon == WP_SABER || secondaryWeapon == WP_SABER || temporaryWeapon == WP_SABER)
 		{//have saber in inventory
 			if (cent->currentState.weapon != WP_SABER)
 			{//saber is holstered. render as nessicary.
@@ -13303,8 +13308,8 @@ void CG_VisualWeaponsUpdate(centity_t *cent, clientInfo_t *ci)
 		}
 
 		//Handle Blaster Holster on right hip
-		if (!(weapInv & (1 << WP_BLASTER))  //don't have blaster 
-			|| cent->currentState.weapon == WP_BLASTER) //or are currently using blaster
+		if (primaryWeapon != WP_BLASTER && secondaryWeapon != WP_BLASTER && temporaryWeapon != WP_BLASTER  //don't have blaster 
+			&& cent->currentState.weapon != WP_BLASTER) //or are currently using blaster
 		{//don't need holstered blaster rendered
 			if (ci->holster_blaster != -1 && ci->blaster_holstered == WP_BLASTER)
 			{
@@ -13345,7 +13350,7 @@ void CG_VisualWeaponsUpdate(centity_t *cent, clientInfo_t *ci)
 
 		//handle rendering WP_BRYAR_PISTOL on right hip holster
 		if (rightHipInUse //hip in use already
-			|| !(weapInv & (1 << WP_BRYAR_PISTOL)) //don't have the WP_BRYAR_PISTOL
+			|| (primaryWeapon != WP_BRYAR_PISTOL && secondaryWeapon != WP_BRYAR_PISTOL && temporaryWeapon != WP_BRYAR_PISTOL) //don't have the WP_BRYAR_PISTOL
 			|| cent->currentState.weapon == WP_BRYAR_PISTOL) //currently using WP_BRYAR_PISTOL
 		{//don't render WP_BRYAR_PISTOL on right hip.
 			if (ci->holster_blaster != -1 && ci->blaster_holstered == WP_BRYAR_PISTOL)
@@ -13388,7 +13393,7 @@ void CG_VisualWeaponsUpdate(centity_t *cent, clientInfo_t *ci)
 
 		//handle old school pistol
 		if (rightHipInUse //hip in use already
-			|| !(weapInv & (1 << WP_BRYAR_OLD)) //don't have the WP_BRYAR_OLD
+			|| (primaryWeapon != WP_BRYAR_OLD && secondaryWeapon != WP_BRYAR_OLD && temporaryWeapon != WP_BRYAR_OLD) //don't have the WP_BRYAR_OLD
 			|| cent->currentState.weapon == WP_BRYAR_OLD) //currently using WP_BRYAR_OLD
 		{//don't render WP_BRYAR_OLD on right hip.
 			if (ci->holster_blaster != -1 && ci->blaster_holstered == WP_BRYAR_OLD)
@@ -13435,7 +13440,7 @@ void CG_VisualWeaponsUpdate(centity_t *cent, clientInfo_t *ci)
 		*============================
 		*/
 		//Handle Blaster Holster on left hip
-		if (!(weapInv & (1 << WP_BLASTER))  //don't have blaster 
+		if ((primaryWeapon != WP_BLASTER && secondaryWeapon != WP_BLASTER && temporaryWeapon != WP_BLASTER)  //don't have blaster 
 			|| cent->currentState.weapon == WP_BLASTER  //or are currently using blaster
 			|| rightHipInUse == WP_BLASTER)  //or the blaster is already on the right hip. 
 
@@ -13479,7 +13484,7 @@ void CG_VisualWeaponsUpdate(centity_t *cent, clientInfo_t *ci)
 
 		//Handle pistol Holster on left hip
 		if (leftHipInUse
-			|| !(weapInv & (1 << WP_BRYAR_PISTOL))  //don't have pistol 
+			|| (primaryWeapon != WP_BRYAR_PISTOL && secondaryWeapon != WP_BRYAR_PISTOL && temporaryWeapon != WP_BRYAR_PISTOL)  //don't have pistol 
 			|| cent->currentState.weapon == WP_BRYAR_PISTOL  //or are currently using pistol
 			|| rightHipInUse == WP_BRYAR_PISTOL)  //or the pistol is already on the right hip. 
 		{//don't need holstered pistol on left hip rendered
@@ -13522,7 +13527,7 @@ void CG_VisualWeaponsUpdate(centity_t *cent, clientInfo_t *ci)
 
 		//Handle pistol Holster on left hip
 		if (leftHipInUse
-			|| !(weapInv & (1 << WP_BRYAR_OLD))  //don't have pistol 
+			|| (primaryWeapon != WP_BRYAR_OLD && secondaryWeapon != WP_BRYAR_OLD && temporaryWeapon != WP_BRYAR_OLD)  //don't have pistol 
 			|| cent->currentState.weapon == WP_BRYAR_OLD  //or are currently using pistol
 			|| rightHipInUse == WP_BRYAR_OLD)  //or the pistol is already on the right hip. 
 		{//don't need holstered pistol on left hip rendered
@@ -13574,7 +13579,7 @@ void CG_VisualWeaponsUpdate(centity_t *cent, clientInfo_t *ci)
 		*/
 
 		//Golan Rocket Launcher
-		if (weapInv & (1 << WP_ROCKET_LAUNCHER))
+		if ((primaryWeapon == WP_ROCKET_LAUNCHER || secondaryWeapon == WP_ROCKET_LAUNCHER || temporaryWeapon == WP_ROCKET_LAUNCHER))
 		{//have launcher
 			if (cent->currentState.weapon != WP_ROCKET_LAUNCHER && !backInUse)
 			{//need to render holstered rocket launcher
@@ -13610,7 +13615,7 @@ void CG_VisualWeaponsUpdate(centity_t *cent, clientInfo_t *ci)
 
 		//handle concussion on back
 		if (backInUse //back in use already
-			|| !(weapInv & (1 << WP_CONCUSSION)) //don't have the concussion
+			|| (primaryWeapon != WP_CONCUSSION && secondaryWeapon != WP_CONCUSSION && temporaryWeapon != WP_CONCUSSION) //don't have the concussion
 			|| cent->currentState.weapon == WP_CONCUSSION) //currently using concussion
 		{//don't render weapon on back
 			if (ci->holster_launcher != -1 && ci->launcher_holstered == WP_CONCUSSION)
@@ -13653,7 +13658,7 @@ void CG_VisualWeaponsUpdate(centity_t *cent, clientInfo_t *ci)
 
 		//handle repeater on back
 		if (backInUse //back in use already
-			|| !(weapInv & (1 << WP_REPEATER)) //don't have weapon
+			|| (primaryWeapon != WP_REPEATER && secondaryWeapon != WP_REPEATER && temporaryWeapon != WP_REPEATER) //don't have weapon
 			|| cent->currentState.weapon == WP_REPEATER) //currently using weapon
 		{//don't render weapon on back
 			if (ci->holster_launcher != -1 && ci->launcher_holstered == WP_REPEATER)
@@ -13696,7 +13701,7 @@ void CG_VisualWeaponsUpdate(centity_t *cent, clientInfo_t *ci)
 
 		//handle flechette on back
 		if (backInUse //back in use already
-			|| !(weapInv & (1 << WP_FLECHETTE)) //don't have weapon
+			|| (primaryWeapon != WP_FLECHETTE && secondaryWeapon != WP_FLECHETTE && temporaryWeapon != WP_FLECHETTE) //don't have weapon
 			|| cent->currentState.weapon == WP_FLECHETTE) //currently using weapon
 		{//don't render weapon on back
 			if (ci->holster_launcher != -1 && ci->launcher_holstered == WP_FLECHETTE)
@@ -13739,7 +13744,7 @@ void CG_VisualWeaponsUpdate(centity_t *cent, clientInfo_t *ci)
 
 		//handle disruptor on back
 		if (backInUse //back in use already
-			|| !(weapInv & (1 << WP_DISRUPTOR)) //don't have weapon
+			|| (primaryWeapon != WP_DISRUPTOR && secondaryWeapon != WP_DISRUPTOR && temporaryWeapon != WP_DISRUPTOR) //don't have weapon
 			|| cent->currentState.weapon == WP_DISRUPTOR) //currently using weapon
 		{//don't render weapon on back
 			if (ci->holster_launcher != -1 && ci->launcher_holstered == WP_DISRUPTOR)
@@ -13782,7 +13787,7 @@ void CG_VisualWeaponsUpdate(centity_t *cent, clientInfo_t *ci)
 
 		//handle bowcaster on back
 		if (backInUse //back in use already
-			|| !(weapInv & (1 << WP_BOWCASTER)) //don't have weapon
+			|| (primaryWeapon != WP_BOWCASTER && secondaryWeapon != WP_BOWCASTER && temporaryWeapon != WP_BOWCASTER) //don't have weapon
 			|| cent->currentState.weapon == WP_BOWCASTER) //currently using weapon
 		{//don't render weapon on back
 			if (ci->holster_launcher != -1 && ci->launcher_holstered == WP_BOWCASTER)
@@ -13825,7 +13830,7 @@ void CG_VisualWeaponsUpdate(centity_t *cent, clientInfo_t *ci)
 
 		//handle demp 2 on back
 		if (backInUse //back in use already
-			|| !(weapInv & (1 << WP_DEMP2)) //don't have the demp2
+			|| (primaryWeapon != WP_DEMP2 && secondaryWeapon != WP_DEMP2 && temporaryWeapon != WP_DEMP2) //don't have the demp2
 			|| cent->currentState.weapon == WP_DEMP2) //currently using Demp2
 		{//don't render Demp2 on right hip.
 			if (ci->holster_launcher != -1 && ci->launcher_holstered == WP_DEMP2)
@@ -13872,7 +13877,6 @@ void CG_VisualWeaponsUpdate(centity_t *cent, clientInfo_t *ci)
 		*/
 
 	}
-#endif //0
 }
 //[/VisualWeapons]
 
