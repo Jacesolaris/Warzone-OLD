@@ -112,13 +112,16 @@ out vec4 out_Glow;
 	{
 		vec3 color = texture2D(u_DiffuseMap, t).rgb;
 
-//#define const_1 ( 16.0 / 255.0)
-//#define const_2 (255.0 / 219.0)
-#define const_1 ( 125.0 / 255.0)
-#define const_2 (255.0 / 115.0)
-		color = ((color - const_1) * const_2);
+#define const_1 ( 16.0 / 255.0)
+#define const_2 (255.0 / 219.0)
+		vec3 color2 = ((color - const_1) * const_2);
+#define const_3 ( 125.0 / 255.0)
+#define const_4 (255.0 / 115.0)
+		
+		color = ((color - const_3) * const_4);
 
-		vec3 orig_color = color * 2.0;
+		//vec3 orig_color = color * 2.0;
+		vec3 orig_color = color + color2;
 
 		orig_color = clamp(orig_color, 0.0, 1.0);
 		float combined_color2 = orig_color.r + orig_color.g + orig_color.b;
@@ -344,7 +347,7 @@ void main()
 	vec3 offsetDir = normalize(E * tangentToWorld);
 
 	//offsetDir.xy *= -u_NormalScale.a / offsetDir.z;
-	offsetDir.xy *= tex_offset * -3.0;//-4.0;//-5.0; // -3.0
+	offsetDir.xy *= tex_offset * -var_Local1.x;//-4.0;//-5.0; // -3.0
 
   #if defined(USE_PARALLAXMAP)
 	texCoords += offsetDir.xy * RayIntersectDisplaceMap(texCoords, offsetDir.xy, u_NormalMap);

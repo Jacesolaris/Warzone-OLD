@@ -1603,14 +1603,21 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				case MATERIAL_SHORTGRASS:		// 5			// manicured lawn
 					GLSL_BindProgram(sp);
 					GLSL_SetUniformFloat(sp, UNIFORM_TIME, backEnd.refdef.floatTime);
-					RB_SetParallaxScale(sp, 3.0);
+					//RB_SetParallaxScale(sp, 3.0);
+					RB_SetParallaxScale(sp, 4.0);
 					break;
 				case MATERIAL_LONGGRASS:		// 6			// long jungle grass
 					GLSL_BindProgram(sp);
 					GLSL_SetUniformFloat(sp, UNIFORM_TIME, backEnd.refdef.floatTime);
-					RB_SetParallaxScale(sp, 3.0);
+					//RB_SetParallaxScale(sp, 3.0);
+					RB_SetParallaxScale(sp, 5.0);
 					break;
 				case MATERIAL_SAND:				// 8			// sandy beach
+					GLSL_BindProgram(sp);
+					GLSL_SetUniformFloat(sp, UNIFORM_TIME, backEnd.refdef.floatTime);
+					RB_SetParallaxScale(sp, 3.0);
+					//RB_SetParallaxScale(sp, 5.0);
+					break;
 				case MATERIAL_CARPET:			// 27			// lush carpet
 					GLSL_BindProgram(sp);
 					GLSL_SetUniformFloat(sp, UNIFORM_TIME, backEnd.refdef.floatTime);
@@ -1620,16 +1627,19 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 					GLSL_BindProgram(sp);
 					GLSL_SetUniformFloat(sp, UNIFORM_TIME, backEnd.refdef.floatTime);
 					RB_SetParallaxScale(sp, 4.0);
+					//RB_SetParallaxScale(sp, 5.0);
 					break;
 				case MATERIAL_ROCK:				// 23			//
 					GLSL_BindProgram(sp);
 					GLSL_SetUniformFloat(sp, UNIFORM_TIME, backEnd.refdef.floatTime);
-					RB_SetParallaxScale(sp, 6.0);
+					//RB_SetParallaxScale(sp, 6.0);
+					RB_SetParallaxScale(sp, 4.0);
 					break;
 				case MATERIAL_TILES:			// 26			// tiled floor
 					GLSL_BindProgram(sp);
 					GLSL_SetUniformFloat(sp, UNIFORM_TIME, backEnd.refdef.floatTime);
-					RB_SetParallaxScale(sp, 4.0);
+					//RB_SetParallaxScale(sp, 4.0);
+					RB_SetParallaxScale(sp, 3.0);
 					break;
 				case MATERIAL_SOLIDWOOD:		// 1			// freshly cut timber
 				case MATERIAL_HOLLOWWOOD:		// 2			// termite infested creaky wood
@@ -1637,13 +1647,15 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				case MATERIAL_HOLLOWMETAL:		// 4			// hollow metal machines
 					GLSL_BindProgram(sp);
 					GLSL_SetUniformFloat(sp, UNIFORM_TIME, backEnd.refdef.floatTime);
-					RB_SetParallaxScale(sp, 4.0);
+					//RB_SetParallaxScale(sp, 4.0);
+					RB_SetParallaxScale(sp, 3.0);
 					break;
 				case MATERIAL_DRYLEAVES:		// 19			// dried up leaves on the floor
 				case MATERIAL_GREENLEAVES:		// 20			// fresh leaves still on a tree
 					GLSL_BindProgram(sp);
 					GLSL_SetUniformFloat(sp, UNIFORM_TIME, backEnd.refdef.floatTime);
-					RB_SetParallaxScale(sp, 4.0);
+					//RB_SetParallaxScale(sp, 4.0);
+					RB_SetParallaxScale(sp, 5.0);
 					break;
 				case MATERIAL_FABRIC:			// 21			// Cotton sheets
 				case MATERIAL_CANVAS:			// 22			// tent material
@@ -1665,6 +1677,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 					GLSL_BindProgram(sp);
 					GLSL_SetUniformFloat(sp, UNIFORM_TIME, backEnd.refdef.floatTime);
 					RB_SetParallaxScale(sp, 4.0);
+					//RB_SetParallaxScale(sp, 5.0);
 					break;
 				case MATERIAL_DIRT:				// 7			// hard mud
 				case MATERIAL_CONCRETE:			// 11			// hardened concrete pavement
