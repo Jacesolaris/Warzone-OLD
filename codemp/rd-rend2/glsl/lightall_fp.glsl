@@ -1,4 +1,4 @@
-#define FAST_PARALLAX
+//#define FAST_PARALLAX
 
 uniform sampler2D u_DiffuseMap;
 varying vec4	var_Local1; // parallaxScale, 0, 0, 0
@@ -112,31 +112,17 @@ out vec4 out_Glow;
 	{
 		vec3 color = texture2D(u_DiffuseMap, t).rgb;
 
-#define const_1 ( 16.0 / 255.0)
-#define const_2 (255.0 / 219.0)
+//#define const_1 ( 16.0 / 255.0)
+//#define const_2 (255.0 / 219.0)
+#define const_1 ( 125.0 / 255.0)
+#define const_2 (255.0 / 115.0)
 		color = ((color - const_1) * const_2);
 
 		vec3 orig_color = color * 2.0;
-		//color += 0.2;
-		//color = clamp(color, 0.0, 1.0);
-		//color -= vec3(0.4, 0.4, 0.4);
-		//color = clamp(color, 0.0, 1.0);
-		//color += vec3(0.2, 0.2, 0.2);
-		//color = clamp(color, 0.0, 1.0);
-		//color *= 1.8;
-		//color = clamp(color, 0.0, 1.0);
-	
-		//float combined_color = color.r + color.g + color.b;
-		//combined_color /= 3.0;
-  
-		//return clamp(1.0 - combined_color, 0.0, 1.0);
 
 		orig_color = clamp(orig_color, 0.0, 1.0);
 		float combined_color2 = orig_color.r + orig_color.g + orig_color.b;
 		combined_color2 /= 4.0;
-
-		//float out_color = (clamp(1.0 - combined_color, 0.0, 1.0) + clamp(1.0 - combined_color2, 0.0, 1.0)) / 2.0;
-		//return out_color;
 
 		return clamp(1.0 - combined_color2, 0.0, 1.0);
 	}
@@ -189,6 +175,7 @@ float RayIntersectDisplaceMap(vec2 dp, vec2 ds, sampler2D normalMap)
 	}
 
 	return bestDepth * var_Local1.x;
+	//return ((bestDepth * var_Local1.x) + (SampleDepth(normalMap, dp) - 1.0)) * 0.5;
 #else //FAST_PARALLAX
 	float depth = SampleDepth(normalMap, dp) - 1.0;
 	return depth * var_Local1.x;
@@ -313,6 +300,7 @@ void main()
 	vec3 viewDir, lightColor, ambientColor;
 	vec3 L, N, E, H;
 	float NL, NH, NE, EH, attenuation;
+	vec2 tex_offset = vec2(1.0 / var_Dimensions.x, 1.0 / var_Dimensions.y);
 
 #if defined(USE_LIGHT) && !defined(USE_FAST_LIGHT)
   #if defined(USE_VERT_TANGENT_SPACE)
@@ -355,7 +343,8 @@ void main()
 #if defined(USE_PARALLAXMAP) || defined(USE_PARALLAXMAP_NONORMALS)
 	vec3 offsetDir = normalize(E * tangentToWorld);
 
-	offsetDir.xy *= -u_NormalScale.a / offsetDir.z;
+	//offsetDir.xy *= -u_NormalScale.a / offsetDir.z;
+	offsetDir.xy *= tex_offset * -3.0;//-4.0;//-5.0; // -3.0
 
   #if defined(USE_PARALLAXMAP)
 	texCoords += offsetDir.xy * RayIntersectDisplaceMap(texCoords, offsetDir.xy, u_NormalMap);
@@ -387,7 +376,8 @@ void main()
 	lightColor	= var_Color.rgb;
   #endif
 
-  #if defined(USE_NORMALMAP)
+  // UQ1: This is broken...
+  /*#if defined(USE_NORMALMAP)
     #if defined(SWIZZLE_NORMALMAP)
 	N.xy = texture2D(u_NormalMap, texCoords).ag - vec2(0.5);
     #else
@@ -396,9 +386,9 @@ void main()
 	N.xy *= u_NormalScale.xy;
 	N.z = sqrt(clamp((0.25 - N.x * N.x) - N.y * N.y, 0.0, 1.0));
 	N = tangentToWorld * N;
-  #else
+  #else*/
 	N = var_Normal.xyz;
-  #endif
+  //#endif
 
 	N = normalize(N);
 	L /= sqrt(sqrLightDist);
