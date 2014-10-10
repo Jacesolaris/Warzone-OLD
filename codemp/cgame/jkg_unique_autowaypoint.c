@@ -41,7 +41,8 @@
 
 #define MOD_DIRECTORY "OJK"
 
-#define MAX_MAP_SIZE 16384
+//#define MAX_MAP_SIZE 16384
+#define MAX_MAP_SIZE 64000
 
 #define Vector4Copy(a,b)		((b)[0]=(a)[0],(b)[1]=(a)[1],(b)[2]=(a)[2],(b)[3]=(a)[3])
 
@@ -4825,7 +4826,7 @@ AIMod_GetMapBounts ( void )
 			VectorSet( org1, startx, starty, startz );
 			VectorSet( org2, startx, starty, startz );
 			org2[2] += (MAX_MAP_SIZE*2);
-			CG_Trace( &tr, org1, NULL, NULL, org2, ENTITYNUM_NONE, MASK_SHOT | MASK_WATER );
+			CG_Trace( &tr, org1, NULL, NULL, org2, ENTITYNUM_NONE, MASK_PLAYERSOLID | MASK_WATER );
 			
 			if ( tr.endpos[2] < mapMins[2] )
 			{
@@ -4867,7 +4868,7 @@ AIMod_GetMapBounts ( void )
 			VectorSet( org1, startx, starty, startz );
 			VectorSet( org2, startx, starty, startz );
 			org2[2] -= (MAX_MAP_SIZE*2);
-			CG_Trace( &tr, org1, NULL, NULL, org2, ENTITYNUM_NONE, MASK_SHOT | MASK_WATER );
+			CG_Trace( &tr, org1, NULL, NULL, org2, ENTITYNUM_NONE, MASK_PLAYERSOLID | MASK_WATER );
 			if ( tr.endpos[2] > mapMaxs[2] )
 			{
 				mapMaxs[2] = tr.endpos[2];
@@ -4906,7 +4907,7 @@ AIMod_GetMapBounts ( void )
 			VectorSet( org1, startx, starty, startz );
 			VectorSet( org2, startx, starty, startz );
 			org2[0] += (MAX_MAP_SIZE*2);
-			CG_Trace( &tr, org1, NULL, NULL, org2, ENTITYNUM_NONE, MASK_SHOT | MASK_WATER );
+			CG_Trace( &tr, org1, NULL, NULL, org2, ENTITYNUM_NONE, MASK_PLAYERSOLID | MASK_WATER );
 			if ( tr.endpos[0] < mapMins[0] )
 			{
 				starty += INCRUMENT;
@@ -4947,7 +4948,7 @@ AIMod_GetMapBounts ( void )
 			VectorSet( org1, startx, starty, startz );
 			VectorSet( org2, startx, starty, startz );
 			org2[0] -= (MAX_MAP_SIZE*2);
-			CG_Trace( &tr, org1, NULL, NULL, org2, ENTITYNUM_NONE, MASK_SHOT | MASK_WATER );
+			CG_Trace( &tr, org1, NULL, NULL, org2, ENTITYNUM_NONE, MASK_PLAYERSOLID | MASK_WATER );
 			if ( tr.endpos[0] > mapMaxs[0] )
 			{
 				mapMaxs[0] = tr.endpos[0];
@@ -4992,7 +4993,7 @@ AIMod_GetMapBounts ( void )
 			VectorSet( org1, startx, starty, startz );
 			VectorSet( org2, startx, starty, startz );
 			org2[1] += (MAX_MAP_SIZE*2);
-			CG_Trace( &tr, org1, NULL, NULL, org2, ENTITYNUM_NONE, MASK_SHOT | MASK_WATER );
+			CG_Trace( &tr, org1, NULL, NULL, org2, ENTITYNUM_NONE, MASK_PLAYERSOLID | MASK_WATER );
 			if ( tr.endpos[1] < mapMins[1] )
 			{
 				mapMins[1] = tr.endpos[1];
@@ -5033,7 +5034,7 @@ AIMod_GetMapBounts ( void )
 			VectorSet( org1, startx, starty, startz );
 			VectorSet( org2, startx, starty, startz );
 			org2[1] -= (MAX_MAP_SIZE*2);
-			CG_Trace( &tr, org1, NULL, NULL, org2, ENTITYNUM_NONE, MASK_SHOT | MASK_WATER );
+			CG_Trace( &tr, org1, NULL, NULL, org2, ENTITYNUM_NONE, MASK_PLAYERSOLID | MASK_WATER );
 			if ( tr.endpos[1] > mapMaxs[1] )
 			{
 				mapMaxs[1] = tr.endpos[1];
@@ -5079,7 +5080,7 @@ AIMod_GetMapBounts ( void )
 			VectorSet( org1, startx, starty, startz );
 			VectorSet( org2, startx, starty, startz );
 			org2[2] -= (MAX_MAP_SIZE*2);
-			CG_Trace( &tr, org1, NULL, NULL, org2, ENTITYNUM_NONE, MASK_SHOT | MASK_WATER );
+			CG_Trace( &tr, org1, NULL, NULL, org2, ENTITYNUM_NONE, MASK_PLAYERSOLID | MASK_WATER );
 			if ( tr.startsolid || tr.allsolid )
 			{
 				starty -= INCRUMENT;
