@@ -1914,6 +1914,17 @@ void CG_MissileHitWall(int weapon, int clientNum, vec3_t origin, vec3_t dir, imp
 		FX_BowcasterHitWall( origin, dir );
 		break;
 
+	case WP_DC15:
+		if (altFire)
+		{
+			FX_RepeaterAltHitWall(origin, dir);
+		}
+		else
+		{
+			FX_RepeaterHitWall(origin, dir);
+		}
+		break;
+
 	case WP_REPEATER:
 		if ( altFire )
 		{
@@ -2036,6 +2047,17 @@ void CG_MissileHitPlayer(int weapon, vec3_t origin, vec3_t dir, int entityNum, q
 
 	case WP_BOWCASTER:
 		FX_BowcasterHitPlayer( origin, dir, humanoid );
+		break;
+
+	case WP_DC15:
+		if (altFire)
+		{
+			FX_RepeaterAltHitPlayer(origin, dir, humanoid);
+		}
+		else
+		{
+			FX_RepeaterHitPlayer(origin, dir, humanoid);
+		}
 		break;
 
 	case WP_REPEATER:
