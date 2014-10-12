@@ -23,10 +23,11 @@ vec3_t WP_MuzzlePoint[WP_NUM_WEAPONS] =
 	{12,	2,		-6	},	// WP_BOWCASTER,
 	{12,	4.5,	-6	},	// WP_REPEATER,
 	{12,	4.5,	-6	},	// WP_DC15,
-	{12,	4.5,	-6	},	//WP_WESTARM5
+	{12,	4.5,	-6	},	// WP_WESTARM5
 	{12,	6,		-6	},	// WP_T21,
 	{12,	6,		-6	},	// WP_EE3,
-	{12,	6,		-6	},	//WP_CLONE_PISTOL1
+	{12,	6,		-6	},	// WP_CLONE_PISTOL1
+	{12,	6,		-6	},	// WP_DLT20A
 	{12,	6,		-6	},	// WP_DEMP2,
 	{12,	6,		-6	},	// WP_FLECHETTE,
 	{12,	6,		-6	},	// WP_CONCUSSION
@@ -276,6 +277,24 @@ weaponData_t weaponData[WP_NUM_WEAPONS] =
 		0,						//	int		maxCharge;			// stop subtracting once charged for this many ms
 		2100					//	int		altMaxCharge;		// above for secondary
 	},
+	
+		{	// WP_DLT20A
+			//"DLT-20a Blaster Rifle",	//	char	classname[32];		// Spawning name
+			AMMO_BLASTER,			//	int		ammoIndex;			// Index to proper ammo slot
+			5,						//	int		ammoLow;			// Count when ammo is low
+			2,						//	int		energyPerShot;		// Amount of energy used per shot
+			350,					//	int		fireTime;			// Amount of time between firings
+			8192,					//	int		range;				// Range of weapon
+			3,						//	int		altEnergyPerShot;	// Amount of energy used for alt-fire
+			150,					//	int		altFireTime;		// Amount of time between alt-firings
+			8192,					//	int		altRange;			// Range of alt-fire
+			0,						//	int		chargeSubTime;		// ms interval for subtracting ammo during charge
+			0,						//	int		altChargeSubTime;	// above for secondary
+			0,						//	int		chargeSub;			// amount to subtract during charge on each interval
+			0,						//int		altChargeSub;		// above for secondary
+			0,						//	int		maxCharge;			// stop subtracting once charged for this many ms
+			0						//	int		altMaxCharge;		// above for secondary
+		},
 	{	// WP_BOWCASTER
 //		"Wookiee Bowcaster",		//	char	classname[32];		// Spawning name
 		AMMO_POWERCELL,			//	int		ammoIndex;			// Index to proper ammo slot

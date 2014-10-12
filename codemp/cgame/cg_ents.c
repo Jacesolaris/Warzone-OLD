@@ -2144,6 +2144,9 @@ Ghoul2 Insert End
 		case WP_CLONE_PISTOL1:
 			cent->lerpOrigin[2] -= 10;
 			break;
+		case WP_DLT20A:
+			cent->lerpOrigin[2] -= 16;
+			break;
 		default:
 			cent->lerpOrigin[2] -= 8;
 			break;

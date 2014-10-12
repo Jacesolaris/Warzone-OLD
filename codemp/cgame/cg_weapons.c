@@ -1963,6 +1963,10 @@ void CG_MissileHitWall(int weapon, int clientNum, vec3_t origin, vec3_t dir, imp
 		}
 		break;
 
+	case WP_DLT20A:
+		FX_BlasterWeaponHitWall(origin, dir);
+		break;
+
 	case WP_REPEATER:
 		if ( altFire )
 		{
@@ -2127,6 +2131,10 @@ void CG_MissileHitPlayer(int weapon, vec3_t origin, vec3_t dir, int entityNum, q
 			FX_BlasterWeaponHitPlayer(origin, dir, humanoid);
 
 		}
+		break;
+
+	case WP_DLT20A:
+		FX_BlasterWeaponHitPlayer(origin, dir, humanoid);
 		break;
 
 	case WP_REPEATER:
