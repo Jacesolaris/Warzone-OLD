@@ -4608,18 +4608,6 @@ void FireWeapon( gentity_t *ent, qboolean altFire ) {
 			WP_FireDisruptor( ent, altFire );
 			break;
 
-		case WP_DISRUPTOR:
-			WP_FireDisruptor( ent, altFire );
-			break;
-
-		case WP_BOWCASTER:
-			WP_FireBowcaster( ent, altFire );
-			break;
-
-		case WP_REPEATER:
-			WP_FireRepeater( ent, altFire );
-			break;
-
 		case WP_DC15:
 			WP_FireRepeater(ent, altFire);
 			break;
@@ -4633,6 +4621,18 @@ void FireWeapon( gentity_t *ent, qboolean altFire ) {
 			break;
 		case WP_CLONE_PISTOL1:
 			WP_FireDEMP2(ent, altFire);
+			break;
+
+		case WP_DISRUPTOR:
+			WP_FireDisruptor( ent, altFire );
+			break;
+
+		case WP_BOWCASTER:
+			WP_FireBowcaster( ent, altFire );
+			break;
+
+		case WP_REPEATER:
+			WP_FireRepeater( ent, altFire );
 			break;
 
 		case WP_DEMP2:

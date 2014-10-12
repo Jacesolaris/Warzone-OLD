@@ -224,6 +224,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		break;
 
 	case WP_A280: // UQ1: Example. Should have it's own fx...
+		weaponInfo->item->classname =	"A280 Clone Blaster";
 		weaponInfo->selectSound			= trap->S_RegisterSound("sound/weapons/disruptor/select.wav");
 
 		weaponInfo->flashSound[0]		= trap->S_RegisterSound( "sound/weapons/disruptor/fire.wav");
