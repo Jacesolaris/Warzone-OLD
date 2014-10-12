@@ -243,6 +243,7 @@ int WeaponReadyAnim[WP_NUM_WEAPONS] =
 	TORSO_WEAPONREADY3,//TORSO_WEAPONREADY4,//WP_DISRUPTOR,
 	TORSO_WEAPONREADY3,//WP_A280,
 	DC15_READY,//WP_DC15
+	DC15_READY,//WP_WESTARM5
 	TORSO_WEAPONREADY3,//WP_T21
 	DC15_READY,//WP_EE3
 	TORSO_WEAPONREADY2,//WP_CLONE_PISTOL1
@@ -289,6 +290,7 @@ int WeaponReadyLegsAnim[WP_NUM_WEAPONS] =
 	BOTH_STAND1,//TORSO_WEAPONREADY4,//WP_DISRUPTOR,
 	BOTH_STAND1,//WP_A280,
 	BOTH_STAND1,//WP_DC15
+	BOTH_STAND1,//WP_WESTARM5
 	BOTH_STAND1,//WP_T21
 	BOTH_STAND1,//WP_EE3
 	BOTH_STAND1,//WP_CLONE_PISTOL1
@@ -334,6 +336,7 @@ int WeaponAttackAnim[WP_NUM_WEAPONS] =
 	BOTH_ATTACK3,//BOTH_ATTACK4,//WP_DISRUPTOR,
 	BOTH_ATTACK3,//WP_A280,
 	DC15_FIRE,//WP_DC15
+	DC15_FIRE,//WP_WESTARM5
 	BOTH_ATTACK3,//WP_T21
 	DC15_FIRE,//WP_EE3
 	BOTH_ATTACK2,//WP_CLONE_PISTOL1
@@ -1242,19 +1245,39 @@ Don't place this
 		"@MENUS_THE_PRIMARY_WEAPON_OF"				// description
 	},
 
-	/*QUAKED weapon_dc-15 (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+	
+
+	/*QUAKED weapon_westarm 5 (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+	*/
+		{
+			"weapon_dc-15",
+			"sound/weapons/w_pkup.wav",
+			{ "models/weapons3/cw-w5/dc-15_ext_w.glm",
+			0, 0, 0 },
+			/* view */		"models/weapons3/cw-w5/dc-15_ext.md3",
+			/* icon */		"gfx/hud/w_icon_cw-w5g",
+			/* pickup *///	"dc-15",
+			100,
+			IT_WEAPON,
+			WP_DC15,
+			/* precache */ "",
+			/* sounds */ "",
+			"@MENUS_THE_PRIMARY_WEAPON_OF"				// description
+		},
+
+	/*QUAKED weapon_westarm 5 (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
 	*/
 	{
-		"weapon_dc-15",
+		"weapon_westarm5",
 		"sound/weapons/w_pkup.wav",
-		{ "models/weapons3/cw-w5/dc-15_ext_w.glm",
+		{ "models/weapons3/westarm5/heavy_repeater_w.glm",
 		0, 0, 0 },
-		/* view */		"models/weapons3/cw-w5/dc-15_ext_w.md3",
+		/* view */		"models/weapons3/westarm5/heavy_repeater.md3",
 		/* icon */		"gfx/hud/w_icon_cw-w5",
-		/* pickup *///	"dc-15",
+		/* pickup *///	"weastarm 5",
 		100,
 		IT_WEAPON,
-		WP_DC15,
+		WP_WESTARM5,
 		/* precache */ "",
 		/* sounds */ "",
 		"@MENUS_THE_PRIMARY_WEAPON_OF"				// description

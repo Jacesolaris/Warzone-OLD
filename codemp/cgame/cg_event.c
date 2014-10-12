@@ -1087,6 +1087,7 @@ void CG_G2MarkEvent(entityState_t *es)
 	case WP_BRYAR_OLD:
 	case WP_A280:
 	case WP_DC15:
+	case WP_WESTARM5:
 	case WP_T21:
 	case WP_EE3:
 	case WP_CLONE_PISTOL1:

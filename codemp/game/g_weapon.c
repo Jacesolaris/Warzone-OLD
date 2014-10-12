@@ -4612,6 +4612,10 @@ void FireWeapon( gentity_t *ent, qboolean altFire ) {
 			WP_FireRepeater(ent, altFire);
 			break;
 
+		case WP_WESTARM5:
+			WP_FireRepeater(ent, altFire);
+			break;
+
 		case WP_T21:
 			WP_FireBlaster(ent, altFire);
 			break;

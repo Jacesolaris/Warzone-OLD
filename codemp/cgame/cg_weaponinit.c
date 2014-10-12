@@ -275,7 +275,43 @@ void CG_RegisterWeapon( int weaponNum) {
 
 	case WP_DC15:
 
-		weaponInfo->item->classname = "DC-15 Rifle";
+		weaponInfo->item->classname = "DC-15 Blaster";
+		weaponInfo->selectSound = trap->S_RegisterSound("sound/weapons/repeater/select.wav");
+
+		weaponInfo->flashSound[0] = trap->S_RegisterSound("sound/weapons/repeater/fire.wav");
+		weaponInfo->firingSound = NULL_SOUND;
+		weaponInfo->chargeSound = NULL_SOUND;
+		weaponInfo->muzzleEffect = trap->FX_RegisterEffect("repeater/muzzle_flash");
+		weaponInfo->missileModel = NULL_HANDLE;
+		weaponInfo->missileSound = NULL_SOUND;
+		weaponInfo->missileDlight = 0;
+
+		weaponInfo->missileHitSound = NULL_SOUND;
+		weaponInfo->missileTrailFunc = FX_RepeaterProjectileThink;
+		weaponInfo->missileRenderfx = NULL_FX;
+		weaponInfo->altMissileRenderfx = NULL_FX;
+		weaponInfo->altFlashSound[0] = trap->S_RegisterSound("sound/weapons/repeater/alt_fire.wav");
+		weaponInfo->altFiringSound = NULL_SOUND;
+		weaponInfo->altChargeSound = trap->S_RegisterSound("sound/weapons/SBDarm/cannon_charge.mp3");
+		weaponInfo->altMuzzleEffect = trap->FX_RegisterEffect("repeater/muzzle_flash");
+		weaponInfo->altMissileModel = NULL_HANDLE;
+		weaponInfo->altMissileSound = NULL_SOUND;
+		weaponInfo->altMissileDlight = 0;
+
+		weaponInfo->altMissileHitSound = NULL_SOUND;
+		weaponInfo->altMissileTrailFunc = FX_RepeaterAltProjectileThink;
+		cgs.effects.repeaterProjectileEffect = trap->FX_RegisterEffect("repeater/projectile");
+		cgs.effects.repeaterAltProjectileEffect = trap->FX_RegisterEffect("repeater/alt_projectile");
+		cgs.effects.repeaterWallImpactEffect = trap->FX_RegisterEffect("repeater/wall_impact");
+		cgs.effects.repeaterFleshImpactEffect = trap->FX_RegisterEffect("repeater/flesh_impact");
+		cgs.effects.repeaterAltWallImpactEffect = trap->FX_RegisterEffect("repeater/concussion");
+		cgs.effects.concussionShotEffect = trap->FX_RegisterEffect("concussion/shot");
+		cgs.effects.concussionImpactEffect = trap->FX_RegisterEffect("concussion/explosion");
+		break;
+
+	case WP_WESTARM5:
+
+		weaponInfo->item->classname = "Westarm 5 Blaster";
 		weaponInfo->selectSound = trap->S_RegisterSound("sound/weapons/repeater/select.wav");
 
 		weaponInfo->flashSound[0] = trap->S_RegisterSound("sound/weapons/repeater/fire.wav");
