@@ -1770,6 +1770,10 @@ void CG_FireWeapon( centity_t *cent, qboolean altFire ) {
 			{
 				CGCam_Shake(flrand(2, 3), 350);
 			}
+			else if (ent->weapon == WP_DC15)
+			{
+				CGCam_Shake(flrand(2, 3), 350);
+			}
 			else if (ent->weapon == WP_FLECHETTE)
 			{
 				if (altFire)
@@ -1925,6 +1929,10 @@ void CG_MissileHitWall(int weapon, int clientNum, vec3_t origin, vec3_t dir, imp
 		}
 		break;
 
+	case WP_T21:
+		FX_BlasterWeaponHitWall(origin, dir);
+		break;
+
 	case WP_REPEATER:
 		if ( altFire )
 		{
@@ -2058,6 +2066,10 @@ void CG_MissileHitPlayer(int weapon, vec3_t origin, vec3_t dir, int entityNum, q
 		{
 			FX_RepeaterHitPlayer(origin, dir, humanoid);
 		}
+		break;
+
+	case WP_T21:
+		FX_BlasterWeaponHitPlayer(origin, dir, humanoid);
 		break;
 
 	case WP_REPEATER:

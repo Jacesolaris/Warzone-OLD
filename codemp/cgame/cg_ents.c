@@ -2132,6 +2132,9 @@ Ghoul2 Insert End
 		case WP_DC15:
 			cent->lerpOrigin[2] -= 12;
 			break;
+		case WP_T21:
+			cent->lerpOrigin[2] -= 16;
+			break;
 		default:
 			cent->lerpOrigin[2] -= 8;
 			break;
