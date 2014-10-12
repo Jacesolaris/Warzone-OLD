@@ -4680,6 +4680,16 @@ qboolean NPC_FollowRoutes( void )
 		NPC->wpCurrent = NPC->wpNext;
 		NPC->wpNext = NPC_GetNextNode(NPC);
 
+		if (NPC->wpCurrent < 0 || NPC->wpCurrent >= gWPNum || NPC->longTermGoal < 0 || NPC->longTermGoal >= gWPNum)
+		{// FIXME: Try to roam out of problems...
+			NPC_ClearPathData(NPC);
+			ucmd.forwardmove = 0;
+			ucmd.rightmove = 0;
+			ucmd.upmove = 0;
+			NPC_PickRandomIdleAnimantion(NPC);
+			return qfalse; // next think...
+		}
+
 		if (DistanceVertical(gWPArray[NPC->wpCurrent]->origin, NPC->r.currentOrigin) > 48)
 		{
 			// Wait idle...
@@ -4693,16 +4703,6 @@ qboolean NPC_FollowRoutes( void )
 			return qtrue;
 		}
 		
-		if (NPC->wpCurrent < 0 || NPC->wpCurrent >= gWPNum || NPC->longTermGoal < 0 || NPC->longTermGoal >= gWPNum)
-		{// FIXME: Try to roam out of problems...
-			NPC_ClearPathData(NPC);
-			ucmd.forwardmove = 0;
-			ucmd.rightmove = 0;
-			ucmd.upmove = 0;
-			NPC_PickRandomIdleAnimantion(NPC);
-			return qfalse; // next think...
-		}
-
 		NPC->wpTravelTime = level.time + 10000;
 		NPC->wpSeenTime = level.time;
 	}
@@ -5027,6 +5027,19 @@ qboolean NPC_FollowEnemyRoute( void )
 			return qfalse; // next think...
 		}
 
+		if (DistanceVertical(gWPArray[NPC->wpCurrent]->origin, NPC->r.currentOrigin) > 48)
+		{
+			// Wait idle...
+			ucmd.forwardmove = 0;
+			ucmd.rightmove = 0;
+			ucmd.upmove = 0;
+			NPC_PickRandomIdleAnimantion(NPC);
+
+			NPC->wpTravelTime = level.time + 10000;
+			NPC->wpSeenTime = level.time;
+			return qtrue;
+		}
+		
 		NPC->wpTravelTime = level.time + 10000;
 		NPC->wpSeenTime = level.time;
 	}
