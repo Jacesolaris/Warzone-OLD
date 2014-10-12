@@ -49,6 +49,7 @@ void FX_RepeaterAltHitPlayer( vec3_t origin, vec3_t normal, qboolean humanoid );
 // DEMP2
 void FX_DEMP2_ProjectileThink( centity_t *cent, const struct weaponInfo_s *weapon );
 void FX_DEMP2_HitWall( vec3_t origin, vec3_t normal );
+void FX_DEMP2_BounceWall(vec3_t origin, vec3_t normal);
 void FX_DEMP2_HitPlayer( vec3_t origin, vec3_t normal, qboolean humanoid );
 void FX_DEMP2_AltDetonate( vec3_t org, float size );
 

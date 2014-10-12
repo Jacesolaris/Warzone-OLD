@@ -244,6 +244,8 @@ int WeaponReadyAnim[WP_NUM_WEAPONS] =
 	TORSO_WEAPONREADY3,//WP_A280,
 	TORSO_WEAPONREADY3,//WP_DC15
 	TORSO_WEAPONREADY3,//WP_T21
+	TORSO_WEAPONREADY2,//WP_EE3
+	TORSO_WEAPONREADY3,//WP_CLONE_PISTOL1
 	TORSO_WEAPONREADY3,//TORSO_WEAPONREADY5,//WP_BOWCASTER,
 	TORSO_WEAPONREADY3,//TORSO_WEAPONREADY6,//WP_REPEATER,
 	TORSO_WEAPONREADY3,//TORSO_WEAPONREADY7,//WP_DEMP2,
@@ -290,6 +292,8 @@ int WeaponReadyLegsAnim[WP_NUM_WEAPONS] =
 	BOTH_STAND1,//TORSO_WEAPONREADY6,//WP_REPEATER,
 	BOTH_STAND1,//WP_DC15
 	BOTH_STAND1,//WP_T21
+	BOTH_STAND1,//WP_EE3
+	BOTH_STAND1,//WP_CLONE_PISTOL1
 	BOTH_STAND1,//TORSO_WEAPONREADY7,//WP_DEMP2,
 	BOTH_STAND1,//TORSO_WEAPONREADY8,//WP_FLECHETTE,
 	BOTH_STAND1,//WP_CONCUSSION
@@ -333,6 +337,8 @@ int WeaponAttackAnim[WP_NUM_WEAPONS] =
 	BOTH_ATTACK3,//BOTH_ATTACK6,//WP_REPEATER,
 	BOTH_ATTACK3,//WP_DC15
 	BOTH_ATTACK3,//WP_T21
+	BOTH_ATTACK3,//WP_EE3
+	BOTH_ATTACK2,//WP_CLONE_PISTOL1
 	BOTH_ATTACK3,//BOTH_ATTACK7,//WP_DEMP2,
 	BOTH_ATTACK3,//BOTH_ATTACK8,//WP_FLECHETTE,
 	BOTH_ATTACK3,//WP_CONCUSSION,
@@ -1236,25 +1242,25 @@ Don't place this
 		"@MENUS_THE_PRIMARY_WEAPON_OF"				// description
 	},
 
-/*QUAKED weapon_dc-15 (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-*/
-{
-	"weapon_dc-15",
-	"sound/weapons/w_pkup.wav",
-	{ "models/weapons3/cw-w5/dc-15_ext_w.glm",
-	0, 0, 0 },
-	/* view */		"models/weapons3/cw-w5/dc-15_ext_w.md3",
-	/* icon */		"gfx/hud/w_icon_cw-w5",
-	/* pickup *///	"dc-15",
-	100,
-	IT_WEAPON,
-	WP_DC15,
-	/* precache */ "",
-	/* sounds */ "",
-	"@MENUS_THE_PRIMARY_WEAPON_OF"				// description
-},
+	/*QUAKED weapon_dc-15 (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+	*/
+	{
+		"weapon_dc-15",
+		"sound/weapons/w_pkup.wav",
+		{ "models/weapons3/cw-w5/dc-15_ext_w.glm",
+		0, 0, 0 },
+		/* view */		"models/weapons3/cw-w5/dc-15_ext_w.md3",
+		/* icon */		"gfx/hud/w_icon_cw-w5",
+		/* pickup *///	"dc-15",
+		100,
+		IT_WEAPON,
+		WP_DC15,
+		/* precache */ "",
+		/* sounds */ "",
+		"@MENUS_THE_PRIMARY_WEAPON_OF"				// description
+	},
 
-/*QUAKED weapon_t-21 (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+	/*QUAKED weapon_t-21 (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
 */
 {
 	"weapon_t-21",
@@ -1267,6 +1273,42 @@ Don't place this
 	100,
 	IT_WEAPON,
 	WP_T21,
+	/* precache */ "",
+	/* sounds */ "",
+	"@MENUS_THE_PRIMARY_WEAPON_OF"				// description
+},
+
+/*QUAKED weapon_ee-3 (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+*/
+{
+	"weapon_ee-3",
+	"sound/weapons/w_pkup.wav",
+	{ "models/weapons3/ee-3/ee-3_w.glm",
+	0, 0, 0 },
+	/* view */		"models/weapons3/ee-3/ee-3.md3",
+	/* icon */		"gfx/hud/w_icon_ee-3",
+	/* pickup *///	"t-21",
+	100,
+	IT_WEAPON,
+	WP_EE3,
+	/* precache */ "",
+	/* sounds */ "",
+	"@MENUS_THE_PRIMARY_WEAPON_OF"				// description
+},
+
+/*QUAKED weapon_dc-17 (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+*/
+{
+	"weapon_clone_pistol_1",
+	"sound/weapons/w_pkup.wav",
+	{ "models/weapons3/dc-17/dc-17_w.glm",
+	0, 0, 0 },
+	/* view */		"models/weapons3/dc-17/dc-17.md3",
+	/* icon */		"gfx/hud/w_icon_clonepistol_1",
+	/* pickup *///	"clone_pistol_1",
+	100,
+	IT_WEAPON,
+	WP_CLONE_PISTOL1,
 	/* precache */ "",
 	/* sounds */ "",
 	"@MENUS_THE_PRIMARY_WEAPON_OF"				// description

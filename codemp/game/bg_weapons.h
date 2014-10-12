@@ -41,6 +41,8 @@ typedef enum {
 	WP_A280,
 	WP_DC15,
 	WP_T21,
+	WP_EE3,
+	WP_CLONE_PISTOL1,
 
 	WP_BOWCASTER,
 	WP_REPEATER,

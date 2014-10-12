@@ -1933,6 +1933,21 @@ void CG_MissileHitWall(int weapon, int clientNum, vec3_t origin, vec3_t dir, imp
 		FX_BlasterWeaponHitWall(origin, dir);
 		break;
 
+	case WP_EE3:
+		FX_BlasterWeaponHitWall(origin, dir);
+		break;
+
+	case WP_CLONE_PISTOL1:
+		if (altFire)
+		{
+			FX_DEMP2_BounceWall(origin, dir);
+		}
+		else
+		{
+			FX_DEMP2_HitWall(origin, dir);
+		}
+		break;
+
 	case WP_REPEATER:
 		if ( altFire )
 		{
@@ -2070,6 +2085,22 @@ void CG_MissileHitPlayer(int weapon, vec3_t origin, vec3_t dir, int entityNum, q
 
 	case WP_T21:
 		FX_BlasterWeaponHitPlayer(origin, dir, humanoid);
+		break;
+
+	case WP_EE3:
+		FX_BlasterWeaponHitPlayer(origin, dir, humanoid);
+		break;
+
+	case WP_CLONE_PISTOL1:
+		if (altFire)
+		{
+			trap->FX_PlayEffectID(cgs.effects.mAltDetonateNewGFX, origin, dir, -1, -1, qfalse);
+		}
+		else
+		{
+			FX_BlasterWeaponHitPlayer(origin, dir, humanoid);
+
+		}
 		break;
 
 	case WP_REPEATER:

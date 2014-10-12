@@ -732,6 +732,8 @@ typedef struct weaponInfo_s {
 	float			missileDlight;
 	vec3_t			missileDlightColor;
 	int				missileRenderfx;
+	int				newmissileRenderfx;
+	int				powerupShotRenderfx;
 	sfxHandle_t		missileHitSound;
 
 	sfxHandle_t		altFlashSound[4];
@@ -1559,7 +1561,13 @@ typedef struct cgEffects_s {
 
 	// DEMP2
 	fxHandle_t  demp2ProjectileEffect;
+	fxHandle_t  demp2ShotEffect;
 	fxHandle_t  demp2WallImpactEffect;
+	fxHandle_t  newdemp2WallImpactEffect;
+
+	fxHandle_t  demp2WallBounceEffect;
+	fxHandle_t  newdemp2WallBounceEffect;
+
 	fxHandle_t  demp2FleshImpactEffect;
 
 	// FLECHETTE
@@ -1626,6 +1634,7 @@ typedef struct cgEffects_s {
 	fxHandle_t	mFlechetteAltBlow;
 	fxHandle_t	mStunBatonFleshImpact;
 	fxHandle_t	mAltDetonate;
+	fxHandle_t	mAltDetonateNewGFX;
 	fxHandle_t	mSparksExplodeNoSound;
 	fxHandle_t	mTripMineLaser;
 	fxHandle_t	mEmplacedMuzzleFlash;

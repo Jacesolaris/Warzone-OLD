@@ -1504,6 +1504,7 @@ static void CG_RegisterGraphics( void ) {
 	cgs.effects.mFlechetteAltBlow = trap->FX_RegisterEffect("effects/flechette/alt_blow.efx");
 	cgs.effects.mStunBatonFleshImpact = trap->FX_RegisterEffect("effects/stunBaton/flesh_impact.efx");
 	cgs.effects.mAltDetonate = trap->FX_RegisterEffect("effects/demp2/altDetonate.efx");
+	cgs.effects.mAltDetonateNewGFX = trap->FX_RegisterEffect("demp2/altDetonate_enhanced2.efx");
 	cgs.effects.mSparksExplodeNoSound = trap->FX_RegisterEffect("effects/sparks/spark_exp_nosnd");
 	cgs.effects.mTripMineLaser = trap->FX_RegisterEffect("effects/tripMine/laser.efx");
 	cgs.effects.mEmplacedMuzzleFlash = trap->FX_RegisterEffect( "effects/emplaced/muzzle_flash" );

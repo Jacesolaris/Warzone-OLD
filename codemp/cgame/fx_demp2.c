@@ -46,6 +46,11 @@ void FX_DEMP2_HitWall( vec3_t origin, vec3_t normal )
 	trap->FX_PlayEffectID( cgs.effects.demp2WallImpactEffect, origin, normal, -1, -1, qfalse );
 }
 
+void FX_DEMP2_BounceWall(vec3_t origin, vec3_t normal)
+{
+	trap->FX_PlayEffectID(cgs.effects.newdemp2WallBounceEffect, origin, normal, -1, -1, qfalse);
+}
+
 /*
 ---------------------------
 FX_DEMP2_HitPlayer
