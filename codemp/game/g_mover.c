@@ -662,6 +662,7 @@ void Reached_BinaryMover( gentity_t *ent )
 		return;
 	}
 
+	/*
 	{// UQ1: let's use a timer to get it to wait at top and bottom positions...
 		if ( !(ent->moverState == MOVER_POS1 || ent->moverState == MOVER_POS2) )
 		{// Moving. Start debounce time clock...
@@ -674,6 +675,7 @@ void Reached_BinaryMover( gentity_t *ent )
 			return;
 		}
 	}
+	*/
 
 	if ( ent->moverState == MOVER_1TO2 )
 	{//reached open
@@ -919,6 +921,7 @@ void Use_BinaryMover( gentity_t *ent, gentity_t *other, gentity_t *activator )
 		return;
 	}
 	
+	/*
 	if ( other->client && ent->parent )
 	{// UQ1: let's use a timer to get it to wait at top and bottom positions...
 		if ((ent->parent->moverState == MOVER_POS1 || ent->parent->moverState == MOVER_POS2)
@@ -932,6 +935,7 @@ void Use_BinaryMover( gentity_t *ent, gentity_t *other, gentity_t *activator )
 			ent->useDebounceTime = level.time + 5100; // about 5 secs wait at each point???
 		}
 	}
+	*/
 
 	// only the master should be used
 	if ( ent->flags & FL_TEAMSLAVE )
