@@ -1,0 +1,10 @@
+hull_low,models/players/DtAdeceptor/my_body.jpg
+cannon,models/players/DtAdeceptor/guns.jpg
+glass01,models/players/DtAdeceptor/xwglass_shd.jpg
+guns,models/players/DtAdeceptor/guns.jpg
+swivel,models/players/DtAdeceptor/guns.jpg
+x_wing01,models/players/DtAdeceptor/my_wings.jpg
+x_wing02,models/players/DtAdeceptor/my_wings.jpg
+landing(1),models/players/DtAdeceptor/body.jpg
+landing(2),models/players/DtAdeceptor/body.jpg
+landing_ge,models/players/DtAdeceptor/body.jpg

@@ -1,0 +1,4 @@
+$aseanimgrabinit
+$aseanimgrab models/players/slave2_hat/root.xsi -loop -1
+$aseanimgrabfinalize
+$aseanimconvertmdx_noask models/players/slave2_hat/root -makeskel /models/players/slave2_hat/slave2_hat -origin 0 0 24

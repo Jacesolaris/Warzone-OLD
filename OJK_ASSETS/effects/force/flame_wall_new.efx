@@ -1,0 +1,49 @@
+repeatDelay				1000
+
+Particle
+{
+	spawnFlags			rgbComponentInterpolation
+
+	count				1 1
+
+	life				20 60
+
+	delay				0 20
+
+	origin				0 0 -40 0 0 40
+
+	rotation			87 93
+
+	rotationDelta		-5 5
+
+	velocity			0 -10 -10 60 10 10
+
+	gravity				0 120
+
+	rgb
+	{
+		start			0.8235 0.502 0.6275 0.851 0.5098 0
+	}
+
+	alpha
+	{
+		end				0
+		parm			50
+		flags			linear nonlinear
+	}
+
+	size
+	{
+		start			10 60
+		end				14 128
+		parm			50
+		flags			linear clamp
+	}
+
+	shaders
+	[
+		gfx/effects/fire2
+		gfx/effects/fire3
+		gfx/effects/fire4
+	]
+}

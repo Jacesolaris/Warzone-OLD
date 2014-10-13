@@ -1,0 +1,44 @@
+repeatDelay				50
+
+Line
+{
+	flags				useAlpha
+
+	life				60
+
+	origin				100 0 0
+
+	origin2				-100 0 0
+
+	size
+	{
+		start			11
+	}
+
+	shaders
+	[
+		gfx/effects/jsf_blob
+	]
+}
+
+Line
+{
+	origin				120 0 0
+
+	origin2				-120 0 0
+
+	rgb
+	{
+		start			1 0 0
+	}
+
+	size
+	{
+		start			15
+	}
+
+	shaders
+	[
+		gfx/effects/whiteGlow
+	]
+}

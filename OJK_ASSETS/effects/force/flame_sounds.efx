@@ -1,0 +1,8 @@
+Sound
+{
+	sounds
+	[
+		sound/weapons/flamethrower2/flamehit1.wav
+		sound/weapons/flamethrower2/flamehit2.wav
+	]
+}

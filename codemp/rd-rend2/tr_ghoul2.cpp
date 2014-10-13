@@ -280,6 +280,7 @@ class CBoneCache
 		VectorScale(&tempMatrix.matrix[2][0],maxl,&tempMatrix.matrix[2][0]);
 		Multiply_3x4Matrix(&mSmoothBones[index].boneMatrix,&tempMatrix,&skel->BasePoseMatInv);
 		mSmoothBones[index].touch=mCurrentTouch;
+#if 0
 #ifdef _DEBUG
 		for ( int i = 0; i < 3; i++ )
 		{
@@ -289,6 +290,7 @@ class CBoneCache
 			}
 		}
 #endif// _DEBUG
+#endif //0
 	}
 //rww - RAGDOLL_END
 public:

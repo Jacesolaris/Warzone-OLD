@@ -1,0 +1,30 @@
+Electricity
+{
+	flags				useModel useBBox usePhysics
+
+	spawnFlags			org2fromTrace
+
+	count				1 2
+
+	life				500 650
+
+	bounce				5 8
+
+	alpha
+	{
+		end				0
+	}
+
+	size
+	{
+		start			25 30
+		end				4
+		parm			80
+		flags			nonlinear
+	}
+
+	shaders
+	[
+		gfx/misc/blueLine
+	]
+}

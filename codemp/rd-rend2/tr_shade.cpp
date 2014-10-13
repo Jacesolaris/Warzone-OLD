@@ -443,12 +443,9 @@ float DLIGHT_SIZE_MULTIPLIER = 2.5;
 
 static void ProjectDlightTexture( void ) {
 	int		l;
-	vec3_t	origin;
-	float	scale;
-	float	radius;
-	int deformGen;
 	vec5_t deformParams;
-	
+	int deformGen;
+
 	if ( !backEnd.refdef.num_dlights ) {
 		return;
 	}
@@ -458,6 +455,9 @@ static void ProjectDlightTexture( void ) {
 #ifndef __MERGE_DLIGHTS__
 
 	for ( l = 0 ; l < backEnd.refdef.num_dlights ; l++ ) {
+		vec3_t	origin;
+		float	scale;
+		float	radius;
 		dlight_t	*dl;
 		shaderProgram_t *sp;
 		vec4_t vector;
@@ -1879,6 +1879,9 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			VectorSet4(enableTextures, 0, 0, 0, 0);
 			if ((r_lightmap->integer == 1 || r_lightmap->integer == 2) && pStage->bundle[TB_LIGHTMAP].image[0])
 			{
+				#pragma omp parallel //num_threads(8)
+				{
+#pragma omp parallel for
 				for (i = 0; i < NUM_TEXTURE_BUNDLES; i++)
 				{
 					if (i == TB_LIGHTMAP)
@@ -1886,15 +1889,20 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 					else
 						GL_BindToTMU( tr.whiteImage, i );
 				}
+				}
 			}
 			else if (r_lightmap->integer == 3 && pStage->bundle[TB_DELUXEMAP].image[0])
 			{
+				#pragma omp parallel //num_threads(8)
+				{
+#pragma omp parallel for
 				for (i = 0; i < NUM_TEXTURE_BUNDLES; i++)
 				{
 					if (i == TB_LIGHTMAP)
 						R_BindAnimatedImageToTMU( &pStage->bundle[TB_DELUXEMAP], i);
 					else
 						GL_BindToTMU( tr.whiteImage, i );
+				}
 				}
 			}
 			else

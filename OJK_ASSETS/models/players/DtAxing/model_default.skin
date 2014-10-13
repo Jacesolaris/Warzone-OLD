@@ -1,0 +1,12 @@
+body,models/players/DtAxing/xwbody.jpg
+glass,models/players/DtAxing/xwglass_shd.tga
+l_gear,models/players/DtAxing/xwbody.jpg
+r_gear,models/players/DtAxing/xwbody.jpg
+r_wing1,models/players/DtAxing/xwings.jpg
+r_wing2,models/players/DtAxing/xwings.jpg
+l_wing1,models/players/DtAxing/xwings.jpg
+l_wing2,models/players/DtAxing/xwings.jpg
+nose,models/players/DtAxing/xwbody.jpg
+f_gear,models/players/DtAxing/xwbody.jpg
+cap_nose_body,models/players/DtAxing/xwbody.jpg
+cap_body_nose,models/players/DtAxing/xwbody.jpg

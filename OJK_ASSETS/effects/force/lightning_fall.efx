@@ -1,0 +1,25 @@
+// Quick and dirty lightning effect....let's make the shader do all the hard work. :)
+
+Electricity
+{
+	count	1	2
+	delay	0 100
+	life	50
+
+	origin	0 -4 -4	0 4 4
+	spawnflags	org2fromTrace
+
+	intensity	0.9
+	
+	size
+	{
+		start	9.0	15.0
+		end 	5.0	8.0
+		flags	linear
+	}
+
+	shaders
+	[
+		gfx/misc/blueLine
+	]
+}

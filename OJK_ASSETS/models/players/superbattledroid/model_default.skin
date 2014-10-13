@@ -1,0 +1,13 @@
+torso_hips,models/players/superbattledroid/body.jpg
+head,models/players/superbattledroid/body.jpg
+l_arm,models/players/superbattledroid/arms_legs.jpg
+l_forearm,models/players/superbattledroid/arms_legs.jpg
+l_leg,models/players/superbattledroid/arms_legs.jpg
+l_foreleg,models/players/superbattledroid/arms_legs.jpg
+r_arm,models/players/superbattledroid/arms_legs.jpg
+r_forearm,models/players/superbattledroid/arms_legs.jpg
+r_leg,models/players/superbattledroid/arms_legs.jpg
+r_foreleg,models/players/superbattledroid/arms_legs.jpg
+r_knee,models/players/superbattledroid/arms_legs.jpg
+l_knee,models/players/superbattledroid/arms_legs.jpg
+

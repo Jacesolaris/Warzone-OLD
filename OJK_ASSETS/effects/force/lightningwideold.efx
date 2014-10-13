@@ -1,0 +1,33 @@
+repeatDelay				100
+
+Electricity
+{
+	flags				useModel usePhysics
+
+	spawnFlags			org2fromTrace traceImpactFx
+
+	count				10 20
+
+	life				1 25
+
+	bounce				2 4
+
+	alpha
+	{
+		end				0
+	}
+
+	size
+	{
+		start			1 6
+		end				5
+		parm			80
+		flags			nonlinear
+	}
+
+	shaders
+	[
+		gfx/misc/blueLine
+	]
+
+}

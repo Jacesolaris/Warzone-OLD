@@ -1,0 +1,9 @@
+// Only muzzle a thrower needs is a sound.
+
+sound
+{
+	sounds
+	[
+		sound/effects/fireburst.wav
+	]
+}

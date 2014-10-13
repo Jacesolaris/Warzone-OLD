@@ -1,0 +1,104 @@
+Emitter
+{
+	flags				expensivePhysics useModel usePhysics impactKills impactFx emitFx
+
+	life				8000
+
+	angle				0 0 0 360 360 360
+
+	angleDelta			-40 -40 -10 40 40 20
+
+	velocity			-1 0 0
+
+	acceleration		-1300 -400 -400 -1300 400 400
+
+	density				4
+
+	size
+	{
+		start			2.5 4.5
+	}
+
+	models
+	[
+		models/chunks/rock/rock2_4.md3
+	]
+
+	impactfx
+	[
+		env/meteor_explosion
+	]
+
+	emitfx
+	[
+		env/meteor_trail
+	]
+}
+
+Particle
+{
+	count				1 2
+
+	life				120 200
+
+	rgb
+	{
+		start			1 0.8 0.5
+	}
+
+	alpha
+	{
+		end				0
+		flags			linear
+	}
+
+	size
+	{
+		start			130 210
+		end				5
+		flags			linear
+	}
+
+	shaders
+	[
+		gfx/effects/whiteFlare
+	]
+}
+
+Particle
+{
+	life				50
+
+	rgb
+	{
+		start			1 0.8 0.5
+	}
+
+	alpha
+	{
+		end				0
+		flags			linear
+	}
+
+	size
+	{
+		start			260
+		end				560
+		flags			linear
+	}
+
+	shaders
+	[
+		gfx/effects/whiteFlare
+	]
+}
+
+Sound
+{
+	spawnFlags			lessAttenuation
+
+	sounds
+	[
+		sound/movers/objects/meteor_sky.mp3
+	]
+}

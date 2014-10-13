@@ -1,0 +1,23 @@
+Decal
+{
+	rotation			360 0
+
+	size
+	{
+		start			8
+	}
+
+	shaders
+	[
+		gfx/blood/spat_big
+	]
+}
+
+sound
+{
+	sounds
+	[
+		sound/blood/smallbloodtic.wav
+	]
+}
+

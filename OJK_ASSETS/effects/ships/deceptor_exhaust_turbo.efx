@@ -1,0 +1,69 @@
+Particle
+{
+	spawnFlags			evenDistribution
+
+	count				45
+
+	life				600 500
+
+	delay				0 800
+
+	origin				0 -5 0
+
+	velocity			0 400 0
+
+	acceleration		0 300 0
+
+	rgb
+	{
+		start			1 0.5725 0.1412 0.8392 0.4353 0.02745
+		end				0.8392 0.4353 0.02745 1 0.5725 0.1412
+		flags			linear
+	}
+
+	alpha
+	{
+		end				0.1
+		flags			linear
+	}
+
+	size
+	{
+		start			10
+		end				8
+		flags			linear
+	}
+
+	shaders
+	[
+		sun2
+	]
+}
+
+Particle
+{
+	spawnFlags			evenDistribution
+
+	life				281
+
+	delay				0 700
+
+	origin				0 2 0
+
+	rgb
+	{
+		start			1 0.5725 0.1412 1 0.502 0
+		end				1 0.5725 0.1412
+		flags			linear
+	}
+
+	size
+	{
+		start			10
+	}
+
+	shaders
+	[
+		sun2
+	]
+}

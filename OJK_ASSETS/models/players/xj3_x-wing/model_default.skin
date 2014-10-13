@@ -1,0 +1,12 @@
+body,models/players/xj3_x-wing/xwbody.jpg
+glass,models/players/xj3_x-wing/xwglass_shd.tga
+l_gear,models/players/xj3_x-wing/xwbody.jpg
+r_gear,models/players/xj3_x-wing/xwbody.jpg
+r_wing1,models/players/xj3_x-wing/xwings.jpg
+r_wing2,models/players/xj3_x-wing/xwings.jpg
+l_wing1,models/players/xj3_x-wing/xwings.jpg
+l_wing2,models/players/xj3_x-wing/xwings.jpg
+nose,models/players/xj3_x-wing/xwbody.jpg
+f_gear,models/players/xj3_x-wing/xwbody.jpg
+cap_nose_body,models/players/xj3_x-wing/xwbody.jpg
+cap_body_nose,models/players/xj3_x-wing/xwbody.jpg

@@ -1,0 +1,31 @@
+Particle
+{
+	life				3000
+
+	rgb
+	{
+		start			0.8353 0.9255 1
+	}
+
+	alpha
+	{
+		start			0
+		end				0.5
+		parm			2
+		flags			wave
+	}
+
+	size
+	{
+		start			188
+	}
+
+	shaders
+	[
+		gfx/effects/whiteFlare
+		textures/flares/flare_red
+		textures/flares/flare_blue
+		textures/flares/redflare
+		textures/flares/blueflare
+	]
+}

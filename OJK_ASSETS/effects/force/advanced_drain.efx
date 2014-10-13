@@ -1,0 +1,148 @@
+Light
+{
+	life				40
+
+	rgb
+	{
+		start			1 0 0
+	}
+
+	size
+	{
+		start			300
+	}
+}
+
+Particle
+{
+	count				3 5
+
+	life				75 150
+
+	origin				-8 -8 -8 8 8 8
+
+	rotation			0 360
+
+	rotationDelta		-4 4
+
+	velocity			-8 -8 -8 8 8 8
+
+	alpha
+	{
+		end				0
+		parm			50 80
+		flags			linear
+	}
+
+	size
+	{
+		start			20 30
+		end				40 70
+		flags			linear
+	}
+
+	shaders
+	[
+		//gfx/effects/blasterFrontFlash
+		gfx/effects/rocket_muz
+		gfx/effects/rocket_muz2
+	]
+}
+
+CameraShake
+{
+	name				Shake
+
+	flags				usePhysics
+
+	life				500 800
+
+	bounce				1.5
+
+	radius				1400
+}
+
+Sound
+{
+	name				Boom
+	spawnflags		lessAttenuation
+
+	sounds
+	[
+//		sound/chars/ion_cannon/ion_cannon1.mp3
+//		sound/chars/ion_cannon/ion_cannon2.mp3
+//		sound/chars/ion_cannon/ion_cannon3.mp3
+		sound/ambience/outdoor/windy_b.mp3
+		sound/ambience/outdoor/windy_d.mp3
+	]
+}
+
+Light
+{
+	life				40
+
+	rgb
+	{
+		start			0.8 0.3 0.3
+	}
+
+	size
+	{
+		start			300
+	}
+}
+
+Electricity
+{
+	flags				useModel useBBox usePhysics
+
+	count				2 4
+
+	life				50 60
+
+	bounce				0.8 2
+
+	origin2				500 -384 -2 524 384 2
+
+	rgb
+	{
+		start			1 0 0
+		end				1 0 0
+	}
+
+	size
+	{
+		start			13 37
+		flags			linear
+	}
+
+	shaders
+	[
+		gfx/misc/blueLine
+	]
+}
+
+Particle
+{
+	life				30
+
+	rotation			0 360
+
+	rgb
+	{
+		start			1 0 0
+		end				1 0 0
+	}
+
+	size
+	{
+		start			34 76
+		flags			random
+	}
+
+	shaders
+	[
+		gfx/misc/lightningFlash
+	]
+}
+

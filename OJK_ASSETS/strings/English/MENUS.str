@@ -13,6 +13,34 @@ VERSION             "1"
 CONFIG              "W:\bin\stringed.cfg"
 FILENOTES           ""
 
+REFERENCE           JEDI_cul
+NOTES               "For character menu"
+LANG_ENGLISH        "cultist"
+
+REFERENCE           JEDI_nrm
+NOTES               "For character menu"
+LANG_ENGLISH        "new_reborn"
+
+REFERENCE           PRISONER
+NOTES               "For character menu"
+LANG_ENGLISH        "Prisoner Male"
+
+REFERENCE           JEDI_HF
+NOTES               "For character menu"
+LANG_ENGLISH        "Human Female"
+
+REFERENCE           JEDI_rb
+NOTES               "For character menu"
+LANG_ENGLISH        "reborn"
+
+REFERENCE           JEDI_rtm
+NOTES               "For character menu"
+LANG_ENGLISH        "reborn twin"
+
+REFERENCE           JEDI_stm
+NOTES               "For character menu"
+LANG_ENGLISH        "stormtrooper"
+
 REFERENCE           JEDI_HF
 NOTES               "For character menu"
 LANG_ENGLISH        "Human Female"
@@ -293,12 +321,6 @@ LANG_ENGLISH        "Controls"
 REFERENCE           VOTE
 LANG_ENGLISH        "Vote"
 
-REFERENCE	    NOQUIT
-LANG_ENGLISH	    "No Real Jedi and Mercs don't quit"
-
-REFERENCE           YESQUIT
-LANG_ENGLISH	    "Yeah I am a wuss"
-
 REFERENCE           YES
 LANG_ENGLISH        "Yes"
 
@@ -508,7 +530,7 @@ LANG_ENGLISH        "Do not apply changes and return to video menu."
 
 REFERENCE           ADJUST_BRIGHTNESS_SLIDER
 NOTES               "Used in video data2 screen"
-LANG_ENGLISH        "Adjust brightness slider until the number 6 can barely be seen."
+LANG_ENGLISH        "Adjust brightness slider until"
 
 REFERENCE           THE_NUMBER_6_CAN_BARELY
 NOTES               "Used in video data2 screen"
@@ -849,7 +871,7 @@ LANG_ENGLISH        "Sort by map name."
 
 REFERENCE           PLYRS
 NOTES               "Number of players in a server.\nUsed in MP Find Server screen"
-LANG_ENGLISH        "Players"
+LANG_ENGLISH        "Plyrs"
 
 REFERENCE           SORT_BY_NUMBER_OF_PLAYERS
 NOTES               "Description of PLYRS COLUMN\nUsed in MP Find Server screen.\n"
@@ -946,7 +968,7 @@ REFERENCE           CHOOSE_YOUR_GAME
 LANG_ENGLISH        "Choose Your Game."
 
 REFERENCE           MAXIMUM_PLAYERS
-LANG_ENGLISH        "Player Slots:"
+LANG_ENGLISH        "Maximum Players:"
 
 REFERENCE           SETS_THE_MAXIMUM_NUMBER
 LANG_ENGLISH        "Sets the maximum number of players allowed to join your server. "
@@ -1374,7 +1396,7 @@ LANG_ENGLISH        "Finished inputting info."
 
 REFERENCE           QUIT_JEDI_KNIGHT_II
 NOTES               "Quit screen title\n"
-LANG_ENGLISH        "Are you sure you want to quit?"
+LANG_ENGLISH        "Quit Jedi Academy?"
 
 REFERENCE           DO_NOT_LEAVE_JEDI_KNIGHT
 NOTES               "Quit screen, NO button description"
@@ -1532,7 +1554,7 @@ LANG_ENGLISH        "Disruptor Rifle:"
 
 REFERENCE           HEAVY_REPEATER
 NOTES               "Used in weapon binding."
-LANG_ENGLISH        "Clone Rifle:"
+LANG_ENGLISH        "Heavy Repeater:"
 
 REFERENCE           DEMP_2
 NOTES               "Used in weapon binding."
@@ -1540,13 +1562,13 @@ LANG_ENGLISH        "DEMP 2:"
 
 REFERENCE           FLECHETTE
 NOTES               "Used in weapon binding."
-LANG_ENGLISH        "T-21:"
+LANG_ENGLISH        "Flechette:"
 
 REFERENCE           CONC_RIFLE_SETUP
 LANG_ENGLISH        "Concussion Rifle:"
 
 REFERENCE           MERR_SONN
-LANG_ENGLISH        "Rocket Launcher:"
+LANG_ENGLISH        "Merr-Sonn:"
 
 REFERENCE           NEXT_WEAPON
 NOTES               "Used in weapon binding."
@@ -1701,31 +1723,50 @@ REFERENCE           TYPE
 LANG_ENGLISH        "Game Type:"
 
 REFERENCE           FREE_FOR_ALL
-LANG_ENGLISH        "Free For All"
+LANG_ENGLISH        "^3Free For All"
 
 REFERENCE           HOLOCRON_FFA
-LANG_ENGLISH        "Holocron FFA"
+LANG_ENGLISH        "^3Holocron FFA"
+
+//[OLDGAMETYPES]
+REFERENCE           JEDIMASTER
+LANG_ENGLISH        "^3Jedi Master"
 
 REFERENCE           DUEL
-LANG_ENGLISH        "Duel"
+LANG_ENGLISH        "^3Duel"
 
 REFERENCE           TEAM_FFA
-LANG_ENGLISH        "Team FFA"
+LANG_ENGLISH        "^3Team FFA"
 
 REFERENCE           SAGA
-LANG_ENGLISH        "N/A"
+LANG_ENGLISH        "^3Co-Op Mission"
 
 REFERENCE           SIEGE
-LANG_ENGLISH        "Siege"
+LANG_ENGLISH        "^3Siege"
 
 REFERENCE           POWERDUEL
-LANG_ENGLISH        "Power Duel"
+LANG_ENGLISH        "^3Power Duel"
 
 REFERENCE           CAPTURE_THE_FLAG
-LANG_ENGLISH        "Capture the Flag"
+LANG_ENGLISH        "^3Capture the Flag"
 
 REFERENCE           CAPTURE_THE_YSALIMARI
-LANG_ENGLISH        "Capture the Ysalamiri"
+LANG_ENGLISH        "^3Capture the Ysalamiri"
+
+REFERENCE           ROLE_PLAYING_GAME
+LANG_ENGLISH        "^3Role Playing Game"
+
+REFERENCE           INSTAGIB
+LANG_ENGLISH        "^3Instagib"
+
+REFERENCE           ATTACK
+LANG_ENGLISH        "^3Base Attack"
+
+REFERENCE           DEFENCE
+LANG_ENGLISH        "^3Base Defence"
+
+REFERENCE           SCENARIO
+LANG_ENGLISH        "^3Scenario"
 
 REFERENCE           CAPTURE_LIMIT
 NOTES               "For server connect screen"
@@ -1738,7 +1779,7 @@ REFERENCE           CONFIGURE_CONTROLS
 LANG_ENGLISH        "Configure Controls"
 
 REFERENCE           FORCE_POWERS_1
-LANG_ENGLISH        "Force Powers"
+LANG_ENGLISH        "Force Powers 1"
 
 REFERENCE           FORCE_POWERS_2
 LANG_ENGLISH        "Force Powers 2"
@@ -2286,10 +2327,10 @@ REFERENCE           SEE_ENEMIES_AT_ALL_TIMES
 LANG_ENGLISH        "See enemies at all times, and even dodge sniper shots."
 
 REFERENCE           CREATE_AN_AURA_THAT_PROTECTS
-LANG_ENGLISH        "Create a Force shield that reduces DP damage from attacks."
+LANG_ENGLISH        "Create an aura that protects from physical attacks."
 
 REFERENCE           PROTECT_AGAINST_FORCE
-LANG_ENGLISH        "Passively absorbs Force attacks."
+LANG_ENGLISH        "Protect against Force attacks and gain power from them."
 
 REFERENCE           HEAL_YOUR_BODY_WITH_THE
 LANG_ENGLISH        "Heal your body with the Force."
@@ -2308,9 +2349,6 @@ LANG_ENGLISH        "Immobilize opponents in an agonizing grip of death."
 
 REFERENCE           UNLEASH_DEADLY_ELECTRICAL
 LANG_ENGLISH        "Unleash deadly electrical attacks against your foes."
-
-REFERENCE           UNLEASH_DEADLY_RAGE
-LANG_ENGLISH        "Unleash a raging flurry of fast strikes."
 
 REFERENCE           BECOME_A_NEARLY_UNSTOPPABLE
 LANG_ENGLISH        "Become a nearly unstoppable juggernaut."
@@ -2394,10 +2432,10 @@ REFERENCE           START_PLAYING_NOW
 LANG_ENGLISH        "Start playing now!"
 
 REFERENCE           JOIN_A_GAME_IN_PROGRESS
-LANG_ENGLISH        "JOIN GAME"
+LANG_ENGLISH        "Join a Game in Progress."
 
 REFERENCE           CREATE_A_NEW_MULTIPLAYER
-LANG_ENGLISH        "CREATE GAME"
+LANG_ENGLISH        "Create a new multiplayer game."
 
 REFERENCE           SERVER_NAME_1
 LANG_ENGLISH        "Server Name:"
@@ -2744,16 +2782,13 @@ REFERENCE           DEMOS
 LANG_ENGLISH        "Demos"
 
 REFERENCE           PLAY_DEMO
-LANG_ENGLISH        "Demo"
-
-REFERENCE           ENCYCLOPEDIA
-LANG_ENGLISH	    "Encyclopedia"
+LANG_ENGLISH        "Play Demo"
 
 REFERENCE           BEGIN_PLAYING_THE_DEMO
 LANG_ENGLISH        "Begin playing the demo from the selected file."
 
 REFERENCE           LEAVING_JEDI_KNIGHT_2
-LANG_ENGLISH        "Are you sure you want to quit this awesome game?"
+LANG_ENGLISH        "Leaving Jedi Academy"
 
 REFERENCE           ENTER_IP_ADDRESS
 LANG_ENGLISH        "Enter IP Address:"
@@ -3014,6 +3049,12 @@ LANG_ENGLISH        "POWER DUEL"
 REFERENCE           SIEGE_CAPS
 LANG_ENGLISH        "SIEGE"
 
+REFERENCE           RPG_CAPS
+LANG_ENGLISH        "ROLE PLAYING GAME"
+
+REFERENCE           ITG_CAPS
+LANG_ENGLISH        "INSTAGIB"
+
 REFERENCE           RETURN_TO_SERVER
 LANG_ENGLISH        "Return to Server Finder."
 
@@ -3049,10 +3090,10 @@ LANG_ENGLISH        "Start a single-player game against computer opponents."
 
 REFERENCE           JOIN_SERVER_CAPS
 NOTES               "join server"
-LANG_ENGLISH        "JOIN GAME"
+LANG_ENGLISH        "JOIN A GAME"
 
-REFERENCE           CREATE
-LANG_ENGLISH        "CREATE GAME"
+REFERENCE           CREATE_SERVER_CAPS
+LANG_ENGLISH        "CREATE A GAME"
 
 REFERENCE           PLAY_DEMO_CAPS
 LANG_ENGLISH        "PLAY DEMO"
@@ -3764,6 +3805,18 @@ REFERENCE           SINGLE_HILT9
 NOTES               "saber hilt name"
 LANG_ENGLISH        "Firebrand"
 
+REFERENCE	    SINGLE_HILT10
+NOTES               "HSABERS"
+LANG_ENGLISH        "Retribution"
+
+REFERENCE	    SINGLE_HILT11
+NOTES               "HSABERS"
+LANG_ENGLISH        "Skywalker"
+
+REFERENCE	    SINGLE_HILT12
+NOTES               "HSABERS"
+LANG_ENGLISH        "Stinger"
+
 REFERENCE           STAFF_HILT1
 NOTES               "saber hilt name"
 LANG_ENGLISH        "Guardian"
@@ -4200,6 +4253,36 @@ LANG_ENGLISH        "Toggle to use Creative Labs Enhanced audio."
 REFERENCE           AUTO_JOIN_DESC
 LANG_ENGLISH        "Allow server to choose your team and class."
 
+REFERENCE           AOTCTC
+LANG_ENGLISH        "Attack Of The Clones TC"
+
+REFERENCE           AIMOD
+LANG_ENGLISH        "AIMod-JKA"
+
+REFERENCE           DCAMOD
+LANG_ENGLISH        "DCAMod"
+
+REFERENCE           RELOADED
+LANG_ENGLISH        "JA Reloaded"
+
+REFERENCE           JAPLUS
+LANG_ENGLISH        "JA+ Mod"
+
+REFERENCE           OJPBASIC
+LANG_ENGLISH        "OJP Basic"
+
+REFERENCE           OJPENHANCED
+LANG_ENGLISH        "OJP Enhanced"
+
+REFERENCE           OMNI
+LANG_ENGLISH        "OmNi AdminMOD"
+
+REFERENCE           XMOD
+LANG_ENGLISH        "xMod"
+
+REFERENCE           ZOCKER
+LANG_ENGLISH        "ZocKer Mods"
+
 REFERENCE           JEDI_ACADEMY
 LANG_ENGLISH        "Jedi Academy"
 
@@ -4263,7 +4346,7 @@ LANG_ENGLISH        "CLOSE"
 REFERENCE           TEAM_SWITCHING
 LANG_ENGLISH        "Team Switching:"
 
-REFERENCE     TEAM_SWITCHING_DESC
+REFERENCE           TEAM_SWITCHING_DESC
 LANG_ENGLISH        "Toggle game mode where teams compete to finish map in least amount of time."
 
 REFERENCE           MATCHING_NAMES

@@ -1,0 +1,13 @@
+//Since a flamethrower doesn't need an impact effect really...
+//Someday i'll make a g2markshader of little fiery bits
+//to use for this.  Ahhhhhh I'm on fire.
+
+Sound
+{
+	name				Flame
+
+	sounds
+	[
+		sound/effects/fireout.wav
+	]
+}

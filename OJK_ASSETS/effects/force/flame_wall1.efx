@@ -1,0 +1,95 @@
+Emitter
+{
+	flags				expensivePhysics useModel usePhysics impactKills impactFx emitFx
+
+	life				1000
+
+	angle				0 0 0 360 360 360
+
+	angleDelta			-40 -40 -10 40 40 20
+
+	velocity			-1 0 0
+
+	acceleration		1300 0 0
+
+	density				4
+
+	size
+	{
+		start			0
+	}
+
+	models
+	[
+		models/chunks/rock/rock2_4.md3
+	]
+
+	impactfx
+	[
+		force/flame_wall_hit
+	]
+
+	emitfx
+	[
+		force/flame_wall_trail1
+	]
+}
+
+Particle
+{
+	count				1 2
+
+	life				60 100
+
+	rgb
+	{
+		start			1 0.8 0.5
+	}
+
+	alpha
+	{
+		end				0
+		flags			linear
+	}
+
+	size
+	{
+		start			30 60
+		end				5
+		flags			linear
+	}
+
+	shaders
+	[
+		gfx/effects/whiteFlare
+	]
+}
+
+Particle
+{
+	life				20
+
+	rgb
+	{
+		start			1 0.8 0.5
+	}
+
+	alpha
+	{
+		end				0
+		flags			linear
+	}
+
+	size
+	{
+		start			60
+		end				80
+		flags			linear
+	}
+
+	shaders
+	[
+		gfx/effects/whiteFlare
+	]
+}
+
