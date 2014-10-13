@@ -1,0 +1,622 @@
+repeatDelay				100
+
+Line
+{
+	name				Lines
+
+	count				10 14
+
+	life				150 200
+
+	delay				0.1
+
+	origin2				12 -10 -10 20 10 10
+
+	rgb
+	{
+		start			1 1 1 0.9961 0.9922 0.8039
+	}
+
+	alpha
+	{
+		start			0.45 1
+		end				0
+		flags			linear
+	}
+
+	size
+	{
+		start			0.25 0.8
+	}
+
+	shaders
+	[
+		gfx/misc/exp01_1
+	]
+}
+
+Particle
+{
+	name				SmokepuffwhiteThick
+
+	flags				expensivePhysics usePhysics useAlpha
+
+	spawnFlags			rgbComponentInterpolation affectedByWind
+
+	count				1 3
+
+	life				500 1000
+
+	bounce				0.1
+
+	origin				1 0 0
+
+	wind				5 10
+
+	rotation			-180 180
+
+	rotationDelta		-4 4
+
+	velocity			9 -7 -7 13 7 7
+
+	gravity				7 10
+
+	rgb
+	{
+		start			1 1 1 0.8471 0.8471 0.8471
+		end				0.302 0.302 0.3686
+		parm			200 0
+		flags			linear nonlinear
+	}
+
+	alpha
+	{
+		start			0.6 0.8
+		end				0
+		flags			linear
+	}
+
+	size
+	{
+		start			5 2
+		end				50 70
+		flags			linear
+	}
+
+	shaders
+	[
+		gfx/effects/puffa1
+		gfx/effects/puffa2
+		gfx/effects/puffa3
+		gfx/effects/puffa4
+		gfx/effects/puffa5
+	]
+}
+
+OrientedParticle
+{
+	name				ImpactBurn
+
+	life				2500 6000
+
+	rotation			-180 180
+
+	rgb
+	{
+		start			1 0.502 0 0.9922 0.7961 0.007843
+		end				1 0 0 0.502 0 0
+		flags			linear
+	}
+
+	alpha
+	{
+		end				0
+		flags			linear
+	}
+
+	size
+	{
+		start			4 5
+		end				0
+	}
+
+	shaders
+	[
+		gfx/effects/embers
+	]
+}
+
+Decal
+{
+	name				ImpactDamage
+
+	rotation			-180 180
+
+	size
+	{
+		start			5 7
+	}
+
+	shaders
+	[
+		gfx/damage/burnmark1
+	]
+}
+
+Sound
+{
+	name				WallhitSounds
+
+	sounds
+	[
+		sound/weapons/bryar/hit_wall13.mp3
+		sound/weapons/bryar/hit_wall17.mp3
+		sound/weapons/bryar/hit_wall18.mp3
+		sound/weapons/bryar/hit_wall30.mp3
+		sound/weapons/bryar/hit_wall35.mp3
+		sound/weapons/bryar/hit_wall38.mp3
+		sound/weapons/bryar/hit_wall7.mp3
+	]
+}
+
+Particle
+{
+	name				SmokepuffWhiteViolent
+
+	count				1 0
+
+	life				500 300
+
+	wind				10 40
+
+	rotation			-180 180
+
+	rotationDelta		-13 13
+
+	velocity			5 -3 -3 20 3 3
+
+	gravity				1 8
+
+	rgb
+	{
+		start			1 0.7294 0.4588 0.9922 0.5176 0.451
+		end				0.7216 0.3451 0.003922
+		flags			linear
+	}
+
+	alpha
+	{
+		start			0.9
+		end				0
+		flags			linear
+	}
+
+	size
+	{
+		start			5 2
+		end				15 10
+		flags			linear
+	}
+
+	shaders
+	[
+		gfx/exp/expa1
+		gfx/exp/expa2
+		gfx/exp/expa3
+		gfx/exp/expa4
+		gfx/exp/expa5
+	]
+}
+
+Particle
+{
+	name				Flare
+
+	count				1 2
+
+	life				200
+
+	origin				1 0 0
+
+	rgb
+	{
+		start			0.8431 0.9333 1
+	}
+
+	alpha
+	{
+		start			0.7
+		end				0
+		flags			linear
+	}
+
+	size
+	{
+		start			45 55
+		end				30
+		flags			linear
+	}
+
+	shaders
+	[
+		gfx/misc/colflare
+	]
+}
+
+Tail
+{
+	name				SparktailsYlight
+
+	flags				useBBox useAlpha
+
+	spawnFlags			affectedByWind
+
+	count				5 3
+
+	life				500 600
+
+	delay				1 50
+
+	intensity			0.2 0.4
+
+	origin				2 -2 -2 2 2 2
+
+	velocity			5 -50 -50 55 50 50
+
+	acceleration		-10 0 0 -30 0 0
+
+	gravity				-140 -150
+
+	rgb
+	{
+		start			1 0.7922 0.5843 0.9804 0.5961 0.3373
+		end				1 0.7569 0.5176 0.8667 0.2745 0.1922
+	}
+
+	alpha
+	{
+		end				0
+		flags			linear
+	}
+
+	size
+	{
+		start			2 3
+		end				0.2
+		parm			200 0
+		flags			linear nonlinear
+	}
+
+	length
+	{
+		start			9 10
+		end				0
+		parm			100 0
+		flags			linear nonlinear
+	}
+
+	shaders
+	[
+		gfx/misc/sparkyellow
+	]
+}
+
+Tail
+{
+	name				SparktailsB
+
+	flags				useBBox useAlpha
+
+	spawnFlags			affectedByWind
+
+	count				3 5
+
+	life				700 1000
+
+	delay				1 10
+
+	intensity			0.2 0.4
+
+	origin				2 -2 -2 2 2 2
+
+	wind				1 20
+
+	velocity			40 -70 -70 100 70 70
+
+	acceleration		-10 0 0 -30 0 0
+
+	gravity				-90 -250
+
+	rgb
+	{
+		start			0.9529 0.9529 0.9608
+		end				1 1 1 0.9529 0.9529 0.9608
+	}
+
+	alpha
+	{
+		end				0 0.5
+	}
+
+	size
+	{
+		start			1.5 1.7
+		end				0.2
+		parm			200 0
+		flags			linear nonlinear
+	}
+
+	length
+	{
+		start			7 8
+		end				0
+		parm			200 0
+		flags			linear nonlinear
+	}
+
+	shaders
+	[
+		gfx/misc/sparkblue
+	]
+}
+
+Tail
+{
+	name				SparktailsBright
+
+	flags				expensivePhysics useBBox usePhysics useAlpha
+
+	count				1 3
+
+	life				900 1100
+
+	delay				1 10
+
+	bounce				0.2 0.4
+
+	min					-0.5 -0.5 -0.5
+
+	max					0.5 0.5 0.5
+
+	origin				2 -2 -2 2 2 2
+
+	wind				1 20
+
+	velocity			5 -120 0 40 -15 100
+
+	acceleration		0 -40 0 0 0 0
+
+	gravity				-90 -250
+
+	rgb
+	{
+		start			0.9529 0.9529 0.9608
+		end				1 1 1 0.9529 0.9529 0.9608
+	}
+
+	alpha
+	{
+		end				0 0.5
+	}
+
+	size
+	{
+		start			1.8 2.3
+		end				0.9
+		parm			200 0
+		flags			linear nonlinear
+	}
+
+	length
+	{
+		start			6 8
+		end				0
+		parm			200 0
+		flags			linear nonlinear
+	}
+
+	shaders
+	[
+		gfx/misc/sparkblue
+	]
+}
+
+Tail
+{
+	name				SparktailsBlight
+
+	flags				useBBox useAlpha
+
+	count				5 3
+
+	life				600 700
+
+	delay				1 10
+
+	intensity			0.2 0.4
+
+	origin				2 -2 -2 2 2 2
+
+	velocity			30 -70 -70 60 70 70
+
+	acceleration		-10 0 0 -30 0 0
+
+	gravity				-90 -250
+
+	rgb
+	{
+		start			0.9529 0.9529 0.9608
+		end				1 1 1 0.9529 0.9529 0.9608
+	}
+
+	alpha
+	{
+		end				0 0.5
+	}
+
+	size
+	{
+		start			1.8 2.3
+		end				0.9
+		parm			100 0
+		flags			linear nonlinear
+	}
+
+	length
+	{
+		start			6 8
+		end				0
+		parm			100 0
+		flags			linear nonlinear
+	}
+
+	shaders
+	[
+		gfx/misc/sparkblue
+	]
+}
+
+Particle
+{
+	name				Flare
+
+	life				150
+
+	cullrange			60
+
+	origin				1 0 0
+
+	rgb
+	{
+		start			0.8431 0.9333 1
+	}
+
+	alpha
+	{
+		start			0.7
+		end				0
+		flags			linear
+	}
+
+	size
+	{
+		start			25 40
+		end				20 10
+		flags			linear
+	}
+
+	shaders
+	[
+		gfx/misc/colflare
+	]
+}
+
+Light
+{
+	name				LightFlash
+
+	life				600 700
+
+	origin				20 0 0
+
+	rgb
+	{
+		start			0.302 0.302 0.3686
+		end				0.1294 0.04706 0.02745
+		flags			linear
+	}
+
+	size
+	{
+		start			95 115
+		end				0
+		flags			linear
+	}
+}
+
+Particle
+{
+	name				SmokepuffWhiteViolent2
+
+	count				2 1
+
+	life				300 500
+
+	origin				1 0 0
+
+	wind				10 40
+
+	rotation			-180 180
+
+	gravity				1 8
+
+	rgb
+	{
+		end				0.9765 0.5922 0.4235
+	}
+
+	alpha
+	{
+		start			0.9
+		end				0
+		flags			linear
+	}
+
+	size
+	{
+		start			8 5
+		end				15 20
+		flags			linear
+	}
+
+	shaders
+	[
+		gfx/misc/spiker
+	]
+}
+
+Particle
+{
+	name				SmokepuffWhiteViolent3
+
+	life				350 500
+
+	delay				50 150
+
+	rotation			-180 180
+
+	rotationDelta		-13 13
+
+	velocity			5 -3 -3 20 3 3
+
+	gravity				1 8
+
+	rgb
+	{
+		start			1 1 1 0.9961 0.9608 0.7294
+		end				0.9765 0.4902 0.1333
+	}
+
+	alpha
+	{
+		start			0.2
+		end				0
+		flags			linear
+	}
+
+	size
+	{
+		start			8 5
+		end				15 25
+		flags			linear
+	}
+
+	shaders
+	[
+		gfx/exp/expa1
+		gfx/exp/expa2
+		gfx/exp/expa3
+		gfx/exp/expa4
+		gfx/exp/expa5
+	]
+}

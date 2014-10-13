@@ -1,0 +1,292 @@
+repeatDelay				100
+
+Line
+{
+	name				Lines
+
+	count				10 14
+
+	life				150 200
+
+	delay				0.1
+
+	origin2				12 -10 -10 20 10 10
+
+	rgb
+	{
+		start			1 1 1 0.6196 0.6196 0.7059
+	}
+
+	alpha
+	{
+		start			0.45 1
+		end				0
+		flags			linear
+	}
+
+	size
+	{
+		start			0.25 0.4
+	}
+
+	shaders
+	[
+		gfx/misc/sparker
+	]
+}
+
+Tail
+{
+	name				SparktailsB
+
+	flags				useBBox useAlpha
+
+	spawnFlags			affectedByWind
+
+	count				10 5
+
+	life				300 800
+
+	delay				1 50
+
+	intensity			0.2 0.4
+
+	origin				2 -2 -2 2 2 2
+
+	velocity			5 -20 -20 70 20 20
+
+	acceleration		-10 0 0 -30 0 0
+
+	gravity				-160 -170
+
+	rgb
+	{
+		start			0.9529 0.9529 0.9608 1 1 1
+		end				0.6196 0.6196 0.7059 0.4902 0.5882 0.9686
+		flags			linear
+	}
+
+	alpha
+	{
+		end				0 0.5
+	}
+
+	size
+	{
+		start			1.5 1.7
+		end				0.2
+		parm			200 0
+		flags			linear nonlinear
+	}
+
+	length
+	{
+		start			6 7
+		end				0
+		parm			100 0
+		flags			linear nonlinear
+	}
+
+	shaders
+	[
+		gfx/misc/sparkblue
+	]
+}
+
+Particle
+{
+	name				SmokepuffwhiteThick
+
+	flags				expensivePhysics usePhysics useAlpha
+
+	spawnFlags			rgbComponentInterpolation affectedByWind
+
+	life				500 300
+
+	bounce				0.1
+
+	origin				1 0 0
+
+	wind				5 10
+
+	rotation			-180 180
+
+	rotationDelta		-3 3
+
+	velocity			9 -3 -3 11 3 3
+
+	gravity				5 6
+
+	rgb
+	{
+		end				0.302 0.302 0.3686
+		parm			200 0
+		flags			linear nonlinear
+	}
+
+	alpha
+	{
+		start			0.1
+		end				0
+		flags			linear
+	}
+
+	size
+	{
+		start			5 3
+		end				35 15
+		flags			linear
+	}
+
+	shaders
+	[
+		gfx/effects/puffa1
+		gfx/effects/puffa2
+		gfx/effects/puffa3
+		gfx/effects/puffa4
+		gfx/effects/puffa5
+	]
+}
+
+Decal
+{
+	name				ImpactDamage
+
+	rotation			-180 180
+
+	size
+	{
+		start			2 3
+	}
+
+	shaders
+	[
+		gfx/damage/burnmark1
+	]
+}
+
+Sound
+{
+	name				WallhitSounds
+
+	sounds
+	[
+		sound/weapons/bryar/hit_wall.mp3
+		sound/weapons/bryar/hit_wall13.mp3
+		sound/weapons/bryar/hit_wall17.mp3
+		sound/weapons/bryar/hit_wall18.mp3
+		sound/weapons/bryar/hit_wall23.mp3
+		sound/weapons/bryar/hit_wall35.mp3
+		sound/weapons/bryar/hit_wall36.mp3
+		sound/weapons/bryar/hit_wall38.mp3
+		sound/weapons/bryar/hit_wall41.mp3
+		sound/weapons/bryar/hit_wall7.mp3
+	]
+}
+
+Particle
+{
+	name				SmokepuffWhiteViolent
+
+	life				500 300
+
+	wind				10 40
+
+	rotation			-180 180
+
+	rotationDelta		-13 13
+
+	velocity			5 -3 -3 20 3 3
+
+	gravity				1 8
+
+	rgb
+	{
+		start			0.2471 0.4824 0.9294
+		end				0.4902 0.5882 0.9686
+		flags			linear
+	}
+
+	alpha
+	{
+		start			0.9
+		end				0
+		flags			linear
+	}
+
+	size
+	{
+		start			8 5
+		end				10 15
+		flags			linear
+	}
+
+	shaders
+	[
+		gfx/exp/expa1
+		gfx/exp/expa2
+		gfx/exp/expa3
+		gfx/exp/expa4
+		gfx/exp/expa5
+	]
+}
+
+Light
+{
+	name				LightFlash
+
+	life				400 500
+
+	origin				20 0 0
+
+	rgb
+	{
+		start			0.3922 0.3294 0.2745
+		end				0.1294 0.04706 0.02745
+		flags			linear
+	}
+
+	size
+	{
+		start			65 75
+		end				0
+		flags			linear
+	}
+}
+
+Particle
+{
+	name				Flare
+
+	count				1 2
+
+	life				200
+
+	cullrange			2
+
+	origin				1 0 0
+
+	rgb
+	{
+		start			0.9922 0.6902 0.6588
+	}
+
+	alpha
+	{
+		start			0.5
+		end				0
+		flags			linear
+	}
+
+	size
+	{
+		start			45 55
+		end				30
+		flags			linear
+	}
+
+	shaders
+	[
+		gfx/misc/colflare
+	]
+}

@@ -1,12 +1,21 @@
-repeatDelay				300
+repeatDelay				50
 
 Line
 {
+	name				core1
+
 	flags				useAlpha
 
-	origin				8 3 0
+	life				1
 
-	origin2				-80 3 0
+	origin				10 3 0
+
+	origin2				-60 3 0
+
+	rgb
+	{
+		start			0.9961 0.9608 0.7294 0.9922 0.9059 0.302
+	}
 
 	alpha
 	{
@@ -15,34 +24,33 @@ Line
 
 	size
 	{
-		start			1.4 1.6
+		start			0.5 1
 	}
 
 	shaders
 	[
-		gfx/effects/blaster_blob
+		gfx/effects/whiteFlare
 	]
 }
 
 Line
 {
+	name				Redglow1
+
+	life				1
+
 	origin				16 3 0
 
-	origin2				-90 3 0
+	origin2				-75 3 0
 
 	rgb
 	{
-		start			0.7 0 0 0.8 0.2 0.2
-	}
-
-	alpha
-	{
-		start			0.8 1
+		start			0.698 0 0 1 0 0
 	}
 
 	size
 	{
-		start			4 5
+		start			3 4
 	}
 
 	shaders
@@ -53,7 +61,11 @@ Line
 
 Particle
 {
-	origin				-5 0 0
+	name				flare1
+
+	life				1
+
+	origin				-15 3 0
 
 	rgb
 	{
@@ -62,7 +74,7 @@ Particle
 
 	size
 	{
-		start			1.6 1.8
+		start			2 1
 	}
 
 	shaders
@@ -73,13 +85,20 @@ Particle
 
 Line
 {
-	name				Copy of Unnamed Line 0
+	name				core2
 
 	flags				useAlpha
 
-	origin				8 -3 0
+	life				1
 
-	origin2				-80 -3 0
+	origin				10 -3 0
+
+	origin2				-60 -3 0
+
+	rgb
+	{
+		start			0.9961 0.9608 0.7294 0.9922 0.9059 0.302
+	}
 
 	alpha
 	{
@@ -88,40 +107,76 @@ Line
 
 	size
 	{
-		start			1.4 1.6
+		start			0.5 1
 	}
 
 	shaders
 	[
-		gfx/effects/blaster_blob
+		gfx/effects/whiteFlare
 	]
 }
 
 Line
 {
-	name				Copy of Unnamed Line 1
+	name				redglow2
+
+	life				1
 
 	origin				16 -3 0
 
-	origin2				-90 0 3
+	origin2				-75 -3 0
 
 	rgb
 	{
-		start			0.7 0 0 0.8 0.2 0.2
-	}
-
-	alpha
-	{
-		start			0.8 1
+		start			0.698 0 0 1 0 0
 	}
 
 	size
 	{
-		start			4 5
+		start			3 4
 	}
 
 	shaders
 	[
 		gfx/effects/whiteGlow
 	]
+}
+
+Particle
+{
+	name				flare2
+
+	life				1
+
+	origin				-15 -3 0
+
+	rgb
+	{
+		start			0.7 0 0 0.9 0.15 0.15
+	}
+
+	size
+	{
+		start			2 1
+	}
+
+	shaders
+	[
+		gfx/effects/whiteGlow
+	]
+}
+
+Light
+{
+	life				1 5
+
+	rgb
+	{
+		start			1 0 0
+	}
+
+	size
+	{
+		start			40
+	}
 }

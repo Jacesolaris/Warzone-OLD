@@ -1,0 +1,41 @@
+Sound
+{
+	sounds
+	[
+		sound/weapons/blaster/reflect1.wav
+		sound/weapons/blaster/reflect2.wav
+		sound/weapons/blaster/reflect3.wav
+	]
+}
+
+Particle
+{
+	count				1 
+
+	life				100
+
+	rgb
+	{
+		start			1 1 0.7 1 1 0.9
+		end			1 0.6 0.4 1 0.7 0.6
+		flags			linear
+	}
+
+	alpha
+	{
+		end				0
+		flags			linear
+	}
+
+	size
+	{
+		start			4 6
+		end				12 14
+		flags			linear random
+	}
+
+	shaders
+	[
+		gfx/effects/saberflare
+	]
+}

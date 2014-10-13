@@ -1,0 +1,474 @@
+CameraShake
+{
+	name				Shake
+
+	flags				usePhysics
+
+	count				5
+
+	life				180 400
+
+	bounce				0.1 0.7
+
+	intensity				0.3 0.5
+
+	radius				150 500
+}
+
+Light
+{
+	count				1
+
+	life				80 90
+
+	rgb
+	{
+		start			0.5 0.4 0.2
+		end			0
+		parm			50
+		flags			nonlinear
+	}
+
+	size
+	{
+		start			700
+		flags			linear
+	}
+}
+
+forcefeedback
+{
+	forces
+	[
+		fffx/weapons/blaster/fire
+	]
+}
+
+Particle
+{
+	name				Dust
+
+	flags				useAlpha
+
+	count				2
+
+	life				500 900
+
+	delay				100
+
+	velocity				-4 -4 -4 4 4 4
+
+	rotation			0 360
+
+	velocity			25 -32 -32 30 32 32
+
+	gravity				4 8
+
+	rgb
+	{
+		start			0.2 0.15 0.13
+	}
+
+	alpha
+	{
+		start			0.14 0.24
+		end				0
+		parm			30 60
+		flags			nonlinear
+	}
+
+	size
+	{
+		start			7 9
+		end				10 14
+		flags			linear
+	}
+
+	shaders
+	[
+		gfx/misc/smoke
+	]
+}
+
+Particle
+{
+	name				Smoke
+
+	flags				useAlpha
+
+	count				1 2
+
+	life				500 900
+
+	delay				100
+
+	origin				2 -5 -5 2 5 5
+
+	rotation			0 360
+
+	velocity				-4 -4 -4 4 4 4
+
+	gravity				4 8
+
+	rgb
+	{
+		start			0.9 0.9 0.9 1 1 1
+		end			1 1 1
+		flags			linear
+	}
+
+	alpha
+	{
+		start			0.14 0.24
+		end				0
+		parm			30 60
+		flags			nonlinear
+	}
+
+	size
+	{
+		start			7 9
+		end				10 14
+		flags			linear
+	}
+
+	shaders
+	[
+		gfx/misc/smoke
+	]
+}
+
+Particle
+{
+	name				Big
+
+	count				2 3
+
+	life				125 130
+
+	rotation				-180 180
+
+	alpha
+	{
+		start			0.2 0.5
+		end				0
+		flags			linear
+	}
+
+	rgb
+	{
+		start			0.6 0.3 0.2 0.6 0.4 0.2
+		end			0.6 0.2 0.2 0.6 0.35 0.2
+		flags			linear
+	}
+
+	size
+	{
+		start			12 15
+		end				13 18
+		flags			linear random
+	}
+
+	shaders
+	[
+		frontflash
+	]
+}
+
+Particle
+{
+	name				Small
+
+	count				2 3
+
+	life				125 130
+
+	rotation				-180 180
+
+	alpha
+	{
+		start			0.2 0.5
+		end				0
+		flags			linear
+	}
+
+	rgb
+	{
+		start			1 0.6 0 1 0.9 0.7
+		end			1 0.7 0.4 1 0.8 0.7
+		flags			linear
+	}
+
+	size
+	{
+		start			5 9 
+		end				7 10
+		flags			linear random
+	}
+
+	shaders
+	[
+		frontflash
+	]
+}
+
+Line
+{
+	name				Lines
+
+	count				2 8
+
+	life				130 160
+
+	delay				0.1
+
+	origin				-1 -1 -1 1 1 1
+
+	origin2				25 0 0
+
+	rgb
+	{
+		start			0.9529 0.9529 0.9608 1 0.851 0.7176
+		end				1 0.7961 0.6078 1 0.6196 0.2745
+		flags			linear
+	}
+
+	alpha
+	{
+		start			0.45 1
+		end				0
+		flags			linear
+	}
+
+	size
+	{
+		start			0.25 0.8
+	}
+
+	shaders
+	[
+		gfx/effects/whiteFlare
+		gfx/misc/spikeb
+	]
+}
+
+Tail
+{
+	name				Sparks/down
+
+	flags				usePhysics
+
+	spawnFlags			rgbComponentInterpolation
+
+	count				0 2
+
+	life				1400 1700
+
+	cullrange			900
+
+	bounce				0.35 0.8
+
+	origin				2 -2 -2 2 2 2
+
+	rotation			-180 180
+
+	velocity				-5 -90 -120 5 -230 -190
+
+	gravity				0
+
+	rgb
+	{
+		start			1 1 0.9 1 1 1
+		end				1 0.5 0.4 1 0.65 0.5
+		flags			linear
+	}
+
+	size
+	{
+		start			0.15 0.25
+		end				0.1 0.15
+		flags			linear
+	}
+
+	length
+	{
+		start			3 4
+		end			1 3
+		flags			linear
+	}
+
+	shaders
+	[
+		gfx/effects/orangesparkround
+		gfx/effects/goldensideflash
+	]
+}
+
+Tail
+{
+	name				Sparks/up
+
+	flags				usePhysics
+
+	spawnFlags			rgbComponentInterpolation
+
+	count				0 2
+
+	life				1400 1700
+
+	cullrange			900
+
+	bounce				0.35 0.8
+
+	origin				2 -2 -2 2 2 2
+
+	rotation			-180 180
+
+	velocity				-5 120 90 5 190 230
+
+	gravity				0
+
+	rgb
+	{
+		start			1 1 0.9 1 1 1
+		end				1 0.5 0.4 1 0.65 0.5
+		flags			linear
+	}
+
+	size
+	{
+		start			0.15 0.25
+		end				0.1 0.15
+		flags			linear
+	}
+
+	length
+	{
+		start			3 4
+		end			1 3
+		flags			linear
+	}
+
+	shaders
+	[
+		gfx/effects/orangesparkround
+		gfx/effects/goldensideflash
+	]
+}
+
+
+Tail
+{
+	name				Sparks\down
+
+	flags				usePhysics
+
+	spawnFlags			rgbComponentInterpolation
+
+	count				0 2
+
+	life				1400 1700
+
+	cullrange			900
+
+	bounce				0.35 0.8
+
+	origin				2 -2 -2 2 2 2
+
+	rotation			-180 180
+
+	velocity				-5 120 -90 5 190 -230
+
+	gravity				0
+
+	rgb
+	{
+		start			1 1 0.9 1 1 1
+		end				1 0.5 0.4 1 0.65 0.5
+		flags			linear
+	}
+
+	size
+	{
+		start			0.15 0.25
+		end				0.1 0.15
+		flags			linear
+	}
+
+	length
+	{
+		start			3 4
+		end			1 3
+		flags			linear
+	}
+
+	shaders
+	[
+		gfx/effects/orangesparkround
+		gfx/effects/goldensideflash
+	]
+}
+
+Tail
+{
+	name				Sparks\up
+
+	flags				usePhysics
+
+	spawnFlags			rgbComponentInterpolation
+
+	count				0 2
+
+	life				1400 1700
+
+	cullrange			900
+
+	bounce				0.35 0.8
+
+	origin				2 -2 -2 2 2 2
+
+	rotation			-180 180
+
+	velocity				-5 -90 120 5 -230 190
+
+	gravity				0
+
+	rgb
+	{
+		start			1 1 0.9 1 1 1
+		end				1 0.5 0.4 1 0.65 0.5
+		flags			linear
+	}
+
+	size
+	{
+		start			0.15 0.25
+		end				0.1 0.15
+		flags			linear
+	}
+
+	length
+	{
+		start			3 4
+		end			1 3
+		flags			linear
+	}
+
+	shaders
+	[
+		gfx/effects/orangesparkround
+		gfx/effects/goldensideflash
+	]
+}
+
+Sound
+{
+	cullrange		2500
+
+	spawnflags			lessAttenuation
+
+	sounds
+	[
+		sound/weapons/blaster/fire..wav
+	]
+}

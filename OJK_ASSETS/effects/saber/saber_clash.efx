@@ -18,8 +18,8 @@ Particle
 
 	size
 	{
-		start			5 10
-		end				5
+		start			60 200
+		end				60
 		flags			linear
 	}
 
@@ -55,8 +55,8 @@ Particle
 
 	size
 	{
-		start			1 3
-		end				1 3
+		start			3
+		end				30
 		flags			linear
 	}
 
