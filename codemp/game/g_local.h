@@ -1322,7 +1322,7 @@ gentity_t *CreateMissile( vec3_t org, vec3_t dir, float vel, int life,
 void G_BounceProjectile( vec3_t start, vec3_t impact, vec3_t dir, vec3_t endout );
 void G_ExplodeMissile( gentity_t *ent );
 
-void WP_FireBlasterMissile( gentity_t *ent, vec3_t start, vec3_t dir, qboolean altFire );
+void WP_FireBlasterMissile( gentity_t *ent, vec3_t start, vec3_t dir, int velocity, int damage, qboolean altFire, int weapon );
 
 
 //

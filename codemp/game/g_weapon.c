@@ -408,11 +408,9 @@ BLASTER
 */
 
 //---------------------------------------------------------
-void WP_FireBlasterMissile( gentity_t *ent, vec3_t start, vec3_t dir, qboolean altFire )
+void WP_FireBlasterMissile( gentity_t *ent, vec3_t start, vec3_t dir, int velocity, int damage, qboolean altFire, int weapon )
 //---------------------------------------------------------
 {
-	int velocity	= BLASTER_VELOCITY;
-	int	damage		= BLASTER_DAMAGE;
 	gentity_t *missile;
 
 	if (ent->s.eType == ET_NPC)
@@ -423,7 +421,7 @@ void WP_FireBlasterMissile( gentity_t *ent, vec3_t start, vec3_t dir, qboolean a
 	missile = CreateMissile( start, dir, velocity, 10000, ent, altFire );
 
 	missile->classname = "blaster_proj";
-	missile->s.weapon = WP_BLASTER;
+	missile->s.weapon = weapon;
 
 	missile->damage = damage;
 	missile->dflags = DAMAGE_DEATH_KNOCKBACK;
@@ -500,7 +498,7 @@ void WP_FireEmplacedMissile( gentity_t *ent, vec3_t start, vec3_t dir, qboolean 
 }
 
 //---------------------------------------------------------
-static void WP_FireBlaster( gentity_t *ent, qboolean altFire )
+static void WP_FireBlaster( gentity_t *ent, qboolean altFire, int velocity, int damage, float spread, int weapon )
 //---------------------------------------------------------
 {
 	vec3_t  dir, angs;
@@ -510,14 +508,14 @@ static void WP_FireBlaster( gentity_t *ent, qboolean altFire )
 	if ( altFire )
 	{
 		// add some slop to the alt-fire direction
-		angs[PITCH] += crandom() * BLASTER_SPREAD;
-		angs[YAW]       += crandom() * BLASTER_SPREAD;
+		angs[PITCH] += crandom() * spread;
+		angs[YAW]   += crandom() * spread;
 	}
 
 	AngleVectors( angs, dir, NULL, NULL );
 
 	// FIXME: if temp_org does not have clear trace to inside the bbox, don't shoot!
-	WP_FireBlasterMissile( ent, muzzle, dir, altFire );
+	WP_FireBlasterMissile( ent, muzzle, dir, velocity, damage, altFire, weapon );
 }
 
 
@@ -4601,11 +4599,11 @@ void FireWeapon( gentity_t *ent, qboolean altFire ) {
 			break;
 
 		case WP_BLASTER:
-			WP_FireBlaster( ent, altFire );
+			WP_FireBlaster( ent, altFire, BLASTER_VELOCITY, BLASTER_DAMAGE, BLASTER_SPREAD, ent->s.weapon );
 			break;
 
 		case WP_A280: // UQ1: Example. Should have it's own code...
-			WP_FireDisruptor( ent, altFire );
+			WP_FireBlaster( ent, altFire, BLASTER_VELOCITY*4, BLASTER_DAMAGE*8, 0.0, ent->s.weapon );
 			break;
 
 		case WP_DC15:
@@ -4617,18 +4615,19 @@ void FireWeapon( gentity_t *ent, qboolean altFire ) {
 			break;
 
 		case WP_T21:
-			WP_FireBlaster(ent, altFire);
+			WP_FireBlaster( ent, altFire, BLASTER_VELOCITY, BLASTER_DAMAGE, BLASTER_SPREAD, ent->s.weapon );
 			break;
 
 		case WP_EE3:
-			WP_FireBlaster(ent, altFire);
+			WP_FireBlaster( ent, altFire, BLASTER_VELOCITY, BLASTER_DAMAGE, BLASTER_SPREAD, ent->s.weapon );
 			break;
+
 		case WP_CLONE_PISTOL1:
-			WP_FireDEMP2(ent, altFire);
+			WP_FireBlaster( ent, altFire, BLASTER_VELOCITY, BLASTER_DAMAGE, BLASTER_SPREAD, ent->s.weapon );
 			break;
 
 		case WP_DLT20A:
-			WP_FireBlaster(ent, altFire);
+			WP_FireBlaster( ent, altFire, BLASTER_VELOCITY, BLASTER_DAMAGE, BLASTER_SPREAD, ent->s.weapon );
 			break;
 
 		case WP_DISRUPTOR:

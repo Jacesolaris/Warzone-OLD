@@ -1108,6 +1108,10 @@ void SP_misc_holocron(gentity_t *ent)
 ======================================================================
 */
 
+#define BLASTER_SPREAD				1.6f//1.2f
+#define BLASTER_VELOCITY			2300
+#define BLASTER_DAMAGE				20
+
 void Use_Shooter( gentity_t *ent, gentity_t *other, gentity_t *activator ) {
 	vec3_t		dir;
 	float		deg;
@@ -1135,7 +1139,7 @@ void Use_Shooter( gentity_t *ent, gentity_t *other, gentity_t *activator ) {
 
 	switch ( ent->s.weapon ) {
 	case WP_BLASTER:
-		WP_FireBlasterMissile( ent, ent->s.origin, dir, qfalse );
+		WP_FireBlasterMissile( ent, ent->s.origin, dir, BLASTER_VELOCITY, BLASTER_DAMAGE, qfalse, ent->s.weapon );
 		break;
 	}
 

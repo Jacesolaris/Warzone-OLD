@@ -232,6 +232,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->chargeSound			= NULL_SOUND;
 		weaponInfo->muzzleEffect		= trap->FX_RegisterEffect( "disruptor/muzzle_flash" );
 		weaponInfo->missileModel		= NULL_HANDLE;
+		weaponInfo->missileRenderfx		= trap->FX_RegisterEffect( "blaster/shot" );
 		weaponInfo->missileSound		= NULL_SOUND;
 		weaponInfo->missileDlight		= 0;
 //		weaponInfo->missileDlightColor	= {0,0,0};
@@ -243,6 +244,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altChargeSound		= trap->S_RegisterSound("sound/weapons/disruptor/altCharge.wav");
 		weaponInfo->altMuzzleEffect		= trap->FX_RegisterEffect( "disruptor/muzzle_flash" );
 		weaponInfo->altMissileModel		= NULL_HANDLE;
+		weaponInfo->altMissileRenderfx  = trap->FX_RegisterEffect( "blaster/shot" );
 		weaponInfo->altMissileSound		= NULL_SOUND;
 		weaponInfo->altMissileDlight	= 0;
 //		weaponInfo->altMissileDlightColor= {0,0,0};
@@ -283,6 +285,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->chargeSound = NULL_SOUND;
 		weaponInfo->muzzleEffect = trap->FX_RegisterEffect("repeater/muzzle_flash");
 		weaponInfo->missileModel = NULL_HANDLE;
+		weaponInfo->missileRenderfx  = trap->FX_RegisterEffect( "blaster/shot" );
 		weaponInfo->missileSound = NULL_SOUND;
 		weaponInfo->missileDlight = 0;
 
@@ -295,6 +298,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altChargeSound = trap->S_RegisterSound("sound/weapons/SBDarm/cannon_charge.mp3");
 		weaponInfo->altMuzzleEffect = trap->FX_RegisterEffect("repeater/muzzle_flash");
 		weaponInfo->altMissileModel = NULL_HANDLE;
+		weaponInfo->altMissileRenderfx  = trap->FX_RegisterEffect( "blaster/shot" );
 		weaponInfo->altMissileSound = NULL_SOUND;
 		weaponInfo->altMissileDlight = 0;
 
@@ -319,6 +323,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->chargeSound = NULL_SOUND;
 		weaponInfo->muzzleEffect = trap->FX_RegisterEffect("repeater/muzzle_flash");
 		weaponInfo->missileModel = NULL_HANDLE;
+		weaponInfo->missileRenderfx  = trap->FX_RegisterEffect( "blaster/shot" );
 		weaponInfo->missileSound = NULL_SOUND;
 		weaponInfo->missileDlight = 0;
 
@@ -331,6 +336,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altChargeSound = trap->S_RegisterSound("sound/weapons/SBDarm/cannon_charge.mp3");
 		weaponInfo->altMuzzleEffect = trap->FX_RegisterEffect("repeater/muzzle_flash");
 		weaponInfo->altMissileModel = NULL_HANDLE;
+		weaponInfo->altMissileRenderfx  = trap->FX_RegisterEffect( "blaster/shot" );
 		weaponInfo->altMissileSound = NULL_SOUND;
 		weaponInfo->altMissileDlight = 0;
 
@@ -354,6 +360,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->chargeSound = NULL_SOUND;
 		weaponInfo->muzzleEffect = trap->FX_RegisterEffect("blaster/muzzle_flash");
 		weaponInfo->missileModel = NULL_HANDLE;
+		weaponInfo->missileRenderfx  = trap->FX_RegisterEffect( "blaster/shot" );
 		weaponInfo->missileSound = NULL_SOUND;
 		weaponInfo->missileDlight = 0;
 		weaponInfo->missileHitSound = NULL_SOUND;
@@ -364,6 +371,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altChargeSound = NULL_SOUND;
 		weaponInfo->altMuzzleEffect = trap->FX_RegisterEffect("blaster/muzzle_flash");
 		weaponInfo->altMissileModel = NULL_HANDLE;
+		weaponInfo->altMissileRenderfx  = trap->FX_RegisterEffect( "blaster/shot" );
 		weaponInfo->altMissileSound = NULL_SOUND;
 		weaponInfo->altMissileDlight = 0;
 		weaponInfo->altMissileHitSound = NULL_SOUND;
@@ -385,6 +393,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->chargeSound = NULL_SOUND;
 		weaponInfo->muzzleEffect = trap->FX_RegisterEffect("blaster/muzzle_flash");
 		weaponInfo->missileModel = NULL_HANDLE;
+		weaponInfo->missileRenderfx  = trap->FX_RegisterEffect( "blaster/shot" );
 		weaponInfo->missileSound = NULL_SOUND;
 		weaponInfo->missileDlight = 0;
 		weaponInfo->missileHitSound = NULL_SOUND;
@@ -395,6 +404,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altChargeSound = NULL_SOUND;
 		weaponInfo->altMuzzleEffect = trap->FX_RegisterEffect("blaster/muzzle_flash");
 		weaponInfo->altMissileModel = NULL_HANDLE;
+		weaponInfo->altMissileRenderfx  = trap->FX_RegisterEffect( "blaster/shot" );
 		weaponInfo->altMissileSound = NULL_SOUND;
 		weaponInfo->altMissileDlight = 0;
 		weaponInfo->altMissileHitSound = NULL_SOUND;
@@ -417,6 +427,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->chargeSound = NULL_SOUND;
 		weaponInfo->muzzleEffect = trap->FX_RegisterEffect("demp2/muzzle_flash");
 		weaponInfo->missileModel = NULL_HANDLE;
+		weaponInfo->missileRenderfx  = trap->FX_RegisterEffect( "blaster/shot" );
 		weaponInfo->missileSound = NULL_SOUND;
 		weaponInfo->missileDlight = 0;
 
@@ -432,6 +443,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altChargeSound = trap->S_RegisterSound("sound/weapons/demp2/altCharge.wav");
 		weaponInfo->altMuzzleEffect = trap->FX_RegisterEffect("demp2/muzzle_flash");
 		weaponInfo->altMissileModel = NULL_HANDLE;
+		weaponInfo->altMissileRenderfx  = trap->FX_RegisterEffect( "blaster/shot" );
 		weaponInfo->altMissileSound = NULL_SOUND;
 		weaponInfo->altMissileDlight = 0;
 
@@ -461,6 +473,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->chargeSound = NULL_SOUND;
 		weaponInfo->muzzleEffect = trap->FX_RegisterEffect("blaster/muzzle_flash");
 		weaponInfo->missileModel = NULL_HANDLE;
+		weaponInfo->missileRenderfx  = trap->FX_RegisterEffect( "blaster/shot" );
 		weaponInfo->missileSound = NULL_SOUND;
 		weaponInfo->missileDlight = 0;
 		weaponInfo->missileHitSound = NULL_SOUND;
@@ -471,6 +484,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altChargeSound = NULL_SOUND;
 		weaponInfo->altMuzzleEffect = trap->FX_RegisterEffect("blaster/muzzle_flash");
 		weaponInfo->altMissileModel = NULL_HANDLE;
+		weaponInfo->altMissileRenderfx  = trap->FX_RegisterEffect( "blaster/shot" );
 		weaponInfo->altMissileSound = NULL_SOUND;
 		weaponInfo->altMissileDlight = 0;
 		weaponInfo->altMissileHitSound = NULL_SOUND;
@@ -492,6 +506,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->chargeSound			= NULL_SOUND;
 		weaponInfo->muzzleEffect		= trap->FX_RegisterEffect( "blaster/muzzle_flash" );
 		weaponInfo->missileModel		= NULL_HANDLE;
+		weaponInfo->missileRenderfx		= trap->FX_RegisterEffect( "blaster/shot" );
 		weaponInfo->missileSound		= NULL_SOUND;
 		weaponInfo->missileDlight		= 0;
 //		weaponInfo->missileDlightColor	= {0,0,0};
@@ -503,6 +518,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altChargeSound		= NULL_SOUND;
 		weaponInfo->altMuzzleEffect		= trap->FX_RegisterEffect( "blaster/muzzle_flash" );
 		weaponInfo->altMissileModel		= NULL_HANDLE;
+		weaponInfo->altMissileRenderfx  = trap->FX_RegisterEffect( "blaster/shot" );
 		weaponInfo->altMissileSound		= NULL_SOUND;
 		weaponInfo->altMissileDlight	= 0;
 //		weaponInfo->altMissileDlightColor= {0,0,0};
