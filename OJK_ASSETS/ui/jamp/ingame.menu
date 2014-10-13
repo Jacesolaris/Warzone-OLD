@@ -141,7 +141,7 @@
 			backcolor			0 0 0 0
 			visible			1
 			cvartest			"g_gametype"
-			showcvar			{ "0", "1", "2", "3", "4", "5", "6", "8" }
+			showcvar			{ "0", "1", "2", "3", "4", "5", "6", "7", "9", "10", "11", "12" }
 			action 
 			{ 
 				play			"sound/interface/button1.wav" ;
@@ -174,7 +174,7 @@
 			backcolor			0 0 0 0
 			visible			1
 			cvartest			"g_gametype"
-			showcvar			{ "7" }
+			showcvar			{ "8" }
 			action 
 			{ 
 				play			"sound/interface/button1.wav" ;
@@ -219,7 +219,7 @@
 			backcolor			0 0 0 0
 			visible				1
 			cvartest			"g_gametype"
-			showcvar			{ "0", "1", "2", "3", "4", "5", "6", "8" }
+			showcvar			{ "0", "1", "2", "3", "4", "5", "6", "7", "9", "10", "11", "12" }
 			action 
 			{ 
 				play			"sound/interface/button1.wav" ;
@@ -264,7 +264,7 @@
 			backcolor			0 0 0 0
 			visible				1
 			cvartest			"g_gametype"
-			showcvar			{ "7" }
+			showcvar			{ "8" }
 			action 
 			{ 
 				play			"sound/interface/button1.wav" ;
@@ -277,63 +277,6 @@
 			mouseexit 
 			{ 
 				hide			objectivesButton
-			}
-		}
-
-		itemDef 
-		{
-			name				chatButton
-			group				none
-			style				WINDOW_STYLE_SHADER
-			rect				215 0 70 32
-			background			"gfx/menus/menu_buttonback"			// Frame around button
-			forecolor			1 1 1 1
-			decoration
-			visible			0
-		}
-
-		itemDef 
-		{
-			name				chat
-			text				@MENUS_VOICE_CHAT			
-			type				1
-			style				WINDOW_STYLE_FILLED
-			rect				215 0 70 32
-			font				2
-			textscale			.8
-			textstyle			3
-			textalign			ITEM_ALIGN_CENTER
-			textalignx         	35
-			textaligny			2
-			forecolor			1 .682 0 1
-			backcolor			0 0 0 0
-			visible				1
-//[BotTweaks]
-//do vchat in all team gametypes
-			cvartest			"g_gametype"
-			hidecvar
-			{ 
-				"0" ;
-				"1" ;
-				"2" ;
-				"3" ;
-				"4" ;
-				"5"
-			}
-//			showcvar			{ "7" }
-//[/BotTweaks]
-			action 
-			{ 
-				play			"sound/interface/button1.wav" ;
-				open			ingame_voicechat
-			} 
-			mouseenter 
-			{ 
-				show			chatButton
-			}
-			mouseexit 
-			{ 
-				hide			chatButton
 			}
 		}
 

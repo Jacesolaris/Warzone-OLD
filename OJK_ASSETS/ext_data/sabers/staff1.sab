@@ -3,7 +3,7 @@ staff1
 {
 	name		"Force Staff"
 	saberType	SABER_STAFF
-	saberModel	"models/weapons2/staff1/force_staff_1.glm"
+	saberModel	"models/weapons4/staff1/force_staff_1.glm"
 	soundOn		"sound/weapons/saber/saberon.wav"
 	soundLoop	"sound/weapons/saber/saberhum4.wav"
 	soundOff	"sound/weapons/saber/saberoff.wav"
