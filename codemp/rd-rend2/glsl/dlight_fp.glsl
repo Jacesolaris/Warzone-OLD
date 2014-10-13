@@ -42,4 +42,3 @@ void main (void)
 
 	gl_FragColor = final_color;			
 }
-
