@@ -24,6 +24,7 @@ varying vec3   var_Position;
 varying vec4	var_LightColor;
 varying vec4	var_LightOrigin;
 varying float   var_LightRadius;
+varying vec3   var_LightDir;
 
 #if defined(USE_DEFORM_VERTEXES)
 vec3 DeformPosition(const vec3 pos, const vec3 normal, const vec2 st)
@@ -95,15 +96,17 @@ void main()
 	var_Normal = normalize(gl_NormalMatrix * gl_Normal);
 
 	// Transform the vertex position to eye space (V)
-	var_Position = vec3(u_ModelViewProjectionMatrix * vec4(attr_Position, 1.0));
+	var_Position = vec3(u_ModelViewProjectionMatrix * vec4(position, 1.0));
 		
 	vec3 dist = u_LightOrigin.xyz - position;
 
 	var_Tex1 = dist.xy * u_LightOrigin.a + vec2(0.5);
+
 	float dlightmod = step(0.0, dot(dist, normal));
 	dlightmod *= clamp(2.0 * (1.0 - abs(dist.x + dist.y + dist.z) * u_LightOrigin.a), 0.0, 1.0);
 	
 	var_LightColor = (u_LightColor * dlightmod);
 	var_LightOrigin = u_LightOrigin;
 	var_LightRadius = u_LightRadius;
+	var_LightDir = dist;
 }
