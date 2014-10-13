@@ -1,0 +1,12 @@
+repeatDelay				50
+
+FxRunner
+{
+	name				Wallvariants
+
+	playfx
+	[
+		impacts/impactATST
+		
+	]
+}

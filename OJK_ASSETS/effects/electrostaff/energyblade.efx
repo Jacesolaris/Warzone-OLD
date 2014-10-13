@@ -1,0 +1,44 @@
+repeatDelay				58
+
+Electricity
+{
+	name				zzzz5
+
+	flags				useModel useBBox usePhysics
+
+	spawnFlags			axisFromSphere
+
+	count				10 15
+
+	life				150 50
+
+	bounce				2 5
+
+	origin2				20 20 20 -20 -20 -20
+
+	radius				2
+
+	height				2
+
+	rgb
+	{
+		start			1 1 1 1 0.9843 0.9412
+	}
+
+	alpha
+	{
+		start			1 0.7
+	}
+
+	size
+	{
+		start			0.5
+		end				0.5
+		parm			70
+	}
+
+	shaders
+	[
+		gfx/effects/purpleLine
+	]
+}

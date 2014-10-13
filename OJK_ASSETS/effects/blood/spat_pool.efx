@@ -1,3 +1,5 @@
+repeatDelay				300
+
 Decal
 {
 	rotation			360 0
@@ -9,11 +11,11 @@ Decal
 
 	shaders
 	[
-		gfx/blood/spat_pool
+		gfx/blood/dropstiny
 	]
 }
 
-sound
+Sound
 {
 	sounds
 	[

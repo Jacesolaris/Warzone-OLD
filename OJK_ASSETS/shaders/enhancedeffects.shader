@@ -476,9 +476,8 @@ gfx/effects/glowwhite
 gfx/damage/burnmark1
 {
 	qer_editorimage	gfx/damage/burnmark1
-	surfaceparm	trans
-	q3map_onlyvertexlighting
-	cull	twosided
+	polygonOffset
+	q3map_nolightmap
     {
         map gfx/damage/burnmark1
         blendFunc GL_SRC_ALPHA GL_ONE_MINUS_SRC_ALPHA
@@ -489,65 +488,55 @@ gfx/damage/burnmark1
 gfx/damage/burnmark2
 {
 	qer_editorimage	gfx/damage/burnmark2
-	surfaceparm	trans
-	q3map_onlyvertexlighting
-	cull	twosided
+	polygonOffset
+	q3map_nolightmap
     {
         map gfx/damage/burnmark2
         blendFunc GL_SRC_ALPHA GL_ONE_MINUS_SRC_ALPHA
-        rgbGen vertex
     }
 }
 
 gfx/damage/burnmark3
 {
 	qer_editorimage	gfx/damage/burnmark3
-	surfaceparm	trans
-	q3map_onlyvertexlighting
-	cull	twosided
+	polygonOffset
+	q3map_nolightmap
     {
-        map gfx/damage/burnmark3
+        clampmap gfx/damage/burnmark3 //console prints a warning with map, no idea why
         blendFunc GL_SRC_ALPHA GL_ONE_MINUS_SRC_ALPHA
-        rgbGen vertex
     }
 }
 
 gfx/damage/burnmark4
 {
 	qer_editorimage	gfx/damage/burnmark4
-	surfaceparm	trans
-	q3map_onlyvertexlighting
-	cull	twosided
+	polygonOffset
+	q3map_nolightmap
     {
         map gfx/damage/burnmark4
         blendFunc GL_SRC_ALPHA GL_ONE_MINUS_SRC_ALPHA
-        rgbGen vertex
     }
 }
 
 gfx/damage/burnmark5
 {
 	qer_editorimage	gfx/damage/burnmark5
-	surfaceparm	trans
-	q3map_onlyvertexlighting
-	cull	twosided
+	polygonOffset
+	q3map_nolightmap
     {
         map gfx/damage/burnmark5
         blendFunc GL_SRC_ALPHA GL_ONE_MINUS_SRC_ALPHA
-        rgbGen vertex
     }
 }
 
 gfx/damage/burnmark6
 {
 	qer_editorimage	gfx/damage/burnmark6
-	surfaceparm	trans
-	q3map_onlyvertexlighting
-	cull	twosided
+	polygonOffset
+	q3map_nolightmap
     {
         map gfx/damage/burnmark6
         blendFunc GL_SRC_ALPHA GL_ONE_MINUS_SRC_ALPHA
-        rgbGen vertex
     }
 }
 

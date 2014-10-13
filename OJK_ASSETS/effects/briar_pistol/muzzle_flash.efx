@@ -1,0 +1,115 @@
+repeatDelay				509
+
+Line
+{
+	life				30
+
+	origin2				20 0 0 25 0 0
+
+	alpha
+	{
+		start			0.5 0.6
+		end				0.35
+		flags			linear
+	}
+
+	size
+	{
+		start			4
+		end				5
+		flags			linear
+	}
+
+	shaders
+	[
+		gfx/effects/blasterSideFlash
+	]
+}
+
+Particle
+{
+	life				30
+
+	origin				5 0 0
+
+	rotation			0 360
+
+	alpha
+	{
+		start			0.8 1
+		end				0.5
+		flags			linear
+	}
+
+	size
+	{
+		start			6
+		end				7
+		flags			linear
+	}
+
+	shaders
+	[
+		gfx/effects/blasterFrontFlash
+	]
+}
+
+Light
+{
+	rgb
+	{
+		start			1 0.1 0.1
+	}
+
+	size
+	{
+		start			75
+	}
+}
+
+Sound
+{
+	sounds
+	[
+		sound/weapons/blaster/alt_fire.wav
+	]
+}
+
+CameraShake
+{
+	intensity			0.3 0.4
+
+	radius				60
+}
+
+Line
+{
+	name				Copy of Unnamed Line 0
+
+	life				30
+
+	origin2				30 0 0
+
+	rgb
+	{
+		start			1 0 0
+	}
+
+	alpha
+	{
+		start			0.5 0.6
+		end				0.35
+		flags			linear
+	}
+
+	size
+	{
+		start			0.5
+		flags			linear
+	}
+
+	shaders
+	[
+		gfx/effects/whiteFlare
+	]
+}

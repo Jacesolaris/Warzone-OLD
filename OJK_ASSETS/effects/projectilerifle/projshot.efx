@@ -1,0 +1,87 @@
+repeatDelay				90
+
+Line
+{
+	name				Core
+
+	flags				useAlpha
+
+	life				10
+
+	origin2				-60 0 0
+
+	rgb
+	{
+		start			1 0.7765 0.7765
+	}
+
+	alpha
+	{
+		start			0.2
+	}
+
+	size
+	{
+		start			3
+	}
+
+	shaders
+	[
+		gfx/effects/whiteGlow
+	]
+}
+
+Line
+{
+	name				Glow
+
+	life				10
+
+	origin				25 0 0
+
+	origin2				-90 0 0
+
+	rgb
+	{
+		start			1 0 0
+	}
+
+	alpha
+	{
+		start			0.8 1
+	}
+
+	size
+	{
+		start			10
+	}
+
+	shaders
+	[
+		gfx/effects/whiteGlow
+	]
+}
+
+Particle
+{
+	name				Filler
+
+	life				10
+
+	origin				-30 0 0
+
+	rgb
+	{
+		start			1 0 0
+	}
+
+	size
+	{
+		start			3
+	}
+
+	shaders
+	[
+		gfx/effects/whiteGlow
+	]
+}

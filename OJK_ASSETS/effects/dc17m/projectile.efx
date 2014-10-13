@@ -1,0 +1,195 @@
+Line
+{
+	name				Core
+
+	flags				useAlpha
+
+	life				7
+
+	origin				90 0 0
+
+	origin2				-140 0 0
+
+	rgb
+	{
+		start			0.9 0.8157 0.5
+	}
+
+	size
+	{
+		start			0.23
+	}
+
+	shaders
+	[
+		gfx/effects/whiteGlow
+	]
+}
+
+Line
+{
+	name				Glow
+
+	life				7
+
+	origin				90 0 0
+
+	origin2				-140 0 0
+
+	rgb
+	{
+		start			0.3 0.3 0.75
+	}
+
+	alpha
+	{
+		start			0.8 1
+	}
+
+	size
+	{
+		start			0.75
+	}
+
+	shaders
+	[
+		gfx/effects/whiteGlow
+	]
+}
+
+Light
+{
+	rgb
+	{
+		start			0.15 0.15 0.18
+	}
+
+
+	alpha	
+	{
+		start			0.1
+		end			0
+		flags			linear
+	}
+
+
+	size
+	{
+		start			400
+	}
+}
+
+Particle
+{
+	name				Filler
+
+	count				15 25
+
+	life				7
+
+	origin				-55 0 0 60 0 0
+
+	rotationdelta			-60 60
+
+	rgb
+	{
+		start			0.25 0.25 1 0.7 0.7 1
+	}
+
+	alpha
+	{
+		start			0.5 0.7
+	}
+
+	size
+	{
+		start			0.19 0.26
+	}
+
+	shaders
+	[
+		gfx/effects/whiteGlow
+		gfx/misc/spark3
+	]
+}
+
+Line
+{
+	name				ThickGlow
+
+	life				7
+
+	origin				90 0 0
+
+	origin2				-110 0 0
+
+	rgb
+	{
+		start			0.3 0.3 0.75
+	}
+
+	size
+	{
+		start			0.27
+	}
+
+	shaders
+	[
+		gfx/effects/whiteGlow
+		gfx/misc/spark3
+	]
+}
+
+Line
+{
+	name				CoreFront
+
+	flags				useAlpha
+
+	life				7
+
+	origin				90 0 0
+
+	origin2				-70 0 0
+
+	rgb
+	{
+		start			0.85 0.85 1
+	}
+
+	size
+	{
+		start			0.23
+	}
+
+	shaders
+	[
+		gfx/misc/spark3
+	]
+}
+
+Line
+{
+	name				ThickGlowfront
+
+	life				7
+
+	origin				90 0 0
+
+	origin2				-75 0 0
+
+	rgb
+	{
+		start			0.3 0.3 0.75
+	}
+
+	size
+	{
+		start			0.43
+	}
+
+	shaders
+	[
+		gfx/effects/whiteGlow
+	]
+}
