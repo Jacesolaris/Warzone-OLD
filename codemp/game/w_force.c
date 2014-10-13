@@ -5223,31 +5223,27 @@ void WP_ForcePowersUpdate( gentity_t *self, usercmd_t *ucmd )
 			{
 				self->client->ps.forceHandExtend = HANDEXTEND_NONE;
 			}
+			else if (self->client->pers.cmd.upmove && self->client->ps.fd.forcePowerLevel[FP_LEVITATION] > FORCE_LEVEL_1)
+			{ //force getup
+				G_PreDefSound(self->client->ps.origin, PDSOUND_FORCEJUMP);
+				self->client->ps.forceDodgeAnim = 2;
+				//self->client->ps.forceHandExtendTime = level.time + 500; // UQ1: Likely suspect here. This would keep them down forever!
+
+				//self->client->ps.velocity[2] = 400;
+			}
+			if ((level.time-self->client->ps.forceHandExtendTime) > 2000 && self->client->ps.quickerGetup)
+			{ //2 seconds elapsed, I guess they're too dumb to push something to get up!
+				G_EntitySound( self, CHAN_VOICE, G_SoundIndex("*jump1.wav") );
+				self->client->ps.forceDodgeAnim = 3;
+				//self->client->ps.forceHandExtendTime = level.time + 500; // UQ1: Likely suspect here. This would keep them down forever!
+				self->client->ps.velocity[2] = 300;
+			}
 			else
 			{ //hmm.. ok.. no more getting up on your own, you've gotta push something, unless..
 				if ((level.time-self->client->ps.forceHandExtendTime) > 4000)
 				{ //4 seconds elapsed, I guess they're too dumb to push something to get up!
-					if (self->client->pers.cmd.upmove &&
-						self->client->ps.fd.forcePowerLevel[FP_LEVITATION] > FORCE_LEVEL_1)
-					{ //force getup
-						G_PreDefSound(self->client->ps.origin, PDSOUND_FORCEJUMP);
-						self->client->ps.forceDodgeAnim = 2;
-						self->client->ps.forceHandExtendTime = level.time + 500;
-
-						//self->client->ps.velocity[2] = 400;
-					}
-					else if (self->client->ps.quickerGetup)
-					{
-						G_EntitySound( self, CHAN_VOICE, G_SoundIndex("*jump1.wav") );
-						self->client->ps.forceDodgeAnim = 3;
-						self->client->ps.forceHandExtendTime = level.time + 500;
-						self->client->ps.velocity[2] = 300;
-					}
-					else
-					{
-						self->client->ps.forceDodgeAnim = 1;
-						self->client->ps.forceHandExtendTime = level.time + 1000;
-					}
+					self->client->ps.forceDodgeAnim = 1;
+					//self->client->ps.forceHandExtendTime = level.time + 1000; // UQ1: Likely suspect here. This would keep them down forever!
 				}
 			}
 			self->client->ps.quickerGetup = qfalse;
