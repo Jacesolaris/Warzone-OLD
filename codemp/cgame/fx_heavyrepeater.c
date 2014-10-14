@@ -26,18 +26,23 @@ FX_RepeaterProjectileThink
 ---------------------------
 */
 
-void FX_RepeaterProjectileThink( centity_t *cent, const struct weaponInfo_s *weapon )
+void FX_RepeaterProjectileThink(centity_t *cent, const struct weaponInfo_s *weapon)
 {
 	vec3_t forward;
 
-	if ( VectorNormalize2( cent->currentState.pos.trDelta, forward ) == 0.0f )
+	if (VectorNormalize2(cent->currentState.pos.trDelta, forward) == 0.0f)
 	{
 		forward[2] = 1.0f;
 	}
 
-	trap->FX_PlayEffectID( cgs.effects.repeaterProjectileEffect, cent->lerpOrigin, forward, -1, -1, qfalse );
-
-	FX_RepeaterAddLight(cent->lerpOrigin);
+	if (weapon->missileRenderfx)
+	{
+		trap->FX_PlayEffectID(weapon->missileRenderfx, cent->lerpOrigin, forward, -1, -1, qfalse);
+	}
+	else
+	{
+		trap->FX_PlayEffectID(cgs.effects.repeaterProjectileEffect, cent->lerpOrigin, forward, -1, -1, qfalse);
+	}
 }
 
 /*
@@ -147,13 +152,19 @@ void FX_RepeaterAltProjectileThink( centity_t *cent, const struct weaponInfo_s *
 		forward[2] = 1.0f;
 	}
 
-	if (cg_repeaterOrb.integer)
+	if (/*cg_repeaterOrb.integer*/0)
 	{
 		CG_DistortionOrb(cent);
 	}
-	trap->FX_PlayEffectID( cgs.effects.repeaterAltProjectileEffect, cent->lerpOrigin, forward, -1, -1, qfalse );
 
-	FX_RepeaterAltAddLight(cent->lerpOrigin);
+	if (weapon->altMissileRenderfx)
+	{
+		trap->FX_PlayEffectID(weapon->altMissileRenderfx, cent->lerpOrigin, forward, -1, -1, qfalse);
+	}
+	else
+	{
+		trap->FX_PlayEffectID(cgs.effects.repeaterAltProjectileEffect, cent->lerpOrigin, forward, -1, -1, qfalse);
+	}
 }
 
 /*

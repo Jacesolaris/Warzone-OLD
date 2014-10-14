@@ -2146,6 +2146,8 @@ Ghoul2 Insert End
 			break;
 		case WP_DLT20A:
 			cent->lerpOrigin[2] -= 16;
+		case WP_CLONERIFLE:
+			cent->lerpOrigin[2] -= 12;
 			break;
 		default:
 			cent->lerpOrigin[2] -= 8;

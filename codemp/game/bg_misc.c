@@ -248,6 +248,7 @@ int WeaponReadyAnim[WP_NUM_WEAPONS] =
 	DC15_READY,//WP_EE3
 	TORSO_WEAPONREADY2,//WP_CLONE_PISTOL1
 	TORSO_WEAPONREADY3,//WP_DLT20A
+	TORSO_WEAPONREADY3,//WP_CLONERIFLE
 	TORSO_WEAPONREADY3,//TORSO_WEAPONREADY5,//WP_BOWCASTER,
 	TORSO_WEAPONREADY3,//TORSO_WEAPONREADY6,//WP_REPEATER,
 	TORSO_WEAPONREADY3,//TORSO_WEAPONREADY7,//WP_DEMP2,
@@ -296,6 +297,7 @@ int WeaponReadyLegsAnim[WP_NUM_WEAPONS] =
 	BOTH_STAND1,//WP_EE3
 	BOTH_STAND1,//WP_CLONE_PISTOL1
 	BOTH_STAND1,//WP_DLT20A
+	BOTH_STAND1,//WP_CLONERIFLE
 	BOTH_STAND1,//TORSO_WEAPONREADY5,//WP_BOWCASTER,
 	BOTH_STAND1,//TORSO_WEAPONREADY6,//WP_REPEATER,
 	BOTH_STAND1,//TORSO_WEAPONREADY7,//WP_DEMP2,
@@ -343,6 +345,7 @@ int WeaponAttackAnim[WP_NUM_WEAPONS] =
 	DC15_FIRE,//WP_EE3
 	BOTH_ATTACK2,//WP_CLONE_PISTOL1
 	BOTH_ATTACK3, //WP_DLT20A
+	BOTH_ATTACK3,//WP_CLONERIFLE
 	BOTH_ATTACK3,//BOTH_ATTACK5,//WP_BOWCASTER,
 	BOTH_ATTACK3,//BOTH_ATTACK6,//WP_REPEATER,
 	BOTH_ATTACK2,//BOTH_ATTACK7,//WP_DEMP2,
@@ -1360,6 +1363,25 @@ Don't place this
 		"@MENUS_THE_PRIMARY_WEAPON_OF"				// description
 	},
 
+	
+/*QUAKED weapon_CloneTrooper_Rifle (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+*/
+	{
+		"weapon_CloneTrooper_Rifle",
+		"sound/weapons/w_pkup.wav",
+		{ "models/weapons3/heavy_repeater/heavy_repeater_w.glm",
+		0, 0, 0 },
+		/* view */		"models/weapons3/heavy_repeater/heavy_repeater.md3",
+		/* icon */		"gfx/hud/w_icon_clonerifle",
+		/* pickup *///	"Clone Trooper Rifle",
+		100,
+		IT_WEAPON,
+		WP_CLONERIFLE,
+		/* precache */ "",
+		/* sounds */ "",
+		"@MENUS_THE_PRIMARY_WEAPON_OF"				// description
+	},
+
 /*QUAKED weapon_blaster (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
 */
 	{
@@ -1419,10 +1441,10 @@ Don't place this
 	{
 		"weapon_repeater",
 		"sound/weapons/w_pkup.wav",
-        { "models/weapons2/heavy_repeater/heavy_repeater_w.glm",
+        { "models/weapons3/imperial_repeater/heavy_repeater_w.glm",
 		0, 0, 0},
-/* view */		"models/weapons2/heavy_repeater/heavy_repeater.md3",
-/* icon */		"gfx/hud/w_icon_repeater",
+/* view */		"models/weapons3/imperial_repeater/heavy_repeater_1.md3",
+/* icon */		"gfx/hud/w_icon_imperial_repeater",
 /* pickup *///	"Imperial Heavy Repeater",
 		100,
 		IT_WEAPON,

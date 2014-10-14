@@ -749,6 +749,9 @@ typedef struct weaponInfo_s {
 	sfxHandle_t		altMissileHitSound;
 
 	sfxHandle_t		selectSound;
+	sfxHandle_t		spinSound;
+	sfxHandle_t		spinupSound;
+	sfxHandle_t		spindownSound;
 
 	sfxHandle_t		readySound;
 	float			trailRadius;
