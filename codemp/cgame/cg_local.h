@@ -1561,13 +1561,11 @@ typedef struct cgEffects_s {
 
 	// DEMP2
 	fxHandle_t  demp2ProjectileEffect;
-	fxHandle_t  demp2ShotEffect;
+	fxHandle_t  demp2Lvl3ShotEffect;
 	fxHandle_t  demp2WallImpactEffect;
-	fxHandle_t  newdemp2WallImpactEffect;
-
+	fxHandle_t  demp2WallImpactEffectEnhanced;
 	fxHandle_t  demp2WallBounceEffect;
-	fxHandle_t  newdemp2WallBounceEffect;
-
+	fxHandle_t  demp2WallBounceEffectEnhanced;
 	fxHandle_t  demp2FleshImpactEffect;
 
 	// FLECHETTE

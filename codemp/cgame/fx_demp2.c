@@ -21,18 +21,60 @@ FX_DEMP2_ProjectileThink
 ---------------------------
 */
 
-void FX_DEMP2_ProjectileThink( centity_t *cent, const struct weaponInfo_s *weapon )
+//void FX_DEMP2_ProjectileThink( centity_t *cent, const struct weaponInfo_s *weapon )
+//{
+//	vec3_t forward;
+//
+//	if ( VectorNormalize2( cent->currentState.pos.trDelta, forward ) == 0.0f )
+//	{
+//		forward[2] = 1.0f;
+//	}
+//
+//	trap->FX_PlayEffectID( cgs.effects.demp2ProjectileEffect, cent->lerpOrigin, forward, -1, -1, qfalse );
+//
+//	FX_DEMP2AddLight(cent->lerpOrigin);
+//}
+
+void FX_DEMP2_ProjectileThink(centity_t *cent, const struct weaponInfo_s *weapon)
 {
 	vec3_t forward;
+	int t;
 
-	if ( VectorNormalize2( cent->currentState.pos.trDelta, forward ) == 0.0f )
+	if (VectorNormalize2(cent->currentState.pos.trDelta, forward) == 0.0f)
 	{
 		forward[2] = 1.0f;
 	}
 
-	trap->FX_PlayEffectID( cgs.effects.demp2ProjectileEffect, cent->lerpOrigin, forward, -1, -1, qfalse );
+	if (cent->currentState.generic1 == 6)
+	{
+		if (weapon->missile3Renderfx)
+		{
+			for (t = 1; t < (cent->currentState.generic1 - 1); t++) 
+			{
+				// just add ourselves over, and over, and over when we are charged
+				trap->FX_PlayEffectID(weapon->missile3Renderfx, cent->lerpOrigin, forward, -1, -1, qfalse);
 
-	FX_DEMP2AddLight(cent->lerpOrigin);
+			}
+		}
+		else
+		{
+			for (t = 1; t < (cent->currentState.generic1 - 1); t++)
+			{
+				trap->FX_PlayEffectID(cgs.effects.demp2Lvl3ShotEffect, cent->lerpOrigin, forward, -1, -1, qfalse);
+			}
+		}
+	}
+	else
+	{
+		if (weapon->missileRenderfx)
+		{
+			trap->FX_PlayEffectID(weapon->missileRenderfx, cent->lerpOrigin, forward, -1, -1, qfalse);
+		}
+		else
+		{
+			trap->FX_PlayEffectID(cgs.effects.demp2ProjectileEffect, cent->lerpOrigin, forward, -1, -1, qfalse);
+		}
+	}
 }
 
 /*
@@ -48,7 +90,7 @@ void FX_DEMP2_HitWall( vec3_t origin, vec3_t normal )
 
 void FX_DEMP2_BounceWall(vec3_t origin, vec3_t normal)
 {
-	trap->FX_PlayEffectID(cgs.effects.newdemp2WallBounceEffect, origin, normal, -1, -1, qfalse);
+	trap->FX_PlayEffectID(cgs.effects.demp2WallBounceEffect, origin, normal, -1, -1, qfalse);
 }
 
 /*

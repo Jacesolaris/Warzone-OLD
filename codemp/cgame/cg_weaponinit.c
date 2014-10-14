@@ -451,12 +451,11 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altMissileTrailFunc = 0;
 
 		cgs.effects.demp2ProjectileEffect = trap->FX_RegisterEffect("demp2/projectile");
-		cgs.effects.demp2ShotEffect = trap->FX_RegisterEffect("demp2/shot");
+		cgs.effects.demp2Lvl3ShotEffect = trap->FX_RegisterEffect("demp2/lvl3_shot");
 		cgs.effects.demp2WallImpactEffect = trap->FX_RegisterEffect("demp2/wall_impact");
-		//cgs.effects.newdemp2WallBounceEffect = trap->FX_RegisterEffect("demp2/wall_impact_enhanced2");
-
+		cgs.effects.demp2WallImpactEffectEnhanced = trap->FX_RegisterEffect("demp2/wall_impact_enhanced2");
 		cgs.effects.demp2WallBounceEffect = trap->FX_RegisterEffect("demp2/wall_bounce");
-		//cgs.effects.newdemp2WallBounceEffect = trap->FX_RegisterEffect("demp2/wall_bounce_enhanced2");
+		cgs.effects.demp2WallBounceEffectEnhanced = trap->FX_RegisterEffect("demp2/wall_bounce_enhanced2");
 
 		cgs.media.demp2Shell = trap->R_RegisterModel("models/items/sphere.md3");
 		cgs.media.demp2ShellShader = trap->R_RegisterShader("gfx/effects/demp2shell");
