@@ -2,7 +2,6 @@
 
 uniform sampler2D u_DiffuseMap;
 varying vec4	var_Local1; // parallaxScale, 0, 0, 0
-varying vec4	var_Local2; // 0, 0, 0, 0
 varying vec2	var_Dimensions;
 
 #if defined(USE_LIGHTMAP)

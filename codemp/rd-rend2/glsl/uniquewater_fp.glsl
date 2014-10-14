@@ -1,15 +1,11 @@
 //#ifdef GL_ES
-precision highp float;
+//precision highp float;
 //#endif
 
 uniform sampler2D u_DiffuseMap;
 
-varying vec3	var_Normal;
-varying vec3	var_ViewDir;
 varying vec2	var_TexCoords;
 varying vec2	var_Dimensions;
-varying vec4	var_Local1;
-varying vec4	var_Local2;
 varying float	time;
 
 

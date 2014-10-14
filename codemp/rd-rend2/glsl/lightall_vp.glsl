@@ -1,11 +1,10 @@
 attribute vec2 attr_TexCoord0;
 
-uniform vec4   u_Local1; // parallaxScale, 0, 0, 0
-varying vec4	var_Local1; // parallaxScale, 0, 0, 0
-uniform vec4	u_Local2;
-varying vec4	var_Local2; // surfaceType, time, 0, 0
+uniform vec4	u_Local1; // parallaxScale, 0, 0, 0
 uniform vec2	u_Dimensions;
-varying vec2   var_Dimensions;
+
+varying vec4	var_Local1; // parallaxScale, 0, 0, 0
+varying vec2	var_Dimensions;
 
 #if defined(USE_LIGHTMAP) || defined(USE_TCGEN)
 attribute vec2 attr_TexCoord1;
@@ -293,6 +292,5 @@ void main()
 
   var_Dimensions = u_Dimensions;
   var_Local1 = u_Local1;
-  var_Local2 = u_Local2;
 #endif
 }

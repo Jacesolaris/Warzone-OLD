@@ -78,19 +78,13 @@ varying vec2   var_LightTex;
 varying vec4   var_Color;
 
 uniform vec2	u_Dimensions;
-uniform vec4	u_Local1;
-uniform vec4	u_Local2;
 uniform vec3	u_ViewOrigin;
 #ifndef USE_DEFORM_VERTEXES
 uniform float	u_Time;
 #endif
 
-varying vec3	var_Normal;
-varying vec3	var_ViewDir;
 varying vec2	var_TexCoords;
 varying vec2	var_Dimensions;
-varying vec4	var_Local1;
-varying vec4	var_Local2;
 varying float	time;
 
 #if defined(USE_DEFORM_VERTEXES)
@@ -274,33 +268,6 @@ void main()
 
 	var_TexCoords = tex;
 
-#if defined(USE_TCMOD)
-	var_DiffuseTex = ModTexCoords(tex, position, u_DiffuseTexMatrix, u_DiffuseTexOffTurb);
-	var_TexCoords = var_DiffuseTex;
-#else
-    var_DiffuseTex = tex;
-#endif
-
-#if defined(USE_LIGHTMAP)
-	var_LightTex = attr_TexCoord1.st;
-#endif
-
-#if defined(USE_RGBAGEN)
-	var_Color = CalcColor(position, normal);
-#else
-	var_Color = u_VertColor * attr_Color + u_BaseColor;
-#endif
-
-#if defined(USE_FOG)
-	var_Color *= vec4(1.0) - u_FogColorMask * sqrt(clamp(CalcFog(position), 0.0, 1.0));
-#endif
-
-	vec3 viewDir = u_ViewOrigin - position;
-
-	var_Normal = normal;
-	var_ViewDir = viewDir;
 	var_Dimensions = u_Dimensions.st;
-	var_Local1 = u_Local1;
-	var_Local2 = u_Local2;
 	time = u_Time;
 }

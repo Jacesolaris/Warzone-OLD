@@ -6,27 +6,46 @@ attribute vec3 attr_Normal;
 
 uniform vec4   u_DlightInfo;
 
+#if 0
 #if defined(USE_DEFORM_VERTEXES)
 uniform int    u_DeformGen;
 uniform float  u_DeformParams[5];
 uniform float  u_Time;
 #endif
+#endif
 
 uniform mat4   u_ModelViewProjectionMatrix;
 
 uniform vec4   u_LightColor;
-uniform vec4   u_LightOrigin;
-uniform float   u_LightRadius;
+uniform vec4   u_LightColor1;
+uniform vec4   u_LightColor2;
+uniform vec4   u_LightColor3;
+uniform vec4   u_LightColor4;
+uniform vec4   u_LightColor5;
+uniform vec4   u_LightColor6;
+uniform vec4   u_LightColor7;
 
-varying vec2	var_Tex1;
+uniform vec4   u_LightOrigin;
+uniform vec4   u_LightOrigin1;
+uniform vec4   u_LightOrigin2;
+uniform vec4   u_LightOrigin3;
+uniform vec4   u_LightOrigin4;
+uniform vec4   u_LightOrigin5;
+uniform vec4   u_LightOrigin6;
+uniform vec4   u_LightOrigin7;
+
+#define			MAX_VARYING_LIGHTS 8
+
+vec4			LightOrigins[MAX_VARYING_LIGHTS];
+
 varying vec3	var_Normal;
 varying vec3	var_Position;
-varying vec4	var_LightColor;
-varying vec4	var_LightOrigin;
-varying float   var_LightRadius;
-varying vec3	var_LightDir;
+varying vec2	var_Tex1[MAX_VARYING_LIGHTS];
+varying vec4	var_LightColor[MAX_VARYING_LIGHTS];
+varying vec3	var_LightDir[MAX_VARYING_LIGHTS];
+varying float	var_NumLights;
 
-
+#if 0
 #if defined(USE_DEFORM_VERTEXES)
 vec3 DeformPosition(const vec3 pos, const vec3 normal, const vec2 st)
 {
@@ -81,14 +100,17 @@ vec3 DeformPosition(const vec3 pos, const vec3 normal, const vec2 st)
 	return pos + normal * (base + func * amplitude);
 }
 #endif
+#endif
 
 void main()
 {
 	vec3 position = attr_Position;
 	vec3 normal = attr_Normal * 2.0 - vec3(1.0);
 
+#if 0
 #if defined(USE_DEFORM_VERTEXES)
 	position = DeformPosition(position, normal, attr_TexCoord0.st);
+#endif
 #endif
 
 	gl_Position = u_ModelViewProjectionMatrix * vec4(position, 1.0);
@@ -98,16 +120,42 @@ void main()
 
 	// Transform the vertex position to eye space (V)
 	var_Position = -vec3(u_ModelViewProjectionMatrix * vec4(position, 1.0));
-		
-	vec3 dist = u_LightOrigin.xyz - position;
 
-	var_Tex1 = dist.xy * u_LightOrigin.a + vec2(0.5);
+	LightOrigins[0] = u_LightOrigin;
+	LightOrigins[1] = u_LightOrigin1;
+	LightOrigins[2] = u_LightOrigin2;
+	LightOrigins[3] = u_LightOrigin3;
+	LightOrigins[4] = u_LightOrigin4;
+	LightOrigins[5] = u_LightOrigin5;
+	LightOrigins[6] = u_LightOrigin6;
+	LightOrigins[7] = u_LightOrigin7;
 
-	float dlightmod = step(0.0, dot(dist, normal));
-	dlightmod *= clamp(2.0 * (1.0 - abs(dist.x + dist.y + dist.z) * u_LightOrigin.a), 0.0, 1.0);
+	var_LightColor[0] = u_LightColor;
+	var_LightColor[1] = u_LightColor1;
+	var_LightColor[2] = u_LightColor2;
+	var_LightColor[3] = u_LightColor3;
+	var_LightColor[4] = u_LightColor4;
+	var_LightColor[5] = u_LightColor5;
+	var_LightColor[6] = u_LightColor6;
+	var_LightColor[7] = u_LightColor7;
 	
-	var_LightColor = (u_LightColor * dlightmod);
-	var_LightOrigin = u_LightOrigin;
-	var_LightRadius = u_LightRadius;
-	var_LightDir = dist;
+	for (int light = 0; light < MAX_VARYING_LIGHTS; light++)
+	{
+		var_NumLights = light;
+
+		if (var_LightColor[light].x == 0 && var_LightColor[light].y == 0 && var_LightColor[light].z == 0)
+		{
+			break; // We found the last one...
+		}
+
+		vec3 dist = LightOrigins[light].xyz - position;
+
+		var_Tex1[light] = dist.xy * LightOrigins[light].a + vec2(0.5);
+
+		float dlightmod = step(0.0, dot(dist, normal));
+		dlightmod *= clamp(2.0 * (1.0 - abs(dist.x + dist.y + dist.z) * LightOrigins[light].a), 0.0, 1.0);
+	
+		var_LightColor[light] = (var_LightColor[light] * dlightmod);
+		var_LightDir[light] = dist;
+	}
 }

@@ -14,8 +14,6 @@ varying vec2      var_LightTex;
 
 varying vec4      var_Color;
 
-varying vec2	  var_Dimensions;
-
 out vec4 out_Glow;
 
 void main()

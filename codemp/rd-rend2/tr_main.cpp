@@ -2050,9 +2050,6 @@ void R_RenderDlightCubemaps(const refdef_t *fd)
 {
 	int i;
 
-	#pragma omp parallel //num_threads(8)
-	{
-#pragma omp parallel for
 	for (i = 0; i < tr.refdef.num_dlights; i++)
 	{
 		viewParms_t		shadowParms;
@@ -2125,7 +2122,6 @@ void R_RenderDlightCubemaps(const refdef_t *fd)
 			R_AddCapShadowmapCmd( i, j );
 		}
 	}
-	}
 }
 
 
@@ -2135,9 +2131,6 @@ void R_RenderPshadowMaps(const refdef_t *fd)
 	int i;
 
 	// first, make a list of shadows
-	#pragma omp parallel //num_threads(8)
-	{
-#pragma omp parallel for
 	for ( i = 0; i < tr.refdef.num_entities; i++)
 	{
 		trRefEntity_t *ent = &tr.refdef.entities[i];
@@ -2242,7 +2235,6 @@ void R_RenderPshadowMaps(const refdef_t *fd)
 				shadow = swap;
 			}
 		}
-	}
 	}
 
 	// next, merge touching pshadows

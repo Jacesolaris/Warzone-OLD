@@ -3105,9 +3105,6 @@ void R_MergeLeafSurfaces(void)
 	}
 
 	// mark matching surfaces
-	#pragma omp parallel num_threads(8)
-	{
-#pragma omp parallel for
 	for (i = 0; i < s_worldData.numnodes - s_worldData.numDecisionNodes; i++)
 	{
 		mnode_t *leaf = s_worldData.nodes + s_worldData.numDecisionNodes + i;
@@ -3183,12 +3180,8 @@ void R_MergeLeafSurfaces(void)
 			}
 		}
 	}
-	}
 
 	// don't add surfaces that don't merge to any others to the merged list
-	#pragma omp parallel num_threads(8)
-	{
-#pragma omp parallel for
 	for (i = 0; i < numWorldSurfaces; i++)
 	{
 		qboolean merges = qfalse;
@@ -3211,15 +3204,11 @@ void R_MergeLeafSurfaces(void)
 		if (!merges)
 			s_worldData.surfacesViewCount[i] = -1;
 	}	
-	}
 
 	// count merged/unmerged surfaces
 	numMergedSurfaces = 0;
 	numUnmergedSurfaces = 0;
 
-	#pragma omp parallel num_threads(8)
-	{
-#pragma omp parallel for
 	for (i = 0; i < numWorldSurfaces; i++)
 	{
 		if (s_worldData.surfacesViewCount[i] == i)
@@ -3230,7 +3219,6 @@ void R_MergeLeafSurfaces(void)
 		{
 			numUnmergedSurfaces++;
 		}
-	}
 	}
 
 	// Allocate merged surfaces
@@ -3258,9 +3246,6 @@ void R_MergeLeafSurfaces(void)
 	mergedSurfIndex = 0;
 	mergedSurf = s_worldData.mergedSurfaces;
 
-	#pragma omp parallel num_threads(8)
-	{
-#pragma omp parallel for
 	for (i = 0; i < numWorldSurfaces; i++)
 	{
 		msurface_t *surf1;
@@ -3401,7 +3386,6 @@ void R_MergeLeafSurfaces(void)
 
 		mergedSurfIndex++;
 		mergedSurf++;
-	}
 	}
 
 	endTime = ri->Milliseconds();
