@@ -501,7 +501,7 @@ void CG_RegisterWeapon( int weaponNum) {
 	case WP_EMPLACED_GUN: //rww - just use the same as this for now..
 		weaponInfo->selectSound			= trap->S_RegisterSound("sound/weapons/blaster/select.wav");
 
-		weaponInfo->flashSound[0]		= trap->S_RegisterSound( "sound/weapons/blaster/fire.wav");
+		weaponInfo->flashSound[0]		= trap->S_RegisterSound( "sound/weapons/blasterMB/fire.wav");
 		weaponInfo->firingSound			= NULL_SOUND;
 		weaponInfo->chargeSound			= NULL_SOUND;
 		weaponInfo->muzzleEffect		= trap->FX_RegisterEffect( "blaster/muzzle_flash" );
@@ -513,7 +513,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->missileHitSound		= NULL_SOUND;
 		weaponInfo->missileTrailFunc	= FX_BlasterProjectileThink;
 
-		weaponInfo->altFlashSound[0]	= trap->S_RegisterSound( "sound/weapons/blaster/alt_fire.wav");
+		weaponInfo->altFlashSound[0]	= trap->S_RegisterSound( "sound/weapons/blasterMB/alt_fire.wav");
 		weaponInfo->altFiringSound		= NULL_SOUND;
 		weaponInfo->altChargeSound		= NULL_SOUND;
 		weaponInfo->altMuzzleEffect		= trap->FX_RegisterEffect( "blaster/muzzle_flash" );
