@@ -292,9 +292,9 @@ static	void R_LoadLightmaps( lump_t *l, lump_t *surfs ) {
 
 	if (r_mergeLightmaps->integer)
 	{
-		#pragma omp parallel num_threads(8)
+		//#pragma omp parallel num_threads(8)
 		{
-#pragma omp parallel for
+//#pragma omp parallel for
 		for (i = 0; i < tr.numLightmaps; i++)
 		{
 			tr.lightmaps[i] = R_CreateImage(va("_fatlightmap%d", i), NULL, tr.fatLightmapSize, tr.fatLightmapSize, IMGTYPE_COLORALPHA, IMGFLAG_NOLIGHTSCALE | IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, textureInternalFormat );
@@ -382,9 +382,9 @@ static	void R_LoadLightmaps( lump_t *l, lump_t *surfs ) {
 					buf_p = buf + i * tr.lightmapSize * tr.lightmapSize * 3;
 			}
 
-			#pragma omp parallel num_threads(8)
+			//#pragma omp parallel num_threads(8)
 			{
-#pragma omp parallel for
+//#pragma omp parallel for
 			for ( j = 0 ; j < tr.lightmapSize * tr.lightmapSize; j++ ) 
 			{
 				if (hdrLightmap)
@@ -488,9 +488,9 @@ static	void R_LoadLightmaps( lump_t *l, lump_t *surfs ) {
 		{
 			buf_p = buf + (i * 2 + 1) * tr.lightmapSize * tr.lightmapSize * 3;
 
-			#pragma omp parallel num_threads(8)
+			//#pragma omp parallel num_threads(8)
 			{
-#pragma omp parallel for
+//#pragma omp parallel for
 			for ( j = 0 ; j < tr.lightmapSize * tr.lightmapSize; j++ ) {
 				image[j*4+0] = buf_p[j*3+0];
 				image[j*4+1] = buf_p[j*3+1];
@@ -878,9 +878,9 @@ static void ParseMesh ( dsurface_t *ds, drawVert_t *verts, float *hdrVertColors,
 	verts += LittleLong( ds->firstVert );
 	numPoints = width * height;
 
-	#pragma omp parallel num_threads(8)
+	//#pragma omp parallel num_threads(8)
 	{
-#pragma omp parallel for
+//#pragma omp parallel for
 	for(i = 0; i < numPoints; i++)
 	{
 		vec4_t color;
@@ -987,9 +987,9 @@ static void ParseTriSurf( dsurface_t *ds, drawVert_t *verts, float *hdrVertColor
 	ClearBounds(surf->cullinfo.bounds[0], surf->cullinfo.bounds[1]);
 	verts += LittleLong(ds->firstVert);
 
-	#pragma omp parallel num_threads(8)
+	//#pragma omp parallel num_threads(8)
 	{
-#pragma omp parallel for
+//#pragma omp parallel for
 	for(i = 0; i < numVerts; i++)
 	{
 		vec4_t color;
@@ -1285,9 +1285,9 @@ void R_FixSharedVertexLodError( void ) {
 	int i;
 	srfBspSurface_t *grid1;
 
-	#pragma omp parallel num_threads(8)
+	//#pragma omp parallel num_threads(8)
 	{
-#pragma omp parallel for
+//#pragma omp parallel for
 	for ( i = 0; i < s_worldData.numsurfaces; i++ ) {
 		//
 		grid1 = (srfBspSurface_t *) s_worldData.surfaces[i].data;
@@ -2674,9 +2674,9 @@ void R_LoadLightGrid( lump_t *l ) {
 	Com_Memcpy( w->lightGridData, (void *)(fileBase + l->fileofs), l->filelen );
 
 	// deal with overbright bits
-	#pragma omp parallel num_threads(8)
+	//#pragma omp parallel num_threads(8)
 	{
-#pragma omp parallel for
+//#pragma omp parallel for
 	for ( i = 0 ; i < numGridDataElements ; i++ ) 
 	{
 		for(int j = 0; j < MAXLIGHTMAPS; j++)
@@ -3011,9 +3011,9 @@ static void R_AssignCubemapsToWorldSurfaces(void)
 
 	w = &s_worldData;
 
-	#pragma omp parallel num_threads(8)
+	//#pragma omp parallel num_threads(8)
 	{
-#pragma omp parallel for
+//#pragma omp parallel for
 	for (i = 0; i < w->numsurfaces; i++)
 	{
 		msurface_t *surf = &w->surfaces[i];
@@ -3415,9 +3415,9 @@ static void R_CalcVertexLightDirs( void )
 			case SF_FACE:
 			case SF_GRID:
 			case SF_TRIANGLES:
-				#pragma omp parallel num_threads(8)
+				//#pragma omp parallel num_threads(8)
 				{
-#pragma omp parallel for
+//#pragma omp parallel for
 				for(i = 0; i < bspSurf->numVerts; i++)
 					R_LightDirForPoint( bspSurf->verts[i].xyz, bspSurf->verts[i].lightdir, bspSurf->verts[i].normal, &s_worldData );
 				}

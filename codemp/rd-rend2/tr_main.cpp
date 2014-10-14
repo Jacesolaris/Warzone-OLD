@@ -937,9 +937,9 @@ void R_SetupFrustum (viewParms_t *dest, float xmin, float xmax, float ymax, floa
 	VectorScale(dest->ori.axis[0], oppleg, dest->frustum[3].normal);
 	VectorMA(dest->frustum[3].normal, -adjleg, dest->ori.axis[2], dest->frustum[3].normal);
 	
-	#pragma omp parallel //num_threads(8)
+	//#pragma omp parallel //num_threads(8)
 	{
-#pragma omp parallel for
+//#pragma omp parallel for
 	for (i=0 ; i<4 ; i++) {
 		dest->frustum[i].type = PLANE_NON_AXIAL;
 		dest->frustum[i].dist = DotProduct (ofsorigin, dest->frustum[i].normal);
@@ -1137,9 +1137,9 @@ void R_SetupProjectionOrtho(viewParms_t *dest, vec3_t viewBounds[2])
 	VectorMA(dest->ori.origin, -viewBounds[1][0], dest->frustum[4].normal, pop);
 	dest->frustum[4].dist = DotProduct(pop, dest->frustum[4].normal);
 	
-	#pragma omp parallel //num_threads(8)
+	//#pragma omp parallel //num_threads(8)
 	{
-#pragma omp parallel for
+//#pragma omp parallel for
 	for (i = 0; i < 5; i++)
 	{
 		dest->frustum[i].type = PLANE_NON_AXIAL;
@@ -1437,9 +1437,9 @@ static qboolean SurfIsOffscreen( const drawSurf_t *drawSurf, vec4_t clipDest[128
 
 	assert( tess.numVertexes < 128 );
 
-	#pragma omp parallel //num_threads(8)
+	//#pragma omp parallel //num_threads(8)
 	{
-#pragma omp parallel for
+//#pragma omp parallel for
 	for ( i = 0; i < tess.numVertexes; i++ )
 	{
 		int j;
@@ -1476,9 +1476,9 @@ static qboolean SurfIsOffscreen( const drawSurf_t *drawSurf, vec4_t clipDest[128
 	// we have in the game right now.
 	numTriangles = tess.numIndexes / 3;
 
-	#pragma omp parallel //num_threads(8)
+	//#pragma omp parallel //num_threads(8)
 	{
-#pragma omp parallel for
+//#pragma omp parallel for
 	for ( i = 0; i < tess.numIndexes; i += 3 )
 	{
 		vec3_t normal, tNormal;

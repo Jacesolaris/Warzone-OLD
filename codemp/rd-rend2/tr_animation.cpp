@@ -358,9 +358,9 @@ void RB_MDRSurfaceAnim( mdrSurface_t *surface )
 	baseVertex	= tess.numVertexes;
 	
 	// Set up all triangles.
-	#pragma omp parallel //num_threads(8)
+	//#pragma omp parallel //num_threads(8)
 	{
-#pragma omp parallel for
+//#pragma omp parallel for
 	for (j = 0 ; j < indexes ; j++) 
 	{
 		tess.indexes[baseIndex + j] = baseVertex + triangles[j];
@@ -380,9 +380,9 @@ void RB_MDRSurfaceAnim( mdrSurface_t *surface )
 	{
 		bonePtr = bones;
 		
-		#pragma omp parallel //num_threads(8)
+		//#pragma omp parallel //num_threads(8)
 		{
-#pragma omp parallel for
+//#pragma omp parallel for
 		for ( i = 0 ; i < header->numBones*12 ; i++ ) 
 		{
 			((float *)bonePtr)[i] = frontlerp * ((float *)frame->bones)[i] + backlerp * ((float *)oldFrame->bones)[i];
@@ -396,9 +396,9 @@ void RB_MDRSurfaceAnim( mdrSurface_t *surface )
 	numVerts = surface->numVerts;
 	v = (mdrVertex_t *) ((byte *)surface + surface->ofsVerts);
 
-	#pragma omp parallel //num_threads(8)
+	//#pragma omp parallel //num_threads(8)
 	{
-#pragma omp parallel for
+//#pragma omp parallel for
 	for ( j = 0; j < numVerts; j++ ) 
 	{
 		vec3_t	tempVert, tempNormal;

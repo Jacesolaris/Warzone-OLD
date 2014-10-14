@@ -6665,10 +6665,10 @@ void Grenader_SelectBestWeapon( void )
 
 void Jedi_SelectBestWeapon( void )
 {
-	if ( NPCS.NPC->client->ps.weapon != WP_BLASTER 
+	if ( NPCS.NPC->client->ps.weapon != WP_WESTARM5 
 		&& Distance( NPCS.NPC->r.currentOrigin, NPCS.NPC->enemy->r.currentOrigin ) > 768 )
 	{
-		Boba_ChangeWeapon( WP_BLASTER );
+		Boba_ChangeWeapon( WP_WESTARM5 );
 		return;
 	}
 	else if ( NPCS.NPC->client->ps.weapon != WP_SABER )
@@ -6688,10 +6688,10 @@ void Jedi_SelectBestWeapon( void )
 
 void BOT_SelectBestWeapon( void )
 {
-	if ( NPCS.NPC->client->ps.weapon != WP_BLASTER 
+	if ( NPCS.NPC->client->ps.weapon != WP_WESTARM5 
 		&& Distance( NPCS.NPC->r.currentOrigin, NPCS.NPC->enemy->r.currentOrigin ) > 512 )
 	{
-		Fast_ChangeWeapon( WP_BLASTER );
+		Fast_ChangeWeapon( WP_WESTARM5 );
 		return;
 	}
 	/*if ( NPCS.NPC->client->ps.weapon != WP_REPEATER 
