@@ -732,7 +732,7 @@ typedef struct weaponInfo_s {
 	float			missileDlight;
 	vec3_t			missileDlightColor;
 	int				missileRenderfx;
-	int				newmissileRenderfx;
+	int				missile3Renderfx;
 	int				powerupShotRenderfx;
 	sfxHandle_t		missileHitSound;
 
@@ -1523,20 +1523,28 @@ typedef struct cgMedia_s {
 typedef struct cgEffects_s {
 	//concussion
 	fxHandle_t	concussionShotEffect;
+	fxHandle_t	concussionAltShotEffect;
+	fxHandle_t	concussionAltImpactEffect;
 	fxHandle_t	concussionImpactEffect;
+	fxHandle_t	ionBlastShotEffect;
 
 	// BRYAR PISTOL
 	fxHandle_t	bryarShotEffect;
+	fxHandle_t  bryarLvl3ShotEffect;
 	fxHandle_t	bryarPowerupShotEffect;
 	fxHandle_t	bryarWallImpactEffect;
+	fxHandle_t	bryarWallImpactEffectEnhanced;
 	fxHandle_t	bryarWallImpactEffect2;
+	fxHandle_t	bryarWallImpactEffect2Enhanced;
 	fxHandle_t	bryarWallImpactEffect3;
+	fxHandle_t	bryarWallImpactEffect3Enhanced;
 	fxHandle_t	bryarFleshImpactEffect;
 	fxHandle_t	bryarDroidImpactEffect;
 
 	// BLASTER
 	fxHandle_t  blasterShotEffect;
 	fxHandle_t  blasterWallImpactEffect;
+	fxHandle_t  blasterWallImpactEffectEnhanced;
 	fxHandle_t  blasterFleshImpactEffect;
 	fxHandle_t  blasterDroidImpactEffect;
 
@@ -1544,6 +1552,7 @@ typedef struct cgEffects_s {
 	fxHandle_t  disruptorRingsEffect;
 	fxHandle_t  disruptorProjectileEffect;
 	fxHandle_t  disruptorWallImpactEffect;
+	fxHandle_t  disruptorWallImpactEffectEnhanced;
 	fxHandle_t  disruptorFleshImpactEffect;
 	fxHandle_t  disruptorAltMissEffect;
 	fxHandle_t  disruptorAltHitEffect;
@@ -1551,11 +1560,13 @@ typedef struct cgEffects_s {
 	// BOWCASTER
 	fxHandle_t	bowcasterShotEffect;
 	fxHandle_t	bowcasterImpactEffect;
+	fxHandle_t	bowcasterImpactEffectEnhanced;
 
 	// REPEATER
 	fxHandle_t  repeaterProjectileEffect;
 	fxHandle_t  repeaterAltProjectileEffect;
 	fxHandle_t  repeaterWallImpactEffect;
+	fxHandle_t  repeaterWallImpactEffectEnhanced;
 	fxHandle_t  repeaterFleshImpactEffect;
 	fxHandle_t  repeaterAltWallImpactEffect;
 
@@ -1572,19 +1583,67 @@ typedef struct cgEffects_s {
 	fxHandle_t	flechetteShotEffect;
 	fxHandle_t	flechetteAltShotEffect;
 	fxHandle_t	flechetteWallImpactEffect;
+	fxHandle_t	flechetteWallImpactEffectEnhanced;
 	fxHandle_t	flechetteFleshImpactEffect;
+
+	//EE-3
+	fxHandle_t	ee3ShotEffect;
+	fxHandle_t	ee3AltShotEffect;
 
 	// ROCKET
 	fxHandle_t  rocketShotEffect;
+	fxHandle_t  pulserocketShotEffect;
 	fxHandle_t  rocketExplosionEffect;
+	fxHandle_t  rocketExplosionEffectEnhanced;
+	fxHandle_t	pulserocketExplosionEffect;
+	fxHandle_t	pulserocketExplosionEffectEnhanced;
+
 
 	// THERMAL
+	fxHandle_t	thermalShotEffect;
+	fxHandle_t	thermalShotEffect2;
+	fxHandle_t	fireGrenadeShotEffect;
+	fxHandle_t	fireGrenadeShotEffect2;
+	fxHandle_t	sonicGrenadeShotEffect;
+	fxHandle_t	sonicGrenadeShotEffect2;
+	fxHandle_t	concussionGrenadeShotEffect;
+	fxHandle_t	concussionGrenadeShotEffect2;
+	fxHandle_t	concussionExplosionEffect;
+	fxHandle_t	concussionExplosionEffectEnhanced;
+	fxHandle_t	thermalRealShotEffect;
+	fxHandle_t	thermalRealShotEffect2;
 	fxHandle_t	thermalExplosionEffect;
+	fxHandle_t	thermalExplosionEffectEnhanced;
+	fxHandle_t	thermalExplosionAltEffect;
+	fxHandle_t	thermalExplosionAltEffectEnhanced;
 	fxHandle_t	thermalShockwaveEffect;
+	fxHandle_t	thermalRealExplosion;
+	fxHandle_t	thermalRealExplosionEnhanced;
+	fxHandle_t	fireGrenadeFireBlob;
+	fxHandle_t	fireGrenadeExplosion;
+	fxHandle_t	fireGrenadeWaterBurst;
+	fxHandle_t	fireGrenadeSlimeBurst;
+	fxHandle_t	fireGrenadePart;
+	fxHandle_t	fireGrenadeNapalm;
+	fxHandle_t	iceGrenadeExplosion;
+	fxHandle_t	iceGrenadeExplosionEnhanced;
+	fxHandle_t	iceTargetFreeze;
+	fxHandle_t	iceTargetFreezeEnhanced;
+	fxHandle_t	sonicGrenadeWave;
 
 	// TRIPMINE
 	fxHandle_t	tripmineLaserFX;
 	fxHandle_t	tripmineGlowFX;
+	fxHandle_t	pulseGrenadeShotEffect;
+	fxHandle_t	pulseGrenadeShotEffect2;
+	fxHandle_t	iceGrenadeShotEffect;
+	fxHandle_t	iceGrenadeShotEffect2;
+
+	// T-21
+	fxHandle_t	T21ShotEffect;
+
+	// WRIST LASER
+	fxHandle_t	wristLaserShotEffect;
 
 	//FORCE
 	fxHandle_t forceLightning;
@@ -1610,6 +1669,7 @@ typedef struct cgEffects_s {
 	fxHandle_t itemCone;
 
 	fxHandle_t	mSparks;
+	fxHandle_t	mSparksEnhanced1;
 	fxHandle_t	mSaberCut;
 	fxHandle_t	mTurretMuzzleFlash;
 	fxHandle_t	mSaberBlock;
