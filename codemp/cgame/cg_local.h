@@ -1530,7 +1530,7 @@ typedef struct cgEffects_s {
 
 	// BRYAR PISTOL
 	fxHandle_t	bryarShotEffect;
-	fxHandle_t  bryarLvl3ShotEffect;
+	fxHandle_t  bryarShotEffect1;
 	fxHandle_t	bryarPowerupShotEffect;
 	fxHandle_t	bryarWallImpactEffect;
 	fxHandle_t	bryarWallImpactEffectEnhanced;
