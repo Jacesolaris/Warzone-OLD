@@ -1180,6 +1180,9 @@ int GLSL_BeginLoadGPUShaders(void)
 		if (r_parallaxMapping->integer) // Parallax without normal maps...
 			Q_strcat(extradefines, 1024, "#define USE_PARALLAXMAP_NONORMALS\n");
 
+		if (r_parallaxMapping->integer && r_parallaxMapping->integer < 2) // Fast parallax mapping...
+			Q_strcat(extradefines, 1024, "#define FAST_PARALLAX\n");
+
 		if (!GLSL_BeginLoadGPUShader(&tr.genericShader[i], "generic", attribs, qtrue, extradefines, qtrue, fallbackShader_generic_vp, fallbackShader_generic_fp))
 		{
 			ri->Error(ERR_FATAL, "Could not load generic shader!");
@@ -1326,6 +1329,9 @@ int GLSL_BeginLoadGPUShaders(void)
 					Q_strcat(extradefines, 1024, "#define USE_PARALLAXMAP\n");
 				else if (r_parallaxMapping->integer) // Parallax without normal maps...
 					Q_strcat(extradefines, 1024, "#define USE_PARALLAXMAP_NONORMALS\n");
+
+				if (r_parallaxMapping->integer && r_parallaxMapping->integer < 2) // Fast parallax mapping...
+					Q_strcat(extradefines, 1024, "#define FAST_PARALLAX\n");
 			}
 			else if (r_parallaxMapping->integer) // Parallax without normal maps...
 			{
@@ -1334,6 +1340,9 @@ int GLSL_BeginLoadGPUShaders(void)
 				Q_strcat(extradefines, 1024, "#define USE_VERT_TANGENT_SPACE\n");
 				attribs |= ATTR_TANGENT;
 #endif
+
+				if (r_parallaxMapping->integer && r_parallaxMapping->integer < 2) // Fast parallax mapping...
+					Q_strcat(extradefines, 1024, "#define FAST_PARALLAX\n");
 			}
 
 			if (r_specularMapping->integer)
