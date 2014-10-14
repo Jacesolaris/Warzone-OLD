@@ -5,6 +5,8 @@
 
 //#define __JEDI_TRACKING__
 
+extern void NPC_ClearPathData ( gentity_t *NPC );
+
 extern qboolean BG_SabersOff( playerState_t *ps );
 
 extern void CG_DrawAlert( vec3_t origin, float rating );
@@ -5389,6 +5391,8 @@ static void Jedi_Combat( void )
 			{
 				//trap->Print("FAILED ROUTE!\n");
 
+				NPC_ClearPathData(NPCS.NPC);
+
 				if (!Jedi_Hunt()) 
 					Jedi_Track();
 			}
@@ -6160,6 +6164,7 @@ void NPC_BSJedi_FollowLeader( void )
 			else
 			{
 				//trap->Print("FAILED ROUTE!\n");
+				NPC_ClearPathData(NPCS.NPC);
 
 				if (!Jedi_Hunt()) 
 					Jedi_Track();

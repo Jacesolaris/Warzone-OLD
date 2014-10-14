@@ -4502,6 +4502,30 @@ qboolean NPC_RoutingJumpWaypoint ( int wpLast, int wpCurrent )
 	return qfalse;
 }
 
+qboolean NPC_RoutingIncreaseCost ( int wpLast, int wpCurrent )
+{
+	int			link = 0;
+	qboolean	found = qfalse;
+
+	if (wpLast < 0 || wpLast > gWPNum) return qfalse;
+	if (wpCurrent < 0 || wpCurrent > gWPNum) return qfalse;
+
+	for (link = 0; link < gWPArray[wpLast]->neighbornum; link++)
+	{
+		if (gWPArray[wpLast]->neighbors[link].num == wpCurrent) 
+		{// found it!
+			gWPArray[wpLast]->neighbors[link].cost *= 2;
+
+			gWPArray[wpLast]->neighbors[link].forceJumpTo = 1;
+
+			if (gWPArray[wpLast]->neighbors[link].cost < 1) 
+				gWPArray[wpLast]->neighbors[link].cost = 2;
+
+			break;
+		}
+	}
+}
+
 //#define __OLD_NPC_WAYPOINTING__
 
 qboolean NPC_FollowRoutes( void ) 
@@ -4639,6 +4663,11 @@ qboolean NPC_FollowRoutes( void )
 		//if (NPC->wpSeenTime < level.time - 5000) trap->Print("wpSeenTime.\n");
 		//if (NPC->wpTravelTime < level.time) trap->Print("wpTravelTime.\n");
 		//if (NPC->last_move_time < level.time - 5000) trap->Print("last_move_time.\n");
+
+		if (wpDist > 512 || NPC->wpTravelTime < level.time )
+		{
+			NPC_RoutingIncreaseCost( NPC->wpLast, NPC->wpCurrent );
+		}
 
 		NPC_ClearPathData(NPC);
 		NPC_SetNewGoalAndPath();
@@ -4958,6 +4987,12 @@ qboolean NPC_FollowEnemyRoute( void )
 		|| NPC->last_move_time < level.time - 5000 
 		|| Distance(gWPArray[NPC->longTermGoal]->origin, NPC->enemy->r.currentOrigin) > 256.0)
 	{// We hit a problem in route, or don't have one yet.. Find a new goal and path...
+
+		if (wpDist > 512 || NPC->wpTravelTime < level.time )
+		{
+			NPC_RoutingIncreaseCost( NPC->wpLast, NPC->wpCurrent );
+		}
+
 		NPC_ClearPathData(NPC);
 		NPC_SetNewEnemyGoalAndPath();
 		G_ClearEnemy(NPC); // UQ1: Give up...
