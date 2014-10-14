@@ -452,15 +452,18 @@ static void ProjectDlightTexture( void ) {
 		return;
 	}
 
+//#define MAX_SHADER_DLIGHTS 8
+#define MAX_SHADER_DLIGHTS 6
+
 	ComputeDeformValues(&deformGen, deformParams);
 
 #ifdef __SINGLE_PASS__
 
-	int NUM_PASSES = (backEnd.refdef.num_dlights / 8) + 1;
+	int NUM_PASSES = (backEnd.refdef.num_dlights / MAX_SHADER_DLIGHTS) + 1;
 
 	for (int i = 0; i < NUM_PASSES; i++)
 	{
-		int START_POS = i * 8;
+		int START_POS = i * MAX_SHADER_DLIGHTS;
 
 		backEnd.pc.c_dlightDraws++;
 
@@ -472,14 +475,16 @@ static void ProjectDlightTexture( void ) {
 
 		GLSL_SetUniformFloat(sp, UNIFORM_VERTEXLERP, glState.vertexAttribsInterpolation);
 
+#if 0
 		GLSL_SetUniformInt(sp, UNIFORM_DEFORMGEN, deformGen);
 		if (deformGen != DGEN_NONE)
 		{
 			GLSL_SetUniformFloat5(sp, UNIFORM_DEFORMPARAMS, deformParams);
 			GLSL_SetUniformFloat(sp, UNIFORM_TIME, tess.shaderTime);
 		}
+#endif
 
-		for ( l = START_POS ; l < backEnd.refdef.num_dlights && l - START_POS < 8; l++ ) {
+		for ( l = START_POS ; l < backEnd.refdef.num_dlights && l - START_POS < MAX_SHADER_DLIGHTS; l++ ) {
 			vec3_t		origin;
 			float		scale;
 			float		radius;

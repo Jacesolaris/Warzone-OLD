@@ -62,13 +62,13 @@ void ASTAR_InitWaypointCosts ( void )
 
 	if (ASTAR_COSTS_DONE || gWPNum <= 0) return;
 
-#pragma omp parallel //num_threads(8)
+//#pragma omp parallel //num_threads(8)
 	{
-#pragma omp parallel for
+//#pragma omp parallel for
 		// Init the waypoint link costs...
 		for (i = 0; i < gWPNum; i++)
 		{
-#pragma omp parallel for
+//#pragma omp parallel for
 			for (j = 0; j < gWPArray[i]->neighbornum; j++)
 			{
 				float ht = 0, hd = 0;
@@ -159,9 +159,9 @@ int ASTAR_FindPathFast(int from, int to, int *pathlist, qboolean shorten)
 	memset(list, 0, (sizeof(char)* gWPNum));
 	memset(parent, 0, (sizeof(int)* gWPNum));
 
-#pragma omp parallel //num_threads(8)
+//#pragma omp parallel //num_threads(8)
 	{
-#pragma omp parallel for
+//#pragma omp parallel for
 		for (i = 0; i < gWPNum; i++)
 		{
 			gcost[i] = Distance(gWPArray[i]->origin, gWPArray[to]->origin);
