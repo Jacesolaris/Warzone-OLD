@@ -47,11 +47,11 @@ void FX_DEMP2_ProjectileThink(centity_t *cent, const struct weaponInfo_s *weapon
 
 	if (cent->currentState.generic1 == 6)
 	{
-		if (weapon->missileRenderfx)
+		if (weapon->missile3Renderfx)
 		{
 			for (t = 1; t < (cent->currentState.generic1 - 1); t++) 
 			{
-				trap->FX_PlayEffectID(weapon->missileRenderfx, cent->lerpOrigin, forward, -1, -1, qfalse);
+				trap->FX_PlayEffectID(weapon->missile3Renderfx, cent->lerpOrigin, forward, -1, -1, qfalse);
 
 			}
 		}

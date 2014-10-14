@@ -10,6 +10,32 @@ void FX_FlechetteAddLight ( vec3_t org )
 
 /*
 -------------------------
+FX_T21ProjectileThink
+-------------------------
+*/
+//Copy and modifie the FX_FlechetterProjectileThink code for T-21 effect
+void FX_T21ProjectileThink(centity_t *cent, const struct weaponInfo_s *weapon)
+{
+	vec3_t forward;
+
+	if (VectorNormalize2(cent->currentState.pos.trDelta, forward) == 0.0f)
+	{
+		forward[2] = 1.0f;
+	}
+
+	if (weapon->missileRenderfx)
+	{
+		trap->FX_PlayEffectID(weapon->missileRenderfx, cent->lerpOrigin, forward, -1, -1, qfalse);
+	}
+	else
+	{
+		trap->FX_PlayEffectID(cgs.effects.T21ShotEffect, cent->lerpOrigin, forward, -1, -1, qfalse);
+	}
+}
+
+
+/*
+-------------------------
 FX_FlechetteProjectileThink
 -------------------------
 */

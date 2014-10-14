@@ -60,7 +60,20 @@ void FX_FlechetteWeaponHitPlayer( vec3_t origin, vec3_t normal, qboolean humanoi
 void FX_FlechetteAltProjectileThink( centity_t *cent, const struct weaponInfo_s *weapon );
 
 // Personal Rocket Launcher
-void FX_RocketProjectileThink( centity_t *cent, const struct weaponInfo_s *weapon );
-void FX_RocketAltProjectileThink( centity_t *cent, const struct weaponInfo_s *weapon );
-void FX_RocketHitWall( vec3_t origin, vec3_t normal );
-void FX_RocketHitPlayer( vec3_t origin, vec3_t normal, qboolean humanoid );
+void FX_RocketProjectileThink(centity_t *cent, const struct weaponInfo_s *weapon);
+void FX_PulseRocketProjectileThink(centity_t *cent, const struct weaponInfo_s *weapon);
+void FX_RocketAltProjectileThink(centity_t *cent, const struct weaponInfo_s *weapon);
+void FX_PulseRocketAltProjectileThink(centity_t *cent, const struct weaponInfo_s *weapon);
+void FX_RocketHitWall(vec3_t origin, vec3_t normal);
+void FX_PulseRocketHitWall(vec3_t origin, vec3_t normal);
+void FX_RocketHitPlayer(vec3_t origin, vec3_t normal, qboolean humanoid);
+void FX_PulseRocketHitPlayer(vec3_t origin, vec3_t normal, qboolean humanoid);
+
+//T21
+void FX_T21ProjectileThink(centity_t *cent, const struct weaponInfo_s *weapon);
+
+// Thermals
+void FX_ThermalProjectileThink(centity_t *cent, const struct weaponInfo_s *weapon);
+
+// Pulse Grenades
+void FX_PulseGrenadeProjectileThink(centity_t *cent, const struct weaponInfo_s *weapon);
