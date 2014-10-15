@@ -3758,14 +3758,19 @@ qboolean NPC_PatrolArea( void )
 qboolean NPC_ShortenJump(gentity_t *NPC, int node)
 {
 	float MAX_JUMP_DISTANCE = 192.0;
+	float dist = Distance(gWPArray[node]->origin, NPC->r.currentOrigin);
 		
 	if (NPC_IsJedi(NPC)) MAX_JUMP_DISTANCE = 512.0; // Jedi can jump further...
 
-	if (Distance(gWPArray[node]->origin, NPC->r.currentOrigin) <= MAX_JUMP_DISTANCE
+	if (dist <= MAX_JUMP_DISTANCE
 		&& NPC_TryJump( NPC, gWPArray[node]->origin ))
 	{// Looks like we can jump there... Let's do that instead of failing!
 		//trap->Print("%s is shortening path using jump.\n", NPC->client->pers.netname);
 		return qtrue; // next think...
+	}
+	else if (dist <= MAX_JUMP_DISTANCE && NPC_RoutingSimpleJump( NPC->wpLast, NPC->wpCurrent ))
+	{// UQ1: Testing new jump...
+		return qtrue;
 	}
 
 	return qfalse;
