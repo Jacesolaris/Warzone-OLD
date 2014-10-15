@@ -4521,9 +4521,11 @@ qboolean NPC_RoutingIncreaseCost ( int wpLast, int wpCurrent )
 			if (gWPArray[wpLast]->neighbors[link].cost < 1) 
 				gWPArray[wpLast]->neighbors[link].cost = 2;
 
-			break;
+			return qtrue;
 		}
 	}
+
+	return qfalse;
 }
 
 //#define __OLD_NPC_WAYPOINTING__
