@@ -3351,7 +3351,20 @@ void ClientSpawn(gentity_t *ent) {
 				// UQ1: For AUTO-WAYPOINTER - If local client, also send dm spawn origin for use by /AWC...
 				gentity_t *AW_SPAWN = NULL;
 				AW_SPAWN = G_Find(AW_SPAWN, FOFS(classname), "info_player_deathmatch");
-				trap->SendServerCommand( client - level.clients, va("awps %f %f %f", AW_SPAWN->s.origin[0], AW_SPAWN->s.origin[1], AW_SPAWN->s.origin[2]) );
+				if (!AW_SPAWN) AW_SPAWN = G_Find(AW_SPAWN, FOFS(classname), "info_player_start");
+				if (!AW_SPAWN) AW_SPAWN = G_Find(AW_SPAWN, FOFS(classname), "info_player_start_blue");
+				if (!AW_SPAWN) AW_SPAWN = G_Find(AW_SPAWN, FOFS(classname), "info_player_start_red");
+				if (!AW_SPAWN) AW_SPAWN = G_Find(AW_SPAWN, FOFS(classname), "info_player_siegeteam1");
+				if (!AW_SPAWN) AW_SPAWN = G_Find(AW_SPAWN, FOFS(classname), "info_player_siegeteam2");
+				if (!AW_SPAWN) AW_SPAWN = G_Find(AW_SPAWN, FOFS(classname), "info_player_duel");
+				if (!AW_SPAWN) AW_SPAWN = G_Find(AW_SPAWN, FOFS(classname), "info_player_duel1");
+				if (!AW_SPAWN) AW_SPAWN = G_Find(AW_SPAWN, FOFS(classname), "info_player_duel2");
+				if (!AW_SPAWN) AW_SPAWN = G_Find(AW_SPAWN, FOFS(classname), "info_jedimaster_start");
+				if (!AW_SPAWN) AW_SPAWN = G_Find(AW_SPAWN, FOFS(classname), "item_botroam");
+				if (!AW_SPAWN) AW_SPAWN = G_Find(AW_SPAWN, FOFS(classname), "info_camp");
+				if (!AW_SPAWN) AW_SPAWN = G_Find(AW_SPAWN, FOFS(classname), "info_camp");
+
+				if (AW_SPAWN) trap->SendServerCommand( client - level.clients, va("awps %f %f %f", AW_SPAWN->s.origin[0], AW_SPAWN->s.origin[1], AW_SPAWN->s.origin[2]) );
 			}
 	} else if (level.gametype == GT_CTF || level.gametype == GT_CTY) {
 		// all base oriented team games use the CTF spawn points

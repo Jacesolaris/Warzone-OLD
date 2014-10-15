@@ -1109,7 +1109,7 @@ void GenerateMoverList ( void )
 
 	if (MOVER_LIST_GENERATED) return;
 
-	trap->Print("Generating mover list.\n");
+	//trap->Print("Generating mover list.\n");
 
 	for (i = 0; i < MAX_GENTITIES; i++)
 	{
@@ -1137,11 +1137,11 @@ void GenerateMoverList ( void )
 			VectorCopy(cent->currentState.origin2, MOVER_LIST_TOP[MOVER_LIST_NUM]);
 			MOVER_LIST_TOP[MOVER_LIST_NUM][2]+=128.0;
 			MOVER_LIST_NUM++;
-			trap->Print("Mover found at %f %f %f.\n", mover_org[0], mover_org[1], mover_org[2]);
+			//trap->Print("^4*** ^3AUTO-WAYPOINTER^4: ^5Mover found at %f %f %f.\n", mover_org[0], mover_org[1], mover_org[2]);
 		}
 	}
 
-	trap->Print("There are %i movers.\n", MOVER_LIST_NUM);
+	//trap->Print("There are %i movers.\n", MOVER_LIST_NUM);
 
 	MOVER_LIST_GENERATED = qtrue;
 }
@@ -5883,8 +5883,10 @@ void AIMod_AutoWaypoint_StandardMethod( void )
 			count++;
 		}
 
-		trap->Print("Added %i waypoints for mover %i.\n", count, i);
+		trap->Print("^4*** ^3AUTO-WAYPOINTER^4: ^5Added %i waypoints for mover %i.\n", count, i);
 	}
+
+	trap->Print("^4*** ^3AUTO-WAYPOINTER^4: ^5Generated a total of %i temporary waypoints.\n", areas);
 
 	//
 	// Check for cleaning...
@@ -5892,6 +5894,8 @@ void AIMod_AutoWaypoint_StandardMethod( void )
 
 	if (areas < 32000)
 	{// UQ1: Can use them all!
+		trap->Print("^4*** ^3AUTO-WAYPOINTER^4: ^5Temporary waypoint cleanup not required. Converting to final waypoints.\n");
+
 		aw_percent_complete = 0.0f;
 		strcpy( task_string3, va("^5Final (cleanup) pass. Building final waypoints...") );
 		trap->UpdateScreen();
@@ -5956,6 +5960,8 @@ void AIMod_AutoWaypoint_StandardMethod( void )
 		strcpy( task_string3, va("^5Saving %i generated waypoints.", total_waypoints) );
 		trap->UpdateScreen();
 
+		trap->Print("^4*** ^3AUTO-WAYPOINTER^4: ^5Generated a total of %i waypoints.\n", total_waypoints);
+
 		number_of_nodes = total_waypoints;
 		AIMOD_NODES_SaveNodes_Autowaypointed();
 
@@ -6005,6 +6011,8 @@ void AIMod_AutoWaypoint_StandardMethod( void )
 	remove_ratio = (areas / MAX_WPARRAY_SIZE);
 	remove_ratio -= 1;
 	if (remove_ratio < 1) remove_ratio = 1;
+
+	trap->Print("^4*** ^3AUTO-WAYPOINTER^4: ^5Generated too many temporary waypoints for the game. Running cleanup.\n");
 
 	for ( i = 0; i < areas; i++ )
 	{
@@ -6086,6 +6094,8 @@ void AIMod_AutoWaypoint_StandardMethod( void )
 	strcpy( task_string3, va("^5Saving the generated waypoints.\n") );
 	trap->UpdateScreen();
 
+	trap->Print("^4*** ^3AUTO-WAYPOINTER^4: ^5Generated a total of %i waypoints.\n", total_waypoints);
+
 	number_of_nodes = total_waypoints;
 	AIMOD_NODES_SaveNodes_Autowaypointed();
 
@@ -6157,17 +6167,17 @@ void AIMod_AutoWaypoint_Clean ( void )
 	{
 		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^7Usage:\n" );
 		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3/awc <method>^5.\n" );
-		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^5Available methods are:\n" );
-		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3\"convert\" ^5- Convert old JKA wp file to JKG format.\n");
+		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^5Available methods are: Generally only a pathtest pass is needed.\n" );
+		//trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3\"convert\" ^5- Convert old JKA wp file to JKG format.\n");
 		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3\"relink\" ^5- Just do relinking.\n");
 		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3\"pathtest\" ^5- Remove waypoints with no path to server's first spawnpoint.\n");
-		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3\"clean\" ^5- Do a full clean.\n");
-		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3\"multipass\" ^5- Do a multi-pass full clean (max optimize).\n");
-		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3\"extra\" ^5- Do a full clean (but remove more - good if the number is still too high after optimization).\n");
-		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3\"markedlocations\" ^5- Remove waypoints nearby your marked locations (awc_addremovalspot & awc_addbadheight).\n");
 		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3\"extrareach\" ^5- Remove waypoints nearby your marked locations (awc_addremovalspot & awc_addbadheight) and add extra reachability (wp link ranges).\n");
 		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3\"resetreach\" ^5- Remove waypoints with no path to server's first spawnpoint and reset max link ranges.\n");
-		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3\"cover\" ^5- Just generate coverpoints.\n");
+		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3\"clean\" ^5- Do a full clean.\n");
+		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3\"markedlocations\" ^5- Remove waypoints nearby your marked locations (awc_addremovalspot & awc_addbadheight).\n");
+		//trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3\"multipass\" ^5- Do a multi-pass full clean (max optimize).\n");
+		//trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3\"extra\" ^5- Do a full clean (but remove more - good if the number is still too high after optimization).\n");
+		//trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3\"cover\" ^5- Just generate coverpoints.\n");
 		trap->UpdateScreen();
 		return;
 	}
