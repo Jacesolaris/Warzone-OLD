@@ -1441,9 +1441,9 @@ Don't place this
 	{
 		"weapon_repeater",
 		"sound/weapons/w_pkup.wav",
-        { "models/weapons3/imperial_repeater/heavy_repeater_w.glm",
+        { "models/weapons2/heavy_repeater/heavy_repeater_w.glm",
 		0, 0, 0},
-/* view */		"models/weapons3/imperial_repeater/heavy_repeater_1.md3",
+/* view */		"models/weapons2/heavy_repeater/heavy_repeater_1.md3",
 /* icon */		"gfx/hud/w_icon_imperial_repeater",
 /* pickup *///	"Imperial Heavy Repeater",
 		100,

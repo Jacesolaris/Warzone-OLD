@@ -37,8 +37,14 @@ void FX_BryarProjectileThink(  centity_t *cent, const struct weaponInfo_s *weapo
 FX_BryarHitWall
 -------------------------
 */
-void FX_BryarHitWall( vec3_t origin, vec3_t normal )
+void FX_BryarHitWall(vec3_t origin, vec3_t normal, int weapon, qboolean altFire)
 {
+	fxHandle_t fx = cg_weapons[weapon].missileWallImpactfx;
+	if (altFire) fx = cg_weapons[weapon].altMissileWallImpactfx;
+
+	if (fx)
+		trap->FX_PlayEffectID(fx, origin, normal, -1, -1, qfalse);
+	else
 	trap->FX_PlayEffectID( cgs.effects.bryarWallImpactEffect, origin, normal, -1, -1, qfalse );
 }
 
@@ -47,15 +53,23 @@ void FX_BryarHitWall( vec3_t origin, vec3_t normal )
 FX_BryarHitPlayer
 -------------------------
 */
-void FX_BryarHitPlayer( vec3_t origin, vec3_t normal, qboolean humanoid )
+void FX_BryarHitPlayer(vec3_t origin, vec3_t normal, qboolean humanoid, int weapon, qboolean altFire)
 {
-	if ( humanoid )
-	{
-		trap->FX_PlayEffectID( cgs.effects.bryarFleshImpactEffect, origin, normal, -1, -1, qfalse );
-	}
+	fxHandle_t fx = cg_weapons[weapon].fleshImpactEffect;
+	if (altFire) fx = cg_weapons[weapon].altFleshImpactEffect;
+
+	if (fx)
+		trap->FX_PlayEffectID(fx, origin, normal, -1, -1, qfalse);
 	else
 	{
-		trap->FX_PlayEffectID( cgs.effects.bryarDroidImpactEffect, origin, normal, -1, -1, qfalse );
+		if (humanoid)
+		{
+			trap->FX_PlayEffectID(cgs.effects.bryarFleshImpactEffect, origin, normal, -1, -1, qfalse);
+		}
+		else
+		{
+			trap->FX_PlayEffectID(cgs.effects.bryarDroidImpactEffect, origin, normal, -1, -1, qfalse);
+		}
 	}
 }
 
@@ -98,23 +112,31 @@ void FX_BryarAltProjectileThink(  centity_t *cent, const struct weaponInfo_s *we
 FX_BryarAltHitWall
 -------------------------
 */
-void FX_BryarAltHitWall( vec3_t origin, vec3_t normal, int power )
+void FX_BryarAltHitWall(vec3_t origin, vec3_t normal, int power, int weapon, qboolean altFire)
 {
-	switch( power )
+	fxHandle_t fx = cg_weapons[weapon].missileWallImpactfx;
+	if (altFire) fx = cg_weapons[weapon].altMissileWallImpactfx;
+
+	if (fx)
+		trap->FX_PlayEffectID(fx, origin, normal, -1, -1, qfalse);
+	else
 	{
-	case 4:
-	case 5:
-		trap->FX_PlayEffectID( cgs.effects.bryarWallImpactEffect3, origin, normal, -1, -1, qfalse );
-		break;
+		switch (power)
+		{
+		case 4:
+		case 5:
+			trap->FX_PlayEffectID(cgs.effects.bryarWallImpactEffect3, origin, normal, -1, -1, qfalse);
+			break;
 
-	case 2:
-	case 3:
-		trap->FX_PlayEffectID( cgs.effects.bryarWallImpactEffect2, origin, normal, -1, -1, qfalse );
-		break;
+		case 2:
+		case 3:
+			trap->FX_PlayEffectID(cgs.effects.bryarWallImpactEffect2, origin, normal, -1, -1, qfalse);
+			break;
 
-	default:
-		trap->FX_PlayEffectID( cgs.effects.bryarWallImpactEffect, origin, normal, -1, -1, qfalse );
-		break;
+		default:
+			trap->FX_PlayEffectID(cgs.effects.bryarWallImpactEffect, origin, normal, -1, -1, qfalse);
+			break;
+		}
 	}
 }
 
@@ -123,15 +145,23 @@ void FX_BryarAltHitWall( vec3_t origin, vec3_t normal, int power )
 FX_BryarAltHitPlayer
 -------------------------
 */
-void FX_BryarAltHitPlayer( vec3_t origin, vec3_t normal, qboolean humanoid )
+void FX_BryarAltHitPlayer(vec3_t origin, vec3_t normal, qboolean humanoid, int weapon, qboolean altFire)
 {
-	if ( humanoid )
-	{
-		trap->FX_PlayEffectID( cgs.effects.bryarFleshImpactEffect, origin, normal, -1, -1, qfalse );
-	}
+	fxHandle_t fx = cg_weapons[weapon].fleshImpactEffect;
+	if (altFire) fx = cg_weapons[weapon].altFleshImpactEffect;
+
+	if (fx)
+		trap->FX_PlayEffectID(fx, origin, normal, -1, -1, qfalse);
 	else
 	{
-		trap->FX_PlayEffectID( cgs.effects.bryarDroidImpactEffect, origin, normal, -1, -1, qfalse );
+		if (humanoid)
+		{
+			trap->FX_PlayEffectID(cgs.effects.bryarFleshImpactEffect, origin, normal, -1, -1, qfalse);
+		}
+		else
+		{
+			trap->FX_PlayEffectID(cgs.effects.bryarDroidImpactEffect, origin, normal, -1, -1, qfalse);
+		}
 	}
 }
 
@@ -168,8 +198,14 @@ void FX_TurretProjectileThink(  centity_t *cent, const struct weaponInfo_s *weap
 FX_TurretHitWall
 -------------------------
 */
-void FX_TurretHitWall( vec3_t origin, vec3_t normal )
+void FX_TurretHitWall(vec3_t origin, vec3_t normal, int weapon, qboolean altFire)
 {
+	fxHandle_t fx = cg_weapons[weapon].missileWallImpactfx;
+	if (altFire) fx = cg_weapons[weapon].altMissileWallImpactfx;
+
+	if (fx)
+		trap->FX_PlayEffectID(fx, origin, normal, -1, -1, qfalse);
+	else
 	trap->FX_PlayEffectID( cgs.effects.bryarWallImpactEffect, origin, normal, -1, -1, qfalse );
 }
 
@@ -178,15 +214,23 @@ void FX_TurretHitWall( vec3_t origin, vec3_t normal )
 FX_TurretHitPlayer
 -------------------------
 */
-void FX_TurretHitPlayer( vec3_t origin, vec3_t normal, qboolean humanoid )
+void FX_TurretHitPlayer(vec3_t origin, vec3_t normal, qboolean humanoid, int weapon, qboolean altFire)
 {
-	if ( humanoid )
-	{
-		trap->FX_PlayEffectID( cgs.effects.bryarFleshImpactEffect, origin, normal, -1, -1, qfalse );
-	}
+	fxHandle_t fx = cg_weapons[weapon].fleshImpactEffect;
+	if (altFire) fx = cg_weapons[weapon].altFleshImpactEffect;
+
+	if (fx)
+		trap->FX_PlayEffectID(fx, origin, normal, -1, -1, qfalse);
 	else
 	{
-		trap->FX_PlayEffectID( cgs.effects.bryarDroidImpactEffect, origin, normal, -1, -1, qfalse );
+		if (humanoid)
+		{
+			trap->FX_PlayEffectID(cgs.effects.bryarFleshImpactEffect, origin, normal, -1, -1, qfalse);
+		}
+		else
+		{
+			trap->FX_PlayEffectID(cgs.effects.bryarDroidImpactEffect, origin, normal, -1, -1, qfalse);
+		}
 	}
 }
 
@@ -205,8 +249,14 @@ void FX_ConcussionAddLight ( vec3_t org )
 FX_ConcussionHitWall
 -------------------------
 */
-void FX_ConcussionHitWall( vec3_t origin, vec3_t normal )
+void FX_ConcussionHitWall(vec3_t origin, vec3_t normal, int weapon, qboolean altFire)
 {
+	fxHandle_t fx = cg_weapons[weapon].missileWallImpactfx;
+	if (altFire) fx = cg_weapons[weapon].altMissileWallImpactfx;
+
+	if (fx)
+		trap->FX_PlayEffectID(fx, origin, normal, -1, -1, qfalse);
+	else
 	trap->FX_PlayEffectID( cgs.effects.concussionImpactEffect, origin, normal, -1, -1, qfalse );
 }
 
@@ -215,8 +265,14 @@ void FX_ConcussionHitWall( vec3_t origin, vec3_t normal )
 FX_ConcussionHitPlayer
 -------------------------
 */
-void FX_ConcussionHitPlayer( vec3_t origin, vec3_t normal, qboolean humanoid )
+void FX_ConcussionHitPlayer(vec3_t origin, vec3_t normal, qboolean humanoid, int weapon, qboolean altFire)
 {
+	fxHandle_t fx = cg_weapons[weapon].fleshImpactEffect;
+	if (altFire) fx = cg_weapons[weapon].altFleshImpactEffect;
+
+	if (fx)
+		trap->FX_PlayEffectID(fx, origin, normal, -1, -1, qfalse);
+	else
 	trap->FX_PlayEffectID( cgs.effects.concussionImpactEffect, origin, normal, -1, -1, qfalse );
 }
 

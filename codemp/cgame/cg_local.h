@@ -740,6 +740,19 @@ typedef struct weaponInfo_s {
 	sfxHandle_t		altFiringSound;
 	sfxHandle_t		altChargeSound;
 	fxHandle_t		altMuzzleEffect;
+	// JKA added...
+	fxHandle_t		missileWallImpactfx;
+	fxHandle_t		altMissileWallImpactfx;
+	fxHandle_t		fleshImpactEffect; // should we do these or use generic ones?
+	fxHandle_t		altFleshImpactEffect;
+	fxHandle_t		wallImpactEffectEnhancedFX;
+	fxHandle_t		WallBounceEffectEnhancedFX;
+	fxHandle_t		shotEffectFx;
+	fxHandle_t		explotionImpactEffect;
+	fxHandle_t		ionBlastShotEffect;
+	fxHandle_t		WallBounceEffectFX;
+	fxHandle_t		ProjectileEffectFX;
+	
 	qhandle_t		altMissileModel;
 	sfxHandle_t		altMissileSound;
 	void			(*altMissileTrailFunc)( centity_t *, const struct weaponInfo_s *wi );
@@ -1593,6 +1606,7 @@ typedef struct cgEffects_s {
 	fxHandle_t	ee3ShotEffect;
 	fxHandle_t	ee3AltShotEffect;
 
+
 	// ROCKET
 	fxHandle_t  rocketShotEffect;
 	fxHandle_t  pulserocketShotEffect;
@@ -2208,11 +2222,11 @@ void		BG_CycleForce(playerState_t *ps, int direction);
 const char *CG_GetStringEdString(char *refSection, char *refName);
 
 void FX_TurretProjectileThink(  centity_t *cent, const struct weaponInfo_s *weapon );
-void FX_TurretHitWall( vec3_t origin, vec3_t normal );
-void FX_TurretHitPlayer( vec3_t origin, vec3_t normal, qboolean humanoid );
+void FX_TurretHitWall(vec3_t origin, vec3_t normal, int weapon, qboolean altFire);
+void FX_TurretHitPlayer(vec3_t origin, vec3_t normal, qboolean humanoid, int weapon, qboolean altFire);
 
-void FX_ConcussionHitWall( vec3_t origin, vec3_t normal );
-void FX_ConcussionHitPlayer( vec3_t origin, vec3_t normal, qboolean humanoid );
+void FX_ConcussionHitWall(vec3_t origin, vec3_t normal, int weapon, qboolean altFire);
+void FX_ConcussionHitPlayer(vec3_t origin, vec3_t normal, qboolean humanoid, int weapon, qboolean altFire);
 void FX_ConcussionProjectileThink(  centity_t *cent, const struct weaponInfo_s *weapon );
 void FX_ConcAltShot( vec3_t start, vec3_t end );
 
@@ -2224,7 +2238,7 @@ void FX_ConcAltShot( vec3_t start, vec3_t end );
 void CG_Spark( vec3_t origin, vec3_t dir );
 
 // Weapon prototypes
-void FX_BryarHitWall( vec3_t origin, vec3_t normal );
+void FX_BryarHitWall(vec3_t origin, vec3_t normal, int weapon, qboolean altFire);
 void FX_BryarAltHitWall( vec3_t origin, vec3_t normal, int power );
 void FX_BryarHitPlayer( vec3_t origin, vec3_t normal, qboolean humanoid );
 void FX_BryarAltHitPlayer( vec3_t origin, vec3_t normal, qboolean humanoid );
@@ -2246,7 +2260,7 @@ void FX_ForceDrained(vec3_t origin, vec3_t dir);
 void CG_Spark( vec3_t origin, vec3_t dir );
 
 // Weapon prototypes
-void FX_BryarHitWall( vec3_t origin, vec3_t normal );
+void FX_BryarHitWall(vec3_t origin, vec3_t normal, int weapon, qboolean altFire);
 void FX_BryarAltHitWall( vec3_t origin, vec3_t normal, int power );
 void FX_BryarHitPlayer( vec3_t origin, vec3_t normal, qboolean humanoid );
 void FX_BryarAltHitPlayer( vec3_t origin, vec3_t normal, qboolean humanoid );

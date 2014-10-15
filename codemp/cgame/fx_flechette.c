@@ -29,7 +29,7 @@ void FX_T21ProjectileThink(centity_t *cent, const struct weaponInfo_s *weapon)
 	}
 	else
 	{
-		trap->FX_PlayEffectID(cgs.effects.T21ShotEffect, cent->lerpOrigin, forward, -1, -1, qfalse);
+		trap->FX_PlayEffectID(weapon->shotEffectFx, cent->lerpOrigin, forward, -1, -1, qfalse);
 	}
 }
 
@@ -59,8 +59,14 @@ void FX_FlechetteProjectileThink( centity_t *cent, const struct weaponInfo_s *we
 FX_FlechetteWeaponHitWall
 -------------------------
 */
-void FX_FlechetteWeaponHitWall( vec3_t origin, vec3_t normal )
+void FX_FlechetteWeaponHitWall(vec3_t origin, vec3_t normal, int weapon, qboolean altFire)
 {
+	fxHandle_t fx = cg_weapons[weapon].missileWallImpactfx;
+	if (altFire) fx = cg_weapons[weapon].altMissileWallImpactfx;
+
+	if (fx)
+		trap->FX_PlayEffectID(fx, origin, normal, -1, -1, qfalse);
+	else
 	trap->FX_PlayEffectID( cgs.effects.flechetteWallImpactEffect, origin, normal, -1, -1, qfalse );
 }
 
@@ -69,16 +75,24 @@ void FX_FlechetteWeaponHitWall( vec3_t origin, vec3_t normal )
 FX_FlechetteWeaponHitPlayer
 -------------------------
 */
-void FX_FlechetteWeaponHitPlayer( vec3_t origin, vec3_t normal, qboolean humanoid )
+void FX_FlechetteWeaponHitPlayer(vec3_t origin, vec3_t normal, qboolean humanoid, int weapon, qboolean altFire)
 {
-//	if ( humanoid )
-//	{
-		trap->FX_PlayEffectID( cgs.effects.flechetteFleshImpactEffect, origin, normal, -1, -1, qfalse );
-//	}
-//	else
-//	{
-//		trap->FX_PlayEffect( "blaster/droid_impact", origin, normal );
-//	}
+	fxHandle_t fx = cg_weapons[weapon].fleshImpactEffect;
+	if (altFire) fx = cg_weapons[weapon].altFleshImpactEffect;
+
+	if (fx)
+		trap->FX_PlayEffectID(fx, origin, normal, -1, -1, qfalse);
+	else
+	{
+		//	if ( humanoid )
+		//	{
+		trap->FX_PlayEffectID(cgs.effects.flechetteFleshImpactEffect, origin, normal, -1, -1, qfalse);
+		//	}
+		//	else
+		//	{
+		//		trap->FX_PlayEffect( "blaster/droid_impact", origin, normal );
+		//	}
+	}
 }
 
 

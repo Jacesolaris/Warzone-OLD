@@ -2452,11 +2452,11 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 		ByteToDir( es->eventParm, dir );
 		if (es->weapon)
 		{ //primary
-			FX_DisruptorHitWall( cent->lerpOrigin, dir );
+			FX_DisruptorHitWall( cent->lerpOrigin, dir, es->weapon, qfalse );
 		}
 		else
 		{ //secondary
-			FX_DisruptorAltMiss( cent->lerpOrigin, dir );
+			FX_DisruptorAltMiss( cent->lerpOrigin, dir, es->weapon, qtrue );
 		}
 		break;
 
@@ -2465,11 +2465,11 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 		ByteToDir( es->eventParm, dir );
 		if (es->weapon)
 		{ //client
-			FX_DisruptorHitPlayer( cent->lerpOrigin, dir, qtrue );
+			FX_DisruptorHitPlayer( cent->lerpOrigin, dir, qtrue, es->weapon, qfalse );
 		}
 		else
 		{ //non-client
-			FX_DisruptorHitWall( cent->lerpOrigin, dir );
+			FX_DisruptorHitWall(cent->lerpOrigin, dir, es->weapon, qtrue);
 		}
 		break;
 
@@ -2850,7 +2850,7 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 			FX_ConcAltShot(es->origin2, spot);
 
 			//steal the bezier effect from the disruptor
-			FX_DisruptorAltMiss(position, dir);
+			FX_DisruptorAltMiss(position, dir, WP_CONCUSSION, qtrue);
 		}
 		break;
 

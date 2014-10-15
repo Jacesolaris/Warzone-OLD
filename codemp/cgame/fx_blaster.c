@@ -14,7 +14,7 @@ FX_BlasterProjectileThink
 -------------------------
 */
 
-void FX_BlasterProjectileThink( centity_t *cent, struct weaponInfo_s *weapon )
+void FX_BlasterProjectileThink( centity_t *cent, const struct weaponInfo_s *weapon )
 {
 	vec3_t forward;
 
@@ -23,8 +23,9 @@ void FX_BlasterProjectileThink( centity_t *cent, struct weaponInfo_s *weapon )
 		forward[2] = 1.0f;
 	}
 
-	if (!weapon->missileRenderfx) weapon->missileRenderfx = cgs.effects.blasterShotEffect;
-	
+	if (weapon->missileRenderfx)
+		trap->FX_PlayEffectID(weapon->missileRenderfx, cent->lerpOrigin, forward, -1, -1, qfalse);
+	else	
 	trap->FX_PlayEffectID( weapon->missileRenderfx, cent->lerpOrigin, forward, -1, -1, qfalse );
 
 	FX_BlasterAddLight(cent->lerpOrigin);
@@ -35,7 +36,7 @@ void FX_BlasterProjectileThink( centity_t *cent, struct weaponInfo_s *weapon )
 FX_BlasterAltFireThink
 -------------------------
 */
-void FX_BlasterAltFireThink( centity_t *cent, struct weaponInfo_s *weapon )
+void FX_BlasterAltFireThink( centity_t *cent, const struct weaponInfo_s *weapon )
 {
 	vec3_t forward;
 
@@ -44,9 +45,10 @@ void FX_BlasterAltFireThink( centity_t *cent, struct weaponInfo_s *weapon )
 		forward[2] = 1.0f;
 	}
 
-	if (!weapon->altMissileRenderfx) weapon->altMissileRenderfx = cgs.effects.blasterShotEffect;
-
-	trap->FX_PlayEffectID( weapon->altMissileRenderfx, cent->lerpOrigin, forward, -1, -1, qfalse );
+	if (weapon->missileRenderfx)
+		trap->FX_PlayEffectID(weapon->altMissileRenderfx, cent->lerpOrigin, forward, -1, -1, qfalse);
+	else
+		trap->FX_PlayEffectID( weapon->altMissileRenderfx, cent->lerpOrigin, forward, -1, -1, qfalse );
 
 	FX_BlasterAddLight(cent->lerpOrigin);
 }
@@ -56,8 +58,14 @@ void FX_BlasterAltFireThink( centity_t *cent, struct weaponInfo_s *weapon )
 FX_BlasterWeaponHitWall
 -------------------------
 */
-void FX_BlasterWeaponHitWall( vec3_t origin, vec3_t normal )
+void FX_BlasterWeaponHitWall(vec3_t origin, vec3_t normal, int weapon, qboolean altFire)
 {
+	fxHandle_t fx = cg_weapons[weapon].missileWallImpactfx;
+	if (altFire) fx = cg_weapons[weapon].altMissileWallImpactfx;
+
+	if (fx)
+		trap->FX_PlayEffectID(fx, origin, normal, -1, -1, qfalse);
+	else
 	trap->FX_PlayEffectID( cgs.effects.blasterWallImpactEffect, origin, normal, -1, -1, qfalse );
 }
 

@@ -241,7 +241,7 @@ static void WP_FireBryarPistol( gentity_t *ent, qboolean altFire )
 	gentity_t	*missile = CreateMissile( muzzle, forward, BRYAR_PISTOL_VEL, 10000, ent, altFire );
 
 	missile->classname = "bryar_proj";
-	missile->s.weapon = WP_BRYAR_PISTOL;
+	missile->s.weapon = ent->s.weapon;//WP_BRYAR_PISTOL;
 
 	if ( altFire )
 	{
@@ -388,7 +388,7 @@ void WP_FireGenericBlasterMissile( gentity_t *ent, vec3_t start, vec3_t dir, qbo
 	missile = CreateMissile( start, dir, velocity, 10000, ent, altFire );
 
 	missile->classname = "generic_proj";
-	missile->s.weapon = WP_BRYAR_PISTOL;
+	missile->s.weapon = WP_BRYAR_PISTOL; // dunno about this one. see if it needs ent->s.weapon
 
 	missile->damage = damage;
 	missile->dflags = DAMAGE_DEATH_KNOCKBACK;
@@ -989,7 +989,7 @@ static void WP_BowcasterAltFire( gentity_t *ent )
 	gentity_t *missile = CreateMissile( muzzle, forward, BOWCASTER_VELOCITY, 10000, ent, qfalse);
 
 	missile->classname = "bowcaster_proj";
-	missile->s.weapon = WP_BOWCASTER;
+	missile->s.weapon = ent->s.weapon;//WP_BOWCASTER;
 
 	VectorSet( missile->r.maxs, BOWCASTER_SIZE, BOWCASTER_SIZE, BOWCASTER_SIZE );
 	VectorScale( missile->r.maxs, -1, missile->r.mins );
@@ -1075,7 +1075,7 @@ static void WP_BowcasterMainFire( gentity_t *ent )
 		missile = CreateMissile( muzzle, dir, vel, 10000, ent, qtrue );
 
 		missile->classname = "bowcaster_alt_proj";
-		missile->s.weapon = WP_BOWCASTER;
+		missile->s.weapon = ent->s.weapon;//WP_BOWCASTER;
 
 		VectorSet( missile->r.maxs, BOWCASTER_SIZE, BOWCASTER_SIZE, BOWCASTER_SIZE );
 		VectorScale( missile->r.maxs, -1, missile->r.mins );
@@ -1123,7 +1123,7 @@ static void WP_RepeaterMainFire( gentity_t *ent, vec3_t dir )
 	gentity_t *missile = CreateMissile( muzzle, dir, REPEATER_VELOCITY, 10000, ent, qfalse );
 
 	missile->classname = "repeater_proj";
-	missile->s.weapon = WP_REPEATER;
+	missile->s.weapon = ent->s.weapon;// WP_REPEATER;
 
 	missile->damage = damage;
 	missile->dflags = DAMAGE_DEATH_KNOCKBACK;
@@ -1143,7 +1143,7 @@ static void WP_RepeaterAltFire( gentity_t *ent )
 	gentity_t *missile = CreateMissile( muzzle, forward, REPEATER_ALT_VELOCITY, 10000, ent, qtrue );
 
 	missile->classname = "repeater_alt_proj";
-	missile->s.weapon = WP_REPEATER;
+	missile->s.weapon = ent->s.weapon;// WP_REPEATER;
 
 	VectorSet( missile->r.maxs, REPEATER_ALT_SIZE, REPEATER_ALT_SIZE, REPEATER_ALT_SIZE );
 	VectorScale( missile->r.maxs, -1, missile->r.mins );
@@ -1208,7 +1208,7 @@ static void WP_DEMP2_MainFire( gentity_t *ent )
 	gentity_t *missile = CreateMissile( muzzle, forward, DEMP2_VELOCITY, 10000, ent, qfalse);
 
 	missile->classname = "demp2_proj";
-	missile->s.weapon = WP_DEMP2;
+	missile->s.weapon = ent->s.weapon;//WP_DEMP2;
 
 	VectorSet( missile->r.maxs, DEMP2_SIZE, DEMP2_SIZE, DEMP2_SIZE );
 	VectorScale( missile->r.maxs, -1, missile->r.mins );
@@ -1446,7 +1446,7 @@ static void WP_DEMP2_AltFire( gentity_t *ent )
 	missile->count = count;
 
 	missile->classname = "demp2_alt_proj";
-	missile->s.weapon = WP_DEMP2;
+	missile->s.weapon = ent->s.weapon;//WP_DEMP2;
 
 	missile->think = DEMP2_AltDetonate;
 	missile->nextthink = level.time;
@@ -1511,7 +1511,7 @@ static void WP_FlechetteMainFire( gentity_t *ent )
 		missile = CreateMissile( muzzle, fwd, FLECHETTE_VEL, 10000, ent, qfalse);
 
 		missile->classname = "flech_proj";
-		missile->s.weapon = WP_FLECHETTE;
+		missile->s.weapon = ent->s.weapon;//WP_FLECHETTE;
 
 		VectorSet( missile->r.maxs, FLECHETTE_SIZE, FLECHETTE_SIZE, FLECHETTE_SIZE );
 		VectorScale( missile->r.maxs, -1, missile->r.mins );
@@ -1628,7 +1628,7 @@ static void WP_CreateFlechetteBouncyThing( vec3_t start, vec3_t fwd, gentity_t *
 
 	missile->activator = self;
 
-	missile->s.weapon = WP_FLECHETTE;
+	missile->s.weapon = self->s.weapon;//WP_FLECHETTE;
 	missile->classname = "flech_alt";
 	missile->mass = 4;
 
@@ -1936,7 +1936,7 @@ static void WP_FireRocket( gentity_t *ent, qboolean altFire )
 	}
 
 	missile->classname = "rocket_proj";
-	missile->s.weapon = WP_ROCKET_LAUNCHER;
+	missile->s.weapon = ent->s.weapon;//WP_ROCKET_LAUNCHER;
 
 	// Make it easier to hit things
 	VectorSet( missile->r.maxs, ROCKET_SIZE, ROCKET_SIZE, ROCKET_SIZE );
@@ -3342,7 +3342,7 @@ static void WP_FireConcussion( gentity_t *ent )
 	missile = CreateMissile( start, forward, vel, 10000, ent, qfalse );
 
 	missile->classname = "conc_proj";
-	missile->s.weapon = WP_CONCUSSION;
+	missile->s.weapon = ent->s.weapon;//WP_CONCUSSION;
 	missile->mass = 10;
 
 	// Make it easier to hit things

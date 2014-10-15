@@ -34,8 +34,14 @@ FX_BowcasterHitWall
 ---------------------------
 */
 
-void FX_BowcasterHitWall( vec3_t origin, vec3_t normal )
+void FX_BowcasterHitWall(vec3_t origin, vec3_t normal, int weapon, qboolean altFire)
 {
+	fxHandle_t fx = cg_weapons[weapon].missileWallImpactfx;
+	if (altFire) fx = cg_weapons[weapon].altMissileWallImpactfx;
+
+	if (fx)
+		trap->FX_PlayEffectID(fx, origin, normal, -1, -1, qfalse);
+	else
 	trap->FX_PlayEffectID( cgs.effects.bowcasterImpactEffect, origin, normal, -1, -1, qfalse );
 }
 
@@ -45,8 +51,14 @@ FX_BowcasterHitPlayer
 ---------------------------
 */
 
-void FX_BowcasterHitPlayer( vec3_t origin, vec3_t normal, qboolean humanoid )
+void FX_BowcasterHitPlayer(vec3_t origin, vec3_t normal, qboolean humanoid, int weapon, qboolean altFire)
 {
+	fxHandle_t fx = cg_weapons[weapon].fleshImpactEffect;
+	if (altFire) fx = cg_weapons[weapon].altFleshImpactEffect;
+
+	if (fx)
+		trap->FX_PlayEffectID(fx, origin, normal, -1, -1, qfalse);
+	else
 	trap->FX_PlayEffectID( cgs.effects.bowcasterImpactEffect, origin, normal, -1, -1, qfalse );
 }
 

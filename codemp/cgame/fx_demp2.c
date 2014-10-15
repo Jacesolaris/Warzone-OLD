@@ -82,8 +82,14 @@ FX_DEMP2_HitWall
 ---------------------------
 */
 
-void FX_DEMP2_HitWall( vec3_t origin, vec3_t normal )
+void FX_DEMP2_HitWall(vec3_t origin, vec3_t normal, int weapon, qboolean altFire)
 {
+	fxHandle_t fx = cg_weapons[weapon].missileWallImpactfx;
+	if (altFire) fx = cg_weapons[weapon].altMissileWallImpactfx;
+
+	if (fx)
+		trap->FX_PlayEffectID(fx, origin, normal, -1, -1, qfalse);
+	else
 	trap->FX_PlayEffectID( cgs.effects.demp2WallImpactEffect, origin, normal, -1, -1, qfalse );
 }
 
@@ -98,8 +104,14 @@ FX_DEMP2_HitPlayer
 ---------------------------
 */
 
-void FX_DEMP2_HitPlayer( vec3_t origin, vec3_t normal, qboolean humanoid )
+void FX_DEMP2_HitPlayer(vec3_t origin, vec3_t normal, qboolean humanoid, int weapon, qboolean altFire)
 {
+	fxHandle_t fx = cg_weapons[weapon].fleshImpactEffect;
+	if (altFire) fx = cg_weapons[weapon].altFleshImpactEffect;
+
+	if (fx)
+		trap->FX_PlayEffectID(fx, origin, normal, -1, -1, qfalse);
+	else
 	trap->FX_PlayEffectID( cgs.effects.demp2FleshImpactEffect, origin, normal, -1, -1, qfalse );
 }
 

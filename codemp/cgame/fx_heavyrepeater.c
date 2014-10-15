@@ -51,9 +51,15 @@ FX_RepeaterHitWall
 ------------------------
 */
 
-void FX_RepeaterHitWall( vec3_t origin, vec3_t normal )
+void FX_RepeaterHitWall( vec3_t origin, vec3_t normal, int weapon, qboolean altFire )
 {
-	trap->FX_PlayEffectID( cgs.effects.repeaterWallImpactEffect, origin, normal, -1, -1, qfalse );
+	fxHandle_t fx = cg_weapons[weapon].missileWallImpactfx;
+	if (altFire) fx = cg_weapons[weapon].altMissileWallImpactfx;
+
+	if (fx)
+		trap->FX_PlayEffectID(fx, origin, normal, -1, -1, qfalse);
+	else
+		trap->FX_PlayEffectID( cgs.effects.repeaterWallImpactEffect, origin, normal, -1, -1, qfalse );
 }
 
 /*
@@ -62,9 +68,9 @@ FX_RepeaterHitPlayer
 ------------------------
 */
 
-void FX_RepeaterHitPlayer( vec3_t origin, vec3_t normal, qboolean humanoid )
+void FX_RepeaterHitPlayer( vec3_t origin, vec3_t normal, qboolean humanoid) // meh screw hit player. more work then its worth
 {
-	trap->FX_PlayEffectID( cgs.effects.repeaterFleshImpactEffect, origin, normal, -1, -1, qfalse );
+		trap->FX_PlayEffectID( cgs.effects.repeaterFleshImpactEffect, origin, normal, -1, -1, qfalse );
 }
 
 static void CG_DistortionOrb( centity_t *cent )
@@ -173,9 +179,15 @@ FX_RepeaterAltHitWall
 ------------------------
 */
 
-void FX_RepeaterAltHitWall( vec3_t origin, vec3_t normal )
+void FX_RepeaterAltHitWall(vec3_t origin, vec3_t normal, int weapon, qboolean altFire)
 {
-	trap->FX_PlayEffectID( cgs.effects.repeaterAltWallImpactEffect, origin, normal, -1, -1, qfalse );
+	fxHandle_t fx = cg_weapons[weapon].missileWallImpactfx;
+	if (altFire) fx = cg_weapons[weapon].altMissileWallImpactfx;
+
+	if (fx)
+		trap->FX_PlayEffectID(fx, origin, normal, -1, -1, qfalse);
+	else
+		trap->FX_PlayEffectID( cgs.effects.repeaterAltWallImpactEffect, origin, normal, -1, -1, qfalse );
 }
 
 /*
@@ -184,7 +196,13 @@ FX_RepeaterAltHitPlayer
 ------------------------
 */
 
-void FX_RepeaterAltHitPlayer( vec3_t origin, vec3_t normal, qboolean humanoid )
+void FX_RepeaterAltHitPlayer(vec3_t origin, vec3_t normal, qboolean humanoid, int weapon, qboolean altFire)
 {
+	fxHandle_t fx = cg_weapons[weapon].fleshImpactEffect;
+	if (altFire) fx = cg_weapons[weapon].altFleshImpactEffect;
+
+	if (fx)
+		trap->FX_PlayEffectID(fx, origin, normal, -1, -1, qfalse);
+	else
 	trap->FX_PlayEffectID( cgs.effects.repeaterAltWallImpactEffect, origin, normal, -1, -1, qfalse );
 }
