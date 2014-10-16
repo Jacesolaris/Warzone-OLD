@@ -3381,11 +3381,7 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 		{
 			trap->S_StartSound(NULL, es->number, CHAN_WEAPON, cg_weapons[es->eventParm].chargeSound);
 		}
-		else if (es->eventParm == WP_DISRUPTOR)
-		{
-			trap->S_StartSound(NULL, es->number, CHAN_WEAPON, cgs.media.disruptorZoomLoop);
-		}
-		else if (es->eventParm == WP_A280)
+		else if (IsSniperRifle(es->eventParm))
 		{
 			trap->S_StartSound(NULL, es->number, CHAN_WEAPON, cgs.media.disruptorZoomLoop);
 		}

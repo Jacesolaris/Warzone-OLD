@@ -4611,7 +4611,10 @@ void FireWeapon( gentity_t *ent, qboolean altFire ) {
 			break;
 
 		case WP_A280: // UQ1: Example. Should have it's own code...
-			WP_FireBlaster( ent, altFire, BLASTER_VELOCITY*4, BLASTER_DAMAGE*4, 0.0, ent->s.weapon );
+			if (altFire)
+				WP_FireBlaster( ent, altFire, BLASTER_VELOCITY*3, BLASTER_DAMAGE*2, 0.0, ent->s.weapon );
+			else
+				WP_FireBlaster( ent, altFire, BLASTER_VELOCITY*4, BLASTER_DAMAGE*4, 0.0, ent->s.weapon );
 			break;
 
 		case WP_DC15:
@@ -4627,7 +4630,10 @@ void FireWeapon( gentity_t *ent, qboolean altFire ) {
 			break;
 
 		case WP_EE3:
-			WP_FireBlaster( ent, altFire, BLASTER_VELOCITY, BLASTER_DAMAGE, BLASTER_SPREAD, ent->s.weapon );
+			if (altFire)
+				WP_FireBlaster( ent, altFire, BLASTER_VELOCITY*2.5, BLASTER_DAMAGE*1.5, 0.0, ent->s.weapon );
+			else
+				WP_FireBlaster( ent, altFire, BLASTER_VELOCITY*2.5, BLASTER_DAMAGE*3.5, 0.0, ent->s.weapon );
 			break;
 
 		case WP_CLONE_PISTOL1:

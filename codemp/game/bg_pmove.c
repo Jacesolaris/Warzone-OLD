@@ -6345,92 +6345,8 @@ static qboolean PM_DoChargedWeapons( qboolean vehicleRocketLock, bgEntity_t *veh
 	}
 	else
 	{
-		// If you want your weapon to be a charging weapon, just set this bit up
-		switch( pm->ps->weapon )
+		if (IsSniperRifle(pm->ps->weapon))
 		{
-		//------------------
-		case WP_BRYAR_PISTOL:
-
-			// alt-fire charges the weapon
-			//if ( pm->gametype == GT_SIEGE )
-			if (1)
-			{
-				if ( pm->cmd.buttons & BUTTON_ALT_ATTACK )
-				{
-					charging = qtrue;
-					altFire = qtrue;
-				}
-			}
-			break;
-
-		case WP_CONCUSSION:
-			if ( pm->cmd.buttons & BUTTON_ALT_ATTACK )
-			{
-				altFire = qtrue;
-			}
-			break;
-		case WP_ELG_3A:
-		case WP_WESTER_PISTOL:
-		case WP_BRYAR_OLD:
-
-			// alt-fire charges the weapon
-			if ( pm->cmd.buttons & BUTTON_ALT_ATTACK )
-			{
-				charging = qtrue;
-				altFire = qtrue;
-			}
-			break;
-
-		//------------------
-		case WP_BOWCASTER:
-
-			// primary fire charges the weapon
-			if ( pm->cmd.buttons & BUTTON_ATTACK )
-			{
-				charging = qtrue;
-			}
-			break;
-
-		//------------------
-		case WP_ROCKET_LAUNCHER:
-			if ( (pm->cmd.buttons & BUTTON_ALT_ATTACK)
-#ifndef __MMO__
-				&& pm->ps->ammo[weaponData[pm->ps->weapon].ammoIndex] >= weaponData[pm->ps->weapon].altEnergyPerShot 
-#endif //__MMO__
-				)
-			{
-				PM_RocketLock(2048,qfalse);
-				charging = qtrue;
-				altFire = qtrue;
-			}
-			break;
-
-		//------------------
-		case WP_THERMAL:
-
-			if ( pm->cmd.buttons & BUTTON_ALT_ATTACK )
-			{
-				altFire = qtrue; // override default of not being an alt-fire
-				charging = qtrue;
-			}
-			else if ( pm->cmd.buttons & BUTTON_ATTACK )
-			{
-				charging = qtrue;
-			}
-			break;
-
-
-		case WP_CLONE_PISTOL1:
-		case WP_DEMP2:
-			if ( pm->cmd.buttons & BUTTON_ALT_ATTACK )
-			{
-				altFire = qtrue; // override default of not being an alt-fire
-				charging = qtrue;
-			}
-			break;
-
-		case WP_A280:
-		case WP_DISRUPTOR:
 			if ((pm->cmd.buttons & BUTTON_ATTACK) &&
 				pm->ps->zoomMode == 1 &&
 				pm->ps->zoomLocked)
@@ -6456,8 +6372,94 @@ static qboolean PM_DoChargedWeapons( qboolean vehicleRocketLock, bgEntity_t *veh
 				charging = qfalse;
 				altFire = qfalse;
 			}
+		}
+		else
+		{
+			// If you want your weapon to be a charging weapon, just set this bit up
+			switch( pm->ps->weapon )
+			{
+				//------------------
+			case WP_BRYAR_PISTOL:
 
-		} // end switch
+				// alt-fire charges the weapon
+				//if ( pm->gametype == GT_SIEGE )
+				if (1)
+				{
+					if ( pm->cmd.buttons & BUTTON_ALT_ATTACK )
+					{
+						charging = qtrue;
+						altFire = qtrue;
+					}
+				}
+				break;
+
+			case WP_CONCUSSION:
+				if ( pm->cmd.buttons & BUTTON_ALT_ATTACK )
+				{
+					altFire = qtrue;
+				}
+				break;
+			case WP_ELG_3A:
+			case WP_WESTER_PISTOL:
+			case WP_BRYAR_OLD:
+
+				// alt-fire charges the weapon
+				if ( pm->cmd.buttons & BUTTON_ALT_ATTACK )
+				{
+					charging = qtrue;
+					altFire = qtrue;
+				}
+				break;
+
+				//------------------
+			case WP_BOWCASTER:
+
+				// primary fire charges the weapon
+				if ( pm->cmd.buttons & BUTTON_ATTACK )
+				{
+					charging = qtrue;
+				}
+				break;
+
+				//------------------
+			case WP_ROCKET_LAUNCHER:
+				if ( (pm->cmd.buttons & BUTTON_ALT_ATTACK)
+#ifndef __MMO__
+					&& pm->ps->ammo[weaponData[pm->ps->weapon].ammoIndex] >= weaponData[pm->ps->weapon].altEnergyPerShot 
+#endif //__MMO__
+					)
+				{
+					PM_RocketLock(2048,qfalse);
+					charging = qtrue;
+					altFire = qtrue;
+				}
+				break;
+
+				//------------------
+			case WP_THERMAL:
+
+				if ( pm->cmd.buttons & BUTTON_ALT_ATTACK )
+				{
+					altFire = qtrue; // override default of not being an alt-fire
+					charging = qtrue;
+				}
+				else if ( pm->cmd.buttons & BUTTON_ATTACK )
+				{
+					charging = qtrue;
+				}
+				break;
+
+
+			case WP_CLONE_PISTOL1:
+			case WP_DEMP2:
+				if ( pm->cmd.buttons & BUTTON_ALT_ATTACK )
+				{
+					altFire = qtrue; // override default of not being an alt-fire
+					charging = qtrue;
+				}
+				break;
+			} // end switch
+		}
 	}
 
 	// set up the appropriate weapon state based on the button that's down.
@@ -10834,7 +10836,7 @@ void PmoveSingle (pmove_t *pmove) {
 	}
 	*/
 
-	if (pm->ps->weapon == WP_DISRUPTOR && pm->ps->weaponstate == WEAPON_CHARGING_ALT)
+	if (IsSniperRifle(pm->ps->weapon) && pm->ps->weaponstate == WEAPON_CHARGING_ALT)
 	{ //not allowed to move while charging the disruptor
 		if (pm->cmd.forwardmove ||
 			pm->cmd.rightmove ||
@@ -10842,19 +10844,7 @@ void PmoveSingle (pmove_t *pmove) {
 		{ //get out
 			pm->ps->weaponstate = WEAPON_READY;
 			pm->ps->weaponTime = 1000;
-			PM_AddEventWithParm(EV_WEAPON_CHARGE, WP_DISRUPTOR); //cut the weapon charge sound
-			pm->cmd.upmove = 0;
-		}
-	}
-	else if (pm->ps->weapon == WP_A280 && pm->ps->weaponstate == WEAPON_CHARGING_ALT)
-	{ //not allowed to move while charging the disruptor
-		if (pm->cmd.forwardmove ||
-			pm->cmd.rightmove ||
-			pm->cmd.upmove > 0)
-		{ //get out
-			pm->ps->weaponstate = WEAPON_READY;
-			pm->ps->weaponTime = 1000;
-			PM_AddEventWithParm(EV_WEAPON_CHARGE, WP_A280); //cut the weapon charge sound
+			PM_AddEventWithParm(EV_WEAPON_CHARGE, pm->ps->weapon); //cut the weapon charge sound
 			pm->cmd.upmove = 0;
 		}
 	}
