@@ -1094,6 +1094,7 @@ void CG_G2MarkEvent(entityState_t *es)
 	case WP_DLT20A:
 	case WP_CLONERIFLE:
 	case WP_WESTER_PISTOL:
+	case WP_ELG_3A:
 	case WP_BLASTER:
 	case WP_DISRUPTOR:
 	case WP_BOWCASTER:

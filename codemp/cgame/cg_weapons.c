@@ -570,7 +570,8 @@ Ghoul2 Insert End
 		  ( cent->currentState.weapon == WP_BOWCASTER && cent->currentState.modelindex2 == WEAPON_CHARGING ) ||
 		  ( cent->currentState.weapon == WP_DEMP2 && cent->currentState.modelindex2 == WEAPON_CHARGING_ALT) ||
 		  (cent->currentState.weapon == WP_CLONE_PISTOL1 && cent->currentState.modelindex2 == WEAPON_CHARGING_ALT) ||
-		  (cent->currentState.weapon == WP_WESTER_PISTOL && cent->currentState.modelindex2 == WEAPON_CHARGING_ALT )))
+		  (cent->currentState.weapon == WP_WESTER_PISTOL && cent->currentState.modelindex2 == WEAPON_CHARGING_ALT ) ||
+		  (cent->currentState.weapon == WP_ELG_3A && cent->currentState.modelindex2 == WEAPON_CHARGING_ALT)))
 	{
 		int		shader = 0;
 		float	val = 0.0f;
@@ -604,7 +605,8 @@ Ghoul2 Insert End
 
 		if ( cent->currentState.weapon == WP_BRYAR_PISTOL ||
 			cent->currentState.weapon == WP_BRYAR_OLD ||
-			cent->currentState.weapon == WP_WESTER_PISTOL)
+			cent->currentState.weapon == WP_WESTER_PISTOL ||
+			cent->currentState.weapon == WP_ELG_3A)
 		{
 			// Hardcoded max charge time of 1 second
 			val = ( cg.time - cent->currentState.constantLight ) * 0.001f;
@@ -1745,7 +1747,8 @@ void CG_FireWeapon( centity_t *cent, qboolean altFire ) {
 			(ent->weapon == WP_WESTER_PISTOL && altFire) ||
 			(ent->weapon == WP_BOWCASTER && !altFire) ||
 			(ent->weapon == WP_DEMP2 && altFire) ||
-			(ent->weapon == WP_CLONE_PISTOL1 && altFire))
+			(ent->weapon == WP_CLONE_PISTOL1 && altFire) ||
+			(ent->weapon == WP_ELG_3A && altFire))
 			
 		{
 			float val = ( cg.time - cent->currentState.constantLight ) * 0.001f;
@@ -1904,6 +1907,7 @@ void CG_MissileHitWall(int weapon, int clientNum, vec3_t origin, vec3_t dir, imp
 		FX_ConcussionHitWall(origin, dir, weapon, altFire);
 		break;
 
+	case WP_ELG_3A:
 	case WP_WESTER_PISTOL:
 	case WP_BRYAR_OLD:
 		if ( altFire )
@@ -2087,6 +2091,7 @@ void CG_MissileHitPlayer(int weapon, vec3_t origin, vec3_t dir, int entityNum, q
 		FX_ConcussionHitPlayer( origin, dir, humanoid, weapon, altFire );
 		break;
 
+	case WP_ELG_3A:
 	case WP_WESTER_PISTOL:
 	case WP_BRYAR_OLD:
 		if ( altFire )
