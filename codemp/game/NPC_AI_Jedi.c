@@ -514,7 +514,7 @@ void Boba_FireDecide( void )
 	vec3_t	impactPos, enemyDir, shootDir;
 	float	enemyDist, dot;
 
-	if ( NPC_IsBountyHunter(NPCS.NPC)
+	if ( (NPC_IsBountyHunter(NPCS.NPC) || NPCS.NPC->hasJetpack)
 		&& NPCS.NPC->client->ps.groundEntityNum == ENTITYNUM_NONE
 		&& NPCS.NPC->client->ps.fd.forceJumpZStart
 		&& !BG_FlippingAnim( NPCS.NPC->client->ps.legsAnim )

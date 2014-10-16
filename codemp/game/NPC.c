@@ -1612,7 +1612,7 @@ void NPC_RunBehavior( int team, int bState )
 	{
 		NPC_BehaviorSet_Seeker( bState );
 	}
-	else if ( NPCS.NPC->client->NPC_class == CLASS_BOBAFETT )
+	else if ( NPCS.NPC->client->NPC_class == CLASS_BOBAFETT || NPCS.NPC->hasJetpack )
 	{//bounty hunter
 		if ( Boba_Flying( NPCS.NPC ) )
 		{

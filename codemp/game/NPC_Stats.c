@@ -603,6 +603,7 @@ void NPC_Precache ( gentity_t *spawner )
 	{//sorry, can't precache a random just yet
 		return;
 	}
+
 	strcpy(customSkin,"default");
 
 	p = NPCParms;
@@ -1102,6 +1103,8 @@ qboolean NPC_ParseParms( const char *NPCName, gentity_t *NPC )
 	NPC->client->ps.customRGBA[1]=255;
 	NPC->client->ps.customRGBA[2]=255;
 	NPC->client->ps.customRGBA[3]=255;
+
+	NPC->hasJetpack = qfalse;
 
 	if ( !Q_stricmp( "random", NPCName ) )
 	{//Randomly assemble a starfleet guy
@@ -2119,6 +2122,22 @@ qboolean NPC_ParseParms( const char *NPCName, gentity_t *NPC )
 				{
 					NPC->client->ps.stats[STAT_MAX_HEALTH] = NPC->client->pers.maxHealth = n;
 				}
+				continue;
+			}
+
+			if (!Q_stricmp(token, "jetpack"))
+			{// UQ1: Added. Marks that this NPC has a jetpack...
+				if ( COM_ParseInt( &p, &n ) )
+				{
+					SkipRestOfLine( &p );
+					continue;
+				}
+				if ( n > 0 )
+				{
+					NPC->hasJetpack = qtrue;
+				}
+
+				NPC->hasJetpack = qfalse;
 				continue;
 			}
 
