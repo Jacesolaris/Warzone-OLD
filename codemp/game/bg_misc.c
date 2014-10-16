@@ -1389,27 +1389,6 @@ Don't place this
 	"@MENUS_THE_PRIMARY_WEAPON_OF"				// description
 },
 
-//
-/*QUAKED weapon_wester_pistol (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-Don't place this
-*/
-{
-	"weapon_wester_pistol",
-	"sound/weapons/w_pkup.wav",
-	{ "models/weapons3/elg-3a/blaster_pistol_w.glm",
-	0, 0, 0 },
-	/* view */		"models/weapons3/elg-3a/blaster_pistol.md3",
-	/* icon */		"gfx/hud/w_icon_elg-3a",
-	/* pickup *///	"Bryar Pistol",
-	100,
-	IT_WEAPON,
-	WP_ELG_3A,
-	/* precache */ "",
-	/* sounds */ "",
-	"@SP_INGAME_BLASTER_PISTOL"					// description
-},
-
-//WP_ELG_3A
 /*QUAKED weapon_wester_pistol (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
 Don't place this
 */
@@ -1429,6 +1408,25 @@ Don't place this
 	"@SP_INGAME_BLASTER_PISTOL"					// description
 },
 
+//
+/*QUAKED weapon_egl-3e_pistol (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+Don't place this
+*/
+{
+	"weapon_egl-3e_pistol",
+	"sound/weapons/w_pkup.wav",
+	{ "models/weapons3/elg-3a/blaster_pistol_w.glm",
+	0, 0, 0 },
+	/* view */		"models/weapons3/elg-3a/blaster_pistol.md3",
+	/* icon */		"gfx/hud/w_icon_elg-3a",
+	/* pickup *///	"Bryar Pistol",
+	100,
+	IT_WEAPON,
+	WP_ELG_3A,
+	/* precache */ "",
+	/* sounds */ "",
+	"@SP_INGAME_BLASTER_PISTOL"					// description
+},
 
 /*QUAKED weapon_blaster (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
 */

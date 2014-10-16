@@ -6644,14 +6644,14 @@ void BountyHunter_SelectBestWeapon( void )
 	{
 		Boba_ChangeWeapon( WP_ROCKET_LAUNCHER );
 	}
-	else if ( NPCS.NPC->client->ps.weapon != WP_A280
+	else if (NPCS.NPC->client->ps.weapon != WP_EE3
 		&& Distance( NPCS.NPC->r.currentOrigin, NPCS.NPC->enemy->r.currentOrigin ) > 500 )
 	{
-		Boba_ChangeWeapon( WP_A280 );
+		Boba_ChangeWeapon(WP_EE3);
 	}
-	else if ( NPCS.NPC->client->ps.weapon != WP_REPEATER )
+	else if (NPCS.NPC->client->ps.weapon != WP_WESTER_PISTOL)
 	{
-		Boba_ChangeWeapon( WP_REPEATER );
+		Boba_ChangeWeapon(WP_WESTER_PISTOL);
 	}
 }
 
