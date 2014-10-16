@@ -2345,7 +2345,7 @@ extern void RunEmplacedWeapon( gentity_t *ent, usercmd_t **ucmd );
 			//self->owner = old;
 		}
 		*/
-		if ( self->client->NPC_class == CLASS_BOBAFETT && self->client->ps.eFlags2 & EF2_FLYING )
+		if ( (self->client->NPC_class == CLASS_BOBAFETT || self->hasJetpack) && self->client->ps.eFlags2 & EF2_FLYING )
 			Boba_FlyStop( self );
 		if ( self->s.NPC_class == CLASS_RANCOR )
 			Rancor_DropVictim( self );
