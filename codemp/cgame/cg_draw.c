@@ -308,7 +308,7 @@ static void CG_DrawZoomMask( void )
 		{
 			if (cg.predictedPlayerState.weapon == WP_BOWCASTER)
 			{
-				CG_DrawPic(0, 0, 640, 480, cgs.media.bowMask);
+				CG_DrawPic(0, 0, 640, 480, cgs.media.bowcasterMask);
 			}
 		}
 		else if (cg.predictedPlayerState.zoomMode == 4)
@@ -319,7 +319,7 @@ static void CG_DrawZoomMask( void )
 			}
 			else if (cg.predictedPlayerState.weapon == WP_A280 || cg.predictedPlayerState.weapon == WP_DLT20A)
 			{
-				CG_DrawPic(0, 0, 640, 480, cgs.media.arcRifleMask);
+				CG_DrawPic(0, 0, 640, 480, cgs.media.RifleMask);
 			}
 			else
 			{
@@ -348,7 +348,7 @@ static void CG_DrawZoomMask( void )
 		{
 			if (cg.predictedPlayerState.weapon == WP_BOWCASTER)
 			{
-				CG_DrawPic(0, 0, 640, 480, cgs.media.bowInsert);
+				CG_DrawPic(0, 0, 640, 480, cgs.media.bowcasterInsert);
 			}
 		}
 		else if (cg.predictedPlayerState.zoomMode == 4)

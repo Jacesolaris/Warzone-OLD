@@ -482,15 +482,9 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->shotEffectFx = trap->FX_RegisterEffect("ee3/blaster_shot");
 
 		//Need this later on for scope code
-		cgs.media.arcRifleMask = trap->R_RegisterShaderNoMip("gfx/2D/arcMask");
+		cgs.media.RifleMask = trap->R_RegisterShaderNoMip("gfx/2D/arcMask");
 		cgs.media.a280Mask = trap->R_RegisterShaderNoMip("gfx/2d/a280cropCircle2");
 		cgs.media.a280Insert = trap->R_RegisterShaderNoMip("gfx/2d/a280cropCircle");
-			
-
-		//cgs.effects.ee3ShotEffect = trap->FX_RegisterEffect("ee3/blaster_shot");
-		//cgs.effects.blasterWallImpactEffect = trap->FX_RegisterEffect("ee3/wall_impact");
-		//cgs.effects.blasterFleshImpactEffect = trap->FX_RegisterEffect("ee3/flesh_impact");
-		//cgs.effects.blasterDroidImpactEffect = trap->FX_RegisterEffect("blaster/droid_impact");
 		break;
 
 	case WP_CLONE_PISTOL1:
@@ -562,7 +556,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		cgs.effects.ee3AltShotEffect = trap->FX_RegisterEffect("ee3/sniper_shot");
 
 		//Need this later on for scope code
-		cgs.media.arcRifleMask = trap->R_RegisterShaderNoMip("gfx/2D/arcMask");
+		cgs.media.RifleMask = trap->R_RegisterShaderNoMip("gfx/2D/arcMask");
 		cgs.media.a280Mask = trap->R_RegisterShaderNoMip("gfx/2d/a280cropCircle2");
 		cgs.media.a280Insert = trap->R_RegisterShaderNoMip("gfx/2d/a280cropCircle");
 		break;
