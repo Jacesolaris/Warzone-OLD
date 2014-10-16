@@ -2962,6 +2962,7 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 		case EFFECT_EXPLOSION_DEMP2ALT:
 			FX_DEMP2_AltDetonate( cent->lerpOrigin, es->weapon );
 			eID = cgs.effects.mAltDetonate;
+			eID = cgs.effects.mAltDetonateEnhancedFX;
 			break;
 		case EFFECT_EXPLOSION_TURRET:
 			eID = cgs.effects.mTurretExplode;

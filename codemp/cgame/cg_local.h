@@ -732,7 +732,6 @@ typedef struct weaponInfo_s {
 	float			missileDlight;
 	vec3_t			missileDlightColor;
 	int				missileRenderfx;
-	int				missile3Renderfx;
 	int				powerupShotRenderfx;
 	sfxHandle_t		missileHitSound;
 
@@ -1588,7 +1587,7 @@ typedef struct cgEffects_s {
 
 	// DEMP2
 	fxHandle_t  demp2ProjectileEffect;
-	fxHandle_t  demp2Lvl3ShotEffect;
+	fxHandle_t  demp2SecShotEffect;
 	fxHandle_t  demp2WallImpactEffect;
 	fxHandle_t  demp2WallImpactEffectEnhanced;
 	fxHandle_t  demp2WallBounceEffect;
@@ -1665,6 +1664,24 @@ typedef struct cgEffects_s {
 	//FORCE
 	fxHandle_t forceLightning;
 	fxHandle_t forceLightningWide;
+
+	//New EFX
+	fxHandle_t mFlameBurnFX;
+	fxHandle_t mFlameBurnEnhancedFX;
+	fxHandle_t mPlasmaFlameBurnFX;
+	fxHandle_t mPlasmaFlameBurnEnhancedFX;
+	fxHandle_t mEmplacedExplodeEnhancedFX;
+	fxHandle_t mTurretExplodeEnhancedFX;
+	fxHandle_t mSparkExplosionEnhancedFX;
+	fxHandle_t mAltDetonateEnhancedFX;
+	fxHandle_t mSparksEnhancedFX;
+	fxHandle_t flamedFX;
+	fxHandle_t flameThrowerFX;
+	fxHandle_t flameThrowerEnhancedFX;
+	fxHandle_t flameThrowerPlasmaFX;
+	fxHandle_t flameThrowerPlasmaEnhancedFX;
+	fxHandle_t iceThrowerFX;
+
 	
 	//[NewLightningEFX]
 	fxHandle_t lightningarc;
@@ -1686,7 +1703,6 @@ typedef struct cgEffects_s {
 	fxHandle_t itemCone;
 
 	fxHandle_t	mSparks;
-	fxHandle_t	mSparksEnhanced1;
 	fxHandle_t	mSaberCut;
 	fxHandle_t	mTurretMuzzleFlash;
 	fxHandle_t	mSaberBlock;
@@ -1709,7 +1725,6 @@ typedef struct cgEffects_s {
 	fxHandle_t	mFlechetteAltBlow;
 	fxHandle_t	mStunBatonFleshImpact;
 	fxHandle_t	mAltDetonate;
-	fxHandle_t	mAltDetonateNewGFX;
 	fxHandle_t	mSparksExplodeNoSound;
 	fxHandle_t	mTripMineLaser;
 	fxHandle_t	mEmplacedMuzzleFlash;

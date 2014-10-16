@@ -6418,6 +6418,8 @@ static qboolean PM_DoChargedWeapons( qboolean vehicleRocketLock, bgEntity_t *veh
 			}
 			break;
 
+
+		case WP_CLONE_PISTOL1:
 		case WP_DEMP2:
 			if ( pm->cmd.buttons & BUTTON_ALT_ATTACK )
 			{

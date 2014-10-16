@@ -269,6 +269,7 @@ static void CG_LightningBolt( centity_t *cent, vec3_t origin ) {
 
 	//Must be a durational weapon that continuously generates an effect.
 	if ( cent->currentState.weapon == WP_DEMP2 && cent->currentState.eFlags & EF_ALT_FIRING )
+		if (cent->currentState.weapon == WP_CLONE_PISTOL1 && cent->currentState.eFlags & EF_ALT_FIRING)
 	{ /*nothing*/ }
 	else
 	{
@@ -567,7 +568,8 @@ Ghoul2 Insert End
 		( ( cent->currentState.modelindex2 == WEAPON_CHARGING_ALT && cent->currentState.weapon == WP_BRYAR_PISTOL ) ||
 		  ( cent->currentState.modelindex2 == WEAPON_CHARGING_ALT && cent->currentState.weapon == WP_BRYAR_OLD ) ||
 		  ( cent->currentState.weapon == WP_BOWCASTER && cent->currentState.modelindex2 == WEAPON_CHARGING ) ||
-		  ( cent->currentState.weapon == WP_DEMP2 && cent->currentState.modelindex2 == WEAPON_CHARGING_ALT) ) )
+		  ( cent->currentState.weapon == WP_DEMP2 && cent->currentState.modelindex2 == WEAPON_CHARGING_ALT) ||
+		  (cent->currentState.weapon == WP_CLONE_PISTOL1 && cent->currentState.modelindex2 == WEAPON_CHARGING_ALT)))
 	{
 		int		shader = 0;
 		float	val = 0.0f;
@@ -615,6 +617,13 @@ Ghoul2 Insert End
 		else if ( cent->currentState.weapon == WP_DEMP2 )
 		{
 			val = ( cg.time - cent->currentState.constantLight ) * 0.001f;
+			shader = cgs.media.lightningFlash;
+			scale = 1.75f;
+		}
+		
+		else if (cent->currentState.weapon == WP_CLONE_PISTOL1)
+		{
+			val = (cg.time - cent->currentState.constantLight) * 0.001f;
 			shader = cgs.media.lightningFlash;
 			scale = 1.75f;
 		}
@@ -669,7 +678,7 @@ Ghoul2 Insert End
 	}
 
 	// add the flash
-	if ( ( weaponNum == WP_DEMP2)
+	if ((weaponNum == WP_DEMP2 && WP_CLONE_PISTOL1)
 		&& ( nonPredictedCent->currentState.eFlags & EF_FIRING ) )
 	{
 		// continuous flash
@@ -1732,7 +1741,9 @@ void CG_FireWeapon( centity_t *cent, qboolean altFire ) {
 		if ((ent->weapon == WP_BRYAR_PISTOL && altFire) ||
 			(ent->weapon == WP_BRYAR_OLD && altFire) ||
 			(ent->weapon == WP_BOWCASTER && !altFire) ||
-			(ent->weapon == WP_DEMP2 && altFire))
+			(ent->weapon == WP_DEMP2 && altFire) ||
+			(ent->weapon == WP_CLONE_PISTOL1 && altFire))
+			
 		{
 			float val = ( cg.time - cent->currentState.constantLight ) * 0.001f;
 
@@ -2137,7 +2148,7 @@ void CG_MissileHitPlayer(int weapon, vec3_t origin, vec3_t dir, int entityNum, q
 	case WP_CLONE_PISTOL1:
 		if (altFire)
 		{
-			trap->FX_PlayEffectID(cgs.effects.mAltDetonateNewGFX, origin, dir, -1, -1, qfalse);
+			trap->FX_PlayEffectID(cgs.effects.mAltDetonateEnhancedFX, origin, dir, -1, -1, qfalse);
 		}
 		else
 		{

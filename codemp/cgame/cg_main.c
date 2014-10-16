@@ -1113,9 +1113,9 @@ static void CG_RegisterSounds( void ) {
 	cgs.media.winnerSound = trap->S_RegisterSound( "sound/chars/protocol/misc/40MOM006" );
 	cgs.media.loserSound = trap->S_RegisterSound( "sound/chars/protocol/misc/40MOM010" );
 	// Weather
-	/*cgs.media.heavyRain = trap_S_RegisterSound("sound/ambient/rain_hard");
-	cgs.media.regularRain = trap_S_RegisterSound("sound/ambient/rain_mid");
-	cgs.media.lightRain = trap_S_RegisterSound("sound/ambient/rain_light");*/
+	/*cgs.media.heavyRain = trap->S_RegisterSound("sound/ambient/rain_hard");
+	cgs.media.regularRain = trap->S_RegisterSound("sound/ambient/rain_mid");
+	cgs.media.lightRain = trap->S_RegisterSound("sound/ambient/rain_light");*/
 }
 
 
@@ -1494,6 +1494,24 @@ static void CG_RegisterGraphics( void ) {
 
 	cgs.media.boltShader = trap->R_RegisterShader( "gfx/misc/blueLine" );
 
+	//New EFX calls
+	cgs.effects.mFlameBurnFX = trap->FX_RegisterEffect("effects/flamethrower/flameburn.efx");
+	cgs.effects.mFlameBurnEnhancedFX = trap->FX_RegisterEffect("effects/flamethrower/flameburn_enhanced2.efx");
+	cgs.effects.mPlasmaFlameBurnFX = trap->FX_RegisterEffect("effects/flamethrower/plasmaflameburn.efx");
+	cgs.effects.mPlasmaFlameBurnEnhancedFX = trap->FX_RegisterEffect("effects/flamethrower/plasmaflameburn_enhanced2.efx");
+	cgs.effects.mEmplacedExplodeEnhancedFX = trap->FX_RegisterEffect("emplaced/explode_enhanced2.efx");
+	cgs.effects.mTurretExplodeEnhancedFX = trap->FX_RegisterEffect("turret/explode_enhanced2.efx");
+	cgs.effects.mTurretExplodeEnhancedFX = trap->FX_RegisterEffect("turret/explode_enhanced2.efx");
+	cgs.effects.mSparkExplosionEnhancedFX = trap->FX_RegisterEffect("sparks/spark_explosion_enhanced2.efx");
+	cgs.effects.mAltDetonateEnhancedFX = trap->FX_RegisterEffect("demp2/altDetonate_enhanced2.efx");
+	cgs.effects.mSparksEnhancedFX = trap->FX_RegisterEffect("sparks/spark_nosnd_enhanced2.efx");
+	cgs.effects.flamedFX = trap->FX_RegisterEffect("effects/flamethrower/flamed.efx");
+	cgs.effects.flameThrowerFX = trap->FX_RegisterEffect("effects/flamethrower/flamethrowerwide.efx");
+	cgs.effects.flameThrowerEnhancedFX = trap->FX_RegisterEffect("effects/flamethrower/flamethrowerwide_enhanced2.efx");
+	cgs.effects.flameThrowerPlasmaFX = trap->FX_RegisterEffect("effects/flamethrower/flamethrowerwideplasma.efx");
+	cgs.effects.flameThrowerPlasmaEnhancedFX = trap->FX_RegisterEffect("effects/flamethrower/flamethrowerwideplasma_enhanced2.efx");
+	cgs.effects.iceThrowerFX = trap->FX_RegisterEffect("effects/flamethrower/ice.efx");
+
 	cgs.effects.turretShotEffect = trap->FX_RegisterEffect( "effects/turret/shot" );
 	cgs.effects.mEmplacedDeadSmoke = trap->FX_RegisterEffect("effects/emplaced/dead_smoke.efx");
 	cgs.effects.mEmplacedExplode = trap->FX_RegisterEffect("effects/emplaced/explode.efx");
@@ -1504,7 +1522,7 @@ static void CG_RegisterGraphics( void ) {
 	cgs.effects.mFlechetteAltBlow = trap->FX_RegisterEffect("effects/flechette/alt_blow.efx");
 	cgs.effects.mStunBatonFleshImpact = trap->FX_RegisterEffect("effects/stunBaton/flesh_impact.efx");
 	cgs.effects.mAltDetonate = trap->FX_RegisterEffect("effects/demp2/altDetonate.efx");
-	cgs.effects.mAltDetonateNewGFX = trap->FX_RegisterEffect("demp2/altDetonate_enhanced2.efx");
+	
 	cgs.effects.mSparksExplodeNoSound = trap->FX_RegisterEffect("effects/sparks/spark_exp_nosnd");
 	cgs.effects.mTripMineLaser = trap->FX_RegisterEffect("effects/tripMine/laser.efx");
 	cgs.effects.mEmplacedMuzzleFlash = trap->FX_RegisterEffect( "effects/emplaced/muzzle_flash" );

@@ -317,6 +317,9 @@ void G_MissileBounceEffect( gentity_t *ent, vec3_t org, vec3_t dir )
 	case WP_BOWCASTER:
 		G_PlayEffectID( G_EffectIndex("bowcaster/deflect"), ent->r.currentOrigin, dir );
 		break;
+	case WP_CLONE_PISTOL1:
+		G_PlayEffectID(G_EffectIndex("demp2/wall_bounce_enhanced2"), ent->r.currentOrigin, dir);
+		break;
 	case WP_BLASTER:
 	case WP_BRYAR_PISTOL:
 		G_PlayEffectID( G_EffectIndex("blaster/deflect"), ent->r.currentOrigin, dir );

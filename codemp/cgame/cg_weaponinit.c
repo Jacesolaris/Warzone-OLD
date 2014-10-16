@@ -170,7 +170,6 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->missileHitSound = NULL_SOUND;
 		weaponInfo->missileTrailFunc = FX_BryarProjectileThink;
 		weaponInfo->missileRenderfx = NULL_FX;
-		weaponInfo->missile3Renderfx = NULL_FX;
 		weaponInfo->altMissileRenderfx = NULL_FX;
 		weaponInfo->powerupShotRenderfx = NULL_FX;
 		weaponInfo->altFlashSound[0] = trap->S_RegisterSound("sound/weapons/bryar/alt_fire.wav");
@@ -209,7 +208,6 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->missileHitSound = NULL_SOUND;
 		weaponInfo->missileTrailFunc = FX_BryarProjectileThink;
 		weaponInfo->missileRenderfx = NULL_FX;
-		weaponInfo->missile3Renderfx = NULL_FX;
 		weaponInfo->altMissileRenderfx = NULL_FX;
 		weaponInfo->powerupShotRenderfx = NULL_FX;
 		weaponInfo->altFlashSound[0] = trap->S_RegisterSound("sound/weapons/westar/alt_fire.wav");
@@ -292,7 +290,6 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->missileHitSound = NULL_SOUND;
 		weaponInfo->missileTrailFunc = FX_RepeaterProjectileThink;
 		weaponInfo->missileRenderfx = trap->FX_RegisterEffect("clone_rifle/projectile");
-		weaponInfo->missile3Renderfx = NULL_FX;
 		weaponInfo->altMissileRenderfx = trap->FX_RegisterEffect("clone_rifle/alt_projectile");
 		weaponInfo->powerupShotRenderfx = NULL_FX;
 		weaponInfo->altFlashSound[0] = trap->S_RegisterSound("sound/weapons/repeater/alt_fire.wav");
@@ -329,7 +326,6 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->missileHitSound = NULL_SOUND;
 		weaponInfo->missileTrailFunc = FX_RepeaterProjectileThink;
 		weaponInfo->missileRenderfx = trap->FX_RegisterEffect("clone_rifle/projectile");
-		weaponInfo->missile3Renderfx = NULL_FX;
 		weaponInfo->altMissileRenderfx = trap->FX_RegisterEffect("clone_rifle/alt_projectile");
 		weaponInfo->powerupShotRenderfx = NULL_FX;
 		weaponInfo->altFlashSound[0] = trap->S_RegisterSound("sound/weapons/repeater/alt_fire.wav");
@@ -367,7 +363,6 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->missileHitSound = NULL_SOUND;
 		weaponInfo->missileTrailFunc = FX_FlechetteProjectileThink;
 		weaponInfo->missileRenderfx = NULL_FX;
-		weaponInfo->missile3Renderfx = NULL_FX;
 		weaponInfo->altMissileRenderfx = NULL_FX;
 		weaponInfo->powerupShotRenderfx = NULL_FX;
 		weaponInfo->altFlashSound[0] = trap->S_RegisterSound("sound/weapons/T-21/alt_fire.mp3");
@@ -434,7 +429,6 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->missileDlight = 0;
 		weaponInfo->missileHitSound = NULL_SOUND;
 		weaponInfo->missileTrailFunc = FX_DEMP2_ProjectileThink;
-		weaponInfo->missile3Renderfx = NULL_FX;
 		weaponInfo->powerupShotRenderfx = NULL_FX;
 		weaponInfo->altFlashSound[0] = trap->S_RegisterSound("sound/weapons/demp2/altfire.wav");
 		weaponInfo->altFiringSound = NULL_SOUND;
@@ -445,7 +439,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altMissileSound = NULL_SOUND;
 		weaponInfo->altMissileDlight = 0;
 		weaponInfo->altMissileHitSound = NULL_SOUND;
-		weaponInfo->altMissileTrailFunc = 0;
+		weaponInfo->altMissileTrailFunc = FX_DEMP2_BounceWall;
 		weaponInfo->missileWallImpactfx = trap->FX_RegisterEffect("demp2/wall_impact");
 		weaponInfo->wallImpactEffectEnhancedFX = trap->FX_RegisterEffect("demp2/wall_impact_enhanced2");
 		weaponInfo->shotEffectFx = trap->FX_RegisterEffect("demp2/lvl3_shot");
@@ -470,7 +464,6 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->missileHitSound = NULL_SOUND;
 		weaponInfo->missileTrailFunc = FX_T21ProjectileThink;
 		weaponInfo->missileRenderfx = NULL_FX;
-		weaponInfo->missile3Renderfx = NULL_FX;
 		weaponInfo->altMissileRenderfx = NULL_FX;
 		weaponInfo->powerupShotRenderfx = NULL_FX;
 		weaponInfo->altFlashSound[0] = trap->S_RegisterSound("sound/weapons/A280/alt_fire.wav");
@@ -510,7 +503,6 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->missileHitSound = NULL_SOUND;
 		weaponInfo->missileTrailFunc = FX_RepeaterProjectileThink;
 		weaponInfo->missileRenderfx = trap->FX_RegisterEffect("clone_rifle/projectile");
-		weaponInfo->missile3Renderfx = NULL_FX;
 		weaponInfo->altMissileRenderfx = trap->FX_RegisterEffect("clone_rifle/alt_projectile");
 		weaponInfo->powerupShotRenderfx = NULL_FX;
 		weaponInfo->altFlashSound[0] = trap->S_RegisterSound("sound/weapons/repeater/alt_fire.wav");
@@ -548,7 +540,6 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->missileHitSound = NULL_SOUND;
 		weaponInfo->missileTrailFunc = FX_BlasterProjectileThink;
 		weaponInfo->missileRenderfx = NULL_FX;
-		weaponInfo->missile3Renderfx = NULL_FX;
 		weaponInfo->altMissileRenderfx = NULL_FX;
 		weaponInfo->powerupShotRenderfx = NULL_FX;
 		weaponInfo->altFlashSound[0] = trap->S_RegisterSound("sound/weapons/blasterMB/alt_fire.wav");
