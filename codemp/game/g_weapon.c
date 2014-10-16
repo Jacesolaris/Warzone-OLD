@@ -4596,6 +4596,7 @@ void FireWeapon( gentity_t *ent, qboolean altFire ) {
 				WP_FireConcussion( ent );
 			break;
 
+		case WP_WESTER_PISTOL:
 		case WP_BRYAR_OLD:
 			WP_FireBryarPistol( ent, altFire );
 			break;

@@ -249,6 +249,7 @@ int WeaponReadyAnim[WP_NUM_WEAPONS] =
 	TORSO_WEAPONREADY2,//WP_CLONE_PISTOL1
 	TORSO_WEAPONREADY3,//WP_DLT20A
 	TORSO_WEAPONREADY3,//WP_CLONERIFLE
+	TORSO_WEAPONREADY2,//WP_WESTER_PISTOL
 	TORSO_WEAPONREADY3,//TORSO_WEAPONREADY5,//WP_BOWCASTER,
 	TORSO_WEAPONREADY3,//TORSO_WEAPONREADY6,//WP_REPEATER,
 	TORSO_WEAPONREADY3,//TORSO_WEAPONREADY7,//WP_DEMP2,
@@ -298,6 +299,7 @@ int WeaponReadyLegsAnim[WP_NUM_WEAPONS] =
 	BOTH_STAND1,//WP_CLONE_PISTOL1
 	BOTH_STAND1,//WP_DLT20A
 	BOTH_STAND1,//WP_CLONERIFLE
+	BOTH_STAND1,//WP_WESTER_PISTOL
 	BOTH_STAND1,//TORSO_WEAPONREADY5,//WP_BOWCASTER,
 	BOTH_STAND1,//TORSO_WEAPONREADY6,//WP_REPEATER,
 	BOTH_STAND1,//TORSO_WEAPONREADY7,//WP_DEMP2,
@@ -346,6 +348,7 @@ int WeaponAttackAnim[WP_NUM_WEAPONS] =
 	BOTH_ATTACK2,//WP_CLONE_PISTOL1
 	BOTH_ATTACK3, //WP_DLT20A
 	BOTH_ATTACK3,//WP_CLONERIFLE
+	BOTH_ATTACK2,//WP_WESTER_PISTOL
 	BOTH_ATTACK3,//BOTH_ATTACK5,//WP_BOWCASTER,
 	BOTH_ATTACK3,//BOTH_ATTACK6,//WP_REPEATER,
 	BOTH_ATTACK2,//BOTH_ATTACK7,//WP_DEMP2,
@@ -1214,6 +1217,7 @@ Don't place this
 		"@MENUS_CONC_RIFLE_DESC"					// description
 	},
 
+
 /*QUAKED weapon_bryar_pistol_old (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
 Don't place this
 */
@@ -1253,41 +1257,41 @@ Don't place this
 
 	
 
-	/*QUAKED weapon_westarm 5 (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-	*/
-		{
-			"weapon_dc-15",
-			"sound/weapons/w_pkup.wav",
-			{ "models/weapons3/cw-w5/dc-15_ext_w.glm",
-			0, 0, 0 },
-			/* view */		"models/weapons3/cw-w5/dc-15_ext.md3",
-			/* icon */		"gfx/hud/w_icon_cw-w5g",
-			/* pickup *///	"dc-15",
-			100,
-			IT_WEAPON,
-			WP_DC15,
-			/* precache */ "",
-			/* sounds */ "",
-			"@MENUS_THE_PRIMARY_WEAPON_OF"				// description
-		},
-
-	/*QUAKED weapon_westarm 5 (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-	*/
+/*QUAKED weapon_westarm 5 (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+*/
 	{
-		"weapon_westarm5",
+		"weapon_dc-15",
 		"sound/weapons/w_pkup.wav",
-		{ "models/weapons3/westarm5/heavy_repeater_w.glm",
+		{ "models/weapons3/cw-w5/dc-15_ext_w.glm",
 		0, 0, 0 },
-		/* view */		"models/weapons3/westarm5/heavy_repeater.md3",
-		/* icon */		"gfx/hud/w_icon_cw-w5",
-		/* pickup *///	"weastarm 5",
+		/* view */		"models/weapons3/cw-w5/dc-15_ext.md3",
+		/* icon */		"gfx/hud/w_icon_cw-w5g",
+		/* pickup *///	"dc-15",
 		100,
 		IT_WEAPON,
-		WP_WESTARM5,
+		WP_DC15,
 		/* precache */ "",
 		/* sounds */ "",
 		"@MENUS_THE_PRIMARY_WEAPON_OF"				// description
 	},
+
+/*QUAKED weapon_westarm 5 (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+*/
+{
+	"weapon_westarm5",
+	"sound/weapons/w_pkup.wav",
+	{ "models/weapons3/westarm5/heavy_repeater_w.glm",
+	0, 0, 0 },
+	/* view */		"models/weapons3/westarm5/heavy_repeater.md3",
+	/* icon */		"gfx/hud/w_icon_cw-w5",
+	/* pickup *///	"weastarm 5",
+	100,
+	IT_WEAPON,
+	WP_WESTARM5,
+	/* precache */ "",
+	/* sounds */ "",
+	"@MENUS_THE_PRIMARY_WEAPON_OF"				// description
+},
 
 
 /*QUAKED weapon_t-21 (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
@@ -1326,24 +1330,6 @@ Don't place this
 	"@MENUS_THE_PRIMARY_WEAPON_OF"				// description
 },
 
-/*QUAKED weapon_dc-17 (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-*/
-{
-	"weapon_clone_pistol_1",
-	"sound/weapons/w_pkup.wav",
-	{ "models/weapons3/dc-17/dc-17_w.glm",
-	0, 0, 0 },
-	/* view */		"models/weapons3/dc-17/dc-17.md3",
-	/* icon */		"gfx/hud/w_icon_clonepistol_1",
-	/* pickup *///	"clone_pistol_1",
-	100,
-	IT_WEAPON,
-	WP_CLONE_PISTOL1,
-	/* precache */ "",
-	/* sounds */ "",
-	"@MENUS_THE_PRIMARY_WEAPON_OF"				// description
-},
-
 
 /*QUAKED weapon_t-21 (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
 */
@@ -1366,21 +1352,60 @@ Don't place this
 	
 /*QUAKED weapon_CloneTrooper_Rifle (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
 */
-	{
-		"weapon_CloneTrooper_Rifle",
-		"sound/weapons/w_pkup.wav",
-		{ "models/weapons3/heavy_repeater/heavy_repeater_w.glm",
-		0, 0, 0 },
-		/* view */		"models/weapons3/heavy_repeater/heavy_repeater.md3",
-		/* icon */		"gfx/hud/w_icon_clonerifle",
-		/* pickup *///	"Clone Trooper Rifle",
-		100,
-		IT_WEAPON,
-		WP_CLONERIFLE,
-		/* precache */ "",
-		/* sounds */ "",
-		"@MENUS_THE_PRIMARY_WEAPON_OF"				// description
-	},
+{
+	"weapon_CloneTrooper_Rifle",
+	"sound/weapons/w_pkup.wav",
+	{ "models/weapons3/heavy_repeater/heavy_repeater_w.glm",
+	0, 0, 0 },
+	/* view */		"models/weapons3/heavy_repeater/heavy_repeater.md3",
+	/* icon */		"gfx/hud/w_icon_clonerifle",
+	/* pickup *///	"Clone Trooper Rifle",
+	100,
+	IT_WEAPON,
+	WP_CLONERIFLE,
+	/* precache */ "",
+	/* sounds */ "",
+	"@MENUS_THE_PRIMARY_WEAPON_OF"				// description
+},
+
+/*QUAKED weapon_clone_pistol_1 (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+*/
+{
+	"weapon_clone_pistol_1",
+	"sound/weapons/w_pkup.wav",
+	{ "models/weapons3/dc-17/dc-17_w.glm",
+	0, 0, 0 },
+	/* view */		"models/weapons3/dc-17/dc-17.md3",
+	/* icon */		"gfx/hud/w_icon_clonepistol_1",
+	/* pickup *///	"clone_pistol_1",
+	100,
+	IT_WEAPON,
+	WP_CLONE_PISTOL1,
+	/* precache */ "",
+	/* sounds */ "",
+	"@MENUS_THE_PRIMARY_WEAPON_OF"				// description
+},
+
+//
+/*QUAKED weapon_wester_pistol (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+Don't place this
+*/
+{
+	"weapon_wester_pistol",
+	"sound/weapons/w_pkup.wav",
+	{ "models/weapons3/briar_pistol/blaster_pistol_w.glm",
+	0, 0, 0 },
+	/* view */		"models/weapons3/briar_pistol/blaster_pistol.md3",
+	/* icon */		"gfx/hud/w_icon_westar",
+	/* pickup *///	"Bryar Pistol",
+	100,
+	IT_WEAPON,
+	WP_WESTER_PISTOL,
+	/* precache */ "",
+	/* sounds */ "",
+	"@SP_INGAME_BLASTER_PISTOL"					// description
+},
+
 
 /*QUAKED weapon_blaster (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
 */

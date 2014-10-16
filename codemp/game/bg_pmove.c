@@ -6370,6 +6370,7 @@ static qboolean PM_DoChargedWeapons( qboolean vehicleRocketLock, bgEntity_t *veh
 			}
 			break;
 
+		case WP_WESTER_PISTOL:
 		case WP_BRYAR_OLD:
 
 			// alt-fire charges the weapon
