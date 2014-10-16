@@ -1657,7 +1657,7 @@ extern qboolean PATHING_IGNORE_FRAME_TIME;
 
 int ASTAR_FindPath(int from, int to, int *pathlist);
 int ASTAR_FindPathWithTimeLimit(int from, int to, int *pathlist);
-int ASTAR_FindPathFast(int from, int to, int *pathlist, qboolean shorten);
+int ASTAR_FindPathFast(int from, int to, int *pathlist, qboolean altPath);
 
 void NPC_ClearLookTarget(gentity_t *self);
 void BG_VehicleLoadParms(void);

@@ -122,7 +122,7 @@ int ASTAR_GetFCost(gentity_t *bot, int to, int num, int parentNum, float *gcost)
 	//return (int)(gc + hc);
 }
 
-int ASTAR_FindPathFast(int from, int to, int *pathlist, qboolean shorten)
+int ASTAR_FindPathFast(int from, int to, int *pathlist, qboolean altPath)
 {
 	//all the data we have to hold...since we can't do dynamic allocation, has to be MAX_WPARRAY_SIZE
 	//we can probably lower this later - eg, the open list should never have more than at most a few dozen items on it
@@ -134,6 +134,8 @@ int ASTAR_FindPathFast(int from, int to, int *pathlist, qboolean shorten)
 	float		gc;
 	int			i, j, u, v, m;
 	gentity_t	*bot = NULL;
+	int			IGNORE_AREAS_NUM = 0;
+	int			IGNORE_AREAS[16];
 	//int			debug_max_threads = 0;
 
 	if (!PATHING_IGNORE_FRAME_TIME && trap->Milliseconds() - FRAME_TIME > 300)
@@ -174,6 +176,21 @@ int ASTAR_FindPathFast(int from, int to, int *pathlist, qboolean shorten)
 	numOpen++;
 	gcost[from] = 0;																	//its f and g costs are obviously 0
 	fcost[from] = 0;
+
+	if (altPath)
+	{// Mark some locations as bad to alter the path...
+		for (i = 0; i < gWPNum; i+=irand(1,gWPNum*0.3))
+		{
+			if (Distance(gWPArray[i]->origin, gWPArray[from]->origin) > 256
+				&& Distance(gWPArray[i]->origin, gWPArray[to]->origin) > 256)
+			{
+				IGNORE_AREAS[IGNORE_AREAS_NUM] = i;
+				IGNORE_AREAS_NUM++;
+			}
+
+			if (IGNORE_AREAS_NUM >= 16) break;
+		}
+	}
 
 	while (1)
 	{
@@ -238,6 +255,26 @@ int ASTAR_FindPathFast(int from, int to, int *pathlist, qboolean shorten)
 				if (list[newnode] == 2)
 				{																		//if this node is on the closed list, skip it
 					continue;
+				}
+
+				if (altPath)
+				{// Doing an alt path. Check this waypoint is not too close to a marked random location...
+					int			badWP = 0;
+					qboolean	bad = qfalse;
+
+					for (badWP = 0; badWP < IGNORE_AREAS_NUM; badWP++)
+					{
+						if (Distance(gWPArray[i]->origin, gWPArray[IGNORE_AREAS[bad]]->origin) <= 256)
+						{// Too close to bad location...
+							bad = qtrue;
+							break;
+						}
+					}
+
+					if (bad)
+					{// This wp is too close to a marked bad location. Ignore it...
+						continue;
+					}
 				}
 
 				if (list[newnode] != 1)												//if this node is not already on the open list

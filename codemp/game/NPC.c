@@ -4014,10 +4014,6 @@ void NPC_SetEnemyGoal()
 	{
 		memset(NPC->pathlist, WAYPOINT_NONE, MAX_WPARRAY_SIZE);
 		NPC->pathsize = ASTAR_FindPathFast(NPC->wpCurrent, NPC->longTermGoal, NPC->pathlist, qfalse);
-
-		//if (NPC->pathsize <= 0) // Use the alternate (older) A* pathfinding code as alternative/fallback...
-			//NPC->pathsize = DOM_FindIdealPathtoWP(NULL, NPC->wpCurrent, NPC->longTermGoal, -1, NPC->pathlist);
-			//NPC->pathsize = ASTAR_FindPathFast(NPC->wpCurrent, NPC->longTermGoal, NPC->pathlist, qtrue);
 		
 		if (NPC->pathsize > 0)
 		{
@@ -4271,7 +4267,11 @@ void NPC_SetNewGoalAndPath()
 	if (NPC->longTermGoal >= 0)
 	{
 		memset(NPC->pathlist, WAYPOINT_NONE, sizeof(int)*MAX_WPARRAY_SIZE);
-		NPC->pathsize = ASTAR_FindPathFast(NPC->wpCurrent, NPC->longTermGoal, NPC->pathlist, qtrue);
+
+		if (irand(0,10) > 6) // use an alt path...
+			NPC->pathsize = ASTAR_FindPathFast(NPC->wpCurrent, NPC->longTermGoal, NPC->pathlist, qtrue);
+		else
+			NPC->pathsize = ASTAR_FindPathFast(NPC->wpCurrent, NPC->longTermGoal, NPC->pathlist, qfalse);
 
 		if (NPC->pathsize > 0)
 		{
@@ -4337,7 +4337,7 @@ void NPC_SetNewWarzoneGoalAndPath()
 	if (NPC->longTermGoal >= 0)
 	{
 		memset(NPC->pathlist, WAYPOINT_NONE, sizeof(int)*MAX_WPARRAY_SIZE);
-		NPC->pathsize = ASTAR_FindPathFast(NPC->wpCurrent, NPC->longTermGoal, NPC->pathlist, qtrue);
+		NPC->pathsize = ASTAR_FindPathFast(NPC->wpCurrent, NPC->longTermGoal, NPC->pathlist, qfalse);
 
 		if (NPC->pathsize > 0)
 		{
@@ -4874,7 +4874,7 @@ void NPC_SetNewEnemyGoalAndPath()
 	if (NPC->longTermGoal >= 0)
 	{
 		memset(NPC->pathlist, WAYPOINT_NONE, sizeof(int)*MAX_WPARRAY_SIZE);
-		NPC->pathsize = ASTAR_FindPathFast(NPC->wpCurrent, NPC->longTermGoal, NPC->pathlist, qtrue);
+		NPC->pathsize = ASTAR_FindPathFast(NPC->wpCurrent, NPC->longTermGoal, NPC->pathlist, qfalse);
 
 		if (NPC->pathsize > 0)
 		{
