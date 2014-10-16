@@ -1975,7 +1975,8 @@ void CG_MissileHitWall(int weapon, int clientNum, vec3_t origin, vec3_t dir, imp
 	case WP_CLONE_PISTOL1:
 		if (altFire)
 		{
-			FX_DEMP2_BounceWall(origin, dir, weapon, altFire);
+			//FX_DEMP2_BounceWall(origin, dir, weapon, altFire); // UQ1: This isn't right...
+			FX_DEMP2_HitWall(origin, dir, weapon, altFire); // UQ1: This probably is...
 		}
 		else
 		{
