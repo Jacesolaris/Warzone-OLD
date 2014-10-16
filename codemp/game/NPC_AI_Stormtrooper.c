@@ -120,7 +120,7 @@ enum
 	SPEECH_PUSHED
 };
 
-static void ST_Speech( gentity_t *self, int speechType, float failChance )
+void ST_Speech( gentity_t *self, int speechType, float failChance )
 {
 	if ( random() < failChance )
 	{
