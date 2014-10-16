@@ -196,7 +196,43 @@ void CG_RegisterWeapon( int weaponNum) {
 		break;
 
 	case WP_BRYAR_OLD:
-		weaponInfo->item->classname = "Westar";
+		weaponInfo->item->classname = "Old Bayar Pistol";
+		weaponInfo->selectSound = trap->S_RegisterSound("sound/weapons/bryar/select.wav");
+		weaponInfo->flashSound[0] = trap->S_RegisterSound("sound/weapons/bryar/fire.wav");
+		weaponInfo->firingSound = NULL_SOUND;
+		weaponInfo->chargeSound = NULL_SOUND;
+		weaponInfo->muzzleEffect = trap->FX_RegisterEffect("bryar/muzzle_flash");
+		weaponInfo->missileModel = NULL_HANDLE;
+		weaponInfo->missileSound = NULL_SOUND;
+		weaponInfo->missileDlight = 0;
+		weaponInfo->missileHitSound = NULL_SOUND;
+		weaponInfo->missileTrailFunc = FX_BryarProjectileThink;
+		weaponInfo->missileRenderfx = NULL_FX;
+		weaponInfo->altMissileRenderfx = NULL_FX;
+		weaponInfo->powerupShotRenderfx = NULL_FX;
+		weaponInfo->altFlashSound[0] = trap->S_RegisterSound("sound/weapons/bryar/alt_fire.wav");
+		weaponInfo->altFiringSound = NULL_SOUND;
+		weaponInfo->altMuzzleEffect = trap->FX_RegisterEffect("bryar/muzzle_flash");
+		weaponInfo->altMissileModel = NULL_HANDLE;
+		weaponInfo->altMissileSound = NULL_SOUND;
+		weaponInfo->altMissileDlight = 0;
+		weaponInfo->altMissileHitSound = NULL_SOUND;
+		weaponInfo->altMissileTrailFunc = FX_BryarAltProjectileThink;
+		cgs.effects.bryarShotEffect = trap->FX_RegisterEffect("bryar/shot");
+		cgs.effects.bryarShotEffect1 = trap->FX_RegisterEffect("bryar/lvl3_shot");
+		cgs.effects.bryarPowerupShotEffect = trap->FX_RegisterEffect("bryar/crackleShot");
+		cgs.effects.bryarWallImpactEffect = trap->FX_RegisterEffect("bryar/wall_impact");
+		cgs.effects.bryarWallImpactEffectEnhanced = trap->FX_RegisterEffect("bryar/wall_impact_enhanced2");
+		cgs.effects.bryarWallImpactEffect2 = trap->FX_RegisterEffect("bryar/wall_impact2");
+		cgs.effects.bryarWallImpactEffect2Enhanced = trap->FX_RegisterEffect("bryar/wall_impact2_enhanced2");
+		cgs.effects.bryarWallImpactEffect3 = trap->FX_RegisterEffect("bryar/wall_impact3");
+		cgs.effects.bryarWallImpactEffect3Enhanced = trap->FX_RegisterEffect("bryar/wall_impact3_enhanced2");
+		cgs.effects.bryarFleshImpactEffect = trap->FX_RegisterEffect("bryar/flesh_impact");
+		cgs.effects.bryarDroidImpactEffect = trap->FX_RegisterEffect("bryar/droid_impact");
+		cgs.media.bryarFrontFlash = trap->R_RegisterShader("gfx/effects/bryarFrontFlash");
+
+	case WP_WESTER_PISTOL:
+		weaponInfo->item->classname = "Westar Pistol";
 		weaponInfo->selectSound = trap->S_RegisterSound("sound/weapons/bryar/select.wav");
 		weaponInfo->flashSound[0] = trap->S_RegisterSound("sound/weapons/westar/fire.wav");
 		weaponInfo->firingSound = NULL_SOUND;
@@ -230,7 +266,6 @@ void CG_RegisterWeapon( int weaponNum) {
 		cgs.effects.bryarFleshImpactEffect = trap->FX_RegisterEffect("bryar/flesh_impact");
 		cgs.effects.bryarDroidImpactEffect = trap->FX_RegisterEffect("bryar/droid_impact");
 		cgs.media.bryarFrontFlash = trap->R_RegisterShader("gfx/effects/bryarFrontFlash");
-
 		break;
 
 	case WP_A280: // UQ1: Example. Should have it's own fx...
