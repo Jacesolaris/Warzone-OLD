@@ -1001,6 +1001,8 @@ static void WP_BowcasterAltFire( gentity_t *ent )
 
 	missile->flags |= FL_BOUNCE;
 	missile->bounceCount = 3;
+
+	if (ent->s.weapon == WP_CLONE_PISTOL1) missile->bounceCount = 1;
 }
 
 //---------------------------------------------------------
