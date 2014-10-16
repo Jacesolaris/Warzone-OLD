@@ -1393,9 +1393,9 @@ Don't place this
 {
 	"weapon_wester_pistol",
 	"sound/weapons/w_pkup.wav",
-	{ "models/weapons3/briar_pistol/blaster_pistol_w.glm",
+	{ "models/weapons3/briar_pistol/briar_pistol_w.glm",
 	0, 0, 0 },
-	/* view */		"models/weapons3/briar_pistol/blaster_pistol.md3",
+	/* view */		"models/weapons3/briar_pistol/briar_pistol.md3",
 	/* icon */		"gfx/hud/w_icon_westar",
 	/* pickup *///	"Bryar Pistol",
 	100,
