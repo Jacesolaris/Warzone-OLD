@@ -300,6 +300,33 @@ static void CG_DrawZoomMask( void )
 		trap->R_SetColor( colorTable[CT_WHITE] );
 		CG_DrawPic( 0, 0, 640, 480, cgs.media.disruptorMask );
 
+		if (cg.predictedPlayerState.zoomMode == 1)
+		{
+			CG_DrawPic(0, 0, 640, 480, cgs.media.disruptorMask);
+		}
+		else if (cg.predictedPlayerState.zoomMode == 3)
+		{
+			if (cg.predictedPlayerState.weapon == WP_BOWCASTER)
+			{
+				CG_DrawPic(0, 0, 640, 480, cgs.media.bowMask);
+			}
+		}
+		else if (cg.predictedPlayerState.zoomMode == 4)
+		{
+			if (cg.predictedPlayerState.weapon == WP_EE3)
+			{
+				CG_DrawPic(0, 0, 640, 480, cgs.media.projMask);
+			}
+			else if (cg.predictedPlayerState.weapon == WP_A280 || cg.predictedPlayerState.weapon == WP_DLT20A)
+			{
+				CG_DrawPic(0, 0, 640, 480, cgs.media.arcRifleMask);
+			}
+			else
+			{
+				CG_DrawPic(0, 0, 640, 480, cgs.media.a280Mask);
+			}
+		}
+
 		// apparently 99.0f is the full zoom level
 		if ( level >= 99 )
 		{
@@ -313,7 +340,32 @@ static void CG_DrawZoomMask( void )
 		}
 
 		// Draw rotating insert
-		CG_DrawRotatePic2( 320, 240, 640, 480, -level, cgs.media.disruptorInsert );
+		if (cg.predictedPlayerState.zoomMode == 1)
+		{
+			CG_DrawRotatePic2(320, 240, 640, 480, -level, cgs.media.disruptorInsert);
+		}
+		else if (cg.predictedPlayerState.zoomMode == 3)
+		{
+			if (cg.predictedPlayerState.weapon == WP_BOWCASTER)
+			{
+				CG_DrawPic(0, 0, 640, 480, cgs.media.bowInsert);
+			}
+		}
+		else if (cg.predictedPlayerState.zoomMode == 4)
+		{
+			if (cg.predictedPlayerState.weapon == WP_EE3)
+			{
+				CG_DrawPic(0, 0, 640, 480, cgs.media.projInsert);
+			}
+			else if (cg.predictedPlayerState.weapon == WP_A280 || cg.predictedPlayerState.weapon == WP_DLT20A)
+			{
+				//CG_DrawPic( 0, 0, 640, 480, cgs.media.arcRifleInsert );
+			}
+			else
+			{
+				CG_DrawPic(0, 0, 640, 480, cgs.media.a280Insert);
+			}
+		}
 
 		// Increase the light levels under the center of the target
 //		CG_DrawPic( 198, 118, 246, 246, cgs.media.disruptorLight );

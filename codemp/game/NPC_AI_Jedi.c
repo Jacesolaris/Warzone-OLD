@@ -514,7 +514,7 @@ void Boba_FireDecide( void )
 	vec3_t	impactPos, enemyDir, shootDir;
 	float	enemyDist, dot;
 
-	if ( (NPC_IsBountyHunter(NPCS.NPC) || NPCS.NPC->hasJetpack)
+	if ((NPC_IsBountyHunter(NPCS.NPC) || NPCS.NPC->hasJetpack)
 		&& NPCS.NPC->client->ps.groundEntityNum == ENTITYNUM_NONE
 		&& NPCS.NPC->client->ps.fd.forceJumpZStart
 		&& !BG_FlippingAnim( NPCS.NPC->client->ps.legsAnim )
@@ -6645,7 +6645,7 @@ void BountyHunter_SelectBestWeapon( void )
 		Boba_ChangeWeapon( WP_ROCKET_LAUNCHER );
 	}
 	else if (NPCS.NPC->client->ps.weapon != WP_EE3
-		&& Distance( NPCS.NPC->r.currentOrigin, NPCS.NPC->enemy->r.currentOrigin ) > 500 )
+		&& Distance( NPCS.NPC->r.currentOrigin, NPCS.NPC->enemy->r.currentOrigin ) > 50 )
 	{
 		Boba_ChangeWeapon(WP_EE3);
 	}

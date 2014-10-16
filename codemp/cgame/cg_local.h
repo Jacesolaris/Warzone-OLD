@@ -1351,6 +1351,19 @@ typedef struct cgMedia_s {
 	qhandle_t	disruptorInsertTick;
 	qhandle_t	disruptorChargeShader;
 
+	//New Scope calls for guns
+	qhandle_t	arcRifleMask;
+	qhandle_t	arcRifleInsert;
+	qhandle_t	a280Mask;
+	qhandle_t	a280Insert;
+	qhandle_t	a280Light;
+	qhandle_t	a280InsertTick;
+	qhandle_t	a280ChargeShader;
+	qhandle_t	projMask;
+	qhandle_t	projInsert;
+	qhandle_t	bowMask;
+	qhandle_t	bowInsert;
+
 	// Binocular graphics
 	qhandle_t	binocularCircle;
 	qhandle_t	binocularMask;
