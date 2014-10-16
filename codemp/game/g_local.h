@@ -465,6 +465,7 @@ struct gentity_s {
 	int                     npc_mover_start_pos;
 	int                     npc_dumb_route_time;
 	vec3_t                  npc_previous_pos;
+	int						npc_cower_time;
 
 	qboolean				npc_jumping;
 	vec3_t					npc_jump_start;

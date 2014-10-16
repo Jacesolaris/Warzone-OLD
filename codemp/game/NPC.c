@@ -4014,6 +4014,10 @@ void NPC_SetEnemyGoal()
 	{
 		memset(NPC->pathlist, WAYPOINT_NONE, MAX_WPARRAY_SIZE);
 		NPC->pathsize = ASTAR_FindPathFast(NPC->wpCurrent, NPC->longTermGoal, NPC->pathlist, qfalse);
+
+		//if (NPC->pathsize <= 0) // Use the alternate (older) A* pathfinding code as alternative/fallback...
+			//NPC->pathsize = DOM_FindIdealPathtoWP(NULL, NPC->wpCurrent, NPC->longTermGoal, -1, NPC->pathlist);
+			//NPC->pathsize = ASTAR_FindPathFast(NPC->wpCurrent, NPC->longTermGoal, NPC->pathlist, qtrue);
 		
 		if (NPC->pathsize > 0)
 		{
@@ -4267,11 +4271,7 @@ void NPC_SetNewGoalAndPath()
 	if (NPC->longTermGoal >= 0)
 	{
 		memset(NPC->pathlist, WAYPOINT_NONE, sizeof(int)*MAX_WPARRAY_SIZE);
-
-		if (irand(0,10) > 6) // use an alt path...
-			NPC->pathsize = ASTAR_FindPathFast(NPC->wpCurrent, NPC->longTermGoal, NPC->pathlist, qtrue);
-		else
-			NPC->pathsize = ASTAR_FindPathFast(NPC->wpCurrent, NPC->longTermGoal, NPC->pathlist, qfalse);
+		NPC->pathsize = ASTAR_FindPathFast(NPC->wpCurrent, NPC->longTermGoal, NPC->pathlist, qtrue);
 
 		if (NPC->pathsize > 0)
 		{
@@ -4337,7 +4337,7 @@ void NPC_SetNewWarzoneGoalAndPath()
 	if (NPC->longTermGoal >= 0)
 	{
 		memset(NPC->pathlist, WAYPOINT_NONE, sizeof(int)*MAX_WPARRAY_SIZE);
-		NPC->pathsize = ASTAR_FindPathFast(NPC->wpCurrent, NPC->longTermGoal, NPC->pathlist, qfalse);
+		NPC->pathsize = ASTAR_FindPathFast(NPC->wpCurrent, NPC->longTermGoal, NPC->pathlist, qtrue);
 
 		if (NPC->pathsize > 0)
 		{
@@ -4874,7 +4874,7 @@ void NPC_SetNewEnemyGoalAndPath()
 	if (NPC->longTermGoal >= 0)
 	{
 		memset(NPC->pathlist, WAYPOINT_NONE, sizeof(int)*MAX_WPARRAY_SIZE);
-		NPC->pathsize = ASTAR_FindPathFast(NPC->wpCurrent, NPC->longTermGoal, NPC->pathlist, qfalse);
+		NPC->pathsize = ASTAR_FindPathFast(NPC->wpCurrent, NPC->longTermGoal, NPC->pathlist, qtrue);
 
 		if (NPC->pathsize > 0)
 		{
@@ -5156,6 +5156,101 @@ qboolean NPC_FollowEnemyRoute( void )
 	return qtrue;
 }
 
+extern void ST_Speech( gentity_t *self, int speechType, float failChance );
+
+void NPC_CivilianCowerPoint( gentity_t *enemy, vec3_t position )
+{
+	int				i, num;
+	int				touch[MAX_GENTITIES];
+	gentity_t		*NPC;
+	vec3_t			mins, maxs;
+	static vec3_t	range = { 512, 512, 52 };
+
+	VectorSubtract( position, range, mins );
+	VectorAdd( position, range, maxs );
+
+	num = trap->EntitiesInBox( mins, maxs, touch, MAX_GENTITIES );
+
+	for ( i=0 ; i<num ; i++ ) {
+		NPC = &g_entities[touch[i]];
+
+		if ( !NPC ) {
+			continue;
+		}
+		if ( NPC->s.eType != ET_NPC ) {
+			continue;
+		}
+		if (!NPC_IsCivilian(NPC)) {
+			continue;
+		}
+
+		//
+		// This one should cower...
+		//
+
+		if ( NPC->npc_cower_time < level.time && TIMER_Done( NPCS.NPC, "flee" ) && TIMER_Done( NPCS.NPC, "panic" ) )
+		{
+			G_StartFlee( NPC, enemy, position, AEL_DANGER_GREAT, 3000, 5000 );
+			ST_Speech( NPC, 2/*SPEECH_COVER*/, 0 );//FIXME: flee sound?
+		}
+
+		NPC->npc_cower_time = level.time + 12000 + irand(0, 18000);
+	}
+}
+
+void NPC_GenericFrameCode ( gentity_t *self )
+{
+	if ( NPCS.client->ps.weaponstate == WEAPON_READY )
+	{
+		NPCS.client->ps.weaponstate = WEAPON_IDLE;
+	}
+
+	if ( NPCS.NPC->s.torsoAnim == TORSO_WEAPONREADY1 || NPCS.NPC->s.torsoAnim == TORSO_WEAPONREADY3 )
+	{//we look ready for action, using one of the first 2 weapon, let's rest our weapon on our shoulder
+		NPC_SetAnim(NPCS.NPC,SETANIM_TORSO,TORSO_WEAPONIDLE3,SETANIM_FLAG_NORMAL);
+	}
+
+	NPC_CheckAttackHold();
+	NPC_ApplyScriptFlags();
+
+	//cliff and wall avoidance
+	NPC_AvoidWallsAndCliffs();
+
+	// run the bot through the server like it was a real client
+	//=== Save the ucmd for the second no-think Pmove ============================
+	NPCS.ucmd.serverTime = level.time - 50;
+	memcpy( &NPCS.NPCInfo->last_ucmd, &NPCS.ucmd, sizeof( usercmd_t ) );
+	if ( !NPCS.NPCInfo->attackHoldTime )
+	{
+		NPCS.NPCInfo->last_ucmd.buttons &= ~(BUTTON_ATTACK|BUTTON_ALT_ATTACK);//so we don't fire twice in one think
+	}
+	//============================================================================
+	NPC_CheckAttackScript();
+	NPC_KeepCurrentFacing();
+
+	if ( NPC_IsCivilianHumanoid(NPCS.NPC) )
+	{// Set better torso anims when not holding a weapon.
+		NPC_SetAnim(NPCS.NPC, SETANIM_TORSO, BOTH_STAND9IDLE1, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD);
+		NPCS.NPC->client->ps.torsoTimer = 200;
+		//trap->Print(va("%s set torso anim.\n", NPCS.client->modelname));
+	}
+
+	if ( !NPCS.NPC->next_roff_time || NPCS.NPC->next_roff_time < level.time )
+	{//If we were following a roff, we don't do normal pmoves.
+		ClientThink( NPCS.NPC->s.number, &NPCS.ucmd );
+	}
+	else
+	{
+		NPC_ApplyRoff();
+	}
+
+	// end of thinking cleanup
+	NPCS.NPCInfo->touchedByPlayer = NULL;
+
+	NPC_CheckPlayerAim();
+	NPC_CheckAllClear();
+}
+
 /*
 ===============
 NPC_Think
@@ -5341,113 +5436,57 @@ void NPC_Think ( gentity_t *self)//, int msec )
 
 			if (!self->enemy)
 			{
-				if (use_pathing && NPC_FollowRoutes()) 
+				//
+				// Civilian NPC cowerring...
+				//
+				if (self->npc_cower_time < level.time)
+				{// Just finished cowerring... Stand up again...
+					if (NPCS.NPCInfo->scriptFlags & SCF_CROUCHED)
+					{// Makse sure they are no longer crouching/cowering in place...
+						NPCS.NPCInfo->scriptFlags &= ~SCF_CROUCHED;
+						NPCS.ucmd.upmove = 127;
+					}
+				}
+
+				if (self->npc_cower_time > level.time)
+				{// A civilian NPC that is cowering in place...
+					if ( TIMER_Done( NPCS.NPC, "flee" ) && TIMER_Done( NPCS.NPC, "panic" ) )
+					{// We finished running away, now cower in place...
+						NPCS.ucmd.forwardmove = 0;
+						NPCS.ucmd.rightmove = 0;
+						NPCS.ucmd.upmove = 0;
+						NPCS.ucmd.buttons = 0;
+
+						if (!(NPCS.NPCInfo->scriptFlags & SCF_CROUCHED))
+						{// Makse sure they are crouching/cowering in place...
+							NPCS.NPCInfo->scriptFlags |= SCF_CROUCHED;
+
+							if (self->s.eType == ET_PLAYER)
+								trap->EA_Crouch(self->s.number);
+							else
+								NPCS.ucmd.upmove = -127;
+
+							NPC_FacePosition( self->r.currentOrigin, qtrue ); // Should make them look at the ground I hope...
+						}
+					}
+
+					NPC_GenericFrameCode( self );
+				}
+				//
+				// Pathfinding...
+				//
+				else if (use_pathing && NPC_FollowRoutes()) 
 				{
 					//trap->Print("NPCBOT DEBUG: NPC is following routes.\n");
-
-					if ( NPCS.client->ps.weaponstate == WEAPON_READY )
-					{
-						NPCS.client->ps.weaponstate = WEAPON_IDLE;
-					}
-
-					if ( NPCS.NPC->s.torsoAnim == TORSO_WEAPONREADY1 || NPCS.NPC->s.torsoAnim == TORSO_WEAPONREADY3 )
-					{//we look ready for action, using one of the first 2 weapon, let's rest our weapon on our shoulder
-						NPC_SetAnim(NPCS.NPC,SETANIM_TORSO,TORSO_WEAPONIDLE3,SETANIM_FLAG_NORMAL);
-					}
-
-					NPC_CheckAttackHold();
-					NPC_ApplyScriptFlags();
-
-					//cliff and wall avoidance
-					NPC_AvoidWallsAndCliffs();
-
-					// run the bot through the server like it was a real client
-					//=== Save the ucmd for the second no-think Pmove ============================
-					NPCS.ucmd.serverTime = level.time - 50;
-					memcpy( &NPCS.NPCInfo->last_ucmd, &NPCS.ucmd, sizeof( usercmd_t ) );
-					if ( !NPCS.NPCInfo->attackHoldTime )
-					{
-						NPCS.NPCInfo->last_ucmd.buttons &= ~(BUTTON_ATTACK|BUTTON_ALT_ATTACK);//so we don't fire twice in one think
-					}
-					//============================================================================
-					NPC_CheckAttackScript();
-					NPC_KeepCurrentFacing();
-
-					if ( NPC_IsCivilianHumanoid(NPCS.NPC) )
-					{// Set better torso anims when not holding a weapon.
-						NPC_SetAnim(NPCS.NPC, SETANIM_TORSO, BOTH_STAND9IDLE1, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD);
-						NPCS.NPC->client->ps.torsoTimer = 200;
-						//trap->Print(va("%s set torso anim.\n", NPCS.client->modelname));
-					}
-
-					if ( !NPCS.NPC->next_roff_time || NPCS.NPC->next_roff_time < level.time )
-					{//If we were following a roff, we don't do normal pmoves.
-						ClientThink( NPCS.NPC->s.number, &NPCS.ucmd );
-					}
-					else
-					{
-						NPC_ApplyRoff();
-					}
-
-					// end of thinking cleanup
-					NPCS.NPCInfo->touchedByPlayer = NULL;
-
-					NPC_CheckPlayerAim();
-					NPC_CheckAllClear();
+					NPC_GenericFrameCode( self );
 				}
+				//
+				// Patroling...
+				//
 				else if (!use_pathing && NPC_PatrolArea())
 				{
 					//trap->Print("NPCBOT DEBUG: NPC is patroling.\n");
-
-					if ( NPCS.client->ps.weaponstate == WEAPON_READY )
-					{
-						NPCS.client->ps.weaponstate = WEAPON_IDLE;
-					}
-
-					if ( NPCS.NPC->s.torsoAnim == TORSO_WEAPONREADY1 || NPCS.NPC->s.torsoAnim == TORSO_WEAPONREADY3 )
-					{//we look ready for action, using one of the first 2 weapon, let's rest our weapon on our shoulder
-						NPC_SetAnim(NPCS.NPC,SETANIM_TORSO,TORSO_WEAPONIDLE3,SETANIM_FLAG_NORMAL);
-					}
-
-					NPC_CheckAttackHold();
-					NPC_ApplyScriptFlags();
-
-					//cliff and wall avoidance
-					NPC_AvoidWallsAndCliffs();
-
-					// run the bot through the server like it was a real client
-					//=== Save the ucmd for the second no-think Pmove ============================
-					NPCS.ucmd.serverTime = level.time - 50;
-					memcpy( &NPCS.NPCInfo->last_ucmd, &NPCS.ucmd, sizeof( usercmd_t ) );
-					if ( !NPCS.NPCInfo->attackHoldTime )
-					{
-						NPCS.NPCInfo->last_ucmd.buttons &= ~(BUTTON_ATTACK|BUTTON_ALT_ATTACK);//so we don't fire twice in one think
-					}
-					//============================================================================
-					NPC_CheckAttackScript();
-					NPC_KeepCurrentFacing();
-
-					if ( NPC_IsCivilianHumanoid(NPCS.NPC) )
-					{// Set better torso anims when not holding a weapon.
-						NPC_SetAnim(NPCS.NPC, SETANIM_TORSO, BOTH_STAND9IDLE1, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD);
-						NPCS.NPC->client->ps.torsoTimer = 200;
-						//trap->Print(va("%s set torso anim.\n", NPCS.client->modelname));
-					}
-
-					if ( !NPCS.NPC->next_roff_time || NPCS.NPC->next_roff_time < level.time )
-					{//If we were following a roff, we don't do normal pmoves.
-						ClientThink( NPCS.NPC->s.number, &NPCS.ucmd );
-					}
-					else
-					{
-						NPC_ApplyRoff();
-					}
-
-					// end of thinking cleanup
-					NPCS.NPCInfo->touchedByPlayer = NULL;
-
-					NPC_CheckPlayerAim();
-					NPC_CheckAllClear();
+					NPC_GenericFrameCode( self );
 				}
 				else
 				{
@@ -5458,84 +5497,17 @@ void NPC_Think ( gentity_t *self)//, int msec )
 					NPCS.ucmd.upmove = 0;
 					NPCS.ucmd.buttons = 0;
 
-#ifdef __NPC_BBOX_ADJUST__
-					// Adjust the NPC's bbox size to make it smaller and let it move around easier...
-					if (self->r.maxs[0] != 8)
-					{// UQ1: Assuming HUMANOID NPCs... Exceptions may need to be made...
-						self->r.maxs[0] = 8;
-						self->r.maxs[1] = 8;
-	
-						self->r.mins[0] = -8;
-						self->r.mins[1] = -8;
-						trap->LinkEntity((sharedEntity_t *)self);
-					}
-#endif //__NPC_BBOX_ADJUST__
-
 					if (!NPCS.NPC->NPC->conversationPartner)
 					{// Not chatting with another NPC... Set idle animation...
 						NPC_PickRandomIdleAnimantion(NPCS.NPC);
 					}
 
-					if ( NPCS.client->ps.weaponstate == WEAPON_READY )
-					{
-						NPCS.client->ps.weaponstate = WEAPON_IDLE;
-					}
-
-					//if ( NPCS.NPC->s.torsoAnim == TORSO_WEAPONREADY1 || NPCS.NPC->s.torsoAnim == TORSO_WEAPONREADY3 )
-					//{//we look ready for action, using one of the first 2 weapon, let's rest our weapon on our shoulder
-					//	NPC_SetAnim(NPCS.NPC,SETANIM_TORSO,TORSO_WEAPONIDLE3,SETANIM_FLAG_NORMAL);
-					//}
-
-					NPC_CheckAttackHold();
-					NPC_ApplyScriptFlags();
-
-					//cliff and wall avoidance
-					NPC_AvoidWallsAndCliffs();
-
-					// run the bot through the server like it was a real client
-					//=== Save the ucmd for the second no-think Pmove ============================
-					NPCS.ucmd.serverTime = level.time - 50;
-					memcpy( &NPCS.NPCInfo->last_ucmd, &NPCS.ucmd, sizeof( usercmd_t ) );
-					if ( !NPCS.NPCInfo->attackHoldTime )
-					{
-						NPCS.NPCInfo->last_ucmd.buttons &= ~(BUTTON_ATTACK|BUTTON_ALT_ATTACK);//so we don't fire twice in one think
-					}
-					//============================================================================
-					NPC_CheckAttackScript();
-					NPC_KeepCurrentFacing();
-
-					if ( !NPCS.NPC->next_roff_time || NPCS.NPC->next_roff_time < level.time )
-					{//If we were following a roff, we don't do normal pmoves.
-						ClientThink( NPCS.NPC->s.number, &NPCS.ucmd );
-					}
-					else
-					{
-						NPC_ApplyRoff();
-					}
-
-					// end of thinking cleanup
-					NPCS.NPCInfo->touchedByPlayer = NULL;
-
-					NPC_CheckPlayerAim();
-					NPC_CheckAllClear();
+					NPC_GenericFrameCode( self );
 				}
 			}
 			else
 			{
 				//trap->Print("NPCBOT DEBUG: NPC is attacking.\n");
-
-#ifdef __NPC_BBOX_ADJUST__
-				// Adjust the NPC's bbox size to make it smaller and let it move around easier...
-				if (self->r.maxs[0] != 8)
-				{// UQ1: Assuming HUMANOID NPCs... Exceptions may need to be made...
-					self->r.maxs[0] = 8;
-					self->r.maxs[1] = 8;
-	
-					self->r.mins[0] = -8;
-					self->r.mins[1] = -8;
-					trap->LinkEntity((sharedEntity_t *)self);
-				}
-#endif //__NPC_BBOX_ADJUST__
 
 				NPC_ExecuteBState( self );
 

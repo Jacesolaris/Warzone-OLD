@@ -4478,6 +4478,7 @@ FireWeapon
 ===============
 */
 int BG_EmplacedView(vec3_t baseAngles, vec3_t angles, float *newYaw, float constraint);
+extern void NPC_CivilianCowerPoint( gentity_t *enemy, vec3_t position );
 
 void FireWeapon( gentity_t *ent, qboolean altFire ) {
 	// track shots taken for accuracy tracking. melee weapons are not tracked.
@@ -4571,6 +4572,9 @@ void FireWeapon( gentity_t *ent, qboolean altFire ) {
 			WP_FireMelee( ent, (qboolean)irand(0,1) /*altFire*/);
 			return;
 		}
+
+		// If an NPC is nearby then make them cower in place...
+		NPC_CivilianCowerPoint( ent, ent->r.currentOrigin );
 
 		// fire the specific weapon
 		switch( ent->s.weapon ) {
