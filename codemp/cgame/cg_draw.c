@@ -315,15 +315,15 @@ static void CG_DrawZoomMask( void )
 		{
 			if (cg.predictedPlayerState.weapon == WP_EE3)
 			{
-				CG_DrawPic(0, 0, 640, 480, cgs.media.projMask);
+				CG_DrawPic(0, 0, 640, 480, cgs.media.GunProjMask);
 			}
 			else if (cg.predictedPlayerState.weapon == WP_A280 || cg.predictedPlayerState.weapon == WP_DLT20A)
 			{
-				CG_DrawPic(0, 0, 640, 480, cgs.media.RifleMask);
+				CG_DrawPic(0, 0, 640, 480, cgs.media.GunRifleMask);
 			}
 			else
 			{
-				CG_DrawPic(0, 0, 640, 480, cgs.media.a280Mask);
+				CG_DrawPic(0, 0, 640, 480, cgs.media.GunsMasks);
 			}
 		}
 
@@ -355,7 +355,7 @@ static void CG_DrawZoomMask( void )
 		{
 			if (cg.predictedPlayerState.weapon == WP_EE3)
 			{
-				CG_DrawPic(0, 0, 640, 480, cgs.media.projInsert);
+				CG_DrawPic(0, 0, 640, 480, cgs.media.GunProjInsert);
 			}
 			else if (cg.predictedPlayerState.weapon == WP_A280 || cg.predictedPlayerState.weapon == WP_DLT20A)
 			{
@@ -363,7 +363,7 @@ static void CG_DrawZoomMask( void )
 			}
 			else
 			{
-				CG_DrawPic(0, 0, 640, 480, cgs.media.a280Insert);
+				CG_DrawPic(0, 0, 640, 480, cgs.media.GunInsert);
 			}
 		}
 

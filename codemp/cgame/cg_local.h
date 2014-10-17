@@ -1352,15 +1352,15 @@ typedef struct cgMedia_s {
 	qhandle_t	disruptorChargeShader;
 
 	//New Scope calls for guns
-	qhandle_t	RifleMask;
-	qhandle_t	RifleInsert;
-	qhandle_t	a280Mask;
-	qhandle_t	a280Insert;
-	qhandle_t	a280Light;
-	qhandle_t	a280InsertTick;
-	qhandle_t	a280ChargeShader;
-	qhandle_t	projMask;
-	qhandle_t	projInsert;
+	qhandle_t	GunRifleMask;
+	qhandle_t	GunRifleInsert;
+	qhandle_t	GunsMasks;
+	qhandle_t	GunInsert;
+	qhandle_t	GunLight;
+	qhandle_t	GunInsertTick;
+	qhandle_t	GunChargeShader;
+	qhandle_t	GunProjMask;
+	qhandle_t	GunProjInsert;
 	qhandle_t	bowcasterMask;
 	qhandle_t	bowcasterInsert;
 

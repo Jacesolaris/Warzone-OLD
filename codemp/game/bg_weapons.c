@@ -268,7 +268,7 @@ weaponData_t weaponData[WP_NUM_WEAPONS] =
 		AMMO_POWERCELL,			//	int		ammoIndex;			// Index to proper ammo slot
 		5,						//	int		ammoLow;			// Count when ammo is low
 		8,						//	int		energyPerShot;		// Amount of energy used per shot
-		500,					//	int		fireTime;			// Amount of time between firings
+		400,//500,					//	int		fireTime;			// Amount of time between firings
 		8192,					//	int		range;				// Range of weapon
 		6,						//	int		altEnergyPerShot;	// Amount of energy used for alt-fire
 		900,						//	int		altFireTime;		// Amount of time between alt-firings
@@ -285,10 +285,10 @@ weaponData_t weaponData[WP_NUM_WEAPONS] =
 		AMMO_BLASTER,			//	int		ammoIndex;			// Index to proper ammo slot
 		5,						//	int		ammoLow;			// Count when ammo is low
 		2,						//	int		energyPerShot;		// Amount of energy used per shot
-		350,					//	int		fireTime;			// Amount of time between firings
+		250,					//	int		fireTime;			// Amount of time between firings
 		8192,					//	int		range;				// Range of weapon
 		3,						//	int		altEnergyPerShot;	// Amount of energy used for alt-fire
-		150,					//	int		altFireTime;		// Amount of time between alt-firings
+		750,					//	int		altFireTime;		// Amount of time between alt-firings
 		8192,					//	int		altRange;			// Range of alt-fire
 		0,						//	int		chargeSubTime;		// ms interval for subtracting ammo during charge
 		0,						//	int		altChargeSubTime;	// above for secondary
@@ -544,6 +544,7 @@ qboolean IsSniperRifle ( int weapon )
 	case WP_DISRUPTOR:
 	case WP_A280:
 	case WP_EE3:
+	case WP_DLT20A:
 		return qtrue;
 	default:
 		break;
