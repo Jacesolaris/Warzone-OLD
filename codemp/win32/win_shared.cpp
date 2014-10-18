@@ -258,9 +258,41 @@ static const char *GetErrorString( DWORD error ) {
 	return buf;
 }
 
+int Sys_GetProcessorCoreCount( void ) 
+{// UQ1: Get system cores/processors count...
+	int numCPU = 0;
+#ifdef _WIN32
+	SYSTEM_INFO sysinfo;
+	GetSystemInfo( &sysinfo );
+
+	numCPU = sysinfo.dwNumberOfProcessors;
+#else //!_WIN32
+	numCPU = sysconf( _SC_NPROCESSORS_ONLN );
+#endif //_WIN32
+
+	return numCPU;
+}
+
 void Sys_SetProcessorAffinity( void ) {
 	DWORD_PTR processMask, dummy;
 	HANDLE handle = GetCurrentProcess();
+
+	{// UQ1: Get core count from system and use that ffs...
+		int numCores = Sys_GetProcessorCoreCount();
+		int mask = 0;
+
+		Com_DPrintf( "Found %i CPU cores.\n", numCores );
+
+		//Cvar_Set("com_affinity", va("%i", numCores));
+		for (int core = 0; core < numCores; core++)
+		{
+			mask += (1 << core);
+		}
+
+		if (mask < 1) mask = 1;
+
+		Cvar_Set("com_affinity", va("%i", mask));
+	}
 
 	if ( !GetProcessAffinityMask( handle, &dummy, &dummy ) )
 		return;

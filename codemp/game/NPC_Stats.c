@@ -2132,12 +2132,14 @@ qboolean NPC_ParseParms( const char *NPCName, gentity_t *NPC )
 					SkipRestOfLine( &p );
 					continue;
 				}
+
+				NPC->hasJetpack = qfalse;
+
 				if ( n > 0 )
 				{
 					NPC->hasJetpack = qtrue;
 				}
-
-				NPC->hasJetpack = qfalse;
+				
 				continue;
 			}
 

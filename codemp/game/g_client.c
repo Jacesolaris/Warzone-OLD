@@ -2968,6 +2968,9 @@ void G_UpdateClientAnims(gentity_t *self, float animSpeedScale)
 	torsoAnim = (self->client->ps.torsoAnim);
 	legsAnim = (self->client->ps.legsAnim);
 
+	if (torsoAnim > 32768) return; // obviously bad...
+	if (legsAnim > 32768) return; // obviously bad...
+
 	if (self->client->ps.saberLockFrame)
 	{
 		trap->G2API_SetBoneAnim(self->ghoul2, 0, "model_root", self->client->ps.saberLockFrame, self->client->ps.saberLockFrame+1, BONE_ANIM_OVERRIDE_FREEZE|BONE_ANIM_BLEND, animSpeedScale, level.time, -1, 150);

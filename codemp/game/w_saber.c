@@ -7930,6 +7930,10 @@ void UpdateClientRenderBolts(gentity_t *self, vec3_t renderOrigin, vec3_t render
 void UpdateClientRenderinfo(gentity_t *self, vec3_t renderOrigin, vec3_t renderAngles)
 {
 	renderInfo_t *ri = &self->client->renderInfo;
+
+	if (self->client->ps.torsoAnim > 32768) return; // obviously bad...
+	if (self->client->ps.legsAnim > 32768) return; // obviously bad...
+
 	if (ri->mPCalcTime < level.time)
 	{
 		//We're just going to give rough estimates on most of this stuff,

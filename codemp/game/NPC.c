@@ -5188,7 +5188,7 @@ void NPC_CivilianCowerPoint( gentity_t *enemy, vec3_t position )
 		// This one should cower...
 		//
 
-		if ( NPC->npc_cower_time < level.time && TIMER_Done( NPCS.NPC, "flee" ) && TIMER_Done( NPCS.NPC, "panic" ) )
+		if ( NPC->npc_cower_time < level.time && TIMER_Done( NPC, "flee" ) && TIMER_Done( NPC, "panic" ) )
 		{
 			G_StartFlee( NPC, enemy, position, AEL_DANGER_GREAT, 3000, 5000 );
 			ST_Speech( NPC, 2/*SPEECH_COVER*/, 0 );//FIXME: flee sound?

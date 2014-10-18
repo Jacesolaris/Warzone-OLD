@@ -30,6 +30,11 @@
 #define __AUTOWAYPOINT__
 //#define __COVER_SPOTS__ // UQ1: Not used because we now have NPC bot evasion/cover/etc...
 
+#ifdef _WIN32
+#include <windows.h>
+#include <process.h>
+#endif //_WIN32
+
 #include "../qcommon/q_shared.h"
 #include "../cgame/cg_local.h"
 #include "../ui/ui_shared.h"
@@ -8290,6 +8295,7 @@ AIMod_AutoWaypoint_Cleaner ( qboolean quiet, qboolean null_links_only, qboolean 
 	int			num_passes_completed = 0;
 	float		original_wp_max_distance = 0;
 	float		original_wp_scatter_multiplier = 0;
+	qboolean	SCREENDRAW_ACTIVE = qfalse;
 
 	trap->Cvar_Set("jkg_waypoint_render", "0");
 	trap->UpdateScreen();
@@ -8607,246 +8613,212 @@ AIMod_AutoWaypoint_Cleaner ( qboolean quiet, qboolean null_links_only, qboolean 
 
 		// Disable some ice/water ndoes...
 		if (!relink_only && !convert_old)
-		for (i = 0; i < number_of_nodes; i++)
 		{
-			node_clean_ticker++;
-			calculations_complete++;
-
-			/*
-			if (number_of_nodes <= 5000 )
-			{// No point relinking and saving...
-				AIMod_AutoWaypoint_Free_Memory();
-				AIMod_AutoWaypoint_Optimize_Free_Memory();
-				trap->Print("^4*** ^3AUTO-WAYPOINTER^4: ^5Waypoint cleaner exited. The waypoint file has been optimized enough.\n");
-				
-				// Restore the original multiplier...
-				waypoint_distance_multiplier = original_wp_scatter_multiplier;
-				return;
-			}
-			*/
-
-			// Draw a nice little progress bar ;)
-			aw_percent_complete = (float)((float)((float)(calculations_complete)/(float)(total_calculations))*100.0f);
-
-			if (node_clean_ticker > 100)
+#pragma omp parallel for
+			for (i = 0; i < number_of_nodes; i++)
 			{
-				strcpy( last_node_added_string, va("^5Checking waypoint ^3%i ^5at ^7%f %f %f^5.", i, nodes[i].origin[0], nodes[i].origin[1], nodes[i].origin[2]) );
-				trap->UpdateScreen();
-				node_clean_ticker = 0;
-			}
-
-			if (nodes[i].objectNum[0] == 1)
-				continue;
-
-			if (nodes[i].enodenum <= 1/*0*/)
-			{// Remove all waypoints without any links...
-				nodes[i].objectNum[0] = 1;
-				num_nolink_nodes++;
-				continue;
-			}
-
-			if (!JKG_CheckRoutingFrom( i ) || !JKG_CheckBelowWaypoint( i ))
-			{// Removes all waypoints without any route to the server's specified spawnpoint location...
-				nodes[i].objectNum[0] = 1;
-				num_noroute_nodes++;
-				continue;
-			}
-
-			if (marked_locations)
-			{
-				int z = 0;
-
-				if (AIMOD_IsWaypointHeightMarkedAsBad( nodes[i].origin ))
+				if(omp_get_thread_num() == 0)
 				{
-					nodes[i].objectNum[0] = 1;
-					num_marked_height_nodes++;
-					continue;
-				}
-
-				for (z = 0; z < NUM_REMOVAL_POINTS; z++)
-				{
-					if (VectorDistance(nodes[i].origin, REMOVAL_POINTS[z]) <= 128)
+					if (node_clean_ticker > 100)
 					{
-						nodes[i].objectNum[0] = 1;
-						num_this_location_nodes++;
+						//strcpy( last_node_added_string, va("^5Checking waypoint ^3%i ^5at ^7%f %f %f^5.", i, nodes[i].origin[0], nodes[i].origin[1], nodes[i].origin[2]) );
+						strcpy( last_node_added_string, va("^5Completed ^3%i ^5of ^7%i^5 waypoints.", calculations_complete, total_calculations) );
+						trap->UpdateScreen();
+						node_clean_ticker = 0;
 					}
 				}
 
-				// Skip cleaner...
-				continue;
-			}
-
-			if (relink_only)
-				continue;
-
-			if (null_links_only)
-				continue;
-
-			/*
-			if (nodes[i].enodenum > 2 && LocationIsNearTriggerHurt(nodes[i].origin))
-			{// Lots of links, but also seems to be located close to barb wire (or other damage entity). Remove it!
-				nodes[i].objectNum[0] = 1;
-				num_trigger_hurt_nodes++;
-				continue;
-			}
-			*/
-
-#ifndef __TEST_CLEANER__
-			if (extra)
-			{
-				if (nodes[i].enodenum >= 12/*16*/)
 				{
-					/*if ((nodes[i].type & NODE_LAND_VEHICLE) && !CheckIfAnotherVehicleNodeIsNearby(i))
-					{// We need to never remove vehicle nodes when there is not enough others around...
-					
-					}
-					else*/
-					//if (!CheckIfTooManyLinksRemoved(i, extra))
-					{
+					node_clean_ticker++;
+					calculations_complete++;
+
+					// Draw a nice little progress bar ;)
+					aw_percent_complete = (float)((float)((float)(calculations_complete)/(float)(total_calculations))*100.0f);
+
+
+
+					if (nodes[i].objectNum[0] == 1)
+						continue;
+
+					if (nodes[i].enodenum <= 1/*0*/)
+					{// Remove all waypoints without any links...
 						nodes[i].objectNum[0] = 1;
-						num_skiped_nodes++;
+						num_nolink_nodes++;
 						continue;
 					}
-				}
-			}
-			else if (nodes[i].enodenum >= 16/*16*/)
-			{
-				/*if ((nodes[i].type & NODE_LAND_VEHICLE) && !CheckIfAnotherVehicleNodeIsNearby(i))
-				{// We need to never remove vehicle nodes when there is not enough others around...
-					
-				}
-				else*/
-				if (!CheckIfTooManyLinksRemoved(i, extra))
-				{
-					nodes[i].objectNum[0] = 1;
-					num_skiped_nodes++;
-					continue;
-				}
-			}
 
-			CheackForNearbyDupeNodes(i);
-#else //__TEST_CLEANER__
-			if (nodes[i].enodenum >= 1)
-			{
-				int num_links_alt_reachable = 0;
-				int current_link = 0;
-				int	reach_nodes[64];
-				int	num_reach_nodes = 0;
+					if (!JKG_CheckRoutingFrom( i ) || !JKG_CheckBelowWaypoint( i ))
+					{// Removes all waypoints without any route to the server's specified spawnpoint location...
+						nodes[i].objectNum[0] = 1;
+						num_noroute_nodes++;
+						continue;
+					}
 
-				for (current_link = 0; current_link < nodes[i].enodenum; current_link++)
-				{
-					int			j = 0;
-					int			current_target_node = nodes[i].links[current_link].targetNode;
-					qboolean	return_to_start = qfalse;
-
-					num_reach_nodes = 0;
-
-					for (j = 0; j < nodes[i].enodenum; j++)
+					if (marked_locations)
 					{
-						int k = 0;
-						int target_node1 = nodes[i].links[j].targetNode;
+						int z = 0;
 
-						if (nodes[target_node1].objectNum[0] == 1)
-							continue;
-
-						for (k = 0; k < nodes[target_node1].enodenum; k++)
+						if (AIMOD_IsWaypointHeightMarkedAsBad( nodes[i].origin ))
 						{
-							int target_node2 = nodes[target_node1].links[k].targetNode;
+							nodes[i].objectNum[0] = 1;
+							num_marked_height_nodes++;
+							continue;
+						}
 
-							if (target_node2 == i)
-								continue;
-
-							if (target_node2 == current_target_node)
+						for (z = 0; z < NUM_REMOVAL_POINTS; z++)
+						{
+							if (VectorDistance(nodes[i].origin, REMOVAL_POINTS[z]) <= 128)
 							{
-								num_links_alt_reachable++;
-								reach_nodes[num_reach_nodes] = target_node2;
-								num_reach_nodes++;
-								return_to_start = qtrue;
-								break;
+								nodes[i].objectNum[0] = 1;
+								num_this_location_nodes++;
 							}
 						}
 
-						//if (return_to_start)
-						//	break;
+						// Skip cleaner...
+						continue;
 					}
-				}
 
-				if (num_links_alt_reachable >= nodes[i].enodenum*4)
-				{
-					int k = 0;
-					int num_alt_links = 0;
+					if (relink_only)
+						continue;
 
-					for (k = 0; k < num_reach_nodes; k++)
+					if (null_links_only)
+						continue;
+
+					/*
+					if (nodes[i].enodenum > 2 && LocationIsNearTriggerHurt(nodes[i].origin))
+					{// Lots of links, but also seems to be located close to barb wire (or other damage entity). Remove it!
+					nodes[i].objectNum[0] = 1;
+					num_trigger_hurt_nodes++;
+					continue;
+					}
+					*/
+
+#ifndef __TEST_CLEANER__
+					if (extra)
 					{
-						int j = 0;
-						int target_node1 = reach_nodes[k];
-
-						for (j = 0; j < nodes[i].enodenum; j++)
+						if (nodes[i].enodenum >= 12/*16*/)
 						{
-							qboolean found = qfalse;
-							int l = 0;
-							int target_node2 = nodes[i].links[j].targetNode;
-						
-							for (l = 0; l < nodes[target_node2].enodenum; l++)
-							{
-								int target_node3 = nodes[target_node2].links[l].targetNode;
+							/*if ((nodes[i].type & NODE_LAND_VEHICLE) && !CheckIfAnotherVehicleNodeIsNearby(i))
+							{// We need to never remove vehicle nodes when there is not enough others around...
 
-								if (target_node3 == target_node1)
+							}
+							else*/
+							//if (!CheckIfTooManyLinksRemoved(i, extra))
+							{
+								nodes[i].objectNum[0] = 1;
+								num_skiped_nodes++;
+								continue;
+							}
+						}
+					}
+					else if (nodes[i].enodenum >= 16/*16*/)
+					{
+						/*if ((nodes[i].type & NODE_LAND_VEHICLE) && !CheckIfAnotherVehicleNodeIsNearby(i))
+						{// We need to never remove vehicle nodes when there is not enough others around...
+
+						}
+						else*/
+						if (!CheckIfTooManyLinksRemoved(i, extra))
+						{
+							nodes[i].objectNum[0] = 1;
+							num_skiped_nodes++;
+							continue;
+						}
+					}
+
+					CheackForNearbyDupeNodes(i);
+#else //__TEST_CLEANER__
+					if (nodes[i].enodenum >= 1)
+					{
+						int num_links_alt_reachable = 0;
+						int current_link = 0;
+						int	reach_nodes[64];
+						int	num_reach_nodes = 0;
+
+						for (current_link = 0; current_link < nodes[i].enodenum; current_link++)
+						{
+							int			j = 0;
+							int			current_target_node = nodes[i].links[current_link].targetNode;
+							qboolean	return_to_start = qfalse;
+
+							num_reach_nodes = 0;
+
+							for (j = 0; j < nodes[i].enodenum; j++)
+							{
+								int k = 0;
+								int target_node1 = nodes[i].links[j].targetNode;
+
+								if (nodes[target_node1].objectNum[0] == 1)
+									continue;
+
+								for (k = 0; k < nodes[target_node1].enodenum; k++)
 								{
-									num_alt_links++;
-									found = qtrue;
-									break;
+									int target_node2 = nodes[target_node1].links[k].targetNode;
+
+									if (target_node2 == i)
+										continue;
+
+									if (target_node2 == current_target_node)
+									{
+										num_links_alt_reachable++;
+										reach_nodes[num_reach_nodes] = target_node2;
+										num_reach_nodes++;
+										return_to_start = qtrue;
+										break;
+									}
+								}
+
+								//if (return_to_start)
+								//	break;
+							}
+						}
+
+						if (num_links_alt_reachable >= nodes[i].enodenum*4)
+						{
+							int k = 0;
+							int num_alt_links = 0;
+
+							for (k = 0; k < num_reach_nodes; k++)
+							{
+								int j = 0;
+								int target_node1 = reach_nodes[k];
+
+								for (j = 0; j < nodes[i].enodenum; j++)
+								{
+									qboolean found = qfalse;
+									int l = 0;
+									int target_node2 = nodes[i].links[j].targetNode;
+
+									for (l = 0; l < nodes[target_node2].enodenum; l++)
+									{
+										int target_node3 = nodes[target_node2].links[l].targetNode;
+
+										if (target_node3 == target_node1)
+										{
+											num_alt_links++;
+											found = qtrue;
+											break;
+										}
+									}
+
+									//if (found)
+									//	break;
 								}
 							}
 
-							//if (found)
-							//	break;
+							if (num_alt_links >= nodes[i].enodenum*3 && num_alt_links >= num_reach_nodes*4)
+							{
+								nodes[i].objectNum[0] = 1;
+								num_skiped_nodes++;
+								continue;
+							}
 						}
-					}
 
-					if (num_alt_links >= nodes[i].enodenum*3 && num_alt_links >= num_reach_nodes*4)
-					{
-						nodes[i].objectNum[0] = 1;
-						num_skiped_nodes++;
-						continue;
+						//CheackForNearbyDupeNodes(i);
 					}
 				}
-
-				//CheackForNearbyDupeNodes(i);
-			}
 #endif //__TEST_CLEANER__
-
-			//if (nodes[i].enodenum <= 8/*4*/ || AIMod_AutoWaypoint_Cleaner_NodeHasLinkWithFewLinks(i))
-			//	continue;
-
-			/*if (initial_pass && reducecount)
-			{
-				if (skip == 0)
-				{
-					skip = 1;
-				}
-				else
-				{
-					nodes[i].objectNum[0] = 1;
-					num_skiped_nodes++;
-
-					skip = 0;
-				}
-			}*/
-
-			/*if ((!nowaterremove && (nodes[i].type & NODE_WATER)) || (!noiceremove && (nodes[i].type & NODE_ICE)))
-			{
-				if (node_disable_ticker < node_disable_ratio)
-				{// Remove 2 out of every (node_disable_ratio)..
-					nodes[i].objectNum[0] = 1;
-					num_disabled_nodes++;
-					node_disable_ticker++;
-				}
-				else
-				{
-					node_disable_ticker = 0;
-				}
-			}*/
+			}
 		}
 
 		aw_percent_complete = 0.0f;

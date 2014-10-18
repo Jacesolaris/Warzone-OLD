@@ -491,6 +491,11 @@ static void ProjectDlightTexture( void ) {
 			dlight_t	*dl;
 			vec4_t		vector;
 
+			
+			//if ( !( tess.dlightBits & ( 1 << l ) ) ) {
+			//	continue;	// this surface definately doesn't have any of this light
+			//}
+
 			dl = &backEnd.refdef.dlights[l];
 			VectorCopy( dl->transformed, origin );
 			radius = dl->radius * DLIGHT_SIZE_MULTIPLIER;
