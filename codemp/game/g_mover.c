@@ -3,7 +3,7 @@
 
 #include "g_local.h"
 
-
+//#define __MOVER_DELAY__
 
 /*
 ===============================================================================
@@ -651,6 +651,7 @@ void Reached_BinaryMover( gentity_t *ent )
 	ent->s.loopSound = 0;
 	ent->s.loopIsSoundset = qfalse;
 
+#ifdef __MOVER_DELAY__
 	if ( trigger && !(ent->moverState == MOVER_POS1 || ent->moverState == MOVER_POS2) )
 	{// Moving. Start debounce time clock...
 		trigger->useDebounceTime = level.time + 5100; // about 5 secs wait at each point???
@@ -676,6 +677,7 @@ void Reached_BinaryMover( gentity_t *ent )
 		}
 	}
 	*/
+#endif //__MOVER_DELAY__
 
 	if ( ent->moverState == MOVER_1TO2 )
 	{//reached open
@@ -908,8 +910,8 @@ void Use_BinaryMover( gentity_t *ent, gentity_t *other, gentity_t *activator )
 	{//I cannot be used anymore, must be a door with a wait of -1 that's opened.
 		return;
 	}
-
 	
+#ifdef __MOVER_DELAY__
 	if ( trigger && !(ent->moverState == MOVER_POS1 || ent->moverState == MOVER_POS2) )
 	{// Moving. Start debounce time clock...
 		trigger->useDebounceTime = level.time + 5100; // about 5 secs wait at each point???
@@ -936,6 +938,7 @@ void Use_BinaryMover( gentity_t *ent, gentity_t *other, gentity_t *activator )
 		}
 	}
 	*/
+#endif //__MOVER_DELAY__
 
 	// only the master should be used
 	if ( ent->flags & FL_TEAMSLAVE )
@@ -1217,6 +1220,7 @@ void Touch_DoorTrigger( gentity_t *ent, gentity_t *other, trace_t *trace )
 {
 	gentity_t *relockEnt = NULL;
 
+#ifdef __MOVER_DELAY__
 	//if ( other->client )
 	{// UQ1: let's use a timer to get it to wait at top and bottom positions...
 		if ( !(ent->parent->moverState == MOVER_POS1 || ent->parent->moverState == MOVER_POS2) )
@@ -1230,6 +1234,7 @@ void Touch_DoorTrigger( gentity_t *ent, gentity_t *other, trace_t *trace )
 			return;
 		}
 	}
+#endif //__MOVER_DELAY__
 
 	if ( other->client )
 	{
@@ -1698,6 +1703,7 @@ void Touch_Plat( gentity_t *ent, gentity_t *other, trace_t *trace ) {
 		return;
 	}
 
+#ifdef __MOVER_DELAY__
 	{// UQ1: let's use a timer to get it to wait at top and bottom positions...
 		if ( !(ent->parent->moverState == MOVER_POS1 || ent->parent->moverState == MOVER_POS2) )
 		{// Moving. Start debounce time clock...
@@ -1710,6 +1716,7 @@ void Touch_Plat( gentity_t *ent, gentity_t *other, trace_t *trace ) {
 			return;
 		}
 	}
+#endif //__MOVER_DELAY__
 
 	if ( other->client )
 	{
@@ -1739,6 +1746,7 @@ void Touch_PlatCenterTrigger(gentity_t *ent, gentity_t *other, trace_t *trace ) 
 		return;
 	}
 
+#ifdef __MOVER_DELAY__
 	{// UQ1: let's use a timer to get it to wait at top and bottom positions...
 		if ( !(ent->parent->moverState == MOVER_POS1 || ent->parent->moverState == MOVER_POS2) )
 		{// Moving. Start debounce time clock...
@@ -1752,6 +1760,7 @@ void Touch_PlatCenterTrigger(gentity_t *ent, gentity_t *other, trace_t *trace ) 
 			return;
 		}
 	}
+#endif //__MOVER_DELAY__
 
 	if ( other->client )
 	{
