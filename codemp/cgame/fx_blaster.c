@@ -26,7 +26,7 @@ void FX_BlasterProjectileThink( centity_t *cent, const struct weaponInfo_s *weap
 	if (weapon->missileRenderfx)
 		trap->FX_PlayEffectID(weapon->missileRenderfx, cent->lerpOrigin, forward, -1, -1, qfalse);
 	else	
-	trap->FX_PlayEffectID( weapon->missileRenderfx, cent->lerpOrigin, forward, -1, -1, qfalse );
+	trap->FX_PlayEffectID( cgs.effects.blasterShotEffect, cent->lerpOrigin, forward, -1, -1, qfalse );
 
 	FX_BlasterAddLight(cent->lerpOrigin);
 }
@@ -48,7 +48,7 @@ void FX_BlasterAltFireThink( centity_t *cent, const struct weaponInfo_s *weapon 
 	if (weapon->missileRenderfx)
 		trap->FX_PlayEffectID(weapon->altMissileRenderfx, cent->lerpOrigin, forward, -1, -1, qfalse);
 	else
-		trap->FX_PlayEffectID( weapon->altMissileRenderfx, cent->lerpOrigin, forward, -1, -1, qfalse );
+		trap->FX_PlayEffectID(cgs.effects.blasterShotEffect, cent->lerpOrigin, forward, -1, -1, qfalse );
 
 	FX_BlasterAddLight(cent->lerpOrigin);
 }
