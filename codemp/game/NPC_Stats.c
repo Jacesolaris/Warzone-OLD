@@ -2592,7 +2592,7 @@ qboolean NPC_ParseParms( const char *NPCName, gentity_t *NPC )
 					if (NPC->client->ps.primaryWeapon <= WP_NONE) NPC->client->ps.primaryWeapon = weap;
 					else if (NPC->client->ps.secondaryWeapon <= WP_NONE) NPC->client->ps.secondaryWeapon = weap;
 					else if (NPC->client->ps.temporaryWeapon <= WP_NONE) NPC->client->ps.temporaryWeapon = weap;
-					else trap->Print("WARNING: NPC %s has more then 3 weapons in it's script. Ignoring extras.\n", NPC->NPC_type);
+					else trap->Print("WARNING: NPC %s has more then 3 weapons in it's script. Ignoring extras.\n", NPCName);
 				}
 				continue;
 			}

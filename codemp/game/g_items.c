@@ -2419,7 +2419,10 @@ void Touch_Item (gentity_t *ent, gentity_t *other, trace_t *trace) {
 	}
 #endif //__MMO__
 
+#ifndef __MMO__
+	// UQ1: Don't need this spam in MMO mode...
 	G_LogPrintf( "Item: %i %s\n", other->s.number, ent->item->classname );
+#endif //__MMO__
 
 	predict = other->client->pers.predictItemPickup;
 

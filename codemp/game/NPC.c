@@ -131,6 +131,7 @@ void NPC_RemoveBody( gentity_t *self )
 
 	if ( self->message )
 	{//I still have a key
+		trap->Print("NPC %s not removed because of key.\n", self->NPC_type);
 		return;
 	}
 
@@ -155,6 +156,8 @@ void NPC_RemoveBody( gentity_t *self )
 			{//not being held by a Rancor
 				G_FreeEntity( self );
 			}
+			else
+				trap->Print("NPC %s not removed because of activator1.\n", self->NPC_type);
 		}
 		return;
 	}
@@ -206,8 +209,7 @@ void NPC_RemoveBody( gentity_t *self )
 		//			placed in the map as a corpse
 		if ( self->enemy )
 		{
-			//if ( !self->taskManager || !self->taskManager->IsRunning() )
-			if (!trap->ICARUS_IsRunning(self->s.number))
+			//if (!trap->ICARUS_IsRunning(self->s.number))
 			{
 				if ( !self->activator || !self->activator->client || !(self->activator->client->ps.eFlags2&EF2_HELD_BY_MONSTER) )
 				{//not being held by a Rancor
@@ -219,8 +221,12 @@ void NPC_RemoveBody( gentity_t *self )
 							G_FreeEntity( saberent );
 						}
 					}
+
+					trap->ICARUS_FreeEnt((sharedEntity_t*)self); // UQ1: This???
 					G_FreeEntity( self );
 				}
+				else
+					trap->Print("NPC %s not removed because of activator2.\n", self->NPC_type);
 			}
 		}
 	}
@@ -559,12 +565,25 @@ static void DeadThink ( void )
 		{
 			if ( NPCS.NPC->client->ps.eFlags & EF_NODRAW )
 			{
-				if (!trap->ICARUS_IsRunning(NPCS.NPC->s.number))
-				//if ( !NPC->taskManager || !NPC->taskManager->IsRunning() )
+				//if (!trap->ICARUS_IsRunning(NPCS.NPC->s.number))
 				{
-					NPCS.NPC->think = G_FreeEntity;
-					NPCS.NPC->nextthink = level.time + FRAMETIME;
+					//NPCS.NPC->think = G_FreeEntity;
+					//NPCS.NPC->nextthink = level.time + FRAMETIME;
+
+					if ( NPCS.NPC->client && NPCS.NPC->client->ps.saberEntityNum > 0 && NPCS.NPC->client->ps.saberEntityNum < ENTITYNUM_WORLD )
+					{
+						gentity_t *saberent = &g_entities[NPCS.NPC->client->ps.saberEntityNum];
+						
+						if ( saberent )
+						{
+							G_FreeEntity( saberent );
+						}
+					}
+
+					trap->ICARUS_FreeEnt((sharedEntity_t*)NPCS.NPC); // UQ1: This???
+					G_FreeEntity( NPCS.NPC );
 				}
+				//trap->ICARUS_FreeEnt(NPCS.NPC); // UQ1: This???
 			}
 			else
 			{
@@ -5470,6 +5489,8 @@ void NPC_Think ( gentity_t *self)//, int msec )
 	{
 		self->s.eFlags |= EF_DEAD;
 		self->client->ps.pm_type = PM_DEAD;
+
+		self->health = self->s.health = self->client->ps.stats[STAT_HEALTH] = 0;
 
 		DeadThink();
 
