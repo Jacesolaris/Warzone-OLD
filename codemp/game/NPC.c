@@ -5356,7 +5356,7 @@ void NPC_CivilianCowerPoint( gentity_t *enemy, vec3_t position )
 				ST_Speech( NPC, 2/*SPEECH_COVER*/, 0 );//FIXME: flee sound?
 			}
 
-			NPCS.NPC->npc_cower_runaway_anim = 0; // Select new cower animation...
+			NPC->npc_cower_runaway_anim = 0; // Select new cower animation...
 			NPC->npc_cower_runaway = qtrue;
 		}
 		else if ( NPC->npc_cower_time < level.time && TIMER_Done( NPC, "flee" ) && TIMER_Done( NPC, "panic" ) )
