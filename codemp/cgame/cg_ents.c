@@ -3420,6 +3420,7 @@ Ghoul2 Insert End
 		CG_FX( cent );
 		break;
 
+	case ET_FREED:
 	case ET_INVISIBLE:
 	case ET_PUSH_TRIGGER:
 	case ET_TELEPORT_TRIGGER:
