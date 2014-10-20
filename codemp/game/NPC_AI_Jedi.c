@@ -528,6 +528,11 @@ void Boba_FireDecide( void )
 		return;
 	}
 
+	if (!CanShoot (NPCS.NPC->enemy, NPCS.NPC ))
+	{// UQ1: Umm, how about we actually check if we can hit them first???
+		return;
+	}
+
 	if ( Distance(NPCS.NPC->enemy->r.currentOrigin, NPCS.NPC->r.currentOrigin) <= 64 
 		&& NPCS.NPC->client->ps.weapon != WP_SABER//!NPC_IsJedi(NPCS.NPC) 
 		&& NPCS.NPC->client->NPC_class != CLASS_BOBAFETT // BOBA kicks like a jedi now...
@@ -3013,17 +3018,29 @@ evasionType_t Jedi_SaberBlockGo( gentity_t *self, usercmd_t *cmd, vec3_t pHitloc
 		if ( !saberBusy )
 		{
 			// UQ1: Fall back to using the block button like players...
-			if (self->blockToggleTime > level.time)
+			if (!self->enemy)
+			{// Never, ever use block if we have no enemy...
+				self->client->ps.powerups[PW_BLOCK] = 0;
+				self->blockToggleTime = level.time + 250; // 250 ms between toggles...
+			}
+			else if (self->blockToggleTime > level.time)
 			{// Toggled less then a second ago.. Ignore...
 
+			}
+			else if (self->enemy && self->enemy->s.weapon != WP_SABER)
+			{// UQ1: If the enemy is not holding a saber, then we don't block...
+				self->client->ps.powerups[PW_BLOCK] = 0;
+				self->blockToggleTime = level.time + 250; // 250 ms between toggles...
+			}
+			else if (self->enemy && self->enemy->s.weapon == WP_SABER && Distance(self->r.currentOrigin, self->enemy->r.currentOrigin) > 128)
+			{// UQ1: If the enemy is holding a saber but is out of range, then we don't block...
+				self->client->ps.powerups[PW_BLOCK] = 0;
+				self->blockToggleTime = level.time + 250; // 250 ms between toggles...
 			}
 			else if (!self->client->ps.powerups[PW_BLOCK])
 			{// BLOCK pressed, but PW_BLOCK not active. Turn it ON...
 				self->client->ps.powerups[PW_BLOCK] = INT_MAX; // This *could* be a time in the future instead if you want block to last X milliseconds...
 				self->blockToggleTime = level.time + 250; // 250 ms between toggles...
-
-				//if (!(NPCS.ucmd.buttons & BUTTON_WALKING))
-				//	NPCS.ucmd.buttons |= BUTTON_WALKING;
 			}
 			else
 			{// BLOCK pressed, and PW_BLOCK is active. Turn it OFF...
@@ -4430,8 +4447,11 @@ static qboolean Jedi_AttackDecide( int enemy_dist )
 
 	if ( !(NPCS.ucmd.buttons & BUTTON_ATTACK) && !(NPCS.ucmd.buttons & BUTTON_ALT_ATTACK) )
 	{//not already attacking
-		//Try to attack
-		WeaponThink( qtrue );
+		if (CanShoot (NPCS.NPC->enemy, NPCS.NPC ))
+		{// UQ1: Umm, how about we actually check if we can hit them first???
+			//Try to attack
+			WeaponThink( qtrue );
+		}
 	}
 
 	//FIXME:  Maybe try to push enemy off a ledge?

@@ -466,6 +466,8 @@ struct gentity_s {
 	int                     npc_dumb_route_time;
 	vec3_t                  npc_previous_pos;
 	int						npc_cower_time;
+	qboolean				npc_cower_runaway;
+	int						npc_cower_runaway_anim;
 
 	qboolean				hasJetpack;
 

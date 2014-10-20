@@ -2215,14 +2215,60 @@ void NPC_PickRandomIdleAnimantion(gentity_t *NPC)
 	}
 }
 
-qboolean NPC_SetCivilianMoveAnim( void )
+qboolean NPC_SelectMoveRunAwayAnimation( void )
+{
+	int animChoice = irand(0,1);
+
+	if (NPCS.ucmd.forwardmove < 0) 
+		NPC_SetAnim( NPCS.NPC, SETANIM_LEGS, BOTH_RUNBACK2, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD );
+	else 
+		NPC_SetAnim( NPCS.NPC, SETANIM_LEGS, BOTH_RUN2, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD );
+
+
+	if (NPCS.NPC->npc_cower_runaway_anim == 0)
+	{
+		if (animChoice == 0) 
+			NPCS.NPC->npc_cower_runaway_anim = BOTH_COWER1;
+		else 
+			NPCS.NPC->npc_cower_runaway_anim = TORSO_SURRENDER_START;
+	}
+
+	NPC_SetAnim(NPCS.NPC, SETANIM_TORSO, NPCS.NPC->npc_cower_runaway_anim, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD);
+
+	//trap->Print("%s is running away scared.\n", NPCS.NPC->NPC_type);
+
+	/*
+	// UQ1: Stoiss - know any other good anims???
+	BOTH_TUSKENTAUNT1
+	BOTH_COWER1
+	TORSO_SURRENDER_START
+	BOTH_WOOKRAGE // What is this anim???
+	*/
+
+	NPCS.NPC->client->ps.legsTimer = 200;
+	NPCS.NPC->client->ps.torsoTimer = 200;
+
+	return qtrue;
+}
+
+qboolean NPC_SetCivilianMoveAnim( qboolean walk )
 {
 	if (NPC_IsCivilianHumanoid(NPCS.NPC))
 	{// Set better torso anims when not holding a weapon.
-		if (NPCS.ucmd.forwardmove < 0) 
-			NPC_SetAnim( NPCS.NPC, SETANIM_LEGS, BOTH_WALKBACK2, /*SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD*/0 );
-		else 
-			NPC_SetAnim( NPCS.NPC, SETANIM_LEGS, BOTH_WALK2, /*SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD*/0 );
+		if (walk)
+		{
+			if (NPCS.ucmd.forwardmove < 0) 
+				NPC_SetAnim( NPCS.NPC, SETANIM_LEGS, BOTH_WALKBACK2, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD );
+			else 
+				NPC_SetAnim( NPCS.NPC, SETANIM_LEGS, BOTH_WALK2, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD );
+		}
+		else
+		{
+			if (NPCS.ucmd.forwardmove < 0) 
+				NPC_SetAnim( NPCS.NPC, SETANIM_LEGS, BOTH_RUNBACK2, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD );
+			else 
+				NPC_SetAnim( NPCS.NPC, SETANIM_LEGS, BOTH_RUN2, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD );
+		}
 
 		NPC_SetAnim(NPCS.NPC, SETANIM_TORSO, BOTH_STAND9IDLE1, /*SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD*/0);
 
@@ -2244,7 +2290,7 @@ void NPC_SelectMoveAnimation(qboolean walk)
 	if (NPCS.NPC->client->ps.standheight <= 0)
 		NPCS.NPC->client->ps.standheight = DEFAULT_MAXS_2;
 
-	if (NPC_SetCivilianMoveAnim()) 
+	if (NPC_SetCivilianMoveAnim(walk)) 
 	{
 		return;
 	}
@@ -3132,7 +3178,7 @@ qboolean NPC_NPCBlockingPath()
 }
 
 //Adjusts the moveDir to account for strafing
-void NPC_AdjustforStrafe(vec3_t moveDir)
+void NPC_AdjustforStrafe(vec3_t moveDir, qboolean walk, float walkSpeed)
 {
 	vec3_t right, angles;
 	gentity_t	*NPC = NPCS.NPC;
@@ -3161,11 +3207,17 @@ void NPC_AdjustforStrafe(vec3_t moveDir)
 
 	if (NPC->bot_strafe_left_timer > level.time)
 	{//strafing left
-		VectorScale(right, -64, right);
+		if (walk)
+			VectorScale(right, -walkSpeed, right);
+		else
+			VectorScale(right, -48/*64*/, right);
 	}
 	else if (NPC->bot_strafe_right_timer > level.time)
 	{//strafing right
-		VectorScale(right, 64, right);
+		if (walk)
+			VectorScale(right, walkSpeed, right);
+		else
+			VectorScale(right, 48/*64*/, right);
 	}
 
 	//We assume that moveDir has been normalized before this function.
@@ -3468,12 +3520,19 @@ qboolean UQ1_UcmdMoveForDir ( gentity_t *self, usercmd_t *cmd, vec3_t dir, qbool
 	vec3_t		forward, right;
 	float		fDot, rDot;
 	qboolean	jumping = qfalse;
+	float		walkSpeed = 32;//48;//64;//32;//self->NPC->stats.walkSpeed*1.1;
+
+	if (self->NPC)
+	{
+		walkSpeed = self->NPC->stats.walkSpeed * 0.55; // UQ1: Why are these values so fast????
+		//trap->Print("%s walk speed is %f.\n", self->NPC_type, walkSpeed);
+	}
 
 	AngleVectors( self->r.currentAngles, forward, right, NULL );
 	
 #ifdef __NPC_STRAFE__
 	if (self->wpCurrent >= 0) NPC_NPCBlockingPath();
-	NPC_AdjustforStrafe(right);
+	NPC_AdjustforStrafe(right, walk, walkSpeed);
 	//if (self->bot_strafe_left_timer > level.time) cmd->rightmove -= 127.0;
 #endif //__NPC_STRAFE__
 
@@ -3508,31 +3567,49 @@ qboolean UQ1_UcmdMoveForDir ( gentity_t *self, usercmd_t *cmd, vec3_t dir, qbool
 
 	if (walk)
 	{
-		fDot = DotProduct( forward, dir ) * 48.0;//64.0;//32.0;//self->NPC->stats.walkSpeed*1.1;
-		rDot = DotProduct( right, dir ) * 48.0;//64.0;//32.0;//self->NPC->stats.walkSpeed*1.1;
+		fDot = DotProduct( forward, dir ) * walkSpeed;
+		rDot = DotProduct( right, dir ) * walkSpeed;
+
+		//Must clamp this because DotProduct is not guaranteed to return a number within -1 to 1, and that would be bad when we're shoving this into a signed byte
+		if ( fDot > walkSpeed )
+		{
+			fDot = walkSpeed;
+		}
+		if ( fDot < -walkSpeed )
+		{
+			fDot = -walkSpeed;
+		}
+		if ( rDot > walkSpeed )
+		{
+			rDot = walkSpeed;
+		}
+		if ( rDot < -walkSpeed )
+		{
+			rDot = -walkSpeed;
+		}
 	}
 	else
 	{
 		fDot = DotProduct( forward, dir ) * 127.0f;
 		rDot = DotProduct( right, dir ) * 127.0f;
-	}
 
-	//Must clamp this because DotProduct is not guaranteed to return a number within -1 to 1, and that would be bad when we're shoving this into a signed byte
-	if ( fDot > 127.0f )
-	{
-		fDot = 127.0f;
-	}
-	if ( fDot < -127.0f )
-	{
-		fDot = -127.0f;
-	}
-	if ( rDot > 127.0f )
-	{
-		rDot = 127.0f;
-	}
-	if ( rDot < -127.0f )
-	{
-		rDot = -127.0f;
+		//Must clamp this because DotProduct is not guaranteed to return a number within -1 to 1, and that would be bad when we're shoving this into a signed byte
+		if ( fDot > 127.0f )
+		{
+			fDot = 127.0f;
+		}
+		if ( fDot < -127.0f )
+		{
+			fDot = -127.0f;
+		}
+		if ( rDot > 127.0f )
+		{
+			rDot = 127.0f;
+		}
+		if ( rDot < -127.0f )
+		{
+			rDot = -127.0f;
+		}
 	}
 
 	cmd->forwardmove = floor(fDot);
@@ -3842,7 +3919,8 @@ int NPC_GetNextNode(gentity_t *NPC)
 		return WAYPOINT_NONE;
 	}
 
-	//NPC_ShortenPath(NPC);
+	if (NPC->npc_cower_runaway)
+		NPC_ShortenPath(NPC); // Shorten any path we can, if we are running away from combat...
 
 	if (NPC->pathsize <= 0)	//if the bot is at the end of his path, this shouldn't have been called
 	{
@@ -4792,39 +4870,72 @@ qboolean NPC_FollowRoutes( void )
 		}
 	}
 
-	if (NPC_IsCivilianHumanoid(NPC))
+	if (NPC_IsCivilian(NPC))
 	{
-		if (NPC_PointIsMoverLocation(gWPArray[NPC->wpCurrent]->origin))
-		{// When nearby a mover, run!
+		if (NPC->npc_cower_runaway)
+		{// A civilian running away from combat...
 			if (!UQ1_UcmdMoveForDir( NPC, &NPCS.ucmd, NPC->movedir, qfalse, gWPArray[NPC->wpCurrent]->origin )) 
-			{ 
-				//if (NPC->client->ps.groundEntityNum != ENTITYNUM_NONE)
-				//	NPC_PickRandomIdleAnimantion(NPC);
-				//else
-					//NPC_SelectMoveAnimation(qfalse);
+			{
+				if (NPCS.ucmd.forwardmove == 0 && NPCS.ucmd.rightmove == 0 && NPCS.ucmd.upmove == 0)
+					NPC_PickRandomIdleAnimantion(NPC);
+				else
+					NPC_SelectMoveRunAwayAnimation();
 
-				return qtrue; 
+				return qtrue;
 			}
 
-			//NPC_SelectMoveAnimation(qtrue);
-		}
-		else if (!UQ1_UcmdMoveForDir( NPC, &NPCS.ucmd, NPC->movedir, qtrue, gWPArray[NPC->wpCurrent]->origin )) 
-		{
-			//if (NPC->client->ps.groundEntityNum != ENTITYNUM_NONE)
-			//	NPC_PickRandomIdleAnimantion(NPC);
-			//else
-				//NPC_SelectMoveAnimation(qtrue);
+			if (NPCS.ucmd.forwardmove == 0 && NPCS.ucmd.rightmove == 0 && NPCS.ucmd.upmove == 0)
+				NPC_PickRandomIdleAnimantion(NPC);
+			else
+				NPC_SelectMoveRunAwayAnimation();
 
-			return qtrue; 
-		}
+			VectorCopy( NPC->movedir, NPC->client->ps.moveDir );
 
-		//NPC_SelectMoveAnimation(qtrue);
+			return qtrue;
+		}
+		else if (NPC_IsCivilianHumanoid(NPC))
+		{// Civilian humanoid... Force walk/run anims...
+			if (NPC_PointIsMoverLocation(gWPArray[NPC->wpCurrent]->origin))
+			{// When nearby a mover, run!
+				if (!UQ1_UcmdMoveForDir( NPC, &NPCS.ucmd, NPC->movedir, qfalse, gWPArray[NPC->wpCurrent]->origin )) 
+				{ 
+					if (NPCS.ucmd.forwardmove == 0 && NPCS.ucmd.rightmove == 0 && NPCS.ucmd.upmove == 0)
+						NPC_PickRandomIdleAnimantion(NPC);
+					else
+						NPC_SelectMoveAnimation(qfalse);
+
+					return qtrue; 
+				}
+
+				if (NPCS.ucmd.forwardmove == 0 && NPCS.ucmd.rightmove == 0 && NPCS.ucmd.upmove == 0)
+					NPC_PickRandomIdleAnimantion(NPC);
+				else
+					NPC_SelectMoveAnimation(qtrue); // UQ1: Always set civilian walk animation...
+			}
+			else if (!UQ1_UcmdMoveForDir( NPC, &NPCS.ucmd, NPC->movedir, qtrue, gWPArray[NPC->wpCurrent]->origin )) 
+			{
+				if (NPCS.ucmd.forwardmove == 0 && NPCS.ucmd.rightmove == 0 && NPCS.ucmd.upmove == 0)
+					NPC_PickRandomIdleAnimantion(NPC);
+				else
+					NPC_SelectMoveAnimation(qtrue);
+
+				return qtrue;
+			}
+
+			if (NPCS.ucmd.forwardmove == 0 && NPCS.ucmd.rightmove == 0 && NPCS.ucmd.upmove == 0)
+				NPC_PickRandomIdleAnimantion(NPC);
+			else
+				NPC_SelectMoveAnimation(qtrue);
+		}
+		else
+		{// Civilian non-humanoid... let bg_ set anim...
+			return qtrue;
+		}
 	}
 	else if (g_gametype.integer == GT_WARZONE || (NPC->r.svFlags & SVF_BOT))
 	{
 		if (!UQ1_UcmdMoveForDir( NPC, &NPCS.ucmd, NPC->movedir, qfalse, gWPArray[NPC->wpCurrent]->origin )) 
 		{ 
-			//NPC_SelectMoveAnimation(qfalse);
 			return qtrue; 
 		}
 	}
@@ -4836,19 +4947,11 @@ qboolean NPC_FollowRoutes( void )
 
 		if (!UQ1_UcmdMoveForDir( NPC, &NPCS.ucmd, NPC->movedir, walk, gWPArray[NPC->wpCurrent]->origin )) 
 		{
-			//NPC_SelectMoveAnimation(walk);
 			return qtrue; 
 		}
 	}
 
 	VectorCopy( NPC->movedir, NPC->client->ps.moveDir );
-
-	/*
-	if (g_gametype.integer == GT_WARZONE || (NPC->r.svFlags & SVF_BOT))
-		NPC_SelectMoveAnimation(qfalse);
-	else
-		NPC_SelectMoveAnimation(!NPC_HaveValidEnemy());
-		*/
 
 	return qtrue;
 }
@@ -4937,6 +5040,12 @@ qboolean NPC_FollowEnemyRoute( void )
 		//trap->Print("close wp!\n");
 		return qfalse;
 	}
+
+#ifdef __NPC_USE_SABER_BLOCKING__
+	// Never block when travelling...
+	NPC->client->ps.powerups[PW_BLOCK] = 0;
+	NPC->blockToggleTime = level.time + 250; // 250 ms between toggles...
+#endif //__NPC_USE_SABER_BLOCKING__
 
 	if (DistanceHorizontal(NPC->r.currentOrigin, NPC->npc_previous_pos) > 3)
 	{
@@ -5158,6 +5267,58 @@ qboolean NPC_FollowEnemyRoute( void )
 
 extern void ST_Speech( gentity_t *self, int speechType, float failChance );
 
+qboolean NPC_FuturePathIsSafe( gentity_t *self )
+{
+	int wp = 0;
+
+	if (!self) return qfalse;
+	if (self->pathsize <= 0) return qfalse;
+	if (self->wpCurrent < 0 || self->wpCurrent >= gWPNum) return qfalse;
+	if (self->wpNext < 0 || self->wpNext >= gWPNum) return qfalse;
+
+	for (wp = 0; wp < self->pathsize; wp++)
+	{// See if our future path has no hostile NPCs/Bots around...
+		int				i, num;
+		int				touch[MAX_GENTITIES];
+		gentity_t		*NPC;
+		vec3_t			mins, maxs, position;
+		static vec3_t	range = { 512, 512, 52 };
+		qboolean		bad = qfalse;
+
+		if (Distance(gWPArray[self->pathlist[wp]]->origin, self->r.currentOrigin) < 512) continue; // Too close to start point, ignore...
+
+		// Ok, check that this position has no combatants nearby...
+		VectorCopy(gWPArray[self->pathlist[wp]]->origin, position);
+
+		VectorSubtract( position, range, mins );
+		VectorAdd( position, range, maxs );
+
+		num = trap->EntitiesInBox( mins, maxs, touch, MAX_GENTITIES );
+
+		for ( i=0 ; i<num ; i++ ) {
+			NPC = &g_entities[touch[i]];
+
+			if ( !NPC ) {
+				continue;
+			}
+			if ( NPC->s.eType != ET_NPC && NPC->s.eType != ET_PLAYER ) {
+				continue;
+			}
+			if (NPC->s.eType == ET_NPC && NPC_IsCivilian(NPC)) {
+				continue;
+			}
+
+			// Ok looks like this spot is bad... Combatants found here...
+			bad = qtrue;
+			break;
+		}
+
+		if (!bad) return qtrue; // We found a spot of safety...
+	}
+
+	return qfalse; // We checked their whole path, and no safe spot was found...
+}
+
 void NPC_CivilianCowerPoint( gentity_t *enemy, vec3_t position )
 {
 	int				i, num;
@@ -5188,10 +5349,21 @@ void NPC_CivilianCowerPoint( gentity_t *enemy, vec3_t position )
 		// This one should cower...
 		//
 
-		if ( NPC->npc_cower_time < level.time && TIMER_Done( NPC, "flee" ) && TIMER_Done( NPC, "panic" ) )
+		if (NPC->npc_cower_runaway || NPC_FuturePathIsSafe(NPC))
+		{// Their future path is clear of combatants, make them run away...
+			if ( NPC->npc_cower_time < level.time && TIMER_Done( NPC, "flee" ) && TIMER_Done( NPC, "panic" ) )
+			{
+				ST_Speech( NPC, 2/*SPEECH_COVER*/, 0 );//FIXME: flee sound?
+			}
+
+			NPCS.NPC->npc_cower_runaway_anim = 0; // Select new cower animation...
+			NPC->npc_cower_runaway = qtrue;
+		}
+		else if ( NPC->npc_cower_time < level.time && TIMER_Done( NPC, "flee" ) && TIMER_Done( NPC, "panic" ) )
 		{
 			G_StartFlee( NPC, enemy, position, AEL_DANGER_GREAT, 3000, 5000 );
 			ST_Speech( NPC, 2/*SPEECH_COVER*/, 0 );//FIXME: flee sound?
+			NPC->npc_cower_runaway = qfalse;
 		}
 
 		NPC->npc_cower_time = level.time + 12000 + irand(0, 18000);
@@ -5228,7 +5400,7 @@ void NPC_GenericFrameCode ( gentity_t *self )
 	NPC_CheckAttackScript();
 	NPC_KeepCurrentFacing();
 
-	if ( NPC_IsCivilianHumanoid(NPCS.NPC) )
+	if ( NPC_IsCivilianHumanoid(NPCS.NPC) && !NPCS.NPC->npc_cower_runaway )
 	{// Set better torso anims when not holding a weapon.
 		NPC_SetAnim(NPCS.NPC, SETANIM_TORSO, BOTH_STAND9IDLE1, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD);
 		NPCS.NPC->client->ps.torsoTimer = 200;
@@ -5434,6 +5606,14 @@ void NPC_Think ( gentity_t *self)//, int msec )
 				NPC_FaceEnemy( qtrue );
 			}
 
+#ifdef __NPC_USE_SABER_BLOCKING__
+			if (!self->enemy)
+			{// Never, ever use block if we have no enemy...
+				self->client->ps.powerups[PW_BLOCK] = 0;
+				self->blockToggleTime = level.time + 250; // 250 ms between toggles...
+			}
+#endif //__NPC_USE_SABER_BLOCKING__
+
 			if (!self->enemy)
 			{
 				//
@@ -5441,14 +5621,23 @@ void NPC_Think ( gentity_t *self)//, int msec )
 				//
 				if (self->npc_cower_time < level.time)
 				{// Just finished cowerring... Stand up again...
+#ifdef __NPC_USE_SABER_BLOCKING__
+					// Never block when cowerring...
+					self->client->ps.powerups[PW_BLOCK] = 0;
+					self->blockToggleTime = level.time + 250; // 250 ms between toggles...
+#endif //__NPC_USE_SABER_BLOCKING__
+
 					if (NPCS.NPCInfo->scriptFlags & SCF_CROUCHED)
 					{// Makse sure they are no longer crouching/cowering in place...
 						NPCS.NPCInfo->scriptFlags &= ~SCF_CROUCHED;
 						NPCS.ucmd.upmove = 127;
 					}
+
+					// Init the run-away flag...
+					self->npc_cower_runaway = qfalse;
 				}
 
-				if (self->npc_cower_time > level.time)
+				if (self->npc_cower_time > level.time && !self->npc_cower_runaway)
 				{// A civilian NPC that is cowering in place...
 					if ( TIMER_Done( NPCS.NPC, "flee" ) && TIMER_Done( NPCS.NPC, "panic" ) )
 					{// We finished running away, now cower in place...
@@ -5470,6 +5659,12 @@ void NPC_Think ( gentity_t *self)//, int msec )
 						}
 					}
 
+#ifdef __NPC_USE_SABER_BLOCKING__
+					// Never block when cowerring...
+					self->client->ps.powerups[PW_BLOCK] = 0;
+					self->blockToggleTime = level.time + 250; // 250 ms between toggles...
+#endif //__NPC_USE_SABER_BLOCKING__
+
 					NPC_GenericFrameCode( self );
 				}
 				//
@@ -5478,6 +5673,13 @@ void NPC_Think ( gentity_t *self)//, int msec )
 				else if (use_pathing && NPC_FollowRoutes()) 
 				{
 					//trap->Print("NPCBOT DEBUG: NPC is following routes.\n");
+
+#ifdef __NPC_USE_SABER_BLOCKING__
+					// Never block when travelling...
+					self->client->ps.powerups[PW_BLOCK] = 0;
+					self->blockToggleTime = level.time + 250; // 250 ms between toggles...
+#endif //__NPC_USE_SABER_BLOCKING__
+
 					NPC_GenericFrameCode( self );
 				}
 				//
@@ -5486,6 +5688,13 @@ void NPC_Think ( gentity_t *self)//, int msec )
 				else if (!use_pathing && NPC_PatrolArea())
 				{
 					//trap->Print("NPCBOT DEBUG: NPC is patroling.\n");
+
+#ifdef __NPC_USE_SABER_BLOCKING__
+					// Never block when patroling...
+					self->client->ps.powerups[PW_BLOCK] = 0;
+					self->blockToggleTime = level.time + 250; // 250 ms between toggles...
+#endif //__NPC_USE_SABER_BLOCKING__
+
 					NPC_GenericFrameCode( self );
 				}
 				else
@@ -5496,6 +5705,12 @@ void NPC_Think ( gentity_t *self)//, int msec )
 					NPCS.ucmd.rightmove = 0;
 					NPCS.ucmd.upmove = 0;
 					NPCS.ucmd.buttons = 0;
+
+#ifdef __NPC_USE_SABER_BLOCKING__
+					// Never block when idle...
+					self->client->ps.powerups[PW_BLOCK] = 0;
+					self->blockToggleTime = level.time + 250; // 250 ms between toggles...
+#endif //__NPC_USE_SABER_BLOCKING__
 
 					if (!NPCS.NPC->NPC->conversationPartner)
 					{// Not chatting with another NPC... Set idle animation...
