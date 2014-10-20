@@ -1190,8 +1190,8 @@ int		G_RadiusList ( vec3_t origin, float radius,	gentity_t *ignore, qboolean tak
 
 void	G_Throw( gentity_t *targ, vec3_t newDir, float push );
 
-void	G_FreeFakeClient(gclient_t **cl);
-void	G_CreateFakeClient(int entNum, gclient_t **cl);
+void	G_FreeFakeClient(gentity_t *ent);
+void	G_CreateFakeClient(int entNum, gentity_t *ent);
 void	G_CleanAllFakeClients(void);
 
 void	G_SetAnim(gentity_t *ent, usercmd_t *ucmd, int setAnimParts, int anim, int setAnimFlags, int blendTime);

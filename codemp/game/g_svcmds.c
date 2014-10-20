@@ -355,7 +355,10 @@ void	Svcmd_EntityList_f (void) {
 			trap->Print("ET_FREED            ");
 			break;
 		default:
-			trap->Print("%-3i                ", check->s.eType);
+			if (!check->freeAfterEvent) // Not a tempEntity... wtf???
+				trap->Print("%-3i                ", check->s.eType);
+			else
+				trap->Print("EVENT: %-3i          ", check->s.eType);
 			break;
 		}
 

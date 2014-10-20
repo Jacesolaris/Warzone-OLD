@@ -376,11 +376,12 @@ void G_Throw( gentity_t *targ, vec3_t newDir, float push )
 //You ABSOLUTELY MUST free this client after creating it before game shutdown. If
 //it is left around you will have a memory leak, because true dynamic memory is
 //allocated by the exe.
-void G_FreeFakeClient(gclient_t **cl)
+void G_FreeFakeClient(gentity_t *ent)
 { //or not, the dynamic stuff is busted somehow at the moment. Yet it still works in the test.
   //I think something is messed up in being able to cast the memory to stuff to modify it,
   //while modifying it directly seems to work fine.
 	//trap->TrueFree((void **)cl);
+	dlfree(ent->client);
 }
 
 //allocate a veh object
@@ -430,32 +431,31 @@ void G_FreeVehicleObject(Vehicle_t *pVeh)
 
 gclient_t *gClPtrs[MAX_GENTITIES];
 
-void G_CreateFakeClient(int entNum, gclient_t **cl)
+void G_CreateFakeClient(int entNum, gentity_t *ent)
 {
 	//trap->TrueMalloc((void **)cl, sizeof(gclient_t));
 	if (!gClPtrs[entNum])
 	{
 		//gClPtrs[entNum] = (gclient_t *) BG_Alloc(sizeof(gclient_t));
-		gClPtrs[entNum] = (gclient_t *) G_Alloc(sizeof(gclient_t));
+		gClPtrs[entNum] = (gclient_t *) dlmalloc/*G_Alloc*/(sizeof(gclient_t));
 	}
-	*cl = gClPtrs[entNum];
+	ent->client = gClPtrs[entNum];
+	ent->s.number = entNum;
 }
 
 //call this on game shutdown to run through and get rid of all the lingering client pointers.
 void G_CleanAllFakeClients(void)
 {
 	int i = MAX_CLIENTS; //start off here since all ents below have real client structs.
-	gentity_t *ent;
 
-	while (i < MAX_GENTITIES)
+	for (i = MAX_CLIENTS; i < MAX_GENTITIES; i++)
 	{
-		ent = &g_entities[i];
+		gentity_t *ent = &g_entities[i];
 
 		if (ent->inuse && ent->s.eType == ET_NPC && ent->client)
 		{
-			G_FreeFakeClient(&ent->client);
+			G_FreeFakeClient(ent);
 		}
-		i++;
 	}
 }
 
@@ -926,7 +926,7 @@ void G_FreeEntity( gentity_t *ed ) {
 	if (ed->isSaberEntity)
 	{
 #ifdef _DEBUG
-		Com_Printf("Tried to remove JM saber!\n");
+		trap->Print("Tried to remove JM saber!\n");
 #endif
 		return;
 	}
@@ -993,7 +993,7 @@ void G_FreeEntity( gentity_t *ed ) {
 			i++;
 		}
 
-		G_FreeFakeClient(&ed->client);
+		G_FreeFakeClient(ed);
 	}
 
 	if (ed->s.eFlags & EF_SOUNDTRACKER)
@@ -1013,6 +1013,12 @@ void G_FreeEntity( gentity_t *ed ) {
 				{
 					if (ent->client->ps.fd.killSoundEntIndex[ch] == ed->s.number)
 					{
+#ifdef __MMO__
+						if (ent->s.eType == ET_PLAYER && !(ent->r.svFlags & SVF_BOT))
+						{// Send ONLY this REAL PLAYER client a server command to update...
+							trap->SendServerCommand(ent->s.clientNum, va("kls %i %i", ed->s.trickedentindex, ed->s.number));
+						}
+#endif //__MMO__
 						ent->client->ps.fd.killSoundEntIndex[ch] = 0;
 					}
 

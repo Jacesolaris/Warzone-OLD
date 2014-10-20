@@ -1632,7 +1632,7 @@ gentity_t *NPC_Spawn_Do( gentity_t *ent )
 	}
 
 	//newent->client = (gclient_s *)G_Alloc (sizeof(gclient_s));
-	G_CreateFakeClient(newent->s.number, &newent->client);
+	G_CreateFakeClient(newent->s.number, newent);
 
 #if 0
 	newent->NPC->tempGoal = G_Spawn();

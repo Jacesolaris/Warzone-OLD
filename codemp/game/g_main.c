@@ -514,8 +514,6 @@ void G_ShutdownGame( int restart ) {
 
 //	trap->Print ("==== ShutdownGame ====\n");
 
-	G_CleanAllFakeClients(); //get rid of dynamically allocated fake client structs.
-
 	BG_ClearAnimsets(); //free all dynamic allocations made through the engine
 
 //	Com_Printf("... Gameside GHOUL2 Cleanup\n");
@@ -543,6 +541,7 @@ void G_ShutdownGame( int restart ) {
 		}
 		i++;
 	}
+
 	if (g2SaberInstance && trap->G2API_HaveWeGhoul2Models(g2SaberInstance))
 	{
 		trap->G2API_CleanGhoul2Models(&g2SaberInstance);
@@ -583,6 +582,8 @@ void G_ShutdownGame( int restart ) {
 	if ( trap->Cvar_VariableIntegerValue( "bot_enable" ) ) {
 		BotAIShutdown( restart );
 	}
+
+	G_CleanAllFakeClients(); //get rid of dynamically allocated fake client structs.
 }
 
 /*
