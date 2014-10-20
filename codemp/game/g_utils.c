@@ -931,6 +931,8 @@ void G_FreeEntity( gentity_t *ed ) {
 		return;
 	}
 
+	ed->s.eType = ET_FREED;
+
 	trap->UnlinkEntity ((sharedEntity_t *)ed);		// unlink from world
 
 	trap->ICARUS_FreeEnt( (sharedEntity_t *)ed );	//ICARUS information must be added after this point

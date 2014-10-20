@@ -5472,10 +5472,12 @@ void NPC_Think ( gentity_t *self)//, int msec )
 		self->client->ps.pm_type = PM_DEAD;
 
 		DeadThink();
+
 		if ( NPCS.NPCInfo->nextBStateThink <= level.time )
 		{
 			trap->ICARUS_MaintainTaskManager(self->s.number);
 		}
+
 		VectorCopy(self->r.currentOrigin, self->client->ps.origin);
 		return;
 	}
@@ -5542,6 +5544,12 @@ void NPC_Think ( gentity_t *self)//, int msec )
 	else if ( NPCS.NPC->s.m_iVehicleNum )
 	{//droid in a vehicle?
 		G_DroidSounds( self );
+	}
+	else if (self->client)
+	{// Update playerstate health values as well... cgame needs them...
+		//self->client->ps.stats[STAT_HEALTH] = self->s.health = self->health;
+		//self->client->ps.stats[STAT_MAX_HEALTH] = self->s.maxhealth = self->maxHealth;
+		//trap->Print("%s health is %i. max is %i.\n", self->NPC_type, self->health, self->maxHealth);
 	}
 
 	if ( NPCS.NPCInfo->nextBStateThink <= level.time

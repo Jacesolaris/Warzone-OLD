@@ -2090,6 +2090,12 @@ void player_die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int
 		return;
 	}
 
+	if (self && self->client)
+	{// UQ1: Init health and max health stats...
+		self->client->ps.stats[STAT_HEALTH] = self->s.health = self->health = 0;
+		self->client->ps.stats[STAT_MAX_HEALTH] = self->s.maxhealth = self->maxHealth = 0;
+	}
+
 	self->s.eFlags |= EF_DEAD;
 	if (self->client)
 	{

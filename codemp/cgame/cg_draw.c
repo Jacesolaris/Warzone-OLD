@@ -3839,6 +3839,12 @@ void CG_DrawEnemyStatus( void )
 	if (crosshairEnt->playerState->pm_type == PM_DEAD)
 		return;
 
+	if (crosshairEnt->currentState.eType == ET_FREED)
+		return;
+
+	//if (crosshairEnt->currentState.health <= 0)
+	//	return;
+
 	if (crosshairEnt->currentState.number < MAX_CLIENTS)
 	{
 		ci = &cgs.clientinfo[crosshairEnt->currentState.number];
@@ -7653,6 +7659,12 @@ void CG_DrawNPCNames( void )
 
 		if (cent->playerState->pm_type == PM_DEAD)
 			continue;
+
+		if (cent->currentState.eType == ET_FREED)
+			continue;
+
+		//if (cent->currentState.health <= 0)
+		//	continue;
 
 		if (cent->currentState.number < MAX_CLIENTS)
 		{

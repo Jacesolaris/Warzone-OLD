@@ -315,9 +315,6 @@ void	Svcmd_EntityList_f (void) {
 		case ET_MOVER:
 			trap->Print("ET_MOVER            ");
 			break;
-		case ET_MOVER_MARKER:
-			trap->Print("ET_MOVER_MARKER     ");
-			break;
 		case ET_BEAM:
 			trap->Print("ET_BEAM             ");
 			break;
@@ -339,6 +336,9 @@ void	Svcmd_EntityList_f (void) {
 		case ET_NPC:
 			trap->Print("ET_NPC              ");
 			break;
+		case ET_TEAM:
+			trap->Print("ET_TEAM             ");
+			break;
 		case ET_BODY:
 			trap->Print("ET_BODY             ");
 			break;
@@ -347,6 +347,12 @@ void	Svcmd_EntityList_f (void) {
 			break;
 		case ET_FX:
 			trap->Print("ET_FX               ");
+			break;
+		case ET_MOVER_MARKER:
+			trap->Print("ET_MOVER_MARKER     ");
+			break;
+		case ET_FREED:
+			trap->Print("ET_FREED            ");
 			break;
 		default:
 			trap->Print("%-3i                ", check->s.eType);
