@@ -118,9 +118,14 @@ FX_DisruptorAltHit
 ---------------------------
 */
 
-void FX_DisruptorAltHit( vec3_t origin, vec3_t normal )
+void FX_DisruptorAltHit( vec3_t origin, vec3_t normal, int weapon, qboolean altFire )
 {
-	trap->FX_PlayEffectID( cgs.effects.disruptorAltHitEffect, origin, normal, -1, -1, qfalse );
+	fxHandle_t fx = cg_weapons[weapon].altMissileWallImpactfx;
+
+	if (fx)
+		trap->FX_PlayEffectID(fx, origin, normal, -1, -1, qfalse);
+	else
+		trap->FX_PlayEffectID( cgs.effects.disruptorAltHitEffect, origin, normal, -1, -1, qfalse );
 }
 
 

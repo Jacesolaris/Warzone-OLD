@@ -2035,7 +2035,7 @@ void CG_MissileHitWall(int weapon, int clientNum, vec3_t origin, vec3_t dir, imp
 		break;
 
 	case WP_ROCKET_LAUNCHER:
-		FX_RocketHitWall(origin, dir, weapon, altFire, altFire);
+		FX_RocketHitWall(origin, dir, weapon, altFire);
 		break;
 
 	case WP_THERMAL:
