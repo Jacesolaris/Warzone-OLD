@@ -572,11 +572,16 @@ static void CG_TouchItem( centity_t *cent ) {
 		return;
 	}
 
+	item = &bg_itemlist[ cent->currentState.modelindex ];
+
+	if (item->giType == IT_WEAPON)
+	{// UQ1: Draw pickup icon later...
+		return;
+	}
+
 	if ( !BG_CanItemBeGrabbed( cgs.gametype, &cent->currentState, &cg.predictedPlayerState ) ) {
 		return;		// can't hold it
 	}
-
-	item = &bg_itemlist[ cent->currentState.modelindex ];
 
 	//Currently there is no reliable way of knowing if the client has touched a certain item before another if they are next to each other, or rather
 	//if the server has touched them in the same order. This results often in grabbing an item in the prediction and the server giving you the other

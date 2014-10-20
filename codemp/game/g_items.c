@@ -2346,6 +2346,11 @@ void Touch_Item (gentity_t *ent, gentity_t *other, trace_t *trace) {
 		}
 	}
 
+	if (other->client && !(other->client->pers.cmd.buttons & BUTTON_USE))
+	{// Only pick up weapons when the USE button is held down...
+		return;
+	}
+
 	// the same pickup rules are used for client side and server side
 	if ( !BG_CanItemBeGrabbed( level.gametype, &ent->s, &other->client->ps ) ) {
 		return;
@@ -2421,10 +2426,6 @@ void Touch_Item (gentity_t *ent, gentity_t *other, trace_t *trace) {
 	// call the item-specific pickup function
 	switch( ent->item->giType ) {
 	case IT_WEAPON:
-		if (!(other->client->pers.cmd.buttons & BUTTON_USE))
-		{// Only pick up weapons when the USE button is held down...
-			return;
-		}
 		respawn = Pickup_Weapon(ent, other);
 //		predict = qfalse;
 		predict = qtrue;
