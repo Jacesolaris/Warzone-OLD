@@ -3478,6 +3478,10 @@ weapChecks:
 			{
 				pm->ps->weaponstate = WEAPON_IDLE;
 			}
+
+			// UQ1: Reset stance...
+			pm->ps->fd.saberAnimLevel = pm->ps->fd.saberAnimLevelBase;
+
 			//Check for finishing an anim if necc.
 			if ( curmove >= LS_S_TL2BR && curmove <= LS_S_T2B )
 			{//started a swing, must continue from here
@@ -3576,13 +3580,76 @@ weapChecks:
 				}
 				else//if ( pm->cmd.buttons&BUTTON_ATTACK && !(pm->ps->pm_flags&PMF_ATTACK_HELD) )//only do this if just pressed attack button?
 				{//get attack move from movement command
-					/*
-					if ( PM_SaberKataDone() )
-					{//we came from a bounce and cannot chain to another attack because our kata is done
-						newmove = saberMoveData[curmove].chain_idle;
+					//newmove = PM_SaberAttackForMovement( (saberMoveName_t)curmove );
+
+					//trap->Print("new: %i. current: %i. chain: %i.\n", newmove, curmove, saberMoveData[curmove].chain_attack);
+
+					newmove = saberMoveData[curmove].chain_attack;
+					
+					if (newmove <= 1)
+					{// UQ1: Test switching stances mid swing...
+						if (pm->ps->fd.saberAnimLevelBase == SS_STAFF)
+						{
+							if (PM_WalkingAnim(pm->ps->legsAnim))
+							{// Walking... Slow down second swing...
+								if (pm->ps->fd.saberAnimLevel == SS_STAFF)
+								{// Cycle to tavion...
+									//trap->Print("Cycle to STRONG\n");
+									pm->ps->fd.saberAnimLevel = SS_STRONG;
+								}
+								else
+								{// Cycle back to staff...
+									//trap->Print("Cycle back to STAFF\n");
+									pm->ps->fd.saberAnimLevel = SS_STAFF;
+								}
+							}
+							else
+							{
+								if (pm->ps->fd.saberAnimLevel == SS_STAFF)
+								{// Cycle to tavion...
+									//trap->Print("Cycle to TAVION\n");
+									pm->ps->fd.saberAnimLevel = SS_TAVION;
+								}
+								else
+								{// Cycle back to staff...
+									//trap->Print("Cycle back to STAFF\n");
+									pm->ps->fd.saberAnimLevel = SS_STAFF;
+								}
+							}
+						}
+						else if (pm->ps->fd.saberAnimLevelBase == SS_DUAL)
+						{
+							if (PM_WalkingAnim(pm->ps->legsAnim))
+							{// Walking... Slow down second swing...
+								if (pm->ps->fd.saberAnimLevel == SS_DUAL)
+								{// Cycle to medium...
+									//trap->Print("Cycle to SS_DESANN\n");
+									pm->ps->fd.saberAnimLevel = SS_DESANN;
+								}
+								else
+								{// Cycle back to dual...
+									//trap->Print("Cycle back to DUAL\n");
+									pm->ps->fd.saberAnimLevel = SS_DUAL;
+								}
+							}
+							else
+							{
+								if (pm->ps->fd.saberAnimLevel == SS_DUAL)
+								{// Cycle to medium...
+									//trap->Print("Cycle to MEDIUM\n");
+									pm->ps->fd.saberAnimLevel = SS_MEDIUM;
+								}
+								else
+								{// Cycle back to dual...
+									//trap->Print("Cycle back to DUAL\n");
+									pm->ps->fd.saberAnimLevel = SS_DUAL;
+								}
+							}
+						}
+
+						newmove = PM_SaberAttackForMovement( (saberMoveName_t)curmove );
 					}
-					else */
-					newmove = PM_SaberAttackForMovement( curmove );
+
 					if ( (PM_SaberInBounce( curmove )||PM_SaberInBrokenParry( curmove ))
 						&& saberMoveData[newmove].startQuad == saberMoveData[curmove].endQuad )
 					{//this attack would be a repeat of the last (which was blocked), so don't actually use it, use the default chain attack for this bounce
