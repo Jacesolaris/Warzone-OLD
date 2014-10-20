@@ -3659,6 +3659,7 @@ static void PM_WalkMove( void ) {
 			wishspeed = pm->ps->speed * pm_duckScale;
 		}
 	}
+#if 0 //turn walk button of atm
 	else if ((pm->ps->powerups[PW_BLOCK])
 		|| (pm->ps->fd.forcePowersActive&(1 << FP_LIGHTNING))
 		|| (pm->ps->fd.forcePowersActive&(1 << FP_GRIP))
@@ -3671,7 +3672,7 @@ static void PM_WalkMove( void ) {
 			wishspeed = pm->ps->speed * pm_saberwalkScale;
 		}
 	}
-
+#endif 
 	// clamp the speed lower if wading or walking on the bottom
 	if ( pm->waterlevel ) {
 		float	waterScale;
@@ -5657,11 +5658,12 @@ static void PM_Footsteps( void ) {
 
 		bobmove = 0.5;	// ducked characters bob much faster
 
-		//if ( ( (PM_RunningAnim( pm->ps->legsAnim )&&VectorLengthSquared(pm->ps->velocity)>=40000/*200*200*/) || PM_CanRollFromSoulCal( pm->ps ) ) &&
-		//	!BG_InRoll(pm->ps, pm->ps->legsAnim) )
-		//{//roll!
-		//	rolled = PM_TryRoll();
-		//}
+		if (((PM_RunningAnim(pm->ps->legsAnim) && VectorLengthSquared(pm->ps->velocity) >= 40000/*200*200*/) || PM_CanRollFromSoulCal(pm->ps)) &&
+			!BG_InRoll(pm->ps, pm->ps->legsAnim))
+		{//roll!
+			rolled = PM_TryRoll();
+		}
+#if 0 //turn this off atm and use the old way to handle this stuff, might need it for later use
 		if (((PM_RunningAnim(pm->ps->legsAnim)
 			|| PM_CanRollFromSoulCal(pm->ps)
 			|| pm->ps->saberActionFlags & (1 << SAF_BLOCKING)
@@ -5672,6 +5674,7 @@ static void PM_Footsteps( void ) {
 		{//roll!
 			rolled = PM_TryRoll();
 		}
+#endif 
 		if ( !rolled )
 		{ //if the roll failed or didn't attempt, do standard crouching anim stuff.
 			if ( pm->ps->pm_flags & PMF_BACKWARDS_RUN ) {
@@ -5747,11 +5750,16 @@ static void PM_Footsteps( void ) {
 		{ //let it finish first
 			bobmove = 0.2f;
 		}
+# if 0
 		else if (!(pm->cmd.buttons & BUTTON_WALKING) && !(pm->ps->powerups[PW_BLOCK]) &&
 			!(pm->ps->fd.forcePowersActive&(1 << FP_LIGHTNING)) &&
 			!(pm->ps->fd.forcePowersActive&(1 << FP_GRIP)) &&
 			!(pm->ps->fd.forcePowersActive&(1 << FP_DRAIN)))
+#else
+		else if (!(pm->cmd.buttons & BUTTON_WALKING))
 		{//running
+
+#endif
 			bobmove = 0.4f;	// faster speeds bob faster
 			if ( pm->ps->clientNum >= MAX_CLIENTS &&
 				pm_entSelf &&

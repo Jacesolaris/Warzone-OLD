@@ -5043,7 +5043,7 @@ qboolean NPC_FollowEnemyRoute( void )
 
 #ifdef __NPC_USE_SABER_BLOCKING__
 	// Never block when travelling...
-	NPC->client->ps.powerups[PW_BLOCK] = 0;
+	//NPC->client->ps.powerups[PW_BLOCK] = 0;
 	NPC->blockToggleTime = level.time + 250; // 250 ms between toggles...
 #endif //__NPC_USE_SABER_BLOCKING__
 
@@ -5617,7 +5617,7 @@ void NPC_Think ( gentity_t *self)//, int msec )
 #ifdef __NPC_USE_SABER_BLOCKING__
 			if (!self->enemy)
 			{// Never, ever use block if we have no enemy...
-				self->client->ps.powerups[PW_BLOCK] = 0;
+			//	self->client->ps.powerups[PW_BLOCK] = 0;
 				self->blockToggleTime = level.time + 250; // 250 ms between toggles...
 			}
 #endif //__NPC_USE_SABER_BLOCKING__
@@ -5669,7 +5669,7 @@ void NPC_Think ( gentity_t *self)//, int msec )
 
 #ifdef __NPC_USE_SABER_BLOCKING__
 					// Never block when cowerring...
-					self->client->ps.powerups[PW_BLOCK] = 0;
+					//self->client->ps.powerups[PW_BLOCK] = 0;
 					self->blockToggleTime = level.time + 250; // 250 ms between toggles...
 #endif //__NPC_USE_SABER_BLOCKING__
 
@@ -5699,7 +5699,7 @@ void NPC_Think ( gentity_t *self)//, int msec )
 
 #ifdef __NPC_USE_SABER_BLOCKING__
 					// Never block when patroling...
-					self->client->ps.powerups[PW_BLOCK] = 0;
+					//self->client->ps.powerups[PW_BLOCK] = 0;
 					self->blockToggleTime = level.time + 250; // 250 ms between toggles...
 #endif //__NPC_USE_SABER_BLOCKING__
 

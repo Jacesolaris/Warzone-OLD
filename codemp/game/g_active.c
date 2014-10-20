@@ -1315,6 +1315,7 @@ qboolean G_ActionButtonPressed(int buttons)
 
 void G_CheckToggleBlock(gentity_t *ent, usercmd_t *ucmd)
 {
+#if 0
 	if (!ent || !ent->client)
 	{
 		return;
@@ -1354,6 +1355,7 @@ void G_CheckToggleBlock(gentity_t *ent, usercmd_t *ucmd)
 		if (!(ucmd->buttons & BUTTON_WALKING))
 			ucmd->buttons |= BUTTON_WALKING;
 	}
+#endif
 }
 
 void G_CheckClientIdle( gentity_t *ent, usercmd_t *ucmd )

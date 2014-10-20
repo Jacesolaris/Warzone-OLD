@@ -9,7 +9,7 @@
 // A user mod should never modify this file
 
 #define __MMO__
-#define __NPC_USE_SABER_BLOCKING__
+//#define __NPC_USE_SABER_BLOCKING__
 
 // Disable stupid warnings...
 #pragma warning( disable : 4996 )
