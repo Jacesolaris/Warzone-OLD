@@ -956,7 +956,6 @@ netField_t	entityStateFields[] =
 #ifdef __MMO__
 { NETF(damageCrit), 1 },
 { NETF(damageValue), 32 },
-{ NETF(saberMoveStyle), 8 },
 { NETF(NPC_NAME_ID), 8 },
 { NETF(playerClass), 32 },
 { NETF(primaryWeapon), 32 },
@@ -1300,7 +1299,6 @@ netField_t	playerStateFields[] =
 #ifdef __MMO__
 { PSF(damageCrit), 1 },
 { PSF(damageValue), 32 },
-{ PSF(saberMoveStyle), 8 },
 { PSF(playerClass), 32 },
 { PSF(primaryWeapon), 32 },
 { PSF(secondaryWeapon), 32 },
@@ -1468,7 +1466,6 @@ netField_t	pilotPlayerStateFields[] =
 #ifdef __MMO__
 { PSF(damageCrit), 1 },
 { PSF(damageValue), 32 },
-{ PSF(saberMoveStyle), 8 },
 { PSF(playerClass), 32 },
 { PSF(primaryWeapon), 32 },
 { PSF(secondaryWeapon), 32 },

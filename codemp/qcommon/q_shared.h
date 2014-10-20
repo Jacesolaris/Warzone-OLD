@@ -1858,8 +1858,6 @@ typedef struct playerState_s {
 	signed short	forcePower;
 	short			saberActionFlags;
 
-	int				saberMoveStyle;
-
 	int				playerClass;
 
 	int				primaryWeapon;
@@ -2276,8 +2274,6 @@ typedef struct entityState_s {
 // UQ1: Added - to display damage stats on client...
 	qboolean	damageCrit;
 	int			damageValue;
-
-	int			saberMoveStyle;
 
 	int			playerClass;
 

@@ -4817,8 +4817,8 @@ extern qboolean WP_SaberCanTurnOffSomeBlades( saberInfo_t *saber );
 void Cmd_SaberAttackCycle_f(gentity_t *ent)
 {
 	int selectLevel = 0;
-	int ANIM_STYLE = ent->client->ps.saberMoveStyle;
-	int ORIGINAL_ANIM_STYLE = ent->client->ps.saberMoveStyle;
+	//int ANIM_STYLE = ent->client->ps.saberMoveStyle;
+	//int ORIGINAL_ANIM_STYLE = ent->client->ps.saberMoveStyle;
 	qboolean usingSiegeStyle = qfalse;
 
 	if ( !ent || !ent->client )
@@ -4839,6 +4839,8 @@ void Cmd_SaberAttackCycle_f(gentity_t *ent)
 	//
 	// FIXME - remove ALL trap->SendServerCommand and add CGAME display...
 	//
+
+#if 0
 
 #ifdef __TEST_ALL_STANCES__
 	ent->client->ps.fd.saberAnimLevelBase = SS_FAST;
@@ -5512,6 +5514,32 @@ void Cmd_SaberAttackCycle_f(gentity_t *ent)
 		ent->client->ps.fd.saberAnimLevelBase = ent->client->saberCycleQueue = selectLevel;
 	}
 #endif //__TEST_ALL_STANCES__
+#endif //0
+
+	/*
+	selectLevel = SS_FAST;
+	selectLevel = SS_MEDIUM;
+	selectLevel = SS_STRONG;
+	selectLevel = SS_TAVION;
+	selectLevel = SS_DESANN;
+	selectLevel = SS_DUAL;
+	selectLevel = SS_STAFF;
+	*/
+
+	if (ent->client->saber[0].model[0] && ent->client->saber[1].model[0])
+	{// Dual Sabers...
+		selectLevel = SS_DUAL;
+	}
+	else if (ent->client->saber[0].numBlades > 1)
+	{// Dual Blade...
+		selectLevel = SS_STAFF;
+	}
+	else
+	{// Single Saber...
+		selectLevel = SS_DUAL;
+	}
+
+	ent->client->ps.fd.saberAnimLevelBase = ent->client->saberCycleQueue = selectLevel;
 }
 
 qboolean G_OtherPlayersDueling(void)

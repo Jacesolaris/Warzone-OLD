@@ -8043,7 +8043,7 @@ static void PM_Weapon( void )
 
 					if (kickMove != -1)
 					{
-						int kickAnim = saberMoveData/*[pm->ps->saberMoveStyle]*/[kickMove].animToUse;
+						int kickAnim = saberMoveData[kickMove].animToUse;
 
 						if (kickAnim != -1)
 						{
