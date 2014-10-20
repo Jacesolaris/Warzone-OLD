@@ -381,7 +381,7 @@ void G_FreeFakeClient(gentity_t *ent)
   //I think something is messed up in being able to cast the memory to stuff to modify it,
   //while modifying it directly seems to work fine.
 	//trap->TrueFree((void **)cl);
-	dlfree(ent->client);
+	//dlfree(ent->client);
 }
 
 //allocate a veh object
@@ -437,7 +437,8 @@ void G_CreateFakeClient(int entNum, gentity_t *ent)
 	if (!gClPtrs[entNum])
 	{
 		//gClPtrs[entNum] = (gclient_t *) BG_Alloc(sizeof(gclient_t));
-		gClPtrs[entNum] = (gclient_t *) dlmalloc/*G_Alloc*/(sizeof(gclient_t));
+		//gClPtrs[entNum] = (gclient_t *) dlmalloc/*G_Alloc*/(sizeof(gclient_t));
+		gClPtrs[entNum] = (gclient_t *) G_Alloc(sizeof(gclient_t));
 	}
 	ent->client = gClPtrs[entNum];
 	ent->s.number = entNum;
