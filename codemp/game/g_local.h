@@ -481,6 +481,8 @@ struct gentity_s {
 	int                     next_kick_time;
 
 	int						blockToggleTime;
+
+	
 };
 
 #define DAMAGEREDIRECT_HEAD		1
@@ -667,15 +669,6 @@ typedef struct renderInfo_s
 	int			boltValidityTime;
 } renderInfo_t;
 
-//[SaberSys]
-typedef struct
-{
-	int EntityNum;
-	int Debounce;
-	int SaberNum;
-	int BladeNum;
-}  sabimpact_t;
-//[SaberSys]
 
 // this structure is cleared on each ClientSpawn(),
 // except for 'client->pers' and 'client->sess'
@@ -716,9 +709,6 @@ struct gclient_s {
 	int			buttons;
 	int			oldbuttons;
 	int			latched_buttons;
-	//[SaberSys]
-	int			saberBlockDebounce;
-	//[/SaberSys]
 	vec3_t		oldOrigin;
 
 	// sum up damage over an entire frame, so
@@ -896,23 +886,9 @@ struct gclient_s {
 		int		drainDebounce;
 		int		lightningDebounce;
 	} force;
-	//[SaberSys]
-	int			saberSaberBlockDebounce;
-	int			saberAttackWound;
-	int			saberIdleWound;
-	unsigned int	saberProjBlockTime;
-	unsigned int	saberBlockTime;
-	float		blockingLightningAccumulation;
-	//the SaberNum of the last enemy blade that you hit.
-	int			lastSaberCollided;
-	//the BladeNum of the last enemy blade that you hit.
-	int			lastBladeCollided;
 
-	sabimpact_t	sabimpact[MAX_SABERS][MAX_BLADES];
-	//used for debouncing saber viewlock
-	int			viewLockTime;
-	//[SaberSys]
 	char          botSoundDir[MAX_QPATH];
+	float		  blockingLightningAccumulation;
 };
 
 //Interest points
@@ -1544,9 +1520,9 @@ gentity_t *G_PreDefSound(vec3_t org, int pdSound);
 qboolean HasSetSaberOnly(void);
 void WP_ForcePowerStop( gentity_t *self, forcePowers_t forcePower );
 void WP_SaberPositionUpdate( gentity_t *self, usercmd_t *ucmd );
-//[SaberSys] qboolean instead of int
-qboolean WP_SaberCanBlock(gentity_t *self, vec3_t point, int dflags, int mod, qboolean projectile, int attackStr);
-//[/SaberSys] 
+
+int WP_SaberCanBlock(gentity_t *self, vec3_t point, int dflags, int mod, qboolean projectile, int attackStr);
+
 void WP_SaberInitBladeData( gentity_t *ent );
 void WP_InitForcePowers( gentity_t *ent );
 void WP_SpawnInitForcePowers( gentity_t *ent );
@@ -1624,11 +1600,7 @@ extern	level_locals_t	level;
 extern	gentity_t		g_entities[MAX_GENTITIES];
 
 #define	FOFS(x) offsetof(gentity_t, x)
-//[SaberSys]
-typedef enum saberSystems_e {
-SABERSYSTEMBEH,
-} saberSystems_t;
-//[SaberSys]
+
 
 // userinfo validation bitflags
 // default is all except extended ascii

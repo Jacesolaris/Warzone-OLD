@@ -2671,42 +2671,42 @@ void ClientThink_real( gentity_t *ent ) {
 	}
 
 	//[SaberSys]
-	if (ent->client->ps.weapon == WP_SABER 
-#ifndef __NPC_USE_SABER_BLOCKING__
-		&& ent->s.eType != ET_NPC 
-#endif //__NPC_USE_SABER_BLOCKING__
-		&& !BG_SabersOff(&ent->client->ps))								// NPCs don't use this method, they do it on their own terms --eez
-	{
-		if (ent->client->pers.cmd.buttons & BUTTON_ATTACK)
-		{
-			// UQ1: You can't block and attack at the same time... lol...
-			ent->client->ps.saberActionFlags &= ~(1 << SAF_BLOCKING);
-			ent->client->blockingLightningAccumulation = 0;
-		}
-		else if (ent->client->ps.powerups[PW_BLOCK] &&			// holding Block button	
-			(ent->client->ps.torsoTimer <= 0 || ent->client->saberBlockDebounce >= level.time || // NOT ATTACKING (swingblocks not permitted, period)
-			(ent->client->ps.saberMove >= LS_R_TL2BR && ent->client->ps.saberMove <= LS_R_T2B &&
-			ent->client->ps.torsoTimer < 400)))														// OR, we're returning from an attack (slight delay)
-		{
-			if (!(ent->client->ps.saberActionFlags & (1 << SAF_BLOCKING)))
-			{
-				ent->client->ps.saberActionFlags |= (1 << SAF_BLOCKING);				// Marks the client for being in manual block mode.
-				ent->client->saberBlockTime = level.time;				// Manual blocking at appropriate times will reduce the force drop from blaster bolts.
-			}
-
-		}
-		else if (ent->client->ps.weaponTime >= 0 && ent->client->ps.saberActionFlags & (1 << SAF_BLOCKING) &&
-			ent->client->ps.powerups[PW_BLOCK] &&
-			ent->client->ps.groundEntityNum != ENTITYNUM_NONE)
-		{
-			// FIXME
-		}
-		else
-		{
-			ent->client->ps.saberActionFlags &= ~(1 << SAF_BLOCKING);
-			ent->client->blockingLightningAccumulation = 0;
-		}
-	}//[/SaberSys]
+//	if (ent->client->ps.weapon == WP_SABER 
+//#ifndef __NPC_USE_SABER_BLOCKING__
+//		&& ent->s.eType != ET_NPC 
+//#endif //__NPC_USE_SABER_BLOCKING__
+//		&& !BG_SabersOff(&ent->client->ps))								// NPCs don't use this method, they do it on their own terms --eez
+//	{
+//		if (ent->client->pers.cmd.buttons & BUTTON_ATTACK)
+//		{
+//			// UQ1: You can't block and attack at the same time... lol...
+//			ent->client->ps.saberActionFlags &= ~(1 << SAF_BLOCKING);
+//			ent->client->blockingLightningAccumulation = 0;
+//		}
+//		else if (ent->client->ps.powerups[PW_BLOCK] &&			// holding Block button	
+//			(ent->client->ps.torsoTimer <= 0 || ent->client->saberBlockDebounce >= level.time || // NOT ATTACKING (swingblocks not permitted, period)
+//			(ent->client->ps.saberMove >= LS_R_TL2BR && ent->client->ps.saberMove <= LS_R_T2B &&
+//			ent->client->ps.torsoTimer < 400)))														// OR, we're returning from an attack (slight delay)
+//		{
+//			if (!(ent->client->ps.saberActionFlags & (1 << SAF_BLOCKING)))
+//			{
+//				ent->client->ps.saberActionFlags |= (1 << SAF_BLOCKING);				// Marks the client for being in manual block mode.
+//				ent->client->saberBlockTime = level.time;				// Manual blocking at appropriate times will reduce the force drop from blaster bolts.
+//			}
+//
+//		}
+//		else if (ent->client->ps.weaponTime >= 0 && ent->client->ps.saberActionFlags & (1 << SAF_BLOCKING) &&
+//			ent->client->ps.powerups[PW_BLOCK] &&
+//			ent->client->ps.groundEntityNum != ENTITYNUM_NONE)
+//		{
+//			// FIXME
+//		}
+//		else
+//		{
+//			ent->client->ps.saberActionFlags &= ~(1 << SAF_BLOCKING);
+//			ent->client->blockingLightningAccumulation = 0;
+//		}
+//	}//[/SaberSys]
 
 	if (ent->client->doingThrow > level.time)
 	{

@@ -757,7 +757,7 @@ int BG_BrokenParryForAttack( int move )
 	//Our attack was knocked away by a knockaway parry
 	//FIXME: need actual anims for this
 	//FIXME: need to know which side of the saber was hit!  For now, we presume the saber gets knocked away from the center
-	switch ( saberMoveData[0/*pm->ps->saberMoveStyle*/][move].startQuad ) // SP_SaberDamage causes it to crash here due to no pm-> info...
+	switch ( saberMoveData/*[0pm->ps->saberMoveStyle]*/[move].startQuad ) // SP_SaberDamage causes it to crash here due to no pm-> info...
 	{
 	case Q_B:
 		return LS_V1_B_;
@@ -1149,7 +1149,7 @@ qboolean BG_StabDownAnim( int anim )
 
 int PM_SaberBounceForAttack( int move )
 {
-	switch ( saberMoveData[0/*pm->ps->saberMoveStyle*/][move].startQuad ) // SP_SaberDamage causes it to crash here due to no pm-> info...
+	switch ( saberMoveData/*[0pm->ps->saberMoveStyle]*/[move].startQuad ) // SP_SaberDamage causes it to crash here due to no pm-> info...
 	{
 	case Q_B:
 	case Q_BR:
@@ -2917,13 +2917,8 @@ void PM_SetTorsoAnimTimer(int time )
 //[SaberSys]
 qboolean BG_BounceAnim(int anim);
 qboolean PM_SaberReturnAnim(int anim);
-//[/SaberSys]
-//[FatigueSys]
-//Made it so saber moves go slower if your fatigued
-void BG_SaberStartTransAnim(int clientNum, int saberAnimLevel, int weapon, int anim, float *animSpeed,
-	int broken, int fatigued)
-	//void BG_SaberStartTransAnim( int clientNum, int saberAnimLevel, int weapon, int anim, float *animSpeed, int broken )
-	//[/FatigueSys]
+void BG_SaberStartTransAnim( int clientNum, int saberAnimLevel, int weapon, int anim, float *animSpeed, int broken )
+
 {
 	if (weapon != WP_SABER) return; // UQ1: Hmmm why are we doing this with non-sabers at all???
 
@@ -3006,10 +3001,8 @@ void BG_SetAnimFinal(playerState_t *ps, animation_t *animations,
 	//assert(animations[anim].firstFrame > 0 || animations[anim].numFrames > 0);
 	if (!(animations[anim].firstFrame > 0 || animations[anim].numFrames > 0)) return; // UQ1: hmmm... avoid crashing and just ignore the anim...
 
-	//[FatigueSys]
-	BG_SaberStartTransAnim(ps->clientNum, ps->fd.saberAnimLevel, ps->weapon, anim, &editAnimSpeed, ps->brokenLimbs, ps->userInt3);
-	//BG_SaberStartTransAnim(ps->clientNum, ps->fd.saberAnimLevel, ps->weapon, anim, &editAnimSpeed, ps->brokenLimbs);
-	//[/FatigueSys]
+	BG_SaberStartTransAnim(ps->clientNum, ps->fd.saberAnimLevel, ps->weapon, anim, &editAnimSpeed, ps->brokenLimbs);
+
 
 	// Set torso anim
 	if (setAnimParts & SETANIM_TORSO)
@@ -3267,7 +3260,7 @@ float BG_GetTorsoAnimPoint(playerState_t * ps, int AnimIndex)
 	float animPercentage = 0;
 
 	//Be sure to scale by the proper anim speed just as if we were going to play the animation
-	BG_SaberStartTransAnim(ps->clientNum, ps->fd.saberAnimLevel, ps->weapon, ps->torsoAnim, &animSpeedFactor, ps->brokenLimbs, ps->userInt3);
+	BG_SaberStartTransAnim(ps->clientNum, ps->fd.saberAnimLevel, ps->weapon, ps->torsoAnim, &animSpeedFactor, ps->brokenLimbs);
 
 	if (animSpeedFactor > 0)
 	{
@@ -3306,7 +3299,7 @@ float BG_GetLegsAnimPoint(playerState_t * ps, int AnimIndex)
 	float animPercentage = 0;
 
 	//Be sure to scale by the proper anim speed just as if we were going to play the animation
-	BG_SaberStartTransAnim(ps->clientNum, ps->fd.saberAnimLevel, ps->weapon, ps->legsAnim, &animSpeedFactor, ps->brokenLimbs, ps->userInt3);
+	BG_SaberStartTransAnim(ps->clientNum, ps->fd.saberAnimLevel, ps->weapon, ps->legsAnim, &animSpeedFactor, ps->brokenLimbs);
 
 	if (animSpeedFactor > 0)
 	{

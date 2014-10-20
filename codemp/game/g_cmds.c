@@ -5711,7 +5711,7 @@ void Cmd_DebugSetSaberMove_f(gentity_t *self)
 		self->client->ps.saberMove = LS_MOVE_MAX-1;
 	}
 
-	Com_Printf("Anim for move: %s\n", animTable[saberMoveData[self->client->ps.saberMoveStyle][self->client->ps.saberMove].animToUse].name);
+	Com_Printf("Anim for move: %s\n", animTable[saberMoveData/*[self->client->ps.saberMoveStyle]*/[self->client->ps.saberMove].animToUse].name);
 }
 
 void Cmd_DebugSetBodyAnim_f(gentity_t *self)

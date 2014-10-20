@@ -1489,8 +1489,9 @@ typedef struct saberMoveData_s {
 	saberMoveName_t chain_attack;		// What move to call if the attack button (and nothing else) is pressed
 	qboolean trailLength;
 } saberMoveData_t;
+extern saberMoveData_t	saberMoveData[LS_MOVE_MAX];
 
-extern saberMoveData_t	saberMoveData[STYLE_MAX][LS_MOVE_MAX];
+//extern saberMoveData_t	saberMoveData[STYLE_MAX][LS_MOVE_MAX];
 
 
 typedef enum saberType_e {
@@ -1736,11 +1737,8 @@ qboolean BG_InSaberLock( int anim );
 qboolean BG_InWalk(int anim);
 //[/SaberSys]
 
-//[FatigueSys]
-void BG_SaberStartTransAnim(int clientNum, int saberAnimLevel, int weapon, int anim,
-	float *animSpeed, int broken, int fatigued);
-//void BG_SaberStartTransAnim( int clientNum, int saberAnimLevel, int weapon, int anim, float *animSpeed, int broken );
-//[/FatigueSys]
+void BG_SaberStartTransAnim( int clientNum, int saberAnimLevel, int weapon, int anim, float *animSpeed, int broken );
+
 
 void BG_ForcePowerDrain( playerState_t *ps, forcePowers_t forcePower, int overrideAmt );
 
