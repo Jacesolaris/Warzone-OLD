@@ -3746,6 +3746,8 @@ void ClientThink( int clientNum, usercmd_t *ucmd ) {
 		trap->GetUsercmd( clientNum, &ent->client->pers.cmd );
 	}
 
+	if (!ent->client) return; // memory must have been freed and the engine has not updated yet...
+
 	// mark the time we got info, so we can display the
 	// phone jack if they don't get any for a while
 	ent->client->lastCmdTime = level.time;
