@@ -15,6 +15,8 @@
 	#include "ui/ui_local.h"
 #endif
 
+#define __SABER_ANIMATION_SLOW__ // UQ1: Slows down fast, medium, desann and tavion by a little, and dual and staff by a bit more...
+
 extern saberInfo_t *BG_MySaber( int clientNum, int saberNum );
 extern qboolean BG_HaveWeapon ( const playerState_t *ps, int weapon );
 
@@ -2628,10 +2630,64 @@ int BG_ParseAnimationFile(const char *filename, animation_t *animset, qboolean i
 		if ( fps < 0 )
 		{//backwards
 			animset[animNum].frameLerp = floor(1000.0f / fps);
+
+#ifdef __SABER_ANIMATION_SLOW__
+			{// UQ1: Slow down saber moves...
+				int x;
+
+				for (x = 4; x < LS_MOVE_MAX; x++)
+				{
+					if (saberMoveData[x].animToUse == animNum // SS_FAST
+						|| saberMoveData[x].animToUse+77 == animNum // SS_MEDIUM
+						//|| saberMoveData[x].animToUse+(77*2) == animNum // SS_STRONG
+						|| saberMoveData[x].animToUse+(77*3) == animNum // SS_DESANN
+						|| saberMoveData[x].animToUse+(77*4) == animNum) // SS_TAVION
+					{
+						animset[animNum].frameLerp *= 1.3;
+						//trap->Print("Slowed down anim %i.\n", animNum);
+						break;
+					}
+					else if (saberMoveData[x].animToUse+(77*5) == animNum // SS_DUAL
+						|| saberMoveData[x].animToUse+(77*6) == animNum) // SS_STAFF
+					{
+						animset[animNum].frameLerp *= 1.5;
+						//trap->Print("Slowed down anim %i.\n", animNum);
+						break;
+					}
+				}
+			}
+#endif //__SABER_ANIMATION_SLOW__
 		}
 		else
 		{
 			animset[animNum].frameLerp = ceil(1000.0f / fps);
+			
+#ifdef __SABER_ANIMATION_SLOW__
+			{// UQ1: Slow down saber moves...
+				int x;
+
+				for (x = 4; x < LS_MOVE_MAX; x++)
+				{
+					if (saberMoveData[x].animToUse == animNum // SS_FAST
+						|| saberMoveData[x].animToUse+77 == animNum // SS_MEDIUM
+						//|| saberMoveData[x].animToUse+(77*2) == animNum // SS_STRONG
+						|| saberMoveData[x].animToUse+(77*3) == animNum // SS_DESANN
+						|| saberMoveData[x].animToUse+(77*4) == animNum) // SS_TAVION
+					{
+						animset[animNum].frameLerp *= 1.3;
+						//trap->Print("Slowed down anim %i.\n", animNum);
+						break;
+					}
+					else if (saberMoveData[x].animToUse+(77*5) == animNum // SS_DUAL
+						|| saberMoveData[x].animToUse+(77*6) == animNum) // SS_STAFF
+					{
+						animset[animNum].frameLerp *= 1.5;
+						//trap->Print("Slowed down anim %i.\n", animNum);
+						break;
+					}
+				}
+			}
+#endif //__SABER_ANIMATION_SLOW__
 		}
 	}
 /*
