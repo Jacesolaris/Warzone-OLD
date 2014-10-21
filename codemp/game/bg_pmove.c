@@ -45,7 +45,8 @@ float	pm_stopspeed = 100.0f;
 float	pm_duckScale = 0.50f;
 float	pm_swimScale = 0.50f;
 float	pm_wadeScale = 0.70f;
-float	pm_saberwalkScale = 0.50f;
+//float	pm_saberwalkScale = 0.50f;
+float	pm_saberwalkScale = 0.30f;
 
 float	pm_vehicleaccelerate = 36.0f;
 float	pm_accelerate = 10.0f;
@@ -5777,7 +5778,8 @@ static void PM_Footsteps( void ) {
 			!(pm->ps->fd.forcePowersActive&(1 << FP_GRIP)) &&
 			!(pm->ps->fd.forcePowersActive&(1 << FP_DRAIN)))
 #else
-		else if (!(pm->cmd.buttons & BUTTON_WALKING))
+		else if (!(pm->cmd.buttons & BUTTON_WALKING) 
+			&& pm->ps->saberMove <= LS_PUTAWAY) // UQ1: When swinging a saber we don't run. Ever!
 		{//running
 
 #endif
