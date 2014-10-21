@@ -16,6 +16,7 @@
 #endif
 
 #define __SABER_ANIMATION_SLOW__ // UQ1: Slows down fast, medium, desann and tavion by a little, and dual and staff by a bit more...
+#define __SABERS_ALWAYS_DAMAGE__ // UQ1: All saber moves do traced damage...
 
 extern saberInfo_t *BG_MySaber( int clientNum, int saberNum );
 extern qboolean BG_HaveWeapon ( const playerState_t *ps, int weapon );
@@ -241,6 +242,7 @@ qboolean BG_SaberInAttack( int move )
 	{
 		return qtrue;
 	}
+
 	switch ( move )
 	{
 	case LS_A_BACK:
@@ -334,6 +336,7 @@ qboolean PM_SaberInDamageMove(int move)
 	{
 		return qtrue;
 	}
+
 	switch (move)
 	{
 	case LS_A_BACK:
@@ -384,6 +387,13 @@ qboolean PM_SaberInDamageMove(int move)
 
 qboolean BG_SaberInSpecial( int move )
 {
+#ifdef __SABERS_ALWAYS_DAMAGE__
+	if (move >= LS_A_TL2BR && move <= LS_A_T2B)
+	{
+		return qtrue;
+	}
+#endif //__SABERS_ALWAYS_DAMAGE__
+
 	switch( move )
 	{
 	case LS_A_BACK:
