@@ -3593,12 +3593,17 @@ weapChecks:
 							if (PM_WalkingAnim(pm->ps->legsAnim))
 							{// Walking... Slow down second swing...
 								if (pm->ps->fd.saberAnimLevel == SS_STAFF)
-								{// Cycle to tavion...
+								{// 2nd swing - Cycle to dual...
+									//trap->Print("Cycle back to DUAL\n");
+									pm->ps->fd.saberAnimLevel = SS_DUAL;
+								}
+								else if (pm->ps->fd.saberAnimLevel == SS_DUAL)
+								{// 3rd swing - Cycle to tavion...
 									//trap->Print("Cycle to STRONG\n");
 									pm->ps->fd.saberAnimLevel = SS_STRONG;
 								}
 								else
-								{// Cycle back to staff...
+								{// 1st/4th swing - Cycle back to staff...
 									//trap->Print("Cycle back to STAFF\n");
 									pm->ps->fd.saberAnimLevel = SS_STAFF;
 								}
@@ -3606,12 +3611,17 @@ weapChecks:
 							else
 							{
 								if (pm->ps->fd.saberAnimLevel == SS_STAFF)
-								{// Cycle to tavion...
+								{// 2nd swing - Cycle to dual...
+									//trap->Print("Cycle back to DUAL\n");
+									pm->ps->fd.saberAnimLevel = SS_DUAL;
+								}
+								else if (pm->ps->fd.saberAnimLevel == SS_DUAL)
+								{// 3rd swing - Cycle to tavion...
 									//trap->Print("Cycle to TAVION\n");
 									pm->ps->fd.saberAnimLevel = SS_TAVION;
 								}
 								else
-								{// Cycle back to staff...
+								{// 1st/4th swing - Cycle back to staff...
 									//trap->Print("Cycle back to STAFF\n");
 									pm->ps->fd.saberAnimLevel = SS_STAFF;
 								}
@@ -3622,12 +3632,17 @@ weapChecks:
 							if (PM_WalkingAnim(pm->ps->legsAnim))
 							{// Walking... Slow down second swing...
 								if (pm->ps->fd.saberAnimLevel == SS_DUAL)
-								{// Cycle to medium...
+								{// 2nd swing - Cycle to medium...
 									//trap->Print("Cycle to SS_DESANN\n");
 									pm->ps->fd.saberAnimLevel = SS_DESANN;
 								}
+								else if (pm->ps->fd.saberAnimLevel == SS_DESANN)
+								{// 3rd swing - Cycle to strong...
+									//trap->Print("Cycle to STRONG\n");
+									pm->ps->fd.saberAnimLevel = SS_STRONG;
+								}
 								else
-								{// Cycle back to dual...
+								{// 1st/4th swing - Cycle back to dual...
 									//trap->Print("Cycle back to DUAL\n");
 									pm->ps->fd.saberAnimLevel = SS_DUAL;
 								}
@@ -3635,12 +3650,17 @@ weapChecks:
 							else
 							{
 								if (pm->ps->fd.saberAnimLevel == SS_DUAL)
-								{// Cycle to medium...
+								{// 2nd swing - Cycle to medium...
 									//trap->Print("Cycle to MEDIUM\n");
 									pm->ps->fd.saberAnimLevel = SS_MEDIUM;
 								}
+								else if (pm->ps->fd.saberAnimLevel == SS_MEDIUM)
+								{// 3rd swing - Cycle to tavion...
+									//trap->Print("Cycle to TAVION\n");
+									pm->ps->fd.saberAnimLevel = SS_TAVION;
+								}
 								else
-								{// Cycle back to dual...
+								{// 1st/4th swing - Cycle back to dual...
 									//trap->Print("Cycle back to DUAL\n");
 									pm->ps->fd.saberAnimLevel = SS_DUAL;
 								}
