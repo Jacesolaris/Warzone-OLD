@@ -15,9 +15,6 @@
 	#include "ui/ui_local.h"
 #endif
 
-#define __SABER_ANIMATION_SLOW__ // UQ1: Slows down fast, medium, desann and tavion by a little, and dual and staff by a bit more...
-#define __SABERS_ALWAYS_DAMAGE__ // UQ1: All saber moves do traced damage...
-
 extern saberInfo_t *BG_MySaber( int clientNum, int saberNum );
 extern qboolean BG_HaveWeapon ( const playerState_t *ps, int weapon );
 

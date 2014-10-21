@@ -4353,6 +4353,9 @@ static QINLINE qboolean CheckSaberDamage(gentity_t *self, int rSaberNum, int rBl
 
 	if (dmg > SABER_NONATTACK_DAMAGE)
 	{
+#ifdef __SABERS_ALWAYS_DAMAGE__
+		dmg *= 0.3;
+#endif //__SABERS_ALWAYS_DAMAGE__
 		dmg *= g_saberDamageScale.value;
 
 		//see if this specific saber has a damagescale
