@@ -3674,6 +3674,7 @@ static void PM_WalkMove( void ) {
 			wishspeed = pm->ps->speed * pm_duckScale;
 		}
 	}
+#ifdef __DYNAMIC_STANCES__
 	else if (pm->ps->saberMove > LS_PUTAWAY)
 	{// UQ1: When swinging a saber we don't run. Ever!
 		if (wishspeed > pm->ps->speed * pm_saberwalkScale)
@@ -3681,6 +3682,7 @@ static void PM_WalkMove( void ) {
 			wishspeed = pm->ps->speed * pm_saberwalkScale;
 		}
 	}
+#endif //__DYNAMIC_STANCES__
 #if 0 //turn walk button of atm
 	else if ((pm->ps->powerups[PW_BLOCK])
 		|| (pm->ps->fd.forcePowersActive&(1 << FP_LIGHTNING))
@@ -5778,8 +5780,12 @@ static void PM_Footsteps( void ) {
 			!(pm->ps->fd.forcePowersActive&(1 << FP_GRIP)) &&
 			!(pm->ps->fd.forcePowersActive&(1 << FP_DRAIN)))
 #else
+#ifdef __DYNAMIC_STANCES__
 		else if (!(pm->cmd.buttons & BUTTON_WALKING) 
 			&& pm->ps->saberMove <= LS_PUTAWAY) // UQ1: When swinging a saber we don't run. Ever!
+#else //!__DYNAMIC_STANCES__
+		else if (!(pm->cmd.buttons & BUTTON_WALKING))
+#endif //__DYNAMIC_STANCES__
 		{//running
 
 #endif

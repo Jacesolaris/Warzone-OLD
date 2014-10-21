@@ -3562,6 +3562,11 @@ weapChecks:
 				anim = saberMoveData[newmove].animToUse;
 			}
 
+#ifdef __DYNAMIC_STANCES__
+			//
+			// NEW METHOD - Changes Stances based on held keys...
+			//
+
 			if ( anim == -1 )
 			{// UQ1: Test switching stances mid swing...
 				if (pm->ps->fd.saberAnimLevelBase == SS_STAFF)
@@ -3619,6 +3624,7 @@ weapChecks:
 					}
 				}
 			}
+#endif //__DYNAMIC_STANCES__
 			
 			//FIXME: diagonal dirs use the figure-eight attacks from ready pose?
 			if ( anim == -1 )
@@ -3646,6 +3652,11 @@ weapChecks:
 					newmove = PM_SaberAttackForMovement( (saberMoveName_t)curmove );
 
 #if 0
+#ifdef __DYNAMIC_STANCES__
+					//
+					// ORIGINAL METHOD - Changes stances during the move chain...
+					//
+
 					//trap->Print("new: %i. current: %i. chain: %i.\n", newmove, curmove, saberMoveData[curmove].chain_attack);
 
 					newmove = saberMoveData[curmove].chain_attack;
@@ -3733,6 +3744,7 @@ weapChecks:
 
 						newmove = PM_SaberAttackForMovement( (saberMoveName_t)curmove );
 					}
+#endif //__DYNAMIC_STANCES__
 #endif //0
 
 					if ( (PM_SaberInBounce( curmove )||PM_SaberInBrokenParry( curmove ))
