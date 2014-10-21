@@ -3659,6 +3659,13 @@ static void PM_WalkMove( void ) {
 			wishspeed = pm->ps->speed * pm_duckScale;
 		}
 	}
+	else if (pm->ps->saberMove > LS_PUTAWAY)
+	{// UQ1: When swinging a saber we don't run. Ever!
+		if (wishspeed > pm->ps->speed * pm_saberwalkScale)
+		{
+			wishspeed = pm->ps->speed * pm_saberwalkScale;
+		}
+	}
 #if 0 //turn walk button of atm
 	else if ((pm->ps->powerups[PW_BLOCK])
 		|| (pm->ps->fd.forcePowersActive&(1 << FP_LIGHTNING))

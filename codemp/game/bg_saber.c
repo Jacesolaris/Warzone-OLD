@@ -3562,6 +3562,36 @@ weapChecks:
 				anim = saberMoveData[newmove].animToUse;
 			}
 
+			if ( anim == -1 )
+			{// UQ1: Test switching stances mid swing...
+				if (pm->ps->fd.saberAnimLevelBase == SS_STAFF)
+				{
+					if (pm->cmd.buttons & BUTTON_WALKING)
+					{// Walking...
+						//trap->Print("Cycle to DUAL\n");
+						pm->ps->fd.saberAnimLevel = SS_DUAL;
+					}
+					else
+					{
+						//trap->Print("Cycle to STAFF\n");
+						pm->ps->fd.saberAnimLevel = SS_STAFF;
+					}
+				}
+				else if (pm->ps->fd.saberAnimLevelBase == SS_DUAL)
+				{
+					if (pm->cmd.buttons & BUTTON_WALKING)
+					{// Walking...
+						//trap->Print("Cycle to TAVION\n");
+						pm->ps->fd.saberAnimLevel = SS_TAVION;
+					}
+					else
+					{
+						//trap->Print("Cycle to DUAL\n");
+						pm->ps->fd.saberAnimLevel = SS_DUAL;
+					}
+				}
+			}
+			
 			//FIXME: diagonal dirs use the figure-eight attacks from ready pose?
 			if ( anim == -1 )
 			{
@@ -3578,10 +3608,16 @@ weapChecks:
 				{//broken parries must always return to ready
 					newmove = LS_READY;
 				}
+				else if ( (PM_SaberInBounce( curmove )||PM_SaberInBrokenParry( curmove ))
+					&& saberMoveData[newmove].startQuad == saberMoveData[curmove].endQuad )
+				{//this attack would be a repeat of the last (which was blocked), so don't actually use it, use the default chain attack for this bounce
+					newmove = saberMoveData[curmove].chain_attack;
+				}
 				else//if ( pm->cmd.buttons&BUTTON_ATTACK && !(pm->ps->pm_flags&PMF_ATTACK_HELD) )//only do this if just pressed attack button?
 				{//get attack move from movement command
-					//newmove = PM_SaberAttackForMovement( (saberMoveName_t)curmove );
+					newmove = PM_SaberAttackForMovement( (saberMoveName_t)curmove );
 
+#if 0
 					//trap->Print("new: %i. current: %i. chain: %i.\n", newmove, curmove, saberMoveData[curmove].chain_attack);
 
 					newmove = saberMoveData[curmove].chain_attack;
@@ -3669,6 +3705,7 @@ weapChecks:
 
 						newmove = PM_SaberAttackForMovement( (saberMoveName_t)curmove );
 					}
+#endif //0
 
 					if ( (PM_SaberInBounce( curmove )||PM_SaberInBrokenParry( curmove ))
 						&& saberMoveData[newmove].startQuad == saberMoveData[curmove].endQuad )
