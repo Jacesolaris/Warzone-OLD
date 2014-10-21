@@ -4857,7 +4857,8 @@ void Cmd_SaberAttackCycle_f(gentity_t *ent)
 	}
 	else
 	{// Single Saber...
-		selectLevel = SS_DUAL;
+		//selectLevel = SS_DUAL;
+		selectLevel = SS_MEDIUM;
 	}
 
 	// UQ1: lol... 4 vars for setting saber stance... funny!!!

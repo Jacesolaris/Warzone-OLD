@@ -3565,29 +3565,57 @@ weapChecks:
 			if ( anim == -1 )
 			{// UQ1: Test switching stances mid swing...
 				if (pm->ps->fd.saberAnimLevelBase == SS_STAFF)
-				{
+				{// Bual Blade...
 					if (pm->cmd.buttons & BUTTON_WALKING)
-					{// Walking...
+					{// Walk Key...
 						//trap->Print("Cycle to DUAL\n");
 						pm->ps->fd.saberAnimLevel = SS_DUAL;
 					}
+					else if (pm->cmd.buttons & BUTTON_BLOCK)
+					{// ALT Key...
+						//trap->Print("Cycle to STRONG\n");
+						pm->ps->fd.saberAnimLevel = SS_STRONG;
+					}
 					else
-					{
+					{// Normal Stance...
 						//trap->Print("Cycle to STAFF\n");
 						pm->ps->fd.saberAnimLevel = SS_STAFF;
 					}
 				}
 				else if (pm->ps->fd.saberAnimLevelBase == SS_DUAL)
-				{
+				{// Dual Sabers...
 					if (pm->cmd.buttons & BUTTON_WALKING)
-					{// Walking...
+					{// Walk Key...
 						//trap->Print("Cycle to TAVION\n");
 						pm->ps->fd.saberAnimLevel = SS_TAVION;
 					}
+					else if (pm->cmd.buttons & BUTTON_BLOCK)
+					{// ALT Key...
+						//trap->Print("Cycle to DESANN\n");
+						pm->ps->fd.saberAnimLevel = SS_DESANN;
+					}
 					else
-					{
+					{// Normal Stance...
 						//trap->Print("Cycle to DUAL\n");
 						pm->ps->fd.saberAnimLevel = SS_DUAL;
+					}
+				}
+				else if (pm->ps->fd.saberAnimLevelBase == SS_MEDIUM)
+				{// Single Saber...
+					if (pm->cmd.buttons & BUTTON_WALKING)
+					{// Walk Key...
+						//trap->Print("Cycle to STRONG\n");
+						pm->ps->fd.saberAnimLevel = SS_STRONG;
+					}
+					else if (pm->cmd.buttons & BUTTON_BLOCK)
+					{// ALT Key...
+						//trap->Print("Cycle to FAST\n");
+						pm->ps->fd.saberAnimLevel = SS_FAST;
+					}
+					else
+					{// Normal Stance...
+						//trap->Print("Cycle to MEDIUM\n");
+						pm->ps->fd.saberAnimLevel = SS_MEDIUM;
 					}
 				}
 			}

@@ -3473,6 +3473,7 @@ void ClientSpawn(gentity_t *ent) {
 
 	client->ps.customRGBA[3]=255;
 
+#if 0 // UQ1: Don't need colored skins, etc... We have name tags...
 	if ( level.gametype >= GT_TEAM && level.gametype != GT_SIEGE && !g_jediVmerc.integer )
 	{
 		char skin[MAX_QPATH] = {0}, model[MAX_QPATH] = {0};
@@ -3485,6 +3486,7 @@ void ClientSpawn(gentity_t *ent) {
 		if ( colorOverride[0] != 0.0f || colorOverride[1] != 0.0f || colorOverride[2] != 0.0f )
 			VectorScaleM( colorOverride, 255.0f, client->ps.customRGBA );
 	}
+#endif //0
 
 	client->siegeClass = savedSiegeIndex;
 
@@ -3598,8 +3600,6 @@ void ClientSpawn(gentity_t *ent) {
 		wDisable = g_weaponDisable.integer;
 	}
 
-
-
 	if ( level.gametype != GT_HOLOCRON
 		&& level.gametype != GT_JEDIMASTER
 		&& !HasSetSaberOnly()
@@ -3707,10 +3707,12 @@ void ClientSpawn(gentity_t *ent) {
 		}
 	}
 	//[SaberSys] Melee To FFA
+#if 0 // UQ1: Let's not override this :)
 	if (level.gametype == GT_FFA)
 	{
 		client->ps.primaryWeapon = WP_MELEE;
 	}
+#endif //0
 
 	if (HaveWeapon(&client->ps, WP_SABER))
 	{

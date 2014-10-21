@@ -532,6 +532,7 @@ int PM_GetSaberStance(void)
 		return BOTH_STAND1;
 	}
 
+#if 0
 	if (saber1
 		&& saber1->readyAnim != -1)
 	{
@@ -550,27 +551,40 @@ int PM_GetSaberStance(void)
 	{//dual sabers, both on
 		return BOTH_SABERDUAL_STANCE;
 	}
+#endif //0
 
 	switch (pm->ps->fd.saberAnimLevel)
 	{
 	case SS_DUAL:
-		anim = BOTH_SABERDUAL_STANCE;
+		//anim = BOTH_SABERDUAL_STANCE;
+		//anim = BOTH_P1_S1_TR; // ok
+		//anim = BOTH_P6_S6_T_;
+		anim = BOTH_P7_S7_T_;
+		//anim = BOTH_D6__R___; // good but bad legs
+		//anim = BOTH_B7_T____; // dumb
 		break;
 	case SS_STAFF:
-		anim = BOTH_SABERSTAFF_STANCE;
+		//anim = BOTH_SABERSTAFF_STANCE;
+		anim = BOTH_P7_S7_TR; // good
 		break;
-	case SS_FAST:
-	case SS_TAVION:
-		anim = BOTH_SABERFAST_STANCE;
-		break;
-	case SS_STRONG:
-		anim = BOTH_SABERSLOW_STANCE;
-		break;
-	case SS_NONE:
 	case SS_MEDIUM:
+		//anim = BOTH_STAND2;
+		anim = BOTH_P7_S7_TL; // good
+		break;
+
+		// These are unused...
 	case SS_DESANN:
+	case SS_FAST:
+	case SS_STRONG:
+	case SS_TAVION:
+	case SS_NONE:
 	default:
-		anim = BOTH_STAND2;
+		//anim = BOTH_SABERFAST_STANCE;
+		//anim = BOTH_P6_S6_T_;
+		//anim = BOTH_P7_S7_T_;
+		//anim = BOTH_D6__R___;
+		anim = BOTH_B7_T____;
+		//anim = BOTH_STAND2;
 		break;
 	}
 	return anim;
