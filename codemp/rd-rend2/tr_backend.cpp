@@ -557,7 +557,6 @@ void RB_BeginDrawingView (void) {
 	}
 }
 
-
 #define	MAC_EVENT_PUMP_MSEC		5
 
 /*
@@ -1255,7 +1254,6 @@ const void *RB_RotatePic2 ( const void *data )
 	return (const void *)(cmd + 1);
 }
 
-
 /*
 =============
 RB_DrawSurfs
@@ -1802,6 +1800,8 @@ const void	*RB_SwapBuffers( const void *data ) {
 	if ( tess.numIndexes ) {
 		RB_EndSurface();
 	}
+
+	ResetGhoul2RenderableSurfaceHeap();
 
 	// texture swapping test
 	if ( r_showImages->integer ) {

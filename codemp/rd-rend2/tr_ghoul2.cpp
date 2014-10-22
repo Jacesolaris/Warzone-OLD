@@ -82,6 +82,30 @@ void G2Time_ReportTimers(void)
 
 //rww - RAGDOLL_END
 
+static const int MAX_RENDERABLE_SURFACES = 2048;
+static CRenderableSurface renderSurfHeap[MAX_RENDERABLE_SURFACES];
+static int currentRenderSurfIndex = 0;
+
+static CRenderableSurface *AllocGhoul2RenderableSurface()
+{
+	if ( currentRenderSurfIndex >= MAX_RENDERABLE_SURFACES )
+	{
+		ri->Error( ERR_DROP, "AllocRenderableSurface: Reached maximum number of Ghoul2 renderable surfaces (%d)", MAX_RENDERABLE_SURFACES );
+		return NULL;
+	}
+
+	CRenderableSurface *rs = &renderSurfHeap[currentRenderSurfIndex++];
+
+	rs->Init();
+
+	return rs;
+}
+
+void ResetGhoul2RenderableSurfaceHeap()
+{
+	currentRenderSurfIndex = 0;
+}
+
 bool HackadelicOnClient=false; // means this is a render traversal
 
 qboolean G2_SetupModelPointers(CGhoul2Info *ghlInfo);
@@ -767,20 +791,6 @@ public:
 	{}
 };
 
-#ifdef _G2_GORE
-#define MAX_RENDER_SURFACES (2048)
-static CRenderableSurface RSStorage[MAX_RENDER_SURFACES];
-static unsigned int NextRS=0;
-
-CRenderableSurface *AllocRS()
-{
-	CRenderableSurface *ret=&RSStorage[NextRS];
-	ret->Init();
-	NextRS++;
-	NextRS%=MAX_RENDER_SURFACES;
-	return ret;
-}
-#endif
 
 /*
 
@@ -2441,8 +2451,8 @@ void RenderSurfaces(CRenderSurface &RS) //also ended up just ripping right from 
 		// don't add third_person objects if not viewing through a portal
 		if ( !RS.personalModel ) 
 		{		// set the surface info to point at the where the transformed bone list is going to be for when the surface gets rendered out
-			CRenderableSurface *newSurf = new CRenderableSurface;
-			
+			CRenderableSurface *newSurf = AllocGhoul2RenderableSurface();
+
 			// UQ1: ADDED - Something is wrong here! Not initialized/loaded???
 			assert(RS.currentModel->data.glm->vboModels);
 
@@ -2480,7 +2490,7 @@ void RenderSurfaces(CRenderSurface &RS) //also ended up just ripping right from 
 					}
 					else if (tex->tex[RS.lod])
 					{
-						CRenderableSurface *newSurf2 = AllocRS();
+						CRenderableSurface *newSurf2 = AllocGhoul2RenderableSurface();
 						*newSurf2=*newSurf;
 						newSurf2->goreChain=0;
 						newSurf2->alternateTex=tex->tex[RS.lod];
@@ -3469,8 +3479,10 @@ void RB_SurfaceGhoul( CRenderableSurface *surf )
 	mdxmSurface_t *surfData = surf->surfaceData;
 	mdxmVBOMesh_t *surface = surf->vboMesh;
 
-	if(!surface->vbo || !surface->ibo)
-		return;
+	if ( surface->vbo == NULL || surface->ibo == NULL )
+	{
+ 		return;
+	}
 
 	RB_EndSurface();
 	RB_BeginSurface(tess.shader, tess.fogNum, tess.cubemapIndex);

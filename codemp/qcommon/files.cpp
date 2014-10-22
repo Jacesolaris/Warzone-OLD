@@ -586,33 +586,33 @@ void FS_CopyFile( char *fromOSPath, char *toOSPath ) {
 
 	// we are using direct malloc instead of Z_Malloc here, so it
 	// probably won't work on a mac... Its only for developers anyway...
-	buf = (unsigned char *)malloc( len );
+	buf = (unsigned char *)Z_Malloc( len, TAG_FILESYS );
 	if (fread( buf, 1, len, f ) != (unsigned)len)
 	{
 		fclose( f );
-		free ( buf );
+		Z_Free ( buf );
 		Com_Error( ERR_FATAL, "Short read in FS_Copyfiles()\n" );
 	}
 	fclose( f );
 
 	if( FS_CreatePath( toOSPath ) ) {
-		free ( buf );
+		Z_Free ( buf );
 		return;
 	}
 
 	f = fopen( toOSPath, "wb" );
 	if ( !f ) {
-		free ( buf );
+		Z_Free ( buf );
 		return;
 	}
 	if (fwrite( buf, 1, len, f ) != (unsigned)len)
 	{
 		fclose( f );
-		free ( buf );
+		Z_Free ( buf );
 		Com_Error( ERR_FATAL, "Short write in FS_Copyfiles()\n" );
 	}
 	fclose( f );
-	free( buf );
+	Z_Free( buf );
 }
 
 /*
@@ -1935,7 +1935,9 @@ long FS_ReadFile( const char *qpath, void **buffer ) {
 				return len;
 			}
 
-			buf = (unsigned char *)Hunk_AllocateTempMemory(len+1);
+			//buf = (unsigned char *)Hunk_AllocateTempMemory(len+1);
+			buf = (byte*)Z_Malloc( len+1, TAG_FILESYS, qfalse);
+			buf[len]='\0';	// because we're not calling Z_Malloc with optional trailing 'bZeroIt' bool
 			*buffer = buf;
 
 			r = FS_Read( buf, len, com_journalDataFile );

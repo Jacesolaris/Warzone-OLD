@@ -1,5 +1,7 @@
 // Created 3/13/03 by Brian Osman (VV) - Split Zone/Hunk from common
 
+//#define DETAILED_ZONE_DEBUG_CODE
+
 #include "client/client.h" // hi i'm bad
 
 ////////////////////////////////////////////////
@@ -399,6 +401,7 @@ void Z_Free(void *pvAddress)
 	if (pvAddress == NULL)	// I've put this in as a safety measure because of some bits of #ifdef BSPC stuff	-Ste.
 	{
 		//Com_Error(ERR_FATAL, "Z_Free(): NULL arg");
+		assert(pvAddress);
 		return;
 	}
 
