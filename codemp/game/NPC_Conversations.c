@@ -109,7 +109,7 @@ void G_InitNPCConversationSounds ( void )
 	// Civilians...
 	//
 
-	for (part = 1; part < 15; part++)
+	for (part = 0; part < 50; part++)
 	{
 		if (part < 10)
 			sprintf(filename, va("sound/conversation/%s/conversation0%i.mp3", "civilian_gran", part));
@@ -121,7 +121,7 @@ void G_InitNPCConversationSounds ( void )
 		G_SoundIndex( filename );
 	}
 
-	for (part = 1; part < 15; part++)
+	for (part = 0; part < 50; part++)
 	{
 		if (part < 10)
 			sprintf(filename, va("sound/conversation/%s/conversation0%i.mp3", "civilian_protocol", part));
@@ -133,7 +133,7 @@ void G_InitNPCConversationSounds ( void )
 		G_SoundIndex( filename );
 	}
 
-	for (part = 1; part < 15; part++)
+	for (part = 0; part < 50; part++)
 	{
 		if (part < 10)
 			sprintf(filename, va("sound/conversation/%s/conversation0%i.mp3", "civilian_r2d2", part));
@@ -145,7 +145,7 @@ void G_InitNPCConversationSounds ( void )
 		G_SoundIndex( filename );
 	}
 
-	for (part = 1; part < 15; part++)
+	for (part = 0; part < 50; part++)
 	{
 		if (part < 10)
 			sprintf(filename, va("sound/conversation/%s/conversation0%i.mp3", "civilian_r5d2", part));
@@ -157,7 +157,7 @@ void G_InitNPCConversationSounds ( void )
 		G_SoundIndex( filename );
 	}
 
-	for (part = 1; part < 15; part++)
+	for (part = 0; part < 50; part++)
 	{
 		if (part < 10)
 			sprintf(filename, va("sound/conversation/%s/conversation0%i.mp3", "civilian_rodian", part));
@@ -169,7 +169,7 @@ void G_InitNPCConversationSounds ( void )
 		G_SoundIndex( filename );
 	}
 
-	for (part = 1; part < 15; part++)
+	for (part = 0; part < 50; part++)
 	{
 		if (part < 10)
 			sprintf(filename, va("sound/conversation/%s/conversation0%i.mp3", "civilian_rodian2", part));
@@ -181,7 +181,7 @@ void G_InitNPCConversationSounds ( void )
 		G_SoundIndex( filename );
 	}
 
-	for (part = 1; part < 15; part++)
+	for (part = 0; part < 50; part++)
 	{
 		if (part < 10)
 			sprintf(filename, va("sound/conversation/%s/conversation0%i.mp3", "civilian_trandoshan", part));
@@ -193,7 +193,7 @@ void G_InitNPCConversationSounds ( void )
 		G_SoundIndex( filename );
 	}
 
-	for (part = 1; part < 15; part++)
+	for (part = 0; part < 50; part++)
 	{
 		if (part < 10)
 			sprintf(filename, va("sound/conversation/%s/conversation0%i.mp3", "civilian_weequay", part));
@@ -205,7 +205,7 @@ void G_InitNPCConversationSounds ( void )
 		G_SoundIndex( filename );
 	}
 
-	for (part = 1; part < 15; part++)
+	for (part = 0; part < 50; part++)
 	{
 		if (part < 10)
 			sprintf(filename, va("sound/conversation/%s/conversation0%i.mp3", "civilian_weequay2", part));
@@ -217,7 +217,7 @@ void G_InitNPCConversationSounds ( void )
 		G_SoundIndex( filename );
 	}
 
-	for (part = 1; part < 15; part++)
+	for (part = 0; part < 50; part++)
 	{
 		if (part < 10)
 			sprintf(filename, va("sound/conversation/%s/conversation0%i.mp3", "civilian_weequay3", part));
@@ -229,7 +229,7 @@ void G_InitNPCConversationSounds ( void )
 		G_SoundIndex( filename );
 	}
 
-	for (part = 1; part < 15; part++)
+	for (part = 0; part < 50; part++)
 	{
 		if (part < 10)
 			sprintf(filename, va("sound/conversation/%s/conversation0%i.mp3", "civilian_weequay4", part));

@@ -2,7 +2,7 @@
 
 // tr_shader.c -- this file deals with the parsing and definition of shaders
 
-#define USE_NEW_SHADER_HASH
+//#define USE_NEW_SHADER_HASH
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -4279,7 +4279,7 @@ static void ScanAndLoadShaderFiles( const char *path )
 		ri->Printf( PRINT_DEVELOPER, "...loading '%s'\n", filename );
 		summand = ri->FS_ReadFile( filename, (void **)&buffers[i] );
 		if ( !buffers[i] ) {
-			ri->Com_Error( ERR_DROP, "Couldn't load %s", filename );
+			ri->Error( ERR_DROP, "Couldn't load %s", filename );
 		}
 
 		// Do a simple check on the shader structure in that file to make sure one bad shader file cannot fuck up all other shaders.
@@ -4327,8 +4327,8 @@ static void ScanAndLoadShaderFiles( const char *path )
 		ri->FS_FreeFile( buffers[i] );
 	}
 
-	Shader_Compress( s_shaderText );
-
+	//Shader_Compress( s_shaderText );
+	
 	// free up memory
 	ri->FS_FreeFileList( shaderFiles );
 
