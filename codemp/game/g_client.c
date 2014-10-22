@@ -2204,6 +2204,22 @@ qboolean ClientUserinfoChanged( int clientNum ) {
 		modelChanged = qtrue;
 	}
 
+	if (!(ent->s.eFlags & EF_FAKE_NPC_BOT))
+	{// UQ1: Register NPC sounds for this model...
+		int i;
+
+		ent->NPC_type = Q_strlwr( G_NewString(model) );
+	
+		// Convert the spaces in the bot name to _ to match npc names...
+		for (i = 0; i < strlen(ent->NPC_type); i++)
+		{
+			if (ent->NPC_type[i] == ' ') 
+				ent->NPC_type[i] = '_';
+		}
+
+		NPC_Precache(ent);// uq1: test
+	}
+
 	client->ps.customRGBA[0] = (value=Info_ValueForKey( userinfo, "char_color_red" ))	? Com_Clampi( 0, 255, atoi( value ) ) : 255;
 	client->ps.customRGBA[1] = (value=Info_ValueForKey( userinfo, "char_color_green" ))	? Com_Clampi( 0, 255, atoi( value ) ) : 255;
 	client->ps.customRGBA[2] = (value=Info_ValueForKey( userinfo, "char_color_blue" ))	? Com_Clampi( 0, 255, atoi( value ) ) : 255;

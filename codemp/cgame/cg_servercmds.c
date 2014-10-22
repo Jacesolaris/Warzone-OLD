@@ -539,8 +539,7 @@ void CG_HandleNPCSounds(centity_t *cent)
 		return;
 	}
 
-	if (cent->currentState.number < MAX_CLIENTS
-		&& (cg_entities[cent->currentState.number].currentState.eFlags & EF_FAKE_NPC_BOT || cg_entities[cent->currentState.number].currentState.eFlags & EF_FAKE_NPC_BOT))
+	//if (cent->currentState.number < MAX_CLIENTS && cg_entities[cent->currentState.number].currentState.eFlags & EF_FAKE_NPC_BOT)
 	{
 		//standard
 		if (cent->currentState.csSounds_Std)

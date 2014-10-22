@@ -87,16 +87,16 @@ void G_InitNPCConversationSounds ( void )
 			if (section < 10)
 			{
 				if (part < 10)
-					sprintf(filename, va("sound/conversation/stormtrooper/MST_0%iL0%i.mp3", section, part));
+					sprintf(filename, "sound/conversation/stormtrooper/MST_0%iL0%i.mp3", section, part);
 				else
-					sprintf(filename, va("sound/conversation/stormtrooper/MST_0%iL%i.mp3", section, part));
+					sprintf(filename, "sound/conversation/stormtrooper/MST_0%iL%i.mp3", section, part);
 			}
 			else
 			{
 				if (part < 10)
-					sprintf(filename, va("sound/conversation/stormtrooper/MST_%iL0%i.mp3", section, part));
+					sprintf(filename, "sound/conversation/stormtrooper/MST_%iL0%i.mp3", section, part);
 				else
-					sprintf(filename, va("sound/conversation/stormtrooper/MST_%iL%i.mp3", section, part));
+					sprintf(filename, "sound/conversation/stormtrooper/MST_%iL%i.mp3", section, part);
 			}
 
 			if ( !G_ConversationExists(filename) ) continue;
@@ -112,9 +112,9 @@ void G_InitNPCConversationSounds ( void )
 	for (part = 0; part < 50; part++)
 	{
 		if (part < 10)
-			sprintf(filename, va("sound/conversation/%s/conversation0%i.mp3", "civilian_gran", part));
+			sprintf(filename, "sound/conversation/%s/conversation0%i.mp3", "civilian_gran", part);
 		else
-			sprintf(filename, va("sound/conversation/%s/conversation%i.mp3", "civilian_gran", part));
+			sprintf(filename, "sound/conversation/%s/conversation%i.mp3", "civilian_gran", part);
 
 		if ( !G_ConversationExists(filename) ) continue;
 
@@ -124,9 +124,9 @@ void G_InitNPCConversationSounds ( void )
 	for (part = 0; part < 50; part++)
 	{
 		if (part < 10)
-			sprintf(filename, va("sound/conversation/%s/conversation0%i.mp3", "civilian_protocol", part));
+			sprintf(filename, "sound/conversation/%s/conversation0%i.mp3", "civilian_protocol", part);
 		else
-			sprintf(filename, va("sound/conversation/%s/conversation%i.mp3", "civilian_protocol", part));
+			sprintf(filename, "sound/conversation/%s/conversation%i.mp3", "civilian_protocol", part);
 
 		if ( !G_ConversationExists(filename) ) continue;
 
@@ -136,9 +136,9 @@ void G_InitNPCConversationSounds ( void )
 	for (part = 0; part < 50; part++)
 	{
 		if (part < 10)
-			sprintf(filename, va("sound/conversation/%s/conversation0%i.mp3", "civilian_r2d2", part));
+			sprintf(filename, "sound/conversation/%s/conversation0%i.mp3", "civilian_r2d2", part);
 		else
-			sprintf(filename, va("sound/conversation/%s/conversation%i.mp3", "civilian_r2d2", part));
+			sprintf(filename, "sound/conversation/%s/conversation%i.mp3", "civilian_r2d2", part);
 
 		if ( !G_ConversationExists(filename) ) continue;
 
@@ -148,9 +148,9 @@ void G_InitNPCConversationSounds ( void )
 	for (part = 0; part < 50; part++)
 	{
 		if (part < 10)
-			sprintf(filename, va("sound/conversation/%s/conversation0%i.mp3", "civilian_r5d2", part));
+			sprintf(filename, "sound/conversation/%s/conversation0%i.mp3", "civilian_r5d2", part);
 		else
-			sprintf(filename, va("sound/conversation/%s/conversation%i.mp3", "civilian_r5d2", part));
+			sprintf(filename, "sound/conversation/%s/conversation%i.mp3", "civilian_r5d2", part);
 
 		if ( !G_ConversationExists(filename) ) continue;
 
@@ -160,9 +160,9 @@ void G_InitNPCConversationSounds ( void )
 	for (part = 0; part < 50; part++)
 	{
 		if (part < 10)
-			sprintf(filename, va("sound/conversation/%s/conversation0%i.mp3", "civilian_rodian", part));
+			sprintf(filename, "sound/conversation/%s/conversation0%i.mp3", "civilian_rodian", part);
 		else
-			sprintf(filename, va("sound/conversation/%s/conversation%i.mp3", "civilian_rodian", part));
+			sprintf(filename, "sound/conversation/%s/conversation%i.mp3", "civilian_rodian", part);
 
 		if ( !G_ConversationExists(filename) ) continue;
 
@@ -172,9 +172,9 @@ void G_InitNPCConversationSounds ( void )
 	for (part = 0; part < 50; part++)
 	{
 		if (part < 10)
-			sprintf(filename, va("sound/conversation/%s/conversation0%i.mp3", "civilian_rodian2", part));
+			sprintf(filename, "sound/conversation/%s/conversation0%i.mp3", "civilian_rodian2", part);
 		else
-			sprintf(filename, va("sound/conversation/%s/conversation%i.mp3", "civilian_rodian2", part));
+			sprintf(filename, "sound/conversation/%s/conversation%i.mp3", "civilian_rodian2", part);
 
 		if ( !G_ConversationExists(filename) ) continue;
 
@@ -184,9 +184,9 @@ void G_InitNPCConversationSounds ( void )
 	for (part = 0; part < 50; part++)
 	{
 		if (part < 10)
-			sprintf(filename, va("sound/conversation/%s/conversation0%i.mp3", "civilian_trandoshan", part));
+			sprintf(filename, "sound/conversation/%s/conversation0%i.mp3", "civilian_trandoshan", part);
 		else
-			sprintf(filename, va("sound/conversation/%s/conversation%i.mp3", "civilian_trandoshan", part));
+			sprintf(filename, "sound/conversation/%s/conversation%i.mp3", "civilian_trandoshan", part);
 
 		if ( !G_ConversationExists(filename) ) continue;
 
@@ -196,9 +196,9 @@ void G_InitNPCConversationSounds ( void )
 	for (part = 0; part < 50; part++)
 	{
 		if (part < 10)
-			sprintf(filename, va("sound/conversation/%s/conversation0%i.mp3", "civilian_weequay", part));
+			sprintf(filename, "sound/conversation/%s/conversation0%i.mp3", "civilian_weequay", part);
 		else
-			sprintf(filename, va("sound/conversation/%s/conversation%i.mp3", "civilian_weequay", part));
+			sprintf(filename, "sound/conversation/%s/conversation%i.mp3", "civilian_weequay", part);
 
 		if ( !G_ConversationExists(filename) ) continue;
 
@@ -208,9 +208,9 @@ void G_InitNPCConversationSounds ( void )
 	for (part = 0; part < 50; part++)
 	{
 		if (part < 10)
-			sprintf(filename, va("sound/conversation/%s/conversation0%i.mp3", "civilian_weequay2", part));
+			sprintf(filename, "sound/conversation/%s/conversation0%i.mp3", "civilian_weequay2", part);
 		else
-			sprintf(filename, va("sound/conversation/%s/conversation%i.mp3", "civilian_weequay2", part));
+			sprintf(filename, "sound/conversation/%s/conversation%i.mp3", "civilian_weequay2", part);
 
 		if ( !G_ConversationExists(filename) ) continue;
 
@@ -220,9 +220,9 @@ void G_InitNPCConversationSounds ( void )
 	for (part = 0; part < 50; part++)
 	{
 		if (part < 10)
-			sprintf(filename, va("sound/conversation/%s/conversation0%i.mp3", "civilian_weequay3", part));
+			sprintf(filename, "sound/conversation/%s/conversation0%i.mp3", "civilian_weequay3", part);
 		else
-			sprintf(filename, va("sound/conversation/%s/conversation%i.mp3", "civilian_weequay3", part));
+			sprintf(filename, "sound/conversation/%s/conversation%i.mp3", "civilian_weequay3", part);
 
 		if ( !G_ConversationExists(filename) ) continue;
 
@@ -232,9 +232,9 @@ void G_InitNPCConversationSounds ( void )
 	for (part = 0; part < 50; part++)
 	{
 		if (part < 10)
-			sprintf(filename, va("sound/conversation/%s/conversation0%i.mp3", "civilian_weequay4", part));
+			sprintf(filename, "sound/conversation/%s/conversation0%i.mp3", "civilian_weequay4", part);
 		else
-			sprintf(filename, va("sound/conversation/%s/conversation%i.mp3", "civilian_weequay4", part));
+			sprintf(filename, "sound/conversation/%s/conversation%i.mp3", "civilian_weequay4", part);
 
 		if ( !G_ConversationExists(filename) ) continue;
 
@@ -340,16 +340,16 @@ void NPC_StormTrooperConversation()
 	if (section < 10)
 	{
 		if (part < 10)
-			sprintf(filename, va("sound/conversation/stormtrooper/MST_0%iL0%i.mp3", section, part));
+			sprintf(filename, "sound/conversation/stormtrooper/MST_0%iL0%i.mp3", section, part);
 		else
-			sprintf(filename, va("sound/conversation/stormtrooper/MST_0%iL%i.mp3", section, part));
+			sprintf(filename, "sound/conversation/stormtrooper/MST_0%iL%i.mp3", section, part);
 	}
 	else
 	{
 		if (part < 10)
-			sprintf(filename, va("sound/conversation/stormtrooper/MST_%iL0%i.mp3", section, part));
+			sprintf(filename, "sound/conversation/stormtrooper/MST_%iL0%i.mp3", section, part);
 		else
-			sprintf(filename, va("sound/conversation/stormtrooper/MST_%iL%i.mp3", section, part));
+			sprintf(filename, "sound/conversation/stormtrooper/MST_%iL%i.mp3", section, part);
 	}
 
 	if ( !G_ConversationExists(filename) )
@@ -373,16 +373,16 @@ void NPC_StormTrooperConversation()
 		if (section < 10)
 		{
 			if (part < 10)
-				sprintf(filename, va("sound/conversation/stormtrooper/MST_0%iL0%i.mp3", section, part));
+				sprintf(filename, "sound/conversation/stormtrooper/MST_0%iL0%i.mp3", section, part);
 			else
-				sprintf(filename, va("sound/conversation/stormtrooper/MST_0%iL%i.mp3", section, part));
+				sprintf(filename, "sound/conversation/stormtrooper/MST_0%iL%i.mp3", section, part);
 		}
 		else
 		{
 			if (part < 10)
-				sprintf(filename, va("sound/conversation/stormtrooper/MST_%iL0%i.mp3", section, part));
+				sprintf(filename, "sound/conversation/stormtrooper/MST_%iL0%i.mp3", section, part);
 			else
-				sprintf(filename, va("sound/conversation/stormtrooper/MST_%iL%i.mp3", section, part));
+				sprintf(filename, "sound/conversation/stormtrooper/MST_%iL%i.mp3", section, part);
 		}
 
 		if ( !G_ConversationExists(filename) )
@@ -497,7 +497,7 @@ qboolean NPC_HasConversationSounds(gentity_t *conversationalist)
 
 	//trap->Print("Testing %s for conversation sounds.\n", conversationalist->NPC_type);
 
-	sprintf(filename, va("sound/conversation/%s/conversation00.mp3", conversationalist->NPC_type));
+	sprintf(filename, "sound/conversation/%s/conversation00.mp3", conversationalist->NPC_type);
 
 	if ( !G_ConversationExists(filename) )
 	{// End of conversation...
@@ -524,7 +524,7 @@ qboolean NPC_VendorHasConversationSounds(gentity_t *conversationalist)
 
 	//trap->Print("Testing %s for conversation sounds.\n", conversationalist->NPC_type);
 
-	sprintf(filename, va("sound/conversation/civilian_%s/conversation00.mp3", conversationalist->NPC_type));
+	sprintf(filename, "sound/conversation/civilian_%s/conversation00.mp3", conversationalist->NPC_type);
 
 	if ( !G_ConversationExists(filename) )
 	{// End of conversation...
@@ -603,9 +603,9 @@ void NPC_NPCConversation()
 		return; // Wait...
 
 	if (part < 10)
-		sprintf(filename, va("sound/conversation/%s/conversation0%i.mp3", NPC->NPC_type, part));
+		sprintf(filename, "sound/conversation/%s/conversation0%i.mp3", NPC->NPC_type, part);
 	else
-		sprintf(filename, va("sound/conversation/%s/conversation%i.mp3", NPC->NPC_type, part));
+		sprintf(filename, "sound/conversation/%s/conversation%i.mp3", NPC->NPC_type, part);
 
 	if ( !G_ConversationExists(filename) )
 	{

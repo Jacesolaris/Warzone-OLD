@@ -774,13 +774,15 @@ void DOM_InitFakeNPC(gentity_t *bot)
 
 	//bot->NPC_type = G_NewString("reborn");
 	bot->NPC_type = Q_strlwr( G_NewString(bot->client->pers.netname) );
-
+	
 	// Convert the spaces in the bot name to _ to match npc names...
 	for (i = 0; i < strlen(bot->NPC_type); i++)
 	{
 		if (bot->NPC_type[i] == ' ') 
 			bot->NPC_type[i] = '_';
 	}
+
+	NPC_Precache(bot);// uq1: test
 
 	//set origin
 	bot->s.pos.trType = TR_INTERPOLATE;

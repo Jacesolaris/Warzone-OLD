@@ -1002,6 +1002,7 @@ sfxHandle_t	S_RegisterSound( const char *name)
 
 	if ( strlen( name ) >= MAX_QPATH ) {
 		Com_Printf( S_COLOR_RED"Sound name exceeds MAX_QPATH - %s\n", name );
+		assert(0);
 		return 0;
 	}
 

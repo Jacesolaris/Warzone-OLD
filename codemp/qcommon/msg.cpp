@@ -898,7 +898,7 @@ netField_t	entityStateFields[] =
 { NETF(soundSetIndex), 8 }, //rww - if MAX_AMBIENT_SETS is changed from 256, REMEMBER TO CHANGE THIS
 // looks like this can be reduced to 4? (ship parts = 4, people parts = 2)
 { NETF(brokenLimbs), 8 }, //up to 8 limbs at once (not that that many are used)
-{ NETF(csSounds_Std), 8 }, //soundindex must be 8 unless max sounds is changed
+{ NETF(csSounds_Std), 16 }, //soundindex must be 8 unless max sounds is changed
 // used extensively
 { NETF(saberInFlight), 1 },
 { NETF(angles2[0]), 0 },
@@ -934,9 +934,9 @@ netField_t	entityStateFields[] =
 // used only in one spot for seige
 { NETF(boltToPlayer), 6 },
 { NETF(npcSaber2), 9 },
-{ NETF(csSounds_Combat), 8 },
-{ NETF(csSounds_Extra), 8 },
-{ NETF(csSounds_Jedi), 8 },
+{ NETF(csSounds_Combat), 16 },
+{ NETF(csSounds_Extra), 16 },
+{ NETF(csSounds_Jedi), 16 },
 // used only for surfaces on NPCs
 { NETF(surfacesOn), 32 }, //allow up to 32 surfaces in the bitflag
 { NETF(boneIndex2), 6 },
