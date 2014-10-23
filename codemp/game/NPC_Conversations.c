@@ -124,6 +124,30 @@ void G_InitNPCConversationSounds ( void )
 	for (part = 0; part < 50; part++)
 	{
 		if (part < 10)
+			sprintf(filename, "sound/conversation/%s/conversation0%i.mp3", "civilian_human_merc", part);
+		else
+			sprintf(filename, "sound/conversation/%s/conversation%i.mp3", "civilian_human_merc", part);
+
+		if ( !G_ConversationExists(filename) ) continue;
+
+		G_SoundIndex( filename );
+	}
+
+	for (part = 0; part < 50; part++)
+	{
+		if (part < 10)
+			sprintf(filename, "sound/conversation/%s/conversation0%i.mp3", "civilian_human_merc2", part);
+		else
+			sprintf(filename, "sound/conversation/%s/conversation%i.mp3", "civilian_human_merc2", part);
+
+		if ( !G_ConversationExists(filename) ) continue;
+
+		G_SoundIndex( filename );
+	}
+
+	for (part = 0; part < 50; part++)
+	{
+		if (part < 10)
 			sprintf(filename, "sound/conversation/%s/conversation0%i.mp3", "civilian_protocol", part);
 		else
 			sprintf(filename, "sound/conversation/%s/conversation%i.mp3", "civilian_protocol", part);
@@ -395,11 +419,11 @@ void NPC_StormTrooperConversation()
 			return;
 		}
 	}
-	//CHAN_VOICE_ATTEN
+	//CHAN_VOICE
 
 	//trap->Print("NPC %i playing sound file %s.\n", NPC->s.number, filename);
 
-	G_SoundOnEnt( NPC, /*CHAN_VOICE_ATTEN*/CHAN_AUTO, filename );
+	G_SoundOnEnt( NPC, CHAN_VOICE/*CHAN_AUTO*/, filename );
 	NPC_SetStormtrooperConversationReplyTimer();
 	NPC_ConversationAnimation(NPC);
 #endif //__NPC_CONVERSATIONS__
@@ -412,7 +436,7 @@ void NPC_StormtrooperFindConversationPartner()
 
 	if (NPC->client->NPC_class != CLASS_STORMTROOPER) return;
 
-	if (VectorLength(NPC->client->ps.velocity) <= 16)
+	//if (VectorLength(NPC->client->ps.velocity) <= 16)
 	{// I'm not mooving... Conversaion possible...
 		int i = 0;
 		gentity_t *partner = NULL;
@@ -442,7 +466,7 @@ void NPC_StormtrooperFindConversationPartner()
 			if (partner->s.eType != ET_NPC) continue;
 			if (!partner->client) continue;
 			if (partner->client->NPC_class != CLASS_STORMTROOPER) continue;
-			if (VectorLength(partner->client->ps.velocity) > 16) continue;
+			if (VectorLength(partner->client->ps.velocity) > 16 && Distance(partner->r.currentOrigin, NPC->r.currentOrigin) > 96) continue;
 			if (!partner->NPC) continue;
 
 			if (partner->NPC->conversationPartner || partner->NPC->conversationReplyTime > level.time)
@@ -615,11 +639,11 @@ void NPC_NPCConversation()
 
 		return;
 	}
-	//CHAN_VOICE_ATTEN
+	//CHAN_VOICE
 
 	//trap->Print("NPC %i (%s) playing sound file %s.\n", NPC->s.number, NPC->NPC_type, filename);
 
-	G_SoundOnEnt( NPC, /*CHAN_VOICE_ATTEN*/CHAN_AUTO, filename );
+	G_SoundOnEnt( NPC, CHAN_VOICE/*CHAN_AUTO*/, filename );
 	NPC_SetConversationReplyTimer();
 	NPC_ConversationAnimation(NPC);
 
@@ -648,7 +672,7 @@ void NPC_FindConversationPartner()
 	if (!NPC_HasConversationSounds(NPC)) 
 		return;
 
-	if (VectorLength(NPC->client->ps.velocity) <= 16)
+	//if (VectorLength(NPC->client->ps.velocity) <= 16)
 	{// I'm not mooving... Conversaion possible...
 		int i = 0;
 		gentity_t *partner = NULL;
@@ -666,7 +690,7 @@ void NPC_FindConversationPartner()
 			if (partner->client->NPC_class == CLASS_STORMTROOPER) continue;
 			//if (!Q_stricmpn(partner->NPC_type, NPC->NPC_type, strlen(partner->NPC_type)-1)) continue; // never talk to the same race... (they would repeat eachother)
 			if (partner->NPC->conversationPartner || partner->NPC->conversationReplyTime > level.time)
-				if (Distance(partner->r.currentOrigin, NPC->r.currentOrigin) < 1024)//2048)
+				if (Distance(partner->r.currentOrigin, NPC->r.currentOrigin) < 512/*1024*/)//2048)
 					return; // We don't want them talking too close to others having the same conversations :)
 		}
 
@@ -681,12 +705,12 @@ void NPC_FindConversationPartner()
 			if (!partner->NPC) continue;
 			if (partner->client->NPC_class == CLASS_STORMTROOPER) continue;
 			//if (!Q_stricmpn(partner->NPC_type, NPC->NPC_type, strlen(partner->NPC_type)-1)) continue; // never talk to the same race... (they would repeat eachother)
-			if (VectorLength(partner->client->ps.velocity) > 16) continue;
+			if (VectorLength(partner->client->ps.velocity) > 16 && Distance(partner->r.currentOrigin, NPC->r.currentOrigin) > 96) continue;
 			if (!NPC_HasConversationSounds(partner)) continue;
 
 			if (partner->NPC->conversationPartner || partner->NPC->conversationReplyTime > level.time)
 			{// this one already in a convo...
-				if (Distance(partner->r.currentOrigin, NPC->r.currentOrigin) < 1024)//2048)
+				if (Distance(partner->r.currentOrigin, NPC->r.currentOrigin) < 512/*1024*/)//2048)
 					return; // We don't want them talking too close to others having the same conversations :)
 
 				continue;

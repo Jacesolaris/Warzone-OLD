@@ -9,12 +9,16 @@
 #include "bg_vehicles.h"
 #include "g_nav.h"
 
+extern void NPC_PrecacheAnimationCFG( const char *NPC_type );
+void NPC_Precache ( gentity_t *spawner );
+
 extern void G_DebugPrint( int level, const char *format, ... );
 
 extern qboolean G_CheckInSolid (gentity_t *self, qboolean fix);
 extern qboolean ClientUserinfoChanged( int clientNum );
 extern qboolean SpotWouldTelefrag2( gentity_t *mover, vec3_t dest );
 extern void Jedi_Cloak( gentity_t *self );
+extern void G_AddVoiceEvent( gentity_t *self, int event, int speakDebounceTime );
 
 extern void Q3_SetParm (int entID, int parmNum, const char *parmValue);
 extern team_t TranslateTeamName( const char *name );
@@ -1913,6 +1917,7 @@ gentity_t *NPC_Spawn_Do( gentity_t *ent )
 	newent->s.teamowner = ent->s.teamowner;
 	newent->alliedTeam = ent->alliedTeam;
 	newent->teamnodmg = ent->teamnodmg;
+
 	if ( ent->team && ent->team[0] )
 	{//specified team directly?
 		newent->client->sess.sessionTeam = atoi(ent->team);
@@ -1933,6 +1938,7 @@ gentity_t *NPC_Spawn_Do( gentity_t *ent )
 	{
 		newent->client->sess.sessionTeam = TEAM_FREE;
 	}
+
 	newent->client->ps.persistant[PERS_TEAM] = newent->client->sess.sessionTeam;
 
 	trap->LinkEntity ((sharedEntity_t *)newent);
@@ -1957,6 +1963,67 @@ finish:
 	{
 		G_SetOrigin( ent, saveOrg );
 	}
+
+	//
+	// Do everything possible to give this character some sounds...
+	//
+
+	// Try using NPC Type as sound name... Should work most of the time...
+	newent->s.csSounds_Std = G_SoundIndex( va("*$%s", newent->NPC_type) );
+	newent->s.csSounds_Combat = G_SoundIndex( va("*$%s", newent->NPC_type) );
+	newent->s.csSounds_Extra = G_SoundIndex( va("*$%s", newent->NPC_type) );
+	newent->s.csSounds_Jedi = G_SoundIndex( va("*$%s", newent->NPC_type) );
+
+	if (!(newent->s.csSounds_Std || newent->s.csSounds_Combat || newent->s.csSounds_Extra || newent->s.csSounds_Jedi))
+	{// Still failed to find sounds... Try using NPC Type as sound name but with variation 1...
+		newent->s.csSounds_Std = G_SoundIndex( va("*$%s1", newent->NPC_type) );
+		newent->s.csSounds_Combat = G_SoundIndex( va("*$%s1", newent->NPC_type) );
+		newent->s.csSounds_Extra = G_SoundIndex( va("*$%s1", newent->NPC_type) );
+		newent->s.csSounds_Jedi = G_SoundIndex( va("*$%s1", newent->NPC_type) );
+	}
+
+	if (!(newent->s.csSounds_Std || newent->s.csSounds_Combat || newent->s.csSounds_Extra || newent->s.csSounds_Jedi))
+	{// Still failed to find sounds... Try using NPC Type as sound name but with variation 2...
+		newent->s.csSounds_Std = G_SoundIndex( va("*$%s2", newent->NPC_type) );
+		newent->s.csSounds_Combat = G_SoundIndex( va("*$%s2", newent->NPC_type) );
+		newent->s.csSounds_Extra = G_SoundIndex( va("*$%s2", newent->NPC_type) );
+		newent->s.csSounds_Jedi = G_SoundIndex( va("*$%s2", newent->NPC_type) );
+	}
+
+	if (!(newent->s.csSounds_Std || newent->s.csSounds_Combat || newent->s.csSounds_Extra || newent->s.csSounds_Jedi))
+	{// Still failed to find sounds... Try using model name for sounds...
+		newent->s.csSounds_Std = G_SoundIndex( va("*$%s", newent->client->modelname) );
+		newent->s.csSounds_Combat = G_SoundIndex( va("*$%s", newent->client->modelname) );
+		newent->s.csSounds_Extra = G_SoundIndex( va("*$%s", newent->client->modelname) );
+		newent->s.csSounds_Jedi = G_SoundIndex( va("*$%s", newent->client->modelname) );
+	}
+		
+	if (!(newent->s.csSounds_Std || newent->s.csSounds_Combat || newent->s.csSounds_Extra || newent->s.csSounds_Jedi))
+	{// Failed to find sounds... Try NPC sound precache...
+		NPC_Precache(newent);
+	}
+
+	// If we still failed, then we failed... Oh well...
+
+	newent->client->ps.csSounds_Std = newent->s.csSounds_Std;
+	newent->client->ps.csSounds_Combat = newent->s.csSounds_Combat;
+	newent->client->ps.csSounds_Extra = newent->s.csSounds_Extra;
+	newent->client->ps.csSounds_Jedi = newent->s.csSounds_Jedi;
+
+#if 0 // UQ1: Hmm doesn't seem to work... Too early???
+	if (newent->s.csSounds_Std || newent->s.csSounds_Combat || newent->s.csSounds_Extra || newent->s.csSounds_Jedi)
+	{// YAY! We got sounds! Let's say hello on spawn, shall we???
+		if ( Q_stricmp( newent->classname, "NPC_Vehicle" ) )
+		{// Only if not a vehicle...
+			if (irand(1,5) == 1)
+			{// UQ1: 1 in 5 NPCs say something on spawn...
+				trap->Print("%s is playing confuse.\n", newent->NPC_type);
+				//G_AddVoiceEvent( newent, Q_irand(EV_TAUNT1, EV_TAUNT3), 2000 );
+				G_AddEvent( newent, Q_irand(EV_TAUNT1, EV_TAUNT3), 0/*TAUNT_TAUNT*/ );
+			}
+		}
+	}
+#endif //0
 
 	return newent;
 }
@@ -2154,8 +2221,7 @@ teamnodmg - team that NPC does not take damage from (turrets and other auto-defe
 "noCombatSounds" - set to 1 to prevent loading and usage of combat sounds (anger, victory, etc.)
 "noExtraSounds" - set to 1 to prevent loading and usage of "extra" sounds (chasing the enemy - detecting them, flanking them... also jedi combat sounds)
 */
-extern void NPC_PrecacheAnimationCFG( const char *NPC_type );
-void NPC_Precache ( gentity_t *spawner );
+
 void NPC_PrecacheType( char *NPC_type )
 {
 	gentity_t *fakespawner = G_Spawn();

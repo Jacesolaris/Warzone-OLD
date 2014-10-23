@@ -845,6 +845,8 @@ void NPC_Precache ( gentity_t *spawner )
 		}
 	}
 
+	if ( spawner->client ) strcpy(spawner->client->modelname, playerModel);
+
 	// If we're not a vehicle, then an error here would be valid...
 	if ( !spawner->client || spawner->client->NPC_class != CLASS_VEHICLE )
 	{

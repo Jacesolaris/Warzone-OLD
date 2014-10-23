@@ -2246,6 +2246,46 @@ qboolean ClientUserinfoChanged( int clientNum ) {
 		ent->s.csSounds_Combat = G_SoundIndex( va("*$%s", ent->NPC_type) );
 		ent->s.csSounds_Extra = G_SoundIndex( va("*$%s", ent->NPC_type) );
 		ent->s.csSounds_Jedi = G_SoundIndex( va("*$%s", ent->NPC_type) );
+
+		if (!(ent->s.csSounds_Std || ent->s.csSounds_Combat || ent->s.csSounds_Extra || ent->s.csSounds_Jedi))
+		{// Still failed to find sounds... Try using NPC Type as sound name but with variation 1...
+			ent->s.csSounds_Std = G_SoundIndex( va("*$%s1", ent->NPC_type) );
+			ent->s.csSounds_Combat = G_SoundIndex( va("*$%s1", ent->NPC_type) );
+			ent->s.csSounds_Extra = G_SoundIndex( va("*$%s1", ent->NPC_type) );
+			ent->s.csSounds_Jedi = G_SoundIndex( va("*$%s1", ent->NPC_type) );
+		}
+
+		if (!(ent->s.csSounds_Std || ent->s.csSounds_Combat || ent->s.csSounds_Extra || ent->s.csSounds_Jedi))
+		{// Still failed to find sounds... Try using NPC Type as sound name but with variation 2...
+			ent->s.csSounds_Std = G_SoundIndex( va("*$%s2", ent->NPC_type) );
+			ent->s.csSounds_Combat = G_SoundIndex( va("*$%s2", ent->NPC_type) );
+			ent->s.csSounds_Extra = G_SoundIndex( va("*$%s2", ent->NPC_type) );
+			ent->s.csSounds_Jedi = G_SoundIndex( va("*$%s2", ent->NPC_type) );
+		}
+
+		if (!(ent->s.csSounds_Std || ent->s.csSounds_Combat || ent->s.csSounds_Extra || ent->s.csSounds_Jedi))
+		{// Still failed to find sounds... Try using model name for sounds...
+			ent->s.csSounds_Std = G_SoundIndex( va("*$%s", ent->client->modelname) );
+			ent->s.csSounds_Combat = G_SoundIndex( va("*$%s", ent->client->modelname) );
+			ent->s.csSounds_Extra = G_SoundIndex( va("*$%s", ent->client->modelname) );
+			ent->s.csSounds_Jedi = G_SoundIndex( va("*$%s", ent->client->modelname) );
+		}
+
+		if (!(ent->s.csSounds_Std || ent->s.csSounds_Combat || ent->s.csSounds_Extra || ent->s.csSounds_Jedi))
+		{// Still failed to find sounds... Try using model name as sound name but with variation 1...
+			ent->s.csSounds_Std = G_SoundIndex( va("*$%s1", ent->client->modelname) );
+			ent->s.csSounds_Combat = G_SoundIndex( va("*$%s1", ent->client->modelname) );
+			ent->s.csSounds_Extra = G_SoundIndex( va("*$%s1", ent->client->modelname) );
+			ent->s.csSounds_Jedi = G_SoundIndex( va("*$%s1", ent->client->modelname) );
+		}
+
+		if (!(ent->s.csSounds_Std || ent->s.csSounds_Combat || ent->s.csSounds_Extra || ent->s.csSounds_Jedi))
+		{// Still failed to find sounds... Try using model name as sound name but with variation 2...
+			ent->s.csSounds_Std = G_SoundIndex( va("*$%s2", ent->client->modelname) );
+			ent->s.csSounds_Combat = G_SoundIndex( va("*$%s2", ent->client->modelname) );
+			ent->s.csSounds_Extra = G_SoundIndex( va("*$%s2", ent->client->modelname) );
+			ent->s.csSounds_Jedi = G_SoundIndex( va("*$%s2", ent->client->modelname) );
+		}
 		
 		if (!(ent->s.csSounds_Std || ent->s.csSounds_Combat || ent->s.csSounds_Extra || ent->s.csSounds_Jedi))
 		{// Failed to find sounds... Try NPC sound precache...

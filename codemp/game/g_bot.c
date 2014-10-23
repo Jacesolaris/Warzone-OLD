@@ -1059,10 +1059,10 @@ void G_CheckCivilianNPCs( void )
 			npc->NPC_type = "civilian_human_merc";
 			break;
 		case 6:
-			npc->NPC_type = "civilian_human_merc";
+			npc->NPC_type = "civilian_human_merc2";
 			break;
 		case 7:
-			npc->NPC_type = "civilian_human_merc";
+			npc->NPC_type = "civilian_human_merc2";
 			break;
 		case 8:
 			npc->NPC_type = "civilian_merchant";
