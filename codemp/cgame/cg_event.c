@@ -20,6 +20,7 @@ extern qboolean CG_InATST( void );
 extern int cg_saberFlashTime;
 extern vec3_t cg_saberFlashPos;
 extern char *showPowersName[];
+extern int CG_SelectRandomTaunt(entityState_t *es);
 
 extern int cg_siegeDeathTime;
 extern int cg_siegeDeathDelay;
@@ -1579,7 +1580,10 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 				&& cgs.gametype != GT_POWERDUEL
 				&& es->eventParm == TAUNT_TAUNT )
 			{//normal taunt
-				soundIndex = CG_CustomSound( es->number, "*taunt.wav" );
+				soundIndex = CG_SelectRandomTaunt(es);
+
+				if (!soundIndex)
+					soundIndex = CG_CustomSound( es->number, "*taunt.wav" );
 			}
 			else
 			{
@@ -1587,16 +1591,21 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 				{
 				case TAUNT_TAUNT:
 				default:
-					if ( Q_irand( 0, 1 ) )
+					soundIndex = CG_SelectRandomTaunt(es);
+
+					if (!soundIndex)
 					{
-						soundIndex = CG_CustomSound( es->number, va("*anger%d.wav", Q_irand(1,3)) );
-					}
-					else
-					{
-						soundIndex = CG_CustomSound( es->number, va("*taunt%d.wav", Q_irand(1,3)) );
-						if ( !soundIndex )
+						if ( Q_irand( 0, 1 ) )
 						{
 							soundIndex = CG_CustomSound( es->number, va("*anger%d.wav", Q_irand(1,3)) );
+						}
+						else
+						{
+							soundIndex = CG_CustomSound( es->number, va("*taunt%d.wav", Q_irand(1,3)) );
+							if ( !soundIndex )
+							{
+								soundIndex = CG_CustomSound( es->number, va("*anger%d.wav", Q_irand(1,3)) );
+							}
 						}
 					}
 					break;
@@ -1643,6 +1652,7 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 			}
 			if ( soundIndex )
 			{
+				//trap->S_StartSound (NULL, es->number, CHAN_VOICE, soundIndex );
 				trap->S_StartSound (NULL, es->number, CHAN_VOICE, soundIndex );
 			}
 		}

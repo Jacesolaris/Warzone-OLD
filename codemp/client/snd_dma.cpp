@@ -1605,8 +1605,11 @@ void S_StartSound(const vec3_t origin, int entityNum, int entchannel, sfxHandle_
 #endif
 
 	// pick a channel to play on
+	if ( entchannel == CHAN_VOICE || entchannel == CHAN_VOICE_ATTEN || entchannel == CHAN_VOICE_GLOBAL )
+		ch = S_PickChannel( entityNum, CHAN_AUTO ); // UQ1: Let voice use ALL channels, but still animate...
+	else
+		ch = S_PickChannel( entityNum, entchannel );
 
-	ch = S_PickChannel( entityNum, entchannel );
 	if (!ch) {
 		return;
 	}
@@ -1620,7 +1623,10 @@ void S_StartSound(const vec3_t origin, int entityNum, int entchannel, sfxHandle_
 
 	ch->master_vol = SOUND_MAXVOL;	//FIXME: Um.. control?
 	ch->entnum = entityNum;
-	ch->entchannel = entchannel;
+	if ( entchannel == CHAN_VOICE || entchannel == CHAN_VOICE_ATTEN || entchannel == CHAN_VOICE_GLOBAL )
+		ch->entchannel = CHAN_AUTO; // UQ1: Let voice use ALL channels, but still animate...
+	else
+		ch->entchannel = entchannel;
 	ch->thesfx = sfx;
 	ch->startSample = START_SAMPLE_IMMEDIATE;
 

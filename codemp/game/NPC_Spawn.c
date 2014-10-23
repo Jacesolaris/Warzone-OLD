@@ -2235,6 +2235,12 @@ void SP_NPC_spawner2( gentity_t *self)
 	//We have to load the animation.cfg now because spawnscripts are going to want to set anims and we need to know their length and if they're valid
 	NPC_PrecacheAnimationCFG( self->NPC_type );
 
+	// Initialize sounds before we begin...
+	self->s.csSounds_Std = 0;
+	self->s.csSounds_Combat = 0;
+	self->s.csSounds_Extra = 0;
+	self->s.csSounds_Jedi = 0;
+
 	//rww - can't cheat and do this on the client like in SP, so I'm doing this.
 	NPC_Precache(self);
 

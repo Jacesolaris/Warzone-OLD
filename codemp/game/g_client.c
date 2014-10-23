@@ -2098,6 +2098,19 @@ char *G_ValidateUserinfo( const char *userinfo ) {
 }
 
 extern void DOM_SetFakeNPCName(gentity_t *ent);
+extern void NPC_Precache ( gentity_t *spawner );
+
+void StripModelName( const char *in, char *out, int destsize )
+{
+	const char *slash = strrchr(in, '/');
+	if (slash)
+		destsize = (destsize < slash-in+1 ? destsize : slash-in+1);
+
+	if ( in == out && destsize > 1 )
+		out[destsize-1] = '\0';
+	else
+		Q_strncpyz(out, in, destsize);
+}
 
 qboolean ClientUserinfoChanged( int clientNum ) {
 	gentity_t *ent = g_entities + clientNum;
@@ -2204,11 +2217,20 @@ qboolean ClientUserinfoChanged( int clientNum ) {
 		modelChanged = qtrue;
 	}
 
-	if (!(ent->s.eFlags & EF_FAKE_NPC_BOT))
-	{// UQ1: Register NPC sounds for this model...
+	
+	//if (!(ent->s.eFlags & EF_FAKE_NPC_BOT))
+	{// UQ1: Register NPC sounds for this model... This should work with most models...
 		int i;
 
-		ent->NPC_type = Q_strlwr( G_NewString(model) );
+		// Initialize sounds before we begin...
+		ent->client->ps.csSounds_Std = ent->s.csSounds_Std = 0;
+		ent->client->ps.csSounds_Combat = ent->s.csSounds_Combat = 0;
+		ent->client->ps.csSounds_Extra = ent->s.csSounds_Extra = 0;
+		ent->client->ps.csSounds_Jedi = ent->s.csSounds_Jedi = 0;
+
+		if (!ent->NPC_type || !ent->NPC_type[0]) ent->NPC_type = G_NewString(model);
+		StripModelName(model, ent->NPC_type, sizeof(model));
+		ent->NPC_type = Q_strlwr( ent->NPC_type );
 	
 		// Convert the spaces in the bot name to _ to match npc names...
 		for (i = 0; i < strlen(ent->NPC_type); i++)
@@ -2217,8 +2239,26 @@ qboolean ClientUserinfoChanged( int clientNum ) {
 				ent->NPC_type[i] = '_';
 		}
 
-		NPC_Precache(ent);// uq1: test
+		//trap->Print("Model is %s.\n", ent->NPC_type);
+
+		// Try using model name as sound name... Should work most of the time...
+		ent->s.csSounds_Std = G_SoundIndex( va("*$%s", ent->NPC_type) );
+		ent->s.csSounds_Combat = G_SoundIndex( va("*$%s", ent->NPC_type) );
+		ent->s.csSounds_Extra = G_SoundIndex( va("*$%s", ent->NPC_type) );
+		ent->s.csSounds_Jedi = G_SoundIndex( va("*$%s", ent->NPC_type) );
+		
+		if (!(ent->s.csSounds_Std || ent->s.csSounds_Combat || ent->s.csSounds_Extra || ent->s.csSounds_Jedi))
+		{// Failed to find sounds... Try NPC sound precache...
+			NPC_Precache(ent);
+		}
+
+		ent->client->ps.csSounds_Std = ent->s.csSounds_Std;
+		ent->client->ps.csSounds_Combat = ent->s.csSounds_Combat;
+		ent->client->ps.csSounds_Extra = ent->s.csSounds_Extra;
+		ent->client->ps.csSounds_Jedi = ent->s.csSounds_Jedi;
+		//trap->Print("SERVER: %i %i %i %i.\n", ent->client->ps.csSounds_Std, ent->client->ps.csSounds_Combat, ent->client->ps.csSounds_Extra, ent->client->ps.csSounds_Jedi);
 	}
+	
 
 	client->ps.customRGBA[0] = (value=Info_ValueForKey( userinfo, "char_color_red" ))	? Com_Clampi( 0, 255, atoi( value ) ) : 255;
 	client->ps.customRGBA[1] = (value=Info_ValueForKey( userinfo, "char_color_green" ))	? Com_Clampi( 0, 255, atoi( value ) ) : 255;

@@ -1864,6 +1864,13 @@ typedef struct playerState_s {
 	int				secondaryWeapon;
 	int				temporaryWeapon;
 
+	//index values for each type of sound, gets the folder the sounds
+	//are in. I wish there were a better way to do this,
+	int		csSounds_Std;
+	int		csSounds_Combat;
+	int		csSounds_Extra;
+	int		csSounds_Jedi;
+
 	//rww - spare values specifically for use by mod authors.
 	//See psf_overrides.txt if you want to increase the send
 	//amount of any of these above 1 bit.

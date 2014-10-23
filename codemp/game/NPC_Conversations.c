@@ -399,7 +399,7 @@ void NPC_StormTrooperConversation()
 
 	//trap->Print("NPC %i playing sound file %s.\n", NPC->s.number, filename);
 
-	G_SoundOnEnt( NPC, CHAN_VOICE_ATTEN/*CHAN_AUTO*/, filename );
+	G_SoundOnEnt( NPC, /*CHAN_VOICE_ATTEN*/CHAN_AUTO, filename );
 	NPC_SetStormtrooperConversationReplyTimer();
 	NPC_ConversationAnimation(NPC);
 #endif //__NPC_CONVERSATIONS__
@@ -619,7 +619,7 @@ void NPC_NPCConversation()
 
 	//trap->Print("NPC %i (%s) playing sound file %s.\n", NPC->s.number, NPC->NPC_type, filename);
 
-	G_SoundOnEnt( NPC, CHAN_VOICE_ATTEN/*CHAN_AUTO*/, filename );
+	G_SoundOnEnt( NPC, /*CHAN_VOICE_ATTEN*/CHAN_AUTO, filename );
 	NPC_SetConversationReplyTimer();
 	NPC_ConversationAnimation(NPC);
 

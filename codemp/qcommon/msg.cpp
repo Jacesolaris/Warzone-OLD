@@ -793,7 +793,7 @@ netField_t	entityStateFields[] =
 { NETF(origin[1]), 0 },
 { NETF(origin[2]), 0 },
 // does this need to be 8 bits?
-{ NETF(weapon), 8 },
+{ NETF(weapon), 32 },
 { NETF(apos.trType), 8 },
 // changed from 12 to 16
 { NETF(legsAnim), 16 },			// Maximum number of animation sequences is 2048.  Top bit is reserved for the togglebit
@@ -879,14 +879,14 @@ netField_t	entityStateFields[] =
 // used for both force pass and an emplaced gun - gun is just a flag indicator
 { NETF(activeForcePass), 6 },
 // used to indicate health
-{ NETF(health), 10 }, //if something's health exceeds 1024, then.. too bad!
+{ NETF(health), 16 }, //if something's health exceeds 1024, then.. too bad!
 // appears to have multiple means, could be eliminated by indicating a sound set differently
 { NETF(loopIsSoundset), 1 },
 { NETF(saberHolstered), 2 },
 //NPC-SPECIFIC:
 // both are used for NPCs sabers, though limited
 { NETF(npcSaber1), 9 },
-{ NETF(maxhealth), 10 },
+{ NETF(maxhealth), 16 },
 { NETF(trickedentindex2), 16 },
 // appear to only be 18 powers?
 { NETF(forcePowersActive), 32 },
@@ -898,7 +898,6 @@ netField_t	entityStateFields[] =
 { NETF(soundSetIndex), 8 }, //rww - if MAX_AMBIENT_SETS is changed from 256, REMEMBER TO CHANGE THIS
 // looks like this can be reduced to 4? (ship parts = 4, people parts = 2)
 { NETF(brokenLimbs), 8 }, //up to 8 limbs at once (not that that many are used)
-{ NETF(csSounds_Std), 16 }, //soundindex must be 8 unless max sounds is changed
 // used extensively
 { NETF(saberInFlight), 1 },
 { NETF(angles2[0]), 0 },
@@ -934,9 +933,6 @@ netField_t	entityStateFields[] =
 // used only in one spot for seige
 { NETF(boltToPlayer), 6 },
 { NETF(npcSaber2), 9 },
-{ NETF(csSounds_Combat), 16 },
-{ NETF(csSounds_Extra), 16 },
-{ NETF(csSounds_Jedi), 16 },
 // used only for surfaces on NPCs
 { NETF(surfacesOn), 32 }, //allow up to 32 surfaces in the bitflag
 { NETF(boneIndex2), 6 },
@@ -952,8 +948,6 @@ netField_t	entityStateFields[] =
 { NETF(boneAngles4[0]), 0 },
 { NETF(boneAngles4[1]), 0 },
 { NETF(boneAngles4[2]), 0 },
-
-#ifdef __MMO__
 { NETF(damageCrit), 1 },
 { NETF(damageValue), 32 },
 { NETF(NPC_NAME_ID), 8 },
@@ -961,7 +955,10 @@ netField_t	entityStateFields[] =
 { NETF(primaryWeapon), 32 },
 { NETF(secondaryWeapon), 32 },
 { NETF(temporaryWeapon), 32 },
-#endif //__MMO__
+{ NETF(csSounds_Std), 16 },
+{ NETF(csSounds_Combat), 16 },
+{ NETF(csSounds_Extra), 16 },
+{ NETF(csSounds_Jedi), 16 },
 
 //rww - for use by mod authors only
 { NETF(userInt1), 1 },
@@ -1296,21 +1293,23 @@ netField_t	playerStateFields[] =
 { PSF(pm_flags), 16 },
 { PSF(jetpackFuel), 8 },
 { PSF(cloakFuel), 8 },
-#ifdef __MMO__
 { PSF(damageCrit), 1 },
 { PSF(damageValue), 32 },
 { PSF(playerClass), 32 },
 { PSF(primaryWeapon), 32 },
 { PSF(secondaryWeapon), 32 },
 { PSF(temporaryWeapon), 32 },
-#endif //__MMO__
+{ PSF(csSounds_Std), 16 },
+{ PSF(csSounds_Combat), 16 },
+{ PSF(csSounds_Extra), 16 },
+{ PSF(csSounds_Jedi), 16 },
 { PSF(pm_time), -16 },
 { PSF(customRGBA[1]), 8 }, //0-255
 { PSF(clientNum), GENTITYNUM_BITS },
 { PSF(duelIndex), GENTITYNUM_BITS },
 { PSF(customRGBA[2]), 8 }, //0-255
 { PSF(gravity), 16 },
-{ PSF(weapon), 8 },
+{ PSF(weapon), 32 },
 { PSF(delta_angles[2]), 16 },
 { PSF(saberCanThrow), 1 },
 { PSF(viewangles[2]), 0 },
@@ -1439,7 +1438,7 @@ netField_t	pilotPlayerStateFields[] =
 { PSF(pm_flags), 16 },
 { PSF(pm_time), -16 },
 { PSF(clientNum), GENTITYNUM_BITS },
-{ PSF(weapon), 8 },
+{ PSF(weapon), 32 },
 { PSF(delta_angles[2]), 16 },
 { PSF(viewangles[2]), 0 },
 { PSF(externalEvent), 10 },
@@ -1463,14 +1462,16 @@ netField_t	pilotPlayerStateFields[] =
 { PSF(legsTimer), 16 },
 { PSF(jetpackFuel), 8 },
 { PSF(cloakFuel), 8 },
-#ifdef __MMO__
 { PSF(damageCrit), 1 },
 { PSF(damageValue), 32 },
 { PSF(playerClass), 32 },
 { PSF(primaryWeapon), 32 },
 { PSF(secondaryWeapon), 32 },
 { PSF(temporaryWeapon), 32 },
-#endif //__MMO__
+{ PSF(csSounds_Std), 16 },
+{ PSF(csSounds_Combat), 16 },
+{ PSF(csSounds_Extra), 16 },
+{ PSF(csSounds_Jedi), 16 },
 { PSF(saberCanThrow), 1 },
 { PSF(fd.forcePowerDebounce[FP_LEVITATION]), 32 },
 { PSF(torsoFlip), 1 },
@@ -1486,12 +1487,8 @@ netField_t	pilotPlayerStateFields[] =
 { PSF(fd.sentryDeployed), 1 },
 { PSF(fd.forcePowerLevel[FP_SEE]), 2 }, //needed for knowing when to display players through walls
 { PSF(holocronBits), 32 },
-#ifdef __MMO__
 { PSF(fd.forcePower), 32 },
 { PSF(fd.forcePowerMax), 32 }, // UQ1: We need this field...
-#else //!__MMO__
-{ PSF(fd.forcePower), 8 },
-#endif //__MMO__
 
 //===THE REST OF THESE SHOULD NOT BE RELEVANT, BUT, FOR SAFETY, INCLUDE THEM ANYWAY, JUST AT THE BOTTOM===============================================================
 { PSF(velocity[0]), 0 },
@@ -1632,7 +1629,7 @@ netField_t	vehPlayerStateFields[] =
 //{ PSF(duelIndex), GENTITYNUM_BITS },
 //{ PSF(customRGBA[2]), 8 }, //0-255
 { PSF(gravity), 16 },
-{ PSF(weapon), 8 },
+{ PSF(weapon), 32 },
 { PSF(delta_angles[2]), 16 },
 { PSF(viewangles[2]), 0 },
 { PSF(externalEvent), 10 },
@@ -1736,7 +1733,7 @@ netField_t	playerStateFields[] =
 { PSF(duelIndex), GENTITYNUM_BITS },
 { PSF(customRGBA[2]), 8 }, //0-255
 { PSF(gravity), 16 },
-{ PSF(weapon), 8 },
+{ PSF(weapon), 32 },
 { PSF(delta_angles[2]), 16 },
 { PSF(saberCanThrow), 1 },
 { PSF(viewangles[2]), 0 },

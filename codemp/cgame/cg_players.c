@@ -214,6 +214,22 @@ sfxHandle_t	CG_CustomSound( int clientNum, const char *soundName ) {
 		return 0;
 	}
 
+	// Does this client slot have a new model???
+	if (stricmp(ci->modelName, ci->oldModelName))
+	{
+		strcpy(ci->oldModelName, ci->modelName);
+		ci->npc_sounds_registered = qfalse;
+	}
+
+	// UQ1: Load NPC sounds for players/bots...
+	if (clientNum < MAX_CLIENTS && !ci->npc_sounds_registered)
+	{
+		trap->S_Shutup(qtrue);
+		CG_HandleNPCSounds(&cg_entities[clientNum]);
+		trap->S_Shutup(qfalse);
+		ci->npc_sounds_registered = qtrue;
+	}
+
 	for (i = 0; i < MAX_CUSTOM_SOUNDS; i++)
 	{
 		if (!cg_customSoundNames[i])
@@ -277,22 +293,6 @@ sfxHandle_t	CG_CustomSound( int clientNum, const char *soundName ) {
 				break;
 			}
 		}
-	}
-
-	// Does this client slot have a new model???
-	if (stricmp(ci->modelName, ci->oldModelName))
-	{
-		strcpy(ci->oldModelName, ci->modelName);
-		ci->npc_sounds_registered = qfalse;
-	}
-
-	// UQ1: Load NPC sounds for players/bots...
-	if (clientNum < MAX_CLIENTS && !ci->npc_sounds_registered)
-	{
-		trap->S_Shutup(qtrue);
-		CG_HandleNPCSounds(&cg_entities[clientNum]);
-		trap->S_Shutup(qfalse);
-		ci->npc_sounds_registered = qtrue;
 	}
 
 	for ( i = 0 ; i < MAX_CUSTOM_SOUNDS ; i++ )
@@ -1239,16 +1239,6 @@ void CG_LoadClientInfo( clientInfo_t *ci ) {
 			CG_ResetPlayerEntity( &cg_entities[i] );
 		}
 	}
-
-	/*
-	if (stored_clientNum >= 0 && stored_clientNum < MAX_CLIENTS)
-	{
-		// UQ1: Load NPC sounds for players...
-		trap->S_Shutup(qtrue);
-		CG_HandleNPCSounds(&cg_entities[clientNum]); //handle sound loading here as well.
-		trap->S_Shutup(qfalse);
-	}
-	*/
 }
 
 
@@ -1861,6 +1851,7 @@ void CG_NewClientInfo( int clientNum, qboolean entitiesInitialized ) {
 		Q_strncpyz( newInfo.skinName, skin, sizeof( newInfo.skinName ) );
 		Q_strncpyz( newInfo.modelName, modelStr, sizeof( newInfo.modelName ) );
 
+#if 0 // UQ1: No team skin colors will be enforced. We have name tags instead...
 		if ( cgs.gametype >= GT_TEAM ) {
 			// keep skin name
 			slash = strchr( v, '/' );
@@ -1868,6 +1859,7 @@ void CG_NewClientInfo( int clientNum, qboolean entitiesInitialized ) {
 				Q_strncpyz( newInfo.skinName, slash + 1, sizeof( newInfo.skinName ) );
 			}
 		}
+#endif //0
 	} else {
 		Q_strncpyz( newInfo.modelName, v, sizeof( newInfo.modelName ) );
 
@@ -1881,6 +1873,23 @@ void CG_NewClientInfo( int clientNum, qboolean entitiesInitialized ) {
 			*slash = 0;
 		}
 	}
+
+	// Does this client slot have a new model???
+	if (stricmp(ci->modelName, ci->oldModelName))
+	{
+		strcpy(ci->oldModelName, ci->modelName);
+		ci->npc_sounds_registered = qfalse;
+
+		trap->Print("Model has changed.\n");
+
+		// UQ1: Load NPC sounds for players/bots...
+		trap->S_Shutup(qtrue);
+		CG_HandleNPCSounds(&cg_entities[clientNum]);
+		trap->S_Shutup(qfalse);
+		ci->npc_sounds_registered = qtrue;
+	}
+	else
+		trap->Print("Model has not changed.\n");
 
 	if (cgs.gametype == GT_SIEGE)
 	{ //entries only sent in siege mode

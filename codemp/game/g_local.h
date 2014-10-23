@@ -806,6 +806,7 @@ struct gclient_s {
 	int			forcePowerSoundDebounce; //if > level.time, don't do certain sound events again (drain sound, absorb sound, etc)
 
 	char		modelname[MAX_QPATH];
+	char		oldmodelname[MAX_QPATH];
 
 	qboolean	fjDidJump;
 

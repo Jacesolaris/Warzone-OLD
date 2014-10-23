@@ -519,56 +519,129 @@ void CG_PrecacheNPCSounds(const char *str)
 	}
 }
 
+int CG_SelectRandomTaunt(entityState_t *es)
+{// UQ1: Select a random taunt from all available options...
+	int soundIndex = 0;
+	int preferred = Q_irand(1,13);
+
+	switch (preferred)
+	{// First try to find a random taunt from all available options...
+	case 1:
+	default:
+		soundIndex = CG_CustomSound( es->number, "*taunt.wav" );
+		break;
+	case 2:
+		soundIndex = CG_CustomSound( es->number, "*taunt1.wav" );
+		break;
+	case 3:
+		soundIndex = CG_CustomSound( es->number, "*taunt2.wav" );
+		break;
+	case 4:
+		soundIndex = CG_CustomSound( es->number, "*taunt3.wav" );
+		break;
+	case 5:
+		soundIndex = CG_CustomSound( es->number, "*anger1.wav" );
+		break;
+	case 6:
+		soundIndex = CG_CustomSound( es->number, "*anger2.wav" );
+		break;
+	case 7:
+		soundIndex = CG_CustomSound( es->number, "*anger3.wav" );
+		break;
+	case 8:
+		soundIndex = CG_CustomSound( es->number, "*gloat1.wav" );
+		break;
+	case 9:
+		soundIndex = CG_CustomSound( es->number, "*gloat2.wav" );
+		break;
+	case 10:
+		soundIndex = CG_CustomSound( es->number, "*gloat3.wav" );
+		break;
+	case 11:
+		soundIndex = CG_CustomSound( es->number, "*victory1.wav" );
+		break;
+	case 12:
+		soundIndex = CG_CustomSound( es->number, "*victory2.wav" );
+		break;
+	case 13:
+		soundIndex = CG_CustomSound( es->number, "*victory3.wav" );
+		break;
+	}
+
+	if (!soundIndex)
+		soundIndex = CG_CustomSound( es->number, "*taunt.wav" );
+
+	if (!soundIndex)
+		soundIndex = CG_CustomSound( es->number, va("*taunt%d.wav", Q_irand(1,3)) );
+
+	if (!soundIndex)
+		soundIndex = CG_CustomSound( es->number, va("*anger%d.wav", Q_irand(1,3)) );
+
+	if (!soundIndex)
+		soundIndex = CG_CustomSound( es->number, va("*gloat%d.wav", Q_irand(1,3)) );
+
+	if (!soundIndex)
+		soundIndex = CG_CustomSound( es->number, va("*victory%d.wav", Q_irand(1,3)) );
+
+	return soundIndex;
+}
+
 void CG_HandleNPCSounds(centity_t *cent)
 {
 	clientInfo_t *ci = NULL;
 
-	if (!cent) return;
-
-	if (cent && cent->npcClient)
+	if (!cent) 
 	{
-		ci = cent->npcClient;
-	}
-	else if (cent->currentState.clientNum < MAX_CLIENTS && (cent->currentState.eFlags & EF_FAKE_NPC_BOT))
-	{
-		ci = &cgs.clientinfo[cent->currentState.clientNum];
-	}
-	else
-	{
-		//trap->Print("cent %i is not an NPC or FAKE_NPC.\n", cent->currentState.number);
+		//trap->Print("No cent\n");
 		return;
 	}
 
-	//if (cent->currentState.number < MAX_CLIENTS && cg_entities[cent->currentState.number].currentState.eFlags & EF_FAKE_NPC_BOT)
+	if (cent->npcClient)
 	{
-		//standard
-		if (cent->currentState.csSounds_Std)
-		{
-			const char *s = CG_ConfigString( CS_SOUNDS + cent->currentState.csSounds_Std );
+		ci = cent->npcClient;
+	}
+	else if (cent->currentState.number < MAX_CLIENTS)
+	{
+		ci = &cgs.clientinfo[cent->currentState.number];
+	}
+	else
+	{
+		//trap->Print("cent %i is not an NPC or PLAYER.\n", cent->currentState.number);
+		return;
+	}
 
-			if (s && s[0])
+	//trap->Print("CLIENT CS: %i %i %i %i.\n", cent->currentState.csSounds_Std, cent->currentState.csSounds_Combat, cent->currentState.csSounds_Extra, cent->currentState.csSounds_Jedi);
+
+	//standard
+	if (cent->currentState.csSounds_Std)
+	{
+		const char *s = CG_ConfigString( CS_SOUNDS + cent->currentState.csSounds_Std );
+
+		//trap->Print("[%s] CS_STD: %s.\n", ci->name, s);
+
+		if (s && s[0])
+		{
+			char sEnd[MAX_QPATH];
+			int i = 2;
+			int j = 0;
+
+			//Parse past the initial "*" which indicates this is a custom sound, and the $ which indicates
+			//it is an NPC custom sound dir.
+			while (s[i])
 			{
-				char sEnd[MAX_QPATH];
-				int i = 2;
-				int j = 0;
-
-				//Parse past the initial "*" which indicates this is a custom sound, and the $ which indicates
-				//it is an NPC custom sound dir.
-				while (s[i])
-				{
-					sEnd[j] = s[i];
-					j++;
-					i++;
-				}
-				sEnd[j] = 0;
-
-				CG_RegisterCustomSounds(ci, 1, sEnd);
+				sEnd[j] = s[i];
+				j++;
+				i++;
 			}
+			sEnd[j] = 0;
+
+			CG_RegisterCustomSounds(ci, 1, sEnd);
 		}
-		else
-		{
-			memset(&ci->sounds, 0, sizeof(ci->sounds));
-		}
+	}
+	else
+	{
+		//trap->Print("[%s] CS_STD: NONE.\n", ci->name);
+		memset(&ci->sounds, 0, sizeof(ci->sounds));
 	}
 
 	//combat
@@ -576,7 +649,7 @@ void CG_HandleNPCSounds(centity_t *cent)
 	{
 		const char *s = CG_ConfigString( CS_SOUNDS + cent->currentState.csSounds_Combat );
 
-		//trap->Print("CS_COMBAT: %s.\n" , s);
+		//trap->Print("[%s] CS_COMBAT: %s.\n", ci->name, s);
 
 		if (s && s[0])
 		{
@@ -599,7 +672,7 @@ void CG_HandleNPCSounds(centity_t *cent)
 	}
 	else
 	{
-		//trap->Print("cent->currentState.csSounds_Combat\n");
+		//trap->Print("[%s] CS_COMBAT: NONE.\n", ci->name);
 		memset(&ci->combatSounds, 0, sizeof(ci->combatSounds));
 	}
 
@@ -608,7 +681,7 @@ void CG_HandleNPCSounds(centity_t *cent)
 	{
 		const char *s = CG_ConfigString( CS_SOUNDS + cent->currentState.csSounds_Extra );
 
-		//trap->Print("CS_EXTRA: %s.\n" , s);
+		//trap->Print("[%s] CS_EXTRA: %s.\n", ci->name, s);
 
 		if (s && s[0])
 		{
@@ -631,7 +704,7 @@ void CG_HandleNPCSounds(centity_t *cent)
 	}
 	else
 	{
-		//trap->Print("cent->currentState.csSounds_Extra\n");
+		//trap->Print("[%s] CS_EXTRA: NONE.\n", ci->name);
 		memset(&ci->extraSounds, 0, sizeof(ci->extraSounds));
 	}
 
@@ -640,7 +713,7 @@ void CG_HandleNPCSounds(centity_t *cent)
 	{
 		const char *s = CG_ConfigString( CS_SOUNDS + cent->currentState.csSounds_Jedi );
 
-		//trap->Print("CS_JEDI: %s.\n" , s);
+		//trap->Print("[%s] CS_JEDI: %s.\n", ci->name, s);
 
 		if (s && s[0])
 		{
@@ -663,7 +736,7 @@ void CG_HandleNPCSounds(centity_t *cent)
 	}
 	else
 	{
-		//trap->Print("cent->currentState.csSounds_Jedi\n");
+		//trap->Print("[%s] CS_JEDI: NONE.\n", ci->name);
 		memset(&ci->jediSounds, 0, sizeof(ci->jediSounds));
 	}
 }

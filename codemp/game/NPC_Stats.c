@@ -588,16 +588,16 @@ Precaches NPC skins, tgas and md3s.
 */
 void NPC_Precache ( gentity_t *spawner )
 {
-	npcteam_t			playerTeam = NPCTEAM_FREE;
+	npcteam_t	playerTeam = NPCTEAM_FREE;
 	const char	*token;
 	const char	*value;
 	const char	*p;
-	char	*patch;
-	char	sound[MAX_QPATH];
+	char		*patch;
+	char		sound[MAX_QPATH];
 	qboolean	md3Model = qfalse;
-	char	playerModel[MAX_QPATH];
-	char	customSkin[MAX_QPATH];
-	char	sessionName[MAX_QPATH+15];
+	char		playerModel[MAX_QPATH];
+	char		customSkin[MAX_QPATH];
+	char		sessionName[MAX_QPATH+15];
 
 	if ( !Q_stricmp( "random", spawner->NPC_type ) )
 	{//sorry, can't precache a random just yet
@@ -617,7 +617,10 @@ void NPC_Precache ( gentity_t *spawner )
 	{
 		token = COM_ParseExt( &p, qtrue );
 		if ( token[0] == 0 )
+		{
+			//trap->Print("NPC_Precache token[0] == 0\n" );
 			return;
+		}
 
 		if ( !Q_stricmp( token, spawner->NPC_type ) )
 		{
@@ -758,7 +761,7 @@ void NPC_Precache ( gentity_t *spawner )
 					*patch = 0;
 				}
 				spawner->s.csSounds_Std = G_SoundIndex( va("*$%s", sound) );
-				//trap->Print("NPC_Precache loaded sound %s\n", va("*$%s", sound) );
+				//trap->Print("NPC_Precache loaded basic sound %s\n", va("*$%s (%i)", sound, spawner->s.csSounds_Std) );
 			}
 			continue;
 		}
@@ -778,7 +781,7 @@ void NPC_Precache ( gentity_t *spawner )
 					*patch = 0;
 				}
 				spawner->s.csSounds_Combat = G_SoundIndex( va("*$%s", sound) );
-				//trap->Print("NPC_Precache loaded combat sound %s\n", va("*$%s", sound) );
+				//trap->Print("NPC_Precache loaded combat sound %s\n", va("*$%s (%i)", sound, spawner->s.csSounds_Combat) );
 			}
 			continue;
 		}
@@ -798,7 +801,7 @@ void NPC_Precache ( gentity_t *spawner )
 					*patch = 0;
 				}
 				spawner->s.csSounds_Extra = G_SoundIndex( va("*$%s", sound) );
-				//trap->Print("NPC_Precache loaded extra sound %s\n", va("*$%s", sound) );
+				//trap->Print("NPC_Precache loaded extra sound %s\n", va("*$%s (%i)", sound, spawner->s.csSounds_Extra) );
 			}
 			continue;
 		}
@@ -818,7 +821,7 @@ void NPC_Precache ( gentity_t *spawner )
 					*patch = 0;
 				}
 				spawner->s.csSounds_Jedi = G_SoundIndex( va("*$%s", sound) );
-				//trap->Print("NPC_Precache loaded jedi sound %s\n", va("*$%s", sound) );
+				//trap->Print("NPC_Precache loaded jedi sound %s\n", va("*$%s (%i)", sound, spawner->s.csSounds_Jedi) );
 			}
 			continue;
 		}

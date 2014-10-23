@@ -3132,13 +3132,19 @@ void BG_PlayerStateToEntityState( playerState_t *ps, entityState_t *s, qboolean 
 	s->damageCrit = ps->damageCrit;
 	s->damageValue = ps->damageValue;
 
-	// UQ1: Added - secondary weapon...
+	// UQ1: Added - Player Class...
 	s->playerClass = ps->playerClass;
 
 	// UQ1: Added - weapons...
 	s->primaryWeapon = ps->primaryWeapon;
 	s->secondaryWeapon = ps->secondaryWeapon;
 	s->temporaryWeapon = ps->temporaryWeapon;
+
+	// UQ1: Added - NPC sounds...
+	s->csSounds_Std = ps->csSounds_Std;
+	s->csSounds_Combat = ps->csSounds_Combat;
+	s->csSounds_Extra = ps->csSounds_Extra;
+	s->csSounds_Jedi = ps->csSounds_Jedi;
 }
 
 /*
@@ -3306,13 +3312,19 @@ void BG_PlayerStateToEntityStateExtraPolate( playerState_t *ps, entityState_t *s
 	s->damageCrit = ps->damageCrit;
 	s->damageValue = ps->damageValue;
 
-	// UQ1: Added - secondary weapon...
+	// UQ1: Added - Player Class...
 	s->playerClass = ps->playerClass;
 
 	// UQ1: Added - weapons...
 	s->primaryWeapon = ps->primaryWeapon;
 	s->secondaryWeapon = ps->secondaryWeapon;
 	s->temporaryWeapon = ps->temporaryWeapon;
+
+	// UQ1: Added - NPC sounds...
+	s->csSounds_Std = ps->csSounds_Std;
+	s->csSounds_Combat = ps->csSounds_Combat;
+	s->csSounds_Extra = ps->csSounds_Extra;
+	s->csSounds_Jedi = ps->csSounds_Jedi;
 }
 
 /*

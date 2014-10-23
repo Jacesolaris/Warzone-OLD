@@ -3737,8 +3737,12 @@ ClientThink
 A new command has arrived from the client
 ==================
 */
+
+extern void StripModelName( const char *in, char *out, int destsize );
+extern void NPC_Precache ( gentity_t *spawner );
+
 void ClientThink( int clientNum, usercmd_t *ucmd ) {
-	gentity_t *ent;
+	gentity_t	*ent;
 
 	ent = g_entities + clientNum;
 	if (clientNum < MAX_CLIENTS)
