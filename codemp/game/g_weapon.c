@@ -4600,6 +4600,7 @@ void FireWeapon( gentity_t *ent, qboolean altFire ) {
 				WP_FireConcussion( ent );
 			break;
 
+		case WP_S5_PISTOL:
 		case WP_ELG_3A:
 		case WP_WESTER_PISTOL:
 		case WP_BRYAR_OLD:
@@ -4651,6 +4652,10 @@ void FireWeapon( gentity_t *ent, qboolean altFire ) {
 			break;
 
 		case WP_CLONERIFLE:
+			WP_FireRepeater(ent, altFire);
+			break;
+
+		WP_Z6_BLASTER_CANON:
 			WP_FireRepeater(ent, altFire);
 			break;
 

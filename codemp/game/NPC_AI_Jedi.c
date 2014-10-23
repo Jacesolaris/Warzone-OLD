@@ -552,7 +552,8 @@ void Boba_FireDecide( void )
 		}
 	}
 	else if (NPCS.NPC->client->ps.weapon == WP_BRYAR_PISTOL || NPCS.NPC->client->ps.weapon == WP_BRYAR_OLD 
-		|| NPCS.NPC->client->ps.weapon == WP_WESTER_PISTOL || NPCS.NPC->client->ps.weapon == WP_ELG_3A )
+		|| NPCS.NPC->client->ps.weapon == WP_WESTER_PISTOL || NPCS.NPC->client->ps.weapon == WP_ELG_3A 
+		|| NPCS.NPC->client->ps.weapon == WP_S5_PISTOL)
 	{
 		if ( NPCS.NPC->health < NPCS.NPC->client->pers.maxHealth*0.5f )
 		{

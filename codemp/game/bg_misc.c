@@ -251,6 +251,8 @@ int WeaponReadyAnim[WP_NUM_WEAPONS] =
 	TORSO_WEAPONREADY3,//WP_CLONERIFLE
 	TORSO_WEAPONREADY2,//WP_WESTER_PISTOL
 	TORSO_WEAPONREADY2, //WP_ELG_3A
+	TORSO_WEAPONREADY2, //WP_S5_PISTOL
+	MINIGUN_READY,		//WP_Z6_BLASTER_CANON
 	TORSO_WEAPONREADY3,//TORSO_WEAPONREADY5,//WP_BOWCASTER,
 	TORSO_WEAPONREADY3,//TORSO_WEAPONREADY6,//WP_REPEATER,
 	TORSO_WEAPONREADY3,//TORSO_WEAPONREADY7,//WP_DEMP2,
@@ -302,6 +304,8 @@ int WeaponReadyLegsAnim[WP_NUM_WEAPONS] =
 	BOTH_STAND1,//WP_CLONERIFLE
 	BOTH_STAND1,//WP_WESTER_PISTOL
 	BOTH_STAND1,//WP_ELG_3A
+	BOTH_STAND1,//WP_S5_PISTOL
+	BOTH_STAND1,//WP_Z6_BLASTER_CANON
 	BOTH_STAND1,//TORSO_WEAPONREADY5,//WP_BOWCASTER,
 	BOTH_STAND1,//TORSO_WEAPONREADY6,//WP_REPEATER,
 	BOTH_STAND1,//TORSO_WEAPONREADY7,//WP_DEMP2,
@@ -352,6 +356,8 @@ int WeaponAttackAnim[WP_NUM_WEAPONS] =
 	BOTH_ATTACK3,//WP_CLONERIFLE
 	BOTH_ATTACK2,//WP_WESTER_PISTOL
 	BOTH_ATTACK2,//WP_ELG_3A
+	BOTH_ATTACK2,//WP_S5_PISTOL
+	MINIGUN_FIRE, //WP_Z6_BLASTER_CANON
 	BOTH_ATTACK3,//BOTH_ATTACK5,//WP_BOWCASTER,
 	BOTH_ATTACK3,//BOTH_ATTACK6,//WP_REPEATER,
 	BOTH_ATTACK2,//BOTH_ATTACK7,//WP_DEMP2,
@@ -1423,6 +1429,45 @@ Don't place this
 	100,
 	IT_WEAPON,
 	WP_ELG_3A,
+	/* precache */ "",
+	/* sounds */ "",
+	"@SP_INGAME_BLASTER_PISTOL"					// description
+},
+
+//
+/*QUAKED weapon_s5_heavy_pistol (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+Don't place this
+*/
+{
+	"weapon_s5_heavy_pistol",
+	"sound/weapons/w_pkup.wav",
+	{ "models/weapons3/s5_heavy_pistol/s5_pistol_w.glm",
+	0, 0, 0 },
+	/* view */		"models/weapons3/s5_heavy_pistol/s5_pistol.md3",
+	/* icon */		"gfx/hud/w_icon_s5",
+	/* pickup *///	"Bryar Pistol",
+	100,
+	IT_WEAPON,
+	WP_S5_PISTOL,
+	/* precache */ "",
+	/* sounds */ "",
+	"@SP_INGAME_BLASTER_PISTOL"					// description
+},
+
+/*QUAKED weapon_Z-6_rotary_blaster_cannon (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+Don't place this
+*/
+{
+	"weapon_Z-6_rotary_blaster_cannon",
+	"sound/weapons/w_pkup.wav",
+	{ "models/weapons3/minigun/minigun_w.glm",
+	0, 0, 0 },
+	/* view */		"models/weapons3/minigun/minigun.md3",
+	/* icon */		"gfx/hud/w_icon_minigun",
+	/* pickup *///	"Bryar Pistol",
+	100,
+	IT_WEAPON,
+	WP_Z6_BLASTER_CANON,
 	/* precache */ "",
 	/* sounds */ "",
 	"@SP_INGAME_BLASTER_PISTOL"					// description
