@@ -3,6 +3,7 @@
 // cg_weapons.c -- events and effects dealing with weapons
 #include "cg_local.h"
 #include "fx_local.h"
+#include "ghoul2\G2.h"
 
 /*
 Ghoul2 Insert Start
@@ -406,6 +407,7 @@ void CG_AddPlayerWeapon( refEntity_t *parent, playerState_t *ps, centity_t *cent
 	weaponInfo_t	*weapon;
 	centity_t	*nonPredictedCent;
 	refEntity_t	flash;
+	int dif = 0;
 
 	weaponNum = cent->currentState.weapon;
 
@@ -458,9 +460,9 @@ Ghoul2 Insert Start
 	*/
 
 	//need this for third and first person...
-	if (weapon->isBlasterCanon)
+	if (weapon->isBlasterCanon || weaponNum == WP_Z6_BLASTER_CANON)
 	{
-		int dif = cg.time - cent->blastercannonBarrelRotationTime;
+		dif = cg.time - cent->blastercannonBarrelRotationTime;
 
 		if (cent->currentState.eFlags & EF_FIRING || ((ps) && ps->weaponstate == WEAPON_FIRING)) 
 		{
@@ -469,6 +471,63 @@ Ghoul2 Insert Start
 	}
 
 	memset( &gun, 0, sizeof( gun ) );
+	//this stuff under here
+	// add the spinning barrel
+#if 0
+	if (weapon->barrelModel) {
+		memset(&barrel, 0, sizeof(barrel));
+		VectorCopy(parent->lightingOrigin, barrel.lightingOrigin);
+		barrel.shadowPlane = parent->shadowPlane;
+		barrel.renderfx = parent->renderfx;
+
+		barrel.hModel = weapon->barrelModel;
+		angles[YAW] = 0;
+		angles[PITCH] = 0;
+		angles[ROLL] = 0;
+		AnglesToAxis(angles, barrel.axis);
+
+		//Z6 stuff.
+		if (weapon->isBlasterCanon) {
+			if (cent->currentState.eFlags & EF_FIRING || ((ps) && ps->weaponstate == WEAPON_FIRING))
+			{
+				RotateAroundDirection(barrel.axis, cg.time);
+			}
+			else if (dif > 0) {
+				RotateAroundDirection(barrel.axis, (cg.time / (-dif / 5.0)));
+			}
+
+		}
+		if (weapon->handsModel)
+			CG_PositionRotatedEntityOnTag(&barrel, parent, /*gun*/
+			weapon->handsModel, "tag_barrel");
+		else
+			CG_PositionRotatedEntityOnTag(&barrel, parent,/* gun*/
+			weapon->weaponModel, "tag_barrel");
+
+		CG_AddWeaponWithPowerups(&barrel, cent->currentState.powerups);
+	}//i have just added this as it was needed to
+	else 
+#endif
+		if(cent->ghoul2weapon) 
+	{
+		if( weaponNum == WP_Z6_BLASTER_CANON ) 
+		 {
+				vec3_t angles;
+				VectorSet(angles, 0, 0, 0);		
+				/*if(cent->currentState.eFlags & EF_FIRING || ( (ps) && ps->weaponstate == WEAPON_FIRING) ) {
+					angles[1] = cg.time;
+				} 
+				else if( dif > 0 ) {
+					angles[1] = cg.time / ( -dif / 5.0);
+				}*/
+				angles[1] = cg.time;
+				trap->G2API_SetBoneAngles(cent->ghoul2weapon, 0, "bone_barrel", angles, 
+					BONE_ANGLES_PREMULT, POSITIVE_X, NEGATIVE_Y, NEGATIVE_Z, 0, 0, cg.time);
+
+				//cent->ghoul2weapon = NULL; //what would you suggest then that?
+				//trap->Print("Spinning! %i\n", angles[1]);
+		}
+	}
 
 	// only do this if we are in first person, since world weapons are now handled on the server by Ghoul2
 	if (!thirdPerson)
