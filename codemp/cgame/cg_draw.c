@@ -8227,6 +8227,11 @@ void CG_DrawNPCNames( void )
 			continue;
 		}
 
+		if (cent->currentState.eType == ET_NPC)
+		{// If it's an npc and has no ci->name, then set it here...
+			if (strcmp(ci->name, str1)) strcpy(ci->name, str1);
+		}
+		
 		VectorCopy( cent->lerpOrigin, origin );
 		origin[2] += 30;//60;
 

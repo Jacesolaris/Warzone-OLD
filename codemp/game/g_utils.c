@@ -1382,7 +1382,9 @@ void G_Sound( gentity_t *ent, int channel, int soundIndex ) {
 G_SoundAtLoc
 =============
 */
-void G_SoundAtLoc( vec3_t loc, int channel, int soundIndex ) {
+void G_SoundAtLoc( vec3_t loc, int channel, int soundIndex ) 
+{
+	// UQ1: This is INSANE. A whole entity spawn to play a fkin sound???? Really??? I need to find a way to unlagify this one too at some point...
 	gentity_t	*te;
 
 	te = G_TempEntity( loc, EV_GENERAL_SOUND );
@@ -1395,25 +1397,37 @@ void G_SoundAtLoc( vec3_t loc, int channel, int soundIndex ) {
 G_EntitySound
 =============
 */
-void G_EntitySound( gentity_t *ent, int channel, int soundIndex ) {
+void G_EntitySound( gentity_t *ent, int channel, int soundIndex ) 
+{
+	// UQ1: This is INSANE. A whole entity spawn to play a fkin sound???? Really???
+#if 0
 	gentity_t	*te;
 
 	te = G_TempEntity( ent->r.currentOrigin, EV_ENTITY_SOUND );
 	te->s.eventParm = soundIndex;
 	te->s.clientNum = ent->s.number;
 	te->s.trickedentindex = channel;
+#else // SANITY!!!
+	ent->s.eventIndex = channel;
+	G_AddEvent( ent, EV_ENTITY_SOUND, soundIndex );
+#endif
 }
 
 //To make porting from SP easier.
 void G_SoundOnEnt( gentity_t *ent, int channel, const char *soundPath )
 {
+	// UQ1: This is INSANE. A whole entity spawn to play a fkin sound???? Really???
+#if 0
 	gentity_t	*te;
 
 	te = G_TempEntity( ent->r.currentOrigin, EV_ENTITY_SOUND );
 	te->s.eventParm = G_SoundIndex((char *)soundPath);
 	te->s.clientNum = ent->s.number;
 	te->s.trickedentindex = channel;
-
+#else // SANITY!!!
+	ent->s.eventIndex = channel;
+	G_AddEvent( ent, EV_ENTITY_SOUND, G_SoundIndex((char *)soundPath) );
+#endif
 }
 
 //==============================================================================

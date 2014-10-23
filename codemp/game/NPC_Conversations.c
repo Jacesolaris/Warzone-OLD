@@ -15,11 +15,16 @@
 extern npcStatic_t NPCS;
 
 extern qboolean NPC_FacePosition( vec3_t position, qboolean doPitch );
-extern void G_SoundOnEnt( gentity_t *ent, int channel, const char *soundPath );
+//extern void G_SoundOnEnt( gentity_t *ent, int channel, const char *soundPath );
 
 int			NUM_REGISTERED_CONVO_FILES = 0;
 char		REGISTERED_CONVO_FILES[1024][256];
 qboolean	REGISTERED_CONVO_EXISTS[1024];
+
+void G_NPCSound( gentity_t *ent, int channel, int soundIndex ) {
+	ent->s.eventIndex = channel;
+	G_AddEvent( ent, EV_ENTITY_SOUND, soundIndex );
+}
 
 qboolean G_ConversationExists ( char *filename )
 {
@@ -423,7 +428,7 @@ void NPC_StormTrooperConversation()
 
 	//trap->Print("NPC %i playing sound file %s.\n", NPC->s.number, filename);
 
-	G_SoundOnEnt( NPC, CHAN_VOICE/*CHAN_AUTO*/, filename );
+	G_NPCSound( NPC, CHAN_VOICE/*CHAN_AUTO*/, G_SoundIndex(filename));
 	NPC_SetStormtrooperConversationReplyTimer();
 	NPC_ConversationAnimation(NPC);
 #endif //__NPC_CONVERSATIONS__
@@ -586,11 +591,13 @@ void NPC_SetConversationReplyTimer()
 	gentity_t	*NPC = NPCS.NPC;
 
 	NPC->NPC->conversationPart++;
-	if (NPC->NPC->conversationPartner->NPC)
-		NPC->NPC->conversationPartner->NPC->conversationPart++;
 	NPC->NPC->conversationReplyTime = level.time + 10000;//18000;
+
 	if (NPC->NPC->conversationPartner->NPC)
+	{
 		NPC->NPC->conversationPartner->NPC->conversationReplyTime = level.time + 5000;//8000;
+	//	NPC->NPC->conversationPartner->NPC->conversationPart++;
+	}
 #endif //__NPC_CONVERSATIONS__
 }
 
@@ -641,9 +648,9 @@ void NPC_NPCConversation()
 	}
 	//CHAN_VOICE
 
-	//trap->Print("NPC %i (%s) playing sound file %s.\n", NPC->s.number, NPC->NPC_type, filename);
+	//trap->Print("NPC %i (%s) playing sound file %s (index %i).\n", NPC->s.number, NPC->NPC_type, filename, G_SoundIndex(filename));
 
-	G_SoundOnEnt( NPC, CHAN_VOICE/*CHAN_AUTO*/, filename );
+	G_NPCSound( NPC, CHAN_VOICE/*CHAN_AUTO*/, G_SoundIndex(filename));
 	NPC_SetConversationReplyTimer();
 	NPC_ConversationAnimation(NPC);
 
@@ -688,6 +695,7 @@ void NPC_FindConversationPartner()
 			if (!partner->client) continue;
 			if (!partner->NPC) continue;
 			if (partner->client->NPC_class == CLASS_STORMTROOPER) continue;
+			if (partner->client->NPC_class == NPC->client->NPC_class) continue;
 			//if (!Q_stricmpn(partner->NPC_type, NPC->NPC_type, strlen(partner->NPC_type)-1)) continue; // never talk to the same race... (they would repeat eachother)
 			if (partner->NPC->conversationPartner || partner->NPC->conversationReplyTime > level.time)
 				if (Distance(partner->r.currentOrigin, NPC->r.currentOrigin) < 512/*1024*/)//2048)
@@ -704,6 +712,7 @@ void NPC_FindConversationPartner()
 			if (!partner->client) continue;
 			if (!partner->NPC) continue;
 			if (partner->client->NPC_class == CLASS_STORMTROOPER) continue;
+			if (partner->client->NPC_class == NPC->client->NPC_class) continue;
 			//if (!Q_stricmpn(partner->NPC_type, NPC->NPC_type, strlen(partner->NPC_type)-1)) continue; // never talk to the same race... (they would repeat eachother)
 			if (VectorLength(partner->client->ps.velocity) > 16 && Distance(partner->r.currentOrigin, NPC->r.currentOrigin) > 96) continue;
 			if (!NPC_HasConversationSounds(partner)) continue;

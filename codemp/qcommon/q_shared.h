@@ -1864,6 +1864,8 @@ typedef struct playerState_s {
 	int				secondaryWeapon;
 	int				temporaryWeapon;
 
+	int				eventIndex;
+
 	//index values for each type of sound, gets the folder the sounds
 	//are in. I wish there were a better way to do this,
 	int		csSounds_Std;
@@ -2287,6 +2289,8 @@ typedef struct entityState_s {
 	int			primaryWeapon;
 	int			secondaryWeapon;
 	int			temporaryWeapon;
+
+	int			eventIndex;
 
 	int			NPC_NAME_ID;
 

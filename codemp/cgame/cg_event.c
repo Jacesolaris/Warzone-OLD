@@ -3265,12 +3265,26 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 
 	case EV_ENTITY_SOUND:
 		DEBUGNAME("EV_ENTITY_SOUND");
-		//somewhat of a hack - weapon is the caller entity's index, trickedentindex is the proper sound channel
-		if ( cgs.gameSounds[ es->eventParm ] ) {
-			trap->S_StartSound (NULL, es->clientNum, es->trickedentindex, cgs.gameSounds[ es->eventParm ] );
-		} else {
-			s = CG_ConfigString( CS_SOUNDS + es->eventParm );
-			trap->S_StartSound (NULL, es->clientNum, es->trickedentindex, CG_CustomSound( es->clientNum, s ) );
+		if (es->eType == ET_NPC || es->eType == ET_PLAYER)
+		{
+			// eventIndex is the proper sound channel
+			if ( cgs.gameSounds[ es->eventParm ] ) {
+				trap->S_StartSound (NULL, es->clientNum, es->eventIndex, cgs.gameSounds[ es->eventParm ] );
+			} else {
+				s = CG_ConfigString( CS_SOUNDS + es->eventParm );
+				//trap->Print("Sound name %s (index %i - %i).\n", s, es->eventParm, CS_SOUNDS + es->eventParm);
+				trap->S_StartSound (NULL, es->clientNum, es->eventIndex, CG_CustomSound( es->clientNum, s ) );
+			}
+		}
+		else
+		{
+			//somewhat of a hack - weapon is the caller entity's index, trickedentindex is the proper sound channel
+			if ( cgs.gameSounds[ es->eventParm ] ) {
+				trap->S_StartSound (NULL, es->clientNum, es->trickedentindex, cgs.gameSounds[ es->eventParm ] );
+			} else {
+				s = CG_ConfigString( CS_SOUNDS + es->eventParm );
+				trap->S_StartSound (NULL, es->clientNum, es->trickedentindex, CG_CustomSound( es->clientNum, s ) );
+			}
 		}
 		break;
 

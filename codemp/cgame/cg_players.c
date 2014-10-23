@@ -1880,7 +1880,7 @@ void CG_NewClientInfo( int clientNum, qboolean entitiesInitialized ) {
 		strcpy(ci->oldModelName, ci->modelName);
 		ci->npc_sounds_registered = qfalse;
 
-		trap->Print("Model has changed.\n");
+		//trap->Print("Model has changed.\n");
 
 		// UQ1: Load NPC sounds for players/bots...
 		trap->S_Shutup(qtrue);

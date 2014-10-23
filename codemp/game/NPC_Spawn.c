@@ -1968,36 +1968,39 @@ finish:
 	// Do everything possible to give this character some sounds...
 	//
 
-	// Try using NPC Type as sound name... Should work most of the time...
-	newent->s.csSounds_Std = G_SoundIndex( va("*$%s", newent->NPC_type) );
-	newent->s.csSounds_Combat = G_SoundIndex( va("*$%s", newent->NPC_type) );
-	newent->s.csSounds_Extra = G_SoundIndex( va("*$%s", newent->NPC_type) );
-	newent->s.csSounds_Jedi = G_SoundIndex( va("*$%s", newent->NPC_type) );
+	if (Q_stricmpn("civilian_", newent->NPC_type, 9))
+	{// Only if not a civilian...
+		// Try using NPC Type as sound name... Should work most of the time...
+		newent->s.csSounds_Std = G_SoundIndex( va("*$%s", newent->NPC_type) );
+		newent->s.csSounds_Combat = G_SoundIndex( va("*$%s", newent->NPC_type) );
+		newent->s.csSounds_Extra = G_SoundIndex( va("*$%s", newent->NPC_type) );
+		newent->s.csSounds_Jedi = G_SoundIndex( va("*$%s", newent->NPC_type) );
 
-	if (!(newent->s.csSounds_Std || newent->s.csSounds_Combat || newent->s.csSounds_Extra || newent->s.csSounds_Jedi))
-	{// Still failed to find sounds... Try using NPC Type as sound name but with variation 1...
-		newent->s.csSounds_Std = G_SoundIndex( va("*$%s1", newent->NPC_type) );
-		newent->s.csSounds_Combat = G_SoundIndex( va("*$%s1", newent->NPC_type) );
-		newent->s.csSounds_Extra = G_SoundIndex( va("*$%s1", newent->NPC_type) );
-		newent->s.csSounds_Jedi = G_SoundIndex( va("*$%s1", newent->NPC_type) );
+		if (!(newent->s.csSounds_Std || newent->s.csSounds_Combat || newent->s.csSounds_Extra || newent->s.csSounds_Jedi))
+		{// Still failed to find sounds... Try using model name for sounds...
+			newent->s.csSounds_Std = G_SoundIndex( va("*$%s", newent->client->modelname) );
+			newent->s.csSounds_Combat = G_SoundIndex( va("*$%s", newent->client->modelname) );
+			newent->s.csSounds_Extra = G_SoundIndex( va("*$%s", newent->client->modelname) );
+			newent->s.csSounds_Jedi = G_SoundIndex( va("*$%s", newent->client->modelname) );
+		}
+
+		if (!(newent->s.csSounds_Std || newent->s.csSounds_Combat || newent->s.csSounds_Extra || newent->s.csSounds_Jedi))
+		{// Still failed to find sounds... Try using NPC Type as sound name but with variation 1...
+			newent->s.csSounds_Std = G_SoundIndex( va("*$%s1", newent->NPC_type) );
+			newent->s.csSounds_Combat = G_SoundIndex( va("*$%s1", newent->NPC_type) );
+			newent->s.csSounds_Extra = G_SoundIndex( va("*$%s1", newent->NPC_type) );
+			newent->s.csSounds_Jedi = G_SoundIndex( va("*$%s1", newent->NPC_type) );
+		}
+
+		if (!(newent->s.csSounds_Std || newent->s.csSounds_Combat || newent->s.csSounds_Extra || newent->s.csSounds_Jedi))
+		{// Still failed to find sounds... Try using NPC Type as sound name but with variation 2...
+			newent->s.csSounds_Std = G_SoundIndex( va("*$%s2", newent->NPC_type) );
+			newent->s.csSounds_Combat = G_SoundIndex( va("*$%s2", newent->NPC_type) );
+			newent->s.csSounds_Extra = G_SoundIndex( va("*$%s2", newent->NPC_type) );
+			newent->s.csSounds_Jedi = G_SoundIndex( va("*$%s2", newent->NPC_type) );
+		}
 	}
 
-	if (!(newent->s.csSounds_Std || newent->s.csSounds_Combat || newent->s.csSounds_Extra || newent->s.csSounds_Jedi))
-	{// Still failed to find sounds... Try using NPC Type as sound name but with variation 2...
-		newent->s.csSounds_Std = G_SoundIndex( va("*$%s2", newent->NPC_type) );
-		newent->s.csSounds_Combat = G_SoundIndex( va("*$%s2", newent->NPC_type) );
-		newent->s.csSounds_Extra = G_SoundIndex( va("*$%s2", newent->NPC_type) );
-		newent->s.csSounds_Jedi = G_SoundIndex( va("*$%s2", newent->NPC_type) );
-	}
-
-	if (!(newent->s.csSounds_Std || newent->s.csSounds_Combat || newent->s.csSounds_Extra || newent->s.csSounds_Jedi))
-	{// Still failed to find sounds... Try using model name for sounds...
-		newent->s.csSounds_Std = G_SoundIndex( va("*$%s", newent->client->modelname) );
-		newent->s.csSounds_Combat = G_SoundIndex( va("*$%s", newent->client->modelname) );
-		newent->s.csSounds_Extra = G_SoundIndex( va("*$%s", newent->client->modelname) );
-		newent->s.csSounds_Jedi = G_SoundIndex( va("*$%s", newent->client->modelname) );
-	}
-		
 	if (!(newent->s.csSounds_Std || newent->s.csSounds_Combat || newent->s.csSounds_Extra || newent->s.csSounds_Jedi))
 	{// Failed to find sounds... Try NPC sound precache...
 		NPC_Precache(newent);
@@ -2024,6 +2027,9 @@ finish:
 		}
 	}
 #endif //0
+
+	// Init conversation search timer... So that they do not find a partner instantly...
+	newent->NPC->conversationSearchTime = level.time + 10000 + irand(0, 10000);
 
 	return newent;
 }
