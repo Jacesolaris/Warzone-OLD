@@ -109,6 +109,7 @@ typedef struct channel_s {
 	unsigned int startSample;	// START_SAMPLE_IMMEDIATE = set immediately on next mix
 	int			entnum;			// to allow overriding a specific sound
 	int			entchannel;		// to allow overriding a specific sound
+	int			volumechannel;	// to allow overriding a specific sound
 	int			leftvol;		// 0-255 volume after spatialization
 	int			rightvol;		// 0-255 volume after spatialization
 	int			master_vol;		// 0-255 volume before spatialization
@@ -183,7 +184,8 @@ void	SNDDMA_Submit(void);
 //====================================================================
 
 //#define	MAX_CHANNELS			32
-#define	MAX_CHANNELS			128
+//#define	MAX_CHANNELS			128
+#define	MAX_CHANNELS			256
 extern	channel_t   s_channels[MAX_CHANNELS];
 
 extern	int		s_paintedtime;

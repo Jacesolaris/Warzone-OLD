@@ -118,7 +118,8 @@ static char			sInfoOnly_CurrentDynamicMusicSet[64];	// any old reasonable size, 
 #define		SOUND_ATTENUATE		0.0008f
 #define		VOICE_ATTENUATE		0.004f
 
-const float	SOUND_FMAXVOL=0.75;//1.0;
+//const float	SOUND_FMAXVOL=0.75;//1.0;
+const float	SOUND_FMAXVOL=1.0; // UQ1: Why was this lowered???
 const int	SOUND_MAXVOL=255;
 
 channel_t   s_channels[MAX_CHANNELS];
@@ -181,7 +182,7 @@ typedef struct
 	bool	bRelative;
 } loopSound_t;
 
-#define	MAX_LOOP_SOUNDS		32
+#define	MAX_LOOP_SOUNDS		64
 
 int			numLoopSounds;
 loopSound_t	loopSounds[MAX_LOOP_SOUNDS];
@@ -1340,7 +1341,7 @@ S_SpatializeOrigin
 Used for spatializing s_channels
 =================
 */
-void S_SpatializeOrigin (const vec3_t origin, float master_vol, int *left_vol, int *right_vol, int channel)
+void S_SpatializeOrigin (const vec3_t origin, float master_vol, int *left_vol, int *right_vol, int channel, int volumechannel)
 {
     float		dot;
     float		dist;
@@ -1483,6 +1484,7 @@ void S_StartAmbientSound( const vec3_t origin, int entityNum, unsigned char volu
 	ch->master_vol = volume;
 	ch->entnum = entityNum;
 	ch->entchannel = CHAN_AMBIENT;
+	ch->volumechannel = ch->entchannel;
 	ch->thesfx = sfx;
 	ch->startSample = START_SAMPLE_IMMEDIATE;
 
@@ -1613,6 +1615,8 @@ void S_StartSound(const vec3_t origin, int entityNum, int entchannel, sfxHandle_
 	if (!ch) {
 		return;
 	}
+
+	ch->volumechannel = entchannel; // set original channel as volume reference...
 
 	if (origin) {
 		VectorCopy (origin, ch->origin);
@@ -2062,7 +2066,7 @@ void S_AddLoopSounds (void)
 			}
 			loop2->mergeFrame = loopFrame;	// don't check this again later
 
-			S_SpatializeOrigin( loop2->origin, loop2->volume, &left, &right, CHAN_AUTO);	//FIXME: Allow for volume change!!
+			S_SpatializeOrigin( loop2->origin, loop2->volume, &left, &right, CHAN_AUTO, CHAN_AUTO);	//FIXME: Allow for volume change!!
 
 			left_total += left;
 			right_total += right;
@@ -2637,12 +2641,12 @@ void S_Respatialize( int entityNum, const vec3_t head, matrix3_t axis, int inwat
 					VectorCopy( s_entityPosition[ ch->entnum ], origin );
 				}
 
-				S_SpatializeOrigin (origin, (float)ch->master_vol, &ch->leftvol, &ch->rightvol, ch->entchannel);
+				S_SpatializeOrigin (origin, (float)ch->master_vol, &ch->leftvol, &ch->rightvol, ch->entchannel, ch->volumechannel);
 			}
 
 			//NOTE: Made it so that voice sounds keep playing, even out of range
 			//		so that tasks waiting for sound completion keep proper timing
-			if ( !( ch->entchannel == CHAN_VOICE || ch->entchannel == CHAN_VOICE_ATTEN || ch->entchannel == CHAN_VOICE_GLOBAL ) && !ch->leftvol && !ch->rightvol ) {
+			if ( !( ch->volumechannel == CHAN_VOICE || ch->volumechannel == CHAN_VOICE_ATTEN || ch->volumechannel == CHAN_VOICE_GLOBAL ) && !ch->leftvol && !ch->rightvol ) {
 				Channel_Clear(ch);	// memset (ch, 0, sizeof(*ch));
 				continue;
 			}
@@ -2721,7 +2725,7 @@ void S_DoLipSynchs( const unsigned s_oldpaintedtime )
 
 		// if we are playing a sample that should override the lip texture on its owning model, lets figure out
 		// what the amplitude is, stick it in a table, then return it
-		if ( ch->entchannel == CHAN_VOICE || ch->entchannel == CHAN_VOICE_ATTEN || ch->entchannel == CHAN_VOICE_GLOBAL )
+		if ( ch->volumechannel == CHAN_VOICE || ch->volumechannel == CHAN_VOICE_ATTEN || ch->volumechannel == CHAN_VOICE_GLOBAL )
 		{
 			// go away and work out amplitude for this sound we are playing right now.
 			s_entityWavVol[ ch->entnum ] = S_CheckAmplitude( ch, s_oldpaintedtime );
@@ -2925,19 +2929,19 @@ void S_Update_(void) {
 				alSourcefv(s_channels[source].alSource, AL_POSITION, pos);
 				alSourcei(s_channels[source].alSource, AL_LOOPING, AL_FALSE);
 
-				if (ch->entchannel == CHAN_VOICE)
+				if (ch->volumechannel == CHAN_VOICE)
 				{
 					// Reduced fall-off (Large Reference Distance), affected by Voice Volume
 					alSourcef(s_channels[source].alSource, AL_REFERENCE_DISTANCE, DEFAULT_VOICE_REF_DISTANCE);
 					alSourcef(s_channels[source].alSource, AL_GAIN, ((float)(ch->master_vol) * s_volumeVoice->value) / 255.0f);
 				}
-				else if (ch->entchannel == CHAN_VOICE_ATTEN)
+				else if (ch->volumechannel == CHAN_VOICE_ATTEN)
 				{
 					// Normal fall-off, affected by Voice Volume
 					alSourcef(s_channels[source].alSource, AL_REFERENCE_DISTANCE, DEFAULT_REF_DISTANCE);
 					alSourcef(s_channels[source].alSource, AL_GAIN, ((float)(ch->master_vol) * s_volumeVoice->value) / 255.0f);
 				}
-				else if (ch->entchannel == CHAN_LESS_ATTEN)
+				else if (ch->volumechannel == CHAN_LESS_ATTEN)
 				{
 					// Reduced fall-off, affected by Sound Effect Volume
 					alSourcef(s_channels[source].alSource, AL_REFERENCE_DISTANCE, DEFAULT_VOICE_REF_DISTANCE);
@@ -3029,7 +3033,7 @@ void S_Update_(void) {
 
 				ch->bStreaming = true;
 
-				if ( ch->entchannel == CHAN_VOICE || ch->entchannel == CHAN_VOICE_ATTEN || ch->entchannel == CHAN_VOICE_GLOBAL )
+				if ( ch->volumechannel == CHAN_VOICE || ch->volumechannel == CHAN_VOICE_ATTEN || ch->volumechannel == CHAN_VOICE_GLOBAL )
 				{
 					if (ch->thesfx->lipSyncData)
 					{
@@ -3062,7 +3066,7 @@ void S_Update_(void) {
 				if (alGetError() == AL_NO_ERROR)
 					s_channels[source].bPlaying = true;
 
-				if ( ch->entchannel == CHAN_VOICE || ch->entchannel == CHAN_VOICE_ATTEN || ch->entchannel == CHAN_VOICE_GLOBAL )
+				if ( ch->volumechannel == CHAN_VOICE || ch->volumechannel == CHAN_VOICE_ATTEN || ch->volumechannel == CHAN_VOICE_GLOBAL )
 				{
 					if (ch->thesfx->lipSyncData)
 					{
@@ -3219,7 +3223,7 @@ void UpdateSingleShotSounds()
 								{
 									memcpy(ch->buffers[j].Data + nTotalBytesDecoded, ch->MP3StreamHeader.bDecodeBuffer, nBytesDecoded);
 
-									if (ch->entchannel == CHAN_VOICE || ch->entchannel == CHAN_VOICE_ATTEN || ch->entchannel == CHAN_VOICE_GLOBAL )
+									if (ch->volumechannel == CHAN_VOICE || ch->volumechannel == CHAN_VOICE_ATTEN || ch->volumechannel == CHAN_VOICE_GLOBAL )
 									{
 										if (ch->thesfx->lipSyncData)
 										{
@@ -3639,7 +3643,7 @@ void S_SetLipSyncs()
 		if ((!ch->thesfx)||(!ch->bPlaying))
 			continue;
 
-		if ( ch->entchannel == CHAN_VOICE || ch->entchannel == CHAN_VOICE_ATTEN || ch->entchannel == CHAN_VOICE_GLOBAL )
+		if ( ch->volumechannel == CHAN_VOICE || ch->volumechannel == CHAN_VOICE_ATTEN || ch->volumechannel == CHAN_VOICE_GLOBAL )
 		{
 			// Calculate how much time has passed since the sample was started
 			timePlayed = currentTime - ch->iStartTime;
@@ -6294,7 +6298,7 @@ void UpdateEAXBuffer(channel_t *ch)
 			Com_OPrintf("UpdateEAXBuffer : Failed to set exclusion to -1000\n");
 	}
 
-	if ((ch->entchannel == CHAN_VOICE) || (ch->entchannel == CHAN_VOICE_ATTEN) || (ch->entchannel == CHAN_VOICE_GLOBAL))
+	if ((ch->volumechannel == CHAN_VOICE) || (ch->volumechannel == CHAN_VOICE_ATTEN) || (ch->volumechannel == CHAN_VOICE_GLOBAL))
 	{
 		// Remove any Occlusion + Obstruction
 		eaxOBProp.lObstruction = EAXSOURCE_DEFAULTOBSTRUCTION;
