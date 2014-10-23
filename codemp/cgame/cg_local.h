@@ -2268,15 +2268,17 @@ void FX_ConcAltShot( vec3_t start, vec3_t end );
 void CG_Spark( vec3_t origin, vec3_t dir );
 
 // Weapon prototypes
-void FX_BryarHitWall(vec3_t origin, vec3_t normal, int weapon, qboolean altFire);
-void FX_BryarAltHitWall( vec3_t origin, vec3_t normal, int power );
-void FX_BryarHitPlayer( vec3_t origin, vec3_t normal, qboolean humanoid );
-void FX_BryarAltHitPlayer( vec3_t origin, vec3_t normal, qboolean humanoid );
+void FX_BryarProjectileThink(  centity_t *cent, const struct weaponInfo_s *weapon );
+void FX_BryarAltProjectileThink(  centity_t *cent, const struct weaponInfo_s *weapon );
+void FX_BryarHitWall( vec3_t origin, vec3_t normal, int weapon, qboolean altFire );
+void FX_BryarAltHitWall(vec3_t origin, vec3_t normal, int power, int weapon, qboolean altFire);
+void FX_BryarHitPlayer(vec3_t origin, vec3_t normal, qboolean humanoid, int weapon, qboolean altFire);
+void FX_BryarAltHitPlayer(vec3_t origin, vec3_t normal, qboolean humanoid, int weapon, qboolean altFire);
 
 void FX_BlasterProjectileThink( centity_t *cent, const struct weaponInfo_s *weapon );
 void FX_BlasterAltFireThink( centity_t *cent, const struct weaponInfo_s *weapon );
-void FX_BlasterWeaponHitWall( vec3_t origin, vec3_t normal );
-void FX_BlasterWeaponHitPlayer( vec3_t origin, vec3_t normal, qboolean humanoid );
+void FX_BlasterWeaponHitWall(vec3_t origin, vec3_t normal, int weapon, qboolean altFire);
+void FX_BlasterWeaponHitPlayer(vec3_t origin, vec3_t normal, qboolean humanoid, int weapon, qboolean altFire);
 
 
 void FX_ForceDrained(vec3_t origin, vec3_t dir);
@@ -2288,17 +2290,6 @@ void FX_ForceDrained(vec3_t origin, vec3_t dir);
 
 // Environmental effects
 void CG_Spark( vec3_t origin, vec3_t dir );
-
-// Weapon prototypes
-void FX_BryarHitWall(vec3_t origin, vec3_t normal, int weapon, qboolean altFire);
-void FX_BryarAltHitWall( vec3_t origin, vec3_t normal, int power );
-void FX_BryarHitPlayer( vec3_t origin, vec3_t normal, qboolean humanoid );
-void FX_BryarAltHitPlayer( vec3_t origin, vec3_t normal, qboolean humanoid );
-
-void FX_BlasterProjectileThink( centity_t *cent, const struct weaponInfo_s *weapon );
-void FX_BlasterAltFireThink( centity_t *cent, const struct weaponInfo_s *weapon );
-void FX_BlasterWeaponHitWall( vec3_t origin, vec3_t normal );
-void FX_BlasterWeaponHitPlayer( vec3_t origin, vec3_t normal, qboolean humanoid );
 
 void		CG_Init_CG(void);
 void		CG_Init_CGents(void);

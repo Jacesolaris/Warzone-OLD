@@ -4655,7 +4655,7 @@ void FireWeapon( gentity_t *ent, qboolean altFire ) {
 			WP_FireRepeater(ent, altFire);
 			break;
 
-		WP_Z6_BLASTER_CANON:
+		case WP_Z6_BLASTER_CANON:
 			WP_FireRepeater(ent, altFire);
 			break;
 

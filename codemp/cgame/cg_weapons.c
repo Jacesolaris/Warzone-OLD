@@ -457,11 +457,11 @@ Ghoul2 Insert Start
 	Ghoul2 Insert Start
 	*/
 
-	int dif = 0;
 	//need this for third and first person...
 	if (weapon->isBlasterCanon)
 	{
-		dif = cg.time - cent->blastercannonBarrelRotationTime;
+		int dif = cg.time - cent->blastercannonBarrelRotationTime;
+
 		if (cent->currentState.eFlags & EF_FIRING || ((ps) && ps->weaponstate == WEAPON_FIRING)) 
 		{
 			cent->blastercannonBarrelRotationTime = cg.time;
@@ -2183,7 +2183,7 @@ void CG_MissileHitPlayer(int weapon, vec3_t origin, vec3_t dir, int entityNum, q
 		break;
 
 	case WP_DISRUPTOR:
-		FX_DisruptorAltHit(origin, dir, humanoid, weapon, altFire);
+		FX_DisruptorAltHit(origin, dir, weapon, altFire);
 		break;
 
 	case WP_BOWCASTER:
@@ -2247,7 +2247,7 @@ void CG_MissileHitPlayer(int weapon, vec3_t origin, vec3_t dir, int entityNum, q
 		}
 		break;
 
-		WP_Z6_BLASTER_CANON:
+	case WP_Z6_BLASTER_CANON:
 		if (altFire)
 		{
 			FX_RepeaterAltHitPlayer(origin, dir, humanoid, weapon, altFire);

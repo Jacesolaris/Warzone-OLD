@@ -360,12 +360,16 @@ extern "C" {
   or other mallocs available that do this.
 */
 
-#if DEBUG
+#if (DEBUG) || (_DEBUG)
 #include <assert.h>
 #else
 #define assert(x) ((void)0)
 #endif
 
+#pragma warning( disable : 4005 )
+#pragma warning( disable : 4308 )
+#pragma warning( disable : 4307 )
+#pragma warning( disable : 4101 )
 
 /*
   INTERNAL_SIZE_T is the word-size used for internal bookkeeping
