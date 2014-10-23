@@ -511,6 +511,7 @@ typedef struct centity_s {
 	//keeps track of everyone's weapon loadout so they are be displayed
 	int				weapons;
 	//[/VisualWeapons]
+	int blastercannonBarrelRotationTime;
 
 } centity_t;
 
@@ -768,6 +769,7 @@ typedef struct weaponInfo_s {
 	sfxHandle_t		readySound;
 	float			trailRadius;
 	float			wiTrailTime;
+	qboolean		isBlasterCanon;
 
 } weaponInfo_t;
 

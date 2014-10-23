@@ -76,6 +76,7 @@ Ghoul2 Insert Start
 			itemInfo->radius[0] = 60;
 		}
 	}
+	//could it becours i did somthig with the new gun ? now when i think of ithex edit? yeah i have hexed it but i can do a relook if it is
 /*
 Ghoul2 Insert End
 */
@@ -425,6 +426,48 @@ void CG_AddPlayerWeapon( refEntity_t *parent, playerState_t *ps, centity_t *cent
 Ghoul2 Insert Start
 */
 
+	if ((cent->currentState.eFlags & EF_FIRING || ((ps) && ps->weaponstate == WEAPON_FIRING))) {
+		if (weapon->isBlasterCanon)
+		{
+			trap->S_AddLoopingSound(cent->currentState.number, cent->lerpOrigin, vec3_origin, weapon->spinSound);
+		}
+		else
+		{
+			trap->S_AddLoopingSound(cent->currentState.number, cent->lerpOrigin, vec3_origin, weapon->firingSound);
+		}
+		cent->pe.lightningFiring = qtrue;
+	}
+	else
+	{
+		if (weapon->isBlasterCanon)
+		{
+			if (cent->pe.lightningFiring)
+			{
+				trap->S_StartSound(cent->lerpOrigin, cent->currentState.number, CHAN_WEAPON, weapon->spindownSound);
+			}
+		}
+		else if (weapon->readySound > 0) 
+		{
+			trap->S_AddLoopingSound(cent->currentState.number, cent->lerpOrigin, vec3_origin, weapon->readySound);
+		}
+		cent->pe.lightningFiring = qfalse;
+	}
+
+	/*
+	Ghoul2 Insert Start
+	*/
+
+	int dif = 0;
+	//need this for third and first person...
+	if (weapon->isBlasterCanon)
+	{
+		dif = cg.time - cent->blastercannonBarrelRotationTime;
+		if (cent->currentState.eFlags & EF_FIRING || ((ps) && ps->weaponstate == WEAPON_FIRING)) 
+		{
+			cent->blastercannonBarrelRotationTime = cg.time;
+		}
+	}
+
 	memset( &gun, 0, sizeof( gun ) );
 
 	// only do this if we are in first person, since world weapons are now handled on the server by Ghoul2
@@ -571,7 +614,8 @@ Ghoul2 Insert End
 		  ( cent->currentState.weapon == WP_DEMP2 && cent->currentState.modelindex2 == WEAPON_CHARGING_ALT) ||
 		  (cent->currentState.weapon == WP_CLONE_PISTOL1 && cent->currentState.modelindex2 == WEAPON_CHARGING_ALT) ||
 		  (cent->currentState.weapon == WP_WESTER_PISTOL && cent->currentState.modelindex2 == WEAPON_CHARGING_ALT ) ||
-		  (cent->currentState.weapon == WP_ELG_3A && cent->currentState.modelindex2 == WEAPON_CHARGING_ALT)))
+		  (cent->currentState.weapon == WP_ELG_3A && cent->currentState.modelindex2 == WEAPON_CHARGING_ALT) ||
+		  (cent->currentState.weapon == WP_S5_PISTOL && cent->currentState.modelindex2 == WEAPON_CHARGING_ALT)))
 	{
 		int		shader = 0;
 		float	val = 0.0f;
@@ -606,7 +650,8 @@ Ghoul2 Insert End
 		if ( cent->currentState.weapon == WP_BRYAR_PISTOL ||
 			cent->currentState.weapon == WP_BRYAR_OLD ||
 			cent->currentState.weapon == WP_WESTER_PISTOL ||
-			cent->currentState.weapon == WP_ELG_3A)
+			cent->currentState.weapon == WP_ELG_3A ||
+			cent->currentState.weapon == WP_S5_PISTOL )
 		{
 			// Hardcoded max charge time of 1 second
 			val = ( cg.time - cent->currentState.constantLight ) * 0.001f;
@@ -1748,7 +1793,8 @@ void CG_FireWeapon( centity_t *cent, qboolean altFire ) {
 			(ent->weapon == WP_BOWCASTER && !altFire) ||
 			(ent->weapon == WP_DEMP2 && altFire) ||
 			(ent->weapon == WP_CLONE_PISTOL1 && altFire) ||
-			(ent->weapon == WP_ELG_3A && altFire))
+			(ent->weapon == WP_ELG_3A && altFire) ||
+			(ent->weapon == WP_S5_PISTOL && altFire))
 			
 		{
 			float val = ( cg.time - cent->currentState.constantLight ) * 0.001f;
@@ -1792,6 +1838,10 @@ void CG_FireWeapon( centity_t *cent, qboolean altFire ) {
 				CGCam_Shake(flrand(2, 3), 350);
 			}
 			else if (ent->weapon == WP_WESTARM5)
+			{
+				CGCam_Shake(flrand(2, 3), 350);
+			}
+			else if (ent->weapon == WP_Z6_BLASTER_CANON)
 			{
 				CGCam_Shake(flrand(2, 3), 350);
 			}
@@ -1907,6 +1957,7 @@ void CG_MissileHitWall(int weapon, int clientNum, vec3_t origin, vec3_t dir, imp
 		FX_ConcussionHitWall(origin, dir, weapon, altFire);
 		break;
 
+	case WP_S5_PISTOL:
 	case WP_ELG_3A:
 	case WP_WESTER_PISTOL:
 	case WP_BRYAR_OLD:
@@ -1929,6 +1980,7 @@ void CG_MissileHitWall(int weapon, int clientNum, vec3_t origin, vec3_t dir, imp
 		//FX_DisruptorAltMiss( origin, dir ); // UQ1: Example... Should have it's own fx...
 		FX_BlasterWeaponHitWall(origin, dir, weapon, altFire);
 		break;
+	
 
 	case WP_BLASTER:
 		FX_BlasterWeaponHitWall(origin, dir, weapon, altFire);
@@ -1989,6 +2041,17 @@ void CG_MissileHitWall(int weapon, int clientNum, vec3_t origin, vec3_t dir, imp
 		break;
 
 	case WP_CLONERIFLE:
+		if (altFire)
+		{
+			FX_RepeaterAltHitWall(origin, dir, weapon, altFire);
+		}
+		else
+		{
+			FX_RepeaterHitWall(origin, dir, weapon, altFire);
+		}
+		break;
+
+	case WP_Z6_BLASTER_CANON:
 		if (altFire)
 		{
 			FX_RepeaterAltHitWall(origin, dir, weapon, altFire);
@@ -2092,6 +2155,7 @@ void CG_MissileHitPlayer(int weapon, vec3_t origin, vec3_t dir, int entityNum, q
 		FX_ConcussionHitPlayer( origin, dir, humanoid, weapon, altFire );
 		break;
 
+	case WP_S5_PISTOL:
 	case WP_ELG_3A:
 	case WP_WESTER_PISTOL:
 	case WP_BRYAR_OLD:
@@ -2173,6 +2237,17 @@ void CG_MissileHitPlayer(int weapon, vec3_t origin, vec3_t dir, int entityNum, q
 		break;
 
 	case WP_CLONERIFLE:
+		if (altFire)
+		{
+			FX_RepeaterAltHitPlayer(origin, dir, humanoid, weapon, altFire);
+		}
+		else
+		{
+			FX_RepeaterHitPlayer(origin, dir, humanoid, weapon, altFire);
+		}
+		break;
+
+		WP_Z6_BLASTER_CANON:
 		if (altFire)
 		{
 			FX_RepeaterAltHitPlayer(origin, dir, humanoid, weapon, altFire);
