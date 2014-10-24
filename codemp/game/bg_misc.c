@@ -1458,11 +1458,11 @@ Don't place this
 Don't place this
 */
 {
-	"weapon_Z-6_rotary_blaster_cannon",
+	"weapon_Z6_rotary_blaster_cannon",
 	"sound/weapons/w_pkup.wav",
-	{ "models/weapons3/minigun/minigun_w.glm",
+	{ "models/weapons3/z6_rotary/model.glm",
 	0, 0, 0 },
-	/* view */		"models/weapons3/minigun/minigun.md3",
+	/* view */		"models/weapons3/z6_rotary/rotary_cannon.MD3",
 	/* icon */		"gfx/hud/w_icon_minigun",
 	/* pickup *///	"Bryar Pistol",
 	100,

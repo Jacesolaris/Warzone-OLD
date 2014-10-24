@@ -460,79 +460,22 @@ Ghoul2 Insert Start
 	*/
 
 	//need this for third and first person...
-	if (weapon->isBlasterCanon || weaponNum == WP_Z6_BLASTER_CANON)
+	if (weapon->isBlasterCanon)
 	{
 		dif = cg.time - cent->blastercannonBarrelRotationTime;
 
-		if (cent->currentState.eFlags & EF_FIRING || ((ps) && ps->weaponstate == WEAPON_FIRING)) 
+		if ((cent->currentState.eFlags & EF_FIRING) || (ps && ps->weaponstate == WEAPON_FIRING)) 
 		{
 			cent->blastercannonBarrelRotationTime = cg.time;
 		}
 	}
 
 	memset( &gun, 0, sizeof( gun ) );
-	//this stuff under here
-	// add the spinning barrel
-#if 0
-	if (weapon->barrelModel) {
-		memset(&barrel, 0, sizeof(barrel));
-		VectorCopy(parent->lightingOrigin, barrel.lightingOrigin);
-		barrel.shadowPlane = parent->shadowPlane;
-		barrel.renderfx = parent->renderfx;
 
-		barrel.hModel = weapon->barrelModel;
-		angles[YAW] = 0;
-		angles[PITCH] = 0;
-		angles[ROLL] = 0;
-		AnglesToAxis(angles, barrel.axis);
-
-		//Z6 stuff.
-		if (weapon->isBlasterCanon) {
-			if (cent->currentState.eFlags & EF_FIRING || ((ps) && ps->weaponstate == WEAPON_FIRING))
-			{
-				RotateAroundDirection(barrel.axis, cg.time);
-			}
-			else if (dif > 0) {
-				RotateAroundDirection(barrel.axis, (cg.time / (-dif / 5.0)));
-			}
-
-		}
-		if (weapon->handsModel)
-			CG_PositionRotatedEntityOnTag(&barrel, parent, /*gun*/
-			weapon->handsModel, "tag_barrel");
-		else
-			CG_PositionRotatedEntityOnTag(&barrel, parent,/* gun*/
-			weapon->weaponModel, "tag_barrel");
-
-		CG_AddWeaponWithPowerups(&barrel, cent->currentState.powerups);
-	}//i have just added this as it was needed to
-	else 
-#endif
-		if(cent->ghoul2weapon) 
-	{
-		if( weaponNum == WP_Z6_BLASTER_CANON ) 
-		 {
-				vec3_t angles;
-				VectorSet(angles, 0, 0, 0);		
-				/*if(cent->currentState.eFlags & EF_FIRING || ( (ps) && ps->weaponstate == WEAPON_FIRING) ) {
-					angles[1] = cg.time;
-				} 
-				else if( dif > 0 ) {
-					angles[1] = cg.time / ( -dif / 5.0);
-				}*/
-				angles[1] = cg.time;
-				trap->G2API_SetBoneAngles(cent->ghoul2weapon, 0, "bone_barrel", angles, 
-					BONE_ANGLES_PREMULT, POSITIVE_X, NEGATIVE_Y, NEGATIVE_Z, 0, 0, cg.time);
-
-				//cent->ghoul2weapon = NULL; //what would you suggest then that?
-				//trap->Print("Spinning! %i\n", angles[1]);
-		}
-	}
-
+	
 	// only do this if we are in first person, since world weapons are now handled on the server by Ghoul2
 	if (!thirdPerson)
 	{
-
 		// add the weapon
 		VectorCopy( parent->lightingOrigin, gun.lightingOrigin );
 		gun.shadowPlane = parent->shadowPlane;
@@ -563,6 +506,58 @@ Ghoul2 Insert Start
 		}
 
 		CG_PositionEntityOnTag( &gun, parent, parent->hModel, "tag_weapon");
+
+		//this stuff under here
+		// add the spinning barrel
+		if (weapon->barrelModel) 
+		{
+			memset(&barrel, 0, sizeof(barrel));
+			VectorCopy(parent->lightingOrigin, barrel.lightingOrigin);
+			barrel.shadowPlane = parent->shadowPlane;
+			barrel.renderfx = parent->renderfx;
+
+			barrel.hModel = weapon->barrelModel;
+			angles[YAW] = 0;
+			angles[PITCH] = 0;
+			angles[ROLL] = 0;
+
+			if( weaponNum == WP_Z6_BLASTER_CANON ) 
+			{
+				if(cent->currentState.eFlags & EF_FIRING || ( (ps) && ps->weaponstate == WEAPON_FIRING) ) 
+				{
+					cent->blastercannonBarrelRotationAngle+=15;
+				}
+				else
+				{
+					cent->blastercannonBarrelRotationAngle++;
+				}
+
+				if (cent->blastercannonBarrelRotationAngle >= 360)
+				{
+					cent->blastercannonBarrelRotationAngle = cent->blastercannonBarrelRotationAngle - 360;
+				}
+
+				angles[ROLL] = cent->blastercannonBarrelRotationAngle;
+			}
+			AnglesToAxis(angles, barrel.axis);
+
+			//Z6 stuff.
+			if (weapon->isBlasterCanon) {
+				if (cent->currentState.eFlags & EF_FIRING || ((ps) && ps->weaponstate == WEAPON_FIRING))
+				{
+					RotateAroundDirection(barrel.axis, cg.time);
+				}
+				else if (dif > 0) {
+					RotateAroundDirection(barrel.axis, (cg.time / (-dif / 5.0)));
+				}
+			}
+			if (weapon->handsModel)
+				CG_PositionRotatedEntityOnTag(&barrel, parent, /*gun*/
+				weapon->handsModel, "tag_barrel");
+			else
+				CG_PositionRotatedEntityOnTag(&barrel, parent,/* gun*/
+				weapon->weaponModel, "tag_barrel");
+		}
 
 		if (!CG_IsMindTricked(cent->currentState.trickedentindex,
 			cent->currentState.trickedentindex2,
@@ -651,6 +646,36 @@ Ghoul2 Insert Start
 			}
 		}
 	}
+	else if (cent->ghoul2weapon) 
+	{
+		if( weaponNum == WP_Z6_BLASTER_CANON ) 
+		{
+			vec3_t angles;
+			VectorSet(angles, 0, 0, 0);		
+
+			if(cent->currentState.eFlags & EF_FIRING || ( (ps) && ps->weaponstate == WEAPON_FIRING) ) 
+			{
+				cent->blastercannonBarrelRotationAngle+=15;
+			}
+			else
+			{
+				cent->blastercannonBarrelRotationAngle++;
+			}
+
+			if (cent->blastercannonBarrelRotationAngle >= 360)
+			{
+				cent->blastercannonBarrelRotationAngle = cent->blastercannonBarrelRotationAngle - 360;
+			}
+
+			angles[YAW] = cent->blastercannonBarrelRotationAngle;
+
+			trap->G2API_SetBoneAngles(cent->ghoul2weapon, 0, "bone_barrel", angles,
+                                        BONE_ANGLES_PREMULT, POSITIVE_X, NEGATIVE_Y, NEGATIVE_Z, 0, 0, cg.time);
+
+			cent->ghoul2weapon = NULL;
+		}
+	}
+
 /*
 Ghoul2 Insert End
 */
@@ -1930,7 +1955,6 @@ void CG_FireWeapon( centity_t *cent, qboolean altFire ) {
 			//trap->S_StartSound (NULL, cent->currentState.number, CHAN_ITEM, cgs.media.quadSound );
 		}
 	#endif // BASE_COMPAT
-
 
 	// play a sound
 	if (altFire)

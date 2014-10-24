@@ -77,7 +77,8 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponNum == WP_FLECHETTE ||
 		weaponNum == WP_REPEATER ||
 		weaponNum == WP_ROCKET_LAUNCHER ||
-		weaponNum == WP_CONCUSSION)
+		weaponNum == WP_CONCUSSION ||
+		weaponNum == WP_Z6_BLASTER_CANON)
 	{
 		Q_strncpyz( path, item->view_model, sizeof(path) );
 		COM_StripExtension( path, path, sizeof( path ) );

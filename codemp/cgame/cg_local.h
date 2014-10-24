@@ -511,7 +511,9 @@ typedef struct centity_s {
 	//keeps track of everyone's weapon loadout so they are be displayed
 	int				weapons;
 	//[/VisualWeapons]
+
 	int blastercannonBarrelRotationTime;
+	int blastercannonBarrelRotationAngle;
 
 } centity_t;
 
