@@ -6,7 +6,7 @@
 #include "mp3code/mp3struct.h"
 
 #if defined(_WIN32) && !defined(WIN64)
-#define USE_OPENAL
+//#define USE_OPENAL // UQ1: Umm.. nope. Too few channels!!!
 #endif
 
 // Open AL Specific
