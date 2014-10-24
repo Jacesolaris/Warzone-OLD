@@ -1334,7 +1334,7 @@ Jedi_Move
 -------------------------
 */
 
-static void Jedi_Move( gentity_t *goal, qboolean retreat )
+void Jedi_Move( gentity_t *goal, qboolean retreat )
 {
 	qboolean	moved;
 	navInfo_t	info;

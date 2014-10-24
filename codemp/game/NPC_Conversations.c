@@ -15,11 +15,38 @@
 extern npcStatic_t NPCS;
 
 extern qboolean NPC_FacePosition( vec3_t position, qboolean doPitch );
+extern void Jedi_Move( gentity_t *goal, qboolean retreat );
 //extern void G_SoundOnEnt( gentity_t *ent, int channel, const char *soundPath );
 
 int			NUM_REGISTERED_CONVO_FILES = 0;
 char		REGISTERED_CONVO_FILES[1024][256];
 qboolean	REGISTERED_CONVO_EXISTS[1024];
+
+void NPC_EnforceConversationRange ( gentity_t *self )
+{
+	float dist = Distance(self->r.currentOrigin, self->NPC->conversationPartner->r.currentOrigin);
+
+	if (!(NPCS.ucmd.buttons & BUTTON_WALKING))
+		NPCS.ucmd.buttons |= BUTTON_WALKING;
+
+	if (dist > 56)
+	{// Too far, move forward...
+		//trap->Print("Dist is %f. Moving closer.\n", dist);
+		Jedi_Move(self->NPC->conversationPartner, qfalse);
+	}
+	else if (dist < 18 )
+	{// Too close, move back...
+		//trap->Print("Dist is %f. Moving back.\n", dist);
+		Jedi_Move(self->NPC->conversationPartner, qtrue);
+	}
+	else
+	{
+		//trap->Print("Dist is %f. OK!\n", dist);
+		NPCS.ucmd.forwardmove = 0;
+		NPCS.ucmd.rightmove = 0;
+		NPCS.ucmd.upmove = 0;
+	}
+}
 
 void G_NPCSound( gentity_t *ent, int channel, int soundIndex ) {
 	ent->s.eventIndex = channel;
@@ -314,26 +341,33 @@ void NPC_SetStormtrooperConversationReplyTimer()
 
 extern void NPC_SetAnim(gentity_t *ent, int setAnimParts, int anim, int setAnimFlags);
 
+
 void NPC_ConversationAnimation(gentity_t *NPC)
 {
 #ifdef __NPC_CONVERSATIONS__
-	int randAnim = irand(1,10);
+	int randAnim = irand(1,8);
 
 	switch (randAnim)
 	{
 	case 1:
 	case 2:
+		NPC_SetAnim(NPC, SETANIM_BOTH, BOTH_STAND1_TALK1, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD);
+		//trap->Print("BOTH_STAND1_TALK1\n");
+		break;
 	case 3:
 	case 4:
-	case 5:
-		NPC_SetAnim(NPC, SETANIM_BOTH, BOTH_TALK2, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD);
+		NPC_SetAnim(NPC, SETANIM_BOTH, BOTH_STAND1_TALK2, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD);
+		//trap->Print("BOTH_STAND1_TALK2\n");
 		break;
-	case 6:
-	case 7:
+	case 5:
 	case 8:
-	case 9:
+		NPC_SetAnim(NPC, SETANIM_BOTH, BOTH_STAND1_TALK3, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD);
+		//trap->Print("BOTH_STAND1_TALK3\n");
+		break;
+	case 7:
 	default:
 		NPC_SetAnim(NPC, SETANIM_BOTH, BOTH_TALK1, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD);
+		//trap->Print("BOTH_TALK1\n");
 		break;
 	}
 #endif //__NPC_CONVERSATIONS__

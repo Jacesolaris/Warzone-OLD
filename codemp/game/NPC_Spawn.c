@@ -2338,6 +2338,9 @@ void SP_NPC_spawner2( gentity_t *self)
 		{//else spawn right now
 			NPC_Spawn( self, self, self );
 			//NPC_Spawn_Do( self );
+
+			if (self->client)
+				self->client->sess.sessionTeam = self->s.teamowner;
 		}
 	}
 

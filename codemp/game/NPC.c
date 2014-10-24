@@ -33,6 +33,8 @@ extern void NPC_BSGM_Default( void );
 extern void NPC_CheckCharmed( void );
 extern qboolean Boba_Flying( gentity_t *self );
 extern int DOM_GetNearestWP(vec3_t org, int badwp);
+extern void Jedi_Move( gentity_t *goal, qboolean retreat );
+extern void NPC_EnforceConversationRange ( gentity_t *self );
 
 // Conversations...
 extern void NPC_NPCConversation();
@@ -2106,8 +2108,36 @@ void G_DroidSounds( gentity_t *self )
 	}
 }
 
+qboolean NPC_IsVendor(gentity_t *NPC)
+{
+	if (!NPC->client) return qfalse;
+
+	switch (NPC->client->NPC_class)
+	{
+	case CLASS_GENERAL_VENDOR:
+	case CLASS_WEAPONS_VENDOR:
+	case CLASS_ARMOR_VENDOR:
+	case CLASS_SUPPLIES_VENDOR:
+	case CLASS_FOOD_VENDOR:
+	case CLASS_MEDICAL_VENDOR:
+	case CLASS_GAMBLER_VENDOR:
+	case CLASS_TRADE_VENDOR:
+	case CLASS_ODDITIES_VENDOR:
+	case CLASS_DRUG_VENDOR:
+	case CLASS_TRAVELLING_VENDOR:
+		return qtrue;
+		break;
+	default:
+		break;
+	}
+
+	return qfalse;
+}
+
 qboolean NPC_IsCivilian(gentity_t *NPC)
 {
+	if (!NPC->client) return qfalse;
+
 	if (NPC->client->NPC_class == CLASS_CIVILIAN
 		|| NPC->client->NPC_class == CLASS_CIVILIAN_R2D2
 		|| NPC->client->NPC_class == CLASS_CIVILIAN_R5D2
@@ -2122,6 +2152,8 @@ qboolean NPC_IsCivilian(gentity_t *NPC)
 
 qboolean NPC_IsCivilianHumanoid(gentity_t *NPC)
 {
+	if (!NPC->client) return qfalse;
+
 	if (NPC->client->NPC_class == CLASS_CIVILIAN
 		|| NPC->client->NPC_class == CLASS_CIVILIAN_WEEQUAY)
 	{
@@ -3782,27 +3814,6 @@ qboolean NPC_PatrolArea( void )
 		}
 	}
 
-	if (NPC->NPC->conversationPartner)
-	{// Chatting with another NPC... Stay still!
-		NPC_NPCConversation();
-
-		if (NPC->NPC->conversationPartner)
-			NPC_FacePosition( NPC->NPC->conversationPartner->r.currentOrigin, qfalse );
-
-		return qfalse;
-	}
-
-	if (!NPC->enemy && !NPC->NPC->conversationPartner)
-	{// UQ1: Strange place to do this, but whatever... ;)
-		NPC_FindConversationPartner();
-	}
-
-	if (NPC->NPC->conversationPartner)
-	{// Chatting with another NPC... Stay still!
-		NPC_FacePosition( NPC->NPC->conversationPartner->r.currentOrigin, qfalse );
-		return qfalse;
-	}
-
 	VectorCopy(NPC->client->ps.velocity, velocity_vec);
 	velocity = VectorLength(velocity_vec);
 
@@ -4686,24 +4697,6 @@ qboolean NPC_FollowRoutes( void )
 		}
 	}
 
-	if (NPC->NPC->conversationPartner)
-	{// Chatting with another NPC... Stay still!
-		NPC_FacePosition( NPC->NPC->conversationPartner->r.currentOrigin, qfalse );
-		NPC_NPCConversation();
-		return qfalse;
-	}
-
-	if (!NPC->enemy && !NPC->NPC->conversationPartner)
-	{// UQ1: Strange place to do this, but whatever... ;)
-		NPC_FindConversationPartner();
-	}
-
-	if (NPC->NPC->conversationPartner)
-	{// Chatting with another NPC... Stay still!
-		NPC_FacePosition( NPC->NPC->conversationPartner->r.currentOrigin, qfalse );
-		return qfalse;
-	}
-
 	G_ClearEnemy(NPC);
 
 	if (DistanceHorizontal(NPC->r.currentOrigin, NPC->npc_previous_pos) > 3)
@@ -5396,7 +5389,8 @@ void NPC_GenericFrameCode ( gentity_t *self )
 		NPCS.client->ps.weaponstate = WEAPON_IDLE;
 	}
 
-	if ( NPCS.NPC->s.torsoAnim == TORSO_WEAPONREADY1 || NPCS.NPC->s.torsoAnim == TORSO_WEAPONREADY3 )
+	if ( !self->NPC->conversationPartner &&
+		!(NPCS.NPC->s.torsoAnim == TORSO_WEAPONREADY1 || NPCS.NPC->s.torsoAnim == TORSO_WEAPONREADY3) )
 	{//we look ready for action, using one of the first 2 weapon, let's rest our weapon on our shoulder
 		NPC_SetAnim(NPCS.NPC,SETANIM_TORSO,TORSO_WEAPONIDLE3,SETANIM_FLAG_NORMAL);
 	}
@@ -5419,7 +5413,7 @@ void NPC_GenericFrameCode ( gentity_t *self )
 	NPC_CheckAttackScript();
 	NPC_KeepCurrentFacing();
 
-	if ( NPC_IsCivilianHumanoid(NPCS.NPC) && !NPCS.NPC->npc_cower_runaway )
+	if ( NPC_IsCivilianHumanoid(NPCS.NPC) && !NPCS.NPC->npc_cower_runaway && !self->NPC->conversationPartner )
 	{// Set better torso anims when not holding a weapon.
 		NPC_SetAnim(NPCS.NPC, SETANIM_TORSO, BOTH_STAND9IDLE1, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD);
 		NPCS.NPC->client->ps.torsoTimer = 200;
@@ -5635,6 +5629,17 @@ void NPC_Think ( gentity_t *self)//, int msec )
 				NPC_FaceEnemy( qtrue );
 			}
 
+			if (!self->enemy && !self->NPC->conversationPartner)
+			{// Let's look for someone to chat to, shall we???
+				NPC_FindConversationPartner();
+			}
+
+			if (self->NPC->conversationPartner)
+			{
+				if (!(NPCS.ucmd.buttons & BUTTON_WALKING))
+					NPCS.ucmd.buttons |= BUTTON_WALKING;
+			}
+
 #ifdef __NPC_USE_SABER_BLOCKING__
 			if (!self->enemy)
 			{// Never, ever use block if we have no enemy...
@@ -5694,6 +5699,16 @@ void NPC_Think ( gentity_t *self)//, int msec )
 					self->blockToggleTime = level.time + 250; // 250 ms between toggles...
 #endif //__NPC_USE_SABER_BLOCKING__
 
+					NPC_GenericFrameCode( self );
+				}
+				//
+				// Conversations...
+				//
+				else if (self->NPC->conversationPartner)
+				{// Chatting with another NPC... Stay still!
+					NPC_EnforceConversationRange(self);
+					NPC_FacePosition( self->NPC->conversationPartner->r.currentOrigin, qfalse );
+					NPC_NPCConversation();
 					NPC_GenericFrameCode( self );
 				}
 				//

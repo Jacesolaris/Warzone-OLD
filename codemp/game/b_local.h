@@ -75,10 +75,6 @@ extern void NPC_BSRunAndShoot (void);
 extern void NPC_BSWait( void );
 extern void NPC_BSDefault( void );
 extern void NPC_CheckEvasion(void);
-extern qboolean NPC_IsHumanoid ( gentity_t *self );
-extern qboolean NPC_IsJedi ( gentity_t *self );
-extern qboolean NPC_IsBountyHunter ( gentity_t *self );
-extern qboolean NPC_HasGrenades ( gentity_t *self );
 
 //NPC_behavior
 extern void NPC_BSAdvanceFight (void);
@@ -167,6 +163,7 @@ extern qboolean NPC_MoveToGoal( qboolean tryStraight );
 #define CHECK_FOV		4
 #define CHECK_SHOOT		8
 #define CHECK_VISRANGE	16
+
 extern qboolean CanSee ( gentity_t *ent );
 extern qboolean InFOV ( gentity_t *ent, gentity_t *from, int hFOV, int vFOV );
 extern qboolean InFOV2( vec3_t origin, gentity_t *from, int hFOV, int vFOV );
@@ -183,7 +180,6 @@ extern qboolean NPC_ParseParms( const char *NPCName, gentity_t *NPC );
 extern void NPC_LoadParms( void );
 
 //NPC_utils
-extern qboolean NPC_IsValidNPCEnemy ( gentity_t *NPC );
 extern int	teamNumbers[TEAM_NUM_TEAMS];
 extern int	teamStrength[TEAM_NUM_TEAMS];
 extern int	teamCounter[TEAM_NUM_TEAMS];
@@ -323,3 +319,11 @@ typedef struct navInfo_s
 extern int	NAV_MoveToGoal( gentity_t *self, navInfo_t *info );
 extern void NAV_GetLastMove( navInfo_t *info );
 extern qboolean NAV_AvoidCollision( gentity_t *self, gentity_t *goal, navInfo_t *info );
+
+extern qboolean NPC_IsCivilian(gentity_t *NPC);
+extern qboolean NPC_IsCivilianHumanoid(gentity_t *NPC);
+extern qboolean NPC_IsVendor(gentity_t *NPC);
+extern qboolean NPC_IsHumanoid ( gentity_t *self );
+extern qboolean NPC_IsJedi ( gentity_t *self );
+extern qboolean NPC_IsBountyHunter ( gentity_t *self );
+extern qboolean NPC_HasGrenades ( gentity_t *self );

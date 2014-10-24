@@ -3,6 +3,7 @@
 // g_bot.c
 
 #include "g_local.h"
+#include "b_local.h"
 #include "ai_dominance_main.h"
 
 #define __NPC_MINPLAYERS__
@@ -895,42 +896,8 @@ void G_CheckVendorNPCs( void )
 		if (!npc) continue;
 		if (npc->s.eType != ET_NPC) continue;
 
-		switch( npc->client->NPC_class )
-		{// UQ1: Vendor types... Stand still for now...
-		case CLASS_GENERAL_VENDOR:
-		case CLASS_WEAPONS_VENDOR:
-		case CLASS_ARMOR_VENDOR:
-		case CLASS_SUPPLIES_VENDOR:
-		case CLASS_FOOD_VENDOR:
-		case CLASS_MEDICAL_VENDOR:
-		case CLASS_GAMBLER_VENDOR:
-		case CLASS_TRADE_VENDOR:
-		case CLASS_ODDITIES_VENDOR:
-		case CLASS_DRUG_VENDOR:
-		case CLASS_TRAVELLING_VENDOR:
+		if (NPC_IsVendor(npc))
 			botplayers++;
-			break;
-		default:
-			switch( npc->s.NPC_class )
-			{// UQ1: Vendor types... Stand still for now...
-			case CLASS_GENERAL_VENDOR:
-			case CLASS_WEAPONS_VENDOR:
-			case CLASS_ARMOR_VENDOR:
-			case CLASS_SUPPLIES_VENDOR:
-			case CLASS_FOOD_VENDOR:
-			case CLASS_MEDICAL_VENDOR:
-			case CLASS_GAMBLER_VENDOR:
-			case CLASS_TRADE_VENDOR:
-			case CLASS_ODDITIES_VENDOR:
-			case CLASS_DRUG_VENDOR:
-			case CLASS_TRAVELLING_VENDOR:
-				botplayers++;
-				break;
-			default:
-				break;
-			}
-			break;
-		}
 	}
 #ifdef __ALWAYS_TWO_TRAVELLINGVENDORS
 	if (botplayers < minplayers)
@@ -1242,12 +1209,8 @@ void G_CheckMinimumNpcs( void ) {
 
 		if (!npc) continue;
 		if (npc->s.eType != ET_NPC) continue;
-		if (npc->client->NPC_class == CLASS_CIVILIAN
-			|| npc->client->NPC_class == CLASS_CIVILIAN_R2D2
-			|| npc->client->NPC_class == CLASS_CIVILIAN_R5D2
-			|| npc->client->NPC_class == CLASS_CIVILIAN_PROTOCOL
-			|| npc->client->NPC_class == CLASS_CIVILIAN_WEEQUAY
-			|| npc->client->NPC_class == CLASS_PRISONER) continue;
+		if (NPC_IsCivilian(npc)) continue;
+		if (NPC_IsVendor(npc)) continue;
 
 		botplayers++;
 	}
@@ -1270,11 +1233,8 @@ void G_CheckMinimumNpcs( void ) {
 
 				if (!npc) continue;
 				if (npc->s.eType != ET_NPC) continue;
-				if (npc->client->NPC_class == CLASS_CIVILIAN
-					|| npc->client->NPC_class == CLASS_CIVILIAN_R2D2
-					|| npc->client->NPC_class == CLASS_CIVILIAN_R5D2
-					|| npc->client->NPC_class == CLASS_CIVILIAN_PROTOCOL
-					|| npc->client->NPC_class == CLASS_CIVILIAN_WEEQUAY) continue;
+				if (NPC_IsCivilian(npc)) continue;
+				if (NPC_IsVendor(npc)) continue;
 
 				if (npc->client->playerTeam == NPCTEAM_ENEMY)
 					RED_NPCS++;
@@ -1600,6 +1560,7 @@ void G_CheckMinimumNpcs( void ) {
 
 				if (NPC_SPAWN_TEAM == TEAM_BLUE) SPAWN_TEAM = TEAM_RED;
 				if (NPC_SPAWN_TEAM == TEAM_RED) SPAWN_TEAM = TEAM_BLUE;
+				npc->s.teamowner = SPAWN_TEAM;
 
 				spawnPoint = *SelectCTFSpawnPoint ( SPAWN_TEAM, 0, npc->s.origin, npc->s.angles, qtrue );
 				VectorCopy(spawnPoint.s.origin, npc->s.origin);

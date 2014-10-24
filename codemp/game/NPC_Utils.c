@@ -11,67 +11,6 @@ int	teamCounter[TEAM_NUM_TEAMS];
 #define	VALID_ATTACK_CONE	2.0f	//Degrees
 extern void G_DebugPrint( int level, const char *format, ... );
 
-qboolean NPC_IsValidNPCEnemy ( gentity_t *NPC )
-{
-	if (!NPC || !NPC->client) return qfalse;
-	if (!(NPC->s.eType == ET_NPC || NPC->s.eType == ET_PLAYER)) {
-		//trap->Print("ENT_TYPE\n");
-		return qfalse;
-	}
-	if (NPC->health <= 0) {
-		//trap->Print("%s HEALTH\n", NPC->NPC_type);
-		return qfalse;
-	}
-	if (NPC->client->sess.sessionTeam == TEAM_SPECTATOR) {
-		//trap->Print("%s T_SPEC\n", NPC->NPC_type);
-		return qfalse;
-	}
-	if (NPC->client->ps.stats[STAT_HEALTH] <= 0) {
-		//trap->Print("%s S_HEALTH\n", NPC->NPC_type);
-		return qfalse;
-	}
-	/*if (NPC->client->ps.pm_type == PM_DEAD) {
-		trap->Print("%s DEAD\n", NPC->NPC_type);
-		return qfalse;
-	}*/
-	if (NPC->client->ps.pm_type == PM_SPECTATOR) {
-		//trap->Print("%s PM_SPEC\n", NPC->NPC_type);
-		return qfalse;
-	}
-
-	if (NPC->s.eType == ET_PLAYER)
-	{// UQ1: Fixme - same as NPC enemy selection...
-		return qtrue;
-	}
-
-	switch (NPC->client->NPC_class)
-	{
-		case CLASS_CIVILIAN:
-		case CLASS_CIVILIAN_R2D2:
-		case CLASS_CIVILIAN_R5D2:
-		case CLASS_CIVILIAN_PROTOCOL:
-		case CLASS_CIVILIAN_WEEQUAY:
-		case CLASS_GENERAL_VENDOR:
-		case CLASS_WEAPONS_VENDOR:
-		case CLASS_ARMOR_VENDOR:
-		case CLASS_SUPPLIES_VENDOR:
-		case CLASS_FOOD_VENDOR:
-		case CLASS_MEDICAL_VENDOR:
-		case CLASS_GAMBLER_VENDOR:
-		case CLASS_TRADE_VENDOR:
-		case CLASS_ODDITIES_VENDOR:
-		case CLASS_DRUG_VENDOR:
-		case CLASS_TRAVELLING_VENDOR:
-			// These guys have no enemies...
-			return qfalse;
-			break;
-		default:
-			break;
-	}
-
-	return qtrue;
-}
-
 /*
 void CalcEntitySpot ( gentity_t *ent, spot_t spot, vec3_t point )
 
@@ -1153,89 +1092,138 @@ qboolean NPC_ValidEnemy( gentity_t *ent )
 {
 	int entTeam = TEAM_FREE;
 
-	// Must not be a civilian NPC...
-	if (!NPC_IsValidNPCEnemy(ent))
-		return qfalse;
-
-	//Must be a valid pointer
 	if ( ent == NULL )
+	{//Must be a valid pointer
 		return qfalse;
+	}
 
-	//Must not be me
 	if ( ent == NPCS.NPC )
+	{//Must not be me
 		return qfalse;
+	}
 
-	//Must not be deleted
 	if ( ent->inuse == qfalse )
+	{//Must not be deleted
 		return qfalse;
+	}
 
-	//Must be alive
 	if ( ent->health <= 0 )
+	{//Must be alive
 		return qfalse;
+	}
 
-	//In case they're in notarget mode
 	if ( ent->flags & FL_NOTARGET )
+	{//In case they're in notarget mode
 		return qfalse;
+	}
 
-	if ( ent->client && ent->client->sess.sessionTeam == TEAM_SPECTATOR )
-	{//don't go after spectators
-		return qfalse;
-	}
-	else if (level.gametype < GT_TEAM && ent->s.eType == ET_PLAYER) 
-	{// In non-team games all BotNPCs/Players are enemies to eachother...
-		return qtrue;
-	}
-	else if (level.gametype >= GT_TEAM 
-		&& NPCS.NPC
-		&& NPCS.NPC->client
-		&& ent->client 
-		 && ent->s.eType == ET_PLAYER) 
-	{// In team games all BotNPCs are enemies to other team...
-		if ( ent->client->sess.sessionTeam == TEAM_BLUE && NPCS.NPC->client->sess.sessionTeam == TEAM_RED )
-		{
-			return qtrue;
-		}
-		else if ( ent->client->sess.sessionTeam == TEAM_RED && NPCS.NPC->client->sess.sessionTeam == TEAM_BLUE )
-		{
-			return qtrue;
-		}
-		else
-		{
-			return qfalse;
-		}
-	}
-	//Must be an NPC
-	else if ( ent->client == NULL )
+	/*if (!(ent->s.eType == ET_NPC || ent->s.eType == ET_PLAYER)) 
 	{
-	//	if ( ent->svFlags&SVF_NONNPC_ENEMY )
-		if (ent->s.eType != ET_NPC)
-		{//still potentially valid
-			if ( ent->alliedTeam == NPCS.NPC->client->playerTeam )
-			{
-				return qfalse;
-			}
-			else
-			{
-				return qtrue;
-			}
+		return qfalse;
+	}*/
+
+	//if (ent->s.number != 0) assert(0); // UQ1: For debugging...
+
+	if ( ent->client )
+	{// Special client checks...
+		if ( ent->client->sess.sessionTeam == TEAM_SPECTATOR )
+		{//don't go after spectators
+			//trap->Print("spec1 %i\n", ent->s.number);
+			return qfalse;
 		}
-		else
+
+		if ( ent->client->tempSpectate >= level.time )
+		{//don't go after spectators
+			//trap->Print("spec2\n");
+			return qfalse;
+		}
+
+		if (ent->client->ps.stats[STAT_HEALTH] <= 0) 
 		{
+			//trap->Print("stat_health\n");
+			return qfalse;
+		}
+
+		if (ent->client->ps.pm_type == PM_SPECTATOR) 
+		{
+			//trap->Print("spec3\n");
+			return qfalse;
+		}
+
+		if (NPC_IsCivilian(ent))
+		{// These guys have no enemies...
+			//trap->Print("civilian\n");
+			return qfalse;
+		}
+
+		if (NPC_IsVendor(ent))
+		{// These guys have no enemies...
+			//trap->Print("vendor\n");
 			return qfalse;
 		}
 	}
-	else if ( ent->client && ent->client->tempSpectate >= level.time )
-	{//don't go after spectators
+
+	if ( ent->s.weapon == WP_SABER 
+		&& ent->enemy 
+		&& ent->enemy != NPCS.NPC 
+		&& ent->enemy->s.weapon == WP_SABER
+		&& ent->enemy->enemy == ent )
+	{// If their current weapon is saber (and is not me), and their enemy's current weapon is as well (and they are dueling), then let them duel...
+		//trap->Print("duel\n");
 		return qfalse;
+	}
+
+	if ( ent->client )
+	{// Special client checks...
+		if (NPCS.NPC->client->enemyTeam == NPCTEAM_FREE && ent->client->NPC_class != NPCS.NPC->client->NPC_class )
+		{//I get mad at anyone and this guy isn't the same class as me
+			return qtrue;
+		}
+
+		if (ent->client->NPC_class == CLASS_WAMPA && ent->enemy )
+		{//a rampaging wampa
+			return qtrue;
+		}
+
+		if (ent->client->NPC_class == CLASS_RANCOR && ent->enemy )
+		{//a rampaging rancor
+			return qtrue;
+		}
 	}
 
 	if ( ent->NPC && ent->client )
 	{
-		entTeam = ent->client->playerTeam;
+		if (NPCS.NPC->client->enemyTeam == TEAM_FREE)
+		{
+			entTeam = NPCS.NPC->client->enemyTeam;
+		}
+		else if (level.gametype < GT_TEAM)
+		{
+			entTeam = ent->client->playerTeam;
+		}
+		else
+		{
+			if ( ent->client->sess.sessionTeam == TEAM_BLUE )
+			{
+				entTeam = NPCTEAM_PLAYER;
+			}
+			else if ( ent->client->sess.sessionTeam == TEAM_RED )
+			{
+				entTeam = NPCTEAM_ENEMY;
+			}
+			else
+			{
+				entTeam = NPCTEAM_NEUTRAL;
+			}
+		}
 	}
 	else if ( ent->client )
 	{
-		if (level.gametype < GT_TEAM)
+		if (NPCS.NPC->client->enemyTeam == TEAM_FREE)
+		{
+			entTeam = NPCS.NPC->client->enemyTeam;
+		}
+		else if (level.gametype < GT_TEAM)
 		{
 			entTeam = NPCTEAM_PLAYER;
 		}
@@ -1255,23 +1243,77 @@ qboolean NPC_ValidEnemy( gentity_t *ent )
 			}
 		}
 	}
-	//Can't be on the same team
-	if ( ent->client->playerTeam == NPCS.NPC->client->playerTeam )
-		return qfalse;
 
-	//if haven't seen him in a while, give up
-	//if ( NPCInfo->enemyLastSeenTime != 0 && level.time - NPCInfo->enemyLastSeenTime > 7000 )//FIXME: make a stat?
-	//	return qfalse;
-	if ( entTeam == NPCS.NPC->client->enemyTeam //simplest case: they're on my enemy team
-		|| (NPCS.NPC->client->enemyTeam == NPCTEAM_FREE && ent->client->NPC_class != NPCS.NPC->client->NPC_class )//I get mad at anyone and this guy isn't the same class as me
-		|| (ent->client->NPC_class == CLASS_WAMPA && ent->enemy )//a rampaging wampa
-		|| (ent->client->NPC_class == CLASS_RANCOR && ent->enemy )//a rampaging rancor
-		|| (entTeam == NPCTEAM_FREE && ent->client->enemyTeam == NPCTEAM_FREE && ent->enemy && ent->enemy->client && (ent->enemy->client->playerTeam == NPCS.NPC->client->playerTeam||(ent->enemy->client->playerTeam != NPCTEAM_ENEMY&&NPCS.NPC->client->playerTeam==NPCTEAM_PLAYER))) //enemy is a rampaging non-aligned creature who is attacking someone on our team or a non-enemy (this last condition is used only if we're a good guy - in effect, we protect the innocent)
-		)
-	{
+	if (entTeam == NPCTEAM_FREE 
+		&& ent->client
+		&& ent->client->enemyTeam == NPCTEAM_FREE 
+		&& ent->enemy 
+		&& ent->enemy->client 
+		&& (ent->enemy->client->playerTeam == NPCS.NPC->client->playerTeam || (ent->enemy->client->playerTeam != NPCTEAM_ENEMY && NPCS.NPC->client->playerTeam == NPCTEAM_PLAYER)))
+	{//enemy is a rampaging non-aligned creature who is attacking someone on our team or a non-enemy (this last condition is used only if we're a good guy - in effect, we protect the innocent)
 		return qtrue;
 	}
+	
+	if (level.gametype < GT_TEAM)
+	{// Non-Team Gametypes...
+		if (ent->s.eType == ET_PLAYER)
+		{// In non-team games all BotNPCs/Players are enemies to eachother...
+			return qtrue;
+		}
 
+		//Must be an NPC
+		if ( ent->client == NULL )
+		{
+			if (ent->s.eType != ET_NPC)
+			{//still potentially valid
+				if ( ent->alliedTeam == NPCS.NPC->client->playerTeam )
+				{
+					return qfalse;
+				}
+				else
+				{
+					return qtrue;
+				}
+			}
+			else
+			{
+				return qfalse;
+			}
+		}
+
+		//Can't be on the same team
+		if ( ent->client->playerTeam == NPCS.NPC->client->playerTeam )
+		{
+			return qfalse;
+		}
+
+		if ( entTeam == NPCS.NPC->client->enemyTeam ) //simplest case: they're on my enemy team
+		{
+			return qtrue;
+		}
+	}
+	else
+	{// Team Gametypes...
+		if ( NPCS.NPC 
+			&& NPCS.NPC->client 
+			&& ent->client) 
+		{// In team games all NPCs and BotNPCs are enemies to other team...
+			if ( ent->client->sess.sessionTeam == TEAM_BLUE && NPCS.NPC->client->sess.sessionTeam == TEAM_RED )
+			{
+				return qtrue;
+			}
+			else if ( ent->client->sess.sessionTeam == TEAM_RED && NPCS.NPC->client->sess.sessionTeam == TEAM_BLUE )
+			{
+				return qtrue;
+			}
+			else
+			{
+				//trap->Print("team\n");
+				return qfalse;
+			}
+		}
+	}
+	
 	return qfalse;
 }
 
