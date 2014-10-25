@@ -914,21 +914,25 @@ void CG_DrawRect_FixedBorder( float x, float y, float width, float height, int b
 	trap->R_SetColor( NULL );
 }
 
+clock_t			start_time;
+
 void AIMod_AutoWaypoint_DrawProgress ( void )
 {
 	int				flags = 64|128;
-	float			frac;//, time_frac;
+	float			frac;
 	rectDef_t		rect;
-	//int				time_taken = 0;
-	int				total_seconds_left = 0;
+	//int				total_seconds_left = 0;
 	int				seconds_left = 0;
 	int				minutes_left = 0;
-	qboolean		estimating = qfalse;
-	//int				avg_time = 0;
+	clock_t			time_taken;
+	clock_t			total_seconds_left;
+	//qboolean		estimating = qfalse;
+	clock_t			current_time = clock();
 
 	if (aw_percent_complete == 0.0f)
 	{// Init timer...
-		aw_stage_start_time = trap->Milliseconds();
+		//aw_stage_start_time = trap->Milliseconds();
+		aw_stage_start_time = clock();
 		aw_last_percent_time = aw_stage_start_time;
 		aw_last_percent = 0;
 		aw_num_last_times = 0;
@@ -941,31 +945,9 @@ void AIMod_AutoWaypoint_DrawProgress ( void )
 		aw_num_last_times = 0;
 	}
 
+	/*
 	if (aw_percent_complete != 0.0f)
 	{
-		/*int total_time;
-		float time_frac2, done;
-
-		time_frac = (aw_percent_complete/100);
-		time_frac2 = 1-time_frac;
-		
-		time_taken = ( (trap->Milliseconds() - aw_stage_start_time) / 1000 );
-		done = (float)(time_frac * (float)time_taken);
-
-		// Ok, i have done % in x time...
-
-		if (done > 0)
-		{
-			total_time = ( (time_taken*time_frac)+(time_taken*time_frac2) * time_taken);
-			total_seconds_left = ((total_time / done) * time_frac2) * (time_frac/time_frac2);
-			minutes_left = total_seconds_left/60;
-			seconds_left = total_seconds_left-(minutes_left*60);
-		}
-		else
-		{
-			estimating = qtrue;
-		}*/
-
 		if (aw_percent_complete >= 1)
 		{
 			float percent_average_time = 0;
@@ -979,10 +961,6 @@ void AIMod_AutoWaypoint_DrawProgress ( void )
 			if (aw_num_last_times >= 1)
 			{
 				percent_average_time /= aw_num_last_times;
-
-				//avg_time = percent_average_time;
-
-				//total_seconds_left = ((percent_average_time * 100) - (percent_average_time * aw_percent_complete)) / 1000;
 				total_seconds_left = ((100 - aw_percent_complete) * percent_average_time) / 1000;
 				minutes_left = total_seconds_left/60;
 				seconds_left = total_seconds_left-(minutes_left*60);
@@ -992,7 +970,7 @@ void AIMod_AutoWaypoint_DrawProgress ( void )
 				estimating = qtrue;
 			}
 
-			if (aw_last_percent <= aw_percent_complete - 1 /*&& current_time - aw_last_percent_time > 1000*/)
+			if (aw_last_percent <= aw_percent_complete - 1)
 			{
 				int current_time = trap->Milliseconds();
 				float percent_time = (current_time-aw_last_percent_time);
@@ -1028,6 +1006,14 @@ void AIMod_AutoWaypoint_DrawProgress ( void )
 	{
 		estimating = qtrue;
 	}
+	*/
+	time_taken = current_time - aw_stage_start_time;
+
+	// (TimeTaken / linesProcessed) * linesLeft=timeLeft
+	total_seconds_left = ((time_taken / aw_percent_complete) * (100 - aw_percent_complete)) / 1000;
+	total_seconds_left /= 10;
+	minutes_left = total_seconds_left/60;
+	seconds_left = total_seconds_left-(minutes_left*60);
 
 	// Draw the bar!
 	frac = (float)((aw_percent_complete)*0.01);
@@ -1049,10 +1035,10 @@ void AIMod_AutoWaypoint_DrawProgress ( void )
 	CG_Text_Paint((rect.x), (rect.y + (rect.h*0.5) - 40), 0.5f, colorWhite, task_string3, 0, 0, ITEM_TEXTSTYLE_SHADOWED, FONT_MEDIUM );
 	CG_Text_Paint((rect.x + (rect.w*0.5) - 35), (rect.y + (rect.h*0.5) - 18/*+ 8*/), 1.0f, colorWhite, va("^7%.2f%%", aw_percent_complete), 0, 0, ITEM_TEXTSTYLE_SHADOWED, FONT_LARGE );
 	
-	if (!estimating && aw_percent_complete > 1.0f)
+	//if (!estimating && aw_percent_complete > 1.0f)
 		CG_Text_Paint((rect.x + 160), (rect.y + (rect.h*0.5) + 16), 0.5f, colorWhite, va("^3%i ^5minutes ^3%i ^5seconds remaining (estimated)", minutes_left, seconds_left), 0, 0, ITEM_TEXTSTYLE_SHADOWED, FONT_SMALL );
-	else
-		CG_Text_Paint((rect.x + 160), (rect.y + (rect.h*0.5) + 16), 0.5f, colorWhite, va("^5    ... estimating time remaining ..."), 0, 0, ITEM_TEXTSTYLE_SHADOWED, FONT_SMALL );
+	//else
+	//	CG_Text_Paint((rect.x + 160), (rect.y + (rect.h*0.5) + 16), 0.5f, colorWhite, va("^5    ... estimating time remaining ..."), 0, 0, ITEM_TEXTSTYLE_SHADOWED, FONT_SMALL );
 
 	CG_Text_Paint((rect.x + 100/*80*/), (rect.y + (rect.h*0.5) + 30), 0.5f, colorWhite, last_node_added_string, 0, 0, ITEM_TEXTSTYLE_SHADOWED, FONT_MEDIUM );
 
@@ -1159,7 +1145,7 @@ qboolean NearMoverEntityLocation( vec3_t org )
 
 	for (i = 0; i < MOVER_LIST_NUM; i++)
 	{
-		if (DistanceHorizontal(org, MOVER_LIST[i]) >= 68.0) continue;
+		if (DistanceHorizontal(org, MOVER_LIST[i]) >= 48.0/*54.0*//*68.0*/) continue;
 
 		return qtrue;
 	}
@@ -1317,10 +1303,12 @@ qboolean AIMod_AutoWaypoint_Check_PlayerWidth ( vec3_t origin )
 	//Offset the step height
 	//vec3_t	mins = {-18, -18, 0};
 	//vec3_t	maxs = {18, 18, 48};
-	vec3_t	mins = {-24, -24, 0};
-	vec3_t	maxs = {24, 24, 48};
 	//vec3_t	mins = {-48, -48, 0};
 	//vec3_t	maxs = {48, 48, 48};
+	//vec3_t	mins = {-24, -24, 0};
+	//vec3_t	maxs = {24, 24, 48};
+	vec3_t	mins = {-26, -26, 0};
+	vec3_t	maxs = {26, 26, 48};
 
 	VectorCopy(origin, org);
 	org[2]+=18;
@@ -1468,9 +1456,13 @@ int NodeVisible( vec3_t from, vec3_t dest, int ignore )
 
 	//Offset the step height
 	//vec3_t	mins = {-18, -18, -24};
-	vec3_t	mins = {-10, -10, 0};
 	//vec3_t	maxs = {18, 18, 48};
-	vec3_t	maxs = {10, 10, 48-STEPSIZE};
+
+	//vec3_t	mins = {-10, -10, 0};
+	//vec3_t	maxs = {10, 10, 48-STEPSIZE};
+
+	vec3_t	mins = {-18, -18, -8};
+	vec3_t	maxs = {18, 18, 48-STEPSIZE};
 
 	VectorCopy(from, org);
 	org[2]+=STEPSIZE;
@@ -2224,8 +2216,10 @@ qboolean AWP_CheckFallPositionOK(vec3_t position)
 	vec3_t testPos, downPos;
 	vec3_t mins, maxs;
 
-	VectorSet(mins, -8, -8, -1);
-	VectorSet(maxs, 8, 8, 1);
+	//VectorSet(mins, -8, -8, -1);
+	//VectorSet(maxs, 8, 8, 1);
+	VectorSet(mins, -24, -24, -1);
+	VectorSet(maxs, 24, 24, 1);
 	
 	VectorCopy(position, testPos);
 	VectorCopy(position, downPos);
@@ -2410,7 +2404,7 @@ qboolean AWP_Jump( vec3_t start, vec3_t dest )
 		VectorCopy(trace.endpos, start2);
 		start2[2] -= 8.0;
 
-		if (OrgVisible(start, dest, -1))
+		if (OrgVisible(start2, dest, -1))
 		{// Destination is visible from here!
 			return qtrue;
 		}
@@ -2640,6 +2634,25 @@ AIMOD_MAPPING_CreateSpecialNodeFlags ( int node )
 
 //#define __BOT_AUTOWAYPOINT_OPTIMIZE__
 
+/*
+#pragma omp parallel for ordered schedule(dynamic)
+	for ( i = 0; i < areas; i++ )
+	{
+		vec3_t		area_org;
+		short int	objNum[3] = { 0, 0, 0 };
+		qboolean	bad = qfalse;
+		int			j;
+		int			found = 0;
+
+		// Draw a nice little progress bar ;)
+		aw_percent_complete = (float)((float)((float)i/(float)total_areas)*100.0f);
+				
+		update_timer++;
+
+		if(omp_get_thread_num() == 0)
+		{
+		*/
+
 /* */
 void
 AIMOD_MAPPING_MakeLinks ( void )
@@ -2675,6 +2688,7 @@ AIMOD_MAPPING_MakeLinks ( void )
 
 	//number_of_nodes = total_good_count;
 	
+#pragma omp parallel for ordered schedule(dynamic)
 	for ( loop = 0; loop < number_of_nodes; loop++ )
 	{// Do links...
 		nodes[loop].enodenum = 0;
@@ -2684,18 +2698,26 @@ AIMOD_MAPPING_MakeLinks ( void )
 
 		update_timer++;
 
-		if (update_timer >= 100)
+		if(omp_get_thread_num() == 0)
 		{
-			trap->UpdateScreen();
-			update_timer = 0;
+			if (update_timer >= 100)
+			{
+				trap->UpdateScreen();
+				update_timer = 0;
+			}
 		}
 
 		// Also check if the node needs special flags...
 		AIMOD_MAPPING_CreateSpecialNodeFlags( loop );
 
-		AIMOD_MAPPING_CreateNodeLinks( loop );
-
-		strcpy( last_node_added_string, va("^5Created ^3%i ^5links for waypoint ^7%i^5.", nodes[loop].enodenum, loop) );
+#pragma omp ordered
+		{
+#pragma omp critical
+			{
+				AIMOD_MAPPING_CreateNodeLinks( loop );
+				strcpy( last_node_added_string, va("^5Created ^3%i ^5links for waypoint ^7%i^5.", nodes[loop].enodenum, loop) );
+			}
+		}
 	}
 
 	aw_percent_complete = 0.0f;
@@ -3481,6 +3503,22 @@ qboolean Waypoint_FloorSurfaceOK ( int surfaceFlags )
 	return qfalse;	
 }
 
+float GroundHeightNoSurfaceChecks ( vec3_t org )
+{
+	trace_t tr;
+	vec3_t org1, org2;
+
+	VectorCopy(org, org1);
+	org1[2]+=48;
+
+	VectorCopy(org, org2);
+	org2[2]= -65536.0f;
+
+	CG_Trace( &tr, org1, NULL, NULL, org2, -1, MASK_PLAYERSOLID);
+
+	return tr.endpos[2];
+}
+
 float GroundHeightAt ( vec3_t org )
 {
 	trace_t tr;
@@ -3681,6 +3719,11 @@ float FloorHeightAt ( vec3_t org )
 
 	CG_Trace( &tr, org1, NULL, NULL, org2, -1, MASK_PLAYERSOLID );//CONTENTS_PLAYERCLIP | MASK_SHOT /*| MASK_OPAQUE*/ | MASK_WATER );
 	
+	if (tr.startsolid)
+	{
+		return 65536.0f;
+	}
+
 	/*if (HasPortalFlags(tr.surfaceFlags, tr.contents))
 	{
 		aw_floor_trace_hit_mover = qtrue;
@@ -3815,6 +3858,13 @@ float FloorHeightAt ( vec3_t org )
 		//trap->Print("Ignore Area Surface\n");
 		return -65536.0f;
 	}
+
+	if ((tr.surfaceFlags & SURF_NOMARKS) && (tr.surfaceFlags & SURF_NODRAW) && (tr.contents & CONTENTS_SOLID) && (tr.contents & CONTENTS_OPAQUE))
+	//if ( tr.surfaceFlags & SURF_NOMARKS && tr.surfaceFlags & SURF_NODRAW )
+	{// Sky...
+		//trap->Print("SURF_SKY\n");
+		return 65536.0f;
+	}
 	
 #ifdef __MORE_SURFACE_CULLING__
 	if ( tr.surfaceFlags & SURF_NOMISCENTS )
@@ -3832,7 +3882,13 @@ float FloorHeightAt ( vec3_t org )
 
 	if ( tr.contents & CONTENTS_WATER )
 	{// Water... I'm just gonna ignore these!
-		//trap->Print("CONTENTS_LAVA\n");
+		//trap->Print("CONTENTS_WATER\n");
+		return 65536.0f;
+	}
+
+	if ( tr.contents & CONTENTS_TRANSLUCENT )
+	{// Invisible surface... I'm just gonna ignore these!
+		//trap->Print("CONTENTS_TRANSLUCENT\n");
 		return 65536.0f;
 	}
 
@@ -4811,7 +4867,7 @@ AIMod_GetMapBounts ( void )
 	int		i;
 	float	startx = -MAX_MAP_SIZE, starty = -MAX_MAP_SIZE, startz = -MAX_MAP_SIZE;
 	float	highest_z_point = -MAX_MAP_SIZE;
-	float	INCRUMENT = 128.0; //64.0;// 256.0
+	float	INCRUMENT = 192.0;//128.0; //64.0;// 256.0
 	trace_t tr;
 	vec3_t	org1;
 	vec3_t	org2;
@@ -5155,11 +5211,15 @@ AIMod_GetMapBounts ( void )
 	cg.mapcoordsValid = qtrue;
 }
 
+#define __NEW_AWP_METHOD__
+
 void AIMod_AutoWaypoint_StandardMethod( void )
 {// Advanced method for multi-level maps...
 	int			i;
 	float		startx = -MAX_MAP_SIZE, starty = -MAX_MAP_SIZE, startz = -MAX_MAP_SIZE;
+#ifndef __NEW_AWP_METHOD__
 	float		orig_startx, orig_starty, orig_startz;
+#endif //__NEW_AWP_METHOD__
 	int			areas = 0, total_waypoints = 0, total_areas = 0;
 	intvec3_t	*arealist;
 	float		map_size, temp, original_waypoint_scatter_distance = waypoint_scatter_distance;
@@ -5212,6 +5272,223 @@ void AIMod_AutoWaypoint_StandardMethod( void )
 		mapMaxs[2] = temp;
 	}
 
+#ifdef __NEW_AWP_METHOD__
+	{
+		//int		x;
+		int		parallel_x = 0;
+		int		parallel_x_max = 0;
+		int		parallel_y_max = 0;
+		float	scatter = 0;
+		float	scatter_avg = 0;
+		float	scatter_min = 0;
+		float	scatter_max = 0;
+		float	scatter_x = 0;
+		clock_t	previous_time = 0;
+		qboolean sjc_jkg_preview = qfalse;
+		vmCvar_t mapname;
+
+		// This is just for the sjc_jkg_preview incomplete map with large bad surfaces... Grrr....
+		trap->Cvar_Register( &mapname, "mapname", "", CVAR_SERVERINFO | CVAR_ROM );
+		if (!Q_stricmpn("sjc_jkg_preview", mapname.string, 15)) sjc_jkg_preview = qtrue;
+
+		trap->S_Shutup(qtrue);
+
+		mapMaxs[0]+=2048;
+		mapMaxs[1]+=2048;
+		mapMaxs[2]+=2048;
+
+		mapMins[0]-=2048;
+		mapMins[1]-=2048;
+		mapMins[2]-=2048;
+
+		startx = mapMaxs[0];
+		starty = mapMaxs[1];
+		startz = mapMaxs[2];
+
+		map_size = VectorDistance(mapMins, mapMaxs);
+
+		trap->Print( va( "^4*** ^3AUTO-WAYPOINTER^4: ^5Map bounds are ^3%.2f %.2f %.2f ^5to ^3%.2f %.2f %.2f^5.\n", mapMins[0], mapMins[1], mapMins[2], mapMaxs[0], mapMaxs[1], mapMaxs[2]) );
+		strcpy( task_string1, va("^5Map bounds are ^3%.2f %.2f %.2f ^7to ^3%.2f %.2f %.2f^5.", mapMins[0], mapMins[1], mapMins[2], mapMaxs[0], mapMaxs[1], mapMaxs[2]) );
+		trap->UpdateScreen();
+
+		trap->Print( va( "^4*** ^3AUTO-WAYPOINTER^4: ^5Generating AI waypoints. This could take a while... (Map size ^3%.2f^5)\n", map_size) );
+		strcpy( task_string2, va("^5Generating AI waypoints. This could take a while... (Map size ^3%.2f^5)", map_size) );
+		trap->UpdateScreen();
+
+		trap->Print( va( "^4*** ^3AUTO-WAYPOINTER^4: ^5First pass. Finding temporary waypoints...\n") );
+		strcpy( task_string3, va("^5First pass. Finding temporary waypoints...") );
+		trap->UpdateScreen();
+
+		//
+		// Create bulk temporary nodes...
+		//
+
+		//scatter = (waypoint_scatter_distance / (32000 / map_size));
+		// Let's vary the scatter distances :)
+		scatter = waypoint_scatter_distance;
+		scatter_min = scatter * 0.33;
+		scatter_max = scatter * 2.0;
+		scatter_avg = (scatter + scatter_min + scatter_max) / 3.0;
+		scatter_x = scatter;
+
+		parallel_x_max = ((mapMaxs[0] - mapMins[0]) / scatter_avg);
+		parallel_y_max = ((mapMaxs[1] - mapMins[1]) / scatter_avg);
+
+		total_tests = ((mapMaxs[0] - mapMins[0]) / scatter_avg);
+		total_tests *= ((mapMaxs[1] - mapMins[1]) / scatter_avg);
+		total_tests *= ((mapMaxs[2] - mapMins[2]) / scatter_min);
+
+		final_tests = 0;
+		previous_time = clock();
+
+//omp_set_nested(1);
+
+#pragma omp parallel for ordered schedule(dynamic) num_threads(32)
+//#pragma omp parallel for ordered schedule(dynamic) shared(parallel_x, scatter_x)
+		//for (x = startx; x >= mapMins[0]; x -= scatter)
+		for (parallel_x = 0; parallel_x < parallel_x_max; parallel_x++) // To OMP this sucker...
+		{
+			int		x;
+			int		parallel_y = 0;
+			float	scatter_y = scatter;
+			
+			// Vary X scatter distance...
+			if (scatter_x == scatter) scatter_x = scatter_min;
+			else if (scatter_x == scatter) scatter_x = scatter_max;
+			else scatter_x = scatter;
+
+			x = startx - (parallel_x * scatter_x);
+
+//#pragma omp parallel for ordered schedule(dynamic) num_threads(32)
+			for (parallel_y = 0; parallel_y < parallel_y_max; parallel_y++) // To OMP this sucker...
+			{
+				int		z, y;
+				float	current_height = mapMaxs[2]; // Init the current height to max map height...
+				vec3_t	last_org;
+
+				// Vary Y scatter distance...
+				if (scatter_y == scatter) scatter_y = scatter_min;
+				else if (scatter_y == scatter) scatter_y = scatter_max;
+				else scatter_y = scatter;
+
+				y = starty - (parallel_y * scatter_y);
+
+				for (z = startz; z >= mapMins[2]; z -= scatter_min)
+				{
+					vec3_t		new_org, org;
+					float		floor = 0;
+					qboolean	force_continue = qfalse;
+					clock_t		current_time = clock();
+
+					// Update the current test number...
+					final_tests++;
+
+					if(omp_get_thread_num() == 0)
+					{// Draw a nice little progress bar ;)
+						aw_percent_complete = (float)((float)final_tests/(float)total_tests)*100.0f;
+
+						if (current_time - previous_time > 100) // update display every 100ms...
+						{
+							previous_time = current_time;
+							trap->UpdateScreen();
+						}
+					}
+
+					if (z >= current_height)
+					{// We can skip down to this position...
+						continue;
+					}
+
+					// Set this test location's origin...
+					VectorSet(new_org, x, y, z);
+
+#pragma omp critical
+					{
+						// Find the ground at this point...
+						floor = FloorHeightAt(new_org);
+					}
+
+					//if (floor > -424)
+					//	trap->Print("Start at %f %f %f. Floor at %f.\n", new_org[0], new_org[1], new_org[2], floor);
+
+					// Set the point found on the floor as the test location...
+					VectorSet(org, new_org[0], new_org[1], floor);
+
+					if (floor < mapMins[2])
+					{// Can skip this one!
+						// Mark current hit location to continue from...
+						current_height = floor;
+						break;
+						//{
+						//	current_height = GroundHeightNoSurfaceChecks(new_org); // get the actual hit location height...
+						//}
+						//continue;
+					}
+					else if (floor > mapMaxs[2])
+					{// Marks a start-solid or on top of the sky... Skip...
+						// We can't mark current_height to FloorHeightAt value...
+//#pragma omp critical
+//						{
+//							current_height = GroundHeightNoSurfaceChecks(new_org); // get the actual hit location height...
+//						}
+						current_height = z - scatter_min;
+						continue;
+					}
+					else if (VectorDistance(org, last_org) < waypoint_scatter_distance)
+					{
+						current_height = floor;
+						continue;
+					}
+
+					if (force_continue) continue; // because omp critical can not "continue"...
+
+#pragma omp critical
+					{
+						if (!AIMod_AutoWaypoint_Check_PlayerWidth(org))
+						{// Not wide enough for a player to fit!
+							current_height = floor;
+							force_continue = qtrue; // because omp critical can not "continue"...
+
+							//trap->Print("Point is too small.\n");
+						}
+					}
+
+					if (force_continue) continue; // because omp critical can not "continue"...
+
+					if (sjc_jkg_preview && org[2]+8 < -423 && org[2]+8 > -424.0)
+					{// grrrr....
+						current_height = floor;
+						continue;
+					}
+
+#pragma omp ordered
+					{
+#pragma omp critical
+						{
+							sprintf(last_node_added_string, "^5Adding temp waypoint ^3%i ^5at ^7%f %f %f^5.", areas, org[0], org[1], org[2]+8);
+
+							//trap->Print("WP added at %f %f %f.\n", org[0], org[1], org[2]+8);
+
+							arealist[areas][0] = org[0];
+							arealist[areas][1] = org[1];
+							arealist[areas][2] = org[2]+8;
+
+							last_org[0] = arealist[areas][0];
+							last_org[1] = arealist[areas][1];
+							last_org[2] = arealist[areas][2];
+							areas++;
+
+							current_height = floor;
+						}
+					}
+				}
+			}
+		}
+	}
+
+	trap->S_Shutup(qfalse);
+
+#else //!__NEW_AWP_METHOD__
 	map_size = VectorDistance(mapMins, mapMaxs);
 
 	// Work out the best scatter distance to use for this map size...
@@ -5821,6 +6098,7 @@ void AIMod_AutoWaypoint_StandardMethod( void )
 		starty = orig_starty;
 		startx -= waypoint_scatter_distance;
 	}
+#endif //__NEW_AWP_METHOD__
 
 	//
 	// Add nodes for all movers...
@@ -5831,19 +6109,34 @@ void AIMod_AutoWaypoint_StandardMethod( void )
 	for (i = 0; i < MOVER_LIST_NUM; i++)
 	{
 		int count = 0;
-		float temp_roof, temp_ground;
+		float temp_roof/*, temp_roof2*/, temp_ground;
 		vec3_t temp_org;
 
 		VectorCopy(MOVER_LIST[i], temp_org);
 
 		//temp_org[2] += waypoint_scatter_distance; // Start above the lift...
-		//temp_roof = RoofHeightAt(temp_org);
+		//temp_roof2 = RoofHeightAt(temp_org);
 		temp_roof = MOVER_LIST_TOP[i][2];
+		//if (temp_roof2 > temp_roof) temp_roof = temp_roof2; // Use the highest height... just to be sure...
 
 		//VectorCopy(org, temp_org);
 		//temp_org[2] -= waypoint_scatter_distance*2; // Start below the lift...
 		//temp_ground = GroundHeightAt(temp_org);
 		temp_ground = MOVER_LIST[i][2];
+
+		if (temp_roof - temp_ground <= 96) 
+		{
+			arealist[areas][0] = temp_org[0];
+			arealist[areas][1] = temp_org[1];
+			arealist[areas][2] = temp_org[2];
+			areas++;
+
+			arealist[areas][0] = temp_org[0];
+			arealist[areas][1] = temp_org[1];
+			arealist[areas][2] = temp_org[2] + waypoint_scatter_distance;
+			areas++;
+			continue; // Most likely a door... Skip it... But add two points near the base...
+		}
 
 		//temp_org[2] += waypoint_scatter_distance;
 
@@ -5854,33 +6147,33 @@ void AIMod_AutoWaypoint_StandardMethod( void )
 			arealist[areas][2] = temp_org[2];
 			areas++;
 
-			arealist[areas][0] = temp_org[0]+64.0;
+			arealist[areas][0] = temp_org[0]+56.0;
 			arealist[areas][1] = temp_org[1];
 			arealist[areas][2] = temp_org[2];
 			areas++;
 
 			arealist[areas][0] = temp_org[0];
-			arealist[areas][1] = temp_org[1]+64.0;
+			arealist[areas][1] = temp_org[1]+56.0;
 			arealist[areas][2] = temp_org[2];
 			areas++;
 
-			arealist[areas][0] = temp_org[0]+64.0;
-			arealist[areas][1] = temp_org[1]+64.0;
+			arealist[areas][0] = temp_org[0]+56.0;
+			arealist[areas][1] = temp_org[1]+56.0;
 			arealist[areas][2] = temp_org[2];
 			areas++;
 
-			arealist[areas][0] = temp_org[0]-64.0;
+			arealist[areas][0] = temp_org[0]-56.0;
 			arealist[areas][1] = temp_org[1];
 			arealist[areas][2] = temp_org[2];
 			areas++;
 
 			arealist[areas][0] = temp_org[0];
-			arealist[areas][1] = temp_org[1]-64.0;
+			arealist[areas][1] = temp_org[1]-56.0;
 			arealist[areas][2] = temp_org[2];
 			areas++;
 
-			arealist[areas][0] = temp_org[0]-64.0;
-			arealist[areas][1] = temp_org[1]-64.0;
+			arealist[areas][0] = temp_org[0]-56.0;
+			arealist[areas][1] = temp_org[1]-56.0;
 			arealist[areas][2] = temp_org[2];
 			areas++;
 
@@ -5897,7 +6190,7 @@ void AIMod_AutoWaypoint_StandardMethod( void )
 	// Check for cleaning...
 	//
 
-	if (areas < 32000)
+	if (areas < MAX_WPARRAY_SIZE)
 	{// UQ1: Can use them all!
 		trap->Print("^4*** ^3AUTO-WAYPOINTER^4: ^5Temporary waypoint cleanup not required. Converting to final waypoints.\n");
 
@@ -6019,56 +6312,90 @@ void AIMod_AutoWaypoint_StandardMethod( void )
 
 	trap->Print("^4*** ^3AUTO-WAYPOINTER^4: ^5Generated too many temporary waypoints for the game. Running cleanup.\n");
 
-	for ( i = 0; i < areas; i++ )
 	{
-		vec3_t		area_org;
-		short int	objNum[3] = { 0, 0, 0 };
-		qboolean	bad = qfalse;
-		int			j;
+		qboolean clean_fail = qfalse;
 
-		// Draw a nice little progress bar ;)
-		aw_percent_complete = (float)((float)((float)i/(float)total_areas)*100.0f);
-				
-		update_timer++;
-
-		if (update_timer >= 100)
+#pragma omp parallel for ordered schedule(dynamic)
+		for ( i = 0; i < areas; i++ )
 		{
-			trap->UpdateScreen();
-			update_timer = 0;
-		}
+			vec3_t		area_org;
+			short int	objNum[3] = { 0, 0, 0 };
+			qboolean	bad = qfalse;
+			int			j;
+			int			found = 0;
 
-		area_org[0] = arealist[i][0];
-		area_org[1] = arealist[i][1];
-		area_org[2] = arealist[i][2];
+			// Draw a nice little progress bar ;)
+			aw_percent_complete = (float)((float)((float)i/(float)areas)*100.0f);
 
-		if (area_org[2] <= -65536.0f)
-		{// This is a bad height!
-			continue;
-		}
+			update_timer++;
 
-		for (j = 0; j < number_of_nodes; j++)
-		{
-			vec3_t area_org2;
-
-			area_org2[0] = nodes[j].origin[0];
-			area_org2[1] = nodes[j].origin[1];
-			area_org2[2] = nodes[j].origin[2];
-
-			if (VectorDistance(area_org, area_org2) < (waypoint_scatter_distance*area_distance_multiplier) * remove_ratio)
+			if(omp_get_thread_num() == 0)
 			{
-				bad = qtrue;
-				break;
+				if (update_timer >= 100)
+				{
+					trap->UpdateScreen();
+					update_timer = 0;
+				}
+			}
+
+			if (total_waypoints > MAX_WPARRAY_SIZE)
+			{// We failed!
+				clean_fail = qtrue;
+				continue;
+			}
+
+			area_org[0] = arealist[i][0];
+			area_org[1] = arealist[i][1];
+			area_org[2] = arealist[i][2];
+
+			if (area_org[2] <= -65536.0f)
+			{// This is a bad height!
+				continue;
+			}
+
+			for (j = 0; j < total_waypoints; j++)
+			{
+				if (VectorDistance(area_org, nodes[j].origin) < waypoint_scatter_distance*area_distance_multiplier)
+				{
+					bad = qtrue;
+					break;
+				}
+			}
+
+			if (bad)
+			{
+				continue;
+			}
+
+#pragma omp ordered
+			{
+#pragma omp critical
+				{
+					strcpy( last_node_added_string, va("^5Adding waypoint ^3%i ^5at ^7%f %f %f^5.", total_waypoints, area_org[0], area_org[1], area_org[2]) );
+					Load_AddNode( area_org, 0, objNum, 0 );	//add the node
+					total_waypoints++;
+				}
 			}
 		}
 
-		if (bad)
+		if (clean_fail)
 		{
-			continue;
-		}
+			trap->Print("^4*** ^3AUTO-WAYPOINTER^4: ^2Cleaning waypoints has failed. Try using a larger scatter distance.\n");
 
-		strcpy( last_node_added_string, va("^5Adding waypoint ^3%i ^5at ^7%f %f %f^5.", total_waypoints, area_org[0], area_org[1], area_org[2]) );
-		Load_AddNode( area_org, 0, objNum, 0 );	//add the node
-		total_waypoints++;
+			aw_percent_complete = 0.0f;
+			strcpy( task_string3, va("^5Waypoint auto-generation is complete...") );
+			trap->UpdateScreen();
+
+			waypoint_scatter_distance = original_waypoint_scatter_distance;
+
+			free(arealist);
+
+			AIMod_AutoWaypoint_Free_Memory();
+
+			aw_percent_complete = 0.0f;
+			trap->UpdateScreen();
+			return;
+		}
 	}
 
 	// Ladders...
@@ -6183,6 +6510,7 @@ void AIMod_AutoWaypoint_Clean ( void )
 		//trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3\"multipass\" ^5- Do a multi-pass full clean (max optimize).\n");
 		//trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3\"extra\" ^5- Do a full clean (but remove more - good if the number is still too high after optimization).\n");
 		//trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3\"cover\" ^5- Just generate coverpoints.\n");
+		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3\"list\" ^5- List locations of all waypoints.\n");
 		trap->UpdateScreen();
 		return;
 	}
@@ -6224,6 +6552,44 @@ void AIMod_AutoWaypoint_Clean ( void )
 	else if ( Q_stricmp( str, "resetreach") == 0 )
 	{
 		AIMod_AutoWaypoint_Cleaner(qtrue, qtrue, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse, qtrue, qfalse);
+	}
+	else if ( Q_stricmp( str, "list") == 0 )
+	{
+		int i;
+
+		AIMod_AutoWaypoint_Init_Memory();
+
+		if (number_of_nodes > 0)
+		{// UQ1: Init nodes list!
+			number_of_nodes = 0; 
+			optimized_number_of_nodes = 0;
+
+			if (SSE_CPU)
+			{
+				sse_memset( nodes, 0, ((sizeof(node_t)+1)*MAX_NODES)/8 );
+				sse_memset( optimized_nodes, 0, ((sizeof(node_t)+1)*MAX_NODES)/8 );
+			}
+			else
+			{
+				memset( nodes, 0, ((sizeof(node_t)+1)*MAX_NODES) );
+				memset( optimized_nodes, 0, ((sizeof(node_t)+1)*MAX_NODES) );
+			}
+		}
+
+		AIMOD_NODES_LoadNodes();
+
+		if (number_of_nodes <= 0)
+		{
+			AIMod_AutoWaypoint_Free_Memory();
+			return;
+		}
+
+		for (i = 0; i < number_of_nodes; i++)
+		{
+			trap->Print("^4*** ^3AUTO-WAYPOINTER^4: ^5Waypoint ^7%i^5 is at ^7%f %f %f^5.\n", i, nodes[i].origin[0], nodes[i].origin[1], nodes[i].origin[2]);
+		}
+
+		AIMod_AutoWaypoint_Free_Memory();
 	}
 	else if ( Q_stricmp( str, "cover") == 0 )
 	{
@@ -7812,6 +8178,19 @@ void AIMod_AddLifts ( void )
 	NUM_LIFT_POINTS = 0;
 }
 
+vec3_t	ADD_POINTS[MAX_NODES];
+int		NUM_ADD_POINTS = 0;
+
+void AIMod_AddWayPoint ( void )
+{
+	VectorCopy(cg.refdef.vieworg, ADD_POINTS[NUM_ADD_POINTS]);
+	ADD_POINTS[NUM_ADD_POINTS][2] -= 48.0;
+
+	trap->Print( va( "^4*** ^3AUTO-WAYPOINTER^4: ^5Waypoint will be added at %f %f %f...\n", ADD_POINTS[NUM_ADD_POINTS][0], ADD_POINTS[NUM_ADD_POINTS][1], ADD_POINTS[NUM_ADD_POINTS][2]) );
+	trap->Print( va( "^4*** ^3AUTO-WAYPOINTER^4: ^5Run a /awc relink to complete all lift additions...\n") );
+	NUM_ADD_POINTS++;
+}
+
 vec3_t	REMOVAL_POINTS[MAX_NODES];
 int		NUM_REMOVAL_POINTS = 0;
 
@@ -8268,9 +8647,11 @@ AIMod_AutoWaypoint_Cleaner ( qboolean quiet, qboolean null_links_only, qboolean 
 	int	calculations_complete = 0;
 	//int	*areas;//[16550];
 //	int num_areas = 0;
+#if 0
 	float map_size;
 	vec3_t mapMins, mapMaxs;
 	float temp;
+#endif //0
 //	float AREA_SEPERATION = DEFAULT_AREA_SEPERATION;
 //	int screen_update_timer = 0;
 //	int entities_start = 0;
@@ -8349,6 +8730,7 @@ AIMod_AutoWaypoint_Cleaner ( qboolean quiet, qboolean null_links_only, qboolean 
 
 	//areas = malloc( (sizeof(int)+1)*512000 );
 
+#if 0
 	//AIMod_GetMapBounts( mapMins, mapMaxs );
 	AIMod_GetMapBounts();
 
@@ -8379,6 +8761,7 @@ AIMod_AutoWaypoint_Cleaner ( qboolean quiet, qboolean null_links_only, qboolean 
 	map_size = VectorDistance(mapMins, mapMaxs);
 
 	trap->Print( va( "^4*** ^3AUTO-WAYPOINTER^4: ^5Map bounds (^7%f %f %f ^5by ^7%f %f %f^5).\n", mapMins[0], mapMins[1], mapMins[2], mapMaxs[0], mapMaxs[1], mapMaxs[2]) );
+#endif //0
 
 	trap->Print( va( "^4*** ^3AUTO-WAYPOINTER^4: ^5Cleaning waypoint list...\n") );
 	strcpy( task_string1, va("^7Cleaning waypoint list....") );
@@ -8414,20 +8797,6 @@ AIMod_AutoWaypoint_Cleaner ( qboolean quiet, qboolean null_links_only, qboolean 
 		node_disable_ratio = 3;
 	else if (number_of_nodes > 8000)
 		node_disable_ratio = 2;
-
-/*	if (number_of_nodes > 64000)
-		skip_threshold = 4;
-	else if (number_of_nodes > 48000)
-		skip_threshold = 3;
-	else if (number_of_nodes > 32000)
-		skip_threshold = 2;
-	else if (number_of_nodes > 10000)
-		skip_threshold = 2;
-	else
-	{
-		skip_threshold = 0;
-		reducecount = qfalse;
-	}*/
 
 	// waypoint_scatter_distance*waypoint_distance_multiplier
 	// Get original awp's distance multiplier...
@@ -8548,6 +8917,19 @@ AIMod_AutoWaypoint_Cleaner ( qboolean quiet, qboolean null_links_only, qboolean 
 		AIMod_AddLifts();
 	}
 
+	if (relink_only)
+	{
+		// Add any manual waypoints...
+		for (i = 0; i < NUM_ADD_POINTS; i++)
+		{
+			VectorCopy(ADD_POINTS[i], nodes[number_of_nodes].origin);
+			nodes[number_of_nodes].origin[2] = GroundHeightNoSurfaceChecks(nodes[number_of_nodes].origin) + 8.0;
+			number_of_nodes++;
+		}
+
+		NUM_ADD_POINTS = 0;
+	}
+
 	while (1)
 	{
 		trap->Print( va( "^4*** ^3AUTO-WAYPOINTER^4: ^5Cleaning waypoints list... Please wait...\n") );
@@ -8570,41 +8952,6 @@ AIMod_AutoWaypoint_Cleaner ( qboolean quiet, qboolean null_links_only, qboolean 
 		
 		num_passes_completed++;
 
-		// Work out the best scatter distance to use for this map size...
-		/*if (map_size > 96000)
-		{
-			waypoint_scatter_distance *= 1.5;
-		}
-		else if (map_size > 32768)
-		{
-			waypoint_scatter_distance *= 1.35;
-		}
-		else if (map_size > 24000)
-		{
-			waypoint_scatter_distance *= 1.25;
-		}
-		else if (map_size > 16550)
-		{
-			waypoint_scatter_distance *= 1.10;
-		}
-		else if (map_size > 8192)
-		{
-			waypoint_scatter_distance *= 1.02;
-		}*/
-	
-		/*if (number_of_nodes < 20000)
-		{
-			waypoint_distance_multiplier = 1.5f;
-		}
-		else if (number_of_nodes < 32000)
-		{
-			waypoint_distance_multiplier = 2.0f;
-		}
-		else
-		{
-			waypoint_distance_multiplier = 2.5f;
-		}*/
-
 		for (i = 0; i < number_of_nodes; i++)
 		{// Initialize...
 			nodes[i].objectNum[0] = 0;
@@ -8614,7 +8961,7 @@ AIMod_AutoWaypoint_Cleaner ( qboolean quiet, qboolean null_links_only, qboolean 
 		// Disable some ice/water ndoes...
 		if (!relink_only && !convert_old)
 		{
-#pragma omp parallel for
+#pragma omp parallel for ordered schedule(dynamic)
 			for (i = 0; i < number_of_nodes; i++)
 			{
 				if(omp_get_thread_num() == 0)

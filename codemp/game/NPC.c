@@ -3678,14 +3678,15 @@ qboolean UQ1_UcmdMoveForDir ( gentity_t *self, usercmd_t *cmd, vec3_t dir, qbool
 		if (NPCS.ucmd.buttons & BUTTON_WALKING)
 		{
 			trap->EA_Action(NPCS.NPC->s.number, 0x0080000);
-			trap->EA_Move(NPCS.NPC->s.number, dir, 5000.0);
+			//trap->EA_Move(NPCS.NPC->s.number, dir, 5000.0);
+			trap->EA_Move(NPCS.NPC->s.number, dir, 100);
 
 			if (self->bot_strafe_left_timer > level.time)
 				trap->EA_MoveLeft(NPCS.NPC->s.number);
 		}
 		else
 		{
-			trap->EA_Move(NPCS.NPC->s.number, dir, 5000.0);
+			trap->EA_Move(NPCS.NPC->s.number, dir, 200);
 
 			if (self->bot_strafe_left_timer > level.time)
 				trap->EA_MoveLeft(NPCS.NPC->s.number);
