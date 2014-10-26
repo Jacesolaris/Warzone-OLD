@@ -663,7 +663,7 @@ void CG_RegisterWeapon( int weaponNum) {
 	case WP_Z6_BLASTER_CANON:
 		weaponInfo->item->classname = "Z-6 rotary blaster cannon";
 		weaponInfo->selectSound = trap->S_RegisterSound("sound/weapons/repeater/select.wav");
-		weaponInfo->flashSound[0] = trap->S_RegisterSound("sound/weapons/repeater/fire.wav");
+		weaponInfo->flashSound[0] = trap->S_RegisterSound("sound/weapons/minigun/fire.wav");
 		weaponInfo->firingSound = NULL_SOUND;
 		weaponInfo->chargeSound = NULL_SOUND;
 		weaponInfo->muzzleEffect = trap->FX_RegisterEffect("clone_blaster/muzzle_flash");
