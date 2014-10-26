@@ -460,3 +460,12 @@ personality	/botfiles/youngrosh.jkb
 }
 
 
+{
+name		"padawan"
+model		padawan
+color1		5
+color2		1
+saber1		"single_3"
+saber2		"single_2"
+personality	/botfiles/padawan.jkb
+}
