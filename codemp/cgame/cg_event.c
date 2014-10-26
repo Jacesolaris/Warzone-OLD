@@ -2855,7 +2855,15 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 			for (dist = 0.0f; dist < shotDist; dist += 64.0f)
 			{ //one effect would be.. a whole lot better
 				VectorMA( es->origin2, dist, es->angles, spot );
-                trap->FX_PlayEffectID(cgs.effects.mConcussionAltRing, spot, es->angles2, -1, -1, qfalse);
+
+				if (es->weapon != WP_CONCUSSION && cg_weapons[es->weapon].altMissileRenderfx)
+				{
+					trap->FX_PlayEffectID(cg_weapons[es->weapon].altMissileRenderfx, spot, es->angles2, -1, -1, qfalse);
+				}
+				else
+				{
+					trap->FX_PlayEffectID(cgs.effects.mConcussionAltRing, spot, es->angles2, -1, -1, qfalse);
+				}
 			}
 
 			ByteToDir( es->eventParm, dir );
