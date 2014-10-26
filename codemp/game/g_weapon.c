@@ -3297,6 +3297,7 @@ static void WP_FireConcussionAlt( gentity_t *ent )
 	tent = G_TempEntity(tr.endpos, EV_CONC_ALT_IMPACT);
 	tent->s.eventParm = DirToByte(tr.plane.normal);
 	tent->s.owner = ent->s.number;
+	tent->s.weapon = ent->s.weapon;
 	VectorCopy(dir, tent->s.angles);
 	VectorCopy(muzzle, tent->s.origin2);
 	VectorCopy(forward, tent->s.angles2);
