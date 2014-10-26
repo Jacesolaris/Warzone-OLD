@@ -1085,7 +1085,7 @@ void InitMover( gentity_t *ent )
 
 	// UQ1: Create a mover marker entity for this mover... (for auto-waypointer)
 	{
-		vec3_t pos, pos_top, diff;
+		vec3_t pos, pos_top, diff, diff2;
 		gentity_t *MOVER_MARKER = G_Spawn();
 		
 		VectorSubtract(ent->r.maxs, ent->r.mins, diff);
@@ -1094,8 +1094,12 @@ void InitMover( gentity_t *ent )
 		pos[1] += (diff[1] * 0.5);
 		//pos[2] += (diff[2] * 0.5);
 
+		VectorSubtract(ent->r.absmax, ent->r.absmin, diff2);
+		diff2[2] -= ent->r.absmin[2];
+
 		VectorCopy(pos, pos_top);
 		pos_top[2] = ent->r.maxs[2];
+		if (diff2[2] > ent->r.maxs[2]) ent->r.maxs[2] = diff2[2]; // for any absmin/absmax objects..
 		
 		MOVER_MARKER->r.contents = CONTENTS_NONE;
 		VectorCopy(pos, MOVER_MARKER->s.origin);

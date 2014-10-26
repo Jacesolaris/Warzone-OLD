@@ -464,18 +464,19 @@ int DOM_GetNearestWP(vec3_t org, int badwp)
 	vec3_t a;
 
 	i = 0;
-	if (RMG.integer)
+	/*if (RMG.integer)
 	{
 		bestdist = 300;
 	}
-	else
+	else*/
 	{
 		//We're not doing traces!
 		bestdist = 99999;
 	}
 	bestindex = -1;
 
-	while (i < gWPNum)
+#pragma omp parallel for ordered schedule(dynamic) num_threads(32)
+	for (i = 0; i < gWPNum; i++)
 	{
 		if (gWPArray[i] && gWPArray[i]->inuse && i != badwp)
 		{
@@ -494,13 +495,16 @@ int DOM_GetNearestWP(vec3_t org, int badwp)
 
 			if (flLen < bestdist)
 			{
-				bestdist = flLen;
-				bestindex = i;
+#pragma omp critical (__ADD_BEST_WP__)
+				{
+					if (flLen < bestdist)
+					{
+						bestdist = flLen;
+						bestindex = i;
+					}
+				}
 			}
 		}
-
-		i++;
-		//i+=Q_irand(1,3);
 	}
 
 	return bestindex;

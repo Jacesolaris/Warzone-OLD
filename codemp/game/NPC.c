@@ -3992,9 +3992,15 @@ qboolean NPC_FindNewWaypoint()
 	//	return qfalse;
 	//}
 
+	// Try to find a visible waypoint first...
 	//NPC->wpCurrent = DOM_GetRandomCloseVisibleWP(NPC, NPC->r.currentOrigin, NPC->s.number, -1);
 	NPC->wpCurrent = DOM_GetRandomCloseWP(NPC->r.currentOrigin, NPC->wpCurrent, -1);
 	//NPC->noWaypointTime = level.time + 3000; // 3 seconds before we try again... (it will run avoidance in the meantime)
+
+	if (NPC->wpCurrent < 0 || NPC->wpCurrent >= gWPNum)
+	{// Just select the closest, even if none are visible...
+		NPC->wpCurrent = DOM_GetNearestWP(NPC->r.currentOrigin, NPC->wpCurrent);
+	}
 
 	//if (NPC->wpSeenTime < NPC->noWaypointTime)
 	//	NPC->wpSeenTime = NPC->noWaypointTime; // also make sure we don't try to make a new route for the same length of time...

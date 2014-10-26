@@ -706,10 +706,10 @@ char task_string2[255];
 char task_string3[255];
 char last_node_added_string[255];
 
-int		aw_stage_start_time = 0;
+clock_t	aw_stage_start_time = 0;
 float	aw_last_percent = 0;
-int		aw_last_percent_time = 0;
-int		aw_last_times[100];
+clock_t	aw_last_percent_time = 0;
+clock_t	aw_last_times[100];
 int		aw_num_last_times = 0;
 
 vec4_t	popBG			=	{0.f,0.f,0.f,0.3f};
@@ -914,8 +914,6 @@ void CG_DrawRect_FixedBorder( float x, float y, float width, float height, int b
 	trap->R_SetColor( NULL );
 }
 
-clock_t			start_time;
-
 void AIMod_AutoWaypoint_DrawProgress ( void )
 {
 	int				flags = 64|128;
@@ -927,11 +925,12 @@ void AIMod_AutoWaypoint_DrawProgress ( void )
 	clock_t			time_taken;
 	clock_t			total_seconds_left;
 	//qboolean		estimating = qfalse;
-	clock_t			current_time = clock();
-
-	if (aw_percent_complete == 0.0f)
+	clock_t			current_time;
+	
+	if (aw_percent_complete == 0.0f || aw_percent_complete < aw_last_percent || aw_stage_start_time == 0)
 	{// Init timer...
 		//aw_stage_start_time = trap->Milliseconds();
+		//aw_stage_start_time = clock();
 		aw_stage_start_time = clock();
 		aw_last_percent_time = aw_stage_start_time;
 		aw_last_percent = 0;
@@ -945,73 +944,26 @@ void AIMod_AutoWaypoint_DrawProgress ( void )
 		aw_num_last_times = 0;
 	}
 
-	/*
-	if (aw_percent_complete != 0.0f)
-	{
-		if (aw_percent_complete >= 1)
-		{
-			float percent_average_time = 0;
-			int i;
+	current_time = clock();
 
-			for (i = 0; i < aw_num_last_times; i++)
-			{
-				percent_average_time += aw_last_times[i];
-			}
+	aw_last_percent = aw_percent_complete;
 
-			if (aw_num_last_times >= 1)
-			{
-				percent_average_time /= aw_num_last_times;
-				total_seconds_left = ((100 - aw_percent_complete) * percent_average_time) / 1000;
-				minutes_left = total_seconds_left/60;
-				seconds_left = total_seconds_left-(minutes_left*60);
-			}
-			else
-			{
-				estimating = qtrue;
-			}
-
-			if (aw_last_percent <= aw_percent_complete - 1)
-			{
-				int current_time = trap->Milliseconds();
-				float percent_time = (current_time-aw_last_percent_time);
-
-				if (percent_time < 1)
-					percent_time = 1;
-
-				aw_last_percent = aw_percent_complete;
-				aw_last_percent_time = current_time;
-
-				if (aw_num_last_times >= 100)
-				{
-					for (i = 1; i < aw_num_last_times; i++)
-					{
-						aw_last_times[i-1] = aw_last_times[i];
-					}
-
-					aw_last_times[99] = percent_time;
-				}
-				else
-				{
-					aw_last_times[aw_num_last_times] = percent_time;
-					aw_num_last_times++;
-				}
-			}
-		}
-		else
-		{
-			estimating = qtrue;
-		}
-	}
-	else
-	{
-		estimating = qtrue;
-	}
-	*/
 	time_taken = current_time - aw_stage_start_time;
 
-	// (TimeTaken / linesProcessed) * linesLeft=timeLeft
-	total_seconds_left = ((time_taken / aw_percent_complete) * (100 - aw_percent_complete)) / 1000;
-	total_seconds_left /= 10;
+	{
+		float perc_done = aw_percent_complete / 100.0;
+		float perc_left = 1 - perc_done;
+		time_t TimePerPerc = time_taken / perc_done;
+		time_t TotalTime = TimePerPerc * 100;
+		time_t TakenTime = TimePerPerc * perc_done;
+		time_t LeftTime = TimePerPerc * perc_left;
+		time_t TimeRemaining = LeftTime;
+
+		//trap->Print("Ptime: %i. Total: %i. Taken: %i. Left: %i. Remaining: %i.\n", (int)(TimePerPerc), (int)(TotalTime), (int)(TakenTime), (int)(LeftTime), (int)(TimeRemaining));
+
+		total_seconds_left = TimeRemaining / 1000;
+	}
+
 	minutes_left = total_seconds_left/60;
 	seconds_left = total_seconds_left-(minutes_left*60);
 
@@ -1035,12 +987,12 @@ void AIMod_AutoWaypoint_DrawProgress ( void )
 	CG_Text_Paint((rect.x), (rect.y + (rect.h*0.5) - 40), 0.5f, colorWhite, task_string3, 0, 0, ITEM_TEXTSTYLE_SHADOWED, FONT_MEDIUM );
 	CG_Text_Paint((rect.x + (rect.w*0.5) - 35), (rect.y + (rect.h*0.5) - 18/*+ 8*/), 1.0f, colorWhite, va("^7%.2f%%", aw_percent_complete), 0, 0, ITEM_TEXTSTYLE_SHADOWED, FONT_LARGE );
 	
-	//if (!estimating && aw_percent_complete > 1.0f)
+	if (aw_percent_complete > 2.0f)
 		CG_Text_Paint((rect.x + 160), (rect.y + (rect.h*0.5) + 16), 0.5f, colorWhite, va("^3%i ^5minutes ^3%i ^5seconds remaining (estimated)", minutes_left, seconds_left), 0, 0, ITEM_TEXTSTYLE_SHADOWED, FONT_SMALL );
-	//else
-	//	CG_Text_Paint((rect.x + 160), (rect.y + (rect.h*0.5) + 16), 0.5f, colorWhite, va("^5    ... estimating time remaining ..."), 0, 0, ITEM_TEXTSTYLE_SHADOWED, FONT_SMALL );
+	else
+		CG_Text_Paint((rect.x + 160), (rect.y + (rect.h*0.5) + 16), 0.5f, colorWhite, va("^5    ... estimating time remaining ..."), 0, 0, ITEM_TEXTSTYLE_SHADOWED, FONT_SMALL );
 
-	CG_Text_Paint((rect.x + 100/*80*/), (rect.y + (rect.h*0.5) + 30), 0.5f, colorWhite, last_node_added_string, 0, 0, ITEM_TEXTSTYLE_SHADOWED, FONT_MEDIUM );
+	CG_Text_Paint((rect.x + 100), (rect.y + (rect.h*0.5) + 30), 0.5f, colorWhite, last_node_added_string, 0, 0, ITEM_TEXTSTYLE_SHADOWED, FONT_MEDIUM );
 
 	trap->R_SetColor( NULL );
 }
@@ -2035,6 +1987,7 @@ void AIMOD_Generate_Cover_Spots ( void )
 			trap->UpdateScreen();
 
 			aw_percent_complete = 0.0f;
+			aw_stage_start_time = clock();
 
 			for (i = 0; i < number_of_nodes; i++)
 			{
@@ -2646,25 +2599,6 @@ AIMOD_MAPPING_CreateSpecialNodeFlags ( int node )
 
 //#define __BOT_AUTOWAYPOINT_OPTIMIZE__
 
-/*
-#pragma omp parallel for ordered schedule(dynamic)
-	for ( i = 0; i < areas; i++ )
-	{
-		vec3_t		area_org;
-		short int	objNum[3] = { 0, 0, 0 };
-		qboolean	bad = qfalse;
-		int			j;
-		int			found = 0;
-
-		// Draw a nice little progress bar ;)
-		aw_percent_complete = (float)((float)((float)i/(float)total_areas)*100.0f);
-				
-		update_timer++;
-
-		if(omp_get_thread_num() == 0)
-		{
-		*/
-
 /* */
 void
 AIMOD_MAPPING_MakeLinks ( void )
@@ -2687,6 +2621,7 @@ AIMOD_MAPPING_MakeLinks ( void )
 	}
 
 	aw_percent_complete = 0.0f;
+	aw_stage_start_time = clock();
  	strcpy( last_node_added_string, va("") );
 
 	trap->Print( va( "^4*** ^3AUTO-WAYPOINTER^4: ^5Creating waypoint linkages and flags...\n") );
@@ -4012,6 +3947,16 @@ float RoofHeightAt ( vec3_t org )
 		return -65536.0f;
 	}
 
+	if (tr.surfaceFlags & SURF_SKY)
+	{
+		return -65536.f;
+	}
+
+	if ((tr.surfaceFlags & SURF_NOMARKS) && (tr.surfaceFlags & SURF_NODRAW) && (tr.contents & CONTENTS_SOLID) && (tr.contents & CONTENTS_OPAQUE))
+	{
+		return -65536.f;
+	}
+
 	return tr.endpos[2];
 }
 
@@ -5293,6 +5238,7 @@ void AIMod_AutoWaypoint_StandardMethod( void )
 		float	scatter = 0;
 		float	scatter_avg = 0;
 		float	scatter_min = 0;
+		float	scatter_z = 0;
 		float	scatter_max = 0;
 		float	scatter_x = 0;
 		clock_t	previous_time = 0;
@@ -5340,6 +5286,43 @@ void AIMod_AutoWaypoint_StandardMethod( void )
 		scatter = waypoint_scatter_distance;
 		scatter_min = scatter * 0.33;
 		scatter_max = scatter * 2.0;
+		scatter_z = scatter_min;
+
+		// UQ1: Vary scatter based on map size...
+		if (map_size >= 50000)
+		{
+			if (map_size >= 90000) 
+			{
+				scatter_min = scatter * 3.0;
+				scatter_max = scatter * 5.0;
+				scatter_z = scatter * 0.33;
+			}
+			else if (map_size >= 80000) 
+			{
+				scatter_min = scatter * 2.0;
+				scatter_max = scatter * 4.0;
+				scatter_z = scatter * 0.33;
+			}
+			else if (map_size >= 70000)
+			{
+				scatter_min = scatter * 1.5;
+				scatter_max = scatter * 3.0;
+				scatter_z = scatter * 0.33;
+			}
+			else if (map_size >= 60000) 
+			{
+				scatter_min = scatter * 0.75;
+				scatter_max = scatter * 2.5;
+				scatter_z = scatter * 0.33;
+			}
+			else if (map_size >= 50000) 
+			{
+				scatter_min = scatter * 0.5;
+				scatter_max = scatter * 2.5;
+				scatter_z = scatter * 0.33;
+			}
+		}
+
 		scatter_avg = (scatter + scatter_min + scatter_max) / 3.0;
 		scatter_x = scatter;
 
@@ -5355,6 +5338,12 @@ void AIMod_AutoWaypoint_StandardMethod( void )
 
 //omp_set_nested(1);
 omp_set_nested(0);
+
+		scatter_x = scatter;
+
+		final_tests = 0;
+		previous_time = clock();
+		aw_stage_start_time = clock();
 
 #pragma omp parallel for num_threads(32)
 //#pragma omp parallel for schedule(dynamic) num_threads(32)
@@ -5398,14 +5387,17 @@ omp_set_nested(0);
 					// Update the current test number...
 					final_tests++;
 
-					if(omp_get_thread_num() == 0)
-					{// Draw a nice little progress bar ;)
-						aw_percent_complete = (float)((float)final_tests/(float)total_tests)*100.0f;
+					if (final_tests > 1000)
+					{
+						if(omp_get_thread_num() == 0)
+						{// Draw a nice little progress bar ;)
+							aw_percent_complete = (float)((float)final_tests/(float)total_tests)*100.0f;
 
-						if (current_time - previous_time > 500) // update display every 500ms...
-						{
-							previous_time = current_time;
-							trap->UpdateScreen();
+							if (current_time - previous_time > 500) // update display every 500ms...
+							{
+								previous_time = current_time;
+								trap->UpdateScreen();
+							}
 						}
 					}
 
@@ -5432,8 +5424,9 @@ omp_set_nested(0);
 					if (floor < mapMins[2])
 					{// Can skip this one!
 						// Mark current hit location to continue from...
-						current_height = floor;
-						break;
+						current_height = mapMins[2]-2048; // so we still update final_tests
+						continue; // so we still update final_tests
+						//break;
 						//{
 						//	current_height = GroundHeightNoSurfaceChecks(new_org); // get the actual hit location height...
 						//}
@@ -5577,6 +5570,8 @@ omp_set_nested(0);
 	//
 	// Create bulk temporary nodes...
 	//
+
+	aw_stage_start_time = clock();
 
 	while ( startx > mapMins[0]-2048 )
 	{
@@ -6124,22 +6119,28 @@ omp_set_nested(0);
 	for (i = 0; i < MOVER_LIST_NUM; i++)
 	{
 		int count = 0;
-		float temp_roof/*, temp_roof2*/, temp_ground;
+		float temp_roof, temp_roof2, temp_ground;
 		vec3_t temp_org;
+		qboolean isDoor = qfalse;
 
 		VectorCopy(MOVER_LIST[i], temp_org);
 
+		temp_ground = MOVER_LIST[i][2];
+
 		//temp_org[2] += waypoint_scatter_distance; // Start above the lift...
-		//temp_roof2 = RoofHeightAt(temp_org);
+		temp_roof2 = RoofHeightAt(temp_org);
 		temp_roof = MOVER_LIST_TOP[i][2];
-		//if (temp_roof2 > temp_roof) temp_roof = temp_roof2; // Use the highest height... just to be sure...
+
+		if (temp_roof - temp_ground <= 96) isDoor = qtrue;
+
+		if (temp_roof2 > temp_roof && !isDoor) temp_roof = temp_roof2; // Use the highest height... just to be sure...
 
 		//VectorCopy(org, temp_org);
 		//temp_org[2] -= waypoint_scatter_distance*2; // Start below the lift...
 		//temp_ground = GroundHeightAt(temp_org);
 		temp_ground = MOVER_LIST[i][2];
 
-		if (temp_roof - temp_ground <= 96) 
+		if (isDoor) 
 		{
 			arealist[areas][0] = temp_org[0];
 			arealist[areas][1] = temp_org[1];
@@ -6210,6 +6211,7 @@ omp_set_nested(0);
 		trap->Print("^4*** ^3AUTO-WAYPOINTER^4: ^5Temporary waypoint cleanup not required. Converting to final waypoints.\n");
 
 		aw_percent_complete = 0.0f;
+		aw_stage_start_time = clock();
 		strcpy( task_string3, va("^5Final (cleanup) pass. Building final waypoints...") );
 		trap->UpdateScreen();
 
@@ -6248,6 +6250,8 @@ omp_set_nested(0);
 		// Ladders...
 //		aw_total_waypoints = total_waypoints;
 //		aw_percent_complete = 0.0f;
+//		aw_stage_start_time = clock();
+
 //		strcpy( task_string3, va("^5Looking for ladders...") );
 //		trap->UpdateScreen();
 
@@ -6318,6 +6322,8 @@ omp_set_nested(0);
 	total_areas = areas;
 
 	aw_percent_complete = 0.0f;
+	aw_stage_start_time = clock();
+
 	strcpy( task_string3, va("^5Final (cleanup) pass. Building final waypoints...") );
 	trap->UpdateScreen();
 
@@ -6328,7 +6334,31 @@ omp_set_nested(0);
 	trap->Print("^4*** ^3AUTO-WAYPOINTER^4: ^5Generated too many temporary waypoints for the game. Running cleanup.\n");
 
 	{
-		qboolean clean_fail = qfalse;
+		qboolean	clean_fail = qfalse;
+		float		use_scatter = 0;
+
+#ifdef __NEW_AWP_METHOD__
+		if (map_size >= 90000) 
+		{
+			use_scatter = waypoint_scatter_distance * 3.0;
+		}
+		else if (map_size >= 80000) 
+		{
+			use_scatter = waypoint_scatter_distance * 2.0;
+		}
+		else if (map_size >= 70000)
+		{
+			use_scatter = waypoint_scatter_distance * 1.5;
+		}
+		else
+		{
+			use_scatter = waypoint_scatter_distance;
+		}
+#else //!__NEW_AWP_METHOD__
+		use_scatter = waypoint_scatter_distance;
+#endif //__NEW_AWP_METHOD__
+
+		aw_stage_start_time = clock();
 
 #pragma omp parallel for ordered schedule(dynamic)
 		for ( i = 0; i < areas; i++ )
@@ -6370,7 +6400,7 @@ omp_set_nested(0);
 
 			for (j = 0; j < total_waypoints; j++)
 			{
-				if (VectorDistance(area_org, nodes[j].origin) < waypoint_scatter_distance*area_distance_multiplier)
+				if (VectorDistance(area_org, nodes[j].origin) < use_scatter*area_distance_multiplier)
 				{
 					bad = qtrue;
 					break;
@@ -7596,6 +7626,9 @@ AIMod_AutoWaypoint_Optimizer ( void )
 		return;
 	}
 
+	aw_percent_complete = 0.0f;
+	aw_stage_start_time = clock();
+
 	if (!bad_surfaces_only && !null_links_only)
 	{
 		i = mapMins[0]-MAP_BOUNDS_OFFSET;
@@ -7841,6 +7874,9 @@ AIMod_AutoWaypoint_Optimizer ( void )
 
 		total_calculations = number_of_nodes;
 		calculations_complete = 0;
+
+		aw_percent_complete = 0.0f;
+		aw_stage_start_time = clock();
 
 		for (i = 0; i < number_of_nodes; i++)
 		{
@@ -8973,6 +9009,9 @@ AIMod_AutoWaypoint_Cleaner ( qboolean quiet, qboolean null_links_only, qboolean 
 			nodes[i].objEntity = 0;
 		}
 
+		aw_percent_complete = 0.0f;
+		aw_stage_start_time = clock();
+
 		// Disable some ice/water ndoes...
 		if (!relink_only && !convert_old)
 		{
@@ -9236,6 +9275,9 @@ AIMod_AutoWaypoint_Cleaner ( qboolean quiet, qboolean null_links_only, qboolean 
 
 		total_calculations = number_of_nodes;
 		calculations_complete = 0;
+
+		aw_percent_complete = 0.0f;
+		aw_stage_start_time = clock();
 
 		for (i = 0; i < number_of_nodes; i++)
 		{
