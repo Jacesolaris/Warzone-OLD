@@ -2260,7 +2260,7 @@ void FX_TurretHitPlayer(vec3_t origin, vec3_t normal, qboolean humanoid, int wea
 void FX_ConcussionHitWall(vec3_t origin, vec3_t normal, int weapon, qboolean altFire);
 void FX_ConcussionHitPlayer(vec3_t origin, vec3_t normal, qboolean humanoid, int weapon, qboolean altFire);
 void FX_ConcussionProjectileThink(  centity_t *cent, const struct weaponInfo_s *weapon );
-void FX_ConcAltShot( vec3_t start, vec3_t end );
+void FX_ConcAltShot( vec3_t start, vec3_t end, int weapon );
 
 //-----------------------------
 // Effects related prototypes

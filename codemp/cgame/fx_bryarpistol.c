@@ -257,7 +257,7 @@ void FX_ConcussionHitWall(vec3_t origin, vec3_t normal, int weapon, qboolean alt
 	if (fx)
 		trap->FX_PlayEffectID(fx, origin, normal, -1, -1, qfalse);
 	else
-	trap->FX_PlayEffectID( cgs.effects.concussionImpactEffect, origin, normal, -1, -1, qfalse );
+		trap->FX_PlayEffectID( cgs.effects.concussionImpactEffect, origin, normal, -1, -1, qfalse );
 }
 
 /*
@@ -273,7 +273,7 @@ void FX_ConcussionHitPlayer(vec3_t origin, vec3_t normal, qboolean humanoid, int
 	if (fx)
 		trap->FX_PlayEffectID(fx, origin, normal, -1, -1, qfalse);
 	else
-	trap->FX_PlayEffectID( cgs.effects.concussionImpactEffect, origin, normal, -1, -1, qfalse );
+		trap->FX_PlayEffectID( cgs.effects.concussionImpactEffect, origin, normal, -1, -1, qfalse );
 }
 
 /*
@@ -290,7 +290,10 @@ void FX_ConcussionProjectileThink(  centity_t *cent, const struct weaponInfo_s *
 		forward[2] = 1.0f;
 	}
 
-	trap->FX_PlayEffectID( cgs.effects.concussionShotEffect, cent->lerpOrigin, forward, -1, -1, qfalse );
+	if (weapon->missileRenderfx)
+		trap->FX_PlayEffectID(weapon->missileRenderfx, cent->lerpOrigin, forward, -1, -1, qfalse);
+	else	
+		trap->FX_PlayEffectID( cgs.effects.concussionShotEffect, cent->lerpOrigin, forward, -1, -1, qfalse );
 
 	FX_ConcussionAddLight(cent->lerpOrigin);
 }
@@ -303,19 +306,48 @@ FX_ConcAltShot
 static vec3_t WHITE	={1.0f,1.0f,1.0f};
 static vec3_t BRIGHT={0.75f,0.5f,1.0f};
 
-void FX_ConcAltShot( vec3_t start, vec3_t end )
+void FX_ConcAltShot( vec3_t start, vec3_t end, int weapon )
 {
-	//"concussion/beam"
-	trap->FX_AddLine( start, end, 0.1f, 10.0f, 0.0f,
+	if (weapon != WP_CONCUSSION 
+		&& (cg_weapons[weapon].missileDlightColor[0] > 0 || cg_weapons[weapon].missileDlightColor[1] > 0 || cg_weapons[weapon].missileDlightColor[2] > 0))
+	{
+		vec3_t mainColor, beefColor;
+
+		VectorCopy(cg_weapons[weapon].missileDlightColor, mainColor);
+		VectorCopy(cg_weapons[weapon].missileDlightColor, beefColor);
+		beefColor[0] *= 0.4;
+		beefColor[1] *= 0.4;
+		beefColor[2] *= 0.4;
+
+		//"concussion/beam"
+		trap->FX_AddLine( start, end, 0.1f, 10.0f, 0.0f,
+							1.0f, 0.0f, 0.0f,
+							mainColor, mainColor, 0.0f,
+							175, trap->R_RegisterShader( "gfx/effects/whiteline2" ),
+							FX_SIZE_LINEAR | FX_ALPHA_LINEAR );
+
+		
+		// add some beef
+		trap->FX_AddLine( start, end, 0.1f, 7.0f, 0.0f,
+						1.0f, 0.0f, 0.0f,
+						beefColor, beefColor, 0.0f,
+						150, trap->R_RegisterShader( "gfx/misc/whiteline2" ),
+						FX_SIZE_LINEAR | FX_ALPHA_LINEAR );
+	}
+	else
+	{
+		//"concussion/beam"
+		trap->FX_AddLine( start, end, 0.1f, 10.0f, 0.0f,
 							1.0f, 0.0f, 0.0f,
 							WHITE, WHITE, 0.0f,
 							175, trap->R_RegisterShader( "gfx/effects/blueLine" ),
 							FX_SIZE_LINEAR | FX_ALPHA_LINEAR );
 
-	// add some beef
-	trap->FX_AddLine( start, end, 0.1f, 7.0f, 0.0f,
+		// add some beef
+		trap->FX_AddLine( start, end, 0.1f, 7.0f, 0.0f,
 						1.0f, 0.0f, 0.0f,
 						BRIGHT, BRIGHT, 0.0f,
 						150, trap->R_RegisterShader( "gfx/misc/whiteline2" ),
 						FX_SIZE_LINEAR | FX_ALPHA_LINEAR );
+	}
 }

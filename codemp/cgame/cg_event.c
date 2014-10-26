@@ -2859,12 +2859,12 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 			}
 
 			ByteToDir( es->eventParm, dir );
-			CG_MissileHitWall(WP_CONCUSSION, es->owner, position, dir, IMPACTSOUND_DEFAULT, qtrue, 0);
+			CG_MissileHitWall(es->weapon, es->owner, position, dir, IMPACTSOUND_DEFAULT, qtrue, 0);
 
-			FX_ConcAltShot(es->origin2, spot);
+			FX_ConcAltShot(es->origin2, spot, es->weapon);
 
 			//steal the bezier effect from the disruptor
-			FX_DisruptorAltMiss(position, dir, WP_CONCUSSION, qtrue);
+			FX_DisruptorAltMiss(position, dir, es->weapon, qtrue);
 		}
 		break;
 
