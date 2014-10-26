@@ -1141,7 +1141,10 @@ qboolean NearMoverEntityLocation( vec3_t org )
 {
 	int i = 0;
 
-	GenerateMoverList(); // init the mover list on first check...
+#pragma omp critical (__GENERATE_MOVER_LIST__)
+	{
+		GenerateMoverList(); // init the mover list on first check...
+	}
 
 	for (i = 0; i < MOVER_LIST_NUM; i++)
 	{
@@ -2438,6 +2441,7 @@ AIMOD_MAPPING_CreateNodeLinks ( int node )
 				break; // Already have enough links for this one...
 		}
 
+//#pragma omp parallel for ordered schedule(dynamic) num_threads(32)
 		for ( loop = 0; loop < number_of_nodes; loop++ )
 		{
 			if (loop == node)
@@ -2446,11 +2450,16 @@ AIMOD_MAPPING_CreateNodeLinks ( int node )
 			if ( linknum >= MAX_NODELINKS )
 			{
 				break;
+				//continue;
 			}
 
 			if ( !BAD_WP_Distance( nodes[node].origin, nodes[loop].origin, double_range) )
 			{
-				int visCheck = NodeVisible( nodes[loop].origin, tmp, -1 );
+				int visCheck = 0;
+//#pragma omp critical (__NODE_VISIBLE_CHECK__)
+				{
+					visCheck = NodeVisible( nodes[loop].origin, tmp, -1 );
+				}
 
 				//0 = wall in way
 				//1 = player or no obstruction
@@ -2458,21 +2467,24 @@ AIMOD_MAPPING_CreateNodeLinks ( int node )
 				//3 = door entity in the way.
 				if ( visCheck == 1 || visCheck == 2 || visCheck == 3 /*|| loop == node - 1*/ )
 				{
-					if (AIMod_Check_Slope_Between(nodes[node].origin, nodes[loop].origin))
+//#pragma omp critical (__SLOPE_CHECK__)
 					{
-						nodes[node].links[linknum].targetNode = loop;
-						nodes[node].links[linknum].cost = VectorDistance(nodes[loop].origin, nodes[node].origin) + (DistanceVertical(nodes[loop].origin, nodes[node].origin)*DistanceVertical(nodes[loop].origin, nodes[node].origin));
-						nodes[node].links[linknum].flags = 0;
+						if (AIMod_Check_Slope_Between(nodes[node].origin, nodes[loop].origin))
+						{
+							nodes[node].links[linknum].targetNode = loop;
+							nodes[node].links[linknum].cost = VectorDistance(nodes[loop].origin, nodes[node].origin) + (DistanceVertical(nodes[loop].origin, nodes[node].origin)*DistanceVertical(nodes[loop].origin, nodes[node].origin));
+							nodes[node].links[linknum].flags = 0;
 
-						linknum++;
-					}
-					else if (/*double_range &&*/ AWP_Jump( nodes[node].origin, nodes[loop].origin ))
-					{// Can jump there!
-						nodes[node].links[linknum].targetNode = loop;
-						nodes[node].links[linknum].cost = VectorDistance(nodes[loop].origin, nodes[node].origin) + (DistanceVertical(nodes[loop].origin, nodes[node].origin)*DistanceVertical(nodes[loop].origin, nodes[node].origin));
-						nodes[node].links[linknum].flags |= NODE_JUMP;
+							linknum++;
+						}
+						else if (/*double_range &&*/ AWP_Jump( nodes[node].origin, nodes[loop].origin ))
+						{// Can jump there!
+							nodes[node].links[linknum].targetNode = loop;
+							nodes[node].links[linknum].cost = VectorDistance(nodes[loop].origin, nodes[node].origin) + (DistanceVertical(nodes[loop].origin, nodes[node].origin)*DistanceVertical(nodes[loop].origin, nodes[node].origin));
+							nodes[node].links[linknum].flags |= NODE_JUMP;
 
-						linknum++;
+							linknum++;
+						}
 					}
 				}
 			}
@@ -2688,7 +2700,7 @@ AIMOD_MAPPING_MakeLinks ( void )
 
 	//number_of_nodes = total_good_count;
 	
-#pragma omp parallel for ordered schedule(dynamic)
+#pragma omp parallel for ordered schedule(dynamic) num_threads(32)
 	for ( loop = 0; loop < number_of_nodes; loop++ )
 	{// Do links...
 		nodes[loop].enodenum = 0;
@@ -2710,9 +2722,9 @@ AIMOD_MAPPING_MakeLinks ( void )
 		// Also check if the node needs special flags...
 		AIMOD_MAPPING_CreateSpecialNodeFlags( loop );
 
-#pragma omp ordered
+//#pragma omp ordered
 		{
-#pragma omp critical
+#pragma omp critical (__CREATE_NODE_LINKS__)
 			{
 				AIMOD_MAPPING_CreateNodeLinks( loop );
 				strcpy( last_node_added_string, va("^5Created ^3%i ^5links for waypoint ^7%i^5.", nodes[loop].enodenum, loop) );
@@ -5342,8 +5354,11 @@ void AIMod_AutoWaypoint_StandardMethod( void )
 		previous_time = clock();
 
 //omp_set_nested(1);
+omp_set_nested(0);
 
-#pragma omp parallel for ordered schedule(dynamic) num_threads(32)
+#pragma omp parallel for num_threads(32)
+//#pragma omp parallel for schedule(dynamic) num_threads(32)
+//#pragma omp parallel for ordered schedule(dynamic) num_threads(32)
 //#pragma omp parallel for ordered schedule(dynamic) shared(parallel_x, scatter_x)
 		//for (x = startx; x >= mapMins[0]; x -= scatter)
 		for (parallel_x = 0; parallel_x < parallel_x_max; parallel_x++) // To OMP this sucker...
@@ -5387,7 +5402,7 @@ void AIMod_AutoWaypoint_StandardMethod( void )
 					{// Draw a nice little progress bar ;)
 						aw_percent_complete = (float)((float)final_tests/(float)total_tests)*100.0f;
 
-						if (current_time - previous_time > 100) // update display every 100ms...
+						if (current_time - previous_time > 500) // update display every 500ms...
 						{
 							previous_time = current_time;
 							trap->UpdateScreen();
@@ -5402,7 +5417,7 @@ void AIMod_AutoWaypoint_StandardMethod( void )
 					// Set this test location's origin...
 					VectorSet(new_org, x, y, z);
 
-#pragma omp critical
+#pragma omp critical (__FLOOR_CHECK__)
 					{
 						// Find the ground at this point...
 						floor = FloorHeightAt(new_org);
@@ -5427,7 +5442,7 @@ void AIMod_AutoWaypoint_StandardMethod( void )
 					else if (floor > mapMaxs[2])
 					{// Marks a start-solid or on top of the sky... Skip...
 						// We can't mark current_height to FloorHeightAt value...
-//#pragma omp critical
+//#pragma omp critical (__GROUND_HEIGHT_CHECK__)
 //						{
 //							current_height = GroundHeightNoSurfaceChecks(new_org); // get the actual hit location height...
 //						}
@@ -5442,7 +5457,7 @@ void AIMod_AutoWaypoint_StandardMethod( void )
 
 					if (force_continue) continue; // because omp critical can not "continue"...
 
-#pragma omp critical
+#pragma omp critical (__PLAYER__WIDTH_CHECK__)
 					{
 						if (!AIMod_AutoWaypoint_Check_PlayerWidth(org))
 						{// Not wide enough for a player to fit!
@@ -5461,9 +5476,9 @@ void AIMod_AutoWaypoint_StandardMethod( void )
 						continue;
 					}
 
-#pragma omp ordered
+//#pragma omp ordered
 					{
-#pragma omp critical
+#pragma omp critical (__ADD_TEMP_NODE__)
 						{
 							sprintf(last_node_added_string, "^5Adding temp waypoint ^3%i ^5at ^7%f %f %f^5.", areas, org[0], org[1], org[2]+8);
 
@@ -5477,9 +5492,9 @@ void AIMod_AutoWaypoint_StandardMethod( void )
 							last_org[1] = arealist[areas][1];
 							last_org[2] = arealist[areas][2];
 							areas++;
-
-							current_height = floor;
 						}
+
+						current_height = floor;
 					}
 				}
 			}
@@ -6367,9 +6382,9 @@ void AIMod_AutoWaypoint_StandardMethod( void )
 				continue;
 			}
 
-#pragma omp ordered
+//#pragma omp ordered
 			{
-#pragma omp critical
+#pragma omp critical (__ADD_WAYPOINT_CHECK__)
 				{
 					strcpy( last_node_added_string, va("^5Adding waypoint ^3%i ^5at ^7%f %f %f^5.", total_waypoints, area_org[0], area_org[1], area_org[2]) );
 					Load_AddNode( area_org, 0, objNum, 0 );	//add the node
