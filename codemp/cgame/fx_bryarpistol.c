@@ -298,6 +298,34 @@ void FX_ConcussionProjectileThink(  centity_t *cent, const struct weaponInfo_s *
 	FX_ConcussionAddLight(cent->lerpOrigin);
 }
 
+//void FX_ConcussionProjectileThink(centity_t *cent, const struct weaponInfo_s *weapon)
+//{
+//	vec3_t forward;
+//
+//	if (VectorNormalize2(cent->currentState.pos.trDelta, forward) == 0.0f)
+//	{
+//		forward[2] = 1.0f;
+//	}
+//
+//	if (weapon->missileRenderfx)
+//	{
+//		trap->FX_PlayEffectID(weapon->altMissileRenderfx, cent->lerpOrigin, forward, -1, -1, qfalse);
+//	}
+//	else
+//	{
+//		if (cent->currentState.weapon == WP_DC15 || cent->currentState.weapon == WP_CLONERIFLE)
+//		{
+//			trap->FX_PlayEffectID(cgs.effects.fireGrenadeFireBlob, cent->lerpOrigin, forward, -1, -1, qfalse);
+//
+//		}
+//		else
+//		{
+//			trap->FX_PlayEffectID(cgs.effects.concussionShotEffect, cent->lerpOrigin, forward, -1, -1, qfalse);
+//			
+//		}
+//	}
+//}
+
 /*
 ---------------------------
 FX_ConcAltShot
