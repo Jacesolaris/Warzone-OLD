@@ -21,60 +21,60 @@ FX_DEMP2_ProjectileThink
 ---------------------------
 */
 
-//void FX_DEMP2_ProjectileThink( centity_t *cent, const struct weaponInfo_s *weapon )
-//{
-//	vec3_t forward;
-//
-//	if ( VectorNormalize2( cent->currentState.pos.trDelta, forward ) == 0.0f )
-//	{
-//		forward[2] = 1.0f;
-//	}
-//
-//	trap->FX_PlayEffectID( cgs.effects.demp2ProjectileEffect, cent->lerpOrigin, forward, -1, -1, qfalse );
-//
-//	FX_DEMP2AddLight(cent->lerpOrigin);
-//}
-
-void FX_DEMP2_ProjectileThink(centity_t *cent, const struct weaponInfo_s *weapon)
+void FX_DEMP2_ProjectileThink( centity_t *cent, const struct weaponInfo_s *weapon )
 {
 	vec3_t forward;
-	int t;
 
-	if (VectorNormalize2(cent->currentState.pos.trDelta, forward) == 0.0f)
+	if ( VectorNormalize2( cent->currentState.pos.trDelta, forward ) == 0.0f )
 	{
 		forward[2] = 1.0f;
 	}
 
-	if (cent->currentState.generic1 == 6)
-	{
-		if (weapon->missileRenderfx)
-		{
-			for (t = 1; t < (cent->currentState.generic1 - 1); t++) 
-			{
-				trap->FX_PlayEffectID(weapon->missileRenderfx, cent->lerpOrigin, forward, -1, -1, qfalse);
+	trap->FX_PlayEffectID( cgs.effects.demp2ProjectileEffect, cent->lerpOrigin, forward, -1, -1, qfalse );
 
-			}
-		}
-		else
-		{
-			for (t = 1; t < (cent->currentState.generic1 - 1); t++)
-			{
-				trap->FX_PlayEffectID(cgs.effects.demp2SecShotEffect, cent->lerpOrigin, forward, -1, -1, qfalse);
-			}
-		}
-	}
-	else
-	{
-		if (weapon->missileRenderfx)
-		{
-			trap->FX_PlayEffectID(weapon->missileRenderfx, cent->lerpOrigin, forward, -1, -1, qfalse);
-		}
-		else
-		{
-			trap->FX_PlayEffectID(cgs.effects.demp2ProjectileEffect, cent->lerpOrigin, forward, -1, -1, qfalse);
-		}
-	}
+	FX_DEMP2AddLight(cent->lerpOrigin);
 }
+
+//void FX_DEMP2_ProjectileThink(centity_t *cent, const struct weaponInfo_s *weapon)
+//{
+//	vec3_t forward;
+//	int t;
+//
+//	if (VectorNormalize2(cent->currentState.pos.trDelta, forward) == 0.0f)
+//	{
+//		forward[2] = 1.0f;
+//	}
+//
+//	if (cent->currentState.generic1 == 6)
+//	{
+//		if (weapon->missileRenderfx)
+//		{
+//			for (t = 1; t < (cent->currentState.generic1 - 1); t++) 
+//			{
+//				trap->FX_PlayEffectID(weapon->missileRenderfx, cent->lerpOrigin, forward, -1, -1, qfalse);
+//
+//			}
+//		}
+//		else
+//		{
+//			for (t = 1; t < (cent->currentState.generic1 - 1); t++)
+//			{
+//				trap->FX_PlayEffectID(cgs.effects.demp2SecShotEffect, cent->lerpOrigin, forward, -1, -1, qfalse);
+//			}
+//		}
+//	}
+//	else
+//	{
+//		if (weapon->missileRenderfx)
+//		{
+//			trap->FX_PlayEffectID(weapon->missileRenderfx, cent->lerpOrigin, forward, -1, -1, qfalse);
+//		}
+//		else
+//		{
+//			trap->FX_PlayEffectID(cgs.effects.demp2ProjectileEffect, cent->lerpOrigin, forward, -1, -1, qfalse);
+//		}
+//	}
+//}
 
 /*
 ---------------------------
