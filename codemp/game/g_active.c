@@ -1990,6 +1990,11 @@ once for each server frame, which makes for smooth demo recording.
 ==============
 */
 
+#include "b_local.h"
+
+//Local Variables
+npcStatic_t NPCS;
+
 void ClientThink_real( gentity_t *ent ) {
 	gclient_t	*client;
 	pmove_t		pmove;
@@ -2018,6 +2023,12 @@ void ClientThink_real( gentity_t *ent ) {
 
 	// mark the time, so the connection sprite can be removed
 	ucmd = &ent->client->pers.cmd;
+
+	if (isNPC)
+	{// UQ1: Why were we not using this???
+		//ucmd = &NPCS.ucmd;
+		memcpy(&ent->client->pers.cmd, &NPCS.ucmd, sizeof(usercmd_t));
+	}
 
 	//check if we need to toggle the block powerup on/off..
 	G_CheckToggleBlock(ent, ucmd); // moved up here to make sure it always gets called... (eg: no return; 's before it gets to the check)

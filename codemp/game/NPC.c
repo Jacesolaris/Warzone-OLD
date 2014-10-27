@@ -2296,11 +2296,19 @@ void NPC_PickRandomIdleAnimantionCivilian(gentity_t *NPC)
 
 void NPC_PickRandomIdleAnimantion(gentity_t *NPC)
 {
-	int randAnim = irand(0,10);
+	int randAnim = 0;
 
 	if (!NPC || !NPC->client) return;
 
 	if (NPC->enemy) return; // No idle anims when we got an enemy...
+
+	//VectorClear( NPC->client->ps.velocity );
+	NPC->client->ps.velocity[0] = 0;
+	NPC->client->ps.velocity[1] = 0;
+	VectorClear( NPC->client->ps.moveDir );
+	VectorClear( NPC->movedir );
+
+	randAnim = irand(0,10);
 
 	switch (NPC->client->ps.legsAnim)
 	{
@@ -3289,7 +3297,7 @@ qboolean NPC_NPCBlockingPath()
 		//if (InFOV3( ent->r.currentOrigin, NPC->r.currentOrigin, NPC->move_vector, 90, 120 ))
 		if (/*trap->InPVS(NPC->r.currentOrigin, ent->r.currentOrigin) &&*/ InFOV2(ent->r.currentOrigin, NPC, 60, 180))
 		{
-			NPC->bot_strafe_left_timer = level.time + 1000;
+			NPC->bot_strafe_left_timer = level.time + 100;
 			return qtrue;
 		}
 	}
@@ -3332,13 +3340,13 @@ void NPC_AdjustforStrafe(vec3_t moveDir, qboolean walk, float walkSpeed)
 	if (NPC->bot_strafe_right_timer < level.time && NPC->bot_strafe_left_timer < level.time)
 		return;
 
-	if (NPC->bot_strafe_right_timer > level.time + 2000)
+	if (NPC->bot_strafe_right_timer > level.time + 200)
 	{
 		// Obviously incorrect...
 		NPC->bot_strafe_right_timer = 0;
 		return;
 	}
-	else if (NPC->bot_strafe_left_timer > level.time + 2000)
+	else if (NPC->bot_strafe_left_timer > level.time + 200)
 	{
 		// Obviously incorrect...
 		NPC->bot_strafe_left_timer = 0;
@@ -3685,7 +3693,7 @@ qboolean UQ1_UcmdMoveForDir ( gentity_t *self, usercmd_t *cmd, vec3_t dir, qbool
 #ifdef __NPC_STRAFE__
 	if (self->wpCurrent >= 0) NPC_NPCBlockingPath();
 	NPC_AdjustforStrafe(dir, walk, walkSpeed);
-	//if (self->bot_strafe_left_timer > level.time) cmd->rightmove -= 127.0;
+	////if (self->bot_strafe_left_timer > level.time) cmd->rightmove -= 127.0;
 #endif //__NPC_STRAFE__
 
 	dir[2] = 0;
@@ -4778,6 +4786,118 @@ qboolean NPC_RoutingIncreaseCost ( int wpLast, int wpCurrent )
 
 //#define __OLD_NPC_WAYPOINTING__
 
+qboolean NPC_PadawanMove( void )
+{
+	gentity_t	*NPC = NPCS.NPC;
+	usercmd_t	ucmd = NPCS.ucmd;
+	
+	if (NPC->s.NPC_class == CLASS_PADAWAN)
+	{
+		NPC_ClearGoal();
+		NPCS.NPCInfo->goalEntity = NULL;
+		NPCS.NPCInfo->tempGoal = NULL;
+		
+		if (NPC->parent && NPC_IsAlive(NPC->parent))
+		{
+			float dist = Distance(NPC->parent->r.currentOrigin, NPC->r.currentOrigin);
+
+			// OMG combatmovetogoal sucks...
+			if (dist > 128 && dist < 512)
+			{// If clear then move stright there...
+				qboolean walk = qfalse;
+
+				if (dist < 128 && !(NPC->enemy && NPC_IsAlive(NPC->enemy))) 
+					walk = qtrue;
+
+				NPC_FacePosition( NPC->parent->r.currentOrigin, qfalse );
+				VectorSubtract( NPC->parent->r.currentOrigin, NPC->r.currentOrigin, NPC->movedir );
+
+				if (UQ1_UcmdMoveForDir( NPC, &NPCS.ucmd, NPC->movedir, walk, NPC->parent->r.currentOrigin )) 
+				{// Looks like we can move there...
+					//trap->Print("dist > 96 && dist < 512 MOVE!\n");
+
+					if (NPCS.ucmd.forwardmove == 0 && NPCS.ucmd.rightmove == 0 && NPCS.ucmd.upmove == 0)
+					{
+						NPC_PickRandomIdleAnimantion(NPC);
+						VectorClear( NPC->client->ps.moveDir );
+						VectorClear( NPC->movedir );
+					}
+					else
+					{
+						NPC_SelectMoveAnimation(walk);
+					}
+
+					return qtrue;
+				}
+				else if (/*NPC->nextPadawanJumpThink <= level.time &&*/ Jedi_Jump( NPC->parent->r.currentOrigin, NPC->parent->s.number ))
+				{// Backup... Can we jump there???
+					//trap->Print("dist > 96 && dist < 512 JUMP!\n");
+					return qtrue;
+				}
+
+				//trap->Print("dist > 96 && dist < 512 FAIL!\n");
+			}
+			/*else if (dist < 64)
+			{// If clear then move back a bit...
+				NPC_FacePosition( NPC->parent->r.currentOrigin, qfalse );
+				VectorSubtract( NPC->r.currentOrigin, NPC->parent->r.currentOrigin, NPC->movedir );
+
+				if (UQ1_UcmdMoveForDir( NPC, &NPCS.ucmd, NPC->movedir, qtrue, NPC->parent->r.currentOrigin )) 
+				{// Looks like we can move there...
+					//trap->Print("dist < 32 OK!\n");
+					return qtrue;
+				}
+			}*/
+			else if (dist <= 128)
+			{// Perfect distance... Stay idle...
+				ucmd.forwardmove = 0;
+				ucmd.rightmove = 0;
+				ucmd.upmove = 0;
+				NPC_PickRandomIdleAnimantion(NPC);
+
+				//trap->Print("dist <= 96 IDLE!\n");
+
+				return qtrue;
+			}
+			else if (NPC->parent->s.groundEntityNum != ENTITYNUM_NONE) // UQ1: Let's just skip pathfinding completely...
+			{// Padawan is too far from jedi. Teleport to him... Only if they are not in mid air...
+				if (NPC->nextPadawanTeleportThink <= level.time)
+				{
+					int waypoint = DOM_GetNearWP(NPC->parent->r.currentOrigin, NPC->parent->wpCurrent);
+
+					NPC->nextPadawanTeleportThink = level.time + 5000;
+
+					if (waypoint >= 0 && waypoint < gWPNum)
+					{
+						TeleportNPC( NPC, gWPArray[waypoint]->origin, NPC->s.angles );
+
+						NPC_ClearPathData(NPC);
+						ucmd.forwardmove = 0;
+						ucmd.rightmove = 0;
+						ucmd.upmove = 0;
+						NPC_PickRandomIdleAnimantion(NPC);
+
+						//trap->Print("TELEPORT!\n");
+
+						return qtrue;
+					}
+				}
+			}
+		}
+
+		ucmd.forwardmove = 0;
+		ucmd.rightmove = 0;
+		ucmd.upmove = 0;
+		NPC_PickRandomIdleAnimantion(NPC);
+		
+		//trap->Print("IDLE!\n");
+
+		return qtrue;
+	}
+
+	return qfalse;
+}
+
 qboolean NPC_FollowRoutes( void ) 
 {// Quick method of following bot routes...
 	gentity_t	*NPC = NPCS.NPC;
@@ -4833,97 +4953,6 @@ qboolean NPC_FollowRoutes( void )
 		}
 	}
 
-	if (NPC->s.NPC_class == CLASS_PADAWAN)
-	{
-		if (NPC->parent && NPC_IsAlive(NPC->parent))
-		{
-			/*
-			NPCS.NPCInfo->goalEntity = NPC->parent;
-
-			if ( NPC_CombatMoveToGoal( qtrue, qfalse ) )
-			{
-				NPC_UpdateAngles( qtrue, qtrue );
-				return qtrue;
-			}
-			*/
-
-			float dist = Distance(NPC->parent->r.currentOrigin, NPC->r.currentOrigin);
-
-			// OMG combatmovetogoal sucks...
-			if (dist > 96 && dist < 512)
-			{// If clear then move stright there...
-				qboolean walk = qfalse;
-
-				NPC_FacePosition( NPC->parent->r.currentOrigin, qfalse );
-				VectorSubtract( NPC->parent->r.currentOrigin, NPC->r.currentOrigin, NPC->movedir );
-
-				if (dist < 128) walk = qtrue;
-
-				if (UQ1_UcmdMoveForDir( NPC, &NPCS.ucmd, NPC->movedir, walk, NPC->parent->r.currentOrigin )) 
-				{// Looks like we can move there...
-					//trap->Print("dist > 96 && dist < 512 OK!\n");
-					return qtrue;
-				}
-				else if (Jedi_Jump( NPC->parent->r.currentOrigin, NPC->parent->s.number ))
-				{// Backup... Can we jump there???
-					//trap->Print("dist > 96 && dist < 512 JUMP!\n");
-					return qtrue;
-				}
-
-				//trap->Print("dist > 96 && dist < 512 FAIL!\n");
-			}
-			else if (dist < 32)
-			{// If clear then move back a bit...
-				NPC_FacePosition( NPC->parent->r.currentOrigin, qfalse );
-				VectorSubtract( NPC->r.currentOrigin, NPC->parent->r.currentOrigin, NPC->movedir );
-
-				if (UQ1_UcmdMoveForDir( NPC, &NPCS.ucmd, NPC->movedir, qtrue, NPC->parent->r.currentOrigin )) 
-				{// Looks like we can move there...
-					//trap->Print("dist < 32 OK!\n");
-					return qtrue;
-				}
-				else
-				{// Stay idle...
-					NPC_ClearPathData(NPC);
-					ucmd.forwardmove = 0;
-					ucmd.rightmove = 0;
-					ucmd.upmove = 0;
-					NPC_PickRandomIdleAnimantion(NPC);
-					//trap->Print("dist < 32 IDLE!\n");
-					return qtrue;
-				}
-			}
-			else if (dist <= 96)
-			{// Perfect distance... Stay idle...
-				NPC_ClearPathData(NPC);
-				ucmd.forwardmove = 0;
-				ucmd.rightmove = 0;
-				ucmd.upmove = 0;
-				NPC_PickRandomIdleAnimantion(NPC);
-				//trap->Print("dist <= 96 IDLE!\n");
-				return qtrue;
-			}
-			else if (NPC->parent->s.groundEntityNum != ENTITYNUM_NONE) // UQ1: Let's just skip pathfinding completely...
-			{// Padawan is too far from jedi. Teleport to him... Only if they are not in mid air...
-				int waypoint = DOM_GetNearWP(NPC->parent->r.currentOrigin, NPC->parent->wpCurrent);
-
-				if (waypoint >= 0 && waypoint < gWPNum)
-				{
-					TeleportNPC( NPC, gWPArray[waypoint]->origin, NPC->s.angles );
-
-					NPC_ClearPathData(NPC);
-					ucmd.forwardmove = 0;
-					ucmd.rightmove = 0;
-					ucmd.upmove = 0;
-					NPC_PickRandomIdleAnimantion(NPC);
-					return qtrue;
-				}
-			}
-		}
-
-		//trap->Print("Too far???\n");
-	}
-
 	G_ClearEnemy(NPC);
 
 	if (DistanceHorizontal(NPC->r.currentOrigin, NPC->npc_previous_pos) > 3)
@@ -4971,18 +5000,23 @@ qboolean NPC_FollowRoutes( void )
 
 	if (NPC->isPadawan)
 	{
-		if (NPC->parent
-			&& (NPC->wpCurrent < 0 || NPC->wpCurrent >= gWPNum 
-			|| NPC->longTermGoal < 0 || NPC->longTermGoal >= gWPNum
-			|| Distance(NPC->parent->r.currentOrigin, gWPArray[NPC->longTermGoal]->origin) > 128))
-		{// Need a new path to our master...
-			padawanPath = qtrue;
-		}
-		else if (NPC->parent 
-			&& NPC->parent->wpCurrent >= 0 && NPC->parent->wpCurrent < gWPNum 
-			&& Distance(NPC->parent->r.currentOrigin, gWPArray[NPC->parent->wpCurrent]->origin) > 128)
-		{// Need a new path to our master...
-			padawanPath = qtrue;
+		if (NPC->nextPadawanWaypointThink < level.time)
+		{
+			if (NPC->parent
+				&& (NPC->wpCurrent < 0 || NPC->wpCurrent >= gWPNum 
+				|| NPC->longTermGoal < 0 || NPC->longTermGoal >= gWPNum
+				|| Distance(NPC->parent->r.currentOrigin, gWPArray[NPC->longTermGoal]->origin) > 128))
+			{// Need a new path to our master...
+				padawanPath = qtrue;
+			}
+			else if (NPC->parent 
+				&& NPC->parent->wpCurrent >= 0 && NPC->parent->wpCurrent < gWPNum 
+				&& Distance(NPC->parent->r.currentOrigin, gWPArray[NPC->parent->wpCurrent]->origin) > 128)
+			{// Need a new path to our master...
+				padawanPath = qtrue;
+			}
+
+			NPC->nextPadawanWaypointThink = level.time + 5000; // only look for a new route every 5 seconds..
 		}
 	}
 
@@ -5697,16 +5731,19 @@ qboolean NPC_NeedPadawan_Spawn ( void )
 		if ( parent2
 			&& NPC_IsAlive(parent2)
 			&& parent2->client->sess.sessionTeam == TEAM_BLUE
-			&& (parent2->client->NPC_class == CLASS_JEDI || parent2->client->NPC_class == CLASS_LUKE || parent2->client->NPC_class == CLASS_KYLE || parent2->client->NPC_class == CLASS_JAN || parent2->s.eType == ET_PLAYER))
+			&& (parent2->client->NPC_class == CLASS_JEDI || parent2->client->NPC_class == CLASS_LUKE || parent2->client->NPC_class == CLASS_KYLE || parent2->client->NPC_class == CLASS_JAN || (parent2->s.eType == ET_PLAYER && parent2->s.primaryWeapon == WP_SABER)))
 		{// This is a jedi on our team...
 #pragma omp atomic
 			jedi_count++;
 		}
 		else if ( parent2
 			&& NPC_IsAlive(parent2)
-			&& parent2->client->sess.sessionTeam == TEAM_BLUE
+			//&& parent2->client->sess.sessionTeam == TEAM_BLUE
 			&& parent2->client->NPC_class == CLASS_PADAWAN)
-		{// This is a jedi on our team...
+		{// This is a padawan on our team...
+			if (parent2->client->sess.sessionTeam != TEAM_BLUE)
+				parent2->client->sess.sessionTeam = TEAM_BLUE; // must have been manually spawned.. set team info...
+
 #pragma omp atomic
 			padawan_count++;
 		}
@@ -5737,6 +5774,15 @@ void NPC_DoPadawanStuff ( void )
 	{
 		return; // This is only for padawans...
 	}
+
+	if (me->nextPadawanThink > level.time) return;
+
+	me->nextPadawanThink = level.time + 5000;
+
+	me->NPC->combatMove = qtrue;
+
+	if (me->client->sess.sessionTeam != TEAM_BLUE)
+		me->client->sess.sessionTeam = TEAM_BLUE; // must have been manually spawned.. set team info...
 
 	if (parent && NPC_IsAlive(parent))
 	{
@@ -5771,6 +5817,7 @@ void NPC_DoPadawanStuff ( void )
 				{
 					me->client->ps.saberHolstered = 2;
 
+#if 0
 					if (me->client->saber[0].soundOff)
 					{
 						G_Sound(me, CHAN_AUTO, me->client->saber[0].soundOff);
@@ -5780,6 +5827,7 @@ void NPC_DoPadawanStuff ( void )
 					{
 						G_Sound(me, CHAN_AUTO, me->client->saber[1].soundOff);
 					}
+#endif
 				}
 			}
 			else
@@ -5788,6 +5836,7 @@ void NPC_DoPadawanStuff ( void )
 				{
 					me->client->ps.saberHolstered = 0;
 
+#if 0
 					if (me->client->saber[0].soundOn)
 					{
 						G_Sound(me, CHAN_AUTO, me->client->saber[0].soundOn);
@@ -5797,18 +5846,30 @@ void NPC_DoPadawanStuff ( void )
 					{
 						G_Sound(me, CHAN_AUTO, me->client->saber[1].soundOn);
 					}
+#endif
 				}
 			}
 		}
 
-		if ((Distance(me->r.currentOrigin, parent->r.currentOrigin) > 1024 || DistanceVertical(me->r.currentOrigin, parent->r.currentOrigin) > 512)
+		/*if ((Distance(me->r.currentOrigin, parent->r.currentOrigin) > 1024 || DistanceVertical(me->r.currentOrigin, parent->r.currentOrigin) > 512)
 			&& parent->s.groundEntityNum != ENTITYNUM_NONE)
 		{// Padawan is too far from jedi. Teleport to him... Only if they are not in mid air...
-			int waypoint = DOM_GetNearWP(parent->r.currentOrigin, parent->wpCurrent);
+			if (me->nextPadawanTeleportThink <= level.time)
+			{
+				int waypoint = DOM_GetNearWP(me->parent->r.currentOrigin, me->parent->wpCurrent);
 
-			if (waypoint >= 0 && waypoint < gWPNum)
-				TeleportNPC( me, gWPArray[waypoint]->origin, me->s.angles );
-		}
+				me->nextPadawanTeleportThink = level.time + 5000;
+
+				if (waypoint >= 0 && waypoint < gWPNum)
+				{
+					TeleportNPC( me, gWPArray[waypoint]->origin, me->s.angles );
+					NPC_ClearPathData(me);
+				}
+			}
+		}*/
+
+		if (!me->enemy || !NPC_IsAlive(me->enemy))
+			NPC_ClearGoal();
 
 		return; // Already have a master to follow...
 	}
@@ -5887,6 +5948,7 @@ void NPC_DoPadawanStuff ( void )
 				{
 					me->client->ps.saberHolstered = 2;
 
+#if 0
 					if (me->client->saber[0].soundOff)
 					{
 						G_Sound(me, CHAN_AUTO, me->client->saber[0].soundOff);
@@ -5896,6 +5958,7 @@ void NPC_DoPadawanStuff ( void )
 					{
 						G_Sound(me, CHAN_AUTO, me->client->saber[1].soundOff);
 					}
+#endif
 				}
 			}
 			else
@@ -5904,6 +5967,7 @@ void NPC_DoPadawanStuff ( void )
 				{
 					me->client->ps.saberHolstered = 0;
 
+#if 0
 					if (me->client->saber[0].soundOn)
 					{
 						G_Sound(me, CHAN_AUTO, me->client->saber[0].soundOn);
@@ -5913,24 +5977,36 @@ void NPC_DoPadawanStuff ( void )
 					{
 						G_Sound(me, CHAN_AUTO, me->client->saber[1].soundOn);
 					}
+#endif
 				}
 			}
 		}
 
-		if ((Distance(me->r.currentOrigin, parent->r.currentOrigin) > 1024 || DistanceVertical(me->r.currentOrigin, parent->r.currentOrigin) > 512)
+		/*if ((Distance(me->r.currentOrigin, parent->r.currentOrigin) > 1024 || DistanceVertical(me->r.currentOrigin, parent->r.currentOrigin) > 512)
 			&& parent->s.groundEntityNum != ENTITYNUM_NONE)
 		{// Padawan is too far from jedi. Teleport to him... Only if they are not in mid air...
-			int waypoint = DOM_GetNearWP(parent->r.currentOrigin, parent->wpCurrent);
+			if (me->nextPadawanTeleportThink <= level.time)
+			{
+				int waypoint = DOM_GetNearWP(me->parent->r.currentOrigin, me->parent->wpCurrent);
 
-			if (waypoint >= 0 && waypoint < gWPNum)
-				TeleportNPC( me, gWPArray[waypoint]->origin, me->s.angles );
-		}
+				me->nextPadawanTeleportThink = level.time + 5000;
+
+				if (waypoint >= 0 && waypoint < gWPNum)
+				{
+					TeleportNPC( me, gWPArray[waypoint]->origin, me->s.angles );
+					NPC_ClearPathData(me);
+				}
+			}
+		}*/
 	}
 	else
 	{// Need to check again next time...
 		//trap->Print("Padawan %s failed to find a new jedi.\n", me->client->pers.netname);
 		me->parent = NULL;
 	}
+
+	if (!me->enemy || !NPC_IsAlive(me->enemy))
+		NPC_ClearGoal();
 }
 
 /*
@@ -6102,7 +6178,8 @@ void NPC_Think ( gentity_t *self)//, int msec )
 			qboolean is_bot = (self->s.eType == ET_PLAYER);
 			qboolean use_pathing = qfalse;
 
-			if (!is_jedi && self->isPadawan) is_jedi = qtrue;
+			//if (!is_jedi && self->isPadawan) is_jedi = qtrue;
+			if (self->isPadawan) is_jedi = qfalse;
 
 			if (is_civilian || is_jedi || is_bot) use_pathing = qtrue;
 			if (g_gametype.integer >= GT_TEAM) use_pathing = qtrue;
@@ -6120,7 +6197,7 @@ void NPC_Think ( gentity_t *self)//, int msec )
 				G_ClearEnemy(self);
 			}
 
-			if (!self->enemy && !is_civilian)
+			if (!self->isPadawan && !self->enemy && !is_civilian)
 			{
 				NPC_FindEnemy( qtrue );
 			}
@@ -6130,12 +6207,12 @@ void NPC_Think ( gentity_t *self)//, int msec )
 				NPC_FaceEnemy( qtrue );
 			}
 
-			if (!self->enemy && !self->NPC->conversationPartner)
+			if (!self->isPadawan && !self->enemy && !self->NPC->conversationPartner)
 			{// Let's look for someone to chat to, shall we???
 				NPC_FindConversationPartner();
 			}
 
-			if (self->NPC->conversationPartner)
+			if (!self->isPadawan && self->NPC->conversationPartner)
 			{
 				if (!(NPCS.ucmd.buttons & BUTTON_WALKING))
 					NPCS.ucmd.buttons |= BUTTON_WALKING;
@@ -6205,7 +6282,7 @@ void NPC_Think ( gentity_t *self)//, int msec )
 				//
 				// Conversations...
 				//
-				else if (self->NPC->conversationPartner)
+				else if (!self->isPadawan && self->NPC->conversationPartner)
 				{// Chatting with another NPC... Stay still!
 					NPC_EnforceConversationRange(self);
 					NPC_FacePosition( self->NPC->conversationPartner->r.currentOrigin, qfalse );
@@ -6215,7 +6292,11 @@ void NPC_Think ( gentity_t *self)//, int msec )
 				//
 				// Pathfinding...
 				//
-				else if (use_pathing && NPC_FollowRoutes()) 
+				else if (NPC_PadawanMove())
+				{
+					NPC_GenericFrameCode( self );
+				}
+				else if (!self->isPadawan && use_pathing && NPC_FollowRoutes()) 
 				{
 					//trap->Print("NPCBOT DEBUG: NPC is following routes.\n");
 
@@ -6230,7 +6311,7 @@ void NPC_Think ( gentity_t *self)//, int msec )
 				//
 				// Patroling...
 				//
-				else if (!use_pathing && NPC_PatrolArea())
+				else if (!self->isPadawan && !use_pathing && NPC_PatrolArea())
 				{
 					//trap->Print("NPCBOT DEBUG: NPC is patroling.\n");
 
@@ -6272,6 +6353,7 @@ void NPC_Think ( gentity_t *self)//, int msec )
 				NPC_ExecuteBState( self );
 
 				if (self->enemy 
+					&& NPC_IsAlive(self->enemy)
 					&& NPC_IsJedi(self) 
 					&& Distance(self->r.currentOrigin, self->enemy->r.currentOrigin) > 64)
 				{
@@ -6282,6 +6364,7 @@ void NPC_Think ( gentity_t *self)//, int msec )
 						NPC_MoveToGoal( qtrue );
 				}
 				else if (self->enemy 
+					&& NPC_IsAlive(self->enemy)
 					&& Distance(self->r.currentOrigin, self->enemy->r.currentOrigin) > 64
 					&& NPC_CheckVisibility ( NPCS.NPC->enemy, CHECK_360|CHECK_VISRANGE ) < VIS_FOV)
 				{
@@ -6298,7 +6381,10 @@ void NPC_Think ( gentity_t *self)//, int msec )
 		{
 			//trap->Print("NPCBOT DEBUG: NPC is movetogoal.\n");
 			// UQ1: Always force move to any goal they might have...
-			NPC_MoveToGoal( qtrue );
+			//NPC_MoveToGoal( qtrue );
+			if (UpdateGoal())
+				if (!NPC_MoveToGoal( qfalse ))
+					NPC_MoveToGoal( qtrue );
 		}
 
 #if	AI_TIMERS

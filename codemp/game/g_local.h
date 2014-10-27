@@ -477,6 +477,10 @@ struct gentity_s {
 
 	qboolean				isPadawan;
 	gentity_t				*padawan;
+	int						nextPadawanThink;
+	int						nextPadawanWaypointThink;
+	int						nextPadawanJumpThink;
+	int						nextPadawanTeleportThink;
 
 	int                     next_weapon_switch;
 	int                     next_rifle_butt_time;

@@ -1103,8 +1103,19 @@ qboolean NPC_ValidEnemy( gentity_t *ent )
 
 		if (NPCS.NPC->parent && NPC_IsAlive(NPCS.NPC->parent))
 		{// They just copy their master's enemy instead...
-			NPCS.NPC->enemy = NPCS.NPC->parent->enemy;
-			return qfalse;
+			if (NPCS.NPC->parent->enemy && NPC_IsAlive(NPCS.NPC->parent->enemy))
+			{
+				NPCS.NPC->enemy = NPCS.NPC->parent->enemy;
+				return qfalse;
+			}
+			else
+			{
+				if (Distance(NPCS.NPC->r.currentOrigin, ent->r.currentOrigin) > 384
+					|| Distance(NPCS.NPC->parent->r.currentOrigin, ent->r.currentOrigin) > 384)
+				{// Too far from me or my master...
+					return qfalse;
+				}
+			}
 		}
 	}
 

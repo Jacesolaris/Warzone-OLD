@@ -4176,27 +4176,79 @@ void ClientSpawn(gentity_t *ent) {
 	trap->ICARUS_FreeEnt( (sharedEntity_t *)ent );
 	trap->ICARUS_InitEnt( (sharedEntity_t *)ent );
 
+	ent->padawan = NULL;
+
 	if ((g_gametype.integer == GT_WARZONE || g_gametype.integer == GT_INSTANCE) 
 		&& ent->s.primaryWeapon == WP_SABER
 		&& ent->client->sess.sessionTeam != TEAM_SPECTATOR)
 	{// Spawn a padawan for this jedi player...
-		if (!(ent->padawan && NPC_IsAlive(ent->padawan)) && NPC_NeedPadawan_Spawn())
+		if (NPC_NeedPadawan_Spawn())
 		{// Only if we do not already have a padawan...
 			gentity_t *padawan = G_Spawn();
 			int waypoint = DOM_GetNearWP(ent->r.currentOrigin, ent->wpCurrent);
 
 			if (waypoint >= 0 && waypoint < gWPNum)
 			{
-				int choice = irand(0,5);
+				int choice = irand(1,36);
 
-				if (choice <= 1)
-					padawan->NPC_type = "padawan";
-				else if (choice == 3)
-					padawan->NPC_type = "padawan2";
-				else if (choice == 4)
-					padawan->NPC_type = "padawan3";
-				else
-					padawan->NPC_type = "padawan4";
+				if (choice <= 5)
+					padawan->NPC_type = G_NewString("padawan");
+				else if (choice == 10)
+					padawan->NPC_type = G_NewString("padawan2");
+				else if (choice == 11)
+					padawan->NPC_type = G_NewString("padawan3");
+				else if (choice == 12)
+					padawan->NPC_type = G_NewString("padawan4");
+				else if (choice == 13)
+					padawan->NPC_type = G_NewString("padawan5");
+				else if (choice == 14)
+					padawan->NPC_type = G_NewString("padawan6");
+				else if (choice == 15)
+					padawan->NPC_type = G_NewString("padawan7");
+				else if (choice == 16)
+					padawan->NPC_type = G_NewString("padawan8");
+				else if (choice == 17)
+					padawan->NPC_type = G_NewString("padawan9");
+				else if (choice == 18)
+					padawan->NPC_type = G_NewString("padawan10");
+				else if (choice == 19)
+					padawan->NPC_type = G_NewString("padawan11");
+				else if (choice == 20)
+					padawan->NPC_type = G_NewString("padawan12");
+				else if (choice == 21)
+					padawan->NPC_type = G_NewString("padawan13");
+				else if (choice == 22)
+					padawan->NPC_type = G_NewString("padawan14");
+				else if (choice == 23)
+					padawan->NPC_type = G_NewString("padawan15");
+				else if (choice == 24)
+					padawan->NPC_type = G_NewString("padawan16");
+				else if (choice == 25)
+					padawan->NPC_type = G_NewString("padawan17");
+				else if (choice == 26)
+					padawan->NPC_type = G_NewString("padawan18");
+				else if (choice == 27)
+					padawan->NPC_type = G_NewString("padawan19");
+				else if (choice == 28)
+					padawan->NPC_type = G_NewString("padawan20");
+				else if (choice == 29)
+					padawan->NPC_type = G_NewString("padawan21");
+				else if (choice == 30)
+					padawan->NPC_type = G_NewString("padawan22");
+				else if (choice == 31)
+					padawan->NPC_type = G_NewString("padawan23");
+				else if (choice == 32)
+					padawan->NPC_type = G_NewString("padawan24");
+				else if (choice == 33)
+					padawan->NPC_type = G_NewString("padawan25");
+				else if (choice == 34)
+					padawan->NPC_type = G_NewString("padawan26");
+				else if (choice == 35)
+					padawan->NPC_type = G_NewString("padawan27");
+				else if (choice == 36)
+					padawan->NPC_type = G_NewString("padawan28");
+
+				trap->Print("Spawning padawan %s for player %s.\n", padawan->NPC_type, ent->client->pers.netname);
 
 				padawan->s.teamowner = ent->client->sess.sessionTeam;
 				SP_NPC_spawner2( padawan );

@@ -19,6 +19,8 @@ extern void TakeExperiance(gentity_t *ent, int amount);
 extern void TradeExperiance(gentity_t *from, gentity_t *to, int amount);
 //[/EXPsys]
 
+extern qboolean NPC_IsAlive ( gentity_t *NPC );
+
 //rww - pd
 void BotDamageNotification(gclient_t *bot, gentity_t *attacker);
 //end rww
@@ -4605,6 +4607,28 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker, vec3_
 		&& targ != attacker)
 	{// UQ1: NPCs don't take damage from other same team NPCs (unless they suicide somehow, like falling).
 		return;
+	}
+
+	if (targ
+		&& targ->s.eType == ET_PLAYER
+		&& !(targ->s.eFlags & EF_FAKE_NPC_BOT)
+		&& attacker
+		&& targ->padawan
+		&& NPC_IsAlive(targ->padawan))
+	{// A player who has a padawan just got hit... Set his enemy to the attacker so that the padawan knows who to fight...
+		targ->enemy = attacker;
+		targ->padawan->enemy = attacker;
+	}
+
+	if (attacker
+		&& attacker->s.eType == ET_PLAYER
+		&& !(attacker->s.eFlags & EF_FAKE_NPC_BOT)
+		&& targ
+		&& attacker->padawan
+		&& NPC_IsAlive(attacker->padawan))
+	{// A player who has a padawan just hit someone... Set his enemy to the attacker so that the padawan knows who to fight...
+		attacker->enemy = targ;
+		attacker->padawan->enemy = targ;
 	}
 
 	if (targ && targ->damageRedirect)

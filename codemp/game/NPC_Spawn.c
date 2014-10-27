@@ -2383,16 +2383,66 @@ void SP_NPC_spawner( gentity_t *self)
 				|| !Q_stricmpn("Kyle", self->NPC_type, 4)
 				|| !Q_stricmpn("Luke", self->NPC_type, 4)))
 			{// Spawned a jedi. Spawn a padawan for them as well...
-				int choice = irand(0,5);
+				int choice = irand(1,36);
 
-				if (choice <= 1)
-					self->NPC_type = "padawan";
-				else if (choice == 3)
-					self->NPC_type = "padawan2";
-				else if (choice == 4)
-					self->NPC_type = "padawan3";
-				else
-					self->NPC_type = "padawan4";
+				if (choice <= 5)
+					self->NPC_type = G_NewString("padawan");
+				else if (choice == 10)
+					self->NPC_type = G_NewString("padawan2");
+				else if (choice == 11)
+					self->NPC_type = G_NewString("padawan3");
+				else if (choice == 12)
+					self->NPC_type = G_NewString("padawan4");
+				else if (choice == 13)
+					self->NPC_type = G_NewString("padawan5");
+				else if (choice == 14)
+					self->NPC_type = G_NewString("padawan6");
+				else if (choice == 15)
+					self->NPC_type = G_NewString("padawan7");
+				else if (choice == 16)
+					self->NPC_type = G_NewString("padawan8");
+				else if (choice == 17)
+					self->NPC_type = G_NewString("padawan9");
+				else if (choice == 18)
+					self->NPC_type = G_NewString("padawan10");
+				else if (choice == 19)
+					self->NPC_type = G_NewString("padawan11");
+				else if (choice == 20)
+					self->NPC_type = G_NewString("padawan12");
+				else if (choice == 21)
+					self->NPC_type = G_NewString("padawan13");
+				else if (choice == 22)
+					self->NPC_type = G_NewString("padawan14");
+				else if (choice == 23)
+					self->NPC_type = G_NewString("padawan15");
+				else if (choice == 24)
+					self->NPC_type = G_NewString("padawan16");
+				else if (choice == 25)
+					self->NPC_type = G_NewString("padawan17");
+				else if (choice == 26)
+					self->NPC_type = G_NewString("padawan18");
+				else if (choice == 27)
+					self->NPC_type = G_NewString("padawan19");
+				else if (choice == 28)
+					self->NPC_type = G_NewString("padawan20");
+				else if (choice == 29)
+					self->NPC_type = G_NewString("padawan21");
+				else if (choice == 30)
+					self->NPC_type = G_NewString("padawan22");
+				else if (choice == 31)
+					self->NPC_type = G_NewString("padawan23");
+				else if (choice == 32)
+					self->NPC_type = G_NewString("padawan24");
+				else if (choice == 33)
+					self->NPC_type = G_NewString("padawan25");
+				else if (choice == 34)
+					self->NPC_type = G_NewString("padawan26");
+				else if (choice == 35)
+					self->NPC_type = G_NewString("padawan27");
+				else if (choice == 36)
+					self->NPC_type = G_NewString("padawan28");
+
+				trap->Print("Spawning padawan %s for NPC.\n", self->NPC_type);
 
 				SP_NPC_spawner2( self );
 			}

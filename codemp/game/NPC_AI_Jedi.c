@@ -4589,6 +4589,8 @@ qboolean Jedi_Jump( vec3_t dest, int goalEntNum )
 	// First type of jump...
 	//
 
+	NPCS.NPC->nextPadawanJumpThink = level.time + 5000;
+
 	if (goalEntNum != ENTITYNUM_NONE)
 	{
 		gentity_t *goal = &g_entities[goalEntNum];
