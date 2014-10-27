@@ -11,6 +11,7 @@
 
 extern void NPC_PrecacheAnimationCFG( const char *NPC_type );
 void NPC_Precache ( gentity_t *spawner );
+extern qboolean NPC_NeedPadawan_Spawn ( void );
 
 extern void G_DebugPrint( int level, const char *format, ... );
 
@@ -2376,15 +2377,22 @@ void SP_NPC_spawner( gentity_t *self)
 		self->s.origin[1] -= 16;
 		if (OrgVisibleBox(origin, playerMins, playerMaxs, self->s.origin, -1))
 		{
-			if (!Q_stricmpn("jedi", self->NPC_type, 4)
+			if (NPC_NeedPadawan_Spawn()
+				&& (!Q_stricmpn("jedi", self->NPC_type, 4)
 				|| !Q_stricmpn("Jedi", self->NPC_type, 4)
 				|| !Q_stricmpn("Kyle", self->NPC_type, 4)
-				|| !Q_stricmpn("Luke", self->NPC_type, 4))
+				|| !Q_stricmpn("Luke", self->NPC_type, 4)))
 			{// Spawned a jedi. Spawn a padawan for them as well...
-				if (irand(0,1) == 0)
+				int choice = irand(0,5);
+
+				if (choice <= 1)
 					self->NPC_type = "padawan";
-				else
+				else if (choice == 3)
 					self->NPC_type = "padawan2";
+				else if (choice == 4)
+					self->NPC_type = "padawan3";
+				else
+					self->NPC_type = "padawan4";
 
 				SP_NPC_spawner2( self );
 			}

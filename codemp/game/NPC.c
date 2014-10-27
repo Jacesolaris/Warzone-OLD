@@ -33,9 +33,11 @@ extern void NPC_BSGM_Default( void );
 extern void NPC_CheckCharmed( void );
 extern qboolean Boba_Flying( gentity_t *self );
 extern int DOM_GetNearestWP(vec3_t org, int badwp);
+extern int DOM_GetNearWP(vec3_t org, int badwp);
 extern void Jedi_Move( gentity_t *goal, qboolean retreat );
 extern void NPC_EnforceConversationRange ( gentity_t *self );
 extern qboolean NPC_CombatMoveToGoal( qboolean tryStraight, qboolean retreat );
+qboolean UQ_MoveDirClear( int forwardmove, int rightmove, qboolean reset );
 
 // Conversations...
 extern void NPC_NPCConversation();
@@ -65,6 +67,73 @@ qboolean NPC_IsAlive ( gentity_t *NPC )
 	}
 
 	return qfalse;
+}
+
+void TeleportNPC( gentity_t *player, vec3_t origin, vec3_t angles ) {
+//	gentity_t	*tent;
+	qboolean	isNPC = qfalse;
+	qboolean	noAngles;
+
+	if (player->s.eType == ET_NPC)
+	{
+		isNPC = qtrue;
+	}
+
+	noAngles = (angles[0] > 999999.0) ? qtrue : qfalse;
+
+	// use temp events at source and destination to prevent the effect
+	// from getting dropped by a second player event
+#if 0 // UQ1: We don't want fx...
+	if ( player->client->sess.sessionTeam != TEAM_SPECTATOR ) {
+		tent = G_TempEntity( player->client->ps.origin, EV_PLAYER_TELEPORT_OUT );
+		tent->s.clientNum = player->s.clientNum;
+
+		tent = G_TempEntity( origin, EV_PLAYER_TELEPORT_IN );
+		tent->s.clientNum = player->s.clientNum;
+	}
+#endif //0
+
+	// unlink to make sure it can't possibly interfere with G_KillBox
+	trap->UnlinkEntity ((sharedEntity_t *)player);
+
+	VectorCopy ( origin, player->client->ps.origin );
+	player->client->ps.origin[2] += 1;
+
+	// spit the player out
+	if ( !noAngles ) {
+		AngleVectors( angles, player->client->ps.velocity, NULL, NULL );
+		VectorScale( player->client->ps.velocity, 400, player->client->ps.velocity );
+		player->client->ps.pm_time = 160;		// hold time
+		player->client->ps.pm_flags |= PMF_TIME_KNOCKBACK;
+
+		// set angles
+		SetClientViewAngle( player, angles );
+	}
+
+	// toggle the teleport bit so the client knows to not lerp
+	player->client->ps.eFlags ^= EF_TELEPORT_BIT;
+
+#if 0 // UQ1: Nope...
+	// kill anything at the destination
+	if ( player->client->sess.sessionTeam != TEAM_SPECTATOR ) {
+		G_KillBox (player);
+	}
+#endif //0
+
+	// save results of pmove
+	BG_PlayerStateToEntityState( &player->client->ps, &player->s, qtrue );
+
+	if (isNPC)
+	{
+		player->s.eType = ET_NPC;
+	}
+
+	// use the precise origin for linking
+	VectorCopy( player->client->ps.origin, player->r.currentOrigin );
+
+	if ( player->client->sess.sessionTeam != TEAM_SPECTATOR ) {
+		trap->LinkEntity ((sharedEntity_t *)player);
+	}
 }
 
 void CorpsePhysics( gentity_t *self )
@@ -868,6 +937,13 @@ void NPC_HandleAIFlags (void)
 void NPC_AvoidWallsAndCliffs (void)
 {
 	//...
+	if (NPCS.NPC->s.groundEntityNum != ENTITYNUM_NONE
+		&& !UQ_MoveDirClear( NPCS.ucmd.forwardmove, NPCS.ucmd.rightmove, qfalse ))
+	{// Moving here would fall... Never do it!
+		NPCS.ucmd.forwardmove = 0;
+		NPCS.ucmd.rightmove = 0;
+		NPCS.ucmd.upmove = 0;
+	}
 }
 
 void NPC_CheckAttackScript(void)
@@ -4329,8 +4405,7 @@ int NPC_FindGoal( gentity_t *NPC )
 
 int NPC_FindPadawanGoal( gentity_t *NPC )
 {
-	int waypoint = -1;
-	waypoint = DOM_GetNearestWP(NPC->parent->r.currentOrigin, NPC->parent->wpCurrent);;
+	int waypoint = DOM_GetNearWP(NPC->parent->r.currentOrigin, NPC->parent->wpCurrent);
 	return waypoint;
 }
 
@@ -4786,12 +4861,16 @@ qboolean NPC_FollowRoutes( void )
 
 				if (UQ1_UcmdMoveForDir( NPC, &NPCS.ucmd, NPC->movedir, walk, NPC->parent->r.currentOrigin )) 
 				{// Looks like we can move there...
+					//trap->Print("dist > 96 && dist < 512 OK!\n");
 					return qtrue;
 				}
 				else if (Jedi_Jump( NPC->parent->r.currentOrigin, NPC->parent->s.number ))
 				{// Backup... Can we jump there???
+					//trap->Print("dist > 96 && dist < 512 JUMP!\n");
 					return qtrue;
 				}
+
+				//trap->Print("dist > 96 && dist < 512 FAIL!\n");
 			}
 			else if (dist < 32)
 			{// If clear then move back a bit...
@@ -4800,10 +4879,49 @@ qboolean NPC_FollowRoutes( void )
 
 				if (UQ1_UcmdMoveForDir( NPC, &NPCS.ucmd, NPC->movedir, qtrue, NPC->parent->r.currentOrigin )) 
 				{// Looks like we can move there...
+					//trap->Print("dist < 32 OK!\n");
+					return qtrue;
+				}
+				else
+				{// Stay idle...
+					NPC_ClearPathData(NPC);
+					ucmd.forwardmove = 0;
+					ucmd.rightmove = 0;
+					ucmd.upmove = 0;
+					NPC_PickRandomIdleAnimantion(NPC);
+					//trap->Print("dist < 32 IDLE!\n");
+					return qtrue;
+				}
+			}
+			else if (dist <= 96)
+			{// Perfect distance... Stay idle...
+				NPC_ClearPathData(NPC);
+				ucmd.forwardmove = 0;
+				ucmd.rightmove = 0;
+				ucmd.upmove = 0;
+				NPC_PickRandomIdleAnimantion(NPC);
+				//trap->Print("dist <= 96 IDLE!\n");
+				return qtrue;
+			}
+			else if (NPC->parent->s.groundEntityNum != ENTITYNUM_NONE) // UQ1: Let's just skip pathfinding completely...
+			{// Padawan is too far from jedi. Teleport to him... Only if they are not in mid air...
+				int waypoint = DOM_GetNearWP(NPC->parent->r.currentOrigin, NPC->parent->wpCurrent);
+
+				if (waypoint >= 0 && waypoint < gWPNum)
+				{
+					TeleportNPC( NPC, gWPArray[waypoint]->origin, NPC->s.angles );
+
+					NPC_ClearPathData(NPC);
+					ucmd.forwardmove = 0;
+					ucmd.rightmove = 0;
+					ucmd.upmove = 0;
+					NPC_PickRandomIdleAnimantion(NPC);
 					return qtrue;
 				}
 			}
 		}
+
+		//trap->Print("Too far???\n");
 	}
 
 	G_ClearEnemy(NPC);
@@ -4888,7 +5006,7 @@ qboolean NPC_FollowRoutes( void )
 		//if (NPC->wpTravelTime < level.time) trap->Print("wpTravelTime.\n");
 		//if (NPC->last_move_time < level.time - 5000) trap->Print("last_move_time.\n");
 
-		if (wpDist > 512 || NPC->wpTravelTime < level.time )
+		if (!padawanPath && (wpDist > 512 || NPC->wpTravelTime < level.time) )
 		{
 			NPC_RoutingIncreaseCost( NPC->wpLast, NPC->wpCurrent );
 		}
@@ -5531,7 +5649,9 @@ void NPC_GenericFrameCode ( gentity_t *self )
 	// run the bot through the server like it was a real client
 	//=== Save the ucmd for the second no-think Pmove ============================
 	NPCS.ucmd.serverTime = level.time - 50;
+
 	memcpy( &NPCS.NPCInfo->last_ucmd, &NPCS.ucmd, sizeof( usercmd_t ) );
+
 	if ( !NPCS.NPCInfo->attackHoldTime )
 	{
 		NPCS.NPCInfo->last_ucmd.buttons &= ~(BUTTON_ATTACK|BUTTON_ALT_ATTACK);//so we don't fire twice in one think
@@ -5563,6 +5683,43 @@ void NPC_GenericFrameCode ( gentity_t *self )
 	NPC_CheckAllClear();
 }
 
+qboolean NPC_NeedPadawan_Spawn ( void )
+{// UQ1: Because I don't want to end up with a map full of padawans without a jedi...
+	int i;
+	int padawan_count = 0;
+	int jedi_count = 0;
+
+#pragma omp parallel for
+	for (i = 0; i < MAX_GENTITIES; i++)
+	{// Find the closest jedi to follow...
+		gentity_t *parent2 = &g_entities[i];
+
+		if ( parent2
+			&& NPC_IsAlive(parent2)
+			&& parent2->client->sess.sessionTeam == TEAM_BLUE
+			&& (parent2->client->NPC_class == CLASS_JEDI || parent2->client->NPC_class == CLASS_LUKE || parent2->client->NPC_class == CLASS_KYLE || parent2->client->NPC_class == CLASS_JAN || parent2->s.eType == ET_PLAYER))
+		{// This is a jedi on our team...
+#pragma omp atomic
+			jedi_count++;
+		}
+		else if ( parent2
+			&& NPC_IsAlive(parent2)
+			&& parent2->client->sess.sessionTeam == TEAM_BLUE
+			&& parent2->client->NPC_class == CLASS_PADAWAN)
+		{// This is a jedi on our team...
+#pragma omp atomic
+			padawan_count++;
+		}
+	}
+
+	if (jedi_count >= padawan_count)
+	{// If we have equal to or more jedi then padawans, then we need a new padawan...
+		return qtrue;
+	}
+
+	return qfalse;
+}
+
 void NPC_DoPadawanStuff ( void )
 {
 	int			i = 0;
@@ -5571,8 +5728,8 @@ void NPC_DoPadawanStuff ( void )
 	int			best_parent_dist = 99999;
 	gentity_t	*best_parent = NULL;
 
-	if (g_gametype.integer < GT_TEAM)
-	{// not in non-team games...
+	if (!(g_gametype.integer == GT_WARZONE || g_gametype.integer == GT_INSTANCE) )
+	{// not in other gametypes...
 		return;
 	}
 
@@ -5606,39 +5763,51 @@ void NPC_DoPadawanStuff ( void )
 			}
 		}
 
-		if (parent->client->ps.saberHolstered > 0)
-		{// Copy our master's saber holster setting...
-			if (me->client->ps.saberHolstered != 2)
-			{
-				me->client->ps.saberHolstered = 2;
+		if (!(me->enemy && NPC_IsAlive(me->enemy)))
+		{
+			if (parent->client->ps.saberHolstered > 0)
+			{// Copy our master's saber holster setting...
+				if (me->client->ps.saberHolstered != 2)
+				{
+					me->client->ps.saberHolstered = 2;
 
-				if (me->client->saber[0].soundOff)
-				{
-					G_Sound(me, CHAN_AUTO, me->client->saber[0].soundOff);
+					if (me->client->saber[0].soundOff)
+					{
+						G_Sound(me, CHAN_AUTO, me->client->saber[0].soundOff);
+					}
+					if (me->client->saber[1].soundOff &&
+						me->client->saber[1].model[0])
+					{
+						G_Sound(me, CHAN_AUTO, me->client->saber[1].soundOff);
+					}
 				}
-				if (me->client->saber[1].soundOff &&
-					me->client->saber[1].model[0])
+			}
+			else
+			{// Copy our master's saber holster setting...
+				if (me->client->ps.saberHolstered != 0)
 				{
-					G_Sound(me, CHAN_AUTO, me->client->saber[1].soundOff);
+					me->client->ps.saberHolstered = 0;
+
+					if (me->client->saber[0].soundOn)
+					{
+						G_Sound(me, CHAN_AUTO, me->client->saber[0].soundOn);
+					}
+					if (me->client->saber[1].soundOn &&
+						me->client->saber[1].model[0])
+					{
+						G_Sound(me, CHAN_AUTO, me->client->saber[1].soundOn);
+					}
 				}
 			}
 		}
-		else
-		{// Copy our master's saber holster setting...
-			if (me->client->ps.saberHolstered != 0)
-			{
-				me->client->ps.saberHolstered = 0;
 
-				if (me->client->saber[0].soundOn)
-				{
-					G_Sound(me, CHAN_AUTO, me->client->saber[0].soundOn);
-				}
-				if (me->client->saber[1].soundOn &&
-					me->client->saber[1].model[0])
-				{
-					G_Sound(me, CHAN_AUTO, me->client->saber[1].soundOn);
-				}
-			}
+		if ((Distance(me->r.currentOrigin, parent->r.currentOrigin) > 1024 || DistanceVertical(me->r.currentOrigin, parent->r.currentOrigin) > 512)
+			&& parent->s.groundEntityNum != ENTITYNUM_NONE)
+		{// Padawan is too far from jedi. Teleport to him... Only if they are not in mid air...
+			int waypoint = DOM_GetNearWP(parent->r.currentOrigin, parent->wpCurrent);
+
+			if (waypoint >= 0 && waypoint < gWPNum)
+				TeleportNPC( me, gWPArray[waypoint]->origin, me->s.angles );
 		}
 
 		return; // Already have a master to follow...
@@ -5710,39 +5879,51 @@ void NPC_DoPadawanStuff ( void )
 			}
 		}
 
-		if (parent->client->ps.saberHolstered > 0)
-		{// Copy our master's saber holster setting...
-			if (me->client->ps.saberHolstered != 2)
-			{
-				me->client->ps.saberHolstered = 2;
+		if (!(me->enemy && NPC_IsAlive(me->enemy)))
+		{
+			if (parent->client->ps.saberHolstered > 0)
+			{// Copy our master's saber holster setting...
+				if (me->client->ps.saberHolstered != 2)
+				{
+					me->client->ps.saberHolstered = 2;
 
-				if (me->client->saber[0].soundOff)
-				{
-					G_Sound(me, CHAN_AUTO, me->client->saber[0].soundOff);
+					if (me->client->saber[0].soundOff)
+					{
+						G_Sound(me, CHAN_AUTO, me->client->saber[0].soundOff);
+					}
+					if (me->client->saber[1].soundOff &&
+						me->client->saber[1].model[0])
+					{
+						G_Sound(me, CHAN_AUTO, me->client->saber[1].soundOff);
+					}
 				}
-				if (me->client->saber[1].soundOff &&
-					me->client->saber[1].model[0])
+			}
+			else
+			{// Copy our master's saber holster setting...
+				if (me->client->ps.saberHolstered != 0)
 				{
-					G_Sound(me, CHAN_AUTO, me->client->saber[1].soundOff);
+					me->client->ps.saberHolstered = 0;
+
+					if (me->client->saber[0].soundOn)
+					{
+						G_Sound(me, CHAN_AUTO, me->client->saber[0].soundOn);
+					}
+					if (me->client->saber[1].soundOn &&
+						me->client->saber[1].model[0])
+					{
+						G_Sound(me, CHAN_AUTO, me->client->saber[1].soundOn);
+					}
 				}
 			}
 		}
-		else
-		{// Copy our master's saber holster setting...
-			if (me->client->ps.saberHolstered != 0)
-			{
-				me->client->ps.saberHolstered = 0;
 
-				if (me->client->saber[0].soundOn)
-				{
-					G_Sound(me, CHAN_AUTO, me->client->saber[0].soundOn);
-				}
-				if (me->client->saber[1].soundOn &&
-					me->client->saber[1].model[0])
-				{
-					G_Sound(me, CHAN_AUTO, me->client->saber[1].soundOn);
-				}
-			}
+		if ((Distance(me->r.currentOrigin, parent->r.currentOrigin) > 1024 || DistanceVertical(me->r.currentOrigin, parent->r.currentOrigin) > 512)
+			&& parent->s.groundEntityNum != ENTITYNUM_NONE)
+		{// Padawan is too far from jedi. Teleport to him... Only if they are not in mid air...
+			int waypoint = DOM_GetNearWP(parent->r.currentOrigin, parent->wpCurrent);
+
+			if (waypoint >= 0 && waypoint < gWPNum)
+				TeleportNPC( me, gWPArray[waypoint]->origin, me->s.angles );
 		}
 	}
 	else

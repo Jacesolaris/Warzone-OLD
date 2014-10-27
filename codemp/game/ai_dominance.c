@@ -510,6 +510,62 @@ int DOM_GetNearestWP(vec3_t org, int badwp)
 	return bestindex;
 }
 
+//just like GetNearestVisibleWP except without visiblity checks
+int DOM_GetNearWP(vec3_t org, int badwp)
+{
+	int i;
+	float bestdist;
+	float flLen;
+	int bestindex;
+	vec3_t a;
+
+	i = 0;
+	/*if (RMG.integer)
+	{
+		bestdist = 300;
+	}
+	else*/
+	{
+		//We're not doing traces!
+		bestdist = 99999;
+	}
+	bestindex = -1;
+
+#pragma omp parallel for ordered schedule(dynamic) num_threads(32)
+	for (i = 0; i < gWPNum; i++)
+	{
+		if (gWPArray[i] && gWPArray[i]->inuse && i != badwp)
+		{
+			VectorSubtract(org, gWPArray[i]->origin, a);
+			flLen = VectorLength(a);
+
+			if (gWPArray[i]->flags & WPFLAG_WAITFORFUNC
+				|| (gWPArray[i]->flags & WPFLAG_NOMOVEFUNC)/*
+														   || (gWPArray[i]->flags & WPFLAG_DESTROY_FUNCBREAK)
+														   || (gWPArray[i]->flags & WPFLAG_FORCEPUSH)
+														   || (gWPArray[i]->flags & WPFLAG_FORCEPULL)*/)
+			{//boost the distance for these waypoints so that we will try to avoid using them
+				//if at all possible
+				flLen = flLen + 500;
+			}
+
+			if (flLen < bestdist && flLen >= 64)
+			{
+#pragma omp critical (__ADD_BEST_WP__)
+				{
+					if (flLen < bestdist)
+					{
+						bestdist = flLen;
+						bestindex = i;
+					}
+				}
+			}
+		}
+	}
+
+	return bestindex;
+}
+
 int DOM_GetNearestVisibleWP_Goal(vec3_t org, int ignore, int badwp)
 {
 	int i;

@@ -4,7 +4,12 @@
 #include "ghoul2/G2.h"
 #include "bg_saga.h"
 //#include "bg_class.h"
+#include "ai_dominance_main.h"
 
+extern int DOM_GetNearWP(vec3_t org, int badwp);
+extern void SP_NPC_spawner2( gentity_t *self);
+extern qboolean NPC_IsAlive ( gentity_t *NPC );
+extern qboolean NPC_NeedPadawan_Spawn ( void );
 
 // g_client.c -- client functions that don't happen every frame
 
@@ -4170,6 +4175,34 @@ void ClientSpawn(gentity_t *ent) {
 	//rww - make sure client has a valid icarus instance
 	trap->ICARUS_FreeEnt( (sharedEntity_t *)ent );
 	trap->ICARUS_InitEnt( (sharedEntity_t *)ent );
+
+	if ((g_gametype.integer == GT_WARZONE || g_gametype.integer == GT_INSTANCE) 
+		&& ent->s.primaryWeapon == WP_SABER
+		&& ent->client->sess.sessionTeam != TEAM_SPECTATOR)
+	{// Spawn a padawan for this jedi player...
+		if (!(ent->padawan && NPC_IsAlive(ent->padawan)) && NPC_NeedPadawan_Spawn())
+		{// Only if we do not already have a padawan...
+			gentity_t *padawan = G_Spawn();
+			int waypoint = DOM_GetNearWP(ent->r.currentOrigin, ent->wpCurrent);
+
+			if (waypoint >= 0 && waypoint < gWPNum)
+			{
+				int choice = irand(0,5);
+
+				if (choice <= 1)
+					padawan->NPC_type = "padawan";
+				else if (choice == 3)
+					padawan->NPC_type = "padawan2";
+				else if (choice == 4)
+					padawan->NPC_type = "padawan3";
+				else
+					padawan->NPC_type = "padawan4";
+
+				padawan->s.teamowner = ent->client->sess.sessionTeam;
+				SP_NPC_spawner2( padawan );
+			}
+		}
+	}
 }
 
 

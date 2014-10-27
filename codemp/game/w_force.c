@@ -1192,7 +1192,7 @@ void ForceTeamHeal( gentity_t *self )
 		radius *= 2;
 	}
 
-	while (i < MAX_CLIENTS)
+	while (i < MAX_GENTITIES)
 	{
 		ent = &g_entities[i];
 
