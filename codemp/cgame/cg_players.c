@@ -14110,11 +14110,16 @@ void CG_Player( centity_t *cent ) {
 		return;
 	}
 
+	team = ci->team;
+
+	if (cent->currentState.eType == ET_NPC)
+		team = cent->currentState.teamowner;
+
 	// Add the player to the radar if on the same team and its a team game
 	if (cgs.gametype >= GT_TEAM)
 	{
 		if ( ((cent->currentState.eType == ET_NPC && cent->currentState.NPC_class != CLASS_VEHICLE) || cg.snap->ps.clientNum != cent->currentState.number)
-			&& ci->team == cg.snap->ps.persistant[PERS_TEAM] ) // UQ1: I want to show NPCs as well...
+			&& team == cg.snap->ps.persistant[PERS_TEAM] ) // UQ1: I want to show NPCs as well...
 		{
 			CG_AddRadarEnt(cent);
 		}

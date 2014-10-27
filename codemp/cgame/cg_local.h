@@ -1085,10 +1085,10 @@ Ghoul2 Insert End
 	} sharedBuffer;
 
 	short				radarEntityCount;
-	short				radarEntities[MAX_CLIENTS+16];
+	short				radarEntities[MAX_GENTITIES+16];
 
 	short				bracketedEntityCount;
-	short				bracketedEntities[MAX_CLIENTS+16];
+	short				bracketedEntities[MAX_GENTITIES+16];
 
 	float				distanceCull;
 

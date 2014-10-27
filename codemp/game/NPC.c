@@ -5606,6 +5606,41 @@ void NPC_DoPadawanStuff ( void )
 			}
 		}
 
+		if (parent->client->ps.saberHolstered > 0)
+		{// Copy our master's saber holster setting...
+			if (me->client->ps.saberHolstered != 2)
+			{
+				me->client->ps.saberHolstered = 2;
+
+				if (me->client->saber[0].soundOff)
+				{
+					G_Sound(me, CHAN_AUTO, me->client->saber[0].soundOff);
+				}
+				if (me->client->saber[1].soundOff &&
+					me->client->saber[1].model[0])
+				{
+					G_Sound(me, CHAN_AUTO, me->client->saber[1].soundOff);
+				}
+			}
+		}
+		else
+		{// Copy our master's saber holster setting...
+			if (me->client->ps.saberHolstered != 0)
+			{
+				me->client->ps.saberHolstered = 0;
+
+				if (me->client->saber[0].soundOn)
+				{
+					G_Sound(me, CHAN_AUTO, me->client->saber[0].soundOn);
+				}
+				if (me->client->saber[1].soundOn &&
+					me->client->saber[1].model[0])
+				{
+					G_Sound(me, CHAN_AUTO, me->client->saber[1].soundOn);
+				}
+			}
+		}
+
 		return; // Already have a master to follow...
 	}
 
@@ -5672,6 +5707,41 @@ void NPC_DoPadawanStuff ( void )
 			if (me->enemy && NPC_IsAlive(me->enemy))
 			{// Jedi assists padawan... No range limit on jedi helping the padawan...
 				parent->enemy = me->enemy;
+			}
+		}
+
+		if (parent->client->ps.saberHolstered > 0)
+		{// Copy our master's saber holster setting...
+			if (me->client->ps.saberHolstered != 2)
+			{
+				me->client->ps.saberHolstered = 2;
+
+				if (me->client->saber[0].soundOff)
+				{
+					G_Sound(me, CHAN_AUTO, me->client->saber[0].soundOff);
+				}
+				if (me->client->saber[1].soundOff &&
+					me->client->saber[1].model[0])
+				{
+					G_Sound(me, CHAN_AUTO, me->client->saber[1].soundOff);
+				}
+			}
+		}
+		else
+		{// Copy our master's saber holster setting...
+			if (me->client->ps.saberHolstered != 0)
+			{
+				me->client->ps.saberHolstered = 0;
+
+				if (me->client->saber[0].soundOn)
+				{
+					G_Sound(me, CHAN_AUTO, me->client->saber[0].soundOn);
+				}
+				if (me->client->saber[1].soundOn &&
+					me->client->saber[1].model[0])
+				{
+					G_Sound(me, CHAN_AUTO, me->client->saber[1].soundOn);
+				}
 			}
 		}
 	}
