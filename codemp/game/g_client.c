@@ -2364,6 +2364,7 @@ qboolean ClientUserinfoChanged( int clientNum ) {
 
 	Q_strncpyz( forcePowers, Info_ValueForKey( userinfo, "forcepowers" ), sizeof( forcePowers ) );
 
+#ifdef __FORCED_TEAM_COLORS__
 	// update our customRGBA for team colors.
 	if ( level.gametype >= GT_TEAM && level.gametype != GT_SIEGE && !g_jediVmerc.integer ) {
 		char skin[MAX_QPATH] = {0};
@@ -2375,6 +2376,7 @@ qboolean ClientUserinfoChanged( int clientNum ) {
 		if ( colorOverride[0] != 0.0f || colorOverride[1] != 0.0f || colorOverride[2] != 0.0f )
 			VectorScaleM( colorOverride, 255.0f, client->ps.customRGBA );
 	}
+#endif //__FORCED_TEAM_COLORS__
 
 	// bots set their team a few frames later
 	if ( level.gametype >= GT_TEAM && g_entities[clientNum].r.svFlags & SVF_BOT ) {

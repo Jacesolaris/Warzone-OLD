@@ -496,12 +496,14 @@ retryModel:
 		skinName = "default";
 	}
 
+//#ifdef __FORCED_TEAM_COLORS__
 	if ( cgs.gametype >= GT_TEAM && !cgs.jediVmerc && cgs.gametype != GT_SIEGE )
 	{ //We won't force colors for siege.
 		BG_ValidateSkinForTeam( ci->modelName, ci->skinName, ci->team, ci->colorOverride );
 		skinName = ci->skinName;
 	}
 	else
+//#endif //__FORCED_TEAM_COLORS__
 	{
 		ci->colorOverride[0] = ci->colorOverride[1] = ci->colorOverride[2] = 0.0f;
 	}
@@ -1851,7 +1853,7 @@ void CG_NewClientInfo( int clientNum, qboolean entitiesInitialized ) {
 		Q_strncpyz( newInfo.skinName, skin, sizeof( newInfo.skinName ) );
 		Q_strncpyz( newInfo.modelName, modelStr, sizeof( newInfo.modelName ) );
 
-#if 0 // UQ1: No team skin colors will be enforced. We have name tags instead...
+#ifdef __FORCED_TEAM_COLORS__ // UQ1: No team skin colors will be enforced. We have name tags instead...
 		if ( cgs.gametype >= GT_TEAM ) {
 			// keep skin name
 			slash = strchr( v, '/' );
@@ -1859,7 +1861,7 @@ void CG_NewClientInfo( int clientNum, qboolean entitiesInitialized ) {
 				Q_strncpyz( newInfo.skinName, slash + 1, sizeof( newInfo.skinName ) );
 			}
 		}
-#endif //0
+#endif //__FORCED_TEAM_COLORS__
 	} else {
 		Q_strncpyz( newInfo.modelName, v, sizeof( newInfo.modelName ) );
 
@@ -2062,11 +2064,13 @@ void CG_NewClientInfo( int clientNum, qboolean entitiesInitialized ) {
 	v = Info_ValueForKey( configstring, "forcepowers" );
 	Q_strncpyz( newInfo.forcePowers, v, sizeof( newInfo.forcePowers ) );
 
+//#ifdef __FORCED_TEAM_COLORS__
 	if (cgs.gametype >= GT_TEAM	&& !cgs.jediVmerc && cgs.gametype != GT_SIEGE )
 	{ //We won't force colors for siege.
 		BG_ValidateSkinForTeam( newInfo.modelName, newInfo.skinName, newInfo.team, newInfo.colorOverride );
 	}
 	else
+//#endif //__FORCED_TEAM_COLORS__
 	{
 		newInfo.colorOverride[0] = newInfo.colorOverride[1] = newInfo.colorOverride[2] = 0.0f;
 	}
@@ -9819,6 +9823,7 @@ void CG_AddSaberBlade(centity_t *cent, centity_t *scent, refEntity_t *saber, int
 		}
 	}
 
+#ifdef __FORCED_TEAM_COLORS__
 	//[RGBSabers]
 	if (((ojp_teamrgbsabers.integer < 1)
 		|| (ojp_teamrgbsabers.integer == 1 && cg.snap && cg.snap->ps.clientNum != cent->currentState.number)) &&
@@ -9843,6 +9848,7 @@ void CG_AddSaberBlade(centity_t *cent, centity_t *scent, refEntity_t *saber, int
 			scolor = SABER_BLUE;
 		}
 	}
+#endif //__FORCED_TEAM_COLORS__
 
 	if (!cg_saberContact.integer)
 	{ //if we don't have saber contact enabled, just add the blade and don't care what it's touching
@@ -14107,14 +14113,13 @@ void CG_Player( centity_t *cent ) {
 	// Add the player to the radar if on the same team and its a team game
 	if (cgs.gametype >= GT_TEAM)
 	{
-		if ( cent->currentState.eType != ET_NPC &&
-			cg.snap->ps.clientNum != cent->currentState.number &&
-			ci->team == cg.snap->ps.persistant[PERS_TEAM] )
+		if ( ((cent->currentState.eType == ET_NPC && cent->currentState.NPC_class != CLASS_VEHICLE) || cg.snap->ps.clientNum != cent->currentState.number)
+			&& ci->team == cg.snap->ps.persistant[PERS_TEAM] ) // UQ1: I want to show NPCs as well...
 		{
 			CG_AddRadarEnt(cent);
 		}
 	}
-
+	
 	if (cent->currentState.eType == ET_NPC &&
 		cent->currentState.NPC_class == CLASS_VEHICLE)
 	{ //add vehicles
@@ -16673,6 +16678,7 @@ stillDoSaber:
 				legs.shaderRGBA[2] = 50;
 			}
 		}
+//#ifdef __FORCED_TEAM_COLORS__
 		else if (cgs.gametype >= GT_TEAM)
 		{	// A team game
 			switch(ci->team)
@@ -16695,6 +16701,7 @@ stillDoSaber:
 				break;
 			}
 		}
+//#endif //__FORCED_TEAM_COLORS__
 		else
 		{	// Not a team game
 			legs.shaderRGBA[0] = 255;

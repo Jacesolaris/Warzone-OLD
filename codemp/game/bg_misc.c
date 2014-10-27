@@ -2915,6 +2915,7 @@ qboolean BG_IsValidCharacterModel(const char *modelName, const char *skinName)
 
 qboolean BG_ValidateSkinForTeam( const char *modelName, char *skinName, int team, float *colors )
 {
+#ifdef __FORCED_TEAM_COLORS__
 	if (strlen (modelName) > 5 && Q_stricmpn (modelName, "jedi_", 5) == 0)
 	{ //argh, it's a custom player skin!
 		if (team == TEAM_RED && colors)
@@ -3021,6 +3022,8 @@ qboolean BG_ValidateSkinForTeam( const char *modelName, char *skinName, int team
 			}
 		}
 	}
+#endif //__FORCED_TEAM_COLORS__
+
 	return qtrue;
 }
 
