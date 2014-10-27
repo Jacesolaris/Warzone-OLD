@@ -495,7 +495,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->missileSound = NULL_SOUND;
 		weaponInfo->missileDlight = 0;
 		weaponInfo->missileHitSound = NULL_SOUND;
-		weaponInfo->missileTrailFunc = FX_FlechetteProjectileThink;
+		weaponInfo->missileTrailFunc = FX_T21ProjectileThink;
 		weaponInfo->missileRenderfx = NULL_FX;
 		weaponInfo->altMissileRenderfx = NULL_FX;
 		weaponInfo->powerupShotRenderfx = NULL_FX;
@@ -507,7 +507,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altMissileSound = NULL_SOUND;
 		weaponInfo->altMissileDlight = 0;
 		weaponInfo->altMissileHitSound = NULL_SOUND;
-		weaponInfo->altMissileTrailFunc = FX_FlechetteAltProjectileThink;
+		weaponInfo->altMissileTrailFunc = FX_T21ProjectileThink;
 		weaponInfo->shotEffectFx = trap->FX_RegisterEffect("T-21/shot");
 		break;
 		
