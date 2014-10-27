@@ -410,7 +410,7 @@ void NPC_SetMiscDefaultData( gentity_t *ent )
 	{
 	case NPCTEAM_PLAYER:
 		//ent->flags |= FL_NO_KNOCKBACK;
-		if ( ent->client->NPC_class == CLASS_JEDI || ent->client->NPC_class == CLASS_LUKE )
+		if ( ent->client->NPC_class == CLASS_JEDI || ent->client->NPC_class == CLASS_LUKE || ent->client->NPC_class == CLASS_PADAWAN )
 		{//good jedi
 			ent->client->enemyTeam = NPCTEAM_ENEMY;
 			if ( ent->spawnflags & JSF_AMBUSH )
@@ -1036,7 +1036,8 @@ void NPC_Begin (gentity_t *ent)
 			&& ent->client->NPC_class != CLASS_SHADOWTROOPER
 			//&& ent->client->NPC_class != CLASS_TAVION
 			//&& ent->client->NPC_class != CLASS_DESANN
-			&& ent->client->NPC_class != CLASS_JEDI )
+			&& ent->client->NPC_class != CLASS_JEDI
+			&& ent->client->NPC_class != CLASS_PADAWAN )
 		{// up everyone except jedi
 			ent->NPC->stats.health += ent->NPC->stats.health/4 * g_npcspskill.integer; // 100% on easy, 125% on medium, 150% on hard
 		}
@@ -2375,7 +2376,21 @@ void SP_NPC_spawner( gentity_t *self)
 		self->s.origin[1] -= 16;
 		if (OrgVisibleBox(origin, playerMins, playerMaxs, self->s.origin, -1))
 		{
-			SP_NPC_spawner2( self );
+			if (!Q_stricmpn("jedi", self->NPC_type, 4)
+				|| !Q_stricmpn("Jedi", self->NPC_type, 4)
+				|| !Q_stricmpn("Kyle", self->NPC_type, 4)
+				|| !Q_stricmpn("Luke", self->NPC_type, 4))
+			{// Spawned a jedi. Spawn a padawan for them as well...
+				if (irand(0,1) == 0)
+					self->NPC_type = "padawan";
+				else
+					self->NPC_type = "padawan2";
+
+				SP_NPC_spawner2( self );
+			}
+			else
+				SP_NPC_spawner2( self );
+
 			VectorCopy(origin, self->s.origin);
 		}
 

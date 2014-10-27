@@ -3,6 +3,7 @@
 #include "b_local.h"
 #include "icarus/Q3_Interface.h"
 #include "ghoul2/G2.h"
+#include "ai_dominance_main.h"
 
 int	teamNumbers[TEAM_NUM_TEAMS];
 int	teamStrength[TEAM_NUM_TEAMS];
@@ -1087,10 +1088,20 @@ qboolean NPC_ClearLOS2( gentity_t *ent, const vec3_t end )
 NPC_ValidEnemy
 -------------------------
 */
+extern qboolean NPC_IsAlive ( gentity_t *NPC );
 
 qboolean NPC_ValidEnemy( gentity_t *ent )
 {
 	int entTeam = TEAM_FREE;
+
+	if (NPCS.NPC && NPCS.NPC->client && NPCS.NPC->isPadawan)
+	{
+		if (NPCS.NPC->parent && NPC_IsAlive(NPCS.NPC->parent))
+		{// They just copy their master's enemy instead...
+			NPCS.NPC->enemy = NPCS.NPC->parent->enemy;
+			return qfalse;
+		}
+	}
 
 	if ( ent == NULL )
 	{//Must be a valid pointer
@@ -1166,6 +1177,8 @@ qboolean NPC_ValidEnemy( gentity_t *ent )
 	if ( ent->s.weapon == WP_SABER 
 		&& ent->enemy 
 		&& ent->enemy != NPCS.NPC 
+		&& ent->enemy != NPCS.NPC->parent // padawans will assist their jedi... 
+		&& ent->enemy != NPCS.NPC->padawan // jedi will assist their padawans... 
 		&& ent->enemy->s.weapon == WP_SABER
 		&& ent->enemy->enemy == ent )
 	{// If their current weapon is saber (and is not me), and their enemy's current weapon is as well (and they are dueling), then let them duel...

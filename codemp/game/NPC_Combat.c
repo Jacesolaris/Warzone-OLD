@@ -197,6 +197,7 @@ void G_AttackDelay( gentity_t *self, gentity_t *enemy )
 		case CLASS_WEEQUAY:
 			break;
 		case CLASS_JEDI:
+		case CLASS_PADAWAN:
 		case CLASS_SHADOWTROOPER:
 		case CLASS_TAVION:
 		case CLASS_REBORN:

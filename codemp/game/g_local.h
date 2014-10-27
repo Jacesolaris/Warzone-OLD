@@ -475,6 +475,9 @@ struct gentity_s {
 	vec3_t					npc_jump_start;
 	vec3_t					npc_jump_dest;
 
+	qboolean				isPadawan;
+	gentity_t				*padawan;
+
 	int                     next_weapon_switch;
 	int                     next_rifle_butt_time;
 	int                     next_flamer_time;

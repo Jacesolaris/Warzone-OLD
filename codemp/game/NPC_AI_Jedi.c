@@ -1096,9 +1096,9 @@ static qboolean Jedi_BattleTaunt( void )
 	{
 		int event = -1;
 		if ( NPCS.NPC->client->playerTeam == NPCTEAM_PLAYER
-			&& NPCS.NPC->enemy && NPCS.NPC->enemy->client && NPCS.NPC->enemy->client->NPC_class == CLASS_JEDI )
+			&& NPCS.NPC->enemy && NPCS.NPC->enemy->client && (NPCS.NPC->enemy->client->NPC_class == CLASS_JEDI || NPCS.NPC->enemy->client->NPC_class == CLASS_PADAWAN) )
 		{//a jedi fighting a jedi - training
-			if ( NPCS.NPC->client->NPC_class == CLASS_JEDI && NPCS.NPCInfo->rank == RANK_COMMANDER )
+			if ( (NPCS.NPC->client->NPC_class == CLASS_JEDI || NPCS.NPC->client->NPC_class == CLASS_PADAWAN) && NPCS.NPCInfo->rank == RANK_COMMANDER )
 			{//only trainer taunts
 				event = EV_TAUNT1;
 			}
@@ -1113,7 +1113,10 @@ static qboolean Jedi_BattleTaunt( void )
 			jediSpeechDebounceTime[NPCS.NPC->client->playerTeam] = NPCS.NPCInfo->blockedSpeechDebounceTime = level.time + 10000;
 			TIMER_Set( NPCS.NPC, "chatter", Q_irand( 10000, 15000 ) );
 
-			if ( NPCS.NPC->enemy && NPCS.NPC->enemy->NPC && NPCS.NPC->enemy->s.weapon == WP_SABER && NPCS.NPC->enemy->client && NPCS.NPC->enemy->client->NPC_class == CLASS_JEDI )
+			if ( NPCS.NPC->enemy && NPCS.NPC->enemy->NPC 
+				&& NPCS.NPC->enemy->s.weapon == WP_SABER 
+				&& NPCS.NPC->enemy->client 
+				&& (NPCS.NPC->enemy->client->NPC_class == CLASS_JEDI || NPCS.NPC->enemy->client->NPC_class == CLASS_PADAWAN) )
 			{//Have the enemy jedi say something in response when I'm done?
 			}
 			return qtrue;
@@ -1601,6 +1604,29 @@ static void Jedi_CombatDistance( int enemy_dist )
 		TIMER_Set( NPCS.NPC, "attackDelay", Q_irand( 0, 1000 ) );
 	}
 
+	// UQ1: Special heals/protects/absorbs - mainly for padawans...
+	if ( (NPCS.NPC->client->ps.fd.forcePowersKnown&(1<<FP_HEAL)) != 0
+		&& (NPCS.NPC->client->ps.fd.forcePowersActive&(1<<FP_HEAL)) == 0
+		&& (NPCS.NPC->s.NPC_class == CLASS_PADAWAN || Q_irand( 0, 1 ))
+		&& NPCS.NPC->health < NPCS.NPC->maxHealth * 0.75)
+	{
+		ForceHeal( NPCS.NPC );
+	}
+	if ( (NPCS.NPC->client->ps.fd.forcePowersKnown&(1<<FP_PROTECT)) != 0
+		&& (NPCS.NPC->client->ps.fd.forcePowersActive&(1<<FP_PROTECT)) == 0
+		&& (NPCS.NPC->s.NPC_class == CLASS_PADAWAN || Q_irand( 0, 1 ))
+		&& Q_irand( 0, 1 ) )
+	{
+		ForceProtect( NPCS.NPC );
+	}
+	else if ( (NPCS.NPC->client->ps.fd.forcePowersKnown&(1<<FP_ABSORB)) != 0
+		&& (NPCS.NPC->client->ps.fd.forcePowersActive&(1<<FP_ABSORB)) == 0
+		&& (NPCS.NPC->s.NPC_class == CLASS_PADAWAN || Q_irand( 0, 1 ))
+		&& Q_irand( 0, 1 ) )
+	{
+		ForceAbsorb( NPCS.NPC );
+	}
+
 	if ( !NPCS.NPC->client->ps.saberInFlight && TIMER_Done( NPCS.NPC, "taunting" ) )
 	{
 		if ( enemy_dist > 256 )
@@ -1610,15 +1636,7 @@ static void Jedi_CombatDistance( int enemy_dist )
 				&& NPCS.NPC->health < NPCS.NPC->client->pers.maxHealth*0.75f
 				&& !Q_irand( 0, 2 ) )
 			{
-				if ( (NPCS.NPC->client->ps.fd.forcePowersKnown&(1<<FP_HEAL)) != 0
-					&& (NPCS.NPC->client->ps.fd.forcePowersActive&(1<<FP_HEAL)) == 0
-					&& Q_irand( 0, 1 ) )
-				{
-					ForceHeal( NPCS.NPC );
-					usedForce = qtrue;
-					//FIXME: check level of heal and know not to move or attack when healing
-				}
-				else if ( (NPCS.NPC->client->ps.fd.forcePowersKnown&(1<<FP_TELEPATHY)) != 0
+				if ( (NPCS.NPC->client->ps.fd.forcePowersKnown&(1<<FP_TELEPATHY)) != 0
 					&& (NPCS.NPC->client->ps.fd.forcePowersActive&(1<<FP_TELEPATHY)) == 0
 					&& Q_irand( 0, 1 ) )
 				{
@@ -2406,7 +2424,7 @@ int Jedi_ReCalcParryTime( gentity_t *self, evasionType_t evasionType )
 
 qboolean Jedi_QuickReactions( gentity_t *self )
 {
-	if ( ( self->client->NPC_class == CLASS_JEDI && NPCS.NPCInfo->rank == RANK_COMMANDER ) ||
+	if ( ( (self->client->NPC_class == CLASS_JEDI || self->client->NPC_class == CLASS_PADAWAN) && NPCS.NPCInfo->rank == RANK_COMMANDER ) ||
 		self->client->NPC_class == CLASS_TAVION ||
 		(self->client->ps.fd.forcePowerLevel[FP_SABER_DEFENSE]>FORCE_LEVEL_1&&g_npcspskill.integer>1) ||
 		(self->client->ps.fd.forcePowerLevel[FP_SABER_DEFENSE]>FORCE_LEVEL_2&&g_npcspskill.integer>0) )
@@ -3588,14 +3606,18 @@ void Jedi_EvasionSaber( vec3_t enemy_movedir, float enemy_dist, vec3_t enemy_dir
 								if ( Q_irand( 0, 2 ) )
 								{
 									if ( NPC_MoveDirClear( 127, NPCS.ucmd.rightmove, qfalse ) )
+									{
 										NPCS.ucmd.forwardmove = 127;
-									VectorClear( NPCS.NPC->client->ps.moveDir );
+										VectorClear( NPCS.NPC->client->ps.moveDir );
+									}
 								}
 								else
 								{
 									if ( NPC_MoveDirClear( -127, NPCS.ucmd.rightmove, qfalse ) )
+									{
 										NPCS.ucmd.forwardmove = -127;
-									VectorClear( NPCS.NPC->client->ps.moveDir );
+										VectorClear( NPCS.NPC->client->ps.moveDir );
+									}
 								}
 								//FIXME: if this jump is cleared, we can't block... so pick a random lower block?
 								if ( Q_irand( 0, 1 ) )//FIXME: make intelligent
@@ -4018,8 +4040,11 @@ static void Jedi_TimersApply( void )
 			else
 			{//go ahead and strafe left
 				//NPCS.ucmd.rightmove = -127;
-				NPCS.NPC->bot_strafe_left_timer = level.time + 50;
-				VectorClear( NPCS.NPC->client->ps.moveDir );
+				if (NPC_MoveDirClear( 0, -127, qfalse ))
+				{
+					NPCS.NPC->bot_strafe_left_timer = level.time + 50;
+					VectorClear( NPCS.NPC->client->ps.moveDir );
+				}
 			}
 		}
 		else if ( !TIMER_Done( NPCS.NPC, "strafeRight" ) )
@@ -4030,8 +4055,11 @@ static void Jedi_TimersApply( void )
 			else
 			{//go ahead and strafe left
 				//NPCS.ucmd.rightmove = 127;
-				NPCS.NPC->bot_strafe_right_timer = level.time + 50;
-				VectorClear( NPCS.NPC->client->ps.moveDir );
+				if (NPC_MoveDirClear( 0, 127, qfalse ))
+				{
+					NPCS.NPC->bot_strafe_right_timer = level.time + 50;
+					VectorClear( NPCS.NPC->client->ps.moveDir );
+				}
 			}
 		}
 		else
@@ -4416,7 +4444,8 @@ static qboolean Jedi_AttackDecide( int enemy_dist )
 	if ( NPCS.NPC->s.eFlags & EF_FAKE_NPC_BOT ||
 		NPCS.NPC->client->NPC_class == CLASS_TAVION ||
 		( NPCS.NPC->client->NPC_class == CLASS_REBORN && NPCS.NPCInfo->rank == RANK_LT_JG ) ||
-		( NPCS.NPC->client->NPC_class == CLASS_JEDI && NPCS.NPCInfo->rank == RANK_COMMANDER ) )
+		( NPCS.NPC->client->NPC_class == CLASS_JEDI && NPCS.NPCInfo->rank == RANK_COMMANDER ) ||
+		( NPCS.NPC->client->NPC_class == CLASS_PADAWAN && NPCS.NPCInfo->rank == RANK_COMMANDER ) )
 	{//tavion, fencers, jedi trainer are all good at following up a parry with an attack
 		if ( ( PM_SaberInParry( NPCS.NPC->client->ps.saberMove ) || PM_SaberInKnockaway( NPCS.NPC->client->ps.saberMove ) )
 			&& NPCS.NPC->client->ps.saberBlocked != BLOCKED_PARRY_BROKEN )
@@ -4659,12 +4688,13 @@ qboolean Jedi_Jump( vec3_t dest, int goalEntNum )
 						}
 						else*/ if ( goalEntNum != ENTITYNUM_NONE 
 							&& (trace.entityNum == ENTITYNUM_NONE || trace.entityNum == ENTITYNUM_WORLD) 
-							&& Distance( trace.endpos, dest ) < 128/*96*/ && NPC_CheckFallPositionOK(NPCS.NPC, trace.endpos) )
+							&& Distance( trace.endpos, dest ) <= 32/*128*//*96*/ 
+							&& NPC_CheckFallPositionOK(NPCS.NPC, trace.endpos) )
 						{//hit the spot, that's perfect!
 							break;
 						}
 						else if ( goalEntNum == ENTITYNUM_NONE 
-							&& Distance( trace.endpos, dest ) < 128/*96*/ 
+							&& Distance( trace.endpos, dest ) <= 32/*128*//*96*/ 
 							&& NPC_CheckFallPositionOK(NPCS.NPC, trace.endpos) )
 						{//hit the spot, that's perfect!
 							break;
@@ -4676,7 +4706,7 @@ qboolean Jedi_Jump( vec3_t dest, int goalEntNum )
 								blocked = qtrue;
 								break;
 							}
-							if ( trace.plane.normal[2] > 0.7 && DistanceSquared( trace.endpos, dest ) < 4096 )//hit within 64 of desired location, should be okay
+							if ( trace.plane.normal[2] > 0.7 && Distance( trace.endpos, dest ) < 32/*64*/ )//hit within 64 of desired location, should be okay
 							{//close enough!
 								break;
 							}
@@ -6436,6 +6466,7 @@ static void Jedi_Attack( void )
 	//Track the player and kill them if possible
 	Jedi_Combat();
 	
+#if 0
 	if ( !(NPCS.NPCInfo->scriptFlags&SCF_CHASE_ENEMIES)
 		|| ((NPCS.NPC->client->ps.fd.forcePowersActive&(1<<FP_HEAL))&&NPCS.NPC->client->ps.fd.forcePowerLevel[FP_HEAL]<FORCE_LEVEL_2))
 	{//this is really stupid, but okay...
@@ -6448,6 +6479,7 @@ static void Jedi_Attack( void )
 		NPCS.NPC->client->ps.fd.forceJumpCharge = 0;
 		VectorClear( NPCS.NPC->client->ps.moveDir );
 	}
+#endif
 
 	//NOTE: for now, we clear ucmd.forwardmove & ucmd.rightmove while in air to avoid jumps going awry...
 	if ( NPCS.NPC->client->ps.groundEntityNum == ENTITYNUM_NONE )

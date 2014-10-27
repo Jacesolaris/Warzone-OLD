@@ -41,6 +41,7 @@ stringID_table_t ClassTable[] =
 	ENUM2STRING(CLASS_INTERROGATOR),		// droid
 	ENUM2STRING(CLASS_JAN),
 	ENUM2STRING(CLASS_JEDI),
+	ENUM2STRING(CLASS_PADAWAN),
 	ENUM2STRING(CLASS_KYLE),
 	ENUM2STRING(CLASS_LANDO),
 	ENUM2STRING(CLASS_LIZARD),
@@ -3643,7 +3644,7 @@ void NPC_LoadParms( void )
 	int			len, totallen, npcExtFNLen, fileCnt, i;
 //	const char	*filename = "ext_data/NPC2.cfg";
 	char		/**buffer,*/ *holdChar, *marker;
-	char		npcExtensionListBuf[2048];			//	The list of file names read in
+	char		npcExtensionListBuf[4096];			//	The list of file names read in
 	fileHandle_t f;
 	len = 0;
 
@@ -3656,11 +3657,12 @@ void NPC_LoadParms( void )
 	fileCnt = trap->FS_GetFileList("ext_data/NPCs", ".npc", npcExtensionListBuf, sizeof(npcExtensionListBuf) );
 
 	holdChar = npcExtensionListBuf;
+
 	for ( i = 0; i < fileCnt; i++, holdChar += npcExtFNLen + 1 )
 	{
 		npcExtFNLen = strlen( holdChar );
 
-//		Com_Printf( "Parsing %s\n", holdChar );
+		//trap->Print( "Parsing %s\n", holdChar );
 
 		len = trap->FS_Open(va( "ext_data/NPCs/%s", holdChar), &f, FS_READ);
 

@@ -1260,19 +1260,19 @@ void G_CheckMinimumNpcs( void ) {
 
 		if (NPC_SPAWN_TEAM == TEAM_RED)
 		{// Imperial NPCs...
-			if (random >= 6)
+			if (random >= 7)
 			{
 				npc->NPC_type = "stormtrooper";
 			}
-			else if (random >= 5)
+			else if (random >= 6)
 			{
 				npc->NPC_type = "stofficer";
 			}
-			else if (random >= 4)
+			else if (random >= 5)
 			{
 				npc->NPC_type = "stcommander";
 			}
-			else if (random >= 2)
+			else if (random >= 3)
 			{// Officers/Specials...
 				int rnd2 = irand(0,7);
 				switch (rnd2)
@@ -1375,15 +1375,15 @@ void G_CheckMinimumNpcs( void ) {
 		}
 		else
 		{// Rebel NPCs...
-			if (random >= 10)
+			if (random >= 11)
 			{
 				npc->NPC_type = "rebel";
 			}
-			else if (random >= 7)
+			else if (random >= 8)
 			{
 				npc->NPC_type = "rebel2";
 			}
-			else if (random >= 4)
+			else if (random >= 5)
 			{
 				int rnd2 = irand(0,7);
 				switch (rnd2)
@@ -1411,7 +1411,7 @@ void G_CheckMinimumNpcs( void ) {
 					break;
 				}
 			}
-			else if (random >= 2)
+			else if (random >= 3)
 			{// Officers/Specials...
 				int rnd2 = irand(0,4);
 				switch (rnd2)

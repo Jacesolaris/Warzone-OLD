@@ -29,6 +29,7 @@ qboolean NPC_IsHumanoid ( gentity_t *self )
 	//case CLASS_INTERROGATOR:		// droid 
 	case CLASS_JAN:				
 	case CLASS_JEDI:
+	case CLASS_PADAWAN:
 	case CLASS_KYLE:				
 	case CLASS_LANDO:			
 	//case CLASS_LIZARD:
@@ -114,6 +115,7 @@ qboolean NPC_IsJedi ( gentity_t *self )
 	//case CLASS_INTERROGATOR:		// droid 
 	//case CLASS_JAN:				
 	case CLASS_JEDI:
+	case CLASS_PADAWAN:
 	case CLASS_KYLE:				
 	//case CLASS_LANDO:			
 	//case CLASS_LIZARD:
@@ -197,6 +199,7 @@ qboolean NPC_IsBountyHunter ( gentity_t *self )
 	//case CLASS_INTERROGATOR:		// droid 
 	//case CLASS_JAN:				
 	//case CLASS_JEDI:
+	//case CLASS_PADAWAN:
 	//case CLASS_KYLE:				
 	//case CLASS_LANDO:			
 	//case CLASS_LIZARD:
@@ -267,6 +270,7 @@ qboolean NPC_HasGrenades ( gentity_t *self )
 	//case CLASS_INTERROGATOR:		// droid 
 	case CLASS_JAN:				
 	//case CLASS_JEDI:
+	//case CLASS_PADAWAN:
 	//case CLASS_KYLE:				
 	case CLASS_LANDO:			
 	//case CLASS_LIZARD:
@@ -347,6 +351,7 @@ void NPC_CheckEvasion(void)
 	//case CLASS_INTERROGATOR:		// droid 
 	case CLASS_JAN:				
 	case CLASS_JEDI:
+	case CLASS_PADAWAN:
 	case CLASS_KYLE:				
 	case CLASS_LANDO:			
 	//case CLASS_LIZARD:

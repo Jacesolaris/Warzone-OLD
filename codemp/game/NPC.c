@@ -35,6 +35,7 @@ extern qboolean Boba_Flying( gentity_t *self );
 extern int DOM_GetNearestWP(vec3_t org, int badwp);
 extern void Jedi_Move( gentity_t *goal, qboolean retreat );
 extern void NPC_EnforceConversationRange ( gentity_t *self );
+extern qboolean NPC_CombatMoveToGoal( qboolean tryStraight, qboolean retreat );
 
 // Conversations...
 extern void NPC_NPCConversation();
@@ -49,6 +50,22 @@ void pitch_roll_for_slope( gentity_t *forwhom, vec3_t pass_slope );
 extern void GM_Dying( gentity_t *self );
 
 extern int eventClearTime;
+
+qboolean NPC_IsAlive ( gentity_t *NPC )
+{
+	if ( NPC
+		&& NPC->inuse 
+		&& NPC->health > 0
+		&& NPC->client 
+		&& NPC->client->ps.stats[STAT_HEALTH] > 0 
+		&& NPC->client->ps.pm_type != PM_SPECTATOR 
+		&& (NPC->s.eType == ET_NPC || NPC->s.eType == ET_PLAYER))
+	{
+		return qtrue;
+	}
+
+	return qfalse;
+}
 
 void CorpsePhysics( gentity_t *self )
 {
@@ -969,6 +986,7 @@ qboolean NPC_CanUseAdvancedFighting()
 	//case CLASS_INTERROGATOR:		// droid 
 	case CLASS_JAN:				
 	case CLASS_JEDI:
+	case CLASS_PADAWAN:
 	case CLASS_KYLE:				
 	case CLASS_LANDO:			
 	//case CLASS_LIZARD:
@@ -1603,6 +1621,7 @@ void NPC_RunBehavior( int team, int bState )
 		return;
 	}
 	else if ( NPCS.NPC->client->NPC_class == CLASS_JEDI 
+		|| NPCS.NPC->client->NPC_class == CLASS_PADAWAN 
 		|| NPCS.NPC->client->NPC_class == CLASS_REBORN
 		|| NPCS.NPC->client->NPC_class == CLASS_TAVION
 		|| NPCS.NPC->client->NPC_class == CLASS_ALORA
@@ -3385,7 +3404,14 @@ qboolean NPC_CheckFall(gentity_t *NPC, vec3_t dir)
 		return qtrue;
 	}
 
-	/*
+	VectorMA( NPC->r.currentOrigin, 48, dir, forwardPos );
+	forwardPos[2]+=16.0;
+
+	if (OrgVisible(NPC->r.currentOrigin, forwardPos, NPC->s.number) && !NPC_CheckFallPositionOK(NPC, forwardPos))
+	{
+		return qtrue;
+	}
+
 	VectorMA( NPC->r.currentOrigin, 64, dir, forwardPos );
 	forwardPos[2]+=16.0;
 
@@ -3393,7 +3419,6 @@ qboolean NPC_CheckFall(gentity_t *NPC, vec3_t dir)
 	{
 		return qtrue;
 	}
-	*/
 
 	return qfalse;
 }
@@ -3583,7 +3608,7 @@ qboolean UQ1_UcmdMoveForDir ( gentity_t *self, usercmd_t *cmd, vec3_t dir, qbool
 	
 #ifdef __NPC_STRAFE__
 	if (self->wpCurrent >= 0) NPC_NPCBlockingPath();
-	NPC_AdjustforStrafe(right, walk, walkSpeed);
+	NPC_AdjustforStrafe(dir, walk, walkSpeed);
 	//if (self->bot_strafe_left_timer > level.time) cmd->rightmove -= 127.0;
 #endif //__NPC_STRAFE__
 
@@ -3950,7 +3975,7 @@ int NPC_GetNextNode(gentity_t *NPC)
 		return WAYPOINT_NONE;
 	}
 
-	if (NPC->npc_cower_runaway)
+	if (NPC->npc_cower_runaway || NPC->isPadawan)
 		NPC_ShortenPath(NPC); // Shorten any path we can, if we are running away from combat...
 
 	if (NPC->pathsize <= 0)	//if the bot is at the end of his path, this shouldn't have been called
@@ -4302,12 +4327,18 @@ int NPC_FindGoal( gentity_t *NPC )
 	return waypoint;
 }
 
+int NPC_FindPadawanGoal( gentity_t *NPC )
+{
+	int waypoint = -1;
+	waypoint = NPC->parent->wpCurrent;
+	return waypoint;
+}
+
 int NPC_FindTeamGoal( gentity_t *NPC )
 {
 	int waypoint = -1;
 	int i;
-	//char enemy_name[64];
-
+	
 	for ( i = 0; i < MAX_GENTITIES; i++)
 	{
 		gentity_t *ent = &g_entities[i];
@@ -4352,6 +4383,7 @@ int NPC_FindTeamGoal( gentity_t *NPC )
 void NPC_SetNewGoalAndPath()
 {
 	gentity_t	*NPC = NPCS.NPC;
+	qboolean	padawanPath = qfalse;
 
 	//if (NPC->client->NPC_class != CLASS_TRAVELLING_VENDOR)
 	//	if (NPC_CopyPathFromNearbyNPC()) 
@@ -4370,6 +4402,20 @@ void NPC_SetNewGoalAndPath()
 		return; // wait before trying to get a new waypoint...
 	}
 
+	if (NPC->isPadawan)
+	{
+		if (!NPC->parent || !NPC_IsAlive(NPC->parent))
+		{
+			NPC->parent = NULL;
+			return; // wait...
+		}
+
+		if (NPC->parent && NPC_IsAlive(NPC->parent))
+		{// Need a new path to our master...
+			padawanPath = qtrue;
+		}
+	}
+
 	if (NPC->return_home)
 	{// Returning home...
 		//NPC->longTermGoal = DOM_GetRandomCloseVisibleWP(NPC, NPC->spawn_pos, NPC->s.number, -1);
@@ -4378,9 +4424,16 @@ void NPC_SetNewGoalAndPath()
 	else
 	{// Find a new generic goal...
 		if (g_gametype.integer >= GT_TEAM)
-			NPC->longTermGoal = NPC_FindTeamGoal( NPC );
+		{
+			if (padawanPath) 
+				NPC->longTermGoal = NPC_FindPadawanGoal( NPC );
+			else 
+				NPC->longTermGoal = NPC_FindTeamGoal( NPC );
+		}
 		else
+		{
 			NPC->longTermGoal = NPC_FindGoal( NPC );
+		}
 	}
 
 	if (NPC->longTermGoal >= 0)
@@ -4655,6 +4708,7 @@ qboolean NPC_FollowRoutes( void )
 	gentity_t	*NPC = NPCS.NPC;
 	usercmd_t	ucmd = NPCS.ucmd;
 	float		wpDist = 0.0;
+	qboolean	padawanPath = qfalse;
 
 	NPCS.NPCInfo->combatMove = qtrue;
 
@@ -4704,6 +4758,42 @@ qboolean NPC_FollowRoutes( void )
 		}
 	}
 
+	if (NPC->s.NPC_class == CLASS_PADAWAN)
+	{
+		if (NPC->parent && NPC_IsAlive(NPC->parent))
+		{
+			/*
+			NPCS.NPCInfo->goalEntity = NPC->parent;
+
+			if ( NPC_CombatMoveToGoal( qtrue, qfalse ) )
+			{
+				NPC_UpdateAngles( qtrue, qtrue );
+				return qtrue;
+			}
+			*/
+
+			float dist = Distance(NPC->parent->r.currentOrigin, NPC->r.currentOrigin);
+
+			// OMG combatmovetogoal sucks...
+			if (dist > 64
+				&& dist < 512
+				/*&& DOM_NPC_ClearPathToSpot(NPC, NPC->parent->r.currentOrigin, NPC->parent->s.number)*/)
+			{// If clear then move stright there...
+				NPC_FacePosition( NPC->parent->r.currentOrigin, qfalse );
+				VectorSubtract( NPC->parent->r.currentOrigin, NPC->r.currentOrigin, NPC->movedir );
+
+				if (UQ1_UcmdMoveForDir( NPC, &NPCS.ucmd, NPC->movedir, qfalse, NPC->parent->r.currentOrigin )) 
+				{// Looks like we can move there...
+					return qtrue;
+				}
+				else if (Jedi_Jump( NPC->parent->r.currentOrigin, NPC->parent->s.number ))
+				{// Backup... Can we jump there???
+					return qtrue;
+				}
+			}
+		}
+	}
+
 	G_ClearEnemy(NPC);
 
 	if (DistanceHorizontal(NPC->r.currentOrigin, NPC->npc_previous_pos) > 3)
@@ -4749,6 +4839,23 @@ qboolean NPC_FollowRoutes( void )
 	}
 #endif
 
+	if (NPC->isPadawan)
+	{
+		if (NPC->parent
+			&& (NPC->wpCurrent < 0 || NPC->wpCurrent >= gWPNum 
+			|| NPC->longTermGoal < 0 || NPC->longTermGoal >= gWPNum
+			|| Distance(NPC->parent->r.currentOrigin, gWPArray[NPC->longTermGoal]->origin) > 96))
+		{// Need a new path to our master...
+			padawanPath = qtrue;
+		}
+		else if (NPC->parent 
+			&& NPC->parent->wpCurrent >= 0 && NPC->parent->wpCurrent < gWPNum 
+			&& Distance(NPC->parent->r.currentOrigin, gWPArray[NPC->parent->wpCurrent]->origin) > 96)
+		{// Need a new path to our master...
+			padawanPath = qtrue;
+		}
+	}
+
 	/*if (NPC->wpSeenTime >= level.time - 5000
 		&& NPC->wpCurrent >= 0 
 		&& NPC->wpCurrent < gWPNum
@@ -4756,7 +4863,8 @@ qboolean NPC_FollowRoutes( void )
 	{
 
 	}
-	else*/ if ( NPC->wpCurrent < 0 || NPC->wpCurrent >= gWPNum 
+	else*/ if ( padawanPath
+		|| NPC->wpCurrent < 0 || NPC->wpCurrent >= gWPNum 
 		|| NPC->longTermGoal < 0 || NPC->longTermGoal >= gWPNum 
 		|| wpDist > 512
 		|| NPC->wpSeenTime < level.time - 5000
@@ -5443,6 +5551,125 @@ void NPC_GenericFrameCode ( gentity_t *self )
 	NPC_CheckAllClear();
 }
 
+void NPC_DoPadawanStuff ( void )
+{
+	int			i = 0;
+	gentity_t	*me = NPCS.NPC;
+	gentity_t	*parent = me->parent;
+	int			best_parent_dist = 99999;
+	gentity_t	*best_parent = NULL;
+
+	if (g_gametype.integer < GT_TEAM)
+	{// not in non-team games...
+		return;
+	}
+
+	if (NPCS.NPC->client->NPC_class != CLASS_PADAWAN)
+	{
+		return; // This is only for padawans...
+	}
+
+	if (parent && NPC_IsAlive(parent))
+	{
+		if (parent->enemy && NPC_IsAlive(parent->enemy))
+		{// Padawan assists jedi...
+			float Jdist = Distance(me->r.currentOrigin, parent->r.currentOrigin);
+			float Edist = Distance(me->r.currentOrigin, parent->enemy->r.currentOrigin);
+
+			if ( Jdist <= 256 && Edist <= 256 )
+			{
+				me->enemy = parent->enemy;
+			}
+			else
+			{
+				if (me->enemy && me->enemy->enemy != me)
+					me->enemy = NULL;
+			}
+		}
+		else
+		{
+			if (me->enemy && NPC_IsAlive(me->enemy))
+			{// Jedi assists padawan... No range limit on jedi helping the padawan...
+				parent->enemy = me->enemy;
+			}
+		}
+
+		return; // Already have a master to follow...
+	}
+
+	//
+	// Looks like we need a new master, if we are in fact a padawan...
+	//
+
+	me->isPadawan = qtrue; // Mark us as a padawan for the next check to not need to do a string compare..
+	parent = NULL;
+
+	// We need to select a master...
+#pragma omp parallel for
+	for (i = 0; i < MAX_GENTITIES; i++)
+	{// Find the closest jedi to follow...
+		gentity_t *parent2 = &g_entities[i];
+
+		if ( parent2
+			&& NPC_IsAlive(parent2)
+			&& parent2->client->sess.sessionTeam == me->client->sess.sessionTeam
+			&& (parent2->client->NPC_class == CLASS_JEDI || parent2->client->NPC_class == CLASS_LUKE || parent2->client->NPC_class == CLASS_KYLE || parent2->client->NPC_class == CLASS_JAN || parent2->s.eType == ET_PLAYER)
+			&& (!parent2->padawan || !NPC_IsAlive(parent2->padawan)) )
+		{// This is a jedi on our team...
+			float dist = Distance(me->r.currentOrigin, parent2->r.currentOrigin);
+			
+			if (dist < best_parent_dist)
+#pragma omp critical
+			{
+				if (dist < best_parent_dist)
+				{// Found a new best jedi...
+					best_parent = parent2;
+					best_parent_dist = dist;
+				}
+			}
+		}
+	}
+
+	if (best_parent)
+	{// Set our new master...
+		parent = best_parent;
+		me->parent = parent;
+		parent->padawan = me;
+
+		//trap->Print("Padawan %s found a new jedi (%s).\n", me->client->pers.netname, parent->client->pers.netname);
+
+		if (parent->enemy && NPC_IsAlive(parent->enemy))
+		{// Padawan assists jedi...
+			float Jdist = Distance(me->r.currentOrigin, parent->r.currentOrigin);
+			float Edist = Distance(me->r.currentOrigin, parent->enemy->r.currentOrigin);
+
+			if ( Jdist <= 256 && Edist <= 256 )
+			{
+				me->enemy = parent->enemy;
+			}
+			else
+			{
+				if (me->enemy && me->enemy->enemy != me)
+				{
+					me->enemy = NULL;
+				}
+			}
+		}
+		else
+		{
+			if (me->enemy && NPC_IsAlive(me->enemy))
+			{// Jedi assists padawan... No range limit on jedi helping the padawan...
+				parent->enemy = me->enemy;
+			}
+		}
+	}
+	else
+	{// Need to check again next time...
+		//trap->Print("Padawan %s failed to find a new jedi.\n", me->client->pers.netname);
+		me->parent = NULL;
+	}
+}
+
 /*
 ===============
 NPC_Think
@@ -5612,8 +5839,12 @@ void NPC_Think ( gentity_t *self)//, int msec )
 			qboolean is_bot = (self->s.eType == ET_PLAYER);
 			qboolean use_pathing = qfalse;
 
+			if (!is_jedi && self->isPadawan) is_jedi = qtrue;
+
 			if (is_civilian || is_jedi || is_bot) use_pathing = qtrue;
 			if (g_gametype.integer >= GT_TEAM) use_pathing = qtrue;
+
+			NPC_DoPadawanStuff(); // check any padawan stuff we might need to do...
 
 			if (self->enemy 
 				&& (!NPC_ValidEnemy(self->enemy) || Distance(self->r.currentOrigin, self->enemy->r.currentOrigin) > 2048.0))

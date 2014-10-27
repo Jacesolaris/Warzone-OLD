@@ -3899,11 +3899,13 @@ void CG_DrawEnemyStatus( void )
 			case CLASS_TRAVELLING_VENDOR:
 			case CLASS_LUKE:
 			case CLASS_JEDI:
+			case CLASS_PADAWAN:
 			case CLASS_KYLE:
 			case CLASS_JAN:
 			case CLASS_MONMOTHA:			
 			case CLASS_MORGANKATARN:
 			case CLASS_TAVION:
+			case CLASS_ALORA:
 			case CLASS_REBORN:
 			case CLASS_DESANN:
 			case CLASS_BOBAFETT:
@@ -4035,6 +4037,18 @@ void CG_DrawEnemyStatus( void )
 		case CLASS_MONMOTHA:			
 		case CLASS_MORGANKATARN:
 			str2 = va("< Jedi >");
+			tclr[0] = 0.125f;
+			tclr[1] = 0.325f;
+			tclr[2] = 0.7f;
+			tclr[3] = 1.0f;
+
+			tclr2[0] = 0.125f;
+			tclr2[1] = 0.325f;
+			tclr2[2] = 0.7f;
+			tclr2[3] = 1.0f;
+			break;
+		case CLASS_PADAWAN:
+			str2 = va("< Padawan >");
 			tclr[0] = 0.125f;
 			tclr[1] = 0.325f;
 			tclr[2] = 0.7f;
@@ -4209,6 +4223,7 @@ void CG_DrawEnemyStatus( void )
 		case CLASS_TAVION:
 		case CLASS_REBORN:
 		case CLASS_DESANN:
+		case CLASS_ALORA:
 			str2 = va("< Sith >");
 			tclr[0] = 1.0f;
 			tclr[1] = 0.325f;
@@ -7786,6 +7801,18 @@ void CG_DrawNPCNames( void )
 				tclr2[2] = 0.7f;
 				tclr2[3] = 1.0f;
 				break;
+			case CLASS_PADAWAN:
+				str2 = va("< Padawan >");
+				tclr[0] = 0.125f;
+				tclr[1] = 0.325f;
+				tclr[2] = 0.7f;
+				tclr[3] = 1.0f;
+
+				tclr2[0] = 0.125f;
+				tclr2[1] = 0.325f;
+				tclr2[2] = 0.7f;
+				tclr2[3] = 1.0f;
+				break;
 			case CLASS_GENERAL_VENDOR:
 				str2 = va("< General Vendor >");
 				tclr[0] = 0.525f;
@@ -7950,6 +7977,7 @@ void CG_DrawNPCNames( void )
 			case CLASS_TAVION:
 			case CLASS_REBORN:
 			case CLASS_DESANN:
+			case CLASS_ALORA:
 				str2 = va("< Sith >");
 				tclr[0] = 1.0f;
 				tclr[1] = 0.325f;
@@ -8107,11 +8135,13 @@ void CG_DrawNPCNames( void )
 				case CLASS_TRAVELLING_VENDOR:
 				case CLASS_LUKE:
 				case CLASS_JEDI:
+				case CLASS_PADAWAN:
 				case CLASS_KYLE:
 				case CLASS_JAN:
 				case CLASS_MONMOTHA:			
 				case CLASS_MORGANKATARN:
 				case CLASS_TAVION:
+				case CLASS_ALORA:
 				case CLASS_REBORN:
 				case CLASS_DESANN:
 				case CLASS_BOBAFETT:
