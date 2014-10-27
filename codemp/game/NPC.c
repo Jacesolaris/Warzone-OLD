@@ -4330,7 +4330,7 @@ int NPC_FindGoal( gentity_t *NPC )
 int NPC_FindPadawanGoal( gentity_t *NPC )
 {
 	int waypoint = -1;
-	waypoint = NPC->parent->wpCurrent;
+	waypoint = DOM_GetNearestWP(NPC->parent->r.currentOrigin, NPC->parent->wpCurrent);;
 	return waypoint;
 }
 
@@ -4775,19 +4775,31 @@ qboolean NPC_FollowRoutes( void )
 			float dist = Distance(NPC->parent->r.currentOrigin, NPC->r.currentOrigin);
 
 			// OMG combatmovetogoal sucks...
-			if (dist > 64
-				&& dist < 512
-				/*&& DOM_NPC_ClearPathToSpot(NPC, NPC->parent->r.currentOrigin, NPC->parent->s.number)*/)
+			if (dist > 96 && dist < 512)
 			{// If clear then move stright there...
+				qboolean walk = qfalse;
+
 				NPC_FacePosition( NPC->parent->r.currentOrigin, qfalse );
 				VectorSubtract( NPC->parent->r.currentOrigin, NPC->r.currentOrigin, NPC->movedir );
 
-				if (UQ1_UcmdMoveForDir( NPC, &NPCS.ucmd, NPC->movedir, qfalse, NPC->parent->r.currentOrigin )) 
+				if (dist < 128) walk = qtrue;
+
+				if (UQ1_UcmdMoveForDir( NPC, &NPCS.ucmd, NPC->movedir, walk, NPC->parent->r.currentOrigin )) 
 				{// Looks like we can move there...
 					return qtrue;
 				}
 				else if (Jedi_Jump( NPC->parent->r.currentOrigin, NPC->parent->s.number ))
 				{// Backup... Can we jump there???
+					return qtrue;
+				}
+			}
+			else if (dist < 32)
+			{// If clear then move back a bit...
+				NPC_FacePosition( NPC->parent->r.currentOrigin, qfalse );
+				VectorSubtract( NPC->r.currentOrigin, NPC->parent->r.currentOrigin, NPC->movedir );
+
+				if (UQ1_UcmdMoveForDir( NPC, &NPCS.ucmd, NPC->movedir, qtrue, NPC->parent->r.currentOrigin )) 
+				{// Looks like we can move there...
 					return qtrue;
 				}
 			}
@@ -4844,13 +4856,13 @@ qboolean NPC_FollowRoutes( void )
 		if (NPC->parent
 			&& (NPC->wpCurrent < 0 || NPC->wpCurrent >= gWPNum 
 			|| NPC->longTermGoal < 0 || NPC->longTermGoal >= gWPNum
-			|| Distance(NPC->parent->r.currentOrigin, gWPArray[NPC->longTermGoal]->origin) > 96))
+			|| Distance(NPC->parent->r.currentOrigin, gWPArray[NPC->longTermGoal]->origin) > 128))
 		{// Need a new path to our master...
 			padawanPath = qtrue;
 		}
 		else if (NPC->parent 
 			&& NPC->parent->wpCurrent >= 0 && NPC->parent->wpCurrent < gWPNum 
-			&& Distance(NPC->parent->r.currentOrigin, gWPArray[NPC->parent->wpCurrent]->origin) > 96)
+			&& Distance(NPC->parent->r.currentOrigin, gWPArray[NPC->parent->wpCurrent]->origin) > 128)
 		{// Need a new path to our master...
 			padawanPath = qtrue;
 		}

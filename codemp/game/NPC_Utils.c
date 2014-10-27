@@ -1096,6 +1096,11 @@ qboolean NPC_ValidEnemy( gentity_t *ent )
 
 	if (NPCS.NPC && NPCS.NPC->client && NPCS.NPC->isPadawan)
 	{
+		if (ent == NPCS.NPC->parent || ent == NPCS.NPC->padawan)
+		{// My padawan and his jedi are never enemies...
+			return qfalse;
+		}
+
 		if (NPCS.NPC->parent && NPC_IsAlive(NPCS.NPC->parent))
 		{// They just copy their master's enemy instead...
 			NPCS.NPC->enemy = NPCS.NPC->parent->enemy;

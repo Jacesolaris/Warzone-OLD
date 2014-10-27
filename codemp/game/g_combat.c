@@ -4565,6 +4565,17 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker, vec3_
 				return;
 			}
 			break;
+		case CLASS_PADAWAN:
+			if (targ->padawan == attacker || targ->parent == attacker)
+			{
+				targ->enemy = NULL; // Make sure civilians never have an enemy... (no AI for it, no weapon for it)
+
+				if (attacker && (attacker->s.eType == ET_NPC || attacker->s.eType == ET_PLAYER))
+					attacker->enemy = NULL; // Make sure this does not happen again...
+
+				return;
+			}
+			break;
 		default:
 			break;
 		}
