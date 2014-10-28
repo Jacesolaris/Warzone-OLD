@@ -9738,6 +9738,8 @@ void CG_AddSaberBlade(centity_t *cent, centity_t *scent, refEntity_t *saber, int
 	saberEnt = &cg_entities[cent->currentState.saberEntityNum];
 	saberLen = client->saber[saberNum].blade[bladeNum].length;
 
+	saberLen *= (cent->currentState.iModelScale/100.0f); // UQ1: Scale sabers to match player scales...
+
 	if (saberLen <= 0 && !dontDraw)
 	{ //don't bother then.
 		return;

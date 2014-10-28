@@ -5,6 +5,8 @@
 
 //#define __JEDI_TRACKING__
 
+#define SABER_ATTACK_RANGE 24
+
 extern void NPC_ClearPathData ( gentity_t *NPC );
 
 extern qboolean BG_SabersOff( playerState_t *ps );
@@ -1553,6 +1555,7 @@ static void Jedi_CombatDistance( int enemy_dist )
 {//FIXME: for many of these checks, what we really want is horizontal distance to enemy
 	if (!NPCS.NPC->enemy) return;
 
+#if 0
 	if ( NPCS.NPC->client->ps.fd.forcePowersActive&(1<<FP_GRIP) &&
 		NPCS.NPC->client->ps.fd.forcePowerLevel[FP_GRIP] > FORCE_LEVEL_1 )
 	{//when gripping, don't move
@@ -1571,18 +1574,6 @@ static void Jedi_CombatDistance( int enemy_dist )
 		NPCS.ucmd.buttons &= ~BUTTON_WALKING;
 	}
 
-#ifdef __UTTER_SHIT__
-	if ( NPCS.NPC->client->ps.fd.forcePowersActive&(1<<FP_DRAIN) &&
-		NPCS.NPC->client->ps.fd.forcePowerLevel[FP_DRAIN] > FORCE_LEVEL_1 )
-	{//when draining, don't move
-		return;
-	}
-	else if ( !TIMER_Done( NPCS.NPC, "draining" ) )
-	{//stopped draining, clear timers just in case
-		TIMER_Set( NPCS.NPC, "draining", -level.time );
-		TIMER_Set( NPCS.NPC, "attackDelay", Q_irand( 0, 1000 ) );
-	}
-#else //!__UTTER_SHIT__
 	if ( NPCS.NPC->client->ps.fd.forcePowersActive&(1<<FP_DRAIN) &&
 		NPCS.NPC->client->ps.fd.forcePowerLevel[FP_DRAIN] >= FORCE_LEVEL_1 )
 	{//when draining, don't move
@@ -1723,7 +1714,7 @@ static void Jedi_CombatDistance( int enemy_dist )
 			}
 			Jedi_Retreat();
 		}
-		else if ( enemy_dist <= 64
+		else if ( enemy_dist <= SABER_ATTACK_RANGE
 			&& NPCS.NPC->client->pers.maxHealth - NPCS.NPC->health > NPCS.NPC->client->pers.maxHealth*0.25f//lost over 1/4 of our health
 			&& NPCS.NPC->client->ps.fd.forcePowersKnown&(1<<FP_DRAIN) //know how to drain
 			&& WP_ForcePowerAvailable( NPCS.NPC, FP_DRAIN, 20 )//have enough power
@@ -1736,7 +1727,7 @@ static void Jedi_CombatDistance( int enemy_dist )
 			return;
 		}
 	}
-#endif //!__UTTER_SHIT__
+#endif //0
 
 	if ( NPC_IsBountyHunter(NPCS.NPC)  )
 	{
@@ -1833,12 +1824,12 @@ static void Jedi_CombatDistance( int enemy_dist )
 		}
 	}
 	else if ( (NPCS.NPC->s.weapon == WP_SABER || NPCS.NPC->s.weapon == WP_MELEE)
-		&& enemy_dist > 24 )
+		&& enemy_dist > SABER_ATTACK_RANGE )
 	{//we're too damn far!
 		Jedi_Advance();
 	}
 	else if ( (NPCS.NPC->s.weapon == WP_SABER || NPCS.NPC->s.weapon == WP_MELEE)
-		&& enemy_dist < 16 )
+		&& enemy_dist < SABER_ATTACK_RANGE/3 )
 	{//we're too damn close!
 		Jedi_Retreat();
 	}
@@ -5380,6 +5371,8 @@ static void Jedi_Combat( void )
 	float	enemy_dist, enemy_movespeed;
 	qboolean	enemy_lost = qfalse;
 
+	if (!NPCS.NPC->enemy || !NPC_IsAlive(NPCS.NPC->enemy)) return;
+
 	//See where enemy will be 300 ms from now
 	Jedi_SetEnemyInfo( enemy_dest, enemy_dir, &enemy_dist, enemy_movedir, &enemy_movespeed, 300 );
 
@@ -6806,6 +6799,182 @@ void NPC_SelectBestWeapon( void )
 	*/
 }
 
+qboolean NPC_Jedi_EnemyInForceRange ( void )
+{
+	if (!NPCS.NPC->enemy || !NPC_IsAlive(NPCS.NPC->enemy)) return qfalse;
+
+	if (Distance(NPCS.NPC->r.currentOrigin, NPCS.NPC->enemy->r.currentOrigin) > 192) return qfalse;
+
+	return qtrue;
+}
+
+qboolean Jedi_CheckForce ( void )
+{// UQ1: New code to make better use of force powers...
+	if ( NPCS.NPC->client->ps.fd.forcePowersActive&(1<<FP_GRIP) )
+	{//when gripping, don't move
+		return qtrue;
+	}
+
+	if ( NPCS.NPC->client->ps.fd.forcePowersActive&(1<<FP_DRAIN) )
+	{//when draining, don't move
+		return qtrue;
+	}
+
+	if ( NPCS.NPC->client->ps.fd.forcePowersActive&(1<<FP_HEAL) )
+	{//lvl 1 healing, don't move
+		return qtrue;
+	}
+
+	if ( NPCS.NPC->client->ps.fd.forcePowersActive&(1<<FP_LIGHTNING) )
+	{// don't move
+		return qtrue;
+	}
+
+	// UQ1: Special heals/protects/absorbs - mainly for padawans...
+	if ( TIMER_Done( NPCS.NPC, "heal" )
+		&& (NPCS.NPC->client->ps.fd.forcePowersKnown&(1<<FP_HEAL)) != 0
+		&& (NPCS.NPC->client->ps.fd.forcePowersActive&(1<<FP_HEAL)) == 0
+		&& (NPCS.NPC->s.NPC_class == CLASS_PADAWAN || Q_irand( 0, 5 ) < 2)
+		&& NPCS.NPC->health < NPCS.NPC->maxHealth * 0.5)
+	{
+		ForceHeal( NPCS.NPC );
+		TIMER_Set( NPCS.NPC, "heal", irand(5000, 15000) );
+		return qtrue;
+	}
+	else if ( TIMER_Done( NPCS.NPC, "drain" )
+		&& (NPCS.NPC->client->ps.fd.forcePowersKnown&(1<<FP_DRAIN)) != 0
+		&& (NPCS.NPC->client->ps.fd.forcePowersActive&(1<<FP_DRAIN)) == 0
+		&& Q_irand( 0, 5 ) < 2
+		&& NPC_Jedi_EnemyInForceRange()
+		&& NPCS.NPC->health < NPCS.NPC->maxHealth * 0.5)
+	{
+		ForceDrain( NPCS.NPC );
+		TIMER_Set( NPCS.NPC, "drain", irand(5000, 15000) );
+		return qtrue;
+	}
+	else if ( TIMER_Done( NPCS.NPC, "grip" )
+		&& (NPCS.NPC->client->ps.fd.forcePowersKnown&(1<<FP_GRIP)) != 0
+		&& (NPCS.NPC->client->ps.fd.forcePowersActive&(1<<FP_GRIP)) == 0
+		&& NPC_Jedi_EnemyInForceRange()
+		&& Q_irand( 0, 10 ) < 2 )
+	{
+		ForceGrip( NPCS.NPC );
+		TIMER_Set( NPCS.NPC, "grip", irand(12000, 25000) );
+		return qtrue;
+	}
+	else if ( TIMER_Done( NPCS.NPC, "lightning" )
+		&& (NPCS.NPC->client->ps.fd.forcePowersKnown&(1<<FP_LIGHTNING)) != 0
+		&& (NPCS.NPC->client->ps.fd.forcePowersActive&(1<<FP_LIGHTNING)) == 0
+		&& NPC_Jedi_EnemyInForceRange()
+		&& Q_irand( 0, 10 ) < 2 )
+	{
+		ForceLightning( NPCS.NPC );
+		TIMER_Set( NPCS.NPC, "lightning", irand(12000, 25000) );
+		return qtrue;
+	}
+	else if ( TIMER_Done( NPCS.NPC, "protect" )
+		&& (NPCS.NPC->client->ps.fd.forcePowersKnown&(1<<FP_PROTECT)) != 0
+		&& (NPCS.NPC->client->ps.fd.forcePowersActive&(1<<FP_PROTECT)) == 0
+		&& (NPCS.NPC->s.NPC_class == CLASS_PADAWAN || Q_irand( 0, 10 ) < 2 ))
+	{
+		ForceProtect( NPCS.NPC );
+		TIMER_Set( NPCS.NPC, "protect", irand(15000, 30000) );
+		return qtrue;
+	}
+	else if ( TIMER_Done( NPCS.NPC, "absorb" )
+		&& (NPCS.NPC->client->ps.fd.forcePowersKnown&(1<<FP_ABSORB)) != 0
+		&& (NPCS.NPC->client->ps.fd.forcePowersActive&(1<<FP_ABSORB)) == 0
+		&& (NPCS.NPC->s.NPC_class == CLASS_PADAWAN || Q_irand( 0, 10 ) < 2))
+	{
+		ForceAbsorb( NPCS.NPC );
+		TIMER_Set( NPCS.NPC, "absorb", irand(15000, 30000) );
+		return qtrue;
+	}
+	else if ( TIMER_Done( NPCS.NPC, "telepathy" )
+		&& (NPCS.NPC->client->ps.fd.forcePowersKnown&(1<<FP_TELEPATHY)) != 0
+		&& (NPCS.NPC->client->ps.fd.forcePowersActive&(1<<FP_TELEPATHY)) == 0
+		&& NPC_Jedi_EnemyInForceRange()
+		&& Q_irand( 0, 10 ) < 2 )
+	{
+		ForceTelepathy(NPCS.NPC);
+		TIMER_Set( NPCS.NPC, "telepathy", irand(15000, 30000) );
+		return qtrue;
+	}
+	else if ( TIMER_Done( NPCS.NPC, "rage" )
+		&& (NPCS.NPC->client->ps.fd.forcePowersKnown&(1<<FP_RAGE)) != 0
+		&& (NPCS.NPC->client->ps.fd.forcePowersActive&(1<<FP_RAGE)) == 0
+		&& NPC_Jedi_EnemyInForceRange()
+		&& Q_irand( 0, 10 ) < 2 )
+	{
+		Jedi_Rage();
+		TIMER_Set( NPCS.NPC, "rage", irand(15000, 30000) );
+		return qtrue;
+	}
+	else if ( TIMER_Done( NPCS.NPC, "speed" )
+		&& (NPCS.NPC->client->ps.fd.forcePowersKnown&(1<<FP_SPEED)) != 0
+		&& (NPCS.NPC->client->ps.fd.forcePowersActive&(1<<FP_SPEED)) == 0
+		&& NPC_Jedi_EnemyInForceRange()
+		&& Q_irand( 0, 10 ) < 2 )
+	{
+		ForceSpeed( NPCS.NPC, 500 );
+		TIMER_Set( NPCS.NPC, "speed", irand(15000, 30000) );
+		return qtrue;
+	}
+
+	return qfalse;
+}
+
+qboolean NPC_MoveIntoOptimalAttackPosition ( void )
+{
+	gentity_t	*NPC = NPCS.NPC;
+	float		dist = Distance(NPC->enemy->r.currentOrigin, NPC->r.currentOrigin);
+	float		OPTIMAL_MIN_RANGE = 256;
+	float		OPTIMAL_MAX_RANGE = 384;
+	float		OPTIMAL_RANGE = 300;
+
+	if (NPC->s.weapon == WP_SABER)
+	{
+		OPTIMAL_MIN_RANGE = 35;
+		OPTIMAL_MAX_RANGE = 50;
+		OPTIMAL_RANGE = 40;
+	}
+
+	if (dist > OPTIMAL_MAX_RANGE)
+	{// If clear then move stright there...
+		NPC_FacePosition( NPC->enemy->r.currentOrigin, qfalse );
+
+		NPCS.NPCInfo->goalEntity = NPC->enemy;
+		NPCS.NPCInfo->goalRadius = OPTIMAL_RANGE;
+
+		if ( UpdateGoal() )
+		{
+			if (NPC_CombatMoveToGoal( qtrue, qfalse ))
+			{// All is good in the world...
+				return qtrue;
+			}
+			/*else if (Jedi_Jump( NPC->enemy->r.currentOrigin, NPC->enemy->s.number ))
+			{// Backup... Can we jump there???
+				return qtrue;
+			}*/
+		}
+	}
+	else if (dist < OPTIMAL_MIN_RANGE)
+	{// If clear then move back a bit...
+		NPC_FacePosition( NPC->enemy->r.currentOrigin, qfalse );
+
+		NPCS.NPCInfo->goalEntity = NPC->enemy;
+		NPCS.NPCInfo->goalRadius = OPTIMAL_RANGE;
+
+		if ( UpdateGoal() )
+		{
+			NPC_CombatMoveToGoal( qtrue, qtrue );
+			return qtrue;
+		}
+	}
+
+	return qfalse;
+}
+
 extern void NPC_BSST_Patrol( void );
 extern void NPC_BSSniper_Default( void );
 
@@ -6818,6 +6987,25 @@ void NPC_BSJedi_Default( void )
 
 	Jedi_CheckCloak();
 
+	if (Jedi_CheckForce())
+	{// UQ1: Don't move/attack when we just used or are using a force power...
+		NPCS.ucmd.forwardmove = 0;
+		NPCS.ucmd.rightmove = 0;
+		NPCS.ucmd.upmove = 0;
+		return;
+	}
+
+	if (!NPCS.NPC->enemy || !NPC_IsAlive(NPCS.NPC->enemy))
+	{
+		return;
+	}
+
+	if (NPC_MoveIntoOptimalAttackPosition())
+	{// Just move into optimal range...
+		return;
+	}
+
+#if 0
 	if( !NPCS.NPC->enemy )
 	{//don't have an enemy, look for one
 		if ( !NPC_IsJedi(NPCS.NPC) )
@@ -6830,6 +7018,7 @@ void NPC_BSJedi_Default( void )
 		}
 	}
 	else//if ( NPC->enemy )
+#endif
 	{//have an enemy
 		if ( Jedi_WaitingAmbush( NPCS.NPC ) )
 		{//we were still waiting to drop down - must have had enemy set on me outside my AI
@@ -6868,6 +7057,7 @@ void NPC_BSJedi_Default( void )
 
 		if ( TIMER_Done( NPCS.NPC, "duck" ) && NPCS.ucmd.upmove < 0) NPCS.ucmd.upmove = 0;
 
+#if 0 // UQ1: Don't need this...
 		//if we have multiple-jedi combat, probably need to keep checking (at certain debounce intervals) for a better (closer, more active) enemy and switch if needbe...
 		if ( ((!NPCS.ucmd.buttons && !NPCS.NPC->client->ps.fd.forcePowersActive) 
 			|| (NPCS.NPC->enemy && NPCS.NPC->enemy->health <= 0)) 
@@ -6887,5 +7077,6 @@ void NPC_BSJedi_Default( void )
 			}
 			NPCS.NPCInfo->enemyCheckDebounceTime = level.time + Q_irand( 1000, 3000 );
 		}
+#endif //0
 	}
 }

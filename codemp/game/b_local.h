@@ -113,6 +113,7 @@ extern void NPC_LostEnemyDecideChase(void);
 extern float NPC_MaxDistSquaredForWeapon( void );
 extern qboolean NPC_EvaluateShot( int hit, qboolean glassOK );
 extern int NPC_ShotEntity( gentity_t *ent, vec3_t impactPos ); //impactedPos = NULL
+extern qboolean NPC_IsAlive ( gentity_t *NPC );
 
 //NPC_formation
 extern qboolean NPC_SlideMoveToGoal (void);

@@ -1097,18 +1097,20 @@ qboolean NPC_ValidEnemy( gentity_t *ent )
 	if (NPCS.NPC && NPCS.NPC->client && NPCS.NPC->isPadawan)
 	{
 		if (ent == NPCS.NPC->parent || ent == NPCS.NPC->padawan)
-		{// My padawan and his jedi are never enemies...
+		{// A padawan and his jedi are never enemies...
 			return qfalse;
 		}
 
 		if (NPCS.NPC->parent && NPC_IsAlive(NPCS.NPC->parent))
 		{// They just copy their master's enemy instead...
+#if 0
 			if (NPCS.NPC->parent->enemy && NPC_IsAlive(NPCS.NPC->parent->enemy))
 			{
 				NPCS.NPC->enemy = NPCS.NPC->parent->enemy;
 				return qfalse;
 			}
 			else
+#endif //0
 			{
 				if (Distance(NPCS.NPC->r.currentOrigin, ent->r.currentOrigin) > 384
 					|| Distance(NPCS.NPC->parent->r.currentOrigin, ent->r.currentOrigin) > 384)

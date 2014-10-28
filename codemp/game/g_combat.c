@@ -4609,28 +4609,6 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker, vec3_
 		return;
 	}
 
-	if (targ
-		&& targ->s.eType == ET_PLAYER
-		&& !(targ->s.eFlags & EF_FAKE_NPC_BOT)
-		&& attacker
-		&& targ->padawan
-		&& NPC_IsAlive(targ->padawan))
-	{// A player who has a padawan just got hit... Set his enemy to the attacker so that the padawan knows who to fight...
-		targ->enemy = attacker;
-		targ->padawan->enemy = attacker;
-	}
-
-	if (attacker
-		&& attacker->s.eType == ET_PLAYER
-		&& !(attacker->s.eFlags & EF_FAKE_NPC_BOT)
-		&& targ
-		&& attacker->padawan
-		&& NPC_IsAlive(attacker->padawan))
-	{// A player who has a padawan just hit someone... Set his enemy to the attacker so that the padawan knows who to fight...
-		attacker->enemy = targ;
-		attacker->padawan->enemy = targ;
-	}
-
 	if (targ && targ->damageRedirect)
 	{
 		G_Damage(&g_entities[targ->damageRedirectTo], inflictor, attacker, dir, point, damage, dflags, mod);
@@ -5824,6 +5802,52 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker, vec3_
 	if (targ && targ->client)
 	{
 		targ->client->ps.damageValue = take;
+	}
+
+	if (g_gametype.integer >= GT_TEAM 
+		&& targ 
+		&& targ->client
+		&& attacker 
+		&& attacker->client
+		&& (targ->s.eType == ET_PLAYER || attacker->s.eType == ET_PLAYER)
+		&& ((targ->padawan && NPC_IsAlive(targ->padawan)) || (attacker->padawan && NPC_IsAlive(attacker->padawan))))
+	{
+		int targ_team = targ->client->playerTeam;
+		int attk_team = attacker->client->playerTeam;
+		
+		if (targ->client)
+			targ_team = targ->client->sess.sessionTeam;
+
+		if (attacker->client)
+			attk_team = attacker->client->sess.sessionTeam;
+
+		if (targ
+			&& targ->s.eType == ET_PLAYER
+			&& attacker
+			&& targ->padawan
+			&& targ_team != attk_team
+			&& NPC_IsAlive(targ->padawan))
+		{// A player who has a padawan just got hit... Set his enemy to the attacker so that the padawan knows who to fight...
+			if (!targ->enemy || !NPC_IsAlive(targ->enemy))
+			{
+				targ->enemy = attacker;
+				targ->padawan->enemy = attacker;
+			}
+		}
+
+		if (attacker
+			&& attacker->s.eType == ET_PLAYER
+			&& targ
+			&& attacker->padawan
+			&& targ_team != attk_team
+			&& NPC_IsAlive(attacker->padawan))
+		{// A player who has a padawan just hit someone... Set his enemy to the attacker so that the padawan knows who to fight...
+			if (!attacker->enemy || !NPC_IsAlive(attacker->enemy))
+			{
+				attacker->enemy = targ;
+				attacker->padawan->enemy = targ;
+			}
+		}
 	}
 }
 

@@ -2233,6 +2233,9 @@ teamnodmg - team that NPC does not take damage from (turrets and other auto-defe
 void NPC_PrecacheType( char *NPC_type )
 {
 	gentity_t *fakespawner = G_Spawn();
+
+	trap->Print("* Precaching NPC type: %s.\n", NPC_type);
+
 	if ( fakespawner )
 	{
 		fakespawner->NPC_type = NPC_type;
@@ -2240,6 +2243,116 @@ void NPC_PrecacheType( char *NPC_type )
 		//NOTE: does the spawner have to stay around to send any precached info to the clients...?
 		G_FreeEntity( fakespawner );
 	}
+}
+
+void NPC_PrecacheWarzoneNPCs ( void )
+{
+	int i;
+
+	//
+	// Padawans...
+	//
+
+	NPC_PrecacheType( "padawan" );
+
+	for (i = 2; i < 29; i++)
+	{
+		char name[64];
+		sprintf(name, "padawan%i", i);
+		NPC_PrecacheType( name );
+	}
+
+
+	//
+	// Rebels...
+	//
+
+	NPC_PrecacheType( "rebel" );
+	NPC_PrecacheType( "rebel2" );
+	NPC_PrecacheType( "prisoner" );
+	NPC_PrecacheType( "prisoner2" );
+	NPC_PrecacheType( "bespincop" );
+	NPC_PrecacheType( "bespincop2" );
+	NPC_PrecacheType( "jan" );
+	NPC_PrecacheType( "lando" );
+	NPC_PrecacheType( "chewie" );
+	NPC_PrecacheType( "jedi" );
+	NPC_PrecacheType( "jedi2" );
+	NPC_PrecacheType( "jedi_hf1" );
+	NPC_PrecacheType( "jedi_hf2" );
+	NPC_PrecacheType( "jedi_hm1" );
+	NPC_PrecacheType( "jedi_hm2" );
+	NPC_PrecacheType( "jedi_kdm1" );
+	NPC_PrecacheType( "jedi_kdm2" );
+	NPC_PrecacheType( "jedi_rm1" );
+	NPC_PrecacheType( "jedi_rm2" );
+	NPC_PrecacheType( "jedi_tf1" );
+	NPC_PrecacheType( "jedi_tf2" );
+	NPC_PrecacheType( "jedi_zf1" );
+	NPC_PrecacheType( "jedi_zf2" );
+	NPC_PrecacheType( "JediF" );
+	NPC_PrecacheType( "JediMaster" );
+	NPC_PrecacheType( "JediTrainer" );
+	NPC_PrecacheType( "Kyle_boss" );
+	NPC_PrecacheType( "Luke" );
+
+
+	//
+	// Imperials...
+	//
+
+	NPC_PrecacheType( "stormtrooper" );
+	NPC_PrecacheType( "stofficer" );
+	NPC_PrecacheType( "stofficeralt" );
+	NPC_PrecacheType( "stcommander" );
+	NPC_PrecacheType( "impofficer" );
+	NPC_PrecacheType( "impworker" );
+	//NPC_PrecacheType( "hazardtrooper" );
+	NPC_PrecacheType( "boba_fett" );
+	NPC_PrecacheType( "imperial" );
+	NPC_PrecacheType( "rockettrooper" );
+	NPC_PrecacheType( "impworker" );
+	NPC_PrecacheType( "reborn_dual" );
+	NPC_PrecacheType( "reborn_new" );
+	NPC_PrecacheType( "reborn_staff" );
+	//NPC_PrecacheType( "reborn_twin" );
+	//NPC_PrecacheType( "rebornacrobat" );
+	//	NPC_PrecacheType( "rebornchiss" );
+	//NPC_PrecacheType( "rebornfencer" );
+	//NPC_PrecacheType( "rebornforceuser" );
+	NPC_PrecacheType( "rebornrodian" );
+	NPC_PrecacheType( "reborntrandoshan" );
+	NPC_PrecacheType( "rebornweequay" );
+	NPC_PrecacheType( "rebornboss" );
+	NPC_PrecacheType( "tavion" );
+	NPC_PrecacheType( "tavion_new" );
+	//	NPC_PrecacheType( "shadowtrooper" );
+	//NPC_PrecacheType( "saber_droid" );
+	NPC_PrecacheType( "alora" );
+	NPC_PrecacheType( "alora_dual" );
+	NPC_PrecacheType( "reborn" );
+
+
+	//
+	// Civilians...
+	//
+
+	NPC_PrecacheType( "civilian_bartender" );
+	NPC_PrecacheType( "civilian_human_merc" );
+	NPC_PrecacheType( "civilian_human_merc2" );
+	NPC_PrecacheType( "civilian_merchant" );
+	NPC_PrecacheType( "civilian_protocol" );
+	NPC_PrecacheType( "civilian_r2d2" );
+	NPC_PrecacheType( "civilian_rodian" );
+	NPC_PrecacheType( "civilian_rodian2" );
+	NPC_PrecacheType( "civilian_trandoshan" );
+	NPC_PrecacheType( "civilian_ugnaught" );
+	NPC_PrecacheType( "civilian_ugnaught2" );
+	NPC_PrecacheType( "civilian_weequay" );
+	NPC_PrecacheType( "civilian_weequay2" );
+	NPC_PrecacheType( "civilian_weequay3" );
+	NPC_PrecacheType( "civilian_weequay4" );
+	NPC_PrecacheType( "civilian_r5d2" );
 }
 
 void SP_NPC_spawner2( gentity_t *self)
@@ -2384,65 +2497,16 @@ void SP_NPC_spawner( gentity_t *self)
 				|| !Q_stricmpn("Luke", self->NPC_type, 4)))
 			{// Spawned a jedi. Spawn a padawan for them as well...
 				int choice = irand(1,36);
+				char name[64];
 
-				if (choice <= 5)
-					self->NPC_type = G_NewString("padawan");
-				else if (choice == 10)
-					self->NPC_type = G_NewString("padawan2");
-				else if (choice == 11)
-					self->NPC_type = G_NewString("padawan3");
-				else if (choice == 12)
-					self->NPC_type = G_NewString("padawan4");
-				else if (choice == 13)
-					self->NPC_type = G_NewString("padawan5");
-				else if (choice == 14)
-					self->NPC_type = G_NewString("padawan6");
-				else if (choice == 15)
-					self->NPC_type = G_NewString("padawan7");
-				else if (choice == 16)
-					self->NPC_type = G_NewString("padawan8");
-				else if (choice == 17)
-					self->NPC_type = G_NewString("padawan9");
-				else if (choice == 18)
-					self->NPC_type = G_NewString("padawan10");
-				else if (choice == 19)
-					self->NPC_type = G_NewString("padawan11");
-				else if (choice == 20)
-					self->NPC_type = G_NewString("padawan12");
-				else if (choice == 21)
-					self->NPC_type = G_NewString("padawan13");
-				else if (choice == 22)
-					self->NPC_type = G_NewString("padawan14");
-				else if (choice == 23)
-					self->NPC_type = G_NewString("padawan15");
-				else if (choice == 24)
-					self->NPC_type = G_NewString("padawan16");
-				else if (choice == 25)
-					self->NPC_type = G_NewString("padawan17");
-				else if (choice == 26)
-					self->NPC_type = G_NewString("padawan18");
-				else if (choice == 27)
-					self->NPC_type = G_NewString("padawan19");
-				else if (choice == 28)
-					self->NPC_type = G_NewString("padawan20");
-				else if (choice == 29)
-					self->NPC_type = G_NewString("padawan21");
-				else if (choice == 30)
-					self->NPC_type = G_NewString("padawan22");
-				else if (choice == 31)
-					self->NPC_type = G_NewString("padawan23");
-				else if (choice == 32)
-					self->NPC_type = G_NewString("padawan24");
-				else if (choice == 33)
-					self->NPC_type = G_NewString("padawan25");
-				else if (choice == 34)
-					self->NPC_type = G_NewString("padawan26");
-				else if (choice == 35)
-					self->NPC_type = G_NewString("padawan27");
-				else if (choice == 36)
-					self->NPC_type = G_NewString("padawan28");
+				sprintf(name, "padawan%i", choice);
 
-				trap->Print("Spawning padawan %s for NPC.\n", self->NPC_type);
+				if (choice > 1 && choice < 28)
+					self->NPC_type = name;
+				else
+					self->NPC_type = "padawan";
+
+				trap->Print("Spawning padawan \"%s\" for Jedi NPC.\n", self->NPC_type);
 
 				SP_NPC_spawner2( self );
 			}

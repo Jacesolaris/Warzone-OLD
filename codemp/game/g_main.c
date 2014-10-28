@@ -236,6 +236,8 @@ G_InitGame
 */
 extern void RemoveAllWP(void);
 extern void BG_ClearVehicleParseParms(void);
+extern void NPC_PrecacheWarzoneNPCs ( void );
+
 gentity_t *SelectRandomDeathmatchSpawnPoint( void );
 void SP_info_jedimaster_start( gentity_t *ent );
 void G_InitGame( int levelTime, int randomSeed, int restart ) {
@@ -499,6 +501,7 @@ void G_InitGame( int levelTime, int randomSeed, int restart ) {
 	}
 
 	Load_Model_Scales();
+	NPC_PrecacheWarzoneNPCs();
 }
 
 

@@ -3292,6 +3292,7 @@ qboolean NPC_NPCBlockingPath()
 		if (!ent) continue;
 		if (ent == NPC) continue; // UQ1: OLD JKG Mod was missing this :)
 		if (ent->s.eType != ET_PLAYER && ent->s.eType != ET_NPC) continue;
+		if (ent == NPC->enemy) continue; // enemy never blocks path...
 		//if (Distance(ent->r.currentOrigin, NPC->r.currentOrigin) > 64) continue;
 
 		//if (InFOV3( ent->r.currentOrigin, NPC->r.currentOrigin, NPC->move_vector, 90, 120 ))
@@ -4793,6 +4794,7 @@ qboolean NPC_PadawanMove( void )
 	
 	if (NPC->s.NPC_class == CLASS_PADAWAN)
 	{
+		G_ClearEnemy( NPCS.NPC );
 		NPC_ClearGoal();
 		NPCS.NPCInfo->goalEntity = NULL;
 		NPCS.NPCInfo->tempGoal = NULL;
@@ -4802,61 +4804,53 @@ qboolean NPC_PadawanMove( void )
 			float dist = Distance(NPC->parent->r.currentOrigin, NPC->r.currentOrigin);
 
 			// OMG combatmovetogoal sucks...
-			if (dist > 128 && dist < 512)
+			if (dist > 96 && dist < 512)
 			{// If clear then move stright there...
-				qboolean walk = qfalse;
-
-				if (dist < 128 && !(NPC->enemy && NPC_IsAlive(NPC->enemy))) 
-					walk = qtrue;
-
 				NPC_FacePosition( NPC->parent->r.currentOrigin, qfalse );
-				VectorSubtract( NPC->parent->r.currentOrigin, NPC->r.currentOrigin, NPC->movedir );
 
-				if (UQ1_UcmdMoveForDir( NPC, &NPCS.ucmd, NPC->movedir, walk, NPC->parent->r.currentOrigin )) 
-				{// Looks like we can move there...
-					//trap->Print("dist > 96 && dist < 512 MOVE!\n");
+				NPCS.NPCInfo->goalEntity = NPC->parent;
+				NPCS.NPCInfo->goalRadius = 96.0;
+				NPCS.NPCInfo->greetEnt = NPC->parent;
 
-					if (NPCS.ucmd.forwardmove == 0 && NPCS.ucmd.rightmove == 0 && NPCS.ucmd.upmove == 0)
-					{
-						NPC_PickRandomIdleAnimantion(NPC);
-						VectorClear( NPC->client->ps.moveDir );
-						VectorClear( NPC->movedir );
+				if ( UpdateGoal() )
+				{
+					//if (walk) NPCS.ucmd.buttons |= BUTTON_WALKING;
+					if (NPC_CombatMoveToGoal( qtrue, qfalse ))
+					{// All is good in the world...
+						return qtrue;
 					}
-					else
-					{
-						NPC_SelectMoveAnimation(walk);
+					else if (Jedi_Jump( NPC->parent->r.currentOrigin, NPC->parent->s.number ))
+					{// Backup... Can we jump there???
+						return qtrue;
 					}
-
-					return qtrue;
-				}
-				else if (/*NPC->nextPadawanJumpThink <= level.time &&*/ Jedi_Jump( NPC->parent->r.currentOrigin, NPC->parent->s.number ))
-				{// Backup... Can we jump there???
-					//trap->Print("dist > 96 && dist < 512 JUMP!\n");
-					return qtrue;
 				}
 
 				//trap->Print("dist > 96 && dist < 512 FAIL!\n");
 			}
-			/*else if (dist < 64)
+			else if (dist < 48)
 			{// If clear then move back a bit...
 				NPC_FacePosition( NPC->parent->r.currentOrigin, qfalse );
-				VectorSubtract( NPC->r.currentOrigin, NPC->parent->r.currentOrigin, NPC->movedir );
 
-				if (UQ1_UcmdMoveForDir( NPC, &NPCS.ucmd, NPC->movedir, qtrue, NPC->parent->r.currentOrigin )) 
-				{// Looks like we can move there...
-					//trap->Print("dist < 32 OK!\n");
+				NPCS.NPCInfo->goalEntity = NPC->parent;
+				NPCS.NPCInfo->goalRadius = 96.0;
+				NPCS.NPCInfo->greetEnt = NPC->parent;
+
+				if ( UpdateGoal() )
+				{
+					//if (walk) NPCS.ucmd.buttons |= BUTTON_WALKING;
+					//Jedi_Move( NPCS.NPCInfo->goalEntity, qfalse );
+					NPC_CombatMoveToGoal( qtrue, qtrue );
 					return qtrue;
 				}
-			}*/
-			else if (dist <= 128)
+			}
+			else if (dist <= 96)
 			{// Perfect distance... Stay idle...
-				ucmd.forwardmove = 0;
+				/*ucmd.forwardmove = 0;
 				ucmd.rightmove = 0;
 				ucmd.upmove = 0;
-				NPC_PickRandomIdleAnimantion(NPC);
 
 				//trap->Print("dist <= 96 IDLE!\n");
-
+				*/
 				return qtrue;
 			}
 			else if (NPC->parent->s.groundEntityNum != ENTITYNUM_NONE) // UQ1: Let's just skip pathfinding completely...
@@ -4871,7 +4865,7 @@ qboolean NPC_PadawanMove( void )
 					{
 						TeleportNPC( NPC, gWPArray[waypoint]->origin, NPC->s.angles );
 
-						NPC_ClearPathData(NPC);
+						//NPC_ClearPathData(NPC);
 						ucmd.forwardmove = 0;
 						ucmd.rightmove = 0;
 						ucmd.upmove = 0;
@@ -4885,11 +4879,12 @@ qboolean NPC_PadawanMove( void )
 			}
 		}
 
+		/*
 		ucmd.forwardmove = 0;
 		ucmd.rightmove = 0;
 		ucmd.upmove = 0;
-		NPC_PickRandomIdleAnimantion(NPC);
-		
+		*/
+
 		//trap->Print("IDLE!\n");
 
 		return qtrue;
@@ -5791,14 +5786,14 @@ void NPC_DoPadawanStuff ( void )
 			float Jdist = Distance(me->r.currentOrigin, parent->r.currentOrigin);
 			float Edist = Distance(me->r.currentOrigin, parent->enemy->r.currentOrigin);
 
-			if ( Jdist <= 256 && Edist <= 256 )
+			if ( Jdist <= 384 && Edist <= 384 )
 			{
 				me->enemy = parent->enemy;
 			}
 			else
 			{
-				if (me->enemy && me->enemy->enemy != me)
-					me->enemy = NULL;
+				//if (me->enemy && me->enemy->enemy != me)
+				//	me->enemy = NULL;
 			}
 		}
 		else
@@ -5920,7 +5915,7 @@ void NPC_DoPadawanStuff ( void )
 			float Jdist = Distance(me->r.currentOrigin, parent->r.currentOrigin);
 			float Edist = Distance(me->r.currentOrigin, parent->enemy->r.currentOrigin);
 
-			if ( Jdist <= 256 && Edist <= 256 )
+			if ( Jdist <= 384 && Edist <= 384 )
 			{
 				me->enemy = parent->enemy;
 			}
@@ -5928,7 +5923,7 @@ void NPC_DoPadawanStuff ( void )
 			{
 				if (me->enemy && me->enemy->enemy != me)
 				{
-					me->enemy = NULL;
+					//me->enemy = NULL;
 				}
 			}
 		}
@@ -6197,7 +6192,7 @@ void NPC_Think ( gentity_t *self)//, int msec )
 				G_ClearEnemy(self);
 			}
 
-			if (!self->isPadawan && !self->enemy && !is_civilian)
+			if ((!self->enemy || !NPC_IsAlive(self->enemy)) && !is_civilian)
 			{
 				NPC_FindEnemy( qtrue );
 			}
