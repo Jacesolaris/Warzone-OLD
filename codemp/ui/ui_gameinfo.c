@@ -208,6 +208,12 @@ void UI_LoadArenas( void ) {
 			uiInfo.mapList[uiInfo.mapCount].typeBits |= (1 << GT_JEDIMASTER);
 		}
 
+		// UQ1: All maps work with these gametypes now...
+		if (!(uiInfo.mapList[uiInfo.mapCount].typeBits & (1 << GT_FFA))) uiInfo.mapList[uiInfo.mapCount].typeBits |= (1 << GT_FFA);
+		if (!(uiInfo.mapList[uiInfo.mapCount].typeBits & (1 << GT_TEAM))) uiInfo.mapList[uiInfo.mapCount].typeBits |= (1 << GT_TEAM);
+		if (!(uiInfo.mapList[uiInfo.mapCount].typeBits & (1 << GT_CTF))) uiInfo.mapList[uiInfo.mapCount].typeBits |= (1 << GT_CTF);
+		if (!(uiInfo.mapList[uiInfo.mapCount].typeBits & (1 << GT_WARZONE))) uiInfo.mapList[uiInfo.mapCount].typeBits |= (1 << GT_WARZONE);
+
 		uiInfo.mapCount++;
 		if (uiInfo.mapCount >= MAX_MAPS) {
 			break;

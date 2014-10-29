@@ -2608,6 +2608,7 @@ static void CG_Missile( centity_t *cent ) {
 	memset (&ent, 0, sizeof(ent));
 	VectorCopy( cent->lerpOrigin, ent.origin);
 	VectorCopy( cent->lerpOrigin, ent.oldorigin);
+	ent.ignoreCull = qtrue; // already checked...
 /*
 Ghoul2 Insert Start
 */
@@ -2851,6 +2852,7 @@ static void CG_Mover( centity_t *cent ) {
 
 	// create the render entity
 	memset (&ent, 0, sizeof(ent));
+	ent.ignoreCull = qtrue; // already checked...
 
 	if ( (cent->currentState.eFlags2&EF2_HYPERSPACE) )
 	{//I'm the hyperspace brush
@@ -3001,6 +3003,7 @@ static void CG_Portal( centity_t *cent ) {
 	ent.oldframe = s1->powerups;
 	ent.frame = s1->frame;		// rotation speed
 	ent.skinNum = s1->clientNum/256.0 * 360;	// roll offset
+	ent.ignoreCull = qtrue; // already checked...
 /*
 Ghoul2 Insert Start
 */
@@ -3489,7 +3492,6 @@ CG_AddPacketEntities
 */
 void CG_AddPacketEntities( qboolean isPortal ) {
 	int					num;
-	centity_t			*cent;
 	playerState_t		*ps;
 
 //[AUTOWAYPOINT]
@@ -3498,6 +3500,8 @@ void CG_AddPacketEntities( qboolean isPortal ) {
 
 	if (isPortal)
 	{
+		centity_t			*cent;
+
 		for ( num = 0 ; num < cg.snap->numEntities ; num++ )
 		{
 			cent = &cg_entities[ cg.snap->entities[ num ].number ];
@@ -3573,13 +3577,15 @@ void CG_AddPacketEntities( qboolean isPortal ) {
 	//No longer have to do this.
 
 	// add each entity sent over by the server
-	for ( num = 0 ; num < cg.snap->numEntities ; num++ ) {
+//#pragma omp parallel for num_threads(32) schedule(dynamic) // UQ1: lets thread this sucker...
+	for ( num = 0 ; num < cg.snap->numEntities ; num++ ) 
+	{
 		// Don't re-add ents that have been predicted.
 		if (cg.snap->entities[ num ].number != cg.snap->ps.clientNum)
 		{
-			cent = &cg_entities[ cg.snap->entities[ num ].number ];
-			if (cent->currentState.eType == ET_PLAYER &&
-				cent->currentState.m_iVehicleNum)
+			centity_t *cent = &cg_entities[ cg.snap->entities[ num ].number ];
+
+			if (cent->currentState.eType == ET_PLAYER && cent->currentState.m_iVehicleNum)
 			{ //add his veh first
 				int j = 0;
 
@@ -3588,9 +3594,35 @@ void CG_AddPacketEntities( qboolean isPortal ) {
 					if (cg.snap->entities[j].number == cent->currentState.m_iVehicleNum)
 					{
 						centity_t *veh = &cg_entities[cg.snap->entities[j].number];
+#if 0
+						byte mask;
 
-						CG_AddCEntity(veh);
-						veh->bodyHeight = cg.time; //indicate we have already been added
+						if (!veh->currentState.isPortalEnt
+							&& veh->currentState.eType != ET_MOVER
+							&& veh->currentState.eType != ET_MOVER_MARKER
+							&& veh->currentState.eType != ET_PORTAL
+							&& veh->currentState.eType != ET_MISSILE
+							&& (veh->currentState.eType == ET_INVISIBLE || veh->currentState.eType == ET_FREED || !trap->R_InPVS(cg.refdef.vieworg, veh->lerpOrigin, &mask)))
+						{// UQ1: This is not on screen. We should be able to skip render...
+							continue;
+						}
+
+						/*if (!veh->currentState.isPortalEnt
+							&& veh->currentState.eType != ET_MOVER
+							&& veh->currentState.eType != ET_MOVER_MARKER
+							&& veh->currentState.eType != ET_PORTAL
+							&& veh->currentState.eType != ET_MISSILE
+							&& !CG_InFOV( veh->lerpOrigin, cg.refdef.vieworg, cg.refdef.viewangles, cg.refdef.fov_x * 1.3, cg.refdef.fov_y * 1.3))
+						{// UQ1: This is not on screen. We should be able to skip render...
+							continue;
+						}*/
+
+#endif
+//#pragma omp critical
+						{
+							CG_AddCEntity(veh);
+							veh->bodyHeight = cg.time; //indicate we have already been added
+						}
 						break;
 					}
 
@@ -3604,13 +3636,52 @@ void CG_AddPacketEntities( qboolean isPortal ) {
 				//if we were to add the vehicle after the pilot, the pilot's bolt would lag a frame behind.
 				continue;
 			}
-			CG_AddCEntity( cent );
+
+#if 0
+			{
+				byte mask;
+				//float dist = Distance( cent->lerpOrigin, cg.refdef.vieworg);
+
+				if (!cent->currentState.isPortalEnt
+					&& cent->currentState.eType != ET_MOVER
+					&& cent->currentState.eType != ET_MOVER_MARKER
+					&& cent->currentState.eType != ET_PORTAL
+					&& cent->currentState.eType != ET_MISSILE
+					&& (cent->currentState.eType == ET_INVISIBLE || cent->currentState.eType == ET_FREED || !trap->R_InPVS(cg.refdef.vieworg, cent->lerpOrigin, &mask)))
+				{// UQ1: This is not on screen. We should be able to skip render...
+					continue;
+				}
+
+				/*
+				if (!cent->currentState.isPortalEnt
+					&& cent->currentState.eType != ET_MOVER
+					&& cent->currentState.eType != ET_MOVER_MARKER
+					&& cent->currentState.eType != ET_PORTAL
+					&& cent->currentState.eType != ET_MISSILE
+					&& !CG_InFOV( cent->lerpOrigin, cg.refdef.vieworg, cg.refdef.viewangles, cg.refdef.fov_x * 1.3, cg.refdef.fov_y * 1.3))
+				{// UQ1: This is not on screen. We should be able to skip render...
+					continue;
+				}
+
+				// Distance cull...
+				if (dist > 3072)
+				{// UQ1: This is not on screen. We should be able to skip render...
+					continue;
+				}
+				*/
+			}
+#endif
+//#pragma omp critical
+			{
+				CG_AddCEntity( cent );
+			}
 		}
 	}
 
-	for(num=0;num<cg_numpermanents;num++)
+	for(num = 0; num < cg_numpermanents; num++)
 	{
-		cent = cg_permanents[num];
+		centity_t *cent = cg_permanents[num];
+
 		if (cent->currentValid)
 		{
 			CG_AddCEntity( cent );

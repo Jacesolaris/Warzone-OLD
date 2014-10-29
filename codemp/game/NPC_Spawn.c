@@ -2816,6 +2816,13 @@ first and so no scripts should be names with these names:
 delay - after spawned or triggered, how many seconds to wait to spawn the NPC
 */
 
+qboolean NPC_GameTypeDisablesMapNPCS( void )
+{
+	if (g_gametype.integer == GT_WARZONE) return qtrue;
+
+	return qfalse;
+}
+
 //=============================================================================================
 //CHARACTERS
 //=============================================================================================
@@ -2828,6 +2835,12 @@ SHY - Spawner is shy
 */
 void SP_NPC_Kyle( gentity_t *self)
 {
+	if (NPC_GameTypeDisablesMapNPCS())
+	{
+		G_FreeEntity(self);
+		return;
+	}
+
 	self->NPC_type = "Kyle";
 
 	WP_SetSaberModel( NULL, CLASS_KYLE );
@@ -2844,6 +2857,12 @@ SHY - Spawner is shy
 */
 void SP_NPC_Lando( gentity_t *self)
 {
+	if (NPC_GameTypeDisablesMapNPCS())
+	{
+		G_FreeEntity(self);
+		return;
+	}
+
 	self->NPC_type = "Lando";
 
 	SP_NPC_spawner( self );
@@ -2858,6 +2877,12 @@ SHY - Spawner is shy
 */
 void SP_NPC_Jan( gentity_t *self)
 {
+	if (NPC_GameTypeDisablesMapNPCS())
+	{
+		G_FreeEntity(self);
+		return;
+	}
+
 	self->NPC_type = "Jan";
 
 	SP_NPC_spawner( self );
@@ -2872,6 +2897,12 @@ SHY - Spawner is shy
 */
 void SP_NPC_Luke( gentity_t *self)
 {
+	if (NPC_GameTypeDisablesMapNPCS())
+	{
+		G_FreeEntity(self);
+		return;
+	}
+
 	self->NPC_type = "Luke";
 
 	WP_SetSaberModel( NULL, CLASS_LUKE );
@@ -2888,6 +2919,12 @@ SHY - Spawner is shy
 */
 void SP_NPC_MonMothma( gentity_t *self)
 {
+	if (NPC_GameTypeDisablesMapNPCS())
+	{
+		G_FreeEntity(self);
+		return;
+	}
+
 	self->NPC_type = "MonMothma";
 
 	SP_NPC_spawner( self );
@@ -2902,6 +2939,12 @@ SHY - Spawner is shy
 */
 void SP_NPC_Tavion( gentity_t *self)
 {
+	if (NPC_GameTypeDisablesMapNPCS())
+	{
+		G_FreeEntity(self);
+		return;
+	}
+
 	self->NPC_type = "Tavion";
 
 	WP_SetSaberModel( NULL, CLASS_TAVION );
@@ -2922,6 +2965,12 @@ SHY - Spawner is shy
 */
 void SP_NPC_Tavion_New( gentity_t *self)
 {
+	if (NPC_GameTypeDisablesMapNPCS())
+	{
+		G_FreeEntity(self);
+		return;
+	}
+
 	if ( (self->spawnflags&1) )
 	{
 		self->NPC_type = "tavion_scepter";
@@ -2950,6 +2999,12 @@ SHY - Spawner is shy
 */
 void SP_NPC_Alora( gentity_t *self)
 {
+	if (NPC_GameTypeDisablesMapNPCS())
+	{
+		G_FreeEntity(self);
+		return;
+	}
+
 	if ( (self->spawnflags&1) )
 	{
 		self->NPC_type = "alora_dual";
@@ -2977,6 +3032,12 @@ SHY - Spawner is shy
 */
 void SP_NPC_Reborn_New( gentity_t *self)
 {
+	if (NPC_GameTypeDisablesMapNPCS())
+	{
+		G_FreeEntity(self);
+		return;
+	}
+
 	if ( !self->NPC_type )
 	{
 		if ( (self->spawnflags&4) )
@@ -3032,6 +3093,12 @@ SHY - Spawner is shy
 */
 void SP_NPC_Cultist_Saber( gentity_t *self)
 {
+	if (NPC_GameTypeDisablesMapNPCS())
+	{
+		G_FreeEntity(self);
+		return;
+	}
+
 	if ( !self->NPC_type )
 	{
 		if ( (self->spawnflags&1) )
@@ -3101,6 +3168,12 @@ SHY - Spawner is shy
 */
 void SP_NPC_Cultist_Saber_Powers( gentity_t *self)
 {
+	if (NPC_GameTypeDisablesMapNPCS())
+	{
+		G_FreeEntity(self);
+		return;
+	}
+
 	if ( !self->NPC_type )
 	{
 		if ( (self->spawnflags&1) )
@@ -3169,6 +3242,12 @@ SHY - Spawner is shy
 */
 void SP_NPC_Cultist( gentity_t *self)
 {
+	if (NPC_GameTypeDisablesMapNPCS())
+	{
+		G_FreeEntity(self);
+		return;
+	}
+
 	if ( !self->NPC_type )
 	{
 		if ( (self->spawnflags&1) )
@@ -3227,6 +3306,12 @@ SHY - Spawner is shy
 */
 void SP_NPC_Cultist_Commando( gentity_t *self)
 {
+	if (NPC_GameTypeDisablesMapNPCS())
+	{
+		G_FreeEntity(self);
+		return;
+	}
+
 	if ( !self->NPC_type )
 	{
 		self->NPC_type = "cultistcommando";
@@ -3245,6 +3330,12 @@ SHY - Spawner is shy
 */
 void SP_NPC_Cultist_Destroyer( gentity_t *self)
 {
+	if (NPC_GameTypeDisablesMapNPCS())
+	{
+		G_FreeEntity(self);
+		return;
+	}
+
 	self->NPC_type = "cultist";//"cultist_explode";
 	SP_NPC_spawner( self );
 }
@@ -3258,6 +3349,12 @@ SHY - Spawner is shy
 */
 void SP_NPC_Reelo( gentity_t *self)
 {
+	if (NPC_GameTypeDisablesMapNPCS())
+	{
+		G_FreeEntity(self);
+		return;
+	}
+
 	self->NPC_type = "Reelo";
 
 	SP_NPC_spawner( self );
@@ -3274,6 +3371,12 @@ SHY - Spawner is shy
 */
 void SP_NPC_Galak( gentity_t *self)
 {
+	if (NPC_GameTypeDisablesMapNPCS())
+	{
+		G_FreeEntity(self);
+		return;
+	}
+
 	if ( self->spawnflags & 1 )
 	{
 		self->NPC_type = "Galak_Mech";
@@ -3296,6 +3399,12 @@ SHY - Spawner is shy
 */
 void SP_NPC_Desann( gentity_t *self)
 {
+	if (NPC_GameTypeDisablesMapNPCS())
+	{
+		G_FreeEntity(self);
+		return;
+	}
+
 	self->NPC_type = "Desann";
 
 	WP_SetSaberModel( NULL, CLASS_DESANN );
@@ -3312,6 +3421,12 @@ SHY - Spawner is shy
 */
 void SP_NPC_Bartender( gentity_t *self)
 {
+	if (NPC_GameTypeDisablesMapNPCS())
+	{
+		G_FreeEntity(self);
+		return;
+	}
+
 	self->NPC_type = "Bartender";
 
 	SP_NPC_spawner( self );
@@ -3326,6 +3441,12 @@ SHY - Spawner is shy
 */
 void SP_NPC_MorganKatarn( gentity_t *self)
 {
+	if (NPC_GameTypeDisablesMapNPCS())
+	{
+		G_FreeEntity(self);
+		return;
+	}
+
 	self->NPC_type = "MorganKatarn";
 
 	SP_NPC_spawner( self );
@@ -3349,6 +3470,12 @@ Ally Jedi NPC Buddy - tags along with player
 */
 void SP_NPC_Jedi( gentity_t *self)
 {
+	if (NPC_GameTypeDisablesMapNPCS())
+	{
+		G_FreeEntity(self);
+		return;
+	}
+
 	if(!self->NPC_type)
 	{
 		if (self->spawnflags & 4)
@@ -3436,6 +3563,12 @@ SHY - Spawner is shy
 */
 void SP_NPC_Prisoner( gentity_t *self)
 {
+	if (NPC_GameTypeDisablesMapNPCS())
+	{
+		G_FreeEntity(self);
+		return;
+	}
+
 	if(!self->NPC_type)
 	{
 		if ( Q_irand( 0, 1 ) )
@@ -3460,6 +3593,12 @@ SHY - Spawner is shy
 */
 void SP_NPC_Rebel( gentity_t *self)
 {
+	if (NPC_GameTypeDisablesMapNPCS())
+	{
+		G_FreeEntity(self);
+		return;
+	}
+
 	if(!self->NPC_type)
 	{
 		if ( Q_irand( 0, 1 ) )
@@ -3495,6 +3634,12 @@ SHY - Spawner is shy
 */
 void SP_NPC_Human_Merc(gentity_t *self)
 {
+	if (NPC_GameTypeDisablesMapNPCS())
+	{
+		G_FreeEntity(self);
+		return;
+	}
+
 	if (!self->NPC_type)
 	{
 		/*if ( self->message )
@@ -3544,6 +3689,12 @@ SHY - Spawner is shy
 */
 void SP_NPC_Stormtrooper( gentity_t *self)
 {
+	if (NPC_GameTypeDisablesMapNPCS())
+	{
+		G_FreeEntity(self);
+		return;
+	}
+
 	if ( self->spawnflags & 8 )
 	{//rocketer
 		self->NPC_type = "rockettrooper";
@@ -3576,6 +3727,12 @@ void SP_NPC_Stormtrooper( gentity_t *self)
 }
 void SP_NPC_StormtrooperOfficer( gentity_t *self)
 {
+	if (NPC_GameTypeDisablesMapNPCS())
+	{
+		G_FreeEntity(self);
+		return;
+	}
+
 	self->spawnflags |= 1;
 	SP_NPC_Stormtrooper( self );
 }
@@ -3590,6 +3747,12 @@ SHY - Spawner is shy
 */
 void SP_NPC_Snowtrooper( gentity_t *self)
 {
+	if (NPC_GameTypeDisablesMapNPCS())
+	{
+		G_FreeEntity(self);
+		return;
+	}
+
 	self->NPC_type = "snowtrooper";
 
 	SP_NPC_spawner( self );
@@ -3605,6 +3768,12 @@ SHY - Spawner is shy
 */
 void SP_NPC_Tie_Pilot( gentity_t *self)
 {
+	if (NPC_GameTypeDisablesMapNPCS())
+	{
+		G_FreeEntity(self);
+		return;
+	}
+
 	self->NPC_type = "stormpilot";
 
 	SP_NPC_spawner( self );
@@ -3619,6 +3788,12 @@ SHY - Spawner is shy
 */
 void SP_NPC_Ugnaught( gentity_t *self)
 {
+	if (NPC_GameTypeDisablesMapNPCS())
+	{
+		G_FreeEntity(self);
+		return;
+	}
+
 	if ( !self->NPC_type )
 	{
 		if ( Q_irand( 0, 1 ) )
@@ -3645,6 +3820,12 @@ SHY - Spawner is shy
 */
 void SP_NPC_Jawa( gentity_t *self)
 {
+	if (NPC_GameTypeDisablesMapNPCS())
+	{
+		G_FreeEntity(self);
+		return;
+	}
+
 	if ( !self->NPC_type )
 	{
 		if ( (self->spawnflags&1) )
@@ -3673,6 +3854,12 @@ SHY - Spawner is shy
 */
 void SP_NPC_Gran( gentity_t *self)
 {
+	if (NPC_GameTypeDisablesMapNPCS())
+	{
+		G_FreeEntity(self);
+		return;
+	}
+
 	if ( !self->NPC_type )
 	{
 		if ( self->spawnflags & 1 )
@@ -3710,6 +3897,12 @@ SHY - Spawner is shy
 */
 void SP_NPC_Rodian( gentity_t *self)
 {
+	if (NPC_GameTypeDisablesMapNPCS())
+	{
+		G_FreeEntity(self);
+		return;
+	}
+
 	if ( !self->NPC_type )
 	{
 		if ( self->spawnflags&1 )
@@ -3734,6 +3927,12 @@ SHY - Spawner is shy
 */
 void SP_NPC_Weequay( gentity_t *self)
 {
+	if (NPC_GameTypeDisablesMapNPCS())
+	{
+		G_FreeEntity(self);
+		return;
+	}
+
 	if ( !self->NPC_type )
 	{
 		switch ( Q_irand( 0, 3 ) )
@@ -3765,6 +3964,12 @@ SHY - Spawner is shy
 */
 void SP_NPC_Trandoshan( gentity_t *self)
 {
+	if (NPC_GameTypeDisablesMapNPCS())
+	{
+		G_FreeEntity(self);
+		return;
+	}
+
 	if ( !self->NPC_type )
 	{
 		self->NPC_type = "Trandoshan";
@@ -3782,6 +3987,12 @@ SHY - Spawner is shy
 */
 void SP_NPC_Tusken( gentity_t *self)
 {
+	if (NPC_GameTypeDisablesMapNPCS())
+	{
+		G_FreeEntity(self);
+		return;
+	}
+
 	if ( !self->NPC_type )
 	{
 		if ( (self->spawnflags&1) )
@@ -3806,6 +4017,12 @@ SHY - Spawner is shy
 */
 void SP_NPC_Noghri( gentity_t *self)
 {
+	if (NPC_GameTypeDisablesMapNPCS())
+	{
+		G_FreeEntity(self);
+		return;
+	}
+
 	if ( !self->NPC_type )
 	{
 		self->NPC_type = "noghri";
@@ -3824,6 +4041,12 @@ SHY - Spawner is shy
 */
 void SP_NPC_SwampTrooper( gentity_t *self)
 {
+	if (NPC_GameTypeDisablesMapNPCS())
+	{
+		G_FreeEntity(self);
+		return;
+	}
+
 	if ( !self->NPC_type )
 	{
 		if ( self->spawnflags & 1 )
@@ -3856,6 +4079,12 @@ SHY - Spawner is shy
 */
 void SP_NPC_Imperial( gentity_t *self)
 {
+	if (NPC_GameTypeDisablesMapNPCS())
+	{
+		G_FreeEntity(self);
+		return;
+	}
+
 	if ( !self->NPC_type )
 	{
 		if ( self->spawnflags & 1 )
@@ -3899,6 +4128,12 @@ SHY - Spawner is shy
 */
 void SP_NPC_ImpWorker( gentity_t *self)
 {
+	if (NPC_GameTypeDisablesMapNPCS())
+	{
+		G_FreeEntity(self);
+		return;
+	}
+
 	if ( !self->NPC_type )
 	{
 		if ( !Q_irand( 0, 2 ) )
@@ -3927,6 +4162,12 @@ SHY - Spawner is shy
 */
 void SP_NPC_BespinCop( gentity_t *self)
 {
+	if (NPC_GameTypeDisablesMapNPCS())
+	{
+		G_FreeEntity(self);
+		return;
+	}
+
 	if ( !self->NPC_type )
 	{
 		if ( !Q_irand( 0, 1 ) )
@@ -3961,6 +4202,12 @@ SHY - Spawner is shy
 */
 void SP_NPC_Reborn( gentity_t *self)
 {
+	if (NPC_GameTypeDisablesMapNPCS())
+	{
+		G_FreeEntity(self);
+		return;
+	}
+
 	if ( !self->NPC_type )
 	{
 		if ( self->spawnflags & 1 )
@@ -3998,6 +4245,12 @@ SHY - Spawner is shy
 */
 void SP_NPC_ShadowTrooper( gentity_t *self)
 {
+	if (NPC_GameTypeDisablesMapNPCS())
+	{
+		G_FreeEntity(self);
+		return;
+	}
+
 	if(!self->NPC_type)
 	{
 		if ( !Q_irand( 0, 1 ) )
@@ -4031,6 +4284,12 @@ SHY - Spawner is shy
 */
 void SP_NPC_Saboteur( gentity_t *self)
 {
+	if (NPC_GameTypeDisablesMapNPCS())
+	{
+		G_FreeEntity(self);
+		return;
+	}
+
 	/*
 	if ( !self->NPC_type )
 	{
@@ -4096,6 +4355,12 @@ SHY - Spawner is shy
 */
 void SP_NPC_Monster_Murjj( gentity_t *self)
 {
+	if (NPC_GameTypeDisablesMapNPCS())
+	{
+		G_FreeEntity(self);
+		return;
+	}
+
 	self->NPC_type = "Murjj";
 
 	SP_NPC_spawner( self );
@@ -4110,6 +4375,12 @@ SHY - Spawner is shy
 */
 void SP_NPC_Monster_Swamp( gentity_t *self)
 {
+	if (NPC_GameTypeDisablesMapNPCS())
+	{
+		G_FreeEntity(self);
+		return;
+	}
+
 	self->NPC_type = "Swamp";
 
 	SP_NPC_spawner( self );
@@ -4124,6 +4395,12 @@ SHY - Spawner is shy
 */
 void SP_NPC_Monster_Howler( gentity_t *self)
 {
+	if (NPC_GameTypeDisablesMapNPCS())
+	{
+		G_FreeEntity(self);
+		return;
+	}
+
 	self->NPC_type = "howler";
 
 	SP_NPC_spawner( self );
@@ -4138,6 +4415,12 @@ SHY - Spawner is shy
 */
 void SP_NPC_MineMonster( gentity_t *self)
 {
+	if (NPC_GameTypeDisablesMapNPCS())
+	{
+		G_FreeEntity(self);
+		return;
+	}
+
 	self->NPC_type = "minemonster";
 
 	SP_NPC_spawner( self );
@@ -4153,6 +4436,12 @@ SHY - Spawner is shy
 */
 void SP_NPC_Monster_Claw( gentity_t *self)
 {
+	if (NPC_GameTypeDisablesMapNPCS())
+	{
+		G_FreeEntity(self);
+		return;
+	}
+
 	self->NPC_type = "Claw";
 
 	SP_NPC_spawner( self );
@@ -4167,6 +4456,12 @@ SHY - Spawner is shy
 */
 void SP_NPC_Monster_Glider( gentity_t *self)
 {
+	if (NPC_GameTypeDisablesMapNPCS())
+	{
+		G_FreeEntity(self);
+		return;
+	}
+
 	self->NPC_type = "Glider";
 
 	SP_NPC_spawner( self );
@@ -4181,6 +4476,12 @@ SHY - Spawner is shy
 */
 void SP_NPC_Monster_Flier2( gentity_t *self)
 {
+	if (NPC_GameTypeDisablesMapNPCS())
+	{
+		G_FreeEntity(self);
+		return;
+	}
+
 	self->NPC_type = "Flier2";
 
 	SP_NPC_spawner( self );
@@ -4195,6 +4496,12 @@ SHY - Spawner is shy
 */
 void SP_NPC_Monster_Lizard( gentity_t *self)
 {
+	if (NPC_GameTypeDisablesMapNPCS())
+	{
+		G_FreeEntity(self);
+		return;
+	}
+
 	self->NPC_type = "Lizard";
 
 	SP_NPC_spawner( self );
@@ -4209,6 +4516,12 @@ SHY - Spawner is shy
 */
 void SP_NPC_Monster_Fish( gentity_t *self)
 {
+	if (NPC_GameTypeDisablesMapNPCS())
+	{
+		G_FreeEntity(self);
+		return;
+	}
+
 	self->NPC_type = "Fish";
 
 	SP_NPC_spawner( self );
@@ -4225,6 +4538,12 @@ SHY - Spawner is shy
 */
 void SP_NPC_Monster_Wampa( gentity_t *self)
 {
+	if (NPC_GameTypeDisablesMapNPCS())
+	{
+		G_FreeEntity(self);
+		return;
+	}
+
 	self->NPC_type = "wampa";
 
 	NPC_Wampa_Precache();
@@ -4241,6 +4560,12 @@ SHY - Spawner is shy
 */
 void SP_NPC_Monster_Rancor( gentity_t *self)
 {
+	if (NPC_GameTypeDisablesMapNPCS())
+	{
+		G_FreeEntity(self);
+		return;
+	}
+
 	self->NPC_type = "rancor";
 
 	SP_NPC_spawner( self );
@@ -4259,6 +4584,12 @@ SHY - Spawner is shy
 */
 void SP_NPC_Droid_Interrogator( gentity_t *self)
 {
+	if (NPC_GameTypeDisablesMapNPCS())
+	{
+		G_FreeEntity(self);
+		return;
+	}
+
 	self->NPC_type = "interrogator";
 
 	SP_NPC_spawner( self );
@@ -4277,6 +4608,12 @@ Imperial Probe Droid - the multilegged floating droid that Han and Chewie shot o
 */
 void SP_NPC_Droid_Probe( gentity_t *self)
 {
+	if (NPC_GameTypeDisablesMapNPCS())
+	{
+		G_FreeEntity(self);
+		return;
+	}
+
 	self->NPC_type = "probe";
 
 	SP_NPC_spawner( self );
@@ -4296,6 +4633,12 @@ Big walking droid
 */
 void SP_NPC_Droid_Mark1( gentity_t *self)
 {
+	if (NPC_GameTypeDisablesMapNPCS())
+	{
+		G_FreeEntity(self);
+		return;
+	}
+
 	self->NPC_type = "mark1";
 
 	SP_NPC_spawner( self );
@@ -4315,6 +4658,12 @@ Small rolling droid with one gun.
 */
 void SP_NPC_Droid_Mark2( gentity_t *self)
 {
+	if (NPC_GameTypeDisablesMapNPCS())
+	{
+		G_FreeEntity(self);
+		return;
+	}
+
 	self->NPC_type = "mark2";
 
 	SP_NPC_spawner( self );
@@ -4331,6 +4680,12 @@ SHY - Spawner is shy
 */
 void SP_NPC_Droid_ATST( gentity_t *self)
 {
+	if (NPC_GameTypeDisablesMapNPCS())
+	{
+		G_FreeEntity(self);
+		return;
+	}
+
 	if ( (self->spawnflags&1) )
 	{
 		self->NPC_type = "atst_vehicle";
@@ -4356,6 +4711,12 @@ Remote Droid - the floating round droid used by Obi Wan to train Luke about the 
 */
 void SP_NPC_Droid_Remote( gentity_t *self)
 {
+	if (NPC_GameTypeDisablesMapNPCS())
+	{
+		G_FreeEntity(self);
+		return;
+	}
+
 	self->NPC_type = "remote";
 
 	SP_NPC_spawner( self );
@@ -4374,6 +4735,12 @@ Seeker Droid - floating round droids that shadow troopers spawn
 */
 void SP_NPC_Droid_Seeker( gentity_t *self)
 {
+	if (NPC_GameTypeDisablesMapNPCS())
+	{
+		G_FreeEntity(self);
+		return;
+	}
+
 	self->NPC_type = "seeker";
 
 	SP_NPC_spawner( self );
@@ -4392,6 +4759,12 @@ Sentry Droid - Large, armored floating Imperial droids with 3 forward-facing gun
 */
 void SP_NPC_Droid_Sentry( gentity_t *self)
 {
+	if (NPC_GameTypeDisablesMapNPCS())
+	{
+		G_FreeEntity(self);
+		return;
+	}
+
 	self->NPC_type = "sentry";
 
 	SP_NPC_spawner( self );
@@ -4412,6 +4785,12 @@ NOTARGET by default
 */
 void SP_NPC_Droid_Gonk( gentity_t *self)
 {
+	if (NPC_GameTypeDisablesMapNPCS())
+	{
+		G_FreeEntity(self);
+		return;
+	}
+
 	self->NPC_type = "gonk";
 
 	SP_NPC_spawner( self );
@@ -4433,6 +4812,12 @@ NOTARGET by default
 */
 void SP_NPC_Droid_Mouse( gentity_t *self)
 {
+	if (NPC_GameTypeDisablesMapNPCS())
+	{
+		G_FreeEntity(self);
+		return;
+	}
+
 	self->NPC_type = "mouse";
 
 	SP_NPC_spawner( self );
@@ -4455,6 +4840,12 @@ NOTARGET by default
 */
 void SP_NPC_Droid_R2D2( gentity_t *self)
 {
+	if (NPC_GameTypeDisablesMapNPCS())
+	{
+		G_FreeEntity(self);
+		return;
+	}
+
 	if ( self->spawnflags&1 )
 	{//imperial skin
 		self->NPC_type = "r2d2_imp";
@@ -4483,6 +4874,12 @@ NOTARGET by default
 */
 void SP_NPC_Droid_R5D2( gentity_t *self)
 {
+	if (NPC_GameTypeDisablesMapNPCS())
+	{
+		G_FreeEntity(self);
+		return;
+	}
+
 	if ( self->spawnflags&1 )
 	{//imperial skin
 		self->NPC_type = "r5d2_imp";
@@ -4508,6 +4905,12 @@ NOTARGET by default
 */
 void SP_NPC_Droid_Protocol( gentity_t *self)
 {
+	if (NPC_GameTypeDisablesMapNPCS())
+	{
+		G_FreeEntity(self);
+		return;
+	}
+
 	if ( self->spawnflags&1 )
 	{//imperial skin
 		self->NPC_type = "protocol_imp";

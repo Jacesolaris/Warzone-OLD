@@ -611,6 +611,8 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 
 			drawSurf = &drawSurfs[i];
 
+			if (!drawSurf->surface) continue;
+
 			if ( drawSurf->sort == oldSort && drawSurf->cubemapIndex == oldCubemapIndex) {
 				if (backEnd.depthFill && shader && shader->sort != SS_OPAQUE)
 				{

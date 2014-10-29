@@ -18,6 +18,11 @@ void CG_RegisterWeapon( int weaponNum) {
 	vec3_t			mins, maxs;
 	int				i;
 
+	if (weaponNum < WP_NONE) 
+	{// Missing SP weapons...
+		return;
+	}
+
 	weaponInfo = &cg_weapons[weaponNum];
 
 	if ( weaponNum == 0 ) {
@@ -42,6 +47,7 @@ void CG_RegisterWeapon( int weaponNum) {
 	}
 	if ( !item->classname ) {
 		trap->Error( ERR_DROP, "Couldn't find weapon %i", weaponNum );
+		return;
 	}
 	CG_RegisterItemVisuals( item - bg_itemlist );
 

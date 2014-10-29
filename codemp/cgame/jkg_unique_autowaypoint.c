@@ -218,8 +218,7 @@ void AIMOD_MapEntityHeights()
 		NUM_ENTITY_HEIGHTS++;
 	}
 
-	trap->Print("^3*** ^3%s: ^5Mapped %i entity heights.\n", "AUTO-WAYPOINTER", NUM_ENTITY_HEIGHTS);
-	trap->UpdateScreen();
+	//trap->Print("^3*** ^3%s: ^5Mapped %i entity heights.\n", "AUTO-WAYPOINTER", NUM_ENTITY_HEIGHTS);
 
 	ENTITY_HIGHTS_INITIALIZED = qtrue;
 }
@@ -5345,7 +5344,7 @@ omp_set_nested(0);
 		previous_time = clock();
 		aw_stage_start_time = clock();
 
-#pragma omp parallel for num_threads(32)
+//#pragma omp parallel for num_threads(32) // UQ1: Disabled for now...
 //#pragma omp parallel for schedule(dynamic) num_threads(32)
 //#pragma omp parallel for ordered schedule(dynamic) num_threads(32)
 //#pragma omp parallel for ordered schedule(dynamic) shared(parallel_x, scatter_x)
@@ -8160,6 +8159,7 @@ void AIMod_AddLiftPoint ( void )
 	NUM_LIFT_POINTS++;
 }
 
+#if 0
 void AIMod_AddLifts ( void )
 {
 	int liftNum = 0;
@@ -8228,6 +8228,7 @@ void AIMod_AddLifts ( void )
 
 	NUM_LIFT_POINTS = 0;
 }
+#endif //0
 
 vec3_t	ADD_POINTS[MAX_NODES];
 int		NUM_ADD_POINTS = 0;
@@ -8963,14 +8964,18 @@ AIMod_AutoWaypoint_Cleaner ( qboolean quiet, qboolean null_links_only, qboolean 
 	original_wp_scatter_multiplier = waypoint_distance_multiplier;
 	waypoint_distance_multiplier = original_wp_max_distance/waypoint_scatter_distance;
 
+	/*
 	if (relink_only || convert_old)
 	{
 		AIMod_AddLifts();
 	}
+	*/
 
 	if (relink_only)
 	{
+		//
 		// Add any manual waypoints...
+		//
 		for (i = 0; i < NUM_ADD_POINTS; i++)
 		{
 			VectorCopy(ADD_POINTS[i], nodes[number_of_nodes].origin);
@@ -8979,6 +8984,67 @@ AIMod_AutoWaypoint_Cleaner ( qboolean quiet, qboolean null_links_only, qboolean 
 		}
 
 		NUM_ADD_POINTS = 0;
+
+		//
+		// Add any manual elevator waypoints...
+		//
+		for (i = 0; i < NUM_LIFT_POINTS; i++)
+		{
+			int count = 0;
+			float temp_roof, temp_ground;
+			vec3_t temp_org;
+			qboolean isDoor = qfalse;
+
+			VectorCopy(LIFT_POINTS[i], temp_org);
+
+			temp_ground = GroundHeightAt(temp_org);
+			temp_roof = RoofHeightAt(temp_org);
+
+			while (temp_org[2] <= temp_roof)
+			{// Add waypoints all the way up!
+				nodes[number_of_nodes].origin[0] = temp_org[0];
+				nodes[number_of_nodes].origin[1] = temp_org[1];
+				nodes[number_of_nodes].origin[2] = temp_org[2];
+				number_of_nodes++;
+
+				nodes[number_of_nodes].origin[0] = temp_org[0]+56.0;
+				nodes[number_of_nodes].origin[1] = temp_org[1];
+				nodes[number_of_nodes].origin[2] = temp_org[2];
+				number_of_nodes++;
+
+				nodes[number_of_nodes].origin[0] = temp_org[0];
+				nodes[number_of_nodes].origin[1] = temp_org[1]+56.0;
+				nodes[number_of_nodes].origin[2] = temp_org[2];
+				number_of_nodes++;
+
+				nodes[number_of_nodes].origin[0] = temp_org[0]+56.0;
+				nodes[number_of_nodes].origin[1] = temp_org[1]+56.0;
+				nodes[number_of_nodes].origin[2] = temp_org[2];
+				number_of_nodes++;
+
+				nodes[number_of_nodes].origin[0] = temp_org[0]-56.0;
+				nodes[number_of_nodes].origin[1] = temp_org[1];
+				nodes[number_of_nodes].origin[2] = temp_org[2];
+				number_of_nodes++;
+
+				nodes[number_of_nodes].origin[0] = temp_org[0];
+				nodes[number_of_nodes].origin[1] = temp_org[1]-56.0;
+				nodes[number_of_nodes].origin[2] = temp_org[2];
+				number_of_nodes++;
+
+				nodes[number_of_nodes].origin[0] = temp_org[0]-56.0;
+				nodes[number_of_nodes].origin[1] = temp_org[1]-56.0;
+				nodes[number_of_nodes].origin[2] = temp_org[2];
+				number_of_nodes++;
+
+				temp_org[2] += waypoint_scatter_distance;
+				count++;
+			}
+
+			trap->Print("^4*** ^3AUTO-WAYPOINTER^4: ^5Added %i waypoints for manually added elevator %i.\n", count, i);
+		}
+
+		NUM_LIFT_POINTS = 0;
 	}
 
 	while (1)

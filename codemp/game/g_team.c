@@ -1106,6 +1106,35 @@ gentity_t *SelectRandomTeamSpawnPoint( int teamstate, team_t team, int siegeClas
 			break;
 	}
 
+	if ( !count && level.gametype != GT_SIEGE && teamstate == TEAM_BEGIN )
+	{// UQ1: Try using other type...
+		count = 0;
+
+		spot = NULL;
+
+		if (team == TEAM_RED)
+			classname = "team_CTF_redspawn";
+		else if (team == TEAM_BLUE)
+			classname = "team_CTF_bluespawn";
+		else
+			classname = "info_player_deathmatch";
+
+		while ((spot = G_Find (spot, FOFS(classname), classname)) != NULL) {
+			if ( SpotWouldTelefrag( spot ) ) {
+				continue;
+			}
+
+			if (mustBeEnabled && !spot->genericValue1)
+			{ //siege point that's not enabled, can't use it
+				continue;
+			}
+
+			spots[ count ] = spot;
+			if (++count == MAX_TEAM_SPAWN_POINTS)
+				break;
+		}
+	}
+
 	if ( !count ) {	// no spots that won't telefrag
 		return G_Find( NULL, FOFS(classname), classname);
 	}

@@ -5371,10 +5371,12 @@ static void Jedi_Combat( void )
 	float	enemy_dist, enemy_movespeed;
 	qboolean	enemy_lost = qfalse;
 
-	if (!NPCS.NPC->enemy || !NPC_IsAlive(NPCS.NPC->enemy)) return;
+	if (!(NPCS.NPC->enemy && NPC_IsAlive(NPCS.NPC->enemy))) return;
 
 	//See where enemy will be 300 ms from now
 	Jedi_SetEnemyInfo( enemy_dest, enemy_dir, &enemy_dist, enemy_movedir, &enemy_movespeed, 300 );
+
+	if (!(NPCS.NPC->enemy && NPC_IsAlive(NPCS.NPC->enemy))) return;
 
 	if (NPCS.NPC->npc_jumping && NPC_SimpleJump( NPCS.NPC->npc_jump_start, NPCS.NPC->npc_jump_dest ))
 	{
@@ -5385,11 +5387,15 @@ static void Jedi_Combat( void )
 		NPCS.NPC->npc_jumping = qfalse;
 	}
 
+	if (!(NPCS.NPC->enemy && NPC_IsAlive(NPCS.NPC->enemy))) return;
+
 	if ( Jedi_Jumping( NPCS.NPC->enemy ) )
 	{//I'm in the middle of a jump, so just see if I should attack
 		Jedi_AttackDecide( enemy_dist );
 		return;
 	}
+
+	if (!(NPCS.NPC->enemy && NPC_IsAlive(NPCS.NPC->enemy))) return;
 
 	if ( !(NPCS.NPC->client->ps.fd.forcePowersActive&(1<<FP_GRIP)) || NPCS.NPC->client->ps.fd.forcePowerLevel[FP_GRIP] < FORCE_LEVEL_2 )
 	{//not gripping
@@ -5447,18 +5453,18 @@ static void Jedi_Combat( void )
 	}
 	//else, we can see him or we can't track him at all
 
-	if (!NPCS.NPC->enemy) return;
+	if (!(NPCS.NPC->enemy && NPC_IsAlive(NPCS.NPC->enemy))) return;
 
 	//every few seconds, decide if we should we advance or retreat?
 	Jedi_CombatTimersUpdate( enemy_dist );
 
-	if (!NPCS.NPC->enemy) return;
+	if (!(NPCS.NPC->enemy && NPC_IsAlive(NPCS.NPC->enemy))) return;
 
 	//We call this even if lost enemy to keep him moving and to update the taunting behavior
 	//maintain a distance from enemy appropriate for our aggression level
 	Jedi_CombatDistance( enemy_dist );
 
-	if (!NPCS.NPC->enemy) return;
+	if (!(NPCS.NPC->enemy && NPC_IsAlive(NPCS.NPC->enemy))) return;
 
 	if ( !enemy_lost )
 	{
@@ -5470,12 +5476,19 @@ static void Jedi_Combat( void )
 		NPCS.NPCInfo->enemyLastSeenTime = level.time;
 	}
 
+	if (!(NPCS.NPC->enemy && NPC_IsAlive(NPCS.NPC->enemy))) return;
+
 	//Turn to face the enemy
 	if ( TIMER_Done( NPCS.NPC, "noturn" ) )
 	{
 		Jedi_FaceEnemy( qtrue );
 	}
+
+	if (!(NPCS.NPC->enemy && NPC_IsAlive(NPCS.NPC->enemy))) return;
+
 	NPC_UpdateAngles( qtrue, qtrue );
+
+	if (!(NPCS.NPC->enemy && NPC_IsAlive(NPCS.NPC->enemy))) return;
 
 	//Check for evasion
 	if ( TIMER_Done( NPCS.NPC, "parryTime" ) )
@@ -5486,6 +5499,8 @@ static void Jedi_Combat( void )
 			NPCS.NPC->client->ps.saberBlocked = BLOCKED_NONE;
 		}
 	}
+
+	if (!(NPCS.NPC->enemy && NPC_IsAlive(NPCS.NPC->enemy))) return;
 
 	/*
 	if ( NPC->enemy->s.weapon == WP_SABER )
@@ -5501,8 +5516,12 @@ static void Jedi_Combat( void )
 	// UQ1: Replaced by a more intensive check... This is used by most NPCs now...
 	NPC_CheckEvasion();
 
+	if (!(NPCS.NPC->enemy && NPC_IsAlive(NPCS.NPC->enemy))) return;
+
 	//apply strafing/walking timers, etc.
 	Jedi_TimersApply();
+
+	if (!(NPCS.NPC->enemy && NPC_IsAlive(NPCS.NPC->enemy))) return;
 
 	if ( !NPCS.NPC->client->ps.saberInFlight && (!(NPCS.NPC->client->ps.fd.forcePowersActive&(1<<FP_GRIP))||NPCS.NPC->client->ps.fd.forcePowerLevel[FP_GRIP] < FORCE_LEVEL_2) )
 	{//not throwing saber or using force grip
@@ -5524,12 +5543,17 @@ static void Jedi_Combat( void )
 	{
 	}
 
+	if (!(NPCS.NPC->enemy && NPC_IsAlive(NPCS.NPC->enemy))) return;
+
 	if ( /*!NPC_IsJedi(NPCS.NPC)*/ NPCS.NPC->client->ps.weapon != WP_SABER )
 	{
 		Boba_FireDecide();
 	}
 
+	if (!(NPCS.NPC->enemy && NPC_IsAlive(NPCS.NPC->enemy))) return;
+
 	if ( NPCS.NPC->enemy 
+		&& NPC_IsAlive(NPCS.NPC->enemy)
 		&& Distance(NPCS.NPC->enemy->r.currentOrigin, NPCS.NPC->r.currentOrigin) <= 64 
 		&& (/*NPC_IsJedi(NPCS.NPC)*/NPCS.NPC->client->ps.weapon == WP_SABER || NPCS.NPC->client->NPC_class == CLASS_BOBAFETT)
 		&& !(NPCS.NPC->client->NPC_class == CLASS_BOBAFETT && (!TIMER_Done( NPCS.NPC, "nextAttackDelay" ) || !TIMER_Done( NPCS.NPC, "flameTime" )))
@@ -5543,7 +5567,7 @@ static void Jedi_Combat( void )
 		NPCS.NPC->next_rifle_butt_time = level.time + 1000;
 		NPCS.NPC->next_kick_time = level.time + 15000;
 
-		if (irand(0, 100) <= 25)
+		if (NPCS.NPC->enemy && NPC_IsAlive(NPCS.NPC->enemy) && irand(0, 100) <= 25)
 		{// 25% of the time, knock them over...
 			vec3_t	smackDir;
 			VectorSubtract( NPCS.NPC->enemy->r.currentOrigin, NPCS.NPC->r.currentOrigin, smackDir );
@@ -5563,6 +5587,7 @@ static void Jedi_Combat( void )
 		//return;
 	}
 	else if (NPCS.NPC->enemy
+		&& NPC_IsAlive(NPCS.NPC->enemy)
 		&& Distance(NPCS.NPC->enemy->r.currentOrigin, NPCS.NPC->r.currentOrigin) <= 64 
 		&& (/*NPC_IsJedi(NPCS.NPC)*/NPCS.NPC->client->ps.weapon == WP_SABER || NPCS.NPC->client->NPC_class == CLASS_BOBAFETT)
 		&& !(NPCS.NPC->client->NPC_class == CLASS_BOBAFETT && (!TIMER_Done( NPCS.NPC, "nextAttackDelay" ) || !TIMER_Done( NPCS.NPC, "flameTime" )))
@@ -5571,11 +5596,17 @@ static void Jedi_Combat( void )
 		//return;
 	}
 
+	if (!(NPCS.NPC->enemy && NPC_IsAlive(NPCS.NPC->enemy))) return;
+
 	//Check for certain enemy special moves
 	Jedi_CheckEnemyMovement( enemy_dist );
 
+	if (!(NPCS.NPC->enemy && NPC_IsAlive(NPCS.NPC->enemy))) return;
+
 	//Make sure that we don't jump off ledges over long drops
 	Jedi_CheckJumps();
+
+	if (!(NPCS.NPC->enemy && NPC_IsAlive(NPCS.NPC->enemy))) return;
 
 	//Just make sure we don't strafe into walls or off cliffs
 	if ( !NPC_MoveDirClear( NPCS.ucmd.forwardmove, NPCS.ucmd.rightmove, qtrue ) )

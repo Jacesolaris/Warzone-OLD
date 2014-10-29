@@ -150,8 +150,12 @@ int G_GetMapTypeBits(char *type)
 		if( strstr( type, "cty" ) ) {
 			typeBits |= (1 << GT_CTY);
 		}
-		if( strstr( type, "coop" ) ) {
+		if( strstr( type, "coop" ) ) { // UQ1: We support these in nearly all gametypes now :)
 			typeBits |= (1 << GT_SINGLE_PLAYER);
+			typeBits |= (1 << GT_FFA);
+			typeBits |= (1 << GT_TEAM);
+			typeBits |= (1 << GT_CTF);
+			typeBits |= (1 << GT_WARZONE);
 		}
 		if( strstr( type, "instance" ) ) {
 			typeBits |= (1 << GT_INSTANCE);
@@ -163,6 +167,12 @@ int G_GetMapTypeBits(char *type)
 		typeBits |= (1 << GT_FFA);
 		typeBits |= (1 << GT_JEDIMASTER);
 	}
+
+	// UQ1: All maps work with these gametypes now...
+	if (!(typeBits & (1 << GT_FFA))) typeBits |= (1 << GT_FFA);
+	if (!(typeBits & (1 << GT_TEAM))) typeBits |= (1 << GT_TEAM);
+	if (!(typeBits & (1 << GT_CTF))) typeBits |= (1 << GT_CTF);
+	if (!(typeBits & (1 << GT_WARZONE))) typeBits |= (1 << GT_WARZONE);
 
 	return typeBits;
 }

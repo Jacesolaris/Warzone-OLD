@@ -13,6 +13,18 @@ PUSHMOVE
 ===============================================================================
 */
 
+qboolean IsUnlockMoversGametype ( void )
+{// UQ1: Screw it... No locked doors any more...
+#if 0
+	if (g_gametype.integer == GT_INSTANCE) return qtrue;
+	if (g_gametype.integer == GT_WARZONE) return qtrue;
+
+	return qfalse;
+#endif //0
+
+	return qtrue;
+}
+
 void MatchTeam( gentity_t *teamLeader, int moverState, int time );
 gentity_t *G_FindDoorTrigger( gentity_t *ent );
 
@@ -701,6 +713,7 @@ void Reached_BinaryMover( gentity_t *ent )
 		{
 			// return to pos1 after a delay
 			ent->think = ReturnToPos1;
+
 			if(ent->spawnflags & 8)
 			{//Toggle, keep think, wait for next use?
 				ent->nextthink = -1;
@@ -716,6 +729,7 @@ void Reached_BinaryMover( gentity_t *ent )
 		{
 			ent->activator = ent;
 		}
+
 		G_UseTargets2( ent, ent->activator, ent->opentarget );
 	}
 	else if ( ent->moverState == MOVER_2TO1 )
@@ -735,6 +749,7 @@ void Reached_BinaryMover( gentity_t *ent )
 		{
 			trap->AdjustAreaPortalState( (sharedEntity_t *)ent, qfalse );
 		}
+
 		G_UseTargets2( ent, ent->activator, ent->closetarget );
 	}
 	else
@@ -777,6 +792,7 @@ void Use_BinaryMover_Go( gentity_t *ent )
 		if ( ent->teammaster == ent || !ent->teammaster ) {
 			trap->AdjustAreaPortalState( (sharedEntity_t *)ent, qtrue );
 		}
+
 		G_UseTargets( ent, ent->activator );
 		return;
 	}
@@ -785,6 +801,7 @@ void Use_BinaryMover_Go( gentity_t *ent )
 	if ( ent->moverState == MOVER_POS2 ) {
 		//have to do this because the delay sets our think to Use_BinaryMover_Go
 		ent->think = ReturnToPos1;
+
 		if ( ent->spawnflags & 8 )
 		{//TOGGLE doors don't use wait!
 			ent->nextthink = level.time + FRAMETIME;
@@ -793,10 +810,12 @@ void Use_BinaryMover_Go( gentity_t *ent )
 		{
 			ent->nextthink = level.time + ent->wait;
 		}
+
 		G_UseTargets2( ent, ent->activator, ent->target2 );
 		return;
 	}
 
+#if 0 // UQ1: NONE OF THIS HALF WAY UP/DOWN ACTIVATION BULLSHIT. KTHANKS!
 	// only partway down before reversing
 	if ( ent->moverState == MOVER_2TO1 )
 	{
@@ -867,6 +886,7 @@ void Use_BinaryMover_Go( gentity_t *ent )
 
 		return;
 	}
+#endif //0
 }
 
 void UnLockDoors(gentity_t *const ent)
@@ -947,7 +967,7 @@ void Use_BinaryMover( gentity_t *ent, gentity_t *other, gentity_t *activator )
 		return;
 	}
 
-	if ( ent->flags & FL_INACTIVE && g_gametype.integer != GT_INSTANCE )
+	if ( (ent->flags & FL_INACTIVE) && !IsUnlockMoversGametype() )
 	{
 		return;
 	}
@@ -1139,7 +1159,7 @@ void Blocked_Door( gentity_t *ent, gentity_t *other )
 {
 	qboolean relock;
 
-	if (g_gametype.integer == GT_INSTANCE)
+	if (IsUnlockMoversGametype())
 	{
 		if ( ent->spawnflags & MOVER_LOCKED )
 		{//a locked door, unlock it
@@ -1153,13 +1173,13 @@ void Blocked_Door( gentity_t *ent, gentity_t *other )
 	if ( ent->damage ) {
 		G_Damage( other, ent, ent, NULL, NULL, ent->damage, 0, MOD_CRUSH );
 	}
-	if ( ent->spawnflags & MOVER_CRUSHER ) {
+	if ( (ent->spawnflags & MOVER_CRUSHER) && !IsUnlockMoversGametype()) {
 		return;		// crushers don't reverse
 	}
 
 	// reverse direction
 	Use_BinaryMover( ent, ent, other );
-	if(relock)
+	if(relock && !IsUnlockMoversGametype())
 	{//door was locked before reverse move, relock door.
 		LockDoors(ent);
 	}
@@ -1180,10 +1200,12 @@ static void Touch_DoorTriggerSpectator( gentity_t *ent, gentity_t *other, trace_
 	vec3_t origin, pMins, pMaxs;
 	trace_t tr;
 
+	/*
 	if (!G_PointInBounds( other->client->ps.origin, ent->trigger_orig_mins, ent->trigger_orig_maxs ))
 	{// UQ1: Not in original bounds. Do not activate for spectators...
 		return;
 	}
+	*/
 
 	axis = ent->count;
 	// the constants below relate to constants in Think_SpawnNewDoorTrigger()
@@ -1240,11 +1262,13 @@ void Touch_DoorTrigger( gentity_t *ent, gentity_t *other, trace_t *trace )
 	}
 #endif //__MOVER_DELAY__
 
-	if ( other->client )
+	//trap->Print("MOVER DEBUG: Door %i trigger touched.\n", ent->parent->s.number);
+
+	//if ( other->client )
 	{
-		if ( ent->parent->moverState == MOVER_1TO2
+		if ( /*ent->parent->moverState == MOVER_1TO2
 			|| ent->parent->moverState == MOVER_2TO1
-			|| ent->parent->moverState == MOVER_POS2 )
+			||*/ ent->parent->moverState == MOVER_POS2 )
 		{// UQ1: Since I enabled triggers at top of elevator, this will make it go down again...
 			return;
 		}
@@ -1277,12 +1301,12 @@ void Touch_DoorTrigger( gentity_t *ent, gentity_t *other, trace_t *trace )
 		}
 	}
 
-	if ( ent->flags & FL_INACTIVE && g_gametype.integer != GT_INSTANCE )
+	if ( ent->flags & FL_INACTIVE && !IsUnlockMoversGametype() )
 	{
 		return;
 	}
 
-	if (g_gametype.integer == GT_INSTANCE)
+	if (IsUnlockMoversGametype())
 	{
 		if ( ent->parent->spawnflags & MOVER_LOCKED )
 		{//a locked door, unlock it
@@ -1290,7 +1314,7 @@ void Touch_DoorTrigger( gentity_t *ent, gentity_t *other, trace_t *trace )
 		}
 	}
 
-	if ( ent->parent->spawnflags & MOVER_LOCKED )
+	if ( ent->parent->spawnflags & MOVER_LOCKED && !IsUnlockMoversGametype() )
 	{//don't even try to use the door if it's locked
 		if ( !ent->parent->alliedTeam //we don't have a "teamallow" team
 			|| !other->client //we do have a "teamallow" team, but this isn't a client
@@ -1316,6 +1340,7 @@ void Touch_DoorTrigger( gentity_t *ent, gentity_t *other, trace_t *trace )
 	}
 
 	if ( ent->parent->moverState != MOVER_1TO2 )
+	//if ( ent->parent->moverState == MOVER_POS1 || ent->parent->moverState == MOVER_POS2 )
 	{//Door is not already opening
 		//if ( ent->parent->moverState == MOVER_POS1 || ent->parent->moverState == MOVER_2TO1 )
 		//{//only check these if closed or closing
@@ -1511,7 +1536,7 @@ qboolean G_EntIsUnlockedDoor( int entityNum )
 				return qfalse;
 			}
 		}
-		if (g_gametype.integer == GT_INSTANCE)
+		if (IsUnlockMoversGametype())
 		{
 			if ( ent->spawnflags & MOVER_LOCKED )
 			{//a locked door, unlock it
@@ -1624,7 +1649,7 @@ void SP_func_door (gentity_t *ent)
 	VectorMA( ent->pos1, distance, ent->movedir, ent->pos2 );
 
 	// if "start_open", reverse position 1 and 2
-	if ( ent->spawnflags & 1 )
+	if ( (ent->spawnflags & 1) && !IsUnlockMoversGametype())
 	{
 		vec3_t	temp;
 
@@ -1722,11 +1747,13 @@ void Touch_Plat( gentity_t *ent, gentity_t *other, trace_t *trace ) {
 	}
 #endif //__MOVER_DELAY__
 
+	//trap->Print("MOVER DEBUG: Plat %i trigger touched.\n", ent->s.number);
+
 	if ( other->client )
 	{
-		if ( ent->parent->moverState == MOVER_1TO2
-			|| ent->parent->moverState == MOVER_2TO1
-			|| ent->parent->moverState == MOVER_POS2 )
+		if ( ent->moverState == MOVER_1TO2
+			|| ent->moverState == MOVER_2TO1
+			|| ent->moverState == MOVER_POS2 )
 		{// UQ1: Since I enabled triggers at top of elevator, this will make it go down again...
 			return;
 		}
@@ -1766,6 +1793,8 @@ void Touch_PlatCenterTrigger(gentity_t *ent, gentity_t *other, trace_t *trace ) 
 	}
 #endif //__MOVER_DELAY__
 
+	//trap->Print("MOVER DEBUG: Plat %i central trigger touched.\n", ent->parent->s.number);
+
 	if ( other->client )
 	{
 		if ( ent->parent->moverState == MOVER_1TO2
@@ -1776,7 +1805,8 @@ void Touch_PlatCenterTrigger(gentity_t *ent, gentity_t *other, trace_t *trace ) 
 		}
 	}
 
-	if ( ent->parent->moverState == MOVER_POS1 ) {
+	if ( ent->parent->moverState == MOVER_POS1
+		&& !(ent->parent->moverState == MOVER_1TO2 || ent->parent->moverState == MOVER_2TO1)) {
 		Use_BinaryMover( ent->parent, ent, other );
 	}
 }

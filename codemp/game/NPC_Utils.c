@@ -1094,33 +1094,6 @@ qboolean NPC_ValidEnemy( gentity_t *ent )
 {
 	int entTeam = TEAM_FREE;
 
-	if (NPCS.NPC && NPCS.NPC->client && NPCS.NPC->isPadawan)
-	{
-		if (ent == NPCS.NPC->parent || ent == NPCS.NPC->padawan)
-		{// A padawan and his jedi are never enemies...
-			return qfalse;
-		}
-
-		if (NPCS.NPC->parent && NPC_IsAlive(NPCS.NPC->parent))
-		{// They just copy their master's enemy instead...
-#if 0
-			if (NPCS.NPC->parent->enemy && NPC_IsAlive(NPCS.NPC->parent->enemy))
-			{
-				NPCS.NPC->enemy = NPCS.NPC->parent->enemy;
-				return qfalse;
-			}
-			else
-#endif //0
-			{
-				if (Distance(NPCS.NPC->r.currentOrigin, ent->r.currentOrigin) > 384
-					|| Distance(NPCS.NPC->parent->r.currentOrigin, ent->r.currentOrigin) > 384)
-				{// Too far from me or my master...
-					return qfalse;
-				}
-			}
-		}
-	}
-
 	if ( ent == NULL )
 	{//Must be a valid pointer
 		return qfalse;
@@ -1189,6 +1162,33 @@ qboolean NPC_ValidEnemy( gentity_t *ent )
 		{// These guys have no enemies...
 			//trap->Print("vendor\n");
 			return qfalse;
+		}
+	}
+
+	if (NPCS.NPC && NPCS.NPC->client && NPCS.NPC->isPadawan)
+	{
+		if (ent == NPCS.NPC->parent || ent == NPCS.NPC->padawan)
+		{// A padawan and his jedi are never enemies...
+			return qfalse;
+		}
+
+		if (NPCS.NPC->parent && NPC_IsAlive(NPCS.NPC->parent))
+		{// They just copy their master's enemy instead...
+#if 0
+			if (NPCS.NPC->parent->enemy && NPC_IsAlive(NPCS.NPC->parent->enemy))
+			{
+				NPCS.NPC->enemy = NPCS.NPC->parent->enemy;
+				return qfalse;
+			}
+			else
+#endif //0
+			{
+				if (Distance(NPCS.NPC->r.currentOrigin, ent->r.currentOrigin) > 384
+					|| Distance(NPCS.NPC->parent->r.currentOrigin, ent->r.currentOrigin) > 384)
+				{// Too far from me or my master...
+					return qfalse;
+				}
+			}
 		}
 	}
 
@@ -1613,7 +1613,7 @@ qboolean NPC_FindEnemy( qboolean checkAlerts )
 	}
 
 	//If we've gotten here alright, then our target it still valid
-	if ( NPC_ValidEnemy( NPCS.NPC->enemy ) )
+	if ( NPCS.NPC->enemy && NPC_ValidEnemy( NPCS.NPC->enemy ) )
 		return qtrue;
 
 	newenemy = NPC_PickEnemyExt( checkAlerts );

@@ -251,6 +251,7 @@ Ghoul2 Insert Start
 /*
 Ghoul2 Insert End
 */
+	qboolean	ignoreCull;
 } refEntity_t;
 
 /*

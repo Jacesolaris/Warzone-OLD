@@ -230,7 +230,7 @@ void RE_AddRefEntityToScene( const refEntity_t *ent ) {
 	{
 		byte mask;
 
-		if (!R_inPVS( tr.refdef.vieworg, ent->origin, &mask )) {
+		if (!ent->ignoreCull && !R_inPVS( tr.refdef.vieworg, ent->origin, &mask )) {
 			return;
 		}
 	}
