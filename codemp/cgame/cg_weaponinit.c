@@ -545,6 +545,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->missileRenderfx = trap->FX_RegisterEffect("ee3/blaster_shot");
 		weaponInfo->altMuzzleEffect = trap->FX_RegisterEffect("blaster/muzzle_flash");
 		weaponInfo->missileWallImpactfx = trap->FX_RegisterEffect("ee3/wall_impact");
+		weaponInfo->wallImpactEffectEnhancedFX = trap->FX_RegisterEffect("flechette/wall_impact_enhanced2");
 		weaponInfo->fleshImpactEffect = trap->FX_RegisterEffect("ee3/flesh_impact");
 		weaponInfo->altFleshImpactEffect = trap->FX_RegisterEffect("blaster/droid_impact");
 		weaponInfo->shotEffectFx = trap->FX_RegisterEffect("ee3/blaster_shot");
@@ -567,7 +568,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->missileSound = NULL_SOUND;
 		weaponInfo->missileDlight = 0;
 		weaponInfo->missileHitSound = NULL_SOUND;
-		weaponInfo->missileTrailFunc = FX_DEMP2_ProjectileThink;
+		weaponInfo->missileTrailFunc = FX_CLONEPISTOL_ProjectileThink;
 		weaponInfo->powerupShotRenderfx = NULL_FX;
 		weaponInfo->altFlashSound[0] = trap->S_RegisterSound("sound/weapons/demp2/altfire.wav");
 		weaponInfo->altFiringSound = NULL_SOUND;
@@ -578,7 +579,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altMissileSound = NULL_SOUND;
 		weaponInfo->altMissileDlight = 0;
 		weaponInfo->altMissileHitSound = NULL_SOUND;
-		weaponInfo->altMissileTrailFunc = FX_DEMP2_BounceWall;
+		weaponInfo->altMissileTrailFunc = 0;//FX_DEMP2_BounceWall;
 		weaponInfo->missileWallImpactfx = trap->FX_RegisterEffect("clone_pistol_1/wall_impact");
 		weaponInfo->wallImpactEffectEnhancedFX = trap->FX_RegisterEffect("clone_pistol_1/wall_impact_enhanced2");
 		weaponInfo->shotEffectFx = trap->FX_RegisterEffect("clone_pistol_1/lvl3_shot");

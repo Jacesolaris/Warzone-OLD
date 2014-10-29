@@ -2110,12 +2110,12 @@ void CG_MissileHitWall(int weapon, int clientNum, vec3_t origin, vec3_t dir, imp
 	case WP_CLONE_PISTOL1:
 		if (altFire)
 		{
-			//FX_DEMP2_BounceWall(origin, dir, weapon, altFire); // UQ1: This isn't right...
-			FX_DEMP2_HitWall(origin, dir, weapon, altFire); // UQ1: This probably is...
+			FX_CLONEPISTOL_BounceWall(origin, dir, weapon, altFire); // UQ1: This isn't right...
+			//FX_DEMP2_HitWall(origin, dir, weapon, altFire); // UQ1: This probably is...
 		}
 		else
 		{
-			FX_DEMP2_HitWall(origin, dir, weapon, altFire);
+			FX_CLONEPISTOL_HitWall(origin, dir, weapon, altFire);
 		}
 		break;
 
@@ -2306,13 +2306,22 @@ void CG_MissileHitPlayer(int weapon, vec3_t origin, vec3_t dir, int entityNum, q
 	case WP_CLONE_PISTOL1:
 		if (altFire)
 		{
+			trap->FX_PlayEffectID(
+				CG_EnableEnhancedFX(cgs.effects.mAltDetonate, cgs.effects.mAltDetonateEnhancedFX), origin, dir, -1, -1, qfalse);
+		}
+		else
+		{
+			FX_CLONEPISTOL_HitPlayer(origin, dir, humanoid, weapon, altFire);
+		}
+		/*if (altFire)
+		{
 			trap->FX_PlayEffectID(cgs.effects.mAltDetonateEnhancedFX, origin, dir, -1, -1, qfalse);
 		}
 		else
 		{
 			FX_BlasterWeaponHitPlayer(origin, dir, humanoid, weapon, altFire);
 
-		}
+		}*/
 		break;
 
 	case WP_DLT20A:
@@ -2365,8 +2374,7 @@ void CG_MissileHitPlayer(int weapon, vec3_t origin, vec3_t dir, int entityNum, q
 		if (altFire)
 		{
 			trap->FX_PlayEffectID(
-				CG_EnableEnhancedFX(cgs.effects.mAltDetonate,
-				cgs.effects.mAltDetonateEnhancedFX),	origin, dir, -1, -1, qfalse);
+				CG_EnableEnhancedFX(cgs.effects.mAltDetonate, cgs.effects.mAltDetonateEnhancedFX),	origin, dir, -1, -1, qfalse);
 		}
 		else
 		{

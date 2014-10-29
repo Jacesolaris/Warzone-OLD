@@ -2975,7 +2975,7 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 			break;
 		case EFFECT_EXPLOSION_TRIPMINE:
 			eID = CG_EnableEnhancedFX(cgs.effects.mTripmineExplosion,
-											cgs.effects.mTripmineExplosionEnhancedFX);
+				cgs.effects.mTripmineExplosionEnhancedFX);
 			break;
 		case EFFECT_EXPLOSION_DETPACK:
 			//eID = cgs.effects.mDetpackExplosion;
