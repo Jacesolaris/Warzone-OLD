@@ -19,9 +19,6 @@
 // If you absolutely need something stored, it can either be kept
 // by the server in the server stored userinfos, or stashed in a cvar.
 
-
-
-
 #define	POWERUP_BLINKS		5
 
 #define	POWERUP_BLINK_TIME	1000
@@ -1565,18 +1562,18 @@ typedef struct cgEffects_s {
 	fxHandle_t  bryarShotEffect1;
 	fxHandle_t	bryarPowerupShotEffect;
 	fxHandle_t	bryarWallImpactEffect;
-	fxHandle_t	bryarWallImpactEffectEnhanced;
+	fxHandle_t	bryarWallImpactEffectEnhancedFX;
 	fxHandle_t	bryarWallImpactEffect2;
-	fxHandle_t	bryarWallImpactEffect2Enhanced;
+	fxHandle_t	bryarWallImpactEffect2EnhancedFX;
 	fxHandle_t	bryarWallImpactEffect3;
-	fxHandle_t	bryarWallImpactEffect3Enhanced;
+	fxHandle_t	bryarWallImpactEffect3EnhancedFX;
 	fxHandle_t	bryarFleshImpactEffect;
 	fxHandle_t	bryarDroidImpactEffect;
 
 	// BLASTER
 	fxHandle_t  blasterShotEffect;
 	fxHandle_t  blasterWallImpactEffect;
-	fxHandle_t  blasterWallImpactEffectEnhanced;
+	fxHandle_t  blasterWallImpactEffectEnhancedFX;
 	fxHandle_t  blasterFleshImpactEffect;
 	fxHandle_t  blasterDroidImpactEffect;
 
@@ -1584,7 +1581,7 @@ typedef struct cgEffects_s {
 	fxHandle_t  disruptorRingsEffect;
 	fxHandle_t  disruptorProjectileEffect;
 	fxHandle_t  disruptorWallImpactEffect;
-	fxHandle_t  disruptorWallImpactEffectEnhanced;
+	fxHandle_t  disruptorWallImpactEffectEnhancedFX;
 	fxHandle_t  disruptorFleshImpactEffect;
 	fxHandle_t  disruptorAltMissEffect;
 	fxHandle_t  disruptorAltHitEffect;
@@ -1592,13 +1589,13 @@ typedef struct cgEffects_s {
 	// BOWCASTER
 	fxHandle_t	bowcasterShotEffect;
 	fxHandle_t	bowcasterImpactEffect;
-	fxHandle_t	bowcasterImpactEffectEnhanced;
+	fxHandle_t	bowcasterImpactEffectEnhancedFX;
 
 	// REPEATER
 	fxHandle_t  repeaterProjectileEffect;
 	fxHandle_t  repeaterAltProjectileEffect;
 	fxHandle_t  repeaterWallImpactEffect;
-	fxHandle_t  repeaterWallImpactEffectEnhanced;
+	fxHandle_t  repeaterWallImpactEffectEnhancedFX;
 	fxHandle_t  repeaterFleshImpactEffect;
 	fxHandle_t  repeaterAltWallImpactEffect;
 
@@ -1606,16 +1603,16 @@ typedef struct cgEffects_s {
 	fxHandle_t  demp2ProjectileEffect;
 	fxHandle_t  demp2SecShotEffect;
 	fxHandle_t  demp2WallImpactEffect;
-	fxHandle_t  demp2WallImpactEffectEnhanced;
+	fxHandle_t  demp2WallImpactEffectEnhancedFX;
 	fxHandle_t  demp2WallBounceEffect;
-	fxHandle_t  demp2WallBounceEffectEnhanced;
+	fxHandle_t  demp2WallBounceEffectEnhancedFX;
 	fxHandle_t  demp2FleshImpactEffect;
 
 	// FLECHETTE
 	fxHandle_t	flechetteShotEffect;
 	fxHandle_t	flechetteAltShotEffect;
 	fxHandle_t	flechetteWallImpactEffect;
-	fxHandle_t	flechetteWallImpactEffectEnhanced;
+	fxHandle_t	flechetteWallImpactEffectEnhancedFX;
 	fxHandle_t	flechetteFleshImpactEffect;
 
 	//EE-3
@@ -1627,9 +1624,9 @@ typedef struct cgEffects_s {
 	fxHandle_t  rocketShotEffect;
 	fxHandle_t  pulserocketShotEffect;
 	fxHandle_t  rocketExplosionEffect;
-	fxHandle_t  rocketExplosionEffectEnhanced;
+	fxHandle_t  rocketExplosionEffectEnhancedFX;
 	fxHandle_t	pulserocketExplosionEffect;
-	fxHandle_t	pulserocketExplosionEffectEnhanced;
+	fxHandle_t	pulserocketExplosionEffectEnhancedFX;
 
 
 	// THERMAL
@@ -1642,16 +1639,16 @@ typedef struct cgEffects_s {
 	fxHandle_t	concussionGrenadeShotEffect;
 	fxHandle_t	concussionGrenadeShotEffect2;
 	fxHandle_t	concussionExplosionEffect;
-	fxHandle_t	concussionExplosionEffectEnhanced;
+	fxHandle_t	concussionExplosionEffectEnhancedFX;
 	fxHandle_t	thermalRealShotEffect;
 	fxHandle_t	thermalRealShotEffect2;
 	fxHandle_t	thermalExplosionEffect;
-	fxHandle_t	thermalExplosionEffectEnhanced;
+	fxHandle_t	thermalExplosionEffectEnhancedFX;
 	fxHandle_t	thermalExplosionAltEffect;
-	fxHandle_t	thermalExplosionAltEffectEnhanced;
+	fxHandle_t	thermalExplosionAltEffectEnhancedFX;
 	fxHandle_t	thermalShockwaveEffect;
 	fxHandle_t	thermalRealExplosion;
-	fxHandle_t	thermalRealExplosionEnhanced;
+	fxHandle_t	thermalRealExplosionEnhancedFX;
 	fxHandle_t	fireGrenadeFireBlob;
 	fxHandle_t	fireGrenadeExplosion;
 	fxHandle_t	fireGrenadeWaterBurst;
@@ -1659,9 +1656,9 @@ typedef struct cgEffects_s {
 	fxHandle_t	fireGrenadePart;
 	fxHandle_t	fireGrenadeNapalm;
 	fxHandle_t	iceGrenadeExplosion;
-	fxHandle_t	iceGrenadeExplosionEnhanced;
+	fxHandle_t	iceGrenadeExplosionEnhancedFX;
 	fxHandle_t	iceTargetFreeze;
-	fxHandle_t	iceTargetFreezeEnhanced;
+	fxHandle_t	iceTargetFreezeEnhancedFX;
 	fxHandle_t	sonicGrenadeWave;
 
 	// TRIPMINE
@@ -1698,6 +1695,13 @@ typedef struct cgEffects_s {
 	fxHandle_t flameThrowerPlasmaFX;
 	fxHandle_t flameThrowerPlasmaEnhancedFX;
 	fxHandle_t iceThrowerFX;
+	fxHandle_t	mBoilWater;
+	fxHandle_t	mBoilLava;
+	fxHandle_t	mBoilAcid;
+	fxHandle_t	mBoilWaterBubble;
+	fxHandle_t	mBoilLavaBubble;
+	fxHandle_t	mBoilAcidBubble;
+	fxHandle_t	mTripmineExplosionEnhancedFX;
 
 	
 	//[NewLightningEFX]
@@ -1765,8 +1769,11 @@ typedef struct cgEffects_s {
 	fxHandle_t landingGravel;
 	//splashes
 	fxHandle_t waterSplash;
+	fxHandle_t waterSplashMissile;
 	fxHandle_t lavaSplash;
+	fxHandle_t lavaSplashMissile;
 	fxHandle_t acidSplash;
+	fxHandle_t acidSplashMissile;
 } cgEffects_t;
 
 #define MAX_STATIC_MODELS 4000
@@ -2265,6 +2272,11 @@ void FX_ConcAltShot( vec3_t start, vec3_t end, int weapon );
 //-----------------------------
 // Effects related prototypes
 //-----------------------------
+
+//[New EFX System]
+fxHandle_t CG_EnableEnhancedFX(fxHandle_t normal, fxHandle_t AdvanceEnhancedFX);
+//[/New EFX System]
+
 
 // Environmental effects
 void CG_Spark( vec3_t origin, vec3_t dir );

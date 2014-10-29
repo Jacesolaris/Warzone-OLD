@@ -3240,6 +3240,10 @@ static void CG_FX( centity_t *cent )
 	int				efxIndex = 0;
 	entityState_t	*s1;
 	const char		*s;
+	//[New EFX System]
+	const char		*s2;
+	const char		*s3;
+	//[/New EFX System]
 
 	if (cent->miscTime > cg.time)
 	{
@@ -3276,21 +3280,26 @@ static void CG_FX( centity_t *cent )
 	{
 		fxDir[1] = 1;
 	}
+	//[New EFX System]
+	efxIndex = CG_EnableEnhancedFX(cgs.gameEffects[s1->modelindex],
+		cgs.gameEffects[s1->boneIndex1]);
+	if (!efxIndex)
+	{
+		s3 = CG_ConfigString(CS_EFFECTS + s1->boneIndex2);
+		s2 = CG_ConfigString(CS_EFFECTS + s1->boneIndex1);
+		s = CG_ConfigString(CS_EFFECTS + s1->modelindex);
 
-	if ( cgs.gameEffects[ s1->modelindex ] )
-	{
-		efxIndex = cgs.gameEffects[s1->modelindex];
-	}
-	else
-	{
-		s = CG_ConfigString( CS_EFFECTS + s1->modelindex );
+		if (s3 && s3[0])
+			cgs.gameEffects[s1->boneIndex2] = trap->FX_RegisterEffect(s3);
+		if (s2 && s2[0])
+			cgs.gameEffects[s1->boneIndex1] = trap->FX_RegisterEffect(s2);
 		if (s && s[0])
-		{
-			efxIndex = trap->FX_RegisterEffect(s);
-			cgs.gameEffects[s1->modelindex] = efxIndex;
-		}
-	}
+			cgs.gameEffects[s1->modelindex] = trap->FX_RegisterEffect(s);
 
+		efxIndex = CG_EnableEnhancedFX(cgs.gameEffects[s1->modelindex],
+			cgs.gameEffects[s1->boneIndex1]);
+	}
+	//[/New EFX System]
 	if (efxIndex)
 	{
 		if (s1->isPortalEnt)

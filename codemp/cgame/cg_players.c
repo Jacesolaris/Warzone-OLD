@@ -9916,7 +9916,9 @@ void CG_AddSaberBlade(centity_t *cent, centity_t *scent, refEntity_t *saber, int
 				{
 					if (!(trace.surfaceFlags & SURF_NOIMPACT)) // never spark on sky
 					{
-						trap->FX_PlayEffectID(cgs.effects.mSparks, trace.endpos, trDir, -1, -1, qfalse);
+						trap->FX_PlayEffectID(
+							CG_EnableEnhancedFX(cgs.effects.mSparks,
+							cgs.effects.mSparksEnhancedFX), trace.endpos, trDir, -1, -1, qfalse);
 					}
 				}
 

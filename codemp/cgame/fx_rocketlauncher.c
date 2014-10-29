@@ -46,7 +46,18 @@ void FX_RocketHitWall(vec3_t origin, vec3_t normal, int weapon, qboolean altFire
 	if (fx)
 		trap->FX_PlayEffectID(fx, origin, normal, -1, -1, qfalse);
 	else
-	trap->FX_PlayEffectID( cgs.effects.rocketExplosionEffect, origin, normal, -1, -1, qfalse );
+		trap->FX_PlayEffectID(CG_EnableEnhancedFX(cgs.effects.rocketExplosionEffect, cgs.effects.rocketExplosionEffectEnhancedFX), origin, normal, -1, -1, qfalse);
+}
+
+void FX_PulseRocketHitWall(vec3_t origin, vec3_t normal, int weapon, qboolean altFire)
+{
+	fxHandle_t fx = cg_weapons[weapon].missileWallImpactfx;
+	if (altFire) fx = cg_weapons[weapon].altMissileWallImpactfx;
+
+	if (fx)
+		trap->FX_PlayEffectID(fx, origin, normal, -1, -1, qfalse);
+	else
+		trap->FX_PlayEffectID(CG_EnableEnhancedFX(cgs.effects.pulserocketExplosionEffect, cgs.effects.pulserocketExplosionEffectEnhancedFX), origin, normal, -1, -1, qfalse);
 }
 
 /*
@@ -63,7 +74,18 @@ void FX_RocketHitPlayer(vec3_t origin, vec3_t normal, qboolean humanoid, int wea
 	if (fx)
 		trap->FX_PlayEffectID(fx, origin, normal, -1, -1, qfalse);
 	else
-		trap->FX_PlayEffectID( cgs.effects.rocketExplosionEffect, origin, normal, -1, -1, qfalse );
+		trap->FX_PlayEffectID(CG_EnableEnhancedFX(cgs.effects.rocketExplosionEffect, cgs.effects.rocketExplosionEffectEnhancedFX), origin, normal, -1, -1, qfalse);
+}
+
+void FX_PulseRocketHitPlayer(vec3_t origin, vec3_t normal, qboolean humanoid, int weapon, qboolean altFire)
+{
+	fxHandle_t fx = cg_weapons[weapon].fleshImpactEffect;
+	if (altFire) fx = cg_weapons[weapon].altFleshImpactEffect;
+
+	if (fx)
+		trap->FX_PlayEffectID(fx, origin, normal, -1, -1, qfalse);
+	else
+	trap->FX_PlayEffectID(CG_EnableEnhancedFX(cgs.effects.pulserocketExplosionEffect, cgs.effects.pulserocketExplosionEffectEnhancedFX), origin, normal, -1, -1, qfalse);
 }
 
 /*

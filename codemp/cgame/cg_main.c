@@ -103,7 +103,6 @@ vec4_t colorTable[CT_MAX] =
 	{   1.0f,   .658f,  .062f, 1},		// CT_HUD_ORANGE
 
 };
-
 void CG_Init( int serverMessageNum, int serverCommandSequence, int clientNum );
 void CG_Shutdown( void );
 
@@ -3507,3 +3506,24 @@ Q_EXPORT intptr_t vmMain( int command, intptr_t arg0, intptr_t arg1, intptr_t ar
 	}
 	return -1;
 }
+
+//[New EFX System]
+fxHandle_t CG_EnableEnhancedFX(fxHandle_t normal, fxHandle_t AdvanceEnhancedFX)
+{
+	if (cg_AdvanceEnhancedFX.integer > 0)
+	{
+		if (cg_AdvanceEnhancedFX.integer >= 1 && AdvanceEnhancedFX)
+		{
+		return AdvanceEnhancedFX;
+		}
+		else
+		{
+			return normal;
+		}
+	}
+	else
+	{
+		return normal;
+	}
+}
+//[/New EFX System]

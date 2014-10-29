@@ -45,7 +45,7 @@ void FX_BryarHitWall(vec3_t origin, vec3_t normal, int weapon, qboolean altFire)
 	if (fx)
 		trap->FX_PlayEffectID(fx, origin, normal, -1, -1, qfalse);
 	else
-	trap->FX_PlayEffectID( cgs.effects.bryarWallImpactEffect, origin, normal, -1, -1, qfalse );
+		trap->FX_PlayEffectID(CG_EnableEnhancedFX(cgs.effects.bryarWallImpactEffect, cgs.effects.bryarWallImpactEffectEnhancedFX), origin, normal, -1, -1, qfalse);
 }
 
 /*
@@ -125,16 +125,19 @@ void FX_BryarAltHitWall(vec3_t origin, vec3_t normal, int power, int weapon, qbo
 		{
 		case 4:
 		case 5:
-			trap->FX_PlayEffectID(cgs.effects.bryarWallImpactEffect3, origin, normal, -1, -1, qfalse);
+			trap->FX_PlayEffectID(
+				CG_EnableEnhancedFX(cgs.effects.bryarWallImpactEffect3, cgs.effects.bryarWallImpactEffect3EnhancedFX), origin, normal, -1, -1, qfalse);
 			break;
 
 		case 2:
 		case 3:
-			trap->FX_PlayEffectID(cgs.effects.bryarWallImpactEffect2, origin, normal, -1, -1, qfalse);
+			trap->FX_PlayEffectID(
+				CG_EnableEnhancedFX(cgs.effects.bryarWallImpactEffect2, cgs.effects.bryarWallImpactEffect2EnhancedFX), origin, normal, -1, -1, qfalse);
 			break;
 
 		default:
-			trap->FX_PlayEffectID(cgs.effects.bryarWallImpactEffect, origin, normal, -1, -1, qfalse);
+			trap->FX_PlayEffectID(
+				CG_EnableEnhancedFX(cgs.effects.bryarWallImpactEffect, cgs.effects.bryarWallImpactEffectEnhancedFX), origin, normal, -1, -1, qfalse);
 			break;
 		}
 	}
@@ -206,7 +209,8 @@ void FX_TurretHitWall(vec3_t origin, vec3_t normal, int weapon, qboolean altFire
 	if (fx)
 		trap->FX_PlayEffectID(fx, origin, normal, -1, -1, qfalse);
 	else
-	trap->FX_PlayEffectID( cgs.effects.bryarWallImpactEffect, origin, normal, -1, -1, qfalse );
+		trap->FX_PlayEffectID(
+		CG_EnableEnhancedFX(cgs.effects.bryarWallImpactEffect, cgs.effects.bryarWallImpactEffectEnhancedFX), origin, normal, -1, -1, qfalse);
 }
 
 /*

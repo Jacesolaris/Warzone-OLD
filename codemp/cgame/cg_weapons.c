@@ -2364,7 +2364,9 @@ void CG_MissileHitPlayer(int weapon, vec3_t origin, vec3_t dir, int entityNum, q
 		*/
 		if (altFire)
 		{
-			trap->FX_PlayEffectID(cgs.effects.mAltDetonate, origin, dir, -1, -1, qfalse);
+			trap->FX_PlayEffectID(
+				CG_EnableEnhancedFX(cgs.effects.mAltDetonate,
+				cgs.effects.mAltDetonateEnhancedFX),	origin, dir, -1, -1, qfalse);
 		}
 		else
 		{

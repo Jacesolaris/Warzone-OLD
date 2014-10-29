@@ -199,4 +199,7 @@ XCVAR_DEF(ojp_holsterdebug_posoffset,			"0.0 0.0 0.0",			NULL, CVAR_ARCHIVE)
 XCVAR_DEF(ojp_holsterdebug_angoffset,			"0.0 0.0 0.0",			NULL, CVAR_ARCHIVE)
 //[/VisualWeapons]
 XCVAR_DEF(jkg_waypoint_render,					"0",					NULL, CVAR_ARCHIVE)
+//[New EFX System]
+XCVAR_DEF(cg_AdvanceEnhancedFX,					"1",					NULL, CVAR_ARCHIVE)
+//[/New EFX System]
 #undef XCVAR_DEF

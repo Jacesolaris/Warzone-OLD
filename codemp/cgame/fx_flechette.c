@@ -67,7 +67,7 @@ void FX_FlechetteWeaponHitWall(vec3_t origin, vec3_t normal, int weapon, qboolea
 	if (fx)
 		trap->FX_PlayEffectID(fx, origin, normal, -1, -1, qfalse);
 	else
-	trap->FX_PlayEffectID( cgs.effects.flechetteWallImpactEffect, origin, normal, -1, -1, qfalse );
+		trap->FX_PlayEffectID(CG_EnableEnhancedFX(cgs.effects.flechetteWallImpactEffect, cgs.effects.flechetteWallImpactEffectEnhancedFX), origin, normal, -1, -1, qfalse);
 }
 
 /*

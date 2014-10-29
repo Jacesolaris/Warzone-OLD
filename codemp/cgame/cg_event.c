@@ -2953,27 +2953,35 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 		}
 		break;
 
+		//[New EFX System]
 	case EV_PLAY_EFFECT:
 		DEBUGNAME("EV_PLAY_EFFECT");
-		switch(es->eventParm)
+		switch (es->eventParm)
 		{ //it isn't a hack, it's ingenuity!
 		case EFFECT_SMOKE:
 			eID = cgs.effects.mEmplacedDeadSmoke;
 			break;
 		case EFFECT_EXPLOSION:
-			eID = cgs.effects.mEmplacedExplode;
+			eID = CG_EnableEnhancedFX(cgs.effects.mEmplacedExplode,
+				cgs.effects.mEmplacedExplodeEnhancedFX);
 			break;
 		case EFFECT_EXPLOSION_PAS:
-			eID = cgs.effects.mTurretExplode;
+			eID = CG_EnableEnhancedFX(cgs.effects.mTurretExplode,
+				cgs.effects.mTurretExplodeEnhancedFX);
 			break;
 		case EFFECT_SPARK_EXPLOSION:
-			eID = cgs.effects.mSparkExplosion;
+			eID = CG_EnableEnhancedFX(cgs.effects.mSparkExplosion,
+				cgs.effects.mSparkExplosionEnhancedFX);
 			break;
 		case EFFECT_EXPLOSION_TRIPMINE:
-			eID = cgs.effects.mTripmineExplosion;
+			eID = CG_EnableEnhancedFX(cgs.effects.mTripmineExplosion,
+											cgs.effects.mTripmineExplosionEnhancedFX);
 			break;
 		case EFFECT_EXPLOSION_DETPACK:
-			eID = cgs.effects.mDetpackExplosion;
+			//eID = cgs.effects.mDetpackExplosion;
+			eID = CG_EnableEnhancedFX(cgs.effects.mAltDetonate,
+				cgs.effects.mAltDetonateEnhancedFX);
+
 			break;
 		case EFFECT_EXPLOSION_FLECHETTE:
 			eID = cgs.effects.mFlechetteAltBlow;
@@ -2982,24 +2990,43 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 			eID = cgs.effects.mStunBatonFleshImpact;
 			break;
 		case EFFECT_EXPLOSION_DEMP2ALT:
-			FX_DEMP2_AltDetonate( cent->lerpOrigin, es->weapon );
-			eID = cgs.effects.mAltDetonate;
-			eID = cgs.effects.mAltDetonateEnhancedFX;
+			FX_DEMP2_AltDetonate(cent->lerpOrigin, es->weapon);
+			eID = CG_EnableEnhancedFX(cgs.effects.mAltDetonate,
+				cgs.effects.mAltDetonateEnhancedFX);
 			break;
 		case EFFECT_EXPLOSION_TURRET:
-			eID = cgs.effects.mTurretExplode;
+			eID = CG_EnableEnhancedFX(cgs.effects.mTurretExplode,
+				cgs.effects.mTurretExplodeEnhancedFX);
 			break;
 		case EFFECT_SPARKS:
 			eID = cgs.effects.mSparksExplodeNoSound;
 			break;
 		case EFFECT_WATER_SPLASH:
-			eID = cgs.effects.waterSplash;
+			eID =  cgs.effects.waterSplash;
+			break;
+		case EFFECT_WATER_SPLASH_MISSILE:
+			eID =  cgs.effects.waterSplashMissile;
+			break;
+		case EFFECT_WATER_BOIL_MISSILE:
+				eID =  cgs.effects.mBoilWater;
 			break;
 		case EFFECT_ACID_SPLASH:
-			eID = cgs.effects.acidSplash;
+			eID =  cgs.effects.acidSplash;
+			break;
+		case EFFECT_ACID_SPLASH_MISSILE:
+			eID =  cgs.effects.acidSplashMissile;
+			break;
+		case EFFECT_ACID_BOIL_MISSILE:
+			eID =  cgs.effects.mBoilAcid;
 			break;
 		case EFFECT_LAVA_SPLASH:
-			eID = cgs.effects.lavaSplash;
+			eID =  cgs.effects.lavaSplash;
+			break;
+		case EFFECT_LAVA_SPLASH_MISSILE:
+			eID =  cgs.effects.lavaSplashMissile;
+			break;
+		case EFFECT_LAVA_BOIL_MISSILE:
+			eID =  cgs.effects.mBoilLava;
 			break;
 		case EFFECT_LANDING_MUD:
 			eID = cgs.effects.landingMud;
@@ -3016,10 +3043,23 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 		case EFFECT_LANDING_GRAVEL:
 			eID = cgs.effects.landingGravel;
 			break;
+
+		case EFFECT_JETPACK_EXPLOSION:
+			eID = CG_EnableEnhancedFX(cgs.effects.rocketExplosionEffect,
+				cgs.effects.rocketExplosionEffectEnhancedFX);
+			break;
+		case EFFECT_CRYOBAN_FREEZE:
+			eID = CG_EnableEnhancedFX(cgs.effects.iceTargetFreeze,
+				cgs.effects.iceTargetFreezeEnhancedFX);
+			break;
+		case EFFECT_SONIC_WAVE:
+			eID = cgs.effects.sonicGrenadeWave;
+			break;
 		default:
 			eID = -1;
 			break;
 		}
+		//[New EFX System]
 
 		if (eID != -1)
 		{
