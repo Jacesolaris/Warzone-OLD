@@ -4957,6 +4957,8 @@ int CheckForFuncAbove(vec3_t org, int ignore)
 
 	if (strstr(fent->classname, "func_"))
 	{
+		if (tr.allsolid || Distance(tr.endpos, org) < 128) return 0; // Not above us... It's a door!
+
 		return 1; //there's a func brush here
 	}
 
