@@ -1170,16 +1170,19 @@ void ForceTeamHeal( gentity_t *self )
 
 	if ( self->health <= 0 )
 	{
+		trap->Print("dead!\n");
 		return;
 	}
 
 	if ( !WP_ForcePowerUsable( self, FP_TEAM_HEAL ) )
 	{
+		//trap->Print("!usable\n");
 		return;
 	}
 
 	if (self->client->ps.fd.forcePowerDebounce[FP_TEAM_HEAL] >= level.time)
 	{
+		//trap->Print("debounce\n");
 		return;
 	}
 
@@ -1196,8 +1199,14 @@ void ForceTeamHeal( gentity_t *self )
 	{
 		ent = &g_entities[i];
 
-		if (ent && ent->client && self != ent && OnSameTeam(self, ent) && ent->client->ps.stats[STAT_HEALTH] < ent->client->ps.stats[STAT_MAX_HEALTH] && ent->client->ps.stats[STAT_HEALTH] > 0 && ForcePowerUsableOn(self, ent, FP_TEAM_HEAL) &&
-			trap->InPVS(self->client->ps.origin, ent->client->ps.origin))
+		if (ent 
+			&& ent->client 
+			&& self != ent 
+			&& OnSameTeam(self, ent) 
+			&& ent->client->ps.stats[STAT_HEALTH] < ent->client->ps.stats[STAT_MAX_HEALTH] 
+			&& ent->client->ps.stats[STAT_HEALTH] > 0 
+			//&& ForcePowerUsableOn(self, ent, FP_TEAM_HEAL) 
+			&& trap->InPVS(self->client->ps.origin, ent->client->ps.origin))
 		{
 			VectorSubtract(self->client->ps.origin, ent->client->ps.origin, a);
 
@@ -1213,6 +1222,7 @@ void ForceTeamHeal( gentity_t *self )
 
 	if (numpl < 1)
 	{
+		//trap->Print("hit none\n");
 		return;
 	}
 

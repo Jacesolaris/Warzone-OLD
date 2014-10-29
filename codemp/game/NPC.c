@@ -3296,6 +3296,8 @@ qboolean NPC_NPCBlockingPath()
 		if (ent == NPC) continue; // UQ1: OLD JKG Mod was missing this :)
 		if (ent->s.eType != ET_PLAYER && ent->s.eType != ET_NPC) continue;
 		if (ent == NPC->enemy) continue; // enemy never blocks path...
+		if (ent == NPC->padawan) continue; // padawan never blocks path...
+		if (ent == NPC->parent) continue; // jedi never blocks path...
 		//if (Distance(ent->r.currentOrigin, NPC->r.currentOrigin) > 64) continue;
 
 		//if (InFOV3( ent->r.currentOrigin, NPC->r.currentOrigin, NPC->move_vector, 90, 120 ))
@@ -4825,27 +4827,24 @@ qboolean NPC_RoutingIncreaseCost ( int wpLast, int wpCurrent )
 qboolean NPC_PadawanMove( void )
 {
 	gentity_t	*NPC = NPCS.NPC;
-	usercmd_t	ucmd = NPCS.ucmd;
+	usercmd_t	*ucmd = &NPCS.ucmd;
 	
 	if (NPC->s.NPC_class == CLASS_PADAWAN)
 	{
 		G_ClearEnemy( NPCS.NPC );
-		NPC_ClearGoal();
-		NPCS.NPCInfo->goalEntity = NULL;
-		NPCS.NPCInfo->tempGoal = NULL;
 		
 		if (NPC->parent && NPC_IsAlive(NPC->parent))
 		{
 			float dist = Distance(NPC->parent->r.currentOrigin, NPC->r.currentOrigin);
 
 			// OMG combatmovetogoal sucks...
-			if (dist > 96 && dist < 512)
+			if (dist > 78 && dist < 512)
 			{// If clear then move stright there...
 				NPC_FacePosition( NPC->parent->r.currentOrigin, qfalse );
 
 				NPCS.NPCInfo->goalEntity = NPC->parent;
-				NPCS.NPCInfo->goalRadius = 96.0;
-				NPCS.NPCInfo->greetEnt = NPC->parent;
+				//NPCS.NPCInfo->goalRadius = 96.0;
+				//NPCS.NPCInfo->greetEnt = NPC->parent;
 
 				if ( UpdateGoal() )
 				{
@@ -4862,13 +4861,14 @@ qboolean NPC_PadawanMove( void )
 
 				//trap->Print("dist > 96 && dist < 512 FAIL!\n");
 			}
+#if 0
 			else if (dist < 48)
 			{// If clear then move back a bit...
 				NPC_FacePosition( NPC->parent->r.currentOrigin, qfalse );
 
 				NPCS.NPCInfo->goalEntity = NPC->parent;
 				NPCS.NPCInfo->goalRadius = 96.0;
-				NPCS.NPCInfo->greetEnt = NPC->parent;
+				//NPCS.NPCInfo->greetEnt = NPC->parent;
 
 				if ( UpdateGoal() )
 				{
@@ -4878,6 +4878,7 @@ qboolean NPC_PadawanMove( void )
 					return qtrue;
 				}
 			}
+#endif
 			else if (dist <= 96)
 			{// Perfect distance... Stay idle...
 				/*ucmd.forwardmove = 0;
@@ -4886,6 +4887,16 @@ qboolean NPC_PadawanMove( void )
 
 				//trap->Print("dist <= 96 IDLE!\n");
 				*/
+
+				NPC_ClearGoal();
+				NPCS.NPCInfo->goalEntity = NULL;
+				NPCS.NPCInfo->tempGoal = NULL;
+
+				ucmd->forwardmove = 0;
+				ucmd->rightmove = 0;
+				ucmd->upmove = 0;
+				NPC_PickRandomIdleAnimantion(NPC);
+
 				return qtrue;
 			}
 			else if (NPC->parent->s.groundEntityNum != ENTITYNUM_NONE) // UQ1: Let's just skip pathfinding completely...
@@ -4900,10 +4911,14 @@ qboolean NPC_PadawanMove( void )
 					{
 						TeleportNPC( NPC, gWPArray[waypoint]->origin, NPC->s.angles );
 
-						//NPC_ClearPathData(NPC);
-						ucmd.forwardmove = 0;
-						ucmd.rightmove = 0;
-						ucmd.upmove = 0;
+
+						NPC_ClearGoal();
+						NPCS.NPCInfo->goalEntity = NULL;
+						NPCS.NPCInfo->tempGoal = NULL;
+
+						ucmd->forwardmove = 0;
+						ucmd->rightmove = 0;
+						ucmd->upmove = 0;
 						NPC_PickRandomIdleAnimantion(NPC);
 
 						//trap->Print("TELEPORT!\n");
@@ -5975,6 +5990,74 @@ qboolean NPC_NeedPadawan_Spawn ( void )
 	return qfalse;
 }
 
+qboolean Padawan_CheckForce ( void )
+{// UQ1: New code to make better use of force powers...
+	if ( NPCS.NPC->client->ps.fd.forcePowersActive&(1<<FP_DRAIN) )
+	{//when draining, don't move
+		return qtrue;
+	}
+
+	if ( NPCS.NPC->client->ps.fd.forcePowersActive&(1<<FP_TEAM_HEAL) )
+	{//when team healing, don't move
+		return qtrue;
+	}
+
+	if ( NPCS.NPC->client->ps.fd.forcePowersActive&(1<<FP_HEAL) )
+	{//lvl 1 healing, don't move
+		return qtrue;
+	}
+
+	// UQ1: Special heals/protects/absorbs - mainly for padawans...
+	if ( TIMER_Done( NPCS.NPC, "heal" )
+		&& (NPCS.NPC->client->ps.fd.forcePowersKnown&(1<<FP_HEAL)) != 0
+		&& (NPCS.NPC->client->ps.fd.forcePowersActive&(1<<FP_HEAL)) == 0
+		&& (NPCS.NPC->s.NPC_class == CLASS_PADAWAN)
+		//&& NPCS.NPC->health < NPCS.NPC->maxHealth * 0.5)
+		&& NPCS.NPC->client->ps.stats[STAT_HEALTH] < NPCS.NPC->client->ps.stats[STAT_MAX_HEALTH] * 0.5
+		&& NPCS.NPC->client->ps.stats[STAT_HEALTH] > 0 )
+	{// We need to heal...
+		ForceHeal( NPCS.NPC );
+		TIMER_Set( NPCS.NPC, "heal", irand(5000, 15000) );
+		return qtrue;
+	}
+	else if ( TIMER_Done( NPCS.NPC, "teamheal" )
+		&& NPCS.NPC->parent
+		&& NPC_IsAlive(NPCS.NPC->parent)
+		&& Distance(NPCS.NPC->parent->r.currentOrigin, NPCS.NPC->r.currentOrigin) < 256
+		&& (NPCS.NPC->client->ps.fd.forcePowersKnown&(1<<FP_TEAM_HEAL)) != 0
+		&& (NPCS.NPC->client->ps.fd.forcePowersActive&(1<<FP_TEAM_HEAL)) == 0
+		&& (NPCS.NPC->s.NPC_class == CLASS_PADAWAN)
+		//&& NPCS.NPC->parent->health < NPCS.NPC->parent->maxHealth * 0.5)
+		&& NPCS.NPC->parent->client->ps.stats[STAT_HEALTH] < NPCS.NPC->parent->client->ps.stats[STAT_MAX_HEALTH] * 0.5
+		&& NPCS.NPC->parent->client->ps.stats[STAT_HEALTH] > 0 )
+	{// Team heal our jedi???
+		NPC_FacePosition(NPCS.NPC->parent->r.currentOrigin, qtrue);
+		ForceTeamHeal( NPCS.NPC );
+		TIMER_Set( NPCS.NPC, "teamheal", irand(5000, 15000) );
+		return qtrue;
+	}
+	else if ( TIMER_Done( NPCS.NPC, "protect" )
+		&& (NPCS.NPC->client->ps.fd.forcePowersKnown&(1<<FP_PROTECT)) != 0
+		&& (NPCS.NPC->client->ps.fd.forcePowersActive&(1<<FP_PROTECT)) == 0
+		&& (Q_irand( 0, 30 ) < 2 ))
+	{// General buff...
+		ForceProtect( NPCS.NPC );
+		TIMER_Set( NPCS.NPC, "protect", irand(15000, 30000) );
+		return qtrue;
+	}
+	else if ( TIMER_Done( NPCS.NPC, "absorb" )
+		&& (NPCS.NPC->client->ps.fd.forcePowersKnown&(1<<FP_ABSORB)) != 0
+		&& (NPCS.NPC->client->ps.fd.forcePowersActive&(1<<FP_ABSORB)) == 0
+		&& (Q_irand( 0, 30 ) < 2))
+	{// General buff...
+		ForceAbsorb( NPCS.NPC );
+		TIMER_Set( NPCS.NPC, "absorb", irand(15000, 30000) );
+		return qtrue;
+	}
+
+	return qfalse;
+}
+
 void NPC_DoPadawanStuff ( void )
 {
 	int			i = 0;
@@ -5994,6 +6077,9 @@ void NPC_DoPadawanStuff ( void )
 	}
 
 	if (me->nextPadawanThink > level.time) return;
+
+	// Does he need to heal up, or use a buff???
+	Padawan_CheckForce();
 
 	me->nextPadawanThink = level.time + 5000;
 

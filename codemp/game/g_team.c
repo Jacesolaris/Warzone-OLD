@@ -258,13 +258,16 @@ qboolean OnSameTeam( gentity_t *ent1, gentity_t *ent2 ) {
 		return qfalse;
 	}
 
-	if (ent1->s.eType == ET_NPC && ent2->s.eType == ET_PLAYER)
+	if (g_gametype.integer < GT_TEAM)
 	{
-		return qfalse;
-	}
-	else if (ent1->s.eType == ET_PLAYER && ent2->s.eType == ET_NPC)
-	{
-		return qfalse;
+		if (ent1->s.eType == ET_NPC && ent2->s.eType == ET_PLAYER)
+		{
+			return qfalse;
+		}
+		else if (ent1->s.eType == ET_PLAYER && ent2->s.eType == ET_NPC)
+		{
+			return qfalse;
+		}
 	}
 
 	if ( ent1->client->sess.sessionTeam == ent2->client->sess.sessionTeam ) {

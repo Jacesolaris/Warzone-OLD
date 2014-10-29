@@ -6966,7 +6966,7 @@ qboolean NPC_MoveIntoOptimalAttackPosition ( void )
 	if (NPC->s.weapon == WP_SABER)
 	{
 		OPTIMAL_MIN_RANGE = 35;
-		OPTIMAL_MAX_RANGE = 50;
+		OPTIMAL_MAX_RANGE = 45;
 		OPTIMAL_RANGE = 40;
 	}
 
