@@ -1482,7 +1482,7 @@ Don't place this
 /*QUAKED weapon_rocket_launcher (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
 */
 {
-	"weapon_rocket_launcher",
+	"weapon_e60r_launcher",
 	"sound/weapons/w_pkup.wav",
 	{ "models/weapons3/e60r_launcher/e60r_launcher_w.glm",
 	0, 0, 0 },
@@ -1499,7 +1499,7 @@ Don't place this
 /*QUAKED weapon_rocket_launcher (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
 */
 {
-	"weapon_rocket_launcher",
+	"weapon_cw_launcher",
 	"sound/weapons/w_pkup.wav",
 	{ "models/weapons3/cw_launcher/cw_launcher_w.glm",
 	0, 0, 0 },
