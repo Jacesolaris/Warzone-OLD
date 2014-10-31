@@ -786,29 +786,39 @@ void CG_RegisterWeapon( int weaponNum) {
 		break;
 
 	case WP_BOWCASTER:
-		weaponInfo->selectSound			= trap->S_RegisterSound("sound/weapons/bowcaster/select.wav");
-		weaponInfo->altFlashSound[0]		= trap->S_RegisterSound( "sound/weapons/bowcaster/fire.wav");
-		weaponInfo->altFiringSound			= NULL_SOUND;
-		weaponInfo->altChargeSound			= NULL_SOUND;
-		weaponInfo->altMuzzleEffect		= trap->FX_RegisterEffect( "bowcaster/muzzle_flash" );
-		weaponInfo->altMissileModel		= NULL_HANDLE;
-		weaponInfo->altMissileSound		= NULL_SOUND;
-		weaponInfo->altMissileDlight		= 0;
-		weaponInfo->altMissileHitSound		= NULL_SOUND;
-		weaponInfo->altMissileTrailFunc	= FX_BowcasterProjectileThink;
-		weaponInfo->flashSound[0]	= trap->S_RegisterSound( "sound/weapons/bowcaster/fire.wav");
-		weaponInfo->firingSound		= NULL_SOUND;
-		weaponInfo->chargeSound		= trap->S_RegisterSound( "sound/weapons/bowcaster/altcharge.wav");
-		weaponInfo->muzzleEffect		= trap->FX_RegisterEffect( "bowcaster/muzzle_flash" );
-		weaponInfo->missileModel		= NULL_HANDLE;
-		weaponInfo->missileSound		= NULL_SOUND;
-		weaponInfo->missileDlight	= 0;
-		weaponInfo->missileHitSound	= NULL_SOUND;
+
+		weaponInfo->altFlashSound[0] = NULL_SOUND;
+		weaponInfo->altFiringSound = NULL_SOUND;
+		weaponInfo->altChargeSound = NULL_SOUND;
+		weaponInfo->altMuzzleEffect = trap->FX_RegisterEffect("blaster/muzzle_flash");
+		weaponInfo->altMissileModel = NULL_HANDLE;
+		weaponInfo->altMissileSound = NULL_SOUND;
+		weaponInfo->altMissileDlight = 0;
+		weaponInfo->altMissileHitSound = NULL_SOUND;
+		weaponInfo->altMissileTrailFunc = FX_BowcasterProjectileThink;
+
+		weaponInfo->flashSound[0] = trap->S_RegisterSound("sound/weapons/bowcaster/fire.wav");
+		weaponInfo->altFlashSound[0] = trap->S_RegisterSound("sound/weapons/bowcaster/fire.wav");
+		weaponInfo->chargeSound = trap->S_RegisterSound("sound/weapons/bowcaster/altcharge.wav");
+		weaponInfo->firingSound = NULL_SOUND;
+		weaponInfo->muzzleEffect = trap->FX_RegisterEffect("blaster/muzzle_flash");
+		weaponInfo->missileModel = NULL_HANDLE;
+		weaponInfo->missileSound = NULL_SOUND;
+		weaponInfo->missileDlight = 0;
+		weaponInfo->missileHitSound = NULL_SOUND;
 		weaponInfo->missileTrailFunc = FX_BowcasterAltProjectileThink;
-		cgs.effects.bowcasterShotEffect		= trap->FX_RegisterEffect( "bowcaster/shot" );
-		cgs.effects.bowcasterImpactEffect	= trap->FX_RegisterEffect( "bowcaster/explosion" );
-		trap->FX_RegisterEffect( "bowcaster/deflect" );
-		cgs.media.greenFrontFlash = trap->R_RegisterShader( "gfx/effects/greenFrontFlash" );
+		weaponInfo->missileRenderfx = NULL_FX;
+		weaponInfo->altMissileRenderfx = NULL_FX;
+		weaponInfo->powerupShotRenderfx = NULL_FX;
+		
+
+		cgs.effects.bowcasterShotEffect = trap->FX_RegisterEffect("bowcaster/shot");
+		cgs.effects.bowcasterImpactEffect = trap->FX_RegisterEffect("bowcaster/wall_impact");
+		cgs.effects.bowcasterImpactEffectEnhancedFX = trap->FX_RegisterEffect("bowcaster/wall_impact_enhanced2");
+		cgs.media.greenFrontFlash = trap->R_RegisterShader("gfx/effects/redfrontflash");
+
+		cgs.media.bowcasterMask = trap->R_RegisterShaderNoMip("gfx/2d/bowMask");
+		cgs.media.bowcasterInsert = trap->R_RegisterShaderNoMip("gfx/2d/bowInsert");
 		break;
 
 	case WP_REPEATER:
@@ -837,6 +847,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		cgs.effects.repeaterFleshImpactEffect	= trap->FX_RegisterEffect( "imperial_repeater/flesh_impact" );
 		//cgs.effects.repeaterAltWallImpactEffect	= trap->FX_RegisterEffect( "repeater/alt_wall_impact" );
 		cgs.effects.repeaterAltWallImpactEffect	= trap->FX_RegisterEffect( "imperial_repeater/concussion" );
+		cgs.effects.repeaterWallImpactEffectEnhancedFX = trap->FX_RegisterEffect("repeater/wall_impact_enhanced2");
 		break;
 
 	case WP_DEMP2:
@@ -891,6 +902,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		cgs.effects.flechetteAltShotEffect		= trap->FX_RegisterEffect( "flechette/alt_shot" );
 		cgs.effects.flechetteWallImpactEffect	= trap->FX_RegisterEffect( "flechette/wall_impact" );
 		cgs.effects.flechetteFleshImpactEffect	= trap->FX_RegisterEffect( "flechette/flesh_impact" );
+		cgs.effects.flechetteWallImpactEffectEnhancedFX = trap->FX_RegisterEffect("flechette/wall_impact_enhanced2");
 		break;
 
 	case WP_ROCKET_LAUNCHER:
@@ -943,8 +955,13 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altMissileDlight	= 0;
 		weaponInfo->altMissileHitSound	= NULL_SOUND;
 		weaponInfo->altMissileTrailFunc = 0;
-		cgs.effects.thermalExplosionEffect		= trap->FX_RegisterEffect( "thermal/explosion" );
-		cgs.effects.thermalShockwaveEffect		= trap->FX_RegisterEffect( "thermal/shockwave" );
+		/*cgs.effects.thermalExplosionEffect		= trap->FX_RegisterEffect( "thermal/explosion" );
+		cgs.effects.thermalShockwaveEffect		= trap->FX_RegisterEffect( "thermal/shockwave" );*/
+		cgs.effects.thermalShockwaveEffect = trap->FX_RegisterEffect("thermal/shockwave");
+		cgs.effects.thermalExplosionEffectEnhancedFX = trap->FX_RegisterEffect("ships/mine_impact_enhanced2");
+		cgs.effects.thermalExplosionAltEffect = trap->FX_RegisterEffect("ships/swoop_explosion");
+		cgs.effects.thermalExplosionAltEffectEnhancedFX = trap->FX_RegisterEffect("ships/swoop_explosion_enhanced2");
+
 		cgs.media.grenadeBounce1		= trap->S_RegisterSound( "sound/weapons/thermal/bounce1.wav" );
 		cgs.media.grenadeBounce2		= trap->S_RegisterSound( "sound/weapons/thermal/bounce2.wav" );
 		trap->S_RegisterSound( "sound/weapons/thermal/thermloop.wav" );
