@@ -8,6 +8,7 @@ padawan
 	saberStyle		2
 	health			300
 	FP_HEAL			3
+	FP_TEAM_HEAL	3
 	FP_LEVITATION	3
 	FP_SPEED		3
 	FP_PUSH			3
@@ -58,6 +59,7 @@ padawan2
 	saberStyle		2
 	health			300
 	FP_HEAL			3
+	FP_TEAM_HEAL	3
 	FP_LEVITATION	3
 	FP_SPEED		3
 	FP_PUSH			3
@@ -110,6 +112,7 @@ padawan3
 	saberStyle		6
 	health			300
 	FP_HEAL			3
+	FP_TEAM_HEAL	3
 	FP_LEVITATION	3
 	FP_SPEED		3
 	FP_PUSH			3
@@ -160,6 +163,7 @@ padawan4
 	saberStyle		7
 	health			300
 	FP_HEAL			3
+	FP_TEAM_HEAL	3
 	FP_LEVITATION	3
 	FP_SPEED		3
 	FP_PUSH			3
@@ -210,6 +214,7 @@ padawan5
 	saberStyle		2
 	health			300
 	FP_HEAL			3
+	FP_TEAM_HEAL	3
 	FP_LEVITATION	3
 	FP_SPEED		3
 	FP_PUSH			3
@@ -260,6 +265,7 @@ padawan6
 	saberStyle		2
 	health			300
 	FP_HEAL			3
+	FP_TEAM_HEAL	3
 	FP_LEVITATION	3
 	FP_SPEED		3
 	FP_PUSH			3
@@ -312,6 +318,7 @@ padawan7
 	saberStyle		6
 	health			300
 	FP_HEAL			3
+	FP_TEAM_HEAL	3
 	FP_LEVITATION	3
 	FP_SPEED		3
 	FP_PUSH			3
@@ -362,6 +369,7 @@ padawan8
 	saberStyle		7
 	health			300
 	FP_HEAL			3
+	FP_TEAM_HEAL	3
 	FP_LEVITATION	3
 	FP_SPEED		3
 	FP_PUSH			3
@@ -412,6 +420,7 @@ padawan5
 	saberStyle		2
 	health			300
 	FP_HEAL			3
+	FP_TEAM_HEAL	3
 	FP_LEVITATION	3
 	FP_SPEED		3
 	FP_PUSH			3
@@ -462,6 +471,7 @@ padawan6
 	saberStyle		2
 	health			300
 	FP_HEAL			3
+	FP_TEAM_HEAL	3
 	FP_LEVITATION	3
 	FP_SPEED		3
 	FP_PUSH			3
@@ -514,6 +524,7 @@ padawan7
 	saberStyle		6
 	health			300
 	FP_HEAL			3
+	FP_TEAM_HEAL	3
 	FP_LEVITATION	3
 	FP_SPEED		3
 	FP_PUSH			3
@@ -564,6 +575,7 @@ padawan8
 	saberStyle		7
 	health			300
 	FP_HEAL			3
+	FP_TEAM_HEAL	3
 	FP_LEVITATION	3
 	FP_SPEED		3
 	FP_PUSH			3
@@ -614,6 +626,7 @@ padawan9
 	saberStyle		2
 	health			300
 	FP_HEAL			3
+	FP_TEAM_HEAL	3
 	FP_LEVITATION	3
 	FP_SPEED		3
 	FP_PUSH			3
@@ -664,6 +677,7 @@ padawan10
 	saberStyle		2
 	health			300
 	FP_HEAL			3
+	FP_TEAM_HEAL	3
 	FP_LEVITATION	3
 	FP_SPEED		3
 	FP_PUSH			3
@@ -716,6 +730,7 @@ padawan11
 	saberStyle		6
 	health			300
 	FP_HEAL			3
+	FP_TEAM_HEAL	3
 	FP_LEVITATION	3
 	FP_SPEED		3
 	FP_PUSH			3
@@ -766,6 +781,7 @@ padawan12
 	saberStyle		7
 	health			300
 	FP_HEAL			3
+	FP_TEAM_HEAL	3
 	FP_LEVITATION	3
 	FP_SPEED		3
 	FP_PUSH			3
@@ -816,6 +832,7 @@ padawan13
 	saberStyle		2
 	health			300
 	FP_HEAL			3
+	FP_TEAM_HEAL	3
 	FP_LEVITATION	3
 	FP_SPEED		3
 	FP_PUSH			3
@@ -866,6 +883,7 @@ padawan14
 	saberStyle		2
 	health			300
 	FP_HEAL			3
+	FP_TEAM_HEAL	3
 	FP_LEVITATION	3
 	FP_SPEED		3
 	FP_PUSH			3
@@ -918,6 +936,7 @@ padawan15
 	saberStyle		6
 	health			300
 	FP_HEAL			3
+	FP_TEAM_HEAL	3
 	FP_LEVITATION	3
 	FP_SPEED		3
 	FP_PUSH			3
@@ -968,6 +987,7 @@ padawan16
 	saberStyle		7
 	health			300
 	FP_HEAL			3
+	FP_TEAM_HEAL	3
 	FP_LEVITATION	3
 	FP_SPEED		3
 	FP_PUSH			3
@@ -1018,6 +1038,7 @@ padawan17
 	saberStyle		2
 	health			300
 	FP_HEAL			3
+	FP_TEAM_HEAL	3
 	FP_LEVITATION	3
 	FP_SPEED		3
 	FP_PUSH			3
@@ -1068,6 +1089,7 @@ padawan18
 	saberStyle		2
 	health			300
 	FP_HEAL			3
+	FP_TEAM_HEAL	3
 	FP_LEVITATION	3
 	FP_SPEED		3
 	FP_PUSH			3
@@ -1120,6 +1142,7 @@ padawan19
 	saberStyle		6
 	health			300
 	FP_HEAL			3
+	FP_TEAM_HEAL	3
 	FP_LEVITATION	3
 	FP_SPEED		3
 	FP_PUSH			3
@@ -1170,6 +1193,7 @@ padawan20
 	saberStyle		7
 	health			300
 	FP_HEAL			3
+	FP_TEAM_HEAL	3
 	FP_LEVITATION	3
 	FP_SPEED		3
 	FP_PUSH			3
@@ -1220,6 +1244,7 @@ padawan21
 	saberStyle		2
 	health			300
 	FP_HEAL			3
+	FP_TEAM_HEAL	3
 	FP_LEVITATION	3
 	FP_SPEED		3
 	FP_PUSH			3
@@ -1270,6 +1295,7 @@ padawan22
 	saberStyle		2
 	health			300
 	FP_HEAL			3
+	FP_TEAM_HEAL	3
 	FP_LEVITATION	3
 	FP_SPEED		3
 	FP_PUSH			3
@@ -1322,6 +1348,7 @@ padawan23
 	saberStyle		6
 	health			300
 	FP_HEAL			3
+	FP_TEAM_HEAL	3
 	FP_LEVITATION	3
 	FP_SPEED		3
 	FP_PUSH			3
@@ -1372,6 +1399,7 @@ padawan24
 	saberStyle		7
 	health			300
 	FP_HEAL			3
+	FP_TEAM_HEAL	3
 	FP_LEVITATION	3
 	FP_SPEED		3
 	FP_PUSH			3
@@ -1422,6 +1450,7 @@ padawan25
 	saberStyle		2
 	health			300
 	FP_HEAL			3
+	FP_TEAM_HEAL	3
 	FP_LEVITATION	3
 	FP_SPEED		3
 	FP_PUSH			3
@@ -1472,6 +1501,7 @@ padawan26
 	saberStyle		2
 	health			300
 	FP_HEAL			3
+	FP_TEAM_HEAL	3
 	FP_LEVITATION	3
 	FP_SPEED		3
 	FP_PUSH			3
@@ -1524,6 +1554,7 @@ padawan27
 	saberStyle		6
 	health			300
 	FP_HEAL			3
+	FP_TEAM_HEAL	3
 	FP_LEVITATION	3
 	FP_SPEED		3
 	FP_PUSH			3
@@ -1574,6 +1605,7 @@ padawan28
 	saberStyle		7
 	health			300
 	FP_HEAL			3
+	FP_TEAM_HEAL	3
 	FP_LEVITATION	3
 	FP_SPEED		3
 	FP_PUSH			3
