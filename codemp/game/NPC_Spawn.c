@@ -2234,7 +2234,7 @@ void NPC_PrecacheType( char *NPC_type )
 {
 	gentity_t *fakespawner = G_Spawn();
 
-	trap->Print("* Precaching NPC type: %s.\n", NPC_type);
+	//trap->Print("* Precaching NPC type: %s.\n", NPC_type);
 
 	if ( fakespawner )
 	{
