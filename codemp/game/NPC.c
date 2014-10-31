@@ -3451,6 +3451,10 @@ qboolean NPC_CheckFallPositionOK(gentity_t *NPC, vec3_t position)
 	VectorCopy(position, downPos);
 
 	downPos[2] -= 96.0;
+
+	if (NPC->s.groundEntityNum < ENTITYNUM_MAX_NORMAL)
+		downPos[2] -= 192.0;
+	
 	testPos[2] += 48.0;
 
 	//trap->Trace( &tr, testPos, NULL/*NPC->r.mins*/, NULL/*NPC->r.maxs*/, downPos, NPC->s.number, MASK_PLAYERSOLID, 0, 0, 0 );
@@ -6341,6 +6345,8 @@ Main NPC AI - called once per frame
 extern gentity_t *NPC_PickEnemyExt( qboolean checkAlerts );
 extern qboolean NPC_FindEnemy( qboolean checkAlerts );
 
+extern vmCvar_t npc_pathing;
+
 //#define __LOW_THINK_AI__
 
 #if	AI_TIMERS
@@ -6498,8 +6504,7 @@ void NPC_Think ( gentity_t *self)//, int msec )
 		NPCS.ucmd.buttons = 0; // init buttons...
 
 		//nextthink is set before this so something in here can override it
-		if (self->s.NPC_class != CLASS_VEHICLE ||
-			!self->m_pVehicle)
+		if (self->s.NPC_class != CLASS_VEHICLE || !self->m_pVehicle)
 		{ //ok, let's not do this at all for vehicles.
 			qboolean is_civilian = NPC_IsCivilian(self);
 			qboolean is_jedi = NPC_IsJedi(self);
@@ -6509,8 +6514,16 @@ void NPC_Think ( gentity_t *self)//, int msec )
 			//if (!is_jedi && self->isPadawan) is_jedi = qtrue;
 			if (self->isPadawan) is_jedi = qfalse;
 
-			if (is_civilian || is_jedi || is_bot) use_pathing = qtrue;
-			if (g_gametype.integer >= GT_TEAM) use_pathing = qtrue;
+			if (npc_pathing.integer > 0)
+			{
+				if (is_civilian || is_jedi || is_bot) use_pathing = qtrue;
+
+				if (g_gametype.integer >= GT_TEAM) use_pathing = qtrue;
+			}
+			else
+			{
+				if (is_civilian || is_bot) use_pathing = qtrue;
+			}
 
 			NPC_DoPadawanStuff(); // check any padawan stuff we might need to do...
 

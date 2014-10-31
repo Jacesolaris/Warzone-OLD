@@ -751,6 +751,8 @@ void G_CheckMinimumPlayers( void ) {
 	*/
 }
 
+vmCvar_t npc_pathing;
+
 #ifdef __NPC_MINPLAYERS__
 
 vmCvar_t npc_enemies;
@@ -1561,8 +1563,7 @@ void G_CheckMinimumNpcs( void ) {
 		}
 		else*/
 		{
-			//if ( g_gametype.integer == GT_WARZONE )
-			if ( g_gametype.integer >= GT_TEAM )
+			if ( npc_pathing.integer && g_gametype.integer >= GT_TEAM )
 			{
 				// New War Zone Instances (not JKG style)... Get CTF spawnpoints...
 				team_t SPAWN_TEAM = TEAM_FREE;
@@ -1604,7 +1605,24 @@ void G_CheckMinimumNpcs( void ) {
 				VectorCopy(gWPArray[waypoint]->origin, npc->s.origin);
 				npc->s.origin[2]+=32; // Drop down...
 
-				trap->Print(va("[%i/%i] Spawning (enemy NPC) %s at waypoint %i.\n", botplayers+1, minplayers, npc->NPC_type, waypoint));
+				if (g_gametype.integer >= GT_TEAM)
+				{
+					team_t SPAWN_TEAM = TEAM_FREE;
+
+					if (NPC_SPAWN_TEAM == TEAM_BLUE) SPAWN_TEAM = TEAM_RED;
+					if (NPC_SPAWN_TEAM == TEAM_RED) SPAWN_TEAM = TEAM_BLUE;
+
+					npc->s.teamowner = SPAWN_TEAM;
+
+					if (SPAWN_TEAM == TEAM_BLUE)
+						trap->Print(va("[%i/%i] Spawning REBEL %s at waypoint %i.\n", botplayers+1, minplayers, npc->NPC_type, waypoint));
+					else
+						trap->Print(va("[%i/%i] Spawning IMPERIAL %s at waypoint %i.\n", botplayers+1, minplayers, npc->NPC_type, waypoint));
+				}
+				else
+				{
+					trap->Print(va("[%i/%i] Spawning (enemy NPC) %s at waypoint %i.\n", botplayers+1, minplayers, npc->NPC_type, waypoint));
+				}
 			}
 		}
 
@@ -2199,6 +2217,7 @@ void G_InitBots( void ) {
 	trap->Cvar_Register( &npc_enemies, "npc_enemies", "0", CVAR_ARCHIVE );
 	trap->Cvar_Register( &npc_civilians, "npc_civilians", "0", CVAR_ARCHIVE );
 	trap->Cvar_Register( &npc_vendors, "npc_vendors", "0", CVAR_ARCHIVE );
+	trap->Cvar_Register( &npc_pathing, "npc_pathing", "0", CVAR_ARCHIVE );
 #endif //__NPC_MINPLAYERS__
 
 	//rww - new bot route stuff
