@@ -3491,6 +3491,8 @@ name_list_t NPC_NAME_LIST[8000];
 
 int NUM_HUMAN_NAMES = 0;
 
+extern qboolean CG_InFOV( vec3_t spot, vec3_t from, vec3_t fromAngles, int hFOV, int vFOV );
+
 int			next_vischeck[MAX_GENTITIES];
 qboolean	currently_visible[MAX_GENTITIES];
 
@@ -3500,12 +3502,17 @@ qboolean CG_CheckClientVisibility ( centity_t *cent )
 	vec3_t		start, end;//, forward, right, up;
 	centity_t	*traceEnt = NULL;
 
+	if (!CG_InFOV( cent->lerpOrigin, cg.refdef.vieworg, cg.refdef.viewangles, cg.refdef.fov_x * 1.3, cg.refdef.fov_y * 1.3))
+	{// We can skip a vischeck...
+		return qfalse;
+	}
+
 	if (next_vischeck[cent->currentState.number] > cg.time)
 	{
 		return currently_visible[cent->currentState.number];
 	}
 
-	next_vischeck[cent->currentState.number] = cg.time + 500 + Q_irand(500, 1000);
+	next_vischeck[cent->currentState.number] = cg.time + 4000 + Q_irand(0, 1000); // offset the checks...
 
 	VectorCopy(cg.refdef.vieworg, start);
 	start[2]+=42;
@@ -7744,6 +7751,9 @@ void CG_DrawNPCNames( void )
 		if (cent->currentState.eType == ET_FREED)
 			continue;
 
+		if (cent->currentState.eFlags & EF_NODRAW)
+			continue;
+
 		//if (cent->currentState.health <= 0)
 		//	continue;
 
@@ -8309,18 +8319,6 @@ void CG_DrawNPCNames( void )
 				}
 				continue;
 			}
-		}
-
-		if (cent->currentState.eFlags & EF_DEAD)
-		{
-			//CG_Printf("NPC is dead.\n");
-			continue;
-		}
-
-		if (cent->currentState.eFlags & EF_NODRAW)
-		{
-			//CG_Printf("NPC is NODRAW.\n");
-			continue;
 		}
 
 		if (cent->currentState.eType == ET_NPC)
