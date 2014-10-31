@@ -774,6 +774,282 @@ void CG_RegisterWeapon( int weaponNum) {
 		cgs.effects.pulserocketExplosionEffectEnhancedFX = trap->FX_RegisterEffect("pulserocket/explosion_enhanced2");
 		break;
 
+		//New Grenades
+	/*case WP_FRAG_GRENADE:
+		weaponInfo->item->classname = "Frag Grenade";
+		weaponInfo->selectSound =  trap->S_RegisterSound("sound/weapons/thermal/select.wav");
+		weaponInfo->flashSound[0] =  trap->S_RegisterSound("sound/weapons/thermal/fire.wav");
+		weaponInfo->firingSound = NULL_SOUND;
+		weaponInfo->chargeSound =  trap->S_RegisterSound("sound/weapons/thermal/charge.wav");
+		weaponInfo->muzzleEffect = NULL_FX;
+		weaponInfo->missileModel =  trap->R_RegisterModel("models/weapons3/fraggrenade/thermal_proj.md3");
+		weaponInfo->missileSound = NULL_SOUND;
+		weaponInfo->missileDlight = 0;
+		weaponInfo->missileHitSound = NULL_SOUND;
+		weaponInfo->missileTrailFunc = FX_GrenadesProjectileThink;
+		weaponInfo->missileRenderfx = NULL_FX;
+		weaponInfo->altMissileRenderfx = NULL_FX;
+		weaponInfo->powerupShotRenderfx = NULL_FX;
+		weaponInfo->altFlashSound[0] =  trap->S_RegisterSound("sound/weapons/thermal/fire.wav");
+		weaponInfo->altFiringSound = NULL_SOUND;
+		weaponInfo->altChargeSound =  trap->S_RegisterSound("sound/weapons/thermal/charge.wav");
+		weaponInfo->altMuzzleEffect = NULL_FX;
+		weaponInfo->altMissileModel =  trap->R_RegisterModel("models/weapons3/fraggrenade/thermal_proj.md3");
+		weaponInfo->altMissileSound = NULL_SOUND;
+		weaponInfo->altMissileDlight = 0;
+		weaponInfo->altMissileHitSound = NULL_SOUND;
+		weaponInfo->altMissileTrailFunc = FX_GrenadesProjectileThink;
+
+		cgs.effects.concussionGrenadeShotEffect =  trap->FX_RegisterEffect("conc/shot");
+		cgs.effects.concussionGrenadeShotEffect2 =  trap->FX_RegisterEffect("conc/shot2");
+		cgs.effects.concussionExplosionEffect =  trap->FX_RegisterEffect("conc/conc");
+		cgs.effects.concussionExplosionEffectEnhancedFX =  trap->FX_RegisterEffect("conc/conc_enhanced2");
+		
+		cgs.media.grenadeBounce1 =  trap->S_RegisterSound("sound/weapons/thermal/bounce1.wav");
+		cgs.media.grenadeBounce2 =  trap->S_RegisterSound("sound/weapons/thermal/bounce2.wav");
+
+		break;
+
+	case WP_FRAG_GRENADE_OLD:
+		weaponInfo->item->classname = "Old Frag Grenade";
+		weaponInfo->selectSound = trap->S_RegisterSound("sound/weapons/thermal/select.wav");
+		weaponInfo->flashSound[0] = trap->S_RegisterSound("sound/weapons/thermal/fire.wav");
+		weaponInfo->firingSound = NULL_SOUND;
+		weaponInfo->chargeSound = trap->S_RegisterSound("sound/weapons/thermal/charge.wav");
+		weaponInfo->muzzleEffect = NULL_FX;
+		weaponInfo->missileModel = trap->R_RegisterModel("models/weapons3/oldfraggrenade/thermal_proj.md3");
+		weaponInfo->missileSound = NULL_SOUND;
+		weaponInfo->missileDlight = 0;
+		weaponInfo->missileHitSound = NULL_SOUND;
+		weaponInfo->missileTrailFunc = FX_GrenadesProjectileThink;
+		weaponInfo->missileRenderfx = NULL_FX;
+		weaponInfo->altMissileRenderfx = NULL_FX;
+		weaponInfo->powerupShotRenderfx = NULL_FX;
+		weaponInfo->altFlashSound[0] = trap->S_RegisterSound("sound/weapons/thermal/fire.wav");
+		weaponInfo->altFiringSound = NULL_SOUND;
+		weaponInfo->altChargeSound = trap->S_RegisterSound("sound/weapons/thermal/charge.wav");
+		weaponInfo->altMuzzleEffect = NULL_FX;
+		weaponInfo->altMissileModel = trap->R_RegisterModel("models/weapons3/oldfraggrenade/thermal_proj.md3");
+		weaponInfo->altMissileSound = NULL_SOUND;
+		weaponInfo->altMissileDlight = 0;
+		weaponInfo->altMissileHitSound = NULL_SOUND;
+		weaponInfo->altMissileTrailFunc = FX_GrenadesProjectileThink;
+
+		cgs.effects.concussionGrenadeShotEffect = trap->FX_RegisterEffect("conc/shot");
+		cgs.effects.concussionGrenadeShotEffect2 = trap->FX_RegisterEffect("conc/shot2");
+		cgs.effects.concussionExplosionEffect = trap->FX_RegisterEffect("conc/conc");
+		cgs.effects.concussionExplosionEffectEnhancedFX = trap->FX_RegisterEffect("conc/conc_enhanced2");
+
+		cgs.media.grenadeBounce1 = trap->S_RegisterSound("sound/weapons/thermal/bounce1.wav");
+		cgs.media.grenadeBounce2 = trap->S_RegisterSound("sound/weapons/thermal/bounce2.wav");
+
+		break;
+
+	case WP_SHOCK_GRENADE:
+		weaponInfo->item->classname = "Shock Grenade";
+		weaponInfo->selectSound = trap->S_RegisterSound("sound/weapons/thermal/select.wav");
+		weaponInfo->flashSound[0] = trap->S_RegisterSound("sound/weapons/thermal/fire.wav");
+		weaponInfo->firingSound = NULL_SOUND;
+		weaponInfo->chargeSound = trap->S_RegisterSound("sound/weapons/thermal/charge.wav");
+		weaponInfo->muzzleEffect = NULL_FX;
+		weaponInfo->missileModel = trap->R_RegisterModel("models/weapons3/kes_pgren/laser_trap_proj.md3");
+		weaponInfo->missileSound = NULL_SOUND;
+		weaponInfo->missileDlight = 0;
+		weaponInfo->missileHitSound = NULL_SOUND;
+		weaponInfo->missileTrailFunc = FX_GrenadesProjectileThink;
+		weaponInfo->missileRenderfx = NULL_FX;
+		weaponInfo->altMissileRenderfx = NULL_FX;
+		weaponInfo->powerupShotRenderfx = NULL_FX;
+		weaponInfo->altFlashSound[0] = trap->S_RegisterSound("sound/weapons/thermal/fire.wav");
+		weaponInfo->altFiringSound = NULL_SOUND;
+		weaponInfo->altChargeSound = trap->S_RegisterSound("sound/weapons/thermal/charge.wav");
+		weaponInfo->altMuzzleEffect = NULL_FX;
+		weaponInfo->altMissileModel = trap->R_RegisterModel("models/weapons3/kes_pgren/laser_trap_proj.md3");
+		weaponInfo->altMissileSound = NULL_SOUND;
+		weaponInfo->altMissileDlight = 0;
+		weaponInfo->altMissileHitSound = NULL_SOUND;
+		weaponInfo->altMissileTrailFunc = FX_GrenadesProjectileThink;
+
+		cgs.effects.thermalShockwaveEffect = trap->FX_RegisterEffect("thermal/shockwave");
+		cgs.effects.pulseGrenadeShotEffect = trap->FX_RegisterEffect("tripMine/shot");
+		cgs.media.grenadeBounce1 = trap->S_RegisterSound("sound/weapons/thermal/bounce1.wav");
+		cgs.media.grenadeBounce2 = trap->S_RegisterSound("sound/weapons/thermal/bounce2.wav");
+		break;
+
+	case WP_PLASMA_GRENADE:
+		weaponInfo->item->classname = "Plasma Grenade";
+		weaponInfo->selectSound = trap->S_RegisterSound("sound/weapons/thermal/select.wav");
+		weaponInfo->flashSound[0] = trap->S_RegisterSound("sound/weapons/thermal/fire.wav");
+		weaponInfo->firingSound = NULL_SOUND;
+		weaponInfo->chargeSound = trap->S_RegisterSound("sound/weapons/thermal/charge.wav");
+		weaponInfo->muzzleEffect = NULL_FX;
+		weaponInfo->missileModel = trap->R_RegisterModel("models/weapons3/plasma/plasma_proj.md3");
+		weaponInfo->missileSound = NULL_SOUND;
+		weaponInfo->missileDlight = 0;
+		weaponInfo->missileHitSound = NULL_SOUND;
+		weaponInfo->missileTrailFunc = FX_GrenadesProjectileThink;
+		weaponInfo->missileRenderfx = NULL_FX;
+		weaponInfo->altMissileRenderfx = NULL_FX;
+		weaponInfo->powerupShotRenderfx = NULL_FX;
+		weaponInfo->altFlashSound[0] = trap->S_RegisterSound("sound/weapons/thermal/fire.wav");
+		weaponInfo->altFiringSound = NULL_SOUND;
+		weaponInfo->altChargeSound = trap->S_RegisterSound("sound/weapons/thermal/charge.wav");
+		weaponInfo->altMuzzleEffect = NULL_FX;
+		weaponInfo->altMissileModel = trap->R_RegisterModel("models/weapons3/plasma/plasma_proj.md3");
+		weaponInfo->altMissileSound = NULL_SOUND;
+		weaponInfo->altMissileDlight = 0;
+		weaponInfo->altMissileHitSound = NULL_SOUND;
+		weaponInfo->altMissileTrailFunc = FX_GrenadesProjectileThink;
+
+		
+		cgs.effects.PlasmaFlameBurn = trap->FX_RegisterEffect("effects/flamethrower/plasmaflameburn.efx");
+		cgs.effects.PlasmaFlameBurnEnhancedFX = trap->FX_RegisterEffect("effects/flamethrower/plasmaflameburn_enhanced2.efx");
+		cgs.media.grenadeBounce1 = trap->S_RegisterSound("sound/weapons/thermal/bounce1.wav");
+		cgs.media.grenadeBounce2 = trap->S_RegisterSound("sound/weapons/thermal/bounce2.wav");
+		break;*/
+
+	//case WP_SONIC_GRENADE:TODO make this work with the rest of the Grenade when it has been worked on.
+	//	weaponInfo->item->classname = "Sonic Grenade";
+	//	weaponInfo->selectSound = trap->S_RegisterSound("sound/weapons/thermal/select.wav");
+	//	weaponInfo->flashSound[0] = trap->S_RegisterSound("sound/weapons/thermal/fire.wav");
+	//	weaponInfo->firingSound = NULL_SOUND;
+	//	weaponInfo->chargeSound = trap->S_RegisterSound("sound/weapons/thermal/charge.wav");
+	//	weaponInfo->muzzleEffect = NULL_FX;
+	//	weaponInfo->missileModel = trap->R_RegisterModel("models/weapons3/sonic_detonator/sonic_det_proj.md3");
+	//	weaponInfo->missileSound = NULL_SOUND;
+	//	weaponInfo->missileDlight = 0;
+	//	weaponInfo->missileHitSound = NULL_SOUND;
+	//	weaponInfo->missileTrailFunc = FX_GrenadesProjectileThink;
+	//	weaponInfo->missileRenderfx = NULL_FX;
+	//	weaponInfo->altMissileRenderfx = NULL_FX;
+	//	weaponInfo->powerupShotRenderfx = NULL_FX;
+
+	//	weaponInfo->altFlashSound[0] = trap->S_RegisterSound("sound/weapons/thermal/fire.wav");
+	//	weaponInfo->altFiringSound = NULL_SOUND;
+	//	weaponInfo->altChargeSound = trap->S_RegisterSound("sound/weapons/thermal/charge.wav");
+	//	weaponInfo->altMuzzleEffect = NULL_FX;
+	//	weaponInfo->altMissileModel = trap->R_RegisterModel("models/weapons3/sonic_detonator/sonic_det_proj.md3");
+	//	weaponInfo->altMissileSound = NULL_SOUND;
+	//	weaponInfo->altMissileDlight = 0;
+	//	weaponInfo->altMissileHitSound = NULL_SOUND;
+	//	weaponInfo->altMissileTrailFunc = FX_GrenadesProjectileThink;
+
+	//	/*cgs.effects.sonicGrenadeWave =  trap->FX_RegisterEffect("sonicgrenade/sonic");
+	//	cgs.effects.sonicGrenadeShotEffect =  trap->FX_RegisterEffect("sonicgrenade/shot");
+	//	cgs.effects.sonicGrenadeShotEffect2 =  trap->FX_RegisterEffect("sonicgrenade/shot2");*/
+
+	//	cgs.media.grenadeBounce1 = trap->S_RegisterSound("sound/weapons/thermal/bounce1.wav");
+	//	cgs.media.grenadeBounce2 = trap->S_RegisterSound("sound/weapons/thermal/bounce2.wav");
+	//	break;
+
+	/*case WP_THERMAL_GRENADE:
+		weaponInfo->item->classname = "Thermal Grenade";
+		weaponInfo->selectSound = trap->S_RegisterSound("sound/weapons/thermal/select.wav");
+		weaponInfo->flashSound[0] = trap->S_RegisterSound("sound/weapons/thermal/fire.wav");
+		weaponInfo->firingSound = NULL_SOUND;
+		weaponInfo->chargeSound = trap->S_RegisterSound("sound/weapons/thermal/charge.wav");
+		weaponInfo->muzzleEffect = NULL_FX;
+		weaponInfo->missileModel = trap->R_RegisterModel("models/weapons3/Stormi_TD/stormiTD_proj.md3");
+		weaponInfo->missileSound = NULL_SOUND;
+		weaponInfo->missileDlight = 0;
+		weaponInfo->missileHitSound = NULL_SOUND;
+		weaponInfo->missileTrailFunc = FX_GrenadesProjectileThink;
+		weaponInfo->missileRenderfx = NULL_FX;
+		weaponInfo->altMissileRenderfx = NULL_FX;
+		weaponInfo->powerupShotRenderfx = NULL_FX;
+		weaponInfo->altFlashSound[0] = trap->S_RegisterSound("sound/weapons/thermal/fire.wav");
+		weaponInfo->altFiringSound = NULL_SOUND;
+		weaponInfo->altChargeSound = trap->S_RegisterSound("sound/weapons/thermal/charge.wav");
+		weaponInfo->altMuzzleEffect = NULL_FX;
+		weaponInfo->altMissileModel = trap->R_RegisterModel("models/weapons3/Stormi_TD/stormiTD_proj.md3");
+		weaponInfo->altMissileSound = NULL_SOUND;
+		weaponInfo->altMissileDlight = 0;
+		weaponInfo->altMissileHitSound = NULL_SOUND;
+		weaponInfo->altMissileTrailFunc = FX_GrenadesProjectileThink;
+		cgs.effects.thermalShotEffect = trap->FX_RegisterEffect("thermal/shot");
+		cgs.effects.thermalShotEffect2 = trap->FX_RegisterEffect("thermal/shot2");
+		
+		cgs.effects.thermalExplosionEffect = trap->FX_RegisterEffect("ships/mine_impact");
+		cgs.effects.thermalExplosionEffectEnhancedFX = trap->FX_RegisterEffect("ships/mine_impact_enhanced2");
+		cgs.effects.thermalExplosionAltEffect = trap->FX_RegisterEffect("ships/swoop_explosion");
+		cgs.effects.thermalExplosionAltEffectEnhancedFX = trap->FX_RegisterEffect("ships/swoop_explosion_enhanced2");
+
+		cgs.media.grenadeBounce1 = trap->S_RegisterSound("sound/weapons/thermal/bounce1.wav");
+		cgs.media.grenadeBounce2 = trap->S_RegisterSound("sound/weapons/thermal/bounce2.wav");
+		break;
+
+	case WP_THERMAL_GREADE_OLD:
+		weaponInfo->item->classname = "Old Thermal Grenades";
+		weaponInfo->selectSound = trap->S_RegisterSound("sound/weapons/thermal/select.wav");
+		weaponInfo->flashSound[0] = trap->S_RegisterSound("sound/weapons/thermal/fire.wav");
+		weaponInfo->firingSound = NULL_SOUND;
+		weaponInfo->chargeSound = trap->S_RegisterSound("sound/weapons/thermal/charge.wav");
+		weaponInfo->muzzleEffect = NULL_FX;
+		weaponInfo->missileModel = trap->R_RegisterModel("models/weapons3/fraggrenade/thermal_proj.md3");
+		weaponInfo->missileSound = NULL_SOUND;
+		weaponInfo->missileDlight = 0;
+		weaponInfo->missileHitSound = NULL_SOUND;
+		weaponInfo->missileTrailFunc = FX_GrenadesProjectileThink;
+		weaponInfo->missileRenderfx = NULL_FX;
+		weaponInfo->altMissileRenderfx = NULL_FX;
+		weaponInfo->powerupShotRenderfx = NULL_FX;
+		weaponInfo->altFlashSound[0] = trap->S_RegisterSound("sound/weapons/thermal/fire.wav");
+		weaponInfo->altFiringSound = NULL_SOUND;
+		weaponInfo->altChargeSound = trap->S_RegisterSound("sound/weapons/thermal/charge.wav");
+		weaponInfo->altMuzzleEffect = NULL_FX;
+		weaponInfo->altMissileModel = trap->R_RegisterModel("models/weapons3/fraggrenade/thermal_proj.md3");
+		weaponInfo->altMissileSound = NULL_SOUND;
+		weaponInfo->altMissileDlight = 0;
+		weaponInfo->altMissileHitSound = NULL_SOUND;
+		weaponInfo->altMissileTrailFunc = FX_GrenadesProjectileThink;
+
+		cgs.effects.thermalRealShotEffect = trap->FX_RegisterEffect("thermal/realshot");
+		cgs.effects.thermalRealShotEffect2 = trap->FX_RegisterEffect("thermal/realshot2");
+		cgs.effects.thermalExplosionEffect = trap->FX_RegisterEffect("ships/mine_impact");
+		cgs.effects.thermalExplosionEffectEnhancedFX = trap->FX_RegisterEffect("ships/mine_impact_enhanced2");
+		cgs.effects.thermalExplosionAltEffect = trap->FX_RegisterEffect("ships/swoop_explosion");
+		cgs.effects.thermalExplosionAltEffectEnhancedFX = trap->FX_RegisterEffect("ships/swoop_explosion_enhanced2");
+
+		cgs.media.grenadeBounce1 = trap->S_RegisterSound("sound/weapons/thermal/bounce1.wav");
+		cgs.media.grenadeBounce2 = trap->S_RegisterSound("sound/weapons/thermal/bounce2.wav");
+		break;
+
+	case WP_V_59_GRENADE:
+		weaponInfo->item->classname = "V-59 Grenade";
+		weaponInfo->selectSound = trap->S_RegisterSound("sound/weapons/thermal/select.wav");
+		weaponInfo->flashSound[0] = trap->S_RegisterSound("sound/weapons/thermal/fire.wav");
+		weaponInfo->firingSound = NULL_SOUND;
+		weaponInfo->chargeSound = trap->S_RegisterSound("sound/weapons/thermal/charge.wav");
+		weaponInfo->muzzleEffect = NULL_FX;
+		weaponInfo->missileModel = trap->R_RegisterModel("models/weapons3/V-59_Concussion/V-59_conc_proj.md3");
+		weaponInfo->missileSound = NULL_SOUND;
+		weaponInfo->missileDlight = 0;
+		weaponInfo->missileHitSound = NULL_SOUND;
+		weaponInfo->missileTrailFunc = FX_GrenadesProjectileThink;
+		weaponInfo->missileRenderfx = NULL_FX;
+		weaponInfo->altMissileRenderfx = NULL_FX;
+		weaponInfo->powerupShotRenderfx = NULL_FX;
+		weaponInfo->altFlashSound[0] = trap->S_RegisterSound("sound/weapons/thermal/fire.wav");
+		weaponInfo->altFiringSound = NULL_SOUND;
+		weaponInfo->altChargeSound = trap->S_RegisterSound("sound/weapons/thermal/charge.wav");
+		weaponInfo->altMuzzleEffect = NULL_FX;
+		weaponInfo->altMissileModel = trap->R_RegisterModel("models/weapons3/V-59_Concussion/V-59_conc_proj.md3");
+		weaponInfo->altMissileSound = NULL_SOUND;
+		weaponInfo->altMissileDlight = 0;
+		weaponInfo->altMissileHitSound = NULL_SOUND;
+		weaponInfo->altMissileTrailFunc = FX_GrenadesProjectileThink;
+
+		cgs.effects.fireGrenadeShotEffect = trap->FX_RegisterEffect("firegrenade/shot");
+		cgs.effects.fireGrenadeShotEffect2 = trap->FX_RegisterEffect("firegrenade/shot");
+		cgs.effects.fireGrenadeFireBlob = trap->FX_RegisterEffect("firegrenade/napalmdrop_trail");
+		cgs.effects.fireGrenadeExplosion = trap->FX_RegisterEffect("firegrenade/prim_explode_new");
+		cgs.effects.fireGrenadePart = trap->FX_RegisterEffect("firegrenade/napalm");
+		cgs.effects.fireGrenadeNapalm = trap->FX_RegisterEffect("firegrenade/napalm_new");
+
+		cgs.media.grenadeBounce1 = trap->S_RegisterSound("sound/weapons/thermal/bounce1.wav");
+		cgs.media.grenadeBounce2 = trap->S_RegisterSound("sound/weapons/thermal/bounce2.wav");
+		break;*/
+
 	case WP_BLASTER:
 	case WP_EMPLACED_GUN: //rww - just use the same as this for now..
 		weaponInfo->selectSound = trap->S_RegisterSound("sound/weapons/blaster/select.wav");

@@ -51,6 +51,14 @@ int adjustRespawnTime(float preRespawnTime, int itemType, int itemTag)
 	if (itemType == IT_WEAPON)
 	{
 		if (itemTag == WP_THERMAL ||
+			//itemTag == WP_FRAG_GRENADE ||
+			//itemTag == WP_FRAG_GRENADE_OLD ||
+			//itemTag == WP_SHOCK_GRENADE ||
+			//itemTag == WP_PLASMA_GRENADE ||
+			///*itemTag == WP_SONIC_GRENADE ||*/
+			//itemTag == WP_THERMAL_GRENADE ||
+			//itemTag == WP_THERMAL_GREADE_OLD ||
+			//itemTag == WP_V_59_GRENADE ||
 			itemTag == WP_TRIP_MINE ||
 			itemTag == WP_DET_PACK)
 		{ //special case for these, use ammo respawn rate
@@ -2641,7 +2649,17 @@ gentity_t *LaunchItem( gitem_t *item, vec3_t origin, vec3_t velocity ) {
 	if (item->giTag != WP_BOWCASTER &&
 		item->giTag != WP_CLONE_PISTOL1 &&
 		item->giTag != WP_DET_PACK &&
-		item->giTag != WP_THERMAL)
+		item->giTag != WP_THERMAL 
+		//&& 
+		//item->giTag != WP_FRAG_GRENADE &&
+		//item->giTag != WP_FRAG_GRENADE_OLD &&
+		//item->giTag != WP_SHOCK_GRENADE &&
+		//item->giTag != WP_PLASMA_GRENADE &&
+		///*item->giTag != WP_SONIC_GRENADE &&*/
+		//item->giTag != WP_THERMAL_GRENADE &&
+		//item->giTag != WP_THERMAL_GREADE_OLD &&
+		//item->giTag != WP_V_59_GRENADE
+		)
 	{
 		dropped->s.angles[ROLL] = -90;
 	}

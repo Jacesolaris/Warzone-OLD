@@ -35,6 +35,14 @@ vec3_t WP_MuzzlePoint[WP_NUM_WEAPONS] =
 	{12,	4.5,	-6	},	//WP_Z6_BLASTER_CANON
 	{12,	8,		-4	},	//WP_E60_ROCKET_LAUNCHER
 	{12,	8,		-4	},	//WP_CW_ROCKET_LAUNCHER
+	//{12,	0,		-4	},	// WP_FRAG_GRENADE,
+	//{12,	0,		-4	},	// WP_FRAG_GRENADE_OLD,
+	//{12,	0,		-4	},	// WP_SHOCK_GRENADE,
+	//{12,	0,		-4	},	// WP_PLASMA_GRENADE,
+	////{12,	0,		-4	},	// WP_SONIC_GRENADE,
+	//{12,	0,		-4	},	// WP_THERMAL_GRENADE,
+	//{12,	0,		-4	},	// WP_THERMAL_GREADE_OLD,
+	//{12,	0,		-4	},	// WP_V_59_GRENADE,
 	{12,	6,		-6	},	// WP_DEMP2,
 	{12,	6,		-6	},	// WP_FLECHETTE,
 	{12,	6,		-6	},	// WP_CONCUSSION
@@ -422,6 +430,142 @@ weaponData_t weaponData[WP_NUM_WEAPONS] =
 		0,						//	int		maxCharge;			// stop subtracting once charged for this many ms
 		0						//	int		altMaxCharge;		// above for secondary
 	},
+	//{	// WP_FRAG_GRENADE
+	//	//		"Thermal Detonator",	//	char	classname[32];		// Spawning name
+	//	AMMO_THERMAL,				//	int		ammoIndex;			// Index to proper ammo slot
+	//	0,						//	int		ammoLow;			// Count when ammo is low
+	//	1,						//	int		energyPerShot;		// Amount of energy used per shot
+	//	800,					//	int		fireTime;			// Amount of time between firings
+	//	8192,					//	int		range;				// Range of weapon
+	//	1,						//	int		altEnergyPerShot;	// Amount of energy used for alt-fire
+	//	400,					//	int		altFireTime;		// Amount of time between alt-firings
+	//	8192,					//	int		altRange;			// Range of alt-fire
+	//	0,						//	int		chargeSubTime;		// ms interval for subtracting ammo during charge
+	//	0,						//	int		altChargeSubTime;	// above for secondary
+	//	0,						//	int		chargeSub;			// amount to subtract during charge on each interval
+	//	0,						//int		altChargeSub;		// above for secondary
+	//	0,						//	int		maxCharge;			// stop subtracting once charged for this many ms
+	//	0						//	int		altMaxCharge;		// above for secondary
+	//},
+	//{	// WP_FRAG_GRENADE_OLD
+	//	//		"Thermal Detonator",	//	char	classname[32];		// Spawning name
+	//	AMMO_THERMAL,				//	int		ammoIndex;			// Index to proper ammo slot
+	//	0,						//	int		ammoLow;			// Count when ammo is low
+	//	1,						//	int		energyPerShot;		// Amount of energy used per shot
+	//	800,					//	int		fireTime;			// Amount of time between firings
+	//	8192,					//	int		range;				// Range of weapon
+	//	1,						//	int		altEnergyPerShot;	// Amount of energy used for alt-fire
+	//	400,					//	int		altFireTime;		// Amount of time between alt-firings
+	//	8192,					//	int		altRange;			// Range of alt-fire
+	//	0,						//	int		chargeSubTime;		// ms interval for subtracting ammo during charge
+	//	0,						//	int		altChargeSubTime;	// above for secondary
+	//	0,						//	int		chargeSub;			// amount to subtract during charge on each interval
+	//	0,						//int		altChargeSub;		// above for secondary
+	//	0,						//	int		maxCharge;			// stop subtracting once charged for this many ms
+	//	0						//	int		altMaxCharge;		// above for secondary
+	//},
+	//{	// WP_SHOCK_GRENADE
+	//	//		"Thermal Detonator",	//	char	classname[32];		// Spawning name
+	//	AMMO_THERMAL,				//	int		ammoIndex;			// Index to proper ammo slot
+	//	0,						//	int		ammoLow;			// Count when ammo is low
+	//	1,						//	int		energyPerShot;		// Amount of energy used per shot
+	//	800,					//	int		fireTime;			// Amount of time between firings
+	//	8192,					//	int		range;				// Range of weapon
+	//	1,						//	int		altEnergyPerShot;	// Amount of energy used for alt-fire
+	//	400,					//	int		altFireTime;		// Amount of time between alt-firings
+	//	8192,					//	int		altRange;			// Range of alt-fire
+	//	0,						//	int		chargeSubTime;		// ms interval for subtracting ammo during charge
+	//	0,						//	int		altChargeSubTime;	// above for secondary
+	//	0,						//	int		chargeSub;			// amount to subtract during charge on each interval
+	//	0,						//int		altChargeSub;		// above for secondary
+	//	0,						//	int		maxCharge;			// stop subtracting once charged for this many ms
+	//	0						//	int		altMaxCharge;		// above for secondary
+	//},
+	//{	// WP_PLASMA_GRENADE
+	//	//		"Thermal Detonator",	//	char	classname[32];		// Spawning name
+	//	AMMO_THERMAL,				//	int		ammoIndex;			// Index to proper ammo slot
+	//	0,						//	int		ammoLow;			// Count when ammo is low
+	//	1,						//	int		energyPerShot;		// Amount of energy used per shot
+	//	800,					//	int		fireTime;			// Amount of time between firings
+	//	8192,					//	int		range;				// Range of weapon
+	//	1,						//	int		altEnergyPerShot;	// Amount of energy used for alt-fire
+	//	400,					//	int		altFireTime;		// Amount of time between alt-firings
+	//	8192,					//	int		altRange;			// Range of alt-fire
+	//	0,						//	int		chargeSubTime;		// ms interval for subtracting ammo during charge
+	//	0,						//	int		altChargeSubTime;	// above for secondary
+	//	0,						//	int		chargeSub;			// amount to subtract during charge on each interval
+	//	0,						//int		altChargeSub;		// above for secondary
+	//	0,						//	int		maxCharge;			// stop subtracting once charged for this many ms
+	//	0						//	int		altMaxCharge;		// above for secondary
+	//},
+	//{	// WP_SONIC_GRENADE
+	//	//		"Thermal Detonator",	//	char	classname[32];		// Spawning name
+	//	AMMO_THERMAL,				//	int		ammoIndex;			// Index to proper ammo slot
+	//	0,						//	int		ammoLow;			// Count when ammo is low
+	//	1,						//	int		energyPerShot;		// Amount of energy used per shot
+	//	800,					//	int		fireTime;			// Amount of time between firings
+	//	8192,					//	int		range;				// Range of weapon
+	//	1,						//	int		altEnergyPerShot;	// Amount of energy used for alt-fire
+	//	400,					//	int		altFireTime;		// Amount of time between alt-firings
+	//	8192,					//	int		altRange;			// Range of alt-fire
+	//	0,						//	int		chargeSubTime;		// ms interval for subtracting ammo during charge
+	//	0,						//	int		altChargeSubTime;	// above for secondary
+	//	0,						//	int		chargeSub;			// amount to subtract during charge on each interval
+	//	0,						//int		altChargeSub;		// above for secondary
+	//	0,						//	int		maxCharge;			// stop subtracting once charged for this many ms
+	//	0						//	int		altMaxCharge;		// above for secondary
+	//},
+	//{	// WP_THERMAL_GRENADE
+	//	//		"Thermal Detonator",	//	char	classname[32];		// Spawning name
+	//	AMMO_THERMAL,				//	int		ammoIndex;			// Index to proper ammo slot
+	//	0,						//	int		ammoLow;			// Count when ammo is low
+	//	1,						//	int		energyPerShot;		// Amount of energy used per shot
+	//	800,					//	int		fireTime;			// Amount of time between firings
+	//	8192,					//	int		range;				// Range of weapon
+	//	1,						//	int		altEnergyPerShot;	// Amount of energy used for alt-fire
+	//	400,					//	int		altFireTime;		// Amount of time between alt-firings
+	//	8192,					//	int		altRange;			// Range of alt-fire
+	//	0,						//	int		chargeSubTime;		// ms interval for subtracting ammo during charge
+	//	0,						//	int		altChargeSubTime;	// above for secondary
+	//	0,						//	int		chargeSub;			// amount to subtract during charge on each interval
+	//	0,						//int		altChargeSub;		// above for secondary
+	//	0,						//	int		maxCharge;			// stop subtracting once charged for this many ms
+	//	0						//	int		altMaxCharge;		// above for secondary
+	//},
+	//{	// WP_THERMAL_GREADE_OLD
+	//	//		"Thermal Detonator",	//	char	classname[32];		// Spawning name
+	//	AMMO_THERMAL,				//	int		ammoIndex;			// Index to proper ammo slot
+	//	0,						//	int		ammoLow;			// Count when ammo is low
+	//	1,						//	int		energyPerShot;		// Amount of energy used per shot
+	//	800,					//	int		fireTime;			// Amount of time between firings
+	//	8192,					//	int		range;				// Range of weapon
+	//	1,						//	int		altEnergyPerShot;	// Amount of energy used for alt-fire
+	//	400,					//	int		altFireTime;		// Amount of time between alt-firings
+	//	8192,					//	int		altRange;			// Range of alt-fire
+	//	0,						//	int		chargeSubTime;		// ms interval for subtracting ammo during charge
+	//	0,						//	int		altChargeSubTime;	// above for secondary
+	//	0,						//	int		chargeSub;			// amount to subtract during charge on each interval
+	//	0,						//int		altChargeSub;		// above for secondary
+	//	0,						//	int		maxCharge;			// stop subtracting once charged for this many ms
+	//	0						//	int		altMaxCharge;		// above for secondary
+	//},
+	//{	// WP_V_59_GRENADE
+	//	//		"Thermal Detonator",	//	char	classname[32];		// Spawning name
+	//	AMMO_THERMAL,				//	int		ammoIndex;			// Index to proper ammo slot
+	//	0,						//	int		ammoLow;			// Count when ammo is low
+	//	1,						//	int		energyPerShot;		// Amount of energy used per shot
+	//	800,					//	int		fireTime;			// Amount of time between firings
+	//	8192,					//	int		range;				// Range of weapon
+	//	1,						//	int		altEnergyPerShot;	// Amount of energy used for alt-fire
+	//	400,					//	int		altFireTime;		// Amount of time between alt-firings
+	//	8192,					//	int		altRange;			// Range of alt-fire
+	//	0,						//	int		chargeSubTime;		// ms interval for subtracting ammo during charge
+	//	0,						//	int		altChargeSubTime;	// above for secondary
+	//	0,						//	int		chargeSub;			// amount to subtract during charge on each interval
+	//	0,						//int		altChargeSub;		// above for secondary
+	//	0,						//	int		maxCharge;			// stop subtracting once charged for this many ms
+	//	0						//	int		altMaxCharge;		// above for secondary
+	//},
 	{	// WP_BOWCASTER
 //		"Wookiee Bowcaster",		//	char	classname[32];		// Spawning name
 		AMMO_POWERCELL,			//	int		ammoIndex;			// Index to proper ammo slot

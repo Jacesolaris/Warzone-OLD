@@ -54,7 +54,18 @@ void CG_RegisterItemVisuals( int itemNum ) {
 		itemInfo->models[0] = trap->R_RegisterModel( item->world_model[1] );
 	}
 	else if (item->giType == IT_WEAPON &&
-		(item->giTag == WP_THERMAL || item->giTag == WP_TRIP_MINE || item->giTag == WP_DET_PACK))
+		(item->giTag == WP_THERMAL 
+		|| item->giTag == WP_TRIP_MINE 
+		|| item->giTag == WP_DET_PACK 
+		//|| item->giTag == WP_FRAG_GRENADE
+		//|| item->giTag == WP_FRAG_GRENADE_OLD
+		//|| item->giTag == WP_SHOCK_GRENADE
+		//|| item->giTag == WP_PLASMA_GRENADE
+		///*|| item->giTag == WP_SONIC_GRENADE*/
+		//|| item->giTag == WP_THERMAL_GRENADE
+		//|| item->giTag == WP_THERMAL_GREADE_OLD
+		//|| item->giTag == WP_V_59_GRENADE
+		))
 	{
 		itemInfo->models[0] = trap->R_RegisterModel( item->world_model[1] );
 	}
@@ -1594,7 +1605,17 @@ void CG_Weapon_f( void ) {
 		int weap, i = 0;
 
 		if (cg.snap->ps.weapon >= WP_THERMAL &&
-			cg.snap->ps.weapon <= WP_DET_PACK)
+			cg.snap->ps.weapon <= WP_DET_PACK 
+			//&&
+			//cg.snap->ps.weapon >= WP_FRAG_GRENADE&&
+			//cg.snap->ps.weapon >= WP_FRAG_GRENADE_OLD &&
+			//cg.snap->ps.weapon >= WP_SHOCK_GRENADE &&
+			//cg.snap->ps.weapon >= WP_PLASMA_GRENADE &&
+			///*cg.snap->ps.weapon >= WP_SONIC_GRENADE &&*/
+			//cg.snap->ps.weapon >= WP_THERMAL_GRENADE &&
+			//cg.snap->ps.weapon >= WP_THERMAL_GREADE_OLD &&
+			//cg.snap->ps.weapon >= WP_V_59_GRENADE
+			)
 		{
 			// already in cycle range so start with next cycle item
 			weap = cg.snap->ps.weapon + 1;
@@ -1603,6 +1624,14 @@ void CG_Weapon_f( void ) {
 		{
 			// not in cycle range, so start with thermal detonator
 			weap = WP_THERMAL;
+			//weap = WP_FRAG_GRENADE;
+			//weap = WP_FRAG_GRENADE_OLD;
+			//weap = WP_SHOCK_GRENADE;
+			//weap = WP_PLASMA_GRENADE;
+			///*weap = WP_SONIC_GRENADE;*/
+			//weap = WP_THERMAL_GRENADE;
+			//weap = WP_THERMAL_GREADE_OLD;
+			//weap = WP_V_59_GRENADE;
 		}
 
 		// prevent an endless loop
@@ -1611,6 +1640,14 @@ void CG_Weapon_f( void ) {
 			if (weap > WP_DET_PACK)
 			{
 				weap = WP_THERMAL;
+				//weap = WP_FRAG_GRENADE;
+				//weap = WP_FRAG_GRENADE_OLD;
+				//weap = WP_SHOCK_GRENADE;
+				//weap = WP_PLASMA_GRENADE;
+				///*weap = WP_SONIC_GRENADE;*/
+				//weap = WP_THERMAL_GRENADE;
+				//weap = WP_THERMAL_GREADE_OLD;
+				//weap = WP_V_59_GRENADE;
 			}
 
 			if (CG_WeaponSelectable(weap))
@@ -1711,7 +1748,17 @@ void CG_WeaponClean_f( void ) {
 		int weap, i = 0;
 
 		if (cg.snap->ps.weapon >= WP_THERMAL &&
-			cg.snap->ps.weapon <= WP_DET_PACK)
+			cg.snap->ps.weapon <= WP_DET_PACK 
+			//&& 
+			//cg.snap->ps.weapon >= WP_FRAG_GRENADE &&
+			//cg.snap->ps.weapon >= WP_FRAG_GRENADE_OLD &&
+			//cg.snap->ps.weapon >= WP_SHOCK_GRENADE &&
+			//cg.snap->ps.weapon >= WP_PLASMA_GRENADE &&
+			///*cg.snap->ps.weapon >= WP_SONIC_GRENADE &&*/
+			//cg.snap->ps.weapon >= WP_THERMAL_GRENADE &&
+			//cg.snap->ps.weapon >= WP_THERMAL_GREADE_OLD &&
+			//cg.snap->ps.weapon >= WP_V_59_GRENADE
+			)
 		{
 			// already in cycle range so start with next cycle item
 			weap = cg.snap->ps.weapon + 1;
@@ -1720,6 +1767,15 @@ void CG_WeaponClean_f( void ) {
 		{
 			// not in cycle range, so start with thermal detonator
 			weap = WP_THERMAL;
+			//weap = WP_FRAG_GRENADE;
+			//weap = WP_FRAG_GRENADE_OLD;
+			//weap = WP_SHOCK_GRENADE;
+			//weap = WP_PLASMA_GRENADE;
+			///*weap = WP_SONIC_GRENADE;*/
+			//weap = WP_THERMAL_GRENADE;
+			//weap = WP_THERMAL_GREADE_OLD;
+			//weap = WP_V_59_GRENADE;
+
 		}
 
 		// prevent an endless loop
@@ -1728,6 +1784,14 @@ void CG_WeaponClean_f( void ) {
 			if (weap > WP_DET_PACK)
 			{
 				weap = WP_THERMAL;
+				//weap = WP_FRAG_GRENADE;
+				//weap = WP_FRAG_GRENADE_OLD;
+				//weap = WP_SHOCK_GRENADE;
+				//weap = WP_PLASMA_GRENADE;
+				///*weap = WP_SONIC_GRENADE;*/
+				//weap = WP_THERMAL_GRENADE;
+				//weap = WP_THERMAL_GREADE_OLD;
+				//weap = WP_V_59_GRENADE;
 			}
 
 			if (CG_WeaponSelectable(weap))
@@ -1794,10 +1858,30 @@ void CG_OutOfAmmoChange( int oldWeapon )
 		{
 			/*
 			if ( 1 == cg_autoswitch.integer &&
-				( i == WP_TRIP_MINE || i == WP_DET_PACK || i == WP_THERMAL || i == WP_ROCKET_LAUNCHER) ) // safe weapon switch
+				( i == WP_TRIP_MINE || i == WP_DET_PACK || i == WP_THERMAL || i == WP_ROCKET_LAUNCHER 
+				|| i == WP_FRAG_GRENADE
+				|| i == WP_FRAG_GRENADE_OLD
+				|| i == WP_SHOCK_GRENADE
+				|| i == WP_PLASMA_GRENADE
+				|| i == WP_SONIC_GRENADE
+				|| i == WP_THERMAL_GRENADE
+				|| i == WP_THERMAL_GREADE_OLD
+				|| i == WP_V_59_GRENADE) ) // safe weapon switch
 			*/
 			//rww - Don't we want to make sure i != one of these if autoswitch is 1 (safe)?
-			if (cg_autoSwitch.integer != 1 || (i != WP_TRIP_MINE && i != WP_DET_PACK && i != WP_THERMAL && i != WP_ROCKET_LAUNCHER && i != WP_E60_ROCKET_LAUNCHER && i != WP_CW_ROCKET_LAUNCHER))
+			if (cg_autoSwitch.integer != 1 || (i != WP_TRIP_MINE && i != WP_DET_PACK && i != WP_THERMAL 
+				&& i != WP_ROCKET_LAUNCHER
+				&& i != WP_E60_ROCKET_LAUNCHER
+				&& i != WP_CW_ROCKET_LAUNCHER
+				//&& i != WP_FRAG_GRENADE
+				//&& i != WP_FRAG_GRENADE_OLD
+				//&& i != WP_SHOCK_GRENADE
+				//&& i != WP_PLASMA_GRENADE
+				///*&& i != WP_SONIC_GRENADE*/
+				//&& i != WP_THERMAL_GRENADE
+				//&& i != WP_THERMAL_GREADE_OLD
+				//&& i != WP_V_59_GRENADE
+				))
 			{
 				if (i != oldWeapon)
 				{ //don't even do anything if we're just selecting the weapon we already have/had
@@ -2020,6 +2104,34 @@ qboolean CG_VehicleWeaponImpact( centity_t *cent )
 	return qfalse;
 }
 
+//NOTE, not sure this is totaly right, its a little experiment i will see if it does as it should
+//void CG_GrenadeEffects(qboolean altFire, vec3_t origin, vec3_t dir, vec3_t up)
+//{
+//	if (altFire)
+//	{
+//		trap->FX_PlayEffectID(CG_EnableEnhancedFX(cgs.effects.thermalExplosionAltEffect,
+//			cgs.effects.thermalExplosionAltEffectEnhancedFX), origin, dir, -1, -1, qfalse);
+//	}
+//	else
+//	{
+//		trap->FX_PlayEffectID(CG_EnableEnhancedFX(cgs.effects.thermalExplosionEffect,
+//			cgs.effects.thermalExplosionEffectEnhancedFX), origin, dir, -1, -1, qfalse);
+//	}
+//	
+//	if (altFire)
+//	{
+//		trap->FX_PlayEffectID(CG_EnableEnhancedFX(cgs.effects.concussionExplosionEffect,
+//			cgs.effects.concussionExplosionEffectEnhancedFX), origin, dir, -1, -1, qfalse);
+//	}
+//	else if (altFire)
+//	{
+//		trap->FX_PlayEffectID(CG_EnableEnhancedFX(cgs.effects.PlasmaFlameBurn,
+//			cgs.effects.PlasmaFlameBurnEnhancedFX), origin, dir, -1, -1, qfalse);
+//	}
+//	
+//	trap->FX_PlayEffectID(cgs.effects.thermalShockwaveEffect, origin, up, -1, -1, qfalse);
+//}
+
 /*
 =================
 CG_MissileHitWall
@@ -2196,9 +2308,66 @@ void CG_MissileHitWall(int weapon, int clientNum, vec3_t origin, vec3_t dir, imp
 		FX_RocketHitWall(origin, dir, weapon, altFire);
 		break;
 
+	//case WP_FRAG_GRENADE:
+	//	trap->FX_PlayEffectID(cgs.effects.thermalExplosionEffect, origin, dir, -1, -1, qfalse);
+	//	trap->FX_PlayEffectID(cgs.effects.thermalShockwaveEffect, origin, up, -1, -1, qfalse);
+	//	/*CG_GrenadeEffects(altFire, origin, dir, up);*/
+	//	break;
+
+	//	
+	//case WP_FRAG_GRENADE_OLD:
+	//	trap->FX_PlayEffectID(cgs.effects.thermalExplosionEffect, origin, dir, -1, -1, qfalse);
+	//	trap->FX_PlayEffectID(cgs.effects.thermalShockwaveEffect, origin, up, -1, -1, qfalse);
+	//	/*CG_GrenadeEffects(altFire, origin, dir, up);*/
+	//	break;
+
+	//	
+	//case WP_SHOCK_GRENADE:
+	//	trap->FX_PlayEffectID(cgs.effects.thermalExplosionEffect, origin, dir, -1, -1, qfalse);
+	//	trap->FX_PlayEffectID(cgs.effects.thermalShockwaveEffect, origin, up, -1, -1, qfalse);
+	//	/*CG_GrenadeEffects(altFire, origin, dir, up);*/
+	//	break;
+
+	//	
+	//case WP_PLASMA_GRENADE:
+	//	trap->FX_PlayEffectID(cgs.effects.thermalExplosionEffect, origin, dir, -1, -1, qfalse);
+	//	trap->FX_PlayEffectID(cgs.effects.thermalShockwaveEffect, origin, up, -1, -1, qfalse);
+	//	/*CG_GrenadeEffects(altFire, origin, dir, up);*/
+	//	break;
+
+	///*
+	//case WP_SONIC_GRENADE:
+	//trap->FX_PlayEffectID( cgs.effects.thermalExplosionEffect, origin, dir, -1, -1, qfalse );
+	//trap->FX_PlayEffectID( cgs.effects.thermalShockwaveEffect, origin, up, -1, -1, qfalse );
+	//CG_GrenadeEffects(altFire, origin, dir, up);
+	//	break;*/
+
+	//	
+	//case WP_THERMAL_GRENADE:
+	//	trap->FX_PlayEffectID(cgs.effects.thermalExplosionEffect, origin, dir, -1, -1, qfalse);
+	//	trap->FX_PlayEffectID(cgs.effects.thermalShockwaveEffect, origin, up, -1, -1, qfalse);
+	//	/*CG_GrenadeEffects(altFire, origin, dir, up);*/
+	//	break;
+
+	//	
+	//case WP_THERMAL_GREADE_OLD:
+	//	trap->FX_PlayEffectID(cgs.effects.thermalExplosionEffect, origin, dir, -1, -1, qfalse);
+	//	trap->FX_PlayEffectID(cgs.effects.thermalShockwaveEffect, origin, up, -1, -1, qfalse);
+	//	/*CG_GrenadeEffects(altFire, origin, dir, up);*/
+	//	break;
+
+	//	
+	//case WP_V_59_GRENADE:
+	//	trap->FX_PlayEffectID( cgs.effects.thermalExplosionEffect, origin, dir, -1, -1, qfalse );
+	//	trap->FX_PlayEffectID( cgs.effects.thermalShockwaveEffect, origin, up, -1, -1, qfalse );
+	//	/*CG_GrenadeEffects(altFire, origin, dir, up);*/
+	//	break;
+
 	case WP_THERMAL:
 		trap->FX_PlayEffectID( cgs.effects.thermalExplosionEffect, origin, dir, -1, -1, qfalse );
 		trap->FX_PlayEffectID( cgs.effects.thermalShockwaveEffect, origin, up, -1, -1, qfalse );
+		//adding new function to hadle more of the new grenade efx
+		/*CG_GrenadeEffects(altFire, origin, dir, up);*/
 		break;
 
 	case WP_EMPLACED_GUN:
@@ -2404,10 +2573,68 @@ void CG_MissileHitPlayer(int weapon, vec3_t origin, vec3_t dir, int entityNum, q
 		FX_RocketHitPlayer( origin, dir, humanoid, weapon, altFire );
 		break;
 
+	//case WP_FRAG_GRENADE:
+	//	trap->FX_PlayEffectID(cgs.effects.thermalExplosionEffect, origin, dir, -1, -1, qfalse);
+	//	trap->FX_PlayEffectID(cgs.effects.thermalShockwaveEffect, origin, up, -1, -1, qfalse);
+	//	/*CG_GrenadeEffects(altFire, origin, dir, up);*/
+	//	break;
+
+
+	//case WP_FRAG_GRENADE_OLD:
+	//	trap->FX_PlayEffectID(cgs.effects.thermalExplosionEffect, origin, dir, -1, -1, qfalse);
+	//	trap->FX_PlayEffectID(cgs.effects.thermalShockwaveEffect, origin, up, -1, -1, qfalse);
+	//	/*CG_GrenadeEffects(altFire, origin, dir, up);*/
+	//	break;
+
+
+	//case WP_SHOCK_GRENADE:
+	//	trap->FX_PlayEffectID(cgs.effects.thermalExplosionEffect, origin, dir, -1, -1, qfalse);
+	//	trap->FX_PlayEffectID(cgs.effects.thermalShockwaveEffect, origin, up, -1, -1, qfalse);
+	//	/*CG_GrenadeEffects(altFire, origin, dir, up);*/
+	//	break;
+
+
+	//case WP_PLASMA_GRENADE:
+	//	trap->FX_PlayEffectID(cgs.effects.thermalExplosionEffect, origin, dir, -1, -1, qfalse);
+	//	trap->FX_PlayEffectID(cgs.effects.thermalShockwaveEffect, origin, up, -1, -1, qfalse);
+	//	/*CG_GrenadeEffects(altFire, origin, dir, up);*/
+	//	break;
+
+	//	/*
+	//	case WP_SONIC_GRENADE:
+	//	trap->FX_PlayEffectID( cgs.effects.thermalExplosionEffect, origin, dir, -1, -1, qfalse );
+	//	trap->FX_PlayEffectID( cgs.effects.thermalShockwaveEffect, origin, up, -1, -1, qfalse );
+	//	CG_GrenadeEffects(altFire, origin, dir, up);
+	//	break;*/
+
+
+	//case WP_THERMAL_GRENADE:
+	//	trap->FX_PlayEffectID(cgs.effects.thermalExplosionEffect, origin, dir, -1, -1, qfalse);
+	//	trap->FX_PlayEffectID(cgs.effects.thermalShockwaveEffect, origin, up, -1, -1, qfalse);
+	//	/*CG_GrenadeEffects(altFire, origin, dir, up);*/
+	//	break;
+
+
+	//case WP_THERMAL_GREADE_OLD:
+	//	trap->FX_PlayEffectID(cgs.effects.thermalExplosionEffect, origin, dir, -1, -1, qfalse);
+	//	trap->FX_PlayEffectID(cgs.effects.thermalShockwaveEffect, origin, up, -1, -1, qfalse);
+	//	/*CG_GrenadeEffects(altFire, origin, dir, up);*/
+	//	break;
+
+
+	//case WP_V_59_GRENADE:
+	//	trap->FX_PlayEffectID(cgs.effects.thermalExplosionEffect, origin, dir, -1, -1, qfalse);
+	//	trap->FX_PlayEffectID(cgs.effects.thermalShockwaveEffect, origin, up, -1, -1, qfalse);
+	//	/*CG_GrenadeEffects(altFire, origin, dir, up);*/
+	//	break;
+
 	case WP_THERMAL:
-		trap->FX_PlayEffectID( cgs.effects.thermalExplosionEffect, origin, dir, -1, -1, qfalse );
-		trap->FX_PlayEffectID( cgs.effects.thermalShockwaveEffect, origin, up, -1, -1, qfalse );
+		trap->FX_PlayEffectID(cgs.effects.thermalExplosionEffect, origin, dir, -1, -1, qfalse);
+		trap->FX_PlayEffectID(cgs.effects.thermalShockwaveEffect, origin, up, -1, -1, qfalse);
+		//adding new function to hadle more of the new grenade efx
+		/*CG_GrenadeEffects(altFire, origin, dir, up);*/
 		break;
+
 	case WP_EMPLACED_GUN:
 		//FIXME: Its own effect?
 		FX_BlasterWeaponHitPlayer( origin, dir, humanoid, weapon, altFire );
