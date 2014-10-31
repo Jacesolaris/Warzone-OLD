@@ -3694,7 +3694,7 @@ qboolean UQ1_UcmdMoveForDir ( gentity_t *self, usercmd_t *cmd, vec3_t dir, qbool
 
 	if (self->NPC)
 	{
-		walkSpeed = self->NPC->stats.walkSpeed * 0.55; // UQ1: Why are these values so fast????
+		walkSpeed = self->NPC->stats.walkSpeed /** 0.55*/; // UQ1: Why are these values so fast????
 		//trap->Print("%s walk speed is %f.\n", self->NPC_type, walkSpeed);
 	}
 
@@ -6522,7 +6522,7 @@ void NPC_Think ( gentity_t *self)//, int msec )
 			}
 			else
 			{
-				if (is_civilian || is_bot) use_pathing = qtrue;
+				if (is_civilian || is_jedi || is_bot) use_pathing = qtrue;
 			}
 
 			NPC_DoPadawanStuff(); // check any padawan stuff we might need to do...

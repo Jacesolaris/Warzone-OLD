@@ -3115,7 +3115,7 @@ void BG_PlayerStateToEntityState( playerState_t *ps, entityState_t *s, qboolean 
 			s->angles2[YAW] = ent->prev_moveDir;
 		}
 
-		if (FULL_UPDATE || ent->prev_speed - ps->speed > 8 || ent->prev_speed - ps->speed < -8 || ps->speed == 0)
+		if (FULL_UPDATE || ent->prev_speed - ps->speed > 2 || ent->prev_speed - ps->speed < -2 || ps->speed == 0)
 		{
 			s->speed = ps->speed;
 		}
@@ -3367,7 +3367,7 @@ void BG_PlayerStateToEntityStateExtraPolate( playerState_t *ps, entityState_t *s
 			s->angles2[YAW] = ent->prev_moveDir;
 		}
 
-		if (FULL_UPDATE || ent->prev_speed - ps->speed > 8 || ent->prev_speed - ps->speed < -8 || ps->speed == 0)
+		if (FULL_UPDATE || ent->prev_speed - ps->speed > 2 || ent->prev_speed - ps->speed < -2 || ps->speed == 0)
 		{
 			s->speed = ps->speed;
 		}
