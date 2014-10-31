@@ -6734,6 +6734,42 @@ void BountyHunter_SelectBestWeapon( void )
 	}
 }
 
+void Commando_SelectBestWeapon( void )
+{
+	if ( NPCS.NPC->client->ps.weapon != WP_Z6_BLASTER_CANON 
+		&& Distance( NPCS.NPC->r.currentOrigin, NPCS.NPC->enemy->r.currentOrigin ) > 800 )
+	{
+		Boba_ChangeWeapon( WP_Z6_BLASTER_CANON );
+	}
+	else if (NPCS.NPC->client->ps.weapon != WP_T21
+		&& Distance( NPCS.NPC->r.currentOrigin, NPCS.NPC->enemy->r.currentOrigin ) > 50 )
+	{
+		Boba_ChangeWeapon(WP_T21);
+	}
+	else if (NPCS.NPC->client->ps.weapon != WP_S5_PISTOL)
+	{
+		Boba_ChangeWeapon(WP_S5_PISTOL);
+	}
+}
+
+void AdvancedGunner_SelectBestWeapon( void )
+{
+	if ( NPCS.NPC->client->ps.weapon != WP_DLT20A 
+		&& Distance( NPCS.NPC->r.currentOrigin, NPCS.NPC->enemy->r.currentOrigin ) > 800 )
+	{
+		Boba_ChangeWeapon( WP_DLT20A );
+	}
+	else if (NPCS.NPC->client->ps.weapon != WP_CLONERIFLE
+		&& Distance( NPCS.NPC->r.currentOrigin, NPCS.NPC->enemy->r.currentOrigin ) > 50 )
+	{
+		Boba_ChangeWeapon(WP_CLONERIFLE);
+	}
+	else if (NPCS.NPC->client->ps.weapon != WP_WESTARM5)
+	{
+		Boba_ChangeWeapon(WP_WESTARM5);
+	}
+}
+
 void Grenader_SelectBestWeapon( void )
 {
 	if ( NPCS.NPC->client->ps.weapon != WP_THERMAL
@@ -6818,6 +6854,18 @@ void NPC_SelectBestWeapon( void )
 	if ( NPC_IsBountyHunter(NPCS.NPC) )
 	{
 		BountyHunter_SelectBestWeapon();
+		return;
+	}
+
+	if ( NPC_IsCommando(NPCS.NPC) )
+	{
+		Commando_SelectBestWeapon();
+		return;
+	}
+
+	if (NPC_IsAdvancedGunner(NPCS.NPC) )
+	{
+		AdvancedGunner_SelectBestWeapon();
 		return;
 	}
 

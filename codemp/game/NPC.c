@@ -1574,31 +1574,6 @@ void ST_SelectBestWeapon( void )
 	NPC_ChangeWeapon( WP_BLASTER );
 }
 
-void Commando_SelectBestWeapon( void )
-{
-	if (NPCS.NPC->next_weapon_switch > level.time) return;
-
-	if (!(NPCS.NPC->client->ps.eFlags & EF_FAKE_NPC_BOT)) return;
-
-	if (!NPCS.NPC->enemy) return;
-
-	if (NPCS.NPC->client->ps.weapon != WP_A280 
-		&& DistanceSquared( NPCS.NPC->r.currentOrigin, NPCS.NPC->enemy->r.currentOrigin )>(700*700) )
-	{
-		NPC_ChangeWeapon( WP_A280 );
-	}
-	else if ( NPCS.NPC->client->ps.weapon != WP_ROCKET_LAUNCHER 
-		&& DistanceSquared( NPCS.NPC->r.currentOrigin, NPCS.NPC->enemy->r.currentOrigin )>(600*600) )
-	{
-		NPC_ChangeWeapon( WP_ROCKET_LAUNCHER );
-	}
-	else if (NPCS.NPC->client->ps.weapon != WP_BLASTER 
-		&& DistanceSquared( NPCS.NPC->r.currentOrigin, NPCS.NPC->enemy->r.currentOrigin )>(300*300) )
-	{
-		NPC_ChangeWeapon( WP_BLASTER );
-	}
-}
-
 void Commando2_SelectBestWeapon( void )
 {
 	if (NPCS.NPC->next_weapon_switch > level.time) return;
@@ -1835,8 +1810,6 @@ void NPC_RunBehavior( int team, int bState )
 			case CLASS_IMPERIAL:
 			case CLASS_RODIAN:
 			case CLASS_TRANDOSHAN:
-				Commando_SelectBestWeapon();
-
 				if ( NPCS.NPC->client->ps.weapon == WP_DISRUPTOR && (NPCS.NPCInfo->scriptFlags & SCF_ALT_FIRE) )
 				{//a sniper
 					NPC_BehaviorSet_Sniper( bState );
