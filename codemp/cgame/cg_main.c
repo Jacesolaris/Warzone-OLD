@@ -1502,7 +1502,10 @@ static void CG_RegisterGraphics( void ) {
 	cgs.effects.mTurretExplodeEnhancedFX = trap->FX_RegisterEffect("turret/explode_enhanced2.efx");
 	cgs.effects.mTurretExplodeEnhancedFX = trap->FX_RegisterEffect("turret/explode_enhanced2.efx");
 	cgs.effects.mSparkExplosionEnhancedFX = trap->FX_RegisterEffect("sparks/spark_explosion_enhanced2.efx");
-	cgs.effects.mAltDetonateEnhancedFX = trap->FX_RegisterEffect("demp2/altDetonate_enhanced2.efx");
+	
+	cgs.effects.mAltDempDetonateEnhancedFX = trap->FX_RegisterEffect ("demp2/altDetonate_enhanced2.efx");
+	cgs.effects.mAltDetonateEnhancedFX = trap->FX_RegisterEffect("sparks/spark_explosion_enhanced2.efx"); //("demp2/altDetonate_enhanced2.efx");
+	
 	cgs.effects.mSparksEnhancedFX = trap->FX_RegisterEffect("sparks/spark_nosnd_enhanced2.efx");
 	cgs.effects.flamedFX = trap->FX_RegisterEffect("effects/flamethrower/flamed.efx");
 	cgs.effects.flameThrowerFX = trap->FX_RegisterEffect("effects/flamethrower/flamethrowerwide.efx");

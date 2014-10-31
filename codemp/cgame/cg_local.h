@@ -1688,6 +1688,7 @@ typedef struct cgEffects_s {
 	fxHandle_t mTurretExplodeEnhancedFX;
 	fxHandle_t mSparkExplosionEnhancedFX;
 	fxHandle_t mAltDetonateEnhancedFX;
+	fxHandle_t mAltDempDetonateEnhancedFX;
 	fxHandle_t mSparksEnhancedFX;
 	fxHandle_t flamedFX;
 	fxHandle_t flameThrowerFX;
