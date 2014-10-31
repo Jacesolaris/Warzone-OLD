@@ -2010,6 +2010,32 @@ qboolean CG_VehicleWeaponImpact( centity_t *cent )
 	return qfalse;
 }
 
+void CG_ConcussionImpactEffect(vec3_t origin, vec3_t dir, vec3_t up)
+{
+
+	trap->FX_PlayEffectID(CG_EnableEnhancedFX(cgs.effects.concussionExplosionEffect,
+		cgs.effects.concussionExplosionEffectEnhancedFX), origin, dir, -1, -1, qfalse);
+}
+
+void CG_ThermalImpactEffect(qboolean altFire, vec3_t origin, vec3_t dir, vec3_t up)
+{
+	if (altFire)
+	{
+		trap->FX_PlayEffectID(CG_EnableEnhancedFX(cgs.effects.thermalExplosionAltEffect,
+			cgs.effects.thermalExplosionAltEffectEnhancedFX), origin, dir, -1, -1, qfalse);
+
+	}
+	else
+	{
+
+		trap->FX_PlayEffectID(CG_EnableEnhancedFX(cgs.effects.thermalExplosionEffect,
+			cgs.effects.thermalExplosionEffectEnhancedFX), origin, dir, -1, -1, qfalse);
+
+	}
+
+	trap->FX_PlayEffectID(cgs.effects.thermalShockwaveEffect, origin, up, -1, -1, qfalse);
+}
+
 /*
 =================
 CG_MissileHitWall
@@ -2185,8 +2211,9 @@ void CG_MissileHitWall(int weapon, int clientNum, vec3_t origin, vec3_t dir, imp
 		break;
 
 	case WP_THERMAL:
-		trap->FX_PlayEffectID( cgs.effects.thermalExplosionEffect, origin, dir, -1, -1, qfalse );
-		trap->FX_PlayEffectID( cgs.effects.thermalShockwaveEffect, origin, up, -1, -1, qfalse );
+		/*trap->FX_PlayEffectID( cgs.effects.thermalExplosionEffect, origin, dir, -1, -1, qfalse );
+		trap->FX_PlayEffectID( cgs.effects.thermalShockwaveEffect, origin, up, -1, -1, qfalse );*/
+		CG_ThermalImpactEffect(altFire, origin, dir, up);
 		break;
 
 	case WP_EMPLACED_GUN:
@@ -2391,8 +2418,9 @@ void CG_MissileHitPlayer(int weapon, vec3_t origin, vec3_t dir, int entityNum, q
 		break;
 
 	case WP_THERMAL:
-		trap->FX_PlayEffectID( cgs.effects.thermalExplosionEffect, origin, dir, -1, -1, qfalse );
-		trap->FX_PlayEffectID( cgs.effects.thermalShockwaveEffect, origin, up, -1, -1, qfalse );
+		CG_ThermalImpactEffect(altFire, origin, dir, up);
+		/*trap->FX_PlayEffectID( cgs.effects.thermalExplosionEffect, origin, dir, -1, -1, qfalse );
+		trap->FX_PlayEffectID( cgs.effects.thermalShockwaveEffect, origin, up, -1, -1, qfalse );*/
 		break;
 	case WP_EMPLACED_GUN:
 		//FIXME: Its own effect?
