@@ -60,7 +60,7 @@ FX_BlasterWeaponHitWall
 */
 void FX_BlasterWeaponHitWall(vec3_t origin, vec3_t normal, int weapon, qboolean altFire)
 {
-	fxHandle_t fx = cg_weapons[weapon].missileWallImpactfx;
+	fxHandle_t fx = cg_weapons[weapon].wallImpactEffectEnhancedFX;// missileWallImpactfx;
 	if (altFire) fx = cg_weapons[weapon].altMissileWallImpactfx;
 
 	if (fx)
