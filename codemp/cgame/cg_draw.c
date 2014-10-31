@@ -4026,6 +4026,7 @@ void CG_DrawEnemyStatus( void )
 			tclr2[3] = 1.0f;
 			break;
 		case CLASS_REBEL:
+		case CLASS_JAN:
 			str2 = va("< Rebel >");
 			tclr[0] = 0.125f;
 			tclr[1] = 0.125f;
@@ -4040,7 +4041,6 @@ void CG_DrawEnemyStatus( void )
 		case CLASS_JEDI:
 		case CLASS_KYLE:
 		case CLASS_LUKE:
-		case CLASS_JAN:
 		case CLASS_MONMOTHA:			
 		case CLASS_MORGANKATARN:
 			str2 = va("< Jedi >");
@@ -7849,6 +7849,7 @@ void CG_DrawNPCNames( void )
 				tclr2[3] = 1.0f;
 				break;
 			case CLASS_REBEL:
+			case CLASS_JAN:
 				str2 = va("< Rebel >");
 				tclr[0] = 0.125f;
 				tclr[1] = 0.125f;
@@ -7863,7 +7864,6 @@ void CG_DrawNPCNames( void )
 			case CLASS_JEDI:
 			case CLASS_KYLE:
 			case CLASS_LUKE:
-			case CLASS_JAN:
 			case CLASS_MONMOTHA:			
 			case CLASS_MORGANKATARN:
 				str2 = va("< Jedi >");

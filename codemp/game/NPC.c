@@ -2464,15 +2464,15 @@ void NPC_SelectMoveAnimation(qboolean walk)
 	{// Standing still...
 		if (NPCS.NPC->client->ps.pm_flags & PMF_DUCKED)
 		{
-			NPC_SetAnim(NPCS.NPC, SETANIM_BOTH, BOTH_CROUCH1, /*SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD*/0);
+			NPC_SetAnim(NPCS.NPC, SETANIM_BOTH, BOTH_CROUCH1, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD);
 		}
 		else if ( NPCS.NPC->client->ps.eFlags2 & EF2_USE_ALT_ANIM )
 		{//holding someone
-			NPC_SetAnim( NPCS.NPC, SETANIM_BOTH, BOTH_STAND4, /*SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD*/0 );
+			NPC_SetAnim( NPCS.NPC, SETANIM_BOTH, BOTH_STAND4, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD );
 		}
 		else if ( NPCS.NPC->client->ps.eFlags2 & EF2_ALERTED )
 		{//have an enemy or have had one since we spawned
-			NPC_SetAnim( NPCS.NPC, SETANIM_BOTH, BOTH_STAND2, /*SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD*/0 );
+			NPC_SetAnim( NPCS.NPC, SETANIM_BOTH, BOTH_STAND2, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD );
 		}
 		else
 		{//just stand there
@@ -2489,17 +2489,17 @@ void NPC_SelectMoveAnimation(qboolean walk)
 		{
 			if (NPCS.NPC->client->ps.pm_flags & PMF_DUCKED)
 			{
-				NPC_SetAnim(NPCS.NPC, SETANIM_BOTH, BOTH_CROUCH1WALKBACK, /*SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD*/0);
+				NPC_SetAnim(NPCS.NPC, SETANIM_BOTH, BOTH_CROUCH1WALKBACK, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD);
 			}
 			else if (NPCS.NPC->client->ps.weapon == WP_SABER)
 			{// Walk with saber...
-				NPC_SetAnim( NPCS.NPC, SETANIM_LEGS, BOTH_WALKBACK1, /*SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD*/0 );
-				NPC_SetAnim( NPCS.NPC, SETANIM_TORSO, BOTH_WALKBACK1, /*SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD*/0 );
+				NPC_SetAnim( NPCS.NPC, SETANIM_LEGS, BOTH_WALKBACK1, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD );
+				NPC_SetAnim( NPCS.NPC, SETANIM_TORSO, BOTH_WALKBACK1, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD );
 			}
 			else
 			{// Standard walk anim..
-				NPC_SetAnim( NPCS.NPC, SETANIM_LEGS, BOTH_WALKBACK2, /*SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD*/0 );
-				NPC_SetAnim( NPCS.NPC, SETANIM_TORSO, TORSO_WEAPONREADY3, /*SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD*/0 );
+				NPC_SetAnim( NPCS.NPC, SETANIM_LEGS, BOTH_WALKBACK2, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD );
+				NPC_SetAnim( NPCS.NPC, SETANIM_TORSO, TORSO_WEAPONREADY3, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD );
 			}
 			//trap->Print("Walking Back.\n");
 		}
@@ -2507,17 +2507,17 @@ void NPC_SelectMoveAnimation(qboolean walk)
 		{
 			if (NPCS.NPC->client->ps.pm_flags & PMF_DUCKED)
 			{
-				NPC_SetAnim(NPCS.NPC, SETANIM_BOTH, BOTH_CROUCH1WALK, /*SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD*/0);
+				NPC_SetAnim(NPCS.NPC, SETANIM_BOTH, BOTH_CROUCH1WALK, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD);
 			}
 			else if (NPCS.NPC->client->ps.weapon == WP_SABER)
 			{// Walk with saber...
-				NPC_SetAnim( NPCS.NPC, SETANIM_LEGS, BOTH_WALK1, /*SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD*/0 );
+				NPC_SetAnim( NPCS.NPC, SETANIM_LEGS, BOTH_WALK1, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD );
 				NPC_SetAnim( NPCS.NPC, SETANIM_TORSO, TORSO_WEAPONREADY3, SETANIM_FLAG_NORMAL );
 			}
 			else
 			{// Standard walk anim..
-				NPC_SetAnim( NPCS.NPC, SETANIM_LEGS, BOTH_WALK2, /*SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD*/0 );
-				NPC_SetAnim( NPCS.NPC, SETANIM_TORSO, TORSO_WEAPONREADY3, /*SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD*/0 );
+				NPC_SetAnim( NPCS.NPC, SETANIM_LEGS, BOTH_WALK2, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD );
+				NPC_SetAnim( NPCS.NPC, SETANIM_TORSO, TORSO_WEAPONREADY3, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD );
 			}
 
 			//trap->Print("Walking Forward.\n");
@@ -3694,8 +3694,9 @@ qboolean UQ1_UcmdMoveForDir ( gentity_t *self, usercmd_t *cmd, vec3_t dir, qbool
 
 	if (self->NPC)
 	{
-		walkSpeed = self->NPC->stats.walkSpeed /** 0.55*/; // UQ1: Why are these values so fast????
+		//walkSpeed = self->NPC->stats.walkSpeed* 0.55; // UQ1: Why are these values so fast????
 		//trap->Print("%s walk speed is %f.\n", self->NPC_type, walkSpeed);
+		walkSpeed = 55 * 1.1;
 	}
 
 	AngleVectors( self->r.currentAngles, forward, right, NULL );
@@ -3868,8 +3869,8 @@ extern void G_UcmdMoveForDir( gentity_t *self, usercmd_t *cmd, vec3_t dir, vec3_
 qboolean NPC_PatrolArea( void ) 
 {// Quick method of patroling...
 	gentity_t *NPC = NPCS.NPC;
-	vec3_t		velocity_vec;
-	float		velocity;
+	//vec3_t		velocity_vec;
+	//float		velocity;
 	qboolean	ENEMY_VISIBLE = qfalse;
 	qboolean	HUNTING_ENEMY = qfalse;
 	qboolean	FORCED_COVERSPOT_FIND = qfalse;
@@ -3934,8 +3935,8 @@ qboolean NPC_PatrolArea( void )
 		}
 	}
 
-	VectorCopy(NPC->client->ps.velocity, velocity_vec);
-	velocity = VectorLength(velocity_vec);
+	//VectorCopy(NPC->client->ps.velocity, velocity_vec);
+	//velocity = VectorLength(velocity_vec);
 
 	if (!NPC->return_home
 		&& (NPC->r.currentOrigin[2] > NPC->spawn_pos[2]+24 || NPC->r.currentOrigin[2] < NPC->spawn_pos[2]-24))
@@ -3974,10 +3975,13 @@ qboolean NPC_PatrolArea( void )
 
 	NPC_FacePosition( gWPArray[NPC->wpCurrent]->origin, qfalse );
 	VectorSubtract( gWPArray[NPC->wpCurrent]->origin, NPC->r.currentOrigin, NPC->movedir );
-	if (!UQ1_UcmdMoveForDir( NPC, &NPCS.ucmd, NPC->movedir, qtrue, gWPArray[NPC->wpCurrent]->origin )) { if (NPC_IsCivilianHumanoid(NPC)) NPC_PickRandomIdleAnimantion(NPC); return qtrue; }
+	UQ1_UcmdMoveForDir( NPC, &NPCS.ucmd, NPC->movedir, qtrue, gWPArray[NPC->wpCurrent]->origin );
 	VectorCopy( NPC->movedir, NPC->client->ps.moveDir );
 
-	NPC_SelectMoveAnimation(qtrue);
+	if (NPCS.ucmd.forwardmove == 0 && NPCS.ucmd.rightmove == 0 && NPCS.ucmd.upmove == 0)
+		NPC_PickRandomIdleAnimantion(NPC);
+	else
+		NPC_SelectMoveAnimation(qtrue);
 
 	return qtrue;
 }
@@ -5930,7 +5934,7 @@ qboolean NPC_NeedPadawan_Spawn ( void )
 		if ( parent2
 			&& NPC_IsAlive(parent2)
 			&& parent2->client->sess.sessionTeam == TEAM_BLUE
-			&& (parent2->client->NPC_class == CLASS_JEDI || parent2->client->NPC_class == CLASS_LUKE || parent2->client->NPC_class == CLASS_KYLE || parent2->client->NPC_class == CLASS_JAN || (parent2->s.eType == ET_PLAYER && parent2->s.primaryWeapon == WP_SABER)))
+			&& (parent2->client->NPC_class == CLASS_JEDI || parent2->client->NPC_class == CLASS_LUKE || parent2->client->NPC_class == CLASS_KYLE || (parent2->s.eType == ET_PLAYER && parent2->s.primaryWeapon == WP_SABER)))
 		{// This is a jedi on our team...
 #pragma omp atomic
 			jedi_count++;
@@ -6160,7 +6164,7 @@ void NPC_DoPadawanStuff ( void )
 		if ( parent2
 			&& NPC_IsAlive(parent2)
 			&& parent2->client->sess.sessionTeam == me->client->sess.sessionTeam
-			&& (parent2->client->NPC_class == CLASS_JEDI || parent2->client->NPC_class == CLASS_LUKE || parent2->client->NPC_class == CLASS_KYLE || parent2->client->NPC_class == CLASS_JAN || parent2->s.eType == ET_PLAYER)
+			&& (parent2->client->NPC_class == CLASS_JEDI || parent2->client->NPC_class == CLASS_LUKE || parent2->client->NPC_class == CLASS_KYLE || parent2->s.eType == ET_PLAYER)
 			&& (!parent2->padawan || !NPC_IsAlive(parent2->padawan)) )
 		{// This is a jedi on our team...
 			float dist = Distance(me->r.currentOrigin, parent2->r.currentOrigin);
