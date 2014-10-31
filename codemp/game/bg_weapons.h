@@ -50,8 +50,6 @@ typedef enum {
 	WP_ELG_3A,
 	WP_S5_PISTOL,
 	WP_Z6_BLASTER_CANON,
-	WP_E60_ROCKET_LAUNCHER,
-	WP_CW_ROCKET_LAUNCHER,
 
 	//WP_FRAG_GRENADE,//fraggrenade
 	//WP_FRAG_GRENADE_OLD,//oldfraggrenade

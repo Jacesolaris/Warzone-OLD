@@ -5144,7 +5144,14 @@ qboolean NPC_FollowRoutes( void )
 			NPC->wpSeenTime = level.time;
 		}
 
-		wpDist = Distance(gWPArray[NPC->wpCurrent]->origin, NPC->r.currentOrigin);
+		if (NPC->s.groundEntityNum != ENTITYNUM_NONE)
+		{// On somebody's head or in the air...
+			wpDist = DistanceHorizontal(gWPArray[NPC->wpCurrent]->origin, NPC->r.currentOrigin);
+		}
+		else
+		{// On ground...
+			wpDist = Distance(gWPArray[NPC->wpCurrent]->origin, NPC->r.currentOrigin);
+		}
 
 		//if (wpDist > 512) trap->Print("To far! (%f)\n", wpDist);
 	}
@@ -5254,7 +5261,8 @@ qboolean NPC_FollowRoutes( void )
 		return qfalse; // next think...
 	}
 	
-	if (Distance(gWPArray[NPC->longTermGoal]->origin, NPC->r.currentOrigin) < 48)
+	if (Distance(gWPArray[NPC->longTermGoal]->origin, NPC->r.currentOrigin) < 48
+		|| (NPC->s.groundEntityNum != ENTITYNUM_NONE && DistanceHorizontal(gWPArray[NPC->longTermGoal]->origin, NPC->r.currentOrigin) < 48))
 	{// We're at out goal! Find a new goal...
 		//trap->Print("HIT GOAL!\n");
 		NPC_ClearPathData(NPC);
@@ -5572,7 +5580,14 @@ qboolean NPC_FollowEnemyRoute( void )
 			NPC->wpSeenTime = level.time;
 		}
 
-		wpDist = Distance(gWPArray[NPC->wpCurrent]->origin, NPC->r.currentOrigin);
+		if (NPC->s.groundEntityNum != ENTITYNUM_NONE)
+		{// On somebody's head or in the air...
+			wpDist = DistanceHorizontal(gWPArray[NPC->wpCurrent]->origin, NPC->r.currentOrigin);
+		}
+		else
+		{// On ground...
+			wpDist = Distance(gWPArray[NPC->wpCurrent]->origin, NPC->r.currentOrigin);
+		}
 	}
 
 #if 0
@@ -5673,7 +5688,8 @@ qboolean NPC_FollowEnemyRoute( void )
 		return qfalse; // next think...
 	}
 
-	if (Distance(gWPArray[NPC->longTermGoal]->origin, NPC->r.currentOrigin) < 48)
+	if (Distance(gWPArray[NPC->longTermGoal]->origin, NPC->r.currentOrigin) < 48
+		|| (NPC->s.groundEntityNum != ENTITYNUM_NONE && DistanceHorizontal(gWPArray[NPC->longTermGoal]->origin, NPC->r.currentOrigin) < 48))
 	{// We're at out goal! Find a new goal...
 		NPC_ClearPathData(NPC);
 		ucmd.forwardmove = 0;
