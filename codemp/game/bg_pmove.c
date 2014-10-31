@@ -6569,8 +6569,6 @@ static qboolean PM_DoChargedWeapons( qboolean vehicleRocketLock, bgEntity_t *veh
 				break;
 
 				//------------------
-			//case WP_E60_ROCKET_LAUNCHER:
-			//case WP_CW_ROCKET_LAUNCHER:
 			case WP_ROCKET_LAUNCHER:
 				if ( (pm->cmd.buttons & BUTTON_ALT_ATTACK)
 #ifndef __MMO__
@@ -7221,9 +7219,7 @@ static void PM_Weapon( void )
 	}
 
 	if (!IsSniperRifle(pm->ps->weapon) //not using disruptor
-		&& pm->ps->weapon != WP_ROCKET_LAUNCHER
-		&& pm->ps->weapon != WP_E60_ROCKET_LAUNCHER
-		&& pm->ps->weapon != WP_CW_ROCKET_LAUNCHER//not using rocket launcher
+		&& pm->ps->weapon != WP_ROCKET_LAUNCHER//not using rocket launcher
 		&& pm->ps->weapon != WP_THERMAL//not using thermals
 		&& !pm->ps->m_iVehicleNum )//not a vehicle or in a vehicle
 	{ //check for exceeding max charge time if not using disruptor or rocket launcher or thermals

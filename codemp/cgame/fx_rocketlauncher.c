@@ -32,25 +32,6 @@ void FX_RocketProjectileThink( centity_t *cent, const struct weaponInfo_s *weapo
 	FX_RocketAddLight(cent->lerpOrigin, cent->currentState.weapon);
 }
 
-void FX_PulseRocketProjectileThink(centity_t *cent, const struct weaponInfo_s *weapon)
-{
-	vec3_t forward;
-
-	if (VectorNormalize2(cent->currentState.pos.trDelta, forward) == 0.0f)
-	{
-		forward[2] = 1.0f;
-	}
-
-	if (weapon->missileRenderfx)
-	{
-		trap->FX_PlayEffectID(weapon->missileRenderfx, cent->lerpOrigin, forward, -1, -1, qfalse);
-	}
-	else
-	{
-		trap->FX_PlayEffectID(cgs.effects.pulserocketShotEffect, cent->lerpOrigin, forward, -1, -1, qfalse);
-	}
-}
-
 /*
 ---------------------------
 FX_RocketHitWall
@@ -129,23 +110,4 @@ void FX_RocketAltProjectileThink( centity_t *cent, const struct weaponInfo_s *we
 	trap->FX_PlayEffectID( cgs.effects.rocketShotEffect, cent->lerpOrigin, forward, -1, -1, qfalse );
 
 	FX_RocketAddLight(cent->lerpOrigin, cent->currentState.weapon);
-}
-
-void FX_PulseRocketAltProjectileThink(centity_t *cent, const struct weaponInfo_s *weapon)
-{
-	vec3_t forward;
-
-	if (VectorNormalize2(cent->currentState.pos.trDelta, forward) == 0.0f)
-	{
-		forward[2] = 1.0f;
-	}
-
-	if (weapon->altMissileRenderfx)
-	{
-		trap->FX_PlayEffectID(weapon->altMissileRenderfx, cent->lerpOrigin, forward, -1, -1, qfalse);
-	}
-	else
-	{
-		trap->FX_PlayEffectID(cgs.effects.pulserocketShotEffect, cent->lerpOrigin, forward, -1, -1, qfalse);
-	}
 }

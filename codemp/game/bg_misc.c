@@ -253,8 +253,6 @@ int WeaponReadyAnim[WP_NUM_WEAPONS] =
 	TORSO_WEAPONREADY2, //WP_ELG_3A
 	TORSO_WEAPONREADY2, //WP_S5_PISTOL
 	MINIGUN_READY,		//WP_Z6_BLASTER_CANON
-	PLX1_WEAPONREADY, //WP_E60_ROCKET_LAUNCHER
-	PLX1_WEAPONREADY, //WP_CW_ROCKET_LAUNCHER
 	TORSO_WEAPONREADY3,//TORSO_WEAPONREADY5,//WP_BOWCASTER,
 	TORSO_WEAPONREADY3,//TORSO_WEAPONREADY6,//WP_REPEATER,
 	TORSO_WEAPONREADY3,//TORSO_WEAPONREADY7,//WP_DEMP2,
@@ -308,8 +306,6 @@ int WeaponReadyLegsAnim[WP_NUM_WEAPONS] =
 	BOTH_STAND1,//WP_ELG_3A
 	BOTH_STAND1,//WP_S5_PISTOL
 	BOTH_STAND1,//WP_Z6_BLASTER_CANON
-	BOTH_STAND1,//WP_E60_ROCKET_LAUNCHER
-	BOTH_STAND1,//WP_CW_ROCKET_LAUNCHER
 	BOTH_STAND1,//TORSO_WEAPONREADY5,//WP_BOWCASTER,
 	BOTH_STAND1,//TORSO_WEAPONREADY6,//WP_REPEATER,
 	BOTH_STAND1,//TORSO_WEAPONREADY7,//WP_DEMP2,
@@ -362,8 +358,6 @@ int WeaponAttackAnim[WP_NUM_WEAPONS] =
 	BOTH_ATTACK2,//WP_ELG_3A
 	BOTH_ATTACK2,//WP_S5_PISTOL
 	MINIGUN_FIRE, //WP_Z6_BLASTER_CANON
-	PLX1_FIRE,//WP_E60_ROCKET_LAUNCHER
-	PLX1_FIRE,//WP_CW_ROCKET_LAUNCHER
 	BOTH_ATTACK3,//BOTH_ATTACK5,//WP_BOWCASTER,
 	BOTH_ATTACK3,//BOTH_ATTACK6,//WP_REPEATER,
 	BOTH_ATTACK2,//BOTH_ATTACK7,//WP_DEMP2,
@@ -1479,40 +1473,6 @@ Don't place this
 	"@SP_INGAME_BLASTER_PISTOL"					// description
 },
 
-/*QUAKED weapon_rocket_launcher (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-*/
-{
-	"weapon_e60r_launcher",
-	"sound/weapons/w_pkup.wav",
-	{ "models/weapons3/e60r_launcher/e60r_launcher_w.glm",
-	0, 0, 0 },
-	/* view */		"models/weapons3/e60r_launcher/e60r_launcher.md3",
-	/* icon */		"gfx/hud/w_icon_e60r_launcher",
-	/* pickup *///	"Merr-Sonn Missile System",
-	3,
-	IT_WEAPON,
-	WP_E60_ROCKET_LAUNCHER,
-	/* precache */ "",
-	/* sounds */ "",
-	"@MENUS_THE_PLX_2M_IS_AN_EXTREMELY"					// description
-},
-/*QUAKED weapon_rocket_launcher (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-*/
-{
-	"weapon_cw_launcher",
-	"sound/weapons/w_pkup.wav",
-	{ "models/weapons3/cw_launcher/cw_launcher_w.glm",
-	0, 0, 0 },
-	/* view */		"models/weapons3/cw_launcher/cw_launcher.md3",
-	/* icon */		"gfx/hud/w_icon_cw_launcher",
-	/* pickup *///	"Merr-Sonn Missile System",
-	3,
-	IT_WEAPON,
-	WP_CW_ROCKET_LAUNCHER,
-	/* precache */ "",
-	/* sounds */ "",
-	"@MENUS_THE_PLX_2M_IS_AN_EXTREMELY"					// description
-},
 /*QUAKED weapon_blaster (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
 */
 	{

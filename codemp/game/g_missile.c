@@ -75,8 +75,7 @@ void G_ReflectMissile( gentity_t *ent, gentity_t *missile, vec3_t forward )
 	{//you are mine, now!
 		missile->r.ownerNum = ent->s.number;
 	}
-	if (missile->s.weapon == WP_ROCKET_LAUNCHER || missile->s.weapon == WP_E60_ROCKET_LAUNCHER 
-		|| missile->s.weapon == WP_CW_ROCKET_LAUNCHER)
+	if ( missile->s.weapon == WP_ROCKET_LAUNCHER )
 	{//stop homing
 		missile->think = 0;
 		missile->nextthink = 0;
@@ -121,8 +120,7 @@ void G_DeflectMissile( gentity_t *ent, gentity_t *missile, vec3_t forward )
 	{//you are mine, now!
 		missile->r.ownerNum = ent->s.number;
 	}
-	if (missile->s.weapon == WP_ROCKET_LAUNCHER || missile->s.weapon == WP_E60_ROCKET_LAUNCHER 
-		|| missile->s.weapon == WP_CW_ROCKET_LAUNCHER)
+	if ( missile->s.weapon == WP_ROCKET_LAUNCHER )
 	{//stop homing
 		missile->think = 0;
 		missile->nextthink = 0;
@@ -453,8 +451,6 @@ void G_MissileImpact(gentity_t *ent, trace_t *trace) {
 
 	if ((other->flags & FL_SHIELDED) &&
 		ent->s.weapon != WP_ROCKET_LAUNCHER &&
-		ent->s.weapon != WP_E60_ROCKET_LAUNCHER &&
-		ent->s.weapon == WP_CW_ROCKET_LAUNCHER &&
 		ent->s.weapon != WP_THERMAL &&
 		ent->s.weapon != WP_TRIP_MINE &&
 		ent->s.weapon != WP_DET_PACK &&
@@ -486,8 +482,6 @@ void G_MissileImpact(gentity_t *ent, trace_t *trace) {
 
 	if (other->takedamage && other->client &&
 		ent->s.weapon != WP_ROCKET_LAUNCHER &&
-		ent->s.weapon != WP_E60_ROCKET_LAUNCHER &&
-		ent->s.weapon == WP_CW_ROCKET_LAUNCHER &&
 		ent->s.weapon != WP_THERMAL &&
 		ent->s.weapon != WP_TRIP_MINE &&
 		ent->s.weapon != WP_DET_PACK &&
@@ -560,8 +554,6 @@ void G_MissileImpact(gentity_t *ent, trace_t *trace) {
 
 		if (otherOwner->takedamage && otherOwner->client &&
 			ent->s.weapon != WP_ROCKET_LAUNCHER &&
-			ent->s.weapon != WP_E60_ROCKET_LAUNCHER &&
-			ent->s.weapon == WP_CW_ROCKET_LAUNCHER &&
 			ent->s.weapon != WP_THERMAL &&
 			ent->s.weapon != WP_TRIP_MINE &&
 			ent->s.weapon != WP_DET_PACK &&
@@ -660,8 +652,7 @@ void G_MissileImpact(gentity_t *ent, trace_t *trace) {
 			}
 
 			if (ent->s.weapon == WP_BOWCASTER || ent->s.weapon == WP_FLECHETTE ||
-				ent->s.weapon == WP_ROCKET_LAUNCHER || ent->s.weapon == WP_E60_ROCKET_LAUNCHER 
-				|| ent->s.weapon == WP_CW_ROCKET_LAUNCHER)
+				ent->s.weapon == WP_ROCKET_LAUNCHER)
 			{
 				if (ent->s.weapon == WP_FLECHETTE && (ent->s.eFlags & EF_ALT_FIRING))
 				{
