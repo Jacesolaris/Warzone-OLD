@@ -803,7 +803,6 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altMissileDlight = 0;
 		weaponInfo->altMissileHitSound = NULL_SOUND;
 		weaponInfo->altMissileTrailFunc = FX_BowcasterProjectileThink;
-
 		weaponInfo->flashSound[0] = trap->S_RegisterSound("sound/weapons/bowcaster/fire.wav");
 		weaponInfo->altFlashSound[0] = trap->S_RegisterSound("sound/weapons/bowcaster/fire.wav");
 		weaponInfo->chargeSound = trap->S_RegisterSound("sound/weapons/bowcaster/altcharge.wav");
@@ -817,7 +816,6 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->missileRenderfx = NULL_FX;
 		weaponInfo->altMissileRenderfx = NULL_FX;
 		weaponInfo->powerupShotRenderfx = NULL_FX;
-		
 
 		cgs.effects.bowcasterShotEffect = trap->FX_RegisterEffect("bowcaster/shot");
 		cgs.effects.bowcasterImpactEffect = trap->FX_RegisterEffect("bowcaster/wall_impact");
@@ -852,7 +850,6 @@ void CG_RegisterWeapon( int weaponNum) {
 		cgs.effects.repeaterAltProjectileEffect	= trap->FX_RegisterEffect( "imperial_repeater/alt_projectile" );
 		cgs.effects.repeaterWallImpactEffect	= trap->FX_RegisterEffect( "imperial_repeater/wall_impact" );
 		cgs.effects.repeaterFleshImpactEffect	= trap->FX_RegisterEffect( "imperial_repeater/flesh_impact" );
-		//cgs.effects.repeaterAltWallImpactEffect	= trap->FX_RegisterEffect( "repeater/alt_wall_impact" );
 		cgs.effects.repeaterAltWallImpactEffect	= trap->FX_RegisterEffect( "imperial_repeater/concussion" );
 		cgs.effects.repeaterWallImpactEffectEnhancedFX = trap->FX_RegisterEffect("repeater/wall_impact_enhanced2");
 		break;
@@ -971,8 +968,6 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altMissileDlight	= 0;
 		weaponInfo->altMissileHitSound	= NULL_SOUND;
 		weaponInfo->altMissileTrailFunc = 0;
-		/*cgs.effects.thermalExplosionEffect		= trap->FX_RegisterEffect( "thermal/explosion" );
-		cgs.effects.thermalShockwaveEffect		= trap->FX_RegisterEffect( "thermal/shockwave" );*/
 		cgs.effects.thermalShockwaveEffect = trap->FX_RegisterEffect("thermal/shockwave");
 		cgs.effects.thermalExplosionEffectEnhancedFX = trap->FX_RegisterEffect("ships/mine_impact_enhanced2");
 		cgs.effects.thermalExplosionAltEffect = trap->FX_RegisterEffect("ships/swoop_explosion");
@@ -990,7 +985,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->firingSound			= NULL_SOUND;
 		weaponInfo->chargeSound			= NULL_SOUND;
 		weaponInfo->muzzleEffect		= NULL_FX;
-		weaponInfo->missileModel		= 0;//trap->R_RegisterModel( "models/weapons2/laser_trap/laser_trap->w.md3" );
+		weaponInfo->missileModel		= 0;
 		weaponInfo->missileSound		= NULL_SOUND;
 		weaponInfo->missileDlight		= 0;
 		weaponInfo->missileHitSound		= NULL_SOUND;
@@ -999,7 +994,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altFiringSound		= NULL_SOUND;
 		weaponInfo->altChargeSound		= NULL_SOUND;
 		weaponInfo->altMuzzleEffect		= NULL_FX;
-		weaponInfo->altMissileModel		= 0;//trap->R_RegisterModel( "models/weapons2/laser_trap/laser_trap->w.md3" );
+		weaponInfo->altMissileModel		= 0;
 		weaponInfo->altMissileSound		= NULL_SOUND;
 		weaponInfo->altMissileDlight	= 0;
 		weaponInfo->altMissileHitSound	= NULL_SOUND;
