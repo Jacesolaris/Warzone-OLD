@@ -53,7 +53,7 @@ FX_RepeaterHitWall
 
 void FX_RepeaterHitWall( vec3_t origin, vec3_t normal, int weapon, qboolean altFire )
 {
-	fxHandle_t fx = cg_weapons[weapon].missileWallImpactfx;
+	fxHandle_t fx = cg_weapons[weapon].wallImpactEffectEnhancedFX;// missileWallImpactfx;
 	if (altFire) fx = cg_weapons[weapon].altMissileWallImpactfx;
 
 	if (fx)
@@ -181,7 +181,7 @@ FX_RepeaterAltHitWall
 
 void FX_RepeaterAltHitWall(vec3_t origin, vec3_t normal, int weapon, qboolean altFire)
 {
-	fxHandle_t fx = cg_weapons[weapon].missileWallImpactfx;
+	fxHandle_t fx = cg_weapons[weapon].wallImpactEffectEnhancedFX;//missileWallImpactfx;
 	if (altFire) fx = cg_weapons[weapon].altMissileWallImpactfx;
 
 	if (fx)

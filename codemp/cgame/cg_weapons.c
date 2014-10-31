@@ -1797,7 +1797,7 @@ void CG_OutOfAmmoChange( int oldWeapon )
 				( i == WP_TRIP_MINE || i == WP_DET_PACK || i == WP_THERMAL || i == WP_ROCKET_LAUNCHER) ) // safe weapon switch
 			*/
 			//rww - Don't we want to make sure i != one of these if autoswitch is 1 (safe)?
-			if (cg_autoSwitch.integer != 1 || (i != WP_TRIP_MINE && i != WP_DET_PACK && i != WP_THERMAL && i != WP_ROCKET_LAUNCHER))
+			if (cg_autoSwitch.integer != 1 || (i != WP_TRIP_MINE && i != WP_DET_PACK && i != WP_THERMAL && i != WP_ROCKET_LAUNCHER && i != WP_E60_ROCKET_LAUNCHER && i != WP_CW_ROCKET_LAUNCHER))
 			{
 				if (i != oldWeapon)
 				{ //don't even do anything if we're just selecting the weapon we already have/had
@@ -1897,9 +1897,11 @@ void CG_FireWeapon( centity_t *cent, qboolean altFire ) {
 			CGCam_Shake( val, 250 );
 		}
 		else if (ent->weapon == WP_ROCKET_LAUNCHER ||
+			(ent->weapon == WP_E60_ROCKET_LAUNCHER ||
+			(ent->weapon == WP_CW_ROCKET_LAUNCHER ||
 			(ent->weapon == WP_REPEATER && altFire) ||
 			ent->weapon == WP_FLECHETTE ||
-			(ent->weapon == WP_CONCUSSION && !altFire))
+			(ent->weapon == WP_CONCUSSION && !altFire))))
 		{
 			if (ent->weapon == WP_CONCUSSION)
 			{
@@ -1926,6 +1928,14 @@ void CG_FireWeapon( centity_t *cent, qboolean altFire ) {
 				CGCam_Shake(flrand(2, 3), 350);
 			}
 			else if (ent->weapon == WP_Z6_BLASTER_CANON)
+			{
+				CGCam_Shake(flrand(2, 3), 350);
+			}
+			else if (ent->weapon == WP_E60_ROCKET_LAUNCHER)
+			{
+				CGCam_Shake(flrand(2, 3), 350);
+			}
+			else if (ent->weapon == WP_CW_ROCKET_LAUNCHER)
 			{
 				CGCam_Shake(flrand(2, 3), 350);
 			}
@@ -2110,12 +2120,12 @@ void CG_MissileHitWall(int weapon, int clientNum, vec3_t origin, vec3_t dir, imp
 	case WP_CLONE_PISTOL1:
 		if (altFire)
 		{
-			//FX_DEMP2_BounceWall(origin, dir, weapon, altFire); // UQ1: This isn't right...
-			FX_DEMP2_HitWall(origin, dir, weapon, altFire); // UQ1: This probably is...
+			FX_CLONEPISTOL_BounceWall(origin, dir, weapon, altFire); // UQ1: This isn't right...
+			//FX_DEMP2_HitWall(origin, dir, weapon, altFire); // UQ1: This probably is...
 		}
 		else
 		{
-			FX_DEMP2_HitWall(origin, dir, weapon, altFire);
+			FX_CLONEPISTOL_HitWall(origin, dir, weapon, altFire);
 		}
 		break;
 
@@ -2180,6 +2190,8 @@ void CG_MissileHitWall(int weapon, int clientNum, vec3_t origin, vec3_t dir, imp
 		}
 		break;
 
+	case WP_E60_ROCKET_LAUNCHER:
+	case WP_CW_ROCKET_LAUNCHER:
 	case WP_ROCKET_LAUNCHER:
 		FX_RocketHitWall(origin, dir, weapon, altFire);
 		break;
@@ -2306,13 +2318,22 @@ void CG_MissileHitPlayer(int weapon, vec3_t origin, vec3_t dir, int entityNum, q
 	case WP_CLONE_PISTOL1:
 		if (altFire)
 		{
+			trap->FX_PlayEffectID(
+				CG_EnableEnhancedFX(cgs.effects.mAltDetonate, cgs.effects.mAltDetonateEnhancedFX), origin, dir, -1, -1, qfalse);
+		}
+		else
+		{
+			FX_CLONEPISTOL_HitPlayer(origin, dir, humanoid, weapon, altFire);
+		}
+		/*if (altFire)
+		{
 			trap->FX_PlayEffectID(cgs.effects.mAltDetonateEnhancedFX, origin, dir, -1, -1, qfalse);
 		}
 		else
 		{
 			FX_BlasterWeaponHitPlayer(origin, dir, humanoid, weapon, altFire);
 
-		}
+		}*/
 		break;
 
 	case WP_DLT20A:
@@ -2365,8 +2386,7 @@ void CG_MissileHitPlayer(int weapon, vec3_t origin, vec3_t dir, int entityNum, q
 		if (altFire)
 		{
 			trap->FX_PlayEffectID(
-				CG_EnableEnhancedFX(cgs.effects.mAltDetonate,
-				cgs.effects.mAltDetonateEnhancedFX),	origin, dir, -1, -1, qfalse);
+				CG_EnableEnhancedFX(cgs.effects.mAltDetonate, cgs.effects.mAltDetonateEnhancedFX),	origin, dir, -1, -1, qfalse);
 		}
 		else
 		{
@@ -2378,6 +2398,8 @@ void CG_MissileHitPlayer(int weapon, vec3_t origin, vec3_t dir, int entityNum, q
 		FX_FlechetteWeaponHitPlayer( origin, dir, humanoid, weapon, altFire );
 		break;
 
+	case WP_E60_ROCKET_LAUNCHER:
+	case WP_CW_ROCKET_LAUNCHER:
 	case WP_ROCKET_LAUNCHER:
 		FX_RocketHitPlayer( origin, dir, humanoid, weapon, altFire );
 		break;

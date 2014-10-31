@@ -3766,6 +3766,8 @@ gentity_t *WP_FireVehicleWeapon( gentity_t *ent, vec3_t start, vec3_t dir, vehWe
 		if ( vehWeapon->fWidth || vehWeapon->fHeight )
 		{//we assume it's a rocket-like thing
 			missile->s.weapon = WP_ROCKET_LAUNCHER;//does this really matter?
+			missile->s.weapon = WP_E60_ROCKET_LAUNCHER;
+			missile->s.weapon = WP_CW_ROCKET_LAUNCHER;
 			missile->methodOfDeath = MOD_VEHICLE;//MOD_ROCKET;
 			missile->splashMethodOfDeath = MOD_VEHICLE;//MOD_ROCKET;// ?SPLASH;
 
@@ -4680,6 +4682,8 @@ void FireWeapon( gentity_t *ent, qboolean altFire ) {
 			WP_FireFlechette( ent, altFire );
 			break;
 
+		case WP_E60_ROCKET_LAUNCHER:
+		case WP_CW_ROCKET_LAUNCHER:
 		case WP_ROCKET_LAUNCHER:
 			WP_FireRocket( ent, altFire );
 			break;
