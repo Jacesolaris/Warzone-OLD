@@ -6357,6 +6357,8 @@ void NPC_Think ( gentity_t *self)//, int msec )
 		return;
 	}
 
+	trap->Cvar_Update(&npc_pathing);
+
 	// dead NPCs have a special think, don't run scripts (for now)
 	//FIXME: this breaks deathscripts
 	if ( self->health <= 0 )

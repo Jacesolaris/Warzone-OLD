@@ -1200,6 +1200,7 @@ void G_CheckMinimumNpcs( void ) {
 
 	checkminimumnpcs_time = level.time;
 	trap->Cvar_Update(&npc_enemies);
+	trap->Cvar_Update(&npc_pathing);
 	minplayers = npc_enemies.integer;
 
 	// Add vendors...
