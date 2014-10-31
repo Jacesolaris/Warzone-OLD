@@ -253,16 +253,6 @@ int WeaponReadyAnim[WP_NUM_WEAPONS] =
 	TORSO_WEAPONREADY2, //WP_ELG_3A
 	TORSO_WEAPONREADY2, //WP_S5_PISTOL
 	MINIGUN_READY,		//WP_Z6_BLASTER_CANON
-	PLX1_WEAPONREADY, //WP_E60_ROCKET_LAUNCHER
-	PLX1_WEAPONREADY, //WP_CW_ROCKET_LAUNCHER
-	//TORSO_WEAPONREADY10,//WP_FRAG_GRENADE
-	//TORSO_WEAPONREADY10,//WP_FRAG_GRENADE_OLD
-	//TORSO_WEAPONREADY10,//WP_SHOCK_GRENADE
-	//TORSO_WEAPONREADY10,//WP_PLASMA_GRENADE
-	//TORSO_WEAPONREADY10,//WP_SONIC_GRENADE
-	//TORSO_WEAPONREADY10,//WP_THERMAL_GRENADE
-	//TORSO_WEAPONREADY10,//WP_THERMAL_GREADE_OLD
-	//TORSO_WEAPONREADY10,//WP_V_59_GRENADE
 	TORSO_WEAPONREADY3,//TORSO_WEAPONREADY5,//WP_BOWCASTER,
 	TORSO_WEAPONREADY3,//TORSO_WEAPONREADY6,//WP_REPEATER,
 	TORSO_WEAPONREADY3,//TORSO_WEAPONREADY7,//WP_DEMP2,
@@ -316,16 +306,6 @@ int WeaponReadyLegsAnim[WP_NUM_WEAPONS] =
 	BOTH_STAND1,//WP_ELG_3A
 	BOTH_STAND1,//WP_S5_PISTOL
 	BOTH_STAND1,//WP_Z6_BLASTER_CANON
-	BOTH_STAND1,//WP_E60_ROCKET_LAUNCHER
-	BOTH_STAND1,//WP_CW_ROCKET_LAUNCHER
-	//BOTH_STAND1,//WP_FRAG_GRENADE
-	//BOTH_STAND1,//WP_FRAG_GRENADE_OLD
-	//BOTH_STAND1,//WP_SHOCK_GRENADE
-	//BOTH_STAND1,//WP_PLASMA_GRENADE
-	//BOTH_STAND1,//WP_SONIC_GRENADE
-	//BOTH_STAND1,//WP_THERMAL_GRENADE
-	//BOTH_STAND1,//WP_THERMAL_GREADE_OLD
-	//BOTH_STAND1,//WP_V_59_GRENADE
 	BOTH_STAND1,//TORSO_WEAPONREADY5,//WP_BOWCASTER,
 	BOTH_STAND1,//TORSO_WEAPONREADY6,//WP_REPEATER,
 	BOTH_STAND1,//TORSO_WEAPONREADY7,//WP_DEMP2,
@@ -378,16 +358,6 @@ int WeaponAttackAnim[WP_NUM_WEAPONS] =
 	BOTH_ATTACK2,//WP_ELG_3A
 	BOTH_ATTACK2,//WP_S5_PISTOL
 	MINIGUN_FIRE, //WP_Z6_BLASTER_CANON
-	PLX1_FIRE,//WP_E60_ROCKET_LAUNCHER
-	PLX1_FIRE,//WP_CW_ROCKET_LAUNCHER
-	//BOTH_THERMAL_THROW,//WP_FRAG_GRENADE
-	//BOTH_THERMAL_THROW,//WP_FRAG_GRENADE_OLD
-	//BOTH_THERMAL_THROW,//WP_SHOCK_GRENADE
-	//BOTH_THERMAL_THROW,//WP_PLASMA_GRENADE
-	//BOTH_THERMAL_THROW,//WP_SONIC_GRENADE
-	//BOTH_THERMAL_THROW,//WP_THERMAL_GRENADE
-	//BOTH_THERMAL_THROW,//WP_THERMAL_GREADE_OLD
-	//BOTH_THERMAL_THROW,//WP_V_59_GRENADE
 	BOTH_ATTACK3,//BOTH_ATTACK5,//WP_BOWCASTER,
 	BOTH_ATTACK3,//BOTH_ATTACK6,//WP_REPEATER,
 	BOTH_ATTACK2,//BOTH_ATTACK7,//WP_DEMP2,
@@ -1503,188 +1473,6 @@ Don't place this
 	"@SP_INGAME_BLASTER_PISTOL"					// description
 },
 
-/*QUAKED weapon_rocket_launcher (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-*/
-{
-	"weapon_e60r_launcher",
-	"sound/weapons/w_pkup.wav",
-	{ "models/weapons3/e60r_launcher/e60r_launcher_w.glm",
-	0, 0, 0 },
-	/* view */		"models/weapons3/e60r_launcher/e60r_launcher.md3",
-	/* icon */		"gfx/hud/w_icon_e60r_launcher",
-	/* pickup *///	"Merr-Sonn Missile System",
-	3,
-	IT_WEAPON,
-	WP_E60_ROCKET_LAUNCHER,
-	/* precache */ "",
-	/* sounds */ "",
-	"@MENUS_THE_PLX_2M_IS_AN_EXTREMELY"					// description
-},
-/*QUAKED weapon_rocket_launcher (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-*/
-{
-	"weapon_cw_launcher",
-	"sound/weapons/w_pkup.wav",
-	{ "models/weapons3/cw_launcher/cw_launcher_w.glm",
-	0, 0, 0 },
-	/* view */		"models/weapons3/cw_launcher/cw_launcher.md3",
-	/* icon */		"gfx/hud/w_icon_cw_launcher",
-	/* pickup *///	"Merr-Sonn Missile System",
-	3,
-	IT_WEAPON,
-	WP_CW_ROCKET_LAUNCHER,
-	/* precache */ "",
-	/* sounds */ "",
-	"@MENUS_THE_PLX_2M_IS_AN_EXTREMELY"					// description
-},
-
-
-//New Grenades
-///*QUAKED weapon_thermal (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-//*/
-//{
-//	"weapon_fraggrenade",
-//	"sound/weapons/w_pkup.wav",
-//	{ "models/weapons3/fraggrenade/thermal_w.glm", "models/weapons3/fraggrenade/thermal_pu.md3",
-//	0, 0 },
-//	/* view */		"models/weapons3/fraggrenade/thermal.md3",
-//	/* icon */		"gfx/hud/w_icon_fraggrenade",
-//	/* pickup *///	"Thermal Detonator",
-//	4,
-//	IT_WEAPON,
-//	WP_FRAG_GRENADE,
-//	/* precache */ "",
-//	/* sounds */ "",
-//	"@MENUS_THE_THERMAL_DETONATOR"					// description
-//},
-//
-///*QUAKED weapon_thermal (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-//*/
-//{
-//	"weapon_oldfraggrenade",
-//	"sound/weapons/w_pkup.wav",
-//	{ "models/weapons3/oldfraggrenade/thermal_w.glm", "models/weapons3/oldfraggrenade/thermal_pu.md3",
-//	0, 0 },
-//	/* view */		"models/weapons3/oldfraggrenade/thermal.md3",
-//	/* icon */		"gfx/hud/w_icon_oldfraggrenade",
-//	/* pickup *///	"Thermal Detonator",
-//	4,
-//	IT_WEAPON,
-//	WP_FRAG_GRENADE_OLD,
-//	/* precache */ "",
-//	/* sounds */ "",
-//	"@MENUS_THE_THERMAL_DETONATOR"					// description
-//},
-//
-///*QUAKED weapon_thermal (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-//*/
-//{
-//	"weapon_kes_pgren",
-//	"sound/weapons/w_pkup.wav",
-//	{ "models/weapons3/kes_pgren/laser_trap_w.glm",
-//	0, 0 },
-//	/* view */		"models/weapons3/kes_pgren/laser_trap.md3",
-//	/* icon */		"gfx/hud/w_icon_rpgren",
-//	/* pickup *///	"Thermal Detonator",
-//	4,
-//	IT_WEAPON,
-//	WP_SHOCK_GRENADE,
-//	/* precache */ "",
-//	/* sounds */ "",
-//	"@MENUS_THE_THERMAL_DETONATOR"					// description
-//},
-//
-///*QUAKED weapon_thermal (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-//*/
-//{
-//	"weapon_plasma",
-//	"sound/weapons/w_pkup.wav",
-//	{ "models/weapons2/plasma/plasma_w.glm",
-//	0, 0 },
-//	/* view */		"models/weapons2/plasma/plasma.md3",
-//	/* icon */		"gfx/hud/w_icon_thermal",
-//	/* pickup *///	"Thermal Detonator",
-//	4,
-//	IT_WEAPON,
-//	WP_PLASMA_GRENADE,
-//	/* precache */ "",
-//	/* sounds */ "",
-//	"@MENUS_THE_THERMAL_DETONATOR"					// description
-//},
-
-//Not used yet as we need more for this grenade here.
-/*QUAKED weapon_thermal (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-*/
-//{
-//	"weapon_thermal",
-//	"sound/weapons/w_pkup.wav",
-//	{ "models/weapons3/sonic_detonator/sonic_det_w.glm",
-//	0, 0 },
-//	/* view */		"models/weapons3/sonic_detonator/sonic_det.md3",
-//	/* icon */		"gfx/hud/w_icon_sonic_det",
-//	/* pickup *///	"Thermal Detonator",
-//	4,
-//	IT_WEAPON,
-//	WP_SONIC_GRENADE,
-//	/* precache */ "",
-//	/* sounds */ "",
-//	"@MENUS_THE_THERMAL_DETONATOR"					// description
-//},
-
-///*QUAKED weapon_thermal (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-//*/
-//{
-//	"weapon_Stormi_TD",
-//	"sound/weapons/w_pkup.wav",
-//	{ "models/weapons3/Stormi_TD/stormiTD_w.glm",
-//	0, 0 },
-//	/* view */		"models/weapons3/Stormi_TD/stormiTD.md3",
-//	/* icon */		"gfx/hud/w_icon_StormiTD",
-//	/* pickup *///	"Thermal Detonator",
-//	4,
-//	IT_WEAPON,
-//	WP_THERMAL_GRENADE,
-//	/* precache */ "",
-//	/* sounds */ "",
-//	"@MENUS_THE_THERMAL_DETONATOR"					// description
-//},
-//
-///*QUAKED weapon_thermal (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-//*/
-//{
-//	"weapon_thermal",
-//	"sound/weapons/w_pkup.wav",
-//	{ "models/weapons2/thermal/thermal_w.glm", "models/weapons2/thermal/thermal_pu.md3",//need to be on weapons2 to get the right model from there
-//	0, 0 },
-//	/* view */		"models/weapons3/thermal/sphereofdoom.md3",
-//	/* icon */		"gfx/hud/w_icon_thermal",
-//	/* pickup *///	"Thermal Detonator",
-//	4,
-//	IT_WEAPON,
-//	WP_THERMAL_GREADE_OLD,
-//	/* precache */ "",
-//	/* sounds */ "",
-//	"@MENUS_THE_THERMAL_DETONATOR"					// description
-//},
-//
-///*QUAKED weapon_V-59_conc (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-//*/
-//{
-//	"weapon_V-59_conc",
-//	"sound/weapons/w_pkup.wav",
-//	{ "models/weapons3/V-59_Concussion/V-59_conc_w.glm",
-//	0, 0 },
-//	/* view */		"models/weapons3/V-59_Concussion/V-59_conc.md3",
-//	/* icon */		"gfx/hud/w_icon_V-59_conc",
-//	/* pickup *///	"Thermal Detonator",
-//	4,
-//	IT_WEAPON,
-//	WP_V_59_GRENADE,
-//	/* precache */ "",
-//	/* sounds */ "",
-//	"@MENUS_THE_THERMAL_DETONATOR"					// description
-//},
-//OLD Weapons
 /*QUAKED weapon_blaster (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
 */
 	{
@@ -1940,8 +1728,6 @@ NOTENOTE This weapon is not yet complete.  Don't place it.
 
 
 //NOTE: This is to keep things from messing up because the turret weapon type isn't real
-/*QUAKED weapon_turretwp (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-*/
 	{
 		"weapon_turretwp",
 		"sound/weapons/w_pkup.wav",
@@ -2617,16 +2403,7 @@ qboolean BG_CanItemBeGrabbed( int gametype, const entityState_t *ent, const play
 		}
 		
 		if (!(ent->eFlags & EF_DROPPEDWEAPON) && BG_HaveWeapon(ps, item->giTag) &&
-			item->giTag != WP_THERMAL && item->giTag != WP_TRIP_MINE && item->giTag != WP_DET_PACK
-			//&& item->giTag != WP_FRAG_GRENADE
-			//&& item->giTag != WP_FRAG_GRENADE_OLD
-			//&& item->giTag != WP_SHOCK_GRENADE
-			//&& item->giTag != WP_PLASMA_GRENADE
-			///*&& item->giTag != WP_SONIC_GRENADE*/
-			//&& item->giTag != WP_THERMAL_GRENADE
-			//&& item->giTag != WP_THERMAL_GREADE_OLD
-			//&& item->giTag != WP_V_59_GRENADE
-			)
+			item->giTag != WP_THERMAL && item->giTag != WP_TRIP_MINE && item->giTag != WP_DET_PACK)
 		{ //weaponstay stuff.. if this isn't dropped, and you already have it, you don't get it.
 			return qfalse;
 		}

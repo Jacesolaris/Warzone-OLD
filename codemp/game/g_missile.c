@@ -169,16 +169,7 @@ void G_BounceMissile( gentity_t *ent, trace_t *trace ) {
 		}
 	}
 
-	if (ent->s.weapon == WP_THERMAL 
-		//|| ent->s.weapon == WP_FRAG_GRENADE
-		//|| ent->s.weapon == WP_FRAG_GRENADE_OLD
-		//|| ent->s.weapon == WP_SHOCK_GRENADE
-		//|| ent->s.weapon == WP_PLASMA_GRENADE
-		///*|| ent->s.weapon == WP_SONIC_GRENADE*/
-		//|| ent->s.weapon == WP_THERMAL_GRENADE
-		//|| ent->s.weapon == WP_THERMAL_GREADE_OLD
-		//|| ent->s.weapon == WP_V_59_GRENADE
-		)
+	if (ent->s.weapon == WP_THERMAL)
 	{ //slight hack for hit sound
 		G_Sound(ent, CHAN_BODY, G_SoundIndex(va("sound/weapons/thermal/bounce%i.wav", Q_irand(1, 2))));
 	}
@@ -460,17 +451,7 @@ void G_MissileImpact(gentity_t *ent, trace_t *trace) {
 
 	if ((other->flags & FL_SHIELDED) &&
 		ent->s.weapon != WP_ROCKET_LAUNCHER &&
-		ent->s.weapon != WP_E60_ROCKET_LAUNCHER &&
-		ent->s.weapon != WP_CW_ROCKET_LAUNCHER &&
 		ent->s.weapon != WP_THERMAL &&
-		//ent->s.weapon != WP_FRAG_GRENADE &&
-		//ent->s.weapon != WP_FRAG_GRENADE_OLD &&
-		//ent->s.weapon != WP_SHOCK_GRENADE &&
-		//ent->s.weapon != WP_PLASMA_GRENADE &&
-		///*ent->s.weapon != WP_SONIC_GRENADE &&*/
-		//ent->s.weapon != WP_THERMAL_GRENADE &&
-		//ent->s.weapon != WP_THERMAL_GREADE_OLD &&
-		//ent->s.weapon != WP_V_59_GRENADE &&
 		ent->s.weapon != WP_TRIP_MINE &&
 		ent->s.weapon != WP_DET_PACK &&
 		ent->s.weapon != WP_DEMP2 &&
@@ -502,14 +483,6 @@ void G_MissileImpact(gentity_t *ent, trace_t *trace) {
 	if (other->takedamage && other->client &&
 		ent->s.weapon != WP_ROCKET_LAUNCHER &&
 		ent->s.weapon != WP_THERMAL &&
-		//ent->s.weapon != WP_FRAG_GRENADE &&
-		//ent->s.weapon != WP_FRAG_GRENADE_OLD &&
-		//ent->s.weapon != WP_SHOCK_GRENADE &&
-		//ent->s.weapon != WP_PLASMA_GRENADE &&
-		///*ent->s.weapon != WP_SONIC_GRENADE &&*/
-		//ent->s.weapon != WP_THERMAL_GRENADE &&
-		//ent->s.weapon != WP_THERMAL_GREADE_OLD &&
-		//ent->s.weapon != WP_V_59_GRENADE &&
 		ent->s.weapon != WP_TRIP_MINE &&
 		ent->s.weapon != WP_DET_PACK &&
 		ent->s.weapon != WP_DEMP2 &&
@@ -582,14 +555,6 @@ void G_MissileImpact(gentity_t *ent, trace_t *trace) {
 		if (otherOwner->takedamage && otherOwner->client &&
 			ent->s.weapon != WP_ROCKET_LAUNCHER &&
 			ent->s.weapon != WP_THERMAL &&
-			//ent->s.weapon != WP_FRAG_GRENADE &&
-			//ent->s.weapon != WP_FRAG_GRENADE_OLD &&
-			//ent->s.weapon != WP_SHOCK_GRENADE &&
-			//ent->s.weapon != WP_PLASMA_GRENADE &&
-			///*ent->s.weapon != WP_SONIC_GRENADE &&*/
-			//ent->s.weapon != WP_THERMAL_GRENADE &&
-			//ent->s.weapon != WP_THERMAL_GREADE_OLD &&
-			//ent->s.weapon != WP_V_59_GRENADE &&
 			ent->s.weapon != WP_TRIP_MINE &&
 			ent->s.weapon != WP_DET_PACK &&
 			ent->s.weapon != WP_DEMP2 &&

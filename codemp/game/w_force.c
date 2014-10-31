@@ -1924,16 +1924,7 @@ void ForceShootLightning( gentity_t *self )
 				continue;
 			if ( traceEnt == self )
 				continue;
-			if ( traceEnt->r.ownerNum == self->s.number && traceEnt->s.weapon != WP_THERMAL 
-				//&& traceEnt->s.weapon != WP_FRAG_GRENADE
-				//&& traceEnt->s.weapon != WP_FRAG_GRENADE_OLD
-				//&& traceEnt->s.weapon != WP_SHOCK_GRENADE
-				//&& traceEnt->s.weapon != WP_PLASMA_GRENADE
-				///*&& traceEnt->s.weapon != WP_SONIC_GRENADE*/
-				//&& traceEnt->s.weapon != WP_THERMAL_GRENADE
-				//&& traceEnt->s.weapon != WP_THERMAL_GREADE_OLD
-				//&& traceEnt->s.weapon != WP_V_59_GRENADE
-				)//can push your own thermals
+			if ( traceEnt->r.ownerNum == self->s.number && traceEnt->s.weapon != WP_THERMAL )//can push your own thermals
 				continue;
 			if ( !traceEnt->inuse )
 				continue;
@@ -3409,16 +3400,7 @@ void ForceThrow( gentity_t *self, qboolean pull )
 			{//can't force-push/pull stuck missiles (detpacks, tripmines)
 				continue;
 			}
-			if (ent->s.pos.trType == TR_STATIONARY && ent->s.weapon != WP_THERMAL 
-				//&& ent->s.weapon != WP_FRAG_GRENADE
-				//&& ent->s.weapon != WP_FRAG_GRENADE_OLD
-				//&& ent->s.weapon != WP_SHOCK_GRENADE
-				//&& ent->s.weapon != WP_PLASMA_GRENADE
-				///*&& ent->s.weapon != WP_SONIC_GRENADE*/
-				//&& ent->s.weapon != WP_THERMAL_GRENADE
-				//&& ent->s.weapon != WP_THERMAL_GREADE_OLD
-				//&& ent->s.weapon != WP_V_59_GRENADE
-				)
+			if ( ent->s.pos.trType == TR_STATIONARY && ent->s.weapon != WP_THERMAL )
 			{//only thermal detonators can be pushed once stopped
 				continue;
 			}
@@ -3724,45 +3706,6 @@ void ForceThrow( gentity_t *self, qboolean pull )
 					}
 				}
 			}
-			//else if (push_list[x]->s.eType == ET_MISSILE && push_list[x]->s.pos.trType != TR_INTERPOLATE)
-			//{
-			//	if (pull)
-			//	{//deflect rather than reflect?
-			//	}
-			//	else
-			//	{
-			//		if (g_entities[push_list[x]->r.ownerNum].client) //ensure the object being pushed has an owner
-			//		{
-			//			// You can not push missiles owned by your own team
-			//			// unless they are owned by yourself
-			//			if (g_entities[push_list[x]->r.ownerNum].client->sess.sessionTeam != self->client->sess.sessionTeam
-			//				|| push_list[x]->r.ownerNum == self->s.number)
-
-			//			{
-			//				int weaponType = push_list[x]->s.weapon;
-
-			//				//can only reflect these weapon types using force push
-			//				if (weaponType == WP_THERMAL || WP_FRAG_GRENADE
-			//					|| WP_FRAG_GRENADE_OLD
-			//					|| WP_SHOCK_GRENADE
-			//					|| WP_PLASMA_GRENADE
-			//					/*|| WP_SONIC_GRENADE*/
-			//					|| WP_THERMAL_GRENADE
-			//					|| WP_THERMAL_GREADE_OLD
-			//					|| WP_V_59_GRENADE 
-			//					|| (weaponType == WP_CONCUSSION && push_list[x]->methodOfDeath == MOD_CONC_ALT) 
-			//					|| (weaponType == WP_CONCUSSION && push_list[x]->methodOfDeath == MOD_CONC) 
-			//					|| weaponType == WP_ROCKET_LAUNCHER 
-			//					|| push_list[x]->methodOfDeath == MOD_ROCKET
-			//					|| weaponType == WP_TRIP_MINE 
-			//					|| push_list[x]->methodOfDeath == MOD_TRIP_MINE_SPLASH)
-			//				{
-			//					G_ReflectMissile(self, push_list[x], forward);
-			//				}
-			//			}
-			//		}
-
-			//Old base
 			else if ( push_list[x]->s.eType == ET_MISSILE && push_list[x]->s.pos.trType != TR_STATIONARY && (push_list[x]->s.pos.trType != TR_INTERPOLATE||push_list[x]->s.weapon != WP_THERMAL) )//rolling and stationary thermal detonators are dealt with below
 			{
 				if ( pull )

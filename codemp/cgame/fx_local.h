@@ -76,7 +76,7 @@ void FX_T21ProjectileThink(centity_t *cent, const struct weaponInfo_s *weapon);
 void FX_ThermalProjectileThink(centity_t *cent, const struct weaponInfo_s *weapon);
 
 // Pulse Grenades
-void FX_GrenadesProjectileThink(centity_t *cent, const struct weaponInfo_s *weapon);
+void FX_PulseGrenadeProjectileThink(centity_t *cent, const struct weaponInfo_s *weapon);
 
 
 void FX_CLONEPISTOL_HitWall(vec3_t origin, vec3_t normal, int weapon, qboolean altFire);

@@ -1660,8 +1660,6 @@ typedef struct cgEffects_s {
 	fxHandle_t	iceTargetFreeze;
 	fxHandle_t	iceTargetFreezeEnhancedFX;
 	fxHandle_t	sonicGrenadeWave;
-	fxHandle_t	PlasmaFlameBurn;
-	fxHandle_t	PlasmaFlameBurnEnhancedFX;
 
 	// TRIPMINE
 	fxHandle_t	tripmineLaserFX;

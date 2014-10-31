@@ -51,16 +51,6 @@ typedef enum {
 	WP_S5_PISTOL,
 	WP_Z6_BLASTER_CANON,
 
-	//WP_FRAG_GRENADE,//fraggrenade
-	//WP_FRAG_GRENADE_OLD,//oldfraggrenade
-	//WP_SHOCK_GRENADE,//kes_pgren
-	//WP_PLASMA_GRENADE,//plasma
-	//WP_SONIC_GRENADE,//sonic_detonator
-	//WP_THERMAL_GRENADE,//Stormtroopers
-	//WP_THERMAL_GREADE_OLD,//thermal
-	//WP_V_59_GRENADE,//V-59_Concussion
-
-
 	WP_BOWCASTER,
 	WP_REPEATER,
 	WP_DEMP2,

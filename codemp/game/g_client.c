@@ -4180,7 +4180,7 @@ void ClientSpawn(gentity_t *ent) {
 
 	if ((g_gametype.integer == GT_WARZONE || g_gametype.integer == GT_INSTANCE) 
 		&& ent->s.primaryWeapon == WP_SABER
-		&& ent->client->sess.sessionTeam == TEAM_BLUE)
+		&& ent->client->sess.sessionTeam != TEAM_SPECTATOR)
 	{// Spawn a padawan for this jedi player...
 		if (NPC_NeedPadawan_Spawn())
 		{// Only if we do not already have a padawan...

@@ -6583,14 +6583,6 @@ static qboolean PM_DoChargedWeapons( qboolean vehicleRocketLock, bgEntity_t *veh
 				break;
 
 				//------------------
-			//case WP_FRAG_GRENADE:
-			//case WP_FRAG_GRENADE_OLD:
-			//case WP_SHOCK_GRENADE:
-			//case WP_PLASMA_GRENADE:
-			///*case WP_SONIC_GRENADE:*/
-			//case WP_THERMAL_GRENADE:
-			//case WP_THERMAL_GREADE_OLD:
-			//case WP_V_59_GRENADE:
 			case WP_THERMAL:
 
 				if ( pm->cmd.buttons & BUTTON_ALT_ATTACK )
@@ -7227,18 +7219,6 @@ static void PM_Weapon( void )
 	}
 
 	if (!IsSniperRifle(pm->ps->weapon) //not using disruptor
-		&& pm->ps->weapon != WP_ROCKET_LAUNCHER
-		&& pm->ps->weapon != WP_E60_ROCKET_LAUNCHER
-		&& pm->ps->weapon != WP_CW_ROCKET_LAUNCHER//not using rocket launcher
-		&& pm->ps->weapon != WP_THERMAL
-		//&& pm->ps->weapon != WP_FRAG_GRENADE
-		//&& pm->ps->weapon != WP_FRAG_GRENADE_OLD
-		//&& pm->ps->weapon != WP_SHOCK_GRENADE
-		//&& pm->ps->weapon != WP_PLASMA_GRENADE
-		///*&& pm->ps->weapon != WP_SONIC_GRENADE*/
-		//&& pm->ps->weapon != WP_THERMAL_GRENADE
-		//&& pm->ps->weapon != WP_THERMAL_GREADE_OLD
-		//&& pm->ps->weapon != WP_V_59_GRENADE//not using thermals
 		&& pm->ps->weapon != WP_ROCKET_LAUNCHER//not using rocket launcher
 		&& pm->ps->weapon != WP_THERMAL//not using thermals
 		&& !pm->ps->m_iVehicleNum )//not a vehicle or in a vehicle
@@ -7534,27 +7514,10 @@ static void PM_Weapon( void )
 	if (PM_CanSetWeaponAnims())
 	{
 		if (pm->ps->weapon == WP_THERMAL ||
-			//pm->ps->weapon == WP_FRAG_GRENADE ||
-			//pm->ps->weapon == WP_FRAG_GRENADE_OLD ||
-			//pm->ps->weapon == WP_SHOCK_GRENADE ||
-			//pm->ps->weapon == WP_PLASMA_GRENADE ||
-			///*pm->ps->weapon == WP_SONIC_GRENADE ||*/
-			//pm->ps->weapon == WP_THERMAL_GRENADE ||
-			//pm->ps->weapon == WP_THERMAL_GREADE_OLD ||
-			//pm->ps->weapon == WP_V_59_GRENADE ||
 			pm->ps->weapon == WP_TRIP_MINE ||
 			pm->ps->weapon == WP_DET_PACK)
 		{
-			if (pm->ps->weapon == WP_THERMAL 
-				//|| pm->ps->weapon == WP_FRAG_GRENADE 
-				//|| pm->ps->weapon == WP_FRAG_GRENADE_OLD
-				//|| pm->ps->weapon == WP_SHOCK_GRENADE
-				//|| pm->ps->weapon == WP_PLASMA_GRENADE
-				///*|| pm->ps->weapon == WP_SONIC_GRENADE*/
-				//|| pm->ps->weapon == WP_THERMAL_GRENADE
-				//|| pm->ps->weapon == WP_THERMAL_GREADE_OLD
-				//|| pm->ps->weapon == WP_V_59_GRENADE
-				)
+			if (pm->ps->weapon == WP_THERMAL)
 			{
 				if ((pm->ps->torsoAnim) == WeaponAttackAnim[pm->ps->weapon] &&
 					(pm->ps->weaponTime-200) <= 0)

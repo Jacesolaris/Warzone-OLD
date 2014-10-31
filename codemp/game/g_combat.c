@@ -520,16 +520,7 @@ void TossClientWeapon(gentity_t *self, vec3_t direction, float speed)
 	launched->count = bg_itemlist[BG_GetItemIndexByTag(weapon, IT_WEAPON)].quantity;
 
 
-	if (weapon != WP_THERMAL && weapon != WP_DET_PACK && weapon != WP_TRIP_MINE
-		//&& weapon != WP_FRAG_GRENADE
-		//&& weapon != WP_FRAG_GRENADE_OLD
-		//&& weapon != WP_SHOCK_GRENADE
-		//&& weapon != WP_PLASMA_GRENADE
-		///*&& weapon != WP_SONIC_GRENADE*/
-		//&& weapon != WP_THERMAL_GRENADE
-		//&& weapon != WP_THERMAL_GREADE_OLD
-		//&& weapon != WP_V_59_GRENADE
-		)
+	if (weapon != WP_THERMAL && weapon != WP_DET_PACK && weapon != WP_TRIP_MINE)
 	{
 		int i = 0;
 		int weap = -1;
