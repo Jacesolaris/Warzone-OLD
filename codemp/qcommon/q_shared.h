@@ -1387,6 +1387,7 @@ typedef enum {
 #ifdef __MMO__
 //#define	MAX_CLIENTS			256		// absolute limit
 #define	MAX_CLIENTS			128		// absolute limit - UQ1: Reducing to 128 for now...
+//#define	MAX_CLIENTS			512
 #else //!__MMO__
 #define	MAX_CLIENTS			32		// absolute limit
 #endif //__MMO__
@@ -1448,7 +1449,8 @@ Ghoul2 Insert End
 #define MAX_AMBIENT_SETS		256 //rww - ambient soundsets must be sent over in config strings.
 
 #ifdef __MMO__
-#define	MAX_CONFIGSTRINGS	3500 //this is getting pretty high. Try not to raise it anymore than it already is.
+#define	MAX_CONFIGSTRINGS	5000 //this is getting pretty high. Try not to raise it anymore than it already is.
+//#define	MAX_CONFIGSTRINGS	3500 //this is getting pretty high. Try not to raise it anymore than it already is.
 #else //!__MMO__
 #define	MAX_CONFIGSTRINGS	1700 //this is getting pretty high. Try not to raise it anymore than it already is.
 #endif //__MMO__
@@ -1461,8 +1463,9 @@ Ghoul2 Insert End
 #define	RESERVED_CONFIGSTRINGS	2	// game can't modify below this, only the system can
 
 #ifdef __MMO__
-//#define	MAX_GAMESTATE_CHARS	64000
-#define	MAX_GAMESTATE_CHARS	32000
+//#define	MAX_GAMESTATE_CHARS	256000
+#define	MAX_GAMESTATE_CHARS	64000
+//#define	MAX_GAMESTATE_CHARS	32000
 #else //!__MMO__
 #define	MAX_GAMESTATE_CHARS	16000
 #endif //__MMO__

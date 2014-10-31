@@ -357,7 +357,9 @@ static void Zone_FreeBlock(zoneHeader_t *pMemory)
 		{
 			pMemory->pNext->pPrev = pMemory->pPrev;
 		}
-		free (pMemory);
+
+		if (pMemory)
+			free (pMemory);
 
 
 		#ifdef DETAILED_ZONE_DEBUG_CODE

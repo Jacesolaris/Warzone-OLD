@@ -824,6 +824,7 @@ SV_SendClientMessages
 =======================
 */
 void SV_SendClientMessages( void ) {
+//#if 0
 	int			i;
 	client_t	*c;
 
@@ -849,5 +850,33 @@ void SV_SendClientMessages( void ) {
 		// generate and send a new message
 		SV_SendClientSnapshot( c );
 	}
+/*#else
+	// send a message to each connected client
+#pragma omp parallel for // UQ1: lets thread out this and save some time...
+	for (int i = 0; i < sv_maxclients->integer; i++) 
+	{
+		client_t	*c = &svs.clients[i];
+
+		if (!c->state) {
+			continue;		// not connected
+		}
+
+		if ( svs.time < c->nextSnapshotTime ) {
+			continue;		// not time yet
+		}
+
+		// send additional message fragments if the last message
+		// was too large to send at once
+		if ( c->netchan.unsentFragments ) 
+		{
+			c->nextSnapshotTime = svs.time + SV_RateMsec( c, c->netchan.unsentLength - c->netchan.unsentFragmentStart );
+			SV_Netchan_TransmitNextFragment( &c->netchan );
+			continue;
+		}
+
+		// generate and send a new message
+		SV_SendClientSnapshot( c );
+	}
+#endif*/
 }
 

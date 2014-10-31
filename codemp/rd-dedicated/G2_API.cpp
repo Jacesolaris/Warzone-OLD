@@ -281,8 +281,10 @@ qboolean G2API_OverrideServerWithClientData(CGhoul2Info_v& ghoul2, int modelInde
 }
 
 // must be a power of two
-#define MAX_G2_MODELS (1024)
-#define G2_MODEL_BITS (10)
+//#define MAX_G2_MODELS (1024)
+//#define G2_MODEL_BITS (10)
+#define MAX_G2_MODELS (4096)
+#define G2_MODEL_BITS (24)
 
 #define G2_INDEX_MASK (MAX_G2_MODELS-1)
 

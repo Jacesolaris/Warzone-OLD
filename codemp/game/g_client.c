@@ -2551,7 +2551,8 @@ qboolean ClientUserinfoChanged( int clientNum ) {
 	}
 
 	trap->GetConfigstring( CS_PLAYERS+clientNum, oldClientinfo, sizeof( oldClientinfo ) );
-	trap->SetConfigstring( CS_PLAYERS+clientNum, buf );
+	if (strcmp( oldClientinfo, buf )) // UQ1: Only if it actually changed...
+		trap->SetConfigstring( CS_PLAYERS+clientNum, buf );
 
 	// only going to be true for allowable server-side custom skeleton cases
 	if ( modelChanged ) {
@@ -3343,7 +3344,10 @@ extern qboolean WP_HasForcePowers( const playerState_t *ps );
 void ClientSpawn(gentity_t *ent) {
 	int					i = 0, index = 0, saveSaberNum = ENTITYNUM_NONE, wDisable = 0, savedSiegeIndex = 0, maxHealth = 100;
 	vec3_t				spawn_origin, spawn_angles;
-	gentity_t			*spawnPoint = NULL, *tent = NULL;
+	gentity_t			*spawnPoint = NULL;
+#if 0 // UQ1: Nope. Waste of bandwidth...
+	gentity_t			*tent = NULL;
+#endif //0
 	gclient_t			*client = NULL;
 	clientPersistant_t	saved;
 	clientSession_t		savedSess;
@@ -4117,8 +4121,10 @@ void ClientSpawn(gentity_t *ent) {
 			// positively link the client, even if the command times are weird
 			VectorCopy(ent->client->ps.origin, ent->r.currentOrigin);
 
+#if 0 // UQ1: Nope. Waste of bandwidth...
 			tent = G_TempEntity(ent->client->ps.origin, EV_PLAYER_TELEPORT_IN);
 			tent->s.clientNum = ent->s.clientNum;
+#endif
 
 			trap->LinkEntity ((sharedEntity_t *)ent);
 		}

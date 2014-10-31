@@ -174,7 +174,9 @@ TELEPORTERS
 */
 
 void TeleportPlayer( gentity_t *player, vec3_t origin, vec3_t angles ) {
+#if 0 // UQ1: Nope. waste of bandwidth...
 	gentity_t	*tent;
+#endif
 	qboolean	isNPC = qfalse;
 	qboolean	noAngles;
 	if (player->s.eType == ET_NPC)
@@ -186,6 +188,7 @@ void TeleportPlayer( gentity_t *player, vec3_t origin, vec3_t angles ) {
 
 	// use temp events at source and destination to prevent the effect
 	// from getting dropped by a second player event
+#if 0 // UQ1: Nope. waste of bandwidth...
 	if ( player->client->sess.sessionTeam != TEAM_SPECTATOR ) {
 		tent = G_TempEntity( player->client->ps.origin, EV_PLAYER_TELEPORT_OUT );
 		tent->s.clientNum = player->s.clientNum;
@@ -193,6 +196,7 @@ void TeleportPlayer( gentity_t *player, vec3_t origin, vec3_t angles ) {
 		tent = G_TempEntity( origin, EV_PLAYER_TELEPORT_IN );
 		tent->s.clientNum = player->s.clientNum;
 	}
+#endif
 
 	// unlink to make sure it can't possibly interfere with G_KillBox
 	trap->UnlinkEntity ((sharedEntity_t *)player);

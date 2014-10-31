@@ -1369,6 +1369,10 @@ qboolean NPC_TargetVisible( gentity_t *ent )
 	if ( NPC_ClearLOS4( ent ) == qfalse )
 		return qfalse;
 
+	// UQ1: Also check if we can actually shoot him...
+	if (NPC_CheckVisibility ( ent, CHECK_VISRANGE|CHECK_SHOOT ) < VIS_SHOOT)
+		return qfalse;
+
 	return qtrue;
 }
 

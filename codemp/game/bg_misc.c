@@ -3027,6 +3027,8 @@ qboolean BG_ValidateSkinForTeam( const char *modelName, char *skinName, int team
 	return qtrue;
 }
 
+#define __BANDWIDTH_SAVE__
+
 /*
 ========================
 BG_PlayerStateToEntityState
@@ -3049,17 +3051,101 @@ void BG_PlayerStateToEntityState( playerState_t *ps, entityState_t *s, qboolean 
 	s->number = ps->clientNum;
 
 	s->pos.trType = TR_INTERPOLATE;
-	VectorCopy( ps->origin, s->pos.trBase );
-	if ( snap ) {
-		SnapVector( s->pos.trBase );
-	}
-	// set the trDelta for flag direction
-	VectorCopy( ps->velocity, s->pos.trDelta );
 
-	s->apos.trType = TR_INTERPOLATE;
-	VectorCopy( ps->viewangles, s->apos.trBase );
-	if ( snap ) {
-		SnapVector( s->apos.trBase );
+#ifdef __BANDWIDTH_SAVE__
+#ifdef _GAME
+	if (s->eType == ET_PLAYER)
+	{
+		gentity_t *ent = &g_entities[s->number];
+		qboolean FULL_UPDATE = qfalse;
+		
+		if (ent->next_full_update <= level.time)
+		{
+			FULL_UPDATE = qtrue;
+		}
+
+		if (FULL_UPDATE || Distance(ent->prev_posTrBase, ps->origin) > 2)
+		{
+			VectorCopy( ps->origin, s->pos.trBase );
+			VectorCopy( s->pos.trBase, ent->prev_posTrBase );
+		}
+		else
+		{
+			VectorCopy( ent->prev_posTrBase, s->pos.trBase );
+		}
+
+		if ( snap ) {
+			SnapVector( s->pos.trBase );
+		}
+
+		// set the trDelta for flag direction
+		if (FULL_UPDATE || Distance(ent->prev_posTrDelta, ps->velocity) > 16)
+		{
+			VectorCopy( ps->velocity, s->pos.trDelta );
+			VectorCopy( s->pos.trDelta, ent->prev_posTrDelta );
+		}
+		else
+		{
+			VectorCopy( ent->prev_posTrDelta, s->pos.trDelta );
+		}
+
+		s->apos.trType = TR_INTERPOLATE;
+
+		if (FULL_UPDATE || Distance(ent->prev_aposTrBase, ps->viewangles) > 32)
+		{
+			VectorCopy( ps->viewangles, s->apos.trBase );
+			VectorCopy( s->apos.trBase, ent->prev_aposTrBase );
+		}
+		else
+		{
+			VectorCopy( ent->prev_aposTrBase, s->apos.trBase );
+		}
+
+		if ( snap ) {
+			SnapVector( s->apos.trBase );
+		}
+
+		if (FULL_UPDATE || ent->prev_moveDir - ps->movementDir > 24 || ent->prev_moveDir - ps->movementDir < -24 || ps->movementDir == 0)
+		{
+			s->angles2[YAW] = ps->movementDir;
+			ent->prev_moveDir = ps->movementDir;
+		}
+		else
+		{
+			s->angles2[YAW] = ent->prev_moveDir;
+		}
+
+		if (FULL_UPDATE || ent->prev_speed - ps->speed > 8 || ent->prev_speed - ps->speed < -8 || ps->speed == 0)
+		{
+			s->speed = ps->speed;
+		}
+		else
+		{
+			s->speed = ent->prev_speed;
+		}
+
+		if (FULL_UPDATE) ent->next_full_update = level.time + 2000; // Force a full update every 2 seconds...
+	}
+	else
+#endif
+#endif //__BANDWIDTH_SAVE__
+	{
+		VectorCopy( ps->origin, s->pos.trBase );
+
+		if ( snap ) {
+			SnapVector( s->pos.trBase );
+		}
+		// set the trDelta for flag direction
+		VectorCopy( ps->velocity, s->pos.trDelta );
+
+		s->apos.trType = TR_INTERPOLATE;
+		VectorCopy( ps->viewangles, s->apos.trBase );
+		if ( snap ) {
+			SnapVector( s->apos.trBase );
+		}
+
+		s->angles2[YAW] = ps->movementDir;
+		s->speed = ps->speed;
 	}
 
 	s->trickedentindex = ps->fd.forceMindtrickTargetIndex;
@@ -3071,13 +3157,10 @@ void BG_PlayerStateToEntityState( playerState_t *ps, entityState_t *s, qboolean 
 
 	s->emplacedOwner = ps->electrifyTime;
 
-	s->speed = ps->speed;
-
 	s->genericenemyindex = ps->genericEnemyIndex;
 
 	s->activeForcePass = ps->activeForcePass;
 
-	s->angles2[YAW] = ps->movementDir;
 	s->legsAnim = ps->legsAnim;
 	s->torsoAnim = ps->torsoAnim;
 
@@ -3221,13 +3304,102 @@ void BG_PlayerStateToEntityStateExtraPolate( playerState_t *ps, entityState_t *s
 
 	s->pos.trType = TR_LINEAR_STOP;
 
-	VectorCopy( ps->origin, s->pos.trBase );
-	if ( snap ) {
-		SnapVector( s->pos.trBase );
-	}
+#ifdef __BANDWIDTH_SAVE__
+#ifdef _GAME
+	if (s->eType == ET_PLAYER)
+	{
+		gentity_t *ent = &g_entities[s->number];
+		qboolean FULL_UPDATE = qfalse;
+		
+		if (ent->next_full_update <= level.time)
+		{
+			FULL_UPDATE = qtrue;
+		}
 
-	// set the trDelta for flag direction and linear prediction
-	VectorCopy( ps->velocity, s->pos.trDelta );
+		if (FULL_UPDATE || Distance(ent->prev_posTrBase, ps->origin) > 2)
+		{
+			VectorCopy( ps->origin, s->pos.trBase );
+			VectorCopy( s->pos.trBase, ent->prev_posTrBase );
+		}
+		else
+		{
+			VectorCopy( ent->prev_posTrBase, s->pos.trBase );
+		}
+
+		if ( snap ) {
+			SnapVector( s->pos.trBase );
+		}
+
+		// set the trDelta for flag direction
+		if (FULL_UPDATE || Distance(ent->prev_posTrDelta, ps->velocity) > 16)
+		{
+			VectorCopy( ps->velocity, s->pos.trDelta );
+			VectorCopy( s->pos.trDelta, ent->prev_posTrDelta );
+		}
+		else
+		{
+			VectorCopy( ent->prev_posTrDelta, s->pos.trDelta );
+		}
+
+		s->apos.trType = TR_INTERPOLATE;
+
+		if (FULL_UPDATE || Distance(ent->prev_aposTrBase, ps->viewangles) > 32)
+		{
+			VectorCopy( ps->viewangles, s->apos.trBase );
+			VectorCopy( s->apos.trBase, ent->prev_aposTrBase );
+		}
+		else
+		{
+			VectorCopy( ent->prev_aposTrBase, s->apos.trBase );
+		}
+
+		if ( snap ) {
+			SnapVector( s->apos.trBase );
+		}
+
+		if (FULL_UPDATE || ent->prev_moveDir - ps->movementDir > 24 || ent->prev_moveDir - ps->movementDir < -24 || ps->movementDir == 0)
+		{
+			s->angles2[YAW] = ps->movementDir;
+			ent->prev_moveDir = ps->movementDir;
+		}
+		else
+		{
+			s->angles2[YAW] = ent->prev_moveDir;
+		}
+
+		if (FULL_UPDATE || ent->prev_speed - ps->speed > 8 || ent->prev_speed - ps->speed < -8 || ps->speed == 0)
+		{
+			s->speed = ps->speed;
+		}
+		else
+		{
+			s->speed = ent->prev_speed;
+		}
+
+		if (FULL_UPDATE) ent->next_full_update = level.time + 2000; // Force a full update every 2 seconds...
+	}
+	else
+#endif
+#endif //__BANDWIDTH_SAVE__
+	{
+		VectorCopy( ps->origin, s->pos.trBase );
+
+		if ( snap ) {
+			SnapVector( s->pos.trBase );
+		}
+
+		// set the trDelta for flag direction and linear prediction
+		VectorCopy( ps->velocity, s->pos.trDelta );
+
+		VectorCopy( ps->viewangles, s->apos.trBase );
+
+		if ( snap ) {
+			SnapVector( s->apos.trBase );
+		}
+
+		s->speed = ps->speed;
+		s->angles2[YAW] = ps->movementDir;
+	}
 
 	// set the time for linear prediction
 	//s->pos.trTime = time;
@@ -3242,10 +3414,7 @@ void BG_PlayerStateToEntityStateExtraPolate( playerState_t *ps, entityState_t *s
 
 	s->apos.trType = TR_INTERPOLATE;
 
-	VectorCopy( ps->viewangles, s->apos.trBase );
-	if ( snap ) {
-		SnapVector( s->apos.trBase );
-	}
+	
 
 	s->trickedentindex = ps->fd.forceMindtrickTargetIndex;
 	s->trickedentindex2 = ps->fd.forceMindtrickTargetIndex2;
@@ -3256,13 +3425,10 @@ void BG_PlayerStateToEntityStateExtraPolate( playerState_t *ps, entityState_t *s
 
 	s->emplacedOwner = ps->electrifyTime;
 
-	s->speed = ps->speed;
-
 	s->genericenemyindex = ps->genericEnemyIndex;
 
 	s->activeForcePass = ps->activeForcePass;
 
-	s->angles2[YAW] = ps->movementDir;
 	s->legsAnim = ps->legsAnim;
 	s->torsoAnim = ps->torsoAnim;
 

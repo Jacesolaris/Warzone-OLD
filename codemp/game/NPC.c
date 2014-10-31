@@ -5894,62 +5894,6 @@ void NPC_CivilianCowerPoint( gentity_t *enemy, vec3_t position )
 	}
 }
 
-void NPC_GenericFrameCode ( gentity_t *self )
-{
-	if ( NPCS.client->ps.weaponstate == WEAPON_READY )
-	{
-		NPCS.client->ps.weaponstate = WEAPON_IDLE;
-	}
-
-	if ( !self->NPC->conversationPartner &&
-		!(NPCS.NPC->s.torsoAnim == TORSO_WEAPONREADY1 || NPCS.NPC->s.torsoAnim == TORSO_WEAPONREADY3) )
-	{//we look ready for action, using one of the first 2 weapon, let's rest our weapon on our shoulder
-		NPC_SetAnim(NPCS.NPC,SETANIM_TORSO,TORSO_WEAPONIDLE3,SETANIM_FLAG_NORMAL);
-	}
-
-	NPC_CheckAttackHold();
-	NPC_ApplyScriptFlags();
-
-	//cliff and wall avoidance
-	NPC_AvoidWallsAndCliffs();
-
-	// run the bot through the server like it was a real client
-	//=== Save the ucmd for the second no-think Pmove ============================
-	NPCS.ucmd.serverTime = level.time - 50;
-
-	memcpy( &NPCS.NPCInfo->last_ucmd, &NPCS.ucmd, sizeof( usercmd_t ) );
-
-	if ( !NPCS.NPCInfo->attackHoldTime )
-	{
-		NPCS.NPCInfo->last_ucmd.buttons &= ~(BUTTON_ATTACK|BUTTON_ALT_ATTACK);//so we don't fire twice in one think
-	}
-	//============================================================================
-	NPC_CheckAttackScript();
-	NPC_KeepCurrentFacing();
-
-	if ( NPC_IsCivilianHumanoid(NPCS.NPC) && !NPCS.NPC->npc_cower_runaway && !self->NPC->conversationPartner )
-	{// Set better torso anims when not holding a weapon.
-		NPC_SetAnim(NPCS.NPC, SETANIM_TORSO, BOTH_STAND9IDLE1, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD);
-		NPCS.NPC->client->ps.torsoTimer = 200;
-		//trap->Print(va("%s set torso anim.\n", NPCS.client->modelname));
-	}
-
-	if ( !NPCS.NPC->next_roff_time || NPCS.NPC->next_roff_time < level.time )
-	{//If we were following a roff, we don't do normal pmoves.
-		ClientThink( NPCS.NPC->s.number, &NPCS.ucmd );
-	}
-	else
-	{
-		NPC_ApplyRoff();
-	}
-
-	// end of thinking cleanup
-	NPCS.NPCInfo->touchedByPlayer = NULL;
-
-	NPC_CheckPlayerAim();
-	NPC_CheckAllClear();
-}
-
 qboolean NPC_NeedPadawan_Spawn ( void )
 {// UQ1: Because I don't want to end up with a map full of padawans without a jedi...
 	int i;
@@ -6313,6 +6257,62 @@ void NPC_DoPadawanStuff ( void )
 		NPC_ClearGoal();
 }
 
+void NPC_GenericFrameCode ( gentity_t *self )
+{
+	if ( NPCS.client->ps.weaponstate == WEAPON_READY )
+	{
+		NPCS.client->ps.weaponstate = WEAPON_IDLE;
+	}
+
+	if ( !self->NPC->conversationPartner &&
+		!(NPCS.NPC->s.torsoAnim == TORSO_WEAPONREADY1 || NPCS.NPC->s.torsoAnim == TORSO_WEAPONREADY3) )
+	{//we look ready for action, using one of the first 2 weapon, let's rest our weapon on our shoulder
+		NPC_SetAnim(NPCS.NPC,SETANIM_TORSO,TORSO_WEAPONIDLE3,SETANIM_FLAG_NORMAL);
+	}
+
+	NPC_CheckAttackHold();
+	NPC_ApplyScriptFlags();
+
+	//cliff and wall avoidance
+	NPC_AvoidWallsAndCliffs();
+
+	// run the bot through the server like it was a real client
+	//=== Save the ucmd for the second no-think Pmove ============================
+	NPCS.ucmd.serverTime = level.time - 50;
+
+	memcpy( &NPCS.NPCInfo->last_ucmd, &NPCS.ucmd, sizeof( usercmd_t ) );
+
+	if ( !NPCS.NPCInfo->attackHoldTime )
+	{
+		NPCS.NPCInfo->last_ucmd.buttons &= ~(BUTTON_ATTACK|BUTTON_ALT_ATTACK);//so we don't fire twice in one think
+	}
+	//============================================================================
+	NPC_CheckAttackScript();
+	NPC_KeepCurrentFacing();
+
+	if ( NPC_IsCivilianHumanoid(NPCS.NPC) && !NPCS.NPC->npc_cower_runaway && !self->NPC->conversationPartner )
+	{// Set better torso anims when not holding a weapon.
+		NPC_SetAnim(NPCS.NPC, SETANIM_TORSO, BOTH_STAND9IDLE1, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD);
+		NPCS.NPC->client->ps.torsoTimer = 200;
+		//trap->Print(va("%s set torso anim.\n", NPCS.client->modelname));
+	}
+
+	if ( !NPCS.NPC->next_roff_time || NPCS.NPC->next_roff_time < level.time )
+	{//If we were following a roff, we don't do normal pmoves.
+		ClientThink( NPCS.NPC->s.number, &NPCS.ucmd );
+	}
+	else
+	{
+		NPC_ApplyRoff();
+	}
+
+	// end of thinking cleanup
+	NPCS.NPCInfo->touchedByPlayer = NULL;
+
+	NPC_CheckPlayerAim();
+	NPC_CheckAllClear();
+}
+
 /*
 ===============
 NPC_Think
@@ -6322,6 +6322,8 @@ Main NPC AI - called once per frame
 */
 extern gentity_t *NPC_PickEnemyExt( qboolean checkAlerts );
 extern qboolean NPC_FindEnemy( qboolean checkAlerts );
+
+//#define __LOW_THINK_AI__
 
 #if	AI_TIMERS
 extern int AITime;
@@ -6467,8 +6469,12 @@ void NPC_Think ( gentity_t *self)//, int msec )
 		*/
 
 		// UQ1: Think more often!
+#ifndef __LOW_THINK_AI__
 		NPCS.NPCInfo->nextBStateThink = level.time + FRAMETIME/2;
-		//NPCS.NPCInfo->nextBStateThink = level.time;
+#else //__LOW_THINK_AI__
+		NPCS.NPCInfo->nextBStateThink = level.time + FRAMETIME;
+		//NPCS.NPCInfo->nextBStateThink = level.time + FRAMETIME*2;
+#endif //__LOW_THINK_AI__
 
 		memcpy( &NPCS.ucmd, &NPCS.NPCInfo->last_ucmd, sizeof( usercmd_t ) );
 		NPCS.ucmd.buttons = 0; // init buttons...
@@ -6707,6 +6713,7 @@ void NPC_Think ( gentity_t *self)//, int msec )
 	}
 	else
 	{
+#ifndef __LOW_THINK_AI__
 		VectorCopy( oldMoveDir, self->client->ps.moveDir );
 
 		//or use client->pers.lastCommand?
@@ -6722,6 +6729,12 @@ void NPC_Think ( gentity_t *self)//, int msec )
 		//{
 		//	NPC_ApplyRoff();
 		//}
+#else //!__LOW_THINK_AI__
+		//VectorCopy( oldMoveDir, self->client->ps.moveDir );
+
+		NPC_GenericFrameCode( self );
+		//NPC_ApplyRoff();
+#endif //__LOW_THINK_AI__
 	}
 
 	//must update icarus *every* frame because of certain animation completions in the pmove stuff that can leave a 50ms gap between ICARUS animation commands

@@ -138,7 +138,8 @@ int   		s_paintedtime; 		// sample PAIRS
 
 // MAX_SFX may be larger than MAX_SOUNDS because
 // of custom player sounds
-#define		MAX_SFX			10000	//512 * 2
+//#define		MAX_SFX			10000	//512 * 2
+#define		MAX_SFX			14000	//512 * 2
 sfx_t		s_knownSfx[MAX_SFX];
 int			s_numSfx;
 
@@ -931,12 +932,12 @@ void S_BeginRegistration( void )
 		memset( s_knownSfx, 0, sizeof( s_knownSfx ) );
 		memset(sfxHash, 0, sizeof(sfx_t *)*LOOP_HASH);
 
-#ifdef _DEBUG
+//#ifdef _DEBUG
 		sfx_t *sfx = S_FindName( "***DEFAULT***" );
 		S_DefaultSound( sfx );
-#else
-		S_RegisterSound("sound/null.wav");
-#endif
+//#else
+//		S_RegisterSound("sound/null.wav");
+//#endif
 	}
 }
 

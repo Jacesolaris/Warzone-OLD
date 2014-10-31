@@ -489,7 +489,13 @@ struct gentity_s {
 
 	int						blockToggleTime;
 
-	
+	// UQ1: These are for reducing bandwidth usage...
+	int					next_full_update;
+	vec3_t				prev_posTrBase;
+	vec3_t				prev_posTrDelta;
+	vec3_t				prev_aposTrBase;
+	int					prev_moveDir;
+	float				prev_speed;
 };
 
 #define DAMAGEREDIRECT_HEAD		1

@@ -82,7 +82,9 @@ void G2Time_ReportTimers(void)
 
 //rww - RAGDOLL_END
 
-static const int MAX_RENDERABLE_SURFACES = 2048;
+//static const int MAX_RENDERABLE_SURFACES = 2048;
+//static const int MAX_RENDERABLE_SURFACES = 4096;
+static const int MAX_RENDERABLE_SURFACES = 8196;
 static CRenderableSurface renderSurfHeap[MAX_RENDERABLE_SURFACES];
 static int currentRenderSurfIndex = 0;
 
@@ -2400,6 +2402,9 @@ void RenderSurfaces(CRenderSurface &RS) //also ended up just ripping right from 
 #endif
 
 	assert(RS.currentModel);
+
+	if (!RS.currentModel) return;
+
 	assert(RS.currentModel->data.glm && RS.currentModel->data.glm->header);
 	// back track and get the surfinfo struct for this surface
 	mdxmSurface_t			*surface = (mdxmSurface_t *)G2_FindSurface(RS.currentModel, RS.surfaceNum, RS.lod);
