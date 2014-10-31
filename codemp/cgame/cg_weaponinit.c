@@ -768,11 +768,18 @@ void CG_RegisterWeapon( int weaponNum) {
 		cgs.effects.disruptorProjectileEffect	= trap->FX_RegisterEffect( "disruptor/projectile" );
 		cgs.effects.disruptorWallImpactEffect	= trap->FX_RegisterEffect( "disruptor/wall_impact" );
 		cgs.effects.disruptorFleshImpactEffect	= trap->FX_RegisterEffect( "disruptor/flesh_impact" );
+		cgs.effects.disruptorWallImpactEffectEnhancedFX = trap->FX_RegisterEffect("disruptor/wall_impact_enhanced2");
 		cgs.effects.disruptorAltMissEffect		= trap->FX_RegisterEffect( "disruptor/alt_miss" );
 		cgs.effects.disruptorAltHitEffect		= trap->FX_RegisterEffect( "disruptor/alt_hit" );
+
+
+
+
 		trap->R_RegisterShader( "gfx/effects/redLine" );
 		trap->R_RegisterShader( "gfx/misc/whiteline2" );
 		trap->R_RegisterShader( "gfx/effects/smokeTrail" );
+
+
 		trap->S_RegisterSound("sound/weapons/disruptor/zoomstart.wav");
 		trap->S_RegisterSound("sound/weapons/disruptor/zoomend.wav");
 
@@ -911,7 +918,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->firingSound			= NULL_SOUND;
 		weaponInfo->chargeSound			= NULL_SOUND;
 		weaponInfo->muzzleEffect		= trap->FX_RegisterEffect( "rocket/muzzle_flash" ); 
-		weaponInfo->missileModel		= trap->R_RegisterModel( "models/weapons2/merr_sonn/projectile.md3" );
+		weaponInfo->missileModel		= trap->R_RegisterModel("models/weapons3/cw_launcher/projectile.md3");
 		weaponInfo->missileSound		= trap->S_RegisterSound( "sound/weapons/rocket/missleloop.wav");
 		weaponInfo->missileDlight		= 125;
 		VectorSet(weaponInfo->missileDlightColor, 1.0, 1.0, 0.5);
@@ -921,14 +928,23 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altFiringSound		= NULL_SOUND;
 		weaponInfo->altChargeSound		= NULL_SOUND;
 		weaponInfo->altMuzzleEffect		= trap->FX_RegisterEffect( "rocket/altmuzzle_flash" );
-		weaponInfo->altMissileModel		= trap->R_RegisterModel( "models/weapons2/merr_sonn/projectile.md3" );
+		weaponInfo->altMissileModel = trap->R_RegisterModel("models/weapons3/cw_launcher/projectile.md3");
 		weaponInfo->altMissileSound		= trap->S_RegisterSound( "sound/weapons/rocket/missleloop.wav");
 		weaponInfo->altMissileDlight	= 125;
 		VectorSet(weaponInfo->altMissileDlightColor, 1.0, 1.0, 0.5);
 		weaponInfo->altMissileHitSound	= NULL_SOUND;
-		weaponInfo->altMissileTrailFunc = FX_RocketAltProjectileThink;
-		cgs.effects.rocketShotEffect			= trap->FX_RegisterEffect( "rocket/shot" );
-		cgs.effects.rocketExplosionEffect		= trap->FX_RegisterEffect( "rocket/explosion" );
+		weaponInfo->altMissileTrailFunc = FX_PulseRocketAltProjectileThink;
+
+		cgs.effects.rocketShotEffect = trap->FX_RegisterEffect("rocket/shot");
+		cgs.effects.pulserocketShotEffect = trap->FX_RegisterEffect("pulserocket/shot");
+		cgs.effects.rocketExplosionEffect = trap->FX_RegisterEffect("ships/mine_impact");
+		cgs.effects.rocketExplosionEffectEnhancedFX = trap->FX_RegisterEffect("ships/mine_impact_enhanced2");
+		cgs.effects.pulserocketExplosionEffect = trap->FX_RegisterEffect("pulserocket/explosion");
+		cgs.effects.pulserocketExplosionEffectEnhancedFX = trap->FX_RegisterEffect("pulserocket/explosion_enhanced2");
+
+
+		/*cgs.effects.rocketShotEffect			= trap->FX_RegisterEffect( "rocket/shot" );
+		cgs.effects.rocketExplosionEffect		= trap->FX_RegisterEffect( "rocket/explosion" );*/
 		trap->R_RegisterShaderNoMip( "gfx/2d/wedge" );
 		trap->R_RegisterShaderNoMip( "gfx/2d/lock" );
 		trap->S_RegisterSound( "sound/weapons/rocket/lock.wav" );
