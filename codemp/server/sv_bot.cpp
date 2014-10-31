@@ -652,6 +652,7 @@ void SV_BotInitCvars(void) {
 	Cvar_Get("bot_rocketjump", "1", 0);					//enable rocket jumping
 	Cvar_Get("bot_challenge", "0", 0);					//challenging bot
 	Cvar_Get("bot_minplayers", "0", 0);					//minimum players in a team or the game
+	Cvar_Get("npc_pathing", "0", 0);					//should npcs use astar pathing?
 	Cvar_Get("npc_enemies", "0", 0);					//minimum NPC enemies
 	Cvar_Get("npc_civilians", "0", 0);					//minimum NPC civilians
 	Cvar_Get("npc_vendors", "0", 0);					//minimum NPC vendors
