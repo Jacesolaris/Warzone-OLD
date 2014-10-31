@@ -151,7 +151,7 @@ void main()
 
 	//gl_FragColor = vec4(vec3(ao)+gi*5.0,1.0);
     //gl_FragColor = vec4(col-vec3(ao)+gi*5.0,1.0);
-	//gl_FragColor = vec4((col-vec3(ao)+gi*5.0)*1.15,1.0); // UQ1: *1.15 to compensate for darkening...
+	gl_FragColor = vec4((col-vec3(ao)+gi*5.0)*1.15,1.0); // UQ1: *1.15 to compensate for darkening...
 }
 
 
