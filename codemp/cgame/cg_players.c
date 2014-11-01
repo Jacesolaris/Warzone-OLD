@@ -1222,8 +1222,10 @@ void CG_LoadClientInfo( clientInfo_t *ci ) {
 	{
 		CG_LoadCISounds(ci, modelloaded);
 		//[VisualWeapons]
-		CG_LoadHolsterData(ci); //initialize our manual holster offset data.
-		//[/VisualWeapons]
+		if (ojp_holsteredweapons.integer > 0)
+		{
+			CG_LoadHolsterData(ci); //initialize our manual holster offset data.
+		}
 	}
 
 	ci->deferred = qfalse;

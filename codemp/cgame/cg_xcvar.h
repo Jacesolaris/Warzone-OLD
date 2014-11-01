@@ -192,9 +192,9 @@ XCVAR_DEF(sfx_sabers,							"1",					NULL, CVAR_ARCHIVE)
 XCVAR_DEF(cg_MovieSaberType,					"3",					NULL, CVAR_ARCHIVE)
 //[/Movie Sabers]
 //[VisualWeapons]
-XCVAR_DEF(ojp_holsteredweapons,					"3",					NULL, CVAR_ARCHIVE)
+XCVAR_DEF(ojp_holsteredweapons,					"2",					NULL, CVAR_ARCHIVE)
 XCVAR_DEF(ojp_holsterdebug,						"0",					NULL, CVAR_ARCHIVE)
-XCVAR_DEF(ojp_holsterdebug_boneindex,			"3",					NULL, CVAR_ARCHIVE)
+XCVAR_DEF(ojp_holsterdebug_boneindex,			"0",					NULL, CVAR_ARCHIVE)
 XCVAR_DEF(ojp_holsterdebug_posoffset,			"0.0 0.0 0.0",			NULL, CVAR_ARCHIVE)
 XCVAR_DEF(ojp_holsterdebug_angoffset,			"0.0 0.0 0.0",			NULL, CVAR_ARCHIVE)
 //[/VisualWeapons]
