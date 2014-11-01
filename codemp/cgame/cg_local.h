@@ -512,6 +512,8 @@ typedef struct centity_s {
 	int blastercannonBarrelRotationTime;
 	int blastercannonBarrelRotationAngle;
 
+	int				lastOnGroundTime;
+
 } centity_t;
 
 

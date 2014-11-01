@@ -10882,6 +10882,7 @@ static void PM_JetpackMove(void) {
 }
 //[/JetpackSystem]
 
+int GROUND_TIME[MAX_GENTITIES];
 
 void PmoveSingle (pmove_t *pmove) {
 	qboolean stiffenedUp = qfalse;
@@ -10890,26 +10891,6 @@ void PmoveSingle (pmove_t *pmove) {
 	int savedGravity = 0;
 
 	pm = pmove;
-
-	//
-	// UQ1: Jetpack - Auto Activation...
-	//
-	if ((pm->ps->eFlags & EF_JETPACK) 
-		&& !(pm->ps->eFlags & EF_JETPACK_ACTIVE)
-		&& pm->cmd.upmove > 0) 
-	{// Have jetpack and jumping, make sure jetpack is active...
-		pm->ps->eFlags |= EF_JETPACK_ACTIVE;
-		pm->ps->eFlags |= EF_JETPACK_FLAMING;
-		pm->ps->pm_type = PM_JETPACK;
-	}
-	else if ((pm->ps->eFlags & EF_JETPACK_ACTIVE) && pm->ps->groundEntityNum == ENTITYNUM_WORLD ) 
-	{// On the ground. Make sure jetpack is deactivated...
-		pm->ps->eFlags &= ~EF_JETPACK_ACTIVE;
-		pm->ps->pm_type = PM_NORMAL;
-	}
-	//
-	// UQ1: End Jetpack - Auto Activation...
-	//
 
 	if (pm->cmd.buttons & BUTTON_ATTACK && pm->cmd.buttons & BUTTON_USE_HOLDABLE)
 	{
@@ -11466,6 +11447,62 @@ void PmoveSingle (pmove_t *pmove) {
 
 	// set groundentity
 	PM_GroundTrace();
+
+	//
+	// UQ1: Jetpack - Auto Activation...
+	//
+	if (pm->ps->groundEntityNum == ENTITYNUM_WORLD)
+	{
+		GROUND_TIME[pm->ps->clientNum] = pm->cmd.serverTime;
+	}
+
+	if (pm->ps->eFlags & EF_JETPACK)
+	{
+		if (GROUND_TIME[pm->ps->clientNum] >= pm->cmd.serverTime - 500
+			&& pm->cmd.upmove > 0)
+		{// Have jetpack and jumping, but not activated yet. Make sure jetpack is not active...
+			pm->ps->eFlags &= ~EF_JETPACK_ACTIVE;
+			pm->ps->eFlags &= ~EF_JETPACK_FLAMING;
+			pm->ps->pm_type = PM_NORMAL;
+		}
+		else if ((pm->ps->eFlags & EF_JETPACK)
+			&& pm->ps->groundEntityNum != ENTITYNUM_WORLD // UQ1: Could make this damage a player/npc below if it hits a player/npc...
+			&& pm->cmd.upmove > 0) 
+		{// Have jetpack and jumping, make sure jetpack is active...
+			pm->ps->eFlags |= EF_JETPACK_ACTIVE;
+
+			if (pm->ps->velocity[2] > 8)
+			{// Also hit the afterburner...
+				pm->ps->eFlags |= EF_JETPACK_FLAMING;
+			}
+			else
+			{// Turn off afterburner...
+				pm->ps->eFlags &= ~EF_JETPACK_FLAMING;
+			}
+
+			pm->ps->pm_type = PM_JETPACK;
+		}
+		else if ((pm->ps->eFlags & EF_JETPACK)
+			&& pm->ps->groundEntityNum != ENTITYNUM_WORLD // UQ1: Could make this damage a player/npc below if it hits a player/npc...
+			&& pm->ps->velocity[2] < 0
+			&& pm->cmd.upmove == 0) 
+		{// Hover at this height... Should probably have an EF_JETPACK_HOVER and smaller flame fx...
+			pm->ps->eFlags |= EF_JETPACK_ACTIVE;
+			pm->ps->pm_type = PM_JETPACK;
+			pm->cmd.upmove = 50;
+		}
+		else if ((pm->ps->eFlags & EF_JETPACK_ACTIVE) 
+			&& pm->ps->groundEntityNum == ENTITYNUM_WORLD ) 
+		{// On the ground. Make sure jetpack is deactivated...
+			pm->ps->eFlags &= ~EF_JETPACK_ACTIVE;
+			pm->ps->eFlags &= ~EF_JETPACK_FLAMING;
+			pm->ps->pm_type = PM_NORMAL;
+		}
+	}
+	//
+	// UQ1: End Jetpack - Auto Activation...
+	//
+
 	if ( pm_flying == FLY_HOVER )
 	{//never stick to the ground
 		PM_HoverTrace();
@@ -11677,7 +11714,7 @@ void PmoveSingle (pmove_t *pmove) {
 	{//don't even run physics on a player if he's on a vehicle - he goes where the vehicle goes
 	}
 	//[JetpackSystem]
-	else if (pm->ps->pm_type == PM_JETPACK /*&& !pml.groundPlane*/)// Handle jetpack movement
+	else if (pm->ps->pm_type == PM_JETPACK && !pml.groundPlane)// Handle jetpack movement
 	{
 		PM_JetpackMove();
 	}

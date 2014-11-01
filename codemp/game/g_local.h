@@ -489,6 +489,8 @@ struct gentity_s {
 
 	int						blockToggleTime;
 
+	int					lastOnGroundTime;
+
 	// UQ1: These are for reducing bandwidth usage...
 	int					next_full_update;
 	vec3_t				prev_posTrBase;
