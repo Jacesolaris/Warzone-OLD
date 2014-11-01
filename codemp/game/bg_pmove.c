@@ -58,7 +58,11 @@ float	pm_friction = 6.0f;
 float	pm_waterfriction = 1.0f;
 float	pm_flightfriction = 3.0f;
 float	pm_spectatorfriction = 5.0f;
-
+//[JetpackSystem]
+float	pm_jetpackspeed = 5.0f;
+float	pm_jetpackaccelerate = 0.3f;
+float	pm_jetpackfriction = 0.4f;
+//[/JetpackSystem]
 int		c_pmove = 0;
 
 float forceSpeedLevels[4] =
@@ -1328,12 +1332,16 @@ static void PM_Friction( void ) {
 	{
 		drop = 0;
 	}
-
-	if ( pm->ps->pm_type == PM_SPECTATOR || pm->ps->pm_type == PM_FLOAT )
+	//[JetpackSystem]
+	if ( pm->ps->pm_type == PM_SPECTATOR || pm->ps->pm_type == PM_FLOAT || pm->ps->pm_type == PM_JETPACK )
 	{
 		if (pm->ps->pm_type == PM_FLOAT)
 		{ //almost no friction while floating
 			drop += speed*0.1*pml.frametime;
+		}
+		else if (pm->ps->pm_type == PM_JETPACK)
+		{ //not much friction while jetpacking
+			drop += speed*pm_jetpackfriction*pml.frametime;
 		}
 		else
 		{
@@ -1348,9 +1356,11 @@ static void PM_Friction( void ) {
 	}
 	newspeed /= speed;
 
-	VectorScale( vel, newspeed, vel );
+	vel[0] = vel[0] * newspeed;
+	vel[1] = vel[1] * newspeed;
+	vel[2] = vel[2] * newspeed;
 }
-
+//[/JetpackSystem]
 
 /*
 ==============
@@ -2036,11 +2046,85 @@ static qboolean PM_CheckJump( void )
 		return qfalse;
 	}
 
-	if (pm->ps->pm_type == PM_JETPACK)
+	//[JetpackSystem]
+	if (pm->ps->eFlags & EF_JETPACK_ACTIVE)
 	{ //there's no actual jumping while we jetpack
+		if ((!BG_InSpecialJump(pm->ps->legsAnim)//not in a special jump anim
+			|| BG_InReboundJump(pm->ps->legsAnim)//we're already in a rebound
+			|| BG_InBackFlip(pm->ps->legsAnim))//a backflip (needed so you can jump off a wall behind you)
+			&& pm->ps->velocity[2] > -1200 //not falling down very fast
+			&& !(pm->ps->pm_flags&PMF_JUMP_HELD)//have to have released jump since last press
+			&& (pm->cmd.forwardmove || pm->cmd.rightmove)//pushing in a direction
+			&& pm->ps->fd.forcePowerLevel[FP_LEVITATION] > FORCE_LEVEL_2//level 3 jump or better
+			&& BG_CanUseFPNow(pm->gametype, pm->ps, pm->cmd.serverTime, FP_LEVITATION)
+			&& (pm->ps->origin[2] - pm->ps->fd.forceJumpZStart) <
+			(forceJumpHeightMax[FORCE_LEVEL_3] - (BG_ForceWallJumpStrength() / 2.0f)))
+		{//see if we're pushing at a wall and jump off it if so
+			vec3_t checkDir, traceto, mins, maxs, fwdAngles;
+			trace_t	trace;
+			vec3_t	idealNormal;
+			int		anim = -1;
+
+			VectorSet(mins, pm->mins[0], pm->mins[1], 0.0f);
+			VectorSet(maxs, pm->maxs[0], pm->maxs[1], 24.0f);
+			VectorSet(fwdAngles, 0, pm->ps->viewangles[YAW], 0.0f);
+
+			if (pm->cmd.rightmove)
+			{
+				if (pm->cmd.rightmove > 0)
+				{
+					anim = BOTH_FORCEWALLREBOUND_RIGHT;
+					AngleVectors(fwdAngles, NULL, checkDir, NULL);
+				}
+				else if (pm->cmd.rightmove < 0)
+				{
+					anim = BOTH_FORCEWALLREBOUND_LEFT;
+					AngleVectors(fwdAngles, NULL, checkDir, NULL);
+					VectorScale(checkDir, -1, checkDir);
+				}
+			}
+			else if (pm->cmd.forwardmove > 0)
+			{
+				anim = BOTH_FORCEWALLREBOUND_FORWARD;
+				AngleVectors(fwdAngles, checkDir, NULL, NULL);
+			}
+			else if (pm->cmd.forwardmove < 0)
+			{
+				anim = BOTH_FORCEWALLREBOUND_BACK;
+				AngleVectors(fwdAngles, checkDir, NULL, NULL);
+				VectorScale(checkDir, -1, checkDir);
+			}
+			if (anim != -1)
+			{//trace in the dir we're pushing in and see if there's a vertical wall there
+				bgEntity_t *traceEnt;
+
+				VectorMA(pm->ps->origin, 8, checkDir, traceto);
+				pm->trace(&trace, pm->ps->origin, mins, maxs, traceto, pm->ps->clientNum, CONTENTS_SOLID);//FIXME: clip brushes too?
+				VectorSubtract(pm->ps->origin, traceto, idealNormal);
+				VectorNormalize(idealNormal);
+				traceEnt = PM_BGEntForNum(trace.entityNum);
+				if (trace.fraction < 1.0f
+					&&fabs(trace.plane.normal[2]) <= 0.2f
+					&& ((trace.entityNum<ENTITYNUM_WORLD&&traceEnt&&traceEnt->s.solid != SOLID_BMODEL) || DotProduct(trace.plane.normal, idealNormal)>0.7))
+				{//there is a wall there
+					float dot = DotProduct(pm->ps->velocity, trace.plane.normal);
+					if (dot < 1.0f)
+					{
+						PM_GrabWallForJump(anim);
+					}
+				}
+			}
+			
+		}
+
 		return qfalse;
 	}
 
+	if (pm->ps->pm_type == PM_JETPACK)
+	{
+		return qfalse;
+	}
+	//[/JetpackSystem]
 	//Don't allow jump until all buttons are up
 	if ( pm->ps->pm_flags & PMF_RESPAWNED ) {
 		return qfalse;
@@ -4042,75 +4126,82 @@ static void PM_CrashLand( void ) {
 	if ( pm->ps->pm_flags & PMF_DUCKED ) {
 		delta *= 2;
 	}
-
-	if (pm->ps->legsAnim == BOTH_A7_KICK_F_AIR ||
-		pm->ps->legsAnim == BOTH_A7_KICK_B_AIR ||
-		pm->ps->legsAnim == BOTH_A7_KICK_R_AIR ||
-		pm->ps->legsAnim == BOTH_A7_KICK_L_AIR)
+	//[JetpackSystem]
+	if (pm->ps->pm_type != PM_JETPACK)
 	{
-		int landAnim = -1;
-		switch ( pm->ps->legsAnim )
+		if (pm->ps->legsAnim == BOTH_A7_KICK_F_AIR ||
+			pm->ps->legsAnim == BOTH_A7_KICK_B_AIR ||
+			pm->ps->legsAnim == BOTH_A7_KICK_R_AIR ||
+			pm->ps->legsAnim == BOTH_A7_KICK_L_AIR ||
+			(pm->ps->legsAnim == BOTH_JUMPKICK1 && pm->ps->legsTimer < 500))
 		{
-		case BOTH_A7_KICK_F_AIR:
-			landAnim = BOTH_FORCELAND1;
-			break;
-		case BOTH_A7_KICK_B_AIR:
-			landAnim = BOTH_FORCELANDBACK1;
-			break;
-		case BOTH_A7_KICK_R_AIR:
-			landAnim = BOTH_FORCELANDRIGHT1;
-			break;
-		case BOTH_A7_KICK_L_AIR:
-			landAnim = BOTH_FORCELANDLEFT1;
-			break;
-		}
-		if ( landAnim != -1 )
-		{
-			if ( pm->ps->torsoAnim == pm->ps->legsAnim )
+			int landAnim = -1;
+			switch (pm->ps->legsAnim)
 			{
-				PM_SetAnim(SETANIM_BOTH, landAnim, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD);
+			case BOTH_A7_KICK_F_AIR:
+			case BOTH_JUMPKICK1:
+				landAnim = BOTH_FORCELAND1;
+				break;
+			case BOTH_A7_KICK_B_AIR:
+				landAnim = BOTH_FORCELANDBACK1;
+				break;
+			case BOTH_A7_KICK_R_AIR:
+				landAnim = BOTH_FORCELANDRIGHT1;
+				break;
+			case BOTH_A7_KICK_L_AIR:
+				landAnim = BOTH_FORCELANDLEFT1;
+				break;
 			}
-			else
+			if (landAnim != -1)
 			{
-				PM_SetAnim(SETANIM_LEGS, landAnim, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD);
+				if (pm->ps->torsoAnim == pm->ps->legsAnim)
+				{
+					PM_SetAnim(SETANIM_BOTH, landAnim, SETANIM_FLAG_OVERRIDE | SETANIM_FLAG_HOLD);
+				}
+				else
+				{
+					PM_SetAnim(SETANIM_LEGS, landAnim, SETANIM_FLAG_OVERRIDE | SETANIM_FLAG_HOLD);
+				}
 			}
 		}
-	}
-	else if (pm->ps->legsAnim == BOTH_FORCEJUMPLEFT1 ||
+		else if (pm->ps->legsAnim == BOTH_FORCEJUMPLEFT1 ||
 			pm->ps->legsAnim == BOTH_FORCEJUMPRIGHT1 ||
 			pm->ps->legsAnim == BOTH_FORCEJUMPBACK1 ||
 			pm->ps->legsAnim == BOTH_FORCEJUMP1)
-	{
-		int fjAnim;
-		switch (pm->ps->legsAnim)
 		{
-		case BOTH_FORCEJUMPLEFT1:
-			fjAnim = BOTH_LANDLEFT1;
-			break;
-		case BOTH_FORCEJUMPRIGHT1:
-			fjAnim = BOTH_LANDRIGHT1;
-			break;
-		case BOTH_FORCEJUMPBACK1:
-			fjAnim = BOTH_LANDBACK1;
-			break;
-		default:
-			fjAnim = BOTH_LAND1;
-			break;
+			int fjAnim;
+			switch (pm->ps->legsAnim)
+			{
+			case BOTH_FORCEJUMPLEFT1:
+				fjAnim = BOTH_LANDLEFT1;
+				break;
+			case BOTH_FORCEJUMPRIGHT1:
+				fjAnim = BOTH_LANDRIGHT1;
+				break;
+			case BOTH_FORCEJUMPBACK1:
+				fjAnim = BOTH_LANDBACK1;
+				break;
+			default:
+				fjAnim = BOTH_LAND1;
+				break;
+			}
+			PM_SetAnim(SETANIM_BOTH, fjAnim, SETANIM_FLAG_OVERRIDE | SETANIM_FLAG_HOLD);
 		}
-		PM_SetAnim(SETANIM_BOTH, fjAnim, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD);
-	}
-	// decide which landing animation to use
-	else if (!BG_InRoll(pm->ps, pm->ps->legsAnim) && pm->ps->inAirAnim && !pm->ps->m_iVehicleNum)
-	{ //only play a land animation if we transitioned into an in-air animation while off the ground
-		if (!BG_SaberInSpecial(pm->ps->saberMove))
-		{
-			if ( pm->ps->pm_flags & PMF_BACKWARDS_JUMP ) {
-				PM_ForceLegsAnim( BOTH_LANDBACK1 );
-			} else {
-				PM_ForceLegsAnim( BOTH_LAND1 );
+		// decide which landing animation to use
+		else if (!BG_InRoll(pm->ps, pm->ps->legsAnim) && pm->ps->inAirAnim && !pm->ps->m_iVehicleNum)
+		{ //only play a land animation if we transitioned into an in-air animation while off the ground
+			if (!BG_SaberInSpecial(pm->ps->saberMove))
+			{
+				if (pm->ps->pm_flags & PMF_BACKWARDS_JUMP) {
+					PM_ForceLegsAnim(BOTH_LANDBACK1);
+				}
+				else {
+					PM_ForceLegsAnim(BOTH_LAND1);
+				}
 			}
 		}
 	}
+	//[/JetpackSystem]
 
 	if (pm->ps->weapon != WP_SABER && pm->ps->weapon != WP_MELEE && !PM_IsRocketTrooper())
 	{ //saber handles its own anims
@@ -4180,7 +4271,7 @@ static void PM_CrashLand( void ) {
 		return;
 	}
 
-	if ( pm->ps->pm_flags & PMF_DUCKED )
+	if ( pm->ps->pm_flags & PMF_DUCKED && pm->ps->pm_type != PM_JETPACK )
 	{
 		if( delta >= 2 && !PM_InOnGroundAnim( pm->ps->legsAnim ) && !PM_InKnockDown( pm->ps ) && !BG_InRoll(pm->ps, pm->ps->legsAnim) &&
 			pm->ps->forceHandExtend == HANDEXTEND_NONE )
@@ -4349,14 +4440,15 @@ static void PM_GroundTraceMissed( void ) {
 		//a proper anim even when on the ground.
 		PM_SetAnim(parts, BOTH_CHOKE3, SETANIM_FLAG_OVERRIDE);
 	}
-	else if ( pm->ps->pm_type == PM_JETPACK )
+	/*else if ( pm->ps->pm_type == PM_JETPACK )
 	{//jetpacking
-		//rww - also don't use SETANIM_FLAG_HOLD, it will cause the legs to float around a bit before going into
-		//a proper anim even when on the ground.
-		//PM_SetAnim(SETANIM_LEGS,BOTH_FORCEJUMP1,SETANIM_FLAG_OVERRIDE);
-	}
+	//rww - also don't use SETANIM_FLAG_HOLD, it will cause the legs to float around a bit before going into
+	//a proper anim even when on the ground.
+	//PM_SetAnim(SETANIM_LEGS,BOTH_FORCEJUMP1,SETANIM_FLAG_OVERRIDE);
+	}*/
 	//If the anim is choke3, act like we just went into the air because we aren't in a float
-	else if ( pm->ps->groundEntityNum != ENTITYNUM_NONE || (pm->ps->legsAnim) == BOTH_CHOKE3 )
+	else if ((pm->ps->groundEntityNum != ENTITYNUM_NONE && !BG_InRoll(pm->ps, pm->ps->torsoAnim) && BG_InRoll(pm->ps, pm->ps->legsAnim))
+		|| (pm->ps->legsAnim) == BOTH_CHOKE3)
 	{
 		// we just transitioned into freefall
 		if ( pm->debugLevel ) {
@@ -4522,17 +4614,16 @@ static void PM_GroundTrace( void ) {
 		return;
 	}
 
-	pml.groundPlane = qtrue;
-	pml.walking = qtrue;
-
-	//[JetpackSys]
-#ifdef QAGAME
-	if (pm->ps->pm_type == PM_JETPACK && g_entities[pm->ps->clientNum].client || (pm->cmd.buttons & BUTTON_USE))
-	{//turn off jetpack if we touch the ground.
-		Jetpack_Off(&g_entities[pm->ps->clientNum]);
+	if (pm->ps->pm_type == PM_JETPACK)
+	{
+		pml.groundPlane = qfalse;
+		pml.walking = qfalse;
 	}
-#endif
-	//[/JetpackSys]
+	else
+	{
+		pml.groundPlane = qtrue;
+		pml.walking = qtrue;
+	}
 
 	// hitting solid ground will end a waterjump
 	if (pm->ps->pm_flags & PMF_TIME_WATERJUMP)
@@ -4581,17 +4672,20 @@ static void PM_GroundTrace( void ) {
 #endif
 
 		// don't do landing time if we were just going down a slope
-		if ( pml.previous_velocity[2] < -200 ) {
+		if (pml.previous_velocity[2] < -200 && pm->ps->pm_type != PM_JETPACK) {
 			// don't allow another jump for a little while
 			pm->ps->pm_flags |= PMF_TIME_LAND;
 			pm->ps->pm_time = 250;
 		}
 	}
 
-	pm->ps->groundEntityNum = trace.entityNum;
-	pm->ps->lastOnGround = pm->cmd.serverTime;
+	if (pm->ps->pm_type != PM_JETPACK)
+	{
+		pm->ps->groundEntityNum = trace.entityNum;
+		pm->ps->lastOnGround = pm->cmd.serverTime;
 
-	PM_AddTouchEnt( trace.entityNum );
+		PM_AddTouchEnt(trace.entityNum);
+	}
 }
 
 
@@ -10707,6 +10801,88 @@ void PM_MoveForKata(usercmd_t *ucmd)
 	}
 }
 
+//[JetpackSystem]
+/*
+===================
+PM_JetpackMove
+===================
+*/
+static void PM_JetpackMove(void) {
+	int		i;
+	vec3_t	wishvel;
+	float	wishspeed;
+	vec3_t	wishdir;
+	float	scale;
+	int		anim = BOTH_FORCEINAIR1;
+
+	pm->ps->viewheight = DEFAULT_VIEWHEIGHT;// Never crouch etc.
+
+	// normal slowdown
+	PM_Friction();
+
+	scale = PM_CmdScale(&pm->cmd);
+
+	PM_SetMovementDir();
+
+	if (!scale && !pm->cmd.upmove) {
+		wishvel[0] = 0;
+		wishvel[1] = 0;
+		wishvel[2] = pm->ps->speed * (pm->cmd.upmove / 127.0f);
+
+		pm->ps->eFlags &= ~EF_JETPACK_FLAMING;
+	}
+	else if (!scale) {
+		wishvel[0] = 0;
+		wishvel[1] = 0;
+		wishvel[2] = pm->ps->speed * (pm->cmd.upmove / 127.0f);
+
+		pm->ps->eFlags |= EF_JETPACK_FLAMING;
+	}
+	else {
+		for (i = 0; i < 3; i++) {
+			wishvel[i] = scale * pml.forward[i] * pm->cmd.forwardmove + scale * pml.right[i] * pm->cmd.rightmove;
+		}
+
+		wishvel[2] += scale * pm->cmd.upmove;
+		pm->ps->eFlags |= EF_JETPACK_FLAMING;
+	}
+
+	if (pm->cmd.rightmove)
+	{
+		if (pm->cmd.rightmove > 0)
+		{
+			anim = JET_RIGHT;
+		}
+		else if (pm->cmd.rightmove < 0)
+		{
+			anim = JET_LEFT;
+		}
+	}
+	else if (pm->cmd.forwardmove > 0)
+	{
+		anim = JET_FORWARD;
+	}
+	else if (pm->cmd.forwardmove < 0)
+	{
+		anim = JET_BACK;
+	}
+
+	PM_SetAnim(SETANIM_LEGS, anim, SETANIM_FLAG_HOLD);
+
+	VectorCopy(wishvel, wishdir);
+	wishspeed = VectorNormalize(wishdir);
+
+	PM_Accelerate(wishdir, wishspeed * pm_jetpackspeed, pm_jetpackaccelerate);
+	PM_SlideMove(qfalse);
+
+	if (pml.previous_origin[2] < pm->ps->origin[2])
+	{
+		pml.previous_origin[2] = pm->ps->origin[2];
+	}
+}
+//[/JetpackSystem]
+
+
 void PmoveSingle (pmove_t *pmove) {
 	qboolean stiffenedUp = qfalse;
 	float gDist = 0;
@@ -11253,145 +11429,12 @@ void PmoveSingle (pmove_t *pmove) {
 	// set mins, maxs, and viewheight
 	PM_CheckDuck ();
 
-	if (pm->ps->pm_type == PM_JETPACK)
 	{
-		gDist = PM_GroundDistance();
-		savedGravity = pm->ps->gravity;
-
-		//[JetpackSys]
-		//no gravity while boosting
-		if (pm->cmd.rightmove || pm->cmd.forwardmove || pm->cmd.upmove)
-		{
-			pm->ps->gravity = 0.0f;
-		}
-
-		/*
-		if (gDist < JETPACK_HOVER_HEIGHT+64)
-		{
-		pm->ps->gravity *= 0.1f;
-		}
-		else
-		{
-		pm->ps->gravity *= 0.25f;
-		}
-		*/
-		//[/JetpackSys]
-	}
-	else if (gPMDoSlowFall)
-	{
-		savedGravity = pm->ps->gravity;
-		pm->ps->gravity *= 0.5;
-	}
-
-	//if we're in jetpack mode then see if we should be jetting around
-	/*JET_BACK,
-		JET_FORWARD,
-		JET_LEFT,
-		JET_RIGHT,*/
-	if (pm->ps->pm_type == PM_JETPACK)
-	{
-		if (pm->cmd.rightmove > 0)
-		{
-			//[JetpackSys]
-			PM_ContinueLegsAnim(JET_RIGHT);
-			//PM_ContinueLegsAnim(BOTH_INAIRRIGHT1);
-			//[/JetpackSys]
-		}
-		else if (pm->cmd.rightmove < 0)
-		{
-			//[JetpackSys]
-			PM_ContinueLegsAnim(JET_LEFT);
-			//PM_ContinueLegsAnim(BOTH_INAIRLEFT1);
-			//[/JetpackSys]
-		}
-		else if (pm->cmd.forwardmove > 0)
-		{
-			//[JetpackSys]
-			PM_ContinueLegsAnim(JET_FORWARD);
-			//PM_ContinueLegsAnim(BOTH_INAIR1);
-			//[/JetpackSys]
-		}
-		else if (pm->cmd.forwardmove < 0)
-		{
-			//[JetpackSys]
-			PM_ContinueLegsAnim(JET_BACK);
-			//PM_ContinueLegsAnim(BOTH_INAIRBACK1);
-			//[/JetpackSys]
-		}
-		else
-		{
-			//[JetpackSys]
-			PM_ContinueLegsAnim(JET_FORWARD);
-			//PM_ContinueLegsAnim(BOTH_INAIR1);
-			//[/JetpackSys]
-		}
-
 		if (pm->ps->weapon == WP_SABER &&
 			BG_SpinningSaberAnim( pm->ps->legsAnim ))
 		{ //make him stir around since he shouldn't have any real control when spinning
 			pm->ps->velocity[0] += Q_irand(-100, 100);
 			pm->ps->velocity[1] += Q_irand(-100, 100);
-		}
-
-		//[JetpackSys]
-		if (pm->cmd.upmove || pm->cmd.rightmove || pm->cmd.forwardmove /*&& pm->ps->velocity[2] < 256*/)
-			//if (pm->cmd.upmove > 0 && pm->ps->velocity[2] < 256)
-			//[/JetpackSys]
-		{ //cap upward velocity off at 256. Seems reasonable.
-			//[JetpackSys]
-			//float addIn = 12.0f;
-
-			/*
-			//Add based on our distance to the ground if we're already travelling upward
-			if (pm->ps->velocity[2] > 0)
-			{
-			while (gDist > 64)
-			{ //subtract 1 for every 64 units off the ground we get
-			addIn--;
-
-			gDist -= 64;
-
-			if (addIn <= 0)
-			{ //break out if we're not even going to add anything
-			break;
-			}
-			}
-			}
-			*/
-			/*
-			if (pm->ps->velocity[2] > 0)
-			{
-			addIn = 12.0f - (gDist / 64.0f);
-			}
-
-			if (addIn > 0.0f)
-			{
-			pm->ps->velocity[2] += addIn;
-			}
-			*/
-			//[/JetpackSys]
-
-			pm->ps->eFlags |= EF_JETPACK_FLAMING; //going up
-		}
-		else
-		{
-			pm->ps->eFlags &= ~EF_JETPACK_FLAMING; //idling
-
-			//[JetpackSys]
-			/*
-			if (pm->ps->velocity[2] < 256)
-			{
-			if (pm->ps->velocity[2] < -100)
-			{
-			pm->ps->velocity[2] = -100;
-			}
-			if (gDist < JETPACK_HOVER_HEIGHT)
-			{ //make sure we're always hovering off the ground somewhat while jetpack is active
-			pm->ps->velocity[2] += 2;
-			}
-			}
-			*/
-			//[/JetpackSys]
 		}
 	}
 
@@ -11609,10 +11652,16 @@ void PmoveSingle (pmove_t *pmove) {
 		noAnimate = qtrue;
 	}
 
-	if (pm_entSelf->s.NPC_class!=CLASS_VEHICLE
+	if (pm_entSelf->s.NPC_class != CLASS_VEHICLE
 		&&pm->ps->m_iVehicleNum)
 	{//don't even run physics on a player if he's on a vehicle - he goes where the vehicle goes
 	}
+	//[JetpackSystem]
+	else if (pm->ps->pm_type == PM_JETPACK && !pml.groundPlane)// Handle jetpack movement
+	{
+		PM_JetpackMove();
+	}
+	//[/JetpackSystem]
 	else
 	{ //don't even run physics on a player if he's on a vehicle - he goes where the vehicle goes
 		if (pm->ps->pm_type == PM_FLOAT
@@ -11714,10 +11763,10 @@ void PmoveSingle (pmove_t *pmove) {
 	if ( !pm->pmove_float )
 		trap->SnapVector( pm->ps->velocity );
 
- 	if (pm->ps->pm_type == PM_JETPACK || gPMDoSlowFall )
+ 	/*if (pm->ps->pm_type == PM_JETPACK || gPMDoSlowFall )
 	{
 		pm->ps->gravity = savedGravity;
-	}
+	}*/
 
 	if (//pm->ps->m_iVehicleNum &&
 		pm->ps->clientNum >= MAX_CLIENTS &&
