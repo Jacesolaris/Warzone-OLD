@@ -2032,7 +2032,7 @@ void ClientThink_real( gentity_t *ent ) {
 
 	//check if we need to toggle the block powerup on/off..
 	G_CheckToggleBlock(ent, ucmd); // moved up here to make sure it always gets called... (eg: no return; 's before it gets to the check)
-
+	
 	// This code was moved here from clientThink to fix a problem with g_synchronousClients
 	// being set to 1 when in vehicles.
 	if ( ent->s.number < MAX_CLIENTS && ent->client->ps.m_iVehicleNum )

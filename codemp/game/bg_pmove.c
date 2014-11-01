@@ -10891,6 +10891,26 @@ void PmoveSingle (pmove_t *pmove) {
 
 	pm = pmove;
 
+	//
+	// UQ1: Jetpack - Auto Activation...
+	//
+	if ((pm->ps->eFlags & EF_JETPACK) 
+		&& !(pm->ps->eFlags & EF_JETPACK_ACTIVE)
+		&& pm->cmd.upmove > 0) 
+	{// Have jetpack and jumping, make sure jetpack is active...
+		pm->ps->eFlags |= EF_JETPACK_ACTIVE;
+		pm->ps->eFlags |= EF_JETPACK_FLAMING;
+		pm->ps->pm_type = PM_JETPACK;
+	}
+	else if ((pm->ps->eFlags & EF_JETPACK_ACTIVE) && pm->ps->groundEntityNum == ENTITYNUM_WORLD ) 
+	{// On the ground. Make sure jetpack is deactivated...
+		pm->ps->eFlags &= ~EF_JETPACK_ACTIVE;
+		pm->ps->pm_type = PM_NORMAL;
+	}
+	//
+	// UQ1: End Jetpack - Auto Activation...
+	//
+
 	if (pm->cmd.buttons & BUTTON_ATTACK && pm->cmd.buttons & BUTTON_USE_HOLDABLE)
 	{
 		pm->cmd.buttons &= ~BUTTON_ATTACK;
@@ -11657,7 +11677,7 @@ void PmoveSingle (pmove_t *pmove) {
 	{//don't even run physics on a player if he's on a vehicle - he goes where the vehicle goes
 	}
 	//[JetpackSystem]
-	else if (pm->ps->pm_type == PM_JETPACK && !pml.groundPlane)// Handle jetpack movement
+	else if (pm->ps->pm_type == PM_JETPACK /*&& !pml.groundPlane*/)// Handle jetpack movement
 	{
 		PM_JetpackMove();
 	}
