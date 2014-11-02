@@ -378,6 +378,9 @@ extern wpobject_t *gWPArray[MAX_WPARRAY_SIZE];
 extern int GROUND_TIME[MAX_GENTITIES];
 
 extern int DOM_GetNearestWP(vec3_t org, int badwp);
+extern int NPC_GetNextNode(gentity_t *NPC);
+extern qboolean UQ1_UcmdMoveForDir ( gentity_t *self, usercmd_t *cmd, vec3_t dir, qboolean walk, vec3_t dest );
+extern qboolean JKG_PointNearMoverEntityLocation( vec3_t org );
 
 void NPC_DoFlyStuff ( void )
 {// UQ1's uber AI jetpack usage code...
@@ -395,19 +398,71 @@ void NPC_DoFlyStuff ( void )
 	{
 		qboolean HAVE_ENEMY = (qboolean)(self->enemy && NPC_IsAlive(self->enemy));
 
+		if (!HAVE_ENEMY 
+			&& self->wpCurrent >= 0 
+			&& self->wpCurrent < gWPNum
+			&& (JKG_PointNearMoverEntityLocation(self->r.currentOrigin) || JKG_PointNearMoverEntityLocation(gWPArray[self->wpCurrent]->origin) || gWPArray[self->wpCurrent]->origin[2] - self->r.currentOrigin[2] > 256))
+		{// We can use the jetpack for this instead of waiting...
+			while ((self->wpCurrent >= 0 && self->wpCurrent < gWPNum) && JKG_PointNearMoverEntityLocation(gWPArray[self->wpCurrent]->origin))
+			{// Find the first waypoint in our path that is not near the mover to head to...
+				self->wpLast = self->wpCurrent;
+				self->wpCurrent = self->wpNext;
+				self->wpNext = NPC_GetNextNode(self);
+				self->wpSeenTime = level.time;
+			}
+
+			if (self->wpCurrent >= 0 && self->wpCurrent < gWPNum)
+			{// And go there...
+				NPC_FacePosition( gWPArray[self->wpCurrent]->origin, qfalse );
+				VectorSubtract( gWPArray[self->wpCurrent]->origin, self->r.currentOrigin, self->movedir );
+				UQ1_UcmdMoveForDir( self, ucmd, self->movedir, qfalse, gWPArray[self->wpCurrent]->origin );
+
+				ucmd->upmove = 50.0;
+
+				self->client->ps.eFlags |= EF_JETPACK_ACTIVE;
+				self->client->ps.eFlags &= ~EF_JETPACK_HOVER;
+
+				self->s.eFlags |= EF_JETPACK_ACTIVE;
+				self->s.eFlags &= ~EF_JETPACK_HOVER;
+
+				if (self->client->ps.velocity[2] > 100)
+				{// Also hit the afterburner...
+					self->client->ps.eFlags |= EF_JETPACK_FLAMING;
+					self->s.eFlags |= EF_JETPACK_FLAMING;
+				}
+				else
+				{// Turn off afterburner...
+					self->client->ps.eFlags &= ~EF_JETPACK_FLAMING;
+					self->s.eFlags &= ~EF_JETPACK_FLAMING;
+				}
+
+				self->client->ps.pm_type = PM_JETPACK;
+
+				VectorCopy( self->movedir, self->client->ps.moveDir );
+
+				//if (Distance(gWPArray[self->wpCurrent]->origin, self->r.currentOrigin) > 64)
+				if (!OrgVisible(self->r.currentOrigin, gWPArray[self->wpCurrent]->origin, self->s.number))
+					return; // Make sure we go up until we are close...
+			}
+		}
+
 		if (GROUND_TIME[self->client->ps.clientNum] < level.time
 			&& !HAVE_ENEMY
 			&& ((self->client->ps.eFlags & EF_JETPACK_ACTIVE) || (self->client->ps.eFlags & EF_JETPACK_HOVER) || (self->client->ps.eFlags & EF_JETPACK_FLAMING)))
 		{// No enemy... Land...
-			if (!(self->wpCurrent >= 0 && self->wpCurrent < gWPNum) || !OrgVisible(self->r.currentOrigin, gWPArray[self->wpCurrent]->origin, self->s.number))
+			if (!(self->wpCurrent >= 0 && self->wpCurrent < gWPNum) /*|| !OrgVisible(self->r.currentOrigin, gWPArray[self->wpCurrent]->origin, self->s.number)*/)
 			{// No valid waypoint to go to... Find one...
 				self->wpCurrent = DOM_GetNearestWP(self->r.currentOrigin, self->wpCurrent);
 			}
 
 			if (self->wpCurrent >= 0 && self->wpCurrent < gWPNum)
 			{// Seems that we have a valid waypoint...
-				if (DistanceHorizontal(gWPArray[self->wpCurrent]->origin, self->r.currentOrigin) < 32)
+				if (DistanceHorizontal(gWPArray[self->wpCurrent]->origin, self->r.currentOrigin) < 24)
 				{// We are directly above our waypoint... Land...
+					NPC_FacePosition( gWPArray[self->wpCurrent]->origin, qfalse );
+					VectorSubtract( gWPArray[self->wpCurrent]->origin, self->r.currentOrigin, self->movedir );
+					UQ1_UcmdMoveForDir( self, ucmd, self->movedir, qfalse, gWPArray[self->wpCurrent]->origin );
+
 					ucmd->upmove = -50.0;
 
 					self->client->ps.eFlags |= EF_JETPACK_HOVER;
@@ -417,9 +472,15 @@ void NPC_DoFlyStuff ( void )
 					self->s.eFlags &= ~EF_JETPACK_ACTIVE;
 					self->s.eFlags &= ~EF_JETPACK_FLAMING;
 					self->client->ps.pm_type = PM_JETPACK;
+
+					VectorCopy( self->movedir, self->client->ps.moveDir );
 				}
-				else if (gWPArray[self->wpCurrent]->origin[2] < self->r.currentOrigin[2]+8)
+				else if (gWPArray[self->wpCurrent]->origin[2]+64 < self->r.currentOrigin[2])
 				{// Our waypoint is below us... Go down...
+					NPC_FacePosition( gWPArray[self->wpCurrent]->origin, qfalse );
+					VectorSubtract( gWPArray[self->wpCurrent]->origin, self->r.currentOrigin, self->movedir );
+					UQ1_UcmdMoveForDir( self, ucmd, self->movedir, qfalse, gWPArray[self->wpCurrent]->origin );
+
 					ucmd->upmove = -50.0;
 
 					self->client->ps.eFlags |= EF_JETPACK_HOVER;
@@ -429,9 +490,15 @@ void NPC_DoFlyStuff ( void )
 					self->s.eFlags &= ~EF_JETPACK_ACTIVE;
 					self->s.eFlags &= ~EF_JETPACK_FLAMING;
 					self->client->ps.pm_type = PM_JETPACK;
+
+					VectorCopy( self->movedir, self->client->ps.moveDir );
 				}
-				else if (gWPArray[self->wpCurrent]->origin[2] > self->r.currentOrigin[2]+8)
+				else if (gWPArray[self->wpCurrent]->origin[2]+64 > self->r.currentOrigin[2])
 				{// Our waypoint is above us... Go up...
+					NPC_FacePosition( gWPArray[self->wpCurrent]->origin, qfalse );
+					VectorSubtract( gWPArray[self->wpCurrent]->origin, self->r.currentOrigin, self->movedir );
+					UQ1_UcmdMoveForDir( self, ucmd, self->movedir, qfalse, gWPArray[self->wpCurrent]->origin );
+
 					ucmd->upmove = 50.0;
 
 					self->client->ps.eFlags |= EF_JETPACK_ACTIVE;
@@ -452,6 +519,8 @@ void NPC_DoFlyStuff ( void )
 					}
 
 					self->client->ps.pm_type = PM_JETPACK;
+
+					VectorCopy( self->movedir, self->client->ps.moveDir );
 				}
 				else
 				{// We are at the right height... We need to hover a little over it until in range...
@@ -6935,12 +7004,14 @@ qboolean Jedi_InSpecialMove( void )
 
 void BountyHunter_SelectBestWeapon( void )
 {
-	if ( NPCS.NPC->client->ps.weapon != WP_ROCKET_LAUNCHER 
+	if ( NPCS.NPC->enemy
+		&& NPCS.NPC->client->ps.weapon != WP_ROCKET_LAUNCHER 
 		&& Distance( NPCS.NPC->r.currentOrigin, NPCS.NPC->enemy->r.currentOrigin ) > 800 )
 	{
 		Boba_ChangeWeapon( WP_ROCKET_LAUNCHER );
 	}
-	else if (NPCS.NPC->client->ps.weapon != WP_EE3
+	else if (NPCS.NPC->enemy
+		&& NPCS.NPC->client->ps.weapon != WP_EE3
 		&& Distance( NPCS.NPC->r.currentOrigin, NPCS.NPC->enemy->r.currentOrigin ) > 400 )
 	{
 		Boba_ChangeWeapon(WP_EE3);
@@ -6953,12 +7024,14 @@ void BountyHunter_SelectBestWeapon( void )
 
 void Commando_SelectBestWeapon( void )
 {
-	if ( NPCS.NPC->client->ps.weapon != WP_Z6_BLASTER_CANON 
+	if ( NPCS.NPC->enemy
+		&& NPCS.NPC->client->ps.weapon != WP_Z6_BLASTER_CANON 
 		&& Distance( NPCS.NPC->r.currentOrigin, NPCS.NPC->enemy->r.currentOrigin ) > 800 )
 	{
 		Boba_ChangeWeapon( WP_Z6_BLASTER_CANON );
 	}
-	else if (NPCS.NPC->client->ps.weapon != WP_T21
+	else if (NPCS.NPC->enemy
+		&& NPCS.NPC->client->ps.weapon != WP_T21
 		&& Distance( NPCS.NPC->r.currentOrigin, NPCS.NPC->enemy->r.currentOrigin ) > 400 )
 	{
 		Boba_ChangeWeapon(WP_T21);
@@ -6971,12 +7044,14 @@ void Commando_SelectBestWeapon( void )
 
 void AdvancedGunner_SelectBestWeapon( void )
 {
-	if ( NPCS.NPC->client->ps.weapon != WP_DLT20A 
+	if ( NPCS.NPC->enemy
+		&& NPCS.NPC->client->ps.weapon != WP_DLT20A 
 		&& Distance( NPCS.NPC->r.currentOrigin, NPCS.NPC->enemy->r.currentOrigin ) > 800 )
 	{
 		Boba_ChangeWeapon( WP_DLT20A );
 	}
-	else if (NPCS.NPC->client->ps.weapon != WP_CLONERIFLE
+	else if (NPCS.NPC->enemy
+		&& NPCS.NPC->client->ps.weapon != WP_CLONERIFLE
 		&& Distance( NPCS.NPC->r.currentOrigin, NPCS.NPC->enemy->r.currentOrigin ) > 400 )
 	{
 		Boba_ChangeWeapon(WP_CLONERIFLE);
@@ -6989,7 +7064,8 @@ void AdvancedGunner_SelectBestWeapon( void )
 
 void Grenader_SelectBestWeapon( void )
 {
-	if ( NPCS.NPC->client->ps.weapon != WP_THERMAL
+	if ( NPCS.NPC->enemy
+		&& NPCS.NPC->client->ps.weapon != WP_THERMAL
 		&& Distance( NPCS.NPC->r.currentOrigin, NPCS.NPC->enemy->r.currentOrigin ) > 256 
 		&& Distance( NPCS.NPC->r.currentOrigin, NPCS.NPC->enemy->r.currentOrigin ) > 512 )
 	{// They are close (but not too close)... Switch to thermal... TODO: Maybe add a num_enemies_in_box_check???
@@ -7003,7 +7079,8 @@ void Grenader_SelectBestWeapon( void )
 
 void Jedi_SelectBestWeapon( void )
 {
-	if ( NPCS.NPC->client->ps.weapon != WP_WESTARM5 
+	if ( NPCS.NPC->enemy
+		&& NPCS.NPC->client->ps.weapon != WP_WESTARM5 
 		&& Distance( NPCS.NPC->r.currentOrigin, NPCS.NPC->enemy->r.currentOrigin ) > 768 )
 	{
 		Boba_ChangeWeapon( WP_WESTARM5 );
@@ -7026,7 +7103,8 @@ void Jedi_SelectBestWeapon( void )
 
 void BOT_SelectBestWeapon( void )
 {
-	if ( NPCS.NPC->client->ps.weapon != WP_WESTARM5 
+	if ( NPCS.NPC->enemy
+		&& NPCS.NPC->client->ps.weapon != WP_WESTARM5 
 		&& Distance( NPCS.NPC->r.currentOrigin, NPCS.NPC->enemy->r.currentOrigin ) > 512 )
 	{
 		Fast_ChangeWeapon( WP_WESTARM5 );

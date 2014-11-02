@@ -69,15 +69,22 @@ FX_CLONEPISTOL_HitWall
 
 void FX_CLONEPISTOL_HitWall(vec3_t origin, vec3_t normal, int weapon, qboolean altFire)
 {
-	fxHandle_t fx = cg_weapons[weapon].wallImpactEffectEnhancedFX;// missileWallImpactfx;
-	//fxHandle_t fx = cg_weapons[weapon].wallImpactEffectEnhancedFX;
+	fxHandle_t fx = cg_weapons[weapon].missileWallImpactfx;
+	fxHandle_t fx2 = cg_weapons[weapon].wallImpactEffectEnhancedFX;
 	if (altFire) fx = cg_weapons[weapon].altMissileWallImpactfx;
 
-	if (fx)
+	if (fx2)
+	{
+		trap->FX_PlayEffectID(CG_EnableEnhancedFX(fx, fx2), origin, normal, -1, -1, qfalse);
+	}
+	else if (fx)
+	{
 		trap->FX_PlayEffectID(fx, origin, normal, -1, -1, qfalse);
+	}
 	else
-		trap->FX_PlayEffectID(
-		CG_EnableEnhancedFX(cgs.effects.demp2WallImpactEffect, cgs.effects.demp2WallImpactEffectEnhancedFX), origin, normal, -1, -1, qfalse);
+	{
+		trap->FX_PlayEffectID(cgs.effects.demp2WallImpactEffect, origin, normal, -1, -1, qfalse);
+	}
 }
 
 /*

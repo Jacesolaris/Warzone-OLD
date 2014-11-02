@@ -6257,6 +6257,7 @@ void NPC_DoPadawanStuff ( void )
 }
 
 extern void NPC_DoFlyStuff ( void );
+extern void NPC_SelectBestWeapon( void );
 
 void NPC_CheckTypeStuff ( void )
 {
@@ -6266,6 +6267,8 @@ void NPC_CheckTypeStuff ( void )
 	}
 	else
 	{
+		NPC_SelectBestWeapon();
+
 		if (NPC_IsBountyHunter(NPCS.NPC) || NPC_IsCommando(NPCS.NPC) || NPC_IsAdvancedGunner(NPCS.NPC))
 		{
 			if (!(NPCS.NPC->client->ps.eFlags & EF_JETPACK))

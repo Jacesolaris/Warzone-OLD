@@ -771,6 +771,20 @@ extern vec3_t		MOVER_LIST[1024];
 extern vec3_t		MOVER_LIST_TOP[1024];
 extern int			MOVER_LIST_NUM;
 
+qboolean JKG_PointNearMoverEntityLocation( vec3_t org )
+{// Never spawn near a mover location...
+	int i = 0;
+
+	for (i = 0; i < MOVER_LIST_NUM; i++)
+	{
+		if (DistanceHorizontal(org, MOVER_LIST[i]) >= 128.0) continue;
+
+		return qtrue;
+	}
+
+	return qfalse;
+}
+
 qboolean JKG_SpawnpointNearMoverEntityLocation( vec3_t org )
 {// Never spawn near a mover location...
 	int i = 0;
