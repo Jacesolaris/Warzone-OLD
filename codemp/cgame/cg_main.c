@@ -3069,8 +3069,16 @@ CG_Shutdown
 Called before every level change or subsystem restart
 =================
 */
+
+#ifdef _WIN32
+extern void ShutdownTextToSpeachThread ( void );
+#endif //_WIN32
 void CG_Shutdown( void )
 {
+#ifdef _WIN32
+	ShutdownTextToSpeachThread();
+#endif //_WIN32
+
 	BG_ClearAnimsets(); //free all dynamic allocations made through the engine
 
     CG_DestroyAllGhoul2();

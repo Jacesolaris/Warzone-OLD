@@ -1,4 +1,8 @@
 #include "client.h"
+#include "snd_local.h"
+
+#ifdef __USE_BASS__
+
 #include "snd_bass.h"
 
 extern cvar_t	*s_khz;
@@ -178,3 +182,5 @@ qboolean BASS_Init ( void )
 
 	return qtrue;
 }
+
+#endif //__USE_BASS__

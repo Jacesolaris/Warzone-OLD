@@ -1426,6 +1426,20 @@ void CG_DrawWeaponSelect( void ) {
 		{
 			CG_DrawProportionalString(320, y+45+yOffset, cg_weapons[ cg.weaponSelect ].item->classname, UI_CENTER|UI_SMALLFONT, textColor);
 		}
+
+#ifdef _WIN32
+		{
+			// UQ1: Just testing...
+			char text[1024] = { 0 };
+
+			if ( !trap->SE_GetStringTextString( va("SP_INGAME_%s", Q_strupr(upperKey)), text, sizeof( text )))
+			{
+				strcpy(text, cg_weapons[ cg.weaponSelect ].item->classname);
+			}
+
+			TextToSpeach( text );
+		}
+#endif //_WIN32
 	}
 
 	trap->R_SetColor( NULL );

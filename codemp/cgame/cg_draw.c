@@ -3371,6 +3371,7 @@ static void CG_DrawPickupItem( void ) {
 	float	*fadeColor;
 
 	value = cg.itemPickup;
+
 	if ( value && cg_items[ value ].icon != -1 )
 	{
 		fadeColor = CG_FadeColor( cg.itemPickupTime, 3000 );

@@ -260,7 +260,7 @@ char *C_MP3_IsValid(void *pvData, int iDataLen, int bStereoDesired)
 
 	memset(pMP3Stream,0,sizeof(*pMP3Stream));
 
-	iFrameBytes = head_info3( pvData, iDataLen/2, &head, &iBitRate, &iRealDataStart);
+	iFrameBytes = head_info3( (unsigned char *)pvData, iDataLen/2, &head, &iBitRate, &iRealDataStart);
 	if (iFrameBytes == 0)
 	{
 		return "MP3ERR: Bad or unsupported file!";
@@ -301,10 +301,12 @@ char *C_MP3_IsValid(void *pvData, int iDataLen, int bStereoDesired)
 			return "MP3ERR: Source file is not 16bit!";	// will this ever happen? oh well...
 		}
 
+		/*
 		if (decinfo.samprate != 44100)
 		{
 			return "MP3ERR: Source file is not sampled @ 44100!";
 		}
+		*/
 
 		if (bStereoDesired && decinfo.channels != 2)
 		{

@@ -5,6 +5,10 @@
 	See the BASS.CHM file for more detailed documentation
 */
 
+#include "snd_local.h"
+
+#ifdef __USE_BASS__
+
 #pragma warning (disable:4200)
 
 #ifndef BASS_H
@@ -905,3 +909,5 @@ BOOL BASSDEF(BASS_FXReset)(HFX handle);
 #endif
 
 #endif
+
+#endif //__USE_BASS__
