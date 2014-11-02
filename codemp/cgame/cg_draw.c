@@ -3565,7 +3565,7 @@ Load_NPC_Names ( void )
 		return;
 	}
 
-	if ( (buf = (char *)dlmalloc( len + 1)) == 0 )
+	if ( (buf = (char *)malloc( len + 1)) == 0 )
 	{			//alloc memory for buffer
 		trap->FS_Close( f );
 		return;
@@ -3612,7 +3612,7 @@ Load_NPC_Names ( void )
 		t = s;
 	}
 
-	dlfree(buf);
+	free(buf);
 	NUM_HUMAN_NAMES--;
 }
 
@@ -3933,6 +3933,9 @@ void CG_DrawEnemyStatus( void )
 			case CLASS_JAWA:
 				str1 = va("%s", NPC_NAME_LIST[crosshairEnt->currentState.NPC_NAME_ID].HumanNames);
 				break;
+			case CLASS_STORMTROOPER_ADVANCED:
+				str1 = va("TA-%i", crosshairEnt->currentState.NPC_NAME_ID);	// EVIL. for a number of reasons --eez
+				break;
 			case CLASS_STORMTROOPER:
 				str1 = va("TK-%i", crosshairEnt->currentState.NPC_NAME_ID);	// EVIL. for a number of reasons --eez
 				break;
@@ -4211,6 +4214,7 @@ void CG_DrawEnemyStatus( void )
 			tclr2[3] = 1.0f;
 			break;
 		case CLASS_STORMTROOPER:
+		case CLASS_STORMTROOPER_ADVANCED:
 		case CLASS_SWAMPTROOPER:
 		case CLASS_IMPWORKER:
 		case CLASS_IMPERIAL:
@@ -8034,6 +8038,7 @@ void CG_DrawNPCNames( void )
 				tclr2[3] = 1.0f;
 				break;
 			case CLASS_STORMTROOPER:
+			case CLASS_STORMTROOPER_ADVANCED:
 			case CLASS_SWAMPTROOPER:
 			case CLASS_IMPWORKER:
 			case CLASS_IMPERIAL:
@@ -8236,6 +8241,9 @@ void CG_DrawNPCNames( void )
 				case CLASS_UGNAUGHT:
 				case CLASS_JAWA:
 					str1 = va("%s", NPC_NAME_LIST[cent->currentState.NPC_NAME_ID].HumanNames);
+					break;
+				case CLASS_STORMTROOPER_ADVANCED:
+					str1 = va("TA-%i", cent->currentState.NPC_NAME_ID);	// EVIL. for a number of reasons --eez
 					break;
 				case CLASS_STORMTROOPER:
 					str1 = va("TK-%i", cent->currentState.NPC_NAME_ID);	// EVIL. for a number of reasons --eez

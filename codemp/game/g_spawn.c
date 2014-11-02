@@ -796,7 +796,7 @@ char *G_NewString_Safe( const char *string )
 	int i=0, len=0;
 
 	len = strlen( string )+1;
-	new_p = newb = (char *)dlmalloc( len );
+	new_p = newb = (char *)malloc( len );
 
 	if ( !new_p )
 		return NULL;

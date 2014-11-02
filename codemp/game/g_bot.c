@@ -1246,7 +1246,7 @@ void G_CheckMinimumNpcs( void ) {
 	{
 		gentity_t	*npc = NULL;
 		int			waypoint = irand(0, gWPNum-1);
-		int			random = irand(0,12);
+		int			random = irand(0,14);
 		int			tries = 0;
 
 		if (g_gametype.integer == GT_WARZONE)
@@ -1287,7 +1287,7 @@ void G_CheckMinimumNpcs( void ) {
 
 		if (NPC_SPAWN_TEAM == TEAM_RED)
 		{// Imperial NPCs...
-			if (random >= 8)
+			if (random >= 7)
 			{
 				npc->NPC_type = "stormtrooper";
 			}
@@ -1406,31 +1406,23 @@ void G_CheckMinimumNpcs( void ) {
 			{
 				npc->NPC_type = "rebel";
 			}
-			else if (random >= 7)
+			else if (random >= 6)
 			{
 				npc->NPC_type = "rebel2";
 			}
 			else if (random >= 4)
 			{
-				int rnd2 = irand(0,7);
+				npc->NPC_type = "prisoner";
+			}
+			else if (random >= 3)
+			{
+				int rnd2 = irand(0,2);
 				switch (rnd2)
 				{
 				case 0:
-					npc->NPC_type = "prisoner";
+					npc->NPC_type = "bespincop";
 					break;
 				case 1:
-					npc->NPC_type = "prisoner";
-					break;
-				case 2:
-					npc->NPC_type = "prisoner";
-					break;
-				case 3:
-					npc->NPC_type = "bespincop";
-					break;
-				case 4:
-					npc->NPC_type = "bespincop";
-					break;
-				case 5:
 					npc->NPC_type = "bespincop";
 					break;
 				default:

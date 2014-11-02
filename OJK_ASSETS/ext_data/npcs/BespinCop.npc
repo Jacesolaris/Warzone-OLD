@@ -2,12 +2,12 @@ BespinCop
 {
 	playerModel bespin_cop
 	weapon		WP_BLASTER
-	health		40
+	health		200
 	reactions	3
 	aim			1
 	move		3
 	aggression	3
-	evasion		1
+	evasion		2
 	intelligence	5
 	rank		crewman
 	playerTeam	TEAM_PLAYER
@@ -31,12 +31,12 @@ BespinCop2
 {
 	playerModel bespin_cop
 	weapon		WP_DISRUPTOR
-	health		40
+	health		200
 	reactions	3
 	aim			1
 	move		3
 	aggression	3
-	evasion		1
+	evasion		2
 	intelligence	5
 	rank		crewman
 	playerTeam	TEAM_PLAYER

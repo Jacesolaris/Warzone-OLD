@@ -477,7 +477,7 @@ void DL_MemStats( void )
 #define public_mUSABLe   dlmalloc_usable_size
 #define public_iCALLOc   dlindependent_calloc
 #define public_iCOMALLOc dlindependent_comalloc*/
-	dlmalloc_stats();
+	//dlmalloc_stats();
 }
 
 typedef struct svcmd_s {
@@ -500,7 +500,7 @@ svcmd_t svcmds[] = {
 	{ "botlist",					Svcmd_BotList_f,					qfalse },
 	{ "checkfields",				G_CheckFields,						qfalse },
 	{ "checkspawns",				G_CheckSpawns,						qfalse },
-	{ "dlmemstats",					DL_MemStats,						qfalse },
+//	{ "dlmemstats",					DL_MemStats,						qfalse },
 	{ "entitylist",					Svcmd_EntityList_f,					qfalse },
 	{ "forceteam",					Svcmd_ForceTeam_f,					qfalse },
 	{ "game_memory",				Svcmd_GameMem_f,					qfalse },

@@ -18,7 +18,7 @@ STCommander
 	playerTeam	TEAM_ENEMY
 	enemyTeam	TEAM_PLAYER
 //	race		klingon
-	class		CLASS_STORMTROOPER
+	class		CLASS_STORMTROOPER_ADVANCED
 	height		68
 	crouchheight 52
 	walkSpeed	51

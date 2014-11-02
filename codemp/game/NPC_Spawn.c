@@ -134,7 +134,7 @@ Load_NPC_Names ( void )
 		return;
 	}
 
-	if ( (buf = (char *)dlmalloc( len + 1)) == 0 )
+	if ( (buf = (char *)malloc( len + 1)) == 0 )
 	{			//alloc memory for buffer
 		trap->FS_Close( f );
 		return;
@@ -183,7 +183,7 @@ Load_NPC_Names ( void )
 
 	NUM_HUMAN_NAMES--;
 
-	dlfree(buf);
+	free(buf);
 	trap->Print( "^4*** ^3%s^4: ^5There are ^7%i^5 NPC names in the database.\n", GAME_VERSION, NUM_HUMAN_NAMES );
 }
 
@@ -233,6 +233,7 @@ PAIN_FUNC *NPC_PainFunc( gentity_t *ent )
 		{
 		// troopers get special pain
 		case CLASS_STORMTROOPER:
+		case CLASS_STORMTROOPER_ADVANCED:
 		case CLASS_SWAMPTROOPER:
 			func = NPC_ST_Pain;
 			break;
@@ -1067,6 +1068,7 @@ void NPC_Begin (gentity_t *ent)
 		}
 	}
 	else if ( ent->client->NPC_class == CLASS_STORMTROOPER
+		|| ent->client->NPC_class == CLASS_STORMTROOPER_ADVANCED
 		|| ent->client->NPC_class == CLASS_SWAMPTROOPER
 		|| ent->client->NPC_class == CLASS_IMPWORKER
 		|| !Q_stricmp( "rodian2", ent->NPC_type ) )
@@ -1234,7 +1236,7 @@ void NPC_Begin (gentity_t *ent)
 	if ( !(ent->s.eFlags & EF_FAKE_NPC_BOT) && ent->client->NPC_class != CLASS_VEHICLE )
 	{
 		//NPC_SetAnim( ent, SETANIM_BOTH, BOTH_STAND1, SETANIM_FLAG_NORMAL );
-		NPC_PickRandomIdleAnimantion();
+		NPC_PickRandomIdleAnimantion(ent);
 	}
 
 	if( spawnPoint )
@@ -1441,6 +1443,10 @@ void NPC_Begin (gentity_t *ent)
 
 		switch( ent->s.NPC_class )
 		{
+		case CLASS_STORMTROOPER_ADVANCED:
+			ent->s.NPC_NAME_ID = irand(100, 999);
+			strcpy(ent->client->pers.netname, va("TA-%i", ent->s.NPC_NAME_ID));
+			break;
 		case CLASS_STORMTROOPER:
 			ent->s.NPC_NAME_ID = irand(100, 999);
 			strcpy(ent->client->pers.netname, va("TK-%i", ent->s.NPC_NAME_ID));

@@ -317,9 +317,22 @@ typedef struct navInfo_s
 	int			flags;
 } navInfo_t;
 
+extern qboolean NPC_Jump( gentity_t *NPC, vec3_t dest );
+extern qboolean NPC_TryJump( gentity_t *NPC, vec3_t goal );
+
+extern qboolean UQ1_UcmdMoveForDir ( gentity_t *self, usercmd_t *cmd, vec3_t dir, qboolean walk, vec3_t dest );
 extern int	NAV_MoveToGoal( gentity_t *self, navInfo_t *info );
 extern void NAV_GetLastMove( navInfo_t *info );
 extern qboolean NAV_AvoidCollision( gentity_t *self, gentity_t *goal, navInfo_t *info );
+extern int DOM_GetNearWP(vec3_t org, int badwp);
+extern qboolean NPC_CombatMoveToGoal( qboolean tryStraight, qboolean retreat );
+extern qboolean Jedi_Jump( vec3_t dest, int goalEntNum );
+extern qboolean NPC_RoutingSimpleJump ( int wpLast, int wpCurrent );
+extern void G_AddVoiceEvent( gentity_t *self, int event, int speakDebounceTime );
+
+extern void NPC_SelectMoveAnimation(qboolean walk);
+extern void NPC_PickRandomIdleAnimantion(gentity_t *NPC);
+extern qboolean NPC_SelectMoveRunAwayAnimation( void );
 
 extern qboolean NPC_IsCivilian(gentity_t *NPC);
 extern qboolean NPC_IsCivilianHumanoid(gentity_t *NPC);
@@ -330,3 +343,45 @@ extern qboolean NPC_IsAdvancedGunner ( gentity_t *self );
 extern qboolean NPC_IsBountyHunter ( gentity_t *self );
 extern qboolean NPC_IsCommando ( gentity_t *self );
 extern qboolean NPC_HasGrenades ( gentity_t *self );
+
+// NPC_AI_Cower.c
+extern void NPC_CivilianCowerPoint( gentity_t *enemy, vec3_t position );
+extern qboolean NPC_FuturePathIsSafe( gentity_t *self );
+
+// NPC_AI_Jetpack.c
+extern void NPC_CheckFlying ( void );
+extern qboolean NPC_IsJetpacking ( gentity_t *self );
+
+// NPC_AI_Padawan.c
+extern qboolean NPC_PadawanMove( void );
+extern qboolean NPC_NeedPadawan_Spawn ( void );
+extern qboolean Padawan_CheckForce ( void );
+extern void NPC_DoPadawanStuff ( void );
+extern int NPC_FindPadawanGoal( gentity_t *NPC );
+extern void TeleportNPC( gentity_t *player, vec3_t origin, vec3_t angles );
+
+// NPC_AI_Path.c
+extern int NPC_GetNextNode(gentity_t *NPC);
+extern qboolean NPC_FollowRoutes( void );
+extern qboolean NPC_FollowEnemyRoute( void );
+extern qboolean NPC_ShortenJump(gentity_t *NPC, int node);
+extern void NPC_ShortenPath(gentity_t *NPC);
+extern qboolean NPC_FindNewWaypoint( void );
+extern void NPC_SetEnemyGoal( void );
+extern qboolean NPC_CopyPathFromNearbyNPC( void );
+extern int NPC_FindGoal( gentity_t *NPC );
+extern int NPC_FindTeamGoal( gentity_t *NPC );
+extern void NPC_SetNewGoalAndPath( void );
+extern void NPC_SetNewEnemyGoalAndPath( void );
+extern qboolean DOM_NPC_ClearPathToSpot( gentity_t *NPC, vec3_t dest, int impactEntNum );
+extern qboolean NPC_PointIsMoverLocation( vec3_t org );
+extern void NPC_ClearPathData ( gentity_t *NPC );
+extern qboolean NPC_RoutingJumpWaypoint ( int wpLast, int wpCurrent );
+extern qboolean NPC_RoutingIncreaseCost ( int wpLast, int wpCurrent );
+extern int CheckForFuncAbove(vec3_t org, int ignore);
+extern int CheckForFunc(vec3_t org, int ignore);
+extern int WaitingForNow(vec3_t goalpos);
+extern qboolean NPC_HaveValidEnemy( void );
+
+// NPC_AI_Patrol.c
+extern qboolean NPC_PatrolArea( void );

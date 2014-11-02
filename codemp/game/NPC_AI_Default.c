@@ -56,6 +56,7 @@ qboolean NPC_IsHumanoid ( gentity_t *self )
 	//case CLASS_SENTRY:
 	case CLASS_SHADOWTROOPER:
 	case CLASS_STORMTROOPER:
+	case CLASS_STORMTROOPER_ADVANCED:
 	case CLASS_SWAMP:
 	case CLASS_SWAMPTROOPER:
 	case CLASS_TAVION:
@@ -369,6 +370,7 @@ qboolean NPC_IsAdvancedGunner ( gentity_t *self )
 	//case CLASS_SENTRY:
 	//case CLASS_SHADOWTROOPER:
 	//case CLASS_STORMTROOPER:
+	case CLASS_STORMTROOPER_ADVANCED:
 	//case CLASS_SWAMP:
 	//case CLASS_SWAMPTROOPER:
 	//case CLASS_TAVION:
@@ -439,7 +441,8 @@ qboolean NPC_HasGrenades ( gentity_t *self )
 	//case CLASS_SEEKER:			// droid
 	//case CLASS_SENTRY:
 	//case CLASS_SHADOWTROOPER:
-	case CLASS_STORMTROOPER:
+	//case CLASS_STORMTROOPER:
+	case CLASS_STORMTROOPER_ADVANCED:
 	//case CLASS_SWAMP:
 	case CLASS_SWAMPTROOPER:
 	//case CLASS_TAVION:
@@ -521,6 +524,7 @@ void NPC_CheckEvasion(void)
 	//case CLASS_SENTRY:
 	case CLASS_SHADOWTROOPER:
 	case CLASS_STORMTROOPER:
+	case CLASS_STORMTROOPER_ADVANCED:
 	case CLASS_SWAMP:
 	case CLASS_SWAMPTROOPER:
 	case CLASS_TAVION:

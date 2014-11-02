@@ -473,7 +473,7 @@ void NPC_StormtrooperFindConversationPartner()
 #ifdef __NPC_CONVERSATIONS__
 	gentity_t	*NPC = NPCS.NPC;
 
-	if (NPC->client->NPC_class != CLASS_STORMTROOPER) return;
+	if (NPC->client->NPC_class != CLASS_STORMTROOPER && NPC->client->NPC_class != CLASS_STORMTROOPER_ADVANCED) return;
 
 	//if (VectorLength(NPC->client->ps.velocity) <= 16)
 	{// I'm not mooving... Conversaion possible...
@@ -490,7 +490,7 @@ void NPC_StormtrooperFindConversationPartner()
 			if (partner->s.eType != ET_NPC) continue;
 			if (!partner->client) continue;
 			if (!partner->NPC) continue;
-			if (partner->client->NPC_class != CLASS_STORMTROOPER) continue;
+			if (partner->client->NPC_class != CLASS_STORMTROOPER && partner->client->NPC_class != CLASS_STORMTROOPER_ADVANCED) continue;
 			if (partner->NPC->conversationPartner || partner->NPC->conversationReplyTime > level.time)
 				if (Distance(partner->r.currentOrigin, NPC->r.currentOrigin) < 2048)
 					return; // We don't want them talking too close to others having the same conversations :)
@@ -504,7 +504,7 @@ void NPC_StormtrooperFindConversationPartner()
 			if (partner == NPC) continue;
 			if (partner->s.eType != ET_NPC) continue;
 			if (!partner->client) continue;
-			if (partner->client->NPC_class != CLASS_STORMTROOPER) continue;
+			if (partner->client->NPC_class != CLASS_STORMTROOPER && partner->client->NPC_class != CLASS_STORMTROOPER_ADVANCED) continue;
 			if (VectorLength(partner->client->ps.velocity) > 16 && Distance(partner->r.currentOrigin, NPC->r.currentOrigin) > 96) continue;
 			if (!partner->NPC) continue;
 
@@ -644,7 +644,7 @@ void NPC_NPCConversation()
 //	vec3_t			origin, angles;
 	char			filename[256];
 
-	if (NPC->client->NPC_class == CLASS_STORMTROOPER)
+	if (NPC->client->NPC_class == CLASS_STORMTROOPER || NPC->client->NPC_class == CLASS_STORMTROOPER_ADVANCED)
 	{
 		NPC_StormTrooperConversation();
 		return;
@@ -704,7 +704,7 @@ void NPC_FindConversationPartner()
 
 	NPC->NPC->conversationSearchTime = level.time + 2000 + irand(0, 3000);
 
-	if (NPC->client->NPC_class == CLASS_STORMTROOPER)
+	if (NPC->client->NPC_class == CLASS_STORMTROOPER || NPC->client->NPC_class == CLASS_STORMTROOPER_ADVANCED)
 	{
 		NPC_StormtrooperFindConversationPartner();
 		return;
@@ -728,7 +728,7 @@ void NPC_FindConversationPartner()
 			if (partner->s.eType != ET_NPC) continue;
 			if (!partner->client) continue;
 			if (!partner->NPC) continue;
-			if (partner->client->NPC_class == CLASS_STORMTROOPER) continue;
+			if (partner->client->NPC_class == CLASS_STORMTROOPER || partner->client->NPC_class == CLASS_STORMTROOPER_ADVANCED) continue;
 			if (partner->client->NPC_class == NPC->client->NPC_class) continue;
 			//if (!Q_stricmpn(partner->NPC_type, NPC->NPC_type, strlen(partner->NPC_type)-1)) continue; // never talk to the same race... (they would repeat eachother)
 			if (partner->NPC->conversationPartner || partner->NPC->conversationReplyTime > level.time)
@@ -745,7 +745,7 @@ void NPC_FindConversationPartner()
 			if (partner->s.eType != ET_NPC) continue;
 			if (!partner->client) continue;
 			if (!partner->NPC) continue;
-			if (partner->client->NPC_class == CLASS_STORMTROOPER) continue;
+			if (partner->client->NPC_class == CLASS_STORMTROOPER || partner->client->NPC_class == CLASS_STORMTROOPER_ADVANCED) continue;
 			if (partner->client->NPC_class == NPC->client->NPC_class) continue;
 			//if (!Q_stricmpn(partner->NPC_type, NPC->NPC_type, strlen(partner->NPC_type)-1)) continue; // never talk to the same race... (they would repeat eachother)
 			if (VectorLength(partner->client->ps.velocity) > 16 && Distance(partner->r.currentOrigin, NPC->r.currentOrigin) > 96) continue;

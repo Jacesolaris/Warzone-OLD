@@ -766,8 +766,8 @@ Use_BinaryMover_Go
 */
 void Use_BinaryMover_Go( gentity_t *ent )
 {
-	int		total;
-	int		partial;
+//	int		total;
+//	int		partial;
 //	gentity_t	*other = ent->enemy;
 	gentity_t	*activator = ent->activator;
 

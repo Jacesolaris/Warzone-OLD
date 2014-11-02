@@ -162,6 +162,7 @@ void G_AttackDelay( gentity_t *self, gentity_t *enemy )
 			attDelay -= Q_irand( 500, 1500 );
 			break;
 		case CLASS_JAN:
+		case CLASS_STORMTROOPER_ADVANCED:
 		case CLASS_LANDO:
 		case CLASS_PRISONER:
 		case CLASS_REBEL:

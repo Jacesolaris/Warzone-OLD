@@ -46,6 +46,8 @@ qboolean G_EntIsBreakable( int entityNum );
 qboolean G_EntIsRemovableUsable( int entNum );
 void CP_FindCombatPointWaypoints( void );
 
+extern qboolean G_PointInBounds( vec3_t point, vec3_t mins, vec3_t maxs );
+
 /*
 ================
 G_FindTeams

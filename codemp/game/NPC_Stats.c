@@ -68,6 +68,7 @@ stringID_table_t ClassTable[] =
 	ENUM2STRING(CLASS_SENTRY),
 	ENUM2STRING(CLASS_SHADOWTROOPER),
 	ENUM2STRING(CLASS_STORMTROOPER),
+	ENUM2STRING(CLASS_STORMTROOPER_ADVANCED),
 	ENUM2STRING(CLASS_SWAMP),
 	ENUM2STRING(CLASS_SWAMPTROOPER),
 	ENUM2STRING(CLASS_TAVION),
@@ -2705,13 +2706,13 @@ qboolean NPC_ParseParms( const char *NPCName, gentity_t *NPC )
 					continue;
 				}
 
-				saberName = (char *)dlmalloc(4096);//G_NewString( value );
+				saberName = (char *)malloc(4096);//G_NewString( value );
 				strcpy(saberName, value);
 
 				WP_SaberParseParms( saberName, &NPC->client->saber[0] );
 				npcSaber1 = G_ModelIndex(va("@%s", saberName));
 
-				dlfree(saberName);
+				free(saberName);
 				continue;
 			}
 
@@ -2725,7 +2726,7 @@ qboolean NPC_ParseParms( const char *NPCName, gentity_t *NPC )
 
 				if ( !(NPC->client->saber[0].saberFlags&SFL_TWO_HANDED) )
 				{//can't use a second saber if first one is a two-handed saber...?
-					char *saberName = (char *)dlmalloc(4096);//G_NewString( value );
+					char *saberName = (char *)malloc(4096);//G_NewString( value );
 					strcpy(saberName, value);
 
 					WP_SaberParseParms( saberName, &NPC->client->saber[1] );
@@ -2738,7 +2739,7 @@ qboolean NPC_ParseParms( const char *NPCName, gentity_t *NPC )
 						//NPC->client->ps.dualSabers = qtrue;
 						npcSaber2 = G_ModelIndex(va("@%s", saberName));
 					}
-					dlfree(saberName);
+					free(saberName);
 				}
 				continue;
 			}
