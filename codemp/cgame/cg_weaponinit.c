@@ -497,24 +497,33 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->firingSound = NULL_SOUND;
 		weaponInfo->chargeSound = NULL_SOUND;
 		weaponInfo->muzzleEffect = trap->FX_RegisterEffect("blaster/muzzle_flash");
-		weaponInfo->missileModel = trap->R_RegisterModel("models/weapons2/golan_arms/projectileMain.md3");
+		weaponInfo->missileModel = trap->R_RegisterModel("models/weapons3/golan_arms/projectileMain.md3");
 		weaponInfo->missileSound = NULL_SOUND;
 		weaponInfo->missileDlight = 0;
 		weaponInfo->missileHitSound = NULL_SOUND;
 		weaponInfo->missileTrailFunc = FX_T21ProjectileThink;
 		weaponInfo->missileRenderfx = NULL_FX;
-		weaponInfo->altMissileRenderfx = NULL_FX;
+		/*weaponInfo->altMissileRenderfx = NULL_FX;*/
 		weaponInfo->powerupShotRenderfx = NULL_FX;
 		weaponInfo->altFlashSound[0] = trap->S_RegisterSound("sound/weapons/T-21/alt_fire.mp3");
 		weaponInfo->altFiringSound = trap->S_RegisterSound("sound/weapons/T-21/alt_fire.mp3");
 		weaponInfo->altChargeSound = NULL_SOUND;
 		weaponInfo->altMuzzleEffect = trap->FX_RegisterEffect("blaster/muzzle_flash");
-		weaponInfo->altMissileModel = trap->R_RegisterModel("models/weapons2/golan_arms/projectile.md3");
+		weaponInfo->altMissileModel = trap->R_RegisterModel("models/weapons3/golan_arms/projectile.md3");
 		weaponInfo->altMissileSound = NULL_SOUND;
 		weaponInfo->altMissileDlight = 0;
 		weaponInfo->altMissileHitSound = NULL_SOUND;
-		weaponInfo->altMissileTrailFunc = FX_T21ProjectileThink;
+		weaponInfo->altMissileTrailFunc = FX_BlasterProjectileThink;
+		
 		weaponInfo->shotEffectFx = trap->FX_RegisterEffect("T-21/shot");
+		weaponInfo->altMissileRenderfx = trap->FX_RegisterEffect("blaster/shot");
+		weaponInfo->missileWallImpactfx = trap->FX_RegisterEffect("blaster/wall_impact");
+		weaponInfo->altMissileWallImpactfx = trap->FX_RegisterEffect("blaster/wall_impact_enhanced2");
+		weaponInfo->fleshImpactEffect = trap->FX_RegisterEffect("blaster/flesh_impact");
+		weaponInfo->altFleshImpactEffect = trap->FX_RegisterEffect("blaster/flesh_impact");
+		weaponInfo->wallImpactEffectEnhancedFX = trap->FX_RegisterEffect("blaster/wall_impact_enhanced2");
+		
+
 		break;
 		
 	case WP_EE3:
@@ -539,13 +548,13 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altMissileSound = NULL_SOUND;
 		weaponInfo->altMissileDlight = 0;
 		weaponInfo->altMissileHitSound = NULL_SOUND;
-		weaponInfo->altMissileTrailFunc = FX_BlasterProjectileThink;
+		weaponInfo->altMissileTrailFunc = FX_FlechetteAltProjectileThink;
 		trap->FX_RegisterEffect("blaster/deflect");
 
 		weaponInfo->missileRenderfx = trap->FX_RegisterEffect("ee3/blaster_shot");
 		weaponInfo->altMuzzleEffect = trap->FX_RegisterEffect("blaster/muzzle_flash");
 		weaponInfo->missileWallImpactfx = trap->FX_RegisterEffect("ee3/wall_impact");
-		weaponInfo->wallImpactEffectEnhancedFX = trap->FX_RegisterEffect("flechette/wall_impact_enhanced2");
+		weaponInfo->wallImpactEffectEnhancedFX = trap->FX_RegisterEffect("blaster/wall_impact_enhanced2");
 		weaponInfo->fleshImpactEffect = trap->FX_RegisterEffect("ee3/flesh_impact");
 		weaponInfo->altFleshImpactEffect = trap->FX_RegisterEffect("blaster/droid_impact");
 		weaponInfo->shotEffectFx = trap->FX_RegisterEffect("ee3/blaster_shot");
@@ -579,7 +588,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altMissileSound = NULL_SOUND;
 		weaponInfo->altMissileDlight = 0;
 		weaponInfo->altMissileHitSound = NULL_SOUND;
-		weaponInfo->altMissileTrailFunc = 0;//FX_DEMP2_BounceWall;
+		weaponInfo->altMissileTrailFunc = 0;
 		weaponInfo->missileWallImpactfx = trap->FX_RegisterEffect("clone_pistol_1/wall_impact");
 		weaponInfo->wallImpactEffectEnhancedFX = trap->FX_RegisterEffect("clone_pistol_1/wall_impact_enhanced2");
 		weaponInfo->shotEffectFx = trap->FX_RegisterEffect("clone_pistol_1/lvl3_shot");

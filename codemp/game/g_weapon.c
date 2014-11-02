@@ -3651,6 +3651,44 @@ void CalcMuzzlePoint ( gentity_t *ent, const vec3_t inForward, const vec3_t inRi
 	SnapVector( muzzlePoint );
 }
 
+
+//Needed for later use when 2 handed pistols are in place  based on CalcMuzzlePoint 
+//void CalcFirstMuzzlePoint(gentity_t *ent, vec3_t forward, vec3_t right, vec3_t up, vec3_t muzzlePoint)
+//{
+//	int weapontype;
+//	vec3_t muzzleOffPoint;
+//
+//	weapontype = ent->s.weapon;
+//	VectorCopy(ent->s.pos.trBase, muzzlePoint);
+//
+//	VectorCopy(WP_FirstPistolMuzzle, muzzleOffPoint);
+//
+//	VectorMA(muzzlePoint, muzzleOffPoint[0], forward, muzzlePoint);
+//	VectorMA(muzzlePoint, muzzleOffPoint[1], right, muzzlePoint);
+//	muzzlePoint[2] += ent->client->ps.viewheight + muzzleOffPoint[2];
+//
+//	// snap to integer coordinates for more efficient network bandwidth usage
+//	SnapVector(muzzlePoint);
+//}
+//
+//void CalcSecondMuzzlePoint(gentity_t *ent, vec3_t forward, vec3_t right, vec3_t up, vec3_t muzzlePoint)
+//{
+//	int weapontype;
+//	vec3_t muzzleOffPoint;
+//
+//	weapontype = ent->s.weapon;
+//	VectorCopy(ent->s.pos.trBase, muzzlePoint);
+//
+//	VectorCopy(WP_SecondPistolMuzzle, muzzleOffPoint);
+//
+//	VectorMA(muzzlePoint, muzzleOffPoint[0], forward, muzzlePoint);
+//	VectorMA(muzzlePoint, muzzleOffPoint[1], right, muzzlePoint);
+//	muzzlePoint[2] += ent->client->ps.viewheight + muzzleOffPoint[2];
+//
+//	// snap to integer coordinates for more efficient network bandwidth usage
+//	SnapVector(muzzlePoint);
+//}
+
 extern void G_MissileImpact( gentity_t *ent, trace_t *trace );
 void WP_TouchVehMissile( gentity_t *ent, gentity_t *other, trace_t *trace )
 {

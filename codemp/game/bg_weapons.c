@@ -41,6 +41,9 @@ vec3_t WP_MuzzlePoint[WP_NUM_WEAPONS] =
 	{12,	0,		-10	},	// WP_TRIP_MINE,
 	{12,	0,		-4	},	// WP_DET_PACK,
 };
+//ready for 2 handed pistols when ready fr it.
+vec3_t WP_FirstPistolMuzzle = { 12, 6, 0 };
+vec3_t WP_SecondPistolMuzzle = { 12, -6, 0 };
 
 weaponData_t weaponData[WP_NUM_WEAPONS] =
 {
@@ -236,7 +239,7 @@ weaponData_t weaponData[WP_NUM_WEAPONS] =
 		AMMO_BLASTER,			//	int		ammoIndex;			// Index to proper ammo slot
 		5,						//	int		ammoLow;			// Count when ammo is low
 		2,						//	int		energyPerShot;		// Amount of energy used per shot
-		350,					//	int		fireTime;			// Amount of time between firings
+		550,					//	int		fireTime;			// Amount of time between firings
 		8192,					//	int		range;				// Range of weapon
 		3,						//	int		altEnergyPerShot;	// Amount of energy used for alt-fire
 		150,					//	int		altFireTime;		// Amount of time between alt-firings
@@ -253,7 +256,7 @@ weaponData_t weaponData[WP_NUM_WEAPONS] =
 		AMMO_BLASTER,			//	int		ammoIndex;			// Index to proper ammo slot
 		5,						//	int		ammoLow;			// Count when ammo is low
 		2,						//	int		energyPerShot;		// Amount of energy used per shot
-		250,					//	int		fireTime;			// Amount of time between firings
+		350,					//	int		fireTime;			// Amount of time between firings
 		8192,					//	int		range;				// Range of weapon
 		3,						//	int		altEnergyPerShot;	// Amount of energy used for alt-fire
 		1200,					//	int		altFireTime;		// Amount of time between alt-firings
