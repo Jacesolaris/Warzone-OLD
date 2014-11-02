@@ -2068,6 +2068,8 @@ void G_CheckForblowingup(gentity_t *ent, gentity_t *enemy, vec3_t point, int dam
 extern qboolean g_noPDuelCheck;
 extern void saberReactivate(gentity_t *saberent, gentity_t *saberOwner);
 extern void saberBackToOwner(gentity_t *saberent);
+extern qboolean Boba_Flying( gentity_t *self );
+
 void player_die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int damage, int meansOfDeath ) {
 #ifndef __MMO__
 	gentity_t	*ent;
@@ -2353,7 +2355,7 @@ extern void RunEmplacedWeapon( gentity_t *ent, usercmd_t **ucmd );
 			//self->owner = old;
 		}
 		*/
-		if ( (self->client->NPC_class == CLASS_BOBAFETT || self->hasJetpack) && self->client->ps.eFlags2 & EF2_FLYING )
+		if ( (self->client->NPC_class == CLASS_BOBAFETT || self->hasJetpack) && Boba_Flying(self) )
 			Boba_FlyStop( self );
 		if ( self->s.NPC_class == CLASS_RANCOR )
 			Rancor_DropVictim( self );

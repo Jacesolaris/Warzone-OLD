@@ -90,6 +90,7 @@ gfx/effects/bbolt3
     {
         map gfx/effects/bbolt3
         blendFunc GL_ONE GL_ONE
+        glow
         rgbGen vertex
     }
 }
@@ -135,6 +136,7 @@ gfx/misc/colflare
     {
         map gfx/misc/colflare
         blendFunc GL_ONE GL_ONE
+        glow
         rgbGen vertex
     }
 }
@@ -459,6 +461,7 @@ gfx/misc/sparker
     {
         map gfx/misc/sparker
         blendFunc GL_ONE GL_ONE
+        glow
         rgbGen vertex
     }
 }
@@ -468,6 +471,7 @@ gfx/effects/glowwhite
     {
         map gfx/effects/glowwhite
         blendFunc GL_ONE GL_ONE
+        glow
         rgbGen vertex
     }
 }
@@ -546,6 +550,7 @@ gfx/misc/exp01_1
     {
         map gfx/misc/exp01_1
         blendFunc GL_ONE GL_ONE
+        glow
         rgbGen vertex
     }
 }
@@ -556,6 +561,7 @@ gfx/misc/exp01_2
     {
         map gfx/misc/exp01_2
         blendFunc GL_ONE GL_ONE
+        glow
         rgbGen vertex
     }
 }
@@ -566,6 +572,7 @@ gfx/misc/exp02_1
     {
         map gfx/misc/exp02_1
         blendFunc GL_ONE GL_ONE
+        glow
         rgbGen vertex
     }
 }
@@ -577,6 +584,7 @@ gfx/effects/embers
     {
         clampmap gfx/effects/embers
         blendFunc GL_ONE GL_ONE
+        glow
         rgbGen vertex
         alphaGen vertex
     }
@@ -599,6 +607,7 @@ gfx/misc/SparkYellow1
     {
         map gfx/misc/SparkYellow1
         blendFunc GL_ONE GL_ONE
+        glow
         rgbGen vertex
     }
 }
@@ -609,6 +618,7 @@ gfx/misc/SparkYellow2
     {
         map gfx/misc/SparkYellow2
         blendFunc GL_ONE GL_ONE
+        glow
         rgbGen vertex
     }
 }
@@ -619,6 +629,7 @@ gfx/misc/SparkBlue1
     {
         map gfx/misc/SparkBlue1
         blendFunc GL_ONE GL_ONE
+        glow
         rgbGen vertex
     }
 }
@@ -629,6 +640,7 @@ gfx/misc/SparkBlue2
     {
         map gfx/misc/SparkBlue2
         blendFunc GL_ONE GL_ONE
+        glow
         rgbGen vertex
     }
 }

@@ -4,20 +4,20 @@
 
 void FX_RepeaterAddLight ( vec3_t org )
 {
-	vec4_t color = { 0.8, 0.8, 0.0, 50.0 }; // r, g, b, intensity
-	trap->R_AddLightToScene( org, color[3], color[0], color[1], color[2] );
+	//vec4_t color = { 0.8, 0.8, 0.0, 50.0 }; // r, g, b, intensity
+	//trap->R_AddLightToScene( org, color[3], color[0], color[1], color[2] );
 }
 
 void FX_RepeaterAltAddLight ( vec3_t org )
 {
-	vec4_t color = { 0.5, 0.5, 1.0, 50.0 }; // r, g, b, intensity
-	trap->R_AddLightToScene( org, color[3], color[0], color[1], color[2] );
+	//vec4_t color = { 0.5, 0.5, 1.0, 50.0 }; // r, g, b, intensity
+	//trap->R_AddLightToScene( org, color[3], color[0], color[1], color[2] );
 }
 
 void FX_RepeaterAltAddExplodeLight ( vec3_t org )
 {
-	vec4_t color = { 0.5, 0.5, 1.0, 100.0 }; // r, g, b, intensity
-	trap->R_AddLightToScene( org, color[3], color[0], color[1], color[2] );
+	//vec4_t color = { 0.5, 0.5, 1.0, 100.0 }; // r, g, b, intensity
+	//trap->R_AddLightToScene( org, color[3], color[0], color[1], color[2] );
 }
 
 /*

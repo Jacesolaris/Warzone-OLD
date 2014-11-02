@@ -6256,8 +6256,61 @@ void NPC_DoPadawanStuff ( void )
 		NPC_ClearGoal();
 }
 
+extern void NPC_DoFlyStuff ( void );
+
+void NPC_CheckTypeStuff ( void )
+{
+	if ( NPCS.NPC->client->NPC_class == CLASS_VEHICLE )
+	{
+
+	}
+	else
+	{
+		if (NPC_IsBountyHunter(NPCS.NPC) || NPC_IsCommando(NPCS.NPC) || NPC_IsAdvancedGunner(NPCS.NPC))
+		{
+			if (!(NPCS.NPC->client->ps.eFlags & EF_JETPACK))
+			{// Commando's get a jetpack...
+				//trap->Print("Commando %s given jetpack.\n", NPCS.NPC->NPC_type);
+				NPCS.NPC->client->ps.eFlags |= EF_JETPACK;
+				NPCS.NPC->hasJetpack = qtrue;
+			}
+		}
+	}
+}
+
+void NPC_CheckFlying ( void )
+{
+	if ( NPCS.NPC->client->NPC_class == CLASS_VEHICLE )
+	{// Vehicles... Don't do normal jetpack stuff...
+
+	}
+	else
+	{
+		if (NPCS.NPC->health <= 0 || !NPC_IsAlive(NPCS.NPC) || (NPCS.NPC->client->ps.eFlags & EF_DEAD) || NPCS.NPC->client->ps.pm_type == PM_DEAD)
+		{// Dead... Return to normal...
+			NPCS.NPC->client->ps.eFlags &= ~EF_JETPACK_ACTIVE;
+			NPCS.NPC->client->ps.eFlags &= ~EF_JETPACK_FLAMING;
+			NPCS.NPC->client->ps.eFlags &= ~EF_JETPACK_HOVER;
+			NPCS.NPC->s.eFlags &= ~EF_JETPACK_ACTIVE;
+			NPCS.NPC->s.eFlags &= ~EF_JETPACK_FLAMING;
+			NPCS.NPC->s.eFlags &= ~EF_JETPACK_HOVER;
+			NPCS.NPC->client->ps.pm_type = PM_DEAD;
+		}
+		else
+		{// If this NPC has a jetpack... Let's make use of it...
+			//if (Boba_Flying( NPCS.NPC ))
+			{// Are we flying???
+				NPC_DoFlyStuff();
+			}
+		}
+	}
+}
+
 void NPC_GenericFrameCode ( gentity_t *self )
 {
+	// UQ1: Check any jetpack stuff...
+	NPC_CheckFlying();
+
 	if ( NPCS.client->ps.weaponstate == WEAPON_READY )
 	{
 		NPCS.client->ps.weaponstate = WEAPON_IDLE;
@@ -6366,6 +6419,9 @@ void NPC_Think ( gentity_t *self)//, int msec )
 		self->s.eFlags |= EF_DEAD;
 		self->client->ps.pm_type = PM_DEAD;
 
+		// Check flying stuff when dead too...
+		NPC_CheckFlying();
+
 		self->health = self->s.health = self->client->ps.stats[STAT_HEALTH] = 0;
 
 		DeadThink();
@@ -6388,6 +6444,9 @@ void NPC_Think ( gentity_t *self)//, int msec )
 		VectorCopy(self->r.currentOrigin, self->client->ps.origin);
 		return;
 	}
+
+	// UQ1: Generic stuff for different NPC types...
+	NPC_CheckTypeStuff();
 
 	//self->nextthink = level.time + FRAMETIME/2;
 

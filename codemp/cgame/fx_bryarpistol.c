@@ -5,8 +5,8 @@
 
 void FX_BryarAddLight ( vec3_t org )
 {
-	vec4_t color = { 0.7, 0.7, 0.0, 50.0 }; // r, g, b, intensity
-	trap->R_AddLightToScene( org, color[3], color[0], color[1], color[2] );
+	//vec4_t color = { 0.7, 0.7, 0.0, 50.0 }; // r, g, b, intensity
+	//trap->R_AddLightToScene( org, color[3], color[0], color[1], color[2] );
 }
 
 /*
@@ -173,8 +173,8 @@ void FX_BryarAltHitPlayer(vec3_t origin, vec3_t normal, qboolean humanoid, int w
 
 void FX_TurretAddLight ( vec3_t org )
 {
-	vec4_t color = { 0.9, 0.7, 0.0, 60.0 }; // r, g, b, intensity
-	trap->R_AddLightToScene( org, color[3], color[0], color[1], color[2] );
+	//vec4_t color = { 0.9, 0.7, 0.0, 60.0 }; // r, g, b, intensity
+	//trap->R_AddLightToScene( org, color[3], color[0], color[1], color[2] );
 }
 
 /*
@@ -244,8 +244,8 @@ void FX_TurretHitPlayer(vec3_t origin, vec3_t normal, qboolean humanoid, int wea
 
 void FX_ConcussionAddLight ( vec3_t org )
 {
-	vec4_t color = { 0.5, 0.5, 1.0, 60.0 }; // r, g, b, intensity
-	trap->R_AddLightToScene( org, color[3], color[0], color[1], color[2] );
+	//vec4_t color = { 0.5, 0.5, 1.0, 60.0 }; // r, g, b, intensity
+	//trap->R_AddLightToScene( org, color[3], color[0], color[1], color[2] );
 }
 
 /*

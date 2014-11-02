@@ -628,7 +628,7 @@ typedef enum {
 #define EF_ALT_FIRING			(1<<10)		// for alt-fires, mostly for lightning guns though
 #define	EF_JETPACK_ACTIVE		(1<<11)		//jetpack is activated
 
-#define EF_NOT_USED_1			(1<<12)		// not used
+//#define EF_NOT_USED_1			(1<<12)		// not used -- UQ1: Now EV_JETPAK_HOVER
 
 #define	EF_TALK					(1<<13)		// draw a talk balloon
 #define	EF_CONNECTION			(1<<14)		// draw a connection trouble sprite
@@ -653,6 +653,7 @@ typedef enum {
 
 #define EF_JETPACK				(1<<29)		//rww - wearing a jetpack
 #define EF_JETPACK_FLAMING		(1<<30)		//rww - jetpack fire effect
+#define EF_JETPACK_HOVER		(1<<12)		//rww - jetpack fire effect
 
 #define	EF_FAKE_NPC_BOT			(1<<31)		// UQ1: Used to transmit that this bot is using NPC AI.
 

@@ -57,6 +57,7 @@ gfx/effects/white_fire1
     {
         map gfx/flames/particle_white4
         blendFunc GL_ONE GL_ONE
+		glow
         rgbGen vertex
     }
 }
@@ -67,6 +68,7 @@ gfx/effects/white_fire2
     {
         map gfx/flames/particle_white2
         blendFunc GL_ONE GL_ONE
+		glow
         rgbGen vertex
     }
 }
@@ -77,6 +79,7 @@ gfx/effects/white_fire1mult
     {
         map gfx/flames/particle_white5
         blendFunc GL_DST_COLOR GL_ONE
+		glow
         rgbGen vertex
     }
 }
@@ -87,6 +90,7 @@ gfx/effects/white_fire2mult
     {
         map gfx/flames/particle_white6
         blendFunc GL_DST_COLOR GL_ONE
+		glow
         rgbGen vertex
     }
 }
@@ -150,6 +154,7 @@ gfx/misc/blueLine
     {
         map gfx/electricity/electricity
         blendFunc GL_ONE GL_ONE
+		glow
         rgbGen vertex
     }
 }
@@ -205,6 +210,7 @@ gfx/effects/shock_ripple
         map gfx/effects/shock_ripple
         blendFunc GL_DST_COLOR GL_SRC_COLOR
         rgbGen identity
+		glow
         tcMod scale 3 1
         tcMod scroll 0.9 0
     }
@@ -212,6 +218,7 @@ gfx/effects/shock_ripple
         map gfx/effects/shock_ripple
         blendFunc GL_DST_COLOR GL_SRC_COLOR
         rgbGen identity
+		glow
         tcMod scale 2 1
         tcMod scroll -0.4 0
     }
@@ -224,12 +231,14 @@ gfx/effects/sho
         map gfx/effects/sho
         blendFunc GL_DST_COLOR GL_SRC_COLOR
         rgbGen identity
+		glow
         tcMod scale 1 0.5
         tcMod scroll 0 2.9
     }
     {
         map gfx/effects/sho
         blendFunc GL_DST_COLOR GL_SRC_COLOR
+		glow
         rgbGen identity
         tcMod scroll 0 -1.8
     }
@@ -241,6 +250,7 @@ gfx/effects/shock_ball
     {
         map gfx/effects/shock_ball
         blendFunc GL_DST_COLOR GL_SRC_COLOR
+		glow
         rgbGen identity
     }
 }
@@ -252,6 +262,7 @@ gfx/effects/saberDamageGlow
     {
         map gfx/effects/saberdamageglow
         blendFunc GL_ONE GL_ONE
+		glow
         rgbGen vertex
     }
 }
@@ -297,6 +308,7 @@ gfx/effects/whiteGlow
     {
         map gfx/effects/whiteglow
         blendFunc GL_ONE GL_ONE
+		glow
         rgbGen vertex
     }
 }
@@ -307,6 +319,7 @@ gfx/effects/blaster_blob
     {
         map gfx/effects/blaster_blob
         blendFunc GL_SRC_ALPHA GL_ONE_MINUS_SRC_ALPHA
+		glow
         alphaGen vertex
     }
 }
@@ -317,6 +330,7 @@ gfx/effects/bryar_blob
     {
         map gfx/effects/bryar_blob
         blendFunc GL_SRC_ALPHA GL_ONE_MINUS_SRC_ALPHA
+		glow
         alphaGen vertex
     }
 }
@@ -327,6 +341,7 @@ gfx/effects/blasterSideFlash
     {
         map gfx/effects/blastersideflash
         blendFunc GL_ONE GL_ONE
+		glow
         rgbGen vertex
     }
 }
@@ -337,6 +352,7 @@ gfx/effects/blasterFrontFlash
     {
         map gfx/effects/blasterfrontflash
         blendFunc GL_ONE GL_ONE
+		glow
         rgbGen vertex
     }
 }
@@ -347,6 +363,7 @@ gfx/effects/bryarSideFlash
     {
         map gfx/effects/bryarsideflash
         blendFunc GL_ONE GL_ONE
+		glow
         rgbGen vertex
     }
 }
@@ -357,6 +374,7 @@ gfx/effects/bryarFrontFlash
     {
         map gfx/effects/bryarfrontflash
         blendFunc GL_ONE GL_ONE
+		glow
         rgbGen vertex
     }
 }
@@ -367,6 +385,7 @@ gfx/effects/greenSideFlash
     {
         map gfx/effects/greensideflash
         blendFunc GL_ONE GL_ONE
+		glow
         rgbGen vertex
     }
 }
@@ -377,6 +396,7 @@ gfx/effects/greenFrontFlash
     {
         map gfx/effects/greenfrontflash
         blendFunc GL_ONE GL_ONE
+		glow
         rgbGen vertex
     }
 }
@@ -387,6 +407,7 @@ gfx/effects/redLine
     {
         map gfx/effects/redline
         blendFunc GL_ONE GL_ONE
+		glow
         rgbGen vertex
     }
 }
@@ -397,6 +418,7 @@ gfx/effects/blueLine
     {
         map gfx/effects/blueline
         blendFunc GL_ONE GL_ONE
+		glow
         rgbGen vertex
     }
 }
@@ -407,6 +429,7 @@ gfx/effects/redLine2
     {
         map gfx/mp/redline
         blendFunc GL_ONE GL_ONE
+		glow
         rgbGen vertex
     }
 }
@@ -417,6 +440,7 @@ gfx/effects/greenShot
     {
         map gfx/effects/green_shot
         blendFunc GL_SRC_ALPHA GL_ONE_MINUS_SRC_ALPHA
+		glow
         rgbGen vertex
     }
 }
@@ -427,6 +451,7 @@ gfx/effects/rorangeShot
     {
         map gfx/effects/rorange_shot
         blendFunc GL_SRC_ALPHA GL_ONE_MINUS_SRC_ALPHA
+		glow
         rgbGen vertex
     }
 }
@@ -468,6 +493,7 @@ gfx/effects/light_cone
         map gfx/effects/light_cone
         blendFunc GL_ONE GL_ONE
         rgbGen vertex
+		glow
         tcMod scale 3 1
         tcMod scroll 0.3 0
     }
@@ -475,6 +501,7 @@ gfx/effects/light_cone
         map gfx/effects/light_cone
         blendFunc GL_ONE GL_ONE
         rgbGen vertex
+		glow
         tcMod scale 4 1
         tcMod scroll -0.1 0
     }
@@ -508,6 +535,7 @@ gfx/effects/rocket_muz
     {
         map gfx/effects/rocket_muz
         blendFunc GL_ONE GL_ONE
+		glow
         rgbGen vertex
     }
 }
@@ -518,6 +546,7 @@ gfx/effects/rocket_muz2
     {
         map gfx/effects/rocket_muz2
         blendFunc GL_ONE GL_ONE
+		glow
         rgbGen vertex
     }
 }
@@ -644,6 +673,7 @@ gfx/effects/burst
     {
         map gfx/effects/burst
         blendFunc GL_ONE GL_ONE
+		glow
         rgbGen vertex
     }
 }
@@ -792,6 +822,7 @@ gfx/effects/blaster_blob_gs
     {
         map gfx/effects/blaster_blob_gs
         blendFunc GL_SRC_ALPHA GL_ONE_MINUS_SRC_ALPHA
+		glow
         alphaGen vertex
     }
 }
@@ -949,6 +980,7 @@ gfx/effects/eplosion_wave
     {
         map gfx/effects/eplosion_wave
         blendFunc GL_ONE GL_ONE
+		glow
         rgbGen vertex
     }
 }
@@ -1014,6 +1046,7 @@ gfx/effects/scorch_mp
     {
         clampmap gfx/effects/scorch_mp
         blendFunc GL_SRC_ALPHA GL_ONE_MINUS_SRC_ALPHA
+		glow
         alphaGen vertex
     }
 }
@@ -1038,6 +1071,7 @@ gfx/effects/greenline
     {
         map gfx/effects/greenline
         blendFunc GL_ONE GL_ONE
+		glow
         rgbGen vertex
     }
 }
@@ -1107,6 +1141,7 @@ gfx/effects/bp_blob
     {
         map gfx/effects/bp_blob
         blendFunc GL_SRC_ALPHA GL_ONE_MINUS_SRC_ALPHA
+		glow
         rgbGen vertex
         alphaGen vertex
     }
@@ -1412,6 +1447,7 @@ gfx/misc/electric
         map gfx/misc/lightning3
         blendFunc GL_ONE GL_ONE
         rgbGen identity
+		glow
         tcMod scroll 0.5 1
         tcMod scale 3 4.5
     }
@@ -1425,6 +1461,7 @@ gfx/misc/fullbodyelectric2
         map gfx/misc/lightning3
         blendFunc GL_ONE GL_ONE
         rgbGen identity
+		glow
         tcMod scroll 0.5 1
         tcMod scale -2 -3.5
     }
@@ -1436,6 +1473,7 @@ gfx/misc/lightningFlash
     {
         map gfx/misc/lightningflash
         blendFunc GL_ONE GL_ONE
+		glow
         rgbGen vertex
     }
 }
@@ -1446,6 +1484,7 @@ gfx/misc/lightningFlash
     {
         map gfx/misc/lightningflash
         blendFunc GL_ONE GL_ONE
+		glow
         rgbGen vertex
     }
 }
@@ -1466,7 +1505,7 @@ gfx/misc/wring1
 	surfaceparm	trans
 	cull	twosided
     {
-        animMap 8 gfx/misc/wring1 gfx/misc/wring2 gfx/misc/wring3 
+        animMap 8 gfx/misc/wring1 gfx/misc/wring2 gfx/misc/wring3
         blendFunc GL_ONE GL_ONE
         rgbGen vertex
     }
@@ -1492,6 +1531,7 @@ gfx/misc/csparks
     {
         map textures/flares/flare_ring2
         blendFunc GL_SRC_ALPHA GL_ONE
+		glow
         rgbGen vertex
     }
 }
@@ -1516,6 +1556,7 @@ gfx/misc/bluebolt
     {
         map gfx/misc/blueline1
         blendFunc GL_ONE GL_ONE
+		glow
         rgbGen vertex
         tcMod scroll 0 -3
     }
@@ -1567,6 +1608,7 @@ gfx/misc/rline
     {
         map gfx/misc/rline
         blendFunc GL_ONE GL_ONE_MINUS_SRC_ALPHA
+		glow
         rgbGen vertex
     }
 }
@@ -1578,6 +1620,7 @@ gfx/misc/bline
     {
         map gfx/misc/bline
         blendFunc GL_ONE GL_ONE_MINUS_SRC_ALPHA
+		glow
         rgbGen vertex
     }
 }
@@ -1615,6 +1658,7 @@ gfx/misc/bline_w
     {
         map gfx/misc/bline-w
         blendFunc GL_ONE GL_ONE_MINUS_SRC_ALPHA
+		glow
         rgbGen vertex
         tcMod scroll 0 2.5
     }
@@ -1770,6 +1814,7 @@ gfx/2d/cropCircleGlow
     {
         map gfx/2d/cropcircleglow
         blendFunc GL_DST_COLOR GL_SRC_COLOR
+		glow
         rgbGen identity
     }
 }

@@ -6,6 +6,7 @@ gfx/effects/bryarfrontflash_h
     {
         map gfx/effects/bryarfrontflash_h
         blendFunc GL_ONE GL_ONE
+        glow
         rgbGen vertex
     }
 }
@@ -16,6 +17,7 @@ gfx/effects/bryarsideflash_h
     {
         map gfx/effects/bryarsideflash_h
         blendFunc GL_ONE GL_ONE
+        glow
         rgbGen vertex
     }
 }

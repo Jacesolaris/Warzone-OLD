@@ -14,6 +14,7 @@ gfx/misc/spark5
     {
         map gfx/misc/spark5
         blendFunc GL_ONE GL_ONE
+        glow
         rgbGen vertex
     }
 }

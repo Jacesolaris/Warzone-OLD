@@ -1535,6 +1535,8 @@ static void CG_RegisterGraphics( void ) {
 	cgs.effects.mShipDestDestroyed = trap->FX_RegisterEffect("effects/ships/dest_destroyed.efx");
 	cgs.effects.mShipDestBurning = trap->FX_RegisterEffect("effects/ships/dest_burning.efx");
 	cgs.effects.mBobaJet = trap->FX_RegisterEffect("effects/boba/jet.efx");
+	cgs.effects.mBobaJetAfterburner = trap->FX_RegisterEffect("effects/boba/jetsp.efx");
+	cgs.effects.mBobaJetHover = trap->FX_RegisterEffect("effects/boba/jethover.efx");
 
 
 	cgs.effects.itemCone = trap->FX_RegisterEffect("effects/mp/itemcone.efx");

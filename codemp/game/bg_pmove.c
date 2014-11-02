@@ -724,11 +724,13 @@ void PM_SetSpecialMoveValues (void)
 {
 	bgEntity_t *pEnt;
 
+	/*
 	if (pm->ps->clientNum < MAX_CLIENTS)
 	{ //we know that real players aren't vehs
 		pm_flying = FLY_NONE;
 		return;
 	}
+	*/
 
 	//default until we decide otherwise
 	pm_flying = FLY_NONE;
@@ -2047,7 +2049,7 @@ static qboolean PM_CheckJump( void )
 	}
 
 	//[JetpackSystem]
-	if (pm->ps->eFlags & EF_JETPACK_ACTIVE)
+	if (pm->ps->eFlags & EF_JETPACK_ACTIVE && !(pm->ps->eFlags & EF_DEAD))
 	{ //there's no actual jumping while we jetpack
 		if ((!BG_InSpecialJump(pm->ps->legsAnim)//not in a special jump anim
 			|| BG_InReboundJump(pm->ps->legsAnim)//we're already in a rebound
@@ -4679,7 +4681,7 @@ static void PM_GroundTrace( void ) {
 		}
 	}
 
-	if (pm->ps->pm_type != PM_JETPACK)
+	//if (pm->ps->pm_type != PM_JETPACK) // UQ1: Now this is just silly... We need this info...
 	{
 		pm->ps->groundEntityNum = trace.entityNum;
 		pm->ps->lastOnGround = pm->cmd.serverTime;
@@ -10828,15 +10830,11 @@ static void PM_JetpackMove(void) {
 		wishvel[0] = 0;
 		wishvel[1] = 0;
 		wishvel[2] = pm->ps->speed * (pm->cmd.upmove / 127.0f);
-
-		pm->ps->eFlags &= ~EF_JETPACK_FLAMING;
 	}
 	else if (!scale) {
 		wishvel[0] = 0;
 		wishvel[1] = 0;
 		wishvel[2] = pm->ps->speed * (pm->cmd.upmove / 127.0f);
-
-		pm->ps->eFlags |= EF_JETPACK_FLAMING;
 	}
 	else {
 		for (i = 0; i < 3; i++) {
@@ -10844,7 +10842,6 @@ static void PM_JetpackMove(void) {
 		}
 
 		wishvel[2] += scale * pm->cmd.upmove;
-		pm->ps->eFlags |= EF_JETPACK_FLAMING;
 	}
 
 	if (pm->cmd.rightmove)
@@ -11458,11 +11455,19 @@ void PmoveSingle (pmove_t *pmove) {
 
 	if (pm->ps->eFlags & EF_JETPACK)
 	{
-		if (GROUND_TIME[pm->ps->clientNum] >= pm->cmd.serverTime - 500
+		if (pm->ps->eFlags & EF_DEAD || pm->ps->pm_type == PM_DEAD)
+		{
+			pm->ps->eFlags &= ~EF_JETPACK_ACTIVE;
+			pm->ps->eFlags &= ~EF_JETPACK_FLAMING;
+			pm->ps->eFlags &= ~EF_JETPACK_HOVER;
+			pm->ps->pm_type = PM_DEAD;
+		}
+		else if (GROUND_TIME[pm->ps->clientNum] >= pm->cmd.serverTime - 500
 			&& pm->cmd.upmove > 0)
 		{// Have jetpack and jumping, but not activated yet. Make sure jetpack is not active...
 			pm->ps->eFlags &= ~EF_JETPACK_ACTIVE;
 			pm->ps->eFlags &= ~EF_JETPACK_FLAMING;
+			pm->ps->eFlags &= ~EF_JETPACK_HOVER;
 			pm->ps->pm_type = PM_NORMAL;
 		}
 		else if ((pm->ps->eFlags & EF_JETPACK)
@@ -11470,8 +11475,9 @@ void PmoveSingle (pmove_t *pmove) {
 			&& pm->cmd.upmove > 0) 
 		{// Have jetpack and jumping, make sure jetpack is active...
 			pm->ps->eFlags |= EF_JETPACK_ACTIVE;
+			pm->ps->eFlags &= ~EF_JETPACK_HOVER;
 
-			if (pm->ps->velocity[2] > 8)
+			if (pm->ps->velocity[2] > 100)
 			{// Also hit the afterburner...
 				pm->ps->eFlags |= EF_JETPACK_FLAMING;
 			}
@@ -11483,19 +11489,22 @@ void PmoveSingle (pmove_t *pmove) {
 			pm->ps->pm_type = PM_JETPACK;
 		}
 		else if ((pm->ps->eFlags & EF_JETPACK)
+			&& pm->ps->pm_type == PM_JETPACK
 			&& pm->ps->groundEntityNum != ENTITYNUM_WORLD // UQ1: Could make this damage a player/npc below if it hits a player/npc...
 			&& pm->ps->velocity[2] < 0
 			&& pm->cmd.upmove == 0) 
-		{// Hover at this height... Should probably have an EF_JETPACK_HOVER and smaller flame fx...
-			pm->ps->eFlags |= EF_JETPACK_ACTIVE;
+		{// Hover at this height...
+			pm->ps->eFlags |= EF_JETPACK_HOVER;
+			pm->ps->eFlags &= ~EF_JETPACK_ACTIVE;
+			pm->ps->eFlags &= ~EF_JETPACK_FLAMING;
 			pm->ps->pm_type = PM_JETPACK;
 			pm->cmd.upmove = 50;
 		}
-		else if ((pm->ps->eFlags & EF_JETPACK_ACTIVE) 
-			&& pm->ps->groundEntityNum == ENTITYNUM_WORLD ) 
+		else if ( GROUND_TIME[pm->ps->clientNum] >= pm->cmd.serverTime )
 		{// On the ground. Make sure jetpack is deactivated...
 			pm->ps->eFlags &= ~EF_JETPACK_ACTIVE;
 			pm->ps->eFlags &= ~EF_JETPACK_FLAMING;
+			pm->ps->eFlags &= ~EF_JETPACK_HOVER;
 			pm->ps->pm_type = PM_NORMAL;
 		}
 	}

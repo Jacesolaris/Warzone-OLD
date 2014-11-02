@@ -2242,13 +2242,16 @@ void ClientThink_real( gentity_t *ent ) {
 		client->ps.eFlags &= ~EF_BODYPUSH;
 	}
 
-	if (client->ps.stats[STAT_HOLDABLE_ITEMS] & (1 << HI_JETPACK))
-	{
-		client->ps.eFlags |= EF_JETPACK;
-	}
-	else
-	{
-		client->ps.eFlags &= ~EF_JETPACK;
+	if (ent->s.eType != ET_NPC && !(ent->s.eFlags & EF_FAKE_NPC_BOT))
+	{// UQ1: AI handles it's own jetpack... mkay!
+		if (client->ps.stats[STAT_HOLDABLE_ITEMS] & (1 << HI_JETPACK))
+		{
+			client->ps.eFlags |= EF_JETPACK;
+		}
+		else
+		{
+			client->ps.eFlags &= ~EF_JETPACK;
+		}
 	}
 
 	if ( client->noclip ) {
@@ -2264,6 +2267,7 @@ void ClientThink_real( gentity_t *ent ) {
 		}
 		else
 		{
+#if 0
 			if (client->jetPackOn)
 			{
 				client->ps.pm_type = PM_JETPACK;
@@ -2274,6 +2278,21 @@ void ClientThink_real( gentity_t *ent ) {
 			{
 				client->ps.pm_type = PM_NORMAL;
 			}
+#else
+			if (client->ps.pm_type == PM_JETPACK)
+			{
+				client->jetPackOn = qtrue;
+				killJetFlags = qfalse;
+			}
+			else
+			{
+				if (client->jetPackOn)
+					killJetFlags = qtrue;
+
+				client->jetPackOn = qfalse;
+				client->ps.pm_type = PM_NORMAL;
+			}
+#endif
 		}
 	}
 

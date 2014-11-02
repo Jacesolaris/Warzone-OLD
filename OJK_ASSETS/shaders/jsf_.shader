@@ -15,7 +15,7 @@ models/players/jsfighter/lid
 }
 
 models/players/jsfighter/hull
-{	  
+{
 	q3map_nolightmap
 	q3map_onlyvertexlighting
     {
@@ -39,6 +39,7 @@ gfx/effects/jfs_blob
     {
         map gfx/effects/jsf_blob
         blendFunc GL_SRC_ALPHA GL_ONE_MINUS_SRC_ALPHA
+		glow
         alphaGen vertex
     }
 }

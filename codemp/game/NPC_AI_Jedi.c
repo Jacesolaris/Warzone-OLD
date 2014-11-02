@@ -373,8 +373,202 @@ qboolean Boba_StopKnockdown( gentity_t *self, gentity_t *pusher, vec3_t pushDir,
 	return qtrue;
 }
 
+extern int gWPNum;
+extern wpobject_t *gWPArray[MAX_WPARRAY_SIZE];
+extern int GROUND_TIME[MAX_GENTITIES];
+
+extern int DOM_GetNearestWP(vec3_t org, int badwp);
+
+void NPC_DoFlyStuff ( void )
+{// UQ1's uber AI jetpack usage code...
+	gentity_t	*self = NPCS.NPC;
+	usercmd_t	*ucmd = &NPCS.ucmd;
+
+	if (!self || !self->client || !NPC_IsAlive(self)) return;
+
+	if (self->client->ps.groundEntityNum == ENTITYNUM_WORLD)
+	{
+		GROUND_TIME[self->s.number] = level.time;
+	}
+
+	if (self->client->ps.eFlags & EF_JETPACK)
+	{
+		qboolean HAVE_ENEMY = (qboolean)(self->enemy && NPC_IsAlive(self->enemy));
+
+		if (GROUND_TIME[self->client->ps.clientNum] < level.time
+			&& !HAVE_ENEMY
+			&& ((self->client->ps.eFlags & EF_JETPACK_ACTIVE) || (self->client->ps.eFlags & EF_JETPACK_HOVER) || (self->client->ps.eFlags & EF_JETPACK_FLAMING)))
+		{// No enemy... Land...
+			if (!(self->wpCurrent >= 0 && self->wpCurrent < gWPNum) || !OrgVisible(self->r.currentOrigin, gWPArray[self->wpCurrent]->origin, self->s.number))
+			{// No valid waypoint to go to... Find one...
+				self->wpCurrent = DOM_GetNearestWP(self->r.currentOrigin, self->wpCurrent);
+			}
+
+			if (self->wpCurrent >= 0 && self->wpCurrent < gWPNum)
+			{// Seems that we have a valid waypoint...
+				if (DistanceHorizontal(gWPArray[self->wpCurrent]->origin, self->r.currentOrigin) < 32)
+				{// We are directly above our waypoint... Land...
+					ucmd->upmove = -50.0;
+
+					self->client->ps.eFlags |= EF_JETPACK_HOVER;
+					self->client->ps.eFlags &= ~EF_JETPACK_ACTIVE;
+					self->client->ps.eFlags &= ~EF_JETPACK_FLAMING;
+					self->s.eFlags |= EF_JETPACK_HOVER;
+					self->s.eFlags &= ~EF_JETPACK_ACTIVE;
+					self->s.eFlags &= ~EF_JETPACK_FLAMING;
+					self->client->ps.pm_type = PM_JETPACK;
+				}
+				else if (gWPArray[self->wpCurrent]->origin[2] < self->r.currentOrigin[2]+8)
+				{// Our waypoint is below us... Go down...
+					ucmd->upmove = -50.0;
+
+					self->client->ps.eFlags |= EF_JETPACK_HOVER;
+					self->client->ps.eFlags &= ~EF_JETPACK_ACTIVE;
+					self->client->ps.eFlags &= ~EF_JETPACK_FLAMING;
+					self->s.eFlags |= EF_JETPACK_HOVER;
+					self->s.eFlags &= ~EF_JETPACK_ACTIVE;
+					self->s.eFlags &= ~EF_JETPACK_FLAMING;
+					self->client->ps.pm_type = PM_JETPACK;
+				}
+				else if (gWPArray[self->wpCurrent]->origin[2] > self->r.currentOrigin[2]+8)
+				{// Our waypoint is above us... Go up...
+					ucmd->upmove = 50.0;
+
+					self->client->ps.eFlags |= EF_JETPACK_ACTIVE;
+					self->client->ps.eFlags &= ~EF_JETPACK_HOVER;
+
+					self->s.eFlags |= EF_JETPACK_ACTIVE;
+					self->s.eFlags &= ~EF_JETPACK_HOVER;
+
+					if (self->client->ps.velocity[2] > 100)
+					{// Also hit the afterburner...
+						self->client->ps.eFlags |= EF_JETPACK_FLAMING;
+						self->s.eFlags |= EF_JETPACK_FLAMING;
+					}
+					else
+					{// Turn off afterburner...
+						self->client->ps.eFlags &= ~EF_JETPACK_FLAMING;
+						self->s.eFlags &= ~EF_JETPACK_FLAMING;
+					}
+
+					self->client->ps.pm_type = PM_JETPACK;
+				}
+				else
+				{// We are at the right height... We need to hover a little over it until in range...
+					ucmd->upmove = 0.0;
+
+					self->client->ps.velocity[2] = 0;
+					self->client->ps.eFlags |= EF_JETPACK_HOVER;
+					self->client->ps.eFlags &= ~EF_JETPACK_ACTIVE;
+					self->client->ps.eFlags &= ~EF_JETPACK_FLAMING;
+					self->s.eFlags |= EF_JETPACK_HOVER;
+					self->s.eFlags &= ~EF_JETPACK_ACTIVE;
+					self->s.eFlags &= ~EF_JETPACK_FLAMING;
+					self->client->ps.pm_type = PM_JETPACK;
+				}
+			}
+			else
+			{// No waypoint... Just try to land...
+				ucmd->upmove = -50.0;
+
+				self->client->ps.velocity[2] = 0;
+				self->client->ps.eFlags |= EF_JETPACK_HOVER;
+				self->client->ps.eFlags &= ~EF_JETPACK_ACTIVE;
+				self->client->ps.eFlags &= ~EF_JETPACK_FLAMING;
+				self->s.eFlags |= EF_JETPACK_HOVER;
+				self->s.eFlags &= ~EF_JETPACK_ACTIVE;
+				self->s.eFlags &= ~EF_JETPACK_FLAMING;
+				self->client->ps.pm_type = PM_JETPACK;
+			}
+		}
+		else if (HAVE_ENEMY
+			&& self->r.currentOrigin[2] > self->enemy->r.currentOrigin[2] + 384)
+		{// Have an enemy and we are too far above him...
+			ucmd->upmove = -50;
+
+			self->client->ps.eFlags |= EF_JETPACK_HOVER;
+			self->client->ps.eFlags &= ~EF_JETPACK_ACTIVE;
+			self->client->ps.eFlags &= ~EF_JETPACK_FLAMING;
+			self->s.eFlags |= EF_JETPACK_HOVER;
+			self->s.eFlags &= ~EF_JETPACK_ACTIVE;
+			self->s.eFlags &= ~EF_JETPACK_FLAMING;
+			self->client->ps.pm_type = PM_JETPACK;
+		}
+		else if (HAVE_ENEMY
+			&& self->r.currentOrigin[2] < self->enemy->r.currentOrigin[2] + 128)
+		{// Have an enemy and we are too far below him...
+			ucmd->upmove = 50;
+
+			self->client->ps.eFlags |= EF_JETPACK_ACTIVE;
+			self->client->ps.eFlags &= ~EF_JETPACK_HOVER;
+
+			self->s.eFlags |= EF_JETPACK_ACTIVE;
+			self->s.eFlags &= ~EF_JETPACK_HOVER;
+
+			if (self->client->ps.velocity[2] > 100)
+			{// Also hit the afterburner...
+				self->client->ps.eFlags |= EF_JETPACK_FLAMING;
+				self->s.eFlags |= EF_JETPACK_FLAMING;
+			}
+			else
+			{// Turn off afterburner...
+				self->client->ps.eFlags &= ~EF_JETPACK_FLAMING;
+				self->s.eFlags &= ~EF_JETPACK_FLAMING;
+			}
+
+			self->client->ps.pm_type = PM_JETPACK;
+		}
+		else if (self->client->ps.groundEntityNum != ENTITYNUM_WORLD // UQ1: Could make this damage a player/npc below if it hits a player/npc...
+			&& self->client->ps.velocity[2] > 0) 
+		{// Have jetpack and jumping, make sure jetpack is active...
+			self->client->ps.eFlags |= EF_JETPACK_ACTIVE;
+			self->client->ps.eFlags &= ~EF_JETPACK_HOVER;
+
+			self->s.eFlags |= EF_JETPACK_ACTIVE;
+			self->s.eFlags &= ~EF_JETPACK_HOVER;
+
+			if (self->client->ps.velocity[2] > 100)
+			{// Also hit the afterburner...
+				self->client->ps.eFlags |= EF_JETPACK_FLAMING;
+				self->s.eFlags |= EF_JETPACK_FLAMING;
+			}
+			else
+			{// Turn off afterburner...
+				self->client->ps.eFlags &= ~EF_JETPACK_FLAMING;
+				self->s.eFlags &= ~EF_JETPACK_FLAMING;
+			}
+
+			self->client->ps.pm_type = PM_JETPACK;
+		}
+		else if (self->client->ps.pm_type == PM_JETPACK
+			&& self->client->ps.groundEntityNum != ENTITYNUM_WORLD // UQ1: Could make this damage a player/npc below if it hits a player/npc...
+			&& self->client->ps.velocity[2] < 0) 
+		{// Hover at this height...
+			self->client->ps.velocity[2] = 0;
+			self->client->ps.eFlags |= EF_JETPACK_HOVER;
+			self->client->ps.eFlags &= ~EF_JETPACK_ACTIVE;
+			self->client->ps.eFlags &= ~EF_JETPACK_FLAMING;
+			self->s.eFlags |= EF_JETPACK_HOVER;
+			self->s.eFlags &= ~EF_JETPACK_ACTIVE;
+			self->s.eFlags &= ~EF_JETPACK_FLAMING;
+			self->client->ps.pm_type = PM_JETPACK;
+		}
+		else if ( GROUND_TIME[self->client->ps.clientNum] >= level.time )
+		{// On the ground. Make sure jetpack is deactivated...
+			self->client->ps.eFlags &= ~EF_JETPACK_ACTIVE;
+			self->client->ps.eFlags &= ~EF_JETPACK_FLAMING;
+			self->client->ps.eFlags &= ~EF_JETPACK_HOVER;
+			self->s.eFlags &= ~EF_JETPACK_ACTIVE;
+			self->s.eFlags &= ~EF_JETPACK_FLAMING;
+			self->s.eFlags &= ~EF_JETPACK_HOVER;
+			self->client->ps.pm_type = PM_NORMAL;
+		}
+	}
+}
+
 void Boba_FlyStart( gentity_t *self )
 {//switch to seeker AI for a while
+#if 0
 	if ( TIMER_Done( self, "jetRecharge" ) )
 	{
 		self->client->ps.gravity = 0;
@@ -382,41 +576,64 @@ void Boba_FlyStart( gentity_t *self )
 		{
 			self->NPC->aiFlags |= NPCAI_CUSTOM_GRAVITY;
 		}
+
 		self->client->ps.eFlags2 |= EF2_FLYING;//moveType = MT_FLYSWIM;
 		self->client->jetPackTime = level.time + Q_irand( 3000, 10000 );
+
 		//take-off sound
 		G_SoundOnEnt( self, CHAN_ITEM, "sound/boba/jeton.wav" );
+
 		//jet loop sound
 		self->s.loopSound = G_SoundIndex( "sound/boba/jethover.wav" );
+
 		if ( self->NPC )
 		{
 			self->count = Q3_INFINITE; // SEEKER shot ammo count
 		}
 	}
+#endif
 }
 
 void Boba_FlyStop( gentity_t *self )
 {
+#if 0
 	self->client->ps.gravity = g_gravity.value;
+
 	if ( self->NPC )
 	{
 		self->NPC->aiFlags &= ~NPCAI_CUSTOM_GRAVITY;
 	}
+
 	self->client->ps.eFlags2 &= ~EF2_FLYING;
 	self->client->jetPackTime = 0;
+
 	//stop jet loop sound
 	self->s.loopSound = 0;
+
 	if ( self->NPC )
 	{
 		self->count = 0; // SEEKER shot ammo count
 		TIMER_Set( self, "jetRecharge", Q_irand( 1000, 5000 ) );
 		TIMER_Set( self, "jumpChaseDebounce", Q_irand( 500, 2000 ) );
 	}
+
+	self->client->ps.eFlags &= ~EF_JETPACK_ACTIVE;
+	self->client->ps.eFlags &= ~EF_JETPACK_FLAMING;
+	self->client->ps.eFlags &= ~EF_JETPACK_HOVER;
+	self->s.eFlags &= ~EF_JETPACK_ACTIVE;
+	self->s.eFlags &= ~EF_JETPACK_FLAMING;
+	self->s.eFlags &= ~EF_JETPACK_HOVER;
+	self->client->ps.pm_type = PM_NORMAL;
+#endif
 }
 
 qboolean Boba_Flying( gentity_t *self )
 {
+#if 0
 	return ((qboolean)(self->client->ps.eFlags2&EF2_FLYING));//moveType==MT_FLYSWIM));
+#else
+	return qfalse;
+#endif
 }
 
 void Boba_FireFlameThrower( gentity_t *self )
@@ -1729,7 +1946,7 @@ static void Jedi_CombatDistance( int enemy_dist )
 	}
 #endif //0
 
-	if ( NPC_IsBountyHunter(NPCS.NPC)  )
+	if ( NPC_IsBountyHunter(NPCS.NPC) || NPCS.NPC->hasJetpack )
 	{
 		if ( !TIMER_Done( NPCS.NPC, "flameTime" ) )
 		{
@@ -3819,7 +4036,7 @@ static void Jedi_FaceEnemy( qboolean doPitch )
 
 	CalcEntitySpot( NPCS.NPC->enemy, SPOT_HEAD, enemy_eyes );
 
-	if ( NPC_IsBountyHunter(NPCS.NPC)
+	if ( (NPC_IsBountyHunter(NPCS.NPC) || NPCS.NPC->hasJetpack)
 		&& TIMER_Done( NPCS.NPC, "flameTime" )
 		&& NPCS.NPC->s.weapon != WP_NONE
 		&& !IsSniperRifle(NPCS.NPC->s.weapon)
@@ -5041,7 +5258,7 @@ static qboolean Jedi_TryJump( gentity_t *goal )
 								NPCS.NPC->client->ps.weaponTime = NPCS.NPC->client->ps.torsoTimer;
 								NPCS.NPC->client->ps.fd.forcePowersActive |= ( 1 << FP_LEVITATION );
 
-								if ( NPC_IsBountyHunter(NPCS.NPC) )
+								if ( NPC_IsBountyHunter(NPCS.NPC) || NPCS.NPC->hasJetpack)
 								{
 									G_SoundOnEnt( NPCS.NPC, CHAN_ITEM, "sound/boba/jeton.wav" );
 									NPCS.NPC->client->jetPackTime = level.time + Q_irand( 1000, 3000 );
@@ -5942,7 +6159,7 @@ static void Jedi_Patrol( void )
 						G_SetEnemy( NPCS.NPC, best_enemy );
 						NPCS.NPCInfo->stats.aggression = 3;
 					}
-					else if ( NPC_IsBountyHunter(NPCS.NPC) )
+					else if ( NPC_IsBountyHunter(NPCS.NPC) || NPCS.NPC->hasJetpack )
 					{//the player, toy with him
 						//get progressively more interested over time
 						if ( TIMER_Done( NPCS.NPC, "watchTime" ) )

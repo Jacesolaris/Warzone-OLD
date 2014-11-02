@@ -4,6 +4,7 @@ gfx/effects/zam_blaster_blob
     {
         map gfx/effects/zam_blaster_blob
         blendFunc GL_SRC_ALPHA GL_ONE_MINUS_SRC_ALPHA
+		glow
         alphaGen vertex
     }
 }
@@ -14,6 +15,7 @@ gfx/effects/zam_blasterSideFlash
     {
         map gfx/effects/zam_blastersideflash
         blendFunc GL_ONE GL_ONE
+		glow
         rgbGen vertex
     }
 }
@@ -24,6 +26,7 @@ gfx/effects/zam_blasterFrontFlash
     {
         map gfx/effects/zam_blasterfrontflash
         blendFunc GL_ONE GL_ONE
+		glow
         rgbGen vertex
     }
 }
@@ -53,6 +56,7 @@ gfx/effects/orange_blob
     {
         map gfx/effects/orange_blob
         blendFunc GL_SRC_ALPHA GL_ONE_MINUS_SRC_ALPHA
+		glow
         alphaGen vertex
     }
 }
@@ -63,6 +67,7 @@ gfx/effects/orangeSideFlash
     {
         map gfx/effects/orangesideflash
         blendFunc GL_ONE GL_ONE
+		glow
         rgbGen vertex
     }
 }
@@ -73,6 +78,7 @@ gfx/effects/orangeFrontFlash
     {
         map gfx/effects/orangefrontflash
         blendFunc GL_ONE GL_ONE
+		glow
         rgbGen vertex
     }
 }
@@ -83,6 +89,7 @@ gfx/effects/red_blob
     {
         map gfx/effects/red_blob
         blendFunc GL_SRC_ALPHA GL_ONE_MINUS_SRC_ALPHA
+		glow
         alphaGen vertex
     }
 }
@@ -93,6 +100,7 @@ gfx/effects/redSideFlash
     {
         map gfx/effects/redsideflash
         blendFunc GL_ONE GL_ONE
+		glow
         rgbGen vertex
     }
 }
@@ -103,6 +111,7 @@ gfx/effects/redFrontFlash
     {
         map gfx/effects/redfrontflash
         blendFunc GL_ONE GL_ONE
+		glow
         rgbGen vertex
     }
 }
@@ -113,6 +122,7 @@ gfx/effects/blue_blob
     {
         map gfx/effects/blue_blob
         blendFunc GL_SRC_ALPHA GL_ONE_MINUS_SRC_ALPHA
+		glow
         alphaGen vertex
     }
 }
@@ -123,6 +133,7 @@ gfx/effects/blueSideFlash
     {
         map gfx/effects/bluesideflash
         blendFunc GL_ONE GL_ONE
+		glow
         rgbGen vertex
     }
 }
@@ -133,6 +144,7 @@ gfx/effects/blueFrontFlash
     {
         map gfx/effects/bluefrontflash
         blendFunc GL_ONE GL_ONE
+		glow
         rgbGen vertex
     }
 }
@@ -143,6 +155,7 @@ gfx/effects/green_blob
     {
         map gfx/effects/green_blob
         blendFunc GL_SRC_ALPHA GL_ONE_MINUS_SRC_ALPHA
+		glow
         alphaGen vertex
     }
 }
@@ -153,6 +166,7 @@ gfx/effects/greenSideFlash
     {
         map gfx/effects/greensideflash
         blendFunc GL_ONE GL_ONE
+		glow
         rgbGen vertex
     }
 }
@@ -163,6 +177,7 @@ gfx/effects/greenFrontFlash
     {
         map gfx/effects/greenfrontflash
         blendFunc GL_ONE GL_ONE
+		glow
         rgbGen vertex
     }
 }

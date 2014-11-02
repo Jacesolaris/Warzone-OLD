@@ -1,6 +1,6 @@
 
 models/players/ajsf/ajsf-lid
-{	  
+{
 	q3map_nolightmap
 	q3map_onlyvertexlighting
     {
@@ -18,7 +18,7 @@ models/players/ajsf/ajsf-lid
     }
 }
 models/players/ajsf/ajsf-hull
-{	  
+{
 	q3map_nolightmap
 	q3map_onlyvertexlighting
     {
@@ -36,7 +36,7 @@ models/players/ajsf/ajsf-hull
     }
 }
 models/players/ajsf/ajsf-eng
-{	  
+{
 	q3map_nolightmap
 	q3map_onlyvertexlighting
     {
@@ -59,6 +59,7 @@ gfx/effects/ajfs_blob
     {
         map gfx/effects/ajsf_blob
         blendFunc GL_SRC_ALPHA GL_ONE_MINUS_SRC_ALPHA
+		glow
         alphaGen vertex
     }
 }

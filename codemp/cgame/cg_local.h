@@ -1758,6 +1758,8 @@ typedef struct cgEffects_s {
 	fxHandle_t	mShipDestDestroyed;
 	fxHandle_t	mShipDestBurning;
 	fxHandle_t	mBobaJet;
+	fxHandle_t	mBobaJetAfterburner;
+	fxHandle_t	mBobaJetHover;
 
 	//footstep effects
 	fxHandle_t footstepMud;
