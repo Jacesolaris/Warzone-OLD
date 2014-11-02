@@ -1020,7 +1020,7 @@ static void WP_BowcasterAltFire( gentity_t *ent )
 	}
 	else
 	{
-		missile->bounceCount = 3;
+		missile->bounceCount = 8;
 	}
 }
 
