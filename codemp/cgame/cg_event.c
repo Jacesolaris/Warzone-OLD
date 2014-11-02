@@ -2953,6 +2953,44 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 		}
 		break;
 
+	case EV_CLONE_PISTOL_IMPACT:
+		DEBUGNAME("EV_CLONE_PISTOL_IMPACT");
+		ByteToDir(es->eventParm, dir);
+		if (es->emplacedOwner)
+		{//hack: this is an index to a custom effect to use
+			trap->FX_PlayEffectID(cgs.gameEffects[es->emplacedOwner], position, dir, -1, -1, qfalse);
+		}
+		else if (CG_VehicleWeaponImpact(cent))
+		{//a vehicle missile that used an overridden impact effect...
+		}
+		else
+		{
+			CG_MissileHitWall(es->weapon, 0, position, dir, IMPACTSOUND_METAL, qfalse, 0);
+		}
+
+		if (cg_ghoul2Marks.integer &&
+			es->trickedentindex)
+		{ //flag to place a ghoul2 mark
+			CG_G2MarkEvent(es);
+		}
+		break;
+
+	case EV_CLONE_PISTOL_BOUNCE_IMPACT:
+		DEBUGNAME("EV_CLONE_PISTOL_BOUNCE_IMPACT");
+		ByteToDir(es->eventParm, dir);
+		if (es->emplacedOwner)
+		{//hack: this is an index to a custom effect to use
+			trap->FX_PlayEffectID(cgs.gameEffects[es->emplacedOwner], position, dir, -1, -1, qfalse);
+		}
+		else if (CG_VehicleWeaponImpact(cent))
+		{//a vehicle missile that used an overridden impact effect...
+		}
+		else
+		{
+			CG_MissileHitWall(es->weapon, 0, position, dir, IMPACTSOUND_METAL, qfalse, 0);
+		}
+		break;
+
 		//[New EFX System]
 	case EV_PLAY_EFFECT:
 		DEBUGNAME("EV_PLAY_EFFECT");

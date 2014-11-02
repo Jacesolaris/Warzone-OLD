@@ -83,7 +83,9 @@ void FX_CLONEPISTOL_HitWall(vec3_t origin, vec3_t normal, int weapon, qboolean a
 	}
 	else
 	{
-		trap->FX_PlayEffectID(cgs.effects.demp2WallImpactEffect, origin, normal, -1, -1, qfalse);
+		trap->FX_PlayEffectID(CG_EnableEnhancedFX(cgs.effects.demp2WallImpactEffect, 
+			cgs.effects.demp2WallImpactEffectEnhancedFX), origin, normal, -1, -1, qfalse);
+
 	}
 }
 
@@ -94,14 +96,21 @@ FX_CLONEPISTOL_BounceWall
 */
 void FX_CLONEPISTOL_BounceWall(vec3_t origin, vec3_t normal, int weapon, qboolean altFire)
 {
-	fxHandle_t fx = cg_weapons[weapon].WallBounceEffectEnhancedFX;// WallBounceEffectFX;
-	//fxHandle_t fx = cg_weapons[weapon].WallBounceEffectEnhancedFX;
+	fxHandle_t fx = cg_weapons[weapon].WallBounceEffectEnhancedFX;
+	fxHandle_t fx2 = cg_weapons[weapon].WallBounceEffectEnhancedFX;
 	if (altFire) fx = cg_weapons[weapon].altMissileWallImpactfx;
 
-	if (fx)
+	if (fx2)
+	{
+		trap->FX_PlayEffectID(CG_EnableEnhancedFX(fx, fx2), origin, normal, -1, -1, qfalse);
+	}
+	else if (fx)
+	{
 		trap->FX_PlayEffectID(fx, origin, normal, -1, -1, qfalse);
+	}
 	else
-		trap->FX_PlayEffectID(CG_EnableEnhancedFX(cgs.effects.demp2WallBounceEffect, cgs.effects.demp2WallBounceEffectEnhancedFX), origin, normal, -1, -1, qfalse);
+		trap->FX_PlayEffectID(CG_EnableEnhancedFX(cgs.effects.demp2WallBounceEffect, 
+		cgs.effects.demp2WallBounceEffectEnhancedFX), origin, normal, -1, -1, qfalse);
 }
 
 

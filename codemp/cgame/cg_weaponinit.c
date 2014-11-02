@@ -544,7 +544,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altChargeSound = NULL_SOUND;
 		
 		weaponInfo->altMissileModel = NULL_HANDLE;
-		weaponInfo->altMissileRenderfx  = trap->FX_RegisterEffect( "ee3/sniper_shot" );
+		weaponInfo->altMissileRenderfx  = trap->FX_RegisterEffect("ee3/sniper_shot");
 		weaponInfo->altMissileSound = NULL_SOUND;
 		weaponInfo->altMissileDlight = 0;
 		weaponInfo->altMissileHitSound = NULL_SOUND;
@@ -589,12 +589,18 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altMissileDlight = 0;
 		weaponInfo->altMissileHitSound = NULL_SOUND;
 		weaponInfo->altMissileTrailFunc = 0;
+
+		weaponInfo->shotEffectFx = trap->FX_RegisterEffect("clone_pistol_1/lvl3_shot");
+		weaponInfo->ProjectileEffectFX = trap->FX_RegisterEffect("clone_pistol_1/projectile");
+
 		weaponInfo->missileWallImpactfx = trap->FX_RegisterEffect("clone_pistol_1/wall_impact");
 		weaponInfo->wallImpactEffectEnhancedFX = trap->FX_RegisterEffect("clone_pistol_1/wall_impact_enhanced2");
-		weaponInfo->shotEffectFx = trap->FX_RegisterEffect("clone_pistol_1/lvl3_shot");
+		
 		weaponInfo->WallBounceEffectEnhancedFX = trap->FX_RegisterEffect("clone_pistol_1/wall_bounce_enhanced2");
 		weaponInfo->WallBounceEffectFX = trap->FX_RegisterEffect("clone_pistol_1/wall_bounce");
-		weaponInfo->ProjectileEffectFX = trap->FX_RegisterEffect("clone_pistol_1/projectile");
+		
+
+
 		cgs.media.demp2Shell = trap->R_RegisterModel("models/items/sphere.md3");
 		cgs.media.demp2ShellShader = trap->R_RegisterShader("gfx/effects/demp2shell");
 		cgs.media.lightningFlash = trap->R_RegisterShader("gfx/misc/lightningFlash");

@@ -1001,8 +1001,27 @@ static void WP_BowcasterAltFire( gentity_t *ent )
 
 	missile->flags |= FL_BOUNCE;
 	missile->bounceCount = 3;
+	
+	// charge up the pistol to make more bounce on walls.
+	if (ent->s.weapon == WP_CLONE_PISTOL1)
+	{
+		int count = (level.time - ent->client->ps.weaponChargeTime) / DEMP2_CHARGE_UNIT;
 
-	if (ent->s.weapon == WP_CLONE_PISTOL1) missile->bounceCount = 1;
+		if (count < 1)
+		{
+			count = 1;
+		}
+		else if (count > 7)
+		{
+			count = 7;
+		}
+		missile->flags |= FL_BOUNCE;
+		missile->bounceCount = count;
+	}
+	else
+	{
+		missile->bounceCount = 3;
+	}
 }
 
 //---------------------------------------------------------
