@@ -469,6 +469,9 @@ struct gentity_s {
 	qboolean				npc_cower_runaway;
 	int						npc_cower_runaway_anim;
 
+	int						npc_jetpack_height_last_check;
+	vec3_t					npc_jetpack_height;
+
 	qboolean				hasJetpack;
 
 	qboolean				npc_jumping;

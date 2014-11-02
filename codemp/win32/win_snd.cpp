@@ -176,7 +176,11 @@ int SNDDMA_InitDS ()
 	dma.channels = 2;
 	dma.samplebits = 16;
 
-	if (s_khz->integer == 44)
+	if (s_khz->integer == 96)
+		dma.speed = 96000;
+	else if (s_khz->integer == 48)
+		dma.speed = 48000;
+	else if (s_khz->integer == 44)
 		dma.speed = 44100;
 	else if (s_khz->integer == 22)
 		dma.speed = 22050;

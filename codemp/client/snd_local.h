@@ -199,6 +199,9 @@ portable_samplepair_t *S_GetRawSamplePointer();	// TA added this, but it just re
 
 extern cvar_t	*s_volume;
 extern cvar_t	*s_volumeVoice;
+extern cvar_t	*s_volumeEffects;
+extern cvar_t	*s_volumeAmbient;
+extern cvar_t	*s_musicVolume;
 extern cvar_t	*s_nosound;
 extern cvar_t	*s_khz;
 extern cvar_t	*s_allowDynamicMusic;

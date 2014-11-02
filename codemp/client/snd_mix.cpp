@@ -353,10 +353,13 @@ void S_PaintChannels( int endtime ) {
 	sfx_t	*sc;
 	int		ltime, count;
 	int		sampleOffset;
-	int	normal_vol,voice_vol;
+	int		normal_vol, voice_vol, effects_vol, ambient_vol, music_vol;
 
 	snd_vol = normal_vol = s_volume->value*256;
-	voice_vol  = (int)(s_volumeVoice->value*256);
+	voice_vol  = (int)(s_volumeVoice->value*normal_vol);
+	effects_vol  = (int)(s_volumeEffects->value*normal_vol);
+	ambient_vol  = (int)(s_volumeAmbient->value*normal_vol);
+	music_vol  = (int)(s_musicVolume->value*normal_vol);
 
 //Com_Printf ("%i to %i\n", s_paintedtime, endtime);
 	while ( s_paintedtime < endtime ) {
@@ -401,10 +404,34 @@ void S_PaintChannels( int endtime ) {
 				continue;
 			}
 
-			if ( ch->entchannel == CHAN_VOICE || ch->entchannel == CHAN_VOICE_ATTEN || ch->entchannel == CHAN_VOICE_GLOBAL )
+			if ( ch->volumechannel == CHAN_VOICE 
+				|| ch->volumechannel == CHAN_VOICE_ATTEN 
+				|| ch->volumechannel == CHAN_VOICE_GLOBAL )
+			{
 				snd_vol = voice_vol;
-			else
+			}
+			else if ( ch->volumechannel == CHAN_LOCAL
+				|| ch->volumechannel == CHAN_WEAPON
+				|| ch->volumechannel == CHAN_ITEM
+				|| ch->volumechannel == CHAN_BODY
+				|| ch->volumechannel == CHAN_MENU1
+				|| ch->volumechannel == CHAN_LESS_ATTEN
+				|| ch->volumechannel == CHAN_AUTO)
+			{
+				snd_vol = effects_vol;
+			}
+			else if ( ch->volumechannel == CHAN_AMBIENT )
+			{
+				snd_vol = ambient_vol;
+			}
+			else if ( ch->volumechannel == CHAN_MUSIC )
+			{
+				snd_vol = music_vol;
+			}
+			else //CHAN_ANNOUNCER //CHAN_LOCAL_SOUND
+			{
 				snd_vol = normal_vol;
+			}
 
 			ltime = s_paintedtime;
 			sc = ch->thesfx;
@@ -432,43 +459,7 @@ void S_PaintChannels( int endtime ) {
 				}
 			} while ( ltime < end && ch->loopSound );
 		}
-/* temprem
-		// paint in the looped channels.
-		ch = loop_channels;
-		for ( i = 0; i < numLoopChannels ; i++, ch++ ) {
-			if ( !ch->thesfx || (!ch->leftvol && !ch->rightvol )) {
-				continue;
-			}
 
-			{
-
-				ltime = s_paintedtime;
-				sc = ch->thesfx;
-
-				if (sc->soundData==NULL || sc->soundLength==0) {
-					continue;
-				}
-				// we might have to make two passes if it
-				// is a looping sound effect and the end of
-				// the sample is hit
-				do {
-					sampleOffset = (ltime % sc->soundLength);
-
-					count = end - ltime;
-					if ( sampleOffset + count > sc->soundLength ) {
-						count = sc->soundLength - sampleOffset;
-					}
-
-					if ( count > 0 )
-					{
-						ChannelPaint(ch, sc, count, sampleOffset, ltime - s_paintedtime);
-						ltime += count;
-					}
-
-				} while ( ltime < end);
-			}
-		}
-*/
 		// transfer out according to DMA format
 		S_TransferPaintBuffer( end );
 		s_paintedtime = end;

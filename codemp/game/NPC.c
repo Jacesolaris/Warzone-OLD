@@ -2952,19 +2952,19 @@ void NPC_AdjustforStrafe (vec3_t moveDir, qboolean walk, float walkSpeed)
 		if (walk)
 			VectorScale(right, -walkSpeed, right);
 		else
-			VectorScale(right, -48/*64*/, right);
+			VectorScale(right, -64, right);
 	}
 	else if (NPC->bot_strafe_right_timer > level.time)
 	{//strafing right
 		if (walk)
 			VectorScale(right, walkSpeed, right);
 		else
-			VectorScale(right, 48/*64*/, right);
+			VectorScale(right, 64, right);
 	}
 
 	//We assume that moveDir has been normalized before this function.
 	VectorAdd(moveDir, right, moveDir);
-	//VectorNormalize(moveDir);
+	VectorNormalize(moveDir);
 }
 
 qboolean NPC_RoutingSimpleJump ( int wpLast, int wpCurrent )
@@ -3026,7 +3026,7 @@ qboolean NPC_CheckFallPositionOK (gentity_t *NPC, vec3_t position)
 	vec3_t testPos, downPos;
 	vec3_t mins, maxs;
 
-	if (NPC_IsJetpacking(NPC)) return qtrue; // We can't fall anyway...
+	if (NPC_IsJetpacking(NPC) || !TIMER_Done( NPCS.NPC, "emergencyJump" )) return qtrue; // We can't fall anyway...
 
 	VectorSet(mins, -8, -8, -1);
 	VectorSet(maxs, 8, 8, 1);
@@ -3061,7 +3061,7 @@ qboolean NPC_CheckFall (gentity_t *NPC, vec3_t dir)
 {
 	vec3_t forwardPos;
 
-	if (NPC_IsJetpacking(NPC)) return qfalse;
+	if (NPC_IsJetpacking(NPC) || !TIMER_Done( NPCS.NPC, "emergencyJump" )) return qfalse;
 
 	VectorMA( NPC->r.currentOrigin, 18, dir, forwardPos );
 	forwardPos[2]+=16.0;
@@ -3110,7 +3110,7 @@ int NPC_CheckFallJump (gentity_t *NPC, vec3_t dest, usercmd_t *cmd)
 	float noheight_dist = DistanceHorizontal(dest, NPC->r.currentOrigin);
 	float height_dist = dest[2] - NPC->r.currentOrigin[2];//DistanceVertical(dest, NPC->r.currentOrigin);
 
-	if (NPC_IsJetpacking(NPC)) return qfalse;
+	if (NPC_IsJetpacking(NPC) || !TIMER_Done( NPCS.NPC, "emergencyJump" )) return qfalse;
 
 	if (!NPC_CheckFallPositionOK(NPC, dest)) return qfalse;
 		
@@ -3259,7 +3259,7 @@ qboolean UQ_MoveDirClear ( int forwardmove, int rightmove, qboolean reset )
 		return qtrue;
 	}
 
-	if (NPC_IsJetpacking(NPCS.NPC)) 
+	if (NPC_IsJetpacking(NPCS.NPC) || !TIMER_Done( NPCS.NPC, "emergencyJump" )) 
 	{// Jetpack on, we can't fall...
 		return qtrue;
 	}

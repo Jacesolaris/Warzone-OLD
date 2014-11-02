@@ -5,6 +5,9 @@
 
 //#define __JEDI_TRACKING__
 
+extern int gWPNum;
+extern wpobject_t *gWPArray[MAX_WPARRAY_SIZE];
+
 #define SABER_ATTACK_RANGE 24
 
 extern void NPC_ClearPathData ( gentity_t *NPC );
@@ -4604,6 +4607,11 @@ qboolean Jedi_Jump( vec3_t dest, int goalEntNum )
 	// First type of jump...
 	//
 
+	if (!NPC_IsJedi(NPCS.NPC) && Distance(dest, NPCS.NPC->r.currentOrigin) > 256.0 && TIMER_Done( NPCS.NPC, "emergencyJump" ))
+	{// Too far for a non-jedi to jump...
+		return qfalse;
+	}
+
 	NPCS.NPC->nextPadawanJumpThink = level.time + 5000;
 
 	if (goalEntNum != ENTITYNUM_NONE)
@@ -4624,8 +4632,8 @@ qboolean Jedi_Jump( vec3_t dest, int goalEntNum )
 		}
 	}
 
-	if (NPCS.NPC->client->ps.groundEntityNum == ENTITYNUM_NONE)
-	{// UQ1: Try my jump first!
+	if (NPCS.NPC->client->ps.groundEntityNum == ENTITYNUM_NONE && TIMER_Done( NPCS.NPC, "emergencyJump" ))
+	{// UQ1: Try my jump first! Unless we are in emergency jump mode (it needs to use velocity)...
 		if (!NPCS.NPC->npc_jumping)
 		{
 			VectorCopy(NPCS.NPC->r.currentOrigin, NPCS.NPC->npc_jump_start);
@@ -4638,7 +4646,7 @@ qboolean Jedi_Jump( vec3_t dest, int goalEntNum )
 		}
 	}
 
-	if (NPCS.NPC->client->ps.groundEntityNum != ENTITYNUM_NONE)
+	if (NPCS.NPC->client->ps.groundEntityNum != ENTITYNUM_NONE || !TIMER_Done( NPCS.NPC, "emergencyJump" ))
 	{
 		float	targetDist, shotSpeed = 300, travelTime, impactDist, bestImpactDist = Q3_INFINITE;//fireSpeed,
 		vec3_t	targetDir, shotVel, failCase;
@@ -4703,7 +4711,12 @@ qboolean Jedi_Jump( vec3_t dest, int goalEntNum )
 							//Hmm, don't want to land on him, though...
 							break;
 						}
-						else*/ if ( goalEntNum != ENTITYNUM_NONE 
+						else*/ 
+						if ( !TIMER_Done( NPCS.NPC, "emergencyJump" ) )
+						{// Accept anything solid if we are falling to our death!
+							break;
+						}
+						else if ( goalEntNum != ENTITYNUM_NONE 
 							&& (trace.entityNum == ENTITYNUM_NONE || trace.entityNum == ENTITYNUM_WORLD) 
 							&& Distance( trace.endpos, dest ) <= 32/*128*//*96*/ 
 							&& NPC_CheckFallPositionOK(NPCS.NPC, trace.endpos) )
@@ -4811,124 +4824,150 @@ qboolean Jedi_Jump( vec3_t dest, int goalEntNum )
 	// Try a second type of jump...
 	//
 
-#if 0
-	if (NPCS.NPC->client->ps.groundEntityNum != ENTITYNUM_NONE)
-	{//a more complicated jump
-		vec3_t		dir, p1, p2, apex;
-		float		time, height, forward, z, xy, dist, apexHeight;
+	if (NPCS.NPC->client->ps.groundEntityNum != ENTITYNUM_NONE || !TIMER_Done( NPCS.NPC, "emergencyJump" ))
+	{// Try the other type of jump in an emergency...
+		float APEX = 512.0;
 
-		if ( NPCS.NPC->r.currentOrigin[2] > dest[2] )//NPCInfo->goalEntity->r.currentOrigin
-		{
-			VectorCopy( NPCS.NPC->r.currentOrigin, p1 );
-			VectorCopy( dest, p2 );//NPCInfo->goalEntity->r.currentOrigin
-		}
-		else if ( NPCS.NPC->r.currentOrigin[2] < dest[2] )//NPCInfo->goalEntity->r.currentOrigin
-		{
-			VectorCopy( dest, p1 );//NPCInfo->goalEntity->r.currentOrigin
-			VectorCopy( NPCS.NPC->r.currentOrigin, p2 );
-		}
-		else
-		{
-			VectorCopy( NPCS.NPC->r.currentOrigin, p1 );
-			VectorCopy( dest, p2 );//NPCInfo->goalEntity->r.currentOrigin
+		if (!NPC_IsJedi(NPCS.NPC) && TIMER_Done( NPCS.NPC, "emergencyJump" ))
+		{// Not a jedi and not an emergency...
+			APEX = 256.0;
 		}
 
-		//z = xy*xy
-		VectorSubtract( p2, p1, dir );
-		dir[2] = 0;
+		while (APEX >= APEX_HEIGHT)
+		{//a more complicated jump
+			vec3_t		dir, p1, p2, apex;
+			float		time, height, forward, z, xy, dist, apexHeight;
 
-		//Get xy and z diffs
-		xy = VectorNormalize( dir );
-		z = p1[2] - p2[2];
+			//float P_WIDTH = (sqrt(APEX)+sqrt(APEX));
 
-		apexHeight = APEX_HEIGHT/2;
+			if ( NPCS.NPC->r.currentOrigin[2] > dest[2] )//NPCInfo->goalEntity->r.currentOrigin
+			{
+				VectorCopy( NPCS.NPC->r.currentOrigin, p1 );
+				VectorCopy( dest, p2 );//NPCInfo->goalEntity->r.currentOrigin
+			}
+			else if ( NPCS.NPC->r.currentOrigin[2] < dest[2] )//NPCInfo->goalEntity->r.currentOrigin
+			{
+				VectorCopy( dest, p1 );//NPCInfo->goalEntity->r.currentOrigin
+				VectorCopy( NPCS.NPC->r.currentOrigin, p2 );
+			}
+			else
+			{
+				VectorCopy( NPCS.NPC->r.currentOrigin, p1 );
+				VectorCopy( dest, p2 );//NPCInfo->goalEntity->r.currentOrigin
+			}
 
-		//Determine most desirable apex height
-		//FIXME: length of xy will change curve of parabola, need to account for this
-		//somewhere... PARA_WIDTH
-		/*
-		apexHeight = (APEX_HEIGHT * PARA_WIDTH/xy) + (APEX_HEIGHT * z/128);
-		if ( apexHeight < APEX_HEIGHT * 0.5 )
-		{
+			//z = xy*xy
+			VectorSubtract( p2, p1, dir );
+			dir[2] = 0;
+
+			//Get xy and z diffs
+			xy = VectorNormalize( dir );
+			z = p1[2] - p2[2];
+
+			apexHeight = APEX/*APEX_HEIGHT*//2;
+
+			//Determine most desirable apex height
+			//FIXME: length of xy will change curve of parabola, need to account for this
+			//somewhere... PARA_WIDTH
+			/*
+			apexHeight = (APEX_HEIGHT * PARA_WIDTH/xy) + (APEX_HEIGHT * z/128);
+			if ( apexHeight < APEX_HEIGHT * 0.5 )
+			{
 			apexHeight = APEX_HEIGHT*0.5;
-		}
-		else if ( apexHeight > APEX_HEIGHT * 2 )
-		{
+			}
+			else if ( apexHeight > APEX_HEIGHT * 2 )
+			{
 			apexHeight = APEX_HEIGHT*2;
-		}
-		*/
+			}
+			*/
 
-		z = (sqrt(apexHeight + z) - sqrt(apexHeight));
+			z = (sqrt(apexHeight + z) - sqrt(apexHeight));
 
-		//assert(z >= 0);
-		if (z <= 0) return qfalse;
+			//assert(z >= 0);
+			if (z <= 0)
+			{
+				//return qfalse;
+				APEX -= 16;
+				continue;
+			}
 
-//		Com_Printf("apex is %4.2f percent from p1: ", (xy-z)*0.5/xy*100.0f);
+			//		Com_Printf("apex is %4.2f percent from p1: ", (xy-z)*0.5/xy*100.0f);
 
-		xy -= z;
-		xy *= 0.5;
+			xy -= z;
+			xy *= 0.5;
 
-		//assert(xy > 0);
-		if (xy <= 0) return qfalse;
+			//assert(xy > 0);
+			if (xy <= 0) 
+			{
+				//return qfalse;
+				APEX -= 16;
+				continue;
+			}
 
-		VectorMA( p1, xy, dir, apex );
-		apex[2] += apexHeight;
+			VectorMA( p1, xy, dir, apex );
+			apex[2] += apexHeight;
 
-		VectorCopy(apex, NPCS.NPC->pos1);
+			VectorCopy(apex, NPCS.NPC->pos1);
 
-		//Now we have the apex, aim for it
-		height = apex[2] - NPCS.NPC->r.currentOrigin[2];
-		time = sqrt( height / ( .5 * NPCS.NPC->client->ps.gravity ) );//was 0.5, but didn't work well for very long jumps
+			//Now we have the apex, aim for it
+			height = apex[2] - NPCS.NPC->r.currentOrigin[2];
+			time = sqrt( height / ( .5 * NPCS.NPC->client->ps.gravity ) );//was 0.5, but didn't work well for very long jumps
 
-		if ( time )
-		{
-			VectorSubtract ( apex, NPCS.NPC->r.currentOrigin, NPCS.NPC->client->ps.velocity );
-			NPCS.NPC->client->ps.velocity[2] = 0;
-			dist = VectorNormalize( NPCS.NPC->client->ps.velocity );
+			if ( time )
+			{
+				VectorSubtract ( apex, NPCS.NPC->r.currentOrigin, NPCS.NPC->client->ps.velocity );
+				NPCS.NPC->client->ps.velocity[2] = 0;
+				dist = VectorNormalize( NPCS.NPC->client->ps.velocity );
 
-			forward = dist / time * 1.25;//er... probably bad, but...
-			VectorScale( NPCS.NPC->client->ps.velocity, forward, NPCS.NPC->client->ps.velocity );
+				forward = dist / time * 1.25;//er... probably bad, but...
+				VectorScale( NPCS.NPC->client->ps.velocity, forward, NPCS.NPC->client->ps.velocity );
 
-			//FIXME:  Uh.... should we trace/EvaluateTrajectory this to make sure we have clearance and we land where we want?
-			NPCS.NPC->client->ps.velocity[2] = time * NPCS.NPC->client->ps.gravity;
+				//FIXME:  Uh.... should we trace/EvaluateTrajectory this to make sure we have clearance and we land where we want?
+				NPCS.NPC->client->ps.velocity[2] = time * NPCS.NPC->client->ps.gravity;
 
-			//Com_Printf("Jump Velocity: %4.2f, %4.2f, %4.2f\n", NPC->client->ps.velocity[0], NPC->client->ps.velocity[1], NPC->client->ps.velocity[2] );
+				//Com_Printf("Jump Velocity: %4.2f, %4.2f, %4.2f\n", NPC->client->ps.velocity[0], NPC->client->ps.velocity[1], NPC->client->ps.velocity[2] );
 
-			return qtrue;
+				return qtrue;
+			}
+
+			// Failed, try next APEX height...
+			APEX -= 16;
 		}
 	}
-#endif //0
 
 	//
 	// Try a third type of jump...
 	//
 
-#if 0
-	if (NPCS.NPC->client->ps.groundEntityNum != ENTITYNUM_NONE)
-	if ( dest[2] - NPCS.NPC->r.currentOrigin[2] < 64 && DistanceHorizontal( NPCS.NPC->r.currentOrigin, dest ) > 256 )
-	{//a pretty horizontal jump, easy to fake:
-		vec3_t enemy_diff;
-		float enemy_z_diff, enemy_xy_diff;
+/*
+	if (!TIMER_Done( NPCS.NPC, "emergencyJump" ))
+	{// Try the other type of jump in an emergency...
+		//if (NPCS.NPC->client->ps.groundEntityNum != ENTITYNUM_NONE)
+		if ( dest[2] - NPCS.NPC->r.currentOrigin[2] < 64 && DistanceHorizontal( NPCS.NPC->r.currentOrigin, dest ) > 256 )
+		{//a pretty horizontal jump, easy to fake:
+			vec3_t enemy_diff;
+			float enemy_z_diff, enemy_xy_diff;
 
-		VectorSubtract( dest, NPCS.NPC->r.currentOrigin, enemy_diff );
-		enemy_z_diff = enemy_diff[2];
-		enemy_diff[2] = 0;
-		enemy_xy_diff = VectorNormalize( enemy_diff );
+			VectorSubtract( dest, NPCS.NPC->r.currentOrigin, enemy_diff );
+			enemy_z_diff = enemy_diff[2];
+			enemy_diff[2] = 0;
+			enemy_xy_diff = VectorNormalize( enemy_diff );
 
-		VectorScale( enemy_diff, enemy_xy_diff*0.8, NPCS.NPC->client->ps.velocity );
+			VectorScale( enemy_diff, enemy_xy_diff*0.8, NPCS.NPC->client->ps.velocity );
 
-		if ( enemy_z_diff < 64 )
-		{
-			NPCS.NPC->client->ps.velocity[2] = enemy_xy_diff;
+			if ( enemy_z_diff < 64 )
+			{
+				NPCS.NPC->client->ps.velocity[2] = enemy_xy_diff;
+			}
+			else
+			{
+				NPCS.NPC->client->ps.velocity[2] = enemy_z_diff*2+enemy_xy_diff/2;
+			}
+
+			return qtrue;
 		}
-		else
-		{
-			NPCS.NPC->client->ps.velocity[2] = enemy_z_diff*2+enemy_xy_diff/2;
-		}
-
-		return qtrue;
 	}
-#endif //0
+*/
 
 	return qfalse;
 }
@@ -7087,6 +7126,104 @@ qboolean NPC_MoveIntoOptimalAttackPosition ( void )
 	return qfalse;
 }
 
+qboolean NPC_JediCheckFall ( void )
+{// UQ1: Jedi can save them selves from falling - with the force!
+	gentity_t	*NPC = NPCS.NPC;
+	usercmd_t	*ucmd = &NPCS.ucmd;
+
+	if (!NPC_IsJedi(NPC))
+	{// Only jedi (and jetpackers using their own method) can use the force to save themselves from falling...
+		return qfalse;
+	}
+
+	if (NPC_IsAlive(NPC->enemy) && NPC->enemy->r.currentOrigin < NPC->r.currentOrigin && NPC->enemy->s.groundEntityNum != ENTITYNUM_NONE)
+	{// Our enemy is below us... That is fine...
+		return qfalse;
+	}
+	else if (NPC->wpCurrent >= 0 && NPC->wpCurrent < gWPNum && gWPArray[NPC->wpCurrent]->origin < NPC->r.currentOrigin)
+	{// Our waypoint is below us... That is fine...
+		return qfalse;
+	}
+
+	if (TIMER_Done( NPCS.NPC, "emergencyJumpTime" ) && NPC_JetpackFallingEmergencyCheck(NPC))
+	{// We are falling... Use the force luke!
+
+		//trap->Print("%s is emergency jumping.\n", NPC->NPC_type);
+
+		TIMER_Set( NPCS.NPC, "emergencyJump", 1000 );
+
+		if (NPC->enemy 
+			&& NPC_IsAlive(NPC->enemy) 
+			&& Jedi_Jump(NPC->enemy->r.currentOrigin, NPC->enemy->s.number))
+		{// Use enemy as our target point...
+			// Play a sound to make the unbelievable, believable.... lol...
+			G_Sound( NPC, CHAN_BODY, G_SoundIndex( "sound/weapons/force/push.wav" ) );
+
+			// Max once every 10 seconds...
+			TIMER_Set( NPCS.NPC, "emergencyJumpTime", 10000 );
+
+			return qtrue;
+		}
+		else if (NPC->wpCurrent >= 0 
+			&& NPC->wpCurrent < gWPNum
+			&& Jedi_Jump(gWPArray[NPC->wpCurrent]->origin, ENTITYNUM_NONE))
+		{// Use our current waypoint as our target point...
+			// Play a sound to make the unbelievable, believable.... lol...
+			G_Sound( NPC, CHAN_BODY, G_SoundIndex( "sound/weapons/force/push.wav" ) );
+
+			// Max once every 10 seconds...
+			TIMER_Set( NPCS.NPC, "emergencyJumpTime", 10000 );
+
+			return qtrue;
+		}
+		else if (NPC->wpLast >= 0 
+			&& NPC->wpLast < gWPNum
+			&& Jedi_Jump(gWPArray[NPC->wpLast]->origin, ENTITYNUM_NONE))
+		{// Use our last waypoint as our target point...
+			// Play a sound to make the unbelievable, believable.... lol...
+			G_Sound( NPC, CHAN_BODY, G_SoundIndex( "sound/weapons/force/push.wav" ) );
+
+			// Max once every 10 seconds...
+			TIMER_Set( NPCS.NPC, "emergencyJumpTime", 10000 );
+
+			return qtrue;
+		}
+		else if (NPC->wpNext >= 0 
+			&& NPC->wpNext < gWPNum
+			&& Jedi_Jump(gWPArray[NPC->wpNext]->origin, ENTITYNUM_NONE))
+		{// Use our last waypoint as our target point...
+			// Play a sound to make the unbelievable, believable.... lol...
+			G_Sound( NPC, CHAN_BODY, G_SoundIndex( "sound/weapons/force/push.wav" ) );
+
+			// Max once every 10 seconds...
+			TIMER_Set( NPCS.NPC, "emergencyJumpTime", 10000 );
+
+			return qtrue;
+		}
+		else
+		{// We need to find a waypoint...
+			NPC->wpCurrent = DOM_GetNearWP(NPC->r.currentOrigin, NPC->parent->wpCurrent);
+
+			if (NPC->wpCurrent >= 0 
+				&& NPC->wpCurrent < gWPNum
+				&& Jedi_Jump(gWPArray[NPC->wpCurrent]->origin, ENTITYNUM_NONE))
+			{
+				// Play a sound to make the unbelievable, believable.... lol...
+				G_Sound( NPC, CHAN_BODY, G_SoundIndex( "sound/weapons/force/push.wav" ) );
+
+				// Max once every 10 seconds...
+				TIMER_Set( NPCS.NPC, "emergencyJumpTime", 10000 );
+				return qtrue;
+			}
+		}
+	}
+
+	//trap->Print("%s failed emergency jumping.\n", NPC->NPC_type);
+
+	// Uber fail... Die jedi! I could search for a waypoint he can jump to, but what's the point???
+	return qfalse;
+}
+
 extern void NPC_BSST_Patrol( void );
 extern void NPC_BSSniper_Default( void );
 
@@ -7104,6 +7241,11 @@ void NPC_BSJedi_Default( void )
 		NPCS.ucmd.forwardmove = 0;
 		NPCS.ucmd.rightmove = 0;
 		NPCS.ucmd.upmove = 0;
+		return;
+	}
+
+	if (NPC_JediCheckFall())
+	{// Just get out of danger!
 		return;
 	}
 

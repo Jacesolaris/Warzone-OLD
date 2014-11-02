@@ -1005,80 +1005,6 @@
 			decoration
 		}
 
-		itemDef
-		{
-			name				highlight16
-			group				highlights
-			style				WINDOW_STYLE_SHADER
-			rect				260 289 340 14
-			background			"gfx/menus/menu_blendbox"
-			forecolor			1 1 1 1
-			visible			0
-			decoration
-		}
-
-		itemDef
-		{
-			name				highlight17
-			group				highlights
-			style				WINDOW_STYLE_SHADER
-			rect				260 303 340 14
-			background			"gfx/menus/menu_blendbox"
-			forecolor			1 1 1 1
-			visible			0
-			decoration
-		}
-
-		itemDef
-		{
-			name				highlight18
-			group				highlights
-			style				WINDOW_STYLE_SHADER
-			rect				260 317 340 14
-			background			"gfx/menus/menu_blendbox"
-			forecolor			1 1 1 1
-			visible			0
-			decoration
-		}
-
-		itemDef
-		{
-			name				highlight19
-			group				highlights
-			style				WINDOW_STYLE_SHADER
-			rect				260 331 340 14
-			background			"gfx/menus/menu_blendbox"
-			forecolor			1 1 1 1
-			visible			0
-			decoration
-		}
-		
-		itemDef
-		{
-			name				highlight20
-			group				highlights
-			style				WINDOW_STYLE_SHADER
-			rect				260 345 340 14
-			background			"gfx/menus/menu_blendbox"
-			forecolor			1 1 1 1
-			visible			0
-			decoration
-		}
-
-		itemDef
-		{
-			name				highlight21
-			group				highlights
-			style				WINDOW_STYLE_SHADER
-			rect				260 363 340 14
-			background			"gfx/menus/menu_blendbox"
-			forecolor			1 1 1 1
-			visible			0
-			decoration
-		}
-
-
-
 //----------------------------------------------------------------------------------------------
 //
 //	VIDEO 1 MENU BUTTONS
@@ -1448,6 +1374,41 @@
 			} 
 		}
 
+		itemDef 
+		{	
+			name				compress_textures
+			group				video_obsolete
+			type				ITEM_TYPE_MULTI
+			text				@MENUS_COMPRESSED_TEXTURES
+			rect				260 328 340 14
+			textalign			ITEM_ALIGN_RIGHT
+			textalignx			174
+			textaligny			0
+			font 				4
+			textscale 			1
+			forecolor			.615 .615 .956 1
+			cvarFloatList			{  @MENUS_OFF 0 @MENUS_ON 1 }
+			descText			@MENUS_TAKE_ADVANTAGE_OF_3D
+			cvar				"ui_r_ext_compress_textures"
+			visible				0
+
+			mouseenter 
+			{ 
+				show			highlight11
+			}
+			mouseexit 
+			{ 
+				hide			highlight11
+			} 
+			action 
+			{ 
+				play			"sound/interface/button1.wav"
+				uiScript		glCustom
+				setcvar			ui_r_modified 1
+				show			applyChanges
+			}
+		}
+
 		// APPLY CHANGES BUTTON
 		itemDef 
 		{
@@ -1714,42 +1675,6 @@
 			} 
 		}
 
-		itemDef 
-		{			
-			name				shadows
-			group				video2
-      			type				ITEM_TYPE_MULTI
-			text				@MENUS_SHADOWS
-			descText			@MENUS_SHADOWS_DESC
-			cvar				"cg_shadows"
-			cvarFloatList		
-			{  
-				@MENUS_NONE			0 
-				@MENUS_SHADOWS_SIMPLE		1 
-				@MENUS_SHADOWS_VOLUMETRIC	2
-				"Projected"			3
-			}
-			rect				260 289 340 14
-	   		textalign			ITEM_ALIGN_RIGHT
-			textalignx			174
-			textaligny			0
-			font 				4
-			textscale 			1
-			forecolor			0.65 0.65 1 1
-			visible				0
-			action
-			{ 
-				play			"sound/interface/button1.wav" ; 
-			}
-			mouseenter 
-			{ 
-				show			highlight16
-			}
-			mouseexit 
-			{ 
-				hide			highlight16
-			}  
-		}
 		
 		itemDef 
 		{	
@@ -1763,7 +1688,7 @@
 				@MENUS_OFF 	0 
 				@MENUS_ON 	1 
 			}
-			rect				260 303 340 14
+			rect				260 300 340 14
 	   		textalign			ITEM_ALIGN_RIGHT
 			textalignx			174
 			textaligny			0
@@ -1778,81 +1703,11 @@
 			}
 			mouseenter 
 			{ 
-				show			highlight17
+				show			highlight9
 			}
 			mouseexit 
 			{ 
-				hide			highlight17
-			} 
-		}
-
-		itemDef 
-		{	
-			name				dynamic_glow
-			group				video2
-      		type				ITEM_TYPE_MULTI
-			text				@MENUS_DYNAMIC_GLOW
-			cvar				r_dynamicglow
-			cvarFloatList		
-			{  
-				@MENUS_OFF 	0 
-				@MENUS_ON 	1 
-			}
-			rect				260 317 340 14
-	   		textalign			ITEM_ALIGN_RIGHT
-			textalignx			174
-			textaligny			0
-			font 				4
-			textscale 			1
-			forecolor			0.65 0.65 1 1
-			visible				0
-			descText			@MENUS_DYNAMIC_GLOW_DESC
-			action
-			{ 
-				play			"sound/interface/button1"
-			}
-			mouseenter 
-			{ 
-				show			highlight18
-			}
-			mouseexit 
-			{ 
-				hide			highlight18
-			} 
-		}
-
-		itemDef 
-		{	
-			name				light_flares
-			group				video2
-      		type				ITEM_TYPE_MULTI
-			text				@MENUS_LIGHT_FLARES
-			cvar				r_flares
-			cvarFloatList		
-			{  
-				@MENUS_OFF 	0 
-				@MENUS_ON 	1 
-			}
-			rect				260 331 340 14
-	   		textalign			ITEM_ALIGN_RIGHT
-			textalignx			174
-			textaligny			0
-			font 				4
-			textscale 			1
-			forecolor			0.65 0.65 1 1
-			visible				0
-			descText			@MENUS_TOGGLE_TO_SHOW_HALOS
-			action
-			{ 
-				play			"sound/interface/button1"
-			}
-			mouseenter 
-			{ 
-				show			highlight19
-			}
-			mouseexit 
-			{ 
-				hide			highlight19
+				hide			highlight9
 			} 
 		}
 
@@ -1860,7 +1715,7 @@
 		{	
 			name				wall_marks
 			group				video2
-      		type				ITEM_TYPE_MULTI
+      			type				ITEM_TYPE_MULTI
 			text				@MENUS_WALL_MARKS
 			cvar				cg_marks
 			cvarFloatList		
@@ -1868,7 +1723,7 @@
 				@MENUS_OFF 	0 
 				@MENUS_ON 	1 
 			}
-			rect				260 345 340 14
+			rect				260 314 340 14
 	   		textalign			ITEM_ALIGN_RIGHT
 			textalignx			174
 			textaligny			0
@@ -1883,11 +1738,11 @@
 			}
 			mouseenter 
 			{ 
-				show			highlight20
+				show			highlight10
 			}
 			mouseexit 
 			{ 
-				hide			highlight20
+				hide			highlight10
 			} 
 		}
 
@@ -1900,7 +1755,7 @@
 			cvarTest			r_ext_texture_filter_anisotropic_avail
 			disableCvar			{ 0 }     
 			cvarfloat				r_ext_texture_filter_anisotropic 1 .5 16
-			rect				260 363 340 14
+			rect				260 341 340 14
 			textalign			ITEM_ALIGN_RIGHT
 			textalignx			174
 			textaligny			0
@@ -1915,11 +1770,11 @@
 			}
 			mouseenter 
 			{ 
-				show			highlight21
+				show			highlight12
 			}
 			mouseexit 
 			{ 
-				hide			highlight21
+				hide			highlight12
 			} 
 		}
 
@@ -1968,26 +1823,24 @@
 		}
 
 //----------------------------------------------------------------------------------------------
-//
 //	SOUND FIELDS
-//
 //----------------------------------------------------------------------------------------------
 		itemDef 
 		{
-			name				effects_volume
+			name				master_volume
 			group				sound
 			type				ITEM_TYPE_SLIDER
-			text				@MENUS_EFFECTS_VOLUME
+			text				"Master Volume"
 			cvarfloat			"s_volume" 0 0 1
 			rect				260 188 340 14
 	   		textalign			ITEM_ALIGN_RIGHT
 			textalignx			174
 			textaligny			0
-			font 				4
+			font 				4					
 			textscale 			1
-			forecolor			0.65 0.65 1 1
+			forecolor			.615 .615 .956 1
 			visible				0
-			descText			@MENUS_ADJUST_VOLUME_FOR_SOUND
+			descText			"Adjust the volume for all sounds."
 			action 
 			{ 
 				play			"sound/interface/button1.wav" ;
@@ -2014,9 +1867,9 @@
 	   		textalign			ITEM_ALIGN_RIGHT
 			textalignx			174
 			textaligny			0
-			font 				4
+			font 				4					
 			textscale 			1
-			forecolor			0.65 0.65 1 1
+			forecolor			.615 .615 .956 1
 			visible				0
 			descText			@MENUS_ADJUST_VOLUME_FOR_MUSIC
 			action 
@@ -2040,16 +1893,16 @@
 			group				sound
 			type				ITEM_TYPE_SLIDER
 			text				@MENUS_VOICE_VOLUME
-			cvarfloat			"s_volumeVoice" 0 0 1
+			cvarfloat			"s_volumevoice" 0 0 1
 			rect				260 244 340 14
 	   		textalign			ITEM_ALIGN_RIGHT
 			textalignx			174
 			textaligny			0
-			font 				4
+			font 				4					
 			textscale 			1
-			forecolor			0.65 0.65 1 1
+			forecolor			.615 .615 .956 1
 			visible				0
-			descText			@MENUS_VOICE_VOLUME_DESC
+			descText			@MENUS_ADJUST_VOLUME_FOR_SPEECH
 			action 
 			{ 
 				play			"sound/interface/button1.wav" ;
@@ -2064,6 +1917,68 @@
 				hide			highlight5
 			} 
 		}
+		
+		itemDef 
+		{
+			name				effects_volume
+			group				sound
+			type				ITEM_TYPE_SLIDER
+			text				@MENUS_EFFECTS_VOLUME
+			cvarfloat			"s_volumeeffects" 0 0 1
+			rect				260 272 340 14
+	   		textalign			ITEM_ALIGN_RIGHT
+			textalignx			174
+			textaligny			0
+			font 				4					
+			textscale 			1
+			forecolor			.615 .615 .956 1
+			visible				0
+			descText			@MENUS_ADJUST_VOLUME_FOR_SOUND
+			action 
+			{ 
+				play			"sound/interface/button1.wav" ;
+			}
+
+			mouseenter 
+			{ 
+				show			highlight1
+			}
+			mouseexit 
+			{ 
+				hide			highlight1
+			} 
+		}
+		
+		itemDef 
+		{
+			name				ambient_volume
+			group				sound
+			type				ITEM_TYPE_SLIDER
+			text				"Ambient Volume"
+			cvarfloat			"s_volumeambient" 0 0 1
+			rect				260 300 340 14
+	   		textalign			ITEM_ALIGN_RIGHT
+			textalignx			174
+			textaligny			0
+			font 				4					
+			textscale 			1
+			forecolor			.615 .615 .956 1
+			visible				0
+			descText			"Adjust the ambient sound volume."
+			action 
+			{ 
+				play			"sound/interface/button1.wav" ;
+			}
+
+			mouseenter 
+			{ 
+				show			highlight1
+			}
+			mouseexit 
+			{ 
+				hide			highlight1
+			} 
+		}
 
 		itemDef 
 		{	
@@ -2072,22 +1987,16 @@
       			type				ITEM_TYPE_MULTI
 			text				@MENUS_SOUND_QUALITY
 			cvar				"s_khz"
-			cvarFloatList		
-			{ 
-				@MENUS_LOW 	11  
-				@MENUS_HIGH 	22 
-			}
-			rect				260 272 340 14
+			cvarFloatList			{ "Low" 11  "Medium" 22 "High" 44 }
+			rect				260 356 340 14
 	   		textalign			ITEM_ALIGN_RIGHT
 			textalignx			174
 			textaligny			0
-			font 				4
+			font 				4					
 			textscale 			1
-			forecolor			0.65 0.65 1 1
+			forecolor			.615 .615 .956 1
 			visible				0
 			descText			@MENUS_TRADE_CLARITY_OF_SOUND
-			cvarTest			"s_UseOpenAL"
-			hideCvar			{ 1 }
 
 			mouseenter 
 			{ 
@@ -2102,57 +2011,6 @@
 				play			"sound/interface/button1.wav"
 				uiScript		update s_khz
 			}
-		}
-
-		itemDef 
-		{
-			name				eax
-			group				sound
-			type				ITEM_TYPE_MULTI
-			cvar				"s_UseOpenAL"
-			cvarFloatList		
-			{  
-				@MENUS_OFF 	0 
-				@MENUS_ON 	1 
-			}
-			text				@MENUS_EAX
-			rect				260 300 340 14
-	   		textalign			ITEM_ALIGN_RIGHT
-			textalignx			174
-			textaligny			0
-			font 				4
-			textscale 			1
-			forecolor			0.65 0.65 1 1
-			visible				0
-			descText			@MENUS_EAX_DESC
-			action 
-			{ 
-				play			"sound/interface/button1.wav"
-				uiScript		update s_khz
-			}
-
-			mouseenter 
-			{ 
-				show			highlight9
-			}
-			mouseexit 
-			{ 
-				hide			highlight9
-			} 
-		}
-
-		itemDef
-		{
-			name				eax_icon
-			group				sound
-			style				WINDOW_STYLE_SHADER
-			rect				380 320 128 64
-			background			"gfx/menus/eax"
-			forecolor			1 1 1 1
-			visible				1
-			decoration
-			cvarTest			"s_UseOpenAL"
-			hideCvar			{ 0 }
 		}
 
 //----------------------------------------------------------------------------------------------
@@ -2661,22 +2519,21 @@
 			rect				270 196 320 176
 			type				ITEM_TYPE_LISTBOX
 			style				WINDOW_STYLE_FILLED
-			elementwidth		120
-			elementheight		16
+			elementwidth			120
+			elementheight			16
 			font				2
 			textscale			1
-			textaligny			-2
-			border			1
+			border				1
 			bordersize			1
 			bordercolor			.5 .5 .5 .5
 			forecolor			1 .682 0 1
 			backcolor			0 0 .5 .25
-			outlinecolor		.5 .5 .5 .5
+			outlinecolor			.5 .5 .5 .5
 			elementtype			LISTBOX_TEXT
-			feeder			9
+			feeder				9
 			notselectable
-			visible			0
-			columns			1 2 40 280
+			visible				0
+			columns				1 2 40 20  // 200 80 30
 		}
 
 		itemDef 

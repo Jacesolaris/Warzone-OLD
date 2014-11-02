@@ -157,7 +157,8 @@ qboolean NPC_PadawanMove( void )
 
 				return qtrue;
 			}
-			else if (NPC->parent->s.groundEntityNum != ENTITYNUM_NONE) // UQ1: Let's just skip pathfinding completely...
+			else if (NPC->parent->s.groundEntityNum != ENTITYNUM_NONE
+				&& (!NPC_IsAlive(NPC->enemy) || Distance(NPC->parent->r.currentOrigin, NPC->r.currentOrigin) > 1024))
 			{// Padawan is too far from jedi. Teleport to him... Only if they are not in mid air...
 				if (NPC->nextPadawanTeleportThink <= level.time)
 				{

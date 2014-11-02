@@ -351,6 +351,7 @@ extern qboolean NPC_FuturePathIsSafe( gentity_t *self );
 // NPC_AI_Jetpack.c
 extern void NPC_CheckFlying ( void );
 extern qboolean NPC_IsJetpacking ( gentity_t *self );
+extern qboolean NPC_JetpackFallingEmergencyCheck (gentity_t *NPC);
 
 // NPC_AI_Padawan.c
 extern qboolean NPC_PadawanMove( void );

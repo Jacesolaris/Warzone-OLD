@@ -1563,31 +1563,28 @@
 		}
 
 
-		//----------------------------------------------------------------------------------------------
-		//
-		//	SOUND FIELDS
-		//
-		//----------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------
+//	SOUND FIELDS
+//----------------------------------------------------------------------------------------------
 		itemDef 
 		{
-			name				effects_volume
+			name				master_volume
 			group				sound
 			type				ITEM_TYPE_SLIDER
-			text				@MENUS_EFFECTS_VOLUME
+			text				"Master Volume"
 			cvarfloat			"s_volume" 0 0 1
-			rect				220 61 300 20
+			rect				150 61 900 20
 	   		textalign			ITEM_ALIGN_RIGHT
-			textalignx			120
+			textalignx			174
 			textaligny			0
-			font 				4
+			font 				4					
 			textscale 			1
-			forecolor		.615 .615 .956 1
-			visible			0
-			// appearance_slot		1
-			descText			@MENUS_ADJUST_VOLUME_FOR_SOUND
+			forecolor			.615 .615 .956 1
+			visible				0
+			descText			"Adjust the volume for all sounds."
 			action 
 			{ 
-				play			"sound/interface/button1"
+				play			"sound/interface/button1.wav" ;
 			}
 
 			mouseenter 
@@ -1607,19 +1604,18 @@
 			type				ITEM_TYPE_SLIDER
 			text				@MENUS_MUSIC_VOLUME
 			cvarfloat			"s_musicvolume" 0 0 1
-			rect				220 81 300 20
+			rect				150 81 900 20
 	   		textalign			ITEM_ALIGN_RIGHT
-			textalignx			120
+			textalignx			174
 			textaligny			0
-			font 				4
+			font 				4					
 			textscale 			1
-			forecolor		.615 .615 .956 1
-			visible			0
-			// appearance_slot		2
+			forecolor			.615 .615 .956 1
+			visible				0
 			descText			@MENUS_ADJUST_VOLUME_FOR_MUSIC
 			action 
 			{ 
-				play			"sound/interface/button1"
+				play			"sound/interface/button1.wav" ;
 			}
 
 			mouseenter 
@@ -1638,19 +1634,19 @@
 			group				sound
 			type				ITEM_TYPE_SLIDER
 			text				@MENUS_VOICE_VOLUME
-			cvarfloat			"s_volumeVoice" 0 0 1
-			rect				220 101 300 20
+			cvarfloat			"s_volumevoice" 0 0 1
+			rect				150 101 900 20
 	   		textalign			ITEM_ALIGN_RIGHT
-			textalignx			120
+			textalignx			174
 			textaligny			0
-			font 				4
+			font 				4					
 			textscale 			1
-			forecolor		.615 .615 .956 1
+			forecolor			.615 .615 .956 1
 			visible				0
-			descText			@MENUS_VOICE_VOLUME_DESC
+			descText			@MENUS_ADJUST_VOLUME_FOR_SPEECH
 			action 
 			{ 
-				play			"sound/interface/button1"
+				play			"sound/interface/button1.wav" ;
 			}
 
 			mouseenter 
@@ -1662,27 +1658,58 @@
 				hide			highlight4
 			} 
 		}
-
-
+		
 		itemDef 
-		{	
-			name				sound_quality
+		{
+			name				effects_volume
 			group				sound
-      		type				ITEM_TYPE_MULTI
-			text				@MENUS_SOUND_QUALITY
-			cvar				"s_khz"
-			cvarFloatList		{ @MENUS_LOW 11  @MENUS_HIGH 22 }
-			rect				220 141 300 20
+			type				ITEM_TYPE_SLIDER
+			text				@MENUS_EFFECTS_VOLUME
+			cvarfloat			"s_volumeeffects" 0 0 1
+			rect				150 121 900 20
 	   		textalign			ITEM_ALIGN_RIGHT
-			textalignx			165
+			textalignx			174
 			textaligny			0
-			font 				4
+			font 				4					
 			textscale 			1
-			forecolor		.615 .615 .956 1
-			visible			0
-			descText			@MENUS_TRADE_CLARITY_OF_SOUND
-			cvarTest			"s_UseOpenAL"
-			hideCvar			{ 1 }
+			forecolor			.615 .615 .956 1
+			visible				0
+			descText			@MENUS_ADJUST_VOLUME_FOR_SOUND
+			action 
+			{ 
+				play			"sound/interface/button1.wav" ;
+			}
+
+			mouseenter 
+			{ 
+				show			highlight5
+			}
+			mouseexit 
+			{ 
+				hide			highlight5
+			} 
+		}
+		
+		itemDef 
+		{
+			name				ambient_volume
+			group				sound
+			type				ITEM_TYPE_SLIDER
+			text				"Ambient Volume"
+			cvarfloat			"s_volumeambient" 0 0 1
+			rect				150 141 900 20
+	   		textalign			ITEM_ALIGN_RIGHT
+			textalignx			174
+			textaligny			0
+			font 				4					
+			textscale 			1
+			forecolor			.615 .615 .956 1
+			visible				0
+			descText			"Adjust the ambient sound volume."
+			action 
+			{ 
+				play			"sound/interface/button1.wav" ;
+			}
 
 			mouseenter 
 			{ 
@@ -1692,34 +1719,25 @@
 			{ 
 				hide			highlight6
 			} 
-			action 
-			{
-				play			"sound/interface/button1"
-				uiScript		update 	"s_khz"
-			}
 		}
+
 		itemDef 
-		{
-			name				eax
+		{	
+			name				sound_quality
 			group				sound
-			type				ITEM_TYPE_MULTI
-			cvar				"s_UseOpenAL"
-			cvarFloatList		{  @MENUS_OFF 0 @MENUS_ON 1 }
-			text				@MENUS_EAX
-			rect				220 181 300 20
+      			type				ITEM_TYPE_MULTI
+			text				@MENUS_SOUND_QUALITY
+			cvar				"s_khz"
+			cvarFloatList			{ "Low" 11  "Medium" 22 "High" 44 }
+			rect				150 181 900 20
 	   		textalign			ITEM_ALIGN_RIGHT
-			textalignx			120
+			textalignx			174
 			textaligny			0
-			font 				4
+			font 				4					
 			textscale 			1
-			forecolor		.615 .615 .956 1
-			visible			0
-			descText			@MENUS_EAX_DESC
-			action 
-			{ 
-				play			"sound/interface/button1.wav"
-				uiScript		update s_khz
-			}
+			forecolor			.615 .615 .956 1
+			visible				0
+			descText			@MENUS_TRADE_CLARITY_OF_SOUND
 
 			mouseenter 
 			{ 
@@ -1729,20 +1747,11 @@
 			{ 
 				hide			highlight8
 			} 
-		}
-
-		itemDef
-		{
-			name				eax_icon
-			group				sound
-			style				WINDOW_STYLE_SHADER
-			rect				297 201 128 64
-			background			"gfx/menus/eax"
-			forecolor			1 1 1 1
-			visible				1
-			decoration
-			cvarTest			"s_UseOpenAL"
-			hideCvar			{ 0 }
+			action 
+			{
+				play			"sound/interface/button1.wav"
+				uiScript		update s_khz
+			}
 		}
 
 		//----------------------------------------------------------------------------------------------
