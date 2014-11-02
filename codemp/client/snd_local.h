@@ -5,6 +5,20 @@
 #include "snd_public.h"
 #include "mp3code/mp3struct.h"
 
+
+
+//#define __USE_BASS__
+
+
+#ifdef __USE_BASS__
+extern qboolean BASS_Init ( void );
+extern void BASS_Shutdown ( void );
+extern void BASS_AddStreamChanel ( char *file );
+extern void BASS_AddMemoryChanel ( char *memory, int length );
+extern void BASS_Update ( void );
+#endif //__USE_BASS__
+
+
 #if defined(_WIN32) && !defined(WIN64)
 //#define USE_OPENAL // UQ1: Umm.. nope. Too few channels!!!
 #endif

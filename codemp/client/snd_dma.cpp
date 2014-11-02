@@ -1632,10 +1632,12 @@ void S_StartSound(const vec3_t origin, int entityNum, int entchannel, sfxHandle_
 
 	ch->master_vol = SOUND_MAXVOL;	//FIXME: Um.. control?
 	ch->entnum = entityNum;
+
 	if ( entchannel == CHAN_VOICE || entchannel == CHAN_VOICE_ATTEN || entchannel == CHAN_VOICE_GLOBAL )
 		ch->entchannel = CHAN_AUTO; // UQ1: Let voice use ALL channels, but still animate...
 	else
 		ch->entchannel = entchannel;
+
 	ch->thesfx = sfx;
 	ch->startSample = START_SAMPLE_IMMEDIATE;
 
