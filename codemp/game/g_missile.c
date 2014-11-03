@@ -354,10 +354,33 @@ void G_MissileImpact(gentity_t *ent, trace_t *trace) {
 	// check for bounce
 	if (!other->takedamage &&
 		(ent->bounceCount > 0 || ent->bounceCount == -5) &&
-		(ent->flags & (FL_BOUNCE | FL_BOUNCE_HALF))) {
-		G_BounceMissile(ent, trace);
-		G_AddEvent(ent, EV_GRENADE_BOUNCE, 0);
-		return;
+		(ent->flags & (FL_BOUNCE | FL_BOUNCE_HALF)))
+	{
+		if (ent->s.weapon == WP_CLONE_PISTOL1 || ent->s.weapon == WP_BOWCASTER)
+		{ // hit effects on Clone Pistol and Bowcaster to bounces off floors.
+			if (!(trace->surfaceFlags & SURF_FORCEFIELD))
+			{
+				G_BounceMissile(ent, trace);
+
+				if (trace->surfaceFlags & SURF_METALSTEPS)
+					G_AddEvent(ent, EV_CLONE_PISTOL_BOUNCE_IMPACT, DirToByte(trace->plane.normal));
+				else if (ent->s.weapon != G2_MODEL_PART) //dismemberment part
+					G_AddEvent(ent, EV_CLONE_PISTOL_IMPACT, DirToByte(trace->plane.normal));
+				return;
+			}
+			else
+			{ //hit effects on forcefields.
+				G_BounceMissile(ent, trace);
+				G_AddEvent(ent, EV_GRENADE_BOUNCE, 0);
+				return;
+			}
+		}
+		else
+		{ // grenades would be handled by this.
+			G_BounceMissile(ent, trace);
+			G_AddEvent(ent, EV_GRENADE_BOUNCE, 0);
+			return;
+		}
 	}
 	else if (ent->neverFree && ent->s.weapon == WP_SABER && (ent->flags & FL_BOUNCE_HALF))
 	{ //this is a knocked-away saber
