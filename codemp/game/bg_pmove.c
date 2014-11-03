@@ -11427,15 +11427,6 @@ void PmoveSingle (pmove_t *pmove) {
 	// set mins, maxs, and viewheight
 	PM_CheckDuck ();
 
-	{
-		if (pm->ps->weapon == WP_SABER &&
-			BG_SpinningSaberAnim( pm->ps->legsAnim ))
-		{ //make him stir around since he shouldn't have any real control when spinning
-			pm->ps->velocity[0] += Q_irand(-100, 100);
-			pm->ps->velocity[1] += Q_irand(-100, 100);
-		}
-	}
-
 	if (pm->ps->clientNum >= MAX_CLIENTS &&
 		pm_entSelf && pm_entSelf->m_pVehicle)
 	{ //Now update our mins/maxs to match our m_vOrientation based on our length, width & height

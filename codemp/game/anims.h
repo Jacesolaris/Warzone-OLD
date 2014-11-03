@@ -1026,7 +1026,6 @@ typedef enum //# animNumber_e
 	BOTH_A7_KICK_B_AIR,
 	BOTH_A7_KICK_R_AIR,
 	BOTH_A7_KICK_L_AIR,
-	BOTH_JUMPKICK1,
 	BOTH_FLIP_ATTACK7,
 	BOTH_FLIP_HOLD7,
 	BOTH_FLIP_LAND,
@@ -1792,7 +1791,7 @@ typedef enum //# animNumber_e
 	BOTH_CIN_50,		//# Level specific cinematic
 
 	//[NewANIM]
-
+	BOTH_JUMPKICK1,
 	
 	//Jetpack Fly anim
 	JET_BACK,
