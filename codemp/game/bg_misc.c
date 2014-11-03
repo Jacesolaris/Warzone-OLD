@@ -253,6 +253,7 @@ int WeaponReadyAnim[WP_NUM_WEAPONS] =
 	TORSO_WEAPONREADY2, //WP_ELG_3A
 	TORSO_WEAPONREADY2, //WP_S5_PISTOL
 	MINIGUN_READY,		//WP_Z6_BLASTER_CANON
+	TORSO_WEAPONREADY3,//WP_WOOKIE_BOWCASTER
 	TORSO_WEAPONREADY3,//TORSO_WEAPONREADY5,//WP_BOWCASTER,
 	TORSO_WEAPONREADY3,//TORSO_WEAPONREADY6,//WP_REPEATER,
 	TORSO_WEAPONREADY3,//TORSO_WEAPONREADY7,//WP_DEMP2,
@@ -306,6 +307,7 @@ int WeaponReadyLegsAnim[WP_NUM_WEAPONS] =
 	BOTH_STAND1,//WP_ELG_3A
 	BOTH_STAND1,//WP_S5_PISTOL
 	BOTH_STAND1,//WP_Z6_BLASTER_CANON
+	BOTH_STAND1,//WP_WOOKIE_BOWCASTER
 	BOTH_STAND1,//TORSO_WEAPONREADY5,//WP_BOWCASTER,
 	BOTH_STAND1,//TORSO_WEAPONREADY6,//WP_REPEATER,
 	BOTH_STAND1,//TORSO_WEAPONREADY7,//WP_DEMP2,
@@ -358,6 +360,7 @@ int WeaponAttackAnim[WP_NUM_WEAPONS] =
 	BOTH_ATTACK2,//WP_ELG_3A
 	BOTH_ATTACK2,//WP_S5_PISTOL
 	MINIGUN_FIRE, //WP_Z6_BLASTER_CANON
+	BOTH_ATTACK3,//WP_WOOKIE_BOWCASTER
 	BOTH_ATTACK3,//BOTH_ATTACK5,//WP_BOWCASTER,
 	BOTH_ATTACK3,//BOTH_ATTACK6,//WP_REPEATER,
 	BOTH_ATTACK2,//BOTH_ATTACK7,//WP_DEMP2,
@@ -1472,6 +1475,29 @@ Don't place this
 	/* sounds */ "",
 	"@SP_INGAME_BLASTER_PISTOL"					// description
 },
+
+
+
+/*QUAKED weapon_Wookie_Bowcaster (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+*/
+{
+	"weapon_Wookie_Bowcaster",
+	"sound/weapons/w_pkup.wav",
+	{ "models/weapons3/wbowcaster/wbowcaster1.glm",
+	0, 0, 0 },
+	/* view */		"models/weapons3/wbowcaster/wbowcaster1.md3",
+	/* icon */		"gfx/hud/w_icon_wbowcaster1",
+	/* pickup *///	"Wookie Bowcaster",
+	100,
+	IT_WEAPON,
+	WP_WOOKIE_BOWCASTER,
+	/* precache */ "",
+	/* sounds */ "",
+	"@MENUS_THE_PRIMARY_WEAPON_OF"				// description
+},
+
+
+
 
 /*QUAKED weapon_blaster (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
 */

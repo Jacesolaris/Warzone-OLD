@@ -717,6 +717,40 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->shotEffectFx = trap->FX_RegisterEffect("clone_rifle/shot");
 		break;
 
+	case WP_WOOKIE_BOWCASTER:
+		weaponInfo->item->classname = "Wookie BowCaster";
+		weaponInfo->altFlashSound[0] = NULL_SOUND;
+		weaponInfo->altFiringSound = NULL_SOUND;
+		weaponInfo->altChargeSound = NULL_SOUND;
+		weaponInfo->altMuzzleEffect = trap->FX_RegisterEffect("blaster/muzzle_flash");
+		weaponInfo->altMissileModel = NULL_HANDLE;
+		weaponInfo->altMissileSound = NULL_SOUND;
+		weaponInfo->altMissileDlight = 0;
+		weaponInfo->altMissileHitSound = NULL_SOUND;
+		weaponInfo->altMissileTrailFunc = FX_BlasterProjectileThink;
+		weaponInfo->flashSound[0] = trap->S_RegisterSound("sound/weapons/bowcaster/fire.wav");
+		weaponInfo->altFlashSound[0] = trap->S_RegisterSound("sound/weapons/bowcaster/fire.wav");
+		weaponInfo->chargeSound = trap->S_RegisterSound("sound/weapons/bowcaster/altcharge.wav");
+		weaponInfo->firingSound = NULL_SOUND;
+		weaponInfo->muzzleEffect = trap->FX_RegisterEffect("blaster/muzzle_flash");
+		weaponInfo->missileModel = NULL_HANDLE;
+		weaponInfo->missileSound = NULL_SOUND;
+		weaponInfo->missileDlight = 0;
+		weaponInfo->missileHitSound = NULL_SOUND;
+		weaponInfo->missileTrailFunc = FX_BowcasterAltProjectileThink;
+		weaponInfo->missileRenderfx = NULL_FX;
+		weaponInfo->altMissileRenderfx = NULL_FX;
+		weaponInfo->powerupShotRenderfx = NULL_FX;
+
+		cgs.effects.bowcasterShotEffect = trap->FX_RegisterEffect("bowcaster/shot");
+		cgs.effects.bowcasterImpactEffect = trap->FX_RegisterEffect("bowcaster/wall_impact");
+		cgs.effects.bowcasterImpactEffectEnhancedFX = trap->FX_RegisterEffect("bowcaster/wall_impact_enhanced2");
+		cgs.media.greenFrontFlash = trap->R_RegisterShader("gfx/effects/redfrontflash");
+
+		cgs.media.bowcasterMask = trap->R_RegisterShaderNoMip("gfx/2d/bowMask");
+		cgs.media.bowcasterInsert = trap->R_RegisterShaderNoMip("gfx/2d/bowInsert");
+		break;
+
 	case WP_BLASTER:
 	case WP_EMPLACED_GUN: //rww - just use the same as this for now..
 		weaponInfo->selectSound = trap->S_RegisterSound("sound/weapons/blaster/select.wav");

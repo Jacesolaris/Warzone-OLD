@@ -2640,6 +2640,7 @@ gentity_t *LaunchItem( gitem_t *item, vec3_t origin, vec3_t velocity ) {
 
 	if (item->giTag != WP_BOWCASTER &&
 		item->giTag != WP_CLONE_PISTOL1 &&
+		item->giTag != WP_WOOKIE_BOWCASTER &&
 		item->giTag != WP_DET_PACK &&
 		item->giTag != WP_THERMAL)
 	{

@@ -1892,6 +1892,7 @@ void CG_FireWeapon( centity_t *cent, qboolean altFire ) {
 			(ent->weapon == WP_DEMP2 && altFire) ||
 			(ent->weapon == WP_CLONE_PISTOL1 && altFire) ||
 			(ent->weapon == WP_ELG_3A && altFire) ||
+			(ent->weapon == WP_WOOKIE_BOWCASTER && !altFire) ||
 			(ent->weapon == WP_S5_PISTOL && altFire))
 			
 		{
@@ -2151,7 +2152,7 @@ void CG_MissileHitWall(int weapon, int clientNum, vec3_t origin, vec3_t dir, imp
 		if (altFire)
 		{
 			FX_CLONEPISTOL_BounceWall(origin, dir, weapon, altFire); // UQ1: This isn't right...
-			//FX_DEMP2_HitWall(origin, dir, weapon, altFire); // UQ1: This probably is...
+			//sry UQ1 but this is needed to make floor bounce impact efx working ;)
 		}
 		else
 		{
@@ -2182,6 +2183,17 @@ void CG_MissileHitWall(int weapon, int clientNum, vec3_t origin, vec3_t dir, imp
 		else
 		{
 			FX_RepeaterHitWall(origin, dir, weapon, altFire);
+		}
+		break;
+
+	case WP_WOOKIE_BOWCASTER:
+		if (altFire)
+		{
+			FX_BowcasterHitWall(origin, dir, weapon, altFire);
+		}
+		else
+		{
+			FX_BowcasterHitWall(origin, dir, weapon, altFire);
 		}
 		break;
 
@@ -2391,6 +2403,16 @@ void CG_MissileHitPlayer(int weapon, vec3_t origin, vec3_t dir, int entityNum, q
 		}
 		break;
 
+	case WP_WOOKIE_BOWCASTER:
+		if (altFire)
+		{
+			FX_BowcasterHitPlayer(origin, dir, humanoid, weapon, altFire);
+		}
+		else
+		{
+			FX_BowcasterHitPlayer(origin, dir, humanoid, weapon, altFire);
+		}
+		
 	case WP_REPEATER:
 		if ( altFire )
 		{
