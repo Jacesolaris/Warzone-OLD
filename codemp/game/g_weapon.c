@@ -1003,7 +1003,7 @@ static void WP_BowcasterAltFire( gentity_t *ent )
 	missile->bounceCount = 3;
 	
 	// charge up the pistol to make more bounce on walls.
-	if (ent->s.weapon == WP_CLONE_PISTOL1 /*|| ent->s.weapon == WP_WOOKIE_BOWCASTER*/ )
+	if (ent->s.weapon == WP_CLONE_PISTOL1 || ent->s.weapon == WP_WOOKIE_BOWCASTER )
 	{
 		int count = (level.time - ent->client->ps.weaponChargeTime) / DEMP2_CHARGE_UNIT;
 
@@ -4647,6 +4647,9 @@ void FireWeapon( gentity_t *ent, qboolean altFire ) {
 		case WP_SABER:
 			break;
 
+		case WP_WOOKIES_PISTOL:
+		case WP_S5_PISTOL:
+		case WP_ELG_3A:
 		case WP_BRYAR_PISTOL:
 			WP_FireBryarPistol( ent, altFire );
 			break;
@@ -4658,8 +4661,7 @@ void FireWeapon( gentity_t *ent, qboolean altFire ) {
 				WP_FireConcussion( ent );
 			break;
 
-		case WP_S5_PISTOL:
-		case WP_ELG_3A:
+		
 		case WP_WESTER_PISTOL:
 		case WP_BRYAR_OLD:
 			WP_FireBryarPistol( ent, altFire );

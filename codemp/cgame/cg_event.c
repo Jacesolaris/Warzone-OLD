@@ -1097,6 +1097,7 @@ void CG_G2MarkEvent(entityState_t *es)
 	case WP_WESTER_PISTOL:
 	case WP_ELG_3A:
 	case WP_S5_PISTOL:
+	case WP_WOOKIES_PISTOL:
 	case WP_Z6_BLASTER_CANON:
 	case WP_WOOKIE_BOWCASTER:
 	case WP_BLASTER:

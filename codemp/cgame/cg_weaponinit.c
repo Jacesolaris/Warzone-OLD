@@ -369,6 +369,44 @@ void CG_RegisterWeapon( int weaponNum) {
 		cgs.media.bryarFrontFlash = trap->R_RegisterShader("gfx/effects/bryarFrontFlash");
 		break;
 
+	case WP_WOOKIES_PISTOL:
+		weaponInfo->item->classname = "Wookie Pistol";
+		weaponInfo->selectSound = trap->S_RegisterSound("sound/weapons/bryar/select.wav");
+		weaponInfo->flashSound[0] = trap->S_RegisterSound("sound/weapons/bryar/fire.wav");
+		weaponInfo->firingSound = NULL_SOUND;
+		weaponInfo->chargeSound = NULL_SOUND;
+		weaponInfo->muzzleEffect = trap->FX_RegisterEffect("bryar/muzzle_flash");
+		weaponInfo->missileModel = NULL_HANDLE;
+		weaponInfo->missileSound = NULL_SOUND;
+		weaponInfo->missileDlight = 0;
+		weaponInfo->missileHitSound = NULL_SOUND;
+		weaponInfo->missileTrailFunc = FX_BryarProjectileThink;
+		weaponInfo->missileRenderfx = NULL_FX;
+		weaponInfo->altMissileRenderfx = NULL_FX;
+		weaponInfo->powerupShotRenderfx = NULL_FX;
+		weaponInfo->altFlashSound[0] = trap->S_RegisterSound("sound/weapons/bryar/alt_fire.wav");
+		weaponInfo->altFiringSound = NULL_SOUND;
+		weaponInfo->altMuzzleEffect = trap->FX_RegisterEffect("bryar/muzzle_flash");
+		weaponInfo->altMissileModel = NULL_HANDLE;
+		weaponInfo->altMissileSound = NULL_SOUND;
+		weaponInfo->altMissileDlight = 0;
+		weaponInfo->altMissileHitSound = NULL_SOUND;
+		weaponInfo->altMissileTrailFunc = FX_BryarAltProjectileThink;
+		cgs.effects.bryarShotEffect = trap->FX_RegisterEffect("bryar/shot");
+		cgs.effects.bryarShotEffect1 = trap->FX_RegisterEffect("bryar/lvl3_shot");
+		cgs.effects.bryarPowerupShotEffect = trap->FX_RegisterEffect("bryar/crackleShot");
+		cgs.effects.bryarWallImpactEffect = trap->FX_RegisterEffect("bryar/wall_impact");
+		cgs.effects.bryarWallImpactEffectEnhancedFX = trap->FX_RegisterEffect("bryar/wall_impact_enhanced2");
+		cgs.effects.bryarWallImpactEffect2 = trap->FX_RegisterEffect("bryar/wall_impact2");
+		cgs.effects.bryarWallImpactEffect2EnhancedFX = trap->FX_RegisterEffect("bryar/wall_impact2_enhanced2");
+		cgs.effects.bryarWallImpactEffect3 = trap->FX_RegisterEffect("bryar/wall_impact3");
+		cgs.effects.bryarWallImpactEffect3EnhancedFX = trap->FX_RegisterEffect("bryar/wall_impact3_enhanced2");
+		cgs.effects.bryarFleshImpactEffect = trap->FX_RegisterEffect("bryar/flesh_impact");
+		cgs.effects.bryarDroidImpactEffect = trap->FX_RegisterEffect("bryar/droid_impact");
+		cgs.media.bryarFrontFlash = trap->R_RegisterShader("gfx/effects/bryarFrontFlash");
+
+		break;
+
 	case WP_A280: // UQ1: Example. Should have it's own fx...
 		weaponInfo->item->classname =	"A280 Clone Blaster";
 		weaponInfo->selectSound			= trap->S_RegisterSound("sound/weapons/disruptor/select.wav");
@@ -719,33 +757,39 @@ void CG_RegisterWeapon( int weaponNum) {
 
 	case WP_WOOKIE_BOWCASTER:
 		weaponInfo->item->classname = "Wookie BowCaster";
-		weaponInfo->altFlashSound[0] = NULL_SOUND;
-		weaponInfo->altFiringSound = NULL_SOUND;
-		weaponInfo->altChargeSound = NULL_SOUND;
-		weaponInfo->altMuzzleEffect = trap->FX_RegisterEffect("blaster/muzzle_flash");
-		weaponInfo->altMissileModel = NULL_HANDLE;
-		weaponInfo->altMissileSound = NULL_SOUND;
-		weaponInfo->altMissileDlight = 0;
-		weaponInfo->altMissileHitSound = NULL_SOUND;
-		weaponInfo->altMissileTrailFunc = FX_BlasterProjectileThink;
+		weaponInfo->selectSound = trap->S_RegisterSound("sound/weapons/bowcaster/select.wav");
 		weaponInfo->flashSound[0] = trap->S_RegisterSound("sound/weapons/bowcaster/fire.wav");
-		weaponInfo->altFlashSound[0] = trap->S_RegisterSound("sound/weapons/bowcaster/fire.wav");
-		weaponInfo->chargeSound = trap->S_RegisterSound("sound/weapons/bowcaster/altcharge.wav");
 		weaponInfo->firingSound = NULL_SOUND;
-		weaponInfo->muzzleEffect = trap->FX_RegisterEffect("blaster/muzzle_flash");
+		weaponInfo->chargeSound = NULL_SOUND;
+		weaponInfo->muzzleEffect = trap->FX_RegisterEffect("greenblaster/muzzle_flash");
 		weaponInfo->missileModel = NULL_HANDLE;
+		weaponInfo->missileRenderfx = trap->FX_RegisterEffect("greenblaster/shot");
 		weaponInfo->missileSound = NULL_SOUND;
 		weaponInfo->missileDlight = 0;
 		weaponInfo->missileHitSound = NULL_SOUND;
-		weaponInfo->missileTrailFunc = FX_BowcasterAltProjectileThink;
-		weaponInfo->missileRenderfx = NULL_FX;
-		weaponInfo->altMissileRenderfx = NULL_FX;
+		weaponInfo->missileTrailFunc = FX_BlasterProjectileThink;
 		weaponInfo->powerupShotRenderfx = NULL_FX;
+		weaponInfo->altFlashSound[0] = trap->S_RegisterSound("sound/weapons/bowcaster/fire.wav");
+		weaponInfo->altFiringSound = NULL_SOUND;
+		weaponInfo->altChargeSound = trap->S_RegisterSound("sound/weapons/bowcaster/altcharge.wav");
+		weaponInfo->altMuzzleEffect = trap->FX_RegisterEffect("greenblaster/muzzle_flash");
+		weaponInfo->altMissileModel = NULL_HANDLE;
+		weaponInfo->altMissileRenderfx = trap->FX_RegisterEffect("greenblaster/shot");
+		weaponInfo->altMissileSound = NULL_SOUND;
+		weaponInfo->altMissileDlight = 0;
+		weaponInfo->altMissileHitSound = NULL_SOUND;
+		weaponInfo->altMissileTrailFunc = FX_BowcasterAltProjectileThink;
 
-		cgs.effects.bowcasterShotEffect = trap->FX_RegisterEffect("bowcaster/shot");
+		cgs.effects.bowcasterShotEffect = trap->FX_RegisterEffect("greenblaster/shot");
 		cgs.effects.bowcasterImpactEffect = trap->FX_RegisterEffect("bowcaster/wall_impact");
 		cgs.effects.bowcasterImpactEffectEnhancedFX = trap->FX_RegisterEffect("bowcaster/wall_impact_enhanced2");
-		cgs.media.greenFrontFlash = trap->R_RegisterShader("gfx/effects/redfrontflash");
+		cgs.media.greenFrontFlash = trap->R_RegisterShader("gfx/effects/greenfrontflash");
+
+
+
+		/*cgs.media.demp2Shell = trap->R_RegisterModel("models/items/sphere.md3");
+		cgs.media.demp2ShellShader = trap->R_RegisterShader("gfx/effects/demp2shell");*/
+		
 
 		cgs.media.bowcasterMask = trap->R_RegisterShaderNoMip("gfx/2d/bowMask");
 		cgs.media.bowcasterInsert = trap->R_RegisterShaderNoMip("gfx/2d/bowInsert");
@@ -869,7 +913,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		cgs.effects.bowcasterShotEffect = trap->FX_RegisterEffect("bowcaster/shot");
 		cgs.effects.bowcasterImpactEffect = trap->FX_RegisterEffect("bowcaster/wall_impact");
 		cgs.effects.bowcasterImpactEffectEnhancedFX = trap->FX_RegisterEffect("bowcaster/wall_impact_enhanced2");
-		cgs.media.greenFrontFlash = trap->R_RegisterShader("gfx/effects/redfrontflash");
+		cgs.media.redFrontFlash = trap->R_RegisterShader("gfx/effects/redfrontflash");
 
 		cgs.media.bowcasterMask = trap->R_RegisterShaderNoMip("gfx/2d/bowMask");
 		cgs.media.bowcasterInsert = trap->R_RegisterShaderNoMip("gfx/2d/bowInsert");

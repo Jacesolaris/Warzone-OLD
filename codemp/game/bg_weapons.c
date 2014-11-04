@@ -34,6 +34,7 @@ vec3_t WP_MuzzlePoint[WP_NUM_WEAPONS] =
 	{12,	6,		-6	},	//WP_S5_PISTOL
 	{12,	4.5,	-6	},	//WP_Z6_BLASTER_CANON
 	{12,	2,		-6	},	//WP_WOOKIE_BOWCASTER
+	{12,	6,		-6	},	//WP_WOOKIES_PISTOL
 	{12,	6,		-6	},	// WP_DEMP2,
 	{12,	6,		-6	},	// WP_FLECHETTE,
 	{12,	6,		-6	},	// WP_CONCUSSION
@@ -391,21 +392,38 @@ weaponData_t weaponData[WP_NUM_WEAPONS] =
 		0						//	int		altMaxCharge;		// above for secondary
 	},
 	{	// WP_WOOKIE_BOWCASTER
-		//"Wookie Bowcaster",	//	char	classname[32];		// Spawning name
+		//"Wookiee Bowcaster",	//	char	classname[32];		// Spawning name
 		AMMO_POWERCELL,			//	int		ammoIndex;			// Index to proper ammo slot
 		5,						//	int		ammoLow;			// Count when ammo is low
 		5,						//	int		energyPerShot;		// Amount of energy used per shot
 		350,					//	int		fireTime;			// Amount of time between firings
 		8192,					//	int		range;				// Range of weapon
-		15,						//	int		altEnergyPerShot;	// Amount of energy used for alt-fire
-		750,					//	int		altFireTime;		// Amount of time between alt-firings
+		5,						//	int		altEnergyPerShot;	// Amount of energy used for alt-fire
+		650,					//	int		altFireTime;		// Amount of time between alt-firings
+		8192,					//	int		altRange;			// Range of alt-fire
+		400,						//	int		chargeSubTime;		// ms interval for subtracting ammo during charge
+		0,					//	int		altChargeSubTime;	// above for secondary
+		5,						//	int		chargeSub;			// amount to subtract during charge on each interval
+		0,						//int		altChargeSub;		// above for secondary
+		1700,						//	int		maxCharge;			// stop subtracting once charged for this many ms
+		0					//	int		altMaxCharge;		// above for secondary
+	},
+	{	//WP_WOOKIES_PISTOL,
+		//"Wookie Pistol",		//	char	classname[32];		// Spawning name
+		AMMO_BLASTER,			//	int		ammoIndex;			// Index to proper ammo slot
+		15,						//	int		ammoLow;			// Count when ammo is low
+		2,						//	int		energyPerShot;		// Amount of energy used per shot
+		300,					//	int		fireTime;			// Amount of time between firings
+		8192,					//	int		range;				// Range of weapon
+		2,						//	int		altEnergyPerShot;	// Amount of energy used for alt-fire
+		250,					//	int		altFireTime;		// Amount of time between alt-firings
 		8192,					//	int		altRange;			// Range of alt-fire
 		0,						//	int		chargeSubTime;		// ms interval for subtracting ammo during charge
-		0,						//	int		altChargeSubTime;	// above for secondary
+		200,					//	int		altChargeSubTime;	// above for secondary
 		0,						//	int		chargeSub;			// amount to subtract during charge on each interval
-		0,						//int		altChargeSub;		// above for secondary
+		1,						//int		altChargeSub;		// above for secondary
 		0,						//	int		maxCharge;			// stop subtracting once charged for this many ms
-		0						//	int		altMaxCharge;		// above for secondary
+		1500					//	int		altMaxCharge;		// above for secondary
 	},
 	{	// WP_BOWCASTER
 //		"Wookiee Bowcaster",		//	char	classname[32];		// Spawning name
