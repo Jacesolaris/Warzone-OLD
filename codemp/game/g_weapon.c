@@ -1420,6 +1420,7 @@ static void WP_DEMP2_AltFire( gentity_t *ent )
 //---------------------------------------------------------
 {
 	int		damage	= DEMP2_ALT_DAMAGE;
+	int		chargedamage = CONC_DAMAGE;
 	int		count, origcount;
 	float	fact;
 	vec3_t	start, end;
@@ -3339,6 +3340,76 @@ static void WP_FireConcussionAlt( gentity_t *ent )
 #endif
 }
 
+static void WP_FireBlobGrenade(gentity_t *ent)
+{//a fast rocket-like projectile
+	vec3_t	start;
+	int		damage = CONC_DAMAGE;
+	float	vel = CONC_VELOCITY;
+	gentity_t *missile;
+	int		count, origcount;
+	float	fact;
+
+
+	VectorCopy(muzzle, start);
+	WP_TraceSetStart(ent, start, vec3_origin, vec3_origin);
+
+	if (ent->s.weapon == WP_DC15_EXT)
+	{// Since we want alt fx on client, we need to send this as alt fire.
+		missile = CreateMissile(start, forward, vel, 10000, ent, qtrue);
+	}
+	else
+		missile = CreateMissile(start, forward, vel, 10000, ent, qfalse);
+
+	missile->classname = "conc_proj";
+	missile->s.weapon = ent->s.weapon;//WP_CONCUSSION;
+	missile->mass = 10;
+
+	// Make it easier to hit things
+	VectorSet(missile->r.maxs, ROCKET_SIZE, ROCKET_SIZE, ROCKET_SIZE);
+	VectorScale(missile->r.maxs, -1, missile->r.mins);
+
+	missile->damage = damage;
+	missile->dflags = DAMAGE_EXTRA_KNOCKBACK;
+
+	missile->methodOfDeath = MOD_CONC;
+	missile->splashMethodOfDeath = MOD_CONC;
+
+	missile->clipmask = MASK_SHOT | CONTENTS_LIGHTSABER;
+	missile->splashDamage = CONC_SPLASH_DAMAGE;
+	missile->splashRadius = CONC_SPLASH_RADIUS;
+
+	if (ent->s.weapon == WP_DC15_EXT)
+	{
+		count = (level.time - ent->client->ps.weaponChargeTime) / DEMP2_CHARGE_UNIT;
+
+		origcount = count;
+
+		if (count < 1)
+		{
+			count = 1;
+		}
+		else if (count > 3)
+		{
+			count = 3;
+		}
+
+		fact = count*0.8;
+		if (fact < 1)
+		{
+			fact = 1;
+		}
+		damage *= fact;
+
+		if (!origcount)
+		{ //this was just a tap-fire
+			damage = 1;
+		}
+	}
+
+	// we don't want it to ever bounce
+	missile->bounceCount = 0;
+}
+
 static void WP_FireConcussion( gentity_t *ent )
 {//a fast rocket-like projectile
 	vec3_t	start;
@@ -4719,11 +4790,19 @@ void FireWeapon( gentity_t *ent, qboolean altFire ) {
 		case WP_Z6_BLASTER_CANON:
 			WP_FireRepeater(ent, altFire);
 			break;
+
 		case WP_WOOKIE_BOWCASTER:
 			if (altFire)
 				WP_FireBowcaster(ent, altFire);
 			else
 				WP_FireBlaster(ent, altFire, BLASTER_VELOCITY, BLASTER_DAMAGE, BLASTER_SPREAD, ent->s.weapon);
+			break;
+
+		case WP_DC15_EXT:
+			if (altFire)
+				WP_FireBlobGrenade(ent);
+			else
+				WP_FireRepeater(ent, altFire);
 			break;
 
 		case WP_DISRUPTOR:

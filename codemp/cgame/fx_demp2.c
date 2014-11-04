@@ -210,50 +210,6 @@ void FX_DEMP2_HitWall(vec3_t origin, vec3_t normal, int weapon, qboolean altFire
 		CG_EnableEnhancedFX(cgs.effects.demp2WallImpactEffect, cgs.effects.demp2WallImpactEffectEnhancedFX), origin, normal, -1, -1, qfalse);
 }
 
-
-//void FX_DEMP2_BounceWall(centity_t *cent, const struct weaponInfo_s *weapon)
-//{
-//	vec3_t forward;
-//	int t;
-//
-//	if (VectorNormalize2(cent->currentState.pos.trDelta, forward) == 0.0f)
-//	{
-//		forward[2] = 1.0f;
-//	}
-//
-//	if (cent->currentState.generic1 == 6)
-//	{
-//		if (weapon->missileRenderfx)
-//		{
-//			for (t = 1; t < (cent->currentState.generic1 - 1); t++)
-//			{
-//				trap->FX_PlayEffectID(weapon->missileRenderfx, cent->lerpOrigin, forward, -1, -1, qfalse);
-//
-//			}
-//		}
-//		else
-//		{
-//			for (t = 1; t < (cent->currentState.generic1 - 1); t++)
-//			{
-//				trap->FX_PlayEffectID(
-//					CG_EnableEnhancedFX(cgs.effects.demp2WallBounceEffect,
-//					cgs.effects.demp2WallBounceEffectEnhancedFX), cent->lerpOrigin, forward, -1, -1, qfalse);
-//			}
-//		}
-//	}
-//	else
-//	{
-//		if (weapon->missileRenderfx)
-//		{
-//			trap->FX_PlayEffectID(weapon->missileRenderfx, cent->lerpOrigin, forward, -1, -1, qfalse);
-//		}
-//		else
-//		{
-//			trap->FX_PlayEffectID(cgs.effects.demp2ProjectileEffect, cent->lerpOrigin, forward, -1, -1, qfalse);
-//		}
-//	}
-//}
-
 /*
 ---------------------------
 FX_DEMP2_HitPlayer

@@ -256,6 +256,7 @@ int WeaponReadyAnim[WP_NUM_WEAPONS] =
 	TORSO_WEAPONREADY3,//WP_WOOKIE_BOWCASTER
 	TORSO_WEAPONREADY2,//WP_WOOKIES_PISTOL
 	TORSO_WEAPONREADY3,//WP_CLONE_BLASTER
+	DC15_READY,//WP_DC15_EXT
 	TORSO_WEAPONREADY3,//TORSO_WEAPONREADY5,//WP_BOWCASTER,
 	TORSO_WEAPONREADY3,//TORSO_WEAPONREADY6,//WP_REPEATER,
 	TORSO_WEAPONREADY3,//TORSO_WEAPONREADY7,//WP_DEMP2,
@@ -312,6 +313,7 @@ int WeaponReadyLegsAnim[WP_NUM_WEAPONS] =
 	BOTH_STAND1,//WP_WOOKIE_BOWCASTER
 	BOTH_STAND1,//WP_WOOKIES_PISTOL
 	BOTH_STAND1,//WP_CLONE_BLASTER
+	BOTH_STAND1,//WP_DC15_EXT
 	BOTH_STAND1,//TORSO_WEAPONREADY5,//WP_BOWCASTER,
 	BOTH_STAND1,//TORSO_WEAPONREADY6,//WP_REPEATER,
 	BOTH_STAND1,//TORSO_WEAPONREADY7,//WP_DEMP2,
@@ -366,7 +368,8 @@ int WeaponAttackAnim[WP_NUM_WEAPONS] =
 	MINIGUN_FIRE, //WP_Z6_BLASTER_CANON
 	BOTH_ATTACK3,//WP_WOOKIE_BOWCASTER
 	BOTH_ATTACK2,//WP_WOOKIES_PISTOL
-	BOTH_ATTACK3,//WP_CLONE_BLASTER:
+	BOTH_ATTACK3,//WP_CLONE_BLASTER
+	DC15_FIRE, //WP_DC15_EXT
 	BOTH_ATTACK3,//BOTH_ATTACK5,//WP_BOWCASTER,
 	BOTH_ATTACK3,//BOTH_ATTACK6,//WP_REPEATER,
 	BOTH_ATTACK2,//BOTH_ATTACK7,//WP_DEMP2,
@@ -1528,7 +1531,7 @@ Don't place this
 
 
 
-/*QUAKED weapon_westarm 5 (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+/*QUAKED weapon_dc-15s_clone_blaster 5 (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
 */
 {
 	"weapon_dc-15s_clone_blaster",
@@ -1547,7 +1550,23 @@ Don't place this
 },
 
 
-
+/*QUAKED weapon_CloneTrooper_Rifle (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+*/
+{
+	"weapon_dc-15_ext",
+	"sound/weapons/w_pkup.wav",
+	{ "models/weapons3/dc-15_ext/dc-15_ext_w.glm",
+	0, 0, 0 },
+	/* view */		"models/weapons3/dc-15_ext/dc-15_ext.md3",
+	/* icon */		"gfx/hud/w_icon_clonerifle_blobs",
+	/* pickup *///	"Clone Trooper Rifle",
+	100,
+	IT_WEAPON,
+	WP_DC15_EXT,
+	/* precache */ "",
+	/* sounds */ "",
+	"@MENUS_THE_PRIMARY_WEAPON_OF"				// description
+},
 
 
 /*QUAKED weapon_blaster (.3 .3 1) (-16 -16 -16) (16 16 16) suspended

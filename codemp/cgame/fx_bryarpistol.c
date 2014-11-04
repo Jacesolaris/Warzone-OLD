@@ -266,13 +266,46 @@ FX_ConcussionHitWall
 */
 void FX_ConcussionHitWall(vec3_t origin, vec3_t normal, int weapon, qboolean altFire)
 {
+	// Set fx to primary weapon fx.
 	fxHandle_t fx = cg_weapons[weapon].missileWallImpactfx;
-	if (altFire) fx = cg_weapons[weapon].altMissileWallImpactfx;
+	fxHandle_t fx2 = cg_weapons[weapon].wallImpactEffectEnhancedFX;
+
+	if (!fx) {
+		// If there is no primary (missileWallImpactfx) fx. Use original concussion fx.
+		fx = cgs.effects.concussionImpactEffect;
+		
+		// If falling back to normal concussion fx, we have no enhanced.
+		fx2 = fx; // Force normal fx.
+	}
+
+	if (altFire) {
+		// If this is alt fire. Override all fx with alt fire fx...
+		if (cg_weapons[weapon].altMissileWallImpactfx)
+		{// We have alt fx for this weapon. Use it.
+			fx = cg_weapons[weapon].altMissileWallImpactfx;
+		}
+
+		if (cg_weapons[weapon].altwallImpactEffectEnhancedFX)
+		{// We have enhanced alt. Use it.
+			fx2 = cg_weapons[weapon].altwallImpactEffectEnhancedFX;
+		}
+		else
+		{// We have no alt enhanced fx.
+			fx2 = fx; // Force normal fx.
+		}
+	}
+
+	// If fx2 (enhanced) does not exist (set fx2 to -1 above), this should return normal fx.
+	fx = CG_EnableEnhancedFX(fx, fx2);
 
 	if (fx)
+	{// We have fx for this. Play it.
 		trap->FX_PlayEffectID(fx, origin, normal, -1, -1, qfalse);
+	}
 	else
-		trap->FX_PlayEffectID( cgs.effects.concussionImpactEffect, origin, normal, -1, -1, qfalse );
+	{// This should never be possible, but just in case, fall back to concussion here.
+		trap->FX_PlayEffectID(cgs.effects.concussionImpactEffect, origin, normal, -1, -1, qfalse);
+	}
 }
 
 /*
@@ -296,50 +329,41 @@ void FX_ConcussionHitPlayer(vec3_t origin, vec3_t normal, qboolean humanoid, int
 FX_ConcussionProjectileThink
 -------------------------
 */
-void FX_ConcussionProjectileThink(  centity_t *cent, const struct weaponInfo_s *weapon )
+void FX_ConcussionProjectileThink(centity_t *cent, const struct weaponInfo_s *weapon)
 {
 	vec3_t forward;
 
-	if ( VectorNormalize2( cent->currentState.pos.trDelta, forward ) == 0.0f )
+	if (VectorNormalize2(cent->currentState.pos.trDelta, forward) == 0.0f)
 	{
 		forward[2] = 1.0f;
 	}
 
 	if (weapon->missileRenderfx)
 		trap->FX_PlayEffectID(weapon->missileRenderfx, cent->lerpOrigin, forward, -1, -1, qfalse);
-	else	
-		trap->FX_PlayEffectID( cgs.effects.concussionShotEffect, cent->lerpOrigin, forward, -1, -1, qfalse );
+	else
+		trap->FX_PlayEffectID(cgs.effects.concussionShotEffect, cent->lerpOrigin, forward, -1, -1, qfalse);
 
 	FX_ConcussionAddLight(cent->lerpOrigin);
 }
 
-//void FX_ConcussionProjectileThink(centity_t *cent, const struct weaponInfo_s *weapon)
-//{
-//	vec3_t forward;
-//
-//	if (VectorNormalize2(cent->currentState.pos.trDelta, forward) == 0.0f)
-//	{
-//		forward[2] = 1.0f;
-//	}
-//
-//	if (weapon->missileRenderfx)
-//	{
-//		trap->FX_PlayEffectID(weapon->altMissileRenderfx, cent->lerpOrigin, forward, -1, -1, qfalse);
-//	}
-//	else
-//	{
-//		if (cent->currentState.weapon == WP_DC15 || cent->currentState.weapon == WP_CLONERIFLE)
-//		{
-//			trap->FX_PlayEffectID(cgs.effects.fireGrenadeFireBlob, cent->lerpOrigin, forward, -1, -1, qfalse);
-//
-//		}
-//		else
-//		{
-//			trap->FX_PlayEffectID(cgs.effects.concussionShotEffect, cent->lerpOrigin, forward, -1, -1, qfalse);
-//			
-//		}
-//	}
-//}
+void FX_ConcussionAltProjectileThink(centity_t *cent, const struct weaponInfo_s *weapon)
+{
+	vec3_t forward;
+
+	if (VectorNormalize2(cent->currentState.pos.trDelta, forward) == 0.0f)
+	{
+		forward[2] = 1.0f;
+	}
+	//here
+	if (weapon->altMissileRenderfx)
+	{
+		trap->FX_PlayEffectID(weapon->altMissileRenderfx, cent->lerpOrigin, forward, -1, -1, qfalse);
+	}
+	else
+	{
+		trap->FX_PlayEffectID(cgs.effects.concussionShotEffect, cent->lerpOrigin, forward, -1, -1, qfalse);
+	}
+}
 
 /*
 ---------------------------

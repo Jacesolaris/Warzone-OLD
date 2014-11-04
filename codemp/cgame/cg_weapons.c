@@ -271,8 +271,9 @@ static void CG_LightningBolt( centity_t *cent, vec3_t origin ) {
 
 	//Must be a durational weapon that continuously generates an effect.
 	if ( cent->currentState.weapon == WP_DEMP2 && cent->currentState.eFlags & EF_ALT_FIRING )
-		if (cent->currentState.weapon == WP_CLONE_PISTOL1 && cent->currentState.eFlags & EF_ALT_FIRING)
-			if (cent->currentState.weapon == WP_WOOKIE_BOWCASTER && cent->currentState.eFlags & EF_ALT_FIRING)
+	if (cent->currentState.weapon == WP_CLONE_PISTOL1 && cent->currentState.eFlags & EF_ALT_FIRING)
+	if (cent->currentState.weapon == WP_WOOKIE_BOWCASTER && cent->currentState.eFlags & EF_ALT_FIRING)
+	if (cent->currentState.weapon == WP_DC15_EXT && cent->currentState.eFlags & EF_ALT_FIRING)
 	{ /*nothing*/ }
 	else
 	{
@@ -702,6 +703,7 @@ Ghoul2 Insert End
 		  (cent->currentState.weapon == WP_ELG_3A && cent->currentState.modelindex2 == WEAPON_CHARGING_ALT) ||
 		  (cent->currentState.weapon == WP_WOOKIE_BOWCASTER && cent->currentState.modelindex2 == WEAPON_CHARGING_ALT) ||
 		  (cent->currentState.weapon == WP_WOOKIES_PISTOL && cent->currentState.modelindex2 == WEAPON_CHARGING_ALT) ||
+		  (cent->currentState.weapon == WP_DC15_EXT && cent->currentState.modelindex2 == WEAPON_CHARGING_ALT) ||
 		  (cent->currentState.weapon == WP_S5_PISTOL && cent->currentState.modelindex2 == WEAPON_CHARGING_ALT)))
 	{
 		int		shader = 0;
@@ -777,6 +779,13 @@ Ghoul2 Insert End
 			shader = cgs.media.greenFrontFlash;
 			scale = 1.75f;
 		}
+		else if (cent->currentState.weapon == WP_DC15_EXT)
+		{
+			// Hardcoded max charge time of 1 second
+			val = (cg.time - cent->currentState.constantLight) * 0.001f;
+			shader = cgs.media.lightningFlash;
+			scale = 1.75f;
+		}
 
 		if ( val < 0.0f )
 		{
@@ -828,7 +837,7 @@ Ghoul2 Insert End
 	}
 
 	// add the flash
-	if ((weaponNum == WP_DEMP2 && WP_CLONE_PISTOL1 && WP_WOOKIE_BOWCASTER)
+	if ((weaponNum == WP_DEMP2 || weaponNum == WP_CLONE_PISTOL1 || weaponNum == WP_WOOKIE_BOWCASTER || weaponNum == WP_DC15_EXT)
 		&& ( nonPredictedCent->currentState.eFlags & EF_FIRING ) )
 	{
 		// continuous flash
@@ -1932,6 +1941,7 @@ void CG_FireWeapon( centity_t *cent, qboolean altFire ) {
 		else if (ent->weapon == WP_ROCKET_LAUNCHER ||
 			(ent->weapon == WP_REPEATER && altFire) ||
 			ent->weapon == WP_FLECHETTE ||
+			(ent->weapon == WP_DC15_EXT && altFire) ||
 			(ent->weapon == WP_CONCUSSION && !altFire))
 		{
 			if (ent->weapon == WP_CONCUSSION)
@@ -2209,6 +2219,17 @@ void CG_MissileHitWall(int weapon, int clientNum, vec3_t origin, vec3_t dir, imp
 		}
 		break;
 
+	case WP_DC15_EXT:
+		if (altFire)
+		{
+			FX_ConcussionHitWall(origin, dir, weapon, qtrue);//secdir efx
+		}
+		else
+		{
+			FX_RepeaterHitWall(origin, dir, weapon, qfalse);//prime efx
+		}
+		break;
+
 	case WP_WOOKIE_BOWCASTER:
 		if (altFire)
 		{
@@ -2448,6 +2469,17 @@ void CG_MissileHitPlayer(int weapon, vec3_t origin, vec3_t dir, int entityNum, q
 		{
 			FX_RepeaterHitPlayer( origin, dir, humanoid, weapon, altFire );
 		}
+		break;
+
+	case WP_DC15_EXT:
+			if (altFire)
+			{
+				FX_ConcussionHitPlayer(origin, dir, humanoid, weapon, qtrue);
+			}
+			else
+			{
+				FX_RepeaterHitPlayer(origin, dir, humanoid, weapon, qfalse);
+			}
 		break;
 
 	case WP_DEMP2:

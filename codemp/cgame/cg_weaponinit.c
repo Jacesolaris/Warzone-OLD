@@ -819,6 +819,43 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->shotEffectFx = trap->FX_RegisterEffect("clone_rifle/shot");
 		break;
 
+	case WP_DC15_EXT:
+		weaponInfo->item->classname = "DC-15 Blob Rifle";
+		weaponInfo->selectSound = trap->S_RegisterSound("sound/weapons/blaster/select.wav");
+		weaponInfo->flashSound[0] = trap->S_RegisterSound("sound/weapons/repeater/fire.wav");
+		weaponInfo->firingSound = NULL_SOUND;
+		weaponInfo->chargeSound = NULL_SOUND;
+		weaponInfo->muzzleEffect = trap->FX_RegisterEffect("dc-15_ext/muzzle_flash");
+		weaponInfo->missileModel = NULL_HANDLE;
+		weaponInfo->missileSound = NULL_SOUND;
+		weaponInfo->missileDlight = 0;
+		weaponInfo->missileHitSound = NULL_SOUND;
+		weaponInfo->missileTrailFunc = FX_RepeaterProjectileThink;
+		weaponInfo->missileRenderfx = trap->FX_RegisterEffect("dc-15_ext/projectile");
+		weaponInfo->altMissileRenderfx = trap->FX_RegisterEffect("dc-15_ext/conc_shot");
+		weaponInfo->powerupShotRenderfx = NULL_FX;
+		weaponInfo->altFlashSound[0] = trap->S_RegisterSound("sound/weapons/repeater/fire.wav");
+		weaponInfo->altFiringSound = NULL_SOUND;
+		weaponInfo->altChargeSound = trap->S_RegisterSound("sound/weapons/SBDarm/cannon_charge.mp3");
+		weaponInfo->altMuzzleEffect = trap->FX_RegisterEffect("dc-15_ext/muzzle_flash");
+		weaponInfo->altMissileModel = NULL_HANDLE;
+		weaponInfo->altMissileSound = NULL_SOUND;
+		weaponInfo->altMissileDlight = 0;
+		weaponInfo->altMissileHitSound = NULL_SOUND;
+		weaponInfo->altMissileTrailFunc = FX_ConcussionAltProjectileThink;
+
+		weaponInfo->spinSound = trap->S_RegisterSound("sound/weapons/z6/spinny.wav");
+		weaponInfo->spindownSound = trap->S_RegisterSound("sound/weapons/z6/chaingun_spindown.wav");
+
+		weaponInfo->missileWallImpactfx = trap->FX_RegisterEffect("dc-15_ext/wall_impact");
+		weaponInfo->altMissileWallImpactfx = trap->FX_RegisterEffect("dc-15_ext/explosion");
+		weaponInfo->wallImpactEffectEnhancedFX = trap->FX_RegisterEffect("dc-15_ext/wall_impact_enhanced2");//prime efx
+		weaponInfo->altwallImpactEffectEnhancedFX = trap->FX_RegisterEffect("dc-15_ext/explosion");//secder efx
+		weaponInfo->fleshImpactEffect = trap->FX_RegisterEffect("dc-15_ext/flesh_impact");
+		weaponInfo->altFleshImpactEffect = trap->FX_RegisterEffect("dc-15_ext/shot"); // not sure about this one
+
+		break;
+
 	case WP_BLASTER:
 	case WP_EMPLACED_GUN: //rww - just use the same as this for now..
 		weaponInfo->selectSound = trap->S_RegisterSound("sound/weapons/blaster/select.wav");

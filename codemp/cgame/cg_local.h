@@ -747,6 +747,7 @@ typedef struct weaponInfo_s {
 	fxHandle_t		fleshImpactEffect; // should we do these or use generic ones?
 	fxHandle_t		altFleshImpactEffect;
 	fxHandle_t		wallImpactEffectEnhancedFX;
+	fxHandle_t		altwallImpactEffectEnhancedFX;
 	fxHandle_t		WallBounceEffectEnhancedFX;
 	fxHandle_t		shotEffectFx;
 	fxHandle_t		explotionImpactEffect;
@@ -2273,6 +2274,7 @@ void FX_TurretHitPlayer(vec3_t origin, vec3_t normal, qboolean humanoid, int wea
 void FX_ConcussionHitWall(vec3_t origin, vec3_t normal, int weapon, qboolean altFire);
 void FX_ConcussionHitPlayer(vec3_t origin, vec3_t normal, qboolean humanoid, int weapon, qboolean altFire);
 void FX_ConcussionProjectileThink(  centity_t *cent, const struct weaponInfo_s *weapon );
+void FX_ConcussionAltProjectileThink(centity_t *cent, const struct weaponInfo_s *weapon);
 void FX_ConcAltShot( vec3_t start, vec3_t end, int weapon );
 
 //-----------------------------
