@@ -737,7 +737,6 @@ Ghoul2 Insert End
 		if ( cent->currentState.weapon == WP_BRYAR_PISTOL ||
 			cent->currentState.weapon == WP_BRYAR_OLD ||
 			cent->currentState.weapon == WP_WESTER_PISTOL ||
-			cent->currentState.weapon == WP_ELG_3A ||
 			cent->currentState.weapon == WP_WOOKIES_PISTOL ||
 			cent->currentState.weapon == WP_S5_PISTOL )
 		{
@@ -750,6 +749,13 @@ Ghoul2 Insert End
 			// Hardcoded max charge time of 1 second
 			val = ( cg.time - cent->currentState.constantLight ) * 0.001f;
 			shader = cgs.media.redFrontFlash;
+		}
+		else if (cent->currentState.weapon == WP_ELG_3A)
+		{
+			// Hardcoded max charge time of 1 second
+			val = (cg.time - cent->currentState.constantLight) * 0.001f;
+			shader = cgs.media.greenFrontFlash;
+			scale = 1.75f;
 		}
 		else if ( cent->currentState.weapon == WP_DEMP2 )
 		{

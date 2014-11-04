@@ -27,8 +27,14 @@ void FX_BryarProjectileThink(  centity_t *cent, const struct weaponInfo_s *weapo
 		forward[2] = 1.0f;
 	}
 
-	trap->FX_PlayEffectID( cgs.effects.bryarShotEffect, cent->lerpOrigin, forward, -1, -1, qfalse );
-
+	if (weapon->missileRenderfx)
+	{
+		trap->FX_PlayEffectID(weapon->missileRenderfx, cent->lerpOrigin, forward, -1, -1, qfalse);
+	}
+	else
+	{
+		trap->FX_PlayEffectID(cgs.effects.bryarShotEffect, cent->lerpOrigin, forward, -1, -1, qfalse);
+	}
 	FX_BryarAddLight(cent->lerpOrigin);
 }
 
@@ -101,9 +107,14 @@ void FX_BryarAltProjectileThink(  centity_t *cent, const struct weaponInfo_s *we
 	}
 
 	//	for ( int t = 1; t < cent->gent->count; t++ )	// The single player stores the charge in count, which isn't accessible on the client
-
-	trap->FX_PlayEffectID( cgs.effects.bryarShotEffect, cent->lerpOrigin, forward, -1, -1, qfalse );
-
+	if (weapon->altMissileRenderfx)
+	{
+		trap->FX_PlayEffectID(weapon->altMissileRenderfx, cent->lerpOrigin, forward, -1, -1, qfalse);
+	}
+	else
+	{
+		trap->FX_PlayEffectID(cgs.effects.bryarShotEffect, cent->lerpOrigin, forward, -1, -1, qfalse);
+	}
 	FX_BryarAddLight(cent->lerpOrigin);
 }
 

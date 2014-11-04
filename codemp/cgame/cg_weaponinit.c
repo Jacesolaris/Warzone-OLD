@@ -278,48 +278,35 @@ void CG_RegisterWeapon( int weaponNum) {
 	case WP_ELG_3A:
 		weaponInfo->item->classname = "ELG-3A Diplomat's Pistol";
 		weaponInfo->selectSound = trap->S_RegisterSound("sound/weapons/bryar/select.wav");
-		weaponInfo->flashSound[0] = trap->S_RegisterSound("sound/weapons/bryar/fire.wav");
+		weaponInfo->flashSound[0] = trap->S_RegisterSound("sound/weapons/greenblaster/fire1.mp3");
 		weaponInfo->firingSound = NULL_SOUND;
 		weaponInfo->chargeSound = NULL_SOUND;
-		weaponInfo->muzzleEffect = trap->FX_RegisterEffect("blaster/muzzle_flash");
+		weaponInfo->muzzleEffect = trap->FX_RegisterEffect("greenblaster/muzzle_flash");
 		weaponInfo->missileModel = NULL_HANDLE;
 		weaponInfo->missileSound = NULL_SOUND;
 		weaponInfo->missileDlight = 0;
 		weaponInfo->missileHitSound = NULL_SOUND;
 		weaponInfo->missileTrailFunc = FX_BryarProjectileThink;
-		weaponInfo->missileRenderfx = NULL_FX;
-		weaponInfo->altMissileRenderfx = NULL_FX;
 		weaponInfo->powerupShotRenderfx = NULL_FX;
-		weaponInfo->altFlashSound[0] = trap->S_RegisterSound("sound/weapons/bryar/alt_fire.wav");
+		weaponInfo->altFlashSound[0] = trap->S_RegisterSound("sound/weapons/greenblaster/fire2.mp3");
 		weaponInfo->altFiringSound = NULL_SOUND;
-		weaponInfo->altMuzzleEffect = trap->FX_RegisterEffect("blaster/muzzle_flash");
+		weaponInfo->altMuzzleEffect = trap->FX_RegisterEffect("greenblaster/muzzle_flash");
 		weaponInfo->altMissileModel = NULL_HANDLE;
 		weaponInfo->altMissileSound = NULL_SOUND;
 		weaponInfo->altMissileDlight = 0;
 		weaponInfo->altMissileHitSound = NULL_SOUND;
 		weaponInfo->altMissileTrailFunc = FX_BryarAltProjectileThink;
 
-		weaponInfo->missileRenderfx = trap->FX_RegisterEffect("bryar/shot");
-		weaponInfo->altMissileRenderfx = trap->FX_RegisterEffect("bryar/lvl3_shot");
-		weaponInfo->missileWallImpactfx = trap->FX_RegisterEffect("bryar/wall_impact");
+		weaponInfo->missileRenderfx = trap->FX_RegisterEffect("greenblaster/pistol_shot");
+		weaponInfo->altMissileRenderfx = trap->FX_RegisterEffect("greenblaster/pistol_shot");
+		weaponInfo->missileWallImpactfx = trap->FX_RegisterEffect("greenblaster/wall_impact");
 		weaponInfo->altMissileWallImpactfx = trap->FX_RegisterEffect("bryar/wall_impact_enhanced2");
-		weaponInfo->fleshImpactEffect = trap->FX_RegisterEffect("bryar/flesh_impact");
-		weaponInfo->altFleshImpactEffect = trap->FX_RegisterEffect("bryar/flesh_impact");
+		weaponInfo->fleshImpactEffect = trap->FX_RegisterEffect("greenblaster/flesh_impact");
+		weaponInfo->altFleshImpactEffect = trap->FX_RegisterEffect("greenblaster/flesh_impact");
 		weaponInfo->wallImpactEffectEnhancedFX = trap->FX_RegisterEffect("bryar/wall_impact3_enhanced2");
-		weaponInfo->shotEffectFx = trap->FX_RegisterEffect("bryar/shot");
+		//weaponInfo->shotEffectFx = trap->FX_RegisterEffect("greenblaster/shot");
 
-		cgs.effects.bryarShotEffect = trap->FX_RegisterEffect("bryar/shot");
-		cgs.effects.bryarShotEffect1 = trap->FX_RegisterEffect("bryar/lvl3_shot");
-		cgs.effects.bryarPowerupShotEffect = trap->FX_RegisterEffect("bryar/crackleShot");
-		cgs.effects.bryarWallImpactEffect = trap->FX_RegisterEffect("bryar/wall_impact");
-		cgs.effects.bryarWallImpactEffectEnhancedFX = trap->FX_RegisterEffect("bryar/wall_impact_enhanced2");
-		cgs.effects.bryarWallImpactEffect2 = trap->FX_RegisterEffect("bryar/wall_impact2");
-		cgs.effects.bryarWallImpactEffect2EnhancedFX = trap->FX_RegisterEffect("bryar/wall_impact2_enhanced2");
-		cgs.effects.bryarWallImpactEffect3 = trap->FX_RegisterEffect("bryar/wall_impact3");
-		cgs.effects.bryarWallImpactEffect3EnhancedFX = trap->FX_RegisterEffect("bryar/wall_impact3_enhanced2");
-		cgs.effects.bryarFleshImpactEffect = trap->FX_RegisterEffect("bryar/flesh_impact");
-		cgs.effects.bryarDroidImpactEffect = trap->FX_RegisterEffect("bryar/droid_impact");
-		cgs.media.bryarFrontFlash = trap->R_RegisterShader("gfx/effects/bryarFrontFlash");
+		cgs.media.greenFrontFlash = trap->R_RegisterShader("gfx/effects/greenfrontflash");
 		break;
 
 	case WP_S5_PISTOL:
@@ -886,7 +873,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		break;
 
 	case WP_BOWCASTER:
-
+		weaponInfo->item->classname = "Modified Wookie Bowcaster";
 		weaponInfo->altFlashSound[0] = NULL_SOUND;
 		weaponInfo->altFiringSound = NULL_SOUND;
 		weaponInfo->altChargeSound = NULL_SOUND;
