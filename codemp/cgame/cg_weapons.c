@@ -737,7 +737,6 @@ Ghoul2 Insert End
 		if ( cent->currentState.weapon == WP_BRYAR_PISTOL ||
 			cent->currentState.weapon == WP_BRYAR_OLD ||
 			cent->currentState.weapon == WP_WESTER_PISTOL ||
-			cent->currentState.weapon == WP_ELG_3A ||
 			cent->currentState.weapon == WP_WOOKIES_PISTOL ||
 			cent->currentState.weapon == WP_S5_PISTOL )
 		{
@@ -750,6 +749,13 @@ Ghoul2 Insert End
 			// Hardcoded max charge time of 1 second
 			val = ( cg.time - cent->currentState.constantLight ) * 0.001f;
 			shader = cgs.media.redFrontFlash;
+		}
+		else if (cent->currentState.weapon == WP_ELG_3A)
+		{
+			// Hardcoded max charge time of 1 second
+			val = (cg.time - cent->currentState.constantLight) * 0.001f;
+			shader = cgs.media.greenFrontFlash;
+			scale = 1.75f;
 		}
 		else if ( cent->currentState.weapon == WP_DEMP2 )
 		{
@@ -2122,7 +2128,7 @@ void CG_MissileHitWall(int weapon, int clientNum, vec3_t origin, vec3_t dir, imp
 		FX_BlasterWeaponHitWall(origin, dir, weapon, altFire);
 		break;
 	
-
+	case WP_CLONE_BLASTER:
 	case WP_BLASTER:
 		FX_BlasterWeaponHitWall(origin, dir, weapon, altFire);
 		break;
@@ -2333,6 +2339,7 @@ void CG_MissileHitPlayer(int weapon, vec3_t origin, vec3_t dir, int entityNum, q
 		//FX_DisruptorAltHit( origin, dir); // UQ1: Example... Should have it's own fx...
 		break;
 
+	case WP_CLONE_BLASTER:
 	case WP_BLASTER:
 		FX_BlasterWeaponHitPlayer( origin, dir, humanoid, weapon, altFire );
 		break;

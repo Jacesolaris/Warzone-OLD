@@ -254,7 +254,8 @@ int WeaponReadyAnim[WP_NUM_WEAPONS] =
 	TORSO_WEAPONREADY2, //WP_S5_PISTOL
 	MINIGUN_READY,		//WP_Z6_BLASTER_CANON
 	TORSO_WEAPONREADY3,//WP_WOOKIE_BOWCASTER
-	TORSO_WEAPONREADY2,//case WP_WOOKIES_PISTOL:
+	TORSO_WEAPONREADY2,//WP_WOOKIES_PISTOL
+	TORSO_WEAPONREADY3,//WP_CLONE_BLASTER
 	TORSO_WEAPONREADY3,//TORSO_WEAPONREADY5,//WP_BOWCASTER,
 	TORSO_WEAPONREADY3,//TORSO_WEAPONREADY6,//WP_REPEATER,
 	TORSO_WEAPONREADY3,//TORSO_WEAPONREADY7,//WP_DEMP2,
@@ -310,6 +311,7 @@ int WeaponReadyLegsAnim[WP_NUM_WEAPONS] =
 	BOTH_STAND1,//WP_Z6_BLASTER_CANON
 	BOTH_STAND1,//WP_WOOKIE_BOWCASTER
 	BOTH_STAND1,//WP_WOOKIES_PISTOL
+	BOTH_STAND1,//WP_CLONE_BLASTER
 	BOTH_STAND1,//TORSO_WEAPONREADY5,//WP_BOWCASTER,
 	BOTH_STAND1,//TORSO_WEAPONREADY6,//WP_REPEATER,
 	BOTH_STAND1,//TORSO_WEAPONREADY7,//WP_DEMP2,
@@ -364,6 +366,7 @@ int WeaponAttackAnim[WP_NUM_WEAPONS] =
 	MINIGUN_FIRE, //WP_Z6_BLASTER_CANON
 	BOTH_ATTACK3,//WP_WOOKIE_BOWCASTER
 	BOTH_ATTACK2,//WP_WOOKIES_PISTOL
+	BOTH_ATTACK3,//WP_CLONE_BLASTER:
 	BOTH_ATTACK3,//BOTH_ATTACK5,//WP_BOWCASTER,
 	BOTH_ATTACK3,//BOTH_ATTACK6,//WP_REPEATER,
 	BOTH_ATTACK2,//BOTH_ATTACK7,//WP_DEMP2,
@@ -1201,10 +1204,10 @@ Don't place this
 		//"weapon_bryar_pistol",
 		"weapon_blaster_pistol",
 		"sound/weapons/w_pkup.wav",
-        { "models/weapons2/blaster_pistol/blaster_pistol_w.glm",//"models/weapons2/briar_pistol/briar_pistol_w.glm",
+        { "models/weapons3/blaster_two/blaster_pistol_w.glm",
 		0, 0, 0},
-/* view */		"models/weapons2/blaster_pistol/blaster_pistol.md3",//"models/weapons2/briar_pistol/briar_pistol.md3",
-/* icon */		"gfx/hud/w_icon_blaster_pistol",//"gfx/hud/w_icon_rifle",
+/* view */		"models/weapons3/blaster_two/blaster_pistol.md3",
+/* icon */		"gfx/hud/w_icon_blaster_pistol",
 /* pickup *///	"Bryar Pistol",
 		100,
 		IT_WEAPON,
@@ -1222,7 +1225,7 @@ Don't place this
         { "models/weapons2/concussion/c_rifle_w.glm",
 		0, 0, 0},
 /* view */		"models/weapons2/concussion/c_rifle.md3",
-/* icon */		"gfx/hud/w_icon_c_rifle",//"gfx/hud/w_icon_rifle",
+/* icon */		"gfx/hud/w_icon_darkconc",//"gfx/hud/w_icon_rifle",
 /* pickup *///	"Concussion Rifle",
 		50,
 		IT_WEAPON,
@@ -1469,7 +1472,7 @@ Don't place this
 	{ "models/weapons3/z6_rotary/model.glm",
 	0, 0, 0 },
 	/* view */		"models/weapons3/z6_rotary/rotary_cannon.MD3",
-	/* icon */		"gfx/hud/w_icon_minigun",
+	/* icon */		"gfx/hud/w_icon_rotary_cannon",
 	/* pickup *///	"Bryar Pistol",
 	100,
 	IT_WEAPON,
@@ -1525,16 +1528,37 @@ Don't place this
 
 
 
+/*QUAKED weapon_westarm 5 (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+*/
+{
+	"weapon_dc-15s_clone_blaster",
+	"sound/weapons/w_pkup.wav",
+	{ "models/weapons3/cloneblaster_r/blaster_w.glm",
+	0, 0, 0 },
+	/* view */		"models/weapons3/cloneblaster_r/blaster.md3",
+	/* icon */		"gfx/hud/w_icon_dc-15s",
+	/* pickup *///	"weastarm 5",
+	100,
+	IT_WEAPON,
+	WP_CLONE_BLASTER,
+	/* precache */ "",
+	/* sounds */ "",
+	"@MENUS_THE_PRIMARY_WEAPON_OF"				// description
+},
+
+
+
+
 
 /*QUAKED weapon_blaster (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
 */
 	{
 		"weapon_blaster",
 		"sound/weapons/w_pkup.wav",
-        { "models/weapons2/blaster_r/blaster_w.glm",
+        { "models/weapons3/blaster_r/blaster_w.glm",
 		0, 0, 0},
-/* view */		"models/weapons2/blaster_r/blaster.md3",
-/* icon */		"gfx/hud/w_icon_blaster",
+/* view */		"models/weapons3/blaster_r/blaster.md3",
+/* icon */		"gfx/hud/w_icon_E11",
 /* pickup *///	"E11 Blaster Rifle",
 		100,
 		IT_WEAPON,
@@ -1625,7 +1649,7 @@ NOTENOTE This weapon is not yet complete.  Don't place it.
         { "models/weapons2/golan_arms/golan_arms_w.glm",
 		0, 0, 0},
 /* view */		"models/weapons2/golan_arms/golan_arms.md3",
-/* icon */		"gfx/hud/w_icon_flechette",
+/* icon */		"gfx/hud/w_icon_golancr1",
 /* pickup *///	"Golan Arms Flechette",
 		100,
 		IT_WEAPON,
