@@ -4667,6 +4667,7 @@ void FireWeapon( gentity_t *ent, qboolean altFire ) {
 			WP_FireBryarPistol( ent, altFire );
 			break;
 
+		case WP_CLONE_BLASTER:
 		case WP_BLASTER:
 			WP_FireBlaster( ent, altFire, BLASTER_VELOCITY, BLASTER_DAMAGE, BLASTER_SPREAD, ent->s.weapon );
 			break;

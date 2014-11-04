@@ -2128,7 +2128,7 @@ void CG_MissileHitWall(int weapon, int clientNum, vec3_t origin, vec3_t dir, imp
 		FX_BlasterWeaponHitWall(origin, dir, weapon, altFire);
 		break;
 	
-
+	case WP_CLONE_BLASTER:
 	case WP_BLASTER:
 		FX_BlasterWeaponHitWall(origin, dir, weapon, altFire);
 		break;
@@ -2339,6 +2339,7 @@ void CG_MissileHitPlayer(int weapon, vec3_t origin, vec3_t dir, int entityNum, q
 		//FX_DisruptorAltHit( origin, dir); // UQ1: Example... Should have it's own fx...
 		break;
 
+	case WP_CLONE_BLASTER:
 	case WP_BLASTER:
 		FX_BlasterWeaponHitPlayer( origin, dir, humanoid, weapon, altFire );
 		break;
