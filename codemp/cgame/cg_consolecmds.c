@@ -410,6 +410,23 @@ void CG_SaySillyTextTest ( void )
 #endif //_WIN32
 }
 
+void TTS_SayText ( void )
+{
+	char	str[MAX_TOKEN_CHARS];
+	
+	if ( trap->Cmd_Argc() < 2 )
+	{
+		trap->Print( "^4*** ^3TTS^4: ^7Usage:\n" );
+		trap->Print( "^4*** ^3TTS^4: ^3/tts \"text\"^5.\n" );
+		trap->UpdateScreen();
+		return;
+	}
+
+	trap->Cmd_Argv( 1, str, sizeof(str) );
+
+	TextToSpeach(str);
+}
+
 typedef struct consoleCommand_s {
 	const char	*cmd;
 	void		(*func)(void);
@@ -457,6 +474,7 @@ static consoleCommand_t	commands[] = {
 	{ "tell_target",				CG_TellTarget_f },
 	{ "testgun",					CG_TestGun_f },
 	{ "testmodel",					CG_TestModel_f },
+	{ "tts",						TTS_SayText },
 	{ "viewpos",					CG_Viewpos_f },
 	{ "weapnext",					CG_NextWeapon_f },
 	{ "weapon",						CG_Weapon_f },
