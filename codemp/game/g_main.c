@@ -310,7 +310,7 @@ void CreateSpawnpoints( void )
 		red_count = 0;
 		tries = 0;
 
-		while (blue_count < 32 || red_count < 32)
+		while ((blue_count < 32 || red_count < 32) && tries < 2)
 		{
 			map_size[0] = maxs[0] - mins[0];
 			map_size[1] = maxs[1] - mins[1];
