@@ -16,7 +16,6 @@ void FX_BryarAltProjectileThink(  centity_t *cent, const struct weaponInfo_s *we
 void FX_BryarHitWall( vec3_t origin, vec3_t normal, int weapon, qboolean altFire );
 void FX_BryarAltHitWall(vec3_t origin, vec3_t normal, int power, int weapon, qboolean altFire);
 void FX_BryarHitPlayer(vec3_t origin, vec3_t normal, qboolean humanoid, int weapon, qboolean altFire);
-void FX_BryarAltHitPlayer(vec3_t origin, vec3_t normal, qboolean humanoid, int weapon, qboolean altFire);
 
 // Blaster
 void FX_BlasterProjectileThink( centity_t *cent, const struct weaponInfo_s *weapon );
@@ -33,18 +32,13 @@ void FX_DisruptorHitWall(vec3_t origin, vec3_t normal, int weapon, qboolean altF
 void FX_DisruptorHitPlayer(vec3_t origin, vec3_t normal, qboolean humanoid, int weapon, qboolean altFire);
 
 // Bowcaster
-void FX_BowcasterProjectileThink( centity_t *cent, const struct weaponInfo_s *weapon );
-void FX_BowcasterAltProjectileThink( centity_t *cent, const struct weaponInfo_s *weapon );
-void FX_BowcasterHitWall(vec3_t origin, vec3_t normal, int weapon, qboolean altFire);
-void FX_BowcasterHitPlayer(vec3_t origin, vec3_t normal, qboolean humanoid, int weapon, qboolean altFire);
+void FX_WeaponProjectileThink( centity_t *cent, const struct weaponInfo_s *weapon );
+void FX_WeaponAltProjectileThink( centity_t *cent, const struct weaponInfo_s *weapon );
 
 // Heavy Repeater
-void FX_RepeaterProjectileThink( centity_t *cent, const struct weaponInfo_s *weapon );
+void FX_WeaponProjectileThink( centity_t *cent, const struct weaponInfo_s *weapon );
 void FX_RepeaterAltProjectileThink( centity_t *cent, const struct weaponInfo_s *weapon );
-void FX_RepeaterHitWall(vec3_t origin, vec3_t normal, int weapon, qboolean altFire);
-void FX_RepeaterAltHitWall(vec3_t origin, vec3_t normal, int weapon, qboolean altFire);
-void FX_RepeaterHitPlayer(vec3_t origin, vec3_t normal, qboolean humanoid, int weapon, qboolean altFire);
-void FX_RepeaterAltHitPlayer(vec3_t origin, vec3_t normal, qboolean humanoid, int weapon, qboolean altFire);
+void FX_WeaponAltHitPlayer(vec3_t origin, vec3_t normal, qboolean humanoid, int weapon, qboolean altFire);
 
 // DEMP2
 void FX_DEMP2_ProjectileThink( centity_t *cent, const struct weaponInfo_s *weapon );
@@ -54,10 +48,8 @@ void FX_DEMP2_HitPlayer(vec3_t origin, vec3_t normal, qboolean humanoid, int wea
 void FX_DEMP2_AltDetonate( vec3_t org, float size );
 
 // Golan Arms Flechette
-void FX_FlechetteProjectileThink( centity_t *cent, const struct weaponInfo_s *weapon );
-void FX_FlechetteWeaponHitWall(vec3_t origin, vec3_t normal, int weapon, qboolean altFire);
-void FX_FlechetteWeaponHitPlayer(vec3_t origin, vec3_t normal, qboolean humanoid, int weapon, qboolean altFire);
-void FX_FlechetteAltProjectileThink( centity_t *cent, const struct weaponInfo_s *weapon );
+void FX_WeaponProjectileThink( centity_t *cent, const struct weaponInfo_s *weapon );
+void FX_WeaponAltProjectileThink( centity_t *cent, const struct weaponInfo_s *weapon );
 
 // Personal Rocket Launcher
 void FX_RocketProjectileThink(centity_t *cent, const struct weaponInfo_s *weapon);
@@ -70,7 +62,7 @@ void FX_RocketHitPlayer(vec3_t origin, vec3_t normal, qboolean humanoid, int wea
 void FX_PulseRocketHitPlayer(vec3_t origin, vec3_t normal, qboolean humanoid, int weapon, qboolean altFire);
 
 //T21
-void FX_T21ProjectileThink(centity_t *cent, const struct weaponInfo_s *weapon);
+void FX_WeaponProjectileThink(centity_t *cent, const struct weaponInfo_s *weapon);
 
 // Thermals
 void FX_ThermalProjectileThink(centity_t *cent, const struct weaponInfo_s *weapon);

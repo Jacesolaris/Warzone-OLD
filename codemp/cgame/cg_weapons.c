@@ -2108,12 +2108,8 @@ void CG_MissileHitWall(int weapon, int clientNum, vec3_t origin, vec3_t dir, imp
 		}
 		else
 		{
-			FX_BryarHitWall(origin, dir, weapon, altFire);
+			FX_WeaponHitWall(origin, dir, weapon, altFire);
 		}
-		break;
-
-	case WP_CONCUSSION:
-		FX_ConcussionHitWall(origin, dir, weapon, altFire);
 		break;
 
 	case WP_WESTER_PISTOL:
@@ -2125,130 +2121,22 @@ void CG_MissileHitWall(int weapon, int clientNum, vec3_t origin, vec3_t dir, imp
 		}
 		else
 		{
-			FX_BryarHitWall(origin, dir, weapon, altFire);
+			FX_WeaponHitWall(origin, dir, weapon, altFire);
 		}
-		break;
-
-	case WP_TURRET:
-		FX_TurretHitWall(origin, dir, weapon, altFire);
-		break;
-
-	case WP_A280:
-		//FX_DisruptorAltMiss( origin, dir ); // UQ1: Example... Should have it's own fx...
-		FX_BlasterWeaponHitWall(origin, dir, weapon, altFire);
-		break;
-	
-	case WP_CLONE_BLASTER:
-	case WP_BLASTER:
-		FX_BlasterWeaponHitWall(origin, dir, weapon, altFire);
 		break;
 
 	case WP_DISRUPTOR:
 		FX_DisruptorAltMiss(origin, dir, weapon, altFire);
 		break;
 
-	case WP_BOWCASTER:
-		FX_BowcasterHitWall(origin, dir, weapon, altFire);
-		break;
-
-	case WP_DC15:
-		if (altFire)
-		{
-			FX_RepeaterAltHitWall(origin, dir, weapon, altFire);
-		}
-		else
-		{
-			FX_RepeaterHitWall(origin, dir, weapon, altFire);
-		}
-		break;
-
-	case WP_WESTARM5:
-		if (altFire)
-		{
-			FX_RepeaterAltHitWall(origin, dir, weapon, altFire);
-		}
-		else
-		{
-			FX_RepeaterHitWall(origin, dir, weapon, altFire);
-		}
-		break;
-
-	case WP_T21:
-		FX_BlasterWeaponHitWall(origin, dir, weapon, altFire);
-		break;
-
-	case WP_EE3:
-		FX_BlasterWeaponHitWall(origin, dir, weapon, altFire);
-		break;
-
 	case WP_CLONE_PISTOL1:
 		if (altFire)
 		{
-			FX_CLONEPISTOL_BounceWall(origin, dir, weapon, altFire); // UQ1: This isn't right...
-			//sry UQ1 but this is needed to make floor bounce impact efx working ;)
+			FX_CLONEPISTOL_BounceWall(origin, dir, weapon, altFire);
 		}
 		else
 		{
 			FX_CLONEPISTOL_HitWall(origin, dir, weapon, altFire);
-		}
-		break;
-
-	case WP_DLT20A:
-		FX_BlasterWeaponHitWall(origin, dir, weapon, altFire);
-		break;
-
-	case WP_CLONERIFLE:
-		if (altFire)
-		{
-			FX_RepeaterAltHitWall(origin, dir, weapon, altFire);
-		}
-		else
-		{
-			FX_RepeaterHitWall(origin, dir, weapon, altFire);
-		}
-		break;
-
-	case WP_Z6_BLASTER_CANON:
-		if (altFire)
-		{
-			FX_RepeaterAltHitWall(origin, dir, weapon, altFire);
-		}
-		else
-		{
-			FX_RepeaterHitWall(origin, dir, weapon, altFire);
-		}
-		break;
-
-	case WP_DC15_EXT:
-		if (altFire)
-		{
-			FX_ConcussionHitWall(origin, dir, weapon, qtrue);//secdir efx
-		}
-		else
-		{
-			FX_RepeaterHitWall(origin, dir, weapon, qfalse);//prime efx
-		}
-		break;
-
-	case WP_WOOKIE_BOWCASTER:
-		if (altFire)
-		{
-			FX_BowcasterHitWall(origin, dir, weapon, altFire);
-		}
-		else
-		{
-			FX_BowcasterHitWall(origin, dir, weapon, altFire);
-		}
-		break;
-
-	case WP_REPEATER:
-		if ( altFire )
-		{
-			FX_RepeaterAltHitWall(origin, dir, weapon, altFire);
-		}
-		else
-		{
-			FX_RepeaterHitWall(origin, dir, weapon, altFire);
 		}
 		break;
 
@@ -2264,15 +2152,9 @@ void CG_MissileHitWall(int weapon, int clientNum, vec3_t origin, vec3_t dir, imp
 		break;
 
 	case WP_FLECHETTE:
-		/*if (altFire)
-		{
-			CG_SurfaceExplosion(origin, dir, 20.0f, 12.0f, qtrue);
-		}
-		else
-		*/
 		if (!altFire)
 		{
-			FX_FlechetteWeaponHitWall(origin, dir, weapon, altFire);
+			FX_WeaponHitWall(origin, dir, weapon, altFire);
 		}
 		break;
 
@@ -2281,14 +2163,11 @@ void CG_MissileHitWall(int weapon, int clientNum, vec3_t origin, vec3_t dir, imp
 		break;
 
 	case WP_THERMAL:
-		/*trap->FX_PlayEffectID( cgs.effects.thermalExplosionEffect, origin, dir, -1, -1, qfalse );
-		trap->FX_PlayEffectID( cgs.effects.thermalShockwaveEffect, origin, up, -1, -1, qfalse );*/
 		CG_ThermalImpactEffect(altFire, origin, dir, up);
 		break;
 
-	case WP_EMPLACED_GUN:
-		FX_BlasterWeaponHitWall(origin, dir, weapon, altFire);
-		//FIXME: Give it its own hit wall effect
+	default:
+		FX_WeaponHitWall(origin, dir, weapon, altFire);
 		break;
 	}
 }
@@ -2320,178 +2199,22 @@ void CG_MissileHitPlayer(int weapon, vec3_t origin, vec3_t dir, int entityNum, q
 	// some weapons will make an explosion with the blood, while
 	// others will just make the blood
 	switch ( weapon ) {
-	case WP_S5_PISTOL:
-	case WP_ELG_3A:
-	case WP_WOOKIES_PISTOL:
-	case WP_BRYAR_PISTOL:
-		if ( altFire )
-		{
-			FX_BryarAltHitPlayer( origin, dir, humanoid, weapon, altFire );
-		}
-		else
-		{
-			FX_BryarHitPlayer( origin, dir, humanoid, weapon, altFire );
-		}
-		break;
-
-	case WP_CONCUSSION:
-		FX_ConcussionHitPlayer( origin, dir, humanoid, weapon, altFire );
-		break;
-
-	
-	case WP_WESTER_PISTOL:
-	case WP_BRYAR_OLD:
-		if ( altFire )
-		{
-			FX_BryarAltHitPlayer( origin, dir, humanoid, weapon, altFire );
-		}
-		else
-		{
-			FX_BryarHitPlayer( origin, dir, humanoid, weapon, altFire );
-		}
-		break;
-
-	case WP_TURRET:
-		FX_TurretHitPlayer( origin, dir, humanoid, weapon, altFire );
-		break;
-
-	case WP_A280:
-		FX_BlasterWeaponHitPlayer( origin, dir, humanoid, weapon, altFire );
-		//FX_DisruptorAltHit( origin, dir); // UQ1: Example... Should have it's own fx...
-		break;
-
-	case WP_CLONE_BLASTER:
-	case WP_BLASTER:
-		FX_BlasterWeaponHitPlayer( origin, dir, humanoid, weapon, altFire );
-		break;
-
 	case WP_DISRUPTOR:
 		FX_DisruptorAltHit(origin, dir, weapon, altFire);
-		break;
-
-	case WP_BOWCASTER:
-		FX_BowcasterHitPlayer( origin, dir, humanoid, weapon, altFire );
-		break;
-
-	case WP_DC15:
-		if (altFire)
-		{
-			FX_RepeaterAltHitPlayer(origin, dir, humanoid, weapon, altFire);
-		}
-		else
-		{
-			FX_RepeaterHitPlayer(origin, dir, humanoid, weapon, altFire);
-		}
-		break;
-
-	case WP_WESTARM5:
-		if (altFire)
-		{
-			FX_RepeaterAltHitPlayer(origin, dir, humanoid, weapon, altFire);
-		}
-		else
-		{
-			FX_RepeaterHitPlayer(origin, dir, humanoid, weapon, altFire);
-		}
-		break;
-
-	case WP_T21:
-		FX_BlasterWeaponHitPlayer(origin, dir, humanoid, weapon, altFire);
-		break;
-
-	case WP_EE3:
-		FX_BlasterWeaponHitPlayer(origin, dir, humanoid, weapon, altFire);
 		break;
 
 	case WP_CLONE_PISTOL1:
 		if (altFire)
 		{
-			trap->FX_PlayEffectID(
-				CG_EnableEnhancedFX(cgs.effects.mAltDetonate, cgs.effects.mAltDempDetonateEnhancedFX), origin, dir, -1, -1, qfalse);
+			trap->FX_PlayEffectID(CG_EnableEnhancedFX(cgs.effects.mAltDetonate, cgs.effects.mAltDempDetonateEnhancedFX), origin, dir, -1, -1, qfalse);
 		}
 		else
 		{
-			FX_CLONEPISTOL_HitPlayer(origin, dir, humanoid, weapon, altFire);
+			FX_WeaponHitPlayer( origin, dir, humanoid, weapon, altFire );
 		}
-		/*if (altFire)
-		{
-			trap->FX_PlayEffectID(cgs.effects.mAltDetonateEnhancedFX, origin, dir, -1, -1, qfalse);
-		}
-		else
-		{
-			FX_BlasterWeaponHitPlayer(origin, dir, humanoid, weapon, altFire);
-
-		}*/
-		break;
-
-	case WP_DLT20A:
-		FX_BlasterWeaponHitPlayer(origin, dir, humanoid, weapon, altFire);
-		break;
-
-	case WP_CLONERIFLE:
-		if (altFire)
-		{
-			FX_RepeaterAltHitPlayer(origin, dir, humanoid, weapon, altFire);
-		}
-		else
-		{
-			FX_RepeaterHitPlayer(origin, dir, humanoid, weapon, altFire);
-		}
-		break;
-
-	case WP_Z6_BLASTER_CANON:
-		if (altFire)
-		{
-			FX_RepeaterAltHitPlayer(origin, dir, humanoid, weapon, altFire);
-		}
-		else
-		{
-			FX_RepeaterHitPlayer(origin, dir, humanoid, weapon, altFire);
-		}
-		break;
-
-	case WP_WOOKIE_BOWCASTER:
-		if (altFire)
-		{
-			FX_BowcasterHitPlayer(origin, dir, humanoid, weapon, altFire);
-		}
-		else
-		{
-			FX_BowcasterHitPlayer(origin, dir, humanoid, weapon, altFire);
-		}
-		
-	case WP_REPEATER:
-		if ( altFire )
-		{
-			FX_RepeaterAltHitPlayer( origin, dir, humanoid, weapon, altFire );
-		}
-		else
-		{
-			FX_RepeaterHitPlayer( origin, dir, humanoid, weapon, altFire );
-		}
-		break;
-
-	case WP_DC15_EXT:
-			if (altFire)
-			{
-				FX_ConcussionHitPlayer(origin, dir, humanoid, weapon, qtrue);
-			}
-			else
-			{
-				FX_RepeaterHitPlayer(origin, dir, humanoid, weapon, qfalse);
-			}
 		break;
 
 	case WP_DEMP2:
-		// Do a full body effect here for some more feedback
-		// NOTENOTE The chaining of the demp2 is not yet implemented.
-		/*
-		if ( other )
-		{
-			other->s.powerups |= ( 1 << PW_DISINT_1 );
-			other->client->ps.powerups[PW_DISINT_1] = cg.time + 650;
-		}
-		*/
 		if (altFire)
 		{
 			trap->FX_PlayEffectID(
@@ -2503,25 +2226,16 @@ void CG_MissileHitPlayer(int weapon, vec3_t origin, vec3_t dir, int entityNum, q
 		}
 		break;
 
-	case WP_FLECHETTE:
-		FX_FlechetteWeaponHitPlayer( origin, dir, humanoid, weapon, altFire );
-		break;
-
 	case WP_ROCKET_LAUNCHER:
 		FX_RocketHitPlayer( origin, dir, humanoid, weapon, altFire );
 		break;
 
 	case WP_THERMAL:
 		CG_ThermalImpactEffect(altFire, origin, dir, up);
-		/*trap->FX_PlayEffectID( cgs.effects.thermalExplosionEffect, origin, dir, -1, -1, qfalse );
-		trap->FX_PlayEffectID( cgs.effects.thermalShockwaveEffect, origin, up, -1, -1, qfalse );*/
-		break;
-	case WP_EMPLACED_GUN:
-		//FIXME: Its own effect?
-		FX_BlasterWeaponHitPlayer( origin, dir, humanoid, weapon, altFire );
 		break;
 
 	default:
+		FX_WeaponHitPlayer( origin, dir, humanoid, weapon, altFire );
 		break;
 	}
 }

@@ -2268,13 +2268,9 @@ void		BG_CycleForce(playerState_t *ps, int direction);
 const char *CG_GetStringEdString(char *refSection, char *refName);
 
 void FX_TurretProjectileThink(  centity_t *cent, const struct weaponInfo_s *weapon );
-void FX_TurretHitWall(vec3_t origin, vec3_t normal, int weapon, qboolean altFire);
-void FX_TurretHitPlayer(vec3_t origin, vec3_t normal, qboolean humanoid, int weapon, qboolean altFire);
 
-void FX_ConcussionHitWall(vec3_t origin, vec3_t normal, int weapon, qboolean altFire);
-void FX_ConcussionHitPlayer(vec3_t origin, vec3_t normal, qboolean humanoid, int weapon, qboolean altFire);
 void FX_ConcussionProjectileThink(  centity_t *cent, const struct weaponInfo_s *weapon );
-void FX_ConcussionAltProjectileThink(centity_t *cent, const struct weaponInfo_s *weapon);
+void FX_WeaponAltProjectileThink(centity_t *cent, const struct weaponInfo_s *weapon);
 void FX_ConcAltShot( vec3_t start, vec3_t end, int weapon );
 
 //-----------------------------
@@ -2290,17 +2286,14 @@ fxHandle_t CG_EnableEnhancedFX(fxHandle_t normal, fxHandle_t AdvanceEnhancedFX);
 void CG_Spark( vec3_t origin, vec3_t dir );
 
 // Weapon prototypes
-void FX_BryarProjectileThink(  centity_t *cent, const struct weaponInfo_s *weapon );
-void FX_BryarAltProjectileThink(  centity_t *cent, const struct weaponInfo_s *weapon );
-void FX_BryarHitWall( vec3_t origin, vec3_t normal, int weapon, qboolean altFire );
-void FX_BryarAltHitWall(vec3_t origin, vec3_t normal, int power, int weapon, qboolean altFire);
-void FX_BryarHitPlayer(vec3_t origin, vec3_t normal, qboolean humanoid, int weapon, qboolean altFire);
-void FX_BryarAltHitPlayer(vec3_t origin, vec3_t normal, qboolean humanoid, int weapon, qboolean altFire);
+void FX_WeaponProjectileThink(  centity_t *cent, const struct weaponInfo_s *weapon );
+void FX_WeaponAltProjectileThink(  centity_t *cent, const struct weaponInfo_s *weapon );
+void FX_WeaponHitWall( vec3_t origin, vec3_t normal, int weapon, qboolean altFire );
+void FX_WeaponAltHitWall(vec3_t origin, vec3_t normal, int power, int weapon, qboolean altFire);
+void FX_WeaponHitPlayer(vec3_t origin, vec3_t normal, qboolean humanoid, int weapon, qboolean altFire);
+void FX_WeaponAltHitPlayer(vec3_t origin, vec3_t normal, qboolean humanoid, int weapon, qboolean altFire);
 
-void FX_BlasterProjectileThink( centity_t *cent, const struct weaponInfo_s *weapon );
-void FX_BlasterAltFireThink( centity_t *cent, const struct weaponInfo_s *weapon );
-void FX_BlasterWeaponHitWall(vec3_t origin, vec3_t normal, int weapon, qboolean altFire);
-void FX_BlasterWeaponHitPlayer(vec3_t origin, vec3_t normal, qboolean humanoid, int weapon, qboolean altFire);
+void FX_BryarAltProjectileThink(  centity_t *cent, const struct weaponInfo_s *weapon );
 
 void FX_CLONEPISTOL_HitWall(vec3_t origin, vec3_t normal, int weapon, qboolean altFire);
 void FX_CLONEPISTOL_BounceWall(vec3_t origin, vec3_t normal, int weapon, qboolean altFire);
