@@ -7202,7 +7202,7 @@ qboolean NPC_JediCheckFall ( void )
 		}
 		else
 		{// We need to find a waypoint...
-			NPC->wpCurrent = DOM_GetNearWP(NPC->r.currentOrigin, NPC->parent->wpCurrent);
+			NPC->wpCurrent = DOM_GetNearWP(NPC->r.currentOrigin, NPC->wpCurrent);
 
 			if (NPC->wpCurrent >= 0 
 				&& NPC->wpCurrent < gWPNum
