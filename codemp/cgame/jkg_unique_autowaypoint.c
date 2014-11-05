@@ -92,6 +92,7 @@ int outdoor_waypoint_scatter_distance = 192;
 
 qboolean optimize_again = qfalse;
 qboolean DO_THOROUGH = qfalse;
+qboolean DO_TRANSLUCENT = qfalse;
 
 // warning C4996: 'strcpy' was declared deprecated
 #pragma warning( disable : 4996 )
@@ -3837,7 +3838,7 @@ float FloorHeightAt ( vec3_t org )
 		return 65536.0f;
 	}
 
-	if ( tr.contents & CONTENTS_TRANSLUCENT )
+	if ( !DO_TRANSLUCENT && tr.contents & CONTENTS_TRANSLUCENT )
 	{// Invisible surface... I'm just gonna ignore these!
 		//trap->Print("CONTENTS_TRANSLUCENT\n");
 		return 65536.0f;
@@ -6697,6 +6698,7 @@ AIMod_AutoWaypoint ( void )
 		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^5Available methods are:\n" );
 		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3\"standard\" ^5- For standard multi-level maps.\n");
 		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3\"thorough\" ^5- Use extensive fall waypoint checking.\n");
+		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3\"translucent\" ^5- Allow translucent surfaces (for maps with surfaces being ignored by standard).\n");
 		//trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3\"noclean\" ^5- For standard multi-level maps (with no cleaning passes).\n");
 		//trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3\"outdoor_only\" ^5- For standard single level maps.\n");
 		trap->UpdateScreen();
@@ -6704,6 +6706,7 @@ AIMod_AutoWaypoint ( void )
 	}
 
 	DO_THOROUGH = qfalse;
+	DO_TRANSLUCENT = qfalse;
 
 	trap->Cmd_Argv( 1, str, sizeof(str) );
 	
@@ -6764,6 +6767,39 @@ AIMod_AutoWaypoint ( void )
 		else
 		{
 			DO_THOROUGH = qtrue;
+
+			AIMod_AutoWaypoint_StandardMethod();
+		}
+	}
+	else if ( Q_stricmp( str, "translucent") == 0 )
+	{
+		if ( trap->Cmd_Argc() >= 2 )
+		{
+			// Override normal scatter distance...
+			int dist = waypoint_scatter_distance;
+
+			trap->Cmd_Argv( 2, str, sizeof(str) );
+			dist = atoi(str);
+
+			if (dist <= 20)
+			{
+				// Fallback and warning...
+				dist = original_wp_scatter_dist;
+
+				trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^7Warning: ^5Invalid scatter distance set (%i). Using default (%i)...\n", atoi(str), original_wp_scatter_dist );
+			}
+
+			waypoint_scatter_distance = dist;
+
+			DO_TRANSLUCENT = qtrue;
+
+			AIMod_AutoWaypoint_StandardMethod();
+
+			waypoint_scatter_distance = original_wp_scatter_dist;
+		}
+		else
+		{
+			DO_TRANSLUCENT = qtrue;
 
 			AIMod_AutoWaypoint_StandardMethod();
 		}
