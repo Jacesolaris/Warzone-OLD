@@ -3343,11 +3343,11 @@ static void WP_FireConcussionAlt( gentity_t *ent )
 static void WP_FireBlobGrenade(gentity_t *ent)
 {//a fast rocket-like projectile
 	vec3_t	start;
-	int		damage = CONC_DAMAGE;
+	int		damage = 30;
 	float	vel = CONC_VELOCITY;
 	gentity_t *missile;
-	int		count, origcount;
-	float	fact;
+	int		ChargeGrenadeBlobs = ent->s.weapon == WP_DC15_EXT;
+	int		recoil = -150;
 
 
 	VectorCopy(muzzle, start);
@@ -3368,44 +3368,46 @@ static void WP_FireBlobGrenade(gentity_t *ent)
 	VectorSet(missile->r.maxs, ROCKET_SIZE, ROCKET_SIZE, ROCKET_SIZE);
 	VectorScale(missile->r.maxs, -1, missile->r.mins);
 
-	missile->damage = damage;
-	missile->dflags = DAMAGE_EXTRA_KNOCKBACK;
 
-	missile->methodOfDeath = MOD_CONC;
-	missile->splashMethodOfDeath = MOD_CONC;
-
+	/*missile->dflags = DAMAGE_EXTRA_KNOCKBACK;*/
+	missile->methodOfDeath = MOD_REPEATER_ALT;
+	missile->splashMethodOfDeath = MOD_REPEATER_ALT_SPLASH;
 	missile->clipmask = MASK_SHOT | CONTENTS_LIGHTSABER;
-	missile->splashDamage = CONC_SPLASH_DAMAGE;
-	missile->splashRadius = CONC_SPLASH_RADIUS;
-
-	if (ent->s.weapon == WP_DC15_EXT)
+	missile->genericValue1 = ChargeGrenadeBlobs;
+	
+	if (ChargeGrenadeBlobs)
 	{
-		count = (level.time - ent->client->ps.weaponChargeTime) / DEMP2_CHARGE_UNIT;
+		int time = (level.time - ent->client->ps.weaponChargeTime);
+		float ratio;
 
-		origcount = count;
-
-		if (count < 1)
+		if (time > GRENADE_MAX_CHARGE_TIME)
 		{
-			count = 1;
+			time = GRENADE_MAX_CHARGE_TIME;
 		}
-		else if (count > 3)
+		else if (time <= 150)
 		{
-			count = 3;
+			time = 150;
 		}
 
-		fact = count*0.8;
-		if (fact < 1)
-		{
-			fact = 1;
-		}
-		damage *= fact;
-
-		if (!origcount)
-		{ //this was just a tap-fire
-			damage = 1;
-		}
+		ratio = (float)time / (float)GRENADE_MAX_CHARGE_TIME;
+		missile->splashDamage = 20.0f * ratio;
+		missile->damage = missile->splashDamage * 1.25f; //bonus for direct hit
+		missile->s.userFloat2 = time / 2000.0f + 0.75f;
+		//Close enough.
+		missile->splashRadius = (GRENADE_MAX_CHARGE_TIME / 2000.0f + 0.75f) * 50.0f;
+		missile->s.pos.trType = TR_GRAVITY;
+		recoil *= 2;
+		missile->methodOfDeath = missile->splashMethodOfDeath = MOD_CONC;
+		//radius
+		missile->mass = 5;
 	}
-
+	else
+	{
+		//low splash damage for blobs
+		missile->splashDamage = 1;
+		missile->splashRadius = 150;
+		missile->damage = damage;
+	}
 	// we don't want it to ever bounce
 	missile->bounceCount = 0;
 }
