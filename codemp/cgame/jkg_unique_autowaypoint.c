@@ -1261,6 +1261,7 @@ qboolean AIMod_AutoWaypoint_Check_PlayerWidth ( vec3_t origin )
 	//vec3_t	maxs = {48, 48, 48};
 	//vec3_t	mins = {-24, -24, 0};
 	//vec3_t	maxs = {24, 24, 48};
+	
 	vec3_t	mins = {-26, -26, 0};
 	vec3_t	maxs = {26, 26, 48};
 
@@ -2407,10 +2408,15 @@ AIMOD_MAPPING_CreateNodeLinks ( int node )
 
 			if ( !BAD_WP_Distance( nodes[node].origin, nodes[loop].origin, double_range) )
 			{
-				int visCheck = 0;
+				int		visCheck = 0;
+				vec3_t	this_org;
+
+				VectorCopy(nodes[loop].origin, this_org);
+				this_org[2]+=8;
+
 //#pragma omp critical (__NODE_VISIBLE_CHECK__)
 				{
-					visCheck = NodeVisible( nodes[loop].origin, tmp, -1 );
+					visCheck = NodeVisible( this_org, tmp, -1 );
 				}
 
 				//0 = wall in way
@@ -2421,7 +2427,7 @@ AIMOD_MAPPING_CreateNodeLinks ( int node )
 				{
 //#pragma omp critical (__SLOPE_CHECK__)
 					{
-						if (AIMod_Check_Slope_Between(nodes[node].origin, nodes[loop].origin))
+						if (AIMod_Check_Slope_Between(tmp, this_org))
 						{
 							nodes[node].links[linknum].targetNode = loop;
 							nodes[node].links[linknum].cost = VectorDistance(nodes[loop].origin, nodes[node].origin) + (DistanceVertical(nodes[loop].origin, nodes[node].origin)*DistanceVertical(nodes[loop].origin, nodes[node].origin));
@@ -2429,7 +2435,7 @@ AIMOD_MAPPING_CreateNodeLinks ( int node )
 
 							linknum++;
 						}
-						else if (/*double_range &&*/ AWP_Jump( nodes[node].origin, nodes[loop].origin ))
+						else if (/*double_range &&*/ AWP_Jump( tmp, this_org ))
 						{// Can jump there!
 							nodes[node].links[linknum].targetNode = loop;
 							nodes[node].links[linknum].cost = VectorDistance(nodes[loop].origin, nodes[node].origin) + (DistanceVertical(nodes[loop].origin, nodes[node].origin)*DistanceVertical(nodes[loop].origin, nodes[node].origin));
@@ -3658,7 +3664,7 @@ float FloorHeightAt ( vec3_t org )
 	}
 
 	VectorCopy(org, org1);
-	org1[2]+=48;
+	//org1[2]+=48;
 
 	VectorCopy(org, org2);
 	org2[2]= -65536.0f;
@@ -3805,8 +3811,7 @@ float FloorHeightAt ( vec3_t org )
 		return -65536.0f;
 	}
 
-	if ((tr.surfaceFlags & SURF_NOMARKS) && (tr.surfaceFlags & SURF_NODRAW) && (tr.contents & CONTENTS_SOLID) && (tr.contents & CONTENTS_OPAQUE))
-	//if ( tr.surfaceFlags & SURF_NOMARKS && tr.surfaceFlags & SURF_NODRAW )
+	if (!DO_THOROUGH && (tr.surfaceFlags & SURF_NOMARKS) && (tr.surfaceFlags & SURF_NODRAW) && (tr.contents & CONTENTS_SOLID) && (tr.contents & CONTENTS_OPAQUE))
 	{// Sky...
 		//trap->Print("SURF_SKY\n");
 		return 65536.0f;
@@ -6129,6 +6134,8 @@ omp_set_nested(0);
 		//temp_org[2] += waypoint_scatter_distance; // Start above the lift...
 		temp_roof2 = RoofHeightAt(temp_org);
 		temp_roof = MOVER_LIST_TOP[i][2];
+
+		if (temp_roof2 > mapMaxs[2]) temp_roof2 = mapMaxs[2]; // Never go above the roof of the map... lol
 
 		if (temp_roof - temp_ground <= 96) isDoor = qtrue;
 

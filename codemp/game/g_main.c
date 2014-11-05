@@ -239,8 +239,11 @@ qboolean CheckSpawnPosition(vec3_t position)
 {
 	trace_t		tr;
 	vec3_t testPos;
-	vec3_t	mins = {-15, -15, -1};
-	vec3_t	maxs = {15, 15, 48};
+	//vec3_t	mins = {-15, -15, -1};
+	//vec3_t	maxs = {15, 15, 48};
+
+	vec3_t	mins = {-96, -96, -1};
+	vec3_t	maxs = {96, 96, 64};
 	
 	VectorCopy(position, testPos);
 
@@ -263,11 +266,9 @@ void CreateSpawnpoints( void )
 
 	if (g_gametype.integer >= GT_TEAM)
 	{// Create team spawnpoints...
-		//"info_player_start_blue"
-		//"info_player_start_red"
-
 		int			blue_count = 0;
 		int			red_count = 0;
+		int			tries = 0;
 		vec3_t		map_size;
 		int			i = 0;
 		gentity_t	*spot = NULL;
@@ -307,61 +308,83 @@ void CreateSpawnpoints( void )
 
 		blue_count = 0;
 		red_count = 0;
+		tries = 0;
 
-		map_size[0] = maxs[0] - mins[0];
-		map_size[1] = maxs[1] - mins[1];
-		map_size[2] = maxs[2] - mins[2];
-
-		blue_mins[0] = mins[0];
-		blue_mins[1] = mins[1];
-		blue_mins[2] = mins[2];
-		blue_maxs[0] = mins[0] + (map_size[0] / 3.0);
-		blue_maxs[1] = mins[1] + (map_size[1] / 3.0);
-		blue_maxs[2] = maxs[2];
-
-		red_maxs[0] = maxs[0];
-		red_maxs[1] = maxs[1];
-		red_maxs[2] = maxs[2];
-		red_mins[0] = maxs[0] - (map_size[0] / 3.0);
-		red_mins[1] = maxs[1] - (map_size[1] / 3.0);
-		red_mins[2] = mins[2];
-
-		VectorSubtract(mins, maxs, blue_angles); // Blue faces red...
-		VectorSubtract(maxs, mins, red_angles); // Red faces blue...
-		blue_angles[2] = 0;
-		red_angles[2] = 0;
-
-		// Find waypoints close to the edge of the map to make into spawnpoints...
-		for (i = 0; i < gWPNum; i++)
+		while (blue_count < 32 || red_count < 32)
 		{
-			if (!CheckSpawnPosition(gWPArray[i]->origin)) continue;
+			map_size[0] = maxs[0] - mins[0];
+			map_size[1] = maxs[1] - mins[1];
+			map_size[2] = maxs[2] - mins[2];
 
-			if (G_PointInBounds( gWPArray[i]->origin, blue_mins, blue_maxs ))
-			{// Mins is TEAM_BLUE
-				if (blue_count < 32)
-				{
-					gentity_t *spawnpoint = G_Spawn();
-					spawnpoint->classname = "team_CTF_bluespawn";
-					VectorCopy(gWPArray[i]->origin, spawnpoint->s.origin);
-					VectorCopy(blue_angles, spawnpoint->s.angles);
-					SP_info_player_deathmatch( spawnpoint );
-					//trap->Print("Created blue spawn at %f %f %f.\n", spawnpoint->s.origin[0], spawnpoint->s.origin[1], spawnpoint->s.origin[2]);
-					blue_count++;
+			blue_mins[0] = mins[0];
+			blue_mins[1] = mins[1];
+			blue_mins[2] = mins[2];
+			if (tries == 1)
+			{
+				blue_maxs[0] = mins[0] + (map_size[0] / 2.0);
+				blue_maxs[1] = mins[1] + (map_size[1] / 2.0);
+			}
+			else
+			{
+				blue_maxs[0] = mins[0] + (map_size[0] / 3.0);
+				blue_maxs[1] = mins[1] + (map_size[1] / 3.0);
+			}
+			blue_maxs[2] = maxs[2];
+
+			red_maxs[0] = maxs[0];
+			red_maxs[1] = maxs[1];
+			red_maxs[2] = maxs[2];
+			if (tries == 1)
+			{
+				red_mins[0] = maxs[0] - (map_size[0] / 2.0);
+				red_mins[1] = maxs[1] - (map_size[1] / 2.0);
+			}
+			else
+			{
+				red_mins[0] = maxs[0] - (map_size[0] / 3.0);
+				red_mins[1] = maxs[1] - (map_size[1] / 3.0);
+			}
+			red_mins[2] = mins[2];
+
+			VectorSubtract(mins, maxs, blue_angles); // Blue faces red...
+			VectorSubtract(maxs, mins, red_angles); // Red faces blue...
+			blue_angles[2] = 0;
+			red_angles[2] = 0;
+
+			// Find waypoints close to the edge of the map to make into spawnpoints...
+			for (i = 0; i < gWPNum; i++)
+			{
+				if (!CheckSpawnPosition(gWPArray[i]->origin)) continue;
+
+				if (G_PointInBounds( gWPArray[i]->origin, blue_mins, blue_maxs ))
+				{// Mins is TEAM_BLUE
+					if (blue_count < 32)
+					{
+						gentity_t *spawnpoint = G_Spawn();
+						spawnpoint->classname = "team_CTF_bluespawn";
+						VectorCopy(gWPArray[i]->origin, spawnpoint->s.origin);
+						VectorCopy(blue_angles, spawnpoint->s.angles);
+						SP_info_player_deathmatch( spawnpoint );
+						//trap->Print("Created blue spawn at %f %f %f.\n", spawnpoint->s.origin[0], spawnpoint->s.origin[1], spawnpoint->s.origin[2]);
+						blue_count++;
+					}
+				}
+				else if (G_PointInBounds( gWPArray[i]->origin, red_mins, red_maxs ))
+				{// Maxs is TEAM_RED
+					if (red_count < 32)
+					{
+						gentity_t *spawnpoint = G_Spawn();
+						spawnpoint->classname = "team_CTF_redspawn";
+						VectorCopy(gWPArray[i]->origin, spawnpoint->s.origin);
+						VectorCopy(red_angles, spawnpoint->s.angles);
+						SP_info_player_deathmatch( spawnpoint );
+						//trap->Print("Created red spawn at %f %f %f.\n", spawnpoint->s.origin[0], spawnpoint->s.origin[1], spawnpoint->s.origin[2]);
+						red_count++;
+					}
 				}
 			}
-			else if (G_PointInBounds( gWPArray[i]->origin, red_mins, red_maxs ))
-			{// Maxs is TEAM_RED
-				if (red_count < 32)
-				{
-					gentity_t *spawnpoint = G_Spawn();
-					spawnpoint->classname = "team_CTF_redspawn";
-					VectorCopy(gWPArray[i]->origin, spawnpoint->s.origin);
-					VectorCopy(red_angles, spawnpoint->s.angles);
-					SP_info_player_deathmatch( spawnpoint );
-					//trap->Print("Created red spawn at %f %f %f.\n", spawnpoint->s.origin[0], spawnpoint->s.origin[1], spawnpoint->s.origin[2]);
-					red_count++;
-				}
-			}
+
+			tries++;
 		}
 
 		trap->Print("Generated %i extra blue spawnpoints and %i extra red spawnpoints.\n", blue_count, red_count);

@@ -120,6 +120,10 @@ int ASTAR_GetFCost(gentity_t *bot, int to, int num, int parentNum, float *gcost)
 	//return (int)(gc + hc);
 }
 
+//#define __ALT_PATH_METHOD_1__ // This version creates a list of random avoid points...
+#define __ALT_PATH_METHOD_2__ // This version adjusts costs randomly... Can be mixed with 1 and 3...
+#define __ALT_PATH_METHOD_3__ // This version creates a single large avoid point...
+
 int ASTAR_FindPathFast(int from, int to, int *pathlist, qboolean altPath)
 {
 	//all the data we have to hold...since we can't do dynamic allocation, has to be MAX_WPARRAY_SIZE
@@ -132,9 +136,17 @@ int ASTAR_FindPathFast(int from, int to, int *pathlist, qboolean altPath)
 	float		gc;
 	int			i, j, u, v, m;
 	gentity_t	*bot = NULL;
+#ifdef __ALT_PATH_METHOD_1__
 	int			IGNORE_AREAS_NUM = 0;
 	int			IGNORE_AREAS[16];
+#endif //__ALT_PATH_METHOD_1__
+#ifdef __ALT_PATH_METHOD_3__
+	int			IGNORE_AREA = 0;
+	int			IGNORE_RANGE = 2048;
+#endif //__ALT_PATH_METHOD_3__
 	//int			debug_max_threads = 0;
+
+	if (gWPNum <= 0) return -1;
 
 	if (!PATHING_IGNORE_FRAME_TIME && trap->Milliseconds() - FRAME_TIME > 300)
 	{// Never path on an already long frame time...
@@ -174,20 +186,54 @@ int ASTAR_FindPathFast(int from, int to, int *pathlist, qboolean altPath)
 	gcost[from] = 0;																	//its f and g costs are obviously 0
 	fcost[from] = 0;
 
+#ifdef __ALT_PATH_METHOD_1__
 	if (altPath)
 	{// Mark some locations as bad to alter the path...
-		for (i = 0; i < gWPNum; i+=irand(1,gWPNum*0.3))
+		for (i = irand(0,gWPNum*0.2); i < gWPNum; i+=irand(1+(gWPNum*0.1),gWPNum*0.3))
 		{
-			if (Distance(gWPArray[i]->origin, gWPArray[from]->origin) > 256
-				&& Distance(gWPArray[i]->origin, gWPArray[to]->origin) > 256)
+			if (Distance(gWPArray[i]->origin, gWPArray[from]->origin) > 384/*256*/
+				&& Distance(gWPArray[i]->origin, gWPArray[to]->origin) > 384/*256*/)
 			{
 				IGNORE_AREAS[IGNORE_AREAS_NUM] = i;
 				IGNORE_AREAS_NUM++;
 			}
 
-			if (IGNORE_AREAS_NUM >= 16) break;
+			//if (IGNORE_AREAS_NUM >= 16) break;
+			if (IGNORE_AREAS_NUM >= 8) break;
 		}
 	}
+#endif //__ALT_PATH_METHOD_1__
+
+#ifdef __ALT_PATH_METHOD_3__
+	if (altPath)
+	{// Mark a location as bad to alter the path...
+		int tries = 0;
+		int divider = 1;
+
+		while (1)
+		{
+			int choice = irand(0, gWPNum-1);
+
+			if (tries > 5)
+			{// Reduce range check so that we never hit an endless loop...
+				divider++;
+				tries = 0;
+			}
+
+			if (Distance(gWPArray[choice]->origin, gWPArray[from]->origin) <= IGNORE_RANGE / divider
+				|| Distance(gWPArray[choice]->origin, gWPArray[to]->origin) <= IGNORE_RANGE / divider)
+			{// Make sure this is not too close to my, or my target's location...
+				//trap->Print("Range %i. Divider %i. Tries %i.\n", IGNORE_RANGE / divider, divider, tries);
+				tries++;
+				continue;
+			}
+
+			IGNORE_AREA = choice;
+			IGNORE_RANGE /= divider;
+			break;
+		}
+	}
+#endif //__ALT_PATH_METHOD_3__
 
 	while (1)
 	{
@@ -254,6 +300,7 @@ int ASTAR_FindPathFast(int from, int to, int *pathlist, qboolean altPath)
 					continue;
 				}
 
+#ifdef __ALT_PATH_METHOD_1__
 				if (altPath)
 				{// Doing an alt path. Check this waypoint is not too close to a marked random location...
 					int			badWP = 0;
@@ -261,7 +308,7 @@ int ASTAR_FindPathFast(int from, int to, int *pathlist, qboolean altPath)
 
 					for (badWP = 0; badWP < IGNORE_AREAS_NUM; badWP++)
 					{
-						if (Distance(gWPArray[i]->origin, gWPArray[IGNORE_AREAS[bad]]->origin) <= 256)
+						if (Distance(gWPArray[i]->origin, gWPArray[IGNORE_AREAS[bad]]->origin) <= 384/*256*/)
 						{// Too close to bad location...
 							bad = qtrue;
 							break;
@@ -273,6 +320,17 @@ int ASTAR_FindPathFast(int from, int to, int *pathlist, qboolean altPath)
 						continue;
 					}
 				}
+#endif //__ALT_PATH_METHOD_1__
+
+#ifdef __ALT_PATH_METHOD_3__
+				if (altPath)
+				{// Doing an alt path. Check this waypoint is not too close to a marked random location...
+					if (Distance(gWPArray[i]->origin, gWPArray[IGNORE_AREA]->origin) <= IGNORE_RANGE)
+					{// Too close to bad location...
+						continue;
+					}
+				}
+#endif //__ALT_PATH_METHOD_3__
 
 				if (list[newnode] != 1)												//if this node is not already on the open list
 				{
@@ -285,12 +343,22 @@ int ASTAR_FindPathFast(int from, int to, int *pathlist, qboolean altPath)
 						break;															//this will break the 'for' and go all the way to 'if (list[to] == 1)'
 					}
 
+#ifdef __ALT_PATH_METHOD_2__
+					if (altPath)
+					{// Let's try simply adding random multiplier to costs...
+						if (gWPArray[atNode]->neighbors[i].forceJumpTo) // But still always hate jumping...
+							fcost[newnode] = ASTAR_GetFCost(bot, to, newnode, parent[newnode], gcost) * irand(3,5);	//store it's f cost value
+						else
+							fcost[newnode] = ASTAR_GetFCost(bot, to, newnode, parent[newnode], gcost) * irand(1,3);	//store it's f cost value
+					}
+					else
+#endif //__ALT_PATH_METHOD_2__
 					fcost[newnode] = ASTAR_GetFCost(bot, to, newnode, parent[newnode], gcost);	//store it's f cost value
 					
-					if (fcost[newnode] <= 0 && newnode != from)
+					/*if (fcost[newnode] <= 0 && newnode != from)
 					{
 						trap->Print("ASTAR WARNING: Missing fcost for node %i. This should not happen!\n", newnode);
-					}
+					}*/
 
 					//this loop re-orders the heap so that the lowest fcost is at the top
 					m = numOpen;
@@ -332,6 +400,16 @@ int ASTAR_FindPathFast(int from, int to, int *pathlist, qboolean altPath)
 						//trap->Print("ASTAR WARNING: Missing cost for node %i neighbour %i. This should not happen!\n", atNode, i);
 					}
 
+#ifdef __ALT_PATH_METHOD_2__
+					if (altPath)
+					{// Let's try simply adding random multiplier to costs...
+						if (gWPArray[atNode]->neighbors[i].forceJumpTo) // But still always hate jumping...
+							gc *= irand(8,10);	//store it's f cost value
+						else
+							gc *= irand(1,10);	//store it's f cost value
+					}
+#endif //__ALT_PATH_METHOD_2__
+
 					if (gc < gcost[newnode])				//if the new gcost is less (ie, this path is shorter than what we had before)
 					{
 						parent[newnode] = atNode;			//set the new parent for this node
@@ -342,6 +420,16 @@ int ASTAR_FindPathFast(int from, int to, int *pathlist, qboolean altPath)
 							if (openlist[j] == newnode)	//find this node in the list
 							{
 								//calculate the new fcost and store it
+#ifdef __ALT_PATH_METHOD_2__
+								if (altPath)
+								{// Let's try simply adding random multiplier to costs...
+									if (gWPArray[atNode]->neighbors[i].forceJumpTo) // But still always hate jumping...
+										fcost[newnode] = ASTAR_GetFCost(bot, to, newnode, parent[newnode], gcost) * irand(3,5);	//store it's f cost value
+									else
+										fcost[newnode] = ASTAR_GetFCost(bot, to, newnode, parent[newnode], gcost) * irand(1,3);	//store it's f cost value
+								}
+								else
+#endif //__ALT_PATH_METHOD_2__
 								fcost[newnode] = ASTAR_GetFCost(bot, to, newnode, parent[newnode], gcost);
 
 								//reorder the list again, with the lowest fcost item on top

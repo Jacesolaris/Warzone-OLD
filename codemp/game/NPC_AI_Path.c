@@ -15,6 +15,8 @@ extern int DOM_GetNearestVisibleWP_Goal(vec3_t org, int ignore, int badwp);
 extern int DOM_GetNearestVisibleWP_NOBOX(vec3_t org, int ignore, int badwp);
 extern gentity_t *NPC_PickEnemyExt( qboolean checkAlerts );
 
+extern vmCvar_t npc_pathing;
+
 // Recorded in g_mover.c
 extern vec3_t		MOVER_LIST[1024];
 extern vec3_t		MOVER_LIST_TOP[1024];
@@ -556,10 +558,14 @@ void NPC_SetNewGoalAndPath( void )
 	{// Find a new generic goal...
 		if (g_gametype.integer >= GT_TEAM)
 		{
+			trap->Cvar_Update(&npc_pathing);
+
 			if (padawanPath) 
 				NPC->longTermGoal = NPC_FindPadawanGoal( NPC );
-			else 
+			else if (npc_pathing.integer == 1 && irand(0,5) == 0) // 1 in 6 will head straight to the enemy... When npc_pathing == 2, all NPCs head to random spots...
 				NPC->longTermGoal = NPC_FindTeamGoal( NPC );
+			else // 5 out of every 6 will use a totally random spot to spread them out... When npc_pathing == 2, all NPCs head to random spots...
+				NPC->longTermGoal = NPC_FindGoal( NPC );
 		}
 		else
 		{
@@ -570,7 +576,7 @@ void NPC_SetNewGoalAndPath( void )
 	if (NPC->longTermGoal >= 0)
 	{
 		memset(NPC->pathlist, WAYPOINT_NONE, sizeof(int)*MAX_WPARRAY_SIZE);
-		NPC->pathsize = ASTAR_FindPathFast(NPC->wpCurrent, NPC->longTermGoal, NPC->pathlist, qtrue);
+		NPC->pathsize = ASTAR_FindPathFast(NPC->wpCurrent, NPC->longTermGoal, NPC->pathlist, (qboolean)irand(0,1));
 
 		if (NPC->pathsize > 0)
 		{
@@ -595,7 +601,7 @@ void NPC_SetNewGoalAndPath( void )
 	if (NPC->longTermGoal >= 0)
 	{
 		memset(NPC->pathlist, WAYPOINT_NONE, sizeof(int)*MAX_WPARRAY_SIZE);
-		NPC->pathsize = ASTAR_FindPathFast(NPC->wpCurrent, NPC->longTermGoal, NPC->pathlist, qtrue);
+		NPC->pathsize = ASTAR_FindPathFast(NPC->wpCurrent, NPC->longTermGoal, NPC->pathlist, (qboolean)irand(0,1));
 
 		if (NPC->pathsize > 0)
 		{
@@ -658,7 +664,7 @@ void NPC_SetNewWarzoneGoalAndPath()
 	if (NPC->longTermGoal >= 0)
 	{
 		memset(NPC->pathlist, WAYPOINT_NONE, sizeof(int)*MAX_WPARRAY_SIZE);
-		NPC->pathsize = ASTAR_FindPathFast(NPC->wpCurrent, NPC->longTermGoal, NPC->pathlist, qtrue);
+		NPC->pathsize = ASTAR_FindPathFast(NPC->wpCurrent, NPC->longTermGoal, NPC->pathlist, (qboolean)irand(0,1));
 
 		if (NPC->pathsize > 0)
 		{
@@ -1403,7 +1409,7 @@ void NPC_SetNewEnemyGoalAndPath( void )
 	if (NPC->longTermGoal >= 0)
 	{
 		memset(NPC->pathlist, WAYPOINT_NONE, sizeof(int)*MAX_WPARRAY_SIZE);
-		NPC->pathsize = ASTAR_FindPathFast(NPC->wpCurrent, NPC->longTermGoal, NPC->pathlist, qtrue);
+		NPC->pathsize = ASTAR_FindPathFast(NPC->wpCurrent, NPC->longTermGoal, NPC->pathlist, qfalse);
 
 		if (NPC->pathsize > 0)
 		{
