@@ -3340,6 +3340,8 @@ static void WP_FireConcussionAlt( gentity_t *ent )
 #endif
 }
 
+#define GRENADE_MAX_CHARGE_TIME 5000 // UQ1: I dont know, 5 secs? you forgot this and it doesn't compile without it.
+
 static void WP_FireBlobGrenade(gentity_t *ent)
 {//a fast rocket-like projectile
 	vec3_t	start;
