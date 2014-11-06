@@ -900,6 +900,7 @@ CG_OffsetFirstPersonView
 ===============
 */
 static void CG_OffsetFirstPersonView( void ) {
+#if 0
 	float			*origin;
 	float			*angles;
 	float			bob;
@@ -1043,6 +1044,16 @@ static void CG_OffsetFirstPersonView( void ) {
 	VectorMA( cg.refdef.vieworg, NECK_LENGTH, up, cg.refdef.vieworg );
 	}
 #endif
+
+#else //!0
+
+	if ( cg.snap->ps.pm_type == PM_INTERMISSION ) {
+		return;
+	}
+
+	cg.refdef.vieworg[2] += cg.predictedPlayerState.viewheight;
+
+#endif //0
 }
 
 static void CG_OffsetFighterView( void )

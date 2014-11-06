@@ -289,7 +289,7 @@ void CG_ShowLifts ( void )
 
 qboolean VOICE_INITIALIZED = qfalse;
 
-void DoTextToSpeach (char* text)
+void DoTextToSpeech (char* text)
 {
 	ISpVoice * pVoice = NULL;
 	HRESULT hr;
@@ -341,22 +341,22 @@ void DoTextToSpeach (char* text)
 	//CoUninitialize();
 }
 
-void ShutdownTextToSpeachThread ( void )
+void ShutdownTextToSpeechThread ( void )
 {
 	if (VOICE_INITIALIZED) CoUninitialize();
 }
 
 DWORD WINAPI ThreadFunc(void* text) {
-	DoTextToSpeach((char *)text);
+	DoTextToSpeech((char *)text);
 	return 1;
 }
 
 char PREVIOUS_TALK_TEXT[1024];
 int  PREVIOUS_TALK_TIME = 0;
 
-void TextToSpeach( char *text )
+void TextToSpeech( char *text )
 {
-	if (PREVIOUS_TALK_TIME >= cg.time - 1000) return;
+	if (cg.time != 0 && PREVIOUS_TALK_TIME >= cg.time - 1000) return;
 
 	if (strcmp(text, PREVIOUS_TALK_TEXT))
 	{// Never repeat...
@@ -377,34 +377,34 @@ void CG_SaySillyTextTest ( void )
 	switch (choice)
 	{
 	case 1:
-		TextToSpeach("What the fuck are you doing???");
+		TextToSpeech("What the fuck are you doing???");
 		break;
 	case 2:
-		TextToSpeach("Stop that!");
+		TextToSpeech("Stop that!");
 		break;
 	case 3:
-		TextToSpeach("Hay, stop it!");
+		TextToSpeech("Hay, stop it!");
 		break;
 	case 4:
-		TextToSpeach("Get away from me!");
+		TextToSpeech("Get away from me!");
 		break;
 	case 5:
-		TextToSpeach("How much wood wood a wood chuck chuck if a wood chuck could chuck wood?");
+		TextToSpeech("How much wood wood a wood chuck chuck if a wood chuck could chuck wood?");
 		break;
 	case 6:
-		TextToSpeach("What are you doing?");
+		TextToSpeech("What are you doing?");
 		break;
 	case 7:
-		TextToSpeach("Don't talk to me.");
+		TextToSpeech("Don't talk to me.");
 		break;
 	case 8:
-		TextToSpeach("Go away!");
+		TextToSpeech("Go away!");
 		break;
 	case 9:
-		TextToSpeach("Ouch! That hurt!");
+		TextToSpeech("Ouch! That hurt!");
 		break;
 	default:
-		TextToSpeach("Oh meye!");
+		TextToSpeech("Oh meye!");
 		break;
 	}
 #endif //_WIN32
@@ -424,7 +424,7 @@ void TTS_SayText ( void )
 
 	trap->Cmd_Argv( 1, str, sizeof(str) );
 
-	TextToSpeach(str);
+	TextToSpeech(str);
 }
 
 typedef struct consoleCommand_s {

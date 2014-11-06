@@ -1463,7 +1463,7 @@ void CG_DrawWeaponSelect( void ) {
 				strcpy(text, cg_weapons[ cg.weaponSelect ].item->classname);
 			}
 
-			TextToSpeach( text );
+			TextToSpeech( text );
 		}
 #endif //_WIN32
 	}
@@ -2324,17 +2324,18 @@ qboolean CG_CalcMuzzlePoint( int entityNum, vec3_t muzzle ) {
 		}
 		else if (cg.renderingThirdPerson)
 		{
-			muzzle[2] += cg.snap->ps.viewheight + weaponMuzzle[2];
+			muzzle[2] += (cg.snap->ps.viewheight + weaponMuzzle[2]) * (pEnt->currentState.iModelScale/100.0f);
 		}
 		else
 		{
-			muzzle[2] += weaponMuzzle[2];
+			muzzle[2] += weaponMuzzle[2] * (pEnt->currentState.iModelScale/100.0f);
 		}
 
 		return qtrue;
 	}
 
 	cent = &cg_entities[entityNum];
+
 	if ( !cent->currentValid ) {
 		return qfalse;
 	}
@@ -2344,9 +2345,9 @@ qboolean CG_CalcMuzzlePoint( int entityNum, vec3_t muzzle ) {
 	AngleVectors( cent->currentState.apos.trBase, forward, NULL, NULL );
 	anim = cent->currentState.legsAnim;
 	if ( anim == BOTH_CROUCH1WALK || anim == BOTH_CROUCH1IDLE ) {
-		muzzle[2] += CROUCH_VIEWHEIGHT;
+		muzzle[2] += (CROUCH_VIEWHEIGHT * (cent->currentState.iModelScale/100.0f));
 	} else {
-		muzzle[2] += DEFAULT_VIEWHEIGHT;
+		muzzle[2] += (DEFAULT_VIEWHEIGHT * (cent->currentState.iModelScale/100.0f));
 	}
 
 	VectorMA( muzzle, 14, forward, muzzle );
