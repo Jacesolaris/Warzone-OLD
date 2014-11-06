@@ -1463,7 +1463,7 @@ void CG_DrawWeaponSelect( void ) {
 				strcpy(text, cg_weapons[ cg.weaponSelect ].item->classname);
 			}
 
-			TextToSpeach( text );
+			TextToSpeech( text );
 		}
 #endif //_WIN32
 	}

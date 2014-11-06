@@ -3071,12 +3071,12 @@ Called before every level change or subsystem restart
 */
 
 #ifdef _WIN32
-extern void ShutdownTextToSpeachThread ( void );
+extern void ShutdownTextToSpeechThread ( void );
 #endif //_WIN32
 void CG_Shutdown( void )
 {
 #ifdef _WIN32
-	ShutdownTextToSpeachThread();
+	ShutdownTextToSpeechThread();
 #endif //_WIN32
 
 	BG_ClearAnimsets(); //free all dynamic allocations made through the engine
