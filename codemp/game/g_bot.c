@@ -581,11 +581,14 @@ G_CountBotPlayers
 */
 int G_CountBotPlayers( int team ) {
 	int i, n, num;
-	gclient_t	*cl;
 
 	num = 0;
-	for ( i=0 ; i< sv_maxclients.integer ; i++ ) {
-		cl = level.clients + i;
+
+#pragma omp parallel for schedule(dynamic) num_threads(32) if(g_multithread.integer > 0)
+	for ( i=0 ; i< sv_maxclients.integer ; i++ ) 
+	{
+		gclient_t *cl = level.clients + i;
+
 		if ( cl->pers.connected != CON_CONNECTED ) {
 			continue;
 		}
@@ -604,8 +607,12 @@ int G_CountBotPlayers( int team ) {
 				continue;
 			}
 		}
+
+#pragma omp atomic
 		num++;
 	}
+
+#pragma omp parallel for schedule(dynamic) num_threads(16) if(g_multithread.integer > 0)
 	for( n = 0; n < BOT_SPAWN_QUEUE_DEPTH; n++ ) {
 		if( !botSpawnQueue[n].spawnTime ) {
 			continue;
@@ -613,6 +620,8 @@ int G_CountBotPlayers( int team ) {
 		if ( botSpawnQueue[n].spawnTime > level.time ) {
 			continue;
 		}
+
+#pragma omp atomic
 		num++;
 	}
 	return num;
@@ -774,29 +783,37 @@ extern int			MOVER_LIST_NUM;
 qboolean JKG_PointNearMoverEntityLocation( vec3_t org )
 {// Never spawn near a mover location...
 	int i = 0;
+	qboolean found = qfalse;
 
+#pragma omp parallel for schedule(dynamic) num_threads(MOVER_LIST_NUM) if(g_multithread.integer > 0)
 	for (i = 0; i < MOVER_LIST_NUM; i++)
 	{
+		if (found) continue;
+
 		if (DistanceHorizontal(org, MOVER_LIST[i]) >= 128.0) continue;
 
-		return qtrue;
+		found = qtrue;
 	}
 
-	return qfalse;
+	return found;
 }
 
 qboolean JKG_SpawnpointNearMoverEntityLocation( vec3_t org )
 {// Never spawn near a mover location...
 	int i = 0;
+	qboolean found = qfalse;
 
+#pragma omp parallel for schedule(dynamic) num_threads(MOVER_LIST_NUM) if(g_multithread.integer > 0)
 	for (i = 0; i < MOVER_LIST_NUM; i++)
 	{
+		if (found) continue;
+
 		if (DistanceHorizontal(org, MOVER_LIST[i]) >= 256.0) continue;
 
-		return qtrue;
+		found = qtrue;
 	}
 
-	return qfalse;
+	return found;
 }
 
 qboolean JKG_CheckBelowWaypoint( int wp )
@@ -989,6 +1006,7 @@ void G_CheckCivilianNPCs( void )
 		minplayers = 512;
 	}
 
+#pragma omp parallel for schedule(dynamic) num_threads(32) if(g_multithread.integer > 0)
 	for (i = level.maxclients; i < MAX_GENTITIES; i++)
 	{
 		gentity_t *npc = &g_entities[i];
@@ -1001,6 +1019,7 @@ void G_CheckCivilianNPCs( void )
 			|| npc->client->NPC_class == CLASS_CIVILIAN_PROTOCOL
 			|| npc->client->NPC_class == CLASS_CIVILIAN_WEEQUAY)) continue;
 
+#pragma omp atomic
 		botplayers++;
 	}
 
@@ -1230,6 +1249,7 @@ void G_CheckMinimumNpcs( void ) {
 		minplayers = 512;
 	}
 
+#pragma omp parallel for schedule(dynamic) num_threads(32) if(g_multithread.integer > 0)
 	for (i = level.maxclients; i < MAX_GENTITIES; i++)
 	{
 		gentity_t *npc = &g_entities[i];
@@ -1239,6 +1259,7 @@ void G_CheckMinimumNpcs( void ) {
 		if (NPC_IsCivilian(npc)) continue;
 		if (NPC_IsVendor(npc)) continue;
 
+#pragma omp atomic
 		botplayers++;
 	}
 
@@ -1254,6 +1275,7 @@ void G_CheckMinimumNpcs( void ) {
 			int RED_NPCS = 0;
 			int BLUE_NPCS = 0;
 
+#pragma omp parallel for schedule(dynamic) num_threads(32) if(g_multithread.integer > 0)
 			for (i = level.maxclients; i < MAX_GENTITIES; i++)
 			{
 				gentity_t *npc = &g_entities[i];
@@ -1264,8 +1286,10 @@ void G_CheckMinimumNpcs( void ) {
 				if (NPC_IsVendor(npc)) continue;
 
 				if (npc->client->playerTeam == NPCTEAM_ENEMY)
+#pragma omp atomic
 					RED_NPCS++;
 				else if (npc->client->playerTeam == NPCTEAM_PLAYER)
+#pragma omp atomic
 					BLUE_NPCS++;
 			}
 

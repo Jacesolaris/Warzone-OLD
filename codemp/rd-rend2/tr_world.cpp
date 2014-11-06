@@ -821,28 +821,21 @@ void R_AddWorldSurfaces (void) {
 
 		tr.refdef.dlightMask = 0;
 
-#pragma omp parallel for ordered schedule(dynamic)
 		for (i = 0; i < tr.world->numWorldSurfaces; i++)
 		{
 			if (tr.world->surfacesViewCount[i] != tr.viewCount)
 				continue;
-#pragma omp ordered
-			{
 			R_AddWorldSurface( tr.world->surfaces + i, tr.world->surfacesDlightBits[i], tr.world->surfacesPshadowBits[i] );
 			tr.refdef.dlightMask |= tr.world->surfacesDlightBits[i];
-			}
 		}
 
-#pragma omp parallel for ordered schedule(dynamic)
 		for (i = 0; i < tr.world->numMergedSurfaces; i++)
 		{
 			if (tr.world->mergedSurfacesViewCount[i] != tr.viewCount)
 				continue;
-#pragma omp ordered
-			{
+
 			R_AddWorldSurface( tr.world->mergedSurfaces + i, tr.world->mergedSurfacesDlightBits[i], tr.world->mergedSurfacesPshadowBits[i] );
 			tr.refdef.dlightMask |= tr.world->mergedSurfacesDlightBits[i];
-			}
 		}
 
 		tr.refdef.dlightMask = ~tr.refdef.dlightMask;

@@ -5457,15 +5457,15 @@ CG_LightVerts
 int CG_LightVerts( vec3_t normal, int numVerts, polyVert_t *verts )
 {
 	int				i, j;
-	float			incoming;
 	vec3_t			ambientLight;
 	vec3_t			lightDir;
 	vec3_t			directedLight;
 
 	trap->R_LightForPoint( verts[0].xyz, ambientLight, directedLight, lightDir );
 
+#pragma omp parallel for num_threads(numVerts) if(cg_multithread.integer > 0)
 	for (i = 0; i < numVerts; i++) {
-		incoming = DotProduct (normal, lightDir);
+		float incoming = DotProduct (normal, lightDir);
 		if ( incoming <= 0 ) {
 			verts[i].modulate[0] = ambientLight[0];
 			verts[i].modulate[1] = ambientLight[1];

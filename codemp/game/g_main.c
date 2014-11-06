@@ -3254,7 +3254,6 @@ void SetMoverState( gentity_t *ent, moverState_t moverState, int time );
 int FRAME_TIME = 0;
 void G_RunFrame( int levelTime ) {
 	int			i;
-	gentity_t	*ent;
 #ifdef _G_FRAME_PERFANAL
 	int			iTimer_ItemRun = 0;
 	int			iTimer_ROFF = 0;
@@ -3375,7 +3374,7 @@ void G_RunFrame( int levelTime ) {
 		//remember last waypoint, clear current one
 		for ( i = 0; i < level.num_entities ; i++)
 		{
-			ent = &g_entities[i];
+			gentity_t *ent = &g_entities[i];
 
 			if ( !ent->inuse )
 				continue;
@@ -3409,8 +3408,10 @@ void G_RunFrame( int levelTime ) {
 	//
 	// go through all allocated objects
 	//
-	ent = &g_entities[0];
-	for (i=0 ; i<level.num_entities ; i++, ent++) {
+	
+	for (i=0; i<level.num_entities; i++) {
+		gentity_t *ent = &g_entities[i];
+
 		if ( !ent->inuse ) {
 			continue;
 		}
@@ -3721,8 +3722,9 @@ void G_RunFrame( int levelTime ) {
 	trap->PrecisionTimer_Start(&timer_ClientEndframe);
 #endif
 	// perform final fixups on the players
-	ent = &g_entities[0];
-	for (i=0 ; i < level.maxclients ; i++, ent++ ) {
+	for ( i=0 ; i < level.maxclients ; i++ ) {
+		gentity_t *ent = &g_entities[i];
+
 		if ( ent->inuse ) {
 			ClientEndFrame( ent );
 		}

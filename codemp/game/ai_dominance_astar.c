@@ -58,15 +58,17 @@ qboolean ASTAR_COSTS_DONE = qfalse;
 
 void ASTAR_InitWaypointCosts ( void )
 {
-	int i, j;
+	int i;
 
 	if (ASTAR_COSTS_DONE || gWPNum <= 0) return;
 
 	{
-//#pragma omp parallel for ordered schedule(dynamic)
+#pragma omp parallel for schedule(dynamic) num_threads(32) if(g_multithread.integer > 0)
 		// Init the waypoint link costs...
 		for (i = 0; i < gWPNum; i++)
 		{
+			int j;
+
 			for (j = 0; j < gWPArray[i]->neighbornum; j++)
 			{
 				float ht = 0, hd = 0;

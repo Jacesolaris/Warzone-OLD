@@ -11,13 +11,17 @@ static void CG_SVRunningChange( void ) {
 static void CG_ForceModelChange( void ) {
 	int i;
 
+#pragma omp parallel for num_threads(32) if(cg_multithread.integer > 0)
 	for ( i=0; i<MAX_CLIENTS; i++ ) {
 		const char *clientInfo = CG_ConfigString( CS_PLAYERS+i );
 
 		if ( !VALIDSTRING( clientInfo ) )
 			continue;
 
-		CG_NewClientInfo( i, qtrue );
+#pragma omp critical
+		{
+			CG_NewClientInfo( i, qtrue );
+		}
 	}
 }
 

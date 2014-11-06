@@ -937,7 +937,7 @@ void R_SetupFrustum (viewParms_t *dest, float xmin, float xmax, float ymax, floa
 	VectorScale(dest->ori.axis[0], oppleg, dest->frustum[3].normal);
 	VectorMA(dest->frustum[3].normal, -adjleg, dest->ori.axis[2], dest->frustum[3].normal);
 	
-#pragma omp parallel for ordered schedule(dynamic)
+#pragma omp parallel for /*ordered*/ schedule(dynamic) num_threads(4) if(r_multithread->integer > 0)
 	for (i=0 ; i<4 ; i++) {
 		dest->frustum[i].type = PLANE_NON_AXIAL;
 		dest->frustum[i].dist = DotProduct (ofsorigin, dest->frustum[i].normal);
@@ -1134,7 +1134,7 @@ void R_SetupProjectionOrtho(viewParms_t *dest, vec3_t viewBounds[2])
 	VectorMA(dest->ori.origin, -viewBounds[1][0], dest->frustum[4].normal, pop);
 	dest->frustum[4].dist = DotProduct(pop, dest->frustum[4].normal);
 	
-#pragma omp parallel for ordered schedule(dynamic)
+#pragma omp parallel for /*ordered*/ schedule(dynamic) num_threads(5) if(r_multithread->integer > 0)
 	for (i = 0; i < 5; i++)
 	{
 		dest->frustum[i].type = PLANE_NON_AXIAL;
@@ -1431,7 +1431,7 @@ static qboolean SurfIsOffscreen( const drawSurf_t *drawSurf, vec4_t clipDest[128
 
 	assert( tess.numVertexes < 128 );
 
-#pragma omp parallel for ordered schedule(dynamic)
+#pragma omp parallel for /*ordered*/ schedule(dynamic) num_threads(16) if(r_multithread->integer > 0)
 	for ( i = 0; i < tess.numVertexes; i++ )
 	{
 		int j;
@@ -1467,7 +1467,7 @@ static qboolean SurfIsOffscreen( const drawSurf_t *drawSurf, vec4_t clipDest[128
 	// we have in the game right now.
 	numTriangles = tess.numIndexes / 3;
 
-#pragma omp parallel for ordered schedule(dynamic)
+#pragma omp parallel for /*ordered*/ schedule(dynamic) num_threads(16) if(r_multithread->integer > 0)
 	for ( i = 0; i < tess.numIndexes; i += 3 )
 	{
 		vec3_t normal, tNormal;
@@ -1907,8 +1907,8 @@ void R_AddEntitySurfaces (void) {
 	if ( !r_drawentities->integer ) {
 		return;
 	}
-
-//#pragma omp parallel for ordered schedule(dynamic)
+	
+#pragma omp /*parallel*/ for /*ordered*/ schedule(dynamic) nowait //if(r_multithread->integer > 0)
 	for ( i = 0; i < tr.refdef.num_entities; i++)
 	{
 //#pragma omp ordered
@@ -1925,9 +1925,18 @@ R_GenerateDrawSurfs
 ====================
 */
 void R_GenerateDrawSurfs( void ) {
-	R_AddWorldSurfaces ();
+#pragma omp parallel sections if(r_multithread->integer > 0)
+	{
+#pragma omp section
+		{
+			R_AddWorldSurfaces ();
+		}
 
-	R_AddPolygonSurfaces();
+#pragma omp section
+		{
+			R_AddPolygonSurfaces();
+		}
+	}
 
 	// set the projection matrix with the minimum zfar
 	// now that we have the world bounded
@@ -1942,9 +1951,9 @@ void R_GenerateDrawSurfs( void ) {
 	}
 
 	// we know the size of the clipping volume. Now set the rest of the projection matrix.
-	R_SetupProjectionZ (&tr.viewParms);
+	R_SetupProjectionZ(&tr.viewParms);
 
-	R_AddEntitySurfaces ();
+	R_AddEntitySurfaces();
 }
 
 /*

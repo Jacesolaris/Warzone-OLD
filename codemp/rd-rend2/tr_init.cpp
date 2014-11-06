@@ -267,6 +267,7 @@ cvar_t  *r_trueAnaglyphGreen;
 cvar_t  *r_trueAnaglyphBlue;
 cvar_t  *r_vibrancy;
 cvar_t  *r_testshader;
+cvar_t  *r_multithread;
 
 //
 // UQ1: End Added...
@@ -1388,6 +1389,7 @@ void R_Register( void )
 	r_trueAnaglyphBlue = ri->Cvar_Get( "r_trueAnaglyphBlue", "0.0", CVAR_ARCHIVE );
 	r_vibrancy = ri->Cvar_Get( "r_vibrancy", "0.4", CVAR_ARCHIVE );
 	r_testshader = ri->Cvar_Get( "r_testshader", "0", CVAR_ARCHIVE );
+	r_multithread = ri->Cvar_Get( "r_multithread", "1", CVAR_ARCHIVE );
 
 	//
 	// UQ1: End Added...

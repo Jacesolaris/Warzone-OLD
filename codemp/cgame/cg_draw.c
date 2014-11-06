@@ -3689,7 +3689,7 @@ vec4_t	uqAlmostBlack	=	{0.16f,0.16f,0.16f,1.0f};
 void CG_DrawMyStatus( void )
 {
 	int				y = 0;
-	char			*str1, *str2;
+	char			str1[255], str2[255];
 	vec4_t			tclr, tclr2;
 	float			boxX, boxXmid, sizeX, sizeY, healthPerc, forcePerc, armorPerc;
 	int				flags = 64|128;
@@ -3708,8 +3708,8 @@ void CG_DrawMyStatus( void )
 	if (crosshairEnt->playerState->fd.forcePowerMax <= 0) crosshairEnt->playerState->fd.forcePowerMax = 100;
 
 	//str1 = ci->name;
-	str1 = ci->cleanname;
-	str2 = va("< Jedi >"); // UQ1: FIXME - Selected Player Class Name...
+	sprintf(str1, "%s", ci->cleanname);
+	sprintf(str2, "< Jedi >"); // UQ1: FIXME - Selected Player Class Name...
 	tclr[0] = 0.125f;
 	tclr[1] = 0.325f;
 	tclr[2] = 0.7f;
@@ -3721,7 +3721,7 @@ void CG_DrawMyStatus( void )
 	tclr2[3] = 1.0f;
 
 	/*
-	str2 = va("< Sith >");
+	sprintf(str2, "< Sith >");
 	tclr[0] = 1.0f;
 	tclr[1] = 0.325f;
 	tclr[2] = 0.125f;
@@ -3809,7 +3809,7 @@ int currentCrosshairEntity = -1;
 void CG_DrawEnemyStatus( void )
 {
 	int				y = 0;
-	char			*str1, *str2;
+	char			str1[255], str2[255];
 	vec4_t			tclr, tclr2;
 	float			boxX, boxXmid, sizeX, sizeY, healthPerc, forcePerc, armorPerc;
 	int				flags = 64|128;
@@ -3932,74 +3932,74 @@ void CG_DrawEnemyStatus( void )
 			case CLASS_TRANDOSHAN:
 			case CLASS_UGNAUGHT:
 			case CLASS_JAWA:
-				str1 = va("%s", NPC_NAME_LIST[crosshairEnt->currentState.NPC_NAME_ID].HumanNames);
+				sprintf(str1, "%s", NPC_NAME_LIST[crosshairEnt->currentState.NPC_NAME_ID].HumanNames);
 				break;
 			case CLASS_STORMTROOPER_ADVANCED:
-				str1 = va("TA-%i", crosshairEnt->currentState.NPC_NAME_ID);	// EVIL. for a number of reasons --eez
+				sprintf(str1, "TA-%i", crosshairEnt->currentState.NPC_NAME_ID);	// EVIL. for a number of reasons --eez
 				break;
 			case CLASS_STORMTROOPER:
-				str1 = va("TK-%i", crosshairEnt->currentState.NPC_NAME_ID);	// EVIL. for a number of reasons --eez
+				sprintf(str1, "TK-%i", crosshairEnt->currentState.NPC_NAME_ID);	// EVIL. for a number of reasons --eez
 				break;
 			case CLASS_SWAMPTROOPER:
-				str1 = va("TS-%i", crosshairEnt->currentState.NPC_NAME_ID);	// EVIL. for a number of reasons --eez
+				sprintf(str1, "TS-%i", crosshairEnt->currentState.NPC_NAME_ID);	// EVIL. for a number of reasons --eez
 				break;
 			case CLASS_IMPWORKER:
-				str1 = va("IW-%i", crosshairEnt->currentState.NPC_NAME_ID);	// EVIL. for a number of reasons --eez
+				sprintf(str1, "IW-%i", crosshairEnt->currentState.NPC_NAME_ID);	// EVIL. for a number of reasons --eez
 				break;
 			case CLASS_SHADOWTROOPER:
-				str1 = va("ST-%i", crosshairEnt->currentState.NPC_NAME_ID);	// EVIL. for a number of reasons --eez
+				sprintf(str1, "ST-%i", crosshairEnt->currentState.NPC_NAME_ID);	// EVIL. for a number of reasons --eez
 				break;
 			case CLASS_IMPERIAL:
-				str1 = va("Commander %s", NPC_NAME_LIST[crosshairEnt->currentState.NPC_NAME_ID].HumanNames);	// EVIL. for a number of reasons --eez
+				sprintf(str1, "Commander %s", NPC_NAME_LIST[crosshairEnt->currentState.NPC_NAME_ID].HumanNames);	// EVIL. for a number of reasons --eez
 				break;
 			case CLASS_ATST:				// technically droid...
-				str1 = va("AT-ST");
+				sprintf(str1, "AT-ST");
 				break;
 			case CLASS_CLAW:
-				str1 = va("Claw");
+				sprintf(str1, "Claw");
 				break;
 			case CLASS_FISH:
-				str1 = va("Sea Creature");
+				sprintf(str1, "Sea Creature");
 				break;
 			case CLASS_FLIER2:
-				str1 = va("Flier");
+				sprintf(str1, "Flier");
 				break;
 			case CLASS_GLIDER:
-				str1 = va("Glider");
+				sprintf(str1, "Glider");
 				break;
 			case CLASS_HOWLER:
-				str1 = va("Howler");
+				sprintf(str1, "Howler");
 				break;
 			case CLASS_LIZARD:
-				str1 = va("Lizard");
+				sprintf(str1, "Lizard");
 				break;
 			case CLASS_MINEMONSTER:
-				str1 = va("Mine Monster");
+				sprintf(str1, "Mine Monster");
 				break;
 			case CLASS_SWAMP:
-				str1 = va("Swamp Monster");
+				sprintf(str1, "Swamp Monster");
 				break;
 			case CLASS_RANCOR:
-				str1 = va("Rancor");
+				sprintf(str1, "Rancor");
 				break;
 			case CLASS_WAMPA:
-				str1 = va("Wampa");
+				sprintf(str1, "Wampa");
 				break;
 			case CLASS_R2D2:
 			case CLASS_CIVILIAN_R2D2:
-				str1 = va("R2D2 Droid");
+				sprintf(str1, "R2D2 Droid");
 				break;
 			case CLASS_R5D2:
 			case CLASS_CIVILIAN_R5D2:
-				str1 = va("R5D2 Droid");
+				sprintf(str1, "R5D2 Droid");
 				break;
 			case CLASS_PROTOCOL:
 			case CLASS_CIVILIAN_PROTOCOL:
-				str1 = va("Protocol Droid");
+				sprintf(str1, "Protocol Droid");
 				break;
 			case CLASS_WEEQUAY:
 			case CLASS_CIVILIAN_WEEQUAY:
-				str1 = va("Weequay");
+				sprintf(str1, "Weequay");
 				break;
 			case CLASS_VEHICLE:
 				return;
@@ -4018,7 +4018,7 @@ void CG_DrawEnemyStatus( void )
 		case CLASS_CIVILIAN_R5D2:
 		case CLASS_CIVILIAN_PROTOCOL:
 		case CLASS_CIVILIAN_WEEQUAY:
-			str2 = va("< Civilian >");
+			sprintf(str2, "< Civilian >");
 			tclr[0] = 0.125f;
 			tclr[1] = 0.125f;
 			tclr[2] = 0.7f;
@@ -4031,7 +4031,7 @@ void CG_DrawEnemyStatus( void )
 			break;
 		case CLASS_REBEL:
 		case CLASS_JAN:
-			str2 = va("< Rebel >");
+			sprintf(str2, "< Rebel >");
 			tclr[0] = 0.125f;
 			tclr[1] = 0.125f;
 			tclr[2] = 0.7f;
@@ -4047,7 +4047,7 @@ void CG_DrawEnemyStatus( void )
 		case CLASS_LUKE:
 		case CLASS_MONMOTHA:			
 		case CLASS_MORGANKATARN:
-			str2 = va("< Jedi >");
+			sprintf(str2, "< Jedi >");
 			tclr[0] = 0.125f;
 			tclr[1] = 0.325f;
 			tclr[2] = 0.7f;
@@ -4059,7 +4059,7 @@ void CG_DrawEnemyStatus( void )
 			tclr2[3] = 1.0f;
 			break;
 		case CLASS_PADAWAN:
-			str2 = va("< Padawan >");
+			sprintf(str2, "< Padawan >");
 			tclr[0] = 0.125f;
 			tclr[1] = 0.325f;
 			tclr[2] = 0.7f;
@@ -4071,7 +4071,7 @@ void CG_DrawEnemyStatus( void )
 			tclr2[3] = 1.0f;
 			break;
 		case CLASS_GENERAL_VENDOR:
-			str2 = va("< General Vendor >");
+			sprintf(str2, "< General Vendor >");
 			tclr[0] = 0.525f;
 			tclr[1] = 0.525f;
 			tclr[2] = 1.0f;
@@ -4083,7 +4083,7 @@ void CG_DrawEnemyStatus( void )
 			tclr2[3] = 1.0f;
 			break;
 		case CLASS_WEAPONS_VENDOR:
-			str2 = va("< Weapons Vendor >");
+			sprintf(str2, "< Weapons Vendor >");
 			tclr[0] = 0.525f;
 			tclr[1] = 0.525f;
 			tclr[2] = 1.0f;
@@ -4095,7 +4095,7 @@ void CG_DrawEnemyStatus( void )
 			tclr2[3] = 1.0f;
 			break;
 		case CLASS_ARMOR_VENDOR:
-			str2 = va("< Armor Vendor >");
+			sprintf(str2, "< Armor Vendor >");
 			tclr[0] = 0.525f;
 			tclr[1] = 0.525f;
 			tclr[2] = 1.0f;
@@ -4107,7 +4107,7 @@ void CG_DrawEnemyStatus( void )
 			tclr2[3] = 1.0f;
 			break;
 		case CLASS_SUPPLIES_VENDOR:
-			str2 = va("< Supplies Vendor >");
+			sprintf(str2, "< Supplies Vendor >");
 			tclr[0] = 0.525f;
 			tclr[1] = 0.525f;
 			tclr[2] = 1.0f;
@@ -4119,7 +4119,7 @@ void CG_DrawEnemyStatus( void )
 			tclr2[3] = 1.0f;
 			break;
 		case CLASS_FOOD_VENDOR:
-			str2 = va("< Food Vendor >");
+			sprintf(str2, "< Food Vendor >");
 			tclr[0] = 0.525f;
 			tclr[1] = 0.525f;
 			tclr[2] = 1.0f;
@@ -4131,7 +4131,7 @@ void CG_DrawEnemyStatus( void )
 			tclr2[3] = 1.0f;
 			break;
 		case CLASS_MEDICAL_VENDOR:
-			str2 = va("< Medical Vendor >");
+			sprintf(str2, "< Medical Vendor >");
 			tclr[0] = 0.525f;
 			tclr[1] = 0.525f;
 			tclr[2] = 1.0f;
@@ -4143,7 +4143,7 @@ void CG_DrawEnemyStatus( void )
 			tclr2[3] = 1.0f;
 			break;
 		case CLASS_GAMBLER_VENDOR:
-			str2 = va("< Gambling Vendor >");
+			sprintf(str2, "< Gambling Vendor >");
 			tclr[0] = 0.525f;
 			tclr[1] = 0.525f;
 			tclr[2] = 1.0f;
@@ -4155,7 +4155,7 @@ void CG_DrawEnemyStatus( void )
 			tclr2[3] = 1.0f;
 			break;
 		case CLASS_TRADE_VENDOR:
-			str2 = va("< Trade Vendor >");
+			sprintf(str2, "< Trade Vendor >");
 			tclr[0] = 0.525f;
 			tclr[1] = 0.525f;
 			tclr[2] = 1.0f;
@@ -4167,7 +4167,7 @@ void CG_DrawEnemyStatus( void )
 			tclr2[3] = 1.0f;
 			break;
 		case CLASS_ODDITIES_VENDOR:
-			str2 = va("< Oddities Vendor >");
+			sprintf(str2, "< Oddities Vendor >");
 			tclr[0] = 0.525f;
 			tclr[1] = 0.525f;
 			tclr[2] = 1.0f;
@@ -4179,7 +4179,7 @@ void CG_DrawEnemyStatus( void )
 			tclr2[3] = 1.0f;
 			break;
 		case CLASS_DRUG_VENDOR:
-			str2 = va("< Drug Vendor >");
+			sprintf(str2, "< Drug Vendor >");
 			tclr[0] = 0.525f;
 			tclr[1] = 0.525f;
 			tclr[2] = 1.0f;
@@ -4191,7 +4191,7 @@ void CG_DrawEnemyStatus( void )
 			tclr2[3] = 1.0f;
 			break;
 		case CLASS_TRAVELLING_VENDOR:
-			str2 = va("< Travelling Vendor >");
+			sprintf(str2, "< Travelling Vendor >");
 			tclr[0] = 0.525f;
 			tclr[1] = 0.525f;
 			tclr[2] = 1.0f;
@@ -4203,7 +4203,7 @@ void CG_DrawEnemyStatus( void )
 			tclr2[3] = 1.0f;
 			break;
 		case CLASS_MERC:
-			str2 = va("< Mercenary >");
+			sprintf(str2, "< Mercenary >");
 			tclr[0] = 1.0f;
 			tclr[1] = 0.125f;
 			tclr[2] = 0.125f;
@@ -4221,7 +4221,7 @@ void CG_DrawEnemyStatus( void )
 		case CLASS_IMPERIAL:
 		case CLASS_SHADOWTROOPER:
 		case CLASS_COMMANDO:
-			str2 = va("< Imperial >");
+			sprintf(str2, "< Imperial >");
 			tclr[0] = 1.0f;
 			tclr[1] = 0.125f;
 			tclr[2] = 0.125f;
@@ -4236,7 +4236,7 @@ void CG_DrawEnemyStatus( void )
 		case CLASS_REBORN:
 		case CLASS_DESANN:
 		case CLASS_ALORA:
-			str2 = va("< Sith >");
+			sprintf(str2, "< Sith >");
 			tclr[0] = 1.0f;
 			tclr[1] = 0.325f;
 			tclr[2] = 0.125f;
@@ -4248,7 +4248,7 @@ void CG_DrawEnemyStatus( void )
 			tclr2[3] = 1.0f;
 			break;
 		case CLASS_BOBAFETT:
-			str2 = va("< Bounty Hunter >");
+			sprintf(str2, "< Bounty Hunter >");
 			tclr[0] = 1.0f;
 			tclr[1] = 0.225f;
 			tclr[2] = 0.125f;
@@ -4260,7 +4260,7 @@ void CG_DrawEnemyStatus( void )
 			tclr2[3] = 1.0f;
 			break;
 		case CLASS_ATST:
-			str2 = va("< Vehicle >");
+			sprintf(str2, "< Vehicle >");
 			tclr[0] = 1.0f;
 			tclr[1] = 0.225f;
 			tclr[2] = 0.125f;
@@ -4281,7 +4281,7 @@ void CG_DrawEnemyStatus( void )
 		case CLASS_SWAMP:
 		case CLASS_RANCOR:
 		case CLASS_WAMPA:
-			str2 = va("< Animal >");
+			sprintf(str2, "< Animal >");
 			tclr[0] = 1.0f;
 			tclr[1] = 0.125f;
 			tclr[2] = 0.125f;
@@ -4293,7 +4293,7 @@ void CG_DrawEnemyStatus( void )
 			tclr2[3] = 1.0f;
 			break;
 		case CLASS_VEHICLE:
-			str2 = va("< Vehicle >");
+			sprintf(str2, "< Vehicle >");
 			tclr[0] = 1.0f;
 			tclr[1] = 0.125f;
 			tclr[2] = 0.125f;
@@ -4307,7 +4307,7 @@ void CG_DrawEnemyStatus( void )
 		case CLASS_BESPIN_COP:
 		case CLASS_LANDO:
 		case CLASS_PRISONER:
-			str2 = va("< Rebel >");
+			sprintf(str2, "< Rebel >");
 			tclr[0] = 0.125f;
 			tclr[1] = 0.125f;
 			tclr[2] = 0.7f;
@@ -4330,7 +4330,7 @@ void CG_DrawEnemyStatus( void )
 		case CLASS_JAWA:
 			if (crosshairEnt->playerState->persistant[PERS_TEAM] == NPCTEAM_ENEMY)
 			{
-				str2 = va("< Thug >");
+				sprintf(str2, "< Thug >");
 				tclr[0] = 0.5f;
 				tclr[1] = 0.5f;
 				tclr[2] = 0.125f;
@@ -4343,7 +4343,7 @@ void CG_DrawEnemyStatus( void )
 			}
 			else if (crosshairEnt->playerState->persistant[PERS_TEAM] == NPCTEAM_PLAYER)
 			{
-				str2 = va("< Rebel >");
+				sprintf(str2, "< Rebel >");
 				tclr[0] = 0.125f;
 				tclr[1] = 0.125f;
 				tclr[2] = 0.7f;
@@ -4356,7 +4356,7 @@ void CG_DrawEnemyStatus( void )
 			}
 			else
 			{
-				str2 = va("< Civilian >");
+				sprintf(str2, "< Civilian >");
 				tclr[0] = 0.7f;
 				tclr[1] = 0.7f;
 				tclr[2] = 0.125f;
@@ -4371,7 +4371,7 @@ void CG_DrawEnemyStatus( void )
 
 		default:
 			//CG_Printf("NPC %i is not a civilian or vendor (class %i).\n", cent->currentState.number, cent->currentState.NPC_class);
-			str2 = va("");
+			sprintf(str2, "");
 			break;
 		}
 	}
@@ -4402,11 +4402,11 @@ void CG_DrawEnemyStatus( void )
 			CG_DrawPic( boxX + 2, y, sizeY-4, sizeY-4, ci->modelIcon );
 		}
 
-		str1 = ci->cleanname;
+		sprintf(str1, "%s", ci->cleanname);
 		
 		if (cgs.clientinfo[currentCrosshairEntity].team == TEAM_RED)
 		{
-			str2 = va("< Imperial >");
+			sprintf(str2, "< Imperial >");
 			tclr[0] = 0.5f;
 			tclr[1] = 0.5f;
 			tclr[2] = 0.125f;
@@ -4419,7 +4419,7 @@ void CG_DrawEnemyStatus( void )
 		}
 		else if (cgs.clientinfo[currentCrosshairEntity].team == TEAM_BLUE)
 		{
-			str2 = va("< Rebel >");
+			sprintf(str2, "< Rebel >");
 			tclr[0] = 0.125f;
 			tclr[1] = 0.125f;
 			tclr[2] = 0.7f;
@@ -4432,7 +4432,7 @@ void CG_DrawEnemyStatus( void )
 		}
 		else
 		{
-			str2 = va("< Player >");
+			sprintf(str2, "< Player >");
 			tclr[0] = 0.7f;
 			tclr[1] = 0.7f;
 			tclr[2] = 0.125f;
@@ -7712,11 +7712,13 @@ void CG_DrawNPCNames( void )
 	// Load the list on first check...
 	Load_NPC_Names();
 
+#pragma omp parallel for num_threads(32) if(cg_multithread.integer > 0)
 	for (i = 0; i < MAX_GENTITIES; i++)
 	{// Cycle through them...
+		qboolean		skip = qfalse;
 		vec3_t			origin;
 		centity_t		*cent = &cg_entities[i];
-		char			*str1, *str2;
+		char			str1[255], str2[255];
 		int				w, w2;
 		float			size, x, y, x2, y2/*, x3, y3*/, dist;
 		vec4_t			tclr =	{ 0.325f,	0.325f,	1.0f,	1.0f	};
@@ -7793,7 +7795,7 @@ void CG_DrawNPCNames( void )
 		{
 			if (cgs.clientinfo[i].team == TEAM_RED)
 			{
-				str2 = va("< Imperial >");
+				sprintf(str2, "< Imperial >");
 				tclr[0] = 0.5f;
 				tclr[1] = 0.5f;
 				tclr[2] = 0.125f;
@@ -7806,7 +7808,7 @@ void CG_DrawNPCNames( void )
 			}
 			else if (cgs.clientinfo[i].team == TEAM_BLUE)
 			{
-				str2 = va("< Rebel >");
+				sprintf(str2, "< Rebel >");
 				tclr[0] = 0.125f;
 				tclr[1] = 0.125f;
 				tclr[2] = 0.7f;
@@ -7819,7 +7821,7 @@ void CG_DrawNPCNames( void )
 			}
 			else
 			{
-				str2 = va("< Player >");
+				sprintf(str2, "< Player >");
 				tclr[0] = 0.7f;
 				tclr[1] = 0.7f;
 				tclr[2] = 0.125f;
@@ -7831,7 +7833,7 @@ void CG_DrawNPCNames( void )
 				tclr2[3] = 1.0f;
 			}
 
-			str1 = cgs.clientinfo[ i ].cleanname;
+			sprintf(str1, "%s", cgs.clientinfo[ i ].cleanname);
 		}
 		else
 		{
@@ -7842,7 +7844,7 @@ void CG_DrawNPCNames( void )
 			case CLASS_CIVILIAN_R5D2:
 			case CLASS_CIVILIAN_PROTOCOL:
 			case CLASS_CIVILIAN_WEEQUAY:
-				str2 = va("< Civilian >");
+				sprintf(str2, "< Civilian >");
 				tclr[0] = 0.125f;
 				tclr[1] = 0.125f;
 				tclr[2] = 0.7f;
@@ -7855,7 +7857,7 @@ void CG_DrawNPCNames( void )
 				break;
 			case CLASS_REBEL:
 			case CLASS_JAN:
-				str2 = va("< Rebel >");
+				sprintf(str2, "< Rebel >");
 				tclr[0] = 0.125f;
 				tclr[1] = 0.125f;
 				tclr[2] = 0.7f;
@@ -7871,7 +7873,7 @@ void CG_DrawNPCNames( void )
 			case CLASS_LUKE:
 			case CLASS_MONMOTHA:			
 			case CLASS_MORGANKATARN:
-				str2 = va("< Jedi >");
+				sprintf(str2, "< Jedi >");
 				tclr[0] = 0.125f;
 				tclr[1] = 0.325f;
 				tclr[2] = 0.7f;
@@ -7883,7 +7885,7 @@ void CG_DrawNPCNames( void )
 				tclr2[3] = 1.0f;
 				break;
 			case CLASS_PADAWAN:
-				str2 = va("< Padawan >");
+				sprintf(str2, "< Padawan >");
 				tclr[0] = 0.125f;
 				tclr[1] = 0.325f;
 				tclr[2] = 0.7f;
@@ -7895,7 +7897,7 @@ void CG_DrawNPCNames( void )
 				tclr2[3] = 1.0f;
 				break;
 			case CLASS_GENERAL_VENDOR:
-				str2 = va("< General Vendor >");
+				sprintf(str2, "< General Vendor >");
 				tclr[0] = 0.525f;
 				tclr[1] = 0.525f;
 				tclr[2] = 1.0f;
@@ -7907,7 +7909,7 @@ void CG_DrawNPCNames( void )
 				tclr2[3] = 1.0f;
 				break;
 			case CLASS_WEAPONS_VENDOR:
-				str2 = va("< Weapons Vendor >");
+				sprintf(str2, "< Weapons Vendor >");
 				tclr[0] = 0.525f;
 				tclr[1] = 0.525f;
 				tclr[2] = 1.0f;
@@ -7919,7 +7921,7 @@ void CG_DrawNPCNames( void )
 				tclr2[3] = 1.0f;
 				break;
 			case CLASS_ARMOR_VENDOR:
-				str2 = va("< Armor Vendor >");
+				sprintf(str2, "< Armor Vendor >");
 				tclr[0] = 0.525f;
 				tclr[1] = 0.525f;
 				tclr[2] = 1.0f;
@@ -7931,7 +7933,7 @@ void CG_DrawNPCNames( void )
 				tclr2[3] = 1.0f;
 				break;
 			case CLASS_SUPPLIES_VENDOR:
-				str2 = va("< Supplies Vendor >");
+				sprintf(str2, "< Supplies Vendor >");
 				tclr[0] = 0.525f;
 				tclr[1] = 0.525f;
 				tclr[2] = 1.0f;
@@ -7943,7 +7945,7 @@ void CG_DrawNPCNames( void )
 				tclr2[3] = 1.0f;
 				break;
 			case CLASS_FOOD_VENDOR:
-				str2 = va("< Food Vendor >");
+				sprintf(str2, "< Food Vendor >");
 				tclr[0] = 0.525f;
 				tclr[1] = 0.525f;
 				tclr[2] = 1.0f;
@@ -7955,7 +7957,7 @@ void CG_DrawNPCNames( void )
 				tclr2[3] = 1.0f;
 				break;
 			case CLASS_MEDICAL_VENDOR:
-				str2 = va("< Medical Vendor >");
+				sprintf(str2, "< Medical Vendor >");
 				tclr[0] = 0.525f;
 				tclr[1] = 0.525f;
 				tclr[2] = 1.0f;
@@ -7967,7 +7969,7 @@ void CG_DrawNPCNames( void )
 				tclr2[3] = 1.0f;
 				break;
 			case CLASS_GAMBLER_VENDOR:
-				str2 = va("< Gambling Vendor >");
+				sprintf(str2, "< Gambling Vendor >");
 				tclr[0] = 0.525f;
 				tclr[1] = 0.525f;
 				tclr[2] = 1.0f;
@@ -7979,7 +7981,7 @@ void CG_DrawNPCNames( void )
 				tclr2[3] = 1.0f;
 				break;
 			case CLASS_TRADE_VENDOR:
-				str2 = va("< Trade Vendor >");
+				sprintf(str2, "< Trade Vendor >");
 				tclr[0] = 0.525f;
 				tclr[1] = 0.525f;
 				tclr[2] = 1.0f;
@@ -7991,7 +7993,7 @@ void CG_DrawNPCNames( void )
 				tclr2[3] = 1.0f;
 				break;
 			case CLASS_ODDITIES_VENDOR:
-				str2 = va("< Oddities Vendor >");
+				sprintf(str2, "< Oddities Vendor >");
 				tclr[0] = 0.525f;
 				tclr[1] = 0.525f;
 				tclr[2] = 1.0f;
@@ -8003,7 +8005,7 @@ void CG_DrawNPCNames( void )
 				tclr2[3] = 1.0f;
 				break;
 			case CLASS_DRUG_VENDOR:
-				str2 = va("< Drug Vendor >");
+				sprintf(str2, "< Drug Vendor >");
 				tclr[0] = 0.525f;
 				tclr[1] = 0.525f;
 				tclr[2] = 1.0f;
@@ -8015,7 +8017,7 @@ void CG_DrawNPCNames( void )
 				tclr2[3] = 1.0f;
 				break;
 			case CLASS_TRAVELLING_VENDOR:
-				str2 = va("< Travelling Vendor >");
+				sprintf(str2, "< Travelling Vendor >");
 				tclr[0] = 0.525f;
 				tclr[1] = 0.525f;
 				tclr[2] = 1.0f;
@@ -8027,7 +8029,7 @@ void CG_DrawNPCNames( void )
 				tclr2[3] = 1.0f;
 				break;
 			case CLASS_MERC:
-				str2 = va("< Mercenary >");
+				sprintf(str2, "< Mercenary >");
 				tclr[0] = 1.0f;
 				tclr[1] = 0.125f;
 				tclr[2] = 0.125f;
@@ -8045,7 +8047,7 @@ void CG_DrawNPCNames( void )
 			case CLASS_IMPERIAL:
 			case CLASS_SHADOWTROOPER:
 			case CLASS_COMMANDO:
-				str2 = va("< Imperial >");
+				sprintf(str2, "< Imperial >");
 				tclr[0] = 1.0f;
 				tclr[1] = 0.125f;
 				tclr[2] = 0.125f;
@@ -8060,7 +8062,7 @@ void CG_DrawNPCNames( void )
 			case CLASS_REBORN:
 			case CLASS_DESANN:
 			case CLASS_ALORA:
-				str2 = va("< Sith >");
+				sprintf(str2, "< Sith >");
 				tclr[0] = 1.0f;
 				tclr[1] = 0.325f;
 				tclr[2] = 0.125f;
@@ -8072,7 +8074,7 @@ void CG_DrawNPCNames( void )
 				tclr2[3] = 1.0f;
 				break;
 			case CLASS_BOBAFETT:
-				str2 = va("< Bounty Hunter >");
+				sprintf(str2, "< Bounty Hunter >");
 				tclr[0] = 1.0f;
 				tclr[1] = 0.225f;
 				tclr[2] = 0.125f;
@@ -8084,7 +8086,7 @@ void CG_DrawNPCNames( void )
 				tclr2[3] = 1.0f;
 				break;
 			case CLASS_ATST:
-				str2 = va("< Vehicle >");
+				sprintf(str2, "< Vehicle >");
 				tclr[0] = 1.0f;
 				tclr[1] = 0.225f;
 				tclr[2] = 0.125f;
@@ -8105,7 +8107,7 @@ void CG_DrawNPCNames( void )
 			case CLASS_SWAMP:
 			case CLASS_RANCOR:
 			case CLASS_WAMPA:
-				str2 = va("< Animal >");
+				sprintf(str2, "< Animal >");
 				tclr[0] = 1.0f;
 				tclr[1] = 0.125f;
 				tclr[2] = 0.125f;
@@ -8117,7 +8119,7 @@ void CG_DrawNPCNames( void )
 				tclr2[3] = 1.0f;
 				break;
 			case CLASS_VEHICLE:
-				str2 = va("< Vehicle >");
+				sprintf(str2, "< Vehicle >");
 				tclr[0] = 1.0f;
 				tclr[1] = 0.125f;
 				tclr[2] = 0.125f;
@@ -8131,7 +8133,7 @@ void CG_DrawNPCNames( void )
 			case CLASS_BESPIN_COP:
 			case CLASS_LANDO:
 			case CLASS_PRISONER:
-				str2 = va("< Rebel >");
+				sprintf(str2, "< Rebel >");
 				tclr[0] = 0.125f;
 				tclr[1] = 0.125f;
 				tclr[2] = 0.7f;
@@ -8154,7 +8156,7 @@ void CG_DrawNPCNames( void )
 			case CLASS_JAWA:
 				if (cent->playerState->persistant[PERS_TEAM] == NPCTEAM_ENEMY)
 				{
-					str2 = va("< Thug >");
+					sprintf(str2, "< Thug >");
 					tclr[0] = 0.5f;
 					tclr[1] = 0.5f;
 					tclr[2] = 0.125f;
@@ -8167,7 +8169,7 @@ void CG_DrawNPCNames( void )
 				}
 				else if (cent->playerState->persistant[PERS_TEAM] == NPCTEAM_PLAYER)
 				{
-					str2 = va("< Rebel >");
+					sprintf(str2, "< Rebel >");
 					tclr[0] = 0.125f;
 					tclr[1] = 0.125f;
 					tclr[2] = 0.7f;
@@ -8180,7 +8182,7 @@ void CG_DrawNPCNames( void )
 				}
 				else
 				{
-					str2 = va("< Civilian >");
+					sprintf(str2, "< Civilian >");
 					tclr[0] = 0.7f;
 					tclr[1] = 0.7f;
 					tclr[2] = 0.125f;
@@ -8241,77 +8243,77 @@ void CG_DrawNPCNames( void )
 				case CLASS_TRANDOSHAN:
 				case CLASS_UGNAUGHT:
 				case CLASS_JAWA:
-					str1 = va("%s", NPC_NAME_LIST[cent->currentState.NPC_NAME_ID].HumanNames);
+					sprintf(str1, "%s", NPC_NAME_LIST[cent->currentState.NPC_NAME_ID].HumanNames);
 					break;
 				case CLASS_STORMTROOPER_ADVANCED:
-					str1 = va("TA-%i", cent->currentState.NPC_NAME_ID);	// EVIL. for a number of reasons --eez
+					sprintf(str1, "TA-%i", cent->currentState.NPC_NAME_ID);	// EVIL. for a number of reasons --eez
 					break;
 				case CLASS_STORMTROOPER:
-					str1 = va("TK-%i", cent->currentState.NPC_NAME_ID);	// EVIL. for a number of reasons --eez
+					sprintf(str1, "TK-%i", cent->currentState.NPC_NAME_ID);	// EVIL. for a number of reasons --eez
 					break;
 				case CLASS_SWAMPTROOPER:
-					str1 = va("TS-%i", cent->currentState.NPC_NAME_ID);	// EVIL. for a number of reasons --eez
+					sprintf(str1, "TS-%i", cent->currentState.NPC_NAME_ID);	// EVIL. for a number of reasons --eez
 					break;
 				case CLASS_IMPWORKER:
-					str1 = va("IW-%i", cent->currentState.NPC_NAME_ID);	// EVIL. for a number of reasons --eez
+					sprintf(str1, "IW-%i", cent->currentState.NPC_NAME_ID);	// EVIL. for a number of reasons --eez
 					break;
 				case CLASS_SHADOWTROOPER:
-					str1 = va("ST-%i", cent->currentState.NPC_NAME_ID);	// EVIL. for a number of reasons --eez
+					sprintf(str1, "ST-%i", cent->currentState.NPC_NAME_ID);	// EVIL. for a number of reasons --eez
 					break;
 				case CLASS_IMPERIAL:
-					str1 = va("Commander %s", NPC_NAME_LIST[cent->currentState.NPC_NAME_ID].HumanNames);	// EVIL. for a number of reasons --eez
+					sprintf(str1, "Commander %s", NPC_NAME_LIST[cent->currentState.NPC_NAME_ID].HumanNames);	// EVIL. for a number of reasons --eez
 					break;
 				case CLASS_ATST:				// technically droid...
-					str1 = va("AT-ST");
+					sprintf(str1, "AT-ST");
 					break;
 				case CLASS_CLAW:
-					str1 = va("Claw");
+					sprintf(str1, "Claw");
 					break;
 				case CLASS_FISH:
-					str1 = va("Sea Creature");
+					sprintf(str1, "Sea Creature");
 					break;
 				case CLASS_FLIER2:
-					str1 = va("Flier");
+					sprintf(str1, "Flier");
 					break;
 				case CLASS_GLIDER:
-					str1 = va("Glider");
+					sprintf(str1, "Glider");
 					break;
 				case CLASS_HOWLER:
-					str1 = va("Howler");
+					sprintf(str1, "Howler");
 					break;
 				case CLASS_LIZARD:
-					str1 = va("Lizard");
+					sprintf(str1, "Lizard");
 					break;
 				case CLASS_MINEMONSTER:
-					str1 = va("Mine Monster");
+					sprintf(str1, "Mine Monster");
 					break;
 				case CLASS_SWAMP:
-					str1 = va("Swamp Monster");
+					sprintf(str1, "Swamp Monster");
 					break;
 				case CLASS_RANCOR:
-					str1 = va("Rancor");
+					sprintf(str1, "Rancor");
 					break;
 				case CLASS_WAMPA:
-					str1 = va("Wampa");
+					sprintf(str1, "Wampa");
 					break;
 				case CLASS_R2D2:
 				case CLASS_CIVILIAN_R2D2:
-					str1 = va("R2D2 Droid");
+					sprintf(str1, "R2D2 Droid");
 					break;
 				case CLASS_R5D2:
 				case CLASS_CIVILIAN_R5D2:
-					str1 = va("R5D2 Droid");
+					sprintf(str1, "R5D2 Droid");
 					break;
 				case CLASS_PROTOCOL:
 				case CLASS_CIVILIAN_PROTOCOL:
-					str1 = va("Protocol Droid");
+					sprintf(str1, "Protocol Droid");
 					break;
 				case CLASS_WEEQUAY:
 				case CLASS_CIVILIAN_WEEQUAY:
-					str1 = va("Weequay");
+					sprintf(str1, "Weequay");
 					break;
 				case CLASS_VEHICLE:
-					str1 = va("");
+					sprintf(str1, "");
 					break;
 				default:
 					//CG_Printf("NPC %i is not a civilian or vendor (class %i).\n", cent->currentState.number, cent->currentState.NPC_class);
@@ -8323,10 +8325,9 @@ void CG_DrawNPCNames( void )
 			{
 				if (cent->currentState.eType == ET_PLAYER)
 				{
-					str1 = cgs.clientinfo[ cent->currentState.number ].name;
-					break;
+					sprintf(str1, "%s", cgs.clientinfo[ cent->currentState.number ].name);
 				}
-				continue;
+				//continue;
 			}
 		}
 
@@ -8381,11 +8382,17 @@ void CG_DrawNPCNames( void )
 
 		//CG_Printf("%i screen coords are %fx%f. (%f %f %f)\n", cent->currentState.number, x, y, origin[0], origin[1], origin[2]);
 
-		if (!CG_CheckClientVisibility(cent))
+#pragma omp critical
 		{
-			//CG_Printf("NPC is NOT visible.\n");
-			continue;
+			if (!CG_CheckClientVisibility(cent))
+			{
+				//CG_Printf("NPC is NOT visible.\n");
+				//continue;
+				skip = qtrue;
+			}
 		}
+
+		if (skip) continue;
 
 		//CG_Printf("%i screen coords are %fx%f. (%f %f %f)\n", cent->currentState.number, x, y, origin[0], origin[1], origin[2]);
 
@@ -8411,8 +8418,11 @@ void CG_DrawNPCNames( void )
 		x2 -= (w2 * 0.5f);
 		y2 = y + 10/*6*/ + CG_Text_Height(sanitized1, size*2, /*FONT_SMALL*/FONT_SMALL);
 
-		CG_Text_Paint( x, (y*(1-size))+((30*(1-size))*(1-size))+sqrt(sqrt((1-size)*30))+((1-multiplier)*30), size*2, tclr, sanitized1, 0, 0, ITEM_TEXTSTYLE_SHADOWED, FONT_SMALL);
-		CG_Text_Paint( x2, (y2*(1-size))+((30*(1-size))*(1-size))+sqrt(sqrt((1-size)*30))+((1-multiplier)*30), size*1.5, tclr2, sanitized2, 0, 0, ITEM_TEXTSTYLE_SHADOWED, /*FONT_SMALL3*/FONT_SMALL);
+#pragma omp critical
+		{
+			CG_Text_Paint( x, (y*(1-size))+((30*(1-size))*(1-size))+sqrt(sqrt((1-size)*30))+((1-multiplier)*30), size*2, tclr, sanitized1, 0, 0, ITEM_TEXTSTYLE_SHADOWED, FONT_SMALL);
+			CG_Text_Paint( x2, (y2*(1-size))+((30*(1-size))*(1-size))+sqrt(sqrt((1-size)*30))+((1-multiplier)*30), size*1.5, tclr2, sanitized2, 0, 0, ITEM_TEXTSTYLE_SHADOWED, /*FONT_SMALL3*/FONT_SMALL);
+		}
 
 		//x3 = x;
 
@@ -8432,8 +8442,10 @@ void CG_DrawDamage( void )
 {// Float damage value above their heads!
 	int				i;
 
+#pragma omp parallel for num_threads(32) if(cg_multithread.integer > 0)
 	for (i = 0; i < MAX_GENTITIES; i++)
 	{// Cycle through them...
+		qboolean		skip = qfalse;
 		vec3_t			origin;
 		centity_t		*cent = &cg_entities[i];
 		int				w, j;
@@ -8471,10 +8483,16 @@ void CG_DrawDamage( void )
 			continue;
 		}
 
-		if (!CG_CheckClientVisibility(cent))
+#pragma omp critical
 		{
-			continue;
+			if (!CG_CheckClientVisibility(cent))
+			{
+				//continue;
+				skip = qtrue;
+			}
 		}
+
+		if (skip) continue;
 
 		VectorCopy( cent->lerpOrigin, origin );
 		origin[2] += 35;//30;
@@ -8578,6 +8596,7 @@ void CG_DrawDamage( void )
 		// The list has now been sorted... Now show all values...
 		for (j = LOWEST_SLOT; j >= 0; j--)
 		{
+			char value[255];
 			int x2 = x;
 			int y2 = y;
 
@@ -8596,9 +8615,11 @@ void CG_DrawDamage( void )
 			//	size *= 2.0; // crit!
 
 			if (damage_show_value[i][j] == 0)
-				w = CG_Text_Width("MISS", size*2, FONT_SMALL2);
+				sprintf(value, "MISS");
 			else
-				w = CG_Text_Width(va("%i", damage_show_value[i][j]), size*2, FONT_SMALL2);
+				sprintf(value, "%i", damage_show_value[i][j]);
+
+			w = CG_Text_Width(value, size*2, FONT_SMALL2);
 			
 			x2 -= (w * 0.5f);
 
@@ -8608,12 +8629,15 @@ void CG_DrawDamage( void )
 			if (x2 < 0 || x2 > 640) continue; // now off screen...
 			if (y2 < 0 || y2 > 480) continue; // now off screen...
 
-			if (damage_show_value[i][j] == 0) // grey
-				CG_Text_Paint( x2, y2, size*2, colorMiss, "MISS", 0, 0, ITEM_TEXTSTYLE_SHADOWED, FONT_SMALL2);
-			else if (damage_show_crit[i][j]) // bright yellow
-				CG_Text_Paint( x2, y2, size*2, colorCrit, va("%i", damage_show_value[i][j]), 0, 0, ITEM_TEXTSTYLE_SHADOWED, FONT_SMALL2);
-			else // darker yellow
-				CG_Text_Paint( x2, y2, size*2, colorNormal, va("%i", damage_show_value[i][j]), 0, 0, ITEM_TEXTSTYLE_SHADOWED, FONT_SMALL2);
+#pragma omp critical
+			{
+				if (damage_show_value[i][j] == 0) // grey
+					CG_Text_Paint( x2, y2, size*2, colorMiss, value, 0, 0, ITEM_TEXTSTYLE_SHADOWED, FONT_SMALL2);
+				else if (damage_show_crit[i][j]) // bright yellow
+					CG_Text_Paint( x2, y2, size*2, colorCrit, value, 0, 0, ITEM_TEXTSTYLE_SHADOWED, FONT_SMALL2);
+				else // darker yellow
+					CG_Text_Paint( x2, y2, size*2, colorNormal, value, 0, 0, ITEM_TEXTSTYLE_SHADOWED, FONT_SMALL2);
+			}
 		}
 	}
 }

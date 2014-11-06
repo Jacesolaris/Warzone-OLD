@@ -315,6 +315,7 @@ extern cvar_t  *r_trueAnaglyphGreen;
 extern cvar_t  *r_trueAnaglyphBlue;
 extern cvar_t  *r_vibrancy;
 extern cvar_t  *r_testshader;
+extern cvar_t  *r_multithread;
 
 //
 // UQ1: End Added...
@@ -2571,6 +2572,7 @@ extern cvar_t  *r_trueAnaglyphGreen;
 extern cvar_t  *r_trueAnaglyphBlue;
 extern cvar_t  *r_vibrancy;
 extern cvar_t  *r_testshader;
+extern cvar_t  *r_multithread;
 
 //
 // UQ1: End Added...

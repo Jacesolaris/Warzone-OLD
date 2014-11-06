@@ -1911,11 +1911,11 @@ static void CG_PlayBufferedSounds( void ) {
 void CG_UpdateSoundTrackers()
 {
 	int num;
-	centity_t *cent;
 
+#pragma omp parallel for num_threads(32) if(cg_multithread.integer > 0)
 	for ( num = 0 ; num < ENTITYNUM_NONE ; num++ )
 	{
-		cent = &cg_entities[num];
+		centity_t *cent = &cg_entities[num];
 
 		if (cent && (cent->currentState.eFlags & EF_SOUNDTRACKER) && cent->currentState.number == num)
 			//make sure the thing is valid at least.

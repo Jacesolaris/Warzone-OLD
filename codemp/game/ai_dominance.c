@@ -475,7 +475,7 @@ int DOM_GetNearestWP(vec3_t org, int badwp)
 	}
 	bestindex = -1;
 
-//#pragma omp parallel for ordered schedule(dynamic) num_threads(32)
+#pragma omp parallel for schedule(dynamic) num_threads(32) if(g_multithread.integer > 0)
 	for (i = 0; i < gWPNum; i++)
 	{
 		if (gWPArray[i] && gWPArray[i]->inuse && i != badwp)
@@ -495,7 +495,7 @@ int DOM_GetNearestWP(vec3_t org, int badwp)
 
 			if (flLen < bestdist)
 			{
-//#pragma omp critical (__ADD_BEST_WP__)
+#pragma omp critical (__ADD_BEST_WP__)
 				{
 //					if (flLen < bestdist)
 					{
@@ -531,7 +531,7 @@ int DOM_GetNearWP(vec3_t org, int badwp)
 	}
 	bestindex = -1;
 
-#pragma omp parallel for ordered schedule(dynamic) num_threads(32)
+#pragma omp parallel for schedule(dynamic) num_threads(32) if(g_multithread.integer > 0)
 	for (i = 0; i < gWPNum; i++)
 	{
 		if (gWPArray[i] && gWPArray[i]->inuse && i != badwp)
@@ -553,7 +553,7 @@ int DOM_GetNearWP(vec3_t org, int badwp)
 			{
 #pragma omp critical (__ADD_BEST_WP__)
 				{
-					if (flLen < bestdist)
+					//if (flLen < bestdist)
 					{
 						bestdist = flLen;
 						bestindex = i;

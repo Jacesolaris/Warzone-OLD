@@ -163,35 +163,48 @@ static SEffectList *FX_GetValidEffect()
 //-------------------------
 void FX_Add( bool portal )
 {
-	int			i;
-	SEffectList	*ef;
+	int		i;
+	int		numFx = activeFx;	//but stop when there can't be any more left!
 
 	drawnFx = 0;
 
-	int numFx = activeFx;	//but stop when there can't be any more left!
-	for ( i = 0, ef = effectList; i < MAX_EFFECTS && numFx; i++, ef++ )
+#pragma omp parallel for num_threads(/*activeFx*/MAX_EFFECTS)
+	for ( i = 0; i < MAX_EFFECTS; i++)
 	{
+		SEffectList	*ef = &effectList[i];
+
+		if (!numFx) continue;
+
 		if ( ef->mEffect != 0)
 		{
 			--numFx;
+
 			if (portal != ef->mPortal)
 			{
 				continue;	//this one does not render in this scene
 			}
+
 			// Effect is active
 			if ( theFxHelper.mTime > ef->mKillTime )
 			{
 				// Clean up old effects, calling any death effects as needed
 				// this flag just has to be cleared otherwise death effects might not happen correctly
 				ef->mEffect->ClearFlags( FX_KILL_ON_IMPACT );
-				FX_FreeMember( ef );
+
+#pragma omp critical
+				{
+					FX_FreeMember( ef );
+				}
 			}
 			else
 			{
 				if ( ef->mEffect->Update() == false )
 				{
 					// We've been marked for death
-					FX_FreeMember( ef );
+#pragma omp critical
+					{
+						FX_FreeMember( ef );
+					}
 					continue;
 				}
 			}

@@ -3586,7 +3586,7 @@ void CG_AddPacketEntities( qboolean isPortal ) {
 	//No longer have to do this.
 
 	// add each entity sent over by the server
-//#pragma omp parallel for num_threads(32) schedule(dynamic) // UQ1: lets thread this sucker...
+#pragma omp parallel for num_threads(32) if(cg_multithread.integer > 0)
 	for ( num = 0 ; num < cg.snap->numEntities ; num++ ) 
 	{
 		// Don't re-add ents that have been predicted.
@@ -3627,7 +3627,7 @@ void CG_AddPacketEntities( qboolean isPortal ) {
 						}*/
 
 #endif
-//#pragma omp critical
+#pragma omp critical
 						{
 							CG_AddCEntity(veh);
 							veh->bodyHeight = cg.time; //indicate we have already been added
@@ -3680,7 +3680,7 @@ void CG_AddPacketEntities( qboolean isPortal ) {
 				*/
 			}
 #endif
-//#pragma omp critical
+#pragma omp critical
 			{
 				CG_AddCEntity( cent );
 			}
