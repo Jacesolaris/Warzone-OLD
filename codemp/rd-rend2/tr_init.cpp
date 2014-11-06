@@ -258,6 +258,7 @@ cvar_t  *r_textureCleanSigma;
 cvar_t  *r_textureCleanBSigma;
 cvar_t  *r_textureCleanMSize;
 cvar_t  *r_ssao2;
+cvar_t  *r_ssao2passes;
 cvar_t	*r_steepParallax;
 cvar_t  *r_trueAnaglyph;
 cvar_t  *r_trueAnaglyphSeparation;
@@ -1290,13 +1291,13 @@ void R_Register( void )
 	r_floatLightmap = ri->Cvar_Get( "r_floatLightmap", "0", CVAR_ARCHIVE | CVAR_LATCH );
 	r_postProcess = ri->Cvar_Get( "r_postProcess", "1", CVAR_ARCHIVE );
 
-	r_toneMap = ri->Cvar_Get( "r_toneMap", "1", CVAR_ARCHIVE | CVAR_LATCH );
+	r_toneMap = ri->Cvar_Get( "r_toneMap", "0", CVAR_ARCHIVE | CVAR_LATCH ); // UQ1: Disabled. Pointless.
 	r_forceToneMap = ri->Cvar_Get( "r_forceToneMap", "0", CVAR_CHEAT );
 	r_forceToneMapMin = ri->Cvar_Get( "r_forceToneMapMin", "-8.0", CVAR_CHEAT );
 	r_forceToneMapAvg = ri->Cvar_Get( "r_forceToneMapAvg", "-2.0", CVAR_CHEAT );
 	r_forceToneMapMax = ri->Cvar_Get( "r_forceToneMapMax", "0.0", CVAR_CHEAT );
 
-	r_autoExposure = ri->Cvar_Get( "r_autoExposure", "1", CVAR_ARCHIVE );
+	r_autoExposure = ri->Cvar_Get( "r_autoExposure", "0", CVAR_ARCHIVE ); // UQ1: Disabled. Pointless.
 	r_forceAutoExposure = ri->Cvar_Get( "r_forceAutoExposure", "0", CVAR_CHEAT );
 	r_forceAutoExposureMin = ri->Cvar_Get( "r_forceAutoExposureMin", "-2.0", CVAR_CHEAT );
 	r_forceAutoExposureMax = ri->Cvar_Get( "r_forceAutoExposureMax", "2.0", CVAR_CHEAT );
@@ -1378,7 +1379,8 @@ void R_Register( void )
 	r_textureCleanSigma = ri->Cvar_Get( "r_textureCleanSigma", "1.2", CVAR_ARCHIVE );
 	r_textureCleanBSigma = ri->Cvar_Get( "r_textureCleanBSigma", "0.1", CVAR_ARCHIVE );
 	r_textureCleanMSize = ri->Cvar_Get( "r_textureCleanMSize", "6.0", CVAR_ARCHIVE );
-	r_ssao2 = ri->Cvar_Get( "r_ssao2", "0", CVAR_ARCHIVE );
+	r_ssao2 = ri->Cvar_Get( "r_ssao2", "1", CVAR_ARCHIVE );
+	r_ssao2passes = ri->Cvar_Get( "r_ssao2passes", "1.0", CVAR_ARCHIVE ); // 3.0 is the original default, but 1.0 is faster and looks fine so we will use that.
 	r_trueAnaglyph = ri->Cvar_Get( "r_trueAnaglyph", "0", CVAR_ARCHIVE );
 	r_trueAnaglyphSeparation = ri->Cvar_Get( "r_trueAnaglyphSeparation", "8.0", CVAR_ARCHIVE );
 	r_trueAnaglyphRed = ri->Cvar_Get( "r_trueAnaglyphRed", "0.0", CVAR_ARCHIVE );
@@ -1394,11 +1396,11 @@ void R_Register( void )
 	//
 	// temporary latched variables that can only change over a restart
 	//
-	r_fullbright = ri->Cvar_Get ("r_fullbright", "0", CVAR_LATCH|CVAR_CHEAT );
-	r_mapOverBrightBits = ri->Cvar_Get ("r_mapOverBrightBits", "0", CVAR_LATCH );
-	r_intensity = ri->Cvar_Get ("r_intensity", "1", CVAR_LATCH );
-	r_singleShader = ri->Cvar_Get ("r_singleShader", "0", CVAR_CHEAT | CVAR_LATCH );
-	r_displayRefresh = ri->Cvar_Get( "r_displayRefresh", "0", CVAR_LATCH );
+	r_fullbright = ri->Cvar_Get ("r_fullbright", "0", CVAR_ARCHIVE | CVAR_LATCH | CVAR_CHEAT );
+	r_mapOverBrightBits = ri->Cvar_Get ("r_mapOverBrightBits", "0", CVAR_ARCHIVE | CVAR_LATCH );
+	r_intensity = ri->Cvar_Get ("r_intensity", "1", CVAR_ARCHIVE | CVAR_LATCH );
+	r_singleShader = ri->Cvar_Get ("r_singleShader", "0", CVAR_ARCHIVE | CVAR_CHEAT | CVAR_LATCH );
+	r_displayRefresh = ri->Cvar_Get( "r_displayRefresh", "0", CVAR_ARCHIVE | CVAR_LATCH );
 	ri->Cvar_CheckRange( r_displayRefresh, 0, 240, qtrue );
 
 	//
@@ -1429,8 +1431,8 @@ void R_Register( void )
 	r_directedScale = ri->Cvar_Get( "r_directedScale", "1", CVAR_CHEAT );
 
 	r_anaglyphMode = ri->Cvar_Get("r_anaglyphMode", "0", CVAR_ARCHIVE);
-	r_mergeMultidraws = ri->Cvar_Get("r_mergeMultidraws", "1", CVAR_ARCHIVE);
-	r_mergeLeafSurfaces = ri->Cvar_Get("r_mergeLeafSurfaces", "1", CVAR_ARCHIVE);
+	r_mergeMultidraws = ri->Cvar_Get("r_mergeMultidraws", "1", CVAR_ARCHIVE); // UQ1: Disabled. FPS.
+	r_mergeLeafSurfaces = ri->Cvar_Get("r_mergeLeafSurfaces", "1", CVAR_ARCHIVE); // UQ1: Disabled. FPS.
 
 	//
 	// temporary variables that can change at any time

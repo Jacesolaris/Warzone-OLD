@@ -1259,6 +1259,12 @@ void RB_SSAO2(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 		GLSL_SetUniformVec2(&tr.ssao2Shader, UNIFORM_DIMENSIONS, screensize);
 	}
 
+	{
+		vec4_t local0;
+		VectorSet4(local0, r_ssao2passes->value, 0.0, 0.0, 0.0);
+		GLSL_SetUniformVec4(&tr.ssao2Shader, UNIFORM_LOCAL0, local0);
+	}
+
 	FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.ssao2Shader, color, 0);
 }
 

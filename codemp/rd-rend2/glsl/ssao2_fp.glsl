@@ -1,17 +1,14 @@
-#version 130
-
 uniform sampler2D	u_DiffuseMap;
 uniform sampler2D	u_ScreenDepthMap;
 
 varying vec2		var_ScreenTex;
 varying vec2		var_Dimensions;
+varying vec4		var_Local0;
 
 float depthMult = 255.0;
 
 vec3 normal_from_depth(float depth, vec2 texcoords) {
   
-  //vec2 offset1 = vec2(0.0,0.001);
-  //vec2 offset2 = vec2(0.001,0.0);
   vec2 offset1 = vec2(0.0, 1.0 / var_Dimensions.y);
   vec2 offset2 = vec2(1.0 / var_Dimensions.x, 0.0);
   
@@ -29,9 +26,7 @@ vec3 normal_from_depth(float depth, vec2 texcoords) {
 
 vec3 readNormal(in vec2 coord)  
 {  
-     //return normalize(texture2D(u_NormalMap, coord).xyz*2.0  - 1.0);  
 	 float depth = texture2D(u_ScreenDepthMap, var_ScreenTex).r * depthMult;
-	 //float depth = texture2D(u_ScreenDepthMap, coord).r * depthMult;
 	 return normal_from_depth(depth, coord);
 }
 
@@ -84,12 +79,14 @@ float Noise(in vec3 p)
 
 void main()
 {
+	float NUM_PASSES = var_Local0.x;
+
+	if (NUM_PASSES < 1) NUM_PASSES = 1.0;
+
     //read current normal,position and color.
     vec3 n = readNormal(var_ScreenTex);
     vec3 p = posFromDepth(var_ScreenTex);
     vec3 col = texture2D(u_DiffuseMap, var_ScreenTex).rgb;
-	//vec3 n = col;
-	//vec3 n = vec3(0.5, 0.5, 0.5);
 
     //randomization texture
     //vec2 fres = vec2(var_Dimensions.x/128.0*5,var_Dimensions.y/128.0*5);
@@ -110,7 +107,7 @@ void main()
     float cdepth = texture2D(u_ScreenDepthMap, var_ScreenTex).r * depthMult;
 
     //3 rounds of 8 samples each. 
-    for(float i=0.0; i<3.0; ++i) 
+    for(float i=0.0; i<NUM_PASSES; ++i) 
     {
        float npw = (pw+0.0007*random.x)/cdepth;
        float nph = (ph+0.0007*random.y)/cdepth;
@@ -146,8 +143,10 @@ void main()
        pw += incx;  
        ph += incy;    
     } 
-    ao/=24.0;
-    gi/=24.0;
+    //ao/=24.0;
+    //gi/=24.0;
+	ao/=(8*NUM_PASSES);
+	gi/=(8*NUM_PASSES);
 
 	//gl_FragColor = vec4(vec3(ao)+gi*5.0,1.0);
     //gl_FragColor = vec4(col-vec3(ao)+gi*5.0,1.0);
