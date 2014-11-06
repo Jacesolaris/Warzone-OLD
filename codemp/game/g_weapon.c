@@ -3737,7 +3737,7 @@ void CalcMuzzlePoint ( gentity_t *ent, const vec3_t inForward, const vec3_t inRi
 		{	// Crouching.  Use the add-to-Z method to adjust vertically.
 			VectorMA(muzzlePoint, muzzleOffPoint[0], inForward, muzzlePoint);
 			VectorMA(muzzlePoint, muzzleOffPoint[1], inRight, muzzlePoint);
-			muzzlePoint[2] += ent->client->ps.viewheight + muzzleOffPoint[2];
+			muzzlePoint[2] += (ent->client->ps.viewheight + muzzleOffPoint[2]) * (ent->s.iModelScale/100.0f);
 		}
 	}
 
