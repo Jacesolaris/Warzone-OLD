@@ -356,7 +356,7 @@ int  PREVIOUS_TALK_TIME = 0;
 
 void TextToSpeech( char *text )
 {
-	if (PREVIOUS_TALK_TIME >= cg.time - 1000) return;
+	if (cg.time != 0 && PREVIOUS_TALK_TIME >= cg.time - 1000) return;
 
 	if (strcmp(text, PREVIOUS_TALK_TEXT))
 	{// Never repeat...

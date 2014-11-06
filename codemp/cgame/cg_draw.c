@@ -2204,6 +2204,8 @@ void CG_DrawForceSelect( void )
 	if ( showPowersName[cg.forceSelect] )
 	{
 		CG_DrawProportionalString(320, y + 30 + yOffset, CG_GetStringEdString("SP_INGAME", showPowersName[cg.forceSelect]), UI_CENTER | UI_SMALLFONT, colorTable[CT_ICON_BLUE]);
+
+		TextToSpeech((char *)CG_GetStringEdString("SP_INGAME", showPowersName[cg.forceSelect]));
 	}
 }
 
@@ -2357,10 +2359,12 @@ void CG_DrawInvenSelect( void )
 			if ( trap->SE_GetStringTextString( va("SP_INGAME_%s",Q_strupr(upperKey)), text, sizeof( text )))
 			{
 				CG_DrawProportionalString(320, y+45, text, UI_CENTER | UI_SMALLFONT, textColor);
+				TextToSpeech((char *)text);
 			}
 			else
 			{
 				CG_DrawProportionalString(320, y+45, bg_itemlist[itemNdex].classname, UI_CENTER | UI_SMALLFONT, textColor);
+				TextToSpeech((char *)bg_itemlist[itemNdex].classname);
 			}
 		}
 	}
@@ -3800,6 +3804,9 @@ void CG_DrawMyStatus( void )
 	// Write "XXX%" over the bar in white...
 	CG_Text_Paint( boxXmid - (CG_Text_Width ( va("%i", (int)(forcePerc*100)), 0.35f, FONT_SMALL ) * 0.5), y-2, 0.35f, colorWhite, va("%i", (int)(forcePerc*100)), 0, 0, 0, FONT_SMALL );
 	//CG_DrawRect_FixedBorder( boxX + 2, y, sizeX-sizeY-4-8, 5, 1, uqBorder );
+
+	if (healthPerc <= 0.25) TextToSpeech("My health is low.");
+	if (forcePerc <= 0.25) TextToSpeech("My force is low.");
 
 	y += 7;
 }

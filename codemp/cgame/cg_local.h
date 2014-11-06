@@ -2330,6 +2330,8 @@ void	CG_ClearLightStyles (void);
 void	CG_RunLightStyles (void);
 void	CG_SetLightstyle (int i);
 
+extern void TextToSpeech( char *text );
+
 /*
 Ghoul2 Insert End
 */
