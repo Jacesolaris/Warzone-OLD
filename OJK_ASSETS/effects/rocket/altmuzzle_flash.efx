@@ -100,9 +100,9 @@ Light
 
 CameraShake
 {
-	life				150
+	life				120
 
-	intensity			1.0 1.2
+	intensity			0.9 1.1
 
 	radius				60
 }
@@ -111,7 +111,7 @@ sound
 {
 	sounds
 	[
-		sound/weapons/rocket/fire.wav
+		sound/weapons/rocket/alt_fire.wav
 	]
 }
 
@@ -119,6 +119,6 @@ forcefeedback
 {
 	forces
 	[
-		fffx/weapons/rocket/fire
+		fffx/weapons/rocket/alt_fire
 	]
 }

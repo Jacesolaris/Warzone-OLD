@@ -1150,16 +1150,16 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altMissileTrailFunc = FX_PulseRocketAltProjectileThink;
 
 		weaponInfo->missileRenderfx = trap->FX_RegisterEffect("rocket/rocket_shot");
-		weaponInfo->altMissileRenderfx = trap->FX_RegisterEffect("rocket/pulsrocket_shot");
+		weaponInfo->altMissileRenderfx = trap->FX_RegisterEffect("rocket/rocket_alt_shot");
 
-		weaponInfo->missileWallImpactfx = trap->FX_RegisterEffect("rocket/explosion");
-		weaponInfo->altMissileWallImpactfx = trap->FX_RegisterEffect("rocket/explosion");
+		weaponInfo->missileWallImpactfx = trap->FX_RegisterEffect("rocket/wall_impact");
+		weaponInfo->altMissileWallImpactfx = trap->FX_RegisterEffect("rocket/wall_impact");
 
-		weaponInfo->fleshImpactEffect = trap->FX_RegisterEffect("rocket/flesh_impact");
-		weaponInfo->altFleshImpactEffect = trap->FX_RegisterEffect("rocket/flesh_impact"); // not sure about this one
-		weaponInfo->altFleshImpactEnhancedEffect = trap->FX_RegisterEffect("rocket/flesh_impact_enhanced2");
+		weaponInfo->fleshImpactEffect = trap->FX_RegisterEffect("rocket/flesh_Impact");
+		weaponInfo->altFleshImpactEffect = trap->FX_RegisterEffect("rocket/flesh_Impact"); // not sure about this one
+		weaponInfo->altFleshImpactEnhancedEffect = trap->FX_RegisterEffect("rocket/flesh_Impact_enhanced2");
 
-		weaponInfo->wallImpactEffectEnhancedFX = trap->FX_RegisterEffect("rocket/explosion_enhanced2");
+		weaponInfo->wallImpactEffectEnhancedFX = trap->FX_RegisterEffect("rocket/wall_Impact_enhanced2");
 		weaponInfo->altWallImpactEffectEnhancedFX = trap->FX_RegisterEffect("rocket/explosion_enhanced2");
 
 
@@ -1221,8 +1221,8 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altMissileDlight	= 0;
 		weaponInfo->altMissileHitSound	= NULL_SOUND;
 		weaponInfo->altMissileTrailFunc = 0;
-		cgs.effects.tripmineLaserFX = trap->FX_RegisterEffect("tripMine/shot.efx");
-		cgs.effects.tripmineGlowFX = trap->FX_RegisterEffect("tripMine/shot2.efx");
+		cgs.effects.tripmineLaserFX = trap->FX_RegisterEffect("tripMine/laserMP.efx");
+		cgs.effects.tripmineGlowFX = trap->FX_RegisterEffect("tripMine/glowbit.efx");
 		trap->FX_RegisterEffect( "tripMine/explosion" );
 		// NOTENOTE temp stuff
 		trap->S_RegisterSound( "sound/weapons/laser_trap/stick.wav" );
