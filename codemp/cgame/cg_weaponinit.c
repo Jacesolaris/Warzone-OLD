@@ -736,7 +736,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->flashSound[0] = trap->S_RegisterSound("sound/weapons/minigun/fire.wav");
 		weaponInfo->firingSound = NULL_SOUND;
 		weaponInfo->chargeSound = NULL_SOUND;
-		weaponInfo->muzzleEffect = trap->FX_RegisterEffect( "flechette/muzzle_flash" );
+		weaponInfo->muzzleEffect = trap->FX_RegisterEffect("clone_blaster/muzzle_flash");
 		weaponInfo->missileModel = NULL_HANDLE;
 		weaponInfo->missileSound = NULL_SOUND;
 		weaponInfo->missileDlight = 0;
@@ -746,7 +746,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altFlashSound[0] = trap->S_RegisterSound("sound/weapons/repeater/alt_fire.wav");
 		weaponInfo->altFiringSound = NULL_SOUND;
 		weaponInfo->altChargeSound = trap->S_RegisterSound("sound/weapons/SBDarm/cannon_charge.mp3");
-		weaponInfo->altMuzzleEffect = trap->FX_RegisterEffect( "flechette/muzzle_flash" );
+		weaponInfo->altMuzzleEffect = trap->FX_RegisterEffect("clone_rifle/muzzle_flash");
 		weaponInfo->altMissileModel = NULL_HANDLE;
 		weaponInfo->altMissileSound = NULL_SOUND;
 		weaponInfo->altMissileDlight = 0;
@@ -755,17 +755,16 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->spinSound = trap->S_RegisterSound("sound/weapons/z6/spinny.wav");
 		weaponInfo->spindownSound = trap->S_RegisterSound("sound/weapons/z6/chaingun_spindown.wav");
 
-		weaponInfo->missileRenderfx = trap->FX_RegisterEffect( "flechette/shot" );
+		weaponInfo->missileRenderfx = trap->FX_RegisterEffect("clone_rifle/projectile");
 		weaponInfo->altMissileRenderfx = trap->FX_RegisterEffect("z6/z6_alt_shot");
 
-		weaponInfo->missileWallImpactfx = trap->FX_RegisterEffect( "flechette/wall_impact" );
+		weaponInfo->missileWallImpactfx = trap->FX_RegisterEffect("clone_rifle/wall_impact");
 		weaponInfo->altMissileWallImpactfx = trap->FX_RegisterEffect("z6/z6_alt_shot_explode");
 
-		weaponInfo->fleshImpactEffect = trap->FX_RegisterEffect( "flechette/flesh_impact" );
-		weaponInfo->altFleshImpactEffect = trap->FX_RegisterEffect("z6/z6_alt_shot_explode");
-		weaponInfo->altFleshImpactEnhancedEffect = trap->FX_RegisterEffect("z6/z6_alt_shot_explode_enhanced2");
+		weaponInfo->fleshImpactEffect = trap->FX_RegisterEffect("clone_rifle/flesh_impact");
+		weaponInfo->altFleshImpactEffect = trap->FX_RegisterEffect("clone_rifle/concussion"); // not sure about this one
 
-		weaponInfo->wallImpactEffectEnhancedFX = trap->FX_RegisterEffect("flechette/wall_impact_enhanced2");
+		weaponInfo->wallImpactEffectEnhancedFX = trap->FX_RegisterEffect("clone_rifle/wall_impact_enhanced2");
 		weaponInfo->altWallImpactEffectEnhancedFX = trap->FX_RegisterEffect("z6/z6_alt_shot_explode_enhanced2");
 		break;
 
