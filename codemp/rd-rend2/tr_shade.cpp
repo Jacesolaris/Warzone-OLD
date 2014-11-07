@@ -2262,6 +2262,7 @@ void RB_StageIteratorGeneric( void )
 	//
 	// set face culling appropriately
 	//
+
 	if ((backEnd.viewParms.flags & VPF_DEPTHSHADOW))
 	{
 		//GL_Cull( CT_TWO_SIDED );
