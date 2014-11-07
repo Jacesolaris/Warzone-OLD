@@ -751,7 +751,6 @@ typedef struct weaponInfo_s {
 	fxHandle_t		wallImpactEffectEnhancedFX;
 	fxHandle_t		altwallImpactEffectEnhancedFX;
 	fxHandle_t		WallBounceEffectEnhancedFX;
-	fxHandle_t		shotEffectFx;
 	fxHandle_t		explotionImpactEffect;
 	fxHandle_t		ionBlastShotEffect;
 	fxHandle_t		WallBounceEffectFX;

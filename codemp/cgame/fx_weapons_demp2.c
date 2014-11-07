@@ -20,20 +20,9 @@ void FX_CLONEPISTOL_ProjectileThink(centity_t *cent, const struct weaponInfo_s *
 
 	if (cent->currentState.generic1 == 6)
 	{
-		if (weapon->missileRenderfx)
+		for (t = 1; t < (cent->currentState.generic1 - 1); t++)
 		{
-			for (t = 1; t < (cent->currentState.generic1 - 1); t++)
-			{
-				trap->FX_PlayEffectID(weapon->missileRenderfx, cent->lerpOrigin, forward, -1, -1, qfalse);
-
-			}
-		}
-		else
-		{
-			for (t = 1; t < (cent->currentState.generic1 - 1); t++)
-			{
-				trap->FX_PlayEffectID(weapon->shotEffectFx, cent->lerpOrigin, forward, -1, -1, qfalse);
-			}
+			trap->FX_PlayEffectID(weapon->missileRenderfx, cent->lerpOrigin, forward, -1, -1, qfalse);
 		}
 	}
 	else
@@ -137,20 +126,9 @@ void FX_DEMP2_ProjectileThink(centity_t *cent, const struct weaponInfo_s *weapon
 
 	if (cent->currentState.generic1 == 6)
 	{
-		if (weapon->missileRenderfx)
+		for (t = 1; t < (cent->currentState.generic1 - 1); t++) 
 		{
-			for (t = 1; t < (cent->currentState.generic1 - 1); t++) 
-			{
-				trap->FX_PlayEffectID(weapon->missileRenderfx, cent->lerpOrigin, forward, -1, -1, qfalse);
-
-			}
-		}
-		else
-		{
-			for (t = 1; t < (cent->currentState.generic1 - 1); t++)
-			{
-				trap->FX_PlayEffectID(weapon->shotEffectFx, cent->lerpOrigin, forward, -1, -1, qfalse);
-			}
+			trap->FX_PlayEffectID(weapon->missileRenderfx, cent->lerpOrigin, forward, -1, -1, qfalse);
 		}
 	}
 	else
