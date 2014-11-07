@@ -1,0 +1,19 @@
+repeatDelay				363
+
+FxRunner
+{
+	name				Wallvariants
+
+	playfx
+	[
+		impacts/impactsmall1
+		impacts/impactsmall1
+		impacts/impactsmall1
+		impacts/impactsmall2
+		impacts/impactsmall2
+		impacts/impactsmall2
+		impacts/impactsmall2
+		impacts/impactmedium1
+		
+	]
+}
