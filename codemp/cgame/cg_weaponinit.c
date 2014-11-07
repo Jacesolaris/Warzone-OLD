@@ -762,7 +762,8 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altMissileWallImpactfx = trap->FX_RegisterEffect("z6/z6_alt_shot_explode");
 
 		weaponInfo->fleshImpactEffect = trap->FX_RegisterEffect("clone_rifle/flesh_impact");
-		weaponInfo->altFleshImpactEffect = trap->FX_RegisterEffect("clone_rifle/concussion"); // not sure about this one
+		weaponInfo->altFleshImpactEffect = trap->FX_RegisterEffect("z6/z6_alt_shot_explode");
+		weaponInfo->altFleshImpactEnhancedEffect = trap->FX_RegisterEffect("z6/z6_alt_shot_explode_enhanced2");
 
 		weaponInfo->wallImpactEffectEnhancedFX = trap->FX_RegisterEffect("clone_rifle/wall_impact_enhanced2");
 		weaponInfo->altWallImpactEffectEnhancedFX = trap->FX_RegisterEffect("z6/z6_alt_shot_explode_enhanced2");
