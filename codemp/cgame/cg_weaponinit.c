@@ -1160,7 +1160,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altFleshImpactEnhancedEffect = trap->FX_RegisterEffect("rocket/flesh_Impact_enhanced2");
 
 		weaponInfo->wallImpactEffectEnhancedFX = trap->FX_RegisterEffect("rocket/wall_Impact_enhanced2");
-		weaponInfo->altWallImpactEffectEnhancedFX = trap->FX_RegisterEffect("rocket/explosion_enhanced2");
+		weaponInfo->altWallImpactEffectEnhancedFX = trap->FX_RegisterEffect("rocket/alt_wall_Impact_enhanced2");
 
 
 		trap->R_RegisterShaderNoMip( "gfx/2d/wedge" );
