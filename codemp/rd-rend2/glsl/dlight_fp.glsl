@@ -18,7 +18,7 @@ void main (void)
 
 	for (int light = 0; light < var_NumLights; light++)
 	{
-		float shininess = 0.5;
+		float shininess = 2.0;
 		vec4 tex_color = texture2D(u_DiffuseMap, var_Tex1[light]);
 		vec4 tex_ambient = tex_color * 0.33333;
 		vec4 tex_diffuse = tex_ambient;
