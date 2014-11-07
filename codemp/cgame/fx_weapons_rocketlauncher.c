@@ -18,16 +18,22 @@ FX_RocketProjectileThink
 ---------------------------
 */
 
-void FX_RocketProjectileThink( centity_t *cent, const struct weaponInfo_s *weapon )
+void FX_RocketProjectileThink(centity_t *cent, const struct weaponInfo_s *weapon)
 {
 	vec3_t forward;
 
-	if ( VectorNormalize2( cent->currentState.pos.trDelta, forward ) == 0.0f )
+	if (VectorNormalize2(cent->currentState.pos.trDelta, forward) == 0.0f)
 	{
 		forward[2] = 1.0f;
 	}
-
-	trap->FX_PlayEffectID( cgs.effects.rocketShotEffect, cent->lerpOrigin, forward, -1, -1, qfalse );
+	if (weapon->missileRenderfx)
+	{
+		trap->FX_PlayEffectID(weapon->missileRenderfx, cent->lerpOrigin, forward, -1, -1, qfalse);
+	}
+	else
+	{
+		trap->FX_PlayEffectID(cgs.effects.rocketShotEffect, cent->lerpOrigin, forward, -1, -1, qfalse);
+	}
 
 	FX_RocketAddLight(cent->lerpOrigin, cent->currentState.weapon);
 }
