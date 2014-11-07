@@ -28,6 +28,7 @@
 			show			video
 			hide			applyChanges
 			hide			video2
+			hide			video_advanced
 			hide			vidrestart
 			hide			sound
 			hide			options
@@ -59,7 +60,7 @@
 			rect				0 0 570 335
 			background			"gfx/menus/menu_box_ingame"
 			forecolor			1 1 1 1
-			visible				1
+			visible				0
 			decoration
 		}
 		itemDef 
@@ -133,6 +134,7 @@
 				show 			video
 				hide			applyChanges
 				hide			video2
+				hide			video_advanced
 				hide			vidrestart
 				hide			sound
 				hide			options
@@ -193,6 +195,7 @@
 				hide 			video
 				hide			applyChanges
 				show			video2
+				hide			video_advanced
 				hide			vidrestart
 				hide			sound
 				hide			options
@@ -203,13 +206,74 @@
 				setitemcolor	video2menubutton	forecolor	1 1 1 1
 			}
 		}
+		
+		// video_advanced button
+		itemDef 
+		{
+			name				video_advancedbutton_glow
+			style				WINDOW_STYLE_SHADER
+			rect				20 103 185 30
+			background			"gfx/menus/menu_blendbox2"			// Frame around button
+			forecolor			1 1 1 1
+			visible			0
+			// appearance_slot		1
+			decoration
+		}
+
+		itemDef 
+		{
+			name				video_advancedmenubutton
+			group				setup_submenu
+			text				"Advanced Video"
+			type				ITEM_TYPE_BUTTON
+			style				WINDOW_STYLE_EMPTY
+			rect				20 103 170 30
+			font				3
+			textscale			0.9
+			textalignx			170
+			textaligny			5
+			textalign			ITEM_ALIGN_RIGHT
+			textstyle			3
+			forecolor			1 .682 0 1
+			visible			1
+			descText			"Advanced Video Effects"
+
+			mouseEnter 
+			{ 
+				show			video_advancedbutton_glow
+			}
+			mouseExit 
+			{ 
+				hide			video_advancedbutton_glow
+			}	  	  
+			action 
+			{ 
+				play			"sound/interface/button1"
+
+				defer			VideoSetup	videowarningMenu
+
+				show			setup_background
+				hide 			video
+				hide			applyChanges
+				hide			video2
+				show			video_advanced
+				hide			vidrestart
+				hide			sound
+				hide			options
+				hide			mods
+				hide			defaults
+
+				setitemcolor	setup_submenu		forecolor	1 .682 0 1
+				setitemcolor	video_advancedmenubutton	forecolor	1 1 1 1
+			}
+		}
 
 		// sound  button
 		itemDef 
 		{
 			name				soundbutton_glow
 			style				WINDOW_STYLE_SHADER
-			rect				20 103 185 30
+			rect				20 133 185 30
 			background			"gfx/menus/menu_blendbox2"			// Frame around button
 			forecolor			1 1 1 1
 			visible			0
@@ -224,7 +288,7 @@
 			text				@MENUS_SOUND
 			type				ITEM_TYPE_BUTTON
 			style				WINDOW_STYLE_EMPTY
-			rect				20 103 170 30
+			rect				20 133 170 30
 			font				3
 			textscale			0.9
 			textalignx			170
@@ -253,6 +317,7 @@
 				hide 			video
 				hide			applyChanges
 				hide			video2
+				hide			video_advanced
 				hide			vidrestart
 				show			sound
 				hide			options
@@ -269,7 +334,7 @@
 		{
 			name				gameoptionsbutton_glow
 			style				WINDOW_STYLE_SHADER
-			rect				20 133 185 30
+			rect				20 163 185 30
 			background			"gfx/menus/menu_blendbox2"			// Frame around button
 			forecolor			1 1 1 1
 			visible			0
@@ -284,7 +349,7 @@
 			text				@MENUS_OPTIONS
 			type				ITEM_TYPE_BUTTON
 			style				WINDOW_STYLE_EMPTY
-			rect				20 133 170 30
+			rect				20 163 170 30
 			font				3
 			textscale			0.9
 			textalignx			170
@@ -313,6 +378,7 @@
 				hide 			video
 				hide			applyChanges
 				hide			video2
+				hide			video_advanced
 				hide			vidrestart
 				hide			sound
 				show			options
@@ -330,7 +396,7 @@
 		{
 			name				modsbutton_glow
 			style				WINDOW_STYLE_SHADER
-			rect				20 163 185 30
+			rect				20 193 185 30
 			background			"gfx/menus/menu_blendbox2"			// Frame around button
 			forecolor			1 1 1 1
 			visible			0
@@ -344,7 +410,7 @@
 		{
 			name				gamedefaultsbutton_glow
 			style				WINDOW_STYLE_SHADER
-			rect				20 163 185 30
+			rect				20 193 185 30
 			background			"gfx/menus/menu_blendbox2"			// Frame around button
 			forecolor			1 1 1 1
 			visible			0
@@ -359,7 +425,7 @@
 			text				@MENUS_DEFAULTS
 			type				ITEM_TYPE_BUTTON
 			style				WINDOW_STYLE_EMPTY
-			rect				20 163 170 30
+			rect				20 193 170 30
 			font				3
 			textscale			0.9
 			textalignx			170
@@ -388,6 +454,7 @@
 				hide 			video
 				hide			applyChanges
 				hide			video2
+				hide			video_advanced
 				hide			vidrestart
 				hide			sound
 				hide			options
@@ -664,33 +731,26 @@
 		//	VIDEO 1 MENU BUTTONS
 		//
 		//----------------------------------------------------------------------------------------------
+
 		itemDef 
-		{
-		   	name 			graphics				
-			group 			video
-			text			@MENUS_VIDEO_QUALITY
-	   		type 			ITEM_TYPE_MULTI	
-			rect			220 41 300 20
-	   		textalign		ITEM_ALIGN_RIGHT
-			textalignx		165
-			textaligny		0
-			font 			4
-			textscale 		1
-			style			WINDOW_STYLE_FILLED
+		{	
+			name				video_mode
+			group				video
+      		type				ITEM_TYPE_MULTI
+			text				@MENUS_VIDEO_MODE
+			cvarFloatList		{  "Custom" -1 @MENUS_640_X_480 3 @MENUS_800_X_600 4  @MENUS_1024_X_768 6 @MENUS_1152_X_864 7  @MENUS_1280_X_1024 8  @MENUS_1600_X_1200 9  @MENUS_2048_X_1536 10 @MENUS_2400_X_600 12 }
+			cvar				"ui_r_mode"
+
+			rect				220 43 300 20
+			textalign			ITEM_ALIGN_RIGHT
+			textalignx			165
+			textaligny			0
+			font 				4
+			textscale 			1
 			forecolor		.615 .615 .956 1
-			descText		@MENUS_SELECT_PRESET_GRAPHIC
+			descText			@MENUS_CHANGE_THE_DISPLAY_RESOLUTION
 
-	   		visible 		0
-
-			cvar 			"ui_r_glCustom"
-			cvarFloatList 
-			{ 
-				@MENUS_HIGH_QUALITY	0 
-				@MENUS_NORMAL		1 
-				@MENUS_FAST			2 
-				@MENUS_FASTEST		3 
-				@MENUS_CUSTOM		4 
-			}
+			visible				0
 
 			mouseenter 
 			{ 
@@ -701,9 +761,9 @@
 				hide			highlight1
 			} 
 			action 
-			{ 
+			{
 				play			"sound/interface/button1"
-				uiScript 		update "ui_r_glCustom"
+				uiScript		glCustom
 				setcvar			ui_r_modified	1
 				show			applyChanges
 			}
@@ -711,13 +771,48 @@
 
 		itemDef 
 		{	
-			name				video_mode
+			name				color_depth
 			group				video
-      		type				ITEM_TYPE_MULTI
-			text				@MENUS_VIDEO_MODE
-			cvarFloatList		{  @MENUS_640_X_480 3 @MENUS_800_X_600 4  @MENUS_1024_X_768 6 @MENUS_1152_X_864 7  @MENUS_1280_X_1024 8  @MENUS_1600_X_1200 9  @MENUS_2048_X_1536 10 @MENUS_2400_X_600 12 }
-			cvar				"ui_r_mode"
+			type				ITEM_TYPE_MULTI
+			text				@MENUS_COLOR_DEPTH
+			rect				220 63 300 20
+			textalign			ITEM_ALIGN_RIGHT
+			textalignx			165
+			textaligny			0
+			font 				4
+			textscale 			1
+			forecolor		.615 .615 .956 1
 
+			cvarFloatList		{  @MENUS_DEFAULT 0 @MENUS_16_BIT 16 @MENUS_32_BIT 32 }
+			descText			@MENUS_CHANGE_THE_NUMBER_OF
+			cvar				"ui_r_colorbits"
+
+			visible				0
+
+			mouseenter 
+			{ 
+				show			highlight2
+			}
+			mouseexit 
+			{ 
+				hide			highlight2
+			} 
+			action 
+			{
+				play			"sound/interface/button1"
+				uiScript		glCustom
+				uiScript update "ui_r_colorbits"
+				setcvar			ui_r_modified	1
+				show			applyChanges
+			}
+		}
+
+		itemDef 
+		{	
+			name				fullscreen
+			group				video
+			type				ITEM_TYPE_MULTI
+			text				@MENUS_FULL_SCREEN
 			rect				220 83 300 20
 			textalign			ITEM_ALIGN_RIGHT
 			textalignx			165
@@ -725,9 +820,12 @@
 			font 				4
 			textscale 			1
 			forecolor		.615 .615 .956 1
-			descText			@MENUS_CHANGE_THE_DISPLAY_RESOLUTION
 
-			visible				0
+			cvarFloatList		{  @MENUS_OFF 0 @MENUS_ON 1 }
+			descText			@MENUS_TOGGLE_BETWEEN_FULL_SCREEN
+			cvar				"ui_r_fullscreen"
+
+			visible			0
 
 			mouseenter 
 			{ 
@@ -748,10 +846,10 @@
 
 		itemDef 
 		{	
-			name				color_depth
+			name				geometric_detail
 			group				video
 			type				ITEM_TYPE_MULTI
-			text				@MENUS_COLOR_DEPTH
+			text				@MENUS_GEOMETRIC_DETAIL
 			rect				220 103 300 20
 			textalign			ITEM_ALIGN_RIGHT
 			textalignx			165
@@ -759,10 +857,9 @@
 			font 				4
 			textscale 			1
 			forecolor		.615 .615 .956 1
-
-			cvarFloatList		{  @MENUS_DEFAULT 0 @MENUS_16_BIT 16 @MENUS_32_BIT 32 }
-			descText			@MENUS_CHANGE_THE_NUMBER_OF
-			cvar				"ui_r_colorbits"
+			cvarFloatList		{  @MENUS_LOW 2 @MENUS_MEDIUM 1 @MENUS_HIGH 0 }
+			descText			@MENUS_ADJUST_THE_NUMBER_OF
+			cvar				"ui_r_lodbias"
 
 			visible				0
 
@@ -778,7 +875,7 @@
 			{
 				play			"sound/interface/button1"
 				uiScript		glCustom
-				uiScript update "ui_r_colorbits"
+				uiScript update "ui_r_lodbias"
 				setcvar			ui_r_modified	1
 				show			applyChanges
 			}
@@ -786,10 +883,10 @@
 
 		itemDef 
 		{	
-			name				fullscreen
+			name				texture_detail
 			group				video
 			type				ITEM_TYPE_MULTI
-			text				@MENUS_FULL_SCREEN
+			text				@MENUS_TEXTURE_DETAIL
 			rect				220 123 300 20
 			textalign			ITEM_ALIGN_RIGHT
 			textalignx			165
@@ -797,12 +894,11 @@
 			font 				4
 			textscale 			1
 			forecolor		.615 .615 .956 1
+			cvarFloatList		{  @MENUS_LOW 3 @MENUS_MEDIUM 2 @MENUS_HIGH 1 @MENUS_VERY_HIGH 0 }
+			descText			@MENUS_SELECT_THE_RESOLUTION
+			cvar				"ui_r_picmip"
 
-			cvarFloatList		{  @MENUS_OFF 0 @MENUS_ON 1 }
-			descText			@MENUS_TOGGLE_BETWEEN_FULL_SCREEN
-			cvar				"ui_r_fullscreen"
-
-			visible			0
+			visible				0
 
 			mouseenter 
 			{ 
@@ -823,84 +919,11 @@
 
 		itemDef 
 		{	
-			name				geometric_detail
-			group				video
-			type				ITEM_TYPE_MULTI
-			text				@MENUS_GEOMETRIC_DETAIL
-			rect				220 143 300 20
-			textalign			ITEM_ALIGN_RIGHT
-			textalignx			165
-			textaligny			0
-			font 				4
-			textscale 			1
-			forecolor		.615 .615 .956 1
-			cvarFloatList		{  @MENUS_LOW 2 @MENUS_MEDIUM 1 @MENUS_HIGH 0 }
-			descText			@MENUS_ADJUST_THE_NUMBER_OF
-			cvar				"ui_r_lodbias"
-
-			visible				0
-
-			mouseenter 
-			{ 
-				show			highlight6
-			}
-			mouseexit 
-			{ 
-				hide			highlight6
-			} 
-			action 
-			{
-				play			"sound/interface/button1"
-				uiScript		glCustom
-				uiScript update "ui_r_lodbias"
-				setcvar			ui_r_modified	1
-				show			applyChanges
-			}
-		}
-
-		itemDef 
-		{	
-			name				texture_detail
-			group				video
-			type				ITEM_TYPE_MULTI
-			text				@MENUS_TEXTURE_DETAIL
-			rect				220 163 300 20
-			textalign			ITEM_ALIGN_RIGHT
-			textalignx			165
-			textaligny			0
-			font 				4
-			textscale 			1
-			forecolor		.615 .615 .956 1
-			cvarFloatList		{  @MENUS_LOW 3 @MENUS_MEDIUM 2 @MENUS_HIGH 1 @MENUS_VERY_HIGH 0 }
-			descText			@MENUS_SELECT_THE_RESOLUTION
-			cvar				"ui_r_picmip"
-
-			visible				0
-
-			mouseenter 
-			{ 
-				show			highlight7
-			}
-			mouseexit 
-			{ 
-				hide			highlight7
-			} 
-			action 
-			{
-				play			"sound/interface/button1"
-				uiScript		glCustom
-				setcvar			ui_r_modified	1
-				show			applyChanges
-			}
-		}
-
-		itemDef 
-		{	
 			name				texture_quality
 			group				video
 			type				ITEM_TYPE_MULTI
 			text				@MENUS_TEXTURE_QUALITY
-			rect				220 183 300 20
+			rect				220 143 300 20
 			textalign			ITEM_ALIGN_RIGHT
 			textalignx			165
 			textaligny			0
@@ -915,11 +938,11 @@
 
 			mouseenter 
 			{ 
-				show			highlight8
+				show			highlight6
 			}
 			mouseexit 
 			{ 
-				hide			highlight8
+				hide			highlight6
 			} 
 			action 
 			{
@@ -936,7 +959,7 @@
 			group				video
 			type				ITEM_TYPE_MULTI
 			text				@MENUS_TEXTURE_FILTER
-			rect				220 203 300 20
+			rect				220 163 300 20
 			textalign			ITEM_ALIGN_RIGHT
 			textalignx			165
 			textaligny			0
@@ -951,11 +974,11 @@
 
 			mouseenter 
 			{ 
-				show			highlight9
+				show			highlight7
 			}
 			mouseexit 
 			{ 
-				hide			highlight9
+				hide			highlight7
 			} 
 			action 
 			{
@@ -972,7 +995,7 @@
 			group				video
 			type				ITEM_TYPE_MULTI
 			text				@MENUS_DETAILED_SHADERS
-			rect				220 223 300 20
+			rect				220 183 300 20
 			textalign			ITEM_ALIGN_RIGHT
 			textalignx			165
 			textaligny			0
@@ -987,11 +1010,11 @@
 
 			mouseenter 
 			{ 
-				show			highlight10
+				show			highlight8
 			}
 			mouseexit 
 			{ 
-				hide			highlight10
+				hide			highlight8
 			} 
 			action 
 			{
@@ -1014,7 +1037,7 @@
 				@MENUS_OFF 0  
 				@MENUS_ON 1 
 			}
-			rect				220 243 300 20
+			rect				220 203 300 20
 	   		textalign			ITEM_ALIGN_RIGHT
 			textalignx			165
 			textaligny			0
@@ -1031,40 +1054,38 @@
 
 			mouseenter 
 			{ 
-				show			highlight11
+				show			highlight9
 			}
 			mouseexit 
 			{ 
-				hide			highlight11
+				hide			highlight9
 			} 
 		}
-
+		
 		itemDef 
 		{	
-			name				compress_textures
-			group				video_obsolete
+			name				video_parallax
+			group				video
 			type				ITEM_TYPE_MULTI
-			text				@MENUS_COMPRESSED_TEXTURES
-			rect				220 243 300 20
+			text				"Parallax"
+			rect				220 223 300 20
 			textalign			ITEM_ALIGN_RIGHT
 			textalignx			165
 			textaligny			0
 			font 				4
 			textscale 			1
 			forecolor		.615 .615 .956 1
-			cvarFloatList		{  @MENUS_OFF 0 @MENUS_ON 1 }
-			descText			@MENUS_TAKE_ADVANTAGE_OF_3D
-			cvar				"ui_r_ext_compress_textures"
-
-			visible				0
+			cvarFloatList		{  @MENUS_OFF 0 "Fast" 1  "Full" 2 }
+			descText			"Enable Parallax Mapping?"
+			cvar				"r_parallaxMapping"
 
 			mouseenter 
 			{ 
-				show			highlight11
+				show			highlight10
 			}
 			mouseexit 
 			{ 
-				hide			highlight11
+				hide			highlight10
 			} 
 			action 
 			{
@@ -1074,7 +1095,7 @@
 				show			applyChanges
 			}
 		}
-
+		
 		// APPLY CHANGES BUTTON
 		itemDef 
 		{
@@ -1120,6 +1141,7 @@
 				show			vidrestart
 				hide			video
 				hide			video2
+				hide			video_advanced
 				hide			applybutton_glow
 			}
 		}
@@ -1259,6 +1281,7 @@
 				hide 			vidrestart
 				show			video
 				hide			video2
+				hide			video_advanced
 				show			applyChanges
 				hide			vidrestart_yes_button
 				hide			vidrestart_no_button
@@ -1562,6 +1585,389 @@
 			} 
 		}
 
+
+    //----------------------------------------------------------------------------------------------
+		//
+		//	ADVANCED VIDEO MENU BUTTONS
+		//
+		//----------------------------------------------------------------------------------------------
+
+		itemDef 
+		{	
+			name				video_bloom
+			group				video_advanced
+			type				ITEM_TYPE_MULTI
+			text				"Bloom"
+			rect				220 43 300 20
+			textalign			ITEM_ALIGN_RIGHT
+			textalignx			165
+			textaligny			0
+			font 				4
+			textscale 			1
+			forecolor		.615 .615 .956 1
+			cvarFloatList		{  @MENUS_OFF 0 @MENUS_ON 1 }
+			descText			"Enable bloom?"
+			cvar				"r_bloom"
+
+			mouseenter 
+			{ 
+				show			highlight1
+			}
+			mouseexit 
+			{ 
+				hide			highlight1
+			} 
+			action 
+			{
+				play			"sound/interface/button1"
+			}
+		}
+		
+		itemDef 
+		{	
+			name				video_anamorphic
+			group				video_advanced
+			type				ITEM_TYPE_MULTI
+			text				"Anamorphic Lens Flares"
+			rect				220 63 300 20
+			textalign			ITEM_ALIGN_RIGHT
+			textalignx			165
+			textaligny			0
+			font 				4
+			textscale 			1
+			forecolor		.615 .615 .956 1
+			cvarFloatList		{  @MENUS_OFF 0 @MENUS_ON 1 }
+			descText			"Enable anamorphic lens flares?"
+			cvar				"r_anamorphic"
+
+			mouseenter 
+			{ 
+				show			highlight2
+			}
+			mouseexit 
+			{ 
+				hide			highlight2
+			} 
+			action 
+			{
+				play			"sound/interface/button1"
+			}
+		}
+		
+		itemDef 
+		{	
+			name				video_darkxpand
+			group				video_advanced
+			type				ITEM_TYPE_MULTI
+			text				"Dark Xpand"
+			rect				220 83 300 20
+			textalign			ITEM_ALIGN_RIGHT
+			textalignx			165
+			textaligny			0
+			font 				4
+			textscale 			1
+			forecolor		.615 .615 .956 1
+			cvarFloatList		{  @MENUS_OFF 0 @MENUS_ON 1 }
+			descText			"Enable dark xpand technology?"
+			cvar				"r_darkexpand"
+
+			mouseenter 
+			{ 
+				show			highlight3
+			}
+			mouseexit 
+			{ 
+				hide			highlight3
+			} 
+			action 
+			{
+				play			"sound/interface/button1"
+			}
+		}
+		
+		itemDef 
+		{	
+			name				video_truehdr
+			group				video_advanced
+			type				ITEM_TYPE_MULTI
+			text				"True HDR"
+			rect				220 103 300 20
+			textalign			ITEM_ALIGN_RIGHT
+			textalignx			165
+			textaligny			0
+			font 				4
+			textscale 			1
+			forecolor		.615 .615 .956 1
+			cvarFloatList		{  @MENUS_OFF 0 @MENUS_ON 1 }
+			descText			"Enable True HDR technology?"
+			cvar				"r_truehdr"
+
+			mouseenter 
+			{ 
+				show			highlight4
+			}
+			mouseexit 
+			{ 
+				hide			highlight4
+			} 
+			action 
+			{
+				play			"sound/interface/button1"
+			}
+		}
+		
+		itemDef 
+		{	
+			name				video_ssao2
+			group				video_advanced
+			type				ITEM_TYPE_MULTI
+			text				"Ambient Occlusion"
+			rect				220 123 300 20
+			textalign			ITEM_ALIGN_RIGHT
+			textalignx			165
+			textaligny			0
+			font 				4
+			textscale 			1
+			forecolor		.615 .615 .956 1
+			cvarFloatList		{  @MENUS_OFF 0 @MENUS_ON 1 }
+			descText			"Enable screen space ambient occlusion technology?"
+			cvar				"r_ssao2"
+
+			mouseenter 
+			{ 
+				show			highlight5
+			}
+			mouseexit 
+			{ 
+				hide			highlight5
+			} 
+			action 
+			{
+				play			"sound/interface/button1"
+			}
+		}
+		
+		itemDef 
+		{	
+			name				video_dof
+			group				video_advanced
+			type				ITEM_TYPE_MULTI
+			text				"Depth Of Field"
+			rect				220 143 300 20
+			textalign			ITEM_ALIGN_RIGHT
+			textalignx			165
+			textaligny			0
+			font 				4
+			textscale 			1
+			forecolor		.615 .615 .956 1
+			cvarFloatList		{  @MENUS_OFF 0 @MENUS_ON 1 "Cinematic" 2 }
+			descText			"Enable depth Of field technology?"
+			cvar				"r_dof"
+
+			mouseenter 
+			{ 
+				show			highlight6
+			}
+			mouseexit 
+			{ 
+				hide			highlight6
+			} 
+			action 
+			{
+				play			"sound/interface/button1"
+			}
+		}
+		
+		itemDef 
+		{	
+			name				video_esharpen
+			group				video_advanced
+			type				ITEM_TYPE_MULTI
+			text				"E-Sharpen"
+			rect				220 163 300 20
+			textalign			ITEM_ALIGN_RIGHT
+			textalignx			165
+			textaligny			0
+			font 				4
+			textscale 			1
+			forecolor		.615 .615 .956 1
+			cvarFloatList		{  @MENUS_OFF 0 @MENUS_ON 1 }
+			descText			"Enable E-Sharpen technology?"
+			cvar				"r_esharpening"
+
+			mouseenter 
+			{ 
+				show			highlight7
+			}
+			mouseexit 
+			{ 
+				hide			highlight7
+			} 
+			action 
+			{
+				play			"sound/interface/button1"
+			}
+		}
+		
+		itemDef 
+		{	
+			name				video_krisp
+			group				video_advanced
+			type				ITEM_TYPE_MULTI
+			text				"Krisp"
+			rect				220 183 300 20
+			textalign			ITEM_ALIGN_RIGHT
+			textalignx			165
+			textaligny			0
+			font 				4
+			textscale 			1
+			forecolor		.615 .615 .956 1
+			cvarFloatList		{  @MENUS_OFF 0 @MENUS_ON 1 }
+			descText			"Enable Krisp technology?"
+			cvar				"r_esharpening2"
+
+			mouseenter 
+			{ 
+				show			highlight8
+			}
+			mouseexit 
+			{ 
+				hide			highlight8
+			} 
+			action 
+			{
+				play			"sound/interface/button1"
+			}
+		}
+		
+		itemDef 
+		{	
+			name				video_lensflare
+			group				video_advanced
+			type				ITEM_TYPE_MULTI
+			text				"Lens Flares"
+			rect				220 203 300 20
+			textalign			ITEM_ALIGN_RIGHT
+			textalignx			165
+			textaligny			0
+			font 				4
+			textscale 			1
+			forecolor		.615 .615 .956 1
+			cvarFloatList		{  @MENUS_OFF 0 @MENUS_ON 1 }
+			descText			"Enable Lens Flares?"
+			cvar				"r_lensflare"
+
+			mouseenter 
+			{ 
+				show			highlight9
+			}
+			mouseexit 
+			{ 
+				hide			highlight9
+			} 
+			action 
+			{
+				play			"sound/interface/button1"
+			}
+		}
+		
+		itemDef 
+		{	
+			name				video_anaglyph
+			group				video_advanced
+			type				ITEM_TYPE_MULTI
+			text				"Stereo Vision (anaglyph)"
+			rect				220 223 300 20
+			textalign			ITEM_ALIGN_RIGHT
+			textalignx			165
+			textaligny			0
+			font 				4
+			textscale 			1
+			forecolor		.615 .615 .956 1
+			cvarFloatList		{  @MENUS_OFF 0 @MENUS_ON 1 }
+			descText			"Enable Stereo Vision?"
+			cvar				"r_trueanaglyph"
+
+			mouseenter 
+			{ 
+				show			highlight10
+			}
+			mouseexit 
+			{ 
+				hide			highlight10
+			} 
+			action 
+			{
+				play			"sound/interface/button1"
+			}
+		}
+		
+		itemDef 
+		{
+			name				video_anaglyphseparation
+			group				video_advanced
+			type				ITEM_TYPE_SLIDER
+			text				"Stereo Vision Separation"
+			cvarfloat			"r_trueAnaglyphSeparation" 3 1 10
+			rect				220 243 300 20
+			textalign			ITEM_ALIGN_RIGHT
+			textalignx			174
+			textaligny			0
+			font 				4
+			textscale 			1
+			forecolor		.615 .615 .956 1
+
+
+			descText			"Adjust 3D Vision Depth."
+			
+			action 
+			{ 
+				play			"sound/interface/button1"
+			}
+
+			mouseenter 
+			{ 
+				show			highlight11
+			}
+			mouseexit 
+			{ 
+				hide			highlight11
+			} 
+		}
+		
+		itemDef 
+		{
+			name				video_vibrancy
+			group				video_advanced
+			type				ITEM_TYPE_SLIDER
+			text				"Vibrancy"
+			cvarfloat			"r_vibrancy" .4 0 1
+			rect				220 263 300 20
+			textalign			ITEM_ALIGN_RIGHT
+			textalignx			174
+			textaligny			0
+			font 				4
+			textscale 			1
+			forecolor		.615 .615 .956 1
+
+
+			descText			"Enable Vibrancy Technology?"
+			
+			action 
+			{ 
+				play			"sound/interface/button1"
+			}
+
+			mouseenter 
+			{ 
+				show			highlight12
+			}
+			mouseexit 
+			{ 
+				hide			highlight12
+			} 
+		}
+		
 
 //----------------------------------------------------------------------------------------------
 //	SOUND FIELDS

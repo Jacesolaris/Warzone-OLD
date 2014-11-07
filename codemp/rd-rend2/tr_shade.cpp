@@ -1095,6 +1095,8 @@ static void ForwardDlight( void ) {
 	shaderCommands_t *input = &tess;
 	shaderStage_t *pStage = tess.xstages[0];
 
+	if (!pStage) return;
+
 	if ( !backEnd.refdef.num_dlights ) {
 		return;
 	}
@@ -2399,7 +2401,7 @@ void RB_StageIteratorGeneric( void )
 			//
 			// pshadows!
 			//
-			if (r_shadows->integer == 4 && tess.pshadowBits && !(tess.shader->surfaceFlags & (/*SURF_NODLIGHT |*/ SURF_SKY)))
+			if (r_shadows->integer == 4 /*&& tess.pshadowBits*/)
 				ProjectPshadowVBOGLSL();
 			break;
 		}
