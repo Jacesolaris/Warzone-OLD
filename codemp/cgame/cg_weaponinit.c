@@ -568,7 +568,8 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altMissileHitSound = NULL_SOUND;
 		weaponInfo->altMissileTrailFunc = FX_WeaponAltProjectileThink;
 		
-		weaponInfo->shotEffectFx = trap->FX_RegisterEffect("T-21/shot");
+		weaponInfo->missileRenderfx = trap->FX_RegisterEffect("T-21/shot"); // UQ1: Why are there 2 of these??? Is shotfx obsolete???
+		weaponInfo->shotEffectFx = trap->FX_RegisterEffect("T-21/shot"); // UQ1: Why are there 2 of these??? Is shotfx obsolete???
 		weaponInfo->altMissileRenderfx = trap->FX_RegisterEffect("blaster/shot");
 		weaponInfo->missileWallImpactfx = trap->FX_RegisterEffect("blaster/wall_impact");
 		weaponInfo->altMissileWallImpactfx = trap->FX_RegisterEffect("blaster/wall_impact_enhanced2");
@@ -880,7 +881,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altwallImpactEffectEnhancedFX = trap->FX_RegisterEffect("dc-15_ext/explosion");//secder efx
 		weaponInfo->fleshImpactEffect = trap->FX_RegisterEffect("dc-15_ext/flesh_impact");
 		weaponInfo->altFleshImpactEffect = trap->FX_RegisterEffect("dc-15_ext/flesh_impact"); // not sure about this one
-
+		weaponInfo->altFleshImpactEnhancedEffect = trap->FX_RegisterEffect("dc-15_ext/explosion");
 		break;
 
 	case WP_BLASTER:
