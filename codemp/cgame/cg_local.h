@@ -749,7 +749,7 @@ typedef struct weaponInfo_s {
 	fxHandle_t		fleshImpactEnhancedEffect; // should we do these or use generic ones?
 	fxHandle_t		altFleshImpactEnhancedEffect;
 	fxHandle_t		wallImpactEffectEnhancedFX;
-	fxHandle_t		altwallImpactEffectEnhancedFX;
+	fxHandle_t		altWallImpactEffectEnhancedFX;
 	fxHandle_t		WallBounceEffectEnhancedFX;
 	fxHandle_t		explotionImpactEffect;
 	fxHandle_t		ionBlastShotEffect;

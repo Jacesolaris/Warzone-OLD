@@ -1096,6 +1096,37 @@
 			}
 		}
 		
+		itemDef 
+		{	
+			name				video_enhancedFX
+			group				video
+			type				ITEM_TYPE_MULTI
+			text				"Enhanced FX"
+			rect				220 243 300 20
+			textalign			ITEM_ALIGN_RIGHT
+			textalignx			165
+			textaligny			0
+			font 				4
+			textscale 			1
+			forecolor		.615 .615 .956 1
+			cvarFloatList		{  @MENUS_OFF 0 @MENUS_ON 1 }
+			descText			"Enable Enhanced FX?"
+			cvar				"cg_enhancedFX"
+
+			mouseenter 
+			{ 
+				show			highlight11
+			}
+			mouseexit 
+			{ 
+				hide			highlight11
+			} 
+			action 
+			{
+				play			"sound/interface/button1"
+			}
+		}
+		
 		// APPLY CHANGES BUTTON
 		itemDef 
 		{

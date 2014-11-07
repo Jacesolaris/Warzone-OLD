@@ -33,9 +33,9 @@ void FX_WeaponHitWall(vec3_t origin, vec3_t normal, int weapon, qboolean altFire
 			fx = cg_weapons[weapon].altMissileWallImpactfx;
 		}
 
-		if (cg_weapons[weapon].altwallImpactEffectEnhancedFX)
+		if (cg_weapons[weapon].altWallImpactEffectEnhancedFX)
 		{// We have enhanced alt. Use it.
-			fx2 = cg_weapons[weapon].altwallImpactEffectEnhancedFX;
+			fx2 = cg_weapons[weapon].altWallImpactEffectEnhancedFX;
 		}
 		else
 		{// We have no alt enhanced fx.

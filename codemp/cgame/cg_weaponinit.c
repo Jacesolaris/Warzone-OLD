@@ -156,10 +156,14 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altMissileSound		= NULL_SOUND;
 		weaponInfo->altMissileDlight	= 0;
 		weaponInfo->altMissileHitSound	= NULL_SOUND;
-		weaponInfo->altMissileTrailFunc = FX_WeaponProjectileThink;
+		weaponInfo->altMissileTrailFunc = FX_WeaponAltProjectileThink;
+
 		weaponInfo->missileRenderfx = trap->FX_RegisterEffect( "concussion/shot" );
 		weaponInfo->altMissileRenderfx = trap->FX_RegisterEffect( "disruptor/alt_miss" );
+
+		weaponInfo->missileWallImpactfx = trap->FX_RegisterEffect( "concussion/explosion" );
 		weaponInfo->altMissileWallImpactfx = trap->FX_RegisterEffect( "concussion/explosion" );
+
 		cgs.effects.disruptorAltMissEffect		= trap->FX_RegisterEffect( "disruptor/alt_miss" );
 		cgs.effects.concussionShotEffect		= trap->FX_RegisterEffect( "concussion/shot" );
 		cgs.effects.concussionImpactEffect		= trap->FX_RegisterEffect( "concussion/explosion" );
@@ -738,8 +742,6 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->missileDlight = 0;
 		weaponInfo->missileHitSound = NULL_SOUND;
 		weaponInfo->missileTrailFunc = FX_WeaponProjectileThink;
-		weaponInfo->missileRenderfx = trap->FX_RegisterEffect("clone_rifle/projectile");
-		weaponInfo->altMissileRenderfx = trap->FX_RegisterEffect("clone_rifle/projectile");
 		weaponInfo->powerupShotRenderfx = NULL_FX;
 		weaponInfo->altFlashSound[0] = trap->S_RegisterSound("sound/weapons/repeater/alt_fire.wav");
 		weaponInfo->altFiringSound = NULL_SOUND;
@@ -753,11 +755,17 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->spinSound = trap->S_RegisterSound("sound/weapons/z6/spinny.wav");
 		weaponInfo->spindownSound = trap->S_RegisterSound("sound/weapons/z6/chaingun_spindown.wav");
 
+		weaponInfo->missileRenderfx = trap->FX_RegisterEffect("clone_rifle/projectile");
+		weaponInfo->altMissileRenderfx = trap->FX_RegisterEffect("z6/z6_alt_shot");
+
 		weaponInfo->missileWallImpactfx = trap->FX_RegisterEffect("clone_rifle/wall_impact");
-		weaponInfo->altMissileWallImpactfx = trap->FX_RegisterEffect("clone_rifle/wall_impact_enhanced2"); // etc here.. then..
+		weaponInfo->altMissileWallImpactfx = trap->FX_RegisterEffect("z6/z6_alt_shot_explode");
+
 		weaponInfo->fleshImpactEffect = trap->FX_RegisterEffect("clone_rifle/flesh_impact");
 		weaponInfo->altFleshImpactEffect = trap->FX_RegisterEffect("clone_rifle/concussion"); // not sure about this one
+
 		weaponInfo->wallImpactEffectEnhancedFX = trap->FX_RegisterEffect("clone_rifle/wall_impact_enhanced2");
+		weaponInfo->altWallImpactEffectEnhancedFX = trap->FX_RegisterEffect("z6/z6_alt_shot_explode_enhanced2");
 		break;
 
 	case WP_WOOKIE_BOWCASTER:
@@ -866,7 +874,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->missileWallImpactfx = trap->FX_RegisterEffect("dc-15_ext/wall_impact");
 		weaponInfo->altMissileWallImpactfx = trap->FX_RegisterEffect("dc-15_ext/explosion");
 		weaponInfo->wallImpactEffectEnhancedFX = trap->FX_RegisterEffect("dc-15_ext/wall_impact_enhanced2");//prime efx
-		weaponInfo->altwallImpactEffectEnhancedFX = trap->FX_RegisterEffect("dc-15_ext/explosion");//secder efx
+		weaponInfo->altWallImpactEffectEnhancedFX = trap->FX_RegisterEffect("dc-15_ext/explosion");//secder efx
 		weaponInfo->fleshImpactEffect = trap->FX_RegisterEffect("dc-15_ext/flesh_impact");
 		weaponInfo->altFleshImpactEffect = trap->FX_RegisterEffect("dc-15_ext/flesh_impact"); // not sure about this one
 		weaponInfo->altFleshImpactEnhancedEffect = trap->FX_RegisterEffect("dc-15_ext/explosion");
@@ -990,7 +998,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altMissileRenderfx = trap->FX_RegisterEffect( "bowcaster/shot" );
 		weaponInfo->altMissileWallImpactfx = trap->FX_RegisterEffect( "bowcaster/wall_impact" );
 		weaponInfo->wallImpactEffectEnhancedFX = trap->FX_RegisterEffect("bowcaster/wall_impact_enhanced2");
-		weaponInfo->altwallImpactEffectEnhancedFX = trap->FX_RegisterEffect("bowcaster/wall_impact_enhanced2");
+		weaponInfo->altWallImpactEffectEnhancedFX = trap->FX_RegisterEffect("bowcaster/wall_impact_enhanced2");
 		//cgs.effects.bowcasterShotEffect = trap->FX_RegisterEffect("bowcaster/shot");
 		//cgs.effects.bowcasterImpactEffect = trap->FX_RegisterEffect("bowcaster/wall_impact");
 		//cgs.effects.bowcasterImpactEffectEnhancedFX = trap->FX_RegisterEffect("bowcaster/wall_impact_enhanced2");
