@@ -2129,7 +2129,6 @@ void CG_MissileHitWall(int weapon, int clientNum, vec3_t origin, vec3_t dir, imp
 		FX_DisruptorAltMiss(origin, dir, weapon, altFire);
 		break;
 
-	case WP_WOOKIE_BOWCASTER:
 	case WP_CLONE_PISTOL1:
 		if (altFire)
 		{
