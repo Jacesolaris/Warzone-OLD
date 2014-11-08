@@ -1098,20 +1098,30 @@
 		
 		itemDef 
 		{	
-			name				video_enhancedFX
+			name				video_anisotropic
 			group				video
-			type				ITEM_TYPE_MULTI
-			text				"Enhanced FX"
+			type				ITEM_TYPE_SLIDER
+			text				@MENUS_ANISOTROPIC_FILTERING
+			cvarTest			r_ext_texture_filter_anisotropic_avail
+			disableCvar			{ 0 }     
+			cvarfloat				r_ext_texture_filter_anisotropic 1 0 16
 			rect				220 243 300 20
 			textalign			ITEM_ALIGN_RIGHT
-			textalignx			165
+			textalignx			174
 			textaligny			0
 			font 				4
 			textscale 			1
 			forecolor		.615 .615 .956 1
-			cvarFloatList		{  @MENUS_OFF 0 @MENUS_ON 1 }
-			descText			"Enable Enhanced FX?"
-			cvar				"cg_enhancedFX"
+			visible			0
+			// appearance_slot		5
+
+			//descText			@MENUS_TOGGLE_ADVANCED_TEXTURE
+			descText			"Screen space anisotropic filter. Reduce to improve FPS at the cost of visual quality."
+			
+			action 
+			{ 
+				play			"sound/interface/button1"
+			}
 
 			mouseenter 
 			{ 
@@ -1121,28 +1131,32 @@
 			{ 
 				hide			highlight11
 			} 
-			action 
-			{
-				play			"sound/interface/button1"
-			}
 		}
 		
 		itemDef 
 		{	
-			name				video_oldcomputer
+			name				video_framebuffer_multisample
 			group				video
-			type				ITEM_TYPE_MULTI
-			text				"Performance"
+			type				ITEM_TYPE_SLIDER
+			text				"Anisotropic Frame Buffer Filter"
+			cvarTest			r_ext_texture_filter_anisotropic_avail
+			disableCvar			{ 0 }     
+			cvarfloat				r_ext_framebuffer_multisample 1 0 16
 			rect				220 263 300 20
 			textalign			ITEM_ALIGN_RIGHT
-			textalignx			165
+			textalignx			174
 			textaligny			0
 			font 				4
 			textscale 			1
 			forecolor		.615 .615 .956 1
-			cvarFloatList		{  "Older Computer" 0 "New Computer" 1 }
-			descText			"Set to Older Computer if you have FPS issues."
-			cvar				"r_ext_texture_float"
+			visible			0
+			// appearance_slot		5
+
+			descText			"Provides minor visual quality improvement. Highly recommended to disable this if you have FPS issues."
+			action 
+			{ 
+				play			"sound/interface/button1"
+			}
 
 			mouseenter 
 			{ 
@@ -1152,10 +1166,6 @@
 			{ 
 				hide			highlight12
 			} 
-			action 
-			{
-				play			"sound/interface/button1"
-			}
 		}
 		
 		// APPLY CHANGES BUTTON
@@ -1615,30 +1625,20 @@
 
 		itemDef 
 		{	
-			name				video_anisotropic
+			name				video_enhancedFX
 			group				video2
-			type				ITEM_TYPE_SLIDER
-			text				@MENUS_ANISOTROPIC_FILTERING
-			cvarTest			r_ext_texture_filter_anisotropic_avail
-			disableCvar			{ 0 }     
-			cvarfloat				r_ext_texture_filter_anisotropic 1 0 16
+			type				ITEM_TYPE_MULTI
+			text				"Enhanced FX"
 			rect				220 241 300 20
 			textalign			ITEM_ALIGN_RIGHT
-			textalignx			174
+			textalignx			165
 			textaligny			0
 			font 				4
 			textscale 			1
 			forecolor		.615 .615 .956 1
-			visible			0
-			// appearance_slot		5
-
-			//descText			@MENUS_TOGGLE_ADVANCED_TEXTURE
-			descText			"Screen space anisotropic filter. Reduce to improve FPS at the cost of visual quality."
-			
-			action 
-			{ 
-				play			"sound/interface/button1"
-			}
+			cvarFloatList		{  @MENUS_OFF 0 @MENUS_ON 1 }
+			descText			"Enable Enhanced FX?"
+			cvar				"cg_enhancedFX"
 
 			mouseenter 
 			{ 
@@ -1648,41 +1648,10 @@
 			{ 
 				hide			highlight19
 			} 
-		}
-		
-		itemDef 
-		{	
-			name				video_framebuffer_multisample
-			group				video2
-			type				ITEM_TYPE_SLIDER
-			text				"Anisotropic Frame Buffer Filter"
-			cvarTest			r_ext_texture_filter_anisotropic_avail
-			disableCvar			{ 0 }     
-			cvarfloat				r_ext_framebuffer_multisample 1 0 16
-			rect				220 261 300 20
-			textalign			ITEM_ALIGN_RIGHT
-			textalignx			174
-			textaligny			0
-			font 				4
-			textscale 			1
-			forecolor		.615 .615 .956 1
-			visible			0
-			// appearance_slot		5
-
-			descText			"Provides minor visual quality improvement. Highly recommended to disable this if you have FPS issues."
 			action 
-			{ 
+			{
 				play			"sound/interface/button1"
 			}
-
-			mouseenter 
-			{ 
-				show			highlight20
-			}
-			mouseexit 
-			{ 
-				hide			highlight20
-			} 
 		}
 
 
