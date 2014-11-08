@@ -47,32 +47,45 @@ FX_BryarAltHitWall
 */
 void FX_BryarAltHitWall(vec3_t origin, vec3_t normal, int power, int weapon, qboolean altFire)
 {
+	// Set fx to primary weapon fx.
 	fxHandle_t fx = cg_weapons[weapon].missileWallImpactfx;
-	if (altFire) fx = cg_weapons[weapon].altMissileWallImpactfx;
+	fxHandle_t fx2 = cg_weapons[weapon].wallImpactEffectEnhancedFX;
+
+	if (!fx) {
+		// If there is no primary (missileWallImpactfx) fx. Use original blaster fx.
+		fx = cgs.effects.blasterWallImpactEffect;
+
+		// If falling back to normal concussion fx, we have no enhanced.
+		fx2 = fx; // Force normal fx.
+	}
+
+	if (altFire) {
+		// If this is alt fire. Override all fx with alt fire fx...
+		if (cg_weapons[weapon].altMissileWallImpactfx)
+		{// We have alt fx for this weapon. Use it.
+			fx = cg_weapons[weapon].altMissileWallImpactfx;
+		}
+
+		if (cg_weapons[weapon].altWallImpactEffectEnhancedFX)
+		{// We have enhanced alt. Use it.
+			fx2 = cg_weapons[weapon].altWallImpactEffectEnhancedFX;
+		}
+		else
+		{// We have no alt enhanced fx.
+			fx2 = fx; // Force normal fx.
+		}
+	}
+
+	// If fx2 (enhanced) does not exist (set fx2 to -1 above), this should return normal fx.
+	fx = CG_EnableEnhancedFX(fx, fx2);
 
 	if (fx)
+	{// We have fx for this. Play it.
 		trap->FX_PlayEffectID(fx, origin, normal, -1, -1, qfalse);
+	}
 	else
-	{
-		switch (power)
-		{
-		case 4:
-		case 5:
-			trap->FX_PlayEffectID(
-				CG_EnableEnhancedFX(cgs.effects.bryarWallImpactEffect3, cgs.effects.bryarWallImpactEffect3EnhancedFX), origin, normal, -1, -1, qfalse);
-			break;
-
-		case 2:
-		case 3:
-			trap->FX_PlayEffectID(
-				CG_EnableEnhancedFX(cgs.effects.bryarWallImpactEffect2, cgs.effects.bryarWallImpactEffect2EnhancedFX), origin, normal, -1, -1, qfalse);
-			break;
-
-		default:
-			trap->FX_PlayEffectID(
-				CG_EnableEnhancedFX(cgs.effects.bryarWallImpactEffect, cgs.effects.bryarWallImpactEffectEnhancedFX), origin, normal, -1, -1, qfalse);
-			break;
-		}
+	{// This should never be possible, but just in case, fall back to concussion here.
+		trap->FX_PlayEffectID(cgs.effects.bryarWallImpactEffect, origin, normal, -1, -1, qfalse);
 	}
 }
 
