@@ -90,13 +90,12 @@ qboolean NPC_PadawanMove( void )
 	if (NPC->s.NPC_class == CLASS_PADAWAN)
 	{
 		G_ClearEnemy( NPCS.NPC );
-		
+
 		if (NPC->parent && NPC_IsAlive(NPC->parent))
 		{
-			float dist = Distance(NPC->parent->r.currentOrigin, NPC->r.currentOrigin);
+			float dist = DistanceHorizontal(NPC->parent->r.currentOrigin, NPC->r.currentOrigin);
 
-			// OMG combatmovetogoal sucks...
-			if (dist > 78 && dist < 512)
+			if (dist > 112 && dist < 512)
 			{// If clear then move stright there...
 				NPC_FacePosition( NPC->parent->r.currentOrigin, qfalse );
 
@@ -111,6 +110,19 @@ qboolean NPC_PadawanMove( void )
 					{// All is good in the world...
 						return qtrue;
 					}
+					else if (NPC->parent->client->ps.groundEntityNum == ENTITYNUM_NONE)
+					{// Out master is in the air... Don't jump!
+						NPC_ClearGoal();
+						NPCS.NPCInfo->goalEntity = NULL;
+						NPCS.NPCInfo->tempGoal = NULL;
+
+						ucmd->forwardmove = 0;
+						ucmd->rightmove = 0;
+						ucmd->upmove = 0;
+						NPC_PickRandomIdleAnimantion(NPC);
+
+						return qtrue;
+					}
 					else if (Jedi_Jump( NPC->parent->r.currentOrigin, NPC->parent->s.number ))
 					{// Backup... Can we jump there???
 						return qtrue;
@@ -119,14 +131,12 @@ qboolean NPC_PadawanMove( void )
 
 				//trap->Print("dist > 96 && dist < 512 FAIL!\n");
 			}
-#if 0
-			else if (dist < 48)
+//#if 0
+			else if (dist < 96)
 			{// If clear then move back a bit...
 				NPC_FacePosition( NPC->parent->r.currentOrigin, qfalse );
 
 				NPCS.NPCInfo->goalEntity = NPC->parent;
-				NPCS.NPCInfo->goalRadius = 96.0;
-				//NPCS.NPCInfo->greetEnt = NPC->parent;
 
 				if ( UpdateGoal() )
 				{
@@ -136,16 +146,9 @@ qboolean NPC_PadawanMove( void )
 					return qtrue;
 				}
 			}
-#endif
-			else if (dist <= 96)
+//#endif
+			else if (dist <= 128)
 			{// Perfect distance... Stay idle...
-				/*ucmd.forwardmove = 0;
-				ucmd.rightmove = 0;
-				ucmd.upmove = 0;
-
-				//trap->Print("dist <= 96 IDLE!\n");
-				*/
-
 				NPC_ClearGoal();
 				NPCS.NPCInfo->goalEntity = NULL;
 				NPCS.NPCInfo->tempGoal = NULL;
@@ -160,7 +163,20 @@ qboolean NPC_PadawanMove( void )
 			else if (NPC->parent->s.groundEntityNum != ENTITYNUM_NONE
 				&& (!NPC_IsAlive(NPC->enemy) || Distance(NPC->parent->r.currentOrigin, NPC->r.currentOrigin) > 1024))
 			{// Padawan is too far from jedi. Teleport to him... Only if they are not in mid air...
-				if (NPC->nextPadawanTeleportThink <= level.time)
+				if (NPC->parent->client->ps.groundEntityNum == ENTITYNUM_NONE)
+				{// Out master is in the air... Don't teleport!
+					NPC_ClearGoal();
+					NPCS.NPCInfo->goalEntity = NULL;
+					NPCS.NPCInfo->tempGoal = NULL;
+
+					ucmd->forwardmove = 0;
+					ucmd->rightmove = 0;
+					ucmd->upmove = 0;
+					NPC_PickRandomIdleAnimantion(NPC);
+
+					return qtrue;
+				}
+				else if (NPC->nextPadawanTeleportThink <= level.time)
 				{
 					int waypoint = DOM_GetNearWP(NPC->parent->r.currentOrigin, NPC->parent->wpCurrent);
 
@@ -187,14 +203,6 @@ qboolean NPC_PadawanMove( void )
 				}
 			}
 		}
-
-		/*
-		ucmd.forwardmove = 0;
-		ucmd.rightmove = 0;
-		ucmd.upmove = 0;
-		*/
-
-		//trap->Print("IDLE!\n");
 
 		return qtrue;
 	}
@@ -326,6 +334,16 @@ void NPC_DoPadawanStuff ( void )
 	if (NPCS.NPC->client->NPC_class != CLASS_PADAWAN)
 	{
 		return; // This is only for padawans...
+	}
+
+	if (NPC_GetOffPlayer(NPCS.NPC))
+	{// Get off of their head!
+		return;
+	}
+
+	if (NPC_MoverCrushCheck(NPCS.NPC))
+	{// There is a mover gonna crush us... Step back...
+		return;
 	}
 
 	if (me->nextPadawanThink > level.time) return;

@@ -2030,6 +2030,29 @@ void ClientThink_real( gentity_t *ent ) {
 		memcpy(&ent->client->pers.cmd, &NPCS.ucmd, sizeof(usercmd_t));
 	}
 
+	if (ent->health > 0 && ent->client && !(ent->client->ps.eFlags & EF_DEAD) && !(ent->client->ps.pm_type != PM_DEAD))
+	{// UQ1: Why the hell do we need multiple health stats... So dumb...
+		// Coordinate health stats...
+		if (ent->client->ps.stats[STAT_HEALTH] > ent->health)
+		{
+			ent->health = ent->client->ps.stats[STAT_HEALTH];
+		}
+		else if (ent->health > ent->client->ps.stats[STAT_HEALTH])
+		{
+			ent->client->ps.stats[STAT_HEALTH] = ent->health;
+		}
+
+		// Coordinate max health stats...
+		if (ent->client->ps.stats[STAT_MAX_HEALTH] > ent->maxHealth)
+		{
+			ent->maxHealth = ent->client->ps.stats[STAT_MAX_HEALTH];
+		}
+		else if (ent->maxHealth > ent->client->ps.stats[STAT_MAX_HEALTH])
+		{
+			ent->client->ps.stats[STAT_MAX_HEALTH] = ent->maxHealth;
+		}
+	}
+
 	//check if we need to toggle the block powerup on/off..
 	G_CheckToggleBlock(ent, ucmd); // moved up here to make sure it always gets called... (eg: no return; 's before it gets to the check)
 	

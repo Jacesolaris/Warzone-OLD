@@ -2662,6 +2662,8 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, int flags )
 
 	image = R_CreateImage( name, pic, width, height, type, flags, GL_RGBA8 );
 	Z_Free( pic );
+
+	qglBindTexture(GL_TEXTURE_2D, image->texnum);
 	
 	return image;
 }

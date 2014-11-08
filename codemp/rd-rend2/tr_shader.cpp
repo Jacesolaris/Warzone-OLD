@@ -938,6 +938,14 @@ qboolean ForceGlow ( char *shader )
 	{
 		return qtrue;
 	}
+	else if (StringContains(shader, "blob", 0)) // GFX
+	{
+		return qtrue;
+	}
+	else if (StringContains(shader, "shot", 0)) // GFX
+	{
+		return qtrue;
+	}
 	else if (StringContains(shader, "fire", 0)) // GFX
 	{
 		return qtrue;

@@ -921,7 +921,7 @@ int CheckForFunc(vec3_t org, int ignore)
 
 	if (strstr(fent->classname, "func_"))
 	{
-		return 1; //there's a func brush here
+		return fent->s.number; //there's a func brush here
 	}
 
 	return 0;
@@ -950,7 +950,7 @@ int WaitingForNow(vec3_t goalpos)
 		return 0;
 	}
 
-	if (CheckForFuncAbove(goalpos, NPCS.NPC->s.number) || (have_goalpos2 && CheckForFuncAbove(goalpos2, NPCS.NPC->s.number)))
+	if (CheckForFuncAbove(goalpos, NPCS.NPC->s.number) > 0 || (have_goalpos2 && CheckForFuncAbove(goalpos2, NPCS.NPC->s.number) > 0))
 	{// Squisher above alert!
 		return 1;
 	}
@@ -965,7 +965,7 @@ int WaitingForNow(vec3_t goalpos)
 
 	if (VectorLength(a) < 16)
 	{
-		if (CheckForFunc(NPCS.NPC->r.currentOrigin, NPCS.NPC->s.number))
+		if (CheckForFunc(NPCS.NPC->r.currentOrigin, NPCS.NPC->s.number) > 0)
 		{
 			return 1; //we're probably standing on an elevator and riding up/down. Or at least we hope so.
 		}
@@ -976,6 +976,66 @@ int WaitingForNow(vec3_t goalpos)
 	}
 
 	return 0;
+}
+
+qboolean NPC_MoverCrushCheck ( gentity_t *NPC )
+{
+	int above = CheckForFuncAbove(NPC->r.currentOrigin, NPC->s.number);
+
+	if (above > 0)
+	{
+		gentity_t *ABOVE_ENT = &g_entities[above];
+
+		if (!ABOVE_ENT) return qfalse;
+
+		// Looks like there is a mover above us... Step back!
+		NPC_FacePosition( ABOVE_ENT->r.currentOrigin, qfalse );
+
+		NPCS.NPCInfo->goalEntity = ABOVE_ENT;
+
+		if ( UpdateGoal() )
+		{// Retreat until we are off of them...
+			NPC_CombatMoveToGoal( qtrue, qtrue );
+		}
+		else
+		{// Fallback...
+			NPC->client->pers.cmd.forwardmove = -127.0;
+		}
+
+		return qtrue;
+	}
+
+	return qfalse;
+}
+
+qboolean NPC_GetOffPlayer ( gentity_t *NPC )
+{
+	if (NPC->client->ps.groundEntityNum < ENTITYNUM_MAX_NORMAL)
+	{// We are on some entity...
+		gentity_t *on = &g_entities[NPC->client->ps.groundEntityNum];
+
+		if (!on) return qfalse;
+		if (on->s.eType != ET_NPC && on->s.eType != ET_PLAYER) return qfalse;
+		if (!on->client) return qfalse;
+
+		// Looks like we are on a player or NPC... Get off of them...
+		NPC_FacePosition( on->r.currentOrigin, qfalse );
+
+		NPCS.NPCInfo->goalEntity = on;
+
+		if ( UpdateGoal() )
+		{// Retreat until we are off of them...
+			NPC_CombatMoveToGoal( qtrue, qtrue );
+		}
+		else
+		{// Fallback...
+			NPC->client->pers.cmd.forwardmove = -127.0;
+		}
+
+		return qtrue;
+	}
+
+	return qfalse;
 }
 
 qboolean NPC_HaveValidEnemy( void )
@@ -1040,6 +1100,16 @@ qboolean NPC_FollowRoutes( void )
 	}
 
 	G_ClearEnemy(NPC);
+
+	if (NPC_GetOffPlayer(NPC))
+	{// Get off of their head!
+		return qtrue;
+	}
+
+	if (NPC_MoverCrushCheck(NPC))
+	{// There is a mover gonna crush us... Step back...
+		return qtrue;
+	}
 
 	if (DistanceHorizontal(NPC->r.currentOrigin, NPC->npc_previous_pos) > 3)
 	{
@@ -1461,6 +1531,16 @@ qboolean NPC_FollowEnemyRoute( void )
 	if ( !NPC_HaveValidEnemy() )
 	{
 		return qfalse;
+	}
+
+	if (NPC_GetOffPlayer(NPC))
+	{// Get off of their head!
+		return qfalse;
+	}
+
+	if (NPC_MoverCrushCheck(NPC))
+	{// There is a mover gonna crush us... Step back...
+		return qtrue;
 	}
 
 	if ((NPC->client->ps.weapon == WP_SABER || NPC->client->ps.weapon == WP_MELEE)

@@ -2648,6 +2648,7 @@ qboolean NPC_ParseParms( const char *NPCName, gentity_t *NPC )
 				if ( n )
 				{//set
 					NPC->client->ps.fd.forcePowersKnown |= ( 1 << fp );
+					//trap->Print("%s has %s.\n", NPC->NPC_type, FPTable[fp].name);
 				}
 				else
 				{//clear

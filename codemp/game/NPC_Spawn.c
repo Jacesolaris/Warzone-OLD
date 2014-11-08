@@ -396,8 +396,12 @@ void NPC_SetMiscDefaultData( gentity_t *ent )
 	}
 	if ( ent->client->ps.fd.forcePowersKnown != 0 )
 	{
+		int KNOWN_POWERS = ent->client->ps.fd.forcePowersKnown;
+
 		WP_InitForcePowers( ent );
 		WP_SpawnInitForcePowers(ent); //rww
+		
+		ent->client->ps.fd.forcePowersKnown = KNOWN_POWERS;
 	}
 	if ( ent->client->NPC_class == CLASS_SEEKER )
 	{
@@ -2035,7 +2039,7 @@ finish:
 		}
 	}
 #endif //0
-
+	
 	// Init conversation search timer... So that they do not find a partner instantly...
 	newent->NPC->conversationSearchTime = level.time + 10000 + irand(0, 10000);
 

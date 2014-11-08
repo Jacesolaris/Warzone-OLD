@@ -1161,8 +1161,6 @@ void ForceTeamHeal( gentity_t *self )
 {
 	float radius = 256;
 	int i = 0;
-	gentity_t *ent;
-	vec3_t a;
 	int numpl = 0;
 	int pl[MAX_CLIENTS];
 	int healthadd = 0;
@@ -1174,9 +1172,19 @@ void ForceTeamHeal( gentity_t *self )
 		return;
 	}
 
-	if ( !WP_ForcePowerUsable( self, FP_TEAM_HEAL ) )
+	/*if ( !WP_ForcePowerUsable( self, FP_TEAM_HEAL ) )
 	{
 		//trap->Print("!usable\n");
+		return;
+	}*/
+
+	if (self->client->ps.fd.forcePowerLevel[FP_TEAM_HEAL] < FORCE_LEVEL_1)
+	{
+		return;
+	}
+
+	if (self->client->ps.fd.forcePower < forcePowerNeeded[self->client->ps.fd.forcePowerLevel[FP_TEAM_HEAL]][FP_TEAM_HEAL])
+	{
 		return;
 	}
 
@@ -1195,29 +1203,33 @@ void ForceTeamHeal( gentity_t *self )
 		radius *= 2;
 	}
 
-	while (i < MAX_GENTITIES)
+	for (i = 0; i < MAX_GENTITIES; i++)
 	{
-		ent = &g_entities[i];
+		gentity_t *ent = &g_entities[i];
+		qboolean NPC_FRIEND = qfalse;
+
+		if (!ent) continue;
+		if (ent->health <= 0) continue;
+		if (ent->health >= ent->client->ps.stats[STAT_MAX_HEALTH]) continue;
+
+		if (ent->s.eType == ET_NPC)
+		{
+			if (!NPC_ValidEnemy2(self, ent)) NPC_FRIEND = qtrue;
+		}
 
 		if (ent 
 			&& ent->client 
-			&& self != ent 
-			&& OnSameTeam(self, ent) 
-			&& ent->client->ps.stats[STAT_HEALTH] < ent->client->ps.stats[STAT_MAX_HEALTH] 
-			&& ent->client->ps.stats[STAT_HEALTH] > 0 
+			//&& self != ent 
+			&& (NPC_FRIEND || (ent->s.eType == ET_PLAYER && OnSameTeam(self, ent)))
 			//&& ForcePowerUsableOn(self, ent, FP_TEAM_HEAL) 
 			&& trap->InPVS(self->client->ps.origin, ent->client->ps.origin))
 		{
-			VectorSubtract(self->client->ps.origin, ent->client->ps.origin, a);
-
-			if (VectorLength(a) <= radius)
+			if (Distance(self->client->ps.origin, ent->client->ps.origin) <= radius)
 			{
 				pl[numpl] = i;
 				numpl++;
 			}
 		}
-
-		i++;
 	}
 
 	if (numpl < 1)
@@ -1229,7 +1241,7 @@ void ForceTeamHeal( gentity_t *self )
 	if (numpl == 1)
 	{
 #ifdef __MMO__
-		healthadd = 500;
+		healthadd = 300;
 #else //!__MMO__
 		healthadd = 50;
 #endif //__MMO__
@@ -1245,27 +1257,32 @@ void ForceTeamHeal( gentity_t *self )
 	else
 	{
 #ifdef __MMO__
-		healthadd = 100;
+		healthadd = 150;
 #else //!__MMO__
 		healthadd = 25;
 #endif //__MMO__
 	}
 
 	self->client->ps.fd.forcePowerDebounce[FP_TEAM_HEAL] = level.time + 2000;
-	i = 0;
 
-	while (i < numpl)
+	for (i = 0; i < numpl; i++)
 	{
-		if (g_entities[pl[i]].client->ps.stats[STAT_HEALTH] > 0 &&
-			g_entities[pl[i]].health > 0)
+		if (g_entities[pl[i]].health > 0)
 		{
-			g_entities[pl[i]].client->ps.stats[STAT_HEALTH] += healthadd;
-			if (g_entities[pl[i]].client->ps.stats[STAT_HEALTH] > g_entities[pl[i]].client->ps.stats[STAT_MAX_HEALTH])
+			if (g_entities[pl[i]].client->ps.stats[STAT_HEALTH] > g_entities[pl[i]].health)
 			{
-				g_entities[pl[i]].client->ps.stats[STAT_HEALTH] = g_entities[pl[i]].client->ps.stats[STAT_MAX_HEALTH];
+				g_entities[pl[i]].health = g_entities[pl[i]].client->ps.stats[STAT_HEALTH];
+			}
+			else if (g_entities[pl[i]].health > g_entities[pl[i]].client->ps.stats[STAT_HEALTH])
+			{
+				g_entities[pl[i]].client->ps.stats[STAT_HEALTH] = g_entities[pl[i]].health;
 			}
 
-			g_entities[pl[i]].health = g_entities[pl[i]].client->ps.stats[STAT_HEALTH];
+			g_entities[pl[i]].health += healthadd;
+
+			if (g_entities[pl[i]].health > g_entities[pl[i]].maxHealth) g_entities[pl[i]].health = g_entities[pl[i]].maxHealth;
+
+			g_entities[pl[i]].client->ps.stats[STAT_HEALTH] = g_entities[pl[i]].health;
 
 			//At this point we know we got one, so add him into the collective event client bitflag
 			if (!te)
@@ -1280,7 +1297,6 @@ void ForceTeamHeal( gentity_t *self )
 			WP_AddToClientBitflags(te, pl[i]);
 			//Now cramming it all into one event.. doing this many g_sound events at once was a Bad Thing.
 		}
-		i++;
 	}
 }
 

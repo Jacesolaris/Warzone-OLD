@@ -267,6 +267,7 @@ extern qboolean NPC_SetCombatPoint( int combatPointID );
 #define	MAX_COMBAT_POINT_CHECK	32
 
 extern qboolean NPC_ValidEnemy( gentity_t *ent );
+extern qboolean NPC_ValidEnemy2( gentity_t *self, gentity_t *ent );
 extern qboolean NPC_CheckEnemyExt( qboolean checkAlerts ); //checkAlerts = qfalse
 extern qboolean NPC_FindPlayer( void );
 extern qboolean NPC_CheckCanAttackExt( void );
@@ -383,6 +384,8 @@ extern int CheckForFuncAbove(vec3_t org, int ignore);
 extern int CheckForFunc(vec3_t org, int ignore);
 extern int WaitingForNow(vec3_t goalpos);
 extern qboolean NPC_HaveValidEnemy( void );
+extern qboolean NPC_MoverCrushCheck ( gentity_t *NPC );
+extern qboolean NPC_GetOffPlayer ( gentity_t *NPC );
 
 // NPC_AI_Patrol.c
 extern qboolean NPC_PatrolArea( void );

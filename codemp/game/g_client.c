@@ -4218,6 +4218,9 @@ void ClientSpawn(gentity_t *ent) {
 			}
 		}
 	}
+
+	ent->health = client->ps.stats[STAT_HEALTH];
+	ent->maxHealth = client->ps.stats[STAT_MAX_HEALTH];
 }
 
 
