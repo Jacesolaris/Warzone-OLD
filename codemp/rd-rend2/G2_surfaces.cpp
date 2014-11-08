@@ -32,42 +32,6 @@ public:
 extern void G2_ConstructUsedBoneList(CConstructBoneList &CBL);
 
 
-static int G2_CullModel( trRefEntity_t *ent ) {
-
-	// scale the radius if need be
-	float largestScale = ent->e.modelScale[0];
-
-	if (ent->e.modelScale[1] > largestScale)
-	{
-		largestScale = ent->e.modelScale[1];
-	}
-	if (ent->e.modelScale[2] > largestScale)
-	{
-		largestScale = ent->e.modelScale[2];
-	}
-	if (!largestScale)
-	{
-		largestScale = 1;
-	}
-
-	// cull bounding sphere 
-  	switch ( R_CullLocalPointAndRadius( vec3_origin,  ent->e.radius * largestScale) )
-  	{
-  	case CULL_OUT:
-  		tr.pc.c_sphere_cull_md3_out++;
-  		return CULL_OUT;
-
-	case CULL_IN:
-		tr.pc.c_sphere_cull_md3_in++;
-		return CULL_IN;
-
-	case CULL_CLIP:
-		tr.pc.c_sphere_cull_md3_clip++;
-		return CULL_IN;
- 	}
-	return CULL_IN;
-}
-
 //=====================================================================================================================
 // Surface List handling routines - so entities can determine what surfaces attached to a model are operational or not.
 
@@ -264,7 +228,7 @@ int G2_IsSurfaceOff (CGhoul2Info *ghlInfo, surfaceInfo_v &slist, const char *sur
 	{
 		return 0;
 	}
-
+   
  	// first find if we already have this surface in the list
 	surf = G2_FindSurface(ghlInfo, slist, surfaceName, &surfIndex);
 	if (surf)
@@ -302,11 +266,6 @@ void G2_FindRecursiveSurface(model_t *currentModel, int surfaceNum, surfaceInfo_
 
 	// really, we should use the default flags for this surface unless it's been overriden
 	int offFlags = surfInfo->flags;
-
-	if ( G2_CullModel (tr.currentEntity) == CULL_OUT ) 
-	{
-		return;
-	}
 
 	// set the off flags if we have some
 	if (surfOverride)
@@ -379,11 +338,6 @@ qboolean G2_SetRootSurface(CGhoul2Info_v &ghoul2, const int modelIndex, const ch
 
 	// did we find a ghoul 2 model or not?
 	if (!mdxm)
-	{
-		return qfalse;
-	}
-
-	if ( G2_CullModel (tr.currentEntity) == CULL_OUT ) 
 	{
 		return qfalse;
 	}
@@ -547,10 +501,6 @@ qboolean G2_SetRootSurface(CGhoul2Info_v &ghoul2, const int modelIndex, const ch
 extern int G2_DecideTraceLod(CGhoul2Info &ghoul2, int useLod);
 int G2_AddSurface(CGhoul2Info *ghoul2, int surfaceNumber, int polyNumber, float BarycentricI, float BarycentricJ, int lod )
 {
-	if ( G2_CullModel (tr.currentEntity) == CULL_OUT ) 
-	{
-		return -1;
-	}
 
 	surfaceInfo_t temp_slist_entry;
 
@@ -633,11 +583,6 @@ int G2_GetParentSurface(CGhoul2Info *ghlInfo, const int index)
 	mdxmHierarchyOffsets_t	*surfIndexes = (mdxmHierarchyOffsets_t *)((byte *)mod->data.glm->header + sizeof(mdxmHeader_t));
 	mdxmSurfHierarchy_t		*surfInfo = 0;
 
-	if ( G2_CullModel (tr.currentEntity) == CULL_OUT ) 
-	{
-		return -1;
-	}
-
 	// walk each surface and see if this index is listed in it's children
 	surf = (mdxmSurface_t *)G2_FindSurface((void *)mod, index, 0);
 	surfInfo = (mdxmSurfHierarchy_t *)((byte *)surfIndexes + surfIndexes->offsets[surf->thisSurfaceIndex]);
@@ -650,11 +595,6 @@ int G2_GetSurfaceIndex(CGhoul2Info *ghlInfo, const char *surfaceName)
 {
 	model_t		*mod = (model_t *)ghlInfo->currentModel;
 	int			flags;
-
-	if ( G2_CullModel (tr.currentEntity) == CULL_OUT ) 
-	{
-		return -1;
-	}
 	
 	return G2_IsSurfaceLegal(mod, surfaceName, &flags);
 }
@@ -666,13 +606,6 @@ int G2_IsSurfaceRendered(CGhoul2Info *ghlInfo, const char *surfaceName, surfaceI
 	assert(ghlInfo->currentModel);
 	assert(ghlInfo->currentModel->data.glm && ghlInfo->currentModel->data.glm->header);
 	if (!ghlInfo->currentModel->data.glm || !ghlInfo->currentModel->data.glm->header)
-	{
-		return -1;
-	}
-
-	// cull the entire model if merged bounding box of both frames
-	// is outside the view frustum.
-	if ( G2_CullModel (tr.currentEntity) == CULL_OUT ) 
 	{
 		return -1;
 	}
@@ -733,4 +666,3 @@ int G2_IsSurfaceRendered(CGhoul2Info *ghlInfo, const char *surfaceName, surfaceI
 	}
 	return flags;
 }
-

@@ -3343,7 +3343,6 @@ void R_AddGhoulSurfaces( trRefEntity_t *ent ) {
 			}
 
 			RenderSurfaces(RS);
-			RS.rootSList.clear(); // UQ1: TESTING - Trying this...
 		}
 	}
 	HackadelicOnClient=false;

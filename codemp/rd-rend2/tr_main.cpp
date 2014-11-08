@@ -1798,53 +1798,6 @@ void R_SortDrawSurfs( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 	R_AddDrawSurfCmd( drawSurfs, numDrawSurfs );
 }
 
-//int NUM_CULLS = 0;
-
-static int G2_CullModel( trRefEntity_t *ent ) {
-	byte mask;
-
-	/*if (!R_inPVS( tr.refdef.vieworg, ent->e.origin, &mask ))
-	{
-		//NUM_CULLS++;
-		return CULL_OUT;
-	}*/
-
-	// scale the radius if need be
-	float largestScale = ent->e.modelScale[0];
-
-	if (ent->e.modelScale[1] > largestScale)
-	{
-		largestScale = ent->e.modelScale[1];
-	}
-	if (ent->e.modelScale[2] > largestScale)
-	{
-		largestScale = ent->e.modelScale[2];
-	}
-	if (!largestScale)
-	{
-		largestScale = 1;
-	}
-
-	// cull bounding sphere 
-	switch ( R_CullPointAndRadius( ent->e.origin/*vec3_origin*/,  ent->e.radius * largestScale) )
-  	{
-  	case CULL_OUT:
-  		tr.pc.c_sphere_cull_md3_out++;
-		//NUM_CULLS++;
-  		return CULL_OUT;
-
-	case CULL_IN:
-		tr.pc.c_sphere_cull_md3_in++;
-		return CULL_IN;
-
-	case CULL_CLIP:
-		tr.pc.c_sphere_cull_md3_clip++;
-		return CULL_IN;
- 	}
-
-	return CULL_IN;
-}
-
 static void R_AddEntitySurface (int entityNum)
 {
 	trRefEntity_t	*ent;
@@ -1886,12 +1839,6 @@ static void R_AddEntitySurface (int entityNum)
 		if ( (ent->e.renderfx & RF_THIRD_PERSON) && !tr.viewParms.isPortal) {
 			return;
 		}
-
-		if ( G2_CullModel (tr.currentEntity) == CULL_OUT ) 
-		{
-			return;
-		}
-
 		shader = R_GetShaderByHandle( ent->e.customShader );
 		R_AddDrawSurf( &entitySurface, shader, R_SpriteFogNum( ent ), 0, R_IsPostRenderEntity (tr.currentEntityNum, ent), 0 /* cubeMap */ );
 		break;
@@ -1901,12 +1848,6 @@ static void R_AddEntitySurface (int entityNum)
 		R_RotateForEntity( ent, &tr.viewParms, &tr.ori );
 
 		tr.currentModel = R_GetModelByHandle( ent->e.hModel );
-
-		if ( G2_CullModel (tr.currentEntity) == CULL_OUT ) 
-		{
-			return;
-		}
-
 		if (!tr.currentModel) {
 			R_AddDrawSurf( &entitySurface, tr.defaultShader, 0, 0, R_IsPostRenderEntity (tr.currentEntityNum, ent), 0/* cubeMap */ );
 		} else {
@@ -1947,11 +1888,6 @@ static void R_AddEntitySurface (int entityNum)
 		}
 		break;
 	case RT_ENT_CHAIN:
-			if ( G2_CullModel (tr.currentEntity) == CULL_OUT ) 
-			{
-				return;
-			}
-
 			shader = R_GetShaderByHandle( ent->e.customShader );
 			R_AddDrawSurf( &entitySurface, shader, R_SpriteFogNum( ent ), false, R_IsPostRenderEntity (tr.currentEntityNum, ent), 0 /* cubeMap */ );
 			break;

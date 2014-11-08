@@ -643,7 +643,6 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 							if (oldShader != NULL) {
 								RB_EndSurface();
 							}
-
 							RB_BeginSurface( shader, fogNum, cubemapIndex );
 							backEnd.pc.c_surfBatches++;
 							oldShader = shader;
