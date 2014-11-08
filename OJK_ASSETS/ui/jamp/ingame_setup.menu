@@ -1127,6 +1127,37 @@
 			}
 		}
 		
+		itemDef 
+		{	
+			name				video_oldcomputer
+			group				video
+			type				ITEM_TYPE_MULTI
+			text				"Performance"
+			rect				220 263 300 20
+			textalign			ITEM_ALIGN_RIGHT
+			textalignx			165
+			textaligny			0
+			font 				4
+			textscale 			1
+			forecolor		.615 .615 .956 1
+			cvarFloatList		{  "Older Computer" 0 "New Computer" 1 }
+			descText			"Set to Older Computer if you have FPS issues."
+			cvar				"r_ext_texture_float"
+
+			mouseenter 
+			{ 
+				show			highlight12
+			}
+			mouseexit 
+			{ 
+				hide			highlight12
+			} 
+			action 
+			{
+				play			"sound/interface/button1"
+			}
+		}
+		
 		// APPLY CHANGES BUTTON
 		itemDef 
 		{
@@ -1352,13 +1383,14 @@
 		{
 			name				bright_text
 			group				video2
-			text				@MENUS_ADJUST_BRIGHTNESS_SLIDER
-			text2				@MENUS_THE_NUMBER_6_CAN_BARELY
+			text				"Adjust brightness until the number 6 can barely be seen."
+			//text				@MENUS_ADJUST_BRIGHTNESS_SLIDER
+			//text2				@MENUS_THE_NUMBER_6_CAN_BARELY
 			text2aligny			14
 			textalignx			174
 			textaligny			0
 			font 				4
-			textscale 			1
+			textscale 			0.5
 			rect				220 103 256 20
 			textalign			ITEM_ALIGN_CENTER
 			forecolor			0.7 0.7 0.7 1
@@ -1374,7 +1406,7 @@
 			type				ITEM_TYPE_SLIDER
 			text				@MENUS_VIDEO_BRIGHTNESS
 			cvarfloat			"r_gamma" 1 .5 3
-			rect				220 141 300 20
+			rect				220 121 300 20
 			textalign			ITEM_ALIGN_RIGHT
 			textalignx			174
 			textaligny			0
@@ -1391,11 +1423,11 @@
 
 			mouseenter 
 			{ 
-				show			highlight14
+				show			highlight13
 			}
 			mouseexit 
 			{ 
-				hide			highlight14
+				hide			highlight13
 			} 
 		}
 
@@ -1415,7 +1447,7 @@
 				@MENUS_SHADOWS_VOLUMETRIC	2
 				"Projected"			3
 			}
-			rect				220 161 300 14
+			rect				220 141 300 14
 	   		textalign			ITEM_ALIGN_RIGHT
 			textalignx			174
 			textaligny			0
@@ -1429,11 +1461,11 @@
 			}
 			mouseenter 
 			{ 
-				show			highlight15
+				show			highlight14
 			}
 			mouseexit 
 			{ 
-				hide			highlight15
+				hide			highlight14
 			}  
 		}
 
@@ -1449,7 +1481,7 @@
 				@MENUS_OFF 0  
 				@MENUS_ON 1 
 			}
-			rect				220 181 300 14
+			rect				220 161 300 14
 	   		textalign			ITEM_ALIGN_RIGHT
 			textalignx			174
 			textaligny			0
@@ -1466,11 +1498,11 @@
 
 			mouseenter 
 			{ 
-				show			highlight16
+				show			highlight15
 			}
 			mouseexit 
 			{ 
-				hide			highlight16
+				hide			highlight15
 			} 
 		}
 
@@ -1486,7 +1518,7 @@
 				@MENUS_OFF 	0 
 				@MENUS_ON 	1 
 			}
-			rect				220 201 340 14
+			rect				220 181 340 14
 	   		textalign			ITEM_ALIGN_RIGHT
 			textalignx			174
 			textaligny			0
@@ -1501,11 +1533,11 @@
 			}
 			mouseenter 
 			{ 
-				show			highlight17
+				show			highlight16
 			}
 			mouseexit 
 			{ 
-				hide			highlight17
+				hide			highlight16
 			} 
 		}
 
@@ -1521,7 +1553,7 @@
 				@MENUS_OFF 	0 
 				@MENUS_ON 	1 
 			}
-			rect				220 221 340 14
+			rect				220 201 340 14
 	   		textalign			ITEM_ALIGN_RIGHT
 			textalignx			174
 			textaligny			0
@@ -1536,11 +1568,11 @@
 			}
 			mouseenter 
 			{ 
-				show			highlight18
+				show			highlight17
 			}
 			mouseexit 
 			{ 
-				hide			highlight18
+				hide			highlight17
 			} 
 		}
 
@@ -1556,7 +1588,7 @@
 				@MENUS_OFF 0  
 				@MENUS_ON 1 
 			}
-			rect				220 241 300 14
+			rect				220 221 300 14
 	   		textalign			ITEM_ALIGN_RIGHT
 			textalignx			174
 			textaligny			0
@@ -1573,6 +1605,43 @@
 
 			mouseenter 
 			{ 
+				show			highlight18
+			}
+			mouseexit 
+			{ 
+				hide			highlight18
+			} 
+		}
+
+		itemDef 
+		{	
+			name				video_anisotropic
+			group				video2
+			type				ITEM_TYPE_SLIDER
+			text				@MENUS_ANISOTROPIC_FILTERING
+			cvarTest			r_ext_texture_filter_anisotropic_avail
+			disableCvar			{ 0 }     
+			cvarfloat				r_ext_texture_filter_anisotropic 1 .5 16
+			rect				220 241 300 20
+			textalign			ITEM_ALIGN_RIGHT
+			textalignx			174
+			textaligny			0
+			font 				4
+			textscale 			1
+			forecolor		.615 .615 .956 1
+			visible			0
+			// appearance_slot		5
+
+			//descText			@MENUS_TOGGLE_ADVANCED_TEXTURE
+			descText			"Screen space anisotropic filter. Reduce to improve FPS at the cost of visual quality."
+			
+			action 
+			{ 
+				play			"sound/interface/button1"
+			}
+
+			mouseenter 
+			{ 
 				show			highlight19
 			}
 			mouseexit 
@@ -1580,16 +1649,16 @@
 				hide			highlight19
 			} 
 		}
-
+		
 		itemDef 
 		{	
-			name				video_mode
+			name				video_framebuffer_multisample
 			group				video2
 			type				ITEM_TYPE_SLIDER
-			text				@MENUS_ANISOTROPIC_FILTERING
+			text				"Anisotropic Frame Buffer Filter"
 			cvarTest			r_ext_texture_filter_anisotropic_avail
 			disableCvar			{ 0 }     
-			cvarfloat				r_ext_texture_filter_anisotropic 1 .5 16
+			cvarfloat				r_ext_framebuffer_multisample 1 .5 16
 			rect				220 261 300 20
 			textalign			ITEM_ALIGN_RIGHT
 			textalignx			174
@@ -1600,7 +1669,7 @@
 			visible			0
 			// appearance_slot		5
 
-			descText			@MENUS_TOGGLE_ADVANCED_TEXTURE
+			descText			"Provides minor visual quality improvement. Highly recommended to disable this if you have FPS issues."
 			action 
 			{ 
 				play			"sound/interface/button1"
