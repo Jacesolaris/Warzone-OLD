@@ -18,23 +18,23 @@ uniform mat4   u_ModelViewProjectionMatrix;
 
 uniform vec4   u_LightColor;
 uniform vec4   u_LightColor1;
-uniform vec4   u_LightColor2;
-uniform vec4   u_LightColor3;
-uniform vec4   u_LightColor4;
-uniform vec4   u_LightColor5;
+//uniform vec4   u_LightColor2;
+//uniform vec4   u_LightColor3;
+//uniform vec4   u_LightColor4;
+//uniform vec4   u_LightColor5;
 //uniform vec4   u_LightColor6;
 //uniform vec4   u_LightColor7;
 
 uniform vec4   u_LightOrigin;
 uniform vec4   u_LightOrigin1;
-uniform vec4   u_LightOrigin2;
-uniform vec4   u_LightOrigin3;
-uniform vec4   u_LightOrigin4;
-uniform vec4   u_LightOrigin5;
+//uniform vec4   u_LightOrigin2;
+//uniform vec4   u_LightOrigin3;
+//uniform vec4   u_LightOrigin4;
+//uniform vec4   u_LightOrigin5;
 //uniform vec4   u_LightOrigin6;
 //uniform vec4   u_LightOrigin7;
 
-#define			MAX_VARYING_LIGHTS 6
+#define			MAX_VARYING_LIGHTS 2
 
 vec4			LightOrigins[MAX_VARYING_LIGHTS];
 
@@ -123,19 +123,19 @@ void main()
 
 	LightOrigins[0] = u_LightOrigin;
 	LightOrigins[1] = u_LightOrigin1;
-	LightOrigins[2] = u_LightOrigin2;
-	LightOrigins[3] = u_LightOrigin3;
-	LightOrigins[4] = u_LightOrigin4;
-	LightOrigins[5] = u_LightOrigin5;
+	//LightOrigins[2] = u_LightOrigin2;
+	//LightOrigins[3] = u_LightOrigin3;
+	//LightOrigins[4] = u_LightOrigin4;
+	//LightOrigins[5] = u_LightOrigin5;
 	//LightOrigins[6] = u_LightOrigin6;
 	//LightOrigins[7] = u_LightOrigin7;
 
 	var_LightColor[0] = u_LightColor;
 	var_LightColor[1] = u_LightColor1;
-	var_LightColor[2] = u_LightColor2;
-	var_LightColor[3] = u_LightColor3;
-	var_LightColor[4] = u_LightColor4;
-	var_LightColor[5] = u_LightColor5;
+	//var_LightColor[2] = u_LightColor2;
+	//var_LightColor[3] = u_LightColor3;
+	//var_LightColor[4] = u_LightColor4;
+	//var_LightColor[5] = u_LightColor5;
 	//var_LightColor[6] = u_LightColor6;
 	//var_LightColor[7] = u_LightColor7;
 	

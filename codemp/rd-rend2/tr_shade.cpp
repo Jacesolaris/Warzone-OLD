@@ -453,7 +453,8 @@ static void ProjectDlightTexture( void ) {
 	}
 
 //#define MAX_SHADER_DLIGHTS 8
-#define MAX_SHADER_DLIGHTS 6
+//#define MAX_SHADER_DLIGHTS 6
+#define MAX_SHADER_DLIGHTS 2
 
 	ComputeDeformValues(&deformGen, deformParams);
 

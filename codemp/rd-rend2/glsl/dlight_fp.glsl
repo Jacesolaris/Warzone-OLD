@@ -1,6 +1,6 @@
 uniform sampler2D u_DiffuseMap;
 
-#define				MAX_VARYING_LIGHTS 6
+#define				MAX_VARYING_LIGHTS 2
 
 varying vec3		var_Normal;
 varying vec3		var_Position;
