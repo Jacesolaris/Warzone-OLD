@@ -6017,6 +6017,8 @@ qboolean G_RadiusDamage ( vec3_t origin, gentity_t *attacker, float damage, floa
 
 				evEnt->s.otherEntityNum = ent->s.number; //the entity the mark should be placed on
 				evEnt->s.weapon = WP_ROCKET_LAUNCHER; //always say it's rocket so we make the right mark
+				//evEnt->s.weapon = WP_E60_ROCKET_LAUNCHER;
+				//evEnt->s.weapon = WP_CW_ROCKET_LAUNCHER;
 
 				//Try to place the decal by going from the missile location to the location of the person that was hit
 				VectorCopy(missile->r.currentOrigin, evEnt->s.origin);

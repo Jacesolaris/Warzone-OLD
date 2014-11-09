@@ -1837,7 +1837,7 @@ void CG_OutOfAmmoChange( int oldWeapon )
 				( i == WP_TRIP_MINE || i == WP_DET_PACK || i == WP_THERMAL || i == WP_ROCKET_LAUNCHER) ) // safe weapon switch
 			*/
 			//rww - Don't we want to make sure i != one of these if autoswitch is 1 (safe)?
-			if (cg_autoSwitch.integer != 1 || (i != WP_TRIP_MINE && i != WP_DET_PACK && i != WP_THERMAL && i != WP_ROCKET_LAUNCHER))
+			if (cg_autoSwitch.integer != 1 || (i != WP_TRIP_MINE && i != WP_DET_PACK && i != WP_THERMAL && i != WP_ROCKET_LAUNCHER /*&& i != WP_E60_ROCKET_LAUNCHER && i != WP_CW_ROCKET_LAUNCHER*/))
 			{
 				if (i != oldWeapon)
 				{ //don't even do anything if we're just selecting the weapon we already have/had
@@ -1939,6 +1939,8 @@ void CG_FireWeapon( centity_t *cent, qboolean altFire ) {
 			CGCam_Shake( val, 250 );
 		}
 		else if (ent->weapon == WP_ROCKET_LAUNCHER ||
+			/*(ent->weapon == WP_E60_ROCKET_LAUNCHER ||
+			(ent->weapon == WP_CW_ROCKET_LAUNCHER ||*/
 			(ent->weapon == WP_REPEATER && altFire) ||
 			ent->weapon == WP_FLECHETTE ||
 			(ent->weapon == WP_DC15_EXT && altFire) ||
@@ -1956,6 +1958,7 @@ void CG_FireWeapon( centity_t *cent, qboolean altFire ) {
 			{
 				CGCam_Shake(flrand(2, 3), 350);
 			}
+			
 			else if (ent->weapon == WP_REPEATER)
 			{
 				CGCam_Shake(flrand(2, 3), 350);
@@ -1976,6 +1979,14 @@ void CG_FireWeapon( centity_t *cent, qboolean altFire ) {
 			{
 				CGCam_Shake(flrand(2, 3), 350);
 			}
+			/*else if (ent->weapon == WP_E60_ROCKET_LAUNCHER)
+			{
+				CGCam_Shake(flrand(2, 3), 350);
+			}
+			else if (ent->weapon == WP_CW_ROCKET_LAUNCHER)
+			{
+				CGCam_Shake(flrand(2, 3), 350);
+			}*/
 			else if (ent->weapon == WP_FLECHETTE)
 			{
 				if (altFire)
@@ -2157,6 +2168,13 @@ void CG_MissileHitWall(int weapon, int clientNum, vec3_t origin, vec3_t dir, imp
 			FX_WeaponHitWall(origin, dir, weapon, altFire);
 		}
 		break;
+	
+	//case WP_E60_ROCKET_LAUNCHER:
+	//	FX_RocketHitWall(origin, dir, weapon, altFire);//needs its own function fx
+	//	break;
+	//case WP_CW_ROCKET_LAUNCHER:
+	//	FX_RocketHitWall(origin, dir, weapon, altFire);//needs its own function fx
+	//	break;
 
 	case WP_ROCKET_LAUNCHER:
 		FX_RocketHitWall(origin, dir, weapon, altFire);
@@ -2226,6 +2244,14 @@ void CG_MissileHitPlayer(int weapon, vec3_t origin, vec3_t dir, int entityNum, q
 			FX_DEMP2_HitPlayer( origin, dir, humanoid, weapon, altFire );
 		}
 		break;
+
+	//case WP_E60_ROCKET_LAUNCHER:
+	//	FX_RocketHitPlayer(origin, dir, humanoid, weapon, altFire);//needs its own function fx
+	//	break;
+
+	//case WP_CW_ROCKET_LAUNCHER:
+	//	FX_RocketHitPlayer(origin, dir, humanoid, weapon, altFire);//needs its own function fx
+	//	break;
 
 	case WP_ROCKET_LAUNCHER:
 		FX_RocketHitPlayer( origin, dir, humanoid, weapon, altFire );
