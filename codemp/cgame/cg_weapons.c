@@ -2394,6 +2394,7 @@ void CG_InitG2Weapons(void)
 				if (item->giTag == WP_SABER)
 				{
 					trap->G2API_AddBolt(g2WeaponInstances[/*i*/item->giTag], 0, "*blade1");
+					trap->G2API_AddBolt(g2WeaponInstances[/*i*/item->giTag], 0, "*blade2");
 				}
 				else
 				{

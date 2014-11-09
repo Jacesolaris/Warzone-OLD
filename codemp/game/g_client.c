@@ -3316,22 +3316,6 @@ tryTorso:
 #endif
 }
 
-//[ClientPlugInDetect]
-qboolean G_ClientPlugin(void)
-{//this function checks to see if all players are running OJP on their local systems or not.
-	int i;
-	for (i = 0; i < level.maxclients; i++)
-	{
-		if (g_entities[i].inuse && !g_entities[i].client->pers.ClientPlugIn)
-		{//a live player that doesn't have the plugin
-			return qfalse;
-		}
-	}
-
-	return qtrue;
-}
-//[/ClientPlugInDetect]
-
 /*
 ===========
 ClientSpawn
@@ -3341,10 +3325,7 @@ after the first ClientBegin, and after each respawn
 Initializes all non-persistant parts of playerState
 ============
 */
-//[VisualWeapons]
-//prototype
-qboolean G_ClientPlugin(void);
-//[/VisualWeapons]
+
 vmCvar_t	mapname;
 extern qboolean WP_HasForcePowers( const playerState_t *ps );
 void ClientSpawn(gentity_t *ent) {

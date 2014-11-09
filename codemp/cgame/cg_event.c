@@ -1554,7 +1554,14 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 		DEBUGNAME("EV_JUMP");
 		if (cg_jumpSounds.integer)
 		{
-			trap->S_StartSound (NULL, es->number, CHAN_VOICE, CG_CustomSound( es->number, "*jump1.wav" ) );
+			if (!CG_IsMindTricked(cent->currentState.trickedentindex,
+				cent->currentState.trickedentindex2,
+				cent->currentState.trickedentindex3,
+				cent->currentState.trickedentindex4,
+				cg.predictedPlayerState.clientNum))
+			{
+				trap->S_StartSound(NULL, es->number, CHAN_VOICE, CG_CustomSound(es->number, "*jump1.wav"));
+			}
 		}
 		break;
 	case EV_ROLL:
@@ -2430,23 +2437,39 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 	case EV_DISRUPTOR_MAIN_SHOT:
 		DEBUGNAME("EV_DISRUPTOR_MAIN_SHOT");
 		if (cent->currentState.eventParm != cg.snap->ps.clientNum ||
-			//[TrueView]
-			cg.renderingThirdPerson || cg_trueguns.integer
-			|| cg.predictedPlayerState.weapon == WP_SABER || cg.predictedPlayerState.weapon == WP_MELEE)
-			//cg.renderingThirdPerson)
-			//[/TrueView]
+			cg.renderingThirdPerson)
 		{ //h4q3ry
 			CG_GetClientWeaponMuzzleBoltPoint(cent->currentState.eventParm, cent->currentState.origin2);
 		}
-		else
+		else if (!cg.renderingThirdPerson && (cg.lastFPFlashPoint[0] || cg.lastFPFlashPoint[1] || cg.lastFPFlashPoint[2]))
 		{
-			if (cg.lastFPFlashPoint[0] ||cg.lastFPFlashPoint[1] || cg.lastFPFlashPoint[2])
-			{ //get the position of the muzzle flash for the first person weapon model from the last frame
-				VectorCopy(cg.lastFPFlashPoint, cent->currentState.origin2);
+			//get the position of the muzzle flash for the first person weapon model from the last frame
+			VectorCopy(cg.lastFPFlashPoint, cent->currentState.origin2);
+		}
+
+		if (!cent->currentState.origin2[0])
+		{
+			centity_t *ccent;
+			ccent = &cg_entities[cent->currentState.eventParm];
+			if (ccent && ccent->ghoul2)
+			{
+				mdxaBone_t	boltMatrix;
+				vec3_t	tagOrg;//, angles;
+				int handLBolt = -1;
+				handLBolt = trap->G2API_AddBolt(ccent->ghoul2, 0, "*l_hand");
+				//VectorSet( angles, 0, cent->r.currentAngles[YAW], 0 );
+				if (handLBolt >= 0)
+				{
+					//trap_G2API_GetBoltMatrix(cent->ghoul2, 1, 0, &boltMatrix, cent->turAngles, cent->lerpOrigin, cg.time, cgs.gameModels, cent->modelScale);
+					trap->G2API_GetBoltMatrix(ccent->ghoul2, 0, handLBolt, &boltMatrix, ccent->turAngles, ccent->lerpOrigin, cg.time, NULL, ccent->modelScale);
+					BG_GiveMeVectorFromMatrix(&boltMatrix, ORIGIN, tagOrg);
+					VectorCopy(tagOrg, cent->currentState.origin2);
+				}
 			}
 		}
-		FX_DisruptorMainShot( cent->currentState.origin2, cent->lerpOrigin );
+		FX_DisruptorMainShot(cent->currentState.origin2, cent->lerpOrigin);
 		break;
+
 
 	case EV_DISRUPTOR_SNIPER_SHOT:
 		DEBUGNAME("EV_DISRUPTOR_SNIPER_SHOT");
@@ -3020,7 +3043,6 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 				cgs.effects.mTripmineExplosionEnhancedFX);
 			break;
 		case EFFECT_EXPLOSION_DETPACK:
-			//eID = cgs.effects.mDetpackExplosion;
 			eID = CG_EnableEnhancedFX(cgs.effects.mDetpackExplosion,
 				cgs.effects.mAltDetonateEnhancedFX);
 
@@ -3086,7 +3108,7 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 			eID = cgs.effects.landingGravel;
 			break;
 
-		case EFFECT_JETPACK_EXPLOSION:
+		/*case EFFECT_JETPACK_EXPLOSION:
 			eID = CG_EnableEnhancedFX(cgs.effects.rocketExplosionEffect,
 				cgs.effects.rocketExplosionEffectEnhancedFX);
 			break;
@@ -3096,7 +3118,7 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 			break;
 		case EFFECT_SONIC_WAVE:
 			eID = cgs.effects.sonicGrenadeWave;
-			break;
+			break;*/
 		default:
 			eID = -1;
 			break;

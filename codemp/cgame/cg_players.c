@@ -686,10 +686,10 @@ retryModel:
 	//[VisualWeapons]
 	//Initialize the holster bolts
 	ci->holster_saber = trap->G2API_AddBolt(ci->ghoul2Model, 0, "*holster_saber");
-	ci->saber_holstered = qfalse;
+	ci->saber_holstered = 0;
 
 	ci->holster_saber2 = trap->G2API_AddBolt(ci->ghoul2Model, 0, "*holster_saber2");
-	ci->saber2_holstered = qfalse;
+	ci->saber2_holstered = 0;
 
 	ci->holster_staff = trap->G2API_AddBolt(ci->ghoul2Model, 0, "*holster_staff");
 	ci->staff_holstered = qfalse;
@@ -705,6 +705,12 @@ retryModel:
 
 	ci->holster_launcher = trap->G2API_AddBolt(ci->ghoul2Model, 0, "*holster_launcher");
 	ci->launcher_holstered = 0;
+
+	ci->holster_launcher2 = trap->G2API_AddBolt(ci->ghoul2Model, 0, "*holster_launcher2");
+	ci->launcher2_holstered = 0;
+
+	ci->holster_thermal = trap->G2API_AddBolt(ci->ghoul2Model, 0, "*holster_thermal");
+	ci->thermal_holstered = 0;
 
 	//offset holster bolts
 	ci->bolt_rfemurYZ = trap->G2API_AddBolt(ci->ghoul2Model, 0, "rfemurYZ");
@@ -1412,6 +1418,12 @@ static void CG_CopyClientInfoModel( clientInfo_t *from, clientInfo_t *to )
 	to->holster_launcher = from->holster_launcher;
 	to->launcher_holstered = from->launcher_holstered;
 
+	to->holster_launcher2 = from->holster_launcher2;
+	to->launcher2_holstered = from->launcher2_holstered;
+
+	to->holster_thermal = from->holster_thermal;
+	to->thermal_holstered = from->thermal_holstered;
+
 	//offset bolts
 	to->bolt_rfemurYZ = from->bolt_rfemurYZ;
 	to->bolt_lfemurYZ = from->bolt_lfemurYZ;
@@ -1521,6 +1533,12 @@ static qboolean CG_ScanForExistingClientInfo( clientInfo_t *ci, int clientNum ) 
 					ci->bolt_lfemurYZ = match->bolt_lfemurYZ;
 
 					memcpy(ci->holsterData, match->holsterData, sizeof(ci->holsterData));
+
+					ci->holster_launcher2 = match->holster_launcher2;
+					ci->launcher2_holstered = match->launcher2_holstered;
+
+					ci->holster_thermal = match->holster_thermal;
+					ci->thermal_holstered = match->thermal_holstered;
 					//[/VisualWeapons]
 
 					memcpy( ci->sounds, match->sounds, sizeof( ci->sounds ) );
@@ -1963,7 +1981,6 @@ void CG_NewClientInfo( int clientNum, qboolean entitiesInitialized ) {
 		Q_strncpyz( newInfo.saberName, ci->saberName, 64 );
 		memcpy(&newInfo.saber[0], &ci->saber[0], sizeof(newInfo.saber[0]));
 		newInfo.ghoul2Weapons[0] = ci->ghoul2Weapons[0];
-
 		//[VisualWeapons]
 		//copy our first ghoul2 holstered saber to the new info file.
 		newInfo.ghoul2HolsterWeapons[0] = ci->ghoul2HolsterWeapons[0];
@@ -1983,6 +2000,10 @@ void CG_NewClientInfo( int clientNum, qboolean entitiesInitialized ) {
 		Q_strncpyz( newInfo.saber2Name, ci->saber2Name, 64 );
 		memcpy(&newInfo.saber[1], &ci->saber[1], sizeof(newInfo.saber[1]));
 		newInfo.ghoul2Weapons[1] = ci->ghoul2Weapons[1];
+		//[VisualWeapons]
+		//copy our first ghoul2 holstered saber to the new info file.
+		newInfo.ghoul2HolsterWeapons[1] = ci->ghoul2HolsterWeapons[1];
+		//[/VisualWeapons]
 	}
 
 	if (saberUpdate[0] || saberUpdate[1])

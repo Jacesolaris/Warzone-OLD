@@ -23,7 +23,12 @@ stringID_table_t holsterTypeTable[] =
 	ENUM2STRING(HLR_REPEATER),		//repeater
 	ENUM2STRING(HLR_FLECHETTE),		//flechette
 	ENUM2STRING(HLR_DISRUPTOR),		//disruptor
-	ENUM2STRING(MAX_HOLSTER)	
+	ENUM2STRING(MAX_HOLSTER),
+
+	// All stringID tables need to end with this
+	{
+		NULL, 0
+	}
 };
 
 stringID_table_t holsterBoneTable[] =
@@ -32,7 +37,12 @@ stringID_table_t holsterBoneTable[] =
 	ENUM2STRING(HOLSTER_UPPERBACK),	
 	ENUM2STRING(HOLSTER_LOWERBACK),
 	ENUM2STRING(HOLSTER_LEFTHIP),
-	ENUM2STRING(HOLSTER_RIGHTHIP)
+	ENUM2STRING(HOLSTER_RIGHTHIP),
+
+	// All stringID tables need to end with this
+	{
+		NULL, 0
+	}
 };
 
 /*
@@ -161,7 +171,7 @@ void CG_LoadHolsterData (clientInfo_t *ci)
 
 		if( !f )
 		{//no file, use kyle's then.
-			fLen = trap->FS_Open("models/players/kyle/holster.cfg", &f, FS_READ);
+			fLen = trap->FS_Open("models/players/holster.cfg", &f, FS_READ);
 		}
 	}
 	else
@@ -174,7 +184,7 @@ void CG_LoadHolsterData (clientInfo_t *ci)
 
 		if( !f )
 		{//still no dice, use kyle's then.
-			fLen = trap->FS_Open("models/players/kyle/holster.cfg", &f, FS_READ);
+			fLen = trap->FS_Open("models/players/holster.cfg", &f, FS_READ);
 		}
 	}
 

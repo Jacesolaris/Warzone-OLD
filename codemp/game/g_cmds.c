@@ -2066,9 +2066,7 @@ Cmd_Give_f
 Give items to a client
 ==================
 */
-//[VisualWeapons]
-extern qboolean G_ClientPlugin(void);
-//[/VisualWeapons]
+
 void G_Give( gentity_t *ent, const char *name, const char *args, int argc )
 {
 	gitem_t		*it;

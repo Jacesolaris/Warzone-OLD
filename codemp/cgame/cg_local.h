@@ -352,7 +352,13 @@ typedef struct clientInfo_s {
 	//Launchers
 	qhandle_t	holster_launcher;
 	int			launcher_holstered;
+	//More Launchers
+	qhandle_t	holster_launcher2;
+	int			launcher2_holstered;
 
+	//Thermal Holster
+	qhandle_t	holster_thermal;
+	int			thermal_holstered;
 	//offset bolts
 	qhandle_t	bolt_rfemurYZ;  //right hip used for the holster offsetting method
 	qhandle_t	bolt_lfemurYZ;	//left hip used for the holster offsetting method
