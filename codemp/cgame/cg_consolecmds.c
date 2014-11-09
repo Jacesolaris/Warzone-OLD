@@ -351,6 +351,22 @@ DWORD WINAPI ThreadFunc(void* text) {
 	return 1;
 }
 
+void RemoveColorEscapeSequences( char *text ) {
+	int i, l;
+
+	l = 0;
+	for ( i = 0; text[i]; i++ ) {
+		if (Q_IsColorStringExt(&text[i])) {
+			i++;
+			continue;
+		}
+		if (text[i] > 0x7E)
+			continue;
+		text[l++] = text[i];
+	}
+	text[l] = '\0';
+}
+
 char PREVIOUS_TALK_TEXT[1024];
 int  PREVIOUS_TALK_TIME = 0;
 
@@ -361,8 +377,16 @@ void TextToSpeech( char *text )
 	if (strcmp(text, PREVIOUS_TALK_TEXT))
 	{// Never repeat...
 		HANDLE thread;
+		char txt[1024];
 		memset(PREVIOUS_TALK_TEXT, '\0', sizeof(char)*1024);
-		strcpy(PREVIOUS_TALK_TEXT, text);
+		//strcpy(PREVIOUS_TALK_TEXT, text);
+
+		// Remove color codes...
+		memset(txt, '\0', sizeof(char)*1024);
+		strcpy(txt, text);
+		RemoveColorEscapeSequences(txt);
+		strcpy(PREVIOUS_TALK_TEXT, txt);
+		
 		PREVIOUS_TALK_TIME = cg.time;
 		thread = CreateThread(NULL, 0, ThreadFunc, PREVIOUS_TALK_TEXT, 0, NULL);
 	}
