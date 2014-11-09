@@ -372,21 +372,20 @@ int  PREVIOUS_TALK_TIME = 0;
 
 void TextToSpeech( char *text )
 {
+	char txt[1024];
+
 	if (cg.time != 0 && PREVIOUS_TALK_TIME >= cg.time - 1000) return;
 
-	if (strcmp(text, PREVIOUS_TALK_TEXT))
+	// Remove color codes...
+	memset(txt, '\0', sizeof(char)*1024);
+	strcpy(txt, text);
+	RemoveColorEscapeSequences(txt);
+
+	if (strcmp(txt, PREVIOUS_TALK_TEXT))
 	{// Never repeat...
 		HANDLE thread;
-		char txt[1024];
 		memset(PREVIOUS_TALK_TEXT, '\0', sizeof(char)*1024);
-		//strcpy(PREVIOUS_TALK_TEXT, text);
-
-		// Remove color codes...
-		memset(txt, '\0', sizeof(char)*1024);
-		strcpy(txt, text);
-		RemoveColorEscapeSequences(txt);
 		strcpy(PREVIOUS_TALK_TEXT, txt);
-		
 		PREVIOUS_TALK_TIME = cg.time;
 		thread = CreateThread(NULL, 0, ThreadFunc, PREVIOUS_TALK_TEXT, 0, NULL);
 	}
@@ -401,7 +400,7 @@ void CG_SaySillyTextTest ( void )
 	switch (choice)
 	{
 	case 1:
-		TextToSpeech("What the fuck are you doing???");
+		TextToSpeech("What the are you doing???");
 		break;
 	case 2:
 		TextToSpeech("Stop that!");
