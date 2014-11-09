@@ -328,7 +328,7 @@ void CG_RegisterWeapon( int weaponNum) {
 	case WP_S5_PISTOL:
 		weaponInfo->item->classname = "s5 Pistol";
 		weaponInfo->selectSound = trap->S_RegisterSound("sound/weapons/bryar/select.wav");
-		weaponInfo->flashSound[0] = trap->S_RegisterSound("sound/weapons/bryar/fire.wav");
+		weaponInfo->flashSound[0] = trap->S_RegisterSound("sound/weapons/spy_pistol/fire.wav");
 		weaponInfo->firingSound = NULL_SOUND;
 		weaponInfo->chargeSound = NULL_SOUND;
 		weaponInfo->muzzleEffect = trap->FX_RegisterEffect("blaster/muzzle_flash");
@@ -340,7 +340,7 @@ void CG_RegisterWeapon( int weaponNum) {
 
 
 		weaponInfo->powerupShotRenderfx = NULL_FX;
-		weaponInfo->altFlashSound[0] = trap->S_RegisterSound("sound/weapons/bryar/alt_fire.wav");
+		weaponInfo->altFlashSound[0] = trap->S_RegisterSound("sound/weapons/spy_pistol/alt_fire.wav");
 		weaponInfo->altFiringSound = NULL_SOUND;
 		weaponInfo->altMuzzleEffect = trap->FX_RegisterEffect("blaster/muzzle_flash");
 		weaponInfo->altMissileModel = NULL_HANDLE;
