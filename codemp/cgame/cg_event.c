@@ -1104,6 +1104,7 @@ void CG_G2MarkEvent(entityState_t *es)
 	case WP_WOOKIE_BOWCASTER:
 	case WP_CLONE_BLASTER:
 	case WP_DC15_EXT:
+	case WP_TESTGUN:
 	case WP_BLASTER:
 	case WP_DISRUPTOR:
 	case WP_BOWCASTER:

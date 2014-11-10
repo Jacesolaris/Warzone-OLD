@@ -986,6 +986,46 @@ void CG_RegisterWeapon( int weaponNum) {
 	//	weaponInfo->altWallImpactEffectEnhancedFX = trap->FX_RegisterEffect("pulserocket/explosion_enhanced2");
 	//	break;
 
+		case WP_TESTGUN:
+			weaponInfo->item->classname = "TEST GUN";
+			weaponInfo->selectSound = trap->S_RegisterSound("sound/weapons/blaster/select.wav");
+			weaponInfo->flashSound[0] = trap->S_RegisterSound("sound/weapons/Blasters/dl-44_1.mp3");
+			weaponInfo->firingSound = NULL_SOUND;
+			weaponInfo->chargeSound = NULL_SOUND;
+			weaponInfo->muzzleEffect = trap->FX_RegisterEffect("Blasters/muzzleflash2_Purple_small");
+			weaponInfo->missileModel = NULL_HANDLE;
+			weaponInfo->missileSound = NULL_SOUND;
+			weaponInfo->missileDlight = 0;
+			weaponInfo->missileHitSound = NULL_SOUND;
+			weaponInfo->missileTrailFunc = FX_WeaponProjectileThink;
+			weaponInfo->powerupShotRenderfx = NULL_FX;
+			weaponInfo->altFlashSound[0] = trap->S_RegisterSound("sound/weapons/Blasters/dl-44_3.mp3");
+			weaponInfo->altFiringSound = NULL_SOUND;
+			weaponInfo->altChargeSound = NULL_SOUND;
+			weaponInfo->altMuzzleEffect = trap->FX_RegisterEffect("Blasters/muzzleflash2_Purple_small");
+			weaponInfo->altMissileModel = NULL_HANDLE;
+			weaponInfo->altMissileSound = NULL_SOUND;
+			weaponInfo->altMissileDlight = 0;
+			weaponInfo->altMissileHitSound = NULL_SOUND;
+			weaponInfo->altMissileTrailFunc = FX_WeaponAltProjectileThink;//FX_WeaponProjectileThink;
+
+			weaponInfo->missileRenderfx = trap->FX_RegisterEffect("blasters/shot_RedPurple_small");
+			weaponInfo->altMissileRenderfx = trap->FX_RegisterEffect("blasters/shot_RedPurple_small");
+
+			weaponInfo->missileWallImpactfx = trap->FX_RegisterEffect("blaster/wall_impact");
+			weaponInfo->altMissileWallImpactfx = trap->FX_RegisterEffect("blaster/wall_impact");
+
+			weaponInfo->fleshImpactEffect = trap->FX_RegisterEffect("blaster/flesh_impact");
+			weaponInfo->altFleshImpactEffect = trap->FX_RegisterEffect("blaster/flesh_impact");
+			weaponInfo->altFleshImpactEnhancedEffect = trap->FX_RegisterEffect("blaster/flesh_impact");
+
+			weaponInfo->wallImpactEffectEnhancedFX = trap->FX_RegisterEffect("blaster/wall_impact_enhanced2");
+			weaponInfo->altWallImpactEffectEnhancedFX = trap->FX_RegisterEffect("blaster/wall_impact_enhanced2");
+
+			trap->FX_RegisterEffect("blaster/deflect");
+
+			cgs.effects.blasterDroidImpactEffect = trap->FX_RegisterEffect("blaster/droid_impact");
+			break;
 
 	case WP_BLASTER:
 	case WP_EMPLACED_GUN: //rww - just use the same as this for now..

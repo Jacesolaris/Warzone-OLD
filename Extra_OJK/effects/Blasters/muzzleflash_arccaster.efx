@@ -1,0 +1,165 @@
+repeatDelay				50
+
+Electricity
+{
+	name				Electricity
+
+	flags				useModel useBBox usePhysics impactFx
+
+	life				80
+
+	bounce				0.8 3
+
+	origin2				100 0 0 160 0 0
+
+	size
+	{
+		start			7 8
+		end				4 5
+		flags			linear
+	}
+
+	shaders
+	[
+		gfx/electricity/electricity_glowy
+	]
+}
+
+Light
+{
+	name				LightSource
+
+//	origin				5 0 0 150 0 0
+
+	rgb
+	{
+		start			0.5686 0.8392 1 0 0.02353 0.3569
+		end				1 0 0
+	}
+
+	size
+	{
+		start			50 70
+		flags			random
+	}
+}
+
+Particle
+{
+	name				LightFlare
+
+	life				50 80
+
+	rotation			-20 30
+
+	rotationDelta		-5 6
+
+	rgb
+	{
+		end				0.102 0.3255 0.549 0 0.02353 0.3569
+		parm			80
+		flags			linear nonlinear
+	}
+
+	alpha
+	{
+		end				0
+		parm			60 75
+		flags			linear nonlinear
+	}
+
+	size
+	{
+		start			2 6
+		end				12 16
+		flags			linear
+	}
+
+	shaders
+	[
+		gfx/flares/flare_blue
+	]
+}
+
+Particle
+{
+	name				LightBeam
+
+	life				50 100
+
+	cullrange			300
+
+	rgb
+	{
+		start			0 0.02353 0.3255 0.0549 0 0.3569
+		end				0 0.05882 0.2588 0 0.02353 0.2353
+		parm			80
+		flags			linear nonlinear
+	}
+
+	alpha
+	{
+		start			0.4 0.5
+		end				0
+		parm			60 75
+		flags			linear nonlinear
+	}
+
+	size
+	{
+		start			10 16
+		end				50 60
+		flags			random linear
+	}
+
+	shaders
+	[
+		gfx/flares/flare_beam
+	]
+}
+
+Emitter
+{
+	name				Light
+
+	flags				expensivePhysics usePhysics impactKills emitFx
+
+	life				100
+
+	velocity			3000 0 0
+
+	density				100
+
+	emitfx
+	[
+		force/lightning_lights
+	]
+}
+
+Particle
+{
+	name				ElectricityFiller
+
+	life				80
+
+//	origin				3 0 0
+
+	rotation			-180 180
+
+	rgb
+	{
+		end				1 0.9843 0.9412
+	}
+
+	size
+	{
+		start			7 8
+		end				2 3
+		flags			linear
+	}
+
+	shaders
+	[
+		gfx/electricity/electricityburst
+	]
+}

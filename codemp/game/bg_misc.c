@@ -248,7 +248,7 @@ int WeaponReadyAnim[WP_NUM_WEAPONS] =
 	DC15_READY,//WP_EE3
 	TORSO_WEAPONREADY2,//WP_CLONE_PISTOL1
 	TORSO_WEAPONREADY3,//WP_DLT20A
-	DC15_READY,//WP_CLONERIFLE
+	DC15_READY,// WP_TESTGUN
 	TORSO_WEAPONREADY2,//WP_WESTER_PISTOL
 	TORSO_WEAPONREADY2, //WP_ELG_3A
 	TORSO_WEAPONREADY2, //WP_S5_PISTOL
@@ -259,6 +259,7 @@ int WeaponReadyAnim[WP_NUM_WEAPONS] =
 	DC15_READY,//WP_DC15_EXT
 	//PLX1_WEAPONREADY, //WP_E60_ROCKET_LAUNCHER
 	//PLX1_WEAPONREADY, //WP_CW_ROCKET_LAUNCHER
+	TORSO_WEAPONREADY2,// WP_TESTGUN
 	TORSO_WEAPONREADY3,//TORSO_WEAPONREADY5,//WP_BOWCASTER,
 	TORSO_WEAPONREADY3,//TORSO_WEAPONREADY6,//WP_REPEATER,
 	TORSO_WEAPONREADY3,//TORSO_WEAPONREADY7,//WP_DEMP2,
@@ -318,6 +319,7 @@ int WeaponReadyLegsAnim[WP_NUM_WEAPONS] =
 	//PLX1_IDLE,//WP_DC15_EXT,
 	//PLX1_IDLE,//WP_E60_ROCKET_LAUNCHER,
 	BOTH_STAND1,//WP_CW_ROCKET_LAUNCHER,
+	BOTH_STAND1,// WP_TESTGUN
 	BOTH_STAND1,//TORSO_WEAPONREADY5,//WP_BOWCASTER,
 	BOTH_STAND1,//TORSO_WEAPONREADY6,//WP_REPEATER,
 	BOTH_STAND1,//TORSO_WEAPONREADY7,//WP_DEMP2,
@@ -376,6 +378,7 @@ int WeaponAttackAnim[WP_NUM_WEAPONS] =
 	DC15_FIRE, //WP_DC15_EXT
 	//PLX1_FIRE,//WP_E60_ROCKET_LAUNCHER
 	//PLX1_FIRE,//WP_CW_ROCKET_LAUNCHER
+	BOTH_ATTACK2,// WP_TESTGUN
 	BOTH_ATTACK3,//BOTH_ATTACK5,//WP_BOWCASTER,
 	BOTH_ATTACK3,//BOTH_ATTACK6,//WP_REPEATER,
 	BOTH_ATTACK2,//BOTH_ATTACK7,//WP_DEMP2,
@@ -1608,6 +1611,25 @@ Don't place this
 //	"@MENUS_THE_PLX_2M_IS_AN_EXTREMELY"					// description
 //},
 
+//Put any weapon models in this box here and edit you stuff in WP_TEST_GUN in cg_weaponinit.c and find the right stuff you want when testing
+//it's a good way to test stuff out so you don't mess with they other guns.
+/*QUAKED TEST GUN (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+*/
+{
+	"weapon_Test_Gun",
+	"sound/weapons/w_pkup.wav",
+	{ "models/weapons3/leias_pistol/blaster_pistol_w.glm",
+	0, 0, 0 },
+	/* view */		"models/weapons3/leias_pistol/blaster_pistol.md3",
+	/* icon */		"models/weapons3/leias_pistol/w_icon_leias_pistol",
+	/* pickup *///	"Clone Trooper Rifle",
+	100,
+	IT_WEAPON,
+	WP_TESTGUN,
+	/* precache */ "",
+	/* sounds */ "",
+	"@MENUS_THE_PRIMARY_WEAPON_OF"				// description
+},
 
 /*QUAKED weapon_blaster (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
 */
