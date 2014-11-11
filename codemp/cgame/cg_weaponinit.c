@@ -83,7 +83,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponNum == WP_FLECHETTE ||
 		weaponNum == WP_REPEATER ||
 		weaponNum == WP_ROCKET_LAUNCHER ||
-		weaponNum == WP_CONCUSSION ||
+		weaponNum == WP_CONCUSSION 	||	
 		weaponNum == WP_Z6_BLASTER_CANON 
 		//weaponNum == WP_E60_ROCKET_LAUNCHER ||
 		/*weaponNum == WP_CW_ROCKET_LAUNCHER*/)
@@ -749,7 +749,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->flashSound[0] = trap->S_RegisterSound("sound/weapons/minigun/fire.wav");
 		weaponInfo->firingSound = NULL_SOUND;
 		weaponInfo->chargeSound = NULL_SOUND;
-		weaponInfo->muzzleEffect = trap->FX_RegisterEffect("z6/muzzle_flash");
+		weaponInfo->muzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash_Blue_medium");
 		weaponInfo->missileModel = NULL_HANDLE;
 		weaponInfo->missileSound = NULL_SOUND;
 		weaponInfo->missileDlight = 0;
@@ -759,7 +759,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altFlashSound[0] = trap->S_RegisterSound("sound/weapons/repeater/alt_fire.wav");
 		weaponInfo->altFiringSound = NULL_SOUND;
 		weaponInfo->altChargeSound = trap->S_RegisterSound("sound/weapons/SBDarm/cannon_charge.mp3");
-		weaponInfo->altMuzzleEffect = trap->FX_RegisterEffect("z6/muzzle_flash");
+		weaponInfo->altMuzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash_Blue_medium");
 		weaponInfo->altMissileModel = NULL_HANDLE;
 		weaponInfo->altMissileSound = NULL_SOUND;
 		weaponInfo->altMissileDlight = 0;
@@ -768,8 +768,8 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->spinSound = trap->S_RegisterSound("sound/weapons/z6/spinny.wav");
 		weaponInfo->spindownSound = trap->S_RegisterSound("sound/weapons/z6/chaingun_spindown.wav");
 
-		weaponInfo->missileRenderfx = trap->FX_RegisterEffect("z6/projectile");
-		weaponInfo->altMissileRenderfx = trap->FX_RegisterEffect("z6/alt_shot");
+		weaponInfo->missileRenderfx = trap->FX_RegisterEffect("blasters/shot_blue_small");
+		weaponInfo->altMissileRenderfx = trap->FX_RegisterEffect("blasters/shot_Blue_Flare_big");
 
 		weaponInfo->missileWallImpactfx = trap->FX_RegisterEffect("z6/wall_impact");
 		weaponInfo->altMissileWallImpactfx = trap->FX_RegisterEffect("z6/alt_shot_explode");
@@ -780,6 +780,8 @@ void CG_RegisterWeapon( int weaponNum) {
 
 		weaponInfo->wallImpactEffectEnhancedFX = trap->FX_RegisterEffect("z6/wall_impact_enhanced2");
 		weaponInfo->altWallImpactEffectEnhancedFX = trap->FX_RegisterEffect("z6/alt_shot_explode_enhanced2");
+
+		cgs.media.cannonChargeFlash = trap->R_RegisterShader("gfx/misc/lightningFlash");
 		break;
 
 	case WP_WOOKIE_BOWCASTER:

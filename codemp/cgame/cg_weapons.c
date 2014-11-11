@@ -274,6 +274,7 @@ static void CG_LightningBolt( centity_t *cent, vec3_t origin ) {
 	if (cent->currentState.weapon == WP_CLONE_PISTOL1 && cent->currentState.eFlags & EF_ALT_FIRING)
 	if (cent->currentState.weapon == WP_WOOKIE_BOWCASTER && cent->currentState.eFlags & EF_ALT_FIRING)
 	if (cent->currentState.weapon == WP_DC15_EXT && cent->currentState.eFlags & EF_ALT_FIRING)
+	if (cent->currentState.weapon == WP_Z6_BLASTER_CANON && cent->currentState.eFlags & EF_ALT_FIRING)
 	{ /*nothing*/ }
 	else
 	{
@@ -495,16 +496,44 @@ Ghoul2 Insert Start
 			return;
 		}
 
-		if ( !ps ) {
-			// add weapon ready sound
-			cent->pe.lightningFiring = qfalse;
-			if ( ( cent->currentState.eFlags & EF_FIRING ) && weapon->firingSound ) {
-				// lightning gun and gauntlet make a different sound when fire is held down
-				trap->S_AddLoopingSound( cent->currentState.number, cent->lerpOrigin, vec3_origin, weapon->firingSound );
-				cent->pe.lightningFiring = qtrue;
-			} else if ( weapon->readySound ) {
-				trap->S_AddLoopingSound( cent->currentState.number, cent->lerpOrigin, vec3_origin, weapon->readySound );
+		//if ( !ps ) {
+		//	// add weapon ready sound
+		//	cent->pe.lightningFiring = qfalse;
+		//	if ( ( cent->currentState.eFlags & EF_FIRING ) && weapon->firingSound ) {
+		//		// lightning gun and gauntlet make a different sound when fire is held down
+		//		trap->S_AddLoopingSound( cent->currentState.number, cent->lerpOrigin, vec3_origin, weapon->firingSound );
+		//		cent->pe.lightningFiring = qtrue;
+		//	} else if ( weapon->readySound ) {
+		//		trap->S_AddLoopingSound( cent->currentState.number, cent->lerpOrigin, vec3_origin, weapon->readySound );
+		//	}
+		//}
+
+		if ((cent->currentState.eFlags & EF_FIRING || ((ps) && ps->weaponstate == WEAPON_FIRING))) {
+			//If we have a clone rifle, only play this sound if it is a minigun
+			if (weapon->isBlasterCanon)
+			{
+				trap->S_AddLoopingSound(cent->currentState.number, cent->lerpOrigin, vec3_origin, weapon->spinSound);
 			}
+			else
+			{
+				trap->S_AddLoopingSound(cent->currentState.number, cent->lerpOrigin, vec3_origin, weapon->firingSound);
+			}
+			cent->pe.lightningFiring = qtrue;
+		}
+		else
+		{
+			if (weapon->isBlasterCanon)
+			{
+				if (cent->pe.lightningFiring)
+				{
+					trap->S_StartSound(cent->lerpOrigin, cent->currentState.number, CHAN_WEAPON, weapon->spindownSound);
+				}
+			}
+			else if (weapon->readySound > 0) { // Getting initalized to -1 sometimes... readySound isn't even referenced anywere else in code
+
+				trap->S_AddLoopingSound(cent->currentState.number, cent->lerpOrigin, vec3_origin, weapon->readySound);
+			}
+			cent->pe.lightningFiring = qfalse;
 		}
 
 		CG_PositionEntityOnTag( &gun, parent, parent->hModel, "tag_weapon");
@@ -704,6 +733,7 @@ Ghoul2 Insert End
 		  (cent->currentState.weapon == WP_WOOKIE_BOWCASTER && cent->currentState.modelindex2 == WEAPON_CHARGING_ALT) ||
 		  (cent->currentState.weapon == WP_WOOKIES_PISTOL && cent->currentState.modelindex2 == WEAPON_CHARGING_ALT) ||
 		  (cent->currentState.weapon == WP_DC15_EXT && cent->currentState.modelindex2 == WEAPON_CHARGING_ALT) ||
+		  (cent->currentState.weapon == WP_Z6_BLASTER_CANON && cent->currentState.modelindex2 == WEAPON_CHARGING_ALT) ||
 		  (cent->currentState.weapon == WP_S5_PISTOL && cent->currentState.modelindex2 == WEAPON_CHARGING_ALT)))
 	{
 		int		shader = 0;
@@ -786,6 +816,13 @@ Ghoul2 Insert End
 			shader = cgs.media.lightningFlash;
 			scale = 1.75f;
 		}
+		else if (cent->currentState.weapon == WP_Z6_BLASTER_CANON)
+		{
+			// Hardcoded max charge time of 1 second
+			val = (cg.time - cent->currentState.constantLight) * 0.001f;
+			shader = cgs.media.cannonChargeFlash;
+			scale = 1.75f;
+		}
 
 		if ( val < 0.0f )
 		{
@@ -837,7 +874,8 @@ Ghoul2 Insert End
 	}
 
 	// add the flash
-	if ((weaponNum == WP_DEMP2 || weaponNum == WP_CLONE_PISTOL1 || weaponNum == WP_WOOKIE_BOWCASTER || weaponNum == WP_DC15_EXT)
+	if ((weaponNum == WP_DEMP2 || weaponNum == WP_CLONE_PISTOL1 || weaponNum == WP_WOOKIE_BOWCASTER 
+		|| weaponNum == WP_DC15_EXT || weaponNum == WP_Z6_BLASTER_CANON)
 		&& ( nonPredictedCent->currentState.eFlags & EF_FIRING ) )
 	{
 		// continuous flash
@@ -1944,6 +1982,7 @@ void CG_FireWeapon( centity_t *cent, qboolean altFire ) {
 			(ent->weapon == WP_REPEATER && altFire) ||
 			ent->weapon == WP_FLECHETTE ||
 			(ent->weapon == WP_DC15_EXT && altFire) ||
+			(ent->weapon == WP_Z6_BLASTER_CANON && altFire) ||
 			(ent->weapon == WP_CONCUSSION && !altFire))
 		{
 			if (ent->weapon == WP_CONCUSSION)

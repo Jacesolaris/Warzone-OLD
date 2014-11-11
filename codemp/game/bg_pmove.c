@@ -6699,6 +6699,7 @@ static qboolean PM_DoChargedWeapons( qboolean vehicleRocketLock, bgEntity_t *veh
 				}
 				break;
 
+			case WP_Z6_BLASTER_CANON:
 			case WP_DC15_EXT:
 			case WP_WOOKIE_BOWCASTER:
 			case WP_CLONE_PISTOL1:

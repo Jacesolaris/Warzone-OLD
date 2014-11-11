@@ -3347,13 +3347,14 @@ static void WP_FireBlobGrenade(gentity_t *ent)
 	float	vel = CONC_VELOCITY;
 	gentity_t *missile;
 	int		ChargeGrenadeBlobs = ent->s.weapon == WP_DC15_EXT;
+	int		GrenadeBlobs = ent->s.weapon == WP_Z6_BLASTER_CANON;
 	int		recoil = -150;
 
 
 	VectorCopy(muzzle, start);
 	WP_TraceSetStart(ent, start, vec3_origin, vec3_origin);
 
-	if (ent->s.weapon == WP_DC15_EXT)
+	if (ent->s.weapon == WP_DC15_EXT || ent->s.weapon == WP_Z6_BLASTER_CANON)
 	{// Since we want alt fx on client, we need to send this as alt fire.
 		missile = CreateMissile(start, forward, vel, 10000, ent, qtrue);
 	}
@@ -3401,10 +3402,36 @@ static void WP_FireBlobGrenade(gentity_t *ent)
 		//radius
 		missile->mass = 5;
 	}
+	else if (GrenadeBlobs)
+	{
+		int time = (level.time - ent->client->ps.weaponChargeTime);
+		float ratio;
+
+		if (time > GRENADE_MAX_TIME)
+		{
+			time = GRENADE_MAX_TIME;
+		}
+		else if (time <= 150)
+		{
+			time = 150;
+		}
+
+		ratio = (float)time / (float)GRENADE_MAX_TIME;
+		missile->splashDamage = 20.0f * ratio;
+		missile->damage = missile->splashDamage * 1.25f; //bonus for direct hit
+		missile->s.userFloat2 = time / 2000.0f + 0.75f;
+		//Close enough.
+		missile->splashRadius = (GRENADE_MAX_TIME / 2000.0f + 0.75f) * 50.0f;
+		missile->s.pos.trType = TR_GRAVITY;
+		recoil *= 2;
+		missile->methodOfDeath = missile->splashMethodOfDeath = MOD_CONC;
+		//radius
+		missile->mass = 5;
+	}
 	else
 	{
 		//low splash damage for blobs
-		missile->splashDamage = 1;
+		missile->splashDamage = 30;
 		missile->splashRadius = 150;
 		missile->damage = damage;
 	}
@@ -4794,8 +4821,13 @@ void FireWeapon( gentity_t *ent, qboolean altFire ) {
 			break;
 
 		case WP_Z6_BLASTER_CANON:
-			WP_FireRepeater(ent, altFire);
+			if (altFire)
+				WP_FireBlobGrenade(ent);
+			else
+			WP_FireBlaster(ent, altFire, BLASTER_VELOCITY, BLASTER_DAMAGE, BLASTER_SPREAD, ent->s.weapon);
 			break;
+			/*WP_FireRepeater(ent, altFire);
+			break;*/
 
 		case WP_WOOKIE_BOWCASTER:
 			if (altFire)
