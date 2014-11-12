@@ -95,7 +95,7 @@ XCVAR_DEF( g_maxForceRank,				"7",			NULL,				CVAR_SERVERINFO|CVAR_ARCHIVE|CVAR_
 XCVAR_DEF( g_maxGameClients,			"0",			NULL,				CVAR_SERVERINFO|CVAR_LATCH|CVAR_ARCHIVE,		qfalse )
 XCVAR_DEF( g_maxHolocronCarry,			"3",			NULL,				CVAR_LATCH,										qfalse )
 XCVAR_DEF( g_motd,						"",				NULL,				CVAR_NONE,										qfalse )
-XCVAR_DEF( g_multithread,				"1",			NULL,				CVAR_ARCHIVE,									qfalse )
+XCVAR_DEF( g_multithread,				"0",			NULL,				CVAR_ARCHIVE,									qfalse )
 XCVAR_DEF( g_needpass,					"0",			NULL,				CVAR_SERVERINFO|CVAR_ROM,						qfalse )
 XCVAR_DEF( g_noSpecMove,				"0",			NULL,				CVAR_SERVERINFO,								qtrue )
 XCVAR_DEF( g_npcspskill,				"0",			NULL,				CVAR_ARCHIVE|CVAR_INTERNAL,						qfalse )
