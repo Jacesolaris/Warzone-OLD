@@ -14,7 +14,6 @@
 #define STYLE_MAX 7 // Max SP Anim Styles. MP used to use just 1.. lol. - DarkTide.
 
 #define GRENADE_MAX_CHARGE_TIME 5000
-#define GRENADE_MAX_TIME 5000
 
 //these two defs are shared now because we do clientside ent parsing
 #define	MAX_SPAWN_VARS			64

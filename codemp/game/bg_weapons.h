@@ -55,8 +55,8 @@ typedef enum {
 	WP_WOOKIES_PISTOL,
 	WP_CLONE_BLASTER,
 	WP_DC15_EXT,
-	//WP_E60_ROCKET_LAUNCHER,
-	//WP_CW_ROCKET_LAUNCHER,
+	WP_E60_ROCKET_LAUNCHER,
+	WP_CW_ROCKET_LAUNCHER,
 	WP_TESTGUN,
 
 	WP_BOWCASTER,
@@ -122,7 +122,7 @@ typedef enum //# ammo_e
 
 typedef struct weaponData_s
 {
-//	char	classname[32];		// Spawning name
+	char	classname[32];		// Spawning name
 
 	int		ammoIndex;			// Index to proper ammo slot
 	int		ammoLow;			// Count when ammo is low

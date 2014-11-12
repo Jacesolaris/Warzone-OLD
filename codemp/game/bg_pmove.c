@@ -6469,8 +6469,8 @@ void PM_RocketLock( float lockDist, qboolean vehicleLock )
 
 		VectorCopy( pm->ps->origin, muzzlePoint );
 		VectorCopy(WP_MuzzlePoint[WP_ROCKET_LAUNCHER], muzzleOffPoint);
-		//VectorCopy(WP_MuzzlePoint[WP_E60_ROCKET_LAUNCHER], muzzleOffPoint);
-		//VectorCopy(WP_MuzzlePoint[WP_CW_ROCKET_LAUNCHER], muzzleOffPoint);
+		VectorCopy(WP_MuzzlePoint[WP_E60_ROCKET_LAUNCHER], muzzleOffPoint);
+		VectorCopy(WP_MuzzlePoint[WP_CW_ROCKET_LAUNCHER], muzzleOffPoint);
 		
 
 		VectorMA(muzzlePoint, muzzleOffPoint[0], forward, muzzlePoint);
@@ -6699,12 +6699,19 @@ static qboolean PM_DoChargedWeapons( qboolean vehicleRocketLock, bgEntity_t *veh
 				}
 				break;
 
+			case WP_DEMP2:
+				if ( pm->cmd.buttons & BUTTON_ALT_ATTACK )
+				{
+					altFire = qtrue; // override default of not being an alt-fire
+					charging = qtrue;
+				}
+				break;
+
 			case WP_Z6_BLASTER_CANON:
 			case WP_DC15_EXT:
 			case WP_WOOKIE_BOWCASTER:
 			case WP_CLONE_PISTOL1:
-			case WP_DEMP2:
-				if ( pm->cmd.buttons & BUTTON_ALT_ATTACK )
+				if (pm->cmd.buttons & BUTTON_ALT_ATTACK)
 				{
 					altFire = qtrue; // override default of not being an alt-fire
 					charging = qtrue;
@@ -7325,8 +7332,8 @@ static void PM_Weapon( void )
 
 	if (!IsSniperRifle(pm->ps->weapon) //not using disruptor
 		&& pm->ps->weapon != WP_ROCKET_LAUNCHER//not using rocket launcher
-		//&& pm->ps->weapon != WP_E60_ROCKET_LAUNCHER//not using rocket launcher
-		//&& pm->ps->weapon != WP_CW_ROCKET_LAUNCHER//not using rocket launcher
+		&& pm->ps->weapon != WP_E60_ROCKET_LAUNCHER//not using rocket launcher
+		&& pm->ps->weapon != WP_CW_ROCKET_LAUNCHER//not using rocket launcher
 		&& pm->ps->weapon != WP_THERMAL//not using thermals
 		&& !pm->ps->m_iVehicleNum )//not a vehicle or in a vehicle
 	{ //check for exceeding max charge time if not using disruptor or rocket launcher or thermals

@@ -496,44 +496,43 @@ Ghoul2 Insert Start
 			return;
 		}
 
-		//if ( !ps ) {
-		//	// add weapon ready sound
-		//	cent->pe.lightningFiring = qfalse;
-		//	if ( ( cent->currentState.eFlags & EF_FIRING ) && weapon->firingSound ) {
-		//		// lightning gun and gauntlet make a different sound when fire is held down
-		//		trap->S_AddLoopingSound( cent->currentState.number, cent->lerpOrigin, vec3_origin, weapon->firingSound );
-		//		cent->pe.lightningFiring = qtrue;
-		//	} else if ( weapon->readySound ) {
-		//		trap->S_AddLoopingSound( cent->currentState.number, cent->lerpOrigin, vec3_origin, weapon->readySound );
-		//	}
-		//}
-
-		if ((cent->currentState.eFlags & EF_FIRING || ((ps) && ps->weaponstate == WEAPON_FIRING))) {
-			//If we have a clone rifle, only play this sound if it is a minigun
-			if (weapon->isBlasterCanon)
-			{
-				trap->S_AddLoopingSound(cent->currentState.number, cent->lerpOrigin, vec3_origin, weapon->spinSound);
+		if ( !ps ) {
+			// add weapon ready sound
+			cent->pe.lightningFiring = qfalse;
+			if ( ( cent->currentState.eFlags & EF_FIRING ) && weapon->firingSound ) {
+				// lightning gun and gauntlet make a different sound when fire is held down
+				trap->S_AddLoopingSound( cent->currentState.number, cent->lerpOrigin, vec3_origin, weapon->firingSound );
+				cent->pe.lightningFiring = qtrue;
+			} else if ( weapon->readySound ) {
+				trap->S_AddLoopingSound( cent->currentState.number, cent->lerpOrigin, vec3_origin, weapon->readySound );
+			}
+			else if ((cent->currentState.eFlags & EF_FIRING || ((ps) && ps->weaponstate == WEAPON_FIRING))) {
+				//If we have a clone rifle, only play this sound if it is a minigun
+				if (weapon->isBlasterCanon)
+				{
+					trap->S_AddLoopingSound(cent->currentState.number, cent->lerpOrigin, vec3_origin, weapon->spinSound);
+				}
+				else
+				{
+					trap->S_AddLoopingSound(cent->currentState.number, cent->lerpOrigin, vec3_origin, weapon->firingSound);
+				}
+				cent->pe.lightningFiring = qtrue;
 			}
 			else
 			{
-				trap->S_AddLoopingSound(cent->currentState.number, cent->lerpOrigin, vec3_origin, weapon->firingSound);
-			}
-			cent->pe.lightningFiring = qtrue;
-		}
-		else
-		{
-			if (weapon->isBlasterCanon)
-			{
-				if (cent->pe.lightningFiring)
+				if (weapon->isBlasterCanon)
 				{
-					trap->S_StartSound(cent->lerpOrigin, cent->currentState.number, CHAN_WEAPON, weapon->spindownSound);
+					if (cent->pe.lightningFiring)
+					{
+						trap->S_StartSound(cent->lerpOrigin, cent->currentState.number, CHAN_WEAPON, weapon->spindownSound);
+					}
 				}
-			}
-			else if (weapon->readySound > 0) { // Getting initalized to -1 sometimes... readySound isn't even referenced anywere else in code
+				else if (weapon->readySound > 0) { // Getting initalized to -1 sometimes... readySound isn't even referenced anywere else in code
 
-				trap->S_AddLoopingSound(cent->currentState.number, cent->lerpOrigin, vec3_origin, weapon->readySound);
+					trap->S_AddLoopingSound(cent->currentState.number, cent->lerpOrigin, vec3_origin, weapon->readySound);
+				}
+				cent->pe.lightningFiring = qfalse;
 			}
-			cent->pe.lightningFiring = qfalse;
 		}
 
 		CG_PositionEntityOnTag( &gun, parent, parent->hModel, "tag_weapon");
@@ -1875,7 +1874,7 @@ void CG_OutOfAmmoChange( int oldWeapon )
 				( i == WP_TRIP_MINE || i == WP_DET_PACK || i == WP_THERMAL || i == WP_ROCKET_LAUNCHER) ) // safe weapon switch
 			*/
 			//rww - Don't we want to make sure i != one of these if autoswitch is 1 (safe)?
-			if (cg_autoSwitch.integer != 1 || (i != WP_TRIP_MINE && i != WP_DET_PACK && i != WP_THERMAL && i != WP_ROCKET_LAUNCHER /*&& i != WP_E60_ROCKET_LAUNCHER && i != WP_CW_ROCKET_LAUNCHER*/))
+			if (cg_autoSwitch.integer != 1 || (i != WP_TRIP_MINE && i != WP_DET_PACK && i != WP_THERMAL && i != WP_ROCKET_LAUNCHER && i != WP_E60_ROCKET_LAUNCHER && i != WP_CW_ROCKET_LAUNCHER))
 			{
 				if (i != oldWeapon)
 				{ //don't even do anything if we're just selecting the weapon we already have/had
@@ -1977,13 +1976,13 @@ void CG_FireWeapon( centity_t *cent, qboolean altFire ) {
 			CGCam_Shake( val, 250 );
 		}
 		else if (ent->weapon == WP_ROCKET_LAUNCHER ||
-			/*(ent->weapon == WP_E60_ROCKET_LAUNCHER ||
-			(ent->weapon == WP_CW_ROCKET_LAUNCHER ||*/
+			(ent->weapon == WP_E60_ROCKET_LAUNCHER ||
+			(ent->weapon == WP_CW_ROCKET_LAUNCHER ||
 			(ent->weapon == WP_REPEATER && altFire) ||
 			ent->weapon == WP_FLECHETTE ||
 			(ent->weapon == WP_DC15_EXT && altFire) ||
 			(ent->weapon == WP_Z6_BLASTER_CANON && altFire) ||
-			(ent->weapon == WP_CONCUSSION && !altFire))
+			(ent->weapon == WP_CONCUSSION && !altFire))))
 		{
 			if (ent->weapon == WP_CONCUSSION)
 			{
@@ -2018,14 +2017,14 @@ void CG_FireWeapon( centity_t *cent, qboolean altFire ) {
 			{
 				CGCam_Shake(flrand(2, 3), 350);
 			}
-			/*else if (ent->weapon == WP_E60_ROCKET_LAUNCHER)
+			else if (ent->weapon == WP_E60_ROCKET_LAUNCHER)
 			{
 				CGCam_Shake(flrand(2, 3), 350);
 			}
 			else if (ent->weapon == WP_CW_ROCKET_LAUNCHER)
 			{
 				CGCam_Shake(flrand(2, 3), 350);
-			}*/
+			}
 			else if (ent->weapon == WP_FLECHETTE)
 			{
 				if (altFire)
@@ -2208,12 +2207,12 @@ void CG_MissileHitWall(int weapon, int clientNum, vec3_t origin, vec3_t dir, imp
 		}
 		break;
 	
-	//case WP_E60_ROCKET_LAUNCHER:
-	//	FX_RocketHitWall(origin, dir, weapon, altFire);//needs its own function fx
-	//	break;
-	//case WP_CW_ROCKET_LAUNCHER:
-	//	FX_RocketHitWall(origin, dir, weapon, altFire);//needs its own function fx
-	//	break;
+	case WP_E60_ROCKET_LAUNCHER:
+		FX_RocketHitWall(origin, dir, weapon, altFire);//needs its own function fx
+		break;
+	case WP_CW_ROCKET_LAUNCHER:
+		FX_RocketHitWall(origin, dir, weapon, altFire);//needs its own function fx
+		break;
 
 	case WP_ROCKET_LAUNCHER:
 		FX_RocketHitWall(origin, dir, weapon, altFire);
@@ -2284,13 +2283,13 @@ void CG_MissileHitPlayer(int weapon, vec3_t origin, vec3_t dir, int entityNum, q
 		}
 		break;
 
-	//case WP_E60_ROCKET_LAUNCHER:
-	//	FX_RocketHitPlayer(origin, dir, humanoid, weapon, altFire);//needs its own function fx
-	//	break;
+	case WP_E60_ROCKET_LAUNCHER:
+		FX_RocketHitPlayer(origin, dir, humanoid, weapon, altFire);//needs its own function fx
+		break;
 
-	//case WP_CW_ROCKET_LAUNCHER:
-	//	FX_RocketHitPlayer(origin, dir, humanoid, weapon, altFire);//needs its own function fx
-	//	break;
+	case WP_CW_ROCKET_LAUNCHER:
+		FX_RocketHitPlayer(origin, dir, humanoid, weapon, altFire);//needs its own function fx
+		break;
 
 	case WP_ROCKET_LAUNCHER:
 		FX_RocketHitPlayer( origin, dir, humanoid, weapon, altFire );

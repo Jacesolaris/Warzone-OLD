@@ -596,8 +596,8 @@ static void CG_ItemPickup( int itemNum ) {
 				bg_itemlist[itemNum].giTag != WP_DET_PACK &&
 				bg_itemlist[itemNum].giTag != WP_THERMAL &&
 				bg_itemlist[itemNum].giTag != WP_ROCKET_LAUNCHER &&
-				//bg_itemlist[itemNum].giTag != WP_E60_ROCKET_LAUNCHER &&
-				//bg_itemlist[itemNum].giTag != WP_CW_ROCKET_LAUNCHER &&
+				bg_itemlist[itemNum].giTag != WP_E60_ROCKET_LAUNCHER &&
+				bg_itemlist[itemNum].giTag != WP_CW_ROCKET_LAUNCHER &&
 				bg_itemlist[itemNum].giTag > cg.snap->ps.weapon &&
 				cg.snap->ps.weapon != WP_SABER)
 			{
@@ -1123,8 +1123,8 @@ void CG_G2MarkEvent(entityState_t *es)
 			pOwner->lerpAngles[YAW], pOwner->ghoul2,
 			pOwner->modelScale, Q_irand(10000, 20000));
 		break;
-	//case WP_CW_ROCKET_LAUNCHER:
-	//case WP_E60_ROCKET_LAUNCHER:
+	case WP_CW_ROCKET_LAUNCHER:
+	case WP_E60_ROCKET_LAUNCHER:
 	case WP_ROCKET_LAUNCHER:
 	case WP_THERMAL:
 		if ( !size )

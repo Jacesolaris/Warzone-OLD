@@ -3354,7 +3354,11 @@ static void WP_FireBlobGrenade(gentity_t *ent)
 	VectorCopy(muzzle, start);
 	WP_TraceSetStart(ent, start, vec3_origin, vec3_origin);
 
-	if (ent->s.weapon == WP_DC15_EXT || ent->s.weapon == WP_Z6_BLASTER_CANON)
+	if (ent->s.weapon == WP_DC15_EXT)
+	{// Since we want alt fx on client, we need to send this as alt fire.
+		missile = CreateMissile(start, forward, vel, 10000, ent, qtrue);
+	}
+	else if (ent->s.weapon == WP_Z6_BLASTER_CANON)
 	{// Since we want alt fx on client, we need to send this as alt fire.
 		missile = CreateMissile(start, forward, vel, 10000, ent, qtrue);
 	}
@@ -3407,21 +3411,21 @@ static void WP_FireBlobGrenade(gentity_t *ent)
 		int time = (level.time - ent->client->ps.weaponChargeTime);
 		float ratio;
 
-		if (time > GRENADE_MAX_TIME)
+		if (time > GRENADE_MAX_CHARGE_TIME)
 		{
-			time = GRENADE_MAX_TIME;
+			time = GRENADE_MAX_CHARGE_TIME;
 		}
 		else if (time <= 150)
 		{
 			time = 150;
 		}
 
-		ratio = (float)time / (float)GRENADE_MAX_TIME;
+		ratio = (float)time / (float)GRENADE_MAX_CHARGE_TIME;
 		missile->splashDamage = 20.0f * ratio;
 		missile->damage = missile->splashDamage * 1.25f; //bonus for direct hit
 		missile->s.userFloat2 = time / 2000.0f + 0.75f;
 		//Close enough.
-		missile->splashRadius = (GRENADE_MAX_TIME / 2000.0f + 0.75f) * 50.0f;
+		missile->splashRadius = (GRENADE_MAX_CHARGE_TIME / 2000.0f + 0.75f) * 50.0f;
 		missile->s.pos.trType = TR_GRAVITY;
 		recoil *= 2;
 		missile->methodOfDeath = missile->splashMethodOfDeath = MOD_CONC;
@@ -3923,8 +3927,8 @@ gentity_t *WP_FireVehicleWeapon( gentity_t *ent, vec3_t start, vec3_t dir, vehWe
 		if ( vehWeapon->fWidth || vehWeapon->fHeight )
 		{//we assume it's a rocket-like thing
 			missile->s.weapon = WP_ROCKET_LAUNCHER;//does this really matter?
-			//missile->s.weapon = WP_E60_ROCKET_LAUNCHER;
-			//missile->s.weapon = WP_CW_ROCKET_LAUNCHER;
+			missile->s.weapon = WP_E60_ROCKET_LAUNCHER;
+			missile->s.weapon = WP_CW_ROCKET_LAUNCHER;
 			missile->methodOfDeath = MOD_VEHICLE;//MOD_ROCKET;
 			missile->splashMethodOfDeath = MOD_VEHICLE;//MOD_ROCKET;// ?SPLASH;
 
@@ -4863,13 +4867,13 @@ void FireWeapon( gentity_t *ent, qboolean altFire ) {
 			WP_FireFlechette( ent, altFire );
 			break;
 
-		/*case WP_E60_ROCKET_LAUNCHER:
+		case WP_E60_ROCKET_LAUNCHER:
 			WP_FireRocket(ent, altFire);
 			break;
 
 		case WP_CW_ROCKET_LAUNCHER:
 			WP_FireRocket(ent, altFire);
-			break;*/
+			break;
 
 		case WP_ROCKET_LAUNCHER:
 			WP_FireRocket( ent, altFire );

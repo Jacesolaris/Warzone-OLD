@@ -84,9 +84,9 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponNum == WP_REPEATER ||
 		weaponNum == WP_ROCKET_LAUNCHER ||
 		weaponNum == WP_CONCUSSION 	||	
-		weaponNum == WP_Z6_BLASTER_CANON 
-		//weaponNum == WP_E60_ROCKET_LAUNCHER ||
-		/*weaponNum == WP_CW_ROCKET_LAUNCHER*/)
+		weaponNum == WP_Z6_BLASTER_CANON ||
+		weaponNum == WP_E60_ROCKET_LAUNCHER ||
+		weaponNum == WP_CW_ROCKET_LAUNCHER)
 
 	{
 		Q_strncpyz( path, item->view_model, sizeof(path) );
@@ -912,81 +912,81 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altWallImpactEffectEnhancedFX = trap->FX_RegisterEffect("dc-15_ext/explosion");//secder efx
 		break;
 
-	//case WP_CW_ROCKET_LAUNCHER:
-	//	weaponInfo->item->classname = "CW Rucket Launcher";
-	//	weaponInfo->selectSound = trap->S_RegisterSound("sound/weapons/rocket/select.wav");
-	//	weaponInfo->flashSound[0] = trap->S_RegisterSound("sound/weapons/rocket/fire.wav");
-	//	weaponInfo->firingSound = NULL_SOUND;
-	//	weaponInfo->chargeSound = NULL_SOUND;
-	//	weaponInfo->muzzleEffect = trap->FX_RegisterEffect("rocket/muzzle_flash.efx");
-	//	weaponInfo->missileModel = trap->R_RegisterModel("models/weapons3/cw_launcher/projectile.md3");
-	//	weaponInfo->missileSound = trap->S_RegisterSound("sound/weapons/rocket/missleloop.wav");
-	//	weaponInfo->missileDlight = 125;
-	//	VectorSet(weaponInfo->missileDlightColor, 1.0, 1.0, 0.5);
-	//	weaponInfo->missileHitSound = NULL_SOUND;
-	//	weaponInfo->missileTrailFunc = FX_RocketProjectileThink;
-	//	weaponInfo->altFlashSound[0] = trap->S_RegisterSound("sound/weapons/rocket/alt_fire.wav");
-	//	weaponInfo->altFiringSound = NULL_SOUND;
-	//	weaponInfo->altChargeSound = NULL_SOUND;
-	//	weaponInfo->altMuzzleEffect = trap->FX_RegisterEffect("pulserocket/muzzle_flash.efx");
-	//	weaponInfo->altMissileModel = trap->R_RegisterModel("models/weapons3/cw_launcher/projectile.md3");
-	//	weaponInfo->altMissileSound = trap->S_RegisterSound("sound/weapons/rocket/missleloop.wav");
-	//	weaponInfo->altMissileDlight = 125;
-	//	VectorSet(weaponInfo->altMissileDlightColor, 1.0, 1.0, 0.5);
-	//	weaponInfo->altMissileHitSound = NULL_SOUND;
-	//	weaponInfo->altMissileTrailFunc = FX_PulseRocketAltProjectileThink;
+	case WP_CW_ROCKET_LAUNCHER:
+		weaponInfo->item->classname = "CW Rucket Launcher";
+		weaponInfo->selectSound = trap->S_RegisterSound("sound/weapons/rocket/select.wav");
+		weaponInfo->flashSound[0] = trap->S_RegisterSound("sound/weapons/rocket/fire.wav");
+		weaponInfo->firingSound = NULL_SOUND;
+		weaponInfo->chargeSound = NULL_SOUND;
+		weaponInfo->muzzleEffect = trap->FX_RegisterEffect("rocket/muzzle_flash.efx");
+		weaponInfo->missileModel = trap->R_RegisterModel("models/weapons3/cw_launcher/projectile.md3");
+		weaponInfo->missileSound = trap->S_RegisterSound("sound/weapons/rocket/missleloop.wav");
+		weaponInfo->missileDlight = 125;
+		VectorSet(weaponInfo->missileDlightColor, 1.0, 1.0, 0.5);
+		weaponInfo->missileHitSound = NULL_SOUND;
+		weaponInfo->missileTrailFunc = FX_RocketProjectileThink;
+		weaponInfo->altFlashSound[0] = trap->S_RegisterSound("sound/weapons/rocket/alt_fire.wav");
+		weaponInfo->altFiringSound = NULL_SOUND;
+		weaponInfo->altChargeSound = NULL_SOUND;
+		weaponInfo->altMuzzleEffect = trap->FX_RegisterEffect("pulserocket/muzzle_flash.efx");
+		weaponInfo->altMissileModel = trap->R_RegisterModel("models/weapons3/cw_launcher/projectile.md3");
+		weaponInfo->altMissileSound = trap->S_RegisterSound("sound/weapons/rocket/missleloop.wav");
+		weaponInfo->altMissileDlight = 125;
+		VectorSet(weaponInfo->altMissileDlightColor, 1.0, 1.0, 0.5);
+		weaponInfo->altMissileHitSound = NULL_SOUND;
+		weaponInfo->altMissileTrailFunc = FX_PulseRocketAltProjectileThink;
 
-	//	weaponInfo->missileRenderfx = trap->FX_RegisterEffect("rocket/rocket_shot");
-	//	weaponInfo->altMissileRenderfx = trap->FX_RegisterEffect("rocket/rocket_alt_shot");
+		weaponInfo->missileRenderfx = trap->FX_RegisterEffect("rocket/rocket_shot");
+		weaponInfo->altMissileRenderfx = trap->FX_RegisterEffect("rocket/rocket_alt_shot");
 
-	//	weaponInfo->missileWallImpactfx = trap->FX_RegisterEffect("ships/mine_impact");
-	//	weaponInfo->altMissileWallImpactfx = trap->FX_RegisterEffect("pulserocket/explosion");
+		weaponInfo->missileWallImpactfx = trap->FX_RegisterEffect("ships/mine_impact");
+		weaponInfo->altMissileWallImpactfx = trap->FX_RegisterEffect("pulserocket/explosion");
 
-	//	weaponInfo->fleshImpactEffect = trap->FX_RegisterEffect("rocket/flesh_Impact");
-	//	weaponInfo->altFleshImpactEffect = trap->FX_RegisterEffect("rocket/flesh_Impact"); // not sure about this one
-	//	weaponInfo->altFleshImpactEnhancedEffect = trap->FX_RegisterEffect("rocket/flesh_Impact_enhanced2");
+		weaponInfo->fleshImpactEffect = trap->FX_RegisterEffect("rocket/flesh_Impact");
+		weaponInfo->altFleshImpactEffect = trap->FX_RegisterEffect("rocket/flesh_Impact"); // not sure about this one
+		weaponInfo->altFleshImpactEnhancedEffect = trap->FX_RegisterEffect("rocket/flesh_Impact_enhanced2");
 
-	//	weaponInfo->wallImpactEffectEnhancedFX = trap->FX_RegisterEffect("rocket/wall_Impact_enhanced2");
-	//	weaponInfo->altWallImpactEffectEnhancedFX = trap->FX_RegisterEffect("pulserocket/explosion_enhanced2");
-	//	break;
+		weaponInfo->wallImpactEffectEnhancedFX = trap->FX_RegisterEffect("rocket/wall_Impact_enhanced2");
+		weaponInfo->altWallImpactEffectEnhancedFX = trap->FX_RegisterEffect("pulserocket/explosion_enhanced2");
+		break;
 
-	//case WP_E60_ROCKET_LAUNCHER:
-	//	weaponInfo->item->classname = "E-60 Rucket Launcher";
-	//	weaponInfo->selectSound = trap->S_RegisterSound("sound/weapons/rocket/select.wav");
-	//	weaponInfo->flashSound[0] = trap->S_RegisterSound("sound/weapons/rocket/fire.wav");
-	//	weaponInfo->firingSound = NULL_SOUND;
-	//	weaponInfo->chargeSound = NULL_SOUND;
-	//	weaponInfo->muzzleEffect = trap->FX_RegisterEffect("rocket/muzzle_flash.efx");
-	//	weaponInfo->missileModel = trap->R_RegisterModel("models/weapons3/cw_launcher/projectile.md3");
-	//	weaponInfo->missileSound = trap->S_RegisterSound("sound/weapons/rocket/missleloop.wav");
-	//	weaponInfo->missileDlight = 125;
-	//	VectorSet(weaponInfo->missileDlightColor, 1.0, 1.0, 0.5);
-	//	weaponInfo->missileHitSound = NULL_SOUND;
-	//	weaponInfo->missileTrailFunc = FX_RocketProjectileThink;
-	//	weaponInfo->altFlashSound[0] = trap->S_RegisterSound("sound/weapons/rocket/alt_fire.wav");
-	//	weaponInfo->altFiringSound = NULL_SOUND;
-	//	weaponInfo->altChargeSound = NULL_SOUND;
-	//	weaponInfo->altMuzzleEffect = trap->FX_RegisterEffect("pulserocket/muzzle_flash.efx");
-	//	weaponInfo->altMissileModel = trap->R_RegisterModel("models/weapons3/cw_launcher/projectile.md3");
-	//	weaponInfo->altMissileSound = trap->S_RegisterSound("sound/weapons/rocket/missleloop.wav");
-	//	weaponInfo->altMissileDlight = 125;
-	//	VectorSet(weaponInfo->altMissileDlightColor, 1.0, 1.0, 0.5);
-	//	weaponInfo->altMissileHitSound = NULL_SOUND;
-	//	weaponInfo->altMissileTrailFunc = FX_PulseRocketAltProjectileThink;
+	case WP_E60_ROCKET_LAUNCHER:
+		weaponInfo->item->classname = "E-60 Rucket Launcher";
+		weaponInfo->selectSound = trap->S_RegisterSound("sound/weapons/rocket/select.wav");
+		weaponInfo->flashSound[0] = trap->S_RegisterSound("sound/weapons/rocket/fire.wav");
+		weaponInfo->firingSound = NULL_SOUND;
+		weaponInfo->chargeSound = NULL_SOUND;
+		weaponInfo->muzzleEffect = trap->FX_RegisterEffect("rocket/muzzle_flash.efx");
+		weaponInfo->missileModel = trap->R_RegisterModel("models/weapons3/cw_launcher/projectile.md3");
+		weaponInfo->missileSound = trap->S_RegisterSound("sound/weapons/rocket/missleloop.wav");
+		weaponInfo->missileDlight = 125;
+		VectorSet(weaponInfo->missileDlightColor, 1.0, 1.0, 0.5);
+		weaponInfo->missileHitSound = NULL_SOUND;
+		weaponInfo->missileTrailFunc = FX_RocketProjectileThink;
+		weaponInfo->altFlashSound[0] = trap->S_RegisterSound("sound/weapons/rocket/alt_fire.wav");
+		weaponInfo->altFiringSound = NULL_SOUND;
+		weaponInfo->altChargeSound = NULL_SOUND;
+		weaponInfo->altMuzzleEffect = trap->FX_RegisterEffect("pulserocket/muzzle_flash.efx");
+		weaponInfo->altMissileModel = trap->R_RegisterModel("models/weapons3/cw_launcher/projectile.md3");
+		weaponInfo->altMissileSound = trap->S_RegisterSound("sound/weapons/rocket/missleloop.wav");
+		weaponInfo->altMissileDlight = 125;
+		VectorSet(weaponInfo->altMissileDlightColor, 1.0, 1.0, 0.5);
+		weaponInfo->altMissileHitSound = NULL_SOUND;
+		weaponInfo->altMissileTrailFunc = FX_PulseRocketAltProjectileThink;
 
-	//	weaponInfo->missileRenderfx = trap->FX_RegisterEffect("rocket/rocket_shot");
-	//	weaponInfo->altMissileRenderfx = trap->FX_RegisterEffect("rocket/rocket_alt_shot");
+		weaponInfo->missileRenderfx = trap->FX_RegisterEffect("rocket/rocket_shot");
+		weaponInfo->altMissileRenderfx = trap->FX_RegisterEffect("rocket/rocket_alt_shot");
 
-	//	weaponInfo->missileWallImpactfx = trap->FX_RegisterEffect("ships/mine_impact");
-	//	weaponInfo->altMissileWallImpactfx = trap->FX_RegisterEffect("pulserocket/explosion");
+		weaponInfo->missileWallImpactfx = trap->FX_RegisterEffect("ships/mine_impact");
+		weaponInfo->altMissileWallImpactfx = trap->FX_RegisterEffect("pulserocket/explosion");
 
-	//	weaponInfo->fleshImpactEffect = trap->FX_RegisterEffect("rocket/flesh_Impact");
-	//	weaponInfo->altFleshImpactEffect = trap->FX_RegisterEffect("rocket/flesh_Impact"); // not sure about this one
-	//	weaponInfo->altFleshImpactEnhancedEffect = trap->FX_RegisterEffect("rocket/flesh_Impact_enhanced2");
+		weaponInfo->fleshImpactEffect = trap->FX_RegisterEffect("rocket/flesh_Impact");
+		weaponInfo->altFleshImpactEffect = trap->FX_RegisterEffect("rocket/flesh_Impact"); // not sure about this one
+		weaponInfo->altFleshImpactEnhancedEffect = trap->FX_RegisterEffect("rocket/flesh_Impact_enhanced2");
 
-	//	weaponInfo->wallImpactEffectEnhancedFX = trap->FX_RegisterEffect("rocket/wall_Impact_enhanced2");
-	//	weaponInfo->altWallImpactEffectEnhancedFX = trap->FX_RegisterEffect("pulserocket/explosion_enhanced2");
-	//	break;
+		weaponInfo->wallImpactEffectEnhancedFX = trap->FX_RegisterEffect("rocket/wall_Impact_enhanced2");
+		weaponInfo->altWallImpactEffectEnhancedFX = trap->FX_RegisterEffect("pulserocket/explosion_enhanced2");
+		break;
 
 		case WP_TESTGUN:
 			weaponInfo->item->classname = "TEST GUN";
