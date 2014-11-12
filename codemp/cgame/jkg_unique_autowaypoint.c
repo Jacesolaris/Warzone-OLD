@@ -6407,7 +6407,7 @@ omp_set_nested(0);
 
 			for (j = 0; j < total_waypoints; j++)
 			{
-				if (VectorDistance(area_org, nodes[j].origin) < use_scatter*area_distance_multiplier)
+				if (VectorDistance(area_org, nodes[j].origin) < use_scatter)//*area_distance_multiplier)
 				{
 					bad = qtrue;
 					break;

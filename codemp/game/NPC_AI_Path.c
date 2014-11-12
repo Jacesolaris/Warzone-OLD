@@ -980,6 +980,7 @@ int WaitingForNow(vec3_t goalpos)
 
 qboolean NPC_MoverCrushCheck ( gentity_t *NPC )
 {
+#if 0
 	int above = CheckForFuncAbove(NPC->r.currentOrigin, NPC->s.number);
 
 	if (above > 0)
@@ -1004,6 +1005,7 @@ qboolean NPC_MoverCrushCheck ( gentity_t *NPC )
 
 		return qtrue;
 	}
+#endif //0
 
 	return qfalse;
 }
