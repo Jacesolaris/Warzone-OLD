@@ -79,9 +79,11 @@ weaponData_t weaponData[WP_NUM_WEAPONS] = {
 	{ "Wookie Pistol",					AMMO_BLASTER,		15,			2,				300,		8192,		2,					250,			8192,		0,				200,				0,			1,				0,			1500	},
 	{ "DC 15s Clone Blaster",			AMMO_BLASTER,		5,			2,				325,		8192,		3,					145,			8192,		0,				0,					0,			0,				0,			0	},
 	{ "DC 15 ext",						AMMO_BLASTER,		5,			8,				200,		8192,		6,					900,			8192,		0,				250,				0,			3,				0,			2100	},
-	{ "E 60 PulsRocket Launcer",		AMMO_ROCKETS,		5,			8,				200,		8192,		6,					900,			8192,		0,				250,				0,			3,				0,			2100	},
-	{ "CW PulsRocket Launcer",			AMMO_ROCKETS,		5,			8,				200,		8192,		6,					900,			8192,		0,				250,				0,			3,				0,			2100	},
+	{ "E 60 PulsRocket Launcer",		AMMO_ROCKETS,		5,			4,				3000,		8192,		2,					5000,			8192,		0,				0,					0,			0,				0,			0	},
+	{ "CW PulsRocket Launcer",			AMMO_ROCKETS,		5,			4,				3000,		8192,		2,					5000,			8192,		0,				0,					0,			0,				0,			0	},
 	{ "TEST GUN",						AMMO_BLASTER,		5,			2,				350,		8192,		3,					500,			8192,		0,				0,					0,			0,				0,			0	},
+	//Place new Guns under here.
+
 	{ "Modified Wookie Crossbow",		AMMO_POWERCELL,		5,			5,				1000,		8192,		5,					750,			8192,		400,			0,					5,			0,				1700,		0	},
 	{ "Imperial Heavy Repeater",		AMMO_METAL_BOLTS,	5,			8,				150,		8192,		15,					800,			8192,		0,				0,					0,			0,				0,			0	},
 	{ "DEMP2",							AMMO_POWERCELL,		5,			8,				500,		8192,		6,					900,			8192,		0,				250,				0,			3,				0,			2100	},
