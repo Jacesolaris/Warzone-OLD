@@ -1210,6 +1210,7 @@ void ForceTeamHeal( gentity_t *self )
 
 		if (!ent) continue;
 		if (ent->health <= 0) continue;
+		if (!ent->client) continue;
 		if (ent->health >= ent->client->ps.stats[STAT_MAX_HEALTH]) continue;
 
 		if (ent->s.eType == ET_NPC)
