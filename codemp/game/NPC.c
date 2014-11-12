@@ -3591,7 +3591,9 @@ void NPC_Think ( gentity_t *self)//, int msec )
 			trap->ICARUS_MaintainTaskManager(self->s.number);
 		}
 
-		VectorCopy(self->r.currentOrigin, self->client->ps.origin);
+		if (self->client && self->client->ps)
+			VectorCopy(self->r.currentOrigin, self->client->ps.origin);
+
 		return;
 	}
 
