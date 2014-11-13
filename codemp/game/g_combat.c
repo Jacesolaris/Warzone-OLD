@@ -4649,7 +4649,7 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker, vec3_
 		targ->client->ps.damageCrit = qfalse;
 		return;
 	}
-	else
+	else if (targ && targ->client && damage > 0 )
 	{// Not a crit. Reset the qboolean...
 		targ->client->ps.damageCrit = qfalse;
 	}
