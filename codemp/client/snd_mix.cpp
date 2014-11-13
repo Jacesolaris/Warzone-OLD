@@ -481,6 +481,7 @@ static  mixSound_t		mixEmptySound;
 
 static cvar_t	*s_mixSame;
 static cvar_t	*s_mixSameTime;
+static cvar_t	*s_mixSameHandles;
 cvar_t			*s_effects;
 
 #define		SOUND_FULLVOLUME	256
@@ -807,69 +808,72 @@ static void S_MixChannel( mixChannel_t *ch, int speed, int count, int *output ) 
 }
 
 void S_MixChannels( mixChannel_t *ch, int channels, int speed, int count, int *output ) {
-	int queueLeft, freeLeft = channels;
-	int activeCount;
-	mixChannel_t *free = ch;
-	const channelQueue_t *q = s_channelQueue;
-	/* Go through the sound queue and add new channels */
-	for (queueLeft = s_channelQueueCount; queueLeft > 0; queueLeft--, q++) {
-		int scanCount, foundCount;
-		mixChannel_t *scanChan;
-		if (freeLeft <= 0) {
-//			Com_Printf("No more free channels.\n");
-			break;
-		}
-		foundCount = 0;
-		scanChan = ch;
-		for (scanCount = channels;scanCount > 0;scanCount--, scanChan++ ) {
+        int queueLeft, freeLeft = channels;
+        int activeCount;
+        mixChannel_t *free = ch;
+        const channelQueue_t *q = s_channelQueue;
+        /* Go through the sound queue and add new channels */
+        for (queueLeft = s_channelQueueCount; queueLeft > 0; queueLeft--, q++) {
+                int scanCount, foundCount, foundCountHandles;
+                mixChannel_t *scanChan;
+                if (freeLeft <= 0) {
+//                      Com_Printf("No more free channels.\n");
+                        break;
+                }
+                foundCount = 0;
+        foundCountHandles = 0;
+                scanChan = ch;
+                for (scanCount = channels;scanCount > 0;scanCount--, scanChan++ ) {
             /* Large group of tests to see if this one should be counted as a same sound */
-			/* Same sound effect ? */
-			if ( q->handle != scanChan->handle )
-				continue;
-			/* Reasonably same start ? */
-			if ( scanChan->index > (MIX_SPEED * s_mixSameTime->value))
-				continue;
-			if ( q->hasOrigin ) {
-				vec3_t dist;
-				/* Same or close origin */
-				if (!scanChan->hasOrigin)
-					continue;
-				VectorSubtract( q->origin, scanChan->origin, dist );
-				if (VectorLengthSquared( dist ) > 50*50)
-					continue;
-			} else {
-				/* Coming from the same entity */
-				if (q->entNum != scanChan->entNum )
-					continue;
-			}
-			foundCount++;
-			if (foundCount > s_mixSame->integer)
-				goto skip_alloc;
-		}
-		for (;freeLeft > 0;free++, freeLeft--) {
-			if (!free->handle) {
-				free->handle = q->handle;
-				free->entChan = q->entChan;
-				free->entNum = q->entNum;
-				free->index = 0;
-				free->volume = q->volume;
-				VectorCopy( q->origin, free->origin );
-				free->hasOrigin = q->hasOrigin;
-				free->volumeChan = free->volumeChan;
-				freeLeft--;
-				free++;
-				break;
-			}
-		}
+                        /* Same sound effect ? */
+                        if ( q->handle != scanChan->handle )
+                                continue;
+                        foundCountHandles++;
+                        if (foundCountHandles > s_mixSameHandles->integer)
+                                goto skip_alloc;
+                        /* Reasonably same start ? */
+                        if ( scanChan->index > (MIX_SPEED * s_mixSameTime->value))
+                                continue;
+                        if ( q->hasOrigin ) {
+                                vec3_t dist;
+                                /* Same or close origin */
+                                if (!scanChan->hasOrigin)
+                                        continue;
+                                VectorSubtract( q->origin, scanChan->origin, dist );
+                                if (VectorLengthSquared( dist ) > 50*50)
+                                        continue;
+                        } else {
+                                /* Coming from the same entity */
+                                if (q->entNum != scanChan->entNum )
+                                        continue;
+                        }
+                        foundCount++;
+                        if (foundCount > s_mixSame->integer)
+                                goto skip_alloc;
+                }
+                for (;freeLeft > 0;free++, freeLeft--) {
+                        if (!free->handle) {
+                                free->handle = q->handle;
+                                free->entChan = q->entChan;
+                                free->entNum = q->entNum;
+                                free->index = 0;
+                                free->volume = q->volume;
+                                VectorCopy( q->origin, free->origin );
+                                free->hasOrigin = q->hasOrigin;
+                                freeLeft--;
+                                free++;
+                                break;
+                        }
+                }
 skip_alloc:;
-	}
-	activeCount = 0;
-	for (;channels>0;channels--, ch++) {
-		if (ch->handle <= 0 )
-			continue;
-		activeCount++;
-		S_MixChannel( ch, speed, count, output );
-	}
+        }
+        activeCount = 0;
+        for (;channels>0;channels--, ch++) {
+                if (ch->handle <= 0 )
+                        continue;
+                activeCount++;
+                S_MixChannel( ch, speed, count, output );
+        }
 }
 
 #define MAX_DOPPLER_SCALE 50			//arbitrary
@@ -1147,6 +1151,7 @@ void S_MixInit( void ) {
 	/* How many similar sounding close to eachother sound effects */
 	s_mixSame = Cvar_Get( "s_mixSame", "2", CVAR_ARCHIVE );
 	s_mixSameTime = Cvar_Get( "s_mixSameTime", "10", CVAR_ARCHIVE );
+	s_mixSameHandles = Cvar_Get( "s_mixSameHandles", "10", CVAR_ARCHIVE );
 
 	s_effects = Cvar_Get( "s_effects", "1", CVAR_ARCHIVE );
 	S_EffectInit();

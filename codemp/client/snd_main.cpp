@@ -152,7 +152,7 @@ void S_Init( void ) {
 	Com_Printf("------------------------------------\n");
 
 	S_DMAInit();
-		
+
 	s_soundStarted = 1;
 	s_soundMuted = qtrue;
 	S_StopAllSounds ();
@@ -289,6 +289,30 @@ sfxHandle_t	S_RegisterSound( const char *name) {
 	Com_Memcpy( entry->name, fileName, len + 1);
 	entry->next = sfxHash[hashIndex];
 	sfxHash[hashIndex] = entry;
+
+#ifdef __USE_BASS__
+	{
+		{// Load whole sound file into ram...
+			fileHandle_t hFile = 0;
+
+			sfxHash[hashIndex]->indexSize = FS_FOpenFileRead( fileName, &hFile, qtrue );
+
+			if (hFile && sfxHash[hashIndex]->indexSize)
+			{
+				if (sfxHash[hashIndex]->indexSize)
+				{
+					sfxHash[hashIndex]->qhandle = sfxEntryCount+1;
+					sfxHash[hashIndex]->fullSoundData = malloc(sfxHash[hashIndex]->indexSize);
+					FS_Read(sfxHash[hashIndex]->fullSoundData, sfxHash[hashIndex]->indexSize, hFile);
+					Com_Printf("Registered sound %s. ID %i.\n", fileName, sfxHash[hashIndex]->qhandle);
+				}
+			}
+
+			FS_FCloseFile(hFile);
+		}
+	}
+#endif //__USE_BASS__
+
 	return sfxEntryCount++;
 }
 
@@ -345,6 +369,21 @@ void S_StartSound(const vec3_t origin, int entityNum, int entchannel, unsigned c
 		return;
 	}
 
+#ifdef __USE_BASS__
+	{
+		//const mixSound_t *sfx = S_MixGetSound(q->handle);
+		//BASS_AddMemoryChanel((char *)sfx->data, sfx->samples);
+		for (int i = 0; i < 10000; i++)
+		{
+			if (sfxEntries[i].qhandle == sfxHandle)
+			{
+				BASS_AddMemoryChanel((char *)sfxEntries[i].fullSoundData, sfxEntries[i].indexSize);
+				return;
+			}
+		}
+	}
+#endif //__USE_BASS__
+
 	q = s_channelQueue + s_channelQueueCount++;
 	q->entChan = entchannel;
 	q->volumeChan = entchannel;
@@ -362,13 +401,6 @@ void S_StartSound(const vec3_t origin, int entityNum, int entchannel, unsigned c
 	} else {
 		q->hasOrigin = qfalse;
 	}
-
-#ifdef __USE_BASS__
-	{
-		const mixSound_t *sfx = S_MixGetSound(q->handle);
-		BASS_AddMemoryChanel((char *)sfx->data, sfx->samples);
-	}
-#endif //__USE_BASS__
 }
 
 /*

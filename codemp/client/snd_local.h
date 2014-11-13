@@ -2,7 +2,7 @@
 
 // snd_local.h -- private sound definations
 
-#define __NEW_SOUND_SYSTEM__
+//#define __NEW_SOUND_SYSTEM__
 //#define __USE_BASS__
 
 #include "snd_public.h"
@@ -277,6 +277,11 @@ void S_memoryLoad(sfx_t *sfx);
 typedef struct sfxEntry_s {
 	struct		sfxEntry_s *next;
 	char		name[MAX_QPATH];
+#ifdef __USE_BASS__
+	int			qhandle;
+	int			indexSize;
+	void		*fullSoundData;
+#endif //__USE_BASS__
 } sfxEntry_t;
 
 typedef struct {

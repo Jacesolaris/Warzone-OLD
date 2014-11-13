@@ -136,6 +136,7 @@ DEFINE_GUID(CLSID_DirectSound8, 0x3901cc3f, 0x84b5, 0x4fa4, 0xba, 0x35, 0xaa, 0x
 DEFINE_GUID(IID_IDirectSound8, 0xC50A7E93, 0xF395, 0x4834, 0x9E, 0xF6, 0x7F, 0xA9, 0x9D, 0xE5, 0x09, 0x66);
 DEFINE_GUID(IID_IDirectSound, 0x279AFA83, 0x4981, 0x11CE, 0xA5, 0x21, 0x00, 0x20, 0xAF, 0x0B, 0xE5, 0x60);
 
+#define __SURROUND_SOUND__
 
 int SNDDMA_InitDS ()
 {
@@ -198,7 +199,7 @@ int SNDDMA_InitDS ()
 
 	memset (&dsbuf, 0, sizeof(dsbuf));
 	dsbuf.dwSize = sizeof(DSBUFFERDESC);
-
+	
 	// Micah: take advantage of 2D hardware.if available.
 	dsbuf.dwFlags = DSBCAPS_CTRLFREQUENCY | DSBCAPS_LOCHARDWARE;
 	if (use8) {
@@ -210,7 +211,7 @@ int SNDDMA_InitDS ()
 
 	memset(&dsbcaps, 0, sizeof(dsbcaps));
 	dsbcaps.dwSize = sizeof(dsbcaps);
-
+	
 	Com_DPrintf( "...creating secondary buffer: " );
 	if (DS_OK == pDS->CreateSoundBuffer(&dsbuf, &pDSBuf, NULL)) {
 		Com_Printf( "locked hardware.  ok\n" );
@@ -253,6 +254,41 @@ int SNDDMA_InitDS ()
 	dma.buffer = NULL;			// must be locked first
 
 	sample16 = (dma.samplebits/8) - 1;
+
+#ifdef __SURROUND_SOUND__
+	{// UQ1: 5.1 surround maybe?
+		DWORD			speakerConfig; 
+		int				currentChannelCount = 2;
+//		pDS->SetSpeakerConfig(DSSPEAKER_5POINT1_SURROUND);
+
+		if (pDS->GetSpeakerConfig(&speakerConfig) != S_OK) { 
+			Com_Printf("GetSpeakerConfig() failed\n"); 
+		} else {
+			switch (DSSPEAKER_CONFIG(speakerConfig)) { 
+				case DSSPEAKER_STEREO:
+				default:
+					currentChannelCount = 2;
+					Com_Printf("Speakers: Stereo.\n");
+					break;
+				case DSSPEAKER_QUAD:    
+					currentChannelCount = 4;
+					Com_Printf("Speakers: Quad.\n");
+					break;
+				case DSSPEAKER_5POINT1: 
+					currentChannelCount = 6;
+					Com_Printf("Speakers: 5.1 Surround.\n");
+					break;
+				case DSSPEAKER_7POINT1: 
+					currentChannelCount = 8;
+					Com_Printf("Speakers: 7.1 Surround.\n");
+					break;
+			}
+
+			pDS->SetSpeakerConfig(DSSPEAKER_CONFIG(speakerConfig));
+			//format.nChannels = dma.channels = currentChannelCount;
+		}
+	}
+#endif //__SURROUND_SOUND__
 
 	SNDDMA_BeginPainting ();
 	if (dma.buffer)
