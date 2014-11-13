@@ -4525,7 +4525,7 @@ int gPainMOD = 0;
 int gPainHitLoc = -1;
 vec3_t gPainPoint;
 
-#define DAMAGE_NORMAL 0
+#define DAMAGE_STANDARD 0
 #define DAMAGE_CRITICAL 1
 #define DAMAGE_MISS 2
 
@@ -4534,7 +4534,7 @@ int G_CheckCritDamage ( gentity_t *targ, gentity_t *attacker )
 	int d20_roll = irand(1, 20);
 	if (d20_roll >= 19) return DAMAGE_CRITICAL; // UQ1: Standard D&D d20 crit range...
 	if (d20_roll <= 1) return DAMAGE_MISS; // UQ1: Standard D&D d20 crit range...
-	return DAMAGE_NORMAL;
+	return DAMAGE_STANDARD;
 }
 
 void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker, vec3_t dir, vec3_t point, int damage, int dflags, int mod ) {
@@ -4635,7 +4635,7 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker, vec3_
 	//
 	damage_type = G_CheckCritDamage( targ, attacker );
 
-	if (mod == MOD_CRUSH || mod == MOD_FALLING) damage_type = DAMAGE_NORMAL;
+	if (mod == MOD_CRUSH || mod == MOD_FALLING) damage_type = DAMAGE_STANDARD;
 
 	if (targ && targ->client && damage > 0 && damage_type == DAMAGE_CRITICAL)
 	{// If this was a crit, inform the client(s) and add the extra damage...
