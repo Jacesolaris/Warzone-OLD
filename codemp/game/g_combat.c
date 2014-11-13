@@ -4525,6 +4525,12 @@ int gPainMOD = 0;
 int gPainHitLoc = -1;
 vec3_t gPainPoint;
 
+qboolean G_CheckCritDamage ( gentity_t *targ, gentity_t *attacker )
+{// UQ1: Improve me later... Offensive/Defensive perks to increase/decrease crit chance and damage...
+	if (irand(1, 20) <= 2) return qtrue; // UQ1: Standard D&D d20 crit range...
+	return qfalse;
+}
+
 void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker, vec3_t dir, vec3_t point, int damage, int dflags, int mod ) {
 	gclient_t	*client;
 	int			take, asave, max, subamt = 0, knockback;
@@ -4615,6 +4621,16 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker, vec3_
 	{
 		G_Damage(&g_entities[targ->damageRedirectTo], inflictor, attacker, dir, point, damage, dflags, mod);
 		return;
+	}
+
+	if (targ && targ->client && damage > 0 && G_CheckCritDamage( targ, attacker ))
+	{// If this was a crit, inform the client(s) and add the extra damage...
+		damage *= flrand(2.0, 3.0);
+		targ->client->ps.damageCrit = qtrue;
+	}
+	else
+	{// Not a crit. Reset the qboolean...
+		targ->client->ps.damageCrit = qfalse;
 	}
 
 	if (mod == MOD_DEMP2 && targ && targ->inuse && targ->client)

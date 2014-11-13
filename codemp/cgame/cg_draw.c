@@ -3517,7 +3517,7 @@ qboolean CG_CheckClientVisibility ( centity_t *cent )
 		return currently_visible[cent->currentState.number];
 	}
 
-	next_vischeck[cent->currentState.number] = cg.time + 4000 + Q_irand(0, 1000); // offset the checks...
+	//next_vischeck[cent->currentState.number] = cg.time + 4000 + Q_irand(0, 1000); // offset the checks... -- UQ1: Gonna update more often when not visible...
 
 	VectorCopy(cg.refdef.vieworg, start);
 	start[2]+=42;
@@ -3532,10 +3532,12 @@ qboolean CG_CheckClientVisibility ( centity_t *cent )
 	if (traceEnt == cent || trace.fraction == 1.0f)
 	{
 		currently_visible[cent->currentState.number] = qtrue;
+		next_vischeck[cent->currentState.number] = cg.time + 4000 + Q_irand(0, 1000); // offset the checks...
 		return qtrue;
 	}
 
 	currently_visible[cent->currentState.number] = qfalse;
+	next_vischeck[cent->currentState.number] = cg.time + Q_irand(0, 1000); // offset the checks...
 	return qfalse;
 }
 
@@ -8461,7 +8463,6 @@ void CG_DrawDamage( void )
 		vec4_t			colorNormal =	{ 0.825f,	0.825f,	0.0f,	1.0f	};
 		vec4_t			colorCrit =	{ 1.0f,	1.0f,	0.0f,	1.0f	};
 		int				baseColor = CT_BLUE;
-		float			multiplier = 1.0f;
 		int				LOWEST_SLOT = -1;
 		int				LOWEST_TIME = cg.time + 5000;
 		int				NUM_DAMAGES_THIS_FRAME = 0;
@@ -8480,10 +8481,12 @@ void CG_DrawDamage( void )
 		if (cent->cloaked)
 			continue;
 
+		/*
 		if (cent->currentState.eFlags & EF_DEAD)
 		{
 			continue;
 		}
+		*/
 
 		if (cent->currentState.eFlags & EF_NODRAW)
 		{
@@ -8508,6 +8511,10 @@ void CG_DrawDamage( void )
 		if ( cent->playerState->pm_flags & PMF_DUCKED )
 			origin[2] -= 18;
 
+		dist = Distance(cg.refdef.vieworg/*cg.snap->ps.origin*/, origin);
+
+		if (dist > 2048.0f/*1024.0f*/) continue; // Too far...
+
 		// Draw the NPC name!
 		if (!CG_WorldCoordToScreenCoordFloat(origin, &x, &y))
 		{
@@ -8518,12 +8525,6 @@ void CG_DrawDamage( void )
 		{
 			continue;
 		}
-
-		dist = Distance(cg.snap->ps.origin, origin);
-
-		if (dist > 1024.0f) continue; // Too far...
-		if (dist < 192.0f) multiplier = 200.0f/dist; // Cap short ranges...
-
 		
 		// UQ1: Clean the list...
 		for (j = 0; j < NUM_DAMAGES; j++)
@@ -8546,6 +8547,7 @@ void CG_DrawDamage( void )
 				NUM_DAMAGES_THIS_FRAME++;
 		}
 
+#if 0
 		// UQ1: Sort the list...
 		while (found)
 		{
@@ -8576,6 +8578,7 @@ void CG_DrawDamage( void )
 				}
 			}
 		}
+#endif
 
 		// Find where we can add another value if needed...
 		for (j = 0; j < NUM_DAMAGES; j++)
@@ -8601,7 +8604,7 @@ void CG_DrawDamage( void )
 		}
 
 		// The list has now been sorted... Now show all values...
-		for (j = LOWEST_SLOT; j >= 0; j--)
+		for (j = NUM_DAMAGES-1/*LOWEST_SLOT*/; j >= 0; j--)
 		{
 			char value[255];
 			int x2 = x;
@@ -8618,8 +8621,8 @@ void CG_DrawDamage( void )
 
 			size *= 0.3;
 
-			//if (damage_show_crit[i][j])
-			//	size *= 2.0; // crit!
+			if (damage_show_crit[i][j])
+				size *= 2.0; // crit!
 
 			if (damage_show_value[i][j] == 0)
 				sprintf(value, "MISS");
@@ -8630,8 +8633,8 @@ void CG_DrawDamage( void )
 			
 			x2 -= (w * 0.5f);
 
-			y2 -= (j * 12);
-			y2 += y2 - ((cg.time - damage_show_time[i][j]) / 10);
+			//y2 -= (j * 12);
+			y2 = y - (((cg.time + 5000) - damage_show_time[i][j]) / 10);
 
 			if (x2 < 0 || x2 > 640) continue; // now off screen...
 			if (y2 < 0 || y2 > 480) continue; // now off screen...
