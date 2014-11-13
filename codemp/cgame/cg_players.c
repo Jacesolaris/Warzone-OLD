@@ -12917,7 +12917,7 @@ void SmoothTrueView(vec3_t eyeAngles)
 //[/TrueView]
 
 //[VisualWeapons]
-extern void *g2HolsterWeaponInstances[MAX_WEAPONS];
+extern void *g2HolsterWeaponInstances[WP_NUM_WEAPONS];
 void *CG_G2HolsterWeaponInstance(centity_t *cent, int weapon, qboolean secondSaber);
 void ApplyAxisRotation(vec3_t axis[3], int rotType, float value)
 {//apply matrix rotation to this axis.

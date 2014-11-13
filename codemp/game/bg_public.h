@@ -569,9 +569,6 @@ typedef enum {
 	STAT_HOLDABLE_ITEM,
 	STAT_HOLDABLE_ITEMS,
 	STAT_PERSISTANT_POWERUP,
-	//MAKE SURE STAT_WEAPONS REMAINS 4!!!!
-	//There is a hardcoded reference in msg.cpp to send it in 32 bits -rww
-	STAT_WEAPONS = 4,					// 16 bit fields
 	STAT_ARMOR,
 	STAT_DEAD_YAW,					// look this direction when dead (FIXME: get rid of?)
 	STAT_CLIENTS_READY,				// bit mask of clients wishing to exit the intermission (FIXME: configstring?)

@@ -4586,10 +4586,6 @@ void FireVehicleWeapon( gentity_t *ent, qboolean alt_fire )
 					//take away the ammo
 					pVeh->weaponStatus[weaponNum].ammo -= vehWeapon->iAmmoPerShot;
 					//NOTE: in order to send the vehicle's ammo info to the client, we copy the ammo into the first 2 ammo slots on the vehicle NPC's client->ps.ammo array
-					if ( pVeh->m_pParentEntity && ((gentity_t*)(pVeh->m_pParentEntity))->client )
-					{
-						((gentity_t*)(pVeh->m_pParentEntity))->client->ps.ammo[weaponNum] = pVeh->weaponStatus[weaponNum].ammo;
-					}
 					//done!
 					//we'll get in here again next frame and try the next muzzle...
 					//return;
@@ -4602,10 +4598,6 @@ void FireVehicleWeapon( gentity_t *ent, qboolean alt_fire )
 				//take the ammo
 				pVeh->weaponStatus[weaponNum].ammo -= cumulativeAmmo;
 				//NOTE: in order to send the vehicle's ammo info to the client, we copy the ammo into the first 2 ammo slots on the vehicle NPC's client->ps.ammo array
-				if ( pVeh->m_pParentEntity && ((gentity_t*)(pVeh->m_pParentEntity))->client )
-				{
-					((gentity_t*)(pVeh->m_pParentEntity))->client->ps.ammo[weaponNum] = pVeh->weaponStatus[weaponNum].ammo;
-				}
 			}
 			if ( cumulativeDelay )
 			{//we linked muzzles so we need to apply the cumulative delay now, to each of the linked muzzles

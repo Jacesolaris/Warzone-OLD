@@ -2428,9 +2428,9 @@ Ghoul2 Insert Start
 */
 
 // create one instance of all the weapons we are going to use so we can just copy this info into each clients gun ghoul2 object in fast way
-static void *g2WeaponInstances[MAX_WEAPONS];
+static void *g2WeaponInstances[WP_NUM_WEAPONS];
 //[VisualWeapons]
-void *g2HolsterWeaponInstances[MAX_WEAPONS];
+void *g2HolsterWeaponInstances[WP_NUM_WEAPONS];
 //[/VisualWeapons]
 void CG_InitG2Weapons(void)
 {
@@ -2441,7 +2441,7 @@ void CG_InitG2Weapons(void)
 	{
 		if ( item->giType == IT_WEAPON )
 		{
-			assert(item->giTag < MAX_WEAPONS);
+			assert(item->giTag < WP_NUM_WEAPONS);
 
 			// initialise model
 			trap->G2API_InitGhoul2Model(&g2WeaponInstances[/*i*/item->giTag], item->world_model[0], 0, 0, 0, 0, 0);
@@ -2466,7 +2466,7 @@ void CG_InitG2Weapons(void)
 				}
 				i++;
 			}
-			if (i == MAX_WEAPONS)
+			if (i == WP_NUM_WEAPONS)
 			{
 				assert(0);
 				break;
@@ -2480,7 +2480,7 @@ void CG_InitG2Weapons(void)
 void CG_ShutDownG2Weapons(void)
 {
 	int i;
-	for (i=0; i<MAX_WEAPONS; i++)
+	for (i=0; i<WP_NUM_WEAPONS; i++)
 	{
 		trap->G2API_CleanGhoul2Models(&g2WeaponInstances[i]);
 		//[VisualWeapons]
@@ -2586,7 +2586,7 @@ void *CG_G2HolsterWeaponInstance(centity_t *cent, int weapon, qboolean secondSab
 void CG_CopyG2WeaponInstance(centity_t *cent, int weaponNum, void *toGhoul2)
 {
 	//rww - the -1 is because there is no "weapon" for WP_NONE
-	assert(weaponNum < MAX_WEAPONS);
+	assert(weaponNum < WP_NUM_WEAPONS);
 	if (CG_G2WeaponInstance(cent, weaponNum/*-1*/))
 	{
 		if (weaponNum == WP_SABER)

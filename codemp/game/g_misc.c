@@ -8,7 +8,6 @@
 #include "ai_dominance_main.h" //for the g2animents
 
 #define HOLOCRON_RESPAWN_TIME 30000
-#define MAX_AMMO_GIVE 2
 #define STATION_RECHARGE_TIME 100
 
 void HolocronThink(gentity_t *ent);
@@ -1286,14 +1285,7 @@ void shield_power_converter_use( gentity_t *self, gentity_t *other, gentity_t *a
 
 		if (dif > 0)					// Already at full armor?
 		{
-			if (dif >MAX_AMMO_GIVE)
-			{
-				add = MAX_AMMO_GIVE;
-			}
-			else
-			{
-				add = dif;
-			}
+			add = dif;
 
 			if (self->count<add)
 			{
@@ -1698,9 +1690,9 @@ void health_power_converter_use( gentity_t *self, gentity_t *other, gentity_t *a
 
 		if (dif > 0)					// Already at full armor?
 		{
-			if (dif >/*MAX_AMMO_GIVE*/5)
+			if (dif >5)
 			{
-				add = 5;//MAX_AMMO_GIVE;
+				add = 5;
 			}
 			else
 			{

@@ -6569,12 +6569,10 @@ static qboolean PM_DoChargedWeapons( qboolean vehicleRocketLock, bgEntity_t *veh
 				&& veh->m_pVehicle )
 			{//just make sure we have this veh info
 				if ( ( (pm->cmd.buttons&BUTTON_ATTACK)
-						&&g_vehWeaponInfo[veh->m_pVehicle->m_pVehicleInfo->weapon[0].ID].fHoming
-						&&pm->ps->ammo[0]>=g_vehWeaponInfo[veh->m_pVehicle->m_pVehicleInfo->weapon[0].ID].iAmmoPerShot )
+						&&g_vehWeaponInfo[veh->m_pVehicle->m_pVehicleInfo->weapon[0].ID].fHoming )
 						||
 					( (pm->cmd.buttons&BUTTON_ALT_ATTACK)
-						&&g_vehWeaponInfo[veh->m_pVehicle->m_pVehicleInfo->weapon[1].ID].fHoming
-						&&pm->ps->ammo[1]>=g_vehWeaponInfo[veh->m_pVehicle->m_pVehicleInfo->weapon[1].ID].iAmmoPerShot ) )
+						&&g_vehWeaponInfo[veh->m_pVehicle->m_pVehicleInfo->weapon[1].ID].fHoming ))
 				{//pressing the appropriate fire button for the lock-on/charging weapon
 					PM_RocketLock(16384, qtrue);
 					charging = qtrue;
@@ -6673,11 +6671,7 @@ static qboolean PM_DoChargedWeapons( qboolean vehicleRocketLock, bgEntity_t *veh
 			//case WP_E60_ROCKET_LAUNCHER:
 			//case WP_CW_ROCKET_LAUNCHER:
 			case WP_ROCKET_LAUNCHER:
-				if ( (pm->cmd.buttons & BUTTON_ALT_ATTACK)
-#ifndef __MMO__
-					&& pm->ps->ammo[weaponData[pm->ps->weapon].ammoIndex] >= weaponData[pm->ps->weapon].altEnergyPerShot 
-#endif //__MMO__
-					)
+				if ( (pm->cmd.buttons & BUTTON_ALT_ATTACK))
 				{
 					PM_RocketLock(2048,qfalse);
 					charging = qtrue;
@@ -6740,31 +6734,6 @@ static qboolean PM_DoChargedWeapons( qboolean vehicleRocketLock, bgEntity_t *veh
 				assert(pm->ps->weapon > WP_NONE);
 				BG_AddPredictableEventToPlayerstate(EV_WEAPON_CHARGE_ALT, pm->ps->weapon, pm->ps);
 			}
-
-			if ( vehicleRocketLock )
-			{//check vehicle ammo
-				if ( veh && pm->ps->ammo[1] < g_vehWeaponInfo[veh->m_pVehicle->m_pVehicleInfo->weapon[1].ID].iAmmoPerShot )
-				{
-					pm->ps->weaponstate = WEAPON_CHARGING_ALT;
-					goto rest;
-				}
-			}
-#ifndef __MMO__
-			else if (pm->ps->ammo[weaponData[pm->ps->weapon].ammoIndex] < (weaponData[pm->ps->weapon].altChargeSub+weaponData[pm->ps->weapon].altEnergyPerShot))
-			{
-				pm->ps->weaponstate = WEAPON_CHARGING_ALT;
-
-				goto rest;
-			}
-			else if ((pm->cmd.serverTime - pm->ps->weaponChargeTime) < weaponData[pm->ps->weapon].altMaxCharge)
-			{
-				if (pm->ps->weaponChargeSubtractTime < pm->cmd.serverTime)
-				{
-					pm->ps->ammo[weaponData[pm->ps->weapon].ammoIndex] -= weaponData[pm->ps->weapon].altChargeSub;
-					pm->ps->weaponChargeSubtractTime = pm->cmd.serverTime + weaponData[pm->ps->weapon].altChargeSubTime;
-				}
-			}
-#endif //__MMO__
 		}
 		else
 		{
@@ -6780,36 +6749,11 @@ static qboolean PM_DoChargedWeapons( qboolean vehicleRocketLock, bgEntity_t *veh
 #endif
 				BG_AddPredictableEventToPlayerstate(EV_WEAPON_CHARGE, pm->ps->weapon, pm->ps);
 			}
-
-			if ( vehicleRocketLock )
-			{
-				if ( veh && pm->ps->ammo[0] < g_vehWeaponInfo[veh->m_pVehicle->m_pVehicleInfo->weapon[0].ID].iAmmoPerShot )
-				{//check vehicle ammo
-					pm->ps->weaponstate = WEAPON_CHARGING;
-					goto rest;
-				}
-			}
-#ifndef __MMO__
-			else if (pm->ps->ammo[weaponData[pm->ps->weapon].ammoIndex] < (weaponData[pm->ps->weapon].chargeSub+weaponData[pm->ps->weapon].energyPerShot))
-			{
-				pm->ps->weaponstate = WEAPON_CHARGING;
-
-				goto rest;
-			}
-			else if ((pm->cmd.serverTime - pm->ps->weaponChargeTime) < weaponData[pm->ps->weapon].maxCharge)
-			{
-				if (pm->ps->weaponChargeSubtractTime < pm->cmd.serverTime)
-				{
-					pm->ps->ammo[weaponData[pm->ps->weapon].ammoIndex] -= weaponData[pm->ps->weapon].chargeSub;
-					pm->ps->weaponChargeSubtractTime = pm->cmd.serverTime + weaponData[pm->ps->weapon].chargeSubTime;
-				}
-			}
-#endif //__MMO__
 		}
 
 		return qtrue; // short-circuit rest of weapon code
 	}
-rest:
+
 	// Only charging weapons should be able to set these states...so....
 	//	let's see which fire mode we need to set up now that the buttons are up
 	if ( pm->ps->weaponstate == WEAPON_CHARGING )
@@ -7779,42 +7723,6 @@ static void PM_Weapon( void )
 
 	amount = weaponData[pm->ps->weapon].energyPerShot;
 
-#ifndef __MMO__
-	// take an ammo away if not infinite
-	if ( pm->ps->weapon != WP_NONE &&
-		pm->ps->weapon == pm->cmd.weapon &&
-		(pm->ps->weaponTime <= 0 || pm->ps->weaponstate != WEAPON_FIRING) )
-	{
-		if ( pm->ps->clientNum < MAX_CLIENTS && pm->ps->ammo[ weaponData[pm->ps->weapon].ammoIndex ] != -1 )
-		{
-			// enough energy to fire this weapon?
-			if (pm->ps->ammo[weaponData[pm->ps->weapon].ammoIndex] < weaponData[pm->ps->weapon].energyPerShot &&
-				pm->ps->ammo[weaponData[pm->ps->weapon].ammoIndex] < weaponData[pm->ps->weapon].altEnergyPerShot)
-			{ //the weapon is out of ammo essentially because it cannot fire primary or secondary, so do the switch
-			  //regardless of if the player is attacking or not
-				PM_AddEventWithParm( EV_NOAMMO, WP_NUM_WEAPONS+pm->ps->weapon );
-
-				if (pm->ps->weaponTime < 500)
-				{
-					pm->ps->weaponTime += 500;
-				}
-				return;
-			}
-
-			if (pm->ps->weapon == WP_DET_PACK && !pm->ps->hasDetPackPlanted && pm->ps->ammo[weaponData[pm->ps->weapon].ammoIndex] < 1)
-			{
-				PM_AddEventWithParm( EV_NOAMMO, WP_NUM_WEAPONS+pm->ps->weapon );
-
-				if (pm->ps->weaponTime < 500)
-				{
-					pm->ps->weaponTime += 500;
-				}
-				return;
-			}
-		}
-	}
-#endif //__MMO__
-
 	// check for weapon change
 	// can't change if weapon is firing, but can change
 	// again if lowering or raising
@@ -8259,31 +8167,6 @@ static void PM_Weapon( void )
 
 	pm->ps->weaponstate = WEAPON_FIRING;
 
-#ifndef __MMO__
-	// take an ammo away if not infinite
-	if ( pm->ps->clientNum < MAX_CLIENTS && pm->ps->ammo[ weaponData[pm->ps->weapon].ammoIndex ] != -1 )
-	{
-		// enough energy to fire this weapon?
-		if ((pm->ps->ammo[weaponData[pm->ps->weapon].ammoIndex] - amount) >= 0)
-		{
-			pm->ps->ammo[weaponData[pm->ps->weapon].ammoIndex] -= amount;
-		}
-		else	// Not enough energy
-		{
-			// Switch weapons
-			if (pm->ps->weapon != WP_DET_PACK || !pm->ps->hasDetPackPlanted)
-			{
-				PM_AddEventWithParm( EV_NOAMMO, WP_NUM_WEAPONS+pm->ps->weapon );
-				if (pm->ps->weaponTime < 500)
-				{
-					pm->ps->weaponTime += 500;
-				}
-			}
-			return;
-		}
-	}
-#endif //__MMO__
-
 	if ( pm->cmd.buttons & BUTTON_ALT_ATTACK ) 	{
 		//if ( pm->ps->weapon == WP_BRYAR_PISTOL && pm->gametype != GT_SIEGE )
 		if (0)
@@ -8707,18 +8590,6 @@ void PM_AdjustAttackStates( pmove_t *pmove )
 		}
 	}
 
-#ifndef __MMO__
-	// get ammo usage
-	if ( pmove->cmd.buttons & BUTTON_ALT_ATTACK )
-	{
-		amount = pmove->ps->ammo[weaponData[ pmove->ps->weapon ].ammoIndex] - weaponData[pmove->ps->weapon].altEnergyPerShot;
-	}
-	else
-	{
-		amount = pmove->ps->ammo[weaponData[ pmove->ps->weapon ].ammoIndex] - weaponData[pmove->ps->weapon].energyPerShot;
-	}
-#endif //__MMO__
-
 	// disruptor alt-fire should toggle the zoom mode, but only bother doing this for the player?
 	if ( IsSniperRifle(pmove->ps->weapon) && pmove->ps->weaponstate == WEAPON_READY )
 	{
@@ -8788,24 +8659,6 @@ void PM_AdjustAttackStates( pmove_t *pmove )
 			}
 		}
 		*/
-
-#ifndef __MMO__
-		if ( pmove->cmd.buttons & BUTTON_ATTACK )
-		{
-			// If we are zoomed, we should switch the ammo usage to the alt-fire, otherwise, we'll
-			//	just use whatever ammo was selected from above
-			if ( pmove->ps->zoomMode )
-			{
-				amount = pmove->ps->ammo[weaponData[ pmove->ps->weapon ].ammoIndex] -
-							weaponData[pmove->ps->weapon].altEnergyPerShot;
-			}
-		}
-		else
-		{
-			// alt-fire button pressing doesn't use any ammo
-			amount = 0;
-		}
-#endif //__MMO__
 	}
 	/*
 	else if (IsSniperRifle(pmove->ps->weapon)) //still perform certain checks, even if the weapon is not ready

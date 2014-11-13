@@ -2054,10 +2054,6 @@ void MSG_CheckNETFPSFOverrides(qboolean psfOverrides)
 	}
 }
 
-//MAKE SURE THIS MATCHES THE ENUM IN BG_PUBLIC.H!!!
-//This is in caps, because it is important.
-#define STAT_WEAPONS 4
-
 /*
 =============
 MSG_WriteDeltaPlayerstate
@@ -2073,7 +2069,6 @@ void MSG_WriteDeltaPlayerstate( msg_t *msg, struct playerState_s *from, struct p
 	playerState_t	dummy;
 	int				statsbits;
 	int				persistantbits;
-	int				ammobits;
 	int				powerupbits;
 	int				numFields;
 	int				c;
@@ -2200,12 +2195,6 @@ void MSG_WriteDeltaPlayerstate( msg_t *msg, struct playerState_s *from, struct p
 			persistantbits |= 1<<i;
 		}
 	}
-	ammobits = 0;
-	for (i=0 ; i<MAX_AMMO_TRANSMIT ; i++) {
-		if (to->ammo[i] != from->ammo[i]) {
-			ammobits |= 1<<i;
-		}
-	}
 	powerupbits = 0;
 	for (i=0 ; i<MAX_POWERUPS ; i++) {
 		if (to->powerups[i] != from->powerups[i]) {
@@ -2213,7 +2202,7 @@ void MSG_WriteDeltaPlayerstate( msg_t *msg, struct playerState_s *from, struct p
 		}
 	}
 
-	if (!statsbits && !persistantbits && !ammobits && !powerupbits) {
+	if (!statsbits && !persistantbits && !powerupbits) {
 		MSG_WriteBits( msg, 0, 1 );	// no change
 		oldsize += 4;
 #ifdef _ONEBIT_COMBO
@@ -2233,9 +2222,9 @@ void MSG_WriteDeltaPlayerstate( msg_t *msg, struct playerState_s *from, struct p
 			{
 #ifdef __MMO__
 #define MAX_STAT_BITS 32
-				if (i == STAT_WEAPONS || i == STAT_HEALTH || i == STAT_MAX_HEALTH || i == STAT_ARMOR || i == STAT_EXP || i == STAT_EXP_COUNT)
+				if (i == STAT_HEALTH || i == STAT_MAX_HEALTH || i == STAT_ARMOR || i == STAT_EXP || i == STAT_EXP_COUNT)
 				{ //ugly.. but we're gonna need it anyway -rww
-					//(just send this one in MAX_WEAPONS bits, so that we can add up to MAX_WEAPONS weaps without hassle)
+					//(just send this one in MAX_STAT_BITS bits, so that we can add up to MAX_STAT_BITS weaps without hassle)
 					MSG_WriteBits(msg, to->stats[i], MAX_STAT_BITS);
 				}
 				else
@@ -2243,15 +2232,7 @@ void MSG_WriteDeltaPlayerstate( msg_t *msg, struct playerState_s *from, struct p
 					MSG_WriteShort (msg, to->stats[i]);
 				}
 #else //!__MMO__
-				if (i == STAT_WEAPONS)
-				{ //ugly.. but we're gonna need it anyway -rww
-					//(just send this one in MAX_WEAPONS bits, so that we can add up to MAX_WEAPONS weaps without hassle)
-					MSG_WriteBits(msg, to->stats[i], MAX_WEAPONS);
-				}
-				else
-				{
-					MSG_WriteShort (msg, to->stats[i]);
-				}
+				MSG_WriteShort (msg, to->stats[i]);
 #endif //__MMO__
 			}
 		}
@@ -2269,18 +2250,6 @@ void MSG_WriteDeltaPlayerstate( msg_t *msg, struct playerState_s *from, struct p
 	} else {
 		MSG_WriteBits( msg, 0, 1 );	// no change
 	}
-
-
-	if ( ammobits ) {
-		MSG_WriteBits( msg, 1, 1 );	// changed
-		MSG_WriteBits( msg, ammobits, MAX_AMMO_TRANSMIT );
-		for (i=0 ; i<MAX_AMMO_TRANSMIT ; i++)
-			if (ammobits & (1<<i) )
-				MSG_WriteShort (msg, to->ammo[i]);
-	} else {
-		MSG_WriteBits( msg, 0, 1 );	// no change
-	}
-
 
 	if ( powerupbits ) {
 		MSG_WriteBits( msg, 1, 1 );	// changed
@@ -2447,9 +2416,9 @@ void MSG_ReadDeltaPlayerstate (msg_t *msg, playerState_t *from, playerState_t *t
 				if (bits & (1<<i) )
 				{
 #ifdef __MMO__
-					if (i == STAT_WEAPONS || i == STAT_HEALTH || i == STAT_MAX_HEALTH || i == STAT_ARMOR || i == STAT_EXP || i == STAT_EXP_COUNT)
+					if (i == STAT_HEALTH || i == STAT_MAX_HEALTH || i == STAT_ARMOR || i == STAT_EXP || i == STAT_EXP_COUNT)
 					{ //ugly.. but we're gonna need it anyway -rww
-						//(just send this one in MAX_WEAPONS bits, so that we can add up to MAX_WEAPONS weaps without hassle)
+						//(just send this one in MAX_STAT_BITS bits, so that we can add up to MAX_STAT_BITS weaps without hassle)
 						to->stats[i] = MSG_ReadBits(msg, MAX_STAT_BITS);
 					}
 					else
@@ -2457,14 +2426,7 @@ void MSG_ReadDeltaPlayerstate (msg_t *msg, playerState_t *from, playerState_t *t
 						to->stats[i] = MSG_ReadShort(msg);
 					}
 #else //!__MMO__
-					if (i == STAT_WEAPONS)
-					{ //ugly.. but we're gonna need it anyway -rww
-						to->stats[i] = MSG_ReadBits(msg, MAX_WEAPONS);
-					}
-					else
-					{
-						to->stats[i] = MSG_ReadShort(msg);
-					}
+					to->stats[i] = MSG_ReadShort(msg);
 #endif //__MMO__
 				}
 			}
@@ -2477,17 +2439,6 @@ void MSG_ReadDeltaPlayerstate (msg_t *msg, playerState_t *from, playerState_t *t
 			for (i=0 ; i<MAX_PERSISTANT ; i++) {
 				if (bits & (1<<i) ) {
 					to->persistant[i] = MSG_ReadShort(msg);
-				}
-			}
-		}
-
-		// parse ammo
-		if ( MSG_ReadBits( msg, 1 ) ) {
-			LOG("PS_AMMO");
-			bits = MSG_ReadBits (msg, MAX_AMMO_TRANSMIT);
-			for (i=0 ; i<MAX_AMMO_TRANSMIT ; i++) {
-				if (bits & (1<<i) ) {
-					to->ammo[i] = MSG_ReadShort(msg);
 				}
 			}
 		}

@@ -1564,16 +1564,10 @@ typedef enum {
 #define	MAX_STATS				16
 #define	MAX_PERSISTANT			16
 #define	MAX_POWERUPS			16
-#define	MAX_WEAPONS				WP_NUM_WEAPONS // UQ1: Lol. That explains a few issues. But how about we just send the number of bits we need? - and never have to think about this again. :)
-#define MAX_AMMO_TRANSMIT		16 // This is needed because the ammo array is 19 but only 16 sized array is networked
-#define MAX_AMMO				MAX_WEAPONS
 #else //!
 #define	MAX_STATS				16
 #define	MAX_PERSISTANT			16
 #define	MAX_POWERUPS			16
-#define	MAX_WEAPONS				19
-#define MAX_AMMO_TRANSMIT		16 // This is needed because the ammo array is 19 but only 16 sized array is networked
-#define MAX_AMMO				MAX_WEAPONS
 #endif //__MMO__
 
 #define	MAX_PS_EVENTS			2
@@ -1682,7 +1676,6 @@ typedef struct playerState_s {
 	int			stats[MAX_STATS];
 	int			persistant[MAX_PERSISTANT];	// stats that aren't cleared on death
 	int			powerups[MAX_POWERUPS];	// level.time that the powerup runs out
-	int			ammo[MAX_AMMO];
 
 	int			generic1;
 	int			loopSound;
