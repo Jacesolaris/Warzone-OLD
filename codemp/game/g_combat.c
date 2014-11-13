@@ -4525,16 +4525,23 @@ int gPainMOD = 0;
 int gPainHitLoc = -1;
 vec3_t gPainPoint;
 
-qboolean G_CheckCritDamage ( gentity_t *targ, gentity_t *attacker )
+#define DAMAGE_NORMAL 0
+#define DAMAGE_CRITICAL 1
+#define DAMAGE_MISS 2
+
+int G_CheckCritDamage ( gentity_t *targ, gentity_t *attacker )
 {// UQ1: Improve me later... Offensive/Defensive perks to increase/decrease crit chance and damage...
-	if (irand(1, 20) <= 2) return qtrue; // UQ1: Standard D&D d20 crit range...
-	return qfalse;
+	int d20_roll = irand(1, 20);
+	if (d20_roll >= 19) return DAMAGE_CRITICAL; // UQ1: Standard D&D d20 crit range...
+	if (d20_roll <= 1) return DAMAGE_MISS; // UQ1: Standard D&D d20 crit range...
+	return DAMAGE_NORMAL;
 }
 
 void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker, vec3_t dir, vec3_t point, int damage, int dflags, int mod ) {
 	gclient_t	*client;
 	int			take, asave, max, subamt = 0, knockback;
 	float		famt = 0, hamt = 0, shieldAbsorbed = 0;
+	int			damage_type = 0;
 
 	if (!targ)
 		return;
@@ -4623,15 +4630,32 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker, vec3_
 		return;
 	}
 
-	if (targ && targ->client && damage > 0 && G_CheckCritDamage( targ, attacker ))
+	//
+	// BEGIN - Critical damage and miss system...
+	//
+	damage_type = G_CheckCritDamage( targ, attacker );
+
+	if (mod == MOD_CRUSH || mod == MOD_FALLING) damage_type = DAMAGE_NORMAL;
+
+	if (targ && targ->client && damage > 0 && damage_type == DAMAGE_CRITICAL)
 	{// If this was a crit, inform the client(s) and add the extra damage...
 		damage *= flrand(2.0, 3.0);
 		targ->client->ps.damageCrit = qtrue;
+	}
+	else if (targ && targ->client && damage > 0 && damage_type == DAMAGE_MISS)
+	{// If this was a miss, inform the client(s) and remove all damage...
+		damage = 0;
+		targ->client->ps.damageValue = 0;
+		targ->client->ps.damageCrit = qfalse;
+		return;
 	}
 	else
 	{// Not a crit. Reset the qboolean...
 		targ->client->ps.damageCrit = qfalse;
 	}
+	//
+	// END - Critical damage and miss system...
+	//
 
 	if (mod == MOD_DEMP2 && targ && targ->inuse && targ->client)
 	{
