@@ -1,6 +1,7 @@
 #pragma once
 
 #include <omp.h>
+#include "../game/bg_weapons.h"
 
 // Copyright (C) 1999-2000 Id Software, Inc.
 //
@@ -1563,7 +1564,7 @@ typedef enum {
 #define	MAX_STATS				16
 #define	MAX_PERSISTANT			16
 #define	MAX_POWERUPS			16
-#define	MAX_WEAPONS				128//32 //Stoiss Unq1 your slacker :D you forgot to rize the MAX_WEAPONS numbers
+#define	MAX_WEAPONS				WP_NUM_WEAPONS // UQ1: Lol. That explains a few issues. But how about we just send the number of bits we need? - and never have to think about this again. :)
 #define MAX_AMMO_TRANSMIT		16 // This is needed because the ammo array is 19 but only 16 sized array is networked
 #define MAX_AMMO				MAX_WEAPONS
 #else //!
