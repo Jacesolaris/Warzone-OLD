@@ -67,7 +67,8 @@ void BASS_AddMemoryChanel ( char *memory, int length )
 
 	// Load a music or sample from "file" (memory)
 	if ((newchan=BASS_MusicLoad(TRUE,memory,0,(DWORD)length,BASS_MUSIC_RAMP|BASS_SAMPLE_3D,0))
-		|| (newchan=BASS_SampleLoad(TRUE,memory,0,(DWORD)length,1,BASS_SAMPLE_3D|BASS_SAMPLE_MONO))) {
+		|| (newchan=BASS_SampleLoad(TRUE,memory,0,(DWORD)length,1,BASS_SAMPLE_3D|BASS_SAMPLE_MONO))
+		/*|| (newchan=BASS_StreamCreateFile(TRUE, memory, 0, (QWORD) length, BASS_SAMPLE_3D))*/ ) {
 			Channel *c;
 			chanc++;
 			chans=(Channel*)realloc((void*)chans,chanc*sizeof(Channel));
@@ -76,8 +77,10 @@ void BASS_AddMemoryChanel ( char *memory, int length )
 			c->channel=newchan;
 			BASS_SampleGetChannel(newchan,FALSE); // initialize sample channel
 			BASS_ChannelPlay(chans[chan].channel,FALSE);
-	} else
+	} else {
 		Com_Printf("Can't load sound memory (note samples must be mono)\n");
+		Com_Printf("data size %i (%i).\n", sizeof(memory), length);
+	}
 }
 
 void BASS_RemoveChannel ( void )

@@ -21,6 +21,8 @@
 
 #include "snd_local.h"
 
+#ifndef __NEW_SOUND_SYSTEM__
+
 //
 #include "snd_music.h"
 #include "snd_ambient.h"
@@ -1125,3 +1127,4 @@ const char *Music_GetLevelSetName(void)
 
 ///////////////// eof /////////////////////
 
+#endif //__NEW_SOUND_SYSTEM__

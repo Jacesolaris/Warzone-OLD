@@ -6,6 +6,10 @@
 
 #include "qcommon/qcommon.h"
 
+#include "snd_local.h"
+
+#ifndef __NEW_SOUND_SYSTEM__
+
 // if you change this enum, you MUST update the #defines below
 typedef enum
 {
@@ -56,3 +60,5 @@ qboolean	Music_AllowedToTransition	( float fPlayingTimeElapsed, MusicState_e eMu
 const char *Music_BaseStateToString		( MusicState_e eMusicState, qboolean bDebugPrintQuery = qfalse);
 
 //////////////// eof /////////////////
+
+#endif //__NEW_SOUND_SYSTEM__

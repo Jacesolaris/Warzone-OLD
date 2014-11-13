@@ -79,6 +79,10 @@ cvar_t	*cl_consoleKeys;
 
 cvar_t  *cl_lanForcePackets;
 
+#ifdef __NEW_SOUND_SYSTEM__
+cvar_t	*mme_saveWav;
+#endif //__NEW_SOUND_SYSTEM__
+
 vec3_t cl_windVec;
 
 
@@ -2306,6 +2310,11 @@ static IHeapAllocator *GetG2VertSpaceServer( void ) {
 
 #define DEFAULT_RENDER_LIBRARY "rd-vanilla"
 
+#ifdef 	__NEW_SOUND_SYSTEM__
+void S_RestartMusic( void ) {}
+qboolean SND_RegisterAudio_LevelLoadEnd(qboolean bDeleteEverythingNotUsedThisLevel /* 99% qfalse */) {return qtrue;}
+#endif //__NEW_SOUND_SYSTEM__
+
 void CL_InitRef( void ) {
 	static refimport_t ri;
 	refexport_t	*ret;
@@ -2679,6 +2688,10 @@ void CL_Init( void ) {
 	cl_lanForcePackets = Cvar_Get ("cl_lanForcePackets", "1", CVAR_ARCHIVE);
 
 	cl_guidServerUniq = Cvar_Get ("cl_guidServerUniq", "1", CVAR_ARCHIVE);
+
+#ifdef __NEW_SOUND_SYSTEM__
+	mme_saveWav = Cvar_Get ("mme_saveWav", "0", CVAR_ARCHIVE);
+#endif //__NEW_SOUND_SYSTEM__
 
 #ifndef _WIN32
 	// ~ and `, as keys and characters

@@ -1139,7 +1139,9 @@ redump:
 			if (!cinTable[currentHandle].silent) {
 				if (cinTable[currentHandle].numQuads == -1) {
 					S_Update();
+#ifndef __NEW_SOUND_SYSTEM__
 					s_rawend = s_soundtime;
+#endif //__NEW_SOUND_SYSTEM__
 				}
 				ssize = RllDecodeStereoToStereo( framedata, sbuf, cinTable[currentHandle].RoQFrameSize, 0, (unsigned short)cinTable[currentHandle].roq_flags);
                 S_RawSamples( ssize, 22050, 2, 2, (byte *)sbuf, s_volume->value, 1 );
@@ -1469,8 +1471,10 @@ int CIN_PlayCinematic( const char *arg, int x, int y, int w, int h, int systemBi
 
 		Con_Close();
 
+#ifndef __NEW_SOUND_SYSTEM__
 		if ( !cinTable[currentHandle].silent )
 			s_rawend = s_soundtime;
+#endif //__NEW_SOUND_SYSTEM__
 
 		return currentHandle;
 	}

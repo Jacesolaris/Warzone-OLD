@@ -87,7 +87,11 @@ public:
 	inline	void	PlaySound( vec3_t origin, int entityNum, int entchannel, sfxHandle_t sfxHandle, int volume, int radius )
 	{
 		//S_StartSound( origin, ENTITYNUM_NONE, CHAN_AUTO, sfxHandle, volume, radius );
+#ifndef __NEW_SOUND_SYSTEM__
 		S_StartSound( origin, ENTITYNUM_NONE, CHAN_AUTO, sfxHandle );
+#else //!__NEW_SOUND_SYSTEM__
+		S_StartSound( origin, ENTITYNUM_NONE, CHAN_AUTO, 255/*volume*/, sfxHandle );
+#endif //__NEW_SOUND_SYSTEM__
 	}
 	inline	void	PlayLocalSound(sfxHandle_t sfxHandle, int entchannel)
 	{

@@ -129,7 +129,7 @@ if(BuildMPEngine OR BuildMPDed)
 	set(MPEngineAndDedLibraries ${MPBotLib})
 	# Platform-specific libraries
 	if(WIN32)
-		set(MPEngineAndDedLibraries ${MPEngineAndDedLibraries} "winmm" "wsock32")
+		set(MPEngineAndDedLibraries ${MPEngineAndDedLibraries} "winmm" "wsock32" "../../lib/bass" "../../lib/libmad")
 	endif(WIN32)
 	# Include directories
 	set(MPEngineAndDedIncludeDirectories ${MPDir} ${OpenJKLibDir}) # codemp folder, since includes are not always relative in the files
@@ -424,11 +424,15 @@ if(BuildMPEngine)
 		"${MPDir}/client/snd_bass.cpp"
 		"${MPDir}/client/snd_bass.h"
 		"${MPDir}/client/snd_dma.cpp"
+		"${MPDir}/client/snd_effects.cpp"
 		"${MPDir}/client/snd_local.h"
+		"${MPDir}/client/snd_main.cpp"
 		"${MPDir}/client/snd_mem.cpp"
 		"${MPDir}/client/snd_mix.cpp"
+		"${MPDir}/client/snd_mix.h"
 		"${MPDir}/client/snd_mp3.cpp"
 		"${MPDir}/client/snd_mp3.h"
+		"${MPDir}/client/snd_mme.cpp"
 		"${MPDir}/client/snd_music.cpp"
 		"${MPDir}/client/snd_music.h"
 		)

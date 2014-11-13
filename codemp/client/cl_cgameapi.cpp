@@ -333,7 +333,9 @@ static int CL_S_GetVoiceVolume( int entID ) {
 }
 
 static void CL_S_Shutup( qboolean shutup ) {
+#ifndef __NEW_SOUND_SYSTEM__
 	s_shutUp = shutup;
+#endif //__NEW_SOUND_SYSTEM__
 }
 
 static int CL_GetCurrentCmdNumber( void ) {
@@ -956,11 +958,17 @@ intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 		return CL_S_GetVoiceVolume( args[1] );
 
 	case CG_S_MUTESOUND:
+#ifndef __NEW_SOUND_SYSTEM__
 		S_MuteSound( args[1], args[2] );
+#endif //__NEW_SOUND_SYSTEM__
 		return 0;
 
 	case CG_S_STARTSOUND:
+#ifndef __NEW_SOUND_SYSTEM__
 		S_StartSound( (float *)VMA(1), args[2], args[3], args[4] );
+#else //!__NEW_SOUND_SYSTEM__
+		S_StartSound( (float *)VMA(1), args[2], args[3], 255, args[4] );
+#endif //__NEW_SOUND_SYSTEM__
 		return 0;
 
 	case CG_S_STARTLOCALSOUND:
@@ -972,15 +980,25 @@ intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 		return 0;
 
 	case CG_S_ADDLOOPINGSOUND:
+#ifndef __NEW_SOUND_SYSTEM__
 		S_AddLoopingSound( args[1], (const float *)VMA(2), (const float *)VMA(3), args[4] );
+#else //!__NEW_SOUND_SYSTEM__
+		S_AddLoopingSound( (const void*)args[1], (const float *)VMA(2), (const float *)VMA(3), args[4], 255 );
+#endif //__NEW_SOUND_SYSTEM__
 		return 0;
 
 	case CG_S_ADDREALLOOPINGSOUND:
+#ifndef __NEW_SOUND_SYSTEM__
 		/*S_AddRealLoopingSound*/S_AddLoopingSound( args[1], (const float *)VMA(2), (const float *)VMA(3), args[4] );
+#else //!__NEW_SOUND_SYSTEM__
+		/*S_AddRealLoopingSound*/S_AddLoopingSound( (const void *)args[1], (const float *)VMA(2), (const float *)VMA(3), args[4], 255 );
+#endif //__NEW_SOUND_SYSTEM__
 		return 0;
 
 	case CG_S_STOPLOOPINGSOUND:
+#ifndef __NEW_SOUND_SYSTEM__
 		S_StopLoopingSound( args[1] );
+#endif //__NEW_SOUND_SYSTEM__
 		return 0;
 
 	case CG_S_UPDATEENTITYPOSITION:
@@ -1623,6 +1641,33 @@ intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 // Stub function for old RMG system.
 static void RE_InitRendererTerrain ( const char * /*info*/ ) {}
 
+#ifdef __NEW_SOUND_SYSTEM__
+void S_AddLoopingSound_CONVERT( int entityNum, const vec3_t origin, const vec3_t velocity, sfxHandle_t sfxHandle ) 
+{
+	S_AddLoopingSound((const void *)&entityNum, origin, velocity, sfxHandle, 255);
+}
+
+void S_MuteSound_CONVERT(int entityNum, int entchannel)
+{
+
+}
+
+void S_StopLoopingSound_CONVERT( int entityNum )
+{
+
+}
+
+void S_StartBackgroundTrack_CONVERT( const char *intro, const char *loop, qboolean bCalledByCGameStart )
+{
+	S_StartBackgroundTrack(intro, loop, bCalledByCGameStart);
+}
+
+void S_StartSound_CONVERT(const vec3_t origin, int entityNum, int entchannel, sfxHandle_t sfxHandle )
+{
+	S_StartSound(origin, entityNum, entchannel, 255, sfxHandle );
+}
+#endif //__NEW_SOUND_SYSTEM__
+
 void CL_BindCGame( void ) {
 	static cgameImport_t cgi;
 	cgameExport_t		*ret;
@@ -1672,18 +1717,26 @@ void CL_BindCGame( void ) {
 		cgi.CM_TransformedTrace					= CM_TransformedBoxTrace;
 		cgi.RMG_Init							= CL_RMG_Init;
 		cgi.S_AddLocalSet						= S_AddLocalSet;
+#ifndef __NEW_SOUND_SYSTEM__
 		cgi.S_AddLoopingSound					= S_AddLoopingSound;
+		cgi.S_StartBackgroundTrack				= S_StartBackgroundTrack;
+		cgi.S_StartSound						= S_StartSound;
+		cgi.S_MuteSound							= S_MuteSound;
+		cgi.S_StopLoopingSound					= S_StopLoopingSound;
+#else //!__NEW_SOUND_SYSTEM__
+		cgi.S_AddLoopingSound					= S_AddLoopingSound_CONVERT;
+		cgi.S_StartBackgroundTrack				= S_StartBackgroundTrack_CONVERT;
+		cgi.S_StartSound						= S_StartSound_CONVERT;
+		cgi.S_MuteSound							= S_MuteSound_CONVERT;
+		cgi.S_StopLoopingSound					= S_StopLoopingSound_CONVERT;
+#endif //__NEW_SOUND_SYSTEM__
 		cgi.S_ClearLoopingSounds				= S_ClearLoopingSounds;
 		cgi.S_GetVoiceVolume					= CL_S_GetVoiceVolume;
-		cgi.S_MuteSound							= S_MuteSound;
 		cgi.S_RegisterSound						= S_RegisterSound;
 		cgi.S_Respatialize						= S_Respatialize;
 		cgi.S_Shutup							= CL_S_Shutup;
-		cgi.S_StartBackgroundTrack				= S_StartBackgroundTrack;
 		cgi.S_StartLocalSound					= S_StartLocalSound;
-		cgi.S_StartSound						= S_StartSound;
 		cgi.S_StopBackgroundTrack				= S_StopBackgroundTrack;
-		cgi.S_StopLoopingSound					= S_StopLoopingSound;
 		cgi.S_UpdateEntityPosition				= S_UpdateEntityPosition;
 		cgi.S_UpdateAmbientSet					= S_UpdateAmbientSet;
 		cgi.AS_AddPrecacheEntry					= AS_AddPrecacheEntry;
