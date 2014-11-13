@@ -8594,7 +8594,9 @@ void CG_DrawDamage( void )
 		// Now they should be in order of longest time to display remaining...
 		//
 
-		if (cent->currentState.damageValue >= 0 && cent->currentState.damageValue != damage_value_last[i])
+		if (cent->currentState.damageValue >= 0 
+			&& cent->currentState.damageValue != damage_value_last[i] 
+			&& !(LOWEST_SLOT == NUM_DAMAGES-1 && cent->currentState.damageValue == 0) /* This means a new character just came into range - don't draw a miss */)
 		{
 			// Replace the lowest time...
 			damage_show_time[i][LOWEST_SLOT] = cg.time + 5000;
