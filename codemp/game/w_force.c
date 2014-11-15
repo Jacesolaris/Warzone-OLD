@@ -1943,6 +1943,8 @@ void ForceShootLightning( gentity_t *self )
 				continue;
 			if ( traceEnt->r.ownerNum == self->s.number && traceEnt->s.weapon != WP_THERMAL )//can push your own thermals
 				continue;
+			if (traceEnt->r.ownerNum == self->s.number && traceEnt->s.weapon != WP_FRAG_GRENADE)//can push your own thermals
+				continue;
 			if ( !traceEnt->inuse )
 				continue;
 			if ( !traceEnt->takedamage )
@@ -3417,7 +3419,7 @@ void ForceThrow( gentity_t *self, qboolean pull )
 			{//can't force-push/pull stuck missiles (detpacks, tripmines)
 				continue;
 			}
-			if ( ent->s.pos.trType == TR_STATIONARY && ent->s.weapon != WP_THERMAL )
+			if (ent->s.pos.trType == TR_STATIONARY && ent->s.weapon != WP_THERMAL && ent->s.weapon != WP_FRAG_GRENADE)
 			{//only thermal detonators can be pushed once stopped
 				continue;
 			}
@@ -3723,7 +3725,9 @@ void ForceThrow( gentity_t *self, qboolean pull )
 					}
 				}
 			}
-			else if ( push_list[x]->s.eType == ET_MISSILE && push_list[x]->s.pos.trType != TR_STATIONARY && (push_list[x]->s.pos.trType != TR_INTERPOLATE||push_list[x]->s.weapon != WP_THERMAL) )//rolling and stationary thermal detonators are dealt with below
+			else if (push_list[x]->s.eType == ET_MISSILE && push_list[x]->s.pos.trType != TR_STATIONARY && (push_list[x]->s.pos.trType != TR_INTERPOLATE 
+				|| push_list[x]->s.weapon != WP_THERMAL 
+				|| push_list[x]->s.weapon != WP_FRAG_GRENADE))//rolling and stationary thermal detonators are dealt with below
 			{
 				if ( pull )
 				{//deflect rather than reflect?

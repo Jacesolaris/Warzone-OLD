@@ -173,6 +173,10 @@ void G_BounceMissile( gentity_t *ent, trace_t *trace ) {
 	{ //slight hack for hit sound
 		G_Sound(ent, CHAN_BODY, G_SoundIndex(va("sound/weapons/thermal/bounce%i.wav", Q_irand(1, 2))));
 	}
+	else if (ent->s.weapon == WP_FRAG_GRENADE)
+	{ //slight hack for hit sound
+		G_Sound(ent, CHAN_BODY, G_SoundIndex(va("sound/weapons/thermal/bounce%i.wav", Q_irand(1, 2))));
+	}
 	else if (ent->s.weapon == WP_SABER)
 	{
 		G_Sound(ent, CHAN_BODY, G_SoundIndex(va("sound/weapons/saber/bounce%i.wav", Q_irand(1, 3))));
@@ -477,6 +481,7 @@ void G_MissileImpact(gentity_t *ent, trace_t *trace) {
 		ent->s.weapon != WP_ROCKET_LAUNCHER &&
 		ent->s.weapon != WP_E60_ROCKET_LAUNCHER &&
 		ent->s.weapon != WP_CW_ROCKET_LAUNCHER &&
+		ent->s.weapon != WP_FRAG_GRENADE &&
 		ent->s.weapon != WP_THERMAL &&
 		ent->s.weapon != WP_TRIP_MINE &&
 		ent->s.weapon != WP_DET_PACK &&
@@ -510,6 +515,7 @@ void G_MissileImpact(gentity_t *ent, trace_t *trace) {
 		ent->s.weapon != WP_ROCKET_LAUNCHER &&
 		ent->s.weapon != WP_E60_ROCKET_LAUNCHER &&
 		ent->s.weapon != WP_CW_ROCKET_LAUNCHER &&
+		ent->s.weapon != WP_FRAG_GRENADE &&
 		ent->s.weapon != WP_THERMAL &&
 		ent->s.weapon != WP_TRIP_MINE &&
 		ent->s.weapon != WP_DET_PACK &&
@@ -584,6 +590,7 @@ void G_MissileImpact(gentity_t *ent, trace_t *trace) {
 			ent->s.weapon != WP_ROCKET_LAUNCHER &&
 			ent->s.weapon != WP_E60_ROCKET_LAUNCHER &&
 			ent->s.weapon != WP_CW_ROCKET_LAUNCHER &&
+			ent->s.weapon != WP_FRAG_GRENADE &&
 			ent->s.weapon != WP_THERMAL &&
 			ent->s.weapon != WP_TRIP_MINE &&
 			ent->s.weapon != WP_DET_PACK &&

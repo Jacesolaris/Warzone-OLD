@@ -5625,7 +5625,7 @@ void WP_SaberStartMissileBlockCheck( gentity_t *self, usercmd_t *ucmd  )
 		VectorSubtract( ent->r.currentOrigin, self->r.currentOrigin, dir );
 		dist = VectorNormalize( dir );
 		//FIXME: handle detpacks, proximity mines and tripmines
-		if ( ent->s.weapon == WP_THERMAL )
+		if (ent->s.weapon == WP_THERMAL || ent->s.weapon == WP_FRAG_GRENADE)
 		{//thermal detonator!
 			if ( self->NPC && dist < ent->splashRadius )
 			{
