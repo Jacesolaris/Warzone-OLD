@@ -392,9 +392,12 @@ MATHLIB
 */
 
 
-typedef float	 vec2_t[2],	 vec3_t[3],	 vec4_t[4],	 vec5_t[5];
+#define vec_t	float
+#define ivec_t	int
+
+typedef float	vec2_t[2], vec3_t[3], vec4_t[4], vec5_t[5];
 typedef int		ivec2_t[2],	ivec3_t[3],	ivec4_t[4],	ivec5_t[5];
-typedef vec3_t vec3pair_t[2], matrix3_t[3];
+typedef vec3_t	vec3pair_t[2], matrix3_t[3];
 
 typedef	int	fixed4_t, fixed8_t, fixed16_t;
 

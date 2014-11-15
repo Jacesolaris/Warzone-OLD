@@ -5192,7 +5192,7 @@ void AIMod_AutoWaypoint_StandardMethod( void )
 	float		waypoint_scatter_realtime_modifier = 1.0f;
 	float		waypoint_scatter_realtime_modifier_alt = 0.5f; // 0.3f;
 	int			wp_loop = 0;
-	int			remove_ratio = 1.0;
+	float		remove_ratio = 1.0;
 
 	trap->Cvar_Set("jkg_waypoint_render", "0");
 	trap->UpdateScreen();
@@ -6215,6 +6215,8 @@ omp_set_nested(0);
 
 	if (areas < MAX_WPARRAY_SIZE)
 	{// UQ1: Can use them all!
+		total_waypoints = 0;
+
 		trap->Print("^4*** ^3AUTO-WAYPOINTER^4: ^5Temporary waypoint cleanup not required. Converting to final waypoints.\n");
 
 		aw_percent_complete = 0.0f;
@@ -6327,6 +6329,7 @@ omp_set_nested(0);
 	//
 
 	total_areas = areas;
+	total_waypoints = 0;
 
 	aw_percent_complete = 0.0f;
 	aw_stage_start_time = clock();
@@ -6335,8 +6338,9 @@ omp_set_nested(0);
 	trap->UpdateScreen();
 
 	remove_ratio = (areas / MAX_WPARRAY_SIZE);
-	remove_ratio -= 1;
-	if (remove_ratio < 1) remove_ratio = 1;
+	remove_ratio *= 7.0; // Hopefully this ratio will provide nearly 32000 waypoints every time...
+	//remove_ratio -= 1;
+	//if (remove_ratio < 1) remove_ratio = 1;
 
 	trap->Print("^4*** ^3AUTO-WAYPOINTER^4: ^5Generated too many temporary waypoints for the game. Running cleanup.\n");
 
@@ -6345,29 +6349,17 @@ omp_set_nested(0);
 		float		use_scatter = 0;
 
 #ifdef __NEW_AWP_METHOD__
-		if (map_size >= 90000) 
-		{
-			use_scatter = waypoint_scatter_distance * 3.0;
-		}
-		else if (map_size >= 80000) 
-		{
-			use_scatter = waypoint_scatter_distance * 2.0;
-		}
-		else if (map_size >= 70000)
-		{
-			use_scatter = waypoint_scatter_distance * 1.5;
-		}
-		else
-		{
-			use_scatter = waypoint_scatter_distance;
-		}
+		use_scatter = original_waypoint_scatter_distance * (remove_ratio/10.0);
+
+		//trap->Print("Use scatter is %f.\n", use_scatter);
+
 #else //!__NEW_AWP_METHOD__
 		use_scatter = waypoint_scatter_distance;
 #endif //__NEW_AWP_METHOD__
 
 		aw_stage_start_time = clock();
 
-#pragma omp parallel for ordered schedule(dynamic)
+//#pragma omp parallel for ordered schedule(dynamic)
 		for ( i = 0; i < areas; i++ )
 		{
 			vec3_t		area_org;
@@ -6381,7 +6373,7 @@ omp_set_nested(0);
 
 			update_timer++;
 
-			if(omp_get_thread_num() == 0)
+			//if(omp_get_thread_num() == 0)
 			{
 				if (update_timer >= 100)
 				{
@@ -6405,10 +6397,21 @@ omp_set_nested(0);
 				continue;
 			}
 
+			if (area_org[0] == 0.0 && area_org[1] == 0.0 && area_org[2] == 0.0)
+			{// Ignore 0,0,0
+				continue;
+			}
+
 			for (j = 0; j < total_waypoints; j++)
 			{
-				if (VectorDistance(area_org, nodes[j].origin) < use_scatter)//*area_distance_multiplier)
+				float dist = VectorDistance(area_org, nodes[j].origin);
+
+				if (dist < use_scatter)//*area_distance_multiplier)
 				{
+					//if(omp_get_thread_num() == 0)
+					//{
+					//	trap->Print("Distance between area %i at %f %f %f and wp %i at %f %f %f is %f. MARKED BAD!\n", i, area_org[0], area_org[1], area_org[2], j, nodes[j].origin[0], nodes[j].origin[1], nodes[j].origin[2], dist );
+					//}
 					bad = qtrue;
 					break;
 				}
@@ -6421,7 +6424,7 @@ omp_set_nested(0);
 
 //#pragma omp ordered
 			{
-#pragma omp critical (__ADD_WAYPOINT_CHECK__)
+//#pragma omp critical (__ADD_WAYPOINT_CHECK__)
 				{
 					strcpy( last_node_added_string, va("^5Adding waypoint ^3%i ^5at ^7%f %f %f^5.", total_waypoints, area_org[0], area_org[1], area_org[2]) );
 					Load_AddNode( area_org, 0, objNum, 0 );	//add the node

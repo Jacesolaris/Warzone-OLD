@@ -459,7 +459,7 @@ int cmdcmp( const void *a, const void *b ) {
 	return Q_stricmp( (const char *)a, ((consoleCommand_t*)b)->cmd );
 }
 
-/* This array MUST be sorted correctly by alphabetical name field */
+/* This array MUST be sorted correctly by alphabetical name field */ // UQ1: And who thought this change was a good idea??? *grrr*
 static consoleCommand_t	commands[] = {
 	{ "+scores",					CG_ScoresDown_f },
 	{ "-scores",					CG_ScoresUp_f },
@@ -470,9 +470,9 @@ static consoleCommand_t	commands[] = {
 	{ "awc_addbadheight",			AIMod_AWC_MarkBadHeight },
 	{ "awc_addlift",				AIMod_AddLiftPoint },
 	{ "awc_addremovalspot",			AIMod_AddRemovalPoint },
-	{ "aw_badheight",				AIMod_MarkBadHeight },
-	{ "aw_addwaypoint",				AIMod_AddWayPoint },
+	{ "awc_addwaypoint",			AIMod_AddWayPoint },
 	{ "awp",						AIMod_AutoWaypoint },
+	{ "awp_badheight",				AIMod_MarkBadHeight },
 	{ "briefing",					CG_SiegeBriefing_f },
 	{ "clientlist",					CG_ClientList_f },
 	{ "forcenext",					CG_NextForcePower_f },

@@ -1231,6 +1231,10 @@ void G_CheckMinimumNpcs( void ) {
 		return;
 	}
 
+	if (level.numConnectedClients <= 0 && checkminimumnpcs_time > level.time - 500) {
+		return;
+	}
+
 	checkminimumnpcs_time = level.time;
 	trap->Cvar_Update(&npc_enemies);
 	trap->Cvar_Update(&npc_pathing);
