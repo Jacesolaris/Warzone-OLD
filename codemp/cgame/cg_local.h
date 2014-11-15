@@ -1663,8 +1663,6 @@ typedef struct cgEffects_s {
 	fxHandle_t	thermalRealExplosionEnhancedFX;
 	fxHandle_t	fireGrenadeFireBlob;
 	fxHandle_t	fireGrenadeExplosion;
-	fxHandle_t	fireGrenadeWaterBurst;
-	fxHandle_t	fireGrenadeSlimeBurst;
 	fxHandle_t	fireGrenadePart;
 	fxHandle_t	fireGrenadeNapalm;
 	fxHandle_t	iceGrenadeExplosion;

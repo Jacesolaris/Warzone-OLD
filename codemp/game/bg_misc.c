@@ -260,6 +260,7 @@ int WeaponReadyAnim[WP_NUM_WEAPONS] =
 	PLX1_WEAPONREADY, //WP_E60_ROCKET_LAUNCHER
 	PLX1_WEAPONREADY, //WP_CW_ROCKET_LAUNCHER
 	TORSO_WEAPONREADY2,// WP_TESTGUN
+	TORSO_WEAPONREADY10,//WP_FRAG_GRENADE
 	TORSO_WEAPONREADY3,//TORSO_WEAPONREADY5,//WP_BOWCASTER,
 	TORSO_WEAPONREADY3,//TORSO_WEAPONREADY6,//WP_REPEATER,
 	TORSO_WEAPONREADY3,//TORSO_WEAPONREADY7,//WP_DEMP2,
@@ -320,6 +321,7 @@ int WeaponReadyLegsAnim[WP_NUM_WEAPONS] =
 	PLX1_IDLE,//WP_E60_ROCKET_LAUNCHER,
 	PLX1_IDLE,//WP_CW_ROCKET_LAUNCHER,
 	BOTH_STAND1,// WP_TESTGUN
+	BOTH_STAND1,//WP_FRAG_GRENADE
 	BOTH_STAND1,//TORSO_WEAPONREADY5,//WP_BOWCASTER,
 	BOTH_STAND1,//TORSO_WEAPONREADY6,//WP_REPEATER,
 	BOTH_STAND1,//TORSO_WEAPONREADY7,//WP_DEMP2,
@@ -379,6 +381,7 @@ int WeaponAttackAnim[WP_NUM_WEAPONS] =
 	PLX1_FIRE,//WP_E60_ROCKET_LAUNCHER
 	PLX1_FIRE,//WP_CW_ROCKET_LAUNCHER
 	BOTH_ATTACK2,// WP_TESTGUN
+	BOTH_THERMAL_THROW,//WP_FRAG_GRENADE
 	BOTH_ATTACK3,//BOTH_ATTACK5,//WP_BOWCASTER,
 	BOTH_ATTACK3,//BOTH_ATTACK6,//WP_REPEATER,
 	BOTH_ATTACK2,//BOTH_ATTACK7,//WP_DEMP2,
@@ -1631,6 +1634,24 @@ Don't place this
 	"@MENUS_THE_PRIMARY_WEAPON_OF"				// description
 },
 
+/*QUAKED weapon_thermal (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+*/
+{
+	"weapon_fraggrenade",
+	"sound/weapons/w_pkup.wav",
+	{ "models/weapons3/fraggrenade/thermal_w.glm", "models/weapons3/fraggrenade/thermal_pu.md3",
+	0, 0 },
+	/* view */		"models/weapons3/fraggrenade/thermal.md3",
+	/* icon */		"gfx/hud/w_icon_fraggrenade",
+	/* pickup *///	"Thermal Detonator",
+	4,
+	IT_WEAPON,
+	WP_FRAG_GRENADE,
+	/* precache */ "",
+	/* sounds */ "",
+	"@MENUS_THE_THERMAL_DETONATOR"					// description
+},
+
 /*QUAKED weapon_blaster (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
 */
 	{
@@ -2561,7 +2582,7 @@ qboolean BG_CanItemBeGrabbed( int gametype, const entityState_t *ent, const play
 		}
 		
 		if (!(ent->eFlags & EF_DROPPEDWEAPON) && BG_HaveWeapon(ps, item->giTag) &&
-			item->giTag != WP_THERMAL && item->giTag != WP_TRIP_MINE && item->giTag != WP_DET_PACK)
+			item->giTag != WP_THERMAL && item->giTag != WP_FRAG_GRENADE && item->giTag != WP_TRIP_MINE && item->giTag != WP_DET_PACK)
 		{ //weaponstay stuff.. if this isn't dropped, and you already have it, you don't get it.
 			return qfalse;
 		}

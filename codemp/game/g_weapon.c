@@ -2138,6 +2138,14 @@ gentity_t *WP_FireThermalDetonator( gentity_t *ent, qboolean altFire )
 	bolt->s.eType = ET_MISSILE;
 	bolt->r.svFlags = SVF_USE_CURRENT_ORIGIN;
 	bolt->s.weapon = WP_THERMAL;
+	bolt->s.weapon = WP_FRAG_GRENADE;
+	/*WP_FRAG_GRENADE_OLD;
+	WP_SHOCK_GRENADE;
+	WP_PLASMA_GRENADE;
+	WP_SONIC_GRENADE;
+	WP_THERMAL_GRENADE;
+	WP_THERMAL_GREADE_OLD;
+	WP_V_59_GRENADE;*/
 
 	bolt->methodOfDeath = MOD_THERMAL;
 	bolt->splashMethodOfDeath = MOD_THERMAL_SPLASH;
@@ -3949,6 +3957,7 @@ gentity_t *WP_FireVehicleWeapon( gentity_t *ent, vec3_t start, vec3_t dir, vehWe
 		if ( vehWeapon->bHasGravity )
 		{//TESTME: is this all we need to do?
 			missile->s.weapon = WP_THERMAL;//does this really matter?
+			missile->s.weapon = WP_FRAG_GRENADE;
 			missile->s.pos.trType = TR_GRAVITY;
 		}
 
@@ -4064,6 +4073,7 @@ gentity_t *WP_FireVehicleWeapon( gentity_t *ent, vec3_t start, vec3_t dir, vehWe
 		{//a mine or something?
 			//only do damage when someone touches us
 			missile->s.weapon = WP_THERMAL;//does this really matter?
+			missile->s.weapon = WP_FRAG_GRENADE;
 			G_SetOrigin( missile, start );
 			missile->touch = WP_TouchVehMissile;
 			missile->s.eFlags |= EF_RADAROBJECT;//FIXME: externalize
@@ -4870,7 +4880,14 @@ void FireWeapon( gentity_t *ent, qboolean altFire ) {
 		case WP_ROCKET_LAUNCHER:
 			WP_FireRocket( ent, altFire );
 			break;
-
+		case WP_FRAG_GRENADE:
+		/*case WP_FRAG_GRENADE_OLD:
+		case WP_SHOCK_GRENADE:
+		case WP_PLASMA_GRENADE:
+		case WP_SONIC_GRENADE:
+		case WP_THERMAL_GRENADE:
+		case WP_THERMAL_GREADE_OLD:
+		case WP_V_59_GRENADE:*/
 		case WP_THERMAL:
 			WP_FireThermalDetonator( ent, altFire );
 			break;

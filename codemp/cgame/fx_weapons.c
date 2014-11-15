@@ -156,3 +156,74 @@ void FX_WeaponAltProjectileThink(centity_t *cent, const struct weaponInfo_s *wea
 	}
 }
 
+void FX_ThermalProjectileThink(centity_t *cent, const struct weaponInfo_s *weapon)
+{
+	vec3_t forward;
+
+	if (VectorNormalize2(cent->currentState.pos.trDelta, forward) == 0.0f)
+	{
+		forward[2] = 1.0f;
+	}
+
+	if (weapon->missileRenderfx)
+	{
+		trap->FX_PlayEffectID(weapon->missileRenderfx, cent->lerpOrigin, forward, -1, -1, qfalse);
+	}
+	else
+	{
+		trap->FX_PlayEffectID(cgs.effects.thermalRealShotEffect2, cent->lerpOrigin, forward, -1, -1, qfalse);
+	}
+	if (weapon->missileRenderfx)
+	{
+		trap->FX_PlayEffectID(cgs.effects.thermalRealShotEffect, cent->lerpOrigin, forward, -1, -1, qfalse);
+	}
+}
+
+
+void FX_PulseGrenadeProjectileThink(centity_t *cent, const struct weaponInfo_s *weapon)
+{
+	vec3_t forward;
+
+	if (VectorNormalize2(cent->currentState.pos.trDelta, forward) == 0.0f)
+	{
+		forward[2] = 1.0f;
+	}
+
+	if (weapon->missileRenderfx)
+	{
+		trap->FX_PlayEffectID(weapon->missileRenderfx, cent->lerpOrigin, forward, -1, -1, qfalse);
+	}
+	else
+	{
+		trap->FX_PlayEffectID(cgs.effects.fireGrenadeShotEffect2, cent->lerpOrigin, forward, -1, -1, qfalse);
+	}
+	if (weapon->missileRenderfx)
+	{
+		trap->FX_PlayEffectID(cgs.effects.fireGrenadeShotEffect, cent->lerpOrigin, forward, -1, -1, qfalse);
+	}
+	else if (weapon->missileRenderfx)
+	{
+		trap->FX_PlayEffectID(weapon->missileRenderfx, cent->lerpOrigin, forward, -1, -1, qfalse);
+	}
+	else
+	{
+		trap->FX_PlayEffectID(cgs.effects.concussionGrenadeShotEffect2, cent->lerpOrigin, forward, -1, -1, qfalse);
+	}
+	if (weapon->missileRenderfx)
+	{
+		trap->FX_PlayEffectID(cgs.effects.concussionGrenadeShotEffect, cent->lerpOrigin, forward, -1, -1, qfalse);
+	}
+	else if (weapon->missileRenderfx)
+	{
+		trap->FX_PlayEffectID(weapon->missileRenderfx, cent->lerpOrigin, forward, -1, -1, qfalse);
+	}
+	else
+	{
+		trap->FX_PlayEffectID(cgs.effects.pulseGrenadeShotEffect2, cent->lerpOrigin, forward, -1, -1, qfalse);
+	}
+	if (weapon->missileRenderfx)
+	{
+		trap->FX_PlayEffectID(cgs.effects.pulseGrenadeShotEffect, cent->lerpOrigin, forward, -1, -1, qfalse);
+	}
+
+}

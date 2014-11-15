@@ -40,6 +40,7 @@ vec3_t WP_MuzzlePoint[WP_NUM_WEAPONS] =
 	{12,	8,		-4	},  //WP_E60_ROCKET_LAUNCHER
 	{12,	8,		-4	},  //WP_CW_ROCKET_LAUNCHER
 	{12,	4.5,	-6	},	//WP_TESTGUN
+	{12,	0,		-4	},	// WP_FRAG_GRENADE
 	{12,	6,		-6	},	// WP_DEMP2,
 	{12,	6,		-6	},	// WP_FLECHETTE,
 	{12,	6,		-6	},	// WP_CONCUSSION
@@ -83,6 +84,7 @@ weaponData_t weaponData[WP_NUM_WEAPONS] = {
 	{ "CW PulsRocket Launcer",			AMMO_ROCKETS,		5,			4,				3000,		8192,		2,					5000,			8192,		0,				0,					0,			0,				0,			0	},
 	{ "TEST GUN",						AMMO_BLASTER,		5,			2,				350,		8192,		3,					500,			8192,		0,				0,					0,			0,				0,			0	},
 	//Place new Guns under here.
+	{ "Frag Grenade",					AMMO_THERMAL,		0,			1,				800,		8192,		1,					400,			8192,		0,				0,					0,			0,				0,			0	},
 
 	{ "Modified Wookie Crossbow",		AMMO_POWERCELL,		5,			5,				1000,		8192,		5,					750,			8192,		400,			0,					5,			0,				1700,		0	},
 	{ "Imperial Heavy Repeater",		AMMO_METAL_BOLTS,	5,			8,				150,		8192,		15,					800,			8192,		0,				0,					0,			0,				0,			0	},

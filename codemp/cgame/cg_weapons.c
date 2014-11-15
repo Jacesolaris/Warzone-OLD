@@ -54,7 +54,10 @@ void CG_RegisterItemVisuals( int itemNum ) {
 		itemInfo->models[0] = trap->R_RegisterModel( item->world_model[1] );
 	}
 	else if (item->giType == IT_WEAPON &&
-		(item->giTag == WP_THERMAL || item->giTag == WP_TRIP_MINE || item->giTag == WP_DET_PACK))
+		(item->giTag == WP_THERMAL 
+		|| item->giTag == WP_TRIP_MINE 
+		|| item->giTag == WP_DET_PACK
+		|| item->giTag == WP_FRAG_GRENADE))
 	{
 		itemInfo->models[0] = trap->R_RegisterModel( item->world_model[1] );
 	}
@@ -1670,8 +1673,8 @@ void CG_Weapon_f( void ) {
 	{
 		int weap, i = 0;
 
-		if (cg.snap->ps.weapon >= WP_THERMAL &&
-			cg.snap->ps.weapon <= WP_DET_PACK)
+		if (cg.snap->ps.weapon >= WP_THERMAL && cg.snap->ps.weapon >= WP_FRAG_GRENADE
+			&& cg.snap->ps.weapon <= WP_DET_PACK)
 		{
 			// already in cycle range so start with next cycle item
 			weap = cg.snap->ps.weapon + 1;
@@ -1680,6 +1683,7 @@ void CG_Weapon_f( void ) {
 		{
 			// not in cycle range, so start with thermal detonator
 			weap = WP_THERMAL;
+			weap = WP_FRAG_GRENADE;
 		}
 
 		// prevent an endless loop
@@ -1688,6 +1692,7 @@ void CG_Weapon_f( void ) {
 			if (weap > WP_DET_PACK)
 			{
 				weap = WP_THERMAL;
+				weap = WP_FRAG_GRENADE;
 			}
 
 			if (CG_WeaponSelectable(weap))
@@ -1787,7 +1792,7 @@ void CG_WeaponClean_f( void ) {
 	{
 		int weap, i = 0;
 
-		if (cg.snap->ps.weapon >= WP_THERMAL &&
+		if (cg.snap->ps.weapon >= WP_THERMAL && cg.snap->ps.weapon >= WP_FRAG_GRENADE &&
 			cg.snap->ps.weapon <= WP_DET_PACK)
 		{
 			// already in cycle range so start with next cycle item
@@ -1797,6 +1802,7 @@ void CG_WeaponClean_f( void ) {
 		{
 			// not in cycle range, so start with thermal detonator
 			weap = WP_THERMAL;
+			weap = WP_FRAG_GRENADE;
 		}
 
 		// prevent an endless loop
@@ -1805,6 +1811,7 @@ void CG_WeaponClean_f( void ) {
 			if (weap > WP_DET_PACK)
 			{
 				weap = WP_THERMAL;
+				weap = WP_FRAG_GRENADE;
 			}
 
 			if (CG_WeaponSelectable(weap))
@@ -1874,7 +1881,8 @@ void CG_OutOfAmmoChange( int oldWeapon )
 				( i == WP_TRIP_MINE || i == WP_DET_PACK || i == WP_THERMAL || i == WP_ROCKET_LAUNCHER) ) // safe weapon switch
 			*/
 			//rww - Don't we want to make sure i != one of these if autoswitch is 1 (safe)?
-			if (cg_autoSwitch.integer != 1 || (i != WP_TRIP_MINE && i != WP_DET_PACK && i != WP_THERMAL && i != WP_ROCKET_LAUNCHER && i != WP_E60_ROCKET_LAUNCHER && i != WP_CW_ROCKET_LAUNCHER))
+			if (cg_autoSwitch.integer != 1 || (i != WP_TRIP_MINE && i != WP_DET_PACK && i != WP_THERMAL && i != WP_ROCKET_LAUNCHER && i != WP_E60_ROCKET_LAUNCHER && i != WP_CW_ROCKET_LAUNCHER
+				&& i != WP_FRAG_GRENADE))
 			{
 				if (i != oldWeapon)
 				{ //don't even do anything if we're just selecting the weapon we already have/had
@@ -2119,14 +2127,11 @@ void CG_ThermalImpactEffect(qboolean altFire, vec3_t origin, vec3_t dir, vec3_t 
 	{
 		trap->FX_PlayEffectID(CG_EnableEnhancedFX(cgs.effects.thermalExplosionAltEffect,
 			cgs.effects.thermalExplosionAltEffectEnhancedFX), origin, dir, -1, -1, qfalse);
-
 	}
 	else
 	{
-
 		trap->FX_PlayEffectID(CG_EnableEnhancedFX(cgs.effects.thermalExplosionEffect,
 			cgs.effects.thermalExplosionEffectEnhancedFX), origin, dir, -1, -1, qfalse);
-
 	}
 
 	trap->FX_PlayEffectID(cgs.effects.thermalShockwaveEffect, origin, up, -1, -1, qfalse);
@@ -2218,6 +2223,10 @@ void CG_MissileHitWall(int weapon, int clientNum, vec3_t origin, vec3_t dir, imp
 		FX_RocketHitWall(origin, dir, weapon, altFire);
 		break;
 
+	case WP_FRAG_GRENADE:
+		CG_ThermalImpactEffect(altFire, origin, dir, up);
+		break;
+
 	case WP_THERMAL:
 		CG_ThermalImpactEffect(altFire, origin, dir, up);
 		break;
@@ -2293,6 +2302,10 @@ void CG_MissileHitPlayer(int weapon, vec3_t origin, vec3_t dir, int entityNum, q
 
 	case WP_ROCKET_LAUNCHER:
 		FX_RocketHitPlayer( origin, dir, humanoid, weapon, altFire );
+		break;
+
+	case WP_FRAG_GRENADE:
+		CG_ThermalImpactEffect(altFire, origin, dir, up);
 		break;
 
 	case WP_THERMAL:
