@@ -2138,14 +2138,6 @@ gentity_t *WP_FireThermalDetonator( gentity_t *ent, qboolean altFire )
 	bolt->s.eType = ET_MISSILE;
 	bolt->r.svFlags = SVF_USE_CURRENT_ORIGIN;
 	bolt->s.weapon = WP_THERMAL;
-	bolt->s.weapon = WP_FRAG_GRENADE;
-	/*WP_FRAG_GRENADE_OLD;
-	WP_SHOCK_GRENADE;
-	WP_PLASMA_GRENADE;
-	WP_SONIC_GRENADE;
-	WP_THERMAL_GRENADE;
-	WP_THERMAL_GREADE_OLD;
-	WP_V_59_GRENADE;*/
 
 	bolt->methodOfDeath = MOD_THERMAL;
 	bolt->splashMethodOfDeath = MOD_THERMAL_SPLASH;
@@ -2167,6 +2159,159 @@ gentity_t *WP_DropThermal( gentity_t *ent )
 {
 	AngleVectors( ent->client->ps.viewangles, forward, vright, up );
 	return (WP_FireThermalDetonator( ent, qfalse ));
+}
+
+gentity_t *WP_FireFragGrenade(gentity_t *ent, qboolean altFire)
+//---------------------------------------------------------
+{
+	gentity_t	*bolt;
+	vec3_t		dir, start;
+	float chargeAmount = 1.0f; // default of full charge
+
+	VectorCopy(forward, dir);
+	VectorCopy(muzzle, start);
+
+	bolt = G_Spawn();
+
+	bolt->physicsObject = qtrue;
+
+	bolt->classname = "Frag Grenade";
+	bolt->think = grenadeThinkStandard;
+	bolt->nextthink = level.time;
+	bolt->touch = touch_NULL;
+
+	// How 'bout we give this thing a size...
+	VectorSet(bolt->r.mins, -3.0f, -3.0f, -3.0f);
+	VectorSet(bolt->r.maxs, 3.0f, 3.0f, 3.0f);
+	bolt->clipmask = MASK_SHOT;
+
+	W_TraceSetStart(ent, start, bolt->r.mins, bolt->r.maxs);//make sure our start point isn't on the other side of a wall
+
+	if (ent->client)
+	{
+		chargeAmount = level.time - ent->client->ps.weaponChargeTime;
+	}
+
+	// get charge amount
+	chargeAmount = chargeAmount / (float)TD_VELOCITY;
+
+	if (chargeAmount > 1.0f)
+	{
+		chargeAmount = 1.0f;
+	}
+	else if (chargeAmount < TD_MIN_CHARGE)
+	{
+		chargeAmount = TD_MIN_CHARGE;
+	}
+
+	// normal ones bounce, alt ones explode on impact
+	bolt->genericValue5 = level.time + TD_TIME; // How long 'til she blows
+	bolt->s.pos.trType = TR_GRAVITY;
+	bolt->parent = ent;
+	bolt->r.ownerNum = ent->s.number;
+	VectorScale(dir, TD_VELOCITY * chargeAmount, bolt->s.pos.trDelta);
+
+	if (ent->health >= 0)
+	{
+		bolt->s.pos.trDelta[2] += 120;
+	}
+
+	if (!altFire)
+	{
+		bolt->flags |= FL_BOUNCE_HALF;
+	}
+
+	bolt->s.loopSound = G_SoundIndex("sound/weapons/realTD/TDthermloop.mp3");
+	bolt->s.loopIsSoundset = qfalse;
+
+	bolt->damage = TD_DAMAGE;
+	bolt->dflags = 0;
+	bolt->splashDamage = TD_SPLASH_DAM;
+	bolt->splashRadius = TD_SPLASH_RAD;
+
+	bolt->s.eType = ET_MISSILE;
+	bolt->r.svFlags = SVF_USE_CURRENT_ORIGIN;
+	bolt->s.weapon = WP_FRAG_GRENADE;
+	/*WP_FRAG_GRENADE_OLD;
+	WP_SHOCK_GRENADE;
+	WP_PLASMA_GRENADE;
+	WP_SONIC_GRENADE;
+	WP_THERMAL_GRENADE;
+	WP_THERMAL_GREADE_OLD;
+	WP_V_59_GRENADE;*/
+
+	bolt->methodOfDeath = MOD_THERMAL;
+	bolt->splashMethodOfDeath = MOD_THERMAL_SPLASH;
+
+	bolt->s.pos.trTime = level.time;		// move a bit on the very first frame
+	VectorCopy(start, bolt->s.pos.trBase);
+
+	SnapVector(bolt->s.pos.trDelta);			// save net bandwidth
+	VectorCopy(start, bolt->r.currentOrigin);
+
+	VectorCopy(start, bolt->pos2);
+
+	bolt->bounceCount = -5;
+
+	return bolt;
+}
+
+void grenadeThinkStandard(gentity_t *ent);
+
+//---------------------------------------------------------
+void grenadeExplode(gentity_t *ent)
+//---------------------------------------------------------
+{
+	if (!ent->count)
+	{
+		G_Sound(ent, CHAN_WEAPON, G_SoundIndex("sound/weapons/realTD/TDwarning.mp3"));
+		ent->count = 1;
+		ent->genericValue5 = level.time + 500;
+		ent->think = thermalThinkStandard;
+		ent->nextthink = level.time;
+		ent->r.svFlags |= SVF_BROADCAST;//so everyone hears/sees the explosion?
+	}
+	else
+	{
+		vec3_t	origin;
+		vec3_t	dir = { 0, 0, 1 };
+
+		BG_EvaluateTrajectory(&ent->s.pos, level.time, origin);
+		origin[2] += 8;
+		SnapVector(origin);
+		G_SetOrigin(ent, origin);
+
+		ent->s.eType = ET_GENERAL;
+		G_AddEvent(ent, EV_MISSILE_MISS, DirToByte(dir));
+		ent->freeAfterEvent = qtrue;
+
+		if (G_RadiusDamage(ent->r.currentOrigin, ent->parent, ent->splashDamage, ent->splashRadius,
+			ent, ent, ent->splashMethodOfDeath))
+		{
+			g_entities[ent->r.ownerNum].client->accuracy_hits++;
+		}
+
+		trap->LinkEntity((sharedEntity_t *)ent);
+	}
+}
+
+void grenadeThinkStandard(gentity_t *ent)
+{
+	if (ent->genericValue5 < level.time)
+	{
+		ent->think = grenadeExplode;
+		ent->nextthink = level.time;
+		return;
+	}
+
+	G_RunObject(ent);
+	ent->nextthink = level.time;
+}
+
+gentity_t *WP_DropGrenade(gentity_t *ent)
+{
+	AngleVectors(ent->client->ps.viewangles, forward, vright, up);
+	return (WP_FireFragGrenade(ent, qfalse));
 }
 
 
@@ -3957,7 +4102,7 @@ gentity_t *WP_FireVehicleWeapon( gentity_t *ent, vec3_t start, vec3_t dir, vehWe
 		if ( vehWeapon->bHasGravity )
 		{//TESTME: is this all we need to do?
 			missile->s.weapon = WP_THERMAL;//does this really matter?
-			missile->s.weapon = WP_FRAG_GRENADE;
+			//missile->s.weapon = WP_FRAG_GRENADE;
 			missile->s.pos.trType = TR_GRAVITY;
 		}
 
@@ -4073,7 +4218,7 @@ gentity_t *WP_FireVehicleWeapon( gentity_t *ent, vec3_t start, vec3_t dir, vehWe
 		{//a mine or something?
 			//only do damage when someone touches us
 			missile->s.weapon = WP_THERMAL;//does this really matter?
-			missile->s.weapon = WP_FRAG_GRENADE;
+			//missile->s.weapon = WP_FRAG_GRENADE;
 			G_SetOrigin( missile, start );
 			missile->touch = WP_TouchVehMissile;
 			missile->s.eFlags |= EF_RADAROBJECT;//FIXME: externalize
@@ -4880,14 +5025,18 @@ void FireWeapon( gentity_t *ent, qboolean altFire ) {
 		case WP_ROCKET_LAUNCHER:
 			WP_FireRocket( ent, altFire );
 			break;
+
+			/*case WP_FRAG_GRENADE_OLD:
+			case WP_SHOCK_GRENADE:
+			case WP_PLASMA_GRENADE:
+			case WP_SONIC_GRENADE:
+			case WP_THERMAL_GRENADE:
+			case WP_THERMAL_GREADE_OLD:
+			case WP_V_59_GRENADE:*/
 		case WP_FRAG_GRENADE:
-		/*case WP_FRAG_GRENADE_OLD:
-		case WP_SHOCK_GRENADE:
-		case WP_PLASMA_GRENADE:
-		case WP_SONIC_GRENADE:
-		case WP_THERMAL_GRENADE:
-		case WP_THERMAL_GREADE_OLD:
-		case WP_V_59_GRENADE:*/
+			WP_FireFragGrenade(ent, altFire);
+			break;
+		
 		case WP_THERMAL:
 			WP_FireThermalDetonator( ent, altFire );
 			break;

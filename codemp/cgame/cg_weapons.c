@@ -55,9 +55,9 @@ void CG_RegisterItemVisuals( int itemNum ) {
 	}
 	else if (item->giType == IT_WEAPON &&
 		(item->giTag == WP_THERMAL 
+		|| item->giTag == WP_FRAG_GRENADE
 		|| item->giTag == WP_TRIP_MINE 
-		|| item->giTag == WP_DET_PACK
-		|| item->giTag == WP_FRAG_GRENADE))
+		|| item->giTag == WP_DET_PACK))
 	{
 		itemInfo->models[0] = trap->R_RegisterModel( item->world_model[1] );
 	}
@@ -1683,7 +1683,7 @@ void CG_Weapon_f( void ) {
 		{
 			// not in cycle range, so start with thermal detonator
 			weap = WP_THERMAL;
-			weap = WP_FRAG_GRENADE;
+			//weap = WP_FRAG_GRENADE;
 		}
 
 		// prevent an endless loop
@@ -1692,7 +1692,7 @@ void CG_Weapon_f( void ) {
 			if (weap > WP_DET_PACK)
 			{
 				weap = WP_THERMAL;
-				weap = WP_FRAG_GRENADE;
+				//weap = WP_FRAG_GRENADE;
 			}
 
 			if (CG_WeaponSelectable(weap))
@@ -1802,7 +1802,7 @@ void CG_WeaponClean_f( void ) {
 		{
 			// not in cycle range, so start with thermal detonator
 			weap = WP_THERMAL;
-			weap = WP_FRAG_GRENADE;
+			//weap = WP_FRAG_GRENADE;
 		}
 
 		// prevent an endless loop
@@ -1811,7 +1811,7 @@ void CG_WeaponClean_f( void ) {
 			if (weap > WP_DET_PACK)
 			{
 				weap = WP_THERMAL;
-				weap = WP_FRAG_GRENADE;
+				//weap = WP_FRAG_GRENADE;
 			}
 
 			if (CG_WeaponSelectable(weap))
@@ -2224,7 +2224,7 @@ void CG_MissileHitWall(int weapon, int clientNum, vec3_t origin, vec3_t dir, imp
 		break;
 
 	case WP_FRAG_GRENADE:
-		CG_ThermalImpactEffect(altFire, origin, dir, up);
+		FX_WeaponHitWall(origin, dir, weapon, altFire);
 		break;
 
 	case WP_THERMAL:
@@ -2305,7 +2305,7 @@ void CG_MissileHitPlayer(int weapon, vec3_t origin, vec3_t dir, int entityNum, q
 		break;
 
 	case WP_FRAG_GRENADE:
-		CG_ThermalImpactEffect(altFire, origin, dir, up);
+		FX_WeaponHitPlayer(origin, dir, humanoid, weapon, altFire);
 		break;
 
 	case WP_THERMAL:
