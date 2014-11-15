@@ -1046,6 +1046,52 @@ qboolean NPC_HaveValidEnemy( void )
 	return NPC_IsAlive(NPC->enemy);
 }
 
+extern qboolean NPC_SimpleJump( vec3_t from, vec3_t to );
+
+void NPC_NewWaypointJump ( void )
+{// Jumping to new waypoint...
+	vec3_t myOrg, wpOrg;
+
+	VectorCopy(NPCS.NPC->r.currentOrigin, myOrg);
+	myOrg[2]+= 8;
+
+	if (NPCS.NPC->wpCurrent < 0 || NPCS.NPC->wpCurrent >= gWPNum)
+	{
+		return;
+	}
+
+	VectorCopy(gWPArray[NPCS.NPC->wpCurrent]->origin, wpOrg);
+	//wpOrg[2]+= 8;
+
+	if (!NPCS.NPC->npc_jumping && NPCS.NPC->wpLast >= 0 && NPCS.NPC->wpLast < gWPNum)
+	{// Have a wpLast... We are mid route...
+		if (OrgVisible(myOrg, wpOrg, NPCS.NPC->s.number))
+			return;
+	}
+	else if (!NPCS.NPC->npc_jumping && wpOrg[2] <= myOrg[2]+8)
+	{// No wpLast, we are on a new route, but this waypoint is walkable...
+		if (OrgVisible(myOrg, wpOrg, NPCS.NPC->s.number))
+			return; // No need to jump to this...
+	}
+
+	if (NPCS.NPC->npc_jumping && NPC_SimpleJump( NPCS.NPC->npc_jump_start, NPCS.NPC->npc_jump_dest ))
+	{// Continue the jump...
+		return;
+	}
+	else
+	{
+		NPCS.NPC->npc_jumping = qfalse;
+	}
+
+	if (!NPCS.NPC->npc_jumping)
+	{// Start the jump...
+		VectorCopy(NPCS.NPC->r.currentOrigin, NPCS.NPC->npc_jump_start);
+		wpOrg[2] += 64.0;
+		VectorCopy(wpOrg, NPCS.NPC->npc_jump_dest);
+		NPC_SimpleJump( NPCS.NPC->npc_jump_start, NPCS.NPC->npc_jump_dest );
+	}
+}
+
 qboolean NPC_FollowRoutes( void ) 
 {// Quick method of following bot routes...
 	gentity_t	*NPC = NPCS.NPC;
@@ -1352,6 +1398,10 @@ qboolean NPC_FollowRoutes( void )
 		{// UQ1: Testing new jump...
 			return qtrue;
 		}
+	}
+	else
+	{// If this is a new waypoint, we may need to jump to it...
+		NPC_NewWaypointJump();
 	}
 
 	if (NPC_IsCivilian(NPC))
@@ -1806,6 +1856,10 @@ qboolean NPC_FollowEnemyRoute( void )
 		{// UQ1: Testing new jump...
 			return qtrue;
 		}
+	}
+	else
+	{// If this is a new waypoint, we may need to jump to it...
+		NPC_NewWaypointJump();
 	}
 
 	if (!UQ1_UcmdMoveForDir( NPC, &NPCS.ucmd, NPC->movedir, qfalse, gWPArray[NPC->wpCurrent]->origin )) { /*NPC_PickRandomIdleAnimantion(NPC);*/ return qtrue; }

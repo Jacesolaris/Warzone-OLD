@@ -537,17 +537,18 @@ void Boba_DoFlameThrower( gentity_t *self )
 
 void Boba_FireDecide( void )
 {
-	qboolean enemyLOS = qfalse, enemyCS = qfalse, enemyInFOV = qfalse;
-	//qboolean move = qtrue;
-	qboolean shoot = qfalse, hitAlly = qfalse;
-	vec3_t	impactPos, enemyDir, shootDir;
-	float	enemyDist, dot;
+	qboolean	enemyLOS = qfalse, enemyCS = qfalse, enemyInFOV = qfalse;
+	//qboolean	move = qtrue;
+	qboolean	shoot = qfalse, hitAlly = qfalse;
+	vec3_t		impactPos, enemyDir, shootDir;
+	float		enemyDist, dot;
+	qboolean	ENEMY_IS_BREAKABLE = qfalse;
 
 	if ((NPC_IsBountyHunter(NPCS.NPC) || NPCS.NPC->hasJetpack)
 		&& NPCS.NPC->client->ps.groundEntityNum == ENTITYNUM_NONE
 		&& NPCS.NPC->client->ps.fd.forceJumpZStart
 		&& !BG_FlippingAnim( NPCS.NPC->client->ps.legsAnim )
-		&& !Q_irand( 0, 10 ) )
+		&& !Q_irand( 0, 4 ) )
 	{//take off
 		Boba_FlyStart( NPCS.NPC );
 	}
@@ -557,12 +558,34 @@ void Boba_FireDecide( void )
 		return;
 	}
 
+	ENEMY_IS_BREAKABLE = NPC_EntityIsBreakable(NPCS.NPC, NPCS.NPC->enemy);
+
 	if (!CanShoot (NPCS.NPC->enemy, NPCS.NPC ))
 	{// UQ1: Umm, how about we actually check if we can hit them first???
 		return;
 	}
 
-	if ( Distance(NPCS.NPC->enemy->r.currentOrigin, NPCS.NPC->r.currentOrigin) <= 64 
+	if ( !ENEMY_IS_BREAKABLE
+		&& Distance(NPCS.NPC->enemy->r.currentOrigin, NPCS.NPC->r.currentOrigin) <= 64 
+		&& NPCS.NPC->client->ps.weapon != WP_SABER//!NPC_IsJedi(NPCS.NPC) 
+		&& NPCS.NPC->client->NPC_class != CLASS_BOBAFETT // BOBA kicks like a jedi now...
+		/*&& !(NPCS.NPC->client->NPC_class == CLASS_BOBAFETT && (!TIMER_Done( NPCS.NPC, "nextAttackDelay" ) || !TIMER_Done( NPCS.NPC, "flameTime" )))*/)
+	{// Close range - switch to melee... TODO: Make jedi/sith kick...
+		if (NPCS.NPC->next_rifle_butt_time > level.time)
+		{// Wait for anim to play out...
+			return;
+		}
+		else
+		{// Hit them again...
+			NPCS.NPCInfo->scriptFlags &= ~SCF_ALT_FIRE;
+			NPC_SetAnim( NPCS.NPC, SETANIM_BOTH, BOTH_MELEE2, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD ); // UQ1: Better anim?????
+			WP_FireMelee(NPCS.NPC, qfalse);
+			NPCS.NPC->next_rifle_butt_time = level.time + 1000;
+			return;
+		}
+	}
+	else if ( ENEMY_IS_BREAKABLE
+		&& Distance(NPCS.NPC->enemy->breakableOrigin, NPCS.NPC->r.currentOrigin) <= 64 
 		&& NPCS.NPC->client->ps.weapon != WP_SABER//!NPC_IsJedi(NPCS.NPC) 
 		&& NPCS.NPC->client->NPC_class != CLASS_BOBAFETT // BOBA kicks like a jedi now...
 		/*&& !(NPCS.NPC->client->NPC_class == CLASS_BOBAFETT && (!TIMER_Done( NPCS.NPC, "nextAttackDelay" ) || !TIMER_Done( NPCS.NPC, "flameTime" )))*/)
@@ -584,7 +607,7 @@ void Boba_FireDecide( void )
 		|| NPCS.NPC->client->ps.weapon == WP_WESTER_PISTOL || NPCS.NPC->client->ps.weapon == WP_ELG_3A 
 		|| NPCS.NPC->client->ps.weapon == WP_S5_PISTOL)
 	{
-		if ( NPCS.NPC->health < NPCS.NPC->client->pers.maxHealth*0.5f )
+		if ( NPCS.NPC->health < NPCS.NPC->client->pers.maxHealth*0.5f || ENEMY_IS_BREAKABLE )
 		{
 			NPCS.NPCInfo->scriptFlags |= SCF_ALT_FIRE;
 
@@ -600,7 +623,7 @@ void Boba_FireDecide( void )
 	}
 	else if (NPCS.NPC->client->ps.weapon == WP_BLASTER)
 	{
-		if ( NPCS.NPC->health < NPCS.NPC->client->pers.maxHealth*0.5f || NPC_IsJedi(NPCS.NPC) || NPCS.NPC->s.eType == ET_PLAYER )
+		if ( NPCS.NPC->health < NPCS.NPC->client->pers.maxHealth*0.5f || NPC_IsJedi(NPCS.NPC) || NPCS.NPC->s.eType == ET_PLAYER || ENEMY_IS_BREAKABLE )
 		{
 			NPCS.NPCInfo->scriptFlags |= SCF_ALT_FIRE;
 
@@ -632,7 +655,7 @@ void Boba_FireDecide( void )
 	}
 	else if (NPCS.NPC->client->ps.weapon == WP_REPEATER)
 	{
-		if ( NPCS.NPC->health < NPCS.NPC->client->pers.maxHealth*0.5f || NPC_IsJedi(NPCS.NPC) || NPCS.NPC->s.eType == ET_PLAYER )
+		if ( NPCS.NPC->health < NPCS.NPC->client->pers.maxHealth*0.5f || NPC_IsJedi(NPCS.NPC) || NPCS.NPC->s.eType == ET_PLAYER || ENEMY_IS_BREAKABLE)
 		{
 			NPCS.NPCInfo->scriptFlags |= SCF_ALT_FIRE;
 
@@ -648,7 +671,7 @@ void Boba_FireDecide( void )
 	}
 	else if (NPCS.NPC->client->ps.weapon == WP_DEMP2 || NPCS.NPC->client->ps.weapon == WP_FLECHETTE)
 	{
-		if ( NPCS.NPC->health < NPCS.NPC->client->pers.maxHealth*0.5f )
+		if ( NPCS.NPC->health < NPCS.NPC->client->pers.maxHealth*0.5f || ENEMY_IS_BREAKABLE )
 		{
 			NPCS.NPCInfo->scriptFlags |= SCF_ALT_FIRE;
 
@@ -664,7 +687,7 @@ void Boba_FireDecide( void )
 	}
 	else if (NPCS.NPC->client->ps.weapon == WP_CONCUSSION)
 	{
-		if ( NPCS.NPC->health < NPCS.NPC->client->pers.maxHealth*0.5f || NPC_IsJedi(NPCS.NPC) || NPCS.NPC->s.eType == ET_PLAYER )
+		if ( NPCS.NPC->health < NPCS.NPC->client->pers.maxHealth*0.5f || NPC_IsJedi(NPCS.NPC) || NPCS.NPC->s.eType == ET_PLAYER || ENEMY_IS_BREAKABLE )
 		{
 			NPCS.NPCInfo->scriptFlags |= SCF_ALT_FIRE;
 
@@ -678,22 +701,58 @@ void Boba_FireDecide( void )
 			NPCS.NPCInfo->scriptFlags &= ~SCF_ALT_FIRE;
 		}
 	}
+	else if (NPCS.NPC->client->ps.weapon != WP_SABER && ENEMY_IS_BREAKABLE)
+	{// Breakables...
+		NPCS.NPCInfo->scriptFlags |= SCF_ALT_FIRE;
+
+		NPCS.NPCInfo->burstMin = 3;
+		NPCS.NPCInfo->burstMean = 12;
+		NPCS.NPCInfo->burstMax = 20;
+		NPCS.NPCInfo->burstSpacing = Q_irand( 300, 750 );//attack debounce
+	}
+	else if (NPCS.NPC->client->ps.weapon != WP_SABER)
+	{// UQ1: How about I add a default for them??? :)
+		if ( NPCS.NPC->health < NPCS.NPC->client->pers.maxHealth*0.5f || NPC_IsJedi(NPCS.NPC) || NPCS.NPC->s.eType == ET_PLAYER || ENEMY_IS_BREAKABLE )
+		{
+			NPCS.NPCInfo->scriptFlags |= SCF_ALT_FIRE;
+
+			NPCS.NPCInfo->burstMin = 3;
+			NPCS.NPCInfo->burstMean = 12;
+			NPCS.NPCInfo->burstMax = 20;
+			NPCS.NPCInfo->burstSpacing = Q_irand( 300, 750 );//attack debounce
+		}
+		else
+		{
+			NPCS.NPCInfo->scriptFlags &= ~SCF_ALT_FIRE;
+		}
+	}
 	
 
 	VectorClear( impactPos );
-	enemyDist = DistanceSquared( NPCS.NPC->r.currentOrigin, NPCS.NPC->enemy->r.currentOrigin );
 
-	VectorSubtract( NPCS.NPC->enemy->r.currentOrigin, NPCS.NPC->r.currentOrigin, enemyDir );
+	if (ENEMY_IS_BREAKABLE)
+	{
+		enemyDist = DistanceSquared( NPCS.NPC->r.currentOrigin, NPCS.NPC->enemy->breakableOrigin );
+		VectorSubtract( NPCS.NPC->enemy->breakableOrigin, NPCS.NPC->r.currentOrigin, enemyDir );
+	}
+	else
+	{
+		enemyDist = DistanceSquared( NPCS.NPC->r.currentOrigin, NPCS.NPC->enemy->r.currentOrigin );
+		VectorSubtract( NPCS.NPC->enemy->r.currentOrigin, NPCS.NPC->r.currentOrigin, enemyDir );
+	}
+
 	VectorNormalize( enemyDir );
 	AngleVectors( NPCS.NPC->client->ps.viewangles, shootDir, NULL, NULL );
 	dot = DotProduct( enemyDir, shootDir );
+
 	if ( dot > 0.5f ||( enemyDist * (1.0f-dot)) < 10000 )
 	{//enemy is in front of me or they're very close and not behind me
 		enemyInFOV = qtrue;
 	}
 
-	if ( NPC_IsBountyHunter(NPCS.NPC)
-		&& (enemyDist < (128*128)&&enemyInFOV) || !TIMER_Done( NPCS.NPC, "flameTime" ) )
+	if ( !ENEMY_IS_BREAKABLE
+		&& NPC_IsBountyHunter(NPCS.NPC)
+		&& (enemyDist < (128*128) && enemyInFOV) || !TIMER_Done( NPCS.NPC, "flameTime" ) )
 	{//flamethrower
 		Boba_DoFlameThrower( NPCS.NPC );
 		enemyCS = qfalse;
@@ -776,7 +835,12 @@ void Boba_FireDecide( void )
 				}
 			}
 		}
-		else if ( trap->InPVS( NPCS.NPC->enemy->r.currentOrigin, NPCS.NPC->r.currentOrigin ) )
+		else if ( !ENEMY_IS_BREAKABLE && trap->InPVS( NPCS.NPC->enemy->r.currentOrigin, NPCS.NPC->r.currentOrigin ) )
+		{
+			NPCS.NPCInfo->enemyLastSeenTime = level.time;
+			//NPC_AimAdjust( -1 );//adjust aim worse longer we cannot see enemy
+		}
+		else if (ENEMY_IS_BREAKABLE && trap->InPVS( NPCS.NPC->enemy->breakableOrigin, NPCS.NPC->r.currentOrigin ) )
 		{
 			NPCS.NPCInfo->enemyLastSeenTime = level.time;
 			//NPC_AimAdjust( -1 );//adjust aim worse longer we cannot see enemy
@@ -7179,8 +7243,10 @@ qboolean NPC_MoveIntoOptimalAttackPosition ( void )
 
 		if ( UpdateGoal() )
 		{
-			NPC_CombatMoveToGoal( qtrue, qtrue );
-			return qtrue;
+			if (NPC_CombatMoveToGoal( qtrue, qtrue ))
+			{// All is good in the world...
+				return qtrue;
+			}
 		}
 	}
 

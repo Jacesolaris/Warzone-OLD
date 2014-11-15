@@ -391,6 +391,7 @@ extern int navTime;
 
 extern qboolean NPC_CheckFall(gentity_t *NPC, vec3_t dir);
 extern int NPC_CheckFallJump(gentity_t *NPC, vec3_t dest, usercmd_t *cmd);
+extern qboolean NPC_MoveDirClear( int forwardmove, int rightmove, qboolean reset );
 
 qboolean NPC_CombatMoveToGoal( qboolean tryStraight, qboolean retreat )
 {
@@ -519,11 +520,64 @@ qboolean NPC_CombatMoveToGoal( qboolean tryStraight, qboolean retreat )
 		}
 
 		//Set any final info
-		NPCS.ucmd.forwardmove = 127;
-
 		if (retreat)
 		{
-			NPCS.ucmd.forwardmove = -127;
+			if (NPC_MoveDirClear( -127, NPCS.ucmd.rightmove, qfalse )) // UQ1: Only if safe!
+			{
+				NPCS.ucmd.forwardmove = -127;
+
+				if (NPCS.NPC->s.eType == ET_PLAYER)
+				{
+					if (NPCS.ucmd.buttons & BUTTON_WALKING)
+					{
+						trap->EA_MoveBack(NPCS.NPC->s.number);
+					}
+					else
+					{
+						trap->EA_MoveBack(NPCS.NPC->s.number);
+					}
+				}
+				return qtrue;
+			}
+		}
+		else
+		{
+			if (NPC_MoveDirClear( 127, NPCS.ucmd.rightmove, qfalse )) // UQ1: Only if safe!
+			{
+				NPCS.ucmd.forwardmove = 127;
+
+				if (NPCS.NPC->s.eType == ET_PLAYER)
+				{
+					if (NPCS.ucmd.buttons & BUTTON_WALKING)
+					{
+						trap->EA_MoveForward(NPCS.NPC->s.number);
+					}
+					else
+					{
+						trap->EA_MoveForward(NPCS.NPC->s.number);
+					}
+				}
+				return qtrue;
+			}
+		}
+
+		//
+		// Non-Combat move has failed! Force combat move...
+		//
+
+		G_UcmdMoveForDir( NPCS.NPC, &NPCS.ucmd, dir, NPCS.NPCInfo->goalEntity->r.currentOrigin );
+
+		if (NPCS.NPC->s.eType == ET_PLAYER)
+		{
+			if (NPCS.ucmd.buttons & BUTTON_WALKING)
+			{
+				//trap->EA_Action(NPCS.NPC->s.number, 0x0080000);
+				trap->EA_Move(NPCS.NPC->s.number, dir, 5000.0);
+			}
+			else
+			{
+				trap->EA_Move(NPCS.NPC->s.number, dir, 5000.0);
+			}
 		}
 	}
 
@@ -531,10 +585,12 @@ qboolean NPC_CombatMoveToGoal( qboolean tryStraight, qboolean retreat )
 	navTime += GetTime( startTime );
 #endif//	AI_TIMERS
 
+	/*
 	if (retreat)
-	{
+	{// UQ1: Isn't this done above???
 		VectorScale( NPCS.NPC->client->ps.moveDir, -1, NPCS.NPC->client->ps.moveDir );
 	}
+	*/
 
 	return qtrue;
 }

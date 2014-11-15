@@ -11,6 +11,7 @@ int	teamCounter[TEAM_NUM_TEAMS];
 
 #define	VALID_ATTACK_CONE	2.0f	//Degrees
 extern void G_DebugPrint( int level, const char *format, ... );
+extern qboolean G_EntIsBreakable( int entityNum );
 
 /*
 void CalcEntitySpot ( gentity_t *ent, spot_t spot, vec3_t point )
@@ -21,24 +22,35 @@ Added: Uses shootAngles if a NPC has them
 void CalcEntitySpot ( const gentity_t *ent, const spot_t spot, vec3_t point )
 {
 	vec3_t	forward, up, right;
-	vec3_t	start, end;
+	vec3_t	start, end, org;
 	trace_t	tr;
 
 	if ( !ent )
 	{
 		return;
 	}
+
+	if (NPCS.NPC && G_EntIsBreakable(ent->s.number))
+	{
+		VectorCopy ( ent->breakableOrigin, point );
+		return;
+	}
+
+	VectorCopy(ent->r.currentOrigin, org);
+
+	//if (G_EntIsBreakable(ent->s.number)) VectorCopy(ent->breakableOrigin, org);
+
 	switch ( spot )
 	{
 	case SPOT_ORIGIN:
-		if(VectorCompare(ent->r.currentOrigin, vec3_origin))
+		if(VectorCompare(org, vec3_origin))
 		{//brush
 			VectorSubtract(ent->r.absmax, ent->r.absmin, point);//size
 			VectorMA(ent->r.absmin, 0.5, point, point);
 		}
 		else
 		{
-			VectorCopy ( ent->r.currentOrigin, point );
+			VectorCopy ( org, point );
 		}
 		break;
 
@@ -54,8 +66,8 @@ void CalcEntitySpot ( const gentity_t *ent, const spot_t spot, vec3_t point )
 			}
 			if ( ent->NPC )
 			{//always aim from the center of my bbox, so we don't wiggle when we lean forward or backwards
-				point[0] = ent->r.currentOrigin[0];
-				point[1] = ent->r.currentOrigin[1];
+				point[0] = org[0];
+				point[1] = org[1];
 			}
 			/*
 			else if (ent->s.eType == ET_PLAYER )
@@ -66,7 +78,7 @@ void CalcEntitySpot ( const gentity_t *ent, const spot_t spot, vec3_t point )
 		}
 		else
 		{
-			VectorCopy ( ent->r.currentOrigin, point );
+			VectorCopy ( org, point );
 			if ( ent->client )
 			{
 				point[2] += ent->client->ps.viewheight;
@@ -92,8 +104,8 @@ void CalcEntitySpot ( const gentity_t *ent, const spot_t spot, vec3_t point )
 			}
 			if ( ent->NPC )
 			{//always aim from the center of my bbox, so we don't wiggle when we lean forward or backwards
-				point[0] = ent->r.currentOrigin[0];
-				point[1] = ent->r.currentOrigin[1];
+				point[0] = org[0];
+				point[1] = org[1];
 			}
 			/*
 			else if ( ent->s.eType == ET_PLAYER )
@@ -105,7 +117,7 @@ void CalcEntitySpot ( const gentity_t *ent, const spot_t spot, vec3_t point )
 		}
 		else
 		{
-			VectorCopy ( ent->r.currentOrigin, point );
+			VectorCopy ( org, point );
 			if ( ent->client )
 			{
 				point[2] += ent->client->ps.viewheight;
@@ -120,7 +132,7 @@ void CalcEntitySpot ( const gentity_t *ent, const spot_t spot, vec3_t point )
 		//break;
 
 	case SPOT_LEGS:
-		VectorCopy ( ent->r.currentOrigin, point );
+		VectorCopy ( org, point );
 		point[2] += (ent->r.mins[2] * 0.5);
 		break;
 
@@ -141,13 +153,13 @@ void CalcEntitySpot ( const gentity_t *ent, const spot_t spot, vec3_t point )
 		// if entity is on the ground, just use it's absmin
 		if ( ent->s.groundEntityNum != ENTITYNUM_NONE )
 		{
-			VectorCopy( ent->r.currentOrigin, point );
+			VectorCopy( org, point );
 			point[2] = ent->r.absmin[2];
 			break;
 		}
 
 		// if it is reasonably close to the ground, give the point underneath of it
-		VectorCopy( ent->r.currentOrigin, start );
+		VectorCopy( org, start );
 		start[2] = ent->r.absmin[2];
 		VectorCopy( start, end );
 		end[2] -= 64;
@@ -159,11 +171,11 @@ void CalcEntitySpot ( const gentity_t *ent, const spot_t spot, vec3_t point )
 		}
 
 		// otherwise just use the origin
-		VectorCopy( ent->r.currentOrigin, point );
+		VectorCopy( org, point );
 		break;
 
 	default:
-		VectorCopy ( ent->r.currentOrigin, point );
+		VectorCopy ( org, point );
 		break;
 	}
 }
@@ -1119,6 +1131,11 @@ qboolean NPC_ValidEnemy( gentity_t *ent )
 		return qfalse;
 	}
 
+	if ( NPCS.NPC && NPC_EntityIsBreakable(NPCS.NPC, ent) )
+	{// Breakables are perfectly valid targets...
+		return qtrue;
+	}
+
 	/*if (!(ent->s.eType == ET_NPC || ent->s.eType == ET_PLAYER)) 
 	{
 		return qfalse;
@@ -1377,6 +1394,11 @@ qboolean NPC_ValidEnemy2( gentity_t *self, gentity_t *ent )
 		return qfalse;
 	}
 
+	if ( self && NPC_EntityIsBreakable(self, ent) )
+	{// Breakables are perfectly valid targets...
+		return qtrue;
+	}
+
 	/*if (!(ent->s.eType == ET_NPC || ent->s.eType == ET_PLAYER)) 
 	{
 		return qfalse;
@@ -1614,22 +1636,45 @@ NPC_TargetVisible
 
 qboolean NPC_TargetVisible( gentity_t *ent )
 {
+	qboolean IS_BREAKABLE = qfalse;
+
+	if (NPCS.NPC && NPC_EntityIsBreakable(NPCS.NPC, ent))
+	{
+		IS_BREAKABLE = qtrue;
+	}
 
 	//Make sure we're in a valid range
-	if ( DistanceSquared( ent->r.currentOrigin, NPCS.NPC->r.currentOrigin ) > ( NPCS.NPCInfo->stats.visrange * NPCS.NPCInfo->stats.visrange ) )
+	if ( !IS_BREAKABLE && DistanceSquared( ent->r.currentOrigin, NPCS.NPC->r.currentOrigin ) > ( NPCS.NPCInfo->stats.visrange * NPCS.NPCInfo->stats.visrange ) )
+	{
 		return qfalse;
+	}
+
+	if ( IS_BREAKABLE && DistanceSquared( ent->breakableOrigin, NPCS.NPC->r.currentOrigin ) > ( NPCS.NPCInfo->stats.visrange * NPCS.NPCInfo->stats.visrange ) )
+	{
+		//if (IS_BREAKABLE) trap->Print("IS_BREAKABLE failed DIST\n");
+		return qfalse;
+	}
 
 	//Check our FOV
-	if ( InFOV( ent, NPCS.NPC, NPCS.NPCInfo->stats.hfov, NPCS.NPCInfo->stats.vfov ) == qfalse )
+	if ( !InFOV( ent, NPCS.NPC, NPCS.NPCInfo->stats.hfov, NPCS.NPCInfo->stats.vfov ) )
+	{
+		//if (IS_BREAKABLE) trap->Print("IS_BREAKABLE failed FOV\n");
 		return qfalse;
+	}
 
 	//Check for sight
 	if ( NPC_ClearLOS4( ent ) == qfalse )
+	{
+		//if (IS_BREAKABLE) trap->Print("IS_BREAKABLE failed LOS\n");
 		return qfalse;
+	}
 
 	// UQ1: Also check if we can actually shoot him...
-	if (NPC_CheckVisibility ( ent, CHECK_VISRANGE|CHECK_SHOOT ) < VIS_SHOOT)
+	if (NPC_CheckVisibility( ent, CHECK_VISRANGE|CHECK_SHOOT ) < VIS_SHOOT)
+	{
+		//if (IS_BREAKABLE) trap->Print("IS_BREAKABLE failed VIS\n");
 		return qfalse;
+	}
 
 	return qtrue;
 }
@@ -1702,11 +1747,26 @@ int NPC_FindNearestEnemy( gentity_t *ent )
 			continue;
 
 		numChecks++;
+
 		//Must be visible
 		if ( NPC_TargetVisible( radEnt ) == qfalse )
 			continue;
 
-		distance = DistanceSquared( ent->r.currentOrigin, radEnt->r.currentOrigin );
+		if (EntIsGlass(radEnt))
+		{
+			//trap->Print("Skip glass at %f %f %f.\n", radEnt->breakableOrigin[0], radEnt->breakableOrigin[1], radEnt->breakableOrigin[2]);
+			continue;
+		}
+
+		if (NPC_EntityIsBreakable(ent, radEnt))
+		{
+			//trap->Print("Target breakable at %f %f %f.\n", radEnt->breakableOrigin[0], radEnt->breakableOrigin[1], radEnt->breakableOrigin[2]);
+			distance = DistanceSquared( ent->r.currentOrigin, radEnt->breakableOrigin );
+		}
+		else
+		{
+			distance = DistanceSquared( ent->r.currentOrigin, radEnt->r.currentOrigin );
+		}
 
 		//Found one closer to us
 		if ( distance < nearestDist )
@@ -1714,6 +1774,12 @@ int NPC_FindNearestEnemy( gentity_t *ent )
 			nearestEntID = radEnt->s.number;
 			nearestDist = distance;
 		}
+	}
+
+	if (nearestEntID && NPC_EntityIsBreakable(ent, &g_entities[nearestEntID]))
+	{
+		radEnt = &g_entities[nearestEntID];
+		//trap->Print("Target breakable at %f %f %f.\n", radEnt->breakableOrigin[0], radEnt->breakableOrigin[1], radEnt->breakableOrigin[2]);
 	}
 
 	return nearestEntID;

@@ -262,6 +262,11 @@ NPC_CheckVisibility
 
 visibility_t NPC_CheckVisibility ( gentity_t *ent, int flags )
 {
+	qboolean IS_BREAKABLE = qfalse;
+
+	if (NPCS.NPC && NPC_EntityIsBreakable(NPCS.NPC, ent))
+		IS_BREAKABLE = qtrue;
+
 	// flags should never be 0
 	if ( !flags )
 	{
@@ -271,7 +276,11 @@ visibility_t NPC_CheckVisibility ( gentity_t *ent, int flags )
 	// check PVS
 	if ( flags & CHECK_PVS )
 	{
-		if ( !trap->InPVS ( ent->r.currentOrigin, NPCS.NPC->r.currentOrigin ) )
+		if ( !IS_BREAKABLE && !trap->InPVS ( ent->r.currentOrigin, NPCS.NPC->r.currentOrigin ) )
+		{
+			return VIS_NOT;
+		}
+		else if ( IS_BREAKABLE && !trap->InPVS ( ent->breakableOrigin, NPCS.NPC->r.currentOrigin ) )
 		{
 			return VIS_NOT;
 		}
@@ -748,10 +757,50 @@ qboolean G_ClearLOS( gentity_t *self, const vec3_t start, const vec3_t end )
 	trace_t		tr;
 	int			traceCount = 0;
 
-	//FIXME: ENTITYNUM_NONE ok?
-	trap->Trace ( &tr, start, NULL, NULL, end, ENTITYNUM_NONE, CONTENTS_OPAQUE/*CONTENTS_SOLID*//*(CONTENTS_SOLID|CONTENTS_MONSTERCLIP)*/, qfalse, 0, 0 );
+	//FIXME: ENTITYNUM_NONE ok? // UQ1: ummm, no!
+	if (self)
+		trap->Trace ( &tr, start, NULL, NULL, end, self->s.number, CONTENTS_OPAQUE/*CONTENTS_SOLID*//*(CONTENTS_SOLID|CONTENTS_MONSTERCLIP)*/, qfalse, 0, 0 );
+	else
+		trap->Trace ( &tr, start, NULL, NULL, end, ENTITYNUM_NONE, CONTENTS_OPAQUE/*CONTENTS_SOLID*//*(CONTENTS_SOLID|CONTENTS_MONSTERCLIP)*/, qfalse, 0, 0 );
+
 	while ( tr.fraction < 1.0 && traceCount < 3 )
 	{//can see through 3 panes of glass
+		if ( tr.entityNum < ENTITYNUM_WORLD )
+		{
+			if ( &g_entities[tr.entityNum] != NULL && (g_entities[tr.entityNum].r.svFlags&SVF_GLASS_BRUSH) )
+			{//can see through glass, trace again, ignoring me
+				trap->Trace ( &tr, tr.endpos, NULL, NULL, end, tr.entityNum, MASK_OPAQUE, qfalse, 0, 0 );
+				traceCount++;
+				continue;
+			}
+		}
+		return qfalse;
+	}
+
+	if ( tr.fraction == 1.0 )
+		return qtrue;
+
+	return qfalse;
+}
+
+extern qboolean G_EntIsBreakable( int entityNum );
+
+qboolean G_ClearLOS_Breakable( gentity_t *self, const vec3_t start, const vec3_t end, gentity_t *ent )
+{
+	trace_t		tr;
+	int			traceCount = 0;
+
+	//FIXME: ENTITYNUM_NONE ok? // UQ1: ummm, no!
+	if (self)
+		trap->Trace ( &tr, start, NULL, NULL, end, self->s.number, CONTENTS_OPAQUE/*CONTENTS_SOLID*//*(CONTENTS_SOLID|CONTENTS_MONSTERCLIP)*/, qfalse, 0, 0 );
+	else
+		trap->Trace ( &tr, start, NULL, NULL, end, ENTITYNUM_NONE, CONTENTS_OPAQUE/*CONTENTS_SOLID*//*(CONTENTS_SOLID|CONTENTS_MONSTERCLIP)*/, qfalse, 0, 0 );
+
+	while ( tr.fraction < 1.0 && traceCount < 3 )
+	{//can see through 3 panes of glass
+		if ( tr.entityNum == ent->s.number)
+			return qtrue;
+
 		if ( tr.entityNum < ENTITYNUM_WORLD )
 		{
 			if ( &g_entities[tr.entityNum] != NULL && (g_entities[tr.entityNum].r.svFlags&SVF_GLASS_BRUSH) )
@@ -793,6 +842,11 @@ qboolean G_ClearLOS3( gentity_t *self, const vec3_t start, gentity_t *ent )
 
 	//Look for the head next
 	CalcEntitySpot( ent, SPOT_HEAD_LEAN, spot );
+
+	if ( ent 
+		&& G_EntIsBreakable(ent->s.number) 
+		&& G_ClearLOS_Breakable(self, start, spot, ent ) )
+		return qtrue;
 
 	if ( G_ClearLOS( self, start, spot ) )
 		return qtrue;

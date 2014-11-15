@@ -630,7 +630,8 @@ void G_InitGame( int levelTime, int randomSeed, int restart ) {
 	ClearRegisteredItems();
 
 	//make sure saber data is loaded before this! (so we can precache the appropriate hilts)
-	InitSiegeMode();
+	if (level.gametype == GT_SIEGE) // UQ1: Why were we doing this in non siege gametypes???
+		InitSiegeMode();
 
 	trap->Cvar_Register( &mapname, "mapname", "", CVAR_SERVERINFO | CVAR_ROM );
 	trap->Cvar_Register( &ckSum, "sv_mapChecksum", "", CVAR_ROM );
@@ -3505,6 +3506,50 @@ void G_RunFrame( int levelTime ) {
 			continue;
 		}
 
+		if ( ent->client && (ent->s.eType == ET_PLAYER || ent->s.eType == ET_NPC) )
+		{// UQ1: NPCs can hack/use too!!!
+			if (ent->client->isHacking)
+			{ //hacking checks
+				gentity_t *hacked = &g_entities[ent->client->isHacking];
+				vec3_t angDif;
+
+				VectorSubtract(ent->client->ps.viewangles, ent->client->hackingAngles, angDif);
+
+				//keep him in the "use" anim
+				if (ent->client->ps.torsoAnim != BOTH_CONSOLE1)
+				{
+					G_SetAnim( ent, NULL, SETANIM_TORSO, BOTH_CONSOLE1, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD, 0 );
+				}
+				else
+				{
+					ent->client->ps.torsoTimer = 500;
+				}
+
+				ent->client->ps.weaponTime = ent->client->ps.torsoTimer;
+
+				if (!(ent->client->pers.cmd.buttons & BUTTON_USE) && ent->s.eType == ET_PLAYER)
+				{ //have to keep holding use
+					ent->client->isHacking = 0;
+					ent->client->ps.hackingTime = 0;
+				}
+				else if (!hacked || !hacked->inuse)
+				{ //shouldn't happen, but safety first
+					ent->client->isHacking = 0;
+					ent->client->ps.hackingTime = 0;
+				}
+				else if (!G_PointInBounds( ent->client->ps.origin, hacked->r.absmin, hacked->r.absmax ))
+				{ //they stepped outside the thing they're hacking, so reset hacking time
+					ent->client->isHacking = 0;
+					ent->client->ps.hackingTime = 0;
+				}
+				else if (VectorLength(angDif) > 10.0f && ent->s.eType == ET_PLAYER)
+				{ //must remain facing generally the same angle as when we start (UQ1: But only for players)
+					ent->client->isHacking = 0;
+					ent->client->ps.hackingTime = 0;
+				}
+			}
+		}
+
 		if ( i < MAX_CLIENTS )
 		{
 			G_CheckClientTimeouts ( ent );
@@ -3539,46 +3584,6 @@ void G_RunFrame( int levelTime ) {
 
 						ent->client->inSpaceSuffocation = level.time + Q_irand(100, 200);
 					}
-				}
-			}
-
-			if (ent->client->isHacking)
-			{ //hacking checks
-				gentity_t *hacked = &g_entities[ent->client->isHacking];
-				vec3_t angDif;
-
-				VectorSubtract(ent->client->ps.viewangles, ent->client->hackingAngles, angDif);
-
-				//keep him in the "use" anim
-				if (ent->client->ps.torsoAnim != BOTH_CONSOLE1)
-				{
-					G_SetAnim( ent, NULL, SETANIM_TORSO, BOTH_CONSOLE1, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD, 0 );
-				}
-				else
-				{
-					ent->client->ps.torsoTimer = 500;
-				}
-				ent->client->ps.weaponTime = ent->client->ps.torsoTimer;
-
-				if (!(ent->client->pers.cmd.buttons & BUTTON_USE))
-				{ //have to keep holding use
-					ent->client->isHacking = 0;
-					ent->client->ps.hackingTime = 0;
-				}
-				else if (!hacked || !hacked->inuse)
-				{ //shouldn't happen, but safety first
-					ent->client->isHacking = 0;
-					ent->client->ps.hackingTime = 0;
-				}
-				else if (!G_PointInBounds( ent->client->ps.origin, hacked->r.absmin, hacked->r.absmax ))
-				{ //they stepped outside the thing they're hacking, so reset hacking time
-					ent->client->isHacking = 0;
-					ent->client->ps.hackingTime = 0;
-				}
-				else if (VectorLength(angDif) > 10.0f)
-				{ //must remain facing generally the same angle as when we start
-					ent->client->isHacking = 0;
-					ent->client->ps.hackingTime = 0;
 				}
 			}
 

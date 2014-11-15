@@ -950,6 +950,7 @@ void target_level_change_use(gentity_t *self, gentity_t *other, gentity_t *activ
 */
 void SP_target_level_change( gentity_t *self )
 {
+#if 0
 	char *s;
 
 	G_SpawnString( "mapname", "", &s );
@@ -963,6 +964,9 @@ void SP_target_level_change( gentity_t *self )
 
 	G_SetOrigin( self, self->s.origin );
 	self->use = target_level_change_use;
+#else
+	G_FreeEntity(self); // UQ1: Not in an MMO... Can't have the server switching maps...
+#endif
 }
 
 void target_play_music_use(gentity_t *self, gentity_t *other, gentity_t *activator)

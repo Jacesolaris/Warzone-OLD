@@ -494,6 +494,8 @@ struct gentity_s {
 
 	int					lastOnGroundTime;
 
+	vec3_t				breakableOrigin;
+
 	// UQ1: These are for reducing bandwidth usage...
 	int					next_full_update;
 	vec3_t				prev_posTrBase;
