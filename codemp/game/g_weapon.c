@@ -2161,6 +2161,7 @@ gentity_t *WP_DropThermal( gentity_t *ent )
 	return (WP_FireThermalDetonator( ent, qfalse ));
 }
 
+void grenadeThinkStandard(gentity_t *ent);
 gentity_t *WP_FireFragGrenade(gentity_t *ent, qboolean altFire)
 //---------------------------------------------------------
 {
