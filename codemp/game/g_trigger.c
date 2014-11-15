@@ -157,12 +157,12 @@ void multi_trigger( gentity_t *ent, gentity_t *activator )
 	{ //only certain classes can activate it
 		if (!activator ||
 			!activator->client ||
-			activator->client->siegeClass < 0)
+			(activator->client->siegeClass < 0 && activator->s.eType == ET_PLAYER))
 		{ //no class
 			return;
 		}
 
-		if (!G_NameInTriggerClassList(bgSiegeClasses[activator->client->siegeClass].name, ent->idealclass))
+		if (!G_NameInTriggerClassList(bgSiegeClasses[activator->client->siegeClass].name, ent->idealclass) && activator->s.eType != ET_NPC)
 		{ //wasn't in the list
 			return;
 		}
@@ -241,7 +241,8 @@ void multi_trigger( gentity_t *ent, gentity_t *activator )
 		numEnts = trap->EntitiesInBox( ent->r.absmin, ent->r.absmax, entityList, MAX_GENTITIES );
 		while (i < numEnts)
 		{
-			if (entityList[i] < MAX_CLIENTS)
+			//if (entityList[i] < MAX_CLIENTS)
+			if (g_entities[entityList[i]].s.eType == ET_PLAYER || g_entities[entityList[i]].s.eType == ET_NPC)
 			{ //only care about clients
 				cl = &g_entities[entityList[i]];
 
@@ -317,7 +318,7 @@ void multi_trigger( gentity_t *ent, gentity_t *activator )
 	}
 
 	// if the player has already activated this trigger this frame
-	if( activator && activator->s.number < MAX_CLIENTS && ent->aimDebounceTime == level.time )
+	if( activator && (activator->s.eType == ET_PLAYER || activator->s.eType == ET_NPC) && ent->aimDebounceTime == level.time )
 	{
 		return;
 	}
@@ -348,6 +349,7 @@ void Use_Multi( gentity_t *ent, gentity_t *other, gentity_t *activator )
 }
 
 qboolean G_PointInBounds( vec3_t point, vec3_t mins, vec3_t maxs );
+extern qboolean NPC_IsAlive ( gentity_t *NPC );
 
 void Touch_Multi( gentity_t *self, gentity_t *other, trace_t *trace )
 {
@@ -379,10 +381,12 @@ void Touch_Multi( gentity_t *self, gentity_t *other, trace_t *trace )
 
 	if ( self->spawnflags & 1 )
 	{
+		/* // UQ1: NPCs can do this stuff too...
 		if ( other->s.eType == ET_NPC )
 		{
 			return;
 		}
+		*/
 	}
 	else
 	{
@@ -424,7 +428,18 @@ void Touch_Multi( gentity_t *self, gentity_t *other, trace_t *trace )
 
 	if ( self->spawnflags & 4 )
 	{//USE_BUTTON
-		if( !( other->client->pers.cmd.buttons & BUTTON_USE ) )
+		if (other->client 
+			&& other->s.eType == ET_NPC
+			&& other->s.NPC_class != CLASS_VEHICLE
+			//&& !other->m_pVehicle
+			&& !(other->enemy && NPC_IsAlive(other->enemy))
+			&& self->genericValue7
+			&& G_PointInBounds( other->client->ps.origin, self->r.absmin, self->r.absmax ))
+		{// UQ1: Force NPCs to hack stuff that might be blocking their path...
+			if( !( other->client->pers.cmd.buttons & BUTTON_USE ) ) other->client->pers.cmd.buttons |= BUTTON_USE;
+			//trap->Print("NPC %s is hacking. Time %i.\n", other->NPC_type, other->client->ps.hackingTime - level.time);
+		}
+		else if( !( other->client->pers.cmd.buttons & BUTTON_USE ) )
 		{//not pressing use button
 			return;
 		}
@@ -443,12 +458,12 @@ void Touch_Multi( gentity_t *self, gentity_t *other, trace_t *trace )
 			{ //only certain classes can activate it
 				if (!other ||
 					!other->client ||
-					other->client->siegeClass < 0)
+					(other->client->siegeClass < 0 && other->s.eType == ET_PLAYER))
 				{ //no class
 					return;
 				}
 
-				if (!G_NameInTriggerClassList(bgSiegeClasses[other->client->siegeClass].name, self->idealclass))
+				if (!G_NameInTriggerClassList(bgSiegeClasses[other->client->siegeClass].name, self->idealclass) && other->s.eType != ET_NPC)
 				{ //wasn't in the list
 					return;
 				}
@@ -458,7 +473,7 @@ void Touch_Multi( gentity_t *self, gentity_t *other, trace_t *trace )
 			{
 				return;
 			}
-			else if (other->client->isHacking != self->s.number && other->s.number < MAX_CLIENTS )
+			else if (other->client->isHacking != self->s.number && (other->s.eType == ET_PLAYER || other->s.eType == ET_NPC) )
 			{ //start the hack
 				other->client->isHacking = self->s.number;
 				VectorCopy(other->client->ps.viewangles, other->client->hackingAngles);
@@ -485,6 +500,16 @@ void Touch_Multi( gentity_t *self, gentity_t *other, trace_t *trace )
 
 	if ( self->spawnflags & 8 )
 	{//FIRE_BUTTON
+		if (other->client 
+			&& other->s.eType == ET_NPC
+			&& other->s.NPC_class != CLASS_VEHICLE
+			&& !(other->enemy && NPC_IsAlive(other->enemy)))
+		{// NPCs should shoot as well...
+			other->alt_fire = qtrue;
+			other->client->pers.cmd.buttons |= BUTTON_ATTACK;
+			FireWeapon(other, qtrue);
+		}
+		
 		if( !( other->client->pers.cmd.buttons & BUTTON_ATTACK ) &&
 			!( other->client->pers.cmd.buttons & BUTTON_ALT_ATTACK ) )
 		{//not pressing fire button or altfire button

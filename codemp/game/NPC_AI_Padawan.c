@@ -223,6 +223,7 @@ qboolean NPC_NeedPadawan_Spawn ( void )
 
 		if ( parent2
 			&& NPC_IsAlive(parent2)
+			&& parent2->client
 			&& parent2->client->sess.sessionTeam == TEAM_BLUE
 			&& (parent2->client->NPC_class == CLASS_JEDI || parent2->client->NPC_class == CLASS_LUKE || parent2->client->NPC_class == CLASS_KYLE || (parent2->s.eType == ET_PLAYER && parent2->s.primaryWeapon == WP_SABER)))
 		{// This is a jedi on our team...
@@ -230,6 +231,7 @@ qboolean NPC_NeedPadawan_Spawn ( void )
 			jedi_count++;
 		}
 		else if ( parent2
+			&& parent2->client
 			&& NPC_IsAlive(parent2)
 			//&& parent2->client->sess.sessionTeam == TEAM_BLUE
 			&& parent2->client->NPC_class == CLASS_PADAWAN)
@@ -318,6 +320,49 @@ qboolean Padawan_CheckForce ( void )
 	return qfalse;
 }
 
+void NPC_Padawan_CopyParentFlags ( gentity_t *me, gentity_t *parent )
+{
+	if (!me || !NPC_IsAlive(me))
+	{
+		return;
+	}
+	
+	if (!parent || !NPC_IsAlive(parent))
+	{// Reset all flags if parent is dead...
+		if (me->flags & FL_NOTARGET)
+		{
+			me->flags &= ~FL_NOTARGET;
+		}
+
+		if (me->flags & FL_GODMODE)
+		{
+			me->flags &= ~FL_GODMODE;
+		}
+
+		return;
+	}
+
+	// Copy my parent's NOTARGET flag...
+	if ((parent->flags & FL_NOTARGET) && !(me->flags & FL_NOTARGET))
+	{
+		me->flags |= FL_NOTARGET;
+	}
+	else if (me->flags & FL_NOTARGET)
+	{
+		me->flags &= ~FL_NOTARGET;
+	}
+
+	// Copy my parent's GODMODE flag...
+	if ((parent->flags & FL_GODMODE) && !(me->flags & FL_GODMODE))
+	{
+		me->flags |= FL_GODMODE;
+	}
+	else if (me->flags & FL_GODMODE)
+	{
+		me->flags &= ~FL_GODMODE;
+	}
+}
+
 void NPC_DoPadawanStuff ( void )
 {
 	int			i = 0;
@@ -335,6 +380,8 @@ void NPC_DoPadawanStuff ( void )
 	{
 		return; // This is only for padawans...
 	}
+
+	NPC_Padawan_CopyParentFlags(me, parent);
 
 	if (NPC_GetOffPlayer(NPCS.NPC))
 	{// Get off of their head!
@@ -446,6 +493,7 @@ void NPC_DoPadawanStuff ( void )
 
 		if ( parent2
 			&& NPC_IsAlive(parent2)
+			&& parent2->client
 			&& parent2->client->sess.sessionTeam == me->client->sess.sessionTeam
 			&& (parent2->client->NPC_class == CLASS_JEDI || parent2->client->NPC_class == CLASS_LUKE || parent2->client->NPC_class == CLASS_KYLE || parent2->s.eType == ET_PLAYER)
 			&& (!parent2->padawan || !NPC_IsAlive(parent2->padawan)) )
@@ -469,6 +517,8 @@ void NPC_DoPadawanStuff ( void )
 		parent = best_parent;
 		me->parent = parent;
 		parent->padawan = me;
+
+		NPC_Padawan_CopyParentFlags(me, parent);
 
 		//trap->Print("Padawan %s found a new jedi (%s).\n", me->client->pers.netname, parent->client->pers.netname);
 

@@ -51,11 +51,55 @@ npcStatic_t NPCS;
 void NPC_SetAnim(gentity_t	*ent,int type,int anim,int priority);
 void pitch_roll_for_slope( gentity_t *forwhom, vec3_t pass_slope );
 extern void GM_Dying( gentity_t *self );
+extern qboolean G_EntIsBreakable( int entityNum );
 
 extern int eventClearTime;
 
+qboolean NPC_EntityIsBreakable ( gentity_t *self, gentity_t *ent )
+{
+	if (ent
+		&& ent->inuse
+		&& ent->takedamage
+		&& ent->classname 
+		&& ent->classname[0] 
+		&& ent->s.eType != ET_INVISIBLE
+		&& G_EntIsBreakable(ent->s.number)
+		&& !EntIsGlass(ent) // UQ1: Ignore glass...
+		&& ent->health > 0
+		&& !(ent->r.svFlags & SVF_PLAYER_USABLE))
+	{
+#if 0 // UQ1: Removed restrictions on these...
+		if ( (ent->flags & FL_DMG_BY_SABER_ONLY) 
+			&& self->s.weapon != WP_SABER )
+		{
+			return qfalse;
+		}
+
+		if ( (ent->flags & FL_DMG_BY_HEAVY_WEAP_ONLY) 
+			&& self->s.weapon != WP_SABER
+			&& self->s.weapon != WP_REPEATER
+			&& self->s.weapon != WP_ROCKET_LAUNCHER
+			&& self->s.weapon != WP_FLECHETTE
+			&& self->s.weapon != WP_THERMAL
+			&& self->s.weapon != WP_CONCUSSION )
+		{// Heavy weapons only... FIXME: Add new weapons???
+			return qfalse;
+		}
+#endif
+
+		return qtrue;
+	}
+
+	return qfalse;
+}
+
 qboolean NPC_IsAlive ( gentity_t *NPC )
 {
+	if (NPCS.NPC && NPC_EntityIsBreakable(NPCS.NPC, NPC))
+	{
+		return qtrue;
+	}
+
 	if ( NPC
 		&& NPC->inuse 
 		&& NPC->health > 0
@@ -3728,7 +3772,7 @@ void NPC_Think ( gentity_t *self)//, int msec )
 			NPC_DoPadawanStuff(); // check any padawan stuff we might need to do...
 
 			if (self->enemy 
-				&& (!NPC_ValidEnemy(self->enemy) || Distance(self->r.currentOrigin, self->enemy->r.currentOrigin) > 2048.0))
+				&& (!NPC_ValidEnemy(self->enemy) || (!NPC_EntityIsBreakable(self, self->enemy) && Distance(self->r.currentOrigin, self->enemy->r.currentOrigin) > 2048.0)))
 			{// If NPC Bot's enemy is invalid (eg: a dead NPC) or too far away, clear it!
 				G_ClearEnemy(self);
 			}
@@ -3817,6 +3861,20 @@ void NPC_Think ( gentity_t *self)//, int msec )
 					//self->client->ps.powerups[PW_BLOCK] = 0;
 					self->blockToggleTime = level.time + 250; // 250 ms between toggles...
 #endif //__NPC_USE_SABER_BLOCKING__
+
+					NPC_GenericFrameCode( self );
+				}
+				//
+				// Hacking/Using something...
+				//
+				else if (self->client->isHacking)
+				{// Hacking/using something... Look at it and wait...
+					gentity_t *HACK_TARGET = &g_entities[self->client->isHacking];
+
+					if (HACK_TARGET) NPC_FaceEntity(HACK_TARGET, qtrue);
+
+					if (!(NPCS.ucmd.buttons & BUTTON_USE))
+						NPCS.ucmd.buttons |= BUTTON_USE;
 
 					NPC_GenericFrameCode( self );
 				}

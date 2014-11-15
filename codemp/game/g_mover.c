@@ -1832,7 +1832,7 @@ void SpawnPlatTrigger( gentity_t *ent ) {
 	trigger->r.contents = CONTENTS_TRIGGER;
 	trigger->parent = ent;
 
-	trap->Print("mins: %f %f %f. maxs: %f %f %f.\n", ent->r.mins[0], ent->r.mins[1], ent->r.mins[2], ent->r.maxs[0], ent->r.maxs[1], ent->r.maxs[2]);
+	//trap->Print("mins: %f %f %f. maxs: %f %f %f.\n", ent->r.mins[0], ent->r.mins[1], ent->r.mins[2], ent->r.maxs[0], ent->r.maxs[1], ent->r.maxs[2]);
 	tmin[0] = ent->pos1[0] + ent->r.mins[0] + 33;
 	tmin[1] = ent->pos1[1] + ent->r.mins[1] + 33;
 	tmin[2] = ent->pos1[2] + ent->r.mins[2];
@@ -3080,6 +3080,7 @@ void SP_func_breakable( gentity_t *self )
 	//G_SpawnInt( "teamowner", "0", &t );
 	//self->s.teamowner = t;
 
+#if 0 // UQ1: No restriction on weapon types please. This would be unfair for players - and screw up NPCs.
 	if ( self->spawnflags & 16 ) // saber only
 	{
 		self->flags |= FL_DMG_BY_SABER_ONLY;
@@ -3088,6 +3089,7 @@ void SP_func_breakable( gentity_t *self )
 	{
 		self->flags |= FL_DMG_BY_HEAVY_WEAP_ONLY;
 	}
+#endif //0
 
 	if (self->health)
 	{
@@ -3142,6 +3144,24 @@ void SP_func_breakable( gentity_t *self )
 		self->mass = 1.0f;
 	}
 	self->genericValue4 = 1; //so damage sys knows it's a bbrush
+
+	if (self->s.origin[0] == 0 && self->s.origin[1] == 0 && self->s.origin[2] == 0)
+	{// UQ1: Must be using absmin/absmax. Set an actual origin point for NPCs to targer/use...
+		vec3_t spot;
+
+		VectorSubtract(self->r.absmax, self->r.absmin, spot);//size
+		VectorMA(self->r.absmin, 0.5, spot, spot);
+
+		VectorCopy(spot, self->breakableOrigin);
+
+		//trap->Print("Breakable (1) at %f %f %f.\n", self->breakableOrigin[0], self->breakableOrigin[1], self->breakableOrigin[2]);
+	}
+	else
+	{
+		VectorCopy(self->s.origin, self->breakableOrigin);
+
+		//trap->Print("Breakable (2) at %f %f %f.\n", self->breakableOrigin[0], self->breakableOrigin[1], self->breakableOrigin[2]);
+	}
 }
 
 qboolean G_EntIsBreakable( int entityNum )
@@ -3303,6 +3323,20 @@ void SP_func_glass( gentity_t *ent ) {
 	ent->die = GlassDie;
 	ent->use = GlassUse;
 	ent->pain = GlassPain;
+
+	if (ent->s.origin[0] == 0 && ent->s.origin[1] == 0 && ent->s.origin[2] == 0)
+	{// UQ1: Must be using absmin/absmax. Set an actual origin point for NPCs to targer/use...
+		vec3_t spot;
+
+		VectorSubtract(ent->r.absmax, ent->r.absmin, spot);//size
+		VectorMA(ent->r.absmin, 0.5, spot, spot);
+
+		VectorCopy(spot, ent->breakableOrigin);
+	}
+	else
+	{
+		VectorCopy(ent->s.origin, ent->breakableOrigin);
+	}
 }
 
 void func_usable_use (gentity_t *self, gentity_t *other, gentity_t *activator);

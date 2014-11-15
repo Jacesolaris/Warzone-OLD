@@ -1017,9 +1017,22 @@ void WeaponThink( qboolean inCombat )
 
 qboolean EntIsGlass (gentity_t *check)
 {
-	if(check->classname &&
-		!Q_stricmp("func_breakable", check->classname) &&
-		check->count == 1 && check->health <= 100)
+	if (check->classname
+		&& (!Q_stricmp("func_breakable", check->classname) || !Q_stricmp("func_glass", check->classname))
+		/*&& check->count == 1 && check->health <= 100*/
+		&& ((check->r.svFlags & SVF_GLASS_BRUSH) || check->material == MAT_GLASS || check->material == MAT_GLASS_METAL))
+	{
+		return qtrue;
+	}
+
+	return qfalse;
+}
+
+qboolean EntIsGlass_OLD (gentity_t *check)
+{
+	if (check->classname
+		&& (!Q_stricmp("func_breakable", check->classname) || !Q_stricmp("func_glass", check->classname))
+		&& check->count == 1 && check->health <= 100)
 	{
 		return qtrue;
 	}
@@ -1030,7 +1043,7 @@ qboolean EntIsGlass (gentity_t *check)
 qboolean ShotThroughGlass (trace_t *tr, gentity_t *target, vec3_t spot, int mask)
 {
 	gentity_t	*hit = &g_entities[ tr->entityNum ];
-	if(hit != target && EntIsGlass(hit))
+	if(hit != target && EntIsGlass_OLD(hit))
 	{//ok to shoot through breakable glass
 		int			skip = hit->s.number;
 		vec3_t		muzzle;
@@ -1057,7 +1070,8 @@ qboolean CanShoot ( gentity_t *ent, gentity_t *shooter )
 	vec3_t		muzzle;
 	vec3_t		spot, diff;
 	gentity_t	*traceEnt;
-
+	qboolean	IS_BREAKABLE = NPC_EntityIsBreakable(shooter, ent);
+	
 	CalcEntitySpot( shooter, SPOT_WEAPON, muzzle );
 	CalcEntitySpot( ent, SPOT_ORIGIN, spot );		//FIXME preferred target locations for some weapons (feet for R/L)
 
@@ -1065,14 +1079,19 @@ qboolean CanShoot ( gentity_t *ent, gentity_t *shooter )
 	traceEnt = &g_entities[ tr.entityNum ];
 
 	// point blank, baby!
-	if (tr.startsolid && (shooter->NPC) && (shooter->NPC->touchedByPlayer) )
+	if (!IS_BREAKABLE && tr.startsolid && (shooter->NPC) && (shooter->NPC->touchedByPlayer) )
 	{
 		traceEnt = shooter->NPC->touchedByPlayer;
 	}
 
-	if ( ShotThroughGlass( &tr, ent, spot, MASK_SHOT ) )
+	if ( !IS_BREAKABLE && ShotThroughGlass( &tr, ent, spot, MASK_SHOT ) )
 	{
 		traceEnt = &g_entities[ tr.entityNum ];
+	}
+
+	if ( IS_BREAKABLE && tr.fraction > 0.8)
+	{// Close enough...
+		return qtrue;
 	}
 
 	// shot is dead on

@@ -46,7 +46,8 @@ void CG_RegisterWeapon( int weaponNum) {
 		}
 	}
 	if ( !item->classname ) {
-		trap->Error( ERR_DROP, "Couldn't find weapon %i", weaponNum );
+		//trap->Error( ERR_DROP, "Couldn't find weapon %i", weaponNum );
+		trap->Print("Weapon %i has no classname!\n", weaponNum);
 		return;
 	}
 	CG_RegisterItemVisuals( item - bg_itemlist );
