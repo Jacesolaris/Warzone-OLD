@@ -867,8 +867,19 @@ void RB_StageIteratorSky( void ) {
 	}
 
 	// draw the outer skybox
-	if ( tess.shader->sky.outerbox[0] && tess.shader->sky.outerbox[0] != tr.defaultImage ) {
+	//if ( tess.shader->sky.outerbox[0] && tess.shader->sky.outerbox[0] != tr.defaultImage ) 
+	{
 		matrix_t oldmodelview;
+
+		if ( !tess.shader->sky.outerbox[0] || tess.shader->sky.outerbox[0] == tr.defaultImage ) 
+		{// UQ1: Set a default image...
+			tess.shader->sky.outerbox[0] = 
+				tess.shader->sky.outerbox[1] = 
+				tess.shader->sky.outerbox[2] = 
+				tess.shader->sky.outerbox[3] = 
+				tess.shader->sky.outerbox[4] = 
+				tess.shader->sky.outerbox[5] = tr.fogImage;
+		}
 		
 		GL_State( 0 );
 		//qglTranslatef (backEnd.viewParms.ori.origin[0], backEnd.viewParms.ori.origin[1], backEnd.viewParms.ori.origin[2]);
