@@ -191,7 +191,7 @@ void FX_PulseGrenadeProjectileThink(centity_t *cent, const struct weaponInfo_s *
 
 	if (weapon->missileRenderfx)
 	{
-		trap->FX_PlayEffectID(weapon->missileRenderfx, cent->lerpOrigin, forward, -1, -1, qfalse);
+		trap->FX_PlayEffectID(weapon->altMissileRenderfx, cent->lerpOrigin, forward, -1, -1, qfalse);
 	}
 	else
 	{
@@ -203,7 +203,7 @@ void FX_PulseGrenadeProjectileThink(centity_t *cent, const struct weaponInfo_s *
 	}
 	else if (weapon->missileRenderfx)
 	{
-		trap->FX_PlayEffectID(weapon->missileRenderfx, cent->lerpOrigin, forward, -1, -1, qfalse);
+		trap->FX_PlayEffectID(weapon->altMissileRenderfx, cent->lerpOrigin, forward, -1, -1, qfalse);
 	}
 	else
 	{
@@ -215,7 +215,7 @@ void FX_PulseGrenadeProjectileThink(centity_t *cent, const struct weaponInfo_s *
 	}
 	else if (weapon->missileRenderfx)
 	{
-		trap->FX_PlayEffectID(weapon->missileRenderfx, cent->lerpOrigin, forward, -1, -1, qfalse);
+		trap->FX_PlayEffectID(weapon->altMissileRenderfx, cent->lerpOrigin, forward, -1, -1, qfalse);
 	}
 	else
 	{

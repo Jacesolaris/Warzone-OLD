@@ -598,8 +598,8 @@ static void CG_ItemPickup( int itemNum ) {
 				bg_itemlist[itemNum].giTag != WP_ROCKET_LAUNCHER &&
 				bg_itemlist[itemNum].giTag != WP_E60_ROCKET_LAUNCHER &&
 				bg_itemlist[itemNum].giTag != WP_CW_ROCKET_LAUNCHER &&
-				bg_itemlist[itemNum].giTag > cg.snap->ps.weapon &&
 				bg_itemlist[itemNum].giTag != WP_FRAG_GRENADE &&
+				bg_itemlist[itemNum].giTag > cg.snap->ps.weapon &&
 				cg.snap->ps.weapon != WP_SABER)
 			{
 				if (!cg.snap->ps.emplacedIndex)
