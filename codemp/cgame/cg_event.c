@@ -599,6 +599,7 @@ static void CG_ItemPickup( int itemNum ) {
 				bg_itemlist[itemNum].giTag != WP_E60_ROCKET_LAUNCHER &&
 				bg_itemlist[itemNum].giTag != WP_CW_ROCKET_LAUNCHER &&
 				bg_itemlist[itemNum].giTag != WP_FRAG_GRENADE &&
+				bg_itemlist[itemNum].giTag != WP_FRAG_GRENADE_OLD &&
 				bg_itemlist[itemNum].giTag > cg.snap->ps.weapon &&
 				cg.snap->ps.weapon != WP_SABER)
 			{
@@ -1094,7 +1095,7 @@ void CG_G2MarkEvent(entityState_t *es)
 	case WP_WESTARM5:
 	case WP_T21:
 	case WP_EE3:
-	case WP_CLONE_PISTOL1:
+	case WP_CLONE_PISTOL_ONEHAND:
 	case WP_DLT20A:
 	case WP_CLONERIFLE:
 	case WP_WESTER_PISTOL:
@@ -1126,6 +1127,7 @@ void CG_G2MarkEvent(entityState_t *es)
 		break;
 
 	case WP_FRAG_GRENADE:
+	case WP_FRAG_GRENADE_OLD:
 	case WP_CW_ROCKET_LAUNCHER:
 	case WP_E60_ROCKET_LAUNCHER:
 	case WP_ROCKET_LAUNCHER:
@@ -2952,6 +2954,10 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 		else if ( CG_VehicleWeaponImpact( cent ) )
 		{//a vehicle missile that used an overridden impact effect...
 		}
+		else if ((cent->currentState.eFlags & EF_ALT_FIRING) && es->weapon != WP_CLONE_PISTOL_ONEHAND)
+		{
+			CG_MissileHitWall(es->weapon, es->number, position, dir, IMPACTSOUND_METAL, qtrue, es->generic1);
+		}
 		else if (cent->currentState.eFlags & EF_ALT_FIRING)
 		{
 			CG_MissileHitWall(es->weapon, 0, position, dir, IMPACTSOUND_DEFAULT, qtrue, es->generic1);
@@ -2975,6 +2981,10 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 		{//hack: this is an index to a custom effect to use
 			trap->FX_PlayEffectID(cgs.gameEffects[es->emplacedOwner], position, dir, -1, -1, qfalse);
 		}
+		else if ((cent->currentState.eFlags & EF_ALT_FIRING) && es->weapon != WP_CLONE_PISTOL_ONEHAND)
+		{
+			CG_MissileHitWall(es->weapon, es->number, position, dir, IMPACTSOUND_DEFAULT, qtrue, es->generic1);
+		}
 		else if ( CG_VehicleWeaponImpact( cent ) )
 		{//a vehicle missile that used an overridden impact effect...
 		}
@@ -2988,9 +2998,10 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 		}
 		break;
 
-	case EV_CLONE_PISTOL_IMPACT:
-		DEBUGNAME("EV_CLONE_PISTOL_IMPACT");
+	case EV_CLONE_PISTOL_BOUNCE_METAL:
+		DEBUGNAME("EV_CLONE_PISTOL_BOUNCE_METAL");
 		ByteToDir(es->eventParm, dir);
+		trap->Print("bounce metal %i\n", es->weapon);
 		if (es->emplacedOwner)
 		{//hack: this is an index to a custom effect to use
 			trap->FX_PlayEffectID(cgs.gameEffects[es->emplacedOwner], position, dir, -1, -1, qfalse);
@@ -3000,7 +3011,7 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 		}
 		else
 		{
-			CG_MissileHitWall(es->weapon, 0, position, dir, IMPACTSOUND_METAL, qfalse, 0);
+			CG_MissileHitWall(es->weapon, 0, position, dir, IMPACTSOUND_METAL, qtrue, 0);
 		}
 
 		if (cg_ghoul2Marks.integer &&
@@ -3010,8 +3021,9 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 		}
 		break;
 
-	case EV_CLONE_PISTOL_BOUNCE_IMPACT:
-		DEBUGNAME("EV_CLONE_PISTOL_BOUNCE_IMPACT");
+	case EV_CLONE_PISTOL_BOUNCE:
+		DEBUGNAME("EV_CLONE_PISTOL_BOUNCE");
+		trap->Print("bounce %i\n", es->weapon);
 		ByteToDir(es->eventParm, dir);
 		if (es->emplacedOwner)
 		{//hack: this is an index to a custom effect to use
@@ -3022,7 +3034,7 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 		}
 		else
 		{
-			CG_MissileHitWall(es->weapon, 0, position, dir, IMPACTSOUND_METAL, qfalse, 0);
+			CG_MissileHitWall(es->weapon, 0, position, dir, IMPACTSOUND_METAL, qtrue, 0);
 		}
 		break;
 

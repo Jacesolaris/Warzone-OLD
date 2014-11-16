@@ -760,6 +760,8 @@ typedef struct weaponInfo_s {
 	fxHandle_t		explotionImpactEffect;
 	fxHandle_t		ionBlastShotEffect;
 	fxHandle_t		WallBounceEffectFX;
+	fxHandle_t		altWallBounceEffectFX;
+	fxHandle_t		altWallBounceEnhancedEffectFX;
 	fxHandle_t		ProjectileEffectFX;
 	
 	qhandle_t		altMissileModel;
@@ -2301,10 +2303,10 @@ void FX_WeaponAltHitPlayer(vec3_t origin, vec3_t normal, qboolean humanoid, int 
 
 void FX_BryarAltProjectileThink(  centity_t *cent, const struct weaponInfo_s *weapon );
 
-void FX_CLONEPISTOL_HitWall(vec3_t origin, vec3_t normal, int weapon, qboolean altFire);
-void FX_CLONEPISTOL_BounceWall(vec3_t origin, vec3_t normal, int weapon, qboolean altFire);
-void FX_CLONEPISTOL_HitPlayer(vec3_t origin, vec3_t normal, qboolean humanoid, int weapon, qboolean altFire);
-void FX_CLONEPISTOL_ProjectileThink(centity_t *cent, const struct weaponInfo_s *weapon);
+void FX_Clonepistol_HitWall(vec3_t origin, vec3_t normal, int weapon, qboolean altFire);
+void FX_Clonepistol_BounceWall(vec3_t origin, vec3_t normal, int weapon, qboolean altFire);
+void FX_Clonepistol_HitPlayer(vec3_t origin, vec3_t normal, qboolean humanoid, int weapon, qboolean altFire);
+void FX_Clonepistol_ProjectileThink(centity_t *cent, const struct weaponInfo_s *weapon);
 
 
 void FX_ForceDrained(vec3_t origin, vec3_t dir);

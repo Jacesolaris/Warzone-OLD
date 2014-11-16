@@ -1003,7 +1003,7 @@ static void WP_BowcasterAltFire( gentity_t *ent )
 	missile->bounceCount = 3;
 	
 	// charge up the pistol to make more bounce on walls.
-	if (ent->s.weapon == WP_CLONE_PISTOL1 || ent->s.weapon == WP_WOOKIE_BOWCASTER )
+	if (ent->s.weapon == WP_CLONE_PISTOL_ONEHAND || ent->s.weapon == WP_WOOKIE_BOWCASTER)
 	{
 		int count = (level.time - ent->client->ps.weaponChargeTime) / DEMP2_CHARGE_UNIT;
 
@@ -1015,7 +1015,7 @@ static void WP_BowcasterAltFire( gentity_t *ent )
 		{
 			count = 7;
 		}
-		missile->flags |= FL_BOUNCE;
+
 		missile->bounceCount = count;
 	}
 	else
@@ -2137,7 +2137,7 @@ gentity_t *WP_FireThermalDetonator( gentity_t *ent, qboolean altFire )
 
 	bolt->s.eType = ET_MISSILE;
 	bolt->r.svFlags = SVF_USE_CURRENT_ORIGIN;
-	bolt->s.weapon = WP_THERMAL;
+	bolt->s.weapon = ent->s.weapon; //WP_THERMAL;
 
 	bolt->methodOfDeath = MOD_THERMAL;
 	bolt->splashMethodOfDeath = MOD_THERMAL_SPLASH;
@@ -2232,14 +2232,7 @@ gentity_t *WP_FireFragGrenade(gentity_t *ent, qboolean altFire)
 
 	bolt->s.eType = ET_MISSILE;
 	bolt->r.svFlags = SVF_USE_CURRENT_ORIGIN;
-	bolt->s.weapon = WP_FRAG_GRENADE;
-	/*WP_FRAG_GRENADE_OLD;
-	WP_SHOCK_GRENADE;
-	WP_PLASMA_GRENADE;
-	WP_SONIC_GRENADE;
-	WP_THERMAL_GRENADE;
-	WP_THERMAL_GREADE_OLD;
-	WP_V_59_GRENADE;*/
+	bolt->s.weapon = ent->s.weapon;// WP_FRAG_GRENADE;
 
 	bolt->methodOfDeath = MOD_THERMAL;
 	bolt->splashMethodOfDeath = MOD_THERMAL_SPLASH;
@@ -2265,7 +2258,7 @@ void grenadeExplode(gentity_t *ent)
 {
 	if (!ent->count)
 	{
-		G_Sound(ent, CHAN_WEAPON, G_SoundIndex("sound/weapons/realTD/TDwarning.mp3"));
+		G_Sound(ent, CHAN_WEAPON, G_SoundIndex("sound/weapons/thermal/fire.wav"));
 		ent->count = 1;
 		ent->genericValue5 = level.time + 500;
 		ent->think = thermalThinkStandard;
@@ -4953,7 +4946,7 @@ void FireWeapon( gentity_t *ent, qboolean altFire ) {
 				WP_FireBlaster(ent, altFire, BLASTER_VELOCITY, BLASTER_DAMAGE, BLASTER_SPREAD, ent->s.weapon);
 			break;
 
-		case WP_CLONE_PISTOL1:
+		case WP_CLONE_PISTOL_ONEHAND:
 			if (altFire)
 				WP_FireBowcaster(ent, altFire);
 			else
@@ -5027,13 +5020,14 @@ void FireWeapon( gentity_t *ent, qboolean altFire ) {
 			WP_FireRocket( ent, altFire );
 			break;
 
-			/*case WP_FRAG_GRENADE_OLD:
+			/*
 			case WP_SHOCK_GRENADE:
 			case WP_PLASMA_GRENADE:
 			case WP_SONIC_GRENADE:
 			case WP_THERMAL_GRENADE:
 			case WP_THERMAL_GREADE_OLD:
 			case WP_V_59_GRENADE:*/
+		case WP_FRAG_GRENADE_OLD:
 		case WP_FRAG_GRENADE:
 			WP_FireFragGrenade(ent, altFire);
 			break;

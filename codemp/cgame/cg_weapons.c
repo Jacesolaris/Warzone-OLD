@@ -56,6 +56,7 @@ void CG_RegisterItemVisuals( int itemNum ) {
 	else if (item->giType == IT_WEAPON &&
 		(item->giTag == WP_THERMAL 
 		|| item->giTag == WP_FRAG_GRENADE
+		|| item->giTag == WP_FRAG_GRENADE_OLD
 		|| item->giTag == WP_TRIP_MINE 
 		|| item->giTag == WP_DET_PACK))
 	{
@@ -274,7 +275,7 @@ static void CG_LightningBolt( centity_t *cent, vec3_t origin ) {
 
 	//Must be a durational weapon that continuously generates an effect.
 	if ( cent->currentState.weapon == WP_DEMP2 && cent->currentState.eFlags & EF_ALT_FIRING )
-	if (cent->currentState.weapon == WP_CLONE_PISTOL1 && cent->currentState.eFlags & EF_ALT_FIRING)
+		if (cent->currentState.weapon == WP_CLONE_PISTOL_ONEHAND && cent->currentState.eFlags & EF_ALT_FIRING)
 	if (cent->currentState.weapon == WP_WOOKIE_BOWCASTER && cent->currentState.eFlags & EF_ALT_FIRING)
 	if (cent->currentState.weapon == WP_DC15_EXT && cent->currentState.eFlags & EF_ALT_FIRING)
 	if (cent->currentState.weapon == WP_Z6_BLASTER_CANON && cent->currentState.eFlags & EF_ALT_FIRING)
@@ -729,7 +730,7 @@ Ghoul2 Insert End
 		  ( cent->currentState.modelindex2 == WEAPON_CHARGING_ALT && cent->currentState.weapon == WP_BRYAR_OLD ) ||
 		  ( cent->currentState.weapon == WP_BOWCASTER && cent->currentState.modelindex2 == WEAPON_CHARGING ) ||
 		  ( cent->currentState.weapon == WP_DEMP2 && cent->currentState.modelindex2 == WEAPON_CHARGING_ALT) ||
-		  (cent->currentState.weapon == WP_CLONE_PISTOL1 && cent->currentState.modelindex2 == WEAPON_CHARGING_ALT) ||
+		  (cent->currentState.weapon == WP_CLONE_PISTOL_ONEHAND && cent->currentState.modelindex2 == WEAPON_CHARGING_ALT) ||
 		  (cent->currentState.weapon == WP_WESTER_PISTOL && cent->currentState.modelindex2 == WEAPON_CHARGING_ALT ) ||
 		  (cent->currentState.weapon == WP_ELG_3A && cent->currentState.modelindex2 == WEAPON_CHARGING_ALT) ||
 		  (cent->currentState.weapon == WP_WOOKIE_BOWCASTER && cent->currentState.modelindex2 == WEAPON_CHARGING_ALT) ||
@@ -798,7 +799,7 @@ Ghoul2 Insert End
 			scale = 1.75f;
 		}
 		
-		else if (cent->currentState.weapon == WP_CLONE_PISTOL1)
+		else if (cent->currentState.weapon == WP_CLONE_PISTOL_ONEHAND)
 		{
 			val = (cg.time - cent->currentState.constantLight) * 0.001f;
 			shader = cgs.media.lightningFlash;
@@ -876,7 +877,7 @@ Ghoul2 Insert End
 	}
 
 	// add the flash
-	if ((weaponNum == WP_DEMP2 || weaponNum == WP_CLONE_PISTOL1 || weaponNum == WP_WOOKIE_BOWCASTER 
+	if ((weaponNum == WP_DEMP2 || weaponNum == WP_CLONE_PISTOL_ONEHAND || weaponNum == WP_WOOKIE_BOWCASTER
 		|| weaponNum == WP_DC15_EXT || weaponNum == WP_Z6_BLASTER_CANON)
 		&& ( nonPredictedCent->currentState.eFlags & EF_FIRING ) )
 	{
@@ -1673,7 +1674,8 @@ void CG_Weapon_f( void ) {
 	{
 		int weap, i = 0;
 
-		if (cg.snap->ps.weapon >= WP_THERMAL && cg.snap->ps.weapon >= WP_FRAG_GRENADE
+		if (cg.snap->ps.weapon >= WP_THERMAL && cg.snap->ps.weapon >= WP_FRAG_GRENADE 
+			&& cg.snap->ps.weapon >= WP_FRAG_GRENADE_OLD
 			&& cg.snap->ps.weapon <= WP_DET_PACK)
 		{
 			// already in cycle range so start with next cycle item
@@ -1792,8 +1794,9 @@ void CG_WeaponClean_f( void ) {
 	{
 		int weap, i = 0;
 
-		if (cg.snap->ps.weapon >= WP_THERMAL && cg.snap->ps.weapon >= WP_FRAG_GRENADE &&
-			cg.snap->ps.weapon <= WP_DET_PACK)
+		if (cg.snap->ps.weapon >= WP_THERMAL && cg.snap->ps.weapon >= WP_FRAG_GRENADE 
+			&& cg.snap->ps.weapon >= WP_FRAG_GRENADE_OLD
+			&& cg.snap->ps.weapon <= WP_DET_PACK)
 		{
 			// already in cycle range so start with next cycle item
 			weap = cg.snap->ps.weapon + 1;
@@ -1882,7 +1885,7 @@ void CG_OutOfAmmoChange( int oldWeapon )
 			*/
 			//rww - Don't we want to make sure i != one of these if autoswitch is 1 (safe)?
 			if (cg_autoSwitch.integer != 1 || (i != WP_TRIP_MINE && i != WP_DET_PACK && i != WP_THERMAL && i != WP_ROCKET_LAUNCHER && i != WP_E60_ROCKET_LAUNCHER && i != WP_CW_ROCKET_LAUNCHER
-				&& i != WP_FRAG_GRENADE))
+				&& i != WP_FRAG_GRENADE && i != WP_FRAG_GRENADE_OLD))
 			{
 				if (i != oldWeapon)
 				{ //don't even do anything if we're just selecting the weapon we already have/had
@@ -1961,7 +1964,7 @@ void CG_FireWeapon( centity_t *cent, qboolean altFire ) {
 			(ent->weapon == WP_WESTER_PISTOL && altFire) ||
 			(ent->weapon == WP_BOWCASTER && !altFire) ||
 			(ent->weapon == WP_DEMP2 && altFire) ||
-			(ent->weapon == WP_CLONE_PISTOL1 && altFire) ||
+			(ent->weapon == WP_CLONE_PISTOL_ONEHAND && altFire) ||
 			(ent->weapon == WP_ELG_3A && altFire) ||
 			//(ent->weapon == WP_WOOKIE_BOWCASTER && !altFire) ||
 			//(ent->weapon == WP_WOOKIES_PISTOL && !altFire) ||
@@ -2183,14 +2186,14 @@ void CG_MissileHitWall(int weapon, int clientNum, vec3_t origin, vec3_t dir, imp
 		FX_DisruptorAltMiss(origin, dir, weapon, altFire);
 		break;
 
-	case WP_CLONE_PISTOL1:
+	case WP_CLONE_PISTOL_ONEHAND:
 		if (altFire)
 		{
-			FX_CLONEPISTOL_BounceWall(origin, dir, weapon, altFire);
+			FX_Clonepistol_BounceWall(origin, dir, weapon, altFire);
 		}
 		else
 		{
-			FX_CLONEPISTOL_HitWall(origin, dir, weapon, altFire);
+			FX_Clonepistol_HitWall(origin, dir, weapon, altFire);
 		}
 		break;
 
@@ -2223,6 +2226,7 @@ void CG_MissileHitWall(int weapon, int clientNum, vec3_t origin, vec3_t dir, imp
 		FX_RocketHitWall(origin, dir, weapon, altFire);
 		break;
 
+	case WP_FRAG_GRENADE_OLD:
 	case WP_FRAG_GRENADE:
 		FX_WeaponHitWall(origin, dir, weapon, altFire);
 		break;
@@ -2269,7 +2273,7 @@ void CG_MissileHitPlayer(int weapon, vec3_t origin, vec3_t dir, int entityNum, q
 		break;
 
 	case WP_WOOKIE_BOWCASTER:
-	case WP_CLONE_PISTOL1:
+	case WP_CLONE_PISTOL_ONEHAND:
 		if (altFire)
 		{
 			trap->FX_PlayEffectID(CG_EnableEnhancedFX(cgs.effects.mAltDetonate, cgs.effects.mAltDempDetonateEnhancedFX), origin, dir, -1, -1, qfalse);
@@ -2304,6 +2308,7 @@ void CG_MissileHitPlayer(int weapon, vec3_t origin, vec3_t dir, int entityNum, q
 		FX_RocketHitPlayer( origin, dir, humanoid, weapon, altFire );
 		break;
 
+	case WP_FRAG_GRENADE_OLD:
 	case WP_FRAG_GRENADE:
 		FX_WeaponHitPlayer(origin, dir, humanoid, weapon, altFire);
 		break;

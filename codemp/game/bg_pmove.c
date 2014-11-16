@@ -6680,6 +6680,7 @@ static qboolean PM_DoChargedWeapons( qboolean vehicleRocketLock, bgEntity_t *veh
 				break;
 
 				//------------------
+			case WP_FRAG_GRENADE_OLD:
 			case WP_FRAG_GRENADE:
 			case WP_THERMAL:
 
@@ -6705,7 +6706,7 @@ static qboolean PM_DoChargedWeapons( qboolean vehicleRocketLock, bgEntity_t *veh
 			case WP_Z6_BLASTER_CANON:
 			case WP_DC15_EXT:
 			case WP_WOOKIE_BOWCASTER:
-			case WP_CLONE_PISTOL1:
+			case WP_CLONE_PISTOL_ONEHAND:
 				if (pm->cmd.buttons & BUTTON_ALT_ATTACK)
 				{
 					altFire = qtrue; // override default of not being an alt-fire
@@ -7281,6 +7282,7 @@ static void PM_Weapon( void )
 		&& pm->ps->weapon != WP_CW_ROCKET_LAUNCHER//not using rocket launcher
 		&& pm->ps->weapon != WP_THERMAL//not using thermals
 		&& pm->ps->weapon != WP_FRAG_GRENADE
+		&& pm->ps->weapon != WP_FRAG_GRENADE_OLD
 		&& !pm->ps->m_iVehicleNum )//not a vehicle or in a vehicle
 	{ //check for exceeding max charge time if not using disruptor or rocket launcher or thermals
 		if ( pm->ps->weaponstate == WEAPON_CHARGING_ALT )
@@ -7575,6 +7577,7 @@ static void PM_Weapon( void )
 	{
 		if (pm->ps->weapon == WP_THERMAL ||
 			pm->ps->weapon == WP_FRAG_GRENADE ||
+			pm->ps->weapon == WP_FRAG_GRENADE_OLD ||
 			pm->ps->weapon == WP_TRIP_MINE ||
 			pm->ps->weapon == WP_DET_PACK)
 		{
@@ -7587,6 +7590,14 @@ static void PM_Weapon( void )
 				}
 			}
 			else if (pm->ps->weapon == WP_FRAG_GRENADE)
+			{
+				if ((pm->ps->torsoAnim) == WeaponAttackAnim[pm->ps->weapon] &&
+					(pm->ps->weaponTime - 200) <= 0)
+				{
+					PM_StartTorsoAnim(WeaponReadyAnim[pm->ps->weapon]);
+				}
+			}
+			else if (pm->ps->weapon == WP_FRAG_GRENADE_OLD)
 			{
 				if ((pm->ps->torsoAnim) == WeaponAttackAnim[pm->ps->weapon] &&
 					(pm->ps->weaponTime - 200) <= 0)
