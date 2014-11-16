@@ -2641,11 +2641,12 @@ gentity_t *LaunchItem( gitem_t *item, vec3_t origin, vec3_t velocity ) {
 	}
 
 	if (item->giTag != WP_BOWCASTER &&
-		item->giTag != WP_CLONE_PISTOL_ONEHAND &&
+		item->giTag != WP_DC_15S_CLONE_PISTOL &&
 		item->giTag != WP_WOOKIE_BOWCASTER &&
 		item->giTag != WP_DET_PACK &&
 		item->giTag != WP_FRAG_GRENADE &&
 		item->giTag != WP_FRAG_GRENADE_OLD &&
+		item->giTag != WP_DC_17_CLONE_PISTOL &&
 		item->giTag != WP_THERMAL)
 	{
 		dropped->s.angles[ROLL] = -90;

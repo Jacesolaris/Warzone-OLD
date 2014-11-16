@@ -26,7 +26,7 @@ vec3_t WP_MuzzlePoint[WP_NUM_WEAPONS] =
 	{12,	4.5,	-6	},	// WP_WESTARM5
 	{12,	6,		-6	},	// WP_T21,
 	{12,	6,		-6	},	// WP_EE3,
-	{12,	6,		-6	},	// WP_CLONE_PISTOL_ONEHAND
+	{12,	6,		-6	},	// WP_DC_15S_CLONE_PISTOL
 	{12,	6,		-6	},	// WP_DLT20A
 	{12,	6,		-6	},	//WP_CLONERIFLE
 	{12,	6,		-6	},	//WP_WESTER_PISTOL
@@ -42,6 +42,7 @@ vec3_t WP_MuzzlePoint[WP_NUM_WEAPONS] =
 	{12,	4.5,	-6	},	//WP_TESTGUN
 	{12,	0,		-4	},	// WP_FRAG_GRENADE
 	{12,	0,		-4	},	// WP_FRAG_GRENADE_OLD
+	{12,	6,		-6	},	// WP_DC_17_CLONE_PISTOL
 	{12,	6,		-6	},	// WP_DEMP2,
 	{12,	6,		-6	},	// WP_FLECHETTE,
 	{12,	6,		-6	},	// WP_CONCUSSION
@@ -70,7 +71,7 @@ weaponData_t weaponData[WP_NUM_WEAPONS] = {
 	{ "Westarm 5 Blaster",				AMMO_METAL_BOLTS,	5,			8,				200,		8192,		6,					900,			8192,		0,				3,					0,			250,		    0,			2100	},
 	{ "T21 Blaster Rifle",				AMMO_BLASTER,		5,			2,				550,		8192,		3,					150,			8192,		0,				0,					0,			0,				0,			0	},
 	{ "EE 3 Blaster Rifle",				AMMO_BLASTER,		5,			2,				250,		8192,		3,					1200,			8192,		0,				0,					0,			0,				0,			0	},
-	{ "One Handed Clone Pistol",		AMMO_POWERCELL,		5,			8,				400,		8192,		6,					900,			8192,		0,				250,				0,			3,				0,			2100	},
+	{ "DC 15s blaster Pistol",			AMMO_POWERCELL,		5,			8,				400,		8192,		6,					900,			8192,		0,				250,				0,			3,				0,			2100	},
 	{ "DLT 20a Blaster Rifle",			AMMO_BLASTER,		5,			2,				250,		8192,		3,					1200,			8192,		0,				0,					0,			0,				0,			0	},
 	{ "Clone Trooper Rifle",			AMMO_BLASTER,		5,			8,				200,		8192,		6,					900,			8192,		0,				250,				0,			3,				0,			2100	},
 	{ "Wester Pistol",					AMMO_BLASTER,		15,			2,				400,		8192,		2,					400,			8192,		0,				200,				0,			1,				0,			1500	},
@@ -87,7 +88,8 @@ weaponData_t weaponData[WP_NUM_WEAPONS] = {
 	//Place new Guns under here.
 	{ "Frag Grenade",					AMMO_THERMAL,		0,			1,				800,		8192,		1,					400,			8192,		0,				0,					0,			0,				0,			0	},
 	{ "Old Frag Grenade",				AMMO_THERMAL,		0,			1,				800,		8192,		1,					400,			8192,		0,				0,					0,			0,				0,			0	},
-
+	{ "DC 17 Clone blasters Pistol",	AMMO_POWERCELL,		5,			8,				375,		8192,		6,					875,			8192,		0,				250,				0,			3,				0,			2100	},
+	
 	{ "Modified Wookie Crossbow",		AMMO_POWERCELL,		5,			5,				1000,		8192,		5,					750,			8192,		400,			0,					5,			0,				1700,		0	},
 	{ "Imperial Heavy Repeater",		AMMO_METAL_BOLTS,	5,			8,				150,		8192,		15,					800,			8192,		0,				0,					0,			0,				0,			0	},
 	{ "DEMP2",							AMMO_POWERCELL,		5,			8,				500,		8192,		6,					900,			8192,		0,				250,				0,			3,				0,			2100	},
@@ -328,7 +330,7 @@ weaponData_t weaponData[WP_NUM_WEAPONS] = {
 //		0						//	int		altMaxCharge;		// above for secondary
 //	},
 //	{	
-//		//"WP_CLONE_PISTOL_ONEHAND",	//	char	classname[32];		// Spawning name
+//		//"WP_DC_15S_CLONE_PISTOL",	//	char	classname[32];		// Spawning name
 //		AMMO_POWERCELL,			//	int		ammoIndex;			// Index to proper ammo slot
 //		5,						//	int		ammoLow;			// Count when ammo is low
 //		8,						//	int		energyPerShot;		// Amount of energy used per shot

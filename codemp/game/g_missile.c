@@ -326,7 +326,9 @@ void G_MissileBounceEffect( gentity_t *ent, vec3_t org, vec3_t dir )
 	case WP_BOWCASTER:
 		G_PlayEffectID( G_EffectIndex("bowcaster/deflect"), ent->r.currentOrigin, dir );
 		break;
-	case WP_CLONE_PISTOL_ONEHAND:
+
+	case WP_DC_17_CLONE_PISTOL:
+	case WP_DC_15S_CLONE_PISTOL:
 		G_PlayEffectID(G_EffectIndex("clone_pistol_1/wall_bounce_enhanced2"), ent->r.currentOrigin, dir);
 		break;
 	case WP_BLASTER:
@@ -365,7 +367,10 @@ void G_MissileImpact(gentity_t *ent, trace_t *trace) {
 		(ent->bounceCount > 0 || ent->bounceCount == -5) &&
 		(ent->flags & (FL_BOUNCE | FL_BOUNCE_HALF)))
 	{
-		if (ent->s.weapon == WP_CLONE_PISTOL_ONEHAND || ent->s.weapon == WP_BOWCASTER || ent->s.weapon == WP_WOOKIE_BOWCASTER)
+		if (ent->s.weapon == WP_DC_15S_CLONE_PISTOL 
+			|| ent->s.weapon == WP_BOWCASTER 
+			|| ent->s.weapon == WP_WOOKIE_BOWCASTER
+			|| ent->s.weapon == WP_DC_17_CLONE_PISTOL)
 		{ // hit effects on Clone Pistol and Bowcaster to bounces off floors.
 			if (!(trace->surfaceFlags & SURF_FORCEFIELD))
 			{

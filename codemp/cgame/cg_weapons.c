@@ -275,10 +275,11 @@ static void CG_LightningBolt( centity_t *cent, vec3_t origin ) {
 
 	//Must be a durational weapon that continuously generates an effect.
 	if ( cent->currentState.weapon == WP_DEMP2 && cent->currentState.eFlags & EF_ALT_FIRING )
-		if (cent->currentState.weapon == WP_CLONE_PISTOL_ONEHAND && cent->currentState.eFlags & EF_ALT_FIRING)
+	if (cent->currentState.weapon == WP_DC_15S_CLONE_PISTOL && cent->currentState.eFlags & EF_ALT_FIRING)
 	if (cent->currentState.weapon == WP_WOOKIE_BOWCASTER && cent->currentState.eFlags & EF_ALT_FIRING)
 	if (cent->currentState.weapon == WP_DC15_EXT && cent->currentState.eFlags & EF_ALT_FIRING)
 	if (cent->currentState.weapon == WP_Z6_BLASTER_CANON && cent->currentState.eFlags & EF_ALT_FIRING)
+	if (cent->currentState.weapon == WP_DC_17_CLONE_PISTOL && cent->currentState.eFlags & EF_ALT_FIRING)
 	{ /*nothing*/ }
 	else
 	{
@@ -730,14 +731,15 @@ Ghoul2 Insert End
 		  ( cent->currentState.modelindex2 == WEAPON_CHARGING_ALT && cent->currentState.weapon == WP_BRYAR_OLD ) ||
 		  ( cent->currentState.weapon == WP_BOWCASTER && cent->currentState.modelindex2 == WEAPON_CHARGING ) ||
 		  ( cent->currentState.weapon == WP_DEMP2 && cent->currentState.modelindex2 == WEAPON_CHARGING_ALT) ||
-		  (cent->currentState.weapon == WP_CLONE_PISTOL_ONEHAND && cent->currentState.modelindex2 == WEAPON_CHARGING_ALT) ||
+		  (cent->currentState.weapon == WP_DC_15S_CLONE_PISTOL && cent->currentState.modelindex2 == WEAPON_CHARGING_ALT) ||
 		  (cent->currentState.weapon == WP_WESTER_PISTOL && cent->currentState.modelindex2 == WEAPON_CHARGING_ALT ) ||
 		  (cent->currentState.weapon == WP_ELG_3A && cent->currentState.modelindex2 == WEAPON_CHARGING_ALT) ||
 		  (cent->currentState.weapon == WP_WOOKIE_BOWCASTER && cent->currentState.modelindex2 == WEAPON_CHARGING_ALT) ||
 		  (cent->currentState.weapon == WP_WOOKIES_PISTOL && cent->currentState.modelindex2 == WEAPON_CHARGING_ALT) ||
 		  (cent->currentState.weapon == WP_DC15_EXT && cent->currentState.modelindex2 == WEAPON_CHARGING_ALT) ||
 		  (cent->currentState.weapon == WP_Z6_BLASTER_CANON && cent->currentState.modelindex2 == WEAPON_CHARGING_ALT) ||
-		  (cent->currentState.weapon == WP_S5_PISTOL && cent->currentState.modelindex2 == WEAPON_CHARGING_ALT)))
+		  (cent->currentState.weapon == WP_S5_PISTOL && cent->currentState.modelindex2 == WEAPON_CHARGING_ALT) ||
+		  (cent->currentState.weapon == WP_DC_17_CLONE_PISTOL && cent->currentState.modelindex2 == WEAPON_CHARGING_ALT)))
 	{
 		int		shader = 0;
 		float	val = 0.0f;
@@ -799,7 +801,7 @@ Ghoul2 Insert End
 			scale = 1.75f;
 		}
 		
-		else if (cent->currentState.weapon == WP_CLONE_PISTOL_ONEHAND)
+		else if (cent->currentState.weapon == WP_DC_15S_CLONE_PISTOL)
 		{
 			val = (cg.time - cent->currentState.constantLight) * 0.001f;
 			shader = cgs.media.lightningFlash;
@@ -824,6 +826,12 @@ Ghoul2 Insert End
 			// Hardcoded max charge time of 1 second
 			val = (cg.time - cent->currentState.constantLight) * 0.001f;
 			shader = cgs.media.cannonChargeFlash;
+			scale = 1.75f;
+		}
+		else if (cent->currentState.weapon == WP_DC_17_CLONE_PISTOL)
+		{
+			val = (cg.time - cent->currentState.constantLight) * 0.001f;
+			shader = cgs.media.lightningFlash;
 			scale = 1.75f;
 		}
 
@@ -877,8 +885,8 @@ Ghoul2 Insert End
 	}
 
 	// add the flash
-	if ((weaponNum == WP_DEMP2 || weaponNum == WP_CLONE_PISTOL_ONEHAND || weaponNum == WP_WOOKIE_BOWCASTER
-		|| weaponNum == WP_DC15_EXT || weaponNum == WP_Z6_BLASTER_CANON)
+	if ((weaponNum == WP_DEMP2 || weaponNum == WP_DC_15S_CLONE_PISTOL || weaponNum == WP_WOOKIE_BOWCASTER
+		|| weaponNum == WP_DC15_EXT || weaponNum == WP_Z6_BLASTER_CANON || weaponNum == WP_DC_17_CLONE_PISTOL)
 		&& ( nonPredictedCent->currentState.eFlags & EF_FIRING ) )
 	{
 		// continuous flash
@@ -1964,11 +1972,12 @@ void CG_FireWeapon( centity_t *cent, qboolean altFire ) {
 			(ent->weapon == WP_WESTER_PISTOL && altFire) ||
 			(ent->weapon == WP_BOWCASTER && !altFire) ||
 			(ent->weapon == WP_DEMP2 && altFire) ||
-			(ent->weapon == WP_CLONE_PISTOL_ONEHAND && altFire) ||
+			(ent->weapon == WP_DC_15S_CLONE_PISTOL && altFire) ||
 			(ent->weapon == WP_ELG_3A && altFire) ||
 			//(ent->weapon == WP_WOOKIE_BOWCASTER && !altFire) ||
 			//(ent->weapon == WP_WOOKIES_PISTOL && !altFire) ||
-			(ent->weapon == WP_S5_PISTOL && altFire))
+			(ent->weapon == WP_S5_PISTOL && altFire ||
+			(ent->weapon == WP_DC_17_CLONE_PISTOL && altFire)))
 			
 		{
 			float val = ( cg.time - cent->currentState.constantLight ) * 0.001f;
@@ -2186,7 +2195,8 @@ void CG_MissileHitWall(int weapon, int clientNum, vec3_t origin, vec3_t dir, imp
 		FX_DisruptorAltMiss(origin, dir, weapon, altFire);
 		break;
 
-	case WP_CLONE_PISTOL_ONEHAND:
+	case WP_DC_17_CLONE_PISTOL:
+	case WP_DC_15S_CLONE_PISTOL:
 		if (altFire)
 		{
 			FX_Clonepistol_BounceWall(origin, dir, weapon, altFire);
@@ -2272,8 +2282,9 @@ void CG_MissileHitPlayer(int weapon, vec3_t origin, vec3_t dir, int entityNum, q
 		FX_DisruptorAltHit(origin, dir, weapon, altFire);
 		break;
 
+	case WP_DC_17_CLONE_PISTOL:
 	case WP_WOOKIE_BOWCASTER:
-	case WP_CLONE_PISTOL_ONEHAND:
+	case WP_DC_15S_CLONE_PISTOL:
 		if (altFire)
 		{
 			trap->FX_PlayEffectID(CG_EnableEnhancedFX(cgs.effects.mAltDetonate, cgs.effects.mAltDempDetonateEnhancedFX), origin, dir, -1, -1, qfalse);

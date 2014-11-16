@@ -6703,10 +6703,11 @@ static qboolean PM_DoChargedWeapons( qboolean vehicleRocketLock, bgEntity_t *veh
 				}
 				break;
 
+			case WP_DC_17_CLONE_PISTOL:
 			case WP_Z6_BLASTER_CANON:
 			case WP_DC15_EXT:
 			case WP_WOOKIE_BOWCASTER:
-			case WP_CLONE_PISTOL_ONEHAND:
+			case WP_DC_15S_CLONE_PISTOL:
 				if (pm->cmd.buttons & BUTTON_ALT_ATTACK)
 				{
 					altFire = qtrue; // override default of not being an alt-fire

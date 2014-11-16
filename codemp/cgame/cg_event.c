@@ -1095,7 +1095,7 @@ void CG_G2MarkEvent(entityState_t *es)
 	case WP_WESTARM5:
 	case WP_T21:
 	case WP_EE3:
-	case WP_CLONE_PISTOL_ONEHAND:
+	case WP_DC_15S_CLONE_PISTOL:
 	case WP_DLT20A:
 	case WP_CLONERIFLE:
 	case WP_WESTER_PISTOL:
@@ -1107,6 +1107,7 @@ void CG_G2MarkEvent(entityState_t *es)
 	case WP_CLONE_BLASTER:
 	case WP_DC15_EXT:
 	case WP_TESTGUN:
+	case WP_DC_17_CLONE_PISTOL:
 	case WP_BLASTER:
 	case WP_DISRUPTOR:
 	case WP_BOWCASTER:
@@ -2954,7 +2955,11 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 		else if ( CG_VehicleWeaponImpact( cent ) )
 		{//a vehicle missile that used an overridden impact effect...
 		}
-		else if ((cent->currentState.eFlags & EF_ALT_FIRING) && es->weapon != WP_CLONE_PISTOL_ONEHAND)
+		else if ((cent->currentState.eFlags & EF_ALT_FIRING) && es->weapon != WP_DC_15S_CLONE_PISTOL)
+		{
+			CG_MissileHitWall(es->weapon, es->number, position, dir, IMPACTSOUND_METAL, qtrue, es->generic1);
+		}
+		else if ((cent->currentState.eFlags & EF_ALT_FIRING) && es->weapon != WP_DC_17_CLONE_PISTOL)
 		{
 			CG_MissileHitWall(es->weapon, es->number, position, dir, IMPACTSOUND_METAL, qtrue, es->generic1);
 		}
@@ -2981,7 +2986,11 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 		{//hack: this is an index to a custom effect to use
 			trap->FX_PlayEffectID(cgs.gameEffects[es->emplacedOwner], position, dir, -1, -1, qfalse);
 		}
-		else if ((cent->currentState.eFlags & EF_ALT_FIRING) && es->weapon != WP_CLONE_PISTOL_ONEHAND)
+		else if ((cent->currentState.eFlags & EF_ALT_FIRING) && es->weapon != WP_DC_15S_CLONE_PISTOL)
+		{
+			CG_MissileHitWall(es->weapon, es->number, position, dir, IMPACTSOUND_DEFAULT, qtrue, es->generic1);
+		}
+		else if ((cent->currentState.eFlags & EF_ALT_FIRING) && es->weapon != WP_DC_17_CLONE_PISTOL)
 		{
 			CG_MissileHitWall(es->weapon, es->number, position, dir, IMPACTSOUND_DEFAULT, qtrue, es->generic1);
 		}
@@ -3001,7 +3010,6 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 	case EV_CLONE_PISTOL_BOUNCE_METAL:
 		DEBUGNAME("EV_CLONE_PISTOL_BOUNCE_METAL");
 		ByteToDir(es->eventParm, dir);
-		trap->Print("bounce metal %i\n", es->weapon);
 		if (es->emplacedOwner)
 		{//hack: this is an index to a custom effect to use
 			trap->FX_PlayEffectID(cgs.gameEffects[es->emplacedOwner], position, dir, -1, -1, qfalse);
@@ -3023,7 +3031,6 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 
 	case EV_CLONE_PISTOL_BOUNCE:
 		DEBUGNAME("EV_CLONE_PISTOL_BOUNCE");
-		trap->Print("bounce %i\n", es->weapon);
 		ByteToDir(es->eventParm, dir);
 		if (es->emplacedOwner)
 		{//hack: this is an index to a custom effect to use
