@@ -164,7 +164,7 @@ void S_Init( void ) {
 	AS_Init();
 
 #ifdef __USE_BASS__
-	BASS_Init();
+	BASS_Initialize();
 #endif //__USE_BASS__
 }
 
@@ -372,12 +372,12 @@ void S_StartSound(const vec3_t origin, int entityNum, int entchannel, unsigned c
 #ifdef __USE_BASS__
 	{
 		//const mixSound_t *sfx = S_MixGetSound(q->handle);
-		//BASS_AddMemoryChanel((char *)sfx->data, sfx->samples);
+		//BASS_AddMemoryChannel((char *)sfx->data, sfx->samples);
 		for (int i = 0; i < 10000; i++)
 		{
 			if (sfxEntries[i].qhandle == sfxHandle)
 			{
-				BASS_AddMemoryChanel((char *)sfxEntries[i].fullSoundData, sfxEntries[i].indexSize);
+				BASS_AddMemoryChannel((char *)sfxEntries[i].fullSoundData, sfxEntries[i].indexSize);
 				return;
 			}
 		}

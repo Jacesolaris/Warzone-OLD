@@ -58,7 +58,7 @@ extern "C"
 #endif
 
 
-char*	C_MP3_IsValid			(void *pvData, int iDataLen, int bStereoDesired);
+char*	C_MP3_IsValid			(void *pvData, int iDataLen, int bStereoDesired, qboolean use_bass);
 char*	C_MP3_GetUnpackedSize	(void *pvData, int iDataLen, int *piUnpackedSize, int bStereoDesired);
 char*	C_MP3_UnpackRawPCM		(void *pvData, int iDataLen, int *piUnpackedSize, void *pbUnpackBuffer, int bStereoDesired);
 char*	C_MP3_GetHeaderData		(void *pvData, int iDataLen, int *piRate, int *piWidth, int *piChannels, int bStereoDesired);

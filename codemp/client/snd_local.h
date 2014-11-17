@@ -3,7 +3,7 @@
 // snd_local.h -- private sound definations
 
 //#define __NEW_SOUND_SYSTEM__
-//#define __USE_BASS__
+#define __USE_BASS__
 
 #include "snd_public.h"
 
@@ -13,11 +13,16 @@
 
 
 #ifdef __USE_BASS__
-extern qboolean BASS_Init ( void );
+extern qboolean BASS_Initialize ( void );
 extern void BASS_Shutdown ( void );
-extern void BASS_AddStreamChanel ( char *file );
-extern void BASS_AddMemoryChanel ( char *memory, int length );
+extern DWORD BASS_LoadMemorySample ( void *memory, int length );
+extern DWORD BASS_LoadMusicSample ( void *memory, int length );
+extern void BASS_AddStreamChannel ( char *file, int entityNum, int entityChannel, vec3_t origin );
+extern void BASS_AddMemoryChannel ( DWORD samplechan, int entityNum, int entityChannel, vec3_t origin );
+extern void BASS_AddMemoryLoopChannel ( DWORD samplechan, int entityNum, int entityChannel, vec3_t origin );
+extern void BASS_StartMusic ( DWORD samplechan );
 extern void BASS_Update ( void );
+extern void BASS_StopMusic( void );
 #endif //__USE_BASS__
 
 #ifndef __NEW_SOUND_SYSTEM__
@@ -87,6 +92,11 @@ typedef struct sfx_s {
 	ALuint		Buffer;
 #endif
 	char		*lipSyncData;
+
+	int			qhandle;
+	DWORD		bassSampleID;
+	int			indexSize;
+	byte		*indexData;
 
 	struct sfx_s	*next;					// only used because of hash table when registering
 } sfx_t;

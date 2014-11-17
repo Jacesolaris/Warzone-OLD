@@ -17,7 +17,11 @@
 //
 qboolean MP3_IsValid( const char *psLocalFilename, void *pvData, int iDataLen, qboolean bStereoDesired /* = qfalse */)
 {
-	char *psError = C_MP3_IsValid(pvData, iDataLen, bStereoDesired);
+#ifdef __USE_BASS__
+	char *psError = C_MP3_IsValid(pvData, iDataLen, bStereoDesired, qtrue);
+#else //!__USE_BASS__
+	char *psError = C_MP3_IsValid(pvData, iDataLen, bStereoDesired, qfalse);
+#endif //__USE_BASS__
 
 	if (psError)
 	{

@@ -711,10 +711,10 @@ of a forced fallback of a player specific sound	(or of a wav/mp3 substitution no
 qboolean gbInsideLoadSound = qfalse;
 static qboolean S_LoadSound_Actual( sfx_t *sfx )
 {
-	byte	*data;
+	//byte	*data;
 	short	*samples;
 	wavinfo_t	info;
-	int		size;
+	//int		size;
 	char	*psExt;
 	char	sLoadName[MAX_QPATH];
 
@@ -745,25 +745,54 @@ static qboolean S_LoadSound_Actual( sfx_t *sfx )
 		len = strlen(sLoadName);
 	}
 
-	if (!S_LoadSound_FileLoadAndNameAdjuster(sLoadName, &data, &size, len))
+	if (!S_LoadSound_FileLoadAndNameAdjuster(sLoadName, &sfx->indexData, &sfx->indexSize, len))
 	{
 		return qfalse;
 	}
 
 	SND_TouchSFX(sfx);
 
+#ifdef __USE_BASS__
+	{// Load whole sound file into ram...
+		qboolean isMusic = qfalse;
+		
+		if (Q_stricmpn(psExt,".mp3",4) == 0 && !MP3_IsValid(sLoadName, sfx->indexData, sfx->indexSize, qfalse)) isMusic = qtrue;
+
+		sfx->qhandle = sfx - s_knownSfx;
+		//sfx->indexSize = size;
+		//sfx->indexData = (byte *)malloc(size);
+		//memcpy(sfx->indexData, data, size);
+
+		if (!isMusic)
+			sfx->bassSampleID = BASS_LoadMemorySample( sfx->indexData, sfx->indexSize );
+		else
+			sfx->bassSampleID = BASS_LoadMusicSample( sfx->indexData, sfx->indexSize );
+
+		//Com_Printf("BASS: Registered sound %s. ID %i. Length %i. Size %i.\n", sLoadName, sfx->qhandle, sfx->indexSize, sizeof(sfx->indexData));
+		
+		if (sfx->bassSampleID < 0) Com_Printf("BASS: Failed to load sample %s from memory.\n", sLoadName);
+
+		if (isMusic) 
+		{// Stereo sample or music... Normal game can't load/play these, so exit here...
+			//sfx->bInMemory = qtrue;
+			//FS_FreeFile( sfx->indexData );
+			return qtrue;
+		}
+	}
+#endif //__USE_BASS__
+
 //=========
 	if (Q_stricmpn(psExt,".mp3",4)==0)
 	{
 		// load MP3 file instead...
 		//
-		if (MP3_IsValid(sLoadName,data, size, qfalse))
+		if (MP3_IsValid(sLoadName, sfx->indexData, sfx->indexSize, qfalse))
 		{
-			int iRawPCMDataSize = MP3_GetUnpackedSize(sLoadName,data,size,qfalse,qfalse);
+			int iRawPCMDataSize = MP3_GetUnpackedSize(sLoadName, sfx->indexData, sfx->indexSize, qfalse, qfalse);
 
 			if (S_LoadSound_DirIsAllowedToKeepMP3s(sfx->sSoundName)	// NOT sLoadName, this uses original un-languaged name
 				&&
-				MP3Stream_InitFromFile(sfx, data, size, sLoadName, iRawPCMDataSize + 2304 /* + 1 MP3 frame size, jic */,qfalse)
+				MP3Stream_InitFromFile(sfx, sfx->indexData, sfx->indexSize, sLoadName, iRawPCMDataSize + 2304 /* + 1 MP3 frame size, jic */,qfalse)
 				)
 			{
 //				Com_DPrintf("(Keeping file \"%s\" as MP3)\n",sLoadName);
@@ -783,7 +812,7 @@ static qboolean S_LoadSound_Actual( sfx_t *sfx )
 			{
 				// small file, not worth keeping as MP3 since it would increase in size (with MP3 header etc)...
 				//
-				Com_DPrintf("S_LoadSound: Unpacking MP3 file(%i) \"%s\" to wav(%i).\n",size,sLoadName,iRawPCMDataSize);
+				Com_DPrintf("S_LoadSound: Unpacking MP3 file(%i) \"%s\" to wav(%i).\n",sfx->indexSize,sLoadName,iRawPCMDataSize);
 				//
 				// unpack and convert into WAV...
 				//
@@ -791,7 +820,7 @@ static qboolean S_LoadSound_Actual( sfx_t *sfx )
 					byte *pbUnpackBuffer = (byte *) Z_Malloc( iRawPCMDataSize+10 +2304 /* <g> */, TAG_TEMP_WORKSPACE, qfalse );	// won't return if fails
 
 					{
-						int iResultBytes = MP3_UnpackRawPCM( sLoadName, data, size, pbUnpackBuffer, qfalse );
+						int iResultBytes = MP3_UnpackRawPCM( sLoadName, sfx->indexData, sfx->indexSize, pbUnpackBuffer, qfalse );
 
 						if (iResultBytes!= iRawPCMDataSize){
 							Com_Printf(S_COLOR_YELLOW"**** MP3 %s final unpack size %d different to previous value %d\n",sLoadName,iResultBytes,iRawPCMDataSize);
@@ -803,7 +832,7 @@ static qboolean S_LoadSound_Actual( sfx_t *sfx )
 						//
 						// (this is a bit crap really, but it lets me drop through into existing code)...
 						//
-						MP3_FakeUpWAVInfo( sLoadName, data, size, iResultBytes,
+						MP3_FakeUpWAVInfo( sLoadName, sfx->indexData, sfx->indexSize, iResultBytes,
 											// these params are all references...
 											info.format, info.rate, info.width, info.channels, info.samples, info.dataofs,
 											qfalse
@@ -867,7 +896,7 @@ static qboolean S_LoadSound_Actual( sfx_t *sfx )
 		{
 			// MP3_IsValid() will already have printed any errors via Com_Printf at this point...
 			//
-			FS_FreeFile (data);
+			//FS_FreeFile (sfx->indexData);
 			return qfalse;
 		}
 	}
@@ -877,10 +906,10 @@ static qboolean S_LoadSound_Actual( sfx_t *sfx )
 
 //=========
 
-		info = GetWavinfo( sLoadName, data, size );
+		info = GetWavinfo( sLoadName, sfx->indexData, sfx->indexSize );
 		if ( info.channels != 1 ) {
 			Com_Printf ("%s is a stereo wav file\n", sLoadName);
-			FS_FreeFile (data);
+			//FS_FreeFile (sfx->indexData);
 			return qfalse;
 		}
 
@@ -897,7 +926,7 @@ static qboolean S_LoadSound_Actual( sfx_t *sfx )
 		sfx->eSoundCompressionMethod = ct_16;
 		sfx->iSoundLengthInSamples	 = info.samples;
 		sfx->pSoundData = NULL;
-		ResampleSfx( sfx, info.rate, info.width, data + info.dataofs );
+		ResampleSfx( sfx, info.rate, info.width, sfx->indexData + info.dataofs );
 
 		// Open AL
 #ifdef USE_OPENAL
@@ -935,7 +964,7 @@ static qboolean S_LoadSound_Actual( sfx_t *sfx )
 		Z_Free(samples);
 	}
 
-	FS_FreeFile( data );
+	//FS_FreeFile( sfx->indexData );
 
 	return qtrue;
 }
@@ -948,7 +977,7 @@ qboolean S_LoadSound( sfx_t *sfx )
 {
 	gbInsideLoadSound = qtrue;	// !!!!!!!!!!!!!
 
-		qboolean bReturn = S_LoadSound_Actual( sfx );
+	qboolean bReturn = S_LoadSound_Actual( sfx );
 
 	gbInsideLoadSound = qfalse;	// !!!!!!!!!!!!!
 

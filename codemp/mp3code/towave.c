@@ -244,7 +244,7 @@ int bFastEstimateOnly = 0;	// MUST DEFAULT TO THIS VALUE!!!!!!!!!
 
 // char *return is NZ for any errors (no trailing CR!)
 //
-char *C_MP3_IsValid(void *pvData, int iDataLen, int bStereoDesired)
+char *C_MP3_IsValid(void *pvData, int iDataLen, int bStereoDesired, qboolean use_bass)
 {
 //	char sTemp[1024];	/////////////////////////////////////////////////
 	unsigned int iRealDataStart;
@@ -277,6 +277,9 @@ char *C_MP3_IsValid(void *pvData, int iDataLen, int bStereoDesired)
 			return "MP3ERR: Sound file is stereo!";
 		}
 	}
+	
+	if (use_bass) return NULL;
+
 	if (audio.decode_init(&head, iFrameBytes, reduction_code, iRealDataStart, bStereoDesired?convert_code_stereo:convert_code_mono, freq_limit))
 	{
 		if (bStereoDesired)

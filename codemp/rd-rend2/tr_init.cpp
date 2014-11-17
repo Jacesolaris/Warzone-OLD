@@ -1254,7 +1254,7 @@ void R_Register( void )
 	r_dynamicGlow						= ri->Cvar_Get( "r_dynamicGlow",			"1",		CVAR_ARCHIVE );
 	r_dynamicGlowPasses					= ri->Cvar_Get( "r_dynamicGlowPasses",		"5",		CVAR_ARCHIVE );
 	r_dynamicGlowDelta					= ri->Cvar_Get( "r_dynamicGlowDelta",		"1.2",		CVAR_ARCHIVE );
-	r_dynamicGlowIntensity				= ri->Cvar_Get( "r_dynamicGlowIntensity",	"3.0",	CVAR_ARCHIVE );
+	r_dynamicGlowIntensity				= ri->Cvar_Get( "r_dynamicGlowIntensity",	"1.13",		CVAR_ARCHIVE );
 	r_dynamicGlowSoft					= ri->Cvar_Get( "r_dynamicGlowSoft",		"1",		CVAR_ARCHIVE );
 	r_dynamicGlowWidth					= ri->Cvar_Get( "r_dynamicGlowWidth",		"320",		CVAR_ARCHIVE|CVAR_LATCH );
 	r_dynamicGlowHeight					= ri->Cvar_Get( "r_dynamicGlowHeight",		"240",		CVAR_ARCHIVE|CVAR_LATCH );

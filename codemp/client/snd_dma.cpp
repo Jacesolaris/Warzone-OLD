@@ -474,6 +474,10 @@ void S_Init( void ) {
 	Cmd_AddCommand("mp3_calcvols", S_MP3_CalcVols_f);
 	Cmd_AddCommand("s_dynamic", S_SetDynamicMusic_f);
 
+#ifdef __USE_BASS__
+	BASS_Initialize();
+#endif //__USE_BASS__
+
 #ifdef USE_OPENAL
 	cv = Cvar_Get("s_UseOpenAL" , "0",CVAR_ARCHIVE|CVAR_LATCH);
 	s_UseOpenAL = !!(cv->integer);
@@ -659,6 +663,10 @@ void S_Shutdown( void )
 
 	S_FreeAllSFXMem();
 	S_UnCacheDynamicMusic();
+
+#ifdef __USE_BASS__
+	BASS_Shutdown();
+#endif //__USE_BASS__
 
 #ifdef USE_OPENAL
 	if (s_UseOpenAL)
@@ -1539,6 +1547,51 @@ void S_MuteSound(int entityNum, int entchannel)
 	ch->rightvol = 0;
 }
 
+#ifdef __USE_BASS__
+float S_GetVolumeForChannel ( int entchannel )
+{
+	float		volume = 1;
+	float		normal_vol, voice_vol, effects_vol, ambient_vol, music_vol;
+
+	normal_vol = s_volume->value;
+	voice_vol  = (s_volumeVoice->value*normal_vol);
+	effects_vol  = (s_volumeEffects->value*normal_vol);
+	ambient_vol  = (s_volumeAmbient->value*normal_vol);
+	music_vol  = (s_musicVolume->value*normal_vol);
+
+	if ( entchannel == CHAN_VOICE 
+		|| entchannel == CHAN_VOICE_ATTEN 
+		|| entchannel == CHAN_VOICE_GLOBAL )
+	{
+		volume = voice_vol;
+	}
+	else if ( entchannel == CHAN_LOCAL
+		|| entchannel == CHAN_WEAPON
+		|| entchannel == CHAN_ITEM
+		|| entchannel == CHAN_BODY
+		|| entchannel == CHAN_MENU1
+		|| entchannel == CHAN_LESS_ATTEN
+		|| entchannel == CHAN_AUTO)
+	{
+		volume = effects_vol;
+	}
+	else if ( entchannel == CHAN_AMBIENT )
+	{
+		volume = ambient_vol;
+	}
+	else if ( entchannel == CHAN_MUSIC )
+	{
+		volume = music_vol;
+	}
+	else //CHAN_ANNOUNCER //CHAN_LOCAL_SOUND
+	{
+		volume = normal_vol;
+	}
+
+	return volume;
+}
+#endif //__USE_BASS__
+
 /*
 ====================
 S_StartSound
@@ -1550,6 +1603,11 @@ entchannel 0 will never override a playing sound
 */
 void S_StartSound(const vec3_t origin, int entityNum, int entchannel, sfxHandle_t sfxHandle )
 {
+#ifdef __USE_BASS__
+	if (s_knownSfx[ sfxHandle ].bassSampleID < 0) return;
+	BASS_AddMemoryChannel(s_knownSfx[ sfxHandle ].bassSampleID, entityNum, entchannel, (float *)origin);
+	return;
+#else //!__USE_BASS__
 	channel_t	*ch;
 	/*const*/ sfx_t *sfx;
 
@@ -1666,6 +1724,7 @@ void S_StartSound(const vec3_t origin, int entityNum, int entchannel, sfxHandle_
 	{
 		memset(&ch->MP3StreamHeader,0,						sizeof(ch->MP3StreamHeader));
 	}
+#endif //__USE_BASS__
 }
 
 /*
@@ -2767,6 +2826,10 @@ void S_Update( void ) {
 		return;
 	}
 
+#ifdef __USE_BASS__
+	BASS_Update();
+#endif //__USE_BASS__
+
 	//
 	// debugging output
 	//
@@ -2858,8 +2921,10 @@ void S_GetSoundtime(void)
 
 
 void S_Update_(void) {
+#ifndef __USE_BASS__
 	unsigned        endtime;
 	int				samps;
+#endif //__USE_BASS__
 
 	if ( !s_soundStarted || s_soundMuted ) {
 		return;
@@ -3106,11 +3171,13 @@ void S_Update_(void) {
 	else
 	{
 #endif
+
 		// Updates s_soundtime
 		S_GetSoundtime();
 
 		const unsigned s_oldpaintedtime = s_paintedtime;
 
+#ifndef __USE_BASS__
 		// clear any sound effects that end before the current time,
 		// and start any new sounds
 		S_ScanChannelStarts();
@@ -3133,6 +3200,7 @@ void S_Update_(void) {
 		S_PaintChannels (endtime);
 
 		SNDDMA_Submit ();
+#endif //__USE_BASS__
 
 		S_DoLipSynchs( s_oldpaintedtime );
 #ifdef USE_OPENAL
@@ -4026,8 +4094,10 @@ qboolean S_FileExists( const char *psFilename )
 //
 static void MP3MusicStream_Reset(MusicInfo_t *pMusicInfo)
 {
+#ifndef __USE_BASS__
 	pMusicInfo->iMP3MusicStream_DiskReadPos		= 0;
 	pMusicInfo->iMP3MusicStream_DiskWindowPos	= 0;
+#endif //__USE_BASS__
 }
 
 //
@@ -4035,6 +4105,7 @@ static void MP3MusicStream_Reset(MusicInfo_t *pMusicInfo)
 //
 static byte *MP3MusicStream_ReadFromDisk(MusicInfo_t *pMusicInfo, int iReadOffset, int iReadBytesNeeded)
 {
+#ifndef __USE_BASS__
 	if (iReadOffset < pMusicInfo->iMP3MusicStream_DiskWindowPos)
 	{
 		assert(0);											// should never happen
@@ -4065,12 +4136,18 @@ static byte *MP3MusicStream_ReadFromDisk(MusicInfo_t *pMusicInfo, int iReadOffse
 	}
 
 	return pMusicInfo->byMP3MusicStream_DiskBuffer + (iReadOffset - pMusicInfo->iMP3MusicStream_DiskWindowPos);
+#else //__USE_BASS__
+	return NULL;
+#endif //__USE_BASS__
 }
 
 // does NOT set s_rawend!...
 //
 static void S_StopBackgroundTrack_Actual( MusicInfo_t *pMusicInfo )
 {
+#ifdef __USE_BASS__
+	BASS_StopMusic();
+#else //!__USE_BASS__
 	if ( pMusicInfo->s_backgroundFile )
 	{
 		if ( pMusicInfo->s_backgroundFile != -1)
@@ -4079,10 +4156,12 @@ static void S_StopBackgroundTrack_Actual( MusicInfo_t *pMusicInfo )
 		}
 		pMusicInfo->s_backgroundFile = 0;
 	}
+#endif //__USE_BASS__
 }
 
 static void FreeMusic( MusicInfo_t *pMusicInfo )
 {
+#ifndef __USE_BASS__
 	if (pMusicInfo->pLoadedData)
 	{
 		Z_Free(pMusicInfo->pLoadedData);
@@ -4090,22 +4169,27 @@ static void FreeMusic( MusicInfo_t *pMusicInfo )
 		pMusicInfo->sLoadedDataName[0]= '\0';	//
 		pMusicInfo->iLoadedDataLen	= 0;
 	}
+#endif //__USE_BASS__
 }
 
 // called only by snd_shutdown (from snd_restart or app exit)
 //
 void S_UnCacheDynamicMusic( void )
 {
+#ifndef __USE_BASS__
 	for (int i = eBGRNDTRACK_DATABEGIN; i != eBGRNDTRACK_DATAEND; i++)
 	{
 		FreeMusic( &tMusic_Info[i]);
 	}
+#endif //__USE_BASS__
 }
 
 static qboolean S_StartBackgroundTrack_Actual( MusicInfo_t *pMusicInfo, qboolean qbDynamic, const char *intro, const char *loop )
 {
+#ifndef __USE_BASS__
 	int		len;
 	char	dump[16];
+#endif //__USE_BASS__
 	char	name[MAX_QPATH];
 
 	Q_strncpyz( sMusic_BackgroundLoop, loop, sizeof( sMusic_BackgroundLoop ));
@@ -4115,6 +4199,16 @@ static qboolean S_StartBackgroundTrack_Actual( MusicInfo_t *pMusicInfo, qboolean
 													//	get the "soft" fopen() error, rather than the ERR_DROP you'd get
 													//	if COM_DefaultExtension didn't have room to add it on.
 	COM_DefaultExtension( name, sizeof( name ), ".mp3" );
+
+#ifdef __USE_BASS__
+	sfxHandle_t	sfxHandle = S_RegisterSound( name );
+
+	//if (s_knownSfx[ sfxHandle ].indexSize <= 0 || !s_knownSfx[ sfxHandle ].indexData) return qfalse;
+
+	if (s_knownSfx[ sfxHandle ].bassSampleID < 0) return qfalse;
+	BASS_StartMusic(s_knownSfx[ sfxHandle ].bassSampleID);
+	return qtrue;
+#else //!__USE_BASS__
 
 	// close the background track, but DON'T reset s_rawend (or remaining music bits that haven't been output yet will be cut off)
 	//
@@ -4302,12 +4396,14 @@ static qboolean S_StartBackgroundTrack_Actual( MusicInfo_t *pMusicInfo, qboolean
 
 		pMusicInfo->s_backgroundSamples = pMusicInfo->s_backgroundInfo.samples;
 	}
+#endif //__USE_BASS__
 
 	return qtrue;
 }
 
 static void S_SwitchDynamicTracks( MusicState_e eOldState, MusicState_e eNewState, qboolean bNewTrackStartsFullVolume )
 {
+#ifndef __USE_BASS__
 	// copy old track into fader...
 	//
 	tMusic_Info[ eBGRNDTRACK_FADE ] = tMusic_Info[ eOldState ];
@@ -4336,6 +4432,7 @@ static void S_SwitchDynamicTracks( MusicState_e eOldState, MusicState_e eNewStat
 
 		Com_Printf( S_COLOR_MAGENTA "S_SwitchDynamicTracks( \"%s\" )\n", psNewStateString );
 	}
+#endif //__USE_BASS__
 }
 
 // called by both the config-string parser and the console-command state-changer...
@@ -4345,6 +4442,7 @@ static void S_SwitchDynamicTracks( MusicState_e eOldState, MusicState_e eNewStat
 //
 static void S_SetDynamicMusicState( MusicState_e eNewState )
 {
+#ifndef __USE_BASS__
 	if (eMusic_StateRequest != eNewState)
 	{
 		eMusic_StateRequest  = eNewState;
@@ -4357,10 +4455,12 @@ static void S_SetDynamicMusicState( MusicState_e eNewState )
 			Com_Printf( S_COLOR_MAGENTA "S_SetDynamicMusicState( Request: \"%s\" )\n", psNewStateString );
 		}
 	}
+#endif //__USE_BASS__
 }
 
 static void S_HandleDynamicMusicStateChange( void )
 {
+#ifndef __USE_BASS__
 	if (eMusic_StateRequest != eMusic_StateActual)
 	{
 		// check whether or not the new request can be honoured, given what's currently playing...
@@ -4508,6 +4608,7 @@ static void S_HandleDynamicMusicStateChange( void )
 			}
 		}
 	}
+#endif //__USE_BASS__
 }
 
 static char gsIntroMusic[MAX_QPATH]={0};
@@ -4580,6 +4681,7 @@ void S_StartBackgroundTrack( const char *intro, const char *loop, qboolean bCall
 		Com_DPrintf("S_StartBackgroundTrack: Found/using non-dynamic music track '%s' (loop: '%s')\n", sNameIntro, psLoopName);
 		S_StartBackgroundTrack_Actual( &tMusic_Info[eBGRNDTRACK_NONDYNAMIC], bMusic_IsDynamic, sNameIntro, psLoopName );
 	}
+#ifndef __USE_BASS__
 	else
 	{
 		if (Music_DynamicDataAvailable(intro))	// "intro", NOT "sName" (i.e. don't use version with ".mp3" extension)
@@ -4651,6 +4753,7 @@ void S_StartBackgroundTrack( const char *intro, const char *loop, qboolean bCall
 			}
 		}
 	}
+#endif //__USE_BASS__
 
 	if (bCalledByCGameStart)
 	{
@@ -4660,10 +4763,15 @@ void S_StartBackgroundTrack( const char *intro, const char *loop, qboolean bCall
 
 void S_StopBackgroundTrack( void )
 {
+#ifdef __USE_BASS__
+	// UQ1: FIXME...
+	BASS_StopMusic();
+#else //!__USE_BASS__
 	for (int i=0; i<eBGRNDTRACK_NUMBEROF; i++)
 	{
 		S_StopBackgroundTrack_Actual( &tMusic_Info[i] );
 	}
+#endif //__USE_BASS__
 
 	s_rawend = 0;
 }
@@ -4672,6 +4780,7 @@ void S_StopBackgroundTrack( void )
 //
 static qboolean S_UpdateBackgroundTrack_Actual( MusicInfo_t *pMusicInfo, qboolean bFirstOrOnlyMusicTrack, float fDefaultVolume)
 {
+#ifndef __USE_BASS__
 	int		bufferSamples;
 	int		fileSamples;
 	byte	raw[30000];		// just enough to fit in a mac stack frame  (note that MP3 doesn't use full size of it)
@@ -4837,6 +4946,7 @@ static qboolean S_UpdateBackgroundTrack_Actual( MusicInfo_t *pMusicInfo, qboolea
 
 #undef SIZEOF_RAW_BUFFER_FOR_MP3
 #undef RAWSIZE
+#endif //__USE_BASS__
 
 	return qfalse;
 }
@@ -4866,6 +4976,7 @@ static const char *S_Music_GetRequestedState(void)
 //
 static void S_CheckDynamicMusicState(void)
 {
+#ifndef __USE_BASS__
 	const char *psCommand = S_Music_GetRequestedState();
 
 	if (psCommand)
@@ -4921,10 +5032,12 @@ static void S_CheckDynamicMusicState(void)
 	}
 
 	S_HandleDynamicMusicStateChange();
+#endif //__USE_BASS__
 }
 
 static void S_UpdateBackgroundTrack( void )
 {
+#ifndef __USE_BASS__
 	if (bMusic_IsDynamic)
 	{
 		if (s_debugdynamic->integer == 2)
@@ -5023,6 +5136,7 @@ static void S_UpdateBackgroundTrack( void )
 		}
 	}
 	else
+#endif //__USE_BASS__
 	{
 		// standard / non-dynamic one-track music...
 		//
