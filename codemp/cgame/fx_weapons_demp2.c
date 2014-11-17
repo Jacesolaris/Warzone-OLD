@@ -5,10 +5,10 @@
 
 /*
 ---------------------------
-FX_CLONEPISTOL_ProjectileThink
+FX_Clonepistol_ProjectileThink
 ---------------------------
 */
-void FX_CLONEPISTOL_ProjectileThink(centity_t *cent, const struct weaponInfo_s *weapon)
+void FX_Clonepistol_ProjectileThink(centity_t *cent, const struct weaponInfo_s *weapon)
 {
 	vec3_t forward;
 	int t;
@@ -40,72 +40,154 @@ void FX_CLONEPISTOL_ProjectileThink(centity_t *cent, const struct weaponInfo_s *
 
 /*
 ---------------------------
-FX_CLONEPISTOL_HitWall
+FX_Clonepistol_HitWall
 ---------------------------
 */
-
-void FX_CLONEPISTOL_HitWall(vec3_t origin, vec3_t normal, int weapon, qboolean altFire)
+//i added this stuff here under but
+void FX_Clonepistol_HitWall(vec3_t origin, vec3_t normal, int weapon, qboolean altFire)
 {
+
+	// Set fx to primary weapon fx.
 	fxHandle_t fx = cg_weapons[weapon].missileWallImpactfx;
 	fxHandle_t fx2 = cg_weapons[weapon].wallImpactEffectEnhancedFX;
-	if (altFire) fx = cg_weapons[weapon].altMissileWallImpactfx;
 
-	if (fx2)
-	{
-		trap->FX_PlayEffectID(CG_EnableEnhancedFX(fx, fx2), origin, normal, -1, -1, qfalse);
+	if (!fx) {
+		// If there is no primary (missileWallImpactfx) fx. Use original blaster fx.
+		fx = cgs.effects.demp2WallImpactEffect;
+
+		// If falling back to normal concussion fx, we have no enhanced.
+		fx2 = fx; // Force normal fx.
 	}
-	else if (fx)
-	{
-		trap->FX_PlayEffectID(fx, origin, normal, -1, -1, qfalse);
+
+	if (altFire) {
+		// If this is alt fire. Override all fx with alt fire fx...
+		if (cg_weapons[weapon].altMissileWallImpactfx)
+		{// We have alt fx for this weapon. Use it.
+			fx = cg_weapons[weapon].altMissileWallImpactfx;
+		}
+
+		if (cg_weapons[weapon].altWallImpactEffectEnhancedFX)
+		{// We have enhanced alt. Use it.
+			fx2 = cg_weapons[weapon].altWallImpactEffectEnhancedFX;
+		}
+		else
+		{// We have no alt enhanced fx.
+			fx2 = fx; // Force normal fx.
+		}
 	}
-	else
-	{
-		trap->FX_PlayEffectID(CG_EnableEnhancedFX(cgs.effects.demp2WallImpactEffect, 
-			cgs.effects.demp2WallImpactEffectEnhancedFX), origin, normal, -1, -1, qfalse);
 
-	}
-}
-
-/*
----------------------------
-FX_CLONEPISTOL_BounceWall
----------------------------
-*/
-void FX_CLONEPISTOL_BounceWall(vec3_t origin, vec3_t normal, int weapon, qboolean altFire)
-{
-	fxHandle_t fx = cg_weapons[weapon].WallBounceEffectEnhancedFX;
-	fxHandle_t fx2 = cg_weapons[weapon].WallBounceEffectEnhancedFX;
-	if (altFire) fx = cg_weapons[weapon].altMissileWallImpactfx;
-
-	if (fx2)
-	{
-		trap->FX_PlayEffectID(CG_EnableEnhancedFX(fx, fx2), origin, normal, -1, -1, qfalse);
-	}
-	else if (fx)
-	{
-		trap->FX_PlayEffectID(fx, origin, normal, -1, -1, qfalse);
-	}
-	else
-		trap->FX_PlayEffectID(CG_EnableEnhancedFX(cgs.effects.demp2WallBounceEffect, 
-		cgs.effects.demp2WallBounceEffectEnhancedFX), origin, normal, -1, -1, qfalse);
-}
-
-
-/*
----------------------------
-FX_CLONEPISTOL_HitPlayer
----------------------------
-*/
-
-void FX_CLONEPISTOL_HitPlayer(vec3_t origin, vec3_t normal, qboolean humanoid, int weapon, qboolean altFire)
-{
-	fxHandle_t fx = cg_weapons[weapon].fleshImpactEffect;
-	if (altFire) fx = cg_weapons[weapon].altFleshImpactEffect;
+	// If fx2 (enhanced) does not exist (set fx2 to -1 above), this should return normal fx.
+	fx = CG_EnableEnhancedFX(fx, fx2);
 
 	if (fx)
+	{// We have fx for this. Play it.
 		trap->FX_PlayEffectID(fx, origin, normal, -1, -1, qfalse);
+	}
+	else
+	{// This should never be possible, but just in case, fall back to concussion here.
+		trap->FX_PlayEffectID(cgs.effects.demp2WallImpactEffect, origin, normal, -1, -1, qfalse);
+	}
+}
+
+/*
+---------------------------
+FX_Clonepistol_BounceWall
+---------------------------
+*///its like it is the same here just call with some othere cmd
+void FX_Clonepistol_BounceWall(vec3_t origin, vec3_t normal, int weapon, qboolean altFire)
+{
+
+	// Set fx to primary weapon fx.
+	fxHandle_t fx = cg_weapons[weapon].WallBounceEffectFX;
+	fxHandle_t fx2 = cg_weapons[weapon].WallBounceEffectEnhancedFX;
+
+	if (!fx) {
+		// If there is no primary (WallBounceEffectFX) fx. Use original blaster fx.
+		fx = cgs.effects.demp2WallBounceEffect;
+
+		// If falling back to normal concussion fx, we have no enhanced.
+		fx2 = fx; // Force normal fx.
+	}
+
+	if (altFire) {
+		// If this is alt fire. Override all fx with alt fire fx...
+		if (cg_weapons[weapon].altWallBounceEffectFX)
+		{// We have alt fx for this weapon. Use it.
+			fx = cg_weapons[weapon].altWallBounceEffectFX;
+		}
+
+		if (cg_weapons[weapon].altWallBounceEnhancedEffectFX)
+		{// We have enhanced alt. Use it.
+			fx2 = cg_weapons[weapon].altWallBounceEnhancedEffectFX;
+		}
+		else
+		{// We have no alt enhanced fx.
+			fx2 = fx; // Force normal fx.
+		}
+	}
+
+	// If fx2 (enhanced) does not exist (set fx2 to -1 above), this should return normal fx.
+	fx = CG_EnableEnhancedFX(fx, fx2);
+
+	if (fx)
+	{// We have fx for this. Play it.
+		trap->FX_PlayEffectID(fx, origin, normal, -1, -1, qfalse);
+	}
+	else
+	{// This should never be possible, but just in case, fall back to concussion here.
+		trap->FX_PlayEffectID(cgs.effects.demp2WallBounceEffect, origin, normal, -1, -1, qfalse);
+	}
+}
+
+
+
+/*
+---------------------------
+FX_Clonepistol_HitPlayer
+---------------------------
+*/
+
+void FX_Clonepistol_HitPlayer(vec3_t origin, vec3_t normal, qboolean humanoid, int weapon, qboolean altFire)
+{
+	// Set fx to primary weapon fx.
+	fxHandle_t fx = cg_weapons[weapon].fleshImpactEffect;
+	fxHandle_t fx2 = cg_weapons[weapon].fleshImpactEnhancedEffect;
+
+	if (!fx) {
+		// If there is no primary (missileWallImpactfx) fx. Use original blaster fx.
+		fx = cgs.effects.blasterFleshImpactEffect;
+
+		// If falling back to normal concussion fx, we have no enhanced.
+		fx2 = fx; // Force normal fx.
+	}
+
+	if (altFire) {
+		// If this is alt fire. Override all fx with alt fire fx...
+		if (cg_weapons[weapon].altFleshImpactEffect)
+		{// We have alt fx for this weapon. Use it.
+			fx = cg_weapons[weapon].altFleshImpactEffect;
+		}
+
+		if (cg_weapons[weapon].altFleshImpactEnhancedEffect)
+		{// We have enhanced alt. Use it.
+			fx2 = cg_weapons[weapon].altFleshImpactEnhancedEffect;
+		}
+		else
+		{// We have no alt enhanced fx.
+			fx2 = fx; // Force normal fx.
+		}
+	}
+
+	// If fx2 (enhanced) does not exist (set fx2 to -1 above), this should return normal fx.
+	fx = CG_EnableEnhancedFX(fx, fx2);
+
+	if (fx)
+	{// We have fx for this. Play it.
+		trap->FX_PlayEffectID(fx, origin, normal, -1, -1, qfalse);
+	}
 	else
 		trap->FX_PlayEffectID(cgs.effects.demp2FleshImpactEffect, origin, normal, -1, -1, qfalse);
+
 }
 
 /*
@@ -170,11 +252,42 @@ FX_DEMP2_HitPlayer
 
 void FX_DEMP2_HitPlayer(vec3_t origin, vec3_t normal, qboolean humanoid, int weapon, qboolean altFire)
 {
+	// Set fx to primary weapon fx.
 	fxHandle_t fx = cg_weapons[weapon].fleshImpactEffect;
-	if (altFire) fx = cg_weapons[weapon].altFleshImpactEffect;
+	fxHandle_t fx2 = cg_weapons[weapon].fleshImpactEnhancedEffect;
+
+	if (!fx) {
+		// If there is no primary (missileWallImpactfx) fx. Use original blaster fx.
+		fx = cgs.effects.blasterFleshImpactEffect;
+
+		// If falling back to normal concussion fx, we have no enhanced.
+		fx2 = fx; // Force normal fx.
+	}
+
+	if (altFire) {
+		// If this is alt fire. Override all fx with alt fire fx...
+		if (cg_weapons[weapon].altFleshImpactEffect)
+		{// We have alt fx for this weapon. Use it.
+			fx = cg_weapons[weapon].altFleshImpactEffect;
+		}
+
+		if (cg_weapons[weapon].altFleshImpactEnhancedEffect)
+		{// We have enhanced alt. Use it.
+			fx2 = cg_weapons[weapon].altFleshImpactEnhancedEffect;
+		}
+		else
+		{// We have no alt enhanced fx.
+			fx2 = fx; // Force normal fx.
+		}
+	}
+
+	// If fx2 (enhanced) does not exist (set fx2 to -1 above), this should return normal fx.
+	fx = CG_EnableEnhancedFX(fx, fx2);
 
 	if (fx)
+	{// We have fx for this. Play it.
 		trap->FX_PlayEffectID(fx, origin, normal, -1, -1, qfalse);
+	}
 	else
 	trap->FX_PlayEffectID( cgs.effects.demp2FleshImpactEffect, origin, normal, -1, -1, qfalse );
 }

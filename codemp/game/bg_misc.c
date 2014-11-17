@@ -246,7 +246,7 @@ int WeaponReadyAnim[WP_NUM_WEAPONS] =
 	DC15_READY,//WP_WESTARM5
 	TORSO_WEAPONREADY3,//WP_T21
 	DC15_READY,//WP_EE3
-	TORSO_WEAPONREADY2,//WP_CLONE_PISTOL1
+	TORSO_WEAPONREADY2,//WP_DC_15S_CLONE_PISTOL
 	TORSO_WEAPONREADY3,//WP_DLT20A
 	DC15_READY,//WP_CLONERIFLE
 	TORSO_WEAPONREADY2,//WP_WESTER_PISTOL
@@ -261,6 +261,8 @@ int WeaponReadyAnim[WP_NUM_WEAPONS] =
 	PLX1_WEAPONREADY, //WP_CW_ROCKET_LAUNCHER
 	TORSO_WEAPONREADY2,// WP_TESTGUN
 	TORSO_WEAPONREADY10,//WP_FRAG_GRENADE
+	TORSO_WEAPONREADY10,//WP_FRAG_GRENADE_OLD
+	TORSO_WEAPONREADY2,//WP_DC_17_CLONE_PISTOL
 	TORSO_WEAPONREADY3,//TORSO_WEAPONREADY5,//WP_BOWCASTER,
 	TORSO_WEAPONREADY3,//TORSO_WEAPONREADY6,//WP_REPEATER,
 	TORSO_WEAPONREADY3,//TORSO_WEAPONREADY7,//WP_DEMP2,
@@ -307,7 +309,7 @@ int WeaponReadyLegsAnim[WP_NUM_WEAPONS] =
 	BOTH_STAND1,//WP_WESTARM5,
 	BOTH_STAND1,//WP_T21,
 	BOTH_STAND1,//WP_EE3,
-	BOTH_STAND1,//WP_CLONE_PISTOL1,
+	BOTH_STAND1,//WP_DC_15S_CLONE_PISTOL,
 	BOTH_STAND1,//WP_DLT20A,
 	BOTH_STAND1,//WP_CLONERIFLE,
 	BOTH_STAND1,//WP_WESTER_PISTOL,
@@ -322,6 +324,8 @@ int WeaponReadyLegsAnim[WP_NUM_WEAPONS] =
 	PLX1_IDLE,//WP_CW_ROCKET_LAUNCHER,
 	BOTH_STAND1,// WP_TESTGUN
 	BOTH_STAND1,//WP_FRAG_GRENADE
+	BOTH_STAND1,//WP_FRAG_GRENADE_OLD
+	BOTH_STAND1,//WP_DC_17_CLONE_PISTOL,
 	BOTH_STAND1,//TORSO_WEAPONREADY5,//WP_BOWCASTER,
 	BOTH_STAND1,//TORSO_WEAPONREADY6,//WP_REPEATER,
 	BOTH_STAND1,//TORSO_WEAPONREADY7,//WP_DEMP2,
@@ -367,7 +371,7 @@ int WeaponAttackAnim[WP_NUM_WEAPONS] =
 	DC15_FIRE,//WP_WESTARM5
 	BOTH_ATTACK3,//WP_T21
 	DC15_FIRE,//WP_EE3
-	BOTH_ATTACK2,//WP_CLONE_PISTOL1
+	BOTH_ATTACK2,//WP_DC_15S_CLONE_PISTOL
 	BOTH_ATTACK3, //WP_DLT20A
 	DC15_FIRE,//WP_CLONERIFLE
 	BOTH_ATTACK2,//WP_WESTER_PISTOL
@@ -382,6 +386,8 @@ int WeaponAttackAnim[WP_NUM_WEAPONS] =
 	PLX1_FIRE,//WP_CW_ROCKET_LAUNCHER
 	BOTH_ATTACK2,// WP_TESTGUN
 	BOTH_THERMAL_THROW,//WP_FRAG_GRENADE
+	BOTH_THERMAL_THROW,//WP_FRAG_GRENADE_OLD
+	BOTH_ATTACK2,//WP_DC_17_CLONE_PISTOL
 	BOTH_ATTACK3,//BOTH_ATTACK5,//WP_BOWCASTER,
 	BOTH_ATTACK3,//BOTH_ATTACK6,//WP_REPEATER,
 	BOTH_ATTACK2,//BOTH_ATTACK7,//WP_DEMP2,
@@ -1413,7 +1419,7 @@ Don't place this
 	/* pickup *///	"clone_pistol_1",
 	100,
 	IT_WEAPON,
-	WP_CLONE_PISTOL1,
+	WP_DC_15S_CLONE_PISTOL,
 	/* precache */ "",
 	/* sounds */ "",
 	"@MENUS_THE_PRIMARY_WEAPON_OF"				// description
@@ -1650,6 +1656,42 @@ Don't place this
 	/* precache */ "",
 	/* sounds */ "",
 	"@MENUS_THE_THERMAL_DETONATOR"					// description
+},
+
+/*QUAKED weapon_thermal (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+*/
+{
+	"weapon_old_fraggrenade",
+	"sound/weapons/w_pkup.wav",
+	{ "models/weapons3/oldfraggrenade/thermal_w.glm", "models/weapons3/oldfraggrenade/thermal_pu.md3",
+	0, 0 },
+	/* view */		"models/weapons3/oldfraggrenade/thermal.md3",
+	/* icon */		"gfx/hud/w_icon_oldfraggrenade",
+	/* pickup *///	"Thermal Detonator",
+	4,
+	IT_WEAPON,
+	WP_FRAG_GRENADE_OLD,
+	/* precache */ "",
+	/* sounds */ "",
+	"@MENUS_THE_THERMAL_DETONATOR"					// description
+},
+
+/*QUAKED weapon_clone_pistol_1 (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+*/
+{
+	"weapon_clone_pistol_1",
+	"sound/weapons/w_pkup.wav",
+	{ "models/weapons3/demp2/demp2_w.glm",
+	0, 0, 0 },
+	/* view */		"models/weapons3/demp2/demp2_2.md3",
+	/* icon */		"gfx/hud/w_icon_dc-17s",
+	/* pickup *///	"clone_pistol_1",
+	100,
+	IT_WEAPON,
+	WP_DC_17_CLONE_PISTOL,
+	/* precache */ "",
+	/* sounds */ "",
+	"@MENUS_THE_PRIMARY_WEAPON_OF"				// description
 },
 
 /*QUAKED weapon_blaster (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
@@ -2582,7 +2624,7 @@ qboolean BG_CanItemBeGrabbed( int gametype, const entityState_t *ent, const play
 		}
 		
 		if (!(ent->eFlags & EF_DROPPEDWEAPON) && BG_HaveWeapon(ps, item->giTag) &&
-			item->giTag != WP_THERMAL && item->giTag != WP_FRAG_GRENADE && item->giTag != WP_TRIP_MINE && item->giTag != WP_DET_PACK)
+			item->giTag != WP_THERMAL && item->giTag != WP_FRAG_GRENADE && item->giTag != WP_FRAG_GRENADE_OLD && item->giTag != WP_TRIP_MINE && item->giTag != WP_DET_PACK)
 		{ //weaponstay stuff.. if this isn't dropped, and you already have it, you don't get it.
 			return qfalse;
 		}

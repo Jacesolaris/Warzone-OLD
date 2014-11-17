@@ -177,6 +177,10 @@ void G_BounceMissile( gentity_t *ent, trace_t *trace ) {
 	{ //slight hack for hit sound
 		G_Sound(ent, CHAN_BODY, G_SoundIndex(va("sound/weapons/thermal/bounce%i.wav", Q_irand(1, 2))));
 	}
+	else if (ent->s.weapon == WP_FRAG_GRENADE_OLD)
+	{ //slight hack for hit sound
+		G_Sound(ent, CHAN_BODY, G_SoundIndex(va("sound/weapons/thermal/bounce%i.wav", Q_irand(1, 2))));
+	}
 	else if (ent->s.weapon == WP_SABER)
 	{
 		G_Sound(ent, CHAN_BODY, G_SoundIndex(va("sound/weapons/saber/bounce%i.wav", Q_irand(1, 3))));
@@ -322,8 +326,10 @@ void G_MissileBounceEffect( gentity_t *ent, vec3_t org, vec3_t dir )
 	case WP_BOWCASTER:
 		G_PlayEffectID( G_EffectIndex("bowcaster/deflect"), ent->r.currentOrigin, dir );
 		break;
-	case WP_CLONE_PISTOL1:
-		G_PlayEffectID(G_EffectIndex("demp2/wall_bounce_enhanced2"), ent->r.currentOrigin, dir);
+
+	case WP_DC_17_CLONE_PISTOL:
+	case WP_DC_15S_CLONE_PISTOL:
+		G_PlayEffectID(G_EffectIndex("clone_pistol_1/wall_bounce_enhanced2"), ent->r.currentOrigin, dir);
 		break;
 	case WP_BLASTER:
 	case WP_BRYAR_PISTOL:
@@ -361,16 +367,19 @@ void G_MissileImpact(gentity_t *ent, trace_t *trace) {
 		(ent->bounceCount > 0 || ent->bounceCount == -5) &&
 		(ent->flags & (FL_BOUNCE | FL_BOUNCE_HALF)))
 	{
-		if (ent->s.weapon == WP_CLONE_PISTOL1 || ent->s.weapon == WP_BOWCASTER || ent->s.weapon == WP_WOOKIE_BOWCASTER)
+		if (ent->s.weapon == WP_DC_15S_CLONE_PISTOL 
+			|| ent->s.weapon == WP_BOWCASTER 
+			|| ent->s.weapon == WP_WOOKIE_BOWCASTER
+			|| ent->s.weapon == WP_DC_17_CLONE_PISTOL)
 		{ // hit effects on Clone Pistol and Bowcaster to bounces off floors.
 			if (!(trace->surfaceFlags & SURF_FORCEFIELD))
 			{
 				G_BounceMissile(ent, trace);
 
 				if (trace->surfaceFlags & SURF_METALSTEPS)
-					G_AddEvent(ent, EV_CLONE_PISTOL_BOUNCE_IMPACT, DirToByte(trace->plane.normal));
-				else if (ent->s.weapon != G2_MODEL_PART) //dismemberment part
-					G_AddEvent(ent, EV_CLONE_PISTOL_IMPACT, DirToByte(trace->plane.normal));
+					G_AddEvent(ent, EV_CLONE_PISTOL_BOUNCE_METAL, DirToByte(trace->plane.normal));
+				else if (ent->s.weapon != G2_MODEL_PART) //dismemberment
+					G_AddEvent(ent, EV_CLONE_PISTOL_BOUNCE, DirToByte(trace->plane.normal));
 				return;
 			}
 			else
@@ -482,6 +491,7 @@ void G_MissileImpact(gentity_t *ent, trace_t *trace) {
 		ent->s.weapon != WP_E60_ROCKET_LAUNCHER &&
 		ent->s.weapon != WP_CW_ROCKET_LAUNCHER &&
 		ent->s.weapon != WP_FRAG_GRENADE &&
+		ent->s.weapon != WP_FRAG_GRENADE_OLD &&
 		ent->s.weapon != WP_THERMAL &&
 		ent->s.weapon != WP_TRIP_MINE &&
 		ent->s.weapon != WP_DET_PACK &&
@@ -516,6 +526,7 @@ void G_MissileImpact(gentity_t *ent, trace_t *trace) {
 		ent->s.weapon != WP_E60_ROCKET_LAUNCHER &&
 		ent->s.weapon != WP_CW_ROCKET_LAUNCHER &&
 		ent->s.weapon != WP_FRAG_GRENADE &&
+		ent->s.weapon != WP_FRAG_GRENADE_OLD &&
 		ent->s.weapon != WP_THERMAL &&
 		ent->s.weapon != WP_TRIP_MINE &&
 		ent->s.weapon != WP_DET_PACK &&
@@ -591,6 +602,7 @@ void G_MissileImpact(gentity_t *ent, trace_t *trace) {
 			ent->s.weapon != WP_E60_ROCKET_LAUNCHER &&
 			ent->s.weapon != WP_CW_ROCKET_LAUNCHER &&
 			ent->s.weapon != WP_FRAG_GRENADE &&
+			ent->s.weapon != WP_FRAG_GRENADE_OLD &&
 			ent->s.weapon != WP_THERMAL &&
 			ent->s.weapon != WP_TRIP_MINE &&
 			ent->s.weapon != WP_DET_PACK &&
