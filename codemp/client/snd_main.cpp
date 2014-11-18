@@ -56,7 +56,7 @@ cvar_t		*s_volume;
 cvar_t		*s_volumeVoice;
 cvar_t		*s_volumeEffects;
 cvar_t		*s_volumeAmbient;
-cvar_t		*s_musicVolume;
+cvar_t		*s_volumeMusic;
 cvar_t		*s_lip_threshold_1;
 cvar_t		*s_lip_threshold_2;
 cvar_t		*s_lip_threshold_3;
@@ -116,7 +116,7 @@ void S_Init( void ) {
 
 	s_volume = Cvar_Get ("s_volume", "1.0", CVAR_ARCHIVE);
 	s_volumeVoice = Cvar_Get ("s_volumeVoice", "1.0", CVAR_ARCHIVE);
-	s_musicVolume = Cvar_Get ("s_musicVolume", "1.0", CVAR_ARCHIVE);
+	s_volumeMusic = Cvar_Get ("s_volumeMusic", "1.0", CVAR_ARCHIVE);
 	s_volumeEffects = Cvar_Get ("s_volumeEffects", "1.0", CVAR_ARCHIVE);
 	s_volumeAmbient = Cvar_Get ("s_volumeAmbient", "1.0", CVAR_ARCHIVE);
 

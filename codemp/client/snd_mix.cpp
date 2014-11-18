@@ -361,7 +361,7 @@ void S_PaintChannels( int endtime ) {
 	voice_vol  = (int)(s_volumeVoice->value*normal_vol);
 	effects_vol  = (int)(s_volumeEffects->value*normal_vol);
 	ambient_vol  = (int)(s_volumeAmbient->value*normal_vol);
-	music_vol  = (int)(s_musicVolume->value*normal_vol);
+	music_vol  = (int)(s_volumeMusic->value*normal_vol);
 
 //Com_Printf ("%i to %i\n", s_paintedtime, endtime);
 	while ( s_paintedtime < endtime ) {
@@ -756,7 +756,7 @@ static void S_MixChannel( mixChannel_t *ch, int speed, int count, int *output ) 
 	}
 	else if ( ch->volumeChan == CHAN_MUSIC )
 	{
-		volume = s_volume->value * s_musicVolume->value * 255;
+		volume = s_volume->value * s_volumeMusic->value * 255;
 	}
 	else //CHAN_ANNOUNCER //CHAN_LOCAL_SOUND
 	{
@@ -1052,7 +1052,7 @@ void S_MixBackground( mixBackground_t *background, int speed, int count, int *ou
 			Com_Memset( output, 0, count * sizeof(int) * 2 );
 			return;
 		}
-		volumeMul = s_musicVolume->value * ( 1 << MIX_SHIFT);
+		volumeMul = s_volumeMusic->value * ( 1 << MIX_SHIFT);
 		background->done += count;
 		while ( count > 0 ) {
 			openSound_t *sound;

@@ -712,8 +712,10 @@ qboolean gbInsideLoadSound = qfalse;
 static qboolean S_LoadSound_Actual( sfx_t *sfx )
 {
 	//byte	*data;
+#ifndef __USE_BASS__
 	short	*samples;
 	wavinfo_t	info;
+#endif //__USE_BASS__
 	//int		size;
 	char	*psExt;
 	char	sLoadName[MAX_QPATH];
@@ -759,9 +761,6 @@ static qboolean S_LoadSound_Actual( sfx_t *sfx )
 		if (Q_stricmpn(psExt,".mp3",4) == 0 && !MP3_IsValid(sLoadName, sfx->indexData, sfx->indexSize, qfalse)) isMusic = qtrue;
 
 		sfx->qhandle = sfx - s_knownSfx;
-		//sfx->indexSize = size;
-		//sfx->indexData = (byte *)malloc(size);
-		//memcpy(sfx->indexData, data, size);
 
 		if (!isMusic)
 			sfx->bassSampleID = BASS_LoadMemorySample( sfx->indexData, sfx->indexSize );
@@ -771,15 +770,11 @@ static qboolean S_LoadSound_Actual( sfx_t *sfx )
 		//Com_Printf("BASS: Registered sound %s. ID %i. Length %i. Size %i.\n", sLoadName, sfx->qhandle, sfx->indexSize, sizeof(sfx->indexData));
 		
 		if (sfx->bassSampleID < 0) Com_Printf("BASS: Failed to load sample %s from memory.\n", sLoadName);
-
-		if (isMusic) 
-		{// Stereo sample or music... Normal game can't load/play these, so exit here...
-			//sfx->bInMemory = qtrue;
-			//FS_FreeFile( sfx->indexData );
-			return qtrue;
-		}
 	}
-#endif //__USE_BASS__
+
+	FS_FreeFile( sfx->indexData );
+	return qtrue;
+#else //!__USE_BASS__
 
 //=========
 	if (Q_stricmpn(psExt,".mp3",4)==0)
@@ -965,8 +960,8 @@ static qboolean S_LoadSound_Actual( sfx_t *sfx )
 	}
 
 	//FS_FreeFile( sfx->indexData );
-
 	return qtrue;
+#endif //__USE_BASS__
 }
 
 

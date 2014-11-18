@@ -154,7 +154,11 @@ cvar_t		*s_volume;
 cvar_t		*s_volumeVoice;
 cvar_t		*s_volumeEffects;
 cvar_t		*s_volumeAmbient;
-cvar_t		*s_musicVolume;
+cvar_t		*s_volumeWeapon;
+cvar_t		*s_volumeItem;
+cvar_t		*s_volumeBody;
+cvar_t		*s_volumeMusic;
+cvar_t		*s_volumeLocal;
 cvar_t		*s_testsound;
 cvar_t		*s_khz;
 cvar_t		*s_allowDynamicMusic;
@@ -433,11 +437,15 @@ void S_Init( void ) {
 
 	Com_Printf("\n------- sound initialization -------\n");
 
-	s_volume = Cvar_Get ("s_volume", "0.5", CVAR_ARCHIVE);
+	s_volume = Cvar_Get ("s_volume", "1.0", CVAR_ARCHIVE);
 	s_volumeVoice= Cvar_Get ("s_volumeVoice", "1.0", CVAR_ARCHIVE);
-	s_volumeEffects= Cvar_Get ("s_volumeEffects", "1.0", CVAR_ARCHIVE);
-	s_volumeAmbient= Cvar_Get ("s_volumeAmbient", "1.0", CVAR_ARCHIVE);
-	s_musicVolume = Cvar_Get ("s_musicvolume", "0.25", CVAR_ARCHIVE);
+	s_volumeEffects= Cvar_Get ("s_volumeEffects", "0.7", CVAR_ARCHIVE);
+	s_volumeAmbient= Cvar_Get ("s_volumeAmbient", "0.5", CVAR_ARCHIVE);
+	s_volumeWeapon= Cvar_Get ("s_volumeWeapon", "0.5", CVAR_ARCHIVE);
+	s_volumeItem= Cvar_Get ("s_volumeItem", "0.5", CVAR_ARCHIVE);
+	s_volumeBody= Cvar_Get ("s_volumeBody", "0.5", CVAR_ARCHIVE);
+	s_volumeMusic = Cvar_Get ("s_volumeMusic", "0.25", CVAR_ARCHIVE);
+	s_volumeLocal = Cvar_Get ("s_volumeLocal", "0.5", CVAR_ARCHIVE);
 	s_separation = Cvar_Get ("s_separation", "0.5", CVAR_ARCHIVE);
 	s_khz = Cvar_Get ("s_khz", "44", CVAR_ARCHIVE|CVAR_LATCH);
 	s_allowDynamicMusic = Cvar_Get ("s_allowDynamicMusic", "1", CVAR_ARCHIVE);
@@ -476,7 +484,10 @@ void S_Init( void ) {
 
 #ifdef __USE_BASS__
 	BASS_Initialize();
-#endif //__USE_BASS__
+	s_soundStarted = 1;
+	s_soundMuted = qtrue;
+	s_soundtime = 0;
+#else //!__USE_BASS__
 
 #ifdef USE_OPENAL
 	cv = Cvar_Get("s_UseOpenAL" , "0",CVAR_ARCHIVE|CVAR_LATCH);
@@ -592,10 +603,10 @@ void S_Init( void ) {
 		if (s_volumeVoice->value > 1.f)
 			s_volumeVoice->value = 1.f;
 
-		if (s_musicVolume->value < 0.f)
-			s_musicVolume->value = 0.f;
-		if (s_musicVolume->value > 1.f)
-			s_musicVolume->value = 1.f;
+		if (s_volumeMusic->value < 0.f)
+			s_volumeMusic->value = 0.f;
+		if (s_volumeMusic->value > 1.f)
+			s_volumeMusic->value = 1.f;
 
 		// s_init could be called in game, if so there may be an .eal file
 		// for this level
@@ -624,6 +635,7 @@ void S_Init( void ) {
 #ifdef USE_OPENAL
 	}
 #endif
+#endif //__USE_BASS__
 
 	Com_Printf("------------------------------------\n");
 
@@ -1078,6 +1090,7 @@ void S_memoryLoad(sfx_t	*sfx)
 //=============================================================================
 static qboolean S_CheckChannelStomp( int chan1, int chan2 )
 {
+#ifndef __USE_BASS__
 #ifdef USE_OPENAL
 	if (!s_UseOpenAL)
 #endif
@@ -1093,6 +1106,7 @@ static qboolean S_CheckChannelStomp( int chan1, int chan2 )
 		return qtrue;
 	}
 
+#endif //__USE_BASS__
 	return qfalse;
 }
 
@@ -1360,6 +1374,7 @@ Used for spatializing s_channels
 */
 void S_SpatializeOrigin (const vec3_t origin, float master_vol, int *left_vol, int *right_vol, int channel, int volumechannel)
 {
+#ifndef __USE_BASS__
     float		dot;
     float		dist;
     float		lscale, rscale, scale;
@@ -1436,6 +1451,7 @@ void S_SpatializeOrigin (const vec3_t origin, float master_vol, int *left_vol, i
 	{
 		*left_vol = 0;
 	}
+#endif //__USE_BASS__
 }
 
 // =======================================================================
@@ -1454,7 +1470,13 @@ void S_StartAmbientSound( const vec3_t origin, int entityNum, unsigned char volu
 {
 #ifdef __USE_BASS__
 	if (s_knownSfx[ sfxHandle ].bassSampleID < 0) return;
-	BASS_AddMemoryChannel(s_knownSfx[ sfxHandle ].bassSampleID, entityNum, CHAN_AMBIENT, (float *)origin);
+	/*
+	if (origin)
+		Com_Printf("BASS_DEBUG: Entity %i playing AMBIENT sound %s on channel %i at org %f %f %f.\n", entityNum, s_knownSfx[ sfxHandle ].sSoundName, CHAN_AMBIENT, origin[0], origin[1], origin[2]);
+	else
+		Com_Printf("BASS_DEBUG: Entity %i playing AMBIENT sound %s on channel %i at NULL org.\n", entityNum, s_knownSfx[ sfxHandle ].sSoundName, CHAN_AMBIENT);
+	*/
+	BASS_AddMemoryChannel(s_knownSfx[ sfxHandle ].bassSampleID, entityNum, CHAN_AMBIENT, (float *)origin, (float)((float)volume/255.0));
 	return;
 #else //!__USE_BASS__
 	channel_t	*ch;
@@ -1561,27 +1583,35 @@ void S_MuteSound(int entityNum, int entchannel)
 float S_GetVolumeForChannel ( int entchannel )
 {
 	float		volume = 1;
-	float		normal_vol, voice_vol, effects_vol, ambient_vol, music_vol;
+	float		normal_vol, voice_vol, effects_vol, ambient_vol, weapon_vol, item_vol, body_vol, music_vol, local_vol;
 
 	normal_vol = s_volume->value;
 	voice_vol  = (s_volumeVoice->value*normal_vol);
 	effects_vol  = (s_volumeEffects->value*normal_vol);
 	ambient_vol  = (s_volumeAmbient->value*normal_vol);
-	music_vol  = (s_musicVolume->value*normal_vol);
+	weapon_vol  = (s_volumeWeapon->value*s_volumeEffects->value*normal_vol);
+	item_vol  = (s_volumeItem->value*s_volumeEffects->value*normal_vol);
+	body_vol  = (s_volumeBody->value*s_volumeEffects->value*normal_vol);
+	music_vol  = (s_volumeMusic->value*normal_vol);
+	local_vol  = (s_volumeLocal->value*normal_vol);
 
-	if ( entchannel == CHAN_VOICE 
-		|| entchannel == CHAN_VOICE_ATTEN 
-		|| entchannel == CHAN_VOICE_GLOBAL )
+	if ( entchannel == CHAN_VOICE || entchannel == CHAN_VOICE_ATTEN )
 	{
 		volume = voice_vol;
 	}
-	else if ( entchannel == CHAN_LOCAL
-		|| entchannel == CHAN_WEAPON
-		|| entchannel == CHAN_ITEM
-		|| entchannel == CHAN_BODY
-		|| entchannel == CHAN_MENU1
-		|| entchannel == CHAN_LESS_ATTEN
-		|| entchannel == CHAN_AUTO)
+	else if (entchannel == CHAN_WEAPON)
+	{
+		volume = weapon_vol;
+	}
+	else if (entchannel == CHAN_ITEM)
+	{
+		volume = item_vol;
+	}
+	else if (entchannel == CHAN_BODY)
+	{
+		volume = body_vol;
+	}
+	else if ( entchannel == CHAN_LESS_ATTEN || entchannel == CHAN_AUTO)
 	{
 		volume = effects_vol;
 	}
@@ -1593,9 +1623,9 @@ float S_GetVolumeForChannel ( int entchannel )
 	{
 		volume = music_vol;
 	}
-	else //CHAN_ANNOUNCER //CHAN_LOCAL_SOUND
+	else //CHAN_LOCAL //CHAN_ANNOUNCER //CHAN_LOCAL_SOUND //CHAN_MENU1 //CHAN_VOICE_GLOBAL
 	{
-		volume = normal_vol;
+		volume = local_vol;
 	}
 
 	return volume;
@@ -1615,7 +1645,15 @@ void S_StartSound(const vec3_t origin, int entityNum, int entchannel, sfxHandle_
 {
 #ifdef __USE_BASS__
 	if (s_knownSfx[ sfxHandle ].bassSampleID < 0) return;
-	BASS_AddMemoryChannel(s_knownSfx[ sfxHandle ].bassSampleID, entityNum, entchannel, (float *)origin);
+
+	/*
+	if (origin)
+		Com_Printf("BASS_DEBUG: Entity %i playing sound %s on channel %i at org %f %f %f.\n", entityNum, s_knownSfx[ sfxHandle ].sSoundName, entchannel, origin[0], origin[1], origin[2]);
+	else
+		Com_Printf("BASS_DEBUG: Entity %i playing sound %s on channel %i at NULL org.\n", entityNum, s_knownSfx[ sfxHandle ].sSoundName, entchannel);
+	*/
+
+	BASS_AddMemoryChannel(s_knownSfx[ sfxHandle ].bassSampleID, entityNum, entchannel, (float *)origin, 1.0);
 	return;
 #else //!__USE_BASS__
 	channel_t	*ch;
@@ -1772,13 +1810,15 @@ void S_StartLocalLoopingSound( sfxHandle_t sfxHandle) {
 	}
 
 	S_AddLoopingSound( listener_number, nullVec, nullVec, sfxHandle );
-
 }
 
 // returns length in milliseconds of supplied sound effect...  (else 0 for bad handle now)
 //
 float S_GetSampleLengthInMilliSeconds( sfxHandle_t sfxHandle)
 {
+#ifdef __USE_BASS__
+	return 512 * 1000;
+#else //!__USE_BASS__
 	sfx_t *sfx;
 
 	if (!s_soundStarted)
@@ -1794,6 +1834,7 @@ float S_GetSampleLengthInMilliSeconds( sfxHandle_t sfxHandle)
 	float f = (float)sfx->iSoundLengthInSamples / (float)dma.speed;
 
 	return (f * 1000);
+#endif //__USE_BASS__
 }
 
 
@@ -1806,6 +1847,7 @@ so sound doesn't stutter.
 ==================
 */
 void S_ClearSoundBuffer( void ) {
+#ifndef __USE_BASS__
 	int		clear;
 
 	if ( !s_soundStarted || s_soundMuted ) {
@@ -1841,6 +1883,7 @@ void S_ClearSoundBuffer( void ) {
 		s_soundtime = 0;
 	}
 #endif
+#endif //__USE_BASS__
 }
 
 
@@ -1851,6 +1894,12 @@ void S_CIN_StopSound(sfxHandle_t sfxHandle)
 	if ( sfxHandle < 0 || sfxHandle >= s_numSfx ) {
 		Com_Error( ERR_DROP, "S_CIN_StopSound: handle %i out of range", sfxHandle );
 	}
+
+#ifdef __USE_BASS__
+	if (s_knownSfx[ sfxHandle ].bassSampleID < 0) return;
+
+	BASS_FindAndStopSound(s_knownSfx[ sfxHandle ].bassSampleID);
+#else //!__USE_BASS__
 
 	sfx_t *sfx = &s_knownSfx[ sfxHandle ];
 	channel_t *ch = s_channels;
@@ -1879,6 +1928,7 @@ void S_CIN_StopSound(sfxHandle_t sfxHandle)
 			break;
 		}
 	}
+#endif //__USE_BASS__
 }
 
 
@@ -1889,7 +1939,9 @@ S_StopAllSounds
 */
 void S_StopSounds(void)
 {
-
+#ifdef __USE_BASS__
+	BASS_StopAllChannels();
+#else //!__USE_BASS__
 	if ( !s_soundStarted ) {
 		return;
 	}
@@ -1927,6 +1979,7 @@ void S_StopSounds(void)
 	memset(s_entityWavVol, 0,sizeof(s_entityWavVol));
 
 	S_ClearSoundBuffer ();
+#endif //__USE_BASS__
 }
 
 /*
@@ -1936,9 +1989,11 @@ S_StopAllSounds
 ==================
 */
 void S_StopAllSounds(void) {
+#ifndef __USE_BASS__
 	if ( !s_soundStarted ) {
 		return;
 	}
+#endif //__USE_BASS__
 
 	// stop the background music
 	S_StopBackgroundTrack();
@@ -1962,7 +2017,9 @@ S_ClearLoopingSounds
 */
 void S_ClearLoopingSounds( void )
 {
-#ifndef __USE_BASS__
+#ifdef __USE_BASS__
+	//BASS_StopAllLoopChannels();
+#else //!__USE_BASS__
 #ifdef USE_OPENAL
 	if (s_UseOpenAL)
 	{
@@ -2020,8 +2077,30 @@ Include velocity in case I get around to doing doppler...
 void S_AddLoopingSound( int entityNum, const vec3_t origin, const vec3_t velocity, sfxHandle_t sfxHandle ) {
 #ifdef __USE_BASS__
 	if (s_knownSfx[ sfxHandle ].bassSampleID < 0) return;
-	BASS_AddMemoryLoopChannel(s_knownSfx[ sfxHandle ].bassSampleID, entityNum, CHAN_BODY, (float *)origin);
-	return;
+	
+	if (entityNum >= 0 /*&& (cl.entityBaselines[entityNum].eType == ET_NPC || cl.entityBaselines[entityNum].eType == ET_PLAYER)*/)
+	{
+		/*
+		if (origin)
+			Com_Printf("BASS_DEBUG: Entity %i playing LOOPING sound %s on channel %i at org %f %f %f.\n", entityNum, s_knownSfx[ sfxHandle ].sSoundName, CHAN_BODY, origin[0], origin[1], origin[2]);
+		else
+			Com_Printf("BASS_DEBUG: Entity %i playing LOOPING sound %s on channel %i at NULL org.\n", entityNum, s_knownSfx[ sfxHandle ].sSoundName, CHAN_BODY);
+		*/
+
+		BASS_AddMemoryLoopChannel(s_knownSfx[ sfxHandle ].bassSampleID, entityNum, CHAN_BODY, (float *)origin, 1.0);
+	}
+	else
+	{
+		/*
+		if (origin)
+			Com_Printf("BASS_DEBUG: Entity %i playing LOOPING sound %s on channel %i at org %f %f %f.\n", entityNum, s_knownSfx[ sfxHandle ].sSoundName, CHAN_AMBIENT, origin[0], origin[1], origin[2]);
+		else
+			Com_Printf("BASS_DEBUG: Entity %i playing LOOPING sound %s on channel %i at NULL org.\n", entityNum, s_knownSfx[ sfxHandle ].sSoundName, CHAN_AMBIENT);
+		*/
+
+		BASS_AddMemoryLoopChannel(s_knownSfx[ sfxHandle ].bassSampleID, entityNum, CHAN_AMBIENT, (float *)origin, 1.0);
+	}
+
 #else //!__USE_BASS__
 	/*const*/ sfx_t *sfx;
 
@@ -2085,8 +2164,16 @@ void S_AddAmbientLoopingSound( const vec3_t origin, unsigned char volume, sfxHan
 {
 #ifdef __USE_BASS__
 	if (s_knownSfx[ sfxHandle ].bassSampleID < 0) return;
-	BASS_AddMemoryLoopChannel(s_knownSfx[ sfxHandle ].bassSampleID, -1, CHAN_AMBIENT, (float *)origin);
-	return;
+
+	/*
+	if (origin)
+		Com_Printf("BASS_DEBUG: Entity %i playing AMBIENT LOOPING sound %s on channel %i at org %f %f %f.\n", -1, s_knownSfx[ sfxHandle ].sSoundName, CHAN_AMBIENT, origin[0], origin[1], origin[2]);
+	else
+		Com_Printf("BASS_DEBUG: Entity %i playing AMBIENT LOOPING sound %s on channel %i at NULL org.\n", -1, s_knownSfx[ sfxHandle ].sSoundName, CHAN_AMBIENT);
+	*/
+
+	BASS_AddMemoryLoopChannel(s_knownSfx[ sfxHandle ].bassSampleID, -1, CHAN_AMBIENT, (float *)origin, (float)((float)volume/255.0));
+
 #else //!__USE_BASS__
 	/*const*/ sfx_t *sfx;
 
@@ -2217,7 +2304,9 @@ If raw data has been loaded in little endian binary form, this must be done.
 If raw data was calculated, as with ADPCM, this should not be called.
 =================
 */
-void S_ByteSwapRawSamples( int samples, int width, int s_channels, const byte *data ) {
+void S_ByteSwapRawSamples( int samples, int width, int s_channels, const byte *data ) 
+{
+#ifndef __USE_BASS__
 	int		i;
 
 	if ( width != 2 ) {
@@ -2233,6 +2322,7 @@ void S_ByteSwapRawSamples( int samples, int width, int s_channels, const byte *d
 	for ( i = 0 ; i < samples ; i++ ) {
 		((short *)data)[i] = LittleShort( ((short *)data)[i] );
 	}
+#endif //__USE_BASS__
 }
 
 
@@ -2250,6 +2340,7 @@ Music streaming
 */
 void S_RawSamples( int samples, int rate, int width, int s_channels, const byte *data, float volume, int bFirstOrOnlyUpdateThisFrame )
 {
+#ifndef __USE_BASS__
 	int		i;
 	int		src, dst;
 	float	scale;
@@ -2419,6 +2510,7 @@ void S_RawSamples( int samples, int rate, int width, int s_channels, const byte 
 	if ( s_rawend > s_soundtime + MAX_RAW_SAMPLES ) {
 		Com_DPrintf( "S_RawSamples: overflowed %i > %i\n", s_rawend, s_soundtime );
 	}
+#endif //__USE_BASS__
 }
 
 //=============================================================================
@@ -2436,6 +2528,9 @@ void S_UpdateEntityPosition( int entityNum, const vec3_t origin )
 		Com_Error( ERR_DROP, "S_UpdateEntityPosition: bad entitynum %i", entityNum );
 	}
 
+#ifdef __USE_BASS__
+	VectorCopy( origin, s_entityPosition[entityNum] );
+#else //!__USE_BASS__
 #ifdef USE_OPENAL
 	if (s_UseOpenAL)
 	{
@@ -2476,6 +2571,7 @@ void S_UpdateEntityPosition( int entityNum, const vec3_t origin )
 #endif
 
 	VectorCopy( origin, s_entityPosition[entityNum] );
+#endif //__USE_BASS__
 }
 
 
@@ -2486,6 +2582,9 @@ void S_UpdateEntityPosition( int entityNum, const vec3_t origin )
 static int next_amplitude = 0;
 static int S_CheckAmplitude(channel_t	*ch, const unsigned int s_oldpaintedtime )
 {
+#ifdef __USE_BASS__
+	return 0; // UQ1: FIXME - lip sync...
+#else //!__USE_BASS__
 	// now, is this a cycle - or have we just started a new sample - where we should update the backup table, and write this value
 	// into the new table? or should we just take the value FROM the back up table and feed it out.
 	assert( ch->startSample != START_SAMPLE_IMMEDIATE );
@@ -2602,6 +2701,7 @@ static int S_CheckAmplitude(channel_t	*ch, const unsigned int s_oldpaintedtime )
 	// no, just get last value calculated from backup table
 	assert( s_entityWavVol_back[ch->entnum] );
 	return (s_entityWavVol_back[ ch->entnum]);
+#endif //__USE_BASS__
 }
 /*
 ============
@@ -2612,6 +2712,7 @@ Change the volumes of all the playing sounds for changes in their positions
 */
 void S_Respatialize( int entityNum, const vec3_t head, matrix3_t axis, int inwater )
 {
+#ifndef __USE_BASS__
 #ifdef USE_OPENAL
 	EAXOCCLUSIONPROPERTIES eaxOCProp;
 	EAXACTIVEFXSLOTS eaxActiveSlots;
@@ -2759,8 +2860,7 @@ void S_Respatialize( int entityNum, const vec3_t head, matrix3_t axis, int inwat
 #ifdef USE_OPENAL
 	}
 #endif
-
-	return;
+#endif //__USE_BASS__
 }
 
 
@@ -2771,7 +2871,11 @@ S_ScanChannelStarts
 Returns qtrue if any new sounds were started since the last mix
 ========================
 */
-qboolean S_ScanChannelStarts( void ) {
+qboolean S_ScanChannelStarts( void ) 
+{
+#ifdef __USE_BASS__
+	return qfalse;
+#else //!__USE_BASS__
 	channel_t		*ch;
 	int				i;
 	qboolean		newSamples;
@@ -2803,6 +2907,7 @@ qboolean S_ScanChannelStarts( void ) {
 	}
 
 	return newSamples;
+#endif //__USE_BASS__
 }
 
 // this is now called AFTER the DMA painting, since it's only the painter calls that cause the MP3s to be unpacked,
@@ -2810,6 +2915,7 @@ qboolean S_ScanChannelStarts( void ) {
 //
 void S_DoLipSynchs( const unsigned s_oldpaintedtime )
 {
+#ifndef __USE_BASS__ // FIXME - lip sync...
 	channel_t		*ch;
 	int				i;
 
@@ -2840,6 +2946,7 @@ void S_DoLipSynchs( const unsigned s_oldpaintedtime )
 	if (next_amplitude < s_soundtime)	{
 		next_amplitude = s_soundtime + 800;
 	}
+#endif //__USE_BASS__
 }
 
 /*
@@ -2849,7 +2956,11 @@ S_Update
 Called once each time through the main loop
 ============
 */
-void S_Update( void ) {
+void S_Update( void ) 
+{
+#ifdef __USE_BASS__
+	BASS_Update();
+#else //!__USE_BASS__
 	int			i;
 	int			total;
 	channel_t	*ch;
@@ -2857,10 +2968,6 @@ void S_Update( void ) {
 	if ( !s_soundStarted || s_soundMuted ) {
 		return;
 	}
-
-#ifdef __USE_BASS__
-	BASS_Update();
-#endif //__USE_BASS__
 
 	//
 	// debugging output
@@ -2896,10 +3003,12 @@ void S_Update( void ) {
 
 	// mix some sound
 	S_Update_();
+#endif //__USE_BASS__
 }
 
 void S_GetSoundtime(void)
 {
+#ifndef __USE_BASS__
 	int		samplepos;
 	static	int		buffers;
 	static	int		oldsamplepos;
@@ -2949,14 +3058,14 @@ void S_GetSoundtime(void)
 	} else {
 		s_paintedtime = s_soundtime + dma.submission_chunk;
 	}
+#endif //__USE_BASS__
 }
 
 
 void S_Update_(void) {
-#ifndef __USE_BASS__
+#ifndef __USE_BASS__ // FIXME - lip sync
 	unsigned        endtime;
 	int				samps;
-#endif //__USE_BASS__
 
 	if ( !s_soundStarted || s_soundMuted ) {
 		return;
@@ -3238,6 +3347,7 @@ void S_Update_(void) {
 #ifdef USE_OPENAL
 	}
 #endif
+#endif //__USE_BASS__
 }
 
 #ifdef USE_OPENAL
@@ -3705,6 +3815,9 @@ void AL_UpdateRawSamples()
 
 int S_MP3PreProcessLipSync(channel_t *ch, short *data)
 {
+#ifdef __USE_BASS__
+	return 0;
+#else //!__USE_BASS__
 	int i;
 	int sample;
 	int sampleTotal = 0;
@@ -3730,10 +3843,12 @@ int S_MP3PreProcessLipSync(channel_t *ch, short *data)
 		sample = 4;
 
 	return sample;
+#endif //__USE_BASS__
 }
 
 void S_SetLipSyncs()
 {
+#ifndef __USE_BASS__
 	int i;
 	unsigned int samples;
 	int currentTime, timePlayed;
@@ -3808,6 +3923,7 @@ void S_SetLipSyncs()
 			}
 		}
 	}
+#endif //__USE_BASS__
 }
 
 /*
@@ -3857,6 +3973,7 @@ static void S_Music_f( void ) {
 //
 static void S_SetDynamicMusic_f(void)
 {
+#ifndef __USE_BASS__
 	int c = Cmd_Argc();
 
 	if ( c == 2 )
@@ -3921,6 +4038,7 @@ static void S_SetDynamicMusic_f(void)
 	//
 	Com_Printf("Usage: s_dynamic <explore/action/silence/boss/death>\n");
 	DynamicMusicInfoPrint();
+#endif //__USE_BASS__
 }
 
 // this table needs to be in-sync with the typedef'd enum "SoundCompressionMethod_t"...	-ste
@@ -3930,7 +4048,9 @@ static const char *sSoundCompressionMethodStrings[ct_NUMBEROF] =
 	"16b",	// ct_16
 	"mp3"	// ct_MP3
 };
-void S_SoundList_f( void ) {
+void S_SoundList_f( void ) 
+{
+#ifndef __USE_BASS__
 	int		i;
 	sfx_t	*sfx;
 	int		size, total;
@@ -4053,6 +4173,7 @@ void S_SoundList_f( void ) {
 	Com_Printf ("%d out of %d sfx_t slots used\n", s_numSfx, MAX_SFX);
 	Com_Printf ("%.2fMB bytes used when counting sfx_t->pSoundData + MP3 headers (if any)\n", (float)iTotalBytes / 1024.0f / 1024.0f);
 	S_DisplayFreeMemory();
+#endif //__USE_BASS__
 }
 
 /*
@@ -4234,8 +4355,6 @@ static qboolean S_StartBackgroundTrack_Actual( MusicInfo_t *pMusicInfo, qboolean
 
 #ifdef __USE_BASS__
 	sfxHandle_t	sfxHandle = S_RegisterSound( name );
-
-	//if (s_knownSfx[ sfxHandle ].indexSize <= 0 || !s_knownSfx[ sfxHandle ].indexData) return qfalse;
 
 	if (s_knownSfx[ sfxHandle ].bassSampleID < 0) return qfalse;
 	BASS_StartMusic(s_knownSfx[ sfxHandle ].bassSampleID);
@@ -4648,7 +4767,9 @@ static char gsLoopMusic [MAX_QPATH]={0};
 
 void S_RestartMusic( void )
 {
+#ifndef __USE_BASS__
 	if (s_soundStarted && !s_soundMuted )
+#endif //__USE_BASS__
 	{
 		//if (gsIntroMusic[0] || gsLoopMusic[0])	// dont test this anymore (but still *use* them), they're blank for JK2 dynamic-music levels anyway
 		{
@@ -4803,9 +4924,9 @@ void S_StopBackgroundTrack( void )
 	{
 		S_StopBackgroundTrack_Actual( &tMusic_Info[i] );
 	}
-#endif //__USE_BASS__
 
 	s_rawend = 0;
+#endif //__USE_BASS__
 }
 
 // qboolean return is true only if we're changing from a streamed intro to a dynamic loop...
@@ -4819,7 +4940,7 @@ static qboolean S_UpdateBackgroundTrack_Actual( MusicInfo_t *pMusicInfo, qboolea
 	int		fileBytes;
 	int		r;
 
-	float fMasterVol = fDefaultVolume; // s_musicVolume->value;
+	float fMasterVol = fDefaultVolume; // s_volumeMusic->value;
 
 	if (bMusic_IsDynamic)
 	{
@@ -4987,17 +5108,6 @@ static qboolean S_UpdateBackgroundTrack_Actual( MusicInfo_t *pMusicInfo, qboolea
 //
 static const char *S_Music_GetRequestedState(void)
 {
-	/*
-	int iStringOffset = cl.gameState.stringOffsets[CS_DYNAMIC_MUSIC_STATE];
-	if (iStringOffset)
-	{
-		const char *psCommand = cl.gameState.stringData+iStringOffset;
-
-		return psCommand;
-	}
-	*/
-	//rwwFIXMEFIXME: Maybe use the above for something in MP?
-
 	return NULL;
 }
 
@@ -5087,7 +5197,7 @@ static void S_UpdateBackgroundTrack( void )
 			if ( pMusicInfoCurrent->s_backgroundFile == -1)
 			{
 				int iRawEnd = s_rawend;
-				S_UpdateBackgroundTrack_Actual( pMusicInfoCurrent, qtrue, s_musicVolume->value * s_volume->value );
+				S_UpdateBackgroundTrack_Actual( pMusicInfoCurrent, qtrue, s_volumeMusic->value * s_volume->value );
 
 	/*			static int iPrevFrontVol = 0;
 				if (iPrevFrontVol != pMusicInfoCurrent->iXFadeVolume)
@@ -5099,7 +5209,7 @@ static void S_UpdateBackgroundTrack( void )
 				if (pMusicInfoFadeOut->bActive)
 				{
 					s_rawend = iRawEnd;
-					S_UpdateBackgroundTrack_Actual( pMusicInfoFadeOut, qfalse, s_musicVolume->value * s_volume->value );	// inactive-checked internally
+					S_UpdateBackgroundTrack_Actual( pMusicInfoFadeOut, qfalse, s_volumeMusic->value * s_volume->value );	// inactive-checked internally
 	/*
 					static int iPrevFadeVol = 0;
 					if (iPrevFadeVol != pMusicInfoFadeOut->iXFadeVolume)
@@ -5159,7 +5269,7 @@ static void S_UpdateBackgroundTrack( void )
 			MusicInfo_t *pMusicInfoFadeOut = &tMusic_Info[ eBGRNDTRACK_FADE ];
 			if (pMusicInfoFadeOut->bActive)
 			{
-				S_UpdateBackgroundTrack_Actual( pMusicInfoFadeOut, qtrue, s_musicVolume->value * s_volume->value );
+				S_UpdateBackgroundTrack_Actual( pMusicInfoFadeOut, qtrue, s_volumeMusic->value * s_volume->value );
 				if (pMusicInfoFadeOut->iXFadeVolume == 0)
 				{
 					pMusicInfoFadeOut->bActive = qfalse;
@@ -5174,7 +5284,7 @@ static void S_UpdateBackgroundTrack( void )
 		//
 		const char *psCommand = S_Music_GetRequestedState();	// special check just for "silence" case...
 		qboolean bShouldBeSilent = (qboolean)(psCommand && !Q_stricmp(psCommand,"silence"));
-		float fDesiredVolume = bShouldBeSilent ? 0.0f : s_musicVolume->value * s_volume->value;
+		float fDesiredVolume = bShouldBeSilent ? 0.0f : s_volumeMusic->value * s_volume->value;
 		//
 		// internal to this code is a volume-smoother...
 		//
@@ -5340,6 +5450,9 @@ void S_FreeAllSFXMem(void)
 //
 int SND_FreeOldestSound(sfx_t *pButNotThisOne /* = NULL */)
 {
+#ifdef __USE_BASS__
+	return 0;
+#else //!__USE_BASS__
 	int iBytesFreed = 0;
 	sfx_t *sfx;
 
@@ -5387,6 +5500,7 @@ int SND_FreeOldestSound(sfx_t *pButNotThisOne /* = NULL */)
 	}
 
 	return iBytesFreed;
+#endif //__USE_BASS__
 }
 int SND_FreeOldestSound(void)
 {
@@ -5401,6 +5515,9 @@ int SND_FreeOldestSound(void)
 extern qboolean gbInsideLoadSound;
 qboolean SND_RegisterAudio_LevelLoadEnd(qboolean bDeleteEverythingNotUsedThisLevel /* 99% qfalse */)
 {
+#ifdef __USE_BASS__
+	return qfalse;
+#else //!__USE_BASS__
 	qboolean bAtLeastOneSoundDropped = qfalse;
 
 	Com_DPrintf( "SND_RegisterAudio_LevelLoadEnd():\n");
@@ -5449,6 +5566,7 @@ qboolean SND_RegisterAudio_LevelLoadEnd(qboolean bDeleteEverythingNotUsedThisLev
 	Com_DPrintf( "SND_RegisterAudio_LevelLoadEnd(): Ok\n");
 
 	return bAtLeastOneSoundDropped;
+#endif //__USE_BASS__
 }
 
 #ifdef USE_OPENAL

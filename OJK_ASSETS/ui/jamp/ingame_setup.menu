@@ -2048,7 +2048,7 @@
 			type				ITEM_TYPE_SLIDER
 			text				"Master Volume"
 			cvarfloat			"s_volume" 0 0 1
-			rect				150 61 900 20
+			rect				220 41 300 20
 	   		textalign			ITEM_ALIGN_RIGHT
 			textalignx			174
 			textaligny			0
@@ -2064,11 +2064,11 @@
 
 			mouseenter 
 			{ 
-				show			highlight2
+				show			highlight1
 			}
 			mouseexit 
 			{ 
-				hide			highlight2
+				hide			highlight1
 			} 
 		}
 
@@ -2078,8 +2078,8 @@
 			group				sound
 			type				ITEM_TYPE_SLIDER
 			text				@MENUS_MUSIC_VOLUME
-			cvarfloat			"s_musicvolume" 0 0 1
-			rect				150 81 900 20
+			cvarfloat			"s_volumeMusic" 0 0 1
+			rect				220 61 300 20
 	   		textalign			ITEM_ALIGN_RIGHT
 			textalignx			174
 			textaligny			0
@@ -2087,7 +2087,38 @@
 			textscale 			1
 			forecolor			.615 .615 .956 1
 			visible				0
-			descText			@MENUS_ADJUST_VOLUME_FOR_MUSIC
+			descText			"Adjust the volume for music."
+			action 
+			{ 
+				play			"sound/interface/button1.wav" ;
+			}
+
+			mouseenter 
+			{ 
+				show			highlight2
+			}
+			mouseexit 
+			{ 
+				hide			highlight2
+			} 
+		}
+		
+		itemDef 
+		{
+			name				local_volume
+			group				sound
+			type				ITEM_TYPE_SLIDER
+			text				"Local Volume:"
+			cvarfloat			"s_volumeLocal" 0 0 1
+			rect				220 81 300 20
+	   		textalign			ITEM_ALIGN_RIGHT
+			textalignx			174
+			textaligny			0
+			font 				4					
+			textscale 			1
+			forecolor			.615 .615 .956 1
+			visible				0
+			descText			"Adjust the volume for local sounds (menus, etc)."
 			action 
 			{ 
 				play			"sound/interface/button1.wav" ;
@@ -2109,8 +2140,8 @@
 			group				sound
 			type				ITEM_TYPE_SLIDER
 			text				@MENUS_VOICE_VOLUME
-			cvarfloat			"s_volumevoice" 0 0 1
-			rect				150 101 900 20
+			cvarfloat			"s_volumeVoice" 0 0 1
+			rect				220 101 300 20
 	   		textalign			ITEM_ALIGN_RIGHT
 			textalignx			174
 			textaligny			0
@@ -2118,7 +2149,7 @@
 			textscale 			1
 			forecolor			.615 .615 .956 1
 			visible				0
-			descText			@MENUS_ADJUST_VOLUME_FOR_SPEECH
+			descText			"Adjust the volume for speech."
 			action 
 			{ 
 				play			"sound/interface/button1.wav" ;
@@ -2136,12 +2167,12 @@
 		
 		itemDef 
 		{
-			name				effects_volume
+			name				ambient_volume
 			group				sound
 			type				ITEM_TYPE_SLIDER
-			text				@MENUS_EFFECTS_VOLUME
-			cvarfloat			"s_volumeeffects" 0 0 1
-			rect				150 121 900 20
+			text				"Ambient Volume:"
+			cvarfloat			"s_volumeAmbient" 0 0 1
+			rect				220 121 300 20
 	   		textalign			ITEM_ALIGN_RIGHT
 			textalignx			174
 			textaligny			0
@@ -2149,7 +2180,7 @@
 			textscale 			1
 			forecolor			.615 .615 .956 1
 			visible				0
-			descText			@MENUS_ADJUST_VOLUME_FOR_SOUND
+			descText			"Adjust the volume for ambient sounds."
 			action 
 			{ 
 				play			"sound/interface/button1.wav" ;
@@ -2167,12 +2198,12 @@
 		
 		itemDef 
 		{
-			name				ambient_volume
+			name				effects_volume
 			group				sound
 			type				ITEM_TYPE_SLIDER
-			text				"Ambient Volume"
-			cvarfloat			"s_volumeambient" 0 0 1
-			rect				150 141 900 20
+			text				@MENUS_EFFECTS_VOLUME
+			cvarfloat			"s_volumeEffects" 0 0 1
+			rect				220 161 300 20
 	   		textalign			ITEM_ALIGN_RIGHT
 			textalignx			174
 			textaligny			0
@@ -2180,7 +2211,7 @@
 			textscale 			1
 			forecolor			.615 .615 .956 1
 			visible				0
-			descText			"Adjust the ambient sound volume."
+			descText			"Adjust the volume for effects. Items, Weapons and Body sounds are also reduced with this."
 			action 
 			{ 
 				play			"sound/interface/button1.wav" ;
@@ -2188,14 +2219,107 @@
 
 			mouseenter 
 			{ 
-				show			highlight6
+				show			highlight7
 			}
 			mouseexit 
 			{ 
-				hide			highlight6
+				hide			highlight7
 			} 
 		}
+		
+		itemDef 
+		{
+			name				item_volume
+			group				sound
+			type				ITEM_TYPE_SLIDER
+			text				"Item Volume:"
+			cvarfloat			"s_volumeItem" 0 0 1
+			rect				220 181 280 20
+	   		textalign			ITEM_ALIGN_RIGHT
+			textalignx			174
+			textaligny			0
+			font 				4					
+			textscale 			1
+			forecolor			.615 .615 .956 1
+			visible				0
+			descText			"Adjust the volume for items. This is also adjusted by the effect volume."
+			action 
+			{ 
+				play			"sound/interface/button1.wav" ;
+			}
 
+			mouseenter 
+			{ 
+				show			highlight8
+			}
+			mouseexit 
+			{ 
+				hide			highlight8
+			} 
+		}
+		
+		itemDef 
+		{
+			name				weapon_volume
+			group				sound
+			type				ITEM_TYPE_SLIDER
+			text				"Weapon Volume:"
+			cvarfloat			"s_volumeWeapon" 0 0 1
+			rect				240 201 280 20
+	   		textalign			ITEM_ALIGN_RIGHT
+			textalignx			174
+			textaligny			0
+			font 				4					
+			textscale 			1
+			forecolor			.615 .615 .956 1
+			visible				0
+			descText			"Adjust the volume for weapons. This is also adjusted by the effect volume."
+			action 
+			{ 
+				play			"sound/interface/button1.wav" ;
+			}
+
+			mouseenter 
+			{ 
+				show			highlight9
+			}
+			mouseexit 
+			{ 
+				hide			highlight9
+			} 
+		}
+		
+		itemDef 
+		{
+			name				body_volume
+			group				sound
+			type				ITEM_TYPE_SLIDER
+			text				"Body Volume:"
+			cvarfloat			"s_volumeBody" 0 0 1
+			rect				240 221 280 20
+	   		textalign			ITEM_ALIGN_RIGHT
+			textalignx			174
+			textaligny			0
+			font 				4					
+			textscale 			1
+			forecolor			.615 .615 .956 1
+			visible				0
+			descText			"Adjust the volume for body sounds. This is also adjusted by the effect volume."
+			action 
+			{ 
+				play			"sound/interface/button1.wav" ;
+			}
+
+			mouseenter 
+			{ 
+				show			highlight10
+			}
+			mouseexit 
+			{ 
+				hide			highlight10
+			} 
+		}
+		
 		itemDef 
 		{	
 			name				sound_quality
@@ -2203,8 +2327,8 @@
       			type				ITEM_TYPE_MULTI
 			text				@MENUS_SOUND_QUALITY
 			cvar				"s_khz"
-			cvarFloatList			{ "Low" 11  "Medium" 22 "High" 44 }
-			rect				150 181 900 20
+			cvarFloatList			{ "Low (11khz)" 11  "Medium (22khz)" 22 "High (44khz)" 44 "Extream (48khz)" 48 "Ultra (96khz)" 96 }
+			rect				220 261 300 20
 	   		textalign			ITEM_ALIGN_RIGHT
 			textalignx			174
 			textaligny			0
@@ -2216,11 +2340,11 @@
 
 			mouseenter 
 			{ 
-				show			highlight8
+				show			highlight12
 			}
 			mouseexit 
 			{ 
-				hide			highlight8
+				hide			highlight12
 			} 
 			action 
 			{
