@@ -20,6 +20,7 @@ typedef struct {
 	int				entityNum;
 	int				entityChannel;
 	qboolean		isActive;
+	qboolean		isLooping;
 } Channel;
 
 //Channel *chans=NULL;		// the channels
@@ -64,6 +65,18 @@ void BASS_StopChannel ( int chanNum )
 	//BASS_MusicFree(SOUND_CHANNELS[chanNum]->channel);
 	//BASS_StreamFree(SOUND_CHANNELS[chanNum]->channel);
 	SOUND_CHANNELS[chanNum]->isActive = qfalse;
+	SOUND_CHANNELS[chanNum]->isLooping = qfalse;
+}
+
+void BASS_StopEntityChannel ( int entityNum, int entchannel )
+{
+	for (int c = 0; c < MAX_CHANNELS; c++) 
+	{
+		if (SOUND_CHANNELS[c]->entityNum == entityNum && SOUND_CHANNELS[c]->isActive && SOUND_CHANNELS[c]->entityChannel == entchannel)
+		{
+			BASS_StopChannel(c);
+		}
+	}
 }
 
 int BASS_FindFreeChannel ( void )
@@ -661,6 +674,7 @@ void BASS_AddStreamChannel ( char *file, int entityNum, int entityChannel, vec3_
 			c->entityNum = entityNum;
 			c->entityChannel = entityChannel;
 			c->isActive = qtrue;
+			c->isLooping = qfalse;
 
 			if (entityNum == -1 || !origin || (origin[0] == 0 && origin[1] == 0 && origin[2] == 0))
 			{
@@ -703,6 +717,7 @@ void BASS_AddMemoryChannel ( DWORD samplechan, int entityNum, int entityChannel,
 	c->entityNum = entityNum;
 	c->entityChannel = entityChannel;
 	c->isActive = qtrue;
+	c->isLooping = qfalse;
 
 	if (entityNum == -1 || !origin || (origin[0] == 0 && origin[1] == 0 && origin[2] == 0))
 	{
@@ -743,6 +758,7 @@ void BASS_AddMemoryLoopChannel ( DWORD samplechan, int entityNum, int entityChan
 	c->entityNum = entityNum;
 	c->entityChannel = entityChannel;
 	c->isActive = qtrue;
+	c->isLooping = qtrue;
 
 	if (entityNum == -1 || !origin || (origin[0] == 0 && origin[1] == 0 && origin[2] == 0))
 	{
@@ -760,6 +776,17 @@ void BASS_AddMemoryLoopChannel ( DWORD samplechan, int entityNum, int entityChan
 	BASS_SetPosition( chan, origin );
 	BASS_ChannelSet3DAttributes(samplechan, /*BASS_3DMODE_RELATIVE*/BASS_3DMODE_NORMAL, 10.0, 2048.0, -1, -1, -1);
 	BASS_Apply3D();
+}
+
+void BASS_StopLoopChannel ( int entityNum )
+{
+	for (int c = 0; c < MAX_CHANNELS; c++) 
+	{
+		if (SOUND_CHANNELS[c]->entityNum == entityNum && SOUND_CHANNELS[c]->isActive && SOUND_CHANNELS[c]->isLooping)
+		{
+			BASS_StopChannel(c);
+		}
+	}
 }
 
 DWORD BASS_LoadMemorySample ( void *memory, int length )

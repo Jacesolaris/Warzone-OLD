@@ -1452,6 +1452,11 @@ Starts an ambient, 'one-shot" sound.
 
 void S_StartAmbientSound( const vec3_t origin, int entityNum, unsigned char volume, sfxHandle_t sfxHandle )
 {
+#ifdef __USE_BASS__
+	if (s_knownSfx[ sfxHandle ].bassSampleID < 0) return;
+	BASS_AddMemoryChannel(s_knownSfx[ sfxHandle ].bassSampleID, entityNum, CHAN_AMBIENT, (float *)origin);
+	return;
+#else //!__USE_BASS__
 	channel_t	*ch;
 	/*const*/ sfx_t *sfx;
 
@@ -1518,6 +1523,7 @@ void S_StartAmbientSound( const vec3_t origin, int entityNum, unsigned char volu
 	{
 		memset(&ch->MP3StreamHeader,0,						sizeof(ch->MP3StreamHeader));
 	}
+#endif //__USE_BASS__
 }
 
 /*
@@ -1529,6 +1535,9 @@ Mutes sound on specified channel for specified entity.
 */
 void S_MuteSound(int entityNum, int entchannel)
 {
+#ifdef __USE_BASS__
+	BASS_StopEntityChannel( entityNum, entchannel );
+#else //!__USE_BASS__
 	//I guess this works.
 	channel_t *ch = S_PickChannel( entityNum, entchannel );
 
@@ -1545,6 +1554,7 @@ void S_MuteSound(int entityNum, int entchannel)
 
 	ch->leftvol = 0;
 	ch->rightvol = 0;
+#endif //__USE_BASS__
 }
 
 #ifdef __USE_BASS__
@@ -1929,6 +1939,7 @@ void S_StopAllSounds(void) {
 	if ( !s_soundStarted ) {
 		return;
 	}
+
 	// stop the background music
 	S_StopBackgroundTrack();
 
@@ -1951,6 +1962,7 @@ S_ClearLoopingSounds
 */
 void S_ClearLoopingSounds( void )
 {
+#ifndef __USE_BASS__
 #ifdef USE_OPENAL
 	if (s_UseOpenAL)
 	{
@@ -1959,6 +1971,7 @@ void S_ClearLoopingSounds( void )
 	}
 #endif
 	numLoopSounds = 0;
+#endif //__USE_BASS__
 }
 
 /*
@@ -1971,6 +1984,10 @@ Sort of a slow method though, isn't there some better way?
 */
 void S_StopLoopingSound( int entityNum )
 {
+#ifdef __USE_BASS__
+	BASS_StopLoopChannel(entityNum);
+	return;
+#else //!__USE_BASS__
 	int i = 0;
 
 	while (i < numLoopSounds)
@@ -1987,6 +2004,7 @@ void S_StopLoopingSound( int entityNum )
 		}
 		i++;
 	}
+#endif //__USE_BASS__
 }
 
 #define MAX_DOPPLER_SCALE 50.0f //arbitrary
@@ -2000,6 +2018,11 @@ Include velocity in case I get around to doing doppler...
 ==================
 */
 void S_AddLoopingSound( int entityNum, const vec3_t origin, const vec3_t velocity, sfxHandle_t sfxHandle ) {
+#ifdef __USE_BASS__
+	if (s_knownSfx[ sfxHandle ].bassSampleID < 0) return;
+	BASS_AddMemoryLoopChannel(s_knownSfx[ sfxHandle ].bassSampleID, entityNum, CHAN_BODY, (float *)origin);
+	return;
+#else //!__USE_BASS__
 	/*const*/ sfx_t *sfx;
 
   	if ( !s_soundStarted || s_soundMuted ) {
@@ -2049,6 +2072,7 @@ void S_AddLoopingSound( int entityNum, const vec3_t origin, const vec3_t velocit
 	}
 
 	numLoopSounds++;
+#endif //__USE_BASS__
 }
 
 
@@ -2059,6 +2083,11 @@ S_AddAmbientLoopingSound
 */
 void S_AddAmbientLoopingSound( const vec3_t origin, unsigned char volume, sfxHandle_t sfxHandle )
 {
+#ifdef __USE_BASS__
+	if (s_knownSfx[ sfxHandle ].bassSampleID < 0) return;
+	BASS_AddMemoryLoopChannel(s_knownSfx[ sfxHandle ].bassSampleID, -1, CHAN_AMBIENT, (float *)origin);
+	return;
+#else //!__USE_BASS__
 	/*const*/ sfx_t *sfx;
 
 	if ( !s_soundStarted || s_soundMuted ) {
@@ -2098,6 +2127,7 @@ void S_AddAmbientLoopingSound( const vec3_t origin, unsigned char volume, sfxHan
 	//TODO: Calculate the distance falloff
 	loopSounds[numLoopSounds].volume = volume;
 	numLoopSounds++;
+#endif //__USE_BASS__
 }
 
 
@@ -2113,6 +2143,7 @@ sum up the channel multipliers.
 */
 void S_AddLoopSounds (void)
 {
+#ifndef __USE_BASS__
 	int			i, j;
 	int			left, right, left_total, right_total;
 	channel_t	*ch;
@@ -2173,6 +2204,7 @@ void S_AddLoopSounds (void)
 			memset(&ch->MP3StreamHeader,0,						sizeof(ch->MP3StreamHeader));
 		}
 	}
+#endif //__USE_BASS__
 }
 
 //=============================================================================

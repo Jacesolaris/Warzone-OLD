@@ -20,6 +20,8 @@ extern DWORD BASS_LoadMusicSample ( void *memory, int length );
 extern void BASS_AddStreamChannel ( char *file, int entityNum, int entityChannel, vec3_t origin );
 extern void BASS_AddMemoryChannel ( DWORD samplechan, int entityNum, int entityChannel, vec3_t origin );
 extern void BASS_AddMemoryLoopChannel ( DWORD samplechan, int entityNum, int entityChannel, vec3_t origin );
+extern void BASS_StopLoopChannel ( int entityNum );
+extern void BASS_StopEntityChannel ( int entityNum, int entchannel );
 extern void BASS_StartMusic ( DWORD samplechan );
 extern void BASS_Update ( void );
 extern void BASS_StopMusic( void );
