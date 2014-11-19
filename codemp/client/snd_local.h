@@ -26,7 +26,7 @@ extern void BASS_StopAllLoopChannels ( void );
 extern void BASS_StopEntityChannel ( int entityNum, int entchannel );
 extern void BASS_FindAndStopSound ( DWORD handle );
 extern void BASS_StartMusic ( DWORD samplechan );
-extern void BASS_Update ( void );
+extern void BASS_UpdateSounds ( void );
 extern void BASS_StopMusic( void );
 #endif //__USE_BASS__
 

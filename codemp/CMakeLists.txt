@@ -408,6 +408,7 @@ if(BuildMPEngine)
 		"${MPDir}/client/cl_ui.cpp"
 		"${MPDir}/client/cl_uiapi.cpp"
 		"${MPDir}/client/cl_uiapi.h"
+		"${MPDir}/client/fast_mutex.h"
 		"${MPDir}/client/FXExport.cpp"
 		"${MPDir}/client/FXExport.h"
 		"${MPDir}/client/FxPrimitives.cpp"
@@ -435,6 +436,8 @@ if(BuildMPEngine)
 		"${MPDir}/client/snd_mme.cpp"
 		"${MPDir}/client/snd_music.cpp"
 		"${MPDir}/client/snd_music.h"
+		"${MPDir}/client/tinythread.cpp"
+		"${MPDir}/client/tinythread.h"
 		)
 	source_group("client" FILES ${MPEngineClientFiles})
 	set(MPEngineFiles ${MPEngineFiles} ${MPEngineClientFiles})

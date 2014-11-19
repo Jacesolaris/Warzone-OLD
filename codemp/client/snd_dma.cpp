@@ -2969,7 +2969,7 @@ Called once each time through the main loop
 void S_Update( void ) 
 {
 #ifdef __USE_BASS__
-	BASS_Update();
+	BASS_UpdateSounds();
 #else //!__USE_BASS__
 	int			i;
 	int			total;

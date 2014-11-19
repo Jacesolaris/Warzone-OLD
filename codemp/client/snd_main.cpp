@@ -581,7 +581,7 @@ void S_Update( void ) {
 	float		scale;
 
 #ifdef __USE_BASS__
-	BASS_Update();
+	BASS_UpdateSounds();
 #endif //__USE_BASS__
 
 	if ( !s_soundStarted || s_soundMuted ) {

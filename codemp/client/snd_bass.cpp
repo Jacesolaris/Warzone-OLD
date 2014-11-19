@@ -4,6 +4,10 @@
 #ifdef __USE_BASS__
 
 #include "snd_bass.h"
+#include "fast_mutex.h"
+#include "tinythread.h"
+
+using namespace tthread;
 
 extern cvar_t		*s_khz;
 extern vec3_t		s_entityPosition[MAX_GENTITIES];
@@ -549,9 +553,9 @@ void BASS_UpdatePosition ( int c )
 
 int BASS_UPDATE_TIME = 0;
 
-void BASS_Update ( void )
+void BASS_UpdateSounds_REAL ( void )
 {
-	int NUM_ACTIVE = 0;
+	//int NUM_ACTIVE = 0;
 	//int NUM_FREE = 0;
 
 	vec3_t forward, right, up;
@@ -582,7 +586,6 @@ void BASS_Update ( void )
 		BASS_ChannelSetAttribute(MUSIC_CHANNEL->channel, BASS_ATTRIB_VOL, MUSIC_CHANNEL->volume*S_GetVolumeForChannel(CHAN_MUSIC));
 	}
 
-#pragma omp parallel for num_threads(8)
 	for (int c = 0; c < MAX_BASS_CHANNELS; c++) 
 	{
 		if (!SOUND_CHANNELS[c]) continue;
@@ -600,16 +603,43 @@ void BASS_Update ( void )
 			}
 		}
 
-		if (SOUND_CHANNELS[c]->isActive)
-			NUM_ACTIVE++;
+		//if (SOUND_CHANNELS[c]->isActive)
+		//	NUM_ACTIVE++;
 		//else
 		//	NUM_FREE++;
 	}
 
-	// Apply the 3D changes. No point if we are not playing anything though...
+	// Apply the 3D changes.
 	BASS_Apply3D();
 
 	//Com_Printf("There are currently %i active and %i free channels.\n", NUM_ACTIVE, NUM_FREE);
+}
+
+qboolean BASS_UPDATE_THREAD_RUNNING = qfalse;
+qboolean BASS_UPDATE_THREAD_STOP = qfalse;
+
+void BASS_UpdateThread(void * aArg)
+{
+	while (!BASS_UPDATE_THREAD_STOP)
+	{
+		BASS_UpdateSounds_REAL();
+		Sleep(10);
+	}
+}
+
+void BASS_UpdateSounds ( void )
+{
+	if (!BASS_UPDATE_THREAD_RUNNING)
+	{
+		BASS_UPDATE_THREAD_RUNNING = qtrue;
+
+		// Start the child thread
+		thread t(BASS_UpdateThread, 0);
+		
+		// Wait for the thread to finish
+		//t.join();
+		t.detach();
+	}
 }
 
 //
@@ -788,8 +818,8 @@ void BASS_AddMemoryLoopChannel ( DWORD samplechan, int entityNum, int entityChan
 				Channel *c = SOUND_CHANNELS[ch];
 				if (origin) VectorCopy(origin, c->origin);
 				c->volume = volume;
-				BASS_UpdatePosition(ch);
-				BASS_Apply3D();
+				//BASS_UpdatePosition(ch);
+				//BASS_Apply3D();
 				//Com_Printf("BASS DEBUG: Sound position (%f %f %f) and volume (%f) updated.\n", origin[0], origin[1], origin[2], volume);
 				return;
 			}
