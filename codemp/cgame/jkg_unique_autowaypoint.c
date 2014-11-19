@@ -537,7 +537,7 @@ void sse_memset(void *dst, int n32, unsigned long i)
 
 #define	G_MAX_SCRIPT_ACCUM_BUFFERS 10
 #define MAX_NODELINKS       32              // Maximum Node Links (12)
-#define MAX_NODES           48000//65536//19500//10000//8000//32000//16000	// Maximum Nodes (8000)
+#define MAX_NODES           65536//48000//65536//19500//10000//8000//32000//16000	// Maximum Nodes (8000)
 #define INVALID				-1
 
 //vec3_t			botTraceMins = { -20, -20, -1 };
@@ -2641,7 +2641,7 @@ AIMOD_MAPPING_MakeLinks ( void )
 
 	//number_of_nodes = total_good_count;
 	
-#pragma omp parallel for ordered schedule(dynamic) num_threads(32)
+//#pragma omp parallel for ordered schedule(dynamic) num_threads(32)
 	for ( loop = 0; loop < number_of_nodes; loop++ )
 	{// Do links...
 		nodes[loop].enodenum = 0;
@@ -6338,18 +6338,26 @@ omp_set_nested(0);
 	trap->UpdateScreen();
 
 	remove_ratio = (areas / MAX_WPARRAY_SIZE);
-	remove_ratio *= 7.0; // Hopefully this ratio will provide nearly 32000 waypoints every time...
-	//remove_ratio -= 1;
-	//if (remove_ratio < 1) remove_ratio = 1;
+	
+	/*
+	if (remove_ratio <= 1.5)
+		remove_ratio *= 7.0; // Hopefully this ratio will provide nearly 32000 waypoints every time...
+	else
+		remove_ratio *= 11.0; // Hopefully this ratio will provide nearly 32000 waypoints every time...
+	*/
 
 	trap->Print("^4*** ^3AUTO-WAYPOINTER^4: ^5Generated too many temporary waypoints for the game. Running cleanup.\n");
 
 	{
 		qboolean	clean_fail = qfalse;
 		float		use_scatter = 0;
+		int			remove_per_area = 0;
 
 #ifdef __NEW_AWP_METHOD__
-		use_scatter = original_waypoint_scatter_distance * (remove_ratio/10.0);
+		//use_scatter = original_waypoint_scatter_distance * (remove_ratio/10.0);
+		//use_scatter = original_waypoint_scatter_distance * remove_ratio;
+		use_scatter = 512.0;//original_waypoint_scatter_distance * waypoint_distance_multiplier;
+		remove_per_area = 32 / (remove_ratio+1);
 
 		//trap->Print("Use scatter is %f.\n", use_scatter);
 
@@ -6367,6 +6375,7 @@ omp_set_nested(0);
 			qboolean	bad = qfalse;
 			int			j;
 			int			found = 0;
+			int			num_found = 0;
 
 			// Draw a nice little progress bar ;)
 			aw_percent_complete = (float)((float)((float)i/(float)areas)*100.0f);
@@ -6408,12 +6417,18 @@ omp_set_nested(0);
 
 				if (dist < use_scatter)//*area_distance_multiplier)
 				{
-					//if(omp_get_thread_num() == 0)
-					//{
-					//	trap->Print("Distance between area %i at %f %f %f and wp %i at %f %f %f is %f. MARKED BAD!\n", i, area_org[0], area_org[1], area_org[2], j, nodes[j].origin[0], nodes[j].origin[1], nodes[j].origin[2], dist );
-					//}
-					bad = qtrue;
-					break;
+					num_found++;
+
+					if (num_found >= remove_per_area)
+					{
+						//if(omp_get_thread_num() == 0)
+						//{
+						//	trap->Print("Distance between area %i at %f %f %f and wp %i at %f %f %f is %f. MARKED BAD!\n", i, area_org[0], area_org[1], area_org[2], j, nodes[j].origin[0], nodes[j].origin[1], nodes[j].origin[2], dist );
+						//}
+					
+						bad = qtrue;
+						break;
+					}
 				}
 			}
 

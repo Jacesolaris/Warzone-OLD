@@ -89,10 +89,16 @@ set(MPDir "${CMAKE_SOURCE_DIR}/codemp")
 if(WIN32)
 	if(MSVC)
 		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /arch:SSE2 /MP /openmp /Ox /Ot /GT") # enable parallel compilation
+		
+		# mark 32 bit executables large address aware so they can use > 2GB address space
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /LARGEADDRESSAWARE")
 	endif(MSVC)
 	if(WIN64)
 		if(MSVC)
 			set(SharedDefines "WIN64" "_CRT_SECURE_NO_WARNINGS")
+			
+			# mark 32 bit executables large address aware so they can use > 2GB address space
+      set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /LARGEADDRESSAWARE")
 		else()
 			set(SharedDefines "WIN64")
 			set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /arch:SSE2 /openmp /Ox /Ot /GT")
@@ -100,6 +106,9 @@ if(WIN32)
 			set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /arch:SSE2 /openmp /MD /Ox /Ot /GT /Ob2 /D NDEBUG")
 			set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} /arch:SSE2 /openmp /MD /Zi /Ox /Ot /GT /Ob1 /D NDEBUG")
 			set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /arch:SSE2 /openmp /D_DEBUG /MDd /Zi /Od /Ot /GT /Ob0 /RTC1")
+			
+			# mark 32 bit executables large address aware so they can use > 2GB address space
+      set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /LARGEADDRESSAWARE")
 		endif()
 	else()
 		if(MSVC)
@@ -109,6 +118,9 @@ if(WIN32)
 			set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /arch:SSE2 /openmp /MD /Ox /Ot /GT /Ob2 /D NDEBUG")
 			set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} /arch:SSE2 /openmp /MD /Zi /Ox /Ot /GT /Ob1 /D NDEBUG")
 			set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /arch:SSE2 /openmp /D_DEBUG /MDd /Zi /Od /Ot /GT /Ob0 /RTC1")
+			
+			# mark 32 bit executables large address aware so they can use > 2GB address space
+      set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /LARGEADDRESSAWARE")
 		endif()
 	endif()
 else()

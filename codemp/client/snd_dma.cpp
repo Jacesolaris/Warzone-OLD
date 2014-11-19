@@ -433,7 +433,9 @@ S_Init
 */
 void S_Init( void ) {
 	cvar_t	*cv;
+#ifndef __USE_BASS__
 	qboolean	r;
+#endif //__USE_BASS__
 
 	Com_Printf("\n------- sound initialization -------\n");
 
@@ -648,7 +650,9 @@ void S_Init( void ) {
 //
 void S_ReloadAllUsedSounds(void)
 {
+#ifndef __USE_BASS__
 	if (s_soundStarted && !s_soundMuted )
+#endif //__USE_BASS__
 	{
 		// new bit, reload all soundsthat are used on the current level...
 		//
@@ -656,9 +660,15 @@ void S_ReloadAllUsedSounds(void)
 		{
 			sfx_t *sfx = &s_knownSfx[i];
 
+#ifdef __USE_BASS__
+			if (!sfx->bDefaultSound && sfx->iLastLevelUsedOn == re->RegisterMedia_GetLevel()){
+				S_memoryLoad(sfx);
+			}
+#else //!__USE_BASS__
 			if (!sfx->bInMemory && !sfx->bDefaultSound && sfx->iLastLevelUsedOn == re->RegisterMedia_GetLevel()){
 				S_memoryLoad(sfx);
 			}
+#endif //__USE_BASS__
 		}
 	}
 }

@@ -2456,9 +2456,9 @@ void RenderSurfaces(CRenderSurface &RS) //also ended up just ripping right from 
 		// don't add third_person objects if not viewing through a portal
 		if ( !RS.personalModel ) 
 		{		// set the surface info to point at the where the transformed bone list is going to be for when the surface gets rendered out
-			if (!RS.currentModel) return;
-
 			CRenderableSurface *newSurf = AllocGhoul2RenderableSurface();
+
+			if (!RS.currentModel || !RS.currentModel->data.glm || !RS.currentModel->data.glm->vboModels) return;
 
 			// UQ1: ADDED - Something is wrong here! Not initialized/loaded???
 			assert(RS.currentModel->data.glm->vboModels);

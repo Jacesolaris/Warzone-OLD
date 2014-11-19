@@ -22,6 +22,9 @@ extern vec3_t		MOVER_LIST[1024];
 extern vec3_t		MOVER_LIST_TOP[1024];
 extern int			MOVER_LIST_NUM;
 
+// UQ1: The maximum distance an NPC is allowed to go to get to the next link (eg: if he is trying to move further, then he is lost/fallen/etc)
+float MAX_LINK_DISTANCE = 1024.0;//512.0;
+
 /*///////////////////////////////////////////////////
 NPC_GetNextNode
 if the bot has reached a node, this function selects the next node
@@ -1197,7 +1200,7 @@ qboolean NPC_FollowRoutes( void )
 	}
 
 #if 0
-	if ( (NPC->wpCurrent >= 0 && NPC->wpCurrent < gWPNum && NPC->longTermGoal >= 0 && NPC->longTermGoal < gWPNum && wpDist <= 512)
+	if ( (NPC->wpCurrent >= 0 && NPC->wpCurrent < gWPNum && NPC->longTermGoal >= 0 && NPC->longTermGoal < gWPNum && wpDist <= MAX_LINK_DISTANCE)
 		&& (NPC->wpSeenTime < level.time - 1000 || NPC->wpTravelTime < level.time || NPC->last_move_time < level.time - 1000) )
 	{// Try this for 2 seconds before giving up...
 		float MAX_JUMP_DISTANCE = 192.0;
@@ -1258,24 +1261,24 @@ qboolean NPC_FollowRoutes( void )
 	/*if (NPC->wpSeenTime >= level.time - 5000
 		&& NPC->wpCurrent >= 0 
 		&& NPC->wpCurrent < gWPNum
-		&& wpDist <= 512)
+		&& wpDist <= MAX_LINK_DISTANCE)
 	{
 
 	}
 	else*/ if ( padawanPath
 		|| NPC->wpCurrent < 0 || NPC->wpCurrent >= gWPNum 
 		|| NPC->longTermGoal < 0 || NPC->longTermGoal >= gWPNum 
-		|| wpDist > 512
+		|| wpDist > MAX_LINK_DISTANCE
 		|| NPC->wpSeenTime < level.time - 5000
 		|| NPC->wpTravelTime < level.time 
 		|| NPC->last_move_time < level.time - 5000 )
 	{// We hit a problem in route, or don't have one yet.. Find a new goal and path...
-		//if (wpDist > 512) trap->Print("wpCurrent too far.\n");
+		//if (wpDist > MAX_LINK_DISTANCE) trap->Print("wpCurrent too far.\n");
 		//if (NPC->wpSeenTime < level.time - 5000) trap->Print("wpSeenTime.\n");
 		//if (NPC->wpTravelTime < level.time) trap->Print("wpTravelTime.\n");
 		//if (NPC->last_move_time < level.time - 5000) trap->Print("last_move_time.\n");
 
-		if (!padawanPath && (wpDist > 512 || NPC->wpTravelTime < level.time) )
+		if (!padawanPath && (wpDist > MAX_LINK_DISTANCE || NPC->wpTravelTime < level.time) )
 		{
 			NPC_RoutingIncreaseCost( NPC->wpLast, NPC->wpCurrent );
 		}
@@ -1651,7 +1654,7 @@ qboolean NPC_FollowEnemyRoute( void )
 	}
 
 #if 0
-	if ( (NPC->wpCurrent >= 0 && NPC->wpCurrent < gWPNum && NPC->longTermGoal >= 0 && NPC->longTermGoal < gWPNum && wpDist <= 512)
+	if ( (NPC->wpCurrent >= 0 && NPC->wpCurrent < gWPNum && NPC->longTermGoal >= 0 && NPC->longTermGoal < gWPNum && wpDist <= MAX_LINK_DISTANCE)
 		&& (NPC->wpSeenTime < level.time - 1000 || NPC->wpTravelTime < level.time || NPC->last_move_time < level.time - 1000) )
 	{// Try this for 2 seconds before giving up...
 		float MAX_JUMP_DISTANCE = 192.0;
@@ -1690,20 +1693,20 @@ qboolean NPC_FollowEnemyRoute( void )
 	/*if (NPC->wpSeenTime >= level.time - 5000
 		&& NPC->wpCurrent >= 0 
 		&& NPC->wpCurrent < gWPNum
-		&& wpDist <= 512)
+		&& wpDist <= MAX_LINK_DISTANCE)
 	{
 
 	}
 	else*/ if ( NPC->wpCurrent < 0 || NPC->wpCurrent >= gWPNum 
 		|| NPC->longTermGoal < 0 || NPC->longTermGoal >= gWPNum 
-		|| wpDist > 512
+		|| wpDist > MAX_LINK_DISTANCE
 		|| NPC->wpSeenTime < level.time - 5000
 		|| NPC->wpTravelTime < level.time 
 		|| NPC->last_move_time < level.time - 5000 
 		|| Distance(gWPArray[NPC->longTermGoal]->origin, NPC->enemy->r.currentOrigin) > 256.0)
 	{// We hit a problem in route, or don't have one yet.. Find a new goal and path...
 
-		if (wpDist > 512 || NPC->wpTravelTime < level.time )
+		if (wpDist > MAX_LINK_DISTANCE || NPC->wpTravelTime < level.time )
 		{
 			NPC_RoutingIncreaseCost( NPC->wpLast, NPC->wpCurrent );
 		}
