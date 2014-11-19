@@ -1924,19 +1924,11 @@ void R_AddEntitySurfaces (void) {
 R_GenerateDrawSurfs
 ====================
 */
-void R_GenerateDrawSurfs( void ) {
-#pragma omp parallel sections if(r_multithread->integer > 0)
-	{
-#pragma omp section
-		{
-			R_AddWorldSurfaces ();
-		}
+void R_GenerateDrawSurfs( void ) 
+{
+	R_AddWorldSurfaces();
 
-#pragma omp section
-		{
-			R_AddPolygonSurfaces();
-		}
-	}
+	R_AddPolygonSurfaces();
 
 	// set the projection matrix with the minimum zfar
 	// now that we have the world bounded

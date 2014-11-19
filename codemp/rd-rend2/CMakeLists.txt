@@ -9,6 +9,9 @@ set(MPRend2IncludeDirectories ${MPDir})
 set(MPRend2IncludeDirectories ${MPRend2IncludeDirectories} "${MPDir}/rd-rend2")
 
 set(MPRend2Files
+  "${MPDir}/client/fast_mutex.h"
+	"${MPDir}/client/tinythread.cpp"
+	"${MPDir}/client/tinythread.h"
 	"${MPDir}/rd-rend2/iqm.h"
 	"${MPDir}/rd-rend2/qgl.h"
 	"${MPDir}/rd-rend2/G2_API.cpp"

@@ -2071,13 +2071,22 @@ CL_Frame
 static unsigned int frameCount;
 static float avgFrametime=0.0;
 extern void SE_CheckForLanguageUpdates(void);
-void CL_Frame ( int msec ) {
-	qboolean takeVideoFrame = qfalse;
 
-	if ( !com_cl_running->integer ) {
-		return;
-	}
+#define MULTITHREAD_CL_FRAME
 
+qboolean takeVideoFrame = qfalse;
+
+#include "fast_mutex.h"
+#include "tinythread.h"
+
+using namespace tthread;
+
+thread *CLIENT_UPDATE_THREAD1;
+thread *CLIENT_UPDATE_THREAD2;
+thread *CLIENT_UPDATE_THREAD3;
+thread *CLIENT_UPDATE_THREAD4;
+
+void CL_Frame_REAL ( int msec ) {
 	SE_CheckForLanguageUpdates();	// will take zero time to execute unless language changes, then will reload strings.
 									//	of course this still doesn't work for menus...
 
@@ -2102,7 +2111,10 @@ void CL_Frame ( int msec ) {
 
 	// save the msec before checking pause
 	cls.realFrametime = msec;
+}
 
+void CL_Frame_REAL2 ( int msec )
+{
 	// decide the simulation time
 	cls.frametime = msec;
 	if(cl_framerate->integer)
@@ -2124,6 +2136,69 @@ void CL_Frame ( int msec ) {
 	if ( cl_timegraph->integer ) {
 		SCR_DebugGraph ( cls.realFrametime * 0.25, 0 );
 	}
+}
+
+void CL_Frame_REAL3 ( int msec )
+{
+	// update audio
+	S_Update();
+}
+
+void CL_Frame_REAL4 ( int msec )
+{
+	// advance local effects for next frame
+	SCR_RunCinematic();
+
+	Con_RunConsole();
+
+	// reset the heap for Ghoul2 vert transform space gameside
+	if (G2VertSpaceServer)
+	{
+		G2VertSpaceServer->ResetHeap();
+	}
+}
+
+void CL_UpdateThread1(void * aArg)
+{
+	CL_Frame_REAL((int)aArg);
+}
+
+void CL_UpdateThread2(void * aArg)
+{
+	CL_Frame_REAL2((int)aArg);
+}
+
+void CL_UpdateThread3(void * aArg)
+{
+	CL_Frame_REAL3((int)aArg);
+}
+
+void CL_UpdateThread4(void * aArg)
+{
+	CL_Frame_REAL4((int)aArg);
+}
+
+void CL_Frame ( int msec )
+{
+	takeVideoFrame = qfalse;
+
+	if ( !com_cl_running->integer ) {
+		return;
+	}
+
+#ifdef MULTITHREAD_CL_FRAME
+	// UQ1: We can thread these 2 and run them at the same time...
+	CLIENT_UPDATE_THREAD1 = new thread (CL_UpdateThread1, (void *)msec);
+	CLIENT_UPDATE_THREAD2 = new thread (CL_UpdateThread2, (void *)msec);
+	// UQ1: And wait for finish...
+	CLIENT_UPDATE_THREAD1->join();
+	CLIENT_UPDATE_THREAD2->join();
+	CLIENT_UPDATE_THREAD1->~thread();
+	CLIENT_UPDATE_THREAD2->~thread();
+#else //!MULTITHREAD_CL_FRAME
+	CL_Frame_REAL(msec);
+	CL_Frame_REAL2(msec);
+#endif //MULTITHREAD_CL_FRAME
 
 	// see if we need to update any userinfo
 	CL_CheckUserinfo();
@@ -2141,22 +2216,26 @@ void CL_Frame ( int msec ) {
 	// decide on the serverTime to render
 	CL_SetCGameTime();
 
-	// update the screen
+#ifdef MULTITHREAD_CL_FRAME
+	// UQ1: We can thread this and run at the same time as the render...
+	CLIENT_UPDATE_THREAD3 = new thread (CL_UpdateThread3, (void *)msec);
+#endif //!MULTITHREAD_CL_FRAME
+
+	// update the screen - can't thread this one...
 	SCR_UpdateScreen();
 
-	// update audio
-	S_Update();
-
-	// advance local effects for next frame
-	SCR_RunCinematic();
-
-	Con_RunConsole();
-
-	// reset the heap for Ghoul2 vert transform space gameside
-	if (G2VertSpaceServer)
-	{
-		G2VertSpaceServer->ResetHeap();
-	}
+#ifdef MULTITHREAD_CL_FRAME
+	// UQ1: We can thread this and run them at the same time...
+	CLIENT_UPDATE_THREAD4 = new thread (CL_UpdateThread4, (void *)msec);
+	// UQ1: And wait for finish...
+	CLIENT_UPDATE_THREAD3->join();
+	CLIENT_UPDATE_THREAD4->join();
+	CLIENT_UPDATE_THREAD3->~thread();
+	CLIENT_UPDATE_THREAD4->~thread();
+#else //!MULTITHREAD_CL_FRAME
+	CL_Frame_REAL3(msec);
+	CL_Frame_REAL4(msec);
+#endif //MULTITHREAD_CL_FRAME
 
 	cls.framecount++;
 

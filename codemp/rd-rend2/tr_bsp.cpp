@@ -2751,7 +2751,7 @@ void R_LoadEntities( lump_t *l ) {
 	w->lightGridSize[1] = 64;
 	w->lightGridSize[2] = 128;
 
-	tr.distanceCull = 6000;//DEFAULT_DISTANCE_CULL;
+	tr.distanceCull = 3072.0;//6000;//DEFAULT_DISTANCE_CULL;
 
 	p = (char *)(fileBase + l->fileofs);
 

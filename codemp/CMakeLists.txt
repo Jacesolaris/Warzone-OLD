@@ -286,6 +286,9 @@ if(BuildMPEngine OR BuildMPDed)
 	set(MPEngineAndDedFiles ${MPEngineAndDedFiles} ${MPEngineAndDedIcarusFiles})
 
 	set(MPEngineAndDedServerFiles
+    "${MPDir}/client/fast_mutex.h"
+		"${MPDir}/client/tinythread.cpp"
+		"${MPDir}/client/tinythread.h"
 		"${MPDir}/server/NPCNav/navigator.cpp"
 		"${MPDir}/server/NPCNav/navigator.h"
 		"${MPDir}/server/server.h"
@@ -566,6 +569,9 @@ if(BuildMPDed)
 		"${MPDir}/ghoul2/G2_gore.cpp"
 		"${MPDir}/rd-common/mdx_format.h"
 		"${MPDir}/rd-common/tr_public.h"
+		"${MPDir}/client/fast_mutex.h"
+		"${MPDir}/client/tinythread.cpp"
+		"${MPDir}/client/tinythread.h"
 		"${MPDir}/rd-dedicated/tr_local.h"
 		"${MPDir}/rd-dedicated/G2_API.cpp"
 		"${MPDir}/rd-dedicated/G2_bolts.cpp"
