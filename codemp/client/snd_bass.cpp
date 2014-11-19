@@ -27,6 +27,13 @@ qboolean EAX_SUPPORTED = qtrue;
 // 0.0 = no doppler, 1.0 = real world, 2.0 = 2x real.
 #define SOUND_REAL_WORLD_DOPPLER		1.0 //0.3048
 
+
+qboolean BASS_UPDATE_THREAD_RUNNING = qfalse;
+qboolean BASS_UPDATE_THREAD_STOP = qfalse;
+
+thread *BASS_UPDATE_THREAD;
+
+
 // channel (sample/music) info structure
 typedef struct {
 	DWORD			channel, originalChannel;			// the channel
@@ -212,6 +219,11 @@ void BASS_Shutdown ( void )
 
 		SOUND_CHANNELS_INITIALIZED = qfalse;
 	}
+
+	BASS_UPDATE_THREAD_STOP = qtrue;
+
+	// Wait for update thread to finish...
+	BASS_UPDATE_THREAD->join();
 
 	BASS_Free();
 }
@@ -427,6 +439,8 @@ qboolean BASS_Initialize ( void )
 
 	Com_Printf("\n\n>>> BASS Sound System initialized OK! <<<\n\n\n");
 
+	BASS_UPDATE_THREAD_STOP = qfalse;
+
 	// UQ1: Play a BASS startup sound...
 	//BASS_AddStreamChannel ( "OJK/sound/startup.wav", -1, s_volume->value, NULL );
 
@@ -473,9 +487,9 @@ void BASS_SetPosition ( int c, vec3_t origin )
 		soundPos[2] = s_entityPosition[SOUND_CHANNELS[c]->entityNum][2];
 	}
 
-	SOUND_CHANNELS[c]->vel.x = soundPos[0] - SOUND_CHANNELS[c]->pos.x;
-	SOUND_CHANNELS[c]->vel.y = soundPos[1] - SOUND_CHANNELS[c]->pos.y;
-	SOUND_CHANNELS[c]->vel.z = soundPos[2] - SOUND_CHANNELS[c]->pos.z;
+	SOUND_CHANNELS[c]->vel.x = SOUND_CHANNELS[c]->pos.x - soundPos[0];
+	SOUND_CHANNELS[c]->vel.y = SOUND_CHANNELS[c]->pos.y - soundPos[1];
+	SOUND_CHANNELS[c]->vel.z = SOUND_CHANNELS[c]->pos.z - soundPos[2];
 
 	// Set origin...
 	SOUND_CHANNELS[c]->pos.x = soundPos[0];
@@ -488,9 +502,6 @@ void BASS_SetPosition ( int c, vec3_t origin )
 	BASS_ChannelFlags(SOUND_CHANNELS[c]->channel, BASS_SAMPLE_MUTEMAX, BASS_SAMPLE_MUTEMAX); // enable muting at the max distance
 }
 
-
-int BASS_UPDATE_TIMER = 0;
-int BASS_TIME_PERIOD = 50;
 
 void BASS_UpdatePosition ( int c )
 {// Update this channel's position, etc...
@@ -536,9 +547,9 @@ void BASS_UpdatePosition ( int c )
 		soundPos[2] = s_entityPosition[SOUND_CHANNELS[c]->entityNum][2];
 	}
 
-	SOUND_CHANNELS[c]->vel.x = soundPos[0] - SOUND_CHANNELS[c]->pos.x;
-	SOUND_CHANNELS[c]->vel.y = soundPos[1] - SOUND_CHANNELS[c]->pos.y;
-	SOUND_CHANNELS[c]->vel.z = soundPos[2] - SOUND_CHANNELS[c]->pos.z;
+	SOUND_CHANNELS[c]->vel.x = SOUND_CHANNELS[c]->pos.x - soundPos[0];
+	SOUND_CHANNELS[c]->vel.y = SOUND_CHANNELS[c]->pos.y - soundPos[1];
+	SOUND_CHANNELS[c]->vel.z = SOUND_CHANNELS[c]->pos.z - soundPos[2];
 
 	// Set origin...
 	SOUND_CHANNELS[c]->pos.x = soundPos[0];
@@ -551,8 +562,6 @@ void BASS_UpdatePosition ( int c )
 	BASS_ChannelFlags(SOUND_CHANNELS[c]->channel, BASS_SAMPLE_MUTEMAX, BASS_SAMPLE_MUTEMAX); // enable muting at the max distance
 }
 
-int BASS_UPDATE_TIME = 0;
-
 void BASS_UpdateSounds_REAL ( void )
 {
 	//int NUM_ACTIVE = 0;
@@ -560,6 +569,10 @@ void BASS_UpdateSounds_REAL ( void )
 
 	vec3_t forward, right, up;
 	BASS_3DVECTOR pos, ang, top, vel;
+
+	vel.x = cl.snap.ps.velocity[0];
+	vel.y = cl.snap.ps.velocity[1];
+	vel.z = -cl.snap.ps.velocity[2];
 
 	pos.x = cl.snap.ps.origin[0];
 	pos.y = cl.snap.ps.origin[1];
@@ -574,10 +587,6 @@ void BASS_UpdateSounds_REAL ( void )
 	top.x = up[0];
 	top.y = up[1];
 	top.z = -up[2];
-
-	vel.x = 0;
-	vel.y = 0;
-	vel.z = 0;
 
 	BASS_Set3DPosition(&pos, &vel, &ang, &top);
 
@@ -615,9 +624,6 @@ void BASS_UpdateSounds_REAL ( void )
 	//Com_Printf("There are currently %i active and %i free channels.\n", NUM_ACTIVE, NUM_FREE);
 }
 
-qboolean BASS_UPDATE_THREAD_RUNNING = qfalse;
-qboolean BASS_UPDATE_THREAD_STOP = qfalse;
-
 void BASS_UpdateThread(void * aArg)
 {
 	while (!BASS_UPDATE_THREAD_STOP)
@@ -625,6 +631,8 @@ void BASS_UpdateThread(void * aArg)
 		BASS_UpdateSounds_REAL();
 		Sleep(10);
 	}
+
+	BASS_UPDATE_THREAD_RUNNING = qfalse;
 }
 
 void BASS_UpdateSounds ( void )
@@ -632,13 +640,7 @@ void BASS_UpdateSounds ( void )
 	if (!BASS_UPDATE_THREAD_RUNNING)
 	{
 		BASS_UPDATE_THREAD_RUNNING = qtrue;
-
-		// Start the child thread
-		thread t(BASS_UpdateThread, 0);
-		
-		// Wait for the thread to finish
-		//t.join();
-		t.detach();
+		BASS_UPDATE_THREAD = new thread (BASS_UpdateThread, 0);
 	}
 }
 
