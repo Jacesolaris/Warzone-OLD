@@ -959,7 +959,7 @@ BOOL BASSDEF(BASS_FXReset)(HFX handle);
 #ifdef __cplusplus
 }
 
-#if 0
+//#if 0
 #ifdef _WIN32
 static inline HPLUGIN BASS_PluginLoad(const WCHAR *file, DWORD flags)
 {
@@ -986,7 +986,7 @@ static inline HSTREAM BASS_StreamCreateURL(const WCHAR *url, DWORD offset, DWORD
 	return BASS_StreamCreateURL((const char*)url, offset, flags|BASS_UNICODE, proc, user);
 }
 #endif
-#endif
+//#endif
 #endif
 
 #endif

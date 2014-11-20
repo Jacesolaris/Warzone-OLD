@@ -28,6 +28,8 @@ extern void BASS_FindAndStopSound ( DWORD handle );
 extern void BASS_StartMusic ( DWORD samplechan );
 extern void BASS_UpdateSounds ( void );
 extern void BASS_StopMusic( void );
+extern void BASS_SetEAX_NORMAL ( void );
+extern void BASS_SetEAX_UNDERWATER ( void );
 #endif //__USE_BASS__
 
 #ifndef __NEW_SOUND_SYSTEM__

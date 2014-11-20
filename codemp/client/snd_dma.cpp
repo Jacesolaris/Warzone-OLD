@@ -206,6 +206,10 @@ int			s_entityWavVol_back[MAX_GENTITIES];
 
 int			s_numChannels;			// Number of AL Sources == Num of Channels
 
+#ifdef __USE_BASS__
+bool					s_bInWater;				// Underwater effect currently active
+#endif //__USE_BASS__
+
 #ifdef USE_OPENAL
 
 /**************************************************************************************************\
@@ -2722,7 +2726,31 @@ Change the volumes of all the playing sounds for changes in their positions
 */
 void S_Respatialize( int entityNum, const vec3_t head, matrix3_t axis, int inwater )
 {
-#ifndef __USE_BASS__
+#ifdef __USE_BASS__
+	// Check if the Listener is underwater
+	if (inwater)
+	{
+		// Check if we have already applied Underwater effect
+		if (!s_bInWater)
+		{
+			s_bInWater = true;
+			BASS_SetEAX_UNDERWATER();
+		}
+		else
+		{
+			if (s_bInWater)
+			{
+				s_bInWater = false;
+				BASS_SetEAX_NORMAL();
+			}
+		}
+	}
+	else if (s_bInWater)
+	{
+		s_bInWater = false;
+		BASS_SetEAX_NORMAL();
+	}
+#else //!__USE_BASS__
 #ifdef USE_OPENAL
 	EAXOCCLUSIONPROPERTIES eaxOCProp;
 	EAXACTIVEFXSLOTS eaxActiveSlots;

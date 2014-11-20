@@ -17,15 +17,23 @@ extern float S_GetVolumeForChannel ( int entchannel );
 qboolean EAX_SUPPORTED = qtrue;
 
 #define MAX_BASS_CHANNELS	256
-#define MAX_SOUND_RANGE		3072.0
+
+#define SOUND_3D_METHOD					BASS_3DMODE_NORMAL //BASS_3DMODE_RELATIVE
+
+float MIN_SOUND_RANGE				=	128.0; //256.0
+float MAX_SOUND_RANGE				=	2048.0; // 3072.0
+
+int SOUND_CONE_INSIDE_ANGLE			=	120;
+int SOUND_CONE_OUTSIDE_ANGLE		=	120;
+float SOUND_CONE_OUTSIDE_VOLUME		=	0.9;
 
 // Use meters as distance unit, real world rolloff, real doppler effect
 // 1.0 = use meters, 0.9144 = use yards, 0.3048 = use feet.
-#define SOUND_DISTANCE_UNIT_SIZE		0.3048 // UQ1: It would seem that this is close to the right conversion for Q3 units... unsure though...
+float SOUND_DISTANCE_UNIT_SIZE		=	0.3048; // UQ1: It would seem that this is close to the right conversion for Q3 units... unsure though...
 // 0.0 = no rolloff, 1.0 = real world, 2.0 = 2x real.
-#define SOUND_REAL_WORLD_FALLOFF		1.0 //0.3048
+float SOUND_REAL_WORLD_FALLOFF		=	1.0; //0.3048
 // 0.0 = no doppler, 1.0 = real world, 2.0 = 2x real.
-#define SOUND_REAL_WORLD_DOPPLER		1.0 //0.3048
+float SOUND_REAL_WORLD_DOPPLER		=	0.3048; //1.0 //0.3048
 
 
 qboolean BASS_UPDATE_THREAD_RUNNING = qfalse;
@@ -76,6 +84,7 @@ void BASS_StopChannel ( int chanNum )
 	if (BASS_ChannelIsActive(SOUND_CHANNELS[chanNum]->channel) == BASS_ACTIVE_PLAYING)
 	{
 		BASS_ChannelStop(SOUND_CHANNELS[chanNum]->channel);
+		//BASS_ChannelPause(SOUND_CHANNELS[chanNum]->channel);
 	}
 
 	SOUND_CHANNELS[chanNum]->isActive = qfalse;
@@ -155,51 +164,6 @@ int BASS_FindFreeChannel ( void )
 	return -1;
 }
 
-void BASS_SetEAX ( void )
-{
-	/*
-	EM(CB_ADDSTRING,0,"Off");
-	EM(CB_ADDSTRING,0,"Generic");
-	EM(CB_ADDSTRING,0,"Padded Cell");
-	EM(CB_ADDSTRING,0,"Room");
-	EM(CB_ADDSTRING,0,"Bathroom");
-	EM(CB_ADDSTRING,0,"Living Room");
-	EM(CB_ADDSTRING,0,"Stone Room");
-	EM(CB_ADDSTRING,0,"Auditorium");
-	EM(CB_ADDSTRING,0,"Concert Hall");
-	EM(CB_ADDSTRING,0,"Cave");
-	EM(CB_ADDSTRING,0,"Arena");
-	EM(CB_ADDSTRING,0,"Hangar");
-	EM(CB_ADDSTRING,0,"Carpeted Hallway");
-	EM(CB_ADDSTRING,0,"Hallway");
-	EM(CB_ADDSTRING,0,"Stone Corridor");
-	EM(CB_ADDSTRING,0,"Alley");
-	EM(CB_ADDSTRING,0,"Forest");
-	EM(CB_ADDSTRING,0,"City");
-	EM(CB_ADDSTRING,0,"Mountains");
-	EM(CB_ADDSTRING,0,"Quarry");
-	EM(CB_ADDSTRING,0,"Plain");
-	EM(CB_ADDSTRING,0,"Parking Lot");
-	EM(CB_ADDSTRING,0,"Sewer Pipe");
-	EM(CB_ADDSTRING,0,"Under Water");
-	EM(CB_ADDSTRING,0,"Drugged");
-	EM(CB_ADDSTRING,0,"Dizzy");
-	EM(CB_ADDSTRING,0,"Psychotic");
-	*/
-
-	//BASS_SetEAXParameters(-1,0,-1,-1); // off (volume=0)
-	//BASS_SetEAXParameters(s-1,-1,-1,-1);
-}
-
-void BASS_SetRolloffFactor ( int factor )
-{
-	BASS_Set3DFactors(-1,pow(2,(factor-10)/5.0),-1);
-}
-
-void BASS_SetDopplerFactor ( int factor )
-{
-	BASS_Set3DFactors(-1,-1,pow(2,(factor-10)/5.0));
-}
 
 HINSTANCE			bass = 0;								// bass handle
 char				tempfile[MAX_PATH];						// temporary BASS.DLL
@@ -347,7 +311,7 @@ qboolean BASS_Initialize ( void )
 	if (!LoadBASS()) Com_Error(ERR_FATAL, "Unable to load BASS sound library.\n");
 #endif
 
-	EAX_SUPPORTED = qtrue;
+	EAX_SUPPORTED = qfalse;
 
 	// check the correct BASS was loaded
 	if (HIWORD(BASS_GetVersion()) != BASSVERSION) {
@@ -369,35 +333,35 @@ qboolean BASS_Initialize ( void )
 	else
 		freq = 11025;
 
+	Com_Printf("^3BASS Sound System Initializing...\n");
+
 	// Initialize the default output device with 3D support
 	if (!BASS_Init(-1, freq, BASS_DEVICE_3D, win, NULL)) {
-		Com_Printf("Can't initialize output device");
+		Com_Printf("^3- ^5BASS could not find a sound device.");
+		Com_Printf("^3BASS Sound System Initialization ^1FAILED^7!\n");
 		return qfalse;
 	}
 
+	Com_Printf("^5BASS Selected Device:\n");
 	BASS_DEVICEINFO info;
 	BASS_GetDeviceInfo(BASS_GetDevice(), &info);
-	Com_Printf("Initialized sound device %s.\n", info.name);
+	Com_Printf("^3%s^5.\n", info.name);
 
 	// Use meters as distance unit, real world rolloff, real doppler effect
 	BASS_Set3DFactors(SOUND_DISTANCE_UNIT_SIZE, SOUND_REAL_WORLD_FALLOFF, SOUND_REAL_WORLD_DOPPLER);
-	//BASS_Set3DFactors(0.0,0.0,0.0);
-	//BASS_SetRolloffFactor(0);
 
 	// Turn EAX off (volume=0), if error then EAX is not supported
-	//if (!BASS_SetEAXParameters(-1,/*0*/s_volume->value,-1,-1))
 	if (!BASS_SetEAXParameters(-1,0,-1,-1))
 	{
-		Com_Printf("EAX Supported.\n");
+		Com_Printf("^3+ ^5EAX Features Supported.\n");
 		EAX_SUPPORTED = qtrue;
+		BASS_SetEAX_NORMAL();
 	}
 	else
 	{
-		Com_Printf("EAX NOT Supported.\n");
+		Com_Printf("^1- ^5EAX Features NOT Supported.\n");
 		EAX_SUPPORTED = qfalse;
 	}
-
-	//BASS_SetConfig(BASS_CONFIG_BUFFER, 1000); // set the buffer length
 
 	BASS_Start();
 
@@ -405,7 +369,7 @@ qboolean BASS_Initialize ( void )
 	BASS_SetConfig(BASS_CONFIG_GVOL_SAMPLE, (DWORD)(float)(s_volume->value*10000.0));
 	BASS_SetConfig(BASS_CONFIG_GVOL_STREAM, (DWORD)(float)(s_volume->value*10000.0));
 
-	BASS_SetConfig(BASS_CONFIG_UPDATETHREADS, (DWORD)8);
+	BASS_SetConfig(BASS_CONFIG_UPDATETHREADS, (DWORD)16);
 	BASS_SetConfig(BASS_CONFIG_BUFFER, (DWORD)100); // set the buffer length
 
 	//Com_Printf("Volume %f. Sample Volume %i. Stream Volume %i.\n", BASS_GetVolume(), (int)BASS_GetConfig(BASS_CONFIG_GVOL_SAMPLE), (int)BASS_GetConfig(BASS_CONFIG_GVOL_STREAM));
@@ -413,31 +377,42 @@ qboolean BASS_Initialize ( void )
 	// Initialize all the sound channels ready for use...
 	BASS_InitializeChannels();
 
+	// Try to use the WDM full 3D algorythm...
+	if (BASS_SetConfig(BASS_CONFIG_3DALGORITHM, BASS_3DALG_FULL))
+	{
+		Com_Printf("^3+ ^5Enhanced Surround Enabled.\n");
+	}
+	else
+	{
+		BASS_SetConfig(BASS_CONFIG_3DALGORITHM, BASS_3DALG_DEFAULT);
+		Com_Printf("^1- ^5Default Surround Enabled. You need a WDM sound driver to use Enhanced Surround.\n");
+	}
+
 	// Set view angles and position to 0,0,0. We will rotate the sound angles...
 	vec3_t forward, right, up;
 	BASS_3DVECTOR pos, ang, top, vel;
 
-	pos.x = 0;
-	pos.y = 0;
-	pos.z = 0;
+	vel.x = cl.snap.ps.velocity[0];
+	vel.y = cl.snap.ps.velocity[1];
+	vel.z = -cl.snap.ps.velocity[2];
 
+	pos.x = cl.snap.ps.origin[0];
+	pos.y = cl.snap.ps.origin[1];
+	pos.z = cl.snap.ps.origin[2];
+	
 	AngleVectors(cl.snap.ps.viewangles, forward, right, up);
 
-	ang.x = 0;
-	ang.y = 0;
-	ang.z = 0;
+	ang.x = forward[0];
+	ang.y = forward[1];
+	ang.z = -forward[2];
 
-	top.x = 0;
-	top.y = 1;
-	top.z = 0;
-
-	vel.x = 0;
-	vel.y = 0;
-	vel.z = 0;
+	top.x = up[0];
+	top.y = up[1];
+	top.z = -up[2];
 
 	BASS_Set3DPosition(&pos, &vel, &ang, &top);
 
-	Com_Printf("\n\n>>> BASS Sound System initialized OK! <<<\n\n\n");
+	Com_Printf("^3BASS Sound System initialized ^7OK^3!\n");
 
 	BASS_UPDATE_THREAD_STOP = qfalse;
 
@@ -455,24 +430,28 @@ void BASS_SetPosition ( int c, vec3_t origin )
 {// If the channel's playing then update it's position
 	vec3_t soundPos;
 
-	if (origin)
-		VectorCopy(origin, SOUND_CHANNELS[c]->origin);
-	else if (s_entityPosition[SOUND_CHANNELS[c]->entityNum])
+	if (!(s_entityPosition[SOUND_CHANNELS[c]->entityNum][0] == 0 && s_entityPosition[SOUND_CHANNELS[c]->entityNum][1] == 0 && s_entityPosition[SOUND_CHANNELS[c]->entityNum][2] == 0))
+	{
 		VectorCopy(s_entityPosition[SOUND_CHANNELS[c]->entityNum], SOUND_CHANNELS[c]->origin);
-	else if (cl.entityBaselines[SOUND_CHANNELS[c]->entityNum].origin)
+	}
+	else if (!(cl.entityBaselines[SOUND_CHANNELS[c]->entityNum].origin[0] == 0 && cl.entityBaselines[SOUND_CHANNELS[c]->entityNum].origin[1] == 0 && cl.entityBaselines[SOUND_CHANNELS[c]->entityNum].origin[2] == 0))
+	{
 		VectorCopy(cl.entityBaselines[SOUND_CHANNELS[c]->entityNum].origin, SOUND_CHANNELS[c]->origin);
+	}
+	else if (origin)
+	{
+		VectorCopy(origin, SOUND_CHANNELS[c]->origin);
+	}
 	else
+	{
 		VectorSet(SOUND_CHANNELS[c]->origin, 0, 0, 0);
+	}
 
 	if (SOUND_CHANNELS[c]->entityNum == -1 && SOUND_CHANNELS[c]->origin[0] == 0 && SOUND_CHANNELS[c]->origin[1] == 0 && SOUND_CHANNELS[c]->origin[2] == 0)
 	{// Local sound...
 		soundPos[0] = cl.snap.ps.origin[0];
 		soundPos[1] = cl.snap.ps.origin[1];
 		soundPos[2] = cl.snap.ps.origin[2];
-
-		SOUND_CHANNELS[c]->ang.x = 0.0;
-		SOUND_CHANNELS[c]->ang.y = 0.0;
-		SOUND_CHANNELS[c]->ang.z = 0.0;
 	}
 	else if (!(SOUND_CHANNELS[c]->origin[0] == 0 && SOUND_CHANNELS[c]->origin[1] == 0 && SOUND_CHANNELS[c]->origin[2] == 0))
 	{// We have an origin...
@@ -487,9 +466,19 @@ void BASS_SetPosition ( int c, vec3_t origin )
 		soundPos[2] = s_entityPosition[SOUND_CHANNELS[c]->entityNum][2];
 	}
 
-	SOUND_CHANNELS[c]->vel.x = SOUND_CHANNELS[c]->pos.x - soundPos[0];
-	SOUND_CHANNELS[c]->vel.y = SOUND_CHANNELS[c]->pos.y - soundPos[1];
-	SOUND_CHANNELS[c]->vel.z = SOUND_CHANNELS[c]->pos.z - soundPos[2];
+	SOUND_CHANNELS[c]->vel.x = 0;//SOUND_CHANNELS[c]->pos.x - soundPos[0];
+	SOUND_CHANNELS[c]->vel.y = 0;//SOUND_CHANNELS[c]->pos.y - soundPos[1];
+	SOUND_CHANNELS[c]->vel.z = 0;//SOUND_CHANNELS[c]->pos.z - soundPos[2];
+
+	/*vec3_t vel, forward, right, up;
+	vel[0] = SOUND_CHANNELS[c]->pos.x - soundPos[0];
+	vel[1] = SOUND_CHANNELS[c]->pos.x - soundPos[1];
+	vel[2] = SOUND_CHANNELS[c]->pos.z - soundPos[2];
+
+	AngleVectors(vel, forward, right, up);
+	SOUND_CHANNELS[c]->vel.x = forward[0];
+	SOUND_CHANNELS[c]->vel.y = forward[1];
+	SOUND_CHANNELS[c]->vel.z = -forward[2];*/
 
 	// Set origin...
 	SOUND_CHANNELS[c]->pos.x = soundPos[0];
@@ -498,7 +487,7 @@ void BASS_SetPosition ( int c, vec3_t origin )
 
 	BASS_ChannelSetAttribute(SOUND_CHANNELS[c]->channel, BASS_ATTRIB_VOL, SOUND_CHANNELS[c]->volume*S_GetVolumeForChannel(SOUND_CHANNELS[c]->entityChannel));
 	BASS_ChannelSet3DPosition(SOUND_CHANNELS[c]->channel,&SOUND_CHANNELS[c]->pos,NULL,&SOUND_CHANNELS[c]->vel);
-	BASS_ChannelSet3DAttributes(SOUND_CHANNELS[c]->channel, /*BASS_3DMODE_RELATIVE*/BASS_3DMODE_NORMAL, 256.0, MAX_SOUND_RANGE, 120, 120, 0.8);//-1, -1, -1);
+	BASS_ChannelSet3DAttributes(SOUND_CHANNELS[c]->channel, SOUND_3D_METHOD, MIN_SOUND_RANGE, MAX_SOUND_RANGE, SOUND_CONE_INSIDE_ANGLE, SOUND_CONE_OUTSIDE_ANGLE, SOUND_CONE_OUTSIDE_VOLUME);//-1, -1, -1);
 	BASS_ChannelFlags(SOUND_CHANNELS[c]->channel, BASS_SAMPLE_MUTEMAX, BASS_SAMPLE_MUTEMAX); // enable muting at the max distance
 }
 
@@ -507,32 +496,30 @@ void BASS_UpdatePosition ( int c )
 {// Update this channel's position, etc...
 	vec3_t soundPos;
 
-	if (!(SOUND_CHANNELS[c]->origin[0] == 0 && SOUND_CHANNELS[c]->origin[1] == 0 && SOUND_CHANNELS[c]->origin[2] == 0))
-	{
-		
-	}
-	else if (s_entityPosition[SOUND_CHANNELS[c]->entityNum])
+	//if (!SOUND_CHANNELS[c]->isLooping) return; // We don't even need to update do we???
+
+	if (!(s_entityPosition[SOUND_CHANNELS[c]->entityNum][0] == 0 && s_entityPosition[SOUND_CHANNELS[c]->entityNum][1] == 0 && s_entityPosition[SOUND_CHANNELS[c]->entityNum][2] == 0))
 	{
 		VectorCopy(s_entityPosition[SOUND_CHANNELS[c]->entityNum], SOUND_CHANNELS[c]->origin);
 	}
-	else if (cl.entityBaselines[SOUND_CHANNELS[c]->entityNum].origin)
+	else if (!(cl.entityBaselines[SOUND_CHANNELS[c]->entityNum].origin[0] == 0 && cl.entityBaselines[SOUND_CHANNELS[c]->entityNum].origin[1] == 0 && cl.entityBaselines[SOUND_CHANNELS[c]->entityNum].origin[2] == 0))
 	{
 		VectorCopy(cl.entityBaselines[SOUND_CHANNELS[c]->entityNum].origin, SOUND_CHANNELS[c]->origin);
+	}
+	else if (!(SOUND_CHANNELS[c]->origin[0] == 0 && SOUND_CHANNELS[c]->origin[1] == 0 && SOUND_CHANNELS[c]->origin[2] == 0))
+	{
+		
 	}
 	else
 	{
 		VectorSet(SOUND_CHANNELS[c]->origin, 0, 0, 0);
 	}
 
-	if (SOUND_CHANNELS[c]->entityNum == -1 && SOUND_CHANNELS[c]->origin[0] == 0 && SOUND_CHANNELS[c]->origin[1] == 0 && SOUND_CHANNELS[c]->origin[2] == 0)
+	if (/*SOUND_CHANNELS[c]->entityNum == -1 &&*/ SOUND_CHANNELS[c]->origin[0] == 0 && SOUND_CHANNELS[c]->origin[1] == 0 && SOUND_CHANNELS[c]->origin[2] == 0)
 	{// Local sound...
 		soundPos[0] = cl.snap.ps.origin[0];
 		soundPos[1] = cl.snap.ps.origin[1];
 		soundPos[2] = cl.snap.ps.origin[2];
-
-		SOUND_CHANNELS[c]->ang.x = 0.0;
-		SOUND_CHANNELS[c]->ang.y = 0.0;
-		SOUND_CHANNELS[c]->ang.z = 0.0;
 	}
 	else if (!(SOUND_CHANNELS[c]->origin[0] == 0 && SOUND_CHANNELS[c]->origin[1] == 0 && SOUND_CHANNELS[c]->origin[2] == 0))
 	{// We have an origin...
@@ -547,9 +534,19 @@ void BASS_UpdatePosition ( int c )
 		soundPos[2] = s_entityPosition[SOUND_CHANNELS[c]->entityNum][2];
 	}
 
-	SOUND_CHANNELS[c]->vel.x = SOUND_CHANNELS[c]->pos.x - soundPos[0];
-	SOUND_CHANNELS[c]->vel.y = SOUND_CHANNELS[c]->pos.y - soundPos[1];
-	SOUND_CHANNELS[c]->vel.z = SOUND_CHANNELS[c]->pos.z - soundPos[2];
+	//SOUND_CHANNELS[c]->vel.x = SOUND_CHANNELS[c]->pos.x - soundPos[0];
+	//SOUND_CHANNELS[c]->vel.y = SOUND_CHANNELS[c]->pos.y - soundPos[1];
+	//SOUND_CHANNELS[c]->vel.z = 0.0-(SOUND_CHANNELS[c]->pos.z - soundPos[2]);
+
+	vec3_t vel, forward, right, up;
+	vel[0] = SOUND_CHANNELS[c]->pos.x - soundPos[0];
+	vel[1] = SOUND_CHANNELS[c]->pos.x - soundPos[1];
+	vel[2] = SOUND_CHANNELS[c]->pos.z - soundPos[2];
+
+	AngleVectors(vel, forward, right, up);
+	SOUND_CHANNELS[c]->vel.x = forward[0];
+	SOUND_CHANNELS[c]->vel.y = forward[1];
+	SOUND_CHANNELS[c]->vel.z = -forward[2];
 
 	// Set origin...
 	SOUND_CHANNELS[c]->pos.x = soundPos[0];
@@ -558,7 +555,7 @@ void BASS_UpdatePosition ( int c )
 
 	BASS_ChannelSetAttribute(SOUND_CHANNELS[c]->channel, BASS_ATTRIB_VOL, SOUND_CHANNELS[c]->volume*S_GetVolumeForChannel(SOUND_CHANNELS[c]->entityChannel));
 	BASS_ChannelSet3DPosition(SOUND_CHANNELS[c]->channel,&SOUND_CHANNELS[c]->pos,NULL,&SOUND_CHANNELS[c]->vel);
-	BASS_ChannelSet3DAttributes(SOUND_CHANNELS[c]->channel, /*BASS_3DMODE_RELATIVE*/BASS_3DMODE_NORMAL, 256.0, MAX_SOUND_RANGE, 120, 120, 0.8);//-1, -1, -1);
+	BASS_ChannelSet3DAttributes(SOUND_CHANNELS[c]->channel, SOUND_3D_METHOD, MIN_SOUND_RANGE, MAX_SOUND_RANGE, SOUND_CONE_INSIDE_ANGLE, SOUND_CONE_OUTSIDE_ANGLE, SOUND_CONE_OUTSIDE_VOLUME);//-1, -1, -1);
 	BASS_ChannelFlags(SOUND_CHANNELS[c]->channel, BASS_SAMPLE_MUTEMAX, BASS_SAMPLE_MUTEMAX); // enable muting at the max distance
 }
 
@@ -577,7 +574,7 @@ void BASS_UpdateSounds_REAL ( void )
 	pos.x = cl.snap.ps.origin[0];
 	pos.y = cl.snap.ps.origin[1];
 	pos.z = cl.snap.ps.origin[2];
-
+	
 	AngleVectors(cl.snap.ps.viewangles, forward, right, up);
 
 	ang.x = forward[0];
@@ -645,6 +642,64 @@ void BASS_UpdateSounds ( void )
 }
 
 //
+// Effects...
+//
+
+/*
+// EAX presets, usage: BASS_SetEAXParameters(EAX_PRESET_xxx)
+#define EAX_PRESET_GENERIC         EAX_ENVIRONMENT_GENERIC,0.5F,1.493F,0.5F
+#define EAX_PRESET_PADDEDCELL      EAX_ENVIRONMENT_PADDEDCELL,0.25F,0.1F,0.0F
+#define EAX_PRESET_ROOM            EAX_ENVIRONMENT_ROOM,0.417F,0.4F,0.666F
+#define EAX_PRESET_BATHROOM        EAX_ENVIRONMENT_BATHROOM,0.653F,1.499F,0.166F
+#define EAX_PRESET_LIVINGROOM      EAX_ENVIRONMENT_LIVINGROOM,0.208F,0.478F,0.0F
+#define EAX_PRESET_STONEROOM       EAX_ENVIRONMENT_STONEROOM,0.5F,2.309F,0.888F
+#define EAX_PRESET_AUDITORIUM      EAX_ENVIRONMENT_AUDITORIUM,0.403F,4.279F,0.5F
+#define EAX_PRESET_CONCERTHALL     EAX_ENVIRONMENT_CONCERTHALL,0.5F,3.961F,0.5F
+#define EAX_PRESET_CAVE            EAX_ENVIRONMENT_CAVE,0.5F,2.886F,1.304F
+#define EAX_PRESET_ARENA           EAX_ENVIRONMENT_ARENA,0.361F,7.284F,0.332F
+#define EAX_PRESET_HANGAR          EAX_ENVIRONMENT_HANGAR,0.5F,10.0F,0.3F
+#define EAX_PRESET_CARPETEDHALLWAY EAX_ENVIRONMENT_CARPETEDHALLWAY,0.153F,0.259F,2.0F
+#define EAX_PRESET_HALLWAY         EAX_ENVIRONMENT_HALLWAY,0.361F,1.493F,0.0F
+#define EAX_PRESET_STONECORRIDOR   EAX_ENVIRONMENT_STONECORRIDOR,0.444F,2.697F,0.638F
+#define EAX_PRESET_ALLEY           EAX_ENVIRONMENT_ALLEY,0.25F,1.752F,0.776F
+#define EAX_PRESET_FOREST          EAX_ENVIRONMENT_FOREST,0.111F,3.145F,0.472F
+#define EAX_PRESET_CITY            EAX_ENVIRONMENT_CITY,0.111F,2.767F,0.224F
+#define EAX_PRESET_MOUNTAINS       EAX_ENVIRONMENT_MOUNTAINS,0.194F,7.841F,0.472F
+#define EAX_PRESET_QUARRY          EAX_ENVIRONMENT_QUARRY,1.0F,1.499F,0.5F
+#define EAX_PRESET_PLAIN           EAX_ENVIRONMENT_PLAIN,0.097F,2.767F,0.224F
+#define EAX_PRESET_PARKINGLOT      EAX_ENVIRONMENT_PARKINGLOT,0.208F,1.652F,1.5F
+#define EAX_PRESET_SEWERPIPE       EAX_ENVIRONMENT_SEWERPIPE,0.652F,2.886F,0.25F
+#define EAX_PRESET_UNDERWATER      EAX_ENVIRONMENT_UNDERWATER,1.0F,1.499F,0.0F
+#define EAX_PRESET_DRUGGED         EAX_ENVIRONMENT_DRUGGED,0.875F,8.392F,1.388F
+#define EAX_PRESET_DIZZY           EAX_ENVIRONMENT_DIZZY,0.139F,17.234F,0.666F
+#define EAX_PRESET_PSYCHOTIC       EAX_ENVIRONMENT_PSYCHOTIC,0.486F,7.563F,0.806F
+	*/
+
+void BASS_SetEAX_NORMAL ( void )
+{
+	if (!EAX_SUPPORTED) return;
+
+	BASS_SetEAXParameters(EAX_PRESET_GENERIC);
+}
+
+void BASS_SetEAX_UNDERWATER ( void )
+{
+	if (!EAX_SUPPORTED) return;
+
+	BASS_SetEAXParameters(EAX_PRESET_UNDERWATER);
+}
+
+void BASS_SetRolloffFactor ( int factor )
+{
+	BASS_Set3DFactors(-1,pow(2,(factor-10)/5.0),-1);
+}
+
+void BASS_SetDopplerFactor ( int factor )
+{
+	BASS_Set3DFactors(-1,-1,pow(2,(factor-10)/5.0));
+}
+
+//
 // Music Tracks...
 //
 
@@ -699,7 +754,7 @@ void BASS_StartMusic ( DWORD samplechan )
 	MUSIC_CHANNEL->pos.z = 0;
 
 	BASS_ChannelSet3DPosition(MUSIC_CHANNEL->channel, &MUSIC_CHANNEL->pos, NULL, &MUSIC_CHANNEL->vel);
-	BASS_ChannelSet3DAttributes(MUSIC_CHANNEL->channel, /*BASS_3DMODE_RELATIVE*/BASS_3DMODE_NORMAL, -1, -1, -1, -1, -1);
+	BASS_ChannelSet3DAttributes(MUSIC_CHANNEL->channel, SOUND_3D_METHOD, -1, -1, -1, -1, -1);
 	BASS_Apply3D();
 }
 
@@ -707,7 +762,20 @@ DWORD BASS_LoadMusicSample ( void *memory, int length )
 {// Just load a sample into memory ready to play instantly...
 	DWORD newchan;
 
-	if (newchan=BASS_SampleLoad(TRUE,memory,0,(DWORD)length,1,/*BASS_SAMPLE_SOFTWARE|*/BASS_SAMPLE_LOOP))
+	// Try to load the sample with the highest quality options we support...
+	if (newchan=BASS_SampleLoad(TRUE,memory,0,(DWORD)length,1,BASS_SAMPLE_LOOP|BASS_SAMPLE_FLOAT))
+	{
+		return newchan;
+	}
+	else if (newchan=BASS_SampleLoad(TRUE,memory,0,(DWORD)length,1,BASS_SAMPLE_SOFTWARE|BASS_SAMPLE_LOOP|BASS_SAMPLE_FLOAT))
+	{
+		return newchan;
+	}
+	else if (newchan=BASS_SampleLoad(TRUE,memory,0,(DWORD)length,1,BASS_SAMPLE_LOOP))
+	{
+		return newchan;
+	}
+	else if (newchan=BASS_SampleLoad(TRUE,memory,0,(DWORD)length,1,BASS_SAMPLE_SOFTWARE|BASS_SAMPLE_LOOP))
 	{
 		return newchan;
 	}
@@ -751,7 +819,7 @@ void BASS_AddStreamChannel ( char *file, int entityNum, int entityChannel, vec3_
 
 			// Apply the 3D changes
 			BASS_SetPosition( chan, origin );
-			BASS_ChannelSet3DAttributes(newchan, /*BASS_3DMODE_RELATIVE*/BASS_3DMODE_NORMAL, 256.0, -1, -1, -1, -1);//120, 120, 0.5);
+			BASS_ChannelSet3DAttributes(newchan, SOUND_3D_METHOD, 256.0, -1, -1, -1, -1);//120, 120, 0.5);
 			BASS_Apply3D();
 	} else {
 		Com_Printf("Can't load file (note samples must be mono)\n");
@@ -782,13 +850,13 @@ void BASS_AddMemoryChannel ( DWORD samplechan, int entityNum, int entityChannel,
 	samplechan = BASS_SampleGetChannel(samplechan,FALSE); // initialize sample channel
 	c->channel=samplechan;
 	BASS_ChannelSetAttribute(samplechan, BASS_ATTRIB_VOL, c->volume*S_GetVolumeForChannel(entityChannel));
+	//BASS_ChannelSlideAttribute( samplechan, BASS_ATTRIB_VOL, c->volume*S_GetVolumeForChannel(entityChannel), 100); // fade-in over 100ms
 
 	// Play
 	BASS_ChannelPlay(samplechan,FALSE);
 
 	// Apply the 3D changes
 	BASS_SetPosition( chan, origin );
-	BASS_ChannelSet3DAttributes(samplechan, /*BASS_3DMODE_RELATIVE*/BASS_3DMODE_NORMAL, 256.0, MAX_SOUND_RANGE, 120, 120, 0.5);//-1, -1, -1);
 	BASS_Apply3D();
 }
 
@@ -806,7 +874,7 @@ void BASS_AddMemoryLoopChannel ( DWORD samplechan, int entityNum, int entityChan
 	// UQ1: Since it seems these also re-call this function to update positions, etc, run a check first...
 	//
 	qboolean UPDATED = qfalse;
-
+	
 	for (int ch = 0; ch < MAX_BASS_CHANNELS; ch++) 
 	{
 		if (SOUND_CHANNELS[ch]->isActive && SOUND_CHANNELS[ch]->isLooping)
@@ -819,6 +887,7 @@ void BASS_AddMemoryLoopChannel ( DWORD samplechan, int entityNum, int entityChan
 			{// This is our sound! Just update it (and then return)...
 				Channel *c = SOUND_CHANNELS[ch];
 				if (origin) VectorCopy(origin, c->origin);
+				//if (origin) BASS_SetPosition( ch, origin );
 				c->volume = volume;
 				//BASS_UpdatePosition(ch);
 				//BASS_Apply3D();
@@ -847,7 +916,6 @@ void BASS_AddMemoryLoopChannel ( DWORD samplechan, int entityNum, int entityChan
 
 	// Apply the 3D changes
 	BASS_SetPosition( chan, origin );
-	BASS_ChannelSet3DAttributes(samplechan, /*BASS_3DMODE_RELATIVE*/BASS_3DMODE_NORMAL, 256.0, MAX_SOUND_RANGE, 120, 120, 0.5);//-1, -1, -1);
 	BASS_Apply3D();
 }
 
@@ -855,7 +923,20 @@ DWORD BASS_LoadMemorySample ( void *memory, int length )
 {// Just load a sample into memory ready to play instantly...
 	DWORD newchan;
 
-	if ((newchan=BASS_SampleLoad(TRUE,memory,0,(DWORD)length,16,BASS_SAMPLE_3D|/*BASS_SAMPLE_SOFTWARE|*/BASS_SAMPLE_MONO)))
+	// Try to load the sample with the highest quality options we support...
+	if ((newchan=BASS_SampleLoad(TRUE,memory,0,(DWORD)length,16,BASS_SAMPLE_3D|BASS_SAMPLE_MONO|BASS_SAMPLE_FLOAT)))
+	{
+		return newchan;
+	}
+	else if ((newchan=BASS_SampleLoad(TRUE,memory,0,(DWORD)length,16,BASS_SAMPLE_3D|BASS_SAMPLE_SOFTWARE|BASS_SAMPLE_MONO|BASS_SAMPLE_FLOAT)))
+	{
+		return newchan;
+	}
+	else if ((newchan=BASS_SampleLoad(TRUE,memory,0,(DWORD)length,16,BASS_SAMPLE_3D|BASS_SAMPLE_MONO)))
+	{
+		return newchan;
+	}
+	else if ((newchan=BASS_SampleLoad(TRUE,memory,0,(DWORD)length,16,BASS_SAMPLE_3D|BASS_SAMPLE_SOFTWARE|BASS_SAMPLE_MONO)))
 	{
 		return newchan;
 	}
