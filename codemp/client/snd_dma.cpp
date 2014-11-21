@@ -837,29 +837,15 @@ sfx_t *S_FindName( const char *name ) {
 
 	sfx = sfxHash[hash];
 
-	//Com_Printf("Check Sound %s", sSoundNameNoExt);
 
 	// see if already loaded
 	while (sfx) {
 		if (!Q_stricmp(sfx->sSoundName, sSoundNameNoExt) ) {
-			//Com_Printf(" - already loaded!\n");
 			return sfx;
 		}
 		sfx = sfx->next;
 	}
 
-	//Com_Printf(" - not loaded in sfx structure");
-
-	for (i=0 ; i < s_numSfx ; i++) {
-		if (s_knownSfx[i].sSoundName[0]) {
-			if (!Q_stricmp(s_knownSfx[i].sSoundName, sSoundNameNoExt) ) {
-				//Com_Printf(" - already loaded in s_knownSfx!\n");
-				return &s_knownSfx[i];
-			}
-		}
-	}
-
-	//Com_Printf(" - NOT loaded!\n");
 /*
 	// find a free sfx
 	for (i=0 ; i < s_numSfx ; i++) {

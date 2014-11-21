@@ -998,7 +998,7 @@ happen before SV_Frame is called
 ==================
 */
 
-#define MULTITHREAD_SV_FRAME
+//#define MULTITHREAD_SV_FRAME
 
 #include "../client/fast_mutex.h"
 #include "../client/tinythread.h"

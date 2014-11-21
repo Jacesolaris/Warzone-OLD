@@ -2072,7 +2072,7 @@ static unsigned int frameCount;
 static float avgFrametime=0.0;
 extern void SE_CheckForLanguageUpdates(void);
 
-#define MULTITHREAD_CL_FRAME
+//#define MULTITHREAD_CL_FRAME
 
 qboolean takeVideoFrame = qfalse;
 
