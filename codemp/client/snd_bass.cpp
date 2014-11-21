@@ -720,20 +720,18 @@ void BASS_SetDopplerFactor ( int factor )
 // Music Tracks...
 //
 
-void BASS_StopMusic( void )
+void BASS_StopMusic( DWORD samplechan )
 {
 	// Free old samples...
-	if (BASS_ChannelIsActive(MUSIC_CHANNEL.channel) == BASS_ACTIVE_PLAYING)
-	{
-		BASS_ChannelStop(MUSIC_CHANNEL.channel);
-	}
+	BASS_ChannelStop(MUSIC_CHANNEL.channel);
+	BASS_SampleFree(MUSIC_CHANNEL.channel);
+	BASS_MusicFree(MUSIC_CHANNEL.channel);
+	BASS_StreamFree(MUSIC_CHANNEL.channel);
 }
 
 void BASS_StartMusic ( DWORD samplechan )
 {
 	//if (s_volumeMusic->value <= 0) return;
-
-	BASS_StopMusic();
 
 	// Set new samples...
 	MUSIC_CHANNEL.originalChannel=MUSIC_CHANNEL.channel = samplechan;

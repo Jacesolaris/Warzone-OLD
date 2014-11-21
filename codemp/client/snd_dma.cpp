@@ -15,6 +15,8 @@
 #define __STDC_FORMAT_MACROS
 #include <inttypes.h>
 
+DWORD CURRENT_MUSIC_TRACK = 0;
+sfx_t *CURRENT_MUSIC_SFX = NULL;
 
 qboolean s_shutUp = qfalse;
 
@@ -4321,7 +4323,11 @@ static byte *MP3MusicStream_ReadFromDisk(MusicInfo_t *pMusicInfo, int iReadOffse
 static void S_StopBackgroundTrack_Actual( MusicInfo_t *pMusicInfo )
 {
 #ifdef __USE_BASS__
-	BASS_StopMusic();
+	if (CURRENT_MUSIC_TRACK && CURRENT_MUSIC_SFX)
+	{// Need to free the old sound!
+		BASS_StopMusic(CURRENT_MUSIC_TRACK);
+		memset (CURRENT_MUSIC_SFX, 0, sizeof(sfx_t));
+	}
 #else //!__USE_BASS__
 	if ( pMusicInfo->s_backgroundFile )
 	{
@@ -4376,9 +4382,17 @@ static qboolean S_StartBackgroundTrack_Actual( MusicInfo_t *pMusicInfo, qboolean
 	COM_DefaultExtension( name, sizeof( name ), ".mp3" );
 
 #ifdef __USE_BASS__
+	if (CURRENT_MUSIC_TRACK && CURRENT_MUSIC_SFX)
+	{// Need to free the old sound!
+		BASS_StopMusic(CURRENT_MUSIC_TRACK);
+		memset (CURRENT_MUSIC_SFX, 0, sizeof(sfx_t));
+	}
+
 	sfxHandle_t	sfxHandle = S_RegisterSound( name );
 
 	if (s_knownSfx[ sfxHandle ].bassSampleID < 0) return qfalse;
+	CURRENT_MUSIC_TRACK = s_knownSfx[ sfxHandle ].bassSampleID;
+	CURRENT_MUSIC_SFX = &s_knownSfx[ sfxHandle ];
 	BASS_StartMusic(s_knownSfx[ sfxHandle ].bassSampleID);
 	return qtrue;
 #else //!__USE_BASS__
@@ -4939,8 +4953,11 @@ void S_StartBackgroundTrack( const char *intro, const char *loop, qboolean bCall
 void S_StopBackgroundTrack( void )
 {
 #ifdef __USE_BASS__
-	// UQ1: FIXME...
-	BASS_StopMusic();
+	if (CURRENT_MUSIC_TRACK && CURRENT_MUSIC_SFX)
+	{// Need to free the old sound!
+		BASS_StopMusic(CURRENT_MUSIC_TRACK);
+		memset (CURRENT_MUSIC_SFX, 0, sizeof(sfx_t));
+	}
 #else //!__USE_BASS__
 	for (int i=0; i<eBGRNDTRACK_NUMBEROF; i++)
 	{

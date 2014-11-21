@@ -12,9 +12,9 @@ qboolean CullVisible ( vec3_t org1, vec3_t org2, int ignore )
 	vec3_t orgA, orgB;
 
 	VectorCopy(org1, orgA);
-	orgA[2]+=32;
+	orgA[2]+=16;
 	VectorCopy(org2, orgB);
-	orgB[2]+=32;
+	orgB[2]+=16;
 
 	CG_Trace( &tr, orgA, NULL, NULL, orgB, ignore, CONTENTS_OPAQUE );
 
@@ -22,7 +22,7 @@ qboolean CullVisible ( vec3_t org1, vec3_t org2, int ignore )
 	{// Completely visible!
 		return ( qtrue );
 	}
-	else if (Distance(tr.endpos, org2) < 256)
+	else if (tr.fraction > 0.8 || Distance(tr.endpos, org2) < 96)//256)
 	{// Close enough!
 		return ( qtrue );
 	}
@@ -32,9 +32,11 @@ qboolean CullVisible ( vec3_t org1, vec3_t org2, int ignore )
 
 qboolean ShouldCull ( vec3_t org )
 {
-	if (Distance(cg.refdef.vieworg, org) > 3072.0) return qtrue; // TOO FAR! CULLED!
+	float dist = Distance(cg.refdef.vieworg, org);
+
+	if (dist > 3072.0) return qtrue; // TOO FAR! CULLED!
 	if (!CG_InFOV( org, cg.refdef.vieworg, cg.refdef.viewangles, cg.refdef.fov_x*1.2, cg.refdef.fov_y*1.2)) return qtrue; // NOT ON SCREEN! CULLED!
-	if (!CullVisible(cg.refdef.vieworg, org, cg.clientNum)) return qtrue; // NOT VISIBLE TO US! CULLED!
+	if (/*dist > 256 &&*/ !CullVisible(cg.refdef.vieworg, org, cg.clientNum)) return qtrue; // NOT VISIBLE TO US! CULLED!
 
 	return qfalse;
 }
