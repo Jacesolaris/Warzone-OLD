@@ -1908,10 +1908,10 @@ void R_AddEntitySurfaces (void) {
 		return;
 	}
 	
-#pragma omp /*parallel*/ for /*ordered*/ schedule(dynamic) nowait //if(r_multithread->integer > 0)
+#pragma omp parallel for ordered schedule(dynamic) if(r_multithread->integer > 0)
 	for ( i = 0; i < tr.refdef.num_entities; i++)
 	{
-//#pragma omp ordered
+#pragma omp ordered
 		{
 		R_AddEntitySurface(i);
 		}
@@ -1924,6 +1924,7 @@ void R_AddEntitySurfaces (void) {
 R_GenerateDrawSurfs
 ====================
 */
+
 void R_GenerateDrawSurfs( void ) 
 {
 	R_AddWorldSurfaces();

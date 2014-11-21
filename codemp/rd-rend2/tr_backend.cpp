@@ -559,42 +559,6 @@ void RB_BeginDrawingView (void) {
 
 #define	MAC_EVENT_PUMP_MSEC		5
 
-static int R_GCullSurfaces( trRefEntity_t *ent ) {
-
-	// scale the radius if need be
-	float largestScale = ent->e.modelScale[0];
-
-	if (ent->e.modelScale[1] > largestScale)
-	{
-		largestScale = ent->e.modelScale[1];
-	}
-	if (ent->e.modelScale[2] > largestScale)
-	{
-		largestScale = ent->e.modelScale[2];
-	}
-	if (!largestScale)
-	{
-		largestScale = 1;
-	}
-
-	// cull bounding sphere 
-  	switch ( R_CullLocalPointAndRadius( vec3_origin,  ent->e.radius * largestScale) )
-  	{
-  	case CULL_OUT:
-  		tr.pc.c_sphere_cull_md3_out++;
-  		return CULL_OUT;
-
-	case CULL_IN:
-		tr.pc.c_sphere_cull_md3_in++;
-		return CULL_IN;
-
-	case CULL_CLIP:
-		tr.pc.c_sphere_cull_md3_clip++;
-		return CULL_IN;
- 	}
-	return CULL_IN;
-}
-
 /*
 ==================
 RB_RenderDrawSurfList
