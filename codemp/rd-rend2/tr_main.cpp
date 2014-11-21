@@ -1902,20 +1902,26 @@ R_AddEntitySurfaces
 =============
 */
 void R_AddEntitySurfaces (void) {
-	int i;
+	int i;//, NUM_CULLED = 0;
 
 	if ( !r_drawentities->integer ) {
 		return;
 	}
 	
-#pragma omp parallel for ordered schedule(dynamic) if(r_multithread->integer > 0)
 	for ( i = 0; i < tr.refdef.num_entities; i++)
 	{
-#pragma omp ordered
+		/*
+		if (!tr.refdef.entities[i].e.ignoreCull && Distance(tr.refdef.entities[i].e.origin, tr.viewParms.pvsOrigin) > 3072.0)
 		{
-		R_AddEntitySurface(i);
+			//NUM_CULLED++;
+			continue;
 		}
+		*/
+
+		R_AddEntitySurface(i);
 	}
+
+	//ri->Printf(PRINT_WARNING, "Culled %i entities.\n", NUM_CULLED);
 }
 
 

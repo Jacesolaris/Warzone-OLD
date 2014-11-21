@@ -109,7 +109,7 @@ void FX_DisruptorAltMiss( vec3_t origin, vec3_t normal, int weapon, qboolean alt
 
 	trap->FX_AddBezier(&b);
 
-	trap->FX_PlayEffectID( cgs.effects.disruptorAltMissEffect, origin, normal, -1, -1, qfalse );
+	PlayEffectID( cgs.effects.disruptorAltMissEffect, origin, normal, -1, -1, qfalse );
 }
 
 /*
@@ -123,9 +123,9 @@ void FX_DisruptorAltHit( vec3_t origin, vec3_t normal, int weapon, qboolean altF
 	fxHandle_t fx = cg_weapons[weapon].altMissileWallImpactfx;
 
 	if (fx)
-		trap->FX_PlayEffectID(fx, origin, normal, -1, -1, qfalse);
+		PlayEffectID(fx, origin, normal, -1, -1, qfalse);
 	else
-		trap->FX_PlayEffectID( cgs.effects.disruptorAltHitEffect, origin, normal, -1, -1, qfalse );
+		PlayEffectID( cgs.effects.disruptorAltHitEffect, origin, normal, -1, -1, qfalse );
 }
 
 
@@ -142,9 +142,9 @@ void FX_DisruptorHitWall(vec3_t origin, vec3_t normal, int weapon, qboolean altF
 	if (altFire) fx = cg_weapons[weapon].altMissileWallImpactfx;
 
 	if (fx)
-		trap->FX_PlayEffectID(fx, origin, normal, -1, -1, qfalse);
+		PlayEffectID(fx, origin, normal, -1, -1, qfalse);
 	else
-		trap->FX_PlayEffectID(CG_EnableEnhancedFX(cgs.effects.disruptorWallImpactEffect, cgs.effects.disruptorWallImpactEffectEnhancedFX), origin, normal, -1, -1, qfalse);
+		PlayEffectID(CG_EnableEnhancedFX(cgs.effects.disruptorWallImpactEffect, cgs.effects.disruptorWallImpactEffectEnhancedFX), origin, normal, -1, -1, qfalse);
 }
 
 /*
@@ -159,7 +159,7 @@ void FX_DisruptorHitPlayer(vec3_t origin, vec3_t normal, qboolean humanoid, int 
 	if (altFire) fx = cg_weapons[weapon].altFleshImpactEffect;
 
 	if (fx)
-		trap->FX_PlayEffectID(fx, origin, normal, -1, -1, qfalse);
+		PlayEffectID(fx, origin, normal, -1, -1, qfalse);
 	else
-	trap->FX_PlayEffectID( cgs.effects.disruptorFleshImpactEffect, origin, normal, -1, -1, qfalse );
+	PlayEffectID( cgs.effects.disruptorFleshImpactEffect, origin, normal, -1, -1, qfalse );
 }

@@ -26,17 +26,17 @@ void FX_BryarAltProjectileThink(  centity_t *cent, const struct weaponInfo_s *we
 	for (t = 1; t < cent->currentState.generic1; t++ )
 	{
 		// just add ourselves over, and over, and over when we are charged
-		trap->FX_PlayEffectID( cgs.effects.bryarPowerupShotEffect, cent->lerpOrigin, forward, -1, -1, qfalse );
+		PlayEffectID( cgs.effects.bryarPowerupShotEffect, cent->lerpOrigin, forward, -1, -1, qfalse );
 	}
 
 	//	for ( int t = 1; t < cent->gent->count; t++ )	// The single player stores the charge in count, which isn't accessible on the client
 	if (weapon->altMissileRenderfx)
 	{
-		trap->FX_PlayEffectID(weapon->altMissileRenderfx, cent->lerpOrigin, forward, -1, -1, qfalse);
+		PlayEffectID(weapon->altMissileRenderfx, cent->lerpOrigin, forward, -1, -1, qfalse);
 	}
 	else
 	{
-		trap->FX_PlayEffectID(cgs.effects.bryarShotEffect, cent->lerpOrigin, forward, -1, -1, qfalse);
+		PlayEffectID(cgs.effects.bryarShotEffect, cent->lerpOrigin, forward, -1, -1, qfalse);
 	}
 }
 
@@ -81,11 +81,11 @@ void FX_BryarAltHitWall(vec3_t origin, vec3_t normal, int power, int weapon, qbo
 
 	if (fx)
 	{// We have fx for this. Play it.
-		trap->FX_PlayEffectID(fx, origin, normal, -1, -1, qfalse);
+		PlayEffectID(fx, origin, normal, -1, -1, qfalse);
 	}
 	else
 	{// This should never be possible, but just in case, fall back to concussion here.
-		trap->FX_PlayEffectID(cgs.effects.bryarWallImpactEffect, origin, normal, -1, -1, qfalse);
+		PlayEffectID(cgs.effects.bryarWallImpactEffect, origin, normal, -1, -1, qfalse);
 	}
 }
 

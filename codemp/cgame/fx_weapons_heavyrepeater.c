@@ -67,7 +67,7 @@ static void CG_DistortionOrb( centity_t *cent )
 	ent.renderfx = RF_DISTORTION;
 #endif
 
-	trap->R_AddRefEntityToScene( &ent );
+	AddRefEntityToScene( &ent );
 }
 
 /*
@@ -92,10 +92,10 @@ void FX_RepeaterAltProjectileThink( centity_t *cent, const struct weaponInfo_s *
 
 	if (weapon->altMissileRenderfx)
 	{
-		trap->FX_PlayEffectID(weapon->altMissileRenderfx, cent->lerpOrigin, forward, -1, -1, qfalse);
+		PlayEffectID(weapon->altMissileRenderfx, cent->lerpOrigin, forward, -1, -1, qfalse);
 	}
 	else
 	{
-		trap->FX_PlayEffectID(cgs.effects.repeaterAltProjectileEffect, cent->lerpOrigin, forward, -1, -1, qfalse);
+		PlayEffectID(cgs.effects.repeaterAltProjectileEffect, cent->lerpOrigin, forward, -1, -1, qfalse);
 	}
 }

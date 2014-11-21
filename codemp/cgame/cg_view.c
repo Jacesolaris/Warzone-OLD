@@ -151,7 +151,7 @@ static void CG_AddTestModel (void) {
 		}
 	}
 
-	trap->R_AddRefEntityToScene( &cg.testModelEntity );
+	AddRefEntityToScene( &cg.testModelEntity );
 }
 
 
@@ -1369,7 +1369,7 @@ static void CG_DamageBlendBlob( void )
 		ent.shaderRGBA[2] = 50 * ( 1.0 - ((float)t / maxTime) );
 		ent.shaderRGBA[3] = 255;
 	}
-	trap->R_AddRefEntityToScene( &ent );
+	AddRefEntityToScene( &ent );
 }
 
 int cg_actionCamLastTime = 0;
@@ -2194,7 +2194,7 @@ static void CG_AddRefentForAutoMap(centity_t *cent)
 		ent.hModel = cgs.gameModels[cent->currentState.modelindex];
 	}
 
-	trap->R_AddRefEntityToScene(&ent);
+	AddRefEntityToScene(&ent);
 }
 
 //add all entities that would be on the radar

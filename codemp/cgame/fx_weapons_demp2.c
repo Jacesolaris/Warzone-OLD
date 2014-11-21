@@ -22,18 +22,18 @@ void FX_Clonepistol_ProjectileThink(centity_t *cent, const struct weaponInfo_s *
 	{
 		for (t = 1; t < (cent->currentState.generic1 - 1); t++)
 		{
-			trap->FX_PlayEffectID(weapon->missileRenderfx, cent->lerpOrigin, forward, -1, -1, qfalse);
+			PlayEffectID(weapon->missileRenderfx, cent->lerpOrigin, forward, -1, -1, qfalse);
 		}
 	}
 	else
 	{
 		if (weapon->missileRenderfx)
 		{
-			trap->FX_PlayEffectID(weapon->missileRenderfx, cent->lerpOrigin, forward, -1, -1, qfalse);
+			PlayEffectID(weapon->missileRenderfx, cent->lerpOrigin, forward, -1, -1, qfalse);
 		}
 		else
 		{
-			trap->FX_PlayEffectID(cgs.effects.demp2ProjectileEffect, cent->lerpOrigin, forward, -1, -1, qfalse);
+			PlayEffectID(cgs.effects.demp2ProjectileEffect, cent->lerpOrigin, forward, -1, -1, qfalse);
 		}
 	}
 }
@@ -81,11 +81,11 @@ void FX_Clonepistol_HitWall(vec3_t origin, vec3_t normal, int weapon, qboolean a
 
 	if (fx)
 	{// We have fx for this. Play it.
-		trap->FX_PlayEffectID(fx, origin, normal, -1, -1, qfalse);
+		PlayEffectID(fx, origin, normal, -1, -1, qfalse);
 	}
 	else
 	{// This should never be possible, but just in case, fall back to concussion here.
-		trap->FX_PlayEffectID(cgs.effects.demp2WallImpactEffect, origin, normal, -1, -1, qfalse);
+		PlayEffectID(cgs.effects.demp2WallImpactEffect, origin, normal, -1, -1, qfalse);
 	}
 }
 
@@ -131,11 +131,11 @@ void FX_Clonepistol_BounceWall(vec3_t origin, vec3_t normal, int weapon, qboolea
 
 	if (fx)
 	{// We have fx for this. Play it.
-		trap->FX_PlayEffectID(fx, origin, normal, -1, -1, qfalse);
+		PlayEffectID(fx, origin, normal, -1, -1, qfalse);
 	}
 	else
 	{// This should never be possible, but just in case, fall back to concussion here.
-		trap->FX_PlayEffectID(cgs.effects.demp2WallBounceEffect, origin, normal, -1, -1, qfalse);
+		PlayEffectID(cgs.effects.demp2WallBounceEffect, origin, normal, -1, -1, qfalse);
 	}
 }
 
@@ -183,10 +183,10 @@ void FX_Clonepistol_HitPlayer(vec3_t origin, vec3_t normal, qboolean humanoid, i
 
 	if (fx)
 	{// We have fx for this. Play it.
-		trap->FX_PlayEffectID(fx, origin, normal, -1, -1, qfalse);
+		PlayEffectID(fx, origin, normal, -1, -1, qfalse);
 	}
 	else
-		trap->FX_PlayEffectID(cgs.effects.demp2FleshImpactEffect, origin, normal, -1, -1, qfalse);
+		PlayEffectID(cgs.effects.demp2FleshImpactEffect, origin, normal, -1, -1, qfalse);
 
 }
 
@@ -210,18 +210,18 @@ void FX_DEMP2_ProjectileThink(centity_t *cent, const struct weaponInfo_s *weapon
 	{
 		for (t = 1; t < (cent->currentState.generic1 - 1); t++) 
 		{
-			trap->FX_PlayEffectID(weapon->missileRenderfx, cent->lerpOrigin, forward, -1, -1, qfalse);
+			PlayEffectID(weapon->missileRenderfx, cent->lerpOrigin, forward, -1, -1, qfalse);
 		}
 	}
 	else
 	{
 		if (weapon->missileRenderfx)
 		{
-			trap->FX_PlayEffectID(weapon->missileRenderfx, cent->lerpOrigin, forward, -1, -1, qfalse);
+			PlayEffectID(weapon->missileRenderfx, cent->lerpOrigin, forward, -1, -1, qfalse);
 		}
 		else
 		{
-			trap->FX_PlayEffectID(cgs.effects.demp2ProjectileEffect, cent->lerpOrigin, forward, -1, -1, qfalse);
+			PlayEffectID(cgs.effects.demp2ProjectileEffect, cent->lerpOrigin, forward, -1, -1, qfalse);
 		}
 	}
 }
@@ -238,9 +238,9 @@ void FX_DEMP2_HitWall(vec3_t origin, vec3_t normal, int weapon, qboolean altFire
 	if (altFire) fx = cg_weapons[weapon].altMissileWallImpactfx;
 
 	if (fx)
-		trap->FX_PlayEffectID(fx, origin, normal, -1, -1, qfalse);
+		PlayEffectID(fx, origin, normal, -1, -1, qfalse);
 	else
-		trap->FX_PlayEffectID(
+		PlayEffectID(
 		CG_EnableEnhancedFX(cgs.effects.demp2WallImpactEffect, cgs.effects.demp2WallImpactEffectEnhancedFX), origin, normal, -1, -1, qfalse);
 }
 
@@ -286,10 +286,10 @@ void FX_DEMP2_HitPlayer(vec3_t origin, vec3_t normal, qboolean humanoid, int wea
 
 	if (fx)
 	{// We have fx for this. Play it.
-		trap->FX_PlayEffectID(fx, origin, normal, -1, -1, qfalse);
+		PlayEffectID(fx, origin, normal, -1, -1, qfalse);
 	}
 	else
-	trap->FX_PlayEffectID( cgs.effects.demp2FleshImpactEffect, origin, normal, -1, -1, qfalse );
+	PlayEffectID( cgs.effects.demp2FleshImpactEffect, origin, normal, -1, -1, qfalse );
 }
 
 /*

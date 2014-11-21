@@ -2340,6 +2340,11 @@ void	CG_SetLightstyle (int i);
 
 extern void TextToSpeech( char *text );
 
+// cg_cull.c
+extern void AddRefEntityToScene ( refEntity_t *ent );
+extern void PlayEffectID ( int id, vec3_t org, vec3_t fwd, int vol, int rad, qboolean isPortal );
+extern void AddLightToScene ( const vec3_t org, float intensity, float r, float g, float b );
+
 /*
 Ghoul2 Insert End
 */

@@ -770,11 +770,11 @@ void CG_MiscModelExplosion( vec3_t mins, vec3_t maxs, int size, material_t chunk
 		{
 			if ( effect2 && effect2[0] && ( rand() & 1 ))
 			{
-				trap->FX_PlayEffectID( eID2, org, dir, -1, -1, qfalse );
+				PlayEffectID( eID2, org, dir, -1, -1, qfalse );
 			}
 			else
 			{
-				trap->FX_PlayEffectID( eID1, org, dir, -1, -1, qfalse );
+				PlayEffectID( eID1, org, dir, -1, -1, qfalse );
 			}
 		}
 	}

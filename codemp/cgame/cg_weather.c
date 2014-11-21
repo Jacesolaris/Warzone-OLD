@@ -59,7 +59,7 @@
 //				angles[PITCH] = 0;
 //				angles[YAW] = 90;
 //				angles[ROLL] = 0;
-//				trap->FX_PlayEffectID(cgs.effects.rain, tr.endpos, angles, -1, 1, qfalse);
+//				PlayEffectID(cgs.effects.rain, tr.endpos, angles, -1, 1, qfalse);
 //			}
 //		}			
 //		cg.we.raintime = cg.time + 30;				
@@ -133,5 +133,5 @@
 //////	re.shaderRGBA[2] = 191; //0.75
 //////	re.shaderRGBA[3] = 255; 
 //////		
-//////	trap->R_AddRefEntityToScene( &re );
+//////	AddRefEntityToScene( &re );
 //////}

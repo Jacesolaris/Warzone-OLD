@@ -2453,7 +2453,7 @@ static void _PlayerFootStep( const vec3_t origin,
 
 	if ( effectID != -1 )
 	{
-		trap->FX_PlayEffectID( effectID, trace.endpos, trace.plane.normal, -1, -1, qfalse );
+		PlayEffectID( effectID, trace.endpos, trace.plane.normal, -1, -1, qfalse );
 	}
 
 	if ( cg_footsteps.integer < 4 )
@@ -2706,14 +2706,14 @@ void CG_PlayerAnimEventDo( centity_t *cent, animevent_t *animEvent )
 			BG_GiveMeVectorFromMatrix(&matrix, ORIGIN, bPoint);
 			VectorSet(bAngle, 0, 1, 0);
 
-			trap->FX_PlayEffectID(animEvent->eventData[AED_EFFECTINDEX], bPoint, bAngle, -1, -1, qfalse);
+			PlayEffectID(animEvent->eventData[AED_EFFECTINDEX], bPoint, bAngle, -1, -1, qfalse);
 		}
 		else
 		{
 			vec3_t bAngle;
 
 			VectorSet(bAngle, 0, 1, 0);
-			trap->FX_PlayEffectID(animEvent->eventData[AED_EFFECTINDEX], cent->lerpOrigin, bAngle, -1, -1, qfalse);
+			PlayEffectID(animEvent->eventData[AED_EFFECTINDEX], cent->lerpOrigin, bAngle, -1, -1, qfalse);
 		}
 #endif
 		break;
@@ -4664,7 +4664,7 @@ static void CG_TrailItem( centity_t *cent, qhandle_t hModel ) {
 	AnglesToAxis( angles, ent.axis );
 
 	ent.hModel = hModel;
-	trap->R_AddRefEntityToScene( &ent );
+	AddRefEntityToScene( &ent );
 }
 #endif
 
@@ -4753,7 +4753,7 @@ static void CG_PlayerFlag( centity_t *cent, qhandle_t hModel ) {
 	*/
 	//FIXME: Not doing this at the moment because sorting totally messes up
 
-	trap->R_AddRefEntityToScene( &ent );
+	AddRefEntityToScene( &ent );
 }
 
 
@@ -4773,7 +4773,7 @@ static void CG_PlayerPowerups( centity_t *cent, refEntity_t *torso ) {
 	#ifdef BASE_COMPAT
 		// quad gives a dlight
 		if ( powerups & ( 1 << PW_QUAD ) )
-			trap->R_AddLightToScene( cent->lerpOrigin, 200 + (rand()&31), 0.2f, 0.2f, 1 );
+			AddLightToScene( cent->lerpOrigin, 200 + (rand()&31), 0.2f, 0.2f, 1 );
 	#endif // BASE_COMPAT
 
 	if (cent->currentState.eType == ET_NPC)
@@ -4782,18 +4782,18 @@ static void CG_PlayerPowerups( centity_t *cent, refEntity_t *torso ) {
 	// redflag
 	if ( powerups & ( 1 << PW_REDFLAG ) ) {
 		CG_PlayerFlag( cent, cgs.media.redFlagModel );
-		trap->R_AddLightToScene( cent->lerpOrigin, 200 + (rand()&31), 1.0, 0.2f, 0.2f );
+		AddLightToScene( cent->lerpOrigin, 200 + (rand()&31), 1.0, 0.2f, 0.2f );
 	}
 
 	// blueflag
 	if ( powerups & ( 1 << PW_BLUEFLAG ) ) {
 		CG_PlayerFlag( cent, cgs.media.blueFlagModel );
-		trap->R_AddLightToScene( cent->lerpOrigin, 200 + (rand()&31), 0.2f, 0.2f, 1.0 );
+		AddLightToScene( cent->lerpOrigin, 200 + (rand()&31), 0.2f, 0.2f, 1.0 );
 	}
 
 	// neutralflag
 	if ( powerups & ( 1 << PW_NEUTRALFLAG ) ) {
-		trap->R_AddLightToScene( cent->lerpOrigin, 200 + (rand()&31), 1.0, 1.0, 1.0 );
+		AddLightToScene( cent->lerpOrigin, 200 + (rand()&31), 1.0, 1.0, 1.0 );
 	}
 
 	// haste leaves smoke trails
@@ -4834,7 +4834,7 @@ static void CG_PlayerFloatSprite( centity_t *cent, qhandle_t shader ) {
 	ent.shaderRGBA[1] = 255;
 	ent.shaderRGBA[2] = 255;
 	ent.shaderRGBA[3] = 255;
-	trap->R_AddRefEntityToScene( &ent );
+	AddRefEntityToScene( &ent );
 }
 
 
@@ -4868,7 +4868,7 @@ static void CG_PlayerFloatSpriteRGBA( centity_t *cent, qhandle_t shader, vec4_t 
 	ent.shaderRGBA[1] = rgba[1];
 	ent.shaderRGBA[2] = rgba[2];
 	ent.shaderRGBA[3] = rgba[3];
-	trap->R_AddRefEntityToScene( &ent );
+	AddRefEntityToScene( &ent );
 }
 #endif
 
@@ -5249,7 +5249,7 @@ static void CG_ForcePushBlur( vec3_t org, centity_t *cent )
 		ent.shaderRGBA[2] = 255.0f;
 		ent.shaderRGBA[3] = alpha;
 
-		trap->R_AddRefEntityToScene( &ent );
+		AddRefEntityToScene( &ent );
 	}
 }
 
@@ -5378,7 +5378,7 @@ void CG_AddRefEntityWithPowerups( refEntity_t *ent, entityState_t *state, int te
 		return; //this entity is mind-tricking the current client, so don't render it
 	}
 
-	trap->R_AddRefEntityToScene( ent );
+	AddRefEntityToScene( ent );
 }
 
 #define MAX_SHIELD_TIME	2000.0
@@ -5448,7 +5448,7 @@ void CG_PlayerShieldHit(int entitynum, vec3_t dir, int amount)
 //	ent.shaderRGBA[1] = alpha;
 //	ent.shaderRGBA[2] = alpha;
 //	ent.shaderRGBA[3] = 255;
-//	trap->R_AddRefEntityToScene(&ent);
+//	AddRefEntityToScene(&ent);
 //}//[/SPShield]
 
 
@@ -5751,7 +5751,7 @@ void CG_NewLightningActEffect(vec3_t muzzle, vec3_t muzzleDir, float length)
 	AngleVectors(ang, forward, NULL, NULL);
 
 	VectorMA(muzzle, length*flrand(0, 1), muzzleDir, end2);
-	trap->FX_PlayEffectID(cgs.effects.lightningarc, end2, forward, -1, -1, qfalse);
+	PlayEffectID(cgs.effects.lightningarc, end2, forward, -1, -1, qfalse);
 }//[/NewLightningEFX]
 
 //[NewLightningEFX]
@@ -5768,9 +5768,9 @@ void CG_BlockLightningEffect(vec3_t muzzle, vec3_t muzzleDir, float length)
 	AngleVectors(ang, forward, NULL, NULL);
 
 	VectorMA(muzzle, length*flrand(0, 1), muzzleDir, end2);
-	trap->FX_PlayEffectID(cgs.effects.forcelightningAbsorb, end2, forward, -1, -1, qfalse);
-	trap->FX_PlayEffectID(cgs.effects.forcelightningFlare, end2, forward, -1, -1, qfalse);
-	trap->FX_PlayEffectID(cgs.effects.lightningarc, end2, forward, -1, -1, qfalse);
+	PlayEffectID(cgs.effects.forcelightningAbsorb, end2, forward, -1, -1, qfalse);
+	PlayEffectID(cgs.effects.forcelightningFlare, end2, forward, -1, -1, qfalse);
+	PlayEffectID(cgs.effects.lightningarc, end2, forward, -1, -1, qfalse);
 	//trap->Print("Muzzle at %f %f %f\n", muzzle[0], muzzle[1], muzzle[2]);
 	//trap->Print("Muzzle dir %f %f %f\n", muzzleDir[0], muzzleDir[1], muzzleDir[2]);
 	//trap->Print("Saber Length %f\n", length);
@@ -5868,7 +5868,7 @@ void CG_DoSaberLight(saberInfo_t *saber, int cnum, int bnum)
 		}
 
 		//[RGBSabers]
-		trap->R_AddLightToScene(mid, diameter + (random()*8.0f), rgb[0], rgb[1], rgb[2]);
+		AddLightToScene(mid, diameter + (random()*8.0f), rgb[0], rgb[1], rgb[2]);
 	}
 }
 
@@ -5943,7 +5943,7 @@ void CG_DoSaber(vec3_t origin, vec3_t dir, float length, float lengthMax, float 
 		//[RGBSabers]
 		float light = length*1.4f + random()*3.0f;
 		CG_RGBForSaberColor(color, rgb, cnum, bnum);
-		trap->R_AddLightToScene(mid, light, rgb[0], rgb[1], rgb[2]);
+		AddLightToScene(mid, light, rgb[0], rgb[1], rgb[2]);
 		//[/RGBSabers]
 	}
 
@@ -5995,7 +5995,7 @@ void CG_DoSaber(vec3_t origin, vec3_t dir, float length, float lengthMax, float 
 	//[/RGBSabers]
 	saber.renderfx = rfx;
 
-	trap->R_AddRefEntityToScene(&saber);
+	AddRefEntityToScene(&saber);
 
 	// Do the hot core
 	VectorMA(origin, length, dir, saber.origin);
@@ -6021,7 +6021,7 @@ void CG_DoSaber(vec3_t origin, vec3_t dir, float length, float lengthMax, float 
 	}
 
 	sbak = saber;
-	trap->R_AddRefEntityToScene(&saber);
+	AddRefEntityToScene(&saber);
 
 	if (color != SABER_RGB && color != SABER_PIMP && color != SABER_WHITE && color != SABER_SCRIPTED)
 		return;
@@ -6032,7 +6032,7 @@ void CG_DoSaber(vec3_t origin, vec3_t dir, float length, float lengthMax, float 
 	saber.shaderRGBA[0] = saber.shaderRGBA[1] = saber.shaderRGBA[2] = saber.shaderRGBA[3] = 0xff;
 	saber.radius = (radiusStart + crandom() * radiusRange)*radiusmult;
 
-	trap->R_AddRefEntityToScene(&saber);
+	AddRefEntityToScene(&saber);
 }
 //[Movie Sabers]
 void CG_DoPrequelSaber(vec3_t blade_muz, vec3_t blade_tip, vec3_t trail_tip, vec3_t trail_muz, float lengthMax, float radius, saber_colors_t color, int rfx, qboolean doLight, qboolean doTrail, int cnum, int bnum, int saberType)
@@ -6279,7 +6279,7 @@ void CG_DoPrequelSaber(vec3_t blade_muz, vec3_t blade_tip, vec3_t trail_tip, vec
 	{
 		CG_RGBForSaberColor(color, rgb, cnum, bnum);
 		VectorScale(rgb, 0.66f, rgb);
-		trap->R_AddLightToScene(mid, (blade_len*2.0f) + (random()*10.0f), rgb[0], rgb[1], rgb[2]);
+		AddLightToScene(mid, (blade_len*2.0f) + (random()*10.0f), rgb[0], rgb[1], rgb[2]);
 	}
 
 	//Distance Scale
@@ -6413,7 +6413,7 @@ void CG_DoPrequelSaber(vec3_t blade_muz, vec3_t blade_tip, vec3_t trail_tip, vec
 				saber.saberLength = (blade_len - (saber.radius / 2));
 				VectorCopy(blade_muz, saber.origin);
 				VectorCopy(blade_dir, saber.axis[0]);
-				trap->R_AddRefEntityToScene(&saber);
+				AddRefEntityToScene(&saber);
 			}
 
 
@@ -6425,7 +6425,7 @@ void CG_DoPrequelSaber(vec3_t blade_muz, vec3_t blade_tip, vec3_t trail_tip, vec
 				VectorCopy(trail_muz, saber.origin);
 				VectorCopy(trail_dir, saber.axis[0]);
 
-				trap->R_AddRefEntityToScene(&saber);
+				AddRefEntityToScene(&saber);
 			}
 
 
@@ -6437,7 +6437,7 @@ void CG_DoPrequelSaber(vec3_t blade_muz, vec3_t blade_tip, vec3_t trail_tip, vec
 				VectorMA(blade_muz, ((effectradius*AngleScale) / 2), base_dir, saber.origin);
 				VectorCopy(base_dir, saber.axis[0]);
 
-				trap->R_AddRefEntityToScene(&saber);
+				AddRefEntityToScene(&saber);
 			}
 
 
@@ -6481,7 +6481,7 @@ void CG_DoPrequelSaber(vec3_t blade_muz, vec3_t blade_tip, vec3_t trail_tip, vec
 				VectorMA(blade_tip, ((effectradius*AngleScale) / 2), end_dir, saber.origin);
 				VectorCopy(end_dir, saber.axis[0]);
 
-				trap->R_AddRefEntityToScene(&saber);
+				AddRefEntityToScene(&saber);
 			}
 		}
 	}
@@ -6514,7 +6514,7 @@ void CG_DoPrequelSaber(vec3_t blade_muz, vec3_t blade_tip, vec3_t trail_tip, vec
 				saber.customShader = cgs.media.whiteIgniteFlare;
 			}
 
-			trap->R_AddRefEntityToScene(&saber);
+			AddRefEntityToScene(&saber);
 
 			if (saberType == 2 || ((saberType == 3) && (color == SABER_RGB || color == SABER_PIMP || color == SABER_WHITE || color == SABER_SCRIPTED)))
 			{
@@ -6532,7 +6532,7 @@ void CG_DoPrequelSaber(vec3_t blade_muz, vec3_t blade_tip, vec3_t trail_tip, vec
 				saber.shaderRGBA[2] = 0xff;
 				saber.shaderRGBA[3] = 0xff;
 
-				trap->R_AddRefEntityToScene(&saber);
+				AddRefEntityToScene(&saber);
 			}
 		}
 	}
@@ -6561,11 +6561,11 @@ void CG_DoPrequelSaber(vec3_t blade_muz, vec3_t blade_tip, vec3_t trail_tip, vec
 			saber.saberLength = blade_len;
 			VectorMA(blade_muz, blade_len, blade_dir, saber.origin);
 			VectorMA(blade_muz, -1, blade_dir, saber.oldorigin);
-			trap->R_AddRefEntityToScene(&saber);
+			AddRefEntityToScene(&saber);
 			//[RGBSabers]		
 			if (color == SABER_RGB || color == SABER_PIMP || color == SABER_WHITE || color == SABER_SCRIPTED)
 			{
-				trap->R_AddRefEntityToScene(&saber);
+				AddRefEntityToScene(&saber);
 			}
 			//[/RGBSabers]
 		}
@@ -6578,11 +6578,11 @@ void CG_DoPrequelSaber(vec3_t blade_muz, vec3_t blade_tip, vec3_t trail_tip, vec
 			saber.saberLength = trail_len;
 			VectorMA(trail_muz, trail_len, trail_dir, saber.origin);
 			VectorMA(trail_muz, -1, trail_dir, saber.oldorigin);
-			trap->R_AddRefEntityToScene(&saber);
+			AddRefEntityToScene(&saber);
 			//[RGBSabers]		
 			if (color == SABER_RGB || color == SABER_PIMP || color == SABER_WHITE || color == SABER_SCRIPTED)
 			{
-				trap->R_AddRefEntityToScene(&saber);
+				AddRefEntityToScene(&saber);
 			}
 			//[/RGBSabers]
 		}
@@ -6595,11 +6595,11 @@ void CG_DoPrequelSaber(vec3_t blade_muz, vec3_t blade_tip, vec3_t trail_tip, vec
 			saber.saberLength = base_len;
 			VectorMA(blade_muz, base_len, base_dir, saber.origin);
 			VectorMA(blade_muz, -0.1, base_dir, saber.oldorigin);
-			trap->R_AddRefEntityToScene(&saber);
+			AddRefEntityToScene(&saber);
 			//[RGBSabers]		
 			if (color == SABER_RGB || color == SABER_PIMP || color == SABER_WHITE || color == SABER_SCRIPTED)
 			{
-				trap->R_AddRefEntityToScene(&saber);
+				AddRefEntityToScene(&saber);
 			}
 			//[/RGBSabers]
 		}
@@ -6643,7 +6643,7 @@ void CG_DoPrequelSaber(vec3_t blade_muz, vec3_t blade_tip, vec3_t trail_tip, vec
 			saber.customShader = cgs.media.sfxSaberEndShader;
 			VectorMA(blade_tip, end_len, end_dir, saber.origin);
 			VectorMA(blade_tip, -0.1, end_dir, saber.oldorigin);
-			trap->R_AddRefEntityToScene(&saber);
+			AddRefEntityToScene(&saber);
 			//[RGBSabers]		
 			if (color == SABER_RGB || color == SABER_PIMP || color == SABER_WHITE || color == SABER_SCRIPTED)
 			{
@@ -6656,7 +6656,7 @@ void CG_DoPrequelSaber(vec3_t blade_muz, vec3_t blade_tip, vec3_t trail_tip, vec
 				{
 					saber.radius = coreradius;
 				}
-				trap->R_AddRefEntityToScene(&saber);
+				AddRefEntityToScene(&saber);
 			}
 			//[/RGBSabers]
 		}
@@ -6736,7 +6736,7 @@ void CG_DoEp1Saber(vec3_t blade_muz, vec3_t blade_tip, vec3_t trail_tip, vec3_t 
 	{
 		CG_RGBForSaberColor(color, rgb, cnum, bnum);
 		VectorScale(rgb, 0.66f, rgb);
-		trap->R_AddLightToScene(mid, (blade_len*2.0f) + (random()*10.0f), rgb[0], rgb[1], rgb[2]);
+		AddLightToScene(mid, (blade_len*2.0f) + (random()*10.0f), rgb[0], rgb[1], rgb[2]);
 	}
 
 	//Distance Scale
@@ -6856,7 +6856,7 @@ void CG_DoEp1Saber(vec3_t blade_muz, vec3_t blade_tip, vec3_t trail_tip, vec3_t 
 			}
 			//[/RGBSabers]
 
-			trap->R_AddRefEntityToScene(&saber);
+			AddRefEntityToScene(&saber);
 		}
 
 		// Do the hot core
@@ -6879,7 +6879,7 @@ void CG_DoEp1Saber(vec3_t blade_muz, vec3_t blade_tip, vec3_t trail_tip, vec3_t 
 			saber.shaderRGBA[3] = 255;
 		}
 		sbak = saber;
-		trap->R_AddRefEntityToScene(&saber);
+		AddRefEntityToScene(&saber);
 
 		if (color == SABER_RGB || color == SABER_PIMP || color == SABER_WHITE || color == SABER_SCRIPTED)
 		{// Add the saber surface that provides color.
@@ -6888,7 +6888,7 @@ void CG_DoEp1Saber(vec3_t blade_muz, vec3_t blade_tip, vec3_t trail_tip, vec3_t 
 			sbak.shaderTexCoord[0] = sbak.shaderTexCoord[1] = 1.0f;
 			sbak.shaderRGBA[0] = sbak.shaderRGBA[1] = sbak.shaderRGBA[2] = sbak.shaderRGBA[3] = 0xff;
 			sbak.radius = coreradius;
-			trap->R_AddRefEntityToScene(&sbak);
+			AddRefEntityToScene(&sbak);
 		}
 		//[/RGBSabers]
 	}
@@ -6917,7 +6917,7 @@ void CG_DoEp1Saber(vec3_t blade_muz, vec3_t blade_tip, vec3_t trail_tip, vec3_t 
 			}
 			//[/RGBSabers]
 
-			trap->R_AddRefEntityToScene(&saber);
+			AddRefEntityToScene(&saber);
 		}
 
 		// Do the hot core
@@ -6940,7 +6940,7 @@ void CG_DoEp1Saber(vec3_t blade_muz, vec3_t blade_tip, vec3_t trail_tip, vec3_t 
 			saber.shaderRGBA[3] = 255;
 		}
 		sbak = saber;
-		trap->R_AddRefEntityToScene(&saber);
+		AddRefEntityToScene(&saber);
 
 		if (color == SABER_RGB || color == SABER_PIMP || color == SABER_WHITE || color == SABER_SCRIPTED)
 		{// Add the saber surface that provides color.
@@ -6949,7 +6949,7 @@ void CG_DoEp1Saber(vec3_t blade_muz, vec3_t blade_tip, vec3_t trail_tip, vec3_t 
 			sbak.shaderTexCoord[0] = sbak.shaderTexCoord[1] = 1.0f;
 			sbak.shaderRGBA[0] = sbak.shaderRGBA[1] = sbak.shaderRGBA[2] = sbak.shaderRGBA[3] = 0xff;
 			sbak.radius = coreradius;
-			trap->R_AddRefEntityToScene(&sbak);
+			AddRefEntityToScene(&sbak);
 		}
 		//[/RGBSabers]
 	}
@@ -6980,7 +6980,7 @@ void CG_DoEp1Saber(vec3_t blade_muz, vec3_t blade_tip, vec3_t trail_tip, vec3_t 
 				saber.shaderRGBA[3] = 255 * effectalpha;
 			}
 			//[/RGBSabers]
-			trap->R_AddRefEntityToScene(&saber);
+			AddRefEntityToScene(&saber);
 		}
 
 		// Do the hot core
@@ -7004,7 +7004,7 @@ void CG_DoEp1Saber(vec3_t blade_muz, vec3_t blade_tip, vec3_t trail_tip, vec3_t 
 			saber.shaderRGBA[3] = 255;
 		}
 		sbak = saber;
-		trap->R_AddRefEntityToScene(&saber);
+		AddRefEntityToScene(&saber);
 
 		if (color == SABER_RGB || color == SABER_PIMP || color == SABER_WHITE || color == SABER_SCRIPTED)
 		{// Add the saber surface that provides color.
@@ -7013,7 +7013,7 @@ void CG_DoEp1Saber(vec3_t blade_muz, vec3_t blade_tip, vec3_t trail_tip, vec3_t 
 			sbak.shaderTexCoord[0] = sbak.shaderTexCoord[1] = 1.0f;
 			sbak.shaderRGBA[0] = sbak.shaderRGBA[1] = sbak.shaderRGBA[2] = sbak.shaderRGBA[3] = 0xff;
 			sbak.radius = coreradius / 2.9f;
-			trap->R_AddRefEntityToScene(&sbak);
+			AddRefEntityToScene(&sbak);
 		}
 		//[/RGBSabers]
 	}
@@ -7076,7 +7076,7 @@ void CG_DoEp1Saber(vec3_t blade_muz, vec3_t blade_tip, vec3_t trail_tip, vec3_t 
 				saber.shaderRGBA[3] = 255 * effectalpha;
 			}
 			//[/RGBSabers]
-			trap->R_AddRefEntityToScene(&saber);
+			AddRefEntityToScene(&saber);
 		}
 
 		// Do the hot core
@@ -7120,7 +7120,7 @@ void CG_DoEp1Saber(vec3_t blade_muz, vec3_t blade_tip, vec3_t trail_tip, vec3_t 
 			saber.shaderRGBA[3] = 255;
 		}
 		sbak = saber;
-		trap->R_AddRefEntityToScene(&saber);
+		AddRefEntityToScene(&saber);
 
 		if (color == SABER_RGB || color == SABER_PIMP || color == SABER_WHITE || color == SABER_SCRIPTED)
 		{
@@ -7129,7 +7129,7 @@ void CG_DoEp1Saber(vec3_t blade_muz, vec3_t blade_tip, vec3_t trail_tip, vec3_t 
 			sbak.shaderTexCoord[0] = sbak.shaderTexCoord[1] = 1.0f;
 			sbak.shaderRGBA[0] = sbak.shaderRGBA[1] = sbak.shaderRGBA[2] = sbak.shaderRGBA[3] = 0xff;
 			sbak.radius = coreradius / 2.9f;
-			trap->R_AddRefEntityToScene(&sbak);
+			AddRefEntityToScene(&sbak);
 		}
 		//[/RGBSabers]
 	}
@@ -7230,7 +7230,7 @@ void CG_DoEp2Saber(vec3_t blade_muz, vec3_t blade_tip, vec3_t trail_tip, vec3_t 
 	{
 		CG_RGBForSaberColor(color, rgb, cnum, bnum);
 		VectorScale(rgb, 0.66f, rgb);
-		trap->R_AddLightToScene(mid, (blade_len*2.0f) + (random()*10.0f), rgb[0], rgb[1], rgb[2]);
+		AddLightToScene(mid, (blade_len*2.0f) + (random()*10.0f), rgb[0], rgb[1], rgb[2]);
 	}
 
 	//Distance Scale
@@ -7355,10 +7355,10 @@ void CG_DoEp2Saber(vec3_t blade_muz, vec3_t blade_tip, vec3_t trail_tip, vec3_t 
 		else
 		{
 			saber.customShader = cgs.media.whiteIgniteFlare;
-			trap->R_AddRefEntityToScene(&saber);
+			AddRefEntityToScene(&saber);
 		}
 
-		trap->R_AddRefEntityToScene(&saber);
+		AddRefEntityToScene(&saber);
 
 		saber.customShader = cgs.media.whiteIgniteFlare;
 
@@ -7368,7 +7368,7 @@ void CG_DoEp2Saber(vec3_t blade_muz, vec3_t blade_tip, vec3_t trail_tip, vec3_t 
 		saber.shaderRGBA[2] = 0xff;
 		saber.shaderRGBA[3] = 0xff;
 
-		trap->R_AddRefEntityToScene(&saber);
+		AddRefEntityToScene(&saber);
 	}
 
 	//Main Blade
@@ -7394,7 +7394,7 @@ void CG_DoEp2Saber(vec3_t blade_muz, vec3_t blade_tip, vec3_t trail_tip, vec3_t 
 			}
 			//[/RGBSabers]
 
-			trap->R_AddRefEntityToScene(&saber);
+			AddRefEntityToScene(&saber);
 		}
 
 		// Do the hot core
@@ -7417,7 +7417,7 @@ void CG_DoEp2Saber(vec3_t blade_muz, vec3_t blade_tip, vec3_t trail_tip, vec3_t 
 			saber.shaderRGBA[3] = 255;
 		}
 		sbak = saber;
-		trap->R_AddRefEntityToScene(&saber);
+		AddRefEntityToScene(&saber);
 
 		if (color == SABER_RGB || color == SABER_PIMP || color == SABER_WHITE || color == SABER_SCRIPTED)
 		{// Add the saber surface that provides color.
@@ -7426,7 +7426,7 @@ void CG_DoEp2Saber(vec3_t blade_muz, vec3_t blade_tip, vec3_t trail_tip, vec3_t 
 			sbak.shaderTexCoord[0] = sbak.shaderTexCoord[1] = 1.0f;
 			sbak.shaderRGBA[0] = sbak.shaderRGBA[1] = sbak.shaderRGBA[2] = sbak.shaderRGBA[3] = 0xff;
 			sbak.radius = coreradius;
-			trap->R_AddRefEntityToScene(&sbak);
+			AddRefEntityToScene(&sbak);
 		}
 		//[/RGBSabers]
 	}
@@ -7455,7 +7455,7 @@ void CG_DoEp2Saber(vec3_t blade_muz, vec3_t blade_tip, vec3_t trail_tip, vec3_t 
 			}
 			//[/RGBSabers]
 
-			trap->R_AddRefEntityToScene(&saber);
+			AddRefEntityToScene(&saber);
 		}
 
 		// Do the hot core
@@ -7478,7 +7478,7 @@ void CG_DoEp2Saber(vec3_t blade_muz, vec3_t blade_tip, vec3_t trail_tip, vec3_t 
 			saber.shaderRGBA[3] = 255;
 		}
 		sbak = saber;
-		trap->R_AddRefEntityToScene(&saber);
+		AddRefEntityToScene(&saber);
 
 		if (color == SABER_RGB || color == SABER_PIMP || color == SABER_WHITE || color == SABER_SCRIPTED)
 		{// Add the saber surface that provides color.
@@ -7487,7 +7487,7 @@ void CG_DoEp2Saber(vec3_t blade_muz, vec3_t blade_tip, vec3_t trail_tip, vec3_t 
 			sbak.shaderTexCoord[0] = sbak.shaderTexCoord[1] = 1.0f;
 			sbak.shaderRGBA[0] = sbak.shaderRGBA[1] = sbak.shaderRGBA[2] = sbak.shaderRGBA[3] = 0xff;
 			sbak.radius = coreradius;
-			trap->R_AddRefEntityToScene(&sbak);
+			AddRefEntityToScene(&sbak);
 		}
 		//[/RGBSabers]
 	}
@@ -7518,7 +7518,7 @@ void CG_DoEp2Saber(vec3_t blade_muz, vec3_t blade_tip, vec3_t trail_tip, vec3_t 
 				saber.shaderRGBA[3] = 255 * effectalpha;
 			}
 			//[/RGBSabers]
-			trap->R_AddRefEntityToScene(&saber);
+			AddRefEntityToScene(&saber);
 		}
 
 		// Do the hot core
@@ -7542,7 +7542,7 @@ void CG_DoEp2Saber(vec3_t blade_muz, vec3_t blade_tip, vec3_t trail_tip, vec3_t 
 			saber.shaderRGBA[3] = 255;
 		}
 		sbak = saber;
-		trap->R_AddRefEntityToScene(&saber);
+		AddRefEntityToScene(&saber);
 
 		if (color == SABER_RGB || color == SABER_PIMP || color == SABER_WHITE || color == SABER_SCRIPTED)
 		{// Add the saber surface that provides color.
@@ -7551,7 +7551,7 @@ void CG_DoEp2Saber(vec3_t blade_muz, vec3_t blade_tip, vec3_t trail_tip, vec3_t 
 			sbak.shaderTexCoord[0] = sbak.shaderTexCoord[1] = 1.0f;
 			sbak.shaderRGBA[0] = sbak.shaderRGBA[1] = sbak.shaderRGBA[2] = sbak.shaderRGBA[3] = 0xff;
 			sbak.radius = coreradius / 2.9f;
-			trap->R_AddRefEntityToScene(&sbak);
+			AddRefEntityToScene(&sbak);
 		}
 		//[/RGBSabers]
 	}
@@ -7614,7 +7614,7 @@ void CG_DoEp2Saber(vec3_t blade_muz, vec3_t blade_tip, vec3_t trail_tip, vec3_t 
 				saber.shaderRGBA[3] = 255 * effectalpha;
 			}
 			//[/RGBSabers]
-			trap->R_AddRefEntityToScene(&saber);
+			AddRefEntityToScene(&saber);
 		}
 
 		// Do the hot core
@@ -7658,7 +7658,7 @@ void CG_DoEp2Saber(vec3_t blade_muz, vec3_t blade_tip, vec3_t trail_tip, vec3_t 
 			saber.shaderRGBA[3] = 255;
 		}
 		sbak = saber;
-		trap->R_AddRefEntityToScene(&saber);
+		AddRefEntityToScene(&saber);
 
 		if (color == SABER_RGB || color == SABER_PIMP || color == SABER_WHITE || color == SABER_SCRIPTED)
 		{
@@ -7667,7 +7667,7 @@ void CG_DoEp2Saber(vec3_t blade_muz, vec3_t blade_tip, vec3_t trail_tip, vec3_t 
 			sbak.shaderTexCoord[0] = sbak.shaderTexCoord[1] = 1.0f;
 			sbak.shaderRGBA[0] = sbak.shaderRGBA[1] = sbak.shaderRGBA[2] = sbak.shaderRGBA[3] = 0xff;
 			sbak.radius = coreradius / 2.9f;
-			trap->R_AddRefEntityToScene(&sbak);
+			AddRefEntityToScene(&sbak);
 		}
 		//[/RGBSabers]
 	}
@@ -7758,7 +7758,7 @@ void CG_DoEp3Saber(vec3_t blade_muz, vec3_t blade_tip, vec3_t trail_tip, vec3_t 
 	{
 		CG_RGBForSaberColor(color, rgb, cnum, bnum);
 		VectorScale(rgb, 0.66f, rgb);
-		trap->R_AddLightToScene(mid, (blade_len*2.0f) + (random()*10.0f), rgb[0], rgb[1], rgb[2]);
+		AddLightToScene(mid, (blade_len*2.0f) + (random()*10.0f), rgb[0], rgb[1], rgb[2]);
 	}
 
 	//Distance Scale
@@ -7885,7 +7885,7 @@ void CG_DoEp3Saber(vec3_t blade_muz, vec3_t blade_tip, vec3_t trail_tip, vec3_t 
 			saber.shaderRGBA[3] = 0xff;
 		}
 
-		trap->R_AddRefEntityToScene(&saber);
+		AddRefEntityToScene(&saber);
 
 		saber.customShader = cgs.media.whiteIgniteFlare02;
 		saber.radius = ignite_radius *= 0.25f;
@@ -7894,7 +7894,7 @@ void CG_DoEp3Saber(vec3_t blade_muz, vec3_t blade_tip, vec3_t trail_tip, vec3_t 
 		saber.shaderRGBA[2] = 0xff;
 		saber.shaderRGBA[3] = 0xff;
 
-		trap->R_AddRefEntityToScene(&saber);
+		AddRefEntityToScene(&saber);
 	}
 
 	//Main Blade
@@ -7920,7 +7920,7 @@ void CG_DoEp3Saber(vec3_t blade_muz, vec3_t blade_tip, vec3_t trail_tip, vec3_t 
 			}
 			//[/RGBSabers]
 
-			trap->R_AddRefEntityToScene(&saber);
+			AddRefEntityToScene(&saber);
 		}
 
 		// Do the hot core
@@ -7943,7 +7943,7 @@ void CG_DoEp3Saber(vec3_t blade_muz, vec3_t blade_tip, vec3_t trail_tip, vec3_t 
 			saber.shaderRGBA[3] = 255;
 		}
 		sbak = saber;
-		trap->R_AddRefEntityToScene(&saber);
+		AddRefEntityToScene(&saber);
 
 		if (color == SABER_RGB || color == SABER_PIMP || color == SABER_WHITE || color == SABER_SCRIPTED)
 		{// Add the saber surface that provides color.
@@ -7952,7 +7952,7 @@ void CG_DoEp3Saber(vec3_t blade_muz, vec3_t blade_tip, vec3_t trail_tip, vec3_t 
 			sbak.shaderTexCoord[0] = sbak.shaderTexCoord[1] = 1.0f;
 			sbak.shaderRGBA[0] = sbak.shaderRGBA[1] = sbak.shaderRGBA[2] = sbak.shaderRGBA[3] = 0xff;
 			sbak.radius = coreradius;
-			trap->R_AddRefEntityToScene(&sbak);
+			AddRefEntityToScene(&sbak);
 		}
 		//[/RGBSabers]
 	}
@@ -7981,7 +7981,7 @@ void CG_DoEp3Saber(vec3_t blade_muz, vec3_t blade_tip, vec3_t trail_tip, vec3_t 
 			}
 			//[/RGBSabers]
 
-			trap->R_AddRefEntityToScene(&saber);
+			AddRefEntityToScene(&saber);
 		}
 
 		// Do the hot core
@@ -8004,7 +8004,7 @@ void CG_DoEp3Saber(vec3_t blade_muz, vec3_t blade_tip, vec3_t trail_tip, vec3_t 
 			saber.shaderRGBA[3] = 255;
 		}
 		sbak = saber;
-		trap->R_AddRefEntityToScene(&saber);
+		AddRefEntityToScene(&saber);
 
 		if (color == SABER_RGB || color == SABER_PIMP || color == SABER_WHITE || color == SABER_SCRIPTED)
 		{// Add the saber surface that provides color.
@@ -8013,7 +8013,7 @@ void CG_DoEp3Saber(vec3_t blade_muz, vec3_t blade_tip, vec3_t trail_tip, vec3_t 
 			sbak.shaderTexCoord[0] = sbak.shaderTexCoord[1] = 1.0f;
 			sbak.shaderRGBA[0] = sbak.shaderRGBA[1] = sbak.shaderRGBA[2] = sbak.shaderRGBA[3] = 0xff;
 			sbak.radius = coreradius;
-			trap->R_AddRefEntityToScene(&sbak);
+			AddRefEntityToScene(&sbak);
 		}
 		//[/RGBSabers]
 	}
@@ -8044,7 +8044,7 @@ void CG_DoEp3Saber(vec3_t blade_muz, vec3_t blade_tip, vec3_t trail_tip, vec3_t 
 				saber.shaderRGBA[3] = 255 * effectalpha;
 			}
 			//[/RGBSabers]
-			trap->R_AddRefEntityToScene(&saber);
+			AddRefEntityToScene(&saber);
 		}
 
 		// Do the hot core
@@ -8068,7 +8068,7 @@ void CG_DoEp3Saber(vec3_t blade_muz, vec3_t blade_tip, vec3_t trail_tip, vec3_t 
 			saber.shaderRGBA[3] = 255;
 		}
 		sbak = saber;
-		trap->R_AddRefEntityToScene(&saber);
+		AddRefEntityToScene(&saber);
 
 		if (color == SABER_RGB || color == SABER_PIMP || color == SABER_WHITE || color == SABER_SCRIPTED)
 		{// Add the saber surface that provides color.
@@ -8077,7 +8077,7 @@ void CG_DoEp3Saber(vec3_t blade_muz, vec3_t blade_tip, vec3_t trail_tip, vec3_t 
 			sbak.shaderTexCoord[0] = sbak.shaderTexCoord[1] = 1.0f;
 			sbak.shaderRGBA[0] = sbak.shaderRGBA[1] = sbak.shaderRGBA[2] = sbak.shaderRGBA[3] = 0xff;
 			sbak.radius = coreradius / 2.9f;
-			trap->R_AddRefEntityToScene(&sbak);
+			AddRefEntityToScene(&sbak);
 		}
 		//[/RGBSabers]
 	}
@@ -8140,7 +8140,7 @@ void CG_DoEp3Saber(vec3_t blade_muz, vec3_t blade_tip, vec3_t trail_tip, vec3_t 
 				saber.shaderRGBA[3] = 255 * effectalpha;
 			}
 			//[/RGBSabers]
-			trap->R_AddRefEntityToScene(&saber);
+			AddRefEntityToScene(&saber);
 		}
 
 		// Do the hot core
@@ -8184,7 +8184,7 @@ void CG_DoEp3Saber(vec3_t blade_muz, vec3_t blade_tip, vec3_t trail_tip, vec3_t 
 			saber.shaderRGBA[3] = 255;
 		}
 		sbak = saber;
-		trap->R_AddRefEntityToScene(&saber);
+		AddRefEntityToScene(&saber);
 
 		if (color == SABER_RGB || color == SABER_PIMP || color == SABER_WHITE || color == SABER_SCRIPTED)
 		{
@@ -8193,7 +8193,7 @@ void CG_DoEp3Saber(vec3_t blade_muz, vec3_t blade_tip, vec3_t trail_tip, vec3_t 
 			sbak.shaderTexCoord[0] = sbak.shaderTexCoord[1] = 1.0f;
 			sbak.shaderRGBA[0] = sbak.shaderRGBA[1] = sbak.shaderRGBA[2] = sbak.shaderRGBA[3] = 0xff;
 			sbak.radius = coreradius / 2.9f;
-			trap->R_AddRefEntityToScene(&sbak);
+			AddRefEntityToScene(&sbak);
 		}
 		//[/RGBSabers]
 	}
@@ -8276,7 +8276,7 @@ void CG_DoOTSaber(vec3_t blade_muz, vec3_t blade_tip, vec3_t trail_tip, vec3_t t
 	{
 		CG_RGBForSaberColor(color, rgb, cnum, bnum);
 		VectorScale(rgb, 0.66f, rgb);
-		trap->R_AddLightToScene(mid, (blade_len*2.0f) + (random()*10.0f), rgb[0], rgb[1], rgb[2]);
+		AddLightToScene(mid, (blade_len*2.0f) + (random()*10.0f), rgb[0], rgb[1], rgb[2]);
 	}
 
 	//Distance Scale
@@ -8397,14 +8397,14 @@ void CG_DoOTSaber(vec3_t blade_muz, vec3_t blade_tip, vec3_t trail_tip, vec3_t t
 		}
 		//[/RGBSabers]
 
-		trap->R_AddRefEntityToScene(&saber);
+		AddRefEntityToScene(&saber);
 
 		for (i = 0; i < count; i++)
 		{
 			VectorMA(saber.origin, dist, blade_dir, saber.origin);
 			effectradius = ((radius * 1.6 * v1) + flrand(0.3f, 1.8f)/* * 0.1f*/)*radiusmult;
 			saber.radius = effectradius*AngleScale;
-			trap->R_AddRefEntityToScene(&saber);
+			AddRefEntityToScene(&saber);
 		}
 
 		// Do the hot core
@@ -8425,7 +8425,7 @@ void CG_DoOTSaber(vec3_t blade_muz, vec3_t blade_tip, vec3_t trail_tip, vec3_t t
 			saber.shaderRGBA[3] = 255;
 		}
 		sbak = saber;
-		trap->R_AddRefEntityToScene(&saber);
+		AddRefEntityToScene(&saber);
 
 		if (color == SABER_RGB || color == SABER_PIMP || color == SABER_WHITE || color == SABER_SCRIPTED)
 		{// Add the saber surface that provides color.
@@ -8435,8 +8435,8 @@ void CG_DoOTSaber(vec3_t blade_muz, vec3_t blade_tip, vec3_t trail_tip, vec3_t t
 			sbak.shaderRGBA[2] = 0xff;
 			sbak.shaderRGBA[3] = 0xff;
 			sbak.radius = coreradius * 3.0f;
-			trap->R_AddRefEntityToScene(&sbak);
-			trap->R_AddRefEntityToScene(&sbak);
+			AddRefEntityToScene(&sbak);
+			AddRefEntityToScene(&sbak);
 		}
 		//[/RGBSabers]		
 	}
@@ -8468,14 +8468,14 @@ void CG_DoOTSaber(vec3_t blade_muz, vec3_t blade_tip, vec3_t trail_tip, vec3_t t
 		}
 		//[/RGBSabers]
 
-		trap->R_AddRefEntityToScene(&saber);
+		AddRefEntityToScene(&saber);
 
 		for (i = 0; i < count; i++)
 		{
 			VectorMA(saber.origin, dist, trail_dir, saber.origin);
 			effectradius = ((radius * 1.6 * v1) + flrand(0.3f, 1.8f)/* * 0.1f*/)*radiusmult;
 			saber.radius = effectradius*AngleScale;
-			trap->R_AddRefEntityToScene(&saber);
+			AddRefEntityToScene(&saber);
 		}
 
 		// Do the hot core
@@ -8496,14 +8496,14 @@ void CG_DoOTSaber(vec3_t blade_muz, vec3_t blade_tip, vec3_t trail_tip, vec3_t t
 			saber.shaderRGBA[3] = 255;
 		}
 		sbak = saber;
-		trap->R_AddRefEntityToScene(&saber);
+		AddRefEntityToScene(&saber);
 
 		if (color == SABER_RGB || color == SABER_PIMP || color == SABER_WHITE || color == SABER_SCRIPTED)
 		{// Add the saber surface that provides color.
 			sbak.customShader = cgs.media.otSaberCoreShader;
 			sbak.shaderRGBA[0] = saber.shaderRGBA[1] = saber.shaderRGBA[2] = sbak.shaderRGBA[3] = 0xff;
 			sbak.radius = coreradius * 1.14f;
-			trap->R_AddRefEntityToScene(&sbak);
+			AddRefEntityToScene(&sbak);
 		}
 		//[/RGBSabers]
 	}
@@ -8538,14 +8538,14 @@ void CG_DoOTSaber(vec3_t blade_muz, vec3_t blade_tip, vec3_t trail_tip, vec3_t t
 		}
 		//[/RGBSabers]
 
-		trap->R_AddRefEntityToScene(&saber);
+		AddRefEntityToScene(&saber);
 
 		for (i = 0; i < count; i++)
 		{
 			VectorMA(saber.origin, dist, base_dir, saber.origin);
 			effectradius = ((radius * 1.6 * v1) + flrand(0.3f, 1.8f))*radiusmult;
 			saber.radius = effectradius*AngleScale;
-			trap->R_AddRefEntityToScene(&saber);
+			AddRefEntityToScene(&saber);
 		}
 
 		// Do the hot core
@@ -8566,14 +8566,14 @@ void CG_DoOTSaber(vec3_t blade_muz, vec3_t blade_tip, vec3_t trail_tip, vec3_t t
 			saber.shaderRGBA[3] = 255;
 		}
 		sbak = saber;
-		trap->R_AddRefEntityToScene(&saber);
+		AddRefEntityToScene(&saber);
 
 		if (color == SABER_RGB || color == SABER_PIMP || color == SABER_WHITE || color == SABER_SCRIPTED)
 		{// Add the saber surface that provides color.
 			sbak.customShader = cgs.media.otSaberCoreShader;
 			sbak.shaderRGBA[0] = saber.shaderRGBA[1] = saber.shaderRGBA[2] = sbak.shaderRGBA[3] = 0xff;
 			sbak.radius = coreradius * 1.14f;
-			trap->R_AddRefEntityToScene(&sbak);
+			AddRefEntityToScene(&sbak);
 		}
 		//[/RGBSabers]
 	}
@@ -8636,7 +8636,7 @@ void CG_DoOTSaber(vec3_t blade_muz, vec3_t blade_tip, vec3_t trail_tip, vec3_t t
 				saber.shaderRGBA[3] = 255 * effectalpha;
 			}
 			//[/RGBSabers]
-			trap->R_AddRefEntityToScene(&saber);
+			AddRefEntityToScene(&saber);
 		}
 
 		// Do the hot core
@@ -8680,14 +8680,14 @@ void CG_DoOTSaber(vec3_t blade_muz, vec3_t blade_tip, vec3_t trail_tip, vec3_t t
 			saber.shaderRGBA[3] = 255;
 		}
 		sbak = saber;
-		trap->R_AddRefEntityToScene(&saber);
+		AddRefEntityToScene(&saber);
 
 		if (color == SABER_RGB || color == SABER_PIMP || color == SABER_WHITE || color == SABER_SCRIPTED)
 		{
 			sbak.customShader = cgs.media.sfxSaberEnd2Shader;
 			sbak.shaderRGBA[0] = saber.shaderRGBA[1] = saber.shaderRGBA[2] = saber.shaderRGBA[3] = 0xff;
 			sbak.radius = (coreradius * AngleScale);
-			trap->R_AddRefEntityToScene(&sbak);
+			AddRefEntityToScene(&sbak);
 		}
 		//[/RGBSabers]
 	}
@@ -8768,7 +8768,7 @@ void CG_DoSFXSaber(vec3_t blade_muz, vec3_t blade_tip, vec3_t trail_tip, vec3_t 
 	{
 		CG_RGBForSaberColor(color, rgb, cnum, bnum);
 		VectorScale(rgb, 0.66f, rgb);
-		trap->R_AddLightToScene(mid, (blade_len*2.0f) + (random()*10.0f), rgb[0], rgb[1], rgb[2]);
+		AddLightToScene(mid, (blade_len*2.0f) + (random()*10.0f), rgb[0], rgb[1], rgb[2]);
 	}
 
 	//Distance Scale
@@ -8883,7 +8883,7 @@ void CG_DoSFXSaber(vec3_t blade_muz, vec3_t blade_tip, vec3_t trail_tip, vec3_t 
 			}
 			//[/RGBSabers]
 
-			trap->R_AddRefEntityToScene(&saber);
+			AddRefEntityToScene(&saber);
 		}
 
 		// Do the hot core
@@ -8906,7 +8906,7 @@ void CG_DoSFXSaber(vec3_t blade_muz, vec3_t blade_tip, vec3_t trail_tip, vec3_t 
 			saber.shaderRGBA[3] = 255;
 		}
 		sbak = saber;
-		trap->R_AddRefEntityToScene(&saber);
+		AddRefEntityToScene(&saber);
 
 		if (color == SABER_RGB || color == SABER_PIMP || color == SABER_WHITE || color == SABER_SCRIPTED)
 		{// Add the saber surface that provides color.
@@ -8916,7 +8916,7 @@ void CG_DoSFXSaber(vec3_t blade_muz, vec3_t blade_tip, vec3_t trail_tip, vec3_t 
 			saber.shaderTexCoord[0] = saber.shaderTexCoord[1] = 1.0f;
 			saber.shaderRGBA[0] = saber.shaderRGBA[1] = saber.shaderRGBA[2] = saber.shaderRGBA[3] = 0xff;
 			saber.radius = coreradius;
-			trap->R_AddRefEntityToScene(&sbak);
+			AddRefEntityToScene(&sbak);
 		}
 		//[/RGBSabers]
 	}
@@ -8942,7 +8942,7 @@ void CG_DoSFXSaber(vec3_t blade_muz, vec3_t blade_tip, vec3_t trail_tip, vec3_t 
 			}
 			//[/RGBSabers]
 
-			trap->R_AddRefEntityToScene(&saber);
+			AddRefEntityToScene(&saber);
 		}
 
 		// Do the hot core
@@ -8965,7 +8965,7 @@ void CG_DoSFXSaber(vec3_t blade_muz, vec3_t blade_tip, vec3_t trail_tip, vec3_t 
 			saber.shaderRGBA[3] = 255;
 		}
 		sbak = saber;
-		trap->R_AddRefEntityToScene(&saber);
+		AddRefEntityToScene(&saber);
 
 		if (color == SABER_RGB || color == SABER_PIMP || color == SABER_WHITE || color == SABER_SCRIPTED)
 		{// Add the saber surface that provides color.
@@ -8975,7 +8975,7 @@ void CG_DoSFXSaber(vec3_t blade_muz, vec3_t blade_tip, vec3_t trail_tip, vec3_t 
 			saber.shaderTexCoord[0] = saber.shaderTexCoord[1] = 1.0f;
 			saber.shaderRGBA[0] = saber.shaderRGBA[1] = saber.shaderRGBA[2] = saber.shaderRGBA[3] = 0xff;
 			saber.radius = coreradius;
-			trap->R_AddRefEntityToScene(&sbak);
+			AddRefEntityToScene(&sbak);
 		}
 		//[/RGBSabers]
 
@@ -9005,7 +9005,7 @@ void CG_DoSFXSaber(vec3_t blade_muz, vec3_t blade_tip, vec3_t trail_tip, vec3_t 
 				saber.shaderRGBA[3] = 255 * effectalpha;
 			}
 			//[/RGBSabers]
-			trap->R_AddRefEntityToScene(&saber);
+			AddRefEntityToScene(&saber);
 		}
 
 		// Do the hot core
@@ -9029,7 +9029,7 @@ void CG_DoSFXSaber(vec3_t blade_muz, vec3_t blade_tip, vec3_t trail_tip, vec3_t 
 			saber.shaderRGBA[3] = 255;
 		}
 		sbak = saber;
-		trap->R_AddRefEntityToScene(&saber);
+		AddRefEntityToScene(&saber);
 
 		if (color == SABER_RGB || color == SABER_PIMP || color == SABER_WHITE || color == SABER_SCRIPTED)
 		{// Add the saber surface that provides color.
@@ -9040,7 +9040,7 @@ void CG_DoSFXSaber(vec3_t blade_muz, vec3_t blade_tip, vec3_t trail_tip, vec3_t 
 			saber.shaderRGBA[0] = saber.shaderRGBA[1] = saber.shaderRGBA[2] = saber.shaderRGBA[3] = 0xff;
 			saber.radius = coreradius;
 			saber.saberLength = base_len;
-			trap->R_AddRefEntityToScene(&sbak);
+			AddRefEntityToScene(&sbak);
 		}
 		//[/RGBSabers]
 	}
@@ -9101,7 +9101,7 @@ void CG_DoSFXSaber(vec3_t blade_muz, vec3_t blade_tip, vec3_t trail_tip, vec3_t 
 				saber.shaderRGBA[3] = 255 * effectalpha;
 			}
 			//[/RGBSabers]
-			trap->R_AddRefEntityToScene(&saber);
+			AddRefEntityToScene(&saber);
 		}
 
 		// Do the hot core
@@ -9145,7 +9145,7 @@ void CG_DoSFXSaber(vec3_t blade_muz, vec3_t blade_tip, vec3_t trail_tip, vec3_t 
 			saber.shaderRGBA[3] = 255;
 		}
 		sbak = saber;
-		trap->R_AddRefEntityToScene(&saber);
+		AddRefEntityToScene(&saber);
 
 		if (color == SABER_RGB || color == SABER_PIMP || color == SABER_WHITE || color == SABER_SCRIPTED)
 		{
@@ -9156,7 +9156,7 @@ void CG_DoSFXSaber(vec3_t blade_muz, vec3_t blade_tip, vec3_t trail_tip, vec3_t 
 			saber.shaderRGBA[0] = saber.shaderRGBA[1] = saber.shaderRGBA[2] = saber.shaderRGBA[3] = 0xff;
 			saber.radius = (coreradius * AngleScale);
 			saber.saberLength = end_len;
-			trap->R_AddRefEntityToScene(&sbak);
+			AddRefEntityToScene(&sbak);
 		}
 		//[/RGBSabers]
 	}
@@ -9452,7 +9452,7 @@ void CG_G2SaberEffects(vec3_t start, vec3_t end, centity_t *owner)
 
 			if (trace.entityNum != ENTITYNUM_NONE)
 			{ //it succeeded with the ghoul2 trace
-				trap->FX_PlayEffectID( cgs.effects.mSaberBloodSparks, trace.endpos, trace.plane.normal, -1, -1, qfalse );
+				PlayEffectID( cgs.effects.mSaberBloodSparks, trace.endpos, trace.plane.normal, -1, -1, qfalse );
 				trap->S_StartSound(trace.endpos, trace.entityNum, CHAN_AUTO, trap->S_RegisterSound(va("sound/weapons/saber/saberhit%i.wav", Q_irand(1, 3))));
 			}
 		}
@@ -9693,12 +9693,12 @@ void CG_SaberCompWork(vec3_t start, vec3_t end, centity_t *owner, int saberNum, 
 
 				if (owner->serverSaberFleshImpact)
 				{ //do standard player/live ent hit sparks
-					trap->FX_PlayEffectID( hitPersonFxID, trace.endpos, trace.plane.normal, -1, -1, qfalse );
+					PlayEffectID( hitPersonFxID, trace.endpos, trace.plane.normal, -1, -1, qfalse );
 					//trap->S_StartSound(trace.endpos, trace.entityNum, CHAN_AUTO, trap->S_RegisterSound(va("sound/weapons/saber/saberhit%i.wav", Q_irand(1, 3))));
 				}
 				else
 				{ //do the cut effect
-					trap->FX_PlayEffectID( hitOtherFxID, trace.endpos, trace.plane.normal, -1, -1, qfalse );
+					PlayEffectID( hitOtherFxID, trace.endpos, trace.plane.normal, -1, -1, qfalse );
 				}
 				doEffect = qfalse;
 			}
@@ -9939,7 +9939,7 @@ void CG_AddSaberBlade(centity_t *cent, centity_t *scent, refEntity_t *saber, int
 				{
 					if (!(trace.surfaceFlags & SURF_NOIMPACT)) // never spark on sky
 					{
-						trap->FX_PlayEffectID(
+						PlayEffectID(
 							CG_EnableEnhancedFX(cgs.effects.mSparks,
 							cgs.effects.mSparksEnhancedFX), trace.endpos, trDir, -1, -1, qfalse);
 					}
@@ -10662,7 +10662,7 @@ void CG_DrawPlayerSphere(centity_t *cent, vec3_t origin, float scale, int shader
 	ent.hModel = cgs.media.halfShieldModel;
 	ent.customShader = shader;
 
-	trap->R_AddRefEntityToScene( &ent );
+	AddRefEntityToScene( &ent );
 
 	if (!cg.renderingThirdPerson && cent->currentState.number == cg.predictedPlayerState.clientNum)
 	{ //don't do the rest then
@@ -10722,7 +10722,7 @@ void CG_DrawPlayerSphere(centity_t *cent, vec3_t origin, float scale, int shader
 	VectorMA(ent.origin, 40.0f, viewDir, ent.origin);
 
 	ent.customShader = trap->R_RegisterShader("effects/refract_2");
-	trap->R_AddRefEntityToScene( &ent );
+	AddRefEntityToScene( &ent );
 }
 
 void CG_AddLightningBeam(vec3_t start, vec3_t end)
@@ -10907,7 +10907,7 @@ void CG_DrawNoForceSphere(centity_t *cent, vec3_t origin, float scale, int shade
 	ent.hModel = cgs.media.halfShieldModel;
 	ent.customShader = shader;
 
-	trap->R_AddRefEntityToScene( &ent );
+	AddRefEntityToScene( &ent );
 }
 #endif
 
@@ -11450,12 +11450,12 @@ static void CG_CreateSurfaceDebris(centity_t *cent, int surfNum, int fxID, qbool
 	BG_GiveMeVectorFromMatrix(&boltMatrix, ORIGIN, v);
 	BG_GiveMeVectorFromMatrix(&boltMatrix, POSITIVE_Z, d);
 
-	trap->FX_PlayEffectID(fxID, v, d, -1, -1, qfalse);
+	PlayEffectID(fxID, v, d, -1, -1, qfalse);
 	if ( throwPart && lostPartFX )
 	{//throw off a ship part, too
 		vec3_t	fxFwd;
 		AngleVectors( cent->lerpAngles, fxFwd, NULL, NULL );
-		trap->FX_PlayEffectID(lostPartFX, v, fxFwd, -1, -1, qfalse);
+		PlayEffectID(lostPartFX, v, fxFwd, -1, -1, qfalse);
 	}
 }
 
@@ -11506,7 +11506,7 @@ static void CG_CreateSurfaceSmoke(centity_t *cent, int shipSurf, int fxID)
 	BG_GiveMeVectorFromMatrix(&boltMatrix, ORIGIN, v);
 	BG_GiveMeVectorFromMatrix(&boltMatrix, POSITIVE_Z, d);
 
-	trap->FX_PlayEffectID(fxID, v, d, -1, -1, qfalse);
+	PlayEffectID(fxID, v, d, -1, -1, qfalse);
 }
 
 #define SMOOTH_G2ANIM_LERPANGLES
@@ -12061,7 +12061,7 @@ static void CG_VehicleHeatEffect( vec3_t org, centity_t *cent )
 	ent.shaderRGBA[2] = 255.0f;
 	ent.shaderRGBA[3] = alpha;
 
-	trap->R_AddRefEntityToScene( &ent );
+	AddRefEntityToScene( &ent );
 }
 #endif
 
@@ -12193,11 +12193,11 @@ static QINLINE void CG_VehicleEffects(centity_t *cent)
 				//if ( pVehNPC->m_iArmor <= 75 )
 				if (0)
 				{//hurt
-					trap->FX_PlayEffectID( cgs.effects.mBlackSmoke, org, fwd, -1, -1, qfalse );
+					PlayEffectID( cgs.effects.mBlackSmoke, org, fwd, -1, -1, qfalse );
 				}
 				else if ( pVehNPC->m_pVehicleInfo->iTrailFX )
 				{//okay, do normal trail
-					trap->FX_PlayEffectID( pVehNPC->m_pVehicleInfo->iTrailFX, org, fwd, -1, -1, qfalse );
+					PlayEffectID( pVehNPC->m_pVehicleInfo->iTrailFX, org, fwd, -1, -1, qfalse );
 				}
 				//=====================================================================
 				//EXHAUST FX
@@ -12265,7 +12265,7 @@ static QINLINE void CG_VehicleEffects(centity_t *cent)
 							BG_GiveMeVectorFromMatrix(&boltMatrix, ORIGIN, boltOrg);
 							VectorCopy(fwd, boltDir); //fixme?
 
-							trap->FX_PlayEffectID( fx, boltOrg, boltDir, -1, -1, qfalse );
+							PlayEffectID( fx, boltOrg, boltDir, -1, -1, qfalse );
 						}
 					}
 				}
@@ -12302,7 +12302,7 @@ static QINLINE void CG_VehicleEffects(centity_t *cent)
 						BG_GiveMeVectorFromMatrix(&boltMatrix, ORIGIN, boltOrg);
 						VectorCopy(fwd, boltDir); //fixme?
 
-						trap->FX_PlayEffectID( pVehNPC->m_pVehicleInfo->iTrailFX, boltOrg, boltDir, -1, -1, qfalse );
+						PlayEffectID( pVehNPC->m_pVehicleInfo->iTrailFX, boltOrg, boltDir, -1, -1, qfalse );
 					}
 				}
 			}
@@ -12333,7 +12333,7 @@ static QINLINE void CG_VehicleEffects(centity_t *cent)
 
 					//	BG_GiveMeVectorFromMatrix(&boltMatrix, ORIGIN, boltOrg);
 					//}
-					trap->FX_PlayEffectID( cgs.effects.mShipDestBurning, boltOrg, up, -1, -1, qfalse );
+					PlayEffectID( cgs.effects.mShipDestBurning, boltOrg, up, -1, -1, qfalse );
 				}
 			}
 			if ( cent->currentState.brokenLimbs )
@@ -12370,7 +12370,7 @@ static QINLINE void CG_VehicleEffects(centity_t *cent)
 				VectorMA( cent->lerpOrigin, 64, fwd, org );
 				VectorScale( fwd, -1, fwd );
 
-				trap->FX_PlayEffectID( cgs.effects.mBlackSmoke, org, fwd, -1, -1, qfalse );
+				PlayEffectID( cgs.effects.mBlackSmoke, org, fwd, -1, -1, qfalse );
 			}
 			if ( pVehNPC->m_iArmor <= 0 )
 			{//FIXME: should use something attached.. but want it to build up over time, so...
@@ -12378,7 +12378,7 @@ static QINLINE void CG_VehicleEffects(centity_t *cent)
 				{//flaming!
 					VectorMA( cent->lerpOrigin, flrand(-64, 64), fwd, org );
 					VectorScale( fwd, -1, fwd );
-					trap->FX_PlayEffectID( trap->FX_RegisterEffect("ships/fire"), org, fwd, -1, -1, qfalse );
+					PlayEffectID( trap->FX_RegisterEffect("ships/fire"), org, fwd, -1, -1, qfalse );
 					nextFXDelay = 50;
 				}
 			}
@@ -13153,7 +13153,7 @@ void CG_HolsteredWeaponRender(centity_t *cent, clientInfo_t *ci, int holsterType
 	if (cent->currentState.powerups & (1 << PW_CLOAKED))
 		ent.customShader = cgs.media.cloakedShader;
 
-	trap->R_AddRefEntityToScene(&ent);
+	AddRefEntityToScene(&ent);
 }
 
 
@@ -14265,8 +14265,8 @@ void CG_Player( centity_t *cent ) {
 				{ //create effects (fast movement) -- Afterburner...
 					//FIXME: Just one big effect -- UQ1: Done!
 					//Play the effect
-					trap->FX_PlayEffectID(cgs.effects.mBobaJetAfterburner, flamePos, flameDir, -1, -1, qfalse);
-					//trap->FX_PlayEffectID(cgs.effects.mBobaJetAfterburner, flamePos, flameDir, -1, -1, qfalse);
+					PlayEffectID(cgs.effects.mBobaJetAfterburner, flamePos, flameDir, -1, -1, qfalse);
+					//PlayEffectID(cgs.effects.mBobaJetAfterburner, flamePos, flameDir, -1, -1, qfalse);
 
 					//Keep the jet fire sound looping
 					trap->S_AddLoopingSound( cent->currentState.number, cent->lerpOrigin, vec3_origin,
@@ -14274,13 +14274,13 @@ void CG_Player( centity_t *cent ) {
 				}
 				else if (cent->currentState.eFlags & EF_JETPACK_ACTIVE)
 				{// Normal (not so fast movement)...
-					trap->FX_PlayEffectID(cgs.effects.mBobaJet, flamePos, flameDir, -1, -1, qfalse);
+					PlayEffectID(cgs.effects.mBobaJet, flamePos, flameDir, -1, -1, qfalse);
 				}
 				else
 				{ //just idling
 					//FIXME: Different smaller effect for idle -- UQ1: Done!
 					//Play the effect
-					trap->FX_PlayEffectID(cgs.effects.mBobaJetHover, flamePos, flameDir, -1, -1, qfalse);
+					PlayEffectID(cgs.effects.mBobaJetHover, flamePos, flameDir, -1, -1, qfalse);
 				}
 
 				n++;
@@ -14688,7 +14688,7 @@ void CG_Player( centity_t *cent ) {
 		AnglesToAxis( angles, seeker.axis );
 
 		seeker.hModel = trap->R_RegisterModel("models/items/remote.md3");
-		trap->R_AddRefEntityToScene( &seeker );
+		AddRefEntityToScene( &seeker );
 	}
 
 	// add a water splash if partially in and out of water
@@ -14978,7 +14978,7 @@ SkipTrueView:
 
 			//reframe_minus1.customShader = 2;
 
-			trap->R_AddRefEntityToScene(&reframe_minus1);
+			AddRefEntityToScene(&reframe_minus1);
 		}
 
 		if (cent->frame_minus2_refreshed)
@@ -15003,7 +15003,7 @@ SkipTrueView:
 
 			//reframe_minus2.customShader = 2;
 
-			trap->R_AddRefEntityToScene(&reframe_minus2);
+			AddRefEntityToScene(&reframe_minus2);
 		}
 	}
 
@@ -15063,13 +15063,13 @@ SkipTrueView:
 
 		if (realForceLev > FORCE_LEVEL_2)
 		{//arc
-			//trap->FX_PlayEffectID( cgs.effects.forceLightningWide, efOrg, fxDir );
+			//PlayEffectID( cgs.effects.forceLightningWide, efOrg, fxDir );
 			//trap->FX_PlayEntityEffectID(cgs.effects.forceDrainWide, efOrg, axis, cent->boltInfo, cent->currentState.number, -1, -1);
 			trap->FX_PlayEntityEffectID(cgs.effects.forceDrainWide, efOrg, axis, -1, -1, -1, -1);
 		}
 		else
 		{//line
-			//trap->FX_PlayEffectID( cgs.effects.forceLightning, efOrg, fxDir );
+			//PlayEffectID( cgs.effects.forceLightning, efOrg, fxDir );
 			//trap->FX_PlayEntityEffectID(cgs.effects.forceDrain, efOrg, axis, cent->boltInfo, cent->currentState.number, -1, -1);
 			trap->FX_PlayEntityEffectID(cgs.effects.forceDrain, efOrg, axis, -1, -1, -1, -1);
 		}
@@ -15135,7 +15135,7 @@ SkipTrueView:
 		if (cent->currentState.activeForcePass > FORCE_LEVEL_2)
 
 		{//arc
-			//trap_FX_PlayEffectID( cgs.effects.forceLightningWide, efOrg, fxDir );
+			//trap_FX_trap->FX_PlayEffectID( cgs.effects.forceLightningWide, efOrg, fxDir );
 			//trap_FX_PlayEntityEffectID(cgs.effects.forceLightningWide, efOrg, axis, cent->boltInfo, cent->currentState.number, -1, -1);
 			if (pm->ps->weapon == WP_NONE || pm->ps->weapon == WP_MELEE || (pm->ps->weapon == WP_SABER && pm->ps->saberHolstered))
 			{
@@ -15153,7 +15153,7 @@ SkipTrueView:
 		}
 		else
 		{//line
-			//trap_FX_PlayEffectID( cgs.effects.forceLightning, efOrg, fxDir );
+			//trap_FX_trap->FX_PlayEffectID( cgs.effects.forceLightning, efOrg, fxDir );
 			//trap_FX_PlayEntityEffectID(cgs.effects.forceLightning, efOrg, axis, cent->boltInfo, cent->currentState.number, -1, -1);
 			//[NewLightningEFX]
 			CG_NewLightningActEffect(efOrgL, fxDir, 0);
@@ -15288,7 +15288,7 @@ SkipTrueView:
 				regrip_arm.shaderRGBA[1] = regrip_arm.shaderRGBA[2] = regrip_arm.shaderRGBA[0];
 
 				regrip_arm.ghoul2 = cent->grip_arm;
-				trap->R_AddRefEntityToScene( &regrip_arm );
+				AddRefEntityToScene( &regrip_arm );
 			}
 			*/
 		}
@@ -15370,7 +15370,7 @@ SkipTrueView:
 			legs.shaderRGBA[3] = ((cent->teamPowerEffectTime - cg.time)/8);
 
 			legs.customShader = trap->R_RegisterShader( "powerups/ysalimarishell" );
-			trap->R_AddRefEntityToScene(&legs);
+			AddRefEntityToScene(&legs);
 
 			legs.customShader = 0;
 			legs.renderfx = preRFX;
@@ -15562,7 +15562,7 @@ SkipTrueView:
 				}
 
 				holoRef.hModel = trap->R_RegisterModel(forceHolocronModels[i]);
-				trap->R_AddRefEntityToScene( &holoRef );
+				AddRefEntityToScene( &holoRef );
 
 				renderedHolos++;
 			}
@@ -16233,7 +16233,7 @@ stillDoSaber:
 	//[SPShield]
 	if (cent->currentState.eFlags2 & EF2_PLAYERHIT)
 	{
-		trap->R_AddRefEntityToScene(&legs);
+		AddRefEntityToScene(&legs);
 		legs.customShader = cgs.media.playerShieldDamage;
 	}
 	//[/SPShield]
@@ -16285,7 +16285,7 @@ stillDoSaber:
 					legs.renderfx &= ~RF_FORCE_ENT_ALPHA;
 					legs.customShader = cgs.media.forceShell;
 
-					trap->R_AddRefEntityToScene( &legs );	//draw the shell
+					AddRefEntityToScene( &legs );	//draw the shell
 
 					legs.customShader = 0;	//reset to player model
 
@@ -16368,7 +16368,7 @@ stillDoSaber:
 		if ((cg.snap->ps.fd.forcePowersActive & (1 << FP_SEE))
 			&& cg.snap->ps.clientNum != cent->currentState.number)
 		{//just draw him
-			trap->R_AddRefEntityToScene( &legs );
+			AddRefEntityToScene( &legs );
 		}
 		else
 		{
@@ -16385,14 +16385,14 @@ stillDoSaber:
 				legs.shaderRGBA[0] = legs.shaderRGBA[1] = legs.shaderRGBA[2] = 255.0f * perc;
 				legs.shaderRGBA[3] = 0;
 				legs.customShader = cgs.media.cloakedShader;
-				trap->R_AddRefEntityToScene( &legs );
+				AddRefEntityToScene( &legs );
 
 				legs.shaderRGBA[0] = legs.shaderRGBA[1] = legs.shaderRGBA[2] = 255;
 				legs.shaderRGBA[3] = 255 * (1.0f - perc); // let model alpha in
 				legs.customShader = 0; // use regular skin
 				legs.renderfx &= ~RF_RGB_TINT;
 				legs.renderfx |= RF_FORCE_ENT_ALPHA;
-				trap->R_AddRefEntityToScene( &legs );
+				AddRefEntityToScene( &legs );
 			}
 		}
 	}
@@ -16401,7 +16401,7 @@ stillDoSaber:
 		if ((cg.snap->ps.fd.forcePowersActive & (1 << FP_SEE))
 			&& cg.snap->ps.clientNum != cent->currentState.number)
 		{//just draw him
-			trap->R_AddRefEntityToScene( &legs );
+			AddRefEntityToScene( &legs );
 		}
 		else
 		{
@@ -16423,7 +16423,7 @@ stillDoSaber:
 
 				ScaleModelAxis(&legs);
 
-				trap->R_AddRefEntityToScene( &legs );
+				AddRefEntityToScene( &legs );
 
 				legs.modelScale[0] = 0.98f;
 				legs.modelScale[1] = 0.98f;
@@ -16439,7 +16439,7 @@ stillDoSaber:
 				{
 					trap->R_SetRefractionProperties(1.0f, 0.0f, qfalse, qfalse); //don't need to do this every frame.. but..
 					legs.customShader = 2; //crazy "refractive" shader
-					trap->R_AddRefEntityToScene( &legs );
+					AddRefEntityToScene( &legs );
 					legs.customShader = 0;
 				}
 				else
@@ -16447,7 +16447,7 @@ stillDoSaber:
 					legs.renderfx = 0;//&= ~(RF_RGB_TINT|RF_ALPHA_FADE);
 					legs.shaderRGBA[0] = legs.shaderRGBA[1] = legs.shaderRGBA[2] = legs.shaderRGBA[3] = 255;
 					legs.customShader = cgs.media.cloakedShader;
-					trap->R_AddRefEntityToScene( &legs );
+					AddRefEntityToScene( &legs );
 					legs.customShader = 0;
 				}
 			}
@@ -16457,7 +16457,7 @@ stillDoSaber:
 	if (!(cent->currentState.powerups & (1 << PW_CLOAKED)))
 	{ //don't add the normal model if cloaked
 		CG_CheckThirdPersonAlpha( cent, &legs );
-		trap->R_AddRefEntityToScene(&legs);
+		AddRefEntityToScene(&legs);
 	}
 
 	//cent->frame_minus2 = cent->frame_minus1;
@@ -16517,7 +16517,7 @@ stillDoSaber:
 		}
 
 		reframe_hold.ghoul2 = cent->frame_hold;
-		trap->R_AddRefEntityToScene(&reframe_hold);
+		AddRefEntityToScene(&reframe_hold);
 	}
 	else
 	{
@@ -16552,7 +16552,7 @@ stillDoSaber:
 
 		legs.customShader = cgs.media.playerShieldDamage;
 
-		trap->R_AddRefEntityToScene(&legs);
+		AddRefEntityToScene(&legs);
 	}
 
 	// =======================
@@ -16584,7 +16584,7 @@ stillDoSaber:
 			legs.customShader = cgs.media.electricBody2Shader;
 		}
 
-		trap->R_AddRefEntityToScene(&legs);
+		AddRefEntityToScene(&legs);
 	}
 
 	if (!cg.snap->ps.duelInProgress && cent->currentState.bolt1 && !(cent->currentState.eFlags & EF_DEAD) && cent->currentState.number != cg.snap->ps.clientNum && (!cg.snap->ps.duelInProgress || cg.snap->ps.duelIndex != cent->currentState.number))
@@ -16597,7 +16597,7 @@ stillDoSaber:
 		legs.renderfx &= ~RF_FORCE_ENT_ALPHA;
 		legs.customShader = cgs.media.forceSightBubble;
 
-		trap->R_AddRefEntityToScene( &legs );
+		AddRefEntityToScene( &legs );
 	}
 
 	if ( CG_VehicleShouldDrawShields( cent ) //vehicle
@@ -16627,7 +16627,7 @@ stillDoSaber:
 			legs.customShader = cgs.media.playerShieldDamage;
 		}
 
-		trap->R_AddRefEntityToScene( &legs );
+		AddRefEntityToScene( &legs );
 	}
 	//For now, these two are using the old shield shader. This is just so that you
 	//can tell it apart from the JM/duel shaders, but it's still very obvious.
@@ -16656,7 +16656,7 @@ stillDoSaber:
 		ScaleModelAxis(&prot);
 		*/
 
-		trap->R_AddRefEntityToScene( &prot );
+		AddRefEntityToScene( &prot );
 	}
 	//if (cent->currentState.forcePowersActive & (1 << FP_ABSORB))
 	//Showing only when the power has been active (absorbed something) recently now, instead of always.
@@ -16674,7 +16674,7 @@ stillDoSaber:
 		legs.renderfx &= ~RF_FORCE_ENT_ALPHA;
 		legs.customShader = cgs.media.playerShieldDamage;
 
-		trap->R_AddRefEntityToScene( &legs );
+		AddRefEntityToScene( &legs );
 	}
 
 	if (cent->currentState.isJediMaster && cg.snap->ps.clientNum != cent->currentState.number)
@@ -16688,7 +16688,7 @@ stillDoSaber:
 		legs.renderfx |= RF_NODEPTH;
 		legs.customShader = cgs.media.forceShell;
 
-		trap->R_AddRefEntityToScene( &legs );
+		AddRefEntityToScene( &legs );
 
 		legs.renderfx &= ~RF_NODEPTH;
 	}
@@ -16765,7 +16765,7 @@ stillDoSaber:
 		legs.renderfx &= ~RF_FORCE_ENT_ALPHA;
 		legs.customShader = cgs.media.sightShell;
 
-		trap->R_AddRefEntityToScene( &legs );
+		AddRefEntityToScene( &legs );
 	}
 
 	// Electricity
@@ -16801,7 +16801,7 @@ stillDoSaber:
 				legs.customShader = cgs.media.electricBody2Shader;
 			}
 
-			trap->R_AddRefEntityToScene( &legs );
+			AddRefEntityToScene( &legs );
 
 			if ( random() > 0.9f )
 				trap->S_StartSound ( NULL, cent->currentState.number, CHAN_AUTO, cgs.media.crackleSound );
@@ -16827,7 +16827,7 @@ stillDoSaber:
 		legs.renderfx &= ~RF_RGB_TINT;
 		legs.customShader = cgs.media.playerShieldDamage;
 
-		trap->R_AddRefEntityToScene( &legs );
+		AddRefEntityToScene( &legs );
 	}
 #if 0
 endOfCall:

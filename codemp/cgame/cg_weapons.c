@@ -343,7 +343,7 @@ static void CG_LightningBolt( centity_t *cent, vec3_t origin ) {
 
 	beam.reType = RT_LIGHTNING;
 	beam.customShader = cgs.media.lightningShader;
-	trap->R_AddRefEntityToScene( &beam );
+	AddRefEntityToScene( &beam );
 */
 
 	// NOTENOTE No lightning gun-ish stuff yet.
@@ -366,7 +366,7 @@ static void CG_LightningBolt( centity_t *cent, vec3_t origin ) {
 		angles[1] = rand() % 360;
 		angles[2] = rand() % 360;
 		AnglesToAxis( angles, beam.axis );
-		trap->R_AddRefEntityToScene( &beam );
+		AddRefEntityToScene( &beam );
 	}
 */
 }
@@ -379,7 +379,7 @@ CG_AddWeaponWithPowerups
 */
 static void CG_AddWeaponWithPowerups( refEntity_t *gun, int powerups ) {
 	// add powerup effects
-	trap->R_AddRefEntityToScene( gun );
+	AddRefEntityToScene( gun );
 
 	if (cg.predictedPlayerState.electrifyTime > cg.time)
 	{ //add electrocution shell
@@ -392,7 +392,7 @@ static void CG_AddWeaponWithPowerups( refEntity_t *gun, int powerups ) {
 		{
 			gun->customShader = cgs.media.electricBody2Shader;
 		}
-		trap->R_AddRefEntityToScene( gun );
+		AddRefEntityToScene( gun );
 		gun->customShader = preShader; //set back just to be safe
 	}
 }
@@ -608,7 +608,7 @@ Ghoul2 Insert Start
 
 				gun.customShader = trap->R_RegisterShader( "gfx/effects/stunPass" );
 				gun.renderfx = RF_RGB_TINT | RF_FIRST_PERSON | RF_DEPTHHACK;
-				trap->R_AddRefEntityToScene( &gun );
+				AddRefEntityToScene( &gun );
 			}
 			*/
 		}
@@ -944,7 +944,7 @@ Ghoul2 Insert End
 					}
 					else
 					{
-						trap->FX_PlayEffectID(weapon->altMuzzleEffect, flashorigin, flashdir, -1, -1, qfalse);
+						PlayEffectID(weapon->altMuzzleEffect, flashorigin, flashdir, -1, -1, qfalse);
 					}
 				}
 			}
@@ -958,7 +958,7 @@ Ghoul2 Insert End
 					}
 					else
 					{
-						trap->FX_PlayEffectID(weapon->muzzleEffect, flashorigin, flashdir, -1, -1, qfalse);
+						PlayEffectID(weapon->muzzleEffect, flashorigin, flashdir, -1, -1, qfalse);
 					}
 				}
 			}
@@ -968,7 +968,7 @@ Ghoul2 Insert End
 		CG_LightningBolt( nonPredictedCent, flashorigin );
 
 		if ( weapon->flashDlightColor[0] || weapon->flashDlightColor[1] || weapon->flashDlightColor[2] ) {
-			trap->R_AddLightToScene( flashorigin, 300 + (rand()&31), weapon->flashDlightColor[0],
+			AddLightToScene( flashorigin, 300 + (rand()&31), weapon->flashDlightColor[0],
 				weapon->flashDlightColor[1], weapon->flashDlightColor[2] );
 		}
 	}
@@ -2120,7 +2120,7 @@ qboolean CG_VehicleWeaponImpact( centity_t *cent )
 		vec3_t normal;
 		ByteToDir( cent->currentState.eventParm, normal );
 
-		trap->FX_PlayEffectID( g_vehWeaponInfo[cent->currentState.otherEntityNum2].iImpactFX, cent->lerpOrigin, normal, -1, -1, qfalse );
+		PlayEffectID( g_vehWeaponInfo[cent->currentState.otherEntityNum2].iImpactFX, cent->lerpOrigin, normal, -1, -1, qfalse );
 		return qtrue;
 	}
 	return qfalse;
@@ -2129,7 +2129,7 @@ qboolean CG_VehicleWeaponImpact( centity_t *cent )
 void CG_ConcussionImpactEffect(vec3_t origin, vec3_t dir, vec3_t up)
 {
 
-	trap->FX_PlayEffectID(CG_EnableEnhancedFX(cgs.effects.concussionExplosionEffect,
+	PlayEffectID(CG_EnableEnhancedFX(cgs.effects.concussionExplosionEffect,
 		cgs.effects.concussionExplosionEffectEnhancedFX), origin, dir, -1, -1, qfalse);
 }
 
@@ -2137,16 +2137,16 @@ void CG_ThermalImpactEffect(qboolean altFire, vec3_t origin, vec3_t dir, vec3_t 
 {
 	if (altFire)
 	{
-		trap->FX_PlayEffectID(CG_EnableEnhancedFX(cgs.effects.thermalExplosionAltEffect,
+		PlayEffectID(CG_EnableEnhancedFX(cgs.effects.thermalExplosionAltEffect,
 			cgs.effects.thermalExplosionAltEffectEnhancedFX), origin, dir, -1, -1, qfalse);
 	}
 	else
 	{
-		trap->FX_PlayEffectID(CG_EnableEnhancedFX(cgs.effects.thermalExplosionEffect,
+		PlayEffectID(CG_EnableEnhancedFX(cgs.effects.thermalExplosionEffect,
 			cgs.effects.thermalExplosionEffectEnhancedFX), origin, dir, -1, -1, qfalse);
 	}
 
-	trap->FX_PlayEffectID(cgs.effects.thermalShockwaveEffect, origin, up, -1, -1, qfalse);
+	PlayEffectID(cgs.effects.thermalShockwaveEffect, origin, up, -1, -1, qfalse);
 }
 
 /*
@@ -2210,7 +2210,7 @@ void CG_MissileHitWall(int weapon, int clientNum, vec3_t origin, vec3_t dir, imp
 	case WP_DEMP2:
 		if (altFire)
 		{
-			trap->FX_PlayEffectID(cgs.effects.mAltDetonate, origin, dir, -1, -1, qfalse);
+			PlayEffectID(cgs.effects.mAltDetonate, origin, dir, -1, -1, qfalse);
 		}
 		else
 		{
@@ -2287,7 +2287,7 @@ void CG_MissileHitPlayer(int weapon, vec3_t origin, vec3_t dir, int entityNum, q
 	case WP_DC_15S_CLONE_PISTOL:
 		if (altFire)
 		{
-			trap->FX_PlayEffectID(CG_EnableEnhancedFX(cgs.effects.mAltDetonate, cgs.effects.mAltDempDetonateEnhancedFX), origin, dir, -1, -1, qfalse);
+			PlayEffectID(CG_EnableEnhancedFX(cgs.effects.mAltDetonate, cgs.effects.mAltDempDetonateEnhancedFX), origin, dir, -1, -1, qfalse);
 		}
 		else
 		{
@@ -2298,7 +2298,7 @@ void CG_MissileHitPlayer(int weapon, vec3_t origin, vec3_t dir, int entityNum, q
 	case WP_DEMP2:
 		if (altFire)
 		{
-			trap->FX_PlayEffectID(
+			PlayEffectID(
 				CG_EnableEnhancedFX(cgs.effects.mAltDetonate, cgs.effects.mAltDempDetonateEnhancedFX), origin, dir, -1, -1, qfalse);
 		}
 		else

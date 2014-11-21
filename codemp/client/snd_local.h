@@ -15,6 +15,7 @@
 #ifdef __USE_BASS__
 extern qboolean BASS_Initialize ( void );
 extern void BASS_Shutdown ( void );
+extern void BASS_UnloadSamples ( void );
 extern DWORD BASS_LoadMemorySample ( void *memory, int length );
 extern DWORD BASS_LoadMusicSample ( void *memory, int length );
 extern void BASS_AddStreamChannel ( char *file, int entityNum, int entityChannel, vec3_t origin );

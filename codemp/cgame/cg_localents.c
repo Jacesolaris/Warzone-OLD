@@ -263,9 +263,9 @@ void CG_AddFragment( localEntity_t *le ) {
 
 			le->refEntity.shaderRGBA[3] = t_e;
 
-			trap->R_AddRefEntityToScene( &le->refEntity );
+			AddRefEntityToScene( &le->refEntity );
 		} else {
-			trap->R_AddRefEntityToScene( &le->refEntity );
+			AddRefEntityToScene( &le->refEntity );
 		}
 
 		return;
@@ -288,7 +288,7 @@ void CG_AddFragment( localEntity_t *le ) {
 			ScaleModelAxis(&le->refEntity);
 		}
 
-		trap->R_AddRefEntityToScene( &le->refEntity );
+		AddRefEntityToScene( &le->refEntity );
 
 		// add a blood trail
 		if ( le->leBounceSoundType == LEBS_BLOOD ) {
@@ -322,7 +322,7 @@ void CG_AddFragment( localEntity_t *le ) {
 		// reflect the velocity on the trace plane
 		CG_ReflectVelocity( le, &trace );
 
-		trap->R_AddRefEntityToScene( &le->refEntity );
+		AddRefEntityToScene( &le->refEntity );
 	}
 }
 
@@ -354,7 +354,7 @@ void CG_AddFadeRGB( localEntity_t *le ) {
 	re->shaderRGBA[2] = le->color[2] * c;
 	re->shaderRGBA[3] = le->color[3] * c;
 
-	trap->R_AddRefEntityToScene( re );
+	AddRefEntityToScene( re );
 }
 
 static void CG_AddFadeScaleModel( localEntity_t *le )
@@ -381,7 +381,7 @@ static void CG_AddFadeScaleModel( localEntity_t *le )
 	ent->shaderRGBA[3] = le->color[3] * frac;
 
 	// add the entity
-	trap->R_AddRefEntityToScene( ent );
+	AddRefEntityToScene( ent );
 }
 
 /*
@@ -423,7 +423,7 @@ static void CG_AddMoveScaleFade( localEntity_t *le ) {
 		return;
 	}
 
-	trap->R_AddRefEntityToScene( re );
+	AddRefEntityToScene( re );
 }
 
 /*
@@ -461,7 +461,7 @@ static void CG_AddPuff( localEntity_t *le ) {
 		return;
 	}
 
-	trap->R_AddRefEntityToScene( re );
+	AddRefEntityToScene( re );
 }
 
 /*
@@ -496,7 +496,7 @@ static void CG_AddScaleFade( localEntity_t *le ) {
 		return;
 	}
 
-	trap->R_AddRefEntityToScene( re );
+	AddRefEntityToScene( re );
 }
 
 
@@ -536,7 +536,7 @@ static void CG_AddFallScaleFade( localEntity_t *le ) {
 		return;
 	}
 
-	trap->R_AddRefEntityToScene( re );
+	AddRefEntityToScene( re );
 }
 
 
@@ -552,7 +552,7 @@ static void CG_AddExplosion( localEntity_t *ex ) {
 	ent = &ex->refEntity;
 
 	// add the entity
-	trap->R_AddRefEntityToScene(ent);
+	AddRefEntityToScene(ent);
 
 	// add the dlight
 	if ( ex->light ) {
@@ -565,7 +565,7 @@ static void CG_AddExplosion( localEntity_t *ex ) {
 			light = 1.0 - ( light - 0.5 ) * 2;
 		}
 		light = ex->light * light;
-		trap->R_AddLightToScene(ent->origin, light, ex->lightColor[0], ex->lightColor[1], ex->lightColor[2] );
+		AddLightToScene(ent->origin, light, ex->lightColor[0], ex->lightColor[1], ex->lightColor[2] );
 	}
 }
 
@@ -593,7 +593,7 @@ static void CG_AddSpriteExplosion( localEntity_t *le ) {
 	re.reType = RT_SPRITE;
 	re.radius = 42 * ( 1.0 - c ) + 30;
 
-	trap->R_AddRefEntityToScene( &re );
+	AddRefEntityToScene( &re );
 
 	// add the dlight
 	if ( le->light ) {
@@ -606,7 +606,7 @@ static void CG_AddSpriteExplosion( localEntity_t *le ) {
 			light = 1.0 - ( light - 0.5 ) * 2;
 		}
 		light = le->light * light;
-		trap->R_AddLightToScene(re.origin, light, le->lightColor[0], le->lightColor[1], le->lightColor[2] );
+		AddLightToScene(re.origin, light, le->lightColor[0], le->lightColor[1], le->lightColor[2] );
 	}
 }
 
@@ -621,7 +621,7 @@ void CG_AddRefEntity( localEntity_t *le ) {
 		CG_FreeLocalEntity( le );
 		return;
 	}
-	trap->R_AddRefEntityToScene( &le->refEntity );
+	AddRefEntityToScene( &le->refEntity );
 }
 
 /*
@@ -706,7 +706,7 @@ void CG_AddScorePlum( localEntity_t *le ) {
 	for (i = 0; i < numdigits; i++) {
 		VectorMA(origin, (float) (((float) numdigits / 2) - i) * NUMBER_SIZE, vec, re->origin);
 		re->customShader = cgs.media.numberShaders[digits[numdigits-1-i]];
-		trap->R_AddRefEntityToScene( re );
+		AddRefEntityToScene( re );
 	}
 }
 
@@ -752,7 +752,7 @@ void CG_AddOLine( localEntity_t *le )
 
 	re->reType = RT_ORIENTEDLINE;
 
-	trap->R_AddRefEntityToScene( re );
+	AddRefEntityToScene( re );
 }
 
 /*
@@ -770,7 +770,7 @@ void CG_AddLine( localEntity_t *le )
 
 	re->reType = RT_LINE;
 
-	trap->R_AddRefEntityToScene( re );
+	AddRefEntityToScene( re );
 }
 
 //==============================================================================

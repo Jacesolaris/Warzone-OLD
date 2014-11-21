@@ -98,6 +98,7 @@ char *showPowersName[] =
 	NULL
 };
 
+
 //Called from UI shared code. For now we'll just redirect to the normal anim load function.
 
 
@@ -489,7 +490,7 @@ void CG_Draw3DModel( float x, float y, float w, float h, qhandle_t model, void *
 	refdef.time = cg.time;
 
 	trap->R_ClearScene();
-	trap->R_AddRefEntityToScene( &ent );
+	AddRefEntityToScene( &ent );
 	trap->R_RenderScene( &refdef );
 }
 
@@ -10933,7 +10934,7 @@ void CG_DrawMiscStaticModels( void ) {
 
 		VectorSubtract(ent.origin, cg.refdef.vieworg, diff);
 		if (VectorLength(diff)-(cgs.miscStaticModels[i].radius) <= cg.distanceCull) {
-			trap->R_AddRefEntityToScene( &ent );
+			AddRefEntityToScene( &ent );
 		}
 	}
 }

@@ -9544,7 +9544,7 @@ void CG_Waypoint( int wp_num ) {
 	for (i = 0; i < numdigits; i++) {
 		//VectorMA(nodes[wp_num].origin, (float) (((float) numdigits / 2) - i) * NUMBER_SIZE, vec, re.origin);
 		re.customShader = cgs.media.numberShaders[digits[numdigits-1-i]];
-		trap->R_AddRefEntityToScene( &re );
+		AddRefEntityToScene( &re );
 	}
 }
 
@@ -9606,7 +9606,7 @@ void CG_AddWaypointLinkLine( int wp_from, int wp_to, int link_flags )
 	VectorCopy(nodes[wp_to].origin, re.oldorigin);
 	re.oldorigin[2]+=16;
 
-	trap->R_AddRefEntityToScene( &re );
+	AddRefEntityToScene( &re );
 }
 
 extern vmCvar_t jkg_waypoint_render;

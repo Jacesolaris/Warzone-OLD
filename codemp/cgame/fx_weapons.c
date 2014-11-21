@@ -48,11 +48,11 @@ void FX_WeaponHitWall(vec3_t origin, vec3_t normal, int weapon, qboolean altFire
 
 	if (fx)
 	{// We have fx for this. Play it.
-		trap->FX_PlayEffectID(fx, origin, normal, -1, -1, qfalse);
+		PlayEffectID(fx, origin, normal, -1, -1, qfalse);
 	}
 	else
 	{// This should never be possible, but just in case, fall back to concussion here.
-		trap->FX_PlayEffectID(cgs.effects.blasterWallImpactEffect, origin, normal, -1, -1, qfalse);
+		PlayEffectID(cgs.effects.blasterWallImpactEffect, origin, normal, -1, -1, qfalse);
 	}
 }
 
@@ -97,17 +97,17 @@ void FX_WeaponHitPlayer(vec3_t origin, vec3_t normal, qboolean humanoid, int wea
 
 	if (fx)
 	{// We have fx for this. Play it.
-		trap->FX_PlayEffectID(fx, origin, normal, -1, -1, qfalse);
+		PlayEffectID(fx, origin, normal, -1, -1, qfalse);
 	}
 	else
 	{
 		if (humanoid)
 		{
-			trap->FX_PlayEffectID( cgs.effects.blasterFleshImpactEffect, origin, normal, -1, -1, qfalse );
+			PlayEffectID( cgs.effects.blasterFleshImpactEffect, origin, normal, -1, -1, qfalse );
 		}
 		else
 		{
-			trap->FX_PlayEffectID(cgs.effects.blasterDroidImpactEffect, origin, normal, -1, -1, qfalse);
+			PlayEffectID(cgs.effects.blasterDroidImpactEffect, origin, normal, -1, -1, qfalse);
 		}
 	}
 }
@@ -127,9 +127,9 @@ void FX_WeaponProjectileThink(centity_t *cent, const struct weaponInfo_s *weapon
 	}
 
 	if (weapon->missileRenderfx)
-		trap->FX_PlayEffectID(weapon->missileRenderfx, cent->lerpOrigin, forward, -1, -1, qfalse);
+		PlayEffectID(weapon->missileRenderfx, cent->lerpOrigin, forward, -1, -1, qfalse);
 	else
-		trap->FX_PlayEffectID(cgs.effects.blasterShotEffect, cent->lerpOrigin, forward, -1, -1, qfalse);
+		PlayEffectID(cgs.effects.blasterShotEffect, cent->lerpOrigin, forward, -1, -1, qfalse);
 }
 
 /*
@@ -148,11 +148,11 @@ void FX_WeaponAltProjectileThink(centity_t *cent, const struct weaponInfo_s *wea
 	
 	if (weapon->altMissileRenderfx)
 	{
-		trap->FX_PlayEffectID(weapon->altMissileRenderfx, cent->lerpOrigin, forward, -1, -1, qfalse);
+		PlayEffectID(weapon->altMissileRenderfx, cent->lerpOrigin, forward, -1, -1, qfalse);
 	}
 	else
 	{
-		trap->FX_PlayEffectID(cgs.effects.blasterShotEffect, cent->lerpOrigin, forward, -1, -1, qfalse);
+		PlayEffectID(cgs.effects.blasterShotEffect, cent->lerpOrigin, forward, -1, -1, qfalse);
 	}
 }
 
@@ -167,15 +167,15 @@ void FX_ThermalProjectileThink(centity_t *cent, const struct weaponInfo_s *weapo
 
 	if (weapon->missileRenderfx)
 	{
-		trap->FX_PlayEffectID(weapon->missileRenderfx, cent->lerpOrigin, forward, -1, -1, qfalse);
+		PlayEffectID(weapon->missileRenderfx, cent->lerpOrigin, forward, -1, -1, qfalse);
 	}
 	else
 	{
-		trap->FX_PlayEffectID(cgs.effects.thermalRealShotEffect2, cent->lerpOrigin, forward, -1, -1, qfalse);
+		PlayEffectID(cgs.effects.thermalRealShotEffect2, cent->lerpOrigin, forward, -1, -1, qfalse);
 	}
 	if (weapon->missileRenderfx)
 	{
-		trap->FX_PlayEffectID(cgs.effects.thermalRealShotEffect, cent->lerpOrigin, forward, -1, -1, qfalse);
+		PlayEffectID(cgs.effects.thermalRealShotEffect, cent->lerpOrigin, forward, -1, -1, qfalse);
 	}
 }
 
@@ -191,39 +191,39 @@ void FX_PulseGrenadeProjectileThink(centity_t *cent, const struct weaponInfo_s *
 
 	if (weapon->missileRenderfx)
 	{
-		trap->FX_PlayEffectID(weapon->altMissileRenderfx, cent->lerpOrigin, forward, -1, -1, qfalse);
+		PlayEffectID(weapon->altMissileRenderfx, cent->lerpOrigin, forward, -1, -1, qfalse);
 	}
 	else
 	{
-		trap->FX_PlayEffectID(cgs.effects.fireGrenadeShotEffect2, cent->lerpOrigin, forward, -1, -1, qfalse);
+		PlayEffectID(cgs.effects.fireGrenadeShotEffect2, cent->lerpOrigin, forward, -1, -1, qfalse);
 	}
 	if (weapon->missileRenderfx)
 	{
-		trap->FX_PlayEffectID(cgs.effects.fireGrenadeShotEffect, cent->lerpOrigin, forward, -1, -1, qfalse);
+		PlayEffectID(cgs.effects.fireGrenadeShotEffect, cent->lerpOrigin, forward, -1, -1, qfalse);
 	}
 	else if (weapon->missileRenderfx)
 	{
-		trap->FX_PlayEffectID(weapon->altMissileRenderfx, cent->lerpOrigin, forward, -1, -1, qfalse);
+		PlayEffectID(weapon->altMissileRenderfx, cent->lerpOrigin, forward, -1, -1, qfalse);
 	}
 	else
 	{
-		trap->FX_PlayEffectID(cgs.effects.concussionGrenadeShotEffect2, cent->lerpOrigin, forward, -1, -1, qfalse);
+		PlayEffectID(cgs.effects.concussionGrenadeShotEffect2, cent->lerpOrigin, forward, -1, -1, qfalse);
 	}
 	if (weapon->missileRenderfx)
 	{
-		trap->FX_PlayEffectID(cgs.effects.concussionGrenadeShotEffect, cent->lerpOrigin, forward, -1, -1, qfalse);
+		PlayEffectID(cgs.effects.concussionGrenadeShotEffect, cent->lerpOrigin, forward, -1, -1, qfalse);
 	}
 	else if (weapon->missileRenderfx)
 	{
-		trap->FX_PlayEffectID(weapon->altMissileRenderfx, cent->lerpOrigin, forward, -1, -1, qfalse);
+		PlayEffectID(weapon->altMissileRenderfx, cent->lerpOrigin, forward, -1, -1, qfalse);
 	}
 	else
 	{
-		trap->FX_PlayEffectID(cgs.effects.pulseGrenadeShotEffect2, cent->lerpOrigin, forward, -1, -1, qfalse);
+		PlayEffectID(cgs.effects.pulseGrenadeShotEffect2, cent->lerpOrigin, forward, -1, -1, qfalse);
 	}
 	if (weapon->missileRenderfx)
 	{
-		trap->FX_PlayEffectID(cgs.effects.pulseGrenadeShotEffect, cent->lerpOrigin, forward, -1, -1, qfalse);
+		PlayEffectID(cgs.effects.pulseGrenadeShotEffect, cent->lerpOrigin, forward, -1, -1, qfalse);
 	}
 
 }

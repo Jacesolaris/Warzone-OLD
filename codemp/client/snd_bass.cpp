@@ -164,16 +164,55 @@ int BASS_FindFreeChannel ( void )
 	return -1;
 }
 
+void BASS_UnloadSamples ( void )
+{
+	if (BASS_ChannelIsActive(MUSIC_CHANNEL.channel) == BASS_ACTIVE_PLAYING)
+	{
+		BASS_ChannelStop(MUSIC_CHANNEL.channel);
+		BASS_SampleFree(MUSIC_CHANNEL.channel);
+		BASS_MusicFree(MUSIC_CHANNEL.channel);
+		BASS_StreamFree(MUSIC_CHANNEL.channel);
+	}
+
+	if (SOUND_CHANNELS_INITIALIZED)
+	{
+		for (int c = 0; c < MAX_BASS_CHANNELS; c++) 
+		{// Free channel...
+			BASS_StopChannel(c);
+			BASS_SampleFree(SOUND_CHANNELS[c].channel);
+			BASS_MusicFree(SOUND_CHANNELS[c].channel);
+			BASS_StreamFree(SOUND_CHANNELS[c].channel);
+		}
+
+		SOUND_CHANNELS_INITIALIZED = qfalse;
+	}
+
+	if (BASS_UPDATE_THREAD_RUNNING && thread::hardware_concurrency() > 1)
+	{// More then one CPU core. We need to shut down the update thread...
+		BASS_UPDATE_THREAD_STOP = qtrue;
+
+		// Wait for update thread to finish...
+		BASS_UPDATE_THREAD->join();
+		BASS_UPDATE_THREAD_RUNNING = qfalse;
+	}
+}
+
 
 HINSTANCE			bass = 0;								// bass handle
 char				tempfile[MAX_PATH];						// temporary BASS.DLL
 
 void BASS_Shutdown ( void )
 {
+	if (BASS_ChannelIsActive(MUSIC_CHANNEL.channel) == BASS_ACTIVE_PLAYING)
+	{
+		BASS_ChannelStop(MUSIC_CHANNEL.channel);
+		BASS_SampleFree(MUSIC_CHANNEL.channel);
+		BASS_MusicFree(MUSIC_CHANNEL.channel);
+		BASS_StreamFree(MUSIC_CHANNEL.channel);
+	}
+
 	if (SOUND_CHANNELS_INITIALIZED)
 	{
-		BASS_MusicFree(MUSIC_CHANNEL.channel);
-
 		for (int c = 0; c < MAX_BASS_CHANNELS; c++) 
 		{// Free channel...
 			BASS_StopChannel(c);
@@ -577,7 +616,10 @@ void BASS_UpdateSounds_REAL ( void )
 				//Com_Printf("Removing inactive channel %i.\n", c);
 				BASS_StopChannel(c);
 				//BASS_ChannelSetAttribute(SOUND_CHANNELS[c].channel, BASS_ATTRIB_VOL, 0.0);
-				//if (SOUND_CHANNELS[c].channel != SOUND_CHANNELS[c].originalChannel) BASS_SampleFree(SOUND_CHANNELS[c].channel);
+				if (SOUND_CHANNELS[c].channel != SOUND_CHANNELS[c].originalChannel) 
+				{// free the copied channel's sample memory...
+					BASS_SampleFree(SOUND_CHANNELS[c].channel);
+				}
 				memset(&SOUND_CHANNELS[c],0,sizeof(Channel));
 				//NUM_FREE++;
 			}

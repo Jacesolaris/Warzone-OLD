@@ -346,7 +346,7 @@ static void CG_EntityEffects( centity_t *cent ) {
 		g = (float) ((cl >> 8) & 0xFF) / 255.0;
 		b = (float) ((cl >> 16) & 0xFF) / 255.0;
 		i = (float) ((cl >> 24) & 0xFF) * 4.0;
-		trap->R_AddLightToScene( cent->lerpOrigin, i, r, g, b );
+		AddLightToScene( cent->lerpOrigin, i, r, g, b );
 	}
 
 }
@@ -582,7 +582,7 @@ void CG_CreateBBRefEnts(entityState_t *s1, vec3_t origin )
 		// add the original origin to each point and then stuff them out there
 		VectorAdd(point[i].origin, origin, point[i].origin);
 
-		trap->R_AddRefEntityToScene (&point[i]);
+		AddRefEntityToScene (&point[i]);
 	}
 #endif
 	*/
@@ -690,12 +690,12 @@ void CG_Disintegration(centity_t *cent, refEntity_t *ent)
 
 	ent->renderfx |= RF_DISINTEGRATE2;
 	ent->customShader = cgs.media.disruptorShader;
-	trap->R_AddRefEntityToScene( ent );
+	AddRefEntityToScene( ent );
 
 	ent->renderfx &= ~(RF_DISINTEGRATE2);
 	ent->renderfx |= (RF_DISINTEGRATE1);
 	ent->customShader = 0;
-	trap->R_AddRefEntityToScene( ent );
+	AddRefEntityToScene( ent );
 
 	if ( cg.time - ent->endTime < 1000 && (timescale.value * timescale.value * random()) > 0.05f )
 	{
@@ -711,11 +711,11 @@ void CG_Disintegration(centity_t *cent, refEntity_t *ent)
 
 		VectorMA( fxOrg, -18, cg.refdef.viewaxis[0], fxOrg );
 		fxOrg[2] += crandom() * 20;
-		trap->FX_PlayEffectID( cgs.effects.mDisruptorDeathSmoke, fxOrg, fxDir, -1, -1, qfalse );
+		PlayEffectID( cgs.effects.mDisruptorDeathSmoke, fxOrg, fxDir, -1, -1, qfalse );
 
 		if ( random() > 0.5f )
 		{
-			trap->FX_PlayEffectID( cgs.effects.mDisruptorDeathSmoke, fxOrg, fxDir, -1, -1, qfalse );
+			PlayEffectID( cgs.effects.mDisruptorDeathSmoke, fxOrg, fxDir, -1, -1, qfalse );
 		}
 	}
 }
@@ -813,7 +813,7 @@ static void CG_SiegeEntRenderAboveHead(centity_t *cent)
 	ent.shaderRGBA[3] = 100;
 
 	//And finally add it
-	trap->R_AddRefEntityToScene(&ent);
+	AddRefEntityToScene(&ent);
 }
 */
 
@@ -1208,7 +1208,7 @@ static void CG_General( centity_t *cent ) {
 				BG_GiveMeVectorFromMatrix(&matrix, ORIGIN, boltOrg);
 				BG_GiveMeVectorFromMatrix(&matrix, NEGATIVE_Y, boltAng);
 
-				trap->FX_PlayEffectID(cgs.effects.mBlasterSmoke, boltOrg, boltAng, -1, -1, qfalse);
+				PlayEffectID(cgs.effects.mBlasterSmoke, boltOrg, boltAng, -1, -1, qfalse);
 			}
 
 			cent->bolt4 = newBolt;
@@ -1232,7 +1232,7 @@ static void CG_General( centity_t *cent ) {
 				BG_GiveMeVectorFromMatrix(&matrix, ORIGIN, boltOrg);
 				BG_GiveMeVectorFromMatrix(&matrix, NEGATIVE_Y, boltAng);
 
-				trap->FX_PlayEffectID(cgs.effects.mBlasterSmoke, boltOrg, boltAng, -1, -1, qfalse);
+				PlayEffectID(cgs.effects.mBlasterSmoke, boltOrg, boltAng, -1, -1, qfalse);
 			}
 
 			if (cent->currentState.modelGhoul2 == G2_MODELPART_RARM || cent->currentState.modelGhoul2 == G2_MODELPART_RHAND || cent->currentState.modelGhoul2 == G2_MODELPART_WAIST)
@@ -1293,7 +1293,7 @@ static void CG_General( centity_t *cent ) {
 				{
 					boltAng[1] = 1;
 				}
-				trap->FX_PlayEffectID(cgs.effects.mBlasterSmoke, boltOrg, boltAng, -1, -1, qfalse);
+				PlayEffectID(cgs.effects.mBlasterSmoke, boltOrg, boltAng, -1, -1, qfalse);
 
 				cent->trailTime = cg.time + 400;
 			}
@@ -1468,13 +1468,13 @@ Ghoul2 Insert End
 		ent.shaderRGBA[1] = ent.shaderRGBA[2] = 0;
 
 		ent.shaderRGBA[3] = 100;
-		trap->R_AddRefEntityToScene( &ent );
+		AddRefEntityToScene( &ent );
 		ent.customShader = 0;
 	}
 	else if ( cent->currentState.time == -1 && cent->currentState.weapon == WP_EMPLACED_GUN)
 	{
 		ent.customShader = trap->R_RegisterShader( "models/map_objects/imp_mine/turret_chair_dmg.tga" );
-		//trap->R_AddRefEntityToScene( &ent );
+		//AddRefEntityToScene( &ent );
 	}
 
 	if ((cent->currentState.eFlags & EF_DISINTEGRATION) && cent->currentState.eType == ET_BODY)
@@ -1517,7 +1517,7 @@ Ghoul2 Insert End
 
 			if (ent.shaderRGBA[3] >= 1)
 			{ //add the transparent body section
-				trap->R_AddRefEntityToScene (&ent);
+				AddRefEntityToScene (&ent);
 			}
 
 			ent.renderfx &= ~RF_FORCE_ENT_ALPHA;
@@ -1576,7 +1576,7 @@ Ghoul2 Insert End
 			ent.origin[2] = cent->bodyHeight;
 			*/
 
-			trap->R_AddRefEntityToScene( &ent );
+			AddRefEntityToScene( &ent );
 			ent.renderfx &= ~RF_DISINTEGRATE2;
 			ent.customShader = 0;
 
@@ -1607,7 +1607,7 @@ Ghoul2 Insert End
 					{
 						trap->S_StartSound ( NULL, cent->currentState.number, CHAN_AUTO, cgs.media.crackleSound );
 					}
-					trap->R_AddRefEntityToScene( &ent );
+					AddRefEntityToScene( &ent );
 				}
 			}
 
@@ -1627,7 +1627,7 @@ Ghoul2 Insert End
 	}
 
 	// add to refresh list
-	trap->R_AddRefEntityToScene (&ent);
+	AddRefEntityToScene (&ent);
 
 	if (cent->bolt3 == 999)
 	{ //this is an in-flight saber being rendered manually
@@ -1644,7 +1644,7 @@ Ghoul2 Insert End
 		ent.shaderRGBA[0] = wv * 255;
 		ent.shaderRGBA[1] = wv * 255;
 		ent.shaderRGBA[2] = wv * 0;
-		trap->R_AddRefEntityToScene (&ent);
+		AddRefEntityToScene (&ent);
 
 		for ( i = -4; i < 10; i += 1 )
 		{
@@ -1716,7 +1716,7 @@ Ghoul2 Insert End
 		ent.origin[2] -= 2;
 		ScaleModelAxis(&ent);
 
-		trap->R_AddRefEntityToScene (&ent);
+		AddRefEntityToScene (&ent);
 
 		VectorMA( ent.origin, 1, ent.axis[2], org );
 
@@ -1784,7 +1784,7 @@ Ghoul2 Insert End
 		{
 			VectorMA( ent.origin, 6.6f, ent.axis[0], beamOrg );// forward
 			beamID = cgs.effects.tripmineGlowFX;
-			trap->FX_PlayEffectID( beamID, beamOrg, cent->currentState.pos.trDelta, -1, -1, qfalse );
+			PlayEffectID( beamID, beamOrg, cent->currentState.pos.trDelta, -1, -1, qfalse );
 		}
 		else
 		{
@@ -1799,13 +1799,13 @@ Ghoul2 Insert End
 
 				while (i > 0)
 				{
-					trap->FX_PlayEffectID( beamID, beamOrg, cent->currentState.pos.trDelta, -1, -1, qfalse );
-					trap->FX_PlayEffectID( beamID, beamOrg, cent->currentState.pos.trDelta, -1, -1, qfalse );
+					PlayEffectID( beamID, beamOrg, cent->currentState.pos.trDelta, -1, -1, qfalse );
+					PlayEffectID( beamID, beamOrg, cent->currentState.pos.trDelta, -1, -1, qfalse );
 					i--;
 				}
 			}
 
-			trap->FX_PlayEffectID( beamID, beamOrg, cent->currentState.pos.trDelta, -1, -1, qfalse );
+			PlayEffectID( beamID, beamOrg, cent->currentState.pos.trDelta, -1, -1, qfalse );
 		}
 	}
 /*
@@ -1937,11 +1937,11 @@ Ghoul2 Insert Start
 			ent.shaderRGBA[2] = 150;
 		}
 
-		trap->R_AddRefEntityToScene(&ent);
+		AddRefEntityToScene(&ent);
 
 		if (!doGrey)
 		{
-			trap->FX_PlayEffectID(cgs.effects.itemCone, ent.origin, uNorm, -1, -1, qfalse);
+			PlayEffectID(cgs.effects.itemCone, ent.origin, uNorm, -1, -1, qfalse);
 		}
 	}
 
@@ -2004,7 +2004,7 @@ Ghoul2 Insert End
 				ent.customShader = trap->R_RegisterShader("gfx/misc/mp_dark_enlight_disable");
 			}
 		}
-		trap->R_AddRefEntityToScene(&ent);
+		AddRefEntityToScene(&ent);
 		return;
 	}
 
@@ -2198,7 +2198,7 @@ Ghoul2 Insert End
 			ent.customShader = trap->R_RegisterShader("gfx/misc/mp_dark_enlight_disable");
 		}
 
-		trap->R_AddRefEntityToScene( &ent );
+		AddRefEntityToScene( &ent );
 		return;
 	}
 
@@ -2244,7 +2244,7 @@ Ghoul2 Insert End
 		{ //boon model uses a different blending mode for the sprite inside and doesn't look proper with this method
 			ent.renderfx |= RF_FORCE_ENT_ALPHA;
 		}
-		trap->R_AddRefEntityToScene(&ent);
+		AddRefEntityToScene(&ent);
 
 		ent.renderfx &= ~RF_FORCE_ENT_ALPHA;
 
@@ -2285,7 +2285,7 @@ Ghoul2 Insert End
 		ent.shaderRGBA[1] = 200;
 		ent.shaderRGBA[2] = 85;
 
-		trap->R_AddRefEntityToScene( &ent );
+		AddRefEntityToScene( &ent );
 	}
 	else
 	{	// add to refresh list  -- normal item
@@ -2297,7 +2297,7 @@ Ghoul2 Insert End
 			ent.modelScale[2] = 0.7f;
 			ScaleModelAxis(&ent);
 		}
-		trap->R_AddRefEntityToScene(&ent);
+		AddRefEntityToScene(&ent);
 	}
 
 	//rww - As far as I can see, this is useless.
@@ -2320,7 +2320,7 @@ Ghoul2 Insert End
 		AxisCopy( ent.axis, barrel.axis );
 		barrel.nonNormalizedAxes = ent.nonNormalizedAxes;
 
-		trap->R_AddRefEntityToScene( &barrel );
+		AddRefEntityToScene( &barrel );
 	}
 	*/
 
@@ -2342,7 +2342,7 @@ Ghoul2 Insert End
 				}
 				AnglesToAxis( spinAngles, ent.axis );
 
-				trap->R_AddRefEntityToScene( &ent );
+				AddRefEntityToScene( &ent );
 			}
 		}
 	}
@@ -2411,7 +2411,7 @@ void CG_CreateDistortionTrailPart(centity_t *cent, float scale, vec3_t pos)
 	ent.renderfx = RF_DISTORTION;
 #endif
 
-	trap->R_AddRefEntityToScene( &ent );
+	AddRefEntityToScene( &ent );
 }
 
 //distortion trail effect for rockets -rww
@@ -2520,7 +2520,7 @@ static void CG_Missile( centity_t *cent ) {
 			&& (g_vehWeaponInfo[s1->otherEntityNum2].iShotFX
 				|| g_vehWeaponInfo[s1->otherEntityNum2].iModel != NULL_HANDLE) )
 		{ //a vehicle with an override for the weapon trail fx or model
-			trap->FX_PlayEffectID( g_vehWeaponInfo[s1->otherEntityNum2].iShotFX, cent->lerpOrigin, forward, -1, -1, qfalse );
+			PlayEffectID( g_vehWeaponInfo[s1->otherEntityNum2].iShotFX, cent->lerpOrigin, forward, -1, -1, qfalse );
 			if ( g_vehWeaponInfo[s1->otherEntityNum2].iLoopSound )
 			{
 				vec3_t	velocity;
@@ -2535,7 +2535,7 @@ static void CG_Missile( centity_t *cent ) {
 		}
 		else
 		{//a regular missile
-			trap->FX_PlayEffectID( cgs.gameEffects[s1->otherEntityNum2], cent->lerpOrigin, forward, -1, -1, qfalse );
+			PlayEffectID( cgs.gameEffects[s1->otherEntityNum2], cent->lerpOrigin, forward, -1, -1, qfalse );
 			if ( s1->loopSound )
 			{
 				vec3_t	velocity;
@@ -2557,7 +2557,7 @@ static void CG_Missile( centity_t *cent ) {
 		// add dynamic light
 		if ( weapon->altMissileDlight )
 		{
-			trap->R_AddLightToScene(cent->lerpOrigin, weapon->altMissileDlight,
+			AddLightToScene(cent->lerpOrigin, weapon->altMissileDlight,
 				weapon->altMissileDlightColor[0], weapon->altMissileDlightColor[1], weapon->altMissileDlightColor[2] );
 		}
 
@@ -2585,7 +2585,7 @@ static void CG_Missile( centity_t *cent ) {
 		// add dynamic light
 		if ( weapon->missileDlight )
 		{
-			trap->R_AddLightToScene(cent->lerpOrigin, weapon->missileDlight,
+			AddLightToScene(cent->lerpOrigin, weapon->missileDlight,
 				weapon->missileDlightColor[0], weapon->missileDlightColor[1], weapon->missileDlightColor[2] );
 		}
 
@@ -2711,7 +2711,7 @@ Ghoul2 Insert End
 		ent.shaderRGBA[0] = wv * 255;
 		ent.shaderRGBA[1] = wv * 255;
 		ent.shaderRGBA[2] = wv * 0;
-		trap->R_AddRefEntityToScene (&ent);
+		AddRefEntityToScene (&ent);
 
 		for ( i = -4; i < 10; i += 1 )
 		{
@@ -2743,7 +2743,7 @@ Ghoul2 Insert End
 			ent.renderfx |= RF_DEPTHHACK;
 			ent.customShader = cgs.media.forceSightBubble;
 
-			trap->R_AddRefEntityToScene( &ent );
+			AddRefEntityToScene( &ent );
 		}
 	}
 
@@ -2752,7 +2752,7 @@ Ghoul2 Insert End
 		vec3_t	beamOrg;
 
 		VectorMA( ent.origin, 8, ent.axis[0], beamOrg );// forward
-		trap->FX_PlayEffectID( cgs.effects.mTripMineLaser, beamOrg, ent.axis[0], -1, -1, qfalse );
+		PlayEffectID( cgs.effects.mTripMineLaser, beamOrg, ent.axis[0], -1, -1, qfalse );
 	}
 }
 
@@ -2925,7 +2925,7 @@ Ghoul2 Insert End
 	}
 
 	// add to refresh list
-	trap->R_AddRefEntityToScene(&ent);
+	AddRefEntityToScene(&ent);
 
 	// add the secondary model
 	if ( s1->modelindex2 && s1->modelindex2 < MAX_MODELS )
@@ -2937,7 +2937,7 @@ Ghoul2 Insert End
 			ent.modelScale[0] = ent.modelScale[1] = ent.modelScale[2] = s1->iModelScale/100.0f;
 			ScaleModelAxis(&ent);
 		}
-		trap->R_AddRefEntityToScene(&ent);
+		AddRefEntityToScene(&ent);
 	}
 
 }
@@ -2972,7 +2972,7 @@ Ghoul2 Insert Start
 Ghoul2 Insert End
 */
 	// add to refresh list
-	trap->R_AddRefEntityToScene(&ent);
+	AddRefEntityToScene(&ent);
 }
 
 
@@ -3012,7 +3012,7 @@ Ghoul2 Insert Start
 Ghoul2 Insert End
 */
 	// add to refresh list
-	trap->R_AddRefEntityToScene(&ent);
+	AddRefEntityToScene(&ent);
 }
 
 
@@ -3304,11 +3304,11 @@ static void CG_FX( centity_t *cent )
 	{
 		if (s1->isPortalEnt)
 		{
-			trap->FX_PlayEffectID(efxIndex, cent->lerpOrigin, fxDir, -1, -1, qtrue );
+			PlayEffectID(efxIndex, cent->lerpOrigin, fxDir, -1, -1, qtrue );
 		}
 		else
 		{
-			trap->FX_PlayEffectID(efxIndex, cent->lerpOrigin, fxDir, -1, -1, qfalse );
+			PlayEffectID(efxIndex, cent->lerpOrigin, fxDir, -1, -1, qfalse );
 		}
 	}
 
@@ -3871,7 +3871,7 @@ defaultoffsetposition:
 			useOrigin[1] += up[1]*parsedOffset[2];
 			useOrigin[2] += up[2]*parsedOffset[2];
 
-			trap->FX_PlayEffectID(objectID, useOrigin, useAngles, -1, -1, qfalse);
+			PlayEffectID(objectID, useOrigin, useAngles, -1, -1, qfalse);
 		}
 	}
 	else if (strcmp(type, "sound") == 0)
