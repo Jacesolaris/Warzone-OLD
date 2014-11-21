@@ -655,7 +655,7 @@ void BASS_UpdateThread(void * aArg)
 	while (!BASS_UPDATE_THREAD_STOP)
 	{
 		BASS_UpdateSounds_REAL();
-		this_thread::sleep_for(chrono::milliseconds(50));
+		this_thread::sleep_for(chrono::milliseconds(10));
 	}
 
 	BASS_UPDATE_THREAD_RUNNING = qfalse;
@@ -749,7 +749,7 @@ void BASS_StopMusic( void )
 
 void BASS_StartMusic ( DWORD samplechan )
 {
-	if (s_volumeMusic->value <= 0) return;
+	//if (s_volumeMusic->value <= 0) return;
 
 	BASS_StopMusic();
 
@@ -784,7 +784,7 @@ DWORD BASS_LoadMusicSample ( void *memory, int length )
 {// Just load a sample into memory ready to play instantly...
 	DWORD newchan;
 
-	if (s_volumeMusic->value <= 0) return -1;
+	//if (s_volumeMusic->value <= 0) return -1;
 
 	// Try to load the sample with the highest quality options we support...
 	if (newchan=BASS_SampleLoad(TRUE,memory,0,(DWORD)length,1,BASS_SAMPLE_LOOP|BASS_SAMPLE_FLOAT))
@@ -878,14 +878,6 @@ void BASS_AddMemoryChannel ( DWORD samplechan, int entityNum, int entityChannel,
 
 void BASS_AddMemoryLoopChannel ( DWORD samplechan, int entityNum, int entityChannel, vec3_t origin, float volume )
 {
-	int chan = BASS_FindFreeChannel();
-
-	if (chan < 0)
-	{// No channel left to play on...
-		Com_Printf("BASS: No free sound channels.\n");
-		return;
-	}
-
 	//
 	// UQ1: Since it seems these also re-call this function to update positions, etc, run a check first...
 	//
@@ -907,6 +899,14 @@ void BASS_AddMemoryLoopChannel ( DWORD samplechan, int entityNum, int entityChan
 				}
 			}
 		}
+	}
+
+	int chan = BASS_FindFreeChannel();
+
+	if (chan < 0)
+	{// No channel left to play on...
+		Com_Printf("BASS: No free sound channels.\n");
+		return;
 	}
 
 	// Load a music or sample from "file" (memory)
