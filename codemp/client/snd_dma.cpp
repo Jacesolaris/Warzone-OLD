@@ -3342,7 +3342,6 @@ void S_Update_(void) {
 
 		const unsigned s_oldpaintedtime = s_paintedtime;
 
-#ifndef __USE_BASS__
 		// clear any sound effects that end before the current time,
 		// and start any new sounds
 		S_ScanChannelStarts();
@@ -3365,7 +3364,6 @@ void S_Update_(void) {
 		S_PaintChannels (endtime);
 
 		SNDDMA_Submit ();
-#endif //__USE_BASS__
 
 		S_DoLipSynchs( s_oldpaintedtime );
 #ifdef USE_OPENAL
