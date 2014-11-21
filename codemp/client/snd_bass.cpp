@@ -21,7 +21,7 @@ qboolean EAX_SUPPORTED = qtrue;
 #define SOUND_3D_METHOD					BASS_3DMODE_NORMAL //BASS_3DMODE_RELATIVE
 
 float MIN_SOUND_RANGE				=	256.0; //256.0
-float MAX_SOUND_RANGE				=	2048.0; // 3072.0
+float MAX_SOUND_RANGE				=	-1;//2048.0; // 3072.0
 
 int SOUND_CONE_INSIDE_ANGLE			=	120;
 int SOUND_CONE_OUTSIDE_ANGLE		=	120;
@@ -185,13 +185,12 @@ void BASS_Shutdown ( void )
 		SOUND_CHANNELS_INITIALIZED = qfalse;
 	}
 
-	if (thread::hardware_concurrency() > 1)
+	if (BASS_UPDATE_THREAD_RUNNING && thread::hardware_concurrency() > 1)
 	{// More then one CPU core. We need to shut down the update thread...
 		BASS_UPDATE_THREAD_STOP = qtrue;
 
 		// Wait for update thread to finish...
 		BASS_UPDATE_THREAD->join();
-		//delete BASS_UPDATE_THREAD;
 	}
 
 	BASS_Free();
@@ -379,9 +378,6 @@ qboolean BASS_Initialize ( void )
 
 	//Com_Printf("Volume %f. Sample Volume %i. Stream Volume %i.\n", BASS_GetVolume(), (int)BASS_GetConfig(BASS_CONFIG_GVOL_SAMPLE), (int)BASS_GetConfig(BASS_CONFIG_GVOL_STREAM));
 
-	// Initialize all the sound channels ready for use...
-	BASS_InitializeChannels();
-
 	// Try to use the WDM full 3D algorythm...
 	if (BASS_SetConfig(BASS_CONFIG_3DALGORITHM, BASS_3DALG_FULL))
 	{
@@ -420,6 +416,9 @@ qboolean BASS_Initialize ( void )
 	Com_Printf("^3BASS Sound System initialized ^7OK^3!\n");
 
 	BASS_UPDATE_THREAD_STOP = qfalse;
+
+	// Initialize all the sound channels ready for use...
+	BASS_InitializeChannels();
 
 	// UQ1: Play a BASS startup sound...
 	//BASS_AddStreamChannel ( "OJK/sound/startup.wav", -1, s_volume->value, NULL );
@@ -473,15 +472,19 @@ void BASS_UpdatePosition ( int c )
 		soundPos[2] = s_entityPosition[SOUND_CHANNELS[c].entityNum][2];
 	}
 
-	vec3_t vel, forward, right, up;
-	vel[0] = SOUND_CHANNELS[c].pos.x - soundPos[0];
-	vel[1] = SOUND_CHANNELS[c].pos.y - soundPos[1];
-	vel[2] = SOUND_CHANNELS[c].pos.z - soundPos[2];
+	//vec3_t vel, forward, right, up;
+	//vel[0] = SOUND_CHANNELS[c].pos.x - soundPos[0];
+	//vel[1] = SOUND_CHANNELS[c].pos.y - soundPos[1];
+	//vel[2] = SOUND_CHANNELS[c].pos.z - soundPos[2];
 
-	AngleVectors(vel, forward, right, up);
-	SOUND_CHANNELS[c].vel.x = forward[0];
-	SOUND_CHANNELS[c].vel.y = forward[1];
-	SOUND_CHANNELS[c].vel.z = -forward[2];
+	//AngleVectors(vel, forward, right, up);
+	SOUND_CHANNELS[c].vel.x = 0;//forward[0];
+	SOUND_CHANNELS[c].vel.y = 0;//forward[1];
+	SOUND_CHANNELS[c].vel.z = 0;//-forward[2];
+
+	//SOUND_CHANNELS[c].ang.x = vel[0];
+	//SOUND_CHANNELS[c].ang.y = vel[1];
+	//SOUND_CHANNELS[c].ang.z = -vel[2];
 
 	// Set origin...
 	SOUND_CHANNELS[c].pos.x = soundPos[0];
@@ -489,11 +492,13 @@ void BASS_UpdatePosition ( int c )
 	SOUND_CHANNELS[c].pos.z = soundPos[2];
 
 	BASS_ChannelSet3DPosition(SOUND_CHANNELS[c].channel,&SOUND_CHANNELS[c].pos,NULL,&SOUND_CHANNELS[c].vel);
+
 	//if (!BASS_ChannelIsSliding(SOUND_CHANNELS[c].channel, BASS_ATTRIB_VOL))
 	{
 		BASS_ChannelSet3DAttributes(SOUND_CHANNELS[c].channel, SOUND_3D_METHOD, MIN_SOUND_RANGE, MAX_SOUND_RANGE, SOUND_CONE_INSIDE_ANGLE, SOUND_CONE_OUTSIDE_ANGLE, SOUND_CONE_OUTSIDE_VOLUME);//-1, -1, -1);
-		BASS_ChannelSetAttribute(SOUND_CHANNELS[c].channel, BASS_ATTRIB_VOL, SOUND_CHANNELS[c].volume*S_GetVolumeForChannel(SOUND_CHANNELS[c].entityChannel));
 		BASS_ChannelFlags(SOUND_CHANNELS[c].channel, BASS_SAMPLE_MUTEMAX, BASS_SAMPLE_MUTEMAX); // enable muting at the max distance
+		BASS_ChannelSetAttribute(SOUND_CHANNELS[c].channel, BASS_ATTRIB_VOL, SOUND_CHANNELS[c].volume*S_GetVolumeForChannel(SOUND_CHANNELS[c].entityChannel));
+		//Com_Printf("Volume %f.\n", SOUND_CHANNELS[c].volume*S_GetVolumeForChannel(SOUND_CHANNELS[c].entityChannel));
 	}
 }
 
@@ -503,7 +508,7 @@ void BASS_ProcessStartRequest( int channel )
 
 	c->channel = BASS_SampleGetChannel(c->originalChannel,FALSE); // initialize sample channel
 
-	BASS_ChannelSetAttribute(c->channel, BASS_ATTRIB_VOL, c->volume*S_GetVolumeForChannel(c->entityChannel));
+	//BASS_ChannelSetAttribute(c->channel, BASS_ATTRIB_VOL, c->volume*S_GetVolumeForChannel(c->entityChannel));
 	//BASS_ChannelSlideAttribute(c->channel, BASS_ATTRIB_VOL, c->volume*S_GetVolumeForChannel(c->entityChannel), 500); // fade-in over 100ms
 
 	// Set original origin...
@@ -551,20 +556,19 @@ void BASS_UpdateSounds_REAL ( void )
 
 	BASS_Set3DPosition(&pos, &vel, &ang, &top);
 
-	if (s_volumeMusic->value > 0)
-	{
-		BASS_ChannelSetAttribute(MUSIC_CHANNEL.channel, BASS_ATTRIB_VOL, MUSIC_CHANNEL.volume*S_GetVolumeForChannel(CHAN_MUSIC));
-	}
+	BASS_ChannelSetAttribute(MUSIC_CHANNEL.channel, BASS_ATTRIB_VOL, MUSIC_CHANNEL.volume*S_GetVolumeForChannel(CHAN_MUSIC));
 
 	for (int c = 0; c < MAX_BASS_CHANNELS; c++) 
 	{
 		if (SOUND_CHANNELS[c].startRequest)
 		{// Start any channels that have been requested...
 			BASS_ProcessStartRequest( c );
+			//NUM_ACTIVE++;
 		}
 		else if (SOUND_CHANNELS[c].isActive && BASS_ChannelIsActive(SOUND_CHANNELS[c].channel) == BASS_ACTIVE_PLAYING) 
 		{// If the channel's playing then update it's position
 			BASS_UpdatePosition(c);
+			//NUM_ACTIVE++;
 		}
 		else
 		{// Finished. Remove the channel...
@@ -572,20 +576,18 @@ void BASS_UpdateSounds_REAL ( void )
 			{// Still marked as active. Stop the channel and reset it...
 				//Com_Printf("Removing inactive channel %i.\n", c);
 				BASS_StopChannel(c);
+				//BASS_ChannelSetAttribute(SOUND_CHANNELS[c].channel, BASS_ATTRIB_VOL, 0.0);
+				//if (SOUND_CHANNELS[c].channel != SOUND_CHANNELS[c].originalChannel) BASS_SampleFree(SOUND_CHANNELS[c].channel);
 				memset(&SOUND_CHANNELS[c],0,sizeof(Channel));
+				//NUM_FREE++;
 			}
 		}
-
-		//if (SOUND_CHANNELS[c].isActive)
-		//	NUM_ACTIVE++;
-		//else
-		//	NUM_FREE++;
 	}
 
 	// Apply the 3D changes.
 	BASS_Apply3D();
 
-	//Com_Printf("There are currently %i active and %i free channels. Free ch list size %i.\n", NUM_ACTIVE, NUM_FREE, current_free_channel);
+	//Com_Printf("There are currently %i active and %i free channels.\n", NUM_ACTIVE, NUM_FREE);
 }
 
 void BASS_UpdateThread(void * aArg)
