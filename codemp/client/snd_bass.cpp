@@ -68,7 +68,7 @@ void BASS_InitializeChannels ( void )
 {
 	if (!SOUND_CHANNELS_INITIALIZED)
 	{
-#pragma omp parallel for num_threads(8)
+//#pragma omp parallel for num_threads(8)
 		for (int c = 0; c < MAX_BASS_CHANNELS; c++) 
 		{// Set up this channel...
 			SOUND_CHANNELS[c]=(Channel*)malloc(sizeof(Channel));
@@ -495,7 +495,7 @@ void BASS_SetPosition ( int c, vec3_t origin )
 void BASS_UpdatePosition ( int c )
 {// Update this channel's position, etc...
 	vec3_t soundPos;
-
+	// all this gets run every 50ms on every sounds, even ones that dont move - but it is probably required for doppler effect as you run past.
 	//if (!SOUND_CHANNELS[c]->isLooping) return; // We don't even need to update do we???
 
 	if (!(s_entityPosition[SOUND_CHANNELS[c]->entityNum][0] == 0 && s_entityPosition[SOUND_CHANNELS[c]->entityNum][1] == 0 && s_entityPosition[SOUND_CHANNELS[c]->entityNum][2] == 0))
@@ -626,7 +626,7 @@ void BASS_UpdateThread(void * aArg)
 	while (!BASS_UPDATE_THREAD_STOP)
 	{
 		BASS_UpdateSounds_REAL();
-		Sleep(10);
+		Sleep(50);
 	}
 
 	BASS_UPDATE_THREAD_RUNNING = qfalse;
@@ -638,6 +638,7 @@ void BASS_UpdateSounds ( void )
 	{
 		BASS_UPDATE_THREAD_RUNNING = qtrue;
 		BASS_UPDATE_THREAD = new thread (BASS_UpdateThread, 0);
+		BASS_UPDATE_THREAD->hardware_concurrency();
 	}
 }
 
