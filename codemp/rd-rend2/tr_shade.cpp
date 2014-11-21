@@ -2375,7 +2375,7 @@ void RB_StageIteratorGeneric( void )
 	// 
 	// now do any dynamic lighting needed. UQ1: A generic method to rule them all... A SANE real world style lighting with a blacklist - not a whitelist!
 	//
-	if ( !(tess.shader->surfaceFlags & (/*SURF_NODLIGHT |*/ SURF_SKY)) ) 
+	if ( !(tess.shader->surfaceFlags & (SURF_NODLIGHT | SURF_SKY)) && tess.dlightBits && tess.shader->sort <= SS_OPAQUE ) 
 	{
 		switch(int(tess.shader->sort))
 		{
