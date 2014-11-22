@@ -904,7 +904,21 @@ S_DefaultSound
 =================
 */
 void S_DefaultSound( sfx_t *sfx ) {
+#ifdef __USE_BASS__
+	int		i;
 
+	sfx->indexSize	= 512;								// #samples, ie shorts
+	sfx->indexData				= (byte *)	Z_Malloc(512*2, TAG_SND_RAWDATA, qfalse);	// ... so *2 for alloc bytes
+	sfx->bInMemory				= qtrue;
+
+	for ( i=0 ; i < sfx->indexSize ; i++ )
+	{
+		sfx->indexData[i] = i;
+	}
+
+	sfx->bassSampleID = BASS_LoadMusicSample( sfx->indexData, sfx->indexSize );
+	Z_Free(sfx->indexData);
+#else //!__USE_BASS__
 	int		i;
 
 	sfx->iSoundLengthInSamples	= 512;								// #samples, ie shorts
@@ -915,6 +929,7 @@ void S_DefaultSound( sfx_t *sfx ) {
 	{
 		sfx->pSoundData[i] = i;
 	}
+#endif //__USE_BASS__
 }
 
 /*
@@ -962,11 +977,11 @@ void S_BeginRegistration( void )
 		memset( s_knownSfx, 0, sizeof( s_knownSfx ) );
 		memset(sfxHash, 0, sizeof(sfx_t *)*LOOP_HASH);
 
-//#ifdef _DEBUG
+/*#ifdef _DEBUG
 		sfx_t *sfx = S_FindName( "***DEFAULT***" );
 		S_DefaultSound( sfx );
-//#else
-//		S_RegisterSound("sound/null.wav");
+#else*/
+		S_RegisterSound("sound/null.wav");
 //#endif
 	}
 }
@@ -1650,9 +1665,9 @@ void S_StartSound(const vec3_t origin, int entityNum, int entchannel, sfxHandle_
 
 	/*
 	if (origin)
-		Com_Printf("BASS_DEBUG: Entity %i playing sound %s on channel %i at org %f %f %f.\n", entityNum, s_knownSfx[ sfxHandle ].sSoundName, entchannel, origin[0], origin[1], origin[2]);
+		Com_Printf("BASS_DEBUG: Entity %i playing sound %s (handle %i - bass id %i) on channel %i at org %f %f %f.\n", entityNum, s_knownSfx[ sfxHandle ].sSoundName, sfxHandle, (int)s_knownSfx[ sfxHandle ].bassSampleID, entchannel, origin[0], origin[1], origin[2]);
 	else
-		Com_Printf("BASS_DEBUG: Entity %i playing sound %s on channel %i at NULL org.\n", entityNum, s_knownSfx[ sfxHandle ].sSoundName, entchannel);
+		Com_Printf("BASS_DEBUG: Entity %i playing sound %s (handle %i - bass id %i) on channel %i at NULL org.\n", entityNum, s_knownSfx[ sfxHandle ].sSoundName, sfxHandle, (int)s_knownSfx[ sfxHandle ].bassSampleID, entchannel);
 	*/
 
 	BASS_AddMemoryChannel(s_knownSfx[ sfxHandle ].bassSampleID, entityNum, entchannel, (float *)origin, 1.0);

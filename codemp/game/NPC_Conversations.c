@@ -383,7 +383,7 @@ void NPC_StormTrooperConversation()
 	vec3_t			origin, angles;
 	char			filename[256];
 
-	if (NPC->enemy || !NPC->NPC->conversationPartner || NPC->NPC->conversationPartner->enemy || NPC->NPC->conversationPartner->NPC)
+	if (NPC->enemy || !NPC->NPC->conversationPartner || NPC->NPC->conversationPartner->enemy || !NPC->NPC->conversationPartner->NPC)
 	{// Exit early if they get a target...
 		NPC_EndConversation();
 		return;
@@ -650,18 +650,13 @@ void NPC_NPCConversation()
 		return;
 	}
 
-	if (NPC->enemy || NPC->NPC->conversationPartner->enemy)
+	if (NPC->enemy || NPC->NPC->conversationPartner->enemy || !NPC->NPC->conversationPartner->NPC)
 	{// Exit early if they get a target...
 		NPC_EndConversation();
 		return;
 	}
 
 	// Look at our partner...
-	//VectorCopy(NPC->NPC->conversationPartner->r.currentOrigin, origin);
-	//VectorSubtract( origin, NPC->r.currentOrigin , NPC->move_vector );
-	//vectoangles( NPC->move_vector, angles );
-	//G_SetAngles(NPC, angles);
-	//VectorCopy(angles, NPC->client->ps.viewangles);
 	NPC_FacePosition( NPC->NPC->conversationPartner->r.currentOrigin, qfalse );
 
 	if (NPC->NPC->conversationReplyTime > level.time)
@@ -680,7 +675,6 @@ void NPC_NPCConversation()
 
 		return;
 	}
-	//CHAN_VOICE
 
 	//trap->Print("NPC %i (%s) playing sound file %s (index %i).\n", NPC->s.number, NPC->NPC_type, filename, G_SoundIndex(filename));
 
@@ -698,7 +692,7 @@ void NPC_FindConversationPartner()
 #ifdef __NPC_CONVERSATIONS__
 	gentity_t	*NPC = NPCS.NPC;
 
-	if (!CONVO_SOUNDS_REGISTERED) G_InitNPCConversationSounds();
+	//if (!CONVO_SOUNDS_REGISTERED) G_InitNPCConversationSounds();
 
 	if (NPC->NPC->conversationSearchTime > level.time) return;
 
