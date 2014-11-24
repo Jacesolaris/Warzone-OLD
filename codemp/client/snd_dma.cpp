@@ -492,6 +492,7 @@ void S_Init( void ) {
 
 #ifdef __USE_BASS__
 	BASS_Initialize();
+	S_BeginRegistration();
 	s_soundStarted = 1;
 	s_soundMuted = qtrue;
 	s_soundtime = 0;
@@ -917,7 +918,7 @@ void S_DefaultSound( sfx_t *sfx ) {
 	}
 
 	sfx->bassSampleID = BASS_LoadMemorySample( sfx->indexData, sfx->indexSize );
-	//Z_Free(sfx->indexData);
+	Z_Free(sfx->indexData);
 #else //!__USE_BASS__
 	int		i;
 
@@ -973,7 +974,10 @@ void S_BeginRegistration( void )
 	if (s_numSfx == 0) {
 		SND_setup();
 
+		Com_Printf("Registering default sound.\n");
+
 		s_numSfx = 0;
+		
 		memset( s_knownSfx, 0, sizeof( s_knownSfx ) );
 		memset(sfxHash, 0, sizeof(sfx_t *)*LOOP_HASH);
 
@@ -1069,10 +1073,17 @@ sfxHandle_t	S_RegisterSound( const char *name)
 	else
 #endif
 	{
+#ifdef __USE_BASS__
+		if ( sfx->bassSampleID )
+		{
+			return sfx - s_knownSfx;
+		}
+#else //!__USE_BASS__
 		if ( sfx->pSoundData )
 		{
 			return sfx - s_knownSfx;
 		}
+#endif //__USE_BASS__
 	}
 
 	sfx->bInMemory = qfalse;

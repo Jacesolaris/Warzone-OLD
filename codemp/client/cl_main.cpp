@@ -1135,6 +1135,7 @@ void CL_Vid_Restart_f( void ) {
 	// unload all sound samples from bass..
 	BASS_Shutdown();
 	BASS_Initialize();
+	S_BeginRegistration();
 #endif //__USE_BASS__
 	// shutdown the UI
 	CL_ShutdownUI();

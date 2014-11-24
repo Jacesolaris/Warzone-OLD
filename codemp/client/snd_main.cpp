@@ -165,6 +165,7 @@ void S_Init( void ) {
 
 #ifdef __USE_BASS__
 	BASS_Initialize();
+	S_BeginRegistration();
 #endif //__USE_BASS__
 }
 

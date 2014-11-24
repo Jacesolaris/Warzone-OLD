@@ -1920,5 +1920,6 @@ void CL_UnbindCGame( void ) {
 	// unload all sound samples from bass..
 	BASS_Shutdown();
 	BASS_Initialize();
+	S_BeginRegistration();
 #endif //__USE_BASS__
 }
