@@ -758,6 +758,8 @@ void G_InitGame( int levelTime, int randomSeed, int restart ) {
 	CreateSpawnpoints();
 	Load_Model_Scales();
 	NPC_PrecacheWarzoneNPCs();
+
+	//trap->Print("MAX_CONFIGSTRINGS is %i.\n", (int)MAX_CONFIGSTRINGS);
 }
 
 

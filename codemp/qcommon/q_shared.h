@@ -1456,8 +1456,37 @@ Ghoul2 Insert End
 #define MAX_AMBIENT_SETS		256 //rww - ambient soundsets must be sent over in config strings.
 
 #ifdef __MMO__
-#define	MAX_CONFIGSTRINGS	5000 //this is getting pretty high. Try not to raise it anymore than it already is.
+//#define	MAX_CONFIGSTRINGS	5000 //this is getting pretty high. Try not to raise it anymore than it already is.
 //#define	MAX_CONFIGSTRINGS	3500 //this is getting pretty high. Try not to raise it anymore than it already is.
+
+
+//
+// UQ1: Let's count them here and use the real maximum... Might save some bandwidth and/or corruption...
+// This will need to continue to match bg_local.h's  CS_ values...
+//
+
+#define CCS_AMBIENT_SET			37
+#define CCS_SIEGE_STATE			(CCS_AMBIENT_SET+MAX_AMBIENT_SETS)
+#define CCS_SIEGE_OBJECTIVES	(CCS_SIEGE_STATE+1)
+#define CCS_SIEGE_TIMEOVERRIDE	(CCS_SIEGE_OBJECTIVES+1)
+#define CCS_SIEGE_WINTEAM		(CCS_SIEGE_TIMEOVERRIDE+1)
+#define CCS_SIEGE_ICONS			(CCS_SIEGE_WINTEAM+1)
+#define	CCS_MODELS				(CCS_SIEGE_ICONS+1)
+#define	CCS_SKYBOXORG			(CCS_MODELS+MAX_MODELS)		//rww - skybox info
+#define	CCS_SOUNDS				(CCS_SKYBOXORG+1)
+#define CCS_ICONS				(CCS_SOUNDS+MAX_SOUNDS)
+#define	CCS_PLAYERS				(CCS_ICONS+MAX_ICONS)
+#define CCS_G2BONES				(CCS_PLAYERS+MAX_CLIENTS)
+#define CCS_LOCATIONS			(CCS_G2BONES+MAX_G2BONES)
+#define CCS_PARTICLES			(CCS_LOCATIONS+MAX_LOCATIONS)
+#define CCS_EFFECTS				(CCS_PARTICLES+MAX_LOCATIONS)
+#define	CCS_LIGHT_STYLES		(CCS_EFFECTS+MAX_FX)
+#define CCS_TERRAINS			(CCS_LIGHT_STYLES+(MAX_LIGHT_STYLES*3))
+#define CCS_BSP_MODELS			(CCS_TERRAINS+MAX_TERRAINS)
+#define CCS_MAX					(CCS_BSP_MODELS+MAX_SUB_BSP)
+
+#define	MAX_CONFIGSTRINGS	CCS_MAX+1 // UQ1: Set to the actual real max value...
+
 #else //!__MMO__
 #define	MAX_CONFIGSTRINGS	1700 //this is getting pretty high. Try not to raise it anymore than it already is.
 #endif //__MMO__

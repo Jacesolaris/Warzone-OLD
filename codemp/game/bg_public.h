@@ -135,9 +135,15 @@ Ghoul2 Insert End
 
 #define CS_MAX					(CS_BSP_MODELS + MAX_SUB_BSP)
 
+#ifdef __MMO__
+#if (CS_MAX+1 != MAX_CONFIGSTRINGS)
+#error overflow: (CS_MAX+1 != MAX_CONFIGSTRINGS) - Verify that CS_ values in bg_public.h match the CCS_ values in q_shared.h
+#endif
+#else //!__MMO__
 #if (CS_MAX) > MAX_CONFIGSTRINGS
 #error overflow: (CS_MAX) > MAX_CONFIGSTRINGS
 #endif
+#endif //__MMO__
 
 typedef enum {
 	G2_MODELPART_HEAD = 10,
