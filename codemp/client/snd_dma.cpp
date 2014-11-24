@@ -492,10 +492,6 @@ void S_Init( void ) {
 
 #ifdef __USE_BASS__
 	BASS_Initialize();
-	S_BeginRegistration();
-	s_soundStarted = 1;
-	s_soundMuted = qtrue;
-	s_soundtime = 0;
 #else //!__USE_BASS__
 
 #ifdef USE_OPENAL

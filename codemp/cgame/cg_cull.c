@@ -27,6 +27,21 @@ qboolean CullVisible ( vec3_t org1, vec3_t org2, int ignore )
 		return ( qtrue );
 	}
 
+	VectorCopy(org1, orgA);
+	orgA[2]+=8;
+	VectorCopy(org2, orgB);
+
+	CG_Trace( &tr, orgA, NULL, NULL, orgB, ignore, CONTENTS_OPAQUE );
+
+	if ( tr.fraction == 1 )
+	{// Completely visible!
+		return ( qtrue );
+	}
+	else if (tr.fraction > 0.8 || Distance(tr.endpos, org2) < 96)//256)
+	{// Close enough!
+		return ( qtrue );
+	}
+
 	return ( qfalse );
 }
 

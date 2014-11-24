@@ -42,8 +42,8 @@ entitySound_t	s_entitySounds[MAX_GENTITIES];
 loopQueue_t		s_loopQueue[MAX_LOOPQUEUE];
 int				s_loopQueueCount;
 
-static int	s_soundStarted;
-static qboolean s_soundMuted;
+int			s_soundStarted;
+qboolean	s_soundMuted;
 int			s_listenNumber;
 vec3_t		s_listenOrigin;
 vec3_t		s_listenVelocity;
