@@ -25,7 +25,7 @@ qboolean EAX_SUPPORTED = qtrue;
 #define SOUND_3D_METHOD					BASS_3DMODE_NORMAL //BASS_3DMODE_RELATIVE
 
 float MIN_SOUND_RANGE				=	256.0; //256.0
-float MAX_SOUND_RANGE				=	-1;//2048.0; // 3072.0
+float MAX_SOUND_RANGE				=	65536.0;//-1;//2048.0; // 3072.0
 
 int SOUND_CONE_INSIDE_ANGLE			=	120;
 int SOUND_CONE_OUTSIDE_ANGLE		=	120;
@@ -479,75 +479,78 @@ qboolean BASS_Initialize ( void )
 // Position Utils...
 //
 
-void BASS_UpdatePosition ( int c )
+void BASS_UpdatePosition ( int ch, qboolean IS_NEW_SOUND )
 {// Update this channel's position, etc...
-	vec3_t soundPos;
-	// all this gets run every 50ms on every sounds, even ones that dont move - but it is probably required for doppler effect as you run past.
-	//if (!SOUND_CHANNELS[c].isLooping) return; // We don't even need to update do we???
+	qboolean	IS_LOCAL_SOUND = qfalse;
+	Channel		*c = &SOUND_CHANNELS[ch];
+	int			SOUND_ENTITY = -1;
 
-	if (!(s_entityPosition[SOUND_CHANNELS[c].entityNum][0] == 0 && s_entityPosition[SOUND_CHANNELS[c].entityNum][1] == 0 && s_entityPosition[SOUND_CHANNELS[c].entityNum][2] == 0))
-	{
-		VectorCopy(s_entityPosition[SOUND_CHANNELS[c].entityNum], SOUND_CHANNELS[c].origin);
+	if (!c) return; // should be impossible, but just in case...
+	if (!IS_NEW_SOUND && !c->isLooping) return; // We don't even need to update do we???
+
+	SOUND_ENTITY = c->entityNum;
+
+	if (IS_NEW_SOUND && !(c->origin[0] == 0 && c->origin[1] == 0 && c->origin[2] == 0))
+	{// New sound with an origin... Use the specified origin...
+
 	}
-	else if (!(cl.entityBaselines[SOUND_CHANNELS[c].entityNum].origin[0] == 0 && cl.entityBaselines[SOUND_CHANNELS[c].entityNum].origin[1] == 0 && cl.entityBaselines[SOUND_CHANNELS[c].entityNum].origin[2] == 0))
-	{
-		VectorCopy(cl.entityBaselines[SOUND_CHANNELS[c].entityNum].origin, SOUND_CHANNELS[c].origin);
+	else if (SOUND_ENTITY == -1)
+	{// Either a local sound, or we hopefully already have an origin...
+
 	}
-	else if (!(SOUND_CHANNELS[c].origin[0] == 0 && SOUND_CHANNELS[c].origin[1] == 0 && SOUND_CHANNELS[c].origin[2] == 0))
-	{
-		
+	else if (!c->isLooping
+		&& !(s_entityPosition[SOUND_ENTITY][0] == 0 
+		&& s_entityPosition[SOUND_ENTITY][1] == 0 
+		&& s_entityPosition[SOUND_ENTITY][2] == 0))
+	{// UPDATE POSITION - Primary - use s_entityPosition if we have one...
+		VectorCopy(s_entityPosition[SOUND_ENTITY], c->origin);
 	}
-	else
-	{
-		VectorSet(SOUND_CHANNELS[c].origin, 0, 0, 0);
+	else if (!c->isLooping
+		&& !(cl.entityBaselines[SOUND_ENTITY].origin[0] == 0 
+		&& cl.entityBaselines[SOUND_ENTITY].origin[1] == 0 
+		&& cl.entityBaselines[SOUND_ENTITY].origin[2] == 0))
+	{// UPDATE POSITION - Backup - use entity baseline origins...
+		VectorCopy(cl.entityBaselines[SOUND_ENTITY].origin, c->origin);
+	}
+	
+	if (c->origin[0] == 0 
+		&& c->origin[1] == 0 
+		&& c->origin[2] == 0)
+	{// Must be a local sound...
+		VectorSet(c->origin, 0, 0, 0);
+		IS_LOCAL_SOUND = qtrue;
 	}
 
-	if (/*SOUND_CHANNELS[c].entityNum == -1 &&*/ SOUND_CHANNELS[c].origin[0] == 0 && SOUND_CHANNELS[c].origin[1] == 0 && SOUND_CHANNELS[c].origin[2] == 0)
-	{// Local sound...
-		soundPos[0] = cl.snap.ps.origin[0];
-		soundPos[1] = cl.snap.ps.origin[1];
-		soundPos[2] = cl.snap.ps.origin[2];
-	}
-	else if (!(SOUND_CHANNELS[c].origin[0] == 0 && SOUND_CHANNELS[c].origin[1] == 0 && SOUND_CHANNELS[c].origin[2] == 0))
-	{// We have an origin...
-		soundPos[0] = SOUND_CHANNELS[c].origin[0];
-		soundPos[1] = SOUND_CHANNELS[c].origin[1];
-		soundPos[2] = SOUND_CHANNELS[c].origin[2];
-	}
-	else
-	{
-		soundPos[0] = s_entityPosition[SOUND_CHANNELS[c].entityNum][0];
-		soundPos[1] = s_entityPosition[SOUND_CHANNELS[c].entityNum][1];
-		soundPos[2] = s_entityPosition[SOUND_CHANNELS[c].entityNum][2];
-	}
-
-	//vec3_t vel, forward, right, up;
-	//vel[0] = SOUND_CHANNELS[c].pos.x - soundPos[0];
-	//vel[1] = SOUND_CHANNELS[c].pos.y - soundPos[1];
-	//vel[2] = SOUND_CHANNELS[c].pos.z - soundPos[2];
-
-	//AngleVectors(vel, forward, right, up);
-	SOUND_CHANNELS[c].vel.x = 0;//forward[0];
-	SOUND_CHANNELS[c].vel.y = 0;//forward[1];
-	SOUND_CHANNELS[c].vel.z = 0;//-forward[2];
-
-	//SOUND_CHANNELS[c].ang.x = vel[0];
-	//SOUND_CHANNELS[c].ang.y = vel[1];
-	//SOUND_CHANNELS[c].ang.z = -vel[2];
+	c->vel.x = 0;
+	c->vel.y = 0;
+	c->vel.z = 0;
 
 	// Set origin...
-	SOUND_CHANNELS[c].pos.x = soundPos[0];
-	SOUND_CHANNELS[c].pos.y = soundPos[1];
-	SOUND_CHANNELS[c].pos.z = soundPos[2];
+	c->pos.x = c->origin[0];
+	c->pos.y = c->origin[1];
+	c->pos.z = c->origin[2];
 
-	BASS_ChannelSet3DPosition(SOUND_CHANNELS[c].channel,&SOUND_CHANNELS[c].pos,NULL,&SOUND_CHANNELS[c].vel);
-
-	//if (!BASS_ChannelIsSliding(SOUND_CHANNELS[c].channel, BASS_ATTRIB_VOL))
+	if (IS_LOCAL_SOUND)
 	{
-		BASS_ChannelSet3DAttributes(SOUND_CHANNELS[c].channel, SOUND_3D_METHOD, MIN_SOUND_RANGE, MAX_SOUND_RANGE, SOUND_CONE_INSIDE_ANGLE, SOUND_CONE_OUTSIDE_ANGLE, SOUND_CONE_OUTSIDE_VOLUME);//-1, -1, -1);
-		BASS_ChannelFlags(SOUND_CHANNELS[c].channel, BASS_SAMPLE_MUTEMAX, BASS_SAMPLE_MUTEMAX); // enable muting at the max distance
-		BASS_ChannelSetAttribute(SOUND_CHANNELS[c].channel, BASS_ATTRIB_VOL, SOUND_CHANNELS[c].volume*S_GetVolumeForChannel(SOUND_CHANNELS[c].entityChannel));
-		//Com_Printf("Volume %f.\n", SOUND_CHANNELS[c].volume*S_GetVolumeForChannel(SOUND_CHANNELS[c].entityChannel));
+		BASS_ChannelSet3DPosition(c->channel, &c->pos, NULL, &c->vel);
+
+		//if (!BASS_ChannelIsSliding(c->channel, BASS_ATTRIB_VOL))
+		{
+			BASS_ChannelSet3DAttributes(c->channel, SOUND_3D_METHOD, -1, -1, -1, -1, -1);
+			BASS_ChannelSetAttribute(c->channel, BASS_ATTRIB_VOL, c->volume*S_GetVolumeForChannel(c->volume*S_GetVolumeForChannel(c->entityChannel)));
+		}
+	}
+	else
+	{
+		BASS_ChannelSet3DPosition(c->channel,&c->pos,NULL,&c->vel);
+
+		//if (!BASS_ChannelIsSliding(c->channel, BASS_ATTRIB_VOL))
+		{
+			BASS_ChannelSet3DAttributes(c->channel, SOUND_3D_METHOD, MIN_SOUND_RANGE, MAX_SOUND_RANGE, SOUND_CONE_INSIDE_ANGLE, SOUND_CONE_OUTSIDE_ANGLE, SOUND_CONE_OUTSIDE_VOLUME);
+			BASS_ChannelSetAttribute(c->channel, BASS_ATTRIB_VOL, c->volume*S_GetVolumeForChannel(c->entityChannel));
+			//BASS_ChannelFlags(c->channel, BASS_SAMPLE_MUTEMAX, BASS_SAMPLE_MUTEMAX); // enable muting at the max distance
+			//Com_Printf("Volume %f.\n", c->volume*S_GetVolumeForChannel(c->entityChannel));
+		}
 	}
 }
 
@@ -558,7 +561,7 @@ void BASS_ProcessStartRequest( int channel )
 	c->channel = BASS_SampleGetChannel(c->originalChannel,FALSE); // initialize sample channel
 
 	//BASS_ChannelSetAttribute(c->channel, BASS_ATTRIB_VOL, c->volume*S_GetVolumeForChannel(c->entityChannel));
-	//BASS_ChannelSlideAttribute(c->channel, BASS_ATTRIB_VOL, c->volume*S_GetVolumeForChannel(c->entityChannel), 500); // fade-in over 100ms
+	//BASS_ChannelSlideAttribute(c->channel, BASS_ATTRIB_VOL, c->volume*S_GetVolumeForChannel(c->entityChannel), 100); // fade-in over 100ms
 
 	// Set original origin...
 	c->pos.x = c->origin[0];
@@ -566,7 +569,7 @@ void BASS_ProcessStartRequest( int channel )
 	c->pos.z = c->origin[2];
 
 	// Apply the 3D changes
-	BASS_UpdatePosition(channel);
+	BASS_UpdatePosition(channel, qtrue);
 
 	// Play
 	if (c->isLooping)
@@ -616,7 +619,7 @@ void BASS_UpdateSounds_REAL ( void )
 		}
 		else if (SOUND_CHANNELS[c].isActive && BASS_ChannelIsActive(SOUND_CHANNELS[c].channel) == BASS_ACTIVE_PLAYING) 
 		{// If the channel's playing then update it's position
-			BASS_UpdatePosition(c);
+			BASS_UpdatePosition(c, qfalse);
 			//NUM_ACTIVE++;
 		}
 		else
