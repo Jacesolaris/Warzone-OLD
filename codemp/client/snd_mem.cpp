@@ -760,16 +760,19 @@ static qboolean S_LoadSound_Actual( sfx_t *sfx )
 		
 		if (Q_stricmpn(psExt,".mp3",4) == 0 && !MP3_IsValid(sLoadName, sfx->indexData, sfx->indexSize, qfalse)) isMusic = qtrue;
 
-		sfx->qhandle = sfx - s_knownSfx;
-
 		if (!isMusic)
 			sfx->bassSampleID = BASS_LoadMemorySample( sfx->indexData, sfx->indexSize );
 		else
 			sfx->bassSampleID = BASS_LoadMusicSample( sfx->indexData, sfx->indexSize );
-		
+
 		//Com_Printf("BASS: Registered sound %s. ID %i. Length %i.\n", sLoadName, sfx->qhandle, sfx->indexSize);
 		
-		if (sfx->bassSampleID < 0) Com_Printf("BASS: Failed to load sample %s from memory.\n", sLoadName);
+		if (sfx->bassSampleID < 0) {
+			Com_Printf("BASS: Failed to load sample %s from memory.\n", sLoadName);
+			return qfalse;
+		}
+
+		sfx->qhandle = sfx - s_knownSfx;
 	}
 
 	FS_FreeFile( sfx->indexData );

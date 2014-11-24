@@ -916,8 +916,8 @@ void S_DefaultSound( sfx_t *sfx ) {
 		sfx->indexData[i] = i;
 	}
 
-	sfx->bassSampleID = BASS_LoadMusicSample( sfx->indexData, sfx->indexSize );
-	Z_Free(sfx->indexData);
+	sfx->bassSampleID = BASS_LoadMemorySample( sfx->indexData, sfx->indexSize );
+	//Z_Free(sfx->indexData);
 #else //!__USE_BASS__
 	int		i;
 
@@ -977,12 +977,12 @@ void S_BeginRegistration( void )
 		memset( s_knownSfx, 0, sizeof( s_knownSfx ) );
 		memset(sfxHash, 0, sizeof(sfx_t *)*LOOP_HASH);
 
-/*#ifdef _DEBUG
+//#ifdef _DEBUG
 		sfx_t *sfx = S_FindName( "***DEFAULT***" );
 		S_DefaultSound( sfx );
-#else*/
+/*#else
 		S_RegisterSound("sound/null.wav");
-//#endif
+#endif*/
 	}
 }
 
