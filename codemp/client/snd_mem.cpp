@@ -557,7 +557,7 @@ void S_MP3_CalcVols_f( void )
 
 
 
-// adjust filename for foreign languages and WAV/MP3 issues.
+// adjust filename for foreign languages and WAV/MP3/OGG issues.
 //
 // returns qfalse if failed to load, else fills in *pData
 //
@@ -580,6 +580,13 @@ static qboolean S_LoadSound_FileLoadAndNameAdjuster(char *psFilename, byte **pDa
 				strcpy(&psFilename[iNameStrlen-3],"mp3");		//not there try mp3
 				FS_FOpenFileRead(psFilename, &hFile, qfalse);	//cache the mp3
 			}
+#ifdef __USE_BASS__
+			if (!hFile)
+			{
+				strcpy(&psFilename[iNameStrlen-3],"ogg");		//not there try ogg
+				FS_FOpenFileRead(psFilename, &hFile, qfalse);	//cache the ogg
+			}
+#endif //__USE_BASS__
 			if (hFile)
 			{
 				FS_FCloseFile(hFile);
@@ -594,6 +601,13 @@ static qboolean S_LoadSound_FileLoadAndNameAdjuster(char *psFilename, byte **pDa
 				strcpy(&psFilename[iNameStrlen-3],"mp3");		//not there try mp3
 				FS_FOpenFileRead(psFilename, &hFile, qfalse);	//cache the mp3
 			}
+#ifdef __USE_BASS__
+			if (!hFile)
+			{
+				strcpy(&psFilename[iNameStrlen-3],"ogg");		//not there try ogg
+				FS_FOpenFileRead(psFilename, &hFile, qfalse);	//cache the ogg
+			}
+#endif //__USE_BASS__
 			if (hFile)
 			{
 				FS_FCloseFile(hFile);
@@ -608,6 +622,13 @@ static qboolean S_LoadSound_FileLoadAndNameAdjuster(char *psFilename, byte **pDa
 				strcpy(&psFilename[iNameStrlen-3],"mp3");		//not there try mp3
 				FS_FOpenFileRead(psFilename, &hFile, qfalse);	//cache the mp3
 			}
+#ifdef __USE_BASS__
+			if (!hFile)
+			{
+				strcpy(&psFilename[iNameStrlen-3],"ogg");		//not there try ogg
+				FS_FOpenFileRead(psFilename, &hFile, qfalse);	//cache the ogg
+			}
+#endif //__USE_BASS__
 			if (hFile)
 			{
 				FS_FCloseFile(hFile);
@@ -636,7 +657,14 @@ static qboolean S_LoadSound_FileLoadAndNameAdjuster(char *psFilename, byte **pDa
 		}
 	}
 
+	//
+	// WAV Support...
+	//
 	*piSize = FS_ReadFile( psFilename, (void **)pData );	// try WAV
+	
+	//
+	// MP3 Support...
+	//
 	if ( !*pData ) {
 		psFilename[iNameStrlen-3] = 'm';
 		psFilename[iNameStrlen-2] = 'p';
@@ -670,12 +698,46 @@ static qboolean S_LoadSound_FileLoadAndNameAdjuster(char *psFilename, byte **pDa
 					*piSize = FS_ReadFile( psFilename, (void **)pData );	// try English MP3
 				}
 			}
+		}
+	}
 
-			if (!*pData)
+#ifdef __USE_BASS__
+	//
+	// OGG Support...
+	//
+	if ( !*pData ) {
+		psFilename[iNameStrlen-3] = 'o';
+		psFilename[iNameStrlen-2] = 'g';
+		psFilename[iNameStrlen-1] = 'g';
+		*piSize = FS_ReadFile( psFilename, (void **)pData );	// try OGG
+
+		if ( !*pData )
+		{
+			//hmmm, not found, ok, maybe we were trying a foreign noise ("arghhhhh.mp3" that doesn't matter?) but it
+			// was missing?   Can't tell really, since both types are now in sound/chars. Oh well, fall back to English for now...
+
+			if (psVoice)	// were we trying to load foreign?
 			{
-				return qfalse;	// sod it, give up...
+				// yep, so fallback to re-try the english...
+				//
+#ifndef FINAL_BUILD
+				Com_Printf(S_COLOR_YELLOW "Foreign file missing: \"%s\"! (using English...)\n",psFilename);
+#endif
+
+				strncpy(psVoice,"chars",5);
+
+				psFilename[iNameStrlen-3] = 'o';
+				psFilename[iNameStrlen-2] = 'g';
+				psFilename[iNameStrlen-1] = 'g';
+				*piSize = FS_ReadFile( psFilename, (void **)pData );	// try English OGG
 			}
 		}
+	}
+#endif //__USE_BASS__
+
+	if (!*pData)
+	{
+		return qfalse;	// sod it, give up...
 	}
 
 	return qtrue;

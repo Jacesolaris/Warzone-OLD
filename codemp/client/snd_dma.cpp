@@ -1603,58 +1603,6 @@ void S_MuteSound(int entityNum, int entchannel)
 #endif //__USE_BASS__
 }
 
-#ifdef __USE_BASS__
-float S_GetVolumeForChannel ( int entchannel )
-{
-	float		volume = 1;
-	float		normal_vol, voice_vol, effects_vol, ambient_vol, weapon_vol, item_vol, body_vol, music_vol, local_vol;
-
-	normal_vol = s_volume->value;
-	voice_vol  = (s_volumeVoice->value*normal_vol);
-	effects_vol  = (s_volumeEffects->value*normal_vol);
-	ambient_vol  = (s_volumeAmbient->value*normal_vol);
-	weapon_vol  = (s_volumeWeapon->value*s_volumeEffects->value*normal_vol);
-	item_vol  = (s_volumeItem->value*s_volumeEffects->value*normal_vol);
-	body_vol  = (s_volumeBody->value*s_volumeEffects->value*normal_vol);
-	music_vol  = (s_volumeMusic->value*normal_vol);
-	local_vol  = (s_volumeLocal->value*normal_vol);
-
-	if ( entchannel == CHAN_VOICE || entchannel == CHAN_VOICE_ATTEN )
-	{
-		volume = voice_vol;
-	}
-	else if (entchannel == CHAN_WEAPON)
-	{
-		volume = weapon_vol;
-	}
-	else if (entchannel == CHAN_ITEM)
-	{
-		volume = item_vol;
-	}
-	else if (entchannel == CHAN_BODY)
-	{
-		volume = body_vol;
-	}
-	else if ( entchannel == CHAN_LESS_ATTEN || entchannel == CHAN_AUTO)
-	{
-		volume = effects_vol;
-	}
-	else if ( entchannel == CHAN_AMBIENT )
-	{
-		volume = ambient_vol;
-	}
-	else if ( entchannel == CHAN_MUSIC )
-	{
-		volume = music_vol;
-	}
-	else //CHAN_LOCAL //CHAN_ANNOUNCER //CHAN_LOCAL_SOUND //CHAN_MENU1 //CHAN_VOICE_GLOBAL
-	{
-		volume = local_vol;
-	}
-
-	return volume;
-}
-#endif //__USE_BASS__
 
 /*
 ====================

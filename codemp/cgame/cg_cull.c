@@ -45,12 +45,12 @@ qboolean CullVisible ( vec3_t org1, vec3_t org2, int ignore )
 	return ( qfalse );
 }
 
-qboolean ShouldCull ( vec3_t org )
+qboolean ShouldCull ( vec3_t org, qboolean check_angles )
 {
 	float dist = Distance(cg.refdef.vieworg, org);
 
 	if (dist > 3072.0) return qtrue; // TOO FAR! CULLED!
-	if (!CG_InFOV( org, cg.refdef.vieworg, cg.refdef.viewangles, cg.refdef.fov_x*1.2, cg.refdef.fov_y*1.2)) return qtrue; // NOT ON SCREEN! CULLED!
+	if (check_angles && !CG_InFOV( org, cg.refdef.vieworg, cg.refdef.viewangles, cg.refdef.fov_x*1.2, cg.refdef.fov_y*1.2)) return qtrue; // NOT ON SCREEN! CULLED!
 	if (/*dist > 256 &&*/ !CullVisible(cg.refdef.vieworg, org, cg.clientNum)) return qtrue; // NOT VISIBLE TO US! CULLED!
 
 	return qfalse;
@@ -58,21 +58,21 @@ qboolean ShouldCull ( vec3_t org )
 
 void AddRefEntityToScene ( refEntity_t *ent )
 {
-	if (!ent->ignoreCull && ShouldCull(ent->origin)) return;
+	if (!ent->ignoreCull && ShouldCull(ent->origin, qtrue)) return;
 
 	trap->R_AddRefEntityToScene( ent );
 }
 
 void PlayEffectID ( int id, vec3_t org, vec3_t fwd, int vol, int rad, qboolean isPortal )
 {
-	if (!isPortal && ShouldCull(org)) return;
+	if (!isPortal && ShouldCull(org, qfalse)) return;
 
 	trap->FX_PlayEffectID( id, org, fwd, vol, rad, isPortal );
 }
 
 void AddLightToScene ( const vec3_t org, float intensity, float r, float g, float b )
 {
-	if (ShouldCull((float *)org)) return;
+	if (ShouldCull((float *)org, qfalse)) return;
 
 	trap->R_AddLightToScene(org, intensity, r, g, b);
 }
