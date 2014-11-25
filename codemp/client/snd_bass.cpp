@@ -3,6 +3,8 @@
 
 #ifdef __USE_BASS__
 
+//#define __BASS_PLAYER_BASED_LOCATIONS__ // UQ1: This puts player always at 0,0,0 and calculates sound positions from that...
+
 #include "snd_bass.h"
 #include "fast_mutex.h"
 #include "tinythread.h"
@@ -580,7 +582,11 @@ void BASS_UpdatePosition ( int ch, qboolean IS_NEW_SOUND )
 	c->vel.y = 0;
 	c->vel.z = 0;
 
+#ifndef __BASS_PLAYER_BASED_LOCATIONS__
 	VectorCopy(cl.snap.ps.origin, porg);
+#else //__BASS_PLAYER_BASED_LOCATIONS__
+	VectorSet(porg, 0, 0, 0);
+#endif //__BASS_PLAYER_BASED_LOCATIONS__
 	//porg[0] /= 1000;
 	//porg[1] /= 1000;
 	//porg[2] /= 1000;
@@ -603,7 +609,11 @@ void BASS_UpdatePosition ( int ch, qboolean IS_NEW_SOUND )
 	}
 	else
 	{
+#ifndef __BASS_PLAYER_BASED_LOCATIONS__
 		VectorCopy(c->origin, corg);
+#else //__BASS_PLAYER_BASED_LOCATIONS__
+		VectorSubtract(c->origin, cl.snap.ps.origin, corg);
+#endif //__BASS_PLAYER_BASED_LOCATIONS__
 		//corg[0] /= 1000;
 		//corg[1] /= 1000;
 		//corg[2] /= 1000;
@@ -656,7 +666,11 @@ void BASS_UpdateSounds_REAL ( void )
 	vec3_t forward, right, up, porg;
 	BASS_3DVECTOR pos, ang, top, vel;
 
+#ifndef __BASS_PLAYER_BASED_LOCATIONS__
 	VectorCopy(cl.snap.ps.origin, porg);
+#else //__BASS_PLAYER_BASED_LOCATIONS__
+	VectorSet(porg, 0, 0, 0);
+#endif //__BASS_PLAYER_BASED_LOCATIONS__
 	//porg[0] /= 1000;
 	//porg[1] /= 1000;
 	//porg[2] /= 1000;
