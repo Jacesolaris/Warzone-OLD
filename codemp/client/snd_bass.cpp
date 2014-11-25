@@ -641,8 +641,19 @@ void BASS_ProcessStartRequest( int channel )
 {
 	Channel *c = &SOUND_CHANNELS[channel];
 
-	c->channel = BASS_SampleGetChannel(c->originalChannel,FALSE); // initialize sample channel
+	DWORD count = BASS_SampleGetChannels(c->originalChannel, NULL);
+	if (count == -1) 
+	{// fail to find a channel...
+		c->startRequest = qfalse;
+		c->isLooping = qfalse;
+		c->isActive = qfalse;
+		return;
+	}
 
+	//Com_Printf("Channel %i. Count: %i. Looping %i. OutChan %i. Volume %f.\n", c->entityChannel, count, (int)c->isLooping, c->channel, c->volume);
+
+	c->channel = BASS_SampleGetChannel(c->originalChannel,FALSE); // initialize sample channel
+	
 	//BASS_ChannelSlideAttribute(c->channel, BASS_ATTRIB_VOL, c->volume*BASS_GetVolumeForChannel(c->entityChannel), 1000); // fade-in over 100ms
 
 	// Apply the 3D changes
@@ -655,7 +666,7 @@ void BASS_ProcessStartRequest( int channel )
 	else
 		BASS_ChannelPlay(c->channel,FALSE);
 
-	SOUND_CHANNELS[channel].startRequest = qfalse;
+	c->startRequest = qfalse;
 }
 
 void BASS_UpdateSounds_REAL ( void )

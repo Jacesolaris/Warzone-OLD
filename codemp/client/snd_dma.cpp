@@ -1618,12 +1618,12 @@ void S_StartSound(const vec3_t origin, int entityNum, int entchannel, sfxHandle_
 #ifdef __USE_BASS__
 	if (s_knownSfx[ sfxHandle ].bassSampleID < 0) return;
 
-	/*
+	
 	if (origin)
-		Com_Printf("BASS_DEBUG: Entity %i playing sound %s (handle %i - bass id %i) on channel %i at org %f %f %f.\n", entityNum, s_knownSfx[ sfxHandle ].sSoundName, sfxHandle, (int)s_knownSfx[ sfxHandle ].bassSampleID, entchannel, origin[0], origin[1], origin[2]);
+		Com_Printf("BASS_DEBUG: Entity %i playing sound %s (handle %i - bass id %ld) on channel %i at org %f %f %f.\n", entityNum, s_knownSfx[ sfxHandle ].sSoundName, sfxHandle, s_knownSfx[ sfxHandle ].bassSampleID, entchannel, origin[0], origin[1], origin[2]);
 	else
-		Com_Printf("BASS_DEBUG: Entity %i playing sound %s (handle %i - bass id %i) on channel %i at NULL org.\n", entityNum, s_knownSfx[ sfxHandle ].sSoundName, sfxHandle, (int)s_knownSfx[ sfxHandle ].bassSampleID, entchannel);
-	*/
+		Com_Printf("BASS_DEBUG: Entity %i playing sound %s (handle %i - bass id %ld) on channel %i at NULL org.\n", entityNum, s_knownSfx[ sfxHandle ].sSoundName, sfxHandle, s_knownSfx[ sfxHandle ].bassSampleID, entchannel);
+	
 
 	BASS_AddMemoryChannel(s_knownSfx[ sfxHandle ].bassSampleID, entityNum, entchannel, (float *)origin, 1.0);
 	return;
