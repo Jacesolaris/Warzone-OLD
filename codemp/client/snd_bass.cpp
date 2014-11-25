@@ -613,6 +613,8 @@ void BASS_UpdatePosition ( int ch, qboolean IS_NEW_SOUND )
 		c->pos.y = corg[1];
 		c->pos.z = corg[2];
 
+		//Com_Printf("SOUND: Pos %f %f %f. Vel %f %f %f.\n", c->pos.x, c->pos.y, c->pos.z, c->vel.x, c->vel.y, c->vel.z);
+
 		BASS_ChannelSet3DPosition(c->channel, &c->pos, NULL, &c->vel);
 
 		//if (!BASS_ChannelIsSliding(c->channel, BASS_ATTRIB_VOL))
@@ -635,6 +637,7 @@ void BASS_ProcessStartRequest( int channel )
 
 	// Apply the 3D changes
 	BASS_UpdatePosition(channel, qtrue);
+	BASS_Apply3D();
 
 	// Play
 	if (c->isLooping)
@@ -660,7 +663,7 @@ void BASS_UpdateSounds_REAL ( void )
 
 	vel.x = cl.snap.ps.velocity[0];
 	vel.y = cl.snap.ps.velocity[1];
-	vel.z = -cl.snap.ps.velocity[2];
+	vel.z = cl.snap.ps.velocity[2]*-1.0;
 
 	pos.x = porg[0];
 	pos.y = porg[1];
@@ -673,11 +676,15 @@ void BASS_UpdateSounds_REAL ( void )
 
 	ang.x = forward[0];
 	ang.y = forward[1];
-	ang.z = -forward[2];
+	ang.z = forward[2]*-1.0;
 
-	top.x = up[0];
-	top.y = up[1];
-	top.z = -up[2];
+	top.x = 0;//0-up[0];
+	top.y = 1;//0-up[1];
+	top.z = 0;//up[2];
+
+	BASS_Set3DPosition(&pos, &vel, &ang, &top);
+
+	//Com_Printf("PL: Pos %f %f %f. Ang %f %f %f. Top %f %f %f. Vel %f %f %f.\n", pos.x, pos.y, pos.z, ang.x, ang.y, ang.z, top.x, top.y, top.z, vel.x, vel.y, vel.z);
 
 	BASS_ChannelSetAttribute(MUSIC_CHANNEL.channel, BASS_ATTRIB_VOL, MUSIC_CHANNEL.volume*BASS_GetVolumeForChannel(CHAN_MUSIC));
 
@@ -711,7 +718,6 @@ void BASS_UpdateSounds_REAL ( void )
 	}
 
 	// Apply the 3D changes.
-	BASS_Set3DPosition(&pos, &vel, &ang, &top);
 	BASS_Apply3D();
 
 	//Com_Printf("There are currently %i active and %i free channels.\n", NUM_ACTIVE, NUM_FREE);
@@ -856,15 +862,7 @@ DWORD BASS_LoadMusicSample ( void *memory, int length )
 	{
 		return newchan;
 	}
-	else if (newchan=BASS_SampleLoad(TRUE,memory,0,(DWORD)length,1,BASS_SAMPLE_SOFTWARE|BASS_SAMPLE_LOOP|BASS_SAMPLE_FLOAT))
-	{
-		return newchan;
-	}
 	else if (newchan=BASS_SampleLoad(TRUE,memory,0,(DWORD)length,1,BASS_SAMPLE_LOOP))
-	{
-		return newchan;
-	}
-	else if (newchan=BASS_SampleLoad(TRUE,memory,0,(DWORD)length,1,BASS_SAMPLE_SOFTWARE|BASS_SAMPLE_LOOP))
 	{
 		return newchan;
 	}
@@ -997,15 +995,7 @@ DWORD BASS_LoadMemorySample ( void *memory, int length )
 	{
 		return newchan;
 	}
-	else if ((newchan=BASS_SampleLoad(TRUE,memory,0,(DWORD)length,(DWORD)16,BASS_SAMPLE_3D|BASS_SAMPLE_SOFTWARE|BASS_SAMPLE_MONO|BASS_SAMPLE_FLOAT|BASS_SAMPLE_VAM|BASS_SAMPLE_OVER_DIST)))
-	{
-		return newchan;
-	}
 	else if ((newchan=BASS_SampleLoad(TRUE,memory,0,(DWORD)length,(DWORD)16,BASS_SAMPLE_3D|BASS_SAMPLE_MONO|BASS_SAMPLE_VAM|BASS_SAMPLE_OVER_DIST)))
-	{
-		return newchan;
-	}
-	else if ((newchan=BASS_SampleLoad(TRUE,memory,0,(DWORD)length,(DWORD)16,BASS_SAMPLE_3D|BASS_SAMPLE_SOFTWARE|BASS_SAMPLE_MONO|BASS_SAMPLE_VAM|BASS_SAMPLE_OVER_DIST)))
 	{
 		return newchan;
 	}

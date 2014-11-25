@@ -809,8 +809,19 @@ static qboolean S_LoadSound_Actual( sfx_t *sfx )
 		len = strlen(sLoadName);
 	}
 
-	if (!S_LoadSound_FileLoadAndNameAdjuster(sLoadName, &sfx->indexData, &sfx->indexSize, len))
+#if 0
+	char sTestName[64];
+	strcpy(sTestName, "sound/test.wav");
+	len = strlen(sTestName);
+#endif //0
+
+	if (!S_LoadSound_FileLoadAndNameAdjuster(sLoadName/*sTestName*/, &sfx->indexData, &sfx->indexSize, len))
 	{
+#ifdef __USE_BASS__
+		//Com_Printf("BASS: Failed to load sound [ID %i] %s from memory.\n", sfx->qhandle, sLoadName);
+		sfx->bassSampleID = s_knownSfx[0].bassSampleID; // link to default sound bass ID...
+		sfx->bDefaultSound = qtrue;
+#endif //__USE_BASS__
 		return qfalse;
 	}
 
@@ -818,8 +829,8 @@ static qboolean S_LoadSound_Actual( sfx_t *sfx )
 
 #ifdef __USE_BASS__
 	{// Load whole sound file into ram...
-		qboolean isMusic = qfalse;
-		
+		qboolean		isMusic = qfalse;
+
 		if (Q_stricmpn(psExt,".mp3",4) == 0 && !MP3_IsValid(sLoadName, sfx->indexData, sfx->indexSize, qfalse)) isMusic = qtrue;
 
 		if (!isMusic)
@@ -834,13 +845,15 @@ static qboolean S_LoadSound_Actual( sfx_t *sfx )
 			sfx->bassSampleID = s_knownSfx[0].bassSampleID; // link to default sound bass ID...
 			sfx->bDefaultSound = qtrue;
 			FS_FreeFile( sfx->indexData );
-			return qtrue;
+			//free( sfx->indexData );
+			return qfalse;
 		}
 	}
 
 	//Com_Printf("BASS: Registered sound [ID %i] %s. Length %i.\n", sfx->qhandle, sLoadName, sfx->indexSize);
 
 	FS_FreeFile( sfx->indexData );
+	//free( sfx->indexData );
 	return qtrue;
 #else //!__USE_BASS__
 
