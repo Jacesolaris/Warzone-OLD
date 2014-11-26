@@ -377,9 +377,7 @@ qboolean CL_OpenAVIForWriting( const char *fileName )
   afd.eBuffer = (byte *)Z_Malloc(PAD(afd.width * 3, AVI_LINE_PADDING) * afd.height, TAG_AVI, qtrue);
 
   afd.a.rate = dma.speed;
-#ifndef __NEW_SOUND_SYSTEM__
   afd.a.format = WAV_FORMAT_PCM;
-#endif //__NEW_SOUND_SYSTEM__
   afd.a.channels = dma.channels;
   afd.a.bits = dma.samplebits;
   afd.a.sampleSize = ( afd.a.bits / 8 ) * afd.a.channels;

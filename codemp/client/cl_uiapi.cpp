@@ -1017,14 +1017,6 @@ intptr_t CL_UISystemCalls( intptr_t *args ) {
 	return 0;
 }
 
-#ifdef __NEW_SOUND_SYSTEM__
-extern void S_AddLoopingSound_CONVERT( int entityNum, const vec3_t origin, const vec3_t velocity, sfxHandle_t sfxHandle );
-extern void S_MuteSound_CONVERT(int entityNum, int entchannel);
-extern void S_StopLoopingSound_CONVERT( int entityNum );
-extern void S_StartBackgroundTrack_CONVERT( const char *intro, const char *loop, qboolean bCalledByCGameStart );
-extern void S_StartSound_CONVERT(const vec3_t origin, int entityNum, int entchannel, sfxHandle_t sfxHandle );
-#endif //__NEW_SOUND_SYSTEM__
-
 void CL_BindUI( void ) {
 	static uiImport_t uii;
 	uiExport_t		*ret;
@@ -1110,11 +1102,7 @@ void CL_BindUI( void ) {
 		uii.LAN_ServerStatus					= LAN_GetServerStatus;
 		uii.LAN_UpdateVisiblePings				= LAN_UpdateVisiblePings;
 
-#ifndef __NEW_SOUND_SYSTEM__
 		uii.S_StartBackgroundTrack				= S_StartBackgroundTrack;
-#else //!__NEW_SOUND_SYSTEM__
-		uii.S_StartBackgroundTrack				= S_StartBackgroundTrack_CONVERT;
-#endif //__NEW_SOUND_SYSTEM__
 		uii.S_StartLocalSound					= S_StartLocalSound;
 		uii.S_StopBackgroundTrack				= S_StopBackgroundTrack;
 		uii.S_RegisterSound						= S_RegisterSound;

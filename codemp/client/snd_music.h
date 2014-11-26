@@ -8,8 +8,6 @@
 
 #include "snd_local.h"
 
-#ifndef __NEW_SOUND_SYSTEM__
-
 // if you change this enum, you MUST update the #defines below
 typedef enum
 {
@@ -61,4 +59,3 @@ const char *Music_BaseStateToString		( MusicState_e eMusicState, qboolean bDebug
 
 //////////////// eof /////////////////
 
-#endif //__NEW_SOUND_SYSTEM__

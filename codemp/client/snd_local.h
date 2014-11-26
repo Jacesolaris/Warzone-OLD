@@ -2,14 +2,11 @@
 
 // snd_local.h -- private sound definations
 
-//#define __NEW_SOUND_SYSTEM__
 #define __USE_BASS__
 
 #include "snd_public.h"
 
-#ifndef __NEW_SOUND_SYSTEM__
 #include "mp3code/mp3struct.h"
-#endif //__NEW_SOUND_SYSTEM__
 
 extern qboolean S_ShouldCull ( vec3_t org, qboolean check_angles, int entityNum );
 
@@ -33,8 +30,6 @@ extern void BASS_StopMusic( DWORD samplechan );
 extern void BASS_SetEAX_NORMAL ( void );
 extern void BASS_SetEAX_UNDERWATER ( void );
 #endif //__USE_BASS__
-
-#ifndef __NEW_SOUND_SYSTEM__
 
 #if defined(_WIN32) && !defined(WIN64)
 //#define USE_OPENAL // UQ1: Umm.. nope. Too few channels!!!
@@ -286,169 +281,3 @@ void S_memoryLoad(sfx_t *sfx);
 
 #include "snd_mp3.h"
 
-#else //!__NEW_SOUND_SYSTEM__
-
-#include "../qcommon/q_shared.h"
-#include "../qcommon/qcommon.h"
-#include "snd_public.h"
-
-#pragma warning (disable:4200)
-
-#define		SFX_SOUNDS		10000
-
-#define MME_SAMPLERATE	44100 //ja is full of 44khz mp3
-
-typedef struct sfxEntry_s {
-	struct		sfxEntry_s *next;
-	char		name[MAX_QPATH];
-#ifdef __USE_BASS__
-	int			qhandle;
-	int			indexSize;
-	void		*fullSoundData;
-#endif //__USE_BASS__
-} sfxEntry_t;
-
-typedef struct {
-	float		seekTime;
-	float		length;
-	char		startName[MAX_QPATH];
-	char		loopName[MAX_QPATH];
-	qboolean	playing;
-	qboolean	reload;
-	qboolean	override;
-} backgroundSound_t;
-
-typedef struct {
-	int			channels;
-	int			samples;				// mono samples in buffer
-	int			submission_chunk;		// don't mix less than this #
-	int			samplebits;
-	int			speed;
-	byte		*buffer;
-} dma_t;
-
-typedef struct {
-	vec3_t		origin;
-	vec3_t		velocity;
-	sfxHandle_t	handle;
-	int			lastFrame;
-	int			volume;
-} entitySound_t;
-
-typedef struct {
-	const void	*parent;
-	vec3_t		origin;
-	vec3_t		velocity;
-	sfxHandle_t	handle;
-	int			volume;
-} loopQueue_t;
-
-typedef struct {
-	sfxHandle_t	handle;
-	vec3_t		origin;
-	short		entNum;
-	char		entChan;
-	char		volumeChan;
-	char		hasOrigin;
-	unsigned char volume;
-} channelQueue_t;
-
-struct openSound_s;
-typedef int (*openSoundRead_t)( struct openSound_s *open, qboolean stereo, int size, short *data );
-/* Maybe some kind of error return sometime? */
-typedef int (*openSoundSeek_t)( struct openSound_s *open, int samples );
-typedef void (*openSoundClose_t)( struct openSound_s *open );
-
-typedef struct openSound_s {
-	int					rate;
-	int					totalSamples, doneSamples;
-	char				buf[16*1024];
-	int					bufUsed, bufPos;
-	fileHandle_t		fileHandle;
-	int					fileSize, filePos;
-
-	openSoundRead_t		read;
-	openSoundSeek_t		seek;
-	openSoundClose_t	close;
-
-	char				data[0];
-} openSound_t;
-
-//from SND_AMBIENT
-extern void AS_Init( void );
-extern void AS_Free( void );
-
-/*
-====================================================================
-  SYSTEM SPECIFIC FUNCTIONS
-====================================================================
-*/
-
-extern	dma_t	dma;
-// initializes cycling through a DMA buffer and returns information on it
-qboolean SNDDMA_Init(void);
-
-// gets the current DMA position
-int		SNDDMA_GetDMAPos(void);
-
-// shutdown the DMA xfer.
-void	SNDDMA_Shutdown(void);
-
-void	SNDDMA_BeginPainting (void);
-
-void	SNDDMA_Submit(void);
-
-//====================================================================
-
-#define	MAX_CHANNELS			32
-#define	MAX_SNDQUEUE			512
-#define	MAX_LOOPQUEUE			512
-
-
-extern	sfxEntry_t		sfxEntries[SFX_SOUNDS];
-extern	backgroundSound_t s_background;
-extern	channelQueue_t	s_channelQueue[MAX_SNDQUEUE];
-extern	int				s_channelQueueCount;
-extern	entitySound_t	s_entitySounds[MAX_GENTITIES];
-extern	loopQueue_t		s_loopQueue[MAX_LOOPQUEUE];
-extern	int				s_loopQueueCount;
-
-extern cvar_t	*s_volume;
-extern cvar_t	*s_volumeVoice;
-extern cvar_t	*s_volumeEffects;
-extern cvar_t	*s_volumeAmbient;
-extern cvar_t	*s_volumeMusic;
-extern cvar_t	*s_khz;
-
-extern cvar_t	*s_doppler;
-extern cvar_t	*s_dopplerSpeed;
-extern cvar_t	*s_dopplerFactor;
-
-extern cvar_t	*s_attenuate;
-
-extern cvar_t	*s_lip_threshold_1;
-extern cvar_t	*s_lip_threshold_2;
-extern cvar_t	*s_lip_threshold_3;
-extern cvar_t	*s_lip_threshold_4;
-
-extern int		s_listenNumber;
-extern vec3_t	s_listenOrigin;
-extern vec3_t	s_listenVelocity;
-extern vec3_t	s_listenAxis[3];
-
-extern qboolean	s_underWater;
-
-qboolean S_FileExists(char *fileName);
-
-openSound_t *S_SoundOpen( const char *fileName );
-int S_SoundRead( openSound_t *open, qboolean stereo, int size, short *data );
-int S_SoundSeek( openSound_t *open, int samples );
-void S_SoundClose( openSound_t *open );
-
-extern void S_AddLoopingSound_CONVERT( int entityNum, const vec3_t origin, const vec3_t velocity, sfxHandle_t sfxHandle );
-extern void S_MuteSound_CONVERT(int entityNum, int entchannel);
-extern void S_StopLoopingSound_CONVERT( int entityNum );
-extern void S_StartBackgroundTrack_CONVERT( const char *intro, const char *loop, qboolean bCalledByCGameStart );
-extern void S_StartSound_CONVERT(const vec3_t origin, int entityNum, int entchannel, sfxHandle_t sfxHandle );
-
-#endif //__NEW_SOUND_SYSTEM__

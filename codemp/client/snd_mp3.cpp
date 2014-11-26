@@ -5,9 +5,6 @@
 
 #include "client.h"
 #include "snd_local.h"
-
-#ifndef __NEW_SOUND_SYSTEM__
-
 #include "snd_mp3.h"					// only included directly by a few snd_xxxx.cpp files plus this one
 #include "mp3code/mp3struct.h"	// keep this rather awful file secret from the rest of the program
 
@@ -555,4 +552,3 @@ qboolean MP3Stream_GetSamples( channel_t *ch, int startingSampleNum, int count, 
 
 ///////////// eof /////////////
 
-#endif //__NEW_SOUND_SYSTEM__

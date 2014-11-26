@@ -7,8 +7,6 @@
 
 #include "snd_local.h"
 
-#ifndef __NEW_SOUND_SYSTEM__
-
 typedef struct id3v1_1 {
     char id[3];
     char title[30];		// <file basename>
@@ -77,4 +75,3 @@ char*	C_MP3Stream_Rewind		(LP_MP3STREAM pSFX_MP3Stream);
 
 ///////////////// eof /////////////////////
 
-#endif //__NEW_SOUND_SYSTEM__
