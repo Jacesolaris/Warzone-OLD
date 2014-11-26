@@ -97,9 +97,9 @@ qboolean S_ShouldCull ( vec3_t org, qboolean check_angles, int entityNum )
 		return qfalse;
 	}
 
-	//float dist = Distance(cl.snap.ps.origin, checkOrg);
+	float dist = Distance(cl.snap.ps.origin, checkOrg);
 
-	//if (dist > 3072.0) return qtrue; // TOO FAR! CULLED!
+	if (dist > 3072.0) return qtrue; // TOO FAR! CULLED!
 	if (check_angles && !S_InFOV( checkOrg, cl.snap.ps.origin, cl.snap.ps.viewangles, 180.0, 180.0)) return qtrue; // NOT ON SCREEN! CULLED!
 	if (!CullVisible(cl.snap.ps.origin, checkOrg, cl.snap.ps.clientNum)) return qtrue; // NOT VISIBLE TO US! CULLED!
 

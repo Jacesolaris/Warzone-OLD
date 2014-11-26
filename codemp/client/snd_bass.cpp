@@ -1056,8 +1056,8 @@ void BASS_AddDynamicTrack ( char *name )
 
 	if (MUSIC_LIST_COUNT >= MAX_DYNAMIC_LIST) return; // Hit MAX allowed number...
 
-	for (int i = 0; i < MUSIC_LIST_COUNT; i++)
-	{
+	for (int i = MUSIC_LIST_COUNT-1; i >= JKA_TRACKS_NUM; i--)
+	{// Reverse check because "extra" music will always be at the end of the list :)
 		if (!strcmp(name, MUSIC_LIST[i].name)) return; // already in the list...
 	}
 
