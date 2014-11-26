@@ -45,33 +45,13 @@ typedef struct portable_samplepair_s {
 	int			right;
 } portable_samplepair_t;
 
-
-// keep this enum in sync with the table "sSoundCompressionMethodStrings"	-ste
-//
-typedef enum
-{
-	ct_16 = 0,		// formerly ct_NONE in EF1, now indicates 16-bit samples (the default)
-	ct_MP3,
-	//
-	ct_NUMBEROF		// used only for array sizing
-
-} SoundCompressionMethod_t;
-
-
 typedef struct sfx_s {
-	short			*pSoundData;
 	qboolean		bDefaultSound;			// couldn't be loaded, so use buzz
 	qboolean		bInMemory;				// not in Memory, set qtrue when loaded, and qfalse when its buffers are freed up because of being old, so can be reloaded
-	SoundCompressionMethod_t eSoundCompressionMethod;
-	MP3STREAM		*pMP3StreamHeader;		// NULL ptr unless this sfx_t is an MP3. Use Z_Malloc and Z_Free
-	int 			iSoundLengthInSamples;	// length in samples, always kept as 16bit now so this is #shorts (watch for stereo later for music?)
 	char 			sSoundName[MAX_QPATH];
 	int				iLastTimeUsed;
 	float			fVolRange;				// used to set the highest volume this sample has at load time - used for lipsynching
 	int				iLastLevelUsedOn;		// used for cacheing purposes
-
-	// Open AL
-	char		*lipSyncData;
 
 	int			qhandle;
 	DWORD		bassSampleID;
@@ -162,34 +142,13 @@ typedef struct wavinfo_s {
 ====================================================================
 */
 
-// initializes cycling through a DMA buffer and returns information on it
-qboolean SNDDMA_Init(void);
-
-// gets the current DMA position
-int		SNDDMA_GetDMAPos(void);
-
-// shutdown the DMA xfer.
-void	SNDDMA_Shutdown(void);
-
-void	SNDDMA_BeginPainting (void);
-
-void	SNDDMA_Submit(void);
-
 //====================================================================
 
-//#define	MAX_CHANNELS			32
-//#define	MAX_CHANNELS			128
 #define	MAX_CHANNELS			256
+
 extern	channel_t   s_channels[MAX_CHANNELS];
 
-extern	int		s_paintedtime;
-extern	int		s_rawend;
 extern	vec3_t	listener_origin;
-extern	dma_t	dma;
-
-#define	MAX_RAW_SAMPLES	16384
-extern	portable_samplepair_t	s_rawsamples[MAX_RAW_SAMPLES];
-portable_samplepair_t *S_GetRawSamplePointer();	// TA added this, but it just returns the s_rawsamples[] array above. Oh well...
 
 extern cvar_t	*s_volume;
 extern cvar_t	*s_volumeAmbient;
@@ -232,15 +191,11 @@ void S_Spatialize(channel_t *ch);
 
 byte	*SND_malloc(int iSize, sfx_t *sfx);
 void	 SND_setup();
-int		 SND_FreeOldestSound(sfx_t *pButNotThisOne = NULL);
 void	 SND_TouchSFX(sfx_t *sfx);
 
 qboolean SND_RegisterAudio_LevelLoadEnd(qboolean bDeleteEverythingNotUsedThisLevel /* 99% qfalse */);
 
-void S_DisplayFreeMemory(void);
 void S_memoryLoad(sfx_t *sfx);
 //
 //////////////////////////////////
-
-#include "snd_mp3.h"
 

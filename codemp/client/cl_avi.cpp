@@ -376,10 +376,7 @@ qboolean CL_OpenAVIForWriting( const char *fileName )
   // raw avi files have pixel lines start on 4-byte boundaries
   afd.eBuffer = (byte *)Z_Malloc(PAD(afd.width * 3, AVI_LINE_PADDING) * afd.height, TAG_AVI, qtrue);
 
-  afd.a.rate = dma.speed;
   afd.a.format = WAV_FORMAT_PCM;
-  afd.a.channels = dma.channels;
-  afd.a.bits = dma.samplebits;
   afd.a.sampleSize = ( afd.a.bits / 8 ) * afd.a.channels;
 
   if( afd.a.rate % afd.frameRate )

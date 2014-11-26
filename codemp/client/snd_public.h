@@ -14,15 +14,10 @@ void S_StartSound( const vec3_t origin, int entnum, int entchannel, sfxHandle_t 
 void S_StartLocalSound( sfxHandle_t sfx, int channelNum );
 void S_StartLocalLoopingSound( sfxHandle_t sfx);
 
-void S_UnCacheDynamicMusic( void );
 void S_RestartMusic( void );
 void S_StartBackgroundTrack( const char *intro, const char *loop, qboolean bCalledByCGameStart );
 void S_StopBackgroundTrack( void );
-float S_GetSampleLengthInMilliSeconds( sfxHandle_t sfxHandle);
 
-// cinematics and voice-over-network will send raw samples
-// 1.0 volume will be direct output of source samples
-void S_RawSamples( int samples, int rate, int width, int s_channels, const byte *data, float volume, int bFirstOrOnlyUpdateThisFrame );
 // stop all sounds
 void S_StopSounds(void);	// from snd_dma.cpp
 // stop all sounds and the background track

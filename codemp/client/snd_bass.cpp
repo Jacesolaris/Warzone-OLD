@@ -13,7 +13,6 @@ extern cvar_t		*s_khz;
 extern vec3_t		s_entityPosition[MAX_GENTITIES];
 
 extern int	s_soundStarted;
-extern int	s_soundtime;		// sample PAIRS
 extern int	s_numSfx;
 
 qboolean EAX_SUPPORTED = qtrue;
@@ -467,7 +466,6 @@ qboolean BASS_Initialize ( void )
 	//BASS_AddStreamChannel ( "OJK/sound/startup.wav", -1, s_volume->value, NULL );
 
 	s_soundStarted = 1;
-	s_soundtime = 0;
 	s_numSfx = 0;
 	S_BeginRegistration();
 

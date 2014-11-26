@@ -756,8 +756,7 @@ void CL_Disconnect( qboolean showMainMenu ) {
 	}
 
 	SCR_StopCinematic ();
-	S_ClearSoundBuffer();
-
+	
 	// send a disconnect message to the server
 	// send it a few times in case one is dropped
 	if ( cls.state >= CA_CONNECTED ) {
@@ -1186,7 +1185,6 @@ The cgame and game must also be forced to restart because
 handles will be invalid
 =================
 */
-// extern void S_UnCacheDynamicMusic( void );
 void CL_Snd_Restart_f( void ) {
 	CL_Vid_Restart_f();
 }
