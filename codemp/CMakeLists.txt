@@ -403,7 +403,6 @@ if(BuildMPEngine)
 		"${MPDir}/client/snd_dma.cpp"
 		"${MPDir}/client/snd_local.h"
 		"${MPDir}/client/snd_mem.cpp"
-		"${MPDir}/client/snd_mix.cpp"
 		"${MPDir}/client/snd_mp3.cpp"
 		"${MPDir}/client/snd_mp3.h"
 		"${MPDir}/client/snd_music.cpp"

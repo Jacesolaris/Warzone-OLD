@@ -82,20 +82,6 @@ typedef struct MusicInfo_s {
 	fileHandle_t s_backgroundFile;	// valid handle, else -1 if an MP3 (so that NZ compares still work)
 	wavinfo_t	s_backgroundInfo;
 	int			s_backgroundSamples;
-
-	void Rewind()
-	{
-		MP3Stream_Rewind( &chMP3_Bgrnd );
-		s_backgroundSamples = sfxMP3_Bgrnd.iSoundLengthInSamples;
-	}
-
-	void SeekTo(float fTime)
-	{
-		chMP3_Bgrnd.iMP3SlidingDecodeWindowPos = 0;
-		chMP3_Bgrnd.iMP3SlidingDecodeWritePos = 0;
-		MP3Stream_SeekTo( &chMP3_Bgrnd, fTime );
-		s_backgroundSamples = sfxMP3_Bgrnd.iSoundLengthInSamples;
-	}
 } MusicInfo_t;
 
 static void S_SetDynamicMusicState( MusicState_e musicState );
@@ -334,8 +320,6 @@ void S_Init( void ) {
 
 	s_doppler = Cvar_Get("s_doppler", "1", CVAR_ARCHIVE);
 
-	MP3_InitCvars();
-
 	cv = Cvar_Get ("s_initsound", "1", 0);
 	if ( !cv->integer ) {
 		s_soundStarted = 0;	// needed in case you set s_initsound to 0 midgame then snd_restart (div0 err otherwise later)
@@ -349,8 +333,6 @@ void S_Init( void ) {
 	Cmd_AddCommand("soundlist", S_SoundList_f);
 	Cmd_AddCommand("soundinfo", S_SoundInfo_f);
 	Cmd_AddCommand("soundstop", S_StopAllSounds);
-	Cmd_AddCommand("mp3_calcvols", S_MP3_CalcVols_f);
-	Cmd_AddCommand("s_dynamic", S_SetDynamicMusic_f);
 
 	BASS_Initialize();
 

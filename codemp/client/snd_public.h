@@ -28,9 +28,6 @@ void S_StopSounds(void);	// from snd_dma.cpp
 // stop all sounds and the background track
 void S_StopAllSounds( void );
 
-// scan all MP3s in the sound dir and add maxvol info if necessary.
-void S_MP3_CalcVols_f( void );
-
 // all continuous looping sounds must be added before calling S_Update
 void S_ClearLoopingSounds( void );
 void S_StopLoopingSound( int entityNum );
