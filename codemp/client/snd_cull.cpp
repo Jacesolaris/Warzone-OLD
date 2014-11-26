@@ -69,6 +69,8 @@ qboolean S_ShouldCull ( vec3_t org, qboolean check_angles, int entityNum )
 {// This checks if the sound is behind a wall or something. When it is, the sound needs to be played at lower volume...
 	vec3_t checkOrg;
 
+	if (!s_realism->integer) return qfalse;
+
 	if (!org)
 	{
 		if (entityNum >= 0)

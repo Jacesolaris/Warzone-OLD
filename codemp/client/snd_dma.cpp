@@ -90,6 +90,7 @@ cvar_t		*s_lip_threshold_3;
 cvar_t		*s_lip_threshold_4;
 cvar_t		*s_language;	// note that this is distinct from "g_language"
 cvar_t		*s_debugdynamic;
+cvar_t		*s_realism;
 
 cvar_t		*s_doppler;
 
@@ -161,6 +162,7 @@ void S_Init( void ) {
 	s_khz = Cvar_Get ("s_khz", "44", CVAR_ARCHIVE|CVAR_LATCH);
 	s_allowDynamicMusic = Cvar_Get ("s_allowDynamicMusic", "1", CVAR_ARCHIVE);
 	s_mixahead = Cvar_Get ("s_mixahead", "0.2", CVAR_ARCHIVE);
+	s_realism = Cvar_Get ("s_realism", "1", CVAR_ARCHIVE);
 
 	s_mixPreStep = Cvar_Get ("s_mixPreStep", "0.05", CVAR_ARCHIVE);
 	s_show = Cvar_Get ("s_show", "0", CVAR_CHEAT);
