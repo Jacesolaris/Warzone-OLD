@@ -1863,9 +1863,7 @@ void CL_UnbindCGame( void ) {
 	VM_Free( cgvm );
 	cgvm = NULL;
 
-#ifdef __USE_BASS__
 	// unload all sound samples from bass..
 	BASS_Shutdown();
 	BASS_Initialize();
-#endif //__USE_BASS__
 }

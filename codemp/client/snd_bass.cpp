@@ -1,8 +1,6 @@
 #include "client.h"
 #include "snd_local.h"
 
-#ifdef __USE_BASS__
-
 //#define __BASS_PLAYER_BASED_LOCATIONS__ // UQ1: This puts player always at 0,0,0 and calculates sound positions from that...
 
 #include "snd_bass.h"
@@ -1027,5 +1025,3 @@ DWORD BASS_LoadMemorySample ( void *memory, int length )
 
 	return -1;
 }
-
-#endif //__USE_BASS__

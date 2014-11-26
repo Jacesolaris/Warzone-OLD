@@ -1127,11 +1127,9 @@ void CL_Vid_Restart_f( void ) {
 
 	// don't let them loop during the restart
 	S_StopAllSounds();
-#ifdef __USE_BASS__
 	// unload all sound samples from bass..
 	BASS_Shutdown();
 	BASS_Initialize();
-#endif //__USE_BASS__
 	// shutdown the UI
 	CL_ShutdownUI();
 	// shutdown the CGame
@@ -1190,23 +1188,7 @@ handles will be invalid
 */
 // extern void S_UnCacheDynamicMusic( void );
 void CL_Snd_Restart_f( void ) {
-#ifdef __USE_BASS__
 	CL_Vid_Restart_f();
-#else //!__USE_BASS__
-	S_Shutdown();
-	S_Init();
-
-//	S_FreeAllSFXMem();			// These two removed by BTO (VV)
-//	S_UnCacheDynamicMusic();	// S_Shutdown() already does this!
-
-//	CL_Vid_Restart_f();
-
-	extern qboolean	s_soundMuted;
-	s_soundMuted = qfalse;		// we can play again
-
-	extern void S_RestartMusic( void );
-	S_RestartMusic();
-#endif //__USE_BASS__
 }
 
 

@@ -2,15 +2,12 @@
 
 // snd_local.h -- private sound definations
 
-#define __USE_BASS__
-
 #include "snd_public.h"
 
 #include "mp3code/mp3struct.h"
 
 extern qboolean S_ShouldCull ( vec3_t org, qboolean check_angles, int entityNum );
 
-#ifdef __USE_BASS__
 extern qboolean BASS_Initialize ( void );
 extern void BASS_Shutdown ( void );
 extern void BASS_UnloadSamples ( void );
@@ -29,25 +26,7 @@ extern void BASS_UpdateSounds ( void );
 extern void BASS_StopMusic( DWORD samplechan );
 extern void BASS_SetEAX_NORMAL ( void );
 extern void BASS_SetEAX_UNDERWATER ( void );
-#endif //__USE_BASS__
 
-#if defined(_WIN32) && !defined(WIN64)
-//#define USE_OPENAL // UQ1: Umm.. nope. Too few channels!!!
-#endif
-
-// Open AL Specific
-#ifdef USE_OPENAL
-#include "OpenAL/al.h"
-#include "OpenAL/alc.h"
-#include "eax/eax.h"
-#include "eax/eaxman.h"
-/*#elif defined MACOS_X
-#include <OpenAL/al.h>
-#include <OpenAL/alc.h>
-#else
-#include <AL/al.h>
-#include <AL/alc.h>*/
-#endif
 // Added for Open AL to know when to mute all sounds (e.g when app. loses focus)
 void S_AL_MuteAllSounds(qboolean bMute);
 
@@ -92,9 +71,6 @@ typedef struct sfx_s {
 	int				iLastLevelUsedOn;		// used for cacheing purposes
 
 	// Open AL
-#ifdef USE_OPENAL
-	ALuint		Buffer;
-#endif
 	char		*lipSyncData;
 
 	int			qhandle;
@@ -116,15 +92,6 @@ typedef struct dma_s {
 
 
 #define START_SAMPLE_IMMEDIATE	0x7fffffff
-
-// Open AL specific
-#ifdef USE_OPENAL
-typedef struct STREAMINGBUFFER_s {
-	ALuint	BufferID;
-	ALuint	Status;
-	char	*Data;
-} STREAMINGBUFFER;
-#endif
 
 #define NUM_STREAMING_BUFFERS	4
 #define STREAMING_BUFFER_SIZE	4608		// 4 decoded MP3 frames
@@ -165,10 +132,6 @@ typedef struct channel_s {
 //	bool	bAmbient;	// Signifies if this channel / source is playing a looping ambient sound
 	bool	bProcessed;	// Signifies if this channel / source has been processed
 	bool	bStreaming;	// Set to true if the data needs to be streamed (MP3 or dialogue)
-#ifdef USE_OPENAL
-	STREAMINGBUFFER	buffers[NUM_STREAMING_BUFFERS];	// AL Buffers for streaming
-	ALuint		alSource;		// Open AL Source
-#endif
 	bool		bPlaying;		// Set to true when a sound is playing on this channel / source
 	int			iStartTime;		// Time playback of Source begins
 	int			lSlotID;		// ID of Slot rendering Source's environment (enables a send to this FXSlot)

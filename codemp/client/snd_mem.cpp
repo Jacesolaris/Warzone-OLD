@@ -7,11 +7,6 @@
 
 #include <string>
 
-#ifdef USE_OPENAL
-// Open AL
-void S_PreProcessLipSync(sfx_t *sfx);
-extern int s_UseOpenAL;
-#endif
 /*
 ===============================================================================
 
@@ -578,13 +573,11 @@ static qboolean S_LoadSound_FileLoadAndNameAdjuster(char *psFilename, byte **pDa
 				strcpy(&psFilename[iNameStrlen-3],"mp3");		//not there try mp3
 				FS_FOpenFileRead(psFilename, &hFile, qfalse);	//cache the mp3
 			}
-#ifdef __USE_BASS__
 			if (!hFile)
 			{
 				strcpy(&psFilename[iNameStrlen-3],"ogg");		//not there try ogg
 				FS_FOpenFileRead(psFilename, &hFile, qfalse);	//cache the ogg
 			}
-#endif //__USE_BASS__
 			if (hFile)
 			{
 				FS_FCloseFile(hFile);
@@ -599,13 +592,11 @@ static qboolean S_LoadSound_FileLoadAndNameAdjuster(char *psFilename, byte **pDa
 				strcpy(&psFilename[iNameStrlen-3],"mp3");		//not there try mp3
 				FS_FOpenFileRead(psFilename, &hFile, qfalse);	//cache the mp3
 			}
-#ifdef __USE_BASS__
 			if (!hFile)
 			{
 				strcpy(&psFilename[iNameStrlen-3],"ogg");		//not there try ogg
 				FS_FOpenFileRead(psFilename, &hFile, qfalse);	//cache the ogg
 			}
-#endif //__USE_BASS__
 			if (hFile)
 			{
 				FS_FCloseFile(hFile);
@@ -620,13 +611,11 @@ static qboolean S_LoadSound_FileLoadAndNameAdjuster(char *psFilename, byte **pDa
 				strcpy(&psFilename[iNameStrlen-3],"mp3");		//not there try mp3
 				FS_FOpenFileRead(psFilename, &hFile, qfalse);	//cache the mp3
 			}
-#ifdef __USE_BASS__
 			if (!hFile)
 			{
 				strcpy(&psFilename[iNameStrlen-3],"ogg");		//not there try ogg
 				FS_FOpenFileRead(psFilename, &hFile, qfalse);	//cache the ogg
 			}
-#endif //__USE_BASS__
 			if (hFile)
 			{
 				FS_FCloseFile(hFile);
@@ -699,7 +688,6 @@ static qboolean S_LoadSound_FileLoadAndNameAdjuster(char *psFilename, byte **pDa
 		}
 	}
 
-#ifdef __USE_BASS__
 	//
 	// OGG Support...
 	//
@@ -731,7 +719,6 @@ static qboolean S_LoadSound_FileLoadAndNameAdjuster(char *psFilename, byte **pDa
 			}
 		}
 	}
-#endif //__USE_BASS__
 
 	if (!*pData)
 	{
@@ -771,12 +758,6 @@ of a forced fallback of a player specific sound	(or of a wav/mp3 substitution no
 qboolean gbInsideLoadSound = qfalse;
 static qboolean S_LoadSound_Actual( sfx_t *sfx )
 {
-	//byte	*data;
-#ifndef __USE_BASS__
-	short	*samples;
-	wavinfo_t	info;
-#endif //__USE_BASS__
-	//int		size;
 	char	*psExt;
 	char	sLoadName[MAX_QPATH];
 
@@ -815,17 +796,14 @@ static qboolean S_LoadSound_Actual( sfx_t *sfx )
 
 	if (!S_LoadSound_FileLoadAndNameAdjuster(sLoadName/*sTestName*/, &sfx->indexData, &sfx->indexSize, len))
 	{
-#ifdef __USE_BASS__
 		//Com_Printf("BASS: Failed to load sound [ID %i] %s from memory.\n", sfx->qhandle, sLoadName);
 		sfx->bassSampleID = s_knownSfx[0].bassSampleID; // link to default sound bass ID...
 		sfx->bDefaultSound = qtrue;
-#endif //__USE_BASS__
 		return qfalse;
 	}
 
 	SND_TouchSFX(sfx);
 
-#ifdef __USE_BASS__
 	{// Load whole sound file into ram...
 		qboolean		isMusic = qfalse;
 
@@ -853,194 +831,6 @@ static qboolean S_LoadSound_Actual( sfx_t *sfx )
 	FS_FreeFile( sfx->indexData );
 	//free( sfx->indexData );
 	return qtrue;
-#else //!__USE_BASS__
-
-//=========
-	if (Q_stricmpn(psExt,".mp3",4)==0)
-	{
-		// load MP3 file instead...
-		//
-		if (MP3_IsValid(sLoadName, sfx->indexData, sfx->indexSize, qfalse))
-		{
-			int iRawPCMDataSize = MP3_GetUnpackedSize(sLoadName, sfx->indexData, sfx->indexSize, qfalse, qfalse);
-
-			if (S_LoadSound_DirIsAllowedToKeepMP3s(sfx->sSoundName)	// NOT sLoadName, this uses original un-languaged name
-				&&
-				MP3Stream_InitFromFile(sfx, sfx->indexData, sfx->indexSize, sLoadName, iRawPCMDataSize + 2304 /* + 1 MP3 frame size, jic */,qfalse)
-				)
-			{
-//				Com_DPrintf("(Keeping file \"%s\" as MP3)\n",sLoadName);
-
-#ifdef USE_OPENAL
-				if (s_UseOpenAL)
-				{
-					// Create space for lipsync data (4 lip sync values per streaming AL buffer)
-					if ((strstr(sfx->sSoundName, "chars")) || (strstr(sfx->sSoundName, "CHARS")))
-						sfx->lipSyncData = (char *)Z_Malloc(16, TAG_SND_RAWDATA, qfalse);
-					else
-						sfx->lipSyncData = NULL;
-				}
-#endif
-			}
-			else
-			{
-				// small file, not worth keeping as MP3 since it would increase in size (with MP3 header etc)...
-				//
-				Com_DPrintf("S_LoadSound: Unpacking MP3 file(%i) \"%s\" to wav(%i).\n",sfx->indexSize,sLoadName,iRawPCMDataSize);
-				//
-				// unpack and convert into WAV...
-				//
-				{
-					byte *pbUnpackBuffer = (byte *) Z_Malloc( iRawPCMDataSize+10 +2304 /* <g> */, TAG_TEMP_WORKSPACE, qfalse );	// won't return if fails
-
-					{
-						int iResultBytes = MP3_UnpackRawPCM( sLoadName, sfx->indexData, sfx->indexSize, pbUnpackBuffer, qfalse );
-
-						if (iResultBytes!= iRawPCMDataSize){
-							Com_Printf(S_COLOR_YELLOW"**** MP3 %s final unpack size %d different to previous value %d\n",sLoadName,iResultBytes,iRawPCMDataSize);
-							//assert (iResultBytes == iRawPCMDataSize);
-						}
-
-
-						// fake up a WAV structure so I can use the other post-load sound code such as volume calc for lip-synching
-						//
-						// (this is a bit crap really, but it lets me drop through into existing code)...
-						//
-						MP3_FakeUpWAVInfo( sLoadName, sfx->indexData, sfx->indexSize, iResultBytes,
-											// these params are all references...
-											info.format, info.rate, info.width, info.channels, info.samples, info.dataofs,
-											qfalse
-										);
-
-						S_LoadSound_Finalize(&info,sfx,pbUnpackBuffer);
-
-#ifdef Q3_BIG_ENDIAN
-						// the MP3 decoder returns the samples in the correct endianness, but ResampleSfx byteswaps them,
-						// so we have to swap them again... 
-						sfx->fVolRange	= 0;
-						
-						for (int i = 0; i < sfx->iSoundLengthInSamples; i++)
-						{
-							sfx->pSoundData[i] = LittleShort(sfx->pSoundData[i]);
-							if (sfx->fVolRange < (abs(sfx->pSoundData[i]) >> 8))
-							{
-								sfx->fVolRange = abs(sfx->pSoundData[i]) >> 8;
-							}
-						}
-#endif
-
-						// Open AL
-#ifdef USE_OPENAL
-						if (s_UseOpenAL)
-						{
-							if ((strstr(sfx->sSoundName, "chars")) || (strstr(sfx->sSoundName, "CHARS")))
-							{
-								sfx->lipSyncData = (char *)Z_Malloc((sfx->iSoundLengthInSamples / 1000) + 1, TAG_SND_RAWDATA, qfalse);
-								S_PreProcessLipSync(sfx);
-							}
-							else
-								sfx->lipSyncData = NULL;
-
-							// Clear Open AL Error state
-							alGetError();
-
-							// Generate AL Buffer
-                            ALuint Buffer;
-							alGenBuffers(1, &Buffer);
-							if (alGetError() == AL_NO_ERROR)
-							{
-								// Copy audio data to AL Buffer
-								alBufferData(Buffer, AL_FORMAT_MONO16, sfx->pSoundData, sfx->iSoundLengthInSamples*2, 22050);
-								if (alGetError() == AL_NO_ERROR)
-								{
-									sfx->Buffer = Buffer;
-									Z_Free(sfx->pSoundData);
-									sfx->pSoundData = NULL;
-								}
-							}
-						}
-#endif
-
-						Z_Free(pbUnpackBuffer);
-					}
-				}
-			}
-		}
-		else
-		{
-			// MP3_IsValid() will already have printed any errors via Com_Printf at this point...
-			//
-			//FS_FreeFile (sfx->indexData);
-			return qfalse;
-		}
-	}
-	else
-	{
-		// loading a WAV, presumably...
-
-//=========
-
-		info = GetWavinfo( sLoadName, sfx->indexData, sfx->indexSize );
-		if ( info.channels != 1 ) {
-			Com_Printf ("%s is a stereo wav file\n", sLoadName);
-			//FS_FreeFile (sfx->indexData);
-			return qfalse;
-		}
-
-/*		if ( info.width == 1 ) {
-			Com_Printf(S_COLOR_YELLOW "WARNING: %s is a 8 bit wav file\n", sLoadName);
-		}
-
-		if ( info.rate != 22050 ) {
-			Com_Printf(S_COLOR_YELLOW "WARNING: %s is not a 22kHz wav file\n", sLoadName);
-		}
-*/
-		samples = (short *)Z_Malloc(info.samples * sizeof(short) * 2, TAG_TEMP_WORKSPACE, qfalse);
-
-		sfx->eSoundCompressionMethod = ct_16;
-		sfx->iSoundLengthInSamples	 = info.samples;
-		sfx->pSoundData = NULL;
-		ResampleSfx( sfx, info.rate, info.width, sfx->indexData + info.dataofs );
-
-		// Open AL
-#ifdef USE_OPENAL
-		if (s_UseOpenAL)
-		{
-			if ((strstr(sfx->sSoundName, "chars")) || (strstr(sfx->sSoundName, "CHARS")))
-			{
-				sfx->lipSyncData = (char *)Z_Malloc((sfx->iSoundLengthInSamples / 1000) + 1, TAG_SND_RAWDATA, qfalse);
-				S_PreProcessLipSync(sfx);
-			}
-			else
-				sfx->lipSyncData = NULL;
-
-			// Clear Open AL Error State
-			alGetError();
-
-			// Generate AL Buffer
-            ALuint Buffer;
-			alGenBuffers(1, &Buffer);
-			if (alGetError() == AL_NO_ERROR)
-			{
-				// Copy audio data to AL Buffer
-				alBufferData(Buffer, AL_FORMAT_MONO16, sfx->pSoundData, sfx->iSoundLengthInSamples*2, 22050);
-				if (alGetError() == AL_NO_ERROR)
-				{
-					// Store AL Buffer in sfx struct, and release sample data
-					sfx->Buffer = Buffer;
-					Z_Free(sfx->pSoundData);
-					sfx->pSoundData = NULL;
-				}
-			}
-		}
-#endif
-
-		Z_Free(samples);
-	}
-
-	//FS_FreeFile( sfx->indexData );
-	return qtrue;
-#endif //__USE_BASS__
 }
 
 
@@ -1058,75 +848,4 @@ qboolean S_LoadSound( sfx_t *sfx )
 	return bReturn;
 }
 
-#ifdef USE_OPENAL
-/*
-	Precalculate the lipsync values for the whole sample
-*/
-void S_PreProcessLipSync(sfx_t *sfx)
-{
-	int i, j;
-	int sample;
-	int sampleTotal = 0;
-
-	j = 0;
-	for (i = 0; i < sfx->iSoundLengthInSamples; i += 100)
-	{
-		sample = LittleShort(sfx->pSoundData[i]);
-
-		sample = sample >> 8;
-		sampleTotal += sample * sample;
-		if (((i + 100) % 1000) == 0)
-		{
-			sampleTotal /= 10;
-
-			if (sampleTotal < sfx->fVolRange *  s_lip_threshold_1->value)
-			{
-				// tell the scripts that are relying on this that we are still going, but actually silent right now.
-				sample = -1;
-			}
-			else if (sampleTotal < sfx->fVolRange * s_lip_threshold_2->value)
-				sample = 1;
-			else if (sampleTotal < sfx->fVolRange * s_lip_threshold_3->value)
-				sample = 2;
-			else if (sampleTotal < sfx->fVolRange * s_lip_threshold_4->value)
-				sample = 3;
-			else
-				sample = 4;
-
-			sfx->lipSyncData[j] = sample;
-			j++;
-
-			sampleTotal = 0;
-		}
-	}
-
-	if ((i % 1000) == 0)
-		return;
-
-	i -= 100;
-	i = i % 1000;
-	i = i / 100;
-	// Process last < 1000 samples
-	if (i != 0)
-		sampleTotal /= i;
-	else
-		sampleTotal = 0;
-
-	if (sampleTotal < sfx->fVolRange * s_lip_threshold_1->value)
-	{
-		// tell the scripts that are relying on this that we are still going, but actually silent right now.
-		sample = -1;
-	}
-	else if (sampleTotal < sfx->fVolRange * s_lip_threshold_2->value)
-		sample = 1;
-	else if (sampleTotal < sfx->fVolRange * s_lip_threshold_3->value)
-		sample = 2;
-	else if (sampleTotal < sfx->fVolRange * s_lip_threshold_4->value)
-		sample = 3;
-	else
-		sample = 4;
-
-	sfx->lipSyncData[j] = sample;
-}
-#endif
 
