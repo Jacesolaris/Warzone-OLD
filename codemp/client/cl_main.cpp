@@ -2176,10 +2176,10 @@ void CL_Frame ( int msec )
 	CLIENT_UPDATE_THREAD1 = new thread (CL_UpdateThread1, (void *)msec);
 	CLIENT_UPDATE_THREAD2 = new thread (CL_UpdateThread2, (void *)msec);
 	// UQ1: And wait for finish...
-	CLIENT_UPDATE_THREAD1->join();
-	CLIENT_UPDATE_THREAD2->join();
-	CLIENT_UPDATE_THREAD1->~thread();
-	CLIENT_UPDATE_THREAD2->~thread();
+	//CLIENT_UPDATE_THREAD1->join();
+	//CLIENT_UPDATE_THREAD2->join();
+	//CLIENT_UPDATE_THREAD1->~thread();
+	//CLIENT_UPDATE_THREAD2->~thread();
 #else //!MULTITHREAD_CL_FRAME
 	CL_Frame_REAL(msec);
 	CL_Frame_REAL2(msec);
@@ -2204,6 +2204,7 @@ void CL_Frame ( int msec )
 #ifdef MULTITHREAD_CL_FRAME
 	// UQ1: We can thread this and run at the same time as the render...
 	CLIENT_UPDATE_THREAD3 = new thread (CL_UpdateThread3, (void *)msec);
+	CLIENT_UPDATE_THREAD4 = new thread (CL_UpdateThread4, (void *)msec);
 #endif //!MULTITHREAD_CL_FRAME
 
 	// update the screen - can't thread this one...
@@ -2211,7 +2212,12 @@ void CL_Frame ( int msec )
 
 #ifdef MULTITHREAD_CL_FRAME
 	// UQ1: We can thread this and run them at the same time...
-	CLIENT_UPDATE_THREAD4 = new thread (CL_UpdateThread4, (void *)msec);
+	//CLIENT_UPDATE_THREAD4 = new thread (CL_UpdateThread4, (void *)msec);
+	// UQ1: And wait for finish...
+	CLIENT_UPDATE_THREAD1->join();
+	CLIENT_UPDATE_THREAD2->join();
+	CLIENT_UPDATE_THREAD1->~thread();
+	CLIENT_UPDATE_THREAD2->~thread();
 	// UQ1: And wait for finish...
 	CLIENT_UPDATE_THREAD3->join();
 	CLIENT_UPDATE_THREAD4->join();
