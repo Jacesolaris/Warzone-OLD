@@ -62,15 +62,6 @@ Light
 	}
 }
 
-
-sound
-{
-	sounds
-	[
-		sound/weapons/demp2/fire.wav
-	]
-}
-
 forcefeedback
 {
 	forces

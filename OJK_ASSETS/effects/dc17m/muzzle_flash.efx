@@ -166,17 +166,6 @@ Particle
 	]
 }
 
-Sound
-{
-	spawnflags			lessAttenuation
-
-	sounds
-	[
-		sound/weapons/repeater/fire.wav
-	]
-}
-
-
 forcefeedback
 {
 	forces

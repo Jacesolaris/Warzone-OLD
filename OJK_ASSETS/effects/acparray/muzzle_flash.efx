@@ -131,10 +131,4 @@ Particle
 	]
 }
 
-sound
-{
-	sounds
-	[
-		sound/weapons/acparray/fire.wav
-	]
-}
+

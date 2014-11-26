@@ -61,14 +61,6 @@ OrientedParticle
 	]
 }
 
-Sound
-{
-	sounds
-	[
-		sound/weapons/darkconc/fire.wav
-	]
-}
-
 Light
 {
 	life				100 80

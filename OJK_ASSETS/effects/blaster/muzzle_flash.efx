@@ -67,14 +67,6 @@ Light
 	}
 }
 
-Sound
-{
-	sounds
-	[
-		sound/weapons/blaster/fire.wav
-	]
-}
-
 CameraShake
 {
 	intensity			0.3 0.4

@@ -37,14 +37,6 @@ Light
 	}
 }
 
-Sound
-{
-	sounds
-	[
-		sound/weapons/demp2/altfire.mp3
-	]
-}
-
 forcefeedback
 {
 	forces

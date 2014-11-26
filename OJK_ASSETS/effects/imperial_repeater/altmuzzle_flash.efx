@@ -43,14 +43,6 @@ Light
 	}
 }
 
-Sound
-{
-	sounds
-	[
-		sound/weapons/repeater/alt_fire.wav
-	]
-}
-
 forcefeedback
 {
 	forces

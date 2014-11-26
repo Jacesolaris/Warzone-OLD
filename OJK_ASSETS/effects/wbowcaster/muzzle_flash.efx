@@ -64,15 +64,6 @@ Light
 	}
 }
 
-
-sound
-{
-	sounds
-	[
-		sound/weapons/bowcaster/fire.wav
-	]
-}
-
 forcefeedback
 {
 	forces

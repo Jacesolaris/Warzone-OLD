@@ -66,14 +66,6 @@ Light
 	}
 }
 
-Sound
-{
-	sounds
-	[
-		sound/weapons/repeater/fire.wav
-	]
-}
-
 CameraShake
 {
 	flags				usePhysics

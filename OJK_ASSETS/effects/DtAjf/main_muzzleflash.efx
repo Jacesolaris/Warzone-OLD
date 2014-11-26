@@ -67,14 +67,6 @@ Light
 	}
 }
 
-Sound
-{
-	sounds
-	[
-		sound/vehicles/weapons/imp_blaster/fire2.mp3
-	]
-}
-
 CameraShake
 {
 	intensity			0.3 0.4

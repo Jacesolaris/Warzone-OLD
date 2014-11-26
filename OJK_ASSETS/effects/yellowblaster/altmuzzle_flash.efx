@@ -73,14 +73,6 @@ Light
 	}
 }
 
-sound
-{
-	sounds
-	[
-		sound/weapons/bryar/alt_fire.wav
-	]
-}
-
 forcefeedback
 {
 	forces

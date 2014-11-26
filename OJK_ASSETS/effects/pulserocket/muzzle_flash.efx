@@ -122,14 +122,6 @@ CameraShake
 	radius				60
 }
 
-Sound
-{
-	sounds
-	[
-		sound/weapons/rocket/fire.wav
-	]
-}
-
 Tail
 {
 	count				6

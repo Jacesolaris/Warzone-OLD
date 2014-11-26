@@ -77,14 +77,6 @@ Light
 	}
 }
 
-Sound
-{
-	sounds
-	[
-		sound/vehicles/weapons/turbolaser/fire1.wav
-	]
-}
-
 CameraShake
 {
 	flags				usePhysics

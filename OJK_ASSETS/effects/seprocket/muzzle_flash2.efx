@@ -115,14 +115,6 @@ CameraShake
 	radius				60
 }
 
-Sound
-{
-	sounds
-	[
-		sound/weapons/rocket/fire.wav
-	]
-}
-
 forcefeedback
 {
 	forces

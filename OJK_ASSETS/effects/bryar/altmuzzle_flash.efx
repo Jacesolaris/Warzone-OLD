@@ -64,15 +64,6 @@ Light
 	}
 }
 
-
-sound
-{
-	sounds
-	[
-		sound/weapons/blaster/alt_fire.wav
-	]
-}
-
 forcefeedback
 {
 	forces

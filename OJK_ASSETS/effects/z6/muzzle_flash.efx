@@ -64,15 +64,6 @@ Light
 	}
 }
 
-
-sound
-{
-	sounds
-	[
-		sound/weapons/clone_blaster/fire.wav
-	]
-}
-
 forcefeedback
 {
 	forces

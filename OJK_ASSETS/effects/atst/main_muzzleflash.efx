@@ -67,17 +67,6 @@ Light
 	}
 }
 
-Sound
-{
-	sounds
-	[
-		sound/weapons/atst/atstshot1.wav
-		sound/weapons/atst/atstshot2.wav
-            sound/weapons/atst/atstshot3.wav
-            sound/weapons/atst/atstshot4.wav
-	]
-}
-
 CameraShake
 {
 	intensity			0.3 0.4

@@ -64,14 +64,6 @@ Light
 	}
 }
 
-Sound
-{
-	sounds
-	[
-		sound/weapons/assaultcannon/fire.wav
-	]
-}
-
 CameraShake
 {
 	life				50

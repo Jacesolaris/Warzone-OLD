@@ -67,13 +67,6 @@ Light
 	}
 }
 
-Sound
-{
-	sounds
-	[
-		sound/vehicles/weapons/imp_blaster/fire2.mp3
-	]
-}
 
 CameraShake
 {

@@ -126,16 +126,6 @@ CameraShake
 	radius				60
 }
 
-Sound
-{
-	flags				depthHack
-
-	sounds
-	[
-		sound/weapons/repeater/alt_fire.mp3
-	]
-}
-
 Particle
 {
 	flags				depthHack

@@ -66,14 +66,6 @@ Light
 	}
 }
 
-Sound
-{
-	sounds
-	[
-		sound/weapons/clone_blaster/fire.wav
-	]
-}
-
 CameraShake
 {
 	flags				usePhysics

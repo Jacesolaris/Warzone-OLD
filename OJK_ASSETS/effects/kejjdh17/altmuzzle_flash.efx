@@ -67,14 +67,6 @@ Light
 	}
 }
 
-Sound
-{
-	sounds
-	[
-		sound/weapons/ee3/sniperfire.mp3
-	]
-}
-
 CameraShake
 {
 	intensity			0.3 0.4

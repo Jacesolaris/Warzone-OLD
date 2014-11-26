@@ -73,14 +73,6 @@ CameraShake
 	radius				60
 }
 
-sound
-{
-	sounds
-	[
-		sound/weapons/bowcaster/alt_fire.wav
-	]
-}
-
 forcefeedback
 {
 	forces

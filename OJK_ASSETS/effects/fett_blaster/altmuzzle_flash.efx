@@ -64,15 +64,6 @@ Light
 	}
 }
 
-
-sound
-{
-	sounds
-	[
-		sound/weapons/repeater/alt_fire.wav
-	]
-}
-
 CameraShake
 {
 	life				50

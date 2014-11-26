@@ -117,14 +117,6 @@ Light
 	}
 }
 
-Sound
-{
-	sounds
-	[
-		sound/weapons/dc-17ms/fire.mp3
-	]
-}
-
 CameraShake
 {
 	radius				120

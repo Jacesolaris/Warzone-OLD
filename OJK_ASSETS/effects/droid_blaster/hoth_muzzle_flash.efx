@@ -67,14 +67,6 @@ Light
 	}
 }
 
-Sound
-{
-	sounds
-	[
-		sound/vehicles/weapons/hoth_turret/fire1.mp3
-	]
-}
-
 CameraShake
 {
 	intensity			0.3 0.4

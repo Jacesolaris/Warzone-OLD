@@ -67,15 +67,6 @@ Light
 	}
 }
 
-Sound
-{
-	sounds
-	[
-		sound/weapons/blaster/alt_fire.wav
-		sound/weapons/demp2/altfire.mp3
-	]
-}
-
 CameraShake
 {
 	intensity			0.3 0.4

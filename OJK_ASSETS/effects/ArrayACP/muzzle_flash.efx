@@ -460,15 +460,3 @@ Tail
 		gfx/effects/goldensideflash
 	]
 }
-
-Sound
-{
-	cullrange		2500
-
-	spawnflags			lessAttenuation
-
-	sounds
-	[
-		sound/weapons/blaster/fire..wav
-	]
-}
