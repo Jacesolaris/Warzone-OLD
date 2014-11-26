@@ -11,6 +11,7 @@
 #include "mp3code/mp3struct.h"
 #endif //__NEW_SOUND_SYSTEM__
 
+extern qboolean S_ShouldCull ( vec3_t org, qboolean check_angles, int entityNum );
 
 #ifdef __USE_BASS__
 extern qboolean BASS_Initialize ( void );

@@ -1500,7 +1500,11 @@ void S_StartAmbientSound( const vec3_t origin, int entityNum, unsigned char volu
 	else
 		Com_Printf("BASS_DEBUG: Entity %i playing AMBIENT sound %s on channel %i at NULL org.\n", entityNum, s_knownSfx[ sfxHandle ].sSoundName, CHAN_AMBIENT);
 	*/
-	BASS_AddMemoryChannel(s_knownSfx[ sfxHandle ].bassSampleID, entityNum, CHAN_AMBIENT, (float *)origin, (float)((float)volume/255.0));
+
+	if (S_ShouldCull((float *)origin, qfalse, entityNum))
+		BASS_AddMemoryChannel(s_knownSfx[ sfxHandle ].bassSampleID, entityNum, CHAN_AMBIENT, (float *)origin, (float)((float)(volume*0.25)/255.0));
+	else
+		BASS_AddMemoryChannel(s_knownSfx[ sfxHandle ].bassSampleID, entityNum, CHAN_AMBIENT, (float *)origin, (float)((float)volume/255.0));
 	return;
 #else //!__USE_BASS__
 	channel_t	*ch;
@@ -1603,7 +1607,6 @@ void S_MuteSound(int entityNum, int entchannel)
 #endif //__USE_BASS__
 }
 
-
 /*
 ====================
 S_StartSound
@@ -1618,14 +1621,17 @@ void S_StartSound(const vec3_t origin, int entityNum, int entchannel, sfxHandle_
 #ifdef __USE_BASS__
 	if (s_knownSfx[ sfxHandle ].bassSampleID < 0) return;
 
-	
+	/*
 	if (origin)
 		Com_Printf("BASS_DEBUG: Entity %i playing sound %s (handle %i - bass id %ld) on channel %i at org %f %f %f.\n", entityNum, s_knownSfx[ sfxHandle ].sSoundName, sfxHandle, s_knownSfx[ sfxHandle ].bassSampleID, entchannel, origin[0], origin[1], origin[2]);
 	else
 		Com_Printf("BASS_DEBUG: Entity %i playing sound %s (handle %i - bass id %ld) on channel %i at NULL org.\n", entityNum, s_knownSfx[ sfxHandle ].sSoundName, sfxHandle, s_knownSfx[ sfxHandle ].bassSampleID, entchannel);
-	
+	*/
 
-	BASS_AddMemoryChannel(s_knownSfx[ sfxHandle ].bassSampleID, entityNum, entchannel, (float *)origin, 1.0);
+	if (S_ShouldCull((float *)origin, qfalse, entityNum))
+		BASS_AddMemoryChannel(s_knownSfx[ sfxHandle ].bassSampleID, entityNum, entchannel, (float *)origin, 0.25);
+	else
+		BASS_AddMemoryChannel(s_knownSfx[ sfxHandle ].bassSampleID, entityNum, entchannel, (float *)origin, 1.0);
 	return;
 #else //!__USE_BASS__
 	channel_t	*ch;
@@ -2059,7 +2065,10 @@ void S_AddLoopingSound( int entityNum, const vec3_t origin, const vec3_t velocit
 			Com_Printf("BASS_DEBUG: Entity %i playing LOOPING sound %s on channel %i at NULL org.\n", entityNum, s_knownSfx[ sfxHandle ].sSoundName, CHAN_BODY);
 		*/
 
-		BASS_AddMemoryLoopChannel(s_knownSfx[ sfxHandle ].bassSampleID, entityNum, CHAN_BODY, (float *)origin, 1.0);
+		if (S_ShouldCull((float *)origin, qfalse, entityNum))
+			BASS_AddMemoryLoopChannel(s_knownSfx[ sfxHandle ].bassSampleID, entityNum, CHAN_BODY, (float *)origin, 0.25);
+		else
+			BASS_AddMemoryLoopChannel(s_knownSfx[ sfxHandle ].bassSampleID, entityNum, CHAN_BODY, (float *)origin, 1.0);
 	}
 	else
 	{
@@ -2070,7 +2079,10 @@ void S_AddLoopingSound( int entityNum, const vec3_t origin, const vec3_t velocit
 			Com_Printf("BASS_DEBUG: Entity %i playing LOOPING sound %s on channel %i at NULL org.\n", entityNum, s_knownSfx[ sfxHandle ].sSoundName, CHAN_AMBIENT);
 		*/
 
-		BASS_AddMemoryLoopChannel(s_knownSfx[ sfxHandle ].bassSampleID, entityNum, CHAN_AMBIENT, (float *)origin, 1.0);
+		if (S_ShouldCull((float *)origin, qfalse, entityNum))
+			BASS_AddMemoryLoopChannel(s_knownSfx[ sfxHandle ].bassSampleID, entityNum, CHAN_AMBIENT, (float *)origin, 0.25);
+		else
+			BASS_AddMemoryLoopChannel(s_knownSfx[ sfxHandle ].bassSampleID, entityNum, CHAN_AMBIENT, (float *)origin, 1.0);
 	}
 
 #else //!__USE_BASS__
@@ -2144,7 +2156,10 @@ void S_AddAmbientLoopingSound( const vec3_t origin, unsigned char volume, sfxHan
 		Com_Printf("BASS_DEBUG: Entity %i playing AMBIENT LOOPING sound %s on channel %i at NULL org.\n", -1, s_knownSfx[ sfxHandle ].sSoundName, CHAN_AMBIENT);
 	*/
 
-	BASS_AddMemoryLoopChannel(s_knownSfx[ sfxHandle ].bassSampleID, -1, CHAN_AMBIENT, (float *)origin, (float)((float)volume/255.0));
+	if (S_ShouldCull((float *)origin, qfalse, -1))
+		BASS_AddMemoryLoopChannel(s_knownSfx[ sfxHandle ].bassSampleID, -1, CHAN_AMBIENT, (float *)origin, (float)((float)(volume*0.25)/255.0));
+	else
+		BASS_AddMemoryLoopChannel(s_knownSfx[ sfxHandle ].bassSampleID, -1, CHAN_AMBIENT, (float *)origin, (float)((float)volume/255.0));
 
 #else //!__USE_BASS__
 	/*const*/ sfx_t *sfx;
