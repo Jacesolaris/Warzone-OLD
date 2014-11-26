@@ -15,26 +15,28 @@ extern vec3_t		s_entityPosition[MAX_GENTITIES];
 extern int	s_soundStarted;
 extern int	s_numSfx;
 
+extern qboolean S_StartBackgroundTrack_Actual( const char *intro, const char *loop );
+
 qboolean EAX_SUPPORTED = qtrue;
 
 #define MAX_BASS_CHANNELS	256
 
 #define SOUND_3D_METHOD					BASS_3DMODE_NORMAL //BASS_3DMODE_RELATIVE
 
-float MIN_SOUND_RANGE				=	256.0; //256.0
-float MAX_SOUND_RANGE				=	2048.0; // 3072.0
+float	MIN_SOUND_RANGE					=	256.0; //256.0
+float	MAX_SOUND_RANGE					=	2048.0; // 3072.0
 
-int SOUND_CONE_INSIDE_ANGLE			=	-1;//120;
-int SOUND_CONE_OUTSIDE_ANGLE		=	-1;//120;
-float SOUND_CONE_OUTSIDE_VOLUME		=	0;//0.9;
+int		SOUND_CONE_INSIDE_ANGLE			=	-1;//120;
+int		SOUND_CONE_OUTSIDE_ANGLE		=	-1;//120;
+float	SOUND_CONE_OUTSIDE_VOLUME		=	0;//0.9;
 
 // Use meters as distance unit, real world rolloff, real doppler effect
 // 1.0 = use meters, 0.9144 = use yards, 0.3048 = use feet.
-float SOUND_DISTANCE_UNIT_SIZE		=	0.3048; // UQ1: It would seem that this is close to the right conversion for Q3 units... unsure though...
+float	SOUND_DISTANCE_UNIT_SIZE		=	0.3048; // UQ1: It would seem that this is close to the right conversion for Q3 units... unsure though...
 // 0.0 = no rolloff, 1.0 = real world, 2.0 = 2x real.
-float SOUND_REAL_WORLD_FALLOFF		=	1.0;//0.3048;//1.0; //0.3048
+float	SOUND_REAL_WORLD_FALLOFF		=	1.0;//0.3048;//1.0; //0.3048
 // 0.0 = no doppler, 1.0 = real world, 2.0 = 2x real.
-float SOUND_REAL_WORLD_DOPPLER		=	0.3048; //1.0 //0.3048
+float	SOUND_REAL_WORLD_DOPPLER		=	0.3048; //1.0 //0.3048
 
 
 qboolean BASS_UPDATE_THREAD_RUNNING = qfalse;
@@ -843,8 +845,6 @@ void BASS_StopMusic( DWORD samplechan )
 
 void BASS_StartMusic ( DWORD samplechan )
 {
-	//if (s_volumeMusic->value <= 0) return;
-
 	// Set new samples...
 	MUSIC_CHANNEL.originalChannel=MUSIC_CHANNEL.channel = samplechan;
 	MUSIC_CHANNEL.entityNum = -1;
@@ -855,40 +855,255 @@ void BASS_StartMusic ( DWORD samplechan )
 	BASS_ChannelSetAttribute(samplechan, BASS_ATTRIB_VOL, MUSIC_CHANNEL.volume*BASS_GetVolumeForChannel(CHAN_MUSIC));
 
 	// Play
-	BASS_ChannelPlay(samplechan,TRUE);
+	if (!s_allowDynamicMusic->integer)
+		BASS_ChannelPlay(samplechan,TRUE);
+	else
+		BASS_ChannelPlay(samplechan,FALSE);
 
 	// Apply the 3D settings (music is always local)...
-	MUSIC_CHANNEL.vel.x = 0;
-	MUSIC_CHANNEL.vel.y = 0;
-	MUSIC_CHANNEL.vel.z = 0;
-
-	// Set origin...
-	MUSIC_CHANNEL.pos.x = 0;
-	MUSIC_CHANNEL.pos.y = 0;
-	MUSIC_CHANNEL.pos.z = 0;
-
-	BASS_ChannelSet3DPosition(MUSIC_CHANNEL.channel, &MUSIC_CHANNEL.pos, NULL, &MUSIC_CHANNEL.vel);
 	BASS_ChannelSet3DAttributes(MUSIC_CHANNEL.channel, SOUND_3D_METHOD, -1, -1, -1, -1, -1);
 	BASS_Apply3D();
 }
 
 DWORD BASS_LoadMusicSample ( void *memory, int length )
 {// Just load a sample into memory ready to play instantly...
-	DWORD newchan;
+	DWORD	newchan;
+	int		flags = 0;
 
-	//if (s_volumeMusic->value <= 0) return -1;
+	if (!s_allowDynamicMusic->integer)
+	{
+		flags = BASS_SAMPLE_LOOP;
+	}
 
 	// Try to load the sample with the highest quality options we support...
-	if (newchan=BASS_SampleLoad(TRUE,memory,0,(DWORD)length,1,BASS_SAMPLE_LOOP|BASS_SAMPLE_FLOAT))
+	if (newchan=BASS_SampleLoad(TRUE,memory,0,(DWORD)length,1,flags|BASS_SAMPLE_FLOAT))
 	{
 		return newchan;
 	}
-	else if (newchan=BASS_SampleLoad(TRUE,memory,0,(DWORD)length,1,BASS_SAMPLE_LOOP))
+	else if (newchan=BASS_SampleLoad(TRUE,memory,0,(DWORD)length,1,flags))
 	{
 		return newchan;
 	}
 
 	return -1;
+}
+
+//
+// New dynamic music system...
+//
+
+const char *JKA_TRACKS[] =
+{
+	"music/badsmall.mp3",
+	"music/cinematic_1.mp3",
+	"music/death_music.mp3",
+	"music/endcredits.mp3",
+	"music/goodsmall.mp3",
+	"music/artus_topside/impbased_action.mp3",
+	"music/bespin_streets/BespinA_Action.mp3",
+	"music/hoth2/hoth2_action.mp3",
+	"music/hoth2/hoth2_atr00.mp3",
+	"music/hoth2/hoth2_atr01.mp3",
+	"music/hoth2/hoth2_atr02.mp3",
+	"music/hoth2/hoth2_atr03.mp3",
+	"music/hoth2/hoth2_etr00.mp3",
+	"music/hoth2/hoth2_etr01.mp3",
+	"music/hoth2/hoth2_explore.mp3",
+	"music/kor1/korrib_action.mp3",
+	"music/kor_dark/final_battle.mp3",
+	"music/kor_dark/korrib_action.mp3",
+	"music/kor_dark/korrib_atr00.mp3",
+	"music/kor_dark/korrib_atr01.mp3",
+	"music/kor_dark/korrib_atr02.mp3",
+	"music/kor_dark/korrib_atr03.mp3",
+	"music/kor_dark/korrib_dark_etr00.mp3",
+	"music/kor_dark/korrib_dark_etr01.mp3",
+	"music/kor_dark/korrib_dark_explore.mp3",
+	"music/kor_lite/final_battle.mp3",
+	"music/kor_lite/korrib_action.mp3",
+	"music/kor_lite/korrib_atr00.mp3",
+	"music/kor_lite/korrib_atr01.mp3",
+	"music/kor_lite/korrib_atr02.mp3",
+	"music/kor_lite/korrib_atr03.mp3",
+	"music/kor_lite/korrib_lite_etr00.mp3",
+	"music/kor_lite/korrib_lite_etr01.mp3",
+	"music/kor_lite/korrib_lite_explore.mp3",
+	"music/mp/duel.mp3",
+	"music/mp/mp_action1.mp3",
+	"music/mp/mp_action2.mp3",
+	"music/mp/mp_action3.mp3",
+	"music/mp/MP_action4.mp3",
+	"music/t1_fatal/tunnels_action.mp3",
+	"music/t1_fatal/tunnels_atr00.mp3",
+	"music/t1_fatal/tunnels_atr01.mp3",
+	"music/t1_fatal/tunnels_atr02.mp3",
+	"music/t1_fatal/tunnels_atr03.mp3",
+	"music/t1_fatal/tunnels_etr00.mp3",
+	"music/t1_fatal/tunnels_etr01.mp3",
+	"music/t1_fatal/tunnels_explore.mp3",
+	"music/t1_rail/rail_nowhere.mp3",
+	"music/t1_sour/dealsour_action.mp3",
+	"music/t1_sour/dealsour_atr00.mp3",
+	"music/t1_sour/dealsour_atr01.mp3",
+	"music/t1_sour/dealsour_atr02.mp3",
+	"music/t1_sour/dealsour_etr00.mp3",
+	"music/t1_sour/dealsour_etr01.mp3",
+	"music/t1_sour/dealsour_explore.mp3",
+	"music/t1_surprise/tusken_action.mp3",
+	"music/t1_surprise/tusken_atr00.mp3",
+	"music/t1_surprise/tusken_atr01.mp3",
+	"music/t1_surprise/tusken_atr02.mp3",
+	"music/t1_surprise/tusken_atr03.mp3",
+	"music/t1_surprise/tusken_etr00.mp3",
+	"music/t1_surprise/tusken_etr01.mp3",
+	"music/t1_surprise/tusken_explore.mp3",
+	"music/t2_dpred/impbaseb_action.mp3",
+	"music/t2_dpred/impbaseb_atr00.mp3",
+	"music/t2_dpred/impbaseb_atr01.mp3",
+	"music/t2_dpred/impbaseb_atr02.mp3",
+	"music/t2_dpred/impbaseb_atr03.mp3",
+	"music/t2_dpred/impbaseb_etr00.mp3",
+	"music/t2_dpred/impbaseb_etr01.mp3",
+	"music/t2_dpred/impbaseb_explore.mp3",
+	"music/t2_rancor/rancor_action.mp3",
+	"music/t2_rancor/rancor_atr00.mp3",
+	"music/t2_rancor/rancor_atr01.mp3",
+	"music/t2_rancor/rancor_atr02.mp3",
+	"music/t2_rancor/rancor_etr00.mp3",
+	"music/t2_rancor/rancor_etr01.mp3",
+	"music/t2_rancor/rancor_explore.mp3",
+	"music/t2_rogue/narshaada_action.mp3",
+	"music/t2_rogue/narshaada_atr00.mp3",
+	"music/t2_rogue/narshaada_atr01.mp3",
+	"music/t2_rogue/narshaada_atr02.mp3",
+	"music/t2_rogue/narshaada_atr03.mp3",
+	"music/t2_rogue/narshaada_etr00.mp3",
+	"music/t2_rogue/narshaada_etr01.mp3",
+	"music/t2_rogue/narshaada_explore.mp3",
+	"music/t2_wedge/besplat_action.mp3",
+	"music/t2_wedge/besplat_atr00.mp3",
+	"music/t2_wedge/besplat_atr01.mp3",
+	"music/t2_wedge/besplat_atr02.mp3",
+	"music/t2_wedge/besplat_boss.mp3",
+	"music/t2_wedge/besplat_etr00.mp3",
+	"music/t2_wedge/besplat_etr01.mp3",
+	"music/t2_wedge/besplat_explore.mp3",
+	"music/t3_byss/alienhb_action.mp3",
+	"music/t3_byss/alienhb_atr00.mp3",
+	"music/t3_byss/alienhb_atr01.mp3",
+	"music/t3_byss/alienhb_atr02.mp3",
+	"music/t3_byss/alienhb_etr00.mp3",
+	"music/t3_byss/alienhb_etr01.mp3",
+	"music/t3_byss/alienhb_explore.mp3",
+	"music/vjun2/impbasee_action.mp3",
+	"music/vjun2/impbasee_atr00.mp3",
+	"music/vjun2/impbasee_atr01.mp3",
+	"music/vjun2/impbasee_atr02.mp3",
+	"music/vjun2/impbasee_atr03.mp3",
+	"music/vjun2/impbasee_etr00.mp3",
+	"music/vjun2/impbasee_etr01.mp3",
+	"music/vjun2/impbasee_explore.mp3",
+	"music/vjun3/vjun3_action.mp3",
+	"music/vjun3/vjun3_atr00.mp3",
+	"music/vjun3/vjun3_atr01.mp3",
+	"music/vjun3/vjun3_atr02.mp3",
+	"music/vjun3/vjun3_etr00.mp3",
+	"music/vjun3/vjun3_etr01.mp3",
+	"music/vjun3/vjun3_explore.mp3",
+	"music/yavin1/swamp_action.mp3",
+	"music/yavin1/swamp_atr00.mp3",
+	"music/yavin1/swamp_atr01.mp3",
+	"music/yavin1/swamp_atr02.mp3",
+	"music/yavin1/swamp_atr03.mp3",
+	"music/yavin1/swamp_etr00.mp3",
+	"music/yavin1/swamp_etr01.mp3",
+	"music/yavin1/swamp_explore.mp3",
+	"music/yavin2/yavtemp2_action.mp3",
+	"music/yavin2/yavtemp2_atr00.mp3",
+	"music/yavin2/yavtemp2_atr01.mp3",
+	"music/yavin2/yavtemp2_atr02.mp3",
+	"music/yavin2/yavtemp2_atr03.mp3",
+	"music/yavin2/yavtemp2_etr00.mp3",
+	"music/yavin2/yavtemp2_etr01.mp3",
+	"music/yavin2/yavtemp2_explore.mp3",
+	"music/yavin2_old/yavtemp_explore.mp3",
+};
+
+#define JKA_TRACKS_NUM 133
+
+// channel (sample/music) info structure
+typedef struct {
+	char name[64];
+} dMusicList_t;
+
+#define			MAX_DYNAMIC_LIST 512
+
+qboolean		MUSIC_LIST_INITIALIZED = qfalse;
+int				MUSIC_LIST_COUNT = 0;
+dMusicList_t	MUSIC_LIST[MAX_DYNAMIC_LIST];
+
+// For multithreading...
+qboolean		MUSIC_LIST_UPDATING = qfalse;
+
+void BASS_AddDynamicTrack ( char *name )
+{
+	if (!MUSIC_LIST_INITIALIZED) 
+	{// Don't add custom tracks until the JKA list has been initialized...
+		return;
+	}
+
+	if (MUSIC_LIST_UPDATING) return; // wait...
+
+	if (MUSIC_LIST_COUNT >= MAX_DYNAMIC_LIST) return; // Hit MAX allowed number...
+
+	for (int i = 0; i < MUSIC_LIST_COUNT; i++)
+	{
+		if (!strcmp(name, MUSIC_LIST[i].name)) return; // already in the list...
+	}
+
+	MUSIC_LIST_UPDATING = qtrue;
+	strcpy(MUSIC_LIST[MUSIC_LIST_COUNT].name, name);
+	MUSIC_LIST_COUNT++;
+	MUSIC_LIST_UPDATING = qfalse;
+}
+
+void BASS_InitDynamicList ( void )
+{
+	if (MUSIC_LIST_INITIALIZED) 
+	{// Already done!
+		return;
+	}
+
+	MUSIC_LIST_UPDATING = qtrue;
+
+	memset(MUSIC_LIST, 0, sizeof(dMusicList_t)*MAX_DYNAMIC_LIST);
+
+	// Add all known JKA tracks to the list...
+	for (int i = 0; i < JKA_TRACKS_NUM; i++)
+	{
+		strcpy(MUSIC_LIST[MUSIC_LIST_COUNT].name, (char *)JKA_TRACKS[i]);
+		MUSIC_LIST_COUNT++;
+	}
+
+	MUSIC_LIST_INITIALIZED = qtrue;
+	MUSIC_LIST_UPDATING = qfalse;
+}
+
+void BASS_UpdateDynamicMusic( void )
+{
+	if (!s_soundStarted) return; // sound sys is still inactive...
+	if (!s_allowDynamicMusic->integer) return; // inactive...
+	if (MUSIC_LIST_UPDATING) return; // wait...
+	
+	BASS_InitDynamicList(); // check if we have initialized the list yet...
+
+	if (!MUSIC_LIST_INITIALIZED) return;
+
+	// Do we need a new track yet???
+	if (BASS_ChannelIsActive(MUSIC_CHANNEL.channel) == BASS_ACTIVE_PLAYING) return; // Still playing a track...
+
+	// Seems we need a new track... Select a random one and play it!
+	S_StartBackgroundTrack_Actual( MUSIC_LIST[irand(0, MUSIC_LIST_COUNT)].name, "" );
 }
 
 

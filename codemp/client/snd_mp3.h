@@ -22,7 +22,7 @@ typedef struct id3v1_1 {
 extern const char sKEY_MAXVOL[];
 extern const char sKEY_UNCOMP[];
 
-qboolean	MP3_IsValid				( const char *psLocalFilename, void *pvData, int iDataLen, qboolean bStereoDesired = qfalse );
+qboolean	MP3_IsMusic				( const char *psLocalFilename, void *pvData, int iDataLen, qboolean bStereoDesired = qfalse );
 
 ///////////////////////////////////////
 //
@@ -33,7 +33,7 @@ extern "C"
 {
 #endif
 
-qboolean	C_MP3_IsValid			(void *pvData, int iDataLen, int bStereoDesired, qboolean use_bass);
+qboolean	C_MP3_IsMusic			(void *pvData, int iDataLen, int bStereoDesired);
 
 #ifdef __cplusplus
 }

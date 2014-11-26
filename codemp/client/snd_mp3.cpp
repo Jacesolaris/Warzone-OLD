@@ -11,9 +11,8 @@
 //
 // returns success/fail
 //
-qboolean MP3_IsValid( const char *psLocalFilename, void *pvData, int iDataLen, qboolean bStereoDesired /* = qfalse */)
+qboolean MP3_IsMusic( const char *psLocalFilename, void *pvData, int iDataLen, qboolean bStereoDesired /* = qfalse */)
 {
-	qboolean psError = C_MP3_IsValid(pvData, iDataLen, bStereoDesired, qtrue);
-	return psError;
+	return C_MP3_IsMusic(pvData, iDataLen, bStereoDesired);
 }
 

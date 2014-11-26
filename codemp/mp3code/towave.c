@@ -37,10 +37,7 @@ MP3STREAM _MP3Stream;
 LP_MP3STREAM pMP3Stream = &_MP3Stream;
 int bFastEstimateOnly = 0;	// MUST DEFAULT TO THIS VALUE!!!!!!!!!
 
-
-// char *return is NZ for any errors (no trailing CR!)
-//
-qboolean C_MP3_IsValid(void *pvData, int iDataLen, int bStereoDesired, qboolean use_bass)
+qboolean C_MP3_IsMusic(void *pvData, int iDataLen, int bStereoDesired)
 {
 //	char sTemp[1024];	/////////////////////////////////////////////////
 	unsigned int iRealDataStart;
@@ -59,16 +56,16 @@ qboolean C_MP3_IsValid(void *pvData, int iDataLen, int bStereoDesired, qboolean 
 	// check for files with bad frame unpack sizes (that would crash the game), or stereo files.
 	//
 	// although the decoder can convert stereo to mono (apparently), we want to know about stereo files
-	//	because they're a waste of source space... (all FX are mono, and moved via panning)
+	//	because they're a waste of source space...
 	//
 	if (head.mode != 3 && !bStereoDesired)	//3 seems to mean mono
 	{
 		if (iDataLen > 98000) {	// we'll allow it for small files even if stereo
-			return qfalse;
+			return qtrue;
 		}
 	}
 	
 	// file seems to be valid...
 	//
-	return qtrue;
+	return qfalse;
 }

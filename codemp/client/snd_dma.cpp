@@ -13,8 +13,7 @@
 #define __STDC_FORMAT_MACROS
 #include <inttypes.h>
 
-DWORD CURRENT_MUSIC_TRACK = 0;
-sfx_t *CURRENT_MUSIC_SFX = NULL;
+DWORD CURRENT_MUSIC_HANDLE = 0;
 
 qboolean s_shutUp = qfalse;
 
@@ -22,7 +21,6 @@ static void S_Play_f(void);
 static void S_Music_f(void);
 static void S_SetDynamicMusic_f(void);
 
-void S_Update_();
 void S_StopAllSounds(void);
 static void S_UpdateBackgroundTrack( void );
 sfx_t *S_FindName( const char *name );
@@ -91,7 +89,6 @@ cvar_t		*s_lip_threshold_2;
 cvar_t		*s_lip_threshold_3;
 cvar_t		*s_lip_threshold_4;
 cvar_t		*s_language;	// note that this is distinct from "g_language"
-cvar_t		*s_dynamix;
 cvar_t		*s_debugdynamic;
 
 cvar_t		*s_doppler;
@@ -786,6 +783,7 @@ Called once each time through the main loop
 void S_Update( void ) 
 {
 	BASS_UpdateSounds();
+	BASS_UpdateDynamicMusic(); // check for any dynamic music updates...
 }
 
 /*
@@ -859,35 +857,43 @@ qboolean S_FileExists( const char *psFilename )
 
 static void S_StopBackgroundTrack_Actual( void )
 {
-	if (CURRENT_MUSIC_TRACK && CURRENT_MUSIC_SFX)
+	if (CURRENT_MUSIC_HANDLE)
 	{// Need to free the old sound!
-		BASS_StopMusic(CURRENT_MUSIC_TRACK);
-		memset (CURRENT_MUSIC_SFX, 0, sizeof(sfx_t));
+		BASS_StopMusic(CURRENT_MUSIC_HANDLE);
 	}
 }
 
-static qboolean S_StartBackgroundTrack_Actual( const char *intro, const char *loop )
+void S_StopBackgroundTrack( void )
 {
+	S_StopBackgroundTrack_Actual();
+}
+
+extern DWORD S_LoadMusic( char *sSoundName );
+
+qboolean S_StartBackgroundTrack_Actual( const char *intro, const char *loop )
+{
+	DWORD	NEW_MUSIC_HANDLE = 0;
 	char	name[MAX_QPATH];
 
-	Q_strncpyz( name, intro, sizeof( name ) - 4 );	// this seems to be so that if the filename hasn't got an extension
-													//	but doesn't have the room to append on either then you'll just
-													//	get the "soft" fopen() error, rather than the ERR_DROP you'd get
-													//	if COM_DefaultExtension didn't have room to add it on.
+	Q_strncpyz( name, intro, sizeof( name ) - 4 );
 	COM_DefaultExtension( name, sizeof( name ), ".mp3" );
 
-	if (CURRENT_MUSIC_TRACK && CURRENT_MUSIC_SFX)
-	{// Need to free the old sound!
-		BASS_StopMusic(CURRENT_MUSIC_TRACK);
-		memset (CURRENT_MUSIC_SFX, 0, sizeof(sfx_t));
+	NEW_MUSIC_HANDLE = S_LoadMusic( name );
+
+	if (NEW_MUSIC_HANDLE)
+	{
+		// Stop old track...
+		S_StopBackgroundTrack_Actual();
+
+		// Start new track...
+		CURRENT_MUSIC_HANDLE = NEW_MUSIC_HANDLE;
+		BASS_StartMusic(CURRENT_MUSIC_HANDLE);
+	}
+	else
+	{
+		return qfalse;
 	}
 
-	sfxHandle_t	sfxHandle = S_RegisterSound( name );
-
-	if (s_knownSfx[ sfxHandle ].bassSampleID < 0) return qfalse;
-	CURRENT_MUSIC_TRACK = s_knownSfx[ sfxHandle ].bassSampleID;
-	CURRENT_MUSIC_SFX = &s_knownSfx[ sfxHandle ];
-	BASS_StartMusic(s_knownSfx[ sfxHandle ].bassSampleID);
 	return qtrue;
 }
 
@@ -928,9 +934,21 @@ void S_StartBackgroundTrack( const char *intro, const char *loop, qboolean bCall
 	COM_DefaultExtension( sNameIntro, sizeof( sNameIntro ), ".mp3" );
 	COM_DefaultExtension( sNameLoop,  sizeof( sNameLoop),	".mp3" );
 
+	if (s_allowDynamicMusic->integer)
+	{// Check dynamic music loading...
+		BASS_AddDynamicTrack(sNameIntro);
+
+		if (strcmp(sNameLoop, sNameIntro)) 
+			BASS_AddDynamicTrack(sNameLoop);
+
+		BASS_UpdateDynamicMusic();
+
+		return;
+	}
+
 	// if dynamic music not allowed, then just stream the explore music instead of playing dynamic...
 	//
-	if (!s_allowDynamicMusic->integer && Music_DynamicDataAvailable(intro))	// "intro", NOT "sName" (i.e. don't use version with ".mp3" extension)
+	if (Music_DynamicDataAvailable(intro))	// "intro", NOT "sName" (i.e. don't use version with ".mp3" extension)
 	{
 		const char *psMusicName = Music_GetFileNameForState( eBGRNDTRACK_DATABEGIN );
 		if (psMusicName && S_FileExists( psMusicName ))
@@ -949,19 +967,12 @@ void S_StartBackgroundTrack( const char *intro, const char *loop, qboolean bCall
 		S_StartBackgroundTrack_Actual( sNameIntro, psLoopName );
 	}
 
+	/*
 	if (bCalledByCGameStart)
 	{
 		S_StopBackgroundTrack();
 	}
-}
-
-void S_StopBackgroundTrack( void )
-{
-	if (CURRENT_MUSIC_TRACK && CURRENT_MUSIC_SFX)
-	{// Need to free the old sound!
-		BASS_StopMusic(CURRENT_MUSIC_TRACK);
-		memset (CURRENT_MUSIC_SFX, 0, sizeof(sfx_t));
-	}
+	*/
 }
 
 cvar_t *s_soundpoolmegs = NULL;
