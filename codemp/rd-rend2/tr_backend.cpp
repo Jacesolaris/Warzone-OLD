@@ -2121,6 +2121,12 @@ const void *RB_PostProcess(const void *data)
 			FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 		}
 
+		if (r_fxaa->integer)
+		{
+			RB_FXAA(srcFbo, srcBox, tr.genericFbo, dstBox);
+			FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+		}
+
 		//
 		// End UQ1 Added...
 		//

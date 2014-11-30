@@ -1089,12 +1089,42 @@
 			action 
 			{
 				play			"sound/interface/button1"
-				uiScript		glCustom
-				setcvar			ui_r_modified	1
-				show			applyChanges
 			}
 		}
 		
+		itemDef 
+		{	
+			name				video_fxaa
+			group				video
+			type				ITEM_TYPE_MULTI
+			text				"FXAA"
+			rect				220 243 300 20
+			textalign			ITEM_ALIGN_RIGHT
+			textalignx			165
+			textaligny			0
+			font 				4
+			textscale 			1
+			forecolor		.615 .615 .956 1
+			cvarFloatList		{  @MENUS_OFF 0 "On" 1  "Off" 2 }
+			descText			"Enable FXAA Anti Aliasing?"
+			cvar				"r_fxaa"
+
+			mouseenter 
+			{ 
+				show			highlight11
+			}
+			mouseexit 
+			{ 
+				hide			highlight11
+			} 
+			action 
+			{
+				play			"sound/interface/button1"
+				uiScript		glCustom
+			}
+		}
+		
+/*
 		itemDef 
 		{	
 			name				video_anisotropic
@@ -1166,6 +1196,7 @@
 				hide			highlight12
 			} 
 		}
+*/
 		
 		// APPLY CHANGES BUTTON
 		itemDef 

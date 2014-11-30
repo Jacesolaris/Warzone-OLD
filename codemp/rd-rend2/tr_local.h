@@ -138,13 +138,17 @@ extern cvar_t	*r_ext_compressed_textures;
 extern cvar_t	*r_ext_multitexture;
 extern cvar_t	*r_ext_compiled_vertex_array;
 extern cvar_t	*r_ext_texture_env_add;
+#if 0 // UQ1: None of this slow ass crap...
 extern cvar_t	*r_ext_texture_filter_anisotropic;
+#endif
 
 extern cvar_t  *r_ext_draw_range_elements;
 extern cvar_t  *r_ext_multi_draw_arrays;
 extern cvar_t  *r_ext_texture_float;
 extern cvar_t  *r_arb_half_float_pixel;
+#if 0 // UQ1: None of this slow ass crap...
 extern cvar_t  *r_ext_framebuffer_multisample;
+#endif
 extern cvar_t  *r_arb_seamless_cube_map;
 
 extern cvar_t  *r_mergeMultidraws;
@@ -300,6 +304,7 @@ extern cvar_t  *r_testvalue0;
 extern cvar_t  *r_testvalue1;
 extern cvar_t  *r_esharpening;
 extern cvar_t  *r_esharpening2;
+extern cvar_t  *r_fxaa;
 extern cvar_t  *r_multipost;
 extern cvar_t  *r_textureClean;
 extern cvar_t  *r_textureCleanSigma;
@@ -2243,6 +2248,7 @@ typedef struct trGlobals_s {
 	shaderProgram_t ssao2Shader;
 	shaderProgram_t esharpeningShader;
 	shaderProgram_t esharpening2Shader;
+	shaderProgram_t fxaaShader;
 	shaderProgram_t texturecleanShader;
 	shaderProgram_t bloomDarkenShader;
 	shaderProgram_t bloomBlurShader;
@@ -2404,7 +2410,9 @@ extern  cvar_t  *r_ext_multi_draw_arrays;
 extern  cvar_t  *r_ext_framebuffer_object;
 extern  cvar_t  *r_ext_texture_float;
 extern  cvar_t  *r_arb_half_float_pixel;
+#if 0 // UQ1: None of this slow ass crap...
 extern  cvar_t  *r_ext_framebuffer_multisample;
+#endif
 extern  cvar_t  *r_arb_seamless_cube_map;
 extern  cvar_t  *r_arb_vertex_type_2_10_10_10_rev;
 
@@ -2558,6 +2566,7 @@ extern cvar_t  *r_testvalue0;
 extern cvar_t  *r_testvalue1;
 extern cvar_t  *r_esharpening;
 extern cvar_t  *r_esharpening2;
+extern cvar_t  *r_fxaa;
 extern cvar_t  *r_multipost;
 extern cvar_t  *r_textureClean;
 extern cvar_t  *r_textureCleanSigma;

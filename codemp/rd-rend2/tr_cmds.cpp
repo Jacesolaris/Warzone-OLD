@@ -425,11 +425,18 @@ void RE_BeginFrame( stereoFrame_t stereoFrame ) {
 	//
 	// texturemode stuff
 	//
-	if ( r_textureMode->modified || r_ext_texture_filter_anisotropic->modified ) {
+	if ( r_textureMode->modified 
+#if 0 // UQ1: None of this slow ass crap...
+		|| r_ext_texture_filter_anisotropic->modified 
+#endif
+		) 
+	{
 		R_IssuePendingRenderCommands();
 		GL_TextureMode( r_textureMode->string );
 		r_textureMode->modified = qfalse;
+#if 0 // UQ1: None of this slow ass crap...
 		r_ext_texture_filter_anisotropic->modified = qfalse;
+#endif
 	}
 
 	//

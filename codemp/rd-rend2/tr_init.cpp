@@ -89,14 +89,18 @@ cvar_t	*r_ext_compressed_textures;
 cvar_t	*r_ext_multitexture;
 cvar_t	*r_ext_compiled_vertex_array;
 cvar_t	*r_ext_texture_env_add;
+#if 0 // UQ1: None of this slow ass crap...
 cvar_t	*r_ext_texture_filter_anisotropic;
+#endif
 cvar_t	*r_ext_preferred_tc_method;
 
 cvar_t  *r_ext_draw_range_elements;
 cvar_t  *r_ext_multi_draw_arrays;
 cvar_t  *r_ext_texture_float;
 cvar_t  *r_arb_half_float_pixel;
+#if 0 // UQ1: None of this slow ass crap...
 cvar_t  *r_ext_framebuffer_multisample;
+#endif
 cvar_t  *r_arb_seamless_cube_map;
 cvar_t  *r_arb_vertex_type_2_10_10_10_rev;
 
@@ -266,6 +270,7 @@ cvar_t  *r_trueAnaglyphRed;
 cvar_t  *r_trueAnaglyphGreen;
 cvar_t  *r_trueAnaglyphBlue;
 cvar_t  *r_vibrancy;
+cvar_t  *r_fxaa;
 cvar_t  *r_testshader;
 cvar_t  *r_multithread;
 
@@ -1246,10 +1251,14 @@ void R_Register( void )
 	r_ext_multi_draw_arrays = ri->Cvar_Get( "r_ext_multi_draw_arrays", "1", CVAR_ARCHIVE | CVAR_LATCH);
 	r_ext_texture_float = ri->Cvar_Get( "r_ext_texture_float", "1", CVAR_ARCHIVE | CVAR_LATCH);
 	r_arb_half_float_pixel = ri->Cvar_Get( "r_arb_half_float_pixel", "1", CVAR_ARCHIVE | CVAR_LATCH);
+#if 0 // UQ1: None of this slow ass crap...
 	r_ext_framebuffer_multisample = ri->Cvar_Get( "r_ext_framebuffer_multisample", "0", CVAR_ARCHIVE | CVAR_LATCH);
+#endif
 	r_arb_seamless_cube_map = ri->Cvar_Get( "r_arb_seamless_cube_map", "0", CVAR_ARCHIVE | CVAR_LATCH);
 	r_arb_vertex_type_2_10_10_10_rev = ri->Cvar_Get( "r_arb_vertex_type_2_10_10_10_rev", "1", CVAR_ARCHIVE | CVAR_LATCH);
-	r_ext_texture_filter_anisotropic = ri->Cvar_Get( "r_ext_texture_filter_anisotropic", "16", CVAR_ARCHIVE );
+#if 0 // UQ1: None of this slow ass crap...
+	r_ext_texture_filter_anisotropic = ri->Cvar_Get( "r_ext_texture_filter_anisotropic", "0", CVAR_ARCHIVE );
+#endif
 	
 	r_dynamicGlow						= ri->Cvar_Get( "r_dynamicGlow",			"1",		CVAR_ARCHIVE );
 	r_dynamicGlowPasses					= ri->Cvar_Get( "r_dynamicGlowPasses",		"5",		CVAR_ARCHIVE );
@@ -1375,6 +1384,7 @@ void R_Register( void )
 	r_testvalue1 = ri->Cvar_Get( "r_testvalue1", "0", 0 );
 	r_esharpening = ri->Cvar_Get( "r_esharpening", "1", CVAR_ARCHIVE );
 	r_esharpening2 = ri->Cvar_Get( "r_esharpening2", "1", CVAR_ARCHIVE );
+	r_fxaa = ri->Cvar_Get( "r_fxaa", "0", CVAR_ARCHIVE );
 	r_multipost = ri->Cvar_Get( "r_multipost", "0", CVAR_ARCHIVE );
 	r_textureClean = ri->Cvar_Get( "r_textureClean", "0", CVAR_ARCHIVE );
 	r_textureCleanSigma = ri->Cvar_Get( "r_textureCleanSigma", "1.2", CVAR_ARCHIVE );
