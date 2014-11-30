@@ -121,12 +121,10 @@ void GL_TextureMode( const char *string ) {
 	gl_filter_min = modes[i].minimize;
 	gl_filter_max = modes[i].maximize;
 	
-#if 0 // UQ1: None of this slow ass crap...
 	if ( r_ext_texture_filter_anisotropic->value > glConfig.maxTextureFilterAnisotropy )
 	{
 		ri->Cvar_SetValue ("r_ext_texture_filter_anisotropic", glConfig.maxTextureFilterAnisotropy);
 	}
-#endif
 
 	// change all the existing mipmap texture objects
 	for ( i = 0 ; i < tr.numImages ; i++ ) {
@@ -136,7 +134,6 @@ void GL_TextureMode( const char *string ) {
 			qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, gl_filter_min);
 			qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, gl_filter_max);
 			
-#if 0 // UQ1: None of this slow ass crap...
 			if ( r_ext_texture_filter_anisotropic->value > 0.0f )
 			{
 				if ( glConfig.maxTextureFilterAnisotropy > 1.0f )
@@ -148,7 +145,6 @@ void GL_TextureMode( const char *string ) {
 					qglTexParameterf (GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, 1.0f);
 				}
 			}
-#endif
 		}
 	}
 }
@@ -2193,13 +2189,11 @@ done:
 
 	if (flags & IMGFLAG_MIPMAP)
 	{
-#if 0 // UQ1: None of this slow ass crap...
 		if (r_ext_texture_filter_anisotropic->value > 1.0f && glConfig.maxTextureFilterAnisotropy > 0.0f)
 		{
 			qglTexParameterf ( GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT,
 							  Com_Clamp( 1.0f, glConfig.maxTextureFilterAnisotropy, r_ext_texture_filter_anisotropic->value ) );
 		}
-#endif
 
 		qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, gl_filter_min);
 		qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, gl_filter_max);
@@ -2233,13 +2227,11 @@ static void EmptyTexture( int width, int height, imgType_t type, int flags,
 
 	if (flags & IMGFLAG_MIPMAP)
 	{
-#if 0 // UQ1: None of this slow ass crap...
 		if (r_ext_texture_filter_anisotropic->integer > 1 && glConfig.maxTextureFilterAnisotropy > 0.0f)
 		{
 			qglTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT,
 					(GLint)Com_Clamp( 1, glConfig.maxTextureFilterAnisotropy, r_ext_texture_filter_anisotropic->integer ) );
 		}
-#endif
 
 		qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, gl_filter_min);
 		qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, gl_filter_max);

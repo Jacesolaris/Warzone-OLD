@@ -138,9 +138,7 @@ extern cvar_t	*r_ext_compressed_textures;
 extern cvar_t	*r_ext_multitexture;
 extern cvar_t	*r_ext_compiled_vertex_array;
 extern cvar_t	*r_ext_texture_env_add;
-#if 0 // UQ1: None of this slow ass crap...
 extern cvar_t	*r_ext_texture_filter_anisotropic;
-#endif
 
 extern cvar_t  *r_ext_draw_range_elements;
 extern cvar_t  *r_ext_multi_draw_arrays;

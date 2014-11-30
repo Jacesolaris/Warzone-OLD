@@ -1145,7 +1145,6 @@ static void GLW_InitExtensions( void )
 		qglGetFloatv( GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &glConfig.maxTextureFilterAnisotropy );
 		Com_Printf ("...GL_EXT_texture_filter_anisotropic available\n" );
 
-#if 0 // UQ1: None of this slow ass crap...
 		if ( r_ext_texture_filter_anisotropic->integer > 1 )
 		{
 			Com_Printf ("...using GL_EXT_texture_filter_anisotropic\n" );
@@ -1159,15 +1158,10 @@ static void GLW_InitExtensions( void )
 		{
 			ri->Cvar_SetValue( "r_ext_texture_filter_anisotropic_avail", glConfig.maxTextureFilterAnisotropy );
 		}
-#else
-		ri->Cvar_Set( "r_ext_texture_filter_anisotropic_avail", "0" );
-#endif
 	}
 	else
 	{
-#if 0 // UQ1: None of this slow ass crap...
 		Com_Printf ("...GL_EXT_texture_filter_anisotropic not found\n" );
-#endif
 		ri->Cvar_Set( "r_ext_texture_filter_anisotropic_avail", "0" );
 	}
 

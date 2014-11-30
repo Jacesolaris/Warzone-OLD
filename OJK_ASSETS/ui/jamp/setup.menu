@@ -1124,7 +1124,6 @@
 			}
 		}
 		
-/*
 		itemDef 
 		{	
 			name				video_anisotropic
@@ -1134,7 +1133,7 @@
 			cvarTest			r_ext_texture_filter_anisotropic_avail
 			disableCvar			{ 0 }     
 			cvarfloat				r_ext_texture_filter_anisotropic 1 0 16
-			rect				220 243 300 20
+			rect				220 263 300 20
 			textalign			ITEM_ALIGN_RIGHT
 			textalignx			174
 			textaligny			0
@@ -1154,14 +1153,15 @@
 
 			mouseenter 
 			{ 
-				show			highlight11
+				show			highlight12
 			}
 			mouseexit 
 			{ 
-				hide			highlight11
+				hide			highlight12
 			} 
 		}
 		
+/*		
 		itemDef 
 		{	
 			name				video_framebuffer_multisample
