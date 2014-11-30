@@ -1105,7 +1105,7 @@
 			font 				4
 			textscale 			1
 			forecolor		.615 .615 .956 1
-			cvarFloatList		{  @MENUS_OFF 0 "On" 1  "Off" 2 }
+			cvarFloatList		{  @MENUS_OFF 0 "On" 1 }
 			descText			"Enable FXAA Anti Aliasing?"
 			cvar				"r_fxaa"
 
