@@ -267,6 +267,7 @@ cvar_t  *r_trueAnaglyphGreen;
 cvar_t  *r_trueAnaglyphBlue;
 cvar_t  *r_vibrancy;
 cvar_t  *r_fxaa;
+cvar_t  *r_underwater;
 cvar_t  *r_testshader;
 cvar_t  *r_multithread;
 
@@ -1377,6 +1378,7 @@ void R_Register( void )
 	r_esharpening = ri->Cvar_Get( "r_esharpening", "1", CVAR_ARCHIVE );
 	r_esharpening2 = ri->Cvar_Get( "r_esharpening2", "1", CVAR_ARCHIVE );
 	r_fxaa = ri->Cvar_Get( "r_fxaa", "0", CVAR_ARCHIVE );
+	r_underwater = ri->Cvar_Get( "r_underwater", "1", CVAR_ARCHIVE );
 	r_multipost = ri->Cvar_Get( "r_multipost", "0", CVAR_ARCHIVE );
 	r_textureClean = ri->Cvar_Get( "r_textureClean", "0", CVAR_ARCHIVE );
 	r_textureCleanSigma = ri->Cvar_Get( "r_textureCleanSigma", "0.5", CVAR_ARCHIVE ); // 1.2

@@ -1990,6 +1990,23 @@ const void *RB_PostProcess(const void *data)
 		// UQ1: Added...
 		//
 
+		if (r_underwater->integer)
+		{
+			vec3_t vOrg, testOrg;
+			VectorCopy(backEnd.refdef.vieworg, vOrg);
+			VectorCopy(backEnd.refdef.vieworg, testOrg);
+			testOrg[2]+=16;
+
+			trace_t trace;
+			ri->CM_BoxTrace(&trace, vOrg, testOrg, NULL, NULL, 0, CONTENTS_WATER|CONTENTS_LAVA, 0);
+
+			if ((trace.contents & CONTENTS_WATER) || (trace.contents & CONTENTS_LAVA))
+			{
+				RB_Underwater(srcFbo, srcBox, tr.genericFbo, dstBox);
+				FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+			}
+		}
+
 		if (r_darkexpand->integer)
 		{
 			for (int pass = 0; pass < 2; pass++)

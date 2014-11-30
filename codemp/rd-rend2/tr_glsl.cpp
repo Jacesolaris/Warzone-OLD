@@ -102,6 +102,8 @@ extern const char *fallbackShader_multipost_vp;
 extern const char *fallbackShader_multipost_fp;
 extern const char *fallbackShader_vibrancy_vp;
 extern const char *fallbackShader_vibrancy_fp;
+extern const char *fallbackShader_underwater_vp;
+extern const char *fallbackShader_underwater_fp;
 extern const char *fallbackShader_fxaa_vp;
 extern const char *fallbackShader_fxaa_fp;
 
@@ -1704,6 +1706,14 @@ int GLSL_BeginLoadGPUShaders(void)
 	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
 	extradefines[0] = '\0';
 
+	if (!GLSL_BeginLoadGPUShader(&tr.underwaterShader, "underwater", attribs, qtrue, extradefines, qtrue, fallbackShader_underwater_vp, fallbackShader_underwater_fp))
+	{
+		ri->Error(ERR_FATAL, "Could not load underwater shader!");
+	}
+
+	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
+	extradefines[0] = '\0';
+
 	if (!GLSL_BeginLoadGPUShader(&tr.fakedepthShader, "fakedepth", attribs, qtrue, extradefines, qtrue, fallbackShader_fakeDepth_vp, fallbackShader_fakeDepth_fp))
 	{
 		ri->Error(ERR_FATAL, "Could not load fake depth shader!");
@@ -2550,6 +2560,50 @@ void GLSL_EndLoadGPUShaders ( int startTime )
 
 #if defined(_DEBUG)
 	GLSL_FinishGPUShader(&tr.fxaaShader);
+#endif
+	
+	numEtcShaders++;
+
+
+	//underwaterShader
+	if (!GLSL_EndLoadGPUShader(&tr.underwaterShader))
+	{
+		ri->Error(ERR_FATAL, "Could not load underwater shader!");
+	}
+	
+	GLSL_InitUniforms(&tr.underwaterShader);
+
+	qglUseProgram(tr.underwaterShader.program);
+
+	GLSL_SetUniformInt(&tr.underwaterShader, UNIFORM_TEXTUREMAP, TB_COLORMAP);
+	GLSL_SetUniformInt(&tr.underwaterShader, UNIFORM_LEVELSMAP,  TB_LEVELSMAP);
+	
+	{
+		vec4_t viewInfo;
+
+		float zmax = backEnd.viewParms.zFar;
+		float zmin = r_znear->value;
+
+		VectorSet4(viewInfo, zmax / zmin, zmax, 0.0, 0.0);
+		//VectorSet4(viewInfo, zmin, zmax, 0.0, 0.0);
+
+		GLSL_SetUniformVec4(&tr.underwaterShader, UNIFORM_VIEWINFO, viewInfo);
+	}
+
+	{
+		vec2_t screensize;
+		screensize[0] = glConfig.vidWidth;
+		screensize[1] = glConfig.vidHeight;
+
+		GLSL_SetUniformVec2(&tr.underwaterShader, UNIFORM_DIMENSIONS, screensize);
+
+		//ri->Printf(PRINT_WARNING, "Sent dimensions %f %f.\n", screensize[0], screensize[1]);
+	}
+
+	qglUseProgram(0);
+
+#if defined(_DEBUG)
+	GLSL_FinishGPUShader(&tr.underwaterShader);
 #endif
 	
 	numEtcShaders++;
