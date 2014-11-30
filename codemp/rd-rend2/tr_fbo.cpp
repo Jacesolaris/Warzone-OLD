@@ -419,7 +419,6 @@ void FBO_Init(void)
 
 	qglGetIntegerv(GL_MAX_SAMPLES, &multisample);
 
-#if 0 // UQ1: None of this slow ass crap...
 	if (r_ext_framebuffer_multisample->integer < multisample)
 	{
 		multisample = r_ext_framebuffer_multisample->integer;
@@ -432,7 +431,6 @@ void FBO_Init(void)
 	{
 		ri->Cvar_SetValue("r_ext_framebuffer_multisample", (float)multisample);
 	}
-#endif
 
 	//
 	// UQ1's Generic FBO...

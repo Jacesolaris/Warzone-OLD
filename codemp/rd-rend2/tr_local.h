@@ -144,9 +144,7 @@ extern cvar_t  *r_ext_draw_range_elements;
 extern cvar_t  *r_ext_multi_draw_arrays;
 extern cvar_t  *r_ext_texture_float;
 extern cvar_t  *r_arb_half_float_pixel;
-#if 0 // UQ1: None of this slow ass crap...
 extern cvar_t  *r_ext_framebuffer_multisample;
-#endif
 extern cvar_t  *r_arb_seamless_cube_map;
 
 extern cvar_t  *r_mergeMultidraws;
@@ -2408,9 +2406,7 @@ extern  cvar_t  *r_ext_multi_draw_arrays;
 extern  cvar_t  *r_ext_framebuffer_object;
 extern  cvar_t  *r_ext_texture_float;
 extern  cvar_t  *r_arb_half_float_pixel;
-#if 0 // UQ1: None of this slow ass crap...
 extern  cvar_t  *r_ext_framebuffer_multisample;
-#endif
 extern  cvar_t  *r_arb_seamless_cube_map;
 extern  cvar_t  *r_arb_vertex_type_2_10_10_10_rev;
 
