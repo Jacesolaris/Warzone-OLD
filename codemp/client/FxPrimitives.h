@@ -2,7 +2,8 @@
 
 #include "FxSystem.h"
 
-#define MAX_EFFECTS			1<<15//1800
+//#define MAX_EFFECTS			1<<15//1800 // UQ1: 32768??? Really? It loops through them all each frame.. Thats silly!
+#define MAX_EFFECTS			1800 // Should be plenty... Now we have culling...
 
 // Generic group flags, used by parser, then get converted to the appropriate specific flags
 #define FX_PARM_MASK		0xC	// use this to mask off any transition types that use a parm

@@ -132,7 +132,7 @@ static SEffectList *FX_GetValidEffect()
 		return nextValidEffect;
 	}
 
-	int			i;
+	int			i, best_replace = 0, best_replace_time = cl.serverTime + 10000;
 	SEffectList	*ef;
 
 	// Blah..plow through the list till we find something that is currently untainted
@@ -142,8 +142,15 @@ static SEffectList *FX_GetValidEffect()
 		{
 			return ef;
 		}
+
+		if (ef->mKillTime < best_replace_time)
+		{// UQ1: Since we run through this whole loop on a fail anyway, let's find the best option to replace at the same time...
+			best_replace_time = ef->mKillTime;
+			best_replace = i;
+		}
 	}
 
+#if 0 // UQ1: This is dumb... let's replace the oldest kill time fx...
 	// report the error.
 #ifndef FINAL_BUILD
 	theFxHelper.Print( "FX system out of effects\n" );
@@ -154,6 +161,11 @@ static SEffectList *FX_GetValidEffect()
 
 	// Recursive call
 	return nextValidEffect;
+#endif
+
+	// Let's replace the oldest kill time fx...
+	FX_FreeMember( &effectList[best_replace] );
+	return &effectList[best_replace];
 }
 
 //-------------------------
@@ -168,12 +180,11 @@ void FX_Add( bool portal )
 
 	drawnFx = 0;
 
-#pragma omp parallel for num_threads(/*activeFx*/MAX_EFFECTS)
 	for ( i = 0; i < MAX_EFFECTS; i++)
 	{
 		SEffectList	*ef = &effectList[i];
 
-		if (!numFx) continue;
+		if (!numFx) break;
 
 		if ( ef->mEffect != 0)
 		{
@@ -190,21 +201,14 @@ void FX_Add( bool portal )
 				// Clean up old effects, calling any death effects as needed
 				// this flag just has to be cleared otherwise death effects might not happen correctly
 				ef->mEffect->ClearFlags( FX_KILL_ON_IMPACT );
-
-#pragma omp critical
-				{
-					FX_FreeMember( ef );
-				}
+				FX_FreeMember( ef );
 			}
 			else
 			{
 				if ( ef->mEffect->Update() == false )
 				{
 					// We've been marked for death
-#pragma omp critical
-					{
-						FX_FreeMember( ef );
-					}
+					FX_FreeMember( ef );
 					continue;
 				}
 			}
@@ -214,9 +218,9 @@ void FX_Add( bool portal )
 
 	if ( fx_debug->integer && !portal)
 	{
-		theFxHelper.Print( "Active    FX: %i\n", activeFx );
-		theFxHelper.Print( "Drawn     FX: %i\n", drawnFx );
-		theFxHelper.Print( "Scheduled FX: %i High: %i\n", theFxScheduler.NumScheduledFx(), theFxScheduler.GetHighWatermark() );
+		Com_Printf( "Active    FX: %i\n", activeFx );
+		Com_Printf( "Drawn     FX: %i\n", drawnFx );
+		Com_Printf( "Scheduled FX: %i High: %i\n", theFxScheduler.NumScheduledFx(), theFxScheduler.GetHighWatermark() );
 	}
 }
 

@@ -50,7 +50,7 @@ qboolean ShouldCull ( vec3_t org, qboolean check_angles )
 	float dist = Distance(cg.refdef.vieworg, org);
 
 	if (dist > 3072.0) return qtrue; // TOO FAR! CULLED!
-	if (check_angles && !CG_InFOV( org, cg.refdef.vieworg, cg.refdef.viewangles, cg.refdef.fov_x*1.2, cg.refdef.fov_y*1.2)) return qtrue; // NOT ON SCREEN! CULLED!
+	if (check_angles && dist > 256 && !CG_InFOV( org, cg.refdef.vieworg, cg.refdef.viewangles, cg.refdef.fov_x*1.2, cg.refdef.fov_y*1.2)) return qtrue; // NOT ON SCREEN! CULLED!
 	if (/*dist > 256 &&*/ !CullVisible(cg.refdef.vieworg, org, cg.clientNum)) return qtrue; // NOT VISIBLE TO US! CULLED!
 
 	return qfalse;
@@ -65,7 +65,7 @@ void AddRefEntityToScene ( refEntity_t *ent )
 
 void PlayEffectID ( int id, vec3_t org, vec3_t fwd, int vol, int rad, qboolean isPortal )
 {
-	if (!isPortal && ShouldCull(org, qfalse)) return;
+	if (!isPortal && ShouldCull(org, qtrue)) return;
 
 	trap->FX_PlayEffectID( id, org, fwd, vol, rad, isPortal );
 }

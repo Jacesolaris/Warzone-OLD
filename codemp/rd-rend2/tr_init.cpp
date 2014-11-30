@@ -1360,15 +1360,15 @@ void R_Register( void )
 	r_volumelight = ri->Cvar_Get( "r_volumelight", "0", CVAR_ARCHIVE );
 	r_anamorphic = ri->Cvar_Get( "r_anamorphic", "1", CVAR_ARCHIVE );
 	r_anamorphicDarkenPower = ri->Cvar_Get( "r_anamorphicDarkenPower", "256.0", CVAR_ARCHIVE );
-	r_depth = ri->Cvar_Get( "r_depth", "0", CVAR_ARCHIVE );
 	r_depthParallax = ri->Cvar_Get( "r_depthParallax", "0", CVAR_ARCHIVE );
 	r_depthParallaxScale = ri->Cvar_Get( "r_depthParallaxScale", "2.0", CVAR_ARCHIVE );
 	r_depthParallaxMultiplier = ri->Cvar_Get( "r_depthParallaxMultiplier", "5.0", CVAR_ARCHIVE );
 	r_depthParallaxEyeX = ri->Cvar_Get( "r_depthParallaxEyeX", "0.0001", CVAR_ARCHIVE );
 	r_depthParallaxEyeY = ri->Cvar_Get( "r_depthParallaxEyeY", "0.0001", CVAR_ARCHIVE );
 	r_depthParallaxEyeZ = ri->Cvar_Get( "r_depthParallaxEyeZ", "0.0001", CVAR_ARCHIVE );
-	r_depthPasses = ri->Cvar_Get( "r_depthPasses", "2", CVAR_ARCHIVE );
-	r_depthScale = ri->Cvar_Get( "r_depthScale", "4.0", CVAR_ARCHIVE );
+	r_depth = ri->Cvar_Get( "r_depth", "1", CVAR_ARCHIVE );
+	r_depthPasses = ri->Cvar_Get( "r_depthPasses", "4", CVAR_ARCHIVE );
+	r_depthScale = ri->Cvar_Get( "r_depthScale", "1024.0", CVAR_ARCHIVE );
 	r_darkexpand = ri->Cvar_Get( "r_darkexpand", "1", CVAR_ARCHIVE );
 	r_truehdr = ri->Cvar_Get( "r_truehdr", "1", CVAR_ARCHIVE );
 	r_dof = ri->Cvar_Get( "r_dof", "0", CVAR_ARCHIVE );
@@ -1379,7 +1379,7 @@ void R_Register( void )
 	r_fxaa = ri->Cvar_Get( "r_fxaa", "0", CVAR_ARCHIVE );
 	r_multipost = ri->Cvar_Get( "r_multipost", "0", CVAR_ARCHIVE );
 	r_textureClean = ri->Cvar_Get( "r_textureClean", "0", CVAR_ARCHIVE );
-	r_textureCleanSigma = ri->Cvar_Get( "r_textureCleanSigma", "1.2", CVAR_ARCHIVE );
+	r_textureCleanSigma = ri->Cvar_Get( "r_textureCleanSigma", "0.5", CVAR_ARCHIVE ); // 1.2
 	r_textureCleanBSigma = ri->Cvar_Get( "r_textureCleanBSigma", "0.1", CVAR_ARCHIVE );
 	r_textureCleanMSize = ri->Cvar_Get( "r_textureCleanMSize", "6.0", CVAR_ARCHIVE );
 	r_ssao2 = ri->Cvar_Get( "r_ssao2", "1", CVAR_ARCHIVE );

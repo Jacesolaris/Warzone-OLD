@@ -29,6 +29,7 @@
 			hide			applyChanges
 			hide			video2
 			hide			video_advanced
+			hide			video_advanced2
 			hide			vidrestart
 			hide			sound
 			hide			options
@@ -135,6 +136,7 @@
 				hide			applyChanges
 				hide			video2
 				hide			video_advanced
+				hide      video_advanced2
 				hide			vidrestart
 				hide			sound
 				hide			options
@@ -196,6 +198,7 @@
 				hide			applyChanges
 				show			video2
 				hide			video_advanced
+				hide			video_advanced2
 				hide			vidrestart
 				hide			sound
 				hide			options
@@ -257,6 +260,69 @@
 				hide			applyChanges
 				hide			video2
 				show			video_advanced
+				hide			video_advanced2
+				hide			vidrestart
+				hide			sound
+				hide			options
+				hide			mods
+				hide			defaults
+
+				setitemcolor	setup_submenu		forecolor	1 .682 0 1
+				setitemcolor	video_advancedmenubutton	forecolor	1 1 1 1
+			}
+		}
+		
+		// video_advanced2 button
+		itemDef 
+		{
+			name				video_advancedbutton2_glow
+			style				WINDOW_STYLE_SHADER
+			rect				20 133 185 30
+			background			"gfx/menus/menu_blendbox2"			// Frame around button
+			forecolor			1 1 1 1
+			visible			0
+			// appearance_slot		1
+			decoration
+		}
+
+		itemDef 
+		{
+			name				video_advanced2menubutton
+			group				setup_submenu
+			text				"Advanced Video 2"
+			type				ITEM_TYPE_BUTTON
+			style				WINDOW_STYLE_EMPTY
+			rect				20 133 170 30
+			font				3
+			textscale			0.9
+			textalignx			170
+			textaligny			5
+			textalign			ITEM_ALIGN_RIGHT
+			textstyle			3
+			forecolor			1 .682 0 1
+			visible			1
+			descText			"Advanced Video Effects 2"
+
+			mouseEnter 
+			{ 
+				show			video_advancedbutton2_glow
+			}
+			mouseExit 
+			{ 
+				hide			video_advancedbutton2_glow
+			}	  	  
+			action 
+			{ 
+				play			"sound/interface/button1"
+
+				defer			VideoSetup	videowarningMenu
+
+				show			setup_background
+				hide 			video
+				hide			applyChanges
+				hide			video2
+				hide			video_advanced
+				show			video_advanced2
 				hide			vidrestart
 				hide			sound
 				hide			options
@@ -273,7 +339,7 @@
 		{
 			name				soundbutton_glow
 			style				WINDOW_STYLE_SHADER
-			rect				20 133 185 30
+			rect				20 163 185 30
 			background			"gfx/menus/menu_blendbox2"			// Frame around button
 			forecolor			1 1 1 1
 			visible			0
@@ -288,7 +354,7 @@
 			text				@MENUS_SOUND
 			type				ITEM_TYPE_BUTTON
 			style				WINDOW_STYLE_EMPTY
-			rect				20 133 170 30
+			rect				20 163 170 30
 			font				3
 			textscale			0.9
 			textalignx			170
@@ -318,6 +384,7 @@
 				hide			applyChanges
 				hide			video2
 				hide			video_advanced
+				hide			video_advanced2
 				hide			vidrestart
 				show			sound
 				hide			options
@@ -334,7 +401,7 @@
 		{
 			name				gameoptionsbutton_glow
 			style				WINDOW_STYLE_SHADER
-			rect				20 163 185 30
+			rect				20 193 185 30
 			background			"gfx/menus/menu_blendbox2"			// Frame around button
 			forecolor			1 1 1 1
 			visible			0
@@ -349,7 +416,7 @@
 			text				@MENUS_OPTIONS
 			type				ITEM_TYPE_BUTTON
 			style				WINDOW_STYLE_EMPTY
-			rect				20 163 170 30
+			rect				20 193 170 30
 			font				3
 			textscale			0.9
 			textalignx			170
@@ -379,6 +446,7 @@
 				hide			applyChanges
 				hide			video2
 				hide			video_advanced
+				hide			video_advanced2
 				hide			vidrestart
 				hide			sound
 				show			options
@@ -396,7 +464,7 @@
 		{
 			name				modsbutton_glow
 			style				WINDOW_STYLE_SHADER
-			rect				20 193 185 30
+			rect				20 223 185 30
 			background			"gfx/menus/menu_blendbox2"			// Frame around button
 			forecolor			1 1 1 1
 			visible			0
@@ -410,7 +478,7 @@
 		{
 			name				gamedefaultsbutton_glow
 			style				WINDOW_STYLE_SHADER
-			rect				20 193 185 30
+			rect				20 223 185 30
 			background			"gfx/menus/menu_blendbox2"			// Frame around button
 			forecolor			1 1 1 1
 			visible			0
@@ -425,7 +493,7 @@
 			text				@MENUS_DEFAULTS
 			type				ITEM_TYPE_BUTTON
 			style				WINDOW_STYLE_EMPTY
-			rect				20 193 170 30
+			rect				20 223 170 30
 			font				3
 			textscale			0.9
 			textalignx			170
@@ -455,6 +523,7 @@
 				hide			applyChanges
 				hide			video2
 				hide			video_advanced
+				hide			video_advanced2
 				hide			vidrestart
 				hide			sound
 				hide			options
@@ -1109,7 +1178,7 @@
 			font 				4
 			textscale 			1
 			forecolor		.615 .615 .956 1
-			cvarFloatList		{  @MENUS_OFF 0 "On" 1 }
+			cvarFloatList		{  @MENUS_OFF 0 "Single Pass" 1 "Dual Pass" 2 "Tripple Pass" 3 "Quadruple Pass" 4 }
 			descText			"Enable FXAA Anti Aliasing?"
 			cvar				"r_fxaa"
 
@@ -1247,6 +1316,7 @@
 				hide			video
 				hide			video2
 				hide			video_advanced
+				hide			video_advanced2
 				hide			applybutton_glow
 			}
 		}
@@ -1387,6 +1457,7 @@
 				show			video
 				hide			video2
 				hide			video_advanced
+				hide			video_advanced2
 				show			applyChanges
 				hide			vidrestart_yes_button
 				hide			vidrestart_no_button
@@ -2067,6 +2138,207 @@
 			mouseexit 
 			{ 
 				hide			highlight12
+			} 
+		}
+		
+		
+    //----------------------------------------------------------------------------------------------
+		//
+		//	ADVANCED VIDEO 2 MENU BUTTONS
+		//
+		//----------------------------------------------------------------------------------------------
+
+		itemDef 
+		{	
+			name				video_depth
+			group				video_advanced2
+			type				ITEM_TYPE_MULTI
+			text				"Depth Xpand"
+			rect				220 43 300 20
+			textalign			ITEM_ALIGN_RIGHT
+			textalignx			165
+			textaligny			0
+			font 				4
+			textscale 			1
+			forecolor		.615 .615 .956 1
+			cvarFloatList		{  @MENUS_OFF 0 @MENUS_ON 1 }
+			descText			"Enable Depth Xpand Technology?"
+			cvar				"r_depth"
+
+			mouseenter 
+			{ 
+				show			highlight1
+			}
+			mouseexit 
+			{ 
+				hide			highlight1
+			} 
+			action 
+			{
+				play			"sound/interface/button1"
+			}
+		}
+		
+		itemDef 
+		{
+			name				video_depthpasses
+			group				video_advanced2
+			type				ITEM_TYPE_SLIDER
+			text				"Depth Xpand Strength"
+			cvarfloat			"r_depthpasses" 2 2 8
+			rect				220 63 300 20
+			textalign			ITEM_ALIGN_RIGHT
+			textalignx			174
+			textaligny			0
+			font 				4
+			textscale 			1
+			forecolor		.615 .615 .956 1
+
+
+			descText			"Set the Depth Xpand Technology stength (by running more passes). Set low for more FPS, high for more depth."
+			
+			action 
+			{ 
+				play			"sound/interface/button1"
+			}
+
+			mouseenter 
+			{ 
+				show			highlight2
+			}
+			mouseexit 
+			{ 
+				hide			highlight2
+			} 
+		}
+		
+		itemDef 
+		{	
+			name				video_textureclean
+			group				video_advanced2
+			type				ITEM_TYPE_MULTI
+			text				"Texture Clean Technology"
+			rect				220 83 300 20
+			textalign			ITEM_ALIGN_RIGHT
+			textalignx			165
+			textaligny			0
+			font 				4
+			textscale 			1
+			forecolor		.615 .615 .956 1
+			cvarFloatList		{  @MENUS_OFF 0 @MENUS_ON 1 }
+			descText			"Enable Texture Cleaning Technology?"
+			cvar				"r_textureclean"
+
+			mouseenter 
+			{ 
+				show			highlight3
+			}
+			mouseexit 
+			{ 
+				hide			highlight3
+			} 
+			action 
+			{
+				play			"sound/interface/button1"
+			}
+		}
+		
+		itemDef 
+		{
+			name				video_texturecleansigmaa
+			group				video_advanced2
+			type				ITEM_TYPE_SLIDER
+			text				"Texture Clean Sigma A"
+			cvarfloat			"r_textureCleanSigma" 1.2 0.1 4.0
+			rect				220 103 300 20
+			textalign			ITEM_ALIGN_RIGHT
+			textalignx			174
+			textaligny			0
+			font 				4
+			textscale 			1
+			forecolor		.615 .615 .956 1
+
+
+			descText			"Set the Texture Cleaning Technology Sigma A."
+			
+			action 
+			{ 
+				play			"sound/interface/button1"
+			}
+
+			mouseenter 
+			{ 
+				show			highlight4
+			}
+			mouseexit 
+			{ 
+				hide			highlight4
+			} 
+		}
+		
+		itemDef 
+		{
+			name				video_texturecleansigmab
+			group				video_advanced2
+			type				ITEM_TYPE_SLIDER
+			text				"Texture Clean Sigma B"
+			cvarfloat			"r_textureCleanBSigma" 0.1 0.01 1.0
+			rect				220 123 300 20
+			textalign			ITEM_ALIGN_RIGHT
+			textalignx			174
+			textaligny			0
+			font 				4
+			textscale 			1
+			forecolor		.615 .615 .956 1
+
+
+			descText			"Set the Texture Cleaning Technology Sigma B."
+			
+			action 
+			{ 
+				play			"sound/interface/button1"
+			}
+
+			mouseenter 
+			{ 
+				show			highlight5
+			}
+			mouseexit 
+			{ 
+				hide			highlight5
+			} 
+		}
+		
+		itemDef 
+		{
+			name				video_texturecleansize
+			group				video_advanced2
+			type				ITEM_TYPE_SLIDER
+			text				"Texture Clean Sample Size"
+			cvarfloat			"r_textureCleanMSize" 6.0 1.0 12.0
+			rect				220 143 300 20
+			textalign			ITEM_ALIGN_RIGHT
+			textalignx			174
+			textaligny			0
+			font 				4
+			textscale 			1
+			forecolor		.615 .615 .956 1
+
+
+			descText			"Set the Texture Cleaning Technology Size."
+			
+			action 
+			{ 
+				play			"sound/interface/button1"
+			}
+
+			mouseenter 
+			{ 
+				show			highlight6
+			}
+			mouseexit 
+			{ 
+				hide			highlight6
 			} 
 		}
 		

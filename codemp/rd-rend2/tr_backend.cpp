@@ -2123,8 +2123,13 @@ const void *RB_PostProcess(const void *data)
 
 		if (r_fxaa->integer)
 		{
-			RB_FXAA(srcFbo, srcBox, tr.genericFbo, dstBox);
-			FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+			int i = 0;
+
+			for (i = 0; i < r_fxaa->integer; i++)
+			{
+				RB_FXAA(srcFbo, srcBox, tr.genericFbo, dstBox);
+				FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+			}
 		}
 
 		//
