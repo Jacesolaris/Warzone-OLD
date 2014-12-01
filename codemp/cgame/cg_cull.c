@@ -47,11 +47,14 @@ qboolean CullVisible ( vec3_t org1, vec3_t org2, int ignore )
 
 qboolean ShouldCull ( vec3_t org, qboolean check_angles )
 {
-	float dist = Distance(cg.refdef.vieworg, org);
+	if (cg_cull.integer)
+	{
+		float dist = Distance(cg.refdef.vieworg, org);
 
-	if (dist > 3072.0) return qtrue; // TOO FAR! CULLED!
-	if (check_angles && dist > 256 && !CG_InFOV( org, cg.refdef.vieworg, cg.refdef.viewangles, cg.refdef.fov_x*1.2, cg.refdef.fov_y*1.2)) return qtrue; // NOT ON SCREEN! CULLED!
-	if (/*dist > 256 &&*/ !CullVisible(cg.refdef.vieworg, org, cg.clientNum)) return qtrue; // NOT VISIBLE TO US! CULLED!
+		if (dist > 3072.0) return qtrue; // TOO FAR! CULLED!
+		if (check_angles && dist > 256 && !CG_InFOV( org, cg.refdef.vieworg, cg.refdef.viewangles, cg.refdef.fov_x*1.2, cg.refdef.fov_y*1.2)) return qtrue; // NOT ON SCREEN! CULLED!
+		if (/*dist > 256 &&*/ !CullVisible(cg.refdef.vieworg, org, cg.clientNum)) return qtrue; // NOT VISIBLE TO US! CULLED!
+	}
 
 	return qfalse;
 }
