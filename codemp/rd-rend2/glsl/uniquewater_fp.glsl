@@ -1,5 +1,5 @@
 //#ifdef GL_ES
-//precision highp float;
+precision highp float;
 //#endif
 
 uniform sampler2D u_DiffuseMap;
@@ -12,7 +12,6 @@ varying float	time;
 vec2 iResolution = var_Dimensions;
 
 out vec4 out_Glow;
-
 
 float iGlobalTime = time * 1.3;
 

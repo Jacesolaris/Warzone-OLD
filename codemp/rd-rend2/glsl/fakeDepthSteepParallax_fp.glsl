@@ -322,16 +322,18 @@ void main (void)
     float oldHeightMap = HeightMap;
     //float PARALLAX_MULTIPLIER = 1.5;
 	//float PARALLAX_MULTIPLIER = 3.0;
-	float PARALLAX_MULTIPLIER = 5.0;
+	float PARALLAX_MULTIPLIER = var_Local0.y;//5.0;
  
     //Coord -= (dt * GetHeight( Coord ) * PARALLAX_MULTIPLIER);
 	Coord += (dt * GetHeight( Coord ) * PARALLAX_MULTIPLIER);
 
     newCoord = Coord;
- 
+
+#if 0 
     vec3 colorMap = texture2D( u_TextureMap, newCoord ).rgb;
-    vec3 normalMap = colorMap.rgb;
+    //vec3 normalMap = colorMap.rgb;
     float heightMap = GetHeight( newCoord );
+	vec3 normalMap = vec3(heightMap,heightMap,heightMap);
  
     // Ambient
     vec3 ambient_color = (colorMap.rgb * colorMap.rgb * colorMap.rgb);
@@ -354,7 +356,11 @@ void main (void)
  
 	//color = vec4( ( ambient_color.rgb + diffuse_color.rgb + specular_color.rgb + (colorMap.rgb * 2.0)) * 0.33333, 1.0 );
 	color = vec4( ( ambient_color.rgb + diffuse_color.rgb + specular_color.rgb + (colorMap.rgb * 2.0)) * 0.44444, 1.0 );
+	//color = vec4( vec3(ambient_color.rgb + diffuse_color.rgb + specular_color.rgb), 1.0 );
 	
 	gl_FragColor = color;
+#endif
+
+	gl_FragColor = texture2D( u_TextureMap, newCoord );
 #endif
 }
