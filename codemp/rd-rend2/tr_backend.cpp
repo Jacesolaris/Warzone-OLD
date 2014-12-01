@@ -1992,6 +1992,7 @@ const void *RB_PostProcess(const void *data)
 
 		if (r_underwater->integer)
 		{
+			/*
 			vec3_t vOrg, testOrg;
 			VectorCopy(backEnd.refdef.vieworg, vOrg);
 			VectorCopy(backEnd.refdef.vieworg, testOrg);
@@ -2001,6 +2002,8 @@ const void *RB_PostProcess(const void *data)
 			ri->CM_BoxTrace(&trace, vOrg, testOrg, NULL, NULL, 0, CONTENTS_WATER|CONTENTS_LAVA, 0);
 
 			if ((trace.contents & CONTENTS_WATER) || (trace.contents & CONTENTS_LAVA))
+			*/
+			if (backEnd.refdef.rdflags & RDF_UNDERWATER)
 			{
 				RB_Underwater(srcFbo, srcBox, tr.genericFbo, dstBox);
 				FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_NEAREST);

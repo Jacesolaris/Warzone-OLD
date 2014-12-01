@@ -1290,9 +1290,11 @@ static int CG_CalcFov( void ) {
 		fov_x += v;
 		fov_y -= v;
 		inwater = qtrue;
+		cg.refdef.rdflags |= RDF_UNDERWATER;
 	}
 	else {
 		inwater = qfalse;
+		cg.refdef.rdflags &= ~RDF_UNDERWATER;
 	}
 
 	// set it
