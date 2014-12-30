@@ -282,15 +282,24 @@ void CG_ShowLifts ( void )
 }
 //[/AUTOWAYPOINT]
 
+#define __WIN_TTS__ // Disable this when I get acapela remote voice chat system working...
+
 #ifdef _WIN32
+#ifdef __WIN_TTS__
 #define COBJMACROS
 #include <sapi.h>
 #include <ole2.h>
 
 qboolean VOICE_INITIALIZED = qfalse;
 
+#else //!__WIN_TTS__
+#include <ole2.h>
+extern size_t GetHttpPostData(char *hostname, char *page, char *poststr, char *recvdata, qboolean https);
+#endif //__WIN_TTS__
+
 void DoTextToSpeech (char* text)
 {
+#ifdef __WIN_TTS__
 	ISpVoice * pVoice = NULL;
 	HRESULT hr;
 
@@ -339,11 +348,27 @@ void DoTextToSpeech (char* text)
 	}
 
 	//CoUninitialize();
+
+#else //!__WIN_TTS__
+
+	size_t size = 0;
+	char RESPONSE[4096+1];
+	char POST_DATA[4096+1];
+
+	// url: acapela_tts, snd_url: '', voice: options.avoice, listen: '1', format: 'MP3', codecMP3: '1', spd: '180', vct: '100', text: '\\vct=100\\ \\spd=180\\ ' + text
+	sprintf(POST_DATA, "&voice=liam22k&listen=1&format=MP3&codecMP3=1&spd=180&vct=100&text=\\vct=100\\ \\spd=180\\  %s", text);
+	size = GetHttpPostData("acapela-box.com", "/AcaBox/dovaas.php", POST_DATA, RESPONSE, qfalse);
+
+
+	trap->Print("Response the was:\n%s.\n", RESPONSE);
+#endif //__WIN_TTS__
 }
 
 void ShutdownTextToSpeechThread ( void )
 {
+#ifdef __WIN_TTS__
 	if (VOICE_INITIALIZED) CoUninitialize();
+#endif //__WIN_TTS__
 }
 
 DWORD WINAPI ThreadFunc(void* text) {
