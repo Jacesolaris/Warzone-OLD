@@ -390,6 +390,7 @@ typedef struct centity_s {
 	void			*ghoul2; //g2 instance
 	int				localAnimIndex; //index locally (game/cgame) to anim data for this skel
 	vec3_t			modelScale; //needed for g2 collision
+	int				selected_voice;
 
 	//from here up must be unified with bgEntity_t -rww
 
@@ -2338,12 +2339,16 @@ void	CG_ClearLightStyles (void);
 void	CG_RunLightStyles (void);
 void	CG_SetLightstyle (int i);
 
-extern void TextToSpeech( char *text );
-
 // cg_cull.c
 extern void AddRefEntityToScene ( refEntity_t *ent );
 extern void PlayEffectID ( int id, vec3_t org, vec3_t fwd, int vol, int rad, qboolean isPortal );
 extern void AddLightToScene ( const vec3_t org, float intensity, float r, float g, float b );
+
+// cg_texttospeech.c
+extern void TTS_SayText ( void );
+extern void CG_SaySillyTextTest ( void );
+extern void TextToSpeech( const char *text, const char *voice );
+extern char *CG_GetTextToSpeechVoiceForEntity(centity_t *ent);
 
 /*
 Ghoul2 Insert End

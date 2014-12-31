@@ -1002,6 +1002,10 @@ intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 		S_StartBackgroundTrack( (const char *)VMA(1), (const char *)VMA(2), args[3]?qtrue:qfalse );
 		return 0;
 
+	case CG_S_TEXTTOSPEECH:
+		S_TextToSpeech( (const char *)VMA(1), (const char *)VMA(2) );
+		return 0;
+
 	case CG_S_UPDATEAMBIENTSET:
 		S_UpdateAmbientSet((const char *)VMA(1), (float *)VMA(2));
 		return 0;
@@ -1686,6 +1690,7 @@ void CL_BindCGame( void ) {
 		cgi.S_StopBackgroundTrack				= S_StopBackgroundTrack;
 		cgi.S_UpdateEntityPosition				= S_UpdateEntityPosition;
 		cgi.S_UpdateAmbientSet					= S_UpdateAmbientSet;
+		cgi.S_TextToSpeech						= S_TextToSpeech;
 		cgi.AS_AddPrecacheEntry					= AS_AddPrecacheEntry;
 		cgi.AS_GetBModelSound					= AS_GetBModelSound;
 		cgi.AS_ParseSets						= AS_ParseSets;

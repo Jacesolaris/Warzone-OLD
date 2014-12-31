@@ -236,6 +236,10 @@ void S_Shutdown( void )
 	Cmd_RemoveCommand("soundinfo");
 	Cmd_RemoveCommand("soundstop");
 	AS_Free();
+
+#ifdef _WIN32
+	ShutdownTextToSpeechThread();
+#endif //_WIN32
 }
 
 

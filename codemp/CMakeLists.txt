@@ -372,6 +372,7 @@ if(BuildMPEngine)
 		"${MPDir}/client/cl_cgameapi.h"
 		"${MPDir}/client/cl_cin.cpp"
 		"${MPDir}/client/cl_console.cpp"
+		"${MPDir}/client/cl_http.cpp"
 		"${MPDir}/client/cl_input.cpp"
 		"${MPDir}/client/cl_keys.cpp"
 		"${MPDir}/client/cl_lan.cpp"
@@ -407,6 +408,7 @@ if(BuildMPEngine)
 		"${MPDir}/client/snd_mp3.h"
 		"${MPDir}/client/snd_music.cpp"
 		"${MPDir}/client/snd_music.h"
+		"${MPDir}/client/snd_texttospeech.cpp"
 		"${MPDir}/client/tinythread.cpp"
 		"${MPDir}/client/tinythread.h"
 		)
@@ -521,7 +523,7 @@ if(BuildMPEngine)
 	set_target_properties(${MPEngine} PROPERTIES COMPILE_DEFINITIONS_DEBUG "${MPEngineDefines};${DebugDefines}")
 	set_target_properties(${MPEngine} PROPERTIES INCLUDE_DIRECTORIES "${MPEngineIncludeDirectories}")
 	set_target_properties(${MPEngine} PROPERTIES PROJECT_LABEL "MP Client")
-	target_link_libraries(${MPEngine} ${MPEngineLibraries})
+	target_link_libraries(${MPEngine} ${MPEngineLibraries} ../../lib/libcurl/libcurl)
 endif(BuildMPEngine)
 
 #        Dedicated Server (Engine) (jampded.exe)

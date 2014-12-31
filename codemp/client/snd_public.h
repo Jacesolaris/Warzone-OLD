@@ -3,6 +3,9 @@
 #include "qcommon/qcommon.h"
 #include "snd_local.h"
 
+extern void S_TextToSpeech( const char *text, const char *voice );
+extern void ShutdownTextToSpeechThread ( void );
+
 void S_Init( void );
 void S_Shutdown( void );
 

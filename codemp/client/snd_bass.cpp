@@ -416,7 +416,7 @@ qboolean BASS_Initialize ( void )
 	BASS_SetConfig(BASS_CONFIG_GVOL_STREAM, (DWORD)(float)(s_volume->value*10000.0));
 
 	BASS_SetConfig(BASS_CONFIG_UPDATETHREADS, (DWORD)16);
-	BASS_SetConfig(BASS_CONFIG_BUFFER, (DWORD)100); // set the buffer length
+	//BASS_SetConfig(BASS_CONFIG_BUFFER, (DWORD)100); // set the buffer length
 
 	//Com_Printf("Volume %f. Sample Volume %i. Stream Volume %i.\n", BASS_GetVolume(), (int)BASS_GetConfig(BASS_CONFIG_GVOL_SAMPLE), (int)BASS_GetConfig(BASS_CONFIG_GVOL_STREAM));
 
@@ -1111,44 +1111,6 @@ void BASS_UpdateDynamicMusic( void )
 // Sounds...
 //
 
-void BASS_AddStreamChannel ( char *file, int entityNum, int entityChannel, vec3_t origin )
-{
-#if 0
-	DWORD newchan;
-	int chan = BASS_FindFreeChannel();
-
-	if (chan < 0)
-	{// No channel left to play on...
-		Com_Printf("BASS: No free sound channels.\n");
-		return;
-	}
-
-	// Load a music or sample from "file"
-	if (newchan=BASS_SampleLoad(FALSE,file,0,0,1,BASS_SAMPLE_3D|BASS_SAMPLE_MONO)) {
-			Channel *c = SOUND_CHANNELS[chan];
-			memset(c,0,sizeof(Channel));
-			c->originalChannel=c->channel=newchan;
-			c->entityNum = entityNum;
-			c->entityChannel = entityChannel;
-			c->isActive = qtrue;
-			c->isLooping = qfalse;
-			c->volume = 1.0;
-
-			BASS_SampleGetChannel(newchan,FALSE); // initialize sample channel
-
-			// Play
-			BASS_ChannelPlay(newchan,FALSE);
-
-			// Apply the 3D changes
-			BASS_SetPosition( chan, origin );
-			BASS_ChannelSet3DAttributes(newchan, SOUND_3D_METHOD, 256.0, -1, -1, -1, -1);//120, 120, 0.5);
-			BASS_Apply3D();
-	} else {
-		Com_Printf("Can't load file (note samples must be mono)\n");
-	}
-#endif
-}
-
 void BASS_AddMemoryChannel ( DWORD samplechan, int entityNum, int entityChannel, vec3_t origin, float volume )
 {
 	int chan = BASS_FindFreeChannel();
@@ -1238,3 +1200,31 @@ DWORD BASS_LoadMemorySample ( void *memory, int length )
 
 	return -1;
 }
+
+void CALLBACK BASS_Stream_StatusProc(const void *buffer, DWORD length, void *user)
+{
+	//if (buffer && !length && (DWORD)user==req) // got HTTP/ICY tags, and this is still the current request
+	//	MESS(32,WM_SETTEXT,0,buffer); // display status
+}
+
+void BASS_StartStreamingSound ( char *filename, int entityNum, int entityChannel, vec3_t origin )
+{
+	DWORD newchan, r;
+
+	// Load a music or sample from "file"
+	if (newchan = BASS_StreamCreateURL(filename,0,BASS_STREAM_BLOCK|BASS_STREAM_STATUS|BASS_STREAM_AUTOFREE,BASS_Stream_StatusProc,(void*)r)) {
+		// Load a music or sample from "file" (memory)
+		BASS_SampleGetChannel(newchan,FALSE); // initialize sample channel
+		BASS_ChannelSetAttribute(newchan, BASS_ATTRIB_VOL, BASS_GetVolumeForChannel(CHAN_LOCAL));
+
+		// Play
+		BASS_ChannelPlay(newchan,FALSE);
+
+		// Apply the 3D settings (music is always local)...
+		//BASS_ChannelSet3DAttributes(newchan, SOUND_3D_METHOD, -1, -1, -1, -1, -1);
+		//BASS_Apply3D();
+	} else {
+		Com_Printf("Can't load file (note samples must be mono)\n");
+	}
+}
+

@@ -627,6 +627,10 @@ intptr_t CL_UISystemCalls( intptr_t *args ) {
 		S_StartLocalSound( args[1], args[2] );
 		return 0;
 
+	case UI_S_TEXTTOSPEECH:
+		S_TextToSpeech( (const char *)VMA(1), (const char *)VMA(2) );
+		return 0;
+
 	case UI_KEY_KEYNUMTOSTRINGBUF:
 		Key_KeynumToStringBuf( args[1], (char *)VMA(2), args[3] );
 		return 0;
@@ -1106,6 +1110,7 @@ void CL_BindUI( void ) {
 		uii.S_StartLocalSound					= S_StartLocalSound;
 		uii.S_StopBackgroundTrack				= S_StopBackgroundTrack;
 		uii.S_RegisterSound						= S_RegisterSound;
+		uii.S_TextToSpeech						= S_TextToSpeech;
 
 		uii.SE_GetLanguageName					= CL_SE_GetLanguageName;
 		uii.SE_GetNumLanguages					= SE_GetNumLanguages;

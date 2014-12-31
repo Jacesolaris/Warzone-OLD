@@ -44,8 +44,6 @@ set(MPCGameCgameFiles
 	"${MPDir}/cgame/cg_effects.c"
 	"${MPDir}/cgame/cg_ents.c"
 	"${MPDir}/cgame/cg_event.c"
-	"${MPDir}/cgame/cg_http.cpp"
-	"${MPDir}/cgame/cg_http.h"
 	"${MPDir}/cgame/cg_info.c"
 	"${MPDir}/cgame/cg_light.c"
 	"${MPDir}/cgame/cg_localents.c"
@@ -145,5 +143,5 @@ set_target_properties(${MPCGame} PROPERTIES INCLUDE_DIRECTORIES "${MPCGameInclud
 set_target_properties(${MPCGame} PROPERTIES PROJECT_LABEL "MP Client Game Library")
 # no libraries used
 if(MPCGameLibraries)
-	target_link_libraries(${MPCGame} ${MPCGameLibraries} ws2_32.lib)
+	target_link_libraries(${MPCGame} ${MPCGameLibraries})
 endif(MPCGameLibraries)

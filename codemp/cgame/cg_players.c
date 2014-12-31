@@ -1903,6 +1903,7 @@ void CG_NewClientInfo( int clientNum, qboolean entitiesInitialized ) {
 		ci->npc_sounds_registered = qfalse;
 
 		//trap->Print("Model has changed.\n");
+		cg_entities[clientNum].selected_voice = 0; // init selected TTS voice for this model...
 
 		// UQ1: Load NPC sounds for players/bots...
 		trap->S_Shutup(qtrue);
@@ -1910,8 +1911,8 @@ void CG_NewClientInfo( int clientNum, qboolean entitiesInitialized ) {
 		trap->S_Shutup(qfalse);
 		ci->npc_sounds_registered = qtrue;
 	}
-	else
-		trap->Print("Model has not changed.\n");
+	//else
+	//	trap->Print("Model has not changed.\n");
 
 	if (cgs.gametype == GT_SIEGE)
 	{ //entries only sent in siege mode

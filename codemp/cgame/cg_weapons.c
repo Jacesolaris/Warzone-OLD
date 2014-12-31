@@ -1512,7 +1512,7 @@ void CG_DrawWeaponSelect( void ) {
 				strcpy(text, cg_weapons[ cg.weaponSelect ].item->classname);
 			}
 
-			TextToSpeech( text );
+			TextToSpeech( text, CG_GetTextToSpeechVoiceForEntity(&cg_entities[cg.clientNum]) );
 		}
 #endif //_WIN32
 	}

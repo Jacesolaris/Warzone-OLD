@@ -71,6 +71,7 @@ typedef enum uiImportLegacy_e {
 	UI_CM_LOADMODEL,
 	UI_S_REGISTERSOUND,
 	UI_S_STARTLOCALSOUND,
+	UI_S_TEXTTOSPEECH,
 	UI_KEY_KEYNUMTOSTRINGBUF,
 	UI_KEY_GETBINDINGBUF,
 	UI_KEY_SETBINDING,
@@ -286,6 +287,7 @@ typedef struct uiImport_s {
 	void			(*S_StartLocalSound)					( sfxHandle_t sfx, int channelNum );
 	void			(*S_StopBackgroundTrack)				( void );
 	sfxHandle_t		(*S_RegisterSound)						( const char *sample );
+	void			(*S_TextToSpeech)						( const char *text, const char *voice );
 
 	void			(*SE_GetLanguageName)					( const int languageIndex, char *buffer );
 	int				(*SE_GetNumLanguages)					( void );

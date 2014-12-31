@@ -7,6 +7,7 @@
 #include "mp3code/mp3struct.h"
 
 extern qboolean S_ShouldCull ( vec3_t org, qboolean check_angles, int entityNum );
+extern void S_TextToSpeech( const char *text, const char *voice );
 
 extern qboolean BASS_Initialize ( void );
 extern void BASS_Shutdown ( void );
@@ -19,6 +20,7 @@ extern void BASS_UpdateDynamicMusic( void );
 extern void BASS_AddStreamChannel ( char *file, int entityNum, int entityChannel, vec3_t origin );
 extern void BASS_AddMemoryChannel ( DWORD samplechan, int entityNum, int entityChannel, vec3_t origin, float volume );
 extern void BASS_AddMemoryLoopChannel ( DWORD samplechan, int entityNum, int entityChannel, vec3_t origin, float volume );
+extern void BASS_StartStreamingSound ( char *filename, int entityNum, int entityChannel, vec3_t origin );
 extern void BASS_StopLoopChannel ( int entityNum );
 extern void BASS_StopAllChannels ( void );
 extern void BASS_StopAllLoopChannels ( void );
