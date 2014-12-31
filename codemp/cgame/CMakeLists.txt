@@ -59,6 +59,7 @@ set(MPCGameCgameFiles
 	"${MPDir}/cgame/cg_snapshot.c"
 	"${MPDir}/cgame/cg_spawn.c"
 	"${MPDir}/cgame/cg_syscalls.c"
+	"${MPDir}/cgame/cg_texttospeech.c"
 	"${MPDir}/cgame/cg_turret.c"
 	"${MPDir}/cgame/cg_view.c"
 	"${MPDir}/cgame/cg_weaponinit.c"
