@@ -439,7 +439,7 @@ void CG_SaySillyTextTest ( void )
 		TextToSpeech("!What are you doing?", CG_GetTextToSpeechVoiceForEntity(&cg_entities[cg.clientNum]), cg.clientNum, cg.snap->ps.origin);
 		break;
 	case 7:
-		TextToSpeech("!Don't talk to me.", CG_GetTextToSpeechVoiceForEntity(&cg_entities[cg.clientNum]), cg.clientNum, cg.snap->ps.origin);
+		TextToSpeech("!Dont talk to me.", CG_GetTextToSpeechVoiceForEntity(&cg_entities[cg.clientNum]), cg.clientNum, cg.snap->ps.origin);
 		break;
 	case 8:
 		TextToSpeech("!Go away!", CG_GetTextToSpeechVoiceForEntity(&cg_entities[cg.clientNum]), cg.clientNum, cg.snap->ps.origin);
@@ -494,12 +494,25 @@ const char *PADAWAN_CHATTERS[] =
 	"You can't trust a rancor to watch your food",
 	"You shouldn't laugh at your master, when he's mad or screaming at you",
 	"I want a wampa pet. Can I have one, master",
-	// UQ1: hmm seems we have a character limit... TODO: Work out why. The server can do these via web...
-	//"As you make your way through this hectic world, set aside a few minutes each day. At the end of the year, you’ll have a couple of days saved up",
-	//"If we could just get everyone to close his or her eyes and visualize galactic peace for an hour, imagine how serene and quiet it would be until the looting started",
-	//"I like to go to the greysor pound and pretend I found my greysor, but then tell them to kill it anyway because I already sold all his stuff. Pound people have no sense of humor",
-	//"I do not deny evil, nor do I believe that any human is completely free of malice. Everything must be in balance. As long as evil and good maintain an equilibrium in this world, there is no problem. Perfect balance is the key to everything",
-	//"I believe you should live each day as if it is your last, which is why I don’t have any clean laundry, because who wants to wash clothes on the last day of their life",
+	"Are we there yet",
+	"Master, I need to pee",
+	"Master, where does light go when you turn it off",
+	"Master, do blind people feel love at first sight",
+	"Master, if you try to fail, and succeed, which have you done",
+	"Master, if you tell a joke in the forest, but nobody laughs, was it a joke",
+	"Master, if I save time, when do I get it back",
+	"Master, before drawing boards were invented, where did one go back to",
+	"Master, can a stupid person be a smart ass",
+	"Master, do imperial pilots take crash courses",
+	"Master, does killing time damage eternity",
+	"Master, how many weeks are there in a light year",
+	"Master, what is the speed of dark",
+	"Master, if someone with multiple personalities threatens to kill himself, is it considered a hostage situation",
+	"Master, I know what the f word means. Its like sex, but you dont love the other person",
+	"Master, As you make your way through this hectic world, set aside a few minutes each day. At the end of the year, you will have a couple of days saved up",
+	"Master, If we could just get everyone to close his or her eyes and visualize galactic peace for an hour, imagine how serene and quiet it would be until the looting started",
+	"Master, I like to go to the greysor pound and pretend I found my greysor, but then tell them to kill it anyway because I already sold all his stuff. Pound people have no sense of humor",
+	"Master, I believe you should live each day as if it is your last, which is why I dont have any clean laundry, because who wants to wash clothes on the last day of their life",
 	"",
 };
 
