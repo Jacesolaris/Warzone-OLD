@@ -1053,6 +1053,7 @@ typedef enum {
 	EV_GLOAT2,
 	EV_GLOAT3,
 	EV_PUSHFAIL,
+	EV_PADAWAN_IDLE,
 	//[VisualWeapons]
 	EV_WEAPINVCHANGE,
 	//[/VisualWeapons]

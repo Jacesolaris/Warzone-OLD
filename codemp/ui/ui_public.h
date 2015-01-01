@@ -287,7 +287,7 @@ typedef struct uiImport_s {
 	void			(*S_StartLocalSound)					( sfxHandle_t sfx, int channelNum );
 	void			(*S_StopBackgroundTrack)				( void );
 	sfxHandle_t		(*S_RegisterSound)						( const char *sample );
-	void			(*S_TextToSpeech)						( const char *text, const char *voice );
+	void			(*S_TextToSpeech)						( const char *text, const char *voice, int entityNum, float *origin );
 
 	void			(*SE_GetLanguageName)					( const int languageIndex, char *buffer );
 	int				(*SE_GetNumLanguages)					( void );

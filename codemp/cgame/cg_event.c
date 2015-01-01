@@ -1847,6 +1847,11 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 		break;
 		//End NPC sounds
 
+	case EV_PADAWAN_IDLE:
+		DEBUGNAME("EV_PADAWAN_IDLE");
+		CG_PadawanIdleChatter ( es->number );
+		break;
+
 	case EV_SIEGESPEC:
 		DEBUGNAME("EV_SIEGESPEC");
 		if ( es->owner == cg.predictedPlayerState.clientNum )

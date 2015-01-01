@@ -80,7 +80,7 @@ ttsVoiceData_t ttsVoiceData[] = {
 	"ella22k", "English (US) - Ella (Child) - Premium", TTS_GENDER_FEMALE, TTS_AGE_CHILD,
 	"heather22k", "English (US) - Heather", TTS_GENDER_FEMALE, TTS_AGE_ADULT,
 	"josh22k", "English (US) - Josh (Child) - Premium", TTS_GENDER_MALE, TTS_AGE_CHILD,
-	"kenny22k", "English (US) - Kenny", TTS_GENDER_MALE, TTS_AGE_ADULT,
+	"kenny22k", "English (US) - Kenny", TTS_GENDER_FEMALE, TTS_AGE_ADULT,
 	"laura22k", "English (US) - Laura", TTS_GENDER_FEMALE, TTS_AGE_ADULT,
 	"micah22k", "English (US) - Micah", TTS_GENDER_MALE, TTS_AGE_ADULT,
 	"nelly22k", "English (US) - Nelly", TTS_GENDER_FEMALE, TTS_AGE_ADULT,
@@ -408,9 +408,9 @@ char *CG_GetTextToSpeechVoiceForEntity(centity_t *ent)
 //
 // TTS Generic functions...
 //
-void TextToSpeech( const char *text, const char *voice )
+void TextToSpeech( const char *text, const char *voice, int entityNum, vec3_t origin )
 {// UQ1: Now uses a trap call to do all the good stuff in engine (client) code...
-	trap->S_TextToSpeech(text, voice);
+	trap->S_TextToSpeech(text, voice, entityNum, (float *)origin);
 }
 
 void CG_SaySillyTextTest ( void )
@@ -421,34 +421,34 @@ void CG_SaySillyTextTest ( void )
 	switch (choice)
 	{
 	case 1:
-		TextToSpeech("What the are you doing???", CG_GetTextToSpeechVoiceForEntity(&cg_entities[cg.clientNum]));
+		TextToSpeech("!What the are you doing???", CG_GetTextToSpeechVoiceForEntity(&cg_entities[cg.clientNum]), cg.clientNum, cg.snap->ps.origin);
 		break;
 	case 2:
-		TextToSpeech("Stop that!", CG_GetTextToSpeechVoiceForEntity(&cg_entities[cg.clientNum]));
+		TextToSpeech("!Stop that!", CG_GetTextToSpeechVoiceForEntity(&cg_entities[cg.clientNum]), cg.clientNum, cg.snap->ps.origin);
 		break;
 	case 3:
-		TextToSpeech("Hay, stop it!", CG_GetTextToSpeechVoiceForEntity(&cg_entities[cg.clientNum]));
+		TextToSpeech("!Hay, stop it!", CG_GetTextToSpeechVoiceForEntity(&cg_entities[cg.clientNum]), cg.clientNum, cg.snap->ps.origin);
 		break;
 	case 4:
-		TextToSpeech("Get away from me!", CG_GetTextToSpeechVoiceForEntity(&cg_entities[cg.clientNum]));
+		TextToSpeech("!Get away from me!", CG_GetTextToSpeechVoiceForEntity(&cg_entities[cg.clientNum]), cg.clientNum, cg.snap->ps.origin);
 		break;
 	case 5:
-		TextToSpeech("How much wood wood a wood chuck chuck if a wood chuck could chuck wood?", CG_GetTextToSpeechVoiceForEntity(&cg_entities[cg.clientNum]));
+		TextToSpeech("!How much wood wood a wood chuck chuck if a wood chuck could chuck wood?", CG_GetTextToSpeechVoiceForEntity(&cg_entities[cg.clientNum]), cg.clientNum, cg.snap->ps.origin);
 		break;
 	case 6:
-		TextToSpeech("What are you doing?", CG_GetTextToSpeechVoiceForEntity(&cg_entities[cg.clientNum]));
+		TextToSpeech("!What are you doing?", CG_GetTextToSpeechVoiceForEntity(&cg_entities[cg.clientNum]), cg.clientNum, cg.snap->ps.origin);
 		break;
 	case 7:
-		TextToSpeech("Don't talk to me.", CG_GetTextToSpeechVoiceForEntity(&cg_entities[cg.clientNum]));
+		TextToSpeech("!Don't talk to me.", CG_GetTextToSpeechVoiceForEntity(&cg_entities[cg.clientNum]), cg.clientNum, cg.snap->ps.origin);
 		break;
 	case 8:
-		TextToSpeech("Go away!", CG_GetTextToSpeechVoiceForEntity(&cg_entities[cg.clientNum]));
+		TextToSpeech("!Go away!", CG_GetTextToSpeechVoiceForEntity(&cg_entities[cg.clientNum]), cg.clientNum, cg.snap->ps.origin);
 		break;
 	case 9:
-		TextToSpeech("Ouch! That hurt!", CG_GetTextToSpeechVoiceForEntity(&cg_entities[cg.clientNum]));
+		TextToSpeech("!Ouch! That hurt!", CG_GetTextToSpeechVoiceForEntity(&cg_entities[cg.clientNum]), cg.clientNum, cg.snap->ps.origin);
 		break;
 	default:
-		TextToSpeech("Oh meye!", CG_GetTextToSpeechVoiceForEntity(&cg_entities[cg.clientNum]));
+		TextToSpeech("!Oh meye!", CG_GetTextToSpeechVoiceForEntity(&cg_entities[cg.clientNum]), cg.clientNum, cg.snap->ps.origin);
 		break;
 	}
 #endif //_WIN32
@@ -457,6 +457,7 @@ void CG_SaySillyTextTest ( void )
 void TTS_SayText ( void )
 {
 	char	str[MAX_TOKEN_CHARS];
+	char	str2[MAX_TOKEN_CHARS];
 	
 	if ( trap->Cmd_Argc() < 2 )
 	{
@@ -467,5 +468,166 @@ void TTS_SayText ( void )
 
 	trap->Cmd_Argv( 1, str, sizeof(str) );
 
-	TextToSpeech(str, CG_GetTextToSpeechVoiceForEntity(&cg_entities[cg.clientNum]));
+	sprintf(str2, "!%s", str); // do not cache...
+
+	TextToSpeech(str2, CG_GetTextToSpeechVoiceForEntity(&cg_entities[cg.clientNum]), cg.clientNum, cg.snap->ps.origin);
+}
+
+const char *PADAWAN_CHATTERS[] =
+{
+	"I think I might retire here",
+	"Give me the strength to change the things I can, the grace to accept the things I can not, and an account full of galactic credits",
+	"Democracy is a beautiful thing, except for that part about letting just any idiot vote",
+	"Home is where your house is",
+	"When I die, I want to see my old master again. But he better have lost the nose hair and the old-man smell",
+	"Love is that first feeling you feel before all the bad stuff",
+	"I wanna get chocolate wasted",
+	"I see dead people",
+	"I think I'm gonna like it here",
+	"If you fight with the god of death, I can't guarantee your safety",
+	"Can I shoot them now",
+	"I like using two pistols. There is symetry to wielding two",
+	"Man That guy was a special kind of stupid",
+	"Man that guy was stupid, ugly and a bad shooter",
+	"I'm gonna keep fighting til this world is the way it should be. Full of candy",
+	"When hunting a legendary light saber. Finding a fairy or two shouldn't be surprising",
+	"You can't trust a rancor to watch your food",
+	"You shouldn't laugh at your master, when he's mad or screaming at you",
+	"I want a wampa pet. Can I have one, master",
+	// UQ1: hmm seems we have a character limit... TODO: Work out why. The server can do these via web...
+	//"As you make your way through this hectic world, set aside a few minutes each day. At the end of the year, you’ll have a couple of days saved up",
+	//"If we could just get everyone to close his or her eyes and visualize galactic peace for an hour, imagine how serene and quiet it would be until the looting started",
+	//"I like to go to the greysor pound and pretend I found my greysor, but then tell them to kill it anyway because I already sold all his stuff. Pound people have no sense of humor",
+	//"I do not deny evil, nor do I believe that any human is completely free of malice. Everything must be in balance. As long as evil and good maintain an equilibrium in this world, there is no problem. Perfect balance is the key to everything",
+	//"I believe you should live each day as if it is your last, which is why I don’t have any clean laundry, because who wants to wash clothes on the last day of their life",
+	"",
+};
+
+int PADAWAN_CHATTERS_MAX = -1;
+
+int GetPadawanChattersMax()
+{
+	int max = 0;
+
+	if (PADAWAN_CHATTERS_MAX != -1) return PADAWAN_CHATTERS_MAX; // already set up...
+
+	// We need to count them...
+	while (PADAWAN_CHATTERS[max] != "")
+	{
+		max++;
+	}
+
+	PADAWAN_CHATTERS_MAX = max;
+	return max;
+}
+
+void CG_PadawanIdleChatter ( int entityNum )
+{
+	int choice = irand(0,GetPadawanChattersMax());
+	centity_t *ent = &cg_entities[entityNum];
+
+	if (!ent) return;
+	if (ent->currentState.eType != ET_NPC) return;
+	if (ent->currentState.NPC_class != CLASS_PADAWAN) return;
+
+	TextToSpeech(PADAWAN_CHATTERS[choice], CG_GetTextToSpeechVoiceForEntity(ent), entityNum, ent->currentState.origin);
+}
+
+extern char *showPowersName[];
+
+void CG_DownloadAllTextToSpeechSounds ( void )
+{
+	int		voice_num = 0;
+	char	voice[64];
+	int		wait_time = 0;
+
+	for (voice_num = 0; voice_num < GetTTSVoicesMax() && ttsVoiceData[voice_num].age != TTS_AGE_MAX; voice_num++)
+	{
+		int		weaponNum = 0;
+		int		forcePowerNum = 0;
+
+		if (ttsVoiceData[voice_num].age == TTS_AGE_NONE) continue;
+
+		strcpy(voice, ttsVoiceData[voice_num].voicename);
+
+		// Download all weapon sounds...
+		for (weaponNum = 0; weaponNum < WP_NUM_WEAPONS; weaponNum++)
+		{
+			if (weaponData[weaponNum].classname && weaponData[weaponNum].classname[0])
+			{
+				trap->Print("Generating TTS weapon %s sound for voice %s.\n", weaponData[weaponNum].classname, voice);
+
+				while (!trap->S_DownloadVoice(weaponData[weaponNum].classname, voice))
+				{// Wait and retry...
+					trap->Print("Failed. Waiting a moment before continuing.\n");
+
+					for (wait_time = 0; wait_time < 500; wait_time++)
+					{// Do some random silly stuff as we have no sleep() function;
+						int ran = irand(0,100);
+						trap->UpdateScreen();
+					}
+				}
+			}
+
+			// Wait at least 1 sec between server connects...
+			/*wait_time = cg.time + 1000;
+
+			for (wait_time = 0; wait_time < 100; wait_time++)
+			{// Do some random silly stuff as we have no sleep() function;
+				int ran = irand(0,100);
+				trap->UpdateScreen();
+			}*/
+			trap->UpdateScreen();
+		}
+
+		for (forcePowerNum = 0; forcePowerNum < NUM_FORCE_POWERS; forcePowerNum++)
+		{
+			if ((char *)CG_GetStringEdString("SP_INGAME", showPowersName[forcePowerNum]) && (char *)CG_GetStringEdString("SP_INGAME", showPowersName[forcePowerNum])[0])
+			{
+				trap->Print("Generating TTS force power %s sound for voice %s.\n", (char *)CG_GetStringEdString("SP_INGAME", showPowersName[forcePowerNum]), voice);
+
+				while (!trap->S_DownloadVoice((char *)CG_GetStringEdString("SP_INGAME", showPowersName[forcePowerNum]), voice))
+				{// Wait and retry...
+					trap->Print("Failed. Waiting a moment before continuing.\n");
+
+					for (wait_time = 0; wait_time < 500; wait_time++)
+					{// Do some random silly stuff as we have no sleep() function;
+						int ran = irand(0,100);
+						trap->UpdateScreen();
+					}
+				}
+			}
+
+			// Wait at least 1 sec between server connects...
+			/*for (wait_time = 0; wait_time < 100; wait_time++)
+			{// Do some random silly stuff as we have no sleep() function;
+				int ran = irand(0,100);
+				trap->UpdateScreen();
+			}*/
+			trap->UpdateScreen();
+		}
+
+		if (ttsVoiceData[voice_num].age == TTS_AGE_CHILD)
+		{// Do padawan chatters...
+			int padawan_chatter = 0;
+
+			for (padawan_chatter = 0; padawan_chatter < GetPadawanChattersMax(); padawan_chatter++)
+			{
+				trap->Print("Generating TTS padawan chatter %i sound for voice %s.\n", padawan_chatter, voice);
+				
+				while (!trap->S_DownloadVoice(PADAWAN_CHATTERS[padawan_chatter], voice))
+				{// Wait and retry...
+					trap->Print("Failed. Waiting a moment before continuing.\n");
+
+					for (wait_time = 0; wait_time < 500; wait_time++)
+					{// Do some random silly stuff as we have no sleep() function;
+						int ran = irand(0,100);
+						trap->UpdateScreen();
+					}
+				}
+
+				trap->UpdateScreen();
+			}
+		}
+	}
 }

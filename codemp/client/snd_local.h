@@ -6,8 +6,12 @@
 
 #include "mp3code/mp3struct.h"
 
+#define		MAX_SOUNDPATH	512
+#define		MAX_SFX			14000	//512 * 2
+
 extern qboolean S_ShouldCull ( vec3_t org, qboolean check_angles, int entityNum );
-extern void S_TextToSpeech( const char *text, const char *voice );
+extern void S_TextToSpeech( const char *text, const char *voice, int entityNum, float *origin );
+extern qboolean S_DownloadVoice( const char *text, const char *voice );
 
 extern qboolean BASS_Initialize ( void );
 extern void BASS_Shutdown ( void );
@@ -53,7 +57,7 @@ typedef struct portable_samplepair_s {
 typedef struct sfx_s {
 	qboolean		bDefaultSound;			// couldn't be loaded, so use buzz
 	qboolean		bInMemory;				// not in Memory, set qtrue when loaded, and qfalse when its buffers are freed up because of being old, so can be reloaded
-	char 			sSoundName[MAX_QPATH];
+	char 			sSoundName[MAX_SOUNDPATH];
 	int				iLastTimeUsed;
 	float			fVolRange;				// used to set the highest volume this sample has at load time - used for lipsynching
 	int				iLastLevelUsedOn;		// used for cacheing purposes
@@ -176,6 +180,8 @@ extern cvar_t	*s_testsound;
 extern cvar_t	*s_separation;
 
 extern cvar_t	*s_doppler;
+
+extern cvar_t	*s_ttscache;
 
 wavinfo_t GetWavinfo (const char *name, byte *wav, int wavlength);
 

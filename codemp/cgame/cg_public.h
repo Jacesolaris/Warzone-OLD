@@ -231,6 +231,7 @@ typedef enum cgameImportLegacy_e {
 	CG_S_STARTBACKGROUNDTRACK,
 	CG_S_UPDATEAMBIENTSET,
 	CG_S_TEXTTOSPEECH,
+	CG_S_DOWNLOADVOICE,
 	CG_AS_PARSESETS,
 	CG_AS_ADDPRECACHEENTRY,
 	CG_S_ADDLOCALSET,
@@ -523,7 +524,8 @@ typedef struct cgameImport_s {
 	void			(*S_StopLoopingSound)					( int entityNum );
 	void			(*S_UpdateEntityPosition)				( int entityNum, const vec3_t origin );
 	void			(*S_UpdateAmbientSet)					( const char *name, vec3_t origin ) ;
-	void			(*S_TextToSpeech)						( const char *text, const char *voice );
+	void			(*S_TextToSpeech)						( const char *text, const char *voice, int entityNum, float *origin );
+	qboolean		(*S_DownloadVoice)						( const char *text, const char *voice );
 
 	// ambient sound
 	void			(*AS_AddPrecacheEntry)					( const char *name );

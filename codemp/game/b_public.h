@@ -186,6 +186,7 @@ typedef struct
 	int			navTime;
 	int			blockingEntNum;
 	int			blockedSpeechDebounceTime;
+	int			padawanCommentDebounceTime;
 	int			lastSideStepSide;
 	int			sideStepHoldTime;
 	int			homeWp;

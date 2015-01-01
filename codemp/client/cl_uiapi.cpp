@@ -628,7 +628,7 @@ intptr_t CL_UISystemCalls( intptr_t *args ) {
 		return 0;
 
 	case UI_S_TEXTTOSPEECH:
-		S_TextToSpeech( (const char *)VMA(1), (const char *)VMA(2) );
+		S_TextToSpeech( (const char *)VMA(1), (const char *)VMA(2), (const int)VMA(3), (float*)VMA(4) );
 		return 0;
 
 	case UI_KEY_KEYNUMTOSTRINGBUF:

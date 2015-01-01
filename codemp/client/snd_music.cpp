@@ -423,7 +423,7 @@ static qboolean Music_ParseLeveldata(const char *psLevelName)
 
 	MusicData->clear();
 
-	char sLevelName[MAX_QPATH];
+	char sLevelName[MAX_SOUNDPATH];
 	Q_strncpyz(sLevelName,psLevelName,sizeof(sLevelName));
 
 	gsLevelNameForLoad		= sLevelName;	// harmless to init here even if we fail to parse dms.dat file
@@ -767,7 +767,7 @@ static MusicFile_t *Music_GetBaseMusicFile( MusicState_e eMusicState )
 //
 qboolean Music_DynamicDataAvailable(const char *psDynamicMusicLabel)
 {
-	char sLevelName[MAX_QPATH];
+	char sLevelName[MAX_SOUNDPATH];
 	Q_strncpyz(sLevelName,COM_SkipPath( const_cast<char*>( (psDynamicMusicLabel&&psDynamicMusicLabel[0])?psDynamicMusicLabel:gsLevelNameFromServer.c_str() ) ),sizeof(sLevelName));
 #ifdef _WIN32
 	strlwr(sLevelName);

@@ -3,7 +3,8 @@
 #include "qcommon/qcommon.h"
 #include "snd_local.h"
 
-extern void S_TextToSpeech( const char *text, const char *voice );
+extern void S_TextToSpeech( const char *text, const char *voice, int entityNum, float *origin );
+extern qboolean S_DownloadVoice( const char *text, const char *voice );
 extern void ShutdownTextToSpeechThread ( void );
 
 void S_Init( void );

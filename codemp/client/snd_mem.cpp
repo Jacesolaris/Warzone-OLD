@@ -253,7 +253,7 @@ DWORD S_LoadMusic( char *sSoundName )
 	int			indexSize = 0;
 	byte		*indexData = NULL;
 	char		*psExt;
-	char		sLoadName[MAX_QPATH];
+	char		sLoadName[MAX_SOUNDPATH];
 	int			len = strlen(sSoundName);
 	qboolean	isMusic = qfalse;
 
@@ -318,7 +318,7 @@ qboolean gbInsideLoadSound = qfalse;
 static qboolean S_LoadSound_Actual( sfx_t *sfx )
 {
 	char		*psExt;
-	char		sLoadName[MAX_QPATH];
+	char		sLoadName[MAX_SOUNDPATH];
 	int			len = strlen(sfx->sSoundName);
 	qboolean	isMusic = qfalse;
 

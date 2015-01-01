@@ -1209,10 +1209,21 @@ void CALLBACK BASS_Stream_StatusProc(const void *buffer, DWORD length, void *use
 
 void BASS_StartStreamingSound ( char *filename, int entityNum, int entityChannel, vec3_t origin )
 {
-	DWORD newchan, r;
+	DWORD newchan = 0, r = 0;
+
+	if (!strncmp(filename, "http", 4))
+	{// http request...
+		//Com_Printf("Playing [HTTP] stream %s.\n", filename);
+		newchan = BASS_StreamCreateURL(filename,0,BASS_STREAM_BLOCK|BASS_STREAM_STATUS|BASS_STREAM_AUTOFREE,BASS_Stream_StatusProc,(void*)r);
+	}
+	else
+	{// local file...
+		//Com_Printf("Playing [LOCAL] stream %s.\n", filename);
+		newchan = BASS_StreamCreateFile(FALSE, filename, 0, -1, BASS_STREAM_AUTOFREE);
+	}
 
 	// Load a music or sample from "file"
-	if (newchan = BASS_StreamCreateURL(filename,0,BASS_STREAM_BLOCK|BASS_STREAM_STATUS|BASS_STREAM_AUTOFREE,BASS_Stream_StatusProc,(void*)r)) {
+	if (newchan) {
 		// Load a music or sample from "file" (memory)
 		BASS_SampleGetChannel(newchan,FALSE); // initialize sample channel
 		BASS_ChannelSetAttribute(newchan, BASS_ATTRIB_VOL, BASS_GetVolumeForChannel(CHAN_LOCAL));

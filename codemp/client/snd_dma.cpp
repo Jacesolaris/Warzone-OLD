@@ -60,8 +60,6 @@ matrix3_t	listener_axis;
 
 // MAX_SFX may be larger than MAX_SOUNDS because
 // of custom player sounds
-//#define		MAX_SFX			10000	//512 * 2
-#define		MAX_SFX			14000	//512 * 2
 sfx_t		s_knownSfx[MAX_SFX];
 int			s_numSfx;
 
@@ -93,6 +91,8 @@ cvar_t		*s_debugdynamic;
 cvar_t		*s_realism;
 
 cvar_t		*s_doppler;
+
+cvar_t		*s_ttscache;
 
 typedef struct
 {
@@ -176,6 +176,8 @@ void S_Init( void ) {
 	s_language = Cvar_Get("s_language","english",CVAR_ARCHIVE | CVAR_NORESTART);
 
 	s_doppler = Cvar_Get("s_doppler", "1", CVAR_ARCHIVE);
+
+	s_ttscache = Cvar_Get("s_ttscache", "1", CVAR_ARCHIVE);
 
 	cv = Cvar_Get ("s_initsound", "1", 0);
 	if ( !cv->integer ) {
@@ -289,11 +291,11 @@ sfx_t *S_FindName( const char *name ) {
 		Com_Error (ERR_FATAL, "S_FindName: empty name");
 	}
 
-	if (strlen(name) >= MAX_QPATH) {
+	if (strlen(name) >= MAX_SOUNDPATH) {
 		Com_Error (ERR_FATAL, "Sound name too long: %s", name);
 	}
 
-	char sSoundNameNoExt[MAX_QPATH];
+	char sSoundNameNoExt[MAX_SOUNDPATH];
 	COM_StripExtension(name,sSoundNameNoExt, sizeof( sSoundNameNoExt ));
 	Q_strlwr(sSoundNameNoExt);//UQ1: force it down low before hashing too?!?!?!?!
 
@@ -439,8 +441,8 @@ sfxHandle_t	S_RegisterSound( const char *name)
 		return 0;
 	}
 
-	if ( strlen( name ) >= MAX_QPATH ) {
-		Com_Printf( S_COLOR_RED"Sound name exceeds MAX_QPATH - %s\n", name );
+	if ( strlen( name ) >= MAX_SOUNDPATH ) {
+		Com_Printf( S_COLOR_RED"Sound name exceeds MAX_SOUNDPATH - %s\n", name );
 		assert(0);
 		return 0;
 	}
@@ -879,7 +881,7 @@ extern DWORD S_LoadMusic( char *sSoundName );
 qboolean S_StartBackgroundTrack_Actual( const char *intro, const char *loop )
 {
 	DWORD	NEW_MUSIC_HANDLE = 0;
-	char	name[MAX_QPATH];
+	char	name[MAX_SOUNDPATH];
 
 	Q_strncpyz( name, intro, sizeof( name ) - 4 );
 	COM_DefaultExtension( name, sizeof( name ), ".mp3" );
@@ -903,8 +905,8 @@ qboolean S_StartBackgroundTrack_Actual( const char *intro, const char *loop )
 	return qtrue;
 }
 
-static char gsIntroMusic[MAX_QPATH]={0};
-static char gsLoopMusic [MAX_QPATH]={0};
+static char gsIntroMusic[MAX_SOUNDPATH]={0};
+static char gsLoopMusic [MAX_SOUNDPATH]={0};
 
 void S_RestartMusic( void )
 {
@@ -932,8 +934,8 @@ void S_StartBackgroundTrack( const char *intro, const char *loop, qboolean bCall
 		loop = intro;
 	}
 
-	char sNameIntro[MAX_QPATH];
-	char sNameLoop [MAX_QPATH];
+	char sNameIntro[MAX_SOUNDPATH];
+	char sNameLoop [MAX_SOUNDPATH];
 	Q_strncpyz(sNameIntro,	intro,	sizeof(sNameIntro));
 	Q_strncpyz(sNameLoop,	loop,	sizeof(sNameLoop));
 

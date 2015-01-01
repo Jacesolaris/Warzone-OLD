@@ -49,7 +49,12 @@ void CG_RegisterWeapon( int weaponNum) {
 		trap->Error( ERR_DROP, "Couldn't find weapon %i", weaponNum );
 		return;
 	}
+
 	CG_RegisterItemVisuals( item - bg_itemlist );
+
+	// UQ1: Set all names in the bg_weapons.c struct and copy it here... Don't set them below...
+	if (weaponInfo->item)
+		weaponInfo->item->classname = weaponData[weaponNum].classname;
 
 	// load cmodel before model so filecache works
 	weaponInfo->weaponModel = trap->R_RegisterModel( item->world_model[0] );
@@ -135,14 +140,12 @@ void CG_RegisterWeapon( int weaponNum) {
 		}
 		break;
 	case WP_SABER:
-		weaponInfo->item->classname = "Light Saber";
 		MAKERGB( weaponInfo->flashDlightColor, 0.6f, 0.6f, 1.0f );
 		weaponInfo->firingSound = trap->S_RegisterSound( "sound/weapons/saber/saberhum1.wav" );
 		weaponInfo->missileModel		= trap->R_RegisterModel( "models/weapons2/saber/saber_w.glm" );
 		break;
 
 	case WP_CONCUSSION:
-		weaponInfo->item->classname		= "Concussion Rifle";
 		weaponInfo->selectSound			= trap->S_RegisterSound("sound/weapons/concussion/select.wav");
 		weaponInfo->flashSound[0]		= NULL_SOUND;
 		weaponInfo->firingSound			= NULL_SOUND;
@@ -180,7 +183,6 @@ void CG_RegisterWeapon( int weaponNum) {
 		break;
 
 	case WP_BRYAR_PISTOL:
-		weaponInfo->item->classname = "Bryar Pistol";
 		weaponInfo->selectSound = trap->S_RegisterSound("sound/weapons/bryar/select.wav");
 		weaponInfo->flashSound[0] = trap->S_RegisterSound("sound/weapons/bryar/fire.wav");
 		weaponInfo->firingSound = NULL_SOUND;
@@ -218,7 +220,6 @@ void CG_RegisterWeapon( int weaponNum) {
 		break;
 
 	case WP_BRYAR_OLD:
-		weaponInfo->item->classname = "Old Bayar Pistol";
 		weaponInfo->selectSound = trap->S_RegisterSound("sound/weapons/bryar/select.wav");
 		weaponInfo->flashSound[0] = trap->S_RegisterSound("sound/weapons/bryar/fire.wav");
 		weaponInfo->firingSound = NULL_SOUND;
@@ -255,7 +256,6 @@ void CG_RegisterWeapon( int weaponNum) {
 		cgs.media.bryarFrontFlash = trap->R_RegisterShader("gfx/effects/bryarFrontFlash");
 
 	case WP_WESTER_PISTOL:
-		weaponInfo->item->classname = "Westar Pistol";
 		weaponInfo->selectSound = trap->S_RegisterSound("sound/weapons/bryar/select.wav");
 		weaponInfo->flashSound[0] = trap->S_RegisterSound("sound/weapons/westar/fire.wav");
 		weaponInfo->firingSound = NULL_SOUND;
@@ -293,7 +293,6 @@ void CG_RegisterWeapon( int weaponNum) {
 		break;
 
 	case WP_ELG_3A:
-		weaponInfo->item->classname = "ELG-3A Diplomat's Pistol";
 		weaponInfo->selectSound = trap->S_RegisterSound("sound/weapons/bryar/select.wav");
 		weaponInfo->flashSound[0] = trap->S_RegisterSound("sound/weapons/greenblaster/fire1.mp3");
 		weaponInfo->firingSound = NULL_SOUND;
@@ -331,7 +330,6 @@ void CG_RegisterWeapon( int weaponNum) {
 		break;
 
 	case WP_S5_PISTOL:
-		weaponInfo->item->classname = "s5 Pistol";
 		weaponInfo->selectSound = trap->S_RegisterSound("sound/weapons/bryar/select.wav");
 		weaponInfo->flashSound[0] = trap->S_RegisterSound("sound/weapons/spy_pistol/fire.wav");
 		weaponInfo->firingSound = NULL_SOUND;
@@ -371,7 +369,6 @@ void CG_RegisterWeapon( int weaponNum) {
 		break;
 
 	case WP_WOOKIES_PISTOL:
-		weaponInfo->item->classname = "Wookie Pistol";
 		weaponInfo->selectSound = trap->S_RegisterSound("sound/weapons/bryar/select.wav");
 		weaponInfo->flashSound[0] = trap->S_RegisterSound("sound/weapons/bryar/fire.wav");
 		weaponInfo->firingSound = NULL_SOUND;
@@ -410,7 +407,6 @@ void CG_RegisterWeapon( int weaponNum) {
 		break;
 
 	case WP_A280: // UQ1: Example. Should have it's own fx...
-		weaponInfo->item->classname =	"A280 Clone Blaster";
 		weaponInfo->selectSound			= trap->S_RegisterSound("sound/weapons/disruptor/select.wav");
 		weaponInfo->flashSound[0]		= trap->S_RegisterSound("sound/weapons/A280/fire.wav");
 		weaponInfo->firingSound			= NULL_SOUND;
@@ -457,7 +453,6 @@ void CG_RegisterWeapon( int weaponNum) {
 		break;
 
 	case WP_DC15:
-		weaponInfo->item->classname = "DC-15 Blaster";
 		weaponInfo->selectSound = trap->S_RegisterSound("sound/weapons/repeater/select.wav");
 		weaponInfo->flashSound[0] = trap->S_RegisterSound("sound/weapons/dc17m/fire.wav");
 		weaponInfo->firingSound = NULL_SOUND;
@@ -498,7 +493,6 @@ void CG_RegisterWeapon( int weaponNum) {
 		break;
 
 	case WP_WESTARM5:
-		weaponInfo->item->classname = "Westarm 5 Blaster";
 		weaponInfo->selectSound = trap->S_RegisterSound("sound/weapons/repeater/select.wav");
 		weaponInfo->flashSound[0] = trap->S_RegisterSound("sound/weapons/dc17m/fire.wav");
 		weaponInfo->firingSound = NULL_SOUND;
@@ -537,7 +531,6 @@ void CG_RegisterWeapon( int weaponNum) {
 		break;
 
 	case WP_T21:
-		weaponInfo->item->classname = "T-21 Blaster Rifle";
 		weaponInfo->selectSound = trap->S_RegisterSound("sound/weapons/flechette/select.wav");
 		weaponInfo->flashSound[0] = trap->S_RegisterSound("sound/weapons/T-21/fire.mp3");
 		weaponInfo->firingSound = NULL_SOUND;
@@ -574,7 +567,6 @@ void CG_RegisterWeapon( int weaponNum) {
 		break;
 		
 	case WP_EE3:
-		weaponInfo->item->classname = "EE-3 Blaster";
 		weaponInfo->selectSound = trap->S_RegisterSound("sound/weapons/blaster/select.wav");
 		weaponInfo->flashSound[0] = trap->S_RegisterSound("sound/weapons/ee3/fire.wav");
 		weaponInfo->firingSound = NULL_SOUND;
@@ -616,7 +608,6 @@ void CG_RegisterWeapon( int weaponNum) {
 		break;
 
 	case WP_DC_15S_CLONE_PISTOL:
-		weaponInfo->item->classname = "DC 15s blaster Pistol";
 		weaponInfo->selectSound = trap->S_RegisterSound("sound/weapons/demp2/select.wav");
 		weaponInfo->flashSound[0] = trap->S_RegisterSound("sound/weapons/demp2/fire.wav");
 		weaponInfo->firingSound = NULL_SOUND;
@@ -660,7 +651,6 @@ void CG_RegisterWeapon( int weaponNum) {
 		break;
 
 	case WP_DLT20A:
-		weaponInfo->item->classname = "DLT-20a";
 		weaponInfo->selectSound = trap->S_RegisterSound("sound/weapons/flechette/select.wav");
 		weaponInfo->flashSound[0] = trap->S_RegisterSound("sound/weapons/A280/fire.wav");
 		weaponInfo->firingSound = NULL_SOUND;
@@ -703,7 +693,6 @@ void CG_RegisterWeapon( int weaponNum) {
 		break;
 
 	case WP_CLONERIFLE:
-		weaponInfo->item->classname = "Clone Trooper Rifle";
 		weaponInfo->selectSound = trap->S_RegisterSound("sound/weapons/repeater/select.wav");
 		weaponInfo->flashSound[0] = trap->S_RegisterSound("sound/weapons/repeater/fire.wav");
 		weaponInfo->firingSound = NULL_SOUND;
@@ -743,7 +732,6 @@ void CG_RegisterWeapon( int weaponNum) {
 		break;
 
 	case WP_Z6_BLASTER_CANON:
-		weaponInfo->item->classname = "Z-6 rotary blaster cannon";
 		weaponInfo->selectSound = trap->S_RegisterSound("sound/weapons/repeater/select.wav");
 		weaponInfo->flashSound[0] = trap->S_RegisterSound("sound/weapons/minigun/fire.wav");
 		weaponInfo->firingSound = NULL_SOUND;
@@ -784,7 +772,6 @@ void CG_RegisterWeapon( int weaponNum) {
 		break;
 
 	case WP_WOOKIE_BOWCASTER:
-		weaponInfo->item->classname = "Wookie BowCaster";
 		weaponInfo->selectSound = trap->S_RegisterSound("sound/weapons/bowcaster/select.wav");
 		weaponInfo->flashSound[0] = trap->S_RegisterSound("sound/weapons/bowcaster/fire.wav");
 		weaponInfo->firingSound = NULL_SOUND;
@@ -832,7 +819,6 @@ void CG_RegisterWeapon( int weaponNum) {
 		break;
 
 	case WP_CLONE_BLASTER:
-		weaponInfo->item->classname = "DC-15s Clone Blaster";
 		weaponInfo->selectSound = trap->S_RegisterSound("sound/weapons/blaster/select.wav");
 		weaponInfo->flashSound[0] = trap->S_RegisterSound("sound/weapons/repeater/fire.wav");
 		weaponInfo->firingSound = NULL_SOUND;
@@ -872,7 +858,6 @@ void CG_RegisterWeapon( int weaponNum) {
 		break;
 
 	case WP_DC15_EXT:
-		weaponInfo->item->classname = "DC-15 Blob Rifle";
 		weaponInfo->selectSound = trap->S_RegisterSound("sound/weapons/blaster/select.wav");
 		weaponInfo->flashSound[0] = trap->S_RegisterSound("sound/weapons/repeater/fire.wav");
 		weaponInfo->firingSound = NULL_SOUND;
@@ -912,7 +897,6 @@ void CG_RegisterWeapon( int weaponNum) {
 		break;
 
 	case WP_CW_ROCKET_LAUNCHER:
-		weaponInfo->item->classname = "CW Rucket Launcher";
 		weaponInfo->selectSound = trap->S_RegisterSound("sound/weapons/rocket/select.wav");
 		weaponInfo->flashSound[0] = trap->S_RegisterSound("sound/weapons/rocket/fire.wav");
 		weaponInfo->firingSound = NULL_SOUND;
@@ -950,7 +934,6 @@ void CG_RegisterWeapon( int weaponNum) {
 		break;
 
 	case WP_E60_ROCKET_LAUNCHER:
-		weaponInfo->item->classname = "E-60 Rucket Launcher";
 		weaponInfo->selectSound = trap->S_RegisterSound("sound/weapons/rocket/select.wav");
 		weaponInfo->flashSound[0] = trap->S_RegisterSound("sound/weapons/rocket/fire.wav");
 		weaponInfo->firingSound = NULL_SOUND;
@@ -988,7 +971,6 @@ void CG_RegisterWeapon( int weaponNum) {
 		break;
 
 	case WP_TESTGUN:
-		weaponInfo->item->classname = "TEST GUN";
 		weaponInfo->selectSound = trap->S_RegisterSound("sound/weapons/blaster/select.wav");
 		weaponInfo->flashSound[0] = trap->S_RegisterSound("sound/weapons/Blasters/dl-44_1.mp3");
 		weaponInfo->firingSound = NULL_SOUND;
@@ -1029,7 +1011,6 @@ void CG_RegisterWeapon( int weaponNum) {
 		break;
 
 	case WP_FRAG_GRENADE:
-		weaponInfo->item->classname = "Frag Grenade";
 		weaponInfo->selectSound = trap->S_RegisterSound("sound/weapons/thermal/select.wav");
 		weaponInfo->flashSound[0] = trap->S_RegisterSound("sound/weapons/thermal/fire.wav");
 		weaponInfo->firingSound = NULL_SOUND;
@@ -1072,7 +1053,6 @@ void CG_RegisterWeapon( int weaponNum) {
 		break;
 
 	case WP_FRAG_GRENADE_OLD:
-		weaponInfo->item->classname = "Old Frag Grenade";
 		weaponInfo->selectSound = trap->S_RegisterSound("sound/weapons/thermal/select.wav");
 		weaponInfo->flashSound[0] = trap->S_RegisterSound("sound/weapons/thermal/fire.wav");
 		weaponInfo->firingSound = NULL_SOUND;
@@ -1115,7 +1095,6 @@ void CG_RegisterWeapon( int weaponNum) {
 		break;
 
 	case WP_DC_17_CLONE_PISTOL:
-		weaponInfo->item->classname = "DC 17 Clone blasters Pistol";
 		weaponInfo->selectSound = trap->S_RegisterSound("sound/weapons/demp2/select.wav");
 		weaponInfo->flashSound[0] = trap->S_RegisterSound("sound/weapons/demp2/fire.wav");
 		weaponInfo->firingSound = NULL_SOUND;
@@ -1160,7 +1139,6 @@ void CG_RegisterWeapon( int weaponNum) {
 
 	case WP_BLASTER:
 	case WP_EMPLACED_GUN: //rww - just use the same as this for now..
-		weaponInfo->item->classname = "E-11 Blaster";
 		weaponInfo->selectSound = trap->S_RegisterSound("sound/weapons/blaster/select.wav");
 		weaponInfo->flashSound[0] = trap->S_RegisterSound("sound/weapons/blasterMB/fire.wav");
 		weaponInfo->firingSound = NULL_SOUND;
@@ -1201,7 +1179,6 @@ void CG_RegisterWeapon( int weaponNum) {
 		break;
 
 	case WP_DISRUPTOR:
-		weaponInfo->item->classname		= "Disruptor Rifle";
 		weaponInfo->selectSound			= trap->S_RegisterSound("sound/weapons/disruptor/select.wav");
 		weaponInfo->flashSound[0]		= trap->S_RegisterSound( "sound/weapons/disruptor/fire.wav");
 		weaponInfo->firingSound			= NULL_SOUND;
@@ -1250,7 +1227,6 @@ void CG_RegisterWeapon( int weaponNum) {
 		break;
 
 	case WP_BOWCASTER:
-		weaponInfo->item->classname			= "Modified Wookie Crossbow";
 		weaponInfo->altFlashSound[0]		= NULL_SOUND;
 		weaponInfo->altFiringSound			= NULL_SOUND;
 		weaponInfo->altChargeSound			= NULL_SOUND;
@@ -1293,7 +1269,6 @@ void CG_RegisterWeapon( int weaponNum) {
 		break;
 
 	case WP_REPEATER:
-		weaponInfo->item->classname		= "Imperial Repeater";
 		weaponInfo->selectSound			= trap->S_RegisterSound("sound/weapons/imperial_repeater/select.wav");
 		weaponInfo->flashSound[0]		= trap->S_RegisterSound( "sound/weapons/imperial_repeater/fire.wav");
 		weaponInfo->firingSound			= NULL_SOUND;
@@ -1330,7 +1305,6 @@ void CG_RegisterWeapon( int weaponNum) {
 		break;
 
 	case WP_DEMP2:
-		weaponInfo->item->classname		= "Electric Pulse Cannon";
 		weaponInfo->selectSound			= trap->S_RegisterSound("sound/weapons/demp2/select.wav");
 		weaponInfo->flashSound[0]		= trap->S_RegisterSound("sound/weapons/demp2/fire.wav");
 		weaponInfo->firingSound			= NULL_SOUND;
@@ -1371,7 +1345,6 @@ void CG_RegisterWeapon( int weaponNum) {
 		break;
 
 	case WP_FLECHETTE:
-		weaponInfo->item->classname		= "Golan Arms Flechette";
 		weaponInfo->selectSound			= trap->S_RegisterSound("sound/weapons/flechette/select.wav");
 		weaponInfo->flashSound[0]		= trap->S_RegisterSound( "sound/weapons/flechette/fire.wav");
 		weaponInfo->firingSound			= NULL_SOUND;
@@ -1407,7 +1380,6 @@ void CG_RegisterWeapon( int weaponNum) {
 		break;
 
 	case WP_ROCKET_LAUNCHER:
-		weaponInfo->item->classname		= "Merr-Sonn Rocket Launcer";
 		weaponInfo->selectSound			= trap->S_RegisterSound("sound/weapons/rocket/select.wav");
 		weaponInfo->flashSound[0]		= trap->S_RegisterSound( "sound/weapons/rocket/fire.wav");
 		weaponInfo->firingSound			= NULL_SOUND;
@@ -1451,7 +1423,6 @@ void CG_RegisterWeapon( int weaponNum) {
 		break;
 
 	case WP_THERMAL:
-		weaponInfo->item->classname		= "Thermal Detonator";
 		weaponInfo->selectSound			= trap->S_RegisterSound("sound/weapons/thermal/select.wav");
 		weaponInfo->flashSound[0]		= trap->S_RegisterSound( "sound/weapons/thermal/fire.wav");
 		weaponInfo->firingSound			= NULL_SOUND;
@@ -1484,7 +1455,6 @@ void CG_RegisterWeapon( int weaponNum) {
 		break;
 
 	case WP_TRIP_MINE:
-		weaponInfo->item->classname		= "Trip Mines";
 		weaponInfo->selectSound			= trap->S_RegisterSound("sound/weapons/detpack/select.wav");
 		weaponInfo->flashSound[0]		= trap->S_RegisterSound( "sound/weapons/laser_trap/fire.wav");
 		weaponInfo->firingSound			= NULL_SOUND;
@@ -1513,7 +1483,6 @@ void CG_RegisterWeapon( int weaponNum) {
 		break;
 
 	case WP_DET_PACK:
-		weaponInfo->item->classname		= "Det Pack";
 		weaponInfo->selectSound			= trap->S_RegisterSound("sound/weapons/detpack/select.wav");
 		weaponInfo->flashSound[0]		= trap->S_RegisterSound( "sound/weapons/detpack/fire.wav");
 		weaponInfo->firingSound			= NULL_SOUND;

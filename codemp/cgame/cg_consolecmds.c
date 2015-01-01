@@ -330,6 +330,7 @@ static consoleCommand_t	commands[] = {
 	{ "testgun",					CG_TestGun_f },
 	{ "testmodel",					CG_TestModel_f },
 	{ "tts",						TTS_SayText },
+	{ "ttsprecache",				CG_DownloadAllTextToSpeechSounds },
 	{ "viewpos",					CG_Viewpos_f },
 	{ "weapnext",					CG_NextWeapon_f },
 	{ "weapon",						CG_Weapon_f },

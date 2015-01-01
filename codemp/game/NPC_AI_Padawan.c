@@ -82,6 +82,40 @@ int NPC_FindPadawanGoal( gentity_t *NPC )
 	return waypoint;
 }
 
+extern void G_SpeechEvent( gentity_t *self, int event );
+
+void G_AddPadawanCommentEvent( gentity_t *self, int event, int speakDebounceTime )
+{
+	if ( !self->NPC )
+	{
+		return;
+	}
+
+	if ( !self->client || self->client->ps.pm_type >= PM_DEAD )
+	{
+		return;
+	}
+
+	if ( self->NPC->padawanCommentDebounceTime > level.time )
+	{
+		return;
+	}
+
+	if ( trap->ICARUS_TaskIDPending( (sharedEntity_t *)self, TID_CHAN_VOICE ) )
+	{
+		return;
+	}
+
+	//FIXME: Also needs to check for teammates. Don't want
+	//		everyone babbling at once
+
+	//NOTE: was losing too many speech events, so we do it directly now, screw networking!
+	G_SpeechEvent( self, event );
+
+	//won't speak again for 5 seconds (unless otherwise specified)
+	self->NPC->padawanCommentDebounceTime = level.time + ((speakDebounceTime==0) ? 30000+irand(0,30000) : speakDebounceTime);
+}
+
 qboolean NPC_PadawanMove( void )
 {
 	gentity_t	*NPC = NPCS.NPC;
@@ -158,6 +192,8 @@ qboolean NPC_PadawanMove( void )
 				ucmd->upmove = 0;
 				NPC_PickRandomIdleAnimantion(NPC);
 
+				// Say something random to our master...
+				G_AddPadawanCommentEvent( NPC, EV_PADAWAN_IDLE, 30000+irand(0,30000) );
 				return qtrue;
 			}
 			else if (NPC->parent->s.groundEntityNum != ENTITYNUM_NONE
