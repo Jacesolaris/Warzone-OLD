@@ -19,7 +19,7 @@ extern qboolean S_StartBackgroundTrack_Actual( const char *intro, const char *lo
 
 qboolean EAX_SUPPORTED = qtrue;
 
-#define MAX_BASS_CHANNELS	256
+#define MAX_BASS_CHANNELS	512
 
 #define SOUND_3D_METHOD					BASS_3DMODE_NORMAL //BASS_3DMODE_RELATIVE
 
@@ -71,7 +71,7 @@ void BASS_InitializeChannels ( void )
 {
 	if (!SOUND_CHANNELS_INITIALIZED)
 	{
-#pragma omp parallel for num_threads(16)
+#pragma omp parallel for num_threads(8)
 		for (int c = 0; c < MAX_BASS_CHANNELS; c++) 
 		{// Set up this channel...
 			memset(&SOUND_CHANNELS[c],0,sizeof(Channel));
@@ -96,7 +96,7 @@ void BASS_StopChannel ( int chanNum )
 
 void BASS_StopEntityChannel ( int entityNum, int entchannel )
 {
-#pragma omp parallel for num_threads(16)
+#pragma omp parallel for num_threads(8)
 	for (int c = 0; c < MAX_BASS_CHANNELS; c++) 
 	{
 		if (SOUND_CHANNELS[c].entityNum == entityNum && SOUND_CHANNELS[c].isActive && SOUND_CHANNELS[c].entityChannel == entchannel)
@@ -108,7 +108,7 @@ void BASS_StopEntityChannel ( int entityNum, int entchannel )
 
 void BASS_FindAndStopSound ( DWORD handle )
 {
-#pragma omp parallel for num_threads(16)
+#pragma omp parallel for num_threads(8)
 	for (int c = 0; c < MAX_BASS_CHANNELS; c++) 
 	{
 		if (SOUND_CHANNELS[c].originalChannel == handle && SOUND_CHANNELS[c].isActive)
@@ -120,7 +120,7 @@ void BASS_FindAndStopSound ( DWORD handle )
 
 void BASS_StopAllChannels ( void )
 {
-#pragma omp parallel for num_threads(16)
+#pragma omp parallel for num_threads(8)
 	for (int c = 0; c < MAX_BASS_CHANNELS; c++) 
 	{
 		if (SOUND_CHANNELS[c].isActive)
@@ -132,7 +132,7 @@ void BASS_StopAllChannels ( void )
 
 void BASS_StopLoopChannel ( int entityNum )
 {
-#pragma omp parallel for num_threads(16)
+#pragma omp parallel for num_threads(8)
 	for (int c = 0; c < MAX_BASS_CHANNELS; c++) 
 	{
 		if (SOUND_CHANNELS[c].entityNum == entityNum && SOUND_CHANNELS[c].isActive && SOUND_CHANNELS[c].isLooping)
@@ -144,7 +144,7 @@ void BASS_StopLoopChannel ( int entityNum )
 
 void BASS_StopAllLoopChannels ( void )
 {
-#pragma omp parallel for num_threads(16)
+#pragma omp parallel for num_threads(8)
 	for (int c = 0; c < MAX_BASS_CHANNELS; c++) 
 	{
 		if (SOUND_CHANNELS[c].isActive && SOUND_CHANNELS[c].isLooping)
@@ -159,7 +159,7 @@ int BASS_FindFreeChannel ( void )
 	int BEST_CHAN = -1;
 
 	// Fall back to full lookup when we have started too many sounds for the update threade to catch up...
-#pragma omp parallel for num_threads(16)
+#pragma omp parallel for num_threads(8)
 	for (int c = 0; c < MAX_BASS_CHANNELS; c++) 
 	{
 		if (BEST_CHAN != -1) continue;
@@ -224,7 +224,7 @@ void BASS_Shutdown ( void )
 
 	if (SOUND_CHANNELS_INITIALIZED)
 	{
-#pragma omp parallel for num_threads(16)
+#pragma omp parallel for num_threads(8)
 		for (int c = 0; c < MAX_BASS_CHANNELS; c++) 
 		{// Free channel...
 			BASS_StopChannel(c);
@@ -549,7 +549,7 @@ void BASS_UpdatePosition ( int ch, qboolean IS_NEW_SOUND )
 	vec3_t		porg, corg;
 
 	if (!c) return; // should be impossible, but just in case...
-	//if (!IS_NEW_SOUND && !c->isLooping) return; // We don't even need to update do we???
+	if (!IS_NEW_SOUND && !c->isLooping) return; // We don't even need to update do we???
 
 	SOUND_ENTITY = c->entityNum;
 	CHAN_VOLUME = c->volume*BASS_GetVolumeForChannel(c->entityChannel);
@@ -720,7 +720,7 @@ void BASS_UpdateSounds_REAL ( void )
 
 	BASS_ChannelSetAttribute(MUSIC_CHANNEL.channel, BASS_ATTRIB_VOL, MUSIC_CHANNEL.volume*BASS_GetVolumeForChannel(CHAN_MUSIC));
 
-#pragma omp parallel for num_threads(16)
+#pragma omp parallel for num_threads(8)
 	for (int c = 0; c < MAX_BASS_CHANNELS; c++) 
 	{
 		if (SOUND_CHANNELS[c].startRequest)
@@ -1155,7 +1155,7 @@ void BASS_AddMemoryLoopChannel ( DWORD samplechan, int entityNum, int entityChan
 	{// If there's no origin, surely this can't be an update...
 		qboolean FOUND = qfalse;
 
-#pragma omp parallel for num_threads(16)
+#pragma omp parallel for num_threads(8)
 		for (int ch = 0; ch < MAX_BASS_CHANNELS; ch++) 
 		{
 			if (FOUND) continue;
@@ -1175,6 +1175,8 @@ void BASS_AddMemoryLoopChannel ( DWORD samplechan, int entityNum, int entityChan
 				}
 			}
 		}
+
+		if (FOUND) return;
 	}
 
 	int chan = BASS_FindFreeChannel();
