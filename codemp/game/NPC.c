@@ -3823,7 +3823,7 @@ void NPC_Think ( gentity_t *self)//, int msec )
 			{// Do any replies to padawan comments...
 				self->padawan_reply_waiting = qfalse;
 				//G_AddEvent( self, EV_PADAWAN_IDLE_REPLY, 0 );
-				G_SpeechEvent( NPCS.NPC, EV_PADAWAN_IDLE_REPLY );
+				G_SpeechEvent( self, EV_PADAWAN_IDLE_REPLY );
 
 				//trap->Print("Master %s replying to padawan comment.\n", self->client->pers.netname);
 

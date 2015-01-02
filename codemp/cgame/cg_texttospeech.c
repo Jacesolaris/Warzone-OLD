@@ -671,7 +671,7 @@ void CG_PadawanIdleChatter ( int entityNum )
 	if (ent->currentState.eType != ET_NPC) return;
 	if (ent->currentState.NPC_class != CLASS_PADAWAN) return;
 
-	CHATTER_TextToSpeech(PADAWAN_CHATTERS[choice], CG_GetTextToSpeechVoiceForEntity(ent), entityNum, ent->currentState.origin);
+	CHATTER_TextToSpeech(PADAWAN_CHATTERS[choice], CG_GetTextToSpeechVoiceForEntity(ent), entityNum, ent->lerpOrigin);
 }
 
 //
@@ -760,9 +760,9 @@ void CG_PadawanIdleReplyChatter ( int entityNum )
 	//if (ent->currentState.eType != ET_NPC) return;
 
 	if (isYoda) 
-		CHATTER_TextToSpeech(PADAWAN_REPLY_YODA_CHATTERS[choice], CG_GetTextToSpeechVoiceForEntity(ent), entityNum, ent->currentState.origin);
+		CHATTER_TextToSpeech(PADAWAN_REPLY_YODA_CHATTERS[choice], CG_GetTextToSpeechVoiceForEntity(ent), entityNum, ent->lerpOrigin);
 	else
-		CHATTER_TextToSpeech(PADAWAN_REPLY_CHATTERS[choice], CG_GetTextToSpeechVoiceForEntity(ent), entityNum, ent->currentState.origin);
+		CHATTER_TextToSpeech(PADAWAN_REPLY_CHATTERS[choice], CG_GetTextToSpeechVoiceForEntity(ent), entityNum, ent->lerpOrigin);
 }
 
 //
