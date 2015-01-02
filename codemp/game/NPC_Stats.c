@@ -4,6 +4,8 @@
 #include "anims.h"
 #include "ghoul2/G2.h"
 
+//#define __DEBUG_SKINS__ // UQ1: Use this to track missing (but used - usually by NPCs) skins...
+
 extern qboolean NPCsPrecached;
 
 extern qboolean WP_SaberParseParms( const char *SaberName, saberInfo_t *saber );
@@ -2593,13 +2595,28 @@ qboolean NPC_ParseParms( const char *NPCName, gentity_t *NPC )
 				weap = GetIDForString( WPTable, value );
 				if ( weap >= WP_NONE && weap <= WP_NUM_WEAPONS )
 				{
-					NPC->client->ps.weapon = weap;
-					NPC_ChangeWeapon(weap);
-
-					if (NPC->client->ps.primaryWeapon <= WP_NONE) NPC->client->ps.primaryWeapon = weap;
-					else if (NPC->client->ps.secondaryWeapon <= WP_NONE) NPC->client->ps.secondaryWeapon = weap;
-					else if (NPC->client->ps.temporaryWeapon <= WP_NONE) NPC->client->ps.temporaryWeapon = weap;
-					else trap->Print("WARNING: NPC %s has more then 3 weapons in it's script. Ignoring extras.\n", NPCName);
+					if (NPC->client->ps.primaryWeapon <= WP_NONE) 
+					{
+						NPC->client->ps.primaryWeapon = weap;
+						NPC->client->ps.weapon = weap;
+						NPC_ChangeWeapon(weap);
+					}
+					else if (NPC->client->ps.secondaryWeapon <= WP_NONE)
+					{
+						NPC->client->ps.secondaryWeapon = weap;
+						NPC->client->ps.weapon = weap;
+						NPC_ChangeWeapon(weap);
+					}
+					else if (NPC->client->ps.temporaryWeapon <= WP_NONE) 
+					{
+						NPC->client->ps.temporaryWeapon = weap;
+						NPC->client->ps.weapon = weap;
+						NPC_ChangeWeapon(weap);
+					}
+					else
+					{
+						//trap->Print("WARNING: NPC %s has more then 3 weapons in it's script. Ignoring extras.\n", NPCName);
+					}
 				}
 				continue;
 			}
@@ -3592,7 +3609,9 @@ Ghoul2 Insert Start
 			}
 			else if (!BG_FileExists(useSkinName))
 			{// hmm missing this custom skin. use default...
+#ifdef __DEBUG_SKINS__
 				trap->Print("Skin %s is missing. Using default.\n", useSkinName);
+#endif //__DEBUG_SKINS__
 				strcpy(customSkin, "default");
 			}
 		}

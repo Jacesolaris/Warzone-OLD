@@ -9,6 +9,8 @@
 #define __NPC_MINPLAYERS__
 #define __ALWAYS_TWO_TRAVELLINGVENDORS
 #define __WAYPOINTS_PRECHECKED__
+//#define __ALL_JEDI_NPCS__ // UQ1: For testing jedi/padawan stuff...
+//#define __NPC_SPAWN_DEBUGGING__ // UQ1: For displaying what NPCs spawn in chat log for debugging...
 
 
 #define BOT_BEGIN_DELAY_BASE		2000
@@ -981,7 +983,9 @@ void G_CheckVendorNPCs( void )
 		npc->s.angles[YAW] = irand(0,359);
 		npc->s.angles[ROLL] = 0;
 
+#ifdef __NPC_SPAWN_DEBUGGING__
 		trap->Print(va("[%i/%i] Spawning (travelling vendor NPC) %s at waypoint %i.\n", botplayers+1, minplayers, npc->NPC_type, waypoint));
+#endif //__NPC_SPAWN_DEBUGGING__
 
 		npc->s.eFlags |= EF_RADAROBJECT;
 		SP_NPC_spawner( npc );
@@ -1172,7 +1176,9 @@ void G_CheckCivilianNPCs( void )
 		npc->s.angles[YAW] = irand(0,359);
 		npc->s.angles[ROLL] = 0;
 
+#ifdef __NPC_SPAWN_DEBUGGING__
 		trap->Print(va("[%i/%i] Spawning (civilian NPC) %s at waypoint %i.\n", botplayers+1, minplayers, npc->NPC_type, waypoint));
+#endif //__NPC_SPAWN_DEBUGGING__
 
 		SP_NPC_spawner( npc );
 	}
@@ -1430,8 +1436,6 @@ void G_CheckMinimumNpcs( void ) {
 		}
 		else
 		{// Rebel NPCs...
-//#define __ALL_JEDI_NPCS__ // UQ1: For testing jedi/padawan stuff...
-
 #ifndef __ALL_JEDI_NPCS__
 			if (random >= 10)
 			{
@@ -1644,14 +1648,18 @@ void G_CheckMinimumNpcs( void ) {
 				VectorCopy(gWPArray[waypoint]->origin, npc->s.origin);
 				npc->s.origin[2]+=32; // Drop down...
 
+#ifdef __NPC_SPAWN_DEBUGGING__
 				trap->Print(va("[%i/%i] Spawning (warzone NPC) %s at (fallback) waypoint %i.\n", botplayers+1, minplayers, npc->NPC_type, waypoint));
+#endif //__NPC_SPAWN_DEBUGGING__
 			}
 			else
 			{// Found a good warzone spawnpoint... Using it...
 				VectorCopy(NPC_SPAWNPOINT, npc->s.origin);
 				npc->s.origin[2]+=32; // Drop down...
 
+#ifdef __NPC_SPAWN_DEBUGGING__
 				trap->Print(va("[%i/%i] Spawning (warzone NPC) %s at flag %i.\n", botplayers+1, minplayers, npc->NPC_type, NPC_SPAWNFLAG));
+#endif //__NPC_SPAWN_DEBUGGING__
 			}
 
 			// Update ticket counts...
@@ -1678,10 +1686,12 @@ void G_CheckMinimumNpcs( void ) {
 				VectorCopy(spawnPoint.s.origin, npc->s.origin);
 				npc->s.origin[2]+=32; // Drop down...
 
+#ifdef __NPC_SPAWN_DEBUGGING__
 				if (SPAWN_TEAM == TEAM_BLUE)
 					trap->Print(va("[%i/%i] Spawning REBEL %s.\n", botplayers+1, minplayers, npc->NPC_type));
 				else
 					trap->Print(va("[%i/%i] Spawning IMPERIAL %s.\n", botplayers+1, minplayers, npc->NPC_type));
+#endif //__NPC_SPAWN_DEBUGGING__
 			}
 			else
 			{
@@ -1715,14 +1725,18 @@ void G_CheckMinimumNpcs( void ) {
 
 					npc->s.teamowner = SPAWN_TEAM;
 
+#ifdef __NPC_SPAWN_DEBUGGING__
 					if (SPAWN_TEAM == TEAM_BLUE)
 						trap->Print(va("[%i/%i] Spawning REBEL %s at waypoint %i.\n", botplayers+1, minplayers, npc->NPC_type, waypoint));
 					else
 						trap->Print(va("[%i/%i] Spawning IMPERIAL %s at waypoint %i.\n", botplayers+1, minplayers, npc->NPC_type, waypoint));
+#endif //__NPC_SPAWN_DEBUGGING__
 				}
 				else
 				{
+#ifdef __NPC_SPAWN_DEBUGGING__
 					trap->Print(va("[%i/%i] Spawning (enemy NPC) %s at waypoint %i.\n", botplayers+1, minplayers, npc->NPC_type, waypoint));
+#endif //__NPC_SPAWN_DEBUGGING__
 				}
 			}
 		}

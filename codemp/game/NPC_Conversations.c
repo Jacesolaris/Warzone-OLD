@@ -9,6 +9,7 @@
 #define __DOMINANCE_NPC__
 #define __NPC_CONVERSATIONS__
 #define __SHORT_STORMIE_CONVOS__
+//#define __NPC_CONVERSATION_DEBUG__ // UQ1: Enable to list all npc conversations to the chat log...
 
 #ifdef __DOMINANCE_NPC__
 
@@ -583,7 +584,9 @@ void NPC_StormtrooperFindConversationPartner()
 				NPC->NPC->conversationPartner->NPC->conversationPart = 1;
 				NPC->NPC->conversationPartner->NPC->conversationReplyTime = level.time + 8000;
 
+#ifdef __NPC_CONVERSATION_DEBUG__
 				trap->Print(">> NPC %i (%s) enterred a conversation with NPC %i.\n", NPC->s.number, NPC->NPC_type, NPC->NPC->conversationPartner->s.number);
+#endif //__NPC_CONVERSATION_DEBUG__
 				NPC_StormTrooperConversation();
 			}
 			else
@@ -609,7 +612,9 @@ void NPC_StormtrooperFindConversationPartner()
 				NPC->NPC->conversationPartner->NPC->conversationPart = 1;
 				NPC->NPC->conversationPartner->NPC->conversationReplyTime = level.time + 8000;
 
+#ifdef __NPC_CONVERSATION_DEBUG__
 				trap->Print(">> NPC %i (%s) enterred a conversation with NPC %i.\n", NPC->s.number, NPC->NPC_type, NPC->NPC->conversationPartner->s.number);
+#endif //__NPC_CONVERSATION_DEBUG__
 				NPC_StormTrooperConversation();
 			}
 			else
@@ -847,7 +852,9 @@ void NPC_FindConversationPartner()
 				NPC->NPC->conversationPartner->NPC->conversationPart = 1;
 				NPC->NPC->conversationPartner->NPC->conversationReplyTime = level.time + 8000;
 
+#ifdef __NPC_CONVERSATION_DEBUG__
 				trap->Print(">> NPC %i (%s) enterred a conversation with NPC %i (%s).\n", NPC->s.number, NPC->NPC_type, NPC->NPC->conversationPartner->s.number, NPC->NPC->conversationPartner->NPC_type);
+#endif //__NPC_CONVERSATION_DEBUG__
 				NPC_NPCConversation();
 			}
 			else

@@ -285,6 +285,21 @@ qboolean CG_IsBountyHunter(centity_t *ent)
 	return qfalse;
 }
 
+qboolean CG_IsYoda(centity_t *ent)
+{
+	clientInfo_t	*ci = CG_GetClientInfoForEnt(ent);
+
+	if (!ci) return qfalse;
+
+	if (ci->modelName && ci->modelName[0])
+	{
+		if (StringContainsWord(ci->modelName, "yoda"))
+			return qtrue;
+	}
+
+	return qfalse;
+}
+
 qboolean CG_TextToSpeechVoiceValid(centity_t *ent)
 {// This checks if the current selected_voice is still valid for this NPC/Player/etc... Returns qfalse if it is not...
 	if (ent->selected_voice)
@@ -294,7 +309,11 @@ qboolean CG_TextToSpeechVoiceValid(centity_t *ent)
 		int				SELECTED_AGE = TTS_AGE_NONE;
 
 		// Select best gender for this entity...
-		if (CG_IsImperialOfficer(ent))
+		if (CG_IsYoda(ent))
+		{
+			SELECTED_GENDER = TTS_GENDER_YODA;
+		}
+		else if (CG_IsImperialOfficer(ent))
 		{// Special case... Use brittish voice for all imperial officers (like the movies - lol)... :)
 			SELECTED_GENDER = TTS_GENDER_IMPERIAL_OFFICER; // All imperial officers are male. We don't have a female model, and i've never seen one anyway...
 		}
@@ -378,7 +397,11 @@ char *CG_GetTextToSpeechVoiceForEntity(centity_t *ent)
 		ent->selected_voice = 0;
 
 		// Select best gender for this entity...
-		if (CG_IsImperialOfficer(ent))
+		if (CG_IsYoda(ent))
+		{
+			SELECTED_GENDER = TTS_GENDER_YODA;
+		}
+		else if (CG_IsImperialOfficer(ent))
 		{// Special case... Use brittish voice for all imperial officers (like the movies - lol)... :)
 			SELECTED_GENDER = TTS_GENDER_IMPERIAL_OFFICER; // All imperial officers are male. We don't have a female model, and i've never seen one anyway...
 		}
@@ -487,7 +510,25 @@ char *CG_GetTextToSpeechVoiceForEntity(centity_t *ent)
 //
 void TextToSpeech( const char *text, const char *voice, int entityNum, vec3_t origin )
 {// UQ1: Now uses a trap call to do all the good stuff in engine (client) code...
+	// Note text send starting with the character ! will never be cached/saved...
 	trap->S_TextToSpeech(text, voice, entityNum, (float *)origin);
+}
+
+extern void CG_ChatBox_AddString(char *chatStr);
+
+void CHATTER_TextToSpeech( const char *text, const char *voice, int entityNum, vec3_t origin )
+{
+	clientInfo_t	*ci = CG_GetClientInfoForEnt(&cg_entities[entityNum]);
+	char			chatline_text[MAX_SAY_TEXT] = {0};
+
+	if (ci)
+	{
+		Com_sprintf( chatline_text, sizeof( chatline_text ), "^7%s: ^2%s.", ci->name, text );
+		CG_ChatBox_AddString( (char *)chatline_text );
+		trap->Print( "*%s\n", chatline_text );
+	}
+
+	TextToSpeech(text, voice, entityNum, origin);
 }
 
 void CG_SaySillyTextTest ( void )
@@ -498,34 +539,34 @@ void CG_SaySillyTextTest ( void )
 	switch (choice)
 	{
 	case 1:
-		TextToSpeech("!What the are you doing???", CG_GetTextToSpeechVoiceForEntity(&cg_entities[cg.clientNum]), cg.clientNum, cg.snap->ps.origin);
+		CHATTER_TextToSpeech("!What the are you doing???", CG_GetTextToSpeechVoiceForEntity(&cg_entities[cg.clientNum]), cg.clientNum, cg.snap->ps.origin);
 		break;
 	case 2:
-		TextToSpeech("!Stop that!", CG_GetTextToSpeechVoiceForEntity(&cg_entities[cg.clientNum]), cg.clientNum, cg.snap->ps.origin);
+		CHATTER_TextToSpeech("!Stop that!", CG_GetTextToSpeechVoiceForEntity(&cg_entities[cg.clientNum]), cg.clientNum, cg.snap->ps.origin);
 		break;
 	case 3:
-		TextToSpeech("!Hay, stop it!", CG_GetTextToSpeechVoiceForEntity(&cg_entities[cg.clientNum]), cg.clientNum, cg.snap->ps.origin);
+		CHATTER_TextToSpeech("!Hay, stop it!", CG_GetTextToSpeechVoiceForEntity(&cg_entities[cg.clientNum]), cg.clientNum, cg.snap->ps.origin);
 		break;
 	case 4:
-		TextToSpeech("!Get away from me!", CG_GetTextToSpeechVoiceForEntity(&cg_entities[cg.clientNum]), cg.clientNum, cg.snap->ps.origin);
+		CHATTER_TextToSpeech("!Get away from me!", CG_GetTextToSpeechVoiceForEntity(&cg_entities[cg.clientNum]), cg.clientNum, cg.snap->ps.origin);
 		break;
 	case 5:
-		TextToSpeech("!How much wood wood a wood chuck chuck if a wood chuck could chuck wood?", CG_GetTextToSpeechVoiceForEntity(&cg_entities[cg.clientNum]), cg.clientNum, cg.snap->ps.origin);
+		CHATTER_TextToSpeech("!How much wood wood a wood chuck chuck if a wood chuck could chuck wood?", CG_GetTextToSpeechVoiceForEntity(&cg_entities[cg.clientNum]), cg.clientNum, cg.snap->ps.origin);
 		break;
 	case 6:
-		TextToSpeech("!What are you doing?", CG_GetTextToSpeechVoiceForEntity(&cg_entities[cg.clientNum]), cg.clientNum, cg.snap->ps.origin);
+		CHATTER_TextToSpeech("!What are you doing?", CG_GetTextToSpeechVoiceForEntity(&cg_entities[cg.clientNum]), cg.clientNum, cg.snap->ps.origin);
 		break;
 	case 7:
-		TextToSpeech("!Dont talk to me.", CG_GetTextToSpeechVoiceForEntity(&cg_entities[cg.clientNum]), cg.clientNum, cg.snap->ps.origin);
+		CHATTER_TextToSpeech("!Dont talk to me.", CG_GetTextToSpeechVoiceForEntity(&cg_entities[cg.clientNum]), cg.clientNum, cg.snap->ps.origin);
 		break;
 	case 8:
-		TextToSpeech("!Go away!", CG_GetTextToSpeechVoiceForEntity(&cg_entities[cg.clientNum]), cg.clientNum, cg.snap->ps.origin);
+		CHATTER_TextToSpeech("!Go away!", CG_GetTextToSpeechVoiceForEntity(&cg_entities[cg.clientNum]), cg.clientNum, cg.snap->ps.origin);
 		break;
 	case 9:
-		TextToSpeech("!Ouch! That hurt!", CG_GetTextToSpeechVoiceForEntity(&cg_entities[cg.clientNum]), cg.clientNum, cg.snap->ps.origin);
+		CHATTER_TextToSpeech("!Ouch! That hurt!", CG_GetTextToSpeechVoiceForEntity(&cg_entities[cg.clientNum]), cg.clientNum, cg.snap->ps.origin);
 		break;
 	default:
-		TextToSpeech("!Oh meye!", CG_GetTextToSpeechVoiceForEntity(&cg_entities[cg.clientNum]), cg.clientNum, cg.snap->ps.origin);
+		CHATTER_TextToSpeech("!Oh meye!", CG_GetTextToSpeechVoiceForEntity(&cg_entities[cg.clientNum]), cg.clientNum, cg.snap->ps.origin);
 		break;
 	}
 #endif //_WIN32
@@ -547,7 +588,7 @@ void TTS_SayText ( void )
 
 	sprintf(str2, "!%s", str); // do not cache...
 
-	TextToSpeech(str2, CG_GetTextToSpeechVoiceForEntity(&cg_entities[cg.clientNum]), cg.clientNum, cg.snap->ps.origin);
+	CHATTER_TextToSpeech(str2, CG_GetTextToSpeechVoiceForEntity(&cg_entities[cg.clientNum]), cg.clientNum, cg.snap->ps.origin);
 }
 
 //
@@ -611,8 +652,8 @@ int GetPadawanChattersMax()
 		max++;
 	}
 
-	PADAWAN_CHATTERS_MAX = max-1;
-	return max-1;
+	PADAWAN_CHATTERS_MAX = max;
+	return max;
 }
 
 void CG_PadawanIdleChatter ( int entityNum )
@@ -624,7 +665,7 @@ void CG_PadawanIdleChatter ( int entityNum )
 	if (ent->currentState.eType != ET_NPC) return;
 	if (ent->currentState.NPC_class != CLASS_PADAWAN) return;
 
-	TextToSpeech(PADAWAN_CHATTERS[choice], CG_GetTextToSpeechVoiceForEntity(ent), entityNum, ent->currentState.origin);
+	CHATTER_TextToSpeech(PADAWAN_CHATTERS[choice], CG_GetTextToSpeechVoiceForEntity(ent), entityNum, ent->currentState.origin);
 }
 
 //
@@ -632,11 +673,18 @@ void CG_PadawanIdleChatter ( int entityNum )
 //
 const char *PADAWAN_REPLY_CHATTERS[] =
 {
-	"ummm. yeah",
-	"yeah",
+	"ummmmm. yeah",
+	"yeah. ok",
 	"i guess so",
-	"hmmm. why not",
+	"ummmmm. why not",
 	"right",
+	"ok",
+	"okay",
+	"ummmmm",
+	"that is a stupid question",
+	"well, that is a stupid question",
+	"that was a stupid question",
+	"well, that was a stupid question",
 	"",
 };
 
@@ -654,19 +702,61 @@ int GetPadawanReplyChattersMax()
 		max++;
 	}
 
-	PADAWAN_REPLY_CHATTERS_MAX = max-1;
-	return max-1;
+	PADAWAN_REPLY_CHATTERS_MAX = max;
+	return max;
 }
+
+const char *PADAWAN_REPLY_YODA_CHATTERS[] =
+{
+	"ummmmm. yeah",
+	"yeah. ok",
+	"i guess so",
+	"ummmmm. why not",
+	"right",
+	"ok",
+	"okay",
+	"ummmmm",
+	"a stupid question, that is",
+	"well, a stupid question, that is",
+	"a stupid question, that was",
+	"well, a stupid question, that was",
+	"",
+};
+
+int PADAWAN_REPLY_YODA_CHATTERS_MAX = -1;
+
+int GetPadawanReplyYodaChattersMax()
+{
+	int max = 0;
+
+	if (PADAWAN_REPLY_YODA_CHATTERS_MAX != -1) return PADAWAN_REPLY_YODA_CHATTERS_MAX; // already set up...
+
+	// We need to count them...
+	while (PADAWAN_REPLY_YODA_CHATTERS[max] != "")
+	{
+		max++;
+	}
+
+	PADAWAN_REPLY_YODA_CHATTERS_MAX = max;
+	return max;
+}
+
 
 void CG_PadawanIdleReplyChatter ( int entityNum )
 {
-	int choice = irand(0,GetPadawanReplyChattersMax());
-	centity_t *ent = &cg_entities[entityNum];
+	int			choice = irand(0,GetPadawanReplyChattersMax());
+	centity_t	*ent = &cg_entities[entityNum];
+	qboolean	isYoda = CG_IsYoda(ent);
+
+	if (isYoda) choice = irand(0,GetPadawanReplyYodaChattersMax());
 
 	if (!ent) return;
 	if (ent->currentState.eType != ET_NPC) return;
 
-	TextToSpeech(PADAWAN_REPLY_CHATTERS[choice], CG_GetTextToSpeechVoiceForEntity(ent), entityNum, ent->currentState.origin);
+	if (isYoda) 
+		CHATTER_TextToSpeech(PADAWAN_REPLY_YODA_CHATTERS[choice], CG_GetTextToSpeechVoiceForEntity(ent), entityNum, ent->currentState.origin);
+	else
+		CHATTER_TextToSpeech(PADAWAN_REPLY_CHATTERS[choice], CG_GetTextToSpeechVoiceForEntity(ent), entityNum, ent->currentState.origin);
 }
 
 //
@@ -769,7 +859,29 @@ void CG_DownloadAllTextToSpeechSounds ( void )
 			}
 		}
 
-		if (ttsVoiceData[voice_num].age != TTS_AGE_CHILD)
+		if (ttsVoiceData[voice_num].gender == TTS_GENDER_YODA)
+		{// Do padawan reply chatters... Yoda has special ones...
+			int padawan_chatter = 0;
+
+			for (padawan_chatter = 0; padawan_chatter < GetPadawanReplyYodaChattersMax(); padawan_chatter++)
+			{
+				trap->Print("Generating TTS padawan reply chatter %i sound for voice %s.\n", padawan_chatter, voice);
+				
+				while (!trap->S_DownloadVoice(PADAWAN_REPLY_YODA_CHATTERS[padawan_chatter], voice))
+				{// Wait and retry...
+					trap->Print("Failed. Waiting a moment before continuing.\n");
+
+					for (wait_time = 0; wait_time < 500; wait_time++)
+					{// Do some random silly stuff as we have no sleep() function;
+						int ran = irand(0,100);
+						trap->UpdateScreen();
+					}
+				}
+
+				trap->UpdateScreen();
+			}
+		}
+		else if (ttsVoiceData[voice_num].age != TTS_AGE_CHILD)
 		{// Do padawan reply chatters...
 			int padawan_chatter = 0;
 
