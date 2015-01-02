@@ -30,6 +30,8 @@ void DoTextToSpeech (char* text, char *voice, int entityNum, vec3_t origin)
 	char		filename[512];
 	char		filename2[512];
 
+	if (text == "") return;
+
 	memset(USE_VOICE, 0, sizeof(USE_VOICE));
 	memset(RESPONSE, 0, sizeof(RESPONSE));
 	memset(POST_DATA, 0, sizeof(POST_DATA));
@@ -48,6 +50,8 @@ void DoTextToSpeech (char* text, char *voice, int entityNum, vec3_t origin)
 		strncpy(SHORTENED_TEXT, text, 60);
 		sprintf(filename, "OJK/sound/tts/%s/%s.mp3", voice, SHORTENED_TEXT);
 		sprintf(filename2, "sound/tts/%s/%s.mp3", voice, SHORTENED_TEXT);
+
+		if (SHORTENED_TEXT == "") return;
 	}
 	else
 	{// This name is fine...

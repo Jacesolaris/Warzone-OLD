@@ -485,6 +485,11 @@ struct gentity_s {
 	int						nextPadawanJumpThink;
 	int						nextPadawanTeleportThink;
 
+	qboolean				padawan_reply_waiting;
+	int						padawan_reply_time;
+
+	int						beStillTime;
+
 	int                     next_weapon_switch;
 	int                     next_rifle_butt_time;
 	int                     next_flamer_time;

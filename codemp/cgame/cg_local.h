@@ -2348,6 +2348,7 @@ extern void AddLightToScene ( const vec3_t org, float intensity, float r, float 
 extern void TTS_SayText ( void );
 extern void CG_DownloadAllTextToSpeechSounds ( void );
 extern void CG_PadawanIdleChatter ( int entityNum );
+extern void CG_PadawanIdleReplyChatter ( int entityNum );
 extern void CG_SaySillyTextTest ( void );
 extern void TextToSpeech( const char *text, const char *voice, int entityNum, vec3_t origin );
 extern char *CG_GetTextToSpeechVoiceForEntity(centity_t *ent);

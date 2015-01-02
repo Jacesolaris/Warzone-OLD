@@ -112,6 +112,12 @@ void G_AddPadawanCommentEvent( gentity_t *self, int event, int speakDebounceTime
 	//NOTE: was losing too many speech events, so we do it directly now, screw networking!
 	G_SpeechEvent( self, event );
 
+	if (self->parent)
+	{// Tell our master to reply...
+		self->parent->padawan_reply_time = level.time + 10000;
+		self->parent->padawan_reply_waiting = qtrue;
+	}
+
 	//won't speak again for 5 seconds (unless otherwise specified)
 	self->NPC->padawanCommentDebounceTime = level.time + ((speakDebounceTime==0) ? 30000+irand(0,30000) : speakDebounceTime);
 }
@@ -443,6 +449,9 @@ void NPC_DoPadawanStuff ( void )
 
 	if (parent && NPC_IsAlive(parent))
 	{
+		parent->padawan = me;
+		NPC_Padawan_CopyParentFlags(me, parent);
+
 		if (parent->enemy && NPC_IsAlive(parent->enemy))
 		{// Padawan assists jedi...
 			float Jdist = Distance(me->r.currentOrigin, parent->r.currentOrigin);

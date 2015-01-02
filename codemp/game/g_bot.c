@@ -1430,6 +1430,9 @@ void G_CheckMinimumNpcs( void ) {
 		}
 		else
 		{// Rebel NPCs...
+//#define __ALL_JEDI_NPCS__ // UQ1: For testing jedi/padawan stuff...
+
+#ifndef __ALL_JEDI_NPCS__
 			if (random >= 10)
 			{
 				npc->NPC_type = "rebel";
@@ -1542,6 +1545,69 @@ void G_CheckMinimumNpcs( void ) {
 			{
 				npc->NPC_type = "prisoner2";
 			}
+#else //__ALL_JEDI_NPCS__
+				int rnd2 = irand(0,18);
+				switch (rnd2)
+				{
+				case 0:
+					npc->NPC_type = "jedi";
+					break;
+				case 1:
+					npc->NPC_type = "jedi2";
+					break;
+				case 2:
+					npc->NPC_type = "jedi_hf1";
+					break;
+				case 3:
+					npc->NPC_type = "jedi_hf2";
+					break;
+				case 4:
+					npc->NPC_type = "jedi_hm1";
+					break;
+				case 5:
+					npc->NPC_type = "jedi_hm2";
+					break;
+				case 6:
+					npc->NPC_type = "jedi_kdm1";
+					break;
+				case 7:
+					npc->NPC_type = "jedi_kdm2";
+					break;
+				case 8:
+					npc->NPC_type = "jedi_rm1";
+					break;
+				case 9:
+					npc->NPC_type = "jedi_rm2";
+					break;
+				case 10:
+					npc->NPC_type = "jedi_tf1";
+					break;
+				case 11:
+					npc->NPC_type = "jedi_tf2";
+					break;
+				case 12:
+					npc->NPC_type = "jedi_zf1";
+					break;
+				case 13:
+					npc->NPC_type = "jedi_zf2";
+					break;
+				case 14:
+					npc->NPC_type = "JediF";
+					break;
+				case 15:
+					npc->NPC_type = "JediMaster";
+					break;
+				case 16:
+					npc->NPC_type = "JediTrainer";
+					break;
+				case 17:
+					npc->NPC_type = "Kyle_boss";
+					break;
+				default:
+					npc->NPC_type = "Luke";
+					break;
+				}
+#endif //__ALL_JEDI_NPCS__
 
 			// Next NPC spawns as imperial...
 			if ( g_gametype.integer >= GT_TEAM /*&& g_gametype.integer != GT_WARZONE*/ )

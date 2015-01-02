@@ -1852,6 +1852,11 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 		CG_PadawanIdleChatter ( es->number );
 		break;
 
+	case EV_PADAWAN_IDLE_REPLY:
+		DEBUGNAME("EV_PADAWAN_IDLE_REPLY");
+		CG_PadawanIdleReplyChatter ( es->number );
+		break;
+
 	case EV_SIEGESPEC:
 		DEBUGNAME("EV_SIEGESPEC");
 		if ( es->owner == cg.predictedPlayerState.clientNum )

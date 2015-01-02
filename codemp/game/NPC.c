@@ -3578,6 +3578,8 @@ Main NPC AI - called once per frame
 */
 extern gentity_t *NPC_PickEnemyExt( qboolean checkAlerts );
 extern qboolean NPC_FindEnemy( qboolean checkAlerts );
+extern void NPC_ConversationAnimation(gentity_t *NPC);
+extern void G_SpeechEvent( gentity_t *self, int event );
 
 extern vmCvar_t npc_pathing;
 
@@ -3810,6 +3812,56 @@ void NPC_Think ( gentity_t *self)//, int msec )
 				self->blockToggleTime = level.time + 250; // 250 ms between toggles...
 			}
 #endif //__NPC_USE_SABER_BLOCKING__
+
+			if (self->padawan && self->padawan_reply_waiting && self->padawan_reply_time - 8000 < level.time)
+			{// Look at the padawan when it is talking to us...
+				NPC_FacePosition( self->padawan->r.currentOrigin, qfalse );
+				self->beStillTime = level.time + 5000;
+			}
+
+			if (self->padawan && self->padawan_reply_waiting && self->padawan_reply_time < level.time)
+			{// Do any replies to padawan comments...
+				self->padawan_reply_waiting = qfalse;
+				//G_AddEvent( self, EV_PADAWAN_IDLE_REPLY, 0 );
+				G_SpeechEvent( NPCS.NPC, EV_PADAWAN_IDLE_REPLY );
+
+				//trap->Print("Master %s replying to padawan comment.\n", self->client->pers.netname);
+
+				if (!self->enemy || !NPC_ValidEnemy(self->enemy))
+				{// Also look and animate if we have no enemy...
+					vec3_t origin, angles;
+
+					// Look at our partner...
+					VectorCopy(self->padawan->r.currentOrigin, origin);
+					VectorSubtract( origin, self->r.currentOrigin, self->move_vector );
+					vectoangles( self->move_vector, angles );
+					G_SetAngles(self, angles);
+					VectorCopy(angles, self->client->ps.viewangles);
+					NPC_FacePosition( origin, qfalse );
+					NPC_ConversationAnimation(self);
+					self->beStillTime = level.time + 5000;
+				}
+			}
+
+			if (self->beStillTime > level.time && (!self->enemy || !NPC_ValidEnemy(self->enemy)))
+			{// Just idle...
+				if (self->padawan)
+				{// Look at our padawan...
+					vec3_t origin, angles;
+					VectorCopy(self->padawan->r.currentOrigin, origin);
+					VectorSubtract( origin, self->r.currentOrigin, self->move_vector );
+					vectoangles( self->move_vector, angles );
+					G_SetAngles(self, angles);
+					VectorCopy(angles, self->client->ps.viewangles);
+					NPC_FacePosition( origin, qfalse );
+				}
+
+				NPCS.ucmd.forwardmove = 0;
+				NPCS.ucmd.rightmove = 0;
+				NPCS.ucmd.upmove = 0;
+				NPC_GenericFrameCode( self );
+				return;
+			}
 
 			if (!self->enemy)
 			{

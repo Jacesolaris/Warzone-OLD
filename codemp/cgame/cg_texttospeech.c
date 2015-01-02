@@ -285,13 +285,87 @@ qboolean CG_IsBountyHunter(centity_t *ent)
 	return qfalse;
 }
 
+qboolean CG_TextToSpeechVoiceValid(centity_t *ent)
+{// This checks if the current selected_voice is still valid for this NPC/Player/etc... Returns qfalse if it is not...
+	if (ent->selected_voice)
+	{
+		clientInfo_t	*ci = CG_GetClientInfoForEnt(ent);
+		int				SELECTED_GENDER = TTS_GENDER_NONE;
+		int				SELECTED_AGE = TTS_AGE_NONE;
+
+		// Select best gender for this entity...
+		if (CG_IsImperialOfficer(ent))
+		{// Special case... Use brittish voice for all imperial officers (like the movies - lol)... :)
+			SELECTED_GENDER = TTS_GENDER_IMPERIAL_OFFICER; // All imperial officers are male. We don't have a female model, and i've never seen one anyway...
+		}
+		else if (CG_IsBountyHunter(ent))
+		{// Use australian accent - closest thing to the new zealand accent from the movies...
+			if (ci->gender == GENDER_FEMALE)
+			{
+				SELECTED_GENDER = TTS_GENDER_BOUNTY_HUNTER_FEMALE;
+			}
+			else
+			{
+				SELECTED_GENDER = TTS_GENDER_BOUNTY_HUNTER_MALE;
+			}
+		}
+		else if (!ci)
+		{// Will assume male...
+			SELECTED_GENDER = TTS_GENDER_MALE;
+		}
+		else if (ci->gender == GENDER_MALE) 
+		{
+			if (CG_IsSith(ent, ci->team))
+			{
+				SELECTED_GENDER = TTS_GENDER_EVIL_MALE;
+			}
+			else
+			{
+				SELECTED_GENDER = TTS_GENDER_MALE;
+			}
+		}
+		else if (ci->gender == GENDER_FEMALE) 
+		{
+			if (CG_IsSith(ent, ci->team))
+			{
+				SELECTED_GENDER = TTS_GENDER_EVIL_MALE;
+			}
+			else
+			{
+				SELECTED_GENDER = TTS_GENDER_FEMALE;
+			}
+		}
+		else if (ci->gender == GENDER_NEUTER) 
+		{
+			SELECTED_GENDER = TTS_GENDER_DROID; // assume droid...
+		}
+
+		// Select the best age group for this entity... -- TODO: Old people npc class check??? Non-human (monster) check???
+		if (CG_IsPadawan(ent))
+		{
+			SELECTED_AGE = TTS_AGE_CHILD;
+		}
+		else
+		{
+			SELECTED_AGE = TTS_AGE_ADULT;
+		}
+
+		if (ttsVoiceData[ent->selected_voice].age == SELECTED_AGE && ttsVoiceData[ent->selected_voice].gender == SELECTED_GENDER)
+		{// Voice is valid...
+			return qtrue;
+		}
+	}
+
+	return qfalse;
+}
+
 char *CG_GetTextToSpeechVoiceForEntity(centity_t *ent)
 {
-	if (ent->selected_voice)
+	if (CG_TextToSpeechVoiceValid(ent))
 	{// Already have a voice... Use it...
 		return ttsVoiceData[ent->selected_voice].voicename;
 	}
-	else if (!ent->selected_voice)
+	else
 	{// Find a new voice for this character...
 		clientInfo_t	*ci = CG_GetClientInfoForEnt(ent);
 		int				SELECTED_GENDER = TTS_GENDER_NONE;
@@ -299,6 +373,9 @@ char *CG_GetTextToSpeechVoiceForEntity(centity_t *ent)
 		int				BEST_VOICES_NUM = 0;
 		int				BEST_VOICES[128];
 		int				i;
+
+		// Init anyway in case we somehow fail...
+		ent->selected_voice = 0;
 
 		// Select best gender for this entity...
 		if (CG_IsImperialOfficer(ent))
@@ -473,6 +550,9 @@ void TTS_SayText ( void )
 	TextToSpeech(str2, CG_GetTextToSpeechVoiceForEntity(&cg_entities[cg.clientNum]), cg.clientNum, cg.snap->ps.origin);
 }
 
+//
+// Padawan Chatters...
+//
 const char *PADAWAN_CHATTERS[] =
 {
 	"I think I might retire here",
@@ -509,9 +589,10 @@ const char *PADAWAN_CHATTERS[] =
 	"Master, what is the speed of dark",
 	"Master, if someone with multiple personalities threatens to kill himself, is it considered a hostage situation",
 	"Master, I know what the f word means. Its like sex, but you dont love the other person",
+	// UQ1: This work but are too long for reply timer... Need to keep these under 10 seconds to make it not stupid...
 	//"Master, As you make your way through this hectic world, set aside a few minutes each day. At the end of the year, you will have a couple of days saved up",
 	//"Master, If we could just get everyone to close his or her eyes and visualize galactic peace for an hour, imagine how serene and quiet it would be until the looting started",
-	"Master, I like to go to the greysor pound and pretend I found my greysor, but then tell them to kill it anyway because I already sold all his stuff. Pound people have no sense of humor",
+	//"Master, I like to go to the greysor pound and pretend I found my greysor, but then tell them to kill it anyway because I already sold all his stuff. Pound people have no sense of humor",
 	//"Master, I believe you should live each day as if it is your last, which is why I dont have any clean laundry, because who wants to wash clothes on the last day of their life",
 	"",
 };
@@ -530,8 +611,8 @@ int GetPadawanChattersMax()
 		max++;
 	}
 
-	PADAWAN_CHATTERS_MAX = max;
-	return max;
+	PADAWAN_CHATTERS_MAX = max-1;
+	return max-1;
 }
 
 void CG_PadawanIdleChatter ( int entityNum )
@@ -546,6 +627,51 @@ void CG_PadawanIdleChatter ( int entityNum )
 	TextToSpeech(PADAWAN_CHATTERS[choice], CG_GetTextToSpeechVoiceForEntity(ent), entityNum, ent->currentState.origin);
 }
 
+//
+// Padawan Reply Chatters...
+//
+const char *PADAWAN_REPLY_CHATTERS[] =
+{
+	"ummm. yeah",
+	"yeah",
+	"i guess so",
+	"hmmm. why not",
+	"right",
+	"",
+};
+
+int PADAWAN_REPLY_CHATTERS_MAX = -1;
+
+int GetPadawanReplyChattersMax()
+{
+	int max = 0;
+
+	if (PADAWAN_REPLY_CHATTERS_MAX != -1) return PADAWAN_REPLY_CHATTERS_MAX; // already set up...
+
+	// We need to count them...
+	while (PADAWAN_REPLY_CHATTERS[max] != "")
+	{
+		max++;
+	}
+
+	PADAWAN_REPLY_CHATTERS_MAX = max-1;
+	return max-1;
+}
+
+void CG_PadawanIdleReplyChatter ( int entityNum )
+{
+	int choice = irand(0,GetPadawanReplyChattersMax());
+	centity_t *ent = &cg_entities[entityNum];
+
+	if (!ent) return;
+	if (ent->currentState.eType != ET_NPC) return;
+
+	TextToSpeech(PADAWAN_REPLY_CHATTERS[choice], CG_GetTextToSpeechVoiceForEntity(ent), entityNum, ent->currentState.origin);
+}
+
+//
+// Pre-downloading all chats for all voices stuff...
+//
 extern char *showPowersName[];
 
 void CG_DownloadAllTextToSpeechSounds ( void )
@@ -629,6 +755,29 @@ void CG_DownloadAllTextToSpeechSounds ( void )
 				trap->Print("Generating TTS padawan chatter %i sound for voice %s.\n", padawan_chatter, voice);
 				
 				while (!trap->S_DownloadVoice(PADAWAN_CHATTERS[padawan_chatter], voice))
+				{// Wait and retry...
+					trap->Print("Failed. Waiting a moment before continuing.\n");
+
+					for (wait_time = 0; wait_time < 500; wait_time++)
+					{// Do some random silly stuff as we have no sleep() function;
+						int ran = irand(0,100);
+						trap->UpdateScreen();
+					}
+				}
+
+				trap->UpdateScreen();
+			}
+		}
+
+		if (ttsVoiceData[voice_num].age != TTS_AGE_CHILD)
+		{// Do padawan reply chatters...
+			int padawan_chatter = 0;
+
+			for (padawan_chatter = 0; padawan_chatter < GetPadawanReplyChattersMax(); padawan_chatter++)
+			{
+				trap->Print("Generating TTS padawan reply chatter %i sound for voice %s.\n", padawan_chatter, voice);
+				
+				while (!trap->S_DownloadVoice(PADAWAN_REPLY_CHATTERS[padawan_chatter], voice))
 				{// Wait and retry...
 					trap->Print("Failed. Waiting a moment before continuing.\n");
 
