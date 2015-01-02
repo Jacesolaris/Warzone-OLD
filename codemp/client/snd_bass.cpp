@@ -549,7 +549,7 @@ void BASS_UpdatePosition ( int ch, qboolean IS_NEW_SOUND )
 	vec3_t		porg, corg;
 
 	if (!c) return; // should be impossible, but just in case...
-	if (!IS_NEW_SOUND && !c->isLooping) return; // We don't even need to update do we???
+	//if (!IS_NEW_SOUND && !c->isLooping) return; // We don't even need to update do we???
 
 	SOUND_ENTITY = c->entityNum;
 	CHAN_VOLUME = c->volume*BASS_GetVolumeForChannel(c->entityChannel);
