@@ -1,5 +1,7 @@
 #include "cg_local.h"
 
+//#define __OTHER_LANGUAGES_SUPPORT__ // disable (comment out) this when your finished...
+
 //
 // TTS Voice Types Tracking Stuff...
 //
