@@ -583,6 +583,7 @@ typedef enum {
 	STAT_EXP,
 	STAT_EXP_COUNT,
 	//[/EXPsys]
+	STAT_GENDER,
 } statIndex_t;
 
 

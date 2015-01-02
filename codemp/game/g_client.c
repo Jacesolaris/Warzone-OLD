@@ -2518,6 +2518,8 @@ qboolean ClientUserinfoChanged( int clientNum ) {
 	else
 		gender = GENDER_NEUTER;
 
+	ent->client->ps.stats[STAT_GENDER] = gender; // UQ1: Added...
+
 	s = Info_ValueForKey( userinfo, "snaps" );
 	if ( atoi( s ) < sv_fps.integer )
 		trap->SendServerCommand( clientNum, va( "print \""S_COLOR_YELLOW"Recommend setting /snaps %d or higher to match this server's sv_fps\n\"", sv_fps.integer ) );

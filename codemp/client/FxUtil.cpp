@@ -116,6 +116,7 @@ static void FX_FreeMember( SEffectList *obj )
 	activeFx--;
 }
 
+//#define __FX_REPLACE_OLDEST__
 
 //-------------------------
 // FX_GetValidEffect
@@ -143,14 +144,16 @@ static SEffectList *FX_GetValidEffect()
 			return ef;
 		}
 
+#ifdef __FX_REPLACE_OLDEST__
 		if (ef->mKillTime < best_replace_time)
 		{// UQ1: Since we run through this whole loop on a fail anyway, let's find the best option to replace at the same time...
 			best_replace_time = ef->mKillTime;
 			best_replace = i;
 		}
+#endif //__FX_REPLACE_OLDEST__
 	}
 
-#if 0 // UQ1: This is dumb... let's replace the oldest kill time fx...
+#ifndef __FX_REPLACE_OLDEST__ // UQ1: This is dumb... let's replace the oldest kill time fx...
 	// report the error.
 #ifndef FINAL_BUILD
 	theFxHelper.Print( "FX system out of effects\n" );
@@ -161,11 +164,11 @@ static SEffectList *FX_GetValidEffect()
 
 	// Recursive call
 	return nextValidEffect;
-#endif
-
+#else //__FX_REPLACE_OLDEST__
 	// Let's replace the oldest kill time fx...
 	FX_FreeMember( &effectList[best_replace] );
 	return &effectList[best_replace];
+#endif //__FX_REPLACE_OLDEST__
 }
 
 //-------------------------

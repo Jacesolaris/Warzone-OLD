@@ -308,6 +308,8 @@ qboolean CG_TextToSpeechVoiceValid(centity_t *ent)
 		int				SELECTED_GENDER = TTS_GENDER_NONE;
 		int				SELECTED_AGE = TTS_AGE_NONE;
 
+		if (ci && ent->currentState.eType == ET_NPC) ci->gender = (gender_t)ent->playerState->stats[STAT_GENDER];
+
 		// Select best gender for this entity...
 		if (CG_IsYoda(ent))
 		{
@@ -395,6 +397,8 @@ char *CG_GetTextToSpeechVoiceForEntity(centity_t *ent)
 
 		// Init anyway in case we somehow fail...
 		ent->selected_voice = 0;
+
+		if (ci && ent->currentState.eType == ET_NPC) ci->gender = (gender_t)ent->playerState->stats[STAT_GENDER];
 
 		// Select best gender for this entity...
 		if (CG_IsYoda(ent))
@@ -520,6 +524,8 @@ void CHATTER_TextToSpeech( const char *text, const char *voice, int entityNum, v
 {
 	clientInfo_t	*ci = CG_GetClientInfoForEnt(&cg_entities[entityNum]);
 	char			chatline_text[MAX_SAY_TEXT] = {0};
+
+	if (text == "") return; // hmm somehow this can happen... no point wasting time...
 
 	if (ci)
 	{
@@ -751,7 +757,7 @@ void CG_PadawanIdleReplyChatter ( int entityNum )
 	if (isYoda) choice = irand(0,GetPadawanReplyYodaChattersMax());
 
 	if (!ent) return;
-	if (ent->currentState.eType != ET_NPC) return;
+	//if (ent->currentState.eType != ET_NPC) return;
 
 	if (isYoda) 
 		CHATTER_TextToSpeech(PADAWAN_REPLY_YODA_CHATTERS[choice], CG_GetTextToSpeechVoiceForEntity(ent), entityNum, ent->currentState.origin);

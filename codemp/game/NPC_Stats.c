@@ -2471,7 +2471,17 @@ qboolean NPC_ParseParms( const char *NPCName, gentity_t *NPC )
 				//sex - skip in MP
 				if ( !Q_stricmp( token, "sex" ) )
 				{
-					SkipRestOfLine( &p );
+					//SkipRestOfLine( &p );
+					if ( COM_ParseString( &p, &value ) )
+					{
+						continue;
+					}
+					
+					if (StringContainsWord(value, "female"))
+						stats->gender = GENDER_FEMALE;
+					else //if (StringContainsWord(value, "male"))
+						stats->gender = GENDER_FEMALE;
+
 					continue;
 				}
 //===MISC===============================================================================

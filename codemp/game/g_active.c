@@ -13,6 +13,8 @@ qboolean PM_SaberInReturn( int move );
 qboolean WP_SaberStyleValidForSaber( saberInfo_t *saber1, saberInfo_t *saber2, int saberHolstered, int saberAnimLevel );
 qboolean saberCheckKnockdown_DuelLoss(gentity_t *saberent, gentity_t *saberOwner, gentity_t *other);
 
+extern void G_SpeechEvent( gentity_t *self, int event );
+
 void P_SetTwitchInfo(gclient_t	*client)
 {
 	client->ps.painTime = level.time;
@@ -2028,6 +2030,18 @@ void ClientThink_real( gentity_t *ent ) {
 	{// UQ1: Why were we not using this???
 		//ucmd = &NPCS.ucmd;
 		memcpy(&ent->client->pers.cmd, &NPCS.ucmd, sizeof(usercmd_t));
+
+		ent->client->ps.stats[STAT_GENDER] = ent->NPC->stats.gender; // UQ1: Added...
+	}
+
+	if (!isNPC)
+	{
+		if (ent->padawan && ent->padawan_reply_waiting && ent->padawan_reply_time < level.time)
+		{// Do any replies to padawan comments...
+			ent->padawan_reply_waiting = qfalse;
+			//G_AddEvent( self, EV_PADAWAN_IDLE_REPLY, 0 );
+			G_SpeechEvent( ent, EV_PADAWAN_IDLE_REPLY );
+		}
 	}
 
 	if (ent->health > 0 && ent->client && !(ent->client->ps.eFlags & EF_DEAD) && !(ent->client->ps.pm_type != PM_DEAD))
