@@ -116,7 +116,7 @@ static void FX_FreeMember( SEffectList *obj )
 	activeFx--;
 }
 
-//#define __FX_REPLACE_OLDEST__
+#define __FX_REPLACE_OLDEST__
 
 //-------------------------
 // FX_GetValidEffect
@@ -183,11 +183,13 @@ void FX_Add( bool portal )
 
 	drawnFx = 0;
 
+#pragma omp parallel for num_threads(16)
 	for ( i = 0; i < MAX_EFFECTS; i++)
 	{
 		SEffectList	*ef = &effectList[i];
 
-		if (!numFx) break;
+		//if (!numFx) break;
+		if (!numFx) continue;
 
 		if ( ef->mEffect != 0)
 		{
