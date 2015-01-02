@@ -4281,7 +4281,7 @@ static void Jedi_CombatTimersUpdate( int enemy_dist )
 				NPC->client->ps.fd.forcePowerDebounce[FP_SABER_DEFENSE] = level.time + 500;
 			}
 			*/
-			if ( NPCS.NPC->enemy && PM_SaberInKnockaway( NPCS.NPC->enemy->client->ps.saberMove ) )
+			if ( NPCS.NPC->enemy && && NPCS.NPC->enemy->client && PM_SaberInKnockaway( NPCS.NPC->enemy->client->ps.saberMove ) )
 			{//advance!
 				Jedi_Aggression( NPCS.NPC, 1 );//get closer
 				Jedi_AdjustSaberAnimLevel( NPCS.NPC, (NPCS.NPC->client->ps.fd.saberAnimLevel-1) );//use a faster attack
