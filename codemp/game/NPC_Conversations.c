@@ -8,6 +8,7 @@
 
 #define __DOMINANCE_NPC__
 #define __NPC_CONVERSATIONS__
+#define __SHORT_STORMIE_CONVOS__
 
 #ifdef __DOMINANCE_NPC__
 
@@ -376,7 +377,7 @@ void NPC_ConversationAnimation(gentity_t *NPC)
 void NPC_StormTrooperConversation()
 {
 #ifdef __NPC_CONVERSATIONS__
-	gentity_t	*NPC = NPCS.NPC;
+	gentity_t		*NPC = NPCS.NPC;
 	int				role = NPC->NPC->conversationRole;
 	int				section = NPC->NPC->conversationSection;
 	int				part = NPC->NPC->conversationPart;
@@ -419,6 +420,11 @@ void NPC_StormTrooperConversation()
 	{
 		//trap->Print("File %s does not exist.\n", filename);
 
+#ifdef __SHORT_STORMIE_CONVOS__
+		// Short convo's only play 1 random section...
+		NPC_EndConversation();
+		return;
+#else //!__SHORT_STORMIE_CONVOS__
 		NPC->NPC->conversationSection++;
 		NPC->NPC->conversationPart = 1;
 
@@ -457,6 +463,7 @@ void NPC_StormTrooperConversation()
 
 			return;
 		}
+#endif //__SHORT_STORMIE_CONVOS__
 	}
 	//CHAN_VOICE
 
@@ -467,6 +474,35 @@ void NPC_StormTrooperConversation()
 	NPC_ConversationAnimation(NPC);
 #endif //__NPC_CONVERSATIONS__
 }
+
+#ifdef __SHORT_STORMIE_CONVOS__
+int NPC_StormtrooperFindConversationMaxSections( void )
+{
+	int				section = 1;
+	int				part = 1;
+	char			filename[256];
+
+	for (section = 1; section <= 15; section++)
+	{
+		if (section < 10)
+		{
+			sprintf(filename, "sound/conversation/stormtrooper/MST_0%iL0%i.mp3", section, part);
+		}
+		else
+		{
+			sprintf(filename, "sound/conversation/stormtrooper/MST_%iL0%i.mp3", section, part);
+		}
+
+		if ( !G_ConversationExists(filename) )
+		{// We found the first section with no sound... This is the max...
+			return section;
+		}
+	}
+
+	// Never found an end... Just return the value of section...
+	return section;
+}
+#endif //__SHORT_STORMIE_CONVOS__
 
 void NPC_StormtrooperFindConversationPartner()
 {
@@ -492,8 +528,14 @@ void NPC_StormtrooperFindConversationPartner()
 			if (!partner->NPC) continue;
 			if (partner->client->NPC_class != CLASS_STORMTROOPER && partner->client->NPC_class != CLASS_STORMTROOPER_ADVANCED) continue;
 			if (partner->NPC->conversationPartner || partner->NPC->conversationReplyTime > level.time)
+#ifdef __SHORT_STORMIE_CONVOS__
+				// Short convos only play one section... So we should be able to use more at a time (and closer together)...
+				if (Distance(partner->r.currentOrigin, NPC->r.currentOrigin) < 512)
+					return; // We don't want them talking too close to others having the same conversations :)
+#else //!__SHORT_STORMIE_CONVOS__
 				if (Distance(partner->r.currentOrigin, NPC->r.currentOrigin) < 2048)
 					return; // We don't want them talking too close to others having the same conversations :)
+#endif //__SHORT_STORMIE_CONVOS__
 		}
 
 		for (i = MAX_CLIENTS; i < MAX_GENTITIES; i++)
@@ -510,14 +552,47 @@ void NPC_StormtrooperFindConversationPartner()
 
 			if (partner->NPC->conversationPartner || partner->NPC->conversationReplyTime > level.time)
 			{// this one already in a convo...
+#ifdef __SHORT_STORMIE_CONVOS__
+				// Short convos only play one section... So we should be able to use more at a time (and closer together)...
+				if (Distance(partner->r.currentOrigin, NPC->r.currentOrigin) < 512)
+					return; // We don't want them talking too close to others having the same conversations :)
+#else //!__SHORT_STORMIE_CONVOS__
 				if (Distance(partner->r.currentOrigin, NPC->r.currentOrigin) < 2048)
 					return; // We don't want them talking too close to others having the same conversations :)
+#endif //__SHORT_STORMIE_CONVOS__
 
 				continue;
 			}
 
 			if (Distance(partner->r.currentOrigin, NPC->r.currentOrigin) > 128) continue;
 
+#ifdef __SHORT_STORMIE_CONVOS__
+			// Looks good! Start a convo... Short conversations only play 1 section...
+			NPC->NPC->conversationSection = irand(1, NPC_StormtrooperFindConversationMaxSections()-1);
+			NPC->NPC->conversationRole = 1;
+			NPC->NPC->conversationPart = 1;
+
+			if (partner->NPC)
+				NPC->NPC->conversationPartner = partner;
+
+			if (NPC->NPC->conversationPartner->NPC)
+			{
+				NPC->NPC->conversationPartner->NPC->conversationPartner = NPC;
+				NPC->NPC->conversationPartner->NPC->conversationRole = 2;
+				NPC->NPC->conversationPartner->NPC->conversationSection = NPC->NPC->conversationSection;
+				NPC->NPC->conversationPartner->NPC->conversationPart = 1;
+				NPC->NPC->conversationPartner->NPC->conversationReplyTime = level.time + 8000;
+
+				trap->Print(">> NPC %i (%s) enterred a conversation with NPC %i.\n", NPC->s.number, NPC->NPC_type, NPC->NPC->conversationPartner->s.number);
+				NPC_StormTrooperConversation();
+			}
+			else
+			{
+				NPC_EndConversation();
+				continue;
+			}
+			return;
+#else //!__SHORT_STORMIE_CONVOS__
 			// Looks good! Start a convo...
 			NPC->NPC->conversationSection = 1;
 			NPC->NPC->conversationRole = 1;
@@ -543,6 +618,7 @@ void NPC_StormtrooperFindConversationPartner()
 				continue;
 			}
 			return;
+#endif //__SHORT_STORMIE_CONVOS__
 		}
 	}
 #endif //__NPC_CONVERSATIONS__
