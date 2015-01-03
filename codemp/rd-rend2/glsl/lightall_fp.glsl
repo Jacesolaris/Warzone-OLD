@@ -134,29 +134,35 @@ out vec4 out_Glow;
 float RayIntersectDisplaceMap(vec2 dp, vec2 ds, sampler2D normalMap)
 {
 #if !defined(FAST_PARALLAX)
+	const float MAX_SIZE = 1.5;//1.0;
 	const int linearSearchSteps = 16;
 	const int binarySearchSteps = 6;
 
 	// current size of search window
-	float size = 1.0 / float(linearSearchSteps);
+	float size = MAX_SIZE / float(linearSearchSteps);
 
 	// current depth position
 	float depth = 0.0;
 
 	// best match found (starts with last position 1.0)
-	float bestDepth = 1.0;
+	float bestDepth = MAX_SIZE;
 
+#if 1
 	// search front to back for first point inside object
 	for(int i = 0; i < linearSearchSteps - 1; ++i)
 	{
 		depth += size;
 		
-		float t = SampleDepth(normalMap, dp + ds * depth);
+		float t = SampleDepth(normalMap, dp + ds * depth) * MAX_SIZE;
 		
-		if(bestDepth > 0.996)		// if no depth found yet
+		//if(bestDepth > 0.996)		// if no depth found yet
+		if(bestDepth > MAX_SIZE - (MAX_SIZE / linearSearchSteps))		// if no depth found yet
 			if(depth >= t)
 				bestDepth = depth;	// store best depth
 	}
+#else
+	bestDepth = MAX_SIZE;
+#endif
 
 	depth = bestDepth;
 	
@@ -165,7 +171,7 @@ float RayIntersectDisplaceMap(vec2 dp, vec2 ds, sampler2D normalMap)
 	{
 		size *= 0.5;
 
-		float t = SampleDepth(normalMap, dp + ds * depth);
+		float t = SampleDepth(normalMap, dp + ds * depth) * MAX_SIZE;
 		
 		if(depth >= t)
 		{
@@ -176,8 +182,8 @@ float RayIntersectDisplaceMap(vec2 dp, vec2 ds, sampler2D normalMap)
 		depth += size;
 	}
 
-	return bestDepth * var_Local1.x;
 	//return ((bestDepth * var_Local1.x) + (SampleDepth(normalMap, dp) - 1.0)) * 0.5;
+	return bestDepth * var_Local1.x;
 #else //FAST_PARALLAX
 	float depth = SampleDepth(normalMap, dp) - 1.0;
 	return depth * var_Local1.x;
