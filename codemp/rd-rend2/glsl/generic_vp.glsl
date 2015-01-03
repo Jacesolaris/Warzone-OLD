@@ -16,6 +16,8 @@ attribute vec2 attr_TexCoord0;
 attribute vec2 attr_TexCoord1;
 #endif
 
+uniform vec2	u_Dimensions;
+
 uniform vec4   u_DiffuseTexMatrix;
 uniform vec4   u_DiffuseTexOffTurb;
 
@@ -66,6 +68,8 @@ varying vec2   var_DiffuseTex;
 varying vec2   var_LightTex;
 #endif
 varying vec4   var_Color;
+
+varying vec2	var_Dimensions;
 
 #if defined(USE_DEFORM_VERTEXES)
 vec3 DeformPosition(const vec3 pos, const vec3 normal, const vec2 st)
@@ -261,6 +265,8 @@ void main()
 #else
 	var_Color = u_VertColor * attr_Color + u_BaseColor;
 #endif
+
+	var_Dimensions = u_Dimensions;
 
 #if defined(USE_FOG)
 	var_Color *= vec4(1.0) - u_FogColorMask * sqrt(clamp(CalcFog(position), 0.0, 1.0));

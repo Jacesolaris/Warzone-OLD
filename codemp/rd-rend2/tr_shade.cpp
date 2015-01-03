@@ -1952,6 +1952,8 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 		if (isGeneric)
 		{// UQ1: Only generic uses these...
+			RB_SetStageImageDimensions(sp, pStage);
+
 			if (pStage->alphaGen == AGEN_PORTAL)
 			{
 				GLSL_SetUniformFloat(sp, UNIFORM_PORTALRANGE, tess.shader->portalRange);
