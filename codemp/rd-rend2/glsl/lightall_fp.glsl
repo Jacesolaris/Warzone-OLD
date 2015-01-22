@@ -134,7 +134,9 @@ out vec4 out_Glow;
 float RayIntersectDisplaceMap(vec2 dp, vec2 ds, sampler2D normalMap)
 {
 #if !defined(FAST_PARALLAX)
-	const float MAX_SIZE = 1.5;//1.0;
+	float MAX_SIZE = var_Local1.x / 3.0;//1.25;//1.5;//1.0;
+	if (MAX_SIZE > 1.75) MAX_SIZE = 1.75;
+	if (MAX_SIZE < 1.0) MAX_SIZE = 1.0;
 	const int linearSearchSteps = 16;
 	const int binarySearchSteps = 6;
 

@@ -2080,7 +2080,9 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 						enableTextures[0] = 1.0f;
 					}
 					else if (r_normalMapping->integer)
+					{
 						GL_BindToTMU( tr.whiteImage, TB_NORMALMAP );
+					}
 
 					if (pStage->bundle[TB_DELUXEMAP].image[0])
 					{
@@ -2088,7 +2090,9 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 						enableTextures[1] = 1.0f;
 					}
 					else if (r_deluxeMapping->integer)
+					{
 						GL_BindToTMU( tr.whiteImage, TB_DELUXEMAP );
+					}
 
 					if (pStage->bundle[TB_SPECULARMAP].image[0])
 					{
@@ -2096,7 +2100,9 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 						enableTextures[2] = 1.0f;
 					}
 					else if (r_specularMapping->integer)
+					{
 						GL_BindToTMU( tr.whiteImage, TB_SPECULARMAP );
+					}
 				}
 
 				enableTextures[3] = (r_cubeMapping->integer && !(tr.viewParms.flags & VPF_NOCUBEMAPS) && input->cubemapIndex) ? 1.0f : 0.0f;
