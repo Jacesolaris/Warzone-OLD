@@ -11,10 +11,10 @@ qboolean BG_HaveWeapon ( const playerState_t *ps, int weapon );
 // Muzzle point table...
 vec3_t WP_MuzzlePoint[WP_NUM_WEAPONS] =
 {//	Fwd,	right,	up.
-	{0,		0,		0	},	// WP_NONE,
-	{0	,	8,		0	},	// WP_STUN_BATON,
-	{0	,	8,		0	},	// WP_MELEE,
-	{8	,	16,		0	},	// WP_SABER,
+	{0,		0,		 0	},	// WP_NONE,
+	{0,		8,		 0	},	// WP_STUN_BATON,
+	{0,	    8,		 0	},	// WP_MELEE,
+	{8,		16,		 0	},	// WP_SABER,
 	{12,	6,		-6	},	// WP_BRYAR_PISTOL,
 	{12,	6,		-6	},	// WP_BRYAR_OLD,
 	{12,	6,		-6	},	// WP_BLASTER,
@@ -28,18 +28,18 @@ vec3_t WP_MuzzlePoint[WP_NUM_WEAPONS] =
 	{12,	6,		-6	},	// WP_EE3,
 	{12,	6,		-6	},	// WP_DC_15S_CLONE_PISTOL
 	{12,	6,		-6	},	// WP_DLT20A
-	{12,	6,		-6	},	//WP_CLONERIFLE
-	{12,	6,		-6	},	//WP_WESTER_PISTOL
-	{12,	6,		-6	},	//WP_ELG_3A
-	{12,	6,		-6	},	//WP_S5_PISTOL
-	{12,	4.5,	-6	},	//WP_Z6_BLASTER_CANON
-	{12,	2,		-6	},	//WP_WOOKIE_BOWCASTER
-	{12,	6,		-6	},	//WP_WOOKIES_PISTOL
-	{12,	6,		-6	},	//WP_CLONE_BLASTER
-	{12,	4.5,	-6	},	//WP_DC15_EXT
-	{12,	8,		-4	},  //WP_E60_ROCKET_LAUNCHER
-	{12,	8,		-4	},  //WP_CW_ROCKET_LAUNCHER
-	{12,	4.5,	-6	},	//WP_TESTGUN
+	{12,	6,		-6	},	// WP_CLONERIFLE
+	{12,	6,		-6	},	// WP_WESTER_PISTOL
+	{12,	6,		-6	},	// WP_ELG_3A
+	{12,	6,		-6	},	// WP_S5_PISTOL
+	{12,	4.5,	-6	},	// WP_Z6_BLASTER_CANON
+	{12,	2,		-6	},	// WP_WOOKIE_BOWCASTER
+	{12,	6,		-6	},	// WP_WOOKIES_PISTOL
+	{12,	6,		-6	},	// WP_CLONE_BLASTER
+	{12,	4.5,	-6	},	// WP_DC15_EXT
+	{12,	8,		-4	},  // WP_E60_ROCKET_LAUNCHER
+	{12,	8,		-4	},  // WP_CW_ROCKET_LAUNCHER
+	{12,	4.5,	-6	},	// WP_TESTGUN
 	{12,	0,		-4	},	// WP_FRAG_GRENADE
 	{12,	0,		-4	},	// WP_FRAG_GRENADE_OLD
 	{12,	6,		-6	},	// WP_DC_17_CLONE_PISTOL
