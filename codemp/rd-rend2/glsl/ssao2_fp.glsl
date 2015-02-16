@@ -26,7 +26,7 @@ vec3 normal_from_depth(float depth, vec2 texcoords) {
 
 vec3 readNormal(in vec2 coord)  
 {  
-	 float depth = texture2D(u_ScreenDepthMap, var_ScreenTex).r * depthMult;
+	 float depth = texture2D(u_ScreenDepthMap, coord/*var_ScreenTex*/).r * depthMult;
 	 return normal_from_depth(depth, coord);
 }
 

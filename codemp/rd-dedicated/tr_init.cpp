@@ -325,7 +325,7 @@ void R_Register( void )
 	r_fastsky							= ri->Cvar_Get( "r_fastsky",						"0",						CVAR_ARCHIVE );
 	r_inGameVideo						= ri->Cvar_Get( "r_inGameVideo",					"1",						CVAR_ARCHIVE );
 	r_drawSun							= ri->Cvar_Get( "r_drawSun",						"0",						CVAR_ARCHIVE );
-	r_dynamiclight						= ri->Cvar_Get( "r_dynamiclight",					"1",						CVAR_ARCHIVE );
+	r_dynamiclight						= ri->Cvar_Get( "r_dynamiclight",					"0",						CVAR_ARCHIVE );
 	// rjr - removed for hacking
 //	r_dlightBacks						= ri->Cvar_Get( "r_dlightBacks",					"1",						CVAR_CHEAT );
 	r_finish							= ri->Cvar_Get( "r_finish",							"0",						CVAR_ARCHIVE );

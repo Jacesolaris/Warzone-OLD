@@ -2092,6 +2092,15 @@ const void *RB_PostProcess(const void *data)
 			FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 		}
 
+		if (r_ssgi->integer)
+		{
+			for (int i = 0; i < r_ssgi->integer; i++)
+			{
+				RB_SSGI(srcFbo, srcBox, tr.genericFbo, dstBox);
+				FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+			}
+		}
+
 		if (r_lensflare->integer)
 		{
 			RB_LensFlare(srcFbo, srcBox, tr.genericFbo, dstBox);

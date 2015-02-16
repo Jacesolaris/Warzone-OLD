@@ -649,7 +649,8 @@ void RB_Bloom(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 
 		{
 			vec4_t local0;
-			VectorSet4(local0, 0.0, 0.0, /* bloom width */ 3.0, 0.0);
+			VectorSet4(local0, 0.0, 0.0, /* bloom width */ 3.0, 0.0); // non-flicker version
+			//VectorSet4(local0, 0.0, 0.0, /* bloom width */ 3.0 * ((float)irand(90,100) / 100), 0.0); // use flicker???
 			GLSL_SetUniformVec4(&tr.bloomBlurShader, UNIFORM_LOCAL0, local0);
 		}
 
@@ -1488,6 +1489,355 @@ void RB_Vibrancy(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 
 	FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.vibrancyShader, color, GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA);
 }
+
+void RB_SSGI(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
+{
+	vec4_t	color;
+	// bloom
+	color[0] =
+		color[1] =
+		color[2] = pow(2, r_cameraExposure->value);
+	color[3] = 1.0f;
+
+	/*if (r_anamorphic->integer)
+	{// Should already have generated an anamorphic image...
+
+	}
+	else
+	*/
+	{
+		vec4i_t halfBox;
+		vec2_t	texScale, texHalfScale, texDoubleScale;
+
+		texScale[0] = texScale[1] = 1.0f;
+		texHalfScale[0] = texHalfScale[1] = texScale[0] / 8.0;
+		texDoubleScale[0] = texDoubleScale[1] = texScale[0] * 8.0;
+
+		halfBox[0] = backEnd.viewParms.viewportX      * tr.anamorphicRenderFBOImage[0]->width  / (float)glConfig.vidWidth;
+		halfBox[1] = backEnd.viewParms.viewportY      * tr.anamorphicRenderFBOImage[0]->height / (float)glConfig.vidHeight;
+		halfBox[2] = backEnd.viewParms.viewportWidth  * tr.anamorphicRenderFBOImage[0]->width  / (float)glConfig.vidWidth;
+		halfBox[3] = backEnd.viewParms.viewportHeight * tr.anamorphicRenderFBOImage[0]->height / (float)glConfig.vidHeight;
+
+		//
+		// Darken to VBO...
+		//
+
+		if (r_dynamicGlow->integer)
+		{
+			FBO_BlitFromTexture(tr.glowFboScaled[0]->colorImage[0], NULL, NULL, tr.anamorphicRenderFBO[0], NULL, NULL, color, 0);
+		}
+		else
+		{
+			GLSL_BindProgram(&tr.anamorphicDarkenShader);
+
+			GL_BindToTMU(tr.fixedLevelsImage, TB_DIFFUSEMAP);
+
+			{
+				vec2_t screensize;
+				screensize[0] = glConfig.vidWidth;
+				screensize[1] = glConfig.vidHeight;
+
+				GLSL_SetUniformVec2(&tr.anamorphicDarkenShader, UNIFORM_DIMENSIONS, screensize);
+			}
+
+			{
+				vec4_t local0;
+				VectorSet4(local0, r_anamorphicDarkenPower->value, 0.0, 0.0, 0.0);
+				GLSL_SetUniformVec4(&tr.anamorphicDarkenShader, UNIFORM_LOCAL0, local0);
+			}
+
+			FBO_Blit(hdrFbo, NULL, texHalfScale, tr.anamorphicRenderFBO[1], NULL, &tr.anamorphicDarkenShader, color, 0);
+			FBO_FastBlit(tr.anamorphicRenderFBO[1], NULL, tr.anamorphicRenderFBO[0], NULL, GL_COLOR_BUFFER_BIT, GL_LINEAR);
+		}
+
+		//
+		// Blur the new darken'ed VBO...
+		//
+
+		//float SCAN_WIDTH = 64.0;
+		float SCAN_WIDTH = 16.0;
+
+		//for ( int i = 0; i < /*r_bloomPasses->integer*/ 4; i++ ) 
+		{
+			//
+			// Bloom +-X axis... (to VBO 1)
+			//
+
+			{
+				GLSL_BindProgram(&tr.anamorphicBlurShader);
+
+				GL_BindToTMU(tr.anamorphicRenderFBOImage[0], TB_DIFFUSEMAP);
+
+				{
+					vec2_t screensize;
+					screensize[0] = tr.anamorphicRenderFBOImage[0]->width;
+					screensize[1] = tr.anamorphicRenderFBOImage[0]->height;
+
+					GLSL_SetUniformVec2(&tr.anamorphicBlurShader, UNIFORM_DIMENSIONS, screensize);
+				}
+
+				{
+					vec4_t local0;
+					//VectorSet4(local0, (float)width, 0.0, 0.0, 0.0);
+					VectorSet4(local0, 1.0, 0.0, SCAN_WIDTH, 1.0);
+					GLSL_SetUniformVec4(&tr.anamorphicBlurShader, UNIFORM_LOCAL0, local0);
+				}
+
+				FBO_Blit(tr.anamorphicRenderFBO[0], NULL, NULL, tr.anamorphicRenderFBO[1], NULL, &tr.anamorphicBlurShader, color, 0);
+				FBO_FastBlit(tr.anamorphicRenderFBO[1], NULL, tr.anamorphicRenderFBO[0], NULL, GL_COLOR_BUFFER_BIT, GL_LINEAR);
+			}
+
+			//
+			// Bloom +-Y axis... (to VBO 1)
+			//
+
+			{
+				GLSL_BindProgram(&tr.anamorphicBlurShader);
+
+				GL_BindToTMU(tr.anamorphicRenderFBOImage[0], TB_DIFFUSEMAP);
+
+				{
+					vec2_t screensize;
+					screensize[0] = tr.anamorphicRenderFBOImage[0]->width;
+					screensize[1] = tr.anamorphicRenderFBOImage[0]->height;
+
+					GLSL_SetUniformVec2(&tr.anamorphicBlurShader, UNIFORM_DIMENSIONS, screensize);
+				}
+
+				{
+					vec4_t local0;
+					//VectorSet4(local0, (float)width, 0.0, 0.0, 0.0);
+					VectorSet4(local0, 0.0, 1.0, SCAN_WIDTH, 1.0);
+					GLSL_SetUniformVec4(&tr.anamorphicBlurShader, UNIFORM_LOCAL0, local0);
+				}
+
+				FBO_Blit(tr.anamorphicRenderFBO[0], NULL, NULL, tr.anamorphicRenderFBO[1], NULL, &tr.anamorphicBlurShader, color, 0);
+				FBO_FastBlit(tr.anamorphicRenderFBO[1], NULL, tr.anamorphicRenderFBO[0], NULL, GL_COLOR_BUFFER_BIT, GL_LINEAR);
+			}
+
+			//
+			// Bloom XY & -X-Y axis... (to VBO 1)
+			//
+
+			{
+				GLSL_BindProgram(&tr.anamorphicBlurShader);
+
+				GL_BindToTMU(tr.anamorphicRenderFBOImage[0], TB_DIFFUSEMAP);
+
+				{
+					vec2_t screensize;
+					screensize[0] = tr.anamorphicRenderFBOImage[0]->width;
+					screensize[1] = tr.anamorphicRenderFBOImage[0]->height;
+
+					GLSL_SetUniformVec2(&tr.anamorphicBlurShader, UNIFORM_DIMENSIONS, screensize);
+				}
+
+				{
+					vec4_t local0;
+					//VectorSet4(local0, (float)width, 0.0, 0.0, 0.0);
+					VectorSet4(local0, 1.0, 1.0, SCAN_WIDTH, 1.0);
+					GLSL_SetUniformVec4(&tr.anamorphicBlurShader, UNIFORM_LOCAL0, local0);
+				}
+
+				FBO_Blit(tr.anamorphicRenderFBO[0], NULL, NULL, tr.anamorphicRenderFBO[1], NULL, &tr.anamorphicBlurShader, color, 0);
+				FBO_FastBlit(tr.anamorphicRenderFBO[1], NULL, tr.anamorphicRenderFBO[0], NULL, GL_COLOR_BUFFER_BIT, GL_LINEAR);
+			}
+
+			//
+			// Bloom -X+Y & +X-Y axis... (to VBO 1)
+			//
+
+			{
+				GLSL_BindProgram(&tr.anamorphicBlurShader);
+
+				GL_BindToTMU(tr.anamorphicRenderFBOImage[0], TB_DIFFUSEMAP);
+
+				{
+					vec2_t screensize;
+					screensize[0] = tr.anamorphicRenderFBOImage[0]->width;
+					screensize[1] = tr.anamorphicRenderFBOImage[0]->height;
+
+					GLSL_SetUniformVec2(&tr.anamorphicBlurShader, UNIFORM_DIMENSIONS, screensize);
+				}
+
+				{
+					vec4_t local0;
+					//VectorSet4(local0, (float)width, 0.0, 0.0, 0.0);
+					VectorSet4(local0, -1.0, 1.0, SCAN_WIDTH, 1.0);
+					GLSL_SetUniformVec4(&tr.anamorphicBlurShader, UNIFORM_LOCAL0, local0);
+				}
+
+				FBO_Blit(tr.anamorphicRenderFBO[0], NULL, NULL, tr.anamorphicRenderFBO[1], NULL, &tr.anamorphicBlurShader, color, 0);
+				FBO_FastBlit(tr.anamorphicRenderFBO[1], NULL, tr.anamorphicRenderFBO[0], NULL, GL_COLOR_BUFFER_BIT, GL_LINEAR);
+			}
+		}
+
+		//
+		// Do a final blur pass - but this time don't mark it as a ssgi one - so that it uses darkness as well...
+		//
+
+		{
+			//
+			// Bloom +-X axis... (to VBO 1)
+			//
+
+			{
+				GLSL_BindProgram(&tr.anamorphicBlurShader);
+
+				GL_BindToTMU(tr.anamorphicRenderFBOImage[0], TB_DIFFUSEMAP);
+
+				{
+					vec2_t screensize;
+					screensize[0] = tr.anamorphicRenderFBOImage[0]->width;
+					screensize[1] = tr.anamorphicRenderFBOImage[0]->height;
+
+					GLSL_SetUniformVec2(&tr.anamorphicBlurShader, UNIFORM_DIMENSIONS, screensize);
+				}
+
+				{
+					vec4_t local0;
+					//VectorSet4(local0, (float)width, 0.0, 0.0, 0.0);
+					VectorSet4(local0, 1.0, 0.0, SCAN_WIDTH, 0.0);
+					GLSL_SetUniformVec4(&tr.anamorphicBlurShader, UNIFORM_LOCAL0, local0);
+				}
+
+				FBO_Blit(tr.anamorphicRenderFBO[0], NULL, NULL, tr.anamorphicRenderFBO[1], NULL, &tr.anamorphicBlurShader, color, 0);
+				FBO_FastBlit(tr.anamorphicRenderFBO[1], NULL, tr.anamorphicRenderFBO[0], NULL, GL_COLOR_BUFFER_BIT, GL_LINEAR);
+			}
+
+			//
+			// Bloom +-Y axis... (to VBO 1)
+			//
+
+			{
+				GLSL_BindProgram(&tr.anamorphicBlurShader);
+
+				GL_BindToTMU(tr.anamorphicRenderFBOImage[0], TB_DIFFUSEMAP);
+
+				{
+					vec2_t screensize;
+					screensize[0] = tr.anamorphicRenderFBOImage[0]->width;
+					screensize[1] = tr.anamorphicRenderFBOImage[0]->height;
+
+					GLSL_SetUniformVec2(&tr.anamorphicBlurShader, UNIFORM_DIMENSIONS, screensize);
+				}
+
+				{
+					vec4_t local0;
+					//VectorSet4(local0, (float)width, 0.0, 0.0, 0.0);
+					VectorSet4(local0, 0.0, 1.0, SCAN_WIDTH, 0.0);
+					GLSL_SetUniformVec4(&tr.anamorphicBlurShader, UNIFORM_LOCAL0, local0);
+				}
+
+				FBO_Blit(tr.anamorphicRenderFBO[0], NULL, NULL, tr.anamorphicRenderFBO[1], NULL, &tr.anamorphicBlurShader, color, 0);
+				FBO_FastBlit(tr.anamorphicRenderFBO[1], NULL, tr.anamorphicRenderFBO[0], NULL, GL_COLOR_BUFFER_BIT, GL_LINEAR);
+			}
+
+			//
+			// Bloom XY & -X-Y axis... (to VBO 1)
+			//
+
+			{
+				GLSL_BindProgram(&tr.anamorphicBlurShader);
+
+				GL_BindToTMU(tr.anamorphicRenderFBOImage[0], TB_DIFFUSEMAP);
+
+				{
+					vec2_t screensize;
+					screensize[0] = tr.anamorphicRenderFBOImage[0]->width;
+					screensize[1] = tr.anamorphicRenderFBOImage[0]->height;
+
+					GLSL_SetUniformVec2(&tr.anamorphicBlurShader, UNIFORM_DIMENSIONS, screensize);
+				}
+
+				{
+					vec4_t local0;
+					//VectorSet4(local0, (float)width, 0.0, 0.0, 0.0);
+					VectorSet4(local0, 1.0, 1.0, SCAN_WIDTH, 0.0);
+					GLSL_SetUniformVec4(&tr.anamorphicBlurShader, UNIFORM_LOCAL0, local0);
+				}
+
+				FBO_Blit(tr.anamorphicRenderFBO[0], NULL, NULL, tr.anamorphicRenderFBO[1], NULL, &tr.anamorphicBlurShader, color, 0);
+				FBO_FastBlit(tr.anamorphicRenderFBO[1], NULL, tr.anamorphicRenderFBO[0], NULL, GL_COLOR_BUFFER_BIT, GL_LINEAR);
+			}
+
+			//
+			// Bloom -X+Y & +X-Y axis... (to VBO 1)
+			//
+
+			{
+				GLSL_BindProgram(&tr.anamorphicBlurShader);
+
+				GL_BindToTMU(tr.anamorphicRenderFBOImage[0], TB_DIFFUSEMAP);
+
+				{
+					vec2_t screensize;
+					screensize[0] = tr.anamorphicRenderFBOImage[0]->width;
+					screensize[1] = tr.anamorphicRenderFBOImage[0]->height;
+
+					GLSL_SetUniformVec2(&tr.anamorphicBlurShader, UNIFORM_DIMENSIONS, screensize);
+				}
+
+				{
+					vec4_t local0;
+					//VectorSet4(local0, (float)width, 0.0, 0.0, 0.0);
+					VectorSet4(local0, -1.0, 1.0, SCAN_WIDTH, 0.0);
+					GLSL_SetUniformVec4(&tr.anamorphicBlurShader, UNIFORM_LOCAL0, local0);
+				}
+
+				FBO_Blit(tr.anamorphicRenderFBO[0], NULL, NULL, tr.anamorphicRenderFBO[1], NULL, &tr.anamorphicBlurShader, color, 0);
+				FBO_FastBlit(tr.anamorphicRenderFBO[1], NULL, tr.anamorphicRenderFBO[0], NULL, GL_COLOR_BUFFER_BIT, GL_LINEAR);
+			}
+		}
+
+		//
+		// Copy (and upscale) the bloom image to our full screen image...
+		//
+
+		FBO_Blit(tr.anamorphicRenderFBO[0], NULL, texDoubleScale, tr.anamorphicRenderFBO[2], NULL, &tr.anamorphicBlurShader, color, 0);
+	}
+
+	//
+	// Do the SSAO/SSGI...
+	//
+
+	GLSL_BindProgram(&tr.ssgiShader);
+
+	GL_BindToTMU(tr.fixedLevelsImage, TB_LEVELSMAP);
+
+	GLSL_SetUniformInt(&tr.ssgiShader, UNIFORM_LEVELSMAP, TB_LEVELSMAP);
+	GLSL_SetUniformInt(&tr.ssgiShader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
+	GL_BindToTMU(tr.renderDepthImage, TB_LIGHTMAP);
+	GLSL_SetUniformInt(&tr.ssgiShader, UNIFORM_NORMALMAP, TB_NORMALMAP); // really scaled down dynamic glow map
+	GL_BindToTMU(tr.anamorphicRenderFBOImage[2], TB_NORMALMAP); // really scaled down dynamic glow map
+
+	{
+		vec2_t screensize;
+		screensize[0] = glConfig.vidWidth;
+		screensize[1] = glConfig.vidHeight;
+
+		GLSL_SetUniformVec2(&tr.ssgiShader, UNIFORM_DIMENSIONS, screensize);
+
+		//ri->Printf(PRINT_WARNING, "Sent dimensions %f %f.\n", screensize[0], screensize[1]);
+	}
+
+	{
+		vec4_t viewInfo;
+
+		float zmax = backEnd.viewParms.zFar;
+		float zmin = r_znear->value;
+		//float zmin = backEnd.viewParms.zNear;
+
+		VectorSet4(viewInfo, zmin, zmax, zmax / zmin, 0.0);
+
+		//ri->Printf(PRINT_WARNING, "Sent zmin %f, zmax %f, zmax/zmin %f.\n", zmin, zmax, zmax / zmin);
+
+		GLSL_SetUniformVec4(&tr.ssgiShader, UNIFORM_VIEWINFO, viewInfo);
+	}
+
+	FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.ssgiShader, color, GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA);
+}
+
 
 void RB_TestShader(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox, int pass_num)
 {

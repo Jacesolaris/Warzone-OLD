@@ -329,7 +329,7 @@
 				hide			defaults
 
 				setitemcolor	setup_submenu		forecolor	1 .682 0 1
-				setitemcolor	video_advancedmenubutton	forecolor	1 1 1 1
+				setitemcolor	video_advanced2menubutton	forecolor	1 1 1 1
 			}
 		}
 
@@ -1534,11 +1534,11 @@
 
 			mouseenter 
 			{ 
-				show			highlight13
+				show			highlight5
 			}
 			mouseexit 
 			{ 
-				hide			highlight13
+				hide			highlight5
 			} 
 		}
 
@@ -1579,6 +1579,37 @@
 				hide			highlight14
 			}  
 		}
+		
+		itemDef 
+		{	
+			name				video_ssgi
+			group				video2
+			type				ITEM_TYPE_MULTI
+			text				"SSGI (Advanced Lighting):"
+			rect				220 161 300 14
+			textalign			ITEM_ALIGN_RIGHT
+			textalignx			174
+			textaligny			0
+			font 				4
+			textscale 			1
+			forecolor		.615 .615 .956 1
+			cvarFloatList		{  @MENUS_OFF 0 @MENUS_ON 1 }
+			descText			"Enable Screen Space Global Illumination? (Recommend: to disable Dynamic Light as it is not needed)"
+			cvar				"r_ssgi"
+
+			mouseenter 
+			{ 
+				show			highlight15
+			}
+			mouseexit 
+			{ 
+				hide			highlight15
+			} 
+			action 
+			{
+				play			"sound/interface/button1"
+			}
+		}
 
 		itemDef 
 		{			
@@ -1592,7 +1623,7 @@
 				@MENUS_OFF 0  
 				@MENUS_ON 1 
 			}
-			rect				220 161 300 14
+			rect				220 181 300 14
 	   		textalign			ITEM_ALIGN_RIGHT
 			textalignx			174
 			textaligny			0
@@ -1609,11 +1640,11 @@
 
 			mouseenter 
 			{ 
-				show			highlight15
+				show			highlight16
 			}
 			mouseexit 
 			{ 
-				hide			highlight15
+				hide			highlight16
 			} 
 		}
 
@@ -1629,41 +1660,6 @@
 				@MENUS_OFF 	0 
 				@MENUS_ON 	1 
 			}
-			rect				220 181 340 14
-	   		textalign			ITEM_ALIGN_RIGHT
-			textalignx			174
-			textaligny			0
-			font 				4
-			textscale 			1
-			forecolor			.615 .615 .956 1
-			visible				0
-			descText			@MENUS_DYNAMIC_GLOW_DESC
-			action
-			{ 
-				play			"sound/interface/button1"
-			}
-			mouseenter 
-			{ 
-				show			highlight16
-			}
-			mouseexit 
-			{ 
-				hide			highlight16
-			} 
-		}
-
-		itemDef 
-		{	
-			name				light_flares
-			group				video2
-      		type				ITEM_TYPE_MULTI
-			text				@MENUS_LIGHT_FLARES
-			cvar				r_flares
-			cvarFloatList		
-			{  
-				@MENUS_OFF 	0 
-				@MENUS_ON 	1 
-			}
 			rect				220 201 340 14
 	   		textalign			ITEM_ALIGN_RIGHT
 			textalignx			174
@@ -1672,7 +1668,7 @@
 			textscale 			1
 			forecolor			.615 .615 .956 1
 			visible				0
-			descText			@MENUS_TOGGLE_TO_SHOW_HALOS
+			descText			@MENUS_DYNAMIC_GLOW_DESC
 			action
 			{ 
 				play			"sound/interface/button1"
@@ -1688,6 +1684,41 @@
 		}
 
 		itemDef 
+		{	
+			name				light_flares
+			group				video2
+      		type				ITEM_TYPE_MULTI
+			text				@MENUS_LIGHT_FLARES
+			cvar				r_flares
+			cvarFloatList		
+			{  
+				@MENUS_OFF 	0 
+				@MENUS_ON 	1 
+			}
+			rect				220 221 340 14
+	   		textalign			ITEM_ALIGN_RIGHT
+			textalignx			174
+			textaligny			0
+			font 				4
+			textscale 			1
+			forecolor			.615 .615 .956 1
+			visible				0
+			descText			@MENUS_TOGGLE_TO_SHOW_HALOS
+			action
+			{ 
+				play			"sound/interface/button1"
+			}
+			mouseenter 
+			{ 
+				show			highlight18
+			}
+			mouseexit 
+			{ 
+				hide			highlight18
+			} 
+		}
+
+		itemDef 
 		{			
 			name				wall_marks
 			group				video2
@@ -1699,7 +1730,7 @@
 				@MENUS_OFF 0  
 				@MENUS_ON 1 
 			}
-			rect				220 221 300 14
+			rect				220 241 300 14
 	   		textalign			ITEM_ALIGN_RIGHT
 			textalignx			174
 			textaligny			0
@@ -1716,11 +1747,11 @@
 
 			mouseenter 
 			{ 
-				show			highlight18
+				show			highlight19
 			}
 			mouseexit 
 			{ 
-				hide			highlight18
+				hide			highlight19
 			} 
 		}
 
@@ -1730,9 +1761,9 @@
 			group				video2
 			type				ITEM_TYPE_MULTI
 			text				"Enhanced FX"
-			rect				220 241 300 20
+			rect				220 261 300 14
 			textalign			ITEM_ALIGN_RIGHT
-			textalignx			165
+			textalignx			174
 			textaligny			0
 			font 				4
 			textscale 			1
@@ -1743,11 +1774,11 @@
 
 			mouseenter 
 			{ 
-				show			highlight19
+				show			highlight20
 			}
 			mouseexit 
 			{ 
-				hide			highlight19
+				hide			highlight20
 			} 
 			action 
 			{

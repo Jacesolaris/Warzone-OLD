@@ -94,6 +94,8 @@ extern const char *fallbackShader_anamorphic_blur_vp;
 extern const char *fallbackShader_anamorphic_blur_fp;
 extern const char *fallbackShader_anamorphic_combine_vp;
 extern const char *fallbackShader_anamorphic_combine_fp;
+extern const char *fallbackShader_ssgi_vp;
+extern const char *fallbackShader_ssgi_fp;
 extern const char *fallbackShader_darkexpand_vp;
 extern const char *fallbackShader_darkexpand_fp;
 extern const char *fallbackShader_lensflare_vp;
@@ -1650,6 +1652,14 @@ int GLSL_BeginLoadGPUShaders(void)
 	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
 	extradefines[0] = '\0';
 
+	if (!GLSL_BeginLoadGPUShader(&tr.ssgiShader, "ssgi", attribs, qtrue, extradefines, qtrue, fallbackShader_ssgi_vp, fallbackShader_ssgi_fp))
+	{
+		ri->Error(ERR_FATAL, "Could not load ssgi shader!");
+	}
+
+	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
+	extradefines[0] = '\0';
+
 	if (!GLSL_BeginLoadGPUShader(&tr.testshaderShader, "testshader", attribs, qtrue, extradefines, qtrue, fallbackShader_testshader_vp, fallbackShader_testshader_fp))
 	{
 		ri->Error(ERR_FATAL, "Could not load testshader shader!");
@@ -2289,6 +2299,34 @@ void GLSL_EndLoadGPUShaders ( int startTime )
 
 #if defined(_DEBUG)
 	GLSL_FinishGPUShader(&tr.anamorphicCombineShader);
+#endif
+	
+	numEtcShaders++;
+
+
+	if (!GLSL_EndLoadGPUShader(&tr.ssgiShader))
+	{
+		ri->Error(ERR_FATAL, "Could not load ssgi shader!");
+	}
+	
+	GLSL_InitUniforms(&tr.ssgiShader);
+
+	qglUseProgram(tr.ssgiShader.program);
+
+	GLSL_SetUniformInt(&tr.ssgiShader, UNIFORM_LEVELSMAP,  TB_LEVELSMAP);
+	
+	{
+		vec2_t screensize;
+		screensize[0] = glConfig.vidWidth;
+		screensize[1] = glConfig.vidHeight;
+
+		GLSL_SetUniformVec2(&tr.ssgiShader, UNIFORM_DIMENSIONS, screensize);
+	}
+
+	qglUseProgram(0);
+
+#if defined(_DEBUG)
+	GLSL_FinishGPUShader(&tr.ssgiShader);
 #endif
 	
 	numEtcShaders++;
