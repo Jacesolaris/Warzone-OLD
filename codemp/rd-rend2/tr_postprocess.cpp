@@ -1548,10 +1548,61 @@ void RB_SSGI(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 		// Blur the new darken'ed VBO...
 		//
 
-		//float SCAN_WIDTH = 64.0;
+//#define __NEW_SATURATION_MAP_METHOD__ // grr slower and crappier...
+
+#ifdef __NEW_SATURATION_MAP_METHOD__
 		float SCAN_WIDTH = 16.0;
 
-		//for ( int i = 0; i < /*r_bloomPasses->integer*/ 4; i++ ) 
+		//for (int i = 0; i < 2; i++)
+		{// Initial blur...
+			GLSL_BindProgram(&tr.anamorphicBlurShader);
+
+			GL_BindToTMU(tr.anamorphicRenderFBOImage[0], TB_DIFFUSEMAP);
+
+			{
+				vec2_t screensize;
+				screensize[0] = tr.anamorphicRenderFBOImage[0]->width;
+				screensize[1] = tr.anamorphicRenderFBOImage[0]->height;
+
+				GLSL_SetUniformVec2(&tr.anamorphicBlurShader, UNIFORM_DIMENSIONS, screensize);
+			}
+
+			{
+				vec4_t local0;
+				VectorSet4(local0, 0.0, 0.0, SCAN_WIDTH, 1.0);
+				GLSL_SetUniformVec4(&tr.anamorphicBlurShader, UNIFORM_LOCAL0, local0);
+			}
+
+			FBO_Blit(tr.anamorphicRenderFBO[0], NULL, NULL, tr.anamorphicRenderFBO[1], NULL, &tr.anamorphicBlurShader, color, 0);
+			FBO_FastBlit(tr.anamorphicRenderFBO[1], NULL, tr.anamorphicRenderFBO[0], NULL, GL_COLOR_BUFFER_BIT, GL_LINEAR);
+		}
+
+		{// Final blur...
+			GLSL_BindProgram(&tr.anamorphicBlurShader);
+
+			GL_BindToTMU(tr.anamorphicRenderFBOImage[0], TB_DIFFUSEMAP);
+
+			{
+				vec2_t screensize;
+				screensize[0] = tr.anamorphicRenderFBOImage[0]->width;
+				screensize[1] = tr.anamorphicRenderFBOImage[0]->height;
+
+				GLSL_SetUniformVec2(&tr.anamorphicBlurShader, UNIFORM_DIMENSIONS, screensize);
+			}
+
+			{
+				vec4_t local0;
+				VectorSet4(local0, 0.0, 0.0, SCAN_WIDTH, 2.0);
+				GLSL_SetUniformVec4(&tr.anamorphicBlurShader, UNIFORM_LOCAL0, local0);
+			}
+
+			FBO_Blit(tr.anamorphicRenderFBO[0], NULL, NULL, tr.anamorphicRenderFBO[1], NULL, &tr.anamorphicBlurShader, color, 0);
+			FBO_FastBlit(tr.anamorphicRenderFBO[1], NULL, tr.anamorphicRenderFBO[0], NULL, GL_COLOR_BUFFER_BIT, GL_LINEAR);
+		}
+#else //!__NEW_SATURATION_MAP_METHOD__
+		//float SCAN_WIDTH = 16.0;
+		float SCAN_WIDTH = r_ssgiWidth->value;//8.0;
+
 		{
 			//
 			// Bloom +-X axis... (to VBO 1)
@@ -1573,7 +1624,7 @@ void RB_SSGI(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 				{
 					vec4_t local0;
 					//VectorSet4(local0, (float)width, 0.0, 0.0, 0.0);
-					VectorSet4(local0, 1.0, 0.0, SCAN_WIDTH, 1.0);
+					VectorSet4(local0, 1.0, 0.0, SCAN_WIDTH, 3.0);
 					GLSL_SetUniformVec4(&tr.anamorphicBlurShader, UNIFORM_LOCAL0, local0);
 				}
 
@@ -1601,7 +1652,7 @@ void RB_SSGI(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 				{
 					vec4_t local0;
 					//VectorSet4(local0, (float)width, 0.0, 0.0, 0.0);
-					VectorSet4(local0, 0.0, 1.0, SCAN_WIDTH, 1.0);
+					VectorSet4(local0, 0.0, 1.0, SCAN_WIDTH, 3.0);
 					GLSL_SetUniformVec4(&tr.anamorphicBlurShader, UNIFORM_LOCAL0, local0);
 				}
 
@@ -1629,7 +1680,7 @@ void RB_SSGI(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 				{
 					vec4_t local0;
 					//VectorSet4(local0, (float)width, 0.0, 0.0, 0.0);
-					VectorSet4(local0, 1.0, 1.0, SCAN_WIDTH, 1.0);
+					VectorSet4(local0, 1.0, 1.0, SCAN_WIDTH, 3.0);
 					GLSL_SetUniformVec4(&tr.anamorphicBlurShader, UNIFORM_LOCAL0, local0);
 				}
 
@@ -1657,7 +1708,7 @@ void RB_SSGI(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 				{
 					vec4_t local0;
 					//VectorSet4(local0, (float)width, 0.0, 0.0, 0.0);
-					VectorSet4(local0, -1.0, 1.0, SCAN_WIDTH, 1.0);
+					VectorSet4(local0, -1.0, 1.0, SCAN_WIDTH, 3.0);
 					GLSL_SetUniformVec4(&tr.anamorphicBlurShader, UNIFORM_LOCAL0, local0);
 				}
 
@@ -1783,6 +1834,7 @@ void RB_SSGI(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 				FBO_FastBlit(tr.anamorphicRenderFBO[1], NULL, tr.anamorphicRenderFBO[0], NULL, GL_COLOR_BUFFER_BIT, GL_LINEAR);
 			}
 		}
+#endif //__NEW_SATURATION_MAP_METHOD__
 
 		//
 		// Copy (and upscale) the bloom image to our full screen image...
@@ -1832,7 +1884,7 @@ void RB_SSGI(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 	{
 		vec4_t local0;
 		local0[0] = r_ssgi->value;
-		local0[1] = 0.0;
+		local0[1] = r_ssgiSamples->value;
 		local0[2] = 0.0;
 		local0[3] = 0.0;
 

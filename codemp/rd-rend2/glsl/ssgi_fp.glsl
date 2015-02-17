@@ -27,7 +27,7 @@ varying vec2		var_TexCoords;
 varying vec2		var_Dimensions;
 varying vec4		var_ViewInfo; // zmin, zmax, zmax / zmin
 
-varying vec4		var_Local0; // MODE, 0, 0, 0
+varying vec4		var_Local0; // MODE, NUM_SAMPLES, 0, 0
 
 float				CURRENT_PASS_NUMBER = var_Local0.x;
 
@@ -36,8 +36,6 @@ float				CURRENT_PASS_NUMBER = var_Local0.x;
 vec2 texCoord = var_TexCoords;
 vec4 ScreenSize = vec4(var_Dimensions.x, 1.0 / var_Dimensions.x, var_Dimensions.y, 1.0 / var_Dimensions.y);
 
-float MODE = var_Local0.x;
-
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /*
@@ -45,10 +43,12 @@ float MODE = var_Local0.x;
 *This shader requires a depth pass and a normal map pass.
 */
 
+float MODE = var_Local0.x;
 
 //#define NUM_SAMPLES 8
-#define NUM_SAMPLES 6
+//#define NUM_SAMPLES 6
 //#define NUM_SAMPLES 4
+//#define NUM_SAMPLES 3
 
 //uniform sampler2D u_ScreenDepthMap;// Depth
 //uniform sampler2D normal;
@@ -123,9 +123,16 @@ float rand(vec2 co){
 }
 
 void main()
-{    
-	//gl_FragColor = texture2D(u_NormalMap, texCoord.st);
-	//return;
+{   
+	float NUM_SAMPLES = var_Local0.y;
+
+	if (NUM_SAMPLES < 1.0) NUM_SAMPLES = 1.0; // Always at least one sample...
+
+	if (MODE >= 5.0)
+	{// Saturation map debug mode...
+		gl_FragColor = texture2D(u_NormalMap, texCoord.st);
+		return;
+	}
 
 	if (MODE >= 2.0)
 	{// Full modes...

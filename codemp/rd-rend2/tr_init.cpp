@@ -237,6 +237,8 @@ cvar_t	*r_volumelight;
 cvar_t	*r_anamorphic;
 cvar_t	*r_anamorphicDarkenPower;
 cvar_t  *r_ssgi;
+cvar_t  *r_ssgiWidth;
+cvar_t  *r_ssgiSamples;
 cvar_t	*r_depth;
 cvar_t	*r_depthParallax;
 cvar_t	*r_depthParallaxScale;
@@ -1363,6 +1365,8 @@ void R_Register( void )
 	r_anamorphic = ri->Cvar_Get( "r_anamorphic", "1", CVAR_ARCHIVE );
 	r_anamorphicDarkenPower = ri->Cvar_Get( "r_anamorphicDarkenPower", "256.0", CVAR_ARCHIVE );
 	r_ssgi = ri->Cvar_Get( "r_ssgi", "1", CVAR_ARCHIVE );
+	r_ssgiWidth = ri->Cvar_Get( "r_ssgiWidth", "16.0", CVAR_ARCHIVE );
+	r_ssgiSamples = ri->Cvar_Get( "r_ssgiSamples", "4", CVAR_ARCHIVE );
 	r_depthParallax = ri->Cvar_Get( "r_depthParallax", "0", CVAR_ARCHIVE );
 	r_depthParallaxScale = ri->Cvar_Get( "r_depthParallaxScale", "2.0", CVAR_ARCHIVE );
 	r_depthParallaxMultiplier = ri->Cvar_Get( "r_depthParallaxMultiplier", "5.0", CVAR_ARCHIVE );
