@@ -1364,7 +1364,7 @@ void R_Register( void )
 	r_volumelight = ri->Cvar_Get( "r_volumelight", "0", CVAR_ARCHIVE );
 	r_anamorphic = ri->Cvar_Get( "r_anamorphic", "1", CVAR_ARCHIVE );
 	r_anamorphicDarkenPower = ri->Cvar_Get( "r_anamorphicDarkenPower", "256.0", CVAR_ARCHIVE );
-	r_ssgi = ri->Cvar_Get( "r_ssgi", "1", CVAR_ARCHIVE );
+	r_ssgi = ri->Cvar_Get( "r_ssgi", "4", CVAR_ARCHIVE );
 	r_ssgiWidth = ri->Cvar_Get( "r_ssgiWidth", "16.0", CVAR_ARCHIVE );
 	r_ssgiSamples = ri->Cvar_Get( "r_ssgiSamples", "4", CVAR_ARCHIVE );
 	r_depthParallax = ri->Cvar_Get( "r_depthParallax", "0", CVAR_ARCHIVE );
