@@ -1499,12 +1499,6 @@ void RB_SSGI(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 		color[2] = pow(2, r_cameraExposure->value);
 	color[3] = 1.0f;
 
-	/*if (r_anamorphic->integer)
-	{// Should already have generated an anamorphic image...
-
-	}
-	else
-	*/
 	{
 		vec4i_t halfBox;
 		vec2_t	texScale, texHalfScale, texDoubleScale;
@@ -1833,6 +1827,18 @@ void RB_SSGI(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 		//ri->Printf(PRINT_WARNING, "Sent zmin %f, zmax %f, zmax/zmin %f.\n", zmin, zmax, zmax / zmin);
 
 		GLSL_SetUniformVec4(&tr.ssgiShader, UNIFORM_VIEWINFO, viewInfo);
+	}
+
+	{
+		vec4_t local0;
+		local0[0] = r_ssgi->value;
+		local0[1] = 0.0;
+		local0[2] = 0.0;
+		local0[3] = 0.0;
+
+		GLSL_SetUniformVec4(&tr.ssgiShader, UNIFORM_LOCAL0, local0);
+
+		//ri->Printf(PRINT_WARNING, "Sent dimensions %f %f.\n", screensize[0], screensize[1]);
 	}
 
 	FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.ssgiShader, color, GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA);

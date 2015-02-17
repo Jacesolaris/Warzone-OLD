@@ -1596,7 +1596,7 @@
 			font 				4
 			textscale 			1
 			forecolor		.615 .615 .956 1
-			cvarFloatList		{  @MENUS_OFF 0 @MENUS_ON 1 }
+			cvarFloatList		{  @MENUS_OFF 0 "Lighting Only" 1 "Lighting & Occlusion" 2 "Lighting & Indirect Lighting" 3 "Lighting, Occlusion & Indirect" 4 }
 			descText			"Enable Screen Space Global Illumination? (Recommend: to disable Dynamic Light as it is not needed)"
 			cvar				"r_ssgi"
 
