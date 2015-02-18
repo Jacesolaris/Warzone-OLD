@@ -84,6 +84,78 @@ int NPC_FindPadawanGoal( gentity_t *NPC )
 
 extern void G_SpeechEvent( gentity_t *self, int event );
 
+void G_AddPadawanCombatCommentEvent( gentity_t *self, int event, int speakDebounceTime )
+{
+	if ( !self->NPC )
+	{
+		return;
+	}
+
+	if ( !self->client || self->client->ps.pm_type >= PM_DEAD )
+	{
+		return;
+	}
+
+	if ( self->NPC->padawanCombatCommentDebounceTime > level.time )
+	{
+		return;
+	}
+
+	if ( self->NPC->blockedSpeechDebounceTime > level.time )
+	{
+		return;
+	}
+
+	if ( trap->ICARUS_TaskIDPending( (sharedEntity_t *)self, TID_CHAN_VOICE ) )
+	{
+		return;
+	}
+
+	//FIXME: Also needs to check for teammates. Don't want
+	//		everyone babbling at once
+
+	//NOTE: was losing too many speech events, so we do it directly now, screw networking!
+	G_SpeechEvent( self, event );
+	
+	//won't speak again for 5 seconds (unless otherwise specified)
+	self->NPC->padawanCombatCommentDebounceTime = level.time + ((speakDebounceTime==0) ? 15000+irand(0,15000) : speakDebounceTime);
+
+	// also disable normal (original jka) combat speech for 5 secs...
+	self->NPC->blockedSpeechDebounceTime = level.time + ((speakDebounceTime==0) ? 5000 : speakDebounceTime);
+}
+
+void G_AddPadawanIdleNoReplyCommentEvent( gentity_t *self, int event, int speakDebounceTime )
+{
+	if ( !self->NPC )
+	{
+		return;
+	}
+
+	if ( !self->client || self->client->ps.pm_type >= PM_DEAD )
+	{
+		return;
+	}
+
+	if ( self->NPC->padawanCommentDebounceTime > level.time )
+	{
+		return;
+	}
+
+	if ( trap->ICARUS_TaskIDPending( (sharedEntity_t *)self, TID_CHAN_VOICE ) )
+	{
+		return;
+	}
+
+	//FIXME: Also needs to check for teammates. Don't want
+	//		everyone babbling at once
+
+	//NOTE: was losing too many speech events, so we do it directly now, screw networking!
+	G_SpeechEvent( self, event );
+
+	//won't speak again for 5 seconds (unless otherwise specified)
+	self->NPC->padawanCommentDebounceTime = level.time + ((speakDebounceTime==0) ? 15000+irand(0,15000) : speakDebounceTime);
+}
+
 void G_AddPadawanCommentEvent( gentity_t *self, int event, int speakDebounceTime )
 {
 	if ( !self->NPC )
@@ -168,6 +240,11 @@ qboolean NPC_PadawanMove( void )
 						return qtrue;
 					}
 				}
+				
+				if (irand(0,2) > 0)
+				{// Random idle sound... Yawns, giggles, etc...
+					G_AddPadawanIdleNoReplyCommentEvent( NPC, EV_PADAWAN_IDLE_NOREPLY, 10000+irand(0,15000) );
+				}
 
 				//trap->Print("dist > 96 && dist < 512 FAIL!\n");
 			}
@@ -185,6 +262,11 @@ qboolean NPC_PadawanMove( void )
 					NPC_CombatMoveToGoal( qtrue, qtrue );
 					return qtrue;
 				}
+
+				if (irand(0,2) > 0)
+				{// Random idle sound... Yawns, giggles, etc...
+					G_AddPadawanIdleNoReplyCommentEvent( NPC, EV_PADAWAN_IDLE_NOREPLY, 10000+irand(0,15000) );
+				}
 			}
 //#endif
 			else if (dist <= 128)
@@ -198,8 +280,15 @@ qboolean NPC_PadawanMove( void )
 				ucmd->upmove = 0;
 				NPC_PickRandomIdleAnimantion(NPC);
 
-				// Say something random to our master...
-				G_AddPadawanCommentEvent( NPC, EV_PADAWAN_IDLE, 30000+irand(0,30000) );
+				if (irand(0,2) > 0)
+				{// Random idle sound... Yawns, giggles, etc...
+					G_AddPadawanIdleNoReplyCommentEvent( NPC, EV_PADAWAN_IDLE_NOREPLY, 10000+irand(0,15000) );
+				}
+				else
+				{// Say something random to our master... And expect a reply...
+					G_AddPadawanCommentEvent( NPC, EV_PADAWAN_IDLE, 30000+irand(0,30000) );
+				}
+
 				return qtrue;
 			}
 			else if (NPC->parent->s.groundEntityNum != ENTITYNUM_NONE
@@ -244,6 +333,10 @@ qboolean NPC_PadawanMove( void )
 					}
 				}
 			}
+		}
+		else if (irand(0,2) > 0)
+		{// Random idle sound... Yawns, giggles, etc...
+			G_AddPadawanIdleNoReplyCommentEvent( NPC, EV_PADAWAN_IDLE_NOREPLY, 10000+irand(0,15000) );
 		}
 
 		return qtrue;
@@ -641,5 +734,19 @@ void NPC_DoPadawanStuff ( void )
 	}
 
 	if (!me->enemy || !NPC_IsAlive(me->enemy))
+	{// Not in combat...
+		if (me->enemy && !NPC_IsAlive(me->enemy))
+		{// Looks like we just killed someone... Make a kill comment...
+			G_AddPadawanCombatCommentEvent( me, EV_PADAWAN_COMBAT_KILL_TALK, 10000+irand(0,15000) );
+		}
+
 		NPC_ClearGoal();
+	}
+	else
+	{// In combat...
+		if (irand(0,2) > 0)
+		{// Make random combat comments...
+			G_AddPadawanCombatCommentEvent( me, EV_PADAWAN_COMBAT_TALK, 10000+irand(0,15000) );
+		}
+	}
 }

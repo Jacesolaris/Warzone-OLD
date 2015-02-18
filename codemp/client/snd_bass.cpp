@@ -1207,11 +1207,11 @@ DWORD BASS_LoadMemorySample ( void *memory, int length )
 	DWORD newchan;
 
 	// Try to load the sample with the highest quality options we support...
-	if ((newchan=BASS_SampleLoad(TRUE,memory,0,(DWORD)length,(DWORD)16,BASS_SAMPLE_3D|BASS_SAMPLE_MONO|BASS_SAMPLE_FLOAT|BASS_SAMPLE_VAM|BASS_SAMPLE_OVER_DIST)))
+	if ((newchan=BASS_SampleLoad(TRUE,memory,0,(DWORD)length,(DWORD)16,BASS_SAMPLE_SOFTWARE|BASS_SAMPLE_3D|BASS_SAMPLE_MONO|BASS_SAMPLE_FLOAT|BASS_SAMPLE_VAM|BASS_SAMPLE_OVER_VOL/*BASS_SAMPLE_OVER_DIST*/)))
 	{
 		return newchan;
 	}
-	else if ((newchan=BASS_SampleLoad(TRUE,memory,0,(DWORD)length,(DWORD)16,BASS_SAMPLE_3D|BASS_SAMPLE_MONO|BASS_SAMPLE_VAM|BASS_SAMPLE_OVER_DIST)))
+	else if ((newchan=BASS_SampleLoad(TRUE,memory,0,(DWORD)length,(DWORD)16,BASS_SAMPLE_SOFTWARE|BASS_SAMPLE_3D|BASS_SAMPLE_MONO|BASS_SAMPLE_VAM|BASS_SAMPLE_OVER_VOL/*BASS_SAMPLE_OVER_DIST*/)))
 	{
 		return newchan;
 	}

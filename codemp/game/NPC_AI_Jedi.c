@@ -83,6 +83,8 @@ extern void G_TestLine(vec3_t start, vec3_t end, int color, int time);
 static void Jedi_Aggression( gentity_t *self, int change );
 qboolean Jedi_WaitingAmbush( gentity_t *self );
 
+extern void G_AddPadawanCombatCommentEvent( gentity_t *self, int event, int speakDebounceTime );
+
 extern int bg_parryDebounce[];
 
 int	jediSpeechDebounceTime[TEAM_NUM_TEAMS];//used to stop several jedi from speaking all at once
@@ -6522,7 +6524,14 @@ static void Jedi_Attack( void )
 				else if ( NPCS.NPCInfo->walkDebounceTime == -1 )
 				{
 					NPCS.NPCInfo->walkDebounceTime = -2;
-					G_AddVoiceEvent( NPCS.NPC, Q_irand( EV_VICTORY1, EV_VICTORY3 ), 10000 );
+
+					if (NPCS.NPC->s.NPC_class == CLASS_PADAWAN)
+					{// Do any padawan chats...
+						G_AddPadawanCombatCommentEvent( NPCS.NPC, EV_PADAWAN_COMBAT_KILL_TALK, 10000+irand(0,15000) );
+					}
+					else
+						G_AddVoiceEvent( NPCS.NPC, Q_irand( EV_VICTORY1, EV_VICTORY3 ), 10000 );
+
 					jediSpeechDebounceTime[NPCS.NPC->client->playerTeam] = level.time + 10000;
 					NPCS.NPCInfo->desiredPitch = 0;
 					NPCS.NPCInfo->goalEntity = NULL;
@@ -6547,7 +6556,13 @@ static void Jedi_Attack( void )
 					Jedi_AggressionErosion(-3);
 					if ( BG_SabersOff( &NPCS.NPC->client->ps ) && !NPCS.NPC->client->ps.saberInFlight )
 					{//turned off saber (in hand), gloat
-						G_AddVoiceEvent( NPCS.NPC, Q_irand( EV_VICTORY1, EV_VICTORY3 ), 10000 );
+						if (NPCS.NPC->s.NPC_class == CLASS_PADAWAN)
+						{// Do any padawan chats...
+							G_AddPadawanCombatCommentEvent( NPCS.NPC, EV_PADAWAN_COMBAT_KILL_TALK, 10000+irand(0,15000) );
+						}
+						else
+							G_AddVoiceEvent( NPCS.NPC, Q_irand( EV_VICTORY1, EV_VICTORY3 ), 10000 );
+
 						jediSpeechDebounceTime[NPCS.NPC->client->playerTeam] = level.time + 10000;
 						NPCS.NPCInfo->desiredPitch = 0;
 						NPCS.NPCInfo->goalEntity = NULL;
@@ -7435,6 +7450,11 @@ void NPC_BSJedi_Default( void )
 		}*/
 
 		Jedi_Attack();
+
+		if (NPCS.NPC->s.NPC_class == CLASS_PADAWAN)
+		{// Do any padawan chats...
+			G_AddPadawanCombatCommentEvent( NPCS.NPC, EV_PADAWAN_COMBAT_TALK, 10000+irand(0,15000) );
+		}
 
 		if ( TIMER_Done( NPCS.NPC, "duck" ) && NPCS.ucmd.upmove < 0) NPCS.ucmd.upmove = 0;
 

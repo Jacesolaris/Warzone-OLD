@@ -1847,6 +1847,21 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 		break;
 		//End NPC sounds
 
+	case EV_PADAWAN_COMBAT_TALK:
+		DEBUGNAME("EV_PADAWAN_COMBAT_TALK");
+		CG_PadawanCombatChatter ( es->number );
+		break;
+
+	case EV_PADAWAN_COMBAT_KILL_TALK:
+		DEBUGNAME("EV_PADAWAN_COMBAT_KILL_TALK");
+		CG_PadawanCombatKillChatter ( es->number );
+		break;
+
+	case EV_PADAWAN_IDLE_NOREPLY:
+		DEBUGNAME("EV_PADAWAN_IDLE_NOREPLY");
+		CG_PadawanIdleNoReplyChatter ( es->number );
+		break;
+
 	case EV_PADAWAN_IDLE:
 		DEBUGNAME("EV_PADAWAN_IDLE");
 		CG_PadawanIdleChatter ( es->number );

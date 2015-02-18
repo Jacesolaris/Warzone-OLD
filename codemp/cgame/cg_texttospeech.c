@@ -84,8 +84,8 @@ ttsVoiceData_t ttsVoiceData[] = {
 	"josh22k", "English (US) - Josh (Child) - Premium", TTS_GENDER_MALE, TTS_AGE_CHILD,
 	"kenny22k", "English (US) - Kenny", TTS_GENDER_FEMALE, TTS_AGE_ADULT,
 	"laura22k", "English (US) - Laura", TTS_GENDER_FEMALE, TTS_AGE_ADULT,
-	"micah22k", "English (US) - Micah", TTS_GENDER_MALE, TTS_AGE_ADULT,
-	"nelly22k", "English (US) - Nelly", TTS_GENDER_FEMALE, TTS_AGE_ADULT,
+	//"micah22k", "English (US) - Micah", TTS_GENDER_MALE, TTS_AGE_ADULT, // UQ1: Sounds too robotic...
+	"nelly22k", "English (US) - Nelly", TTS_GENDER_FEMALE, TTS_AGE_CHILD,
 	"rod22k", "English (US) - Rod", TTS_GENDER_MALE, TTS_AGE_ADULT,
 	"ryan22k", "English (US) - Ryan", TTS_GENDER_MALE, TTS_AGE_ADULT,
 	"saul22k", "English (US) - Saul", TTS_GENDER_MALE, TTS_AGE_ADULT,
@@ -522,14 +522,14 @@ void TextToSpeech( const char *text, const char *voice, int entityNum, vec3_t or
 
 extern void CG_ChatBox_AddString(char *chatStr);
 
-void CHATTER_TextToSpeech( const char *text, const char *voice, int entityNum, vec3_t origin )
+void CHATTER_TextToSpeech( const char *text, const char *voice, int entityNum, vec3_t origin, qboolean add_chat_text )
 {
 	clientInfo_t	*ci = CG_GetClientInfoForEnt(&cg_entities[entityNum]);
 	char			chatline_text[MAX_SAY_TEXT] = {0};
 
 	if (text == "") return; // hmm somehow this can happen... no point wasting time...
 
-	if (ci)
+	if (ci && add_chat_text)
 	{
 		Com_sprintf( chatline_text, sizeof( chatline_text ), "^7%s: ^2%s.", ci->name, text );
 		CG_ChatBox_AddString( (char *)chatline_text );
@@ -547,34 +547,34 @@ void CG_SaySillyTextTest ( void )
 	switch (choice)
 	{
 	case 1:
-		CHATTER_TextToSpeech("!What the are you doing???", CG_GetTextToSpeechVoiceForEntity(&cg_entities[cg.clientNum]), cg.clientNum, cg.snap->ps.origin);
+		CHATTER_TextToSpeech("!What the are you doing???", CG_GetTextToSpeechVoiceForEntity(&cg_entities[cg.clientNum]), cg.clientNum, cg.snap->ps.origin, qfalse);
 		break;
 	case 2:
-		CHATTER_TextToSpeech("!Stop that!", CG_GetTextToSpeechVoiceForEntity(&cg_entities[cg.clientNum]), cg.clientNum, cg.snap->ps.origin);
+		CHATTER_TextToSpeech("!Stop that!", CG_GetTextToSpeechVoiceForEntity(&cg_entities[cg.clientNum]), cg.clientNum, cg.snap->ps.origin, qfalse);
 		break;
 	case 3:
-		CHATTER_TextToSpeech("!Hay, stop it!", CG_GetTextToSpeechVoiceForEntity(&cg_entities[cg.clientNum]), cg.clientNum, cg.snap->ps.origin);
+		CHATTER_TextToSpeech("!Hay, stop it!", CG_GetTextToSpeechVoiceForEntity(&cg_entities[cg.clientNum]), cg.clientNum, cg.snap->ps.origin, qfalse);
 		break;
 	case 4:
-		CHATTER_TextToSpeech("!Get away from me!", CG_GetTextToSpeechVoiceForEntity(&cg_entities[cg.clientNum]), cg.clientNum, cg.snap->ps.origin);
+		CHATTER_TextToSpeech("!Get away from me!", CG_GetTextToSpeechVoiceForEntity(&cg_entities[cg.clientNum]), cg.clientNum, cg.snap->ps.origin, qfalse);
 		break;
 	case 5:
-		CHATTER_TextToSpeech("!How much wood wood a wood chuck chuck if a wood chuck could chuck wood?", CG_GetTextToSpeechVoiceForEntity(&cg_entities[cg.clientNum]), cg.clientNum, cg.snap->ps.origin);
+		CHATTER_TextToSpeech("!How much wood wood a wood chuck chuck if a wood chuck could chuck wood?", CG_GetTextToSpeechVoiceForEntity(&cg_entities[cg.clientNum]), cg.clientNum, cg.snap->ps.origin, qfalse);
 		break;
 	case 6:
-		CHATTER_TextToSpeech("!What are you doing?", CG_GetTextToSpeechVoiceForEntity(&cg_entities[cg.clientNum]), cg.clientNum, cg.snap->ps.origin);
+		CHATTER_TextToSpeech("!What are you doing?", CG_GetTextToSpeechVoiceForEntity(&cg_entities[cg.clientNum]), cg.clientNum, cg.snap->ps.origin, qfalse);
 		break;
 	case 7:
-		CHATTER_TextToSpeech("!Dont talk to me.", CG_GetTextToSpeechVoiceForEntity(&cg_entities[cg.clientNum]), cg.clientNum, cg.snap->ps.origin);
+		CHATTER_TextToSpeech("!Dont talk to me.", CG_GetTextToSpeechVoiceForEntity(&cg_entities[cg.clientNum]), cg.clientNum, cg.snap->ps.origin, qfalse);
 		break;
 	case 8:
-		CHATTER_TextToSpeech("!Go away!", CG_GetTextToSpeechVoiceForEntity(&cg_entities[cg.clientNum]), cg.clientNum, cg.snap->ps.origin);
+		CHATTER_TextToSpeech("!Go away!", CG_GetTextToSpeechVoiceForEntity(&cg_entities[cg.clientNum]), cg.clientNum, cg.snap->ps.origin, qfalse);
 		break;
 	case 9:
-		CHATTER_TextToSpeech("!Ouch! That hurt!", CG_GetTextToSpeechVoiceForEntity(&cg_entities[cg.clientNum]), cg.clientNum, cg.snap->ps.origin);
+		CHATTER_TextToSpeech("!Ouch! That hurt!", CG_GetTextToSpeechVoiceForEntity(&cg_entities[cg.clientNum]), cg.clientNum, cg.snap->ps.origin, qfalse);
 		break;
 	default:
-		CHATTER_TextToSpeech("!Oh meye!", CG_GetTextToSpeechVoiceForEntity(&cg_entities[cg.clientNum]), cg.clientNum, cg.snap->ps.origin);
+		CHATTER_TextToSpeech("!Oh meye!", CG_GetTextToSpeechVoiceForEntity(&cg_entities[cg.clientNum]), cg.clientNum, cg.snap->ps.origin, qfalse);
 		break;
 	}
 #endif //_WIN32
@@ -596,7 +596,240 @@ void TTS_SayText ( void )
 
 	sprintf(str2, "!%s", str); // do not cache...
 
-	CHATTER_TextToSpeech(str2, CG_GetTextToSpeechVoiceForEntity(&cg_entities[cg.clientNum]), cg.clientNum, cg.snap->ps.origin);
+	CHATTER_TextToSpeech(str2, CG_GetTextToSpeechVoiceForEntity(&cg_entities[cg.clientNum]), cg.clientNum, cg.snap->ps.origin, qtrue);
+}
+
+//
+// Padawan Combat Chatters...
+//
+const char *PADAWAN_COMBAT_TALKS[] =
+{
+	// These ones are pre-recorded emotions...
+	"This is fun!",
+	"#LAUGH01#",
+	"#LAUGH02#",
+	"#LAUGH03#",
+	"#LION#",
+	"#WOLF#",
+	"#BREATH01#",
+	"#BREATH02#",
+	"#BREATH03#",
+	"#AARGH01#",
+	"#AARGH02#",
+	"#AARGH03#",
+	"#PIG#",
+	"Whoa!",
+	"Stupid!",
+	"Shit!",
+	"Piss off!",
+	"Loser!",
+	"Leave me alone!",
+	"Jerk!",
+	"Impressive!",
+	"Idiot!",
+	"You Idiot!",
+	"I like you!",
+	//"I hate you!",
+	"Hurry up!",
+	"Hurry up! I'm busting to pee!",
+	"Hilarious!",
+	"Go away!",
+	"Bugger off!",
+	"Bravo!",
+	"Wow!",
+	"Whatever!",
+	"What!",
+	"Wait a minute!",
+	"Uh oh!",
+	"That is so funny!",
+	"Surprise!",
+	"Stop!",
+	"Stop it!",
+	"Seriously!",
+	"Go away!",
+	"Ouch!",
+	"Ouch! It really hurts!",
+	"",
+};
+
+int PADAWAN_COMBAT_TALKS_MAX = -1;
+
+int GetPadawanCombatChattersMax()
+{
+	int max = 0;
+
+	if (PADAWAN_COMBAT_TALKS_MAX != -1) return PADAWAN_COMBAT_TALKS_MAX; // already set up...
+
+	// We need to count them...
+	while (PADAWAN_COMBAT_TALKS[max] != "")
+	{
+		max++;
+	}
+
+	PADAWAN_COMBAT_TALKS_MAX = max;
+	return max;
+}
+
+void CG_PadawanCombatChatter ( int entityNum )
+{
+	int choice = irand(0,GetPadawanCombatChattersMax());
+	centity_t *ent = &cg_entities[entityNum];
+
+	if (!ent) return;
+	if (ent->currentState.eType != ET_NPC) return;
+	if (ent->currentState.NPC_class != CLASS_PADAWAN) return;
+
+	CHATTER_TextToSpeech(PADAWAN_COMBAT_TALKS[choice], CG_GetTextToSpeechVoiceForEntity(ent), entityNum, ent->lerpOrigin, (qboolean)(Q_stricmpn(PADAWAN_COMBAT_TALKS[choice], "#", 1)));
+}
+
+//
+// Padawan Combat Kill Chatters...
+//
+const char *PADAWAN_COMBAT_KILL_TALKS[] =
+{
+	// These ones are pre-recorded emotions...
+	"#LAUGH01#",
+	"#LAUGH02#",
+	"#LAUGH03#",
+	"#LION#",
+	"#BREATH01#",
+	"#BREATH02#",
+	"#BREATH03#",
+	"#AARGH01#",
+	"#AARGH02#",
+	"#AARGH03#",
+	"Whoa!",
+	"Ta da!",
+	"Stupid!",
+	"See you!",
+	"See you later!",
+	"Screw you!",
+	"Shit!",
+	"Piss off!",
+	"Perfect!",
+	"Oops!",
+	"Not again!",
+	"Loser!",
+	"Later, alligator!",
+	"Jerk!",
+	"It's about time!",
+	"Incredible!",
+	"I win!",
+	"Hooray!",
+	"Have a nice day!",
+	"Ha!",
+	"Haha!",
+	"Good night!",
+	"Damn!",
+	"Cool!",
+	"Bye Bye!",
+	"Bingo!",
+	"Amazing!",
+	"Ah hah!",
+	"You're welcome!",
+	"You lose!",
+	"Yes!",
+	"Yeah!",
+	"Yahoo!",
+	"Wow!",
+	"Wonderful!",
+	"Wicked!",
+	"Whoops!",
+	"Whatever!",
+	"Well!",
+	"That is so funny!",
+	"Thanks!",
+	"Thank you!",
+	"Surprise!",
+	"Sorry!",
+	"",
+};
+
+int PADAWAN_COMBAT_KILL_TALKS_MAX = -1;
+
+int GetPadawanCombatKillChattersMax()
+{
+	int max = 0;
+
+	if (PADAWAN_COMBAT_KILL_TALKS_MAX != -1) return PADAWAN_COMBAT_KILL_TALKS_MAX; // already set up...
+
+	// We need to count them...
+	while (PADAWAN_COMBAT_KILL_TALKS[max] != "")
+	{
+		max++;
+	}
+
+	PADAWAN_COMBAT_KILL_TALKS_MAX = max;
+	return max;
+}
+
+void CG_PadawanCombatKillChatter ( int entityNum )
+{
+	int choice = irand(0,GetPadawanCombatKillChattersMax());
+	centity_t *ent = &cg_entities[entityNum];
+
+	if (!ent) return;
+	if (ent->currentState.eType != ET_NPC) return;
+	if (ent->currentState.NPC_class != CLASS_PADAWAN) return;
+
+	CHATTER_TextToSpeech(PADAWAN_COMBAT_KILL_TALKS[choice], CG_GetTextToSpeechVoiceForEntity(ent), entityNum, ent->lerpOrigin, (qboolean)(Q_stricmpn(PADAWAN_COMBAT_KILL_TALKS[choice], "#", 1)));
+}
+
+//
+// Padawan No-Reply Chatters...
+//
+const char *PADAWAN_NO_REPLY_CHATTERS[] =
+{
+	// These ones are pre-recorded emotions...
+	"This is fun!",
+	"#LAUGH01#",
+	"#LAUGH02#",
+	"#LAUGH03#",
+	"#YAWN01#",
+	"#YAWN02#",
+	"#COUGH01#",
+	"#COUGH02#",
+	"#SLEEP01#",
+	"#SLEEP02#",
+	"#SNEEZE01#",
+	"#SNEEZE02#",
+	"#THROAT01#",
+	"#THROAT02#",
+	"#THROAT03#",
+	"#WHISTLE01#",
+	"#WHISTLE02#",
+	"Hurry up!",
+	"",
+};
+
+int PADAWAN_NO_REPLY_CHATTERS_MAX = -1;
+
+int GetPadawanNoReplyChattersMax()
+{
+	int max = 0;
+
+	if (PADAWAN_NO_REPLY_CHATTERS_MAX != -1) return PADAWAN_NO_REPLY_CHATTERS_MAX; // already set up...
+
+	// We need to count them...
+	while (PADAWAN_NO_REPLY_CHATTERS[max] != "")
+	{
+		max++;
+	}
+
+	PADAWAN_NO_REPLY_CHATTERS_MAX = max;
+	return max;
+}
+
+void CG_PadawanIdleNoReplyChatter ( int entityNum )
+{
+	int choice = irand(0,GetPadawanNoReplyChattersMax());
+	centity_t *ent = &cg_entities[entityNum];
+
+	if (!ent) return;
+	if (ent->currentState.eType != ET_NPC) return;
+	if (ent->currentState.NPC_class != CLASS_PADAWAN) return;
+
+	CHATTER_TextToSpeech(PADAWAN_NO_REPLY_CHATTERS[choice], CG_GetTextToSpeechVoiceForEntity(ent), entityNum, ent->lerpOrigin, (qboolean)(Q_stricmpn(PADAWAN_NO_REPLY_CHATTERS[choice], "#", 1)));
 }
 
 //
@@ -604,45 +837,46 @@ void TTS_SayText ( void )
 //
 const char *PADAWAN_CHATTERS[] =
 {
-	"I think I might retire here",
-	"Give me the strength to change the things I can, the grace to accept the things I can not, and an account full of galactic credits",
-	"Democracy is a beautiful thing, except for that part about letting just any idiot vote",
-	"Home is where your house is",
-	"When I die, I want to see my old master again. But he better have lost the nose hair and the old-man smell",
-	"Love is that first feeling you feel before all the bad stuff",
-	"I wanna get chocolate wasted",
-	"I see dead people",
-	"I think I'm gonna like it here",
-	"If you fight with the god of death, I can't guarantee your safety",
-	"Can I shoot them now",
-	"I like using two pistols. There is symetry to wielding two",
+	//"I think I might retire here",
+	//"Give me the strength to change the things I can, the grace to accept the things I can not, and an account full of galactic credits",
+	//"Democracy is a beautiful thing, except for that part about letting just any idiot vote",
+	//"Home is where your house is",
+	//"When I die, I want to see my old master again. But he better have lost the nose hair and the old-man smell",
+	//"Love is that first feeling you feel before all the bad stuff",
+	//"I wanna get chocolate wasted",
+	//"I see dead people",
+	//"I think I'm gonna like it here",
+	//"If you fight with the god of death, I can't guarantee your safety",
+	//"Can I shoot them now",
+	//"I like using two pistols. There is symetry to wielding two",
 	"Man That guy was a special kind of stupid",
 	"Man that guy was stupid, ugly and a bad shooter",
-	"I'm gonna keep fighting til this world is the way it should be. Full of candy",
-	"When hunting a legendary light saber. Finding a fairy or two shouldn't be surprising",
-	"You can't trust a rancor to watch your food",
-	"You shouldn't laugh at your master, when he's mad or screaming at you",
-	"I want a wampa pet. Can I have one, master",
-	"Are we there yet",
+	//"I'm gonna keep fighting til this world is the way it should be. Full of candy",
+	//"When hunting a legendary light saber. Finding a fairy or two shouldn't be surprising",
+	//"You can't trust a rancor to watch your food",
+	//"You shouldn't laugh at your master, when he's mad or screaming at you",
+	//"I want a wampa pet. Can I have one, master",
+	//"Are we there yet",
 	"Master, I need to pee",
-	"Master, where does light go when you turn it off",
-	"Master, do blind people feel love at first sight",
-	"Master, if you try to fail, and succeed, which have you done",
-	"Master, if you tell a joke in the forest, but nobody laughs, was it a joke",
-	"Master, if I save time, when do I get it back",
+	//"Master, where does light go when you turn it off",
+	//"Master, do blind people feel love at first sight",
+	//"Master, if you try to fail, and succeed, which have you done",
+	//"Master, if you tell a joke in the forest, but nobody laughs, was it a joke",
+	//"Master, if I save time, when do I get it back",
 	"Master, before drawing boards were invented, where did one go back to",
 	"Master, can a stupid person be a smart ass",
-	"Master, do imperial pilots take crash courses",
+	//"Master, do imperial pilots take crash courses",
 	"Master, does killing time damage eternity",
 	"Master, how many weeks are there in a light year",
 	"Master, what is the speed of dark",
-	"Master, if someone with multiple personalities threatens to kill himself, is it considered a hostage situation",
+	//"Master, if someone with multiple personalities threatens to kill himself, is it considered a hostage situation",
 	"Master, I know what the f word means. Its like sex, but you dont love the other person",
 	// UQ1: This work but are too long for reply timer... Need to keep these under 10 seconds to make it not stupid...
-	//"Master, As you make your way through this hectic world, set aside a few minutes each day. At the end of the year, you will have a couple of days saved up",
-	//"Master, If we could just get everyone to close his or her eyes and visualize galactic peace for an hour, imagine how serene and quiet it would be until the looting started",
-	//"Master, I like to go to the greysor pound and pretend I found my greysor, but then tell them to kill it anyway because I already sold all his stuff. Pound people have no sense of humor",
-	//"Master, I believe you should live each day as if it is your last, which is why I dont have any clean laundry, because who wants to wash clothes on the last day of their life",
+	////"Master, As you make your way through this hectic world, set aside a few minutes each day. At the end of the year, you will have a couple of days saved up",
+	////"Master, If we could just get everyone to close his or her eyes and visualize galactic peace for an hour, imagine how serene and quiet it would be until the looting started",
+	////"Master, I like to go to the greysor pound and pretend I found my greysor, but then tell them to kill it anyway because I already sold all his stuff. Pound people have no sense of humor",
+	////"Master, I believe you should live each day as if it is your last, which is why I dont have any clean laundry, because who wants to wash clothes on the last day of their life",
+	// These ones are pre-recorded emotions...
 	"",
 };
 
@@ -673,7 +907,7 @@ void CG_PadawanIdleChatter ( int entityNum )
 	if (ent->currentState.eType != ET_NPC) return;
 	if (ent->currentState.NPC_class != CLASS_PADAWAN) return;
 
-	CHATTER_TextToSpeech(PADAWAN_CHATTERS[choice], CG_GetTextToSpeechVoiceForEntity(ent), entityNum, ent->lerpOrigin);
+	CHATTER_TextToSpeech(PADAWAN_CHATTERS[choice], CG_GetTextToSpeechVoiceForEntity(ent), entityNum, ent->lerpOrigin, qtrue);
 }
 
 //
@@ -681,18 +915,32 @@ void CG_PadawanIdleChatter ( int entityNum )
 //
 const char *PADAWAN_REPLY_CHATTERS[] =
 {
-	"ummmmm. yeah",
-	"yeah. ok",
-	"i guess so",
-	"ummmmm. why not",
-	"right",
-	"ok",
-	"okay",
-	"ummmmm",
-	"that is a stupid question",
-	"well, that is a stupid question",
-	"that was a stupid question",
-	"well, that was a stupid question",
+	//"ummmmm. yeah",
+	//"yeah. ok",
+	//"i guess so",
+	//"ummmmm. why not",
+	//"right",
+	//"ok",
+	//"okay",
+	//"ummmmm",
+	//"that is a stupid question",
+	//"well, that is a stupid question",
+	//"that was a stupid question",
+	//"well, that was a stupid question",
+	// These are pre-recorded emotional samples...
+	//"Idiot!",
+	//"Maybe!",
+	// Pre-recorded sample ones...
+	"Not again!",
+	"Oh my god! Not again!",
+	"Ridiculous!",
+	"Stop bugging me!",
+	"Stop it!",
+	"Stop!",
+	"Stupid!",
+	//"That's silly!",
+	"Whatever!",
+	"I don't care!",
 	"",
 };
 
@@ -716,7 +964,7 @@ int GetPadawanReplyChattersMax()
 
 const char *PADAWAN_REPLY_YODA_CHATTERS[] =
 {
-	"ummmmm. yeah",
+	/*"ummmmm. yeah",
 	"yeah. ok",
 	"i guess so",
 	"ummmmm. why not",
@@ -727,7 +975,18 @@ const char *PADAWAN_REPLY_YODA_CHATTERS[] =
 	"a stupid question, that is",
 	"well, a stupid question, that is",
 	"a stupid question, that was",
-	"well, a stupid question, that was",
+	"well, a stupid question, that was",*/
+	// Pre-recorded sample ones...
+	"Not again!",
+	"Oh my god! Not again!",
+	"Ridiculous!",
+	"Stop bugging me!",
+	"Stop it!",
+	"Stop!",
+	"Stupid!",
+	//"That's silly!",
+	"Whatever!",
+	"I don't care!",
 	"",
 };
 
@@ -762,9 +1021,9 @@ void CG_PadawanIdleReplyChatter ( int entityNum )
 	//if (ent->currentState.eType != ET_NPC) return;
 
 	if (isYoda) 
-		CHATTER_TextToSpeech(PADAWAN_REPLY_YODA_CHATTERS[choice], CG_GetTextToSpeechVoiceForEntity(ent), entityNum, ent->lerpOrigin);
+		CHATTER_TextToSpeech(PADAWAN_REPLY_YODA_CHATTERS[choice], CG_GetTextToSpeechVoiceForEntity(ent), entityNum, ent->lerpOrigin, qtrue);
 	else
-		CHATTER_TextToSpeech(PADAWAN_REPLY_CHATTERS[choice], CG_GetTextToSpeechVoiceForEntity(ent), entityNum, ent->lerpOrigin);
+		CHATTER_TextToSpeech(PADAWAN_REPLY_CHATTERS[choice], CG_GetTextToSpeechVoiceForEntity(ent), entityNum, ent->lerpOrigin, qtrue);
 }
 
 //
@@ -853,6 +1112,60 @@ void CG_DownloadAllTextToSpeechSounds ( void )
 				trap->Print("Generating TTS padawan chatter %i sound for voice %s.\n", padawan_chatter, voice);
 				
 				while (!trap->S_DownloadVoice(PADAWAN_CHATTERS[padawan_chatter], voice))
+				{// Wait and retry...
+					trap->Print("Failed. Waiting a moment before continuing.\n");
+
+					for (wait_time = 0; wait_time < 500; wait_time++)
+					{// Do some random silly stuff as we have no sleep() function;
+						int ran = irand(0,100);
+						trap->UpdateScreen();
+					}
+				}
+
+				trap->UpdateScreen();
+			}
+
+			for (padawan_chatter = 0; padawan_chatter < GetPadawanNoReplyChattersMax(); padawan_chatter++)
+			{
+				trap->Print("Generating TTS padawan no-reply chatter %i sound for voice %s.\n", padawan_chatter, voice);
+				
+				while (!trap->S_DownloadVoice(PADAWAN_NO_REPLY_CHATTERS[padawan_chatter], voice))
+				{// Wait and retry...
+					trap->Print("Failed. Waiting a moment before continuing.\n");
+
+					for (wait_time = 0; wait_time < 500; wait_time++)
+					{// Do some random silly stuff as we have no sleep() function;
+						int ran = irand(0,100);
+						trap->UpdateScreen();
+					}
+				}
+
+				trap->UpdateScreen();
+			}
+
+			for (padawan_chatter = 0; padawan_chatter < GetPadawanCombatChattersMax(); padawan_chatter++)
+			{
+				trap->Print("Generating TTS padawan combat chatter %i sound for voice %s.\n", padawan_chatter, voice);
+				
+				while (!trap->S_DownloadVoice(PADAWAN_COMBAT_TALKS[padawan_chatter], voice))
+				{// Wait and retry...
+					trap->Print("Failed. Waiting a moment before continuing.\n");
+
+					for (wait_time = 0; wait_time < 500; wait_time++)
+					{// Do some random silly stuff as we have no sleep() function;
+						int ran = irand(0,100);
+						trap->UpdateScreen();
+					}
+				}
+
+				trap->UpdateScreen();
+			}
+
+			for (padawan_chatter = 0; padawan_chatter < GetPadawanCombatKillChattersMax(); padawan_chatter++)
+			{
+				trap->Print("Generating TTS padawan combat kill chatter %i sound for voice %s.\n", padawan_chatter, voice);
+				
+				while (!trap->S_DownloadVoice(PADAWAN_COMBAT_KILL_TALKS[padawan_chatter], voice))
 				{// Wait and retry...
 					trap->Print("Failed. Waiting a moment before continuing.\n");
 

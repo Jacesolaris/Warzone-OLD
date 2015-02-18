@@ -188,6 +188,7 @@ typedef struct
 	int			blockingEntNum;
 	int			blockedSpeechDebounceTime;
 	int			padawanCommentDebounceTime;
+	int			padawanCombatCommentDebounceTime;
 	int			lastSideStepSide;
 	int			sideStepHoldTime;
 	int			homeWp;
