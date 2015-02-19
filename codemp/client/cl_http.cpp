@@ -137,10 +137,14 @@ void GetHttpDownload(char *address, char *out_file)
 	if(chunk.memory)
 	{
 		fileHandle_t fileOut = FS_SV_FOpenFileWrite(out_file);
-		FS_Write(chunk.memory, chunk.size, fileOut);
-		FS_FCloseFile(fileOut);
 
-		//Com_Printf("TTS %s cached. Size %i.\n", out_file, chunk.size);
+		if(fileOut)
+		{
+			FS_Write(chunk.memory, chunk.size, fileOut);
+			FS_FCloseFile(fileOut);
+
+			//Com_Printf("TTS %s cached. Size %i.\n", out_file, chunk.size);
+		}
 
 		free(chunk.memory);
 	}
