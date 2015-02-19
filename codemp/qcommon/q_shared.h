@@ -1525,6 +1525,40 @@ typedef enum {
 	NUM_TRACK_CHANNELS
 } trackchan_t;
 
+// UQ1: 32 new flags for us to use... For whatever we need...
+#define	EXF_GENDER_MALE			(1<<0)
+#define	EXF_GENDER_DROID		(1<<1)
+#define	EXF_GENDER_FEMALE		(1<<2)
+#define	EXF_UNUSED3				(1<<3)
+#define	EXF_UNUSED4				(1<<4)
+#define	EXF_UNUSED5				(1<<5)
+#define	EXF_UNUSED6				(1<<6)
+#define	EXF_UNUSED7				(1<<7)
+#define	EXF_UNUSED8				(1<<8)
+#define	EXF_UNUSED9				(1<<9)
+#define	EXF_UNUSED10			(1<<10)
+#define	EXF_UNUSED11			(1<<11)
+#define	EXF_UNUSED12			(1<<12)
+#define	EXF_UNUSED13			(1<<13)
+#define	EXF_UNUSED14			(1<<14)
+#define	EXF_UNUSED15			(1<<15)
+#define	EXF_UNUSED16			(1<<16)
+#define	EXF_UNUSED17			(1<<17)
+#define	EXF_UNUSED18			(1<<18)
+#define	EXF_UNUSED19			(1<<19)
+#define	EXF_UNUSED20			(1<<20)
+#define	EXF_UNUSED21			(1<<21)
+#define	EXF_UNUSED22			(1<<22)
+#define	EXF_UNUSED23			(1<<23)
+#define	EXF_UNUSED24			(1<<24)
+#define	EXF_UNUSED25			(1<<25)
+#define	EXF_UNUSED26			(1<<26)
+#define	EXF_UNUSED27			(1<<27)
+#define	EXF_UNUSED28			(1<<28)
+#define	EXF_UNUSED29			(1<<29)
+#define	EXF_UNUSED30			(1<<30)
+#define	EXF_UNUSED31			(1<<31)
+
 #define TRACK_CHANNEL_MAX (NUM_TRACK_CHANNELS-50)
 
 typedef struct forcedata_s {
@@ -1897,6 +1931,9 @@ typedef struct playerState_s {
 	int				temporaryWeapon;
 
 	int				eventIndex;
+
+	// UQ1: Added - Extra flags...
+	int			extra_flags;
 
 	//index values for each type of sound, gets the folder the sounds
 	//are in. I wish there were a better way to do this,
@@ -2325,6 +2362,9 @@ typedef struct entityState_s {
 	int			eventIndex;
 
 	int			NPC_NAME_ID;
+
+	// UQ1: Added - Extra flags...
+	int			extra_flags;
 
 	//rww - spare values specifically for use by mod authors.
 	//See netf_overrides.txt if you want to increase the send

@@ -960,6 +960,7 @@ netField_t	entityStateFields[] =
 { NETF(csSounds_Combat), 16 },
 { NETF(csSounds_Extra), 16 },
 { NETF(csSounds_Jedi), 16 },
+{ NETF(extra_flags), 32 },
 
 //rww - for use by mod authors only
 { NETF(userInt1), 1 },
@@ -1305,6 +1306,7 @@ netField_t	playerStateFields[] =
 { PSF(csSounds_Combat), 16 },
 { PSF(csSounds_Extra), 16 },
 { PSF(csSounds_Jedi), 16 },
+{ PSF(extra_flags), 32 },
 { PSF(pm_time), -16 },
 { PSF(customRGBA[1]), 8 }, //0-255
 { PSF(clientNum), GENTITYNUM_BITS },
@@ -1475,6 +1477,7 @@ netField_t	pilotPlayerStateFields[] =
 { PSF(csSounds_Combat), 16 },
 { PSF(csSounds_Extra), 16 },
 { PSF(csSounds_Jedi), 16 },
+{ PSF(extra_flags), 32 },
 { PSF(saberCanThrow), 1 },
 { PSF(fd.forcePowerDebounce[FP_LEVITATION]), 32 },
 { PSF(torsoFlip), 1 },

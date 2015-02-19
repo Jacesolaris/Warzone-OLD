@@ -610,6 +610,23 @@ void CG_HandleNPCSounds(centity_t *cent)
 		return;
 	}
 
+	if (cent->currentState.extra_flags & EXF_GENDER_DROID)
+	{
+		ci->gender = GENDER_DROID;
+	}
+	else if (cent->currentState.extra_flags & EXF_GENDER_FEMALE)
+	{
+		ci->gender = GENDER_FEMALE;
+	}
+	else if (cent->currentState.extra_flags & EXF_GENDER_MALE)
+	{
+		ci->gender = GENDER_MALE;
+	}
+	else
+	{
+		ci->gender = GENDER_NEUTER;
+	}
+
 	//trap->Print("CLIENT CS: %i %i %i %i.\n", cent->currentState.csSounds_Std, cent->currentState.csSounds_Combat, cent->currentState.csSounds_Extra, cent->currentState.csSounds_Jedi);
 
 	//standard

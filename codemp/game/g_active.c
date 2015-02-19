@@ -2028,10 +2028,45 @@ void ClientThink_real( gentity_t *ent ) {
 
 	if (isNPC)
 	{// UQ1: Why were we not using this???
-		//ucmd = &NPCS.ucmd;
+		class_t npc_class;
+		
 		memcpy(&ent->client->pers.cmd, &NPCS.ucmd, sizeof(usercmd_t));
 
-		ent->client->ps.stats[STAT_GENDER] = ent->NPC->stats.gender; // UQ1: Added...
+		ent->client->ps.extra_flags = ent->s.extra_flags;
+
+		ent->s.extra_flags &= ~EXF_GENDER_MALE;
+		ent->s.extra_flags &= ~EXF_GENDER_FEMALE;
+		ent->s.extra_flags &= ~EXF_GENDER_DROID;
+
+		if (ent->client) npc_class = ent->client->NPC_class;
+
+		if ( npc_class == CLASS_SEEKER || npc_class == CLASS_PROBE || npc_class == CLASS_MOUSE || npc_class == CLASS_REMOTE ||
+				npc_class == CLASS_GONK || npc_class == CLASS_R2D2 || npc_class == CLASS_R5D2 ||
+				npc_class == CLASS_PROTOCOL || npc_class == CLASS_MARK1 || npc_class == CLASS_MARK2 ||
+				npc_class == CLASS_INTERROGATOR || npc_class == CLASS_ATST || npc_class == CLASS_SENTRY )
+		{// Make sure it's marked as a droid...
+			ent->NPC->stats.gender = GENDER_DROID;
+		}
+
+		if ( ent->NPC->stats.gender == GENDER_MALE )
+		{
+			ent->s.extra_flags |= EXF_GENDER_MALE;
+		}
+		else if ( ent->NPC->stats.gender == GENDER_FEMALE )
+		{
+			ent->s.extra_flags |= EXF_GENDER_FEMALE;
+		}
+		else if ( ent->NPC->stats.gender == GENDER_DROID )
+		{
+			ent->s.extra_flags |= EXF_GENDER_DROID;
+		}
+
+		ent->client->ps.extra_flags = ent->s.extra_flags;
+	}
+	else
+	{
+		ent->client->ps.extra_flags = ent->s.extra_flags;
+		//trap->Print("*SERVER* PLAYER %i [%s] - flags %i [%i]\n", ent->s.number, ent->client->pers.netname, ent->client->ps.extra_flags, ent->s.extra_flags);
 	}
 
 	if (!isNPC)

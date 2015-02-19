@@ -2477,10 +2477,25 @@ qboolean NPC_ParseParms( const char *NPCName, gentity_t *NPC )
 						continue;
 					}
 					
-					if (StringContainsWord(value, "female"))
+					if (StringContainsWord(value, "droid"))
+					{
+						stats->gender = GENDER_DROID;
+						NPC->s.extra_flags |= EXF_GENDER_DROID;
+					}
+					else if (StringContainsWord(value, "neuter"))
+					{
+						stats->gender = GENDER_NEUTER;
+					}
+					else if (StringContainsWord(value, "female"))
+					{
 						stats->gender = GENDER_FEMALE;
+						NPC->s.extra_flags |= EXF_GENDER_FEMALE;
+					}
 					else //if (StringContainsWord(value, "male"))
-						stats->gender = GENDER_FEMALE;
+					{
+						stats->gender = GENDER_MALE;
+						NPC->s.extra_flags |= EXF_GENDER_MALE;
+					}
 
 					continue;
 				}

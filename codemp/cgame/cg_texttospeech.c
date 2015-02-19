@@ -253,7 +253,7 @@ qboolean CG_IsImperialOfficer(centity_t *ent)
 
 	if (ci->modelName && ci->modelName[0])
 	{
-		if (StringContainsWord(ci->modelName, "officer"))
+		if (StringContainsWord(ci->modelName, "imperial"))
 			return qtrue;
 	}
 
@@ -310,10 +310,12 @@ qboolean CG_TextToSpeechVoiceValid(centity_t *ent)
 		int				SELECTED_GENDER = TTS_GENDER_NONE;
 		int				SELECTED_AGE = TTS_AGE_NONE;
 
-		if (ci && ent->currentState.eType == ET_NPC) ci->gender = (gender_t)ent->playerState->stats[STAT_GENDER];
-
 		// Select best gender for this entity...
-		if (CG_IsYoda(ent))
+		if (ent->playerState->extra_flags & EXF_GENDER_DROID)
+		{
+			SELECTED_GENDER = TTS_GENDER_DROID;
+		}
+		else if (CG_IsYoda(ent))
 		{
 			SELECTED_GENDER = TTS_GENDER_YODA;
 		}
@@ -400,10 +402,12 @@ char *CG_GetTextToSpeechVoiceForEntity(centity_t *ent)
 		// Init anyway in case we somehow fail...
 		ent->selected_voice = 0;
 
-		if (ci && ent->currentState.eType == ET_NPC) ci->gender = (gender_t)ent->playerState->stats[STAT_GENDER];
-
 		// Select best gender for this entity...
-		if (CG_IsYoda(ent))
+		if (ci->gender == GENDER_DROID)
+		{
+			SELECTED_GENDER = TTS_GENDER_DROID;
+		}
+		else if (CG_IsYoda(ent))
 		{
 			SELECTED_GENDER = TTS_GENDER_YODA;
 		}

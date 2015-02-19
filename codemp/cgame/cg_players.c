@@ -894,21 +894,52 @@ void CG_LoadCISounds(clientInfo_t *ci, qboolean modelloaded)
 	if ( !ci->skinName[0] || !Q_stricmp( "default", ci->skinName ) )
 	{//try default sounds.cfg first
 		fLen = trap->FS_Open(va("models/players/%s/sounds.cfg", dir), &f, FS_READ);
+
 		if ( !f )
 		{//no?  Look for _default sounds.cfg
 			fLen = trap->FS_Open(va("models/players/%s/sounds_default.cfg", dir), &f, FS_READ);
+
+			/*if ( !f )
+			{
+				trap->Print("%s does not exist.\n", va("models/players/%s/sounds_default.cfg", dir));
+			}
+			else
+			{
+				trap->Print("%s exists.\n", va("models/players/%s/sounds_default.cfg", dir));
+			}*/
 		}
+		/*else
+		{
+			trap->Print("%s exists.\n", va("models/players/%s/sounds.cfg", dir));
+		}*/
 	}
 	else
 	{//use the .skin associated with this skin
 		fLen = trap->FS_Open(va("models/players/%s/sounds_%s.cfg", dir, ci->skinName), &f, FS_READ);
+
 		if ( !f )
 		{//fall back to default sounds
 			fLen = trap->FS_Open(va("models/players/%s/sounds.cfg", dir), &f, FS_READ);
-		}
-	}
 
+			/*if ( !f )
+			{
+				trap->Print("%s does not exist.\n", va("models/players/%s/sounds.cfg", dir));
+			}
+			else
+			{
+				trap->Print("%s exists.\n", va("models/players/%s/sounds.cfg", dir));
+			}*/
+		}
+		/*else
+		{
+			trap->Print("%s exists.\n", va("models/players/%s/sounds_%s.cfg", dir, ci->skinName));
+		}*/
+	}
+	
+#if 0
+	/* UQ1: WTF - soundpath is never being defined... All this crap is running on an empty variable */
 	soundpath[0] = 0;
+	//trap->Print("CLIENT: %s. SOUNDPATH: %s. SKIN_NAME: %s. DIR: %s.\n", ci->name, soundpath, ci->skinName, dir);
 
 	if (f)
 	{
@@ -951,6 +982,122 @@ void CG_LoadCISounds(clientInfo_t *ci, qboolean modelloaded)
 	{
 		isFemale = ci->gender == GENDER_FEMALE;
 	}
+#else
+	if ( f )
+	{// Seems we have a sounds.cfg file... Read/Use it...
+		char			*buf;
+		int				num = 0;
+		int				NUM_LINES = 0;
+
+		if ( (buf = (char *)malloc( fLen + 1)) != 0 )
+		{//alloc memory for buffer
+			char			*s, *t;
+
+			// Read in the whole file...
+			trap->FS_Read( buf, fLen, f );
+			buf[fLen] = 0;
+			trap->FS_Close( f );
+
+			// 
+			for ( t = s = buf; *t; /* */ )
+			{
+				char sex[1];
+				sex[0] = s[0];
+
+				num++;
+				s = strchr( s, '\n' );
+
+				if ( !s && *t )
+				{// UQ1: pff no newline on the sex value in the cfg... Hopefully this is all we need...
+					//trap->Print("%s sex is %s.\n", modelname, t);
+
+					// Set sex...
+					if (sex[0] == 'm') {
+						ci->gender = GENDER_MALE;
+						break;
+					}
+					else if (sex[0] == 'f') {
+						ci->gender = GENDER_FEMALE;
+						break;
+					}
+					else if (sex[0] == 'd') {
+						ci->gender = GENDER_DROID;
+						break;
+					}
+					else if (sex[0] == 'n') {
+						ci->gender = GENDER_NEUTER;
+						break;
+					}
+					else {
+						ci->gender = GENDER_MALE;
+						break;
+					}
+				}
+
+				if ( !s || num > fLen )
+				{
+					break;
+				}
+
+				while ( *s == '\n' )
+				{
+					*s++ = 0;
+				}
+
+				if ( *t )
+				{
+					if ( Q_strncmp( "//", va( "%s", t), 2) && strlen( va( "%s", t)) > 0 )
+					{	// Not a comment either... Record it in our list...
+						if (NUM_LINES < 1)
+						{// Sound dir...
+							//strcpy(soundpath, t);
+							Q_strncpyz( soundpath, va( "%s", t), strlen( va( "%s", t)) );
+							//trap->Print("SOUNDPATH set to %s.\n", soundpath);
+						}
+						else
+						{// line 1 is gender "m" or "f" or "n".
+							// Set sex...
+							if (sex[0] == 'm') {
+								ci->gender = GENDER_MALE;
+								break;
+							}
+							else if (sex[0] == 'f') {
+								ci->gender = GENDER_FEMALE;
+								break;
+							}
+							else if (sex[0] == 'd') {
+								ci->gender = GENDER_DROID;
+								break;
+							}
+							else if (sex[0] == 'n') {
+								ci->gender = GENDER_NEUTER;
+								break;
+							}
+							else {
+								ci->gender = GENDER_MALE;
+								break;
+							}
+						}
+
+						NUM_LINES++;
+					}
+				}
+
+				t = s;
+			}
+
+			free(buf);
+		}
+
+		trap->FS_Close( f );
+	}
+
+	if (ci->gender == GENDER_FEMALE) isFemale = qtrue;
+	
+	//if (ci->gender == GENDER_FEMALE) trap->Print("GENDER_FEMALE\n");
+	//if (ci->gender == GENDER_MALE) trap->Print("GENDER_MALE\n");
+	//if (ci->gender == GENDER_DROID) trap->Print("GENDER_DROID\n");
+#endif
 
 	trap->S_Shutup(qtrue);
 
@@ -1834,13 +1981,13 @@ void CG_NewClientInfo( int clientNum, qboolean entitiesInitialized ) {
 	//[/RGBSabers]
 
 	// Gender hints
-	if ( (v = Info_ValueForKey( configstring, "ds" )) )
+	/*if ( (v = Info_ValueForKey( configstring, "ds" )) )
 	{
 		if ( *v == 'm' )
 			newInfo.gender = GENDER_MALE;
 		else
 			newInfo.gender = GENDER_FEMALE;
-	}
+	}*/
 
 	// team task
 	v = Info_ValueForKey( configstring, "tt" );
@@ -13919,6 +14066,52 @@ void CG_VisualWeaponsUpdate(centity_t *cent, clientInfo_t *ci)
 }
 //[/VisualWeapons]
 
+extern clientInfo_t *CG_GetClientInfoForEnt(centity_t *ent);
+
+void CG_SetupGender( centity_t *cent )
+{
+	clientInfo_t	*ci = CG_GetClientInfoForEnt(cent);
+
+	if (cg.snap && cg.snap->ps.clientNum == cent->currentState.number)
+		cent->playerState->extra_flags = cent->currentState.extra_flags = cg.snap->ps.extra_flags;
+	else
+		cent->playerState->extra_flags = cent->currentState.extra_flags;
+
+	if (!ci) return;
+
+	//if (cent->currentState.eType == ET_PLAYER)
+	//	trap->Print("*CLIENT* PLAYER %i [%s] - flags %i [%i] [%i]\n", cent->currentState.number, ci->name, cent->playerState->extra_flags, cent->currentState.extra_flags, cg.snap->ps.extra_flags);
+
+	if (cent->playerState->extra_flags & EXF_GENDER_DROID)
+	{
+		ci->gender = GENDER_DROID;
+
+		//if (cent->currentState.eType == ET_PLAYER)
+		//	trap->Print("*CLIENT* PLAYER %i [%s] - GENDER DROID.\n", cent->currentState.number, ci->name);
+	}
+	else if (cent->playerState->extra_flags & EXF_GENDER_MALE)
+	{
+		ci->gender = GENDER_MALE;
+
+		//if (cent->currentState.eType == ET_PLAYER)
+		//	trap->Print("*CLIENT* PLAYER %i [%s] - GENDER MALE.\n", cent->currentState.number, ci->name);
+	}
+	else if (cent->playerState->extra_flags & EXF_GENDER_FEMALE)
+	{
+		ci->gender = GENDER_FEMALE;
+
+		//if (cent->currentState.eType == ET_PLAYER)
+		//	trap->Print("*CLIENT* PLAYER %i [%s] - GENDER FEMALE.\n", cent->currentState.number, ci->name);
+	}
+	else
+	{
+		ci->gender = GENDER_NEUTER;
+
+		//if (cent->currentState.eType == ET_PLAYER)
+		//	trap->Print("*CLIENT* PLAYER %i [%s] - GENDER NEUTER.\n", cent->currentState.number, ci->name);
+	}
+}
+
 void CG_Player( centity_t *cent ) {
 	clientInfo_t	*ci;
 	refEntity_t		legs;
@@ -13938,6 +14131,8 @@ void CG_Player( centity_t *cent ) {
 	qboolean		g2HasWeapon = qfalse;
 	qboolean		drawPlayerSaber = qfalse;
 	qboolean		checkDroidShields = qfalse;
+
+	CG_SetupGender(cent);
 
 	//first if we are not an npc and we are using an emplaced gun then make sure our
 	//angles are visually capped to the constraints (otherwise it's possible to lerp

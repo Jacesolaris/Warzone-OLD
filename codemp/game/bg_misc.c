@@ -3504,6 +3504,9 @@ void BG_PlayerStateToEntityState( playerState_t *ps, entityState_t *s, qboolean 
 	s->csSounds_Combat = ps->csSounds_Combat;
 	s->csSounds_Extra = ps->csSounds_Extra;
 	s->csSounds_Jedi = ps->csSounds_Jedi;
+
+	// UQ1: Added - Extra flags...
+	//s->extra_flags = ps->extra_flags;
 }
 
 /*
@@ -3770,6 +3773,9 @@ void BG_PlayerStateToEntityStateExtraPolate( playerState_t *ps, entityState_t *s
 	s->csSounds_Combat = ps->csSounds_Combat;
 	s->csSounds_Extra = ps->csSounds_Extra;
 	s->csSounds_Jedi = ps->csSounds_Jedi;
+
+	// UQ1: Added - Extra flags...
+	//s->extra_flags = ps->extra_flags;
 }
 
 /*

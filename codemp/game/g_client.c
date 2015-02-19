@@ -2128,7 +2128,7 @@ qboolean ClientUserinfoChanged( int clientNum ) {
 	char *value=NULL, userinfo[MAX_INFO_STRING], buf[MAX_INFO_STRING], oldClientinfo[MAX_INFO_STRING], model[MAX_QPATH],
 		forcePowers[DEFAULT_FORCEPOWERS_LEN], oldname[MAX_NETNAME], className[MAX_QPATH], color1[16], color2[16];
 	qboolean modelChanged = qfalse;
-	gender_t gender = GENDER_MALE;
+	//gender_t gender = GENDER_MALE;
 
 	//[RGBSabers]
 	char	rgb1[MAX_INFO_STRING];
@@ -2509,16 +2509,190 @@ qboolean ClientUserinfoChanged( int clientNum ) {
 	// print scoreboards, display models, and play custom sounds
 	//[/RGBSabers]
 
+	/*
+	UQ1: Ummm... How about we actually look at sounds.cfg and set gender info???
+	*/
+
+	{
+		char			*modelname = Info_ValueForKey( userinfo, "model" );
+		const char		*dir = modelname;
+		char			use_dir[64];
+		fileHandle_t	f;
+		int				fLen = 0;
+		char			*buf;
+		int				num = 0;
+		int				NUM_LINES = 0;
+
+		StripModelName( dir, use_dir, 64 );
+
+		//try default sounds.cfg first
+		fLen = trap->FS_Open(va("models/players/%s/sounds.cfg", use_dir), &f, FS_READ);
+
+		if ( !f )
+		{//no?  Look for _default sounds.cfg
+			//trap->Print("%s does not exist.\n", va("models/players/%s/sounds.cfg", use_dir));
+
+			fLen = trap->FS_Open(va("models/players/%s/sounds_default.cfg", use_dir), &f, FS_READ);
+
+			/*if ( !f )
+			{
+				trap->Print("%s does not exist.\n", va("models/players/%s/sounds_default.cfg", use_dir));
+			}
+			else
+			{
+				trap->Print("%s exists.\n", va("models/players/%s/sounds_default.cfg", use_dir));
+			}*/
+		}
+		/*else
+		{
+			trap->Print("%s exists.\n", va("models/players/%s/sounds.cfg", use_dir));
+		}*/
+
+		if ( f )
+		{// Seems we have a sounds.cfg file... Read/Use it...
+			if ( (buf = (char *)malloc( fLen + 1)) != 0 )
+			{//alloc memory for buffer
+				char			*s, *t;
+
+				// Read in the whole file...
+				trap->FS_Read( buf, fLen, f );
+				buf[fLen] = 0;
+				trap->FS_Close( f );
+
+				// 
+				for ( t = s = buf; *t; /* */ )
+				{
+					char sex[1];
+					sex[0] = s[0];
+
+					num++;
+					s = strchr( s, '\n' );
+
+					if ( !s && *t )
+					{// UQ1: pff no newline on the sex value in the cfg... Hopefully this is all we need...
+						//trap->Print("%s sex is %s.\n", modelname, sex);
+						ent->s.extra_flags &= ~EXF_GENDER_MALE;
+						ent->s.extra_flags &= ~EXF_GENDER_FEMALE;
+						ent->s.extra_flags &= ~EXF_GENDER_DROID;
+
+						// Set sex...
+						if (sex[0] == 'm') {
+							Info_SetValueForKey( userinfo, "sex", "male" );
+							ent->s.extra_flags |= EXF_GENDER_MALE;
+							//trap->Print("%s sex set to MALE.\n", modelname);
+							break;
+						}
+						else if (sex[0] == 'f') {
+							Info_SetValueForKey( userinfo, "sex", "female" );
+							ent->s.extra_flags |= EXF_GENDER_FEMALE;
+							//trap->Print("%s sex set to FEMALE.\n", modelname);
+							break;
+						}
+						else if (sex[0] == 'd') {
+							Info_SetValueForKey( userinfo, "sex", "droid" );
+							ent->s.extra_flags |= EXF_GENDER_DROID;
+							//trap->Print("%s sex set to DROID.\n", modelname);
+							break;
+						}
+						else if (sex[0] == 'n') {
+							Info_SetValueForKey( userinfo, "sex", "neuter" );
+							//trap->Print("%s sex set to NEUTER.\n", modelname);
+							break;
+						}
+						else {
+							Info_SetValueForKey( userinfo, "sex", "male" );
+							ent->s.extra_flags |= EXF_GENDER_MALE;
+							//trap->Print("%s sex set to MALE (default).\n", modelname);
+							break;
+						}
+					}
+
+					if ( !s || num > fLen )
+					{
+						break;
+					}
+
+					while ( *s == '\n' )
+					{
+						*s++ = 0;
+					}
+
+					if ( *t )
+					{
+						if ( Q_strncmp( "//", va( "%s", t), 2) && strlen( va( "%s", t)) > 0 )
+						{	// Not a comment either... Record it in our list...
+							if (NUM_LINES < 1)
+							{// Sound dir...
+								//strcpy(OUT, t);
+							}
+							else
+							{// line 1 is gender "m" or "f" or "n".
+								ent->s.extra_flags &= ~EXF_GENDER_MALE;
+								ent->s.extra_flags &= ~EXF_GENDER_FEMALE;
+								ent->s.extra_flags &= ~EXF_GENDER_DROID;
+
+								// Set sex...
+								if (sex[0] == 'm') {
+									Info_SetValueForKey( userinfo, "sex", "male" );
+									ent->s.extra_flags |= EXF_GENDER_MALE;
+									break;
+								}
+								else if (sex[0] == 'f') {
+									Info_SetValueForKey( userinfo, "sex", "female" );
+									ent->s.extra_flags |= EXF_GENDER_FEMALE;
+									break;
+								}
+								else if (sex[0] == 'd') {
+									Info_SetValueForKey( userinfo, "sex", "droid" );
+									ent->s.extra_flags |= EXF_GENDER_DROID;
+									break;
+								}
+								else if (sex[0] == 'n') {
+									Info_SetValueForKey( userinfo, "sex", "neuter" );
+									break;
+								}
+								else {
+									Info_SetValueForKey( userinfo, "sex", "male" );
+									ent->s.extra_flags |= EXF_GENDER_MALE;
+									break;
+								}
+							}
+
+							NUM_LINES++;
+						}
+					}
+
+					t = s;
+				}
+
+				free(buf);
+			}
+
+			trap->FS_Close( f );
+		}
+	}
+
+	/*
 	// gender hints
 	s = Info_ValueForKey( userinfo, "sex" );
 	if ( !Q_stricmp( s, "male" ) )
+	{
 		gender = GENDER_MALE;
+		
+	}
 	else if ( !Q_stricmp( s, "female" ) )
+	{
 		gender = GENDER_FEMALE;
+	}
+	else if ( !Q_stricmp( s, "droid" ) )
+	{
+		gender = GENDER_DROID;
+	}
 	else
+	{
 		gender = GENDER_NEUTER;
-
-	ent->client->ps.stats[STAT_GENDER] = gender; // UQ1: Added...
+	}
+	*/
 
 	s = Info_ValueForKey( userinfo, "snaps" );
 	if ( atoi( s ) < sv_fps.integer )
@@ -2530,9 +2704,9 @@ qboolean ClientUserinfoChanged( int clientNum ) {
 	Q_strcat( buf, sizeof( buf ), va( "n\\%s\\", client->pers.netname ) );
 	Q_strcat( buf, sizeof( buf ), va( "t\\%i\\", client->sess.sessionTeam ) );
 	Q_strcat( buf, sizeof( buf ), va( "model\\%s\\", model ) );
-		 if ( gender == GENDER_MALE )	Q_strcat( buf, sizeof( buf ), va( "ds\\%c\\", 'm' ) );
-	else if ( gender == GENDER_FEMALE )	Q_strcat( buf, sizeof( buf ), va( "ds\\%c\\", 'f' ) );
-	else								Q_strcat( buf, sizeof( buf ), va( "ds\\%c\\", 'n' ) );
+	//	 if ( gender == GENDER_MALE )	Q_strcat( buf, sizeof( buf ), va( "ds\\%c\\", 'm' ) );
+	//else if ( gender == GENDER_FEMALE )	Q_strcat( buf, sizeof( buf ), va( "ds\\%c\\", 'f' ) );
+	//else								Q_strcat( buf, sizeof( buf ), va( "ds\\%c\\", 'n' ) );
 	Q_strcat( buf, sizeof( buf ), va( "st\\%s\\", client->pers.saber1 ) );
 	Q_strcat( buf, sizeof( buf ), va( "st2\\%s\\", client->pers.saber2 ) );
 	Q_strcat( buf, sizeof( buf ), va( "c1\\%s\\", color1 ) );
