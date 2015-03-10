@@ -877,9 +877,108 @@ void RB_MultiPost(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 	FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.multipostShader, color, 0);
 }
 
+void TR_AxisToAngles ( const vec3_t axis[3], vec3_t angles )
+{
+    vec3_t right;
+    
+    // vec3_origin is the origin (0, 0, 0).
+    VectorSubtract (vec3_origin, axis[1], right);
+    
+    if ( axis[0][2] > 0.999f )
+    {
+        angles[PITCH] = -90.0f;
+        angles[YAW] = RAD2DEG (atan2f (-right[0], right[1]));
+        angles[ROLL] = 0.0f;
+    }
+    else if ( axis[0][2] < -0.999f )
+    {
+        angles[PITCH] = 90.0f;
+        angles[YAW] = RAD2DEG (atan2f (-right[0], right[1]));
+        angles[ROLL] = 0.0f;
+    }
+    else
+    {
+        angles[PITCH] = RAD2DEG (asinf (-axis[0][2]));
+        angles[YAW] = RAD2DEG (atan2f (axis[0][1], axis[0][0]));
+        angles[ROLL] = RAD2DEG (atan2f (-right[2], axis[2][2]));
+    }
+}
+
+bool TR_WorldToScreen(vec3_t worldCoord, float *x, float *y)
+{
+	int	xcenter, ycenter;
+	vec3_t	local, transformed;
+	vec3_t	vfwd, vright, vup, viewAngles;
+	
+	TR_AxisToAngles(backEnd.refdef.viewaxis, viewAngles);
+
+	//NOTE: did it this way because most draw functions expect virtual 640x480 coords
+	//	and adjust them for current resolution
+	xcenter = 640 / 2;//gives screen coords in virtual 640x480, to be adjusted when drawn
+	ycenter = 480 / 2;//gives screen coords in virtual 640x480, to be adjusted when drawn
+
+	VectorSubtract (worldCoord, backEnd.refdef.vieworg, local);
+
+	AngleVectors (viewAngles, vfwd, vright, vup);
+
+	transformed[0] = DotProduct(local,vright);
+	transformed[1] = DotProduct(local,vup);
+	transformed[2] = DotProduct(local,vfwd);
+
+	// Make sure Z is not negative.
+	if(transformed[2] < 0.01)
+	{
+		return false;
+	}
+	// Simple convert to screen coords.
+	float xzi = xcenter / transformed[2] * (90.0/backEnd.refdef.fov_x);
+	float yzi = ycenter / transformed[2] * (90.0/backEnd.refdef.fov_y);
+
+	*x = (xcenter + xzi * transformed[0]);
+	*y = (ycenter - yzi * transformed[1]);
+
+	return true;
+}
+
+qboolean TR_InFOV( vec3_t spot, vec3_t from )
+{
+	vec3_t	deltaVector, angles, deltaAngles;
+	vec3_t	fromAnglesCopy;
+	vec3_t	fromAngles;
+	int hFOV = backEnd.refdef.fov_x * 0.5;
+	int vFOV = backEnd.refdef.fov_y * 0.5;
+
+	TR_AxisToAngles(backEnd.refdef.viewaxis, fromAngles);
+
+	VectorSubtract ( spot, from, deltaVector );
+	vectoangles ( deltaVector, angles );
+	VectorCopy(fromAngles, fromAnglesCopy);
+	
+	deltaAngles[PITCH]	= AngleDelta ( fromAnglesCopy[PITCH], angles[PITCH] );
+	deltaAngles[YAW]	= AngleDelta ( fromAnglesCopy[YAW], angles[YAW] );
+
+	if ( fabs ( deltaAngles[PITCH] ) <= vFOV && fabs ( deltaAngles[YAW] ) <= hFOV ) 
+	{
+		return qtrue;
+	}
+
+	return qfalse;
+}
+
+#include "../cgame/cg_public.h"
+
+void Volumetric_Trace( trace_t *results, const vec3_t start, const vec3_t mins, const vec3_t maxs, const vec3_t end, const int passEntityNum, const int contentmask )
+{
+	results->entityNum = ENTITYNUM_NONE;
+	//SV_Trace(results, start, mins, maxs, end, passEntityNum, contentmask, eG2TraceType, useLod);
+	ri->CM_BoxTrace(results, start, end, mins, maxs, 0, contentmask, 0);
+	results->entityNum = results->fraction != 1.0 ? ENTITYNUM_WORLD : ENTITYNUM_NONE;
+}
+
 void RB_VolumetricDLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 {
 	vec4_t color;
+	int NUM_VISIBLE_LIGHTS = 0;
 
 	// bloom
 	color[0] =
@@ -894,6 +993,64 @@ void RB_VolumetricDLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t l
 	for ( int l = 0 ; l < backEnd.refdef.num_dlights ; l++ ) 
 	{
 		dlight_t	*dl = &backEnd.refdef.dlights[l];
+		
+		float x, y, distance;
+		
+		distance = Distance(backEnd.refdef.vieworg, dl->origin);
+		
+		if (distance > 2048.0) 
+		{
+			dl->radius = 0.0;
+			continue; // too far away...
+		}
+
+		if (!TR_InFOV( dl->origin, backEnd.refdef.vieworg ))
+		{
+			dl->radius = 0.0;
+			continue; // not on screen...
+		}
+
+		if (!TR_WorldToScreen(dl->origin, &x, &y)) 
+		{
+			dl->radius = 0.0;
+			continue; // not on screen...
+		}
+
+		trace_t trace;
+		vec3_t mins = {-1,-1,-1}, maxs = {1,1,1};
+		// //|CONTENTS_SHOTCLIP|CONTENTS_TERRAIN//(/*MASK_SOLID|*/CONTENTS_SOLID|CONTENTS_PLAYERCLIP|CONTENTS_SHOTCLIP|CONTENTS_TERRAIN|CONTENTS_BODY)
+		Volumetric_Trace( &trace, backEnd.refdef.vieworg, NULL, NULL, dl->origin, -1, (CONTENTS_SOLID|CONTENTS_TERRAIN) );
+		//ri->Printf(PRINT_WARNING, "Trace from %f %f %f to %f %f %f.\n", backEnd.refdef.vieworg[0], backEnd.refdef.vieworg[1], backEnd.refdef.vieworg[2], dl->origin[0], dl->origin[1], dl->origin[2]);
+		if (trace.fraction != 1.0 && Distance(trace.endpos, dl->origin) > 64)
+		{
+			dl->radius = 0.0;
+			continue; // Can't see this...
+		}
+
+		NUM_VISIBLE_LIGHTS++;
+	}
+
+	for ( int l = 0 ; l < backEnd.refdef.num_dlights ; l++ ) 
+	{
+		dlight_t	*dl = &backEnd.refdef.dlights[l];
+		
+		float x, y, distance;
+
+		if (dl->radius <= 0.0) continue; // Marked as not visible...
+
+		distance = Distance(backEnd.refdef.vieworg, dl->origin);
+
+		//if (distance > 2048.0) continue; // too far away...
+		if (!TR_WorldToScreen(dl->origin, &x, &y)) continue; // not on screen...
+
+		/*
+		trace_t trace;
+		vec3_t mins = {-1,-1,-1}, maxs = {1,1,1};
+		// //|CONTENTS_SHOTCLIP|CONTENTS_TERRAIN//(CONTENTS_SOLID|CONTENTS_PLAYERCLIP|CONTENTS_SHOTCLIP|CONTENTS_TERRAIN|CONTENTS_BODY)
+		Volumetric_Trace( &trace, backEnd.refdef.vieworg, NULL, NULL, dl->origin, -1, (CONTENTS_SOLID|CONTENTS_TERRAIN) );
+		//ri->Printf(PRINT_WARNING, "Trace from %f %f %f to %f %f %f.\n", backEnd.refdef.vieworg[0], backEnd.refdef.vieworg[1], backEnd.refdef.vieworg[2], dl->origin[0], dl->origin[1], dl->origin[2]);
+		if (Distance(trace.endpos, dl->origin) > 64) continue; // Can't see this...
+		*/
 
 		GLSL_BindProgram(&tr.volumelightShader);
 
@@ -901,26 +1058,27 @@ void RB_VolumetricDLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t l
 
 		GLSL_SetUniformInt(&tr.volumelightShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
 
-		/*
-		matrix_t    matrix;
-		Matrix16Identity(matrix);
-		GL_SetModelviewMatrix(matrix);
-		Matrix16Ortho( backEnd.viewParms.viewportX, backEnd.viewParms.viewportX + backEnd.viewParms.viewportWidth,
-	               backEnd.viewParms.viewportY, backEnd.viewParms.viewportY + backEnd.viewParms.viewportHeight,
-	               -99999, 99999, matrix );
-		GL_SetProjectionMatrix(matrix);
-
-		GLSL_SetUniformMatrix16(&tr.volumelightShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
-		GLSL_SetUniformMatrix16(&tr.volumelightShader, UNIFORM_MODELMATRIX, backEnd.ori.transformMatrix);
-		*/
-
-
 		GL_SetModelviewMatrix( backEnd.viewParms.ori.modelMatrix );
 		GL_SetProjectionMatrix( backEnd.viewParms.projectionMatrix );
 
-
 		GLSL_SetUniformMatrix16(&tr.volumelightShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, backEnd.viewParms.projectionMatrix);
 		GLSL_SetUniformMatrix16(&tr.volumelightShader, UNIFORM_MODELMATRIX, backEnd.viewParms.ori.modelMatrix);
+
+		GLSL_SetUniformInt(&tr.volumelightShader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
+		GL_BindToTMU(tr.renderDepthImage, TB_LIGHTMAP);
+
+
+		{
+			vec4_t viewInfo;
+
+			float zmax = backEnd.viewParms.zFar;
+			float zmin = r_znear->value;
+
+			VectorSet4(viewInfo, zmax / zmin, zmax, 0.0, 0.0);
+			//VectorSet4(viewInfo, zmin, zmax, 0.0, 0.0);
+
+			GLSL_SetUniformVec4(&tr.volumelightShader, UNIFORM_VIEWINFO, viewInfo);
+		}
 
 		{
 			vec2_t screensize;
@@ -929,15 +1087,32 @@ void RB_VolumetricDLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t l
 
 			GLSL_SetUniformVec2(&tr.volumelightShader, UNIFORM_DIMENSIONS, screensize);
 		}
-
+		
 		{
 			vec4_t local0;
 			local0[0] = dl->origin[0];
 			local0[1] = dl->origin[1];
 			local0[2] = dl->origin[2];
-			local0[3] = 0.0;
+			local0[3] = ((2048.0 - (distance+0.001)) / 2048.0) / NUM_VISIBLE_LIGHTS;
+
+			//float* local0b = local0;
+			//local0b+=4;
+
+			//ri->Printf(PRINT_WARNING, "Light %i is at %f %f %f.\n", l, local0[0], local0[1], local0[2]);
 
 			GLSL_SetUniformVec4(&tr.volumelightShader, UNIFORM_LOCAL0, local0);
+		}
+
+		{
+			vec4_t local2;
+			local2[0] = x / 640;
+			local2[1] = 1.0 - (y / 480);
+			local2[2] = r_testvar->value;
+			local2[3] = 0.0;
+
+			//ri->Printf(PRINT_WARNING, "Light %i is at %f %f.\n", l, local2[0], local2[1]);
+
+			GLSL_SetUniformVec4(&tr.volumelightShader, UNIFORM_LOCAL2, local2);
 		}
 
 		{
@@ -950,44 +1125,19 @@ void RB_VolumetricDLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t l
 			GLSL_SetUniformVec4(&tr.volumelightShader, UNIFORM_LOCAL1, local1);
 		}
 
+		{
+			vec4_t local3;
+			local3[0] = r_volumelightExposure->value;
+			local3[1] = r_volumelightDecay->value;
+			local3[2] = r_volumelightDensity->value;
+			local3[3] = r_volumelightWeight->value;
+
+			GLSL_SetUniformVec4(&tr.volumelightShader, UNIFORM_LOCAL3, local3);
+		}
+
 		FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.volumelightShader, color, 0);
+		FBO_FastBlit(ldrFbo, ldrBox, hdrFbo, hdrBox, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 	}
-
-#if 0
-	GLSL_BindProgram(&tr.volumelightShader);
-
-	GL_BindToTMU(tr.fixedLevelsImage, TB_DIFFUSEMAP);
-
-	GLSL_SetUniformInt(&tr.volumelightShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
-	GLSL_SetUniformInt(&tr.volumelightShader, UNIFORM_NORMALMAP, TB_NORMALMAP);
-	GLSL_SetUniformInt(&tr.volumelightShader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
-	GL_BindToTMU(tr.glowFboScaled[0]->colorImage[0], TB_NORMALMAP);
-	GL_BindToTMU(tr.renderDepthImage, TB_LIGHTMAP);
-
-	{
-		vec2_t screensize;
-		screensize[0] = glConfig.vidWidth;
-		screensize[1] = glConfig.vidHeight;
-
-		GLSL_SetUniformVec2(&tr.volumelightShader, UNIFORM_DIMENSIONS, screensize);
-	}
-
-	{
-		vec4_t local0;
-		local0[0] = tr.glowFboScaled[0]->width;
-		local0[1] = tr.glowFboScaled[0]->height;
-		//local0[0] = tr.glowFboScaled[0]->colorImage[0]->width;
-		//local0[1] = tr.glowFboScaled[0]->colorImage[0]->height;
-		local0[2] = 0.0;
-		local0[3] = 0.0;
-
-		//ri->Printf(PRINT_WARNING, "Sent dimensions %f %f.\n", local0[0], local0[1]);
-
-		GLSL_SetUniformVec4(&tr.volumelightShader, UNIFORM_LOCAL0, local0);
-	}
-
-	FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.volumelightShader, color, 0);
-#endif
 }
 
 void RB_HDR(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)

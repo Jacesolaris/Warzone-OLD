@@ -225,6 +225,7 @@ cvar_t	*r_saveFontData;
 //
 // UQ1: Added...
 //
+cvar_t	*r_testvar;
 cvar_t	*r_steepParallaxEyeX;
 cvar_t	*r_steepParallaxEyeY;
 cvar_t	*r_steepParallaxEyeZ;
@@ -234,6 +235,10 @@ cvar_t	*r_bloomDarkenPower;
 cvar_t	*r_bloomScale;
 cvar_t	*r_lensflare;
 cvar_t	*r_volumelight;
+cvar_t	*r_volumelightExposure;
+cvar_t	*r_volumelightDecay;
+cvar_t	*r_volumelightDensity;
+cvar_t	*r_volumelightWeight;
 cvar_t	*r_anamorphic;
 cvar_t	*r_anamorphicDarkenPower;
 cvar_t  *r_ssgi;
@@ -1353,6 +1358,7 @@ void R_Register( void )
 	//
 	// UQ1: Added...
 	//
+	r_testvar = ri->Cvar_Get( "r_testvar", "1.0", CVAR_ARCHIVE );
 	r_steepParallaxEyeX = ri->Cvar_Get( "r_steepParallaxEyeX", "0.0000", CVAR_ARCHIVE );
 	r_steepParallaxEyeY = ri->Cvar_Get( "r_steepParallaxEyeY", "0.0002", CVAR_ARCHIVE );
 	r_steepParallaxEyeZ = ri->Cvar_Get( "r_steepParallaxEyeZ", "0.0004", CVAR_ARCHIVE );
@@ -1362,6 +1368,10 @@ void R_Register( void )
 	r_bloomScale = ri->Cvar_Get( "r_bloomScale", "1.0", CVAR_ARCHIVE );
 	r_lensflare = ri->Cvar_Get( "r_lensflare", "0", CVAR_ARCHIVE );
 	r_volumelight = ri->Cvar_Get( "r_volumelight", "0", CVAR_ARCHIVE );
+	r_volumelightExposure = ri->Cvar_Get( "r_volumelightExposure", "0.6", CVAR_ARCHIVE );
+	r_volumelightDecay = ri->Cvar_Get( "r_volumelightDecay", "0.97", CVAR_ARCHIVE );
+	r_volumelightDensity = ri->Cvar_Get( "r_volumelightDensity", "0.84", CVAR_ARCHIVE );
+	r_volumelightWeight = ri->Cvar_Get( "r_volumelightWeight", "0.05", CVAR_ARCHIVE );
 	r_anamorphic = ri->Cvar_Get( "r_anamorphic", "1", CVAR_ARCHIVE );
 	r_anamorphicDarkenPower = ri->Cvar_Get( "r_anamorphicDarkenPower", "256.0", CVAR_ARCHIVE );
 	r_ssgi = ri->Cvar_Get( "r_ssgi", "4", CVAR_ARCHIVE );

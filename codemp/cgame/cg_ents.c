@@ -1939,6 +1939,14 @@ Ghoul2 Insert Start
 
 		AddRefEntityToScene(&ent);
 
+		{
+			// UQ1: let there be light... Volumetric light, that is...
+			vec3_t lightOrg;
+			VectorCopy(cent->lerpOrigin, lightOrg);
+			lightOrg[2] += 16;
+			AddLightToScene(lightOrg , 200 + (rand()&31), 0.05, 0.05, 0.05 );
+		}
+
 		if (!doGrey)
 		{
 			PlayEffectID(cgs.effects.itemCone, ent.origin, uNorm, -1, -1, qfalse);

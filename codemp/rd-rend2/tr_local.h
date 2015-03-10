@@ -273,6 +273,7 @@ extern int		max_polyverts;
 //
 // UQ1: Added...
 //
+extern cvar_t	*r_testvar;
 extern cvar_t	*r_steepParallaxEyeX;
 extern cvar_t	*r_steepParallaxEyeY;
 extern cvar_t	*r_steepParallaxEyeZ;
@@ -282,6 +283,10 @@ extern cvar_t	*r_bloomDarkenPower;
 extern cvar_t	*r_bloomScale;
 extern cvar_t	*r_lensflare;
 extern cvar_t	*r_volumelight;
+extern cvar_t	*r_volumelightExposure;
+extern cvar_t	*r_volumelightDecay;
+extern cvar_t	*r_volumelightDensity;
+extern cvar_t	*r_volumelightWeight;
 extern cvar_t	*r_anamorphic;
 extern cvar_t	*r_anamorphicDarkenPower;
 extern cvar_t	*r_ssgi;
@@ -2539,6 +2544,7 @@ extern cvar_t	*r_dynamicGlowHeight;
 //
 // UQ1: Added...
 //
+extern cvar_t	*r_testvar;
 extern cvar_t	*r_steepParallaxEyeX;
 extern cvar_t	*r_steepParallaxEyeY;
 extern cvar_t	*r_steepParallaxEyeZ;
@@ -2548,6 +2554,10 @@ extern cvar_t	*r_bloomDarkenPower;
 extern cvar_t	*r_bloomScale;
 extern cvar_t	*r_lensflare;
 extern cvar_t	*r_volumelight;
+extern cvar_t	*r_volumelightExposure;
+extern cvar_t	*r_volumelightDecay;
+extern cvar_t	*r_volumelightDensity;
+extern cvar_t	*r_volumelightWeight;
 extern cvar_t	*r_anamorphic;
 extern cvar_t	*r_anamorphicDarkenPower;
 extern cvar_t	*r_ssgi;

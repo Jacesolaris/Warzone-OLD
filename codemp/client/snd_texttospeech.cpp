@@ -213,6 +213,7 @@ void S_TextToSpeech( const char *text, const char *voice, int entityNum, float *
 {
 	ttsData_t *ttsInfo;
 
+	if (!voice) return; // Not initialized yet.. wait...
 	if (cl.serverTime != 0 && PREVIOUS_TALK_TIME >= cl.serverTime - 1000) return;
 
 	ttsInfo = (ttsData_t *)malloc(sizeof(ttsData_t));
