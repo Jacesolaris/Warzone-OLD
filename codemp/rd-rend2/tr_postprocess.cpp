@@ -1054,9 +1054,48 @@ void RB_VolumetricDLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t l
 
 		GLSL_BindProgram(&tr.volumelightShader);
 
-		GL_BindToTMU(tr.fixedLevelsImage, TB_DIFFUSEMAP);
-
-		GLSL_SetUniformInt(&tr.volumelightShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
+		// Pick the specified image option if we can...
+		if (r_ssgi->integer && r_volumelight->integer >= 5)
+		{// Use SSGI Saturation image...
+			GL_BindToTMU(tr.anamorphicRenderFBOImage[2], TB_DIFFUSEMAP);
+			GLSL_SetUniformInt(&tr.volumelightShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
+		}
+		else if (r_anamorphic->integer && r_volumelight->integer >= 4)
+		{// Use Anamorphic image...
+			GL_BindToTMU(tr.anamorphicRenderFBOImage[0], TB_DIFFUSEMAP);
+			GLSL_SetUniformInt(&tr.volumelightShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
+		}
+		else if (r_bloom->integer && r_volumelight->integer >= 3)
+		{// Use Bloom image...
+			GL_BindToTMU(tr.bloomRenderFBOImage[2], TB_DIFFUSEMAP);
+			GLSL_SetUniformInt(&tr.volumelightShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
+		}
+		else if (r_dynamicGlow->integer && r_volumelight->integer >= 2)
+		{// Use Dynamic Glow image...
+			GL_BindToTMU(tr.glowImage, TB_DIFFUSEMAP);
+			GLSL_SetUniformInt(&tr.volumelightShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
+		}
+		// We failed to use what the player specified, select the best option we can...
+		else if (r_ssgi->integer && r_volumelight->integer >= 2)
+		{// Use SSGI Saturation image...
+			GL_BindToTMU(tr.anamorphicRenderFBOImage[2], TB_DIFFUSEMAP);
+			GLSL_SetUniformInt(&tr.volumelightShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
+		}
+		else if (r_anamorphic->integer && r_volumelight->integer >= 2)
+		{// Use Anamorphic image...
+			GL_BindToTMU(tr.anamorphicRenderFBOImage[0], TB_DIFFUSEMAP);
+			GLSL_SetUniformInt(&tr.volumelightShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
+		}
+		else if (r_bloom->integer && r_volumelight->integer >= 2)
+		{// Use Bloom image...
+			GL_BindToTMU(tr.bloomRenderFBOImage[2], TB_DIFFUSEMAP);
+			GLSL_SetUniformInt(&tr.volumelightShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
+		}
+		else
+		{
+			GL_BindToTMU(tr.fixedLevelsImage, TB_DIFFUSEMAP);
+			GLSL_SetUniformInt(&tr.volumelightShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
+		}
 
 		GL_SetModelviewMatrix( backEnd.viewParms.ori.modelMatrix );
 		GL_SetProjectionMatrix( backEnd.viewParms.projectionMatrix );
@@ -1093,7 +1132,7 @@ void RB_VolumetricDLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t l
 			local0[0] = dl->origin[0];
 			local0[1] = dl->origin[1];
 			local0[2] = dl->origin[2];
-			local0[3] = ((2048.0 - (distance+0.001)) / 2048.0) / NUM_VISIBLE_LIGHTS;
+			local0[3] = ((2048.0 - (distance+0.001)) / 2048.0) / (float)((float)NUM_VISIBLE_LIGHTS/2);
 
 			//float* local0b = local0;
 			//local0b+=4;

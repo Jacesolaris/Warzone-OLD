@@ -37,36 +37,48 @@ void main()
 {
 	vec2 texCoord = var_TexCoords; 
 	vec4 origColor = texture2D(u_DiffuseMap, var_TexCoords);
+	vec4 origLightColor = texture2D(u_DiffuseMap, var_LightScreenPos.xy);
 
     vec2 deltaTextCoord = vec2( texCoord - var_LightScreenPos.xy );  
     deltaTextCoord *= 1.0 / float(NUM_SAMPLES) * density;  
 
-    float illuminationDecay = 1.0;  
+    float illuminationDecay = 1.0;
 
     //vec4 tmpColor = vec4(0.0,0.0,0.0,0.0); //gl_FragColor;  
-	vec4 tmpShadow = vec4(0.0,0.0,0.0,0.0); //gl_FragColor;  
+	vec4 tmpShadow = vec4(0.0,0.0,0.0,0.0); //gl_FragColor;
+	//vec4 tmpLight = vec4(0.0,0.0,0.0,0.0); //gl_FragColor;
 
     for (int i = 0; i < NUM_SAMPLES; i++) {  
         texCoord -= deltaTextCoord;  
+
+		if (length(texCoord - var_LightScreenPos.xy) > 0.3)
+		{// UQ1: This increases FPS a little and only samples the color near the light source...
+			illuminationDecay *= decay;
+			continue;
+		}
 
 		//vec4 sample = vec4(texture2D(u_ScreenDepthMap,texCoord).rgb * 0.1397,1.0);
 		//sample *= illuminationDecay * weight;  
         //tmpColor += sample * vec4(var_Local1.rgb, 1.0);  
 
 		vec4 shadowSample = texture2D(u_DiffuseMap, texCoord);
-		shadowSample *= illuminationDecay * weight;  
-        tmpShadow += shadowSample;  
+		shadowSample *= illuminationDecay * weight;
+        tmpShadow += shadowSample * origLightColor;
+		//tmpLight += shadowSample * ((NUM_SAMPLES-i)/NUM_SAMPLES);
 
         illuminationDecay *= decay;  
     }
 
 	//tmpColor *= exposure;
 	tmpShadow *= exposure;
+	//tmpLight *= exposure;
 
 	//vec4 lightOutColor = vec4(origColor.rgb + clamp(tmpColor.rgb * var_Local0.a * 0.5, 0.0, 1.0), 1.0);
 	vec4 shadowOutColor = vec4(origColor.rgb + clamp(tmpShadow.rgb * var_Local0.a, 0.0, 1.0), 1.0);
+	//vec4 lightOutColor = vec4(origColor.rgb + clamp(tmpLight.rgb * var_Local0.a, 0.0, 1.0), 1.0);
 
     //gl_FragColor = clamp((origColor + lightOutColor + shadowOutColor) / 3.0, 0.0, 1.0);
 	gl_FragColor = clamp((origColor + shadowOutColor) / 2.0, 0.0, 1.0);
+	//gl_FragColor = clamp((origColor + shadowOutColor + lightOutColor) / 3.0, 0.0, 1.0);
 }
 

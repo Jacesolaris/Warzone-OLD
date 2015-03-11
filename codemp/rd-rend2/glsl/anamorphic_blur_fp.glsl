@@ -131,25 +131,30 @@ void main(void)
 	{// Normal anamorphic blur (or old SSGI blur)...
 		for (float width = 1.0; width <= var_Local0.z; width += 1.0)
 		{
+			float dist_mult = clamp(1.0 - (width / var_Local0.z), 0.0, 1.0);
 			vec3 col1 = texture2D(u_DiffuseMap, var_TexCoords.xy + ((var_Local0.xy * width) * PIXEL_OFFSET)).rgb;
 			vec3 col2 = texture2D(u_DiffuseMap, var_TexCoords.xy - ((var_Local0.xy * width) * PIXEL_OFFSET)).rgb;
-			vec3 color = (col0 / 2) + (col1 + col2) / 4;
+			vec3 add_color = ((col0 / 2) + ((col1 + col2) * (dist_mult * 2.0))) / 4;
 
 			if (var_Local0.a == 0.0)
 			{// Normal anamorphic or SSGI old mode final pass...
-				gl_FragColor.rgb += color;
+				vec3 BLUE_SHIFT_MOD = vec3(0.333, 0.333, 3.0);
+				vec3 add_color_blue = clamp(add_color * (BLUE_SHIFT_MOD * (1.0 - clamp(dist_mult*3.5, 0.0, 1.0))), 0.0, 1.0);
+				add_color.rgb += clamp(((add_color + add_color + add_color_blue) * 0.37), 0.0, 1.0);
+
+				gl_FragColor.rgb += add_color;
 				NUM_VALUES += 1.0;
 			}
-			else if (length(color) > length(gl_FragColor.rgb/NUM_VALUES))
+			else if (length(add_color) > length(gl_FragColor.rgb/NUM_VALUES))
 			{// Special SSGI blur...
-				if (length(color) <= 0.2)
+				if (length(add_color) <= 0.2)
 				{// Amplify non-white colors - the idea of this SSGI blur is to add color to the scene (sabers, weapon bolts, explosions, etc)...
-					gl_FragColor.rgb += clamp(color * 10.0, 0.0, 1.0);
+					gl_FragColor.rgb += clamp(add_color * 10.0, 0.0, 1.0);
 					NUM_VALUES += 1.0;
 				}
 				else
 				{// Accept a tiny bit of white???
-					gl_FragColor.rgb += (color * 0.15);
+					gl_FragColor.rgb += (add_color * 0.15);
 					NUM_VALUES += 1.0;
 				}
 			}

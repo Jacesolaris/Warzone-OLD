@@ -67,6 +67,8 @@ static void CG_DistortionOrb( centity_t *cent )
 	ent.renderfx = RF_DISTORTION;
 #endif
 
+	AddLightToScene( cent->lerpOrigin, 200 + (rand()&31), 1.0f, 1.0f, 1.0f );
+
 	AddRefEntityToScene( &ent );
 }
 
@@ -98,4 +100,6 @@ void FX_RepeaterAltProjectileThink( centity_t *cent, const struct weaponInfo_s *
 	{
 		PlayEffectID(cgs.effects.repeaterAltProjectileEffect, cent->lerpOrigin, forward, -1, -1, qfalse);
 	}
+
+	AddLightToScene( cent->lerpOrigin, 200 + (rand()&31), 1.0f, 1.0f, 1.0f );
 }

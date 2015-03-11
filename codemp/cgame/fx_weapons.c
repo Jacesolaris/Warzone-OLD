@@ -130,6 +130,8 @@ void FX_WeaponProjectileThink(centity_t *cent, const struct weaponInfo_s *weapon
 		PlayEffectID(weapon->missileRenderfx, cent->lerpOrigin, forward, -1, -1, qfalse);
 	else
 		PlayEffectID(cgs.effects.blasterShotEffect, cent->lerpOrigin, forward, -1, -1, qfalse);
+
+	AddLightToScene( cent->lerpOrigin, 200 + (rand()&31), 1.0f, 1.0f, 1.0f );
 }
 
 /*
@@ -154,6 +156,8 @@ void FX_WeaponAltProjectileThink(centity_t *cent, const struct weaponInfo_s *wea
 	{
 		PlayEffectID(cgs.effects.blasterShotEffect, cent->lerpOrigin, forward, -1, -1, qfalse);
 	}
+
+	AddLightToScene( cent->lerpOrigin, 200 + (rand()&31), 1.0f, 1.0f, 1.0f );
 }
 
 void FX_ThermalProjectileThink(centity_t *cent, const struct weaponInfo_s *weapon)

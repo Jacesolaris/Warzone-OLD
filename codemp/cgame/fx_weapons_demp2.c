@@ -36,6 +36,8 @@ void FX_Clonepistol_ProjectileThink(centity_t *cent, const struct weaponInfo_s *
 			PlayEffectID(cgs.effects.demp2ProjectileEffect, cent->lerpOrigin, forward, -1, -1, qfalse);
 		}
 	}
+
+	AddLightToScene( cent->lerpOrigin, 200 + (rand()&31), 1.0f, 1.0f, 1.0f );
 }
 
 /*
@@ -224,6 +226,8 @@ void FX_DEMP2_ProjectileThink(centity_t *cent, const struct weaponInfo_s *weapon
 			PlayEffectID(cgs.effects.demp2ProjectileEffect, cent->lerpOrigin, forward, -1, -1, qfalse);
 		}
 	}
+
+	AddLightToScene( cent->lerpOrigin, 200 + (rand()&31), 1.0f, 1.0f, 1.0f );
 }
 
 /*

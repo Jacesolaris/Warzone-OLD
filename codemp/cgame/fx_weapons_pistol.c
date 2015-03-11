@@ -38,6 +38,8 @@ void FX_BryarAltProjectileThink(  centity_t *cent, const struct weaponInfo_s *we
 	{
 		PlayEffectID(cgs.effects.bryarShotEffect, cent->lerpOrigin, forward, -1, -1, qfalse);
 	}
+
+	AddLightToScene( cent->lerpOrigin, 200 + (rand()&31), 1.0f, 1.0f, 1.0f );
 }
 
 /*

@@ -1370,7 +1370,8 @@ void R_Register( void )
 	r_volumelight = ri->Cvar_Get( "r_volumelight", "0", CVAR_ARCHIVE );
 	r_volumelightExposure = ri->Cvar_Get( "r_volumelightExposure", "0.6", CVAR_ARCHIVE );
 	r_volumelightDecay = ri->Cvar_Get( "r_volumelightDecay", "0.97", CVAR_ARCHIVE );
-	r_volumelightDensity = ri->Cvar_Get( "r_volumelightDensity", "0.84", CVAR_ARCHIVE );
+	//r_volumelightDensity = ri->Cvar_Get( "r_volumelightDensity", "0.84", CVAR_ARCHIVE );
+	r_volumelightDensity = ri->Cvar_Get( "r_volumelightDensity", "1.0", CVAR_ARCHIVE );
 	r_volumelightWeight = ri->Cvar_Get( "r_volumelightWeight", "0.05", CVAR_ARCHIVE );
 	r_anamorphic = ri->Cvar_Get( "r_anamorphic", "1", CVAR_ARCHIVE );
 	r_anamorphicDarkenPower = ri->Cvar_Get( "r_anamorphicDarkenPower", "256.0", CVAR_ARCHIVE );
