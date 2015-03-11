@@ -1055,12 +1055,12 @@ void RB_VolumetricDLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t l
 		GLSL_BindProgram(&tr.volumelightShader);
 
 		// Pick the specified image option if we can...
-		if (r_ssgi->integer && r_volumelight->integer >= 5)
+		/*if (r_ssgi->integer && r_volumelight->integer >= 5)
 		{// Use SSGI Saturation image...
 			GL_BindToTMU(tr.anamorphicRenderFBOImage[2], TB_DIFFUSEMAP);
 			GLSL_SetUniformInt(&tr.volumelightShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
 		}
-		else if (r_anamorphic->integer && r_volumelight->integer >= 4)
+		else*/ if (r_anamorphic->integer && r_volumelight->integer >= 4)
 		{// Use Anamorphic image...
 			GL_BindToTMU(tr.anamorphicRenderFBOImage[0], TB_DIFFUSEMAP);
 			GLSL_SetUniformInt(&tr.volumelightShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);

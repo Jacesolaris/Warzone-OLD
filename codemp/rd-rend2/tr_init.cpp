@@ -1367,7 +1367,7 @@ void R_Register( void )
 	r_bloomDarkenPower = ri->Cvar_Get( "r_bloomDarkenPower", "5.0", CVAR_ARCHIVE );
 	r_bloomScale = ri->Cvar_Get( "r_bloomScale", "1.0", CVAR_ARCHIVE );
 	r_lensflare = ri->Cvar_Get( "r_lensflare", "0", CVAR_ARCHIVE );
-	r_volumelight = ri->Cvar_Get( "r_volumelight", "0", CVAR_ARCHIVE );
+	r_volumelight = ri->Cvar_Get( "r_volumelight", "4", CVAR_ARCHIVE );
 	r_volumelightExposure = ri->Cvar_Get( "r_volumelightExposure", "0.6", CVAR_ARCHIVE );
 	r_volumelightDecay = ri->Cvar_Get( "r_volumelightDecay", "0.97", CVAR_ARCHIVE );
 	//r_volumelightDensity = ri->Cvar_Get( "r_volumelightDensity", "0.84", CVAR_ARCHIVE );
