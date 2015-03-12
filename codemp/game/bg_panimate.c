@@ -3249,6 +3249,8 @@ int BG_PickAnim( int animIndex, int minAnim, int maxAnim )
 //or I will cry. -rww
 void BG_SetAnim(playerState_t *ps, animation_t *animations, int setAnimParts,int anim,int setAnimFlags)
 {
+	if (!ps) return;
+
 	if (!animations)
 	{
 		animations = bgAllAnims[0].anims;

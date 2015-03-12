@@ -63,6 +63,9 @@ qboolean NPC_EntityIsBreakable ( gentity_t *self, gentity_t *ent )
 		&& ent->classname 
 		&& ent->classname[0] 
 		&& ent->s.eType != ET_INVISIBLE
+		&& ent->s.eType != ET_NPC
+		&& ent->s.eType != ET_PLAYER
+		&& !ent->client
 		&& G_EntIsBreakable(ent->s.number)
 		&& !EntIsGlass(ent) // UQ1: Ignore glass...
 		&& ent->health > 0
@@ -95,7 +98,7 @@ qboolean NPC_EntityIsBreakable ( gentity_t *self, gentity_t *ent )
 
 qboolean NPC_IsAlive ( gentity_t *NPC )
 {
-	if (NPCS.NPC && NPC_EntityIsBreakable(NPCS.NPC, NPC))
+	if (NPCS.NPC && NPCS.NPC->client && NPC_EntityIsBreakable(NPCS.NPC, NPC))
 	{
 		return qtrue;
 	}
