@@ -1132,7 +1132,7 @@ void RB_VolumetricDLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t l
 			local0[0] = dl->origin[0];
 			local0[1] = dl->origin[1];
 			local0[2] = dl->origin[2];
-			local0[3] = ((2048.0 - (distance+0.001)) / 2048.0) / (float)((float)NUM_VISIBLE_LIGHTS/2);
+			local0[3] = ((2048.0 - (distance+0.001)) / 2048.0) * 0.66666;// / (float)((float)NUM_VISIBLE_LIGHTS/2);
 
 			//float* local0b = local0;
 			//local0b+=4;
