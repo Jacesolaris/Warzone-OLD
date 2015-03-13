@@ -38,6 +38,8 @@ void main()
 	vec2 texCoord = var_TexCoords; 
 	vec4 origColor = texture2D(u_DiffuseMap, var_TexCoords);
 	vec4 origLightColor = texture2D(u_DiffuseMap, var_LightScreenPos.xy);
+	float origMult = clamp(1.0 - clamp(length(origColor.rgb) / 3.0, 0.0, 1.0), 0.0, 1.0) * 0.5; // work out a multiplier to even out brightnesses of darker and lighter colors
+	//origLightColor.rgb *= origMult;
 
     vec2 deltaTextCoord = vec2( texCoord - var_LightScreenPos.xy );  
     deltaTextCoord *= 1.0 / float(NUM_SAMPLES) * density;  
@@ -74,7 +76,7 @@ void main()
 	//tmpLight *= exposure;
 
 	//vec4 lightOutColor = vec4(origColor.rgb + clamp(tmpColor.rgb * var_Local0.a * 0.5, 0.0, 1.0), 1.0);
-	vec4 shadowOutColor = vec4(origColor.rgb + clamp(tmpShadow.rgb * var_Local0.a, 0.0, 1.0), 1.0);
+	vec4 shadowOutColor = vec4(origColor.rgb + clamp(tmpShadow.rgb * var_Local0.a * origMult, 0.0, 1.0), 1.0);
 	//vec4 lightOutColor = vec4(origColor.rgb + clamp(tmpLight.rgb * var_Local0.a, 0.0, 1.0), 1.0);
 
     //gl_FragColor = clamp((origColor + lightOutColor + shadowOutColor) / 3.0, 0.0, 1.0);
