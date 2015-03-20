@@ -39,7 +39,7 @@ vec3_t WP_MuzzlePoint[WP_NUM_WEAPONS] =
 	{12,	4.5,	-6	},	// WP_DC15_EXT
 	{12,	8,		-4	},  // WP_E60_ROCKET_LAUNCHER
 	{12,	8,		-4	},  // WP_CW_ROCKET_LAUNCHER
-	{12,	4.5,	-6	},	// WP_TESTGUN
+	{12,	12,		-6	},	// WP_TESTGUN
 	{12,	0,		-4	},	// WP_FRAG_GRENADE
 	{12,	0,		-4	},	// WP_FRAG_GRENADE_OLD
 	{12,	6,		-6	},	// WP_DC_17_CLONE_PISTOL

@@ -5698,19 +5698,42 @@ static void Jedi_Combat( void )
 
 		if (NPCS.NPC->enemy && NPC_IsAlive(NPCS.NPC->enemy) && irand(0, 100) <= 25)
 		{// 25% of the time, knock them over...
+			int desiredAnim = 0;
+
 			vec3_t	smackDir;
-			VectorSubtract( NPCS.NPC->enemy->r.currentOrigin, NPCS.NPC->r.currentOrigin, smackDir );
+			VectorSubtract(NPCS.NPC->enemy->r.currentOrigin, NPCS.NPC->r.currentOrigin, smackDir);
 			smackDir[2] += 30;
-			VectorNormalize( smackDir );
-			
+			VectorNormalize(smackDir);
+
 			//hurt them
-			G_Damage( NPCS.NPC->enemy, NPCS.NPC, NPCS.NPC, smackDir, NPCS.NPC->r.currentOrigin, (g_npcspskill.integer+1)*Q_irand( 5, 10), DAMAGE_NO_ARMOR|DAMAGE_NO_KNOCKBACK, MOD_CRUSH ); 
+			G_Damage(NPCS.NPC->enemy, NPCS.NPC, NPCS.NPC, smackDir, NPCS.NPC->r.currentOrigin, (g_npcspskill.integer + 1)*Q_irand(5, 10), DAMAGE_NO_ARMOR | DAMAGE_NO_KNOCKBACK, MOD_CRUSH);
 
 			//throw them
-			G_Throw( NPCS.NPC->enemy, smackDir, 64 );
+			G_Throw(NPCS.NPC->enemy, smackDir, 64);
+
+			switch (irand(0, 16))
+			{
+			case 1: desiredAnim = BOTH_DEATH12; break;
+			case 2: desiredAnim = BOTH_DEATH14; break;
+			case 3: desiredAnim = BOTH_DEATH16; break;
+			case 4: desiredAnim = BOTH_DEATH22; break;
+			case 5: desiredAnim = BOTH_DEATH23; break;
+			case 6: desiredAnim = BOTH_DEATH24; break;
+			case 7: desiredAnim = BOTH_DEATH25; break;
+			case 8: desiredAnim = BOTH_DEATH4; break;
+			case 9: desiredAnim = BOTH_DEATH5; break;
+			case 10: desiredAnim = BOTH_DEATH8; break;
+			case 11: desiredAnim = BOTH_DEATHBACKWARD1; break;
+			case 12: desiredAnim = BOTH_DEATHBACKWARD2; break;
+			case 13: desiredAnim = BOTH_DEATHFORWARD3; break;
+			case 14: desiredAnim = BOTH_KNOCKDOWN1; break;
+			case 15: desiredAnim = BOTH_KNOCKDOWN2; break;
+			case 16: desiredAnim = BOTH_KNOCKDOWN3; break;
+			default: desiredAnim = BOTH_KNOCKDOWN1; break;
+			}
 
 			//make them backflip
-			NPC_SetAnim( NPCS.NPC->enemy, SETANIM_BOTH, BOTH_KNOCKDOWN5, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD );
+			NPC_SetAnim(NPCS.NPC->enemy, SETANIM_BOTH, desiredAnim, SETANIM_FLAG_OVERRIDE | SETANIM_FLAG_HOLD); // this will be the bad anim. not sure what to replace it with
 		}
 
 		//return;

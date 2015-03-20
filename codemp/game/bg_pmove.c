@@ -7442,7 +7442,88 @@ static void PM_Weapon( void )
 			}
 			else
 			{
-				desiredAnim = BOTH_KNOCKDOWN1;
+				//Allow different animation for the headlock knockdown
+				//There are also now other anims which want to keep going too
+				if ((pm->ps->torsoAnim == pm->ps->legsAnim) &&
+					(pm->ps->torsoAnim == BOTH_PLAYER_PA_3_FLY ||
+					pm->ps->torsoAnim == BOTH_DEATH12 ||
+					pm->ps->torsoAnim == BOTH_DEATH14 ||
+					pm->ps->torsoAnim == BOTH_DEATH16 ||
+					pm->ps->torsoAnim == BOTH_DEATH22 ||
+					pm->ps->torsoAnim == BOTH_DEATH23 ||
+					pm->ps->torsoAnim == BOTH_DEATH24 ||
+					pm->ps->torsoAnim == BOTH_DEATH25 ||
+					pm->ps->torsoAnim == BOTH_DEATH4 ||
+					pm->ps->torsoAnim == BOTH_DEATH5 ||
+					pm->ps->torsoAnim == BOTH_DEATH8 ||
+					pm->ps->torsoAnim == BOTH_DEATHBACKWARD1 ||
+					pm->ps->torsoAnim == BOTH_DEATHBACKWARD2 ||
+					pm->ps->torsoAnim == BOTH_DEATHFORWARD3 ||
+					pm->ps->torsoAnim == BOTH_KNOCKDOWN1 ||
+					pm->ps->torsoAnim == BOTH_KNOCKDOWN2 ||
+					pm->ps->torsoAnim == BOTH_KNOCKDOWN3))
+				{
+					desiredAnim = pm->ps->legsAnim;
+				}
+				else
+				{
+					if (pm->ps->groundEntityNum == ENTITYNUM_NONE)
+					{
+						//Let's try adding random anims
+						int r = Q_irand(1, 16);
+						switch (r)
+						{
+						case 1: desiredAnim = BOTH_DEATH12; 
+							break;
+						case 2: desiredAnim = BOTH_DEATH14; 
+							break;
+						case 3: desiredAnim = BOTH_DEATH16; 
+							break;
+						case 4: desiredAnim = BOTH_DEATH22; 
+							break;
+						case 5: desiredAnim = BOTH_DEATH23; 
+							break;
+						case 6: desiredAnim = BOTH_DEATH24; 
+							break;
+						case 7: desiredAnim = BOTH_DEATH25;
+							break;
+						case 8: desiredAnim = BOTH_DEATH4; 
+							break;
+						case 9: desiredAnim = BOTH_DEATH5; 
+							break;
+						case 10: desiredAnim = BOTH_DEATH8; 
+							break;
+						case 11: desiredAnim = BOTH_DEATHBACKWARD1; 
+							break;
+						case 12: desiredAnim = BOTH_DEATHBACKWARD2; 
+							break;
+						case 13: desiredAnim = BOTH_DEATHFORWARD3; 
+							break;
+						case 14: desiredAnim = BOTH_KNOCKDOWN1; 
+							break;
+						case 15: desiredAnim = BOTH_KNOCKDOWN2; 
+							break;
+						case 16: desiredAnim = BOTH_KNOCKDOWN3; 
+							break;
+						default: desiredAnim = BOTH_KNOCKDOWN1; 
+							break;
+						}
+					}
+					else if (pm->ps->legsTimer > 0)
+					{
+						desiredAnim = BOTH_KNOCKDOWN1;
+					}
+					else
+					{
+						if (pm->ps->legsAnim == pm->ps->torsoAnim)
+						{
+							desiredAnim = pm->ps->legsAnim;
+						}
+						else{
+							desiredAnim = BOTH_KNOCKDOWN1;
+						}//dunno how that works but let's assume that this fixes playing running anim when knocked down ^^
+					}
+				}
 			}
 			break;
 		case HANDEXTEND_DUELCHALLENGE:

@@ -3523,10 +3523,11 @@ void NPC_GenericFrameCode ( gentity_t *self )
 		NPCS.client->ps.weaponstate = WEAPON_IDLE;
 	}
 
-	if ( !self->NPC->conversationPartner &&
-		!(NPCS.NPC->s.torsoAnim == TORSO_WEAPONREADY1 || NPCS.NPC->s.torsoAnim == TORSO_WEAPONREADY3) )
+	if (!self->NPC->conversationPartner &&
+		(self->client->ps.weapon > WP_SABER || self->client->ps.weapon == WP_NONE) &&
+		!(NPCS.NPC->s.torsoAnim == TORSO_WEAPONREADY1 || NPCS.NPC->s.torsoAnim == TORSO_WEAPONREADY3))
 	{//we look ready for action, using one of the first 2 weapon, let's rest our weapon on our shoulder
-		NPC_SetAnim(NPCS.NPC,SETANIM_TORSO,TORSO_WEAPONIDLE3,SETANIM_FLAG_NORMAL);
+		NPC_SetAnim(NPCS.NPC, SETANIM_TORSO, TORSO_WEAPONIDLE3, SETANIM_FLAG_NORMAL);
 	}
 
 	NPC_CheckAttackHold();
