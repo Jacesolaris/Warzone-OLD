@@ -1924,19 +1924,49 @@ void R_AddEntitySurfaces (void) {
 	//ri->Printf(PRINT_WARNING, "Culled %i entities.\n", NUM_CULLED);
 }
 
-
 /*
 ====================
 R_GenerateDrawSurfs
 ====================
 */
 
-void R_GenerateDrawSurfs( void ) 
+/*
+void CL_UpdateThread1(void * aArg)
 {
 	R_AddWorldSurfaces();
+}
 
+void CL_UpdateThread2(void * aArg)
+{
 	R_AddPolygonSurfaces();
+}
 
+#include "../client/fast_mutex.h"
+#include "../client/tinythread.h"
+
+using namespace tthread;
+*/
+
+void R_GenerateDrawSurfs( void ) 
+{
+	/*if (r_multithread2->integer)
+	{// Looks like I can run these in parallel... Seen no issues so far... *meh* little to no performance increase here...
+		thread *UPDATE_THREAD1;
+		thread *UPDATE_THREAD2;
+		UPDATE_THREAD1 = new thread (CL_UpdateThread1, (void *)0);
+		UPDATE_THREAD2 = new thread (CL_UpdateThread2, (void *)0);
+		// UQ1: And wait for finish...
+		UPDATE_THREAD1->join();
+		UPDATE_THREAD2->join();
+		UPDATE_THREAD1->~thread();
+		UPDATE_THREAD2->~thread();
+	}
+	else*/
+	{
+		R_AddWorldSurfaces();
+		R_AddPolygonSurfaces();
+	}
+	
 	// set the projection matrix with the minimum zfar
 	// now that we have the world bounded
 	// this needs to be done before entities are

@@ -273,6 +273,8 @@ extern int		max_polyverts;
 //
 // UQ1: Added...
 //
+extern cvar_t	*r_multithread;
+extern cvar_t	*r_multithread2;
 extern cvar_t	*r_testvar;
 extern cvar_t	*r_steepParallaxEyeX;
 extern cvar_t	*r_steepParallaxEyeY;
@@ -325,7 +327,6 @@ extern cvar_t  *r_trueAnaglyphGreen;
 extern cvar_t  *r_trueAnaglyphBlue;
 extern cvar_t  *r_vibrancy;
 extern cvar_t  *r_testshader;
-extern cvar_t  *r_multithread;
 
 //
 // UQ1: End Added...
@@ -2544,6 +2545,8 @@ extern cvar_t	*r_dynamicGlowHeight;
 //
 // UQ1: Added...
 //
+extern cvar_t	*r_multithread;
+extern cvar_t	*r_multithread2;
 extern cvar_t	*r_testvar;
 extern cvar_t	*r_steepParallaxEyeX;
 extern cvar_t	*r_steepParallaxEyeY;
@@ -2596,7 +2599,6 @@ extern cvar_t  *r_trueAnaglyphGreen;
 extern cvar_t  *r_trueAnaglyphBlue;
 extern cvar_t  *r_vibrancy;
 extern cvar_t  *r_testshader;
-extern cvar_t  *r_multithread;
 
 //
 // UQ1: End Added...
