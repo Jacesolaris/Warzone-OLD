@@ -31,7 +31,8 @@ float weight	=	var_Local3.a;
 float znear = var_ViewInfo.x; //camera clipping start
 float zfar = var_ViewInfo.y; //camera clipping end
 
-const int NUM_SAMPLES = 100;
+//const int NUM_SAMPLES = 100;
+const int NUM_SAMPLES = 20;
 
 void main()
 {
