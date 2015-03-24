@@ -362,7 +362,11 @@ void CreateShield(gentity_t *ent)
 	}
 	else
 	{	// Get solid.
+#ifndef __DISABLE_PLAYERCLIP__
 		ent->r.contents = CONTENTS_PLAYERCLIP|CONTENTS_SHOTCLIP;//CONTENTS_SOLID;
+#else //__DISABLE_PLAYERCLIP__
+		ent->r.contents = CONTENTS_SHOTCLIP;//CONTENTS_SOLID;
+#endif //__DISABLE_PLAYERCLIP__
 
 		ent->nextthink = level.time;
 		ent->think = ShieldThink;

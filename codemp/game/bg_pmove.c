@@ -3133,7 +3133,11 @@ static qboolean	PM_CheckWaterJump( void ) {
 
 	spot[2] += 16;
 	cont = pm->pointcontents (spot, pm->ps->clientNum );
+#ifndef __DISABLE_PLAYERCLIP__
 	if ( cont & (CONTENTS_SOLID|CONTENTS_PLAYERCLIP|CONTENTS_BODY) ) {
+#else //__DISABLE_PLAYERCLIP__
+	if ( cont & (CONTENTS_SOLID|CONTENTS_BODY) ) {
+#endif //__DISABLE_PLAYERCLIP__
 		return qfalse;
 	}
 

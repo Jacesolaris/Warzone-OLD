@@ -1209,7 +1209,13 @@ BAD_WP_Distance ( vec3_t start, vec3_t end, qboolean double_distance )
 
 qboolean HasPortalFlags ( int surfaceFlags, int contents )
 {
-	if ( ( (surfaceFlags & SURF_NOMARKS) && (surfaceFlags & SURF_NOIMPACT) && (surfaceFlags & SURF_NODRAW) && (contents & CONTENTS_PLAYERCLIP) && (contents & CONTENTS_TRANSLUCENT) ) )
+	if ( ( (surfaceFlags & SURF_NOMARKS) 
+		&& (surfaceFlags & SURF_NOIMPACT) 
+		&& (surfaceFlags & SURF_NODRAW) 
+#ifndef __DISABLE_PLAYERCLIP__
+		&& (contents & CONTENTS_PLAYERCLIP) 
+#endif //__DISABLE_PLAYERCLIP__
+		&& (contents & CONTENTS_TRANSLUCENT) ) )
 		return qtrue;
 
 	return qfalse;
@@ -1500,7 +1506,7 @@ NodeVisible_OLD ( vec3_t org1, vec3_t org2, int ignore )
 	newOrg[2] += 16/*8*/; // Look from up a little...
 	newOrg2[2] += 16/*8*/; // Look from up a little...
 
-	CG_Trace( &tr, newOrg2, NULL/*mins*/, NULL/*maxs*/, newOrg, ignore, MASK_PLAYERSOLID /*| CONTENTS_LAVA*//*CONTENTS_PLAYERCLIP | MASK_SHOT | MASK_OPAQUE | CONTENTS_LAVA*/ /*MASK_WATER*/ );
+	CG_Trace( &tr, newOrg2, NULL/*mins*/, NULL/*maxs*/, newOrg, ignore, MASK_PLAYERSOLID );
 
 	if ( tr.startsolid )
 	{
@@ -1608,7 +1614,7 @@ NodeVisibleJump ( vec3_t org1, vec3_t org2, int ignore )
 	newOrg2[2] += 16; // Look from up a little...
 
 	//CG_Trace(&tr, newOrg, mins, maxs, org2, ignore, MASK_SHOT);
-	CG_Trace( &tr, newOrg2, mins, maxs, newOrg, ignore, MASK_PLAYERSOLID /*| CONTENTS_LAVA*//*CONTENTS_PLAYERCLIP | MASK_SHOT | MASK_OPAQUE | CONTENTS_LAVA*/ /*MASK_WATER*/ );
+	CG_Trace( &tr, newOrg2, mins, maxs, newOrg, ignore, MASK_PLAYERSOLID );
 
 	if ( tr.startsolid )
 	{
@@ -1660,7 +1666,7 @@ NodeVisibleCrouch ( vec3_t org1, vec3_t org2, int ignore )
 	newOrg2[2] += 1; // Look from up a little...
 
 	//CG_Trace(&tr, newOrg, mins, maxs, org2, ignore, MASK_SHOT);
-	CG_Trace( &tr, newOrg2, mins, maxs, newOrg, ignore, MASK_PLAYERSOLID /*| CONTENTS_LAVA*//*CONTENTS_PLAYERCLIP | MASK_SHOT | MASK_OPAQUE | CONTENTS_LAVA*/ /*MASK_WATER*/ );
+	CG_Trace( &tr, newOrg2, mins, maxs, newOrg, ignore, MASK_PLAYERSOLID );
 
 	if ( tr.startsolid )
 	{
@@ -1708,7 +1714,7 @@ TankNodeVisible ( vec3_t org1, vec3_t org2, vec3_t mins, vec3_t maxs, int ignore
 	newOrg[2] += 32;		// Look from up a little...
 	newOrg2[2] += 32;	// Look from up a little...
 
-	CG_Trace( &tr, newOrg2, mins, maxs, newOrg, ignore, MASK_PLAYERSOLID /*| CONTENTS_LAVA*//*CONTENTS_PLAYERCLIP | MASK_SHOT | MASK_OPAQUE | CONTENTS_LAVA*/ /*MASK_WATER*/ );
+	CG_Trace( &tr, newOrg2, mins, maxs, newOrg, ignore, MASK_PLAYERSOLID );
 	
 	if ( tr.startsolid )
 	{
@@ -3484,7 +3490,7 @@ float GroundHeightAt ( vec3_t org )
 	VectorCopy(org, org2);
 	org2[2]= -65536.0f;
 
-	CG_Trace( &tr, org1, NULL, NULL, org2, -1, MASK_PLAYERSOLID);//CONTENTS_PLAYERCLIP | MASK_SHOT /*| MASK_OPAQUE*/ | MASK_WATER );
+	CG_Trace( &tr, org1, NULL, NULL, org2, -1, MASK_PLAYERSOLID);
 	
 	if ( tr.startsolid || tr.allsolid )
 	{
@@ -3670,7 +3676,7 @@ float FloorHeightAt ( vec3_t org )
 	VectorCopy(org, org2);
 	org2[2]= -65536.0f;
 
-	CG_Trace( &tr, org1, NULL, NULL, org2, -1, MASK_PLAYERSOLID );//CONTENTS_PLAYERCLIP | MASK_SHOT /*| MASK_OPAQUE*/ | MASK_WATER );
+	CG_Trace( &tr, org1, NULL, NULL, org2, -1, MASK_PLAYERSOLID );
 	
 	if (tr.startsolid)
 	{
@@ -3803,7 +3809,9 @@ float FloorHeightAt ( vec3_t org )
 		&& tr.contents & CONTENTS_OPAQUE
 		&& tr.contents & CONTENTS_TRANSLUCENT
 		&& tr.contents & CONTENTS_LADDER
+#ifndef __DISABLE_PLAYERCLIP__
 		&& tr.contents & CONTENTS_PLAYERCLIP
+#endif //__DISABLE_PLAYERCLIP__
 		&& tr.contents & CONTENTS_MONSTERCLIP
 		&& tr.contents & CONTENTS_BOTCLIP
 		&& tr.contents & CONTENTS_NODROP)
@@ -3945,7 +3953,7 @@ float RoofHeightAt ( vec3_t org )
 	VectorCopy(org, org2);
 	org2[2]= 65536.0f;
 
-	CG_Trace( &tr, org1, NULL, NULL, org2, cg.clientNum, MASK_PLAYERSOLID);//CONTENTS_PLAYERCLIP | MASK_SHOT | MASK_OPAQUE | CONTENTS_LAVA | MASK_WATER );
+	CG_Trace( &tr, org1, NULL, NULL, org2, cg.clientNum, MASK_PLAYERSOLID);
 	
 	if ( tr.startsolid || tr.allsolid )
 	{
@@ -4510,7 +4518,7 @@ void RepairPosition ( intvec3_t org1 )
 	VectorMA(newOrg2, 64, forward, newOrg2);
 
 	// Do forward test...
-	CG_Trace( &tr, newOrg, NULL, NULL, newOrg2, -1, MASK_PLAYERSOLID/*MASK_SOLID|MASK_WATER*//*CONTENTS_PLAYERCLIP | MASK_SHOT | MASK_OPAQUE | CONTENTS_LAVA | MASK_WATER*/ );
+	CG_Trace( &tr, newOrg, NULL, NULL, newOrg2, -1, MASK_PLAYERSOLID );
 
 	if ( tr.fraction != 1 )
 	{// Repair the position...
@@ -4527,7 +4535,7 @@ void RepairPosition ( intvec3_t org1 )
 	VectorMA(newOrg2, -64, forward, newOrg2);
 
 	// Do back test...
-	CG_Trace( &tr, newOrg, NULL, NULL, newOrg2, -1, MASK_PLAYERSOLID/*CONTENTS_PLAYERCLIP | MASK_SHOT | MASK_OPAQUE | CONTENTS_LAVA | MASK_WATER*/ );
+	CG_Trace( &tr, newOrg, NULL, NULL, newOrg2, -1, MASK_PLAYERSOLID );
 
 	if ( tr.fraction != 1 )
 	{// Repair the position...
@@ -4544,7 +4552,7 @@ void RepairPosition ( intvec3_t org1 )
 	VectorMA(newOrg2, 64, right, newOrg2);
 
 	// Do right test...
-	CG_Trace( &tr, newOrg, NULL, NULL, newOrg2, -1, MASK_PLAYERSOLID/*CONTENTS_PLAYERCLIP | MASK_SHOT | MASK_OPAQUE | CONTENTS_LAVA | MASK_WATER*/ );
+	CG_Trace( &tr, newOrg, NULL, NULL, newOrg2, -1, MASK_PLAYERSOLID );
 
 	if ( tr.fraction != 1 )
 	{// Repair the position...
@@ -4561,7 +4569,7 @@ void RepairPosition ( intvec3_t org1 )
 	VectorMA(newOrg2, -64, right, newOrg2);
 
 	// Do left test...
-	CG_Trace( &tr, newOrg, NULL, NULL, newOrg2, -1, MASK_PLAYERSOLID/*CONTENTS_PLAYERCLIP | MASK_SHOT | MASK_OPAQUE | CONTENTS_LAVA | MASK_WATER*/ );
+	CG_Trace( &tr, newOrg, NULL, NULL, newOrg2, -1, MASK_PLAYERSOLID );
 
 	if ( tr.fraction != 1 )
 	{// Repair the position...
@@ -4578,7 +4586,7 @@ void RepairPosition ( intvec3_t org1 )
 	VectorMA(newOrg2, 16, up, newOrg2);
 
 	// Do start-solid test...
-	CG_Trace( &tr, newOrg, NULL, NULL, newOrg2, -1, MASK_PLAYERSOLID /*CONTENTS_PLAYERCLIP | MASK_SHOT | MASK_OPAQUE | CONTENTS_LAVA | MASK_WATER*/ );
+	CG_Trace( &tr, newOrg, NULL, NULL, newOrg2, -1, MASK_PLAYERSOLID );
 
 	if ( tr.fraction != 1 || tr.startsolid || tr.contents & CONTENTS_WATER)
 	{// Bad waypoint. Remove it!
@@ -4817,7 +4825,7 @@ void AIMod_AutoWaypoint_Free_Memory ( void ); // below...
 
 qboolean ContentsOK ( int contents )
 {
-	if (contents & CONTENTS_DETAIL || contents & CONTENTS_NODROP /*|| contents & CONTENTS_MONSTERCLIP || contents & CONTENTS_PLAYERCLIP || contents & CONTENTS_BOTCLIP || contents & CONTENTS_SLIME || contents & CONTENTS_LAVA || contents & CONTENTS_WATER*/ )
+	if (contents & CONTENTS_DETAIL || contents & CONTENTS_NODROP )
 		return qfalse;
 
 	return qtrue;
@@ -7287,7 +7295,13 @@ AI_PM_GroundTrace ( vec3_t point, int clientNum )
 	//	bad_surface = qtrue;
 
 	/* TESTING THIS */
-	if ( (trace.surfaceFlags & SURF_NODRAW) && (trace.surfaceFlags & SURF_NOMARKS) && !((trace.contents & CONTENTS_PLAYERCLIP) && (trace.contents & CONTENTS_TRANSLUCENT)) )
+	if ( (trace.surfaceFlags & SURF_NODRAW) 
+		&& (trace.surfaceFlags & SURF_NOMARKS) 
+		&& !(
+#ifndef __DISABLE_PLAYERCLIP__
+		(trace.contents & CONTENTS_PLAYERCLIP) &&
+#endif //__DISABLE_PLAYERCLIP__
+		(trace.contents & CONTENTS_TRANSLUCENT)) )
 		bad_surface = qtrue;
 
 	if ( (trace.surfaceFlags & SURF_SKY) )

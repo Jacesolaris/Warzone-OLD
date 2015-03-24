@@ -5,7 +5,11 @@
 #include "cg_local.h"
 #include "game/bg_saga.h"
 
+#ifndef __DISABLE_PLAYERCLIP__
 #define MASK_CAMERACLIP (MASK_SOLID|CONTENTS_PLAYERCLIP)
+#else //__DISABLE_PLAYERCLIP__
+#define MASK_CAMERACLIP (MASK_SOLID)
+#endif //__DISABLE_PLAYERCLIP__
 #define CAMERA_SIZE	4
 
 

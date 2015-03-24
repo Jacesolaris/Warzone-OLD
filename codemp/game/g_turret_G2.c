@@ -1273,7 +1273,11 @@ void finish_spawning_turretG2( gentity_t *base )
 		G_SoundIndex( "sound/chars/turret/move.wav" );
 	}
 
+#ifndef __DISABLE_PLAYERCLIP__
 	base->r.contents = CONTENTS_BODY|CONTENTS_PLAYERCLIP|CONTENTS_MONSTERCLIP|CONTENTS_SHOTCLIP;
+#else //__DISABLE_PLAYERCLIP__
+	base->r.contents = CONTENTS_BODY|CONTENTS_MONSTERCLIP|CONTENTS_SHOTCLIP;
+#endif //__DISABLE_PLAYERCLIP__
 
 	//base->max_health = base->health;
 	base->takedamage = qtrue;

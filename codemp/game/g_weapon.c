@@ -4274,7 +4274,11 @@ void G_EstimateCamPos( vec3_t viewAngles, vec3_t cameraFocusLoc, float viewheigh
 					  float thirdPersonHorzOffset, float vertOffset, float pitchOffset,
 					  int ignoreEntNum, vec3_t camPos )
 {
+#ifndef __DISABLE_PLAYERCLIP__
 	int			MASK_CAMERACLIP = (MASK_SOLID|CONTENTS_PLAYERCLIP);
+#else //__DISABLE_PLAYERCLIP__
+	int			MASK_CAMERACLIP = (MASK_SOLID);
+#endif //__DISABLE_PLAYERCLIP__
 	float		CAMERA_SIZE = 4;
 	vec3_t		cameramins;
 	vec3_t		cameramaxs;

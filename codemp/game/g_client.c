@@ -1130,7 +1130,11 @@ static qboolean CopyToBodyQue( gentity_t *ent ) {
 	body->s.customRGBA[2] = ent->client->ps.customRGBA[2];
 	body->s.customRGBA[3] = ent->client->ps.customRGBA[3];
 
+#ifndef __DISABLE_PLAYERCLIP__
 	body->clipmask = CONTENTS_SOLID | CONTENTS_PLAYERCLIP;
+#else //__DISABLE_PLAYERCLIP__
+	body->clipmask = CONTENTS_SOLID;
+#endif //__DISABLE_PLAYERCLIP__
 	body->r.contents = CONTENTS_CORPSE;
 	body->r.ownerNum = ent->s.number;
 
