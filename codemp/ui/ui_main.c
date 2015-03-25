@@ -1738,6 +1738,7 @@ static void UI_DrawSkinColor(rectDef_t *rect, float scale, vec4_t color, int tex
 
 	switch(val)
 	{
+#ifdef __FORCED_TEAM_COLORS__
 	case TEAM_RED:
 		trap->SE_GetStringTextString("MENUS_TEAM_RED", s, sizeof(s));
 //		Com_sprintf(s, sizeof(s), "Red\0");
@@ -1746,6 +1747,7 @@ static void UI_DrawSkinColor(rectDef_t *rect, float scale, vec4_t color, int tex
 		trap->SE_GetStringTextString("MENUS_TEAM_BLUE", s, sizeof(s));
 //		Com_sprintf(s, sizeof(s), "Blue\0");
 		break;
+#endif //__FORCED_TEAM_COLORS__
 	default:
 		trap->SE_GetStringTextString("MENUS_DEFAULT", s, sizeof(s));
 //		Com_sprintf(s, sizeof(s), "Default\0");
@@ -2269,12 +2271,14 @@ void UpdateForceStatus()
 
 		switch((int)(trap->Cvar_VariableValue("ui_myteam")))
 		{
+#ifdef __FORCED_TEAM_COLORS__
 		case TEAM_RED:
 			uiSkinColor = TEAM_RED;
 			break;
 		case TEAM_BLUE:
 			uiSkinColor = TEAM_BLUE;
 			break;
+#endif //__FORCED_TEAM_COLORS__
 		default:
 			trap->GetConfigString( CS_SERVERINFO, info, sizeof(info) );
 
@@ -2568,8 +2572,8 @@ static int UI_OwnerDrawWidth(int ownerDraw, float scale) {
 				s = handicapValues[i];
       break;
     case UI_SKIN_COLOR:
-		switch(uiSkinColor)
-		{
+		switch(uiSkinColor) {
+#ifdef __FORCED_TEAM_COLORS__
 		case TEAM_RED:
 //			s = "Red";
 			s = (char *)UI_GetStringEdString("MENUS", "TEAM_RED");
@@ -2578,6 +2582,7 @@ static int UI_OwnerDrawWidth(int ownerDraw, float scale) {
 //			s = "Blue";
 			s = (char *)UI_GetStringEdString("MENUS", "TEAM_BLUE");
 			break;
+#endif //__FORCED_TEAM_COLORS__
 		default:
 //			s = "Default";
 			s = (char *)UI_GetStringEdString("MENUS", "DEFAULT");
@@ -7300,12 +7305,14 @@ static int UI_HeadCountByColor(void) {
 
 	switch(uiSkinColor)
 	{
+#ifdef __FORCED_TEAM_COLORS__
 		case TEAM_BLUE:
 			teamname = "/blue";
 			break;
 		case TEAM_RED:
 			teamname = "/red";
 			break;
+#endif //__FORCED_TEAM_COLORS__
 		default:
 			teamname = "/default";
 	}
