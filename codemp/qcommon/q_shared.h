@@ -1404,7 +1404,8 @@ typedef enum {
 //#define	GENTITYNUM_BITS	11		// don't need to send any more
 //#define	MAX_GENTITIES	(1<<GENTITYNUM_BITS)
 
-#define	GENTITYNUM_BITS	16		// don't need to send any more
+//#define	GENTITYNUM_BITS	16		// don't need to send any more
+#define	GENTITYNUM_BITS	11		// don't need to send any more - UQ1: 2^11 = 2048
 #define		MAX_GENTITIES	(2048-1)
 #else //!__MMO__
 #define	GENTITYNUM_BITS	10		// don't need to send any more
