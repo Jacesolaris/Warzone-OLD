@@ -116,7 +116,7 @@ qboolean NPC_PatrolArea( void )
 		return qfalse;
 	}
 
-	if (NPC->enemy)
+	if (NPC->enemy && NPC_IsAlive(NPC->enemy))
 	{// Chase them...
 		NPC->return_home = qtrue;
 		return qfalse;
@@ -193,7 +193,7 @@ qboolean NPC_PatrolArea( void )
 		return qfalse; // next think...
 	}
 
-	if (NPC->wpCurrent < 0 || NPC->wpCurrent >= gWPNum || NPC->longTermGoal < 0 || NPC->longTermGoal >= gWPNum)
+	if (NPC->wpCurrent < 0 || NPC->wpCurrent >= gWPNum)
 	{// FIXME: Try to roam out of problems...
 		//trap->Print("PATROL: Lost.\n");
 		NPC_PickRandomIdleAnimantion(NPC);
