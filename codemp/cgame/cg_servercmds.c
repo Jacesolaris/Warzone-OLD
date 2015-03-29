@@ -427,7 +427,7 @@ static void CG_RegisterCustomSounds(clientInfo_t *ci, int setType, const char *p
 		hSFX = trap->S_RegisterSound( va("sound/chars/%s/misc/%s", psDir, s) );
 
 		//if (hSFX)
-		//	trap->Print("Registered custom sound sound/chars/%s/misc/%s", psDir, s);
+		//	trap->Print("Registered custom sound sound/chars/%s/misc/%s\n", psDir, s);
 
 		if (hSFX == 0)
 		{
@@ -456,9 +456,9 @@ static void CG_RegisterCustomSounds(clientInfo_t *ci, int setType, const char *p
 					hSFX = trap->S_RegisterSound( va("sound/chars/%s/misc/%s", psDir, modifiedSound) );
 
 					//if (hSFX)
-					//	trap->Print("Registered custom sound sound/chars/%s/misc/%s", psDir, modifiedSound);
+					//	trap->Print("Registered custom sound sound/chars/%s/misc/%s\n", psDir, modifiedSound);
 					//else
-					//	trap->Print("Failed to register custom sound sound/chars/%s/misc/%s", psDir, modifiedSound);
+					//	trap->Print("Failed to register custom sound sound/chars/%s/misc/%s\n", psDir, modifiedSound);
 				}
 			}
 		}

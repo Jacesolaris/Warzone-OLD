@@ -2251,6 +2251,7 @@ qboolean ClientUserinfoChanged( int clientNum ) {
 				ent->NPC_type[i] = '_';
 		}
 
+#if 0
 		//trap->Print("Model is %s.\n", ent->NPC_type);
 
 		// Try using model name as sound name... Should work most of the time...
@@ -2303,6 +2304,45 @@ qboolean ClientUserinfoChanged( int clientNum ) {
 		{// Failed to find sounds... Try NPC sound precache...
 			NPC_Precache(ent);
 		}
+#else
+		{
+			gentity_t *newent = ent;
+			int SOUND_INDEX = 0;
+
+			// Try to precache just like an npc does...
+			NPC_Precache(newent);
+
+			SOUND_INDEX = newent->s.csSounds_Std;
+
+			if (!SOUND_INDEX)
+			{// Still failed to find sounds... Try using NPC Type as sound name but with variation 1...
+				SOUND_INDEX = G_SoundIndex( va("*$%s", newent->NPC_type) );
+			}
+
+			if (!SOUND_INDEX)
+			{// Still failed to find sounds... Try using NPC Type as sound name but with variation 1...
+				SOUND_INDEX = G_SoundIndex( va("*$%s1", newent->NPC_type) );
+			}
+
+			if (!SOUND_INDEX)
+			{// Still failed to find sounds... Try using NPC Type as sound name but with variation 2...
+				SOUND_INDEX = G_SoundIndex( va("*$%s2", newent->NPC_type) );
+			}
+
+			if (!SOUND_INDEX)
+			{// Still failed to find sounds... Try using model name for sounds...
+				SOUND_INDEX = G_SoundIndex( va("*$%s", newent->client->modelname) );
+			}
+
+			//trap->Print("%i given sound index %i.\n", newent->s.number, SOUND_INDEX);
+
+			// Try using NPC Type as sound name... Should work most of the time...
+			newent->s.csSounds_Std = SOUND_INDEX;
+			newent->s.csSounds_Combat = SOUND_INDEX;
+			newent->s.csSounds_Extra = SOUND_INDEX;
+			newent->s.csSounds_Jedi = SOUND_INDEX;
+		}
+#endif
 
 		ent->client->ps.csSounds_Std = ent->s.csSounds_Std;
 		ent->client->ps.csSounds_Combat = ent->s.csSounds_Combat;

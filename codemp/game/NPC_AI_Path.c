@@ -14,6 +14,7 @@ extern int DOM_GetNearestVisibleWP(vec3_t org, int ignore, int badwp);
 extern int DOM_GetNearestVisibleWP_Goal(vec3_t org, int ignore, int badwp);
 extern int DOM_GetNearestVisibleWP_NOBOX(vec3_t org, int ignore, int badwp);
 extern gentity_t *NPC_PickEnemyExt( qboolean checkAlerts );
+extern void ST_Speech( gentity_t *self, int speechType, float failChance );
 
 extern vmCvar_t npc_pathing;
 
@@ -1129,23 +1130,39 @@ qboolean NPC_FollowRoutes( void )
 			// These guys have no enemies...
 			break;
 		default:
+#if 0
 			if ( NPC->client->enemyTeam != NPCTEAM_NEUTRAL )
 			{
 				NPC->enemy = NPC_PickEnemyExt( qtrue );
 
 				if (NPC_HaveValidEnemy())
 				{
-					if (NPC->client->ps.weapon == WP_SABER)
+					if (NPC_IsJedi(NPC))
+					{
 						G_AddVoiceEvent( NPC, Q_irand( EV_JDETECTED1, EV_JDETECTED3 ), 15000 + irand(0, 30000) );
+					}
 					else
 					{
-						G_AddVoiceEvent( NPC, Q_irand( EV_DETECTED1, EV_DETECTED5 ), 15000 + irand(0, 30000) );
+						if (!NPC_IsJedi(NPC) && !NPC_IsBountyHunter(NPC))//NPC_IsStormtrooper(NPC))
+						{
+							if (irand(0,1) == 1)
+								ST_Speech( NPC, SPEECH_DETECTED, 0 );
+							else if (irand(0,1) == 1)
+								ST_Speech( NPC, SPEECH_CHASE, 0 );
+							else
+								ST_Speech( NPC, SPEECH_SIGHT, 0 );
+						}
+						else
+						{
+							G_AddVoiceEvent( NPC, Q_irand( EV_DETECTED1, EV_DETECTED5 ), 15000 + irand(0, 30000) );
+						}
 					}
 
 					//trap->Print("Found enemy!\n");
 					return qfalse;
 				}
 			}
+#endif
 			break;
 		}
 	}

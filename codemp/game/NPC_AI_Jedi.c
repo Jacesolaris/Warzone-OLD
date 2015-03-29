@@ -16,6 +16,7 @@ extern qboolean BG_SabersOff( playerState_t *ps );
 
 extern void CG_DrawAlert( vec3_t origin, float rating );
 extern void G_AddVoiceEvent( gentity_t *self, int event, int speakDebounceTime );
+extern void ST_Speech( gentity_t *self, int speechType, float failChance );
 extern void ForceJump( gentity_t *self, usercmd_t *ucmd );
 extern void WP_FireMelee( gentity_t *ent, qboolean alt_fire );
 extern qboolean NPC_CombatMoveToGoal( qboolean tryStraight, qboolean retreat );
@@ -136,11 +137,18 @@ void Jedi_PlayBlockedPushSound( gentity_t *self )
 {
 	if ( self->s.number >= 0 && self->s.number < MAX_CLIENTS )
 	{
-		G_AddVoiceEvent( self, EV_PUSHFAIL, 3000 );
+		if (!NPC_IsJedi(self) && !NPC_IsBountyHunter(self))//NPC_IsStormtrooper(self))
+			ST_Speech( self, SPEECH_OUTFLANK, 0.7f );
+		else
+			G_AddVoiceEvent( self, EV_PUSHFAIL, 3000 );
 	}
 	else if ( self->health > 0 && self->NPC && self->NPC->blockedSpeechDebounceTime < level.time )
 	{
-		G_AddVoiceEvent( self, EV_PUSHFAIL, 3000 );
+		if (!NPC_IsJedi(self) && !NPC_IsBountyHunter(self))//NPC_IsStormtrooper(self))
+			ST_Speech( self, SPEECH_OUTFLANK, 0.7f );
+		else
+			G_AddVoiceEvent( self, EV_PUSHFAIL, 3000 );
+
 		self->NPC->blockedSpeechDebounceTime = level.time + 3000;
 	}
 }
@@ -149,11 +157,18 @@ void Jedi_PlayDeflectSound( gentity_t *self )
 {
 	if ( self->s.number >= 0 && self->s.number < MAX_CLIENTS )
 	{
-		G_AddVoiceEvent( self, Q_irand( EV_DEFLECT1, EV_DEFLECT3 ), 3000 );
+		if (!NPC_IsJedi(self) && !NPC_IsBountyHunter(self))//NPC_IsStormtrooper(self))
+			ST_Speech( self, SPEECH_CHASE, 0.7f );
+		else
+			G_AddVoiceEvent( self, Q_irand( EV_DEFLECT1, EV_DEFLECT3 ), 3000 );
 	}
 	else if ( self->health > 0 && self->NPC && self->NPC->blockedSpeechDebounceTime < level.time )
 	{
-		G_AddVoiceEvent( self, Q_irand( EV_DEFLECT1, EV_DEFLECT3 ), 3000 );
+		if (!NPC_IsJedi(self) && !NPC_IsBountyHunter(self))//NPC_IsStormtrooper(self))
+			ST_Speech( self, SPEECH_CHASE, 0.7f );
+		else
+			G_AddVoiceEvent( self, Q_irand( EV_DEFLECT1, EV_DEFLECT3 ), 3000 );
+
 		self->NPC->blockedSpeechDebounceTime = level.time + 3000;
 	}
 }
@@ -168,11 +183,17 @@ void NPC_Jedi_PlayConfusionSound( gentity_t *self )
 		}
 		else if ( Q_irand( 0, 1 ) )
 		{
-			G_AddVoiceEvent( self, Q_irand( EV_TAUNT1, EV_TAUNT3 ), 2000 );
+			if (!NPC_IsJedi(self) && !NPC_IsBountyHunter(self))//NPC_IsStormtrooper(self))
+				ST_Speech( self, SPEECH_ESCAPING, 0 );
+			else
+				G_AddVoiceEvent( self, Q_irand( EV_TAUNT1, EV_TAUNT3 ), 2000 );
 		}
 		else
 		{
-			G_AddVoiceEvent( self, Q_irand( EV_GLOAT1, EV_GLOAT3 ), 2000 );
+			if (!NPC_IsJedi(self) && !NPC_IsBountyHunter(self))//NPC_IsStormtrooper(self))
+				ST_Speech( self, SPEECH_CONFUSED, 0 );
+			else
+				G_AddVoiceEvent( self, Q_irand( EV_GLOAT1, EV_GLOAT3 ), 2000 );
 		}
 	}
 }
@@ -1204,7 +1225,11 @@ static qboolean Jedi_BattleTaunt( void )
 		}
 		if ( event != -1 )
 		{
-			G_AddVoiceEvent( NPCS.NPC, event, 3000 );
+			if (!NPC_IsJedi(NPCS.NPC) && !NPC_IsBountyHunter(NPCS.NPC))//NPC_IsStormtrooper(NPCS.NPC))
+				ST_Speech( NPCS.NPC, SPEECH_OUTFLANK, 0 );
+			else
+				G_AddVoiceEvent( NPCS.NPC, event, 3000 );
+
 			jediSpeechDebounceTime[NPCS.NPC->client->playerTeam] = NPCS.NPCInfo->blockedSpeechDebounceTime = level.time + 10000;
 			TIMER_Set( NPCS.NPC, "chatter", Q_irand( 10000, 15000 ) );
 
@@ -4321,7 +4346,11 @@ static void Jedi_CombatTimersUpdate( int enemy_dist )
 					&& jediSpeechDebounceTime[NPCS.NPC->client->playerTeam] < level.time
 					&& NPCS.NPC->painDebounceTime < level.time - 1000 )
 				{
-					G_AddVoiceEvent( NPCS.NPC, Q_irand( EV_GLOAT1, EV_GLOAT3 ), 10000 );
+					if (!NPC_IsJedi(NPCS.NPC) && !NPC_IsBountyHunter(NPCS.NPC))//NPC_IsStormtrooper(NPCS.NPC))
+						ST_Speech( NPCS.NPC, SPEECH_YELL, 0 );
+					else
+						G_AddVoiceEvent( NPCS.NPC, Q_irand( EV_GLOAT1, EV_GLOAT3 ), 10000 );
+
 					jediSpeechDebounceTime[NPCS.NPC->client->playerTeam] = NPCS.NPCInfo->blockedSpeechDebounceTime = level.time + 10000;
 				}
 			}
@@ -5564,7 +5593,11 @@ static void Jedi_Combat( void )
 
 				if ( enemy_dist < 384 && !Q_irand( 0, 10 ) && NPCS.NPCInfo->blockedSpeechDebounceTime < level.time && jediSpeechDebounceTime[NPCS.NPC->client->playerTeam] < level.time && !NPC_ClearLOS4( NPCS.NPC->enemy ) )
 				{
-					G_AddVoiceEvent( NPCS.NPC, Q_irand( EV_JLOST1, EV_JLOST3 ), 10000 );
+					if (!NPC_IsJedi(NPCS.NPC) && !NPC_IsBountyHunter(NPCS.NPC))//NPC_IsStormtrooper(NPCS.NPC))
+						ST_Speech( NPCS.NPC, SPEECH_LOST, 0 );
+					else
+						G_AddVoiceEvent( NPCS.NPC, Q_irand( EV_JLOST1, EV_JLOST3 ), 10000 );
+
 					jediSpeechDebounceTime[NPCS.NPC->client->playerTeam] = NPCS.NPCInfo->blockedSpeechDebounceTime = level.time + 10000;
 				}
 				return;
@@ -5692,7 +5725,12 @@ static void Jedi_Combat( void )
 		NPCS.NPCInfo->scriptFlags &= ~SCF_ALT_FIRE;
 		NPC_SetAnim( NPCS.NPC, SETANIM_BOTH, BOTH_A7_KICK_F, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD ); // UQ1: Better anim?????
 		WP_FireMelee( NPCS.NPC, qfalse );
-		G_AddVoiceEvent( NPCS.NPC, Q_irand( EV_TAUNT1, EV_TAUNT3 ), 10000 );
+		
+		if (!NPC_IsJedi(NPCS.NPC) && !NPC_IsBountyHunter(NPCS.NPC))//NPC_IsStormtrooper(NPCS.NPC))
+			ST_Speech( NPCS.NPC, SPEECH_OUTFLANK, 0 );
+		else
+			G_AddVoiceEvent( NPCS.NPC, Q_irand( EV_TAUNT1, EV_TAUNT3 ), 10000 );
+
 		NPCS.NPC->next_rifle_butt_time = level.time + 1000;
 		NPCS.NPC->next_kick_time = level.time + 15000;
 
@@ -5858,7 +5896,10 @@ void NPC_Jedi_Pain(gentity_t *self, gentity_t *attacker, int damage)
 
 	if ( !damage && self->health > 0 )
 	{//FIXME: better way to know I was pushed
-		G_AddVoiceEvent( self, Q_irand(EV_PUSHED1, EV_PUSHED3), 10000 );
+		if (!NPC_IsJedi(NPCS.NPC) && !NPC_IsBountyHunter(NPCS.NPC))//NPC_IsStormtrooper(NPCS.NPC))
+			ST_Speech( NPCS.NPC, SPEECH_PUSHED, 0.7f );
+		else
+			G_AddVoiceEvent( self, Q_irand(EV_PUSHED1, EV_PUSHED3), 10000 );
 	}
 
 	//drop me from the ceiling if I'm on it
@@ -6108,7 +6149,10 @@ static void Jedi_Patrol( void )
 							{//okay, we've ignored him, now start to notice him
 								if ( !NPCS.NPCInfo->investigateCount )
 								{
-									G_AddVoiceEvent( NPCS.NPC, Q_irand( EV_JDETECTED1, EV_JDETECTED3 ), 10000 );
+									if (!NPC_IsJedi(NPCS.NPC) && !NPC_IsBountyHunter(NPCS.NPC))//NPC_IsStormtrooper(NPCS.NPC))
+										ST_Speech( NPCS.NPC, SPEECH_DETECTED, 0 );
+									else
+										G_AddVoiceEvent( NPCS.NPC, Q_irand( EV_JDETECTED1, EV_JDETECTED3 ), 10000 );
 								}
 								NPCS.NPCInfo->investigateCount++;
 								TIMER_Set( NPCS.NPC, "watchTime", Q_irand( 9000, 15000 ) );
@@ -6386,7 +6430,11 @@ void NPC_BSJedi_FollowLeader( void )
 					&& !Q_irand( 0, 10 ) && NPCS.NPCInfo->blockedSpeechDebounceTime < level.time 
 					&& jediSpeechDebounceTime[NPCS.NPC->client->playerTeam] < level.time && !NPC_ClearLOS4( NPCS.NPC->enemy ) )
 				{
-					G_AddVoiceEvent( NPCS.NPC, Q_irand( EV_JLOST1, EV_JLOST3 ), 10000 );
+					if (!NPC_IsJedi(NPCS.NPC) && !NPC_IsBountyHunter(NPCS.NPC))//NPC_IsStormtrooper(NPCS.NPC))
+						ST_Speech( NPCS.NPC, SPEECH_GIVEUP, 0 );
+					else
+						G_AddVoiceEvent( NPCS.NPC, Q_irand( EV_JLOST1, EV_JLOST3 ), 10000 );
+
 					jediSpeechDebounceTime[NPCS.NPC->client->playerTeam] = NPCS.NPCInfo->blockedSpeechDebounceTime = level.time + 10000;
 				}
 				return;
@@ -6553,7 +6601,9 @@ static void Jedi_Attack( void )
 						G_AddPadawanCombatCommentEvent( NPCS.NPC, EV_PADAWAN_COMBAT_KILL_TALK, 10000+irand(0,15000) );
 					}
 					else
+					{
 						G_AddVoiceEvent( NPCS.NPC, Q_irand( EV_VICTORY1, EV_VICTORY3 ), 10000 );
+					}
 
 					jediSpeechDebounceTime[NPCS.NPC->client->playerTeam] = level.time + 10000;
 					NPCS.NPCInfo->desiredPitch = 0;
@@ -6584,7 +6634,9 @@ static void Jedi_Attack( void )
 							G_AddPadawanCombatCommentEvent( NPCS.NPC, EV_PADAWAN_COMBAT_KILL_TALK, 10000+irand(0,15000) );
 						}
 						else
+						{
 							G_AddVoiceEvent( NPCS.NPC, Q_irand( EV_VICTORY1, EV_VICTORY3 ), 10000 );
+						}
 
 						jediSpeechDebounceTime[NPCS.NPC->client->playerTeam] = level.time + 10000;
 						NPCS.NPCInfo->desiredPitch = 0;

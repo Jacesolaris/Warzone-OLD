@@ -222,7 +222,7 @@ sfxHandle_t	CG_CustomSound( int clientNum, const char *soundName ) {
 	}
 
 	// UQ1: Load NPC sounds for players/bots...
-	if (clientNum < MAX_CLIENTS && !ci->npc_sounds_registered)
+	if (/*clientNum < MAX_CLIENTS &&*/ !ci->npc_sounds_registered)
 	{
 		trap->S_Shutup(qtrue);
 		CG_HandleNPCSounds(&cg_entities[clientNum]);
@@ -325,6 +325,15 @@ sfxHandle_t	CG_CustomSound( int clientNum, const char *soundName ) {
 			return ci->jediSounds[i];
 		}
 	}
+
+	/*
+	{// Failed... Make sure they are loaded for next time...
+		trap->S_Shutup(qtrue);
+		CG_HandleNPCSounds(&cg_entities[clientNum]);
+		trap->S_Shutup(qfalse);
+		ci->npc_sounds_registered = qtrue;
+	}
+	*/
 
 	//trap->Error( ERR_DROP, "Unknown custom sound: %s", lSoundName );
 #ifndef FINAL_BUILD

@@ -1012,7 +1012,6 @@ int GetPadawanReplyYodaChattersMax()
 	return max;
 }
 
-
 void CG_PadawanIdleReplyChatter ( int entityNum )
 {
 	int			choice = irand(0,GetPadawanReplyChattersMax());
@@ -1031,6 +1030,45 @@ void CG_PadawanIdleReplyChatter ( int entityNum )
 }
 
 //
+// Backup Combat Sounds...
+//
+
+const char *COMBAT_BACKUP_SOUNDS[] =
+{
+	// Pre-recorded sample ones...
+	"#AARGH01#",
+	"#AARGH02#",
+	"#AARGH03#",
+	"#LAUGH01#",
+	"#LAUGH02#",
+	"#LAUGH03#",
+	"#YAWN01#",
+	"#YAWN02#",
+	"Loser!",
+	"Stop it!",
+	"Stop!",
+	"Uh oh!",
+	"You lose!",
+	"I win!",
+	"Yes!",
+	"Impressive!",
+	"",
+};
+
+int GetCombatSoundsMax()
+{
+	int max = 0;
+
+	// We need to count them...
+	while (COMBAT_BACKUP_SOUNDS[max] != "")
+	{
+		max++;
+	}
+
+	return max;
+}
+
+//
 // Pre-downloading all chats for all voices stuff...
 //
 extern char *showPowersName[];
@@ -1045,10 +1083,31 @@ void CG_DownloadAllTextToSpeechSounds ( void )
 	{
 		int		weaponNum = 0;
 		int		forcePowerNum = 0;
+		int		soundNum = 0;
 
 		if (ttsVoiceData[voice_num].age == TTS_AGE_NONE) continue;
 
 		strcpy(voice, ttsVoiceData[voice_num].voicename);
+
+		// First get the backup combat sounds...
+		
+		for (soundNum = 0; soundNum < GetCombatSoundsMax(); soundNum++)
+		{
+			trap->Print("Generating backup combat sound %s for voice %s.\n", COMBAT_BACKUP_SOUNDS[soundNum], voice);
+
+			while (!trap->S_DownloadVoice(COMBAT_BACKUP_SOUNDS[soundNum], voice))
+			{// Wait and retry...
+				trap->Print("Failed. Waiting a moment before continuing.\n");
+
+				for (wait_time = 0; wait_time < 500; wait_time++)
+				{// Do some random silly stuff as we have no sleep() function;
+					int ran = irand(0,100);
+					trap->UpdateScreen();
+				}
+			}
+
+			trap->UpdateScreen();
+		}
 
 		// Download all weapon sounds...
 		for (weaponNum = 0; weaponNum < WP_NUM_WEAPONS; weaponNum++)

@@ -319,6 +319,34 @@ typedef struct navInfo_s
 	int			flags;
 } navInfo_t;
 
+/*
+-------------------------
+Storm Trooper Speech
+-------------------------
+*/
+
+enum
+{
+	SPEECH_CHASE,
+	SPEECH_CONFUSED,
+	SPEECH_COVER,
+	SPEECH_DETECTED,
+	SPEECH_GIVEUP,
+	SPEECH_LOOK,
+	SPEECH_LOST,
+	SPEECH_OUTFLANK,
+	SPEECH_ESCAPING,
+	SPEECH_SIGHT,
+	SPEECH_SOUND,
+	SPEECH_SUSPICIOUS,
+	SPEECH_YELL,
+	SPEECH_PUSHED,
+	SPEECH_MAX
+};
+
+extern stringID_table_t speechTable[SPEECH_MAX+1];
+
+
 extern qboolean NPC_Jump( gentity_t *NPC, vec3_t dest );
 extern qboolean NPC_TryJump( gentity_t *NPC, vec3_t goal );
 
@@ -344,6 +372,7 @@ extern qboolean NPC_IsJedi ( gentity_t *self );
 extern qboolean NPC_IsAdvancedGunner ( gentity_t *self );
 extern qboolean NPC_IsBountyHunter ( gentity_t *self );
 extern qboolean NPC_IsCommando ( gentity_t *self );
+extern qboolean NPC_IsStormtrooper ( gentity_t *self );
 extern qboolean NPC_HasGrenades ( gentity_t *self );
 
 // NPC_AI_Cower.c

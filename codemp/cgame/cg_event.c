@@ -993,15 +993,286 @@ int CG_InClientBitflags(entityState_t *ent, int client)
 void CG_PlayDoorLoopSound( centity_t *cent );
 void CG_PlayDoorSound( centity_t *cent, int type );
 
+qboolean CG_AllowBackupCombatSounds ( centity_t *self )
+{
+	//if (self->client->ps.weapon == WP_SABER) return qtrue;
+	//if (self->client->ps.weapon == WP_MELEE) return qtrue;
+
+	if (self->currentState.eType == ET_PLAYER) return qtrue;
+
+	switch (self->currentState.NPC_class)
+	{
+	//case CLASS_ATST:
+	case CLASS_BARTENDER:
+	case CLASS_BESPIN_COP:		
+	//case CLASS_CLAW:
+	case CLASS_COMMANDO:
+	case CLASS_DESANN:		
+	//case CLASS_FISH:
+	//case CLASS_FLIER2:
+	case CLASS_GALAK:
+	//case CLASS_GLIDER:
+	//case CLASS_GONK:				// droid
+	//case CLASS_GRAN:
+	//case CLASS_HOWLER:
+	case CLASS_IMPERIAL:
+	//case CLASS_IMPWORKER:
+	//case CLASS_INTERROGATOR:		// droid 
+	case CLASS_JAN:				
+	case CLASS_JEDI:
+	case CLASS_PADAWAN:
+	case CLASS_KYLE:				
+	case CLASS_LANDO:			
+	//case CLASS_LIZARD:
+	case CLASS_LUKE:				// UQ1: TODO - maybe should be allowed to switch to pistol/blaster???
+	//case CLASS_MARK1:			// droid
+	//case CLASS_MARK2:			// droid
+	//case CLASS_GALAKMECH:		// droid
+	//case CLASS_MINEMONSTER:
+	case CLASS_MONMOTHA:			
+	case CLASS_MORGANKATARN:
+	//case CLASS_MOUSE:			// droid
+	//case CLASS_MURJJ:
+	case CLASS_PRISONER:
+	//case CLASS_PROBE:			// droid
+	//case CLASS_PROTOCOL:			// droid
+	//case CLASS_R2D2:				// droid
+	//case CLASS_R5D2:				// droid
+	case CLASS_REBEL:
+	case CLASS_REBORN:
+	case CLASS_REELO:
+	//case CLASS_REMOTE:
+	case CLASS_RODIAN:
+	//case CLASS_SEEKER:			// droid
+	//case CLASS_SENTRY:
+	//case CLASS_SHADOWTROOPER:
+	//case CLASS_STORMTROOPER:
+	//case CLASS_SWAMP:
+	//case CLASS_SWAMPTROOPER:
+	case CLASS_TAVION:
+	case CLASS_TRANDOSHAN:
+	case CLASS_UGNAUGHT:
+	//case CLASS_JAWA:
+	//case CLASS_WEEQUAY:
+	case CLASS_BOBAFETT:
+	//case CLASS_VEHICLE:
+	//case CLASS_RANCOR:
+	//case CLASS_WAMPA:
+	//case CLASS_CIVILIAN:			// UQ1: Random civilian NPCs...
+	//case CLASS_GENERAL_VENDOR:
+	//case CLASS_WEAPONS_VENDOR:
+	//case CLASS_ARMOR_VENDOR:
+	//case CLASS_SUPPLIES_VENDOR:
+	//case CLASS_FOOD_VENDOR:
+	//case CLASS_MEDICAL_VENDOR:
+	//case CLASS_GAMBLER_VENDOR:
+	//case CLASS_TRADE_VENDOR:
+	//case CLASS_ODDITIES_VENDOR:
+	//case CLASS_DRUG_VENDOR:
+	//case CLASS_TRAVELLING_VENDOR:
+	//case CLASS_BOT_FAKE_NPC:
+		// Is able to use TTS backup combat sounds...
+		return qtrue;
+		break;
+	default:
+		// NOT able to use TTS backup combat sounds...
+		break;
+	}
+
+	return qfalse;
+}
+
 void CG_TryPlayCustomSound( vec3_t origin, int entityNum, int channel, const char *soundName )
 {
 	sfxHandle_t cSound = CG_CustomSound(entityNum, soundName);
 
 	if (cSound <= 0)
 	{
+		//trap->Print("Failed playing custom sound %s for entityNum %i.\n", soundName, entityNum);
+
+		//
+		// UQ1: Fall back to using text to speech sounds...
+		//
+
+		if (!CG_AllowBackupCombatSounds(&cg_entities[entityNum])) 
+		{// Only allow TTS backup combat sounds for specific types of NPCs (allows any players to use them).
+			return;
+		}
+
+		if (!strncmp(soundName, "*anger", 6))
+		{
+			int SELECTED = irand(0,2);
+
+			switch (SELECTED)
+			{
+			case 0:
+				TextToSpeech( "Loser!", CG_GetTextToSpeechVoiceForEntity(&cg_entities[entityNum]), entityNum, cg_entities[entityNum].lerpOrigin );
+				break;
+			case 1:
+				TextToSpeech( "#LAUGH03#", CG_GetTextToSpeechVoiceForEntity(&cg_entities[entityNum]), entityNum, cg_entities[entityNum].lerpOrigin );
+				break;
+			default:
+				TextToSpeech( "Stop!", CG_GetTextToSpeechVoiceForEntity(&cg_entities[entityNum]), entityNum, cg_entities[entityNum].lerpOrigin );
+				break;
+			}
+		}
+		else if (!strncmp(soundName, "*detected", 9))
+		{
+			int SELECTED = irand(0,2);
+
+			switch (SELECTED)
+			{
+			case 0:
+				TextToSpeech( "Uh oh!", CG_GetTextToSpeechVoiceForEntity(&cg_entities[entityNum]), entityNum, cg_entities[entityNum].lerpOrigin );
+				break;
+			case 1:
+				TextToSpeech( "#AARGH01#", CG_GetTextToSpeechVoiceForEntity(&cg_entities[entityNum]), entityNum, cg_entities[entityNum].lerpOrigin );
+				break;
+			default:
+				TextToSpeech( "#AARGH02#", CG_GetTextToSpeechVoiceForEntity(&cg_entities[entityNum]), entityNum, cg_entities[entityNum].lerpOrigin );
+				break;
+			}
+		}
+		else if (!strncmp(soundName, "*victory", 8))
+		{
+			int SELECTED = irand(0,2);
+
+			switch (SELECTED)
+			{
+			case 0:
+				TextToSpeech( "You lose!", CG_GetTextToSpeechVoiceForEntity(&cg_entities[entityNum]), entityNum, cg_entities[entityNum].lerpOrigin );
+				break;
+			case 1:
+				TextToSpeech( "I win!", CG_GetTextToSpeechVoiceForEntity(&cg_entities[entityNum]), entityNum, cg_entities[entityNum].lerpOrigin );
+				break;
+			default:
+				TextToSpeech( "Yes!", CG_GetTextToSpeechVoiceForEntity(&cg_entities[entityNum]), entityNum, cg_entities[entityNum].lerpOrigin );
+				break;
+			}
+		}
+		else if (!strncmp(soundName, "*outflank", 9))
+		{
+			int SELECTED = irand(0,2);
+
+			switch (SELECTED)
+			{
+			case 0:
+				TextToSpeech( "#LAUGH01#", CG_GetTextToSpeechVoiceForEntity(&cg_entities[entityNum]), entityNum, cg_entities[entityNum].lerpOrigin );
+				break;
+			case 1:
+				TextToSpeech( "#LAUGH02#", CG_GetTextToSpeechVoiceForEntity(&cg_entities[entityNum]), entityNum, cg_entities[entityNum].lerpOrigin );
+				break;
+			default:
+				TextToSpeech( "#LAUGH03#", CG_GetTextToSpeechVoiceForEntity(&cg_entities[entityNum]), entityNum, cg_entities[entityNum].lerpOrigin );
+				break;
+			}
+		}
+		else if (!strncmp(soundName, "*combat", 7))
+		{
+			int SELECTED = irand(0,2);
+
+			switch (SELECTED)
+			{
+			case 0:
+				TextToSpeech( "Impressive!", CG_GetTextToSpeechVoiceForEntity(&cg_entities[entityNum]), entityNum, cg_entities[entityNum].lerpOrigin );
+				break;
+			case 1:
+				TextToSpeech( "#LAUGH02#", CG_GetTextToSpeechVoiceForEntity(&cg_entities[entityNum]), entityNum, cg_entities[entityNum].lerpOrigin );
+				break;
+			default:
+				TextToSpeech( "#LAUGH03#", CG_GetTextToSpeechVoiceForEntity(&cg_entities[entityNum]), entityNum, cg_entities[entityNum].lerpOrigin );
+				break;
+			}
+		}
+		else if (!strncmp(soundName, "*chase", 6))
+		{
+			int SELECTED = irand(0,2);
+
+			switch (SELECTED)
+			{
+			case 0:
+				TextToSpeech( "Stop!", CG_GetTextToSpeechVoiceForEntity(&cg_entities[entityNum]), entityNum, cg_entities[entityNum].lerpOrigin );
+				break;
+			case 1:
+				TextToSpeech( "#AARGH01#", CG_GetTextToSpeechVoiceForEntity(&cg_entities[entityNum]), entityNum, cg_entities[entityNum].lerpOrigin );
+				break;
+			default:
+				TextToSpeech( "#AARGH02#", CG_GetTextToSpeechVoiceForEntity(&cg_entities[entityNum]), entityNum, cg_entities[entityNum].lerpOrigin );
+				break;
+			}
+		}
+		else if (!strncmp(soundName, "*taunt", 6))
+		{
+			int SELECTED = irand(0,2);
+
+			switch (SELECTED)
+			{
+			case 0:
+				TextToSpeech( "#YAWN01#", CG_GetTextToSpeechVoiceForEntity(&cg_entities[entityNum]), entityNum, cg_entities[entityNum].lerpOrigin );
+				break;
+			case 1:
+				TextToSpeech( "#YAWN02#", CG_GetTextToSpeechVoiceForEntity(&cg_entities[entityNum]), entityNum, cg_entities[entityNum].lerpOrigin );
+				break;
+			default:
+				TextToSpeech( "#LAUGH03#", CG_GetTextToSpeechVoiceForEntity(&cg_entities[entityNum]), entityNum, cg_entities[entityNum].lerpOrigin );
+				break;
+			}
+		}
+		else if (!strncmp(soundName, "*sight", 6))
+		{
+			int SELECTED = irand(0,2);
+
+			switch (SELECTED)
+			{
+			case 0:
+				TextToSpeech( "#AARGH01#", CG_GetTextToSpeechVoiceForEntity(&cg_entities[entityNum]), entityNum, cg_entities[entityNum].lerpOrigin );
+				break;
+			case 1:
+				TextToSpeech( "#AARGH02#", CG_GetTextToSpeechVoiceForEntity(&cg_entities[entityNum]), entityNum, cg_entities[entityNum].lerpOrigin );
+				break;
+			default:
+				TextToSpeech( "#AARGH03#", CG_GetTextToSpeechVoiceForEntity(&cg_entities[entityNum]), entityNum, cg_entities[entityNum].lerpOrigin );
+				break;
+			}
+		}
+		else if (!strncmp(soundName, "*jdetected", 10))
+		{
+			int SELECTED = irand(0,2);
+
+			switch (SELECTED)
+			{
+			case 0:
+				TextToSpeech( "#AARGH01#", CG_GetTextToSpeechVoiceForEntity(&cg_entities[entityNum]), entityNum, cg_entities[entityNum].lerpOrigin );
+				break;
+			case 1:
+				TextToSpeech( "#AARGH02#", CG_GetTextToSpeechVoiceForEntity(&cg_entities[entityNum]), entityNum, cg_entities[entityNum].lerpOrigin );
+				break;
+			default:
+				TextToSpeech( "#AARGH03#", CG_GetTextToSpeechVoiceForEntity(&cg_entities[entityNum]), entityNum, cg_entities[entityNum].lerpOrigin );
+				break;
+			}
+		}
+		else if (StringContainsWord(soundName, "gloat"))
+		{
+			int SELECTED = irand(0,2);
+
+			switch (SELECTED)
+			{
+			case 0:
+				TextToSpeech( "You lose!", CG_GetTextToSpeechVoiceForEntity(&cg_entities[entityNum]), entityNum, cg_entities[entityNum].lerpOrigin );
+				break;
+			case 1:
+				TextToSpeech( "I win!", CG_GetTextToSpeechVoiceForEntity(&cg_entities[entityNum]), entityNum, cg_entities[entityNum].lerpOrigin );
+				break;
+			default:
+				TextToSpeech( "Yes!", CG_GetTextToSpeechVoiceForEntity(&cg_entities[entityNum]), entityNum, cg_entities[entityNum].lerpOrigin );
+				break;
+			}
+		}
 		return;
 	}
 
+	//trap->Print("Playing custom sound %s for entityNum %i.\n", soundName, entityNum);
 	trap->S_StartSound(origin, entityNum, channel, cSound);
 }
 

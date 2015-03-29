@@ -97,7 +97,7 @@ void NPC_CivilianCowerPoint( gentity_t *enemy, vec3_t position )
 		{// Their future path is clear of combatants, make them run away...
 			if ( NPC->npc_cower_time < level.time && TIMER_Done( NPC, "flee" ) && TIMER_Done( NPC, "panic" ) )
 			{
-				ST_Speech( NPC, 2/*SPEECH_COVER*/, 0 );//FIXME: flee sound?
+				ST_Speech( NPC, SPEECH_COVER, 0 );//FIXME: flee sound?
 			}
 
 			NPC->npc_cower_runaway_anim = 0; // Select new cower animation...
@@ -106,7 +106,7 @@ void NPC_CivilianCowerPoint( gentity_t *enemy, vec3_t position )
 		else if ( NPC->npc_cower_time < level.time && TIMER_Done( NPC, "flee" ) && TIMER_Done( NPC, "panic" ) )
 		{
 			G_StartFlee( NPC, enemy, position, AEL_DANGER_GREAT, 3000, 5000 );
-			ST_Speech( NPC, 2/*SPEECH_COVER*/, 0 );//FIXME: flee sound?
+			ST_Speech( NPC, SPEECH_COVER, 0 );//FIXME: flee sound?
 			NPC->npc_cower_runaway = qfalse;
 		}
 

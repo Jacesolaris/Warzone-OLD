@@ -102,30 +102,37 @@ void ST_ClearTimers( gentity_t *ent )
 	TIMER_Set( ent, "verifyCP", 0 );
 }
 
-enum
+extern char *Get_NPC_Name ( int NAME_ID );
+
+stringID_table_t speechTable[SPEECH_MAX+1] =
 {
-	SPEECH_CHASE,
-	SPEECH_CONFUSED,
-	SPEECH_COVER,
-	SPEECH_DETECTED,
-	SPEECH_GIVEUP,
-	SPEECH_LOOK,
-	SPEECH_LOST,
-	SPEECH_OUTFLANK,
-	SPEECH_ESCAPING,
-	SPEECH_SIGHT,
-	SPEECH_SOUND,
-	SPEECH_SUSPICIOUS,
-	SPEECH_YELL,
-	SPEECH_PUSHED
+	ENUM2STRING(SPEECH_CHASE),
+	ENUM2STRING(SPEECH_CONFUSED),
+	ENUM2STRING(SPEECH_COVER),
+	ENUM2STRING(SPEECH_DETECTED),
+	ENUM2STRING(SPEECH_GIVEUP),
+	ENUM2STRING(SPEECH_LOOK),
+	ENUM2STRING(SPEECH_LOST),
+	ENUM2STRING(SPEECH_OUTFLANK),
+	ENUM2STRING(SPEECH_ESCAPING),
+	ENUM2STRING(SPEECH_SIGHT),
+	ENUM2STRING(SPEECH_SOUND),
+	ENUM2STRING(SPEECH_SUSPICIOUS),
+	ENUM2STRING(SPEECH_YELL),
+	ENUM2STRING(SPEECH_PUSHED),
+	ENUM2STRING(SPEECH_MAX),
 };
 
 void ST_Speech( gentity_t *self, int speechType, float failChance )
 {
+	//trap->Print("NPC %i trying to talk %i.\n", self->s.number, speechType);
+
 	if ( random() < failChance )
 	{
 		return;
 	}
+
+	//trap->Print("NPC %s trying to talk %s - ", Get_NPC_Name(self->s.NPC_NAME_ID), speechTable[speechType]);
 
 	if ( failChance >= 0 )
 	{//a negative failChance makes it always talk
@@ -133,6 +140,7 @@ void ST_Speech( gentity_t *self, int speechType, float failChance )
 		{//group AI speech debounce timer
 			if ( self->NPC->group->speechDebounceTime > level.time )
 			{
+				//trap->Print("RESULT: Blocked group speech Debounce\n");
 				return;
 			}
 			/*
@@ -144,31 +152,41 @@ void ST_Speech( gentity_t *self, int speechType, float failChance )
 				}
 			}
 			*/
+			else
+			{//So they don't all speak at once...
+				//FIXME: if they're not yet mad, they have no group, so distracting a group of them makes them all speak!
+				self->NPC->group->speechDebounceTime = level.time + Q_irand( 2000, 4000 );
+			}
 		}
-		else if ( !TIMER_Done( self, "chatter" ) )
-		{//personal timer
-			return;
+		else
+		{
+			if ( !TIMER_Done( self, "chatter" ) )
+			{//personal timer
+				//trap->Print("RESULT: Blocked speech chatter\n");
+				return;
+			}
+			else
+			{
+				TIMER_Set( self, "chatter", Q_irand( 2000, 4000 ) );
+			}
 		}
-		else if ( groupSpeechDebounceTime[self->client->playerTeam] > level.time )
+
+//#if 0
+		if ( groupSpeechDebounceTime[self->client->playerTeam] > level.time )
 		{//for those not in group AI
 			//FIXME: let certain speech types interrupt others?  Let closer NPCs interrupt farther away ones?
 			return;
 		}
+		else
+		{
+			groupSpeechDebounceTime[self->client->playerTeam] = level.time + Q_irand( 2000, 4000 );
+		}
+//#endif //0
 	}
-
-	if ( self->NPC->group )
-	{//So they don't all speak at once...
-		//FIXME: if they're not yet mad, they have no group, so distracting a group of them makes them all speak!
-		self->NPC->group->speechDebounceTime = level.time + Q_irand( 2000, 4000 );
-	}
-	else
-	{
-		TIMER_Set( self, "chatter", Q_irand( 2000, 4000 ) );
-	}
-	groupSpeechDebounceTime[self->client->playerTeam] = level.time + Q_irand( 2000, 4000 );
 
 	if ( self->NPC->blockedSpeechDebounceTime > level.time )
 	{
+		//trap->Print("RESULT: Blocked speech Debounce\n");
 		return;
 	}
 
@@ -219,6 +237,8 @@ void ST_Speech( gentity_t *self, int speechType, float failChance )
 	default:
 		break;
 	}
+
+	//trap->Print("RESULT: Talked\n");
 
 	self->NPC->blockedSpeechDebounceTime = level.time + 2000;
 }

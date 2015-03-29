@@ -39,6 +39,7 @@ extern void NPC_EnforceConversationRange ( gentity_t *self );
 extern qboolean NPC_CombatMoveToGoal( qboolean tryStraight, qboolean retreat );
 qboolean UQ_MoveDirClear( int forwardmove, int rightmove, qboolean reset );
 extern qboolean NPC_IsJetpacking ( gentity_t *self );
+extern void ST_Speech( gentity_t *self, int speechType, float failChance );
 
 // Conversations...
 extern void NPC_NPCConversation();
@@ -3791,6 +3792,27 @@ void NPC_Think ( gentity_t *self)//, int msec )
 			if ((!self->enemy || !NPC_IsAlive(self->enemy)) && !is_civilian)
 			{
 				NPC_FindEnemy( qtrue );
+
+				if (self->enemy && NPC_IsAlive(self->enemy))
+				{// UQ1: Ummmm sounds please!
+					if (NPC_IsJedi(self))
+					{
+						G_AddVoiceEvent( self, Q_irand( EV_JDETECTED1, EV_JDETECTED3 ), 15000 + irand(0, 30000) );
+					}
+					else if (!NPC_IsBountyHunter(self))//NPC_IsStormtrooper(self))
+					{
+						if (irand(0,1) == 1)
+							ST_Speech( self, SPEECH_DETECTED, 0 );
+						else if (irand(0,1) == 1)
+							ST_Speech( self, SPEECH_CHASE, 0 );
+						else
+							ST_Speech( self, SPEECH_SIGHT, 0 );
+					}
+					else
+					{
+						G_AddVoiceEvent( self, Q_irand( EV_DETECTED1, EV_DETECTED5 ), 15000 + irand(0, 30000) );
+					}
+				}
 			}
 
 			if ( self->enemy ) 
