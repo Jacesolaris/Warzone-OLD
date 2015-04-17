@@ -637,13 +637,34 @@ qboolean	PM_SlideMove( qboolean gravity ) {
 	vec3_t		primal_velocity;
 	vec3_t		clipVelocity;
 	int			i, j, k;
-	trace_t	trace;
+	trace_t		trace;
 	vec3_t		end;
 	float		time_left;
 	float		into;
 	vec3_t		endVelocity;
 	vec3_t		endClipVelocity;
 	//qboolean	damageSelf = qtrue;
+	vec3_t		maxs, mins;
+
+	/*if (pm_entSelf 
+		&& (((pm_entSelf->s.eType == ET_NPC || pm_entSelf->s.eType == ET_PLAYER) && pm_entSelf->s.NPC_class != CLASS_VEHICLE && pm_entSelf->s.NPC_class != CLASS_RANCOR && pm_entSelf->s.NPC_class != CLASS_ATST && !pm_entSelf->m_pVehicle) || (pm_entSelf->s.eFlags & EF_FAKE_NPC_BOT)))
+	{// UQ1: Non-vehicle NPCs should use smaller trace size for easier navigation...
+		maxs[0] = 10;
+		maxs[1] = 10;
+		maxs[2] = pm->maxs[2];
+
+		mins[0] = -10;
+		mins[1] = -10;
+		mins[2] = pm->mins[2];
+
+		//VectorCopy(maxs, pm->maxs);
+		//VectorCopy(mins, pm->mins);
+	}
+	else*/
+	{
+		VectorCopy(pm->maxs, maxs);
+		VectorCopy(pm->mins, mins);
+	}
 
 	numbumps = 4;
 
@@ -689,7 +710,7 @@ qboolean	PM_SlideMove( qboolean gravity ) {
 		VectorMA( pm->ps->origin, time_left, pm->ps->velocity, end );
 
 		// see if we can make it there
-		pm->trace ( &trace, pm->ps->origin, pm->mins, pm->maxs, end, pm->ps->clientNum, pm->tracemask);
+		pm->trace ( &trace, pm->ps->origin, mins, maxs, end, pm->ps->clientNum, pm->tracemask);
 
 		if (trace.allsolid) {
 			// entity is completely trapped in another solid
@@ -713,11 +734,26 @@ qboolean	PM_SlideMove( qboolean gravity ) {
 		{
 			bgEntity_t *pEnt = pm_entSelf;
 
-			if (pEnt && pEnt->s.eType == ET_NPC && pEnt->s.NPC_class == CLASS_VEHICLE &&
-				pEnt->m_pVehicle)
+			if (pEnt 
+				&& pEnt->s.eType == ET_NPC 
+				&& pEnt->s.NPC_class == CLASS_VEHICLE 
+				&& pEnt->m_pVehicle)
 			{ //do vehicle impact stuff then
 				PM_VehicleImpact(pEnt, &trace);
 			}
+/*#ifdef _GAME
+			else if (pEnt 
+				&& pEnt->s.eType == ET_NPC 
+				&& pEnt->s.NPC_class != CLASS_VEHICLE 
+				&& !pEnt->m_pVehicle )
+				//&& (trace.entityNum < MAX_CLIENTS || (trace.entityNum < ENTITYNUM_WORLD && g_entities[trace.entityNum].s.eType == ET_NPC)))
+			{// UQ1: Non-vehicle NPCs should do the client impact things when hitting a client/npc... Not just get stuck on stupid stuff...
+				if ( PM_ClientImpact( &trace ) )
+				{
+					continue;
+				}
+			}
+#endif*/
 		}
 #ifdef _GAME
 		else
@@ -866,7 +902,29 @@ void PM_StepSlideMove( qboolean gravity ) {
 	float		stepSize;
 	qboolean	isGiant = qfalse;
 	bgEntity_t	*pEnt;
-	qboolean skipStep = qfalse;
+	qboolean	skipStep = qfalse;
+	vec3_t		maxs, mins;
+
+	/*
+	if (pm_entSelf 
+		&& (((pm_entSelf->s.eType == ET_NPC || pm_entSelf->s.eType == ET_PLAYER) && pm_entSelf->s.NPC_class != CLASS_VEHICLE && pm_entSelf->s.NPC_class != CLASS_RANCOR && pm_entSelf->s.NPC_class != CLASS_ATST && !pm_entSelf->m_pVehicle) || (pm_entSelf->s.eFlags & EF_FAKE_NPC_BOT)))
+	{// UQ1: Non-vehicle NPCs should use smaller trace size for easier navigation...
+		maxs[0] = 10;
+		maxs[1] = 10;
+		maxs[2] = pm->maxs[2];
+
+		mins[0] = -10;
+		mins[1] = -10;
+		mins[2] = pm->mins[2];
+
+		VectorCopy(maxs, pm->maxs);
+		VectorCopy(mins, pm->mins);
+	}
+	else*/
+	{
+		VectorCopy(pm->maxs, maxs);
+		VectorCopy(pm->mins, mins);
+	}
 
 	VectorCopy (pm->ps->origin, start_o);
 	VectorCopy (pm->ps->velocity, start_v);
@@ -893,7 +951,7 @@ void PM_StepSlideMove( qboolean gravity ) {
 
 	VectorCopy(start_o, down);
 	down[2] -= STEPSIZE;
-	pm->trace (&trace, start_o, pm->mins, pm->maxs, down, pm->ps->clientNum, pm->tracemask);
+	pm->trace (&trace, start_o, mins, maxs, down, pm->ps->clientNum, pm->tracemask);
 	VectorSet(up, 0, 0, 1);
 	// never step up when you still have up velocity
 	if ( pm->ps->velocity[2] > 0 && (trace.fraction == 1.0 ||
@@ -922,16 +980,11 @@ void PM_StepSlideMove( qboolean gravity ) {
 			up[2] += 64.0f;
 			isGiant = qtrue;
 		}
-		else if ( pEnt && pEnt->s.eType == ET_NPC )
-		{//also can step up high - UQ1: All NPCs can now step high... Just to help with pathing...
-			up[2] += 64.0f;
+		/*else if ( pEnt && pEnt->s.eType == ET_NPC )
+		{//also can step up high
+			up[2] += 36.0f;//64.0f;
 			isGiant = qtrue;
-		}
-		else if ( pEnt && pEnt->s.eFlags & EF_FAKE_NPC_BOT )
-		{//also can step up high - UQ1: All Fake NPCs can now step high... Just to help with pathing...
-			up[2] += 64.0f;
-			isGiant = qtrue;
-		}
+		}*/
 		else
 		{
 			up[2] += STEPSIZE;
@@ -943,12 +996,31 @@ void PM_StepSlideMove( qboolean gravity ) {
 	}
 
 	// test the player position if they were a stepheight higher
-	pm->trace (&trace, start_o, pm->mins, pm->maxs, up, pm->ps->clientNum, pm->tracemask);
+	pm->trace (&trace, start_o, mins, maxs, up, pm->ps->clientNum, pm->tracemask);
 	if ( trace.allsolid ) {
 		if ( pm->debugLevel ) {
 			Com_Printf("%i:bend can't step\n", c_pmove);
 		}
-		return;		// can't step up
+		//return;		// can't step up
+
+		/* New secondary check for NPCs and BOTs to navigate easier */
+		if ( pEnt && (pEnt->s.eType == ET_NPC || (pEnt->s.eFlags & EF_FAKE_NPC_BOT)) )
+		{// NPCs and BOTs can also step higher...
+			up[2] += 64.0f;
+			isGiant = qtrue;
+
+			pm->trace (&trace, start_o, mins, maxs, up, pm->ps->clientNum, pm->tracemask);
+			if ( trace.allsolid ) {
+				if ( pm->debugLevel ) {
+					Com_Printf("%i:bend can't step\n", c_pmove);
+				}
+				return;		// can't step up
+			}
+		}
+		else
+		{// Not a NPC or BOT... Can't step high...
+			return;		// can't step up
+		}
 	}
 
 	stepSize = trace.endpos[2] - start_o[2];
@@ -961,7 +1033,7 @@ void PM_StepSlideMove( qboolean gravity ) {
 	// push down the final amount
 	VectorCopy (pm->ps->origin, down);
 	down[2] -= stepSize;
-	pm->trace (&trace, pm->ps->origin, pm->mins, pm->maxs, down, pm->ps->clientNum, pm->tracemask);
+	pm->trace (&trace, pm->ps->origin, mins, maxs, down, pm->ps->clientNum, pm->tracemask);
 
 	if ( pm->stepSlideFix )
 	{
@@ -1017,6 +1089,22 @@ void PM_StepSlideMove( qboolean gravity ) {
 			VectorCopy (start_v, pm->ps->velocity);
 		}
 		*/
+		else if ( pm->ps->clientNum >= MAX_CLIENTS//NPC
+			&& trace.entityNum < MAX_CLIENTS
+			&& pEnt
+			&& (pEnt->s.eType == ET_NPC || (pEnt->s.eFlags & EF_FAKE_NPC_BOT)))
+		{// UQ1: NPCs and BOTs no longer step on clients...
+			if ( pm->stepSlideFix )
+			{
+				VectorCopy (down_o, pm->ps->origin);
+				VectorCopy (down_v, pm->ps->velocity);
+			}
+			else
+			{
+				VectorCopy (start_o, pm->ps->origin);
+				VectorCopy (start_v, pm->ps->velocity);
+			}
+		}
 		else
 		{
 			VectorCopy (trace.endpos, pm->ps->origin);

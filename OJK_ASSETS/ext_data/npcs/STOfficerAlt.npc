@@ -1,7 +1,8 @@
 STOfficerAlt
 {
 	playerModel stormtrooper
-	weapon		WP_FLECHETTE
+	//weapon		WP_FLECHETTE
+	weapon    WP_T21
 	altFire		1
 //	surfOn		torso_pauldron
 //	surfOff		"torso_armor_neck_augment torso_body_neck_augment"

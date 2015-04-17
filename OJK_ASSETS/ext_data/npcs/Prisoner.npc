@@ -1,7 +1,8 @@
 Prisoner
 {
 	playerModel	prisoner
-	weapon		WP_BLASTER
+	//weapon		WP_BLASTER
+	weapon     WP_S5_PISTOL
 	reactions	3
 	aim			1
 	move		3
@@ -28,7 +29,8 @@ Prisoner
 Prisoner2
 {
 	playerModel	prisoner
-	weapon		WP_BLASTER
+	//weapon		WP_BLASTER
+	weapon     WP_DC_17_CLONE_PISTOL
 	//customSkin	prisoner2
 	reactions	3
 	aim			1

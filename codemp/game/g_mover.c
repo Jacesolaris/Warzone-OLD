@@ -424,7 +424,7 @@ qboolean G_MoverPush( gentity_t *pusher, vec3_t move, vec3_t amove, gentity_t **
 			}
 			trap->LinkEntity ((sharedEntity_t *)p->ent);
 		}
-		return qfalse;
+		//return qfalse;
 	}
 
 	return qtrue;
@@ -960,6 +960,12 @@ void Use_BinaryMover( gentity_t *ent, gentity_t *other, gentity_t *activator )
 	*/
 #endif //__MOVER_DELAY__
 
+	/*if (ent->moverState == MOVER_POS1 || ent->moverState == MOVER_POS2)
+	{
+		Use_BinaryMover_Go(ent);
+		return;
+	}*/
+
 	// only the master should be used
 	if ( ent->flags & FL_TEAMSLAVE )
 	{
@@ -1264,6 +1270,17 @@ void Touch_DoorTrigger( gentity_t *ent, gentity_t *other, trace_t *trace )
 
 	//trap->Print("MOVER DEBUG: Door %i trigger touched.\n", ent->parent->s.number);
 
+	if ( other->client && other->client->sess.sessionTeam == TEAM_SPECTATOR )
+	{
+		// if the door is not open and not opening
+		if ( ent->parent->moverState != MOVER_1TO2 &&
+			ent->parent->moverState != MOVER_POS2 )
+		{
+			Touch_DoorTriggerSpectator( ent, other, trace );
+		}
+		return;
+	}
+
 	//if ( other->client )
 	{
 		if ( /*ent->parent->moverState == MOVER_1TO2
@@ -1274,14 +1291,8 @@ void Touch_DoorTrigger( gentity_t *ent, gentity_t *other, trace_t *trace )
 		}
 	}
 
-	if ( other->client && other->client->sess.sessionTeam == TEAM_SPECTATOR )
-	{
-		// if the door is not open and not opening
-		if ( ent->parent->moverState != MOVER_1TO2 &&
-			ent->parent->moverState != MOVER_POS2 )
-		{
-			Touch_DoorTriggerSpectator( ent, other, trace );
-		}
+	if ( ent->parent->moverState == MOVER_1TO2 || ent->parent->moverState == MOVER_2TO1 )
+	{// UQ1: TESTING - If already moving, don't allow activation... Hopefully will stop doors from constantly triggerring with NPCs...
 		return;
 	}
 

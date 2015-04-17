@@ -847,6 +847,9 @@ qboolean NPC_RoutingIncreaseCost ( int wpLast, int wpCurrent )
 		{// found it!
 			gWPArray[wpLast]->neighbors[link].cost *= 2;
 
+			if (gWPArray[wpLast]->neighbors[link].cost > 32768)
+				gWPArray[wpLast]->neighbors[link].cost = 32768;
+
 			//gWPArray[wpLast]->neighbors[link].forceJumpTo = 1;
 
 			if (gWPArray[wpLast]->neighbors[link].cost < 1) 
@@ -1295,7 +1298,7 @@ qboolean NPC_FollowRoutes( void )
 		//if (NPC->wpTravelTime < level.time) trap->Print("wpTravelTime.\n");
 		//if (NPC->last_move_time < level.time - 5000) trap->Print("last_move_time.\n");
 
-		if (!padawanPath && (wpDist > MAX_LINK_DISTANCE || NPC->wpTravelTime < level.time) )
+		if (!padawanPath /*&& (wpDist > MAX_LINK_DISTANCE || NPC->wpTravelTime < level.time)*/ )
 		{
 			NPC_RoutingIncreaseCost( NPC->wpLast, NPC->wpCurrent );
 		}

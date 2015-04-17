@@ -1447,7 +1447,10 @@ void G_CheckMinimumNpcs( void ) {
 			}
 			else if (random >= 4)
 			{
-				npc->NPC_type = "prisoner";
+				if (irand(0,1) == 1)
+					npc->NPC_type = "prisoner2";
+				else
+					npc->NPC_type = "prisoner";
 			}
 			else if (random >= 3)
 			{
@@ -1483,7 +1486,7 @@ void G_CheckMinimumNpcs( void ) {
 			}
 			else if (random >= 1)
 			{// Jedi...
-				int rnd2 = irand(0,18);
+				int rnd2 = irand(0,15);//18);
 				switch (rnd2)
 				{
 				case 0:
@@ -1529,25 +1532,25 @@ void G_CheckMinimumNpcs( void ) {
 					npc->NPC_type = "jedi_zf2";
 					break;
 				case 14:
+					npc->NPC_type = "JediTrainer";
+					break;
+				/*case 15:
 					npc->NPC_type = "JediF";
 					break;
-				case 15:
-					npc->NPC_type = "JediMaster";
-					break;
 				case 16:
-					npc->NPC_type = "JediTrainer";
+					npc->NPC_type = "Luke";
 					break;
 				case 17:
 					npc->NPC_type = "Kyle_boss";
-					break;
+					break;*/
 				default:
-					npc->NPC_type = "Luke";
+					npc->NPC_type = "JediMaster";
 					break;
 				}
 			}
 			else
 			{
-				npc->NPC_type = "prisoner2";
+				npc->NPC_type = "rebel2";
 			}
 #else //__ALL_JEDI_NPCS__
 				int rnd2 = irand(0,18);

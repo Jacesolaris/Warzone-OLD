@@ -792,18 +792,26 @@ void Boba_FireDecide( void )
 			//FIXME: we can never go back to alt-fire this way since, after this, we don't know if we were initially supposed to use alt-fire or not...
 		}
 	}
-	else if ( enemyDist > 256 * 256 )
-	{
-		if ( IsSniperRifle(NPCS.NPC->client->ps.weapon) )
-		{//sniping... should be assumed
-			if ( !(NPCS.NPCInfo->scriptFlags&SCF_ALT_FIRE) )
-			{//use primary fire
-				NPCS.NPCInfo->scriptFlags |= SCF_ALT_FIRE;
-				//reset fire-timing variables
-				//NPC_ChangeWeapon( WP_DISRUPTOR );
-				NPC_UpdateAngles( qtrue, qtrue );
-				return;
-			}
+	else if ( IsSniperRifle(NPCS.NPC->client->ps.weapon) && Distance(NPCS.NPC->r.currentOrigin, NPCS.NPC->enemy->r.currentOrigin) >= 512.0 )
+	{//sniping... should be assumed
+		if ( !(NPCS.NPCInfo->scriptFlags&SCF_ALT_FIRE) )
+		{//use primary fire
+			NPCS.NPCInfo->scriptFlags |= SCF_ALT_FIRE;
+			//reset fire-timing variables
+			NPC_ChangeWeapon( NPCS.NPC->client->ps.weapon );
+			NPC_UpdateAngles( qtrue, qtrue );
+			return;
+		}
+	}
+	else if ( IsSniperRifle(NPCS.NPC->client->ps.weapon) && Distance(NPCS.NPC->r.currentOrigin, NPCS.NPC->enemy->r.currentOrigin) >= 512.0 )
+	{//sniper rifle, but too close...
+		if ( NPCS.NPCInfo->scriptFlags&SCF_ALT_FIRE )
+		{//use primary fire
+			NPCS.NPCInfo->scriptFlags &= ~SCF_ALT_FIRE;
+			//reset fire-timing variables
+			NPC_ChangeWeapon( NPCS.NPC->client->ps.weapon );
+			NPC_UpdateAngles( qtrue, qtrue );
+			return;
 		}
 	}
 
@@ -3940,7 +3948,7 @@ static void Jedi_FaceEnemy( qboolean doPitch )
 	if ( (NPC_IsBountyHunter(NPCS.NPC) || NPCS.NPC->hasJetpack)
 		&& TIMER_Done( NPCS.NPC, "flameTime" )
 		&& NPCS.NPC->s.weapon != WP_NONE
-		&& !IsSniperRifle(NPCS.NPC->s.weapon)
+		&& !(IsSniperRifle(NPCS.NPC->s.weapon) && Distance(NPCS.NPC->r.currentOrigin, NPCS.NPC->enemy->r.currentOrigin) >= 512.0)
 		&& (NPCS.NPC->s.weapon != WP_ROCKET_LAUNCHER||!(NPCS.NPCInfo->scriptFlags&SCF_ALT_FIRE))
 		&& NPCS.NPC->s.weapon != WP_THERMAL
 		&& NPCS.NPC->s.weapon != WP_TRIP_MINE
@@ -5896,8 +5904,8 @@ void NPC_Jedi_Pain(gentity_t *self, gentity_t *attacker, int damage)
 
 	if ( !damage && self->health > 0 )
 	{//FIXME: better way to know I was pushed
-		if (!NPC_IsJedi(NPCS.NPC) && !NPC_IsBountyHunter(NPCS.NPC))//NPC_IsStormtrooper(NPCS.NPC))
-			ST_Speech( NPCS.NPC, SPEECH_PUSHED, 0.7f );
+		if (!NPC_IsJedi(self) && !NPC_IsBountyHunter(self))//NPC_IsStormtrooper(self))
+			ST_Speech( self, SPEECH_PUSHED, 0.7f );
 		else
 			G_AddVoiceEvent( self, Q_irand(EV_PUSHED1, EV_PUSHED3), 10000 );
 	}
@@ -7510,7 +7518,7 @@ void NPC_BSJedi_Default( void )
 
 		NPC_SelectBestWeapon();
 
-		if ( IsSniperRifle(NPCS.NPC->client->ps.weapon) )
+		if ( IsSniperRifle(NPCS.NPC->client->ps.weapon) && Distance(NPCS.NPC->r.currentOrigin, NPCS.NPC->enemy->r.currentOrigin) >= 512.0 )
 		{// Using sniper rifle... Use sniper AI...
 			//NPCS.NPCInfo->scriptFlags |= SCF_ALT_FIRE;
 			NPC_BSSniper_Default();
