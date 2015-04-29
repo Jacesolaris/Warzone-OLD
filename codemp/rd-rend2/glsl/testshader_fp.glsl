@@ -1,13 +1,13 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-#define tex2D(tex, coord) texture2D(tex, coord)
-#define tex2Dlod(tex, coord) texture2D(tex, coord)
+#define texture2D(tex, coord) texture2D(tex, coord)
+#define texture2Dlod(tex, coord) texture2D(tex, coord)
 #define lerp(a, b, t) mix(a, b, t)
 #define saturate(a) clamp(a, 0.0, 1.0)
 #define mad(a, b, c) (a * b + c)
-#define float2 vec2
-#define float3 vec3
-#define float4 vec4
+#define vec2 vec2
+#define vec3 vec3
+#define vec4 vec4
 #define int2 ivec2
 #define int3 ivec3
 #define int4 ivec4
@@ -36,7 +36,7 @@ vec4 ScreenSize = vec4(var_Dimensions.x, 1.0 / var_Dimensions.x, var_Dimensions.
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-float4	Timer;
+vec4	Timer;
 float	EInteriorFactor = 1.0;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -45,23 +45,12 @@ bool	shader_off = false;
 bool	show_edges = false;
 
 bool	smooth_edges = true;
-//float	smooth_strength = 0.52;
 float	smooth_strength = 0.37;
-//float	farDepth = 100.0;
 float	farDepth = 2500.0;
-//float	farDepth = 1.0;
-//float	limiterE = 0.1;
-//float	limiterI = 0.1;
 float	limiterE = 0.068;
 float	limiterI = 0.072;
 
 bool	luma_sharpen = true;
-//float	BlurSigmaE = 0.87;
-//float	BlurSigmaI = 0.98;
-//float	SharpeningE = 1.67;
-//float	SharpeningI = 1.87;
-//float	ThresholdE =  1.0;
-//float	ThresholdI = 0.0;
 float	BlurSigmaE = 0.61;
 float	BlurSigmaI = 0.82;
 float	SharpeningE = 2.83;
@@ -81,9 +70,9 @@ float	GrainIntensity = 0.004;
 // HELPER FUNCS //
 //////////////////
 
-float3 RGBToHSL(float3 color)
+vec3 RGBToHSL(vec3 color)
 {
-	float3 hsl; // init to 0 to avoid warnings (and reverse if + remove first part)
+	vec3 hsl; // init to 0 to avoid warnings (and reverse if + remove first part)
 	
 	float fmin = min(min(color.r, color.g), color.b);
 	float fmax = max(max(color.r, color.g), color.b);
@@ -141,12 +130,12 @@ float HueToRGB(float f1, float f2, float hue)
 	return res;
 }
 
-float3 HSLToRGB(float3 hsl)
+vec3 HSLToRGB(vec3 hsl)
 {
-	float3 rgb;
+	vec3 rgb;
 	
 	if (hsl.y == 0.0)
-		rgb = float3(hsl.z, hsl.z, hsl.z); // Luminance
+		rgb = vec3(hsl.z, hsl.z, hsl.z); // Luminance
 	else
 	{
 		float f2;
@@ -170,15 +159,15 @@ float3 HSLToRGB(float3 hsl)
 const float PI = 3.1415926535897932384626433832795;
 
 // Luminance Blend
-float3 BlendLuma( float3 base, float3 blend )
+vec3 BlendLuma( vec3 base, vec3 blend )
 {
-	float3 HSLBase 	= RGBToHSL( base );
-	float3 HSLBlend	= RGBToHSL( blend );
-	return HSLToRGB( float3( HSLBase.x, HSLBase.y, HSLBlend.z ));
+	vec3 HSLBase 	= RGBToHSL( base );
+	vec3 HSLBlend	= RGBToHSL( blend );
+	return HSLToRGB( vec3( HSLBase.x, HSLBase.y, HSLBlend.z ));
 }
 
 // Pseudo Random Number generator. 
-float random(float2 uv)
+float random(vec2 uv)
 {
 	float noise1 = (frac(sin(dot(uv.x, 12.9898 * 2.0)) * 43758.5453));
 	float noise2 = (frac(sin(dot(uv.y, 78.233 * 2.0)) * 43758.5453));
@@ -195,124 +184,47 @@ float linearDepth(float d, float n, float f)
 //	 SHADERS	//
 //////////////////
 
-float4 PS_ProcessGaussianH()
-{
-	float px 			= ScreenSize.y; 
-	float4 color		= vec4(0.0);
-	float Depth			= 1.0 / tex2D( u_ScreenDepthMap, texCoord.xy ).x;
-	float linDepth		= linearDepth( Depth, 0.5f, farDepth );
-	
-	float SigmaSum		= 0.0f;
-	float sampleOffset	= 1.0f;
-	
-	//Gaussian
-	float BlurSigma		= lerp( BlurSigmaE, BlurSigmaI, EInteriorFactor );
-	BlurSigma			= max( BlurSigma * ( 1.0f - linDepth ), 0.3f );
-	float3 Sigma;
-	Sigma.x				= 1.0f / ( sqrt( 2.0f * PI ) * BlurSigma );
-	Sigma.y				= exp( -0.5f / ( BlurSigma * BlurSigma ));
-	Sigma.z				= Sigma.y * Sigma.y;
-	
-	//Center weight
-	color				= tex2D(u_TextureMap, texCoord.xy);
-	color				*= Sigma.x;
-	SigmaSum			+= Sigma.x;
-	Sigma.xy			*= Sigma.yz;
-
-	for(int i = 0; i < 7; ++i) {
-		color 			+= tex2D(u_TextureMap, texCoord.xy + float2(sampleOffset*px, 0.0)) * Sigma.x;
-		color 			+= tex2D(u_TextureMap, texCoord.xy - float2(sampleOffset*px, 0.0)) * Sigma.x;
-		SigmaSum		+= ( 2.0f * Sigma.x );
-		sampleOffset	= sampleOffset + 1.0f;
-		Sigma.xy		*= Sigma.yz;
-		}
-		
-	color.xyz			/= SigmaSum;
-	color.w				= 1.0f;
-	return color;
-}
-
-float4 PS_ProcessGaussianV()
-{
-	//float sHeight		= ScreenSize.x * ScreenSize.w;
-	float sHeight		= ScreenSize.z;
-	float py 			= 1.0 / sHeight;
-	//float py 			= ScreenSize.w;
-	float4 color		= vec4(0.0);
-	float Depth			= 1.0 / tex2D( u_ScreenDepthMap, texCoord.xy ).x;
-	float linDepth		= linearDepth( Depth, 0.5f, farDepth );
-	
-	float SigmaSum		= 0.0f;
-	float sampleOffset	= 1.0f;
-	
-	//Gaussian
-	float BlurSigma		= lerp( BlurSigmaE, BlurSigmaI, EInteriorFactor );
-	BlurSigma			= max( BlurSigma * ( 1.0f - linDepth ), 0.3f );
-	float3 Sigma;
-	Sigma.x				= 1.0f / ( sqrt( 2.0f * PI ) * BlurSigma );
-	Sigma.y				= exp( -0.5f / ( BlurSigma * BlurSigma ));
-	Sigma.z				= Sigma.y * Sigma.y;
-	
-	//Center weight
-	color				= tex2D(u_TextureMap, texCoord.xy);
-	color				*= Sigma.x;
-	SigmaSum			+= Sigma.x;
-	Sigma.xy			*= Sigma.yz;
-
-	for(int i = 0; i < 7; ++i) {
-		color 			+= tex2D(u_TextureMap, texCoord.xy + float2(0.0, sampleOffset*py)) * Sigma.x;
-		color 			+= tex2D(u_TextureMap, texCoord.xy - float2(0.0, sampleOffset*py)) * Sigma.x;
-		SigmaSum		+= ( 2.0f * Sigma.x );
-		sampleOffset	= sampleOffset + 1.0f;
-		Sigma.xy		*= Sigma.yz;
-		}
-	
-	color.xyz			/= SigmaSum;
-	color.w				= 1.0f;
-	return color;
-}
-
-float4 PS_ProcessEdges()
+vec4 PS_ProcessEdges()
 {
 	float Sharpening	= lerp( SharpeningE, SharpeningI, EInteriorFactor );
 	float Threshold		= lerp( ThresholdE, ThresholdI, EInteriorFactor ) / 255;
 	
-	float4 color;
-	//float4 orig			= tex2D(u_LevelsMap, texCoord.xy);
-	float4 orig			= tex2D(u_TextureMap, texCoord.xy);
-	float4 blurred		= tex2D(u_TextureMap, texCoord.xy) * 0.5;
+	vec4 color;
+	//vec4 orig			= texture2D(u_LevelsMap, texCoord.xy);
+	vec4 orig			= texture2D(u_TextureMap, texCoord.xy);
+	vec4 blurred		= texture2D(u_TextureMap, texCoord.xy) * 0.5;
 	
 	//Find edges
 	orig.xyz			= saturate( orig.xyz );
 	blurred.xyz			= saturate( blurred.xyz );
-	float3 Edges		= max( saturate( orig.xyz - blurred.xyz ) - Threshold, 0.0f );
-	float3 invBlur		= saturate( 1.0f - blurred.xyz );
-	float3 originvBlur	= saturate( orig.xyz + invBlur.xyz );
-	float3 invOrigBlur	= max( saturate( 1.0f - originvBlur.xyz ) - Threshold, 0.0f );
+	vec3 Edges		= max( saturate( orig.xyz - blurred.xyz ) - Threshold, 0.0f );
+	vec3 invBlur		= saturate( 1.0f - blurred.xyz );
+	vec3 originvBlur	= saturate( orig.xyz + invBlur.xyz );
+	vec3 invOrigBlur	= max( saturate( 1.0f - originvBlur.xyz ) - Threshold, 0.0f );
 	
-	float3 edges		= max(( saturate( Sharpening * Edges.xyz )) - ( saturate( Sharpening * invOrigBlur.xyz )), 0.0f );
+	vec3 edges		= max(( saturate( Sharpening * Edges.xyz )) - ( saturate( Sharpening * invOrigBlur.xyz )), 0.0f );
 	
 	color.xyz			= edges.xyz;
 	color.w				= 1.0f;
 	return color;
 }
 
-float4 PS_ProcessSharpen1()
+vec4 PS_ProcessSharpen1()
 {
 	//Smooth out edges with extremely light gaussian
-	float4 edges		= tex2D(u_TextureMap, texCoord.xy);
+	vec4 edges		= texture2D(u_TextureMap, texCoord.xy);
 	
 	if (smooth_edges==false) return edges;
 	
 	float px 			= ScreenSize.y; 
-	float4 color		= vec4(0.0);
+	vec4 color		= vec4(0.0);
 	
 	float SigmaSum		= 0.0f;
 	float sampleOffset	= 1.0f;
 	
 	//Gaussian
 	float BlurSigma		= smooth_strength;
-	float3 Sigma;
+	vec3 Sigma;
 	Sigma.x				= 1.0f / ( sqrt( 2.0f * PI ) * BlurSigma );
 	Sigma.y				= exp( -0.5f / ( BlurSigma * BlurSigma ));
 	Sigma.z				= Sigma.y * Sigma.y;
@@ -323,8 +235,8 @@ float4 PS_ProcessSharpen1()
 	Sigma.xy			*= Sigma.yz;
 
 	for(int i = 0; i < 5; ++i) {
-		edges 			+= tex2D(u_TextureMap, texCoord.xy + float2(sampleOffset*px, 0.0)) * Sigma.x;
-		edges 			+= tex2D(u_TextureMap, texCoord.xy - float2(sampleOffset*px, 0.0)) * Sigma.x;
+		edges 			+= texture2D(u_TextureMap, texCoord.xy + vec2(sampleOffset*px, 0.0)) * Sigma.x;
+		edges 			+= texture2D(u_TextureMap, texCoord.xy - vec2(sampleOffset*px, 0.0)) * Sigma.x;
 		SigmaSum		+= ( 2.0f * Sigma.x );
 		sampleOffset	= sampleOffset + 1.0f;
 		Sigma.xy		*= Sigma.yz;
@@ -336,18 +248,18 @@ float4 PS_ProcessSharpen1()
 
 }
 
-float4 PS_ProcessSharpen2()
+vec4 PS_ProcessSharpen2()
 {
-	//float4 orig			= tex2D(u_LevelsMap, texCoord.xy);
-	float4 orig			= tex2D(u_TextureMap, texCoord.xy);
-	float4 edges		= tex2D(u_TextureMap, texCoord.xy) * 0.5;
+	//vec4 orig			= texture2D(u_LevelsMap, texCoord.xy);
+	vec4 orig			= texture2D(u_TextureMap, texCoord.xy);
+	vec4 edges		= texture2D(u_TextureMap, texCoord.xy) * 0.5;
 	float limiter		= lerp( limiterE, limiterI, EInteriorFactor );
 	
 	//Smooth out edges (reduce aliasing) - expensive, likely
 	//float sHeight		= ScreenSize.x * ScreenSize.w;
 	float sHeight		= ScreenSize.z;
 	float py 			= 1.0 / sHeight;
-	float4 color		= vec4(0.0);
+	vec4 color		= vec4(0.0);
 	
 	if (smooth_edges==true) {
 	
@@ -356,7 +268,7 @@ float4 PS_ProcessSharpen2()
 		
 		//Gaussian
 		float BlurSigma		= smooth_strength;
-		float3 Sigma;
+		vec3 Sigma;
 		Sigma.x				= 1.0f / ( sqrt( 2.0f * PI ) * BlurSigma );
 		Sigma.y				= exp( -0.5f / ( BlurSigma * BlurSigma ));
 		Sigma.z				= Sigma.y * Sigma.y;
@@ -367,8 +279,8 @@ float4 PS_ProcessSharpen2()
 		Sigma.xy			*= Sigma.yz;
 
 		for(int i = 0; i < 5; ++i) {
-			edges 			+= tex2D(u_TextureMap, texCoord.xy + float2(0.0, sampleOffset*py)) * Sigma.x;
-			edges 			+= tex2D(u_TextureMap, texCoord.xy - float2(0.0, sampleOffset*py)) * Sigma.x;
+			edges 			+= texture2D(u_TextureMap, texCoord.xy + vec2(0.0, sampleOffset*py)) * Sigma.x;
+			edges 			+= texture2D(u_TextureMap, texCoord.xy - vec2(0.0, sampleOffset*py)) * Sigma.x;
 			SigmaSum		+= ( 2.0f * Sigma.x );
 			sampleOffset	= sampleOffset + 1.0f;
 			Sigma.xy		*= Sigma.yz;
@@ -380,7 +292,7 @@ float4 PS_ProcessSharpen2()
 	if (show_edges==true) {
 		color.w 		= 1.0f;
 		if(luma_sharpen==true) {
-			//color.xyz 	= min( dot( edges.xyz, float3( 0.2126, 0.7152, 0.0722 )), limiter );
+			//color.xyz 	= min( dot( edges.xyz, vec3( 0.2126, 0.7152, 0.0722 )), limiter );
 			color.x 	= min( dot( edges.x, 0.2126), limiter );
 			color.y 	= min( dot( edges.y, 0.7152), limiter );
 			color.z 	= min( dot( edges.z, 0.0722), limiter );
@@ -391,7 +303,7 @@ float4 PS_ProcessSharpen2()
 	}
 
 	if (luma_sharpen==true) {
-		float3 blend	= saturate( orig.xyz + min( dot( edges.xyz, float3( 0.2126, 0.7152, 0.0722 )), limiter ));
+		vec3 blend	= saturate( orig.xyz + min( dot( edges.xyz, vec3( 0.2126, 0.7152, 0.0722 )), limiter ));
 		color.xyz		= BlendLuma( orig.xyz, blend.xyz );
 		} else {
 		color.xyz		= saturate( orig.xyz + ( edges.xyz * limiter ));
@@ -404,44 +316,6 @@ float4 PS_ProcessSharpen2()
 
 }
 		
-float4 PS_ProcessAfterFX()
-{
-	float4 color		= tex2D(u_TextureMap, texCoord.xy);
-	
-	if (use_noise==true)
-		{
-		float GrainTimerSeed 		= Timer.x * GrainMotion;
-		float2 GrainTexCoordSeed 	= texCoord.xy * 1.0;
-		
-		//Generate grain seeds
-		float2 GrainSeed1 	= GrainTexCoordSeed + float2( 0.0, GrainTimerSeed );
-		float2 GrainSeed2 	= GrainTexCoordSeed + float2( GrainTimerSeed, 0.0 );
-		float2 GrainSeed3 	= GrainTexCoordSeed + float2( GrainTimerSeed, GrainTimerSeed );
-		
-		//Generate pseudo random noise
-		float GrainNoise1 	= random( GrainSeed1 );
-		float GrainNoise2 	= random( GrainSeed2 );
-		float GrainNoise3 	= random( GrainSeed3 );
-		float GrainNoise4 	= ( GrainNoise1 + GrainNoise2 + GrainNoise3 ) * 0.333333333;
-		
-		//Combine results
-		float3 GrainNoise 	= float3( GrainNoise4, GrainNoise4, GrainNoise4 );
-		float3 GrainColor 	= float3( GrainNoise1, GrainNoise2, GrainNoise3 );
-		
-		//Add noise to color
-		color.xyz 			+= ( lerp( GrainNoise, GrainColor, GrainSaturation ) * GrainIntensity ) - ( GrainIntensity * 0.5);
-		}
-	
-	if (use_letterbox==true)
-		{
-			float offset 	= letterbox_size * 0.01;
-			if (texCoord.y <= offset || texCoord.y >= (1.0 - offset)) color.xyzw = vec4(0.0);
-		}
-	
-	color.w				= 1.0f;
-	return color;
-}
-
 const vec3 dtt = vec3(65536.0,255.0,1.0);
 
 int GET_RESULT(float A, float B, float C, float D)
@@ -581,29 +455,90 @@ vec4 PS_SuperEagle()
 	return vec4(p10, 1);	
 }
 
+vec4 PS_EdgePreservingSmooth() 
+{
+	float	px 			= 1.0 / var_Dimensions.x;
+	float	py 			= 1.0f / var_Dimensions.y;
+	vec2	OFFSET		= vec2(px, py);
+  
+	vec4	ColorInput = texture2D(u_TextureMap, var_TexCoords.xy);
+	float	colCombined = ColorInput.r + ColorInput.g + ColorInput.b;
+	
+	float	USE_RADIUS = var_Local0.y;//1.0;
+	float	E_SMOOTH_THRESHOLD = 9.0;
+	
+	vec2 USE_OFFSET = OFFSET.xy;
+	vec4  col1 = texture2D(u_TextureMap, var_TexCoords.xy + vec2(USE_OFFSET.x, 0.0));
+	if (colCombined - (col1.r + col1.g + col1.b) > E_SMOOTH_THRESHOLD) return ColorInput;
+	vec4  col2 = texture2D(u_TextureMap, var_TexCoords.xy - vec2(USE_OFFSET.x, 0.0));
+	if (colCombined - (col2.r + col2.g + col2.b) > E_SMOOTH_THRESHOLD) return ColorInput;
+	vec4  col3 = texture2D(u_TextureMap, var_TexCoords.xy + vec2(0.0, USE_OFFSET.y));
+	if (colCombined - (col3.r + col3.g + col3.b) > E_SMOOTH_THRESHOLD) return ColorInput;
+	vec4  col4 = texture2D(u_TextureMap, var_TexCoords.xy - vec2(0.0, USE_OFFSET.y));
+	if (colCombined - (col4.r + col4.g + col4.b) > E_SMOOTH_THRESHOLD) return ColorInput;
+	vec4  col5 = texture2D(u_TextureMap, var_TexCoords.xy + vec2(USE_OFFSET.x, 0.0-USE_OFFSET.y) * 0.666);
+	if (colCombined - (col5.r + col5.g + col5.b) > E_SMOOTH_THRESHOLD) return ColorInput;
+	vec4  col6 = texture2D(u_TextureMap, var_TexCoords.xy + vec2(0.0-USE_OFFSET.x, USE_OFFSET.y) * 0.666);
+	if (colCombined - (col6.r + col6.g + col6.b) > E_SMOOTH_THRESHOLD) return ColorInput;
+  
+	// Looks like we are ok to smooth!
+	vec4	color = ((ColorInput + col1 + col2 + col3 + col4 + col5 + col6) / 7.0);
+  
+	float   num_passes = 1.0;
+	
+	if (USE_RADIUS >= 2.0)
+	{
+		for (float offset_current = 2.0; offset_current < USE_RADIUS; offset_current += 1.0)
+		{
+			USE_OFFSET = OFFSET.xy * vec2(offset_current, offset_current);
+    
+			col1 = texture2D(u_TextureMap, var_TexCoords.xy + vec2(USE_OFFSET.x, 0.0));
+			if (colCombined - (col1.r + col1.g + col1.b) > E_SMOOTH_THRESHOLD) { color /= num_passes; return color; }
+			col2 = texture2D(u_TextureMap, var_TexCoords.xy - vec2(USE_OFFSET.x, 0.0));
+			if (colCombined - (col2.r + col2.g + col2.b) > E_SMOOTH_THRESHOLD) { color /= num_passes; return color; }
+			col3 = texture2D(u_TextureMap, var_TexCoords.xy + vec2(0.0, USE_OFFSET.y));
+			if (colCombined - (col3.r + col3.g + col3.b) > E_SMOOTH_THRESHOLD) { color /= num_passes; return color; }
+			col4 = texture2D(u_TextureMap, var_TexCoords.xy - vec2(0.0, USE_OFFSET.y));
+			if (colCombined - (col4.r + col4.g + col4.b) > E_SMOOTH_THRESHOLD) { color /= num_passes; return color; }
+			col5 = texture2D(u_TextureMap, var_TexCoords.xy + vec2(USE_OFFSET.x, 0.0-USE_OFFSET.y) * 0.666);
+			if (colCombined - (col5.r + col5.g + col5.b) > E_SMOOTH_THRESHOLD) { color /= num_passes; return color; }
+			col6 = texture2D(u_TextureMap, var_TexCoords.xy + vec2(0.0-USE_OFFSET.x, USE_OFFSET.y) * 0.666);
+			if (colCombined - (col6.r + col6.g + col6.b) > E_SMOOTH_THRESHOLD) { color /= num_passes; return color; }
+    
+			// Looks like we are ok to smooth!
+			color += ((col1 + col2 + col3 + col4 + col5 + col6) / 6.0);
+			num_passes += 1.0;
+		}
+	}
+  
+	color /= num_passes;
+	return color;
+}
+
 void main()
 {
 	vec4 color;
 
 	if (CURRENT_PASS_NUMBER == 0) {
 		//color = PS_ProcessGaussianH();
-		color = tex2D(u_TextureMap, texCoord.xy);
+		color = texture2D(u_TextureMap, texCoord.xy);
 	} else if (CURRENT_PASS_NUMBER == 1) {
 		//color = PS_ProcessGaussianV();
-		color = tex2D(u_TextureMap, texCoord.xy);
+		color = texture2D(u_TextureMap, texCoord.xy);
 	} else if (CURRENT_PASS_NUMBER == 2) {
 		//color = PS_ProcessEdges();
-		color = tex2D(u_TextureMap, texCoord.xy);
+		color = texture2D(u_TextureMap, texCoord.xy);
 	} else if (CURRENT_PASS_NUMBER == 3) {
 		//color = PS_ProcessSharpen1();
-		color = tex2D(u_TextureMap, texCoord.xy);
+		color = texture2D(u_TextureMap, texCoord.xy);
 	} else if (CURRENT_PASS_NUMBER == 4) {
 		//color = PS_ProcessSharpen2();
-		color = tex2D(u_TextureMap, texCoord.xy);
+		color = texture2D(u_TextureMap, texCoord.xy);
 	} else if (CURRENT_PASS_NUMBER == 5) {
 		//color = PS_ProcessAfterFX();
-		//color = tex2D(u_TextureMap, texCoord.xy);
-		color = PS_SuperEagle();
+		//color = texture2D(u_TextureMap, texCoord.xy);
+		//color = PS_SuperEagle();
+		color = PS_EdgePreservingSmooth();
 	}
 
 	gl_FragColor.rgb = color.rgb;

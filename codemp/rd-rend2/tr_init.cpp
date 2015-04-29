@@ -279,6 +279,9 @@ cvar_t  *r_vibrancy;
 cvar_t  *r_fxaa;
 cvar_t  *r_underwater;
 cvar_t  *r_testshader;
+cvar_t  *r_testshaderValue1;
+cvar_t  *r_testshaderValue2;
+cvar_t  *r_testshaderValue3;
 
 //
 // UQ1: End Added...
@@ -1413,6 +1416,9 @@ void R_Register( void )
 	r_trueAnaglyphBlue = ri->Cvar_Get( "r_trueAnaglyphBlue", "0.0", CVAR_ARCHIVE );
 	r_vibrancy = ri->Cvar_Get( "r_vibrancy", "0.4", CVAR_ARCHIVE );
 	r_testshader = ri->Cvar_Get( "r_testshader", "0", CVAR_ARCHIVE );
+	r_testshaderValue1 = ri->Cvar_Get( "r_testshaderValue1", "1.0", CVAR_ARCHIVE );
+	r_testshaderValue2 = ri->Cvar_Get( "r_testshaderValue2", "0.0", CVAR_ARCHIVE );
+	r_testshaderValue3 = ri->Cvar_Get( "r_testshaderValue3", "0.0", CVAR_ARCHIVE );
 
 	//
 	// UQ1: End Added...

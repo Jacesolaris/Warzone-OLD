@@ -2137,7 +2137,9 @@ void RB_TestShader(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox,
 	{
 		vec4_t l0;
 		l0[0] = pass_num;
-		l0[1] = 0;
+		l0[1] = r_testshaderValue1->value;
+		l0[2] = r_testshaderValue2->value;
+		l0[3] = r_testshaderValue3->value;
 
 		GLSL_SetUniformVec4(&tr.testshaderShader, UNIFORM_LOCAL0, l0);
 

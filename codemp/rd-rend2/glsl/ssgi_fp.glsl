@@ -248,7 +248,7 @@ void main()
 
 			vec3 final_color = vec3((dcolor1* occlusion) + (bleeding)) * 1.25;
 
-			// UQ1: Let's add some of the flare color as well... Just to oost colors/glows...
+			// UQ1: Let's add some of the flare color as well... Just to boost colors/glows...
 			vec3 flare_color = clamp(texture2D(u_NormalMap, texCoord.st).rgb, 0.0, 1.0);
 			final_color = (final_color + final_color + clamp(final_color * (flare_color * (1.0 - final_color) * 4.0), 0.0, 1.0)) / 3.0;
 
@@ -264,7 +264,7 @@ void main()
 
 			vec3 final_color = vec3((dcolor1) + (bleeding)) * 1.25;
 
-			// UQ1: Let's add some of the flare color as well... Just to oost colors/glows...
+			// UQ1: Let's add some of the flare color as well... Just to boost colors/glows...
 			vec3 flare_color = clamp(texture2D(u_NormalMap, texCoord.st).rgb, 0.0, 1.0);
 			final_color = (final_color + final_color + clamp(final_color * (flare_color * (1.0 - final_color) * 4.0), 0.0, 1.0)) / 3.0;
 
@@ -276,7 +276,7 @@ void main()
 			float occlusion = 1.0-((sum/samples) * 0.75 * MODIFIER);
 			vec3 final_color = vec3(dcolor1* occlusion) * 1.25;
 
-			// UQ1: Let's add some of the flare color as well... Just to oost colors/glows...
+			// UQ1: Let's add some of the flare color as well... Just to boost colors/glows...
 			vec3 flare_color = clamp(texture2D(u_NormalMap, texCoord.st).rgb, 0.0, 1.0);
 			final_color = (final_color + final_color + clamp(final_color * (flare_color * (1.0 - final_color) * 4.0), 0.0, 1.0)) / 3.0;
 
