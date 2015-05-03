@@ -164,6 +164,11 @@ void CG_LoadHolsterData (clientInfo_t *ci)
 	vec3_t			vectorData;
 
 	InitHolsterData(ci);
+	
+	//
+	// UQ1 - One of these holser.cfg's has a missing } causing a very very annoying crash that deletes all config settings... 
+	// I have added a workaround for now... By making BG_GetNextValueGroup print an error instead of crashing...
+	//
 
 	if ( !ci->skinName || !Q_stricmp( "default", ci->skinName ) )
 	{//try default holster.cfg first
@@ -205,6 +210,7 @@ void CG_LoadHolsterData (clientInfo_t *ci)
 	trap->FS_Close(f);
 
 	s = fileBuffer;
+
 	//parse file
 	while ((s = BG_GetNextValueGroup(s, holsterTypeGroup)) != NULL)
 	{

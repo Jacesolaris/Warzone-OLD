@@ -300,7 +300,8 @@ char *BG_GetNextValueGroup(char *inbuf, char *outbuf)
 	//Verify that we ended up on the closing bracket.
 	if (inbuf[i] != '}')
 	{
-		Com_Error(ERR_DROP, "BG_GetNextValueGroup couldn't find a define group's closing bracket");
+		//Com_Error(ERR_DROP, "BG_GetNextValueGroup couldn't find a define group's closing bracket");
+		Com_Printf("BG_GetNextValueGroup couldn't find a define group's closing bracket");
 		return NULL;
 	}
 
