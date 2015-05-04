@@ -49,8 +49,8 @@ float zfar = var_ViewInfo.y; //camera clipping end
 //------------------------------------------
 //user variables
 
-int samples = 3; //samples on the first ring
-int rings = 3; //ring count
+int samples = 4; //samples on the first ring
+int rings = 4; //ring count
 
 bool manualdof = false; //manual dof calculation
 //bool manualdof = true; //manual dof calculation
@@ -86,8 +86,10 @@ float constant_distant_blur_depth = 0.01578; // UQ1: JKA Optimized value.
 float constant_distant_blur_strength = -0.011; // UQ1: JKA Optimized value.
 
 //float threshold = 0.7; //highlight threshold;
-float threshold = 5.7; //highlight threshold;
-float gain = 100.0; //highlight gain;
+//float threshold = 5.7; //highlight threshold;
+float threshold = 0.01; //highlight threshold;
+//float gain = 100.0; //highlight gain;
+float gain = 1.2; //highlight gain;
 
 float bias = 0.5; //bokeh edge bias
 float fringe = 0.7; //bokeh chromatic aberration/fringing
@@ -104,8 +106,8 @@ not looking good with small sample and ring count
 looks okay starting from samples = 4, rings = 4
 */
 
-bool pentagon = false; //use pentagon as bokeh shape?
-float feather = 0.4; //pentagon shape feather
+bool pentagon = true; //use pentagon as bokeh shape?
+float feather = 3.0;//0.4; //pentagon shape feather
 
 //------------------------------------------
 

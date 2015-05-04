@@ -410,8 +410,10 @@ qboolean Padawan_CheckForce ( void )
 		&& (NPCS.NPC->client->ps.fd.forcePowersActive&(1<<FP_HEAL)) == 0
 		&& (NPCS.NPC->s.NPC_class == CLASS_PADAWAN)
 		//&& NPCS.NPC->health < NPCS.NPC->maxHealth * 0.5)
-		&& NPCS.NPC->client->ps.stats[STAT_HEALTH] < NPCS.NPC->client->ps.stats[STAT_MAX_HEALTH] * 0.5
-		&& NPCS.NPC->client->ps.stats[STAT_HEALTH] > 0 )
+		&& NPCS.NPC->health < NPCS.NPC->client->pers.maxHealth * 0.5
+		&& NPCS.NPC->health > 0 )
+		//&& NPCS.NPC->client->ps.stats[STAT_HEALTH] < NPCS.NPC->client->ps.stats[STAT_MAX_HEALTH] * 0.5
+		//&& NPCS.NPC->client->ps.stats[STAT_HEALTH] > 0 )
 	{// We need to heal...
 		ForceHeal( NPCS.NPC );
 		TIMER_Set( NPCS.NPC, "heal", irand(5000, 15000) );
@@ -424,9 +426,10 @@ qboolean Padawan_CheckForce ( void )
 		&& (NPCS.NPC->client->ps.fd.forcePowersKnown&(1<<FP_TEAM_HEAL)) != 0
 		&& (NPCS.NPC->client->ps.fd.forcePowersActive&(1<<FP_TEAM_HEAL)) == 0
 		&& (NPCS.NPC->s.NPC_class == CLASS_PADAWAN)
-		//&& NPCS.NPC->parent->health < NPCS.NPC->parent->maxHealth * 0.5)
-		&& NPCS.NPC->parent->client->ps.stats[STAT_HEALTH] < NPCS.NPC->parent->client->ps.stats[STAT_MAX_HEALTH] * 0.5
-		&& NPCS.NPC->parent->client->ps.stats[STAT_HEALTH] > 0 )
+		&& NPCS.NPC->parent->health < NPCS.NPC->parent->client->pers.maxHealth * 0.5
+		&& NPCS.NPC->parent->health > 0 )
+		//&& NPCS.NPC->parent->client->ps.stats[STAT_HEALTH] < NPCS.NPC->parent->client->ps.stats[STAT_MAX_HEALTH] * 0.5
+		//&& NPCS.NPC->parent->client->ps.stats[STAT_HEALTH] > 0 )
 	{// Team heal our jedi???
 		NPC_FacePosition(NPCS.NPC->parent->r.currentOrigin, qtrue);
 		ForceTeamHeal( NPCS.NPC );

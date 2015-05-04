@@ -2293,6 +2293,98 @@ image_t *R_CreateImage( const char *name, byte *pic, int width, int height, imgT
 	image->type = type;
 	image->flags = flags;
 
+	/*
+	if (pic)
+	{
+		// UQ1: Testing...
+		if (!(flags & IMGFLAG_NO_COMPRESSION))
+		{
+			image->flags |= IMGFLAG_NO_COMPRESSION;
+		}
+
+		// UQ1: Testing...
+		if ( glRefConfig.immutableTextures && !(flags & IMGFLAG_MUTABLE) )
+		{
+			image->flags |= IMGFLAG_MUTABLE;
+		}
+
+		// UQ1: Testing...
+		if (pic && !(flags & IMGFLAG_MIPMAP))
+		{
+			image->flags |= IMGFLAG_MIPMAP;
+		}
+
+		{// UQ1: testing high pass sharpen filter...
+#if 0
+			thisByte[0] = 0; // alpha????
+			thisByte[1] = 0; // red
+			thisByte[2] = 0; // green
+			thisByte[3] = 0; // blue
+#endif //0
+
+			#define filterWidth 5
+			#define filterHeight 5
+
+			double filter[filterWidth][filterHeight] =
+			{
+				-1, -1, -1, -1, -1,
+				-1,  2,  2,  2, -1,
+				-1,  2,  8,  2, -1,
+				-1,  2,  2,  2, -1,
+				-1, -1, -1, -1, -1,
+			};
+
+			double factor = 1.0 / 8.0;
+			double bias = 0.0;
+
+			RGBAtoYCoCgA(pic, pic, width, height);
+
+			//apply the filter 
+			for(int x = 0; x < width; x++)
+			{
+				for(int y = 0; y < height; y++) 
+				{ 
+					double red = 0.0, green = 0.0, blue = 0.0; 
+
+					byte *thisByte  = pic  + (y * width + x) * 4;
+
+					//multiply every value of the filter with corresponding image pixel 
+					for(int filterX = 0; filterX < filterWidth; filterX++) 
+					{
+						for(int filterY = 0; filterY < filterHeight; filterY++) 
+						{ 
+							//int imageX = (x - filterWidth / 2 + filterX + width) % width;
+							//int imageY = (y - filterHeight / 2 + filterY + height) % height;
+
+							//byte *inbyte  = pic  + (imageY * width + imageX) * 4;
+							int useY = y+filterY;
+							int useX = x+filterX;
+
+							if (useY < 0) useY = (useY+height);
+							if (useX < 0) useX = (useX+width);
+							if (useY >= height) useY = (useY-height);
+							if (useX >= width) useX = (useX-width);
+
+							byte *inbyte  = pic  + (useY * width + useX) * 4;
+							
+							red += inbyte[1] * filter[filterX][filterY];
+							green += inbyte[2] * filter[filterX][filterY];
+							blue += inbyte[3] * filter[filterX][filterY];
+						}
+
+						//truncate values smaller than zero and larger than 255 
+						thisByte[1] = min(max(int(factor * red + bias), 0), 255); 
+						thisByte[2] = min(max(int(factor * green + bias), 0), 255); 
+						thisByte[3] = min(max(int(factor * blue + bias), 0), 255);
+					}
+				}
+			}
+
+			YCoCgAtoRGBA(pic, pic, width, height);
+		}
+	}
+	*/
+
 	Q_strncpyz (image->imgName, name, sizeof (image->imgName));
 
 	image->width = width;

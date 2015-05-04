@@ -7116,7 +7116,18 @@ qboolean NPC_Jedi_EnemyInForceRange ( void )
 {
 	if (!NPCS.NPC->enemy || !NPC_IsAlive(NPCS.NPC->enemy)) return qfalse;
 
-	if (Distance(NPCS.NPC->r.currentOrigin, NPCS.NPC->enemy->r.currentOrigin) > 192) return qfalse;
+	if (Distance(NPCS.NPC->r.currentOrigin, NPCS.NPC->enemy->r.currentOrigin) > 256) return qfalse;
+	if (Distance(NPCS.NPC->r.currentOrigin, NPCS.NPC->enemy->r.currentOrigin) < 128) return qfalse;
+
+	return qtrue;
+}
+
+qboolean NPC_Jedi_EntityInForceRange ( gentity_t *ent )
+{
+	if (!ent || !NPC_IsAlive(ent)) return qfalse;
+
+	if (Distance(NPCS.NPC->r.currentOrigin, ent->r.currentOrigin) > 256) return qfalse;
+	if (Distance(NPCS.NPC->r.currentOrigin, ent->r.currentOrigin) < 128) return qfalse;
 
 	return qtrue;
 }
@@ -7175,8 +7186,22 @@ qboolean Jedi_CheckForce ( void )
 		&& Distance(NPCS.NPC->padawan->r.currentOrigin, NPCS.NPC->r.currentOrigin) < 256
 		&& (NPCS.NPC->client->ps.fd.forcePowersKnown&(1<<FP_TEAM_HEAL)) != 0
 		&& (NPCS.NPC->client->ps.fd.forcePowersActive&(1<<FP_TEAM_HEAL)) == 0
-		&& NPCS.NPC->parent->client->ps.stats[STAT_HEALTH] < NPCS.NPC->parent->client->ps.stats[STAT_MAX_HEALTH] * 0.5
-		&& NPCS.NPC->parent->client->ps.stats[STAT_HEALTH] > 0 )
+		&& NPCS.NPC->padawan->health < NPCS.NPC->padawan->client->pers.maxHealth * 0.5
+		&& NPCS.NPC->padawan->health > 0 )
+	{// Team heal our jedi???
+		NPC_FacePosition(NPCS.NPC->parent->r.currentOrigin, qtrue);
+		ForceTeamHeal( NPCS.NPC );
+		TIMER_Set( NPCS.NPC, "teamheal", irand(5000, 15000) );
+		return qtrue;
+	}
+	else if ( TIMER_Done( NPCS.NPC, "teamheal" )
+		&& NPCS.NPC->parent
+		&& NPC_IsAlive(NPCS.NPC->parent)
+		&& Distance(NPCS.NPC->parent->r.currentOrigin, NPCS.NPC->r.currentOrigin) < 256
+		&& (NPCS.NPC->client->ps.fd.forcePowersKnown&(1<<FP_TEAM_HEAL)) != 0
+		&& (NPCS.NPC->client->ps.fd.forcePowersActive&(1<<FP_TEAM_HEAL)) == 0
+		&& NPCS.NPC->parent->health < NPCS.NPC->parent->client->pers.maxHealth * 0.5
+		&& NPCS.NPC->parent->health > 0 )
 	{// Team heal our jedi???
 		NPC_FacePosition(NPCS.NPC->parent->r.currentOrigin, qtrue);
 		ForceTeamHeal( NPCS.NPC );
@@ -7186,8 +7211,8 @@ qboolean Jedi_CheckForce ( void )
 	else if ( TIMER_Done( NPCS.NPC, "heal" )
 		&& (NPCS.NPC->client->ps.fd.forcePowersKnown&(1<<FP_HEAL)) != 0
 		&& (NPCS.NPC->client->ps.fd.forcePowersActive&(1<<FP_HEAL)) == 0
-		&& (NPCS.NPC->s.NPC_class == CLASS_PADAWAN || Q_irand( 0, 5 ) < 2)
-		&& NPCS.NPC->health < NPCS.NPC->maxHealth * 0.5)
+		&& (NPCS.NPC->s.NPC_class == CLASS_PADAWAN || Q_irand( 0, 5 ) <= 2)
+		&& NPCS.NPC->health < NPCS.NPC->client->pers.maxHealth * 0.5)
 	{
 		//trap->Print("%s is using heal.\n", NPCS.NPC->NPC_type);
 		ForceHeal( NPCS.NPC );
@@ -7197,9 +7222,9 @@ qboolean Jedi_CheckForce ( void )
 	else if ( TIMER_Done( NPCS.NPC, "drain" )
 		&& (NPCS.NPC->client->ps.fd.forcePowersKnown&(1<<FP_DRAIN)) != 0
 		&& (NPCS.NPC->client->ps.fd.forcePowersActive&(1<<FP_DRAIN)) == 0
-		&& Q_irand( 0, 5 ) < 2
+		&& Q_irand( 0, 5 ) < 3
 		&& NPC_Jedi_EnemyInForceRange()
-		&& NPCS.NPC->health < NPCS.NPC->maxHealth * 0.5)
+		&& NPCS.NPC->health < NPCS.NPC->client->pers.maxHealth * 0.5)
 	{
 		//trap->Print("%s is using drain.\n", NPCS.NPC->NPC_type);
 		NPC_FaceEnemy(qtrue);
@@ -7211,7 +7236,7 @@ qboolean Jedi_CheckForce ( void )
 		&& (NPCS.NPC->client->ps.fd.forcePowersKnown&(1<<FP_GRIP)) != 0
 		&& (NPCS.NPC->client->ps.fd.forcePowersActive&(1<<FP_GRIP)) == 0
 		&& NPC_Jedi_EnemyInForceRange()
-		&& Q_irand( 0, 10 ) < 2 )
+		&& Q_irand( 0, 10 ) < 4 )
 	{
 		//trap->Print("%s is using grip.\n", NPCS.NPC->NPC_type);
 		NPC_FaceEnemy(qtrue);
@@ -7223,7 +7248,7 @@ qboolean Jedi_CheckForce ( void )
 		&& (NPCS.NPC->client->ps.fd.forcePowersKnown&(1<<FP_LIGHTNING)) != 0
 		&& (NPCS.NPC->client->ps.fd.forcePowersActive&(1<<FP_LIGHTNING)) == 0
 		&& NPC_Jedi_EnemyInForceRange()
-		&& Q_irand( 0, 10 ) < 2 )
+		&& Q_irand( 0, 10 ) < 4 )
 	{
 		//trap->Print("%s is using lightning.\n", NPCS.NPC->NPC_type);
 		NPC_FaceEnemy(qtrue);
@@ -7234,7 +7259,7 @@ qboolean Jedi_CheckForce ( void )
 	else if ( TIMER_Done( NPCS.NPC, "protect" )
 		&& (NPCS.NPC->client->ps.fd.forcePowersKnown&(1<<FP_PROTECT)) != 0
 		&& (NPCS.NPC->client->ps.fd.forcePowersActive&(1<<FP_PROTECT)) == 0
-		&& (NPCS.NPC->s.NPC_class == CLASS_PADAWAN || Q_irand( 0, 10 ) < 2 ))
+		&& (NPCS.NPC->s.NPC_class == CLASS_PADAWAN || Q_irand( 0, 10 ) < 4 ))
 	{
 		//trap->Print("%s is using protect.\n", NPCS.NPC->NPC_type);
 		ForceProtect( NPCS.NPC );
@@ -7244,7 +7269,7 @@ qboolean Jedi_CheckForce ( void )
 	else if ( TIMER_Done( NPCS.NPC, "absorb" )
 		&& (NPCS.NPC->client->ps.fd.forcePowersKnown&(1<<FP_ABSORB)) != 0
 		&& (NPCS.NPC->client->ps.fd.forcePowersActive&(1<<FP_ABSORB)) == 0
-		&& (NPCS.NPC->s.NPC_class == CLASS_PADAWAN || Q_irand( 0, 10 ) < 2))
+		&& (NPCS.NPC->s.NPC_class == CLASS_PADAWAN || Q_irand( 0, 10 ) < 4))
 	{
 		//trap->Print("%s is using absorb.\n", NPCS.NPC->NPC_type);
 		ForceAbsorb( NPCS.NPC );
@@ -7255,7 +7280,7 @@ qboolean Jedi_CheckForce ( void )
 		&& (NPCS.NPC->client->ps.fd.forcePowersKnown&(1<<FP_TELEPATHY)) != 0
 		&& (NPCS.NPC->client->ps.fd.forcePowersActive&(1<<FP_TELEPATHY)) == 0
 		&& NPC_Jedi_EnemyInForceRange()
-		&& Q_irand( 0, 10 ) < 2 )
+		&& Q_irand( 0, 10 ) < 4 )
 	{
 		//trap->Print("%s is using telepathy.\n", NPCS.NPC->NPC_type);
 		NPC_FaceEnemy(qtrue);
@@ -7267,7 +7292,7 @@ qboolean Jedi_CheckForce ( void )
 		&& (NPCS.NPC->client->ps.fd.forcePowersKnown&(1<<FP_RAGE)) != 0
 		&& (NPCS.NPC->client->ps.fd.forcePowersActive&(1<<FP_RAGE)) == 0
 		&& NPC_Jedi_EnemyInForceRange()
-		&& Q_irand( 0, 10 ) < 2 )
+		&& Q_irand( 0, 10 ) < 4 )
 	{
 		//trap->Print("%s is using rage.\n", NPCS.NPC->NPC_type);
 		Jedi_Rage();
@@ -7278,7 +7303,7 @@ qboolean Jedi_CheckForce ( void )
 		&& (NPCS.NPC->client->ps.fd.forcePowersKnown&(1<<FP_SPEED)) != 0
 		&& (NPCS.NPC->client->ps.fd.forcePowersActive&(1<<FP_SPEED)) == 0
 		&& NPC_Jedi_EnemyInForceRange()
-		&& Q_irand( 0, 10 ) < 2 )
+		&& Q_irand( 0, 10 ) < 4 )
 	{
 		//trap->Print("%s is using speed.\n", NPCS.NPC->NPC_type);
 		ForceSpeed( NPCS.NPC, 500 );
