@@ -6,11 +6,13 @@ uniform mat4   u_ModelViewProjectionMatrix;
 uniform vec4	u_ViewInfo; // zfar / znear, zfar
 uniform vec2	u_Dimensions;
 uniform vec4	u_Local0; // depthScale, 0, 0, 0
+uniform vec4	u_Local1; // AnaglyphType, AnaglyphPower, AnaglyphMax, 0
 
 varying vec2   var_TexCoords;
 varying vec4	var_ViewInfo; // zfar / znear, zfar
 varying vec2   var_Dimensions;
 varying vec4   var_Local0; // depthScale, 0, 0, 0
+varying vec4   var_Local1; // AnaglyphType, AnaglyphPower, AnaglyphMax, 0
 
 void main()
 {
@@ -19,4 +21,5 @@ void main()
 	var_ViewInfo = u_ViewInfo;
 	var_Dimensions = u_Dimensions.st;
 	var_Local0 = u_Local0.rgba;
+	var_Local1 = u_Local1.rgba;
 }

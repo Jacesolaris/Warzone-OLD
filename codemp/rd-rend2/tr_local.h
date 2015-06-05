@@ -325,6 +325,8 @@ extern cvar_t  *r_trueAnaglyphSeparation;
 extern cvar_t  *r_trueAnaglyphRed;
 extern cvar_t  *r_trueAnaglyphGreen;
 extern cvar_t  *r_trueAnaglyphBlue;
+extern cvar_t  *r_trueAnaglyphPower;
+//extern cvar_t  *r_trueAnaglyphMax;
 extern cvar_t  *r_vibrancy;
 extern cvar_t  *r_testshader;
 extern cvar_t  *r_testshaderValue1;

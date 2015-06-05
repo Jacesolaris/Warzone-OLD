@@ -275,6 +275,8 @@ cvar_t  *r_trueAnaglyphSeparation;
 cvar_t  *r_trueAnaglyphRed;
 cvar_t  *r_trueAnaglyphGreen;
 cvar_t  *r_trueAnaglyphBlue;
+cvar_t  *r_trueAnaglyphPower;
+//cvar_t  *r_trueAnaglyphMax;
 cvar_t  *r_vibrancy;
 cvar_t  *r_fxaa;
 cvar_t  *r_underwater;
@@ -1410,10 +1412,12 @@ void R_Register( void )
 	r_ssao2 = ri->Cvar_Get( "r_ssao2", "1", CVAR_ARCHIVE );
 	r_ssao2passes = ri->Cvar_Get( "r_ssao2passes", "1.0", CVAR_ARCHIVE ); // 3.0 is the original default, but 1.0 is faster and looks fine so we will use that.
 	r_trueAnaglyph = ri->Cvar_Get( "r_trueAnaglyph", "0", CVAR_ARCHIVE );
-	r_trueAnaglyphSeparation = ri->Cvar_Get( "r_trueAnaglyphSeparation", "3.0", CVAR_ARCHIVE );
+	r_trueAnaglyphSeparation = ri->Cvar_Get( "r_trueAnaglyphSeparation", "10.0", CVAR_ARCHIVE );
 	r_trueAnaglyphRed = ri->Cvar_Get( "r_trueAnaglyphRed", "0.0", CVAR_ARCHIVE );
 	r_trueAnaglyphGreen = ri->Cvar_Get( "r_trueAnaglyphGreen", "0.0", CVAR_ARCHIVE );
 	r_trueAnaglyphBlue = ri->Cvar_Get( "r_trueAnaglyphBlue", "0.0", CVAR_ARCHIVE );
+	r_trueAnaglyphPower = ri->Cvar_Get( "r_trueAnaglyphPower", "200.0", CVAR_ARCHIVE );
+	//r_trueAnaglyphMax = ri->Cvar_Get( "r_trueAnaglyphMax", "30.0", CVAR_ARCHIVE );
 	r_vibrancy = ri->Cvar_Get( "r_vibrancy", "0.4", CVAR_ARCHIVE );
 	r_testshader = ri->Cvar_Get( "r_testshader", "0", CVAR_ARCHIVE );
 	r_testshaderValue1 = ri->Cvar_Get( "r_testshaderValue1", "1.0", CVAR_ARCHIVE );

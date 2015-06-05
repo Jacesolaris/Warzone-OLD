@@ -2085,7 +2085,7 @@
 			font 				4
 			textscale 			1
 			forecolor		.615 .615 .956 1
-			cvarFloatList		{  @MENUS_OFF 0 @MENUS_ON 1 }
+			cvarFloatList		{  @MENUS_OFF 0 "Simple 3D" 1 "Real 3D" 2 }
 			descText			"Enable Stereo Vision?"
 			cvar				"r_trueanaglyph"
 
@@ -2109,7 +2109,7 @@
 			group				video_advanced
 			type				ITEM_TYPE_SLIDER
 			text				"Stereo Vision Separation"
-			cvarfloat			"r_trueAnaglyphSeparation" 3 1 10
+			cvarfloat			"r_trueAnaglyphSeparation" 3 1 30
 			rect				220 243 300 20
 			textalign			ITEM_ALIGN_RIGHT
 			textalignx			174
