@@ -351,7 +351,7 @@ qboolean NPC_NeedPadawan_Spawn ( void )
 	int padawan_count = 0;
 	int jedi_count = 0;
 
-#pragma omp parallel for
+//#pragma omp parallel for
 	for (i = 0; i < MAX_GENTITIES; i++)
 	{// Find the closest jedi to follow...
 		gentity_t *parent2 = &g_entities[i];
@@ -362,7 +362,7 @@ qboolean NPC_NeedPadawan_Spawn ( void )
 			&& parent2->client->sess.sessionTeam == TEAM_BLUE
 			&& (parent2->client->NPC_class == CLASS_JEDI || parent2->client->NPC_class == CLASS_LUKE || parent2->client->NPC_class == CLASS_KYLE || (parent2->s.eType == ET_PLAYER && parent2->s.primaryWeapon == WP_SABER)))
 		{// This is a jedi on our team...
-#pragma omp atomic
+//#pragma omp atomic
 			jedi_count++;
 		}
 		else if ( parent2
@@ -374,7 +374,7 @@ qboolean NPC_NeedPadawan_Spawn ( void )
 			if (parent2->client->sess.sessionTeam != TEAM_BLUE)
 				parent2->client->sess.sessionTeam = TEAM_BLUE; // must have been manually spawned.. set team info...
 
-#pragma omp atomic
+//#pragma omp atomic
 			padawan_count++;
 		}
 	}
@@ -627,7 +627,7 @@ void NPC_DoPadawanStuff ( void )
 	parent = NULL;
 
 	// We need to select a master...
-#pragma omp parallel for
+//#pragma omp parallel for
 	for (i = 0; i < MAX_GENTITIES; i++)
 	{// Find the closest jedi to follow...
 		gentity_t *parent2 = &g_entities[i];
@@ -642,7 +642,7 @@ void NPC_DoPadawanStuff ( void )
 			float dist = Distance(me->r.currentOrigin, parent2->r.currentOrigin);
 			
 			if (dist < best_parent_dist)
-#pragma omp critical
+//#pragma omp critical
 			{
 				if (dist < best_parent_dist)
 				{// Found a new best jedi...

@@ -2057,23 +2057,20 @@ static unsigned int frameCount;
 static float avgFrametime=0.0;
 extern void SE_CheckForLanguageUpdates(void);
 
-//#define MULTITHREAD_CL_FRAME
-
 qboolean takeVideoFrame = qfalse;
-
-#include "fast_mutex.h"
-#include "tinythread.h"
-
-using namespace tthread;
-
-thread *CLIENT_UPDATE_THREAD1;
-thread *CLIENT_UPDATE_THREAD2;
-thread *CLIENT_UPDATE_THREAD3;
-thread *CLIENT_UPDATE_THREAD4;
 
 void CL_Frame_REAL ( int msec ) {
 	SE_CheckForLanguageUpdates();	// will take zero time to execute unless language changes, then will reload strings.
 									//	of course this still doesn't work for menus...
+
+	if (cls.state == CA_ACTIVE)
+	{
+		Cvar_Set("com_cl_active", "1");
+	}
+	else
+	{
+		Cvar_Set("com_cl_active", "0");
+	}
 
 	if ( cls.state == CA_DISCONNECTED && !( Key_GetCatcher( ) & KEYCATCH_UI )
 		&& !com_sv_running->integer && cls.uiStarted ) {
@@ -2129,6 +2126,25 @@ void CL_Frame_REAL3 ( int msec )
 	S_Update();
 }
 
+//#define ___SOUND_MULTITHREAD___
+
+#ifdef ___SOUND_MULTITHREAD___
+#include "fast_mutex.h"
+#include "tinythread.h"
+
+using namespace tthread;
+
+thread *SOUND_UPDATE_THREAD;
+
+void CL_Frame_REAL4 ( int msec );
+
+void SOUND_UpdateThread(void * aArg)
+{
+	CL_Frame_REAL3((int)aArg);
+	CL_Frame_REAL4((int)aArg);
+}
+#endif //___SOUND_MULTITHREAD___
+
 void CL_Frame_REAL4 ( int msec )
 {
 	// advance local effects for next frame
@@ -2143,26 +2159,6 @@ void CL_Frame_REAL4 ( int msec )
 	}
 }
 
-void CL_UpdateThread1(void * aArg)
-{
-	CL_Frame_REAL((int)aArg);
-}
-
-void CL_UpdateThread2(void * aArg)
-{
-	CL_Frame_REAL2((int)aArg);
-}
-
-void CL_UpdateThread3(void * aArg)
-{
-	CL_Frame_REAL3((int)aArg);
-}
-
-void CL_UpdateThread4(void * aArg)
-{
-	CL_Frame_REAL4((int)aArg);
-}
-
 void CL_Frame ( int msec )
 {
 	takeVideoFrame = qfalse;
@@ -2171,19 +2167,8 @@ void CL_Frame ( int msec )
 		return;
 	}
 
-#ifdef MULTITHREAD_CL_FRAME
-	// UQ1: We can thread these 2 and run them at the same time...
-	CLIENT_UPDATE_THREAD1 = new thread (CL_UpdateThread1, (void *)msec);
-	CLIENT_UPDATE_THREAD2 = new thread (CL_UpdateThread2, (void *)msec);
-	// UQ1: And wait for finish...
-	//CLIENT_UPDATE_THREAD1->join();
-	//CLIENT_UPDATE_THREAD2->join();
-	//CLIENT_UPDATE_THREAD1->~thread();
-	//CLIENT_UPDATE_THREAD2->~thread();
-#else //!MULTITHREAD_CL_FRAME
 	CL_Frame_REAL(msec);
 	CL_Frame_REAL2(msec);
-#endif //MULTITHREAD_CL_FRAME
 
 	// see if we need to update any userinfo
 	CL_CheckUserinfo();
@@ -2201,32 +2186,30 @@ void CL_Frame ( int msec )
 	// decide on the serverTime to render
 	CL_SetCGameTime();
 
-#ifdef MULTITHREAD_CL_FRAME
-	// UQ1: We can thread this and run at the same time as the render...
-	CLIENT_UPDATE_THREAD3 = new thread (CL_UpdateThread3, (void *)msec);
-	CLIENT_UPDATE_THREAD4 = new thread (CL_UpdateThread4, (void *)msec);
-#endif //!MULTITHREAD_CL_FRAME
-
-	// update the screen - can't thread this one...
 	SCR_UpdateScreen();
 
-#ifdef MULTITHREAD_CL_FRAME
-	// UQ1: We can thread this and run them at the same time...
-	//CLIENT_UPDATE_THREAD4 = new thread (CL_UpdateThread4, (void *)msec);
-	// UQ1: And wait for finish...
-	CLIENT_UPDATE_THREAD1->join();
-	CLIENT_UPDATE_THREAD2->join();
-	CLIENT_UPDATE_THREAD1->~thread();
-	CLIENT_UPDATE_THREAD2->~thread();
-	// UQ1: And wait for finish...
-	CLIENT_UPDATE_THREAD3->join();
-	CLIENT_UPDATE_THREAD4->join();
-	CLIENT_UPDATE_THREAD3->~thread();
-	CLIENT_UPDATE_THREAD4->~thread();
-#else //!MULTITHREAD_CL_FRAME
-	CL_Frame_REAL3(msec);
+#ifdef ___SOUND_MULTITHREAD___
+	if (/*msec < 1000 ||*/ com_cl_active->integer <= 0)
+	{
+		CL_Frame_REAL3(msec); // sound
+		CL_Frame_REAL4(msec);
+	}
+	else
+	{
+		if (SOUND_UPDATE_THREAD) {
+			SOUND_UPDATE_THREAD->join();
+			SOUND_UPDATE_THREAD = NULL;
+		} else {
+			SOUND_UPDATE_THREAD = NULL;
+		}
+
+		// Run in background thread...
+		SOUND_UPDATE_THREAD = new thread (SOUND_UpdateThread, (void *)msec);
+	}
+#else //!___SOUND_MULTITHREAD___
+	CL_Frame_REAL3(msec); // sound
 	CL_Frame_REAL4(msec);
-#endif //MULTITHREAD_CL_FRAME
+#endif //___SOUND_MULTITHREAD___
 
 	cls.framecount++;
 

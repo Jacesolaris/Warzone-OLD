@@ -71,7 +71,7 @@ void BASS_InitializeChannels ( void )
 {
 	if (!SOUND_CHANNELS_INITIALIZED)
 	{
-#pragma omp parallel for num_threads(8)
+//#pragma omp parallel for
 		for (int c = 0; c < MAX_BASS_CHANNELS; c++) 
 		{// Set up this channel...
 			memset(&SOUND_CHANNELS[c],0,sizeof(Channel));
@@ -96,7 +96,7 @@ void BASS_StopChannel ( int chanNum )
 
 void BASS_StopEntityChannel ( int entityNum, int entchannel )
 {
-#pragma omp parallel for num_threads(8)
+//#pragma omp parallel for
 	for (int c = 0; c < MAX_BASS_CHANNELS; c++) 
 	{
 		if (SOUND_CHANNELS[c].entityNum == entityNum && SOUND_CHANNELS[c].isActive && SOUND_CHANNELS[c].entityChannel == entchannel)
@@ -108,7 +108,7 @@ void BASS_StopEntityChannel ( int entityNum, int entchannel )
 
 void BASS_FindAndStopSound ( DWORD handle )
 {
-#pragma omp parallel for num_threads(8)
+//#pragma omp parallel for
 	for (int c = 0; c < MAX_BASS_CHANNELS; c++) 
 	{
 		if (SOUND_CHANNELS[c].originalChannel == handle && SOUND_CHANNELS[c].isActive)
@@ -120,7 +120,7 @@ void BASS_FindAndStopSound ( DWORD handle )
 
 void BASS_StopAllChannels ( void )
 {
-#pragma omp parallel for num_threads(8)
+//#pragma omp parallel for
 	for (int c = 0; c < MAX_BASS_CHANNELS; c++) 
 	{
 		if (SOUND_CHANNELS[c].isActive)
@@ -132,7 +132,7 @@ void BASS_StopAllChannels ( void )
 
 void BASS_StopLoopChannel ( int entityNum )
 {
-#pragma omp parallel for num_threads(8)
+//#pragma omp parallel for
 	for (int c = 0; c < MAX_BASS_CHANNELS; c++) 
 	{
 		if (SOUND_CHANNELS[c].entityNum == entityNum && SOUND_CHANNELS[c].isActive && SOUND_CHANNELS[c].isLooping)
@@ -144,7 +144,7 @@ void BASS_StopLoopChannel ( int entityNum )
 
 void BASS_StopAllLoopChannels ( void )
 {
-#pragma omp parallel for num_threads(8)
+//#pragma omp parallel for
 	for (int c = 0; c < MAX_BASS_CHANNELS; c++) 
 	{
 		if (SOUND_CHANNELS[c].isActive && SOUND_CHANNELS[c].isLooping)
@@ -159,15 +159,15 @@ int BASS_FindFreeChannel ( void )
 	int BEST_CHAN = -1;
 
 	// Fall back to full lookup when we have started too many sounds for the update threade to catch up...
-#pragma omp parallel for num_threads(8)
+//#pragma omp parallel for
 	for (int c = 0; c < MAX_BASS_CHANNELS; c++) 
 	{
 		if (BEST_CHAN != -1) continue;
 
 		if (!SOUND_CHANNELS[c].isActive)
 		{
-			//return c;
-			BEST_CHAN = c;
+			return c;
+			//BEST_CHAN = c;
 		}
 	}
 
@@ -224,7 +224,7 @@ void BASS_Shutdown ( void )
 
 	if (SOUND_CHANNELS_INITIALIZED)
 	{
-#pragma omp parallel for num_threads(8)
+//#pragma omp parallel for
 		for (int c = 0; c < MAX_BASS_CHANNELS; c++) 
 		{// Free channel...
 			BASS_StopChannel(c);
@@ -720,7 +720,7 @@ void BASS_UpdateSounds_REAL ( void )
 
 	BASS_ChannelSetAttribute(MUSIC_CHANNEL.channel, BASS_ATTRIB_VOL, MUSIC_CHANNEL.volume*BASS_GetVolumeForChannel(CHAN_MUSIC));
 
-#pragma omp parallel for num_threads(8)
+//#pragma omp parallel for
 	for (int c = 0; c < MAX_BASS_CHANNELS; c++) 
 	{
 		if (SOUND_CHANNELS[c].startRequest)
@@ -756,12 +756,18 @@ void BASS_UpdateSounds_REAL ( void )
 	//Com_Printf("There are currently %i active and %i free channels.\n", NUM_ACTIVE, NUM_FREE);
 }
 
+#include <windows.h>
+
 void BASS_UpdateThread(void * aArg)
 {
 	while (!BASS_UPDATE_THREAD_STOP)
 	{
 		BASS_UpdateSounds_REAL();
-		this_thread::sleep_for(chrono::milliseconds(10));
+//#ifdef _WIN32
+//		Sleep(100);
+//#else
+		this_thread::sleep_for(chrono::milliseconds(100));
+//#endif
 	}
 
 	BASS_UPDATE_THREAD_RUNNING = qfalse;
@@ -1155,7 +1161,7 @@ void BASS_AddMemoryLoopChannel ( DWORD samplechan, int entityNum, int entityChan
 	{// If there's no origin, surely this can't be an update...
 		qboolean FOUND = qfalse;
 
-#pragma omp parallel for num_threads(8)
+//#pragma omp parallel for
 		for (int ch = 0; ch < MAX_BASS_CHANNELS; ch++) 
 		{
 			if (FOUND) continue;
@@ -1170,8 +1176,8 @@ void BASS_AddMemoryLoopChannel ( DWORD samplechan, int entityNum, int entityChan
 					VectorCopy(origin, c->origin);
 					c->volume = volume;
 					//Com_Printf("BASS DEBUG: Sound position (%f %f %f) and volume (%f) updated.\n", origin[0], origin[1], origin[2], volume);
-					//return;
-					FOUND = qtrue;
+					return;
+					//FOUND = qtrue;
 				}
 			}
 		}
@@ -1207,11 +1213,11 @@ DWORD BASS_LoadMemorySample ( void *memory, int length )
 	DWORD newchan;
 
 	// Try to load the sample with the highest quality options we support...
-	if ((newchan=BASS_SampleLoad(TRUE,memory,0,(DWORD)length,(DWORD)16,BASS_SAMPLE_3D|BASS_SAMPLE_MONO|BASS_SAMPLE_FLOAT|/*BASS_SAMPLE_VAM|*/BASS_SAMPLE_OVER_DIST)))
+	if ((newchan=BASS_SampleLoad(TRUE,memory,0,(DWORD)length,(DWORD)16,BASS_SAMPLE_3D|BASS_SAMPLE_MONO|BASS_SAMPLE_FLOAT|/*BASS_SAMPLE_VAM|*//*BASS_SAMPLE_OVER_DIST*/BASS_SAMPLE_OVER_VOL)))
 	{
 		return newchan;
 	}
-	else if ((newchan=BASS_SampleLoad(TRUE,memory,0,(DWORD)length,(DWORD)16,BASS_SAMPLE_3D|BASS_SAMPLE_MONO|/*BASS_SAMPLE_VAM|*/BASS_SAMPLE_OVER_DIST)))
+	else if ((newchan=BASS_SampleLoad(TRUE,memory,0,(DWORD)length,(DWORD)16,BASS_SAMPLE_3D|BASS_SAMPLE_MONO|/*BASS_SAMPLE_VAM|*//*BASS_SAMPLE_OVER_DIST*/BASS_SAMPLE_OVER_VOL)))
 	{
 		return newchan;
 	}

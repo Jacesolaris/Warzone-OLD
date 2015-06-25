@@ -23,6 +23,7 @@ cvar_t	*com_journal;
 cvar_t	*com_maxfps;
 cvar_t	*com_timedemo;
 cvar_t	*com_sv_running;
+cvar_t	*com_cl_active;
 cvar_t	*com_cl_running;
 cvar_t	*com_logfile;		// 1 = buffer log, 2 = flush after each print
 cvar_t	*com_showtrace;
@@ -1237,6 +1238,7 @@ void Com_Init( char *commandLine ) {
 		sv_paused = Cvar_Get ("sv_paused", "0", CVAR_ROM);
 		com_sv_running = Cvar_Get ("sv_running", "0", CVAR_ROM);
 		com_cl_running = Cvar_Get ("cl_running", "0", CVAR_ROM);
+		com_cl_active = Cvar_Get ("com_cl_active", "0", CVAR_ROM);
 		com_buildScript = Cvar_Get( "com_buildScript", "1", 0 );
 
 #ifdef G2_PERFORMANCE_ANALYSIS
@@ -1445,11 +1447,266 @@ extern int G2Time_PreciseFrame;
 Com_Frame
 =================
 */
+
+//#define ___SERVER_MULTITHREAD___
+
+#ifdef ___SERVER_MULTITHREAD___
+
+//#define ___CLIENT_MULTITHREAD___
+
+#include "../client/fast_mutex.h"
+#include "../client/tinythread.h"
+
+using namespace tthread;
+
+thread *SERVER_UPDATE_THREAD;
+thread *CLIENT_UPDATE_THREAD;
+
+void Com_Frame_THREADLESS( void );
+void Com_Frame_THREADED( void );
+
 void Com_Frame( void ) {
 	omp_set_dynamic(1);
 	omp_set_num_threads(16);
 	omp_set_nested(1);
 
+	if ( !com_dedicated->integer ) {
+		Com_Frame_THREADED();
+	} else {
+		Com_Frame_THREADLESS();
+	}
+}
+
+void SV_Frame_THREAD ( int msec )
+{
+	SV_Frame( msec );
+}
+
+void SV_Frame_UpdateThread(void * aArg)
+{
+	SV_Frame_THREAD((int)aArg);
+}
+
+void CL_Frame_THREAD ( int msec )
+{
+	CL_Frame( msec );
+}
+
+void CL_Frame_UpdateThread(void * aArg)
+{
+	CL_Frame_THREAD((int)aArg);
+}
+
+void Com_Frame_THREADED( void ) {
+	try
+	{
+#ifdef G2_PERFORMANCE_ANALYSIS
+		G2PerformanceTimer_PreciseFrame.Start();
+#endif
+		int		msec, minMsec;
+		static int	lastTime = 0;
+
+		int		timeBeforeFirstEvents;
+		int     timeBeforeServer;
+		int     timeBeforeEvents;
+		int     timeBeforeClient;
+		int     timeAfter;
+
+		if (SERVER_UPDATE_THREAD) {
+			SERVER_UPDATE_THREAD->join();
+			SERVER_UPDATE_THREAD = NULL;
+		} else {
+			SERVER_UPDATE_THREAD = NULL;
+		}
+
+		// bk001204 - init to zero.
+		//  also:  might be clobbered by `longjmp' or `vfork'
+		timeBeforeFirstEvents =0;
+		timeBeforeServer =0;
+		timeBeforeEvents =0;
+		timeBeforeClient = 0;
+		timeAfter = 0;
+
+		// write config file if anything changed
+		Com_WriteConfiguration();
+
+		// if "viewlog" has been modified, show or hide the log console
+		if ( com_viewlog->modified ) {
+			if ( !com_dedicated->value ) {
+				Sys_ShowConsole( com_viewlog->integer, qfalse );
+			}
+			com_viewlog->modified = qfalse;
+		}
+
+		//
+		// main event loop
+		//
+		if ( com_speeds->integer ) {
+			timeBeforeFirstEvents = Sys_Milliseconds ();
+		}
+
+		// we may want to spin here if things are going too fast
+		if ( !com_dedicated->integer && com_maxfps->integer > 0 && !com_timedemo->integer ) {
+			minMsec = 1000 / com_maxfps->integer;
+		} else {
+			minMsec = 1;
+		}
+		do {
+			com_frameTime = Com_EventLoop();
+			if ( lastTime > com_frameTime ) {
+				lastTime = com_frameTime;		// possible on first frame
+			}
+			msec = com_frameTime - lastTime;
+		} while ( msec < minMsec );
+		Cbuf_Execute ();
+
+		lastTime = com_frameTime;
+
+		// mess with msec if needed
+		com_frameMsec = msec;
+		msec = Com_ModifyMsec( msec );
+
+		//
+		// server side
+		//
+		if ( com_speeds->integer ) {
+			timeBeforeServer = Sys_Milliseconds ();
+		}
+
+		if (/*msec < 1000 ||*/ com_cl_active->integer <= 0) {
+			// Make sure we run on original thread initially (so client gets all data needed)...
+			SV_Frame_THREAD( msec );
+		} else {
+			// Run in background thread...
+			SERVER_UPDATE_THREAD = new thread (SV_Frame_UpdateThread, (void *)msec);
+		}
+
+		// if "dedicated" has been modified, start up
+		// or shut down the client system.
+		// Do this after the server may have started,
+		// but before the client tries to auto-connect
+		if ( com_dedicated->modified ) {
+			// get the latched value
+			Cvar_Get( "_dedicated", "0", 0 );
+			com_dedicated->modified = qfalse;
+			if ( !com_dedicated->integer ) {
+				CL_Init();
+				Sys_ShowConsole( com_viewlog->integer, qfalse );
+				CL_StartHunkUsers();	//fire up the UI!
+			} else {
+				CL_Shutdown();
+				Sys_ShowConsole( 1, qtrue );
+			}
+		}
+
+		//
+		// client system
+		//
+		if ( !com_dedicated->integer ) {
+#ifdef ___CLIENT_MULTITHREAD___
+			if (CLIENT_UPDATE_THREAD) {
+				CLIENT_UPDATE_THREAD->join();
+				CLIENT_UPDATE_THREAD = NULL;
+			} else {
+				CLIENT_UPDATE_THREAD = NULL;
+			}
+#endif //___CLIENT_MULTITHREAD___
+
+			//
+			// run event loop a second time to get server to client packets
+			// without a frame of latency
+			//
+			if ( com_speeds->integer ) {
+				timeBeforeEvents = Sys_Milliseconds ();
+			}
+			Com_EventLoop();
+			Cbuf_Execute ();
+
+
+			//
+			// client side
+			//
+			if ( com_speeds->integer ) {
+				timeBeforeClient = Sys_Milliseconds ();
+			}
+
+#ifdef ___CLIENT_MULTITHREAD___
+			if (/*msec < 1000 ||*/ com_cl_active->integer <= 0) {
+				// Make sure we run on original thread initially (so client gets all data needed)...
+				CL_Frame_THREAD( msec );
+			} else {
+				// Run in background thread...
+				CLIENT_UPDATE_THREAD = new thread (CL_Frame_UpdateThread, (void *)msec);
+			}
+#else //!___CLIENT_MULTITHREAD___
+			CL_Frame( msec );
+#endif //___CLIENT_MULTITHREAD___
+
+			if ( com_speeds->integer ) {
+				timeAfter = Sys_Milliseconds ();
+			}
+		}
+		else
+		{
+			if ( com_speeds->integer )
+			{
+				timeBeforeEvents = timeBeforeClient = timeAfter = Sys_Milliseconds ();
+			}
+		}
+
+		//
+		// report timing information
+		//
+		if ( com_speeds->integer ) {
+			int			all, sv, ev, cl;
+
+			all = timeAfter - timeBeforeServer;
+			sv = timeBeforeEvents - timeBeforeServer;
+			ev = timeBeforeServer - timeBeforeFirstEvents + timeBeforeClient - timeBeforeEvents;
+			cl = timeAfter - timeBeforeClient;
+			sv -= time_game;
+			cl -= time_frontend + time_backend;
+
+			Com_Printf ("frame:%i all:%3i sv:%3i ev:%3i cl:%3i gm:%3i rf:%3i bk:%3i\n",
+						 com_frameNumber, all, sv, ev, cl, time_game, time_frontend, time_backend );
+		}
+
+		//
+		// trace optimization tracking
+		//
+		if ( com_showtrace->integer ) {
+
+			extern	int c_traces, c_brush_traces, c_patch_traces;
+			extern	int	c_pointcontents;
+
+			Com_Printf ("%4i traces  (%ib %ip) %4i points\n", c_traces,
+				c_brush_traces, c_patch_traces, c_pointcontents);
+			c_traces = 0;
+			c_brush_traces = 0;
+			c_patch_traces = 0;
+			c_pointcontents = 0;
+		}
+
+		com_frameNumber++;
+	}
+	catch (int code) {
+		Com_CatchError (code);
+		Com_Printf ("%s\n", Com_ErrorString (code));
+		//return;
+	}
+#ifdef G2_PERFORMANCE_ANALYSIS
+	G2Time_PreciseFrame += G2PerformanceTimer_PreciseFrame.End();
+
+	if (com_G2Report && com_G2Report->integer)
+	{
+		G2Time_ReportTimers();
+	}
+
+	G2Time_ResetTimers();
+#endif
+}
+
+void Com_Frame_THREADLESS( void ) {
 	try
 	{
 #ifdef G2_PERFORMANCE_ANALYSIS
@@ -1626,6 +1883,188 @@ void Com_Frame( void ) {
 	G2Time_ResetTimers();
 #endif
 }
+
+#else //!___SERVER_MULTITHREAD___
+
+void Com_Frame( void ) {
+	try
+	{
+#ifdef G2_PERFORMANCE_ANALYSIS
+		G2PerformanceTimer_PreciseFrame.Start();
+#endif
+		int		msec, minMsec;
+		static int	lastTime = 0;
+
+		int		timeBeforeFirstEvents;
+		int           timeBeforeServer;
+		int           timeBeforeEvents;
+		int           timeBeforeClient;
+		int           timeAfter;
+
+
+		// bk001204 - init to zero.
+		//  also:  might be clobbered by `longjmp' or `vfork'
+		timeBeforeFirstEvents =0;
+		timeBeforeServer =0;
+		timeBeforeEvents =0;
+		timeBeforeClient = 0;
+		timeAfter = 0;
+
+		// write config file if anything changed
+		Com_WriteConfiguration();
+
+		// if "viewlog" has been modified, show or hide the log console
+		if ( com_viewlog->modified ) {
+			if ( !com_dedicated->value ) {
+				Sys_ShowConsole( com_viewlog->integer, qfalse );
+			}
+			com_viewlog->modified = qfalse;
+		}
+
+		//
+		// main event loop
+		//
+		if ( com_speeds->integer ) {
+			timeBeforeFirstEvents = Sys_Milliseconds ();
+		}
+
+		// we may want to spin here if things are going too fast
+		if ( !com_dedicated->integer && com_maxfps->integer > 0 && !com_timedemo->integer ) {
+			minMsec = 1000 / com_maxfps->integer;
+		} else {
+			minMsec = 1;
+		}
+		do {
+			com_frameTime = Com_EventLoop();
+			if ( lastTime > com_frameTime ) {
+				lastTime = com_frameTime;		// possible on first frame
+			}
+			msec = com_frameTime - lastTime;
+		} while ( msec < minMsec );
+		Cbuf_Execute ();
+
+		lastTime = com_frameTime;
+
+		// mess with msec if needed
+		com_frameMsec = msec;
+		msec = Com_ModifyMsec( msec );
+
+		//
+		// server side
+		//
+		if ( com_speeds->integer ) {
+			timeBeforeServer = Sys_Milliseconds ();
+		}
+
+		SV_Frame( msec );
+
+		// if "dedicated" has been modified, start up
+		// or shut down the client system.
+		// Do this after the server may have started,
+		// but before the client tries to auto-connect
+		if ( com_dedicated->modified ) {
+			// get the latched value
+			Cvar_Get( "_dedicated", "0", 0 );
+			com_dedicated->modified = qfalse;
+			if ( !com_dedicated->integer ) {
+				CL_Init();
+				Sys_ShowConsole( com_viewlog->integer, qfalse );
+				CL_StartHunkUsers();	//fire up the UI!
+			} else {
+				CL_Shutdown();
+				Sys_ShowConsole( 1, qtrue );
+			}
+		}
+
+		//
+		// client system
+		//
+		if ( !com_dedicated->integer ) {
+			//
+			// run event loop a second time to get server to client packets
+			// without a frame of latency
+			//
+			if ( com_speeds->integer ) {
+				timeBeforeEvents = Sys_Milliseconds ();
+			}
+			Com_EventLoop();
+			Cbuf_Execute ();
+
+
+			//
+			// client side
+			//
+			if ( com_speeds->integer ) {
+				timeBeforeClient = Sys_Milliseconds ();
+			}
+
+			CL_Frame( msec );
+
+			if ( com_speeds->integer ) {
+				timeAfter = Sys_Milliseconds ();
+			}
+		}
+		else
+		{
+			if ( com_speeds->integer )
+			{
+				timeBeforeEvents = timeBeforeClient = timeAfter = Sys_Milliseconds ();
+			}
+		}
+
+		//
+		// report timing information
+		//
+		if ( com_speeds->integer ) {
+			int			all, sv, ev, cl;
+
+			all = timeAfter - timeBeforeServer;
+			sv = timeBeforeEvents - timeBeforeServer;
+			ev = timeBeforeServer - timeBeforeFirstEvents + timeBeforeClient - timeBeforeEvents;
+			cl = timeAfter - timeBeforeClient;
+			sv -= time_game;
+			cl -= time_frontend + time_backend;
+
+			Com_Printf ("frame:%i all:%3i sv:%3i ev:%3i cl:%3i gm:%3i rf:%3i bk:%3i\n",
+						 com_frameNumber, all, sv, ev, cl, time_game, time_frontend, time_backend );
+		}
+
+		//
+		// trace optimization tracking
+		//
+		if ( com_showtrace->integer ) {
+
+			extern	int c_traces, c_brush_traces, c_patch_traces;
+			extern	int	c_pointcontents;
+
+			Com_Printf ("%4i traces  (%ib %ip) %4i points\n", c_traces,
+				c_brush_traces, c_patch_traces, c_pointcontents);
+			c_traces = 0;
+			c_brush_traces = 0;
+			c_patch_traces = 0;
+			c_pointcontents = 0;
+		}
+
+		com_frameNumber++;
+	}
+	catch (int code) {
+		Com_CatchError (code);
+		Com_Printf ("%s\n", Com_ErrorString (code));
+		//return;
+	}
+#ifdef G2_PERFORMANCE_ANALYSIS
+	G2Time_PreciseFrame += G2PerformanceTimer_PreciseFrame.End();
+
+	if (com_G2Report && com_G2Report->integer)
+	{
+		G2Time_ReportTimers();
+	}
+
+	G2Time_ResetTimers();
+#endif
+}
+
+#endif //___SERVER_MULTITHREAD___
 
 /*
 =================
