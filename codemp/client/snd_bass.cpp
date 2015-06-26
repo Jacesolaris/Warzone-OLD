@@ -17,6 +17,7 @@ extern int	s_numSfx;
 
 extern qboolean S_StartBackgroundTrack_Actual( const char *intro, const char *loop );
 
+qboolean BASS_INITIALIZED = qfalse;
 qboolean EAX_SUPPORTED = qtrue;
 
 #define MAX_BASS_CHANNELS	512
@@ -245,123 +246,61 @@ void BASS_Shutdown ( void )
 	}
 
 	BASS_Free();
+
+	BASS_INITIALIZED = qfalse;
 }
 
-#if 0
-/* load BASS and the required functions */
-qboolean LoadBASS ( void )
+qboolean BASS_CheckSoundDisabled( void )
 {
-	BYTE	*data;
-	HANDLE	hfile;
-	HRSRC	hres;
-	DWORD	len, c;
-	char	temppath[MAX_PATH];
-
-	/* get the BASS.DLL resource */
-
-	/*
-	if
-	(
-		!(hres = FindResource( GetModuleHandle( "openjk.x86.exe"), "BASS_DLL", RT_RCDATA)) ||
-		!(len = SizeofResource( GetModuleHandle( "openjk.x86.exe"), hres)) ||
-		!(hres = (HRSRC)LoadResource( GetModuleHandle( "openjk.x86.exe"), hres)) ||
-		!(data = (byte *)LockResource( hres))
-	)*/
-	if (!(hres=FindResource(GetModuleHandle(NULL),"BASS_DLL",RT_RCDATA))
-		|| !(len=SizeofResource(NULL,hres))
-		|| !(hres=(HRSRC)LoadResource(NULL,hres))
-		|| !(data=(byte *)LockResource(hres)))
+	if (s_disable->integer)
 	{
-		Com_Printf( "Error: Can't get the BASS.DLL resource\n" );
-		return ( qfalse );
+		if (BASS_ChannelIsActive(MUSIC_CHANNEL.channel) == BASS_ACTIVE_PLAYING)
+		{
+			BASS_ChannelStop(MUSIC_CHANNEL.channel);
+			BASS_SampleFree(MUSIC_CHANNEL.channel);
+			BASS_MusicFree(MUSIC_CHANNEL.channel);
+			BASS_StreamFree(MUSIC_CHANNEL.channel);
+		}
+
+		if (SOUND_CHANNELS_INITIALIZED)
+		{
+			//#pragma omp parallel for
+			for (int c = 0; c < MAX_BASS_CHANNELS; c++) 
+			{// Free channel...
+				BASS_StopChannel(c);
+				BASS_SampleFree(SOUND_CHANNELS[c].channel);
+				BASS_MusicFree(SOUND_CHANNELS[c].channel);
+				BASS_StreamFree(SOUND_CHANNELS[c].channel);
+			}
+
+			BASS_InitializeChannels();
+
+			SOUND_CHANNELS_INITIALIZED = qfalse;
+		}
+
+		if (BASS_UPDATE_THREAD_RUNNING && thread::hardware_concurrency() > 1)
+		{// More then one CPU core. We need to shut down the update thread...
+			BASS_UPDATE_THREAD_STOP = qtrue;
+
+			// Wait for update thread to finish...
+			//BASS_UPDATE_THREAD->join();
+
+			//BASS_UPDATE_THREAD_RUNNING = qfalse;
+		}
+
+		return qtrue;
 	}
 
-	/* get a temporary filename */
-	GetTempPath( MAX_PATH, temppath );
-	GetTempFileName( temppath, "bas", 0, tempfile );
-
-	/* write BASS.DLL to the temporary file */
-	if
-	(
-		INVALID_HANDLE_VALUE ==
-			(hfile = CreateFile( tempfile, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_TEMPORARY, NULL))
-	)
-	{
-#ifndef CGAME
-		Com_Printf( "Error: Can't write BASS.DLL\n" );
-#else
-		CG_Printf( "Error: Can't write BASS.DLL\n" );
-#endif
-		return ( qfalse );
-	}
-
-	WriteFile( hfile, data, len, &c, NULL );
-	CloseHandle( hfile );
-
-	/* load the temporary BASS.DLL library */
-	if ( !(bass = LoadLibrary( tempfile)) )
-	{
-#ifndef CGAME
-		Com_Printf( "Error: Can't load BASS.DLL\n" );
-#else
-		CG_Printf( "Error: Can't load BASS.DLL\n" );
-#endif
-		return ( qfalse );
-	}
-
-/* "load" all the BASS functions that are to be used */
-#define LOADBASSFUNCTION( f )	*( (void **) &f ) = GetProcAddress( bass, #f )
-	LOADBASSFUNCTION( BASS_ErrorGetCode );
-	LOADBASSFUNCTION( BASS_Init );
-	LOADBASSFUNCTION( BASS_Free );
-	LOADBASSFUNCTION( BASS_GetCPU );
-	LOADBASSFUNCTION( BASS_StreamCreateFile );
-	LOADBASSFUNCTION( BASS_StreamCreateURL );
-	LOADBASSFUNCTION( BASS_GetDeviceInfo );
-	LOADBASSFUNCTION( BASS_Set3DFactors );
-	LOADBASSFUNCTION( BASS_Set3DPosition );
-	LOADBASSFUNCTION( BASS_SetEAXParameters );
-	LOADBASSFUNCTION( BASS_Start );
-	LOADBASSFUNCTION( BASS_ChannelSetAttribute );
-	LOADBASSFUNCTION( BASS_ChannelSet3DPosition );
-	LOADBASSFUNCTION( BASS_ChannelSet3DAttributes );
-	LOADBASSFUNCTION( BASS_Apply3D );
-	LOADBASSFUNCTION( BASS_ChannelStop );
-	LOADBASSFUNCTION( BASS_SampleLoad );
-	LOADBASSFUNCTION( BASS_SampleGetChannel );
-	LOADBASSFUNCTION( BASS_Set3DPosition );
-	LOADBASSFUNCTION( BASS_Set3DPosition );
-	LOADBASSFUNCTION( BASS_Set3DPosition );
-	LOADBASSFUNCTION( BASS_StreamGetFilePosition );
-	LOADBASSFUNCTION( BASS_ChannelPlay );
-	LOADBASSFUNCTION( BASS_ChannelBytes2Seconds );
-	LOADBASSFUNCTION( BASS_ChannelIsActive );
-	LOADBASSFUNCTION( BASS_ChannelIsSliding );
-	LOADBASSFUNCTION( BASS_ChannelGetPosition );
-	LOADBASSFUNCTION( BASS_ChannelGetLevel );
-	LOADBASSFUNCTION( BASS_ChannelSetSync );
-	LOADBASSFUNCTION( BASS_GetVersion );
-	LOADBASSFUNCTION( BASS_ErrorGetCode );
-	LOADBASSFUNCTION( BASS_MusicLoad );
-	LOADBASSFUNCTION( BASS_ChannelBytes2Seconds );
-	LOADBASSFUNCTION( BASS_ChannelSetSync );
-	LOADBASSFUNCTION( BASS_ChannelPlay );
-	LOADBASSFUNCTION( BASS_StreamFree );
-	LOADBASSFUNCTION( BASS_ChannelIsActive );
-	LOADBASSFUNCTION( BASS_ChannelGetLevel );
-	LOADBASSFUNCTION( BASS_ChannelGetPosition );
-	LOADBASSFUNCTION( BASS_ChannelGetLength );
-	LOADBASSFUNCTION( BASS_ChannelGetData );
-	LOADBASSFUNCTION( BASS_ChannelGetTags );
-	LOADBASSFUNCTION( BASS_SetVolume ); // To set global volume.
-	LOADBASSFUNCTION( BASS_ChannelSetAttribute ); // Lets me set chanel volume separetly.
-
-	return ( qtrue );
+	return qfalse;
 }
-#endif
 
 qboolean BASS_Initialize ( void )
 {
+	if (s_disable->integer)
+	{
+		return qfalse;
+	}
+
 #if 0
 	if (!LoadBASS()) Com_Error(ERR_FATAL, "Unable to load BASS sound library.\n");
 #endif
@@ -480,6 +419,8 @@ qboolean BASS_Initialize ( void )
 	s_numSfx = 0;
 	S_BeginRegistration();
 
+	BASS_INITIALIZED = qtrue;
+
 	return qtrue;
 }
 
@@ -492,6 +433,11 @@ float BASS_GetVolumeForChannel ( int entchannel )
 {
 	float		volume = 1;
 	float		normal_vol, voice_vol, effects_vol, ambient_vol, weapon_vol, item_vol, body_vol, music_vol, local_vol;
+
+	if (BASS_CheckSoundDisabled())
+	{
+		return 0.0;
+	}
 
 	normal_vol		= s_volume->value;
 	voice_vol		= (s_volumeVoice->value*normal_vol);
@@ -547,6 +493,11 @@ void BASS_UpdatePosition ( int ch, qboolean IS_NEW_SOUND )
 	int			SOUND_ENTITY = -1;
 	float		CHAN_VOLUME = 0.0;
 	vec3_t		porg, corg;
+
+	if (BASS_CheckSoundDisabled())
+	{
+		return;
+	}
 
 	if (!c) return; // should be impossible, but just in case...
 	//if (!IS_NEW_SOUND && !c->isLooping) return; // We don't even need to update do we???
@@ -648,6 +599,11 @@ void BASS_ProcessStartRequest( int channel )
 {
 	Channel *c = &SOUND_CHANNELS[channel];
 
+	if (BASS_CheckSoundDisabled())
+	{
+		return;
+	}
+
 	DWORD count = BASS_SampleGetChannels(c->originalChannel, NULL);
 	if (count == -1) 
 	{// fail to find a channel...
@@ -683,6 +639,11 @@ void BASS_UpdateSounds_REAL ( void )
 
 	vec3_t forward, right, up, porg;
 	BASS_3DVECTOR pos, ang, top, vel;
+
+	if (BASS_CheckSoundDisabled())
+	{
+		return;
+	}
 
 #ifndef __BASS_PLAYER_BASED_LOCATIONS__
 	VectorCopy(cl.snap.ps.origin, porg);
@@ -768,6 +729,11 @@ void BASS_UpdateThread(void * aArg)
 //#else
 		this_thread::sleep_for(chrono::milliseconds(100));
 //#endif
+
+		if (BASS_CheckSoundDisabled())
+		{
+			break;
+		}
 	}
 
 	BASS_UPDATE_THREAD_RUNNING = qfalse;
@@ -824,6 +790,7 @@ void BASS_UpdateSounds ( void )
 
 void BASS_SetEAX_NORMAL ( void )
 {
+	if (BASS_CheckSoundDisabled()) return;
 	if (!EAX_SUPPORTED) return;
 
 	BASS_SetEAXParameters(EAX_PRESET_GENERIC);
@@ -831,6 +798,7 @@ void BASS_SetEAX_NORMAL ( void )
 
 void BASS_SetEAX_UNDERWATER ( void )
 {
+	if (BASS_CheckSoundDisabled()) return;
 	if (!EAX_SUPPORTED) return;
 
 	BASS_SetEAXParameters(EAX_PRESET_UNDERWATER);
@@ -838,11 +806,13 @@ void BASS_SetEAX_UNDERWATER ( void )
 
 void BASS_SetRolloffFactor ( int factor )
 {
+	if (BASS_CheckSoundDisabled()) return;
 	BASS_Set3DFactors(-1,pow(2,(factor-10)/5.0),-1);
 }
 
 void BASS_SetDopplerFactor ( int factor )
 {
+	if (BASS_CheckSoundDisabled()) return;
 	BASS_Set3DFactors(-1,-1,pow(2,(factor-10)/5.0));
 }
 
@@ -861,6 +831,8 @@ void BASS_StopMusic( DWORD samplechan )
 
 void BASS_StartMusic ( DWORD samplechan )
 {
+	if (BASS_CheckSoundDisabled()) return;
+
 	// Set new samples...
 	MUSIC_CHANNEL.originalChannel=MUSIC_CHANNEL.channel = samplechan;
 	MUSIC_CHANNEL.entityNum = -1;
@@ -885,6 +857,8 @@ DWORD BASS_LoadMusicSample ( void *memory, int length )
 {// Just load a sample into memory ready to play instantly...
 	DWORD	newchan;
 	int		flags = 0;
+
+	if (BASS_CheckSoundDisabled()) return -1;
 
 	if (!s_allowDynamicMusic->integer)
 	{
@@ -1063,6 +1037,8 @@ qboolean		MUSIC_LIST_UPDATING = qfalse;
 
 void BASS_AddDynamicTrack ( char *name )
 {
+	if (BASS_CheckSoundDisabled()) return;
+
 	if (!MUSIC_LIST_INITIALIZED) 
 	{// Don't add custom tracks until the JKA list has been initialized...
 		return;
@@ -1085,6 +1061,8 @@ void BASS_AddDynamicTrack ( char *name )
 
 void BASS_InitDynamicList ( void )
 {
+	if (BASS_CheckSoundDisabled()) return;
+
 	if (MUSIC_LIST_INITIALIZED) 
 	{// Already done!
 		return;
@@ -1107,6 +1085,7 @@ void BASS_InitDynamicList ( void )
 
 void BASS_UpdateDynamicMusic( void )
 {
+	if (BASS_CheckSoundDisabled()) return;
 	if (!s_soundStarted) return; // sound sys is still inactive...
 	if (!s_allowDynamicMusic->integer) return; // inactive...
 	if (MUSIC_LIST_UPDATING) return; // wait...
@@ -1130,6 +1109,7 @@ void BASS_UpdateDynamicMusic( void )
 void BASS_AddMemoryChannel ( DWORD samplechan, int entityNum, int entityChannel, vec3_t origin, float volume )
 {
 	int chan = BASS_FindFreeChannel();
+	if (BASS_CheckSoundDisabled()) return;
 
 	if (chan < 0)
 	{// No channel left to play on...
@@ -1154,6 +1134,8 @@ void BASS_AddMemoryChannel ( DWORD samplechan, int entityNum, int entityChannel,
 
 void BASS_AddMemoryLoopChannel ( DWORD samplechan, int entityNum, int entityChannel, vec3_t origin, float volume )
 {
+	if (BASS_CheckSoundDisabled()) return;
+
 	//
 	// UQ1: Since it seems these also re-call this function to update positions, etc, run a check first...
 	//
@@ -1212,6 +1194,8 @@ DWORD BASS_LoadMemorySample ( void *memory, int length )
 {// Just load a sample into memory ready to play instantly...
 	DWORD newchan;
 
+	if (BASS_CheckSoundDisabled()) return -1;
+
 	// Try to load the sample with the highest quality options we support...
 	if ((newchan=BASS_SampleLoad(TRUE,memory,0,(DWORD)length,(DWORD)16,BASS_SAMPLE_3D|BASS_SAMPLE_MONO|BASS_SAMPLE_FLOAT|/*BASS_SAMPLE_VAM|*//*BASS_SAMPLE_OVER_DIST*/BASS_SAMPLE_OVER_VOL)))
 	{
@@ -1234,6 +1218,8 @@ void CALLBACK BASS_Stream_StatusProc(const void *buffer, DWORD length, void *use
 void BASS_StartStreamingSound ( char *filename, int entityNum, int entityChannel, vec3_t origin )
 {
 	DWORD newchan = 0, r = 0;
+
+	if (BASS_CheckSoundDisabled()) return;
 
 	if (!strncmp(filename, "http", 4))
 	{// http request...

@@ -13362,8 +13362,8 @@ void CG_VisualWeaponsUpdate(centity_t *cent, clientInfo_t *ci)
 		}
 
 		primaryWeapon = cent->currentState.primaryWeapon;
-		secondaryWeapon = cent->currentState.primaryWeapon;
-		temporaryWeapon = cent->currentState.primaryWeapon;
+		secondaryWeapon = cent->currentState.secondaryWeapon;
+		temporaryWeapon = cent->currentState.temporaryWeapon;
 	}
 
 	if (cent->ghoul2 &&

@@ -159,6 +159,7 @@ extern	channel_t   s_channels[MAX_CHANNELS];
 
 extern	vec3_t	listener_origin;
 
+extern cvar_t	*s_disable;
 extern cvar_t	*s_volume;
 extern cvar_t	*s_volumeAmbient;
 extern cvar_t	*s_volumeVoice;
