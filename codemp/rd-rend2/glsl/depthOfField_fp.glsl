@@ -87,9 +87,10 @@ float constant_distant_blur_strength = -0.011; // UQ1: JKA Optimized value.
 
 //float threshold = 0.7; //highlight threshold;
 //float threshold = 5.7; //highlight threshold;
-float threshold = 0.01; //highlight threshold;
-//float gain = 100.0; //highlight gain;
-float gain = 1.2; //highlight gain;
+float threshold = 0.95; //highlight threshold;
+//float threshold = 0.01; //highlight threshold;
+float gain = 100.0; //highlight gain;
+//float gain = 1.2; //highlight gain;
 
 float bias = 0.5; //bokeh edge bias
 float fringe = 0.7; //bokeh chromatic aberration/fringing
