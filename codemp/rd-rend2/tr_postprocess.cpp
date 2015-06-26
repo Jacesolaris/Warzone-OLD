@@ -975,7 +975,30 @@ void Volumetric_Trace( trace_t *results, const vec3_t start, const vec3_t mins, 
 	results->entityNum = results->fraction != 1.0 ? ENTITYNUM_WORLD : ENTITYNUM_NONE;
 }
 
-void RB_VolumetricDLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
+qboolean Volumetric_Visible(vec3_t from, vec3_t to)
+{
+	trace_t trace;
+
+	Volumetric_Trace( &trace, from, NULL, NULL, to, -1, (CONTENTS_SOLID|CONTENTS_TERRAIN) );
+
+	if (trace.fraction != 1.0 && Distance(trace.endpos, to) > 64)
+		return qfalse;
+
+	return qtrue;
+}
+
+vec3_t roof;
+
+void Volumetric_RoofHeight(vec3_t from)
+{
+	trace_t trace;
+	vec3_t roofh;
+	VectorSet(roofh, from[0]+192, from[1], from[2]);
+	Volumetric_Trace( &trace, from, NULL, NULL, roofh, -1, (CONTENTS_SOLID|CONTENTS_TERRAIN) );
+	VectorSet(roof, trace.endpos[0]-8.0, trace.endpos[1], trace.endpos[2]);
+}
+
+qboolean RB_VolumetricDLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 {
 	vec4_t color;
 	int NUM_VISIBLE_LIGHTS = 0;
@@ -987,8 +1010,17 @@ void RB_VolumetricDLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t l
 	color[3] = 1.0f;
 
 	if ( !backEnd.refdef.num_dlights ) {
-		return;
+		return qfalse;
 	}
+
+	//
+	// UQ1: Now going to allow a maximum of MAX_VOLUMETRIC_LIGHTS volumetric lights on screen for FPS...
+	//
+	int MAX_VOLUMETRIC_LIGHTS = r_volumelightMaximum->integer; // Absolute maximum - probably should make it a cvar so players can choose...
+	int NUM_CLOSE_LIGHTS = 0;
+	int CLOSEST_LIGHTS[64];
+
+	if (MAX_VOLUMETRIC_LIGHTS > 64) MAX_VOLUMETRIC_LIGHTS = 64; // absolute max is 64...
 
 	for ( int l = 0 ; l < backEnd.refdef.num_dlights ; l++ ) 
 	{
@@ -1016,51 +1048,95 @@ void RB_VolumetricDLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t l
 			continue; // not on screen...
 		}
 
-		trace_t trace;
-		vec3_t mins = {-1,-1,-1}, maxs = {1,1,1};
-		// //|CONTENTS_SHOTCLIP|CONTENTS_TERRAIN//(/*MASK_SOLID|*/CONTENTS_SOLID|CONTENTS_PLAYERCLIP|CONTENTS_SHOTCLIP|CONTENTS_TERRAIN|CONTENTS_BODY)
-		Volumetric_Trace( &trace, backEnd.refdef.vieworg, NULL, NULL, dl->origin, -1, (CONTENTS_SOLID|CONTENTS_TERRAIN) );
-		//ri->Printf(PRINT_WARNING, "Trace from %f %f %f to %f %f %f.\n", backEnd.refdef.vieworg[0], backEnd.refdef.vieworg[1], backEnd.refdef.vieworg[2], dl->origin[0], dl->origin[1], dl->origin[2]);
-		if (trace.fraction != 1.0 && Distance(trace.endpos, dl->origin) > 64)
-		{
-			dl->radius = 0.0;
-			continue; // Can't see this...
+		if (!Volumetric_Visible(backEnd.refdef.vieworg, dl->origin))
+		{// Trace to actual position failed... Try above...
+			vec3_t tmpOrg;
+			vec3_t eyeOrg;
+			vec3_t tmpRoof;
+			vec3_t eyeRoof;
+
+			// Calculate ceiling heights at both positions...
+			Volumetric_RoofHeight(dl->origin);
+			VectorCopy(roof, tmpRoof);
+			Volumetric_RoofHeight(backEnd.refdef.vieworg);
+			VectorCopy(roof, eyeRoof);
+
+			VectorSet(tmpOrg, tmpRoof[0], dl->origin[1], dl->origin[2]);
+			VectorSet(eyeOrg, backEnd.refdef.vieworg[0], backEnd.refdef.vieworg[1], backEnd.refdef.vieworg[2]);
+			if (!Volumetric_Visible(eyeOrg, tmpOrg))
+			{// Trace to above position failed... Try trace from above viewer...
+				VectorSet(tmpOrg, dl->origin[0], dl->origin[1], dl->origin[2]);
+				VectorSet(eyeOrg, eyeRoof[0], backEnd.refdef.vieworg[1], backEnd.refdef.vieworg[2]);
+				if (!Volumetric_Visible(eyeOrg, tmpOrg))
+				{// Trace from above viewer failed... Try trace from above, to above...
+					VectorSet(tmpOrg, tmpRoof[0], dl->origin[1], dl->origin[2]);
+					VectorSet(eyeOrg, eyeRoof[0], backEnd.refdef.vieworg[1], backEnd.refdef.vieworg[2]);
+					if (!Volumetric_Visible(eyeOrg, tmpOrg))
+					{// Trace from/to above viewer failed...
+						dl->radius = 0.0;
+						continue; // Can't see this...
+					}
+				}
+			}
 		}
 
-		NUM_VISIBLE_LIGHTS++;
+		if (NUM_CLOSE_LIGHTS < MAX_VOLUMETRIC_LIGHTS)
+		{// Have free light slots for a new light...
+			CLOSEST_LIGHTS[NUM_CLOSE_LIGHTS] = l;
+			NUM_CLOSE_LIGHTS++;
+			continue;
+		}
+		else
+		{// See if this is closer then one of our other lights...
+			int closest_light = 0;
+			vec3_t closest_pos;
+			VectorCopy(backEnd.refdef.dlights[CLOSEST_LIGHTS[0]].origin, closest_pos);
+
+			for (int i = 1; i < MAX_VOLUMETRIC_LIGHTS; i++)
+			{
+				dlight_t	*thisLight = &backEnd.refdef.dlights[CLOSEST_LIGHTS[i]];
+
+				if (Distance(thisLight->origin, backEnd.refdef.vieworg) < Distance(closest_pos, backEnd.refdef.vieworg))
+				{// This one is closer!
+					closest_light = i;
+					VectorCopy(thisLight->origin, closest_pos);
+					break;
+				}
+			}
+
+			// We now have a closest light list in our array to check against...
+			dlight_t	*closestLight = &backEnd.refdef.dlights[CLOSEST_LIGHTS[closest_light]];
+
+			if (Distance(closestLight->origin, backEnd.refdef.vieworg) < Distance(dl->origin, backEnd.refdef.vieworg))
+			{// Thi light is closer. Replace this one in our array of closest lights...
+				CLOSEST_LIGHTS[CLOSEST_LIGHTS[closest_light]] = l;
+			}
+		}
+
+		//NUM_VISIBLE_LIGHTS++;
 	}
 
-	for ( int l = 0 ; l < backEnd.refdef.num_dlights ; l++ ) 
+	// None to draw...
+	if (NUM_CLOSE_LIGHTS <= 0) return qfalse;
+
+	//for ( int l = 0 ; l < backEnd.refdef.num_dlights ; l++ ) 
+	for (int l = 0; l < NUM_CLOSE_LIGHTS; l++)
 	{
-		dlight_t	*dl = &backEnd.refdef.dlights[l];
+		dlight_t	*dl = &backEnd.refdef.dlights[CLOSEST_LIGHTS[l]];
 		
 		float x, y, distance;
 
-		if (dl->radius <= 0.0) continue; // Marked as not visible...
+		//if (dl->radius <= 0.0) continue; // Marked as not visible...
 
 		distance = Distance(backEnd.refdef.vieworg, dl->origin);
 
 		//if (distance > 2048.0) continue; // too far away...
 		if (!TR_WorldToScreen(dl->origin, &x, &y)) continue; // not on screen...
 
-		/*
-		trace_t trace;
-		vec3_t mins = {-1,-1,-1}, maxs = {1,1,1};
-		// //|CONTENTS_SHOTCLIP|CONTENTS_TERRAIN//(CONTENTS_SOLID|CONTENTS_PLAYERCLIP|CONTENTS_SHOTCLIP|CONTENTS_TERRAIN|CONTENTS_BODY)
-		Volumetric_Trace( &trace, backEnd.refdef.vieworg, NULL, NULL, dl->origin, -1, (CONTENTS_SOLID|CONTENTS_TERRAIN) );
-		//ri->Printf(PRINT_WARNING, "Trace from %f %f %f to %f %f %f.\n", backEnd.refdef.vieworg[0], backEnd.refdef.vieworg[1], backEnd.refdef.vieworg[2], dl->origin[0], dl->origin[1], dl->origin[2]);
-		if (Distance(trace.endpos, dl->origin) > 64) continue; // Can't see this...
-		*/
-
 		GLSL_BindProgram(&tr.volumelightShader);
 
 		// Pick the specified image option if we can...
-		/*if (r_ssgi->integer && r_volumelight->integer >= 5)
-		{// Use SSGI Saturation image...
-			GL_BindToTMU(tr.anamorphicRenderFBOImage[2], TB_DIFFUSEMAP);
-			GLSL_SetUniformInt(&tr.volumelightShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
-		}
-		else*/ if (r_anamorphic->integer && r_volumelight->integer >= 4)
+		/*if (r_anamorphic->integer && r_volumelight->integer >= 4)
 		{// Use Anamorphic image...
 			GL_BindToTMU(tr.anamorphicRenderFBOImage[0], TB_DIFFUSEMAP);
 			GLSL_SetUniformInt(&tr.volumelightShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
@@ -1092,10 +1168,10 @@ void RB_VolumetricDLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t l
 			GLSL_SetUniformInt(&tr.volumelightShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
 		}
 		else
-		{
+		{*/
 			GL_BindToTMU(tr.fixedLevelsImage, TB_DIFFUSEMAP);
 			GLSL_SetUniformInt(&tr.volumelightShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
-		}
+		//}
 
 		GL_SetModelviewMatrix( backEnd.viewParms.ori.modelMatrix );
 		GL_SetProjectionMatrix( backEnd.viewParms.projectionMatrix );
@@ -1132,7 +1208,9 @@ void RB_VolumetricDLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t l
 			local0[0] = dl->origin[0];
 			local0[1] = dl->origin[1];
 			local0[2] = dl->origin[2];
-			local0[3] = ((2048.0 - (distance+0.001)) / 2048.0);// * 0.66666;// / (float)((float)NUM_VISIBLE_LIGHTS/2);
+			//local0[3] = ((2048.0 - (distance+0.001)) / 2048.0) / ((float)NUM_VISIBLE_LIGHTS/2.0);
+			//local0[3] = ((2048.0 - (distance+0.001)) / 2048.0) / ((float)NUM_CLOSE_LIGHTS/2.0);
+			local0[3] = NUM_CLOSE_LIGHTS;
 
 			//float* local0b = local0;
 			//local0b+=4;
@@ -1147,7 +1225,7 @@ void RB_VolumetricDLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t l
 			local2[0] = x / 640;
 			local2[1] = 1.0 - (y / 480);
 			local2[2] = r_testvar->value;
-			local2[3] = 0.0;
+			local2[3] = r_volumelightSamples->value;
 
 			//ri->Printf(PRINT_WARNING, "Light %i is at %f %f.\n", l, local2[0], local2[1]);
 
@@ -1177,6 +1255,8 @@ void RB_VolumetricDLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t l
 		FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.volumelightShader, color, 0);
 		FBO_FastBlit(ldrFbo, ldrBox, hdrFbo, hdrBox, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 	}
+
+	return qtrue;
 }
 
 void RB_HDR(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)

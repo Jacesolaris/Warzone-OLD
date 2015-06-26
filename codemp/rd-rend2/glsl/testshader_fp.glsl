@@ -137,6 +137,8 @@ vec3	ECCChannelMixerR = vec3(1.0, 0.0, 0.0);
 vec3	ECCChannelMixerG = vec3(0.0, 1.0, 0.0);
 vec3	ECCChannelMixerB = vec3(0.0, 0.0, 1.0);
 
+//#define E_CC_PROCEDURAL
+
 vec4 PS_Adaptation() 
 {
 	vec4	color = texture2D(u_TextureMap, var_TexCoords.xy);
