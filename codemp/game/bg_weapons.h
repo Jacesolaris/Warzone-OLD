@@ -38,7 +38,12 @@ typedef enum {
 	WP_BRYAR_OLD,
 	WP_BLASTER,
 	WP_DISRUPTOR,
-
+	WP_BOWCASTER,
+	WP_REPEATER,
+	WP_DEMP2,
+	WP_FLECHETTE,
+	WP_CONCUSSION,
+	// Add new guns here...
 	WP_A280,
 	WP_DC15,
 	WP_WESTARM5,
@@ -61,13 +66,6 @@ typedef enum {
 	WP_FRAG_GRENADE,
 	WP_FRAG_GRENADE_OLD,
 	WP_DC_17_CLONE_PISTOL,
-
-	WP_BOWCASTER,
-	WP_REPEATER,
-	WP_DEMP2,
-	WP_FLECHETTE,
-	WP_CONCUSSION,
-	// Add new guns here...
 
 
 
