@@ -8974,6 +8974,14 @@ void BG_AdjustClientSpeed(playerState_t *ps, usercmd_t *cmd, int svTime)
 		}
 	}
 
+#ifdef __NO_SILLY_SABER_SPINAROUND__
+	if (BG_SaberInAttack( ps->saberMove ))
+	{
+		ps->speed = 0;
+		return;
+	}
+#endif //__NO_SILLY_SABER_SPINAROUND__
+
 	//For prediction, always reset speed back to the last known server base speed
 	//If we didn't do this, under lag we'd eventually dwindle speed down to 0 even though
 	//that would not be the correct predicted value.
@@ -9977,6 +9985,21 @@ void BG_G2PlayerAngles(void *ghoul2, int motionBolt, entityState_t *cent, int ti
 	{
 		angles[0] = -30;
 	}
+
+#ifdef __NO_SILLY_SABER_SPINAROUND__
+	if (BG_SaberInAttack( cent->saberMove ))
+	{
+		legsAngles[ROLL] = 0;
+		torsoAngles[ROLL] = 0;
+
+		BG_G2ClientSpineAngles(ghoul2, motionBolt, cent_lerpOrigin, cent_lerpAngles, cent, time, viewAngles, ciLegs, ciTorso, angles, thoracicAngles, ulAngles, llAngles, modelScale, tPitchAngle, tYawAngle, corrTime);
+		trap->G2API_SetBoneAngles(ghoul2, 0, "lower_lumbar", llAngles, BONE_ANGLES_POSTMULT, POSITIVE_X, NEGATIVE_Y, NEGATIVE_Z, 0, 0, time);
+		trap->G2API_SetBoneAngles(ghoul2, 0, "upper_lumbar", ulAngles, BONE_ANGLES_POSTMULT, POSITIVE_X, NEGATIVE_Y, NEGATIVE_Z, 0, 0, time);
+		trap->G2API_SetBoneAngles(ghoul2, 0, "cranium", vec3_origin, BONE_ANGLES_POSTMULT, POSITIVE_X, NEGATIVE_Y, NEGATIVE_Z, 0, 0, time);
+
+		return; //don't have to bother with the rest then
+	}
+#endif //__NO_SILLY_SABER_SPINAROUND__
 
 	if (cent->weapon == WP_EMPLACED_GUN &&
 		emplaced)

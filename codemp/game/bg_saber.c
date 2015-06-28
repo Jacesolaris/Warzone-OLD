@@ -3953,10 +3953,12 @@ void PM_SetSaberMove(short newMove)
 		{
 			parts = SETANIM_BOTH;
 		}
+#ifndef __NO_SILLY_SABER_SPINAROUND__
 		else if ( BG_SpinningSaberAnim( anim ) )
 		{//spins must be played on entire body
 			parts = SETANIM_BOTH;
 		}
+#endif //__NO_SILLY_SABER_SPINAROUND__
 		else if ( (!pm->cmd.forwardmove&&!pm->cmd.rightmove&&!pm->cmd.upmove))
 		{//not trying to run, duck or jump
 			if ( !BG_FlippingAnim( pm->ps->legsAnim ) &&

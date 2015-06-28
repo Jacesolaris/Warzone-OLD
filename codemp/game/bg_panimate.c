@@ -2661,6 +2661,14 @@ int BG_ParseAnimationFile(const char *filename, animation_t *animset, qboolean i
 						//trap->Print("Slowed down anim %i.\n", animNum);
 						break;
 					}
+#ifdef __NO_SILLY_SABER_SPINAROUND__
+					else if (saberMoveData[x].animToUse+(77*2) == animNum) // SS_STRONG
+					{
+						animset[animNum].frameLerp *= 0.7;
+						//trap->Print("Slowed down anim %i.\n", animNum);
+						break;
+					}
+#endif //__NO_SILLY_SABER_SPINAROUND__
 				}
 			}
 #endif //__SABER_ANIMATION_SLOW__
@@ -2692,6 +2700,14 @@ int BG_ParseAnimationFile(const char *filename, animation_t *animset, qboolean i
 						//trap->Print("Slowed down anim %i.\n", animNum);
 						break;
 					}
+#ifdef __NO_SILLY_SABER_SPINAROUND__
+					else if (saberMoveData[x].animToUse+(77*2) == animNum) // SS_STRONG
+					{
+						animset[animNum].frameLerp *= 0.7;
+						//trap->Print("Slowed down anim %i.\n", animNum);
+						break;
+					}
+#endif //__NO_SILLY_SABER_SPINAROUND__
 				}
 			}
 #endif //__SABER_ANIMATION_SLOW__

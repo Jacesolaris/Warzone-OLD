@@ -11,6 +11,7 @@
 
 #define __MMO__
 //#define __NPC_USE_SABER_BLOCKING__
+#define __NO_SILLY_SABER_SPINAROUND__
 
 // Disable stupid warnings...
 #pragma warning( disable : 4996 )
