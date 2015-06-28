@@ -369,6 +369,8 @@ extern qboolean NPC_IsCivilianHumanoid(gentity_t *NPC);
 extern qboolean NPC_IsVendor(gentity_t *NPC);
 extern qboolean NPC_IsHumanoid ( gentity_t *self );
 extern qboolean NPC_IsJedi ( gentity_t *self );
+extern qboolean NPC_IsLightJedi ( gentity_t *self );
+extern qboolean NPC_IsDarkJedi ( gentity_t *self );
 extern qboolean NPC_IsAdvancedGunner ( gentity_t *self );
 extern qboolean NPC_IsBountyHunter ( gentity_t *self );
 extern qboolean NPC_IsCommando ( gentity_t *self );

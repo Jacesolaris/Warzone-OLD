@@ -207,7 +207,7 @@ qboolean NPC_PadawanMove( void )
 		{
 			float dist = DistanceHorizontal(NPC->parent->r.currentOrigin, NPC->r.currentOrigin);
 
-			if (dist > 112 && dist < 512)
+			if (dist > 112 && dist < 1024)
 			{// If clear then move stright there...
 				NPC_FacePosition( NPC->parent->r.currentOrigin, qfalse );
 
@@ -217,6 +217,17 @@ qboolean NPC_PadawanMove( void )
 
 				if ( UpdateGoal() )
 				{
+					if (dist > 512 && !(NPC->client->ps.fd.forcePowersActive&(1<<FP_SPEED)))
+					{// When the master is a fair way away, use force speed to get to him quicker...
+						if (!(NPC->client->ps.fd.forcePowersKnown & (1 << FP_SPEED))) NPC->client->ps.fd.forcePowersKnown |= (1 << FP_SPEED);
+						ForceSpeed(NPC, 500);
+					}
+					else if (dist > 512 && !(NPC->client->ps.fd.forcePowersActive&(1<<FP_PROTECT)))
+					{// When the master is a fair way away, use force protect to get to him safer...
+						if (!(NPC->client->ps.fd.forcePowersKnown & (1 << FP_SPEED))) NPC->client->ps.fd.forcePowersKnown |= (1 << FP_PROTECT);
+						ForceProtect(NPC);
+					}
+
 					//if (walk) NPCS.ucmd.buttons |= BUTTON_WALKING;
 					if (NPC_CombatMoveToGoal( qtrue, qfalse ))
 					{// All is good in the world...
@@ -389,6 +400,35 @@ qboolean NPC_NeedPadawan_Spawn ( void )
 
 qboolean Padawan_CheckForce ( void )
 {// UQ1: New code to make better use of force powers...
+	//
+	// Give them any force powers they might need...
+	//
+	if (!(NPCS.NPC->client->ps.fd.forcePowersKnown & (1 << FP_TEAM_HEAL))) 
+	{
+		NPCS.NPC->client->ps.fd.forcePowersKnown |= (1 << FP_TEAM_HEAL);
+		NPCS.NPC->client->ps.fd.forcePowerLevel[FP_TEAM_HEAL] = 3;
+	}
+	if (!(NPCS.NPC->client->ps.fd.forcePowersKnown & (1 << FP_HEAL))) 
+	{
+		NPCS.NPC->client->ps.fd.forcePowersKnown |= (1 << FP_HEAL);
+		NPCS.NPC->client->ps.fd.forcePowerLevel[FP_HEAL] = 3;
+	}
+	if (!(NPCS.NPC->client->ps.fd.forcePowersKnown & (1 << FP_PROTECT))) 
+	{
+		NPCS.NPC->client->ps.fd.forcePowersKnown |= (1 << FP_PROTECT);
+		NPCS.NPC->client->ps.fd.forcePowerLevel[FP_PROTECT] = 3;
+	}
+	if (!(NPCS.NPC->client->ps.fd.forcePowersKnown & (1 << FP_ABSORB))) 
+	{
+		NPCS.NPC->client->ps.fd.forcePowersKnown |= (1 << FP_ABSORB);
+		NPCS.NPC->client->ps.fd.forcePowerLevel[FP_ABSORB] = 3;
+	}
+	if (!(NPCS.NPC->client->ps.fd.forcePowersKnown & (1 << FP_TELEPATHY))) 
+	{
+		NPCS.NPC->client->ps.fd.forcePowersKnown |= (1 << FP_TELEPATHY);
+		NPCS.NPC->client->ps.fd.forcePowerLevel[FP_TELEPATHY] = 3;
+	}
+
 	if ( NPCS.NPC->client->ps.fd.forcePowersActive&(1<<FP_DRAIN) )
 	{//when draining, don't move
 		return qtrue;

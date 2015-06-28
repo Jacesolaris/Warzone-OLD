@@ -7134,6 +7134,61 @@ qboolean NPC_Jedi_EntityInForceRange ( gentity_t *ent )
 
 qboolean Jedi_CheckForce ( void )
 {// UQ1: New code to make better use of force powers...
+	//
+	// Give them any force powers they might need...
+	//
+	if (NPC_IsLightJedi(NPCS.NPC))
+	{// Jedi...
+		if (!(NPCS.NPC->client->ps.fd.forcePowersKnown & (1 << FP_TEAM_HEAL))) 
+		{
+			NPCS.NPC->client->ps.fd.forcePowersKnown |= (1 << FP_TEAM_HEAL);
+			NPCS.NPC->client->ps.fd.forcePowerLevel[FP_TEAM_HEAL] = 3;
+		}
+		if (!(NPCS.NPC->client->ps.fd.forcePowersKnown & (1 << FP_HEAL))) 
+		{
+			NPCS.NPC->client->ps.fd.forcePowersKnown |= (1 << FP_HEAL);
+			NPCS.NPC->client->ps.fd.forcePowerLevel[FP_HEAL] = 3;
+		}
+		if (!(NPCS.NPC->client->ps.fd.forcePowersKnown & (1 << FP_PROTECT))) 
+		{
+			NPCS.NPC->client->ps.fd.forcePowersKnown |= (1 << FP_PROTECT);
+			NPCS.NPC->client->ps.fd.forcePowerLevel[FP_PROTECT] = 3;
+		}
+		if (!(NPCS.NPC->client->ps.fd.forcePowersKnown & (1 << FP_ABSORB))) 
+		{
+			NPCS.NPC->client->ps.fd.forcePowersKnown |= (1 << FP_ABSORB);
+			NPCS.NPC->client->ps.fd.forcePowerLevel[FP_ABSORB] = 3;
+		}
+		if (!(NPCS.NPC->client->ps.fd.forcePowersKnown & (1 << FP_TELEPATHY))) 
+		{
+			NPCS.NPC->client->ps.fd.forcePowersKnown |= (1 << FP_TELEPATHY);
+			NPCS.NPC->client->ps.fd.forcePowerLevel[FP_TELEPATHY] = 3;
+		}
+	}
+	else if (NPC_IsDarkJedi(NPCS.NPC))
+	{// Sith...
+		if (!(NPCS.NPC->client->ps.fd.forcePowersKnown & (1 << FP_DRAIN))) 
+		{
+			NPCS.NPC->client->ps.fd.forcePowersKnown |= (1 << FP_DRAIN);
+			NPCS.NPC->client->ps.fd.forcePowerLevel[FP_DRAIN] = 3;
+		}
+		if (!(NPCS.NPC->client->ps.fd.forcePowersKnown & (1 << FP_LIGHTNING))) 
+		{
+			NPCS.NPC->client->ps.fd.forcePowersKnown |= (1 << FP_LIGHTNING);
+			NPCS.NPC->client->ps.fd.forcePowerLevel[FP_LIGHTNING] = 3;
+		}
+		if (!(NPCS.NPC->client->ps.fd.forcePowersKnown & (1 << FP_GRIP))) 
+		{
+			NPCS.NPC->client->ps.fd.forcePowersKnown |= (1 << FP_GRIP);
+			NPCS.NPC->client->ps.fd.forcePowerLevel[FP_GRIP] = 3;
+		}
+		if (!(NPCS.NPC->client->ps.fd.forcePowersKnown & (1 << FP_RAGE))) 
+		{
+			NPCS.NPC->client->ps.fd.forcePowersKnown |= (1 << FP_RAGE);
+			NPCS.NPC->client->ps.fd.forcePowerLevel[FP_RAGE] = 3;
+		}
+	}
+
 	if ( NPCS.NPC->client->ps.fd.forcePowersActive&(1<<FP_GRIP) )
 	{//when gripping, don't move
 		return qtrue;
@@ -7189,7 +7244,7 @@ qboolean Jedi_CheckForce ( void )
 		&& NPCS.NPC->padawan->health < NPCS.NPC->padawan->client->pers.maxHealth * 0.5
 		&& NPCS.NPC->padawan->health > 0 )
 	{// Team heal our jedi???
-		NPC_FacePosition(NPCS.NPC->parent->r.currentOrigin, qtrue);
+		NPC_FacePosition(NPCS.NPC->padawan->r.currentOrigin, qtrue);
 		ForceTeamHeal( NPCS.NPC );
 		TIMER_Set( NPCS.NPC, "teamheal", irand(5000, 15000) );
 		return qtrue;

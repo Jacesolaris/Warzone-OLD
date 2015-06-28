@@ -98,6 +98,7 @@ qboolean NPC_IsJedi ( gentity_t *self )
 
 	switch (self->client->NPC_class)
 	{
+	case CLASS_ALORA:
 	//case CLASS_ATST:
 	//case CLASS_BARTENDER:
 	//case CLASS_BESPIN_COP:		
@@ -167,6 +168,47 @@ qboolean NPC_IsJedi ( gentity_t *self )
 	//case CLASS_DRUG_VENDOR:
 	//case CLASS_TRAVELLING_VENDOR:
 	//case CLASS_BOT_FAKE_NPC:
+		// Is Jedi...
+		return qtrue;
+		break;
+	default:
+		// NOT Jedi...
+		break;
+	}
+
+	return qfalse;
+}
+
+qboolean NPC_IsLightJedi ( gentity_t *self )
+{
+	switch (self->client->NPC_class)
+	{
+	case CLASS_JEDI:
+	case CLASS_PADAWAN:
+	case CLASS_KYLE:				
+	case CLASS_LUKE:				// UQ1: TODO - maybe should be allowed to switch to pistol/blaster???
+	case CLASS_MONMOTHA:			
+	case CLASS_MORGANKATARN:
+		// Is Jedi...
+		return qtrue;
+		break;
+	default:
+		// NOT Jedi...
+		break;
+	}
+
+	return qfalse;
+}
+
+qboolean NPC_IsDarkJedi ( gentity_t *self )
+{
+	switch (self->client->NPC_class)
+	{
+	case CLASS_ALORA:
+	case CLASS_DESANN:		
+	case CLASS_REBORN:
+	case CLASS_SHADOWTROOPER:
+	case CLASS_TAVION:
 		// Is Jedi...
 		return qtrue;
 		break;
