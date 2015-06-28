@@ -1425,8 +1425,16 @@ void NPC_Begin (gentity_t *ent)
 		// More health for instance enemies... This is meant to be run as a team...
 		if (ent->client->ps.weapon == WP_SABER)
 		{// Bosses... TODO: Sub-types...
-			ent->NPC->stats.health *= 4;
-			ent->client->ps.fd.forcePowerMax *= 4;
+			if (ent->client->NPC_class == CLASS_PADAWAN)
+			{// Padawans get just over half health/force... The extra .5 is to compensate for falling, etc following master around map...
+				ent->NPC->stats.health *= 2.5;
+				ent->client->ps.fd.forcePowerMax *= 2.5;
+			}
+			else
+			{
+				ent->NPC->stats.health *= 4;
+				ent->client->ps.fd.forcePowerMax *= 4;
+			}
 		}
 		else
 		{// TODO: Sub-types...
