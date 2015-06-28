@@ -1177,6 +1177,7 @@ void CG_DownloadAllTextToSpeechSounds ( void )
 				while (!trap->S_DownloadVoice(PADAWAN_CHATTERS[padawan_chatter], voice))
 				{// Wait and retry...
 					trap->Print("Failed. Waiting a moment before continuing.\n");
+					trap->Print("Text was %s.", PADAWAN_CHATTERS[padawan_chatter]);
 
 					for (wait_time = 0; wait_time < 500; wait_time++)
 					{// Do some random silly stuff as we have no sleep() function;

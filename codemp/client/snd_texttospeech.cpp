@@ -45,7 +45,7 @@ void DoTextToSpeech (char* text, char *voice, int entityNum, vec3_t origin)
 
 	if (FILENAME_TOO_LONG)
 	{// Shorten the text to fit a decent filename length...
-		char	SHORTENED_TEXT[64];
+		char	SHORTENED_TEXT[64] = { 0 };
 
 		strncpy(SHORTENED_TEXT, text, 60);
 		sprintf(filename, "OJK/sound/tts/%s/%s.mp3", voice, SHORTENED_TEXT);
@@ -271,7 +271,7 @@ qboolean S_DownloadVoice( const char *text, const char *voice )
 
 	if (FILENAME_TOO_LONG)
 	{// Shorten the text to fit a decent filename length...
-		char	SHORTENED_TEXT[64];
+		char	SHORTENED_TEXT[64] = { 0 };
 
 		strncpy(SHORTENED_TEXT, text, 60);
 		sprintf(filename, "OJK/sound/tts/%s/%s.mp3", voice, SHORTENED_TEXT);

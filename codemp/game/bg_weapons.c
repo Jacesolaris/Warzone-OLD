@@ -36,7 +36,7 @@ vec3_t WP_MuzzlePoint[WP_NUM_WEAPONS] =
 	{70, 	3.5,  	-1	},	// WP_WESTER_PISTOL,
 	{70, 	3.5,  	-1	},	// WP_ELG_3A,
 	{70, 	3.5,  	-1	},	// WP_S5_PISTOL,
-	{12,	4.5,	-6	},	// WP_Z6_BLASTER_CANON,
+	{12,	6,	    -6	},	// WP_Z6_BLASTER_CANON,
 	{30,	3.5,	-6	},	// WP_WOOKIE_BOWCASTER,
 	{70, 	3.5,  	-1	},	// WP_WOOKIES_PISTOL,
 	{12,	4.5,	-6	},	// WP_CLONE_BLASTER,
