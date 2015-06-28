@@ -349,7 +349,10 @@ RE_AddLightToScene
 =====================
 */
 void RE_AddLightToScene( const vec3_t org, float intensity, float r, float g, float b ) {
-	RE_AddDynamicLightToScene( org, intensity, r, g, b, qfalse );
+	if (intensity < 0.0) // volumetric
+		RE_AddDynamicLightToScene( org, 0.0-intensity, r, g, b, qfalse );
+	else
+		RE_AddDynamicLightToScene( org, intensity, r, g, b, qfalse );
 }
 
 /*

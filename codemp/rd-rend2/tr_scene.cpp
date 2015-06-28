@@ -291,9 +291,9 @@ void RE_AddDynamicLightToScene( const vec3_t org, float intensity, float r, floa
 	if ( r_numdlights >= MAX_DLIGHTS ) {
 		return;
 	}
-	if ( intensity <= 0 ) {
+	/*if ( intensity <= 0 ) {
 		return;
-	}
+	}*/ // UQ1: negative now means volumetric
 	dl = &backEndData->dlights[r_numdlights++];
 	VectorCopy (org, dl->origin);
 	dl->radius = intensity;

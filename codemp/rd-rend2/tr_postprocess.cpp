@@ -1027,9 +1027,21 @@ qboolean RB_VolumetricDLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i
 		dlight_t	*dl = &backEnd.refdef.dlights[l];
 		
 		float x, y, distance;
+
+		//if (dl->radius > 0.0) ri->Printf(PRINT_WARNING, "Light %i is volumetric.", l);
+		//else ri->Printf(PRINT_WARNING, "Light %i is not volumetric.", l);
+
+		if (dl->radius > 0.0) continue; // not a valumetric light...
+		dl->radius = 0.0 - dl->radius;
 		
 		distance = Distance(backEnd.refdef.vieworg, dl->origin);
 		
+		if (distance > r_volumelightMaxDistance->value)
+		{
+			dl->radius = 0.0;
+			continue; // too far away...
+		}
+
 		if (distance > 2048.0) 
 		{
 			dl->radius = 0.0;
@@ -1210,7 +1222,7 @@ qboolean RB_VolumetricDLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i
 			local0[2] = dl->origin[2];
 			//local0[3] = ((2048.0 - (distance+0.001)) / 2048.0) / ((float)NUM_VISIBLE_LIGHTS/2.0);
 			//local0[3] = ((2048.0 - (distance+0.001)) / 2048.0) / ((float)NUM_CLOSE_LIGHTS/2.0);
-			local0[3] = NUM_CLOSE_LIGHTS;
+			local0[3] = ((r_volumelightMaxDistance->value - (distance+0.001)) / r_volumelightMaxDistance->value);
 
 			//float* local0b = local0;
 			//local0b+=4;

@@ -500,6 +500,7 @@ static void ProjectDlightTexture( void ) {
 			//}
 
 			dl = &backEnd.refdef.dlights[l];
+			if (dl->radius < 0.0) dl->radius = 0.0 - dl->radius;
 			VectorCopy( dl->transformed, origin );
 			radius = dl->radius * DLIGHT_SIZE_MULTIPLIER;
 			scale = 1.0f / radius;
@@ -559,6 +560,7 @@ static void ProjectDlightTexture( void ) {
 		//}
 
 		dl = &backEnd.refdef.dlights[l];
+		if (dl->radius < 0.0) dl->radius = 0.0 - dl->radius;
 		VectorCopy( dl->transformed, origin );
 		radius = dl->radius * DLIGHT_SIZE_MULTIPLIER;
 		scale = 1.0f / radius;
@@ -648,6 +650,8 @@ static void ProjectDlightTexture( void ) {
 		{
 			dlight_t	*dl = &backEnd.refdef.dlights[l];
 
+			if (dl->radius < 0.0) dl->radius = 0.0 - dl->radius;
+
 			// Start search for mergeable lights at the next light from this one...
 			for ( j = l+1; j < backEnd.refdef.num_dlights; j++ )
 			{
@@ -677,6 +681,7 @@ static void ProjectDlightTexture( void ) {
 				for ( j = l; j < backEnd.refdef.num_dlights; j++ ) 
 				{
 					dlight_t	*dl2 = &backEnd.refdef.dlights[j];
+					if (dl2->radius < 0.0) dl2->radius = 0.0 - dl->radius;
 
 					if (!SHOULD_MERGE[j] || COMPLETED_MERGE[j]) continue;
 
@@ -704,6 +709,7 @@ static void ProjectDlightTexture( void ) {
 		for ( l = 0; l < NUM_MERGED_DLIGHTS; l++ )
 		{
 			dlight_t	*dl = &MERGED_DLIGHTS[l];
+			if (dl->radius < 0.0) dl->radius = 0.0 - dl->radius;
 
 			// Average out the colors...
 			dl->color[0] /= MERGED_DLIGHT_COUNT[l];
@@ -723,6 +729,7 @@ static void ProjectDlightTexture( void ) {
 			dlight_t	*dl = &MERGED_DLIGHTS[l];
 
 			VectorCopy( dl->transformed, origin );
+			if (dl->radius < 0.0) dl->radius = 0.0 - dl->radius;
 			radius = dl->radius * DLIGHT_SIZE_MULTIPLIER;
 			scale = 1.0f / radius;
 
@@ -1123,6 +1130,7 @@ static void ForwardDlight( void ) {
 
 		dl = &backEnd.refdef.dlights[l];
 		//VectorCopy( dl->transformed, origin );
+		if (dl->radius < 0.0) dl->radius = 0.0 - dl->radius;
 		radius = dl->radius;
 		//scale = 1.0f / radius;
 

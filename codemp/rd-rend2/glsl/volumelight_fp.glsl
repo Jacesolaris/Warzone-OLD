@@ -102,7 +102,8 @@ void main()
 	tmpShadow *= exposure;
 	
 	float lightOutColor = tmpShadow * (3.0 - brightness);
-	//lightOutColor /= (var_Local0.a);
+	lightOutColor *= var_Local0.a; // distance mult - new
+	//lightOutColor /= var_Local0.a; // num_lights - old
 	//lightOutColor *= pow(1.0 - screenDistance, 3);
 	vec3 add_color = origLightColor.rgb * lightOutColor;
 #define const_1 ( 12.0 / 255.0)

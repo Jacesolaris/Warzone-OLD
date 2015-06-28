@@ -6025,7 +6025,7 @@ void CG_DoSaberLight(saberInfo_t *saber, int cnum, int bnum)
 		}
 
 		//[RGBSabers]
-		AddLightToScene(mid, diameter + (random()*8.0f), rgb[0], rgb[1], rgb[2]);
+		AddLightToScene(mid, 0.0-(diameter + (random()*8.0f)), rgb[0], rgb[1], rgb[2]);
 	}
 }
 
@@ -6100,7 +6100,7 @@ void CG_DoSaber(vec3_t origin, vec3_t dir, float length, float lengthMax, float 
 		//[RGBSabers]
 		float light = length*1.4f + random()*3.0f;
 		CG_RGBForSaberColor(color, rgb, cnum, bnum);
-		AddLightToScene(mid, light, rgb[0], rgb[1], rgb[2]);
+		AddLightToScene(mid, 0.0-light, rgb[0], rgb[1], rgb[2]);
 		//[/RGBSabers]
 	}
 
@@ -6436,7 +6436,7 @@ void CG_DoPrequelSaber(vec3_t blade_muz, vec3_t blade_tip, vec3_t trail_tip, vec
 	{
 		CG_RGBForSaberColor(color, rgb, cnum, bnum);
 		VectorScale(rgb, 0.66f, rgb);
-		AddLightToScene(mid, (blade_len*2.0f) + (random()*10.0f), rgb[0], rgb[1], rgb[2]);
+		AddLightToScene(mid, 0.0-((blade_len*2.0f) + (random()*10.0f)), rgb[0], rgb[1], rgb[2]);
 	}
 
 	//Distance Scale
@@ -6893,7 +6893,7 @@ void CG_DoEp1Saber(vec3_t blade_muz, vec3_t blade_tip, vec3_t trail_tip, vec3_t 
 	{
 		CG_RGBForSaberColor(color, rgb, cnum, bnum);
 		VectorScale(rgb, 0.66f, rgb);
-		AddLightToScene(mid, (blade_len*2.0f) + (random()*10.0f), rgb[0], rgb[1], rgb[2]);
+		AddLightToScene(mid, 0.0-((blade_len*2.0f) + (random()*10.0f)), rgb[0], rgb[1], rgb[2]);
 	}
 
 	//Distance Scale
@@ -7387,7 +7387,7 @@ void CG_DoEp2Saber(vec3_t blade_muz, vec3_t blade_tip, vec3_t trail_tip, vec3_t 
 	{
 		CG_RGBForSaberColor(color, rgb, cnum, bnum);
 		VectorScale(rgb, 0.66f, rgb);
-		AddLightToScene(mid, (blade_len*2.0f) + (random()*10.0f), rgb[0], rgb[1], rgb[2]);
+		AddLightToScene(mid, 0.0-((blade_len*2.0f) + (random()*10.0f)), rgb[0], rgb[1], rgb[2]);
 	}
 
 	//Distance Scale
@@ -7915,7 +7915,7 @@ void CG_DoEp3Saber(vec3_t blade_muz, vec3_t blade_tip, vec3_t trail_tip, vec3_t 
 	{
 		CG_RGBForSaberColor(color, rgb, cnum, bnum);
 		VectorScale(rgb, 0.66f, rgb);
-		AddLightToScene(mid, (blade_len*2.0f) + (random()*10.0f), rgb[0], rgb[1], rgb[2]);
+		AddLightToScene(mid, 0.0-((blade_len*2.0f) + (random()*10.0f)), rgb[0], rgb[1], rgb[2]);
 	}
 
 	//Distance Scale
@@ -8433,7 +8433,7 @@ void CG_DoOTSaber(vec3_t blade_muz, vec3_t blade_tip, vec3_t trail_tip, vec3_t t
 	{
 		CG_RGBForSaberColor(color, rgb, cnum, bnum);
 		VectorScale(rgb, 0.66f, rgb);
-		AddLightToScene(mid, (blade_len*2.0f) + (random()*10.0f), rgb[0], rgb[1], rgb[2]);
+		AddLightToScene(mid, 0.0-((blade_len*2.0f) + (random()*10.0f)), rgb[0], rgb[1], rgb[2]);
 	}
 
 	//Distance Scale
@@ -8925,7 +8925,7 @@ void CG_DoSFXSaber(vec3_t blade_muz, vec3_t blade_tip, vec3_t trail_tip, vec3_t 
 	{
 		CG_RGBForSaberColor(color, rgb, cnum, bnum);
 		VectorScale(rgb, 0.66f, rgb);
-		AddLightToScene(mid, (blade_len*2.0f) + (random()*10.0f), rgb[0], rgb[1], rgb[2]);
+		AddLightToScene(mid, 0.0-((blade_len*2.0f) + (random()*10.0f)), rgb[0], rgb[1], rgb[2]);
 	}
 
 	//Distance Scale
