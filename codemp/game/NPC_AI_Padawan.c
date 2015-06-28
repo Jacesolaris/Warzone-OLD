@@ -8,6 +8,7 @@ extern wpobject_t *gWPArray[MAX_WPARRAY_SIZE];
 extern int DOM_GetNearestWP(vec3_t org, int badwp);
 extern int NPC_GetNextNode(gentity_t *NPC);
 extern qboolean UQ1_UcmdMoveForDir ( gentity_t *self, usercmd_t *cmd, vec3_t dir, qboolean walk, vec3_t dest );
+extern qboolean NPC_ValidEnemy2( gentity_t *self, gentity_t *ent );
 
 void TeleportNPC( gentity_t *player, vec3_t origin, vec3_t angles ) {
 //	gentity_t	*tent;
@@ -198,6 +199,11 @@ qboolean NPC_PadawanMove( void )
 {
 	gentity_t	*NPC = NPCS.NPC;
 	usercmd_t	*ucmd = &NPCS.ucmd;
+
+	if (NPC->enemy && NPC_IsAlive(NPC->enemy) && NPC_ValidEnemy2(NPC, NPC->enemy))
+	{// Keep fighting who we are fighting...
+		return qtrue;
+	}
 	
 	if (NPC->s.NPC_class == CLASS_PADAWAN)
 	{
@@ -428,8 +434,23 @@ qboolean Padawan_CheckForce ( void )
 		NPCS.NPC->client->ps.fd.forcePowersKnown |= (1 << FP_TELEPATHY);
 		NPCS.NPC->client->ps.fd.forcePowerLevel[FP_TELEPATHY] = 3;
 	}
+	if (!(NPCS.NPC->client->ps.fd.forcePowersKnown & (1 << FP_PUSH))) 
+	{
+		NPCS.NPC->client->ps.fd.forcePowersKnown |= (1 << FP_PUSH);
+		NPCS.NPC->client->ps.fd.forcePowerLevel[FP_PUSH] = 3;
+	}
+	if (!(NPCS.NPC->client->ps.fd.forcePowersKnown & (1 << FP_PULL))) 
+	{
+		NPCS.NPC->client->ps.fd.forcePowersKnown |= (1 << FP_PULL);
+		NPCS.NPC->client->ps.fd.forcePowerLevel[FP_PULL] = 3;
+	}
+	if (!(NPCS.NPC->client->ps.fd.forcePowersKnown & (1 << FP_SABERTHROW))) 
+	{
+		NPCS.NPC->client->ps.fd.forcePowersKnown |= (1 << FP_SABERTHROW);
+		NPCS.NPC->client->ps.fd.forcePowerLevel[FP_SABERTHROW] = 3;
+	}
 
-	if ( NPCS.NPC->client->ps.fd.forcePowersActive&(1<<FP_DRAIN) )
+	/*if ( NPCS.NPC->client->ps.fd.forcePowersActive&(1<<FP_DRAIN) )
 	{//when draining, don't move
 		return qtrue;
 	}
@@ -442,16 +463,33 @@ qboolean Padawan_CheckForce ( void )
 	if ( NPCS.NPC->client->ps.fd.forcePowersActive&(1<<FP_HEAL) )
 	{//lvl 1 healing, don't move
 		return qtrue;
-	}
+	}*/
 
 	// UQ1: Special heals/protects/absorbs - mainly for padawans...
-	if ( TIMER_Done( NPCS.NPC, "heal" )
+	if ( TIMER_Done( NPCS.NPC, "teamheal" )
+		&& NPCS.NPC->parent
+		&& NPC_IsAlive(NPCS.NPC->parent)
+		&& Distance(NPCS.NPC->parent->r.currentOrigin, NPCS.NPC->r.currentOrigin) < 256
+		&& (NPCS.NPC->client->ps.fd.forcePowersKnown&(1<<FP_TEAM_HEAL)) != 0
+		&& (NPCS.NPC->client->ps.fd.forcePowersActive&(1<<FP_TEAM_HEAL)) == 0
+		&& (NPCS.NPC->s.NPC_class == CLASS_PADAWAN)
+		&& NPCS.NPC->parent->client->ps.stats[STAT_HEALTH] < NPCS.NPC->parent->client->ps.stats[STAT_MAX_HEALTH] * 0.5
+		&& NPCS.NPC->parent->health > 0 
+		&& Q_irand( 0, 20 ) < 2)
+	{// Team heal our jedi???
+		NPC_FacePosition(NPCS.NPC->parent->r.currentOrigin, qtrue);
+		ForceTeamHeal( NPCS.NPC );
+		TIMER_Set( NPCS.NPC, "teamheal", irand(5000, 15000) );
+		return qtrue;
+	}
+	else if ( TIMER_Done( NPCS.NPC, "heal" )
 		&& (NPCS.NPC->client->ps.fd.forcePowersKnown&(1<<FP_HEAL)) != 0
 		&& (NPCS.NPC->client->ps.fd.forcePowersActive&(1<<FP_HEAL)) == 0
 		&& (NPCS.NPC->s.NPC_class == CLASS_PADAWAN)
 		//&& NPCS.NPC->health < NPCS.NPC->maxHealth * 0.5)
-		&& NPCS.NPC->health < NPCS.NPC->client->pers.maxHealth * 0.5
-		&& NPCS.NPC->health > 0 )
+		&& NPCS.NPC->client->ps.stats[STAT_HEALTH] < NPCS.NPC->client->ps.stats[STAT_MAX_HEALTH] * 0.5
+		&& NPCS.NPC->health > 0
+		&& Q_irand( 0, 20 ) < 2)
 		//&& NPCS.NPC->client->ps.stats[STAT_HEALTH] < NPCS.NPC->client->ps.stats[STAT_MAX_HEALTH] * 0.5
 		//&& NPCS.NPC->client->ps.stats[STAT_HEALTH] > 0 )
 	{// We need to heal...
@@ -459,27 +497,10 @@ qboolean Padawan_CheckForce ( void )
 		TIMER_Set( NPCS.NPC, "heal", irand(5000, 15000) );
 		return qtrue;
 	}
-	else if ( TIMER_Done( NPCS.NPC, "teamheal" )
-		&& NPCS.NPC->parent
-		&& NPC_IsAlive(NPCS.NPC->parent)
-		&& Distance(NPCS.NPC->parent->r.currentOrigin, NPCS.NPC->r.currentOrigin) < 256
-		&& (NPCS.NPC->client->ps.fd.forcePowersKnown&(1<<FP_TEAM_HEAL)) != 0
-		&& (NPCS.NPC->client->ps.fd.forcePowersActive&(1<<FP_TEAM_HEAL)) == 0
-		&& (NPCS.NPC->s.NPC_class == CLASS_PADAWAN)
-		&& NPCS.NPC->parent->health < NPCS.NPC->parent->client->pers.maxHealth * 0.5
-		&& NPCS.NPC->parent->health > 0 )
-		//&& NPCS.NPC->parent->client->ps.stats[STAT_HEALTH] < NPCS.NPC->parent->client->ps.stats[STAT_MAX_HEALTH] * 0.5
-		//&& NPCS.NPC->parent->client->ps.stats[STAT_HEALTH] > 0 )
-	{// Team heal our jedi???
-		NPC_FacePosition(NPCS.NPC->parent->r.currentOrigin, qtrue);
-		ForceTeamHeal( NPCS.NPC );
-		TIMER_Set( NPCS.NPC, "teamheal", irand(5000, 15000) );
-		return qtrue;
-	}
 	else if ( TIMER_Done( NPCS.NPC, "protect" )
 		&& (NPCS.NPC->client->ps.fd.forcePowersKnown&(1<<FP_PROTECT)) != 0
 		&& (NPCS.NPC->client->ps.fd.forcePowersActive&(1<<FP_PROTECT)) == 0
-		&& (Q_irand( 0, 30 ) < 2 ))
+		&& (Q_irand( 0, 20 ) < 2 ))
 	{// General buff...
 		ForceProtect( NPCS.NPC );
 		TIMER_Set( NPCS.NPC, "protect", irand(15000, 30000) );
@@ -488,7 +509,7 @@ qboolean Padawan_CheckForce ( void )
 	else if ( TIMER_Done( NPCS.NPC, "absorb" )
 		&& (NPCS.NPC->client->ps.fd.forcePowersKnown&(1<<FP_ABSORB)) != 0
 		&& (NPCS.NPC->client->ps.fd.forcePowersActive&(1<<FP_ABSORB)) == 0
-		&& (Q_irand( 0, 30 ) < 2))
+		&& (Q_irand( 0, 20 ) < 2))
 	{// General buff...
 		ForceAbsorb( NPCS.NPC );
 		TIMER_Set( NPCS.NPC, "absorb", irand(15000, 30000) );
@@ -657,6 +678,11 @@ void NPC_DoPadawanStuff ( void )
 			NPC_ClearGoal();
 
 		return; // Already have a master to follow...
+	}
+
+	if (me->enemy && NPC_IsAlive(me->enemy) && NPC_ValidEnemy2(me, me->enemy))
+	{// Keep fighting who we are fighting...
+		return;
 	}
 
 	//

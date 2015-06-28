@@ -636,6 +636,8 @@ qboolean WP_ForcePowerInUse( gentity_t *self, forcePowers_t forcePower )
 
 qboolean WP_ForcePowerUsable( gentity_t *self, forcePowers_t forcePower )
 {
+	if (self->s.eType == ET_NPC) return qtrue; // NPCs can do anything I say, ok?!?!??!
+
 	if (BG_HasYsalamiri(level.gametype, &self->client->ps))
 	{
 		return qfalse;
