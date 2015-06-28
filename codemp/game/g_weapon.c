@@ -3900,7 +3900,7 @@ The down side would be that it does not necessarily look alright from a
 first person perspective.
 ===============
 */
-void CalcMuzzlePoint ( gentity_t *ent, const vec3_t inForward, const vec3_t inRight, const vec3_t inUp, vec3_t muzzlePoint )
+void CalcMuzzlePoint ( gentity_t *ent, vec3_t forward, vec3_t right, vec3_t up, vec3_t muzzlePoint )
 {
 	int weapontype;
 	vec3_t muzzleOffPoint;
@@ -3909,6 +3909,21 @@ void CalcMuzzlePoint ( gentity_t *ent, const vec3_t inForward, const vec3_t inRi
 	VectorCopy( ent->s.pos.trBase, muzzlePoint );
 
 	VectorCopy(WP_MuzzlePoint[weapontype], muzzleOffPoint);
+
+
+	if (weapontype > WP_NONE && weapontype < WP_NUM_WEAPONS)
+	{	// Use the table to generate the muzzlepoint;
+		{	// Crouching.  Use the add-to-Z method to adjust vertically.
+			VectorMA(muzzlePoint, muzzleOffPoint[0], forward, muzzlePoint);
+			VectorMA(muzzlePoint, muzzleOffPoint[1], right, muzzlePoint);
+			muzzlePoint[2] += ent->client->ps.viewheight + muzzleOffPoint[2];
+		}
+	}
+
+	// snap to integer coordinates for more efficient network bandwidth usage
+	SnapVector( muzzlePoint );
+
+#ifdef __OLDMUZZLEPOINT__
 
 	if (weapontype > WP_NONE && weapontype < WP_NUM_WEAPONS)
 	{	// Use the table to generate the muzzlepoint;
@@ -3921,45 +3936,61 @@ void CalcMuzzlePoint ( gentity_t *ent, const vec3_t inForward, const vec3_t inRi
 
 	// snap to integer coordinates for more efficient network bandwidth usage
 	SnapVector( muzzlePoint );
+#endif //__OLDMUZZLEPOINT__
 }
 
 
 //Needed for later use when 2 handed pistols are in place  based on CalcMuzzlePoint 
-//void CalcFirstMuzzlePoint(gentity_t *ent, vec3_t forward, vec3_t right, vec3_t up, vec3_t muzzlePoint)
-//{
-//	int weapontype;
-//	vec3_t muzzleOffPoint;
-//
-//	weapontype = ent->s.weapon;
-//	VectorCopy(ent->s.pos.trBase, muzzlePoint);
-//
-//	VectorCopy(WP_FirstPistolMuzzle, muzzleOffPoint);
-//
-//	VectorMA(muzzlePoint, muzzleOffPoint[0], forward, muzzlePoint);
-//	VectorMA(muzzlePoint, muzzleOffPoint[1], right, muzzlePoint);
-//	muzzlePoint[2] += ent->client->ps.viewheight + muzzleOffPoint[2];
-//
-//	// snap to integer coordinates for more efficient network bandwidth usage
-//	SnapVector(muzzlePoint);
-//}
-//
-//void CalcSecondMuzzlePoint(gentity_t *ent, vec3_t forward, vec3_t right, vec3_t up, vec3_t muzzlePoint)
-//{
-//	int weapontype;
-//	vec3_t muzzleOffPoint;
-//
-//	weapontype = ent->s.weapon;
-//	VectorCopy(ent->s.pos.trBase, muzzlePoint);
-//
-//	VectorCopy(WP_SecondPistolMuzzle, muzzleOffPoint);
-//
-//	VectorMA(muzzlePoint, muzzleOffPoint[0], forward, muzzlePoint);
-//	VectorMA(muzzlePoint, muzzleOffPoint[1], right, muzzlePoint);
-//	muzzlePoint[2] += ent->client->ps.viewheight + muzzleOffPoint[2];
-//
-//	// snap to integer coordinates for more efficient network bandwidth usage
-//	SnapVector(muzzlePoint);
-//}
+void CalcFirstMuzzlePoint(gentity_t *ent, vec3_t forward, vec3_t right, vec3_t up, vec3_t muzzlePoint)
+{
+	int weapontype;
+	vec3_t muzzleOffPoint;
+
+	weapontype = ent->s.weapon;
+	VectorCopy(ent->s.pos.trBase, muzzlePoint);
+
+	VectorCopy(WP_FirstPistolMuzzle, muzzleOffPoint);
+
+	VectorMA(muzzlePoint, muzzleOffPoint[0], forward, muzzlePoint);
+	VectorMA(muzzlePoint, muzzleOffPoint[1], right, muzzlePoint);
+	muzzlePoint[2] += ent->client->ps.viewheight + muzzleOffPoint[2];
+
+	// snap to integer coordinates for more efficient network bandwidth usage
+	SnapVector(muzzlePoint);
+}
+
+void CalcSecondMuzzlePoint(gentity_t *ent, vec3_t forward, vec3_t right, vec3_t up, vec3_t muzzlePoint)
+{
+	int weapontype;
+	vec3_t muzzleOffPoint;
+
+	weapontype = ent->s.weapon;
+	VectorCopy(ent->s.pos.trBase, muzzlePoint);
+
+	VectorCopy(WP_SecondPistolMuzzle, muzzleOffPoint);
+
+	VectorMA(muzzlePoint, muzzleOffPoint[0], forward, muzzlePoint);
+	VectorMA(muzzlePoint, muzzleOffPoint[1], right, muzzlePoint);
+	muzzlePoint[2] += ent->client->ps.viewheight + muzzleOffPoint[2];
+
+	// snap to integer coordinates for more efficient network bandwidth usage
+	SnapVector(muzzlePoint);
+}
+
+/*
+===============
+CalcMuzzlePointOrigin
+
+set muzzle location relative to pivoting eye
+===============
+*/
+void CalcMuzzlePointOrigin(gentity_t *ent, vec3_t origin, vec3_t forward, vec3_t right, vec3_t up, vec3_t muzzlePoint) {
+	VectorCopy(ent->s.pos.trBase, muzzlePoint);
+	muzzlePoint[2] += ent->client->ps.viewheight;
+	VectorMA(muzzlePoint, 14, forward, muzzlePoint);
+	// snap to integer coordinates for more efficient network bandwidth usage
+	SnapVector(muzzlePoint);
+}
 
 extern void G_MissileImpact( gentity_t *ent, trace_t *trace );
 void WP_TouchVehMissile( gentity_t *ent, gentity_t *other, trace_t *trace )
@@ -4791,6 +4822,10 @@ FireWeapon
 int BG_EmplacedView(vec3_t baseAngles, vec3_t angles, float *newYaw, float constraint);
 extern void NPC_CivilianCowerPoint( gentity_t *enemy, vec3_t position );
 
+static	vec3_t	forward, vright, up;
+static	vec3_t	muzzle;
+static	vec3_t	secondmuzzle;
+
 void FireWeapon( gentity_t *ent, qboolean altFire ) {
 	// track shots taken for accuracy tracking. melee weapons are not tracked.
 	if( ent->s.weapon != WP_SABER && ent->s.weapon != WP_STUN_BATON && ent->s.weapon != WP_MELEE )
@@ -4899,12 +4934,17 @@ void FireWeapon( gentity_t *ent, qboolean altFire ) {
 
 		case WP_SABER:
 			break;
-
+		
+		case WP_TESTGUN:
 		case WP_WOOKIES_PISTOL:
 		case WP_S5_PISTOL:
 		case WP_ELG_3A:
+		case WP_WESTER_PISTOL:
+		case WP_BRYAR_OLD:
 		case WP_BRYAR_PISTOL:
 			WP_FireBryarPistol( ent, altFire );
+			CalcFirstMuzzlePoint(ent, forward, vright, up, muzzle);
+			CalcSecondMuzzlePoint(ent, forward, vright, up, secondmuzzle);
 			break;
 
 		case WP_CONCUSSION:
@@ -4913,14 +4953,7 @@ void FireWeapon( gentity_t *ent, qboolean altFire ) {
 			else
 				WP_FireConcussion( ent );
 			break;
-
-		
-		case WP_WESTER_PISTOL:
-		case WP_BRYAR_OLD:
-			WP_FireBryarPistol( ent, altFire );
-			break;
-
-		case WP_TESTGUN:
+	
 		case WP_CLONE_BLASTER:
 		case WP_BLASTER:
 			WP_FireBlaster( ent, altFire, BLASTER_VELOCITY, BLASTER_DAMAGE, BLASTER_SPREAD, ent->s.weapon );
