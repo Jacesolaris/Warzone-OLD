@@ -1705,7 +1705,12 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			GLSL_BindProgram(sp);
 			GLSL_SetUniformFloat(sp, UNIFORM_TIME, tess.shaderTime);
 			vec4_t loc0;
-			VectorSet4(loc0, (float)pStage->isWater, 0, 0, 0);
+			
+			if (r_testshader->integer)
+				VectorSet4(loc0, (float)pStage->isWater, 0, 0, 0); // allow for reflections...
+			else
+				VectorSet4(loc0, (float)2.0, 0, 0, 0); // force it to use the old water fx...
+
 			GLSL_SetUniformVec4(sp, UNIFORM_LOCAL0, loc0);
 			isGeneric = qfalse;
 		}
