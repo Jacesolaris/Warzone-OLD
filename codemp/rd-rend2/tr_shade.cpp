@@ -1704,6 +1704,9 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			pStage->glslShaderGroup = &tr.waterShader;
 			GLSL_BindProgram(sp);
 			GLSL_SetUniformFloat(sp, UNIFORM_TIME, tess.shaderTime);
+			vec4_t loc0;
+			VectorSet4(loc0, (float)pStage->isWater, 0, 0, 0);
+			GLSL_SetUniformVec4(sp, UNIFORM_LOCAL0, loc0);
 			isGeneric = qfalse;
 		}
 		else
@@ -2316,10 +2319,15 @@ void RB_StageIteratorGeneric( void )
 
 	if ((tess.shader->contentFlags & CONTENTS_WATER) || (tess.shader->contentFlags & CONTENTS_LAVA)) 
 	{
-		if (input->xstages[0]->isWater != qtrue) // In case it is already set, no need looping more then once on the same shader...
+		if (input->xstages[0]->isWater == 0) // In case it is already set, no need looping more then once on the same shader...
 			for ( int stage = 0; stage < MAX_SHADER_STAGES; stage++ )
 				if (input->xstages[stage])
-					input->xstages[stage]->isWater = qtrue;
+				{
+					if (tess.shader->contentFlags & CONTENTS_LAVA)
+						input->xstages[stage]->isWater = 2;
+					else
+						input->xstages[stage]->isWater = 1;
+				}
 	}
 
 	//

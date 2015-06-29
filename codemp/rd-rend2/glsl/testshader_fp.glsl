@@ -18,8 +18,8 @@
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-uniform sampler2D u_TextureMap;
-uniform sampler2D u_ScreenDepthMap;
+uniform sampler2D u_DiffuseMap;
+//uniform sampler2D u_ScreenDepthMap;
 
 varying vec2		var_TexCoords;
 varying vec2		var_Dimensions;
@@ -46,24 +46,24 @@ vec4 PS_EdgePreservingSmooth()
 	float	py 			= 1.0f / var_Dimensions.y;
 	vec2	OFFSET		= vec2(px, py);
   
-	vec4	ColorInput = texture2D(u_TextureMap, var_TexCoords.xy);
+	vec4	ColorInput = texture2D(u_DiffuseMap, var_TexCoords.xy);
 	float	colCombined = ColorInput.r + ColorInput.g + ColorInput.b;
 	
 	float	USE_RADIUS = var_Local0.y;//1.0;
 	float	E_SMOOTH_THRESHOLD = 9.0;
 	
 	vec2 USE_OFFSET = OFFSET.xy;
-	vec4  col1 = texture2D(u_TextureMap, var_TexCoords.xy + vec2(USE_OFFSET.x, 0.0));
+	vec4  col1 = texture2D(u_DiffuseMap, var_TexCoords.xy + vec2(USE_OFFSET.x, 0.0));
 	if (colCombined - (col1.r + col1.g + col1.b) > E_SMOOTH_THRESHOLD) return ColorInput;
-	vec4  col2 = texture2D(u_TextureMap, var_TexCoords.xy - vec2(USE_OFFSET.x, 0.0));
+	vec4  col2 = texture2D(u_DiffuseMap, var_TexCoords.xy - vec2(USE_OFFSET.x, 0.0));
 	if (colCombined - (col2.r + col2.g + col2.b) > E_SMOOTH_THRESHOLD) return ColorInput;
-	vec4  col3 = texture2D(u_TextureMap, var_TexCoords.xy + vec2(0.0, USE_OFFSET.y));
+	vec4  col3 = texture2D(u_DiffuseMap, var_TexCoords.xy + vec2(0.0, USE_OFFSET.y));
 	if (colCombined - (col3.r + col3.g + col3.b) > E_SMOOTH_THRESHOLD) return ColorInput;
-	vec4  col4 = texture2D(u_TextureMap, var_TexCoords.xy - vec2(0.0, USE_OFFSET.y));
+	vec4  col4 = texture2D(u_DiffuseMap, var_TexCoords.xy - vec2(0.0, USE_OFFSET.y));
 	if (colCombined - (col4.r + col4.g + col4.b) > E_SMOOTH_THRESHOLD) return ColorInput;
-	vec4  col5 = texture2D(u_TextureMap, var_TexCoords.xy + vec2(USE_OFFSET.x, 0.0-USE_OFFSET.y) * 0.666);
+	vec4  col5 = texture2D(u_DiffuseMap, var_TexCoords.xy + vec2(USE_OFFSET.x, 0.0-USE_OFFSET.y) * 0.666);
 	if (colCombined - (col5.r + col5.g + col5.b) > E_SMOOTH_THRESHOLD) return ColorInput;
-	vec4  col6 = texture2D(u_TextureMap, var_TexCoords.xy + vec2(0.0-USE_OFFSET.x, USE_OFFSET.y) * 0.666);
+	vec4  col6 = texture2D(u_DiffuseMap, var_TexCoords.xy + vec2(0.0-USE_OFFSET.x, USE_OFFSET.y) * 0.666);
 	if (colCombined - (col6.r + col6.g + col6.b) > E_SMOOTH_THRESHOLD) return ColorInput;
   
 	// Looks like we are ok to smooth!
@@ -77,17 +77,17 @@ vec4 PS_EdgePreservingSmooth()
 		{
 			USE_OFFSET = OFFSET.xy * vec2(offset_current, offset_current);
     
-			col1 = texture2D(u_TextureMap, var_TexCoords.xy + vec2(USE_OFFSET.x, 0.0));
+			col1 = texture2D(u_DiffuseMap, var_TexCoords.xy + vec2(USE_OFFSET.x, 0.0));
 			if (colCombined - (col1.r + col1.g + col1.b) > E_SMOOTH_THRESHOLD) { color /= num_passes; return color; }
-			col2 = texture2D(u_TextureMap, var_TexCoords.xy - vec2(USE_OFFSET.x, 0.0));
+			col2 = texture2D(u_DiffuseMap, var_TexCoords.xy - vec2(USE_OFFSET.x, 0.0));
 			if (colCombined - (col2.r + col2.g + col2.b) > E_SMOOTH_THRESHOLD) { color /= num_passes; return color; }
-			col3 = texture2D(u_TextureMap, var_TexCoords.xy + vec2(0.0, USE_OFFSET.y));
+			col3 = texture2D(u_DiffuseMap, var_TexCoords.xy + vec2(0.0, USE_OFFSET.y));
 			if (colCombined - (col3.r + col3.g + col3.b) > E_SMOOTH_THRESHOLD) { color /= num_passes; return color; }
-			col4 = texture2D(u_TextureMap, var_TexCoords.xy - vec2(0.0, USE_OFFSET.y));
+			col4 = texture2D(u_DiffuseMap, var_TexCoords.xy - vec2(0.0, USE_OFFSET.y));
 			if (colCombined - (col4.r + col4.g + col4.b) > E_SMOOTH_THRESHOLD) { color /= num_passes; return color; }
-			col5 = texture2D(u_TextureMap, var_TexCoords.xy + vec2(USE_OFFSET.x, 0.0-USE_OFFSET.y) * 0.666);
+			col5 = texture2D(u_DiffuseMap, var_TexCoords.xy + vec2(USE_OFFSET.x, 0.0-USE_OFFSET.y) * 0.666);
 			if (colCombined - (col5.r + col5.g + col5.b) > E_SMOOTH_THRESHOLD) { color /= num_passes; return color; }
-			col6 = texture2D(u_TextureMap, var_TexCoords.xy + vec2(0.0-USE_OFFSET.x, USE_OFFSET.y) * 0.666);
+			col6 = texture2D(u_DiffuseMap, var_TexCoords.xy + vec2(0.0-USE_OFFSET.x, USE_OFFSET.y) * 0.666);
 			if (colCombined - (col6.r + col6.g + col6.b) > E_SMOOTH_THRESHOLD) { color /= num_passes; return color; }
     
 			// Looks like we are ok to smooth!
@@ -141,11 +141,11 @@ vec3	ECCChannelMixerB = vec3(0.0, 0.0, 1.0);
 
 vec4 PS_Adaptation() 
 {
-	vec4	color = texture2D(u_TextureMap, var_TexCoords.xy);
+	vec4	color = texture2D(u_DiffuseMap, var_TexCoords.xy);
 
 	//adaptation in time
 	//vec4	Adaptation=texture2D(_s4, 0.5);
-	//vec4	Adaptation=vec4(1.0) - texture2D(u_TextureMap, vec2(0.5,0.5));
+	//vec4	Adaptation=vec4(1.0) - texture2D(u_DiffuseMap, vec2(0.5,0.5));
 	//float	grayadaptation=max(max(Adaptation.x, Adaptation.y), Adaptation.z);
 	float	grayadaptation=1.0;
 
@@ -232,33 +232,93 @@ vec4 PS_Adaptation()
 	return color;
 }
 
+vec4 PS_Reflection()
+{
+	float	px 			= 1.0 / var_Dimensions.x;
+	float	py 			= 1.0f / var_Dimensions.y;
+	vec2	OFFSET		= vec2(px, py);
+  
+	vec4	ColorInput = texture2D(u_DiffuseMap, var_TexCoords.xy);
+	vec4	OrigColor = ColorInput;//vec4(0.6, 0.6, 1.0, 1.0);
+
+	if (ColorInput.a <= 0.0)
+	{// Reflective...
+		/*
+		float orig_alpha = 0.0-ColorInput.a;
+		vec2 reflectCoords = var_TexCoords.xy;
+		
+		float pixelHeight = var_TexCoords.y;
+		float heightPercent = 1.0 - (pixelHeight / 1.0);
+		//float heightDiff = heightPercent;
+		float heightDiff = pow(heightPercent, pixelHeight * 2.0);
+		reflectCoords.y = heightDiff;
+
+		ColorInput = (texture2D(u_DiffuseMap, reflectCoords.xy) + OrigColor + OrigColor) / 3.0;
+		ColorInput.a = 1.0;//orig_alpha;
+		*/
+
+		vec2 reflectCoords = var_TexCoords.xy;
+
+		for (float y = var_TexCoords.y; y < 1.0; y += (py*1.0))
+		{
+			float thisAlpha = texture2D(u_DiffuseMap, vec2(var_TexCoords.x,y)).a;
+			
+			if (thisAlpha >= 1.0)
+			{// Found top of reflection area...
+				float edgeLength = var_TexCoords.y - y;
+				float reflectSpot = var_TexCoords.y - (edgeLength * 2.0);
+				if (reflectSpot > 0.0 && reflectSpot < 1.0)
+				{
+					reflectCoords.y = reflectSpot;
+				}
+
+				break;
+			}
+		}
+
+		//float distFromTop = 1.0 - reflectCoords.y;
+
+		// Blur???
+		//ColorInput.rgb = (texture2D(u_DiffuseMap, reflectCoords.xy).rgb + texture2D(u_DiffuseMap, reflectCoords.xy + OFFSET).rgb + texture2D(u_DiffuseMap, reflectCoords.xy - OFFSET).rgb + texture2D(u_DiffuseMap, reflectCoords.xy + vec2(px, 0.0)).rgb + texture2D(u_DiffuseMap, reflectCoords.xy + vec2(0.0, py)).rgb) / 5.0;
+		ColorInput.rgb = texture2D(u_DiffuseMap, reflectCoords.xy).rgb;// * distFromTop;
+		ColorInput.rgb += OrigColor.rgb + OrigColor.rgb;
+		ColorInput.rgb /= 3.0;
+		ColorInput.a = 1.0;
+	}
+
+	return ColorInput;
+}
+
 void main()
 {
 	vec4 color;
-
+	/*
 	if (CURRENT_PASS_NUMBER == 0) {
 		//color = PS_ProcessGaussianH();
-		color = texture2D(u_TextureMap, texCoord.xy);
+		color = texture2D(u_DiffuseMap, texCoord.xy);
 	} else if (CURRENT_PASS_NUMBER == 1) {
 		//color = PS_ProcessGaussianV();
-		color = texture2D(u_TextureMap, texCoord.xy);
+		color = texture2D(u_DiffuseMap, texCoord.xy);
 	} else if (CURRENT_PASS_NUMBER == 2) {
 		//color = PS_ProcessEdges();
-		color = texture2D(u_TextureMap, texCoord.xy);
+		color = texture2D(u_DiffuseMap, texCoord.xy);
 	} else if (CURRENT_PASS_NUMBER == 3) {
 		//color = PS_ProcessSharpen1();
-		color = texture2D(u_TextureMap, texCoord.xy);
+		color = texture2D(u_DiffuseMap, texCoord.xy);
 	} else if (CURRENT_PASS_NUMBER == 4) {
 		//color = PS_ProcessSharpen2();
-		color = texture2D(u_TextureMap, texCoord.xy);
+		color = texture2D(u_DiffuseMap, texCoord.xy);
 	} else if (CURRENT_PASS_NUMBER == 5) {
 		//color = PS_ProcessAfterFX();
-		//color = texture2D(u_TextureMap, texCoord.xy);
+		//color = texture2D(u_DiffuseMap, texCoord.xy);
 		//color = PS_SuperEagle();
 		//color = PS_EdgePreservingSmooth();
-		color = PS_Adaptation();
+		//color = PS_Adaptation();
 	}
+	*/
 
-	gl_FragColor.rgb = color.rgb;
-	gl_FragColor.a = 1.0;
+	color = PS_Reflection();
+
+	gl_FragColor.rgba = color.rgba;
+	//gl_FragColor.a = 1.0;
 }

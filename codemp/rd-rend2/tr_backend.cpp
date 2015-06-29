@@ -1919,6 +1919,7 @@ const void *RB_PostProcess(const void *data)
 	}
 
 	srcFbo = tr.renderFbo;
+
 	if (tr.msaaResolveFbo)
 	{
 		// Resolve the MSAA before anything else
@@ -2006,6 +2007,17 @@ const void *RB_PostProcess(const void *data)
 			if (backEnd.refdef.rdflags & RDF_UNDERWATER)
 			{
 				RB_Underwater(srcFbo, srcBox, tr.genericFbo, dstBox);
+				FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+			}
+		}
+
+		if (r_testshader->integer)
+		{
+			int pass_num = 0;
+
+			//for (pass_num = 0; pass_num < 6; pass_num++)
+			{
+				RB_TestShader(srcFbo, srcBox, tr.genericFbo, dstBox, pass_num);
 				FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 			}
 		}
@@ -2119,15 +2131,6 @@ const void *RB_PostProcess(const void *data)
 			for (int i = 0; i < r_depthPasses->integer / 2; i++)
 			{
 				RB_FakeDepth(srcFbo, srcBox, tr.genericFbo, dstBox);
-				FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_NEAREST);
-			}
-		}
-
-		if (r_testshader->integer)
-		{
-			for (int pass_num = 0; pass_num < 6; pass_num++)
-			{
-				RB_TestShader(srcFbo, srcBox, tr.genericFbo, dstBox, pass_num);
 				FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 			}
 		}

@@ -769,7 +769,7 @@ typedef enum
 typedef struct {
 	qboolean		active;
 	qboolean		isDetail;
-	qboolean		isWater;
+	int				isWater;
 	qboolean		glow;
 	
 	textureBundle_t	bundle[NUM_TEXTURE_BUNDLES];

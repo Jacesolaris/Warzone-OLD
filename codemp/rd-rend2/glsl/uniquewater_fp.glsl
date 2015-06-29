@@ -7,6 +7,7 @@ uniform sampler2D u_DiffuseMap;
 varying vec2	var_TexCoords;
 varying vec2	var_Dimensions;
 varying float	time;
+varying vec4	var_Local0; // (1=water, 2=lava), 0, 0, 0
 
 
 vec2 iResolution = var_Dimensions;
@@ -56,42 +57,53 @@ float col(vec2 coord)
 
 void main(void)
 {
-	vec2 p = (var_TexCoords.xy), c1 = p, c2 = p;
-	float cc1 = col(c1);
+	if (var_Local0.r > 1.0)
+	{// Lava...
+		vec2 p = (var_TexCoords.xy), c1 = p, c2 = p;
+		float cc1 = col(c1);
 
-	//c2.x += iResolution.x/delta;
-	c2.x += (iResolution.x/delta) * (1.0 / iResolution.x);
-	float dx = emboss*(cc1-col(c2))/delta;
+		c2.x += (iResolution.x/delta) * (1.0 / iResolution.x);
+		float dx = emboss*(cc1-col(c2))/delta;
 
-	c2.x = p.x;
-	//c2.y += iResolution.y/delta;
-	c2.y += (iResolution.y/delta) * (1.0 / iResolution.y);
-	float dy = emboss*(cc1-col(c2))/delta;
+		c2.x = p.x;
+		c2.y += (iResolution.y/delta) * (1.0 / iResolution.y);
+		float dy = emboss*(cc1-col(c2))/delta;
 
-	c1.x += dx*2.;
-	c1.y = -(c1.y+dy*2.);
+		c1.x += dx*2.;
+		c1.y = -(c1.y+dy*2.);
 
-	float alpha = 1.+dot(dx,dy)*intence;
+		float alpha = 1.+dot(dx,dy)*intence;
 	
-	float ddx = dx - reflectionCutOff;
-	float ddy = dy - reflectionCutOff;
-	if (ddx > 0. && ddy > 0.)
-		alpha = pow(alpha, ddx*ddy*reflectionIntence);
+		float ddx = dx - reflectionCutOff;
+		float ddy = dy - reflectionCutOff;
+		if (ddx > 0. && ddy > 0.)
+			alpha = pow(alpha, ddx*ddy*reflectionIntence);
 
-	alpha = clamp(alpha, 0.0, 1.0);
+		alpha = clamp(alpha, 0.0, 1.0);
 	
-	//vec4 col = texture2D(u_DiffuseMap,var_TexCoords)*(alpha);
-	//col = ((col + vec4(0.0, 0.2, 0.4, 1.0)) / 2.0)*(alpha);
-	//col.a = texture2D(u_DiffuseMap,c1).a;
-
-	//vec4 col = texture2D(u_DiffuseMap,c1);
-	vec4 col = texture2D(u_DiffuseMap,c1)*(alpha);
-	gl_FragColor = col;
-
+		vec4 col = texture2D(u_DiffuseMap,c1)*(alpha);
+		gl_FragColor = col;
+		gl_FragColor.a = 1.0;
+	}
+	else
+	{// Water...
+		//gl_FragColor = vec4(0.6, 0.6, 1.0, 0.0);
+		gl_FragColor = texture2D(u_DiffuseMap, var_TexCoords.xy);
+		gl_FragColor.a = -0.1;
+	}
+	
 #if defined(USE_GLOW_BUFFER)
-	out_Glow = gl_FragColor;
+	if (var_Local0.r > 1)
+	{// Lava...
+		out_Glow = gl_FragColor;
+	}
+	else
+	{// Water...
+		out_Glow = vec4(0.0);
+	}
 #else
 	out_Glow = vec4(0.0);
 #endif
+
 }
 

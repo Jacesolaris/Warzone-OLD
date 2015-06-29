@@ -83,9 +83,12 @@ uniform vec3	u_ViewOrigin;
 uniform float	u_Time;
 #endif
 
+uniform vec4	u_Local0; // (1=water, 2=lava), 0, 0, 0
+
 varying vec2	var_TexCoords;
 varying vec2	var_Dimensions;
 varying float	time;
+varying vec4	var_Local0; // (1=water, 2=lava), 0, 0, 0
 
 #if defined(USE_DEFORM_VERTEXES)
 vec3 DeformPosition(const vec3 pos, const vec3 normal, const vec2 st)
@@ -270,4 +273,6 @@ void main()
 
 	var_Dimensions = u_Dimensions.st;
 	time = u_Time;
+
+	var_Local0 = u_Local0;
 }
