@@ -93,81 +93,18 @@ qboolean NPC_IsHumanoid ( gentity_t *self )
 
 qboolean NPC_IsJedi ( gentity_t *self )
 {
-	//if (self->client->ps.weapon == WP_SABER) return qtrue;
-	//if (self->client->ps.weapon == WP_MELEE) return qtrue;
-
 	switch (self->client->NPC_class)
 	{
 	case CLASS_ALORA:
-	//case CLASS_ATST:
-	//case CLASS_BARTENDER:
-	//case CLASS_BESPIN_COP:		
-	//case CLASS_CLAW:
-	//case CLASS_COMMANDO:
-	case CLASS_DESANN:		
-	//case CLASS_FISH:
-	//case CLASS_FLIER2:
-	//case CLASS_GALAK:
-	//case CLASS_GLIDER:
-	//case CLASS_GONK:				// droid
-	//case CLASS_GRAN:
-	//case CLASS_HOWLER:
-	//case CLASS_IMPERIAL:
-	//case CLASS_IMPWORKER:
-	//case CLASS_INTERROGATOR:		// droid 
-	//case CLASS_JAN:				
+	case CLASS_DESANN:					
 	case CLASS_JEDI:
 	case CLASS_PADAWAN:
 	case CLASS_KYLE:				
-	//case CLASS_LANDO:			
-	//case CLASS_LIZARD:
-	case CLASS_LUKE:				// UQ1: TODO - maybe should be allowed to switch to pistol/blaster???
-	//case CLASS_MARK1:			// droid
-	//case CLASS_MARK2:			// droid
-	//case CLASS_GALAKMECH:		// droid
-	//case CLASS_MINEMONSTER:
-	case CLASS_MONMOTHA:			
+	case CLASS_LUKE:				// UQ1: TODO - maybe should be allowed to switch to pistol/blaster???			
 	case CLASS_MORGANKATARN:
-	//case CLASS_MOUSE:			// droid
-	//case CLASS_MURJJ:
-	//case CLASS_PRISONER:
-	//case CLASS_PROBE:			// droid
-	//case CLASS_PROTOCOL:			// droid
-	//case CLASS_R2D2:				// droid
-	//case CLASS_R5D2:				// droid
-	//case CLASS_REBEL:
 	case CLASS_REBORN:
-	//case CLASS_REELO:
-	//case CLASS_REMOTE:
-	//case CLASS_RODIAN:
-	//case CLASS_SEEKER:			// droid
-	//case CLASS_SENTRY:
 	case CLASS_SHADOWTROOPER:
-	//case CLASS_STORMTROOPER:
-	//case CLASS_SWAMP:
-	//case CLASS_SWAMPTROOPER:
 	case CLASS_TAVION:
-	//case CLASS_TRANDOSHAN:
-	//case CLASS_UGNAUGHT:
-	//case CLASS_JAWA:
-	//case CLASS_WEEQUAY:
-	//case CLASS_BOBAFETT:
-	//case CLASS_VEHICLE:
-	//case CLASS_RANCOR:
-	//case CLASS_WAMPA:
-	//case CLASS_CIVILIAN:			// UQ1: Random civilian NPCs...
-	//case CLASS_GENERAL_VENDOR:
-	//case CLASS_WEAPONS_VENDOR:
-	//case CLASS_ARMOR_VENDOR:
-	//case CLASS_SUPPLIES_VENDOR:
-	//case CLASS_FOOD_VENDOR:
-	//case CLASS_MEDICAL_VENDOR:
-	//case CLASS_GAMBLER_VENDOR:
-	//case CLASS_TRADE_VENDOR:
-	//case CLASS_ODDITIES_VENDOR:
-	//case CLASS_DRUG_VENDOR:
-	//case CLASS_TRAVELLING_VENDOR:
-	//case CLASS_BOT_FAKE_NPC:
 		// Is Jedi...
 		return qtrue;
 		break;
