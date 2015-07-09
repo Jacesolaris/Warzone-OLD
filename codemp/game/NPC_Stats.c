@@ -674,6 +674,9 @@ void NPC_Precache ( gentity_t *spawner )
 			}
 			else
 			{
+				int mindex = G_ModelIndex(value);
+				trap->Print("DEBUG: Model %i [%s] loaded.\n", mindex, value);
+
 				//Q_strncpyz( ri.headModelName, value, sizeof(ri.headModelName), qtrue);
 			}
 			md3Model = qtrue;
@@ -693,6 +696,9 @@ void NPC_Precache ( gentity_t *spawner )
 			}
 			else
 			{
+				int mindex = G_ModelIndex(value);
+				trap->Print("DEBUG: Model %i [%s] loaded.\n", mindex, value);
+
 				//Q_strncpyz( ri.torsoModelName, value, sizeof(ri.torsoModelName), qtrue);
 			}
 			md3Model = qtrue;
@@ -706,6 +712,10 @@ void NPC_Precache ( gentity_t *spawner )
 			{
 				continue;
 			}
+
+			int mindex = G_ModelIndex(value);
+			trap->Print("DEBUG: Model %i [%s] loaded.\n", mindex, value);
+
 			//Q_strncpyz( ri.legsModelName, value, sizeof(ri.legsModelName), qtrue);
 			md3Model = qtrue;
 			continue;
@@ -718,8 +728,17 @@ void NPC_Precache ( gentity_t *spawner )
 			{
 				continue;
 			}
+
+			int mindex = G_ModelIndex(value);
+			trap->Print("DEBUG: Model %i [%s] loaded.\n", mindex, value);
+
 			Q_strncpyz( playerModel, value, sizeof(playerModel));
 			md3Model = qfalse;
+
+			if (strlen(customSkin) > 0) {
+				int skin = trap->R_RegisterSkin(value);
+				trap->Print("DEBUG: Skin %i [%s] loaded.\n", va("models/players/%s/model_%s.skin", playerModel, customSkin), value);
+			}
 			continue;
 		}
 
@@ -730,6 +749,12 @@ void NPC_Precache ( gentity_t *spawner )
 			{
 				continue;
 			}
+
+			if (strlen(playerModel) > 0) {
+				int skin = trap->R_RegisterSkin(value);
+				trap->Print("DEBUG: Skin %i [%s] loaded.\n", va("models/players/%s/model_%s.skin", playerModel, skin), value);
+			}
+
 			Q_strncpyz( customSkin, value, sizeof(customSkin));
 			continue;
 		}

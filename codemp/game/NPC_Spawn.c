@@ -2542,6 +2542,22 @@ void SP_NPC_spawner( gentity_t *self)
 		}
 
 		self->s.origin[0] -= 16;
+		self->s.origin[1] += 16;
+		if (OrgVisibleBox(origin, playerMins, playerMaxs, self->s.origin, -1))
+		{
+			SP_NPC_spawner2(self);
+			VectorCopy(origin, self->s.origin);
+		}
+
+		self->s.origin[0] += 16;
+		self->s.origin[1] -= 16;
+		if (OrgVisibleBox(origin, playerMins, playerMaxs, self->s.origin, -1))
+		{
+			SP_NPC_spawner2(self);
+			VectorCopy(origin, self->s.origin);
+		}
+
+		self->s.origin[0] -= 16;
 		self->s.origin[1] -= 16;
 		if (OrgVisibleBox(origin, playerMins, playerMaxs, self->s.origin, -1))
 		{

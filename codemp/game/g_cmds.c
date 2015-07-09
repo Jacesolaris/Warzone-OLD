@@ -1884,6 +1884,7 @@ DeathmatchScoreboardMessage
 ==================
 */
 void DeathmatchScoreboardMessage( gentity_t *ent ) {
+#ifndef __MMO__
 	char		entry[1024];
 	char		string[1400];
 	int			stringlength;
@@ -1950,6 +1951,7 @@ void DeathmatchScoreboardMessage( gentity_t *ent ) {
 	trap->SendServerCommand( ent-g_entities, va("scores %i %i %i%s", i,
 		level.teamScores[TEAM_RED], level.teamScores[TEAM_BLUE],
 		string ) );
+#endif //__MMO__
 }
 
 
@@ -1961,7 +1963,9 @@ Request current scoreboard information
 ==================
 */
 void Cmd_Score_f( gentity_t *ent ) {
+#ifndef __MMO__
 	DeathmatchScoreboardMessage( ent );
+#endif //__MMO__
 }
 
 /*

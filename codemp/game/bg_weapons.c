@@ -26,7 +26,7 @@ vec3_t WP_MuzzlePoint[WP_NUM_WEAPONS] =
 	{12,	4,  	-10	},	// WP_CONCUSSION,
 	//add new weapon here under the last new weapon.
 	{12,	5,		-6	},	// WP_A280,
-	{70,	9,    -6	},	// WP_DC15,
+	{70,	9,      -6	},	// WP_DC15,
 	{70,	9,  	-6	},	// WP_WESTARM5,
 	{70,	4,		-6	},	// WP_T21,
 	{70,	6,	    -6	},	// WP_EE3,
