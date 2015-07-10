@@ -126,12 +126,14 @@ void G_AttackDelay( gentity_t *self, gentity_t *enemy )
 		AngleVectors( self->client->renderInfo.eyeAngles, fwd, NULL, NULL );
 		//dir[2] = fwd[2] = 0;//ignore z diff?
 
+#ifdef __OLD_WEAPON_TIMING__
 		attDelay = (4-g_npcspskill.integer)*500;//initial: from 1000ms delay on hard to 2000ms delay on easy
 		if ( self->client->playerTeam == NPCTEAM_PLAYER )
 		{//invert
 			attDelay = 2000-attDelay;
 		}
 		attDelay += floor( (DotProduct( fwd, dir )+1.0f) * 2000.0f );//add up to 4000ms delay if they're facing away
+
 
 		//FIXME: should distance matter, too?
 
@@ -218,6 +220,25 @@ void G_AttackDelay( gentity_t *self, gentity_t *enemy )
 			break;
 		case WP_BRYAR_PISTOL:
 			break;
+			
+			
+			WP_EE3:
+			WP_DC_15S_CLONE_PISTOL:
+			WP_DLT20A:
+			
+			WP_WESTER_PISTOL:
+			WP_ELG_3A:
+			WP_S5_PISTOL:
+			WP_Z6_BLASTER_CANON:
+			
+			WP_WOOKIES_PISTOL:
+			WP_CLONE_BLASTER:
+			WP_DC15_EXT:
+			
+			WP_TESTGUN:
+			WP_FRAG_GRENADE:
+			WP_FRAG_GRENADE_OLD:
+			WP_DC_17_CLONE_PISTOL:
 		case WP_BLASTER:
 			if ( self->NPC->scriptFlags & SCF_ALT_FIRE )
 			{//rapid-fire blasters
@@ -228,18 +249,29 @@ void G_AttackDelay( gentity_t *self, gentity_t *enemy )
 				attDelay -= Q_irand( 0, 500 );
 			}
 			break;
+
+		case WP_WOOKIE_BOWCASTER:
 		case WP_BOWCASTER:
 			attDelay += Q_irand( 0, 500 );
 			break;
+
+		case WP_DC15:
+		case WP_WESTARM5:
+		case WP_CLONERIFLE:
 		case WP_REPEATER:
 			if ( !(self->NPC->scriptFlags&SCF_ALT_FIRE) )
 			{//rapid-fire blasters
 				attDelay += Q_irand( 0, 500 );
 			}
 			break;
+
+		case WP_T21:
 		case WP_FLECHETTE:
 			attDelay += Q_irand( 500, 1500 );
 			break;
+
+		case WP_E60_ROCKET_LAUNCHER:
+		case WP_CW_ROCKET_LAUNCHER:
 		case WP_ROCKET_LAUNCHER:
 			attDelay += Q_irand( 500, 1500 );
 			break;
@@ -311,6 +343,41 @@ void G_AttackDelay( gentity_t *self, gentity_t *enemy )
 		}
 
 		TIMER_Set( self, "roamTime", attDelay );//was Q_irand( 1000, 3500 );
+#else //!__OLD_WEAPON_TIMING__
+		switch (self->s.weapon)
+		{
+		case WP_NONE:
+		case WP_SABER:
+			return;
+			break;
+		default:
+			if (self->client->pers.cmd.buttons & BUTTON_ALT_ATTACK) {
+				attDelay = weaponData[self->s.weapon].altFireTime;
+			} else {
+				attDelay = weaponData[self->s.weapon].fireTime;
+			}
+
+			/*
+			//don't shoot right away
+			if (attDelay > 4000 + ((2 - g_npcspskill.integer) * 3000))
+			{
+				attDelay = 4000 + ((2 - g_npcspskill.integer) * 3000);
+			}
+			*/
+			TIMER_Set(self, "attackDelay", attDelay);//Q_irand( 1500, 4500 ) );
+			//don't move right away either
+			if (attDelay > 4000)
+			{
+				attDelay = 4000 - Q_irand(500, 1500);
+			}
+			else
+			{
+				attDelay -= Q_irand(500, 1500);
+			}
+
+			TIMER_Set(self, "roamTime", attDelay);//was Q_irand( 1000, 3500 );
+		}
+#endif //__OLD_WEAPON_TIMING__
 	}
 }
 
