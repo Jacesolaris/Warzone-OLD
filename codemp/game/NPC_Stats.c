@@ -696,8 +696,7 @@ void NPC_Precache ( gentity_t *spawner )
 			}
 			else
 			{
-				int mindex = G_ModelIndex(value);
-				trap->Print("DEBUG: Model %i [%s] loaded.\n", mindex, value);
+				trap->Print("DEBUG: Model %i [%s] loaded.\n", G_ModelIndex(value), value);
 
 				//Q_strncpyz( ri.torsoModelName, value, sizeof(ri.torsoModelName), qtrue);
 			}
@@ -713,8 +712,7 @@ void NPC_Precache ( gentity_t *spawner )
 				continue;
 			}
 
-			int mindex = G_ModelIndex(value);
-			trap->Print("DEBUG: Model %i [%s] loaded.\n", mindex, value);
+			trap->Print("DEBUG: Model %i [%s] loaded.\n", G_ModelIndex(value), value);
 
 			//Q_strncpyz( ri.legsModelName, value, sizeof(ri.legsModelName), qtrue);
 			md3Model = qtrue;
@@ -729,8 +727,7 @@ void NPC_Precache ( gentity_t *spawner )
 				continue;
 			}
 
-			int mindex = G_ModelIndex(value);
-			trap->Print("DEBUG: Model %i [%s] loaded.\n", mindex, value);
+			trap->Print("DEBUG: Model %i [%s] loaded.\n", G_ModelIndex(value), value);
 
 			Q_strncpyz( playerModel, value, sizeof(playerModel));
 			md3Model = qfalse;

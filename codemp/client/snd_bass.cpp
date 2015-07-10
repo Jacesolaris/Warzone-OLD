@@ -205,11 +205,17 @@ void BASS_UnloadSamples ( void )
 	if (BASS_UPDATE_THREAD_RUNNING && thread::hardware_concurrency() > 1)
 	{// More then one CPU core. We need to shut down the update thread...
 		BASS_UPDATE_THREAD_STOP = qtrue;
-		BASS_MUSIC_UPDATE_THREAD_STOP = qtrue;
 
 		// Wait for update thread to finish...
 		BASS_UPDATE_THREAD->join();
 		BASS_UPDATE_THREAD_RUNNING = qfalse;
+	}
+
+	if (BASS_MUSIC_UPDATE_THREAD_RUNNING && thread::hardware_concurrency() > 1)
+	{// More then one CPU core. We need to shut down the update thread...
+		BASS_MUSIC_UPDATE_THREAD_STOP = qtrue;
+
+		// Wait for update thread to finish...
 		BASS_MUSIC_UPDATE_THREAD->join();
 		BASS_MUSIC_UPDATE_THREAD_RUNNING = qfalse;
 	}
@@ -289,12 +295,11 @@ qboolean BASS_CheckSoundDisabled( void )
 		if (BASS_UPDATE_THREAD_RUNNING && thread::hardware_concurrency() > 1)
 		{// More then one CPU core. We need to shut down the update thread...
 			BASS_UPDATE_THREAD_STOP = qtrue;
+		}
+
+		if (BASS_MUSIC_UPDATE_THREAD_STOP && thread::hardware_concurrency() > 1)
+		{// More then one CPU core. We need to shut down the update thread...
 			BASS_MUSIC_UPDATE_THREAD_STOP = qtrue;
-
-			// Wait for update thread to finish...
-			//BASS_UPDATE_THREAD->join();
-
-			//BASS_UPDATE_THREAD_RUNNING = qfalse;
 		}
 
 		return qtrue;
@@ -1252,16 +1257,57 @@ void BASS_InitDynamicList ( void )
 	MUSIC_LIST_UPDATING = qfalse;
 }
 
-qboolean UPDATE_MUSIC = qfalse;
-
 void BASS_MusicUpdateThread( void * aArg )
 {
 	while (!BASS_MUSIC_UPDATE_THREAD_STOP)
 	{
-		if (/*UPDATE_MUSIC ||*/ BASS_CheckSoundDisabled() || !s_soundStarted || !s_allowDynamicMusic->integer || MUSIC_LIST_UPDATING)
+		
+		if (BASS_CheckSoundDisabled())
+		{
+			break;
+		}
+
+		if (!s_soundStarted || !s_allowDynamicMusic->integer || MUSIC_LIST_UPDATING)
 		{// wait...
 			this_thread::sleep_for(chrono::milliseconds(100));
 			continue;
+		}
+
+		BASS_InitDynamicList(); // check if we have initialized the list yet...
+
+		if (!MUSIC_LIST_INITIALIZED) return;
+
+		// Do we need a new track yet???
+		if (BASS_ChannelIsActive(MUSIC_CHANNEL.channel) == BASS_ACTIVE_PLAYING)
+		{// Still playing a track...
+			this_thread::sleep_for(chrono::milliseconds(100));
+			continue;
+		}
+
+		// Seems we need a new track... Select a random one and play it!
+		S_StartBackgroundTrack_Actual( MUSIC_LIST[irand(0, MUSIC_LIST_COUNT)].name, "" );
+
+		this_thread::sleep_for(chrono::milliseconds(100));
+	}
+
+	BASS_MUSIC_UPDATE_THREAD_RUNNING = qfalse;
+}
+
+void BASS_UpdateDynamicMusic( void )
+{
+	if ( thread::hardware_concurrency() > 1 )
+	{
+		if (!BASS_MUSIC_UPDATE_THREAD_RUNNING)
+		{
+			BASS_MUSIC_UPDATE_THREAD_RUNNING = qtrue;
+			BASS_MUSIC_UPDATE_THREAD = new thread (BASS_MusicUpdateThread, 0);
+		}
+	}
+	else
+	{
+		if (BASS_CheckSoundDisabled() || !s_soundStarted || !s_allowDynamicMusic->integer || MUSIC_LIST_UPDATING)
+		{// wait...
+			return;
 		}
 
 		BASS_InitDynamicList(); // check if we have initialized the list yet...
@@ -1274,29 +1320,8 @@ void BASS_MusicUpdateThread( void * aArg )
 		// Seems we need a new track... Select a random one and play it!
 		S_StartBackgroundTrack_Actual( MUSIC_LIST[irand(0, MUSIC_LIST_COUNT)].name, "" );
 
-
 		this_thread::sleep_for(chrono::milliseconds(100));
-
-		//UPDATE_MUSIC = qfalse;
-
-		if (BASS_CheckSoundDisabled())
-		{
-			break;
-		}
 	}
-
-	BASS_MUSIC_UPDATE_THREAD_RUNNING = qfalse;
-}
-
-void BASS_UpdateDynamicMusic( void )
-{
-	if (!BASS_MUSIC_UPDATE_THREAD_RUNNING)
-	{
-		BASS_MUSIC_UPDATE_THREAD_RUNNING = qtrue;
-		BASS_MUSIC_UPDATE_THREAD = new thread (BASS_MusicUpdateThread, 0);
-	}
-
-	//UPDATE_MUSIC = qtrue;
 }
 
 
