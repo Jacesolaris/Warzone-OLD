@@ -236,7 +236,7 @@ cvar_t	*r_bloomPasses;
 cvar_t	*r_bloomDarkenPower;
 cvar_t	*r_bloomScale;
 cvar_t	*r_lensflare;
-cvar_t	*r_volumelight;
+//cvar_t	*r_volumelight;
 cvar_t	*r_volumelightMaximum;
 cvar_t	*r_volumelightMaxDistance;
 cvar_t	*r_volumelightSamples;
@@ -1380,7 +1380,7 @@ void R_Register( void )
 	r_bloomDarkenPower = ri->Cvar_Get( "r_bloomDarkenPower", "5.0", CVAR_ARCHIVE );
 	r_bloomScale = ri->Cvar_Get( "r_bloomScale", "1.0", CVAR_ARCHIVE );
 	r_lensflare = ri->Cvar_Get( "r_lensflare", "0", CVAR_ARCHIVE );
-	r_volumelight = ri->Cvar_Get( "r_volumelight", "1", CVAR_ARCHIVE );
+	//r_volumelight = ri->Cvar_Get( "r_volumelight", "1", CVAR_ARCHIVE );
 	r_volumelightMaximum = ri->Cvar_Get( "r_volumelightMaximum", "4", CVAR_ARCHIVE );
 	r_volumelightSamples = ri->Cvar_Get( "r_volumelightSamples", "100", CVAR_ARCHIVE );
 	r_volumelightExposure = ri->Cvar_Get( "r_volumelightExposure", "0.05", CVAR_ARCHIVE );
@@ -1462,7 +1462,7 @@ void R_Register( void )
 	r_fastsky = ri->Cvar_Get( "r_fastsky", "0", CVAR_ARCHIVE );
 	r_inGameVideo = ri->Cvar_Get( "r_inGameVideo", "1", CVAR_ARCHIVE );
 	r_drawSun = ri->Cvar_Get( "r_drawSun", "0", CVAR_ARCHIVE );
-	r_dynamiclight = ri->Cvar_Get( "r_dynamiclight", "0", CVAR_ARCHIVE );
+	r_dynamiclight = ri->Cvar_Get( "r_dynamiclight", "2", CVAR_ARCHIVE );
 	r_finish = ri->Cvar_Get ("r_finish", "0", CVAR_ARCHIVE);
 	r_textureMode = ri->Cvar_Get( "r_textureMode", "GL_LINEAR_MIPMAP_NEAREST", CVAR_ARCHIVE );
 	r_swapInterval = ri->Cvar_Get( "r_swapInterval", "0",

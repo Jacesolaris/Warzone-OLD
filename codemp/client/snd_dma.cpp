@@ -67,6 +67,7 @@ int			s_numSfx;
 static	sfx_t		*sfxHash[LOOP_HASH];
 
 cvar_t		*s_disable;
+cvar_t		*s_musicSelection;
 cvar_t		*s_volume;
 cvar_t		*s_volumeVoice;
 cvar_t		*s_volumeEffects;
@@ -151,6 +152,7 @@ void S_Init( void ) {
 	Com_Printf("\n------- sound initialization -------\n");
 
 	s_disable = Cvar_Get ("s_disable", "0", CVAR_ARCHIVE);
+	s_musicSelection = Cvar_Get ("s_musicSelection", "1", CVAR_ARCHIVE);
 	s_volume = Cvar_Get ("s_volume", "1.0", CVAR_ARCHIVE);
 	s_volumeVoice= Cvar_Get ("s_volumeVoice", "1.0", CVAR_ARCHIVE);
 	s_volumeEffects= Cvar_Get ("s_volumeEffects", "0.7", CVAR_ARCHIVE);

@@ -4,6 +4,7 @@
 //#define __BASS_PLAYER_BASED_LOCATIONS__ // UQ1: This puts player always at 0,0,0 and calculates sound positions from that...
 
 #include "snd_bass.h"
+#include "dirent.h"
 #include "fast_mutex.h"
 #include "tinythread.h"
 
@@ -42,9 +43,11 @@ float	SOUND_REAL_WORLD_DOPPLER		=	0.3048; //1.0 //0.3048
 
 qboolean BASS_UPDATE_THREAD_RUNNING = qfalse;
 qboolean BASS_UPDATE_THREAD_STOP = qfalse;
+qboolean BASS_MUSIC_UPDATE_THREAD_RUNNING = qfalse;
+qboolean BASS_MUSIC_UPDATE_THREAD_STOP = qfalse;
 
 thread *BASS_UPDATE_THREAD;
-
+thread *BASS_MUSIC_UPDATE_THREAD;
 
 // channel (sample/music) info structure
 typedef struct {
@@ -202,10 +205,13 @@ void BASS_UnloadSamples ( void )
 	if (BASS_UPDATE_THREAD_RUNNING && thread::hardware_concurrency() > 1)
 	{// More then one CPU core. We need to shut down the update thread...
 		BASS_UPDATE_THREAD_STOP = qtrue;
+		BASS_MUSIC_UPDATE_THREAD_STOP = qtrue;
 
 		// Wait for update thread to finish...
 		BASS_UPDATE_THREAD->join();
 		BASS_UPDATE_THREAD_RUNNING = qfalse;
+		BASS_MUSIC_UPDATE_THREAD->join();
+		BASS_MUSIC_UPDATE_THREAD_RUNNING = qfalse;
 	}
 }
 
@@ -240,9 +246,11 @@ void BASS_Shutdown ( void )
 	if (BASS_UPDATE_THREAD_RUNNING && thread::hardware_concurrency() > 1)
 	{// More then one CPU core. We need to shut down the update thread...
 		BASS_UPDATE_THREAD_STOP = qtrue;
+		BASS_MUSIC_UPDATE_THREAD_STOP = qtrue;
 
 		// Wait for update thread to finish...
 		BASS_UPDATE_THREAD->join();
+		BASS_MUSIC_UPDATE_THREAD->join();
 	}
 
 	BASS_Free();
@@ -281,6 +289,7 @@ qboolean BASS_CheckSoundDisabled( void )
 		if (BASS_UPDATE_THREAD_RUNNING && thread::hardware_concurrency() > 1)
 		{// More then one CPU core. We need to shut down the update thread...
 			BASS_UPDATE_THREAD_STOP = qtrue;
+			BASS_MUSIC_UPDATE_THREAD_STOP = qtrue;
 
 			// Wait for update thread to finish...
 			//BASS_UPDATE_THREAD->join();
@@ -406,6 +415,7 @@ qboolean BASS_Initialize ( void )
 	Com_Printf("^3BASS Sound System initialized ^7OK^3!\n");
 
 	BASS_UPDATE_THREAD_STOP = qfalse;
+	BASS_MUSIC_UPDATE_THREAD_STOP = qfalse;
 
 	// Initialize all the sound channels ready for use...
 	BASS_InitializeChannels();
@@ -717,18 +727,15 @@ void BASS_UpdateSounds_REAL ( void )
 	//Com_Printf("There are currently %i active and %i free channels.\n", NUM_ACTIVE, NUM_FREE);
 }
 
-#include <windows.h>
+void BASS_MusicUpdateThread( void );
 
 void BASS_UpdateThread(void * aArg)
 {
 	while (!BASS_UPDATE_THREAD_STOP)
 	{
 		BASS_UpdateSounds_REAL();
-//#ifdef _WIN32
-//		Sleep(100);
-//#else
+
 		this_thread::sleep_for(chrono::milliseconds(100));
-//#endif
 
 		if (BASS_CheckSoundDisabled())
 		{
@@ -879,7 +886,13 @@ DWORD BASS_LoadMusicSample ( void *memory, int length )
 }
 
 //
+//
 // New dynamic music system...
+//
+//
+
+//
+// JKA Tracks...
 //
 
 const char *JKA_TRACKS[] =
@@ -1019,14 +1032,96 @@ const char *JKA_TRACKS[] =
 	"music/yavin2_old/yavtemp_explore.mp3",
 };
 
-#define JKA_TRACKS_NUM 133
+int JKA_TRACKS_NUM = 133;
 
 // channel (sample/music) info structure
 typedef struct {
-	char name[64];
+	char name[260];
 } dMusicList_t;
 
-#define			MAX_DYNAMIC_LIST 512
+//
+// Psy Dynamic Tracks...
+//
+
+qboolean PSY_TRACKS_LOADED = qfalse;
+
+int PSY_TRACKS_NUM = 0;
+
+typedef struct {
+	char name[260];
+} psyMusicList_t;
+
+psyMusicList_t PSY_TRACKS[512];
+
+void BASS_GetPsyTracks( void )
+{
+	if (PSY_TRACKS_LOADED) return;
+
+	DIR *dir;
+	struct dirent *ent;
+	if ((dir = opendir ("OJK/music/psy")) != NULL) {
+		/* all the files and directories within psy directory */
+		while ((ent = readdir (dir)) != NULL) {
+			if (ent->d_name[0] == '.') continue; // skip back directory...
+
+			sprintf(PSY_TRACKS[PSY_TRACKS_NUM].name, "music/psy/%s", ent->d_name);
+			//Com_Printf("Added psy track %s.\n", PSY_TRACKS[PSY_TRACKS_NUM].name);
+			PSY_TRACKS_NUM++;
+		}
+		closedir (dir);
+	} else {
+		/* could not open directory */
+		perror ("");
+	}
+
+	PSY_TRACKS_LOADED = qtrue;
+	Com_Printf("^3BASS Sound System ^4- ^5Loaded ^7%i ^3PSY^5 music tracks.\n", PSY_TRACKS_NUM);
+}
+
+//
+// Custom Dynamic Tracks...
+//
+
+qboolean CUSTOM_TRACKS_LOADED = qfalse;
+
+int CUSTOM_TRACKS_NUM = 0;
+
+typedef struct {
+	char name[260];
+} customMusicList_t;
+
+customMusicList_t CUSTOM_TRACKS[512];
+
+void BASS_GetCustomTracks( void )
+{
+	if (CUSTOM_TRACKS_LOADED) return;
+
+	DIR *dir;
+	struct dirent *ent;
+	if ((dir = opendir ("OJK/music/custom")) != NULL) {
+		/* all the files and directories within psy directory */
+		while ((ent = readdir (dir)) != NULL) {
+			if (ent->d_name[0] == '.') continue; // skip back directory...
+
+			sprintf(CUSTOM_TRACKS[CUSTOM_TRACKS_NUM].name, "music/custom/%s", ent->d_name);
+			//Com_Printf("Added custom track %s.\n", CUSTOM_TRACKS[CUSTOM_TRACKS_NUM].name);
+			CUSTOM_TRACKS_NUM++;
+		}
+		closedir (dir);
+	} else {
+		/* could not open directory */
+		perror ("");
+	}
+
+	CUSTOM_TRACKS_LOADED = qtrue;
+	Com_Printf("^3BASS Sound System ^4- ^5Loaded ^7%i ^3CUSTOM^5 music tracks.\n", CUSTOM_TRACKS_NUM);
+}
+
+//
+// Dynamic music system code...
+//
+
+#define			MAX_DYNAMIC_LIST 2048
 
 qboolean		MUSIC_LIST_INITIALIZED = qfalse;
 int				MUSIC_LIST_COUNT = 0;
@@ -1034,6 +1129,8 @@ dMusicList_t	MUSIC_LIST[MAX_DYNAMIC_LIST];
 
 // For multithreading...
 qboolean		MUSIC_LIST_UPDATING = qfalse;
+
+int				CURRENT_MUSIC_SELECTION = 0;
 
 void BASS_AddDynamicTrack ( char *name )
 {
@@ -1044,11 +1141,22 @@ void BASS_AddDynamicTrack ( char *name )
 		return;
 	}
 
+	//if (s_musicSelection->integer == 1 || s_musicSelection->integer == 2)
+	//{// Don't add map tracks if we are using psy or custom playlist... (but allow it for *all* mode)
+	//	return;
+	//}
+
 	if (MUSIC_LIST_UPDATING) return; // wait...
 
 	if (MUSIC_LIST_COUNT >= MAX_DYNAMIC_LIST) return; // Hit MAX allowed number...
 
-	for (int i = MUSIC_LIST_COUNT-1; i >= JKA_TRACKS_NUM; i--)
+	int NUM_TRACKS = JKA_TRACKS_NUM;
+
+	if (s_musicSelection->integer == 1) NUM_TRACKS = PSY_TRACKS_NUM;
+	if (s_musicSelection->integer == 2) NUM_TRACKS = CUSTOM_TRACKS_NUM;
+	if (s_musicSelection->integer == 3) NUM_TRACKS = JKA_TRACKS_NUM + PSY_TRACKS_NUM + CUSTOM_TRACKS_NUM;
+
+	for (int i = MUSIC_LIST_COUNT-1; i >= NUM_TRACKS; i--)
 	{// Reverse check because "extra" music will always be at the end of the list :)
 		if (!strcmp(name, MUSIC_LIST[i].name)) return; // already in the list...
 	}
@@ -1063,6 +1171,19 @@ void BASS_InitDynamicList ( void )
 {
 	if (BASS_CheckSoundDisabled()) return;
 
+	qboolean MUSIC_SELECTION_CHANGED = qfalse;
+
+	if (s_musicSelection->integer != CURRENT_MUSIC_SELECTION)
+	{// Player changed music selection... Initialize the music list and reload...
+		BASS_StopMusic(NULL);
+		MUSIC_LIST_UPDATING = qtrue;
+		MUSIC_LIST_INITIALIZED = qfalse;
+		MUSIC_LIST_COUNT = 0;
+		memset(MUSIC_LIST, 0, sizeof(dMusicList_t) * MAX_DYNAMIC_LIST);
+		CURRENT_MUSIC_SELECTION = s_musicSelection->integer;
+		MUSIC_SELECTION_CHANGED = qtrue;
+	}
+
 	if (MUSIC_LIST_INITIALIZED) 
 	{// Already done!
 		return;
@@ -1072,33 +1193,110 @@ void BASS_InitDynamicList ( void )
 
 	memset(MUSIC_LIST, 0, sizeof(dMusicList_t)*MAX_DYNAMIC_LIST);
 
-	// Add all known JKA tracks to the list...
-	for (int i = 0; i < JKA_TRACKS_NUM; i++)
+	if (s_musicSelection->integer == 1)
+	{// Add all known PSY tracks to the list...
+		BASS_GetPsyTracks();
+
+		for (int i = 0; i < PSY_TRACKS_NUM; i++)
+		{
+			strcpy(MUSIC_LIST[MUSIC_LIST_COUNT].name, PSY_TRACKS[i].name);
+			MUSIC_LIST_COUNT++;
+		}
+	}
+	else if (s_musicSelection->integer == 2)
+	{// Add all known CUSTOM tracks to the list...
+		BASS_GetCustomTracks();
+
+		for (int i = 0; i < CUSTOM_TRACKS_NUM; i++)
+		{
+			strcpy(MUSIC_LIST[MUSIC_LIST_COUNT].name, CUSTOM_TRACKS[i].name);
+			MUSIC_LIST_COUNT++;
+		}
+	}
+	else if (s_musicSelection->integer == 3)
+	{// Add all known JKA + PSY + CUSTOM tracks to the list...
+		if (MUSIC_SELECTION_CHANGED) Com_Printf("^3BASS Sound System ^4- ^5Loaded ^7%i ^3JKA^5 music tracks.\n", JKA_TRACKS_NUM);
+
+		BASS_GetPsyTracks();
+		BASS_GetCustomTracks();
+
+		for (int i = 0; i < JKA_TRACKS_NUM; i++)
+		{
+			strcpy(MUSIC_LIST[MUSIC_LIST_COUNT].name, (char *)JKA_TRACKS[i]);
+			MUSIC_LIST_COUNT++;
+		}
+		for (int i = 0; i < PSY_TRACKS_NUM; i++)
+		{
+			strcpy(MUSIC_LIST[MUSIC_LIST_COUNT].name, PSY_TRACKS[i].name);
+			MUSIC_LIST_COUNT++;
+		}
+		for (int i = 0; i < CUSTOM_TRACKS_NUM; i++)
+		{
+			strcpy(MUSIC_LIST[MUSIC_LIST_COUNT].name, CUSTOM_TRACKS[i].name);
+			MUSIC_LIST_COUNT++;
+		}
+	}
+	else
 	{
-		strcpy(MUSIC_LIST[MUSIC_LIST_COUNT].name, (char *)JKA_TRACKS[i]);
-		MUSIC_LIST_COUNT++;
+		if (MUSIC_SELECTION_CHANGED) Com_Printf("^3BASS Sound System ^4- ^5Loaded ^7%i ^3JKA^5 music tracks.\n", JKA_TRACKS_NUM);
+
+		// Add all known JKA tracks to the list...
+		for (int i = 0; i < JKA_TRACKS_NUM; i++)
+		{
+			strcpy(MUSIC_LIST[MUSIC_LIST_COUNT].name, (char *)JKA_TRACKS[i]);
+			MUSIC_LIST_COUNT++;
+		}
 	}
 
 	MUSIC_LIST_INITIALIZED = qtrue;
 	MUSIC_LIST_UPDATING = qfalse;
 }
 
+qboolean UPDATE_MUSIC = qfalse;
+
+void BASS_MusicUpdateThread( void * aArg )
+{
+	while (!BASS_MUSIC_UPDATE_THREAD_STOP)
+	{
+		if (/*UPDATE_MUSIC ||*/ BASS_CheckSoundDisabled() || !s_soundStarted || !s_allowDynamicMusic->integer || MUSIC_LIST_UPDATING)
+		{// wait...
+			this_thread::sleep_for(chrono::milliseconds(100));
+			continue;
+		}
+
+		BASS_InitDynamicList(); // check if we have initialized the list yet...
+
+		if (!MUSIC_LIST_INITIALIZED) return;
+
+		// Do we need a new track yet???
+		if (BASS_ChannelIsActive(MUSIC_CHANNEL.channel) == BASS_ACTIVE_PLAYING) return; // Still playing a track...
+
+		// Seems we need a new track... Select a random one and play it!
+		S_StartBackgroundTrack_Actual( MUSIC_LIST[irand(0, MUSIC_LIST_COUNT)].name, "" );
+
+
+		this_thread::sleep_for(chrono::milliseconds(100));
+
+		//UPDATE_MUSIC = qfalse;
+
+		if (BASS_CheckSoundDisabled())
+		{
+			break;
+		}
+	}
+
+	BASS_MUSIC_UPDATE_THREAD_RUNNING = qfalse;
+}
+
 void BASS_UpdateDynamicMusic( void )
 {
-	if (BASS_CheckSoundDisabled()) return;
-	if (!s_soundStarted) return; // sound sys is still inactive...
-	if (!s_allowDynamicMusic->integer) return; // inactive...
-	if (MUSIC_LIST_UPDATING) return; // wait...
-	
-	BASS_InitDynamicList(); // check if we have initialized the list yet...
+	if (!BASS_MUSIC_UPDATE_THREAD_RUNNING)
+	{
+		BASS_MUSIC_UPDATE_THREAD_RUNNING = qtrue;
+		BASS_MUSIC_UPDATE_THREAD = new thread (BASS_MusicUpdateThread, 0);
+	}
 
-	if (!MUSIC_LIST_INITIALIZED) return;
-
-	// Do we need a new track yet???
-	if (BASS_ChannelIsActive(MUSIC_CHANNEL.channel) == BASS_ACTIVE_PLAYING) return; // Still playing a track...
-
-	// Seems we need a new track... Select a random one and play it!
-	S_StartBackgroundTrack_Actual( MUSIC_LIST[irand(0, MUSIC_LIST_COUNT)].name, "" );
+	//UPDATE_MUSIC = qtrue;
 }
 
 

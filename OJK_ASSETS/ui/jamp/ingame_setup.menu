@@ -1619,12 +1619,13 @@
 			name				dynamic_light
 			group				video2
       			type				ITEM_TYPE_MULTI
-			text				@MENUS_DYNAMIC_LIGHTS
+			text				"Lighting System"
 			cvar				"r_dynamiclight"	
 			cvarFloatList		
 			{ 
-				@MENUS_OFF 0  
-				@MENUS_ON 1 
+				"Off" 0
+				"Dynamic" 1
+				"Volumetric" 2
 			}
 			rect				220 181 300 14
 	   		textalign			ITEM_ALIGN_RIGHT
@@ -1635,7 +1636,7 @@
 			forecolor			.615 .615 .956 1
 			visible				0
 			// appearance_slot		1
-			descText			@MENUS_TOGGLE_TO_TURN_ON_MOVING
+			descText			"Select prefered lighting model."
 			action 
 			{ 
 				play			"sound/interface/button1"
@@ -2654,6 +2655,38 @@
 			{ 
 				hide			highlight10
 			} 
+		}
+		
+		itemDef 
+		{	
+			name				music_selection
+			group				sound
+      			type				ITEM_TYPE_MULTI
+			text				"Music Selection"
+			cvar				"s_musicSelection"
+			cvarFloatList			{ "JKA" 0  "Psychedelic" 1 "Custom" 2 "ALL" 3 }
+			rect				220 241 300 20
+	   		textalign			ITEM_ALIGN_RIGHT
+			textalignx			174
+			textaligny			0
+			font 				4					
+			textscale 			1
+			forecolor			.615 .615 .956 1
+			visible				0
+			descText			"Select the style of music you prefer."
+
+			mouseenter 
+			{ 
+				show			highlight11
+			}
+			mouseexit 
+			{ 
+				hide			highlight11
+			} 
+			action 
+			{
+				play			"sound/interface/button1.wav"
+			}
 		}
 		
 		itemDef 

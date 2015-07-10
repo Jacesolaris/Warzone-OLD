@@ -448,7 +448,7 @@ static void ProjectDlightTexture( void ) {
 	vec5_t deformParams;
 	int deformGen;
 
-	if (r_dynamiclight->integer == 0) return;
+	if (r_dynamiclight->integer == 0 || r_dynamiclight->integer == 2) return;
 
 	if ( !backEnd.refdef.num_dlights ) {
 		return;
@@ -1102,7 +1102,7 @@ static void ForwardDlight( void ) {
 	vec4_t fogDistanceVector, fogDepthVector = {0, 0, 0, 0};
 	float eyeT = 0;
 
-	if (r_dynamiclight->integer == 0) return;
+	if (r_dynamiclight->integer == 0 || r_dynamiclight->integer == 2) return;
 
 	shaderCommands_t *input = &tess;
 	shaderStage_t *pStage = tess.xstages[0];
