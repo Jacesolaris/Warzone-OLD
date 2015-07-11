@@ -2619,8 +2619,6 @@ void SP_NPC_Spawner_Group( spawnGroup_t group, vec3_t position, int team )
 		self->s.origin[1] += 16;
 		if (OrgVisibleBox(origin, playerMins, playerMaxs, self->s.origin, -1))
 		{
-			if (group.npcCount > 2) self->NPC_type = group.npcNames[2];
-			else self->NPC_type = group.npcNames[group.npcCount-1];
 			SP_NPC_spawner2( self );
 			VectorCopy(origin, self->s.origin);
 		}
@@ -2629,7 +2627,7 @@ void SP_NPC_Spawner_Group( spawnGroup_t group, vec3_t position, int team )
 		self->s.origin[1] += 16;
 		if (OrgVisibleBox(origin, playerMins, playerMaxs, self->s.origin, -1))
 		{
-			if (group.npcCount > 3) self->NPC_type = group.npcNames[3];
+			if (group.npcCount >= 2) self->NPC_type = group.npcNames[1];
 			else self->NPC_type = group.npcNames[group.npcCount-1];
 			SP_NPC_spawner2(self);
 			VectorCopy(origin, self->s.origin);
@@ -2639,7 +2637,7 @@ void SP_NPC_Spawner_Group( spawnGroup_t group, vec3_t position, int team )
 		self->s.origin[1] -= 16;
 		if (OrgVisibleBox(origin, playerMins, playerMaxs, self->s.origin, -1))
 		{
-			if (group.npcCount > 2) self->NPC_type = group.npcNames[2];
+			if (group.npcCount >= 3) self->NPC_type = group.npcNames[2];
 			else self->NPC_type = group.npcNames[group.npcCount-1];
 			SP_NPC_spawner2(self);
 			VectorCopy(origin, self->s.origin);
@@ -2647,14 +2645,27 @@ void SP_NPC_Spawner_Group( spawnGroup_t group, vec3_t position, int team )
 
 		self->s.origin[0] -= 16;
 		self->s.origin[1] -= 16;
+
 		if (OrgVisibleBox(origin, playerMins, playerMaxs, self->s.origin, -1))
 		{
-			if (NPC_NeedPadawan_Spawn()
-				&& (!Q_stricmpn("jedi", group.npcNames[0], 4)
-				|| !Q_stricmpn("Jedi", group.npcNames[0], 4)
-				|| !Q_stricmpn("Kyle", group.npcNames[0], 4)
-				|| !Q_stricmpn("Luke", group.npcNames[0], 4)))
-			{// Spawned a jedi. Spawn a padawan for them as well...
+			if (group.npcCount >= 4) self->NPC_type = group.npcNames[3];
+			else self->NPC_type = group.npcNames[group.npcCount-1];
+			SP_NPC_spawner2(self);
+			VectorCopy(origin, self->s.origin);
+		}
+
+		if (NPC_NeedPadawan_Spawn()
+			&& (!Q_stricmpn("jedi", group.npcNames[0], 4)
+			|| !Q_stricmpn("Jedi", group.npcNames[0], 4)
+			|| !Q_stricmpn("Kyle", group.npcNames[0], 4)
+			|| !Q_stricmpn("Luke", group.npcNames[0], 4)))
+		{// Spawned a jedi. Spawn a padawan for them as well...
+			VectorCopy(origin, self->s.origin);
+			self->s.origin[0] -= 64;
+			self->s.origin[1] -= 64;
+
+			if (OrgVisibleBox(origin, playerMins, playerMaxs, self->s.origin, -1))
+			{
 				int choice = irand(1,36);
 				char name[64];
 
@@ -2668,11 +2679,34 @@ void SP_NPC_Spawner_Group( spawnGroup_t group, vec3_t position, int team )
 				trap->Print("Spawning padawan \"%s\" for Jedi NPC.\n", self->NPC_type);
 
 				SP_NPC_spawner2( self );
+
+				VectorCopy(origin, self->s.origin);
+				return;
 			}
-			else
+			
+			VectorCopy(origin, self->s.origin);
+			self->s.origin[0] += 64;
+			self->s.origin[1] += 64;
+
+			if (OrgVisibleBox(origin, playerMins, playerMaxs, self->s.origin, -1))
+			{
+				int choice = irand(1,36);
+				char name[64];
+
+				sprintf(name, "padawan%i", choice);
+
+				if (choice > 1 && choice < 28)
+					self->NPC_type = name;
+				else
+					self->NPC_type = "padawan";
+
+				trap->Print("Spawning padawan \"%s\" for Jedi NPC.\n", self->NPC_type);
+
 				SP_NPC_spawner2( self );
 
-			VectorCopy(origin, self->s.origin);
+				VectorCopy(origin, self->s.origin);
+				return;
+			}
 		}
 	}
 	else

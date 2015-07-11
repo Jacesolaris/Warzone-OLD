@@ -1277,7 +1277,7 @@ void G_CheckMinimumNpcs( void ) {
 	if (botplayers < minplayers)
 	{
 		int			waypoint = irand(0, gWPNum-1);
-		int			random = irand(0,14);
+		int			random = irand(0,22);
 		int			tries = 0;
 		vec3_t		position;
 		int			selectedTeam;
@@ -1321,19 +1321,19 @@ void G_CheckMinimumNpcs( void ) {
 
 		if (NPC_SPAWN_TEAM == TEAM_RED)
 		{// Imperial NPCs...
-			if (random >= 10)
+			if (random >= 16)
 			{
 				group = GetSpawnGroup("default_red", RARITY_SPAM);
 			}
-			else if (random >= 7)
+			else if (random >= 11)
 			{
 				group = GetSpawnGroup("default_red", RARITY_COMMON);
 			}
-			else if (random >= 4)
+			else if (random >= 7)
 			{
 				group = GetSpawnGroup("default_red", RARITY_OFFICER);
 			}
-			else if (random >= 2)
+			else if (random >= 4)
 			{// Officers/Specials...
 				group = GetSpawnGroup("default_red", RARITY_ELITE);
 			}
@@ -1352,19 +1352,19 @@ void G_CheckMinimumNpcs( void ) {
 		}
 		else
 		{// Rebel NPCs...
-			if (random >= 10)
+			if (random >= 16)
 			{
 				group = GetSpawnGroup("default_blue", RARITY_SPAM);
 			}
-			else if (random >= 7)
+			else if (random >= 11)
 			{
 				group = GetSpawnGroup("default_blue", RARITY_COMMON);
 			}
-			else if (random >= 4)
+			else if (random >= 7)
 			{
 				group = GetSpawnGroup("default_blue", RARITY_OFFICER);
 			}
-			else if (random >= 2)
+			else if (random >= 4)
 			{// Officers/Specials...
 				group = GetSpawnGroup("default_blue", RARITY_ELITE);
 			}
