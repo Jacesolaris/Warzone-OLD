@@ -759,8 +759,8 @@ void G_InitGame( int levelTime, int randomSeed, int restart ) {
 	Load_Model_Scales();
 	NPC_PrecacheWarzoneNPCs();
 
-	NPC_LoadSpawnList( "default_red" );
 	NPC_LoadSpawnList( "default_blue" );
+	NPC_LoadSpawnList( "default_red" );
 	NPC_LoadSpawnList( va("%s_blue", mapname.string) );
 	NPC_LoadSpawnList( va("%s_red", mapname.string) );
 

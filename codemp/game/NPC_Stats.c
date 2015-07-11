@@ -3765,7 +3765,7 @@ qboolean				SPAWNGROUPS_INITIALIZED = qfalse;
 int						spawnGroupTotalNPCS = 0;
 
 int						spawnGroupFilesLoaded;					// Total files number we have already loaded...
-spawnGroupLists_t		spawnGroupData[MAX_SPAWNGROUP_FILES];
+spawnGroupLists_t		spawnGroupData[MAX_SPAWNGROUP_FILES+1];
 
 qboolean Spawn_Parse(int handle, int RARITY) {
 	pc_token_t token;
@@ -3956,7 +3956,6 @@ qboolean NPC_LoadSpawnList( char *listname )
 
 spawnGroup_t GetSpawnGroup(char *filename, int RARITY)
 {
-	int i;
 	int groupDataSelection;
 	int spawnGroupInt = 0;
 	spawnGroup_t *spawnGroupSelection = NULL;
@@ -3989,7 +3988,7 @@ spawnGroup_t GetSpawnGroup(char *filename, int RARITY)
 				spawnGroupList = &spawnGroupLists->spawnGroupLists[i];
 				Com_Printf("Rarity %i has %i groups.\n", i, spawnGroupList->spawnGroupTotal);
 
-				if (spawnGroupList->spawnGroupTotal > 1000) break; // wtf? where is this corruption comming from???
+				//if (spawnGroupList->spawnGroupTotal > 1000) break; // wtf? where is this corruption comming from???
 
 				for (spawnGroupInt = 0; spawnGroupInt < spawnGroupList->spawnGroupTotal; spawnGroupInt++)
 				{
@@ -4008,6 +4007,7 @@ spawnGroup_t GetSpawnGroup(char *filename, int RARITY)
 		}
 	}
 	*/
+	
 
 	for (groupDataSelection = 0; groupDataSelection < spawnGroupFilesLoaded; groupDataSelection++)
 	{
@@ -4035,10 +4035,10 @@ spawnGroup_t GetSpawnGroup(char *filename, int RARITY)
 
 	//Com_Printf("Have %i groups.\n", spawnGroupList->spawnGroupTotal);
 
-	if (spawnGroupList->spawnGroupTotal > 1000 || spawnGroupList->spawnGroupTotal <= 0)
+	/*if (spawnGroupList->spawnGroupTotal > 1000 || spawnGroupList->spawnGroupTotal <= 0)
 	{// Temporary override for memory corruption workaround... GRRRRR!!!!!
 		spawnGroupList = &spawnGroupLists->spawnGroupLists[RARITY_COMMON];
-	}
+	}*/
 
 	spawnGroupInt = irand(0, spawnGroupList->spawnGroupTotal-1);
 
