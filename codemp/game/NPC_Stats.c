@@ -674,9 +674,7 @@ void NPC_Precache ( gentity_t *spawner )
 			}
 			else
 			{
-				int mindex = G_ModelIndex(value);
-				trap->Print("DEBUG: Model %i [%s] loaded.\n", mindex, value);
-
+				G_ModelIndex(value);
 				//Q_strncpyz( ri.headModelName, value, sizeof(ri.headModelName), qtrue);
 			}
 			md3Model = qtrue;
@@ -696,7 +694,7 @@ void NPC_Precache ( gentity_t *spawner )
 			}
 			else
 			{
-				trap->Print("DEBUG: Model %i [%s] loaded.\n", G_ModelIndex(value), value);
+				G_ModelIndex(value);
 
 				//Q_strncpyz( ri.torsoModelName, value, sizeof(ri.torsoModelName), qtrue);
 			}
@@ -712,7 +710,7 @@ void NPC_Precache ( gentity_t *spawner )
 				continue;
 			}
 
-			trap->Print("DEBUG: Model %i [%s] loaded.\n", G_ModelIndex(value), value);
+			G_ModelIndex(value);
 
 			//Q_strncpyz( ri.legsModelName, value, sizeof(ri.legsModelName), qtrue);
 			md3Model = qtrue;
@@ -727,14 +725,13 @@ void NPC_Precache ( gentity_t *spawner )
 				continue;
 			}
 
-			trap->Print("DEBUG: Model %i [%s] loaded.\n", G_ModelIndex(value), value);
+			G_ModelIndex(value);
 
 			Q_strncpyz( playerModel, value, sizeof(playerModel));
 			md3Model = qfalse;
 
 			if (strlen(customSkin) > 0) {
-				int skin = trap->R_RegisterSkin(value);
-				trap->Print("DEBUG: Skin %i [%s] loaded.\n", va("models/players/%s/model_%s.skin", playerModel, customSkin), value);
+				trap->R_RegisterSkin(va("models/players/%s/model_%s.skin", playerModel, customSkin));
 			}
 			continue;
 		}
@@ -748,8 +745,7 @@ void NPC_Precache ( gentity_t *spawner )
 			}
 
 			if (strlen(playerModel) > 0) {
-				int skin = trap->R_RegisterSkin(value);
-				trap->Print("DEBUG: Skin %i [%s] loaded.\n", va("models/players/%s/model_%s.skin", playerModel, skin), value);
+				trap->R_RegisterSkin(va("models/players/%s/model_%s.skin", playerModel, customSkin));
 			}
 
 			Q_strncpyz( customSkin, value, sizeof(customSkin));
@@ -3759,4 +3755,305 @@ void NPC_LoadParms( void )
 			//rww  12/19/02-actually the probelm was npcParseBuffer not being nul-term'd, which could cause issues in the strcat too
 		}
 	}
+}
+
+//
+// Spawn group system...
+//
+
+qboolean				SPAWNGROUPS_INITIALIZED = qfalse;
+int						spawnGroupTotalNPCS = 0;
+
+int						spawnGroupFilesLoaded;					// Total files number we have already loaded...
+spawnGroupLists_t		spawnGroupData[MAX_SPAWNGROUP_FILES];
+
+qboolean Spawn_Parse(int handle, int RARITY) {
+	pc_token_t token;
+
+	if (!trap->PC_ReadToken(handle, &token))
+	{
+		Com_Printf("spawnGoup - failed to load initial token.\n");
+		return qfalse;
+	}
+
+	if (Q_stricmp(token.string, "{") != 0) {
+		Com_Printf("spawnGoup - no opening brace.\n");
+		return qfalse;
+	}
+
+	//Com_Printf("Group (rarity %i):", RARITY);
+
+	while ( 1 ) {
+		memset(&token, 0, sizeof(pc_token_t));
+
+		if (!trap->PC_ReadToken(handle, &token))
+			return qfalse;
+
+		if (Q_stricmp(token.string, "}") == 0) {
+			//Com_Printf("\n");
+			return qtrue;
+		}
+
+		if (Q_stricmp(token.string, "spawn") == 0)
+		{
+			if (trap->PC_ReadToken(handle,&token))
+			{
+				int groupTotal = spawnGroupData[spawnGroupFilesLoaded].spawnGroupLists[RARITY].spawnGroupTotal;
+				spawnGroup_t *group = &spawnGroupData[spawnGroupFilesLoaded].spawnGroupLists[RARITY].spawnGroups[groupTotal];
+
+				if (group->npcCount > 4) {
+					Com_Printf("WARNING: Too many spawns in spawnGroup. Extra's ignored.\n");
+					return qtrue; // too many
+				}
+
+				//Com_Printf("TOKEN: %s.\n", token.string);
+				//Com_Printf(" %s", token.string);
+
+				strncpy(group->npcNames[group->npcCount], token.string, 64);
+				group->npcCount++;
+				spawnGroupTotalNPCS++;
+			}
+
+			continue;
+		}
+	}
+	return qfalse;
+}
+
+qboolean SpawnGroup_Parse(int handle, int RARITY) {
+	pc_token_t token;
+
+	if (!trap->PC_ReadToken(handle, &token))
+		return qfalse;
+
+	if (Q_stricmp(token.string, "{") != 0) {
+		return qfalse;
+	}
+
+	while ( 1 ) {
+		memset(&token, 0, sizeof(pc_token_t));
+
+		if (!trap->PC_ReadToken(handle, &token))
+			return qfalse;
+
+		if (Q_stricmp(token.string, "}") == 0) {
+			return qtrue;
+		}
+
+		if (Q_stricmp(token.string, "spawnGroup") == 0)
+		{
+			if (Spawn_Parse(handle, RARITY))
+				spawnGroupData[spawnGroupFilesLoaded].spawnGroupLists[RARITY].spawnGroupTotal++;
+
+			continue;
+		}
+	}
+	return qfalse;
+}
+
+qboolean NPC_LoadSpawnList( char *listname )
+{
+	int handle;
+	pc_token_t token;
+	int i = 0;
+
+	//if (!SPAWNGROUPS_INITIALIZED) {
+	//	memset(spawnGroupData, 0, sizeof(spawnGroupData));
+	//	SPAWNGROUPS_INITIALIZED = qtrue;
+	//}
+
+	Com_Printf("Parsing spawnlist file: spawnGroups/%s.spawnGroups\n", listname);
+
+	handle = trap->PC_LoadSource(va("spawnGroups/%s.spawnGroups", listname));
+
+	if (!handle) {
+		Com_Printf("Failed parsing spawnlist file: spawnGroups/%s.spawnGroups - No file?\n", listname);
+		return qfalse;
+	}
+
+	for (i = 0; i < spawnGroupFilesLoaded; i++)
+	{// Check we have not already loaded this file into memory...
+		if (!strcmp(listname, spawnGroupData[i].spawnGroupFilename)) return qtrue; // This one is already loaded!
+	}
+
+	// New list loading... Set it's name for future reference... And update the count of number of files loaded...
+	strcpy(spawnGroupData[spawnGroupFilesLoaded].spawnGroupFilename, listname);
+
+	spawnGroupTotalNPCS = 0;
+
+	while ( 1 ) {
+		memset(&token, 0, sizeof(pc_token_t));
+		if (!trap->PC_ReadToken( handle, &token )) {
+			break;
+		}
+
+		if ( token.string[0] == '}' ) {
+			break;
+		}
+
+		if (Q_stricmp(token.string, "spawnGroup_boss") == 0) {
+			//Com_Printf("Parsing %s.\n", token.string);
+			if (SpawnGroup_Parse(handle, RARITY_BOSS)) {
+				//Com_Printf("Total boss groups %i\n", spawnGroupData[spawnGroupFilesLoaded].spawnGroupLists[RARITY_BOSS].spawnGroupTotal);
+				continue;
+			} else {
+				Com_Printf("Failed to parse spawn group boss for file %s.\n", listname);
+				break;
+			}
+		}
+
+		if (Q_stricmp(token.string, "spawnGroup_elite") == 0) {
+			//Com_Printf("Parsing %s.\n", token.string);
+			if (SpawnGroup_Parse(handle, RARITY_ELITE)) {
+				//Com_Printf("Total elite groups %i\n", spawnGroupData[spawnGroupFilesLoaded].spawnGroupLists[RARITY_ELITE].spawnGroupTotal);
+				continue;
+			} else {
+				Com_Printf("Failed to parse spawn group elite for file %s.\n", listname);
+				break;
+			}
+		}
+
+		if (Q_stricmp(token.string, "spawnGroup_officer") == 0) {
+			//Com_Printf("Parsing %s.\n", token.string);
+			if (SpawnGroup_Parse(handle, RARITY_OFFICER)) {
+				//Com_Printf("Total officer groups %i\n", spawnGroupData[spawnGroupFilesLoaded].spawnGroupLists[RARITY_OFFICER].spawnGroupTotal);
+				continue;
+			} else {
+				Com_Printf("Failed to parse spawn group officer for file %s.\n", listname);
+				break;
+			}
+		}
+
+		if (Q_stricmp(token.string, "spawnGroup_common") == 0) {
+			//Com_Printf("Parsing %s.\n", token.string);
+			if (SpawnGroup_Parse(handle, RARITY_COMMON)) {
+				//Com_Printf("Total common groups %i\n", spawnGroupData[spawnGroupFilesLoaded].spawnGroupLists[RARITY_COMMON].spawnGroupTotal);
+				continue;
+			} else {
+				Com_Printf("Failed to parse spawn group common for file %s.\n", listname);
+				break;
+			}
+		}
+
+		if (Q_stricmp(token.string, "spawnGroup_spam") == 0) {
+			//Com_Printf("Parsing %s.\n", token.string);
+			if (SpawnGroup_Parse(handle, RARITY_SPAM)) {
+				//Com_Printf("Total spam groups %i\n", spawnGroupData[spawnGroupFilesLoaded].spawnGroupLists[RARITY_SPAM].spawnGroupTotal);
+				continue;
+			} else {
+				Com_Printf("Failed to parse spawn group spam for file %s.\n", listname);
+				break;
+			}
+		}
+	}
+	trap->PC_FreeSource(handle);
+
+	spawnGroupFilesLoaded++;
+	Com_Printf("Loaded %i total NPCs from spawnGroup file spawnGroups/%s.spawnGroups.\n", spawnGroupTotalNPCS, listname);
+
+	return qtrue;
+}
+
+spawnGroup_t GetSpawnGroup(char *filename, int RARITY)
+{
+	int i;
+	int groupDataSelection;
+	int spawnGroupInt = 0;
+	spawnGroup_t *spawnGroupSelection = NULL;
+	spawnGroupList_t *spawnGroupList = NULL;
+	spawnGroupLists_t *spawnGroupLists = NULL;
+	int TEAM = 0;
+	
+	if (StringContainsWord(filename, "blue")) TEAM = TEAM_BLUE;
+	else TEAM = TEAM_RED;
+
+	/*
+	{ 
+		int i;
+		int groupDataSelection;
+		int spawnGroupInt = 0;
+		spawnGroup_t *spawnGroupSelection = NULL;
+		spawnGroupList_t *spawnGroupList = NULL;
+		spawnGroupLists_t *spawnGroupLists = NULL;
+		int TEAM = 0;
+
+		if (StringContainsWord(filename, "blue")) TEAM = TEAM_BLUE;
+		else TEAM = TEAM_RED;
+
+		for (groupDataSelection = 0; groupDataSelection < spawnGroupFilesLoaded; groupDataSelection++)
+		{
+			spawnGroupLists = &spawnGroupData[groupDataSelection];
+
+			for (i = 0; i <= RARITY_MAX; i++)
+			{
+				spawnGroupList = &spawnGroupLists->spawnGroupLists[i];
+				Com_Printf("Rarity %i has %i groups.\n", i, spawnGroupList->spawnGroupTotal);
+
+				if (spawnGroupList->spawnGroupTotal > 1000) break; // wtf? where is this corruption comming from???
+
+				for (spawnGroupInt = 0; spawnGroupInt < spawnGroupList->spawnGroupTotal; spawnGroupInt++)
+				{
+					int j;
+					spawnGroupSelection = &spawnGroupList->spawnGroups[spawnGroupInt];
+
+					Com_Printf("List:");
+
+					for (j = 0; j < spawnGroupSelection->npcCount; j++)
+					{
+						Com_Printf(" %s", spawnGroupSelection->npcNames[j]);
+					}
+					Com_Printf("\n");
+				}
+			}
+		}
+	}
+	*/
+
+	for (groupDataSelection = 0; groupDataSelection < spawnGroupFilesLoaded; groupDataSelection++)
+	{
+		if (!strcmp(spawnGroupData[groupDataSelection].spawnGroupFilename, filename))
+			break; // found our wanted groupDataStucture...
+	}
+
+	if (groupDataSelection >= spawnGroupFilesLoaded) {
+		Com_Printf("Fallback!\n");
+		for (groupDataSelection = 0; groupDataSelection < spawnGroupFilesLoaded; groupDataSelection++)
+		{
+			if (TEAM == TEAM_BLUE && StringContainsWord(spawnGroupData[groupDataSelection].spawnGroupFilename, "blue"))
+				break; // found our wanted groupDataStucture...
+
+			if (TEAM == TEAM_RED && StringContainsWord(spawnGroupData[groupDataSelection].spawnGroupFilename, "red"))
+				break; // found our wanted groupDataStucture...
+		}
+	}
+
+	//Com_Printf("Rarity selection is %i.\n", RARITY);
+
+	spawnGroupLists = &spawnGroupData[groupDataSelection];
+
+	spawnGroupList = &spawnGroupLists->spawnGroupLists[RARITY];
+
+	//Com_Printf("Have %i groups.\n", spawnGroupList->spawnGroupTotal);
+
+	if (spawnGroupList->spawnGroupTotal > 1000 || spawnGroupList->spawnGroupTotal <= 0)
+	{// Temporary override for memory corruption workaround... GRRRRR!!!!!
+		spawnGroupList = &spawnGroupLists->spawnGroupLists[RARITY_COMMON];
+	}
+
+	spawnGroupInt = irand(0, spawnGroupList->spawnGroupTotal-1);
+
+	//Com_Printf("Selected group %i.\n", spawnGroupInt);
+
+	spawnGroupSelection = &spawnGroupList->spawnGroups[spawnGroupInt];
+
+	//Com_Printf("Group has %i names.\n", spawnGroupSelection->npcCount);
+
+	/*Com_Printf("Selected spawn list:");
+	for (i = 0; i < spawnGroupSelection->npcCount; i++)
+	{
+		Com_Printf(" %s", spawnGroupSelection->npcNames[i]);
+	}
+	Com_Printf("\n");*/
+
+	return *spawnGroupSelection;
 }

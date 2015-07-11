@@ -2586,40 +2586,94 @@ void SP_NPC_spawner( gentity_t *self)
 
 			VectorCopy(origin, self->s.origin);
 		}
+	}
+	else
+	{
+		SP_NPC_spawner2( self );
+	}
 
-		//self->s.origin[0] += 16;
-		//self->s.origin[1] -= 16;
-		//if (OrgVisibleBox(origin, playerMins, playerMaxs, self->s.origin, -1))
-		//{
-		//	SP_NPC_spawner2( self );
-		//	VectorCopy(origin, self->s.origin);
-		//}
+	G_FreeEntity( self );//bye!
+}
 
-		//self->s.origin[0] -= 16;
-		//self->s.origin[1] += 16;
-		//if (OrgVisibleBox(origin, playerMins, playerMaxs, self->s.origin, -1))
-		//{
-		//	SP_NPC_spawner2( self );
-		//	VectorCopy(origin, self->s.origin);
-		//}
+void SP_NPC_Spawner_Group( spawnGroup_t group, vec3_t position, int team )
+{
+	gentity_t *self = G_Spawn();
+	VectorCopy(position, self->s.origin);
+	self->NPC_type = group.npcNames[0];
+	self->s.teamowner = team;
+	self->s.angles[PITCH] = 0;
+	self->s.angles[YAW] = irand(0,359);
+	self->s.angles[ROLL] = 0;
 
-		/*
+	if (level.gametype == GT_INSTANCE || level.gametype == GT_WARZONE)
+	{
+		// Spawn multiple...
+		vec3_t origin;
+		vec3_t	playerMins = {-15, -15, DEFAULT_MINS_2};
+		vec3_t	playerMaxs = {15, 15, DEFAULT_MAXS_2};
+
+		self->s.origin[2] += 32;
+		VectorCopy(self->s.origin, origin);
+
 		self->s.origin[0] += 16;
+		self->s.origin[1] += 16;
 		if (OrgVisibleBox(origin, playerMins, playerMaxs, self->s.origin, -1))
 		{
+			if (group.npcCount > 2) self->NPC_type = group.npcNames[2];
+			else self->NPC_type = group.npcNames[group.npcCount-1];
 			SP_NPC_spawner2( self );
 			VectorCopy(origin, self->s.origin);
 		}
 
 		self->s.origin[0] -= 16;
+		self->s.origin[1] += 16;
 		if (OrgVisibleBox(origin, playerMins, playerMaxs, self->s.origin, -1))
 		{
-			SP_NPC_spawner2( self );
+			if (group.npcCount > 3) self->NPC_type = group.npcNames[3];
+			else self->NPC_type = group.npcNames[group.npcCount-1];
+			SP_NPC_spawner2(self);
 			VectorCopy(origin, self->s.origin);
 		}
-		*/
 
-		//SP_NPC_spawner2( self );
+		self->s.origin[0] += 16;
+		self->s.origin[1] -= 16;
+		if (OrgVisibleBox(origin, playerMins, playerMaxs, self->s.origin, -1))
+		{
+			if (group.npcCount > 2) self->NPC_type = group.npcNames[2];
+			else self->NPC_type = group.npcNames[group.npcCount-1];
+			SP_NPC_spawner2(self);
+			VectorCopy(origin, self->s.origin);
+		}
+
+		self->s.origin[0] -= 16;
+		self->s.origin[1] -= 16;
+		if (OrgVisibleBox(origin, playerMins, playerMaxs, self->s.origin, -1))
+		{
+			if (NPC_NeedPadawan_Spawn()
+				&& (!Q_stricmpn("jedi", group.npcNames[0], 4)
+				|| !Q_stricmpn("Jedi", group.npcNames[0], 4)
+				|| !Q_stricmpn("Kyle", group.npcNames[0], 4)
+				|| !Q_stricmpn("Luke", group.npcNames[0], 4)))
+			{// Spawned a jedi. Spawn a padawan for them as well...
+				int choice = irand(1,36);
+				char name[64];
+
+				sprintf(name, "padawan%i", choice);
+
+				if (choice > 1 && choice < 28)
+					self->NPC_type = name;
+				else
+					self->NPC_type = "padawan";
+
+				trap->Print("Spawning padawan \"%s\" for Jedi NPC.\n", self->NPC_type);
+
+				SP_NPC_spawner2( self );
+			}
+			else
+				SP_NPC_spawner2( self );
+
+			VectorCopy(origin, self->s.origin);
+		}
 	}
 	else
 	{

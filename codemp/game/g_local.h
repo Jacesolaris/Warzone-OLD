@@ -1664,3 +1664,45 @@ void BG_VehicleLoadParms(void);
 
 // Refactored included functions
 void SetTeamQuick(gentity_t *ent, int team, qboolean doBegin);
+
+//
+// NPC.c --- Spawn Groups System...
+//
+
+#define MAX_SPAWNGROUP_FILES 128
+#define MAX_SPAWNS_PER_GROUP 512
+
+extern int	spawnGroupTotalNPCS;
+
+extern qboolean SPAWNGROUPS_INITIALIZED;
+
+enum spawnGroupRarity_t {
+	RARITY_BOSS,
+	RARITY_ELITE,
+	RARITY_OFFICER,
+	RARITY_COMMON,
+	RARITY_SPAM,
+	RARITY_MAX = RARITY_SPAM
+};
+
+typedef struct {
+	char					npcNames[4][64+1];							// Maximum of 4 npcs per spawn...
+	int						npcCount;									// Count of npcs in this spawn...
+} spawnGroup_t;
+
+typedef struct {
+	int						spawnGroupTotal;							// Total number of spawns currently in this group...
+	spawnGroup_t			spawnGroups[MAX_SPAWNS_PER_GROUP];			// Group spawn list for each group...
+} spawnGroupList_t;
+
+typedef struct {
+	char					spawnGroupFilename[64+1];					// Filename loaded from...
+	spawnGroupList_t		spawnGroupLists[RARITY_MAX];				// Group spawn list for each group...
+} spawnGroupLists_t;
+
+extern int					spawnGroupFilesLoaded;						// Total files number we have already loaded...
+extern spawnGroupLists_t	spawnGroupData[MAX_SPAWNGROUP_FILES];
+
+qboolean NPC_LoadSpawnList( char *listname );
+spawnGroup_t GetSpawnGroup(char *filename, int RARITY);
+void SP_NPC_Spawner_Group( spawnGroup_t group, vec3_t position, int team );

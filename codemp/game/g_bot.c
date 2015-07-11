@@ -1204,6 +1204,7 @@ void G_CheckMinimumNpcs( void ) {
 	int			minplayers;
 	int			botplayers = 0, i;
 	static int	checkminimumplayers_time;
+	spawnGroup_t group;
 
 	if (g_gametype.integer == GT_INSTANCE)
 	{
@@ -1275,10 +1276,11 @@ void G_CheckMinimumNpcs( void ) {
 
 	if (botplayers < minplayers)
 	{
-		gentity_t	*npc = NULL;
 		int			waypoint = irand(0, gWPNum-1);
 		int			random = irand(0,14);
 		int			tries = 0;
+		vec3_t		position;
+		int			selectedTeam;
 
 		if (g_gametype.integer == GT_WARZONE)
 		{// Who (which team) needs this NPC???
@@ -1317,117 +1319,31 @@ void G_CheckMinimumNpcs( void ) {
 			}
 		}
 
-		npc = G_Spawn();
-
 		if (NPC_SPAWN_TEAM == TEAM_RED)
 		{// Imperial NPCs...
-			if (random >= 7)
+			if (random >= 10)
 			{
-				npc->NPC_type = "stormtrooper";
+				group = GetSpawnGroup("default_red", RARITY_SPAM);
 			}
-			else if (random >= 6)
+			else if (random >= 7)
 			{
-				npc->NPC_type = "stofficer";
+				group = GetSpawnGroup("default_red", RARITY_COMMON);
 			}
 			else if (random >= 4)
 			{
-				npc->NPC_type = "stcommander";
+				group = GetSpawnGroup("default_red", RARITY_OFFICER);
 			}
 			else if (random >= 2)
 			{// Officers/Specials...
-				int rnd2 = irand(0,7);
-				switch (rnd2)
-				{
-				case 0:
-					npc->NPC_type = "impofficer";
-					break;
-				case 1:
-					npc->NPC_type = "impworker";
-					break;
-				case 2:
-					//npc->NPC_type = "hazardtrooper";
-					//break;
-				case 3:
-					npc->NPC_type = "boba_fett";
-					break;
-				case 4:
-					npc->NPC_type = "imperial";
-					break;
-				case 5:
-					npc->NPC_type = "rockettrooper";
-					break;
-				default:
-					npc->NPC_type = "impworker";
-					break;
-				}
+				group = GetSpawnGroup("default_red", RARITY_ELITE);
 			}
 			else if (random >= 1)
-			{// Sith...
-				int rnd2 = irand(0,18);
-				switch (rnd2)
-				{
-				case 0:
-					npc->NPC_type = "reborn_dual";
-					break;
-				case 1:
-					npc->NPC_type = "reborn_new";
-					break;
-				case 2:
-					npc->NPC_type = "reborn_staff";
-					break;
-				case 3:
-					//npc->NPC_type = "reborn_twin";
-					//break;
-				case 4:
-					//npc->NPC_type = "rebornacrobat";
-					//break;
-				//case 5:
-				//	npc->NPC_type = "rebornchiss";
-				//	break;
-				case 6:
-					//npc->NPC_type = "rebornfencer";
-					//break;
-				case 7:
-					//npc->NPC_type = "rebornforceuser";
-					//break;
-				case 8:
-					npc->NPC_type = "rebornrodian";
-					break;
-				case 9:
-					npc->NPC_type = "reborntrandoshan";
-					break;
-				case 10:
-					npc->NPC_type = "rebornweequay";
-					break;
-				case 11:
-					npc->NPC_type = "rebornboss";
-					break;
-				case 12:
-					npc->NPC_type = "tavion";
-					break;
-				case 13:
-					npc->NPC_type = "tavion_new";
-					break;
-				//case 14: // UQ1: Disabled until cloak is fixed...
-				//	npc->NPC_type = "shadowtrooper";
-				//	break;
-				case 15:
-					//npc->NPC_type = "saber_droid";
-					//break;
-				case 16:
-					npc->NPC_type = "alora";
-					break;
-				case 17:
-					npc->NPC_type = "alora_dual";
-					break;
-				default:
-					npc->NPC_type = "reborn";
-					break;
-				}
+			{// Jedi...
+				group = GetSpawnGroup("default_red", RARITY_BOSS);
 			}
 			else
 			{
-				npc->NPC_type = "stofficeralt";
+				group = GetSpawnGroup("default_red", RARITY_SPAM);
 			}
 
 			// Next NPC spawns as rebel...
@@ -1436,244 +1352,36 @@ void G_CheckMinimumNpcs( void ) {
 		}
 		else
 		{// Rebel NPCs...
-#ifndef __ALL_JEDI_NPCS__
 			if (random >= 10)
 			{
-				npc->NPC_type = "rebel";
+				group = GetSpawnGroup("default_blue", RARITY_SPAM);
 			}
-			else if (random >= 6)
+			else if (random >= 7)
 			{
-				npc->NPC_type = "rebel2";
+				group = GetSpawnGroup("default_blue", RARITY_COMMON);
 			}
 			else if (random >= 4)
 			{
-				if (irand(0,1) == 1)
-					npc->NPC_type = "prisoner2";
-				else
-					npc->NPC_type = "prisoner";
-			}
-			else if (random >= 3)
-			{
-				int rnd2 = irand(0,2);
-				switch (rnd2)
-				{
-				case 0:
-					npc->NPC_type = "bespincop";
-					break;
-				case 1:
-					npc->NPC_type = "bespincop";
-					break;
-				default:
-					npc->NPC_type = "bespincop2";
-					break;
-				}
+				group = GetSpawnGroup("default_blue", RARITY_OFFICER);
 			}
 			else if (random >= 2)
 			{// Officers/Specials...
-				int rnd2 = irand(0,4);
-				switch (rnd2)
-				{
-				case 0:
-					npc->NPC_type = "jan";
-					break;
-				case 1:
-					npc->NPC_type = "lando";
-					break;
-				default:
-					npc->NPC_type = "chewie";
-					break;
-				}
+				group = GetSpawnGroup("default_blue", RARITY_ELITE);
 			}
 			else if (random >= 1)
 			{// Jedi...
-				int rnd2 = irand(0,15);//18);
-				switch (rnd2)
-				{
-				case 0:
-					npc->NPC_type = "jedi";
-					break;
-				case 1:
-					npc->NPC_type = "jedi2";
-					break;
-				case 2:
-					npc->NPC_type = "jedi_hf1";
-					break;
-				case 3:
-					npc->NPC_type = "jedi_hf2";
-					break;
-				case 4:
-					npc->NPC_type = "jedi_hm1";
-					break;
-				case 5:
-					npc->NPC_type = "jedi_hm2";
-					break;
-				case 6:
-					npc->NPC_type = "jedi_kdm1";
-					break;
-				case 7:
-					npc->NPC_type = "jedi_kdm2";
-					break;
-				case 8:
-					npc->NPC_type = "jedi_rm1";
-					break;
-				case 9:
-					npc->NPC_type = "jedi_rm2";
-					break;
-				case 10:
-					npc->NPC_type = "jedi_tf1";
-					break;
-				case 11:
-					npc->NPC_type = "jedi_tf2";
-					break;
-				case 12:
-					npc->NPC_type = "jedi_zf1";
-					break;
-				case 13:
-					npc->NPC_type = "jedi_zf2";
-					break;
-				case 14:
-					npc->NPC_type = "JediTrainer";
-					break;
-				/*case 15:
-					npc->NPC_type = "JediF";
-					break;
-				case 16:
-					npc->NPC_type = "Luke";
-					break;
-				case 17:
-					npc->NPC_type = "Kyle_boss";
-					break;*/
-				default:
-					npc->NPC_type = "JediMaster";
-					break;
-				}
+				group = GetSpawnGroup("default_blue", RARITY_BOSS);
 			}
 			else
 			{
-				npc->NPC_type = "rebel2";
+				group = GetSpawnGroup("default_blue", RARITY_SPAM);
 			}
-#else //__ALL_JEDI_NPCS__
-				int rnd2 = irand(0,18);
-				switch (rnd2)
-				{
-				case 0:
-					npc->NPC_type = "jedi";
-					break;
-				case 1:
-					npc->NPC_type = "jedi2";
-					break;
-				case 2:
-					npc->NPC_type = "jedi_hf1";
-					break;
-				case 3:
-					npc->NPC_type = "jedi_hf2";
-					break;
-				case 4:
-					npc->NPC_type = "jedi_hm1";
-					break;
-				case 5:
-					npc->NPC_type = "jedi_hm2";
-					break;
-				case 6:
-					npc->NPC_type = "jedi_kdm1";
-					break;
-				case 7:
-					npc->NPC_type = "jedi_kdm2";
-					break;
-				case 8:
-					npc->NPC_type = "jedi_rm1";
-					break;
-				case 9:
-					npc->NPC_type = "jedi_rm2";
-					break;
-				case 10:
-					npc->NPC_type = "jedi_tf1";
-					break;
-				case 11:
-					npc->NPC_type = "jedi_tf2";
-					break;
-				case 12:
-					npc->NPC_type = "jedi_zf1";
-					break;
-				case 13:
-					npc->NPC_type = "jedi_zf2";
-					break;
-				case 14:
-					npc->NPC_type = "JediF";
-					break;
-				case 15:
-					npc->NPC_type = "JediMaster";
-					break;
-				case 16:
-					npc->NPC_type = "JediTrainer";
-					break;
-				case 17:
-					npc->NPC_type = "Kyle_boss";
-					break;
-				default:
-					npc->NPC_type = "Luke";
-					break;
-				}
-#endif //__ALL_JEDI_NPCS__
 
 			// Next NPC spawns as imperial...
-			if ( g_gametype.integer >= GT_TEAM /*&& g_gametype.integer != GT_WARZONE*/ )
+			if ( g_gametype.integer >= GT_TEAM )
 				NPC_SPAWN_TEAM = TEAM_RED;
 		}
 		
-		/*
-		if (g_gametype.integer == GT_WARZONE)
-		{
-			NPC_SelectWarzoneSpawnpoint( NPC_SPAWN_TEAM );
-
-			npc->s.teamowner = NPC_SPAWN_TEAM;
-
-			if (NPC_SPAWNPOINT[0] == 0 && NPC_SPAWNPOINT[1] == 0 && NPC_SPAWNPOINT[2] == 0)
-			{// Bad spot returned... Fallback to normal waypoint spawn...
-				while (gWPArray[waypoint]->inuse == qfalse || gWPArray[waypoint]->wpIsBad == qtrue || JKG_SpawnpointNearMoverEntityLocation(gWPArray[waypoint]->origin)
-#ifndef __WAYPOINTS_PRECHECKED__
-			|| !JKG_CheckBelowWaypoint(waypoint) || !JKG_CheckRoutingFrom( waypoint )
-#endif //__WAYPOINTS_PRECHECKED__
-			)
-				{
-					gWPArray[waypoint]->inuse = qfalse; // set it bad!
-
-					if (tries > 10)
-					{
-						return; // Try again on next check...
-					}
-
-					// Find a new one... This is probably a bad waypoint...
-					waypoint = irand(0, gWPNum-1);
-					tries++;
-				}
-
-				VectorCopy(gWPArray[waypoint]->origin, npc->s.origin);
-				npc->s.origin[2]+=32; // Drop down...
-
-#ifdef __NPC_SPAWN_DEBUGGING__
-				trap->Print(va("[%i/%i] Spawning (warzone NPC) %s at (fallback) waypoint %i.\n", botplayers+1, minplayers, npc->NPC_type, waypoint));
-#endif //__NPC_SPAWN_DEBUGGING__
-			}
-			else
-			{// Found a good warzone spawnpoint... Using it...
-				VectorCopy(NPC_SPAWNPOINT, npc->s.origin);
-				npc->s.origin[2]+=32; // Drop down...
-
-#ifdef __NPC_SPAWN_DEBUGGING__
-				trap->Print(va("[%i/%i] Spawning (warzone NPC) %s at flag %i.\n", botplayers+1, minplayers, npc->NPC_type, NPC_SPAWNFLAG));
-#endif //__NPC_SPAWN_DEBUGGING__
-			}
-
-			// Update ticket counts...
-			if (NPC_SPAWN_TEAM == TEAM_RED)
-				redtickets--;
-			else if (NPC_SPAWN_TEAM == TEAM_BLUE)
-				bluetickets--;
-
-			trap->SendServerCommand( -1, va("tkt %i %i", redtickets, bluetickets ));
-		}
-		else*/
 		{
 			if ( npc_pathing.integer && g_gametype.integer >= GT_TEAM )
 			{
@@ -1683,18 +1391,11 @@ void G_CheckMinimumNpcs( void ) {
 
 				if (NPC_SPAWN_TEAM == TEAM_BLUE) SPAWN_TEAM = TEAM_RED;
 				if (NPC_SPAWN_TEAM == TEAM_RED) SPAWN_TEAM = TEAM_BLUE;
-				npc->s.teamowner = SPAWN_TEAM;
+				selectedTeam = SPAWN_TEAM;
 
-				spawnPoint = *SelectCTFSpawnPoint ( SPAWN_TEAM, 0, npc->s.origin, npc->s.angles, qtrue );
-				VectorCopy(spawnPoint.s.origin, npc->s.origin);
-				npc->s.origin[2]+=32; // Drop down...
-
-#ifdef __NPC_SPAWN_DEBUGGING__
-				if (SPAWN_TEAM == TEAM_BLUE)
-					trap->Print(va("[%i/%i] Spawning REBEL %s.\n", botplayers+1, minplayers, npc->NPC_type));
-				else
-					trap->Print(va("[%i/%i] Spawning IMPERIAL %s.\n", botplayers+1, minplayers, npc->NPC_type));
-#endif //__NPC_SPAWN_DEBUGGING__
+				spawnPoint = *SelectCTFSpawnPoint ( SPAWN_TEAM, 0, position, position, qtrue );
+				VectorCopy(spawnPoint.s.origin, position);
+				position[2]+=32; // Drop down...
 			}
 			else
 			{
@@ -1716,8 +1417,8 @@ void G_CheckMinimumNpcs( void ) {
 					tries++;
 				}
 
-				VectorCopy(gWPArray[waypoint]->origin, npc->s.origin);
-				npc->s.origin[2]+=32; // Drop down...
+				VectorCopy(gWPArray[waypoint]->origin, position);
+				position[2]+=32; // Drop down...
 
 				if (g_gametype.integer >= GT_TEAM)
 				{
@@ -1726,14 +1427,7 @@ void G_CheckMinimumNpcs( void ) {
 					if (NPC_SPAWN_TEAM == TEAM_BLUE) SPAWN_TEAM = TEAM_RED;
 					if (NPC_SPAWN_TEAM == TEAM_RED) SPAWN_TEAM = TEAM_BLUE;
 
-					npc->s.teamowner = SPAWN_TEAM;
-
-#ifdef __NPC_SPAWN_DEBUGGING__
-					if (SPAWN_TEAM == TEAM_BLUE)
-						trap->Print(va("[%i/%i] Spawning REBEL %s at waypoint %i.\n", botplayers+1, minplayers, npc->NPC_type, waypoint));
-					else
-						trap->Print(va("[%i/%i] Spawning IMPERIAL %s at waypoint %i.\n", botplayers+1, minplayers, npc->NPC_type, waypoint));
-#endif //__NPC_SPAWN_DEBUGGING__
+					selectedTeam = SPAWN_TEAM;
 				}
 				else
 				{
@@ -1743,12 +1437,8 @@ void G_CheckMinimumNpcs( void ) {
 				}
 			}
 		}
-
-		npc->s.angles[PITCH] = 0;
-		npc->s.angles[YAW] = irand(0,359);
-		npc->s.angles[ROLL] = 0;
 		
-		SP_NPC_spawner( npc );
+		SP_NPC_Spawner_Group( group, position, selectedTeam );
 	}
 }
 #endif //__NPC_MINPLAYERS__
