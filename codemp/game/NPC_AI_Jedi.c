@@ -7019,10 +7019,10 @@ void Grenader_SelectBestWeapon( void )
 void Jedi_SelectBestWeapon( void )
 {
 	if ( NPCS.NPC->enemy
-		&& NPCS.NPC->client->ps.weapon != WP_WESTARM5 
+		&& NPCS.NPC->client->ps.weapon != WP_BRYAR_PISTOL
 		&& Distance( NPCS.NPC->r.currentOrigin, NPCS.NPC->enemy->r.currentOrigin ) > 768 )
 	{
-		Boba_ChangeWeapon( WP_WESTARM5 );
+		Boba_ChangeWeapon(WP_BRYAR_PISTOL);
 		return;
 	}
 	else if ( NPCS.NPC->client->ps.weapon != WP_SABER )
