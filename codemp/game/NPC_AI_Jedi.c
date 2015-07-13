@@ -7081,6 +7081,40 @@ void BOT_SelectBestWeapon( void )
 	*/
 }
 
+void Default_SelectBestWeapon( void )
+{
+	int primaryWeapon = NPCS.NPC->client->ps.primaryWeapon;
+	int secondaryWeapon = NPCS.NPC->client->ps.secondaryWeapon;
+	int temporaryWeapon = NPCS.NPC->client->ps.temporaryWeapon;
+
+	if (primaryWeapon <= WP_NONE) 
+	{
+		if (NPCS.NPC->client && NPCS.NPC->client->ps.weapon > WP_NONE)
+			primaryWeapon = NPCS.NPC->client->ps.weapon;
+		else
+			primaryWeapon = NPCS.NPC->s.weapon;
+	}
+
+	if ( temporaryWeapon > WP_NONE
+		&& NPCS.NPC->enemy
+		&& NPCS.NPC->client->ps.weapon != temporaryWeapon 
+		&& Distance( NPCS.NPC->r.currentOrigin, NPCS.NPC->enemy->r.currentOrigin ) > 800 )
+	{
+		Boba_ChangeWeapon( temporaryWeapon );
+	}
+	else if (secondaryWeapon > WP_NONE
+		&& NPCS.NPC->enemy
+		&& NPCS.NPC->client->ps.weapon != secondaryWeapon
+		&& Distance( NPCS.NPC->r.currentOrigin, NPCS.NPC->enemy->r.currentOrigin ) > 400 )
+	{
+		Boba_ChangeWeapon(secondaryWeapon);
+	}
+	else if (NPCS.NPC->client->ps.weapon != primaryWeapon)
+	{
+		Boba_ChangeWeapon(primaryWeapon);
+	}
+}
+
 void NPC_SelectBestWeapon( void )
 {
 	if (NPCS.NPC->next_weapon_switch > level.time) return;
@@ -7122,6 +7156,9 @@ void NPC_SelectBestWeapon( void )
 		return;
 	}
 	*/
+
+	// If none of the above, then select based on NPC file...
+	Default_SelectBestWeapon();
 }
 
 qboolean NPC_Jedi_EnemyInForceRange ( void )
