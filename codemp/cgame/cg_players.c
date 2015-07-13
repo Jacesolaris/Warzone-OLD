@@ -11461,7 +11461,7 @@ void CG_G2AnimEntModelLoad(centity_t *cent)
 
 					cent->localAnimIndex = BG_ParseAnimationFile(GLAName, NULL, qfalse);
 				}
-				if (cent->currentState.NPC_class == CLASS_SABER_DROID || cent->currentState.NPC_class == CLASS_HAZARD_TROOPER)
+				if (cent->currentState.NPC_class == CLASS_SABER_DROID || cent->currentState.NPC_class == CLASS_ASSASSIN_DROID || cent->currentState.NPC_class == CLASS_HAZARD_TROOPER)
 				{
 					//trap->Print("Saber droid found.\n");
 					cent->npcClient->bolt_rhand = trap->G2API_AddBolt(cent->ghoul2, 0, "*r_hand");
@@ -14336,7 +14336,7 @@ void CG_Player( centity_t *cent ) {
 				cent->npcClient->bolt_motion = trap->G2API_AddBolt(cent->npcClient->ghoul2Model, 0, "Motion");
 				cent->npcClient->bolt_llumbar = trap->G2API_AddBolt(cent->npcClient->ghoul2Model, 0, "lower_lumbar");
 			}
-			else if (cent->currentState.NPC_class == CLASS_SABER_DROID || cent->currentState.NPC_class == CLASS_HAZARD_TROOPER)
+			else if (cent->currentState.NPC_class == CLASS_SABER_DROID || cent->currentState.NPC_class == CLASS_ASSASSIN_DROID || cent->currentState.NPC_class == CLASS_HAZARD_TROOPER)
 			{
 				cent->npcClient->bolt_rhand = trap->G2API_AddBolt(cent->npcClient->ghoul2Model, 0, "*r_hand");
 				cent->npcClient->bolt_lhand = trap->G2API_AddBolt(cent->npcClient->ghoul2Model, 0, "*l_hand");
