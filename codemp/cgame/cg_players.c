@@ -15395,7 +15395,7 @@ SkipTrueView:
 		}
 		
 	}
-
+	
 	//fullbody push effect
 	if (cent->currentState.eFlags & EF_BODYPUSH)
 	{

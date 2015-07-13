@@ -9961,6 +9961,7 @@ void BG_G2PlayerAngles(void *ghoul2, int motionBolt, entityState_t *cent, int ti
 	static vec3_t		velPos, velAng;
 	static vec3_t		ulAngles, llAngles, viewAngles, angles, thoracicAngles = {0,0,0};
 	static vec3_t		headClampMinAngles = {-25,-55,-10}, headClampMaxAngles = {50,50,10};
+	vec3_t viewangles;
 
 	if ( cent->m_iVehicleNum || cent->forceFrame || BG_SaberLockBreakAnim(cent->legsAnim) || BG_SaberLockBreakAnim(cent->torsoAnim) )
 	{ //a vehicle or riding a vehicle - in either case we don't need to be in here
@@ -10046,10 +10047,25 @@ void BG_G2PlayerAngles(void *ghoul2, int motionBolt, entityState_t *cent, int ti
 	}
 
 	// only show a fraction of the pitch angle in the torso
-	if ( headAngles[PITCH] > 180 ) {
+	/*if ( headAngles[PITCH] > 180 ) {
 		dest = (-360 + headAngles[PITCH]) * 0.75;
 	} else {
 		dest = headAngles[PITCH] * 0.75;
+	}*/
+
+#ifdef _CGAME
+	VectorCopy(cg_entities[cent->number].playerState->viewangles, viewangles);
+#endif //!_CGAME
+#ifdef _GAME
+	VectorCopy(g_entities[cent->number].client->ps.viewangles, viewangles);
+#endif //_GAME
+
+	if ( headAngles[PITCH] > 180 ) {
+		//dest = (-360 + headAngles[PITCH]);
+		dest = (-360 + viewangles[PITCH]);
+	} else {
+		//dest = headAngles[PITCH];
+		dest = viewangles[PITCH];
 	}
 
 	if (cent->m_iVehicleNum)
@@ -10059,6 +10075,7 @@ void BG_G2PlayerAngles(void *ghoul2, int motionBolt, entityState_t *cent, int ti
 	else
 	{
 		BG_SwingAngles( dest, 15, 30, 0.1f, tPitchAngle, tPitching, frametime );
+		//*tPitchAngle = dest;
 	}
 	torsoAngles[PITCH] = *tPitchAngle;
 
@@ -10191,8 +10208,8 @@ void BG_G2PlayerAngles(void *ghoul2, int motionBolt, entityState_t *cent, int ti
 	AnglesToAxis( legsAngles, legs );
 
 	VectorCopy( cent_lerpAngles, viewAngles );
-	viewAngles[YAW] = viewAngles[ROLL] = 0;
-	viewAngles[PITCH] *= 0.5;
+	//viewAngles[YAW] = viewAngles[ROLL] = 0;
+	//viewAngles[PITCH] *= 0.5;
 
 	VectorSet( angles, 0, legsAngles[1], 0 );
 
