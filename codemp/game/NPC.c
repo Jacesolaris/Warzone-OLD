@@ -40,6 +40,7 @@ extern qboolean NPC_CombatMoveToGoal( qboolean tryStraight, qboolean retreat );
 qboolean UQ_MoveDirClear( int forwardmove, int rightmove, qboolean reset );
 extern qboolean NPC_IsJetpacking ( gentity_t *self );
 extern void ST_Speech( gentity_t *self, int speechType, float failChance );
+extern void BubbleShield_Update(void);
 
 // Conversations...
 extern void NPC_NPCConversation();
@@ -1421,6 +1422,29 @@ void NPC_BehaviorSet_Droid( int bState )
 
 /*
 -------------------------
+NPC_BehaviorSet_SandCreature
+-------------------------
+*/
+extern void NPC_BSSandCreature_Default( void );
+void NPC_BehaviorSet_SandCreature( int bState )
+{
+	switch( bState )
+	{
+	case BS_STAND_GUARD:
+	case BS_PATROL:
+	case BS_STAND_AND_SHOOT:
+	case BS_HUNT_AND_KILL:
+	case BS_DEFAULT:
+		NPC_BSSandCreature_Default();
+		break;
+	default:
+		NPC_BehaviorSet_Default( bState );
+		break;
+	}
+}
+
+/*
+-------------------------
 NPC_BehaviorSet_Mark1
 -------------------------
 */
@@ -1632,6 +1656,7 @@ void Rocketer_SelectBestWeapon( void )
 NPC_RunBehavior
 -------------------------
 */
+extern void NPC_BSSD_Default( void );
 extern void NPC_BSEmplaced( void );
 extern qboolean NPC_CheckSurrender( void );
 extern void Boba_FlyStop( gentity_t *self );
@@ -1648,6 +1673,11 @@ void NPC_RunBehavior( int team, int bState )
 	if ( bState == BS_CINEMATIC )
 	{
 		NPC_BSCinematic();
+	}
+	else if ( !TIMER_Done(NPCS.NPC, "DEMP2_StunTime"))
+	{//we've been stunned by a demp2 shot.
+		NPC_UpdateAngles(qtrue, qtrue);
+		return;
 	}
 	else if ( NPCS.NPC->client->ps.weapon == WP_EMPLACED_GUN )
 	{
@@ -1670,6 +1700,19 @@ void NPC_RunBehavior( int team, int bState )
 		|| (NPCS.NPC->client->ps.eFlags & EF_FAKE_NPC_BOT) /* temporary */ )
 	{//jedi
 		NPC_BehaviorSet_Jedi( bState );
+	}
+	else if ( NPCS.NPC->client->NPC_class == CLASS_HOWLER )
+	{
+		NPC_BehaviorSet_Howler( bState );
+		return;
+	}
+	else if ( Jedi_CultistDestroyer( NPCS.NPC ) )
+	{
+		NPC_BSJedi_Default();
+	}
+	else if ( NPCS.NPC->client->NPC_class == CLASS_SABER_DROID )
+	{//saber droid
+		NPC_BSSD_Default();
 	}
 	else if ( NPCS.NPC->client->NPC_class == CLASS_WAMPA )
 	{//wampa
@@ -1745,6 +1788,9 @@ void NPC_RunBehavior( int team, int bState )
 			case CLASS_GALAKMECH:
 				NPC_BSGM_Default();
 				return;
+			case CLASS_SAND_CREATURE:
+				NPC_BehaviorSet_SandCreature( bState );
+				return;
 			case CLASS_TUSKEN:
 				Sniper_SelectBestWeapon();
 
@@ -1790,7 +1836,7 @@ void NPC_RunBehavior( int team, int bState )
 					return;
 				}
 				return;
-			case CLASS_ASSASSIN_DROID:
+			//case CLASS_ASSASSIN_DROID:
 			case CLASS_IMPERIAL:
 			case CLASS_RODIAN:
 			case CLASS_TRANDOSHAN:
@@ -1804,6 +1850,10 @@ void NPC_RunBehavior( int team, int bState )
 					NPC_BehaviorSet_Stormtrooper( bState );
 					return;
 				}
+				return;
+			case CLASS_ASSASSIN_DROID:
+				NPC_BSJedi_Default();
+				BubbleShield_Update();
 				return;
 			case CLASS_NOGHRI:
 			case CLASS_SABER_DROID:
@@ -3767,13 +3817,13 @@ void NPC_Think ( gentity_t *self)//, int msec )
 
 			if (npc_pathing.integer > 0)
 			{
-				if (is_civilian || is_jedi || is_bot) use_pathing = qtrue;
+				if (is_civilian || is_jedi || is_bot || self->client->NPC_class == CLASS_SABER_DROID) use_pathing = qtrue;
 
 				if (g_gametype.integer >= GT_TEAM) use_pathing = qtrue;
 			}
 			else
 			{
-				if (is_civilian || is_jedi || is_bot) use_pathing = qtrue;
+				if (is_civilian || is_jedi || is_bot || self->client->NPC_class == CLASS_SABER_DROID) use_pathing = qtrue;
 			}
 
 			NPC_DoPadawanStuff(); // check any padawan stuff we might need to do...

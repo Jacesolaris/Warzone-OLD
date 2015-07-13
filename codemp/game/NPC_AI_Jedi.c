@@ -97,6 +97,12 @@ enum
 	LSTATE_INVESTIGATE,
 };
 
+void NPC_CultistDestroyer_Precache( void )
+{//precashe for cultist destroyer
+	G_SoundIndex( "sound/movers/objects/green_beam_lp2.wav" );
+	G_EffectIndex( "force/destruction_exp" );
+}
+
 void NPC_ShadowTrooper_Precache( void )
 {
 #ifndef __MMO__
@@ -104,6 +110,12 @@ void NPC_ShadowTrooper_Precache( void )
 #endif //__MMO__
 	G_SoundIndex( "sound/chars/shadowtrooper/cloak.wav" );
 	G_SoundIndex( "sound/chars/shadowtrooper/decloak.wav" );
+}
+
+void NPC_Rosh_Dark_Precache( void )
+{//precashe for Rosh boss
+	G_EffectIndex( "force/kothos_recharge.efx" );
+	G_EffectIndex( "force/kothos_beam.efx" );
 }
 
 void Jedi_ClearTimers( gentity_t *ent )

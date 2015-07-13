@@ -8088,7 +8088,40 @@ static void PM_Weapon( void )
 		return;
 	}
 
-	if (IsSniperRifle(pm->ps->weapon) && pm->ps->zoomMode == 1)
+	//[CoOp]
+	//ported from SP
+	//special fire animation overrides for NPCs
+	if ( pm_entSelf->s.NPC_class == CLASS_ROCKETTROOPER )
+	{
+		if ( (pm->ps->eFlags2&EF2_FLYING) )
+		{
+			PM_StartTorsoAnim(BOTH_ATTACK2);
+			//PM_SetAnim(pm,SETANIM_TORSO,BOTH_ATTACK2,SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_RESTART|SETANIM_FLAG_HOLD);
+		}
+		else
+		{
+			PM_StartTorsoAnim(BOTH_ATTACK1);
+			//PM_SetAnim(pm,SETANIM_TORSO,BOTH_ATTACK1,SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_RESTART|SETANIM_FLAG_HOLD);
+		}
+	}
+	else if ( pm_entSelf->s.NPC_class == CLASS_ASSASSIN_DROID )
+	{
+		// Crouched Attack
+ 		if (BG_CrouchAnim(pm->ps->legsAnim))
+		{
+			PM_StartTorsoAnim(BOTH_ATTACK2);
+			//PM_SetAnim(pm,SETANIM_TORSO,BOTH_ATTACK2,SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_RESTART|SETANIM_FLAG_HOLDLESS);
+		}
+
+		// Standing Attack
+		//-----------------
+		else
+		{
+			PM_StartTorsoAnim(BOTH_ATTACK3);
+			//PM_SetAnim(pm,SETANIM_TORSO,BOTH_ATTACK3,SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_RESTART|SETANIM_FLAG_HOLDLESS);
+		}
+	}
+	else if (IsSniperRifle(pm->ps->weapon) && pm->ps->zoomMode == 1)
 	{
 		PM_StartTorsoAnim( BOTH_ATTACK4 );
 	}
@@ -9364,6 +9397,122 @@ void BG_IK_MoveArm(void *ghoul2, int lHandBolt, int time, entityState_t *ent, in
 	}
 }
 
+//used to make sure NPCs with weird bone structures get they skeletons used correctly
+qboolean BG_ClassHasBadBones( int NPC_class )
+{
+	switch ( NPC_class )
+	{
+	case CLASS_WAMPA:
+	case CLASS_ROCKETTROOPER:
+	case CLASS_SABER_DROID:
+	case CLASS_HAZARD_TROOPER:
+	case CLASS_ASSASSIN_DROID:
+	case CLASS_RANCOR:
+		return qtrue;
+	}
+	return qfalse;
+}
+
+
+//used to set the proper orientations for the funky NPC class bone structures.
+void BG_BoneOrientationsForClass( int NPC_class, char *boneName, int *oUp, int *oRt, int *oFwd )
+{
+	//defaults
+	*oUp = POSITIVE_X;
+	*oRt = NEGATIVE_Y;
+	*oFwd = NEGATIVE_Z;
+	//switch off class
+	switch ( NPC_class )
+	{
+	case CLASS_RANCOR:
+		*oUp = NEGATIVE_X;
+		*oRt = POSITIVE_Y;
+		*oFwd = POSITIVE_Z;
+		//*oUp = testAxes[0];
+		//*oRt = testAxes[1];
+		//*oFwd = testAxes[2];
+		break;
+	case CLASS_ROCKETTROOPER:
+	case CLASS_HAZARD_TROOPER:
+		//Root is:
+		//*oUp = POSITIVE_Z;
+		//*oRt = NEGATIVE_X;
+		//*oFwd = NEGATIVE_Y;
+		if ( Q_stricmp( "pelvis", boneName ) == 0 )
+		{//child of root
+			//in ModView:
+			//*oUp = NEGATIVE_X;
+			//*oRt = NEGATIVE_Z;
+			//*oFwd = NEGATIVE_Y;
+			//actual, when differences with root are accounted for:
+			*oUp = POSITIVE_Z;
+			*oRt = NEGATIVE_X;
+			*oFwd = NEGATIVE_Y;
+		}
+		else
+		{//all the rest are the same, children of root (not pelvis)
+			//in ModView:
+			//*oUp = POSITIVE_X;
+			//*oRt = POSITIVE_Y;
+			//*oFwd = POSITIVE_Z;
+			//actual, when differences with root are accounted for:
+			//*oUp = POSITIVE_Z;
+			//*oRt = NEGATIVE_Y;
+			//*oFwd = NEGATIVE_X;
+			*oUp = NEGATIVE_X;
+			*oRt = POSITIVE_Y;
+			*oFwd = POSITIVE_Z;
+		}
+		break;
+	case CLASS_SABER_DROID:
+		if ( Q_stricmp( "pelvis", boneName ) == 0
+			|| Q_stricmp( "thoracic", boneName ) == 0 )
+		{
+			*oUp = NEGATIVE_X;
+			*oRt = NEGATIVE_Z;
+			*oFwd = NEGATIVE_Y;
+		}
+		else
+		{
+			*oUp = NEGATIVE_X;//POSITIVE_X;
+			*oRt = POSITIVE_Y;
+			*oFwd = POSITIVE_Z;
+		}
+		break;
+	case CLASS_WAMPA:
+		if ( Q_stricmp( "pelvis", boneName ) == 0 )
+		{
+			*oUp = NEGATIVE_X;
+			*oRt = POSITIVE_Y;
+			*oFwd = NEGATIVE_Z;
+		}
+		else
+		{
+			//*oUp = POSITIVE_X;
+			//*oRt = POSITIVE_Y;
+			//*oFwd = POSITIVE_Z;
+			//kinda worked
+			*oUp = NEGATIVE_X;
+			*oRt = POSITIVE_Y;
+			*oFwd = POSITIVE_Z;
+		}
+		break;
+	case CLASS_ASSASSIN_DROID:
+		if ( Q_stricmp( "pelvis", boneName ) == 0
+			|| Q_stricmp( "lower_lumbar", boneName ) == 0
+			|| Q_stricmp( "upper_lumbar", boneName ) == 0 )
+		{//only these 3 bones on them are wrong
+			//*oUp = POSITIVE_X;
+			//*oRt = POSITIVE_Y;
+			//*oFwd = POSITIVE_Z;
+			*oUp = NEGATIVE_X;
+			*oRt = POSITIVE_Y;
+			*oFwd = POSITIVE_Z;
+		}
+		break;
+	}
+}
+
 //Adjust the head/neck desired angles
 void BG_UpdateLookAngles( int lookingDebounceTime, vec3_t lastHeadAngles, int time, vec3_t lookAngles, float lookSpeed, float minPitch, float maxPitch, float minYaw, float maxYaw, float minRoll, float maxRoll )
 {
@@ -9422,7 +9571,7 @@ void BG_UpdateLookAngles( int lookingDebounceTime, vec3_t lastHeadAngles, int ti
 }
 
 //for setting visual look (headturn) angles
-static void BG_G2ClientNeckAngles( void *ghoul2, int time, const vec3_t lookAngles, vec3_t headAngles, vec3_t neckAngles, vec3_t thoracicAngles, vec3_t headClampMinAngles, vec3_t headClampMaxAngles )
+static void BG_G2ClientNeckAngles( entityState_t *cent, void *ghoul2, int time, const vec3_t lookAngles, vec3_t headAngles, vec3_t neckAngles, vec3_t thoracicAngles, vec3_t headClampMinAngles, vec3_t headClampMaxAngles )
 {
 	vec3_t	lA;
 	VectorCopy( lookAngles, lA );
@@ -9454,39 +9603,80 @@ static void BG_G2ClientNeckAngles( void *ghoul2, int time, const vec3_t lookAngl
 		lA[ROLL] = headClampMaxAngles[ROLL];
 	}
 
-	//split it up between the neck and cranium
-	if ( thoracicAngles[PITCH] )
-	{//already been set above, blend them
-		thoracicAngles[PITCH] = (thoracicAngles[PITCH] + (lA[PITCH] * 0.4)) * 0.5f;
+	if ( cent->NPC_class == CLASS_ASSASSIN_DROID )
+	{//each bone has only 1 axis of rotation!
+		//thoracic only pitches, split with cervical
+		if ( thoracicAngles[PITCH] )
+		{//already been set above, blend them
+			thoracicAngles[PITCH] = (thoracicAngles[PITCH] + (lA[PITCH] * 0.5f)) * 0.5f;
+		}
+		else
+		{
+			thoracicAngles[PITCH] = lA[PITCH] * 0.5f;
+		}
+		thoracicAngles[YAW] = thoracicAngles[ROLL] = 0.0f;
+		//cervical only pitches, split with thoracis
+		neckAngles[PITCH] = lA[PITCH] * 0.5f;
+		neckAngles[YAW] = 0.0f;
+		neckAngles[ROLL] = 0.0f;
+		//cranium only yaws
+		headAngles[PITCH] = 0.0f;
+		headAngles[YAW] = lA[YAW];
+		headAngles[ROLL] = 0.0f;
+		//no bones roll
+	}
+	else if ( cent->NPC_class == CLASS_SABER_DROID )
+	{//each bone has only 1 axis of rotation!
+		//no thoracic
+		VectorClear( thoracicAngles );
+		//cervical only yaws
+		neckAngles[PITCH] = 0.0f;
+		neckAngles[YAW] = lA[YAW];
+		neckAngles[ROLL] = 0.0f;
+		//cranium only pitches
+		headAngles[PITCH] = lA[PITCH];
+		headAngles[YAW] = 0.0f;
+		headAngles[ROLL] = 0.0f;
+		//none of the bones roll
 	}
 	else
-	{
-		thoracicAngles[PITCH] = lA[PITCH] * 0.4;
-	}
-	if ( thoracicAngles[YAW] )
-	{//already been set above, blend them
-		thoracicAngles[YAW] = (thoracicAngles[YAW] + (lA[YAW] * 0.1)) * 0.5f;
-	}
-	else
-	{
-		thoracicAngles[YAW] = lA[YAW] * 0.1;
-	}
-	if ( thoracicAngles[ROLL] )
-	{//already been set above, blend them
-		thoracicAngles[ROLL] = (thoracicAngles[ROLL] + (lA[ROLL] * 0.1)) * 0.5f;
-	}
-	else
-	{
-		thoracicAngles[ROLL] = lA[ROLL] * 0.1;
-	}
+	{//normal humaniod
+		//split it up between the neck and cranium
 
-	neckAngles[PITCH] = lA[PITCH] * 0.2f;
-	neckAngles[YAW] = lA[YAW] * 0.3f;
-	neckAngles[ROLL] = lA[ROLL] * 0.3f;
+		if ( thoracicAngles[PITCH] )
+		{//already been set above, blend them
+			thoracicAngles[PITCH] = (thoracicAngles[PITCH] + (lA[PITCH] * 0.4)) * 0.5f;
+		}
+		else
+		{
+			thoracicAngles[PITCH] = lA[PITCH] * 0.4;
+		}
+		if ( thoracicAngles[YAW] )
+		{//already been set above, blend them
+			thoracicAngles[YAW] = (thoracicAngles[YAW] + (lA[YAW] * 0.1)) * 0.5f;
+		}
+		else
+		{
+			thoracicAngles[YAW] = lA[YAW] * 0.1;
+		}
+		if ( thoracicAngles[ROLL] )
+		{//already been set above, blend them
+			thoracicAngles[ROLL] = (thoracicAngles[ROLL] + (lA[ROLL] * 0.1)) * 0.5f;
+		}
+		else
+		{
+			thoracicAngles[ROLL] = lA[ROLL] * 0.1;
+		}
 
-	headAngles[PITCH] = lA[PITCH] * 0.4;
-	headAngles[YAW] = lA[YAW] * 0.6;
-	headAngles[ROLL] = lA[ROLL] * 0.6;
+
+		neckAngles[PITCH] = lA[PITCH] * 0.2f;
+		neckAngles[YAW] = lA[YAW] * 0.3f;
+		neckAngles[ROLL] = lA[ROLL] * 0.3f;
+	
+		headAngles[PITCH] = lA[PITCH] * 0.4;
+		headAngles[YAW] = lA[YAW] * 0.6;
+		headAngles[ROLL] = lA[ROLL] * 0.6;
+	}
 
 	/* //non-applicable SP code
 	if ( G_RidingVehicle( cent->gent ) )// && type == VH_SPEEDER ?
@@ -9495,9 +9685,30 @@ static void BG_G2ClientNeckAngles( void *ghoul2, int time, const vec3_t lookAngl
 	}
 	*/
 
-	trap->G2API_SetBoneAngles(ghoul2, 0, "cranium", headAngles, BONE_ANGLES_POSTMULT, POSITIVE_X, NEGATIVE_Y, NEGATIVE_Z, 0, 0, time);
-	trap->G2API_SetBoneAngles(ghoul2, 0, "cervical", neckAngles, BONE_ANGLES_POSTMULT, POSITIVE_X, NEGATIVE_Y, NEGATIVE_Z, 0, 0, time);
-	trap->G2API_SetBoneAngles(ghoul2, 0, "thoracic", thoracicAngles, BONE_ANGLES_POSTMULT, POSITIVE_X, NEGATIVE_Y, NEGATIVE_Z, 0, 0, time);
+	if ( BG_ClassHasBadBones( cent->NPC_class ) )
+	{
+		int oUp, oRt, oFwd;
+		if ( cent->NPC_class != CLASS_RANCOR )
+		{//Rancor doesn't use cranium and cervical
+			BG_BoneOrientationsForClass( cent->NPC_class, "cranium", &oUp, &oRt, &oFwd );
+			trap->G2API_SetBoneAngles( ghoul2, 0, "cranium", headAngles, BONE_ANGLES_POSTMULT, oUp, oRt, oFwd, 0, 0, time );
+			BG_BoneOrientationsForClass( cent->NPC_class, "cervical", &oUp, &oRt, &oFwd );
+			trap->G2API_SetBoneAngles( ghoul2, 0, "cervical", neckAngles, BONE_ANGLES_POSTMULT, oUp, oRt, oFwd, 0, 0, time); 
+
+			if ( cent->NPC_class == CLASS_SABER_DROID )
+			{
+				//BG_G2ATSTAngles(ghoul2, time, thoracicAngles );
+				BG_BoneOrientationsForClass( cent->NPC_class, "thoracic", &oUp, &oRt, &oFwd );
+				trap->G2API_SetBoneAngles( ghoul2, 0, "thoracic", thoracicAngles, BONE_ANGLES_POSTMULT, oUp, oRt, oFwd, 0, 0, time);
+			}
+		}
+	}
+	else
+	{//normal humanoid
+		trap->G2API_SetBoneAngles(ghoul2, 0, "cranium", headAngles, BONE_ANGLES_POSTMULT, POSITIVE_X, NEGATIVE_Y, NEGATIVE_Z, 0, 0, time); 
+		trap->G2API_SetBoneAngles(ghoul2, 0, "cervical", neckAngles, BONE_ANGLES_POSTMULT, POSITIVE_X, NEGATIVE_Y, NEGATIVE_Z, 0, 0, time); 
+		trap->G2API_SetBoneAngles(ghoul2, 0, "thoracic", thoracicAngles, BONE_ANGLES_POSTMULT, POSITIVE_X, NEGATIVE_Y, NEGATIVE_Z, 0, 0, time); 
+	}
 }
 
 //rww - Finally decided to convert all this stuff to BG form.
@@ -9511,7 +9722,14 @@ static void BG_G2ClientSpineAngles( void *ghoul2, int motionBolt, vec3_t cent_le
 	viewAngles[YAW] = AngleDelta( cent_lerpAngles[YAW], angles[YAW] );
 	//*tYawAngle = viewAngles[YAW];
 
-#if 1
+	if ( cent->NPC_class == CLASS_SABER_DROID )
+	{//don't use lower bones
+		VectorClear( thoracicAngles );
+		VectorClear( ulAngles );
+		VectorClear( llAngles );
+		return;
+	}
+
 	if ( !BG_FlippingAnim( cent->legsAnim ) &&
 		!BG_SpinningSaberAnim( cent->legsAnim ) &&
 		!BG_SpinningSaberAnim( cent->torsoAnim ) &&
@@ -9543,41 +9761,11 @@ static void BG_G2ClientSpineAngles( void *ghoul2, int motionBolt, vec3_t cent_le
 		!(cent->eFlags & EF_DEAD) &&
 		(cent->legsAnim) != (cent->torsoAnim) &&
 		(ciLegs) != (ciTorso) &&
+		!BG_ClassHasBadBones( cent->NPC_class ) &&//these guys' bones are so fucked up we shouldn't even bother with this motion bone comp...
 		!cent->m_iVehicleNum)
 	{
 		doCorr = qtrue;
 	}
-#else
-	if ( ((!BG_FlippingAnim( cent->legsAnim )
-		&& !BG_SpinningSaberAnim( cent->legsAnim )
-		&& !BG_SpinningSaberAnim( cent->torsoAnim )
-		&& (cent->legsAnim) != (cent->torsoAnim)) //NOTE: presumes your legs & torso are on the same frame, though they *should* be because PM_SetAnimFinal tries to keep them in synch
-		||
-		(!BG_FlippingAnim( ciLegs )
-		&& !BG_SpinningSaberAnim( ciLegs )
-		&& !BG_SpinningSaberAnim( ciTorso )
-		&& (ciLegs) != (ciTorso)))
-		||
-		ciLegs != cent->legsAnim
-		||
-		ciTorso != cent->torsoAnim)
-	{
-		doCorr = qtrue;
-		*corrTime = time + 1000; //continue correcting for a second after to smooth things out. SP doesn't need this for whatever reason but I can't find a way around it.
-	}
-	else if (*corrTime >= time)
-	{
-		if (!BG_FlippingAnim( cent->legsAnim )
-			&& !BG_SpinningSaberAnim( cent->legsAnim )
-			&& !BG_SpinningSaberAnim( cent->torsoAnim )
-			&& !BG_FlippingAnim( ciLegs )
-			&& !BG_SpinningSaberAnim( ciLegs )
-			&& !BG_SpinningSaberAnim( ciTorso ))
-		{
-			doCorr = qtrue;
-		}
-	}
-#endif
 
 	if (doCorr)
 	{//FIXME: no need to do this if legs and torso on are same frame
@@ -9611,17 +9799,49 @@ static void BG_G2ClientSpineAngles( void *ghoul2, int motionBolt, vec3_t cent_le
 
 	//distribute the angles differently up the spine
 	//NOTE: each of these distributions must add up to 1.0f
-	thoracicAngles[PITCH] = viewAngles[PITCH]*0.20f;
-	llAngles[PITCH] = viewAngles[PITCH]*0.40f;
-	ulAngles[PITCH] = viewAngles[PITCH]*0.40f;
+	//ported from SP.
+	//added in different bone handling support for some of NPCs
+	if ( cent->NPC_class == CLASS_HAZARD_TROOPER )
+	{//only uses lower_lumbar and upper_lumbar to look around
+		VectorClear( thoracicAngles );
+		ulAngles[PITCH] = viewAngles[PITCH]*0.50f;
+		llAngles[PITCH] = viewAngles[PITCH]*0.50f;
 
-	thoracicAngles[YAW] = viewAngles[YAW]*0.20f;
-	ulAngles[YAW] = viewAngles[YAW]*0.35f;
-	llAngles[YAW] = viewAngles[YAW]*0.45f;
+		ulAngles[YAW] = viewAngles[YAW]*0.45f;
+		llAngles[YAW] = viewAngles[YAW]*0.55f;
 
-	thoracicAngles[ROLL] = viewAngles[ROLL]*0.20f;
-	ulAngles[ROLL] = viewAngles[ROLL]*0.35f;
-	llAngles[ROLL] = viewAngles[ROLL]*0.45f;
+		ulAngles[ROLL] = viewAngles[ROLL]*0.45f;
+		llAngles[ROLL] = viewAngles[ROLL]*0.55f;
+	}
+	else if ( cent->NPC_class == CLASS_ASSASSIN_DROID )
+	{//each bone has only 1 axis of rotation!
+		//upper lumbar does not pitch
+		thoracicAngles[PITCH] = viewAngles[PITCH]*0.40f;
+		ulAngles[PITCH] = 0.0f;
+		llAngles[PITCH] = viewAngles[PITCH]*0.60f;
+		//only upper lumbar yaws
+		thoracicAngles[YAW] = 0.0f;
+		ulAngles[YAW] = viewAngles[YAW];
+		llAngles[YAW] = 0.0f;
+		//no bone is capable of rolling
+		thoracicAngles[ROLL] = 0.0f;
+		ulAngles[ROLL] = 0.0f;
+		llAngles[ROLL] = 0.0f;
+	}
+	else
+	{//use all 3 bones (normal humanoid models)
+		thoracicAngles[PITCH] = viewAngles[PITCH]*0.20f;
+		llAngles[PITCH] = viewAngles[PITCH]*0.40f;
+		ulAngles[PITCH] = viewAngles[PITCH]*0.40f;
+
+		thoracicAngles[YAW] = viewAngles[YAW]*0.20f;
+		ulAngles[YAW] = viewAngles[YAW]*0.35f;
+		llAngles[YAW] = viewAngles[YAW]*0.45f;
+
+		thoracicAngles[ROLL] = viewAngles[ROLL]*0.20f;
+		ulAngles[ROLL] = viewAngles[ROLL]*0.35f;
+		llAngles[ROLL] = viewAngles[ROLL]*0.45f;
+	}
 }
 
 /*
@@ -9992,11 +10212,28 @@ void BG_G2PlayerAngles(void *ghoul2, int motionBolt, entityState_t *cent, int ti
 		legsAngles[ROLL] = 0;
 		torsoAngles[ROLL] = 0;
 
-		BG_G2ClientSpineAngles(ghoul2, motionBolt, cent_lerpOrigin, cent_lerpAngles, cent, time, viewAngles, ciLegs, ciTorso, angles, thoracicAngles, ulAngles, llAngles, modelScale, tPitchAngle, tYawAngle, corrTime);
-		trap->G2API_SetBoneAngles(ghoul2, 0, "lower_lumbar", llAngles, BONE_ANGLES_POSTMULT, POSITIVE_X, NEGATIVE_Y, NEGATIVE_Z, 0, 0, time);
-		trap->G2API_SetBoneAngles(ghoul2, 0, "upper_lumbar", ulAngles, BONE_ANGLES_POSTMULT, POSITIVE_X, NEGATIVE_Y, NEGATIVE_Z, 0, 0, time);
-		trap->G2API_SetBoneAngles(ghoul2, 0, "cranium", vec3_origin, BONE_ANGLES_POSTMULT, POSITIVE_X, NEGATIVE_Y, NEGATIVE_Z, 0, 0, time);
+		if ( BG_ClassHasBadBones( cent->NPC_class ) )
+		{
+			int oUp, oRt, oFwd;
+			if ( cent->NPC_class == CLASS_RANCOR )
+			{
+				llAngles[YAW] = llAngles[ROLL] = 0.0f;
+				ulAngles[YAW] = ulAngles[ROLL] = 0.0f;
+			}
+			BG_BoneOrientationsForClass( cent->NPC_class, "upper_lumbar", &oUp, &oRt, &oFwd );
+			trap->G2API_SetBoneAngles(ghoul2, 0, "lower_lumbar", ulAngles, BONE_ANGLES_POSTMULT, oUp, oRt, oFwd, 0, 0, time); 
+			BG_BoneOrientationsForClass( cent->NPC_class, "lower_lumbar", &oUp, &oRt, &oFwd );
+			trap->G2API_SetBoneAngles(ghoul2, 0, "upper_lumbar", llAngles, BONE_ANGLES_POSTMULT, oUp, oRt, oFwd, 0, 0, time); 
 
+			trap->G2API_SetBoneAngles(ghoul2, 0, "thoracic", thoracicAngles, BONE_ANGLES_POSTMULT, POSITIVE_X, NEGATIVE_Y, NEGATIVE_Z, 0, 0, time);
+		}
+		else
+		{
+			BG_G2ClientSpineAngles(ghoul2, motionBolt, cent_lerpOrigin, cent_lerpAngles, cent, time, viewAngles, ciLegs, ciTorso, angles, thoracicAngles, ulAngles, llAngles, modelScale, tPitchAngle, tYawAngle, corrTime);
+			trap->G2API_SetBoneAngles(ghoul2, 0, "lower_lumbar", llAngles, BONE_ANGLES_POSTMULT, POSITIVE_X, NEGATIVE_Y, NEGATIVE_Z, 0, 0, time);
+			trap->G2API_SetBoneAngles(ghoul2, 0, "upper_lumbar", ulAngles, BONE_ANGLES_POSTMULT, POSITIVE_X, NEGATIVE_Y, NEGATIVE_Z, 0, 0, time);
+			trap->G2API_SetBoneAngles(ghoul2, 0, "cranium", vec3_origin, BONE_ANGLES_POSTMULT, POSITIVE_X, NEGATIVE_Y, NEGATIVE_Z, 0, 0, time);
+		}
 		return; //don't have to bother with the rest then
 	}
 #endif //__NO_SILLY_SABER_SPINAROUND__
@@ -10081,14 +10318,14 @@ void BG_G2PlayerAngles(void *ghoul2, int motionBolt, entityState_t *cent, int ti
 
 	BG_UpdateLookAngles(lookTime, lastHeadAngles, time, lookAngles, lookSpeed, -50.0f, 50.0f, -70.0f, 70.0f, -30.0f, 30.0f);
 
-	BG_G2ClientNeckAngles(ghoul2, time, lookAngles, headAngles, neckAngles, thoracicAngles, headClampMinAngles, headClampMaxAngles);
+	BG_G2ClientNeckAngles(cent, ghoul2, time, lookAngles, headAngles, neckAngles, thoracicAngles, headClampMinAngles, headClampMaxAngles);
 
 #ifdef BONE_BASED_LEG_ANGLES
 	{
 		vec3_t bLAngles;
 		VectorClear(bLAngles);
 		bLAngles[ROLL] = AngleNormalize180((legBoneYaw - cent_lerpAngles[YAW]));
-		strap_G2API_SetBoneAngles(ghoul2, 0, "model_root", bLAngles, BONE_ANGLES_POSTMULT, POSITIVE_X, NEGATIVE_Y, NEGATIVE_Z, 0, 0, time);
+		trap->G2API_SetBoneAngles(ghoul2, 0, "model_root", bLAngles, BONE_ANGLES_POSTMULT, POSITIVE_X, NEGATIVE_Y, NEGATIVE_Z, 0, 0, time);
 
 		if (!llAngles[YAW])
 		{
@@ -10097,10 +10334,29 @@ void BG_G2PlayerAngles(void *ghoul2, int motionBolt, entityState_t *cent, int ti
 	}
 #endif
 
-	trap->G2API_SetBoneAngles(ghoul2, 0, "lower_lumbar", llAngles, BONE_ANGLES_POSTMULT, POSITIVE_X, NEGATIVE_Y, NEGATIVE_Z, 0, 0, time);
-	trap->G2API_SetBoneAngles(ghoul2, 0, "upper_lumbar", ulAngles, BONE_ANGLES_POSTMULT, POSITIVE_X, NEGATIVE_Y, NEGATIVE_Z, 0, 0, time);
-	trap->G2API_SetBoneAngles(ghoul2, 0, "thoracic", thoracicAngles, BONE_ANGLES_POSTMULT, POSITIVE_X, NEGATIVE_Y, NEGATIVE_Z, 0, 0, time);
-//	trap->G2API_SetBoneAngles(ghoul2, 0, "cervical", vec3_origin, BONE_ANGLES_POSTMULT, POSITIVE_X, NEGATIVE_Y, NEGATIVE_Z, 0, 0, time);
+	if ( BG_ClassHasBadBones( cent->NPC_class ) )
+	{
+		int oUp, oRt, oFwd;
+		if ( cent->NPC_class == CLASS_RANCOR )
+		{
+			llAngles[YAW] = llAngles[ROLL] = 0.0f;
+			ulAngles[YAW] = ulAngles[ROLL] = 0.0f;
+		}
+		BG_BoneOrientationsForClass( cent->NPC_class, "upper_lumbar", &oUp, &oRt, &oFwd );
+		trap->G2API_SetBoneAngles(ghoul2, 0, "lower_lumbar", ulAngles, BONE_ANGLES_POSTMULT, oUp, oRt, oFwd, 0, 0, time); 
+		BG_BoneOrientationsForClass( cent->NPC_class, "lower_lumbar", &oUp, &oRt, &oFwd );
+		trap->G2API_SetBoneAngles(ghoul2, 0, "upper_lumbar", llAngles, BONE_ANGLES_POSTMULT, oUp, oRt, oFwd, 0, 0, time); 
+
+		trap->G2API_SetBoneAngles(ghoul2, 0, "thoracic", thoracicAngles, BONE_ANGLES_POSTMULT, POSITIVE_X, NEGATIVE_Y, NEGATIVE_Z, 0, 0, time);
+	}
+	else
+	{
+		trap->G2API_SetBoneAngles(ghoul2, 0, "lower_lumbar", llAngles, BONE_ANGLES_POSTMULT, POSITIVE_X, NEGATIVE_Y, NEGATIVE_Z, 0, 0, time);
+		trap->G2API_SetBoneAngles(ghoul2, 0, "upper_lumbar", ulAngles, BONE_ANGLES_POSTMULT, POSITIVE_X, NEGATIVE_Y, NEGATIVE_Z, 0, 0, time);
+
+		trap->G2API_SetBoneAngles(ghoul2, 0, "thoracic", thoracicAngles, BONE_ANGLES_POSTMULT, POSITIVE_X, NEGATIVE_Y, NEGATIVE_Z, 0, 0, time);
+//		trap->G2API_SetBoneAngles(ghoul2, 0, "cervical", vec3_origin, BONE_ANGLES_POSTMULT, POSITIVE_X, NEGATIVE_Y, NEGATIVE_Z, 0, 0, time);
+	}
 }
 
 void BG_G2ATSTAngles(void *ghoul2, int time, vec3_t cent_lerpAngles )

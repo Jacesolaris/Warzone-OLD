@@ -2705,6 +2705,67 @@ qboolean PM_CanDoRollStab( void )
 	}
 	return qtrue;
 }
+
+void PM_SaberDroidWeapon( void )
+{
+	// make weapon function
+	if ( pm->ps->weaponTime > 0 ) {
+		pm->ps->weaponTime -= pml.msec;
+		if ( pm->ps->weaponTime <= 0 )
+		{
+			pm->ps->weaponTime = 0;
+		}
+	}
+
+	// Now we react to a block action by the player's lightsaber.
+	if ( pm->ps->saberBlocked )
+	{
+		switch ( pm->ps->saberBlocked )
+		{
+			case BLOCKED_PARRY_BROKEN:
+				PM_SetAnim( SETANIM_BOTH, Q_irand(BOTH_PAIN1,BOTH_PAIN3), SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD );
+				pm->ps->weaponTime = pm->ps->legsTimer;
+				break;
+			case BLOCKED_ATK_BOUNCE:
+				PM_SetAnim( SETANIM_BOTH, Q_irand(BOTH_PAIN1,BOTH_PAIN3), SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD );
+				pm->ps->weaponTime = pm->ps->legsTimer;
+				break;
+			case BLOCKED_UPPER_RIGHT:
+			case BLOCKED_UPPER_RIGHT_PROJ:
+			case BLOCKED_LOWER_RIGHT:
+			case BLOCKED_LOWER_RIGHT_PROJ:
+				PM_SetAnim( SETANIM_BOTH, BOTH_P1_S1_TR, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD );
+				pm->ps->legsTimer += Q_irand( 200, 1000 );
+				pm->ps->weaponTime = pm->ps->legsTimer;
+				break;
+			case BLOCKED_UPPER_LEFT:
+			case BLOCKED_UPPER_LEFT_PROJ:
+			case BLOCKED_LOWER_LEFT:
+			case BLOCKED_LOWER_LEFT_PROJ:
+				PM_SetAnim( SETANIM_BOTH, BOTH_P1_S1_TL, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD );
+				pm->ps->legsTimer += Q_irand( 200, 1000 );
+				pm->ps->weaponTime = pm->ps->legsTimer;
+				break;
+			case BLOCKED_TOP:
+			case BLOCKED_TOP_PROJ:
+				PM_SetAnim( SETANIM_BOTH, BOTH_P1_S1_T_, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD );
+				pm->ps->legsTimer += Q_irand( 200, 1000 );
+				pm->ps->weaponTime = pm->ps->legsTimer;
+				break;
+			default:
+				pm->ps->saberBlocked = BLOCKED_NONE;
+				break;
+		}
+
+		pm->ps->saberBlocked = BLOCKED_NONE;
+		pm->ps->saberMove = LS_NONE;	//pm->ps->saberBounceMove = LS_NONE;
+		pm->ps->weaponstate = WEAPON_READY;
+		
+		// Done with block, so stop these active weapon branches.
+		return;
+	}
+}
+
 /*
 =================
 PM_WeaponLightsaber
@@ -2720,6 +2781,7 @@ qboolean PM_SwimmingAnim( int anim );
 int PM_SaberBounceForAttack( int move );
 qboolean BG_SuperBreakLoseAnim( int anim );
 qboolean BG_SuperBreakWinAnim( int anim );
+extern bgEntity_t *pm_entSelf;
 void PM_WeaponLightsaber(void)
 {
 	int			addTime;
@@ -2727,6 +2789,12 @@ void PM_WeaponLightsaber(void)
 	int			anim=-1, curmove, newmove=LS_NONE;
 
 	qboolean checkOnlyWeap = qfalse;
+
+	if ( pm_entSelf->s.NPC_class == CLASS_SABER_DROID )
+	{//Saber droid does it's own attack logic
+		PM_SaberDroidWeapon();
+		return;
+	}
 
 	if ( PM_InKnockDown( pm->ps ) || BG_InRoll( pm->ps, pm->ps->legsAnim ))
 	{//in knockdown

@@ -1157,8 +1157,8 @@ void BASS_AddDynamicTrack ( char *name )
 
 	int NUM_TRACKS = JKA_TRACKS_NUM;
 
-	if (s_musicSelection->integer == 1) NUM_TRACKS = PSY_TRACKS_NUM;
-	if (s_musicSelection->integer == 2) NUM_TRACKS = CUSTOM_TRACKS_NUM;
+	//if (s_musicSelection->integer == 1) NUM_TRACKS = PSY_TRACKS_NUM;
+	//if (s_musicSelection->integer == 2) NUM_TRACKS = CUSTOM_TRACKS_NUM;
 	if (s_musicSelection->integer == 3) NUM_TRACKS = JKA_TRACKS_NUM + PSY_TRACKS_NUM + CUSTOM_TRACKS_NUM;
 
 	for (int i = MUSIC_LIST_COUNT-1; i >= NUM_TRACKS; i--)

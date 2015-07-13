@@ -411,6 +411,21 @@ void NPC_SetMiscDefaultData( gentity_t *ent )
 		ent->client->ps.eFlags2 |= EF2_FLYING;
 		ent->count = 30; // SEEKER shot ammo count
 	}
+
+	if (ent->client->NPC_class == CLASS_SABER_DROID)
+	{
+		ent->flags |= FL_NO_KNOCKBACK;
+	}
+	else if ( ent->client->NPC_class == CLASS_ASSASSIN_DROID )
+	{
+		ent->client->ps.stats[STAT_ARMOR] = 250;	// start with full armor
+		if (ent->s.weapon==WP_BLASTER)
+		{
+			ent->NPC->scriptFlags |= SCF_ALT_FIRE;
+		}
+		ent->flags |= (FL_NO_KNOCKBACK);
+	}
+
 	//***I'm not sure whether I should leave this as a TEAM_ switch, I think NPC_class may be more appropriate - dmv
 	switch(ent->client->playerTeam)
 	{
@@ -3487,6 +3502,7 @@ NOTSOLID - Starts not solid
 STARTINSOLID - Don't try to fix if spawn in solid
 SHY - Spawner is shy
 */
+extern void NPC_CultistDestroyer_Precache( void );
 void SP_NPC_Cultist_Destroyer( gentity_t *self)
 {
 	if (NPC_GameTypeDisablesMapNPCS())
@@ -3495,7 +3511,8 @@ void SP_NPC_Cultist_Destroyer( gentity_t *self)
 		return;
 	}
 
-	self->NPC_type = "cultist";//"cultist_explode";
+	//self->NPC_type = "cultist";//"cultist_explode";
+	self->NPC_type = "cultist_destroyer";
 	SP_NPC_spawner( self );
 }
 
@@ -5083,6 +5100,184 @@ void SP_NPC_Droid_Protocol( gentity_t *self)
 	NPC_Protocol_Precache();
 }
 
+
+/*QUAKED NPC_Rax(1 0 0) (-16 -16 -24) (16 16 40) FUN x x x DROPTOFLOOR CINEMATIC NOTSOLID STARTINSOLID SHY
+FUN - Makes him magically the funnest thing ever in any game ever made. (actually does nothing, it'll just be fun by the power of suggestion).
+DROPTOFLOOR - NPC can be in air, but will spawn on the closest floor surface below it
+CINEMATIC - Will spawn with no default AI (BS_CINEMATIC)
+NOTSOLID - Starts not solid
+STARTINSOLID - Don't try to fix if spawn in solid
+SHY - Spawner is shy
+*/
+void SP_NPC_Rax (gentity_t *self)
+{
+	self->NPC_type = "Rax";
+	SP_NPC_spawner( self );
+}
+
+
+//The reborn boss twins
+/*QUAKED NPC_Kothos(1 0 0) (-16 -16 -24) (16 16 40) VIL x x x DROPTOFLOOR CINEMATIC NOTSOLID STARTINSOLID SHY
+VIL - spawns Vil Kothos instead of Dasariah (can anyone tell them apart anyway...?)
+
+Force only... will (eventually) be set up to re-inforce their leader (use SET_LEADER) by healing them, recharging them, keeping the player away, etc.
+
+DROPTOFLOOR - NPC can be in air, but will spawn on the closest floor surface below it
+CINEMATIC - Will spawn with no default AI (BS_CINEMATIC)
+NOTSOLID - Starts not solid
+STARTINSOLID - Don't try to fix if spawn in solid
+SHY - Spawner is shy
+*/
+void SP_NPC_Kothos (gentity_t *self)
+{
+	if(self->spawnflags & 1)
+	{
+		self->NPC_type = "VKothos";
+	}
+	else
+	{	
+		self->NPC_type = "DKothos";
+	}
+	SP_NPC_spawner( self );
+}
+
+
+/*QUAKED NPC_Droid_Saber (1 0 0) (-12 -12 -24) (12 12 40) TRAINING x x x DROPTOFLOOR CINEMATIC NOTSOLID STARTINSOLID SHY
+TRAINING - much weaker version 50 health vs the normal 300 health
+
+DROPTOFLOOR - NPC can be in air, but will spawn on the closest floor surface below it
+CINEMATIC - Will spawn with no default AI (BS_CINEMATIC)
+NOTSOLID - Starts not solid
+STARTINSOLID - Don't try to fix if spawn in solid
+SHY - Spawner is shy
+*/
+void SP_NPC_Droid_Saber( gentity_t *self)
+{
+	if ( !self->NPC_type )
+	{
+		if ( (self->spawnflags&1) )
+		{
+			self->NPC_type = "saber_droid_training";
+		}
+		else
+		{
+			self->NPC_type = "saber_droid";
+		}
+	}
+
+	SP_NPC_spawner( self );
+}
+
+
+/*QUAKED NPC_HazardTrooper(1 0 0) (-16 -16 -24) (16 16 40) OFFICER CONCUSSION x x DROPTOFLOOR CINEMATIC NOTSOLID STARTINSOLID SHY
+250 health, repeater
+
+OFFICER - 400 health, flechette
+CONCUSSION - 400 health, concussion rifle
+DROPTOFLOOR - NPC can be in air, but will spawn on the closest floor surface below it
+CINEMATIC - Will spawn with no default AI (BS_CINEMATIC)
+NOTSOLID - Starts not solid
+STARTINSOLID - Don't try to fix if spawn in solid
+SHY - Spawner is shy
+*/
+void SP_NPC_HazardTrooper( gentity_t *self)
+{
+	if ( !self->NPC_type )
+	{
+
+
+		if ( (self->spawnflags&1) )
+		{
+			self->NPC_type = "hazardtrooperofficer";
+		}
+		else if ( (self->spawnflags&2) )
+		{
+			self->NPC_type = "hazardtrooperconcussion";
+		}
+		else
+		{
+			self->NPC_type = "hazardtrooper";
+		}
+	}
+
+	SP_NPC_spawner( self );
+}
+
+
+/*QUAKED NPC_Lannik_Racto(1 0 0) (-16 -16 -24) (16 16 40) x x x x DROPTOFLOOR CINEMATIC NOTSOLID STARTINSOLID SHY
+DROPTOFLOOR - NPC can be in air, but will spawn on the closest floor surface below it
+CINEMATIC - Will spawn with no default AI (BS_CINEMATIC)
+NOTSOLID - Starts not solid
+STARTINSOLID - Don't try to fix if spawn in solid
+SHY - Spawner is shy
+*/
+void SP_NPC_Lannik_Racto( gentity_t *self )
+{
+	self->NPC_type = "lannik_racto";
+
+	SP_NPC_spawner( self );
+}
+
+
+/*QUAKED NPC_Droid_Assassin (1 0 0) (-12 -12 -24) (12 12 40) x x x x DROPTOFLOOR CINEMATIC NOTSOLID STARTINSOLID SHY
+DROPTOFLOOR - NPC can be in air, but will spawn on the closest floor surface below it
+CINEMATIC - Will spawn with no default AI (BS_CINEMATIC)
+NOTSOLID - Starts not solid
+STARTINSOLID - Don't try to fix if spawn in solid
+SHY - Spawner is shy
+*/
+void SP_NPC_Droid_Assassin( gentity_t *self)
+{
+	if ( !self->NPC_type )
+	{
+		self->NPC_type = "assassin_droid";
+	}
+
+	SP_NPC_spawner( self );
+}
+
+/*QUAKED NPC_Chewbacca
+DROPTOFLOOR (16) - NPC can be in air, but will spawn on the closest floor surface below it
+CINEMATIC (32) - Will spawn with no default AI (BS_CINEMATIC)
+NOTSOLID (64) - Starts not solid
+STARTINSOLID (128) - Don't try to fix if spawn in solid
+SHY (256) - Spawner is shy
+*/
+void SP_NPC_Chewbacca (gentity_t *self)
+{
+	self->NPC_type = "chewie";
+	SP_NPC_spawner( self );
+}
+
+/*QUAKED NPC_Rosh_Penin (1 0 0) (-16 -16 -24) (16 16 32) DARKSIDE NOFORCE x x DROPTOFLOOR CINEMATIC NOTSOLID STARTINSOLID SHY
+Good Rosh
+DARKSIDE (1) - Evil Rosh
+NOFORCE (2) - Can't jump, starts with no saber
+DROPTOFLOOR (16) - NPC can be in air, but will spawn on the closest floor surface below it
+CINEMATIC (32) - Will spawn with no default AI (BS_CINEMATIC)
+NOTSOLID (64) - Starts not solid
+STARTINSOLID (128) - Don't try to fix if spawn in solid
+SHY (256) - Spawner is shy
+*/
+extern void NPC_Rosh_Dark_Precache( void );
+void SP_NPC_Rosh_Penin( gentity_t *self)
+{
+	if(self->spawnflags & 1)
+	{
+		self->NPC_type = "rosh_dark";
+		//[CoOp] precashe Rosh boss effects
+		NPC_Rosh_Dark_Precache();
+	}
+	else if(self->spawnflags & 2)
+	{
+		self->NPC_type = "rosh_penin_noforce";
+	}
+	else
+	{
+		self->NPC_type = "rosh_penin";
+	}
+	SP_NPC_spawner( self );
+}
 
 //NPC console commands
 /*

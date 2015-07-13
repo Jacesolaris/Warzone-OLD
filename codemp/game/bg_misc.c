@@ -56,6 +56,7 @@ const char *bgToggleableSurfaces[BG_NUM_TOGGLEABLE_SURFACES] =
 	"head",
 	"head_concussion_charger",
 	"head_light_blaster_cann",		//29
+	"force_shield",					//30
 	NULL
 };
 

@@ -1078,6 +1078,21 @@ void WeaponThink( qboolean inCombat )
 		return;
 	}
 
+	//[CoOp]
+	// can't shoot while shield is up
+	if (NPCS.NPC->flags&FL_SHIELDED && NPCS.NPC->client->NPC_class==CLASS_ASSASSIN_DROID)
+	{
+		return;
+	}
+
+	// Can't Fire While Cloaked
+	if (NPCS.NPC->client && 
+		(NPCS.NPC->client->ps.powerups[PW_CLOAKED]))
+	{
+		return;
+	}
+	//[/CoOp]
+
 	NPCS.ucmd.weapon = NPCS.client->ps.weapon;
 	ShootThink();
 }

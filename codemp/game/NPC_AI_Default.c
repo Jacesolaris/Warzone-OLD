@@ -103,6 +103,7 @@ qboolean NPC_IsJedi ( gentity_t *self )
 	case CLASS_LUKE:				// UQ1: TODO - maybe should be allowed to switch to pistol/blaster???			
 	case CLASS_MORGANKATARN:
 	case CLASS_REBORN:
+	//case CLASS_SABER_DROID:
 	case CLASS_SHADOWTROOPER:
 	case CLASS_TAVION:
 		// Is Jedi...
@@ -144,6 +145,7 @@ qboolean NPC_IsDarkJedi ( gentity_t *self )
 	case CLASS_ALORA:
 	case CLASS_DESANN:		
 	case CLASS_REBORN:
+	//case CLASS_SABER_DROID:
 	case CLASS_SHADOWTROOPER:
 	case CLASS_TAVION:
 		// Is Jedi...

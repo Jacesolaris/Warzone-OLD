@@ -13,6 +13,7 @@ extern void G_VehicleSetDamageLocFlags( gentity_t *veh, int impactDir, int death
 extern void G_VehUpdateShields( gentity_t *targ );
 extern void G_LetGoOfWall( gentity_t *ent );
 extern void BG_ClearRocketLock( playerState_t *ps );
+extern void BubbleShield_TurnOff(gentity_t *self);
 //[EXPsys]
 extern void GiveExperiance(gentity_t *ent, int amount);
 extern void TakeExperiance(gentity_t *ent, int amount);
@@ -566,6 +567,16 @@ void TossClientItems( gentity_t *self ) {
 
 	if (level.gametype == GT_SIEGE)
 	{ //just don't drop anything then
+		return;
+	}
+
+	if ( self->client->NPC_class == CLASS_SEEKER 
+		|| self->client->NPC_class == CLASS_REMOTE
+		|| self->client->NPC_class == CLASS_SABER_DROID
+		|| self->client->NPC_class == CLASS_VEHICLE
+		|| self->client->NPC_class == CLASS_ATST)
+	{//these NPCs don't drop items.
+		// these things are so small that they shouldn't bother throwing anything
 		return;
 	}
 
@@ -2314,6 +2325,10 @@ void player_die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int
 
 	if ( /*self->NPC*/ self->s.eType == ET_NPC )
 	{
+		if (self->client && self->client->NPC_class==CLASS_ASSASSIN_DROID)
+		{
+			BubbleShield_TurnOff(self);
+		}
 		if ( self->client && Jedi_WaitingAmbush( self ) )
 		{//ambushing trooper
 			self->client->noclip = qfalse;
@@ -2357,7 +2372,8 @@ extern void RunEmplacedWeapon( gentity_t *ent, usercmd_t **ucmd );
 		*/
 		if ( (self->client->NPC_class == CLASS_BOBAFETT || self->hasJetpack) && Boba_Flying(self) )
 			Boba_FlyStop( self );
-		if ( self->s.NPC_class == CLASS_RANCOR )
+		//if ( self->s.NPC_class == CLASS_RANCOR )
+		if ( self->s.NPC_class == CLASS_RANCOR || self->s.NPC_class == CLASS_WAMPA || self->s.NPC_class == CLASS_SAND_CREATURE)
 			Rancor_DropVictim( self );
 	}
 	if ( attacker && attacker->NPC && attacker->NPC->group && attacker->NPC->group->enemy == self )
@@ -4088,6 +4104,11 @@ qboolean G_GetHitLocFromSurfName( gentity_t *ent, const char *surfName, int *hit
 	{
 		*hitLoc = HL_HAND_LT;
 	}
+	//added force_shield as a hit area
+	else if ( ent->flags&FL_SHIELDED && !Q_stricmp( "force_shield", surfName ) )
+	{
+		*hitLoc = HL_GENERIC2;
+	}
 	/*
 #ifdef _DEBUG
 	else
@@ -4101,6 +4122,14 @@ qboolean G_GetHitLocFromSurfName( gentity_t *ent, const char *surfName, int *hit
 	if (g_dismember.integer == 100)
 	{ //full probability...
 		if ( ent->client && ent->client->NPC_class == CLASS_PROTOCOL )
+		{
+			dismember = qtrue;
+		}
+		else if ( ent->client && ent->client->NPC_class == CLASS_ASSASSIN_DROID )
+		{
+			dismember = qtrue;
+		}
+		else if ( ent->client && ent->client->NPC_class == CLASS_SABER_DROID )
 		{
 			dismember = qtrue;
 		}
@@ -5370,6 +5399,25 @@ void G_Damage( gentity_t *targ, gentity_t *inflictor, gentity_t *attacker, vec3_
 				}
 			}
 		}
+	}
+
+	//ported from SP.
+	if(targ->NPC && client && (mod == MOD_DEMP2 || mod == MOD_DEMP2_ALT))
+	{//NPCs get stunned by demps
+		if(	client->NPC_class == CLASS_SABER_DROID ||
+			client->NPC_class == CLASS_ASSASSIN_DROID ||
+			client->NPC_class == CLASS_GONK ||
+			client->NPC_class == CLASS_MOUSE ||
+			client->NPC_class == CLASS_PROBE ||
+			client->NPC_class == CLASS_PROTOCOL ||
+			client->NPC_class == CLASS_R2D2 ||
+			client->NPC_class == CLASS_R5D2 ||
+			client->NPC_class == CLASS_SEEKER ||
+			client->NPC_class == CLASS_INTERROGATOR)
+		{//these NPC_types take way more damage from demps
+			take *= 7;
+		}
+		TIMER_Set(targ, "DEMP2_StunTime", Q_irand(1000, 2000));
 	}
 
 	if ( mod == MOD_DEMP2 || mod == MOD_DEMP2_ALT )

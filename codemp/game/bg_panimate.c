@@ -66,6 +66,15 @@ qboolean BG_CrouchAnim( int anim )
 	case BOTH_KNEES1:			//# Tavion on her knees
 	case BOTH_CROUCHATTACKBACK1://FIXME: not if in middle of anim?
 	case BOTH_ROLL_STAB:
+	//[CoOp]
+	//SP code port stuff
+	case BOTH_STAND_TO_KNEEL:
+	case BOTH_KNEEL_TO_STAND:
+	case BOTH_TURNCROUCH1:
+	case BOTH_CROUCH4:
+	case BOTH_KNEES2:			//# Tavion on her knees looking down
+	case BOTH_KNEES2TO1:			//# Transition of KNEES2 to KNEES1
+	//[/CoOp]
 		return qtrue;
 		break;
 	}

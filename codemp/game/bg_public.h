@@ -157,7 +157,7 @@ typedef enum {
 
 #define G2_MODEL_PART	50
 
-#define BG_NUM_TOGGLEABLE_SURFACES 31
+#define BG_NUM_TOGGLEABLE_SURFACES 32
 
 #define MAX_CUSTOM_SIEGE_SOUNDS 30
 
@@ -1851,3 +1851,6 @@ extern int forcePowerDarkLight[NUM_FORCE_POWERS];
 extern const char *gametypeStringShort[GT_MAX_GAME_TYPE];
 const char *BG_GetGametypeString( int gametype );
 int BG_GetGametypeForString( const char *gametype );
+qboolean BG_CrouchAnim( int anim );
+void BG_BoneOrientationsForClass( int NPC_class, char *boneName, int *oUp, int *oRt, int *oFwd );
+qboolean BG_ClassHasBadBones( int NPC_class );
