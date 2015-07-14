@@ -5787,18 +5787,6 @@ static void PM_Footsteps( void ) {
 		{//roll!
 			rolled = PM_TryRoll();
 		}
-#if 0 //turn this off atm and use the old way to handle this stuff, might need it for later use
-		if (((PM_RunningAnim(pm->ps->legsAnim)
-			|| PM_CanRollFromSoulCal(pm->ps)
-			|| pm->ps->saberActionFlags & (1 << SAF_BLOCKING)
-			|| (pm->ps->powerups[PW_BLOCK] && !(pm->cmd.buttons & BUTTON_ATTACK))
-			|| pm->cmd.buttons & BUTTON_WALKING))
-			&& !BG_InRoll(pm->ps, pm->ps->legsAnim))
-			// simplified but more accurate at the same time
-		{//roll!
-			rolled = PM_TryRoll();
-		}
-#endif 
 		if ( !rolled )
 		{ //if the roll failed or didn't attempt, do standard crouching anim stuff.
 			if ( pm->ps->pm_flags & PMF_BACKWARDS_RUN ) {
@@ -6354,13 +6342,6 @@ void PM_BeginWeaponChange( int weapon ) {
 		return;
 	}
 
-	//[SaberSys]
-	// Don't allow while in blocking mode for sabers, otherwise this fucks EVERYTHING up...
-	/*if (pm->ps->weapon == WP_SABER && pm->ps->saberActionFlags & (1 << SAF_BLOCKING))
-	{
-		return;
-	}*/
-	//[/SaberSys]
 	// turn of any kind of zooming when weapon switching.
 	if (pm->ps->zoomMode)
 	{
