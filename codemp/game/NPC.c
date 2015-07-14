@@ -2075,7 +2075,7 @@ void NPC_ExecuteBState ( gentity_t *self)//, int msec )
 		else if(NPCS.client->ps.weapon == WP_BRYAR_PISTOL)
 		{//Sniper pose
 			//NPC_SetAnim(NPCS.NPC,SETANIM_TORSO,TORSO_WEAPONREADY3,SETANIM_FLAG_NORMAL);
-			NPC_SetAnim(NPCS.NPC, SETANIM_TORSO, WeaponReadyAnim[NPCS.NPC->s.weapon], 0);
+			NPC_SetAnim(NPCS.NPC, SETANIM_TORSO, WeaponAttackAnim[NPCS.NPC->s.weapon], 0);
 		}
 		/*//FIXME: What's the proper solution here?
 		else
@@ -2083,6 +2083,21 @@ void NPC_ExecuteBState ( gentity_t *self)//, int msec )
 			NPC_SetAnim(NPC,SETANIM_TORSO,TORSO_WEAPONREADY3,SETANIM_FLAG_NORMAL);
 		}
 		*/
+		else
+		{//we just shot at someone. Hold weapon in attack anim for now
+			NPC_SetAnim(NPCS.NPC, SETANIM_TORSO, WeaponAttackAnim[NPCS.NPC->s.weapon], 0);//Stoiss not sure about this one here.. testing
+		}
+	}
+	else if (!TIMER_Done( NPCS.NPC, "attackDelay" ))
+	{
+		if(NPCS.client->ps.weapon == WP_SABER )
+		{//One-handed
+			NPC_SetAnim(NPCS.NPC,SETANIM_TORSO,TORSO_WEAPONREADY1,SETANIM_FLAG_NORMAL);
+		}
+		else
+		{//we just shot at someone. Hold weapon in attack anim for now
+			NPC_SetAnim(NPCS.NPC, SETANIM_TORSO, WeaponAttackAnim[NPCS.NPC->s.weapon], 0);//Stoiss not sure about this one here.. testing
+		}
 	}
 	else if ( !NPCS.NPC->enemy )//HACK!
 	{
@@ -2595,6 +2610,29 @@ void NPC_SelectMoveAnimation(qboolean walk)
 
 		NPCS.NPC->client->ps.torsoTimer = 200;
 		NPCS.NPC->client->ps.legsTimer = 200;
+	}
+
+	if(NPCS.NPC->attackDebounceTime > level.time)
+	{//We just shot but aren't still shooting, so hold the gun up for a while
+		if(NPCS.client->ps.weapon == WP_SABER )
+		{//One-handed
+			NPC_SetAnim(NPCS.NPC,SETANIM_TORSO,TORSO_WEAPONREADY1,SETANIM_FLAG_NORMAL);
+		}
+		else
+		{//we just shot at someone. Hold weapon in attack anim for now
+			NPC_SetAnim(NPCS.NPC, SETANIM_TORSO, WeaponAttackAnim[NPCS.NPC->s.weapon], 0);//Stoiss not sure about this one here.. testing
+		}
+	}
+	else if (!TIMER_Done( NPCS.NPC, "attackDelay" ))
+	{
+		if(NPCS.client->ps.weapon == WP_SABER )
+		{//One-handed
+			NPC_SetAnim(NPCS.NPC,SETANIM_TORSO,TORSO_WEAPONREADY1,SETANIM_FLAG_NORMAL);
+		}
+		else
+		{//we just shot at someone. Hold weapon in attack anim for now
+			NPC_SetAnim(NPCS.NPC, SETANIM_TORSO, WeaponAttackAnim[NPCS.NPC->s.weapon], 0);//Stoiss not sure about this one here.. testing
+		}
 	}
 }
 
@@ -3597,6 +3635,19 @@ void NPC_GenericFrameCode ( gentity_t *self )
 	{//we look ready for action, using one of the first 2 weapon, let's rest our weapon on our shoulder
 		//NPC_SetAnim(NPCS.NPC, SETANIM_TORSO, TORSO_WEAPONIDLE3, SETANIM_FLAG_NORMAL);
 		NPC_SetAnim(NPCS.NPC, SETANIM_TORSO, WeaponReadyAnim[NPCS.NPC->s.weapon], 0);
+	}
+
+	//if(NPCS.NPC->attackDebounceTime > level.time)
+	if (!TIMER_Done( NPCS.NPC, "attackDelay" ))
+	{//We just shot but aren't still shooting, so hold the gun up for a while
+		if(NPCS.client->ps.weapon == WP_SABER )
+		{//One-handed
+			//NPC_SetAnim(NPCS.NPC,SETANIM_TORSO,TORSO_WEAPONREADY1,SETANIM_FLAG_NORMAL);
+		}
+		else
+		{//we just shot at someone. Hold weapon in attack anim for now
+			NPC_SetAnim(NPCS.NPC, SETANIM_TORSO, WeaponAttackAnim[NPCS.NPC->s.weapon], 0);//Stoiss not sure about this one here.. testing
+		}
 	}
 
 	NPC_CheckAttackHold();
