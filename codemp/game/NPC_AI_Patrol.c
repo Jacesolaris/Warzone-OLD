@@ -72,7 +72,7 @@ qboolean NPC_FindNewPatrolWaypoint()
 	gentity_t *NPC = NPCS.NPC;
 
 	if (NPC->noWaypointTime > level.time)
-	{// Only try to find a new waypoint every 25 seconds...
+	{// Only try to find a new waypoint every 10 seconds...
 		NPC_PickRandomIdleAnimantion(NPC);
 		return qfalse;
 	}
@@ -81,7 +81,7 @@ qboolean NPC_FindNewPatrolWaypoint()
 	NPC->patrol_range = 384.0;
 	//NPC->patrol_range = 450.0;
 
-	NPC->noWaypointTime = level.time + 15000 + irand (0, 15000); // 15 to 30 seconds before we try again... (it will run avoidance in the meantime)
+	NPC->noWaypointTime = level.time + 5000 + irand(0, 5000); // 5 to 10 seconds before we try again... (it will run avoidance in the meantime)
 
 	NPC->wpCurrent = NPC_GetPatrolWP(NPC);
 

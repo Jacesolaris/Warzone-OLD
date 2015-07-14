@@ -2472,19 +2472,23 @@ void NPC_SelectMoveAnimation(qboolean walk)
 		if (NPCS.NPC->client->ps.pm_flags & PMF_DUCKED)
 		{
 			NPC_SetAnim(NPCS.NPC, SETANIM_LEGS, BOTH_CROUCH1, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD);
+			NPC_SetAnim(NPCS.NPC, SETANIM_TORSO, WeaponReadyAnim[NPCS.NPC->s.weapon], SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD);
 		}
 		else if ( NPCS.NPC->client->ps.eFlags2 & EF2_USE_ALT_ANIM )
 		{//holding someone
 			NPC_SetAnim( NPCS.NPC, SETANIM_LEGS, BOTH_STAND4, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD );
+			NPC_SetAnim(NPCS.NPC, SETANIM_TORSO, WeaponReadyAnim[NPCS.NPC->s.weapon], SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD);
 		}
 		else if ( NPCS.NPC->client->ps.eFlags2 & EF2_ALERTED )
 		{//have an enemy or have had one since we spawned
 			NPC_SetAnim( NPCS.NPC, SETANIM_LEGS, BOTH_STAND2, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD );
+			NPC_SetAnim(NPCS.NPC, SETANIM_TORSO, WeaponReadyAnim[NPCS.NPC->s.weapon], SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD);
 		}
 		else
 		{//just stand there
 			//NPC_SetAnim( NPCS.NPC, SETANIM_BOTH, BOTH_STAND1, /*SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD*/0 );
 			NPC_PickRandomIdleAnimantion(NPCS.NPC);
+			//NPC_SetAnim(NPCS.NPC, SETANIM_TORSO, WeaponReadyAnim[NPCS.NPC->s.weapon], SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD);
 		}
 
 		NPCS.NPC->client->ps.torsoTimer = 200;
@@ -2497,16 +2501,19 @@ void NPC_SelectMoveAnimation(qboolean walk)
 			if (NPCS.NPC->client->ps.pm_flags & PMF_DUCKED)
 			{
 				NPC_SetAnim(NPCS.NPC, SETANIM_LEGS, BOTH_CROUCH1WALKBACK, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD);
+				NPC_SetAnim(NPCS.NPC, SETANIM_TORSO, WeaponReadyAnim[NPCS.NPC->s.weapon], SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD);
 			}
 			else if (NPCS.NPC->client->ps.weapon == WP_SABER)
 			{// Walk with saber...
 				NPC_SetAnim( NPCS.NPC, SETANIM_LEGS, BOTH_WALKBACK1, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD );
 				//NPC_SetAnim( NPCS.NPC, SETANIM_TORSO, BOTH_WALKBACK1, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD );
+				NPC_SetAnim(NPCS.NPC, SETANIM_TORSO, WeaponReadyAnim[NPCS.NPC->s.weapon], SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD);
 			}
 			else
 			{// Standard walk anim..
 				NPC_SetAnim( NPCS.NPC, SETANIM_LEGS, BOTH_WALKBACK2, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD );
 				//NPC_SetAnim( NPCS.NPC, SETANIM_TORSO, TORSO_WEAPONREADY3, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD );
+				NPC_SetAnim(NPCS.NPC, SETANIM_TORSO, WeaponReadyAnim[NPCS.NPC->s.weapon], SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD);
 			}
 			//trap->Print("Walking Back.\n");
 		}
@@ -2520,11 +2527,13 @@ void NPC_SelectMoveAnimation(qboolean walk)
 			{// Walk with saber...
 				NPC_SetAnim( NPCS.NPC, SETANIM_LEGS, BOTH_WALK1, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD );
 				//NPC_SetAnim( NPCS.NPC, SETANIM_TORSO, TORSO_WEAPONREADY3, SETANIM_FLAG_NORMAL );
+				NPC_SetAnim(NPCS.NPC, SETANIM_TORSO, WeaponReadyAnim[NPCS.NPC->s.weapon], SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD);
 			}
 			else
 			{// Standard walk anim..
 				NPC_SetAnim( NPCS.NPC, SETANIM_LEGS, BOTH_WALK2, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD );
 				//NPC_SetAnim( NPCS.NPC, SETANIM_TORSO, TORSO_WEAPONREADY3, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD );
+				NPC_SetAnim(NPCS.NPC, SETANIM_TORSO, WeaponReadyAnim[NPCS.NPC->s.weapon], SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD);
 			}
 
 			//trap->Print("Walking Forward.\n");
@@ -2538,10 +2547,12 @@ void NPC_SelectMoveAnimation(qboolean walk)
 		if (NPCS.NPC->client->ps.pm_flags & PMF_DUCKED)
 		{
 			NPC_SetAnim( NPCS.NPC, SETANIM_LEGS, BOTH_CROUCH1WALK, /*SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD*/0);
+			NPC_SetAnim(NPCS.NPC, SETANIM_TORSO, WeaponReadyAnim[NPCS.NPC->s.weapon], 0);
 		}
 		else 
 		{
 			NPC_SetAnim( NPCS.NPC, SETANIM_LEGS, BOTH_RUN1, /*SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD*/0 );
+			NPC_SetAnim(NPCS.NPC, SETANIM_TORSO, WeaponReadyAnim[NPCS.NPC->s.weapon], 0);
 		}
 
 		NPCS.NPC->client->ps.torsoTimer = 200;
@@ -2554,10 +2565,12 @@ void NPC_SelectMoveAnimation(qboolean walk)
 			if (NPCS.NPC->client->ps.pm_flags & PMF_DUCKED)
 			{
 				NPC_SetAnim(NPCS.NPC, SETANIM_LEGS, BOTH_CROUCH1WALKBACK, /*SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD*/0);
+				NPC_SetAnim(NPCS.NPC, SETANIM_TORSO, WeaponReadyAnim[NPCS.NPC->s.weapon], 0);
 			}
 			else 
 			{
 				NPC_SetAnim( NPCS.NPC, SETANIM_LEGS, BOTH_RUNBACK2, /*SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD*/0 );
+				NPC_SetAnim(NPCS.NPC, SETANIM_TORSO, WeaponReadyAnim[NPCS.NPC->s.weapon], 0);
 			}
 
 			//trap->Print("Running Back.\n");
@@ -2567,10 +2580,12 @@ void NPC_SelectMoveAnimation(qboolean walk)
 			if (NPCS.NPC->client->ps.pm_flags & PMF_DUCKED)
 			{
 				NPC_SetAnim( NPCS.NPC, SETANIM_LEGS, BOTH_CROUCH1WALK, /*SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD*/0);
+				NPC_SetAnim(NPCS.NPC, SETANIM_TORSO, WeaponReadyAnim[NPCS.NPC->s.weapon], 0);
 			}
 			else 
 			{
 				NPC_SetAnim( NPCS.NPC, SETANIM_LEGS, BOTH_RUN2, /*SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD*/0 );
+				NPC_SetAnim(NPCS.NPC, SETANIM_TORSO, WeaponReadyAnim[NPCS.NPC->s.weapon], 0);
 			}
 
 			//trap->Print("Running Forward.\n");
