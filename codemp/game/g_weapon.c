@@ -3492,13 +3492,11 @@ static void WP_FireConcussionAlt( gentity_t *ent )
 static void WP_FireBlobGrenade(gentity_t *ent)
 {//a fast rocket-like projectile
 	vec3_t	start;
-	int		damage = 30;
+	int		damage = 60;
 	float	vel = CONC_VELOCITY;
 	gentity_t *missile;
 	int		ChargeGrenadeBlobs = ent->s.weapon == WP_DC15_EXT;
 	int		GrenadeBlobs = ent->s.weapon == WP_Z6_BLASTER_CANON;
-	int		recoil = -150;
-
 
 	VectorCopy(muzzle, start);
 	WP_TraceSetStart(ent, start, vec3_origin, vec3_origin);
@@ -3515,7 +3513,7 @@ static void WP_FireBlobGrenade(gentity_t *ent)
 		missile = CreateMissile(start, forward, vel, 10000, ent, qfalse);
 
 	missile->classname = "conc_proj";
-	missile->s.weapon = ent->s.weapon;//WP_CONCUSSION;
+	missile->s.weapon = ent->s.weapon;
 	missile->mass = 10;
 
 	// Make it easier to hit things
@@ -3523,7 +3521,6 @@ static void WP_FireBlobGrenade(gentity_t *ent)
 	VectorScale(missile->r.maxs, -1, missile->r.mins);
 
 
-	/*missile->dflags = DAMAGE_EXTRA_KNOCKBACK;*/
 	missile->methodOfDeath = MOD_REPEATER_ALT;
 	missile->splashMethodOfDeath = MOD_REPEATER_ALT_SPLASH;
 	missile->clipmask = MASK_SHOT | CONTENTS_LIGHTSABER;
@@ -3550,7 +3547,6 @@ static void WP_FireBlobGrenade(gentity_t *ent)
 		//Close enough.
 		missile->splashRadius = (GRENADE_MAX_CHARGE_TIME / 2000.0f + 0.75f) * 50.0f;
 		missile->s.pos.trType = TR_GRAVITY;
-		recoil *= 2;
 		missile->methodOfDeath = missile->splashMethodOfDeath = MOD_CONC;
 		//radius
 		missile->mass = 5;
@@ -3576,7 +3572,6 @@ static void WP_FireBlobGrenade(gentity_t *ent)
 		//Close enough.
 		missile->splashRadius = (GRENADE_MAX_CHARGE_TIME / 2000.0f + 0.75f) * 50.0f;
 		missile->s.pos.trType = TR_GRAVITY;
-		recoil *= 2;
 		missile->methodOfDeath = missile->splashMethodOfDeath = MOD_CONC;
 		//radius
 		missile->mass = 5;
@@ -3584,7 +3579,7 @@ static void WP_FireBlobGrenade(gentity_t *ent)
 	else
 	{
 		//low splash damage for blobs
-		missile->splashDamage = 30;
+		missile->splashDamage = 3;
 		missile->splashRadius = 150;
 		missile->damage = damage;
 	}
