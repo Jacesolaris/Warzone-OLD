@@ -1475,16 +1475,16 @@ NOTENOTE This weapon is not yet complete.  Don't place it.
 {
 	"weapon_t-21",
 	"sound/weapons/w_pkup.wav",
-	//{ "models/Weapons/T-21_Repeater/T-21_Repeater.glm",
-	//0, 0, 0 },
-	///* view */		"models/Weapons/T-21_Repeater/model.md3",
-	///* icon */		"gfx/hud/w_icon_t-21",
-
-
-	{ "models/weapons3/t-21/t-21_w.glm",
+	{ "models/Weapons/T-21_Repeater/model.glm",
 	0, 0, 0 },
-	/* view */		"models/weapons3/t-21/t-21.md3",
+	/* view */		"models/Weapons/T-21_Repeater/model.md3",
 	/* icon */		"gfx/hud/w_icon_t-21",
+
+
+	//{ "models/weapons3/t-21/t-21_w.glm",
+	//0, 0, 0 },
+	///* view */		"models/weapons3/t-21/t-21.md3",
+	///* icon */		"gfx/hud/w_icon_t-21",
 
 	/* pickup *///	"t-21",
 	100,

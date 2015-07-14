@@ -1,7 +1,7 @@
 hazardtrooper
 {
 	playerModel 	hazardtrooper
-	weapon		WP_REPEATER
+	weapon		WP_Z6_BLASTER_CANON
 	health		150
 	headPitchRangeDown 30
 	reactions	3
@@ -32,7 +32,7 @@ hazardtrooper
 hazardtrooperconcussion
 {
 	playerModel 	hazardtrooper
-	weapon		WP_CONCUSSION
+	weapon		WP_ROCKET_LAUNCHER
 	health		150
 	headPitchRangeDown 30
 	reactions	3
