@@ -38,7 +38,7 @@ float	SOUND_DISTANCE_UNIT_SIZE		=	0.3048; // UQ1: It would seem that this is clo
 // 0.0 = no rolloff, 1.0 = real world, 2.0 = 2x real.
 float	SOUND_REAL_WORLD_FALLOFF		=	1.0;//0.3048;//1.0; //0.3048
 // 0.0 = no doppler, 1.0 = real world, 2.0 = 2x real.
-float	SOUND_REAL_WORLD_DOPPLER		=	0.3048; //1.0 //0.3048
+float	SOUND_REAL_WORLD_DOPPLER		=	0.1048; //1.0 //0.3048
 
 
 qboolean BASS_UPDATE_THREAD_RUNNING = qfalse;
