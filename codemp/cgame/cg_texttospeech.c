@@ -660,18 +660,18 @@ int PADAWAN_COMBAT_TALKS_MAX = -1;
 
 int GetPadawanCombatChattersMax()
 {
-	int max = 0;
+	int total = 0;
 
 	if (PADAWAN_COMBAT_TALKS_MAX != -1) return PADAWAN_COMBAT_TALKS_MAX; // already set up...
 
 	// We need to count them...
-	while (PADAWAN_COMBAT_TALKS[max] != "")
+	while (strncmp(PADAWAN_COMBAT_TALKS[total], "", strlen(PADAWAN_COMBAT_TALKS[total])))
 	{
-		max++;
+		total++;
 	}
 
-	PADAWAN_COMBAT_TALKS_MAX = max;
-	return max;
+	PADAWAN_COMBAT_TALKS_MAX = total;
+	return total;
 }
 
 void CG_PadawanCombatChatter ( int entityNum )
@@ -753,18 +753,18 @@ int PADAWAN_COMBAT_KILL_TALKS_MAX = -1;
 
 int GetPadawanCombatKillChattersMax()
 {
-	int max = 0;
+	int total = 0;
 
 	if (PADAWAN_COMBAT_KILL_TALKS_MAX != -1) return PADAWAN_COMBAT_KILL_TALKS_MAX; // already set up...
 
 	// We need to count them...
-	while (PADAWAN_COMBAT_KILL_TALKS[max] != "")
+	while (strncmp(PADAWAN_COMBAT_KILL_TALKS[total], "", strlen(PADAWAN_COMBAT_KILL_TALKS[total])))
 	{
-		max++;
+		total++;
 	}
 
-	PADAWAN_COMBAT_KILL_TALKS_MAX = max;
-	return max;
+	PADAWAN_COMBAT_KILL_TALKS_MAX = total;
+	return total;
 }
 
 void CG_PadawanCombatKillChatter ( int entityNum )
@@ -810,18 +810,18 @@ int PADAWAN_NO_REPLY_CHATTERS_MAX = -1;
 
 int GetPadawanNoReplyChattersMax()
 {
-	int max = 0;
+	int total = 0;
 
 	if (PADAWAN_NO_REPLY_CHATTERS_MAX != -1) return PADAWAN_NO_REPLY_CHATTERS_MAX; // already set up...
 
 	// We need to count them...
-	while (PADAWAN_NO_REPLY_CHATTERS[max] != "")
+	while (strncmp(PADAWAN_NO_REPLY_CHATTERS[total], "", strlen(PADAWAN_NO_REPLY_CHATTERS[total])))
 	{
-		max++;
+		total++;
 	}
 
-	PADAWAN_NO_REPLY_CHATTERS_MAX = max;
-	return max;
+	PADAWAN_NO_REPLY_CHATTERS_MAX = total;
+	return total;
 }
 
 void CG_PadawanIdleNoReplyChatter ( int entityNum )
@@ -888,18 +888,18 @@ int PADAWAN_CHATTERS_MAX = -1;
 
 int GetPadawanChattersMax()
 {
-	int max = 0;
+	int total = 0;
 
 	if (PADAWAN_CHATTERS_MAX != -1) return PADAWAN_CHATTERS_MAX; // already set up...
 
 	// We need to count them...
-	while (PADAWAN_CHATTERS[max] != "")
+	while (strncmp(PADAWAN_CHATTERS[total], "", strlen(PADAWAN_CHATTERS[total])))
 	{
-		max++;
+		total++;
 	}
 
-	PADAWAN_CHATTERS_MAX = max;
-	return max;
+	PADAWAN_CHATTERS_MAX = total;
+	return total;
 }
 
 void CG_PadawanIdleChatter ( int entityNum )
@@ -952,18 +952,18 @@ int PADAWAN_REPLY_CHATTERS_MAX = -1;
 
 int GetPadawanReplyChattersMax()
 {
-	int max = 0;
+	int total = 0;
 
 	if (PADAWAN_REPLY_CHATTERS_MAX != -1) return PADAWAN_REPLY_CHATTERS_MAX; // already set up...
 
 	// We need to count them...
-	while (PADAWAN_REPLY_CHATTERS[max] != "")
+	while (strncmp(PADAWAN_REPLY_CHATTERS[total], "", strlen(PADAWAN_REPLY_CHATTERS[total])))
 	{
-		max++;
+		total++;
 	}
 
-	PADAWAN_REPLY_CHATTERS_MAX = max;
-	return max;
+	PADAWAN_REPLY_CHATTERS_MAX = total;
+	return total;
 }
 
 const char *PADAWAN_REPLY_YODA_CHATTERS[] =
@@ -998,18 +998,18 @@ int PADAWAN_REPLY_YODA_CHATTERS_MAX = -1;
 
 int GetPadawanReplyYodaChattersMax()
 {
-	int max = 0;
+	int total = 0;
 
 	if (PADAWAN_REPLY_YODA_CHATTERS_MAX != -1) return PADAWAN_REPLY_YODA_CHATTERS_MAX; // already set up...
 
 	// We need to count them...
-	while (PADAWAN_REPLY_YODA_CHATTERS[max] != "")
+	while (strncmp(PADAWAN_REPLY_YODA_CHATTERS[total], "", strlen(PADAWAN_REPLY_YODA_CHATTERS[total])))
 	{
-		max++;
+		total++;
 	}
 
-	PADAWAN_REPLY_YODA_CHATTERS_MAX = max;
-	return max;
+	PADAWAN_REPLY_YODA_CHATTERS_MAX = total;
+	return total;
 }
 
 void CG_PadawanIdleReplyChatter ( int entityNum )
@@ -1055,17 +1055,22 @@ const char *COMBAT_BACKUP_SOUNDS[] =
 	"",
 };
 
+int COMBAT_BACKUP_SOUNDS_MAX = -1;
+
 int GetCombatSoundsMax()
 {
-	int max = 0;
+	int total = 0;
+
+	if (COMBAT_BACKUP_SOUNDS_MAX != -1) return COMBAT_BACKUP_SOUNDS_MAX; // already set up...
 
 	// We need to count them...
-	while (COMBAT_BACKUP_SOUNDS[max] != "")
+	while (strncmp(COMBAT_BACKUP_SOUNDS[total], "", strlen(COMBAT_BACKUP_SOUNDS[total])))
 	{
-		max++;
+		total++;
 	}
 
-	return max;
+	COMBAT_BACKUP_SOUNDS_MAX = total;
+	return total;
 }
 
 //

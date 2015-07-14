@@ -928,8 +928,10 @@ bool TR_WorldToScreen(vec3_t worldCoord, float *x, float *y)
 	// Make sure Z is not negative.
 	if(transformed[2] < 0.01)
 	{
-		return false;
+		//return false;
+		//transformed[2] = 2.0 - transformed[2];
 	}
+
 	// Simple convert to screen coords.
 	float xzi = xcenter / transformed[2] * (90.0/backEnd.refdef.fov_x);
 	float yzi = ycenter / transformed[2] * (90.0/backEnd.refdef.fov_y);
@@ -937,11 +939,17 @@ bool TR_WorldToScreen(vec3_t worldCoord, float *x, float *y)
 	*x = (xcenter + xzi * transformed[0]);
 	*y = (ycenter - yzi * transformed[1]);
 
+	//if (*x < 0.0) *x = 0.0;
+	//if (*y < 0.0) *y = 0.0;
+	//if (*x > 640.0) *x = 640.0;
+	//if (*y > 480.0) *y = 480.0;
 	return true;
 }
 
 qboolean TR_InFOV( vec3_t spot, vec3_t from )
 {
+	return qtrue;
+
 	vec3_t	deltaVector, angles, deltaAngles;
 	vec3_t	fromAnglesCopy;
 	vec3_t	fromAngles;
@@ -962,6 +970,8 @@ qboolean TR_InFOV( vec3_t spot, vec3_t from )
 		return qtrue;
 	}
 
+	//if (Distance(spot, from) < 512) return qtrue;
+
 	return qfalse;
 }
 
@@ -978,6 +988,8 @@ void Volumetric_Trace( trace_t *results, const vec3_t start, const vec3_t mins, 
 qboolean Volumetric_Visible(vec3_t from, vec3_t to)
 {
 	trace_t trace;
+
+	//if (Distance(to, from) < 256) return qtrue;
 
 	Volumetric_Trace( &trace, from, NULL, NULL, to, -1, (CONTENTS_SOLID|CONTENTS_TERRAIN) );
 

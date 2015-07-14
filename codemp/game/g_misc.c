@@ -140,7 +140,47 @@ void misc_dlight_use ( gentity_t *ent, gentity_t *other, gentity_t *activator )
 void SP_light( gentity_t *self ) {
 	if (!self->targetname )
 	{//if i don't have a light style switch, the i go away
-		G_FreeEntity( self );
+		//G_FreeEntity( self );
+		/*
+		"classname" "light"
+		"spawnflags" "2"
+		"light" "10"
+		"origin" "1072 -368 320"
+		*/
+		float light;
+		vec3_t color;
+		qboolean lightSet = G_SpawnFloat( "light", "100", &light );
+		qboolean colorSet = G_SpawnVector( "color", "1 1 1", color );
+		if ( lightSet || colorSet ) {
+			int		r, g, b, i;
+
+			r = color[0] * 255;
+			if ( r > 255 ) {
+				r = 255;
+			}
+			g = color[1] * 255;
+			if ( g > 255 ) {
+				g = 255;
+			}
+			b = color[2] * 255;
+			if ( b > 255 ) {
+				b = 255;
+			}
+			
+			if (light < 0) 
+				self->s.extra_flags = 1; // volume light
+			else 
+				self->s.extra_flags = 0; // not volume light
+
+			i = light / 4;
+			if ( i > 255 ) {
+				i = 255;
+			}
+			self->s.constantLight = r | ( g << 8 ) | ( b << 16 ) | ( i << 24 );
+		}
+		G_SetOrigin( self, self->s.origin );
+		self->s.eType = ET_GENERAL;
+		trap->LinkEntity( (sharedEntity_t *)self );
 		return;
 	}
 
