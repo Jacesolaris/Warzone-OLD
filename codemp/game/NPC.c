@@ -2090,7 +2090,8 @@ void NPC_ExecuteBState ( gentity_t *self)//, int msec )
 		{
 			if( NPCS.NPC->s.torsoAnim == TORSO_WEAPONREADY1 || NPCS.NPC->s.torsoAnim == TORSO_WEAPONREADY3 )
 			{//we look ready for action, using one of the first 2 weapon, let's rest our weapon on our shoulder
-				NPC_SetAnim(NPCS.NPC,SETANIM_TORSO,TORSO_WEAPONIDLE3,SETANIM_FLAG_NORMAL);
+				//NPC_SetAnim(NPCS.NPC,SETANIM_TORSO,TORSO_WEAPONIDLE3,SETANIM_FLAG_NORMAL);
+				NPC_SetAnim(NPCS.NPC, SETANIM_TORSO, WeaponReadyAnim[NPCS.NPC->s.weapon], 0);//Stoiss not sure about this one here.. testing
 			}
 		}
 	}
