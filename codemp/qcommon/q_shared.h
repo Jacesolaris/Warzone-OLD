@@ -2557,14 +2557,6 @@ enum {
 
 void NET_AddrToString( char *out, size_t size, void *addr );
 
-//[SaberSys]
-typedef enum {
-	SAF_BLOCKING,
-	SAF_KICK,
-	SAF_ENDBLOCK,
-} saberActionFlag_e;
-//[/SaberSys]
-
 qboolean StringContainsWord(const char *haystack, const char *needle);
 qboolean HaveWeapon( playerState_t *ps, int weapon );
 qboolean IsSniperRifle ( int weapon );
