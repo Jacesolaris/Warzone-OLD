@@ -374,7 +374,7 @@ void RE_BeginScene(const refdef_t *fd)
 	}
 	else
 	{
-		tr.refdef.colorScale = r_forceSun->integer ? r_forceSunMapLightScale->value : tr.mapLightScale;
+		tr.refdef.colorScale = (r_forceSun->integer || r_dlightShadows->integer) ? r_forceSunMapLightScale->value : tr.mapLightScale;
 
 		if (r_sunlightMode->integer == 1)
 		{
@@ -384,12 +384,12 @@ void RE_BeginScene(const refdef_t *fd)
 
 			tr.refdef.sunAmbCol[0] =
 			tr.refdef.sunAmbCol[1] =
-			tr.refdef.sunAmbCol[2] = r_forceSun->integer ? r_forceSunAmbientScale->value : tr.sunShadowScale;
+			tr.refdef.sunAmbCol[2] = (r_forceSun->integer || r_dlightShadows->integer) ? r_forceSunAmbientScale->value : tr.sunShadowScale;
 		}
 		else
 		{
 			float scale = pow(2.0f, r_mapOverBrightBits->integer - tr.overbrightBits - 8);
-			if (r_forceSun->integer)
+			if (r_forceSun->integer || r_dlightShadows->integer)
 			{
 				VectorScale(tr.sunLight, scale * r_forceSunLightScale->value,   tr.refdef.sunCol);
 				VectorScale(tr.sunLight, scale * r_forceSunAmbientScale->value, tr.refdef.sunAmbCol);
@@ -546,7 +546,7 @@ void RE_RenderScene( const refdef_t *fd ) {
 #endif //__DYNAMIC_SHADOWS__
 
 	// playing with even more shadows
-	if(r_sunlightMode->integer && !( fd->rdflags & RDF_NOWORLDMODEL ) && (r_forceSun->integer || tr.sunShadows))
+	if(r_sunlightMode->integer && !( fd->rdflags & RDF_NOWORLDMODEL ) && (r_forceSun->integer || tr.sunShadows || r_dlightShadows->integer))
 	{
 		R_RenderSunShadowMaps(fd, 0);
 		R_RenderSunShadowMaps(fd, 1);
@@ -593,7 +593,7 @@ void RE_RenderScene( const refdef_t *fd ) {
 
 	VectorCopy( fd->vieworg, parms.pvsOrigin );
 
-	if(!( fd->rdflags & RDF_NOWORLDMODEL ) && r_depthPrepass->value && ((r_forceSun->integer) || tr.sunShadows))
+	if(!( fd->rdflags & RDF_NOWORLDMODEL ) && r_depthPrepass->value && ((r_forceSun->integer) || tr.sunShadows || r_dlightShadows->integer))
 	{
 		parms.flags = VPF_USESUNLIGHT;
 	}

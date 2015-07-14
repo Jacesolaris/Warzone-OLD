@@ -1147,6 +1147,8 @@ void BASS_AddDynamicTrack ( char *name )
 		return;
 	}
 
+	if (s_musicSelection->integer == 1 || s_musicSelection->integer == 2) return; // Not in these modes...
+
 	//if (s_musicSelection->integer == 1 || s_musicSelection->integer == 2)
 	//{// Don't add map tracks if we are using psy or custom playlist... (but allow it for *all* mode)
 	//	return;

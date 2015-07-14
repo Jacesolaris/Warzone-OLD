@@ -144,6 +144,7 @@ cvar_t  *r_imageUpsample;
 cvar_t  *r_imageUpsampleMaxSize;
 cvar_t  *r_imageUpsampleType;
 cvar_t  *r_genNormalMaps;
+cvar_t  *r_dlightShadows;
 cvar_t  *r_forceSun;
 cvar_t  *r_forceSunMapLightScale;
 cvar_t  *r_forceSunLightScale;
@@ -1351,6 +1352,7 @@ void R_Register( void )
 	r_imageUpsampleType = ri->Cvar_Get( "r_imageUpsampleType", "1", CVAR_ARCHIVE | CVAR_LATCH );
 	r_genNormalMaps = ri->Cvar_Get( "r_genNormalMaps", "0", CVAR_ARCHIVE | CVAR_LATCH );
 
+	r_dlightShadows = ri->Cvar_Get( "r_dlightShadows", "0", CVAR_ARCHIVE );
 	r_forceSun = ri->Cvar_Get( "r_forceSun", "0", CVAR_ARCHIVE | CVAR_LATCH );
 	r_forceSunMapLightScale = ri->Cvar_Get( "r_forceSunMapLightScale", "1.0", CVAR_CHEAT );
 	r_forceSunLightScale = ri->Cvar_Get( "r_forceSunLightScale", "1.0", CVAR_CHEAT );
@@ -1383,7 +1385,7 @@ void R_Register( void )
 	//r_volumelight = ri->Cvar_Get( "r_volumelight", "1", CVAR_ARCHIVE );
 	r_volumelightMaximum = ri->Cvar_Get( "r_volumelightMaximum", "6", CVAR_ARCHIVE );
 	r_volumelightSamples = ri->Cvar_Get( "r_volumelightSamples", "50", CVAR_ARCHIVE );
-	r_volumelightExposure = ri->Cvar_Get( "r_volumelightExposure", "0.6", CVAR_ARCHIVE );
+	r_volumelightExposure = ri->Cvar_Get( "r_volumelightExposure", "0.45", CVAR_ARCHIVE );
 	r_volumelightDecay = ri->Cvar_Get( "r_volumelightDecay", "0.999", CVAR_ARCHIVE );
 	r_volumelightDensity = ri->Cvar_Get( "r_volumelightDensity", "1.0", CVAR_ARCHIVE );
 	r_volumelightWeight = ri->Cvar_Get( "r_volumelightWeight", "0.01", CVAR_ARCHIVE );

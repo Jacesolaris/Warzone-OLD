@@ -2490,105 +2490,125 @@ static float CalcSplit(float n, float f, float i, float m)
 	return (n * pow(f / n, i / m) + (f - n) * i / m) / 2.0f;
 }
 
+extern qboolean TR_InFOV( vec3_t spot, vec3_t from );
+extern bool TR_WorldToScreen(vec3_t worldCoord, float *x, float *y);
+extern qboolean Volumetric_Visible(vec3_t from, vec3_t to);
+extern void Volumetric_RoofHeight(vec3_t from);
+extern vec3_t roof;
 
-#ifdef __DYNAMIC_SHADOWS__
-void R_RenderDlightShadowMaps(const refdef_t *fd, int level)
+qboolean R_RenderDlightShadowMaps(const refdef_t *fd, int level)
 {
-	if ( !backEnd.refdef.num_dlights ) {
-		return;
-	}
+	dlight_t	*closestDL = NULL;
+	viewParms_t		shadowParms;
+	vec4_t lightDir;//, lightCol;
+	vec3_t lightViewAxis[3];
+	vec3_t lightOrigin;
+	float splitZNear, splitZFar, splitBias;
+	float viewZNear, viewZFar;
+	vec3_t lightviewBounds[2], lOrg, vOrg;
+	qboolean lightViewIndependentOfCameraView = qfalse;
+	qboolean isDlightShadow = qfalse;
 
-	for ( int l = 0 ; l < MAX_DYNAMIC_SHADOWS ; l++ ) {
-		dlight_t	*dl = &backEnd.refdef.dlights[l];
-		dl->activeShadows = qfalse;
-	}
+	VectorCopy(fd->vieworg, vOrg);
 
-	for ( int l = 0 ; l < backEnd.refdef.num_dlights ; l++ ) {
-		dlight_t	*dl;
-		float radius, scale;
-		vec3_t origin;
+	{
+		if ( !backEnd.refdef.num_dlights ) {
+			VectorCopy4(tr.refdef.sunDir, lightDir);
+		} else {
+			closestDL = &backEnd.refdef.dlights[0];
 
-
-		if (l >= MAX_DYNAMIC_SHADOWS) break; // max
-
-		dl = &backEnd.refdef.dlights[l];
-		VectorCopy( dl->transformed, origin );
-		radius = dl->radius;
-		scale = 1.0f / radius;
-
-
-		/*
-		if (Distance(fd->vieworg, dl->origin) > radius * 2.0)
-		{
-			dl->activeShadows = qfalse;
-			continue; // too far away?
-		}
-		*/
-
-		dl->activeShadows = qtrue;
-
-		viewParms_t		shadowParms;
-		vec4_t lightDir, lightCol;
-		vec3_t lightViewAxis[3];
-		vec3_t lightOrigin;
-		float splitZNear, splitZFar, splitBias;
-		float viewZNear, viewZFar;
-		vec3_t lightviewBounds[2];
-		qboolean lightViewIndependentOfCameraView = qtrue;
-
-		/*if (r_forceSun->integer == 2)
-		{
-			int scale = 32768;
-			float angle = (fd->time % scale) / (float)scale * M_PI;
-			lightDir[0] = cos(angle);
-			lightDir[1] = sin(35.0f * M_PI / 180.0f);
-			lightDir[2] = sin(angle) * cos(35.0f * M_PI / 180.0f);
-			lightDir[3] = 0.0f;
-
-			if (1) //((fd->time % (scale * 2)) < scale)
+			// Find the closest dlight...
+			for ( int l = 0 ; l < backEnd.refdef.num_dlights ; l++ ) 
 			{
-				lightCol[0] = 
-					lightCol[1] = 
-					lightCol[2] = CLAMP(sin(angle) * 2.0f, 0.0f, 1.0f) * 2.0f;
-				lightCol[3] = 1.0f;
+				dlight_t	*dl = &backEnd.refdef.dlights[l];
+
+				if (Distance(dl->origin, fd->vieworg) > 96) continue;
+
+				/*if (!Volumetric_Visible((float *)vOrg, dl->origin))
+				{// Trace to actual position failed... Try above...
+					vec3_t tmpOrg;
+					vec3_t eyeOrg;
+					vec3_t tmpRoof;
+					vec3_t eyeRoof;
+
+					// Calculate ceiling heights at both positions...
+					Volumetric_RoofHeight(dl->origin);
+					VectorCopy(roof, tmpRoof);
+					Volumetric_RoofHeight((float *)vOrg);
+					VectorCopy(roof, eyeRoof);
+
+					VectorSet(tmpOrg, tmpRoof[0], dl->origin[1], dl->origin[2]);
+					VectorSet(eyeOrg, vOrg[0], vOrg[1], vOrg[2]);
+					if (!Volumetric_Visible(eyeOrg, tmpOrg))
+					{// Trace to above position failed... Try trace from above viewer...
+						VectorSet(tmpOrg, dl->origin[0], dl->origin[1], dl->origin[2]);
+						VectorSet(eyeOrg, eyeRoof[0], vOrg[1], vOrg[2]);
+						if (!Volumetric_Visible(eyeOrg, tmpOrg))
+						{// Trace from above viewer failed... Try trace from above, to above...
+							VectorSet(tmpOrg, tmpRoof[0], dl->origin[1], dl->origin[2]);
+							VectorSet(eyeOrg, eyeRoof[0], vOrg[1], vOrg[2]);
+							if (!Volumetric_Visible(eyeOrg, tmpOrg))
+							{// Trace from/to above viewer failed...
+								continue; // Can't see this...
+							}
+						}
+					}
+				}*/
+
+				if (Distance(dl->origin, vOrg) < Distance(closestDL->origin, vOrg))
+				{// This one is closer...
+					closestDL = dl;
+				}
 			}
-			else
-			{
-				lightCol[0] = 
-					lightCol[1] = 
-					lightCol[2] = CLAMP(sin(angle) * 2.0f * 0.1f, 0.0f, 0.1f);
-				lightCol[3] = 1.0f;
-			}
+
+			vec3_t dir;
+			
+			VectorCopy(closestDL->origin, vOrg);
+			//vOrg[2]+=32;
+
+			VectorCopy(closestDL->origin, lOrg);
+			//lOrg[2]+=16;
+
+			VectorSubtract(lOrg, vOrg, dir);
+			VectorNormalize(dir);
+
+			lightDir[0] = 0.0;//dir[0]/4.0;
+			lightDir[1] = 0.0;//dir[1]/4.0;
+			lightDir[2] = 1.0;//-dir[2];
+			lightDir[3] = 0.0;
+
+			//ri->Printf(PRINT_WARNING, "dlDir: %f %f %f %f\n", lightDir[0], lightDir[1], lightDir[2], lightDir[3]);
+			//ri->Printf(PRINT_WARNING, "sunDir: %f %f %f %f\n", tr.refdef.sunDir[0], tr.refdef.sunDir[1], tr.refdef.sunDir[2], tr.refdef.sunDir[3]);
+
+			tr.refdef.sunCol[0] = closestDL->color[0] / 255.0;
+			tr.refdef.sunCol[1] = closestDL->color[1] / 255.0;
+			tr.refdef.sunCol[2] = closestDL->color[2] / 255.0;
+			tr.refdef.sunCol[3] = 1.0f;
+			
+			tr.refdef.sunAmbCol[0] = closestDL->color[0] / 255.0;
+			tr.refdef.sunAmbCol[1] = closestDL->color[1] / 255.0;
+			tr.refdef.sunAmbCol[2] = closestDL->color[2] / 255.0;
+			tr.refdef.sunAmbCol[3] = 1.0f;
+
+			float scale = pow(2.0f, r_mapOverBrightBits->integer - tr.overbrightBits - 8);
+			VectorScale(tr.sunLight, scale * r_forceSunLightScale->value,   tr.refdef.sunCol);
+			VectorScale(tr.sunLight, scale * r_forceSunAmbientScale->value, tr.refdef.sunAmbCol);
 
 			VectorCopy4(lightDir, tr.refdef.sunDir);
-			VectorCopy4(lightCol, tr.refdef.sunCol);
-			VectorScale4(lightCol, 0.2f, tr.refdef.sunAmbCol);
+
+			//lightViewIndependentOfCameraView = qtrue;
+			isDlightShadow = qtrue;
 		}
-		else*/
-		{
-			//VectorCopy4(tr.refdef.sunDir, lightDir);
-			/*vec3_t dir, org;
-			//VectorSet(org, 65000.0, 65000.0, -65000.0);
-			
-			VectorSet(org, dl->origin[0]+1.0, dl->origin[1]+1.0, dl->origin[2]-1.0); // UQ1: I have no idea of the point we need a dir for...
-			VectorSubtract(dl->origin, org, dir);
-			VectorNormalize( dir );
-			lightDir[0] = dir[0];
-			lightDir[1] = dir[1];
-			lightDir[2] = dir[2];
-			lightDir[3] = 0.0f;*/
+	}
 
-			lightDir[0] = lightDir[1] = 0.0f;
-			lightDir[2] = 1.0f;
-			lightDir[3] = 1.0f;
-		}
+	if (!closestDL) return qfalse;
 
-		viewZNear = r_shadowCascadeZNear->value;
-		viewZFar = r_shadowCascadeZFar->value;
-		splitBias = r_shadowCascadeZBias->value;
+	viewZNear = r_shadowCascadeZNear->value;
+	viewZFar = r_shadowCascadeZFar->value;
+	splitBias = r_shadowCascadeZBias->value;
 
-		switch(level)
-		{
+	switch(level)
+	{
 		case 0:
 		default:
 			//splitZNear = r_znear->value;
@@ -2608,212 +2628,213 @@ void R_RenderDlightShadowMaps(const refdef_t *fd, int level)
 			//splitZNear = 896;
 			//splitZFar  = 3072;
 			break;
-		}
-
-		//VectorCopy(fd->vieworg, lightOrigin);
-		VectorCopy(dl->origin, lightOrigin);
-		//VectorCopy(origin, lightOrigin);
+	}
+			
+	VectorCopy(lOrg, lightOrigin);
 
 
-		// Make up a projection
-		VectorScale(lightDir, -1.0f, lightViewAxis[0]);
+	// Make up a projection
+	VectorScale(lightDir, -1.0f, lightViewAxis[0]);
 
+	if (lightViewIndependentOfCameraView)
+	{
+		// Use world up as light view up
+		VectorSet(lightViewAxis[2], 0, 0, 1);
+	}
+	else if (level == 0)
+	{
+		// Level 0 tries to use a diamond texture orientation relative to camera view
+		// Use halfway between camera view forward and left for light view up
+		VectorAdd(fd->viewaxis[0], fd->viewaxis[1], lightViewAxis[2]);
+	}
+	else
+	{
+		// Use camera view up as light view up
+		VectorCopy(fd->viewaxis[2], lightViewAxis[2]);
+	}
+
+	// Check if too close to parallel to light direction
+	if (abs(DotProduct(lightViewAxis[2], lightViewAxis[0])) > 0.9f)
+	{
 		if (lightViewIndependentOfCameraView)
 		{
-			// Use world up as light view up
-			VectorSet(lightViewAxis[2], 0, 0, 1);
+			// Use world left as light view up
+			VectorSet(lightViewAxis[2], 0, 1, 0);
 		}
 		else if (level == 0)
 		{
 			// Level 0 tries to use a diamond texture orientation relative to camera view
-			// Use halfway between camera view forward and left for light view up
-			VectorAdd(fd->viewaxis[0], fd->viewaxis[1], lightViewAxis[2]);
+			// Use halfway between camera view forward and up for light view up
+			VectorAdd(fd->viewaxis[0], fd->viewaxis[2], lightViewAxis[2]);
 		}
 		else
 		{
-			// Use camera view up as light view up
-			VectorCopy(fd->viewaxis[2], lightViewAxis[2]);
-		}
-
-		// Check if too close to parallel to light direction
-		if (abs(DotProduct(lightViewAxis[2], lightViewAxis[0])) > 0.9f)
-		{
-			if (lightViewIndependentOfCameraView)
-			{
-				// Use world left as light view up
-				VectorSet(lightViewAxis[2], 0, 1, 0);
-			}
-			else if (level == 0)
-			{
-				// Level 0 tries to use a diamond texture orientation relative to camera view
-				// Use halfway between camera view forward and up for light view up
-				VectorAdd(fd->viewaxis[0], fd->viewaxis[2], lightViewAxis[2]);
-			}
-			else
-			{
-				// Use camera view left as light view up
-				VectorCopy(fd->viewaxis[1], lightViewAxis[2]);
-			}
-		}
-
-		// clean axes
-		CrossProduct(lightViewAxis[2], lightViewAxis[0], lightViewAxis[1]);
-		VectorNormalize(lightViewAxis[1]);
-		CrossProduct(lightViewAxis[0], lightViewAxis[1], lightViewAxis[2]);
-
-		// Create bounds for light projection using slice of view projection
-		{
-			matrix_t lightViewMatrix;
-			vec4_t point, base, lightViewPoint;
-			float lx, ly;
-
-			base[3] = 1;
-			point[3] = 1;
-			lightViewPoint[3] = 1;
-
-			Matrix16View(lightViewAxis, lightOrigin, lightViewMatrix);
-
-			ClearBounds(lightviewBounds[0], lightviewBounds[1]);
-
-			// add view near plane
-			lx = splitZNear * tan(fd->fov_x * M_PI / 360.0f);
-			ly = splitZNear * tan(fd->fov_y * M_PI / 360.0f);
-			VectorMA(fd->vieworg, splitZNear, fd->viewaxis[0], base);
-
-			VectorMA(base,   lx, fd->viewaxis[1], point);
-			VectorMA(point,  ly, fd->viewaxis[2], point);
-			Matrix16Transform(lightViewMatrix, point, lightViewPoint);
-			AddPointToBounds(lightViewPoint, lightviewBounds[0], lightviewBounds[1]);
-
-			VectorMA(base,  -lx, fd->viewaxis[1], point);
-			VectorMA(point,  ly, fd->viewaxis[2], point);
-			Matrix16Transform(lightViewMatrix, point, lightViewPoint);
-			AddPointToBounds(lightViewPoint, lightviewBounds[0], lightviewBounds[1]);
-
-			VectorMA(base,   lx, fd->viewaxis[1], point);
-			VectorMA(point, -ly, fd->viewaxis[2], point);
-			Matrix16Transform(lightViewMatrix, point, lightViewPoint);
-			AddPointToBounds(lightViewPoint, lightviewBounds[0], lightviewBounds[1]);
-
-			VectorMA(base,  -lx, fd->viewaxis[1], point);
-			VectorMA(point, -ly, fd->viewaxis[2], point);
-			Matrix16Transform(lightViewMatrix, point, lightViewPoint);
-			AddPointToBounds(lightViewPoint, lightviewBounds[0], lightviewBounds[1]);
-
-
-			// add view far plane
-			lx = splitZFar * tan(fd->fov_x * M_PI / 360.0f);
-			ly = splitZFar * tan(fd->fov_y * M_PI / 360.0f);
-			VectorMA(fd->vieworg, splitZFar, fd->viewaxis[0], base);
-
-			VectorMA(base,   lx, fd->viewaxis[1], point);
-			VectorMA(point,  ly, fd->viewaxis[2], point);
-			Matrix16Transform(lightViewMatrix, point, lightViewPoint);
-			AddPointToBounds(lightViewPoint, lightviewBounds[0], lightviewBounds[1]);
-
-			VectorMA(base,  -lx, fd->viewaxis[1], point);
-			VectorMA(point,  ly, fd->viewaxis[2], point);
-			Matrix16Transform(lightViewMatrix, point, lightViewPoint);
-			AddPointToBounds(lightViewPoint, lightviewBounds[0], lightviewBounds[1]);
-
-			VectorMA(base,   lx, fd->viewaxis[1], point);
-			VectorMA(point, -ly, fd->viewaxis[2], point);
-			Matrix16Transform(lightViewMatrix, point, lightViewPoint);
-			AddPointToBounds(lightViewPoint, lightviewBounds[0], lightviewBounds[1]);
-
-			VectorMA(base,  -lx, fd->viewaxis[1], point);
-			VectorMA(point, -ly, fd->viewaxis[2], point);
-			Matrix16Transform(lightViewMatrix, point, lightViewPoint);
-			AddPointToBounds(lightViewPoint, lightviewBounds[0], lightviewBounds[1]);
-
-			// Moving the Light in Texel-Sized Increments
-			// from http://msdn.microsoft.com/en-us/library/windows/desktop/ee416324%28v=vs.85%29.aspx
-			//
-			if (lightViewIndependentOfCameraView)
-			{
-				float cascadeBound, worldUnitsPerTexel, invWorldUnitsPerTexel;
-
-				cascadeBound = MAX(lightviewBounds[1][0] - lightviewBounds[0][0], lightviewBounds[1][1] - lightviewBounds[0][1]);
-				cascadeBound = MAX(cascadeBound, lightviewBounds[1][2] - lightviewBounds[0][2]);
-				worldUnitsPerTexel = cascadeBound / tr.dlightShadowFbo[l][level]->width;
-				invWorldUnitsPerTexel = 1.0f / worldUnitsPerTexel;
-
-				VectorScale(lightviewBounds[0], invWorldUnitsPerTexel, lightviewBounds[0]);
-				lightviewBounds[0][0] = floor(lightviewBounds[0][0]);
-				lightviewBounds[0][1] = floor(lightviewBounds[0][1]);
-				lightviewBounds[0][2] = floor(lightviewBounds[0][2]);
-				VectorScale(lightviewBounds[0], worldUnitsPerTexel, lightviewBounds[0]);
-
-				VectorScale(lightviewBounds[1], invWorldUnitsPerTexel, lightviewBounds[1]);
-				lightviewBounds[1][0] = floor(lightviewBounds[1][0]);
-				lightviewBounds[1][1] = floor(lightviewBounds[1][1]);
-				lightviewBounds[1][2] = floor(lightviewBounds[1][2]);
-				VectorScale(lightviewBounds[1], worldUnitsPerTexel, lightviewBounds[1]);
-			}
-
-			//ri->Printf(PRINT_ALL, "znear %f zfar %f\n", lightviewBounds[0][0], lightviewBounds[1][0]);		
-			//ri->Printf(PRINT_ALL, "fovx %f fovy %f xmin %f xmax %f ymin %f ymax %f\n", fd->fov_x, fd->fov_y, xmin, xmax, ymin, ymax);
-		}
-
-
-		{
-			int firstDrawSurf;
-
-			Com_Memset( &shadowParms, 0, sizeof( shadowParms ) );
-
-			shadowParms.viewportX = 0;
-			shadowParms.viewportY = 0;
-			shadowParms.viewportWidth  = tr.dlightShadowFbo[l][level]->width;
-			shadowParms.viewportHeight = tr.dlightShadowFbo[l][level]->height;
-			shadowParms.isPortal = qfalse;
-			shadowParms.isMirror = qfalse;
-
-			shadowParms.fovX = 90;
-			shadowParms.fovY = 90;
-
-			shadowParms.targetFbo = tr.dlightShadowFbo[l][level];
-
-			shadowParms.flags = (viewParmFlags_t)( VPF_DEPTHSHADOW | VPF_DEPTHCLAMP | VPF_ORTHOGRAPHIC | VPF_NOVIEWMODEL );
-			shadowParms.zFar = lightviewBounds[1][0];
-
-			VectorCopy(lightOrigin, shadowParms.ori.origin);
-
-			VectorCopy(lightViewAxis[0], shadowParms.ori.axis[0]);
-			VectorCopy(lightViewAxis[1], shadowParms.ori.axis[1]);
-			VectorCopy(lightViewAxis[2], shadowParms.ori.axis[2]);
-
-			VectorCopy(lightOrigin, shadowParms.pvsOrigin );
-
-			{
-				tr.viewCount++;
-
-				tr.viewParms = shadowParms;
-				tr.viewParms.frameSceneNum = tr.frameSceneNum;
-				tr.viewParms.frameCount = tr.frameCount;
-
-				firstDrawSurf = tr.refdef.numDrawSurfs;
-
-				tr.viewCount++;
-
-				// set viewParms.world
-				R_RotateForViewer ();
-
-				R_SetupProjectionOrtho(&tr.viewParms, lightviewBounds);
-
-				R_AddWorldSurfaces ();
-
-				R_AddPolygonSurfaces();
-
-				R_AddEntitySurfaces ();
-
-				R_SortDrawSurfs( tr.refdef.drawSurfs + firstDrawSurf, tr.refdef.numDrawSurfs - firstDrawSurf );
-			}
-
-			Matrix16Multiply(tr.viewParms.projectionMatrix, tr.viewParms.world.modelMatrix, tr.refdef.dlightShadowMvp[l][level]);
+			// Use camera view left as light view up
+			VectorCopy(fd->viewaxis[1], lightViewAxis[2]);
 		}
 	}
+
+	// clean axes
+	CrossProduct(lightViewAxis[2], lightViewAxis[0], lightViewAxis[1]);
+	VectorNormalize(lightViewAxis[1]);
+	CrossProduct(lightViewAxis[0], lightViewAxis[1], lightViewAxis[2]);
+
+	// Create bounds for light projection using slice of view projection
+	{
+		matrix_t lightViewMatrix;
+		vec4_t point, base, lightViewPoint;
+		float lx, ly;
+
+		base[3] = 1;
+		point[3] = 1;
+		lightViewPoint[3] = 1;
+
+		Matrix16View(lightViewAxis, lightOrigin, lightViewMatrix);
+
+		ClearBounds(lightviewBounds[0], lightviewBounds[1]);
+
+		// add view near plane
+		lx = splitZNear * tan(fd->fov_x * M_PI / 360.0f);
+		ly = splitZNear * tan(fd->fov_y * M_PI / 360.0f);
+		VectorMA(lOrg, splitZNear, fd->viewaxis[0], base);
+
+		VectorMA(base,   lx, fd->viewaxis[1], point);
+		VectorMA(point,  ly, fd->viewaxis[2], point);
+		Matrix16Transform(lightViewMatrix, point, lightViewPoint);
+		AddPointToBounds(lightViewPoint, lightviewBounds[0], lightviewBounds[1]);
+
+		VectorMA(base,  -lx, fd->viewaxis[1], point);
+		VectorMA(point,  ly, fd->viewaxis[2], point);
+		Matrix16Transform(lightViewMatrix, point, lightViewPoint);
+		AddPointToBounds(lightViewPoint, lightviewBounds[0], lightviewBounds[1]);
+
+		VectorMA(base,   lx, fd->viewaxis[1], point);
+		VectorMA(point, -ly, fd->viewaxis[2], point);
+		Matrix16Transform(lightViewMatrix, point, lightViewPoint);
+		AddPointToBounds(lightViewPoint, lightviewBounds[0], lightviewBounds[1]);
+
+		VectorMA(base,  -lx, fd->viewaxis[1], point);
+		VectorMA(point, -ly, fd->viewaxis[2], point);
+		Matrix16Transform(lightViewMatrix, point, lightViewPoint);
+		AddPointToBounds(lightViewPoint, lightviewBounds[0], lightviewBounds[1]);
+		
+
+		// add view far plane
+		lx = splitZFar * tan(fd->fov_x * M_PI / 360.0f);
+		ly = splitZFar * tan(fd->fov_y * M_PI / 360.0f);
+		VectorMA(lOrg, splitZFar, fd->viewaxis[0], base);
+
+		VectorMA(base,   lx, fd->viewaxis[1], point);
+		VectorMA(point,  ly, fd->viewaxis[2], point);
+		Matrix16Transform(lightViewMatrix, point, lightViewPoint);
+		AddPointToBounds(lightViewPoint, lightviewBounds[0], lightviewBounds[1]);
+
+		VectorMA(base,  -lx, fd->viewaxis[1], point);
+		VectorMA(point,  ly, fd->viewaxis[2], point);
+		Matrix16Transform(lightViewMatrix, point, lightViewPoint);
+		AddPointToBounds(lightViewPoint, lightviewBounds[0], lightviewBounds[1]);
+
+		VectorMA(base,   lx, fd->viewaxis[1], point);
+		VectorMA(point, -ly, fd->viewaxis[2], point);
+		Matrix16Transform(lightViewMatrix, point, lightViewPoint);
+		AddPointToBounds(lightViewPoint, lightviewBounds[0], lightviewBounds[1]);
+
+		VectorMA(base,  -lx, fd->viewaxis[1], point);
+		VectorMA(point, -ly, fd->viewaxis[2], point);
+		Matrix16Transform(lightViewMatrix, point, lightViewPoint);
+		AddPointToBounds(lightViewPoint, lightviewBounds[0], lightviewBounds[1]);
+
+		// Moving the Light in Texel-Sized Increments
+		// from http://msdn.microsoft.com/en-us/library/windows/desktop/ee416324%28v=vs.85%29.aspx
+		//
+		if (lightViewIndependentOfCameraView)
+		{
+			float cascadeBound, worldUnitsPerTexel, invWorldUnitsPerTexel;
+
+			cascadeBound = MAX(lightviewBounds[1][0] - lightviewBounds[0][0], lightviewBounds[1][1] - lightviewBounds[0][1]);
+			cascadeBound = MAX(cascadeBound, lightviewBounds[1][2] - lightviewBounds[0][2]);
+			worldUnitsPerTexel = cascadeBound / tr.sunShadowFbo[level]->width;
+			invWorldUnitsPerTexel = 1.0f / worldUnitsPerTexel;
+
+			VectorScale(lightviewBounds[0], invWorldUnitsPerTexel, lightviewBounds[0]);
+			lightviewBounds[0][0] = floor(lightviewBounds[0][0]);
+			lightviewBounds[0][1] = floor(lightviewBounds[0][1]);
+			lightviewBounds[0][2] = floor(lightviewBounds[0][2]);
+			VectorScale(lightviewBounds[0], worldUnitsPerTexel, lightviewBounds[0]);
+
+			VectorScale(lightviewBounds[1], invWorldUnitsPerTexel, lightviewBounds[1]);
+			lightviewBounds[1][0] = floor(lightviewBounds[1][0]);
+			lightviewBounds[1][1] = floor(lightviewBounds[1][1]);
+			lightviewBounds[1][2] = floor(lightviewBounds[1][2]);
+			VectorScale(lightviewBounds[1], worldUnitsPerTexel, lightviewBounds[1]);
+		}
+
+		//ri->Printf(PRINT_ALL, "znear %f zfar %f\n", lightviewBounds[0][0], lightviewBounds[1][0]);		
+		//ri->Printf(PRINT_ALL, "fovx %f fovy %f xmin %f xmax %f ymin %f ymax %f\n", fd->fov_x, fd->fov_y, xmin, xmax, ymin, ymax);
+	}
+
+
+	{
+		int firstDrawSurf;
+
+		Com_Memset( &shadowParms, 0, sizeof( shadowParms ) );
+
+		shadowParms.viewportX = 0;
+		shadowParms.viewportY = 0;
+		shadowParms.viewportWidth  = tr.sunShadowFbo[level]->width;
+		shadowParms.viewportHeight = tr.sunShadowFbo[level]->height;
+		shadowParms.isPortal = qfalse;
+		shadowParms.isMirror = qfalse;
+
+		shadowParms.fovX = 90;
+		shadowParms.fovY = 90;
+
+		shadowParms.targetFbo = tr.sunShadowFbo[level];
+
+		shadowParms.flags = (viewParmFlags_t)( VPF_DEPTHSHADOW | VPF_DEPTHCLAMP | VPF_ORTHOGRAPHIC | VPF_NOVIEWMODEL );
+		shadowParms.zFar = lightviewBounds[1][0];
+
+		VectorCopy(lightOrigin, shadowParms.ori.origin);
+		
+		VectorCopy(lightViewAxis[0], shadowParms.ori.axis[0]);
+		VectorCopy(lightViewAxis[1], shadowParms.ori.axis[1]);
+		VectorCopy(lightViewAxis[2], shadowParms.ori.axis[2]);
+
+		VectorCopy(lightOrigin, shadowParms.pvsOrigin );
+
+		{
+			tr.viewCount++;
+
+			tr.viewParms = shadowParms;
+			tr.viewParms.frameSceneNum = tr.frameSceneNum;
+			tr.viewParms.frameCount = tr.frameCount;
+
+			firstDrawSurf = tr.refdef.numDrawSurfs;
+
+			tr.viewCount++;
+
+			// set viewParms.world
+			R_RotateForViewer ();
+
+			R_SetupProjectionOrtho(&tr.viewParms, lightviewBounds);
+
+			if (!isDlightShadow)
+			{
+				R_AddWorldSurfaces ();
+			}
+
+			R_AddPolygonSurfaces();
+
+			R_AddEntitySurfaces ();
+
+			R_SortDrawSurfs( tr.refdef.drawSurfs + firstDrawSurf, tr.refdef.numDrawSurfs - firstDrawSurf );
+		}
+
+		Matrix16Multiply(tr.viewParms.projectionMatrix, tr.viewParms.world.modelMatrix, tr.refdef.sunShadowMvp[level]);
+	}
+
+	return qtrue;
 }
-#endif //__DYNAMIC_SHADOWS__
 
 void R_RenderSunShadowMaps(const refdef_t *fd, int level)
 {
@@ -2825,8 +2846,21 @@ void R_RenderSunShadowMaps(const refdef_t *fd, int level)
 	float viewZNear, viewZFar;
 	vec3_t lightviewBounds[2];
 	qboolean lightViewIndependentOfCameraView = qfalse;
+	qboolean isDlightShadow = qfalse;
 
-	if (r_forceSun->integer == 2)
+	if (r_dlightShadows->integer)
+	{
+		dlight_t	*closestDL = NULL;
+
+		if ( !backEnd.refdef.num_dlights ) {
+			VectorCopy4(tr.refdef.sunDir, lightDir);
+		} else {
+			if (R_RenderDlightShadowMaps(fd, level)) return;
+
+			VectorCopy4(tr.refdef.sunDir, lightDir);
+		}
+	}
+	else if (r_forceSun->integer == 2)
 	{
 		int scale = 32768;
 		float angle = (fd->time % scale) / (float)scale * M_PI;
@@ -3074,7 +3108,10 @@ void R_RenderSunShadowMaps(const refdef_t *fd, int level)
 
 			R_SetupProjectionOrtho(&tr.viewParms, lightviewBounds);
 
-			R_AddWorldSurfaces ();
+			if (!isDlightShadow)
+			{
+				R_AddWorldSurfaces ();
+			}
 
 			R_AddPolygonSurfaces();
 
@@ -3155,12 +3192,6 @@ void R_RenderCubemapSide( int cubemapIndex, int cubemapSide, qboolean subscene )
 		// fix involves changing r_FBufScale to fit smaller cubemap image size, or rendering cubemap to framebuffer first
 		if(0) //(glRefConfig.framebufferObject && r_sunlightMode->integer && (r_forceSun->integer || tr.sunShadows))
 		{
-#ifdef __DYNAMIC_SHADOWS__
-			R_RenderDlightShadowMaps(&refdef, 0);
-			R_RenderDlightShadowMaps(&refdef, 1);
-			R_RenderDlightShadowMaps(&refdef, 2);
-#endif //__DYNAMIC_SHADOWS__
-
 			R_RenderSunShadowMaps(&refdef, 0);
 			R_RenderSunShadowMaps(&refdef, 1);
 			R_RenderSunShadowMaps(&refdef, 2);
