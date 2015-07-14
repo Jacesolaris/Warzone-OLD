@@ -45,31 +45,11 @@ float OcclusionFromDepth(vec2 pos)
 
 void main()
 {
-	//float screenDistance = length(var_TexCoords - var_LightScreenPos.xy);
 	vec2 texCoord = var_TexCoords; 
 	vec4 origColor = texture2D(u_DiffuseMap, var_TexCoords);
 
-	/*if (screenDistance > 0.5)
-	{// Pixel is too far away from light... Skip...
-		gl_FragColor = origColor;
-		return;
-	}*/
-
 	vec4 origLightColor = var_Local1;
-	//vec4 origLightColor = texture2D(u_DiffuseMap, var_LightScreenPos.xy);
-	//float origMult = clamp(1.0 - clamp(length(origColor.rgb) / 3.0, 0.0, 1.0), 0.0, 1.0) * 0.5; // work out a multiplier to even out brightnesses of darker and lighter colors
-
-	float brightness = clamp(length(origColor.rgb) / 3.0, 0.0, 1.0);
-	//float origMult = clamp(1.0 - brightness, 0.0, 1.0);
-
-	// Equal out glow brightnesses...
-	/*if (brightness > 2.0) {
-		//origMult *= 1.0;
-	} else if (brightness > 1.0) {
-		origMult *= 2.0;
-	} else {
-		origMult *= 3.0;
-	}*/
+	//float brightness = clamp(length(origColor.rgb) / 3.0, 0.0, 1.0);
 
     vec2 deltaTextCoord = vec2( texCoord - var_LightScreenPos.xy );  
     deltaTextCoord *= 1.0 / float(NUM_SAMPLES) * density;  
@@ -89,7 +69,6 @@ void main()
 		}
 		*/
 		
-
 		float shadowSample = OcclusionFromDepth(texCoord);
 		shadowSample *= illuminationDecay * weight;
         tmpShadow += shadowSample;
@@ -98,10 +77,21 @@ void main()
 
 	tmpShadow *= exposure;
 	
-	float lightOutColor = tmpShadow * (3.0 - brightness);
+	float lightOutColor = tmpShadow;// * (3.0 - brightness);
+
+	float bt = lightOutColor;
+
+	if (bt > 0.666) 
+		bt *= 0.666; // Bright lights get dulled... (eg: white)
+	else if (bt < 0.333) 
+		bt *= 2.25; // Dull lights get amplified... (eg: blue)
+	else 
+		bt *= 1.5; // Mid range lights get amplified slightly... (eg: yellow)
+
+	lightOutColor = clamp(lightOutColor * bt, 0.0, 1.0);
+
 	lightOutColor *= var_Local0.a; // distance mult - new
-	//lightOutColor /= var_Local0.a; // num_lights - old
-	//lightOutColor *= pow(1.0 - screenDistance, 3);
+
 	vec3 add_color = origLightColor.rgb * lightOutColor;
 #define const_1 ( 12.0 / 255.0)
 #define const_2 (255.0 / 219.0)

@@ -65,7 +65,7 @@ typedef struct {
 Channel		MUSIC_CHANNEL;
 
 qboolean	SOUND_CHANNELS_INITIALIZED = qfalse;
-Channel		SOUND_CHANNELS[MAX_BASS_CHANNELS];
+Channel		SOUND_CHANNELS[MAX_BASS_CHANNELS+1];
 
 //
 // Channel Utils...
@@ -223,7 +223,7 @@ void BASS_UnloadSamples ( void )
 
 
 HINSTANCE			bass = 0;								// bass handle
-char				tempfile[MAX_PATH];						// temporary BASS.DLL
+char				tempfile[MAX_PATH+1];						// temporary BASS.DLL
 
 void BASS_Shutdown ( void )
 {
@@ -1042,7 +1042,7 @@ int JKA_TRACKS_NUM = 133;
 
 // channel (sample/music) info structure
 typedef struct {
-	char name[260];
+	char name[260+1];
 } dMusicList_t;
 
 //
@@ -1054,10 +1054,10 @@ qboolean PSY_TRACKS_LOADED = qfalse;
 int PSY_TRACKS_NUM = 0;
 
 typedef struct {
-	char name[260];
+	char name[260+1];
 } psyMusicList_t;
 
-psyMusicList_t PSY_TRACKS[512];
+psyMusicList_t PSY_TRACKS[512+1];
 
 void BASS_GetPsyTracks( void )
 {
@@ -1093,10 +1093,10 @@ qboolean CUSTOM_TRACKS_LOADED = qfalse;
 int CUSTOM_TRACKS_NUM = 0;
 
 typedef struct {
-	char name[260];
+	char name[260+1];
 } customMusicList_t;
 
-customMusicList_t CUSTOM_TRACKS[512];
+customMusicList_t CUSTOM_TRACKS[512+1];
 
 void BASS_GetCustomTracks( void )
 {
@@ -1131,7 +1131,7 @@ void BASS_GetCustomTracks( void )
 
 qboolean		MUSIC_LIST_INITIALIZED = qfalse;
 int				MUSIC_LIST_COUNT = 0;
-dMusicList_t	MUSIC_LIST[MAX_DYNAMIC_LIST];
+dMusicList_t	MUSIC_LIST[MAX_DYNAMIC_LIST+1];
 
 // For multithreading...
 qboolean		MUSIC_LIST_UPDATING = qfalse;
