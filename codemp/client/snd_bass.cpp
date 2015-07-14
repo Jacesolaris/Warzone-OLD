@@ -601,6 +601,7 @@ void BASS_UpdatePosition ( int ch, qboolean IS_NEW_SOUND )
 		BASS_ChannelSet3DPosition(c->channel, &c->pos, NULL, &c->vel);
 
 		//if (!BASS_ChannelIsSliding(c->channel, BASS_ATTRIB_VOL))
+		if (IS_NEW_SOUND)
 		{
 			BASS_ChannelSet3DAttributes(c->channel, SOUND_3D_METHOD, MIN_SOUND_RANGE, MAX_SOUND_RANGE, SOUND_CONE_INSIDE_ANGLE, SOUND_CONE_OUTSIDE_ANGLE, SOUND_CONE_OUTSIDE_VOLUME*CHAN_VOLUME);
 			BASS_ChannelSetAttribute(c->channel, BASS_ATTRIB_VOL, CHAN_VOLUME);
@@ -740,7 +741,7 @@ void BASS_UpdateThread(void * aArg)
 	{
 		BASS_UpdateSounds_REAL();
 
-		this_thread::sleep_for(chrono::milliseconds(100));
+		this_thread::sleep_for(chrono::milliseconds(10));
 
 		if (BASS_CheckSoundDisabled())
 		{
