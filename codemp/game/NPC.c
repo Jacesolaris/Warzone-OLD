@@ -2074,7 +2074,8 @@ void NPC_ExecuteBState ( gentity_t *self)//, int msec )
 		}
 		else if(NPCS.client->ps.weapon == WP_BRYAR_PISTOL)
 		{//Sniper pose
-			NPC_SetAnim(NPCS.NPC,SETANIM_TORSO,TORSO_WEAPONREADY3,SETANIM_FLAG_NORMAL);
+			//NPC_SetAnim(NPCS.NPC,SETANIM_TORSO,TORSO_WEAPONREADY3,SETANIM_FLAG_NORMAL);
+			NPC_SetAnim(NPCS.NPC, SETANIM_TORSO, WeaponReadyAnim[NPCS.NPC->s.weapon], 0);
 		}
 		/*//FIXME: What's the proper solution here?
 		else
@@ -3593,7 +3594,8 @@ void NPC_GenericFrameCode ( gentity_t *self )
 		(self->client->ps.weapon > WP_SABER || self->client->ps.weapon == WP_NONE) &&
 		!(NPCS.NPC->s.torsoAnim == TORSO_WEAPONREADY1 || NPCS.NPC->s.torsoAnim == TORSO_WEAPONREADY3))
 	{//we look ready for action, using one of the first 2 weapon, let's rest our weapon on our shoulder
-		NPC_SetAnim(NPCS.NPC, SETANIM_TORSO, TORSO_WEAPONIDLE3, SETANIM_FLAG_NORMAL);
+		//NPC_SetAnim(NPCS.NPC, SETANIM_TORSO, TORSO_WEAPONIDLE3, SETANIM_FLAG_NORMAL);
+		NPC_SetAnim(NPCS.NPC, SETANIM_TORSO, WeaponReadyAnim[NPCS.NPC->s.weapon], 0);
 	}
 
 	NPC_CheckAttackHold();
