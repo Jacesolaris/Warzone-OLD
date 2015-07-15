@@ -1401,7 +1401,7 @@ void R_Register( void )
 	r_depthParallaxEyeX = ri->Cvar_Get( "r_depthParallaxEyeX", "0.0001", CVAR_ARCHIVE );
 	r_depthParallaxEyeY = ri->Cvar_Get( "r_depthParallaxEyeY", "0.0001", CVAR_ARCHIVE );
 	r_depthParallaxEyeZ = ri->Cvar_Get( "r_depthParallaxEyeZ", "0.0001", CVAR_ARCHIVE );
-	r_depth = ri->Cvar_Get( "r_depth", "1", CVAR_ARCHIVE );
+	r_depth = ri->Cvar_Get( "r_depth", "0", CVAR_ARCHIVE );
 	r_depthPasses = ri->Cvar_Get( "r_depthPasses", "4", CVAR_ARCHIVE );
 	r_depthScale = ri->Cvar_Get( "r_depthScale", "1024.0", CVAR_ARCHIVE );
 	r_darkexpand = ri->Cvar_Get( "r_darkexpand", "1", CVAR_ARCHIVE );
