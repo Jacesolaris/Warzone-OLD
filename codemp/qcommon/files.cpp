@@ -994,9 +994,6 @@ fileHandle_t FS_FOpenFileWrite( const char *filename, qboolean safe ) {
 	char			*ospath;
 	fileHandle_t	f;
 
-	FS_WaitForThreads();
-	FS_IN_USE = qtrue;
-
 	if ( !fs_searchpaths ) {
 		Com_Error( ERR_FATAL, "Filesystem call made without initialization\n" );
 	}
@@ -1015,7 +1012,6 @@ fileHandle_t FS_FOpenFileWrite( const char *filename, qboolean safe ) {
 	}
 
 	if( FS_CreatePath( ospath ) ) {
-		FS_IN_USE = qfalse;
 		return 0;
 	}
 
@@ -1030,7 +1026,6 @@ fileHandle_t FS_FOpenFileWrite( const char *filename, qboolean safe ) {
 	if (!fsh[f].handleFiles.file.o) {
 		f = 0;
 	}
-	FS_IN_USE = qfalse;
 	return f;
 }
 
