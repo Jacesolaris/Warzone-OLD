@@ -1378,9 +1378,9 @@ void R_Register( void )
 	r_steepParallaxEyeY = ri->Cvar_Get( "r_steepParallaxEyeY", "0.0002", CVAR_ARCHIVE );
 	r_steepParallaxEyeZ = ri->Cvar_Get( "r_steepParallaxEyeZ", "0.0004", CVAR_ARCHIVE );
 	r_bloom = ri->Cvar_Get( "r_bloom", "1", CVAR_ARCHIVE );
-	r_bloomPasses = ri->Cvar_Get( "r_bloomPasses", "4", CVAR_ARCHIVE );
+	r_bloomPasses = ri->Cvar_Get( "r_bloomPasses", "1", CVAR_ARCHIVE );
 	r_bloomDarkenPower = ri->Cvar_Get( "r_bloomDarkenPower", "5.0", CVAR_ARCHIVE );
-	r_bloomScale = ri->Cvar_Get( "r_bloomScale", "1.0", CVAR_ARCHIVE );
+	r_bloomScale = ri->Cvar_Get( "r_bloomScale", "1.5", CVAR_ARCHIVE );
 	r_lensflare = ri->Cvar_Get( "r_lensflare", "0", CVAR_ARCHIVE );
 	//r_volumelight = ri->Cvar_Get( "r_volumelight", "1", CVAR_ARCHIVE );
 	r_volumelightMaximum = ri->Cvar_Get( "r_volumelightMaximum", "6", CVAR_ARCHIVE );
@@ -1393,8 +1393,8 @@ void R_Register( void )
 	r_anamorphic = ri->Cvar_Get( "r_anamorphic", "1", CVAR_ARCHIVE );
 	r_anamorphicDarkenPower = ri->Cvar_Get( "r_anamorphicDarkenPower", "256.0", CVAR_ARCHIVE );
 	r_ssgi = ri->Cvar_Get( "r_ssgi", "4", CVAR_ARCHIVE );
-	r_ssgiWidth = ri->Cvar_Get( "r_ssgiWidth", "16.0", CVAR_ARCHIVE );
-	r_ssgiSamples = ri->Cvar_Get( "r_ssgiSamples", "4", CVAR_ARCHIVE );
+	r_ssgiWidth = ri->Cvar_Get( "r_ssgiWidth", "12.0", CVAR_ARCHIVE );
+	r_ssgiSamples = ri->Cvar_Get( "r_ssgiSamples", "2", CVAR_ARCHIVE );
 	r_depthParallax = ri->Cvar_Get( "r_depthParallax", "0", CVAR_ARCHIVE );
 	r_depthParallaxScale = ri->Cvar_Get( "r_depthParallaxScale", "2.0", CVAR_ARCHIVE );
 	r_depthParallaxMultiplier = ri->Cvar_Get( "r_depthParallaxMultiplier", "5.0", CVAR_ARCHIVE );

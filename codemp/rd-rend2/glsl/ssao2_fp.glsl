@@ -5,6 +5,7 @@ varying vec2		var_ScreenTex;
 varying vec2		var_Dimensions;
 varying vec4		var_Local0;
 
+//float depthMult = 255.0;
 float depthMult = 255.0;
 
 vec3 normal_from_depth(float depth, vec2 texcoords) {
@@ -15,6 +16,8 @@ vec3 normal_from_depth(float depth, vec2 texcoords) {
   float depth1 = texture2D(u_ScreenDepthMap, texcoords + offset1).r * depthMult;
   float depth2 = texture2D(u_ScreenDepthMap, texcoords + offset2).r * depthMult;
   
+  if (length(depth1 - depth2) < 0.1) depth2 += 0.1;
+
   vec3 p1 = vec3(offset1, depth1 - depth);
   vec3 p2 = vec3(offset2, depth2 - depth);
   
@@ -77,6 +80,8 @@ float Noise(in vec3 p)
 		f.z);
 }
 
+//#define ADD_GI
+
 void main()
 {
 	float NUM_PASSES = var_Local0.x;
@@ -89,13 +94,7 @@ void main()
     vec3 col = texture2D(u_DiffuseMap, var_ScreenTex).rgb;
 
     //randomization texture
-    //vec2 fres = vec2(var_Dimensions.x/128.0*5,var_Dimensions.y/128.0*5);
-    //vec3 random = texture2D(grandom, var_ScreenTex*fres.xy).rgb;
-	//vec3 random = texture2D(u_DiffuseMap, var_ScreenTex*fres.xy).rgb;
-    //random = random*2.0-vec3(1.0);
-	//vec3 random = vec3(Noise(p));
 	vec3 random = vec3(1.0);
-	//random = random*2.0-vec3(1.0);
 
     //initialize variables:
     float ao = 0.0;
@@ -130,6 +129,7 @@ void main()
        ao+=  aoFF(ddiff7,n,npw,0);
        ao+=  aoFF(ddiff8,n,-npw,0);
 
+#ifdef ADD_GI
        gi+=  giFF(ddiff,n,npw,nph)*texture2D(u_DiffuseMap, var_ScreenTex+vec2(npw,nph)).rgb;
        gi+=  giFF(ddiff2,n,npw,-nph)*texture2D(u_DiffuseMap, var_ScreenTex+vec2(npw,-nph)).rgb;
        gi+=  giFF(ddiff3,n,-npw,nph)*texture2D(u_DiffuseMap, var_ScreenTex+vec2(-npw,nph)).rgb;
@@ -138,20 +138,23 @@ void main()
        gi+=  giFF(ddiff6,n,0,-nph)*texture2D(u_DiffuseMap, var_ScreenTex+vec2(0,-nph)).rgb;
        gi+=  giFF(ddiff7,n,npw,0)*texture2D(u_DiffuseMap, var_ScreenTex+vec2(npw,0)).rgb;
        gi+=  giFF(ddiff8,n,-npw,0)*texture2D(u_DiffuseMap, var_ScreenTex+vec2(-npw,0)).rgb;
+#endif //ADD_GI
 
        //increase sampling area:
        pw += incx;  
        ph += incy;    
     } 
-    //ao/=24.0;
-    //gi/=24.0;
-	ao/=(8*NUM_PASSES);
-	gi/=(8*NUM_PASSES);
 
-	//gl_FragColor = vec4(vec3(ao)+gi*5.0,1.0);
-    //gl_FragColor = vec4(col-vec3(ao)+gi*5.0,1.0);
-	//gl_FragColor = vec4((col-vec3(ao)+gi*5.0)*1.15,1.0); // UQ1: *1.15 to compensate for darkening...
+	ao/=(8*NUM_PASSES);
+#ifdef ADD_GI
+	gi/=(8*NUM_PASSES);
+#endif //ADD_GI
+
+#ifdef ADD_GI
 	gl_FragColor = vec4((col-vec3(ao)+gi*3.0)*1.15,1.0); // UQ1: *1.15 to compensate for darkening...
+#else //!ADD_GI
+	gl_FragColor = vec4((col-vec3(ao))*1.15,1.0); // UQ1: *1.15 to compensate for darkening...
+#endif //ADD_GI
 }
 
 

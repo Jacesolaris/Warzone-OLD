@@ -1285,12 +1285,15 @@ const void	*RB_DrawSurfs( const void *data ) {
 		qglColorMask(!backEnd.colorMask[0], !backEnd.colorMask[1], !backEnd.colorMask[2], !backEnd.colorMask[3]);
 		backEnd.depthFill = qfalse;
 
+#if 0
 		if (tr.msaaResolveFbo)
 		{
 			// If we're using multisampling, resolve the depth first
 			FBO_FastBlit(tr.renderFbo, NULL, tr.msaaResolveFbo, NULL, GL_DEPTH_BUFFER_BIT, GL_NEAREST);
 		}
-		else if (tr.renderFbo == NULL)
+		else 
+#endif
+		if (tr.renderFbo == NULL)
 		{
 			// If we're rendering directly to the screen, copy the depth to a texture
 			GL_BindToTMU(tr.renderDepthImage, 0);
@@ -1769,13 +1772,14 @@ const void *RB_ClearDepth(const void *data)
 
 	qglClear(GL_DEPTH_BUFFER_BIT);
 
+#if 0
 	// if we're doing MSAA, clear the depth texture for the resolve buffer
 	if (tr.msaaResolveFbo)
 	{
 		FBO_Bind(tr.msaaResolveFbo);
 		qglClear(GL_DEPTH_BUFFER_BIT);
 	}
-
+#endif
 	
 	return (const void *)(cmd + 1);
 }
@@ -1824,13 +1828,16 @@ const void	*RB_SwapBuffers( const void *data ) {
 
 	if (!backEnd.framePostProcessed)
 	{
+#if 0
 		if (tr.msaaResolveFbo && r_hdr->integer)
 		{
 			// Resolving an RGB16F MSAA FBO to the screen messes with the brightness, so resolve to an RGB16F FBO first
 			FBO_FastBlit(tr.renderFbo, NULL, tr.msaaResolveFbo, NULL, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 			FBO_FastBlit(tr.msaaResolveFbo, NULL, NULL, NULL, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 		}
-		else if (tr.renderFbo)
+		else 
+#endif
+		if (tr.renderFbo)
 		{
 			FBO_FastBlit(tr.renderFbo, NULL, NULL, NULL, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 		}
@@ -1920,6 +1927,7 @@ const void *RB_PostProcess(const void *data)
 
 	srcFbo = tr.renderFbo;
 
+#if 0
 	if (tr.msaaResolveFbo)
 	{
 		// Resolve the MSAA before anything else
@@ -1927,11 +1935,12 @@ const void *RB_PostProcess(const void *data)
 		FBO_FastBlit(tr.renderFbo, NULL, tr.msaaResolveFbo, NULL, GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT, GL_NEAREST);
 		srcFbo = tr.msaaResolveFbo;
 
-		if ( r_dynamicGlow->integer )
+		if ( r_dynamicGlow->integer || r_ssgi->integer || r_anamorphic->integer )
 		{
 			FBO_FastBlitIndexed(tr.renderFbo, tr.msaaResolveFbo, 1, 1, GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT, GL_NEAREST);
 		}
 	}
+#endif
 
 	dstBox[0] = backEnd.viewParms.viewportX;
 	dstBox[1] = backEnd.viewParms.viewportY;
@@ -1954,7 +1963,7 @@ const void *RB_PostProcess(const void *data)
 	}
 	*/
 
-	if (r_dynamicGlow->integer)
+	if (r_dynamicGlow->integer || r_ssgi->integer || r_anamorphic->integer)
 	{
 		// Downscale 8x
 		FBO_BlitFromTexture (tr.glowImage, NULL, NULL, tr.glowFboScaled[0], NULL, &tr.textureColorShader, NULL, GLS_SRCBLEND_ONE | GLS_DSTBLEND_ZERO);
@@ -2279,7 +2288,7 @@ const void *RB_PostProcess(const void *data)
 	}
 #endif //__DYNAMIC_SHADOWS__
 
-	if (r_dynamicGlow->integer != 0)
+	if (r_dynamicGlow->integer != 0 || r_ssgi->integer || r_anamorphic->integer)
 	{
 		// Composite the glow/bloom texture
 		int blendFunc = 0;

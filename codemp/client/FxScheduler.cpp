@@ -404,6 +404,7 @@ int CFxScheduler::ParseEffect( const char *file, CGPGroup *base )
 	if ((pair = base->GetPairs())!=0)
 	{
 		grpName = pair->GetName();
+
 		if ( !Q_stricmp( grpName, "repeatDelay" ))
 		{
 			effect->mRepeatDelay = atoi(pair->GetTopValue());
@@ -434,7 +435,7 @@ int CFxScheduler::ParseEffect( const char *file, CGPGroup *base )
 
 			prim->mType = type;
 			prim->ParsePrimitive( primitiveGroup );
-
+			
 			// Add our primitive template to the effect list
 			AddPrimitiveToEffect( effect, prim );
 		}

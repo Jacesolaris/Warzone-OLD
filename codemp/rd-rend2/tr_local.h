@@ -2184,7 +2184,9 @@ typedef struct trGlobals_s {
 
 	FBO_t					*renderFbo;
 	FBO_t					*glowFboScaled[4];
+#if 0
 	FBO_t					*msaaResolveFbo;
+#endif
 	FBO_t					*sunRaysFbo;
 	FBO_t					*depthFbo;
 	FBO_t					*pshadowFbos[MAX_DRAWN_PSHADOWS];

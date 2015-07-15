@@ -1264,7 +1264,6 @@ void BASS_MusicUpdateThread( void * aArg )
 {
 	while (!BASS_MUSIC_UPDATE_THREAD_STOP)
 	{
-		
 		if (BASS_CheckSoundDisabled())
 		{
 			break;

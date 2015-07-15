@@ -1769,7 +1769,7 @@
 			font 				4
 			textscale 			1
 			forecolor		.615 .615 .956 1
-			cvarFloatList		{  @MENUS_OFF 0 @MENUS_ON 1 }
+			cvarFloatList		{  "No" 0 "Yes" 1 "Insane" 2 }
 			descText			"Enable Enhanced FX?"
 			cvar				"cg_enhancedFX"
 

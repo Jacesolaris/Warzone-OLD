@@ -46,6 +46,8 @@ cvar_t  *com_homepath;
 
 cvar_t *com_affinity;
 
+cvar_t	*cg_enhancedFX;
+
 // com_speeds times
 int		time_game;
 int		time_frontend;		// renderer frontend time
@@ -1240,6 +1242,8 @@ void Com_Init( char *commandLine ) {
 		com_cl_running = Cvar_Get ("cl_running", "0", CVAR_ROM);
 		com_cl_active = Cvar_Get ("com_cl_active", "0", CVAR_ROM);
 		com_buildScript = Cvar_Get( "com_buildScript", "1", 0 );
+
+		cg_enhancedFX = Cvar_Get( "cg_enhancedFX", "1", CVAR_ARCHIVE );
 
 #ifdef G2_PERFORMANCE_ANALYSIS
 		com_G2Report = Cvar_Get("com_G2Report", "0", 0);

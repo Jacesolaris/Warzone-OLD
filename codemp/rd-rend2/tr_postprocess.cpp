@@ -545,11 +545,11 @@ void RB_Bloom(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 	// Darken to VBO...
 	//
 	
-	if (r_dynamicGlow->integer)
+	//if (r_dynamicGlow->integer)
 	{
 		FBO_BlitFromTexture(tr.glowFboScaled[0]->colorImage[0], NULL, NULL, tr.bloomRenderFBO[0], NULL, NULL, color, 0);
 	}
-	else
+	/*else
 	{
 		GLSL_BindProgram(&tr.bloomDarkenShader);
 
@@ -571,7 +571,7 @@ void RB_Bloom(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 
 		FBO_Blit(hdrFbo, NULL, texHalfScale, tr.bloomRenderFBO[1], NULL, &tr.bloomDarkenShader, color, 0);
 		FBO_FastBlit(tr.bloomRenderFBO[1], NULL, tr.bloomRenderFBO[0], NULL, GL_COLOR_BUFFER_BIT, GL_LINEAR);
-	}
+	}*/
 
 	//
 	// Blur the new darken'ed VBO...
@@ -683,7 +683,7 @@ void RB_Bloom(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 	{
 		vec4_t local0;
 		VectorSet4(local0, r_bloomScale->value, 0.0, 0.0, 0.0);
-		if (r_dynamicGlow->integer) VectorSet4(local0, 0.5 * r_bloomScale->value, 0.0, 0.0, 0.0); // Account for already added glow...
+		/*if (r_dynamicGlow->integer)*/ VectorSet4(local0, 0.5 * r_bloomScale->value, 0.0, 0.0, 0.0); // Account for already added glow...
 		GLSL_SetUniformVec4(&tr.bloomCombineShader, UNIFORM_LOCAL0, local0);
 	}
 
@@ -722,11 +722,11 @@ void RB_Anamorphic(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 	// Darken to VBO...
 	//
 	
-	if (r_dynamicGlow->integer)
+	//if (r_dynamicGlow->integer)
 	{
 		FBO_BlitFromTexture(tr.glowFboScaled[0]->colorImage[0], NULL, NULL, tr.anamorphicRenderFBO[0], NULL, NULL, color, 0);
 	}
-	else
+	/*else
 	{
 		GLSL_BindProgram(&tr.anamorphicDarkenShader);
 
@@ -748,13 +748,13 @@ void RB_Anamorphic(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 
 		FBO_Blit(hdrFbo, NULL, texHalfScale, tr.anamorphicRenderFBO[1], NULL, &tr.anamorphicDarkenShader, color, 0);
 		FBO_FastBlit(tr.anamorphicRenderFBO[1], NULL, tr.anamorphicRenderFBO[0], NULL, GL_COLOR_BUFFER_BIT, GL_LINEAR);
-	}
+	}*/
 
 	//
 	// Blur the new darken'ed VBO...
 	//
 
-	for ( int i = 0; i < /*r_bloomPasses->integer*/ 8; i++ ) 
+	for ( int i = 0; i < r_bloomPasses->integer; i++ ) 
 	{
 		//
 		// Bloom X axis... (to VBO 1)
@@ -811,7 +811,7 @@ void RB_Anamorphic(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 		VectorSet4(local0, 0.6, 0.0, 0.0, 0.0);
 
 		//if (r_dynamicGlow->integer) VectorSet4(local0, 1.5, 0.0, 0.0, 0.0);
-		if (r_dynamicGlow->integer) VectorSet4(local0, 1.0, 0.0, 0.0, 0.0); // Account for already added glow...
+		/*if (r_dynamicGlow->integer)*/ VectorSet4(local0, 1.0, 0.0, 0.0, 0.0); // Account for already added glow...
 
 		GLSL_SetUniformVec4(&tr.anamorphicCombineShader, UNIFORM_LOCAL0, local0);
 	}
@@ -1783,11 +1783,11 @@ void RB_SSGI(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 		// Darken to VBO...
 		//
 
-		if (r_dynamicGlow->integer)
+		//if (r_dynamicGlow->integer)
 		{
 			FBO_BlitFromTexture(tr.glowFboScaled[0]->colorImage[0], NULL, NULL, tr.anamorphicRenderFBO[0], NULL, NULL, color, 0);
 		}
-		else
+		/*else
 		{
 			GLSL_BindProgram(&tr.anamorphicDarkenShader);
 
@@ -1809,64 +1809,12 @@ void RB_SSGI(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 
 			FBO_Blit(hdrFbo, NULL, texHalfScale, tr.anamorphicRenderFBO[1], NULL, &tr.anamorphicDarkenShader, color, 0);
 			FBO_FastBlit(tr.anamorphicRenderFBO[1], NULL, tr.anamorphicRenderFBO[0], NULL, GL_COLOR_BUFFER_BIT, GL_LINEAR);
-		}
+		}*/
 
 		//
 		// Blur the new darken'ed VBO...
 		//
 
-//#define __NEW_SATURATION_MAP_METHOD__ // grr slower and crappier...
-
-#ifdef __NEW_SATURATION_MAP_METHOD__
-		float SCAN_WIDTH = 16.0;
-
-		//for (int i = 0; i < 2; i++)
-		{// Initial blur...
-			GLSL_BindProgram(&tr.anamorphicBlurShader);
-
-			GL_BindToTMU(tr.anamorphicRenderFBOImage[0], TB_DIFFUSEMAP);
-
-			{
-				vec2_t screensize;
-				screensize[0] = tr.anamorphicRenderFBOImage[0]->width;
-				screensize[1] = tr.anamorphicRenderFBOImage[0]->height;
-
-				GLSL_SetUniformVec2(&tr.anamorphicBlurShader, UNIFORM_DIMENSIONS, screensize);
-			}
-
-			{
-				vec4_t local0;
-				VectorSet4(local0, 0.0, 0.0, SCAN_WIDTH, 1.0);
-				GLSL_SetUniformVec4(&tr.anamorphicBlurShader, UNIFORM_LOCAL0, local0);
-			}
-
-			FBO_Blit(tr.anamorphicRenderFBO[0], NULL, NULL, tr.anamorphicRenderFBO[1], NULL, &tr.anamorphicBlurShader, color, 0);
-			FBO_FastBlit(tr.anamorphicRenderFBO[1], NULL, tr.anamorphicRenderFBO[0], NULL, GL_COLOR_BUFFER_BIT, GL_LINEAR);
-		}
-
-		{// Final blur...
-			GLSL_BindProgram(&tr.anamorphicBlurShader);
-
-			GL_BindToTMU(tr.anamorphicRenderFBOImage[0], TB_DIFFUSEMAP);
-
-			{
-				vec2_t screensize;
-				screensize[0] = tr.anamorphicRenderFBOImage[0]->width;
-				screensize[1] = tr.anamorphicRenderFBOImage[0]->height;
-
-				GLSL_SetUniformVec2(&tr.anamorphicBlurShader, UNIFORM_DIMENSIONS, screensize);
-			}
-
-			{
-				vec4_t local0;
-				VectorSet4(local0, 0.0, 0.0, SCAN_WIDTH, 2.0);
-				GLSL_SetUniformVec4(&tr.anamorphicBlurShader, UNIFORM_LOCAL0, local0);
-			}
-
-			FBO_Blit(tr.anamorphicRenderFBO[0], NULL, NULL, tr.anamorphicRenderFBO[1], NULL, &tr.anamorphicBlurShader, color, 0);
-			FBO_FastBlit(tr.anamorphicRenderFBO[1], NULL, tr.anamorphicRenderFBO[0], NULL, GL_COLOR_BUFFER_BIT, GL_LINEAR);
-		}
-#else //!__NEW_SATURATION_MAP_METHOD__
 		//float SCAN_WIDTH = 16.0;
 		float SCAN_WIDTH = r_ssgiWidth->value;//8.0;
 
@@ -2101,7 +2049,6 @@ void RB_SSGI(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 				FBO_FastBlit(tr.anamorphicRenderFBO[1], NULL, tr.anamorphicRenderFBO[0], NULL, GL_COLOR_BUFFER_BIT, GL_LINEAR);
 			}
 		}
-#endif //__NEW_SATURATION_MAP_METHOD__
 
 		//
 		// Copy (and upscale) the bloom image to our full screen image...

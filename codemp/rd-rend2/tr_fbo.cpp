@@ -487,6 +487,7 @@ void FBO_Init(void)
 		R_CheckFBO(tr.anamorphicRenderFBO[2]);
 	}
 	
+#if 0
 	// only create a render FBO if we need to resolve MSAA or do HDR
 	// otherwise just render straight to the screen (tr.renderFbo = NULL)
 	if (multisample)
@@ -517,6 +518,7 @@ void FBO_Init(void)
 		R_CheckFBO(tr.msaaResolveFbo);
 	}
 	else
+#endif
 	{
 		tr.renderFbo = FBO_Create("_render", tr.renderDepthImage->width, tr.renderDepthImage->height);
 		FBO_Bind(tr.renderFbo);

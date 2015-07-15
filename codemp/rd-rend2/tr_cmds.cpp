@@ -480,13 +480,15 @@ void RE_BeginFrame( stereoFrame_t stereoFrame ) {
 				backEnd.colorMask[2] = qfalse;
 				backEnd.colorMask[3] = qfalse;
 				qglClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-								
+						
+#if 0
 				// clear all framebuffers
 				if (tr.msaaResolveFbo)
 				{
 					FBO_Bind(tr.msaaResolveFbo);
 					qglClear(GL_COLOR_BUFFER_BIT);
 				}
+#endif
 
 				if (tr.renderFbo)
 				{
