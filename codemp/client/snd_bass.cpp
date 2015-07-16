@@ -1287,7 +1287,9 @@ void BASS_MusicUpdateThread( void * aArg )
 		}
 
 		// Seems we need a new track... Select a random one and play it!
-		S_StartBackgroundTrack_Actual( MUSIC_LIST[irand(0, MUSIC_LIST_COUNT)].name, "" );
+		int trackChoice = irand(0, MUSIC_LIST_COUNT);
+		Com_Printf("Begin music track %s.\n", MUSIC_LIST[trackChoice].name);
+		S_StartBackgroundTrack_Actual( MUSIC_LIST[trackChoice].name, "" );
 
 		this_thread::sleep_for(chrono::milliseconds(100));
 	}

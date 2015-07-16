@@ -134,8 +134,10 @@ vec3 CalculateFlare ( vec3 flare_color, vec3 final_color )
 		bt *= 1.1; // Mid range lights get amplified slightly... (eg: yellow)
 
 	vec3 flare_color2 = clamp(flare_color * bt * 8.0, 0.0, 1.0);
-
 	vec3 add_flare = clamp(final_color * (flare_color2 * (1.25 - final_color) * 2.5), 0.0, 1.0);
+
+	//vec3 flare_color2 = clamp(flare_color * bt * 8.0, 0.0, 1.0);
+	//vec3 add_flare = clamp(final_color * (flare_color2 * (1.5 - final_color) * 2.5), 0.0, 1.0);
 
 #define const_1 ( 12.0 / 255.0)
 #define const_2 (255.0 / 219.0)

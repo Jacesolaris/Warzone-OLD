@@ -140,7 +140,10 @@ void misc_dlight_use ( gentity_t *ent, gentity_t *other, gentity_t *activator )
 void SP_light( gentity_t *self ) {
 	if (!self->targetname )
 	{//if i don't have a light style switch, the i go away
-		//G_FreeEntity( self );
+#if 0
+		G_FreeEntity( self );
+		return;
+#else
 		/*
 		"classname" "light"
 		"spawnflags" "2"
@@ -182,6 +185,7 @@ void SP_light( gentity_t *self ) {
 		self->s.eType = ET_GENERAL;
 		trap->LinkEntity( (sharedEntity_t *)self );
 		return;
+#endif
 	}
 
 	G_SpawnInt( "style", "0", &self->count );

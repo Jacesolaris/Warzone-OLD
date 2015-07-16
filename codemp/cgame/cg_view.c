@@ -2477,6 +2477,8 @@ extern void CG_ActualLoadDeferredPlayers( void );
 
 static int cg_siegeClassIndex = -2;
 
+extern void InventoryWindow ( void );
+
 void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demoPlayback ) {
 	int		inwater;
 	const char *cstr;
@@ -2810,6 +2812,8 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 	if ( cg_stats.integer ) {
 		trap->Print( "cg.clientFrame:%i\n", cg.clientFrame );
 	}
+
+	//InventoryWindow();
 }
 
 //[TrueView]

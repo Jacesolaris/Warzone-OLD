@@ -1254,6 +1254,7 @@ RB_DrawSurfs
 
 =============
 */
+
 const void	*RB_DrawSurfs( const void *data ) {
 	const drawSurfsCommand_t	*cmd;
 
@@ -1616,6 +1617,13 @@ const void	*RB_DrawSurfs( const void *data ) {
 
 		// add light flares on lights that aren't obscured
 		RB_RenderFlares();
+
+#ifdef ___REND2_FLASH___
+		gameswf_drawflash( "interface/test.swf" );
+#endif //___REND2_FLASH___
+#ifdef ___REND2_AWESOMIUM___
+		DrawAwesomium( "http://www.google.com.au" );
+#endif //___REND2_AWESOMIUM___
 	}
 
 	if (tr.renderCubeFbo != NULL && backEnd.viewParms.targetFbo == tr.renderCubeFbo)
@@ -1902,6 +1910,7 @@ RB_PostProcess
 
 =============
 */
+
 const void *RB_PostProcess(const void *data)
 {
 	const postProcessCommand_t *cmd = (const postProcessCommand_t *)data;
@@ -2317,7 +2326,6 @@ const void *RB_PostProcess(const void *data)
 
 	return (const void *)(cmd + 1);
 }
-
 
 /*
 ====================

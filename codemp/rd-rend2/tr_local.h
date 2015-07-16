@@ -55,6 +55,17 @@ typedef unsigned int glIndex_t;
 
 #define BUFFER_OFFSET(i) ((char *)NULL + (i))
 
+//#define ___REND2_FLASH___
+//#define ___REND2_AWESOMIUM___
+
+#ifdef ___REND2_FLASH___
+extern void gameswf_drawflash ( char *filename );
+#endif //___REND2_FLASH___
+
+#ifdef ___REND2_AWESOMIUM___
+extern int DrawAwesomium( char *URL );
+#endif //___REND2_AWESOMIUM___
+
 // 14 bits
 // can't be increased without changing bit packing for drawsurfs
 // see QSORT_SHADERNUM_SHIFT

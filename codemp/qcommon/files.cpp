@@ -1707,16 +1707,11 @@ int FS_Write( const void *buffer, int len, fileHandle_t h ) {
 	int		tries;
 	FILE	*f;
 
-	FS_WaitForThreads();
-	FS_IN_USE = qtrue;
-
 	if ( !fs_searchpaths ) {
-		FS_IN_USE = qfalse;
 		Com_Error( ERR_FATAL, "Filesystem call made without initialization\n" );
 	}
 
 	if ( !h ) {
-		FS_IN_USE = qfalse;
 		return 0;
 	}
 
@@ -1733,14 +1728,12 @@ int FS_Write( const void *buffer, int len, fileHandle_t h ) {
 				tries = 1;
 			} else {
 				Com_Printf( "FS_Write: 0 bytes written\n" );
-				FS_IN_USE = qfalse;
 				return 0;
 			}
 		}
 
 		if (written == -1) {
 			Com_Printf( "FS_Write: -1 bytes written\n" );
-			FS_IN_USE = qfalse;
 			return 0;
 		}
 
@@ -1750,7 +1743,6 @@ int FS_Write( const void *buffer, int len, fileHandle_t h ) {
 	if ( fsh[h].handleSync ) {
 		fflush( f );
 	}
-	FS_IN_USE = qfalse;
 	return len;
 }
 
