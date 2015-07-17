@@ -721,7 +721,7 @@ static bool GLSL_EndLoadGPUShader (shaderProgram_t *program)
 {
 	uint32_t attribs = program->attribs;
 
-	ri->Printf(PRINT_WARNING, "Compiling glsl: %s.\n", program->name);
+	//ri->Printf(PRINT_WARNING, "Compiling glsl: %s.\n", program->name);
 
 	if (!GLSL_IsGPUShaderCompiled (program->vertexShader))
 	{
