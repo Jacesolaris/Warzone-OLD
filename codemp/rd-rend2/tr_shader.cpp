@@ -2733,7 +2733,7 @@ static void ComputeVertexAttribs(void)
 			break;
 		}
 
-		if (pStage->glslShaderGroup == tr.lightallShader)
+		if (pStage->glslShaderGroup == tr.lightallShader || pStage->glslShaderGroup == tr.lightallWithNormalShader)
 		{
 			shader.vertexAttribs |= ATTR_NORMAL;
 
@@ -2971,6 +2971,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 	qboolean useLightVector, qboolean useLightVertex, qboolean parallax, qboolean tcgen)
 {
 	int defs = 0;
+	qboolean hasRealNormalMap = qfalse;
 
 	//ri->Printf(PRINT_ALL, "shader %s has diffuse %s", shader.name, diffuse->bundle[0].image[0]->imgName);
 
@@ -3028,6 +3029,8 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 				diffuse->bundle[TB_NORMALMAP].numImageAnimations = 0;
 				diffuse->bundle[TB_NORMALMAP].image[0] = normalImg;
 
+				hasRealNormalMap = qtrue;
+
 				if (parallax && r_parallaxMapping->integer)
 					defs |= LIGHTDEF_USE_PARALLAXMAP;
 
@@ -3036,7 +3039,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 		}
 	}
 
-	if (r_parallaxMapping->integer && !(defs & LIGHTDEF_USE_PARALLAXMAP))
+	if (!hasRealNormalMap && r_parallaxMapping->integer && !(defs & LIGHTDEF_USE_PARALLAXMAP))
 	{
 		// UQ1: My parallax changes no longer require any normal map...
 		diffuse->bundle[TB_NORMALMAP] = diffuse->bundle[0];
@@ -3067,7 +3070,15 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 
 	//ri->Printf(PRINT_ALL, ".\n");
 
-	diffuse->glslShaderGroup = tr.lightallShader;
+	if (hasRealNormalMap)
+	{
+		diffuse->glslShaderGroup = tr.lightallWithNormalShader;
+	}
+	else
+	{
+		diffuse->glslShaderGroup = tr.lightallShader;
+	}
+
 	diffuse->glslShaderIndex = defs;
 }
 
@@ -3321,6 +3332,8 @@ static qboolean CollapseStagesToGLSL(void)
 		}
 	}
 
+	qboolean hasRealNormalMap = qfalse;
+
 	// deactivate normal and specular stages
 	for (i = 0; i < MAX_SHADER_STAGES; i++)
 	{
@@ -3336,6 +3349,7 @@ static qboolean CollapseStagesToGLSL(void)
 
 		if (pStage->type == ST_NORMALPARALLAXMAP)
 		{
+			hasRealNormalMap = qtrue;
 			pStage->active = qfalse;
 		}
 
@@ -3382,7 +3396,11 @@ static qboolean CollapseStagesToGLSL(void)
 
 			if (pStage->bundle[TB_DIFFUSEMAP].tcGen >= TCGEN_LIGHTMAP && pStage->bundle[TB_DIFFUSEMAP].tcGen <= TCGEN_LIGHTMAP3)
 			{
-				pStage->glslShaderGroup = tr.lightallShader;
+				if (hasRealNormalMap) 
+					pStage->glslShaderGroup = tr.lightallWithNormalShader;
+				else
+					pStage->glslShaderGroup = tr.lightallShader;
+
 				pStage->glslShaderIndex = LIGHTDEF_USE_LIGHTMAP;
 				pStage->bundle[TB_LIGHTMAP] = pStage->bundle[TB_DIFFUSEMAP];
 				pStage->bundle[TB_DIFFUSEMAP].image[0] = tr.whiteImage;
@@ -3410,7 +3428,11 @@ static qboolean CollapseStagesToGLSL(void)
 			{
 				if (pStage->glslShaderGroup != tr.lightallShader)
 				{
-					pStage->glslShaderGroup = tr.lightallShader;
+					if (hasRealNormalMap) 
+						pStage->glslShaderGroup = tr.lightallWithNormalShader;
+					else
+						pStage->glslShaderGroup = tr.lightallShader;
+
 					pStage->glslShaderIndex = LIGHTDEF_USE_LIGHT_VECTOR;
 				}
 				else if (!(pStage->glslShaderIndex & LIGHTDEF_USE_LIGHT_VECTOR))

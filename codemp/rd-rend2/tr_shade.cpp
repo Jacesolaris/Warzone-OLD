@@ -1588,7 +1588,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 		if (backEnd.depthFill)
 		{
-			if (pStage->glslShaderGroup == tr.lightallShader)
+			if (pStage->glslShaderGroup == tr.lightallShader || pStage->glslShaderGroup == tr.lightallWithNormalShader)
 			{
 				int index = 0;
 
@@ -1643,7 +1643,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				isGeneric = qtrue;
 			}
 		}
-		else if (pStage->glslShaderGroup == tr.lightallShader)
+		else if (pStage->glslShaderGroup == tr.lightallShader || pStage->glslShaderGroup == tr.lightallWithNormalShader)
 		{
 			int index = pStage->glslShaderIndex;
 
@@ -2038,7 +2038,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			else if ( pStage->bundle[TB_COLORMAP].image[0] != 0 )
 				R_BindAnimatedImageToTMU( &pStage->bundle[TB_COLORMAP], TB_COLORMAP );
 		}
-		else if ( !isGeneric && pStage->glslShaderGroup == tr.lightallShader )
+		else if ( !isGeneric && (pStage->glslShaderGroup == tr.lightallShader || pStage->glslShaderGroup == tr.lightallWithNormalShader) )
 		{
 			int i;
 			vec4_t enableTextures;

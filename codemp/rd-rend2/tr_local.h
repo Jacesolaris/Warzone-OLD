@@ -2250,6 +2250,7 @@ typedef struct trGlobals_s {
 	shaderProgram_t fogShader[FOGDEF_COUNT];
 	shaderProgram_t dlightShader[DLIGHTDEF_COUNT];
 	shaderProgram_t lightallShader[LIGHTDEF_COUNT];
+	shaderProgram_t lightallWithNormalShader[LIGHTDEF_COUNT];
 	shaderProgram_t shadowmapShader;
 	shaderProgram_t pshadowShader;
 	shaderProgram_t down4xShader;
