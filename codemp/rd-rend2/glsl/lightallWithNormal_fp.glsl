@@ -353,7 +353,7 @@ void main()
   #endif
 
   // UQ1: This is broken...
-  /*#if defined(USE_NORMALMAP)
+  #if defined(USE_NORMALMAP)
     #if defined(SWIZZLE_NORMALMAP)
 	N.xy = texture2D(u_NormalMap, texCoords).ag - vec2(0.5);
     #else
@@ -362,9 +362,9 @@ void main()
 	N.xy *= u_NormalScale.xy;
 	N.z = sqrt(clamp((0.25 - N.x * N.x) - N.y * N.y, 0.0, 1.0));
 	N = tangentToWorld * N;
-  #else*/
+  #else
 	N = var_Normal.xyz;
-  //#endif
+  #endif
 
 	N = normalize(N);
 	L /= sqrt(sqrLightDist);
