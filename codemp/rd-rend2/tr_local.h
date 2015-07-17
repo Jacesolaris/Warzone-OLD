@@ -398,8 +398,9 @@ typedef enum
 {
 	IMGTYPE_COLORALPHA, // for color, lightmap, diffuse, and specular
 	IMGTYPE_NORMAL,
+	IMGTYPE_SPECULAR,
 	IMGTYPE_NORMALHEIGHT,
-	IMGTYPE_DELUXE, // normals are swizzled, deluxe are not
+	IMGTYPE_DELUXE // normals are swizzled, deluxe are not
 } imgType_t;
 
 typedef enum
@@ -742,6 +743,7 @@ typedef struct {
 	qboolean		isLightmap;
 	qboolean		oneShotAnimMap;
 	qboolean		isVideoMap;
+	qboolean		specularLoaded;
 } textureBundle_t;
 
 enum
@@ -782,6 +784,7 @@ typedef struct {
 	qboolean		active;
 	qboolean		isDetail;
 	int				isWater;
+	bool			hasSpecular;
 	qboolean		glow;
 	
 	textureBundle_t	bundle[NUM_TEXTURE_BUNDLES];

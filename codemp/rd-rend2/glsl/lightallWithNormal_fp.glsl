@@ -359,7 +359,7 @@ void main()
     #else
 	N.xy = texture2D(u_NormalMap, texCoords).rg - vec2(0.5);
     #endif
-	//N.xy *= u_NormalScale.xy;
+	N.xy *= u_NormalScale.xy;
 	N.z = sqrt(clamp((0.25 - N.x * N.x) - N.y * N.y, 0.0, 1.0));
 	N = tangentToWorld * N;
   #else
@@ -407,7 +407,17 @@ void main()
 	NE = clamp(dot(N, E), 0.0, 1.0);
 
   #if defined(USE_SPECULARMAP)
-	vec4 specular = texture2D(u_SpecularMap, texCoords);
+	vec4 specular;
+
+	if (var_Local1 != 0.0)
+	{// Real specMap...
+		specular = texture2D(u_SpecularMap, texCoords);
+	}
+	else
+	{// Fake it...
+		specular = vec4(1.0-SampleDepth(u_NormalMap, texCoords));
+		specular.a = 1.0-specular.a;
+	}
     #if defined(USE_GAMMA2_TEXTURES)
 	specular.rgb *= specular.rgb;
     #endif

@@ -1535,10 +1535,10 @@ static void UpdateTexCoords ( const shaderStage_t *stage )
 	}
 }
 
-void RB_SetParallaxScale(shaderProgram_t *sp, float scale)
+void RB_SetParallaxScaleAndSpecular(shaderProgram_t *sp, float scale, shaderStage_t *pStage)
 {
 	vec4_t local1;
-	VectorSet4(local1, scale, 0.0, 0.0, 0.0);
+	VectorSet4(local1, scale, (float)pStage->hasSpecular, 0.0, 0.0);
 	GLSL_SetUniformVec4(sp, UNIFORM_LOCAL1, local1);
 }
 
@@ -1748,43 +1748,43 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				case MATERIAL_SHORTGRASS:		// 5			// manicured lawn
 					GLSL_BindProgram(sp);
 					GLSL_SetUniformFloat(sp, UNIFORM_TIME, backEnd.refdef.floatTime);
-					//RB_SetParallaxScale(sp, 3.0);
-					RB_SetParallaxScale(sp, 4.0);
+					//RB_SetParallaxScaleAndSpecular(sp, 3.0);
+					RB_SetParallaxScaleAndSpecular(sp, 4.0, pStage);
 					break;
 				case MATERIAL_LONGGRASS:		// 6			// long jungle grass
 					GLSL_BindProgram(sp);
 					GLSL_SetUniformFloat(sp, UNIFORM_TIME, backEnd.refdef.floatTime);
-					//RB_SetParallaxScale(sp, 3.0);
-					RB_SetParallaxScale(sp, 5.0);
+					//RB_SetParallaxScaleAndSpecular(sp, 3.0);
+					RB_SetParallaxScaleAndSpecular(sp, 5.0, pStage);
 					break;
 				case MATERIAL_SAND:				// 8			// sandy beach
 					GLSL_BindProgram(sp);
 					GLSL_SetUniformFloat(sp, UNIFORM_TIME, backEnd.refdef.floatTime);
-					RB_SetParallaxScale(sp, 3.0);
-					//RB_SetParallaxScale(sp, 5.0);
+					RB_SetParallaxScaleAndSpecular(sp, 3.0, pStage);
+					//RB_SetParallaxScaleAndSpecular(sp, 5.0);
 					break;
 				case MATERIAL_CARPET:			// 27			// lush carpet
 					GLSL_BindProgram(sp);
 					GLSL_SetUniformFloat(sp, UNIFORM_TIME, backEnd.refdef.floatTime);
-					RB_SetParallaxScale(sp, 3.0);
+					RB_SetParallaxScaleAndSpecular(sp, 3.0, pStage);
 					break;
 				case MATERIAL_GRAVEL:			// 9			// lots of small stones
 					GLSL_BindProgram(sp);
 					GLSL_SetUniformFloat(sp, UNIFORM_TIME, backEnd.refdef.floatTime);
-					RB_SetParallaxScale(sp, 4.0);
-					//RB_SetParallaxScale(sp, 5.0);
+					RB_SetParallaxScaleAndSpecular(sp, 4.0, pStage);
+					//RB_SetParallaxScaleAndSpecular(sp, 5.0);
 					break;
 				case MATERIAL_ROCK:				// 23			//
 					GLSL_BindProgram(sp);
 					GLSL_SetUniformFloat(sp, UNIFORM_TIME, backEnd.refdef.floatTime);
-					//RB_SetParallaxScale(sp, 6.0);
-					RB_SetParallaxScale(sp, 4.0);
+					//RB_SetParallaxScaleAndSpecular(sp, 6.0);
+					RB_SetParallaxScaleAndSpecular(sp, 4.0, pStage);
 					break;
 				case MATERIAL_TILES:			// 26			// tiled floor
 					GLSL_BindProgram(sp);
 					GLSL_SetUniformFloat(sp, UNIFORM_TIME, backEnd.refdef.floatTime);
-					//RB_SetParallaxScale(sp, 4.0);
-					RB_SetParallaxScale(sp, 3.0);
+					//RB_SetParallaxScaleAndSpecular(sp, 4.0);
+					RB_SetParallaxScaleAndSpecular(sp, 3.0, pStage);
 					break;
 				case MATERIAL_SOLIDWOOD:		// 1			// freshly cut timber
 				case MATERIAL_HOLLOWWOOD:		// 2			// termite infested creaky wood
@@ -1792,38 +1792,38 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				case MATERIAL_HOLLOWMETAL:		// 4			// hollow metal machines
 					GLSL_BindProgram(sp);
 					GLSL_SetUniformFloat(sp, UNIFORM_TIME, backEnd.refdef.floatTime);
-					//RB_SetParallaxScale(sp, 4.0);
-					RB_SetParallaxScale(sp, 3.0);
+					//RB_SetParallaxScaleAndSpecular(sp, 4.0);
+					RB_SetParallaxScaleAndSpecular(sp, 3.0, pStage);
 					break;
 				case MATERIAL_DRYLEAVES:		// 19			// dried up leaves on the floor
 				case MATERIAL_GREENLEAVES:		// 20			// fresh leaves still on a tree
 					GLSL_BindProgram(sp);
 					GLSL_SetUniformFloat(sp, UNIFORM_TIME, backEnd.refdef.floatTime);
-					//RB_SetParallaxScale(sp, 4.0);
-					RB_SetParallaxScale(sp, 5.0);
+					//RB_SetParallaxScaleAndSpecular(sp, 4.0);
+					RB_SetParallaxScaleAndSpecular(sp, 5.0, pStage);
 					break;
 				case MATERIAL_FABRIC:			// 21			// Cotton sheets
 				case MATERIAL_CANVAS:			// 22			// tent material
 					GLSL_BindProgram(sp);
 					GLSL_SetUniformFloat(sp, UNIFORM_TIME, backEnd.refdef.floatTime);
-					RB_SetParallaxScale(sp, 3.0);
+					RB_SetParallaxScaleAndSpecular(sp, 3.0, pStage);
 					break;
 				case MATERIAL_MARBLE:			// 12			// marble floors
 					GLSL_BindProgram(sp);
 					GLSL_SetUniformFloat(sp, UNIFORM_TIME, backEnd.refdef.floatTime);
-					RB_SetParallaxScale(sp, 2.0);
+					RB_SetParallaxScaleAndSpecular(sp, 2.0, pStage);
 					break;
 				case MATERIAL_SNOW:				// 14			// freshly laid snow
 					GLSL_BindProgram(sp);
 					GLSL_SetUniformFloat(sp, UNIFORM_TIME, backEnd.refdef.floatTime);
-					//RB_SetParallaxScale(sp, 3.0);
-					RB_SetParallaxScale(sp, 5.0);
+					//RB_SetParallaxScaleAndSpecular(sp, 3.0);
+					RB_SetParallaxScaleAndSpecular(sp, 5.0, pStage);
 					break;
 				case MATERIAL_MUD:				// 17			// wet soil
 					GLSL_BindProgram(sp);
 					GLSL_SetUniformFloat(sp, UNIFORM_TIME, backEnd.refdef.floatTime);
-					RB_SetParallaxScale(sp, 4.0);
-					//RB_SetParallaxScale(sp, 5.0);
+					RB_SetParallaxScaleAndSpecular(sp, 4.0, pStage);
+					//RB_SetParallaxScaleAndSpecular(sp, 5.0);
 					break;
 				case MATERIAL_DIRT:				// 7			// hard mud
 				case MATERIAL_CONCRETE:			// 11			// hardened concrete pavement
@@ -1834,27 +1834,27 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				case MATERIAL_SHATTERGLASS:		// 29			// glass with the Crisis Zone style shattering
 					GLSL_BindProgram(sp);
 					GLSL_SetUniformFloat(sp, UNIFORM_TIME, backEnd.refdef.floatTime);
-					RB_SetParallaxScale(sp, 1.0);
+					RB_SetParallaxScaleAndSpecular(sp, 1.0, pStage);
 					break;
 				case MATERIAL_ARMOR:			// 30			// body armor
 				case MATERIAL_ICE:				// 15			// packed snow/solid ice
 					GLSL_BindProgram(sp);
 					GLSL_SetUniformFloat(sp, UNIFORM_TIME, backEnd.refdef.floatTime);
-					//RB_SetParallaxScale(sp, 4.0);
-					RB_SetParallaxScale(sp, 2.0);
+					//RB_SetParallaxScaleAndSpecular(sp, 4.0);
+					RB_SetParallaxScaleAndSpecular(sp, 2.0, pStage);
 					break;
 				case MATERIAL_GLASS:			// 10			//
 				case MATERIAL_BPGLASS:			// 18			// bulletproof glass
 				case MATERIAL_COMPUTER:			// 31			// computers/electronic equipment
 					GLSL_BindProgram(sp);
 					GLSL_SetUniformFloat(sp, UNIFORM_TIME, backEnd.refdef.floatTime);
-					RB_SetParallaxScale(sp, 1.0);
+					RB_SetParallaxScaleAndSpecular(sp, 1.0, pStage);
 					break;
 				default:
 					GLSL_BindProgram(sp);
 					GLSL_SetUniformFloat(sp, UNIFORM_TIME, backEnd.refdef.floatTime);
-					//RB_SetParallaxScale(sp, 1.0);
-					RB_SetParallaxScale(sp, 2.0);
+					//RB_SetParallaxScaleAndSpecular(sp, 1.0);
+					RB_SetParallaxScaleAndSpecular(sp, 2.0, pStage);
 					break;
 				}
 			}

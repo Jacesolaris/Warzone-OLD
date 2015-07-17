@@ -1185,6 +1185,11 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 					if (stage->type == ST_NORMALPARALLAXMAP)
 						type = IMGTYPE_NORMALHEIGHT;
 				}
+				else if (stage->type == ST_SPECULARMAP)
+				{
+					type = IMGTYPE_SPECULAR;
+					flags |= IMGFLAG_NOLIGHTSCALE;
+				}
 				else
 				{
 					if (r_genNormalMaps->integer)
@@ -2966,12 +2971,25 @@ static qboolean CollapseMultitexture( void ) {
 	return qtrue;
 }
 
+void StripCrap( const char *in, char *out, int destsize )
+{
+	const char *dot = strrchr(in, '_'), *slash;
+	if (dot && (!(slash = strrchr(in, '/')) || slash < dot))
+		destsize = (destsize < dot-in+1 ? destsize : dot-in+1);
+
+	if ( in == out && destsize > 1 )
+		out[destsize-1] = '\0';
+	else
+		Q_strncpyz(out, in, destsize);
+}
+
 static void CollapseStagesToLightall(shaderStage_t *diffuse, 
 	shaderStage_t *normal, shaderStage_t *specular, shaderStage_t *lightmap, 
 	qboolean useLightVector, qboolean useLightVertex, qboolean parallax, qboolean tcgen)
 {
 	int defs = 0;
 	qboolean hasRealNormalMap = qfalse;
+	qboolean hasRealSpecularMap = qfalse;
 
 	//ri->Printf(PRINT_ALL, "shader %s has diffuse %s", shader.name, diffuse->bundle[0].image[0]->imgName);
 
@@ -3014,7 +3032,8 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 
 			hasRealNormalMap = qtrue;
 		}
-		else if ((lightmap || useLightVector || useLightVertex) && (diffuseImg = diffuse->bundle[TB_DIFFUSEMAP].image[0]))
+		else if ((lightmap || useLightVector || useLightVertex) 
+			&& (diffuseImg = diffuse->bundle[TB_DIFFUSEMAP].image[0]))
 		{
 			char normalName[MAX_QPATH];
 			image_t *normalImg;
@@ -3041,6 +3060,48 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 		}
 	}
 
+	if (diffuse && r_specularMapping->integer)
+	{
+		image_t *diffuseImg = diffuse->bundle[TB_DIFFUSEMAP].image[0];
+
+		if (diffuse && diffuse->bundle[TB_SPECULARMAP].specularLoaded)
+		{// Got one...
+			diffuse->bundle[TB_SPECULARMAP] = specular->bundle[0];
+			VectorCopy4(specular->specularScale, diffuse->specularScale);
+			hasRealSpecularMap = qtrue;
+		}
+		else if (diffuse && !diffuse->bundle[TB_SPECULARMAP].specularLoaded)
+		{// Check if we can load one...
+			char specularName[MAX_QPATH];
+			char specularName2[MAX_QPATH];
+			image_t *specularImg;
+			int specularFlags = (diffuseImg->flags & ~(IMGFLAG_GENNORMALMAP | IMGFLAG_SRGB)) | IMGFLAG_NOLIGHTSCALE;
+
+			diffuse->bundle[TB_SPECULARMAP].specularLoaded = qtrue;
+
+			COM_StripExtension( diffuseImg->imgName, specularName, sizeof( specularName ) );
+			StripCrap( specularName, specularName2, sizeof(specularName));
+			Q_strcat( specularName2, sizeof( specularName2 ), "_s" );
+
+			specularImg = R_FindImageFile(specularName2, IMGTYPE_SPECULAR, specularFlags);
+
+			if (specularImg)
+			{
+				//ri->Printf(PRINT_WARNING, "+++++++++++++++ Loaded specular map %s.\n", specularName2);
+				diffuse->bundle[TB_SPECULARMAP] = diffuse->bundle[0];
+				diffuse->bundle[TB_SPECULARMAP].numImageAnimations = 0;
+				diffuse->bundle[TB_SPECULARMAP].image[0] = specularImg;
+				if (!specular) specular = diffuse;
+				VectorCopy4(specular->specularScale, diffuse->specularScale);
+				hasRealSpecularMap = qtrue;
+			}
+			//else
+			//{
+			//	ri->Printf(PRINT_WARNING, "!!!!!!!!!!!!!! No specular map %s.\n", specularName2);
+			//}
+		}
+	}
+
 	if (!hasRealNormalMap && r_parallaxMapping->integer && !(defs & LIGHTDEF_USE_PARALLAXMAP))
 	{
 		// UQ1: My parallax changes no longer require any normal map...
@@ -3050,16 +3111,6 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 		//diffuse->bundle[TB_NORMALMAP].image[0] = tr.whiteImage;
 
 		VectorSet4(diffuse->normalScale, r_baseNormalX->value, r_baseNormalY->value, 1.0f, r_baseParallax->value);
-	}
-
-	if (r_specularMapping->integer)
-	{
-		if (specular)
-		{
-			//ri->Printf(PRINT_ALL, ", specularmap %s", specular->bundle[0].image[0]->imgName);
-			diffuse->bundle[TB_SPECULARMAP] = specular->bundle[0];
-			VectorCopy4(specular->specularScale, diffuse->specularScale);
-		}
 	}
 
 	if (tcgen || diffuse->bundle[0].numTexMods)
@@ -3081,6 +3132,13 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 		diffuse->glslShaderGroup = tr.lightallShader;
 	}
 
+	if (hasRealSpecularMap)
+	{
+		if (diffuse) diffuse->hasSpecular = qtrue;
+		if (normal) normal->hasSpecular = qtrue;
+		if (specular) specular->hasSpecular = qtrue;
+	}
+
 	diffuse->glslShaderIndex = defs;
 }
 
@@ -3090,6 +3148,7 @@ static qboolean CollapseStagesToGLSL(void)
 	int i, j, numStages;
 	qboolean skip = qfalse;
 	qboolean hasRealNormalMap = qfalse;
+	qboolean hasRealSpecularMap = qfalse;
 
 	ri->Printf (PRINT_DEVELOPER, "Collapsing stages for shader '%s'\n", shader.name);
 
@@ -3276,6 +3335,7 @@ static qboolean CollapseStagesToGLSL(void)
 					case ST_SPECULARMAP:
 						if (!specular)
 						{
+							hasRealSpecularMap = qtrue;
 							specular = pStage2;
 						}
 						break;
@@ -3359,6 +3419,7 @@ static qboolean CollapseStagesToGLSL(void)
 
 		if (pStage->type == ST_SPECULARMAP)
 		{
+			hasRealSpecularMap = qtrue;
 			pStage->active = qfalse;
 		}			
 	}
@@ -3464,6 +3525,9 @@ static qboolean CollapseStagesToGLSL(void)
 
 		if (hasRealNormalMap) 
 			stage->glslShaderGroup = tr.lightallWithNormalShader;
+
+		if (hasRealSpecularMap)
+			stage->hasSpecular = qtrue;
 
 		ri->Printf (PRINT_DEVELOPER, "-> %s\n", stage->bundle[0].image[0]->imgName);
 	}

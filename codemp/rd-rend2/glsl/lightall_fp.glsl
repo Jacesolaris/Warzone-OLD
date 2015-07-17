@@ -1,7 +1,5 @@
-//#define FAST_PARALLAX
-
 uniform sampler2D u_DiffuseMap;
-varying vec4	var_Local1; // parallaxScale, 0, 0, 0
+varying vec4	var_Local1; // parallaxScale, haveSpecular, 0, 0
 varying vec2	var_Dimensions;
 
 #if defined(USE_LIGHTMAP)
@@ -200,24 +198,20 @@ float RayIntersectDisplaceMap(vec2 dp, vec2 ds, sampler2D normalMap)
 vec3 EnvironmentBRDF(float gloss, float NE, vec3 specular)
 {
   #if 1
-	// from http://blog.selfshadow.com/publications/s2013-shading-course/lazarov/s2013_pbs_black_ops_2_notes.pdf
 	vec4 t = vec4( 1/0.96, 0.475, (0.0275 - 0.25 * 0.04)/0.96,0.25 ) * gloss;
 	t += vec4( 0.0, 0.0, (0.015 - 0.75 * 0.04)/0.96,0.75 );
 	float a0 = t.x * min( t.y, exp2( -9.28 * NE ) ) + t.z;
 	float a1 = t.w;
 	return clamp( a0 + specular * ( a1 - a0 ), 0.0, 1.0 );
   #elif 0
-    // from http://seblagarde.wordpress.com/2011/08/17/hello-world/
 	return specular + CalcFresnel(NE) * clamp(vec3(gloss) - specular, 0.0, 1.0);
   #else
-    // from http://advances.realtimerendering.com/s2011/Lazarov-Physically-Based-Lighting-in-Black-Ops%20%28Siggraph%202011%20Advances%20in%20Real-Time%20Rendering%20Course%29.pptx
 	return mix(specular.rgb, vec3(1.0), CalcFresnel(NE) / (4.0 - 3.0 * gloss));
   #endif
 }
 
 float CalcGGX(float NH, float gloss)
 {
-	// from http://blog.selfshadow.com/publications/s2013-shading-course/karis/s2013_pbs_epic_notes_v2.pdf
 	float a_sq = exp2(gloss * -13.0 + 1.0);
 	float d = ((NH * NH) * (a_sq - 1.0) + 1.0);
 	return a_sq / (d * d);
@@ -226,11 +220,8 @@ float CalcGGX(float NH, float gloss)
 float CalcFresnel(float EH)
 {
 #if 1
-	// From http://blog.selfshadow.com/publications/s2013-shading-course/lazarov/s2013_pbs_black_ops_2_notes.pdf
-	// not accurate, but fast
 	return exp2(-10.0 * EH);
 #elif 0
-	// From http://seblagarde.wordpress.com/2012/06/03/spherical-gaussien-approximation-for-blinn-phong-phong-and-fresnel/
 	return exp2((-5.55473 * EH - 6.98316) * EH);
 #elif 0
 	float blend = 1.0 - EH;
@@ -247,8 +238,6 @@ float CalcVisibility(float NH, float NL, float NE, float EH, float gloss)
 {
 	float roughness = exp2(gloss * -6.5);
 
-	// Modified from http://blog.selfshadow.com/publications/s2013-shading-course/karis/s2013_pbs_epic_notes_v2.pdf
-	// NL, NE in numerator factored out from cook-torrance
 	float k = roughness + 1.0;
 	k *= k * 0.125;
 
@@ -375,6 +364,13 @@ void main()
 #endif
 
 
+#if defined(USE_PARALLAXMAP) || defined(USE_PARALLAXMAP_NONORMALS)
+	float fakedepth = SampleDepth(u_DiffuseMap, texCoords);
+#else
+	float fakedepth = (diffuse.r + diffuse.g + diffuse.b) / 3.0; // meh
+#endif
+
+
 #if defined(USE_LIGHT) && !defined(USE_FAST_LIGHT)
 	ambientColor = vec3 (0.0);
 	attenuation = 1.0;
@@ -391,8 +387,8 @@ void main()
 
 #if defined(USE_PARALLAXMAP) || defined(USE_PARALLAXMAP_NONORMALS)
   #if defined(USE_NORMALMAP)
-	float norm = SampleDepth(u_NormalMap, texCoords) - 0.5;
-	float norm2 = 0.0 - (SampleDepth(u_NormalMap, texCoords) - 0.5);
+	float norm = (fakedepth - 0.5);
+	float norm2 = 0.0 - (fakedepth - 0.5);
     #if defined(SWIZZLE_NORMALMAP)
 		N.xy = vec2(norm, norm2);
     #else
@@ -448,7 +444,17 @@ void main()
 	NE = clamp(dot(N, E), 0.0, 1.0);
 
   #if defined(USE_SPECULARMAP)
-	vec4 specular = texture2D(u_SpecularMap, texCoords);
+	vec4 specular;
+
+	if (var_Local1 != 0.0)
+	{// Real specMap...
+		specular = texture2D(u_SpecularMap, texCoords);
+	}
+	else
+	{// Fake it...
+		specular = vec4(1.0-fakedepth);
+		specular.a = 1.0-specular.a;
+	}
     #if defined(USE_GAMMA2_TEXTURES)
 	specular.rgb *= specular.rgb;
     #endif
