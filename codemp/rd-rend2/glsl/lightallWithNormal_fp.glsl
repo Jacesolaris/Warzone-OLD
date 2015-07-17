@@ -411,12 +411,20 @@ void main()
 	if (var_Local1.g != 0.0)
 	{// Real specMap...
 		specular = texture2D(u_SpecularMap, texCoords);
-		specular.a = 1.0 - specular;
+		//specular.a = 1.0 - specular.a;
+		//specular.a = ((specular.r + specular.g + specular.b) / 3.0);
+		specular.a = ((clamp((1.0 - specular.a), 0.0, 1.0) * 0.5) + 0.5);
+		specular.a = clamp((specular.a * 2.0) * specular.a, 0.2, 0.9);
 	}
 	else
 	{// Fake it...
-		specular = vec4(diffuse.rgb, 1.0-SampleDepth(u_NormalMap, texCoords));
-		specular.a = (1.0 - specular) / 2.0;
+		//specular = vec4(diffuse.rgb, 1.0-SampleDepth(u_NormalMap, texCoords));
+		////specular.a = 1.0 - specular.a;
+		//specular.a = 1.0 - specular.r;
+		float fakedepth = SampleDepth(u_NormalMap, texCoords);
+		specular = vec4(1.0-fakedepth) * diffuse;
+		specular.a = ((clamp((1.0 - fakedepth), 0.0, 1.0) * 0.5) + 0.5);
+		specular.a = clamp((specular.a * 2.0) * specular.a, 0.2, 0.9);
 	}
     #if defined(USE_GAMMA2_TEXTURES)
 	specular.rgb *= specular.rgb;
@@ -425,7 +433,8 @@ void main()
 	vec4 specular = vec4(1.0);
   #endif
 
-	specular *= u_SpecularScale;
+	//specular *= u_SpecularScale;
+	specular.a *= var_Local1.b;
 
 	float gloss = specular.a;
 	float shininess = exp2(gloss * 13.0);
@@ -464,7 +473,7 @@ void main()
     #endif
   #endif
 
-	gl_FragColor.rgb  = lightColor   * reflectance * (attenuation * NL);
+	gl_FragColor.rgb  = lightColor   * (reflectance * specular.a) * (attenuation * NL);
 
 #if 0
 	vec3 aSpecular = EnvironmentBRDF(gloss, NE, specular.rgb);

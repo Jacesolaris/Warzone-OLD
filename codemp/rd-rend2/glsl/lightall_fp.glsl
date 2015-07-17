@@ -1,5 +1,5 @@
 uniform sampler2D u_DiffuseMap;
-varying vec4	var_Local1; // parallaxScale, haveSpecular, 0, 0
+varying vec4	var_Local1; // parallaxScale, haveSpecular, specularScale, 0
 varying vec2	var_Dimensions;
 
 #if defined(USE_LIGHTMAP)
@@ -308,11 +308,11 @@ void main()
 #if defined(USE_LIGHT) && !defined(USE_FAST_LIGHT)
   #if defined(USE_VERT_TANGENT_SPACE)
 	mat3 tangentToWorld = mat3(var_Tangent.xyz, var_Bitangent.xyz, var_Normal.xyz);
-	viewDir = -vec3(var_Normal.w, var_Tangent.w, var_Bitangent.w);
+	viewDir = vec3(var_Normal.w, var_Tangent.w, var_Bitangent.w);
   #else
 	mat3 tangentToWorld = cotangent_frame(var_Normal.xyz, -var_ViewDir, var_TexCoords.xy);
 	//mat3 tangentToWorld = mat3(1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0);
-	viewDir = -var_ViewDir;
+	viewDir = var_ViewDir;
   #endif
 
 	E = normalize(viewDir);
@@ -325,11 +325,11 @@ void main()
 #else
   #if defined(USE_VERT_TANGENT_SPACE)
 	mat3 tangentToWorld = mat3(var_Tangent.xyz, var_Bitangent.xyz, var_Normal.xyz);
-	viewDir = -vec3(var_Normal.w, var_Tangent.w, var_Bitangent.w);
+	viewDir = vec3(var_Normal.w, var_Tangent.w, var_Bitangent.w);
   #else
 	mat3 tangentToWorld = cotangent_frame(var_Normal.xyz, -var_ViewDir, var_TexCoords.xy);
 	//mat3 tangentToWorld = mat3(1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0);
-	viewDir = -var_ViewDir;
+	viewDir = var_ViewDir;
   #endif
 	E = normalize(viewDir);
 #endif
@@ -449,12 +449,17 @@ void main()
 	if (var_Local1.g != 0.0)
 	{// Real specMap...
 		specular = texture2D(u_SpecularMap, texCoords);
-		specular.a = 1.0 - specular;
+		//specular.a = 1.0 - specular.a;
+		//specular.a = ((specular.r + specular.g + specular.b) / 3.0);
+		specular.a = ((clamp((1.0 - specular.a), 0.0, 1.0) * 0.5) + 0.5);
+		specular.a = clamp((specular.a * 2.0) * specular.a, 0.2, 0.9);
 	}
 	else
 	{// Fake it...
-		specular = vec4(diffuse.rgb, 1.0-fakedepth);
-		specular.a = (1.0 - specular) / 2.0;
+		specular = vec4(1.0-fakedepth) * diffuse;
+		specular.a = ((clamp((1.0 - fakedepth), 0.0, 1.0) * 0.5) + 0.5);
+		specular.a = clamp((specular.a * 2.0) * specular.a, 0.2, 0.9);
+		//specular.a = 1.0;
 	}
     #if defined(USE_GAMMA2_TEXTURES)
 	specular.rgb *= specular.rgb;
@@ -463,7 +468,8 @@ void main()
 	vec4 specular = vec4(1.0);
   #endif
 
-	specular *= u_SpecularScale;
+	//specular *= u_SpecularScale;
+	specular.a *= var_Local1.b;
 
 	float gloss = specular.a;
 	float shininess = exp2(gloss * 13.0);
@@ -502,7 +508,8 @@ void main()
     #endif
   #endif
 
-	gl_FragColor.rgb  = lightColor   * reflectance * (attenuation * NL);
+	gl_FragColor.rgb  = ((lightColor   * reflectance * (attenuation * NL)) + (lightColor   * (reflectance * specular.a) * (attenuation * NL))) / 2.0;
+	//gl_FragColor.rgb  = lightColor   * (reflectance * specular.a) * (attenuation * NL);
 
 #if 0
 	vec3 aSpecular = EnvironmentBRDF(gloss, NE, specular.rgb);
