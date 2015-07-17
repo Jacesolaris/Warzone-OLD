@@ -3011,6 +3011,8 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 				defs |= LIGHTDEF_USE_PARALLAXMAP;
 
 			VectorCopy4(normal->normalScale, diffuse->normalScale);
+
+			hasRealNormalMap = qtrue;
 		}
 		else if ((lightmap || useLightVector || useLightVertex) && (diffuseImg = diffuse->bundle[TB_DIFFUSEMAP].image[0]))
 		{
@@ -3029,12 +3031,12 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 				diffuse->bundle[TB_NORMALMAP].numImageAnimations = 0;
 				diffuse->bundle[TB_NORMALMAP].image[0] = normalImg;
 
-				hasRealNormalMap = qtrue;
-
 				if (parallax && r_parallaxMapping->integer)
 					defs |= LIGHTDEF_USE_PARALLAXMAP;
 
 				VectorSet4(diffuse->normalScale, r_baseNormalX->value, r_baseNormalY->value, 1.0f, r_baseParallax->value);
+
+				hasRealNormalMap = qtrue;
 			}
 		}
 	}
@@ -3087,6 +3089,7 @@ static qboolean CollapseStagesToGLSL(void)
 {
 	int i, j, numStages;
 	qboolean skip = qfalse;
+	qboolean hasRealNormalMap = qfalse;
 
 	ri->Printf (PRINT_DEVELOPER, "Collapsing stages for shader '%s'\n", shader.name);
 
@@ -3256,6 +3259,7 @@ static qboolean CollapseStagesToGLSL(void)
 					case ST_NORMALMAP:
 						if (!normal)
 						{
+							hasRealNormalMap = qtrue;
 							normal = pStage2;
 						}
 						break;
@@ -3263,6 +3267,7 @@ static qboolean CollapseStagesToGLSL(void)
 					case ST_NORMALPARALLAXMAP:
 						if (!normal)
 						{
+							hasRealNormalMap = qtrue;
 							normal = pStage2;
 							parallax = qtrue;
 						}
@@ -3332,8 +3337,6 @@ static qboolean CollapseStagesToGLSL(void)
 		}
 	}
 
-	qboolean hasRealNormalMap = qfalse;
-
 	// deactivate normal and specular stages
 	for (i = 0; i < MAX_SHADER_STAGES; i++)
 	{
@@ -3344,6 +3347,7 @@ static qboolean CollapseStagesToGLSL(void)
 
 		if (pStage->type == ST_NORMALMAP)
 		{
+			hasRealNormalMap = qtrue;
 			pStage->active = qfalse;
 		}
 
@@ -3457,6 +3461,9 @@ static qboolean CollapseStagesToGLSL(void)
 		{
 			continue;
 		}
+
+		if (hasRealNormalMap) 
+			stage->glslShaderGroup = tr.lightallWithNormalShader;
 
 		ri->Printf (PRINT_DEVELOPER, "-> %s\n", stage->bundle[0].image[0]->imgName);
 	}

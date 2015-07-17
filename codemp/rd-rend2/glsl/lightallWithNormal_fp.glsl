@@ -528,7 +528,7 @@ void main()
 
   gl_FragColor = vec4 (diffuse.rgb * lightColor, diffuse.a * var_Color.a);
 #endif
-	
+
 #if defined(USE_GLOW_BUFFER)
 	out_Glow = gl_FragColor;
 #else

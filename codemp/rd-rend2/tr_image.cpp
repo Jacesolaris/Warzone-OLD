@@ -2614,7 +2614,8 @@ static void R_CreateNormalMap ( const char *name, byte *pic, int width, int heig
 	// find normalmap in case it's there
 	normalImage = R_FindImageFile(normalName, IMGTYPE_NORMAL, normalFlags);
 
-	if (normalImage != NULL) ri->Printf(PRINT_WARNING, "Loaded real normal map file %s.\n", name);
+	//if (normalImage != NULL) ri->Printf(PRINT_WARNING, "Loaded real normal map file %s.\n", normalName);
+	//else ri->Printf(PRINT_WARNING, "No real normal map file %s.\n", normalName);
 	
 #if 0
 	// if not, generate it
@@ -2755,6 +2756,10 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, int flags )
 	{
 		R_CreateNormalMap( name, pic, width, height, flags );
 	}
+	/*else if (type == IMGTYPE_NORMAL)
+	{
+		ri->Printf(PRINT_WARNING, "Directly loaded real normal map file %s.\n", name);
+	}*/
 
 	image = R_CreateImage( name, pic, width, height, type, flags, GL_RGBA8 );
 	Z_Free( pic );
