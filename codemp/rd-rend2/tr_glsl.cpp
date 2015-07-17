@@ -721,6 +721,8 @@ static bool GLSL_EndLoadGPUShader (shaderProgram_t *program)
 {
 	uint32_t attribs = program->attribs;
 
+	ri->Printf(PRINT_WARNING, "Compiling glsl: %s.\n", program->name);
+
 	if (!GLSL_IsGPUShaderCompiled (program->vertexShader))
 	{
 		return false;
@@ -1410,7 +1412,7 @@ int GLSL_BeginLoadGPUShaders(void)
 			ri->Error(ERR_FATAL, "Could not load lightall shader!");
 		}
 
-		if (!GLSL_BeginLoadGPUShader(&tr.lightallShader[i], "lightallWithNormal", attribs, qtrue, extradefines, qtrue, fallbackShader_lightallWithNormal_vp, fallbackShader_lightallWithNormal_fp))
+		if (!GLSL_BeginLoadGPUShader(&tr.lightallWithNormalShader[i], "lightallWithNormal", attribs, qtrue, extradefines, qtrue, fallbackShader_lightallWithNormal_vp, fallbackShader_lightallWithNormal_fp))
 		{
 			ri->Error(ERR_FATAL, "Could not load lightallWithNormal shader!");
 		}
@@ -1923,7 +1925,7 @@ void GLSL_EndLoadGPUShaders ( int startTime )
 
 		if (!GLSL_EndLoadGPUShader(&tr.lightallWithNormalShader[i]))
 		{
-			ri->Error(ERR_FATAL, "Could not load lightall shader!");
+			ri->Error(ERR_FATAL, "Could not load lightallWithNormal shader!");
 		}
 		
 		GLSL_InitUniforms(&tr.lightallWithNormalShader[i]);
