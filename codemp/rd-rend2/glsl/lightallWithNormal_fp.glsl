@@ -409,7 +409,7 @@ void main()
   #if defined(USE_SPECULARMAP)
 	vec4 specular;
 
-	if (var_Local1 != 0.0)
+	if (var_Local1.g != 0.0)
 	{// Real specMap...
 		specular = texture2D(u_SpecularMap, texCoords);
 	}
