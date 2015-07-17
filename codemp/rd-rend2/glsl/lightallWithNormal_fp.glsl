@@ -286,11 +286,11 @@ void main()
 #if defined(USE_LIGHT) && !defined(USE_FAST_LIGHT)
   #if defined(USE_VERT_TANGENT_SPACE)
 	mat3 tangentToWorld = mat3(var_Tangent.xyz, var_Bitangent.xyz, var_Normal.xyz);
-	viewDir = vec3(var_Normal.w, var_Tangent.w, var_Bitangent.w);
+	viewDir = -vec3(var_Normal.w, var_Tangent.w, var_Bitangent.w);
   #else
 	mat3 tangentToWorld = cotangent_frame(var_Normal.xyz, -var_ViewDir, var_TexCoords.xy);
 	//mat3 tangentToWorld = mat3(1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0);
-	viewDir = var_ViewDir;
+	viewDir = -var_ViewDir;
   #endif
 
 	E = normalize(viewDir);
@@ -303,11 +303,10 @@ void main()
 #else
   #if defined(USE_VERT_TANGENT_SPACE)
 	mat3 tangentToWorld = mat3(var_Tangent.xyz, var_Bitangent.xyz, var_Normal.xyz);
-	viewDir = vec3(var_Normal.w, var_Tangent.w, var_Bitangent.w);
+	viewDir = -vec3(var_Normal.w, var_Tangent.w, var_Bitangent.w);
   #else
 	mat3 tangentToWorld = cotangent_frame(var_Normal.xyz, -var_ViewDir, var_TexCoords.xy);
-	//mat3 tangentToWorld = mat3(1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0);
-	viewDir = var_ViewDir;
+	viewDir = -var_ViewDir;
   #endif
 	E = normalize(viewDir);
 #endif
@@ -412,11 +411,12 @@ void main()
 	if (var_Local1.g != 0.0)
 	{// Real specMap...
 		specular = texture2D(u_SpecularMap, texCoords);
+		specular.a = 1.0 - specular;
 	}
 	else
 	{// Fake it...
-		specular = vec4(1.0-SampleDepth(u_NormalMap, texCoords));
-		specular.a = 1.0-specular.a;
+		specular = vec4(diffuse.rgb, 1.0-SampleDepth(u_NormalMap, texCoords));
+		specular.a = (1.0 - specular) / 2.0;
 	}
     #if defined(USE_GAMMA2_TEXTURES)
 	specular.rgb *= specular.rgb;
