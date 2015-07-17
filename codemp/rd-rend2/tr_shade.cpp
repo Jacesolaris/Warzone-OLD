@@ -1897,6 +1897,19 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			GLSL_SetUniformVec3(sp, UNIFORM_LOCALVIEWORIGIN, backEnd.ori.viewOrigin);
 			GLSL_SetUniformFloat(sp, UNIFORM_VERTEXLERP, glState.vertexAttribsInterpolation);
 
+			vec4_t normalScale;
+			VectorCopy4(pStage->normalScale, normalScale);
+			if (normalScale[0] == 0 && normalScale[1] == 0 && normalScale[2] == 0 && normalScale[3] == 0)
+				VectorSet4(normalScale, 1.0, 1.0, 1.0, 1.0);
+
+			vec4_t specularScale;
+			VectorCopy4(pStage->specularScale, specularScale);
+			if (specularScale[0] == 0 && specularScale[1] == 0 && specularScale[2] == 0 && specularScale[3] == 0)
+				VectorSet4(specularScale, 1.0, 1.0, 1.0, 1.0);
+
+			GLSL_SetUniformVec4(sp, UNIFORM_NORMALSCALE, normalScale);
+			GLSL_SetUniformVec4(sp, UNIFORM_SPECULARSCALE, specularScale);
+
 			if (glState.skeletalAnimation)
 			{
 				GLSL_SetUniformMatrix16(sp, UNIFORM_BONE_MATRICES, &glState.boneMatrices[0][0], glState.numBones);

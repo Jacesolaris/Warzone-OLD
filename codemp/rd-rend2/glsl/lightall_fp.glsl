@@ -357,8 +357,7 @@ void main()
 #if defined(USE_PARALLAXMAP) || defined(USE_PARALLAXMAP_NONORMALS)
 	vec3 offsetDir = normalize(E * tangentToWorld);
 
-	//offsetDir.xy *= -u_NormalScale.a / offsetDir.z;
-	offsetDir.xy *= tex_offset * -var_Local1.x;//-4.0;//-5.0; // -3.0
+	offsetDir.xy *= tex_offset * -var_Local1.x;
 
   #if defined(USE_PARALLAXMAP)
 	texCoords += offsetDir.xy * RayIntersectDisplaceMap(texCoords, offsetDir.xy, u_NormalMap);
@@ -390,19 +389,23 @@ void main()
 	lightColor	= var_Color.rgb;
   #endif
 
-  // UQ1: This is broken...
-  /*#if defined(USE_NORMALMAP)
+#if defined(USE_PARALLAXMAP) || defined(USE_PARALLAXMAP_NONORMALS)
+  #if defined(USE_NORMALMAP)
+	float norm = SampleDepth(u_NormalMap, texCoords) - 0.5;
+	float norm2 = 0.0 - (SampleDepth(u_NormalMap, texCoords) - 0.5);
     #if defined(SWIZZLE_NORMALMAP)
-	N.xy = texture2D(u_NormalMap, texCoords).ag - vec2(0.5);
+		N.xy = vec2(norm, norm2);
     #else
-	N.xy = texture2D(u_NormalMap, texCoords).rg - vec2(0.5);
+		N.xy = vec2(norm, norm2);
     #endif
 	N.xy *= u_NormalScale.xy;
 	N.z = sqrt(clamp((0.25 - N.x * N.x) - N.y * N.y, 0.0, 1.0));
 	N = tangentToWorld * N;
-  #else*/
+  #else
 	N = var_Normal.xyz;
-  //#endif
+  #endif
+  N = var_Normal.xyz;
+#endif
 
 	N = normalize(N);
 	L /= sqrt(sqrLightDist);

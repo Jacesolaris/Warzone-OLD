@@ -359,7 +359,7 @@ void main()
     #else
 	N.xy = texture2D(u_NormalMap, texCoords).rg - vec2(0.5);
     #endif
-	N.xy *= u_NormalScale.xy;
+	//N.xy *= u_NormalScale.xy;
 	N.z = sqrt(clamp((0.25 - N.x * N.x) - N.y * N.y, 0.0, 1.0));
 	N = tangentToWorld * N;
   #else
