@@ -780,6 +780,19 @@ qboolean IsSniperRifle ( int weapon )
 	return qfalse;
 }
 
+qboolean SniperRifleCharges ( int weapon )
+{
+	switch (weapon)
+	{
+	case WP_A280:
+		return qfalse;
+	default:
+		break;
+	}
+
+	return qtrue;
+}
+
 qboolean BG_HaveWeapon ( const playerState_t *ps, int weapon )
 {
 	if (ps->primaryWeapon == weapon && weapon <= WP_NUM_USEABLE) return qtrue;

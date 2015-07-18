@@ -6576,6 +6576,7 @@ static qboolean PM_DoChargedWeapons( qboolean vehicleRocketLock, bgEntity_t *veh
 		{
 			if ((pm->cmd.buttons & BUTTON_ATTACK) &&
 				pm->ps->scopeType > SCOPE_BINOCULARS &&
+				SniperRifleCharges(pm->ps->weapon) &&
 				pm->ps->zoomLocked)
 			{
 				if (!pm->cmd.forwardmove &&

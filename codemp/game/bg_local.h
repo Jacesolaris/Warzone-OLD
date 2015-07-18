@@ -17,6 +17,7 @@
 
 qboolean BG_HaveWeapon ( const playerState_t *ps, int weapon );
 qboolean IsSniperRifle ( int weapon );
+qboolean SniperRifleCharges ( int weapon );
 
 // all of the locals will be zeroed before each
 // pmove, just to make damn sure we don't have
