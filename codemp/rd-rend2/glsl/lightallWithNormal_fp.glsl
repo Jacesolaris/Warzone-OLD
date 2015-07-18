@@ -491,7 +491,7 @@ void main()
   #endif
 
 	if (var_Local1.b > 0.0)
-		gl_FragColor.rgb  = ((lightColor   * reflectance * (attenuation * NL)) + (lightColor   * (reflectance * specular.a) * (attenuation * NL))) / 2.0;
+		gl_FragColor.rgb  = (((lightColor   * reflectance * (attenuation * NL)) * 2.0) + (lightColor   * (reflectance * specular.a) * (attenuation * NL))) / 3.0;
 	else
 		gl_FragColor.rgb  = lightColor   * reflectance * (attenuation * NL);
 

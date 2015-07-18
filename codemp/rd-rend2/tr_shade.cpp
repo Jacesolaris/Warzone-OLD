@@ -1564,13 +1564,13 @@ void RB_SetParallaxScale(shaderProgram_t *sp, float scale, shaderStage_t *pStage
 		specularScale = 0.5;
 		break;
 	case MATERIAL_TILES:			// 26			// tiled floor
-		specularScale = 0.7;
+		specularScale = 0.8;
 		break;
 	case MATERIAL_SOLIDWOOD:		// 1			// freshly cut timber
-		specularScale = 0.2;
+		specularScale = 0.3;
 		break;
 	case MATERIAL_HOLLOWWOOD:		// 2			// termite infested creaky wood
-		specularScale = 0.2;
+		specularScale = 0.3;
 		break;
 	case MATERIAL_SOLIDMETAL:		// 3			// solid girders
 		specularScale = 1.0;
@@ -1579,16 +1579,16 @@ void RB_SetParallaxScale(shaderProgram_t *sp, float scale, shaderStage_t *pStage
 		specularScale = 1.0;
 		break;
 	case MATERIAL_DRYLEAVES:		// 19			// dried up leaves on the floor
-		specularScale = 0.3;
+		specularScale = 0.4;
 		break;
 	case MATERIAL_GREENLEAVES:		// 20			// fresh leaves still on a tree
-		specularScale = 0.5;
+		specularScale = 0.6;
 		break;
 	case MATERIAL_FABRIC:			// 21			// Cotton sheets
-		specularScale = 0.3;
+		specularScale = 0.6;
 		break;
 	case MATERIAL_CANVAS:			// 22			// tent material
-		specularScale = 0.3;
+		specularScale = 0.6;
 		break;
 	case MATERIAL_MARBLE:			// 12			// marble floors
 		specularScale = 0.9;
@@ -1637,7 +1637,8 @@ void RB_SetParallaxScale(shaderProgram_t *sp, float scale, shaderStage_t *pStage
 		break;
 	default:
 		//specularScale = 0.4;
-		specularScale = 0.0;
+		//specularScale = 0.0;
+		specularScale = 0.4;
 		break;
 	}
 
