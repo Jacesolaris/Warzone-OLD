@@ -3422,6 +3422,8 @@ void FS_Startup( const char *gameName ) {
 
 	FS_STARTUP_COMPLETE = qfalse;
 
+	FS_WaitForThreads();
+
 	Com_Printf( "----- FS_Startup -----\n" );
 
 	fs_packFiles = 0;
