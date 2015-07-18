@@ -8722,9 +8722,32 @@ void PM_AdjustAttackStates( pmove_t *pmove )
 			if ( !pmove->ps->scopeType && pmove->ps->pm_type != PM_DEAD )
 			{
 				// not already zooming, so do it now
-				pmove->ps->scopeType = SCOPE_SCOPE_DISRUPTOR;
+				switch (pmove->ps->weapon)
+				{
+				case WP_DISRUPTOR:
+					pmove->ps->scopeType = SCOPE_SCOPE_DISRUPTOR;
+					pmove->ps->zoomFov = 80.0f;//cg_fov.value;
+					break;
+				case WP_A280:// etc
+					pmove->ps->scopeType = SCOPE_SCOPE_A280_BLASTTECH_LONG_SHORT;
+					pmove->ps->zoomFov = 80.0f;//cg_fov.value;
+					break;
+				case WP_DLT20A:// etc
+					pmove->ps->scopeType = SCOPE_SCOPE_DLT20A_BLASTTECH_LONG_SHORT;
+					pmove->ps->zoomFov = 80.0f;//cg_fov.value;
+					break;
+				case WP_EE3:// etc
+					pmove->ps->scopeType = SCOPE_SCOPE_EE3_BLASTTECH_SHORT;
+					pmove->ps->zoomFov = 80.0f;//cg_fov.value;
+					break;
+				default:
+					pmove->ps->scopeType = SCOPE_SCOPE_DISRUPTOR;
+					pmove->ps->zoomFov = 80.0f;
+					break;
+				}
+
 				pmove->ps->zoomLocked = qfalse;
-				pmove->ps->zoomFov = 80.0f;//cg_fov.value;
+				
 				pmove->ps->zoomLockTime = pmove->cmd.serverTime + 50;
 				PM_AddEvent(EV_DISRUPTOR_ZOOMSOUND);
 			}
