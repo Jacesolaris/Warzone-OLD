@@ -27,6 +27,7 @@ static vec3_t muzzle;
 #define BLASTER_VELOCITY			2300
 #define BLASTER_DAMAGE				20
 #define BLASTER_CANON_DAMAGE		5
+#define RIFLE_SNIPER_DAMAGE				85
 
 // Tenloss Disruptor
 //----------
@@ -4992,7 +4993,7 @@ void FireWeapon( gentity_t *ent, qboolean altFire ) {
 
 		case WP_A280: // UQ1: Example. Should have it's own code...
 			if (altFire)
-				WP_FireBlaster( ent, altFire, BLASTER_VELOCITY*3, BLASTER_DAMAGE*2, 0.0, ent->s.weapon );
+				WP_FireBlaster(ent, altFire, BLASTER_VELOCITY * 3, RIFLE_SNIPER_DAMAGE* 1.5, 0.0, ent->s.weapon);
 			else
 				WP_FireBlaster(ent, altFire, BLASTER_VELOCITY, BLASTER_DAMAGE, BLASTER_SPREAD, ent->s.weapon);
 			break;
@@ -5011,7 +5012,7 @@ void FireWeapon( gentity_t *ent, qboolean altFire ) {
 
 		case WP_EE3:
 			if (altFire)
-				WP_FireBlaster( ent, altFire, BLASTER_VELOCITY*2.5, BLASTER_DAMAGE*1.5, 0.0, ent->s.weapon );
+				WP_FireBlaster(ent, altFire, BLASTER_VELOCITY*2.5, RIFLE_SNIPER_DAMAGE*1.5, 0.0, ent->s.weapon);
 			else
 				WP_FireBlaster(ent, altFire, BLASTER_VELOCITY, BLASTER_DAMAGE, BLASTER_SPREAD, ent->s.weapon);
 			break;
@@ -5026,7 +5027,7 @@ void FireWeapon( gentity_t *ent, qboolean altFire ) {
 
 		case WP_DLT20A:
 			if (altFire)
-				WP_FireBlaster(ent, altFire, BLASTER_VELOCITY*2.5, BLASTER_DAMAGE*1.5, 0.0, ent->s.weapon);
+				WP_FireBlaster(ent, altFire, BLASTER_VELOCITY*2.5, RIFLE_SNIPER_DAMAGE*1.5, 0.0, ent->s.weapon);
 			else
 				WP_FireBlaster(ent, altFire, BLASTER_VELOCITY, BLASTER_DAMAGE, BLASTER_SPREAD, ent->s.weapon);
 			break;

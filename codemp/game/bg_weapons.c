@@ -75,7 +75,7 @@ weaponData_t weaponData[WP_NUM_WEAPONS] = {
 	{ "Golan Arms Flechette",			AMMO_METAL_BOLTS,	5,			10,				700,		8192,		15,					800,			8192,		0,				0,					0,			0,				0,			0	},
 	{ "Concussion Rifle",				AMMO_METAL_BOLTS,	40,			40,				800,		8192,		50,					1200,			8192,		0,				0,					0,			0,				0,			0	},
 	//Place new Guns under here.
-	{ "A280 Clone Blaster",				AMMO_BLASTER,		5,			5,				350,		8192,		6,					1500,			8192,		0,				200,				0,			3,				0,			1700	},
+	{ "A280 Clone Blaster",				AMMO_BLASTER,		5,			5,				350,		8192,		6,					1500,			8192,		0,				0,					0,			3,				0,			1700	},
 	{ "DC-15 Blaster",					AMMO_METAL_BOLTS,	5,			8,				250/*200*/,	8192,		6,					900,			8192,		0,				3,					0,			3,			    0,			2100	},
 	{ "Westarm 5 Blaster",				AMMO_METAL_BOLTS,	5,			8,				250/*200*/,	8192,		6,					900,			8192,		0,				3,					0,			250,		    0,			2100	},
 	{ "T-21 Blaster Rifle",				AMMO_BLASTER,		5,			2,				350/*550*/,	8192,		3,					250,			8192,		0,				0,					0,			0,				0,			0	},
