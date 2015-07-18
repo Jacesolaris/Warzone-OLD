@@ -225,6 +225,7 @@ void NPC_RemoveBody( gentity_t *self )
 		{
 			if ( !self->activator || !self->activator->client || !(self->activator->client->ps.eFlags2&EF2_HELD_BY_MONSTER) )
 			{//not being held by a Rancor
+				self->s.eType == ET_INVISIBLE;
 				G_FreeEntity( self );
 			}
 			else
@@ -289,11 +290,13 @@ void NPC_RemoveBody( gentity_t *self )
 						gentity_t *saberent = &g_entities[self->client->ps.saberEntityNum];
 						if ( saberent )
 						{
+							saberent->s.eType == ET_INVISIBLE;
 							G_FreeEntity( saberent );
 						}
 					}
 
 					trap->ICARUS_FreeEnt((sharedEntity_t*)self); // UQ1: This???
+					self->s.eType == ET_INVISIBLE;
 					G_FreeEntity( self );
 				}
 				else

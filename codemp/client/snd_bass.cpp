@@ -256,7 +256,7 @@ void BASS_Shutdown ( void )
 		BASS_UPDATE_THREAD_STOP = qtrue;
 
 		// Wait for update thread to finish...
-		BASS_UPDATE_THREAD->join();
+		//BASS_UPDATE_THREAD->join();
 	}
 
 	if (BASS_MUSIC_UPDATE_THREAD && thread::hardware_concurrency() > 1)
@@ -264,7 +264,7 @@ void BASS_Shutdown ( void )
 		BASS_MUSIC_UPDATE_THREAD_STOP = qtrue;
 	
 		// Wait for update thread to finish...
-		BASS_MUSIC_UPDATE_THREAD->join();
+		//BASS_MUSIC_UPDATE_THREAD->join();
 	}
 
 	BASS_Free();
