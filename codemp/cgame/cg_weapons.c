@@ -2363,7 +2363,7 @@ qboolean CG_CalcMuzzlePoint( int entityNum, vec3_t muzzle ) {
 
 		VectorCopy(WP_MuzzlePoint[weapontype], weaponMuzzle);
 
-		if (weapontype == WP_DISRUPTOR || weapontype == WP_A280 || weapontype == WP_STUN_BATON || weapontype == WP_MELEE || weapontype == WP_SABER)
+		if (weapontype == WP_DISRUPTOR || weapontype == WP_A280 || weapontype == WP_DLT20A || weapontype == WP_EE3 || weapontype == WP_STUN_BATON || weapontype == WP_MELEE || weapontype == WP_SABER)
 		{
 			VectorClear(weaponMuzzle);
 		}
