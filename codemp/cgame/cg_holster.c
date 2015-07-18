@@ -25,6 +25,35 @@ stringID_table_t holsterTypeTable[] =
 	ENUM2STRING(HLR_DISRUPTOR),		//disruptor
 	ENUM2STRING(HLR_T21),			//t21
 	ENUM2STRING(HLR_A280),
+	ENUM2STRING(HLR_EE3),
+	ENUM2STRING(HLR_DTL20A),
+	ENUM2STRING(HLR_Z6_CANON),
+	ENUM2STRING(HRL_CLONERIFLE),
+	ENUM2STRING(HRL_DC15_EXT),
+	ENUM2STRING(HLR_WOOKIE_BOWCASTER),
+	ENUM2STRING(HLR_DC15),
+	ENUM2STRING(HLR_WESTARM5),
+	ENUM2STRING(HLR_CLONE_BLASTER_L),		
+	ENUM2STRING(HLR_CLONE_BLASTER_R),
+	ENUM2STRING(HRL_E60_ROCKET_LAUNCHER),
+	ENUM2STRING(HRL_CW_ROCKET_LAUNCHER),
+
+	ENUM2STRING(HLR_DC_15S_CLONE_PISTOL_L),		
+	ENUM2STRING(HLR_DC_15S_CLONE_PISTOL_R),		
+	ENUM2STRING(HLR_WESTER_PISTOL_L),		
+	ENUM2STRING(HLR_WESTER_PISTOL_R),		
+	ENUM2STRING(HLR_ELG_3A_L),		
+	ENUM2STRING(HLR_ELG_3A_R),		
+	ENUM2STRING(HLR_S5_PISTOL_L),		
+	ENUM2STRING(HLR_S5_PISTOL_R),		
+	ENUM2STRING(HLR_WOOKIES_PISTOL_L),		
+	ENUM2STRING(HLR_WOOKIES_PISTOL_R),		
+	ENUM2STRING(HLR_DC_17_CLONE_PISTOL_L),		
+	ENUM2STRING(HLR_DC_17_CLONE_PISTOL_R),
+	ENUM2STRING(HLR_TESTGUN_L),
+	ENUM2STRING(HLR_TESTGUN_R),
+
+
 	ENUM2STRING(MAX_HOLSTER),
 
 	// All stringID tables need to end with this
@@ -141,9 +170,34 @@ holster_t defaultHolsterData[MAX_HOLSTER] =
 		{-40, 0, 0},		//angOffset
 	}
 	{//HLR_A280
-	HOLSTER_UPPERBACK,	//boneindex
-	{-5, -7, 3},		//posOffset
-	{-40, 0, 0},		//angOffset
+		HOLSTER_UPPERBACK,	//boneindex
+		{-5, -7, 3},		//posOffset
+		{-40, 0, 0},		//angOffset
+	}
+	{//HLR_EE3
+		HOLSTER_UPPERBACK,	//boneindex
+		{-5, -7, 3},		//posOffset
+		{-40, 0, 0},		//angOffset
+	}
+	{//HLR_DTL20A
+		HOLSTER_UPPERBACK,	//boneindex
+		{-5, -7, 3},		//posOffset
+		{-40, 0, 0},		//angOffset
+	}
+	{//HLR_Z6_CANON
+		HOLSTER_UPPERBACK,	//boneindex
+		{-5, -7, 3},		//posOffset
+		{-40, 0, 0},		//angOffset
+	}
+	{//HRL_CLONERIFLE
+		HOLSTER_UPPERBACK,	//boneindex
+		{-5, -7, 3},		//posOffset
+		{-40, 0, 0},		//angOffset
+	}
+	{//HRL_DC15_EXT
+		HOLSTER_UPPERBACK,	//boneindex
+		{-5, -7, 3},		//posOffset
+		{-40, 0, 0},		//angOffset
 	},
 };
 */
