@@ -2332,6 +2332,50 @@ static void ParseSurfaceParm( const char **text ) {
 	}
 }
 
+qboolean HaveSurfaceType( int surfaceFlags )
+{
+	switch( surfaceFlags & MATERIAL_MASK )
+	{
+	case MATERIAL_WATER:			// 13			// light covering of water on a surface
+	case MATERIAL_SHORTGRASS:		// 5			// manicured lawn
+	case MATERIAL_LONGGRASS:		// 6			// long jungle grass
+	case MATERIAL_SAND:				// 8			// sandy beach
+	case MATERIAL_CARPET:			// 27			// lush carpet
+	case MATERIAL_GRAVEL:			// 9			// lots of small stones
+	case MATERIAL_ROCK:				// 23			//
+	case MATERIAL_TILES:			// 26			// tiled floor
+	case MATERIAL_SOLIDWOOD:		// 1			// freshly cut timber
+	case MATERIAL_HOLLOWWOOD:		// 2			// termite infested creaky wood
+	case MATERIAL_SOLIDMETAL:		// 3			// solid girders
+	case MATERIAL_HOLLOWMETAL:		// 4			// hollow metal machines
+	case MATERIAL_DRYLEAVES:		// 19			// dried up leaves on the floor
+	case MATERIAL_GREENLEAVES:		// 20			// fresh leaves still on a tree
+	case MATERIAL_FABRIC:			// 21			// Cotton sheets
+	case MATERIAL_CANVAS:			// 22			// tent material
+	case MATERIAL_MARBLE:			// 12			// marble floors
+	case MATERIAL_SNOW:				// 14			// freshly laid snow
+	case MATERIAL_MUD:				// 17			// wet soil
+	case MATERIAL_DIRT:				// 7			// hard mud
+	case MATERIAL_CONCRETE:			// 11			// hardened concrete pavement
+	case MATERIAL_FLESH:			// 16			// hung meat, corpses in the world
+	case MATERIAL_RUBBER:			// 24			// hard tire like rubber
+	case MATERIAL_PLASTIC:			// 25			//
+	case MATERIAL_PLASTER:			// 28			// drywall style plaster
+	case MATERIAL_SHATTERGLASS:		// 29			// glass with the Crisis Zone style shattering
+	case MATERIAL_ARMOR:			// 30			// body armor
+	case MATERIAL_ICE:				// 15			// packed snow/solid ice
+	case MATERIAL_GLASS:			// 10			//
+	case MATERIAL_BPGLASS:			// 18			// bulletproof glass
+	case MATERIAL_COMPUTER:			// 31			// computers/electronic equipment
+		return qtrue;
+		break;
+	default:
+		break;
+	}
+
+	return qfalse;
+}
+
 /*
 =================
 ParseShader
@@ -2341,93 +2385,12 @@ shader.  Parse it into the global shader variable.  Later functions
 will optimize it.
 =================
 */
-static qboolean ParseShader( const char **text )
+static qboolean ParseShader( const char *name, const char **text )
 {
 	char *token;
 	int s;
 
 	s = 0;
-
-	/*
-MATERIAL_SOLIDWOOD		1			// freshly cut timber
-MATERIAL_HOLLOWWOOD		2			// termite infested creaky wood
-MATERIAL_SOLIDMETAL		3			// solid girders
-MATERIAL_HOLLOWMETAL	4			// hollow metal machines
-MATERIAL_SHORTGRASS		5			// manicured lawn
-MATERIAL_LONGGRASS		6			// long jungle grass
-MATERIAL_DIRT			7			// hard mud
-MATERIAL_SAND			8			// sandy beach
-MATERIAL_GRAVEL			9			// lots of small stones
-MATERIAL_GLASS			10			//
-MATERIAL_CONCRETE		11			// hardened concrete pavement
-MATERIAL_MARBLE			12			// marble floors
-MATERIAL_WATER			13			// light covering of water on a surface
-MATERIAL_SNOW			14			// freshly laid snow
-MATERIAL_ICE			15			// packed snow/solid ice
-MATERIAL_FLESH			16			// hung meat, corpses in the world
-MATERIAL_MUD			17			// wet soil
-MATERIAL_BPGLASS		18			// bulletproof glass
-MATERIAL_DRYLEAVES		19			// dried up leaves on the floor
-MATERIAL_GREENLEAVES	20			// fresh leaves still on a tree
-MATERIAL_FABRIC			21			// Cotton sheets
-MATERIAL_CANVAS			22			// tent material
-MATERIAL_ROCK			23			//
-MATERIAL_RUBBER			24			// hard tire like rubber
-MATERIAL_PLASTIC		25			//
-MATERIAL_TILES			26			// tiled floor
-MATERIAL_CARPET			27			// lush carpet
-MATERIAL_PLASTER		28			// drywall style plaster
-MATERIAL_SHATTERGLASS	29			// glass with the Crisis Zone style shattering
-MATERIAL_ARMOR			30			// body armor
-MATERIAL_COMPUTER		31			// computers/electronic equipment
-	*/
-
-	if (StringContainsWord(*text, "plastic") || StringContainsWord(*text, "trooper"))
-		shader.surfaceFlags |= MATERIAL_PLASTIC;
-	else if (StringContainsWord(*text, "metal") || StringContainsWord(*text, "pipe"))
-		shader.surfaceFlags |= MATERIAL_SOLIDMETAL;
-	else if (StringContainsWord(*text, "glass"))
-		shader.surfaceFlags |= MATERIAL_GLASS;
-	else if (StringContainsWord(*text, "sand"))
-		shader.surfaceFlags |= MATERIAL_SAND;
-	else if (StringContainsWord(*text, "gravel"))
-		shader.surfaceFlags |= MATERIAL_GRAVEL;
-	else if (StringContainsWord(*text, "dirt"))
-		shader.surfaceFlags |= MATERIAL_DIRT;
-	else if (StringContainsWord(*text, "concrete"))
-		shader.surfaceFlags |= MATERIAL_CONCRETE;
-	else if (StringContainsWord(*text, "marble"))
-		shader.surfaceFlags |= MATERIAL_MARBLE;
-	else if (StringContainsWord(*text, "snow"))
-		shader.surfaceFlags |= MATERIAL_SNOW;
-	else if (StringContainsWord(*text, "flesh") || StringContainsWord(*text, "body"))
-		shader.surfaceFlags |= MATERIAL_FLESH;
-	else if (StringContainsWord(*text, "canvas"))
-		shader.surfaceFlags |= MATERIAL_CANVAS;
-	else if (StringContainsWord(*text, "rock"))
-		shader.surfaceFlags |= MATERIAL_ROCK;
-	else if (StringContainsWord(*text, "rubber"))
-		shader.surfaceFlags |= MATERIAL_RUBBER;
-	else if (StringContainsWord(*text, "carpet"))
-		shader.surfaceFlags |= MATERIAL_CARPET;
-	else if (StringContainsWord(*text, "plaster"))
-		shader.surfaceFlags |= MATERIAL_PLASTER;
-	else if (StringContainsWord(*text, "computer") || StringContainsWord(*text, "console") || StringContainsWord(*text, "button") || StringContainsWord(*text, "terminal"))
-		shader.surfaceFlags |= MATERIAL_COMPUTER;
-	else if (StringContainsWord(*text, "armor") || StringContainsWord(*text, "armour"))
-		shader.surfaceFlags |= MATERIAL_ARMOR;
-	else if (StringContainsWord(*text, "fabric"))
-		shader.surfaceFlags |= MATERIAL_FABRIC;
-	else if (StringContainsWord(*text, "hood") || StringContainsWord(*text, "robe") || StringContainsWord(*text, "cloth"))
-		shader.surfaceFlags |= MATERIAL_FABRIC;
-	else if (StringContainsWord(*text, "tile"))
-		shader.surfaceFlags |= MATERIAL_TILES;
-	else if (StringContainsWord(*text, "leaf") || StringContainsWord(*text, "leaves"))
-		shader.surfaceFlags |= MATERIAL_GREENLEAVES;
-	else if (StringContainsWord(*text, "mud"))
-		shader.surfaceFlags |= MATERIAL_MUD;
-	else if (StringContainsWord(*text, "ice"))
-		shader.surfaceFlags |= MATERIAL_ICE;
 
 	token = COM_ParseExt( text, qtrue );
 	if ( token[0] != '{' )
@@ -2707,6 +2670,102 @@ MATERIAL_COMPUTER		31			// computers/electronic equipment
 	//
 	if ( s == 0 && !shader.isSky && !(shader.contentFlags & CONTENTS_FOG ) ) {
 		return qfalse;
+	}
+
+	//
+	// UQ1: If we do not have any material type for this shader, try to guess as a backup (for parallax and specular settings)...
+	//
+
+	/*
+MATERIAL_SOLIDWOOD		1			// freshly cut timber
+MATERIAL_HOLLOWWOOD		2			// termite infested creaky wood
+MATERIAL_SOLIDMETAL		3			// solid girders
+MATERIAL_HOLLOWMETAL	4			// hollow metal machines
+MATERIAL_SHORTGRASS		5			// manicured lawn
+MATERIAL_LONGGRASS		6			// long jungle grass
+MATERIAL_DIRT			7			// hard mud
+MATERIAL_SAND			8			// sandy beach
+MATERIAL_GRAVEL			9			// lots of small stones
+MATERIAL_GLASS			10			//
+MATERIAL_CONCRETE		11			// hardened concrete pavement
+MATERIAL_MARBLE			12			// marble floors
+MATERIAL_WATER			13			// light covering of water on a surface
+MATERIAL_SNOW			14			// freshly laid snow
+MATERIAL_ICE			15			// packed snow/solid ice
+MATERIAL_FLESH			16			// hung meat, corpses in the world
+MATERIAL_MUD			17			// wet soil
+MATERIAL_BPGLASS		18			// bulletproof glass
+MATERIAL_DRYLEAVES		19			// dried up leaves on the floor
+MATERIAL_GREENLEAVES	20			// fresh leaves still on a tree
+MATERIAL_FABRIC			21			// Cotton sheets
+MATERIAL_CANVAS			22			// tent material
+MATERIAL_ROCK			23			//
+MATERIAL_RUBBER			24			// hard tire like rubber
+MATERIAL_PLASTIC		25			//
+MATERIAL_TILES			26			// tiled floor
+MATERIAL_CARPET			27			// lush carpet
+MATERIAL_PLASTER		28			// drywall style plaster
+MATERIAL_SHATTERGLASS	29			// glass with the Crisis Zone style shattering
+MATERIAL_ARMOR			30			// body armor
+MATERIAL_COMPUTER		31			// computers/electronic equipment
+	*/
+
+	if (!HaveSurfaceType(shader.surfaceFlags))
+	{
+		if (StringContainsWord(name, "reborn")) // Special case to make reborns reflective...
+			shader.surfaceFlags |= MATERIAL_PLASTIC;
+		if (StringContainsWord(name, "plastic") || StringContainsWord(name, "trooper") || StringContainsWord(name, "medpack") || StringContainsWord(name, "reborn"))
+			shader.surfaceFlags |= MATERIAL_PLASTIC;
+		else if (StringContainsWord(name, "metal") || StringContainsWord(name, "pipe") || StringContainsWord(name, "scope") || StringContainsWord(name, "blaster") || StringContainsWord(name, "pistol") || StringContainsWord(name, "thermal") || StringContainsWord(name, "bowcaster") || StringContainsWord(name, "cannon") || StringContainsWord(name, "saber") || StringContainsWord(name, "rifle") || StringContainsWord(name, "jetpack"))
+			shader.surfaceFlags |= MATERIAL_SOLIDMETAL;
+		else if (StringContainsWord(name, "glass") || StringContainsWord(name, "light"))
+			shader.surfaceFlags |= MATERIAL_GLASS;
+		else if (StringContainsWord(name, "sand"))
+			shader.surfaceFlags |= MATERIAL_SAND;
+		else if (StringContainsWord(name, "gravel"))
+			shader.surfaceFlags |= MATERIAL_GRAVEL;
+		else if (StringContainsWord(name, "dirt"))
+			shader.surfaceFlags |= MATERIAL_DIRT;
+		else if (StringContainsWord(name, "concrete"))
+			shader.surfaceFlags |= MATERIAL_CONCRETE;
+		else if (StringContainsWord(name, "marble") || StringContainsWord(name, "teeth") || StringContainsWord(name, "stucco"))
+			shader.surfaceFlags |= MATERIAL_MARBLE;
+		else if (StringContainsWord(name, "snow"))
+			shader.surfaceFlags |= MATERIAL_SNOW;
+		else if (StringContainsWord(name, "flesh") || StringContainsWord(name, "body") || StringContainsWord(name, "leg") || StringContainsWord(name, "hand") || StringContainsWord(name, "head") || StringContainsWord(name, "hips") || StringContainsWord(name, "torso") || StringContainsWord(name, "tentacles") || StringContainsWord(name, "face") || StringContainsWord(name, "arms"))
+			shader.surfaceFlags |= MATERIAL_FLESH;
+		else if (StringContainsWord(name, "canvas"))
+			shader.surfaceFlags |= MATERIAL_CANVAS;
+		else if (StringContainsWord(name, "rock"))
+			shader.surfaceFlags |= MATERIAL_ROCK;
+		else if (StringContainsWord(name, "rubber"))
+			shader.surfaceFlags |= MATERIAL_RUBBER;
+		else if (StringContainsWord(name, "carpet"))
+			shader.surfaceFlags |= MATERIAL_CARPET;
+		else if (StringContainsWord(name, "plaster"))
+			shader.surfaceFlags |= MATERIAL_PLASTER;
+		else if (StringContainsWord(name, "computer") || StringContainsWord(name, "console") || StringContainsWord(name, "button") || StringContainsWord(name, "terminal") || StringContainsWord(name, "switch") || StringContainsWord(name, "panel"))
+			shader.surfaceFlags |= MATERIAL_COMPUTER;
+		else if (StringContainsWord(name, "armor") || StringContainsWord(name, "armour"))
+			shader.surfaceFlags |= MATERIAL_ARMOR;
+		else if (StringContainsWord(name, "fabric"))
+			shader.surfaceFlags |= MATERIAL_FABRIC;
+		else if (StringContainsWord(name, "hood") || StringContainsWord(name, "robe") || StringContainsWord(name, "cloth") || StringContainsWord(name, "pants"))
+			shader.surfaceFlags |= MATERIAL_FABRIC;
+		else if (StringContainsWord(name, "tile") || StringContainsWord(name, "lift"))
+			shader.surfaceFlags |= MATERIAL_TILES;
+		else if (StringContainsWord(name, "leaf") || StringContainsWord(name, "leaves"))
+			shader.surfaceFlags |= MATERIAL_GREENLEAVES;
+		else if (StringContainsWord(name, "mud"))
+			shader.surfaceFlags |= MATERIAL_MUD;
+		else if (StringContainsWord(name, "ice"))
+			shader.surfaceFlags |= MATERIAL_ICE;
+		else if (StringContainsWord(name, "hair") || StringContainsWord(name, "chewbacca")) // use carpet
+			shader.surfaceFlags |= MATERIAL_CARPET;
+		else
+		{
+			ri->Printf(PRINT_WARNING, "Could not work out a default surface type for shader %s.\n", name);
+		}
 	}
 
 	shader.explicitlyDefined = qtrue;
@@ -4461,7 +4520,7 @@ shader_t *R_FindShader( const char *name, const int *lightmapIndexes, const byte
 			ri->Printf( PRINT_ALL, "*SHADER* %s\n", name );
 		}
 
-		if ( !ParseShader( &shaderText ) ) {
+		if ( !ParseShader( name, &shaderText ) ) {
 			// had errors, so use default shader
 			shader.defaultShader = qtrue;
 		}
