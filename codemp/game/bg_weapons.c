@@ -785,6 +785,8 @@ qboolean SniperRifleCharges ( int weapon )
 	switch (weapon)
 	{
 	case WP_A280:
+	case WP_DLT20A:
+	case WP_EE3:
 		return qfalse;
 	default:
 		break;
