@@ -2723,6 +2723,14 @@ static void R_CreateSpecularMap ( const char *name, byte *pic, int width, int he
 
 	//if (normalImage != NULL) ri->Printf(PRINT_WARNING, "Loaded real normal map file %s.\n", normalName);
 	//else ri->Printf(PRINT_WARNING, "No real normal map file %s.\n", normalName);
+
+	if (specularImage == NULL)
+	{
+		memset(specularName, 0, sizeof(specularName));
+		COM_StripExtension(name, specularName, MAX_QPATH);
+		Q_strcat(specularName, MAX_QPATH, "_spec");
+		specularImage = R_FindImageFile(specularName, IMGTYPE_SPECULAR, normalFlags);
+	}
 	
 #if 0
 	// if not, generate it
