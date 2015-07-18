@@ -23,6 +23,8 @@ stringID_table_t holsterTypeTable[] =
 	ENUM2STRING(HLR_REPEATER),		//repeater
 	ENUM2STRING(HLR_FLECHETTE),		//flechette
 	ENUM2STRING(HLR_DISRUPTOR),		//disruptor
+	ENUM2STRING(HLR_T21),			//t21
+	ENUM2STRING(HLR_A280),
 	ENUM2STRING(MAX_HOLSTER),
 
 	// All stringID tables need to end with this
@@ -132,6 +134,16 @@ holster_t defaultHolsterData[MAX_HOLSTER] =
 		HOLSTER_UPPERBACK,	//boneindex
 		{-5, -7, 3},		//posOffset
 		{-40, 0, 0},		//angOffset
+	}
+	{//HLR_T21
+		HOLSTER_UPPERBACK,	//boneindex
+		{-5, -7, 3},		//posOffset
+		{-40, 0, 0},		//angOffset
+	}
+	{//HLR_A280
+	HOLSTER_UPPERBACK,	//boneindex
+	{-5, -7, 3},		//posOffset
+	{-40, 0, 0},		//angOffset
 	},
 };
 */
