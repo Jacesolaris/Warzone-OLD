@@ -307,8 +307,10 @@ void main()
 
 #if defined(USE_LIGHT) && !defined(USE_FAST_LIGHT)
   #if defined(USE_VERT_TANGENT_SPACE)
-	mat3 tangentToWorld = mat3(var_Tangent.xyz, var_Bitangent.xyz, var_Normal.xyz);
-	viewDir = vec3(var_Normal.w, var_Tangent.w, var_Bitangent.w);
+	//mat3 tangentToWorld = mat3(var_Tangent.xyz, var_Bitangent.xyz, var_Normal.xyz);
+	//viewDir = vec3(var_Normal.w, var_Tangent.w, var_Bitangent.w);
+	mat3 tangentToWorld = cotangent_frame(var_Normal.xyz, -var_ViewDir, var_TexCoords.xy);
+	viewDir = var_ViewDir;
   #else
 	mat3 tangentToWorld = cotangent_frame(var_Normal.xyz, -var_ViewDir, var_TexCoords.xy);
 	//mat3 tangentToWorld = mat3(1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0);
@@ -328,7 +330,6 @@ void main()
 	viewDir = vec3(var_Normal.w, var_Tangent.w, var_Bitangent.w);
   #else
 	mat3 tangentToWorld = cotangent_frame(var_Normal.xyz, -var_ViewDir, var_TexCoords.xy);
-	//mat3 tangentToWorld = mat3(1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0);
 	viewDir = var_ViewDir;
   #endif
 	E = normalize(viewDir);
@@ -346,30 +347,27 @@ void main()
 #if defined(USE_PARALLAXMAP) || defined(USE_PARALLAXMAP_NONORMALS)
 	vec3 offsetDir = normalize(E * tangentToWorld);
 
-	offsetDir.xy *= tex_offset * -var_Local1.x;
+	//offsetDir.xy *= -u_NormalScale.a / offsetDir.z;
+	offsetDir.xy *= tex_offset * -var_Local1.x;//-4.0;//-5.0; // -3.0
 
-  #if defined(USE_PARALLAXMAP)
+  #if defined(USE_NORMALMAP)
 	texCoords += offsetDir.xy * RayIntersectDisplaceMap(texCoords, offsetDir.xy, u_NormalMap);
-  #endif //USE_PARALLAXMAP
-  #if defined(USE_PARALLAXMAP_NONORMALS)
+  #else
 	texCoords += offsetDir.xy * RayIntersectDisplaceMap(texCoords, offsetDir.xy, u_DiffuseMap);
-  #endif //USE_PARALLAXMAP_NONORMALS
+  #endif
 #endif //USE_PARALLAXMAP || USE_PARALLAXMAP_NONORMALS
 
 	vec4 diffuse = texture2D(u_DiffuseMap, texCoords);
 
-
 #if defined(USE_GAMMA2_TEXTURES)
 	diffuse.rgb *= diffuse.rgb;
 #endif
-
 
 #if defined(USE_PARALLAXMAP) || defined(USE_PARALLAXMAP_NONORMALS)
 	float fakedepth = SampleDepth(u_DiffuseMap, texCoords);
 #else
 	float fakedepth = (diffuse.r + diffuse.g + diffuse.b) / 3.0; // meh
 #endif
-
 
 #if defined(USE_LIGHT) && !defined(USE_FAST_LIGHT)
 	ambientColor = vec3 (0.0);
@@ -456,11 +454,19 @@ void main()
 	}
 	else
 	{// Fake it...
-		specular = vec4(1.0-fakedepth) * diffuse;
-		specular.a = ((clamp((1.0 - fakedepth), 0.0, 1.0) * 0.5) + 0.5);
-		specular.a = clamp((specular.a * 2.0) * specular.a, 0.2, 0.9);
-		//specular.a = 1.0;
+		if (var_Local1.b > 0.0)
+		{
+			specular = vec4(1.0-fakedepth) * diffuse;
+			specular.a = ((clamp((1.0 - fakedepth), 0.0, 1.0) * 0.5) + 0.5);
+			specular.a = clamp((specular.a * 2.0) * specular.a, 0.2, 0.9);
+			//specular.a = 1.0;
+		}
+		else
+		{
+			specular = vec4(1.0);
+		}
 	}
+
     #if defined(USE_GAMMA2_TEXTURES)
 	specular.rgb *= specular.rgb;
     #endif
@@ -468,8 +474,11 @@ void main()
 	vec4 specular = vec4(1.0);
   #endif
 
-	//specular *= u_SpecularScale;
-	specular.a *= var_Local1.b;
+	if (var_Local1.b > 0.0)
+		//specular.a *= var_Local1.b;
+		specular *= var_Local1.b;
+	else
+		specular *= u_SpecularScale;
 
 	float gloss = specular.a;
 	float shininess = exp2(gloss * 13.0);
@@ -508,8 +517,10 @@ void main()
     #endif
   #endif
 
-	gl_FragColor.rgb  = ((lightColor   * reflectance * (attenuation * NL)) + (lightColor   * (reflectance * specular.a) * (attenuation * NL))) / 2.0;
-	//gl_FragColor.rgb  = lightColor   * (reflectance * specular.a) * (attenuation * NL);
+	if (var_Local1.b > 0.0)
+		gl_FragColor.rgb  = ((lightColor   * reflectance * (attenuation * NL)) + (lightColor   * (reflectance * specular.a) * (attenuation * NL))) / 2.0;
+	else
+		gl_FragColor.rgb  = lightColor   * reflectance * (attenuation * NL);
 
 #if 0
 	vec3 aSpecular = EnvironmentBRDF(gloss, NE, specular.rgb);

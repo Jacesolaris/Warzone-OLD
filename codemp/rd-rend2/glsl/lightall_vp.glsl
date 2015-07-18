@@ -92,8 +92,8 @@ varying vec4   var_Tangent;
 varying vec4   var_Bitangent;
   #else
 varying vec3   var_Normal;
-varying vec3   var_ViewDir;
   #endif
+varying vec3   var_ViewDir;
 #endif
 
 #if defined(USE_LIGHT) && !defined(USE_FAST_LIGHT)
@@ -280,6 +280,7 @@ void main()
 
 #if defined(USE_LIGHT) && !defined(USE_FAST_LIGHT)
 	vec3 viewDir = u_ViewOrigin - position;
+	var_ViewDir = viewDir;
   #if defined(USE_VERT_TANGENT_SPACE)
 	// store view direction in tangent space to save on varyings
 	var_Normal    = vec4(normal,    viewDir.x);
@@ -287,7 +288,6 @@ void main()
 	var_Bitangent = vec4(bitangent, viewDir.z);
   #else
 	var_Normal = normal;
-	var_ViewDir = viewDir;
   #endif
 
   var_Dimensions = u_Dimensions;

@@ -2412,7 +2412,7 @@ MATERIAL_COMPUTER		31			// computers/electronic equipment
 		shader.surfaceFlags |= MATERIAL_CARPET;
 	else if (StringContainsWord(*text, "plaster"))
 		shader.surfaceFlags |= MATERIAL_PLASTER;
-	else if (StringContainsWord(*text, "computer") || StringContainsWord(*text, "console") || StringContainsWord(*text, "button"))
+	else if (StringContainsWord(*text, "computer") || StringContainsWord(*text, "console") || StringContainsWord(*text, "button") || StringContainsWord(*text, "terminal"))
 		shader.surfaceFlags |= MATERIAL_COMPUTER;
 	else if (StringContainsWord(*text, "armor") || StringContainsWord(*text, "armour"))
 		shader.surfaceFlags |= MATERIAL_ARMOR;
