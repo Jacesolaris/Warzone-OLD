@@ -252,10 +252,16 @@ void BASS_Shutdown ( void )
 	if (BASS_UPDATE_THREAD_RUNNING && thread::hardware_concurrency() > 1)
 	{// More then one CPU core. We need to shut down the update thread...
 		BASS_UPDATE_THREAD_STOP = qtrue;
-		BASS_MUSIC_UPDATE_THREAD_STOP = qtrue;
 
 		// Wait for update thread to finish...
 		BASS_UPDATE_THREAD->join();
+	}
+
+	if (BASS_MUSIC_UPDATE_THREAD && thread::hardware_concurrency() > 1)
+	{// More then one CPU core. We need to shut down the update thread...
+		BASS_MUSIC_UPDATE_THREAD_STOP = qtrue;
+	
+		// Wait for update thread to finish...
 		BASS_MUSIC_UPDATE_THREAD->join();
 	}
 
@@ -297,7 +303,7 @@ qboolean BASS_CheckSoundDisabled( void )
 			BASS_UPDATE_THREAD_STOP = qtrue;
 		}
 
-		if (BASS_MUSIC_UPDATE_THREAD_STOP && thread::hardware_concurrency() > 1)
+		if (BASS_MUSIC_UPDATE_THREAD_RUNNING && thread::hardware_concurrency() > 1)
 		{// More then one CPU core. We need to shut down the update thread...
 			BASS_MUSIC_UPDATE_THREAD_STOP = qtrue;
 		}
@@ -1301,13 +1307,13 @@ void BASS_UpdateDynamicMusic( void )
 {
 	if ( thread::hardware_concurrency() > 1 )
 	{
-		if (!BASS_MUSIC_UPDATE_THREAD_RUNNING)
+		if (!BASS_MUSIC_UPDATE_THREAD_RUNNING && !BASS_MUSIC_UPDATE_THREAD_STOP)
 		{
 			BASS_MUSIC_UPDATE_THREAD_RUNNING = qtrue;
 			BASS_MUSIC_UPDATE_THREAD = new thread (BASS_MusicUpdateThread, 0);
 		}
 	}
-	else
+	else if (!BASS_MUSIC_UPDATE_THREAD_STOP)
 	{
 		if (BASS_CheckSoundDisabled() || !s_soundStarted || !s_allowDynamicMusic->integer || MUSIC_LIST_UPDATING)
 		{// wait...
