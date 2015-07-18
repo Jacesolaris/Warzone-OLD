@@ -3,6 +3,23 @@
 #include "cg_local.h"
 #include "fx_local.h"
 
+void CG_PrecacheScopes(void)
+{
+	int sc = 0;
+
+	for (sc = 0; sc < SCOPE_MAX_SCOPES; sc++) { // this was trying to register "". hence cant find ""
+		if (strncmp(scopeData[sc].scopeModel, "", strlen(scopeData[sc].scopeModel))) trap->R_RegisterModel(scopeData[sc].scopeModel);
+		if (strncmp(scopeData[sc].scopeModelShader, "", strlen(scopeData[sc].scopeModelShader))) trap->R_RegisterShader(scopeData[sc].scopeModelShader);
+		if (strncmp(scopeData[sc].gunMaskShader, "", strlen(scopeData[sc].gunMaskShader))) trap->R_RegisterShader(scopeData[sc].gunMaskShader);
+		if (strncmp(scopeData[sc].insertShader, "", strlen(scopeData[sc].insertShader))) trap->R_RegisterShader(scopeData[sc].insertShader);
+		if (strncmp(scopeData[sc].maskShader, "", strlen(scopeData[sc].maskShader))) trap->R_RegisterShader(scopeData[sc].maskShader);
+		if (strncmp(scopeData[sc].lightShader, "", strlen(scopeData[sc].lightShader))) trap->R_RegisterShader(scopeData[sc].lightShader);
+		if (strncmp(scopeData[sc].tickShader, "", strlen(scopeData[sc].tickShader))) trap->R_RegisterShader(scopeData[sc].tickShader);
+		if (strncmp(scopeData[sc].chargeShader, "", strlen(scopeData[sc].chargeShader))) trap->R_RegisterShader(scopeData[sc].chargeShader);
+		if (strncmp(scopeData[sc].zoomStartSound, "", strlen(scopeData[sc].zoomStartSound))) trap->S_RegisterSound(scopeData[sc].zoomStartSound);
+		if (strncmp(scopeData[sc].zoomEndSound, "", strlen(scopeData[sc].zoomEndSound))) trap->S_RegisterSound(scopeData[sc].zoomEndSound);
+	}
+}
 
 /*
 =================
@@ -691,12 +708,6 @@ void CG_RegisterWeapon( int weaponNum) {
 
 		weaponInfo->wallImpactEffectEnhancedFX = trap->FX_RegisterEffect("blaster/wall_impact_enhanced2");
 		weaponInfo->altWallImpactEffectEnhancedFX = trap->FX_RegisterEffect("blaster/wall_impact_enhanced2");
-
-
-		//Need this later on for scope code
-		cgs.media.GunRifleMask = trap->R_RegisterShaderNoMip("gfx/2D/arcMask");
-		cgs.media.GunsMasks = trap->R_RegisterShaderNoMip("gfx/2d/a280cropCircle2");
-		cgs.media.GunInsert = trap->R_RegisterShaderNoMip("gfx/2d/a280cropCircle");
 		break;
 
 	case WP_DC_15S_CLONE_PISTOL:

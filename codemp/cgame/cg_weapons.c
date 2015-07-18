@@ -1037,9 +1037,9 @@ void CG_AddViewWeapon( playerState_t *ps ) {
 
 	// allow the gun to be completely removed
 	//[TrueView]
-	if (!cg_drawGun.integer || cg.predictedPlayerState.zoomMode || cg_trueguns.integer
+	if (!cg_drawGun.integer || cg.predictedPlayerState.scopeType || cg_trueguns.integer
 		|| cg.predictedPlayerState.weapon == WP_SABER || cg.predictedPlayerState.weapon == WP_MELEE) {
-		//if ( !cg_drawGun.integer || cg.predictedPlayerState.zoomMode) {
+		//if ( !cg_drawGun.integer || cg.predictedPlayerState.scopeType) {
 		//[/TrueView]
 		vec3_t		origin;
 

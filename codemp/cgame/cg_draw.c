@@ -181,7 +181,7 @@ static void CG_DrawZoomMask( void )
 	float max, fi;
 
 	// Check for Binocular specific zooming since we'll want to render different bits in each case
-	if ( cg.predictedPlayerState.zoomMode == 2 )
+	if ( cg.predictedPlayerState.scopeType == SCOPE_BINOCULARS )
 	{
 		int val, i;
 		float off;
@@ -279,7 +279,7 @@ static void CG_DrawZoomMask( void )
 			flip = !flip;
 		}
 	}
-	else if ( cg.predictedPlayerState.zoomMode)
+	else if ( cg.predictedPlayerState.scopeType)
 	{
 		// disruptor zoom mode
 		level = (float)(50.0f - zoomFov) / 50.0f;//(float)(80.0f - zoomFov) / 80.0f;
@@ -299,34 +299,9 @@ static void CG_DrawZoomMask( void )
 
 		// Draw target mask
 		trap->R_SetColor( colorTable[CT_WHITE] );
-		CG_DrawPic( 0, 0, 640, 480, cgs.media.disruptorMask );
 
-		if (cg.predictedPlayerState.zoomMode == 1)
-		{
-			CG_DrawPic(0, 0, 640, 480, cgs.media.disruptorMask);
-		}
-		else if (cg.predictedPlayerState.zoomMode == 3)
-		{
-			if (cg.predictedPlayerState.weapon == WP_BOWCASTER)
-			{
-				CG_DrawPic(0, 0, 640, 480, cgs.media.bowcasterMask);
-			}
-		}
-		else if (cg.predictedPlayerState.zoomMode == 4)
-		{
-			if (cg.predictedPlayerState.weapon == WP_EE3)
-			{
-				CG_DrawPic(0, 0, 640, 480, cgs.media.GunProjMask);
-			}
-			else if (cg.predictedPlayerState.weapon == WP_A280 || cg.predictedPlayerState.weapon == WP_DLT20A)
-			{
-				CG_DrawPic(0, 0, 640, 480, cgs.media.GunRifleMask);
-			}
-			else
-			{
-				CG_DrawPic(0, 0, 640, 480, cgs.media.GunsMasks);
-			}
-		}
+		if (strncmp(scopeData[cg.predictedPlayerState.scopeType].maskShader, "", strlen(scopeData[cg.predictedPlayerState.scopeType].maskShader)))
+			CG_DrawPic(0, 0, 640, 480, trap->R_RegisterShader(scopeData[cg.predictedPlayerState.scopeType].maskShader));// you left it here last night
 
 		// apparently 99.0f is the full zoom level
 		if ( level >= 99 )
@@ -341,58 +316,16 @@ static void CG_DrawZoomMask( void )
 		}
 
 		// Draw rotating insert
-		if (cg.predictedPlayerState.zoomMode == 1)
+		if (cg.predictedPlayerState.scopeType == SCOPE_SCOPE_DISRUPTOR)
 		{
-			CG_DrawRotatePic2(320, 240, 640, 480, -level, cgs.media.disruptorInsert);
+			if (strncmp(scopeData[cg.predictedPlayerState.scopeType].insertShader, "", strlen(scopeData[cg.predictedPlayerState.scopeType].insertShader)))
+				CG_DrawRotatePic2(320, 240, 640, 480, -level, trap->R_RegisterShader(scopeData[cg.predictedPlayerState.scopeType].insertShader));
 		}
-		else if (cg.predictedPlayerState.zoomMode == 3)
+		else
 		{
-			if (cg.predictedPlayerState.weapon == WP_BOWCASTER)
-			{
-				CG_DrawPic(0, 0, 640, 480, cgs.media.bowcasterInsert);
-			}
+			if (strncmp(scopeData[cg.predictedPlayerState.scopeType].insertShader, "", strlen(scopeData[cg.predictedPlayerState.scopeType].insertShader)))
+				CG_DrawPic(0, 0, 640, 480, trap->R_RegisterShader(scopeData[cg.predictedPlayerState.scopeType].insertShader));
 		}
-		else if (cg.predictedPlayerState.zoomMode == 4)
-		{
-			if (cg.predictedPlayerState.weapon == WP_EE3)
-			{
-				CG_DrawPic(0, 0, 640, 480, cgs.media.GunProjInsert);
-			}
-			else if (cg.predictedPlayerState.weapon == WP_A280 || cg.predictedPlayerState.weapon == WP_DLT20A)
-			{
-				//CG_DrawPic( 0, 0, 640, 480, cgs.media.arcRifleInsert );
-			}
-			else
-			{
-				CG_DrawPic(0, 0, 640, 480, cgs.media.GunInsert);
-			}
-		}
-
-		// Increase the light levels under the center of the target
-//		CG_DrawPic( 198, 118, 246, 246, cgs.media.disruptorLight );
-
-		// weirdness.....converting ammo to a base five number scale just to be geeky.
-/*		val[0] = ammo % 5;
-		val[1] = (ammo / 5) % 5;
-		val[2] = (ammo / 25) % 5;
-		val[3] = (ammo / 125) % 5;
-		val[4] = (ammo / 625) % 5;
-
-		color1[0] = 0.2f;
-		color1[1] = 0.55f + crandom() * 0.1f;
-		color1[2] = 0.5f + crandom() * 0.1f;
-		color1[3] = 1.0f;
-		trap->R_SetColor( color1 );
-
-		for ( int t = 0; t < 5; t++ )
-		{
-			cx = 320 + sin( (t*10+45)/57.296f ) * 192;
-			cy = 240 + cos( (t*10+45)/57.296f ) * 192;
-
-			CG_DrawRotatePic2( cx, cy, 24, 38, 45 - t * 10, trap->R_RegisterShader( va("gfx/2d/char%d",val[4-t] )));
-		}
-*/
-		//max = ( cg_entities[0].gent->health / 100.0f );
 
 		max = 1.0f;
 
@@ -426,7 +359,8 @@ static void CG_DrawZoomMask( void )
 			cx = 320 + sin( (fi+90.0f)/57.296f ) * 190;
 			cy = 240 + cos( (fi+90.0f)/57.296f ) * 190;
 
-			CG_DrawRotatePic2( cx, cy, 12, 24, 90 - fi, cgs.media.disruptorInsertTick );
+			if (strncmp(scopeData[cg.predictedPlayerState.scopeType].tickShader, "", strlen(scopeData[cg.predictedPlayerState.scopeType].tickShader)))
+				CG_DrawRotatePic2(cx, cy, 12, 24, 90 - fi, trap->R_RegisterShader(scopeData[cg.predictedPlayerState.scopeType].tickShader));
 		}
 
 		if ( cg.predictedPlayerState.weaponstate == WEAPON_CHARGING_ALT )
@@ -442,10 +376,9 @@ static void CG_DrawZoomMask( void )
 			}
 
 			trap->R_DrawStretchPic(257, 435, 134*max, 34, 0, 0, max, 1, cgs.media.disruptorChargeShader);
+			if (strncmp(scopeData[cg.predictedPlayerState.scopeType].chargeShader, "", strlen(scopeData[cg.predictedPlayerState.scopeType].chargeShader)))
+				trap->R_DrawStretchPic(257, 435, 134 * max, 34, 0, 0, max, 1, trap->R_RegisterShader(scopeData[cg.predictedPlayerState.scopeType].chargeShader));
 		}
-//		trap->R_SetColor( colorTable[CT_WHITE] );
-//		CG_DrawPic( 0, 0, 640, 480, cgs.media.disruptorMask );
-
 	}
 }
 
@@ -6574,7 +6507,7 @@ static void CG_DrawCrosshair( vec3_t worldPoint, int chEntValid ) {
 		return;
 	}
 
-	if ( cg.predictedPlayerState.zoomMode != 0 )
+	if ( cg.predictedPlayerState.scopeType != 0 )
 	{//not while scoped
 		return;
 	}
@@ -7312,7 +7245,7 @@ static void CG_DrawHolocronIcons(void)
 	int endx = icon_size;
 	int endy = icon_size;
 
-	if (cg.snap->ps.zoomMode)
+	if (cg.snap->ps.scopeType)
 	{ //don't display over zoom mask
 		return;
 	}
@@ -7367,7 +7300,7 @@ static void CG_DrawActivePowers(void)
 	int endx = icon_size;
 	int endy = icon_size;
 
-	if (cg.snap->ps.zoomMode)
+	if (cg.snap->ps.scopeType)
 	{ //don't display over zoom mask
 		return;
 	}

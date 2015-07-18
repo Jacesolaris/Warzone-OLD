@@ -1679,7 +1679,7 @@ void TryUse( gentity_t *ent )
 
 	if (target && target->m_pVehicle && target->client &&
 		target->s.NPC_class == CLASS_VEHICLE &&
-		!ent->client->ps.zoomMode)
+		!ent->client->ps.scopeType)
 	{ //if target is a vehicle then perform appropriate checks
 		Vehicle_t *pVeh = target->m_pVehicle;
 

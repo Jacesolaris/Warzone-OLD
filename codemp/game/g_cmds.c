@@ -12,6 +12,10 @@ void WP_SetSaber( int entNum, saberInfo_t *sabers, int saberNum, const char *sab
 void Cmd_NPC_f( gentity_t *ent );
 void SetTeamQuick(gentity_t *ent, int team, qboolean doBegin);
 
+//Firemode troggle
+//void Cmd_Troggle_Firemode_f(gentity_t *self);
+
+
 //[EXPsys]
 // But remember to update this structure as well.
 int experienceLevel[NUM_EXP_LEVELS] = {			// Experience needed to proceed to next level.
@@ -2851,7 +2855,7 @@ void StopFollowing( gentity_t *ent ) {
 	ent->client->ps.viewangles[ROLL] = 0.0f;
 	ent->client->ps.forceHandExtend = HANDEXTEND_NONE;
 	ent->client->ps.forceHandExtendTime = 0;
-	ent->client->ps.zoomMode = 0;
+	ent->client->ps.scopeType = SCOPE_NONE;
 	ent->client->ps.zoomLocked = 0;
 	ent->client->ps.zoomLockTime = 0;
 	ent->client->ps.saberMove = LS_NONE;
@@ -4821,6 +4825,12 @@ void Cmd_SaberAttackCycle_f(gentity_t *ent)
 	int selectLevel = 0;
 	//qboolean usingSiegeStyle = qfalse;
 
+	//if (ent->client->ps.weapon != WP_SABER)
+	//{ //If we don't have a saber in our hand but a weapon instead lets try use firemode instaed
+	//	Cmd_Troggle_Firemode_f(ent);
+	//	return;
+	//}
+
 	if ( !ent || !ent->client )
 	{
 		return;
@@ -5424,6 +5434,94 @@ void Cmd_Load_Dungeon_F(gentity_t *ent){
 	Load_Dungeon();
 }
 //[/Create Dungeon]
+
+//void Cmd_Troggle_Firemode_f(gentity_t *self)
+//{ //using this as a generic weapon mode switch now
+//	if (self && self->client)
+//	{
+//		switch (self->s.weapon) 
+//		{
+//		case WP_TESTGUN:
+//			if (self->client->firemodeTimer < level.time)
+//			{
+//				//Toggle weapon fire mode
+//				self->client->ps.eFlags = EF_ZOOM;
+//				self->client->firemodeTimer = level.time + 200;
+//			}
+//			break;
+//		case WP_WOOKIES_PISTOL:
+//			break;
+//		case WP_S5_PISTOL:
+//			break;
+//		case WP_ELG_3A:
+//			break;
+//		case WP_WESTER_PISTOL:
+//			break;
+//		case WP_BRYAR_OLD:
+//			break;
+//		case WP_BRYAR_PISTOL:
+//			break;
+//		case WP_CONCUSSION:
+//			break;
+//		case WP_CLONE_BLASTER:
+//			break;
+//		case WP_BLASTER:
+//			break;
+//		case WP_A280:
+//			break;
+//		case WP_DC15:
+//			break;
+//		case WP_WESTARM5:
+//			break;
+//		case WP_T21:
+//			break;
+//		case WP_EE3:
+//			break;
+//		case WP_DC_17_CLONE_PISTOL:
+//			break;
+//		case WP_DC_15S_CLONE_PISTOL:
+//			break;
+//		case WP_DLT20A:
+//			break;
+//		case WP_CLONERIFLE:
+//			break;
+//		case WP_Z6_BLASTER_CANON:
+//			break;
+//		case WP_WOOKIE_BOWCASTER:
+//			break;
+//		case WP_DC15_EXT:
+//			break;
+//		case WP_DISRUPTOR:
+//			break;
+//		case WP_BOWCASTER:
+//			break;
+//		case WP_REPEATER:
+//			break;
+//		case WP_DEMP2:
+//			break;
+//		case WP_FLECHETTE:
+//			break;
+//		case WP_E60_ROCKET_LAUNCHER:
+//			break;
+//		case WP_CW_ROCKET_LAUNCHER:
+//			break;
+//		case WP_ROCKET_LAUNCHER:
+//			break;
+//		case WP_FRAG_GRENADE_OLD:
+//			break;
+//		case WP_FRAG_GRENADE:
+//			break;
+//		case WP_THERMAL:
+//			break;
+//		case WP_TRIP_MINE:
+//			break;
+//		case WP_DET_PACK:
+//			break;
+//		default:
+//			break;
+//		}
+//	}
+//}
 
 /*
 =================

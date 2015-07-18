@@ -1853,7 +1853,7 @@ typedef struct playerState_s {
 	int			forceAllowDeactivateTime;
 
 	// zoom key
-	int			zoomMode;		// 0 - not zoomed, 1 - disruptor weapon
+	int			scopeType;		// 0 - not zoomed, scopeTypes_t;
 	int			zoomTime;
 	qboolean	zoomLocked;
 	float		zoomFov;

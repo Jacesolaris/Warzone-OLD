@@ -14615,7 +14615,7 @@ void CG_Player( centity_t *cent ) {
 			if ( ( !cg_trueguns.integer && cg.predictedPlayerState.weapon != WP_SABER 
 				&& cg.predictedPlayerState.weapon != WP_MELEE)
 				|| (cg.predictedPlayerState.weapon == WP_SABER && cg_trueSaberOnly.integer)
-				|| cg.predictedPlayerState.zoomMode)
+				|| cg.predictedPlayerState.scopeType)
 				/*
 				#if 0
 				if (!cg_fpls.integer || cent->currentState.weapon != WP_SABER)
@@ -14983,7 +14983,7 @@ void CG_Player( centity_t *cent ) {
 	if (cg.snap && cent->currentState.number == cg.snap->ps.clientNum)
 	{
 		if ( !cg.renderingThirdPerson && (cg_trueguns.integer || cent->currentState.weapon == WP_SABER 
-			|| cent->currentState.weapon == WP_MELEE) && !cg.predictedPlayerState.zoomMode)	
+			|| cent->currentState.weapon == WP_MELEE) && !cg.predictedPlayerState.scopeType)	
 		{
 			//<True View varibles
 			mdxaBone_t 		eyeMatrix;

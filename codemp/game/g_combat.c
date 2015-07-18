@@ -2767,7 +2767,7 @@ extern void RunEmplacedWeapon( gentity_t *ent, usercmd_t **ucmd );
 	{ //handled differently for NPCs
 		self->r.contents = CONTENTS_CORPSE;
 	}
-	self->client->ps.zoomMode = 0;	// Turn off zooming when we die
+	self->client->ps.scopeType = SCOPE_NONE;	// Turn off zooming when we die
 
 	//rww - 07/19/02 - I removed this because it isn't working and it's ugly (for people on the outside)
 	/*

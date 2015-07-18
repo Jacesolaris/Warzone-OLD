@@ -1379,6 +1379,9 @@ typedef struct cgMedia_s {
 	qhandle_t	GunProjInsert;
 	qhandle_t	bowcasterMask;
 	qhandle_t	bowcasterInsert;
+	qhandle_t	arcRifleMask;
+	qhandle_t	a280Mask;
+	qhandle_t	a280Insert;
 
 	// Binocular graphics
 	qhandle_t	binocularCircle;

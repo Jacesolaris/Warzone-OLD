@@ -2766,6 +2766,7 @@ void CG_PmoveClientPointerUpdate();
 
 void WP_SaberLoadParms( void );
 void BG_VehicleLoadParms( void );
+extern void CG_PrecacheScopes(void);
 
 /*
 =================
@@ -2800,6 +2801,7 @@ Ghoul2 Insert Start
 //	memset( &cg, 0, sizeof( cg ) );
 	CG_Init_CG();
 	CG_InitItems();
+	CG_PrecacheScopes();
 
 	//create the global jetpack instance
 	CG_InitJetpackGhoul2();

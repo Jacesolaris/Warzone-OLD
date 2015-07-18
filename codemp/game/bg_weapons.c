@@ -799,3 +799,19 @@ qboolean HaveWeapon ( playerState_t *ps, int weapon )
 
 	return qfalse;
 }
+
+// NOTE: "" means unused/ignore
+scopeData_t scopeData[] = {
+	// char	scopename[64],							char scopeModel[128],							char scopeModelShader[128],						char gunMaskShader[128],				char	maskShader[128],					char	insertShader[128],					char	lightShader[128],						char	tickShader[128],				char	chargeShader[128],				char	zoomStartSound[128],				char	zoomEndSound[128]
+	"No Scope",										"",												"",												"",										"",											"",											"",												"",										"",										"",											"",
+	"Binoculars",									"",												"",												"",										"",											"",											"",												"",										"",										"sound/interface/zoomstart.wav",			"sound/interface/zoomend.wav",
+	"Short Range Viewfinder",						"",												"",												"",										"",											"",											"",												"",										"",										"",											"",
+	"Mid Range Viewfinder",							"",												"",												"",										"",											"",											"",												"",										"",										"",											"",
+	"Tenloss Disruptor Scope",						"",												"",												"",  									"gfx/2d/cropCircle2",						"gfx/2d/cropCircle",						"gfx/2d/cropCircleGlow",						"gfx/2d/insertTick",					"gfx/2d/crop_charge",					"sound/weapons/disruptor/zoomstart.wav",	"sound/weapons/disruptor/zoomend.wav",
+	"Blastech Bowcaster Scope",						"",												"",												"",										"gfx/2d/bowMask",							"gfx/2d/bowInsert",							"",												"",										"",										"sound/weapons/disruptor/zoomstart.wav",	"sound/weapons/disruptor/zoomend.wav", // probably wrong. needs research
+	"Blastech EE3 Scope",							"",												"",												"",										"gfx/2d/fett/cropCircle2",					"gfx/2d/fett/cropCircle",					"gfx/2d/fett/cropCircleGlow",					"",										"gfx/2d/fett/crop_charge",				"sound/weapons/disruptor/zoomstart.wav",	"sound/weapons/disruptor/zoomend.wav",
+	"Blastecg A280 Scope",							"",												"",												"gfx/2D/arcMask",						"gfx/2d/a280cropCircle2",					"gfx/2d/a280cropCircle",					"",												"",										"",										"sound/weapons/disruptor/zoomstart.wav",	"sound/weapons/disruptor/zoomend.wav",
+	"Blastech DLT 20A Scope",						"",												"",												"gfx/2D/arcMask",						"gfx/2d/a280cropCircle2",					"gfx/2d/a280cropCircle",					"",												"",										"",										"sound/weapons/disruptor/zoomstart.wav",	"sound/weapons/disruptor/zoomend.wav",
+	/*"Type 4 Scope",									"",												"",												"gfx/2D/arcMask",						"gfx/2d/a280cropCircle2",					"gfx/2d/a280cropCircle",					"",												"",										"",										"sound/weapons/disruptor/zoomstart.wav",	"sound/weapons/disruptor/zoomend.wav",
+	"Type 5 Scope",									"",												"",												"gfx/2D/arcMask",						"gfx/2d/a280cropCircle2",					"gfx/2d/a280cropCircle",					"",												"",										"",										"sound/weapons/disruptor/zoomstart.wav",	"sound/weapons/disruptor/zoomend.wav",*/
+};

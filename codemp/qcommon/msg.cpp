@@ -1363,7 +1363,7 @@ netField_t	playerStateFields[] =
 { PSF(hasDetPackPlanted), 1 },
 { PSF(saberInFlight), 1 },
 { PSF(forceDodgeAnim), 16 },
-{ PSF(zoomMode), 2 }, // NOTENOTE Are all of these necessary?
+{ PSF(scopeType), 8 }, // NOTENOTE Are all of these necessary? -- UQ1: Raised to 8. Enough for 256
 { PSF(hackingTime), 32 },
 { PSF(zoomTime), 32 },	// NOTENOTE Are all of these necessary?
 { PSF(brokenLimbs), 8 }, //up to 8 limbs at once (not that that many are used)
@@ -1543,7 +1543,7 @@ netField_t	pilotPlayerStateFields[] =
 { PSF(damagePitch), 8 },
 { PSF(jumppad_ent), GENTITYNUM_BITS },
 { PSF(forceDodgeAnim), 16 },
-{ PSF(zoomMode), 2 }, // NOTENOTE Are all of these necessary?
+{ PSF(scopeType), 8 }, // NOTENOTE Are all of these necessary? -- UQ1: Raised to 8. Enough for 256
 { PSF(hackingTime), 32 },
 { PSF(zoomTime), 32 },	// NOTENOTE Are all of these necessary?
 { PSF(brokenLimbs), 8 }, //up to 8 limbs at once (not that that many are used)
@@ -1789,7 +1789,7 @@ netField_t	playerStateFields[] =
 { PSF(hasDetPackPlanted), 1 },
 { PSF(saberInFlight), 1 },
 { PSF(forceDodgeAnim), 16 },
-{ PSF(zoomMode), 2 }, // NOTENOTE Are all of these necessary?
+{ PSF(scopeType), 8 }, // NOTENOTE Are all of these necessary? -- UQ1: Raised to 8. Enough for 256
 { PSF(hackingTime), 32 },
 { PSF(zoomTime), 32 },	// NOTENOTE Are all of these necessary?
 { PSF(brokenLimbs), 8 }, //up to 8 limbs at once (not that that many are used)

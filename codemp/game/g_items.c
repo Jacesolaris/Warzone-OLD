@@ -496,15 +496,15 @@ void ItemUse_Binoculars(gentity_t *ent)
 	}
 	*/
 
-	if (ent->client->ps.zoomMode == 0) // not zoomed or currently zoomed with the disruptor
+	if (ent->client->ps.scopeType == SCOPE_NONE) // not zoomed or currently zoomed with the disruptor
 	{
-		ent->client->ps.zoomMode = 2;
+		ent->client->ps.scopeType = SCOPE_BINOCULARS;
 		ent->client->ps.zoomLocked = qfalse;
 		ent->client->ps.zoomFov = 40.0f;
 	}
-	else if (ent->client->ps.zoomMode == 2)
+	else if (ent->client->ps.scopeType == SCOPE_BINOCULARS)
 	{
-		ent->client->ps.zoomMode = 0;
+		ent->client->ps.scopeType = SCOPE_NONE;
 		ent->client->ps.zoomTime = level.time;
 	}
 }

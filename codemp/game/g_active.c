@@ -1391,7 +1391,7 @@ void G_CheckClientIdle( gentity_t *ent, usercmd_t *ucmd )
 		|| ent->client->ps.weaponTime > 0
 		|| ent->client->ps.weaponstate == WEAPON_CHARGING
 		|| ent->client->ps.weaponstate == WEAPON_CHARGING_ALT
-		|| ent->client->ps.zoomMode
+		|| ent->client->ps.scopeType
 		|| (ent->client->ps.weaponstate != WEAPON_READY && ent->client->ps.weapon != WP_SABER)
 		|| ent->client->ps.forceHandExtend != HANDEXTEND_NONE
 		|| ent->client->ps.saberBlocked != BLOCKED_NONE
@@ -1404,7 +1404,7 @@ void G_CheckClientIdle( gentity_t *ent, usercmd_t *ucmd )
 		if ( !VectorCompare( vec3_origin, ent->client->ps.velocity )
 			|| actionPressed || ucmd->forwardmove || ucmd->rightmove || ucmd->upmove
 			|| (ent->health+ent->client->ps.stats[STAT_ARMOR]) != ent->client->idleHealth
-			|| ent->client->ps.zoomMode
+			|| ent->client->ps.scopeType
 			|| (ent->client->ps.weaponstate != WEAPON_READY && ent->client->ps.weapon != WP_SABER)
 			|| (ent->client->ps.weaponTime > 0 && ent->client->ps.weapon == WP_SABER)
 			|| ent->client->ps.weaponstate == WEAPON_CHARGING
@@ -3459,7 +3459,7 @@ void ClientThink_real( gentity_t *ent ) {
 				G_ItemUsable(&ent->client->ps, HI_BINOCULARS) )
 			{
 				ItemUse_Binoculars(ent);
-				if (ent->client->ps.zoomMode == 0)
+				if (ent->client->ps.scopeType == SCOPE_NONE)
 				{
 					G_AddEvent(ent, EV_USE_ITEM0+HI_BINOCULARS, 1);
 				}
@@ -3474,7 +3474,7 @@ void ClientThink_real( gentity_t *ent ) {
 				G_ItemUsable(&ent->client->ps, HI_BINOCULARS) )
 			{
 				ItemUse_Binoculars(ent);
-				if (ent->client->ps.zoomMode == 0)
+				if (ent->client->ps.scopeType == SCOPE_NONE)
 				{
 					G_AddEvent(ent, EV_USE_ITEM0+HI_BINOCULARS, 1);
 				}
@@ -3500,7 +3500,7 @@ void ClientThink_real( gentity_t *ent ) {
 				ItemUse_Jetpack(ent);
 				G_AddEvent(ent, EV_USE_ITEM0+HI_JETPACK, 0);
 				/*
-				if (ent->client->ps.zoomMode == 0)
+				if (ent->client->ps.scopeType == SCOPE_NONE)
 				{
 					G_AddEvent(ent, EV_USE_ITEM0+HI_BINOCULARS, 1);
 				}

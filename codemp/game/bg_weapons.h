@@ -4,6 +4,9 @@
 //
 // This crosses both client and server.  It could all be crammed into bg_public, but isolation of this type of data is best.
 
+#ifndef WEAPONS_H
+#define WEAPONS_H
+
 typedef enum {
 	WP_NONE,
 
@@ -160,3 +163,41 @@ extern weaponData_t weaponData[WP_NUM_WEAPONS];
 #define DEFAULT_SHOTGUN_COUNT	11
 
 #define	LIGHTNING_RANGE		768
+
+typedef enum {
+	SCOPE_NONE,
+	SCOPE_BINOCULARS,
+	SCOPE_IRONSIGHT_SHORT,
+	SCOPE_IRONSIGHT_MID,
+	SCOPE_SCOPE_DISRUPTOR,
+	SCOPE_SCOPE_BOWCASTER, // these should be renamed to some "scope company/model names"
+	SCOPE_SCOPE_EE3_BLASTTECH_SHORT, // rename this - eg: SCOPE_CLASS_BLASTECH_EE3_SHORT or whatever
+	SCOPE_SCOPE_A280_BLASTTECH_LONG_SHORT, // rename this
+	SCOPE_SCOPE_DLT20A_BLASTTECH_LONG_SHORT, // rename this
+	SCOPE_SCOPE_TYPE4, // Add anything you want. rename as you want.
+	SCOPE_SCOPE_TYPE5,
+	SCOPE_MAX_SCOPES
+} scopeTypes_t;
+
+typedef struct scopeData_s
+{
+	char	scopename[64];
+	char	scopeModel[128];		// For the md3 we attach to tag_scope later
+	char	scopeModelShader[128];	// For alternate shader to use on attached scope later
+	char	gunMaskShader[128];
+	char	maskShader[128];
+	char	insertShader[128];
+	char	lightShader[128];
+	char	tickShader[128];
+	char	chargeShader[128];
+	char	zoomStartSound[128];
+	char	zoomEndSound[128];
+} scopeData_t;
+
+extern scopeData_t scopeData[];
+
+/*
+
+*/
+
+#endif //WEAPONS_H

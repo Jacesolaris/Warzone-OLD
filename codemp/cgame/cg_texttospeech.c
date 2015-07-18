@@ -31,8 +31,8 @@ typedef enum
 
 typedef struct ttsVoiceData_s
 {
-	char	voicename[32];		// Voice Name
-	char	description[128];	// Full Voice Description
+	char	voicename[32+1];		// Voice Name
+	char	description[128+1];	// Full Voice Description
 	int		gender;
 	int		age;
 } ttsVoiceData_t;

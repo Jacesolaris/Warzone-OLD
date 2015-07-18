@@ -1206,7 +1206,7 @@ static int CG_CalcFov( void ) {
 			}
 		}
 
-		if (cg.predictedPlayerState.zoomMode == 2)
+		if (cg.predictedPlayerState.scopeType == SCOPE_BINOCULARS)
 		{ //binoculars
 			if (zoomFov > 40.0f)
 			{
@@ -1224,7 +1224,7 @@ static int CG_CalcFov( void ) {
 
 			fov_x = zoomFov;
 		}
-		else if (cg.predictedPlayerState.zoomMode)
+		else if (cg.predictedPlayerState.scopeType)
 		{
 			if (!cg.predictedPlayerState.zoomLocked)
 			{
@@ -1305,7 +1305,7 @@ static int CG_CalcFov( void ) {
 	cg.refdef.fov_x = fov_x;
 	cg.refdef.fov_y = fov_y;
 
-	if (cg.predictedPlayerState.zoomMode)
+	if (cg.predictedPlayerState.scopeType)
 	{
 		cg.zoomSensitivity = zoomFov/cgFov;
 	}
@@ -1829,13 +1829,13 @@ void CG_DrawSkyBoxPortal(const char *cstr)
 			fov_x = 160;
 		}
 
-		if (cg.predictedPlayerState.zoomMode)
+		if (cg.predictedPlayerState.scopeType)
 		{
 			fov_x = zoomFov;
 		}
 
 		// do smooth transitions for zooming
-		if (cg.predictedPlayerState.zoomMode)
+		if (cg.predictedPlayerState.scopeType)
 		{ //zoomed/zooming in
 			f = ( cg.time - cg.zoomTime ) / (float)ZOOM_OUT_TIME;
 			if ( f > 1.0 ) {
@@ -2677,7 +2677,7 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 		}
 		*/
 		//[/TrueView]
-		else if (cg.snap->ps.zoomMode)
+		else if (cg.snap->ps.scopeType)
 		{ //always force first person when zoomed
 			cg.renderingThirdPerson = qfalse;
 		}
@@ -2701,7 +2701,7 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 	{
 		trap->R_SetRangedFog(-cg_linearFogOverride);
 	}
-	else if (cg.predictedPlayerState.zoomMode)
+	else if (cg.predictedPlayerState.scopeType)
 	{ //zooming with binoculars or sniper, set the fog range based on the zoom level -rww
 		cg_rangedFogging = qtrue;
 		//smaller the fov the less fog we have between the view and cull dist
