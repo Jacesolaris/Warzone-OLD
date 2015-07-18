@@ -26,6 +26,7 @@ static vec3_t muzzle;
 #define BLASTER_SPREAD				1.6f//1.2f
 #define BLASTER_VELOCITY			2300
 #define BLASTER_DAMAGE				20
+#define BLASTER_CANON_DAMAGE		5
 
 // Tenloss Disruptor
 //----------
@@ -5039,7 +5040,7 @@ void FireWeapon( gentity_t *ent, qboolean altFire ) {
 			if (altFire)
 				WP_FireBlobGrenade(ent);
 			else
-			WP_FireBlaster(ent, altFire, BLASTER_VELOCITY, BLASTER_DAMAGE, BLASTER_SPREAD, ent->s.weapon);
+				WP_FireBlaster(ent, altFire, BLASTER_VELOCITY, BLASTER_CANON_DAMAGE, BLASTER_SPREAD, ent->s.weapon);
 			break;
 			/*WP_FireRepeater(ent, altFire);
 			break;*/

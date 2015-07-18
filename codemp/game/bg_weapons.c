@@ -81,7 +81,7 @@ weaponData_t weaponData[WP_NUM_WEAPONS] = {
 	{ "T-21 Blaster Rifle",				AMMO_BLASTER,		5,			2,				350/*550*/,	8192,		3,					250,			8192,		0,				0,					0,			0,				0,			0	},
 	{ "EE-3 Blaster Rifle",				AMMO_BLASTER,		5,			2,				250,		8192,		3,					1200,			8192,		0,				0,					0,			0,				0,			0	},
 	{ "DC-15-S Blaster Pistol",			AMMO_POWERCELL,		5,			8,				450,		8192,		6,					900,			8192,		0,				250,				0,			3,				0,			2100	},
-	{ "DLT-20-A Blaster Rifle",			AMMO_BLASTER,		5,			2,				550,		8192,		3,					1200,			8192,		0,				0,					0,			0,				0,			0	},
+	{ "DLT-20-A Blaster Rifle",			AMMO_BLASTER,		5,			2,				350,		8192,		3,					1200,			8192,		0,				0,					0,			0,				0,			0	},
 	{ "Clone Trooper Rifle",			AMMO_BLASTER,		5,			8,				250/*200*/,	8192,		6,					900,			8192,		0,				250,				0,			3,				0,			2100	},
 	{ "Wester Pistol",					AMMO_BLASTER,		15,			2,				400,		8192,		2,					400,			8192,		0,				200,				0,			1,				0,			1500	},
 	{ "ELG-3A Pistol",					AMMO_BLASTER,		15,			2,				400,		8192,		2,					400,			8192,		0,				200,				0,			1,				0,			1500	},
