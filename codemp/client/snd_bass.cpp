@@ -49,6 +49,8 @@ qboolean BASS_MUSIC_UPDATE_THREAD_STOP = qfalse;
 thread *BASS_UPDATE_THREAD;
 thread *BASS_MUSIC_UPDATE_THREAD;
 
+extern qboolean FS_STARTUP_COMPLETE; // needed for multi-threading...
+
 // channel (sample/music) info structure
 typedef struct {
 	DWORD			channel, originalChannel;			// the channel
@@ -745,6 +747,12 @@ void BASS_UpdateThread(void * aArg)
 {
 	while (!BASS_UPDATE_THREAD_STOP)
 	{
+		while (!FS_STARTUP_COMPLETE)
+		{
+			this_thread::sleep_for(chrono::milliseconds(100));
+			continue;
+		}
+
 		BASS_UpdateSounds_REAL();
 
 		this_thread::sleep_for(chrono::milliseconds(10));
@@ -1275,7 +1283,7 @@ void BASS_MusicUpdateThread( void * aArg )
 			break;
 		}
 
-		if (!s_soundStarted || !s_allowDynamicMusic->integer || MUSIC_LIST_UPDATING)
+		if (!FS_STARTUP_COMPLETE || !s_soundStarted || !s_allowDynamicMusic->integer || MUSIC_LIST_UPDATING)
 		{// wait...
 			this_thread::sleep_for(chrono::milliseconds(100));
 			continue;

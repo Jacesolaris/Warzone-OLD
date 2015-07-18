@@ -3415,8 +3415,12 @@ static void FS_ReorderPurePaks()
 FS_Startup
 ================
 */
+qboolean FS_STARTUP_COMPLETE = qfalse;
+
 void FS_Startup( const char *gameName ) {
 	const char *homePath;
+
+	FS_STARTUP_COMPLETE = qfalse;
 
 	Com_Printf( "----- FS_Startup -----\n" );
 
@@ -3509,6 +3513,8 @@ void FS_Startup( const char *gameName ) {
 	}
 #endif
 	Com_Printf( "%d files in pk3 files\n", fs_packFiles );
+
+	FS_STARTUP_COMPLETE = qtrue;
 }
 
 /*
