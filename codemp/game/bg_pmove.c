@@ -6592,7 +6592,7 @@ static qboolean PM_DoChargedWeapons( qboolean vehicleRocketLock, bgEntity_t *veh
 				}
 			}
 
-			if (pm->ps->scopeType != 1 &&
+			if (pm->ps->scopeType <= SCOPE_BINOCULARS &&
 				pm->ps->weaponstate == WEAPON_CHARGING_ALT)
 			{
 				pm->ps->weaponstate = WEAPON_READY;
@@ -7935,7 +7935,7 @@ static void PM_Weapon( void )
 
 	if (((pm->ps->torsoAnim) == TORSO_WEAPONREADY4 ||
 		(pm->ps->torsoAnim) == BOTH_ATTACK4) &&
-		(!IsSniperRifle(pm->ps->weapon) || pm->ps->scopeType != 1))
+		(!IsSniperRifle(pm->ps->weapon) || pm->ps->scopeType <= SCOPE_BINOCULARS))
 	{
 		if (pm->ps->weapon == WP_EMPLACED_GUN)
 		{
@@ -8296,7 +8296,7 @@ static void PM_Weapon( void )
 			PM_AddEvent( EV_FIRE_WEAPON );
 			addTime = weaponData[pm->ps->weapon].fireTime;
 		}
-		else if (IsSniperRifle(pm->ps->weapon) && pm->ps->scopeType != 1)
+		else if (IsSniperRifle(pm->ps->weapon) && pm->ps->scopeType <= SCOPE_BINOCULARS)
 		{
 			PM_AddEvent( EV_FIRE_WEAPON );
 			addTime = weaponData[pm->ps->weapon].fireTime;
@@ -8715,8 +8715,8 @@ void PM_AdjustAttackStates( pmove_t *pmove )
 	// disruptor alt-fire should toggle the zoom mode, but only bother doing this for the player?
 	if ( IsSniperRifle(pmove->ps->weapon) && pmove->ps->weaponstate == WEAPON_READY )
 	{
-		if ( !(pmove->ps->eFlags & EF_ALT_FIRING) && (pmove->cmd.buttons & BUTTON_ALT_ATTACK) /*&&
-			pmove->cmd.upmove <= 0 && !pmove->cmd.forwardmove && !pmove->cmd.rightmove*/)
+		if ( !(pmove->ps->eFlags & EF_ALT_FIRING) && (pmove->cmd.buttons & BUTTON_ALT_ATTACK) &&
+			pmove->cmd.upmove <= 0 && !pmove->cmd.forwardmove && !pmove->cmd.rightmove)
 		{
 			// We just pressed the alt-fire key
 			if ( !pmove->ps->scopeType && pmove->ps->pm_type != PM_DEAD )
@@ -8751,7 +8751,7 @@ void PM_AdjustAttackStates( pmove_t *pmove )
 				pmove->ps->zoomLockTime = pmove->cmd.serverTime + 50;
 				PM_AddEvent(EV_DISRUPTOR_ZOOMSOUND);
 			}
-			else if (pmove->ps->scopeType <= SCOPE_BINOCULARS && pmove->ps->zoomLockTime < pmove->cmd.serverTime)
+			else if (pmove->ps->scopeType > SCOPE_BINOCULARS && pmove->ps->zoomLockTime < pmove->cmd.serverTime)
 			{ //check for == 1 so we can't turn binoculars off with disruptor alt fire
 				// already zooming, so must be wanting to turn it off
 				pmove->ps->scopeType = SCOPE_NONE;
@@ -8791,9 +8791,7 @@ void PM_AdjustAttackStates( pmove_t *pmove )
 			pmove->cmd.buttons |= BUTTON_ATTACK;
 		}
 		*/
-
-		/*
-		if (pmove->cmd.upmove > 0 || pmove->cmd.forwardmove || pmove->cmd.rightmove)
+		else if (pmove->cmd.upmove > 0 || pmove->cmd.forwardmove || pmove->cmd.rightmove)
 		{
 			if (pmove->ps->scopeType > SCOPE_BINOCULARS && pmove->ps->zoomLockTime < pmove->cmd.serverTime)
 			{ //check for == 1 so we can't turn binoculars off with disruptor alt fire
@@ -8803,9 +8801,8 @@ void PM_AdjustAttackStates( pmove_t *pmove )
 				PM_AddEvent(EV_DISRUPTOR_ZOOMSOUND);
 			}
 		}
-		*/
+		
 	}
-	/*
 	else if (IsSniperRifle(pmove->ps->weapon)) //still perform certain checks, even if the weapon is not ready
 	{
 		if (pmove->cmd.upmove > 0 || pmove->cmd.forwardmove || pmove->cmd.rightmove)
@@ -8819,7 +8816,6 @@ void PM_AdjustAttackStates( pmove_t *pmove )
 			}
 		}
 	}
-	*/
 
 	// set the firing flag for continuous beam weapons, saber will fire even if out of ammo
 	if ( !(pmove->ps->pm_flags & PMF_RESPAWNED) &&

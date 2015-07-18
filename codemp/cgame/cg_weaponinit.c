@@ -7,7 +7,7 @@ void CG_PrecacheScopes(void)
 {
 	int sc = 0;
 
-	for (sc = 0; sc < SCOPE_MAX_SCOPES; sc++) { // this was trying to register "". hence cant find ""
+	for (sc = 0; sc < SCOPE_MAX_SCOPES; sc++) {
 		if (strncmp(scopeData[sc].scopeModel, "", strlen(scopeData[sc].scopeModel))) trap->R_RegisterModel(scopeData[sc].scopeModel);
 		if (strncmp(scopeData[sc].scopeModelShader, "", strlen(scopeData[sc].scopeModelShader))) trap->R_RegisterShader(scopeData[sc].scopeModelShader);
 		if (strncmp(scopeData[sc].gunMaskShader, "", strlen(scopeData[sc].gunMaskShader))) trap->R_RegisterShader(scopeData[sc].gunMaskShader);

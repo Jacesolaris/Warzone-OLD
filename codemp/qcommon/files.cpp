@@ -2163,13 +2163,19 @@ static pack_t *FS_LoadZipFile( const char *zipfile, const char *basename )
 	int				*fs_headerLongs;
 	char			*namePtr;
 
+	FS_WaitForThreads();
+	FS_IN_USE = qtrue;
+
 	fs_numHeaderLongs = 0;
 
 	uf = unzOpen(zipfile);
 	err = unzGetGlobalInfo (uf,&gi);
 
 	if (err != UNZ_OK)
+	{
+		FS_IN_USE = qfalse;
 		return NULL;
+	}
 
 	len = 0;
 	unzGoToFirstFile(uf);
@@ -2245,6 +2251,7 @@ static pack_t *FS_LoadZipFile( const char *zipfile, const char *basename )
 	Z_Free(fs_headerLongs);
 
 	pack->buildBuffer = buildBuffer;
+	FS_IN_USE = qfalse;
 	return pack;
 }
 
@@ -3063,6 +3070,8 @@ static void FS_AddGameDirectory( const char *path, const char *dir ) {
 	int				numfiles;
 	char			**pakfiles;
 	char			*sorted[MAX_PAKFILES];
+
+	FS_WaitForThreads();
 
 	// this fixes the case where fs_basepath is the same as fs_cdpath
 	// which happens on full installs
