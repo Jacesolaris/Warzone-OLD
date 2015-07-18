@@ -3732,6 +3732,20 @@ void WP_FireMelee( gentity_t *ent, qboolean alt_fire )
 	{// UQ1: Added... At close range NPCs can hit you with their rifle butt...
 	
 	}
+	else if ( ent->s.eType == ET_PLAYER
+		&& ent->s.weapon != WP_SABER 
+		&& ent->client
+		&& (ent->client->pers.cmd.buttons & BUTTON_BLOCK))
+	{// UQ1: Added... At close range players can hit you with their rifle butt...
+
+	}
+	else if ( ent->s.eType == ET_PLAYER
+		&& ent->s.weapon != WP_SABER 
+		&& ent->client
+		&& (ent->client->pers.cmd.buttons & BUTTON_DODGE))
+	{// UQ1: Added... At close range players can kick you...
+
+	}
 	else if (ent->client && ent->client->ps.torsoAnim == BOTH_MELEE2)
 	{ //right
 		if (ent->client->ps.brokenLimbs & (1 << BROKENLIMB_RARM))
@@ -3804,8 +3818,10 @@ void WP_FireMelee( gentity_t *ent, qboolean alt_fire )
 				dmg *= 2;
 			}
 
-			if ( ent->s.weapon != WP_MELEE )
+			if ( ent->s.weapon != WP_MELEE && ent->s.eType == ET_NPC )
 				dmg *= 4; // UQ1: (NPCs) Hitting with rifle but does more damage...
+			else if ( ent->s.weapon != WP_MELEE && ent->s.eType != ET_NPC )
+				dmg *= 1.5; // UQ1: (Players) Hitting with rifle but does more damage...
 
 			G_Damage( tr_ent, ent, ent, forward, tr.endpos, dmg, DAMAGE_NO_ARMOR, MOD_MELEE );
 		}
@@ -3903,7 +3919,10 @@ void CalcMuzzlePoint ( gentity_t *ent, vec3_t forward, vec3_t right, vec3_t up, 
 	weapontype = ent->s.weapon;
 	VectorCopy( ent->s.pos.trBase, muzzlePoint );
 
-	VectorCopy(WP_MuzzlePoint[weapontype], muzzleOffPoint);
+	if (ent->client->ps.scopeType > SCOPE_NONE)
+		VectorSet(muzzleOffPoint, 0, 0, 0);
+	else
+		VectorCopy(WP_MuzzlePoint[weapontype], muzzleOffPoint);
 
 
 	if (weapontype > WP_NONE && weapontype < WP_NUM_WEAPONS)
@@ -4911,6 +4930,22 @@ void FireWeapon( gentity_t *ent, qboolean altFire ) {
 			&& Distance(ent->enemy->r.currentOrigin, ent->r.currentOrigin) <= 72)
 		{// UQ1: Added... At close range NPCs can hit you with their rifle butt...
 			WP_FireMelee( ent, (qboolean)irand(0,1) /*altFire*/);
+			return;
+		}
+		else if ( ent->s.eType == ET_PLAYER
+			&& ent->s.weapon != WP_SABER 
+			&& ent->client
+			&& (ent->client->pers.cmd.buttons & BUTTON_BLOCK))
+		{// UQ1: Added... At close range players can hit you with their rifle butt...
+			WP_FireMelee( ent, qfalse);
+			return;
+		}
+		else if ( ent->s.eType == ET_PLAYER
+			&& ent->s.weapon != WP_SABER 
+			&& ent->client
+			&& (ent->client->pers.cmd.buttons & BUTTON_DODGE))
+		{// UQ1: Added... At close range players can kick you...
+			WP_FireMelee( ent, qtrue);
 			return;
 		}
 
