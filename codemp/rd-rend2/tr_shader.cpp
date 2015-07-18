@@ -3208,6 +3208,15 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 
 			specularImg = R_FindImageFile(specularName2, IMGTYPE_SPECULAR, specularFlags);
 
+			if (!specularImg)
+			{
+				COM_StripExtension( diffuseImg->imgName, specularName, sizeof( specularName ) );
+				StripCrap( specularName, specularName2, sizeof(specularName));
+				Q_strcat( specularName2, sizeof( specularName2 ), "_spec" );
+
+				specularImg = R_FindImageFile(specularName2, IMGTYPE_SPECULAR, specularFlags);
+			}
+
 			if (specularImg)
 			{
 				//ri->Printf(PRINT_WARNING, "+++++++++++++++ Loaded specular map %s.\n", specularName2);
