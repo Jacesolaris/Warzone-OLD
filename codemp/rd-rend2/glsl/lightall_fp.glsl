@@ -278,7 +278,6 @@ float CalcLightAttenuation(float point, float normDist)
 	return attenuation;
 }
 
-// from http://www.thetenthplanet.de/archives/1180
 mat3 cotangent_frame( vec3 N, vec3 p, vec2 uv )
 {
 	// get edge vectors of the pixel triangle
@@ -475,8 +474,12 @@ void main()
   #endif
 
 	if (var_Local1.b > 0.0)
+	{
 		//specular.a *= var_Local1.b;
 		specular *= var_Local1.b;
+		if (length(u_SpecularScale) != 0.0 && length(u_SpecularScale) != 4.0)
+			specular *= u_SpecularScale;
+	}
 	else
 		specular *= u_SpecularScale;
 
@@ -543,7 +546,6 @@ void main()
 	vec3 R = reflect(E, N);
 
 	// parallax corrected cubemap (cheaper trick)
-	// from http://seblagarde.wordpress.com/2012/09/29/image-based-lighting-approaches-and-parallax-corrected-cubemap/
 	vec3 parallax = u_CubeMapInfo.xyz + u_CubeMapInfo.w * viewDir;
 
 	vec3 cubeLightColor = textureCubeLod(u_CubeMap, R + parallax, 7.0 - gloss * 7.0).rgb * u_EnableTextures.w;
