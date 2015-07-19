@@ -475,10 +475,10 @@ void main()
 
 	if (var_Local1.b > 0.0)
 	{
-		//specular.a *= var_Local1.b;
-		specular *= var_Local1.b;
-		if (length(u_SpecularScale) != 0.0 && length(u_SpecularScale) != 4.0)
+		if (length(u_SpecularScale) != 0.0) // Shader Specified...
 			specular *= u_SpecularScale;
+		else // Material Defaults...
+			specular *= var_Local1.b;
 	}
 	else
 		specular *= u_SpecularScale;

@@ -105,10 +105,13 @@ static void ClearGlobalShader(void)
 
 		// default normal/specular
 		VectorSet4(stages[i].normalScale, 0.0f, 0.0f, 0.0f, 0.0f);
+		/*
 		stages[i].specularScale[0] = 
 		stages[i].specularScale[1] =
 		stages[i].specularScale[2] = r_baseSpecular->value;
 		stages[i].specularScale[3] = r_baseGloss->value;
+		*/
+		VectorSet4(stages[i].specularScale, 0.0f, 0.0f, 0.0f, 0.0f); // UQ1: if not set, will fall back to material type defaults instead of cvars...
 	}
 
 	shader.contentFlags = CONTENTS_SOLID | CONTENTS_OPAQUE;
