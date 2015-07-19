@@ -1059,7 +1059,7 @@ typedef enum {
 	EV_PADAWAN_IDLE,
 	EV_PADAWAN_IDLE_REPLY,
 	//[VisualWeapons]
-	//EV_WEAPINVCHANGE, Not used becours of a need of OJP client stuff
+	EV_WEAPINVCHANGE, //Not used becours of a need of OJP client stuff
 	//[/VisualWeapons]
 	EV_SIEGESPEC,
 
