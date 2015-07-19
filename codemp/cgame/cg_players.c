@@ -13467,11 +13467,10 @@ void CG_VisualWeaponsUpdate(centity_t *cent, clientInfo_t *ci)
 	}
 
 	if (cent->ghoul2 &&
-		(cent->currentState.eType != ET_NPC
-		|| (cent->currentState.NPC_class != CLASS_VEHICLE
+		cent->currentState.NPC_class != CLASS_VEHICLE
 		&& cent->currentState.NPC_class != CLASS_REMOTE
-		&& cent->currentState.NPC_class != CLASS_SEEKER)) //don't add weapon models to NPCs that have no bolt for them!
-		&& !(cent->currentState.eFlags & EF_DEAD)	//dead players don't have holstered weapons.
+		&& cent->currentState.NPC_class != CLASS_SEEKER //don't add weapon models to NPCs that have no bolt for them! 
+		&& !(cent->currentState.eFlags & EF_DEAD)     //dead players don't have holstered weapons. 
 		&& !cent->torsoBolt
 		&& cg.snap)
 	{//this player can have holstered weapons
