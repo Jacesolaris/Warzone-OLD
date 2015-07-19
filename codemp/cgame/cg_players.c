@@ -13603,8 +13603,11 @@ void CG_VisualWeaponsUpdate(centity_t *cent, clientInfo_t *ci)
 		}
 
 		//Handle Blaster Holster on right hip
-		if (primaryWeapon != WP_BLASTER && secondaryWeapon != WP_BLASTER && temporaryWeapon != WP_BLASTER  //don't have blaster 
-			&& cent->currentState.weapon != WP_BLASTER) //or are currently using blaster
+		//if (!(primaryWeapon & (1 << WP_BLASTER) || secondaryWeapon & (1 << WP_BLASTER) || temporaryWeapon & (1 << WP_BLASTER)  //don't have blaster 
+		//if (!(primaryWeapon == WP_BLASTER && secondaryWeapon == WP_BLASTER && temporaryWeapon == WP_BLASTER  //don't have blaster 
+		//	&& cent->currentState.weapon == WP_BLASTER)) //or are currently using blaster
+		if ((primaryWeapon != WP_BLASTER && secondaryWeapon != WP_BLASTER && temporaryWeapon != WP_BLASTER)  //don't have blaster  
+			|| cent->currentState.weapon == WP_BLASTER) //or are currently using blaster 
 		{//don't need holstered blaster rendered
 			if (ci->holster_blaster != -1 && ci->blaster_holstered == WP_BLASTER)
 			{
@@ -13645,8 +13648,8 @@ void CG_VisualWeaponsUpdate(centity_t *cent, clientInfo_t *ci)
 
 		//New guns here right side
 
-		if (primaryWeapon != WP_CLONE_BLASTER && secondaryWeapon != WP_CLONE_BLASTER && temporaryWeapon != WP_CLONE_BLASTER  //don't have blaster 
-			&& cent->currentState.weapon != WP_CLONE_BLASTER) //or are currently using blaster
+		if ((primaryWeapon != WP_CLONE_BLASTER && secondaryWeapon != WP_CLONE_BLASTER && temporaryWeapon != WP_CLONE_BLASTER)  //don't have blaster  
+			|| cent->currentState.weapon == WP_CLONE_BLASTER) //or are currently using blaster 
 		{//don't need holstered blaster rendered
 			if (ci->holster_blaster != -1 && ci->blaster_holstered == WP_CLONE_BLASTER)
 			{
@@ -14077,8 +14080,11 @@ void CG_VisualWeaponsUpdate(centity_t *cent, clientInfo_t *ci)
 		*============================
 		*/
 		//Handle Blaster Holster on left hip
-		if ((primaryWeapon != WP_BLASTER && secondaryWeapon != WP_BLASTER && temporaryWeapon != WP_BLASTER)  //don't have blaster 
-			|| cent->currentState.weapon == WP_BLASTER  //or are currently using blaster
+		//if ((primaryWeapon != WP_BLASTER && secondaryWeapon != WP_BLASTER && temporaryWeapon != WP_BLASTER)  //don't have blaster 
+		//	|| cent->currentState.weapon == WP_BLASTER  //or are currently using blaster
+		//	|| rightHipInUse == WP_BLASTER)  //or the blaster is already on the right hip. 
+		if ((primaryWeapon != WP_BLASTER && secondaryWeapon != WP_BLASTER && temporaryWeapon != WP_BLASTER)  //don't have blaster  
+			|| cent->currentState.weapon == WP_BLASTER //or are currently using blaster 
 			|| rightHipInUse == WP_BLASTER)  //or the blaster is already on the right hip. 
 
 		{//don't need holstered blaster on left hip rendered
@@ -14120,8 +14126,8 @@ void CG_VisualWeaponsUpdate(centity_t *cent, clientInfo_t *ci)
 		}
 
 		//New guns here left side
-		if ((primaryWeapon != WP_CLONE_BLASTER && secondaryWeapon != WP_CLONE_BLASTER && temporaryWeapon != WP_CLONE_BLASTER)  //don't have blaster 
-			|| cent->currentState.weapon == WP_CLONE_BLASTER  //or are currently using blaster
+		if ((primaryWeapon != WP_CLONE_BLASTER && secondaryWeapon != WP_CLONE_BLASTER && temporaryWeapon != WP_CLONE_BLASTER)  //don't have blaster  
+			|| cent->currentState.weapon == WP_CLONE_BLASTER //or are currently using blaster 
 			|| rightHipInUse == WP_CLONE_BLASTER)  //or the blaster is already on the right hip. 
 
 		{//don't need holstered blaster on left hip rendered

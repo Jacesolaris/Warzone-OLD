@@ -4136,8 +4136,6 @@ void ClientSpawn(gentity_t *ent) {
 	//such)
 	client->ps.genericEnemyIndex = -1;
 
-	//G_AddEvent(ent, EV_WEAPINVCHANGE, client->ps.weapon);
-
 	client->ps.isJediMaster = qfalse;
 
 	if (client->ps.fallingToDeath)
