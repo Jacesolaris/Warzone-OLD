@@ -183,7 +183,7 @@ int BASS_FindFreeChannel ( void )
 
 void BASS_UnloadSamples ( void )
 {
-	if (BASS_ChannelIsActive(MUSIC_CHANNEL.channel) == BASS_ACTIVE_PLAYING)
+	//if (BASS_ChannelIsActive(MUSIC_CHANNEL.channel) == BASS_ACTIVE_PLAYING)
 	{
 		BASS_ChannelStop(MUSIC_CHANNEL.channel);
 		BASS_SampleFree(MUSIC_CHANNEL.channel);
@@ -238,7 +238,7 @@ void BASS_Shutdown ( void )
 		Sleep(1);
 	}
 
-	if (BASS_ChannelIsActive(MUSIC_CHANNEL.channel) == BASS_ACTIVE_PLAYING)
+	//if (BASS_ChannelIsActive(MUSIC_CHANNEL.channel) == BASS_ACTIVE_PLAYING)
 	{
 		BASS_ChannelStop(MUSIC_CHANNEL.channel);
 		BASS_SampleFree(MUSIC_CHANNEL.channel);
@@ -267,6 +267,8 @@ void BASS_Shutdown ( void )
 		// Wait for update thread to finish...
 		if (BASS_UPDATE_THREAD->joinable())
 			BASS_UPDATE_THREAD->join();
+		//BASS_UPDATE_THREAD->~thread();
+		//BASS_UPDATE_THREAD_RUNNING = qfalse;
 	}
 
 	if (BASS_MUSIC_UPDATE_THREAD && thread::hardware_concurrency() > 1)
@@ -274,8 +276,10 @@ void BASS_Shutdown ( void )
 		BASS_MUSIC_UPDATE_THREAD_STOP = qtrue;
 	
 		// Wait for update thread to finish...
-		if (BASS_MUSIC_UPDATE_THREAD->joinable())
-			BASS_MUSIC_UPDATE_THREAD->join();
+		//if (BASS_MUSIC_UPDATE_THREAD->joinable())
+		//	BASS_MUSIC_UPDATE_THREAD->join();
+		//BASS_MUSIC_UPDATE_THREAD->~thread();
+		//BASS_MUSIC_UPDATE_THREAD_RUNNING = qfalse;
 	}
 
 	BASS_Free();
@@ -287,7 +291,7 @@ qboolean BASS_CheckSoundDisabled( void )
 {
 	if (s_disable->integer)
 	{
-		if (BASS_ChannelIsActive(MUSIC_CHANNEL.channel) == BASS_ACTIVE_PLAYING)
+		//if (BASS_ChannelIsActive(MUSIC_CHANNEL.channel) == BASS_ACTIVE_PLAYING)
 		{
 			BASS_ChannelStop(MUSIC_CHANNEL.channel);
 			BASS_SampleFree(MUSIC_CHANNEL.channel);
@@ -1292,6 +1296,8 @@ void BASS_InitDynamicList ( void )
 
 void BASS_MusicUpdateThread( void * aArg )
 {
+	this_thread::sleep_for(chrono::milliseconds(5000));
+
 	while (!BASS_MUSIC_UPDATE_THREAD_STOP)
 	{
 		if (BASS_CheckSoundDisabled())
@@ -1333,7 +1339,7 @@ void BASS_UpdateDynamicMusic( void )
 {
 	if ( thread::hardware_concurrency() > 1 )
 	{
-		if (!BASS_MUSIC_UPDATE_THREAD_RUNNING && !BASS_MUSIC_UPDATE_THREAD_STOP)
+		if (!BASS_MUSIC_UPDATE_THREAD_RUNNING && !BASS_MUSIC_UPDATE_THREAD_STOP && !(!FS_STARTUP_COMPLETE || !s_soundStarted || !s_allowDynamicMusic->integer || MUSIC_LIST_UPDATING))
 		{
 			BASS_MUSIC_UPDATE_THREAD_RUNNING = qtrue;
 			BASS_MUSIC_UPDATE_THREAD = new thread (BASS_MusicUpdateThread, 0);

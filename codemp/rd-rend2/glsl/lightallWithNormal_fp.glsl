@@ -455,7 +455,7 @@ void main()
 		else if (var_Local1.b <= 0.8)
 			specular *= var_Local1.b * 0.6;
 		else if (var_Local1.b < 0.95)
-			specular *= var_Local1.b * 0.9;
+			specular *= var_Local1.b * 1.0;
 		else if (var_Local1.b >= 0.95)
 			specular *= var_Local1.b * 1.0;
 	#endif

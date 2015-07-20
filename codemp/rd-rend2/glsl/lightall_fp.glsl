@@ -119,7 +119,6 @@ out vec4 out_Glow;
 
 		color = clamp(color * color * (color * 5.0), 0.0, 1.0); // testing
 
-		//vec3 orig_color = color * 2.0;
 		vec3 orig_color = color + color2;
 
 		orig_color = clamp(orig_color * 2.5, 0.0, 1.0); // testing
@@ -186,7 +185,6 @@ float RayIntersectDisplaceMap(vec2 dp, vec2 ds, sampler2D normalMap)
 		depth += size;
 	}
 
-	//return ((bestDepth * var_Local1.x) + (SampleDepth(normalMap, dp) - 1.0)) * 0.5;
 	return bestDepth * var_Local1.x;
 #else //FAST_PARALLAX
 	float depth = SampleDepth(normalMap, dp) - 1.0;
@@ -475,7 +473,7 @@ void main()
 		else if (var_Local1.b <= 0.8)
 			specular *= var_Local1.b * 0.6;
 		else if (var_Local1.b < 0.95)
-			specular *= var_Local1.b * 0.9;
+			specular *= var_Local1.b * 0.95;
 		else if (var_Local1.b >= 0.95)
 			specular *= var_Local1.b * 1.0;
 	#endif

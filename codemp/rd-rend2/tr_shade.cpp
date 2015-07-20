@@ -1639,6 +1639,7 @@ void RB_SetParallaxScale(shaderProgram_t *sp, float scale, shaderStage_t *pStage
 		//specularScale = 0.4;
 		//specularScale = 0.0;
 		specularScale = 0.4;
+		//specularScale = 1.0;
 		break;
 	}
 
@@ -1649,6 +1650,12 @@ void RB_SetParallaxScale(shaderProgram_t *sp, float scale, shaderStage_t *pStage
 void RB_SetStageImageDimensions(shaderProgram_t *sp, shaderStage_t *pStage)
 {
 	vec2_t dimensions;
+	if (!pStage->bundle[0].image[0]) {
+		if (pStage->bundle[0].image[1])
+			pStage->bundle[0].image[0] = pStage->bundle[0].image[1]; // argh!
+		else 
+			pStage->bundle[0].image[0] = tr.whiteImage; // argh!
+	}
 	dimensions[0] = pStage->bundle[0].image[0]->width;
 	dimensions[1] = pStage->bundle[0].image[0]->height;
 

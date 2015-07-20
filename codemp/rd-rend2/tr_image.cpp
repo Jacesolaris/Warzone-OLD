@@ -2830,6 +2830,11 @@ Finds or loads the given image.
 Returns NULL if it fails, not a default image.
 ==============
 */
+extern shader_t *R_CreateGenericAdvancedShader( const char *name, const int *lightmapIndexes, const byte *styles, qboolean mipRawImage );
+extern qboolean R_ShaderExists( const char *name, const int *lightmapIndexes, const byte *styles, qboolean mipRawImage );
+
+char previous_name_loaded[256];
+
 image_t	*R_FindImageFile( const char *name, imgType_t type, int flags )
 {
 	image_t	*image;
@@ -2864,6 +2869,50 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, int flags )
 	R_LoadImage( name, &pic, &width, &height );
 	if ( pic == NULL ) {
 		return NULL;
+	}
+
+	if (name[0] != '*' 
+		&& name[0] != '.' 
+		&& name[0] != '$' 
+		&& name[0] != ' ' 
+		&& name[0] != '_' 
+		&& name[0] != '-' 
+		&& name[0] != 0 
+		&& StringContainsWord(name, "/")
+		&& strncmp(name, previous_name_loaded, strlen(name)) // avoid endless call loop...
+		&& (!strncmp(name, "textures/", 9) || !strncmp(name, "models/", 7)) 
+		&& !StringContainsWord(name, "map_objects/mp")
+		&& !StringContainsWord(name, "icon")
+		&& !StringContainsWord(name, "_norm")
+		&& !StringContainsWord(name, "_spec")
+		&& !StringContainsWord(name, "dust")
+		&& !StringContainsWord(name, "smoke")
+		&& !StringContainsWord(name, "trans")
+		&& !StringContainsWord(name, "sky")
+		&& !StringContainsWord(name, "skies")
+		&& !StringContainsWord(name, "glow")
+		&& !StringContainsWord(name, "glw")
+		&& !StringContainsWord(name, "light")
+		&& !StringContainsWord(name, "screen")
+		&& !StringContainsWord(name, "console")
+		&& !StringContainsWord(name, "monitor")
+		&& !StringContainsWord(name, "switch")
+		&& !StringContainsWord(name, "button")
+		&& !StringContainsWord(name, "display")
+		&& !StringContainsWord(name, "panel")
+		&& !StringContainsWord(name, "lining")
+		&& strcmp(name, "")
+		&& !(name[strlen(name)-1] == '_' && name[strlen(name)] == 'n')
+		&& !(name[strlen(name)-1] == '_' && name[strlen(name)] == 's')
+		&& strlen(name) > 10
+		&& !R_ShaderExists( name, lightmapsNone, stylesDefault, qtrue ))
+	{// UQ1: Generate a default shader...
+		memset(previous_name_loaded, 0, sizeof(previous_name_loaded));
+		strcpy(previous_name_loaded, name);
+		if (R_CreateGenericAdvancedShader( name, lightmapsVertex, stylesDefault, qtrue ))
+		{
+			ri->Printf(PRINT_WARNING, "Advanced generic shader generated for image %s.\n", name);
+		}
 	}
 
 	if (type != IMGTYPE_NORMAL && type != IMGTYPE_SPECULAR)
