@@ -513,7 +513,7 @@ typedef struct centity_s {
 	int				vChatTime;
 	//[VisualWeapons]
 	//keeps track of everyone's weapon loadout so they are be displayed
-	//int				weapons;
+	int				weapons;
 	//[/VisualWeapons]
 
 	int blastercannonBarrelRotationTime;

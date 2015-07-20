@@ -1058,9 +1058,6 @@ typedef enum {
 	EV_PADAWAN_IDLE_NOREPLY,
 	EV_PADAWAN_IDLE,
 	EV_PADAWAN_IDLE_REPLY,
-	//[VisualWeapons]
-	//EV_WEAPINVCHANGE, Not used becours of a need of OJP client stuff
-	//[/VisualWeapons]
 	EV_SIEGESPEC,
 
 } entity_event_t;			// There is a maximum of 256 events (8 bits transmission, 2 high bits for uniqueness)

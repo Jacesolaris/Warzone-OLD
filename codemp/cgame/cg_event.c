@@ -3876,12 +3876,6 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 		//[VisualWeapons]
 		//this event is sent whenever a player has lost/picked up a weapon.  This is used
 		//to update the client side's weapon stats for the holstered weapons rendering.
-	/*case EV_WEAPINVCHANGE:
-		DEBUGNAME("EV_WEAPINVCHANGE");
-		cg_entities[es->number].weapons = es->eventParm; Not used becours of a need of OJP client stuff
-		break;*/
-		//[/VisualWeapons]
-
 	default:
 		DEBUGNAME("UNKNOWN");
 		trap->Error( ERR_DROP, "Unknown event: %i", event );

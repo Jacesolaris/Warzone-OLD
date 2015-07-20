@@ -13333,6 +13333,22 @@ void CG_HolsteredWeaponRender(centity_t *cent, clientInfo_t *ci, int holsterType
 	case HLR_TESTGUN_R:
 		weaponType = WP_TESTGUN;
 		break;
+	case HLR_FRAG_GRENADE:
+		weaponType = WP_FRAG_GRENADE;
+		break;
+
+	case HLR_FRAG_GRENADE_OLD:
+		weaponType = WP_FRAG_GRENADE_OLD;
+		break;
+	case HLR_THERMAL_GRENADE:
+		weaponType = WP_THERMAL;
+		break;
+	case HLR_TRIP_MINE:
+		weaponType = WP_TRIP_MINE;
+		break;
+	case HLR_DET_PACK:
+		weaponType = WP_DET_PACK;
+		break;
 	default:
 		trap->Print("Unknown weaponType for holsterType %i in CG_HolsteredWeaponRender.\n", holsterType);
 		return;
@@ -13408,6 +13424,7 @@ void CG_HolsteredWeaponRender(centity_t *cent, clientInfo_t *ci, int holsterType
 #define		G2MODEL_LAUNCHER_HOLSTERED		9
 #define		G2MODEL_LAUNCHER2_HOLSTERED		10
 #define		G2MODEL_GOLAN_HOLSTERED			11
+#define		G2MODEL_GRENADE_HOLSTERED		12
 
 void CG_VisualWeaponsUpdate(centity_t *cent, clientInfo_t *ci)
 {//renders holstered weapons on players.
@@ -13452,11 +13469,10 @@ void CG_VisualWeaponsUpdate(centity_t *cent, clientInfo_t *ci)
 	}
 
 	if (cent->ghoul2 &&
-		(cent->currentState.eType != ET_NPC
-		|| (cent->currentState.NPC_class != CLASS_VEHICLE
+		cent->currentState.NPC_class != CLASS_VEHICLE
 		&& cent->currentState.NPC_class != CLASS_REMOTE
-		&& cent->currentState.NPC_class != CLASS_SEEKER)) //don't add weapon models to NPCs that have no bolt for them!
-		&& !(cent->currentState.eFlags & EF_DEAD)	//dead players don't have holstered weapons.
+		&& cent->currentState.NPC_class != CLASS_SEEKER //don't add weapon models to NPCs that have no bolt for them! 
+		&& !(cent->currentState.eFlags & EF_DEAD)     //dead players don't have holstered weapons. 
 		&& !cent->torsoBolt
 		&& cg.snap)
 	{//this player can have holstered weapons
@@ -13588,8 +13604,11 @@ void CG_VisualWeaponsUpdate(centity_t *cent, clientInfo_t *ci)
 		}
 
 		//Handle Blaster Holster on right hip
-		if (primaryWeapon != WP_BLASTER && secondaryWeapon != WP_BLASTER && temporaryWeapon != WP_BLASTER  //don't have blaster 
-			&& cent->currentState.weapon != WP_BLASTER) //or are currently using blaster
+		//if (!(primaryWeapon & (1 << WP_BLASTER) || secondaryWeapon & (1 << WP_BLASTER) || temporaryWeapon & (1 << WP_BLASTER)  //don't have blaster 
+		//if (!(primaryWeapon == WP_BLASTER && secondaryWeapon == WP_BLASTER && temporaryWeapon == WP_BLASTER  //don't have blaster 
+		//	&& cent->currentState.weapon == WP_BLASTER)) //or are currently using blaster
+		if ((primaryWeapon != WP_BLASTER && secondaryWeapon != WP_BLASTER && temporaryWeapon != WP_BLASTER)  //don't have blaster  
+			|| cent->currentState.weapon == WP_BLASTER) //or are currently using blaster 
 		{//don't need holstered blaster rendered
 			if (ci->holster_blaster != -1 && ci->blaster_holstered == WP_BLASTER)
 			{
@@ -13630,8 +13649,8 @@ void CG_VisualWeaponsUpdate(centity_t *cent, clientInfo_t *ci)
 
 		//New guns here right side
 
-		if (primaryWeapon != WP_CLONE_BLASTER && secondaryWeapon != WP_CLONE_BLASTER && temporaryWeapon != WP_CLONE_BLASTER  //don't have blaster 
-			&& cent->currentState.weapon != WP_CLONE_BLASTER) //or are currently using blaster
+		if ((primaryWeapon != WP_CLONE_BLASTER && secondaryWeapon != WP_CLONE_BLASTER && temporaryWeapon != WP_CLONE_BLASTER)  //don't have blaster  
+			|| cent->currentState.weapon == WP_CLONE_BLASTER) //or are currently using blaster 
 		{//don't need holstered blaster rendered
 			if (ci->holster_blaster != -1 && ci->blaster_holstered == WP_CLONE_BLASTER)
 			{
@@ -14062,8 +14081,11 @@ void CG_VisualWeaponsUpdate(centity_t *cent, clientInfo_t *ci)
 		*============================
 		*/
 		//Handle Blaster Holster on left hip
-		if ((primaryWeapon != WP_BLASTER && secondaryWeapon != WP_BLASTER && temporaryWeapon != WP_BLASTER)  //don't have blaster 
-			|| cent->currentState.weapon == WP_BLASTER  //or are currently using blaster
+		//if ((primaryWeapon != WP_BLASTER && secondaryWeapon != WP_BLASTER && temporaryWeapon != WP_BLASTER)  //don't have blaster 
+		//	|| cent->currentState.weapon == WP_BLASTER  //or are currently using blaster
+		//	|| rightHipInUse == WP_BLASTER)  //or the blaster is already on the right hip. 
+		if ((primaryWeapon != WP_BLASTER && secondaryWeapon != WP_BLASTER && temporaryWeapon != WP_BLASTER)  //don't have blaster  
+			|| cent->currentState.weapon == WP_BLASTER //or are currently using blaster 
 			|| rightHipInUse == WP_BLASTER)  //or the blaster is already on the right hip. 
 
 		{//don't need holstered blaster on left hip rendered
@@ -14105,8 +14127,8 @@ void CG_VisualWeaponsUpdate(centity_t *cent, clientInfo_t *ci)
 		}
 
 		//New guns here left side
-		if ((primaryWeapon != WP_CLONE_BLASTER && secondaryWeapon != WP_CLONE_BLASTER && temporaryWeapon != WP_CLONE_BLASTER)  //don't have blaster 
-			|| cent->currentState.weapon == WP_CLONE_BLASTER  //or are currently using blaster
+		if ((primaryWeapon != WP_CLONE_BLASTER && secondaryWeapon != WP_CLONE_BLASTER && temporaryWeapon != WP_CLONE_BLASTER)  //don't have blaster  
+			|| cent->currentState.weapon == WP_CLONE_BLASTER //or are currently using blaster 
 			|| rightHipInUse == WP_CLONE_BLASTER)  //or the blaster is already on the right hip. 
 
 		{//don't need holstered blaster on left hip rendered
@@ -15345,6 +15367,216 @@ void CG_VisualWeaponsUpdate(centity_t *cent, clientInfo_t *ci)
 			else
 			{//manually render the blaster
 				CG_HolsteredWeaponRender(cent, ci, HLR_DEMP2);
+			}
+			backInUse = qtrue;
+		}
+
+		if (backInUse //back in use already
+			|| (primaryWeapon != WP_FRAG_GRENADE && secondaryWeapon != WP_FRAG_GRENADE && temporaryWeapon != WP_FRAG_GRENADE) 
+			|| cent->currentState.weapon == WP_FRAG_GRENADE) //currently using Demp2
+		{//don't render Demp2 on right hip.
+			if (ci->holster_thermal != -1 && ci->thermal_holstered == WP_FRAG_GRENADE)
+			{
+				if (trap->G2API_HasGhoul2ModelOnIndex(&(cent->ghoul2), G2MODEL_GRENADE_HOLSTERED))
+				{
+					trap->G2API_RemoveGhoul2Model(&(cent->ghoul2), G2MODEL_GRENADE_HOLSTERED);
+				}
+				ci->thermal_holstered = 0;
+			}
+		}
+		else
+		{//render demp 2 on right hip
+			if (ci->holster_thermal != -1)
+			{//have specialized bolt
+				if (ci->thermal_holstered != WP_FRAG_GRENADE)
+				{//don't already have the demp2 bolted.
+					if (ci->thermal_holstered != 0)
+					{//we have something else bolted there, remove it first.
+						if (trap->G2API_HasGhoul2ModelOnIndex(&(cent->ghoul2), G2MODEL_GRENADE_HOLSTERED))
+						{
+							trap->G2API_RemoveGhoul2Model(&(cent->ghoul2), G2MODEL_GRENADE_HOLSTERED);
+						}
+						ci->thermal_holstered = 0;
+					}
+
+					//now add the demp2
+					trap->G2API_CopySpecificGhoul2Model(CG_G2WeaponInstance(cent, WP_FRAG_GRENADE), 0, cent->ghoul2,
+						G2MODEL_GRENADE_HOLSTERED);
+					trap->G2API_SetBoltInfo(cent->ghoul2, G2MODEL_GRENADE_HOLSTERED, ci->holster_thermal);
+					ci->thermal_holstered = WP_FRAG_GRENADE;
+				}
+			}
+			else
+			{//manually render the blaster
+				CG_HolsteredWeaponRender(cent, ci, HLR_FRAG_GRENADE);
+			}
+			backInUse = qtrue;
+		}
+
+		if (backInUse //back in use already
+			|| (primaryWeapon != WP_FRAG_GRENADE_OLD && secondaryWeapon != WP_FRAG_GRENADE_OLD && temporaryWeapon != WP_FRAG_GRENADE_OLD)
+			|| cent->currentState.weapon == WP_FRAG_GRENADE_OLD) //currently using Demp2
+		{//don't render Demp2 on right hip.
+			if (ci->holster_thermal != -1 && ci->thermal_holstered == WP_FRAG_GRENADE_OLD)
+			{
+				if (trap->G2API_HasGhoul2ModelOnIndex(&(cent->ghoul2), G2MODEL_GRENADE_HOLSTERED))
+				{
+					trap->G2API_RemoveGhoul2Model(&(cent->ghoul2), G2MODEL_GRENADE_HOLSTERED);
+				}
+				ci->thermal_holstered = 0;
+			}
+		}
+		else
+		{//render demp 2 on right hip
+			if (ci->holster_thermal != -1)
+			{//have specialized bolt
+				if (ci->thermal_holstered != WP_FRAG_GRENADE_OLD)
+				{//don't already have the demp2 bolted.
+					if (ci->thermal_holstered != 0)
+					{//we have something else bolted there, remove it first.
+						if (trap->G2API_HasGhoul2ModelOnIndex(&(cent->ghoul2), G2MODEL_GRENADE_HOLSTERED))
+						{
+							trap->G2API_RemoveGhoul2Model(&(cent->ghoul2), G2MODEL_GRENADE_HOLSTERED);
+						}
+						ci->thermal_holstered = 0;
+					}
+
+					//now add the demp2
+					trap->G2API_CopySpecificGhoul2Model(CG_G2WeaponInstance(cent, WP_FRAG_GRENADE_OLD), 0, cent->ghoul2,
+						G2MODEL_GRENADE_HOLSTERED);
+					trap->G2API_SetBoltInfo(cent->ghoul2, G2MODEL_GRENADE_HOLSTERED, ci->holster_thermal);
+					ci->thermal_holstered = WP_FRAG_GRENADE_OLD;
+				}
+			}
+			else
+			{//manually render the blaster
+				CG_HolsteredWeaponRender(cent, ci, HLR_FRAG_GRENADE_OLD);
+			}
+			backInUse = qtrue;
+		}
+
+		if (backInUse //back in use already
+			|| (primaryWeapon != WP_THERMAL && secondaryWeapon != WP_THERMAL && temporaryWeapon != WP_THERMAL)
+			|| cent->currentState.weapon == WP_THERMAL) //currently using Demp2
+		{//don't render Demp2 on right hip.
+			if (ci->holster_thermal != -1 && ci->thermal_holstered == WP_THERMAL)
+			{
+				if (trap->G2API_HasGhoul2ModelOnIndex(&(cent->ghoul2), G2MODEL_GRENADE_HOLSTERED))
+				{
+					trap->G2API_RemoveGhoul2Model(&(cent->ghoul2), G2MODEL_GRENADE_HOLSTERED);
+				}
+				ci->thermal_holstered = 0;
+			}
+		}
+		else
+		{//render demp 2 on right hip
+			if (ci->holster_thermal != -1)
+			{//have specialized bolt
+				if (ci->thermal_holstered != WP_THERMAL)
+				{//don't already have the demp2 bolted.
+					if (ci->thermal_holstered != 0)
+					{//we have something else bolted there, remove it first.
+						if (trap->G2API_HasGhoul2ModelOnIndex(&(cent->ghoul2), G2MODEL_GRENADE_HOLSTERED))
+						{
+							trap->G2API_RemoveGhoul2Model(&(cent->ghoul2), G2MODEL_GRENADE_HOLSTERED);
+						}
+						ci->thermal_holstered = 0;
+					}
+
+					//now add the demp2
+					trap->G2API_CopySpecificGhoul2Model(CG_G2WeaponInstance(cent, WP_THERMAL), 0, cent->ghoul2,
+						G2MODEL_GRENADE_HOLSTERED);
+					trap->G2API_SetBoltInfo(cent->ghoul2, G2MODEL_GRENADE_HOLSTERED, ci->holster_thermal);
+					ci->thermal_holstered = WP_THERMAL;
+				}
+			}
+			else
+			{//manually render the blaster
+				CG_HolsteredWeaponRender(cent, ci, HLR_THERMAL_GRENADE);
+			}
+			backInUse = qtrue;
+		}
+
+		if (backInUse //back in use already
+			|| (primaryWeapon != WP_TRIP_MINE && secondaryWeapon != WP_TRIP_MINE && temporaryWeapon != WP_TRIP_MINE)
+			|| cent->currentState.weapon == WP_TRIP_MINE) //currently using Demp2
+		{//don't render Demp2 on right hip.
+			if (ci->holster_thermal != -1 && ci->thermal_holstered == WP_TRIP_MINE)
+			{
+				if (trap->G2API_HasGhoul2ModelOnIndex(&(cent->ghoul2), G2MODEL_GRENADE_HOLSTERED))
+				{
+					trap->G2API_RemoveGhoul2Model(&(cent->ghoul2), G2MODEL_GRENADE_HOLSTERED);
+				}
+				ci->thermal_holstered = 0;
+			}
+		}
+		else
+		{//render demp 2 on right hip
+			if (ci->holster_thermal != -1)
+			{//have specialized bolt
+				if (ci->thermal_holstered != WP_TRIP_MINE)
+				{//don't already have the demp2 bolted.
+					if (ci->thermal_holstered != 0)
+					{//we have something else bolted there, remove it first.
+						if (trap->G2API_HasGhoul2ModelOnIndex(&(cent->ghoul2), G2MODEL_GRENADE_HOLSTERED))
+						{
+							trap->G2API_RemoveGhoul2Model(&(cent->ghoul2), G2MODEL_GRENADE_HOLSTERED);
+						}
+						ci->thermal_holstered = 0;
+					}
+
+					//now add the demp2
+					trap->G2API_CopySpecificGhoul2Model(CG_G2WeaponInstance(cent, WP_TRIP_MINE), 0, cent->ghoul2,
+						G2MODEL_GRENADE_HOLSTERED);
+					trap->G2API_SetBoltInfo(cent->ghoul2, G2MODEL_GRENADE_HOLSTERED, ci->holster_thermal);
+					ci->thermal_holstered = WP_TRIP_MINE;
+				}
+			}
+			else
+			{//manually render the blaster
+				CG_HolsteredWeaponRender(cent, ci, HLR_TRIP_MINE);
+			}
+			backInUse = qtrue;
+		}
+
+		if (backInUse //back in use already
+			|| (primaryWeapon != WP_DET_PACK && secondaryWeapon != WP_DET_PACK && temporaryWeapon != WP_DET_PACK)
+			|| cent->currentState.weapon == WP_DET_PACK) //currently using Demp2
+		{//don't render Demp2 on right hip.
+			if (ci->holster_thermal != -1 && ci->thermal_holstered == WP_DET_PACK)
+			{
+				if (trap->G2API_HasGhoul2ModelOnIndex(&(cent->ghoul2), G2MODEL_GRENADE_HOLSTERED))
+				{
+					trap->G2API_RemoveGhoul2Model(&(cent->ghoul2), G2MODEL_GRENADE_HOLSTERED);
+				}
+				ci->thermal_holstered = 0;
+			}
+		}
+		else
+		{//render demp 2 on right hip
+			if (ci->holster_thermal != -1)
+			{//have specialized bolt
+				if (ci->thermal_holstered != WP_DET_PACK)
+				{//don't already have the demp2 bolted.
+					if (ci->thermal_holstered != 0)
+					{//we have something else bolted there, remove it first.
+						if (trap->G2API_HasGhoul2ModelOnIndex(&(cent->ghoul2), G2MODEL_GRENADE_HOLSTERED))
+						{
+							trap->G2API_RemoveGhoul2Model(&(cent->ghoul2), G2MODEL_GRENADE_HOLSTERED);
+						}
+						ci->thermal_holstered = 0;
+					}
+
+					//now add the demp2
+					trap->G2API_CopySpecificGhoul2Model(CG_G2WeaponInstance(cent, WP_DET_PACK), 0, cent->ghoul2,
+						G2MODEL_GRENADE_HOLSTERED);
+					trap->G2API_SetBoltInfo(cent->ghoul2, G2MODEL_GRENADE_HOLSTERED, ci->holster_thermal);
+					ci->thermal_holstered = WP_DET_PACK;
+				}
+			}
+			else
+			{//manually render the blaster
+				CG_HolsteredWeaponRender(cent, ci, HLR_DET_PACK);
 			}
 			backInUse = qtrue;
 		}
