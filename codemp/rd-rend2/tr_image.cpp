@@ -2871,6 +2871,7 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, int flags )
 		return NULL;
 	}
 
+#ifdef ___SHADER_GENERATOR___
 	if (name[0] != '*' 
 		&& name[0] != '.' 
 		&& name[0] != '$' 
@@ -2901,6 +2902,10 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, int flags )
 		&& !StringContainsWord(name, "display")
 		&& !StringContainsWord(name, "panel")
 		&& !StringContainsWord(name, "lining")
+		&& !StringContainsWord(name, "wind")
+		&& !StringContainsWord(name, "inset")
+		&& !StringContainsWord(name, "s_basic")
+		&& !StringContainsWord(name, "weapon")
 		&& strcmp(name, "")
 		&& !(name[strlen(name)-1] == '_' && name[strlen(name)] == 'n')
 		&& !(name[strlen(name)-1] == '_' && name[strlen(name)] == 's')
@@ -2914,6 +2919,7 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, int flags )
 			ri->Printf(PRINT_WARNING, "Advanced generic shader generated for image %s.\n", name);
 		}
 	}
+#endif //___SHADER_GENERATOR___
 
 	if (type != IMGTYPE_NORMAL && type != IMGTYPE_SPECULAR)
 	{

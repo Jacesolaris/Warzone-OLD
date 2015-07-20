@@ -1650,12 +1650,11 @@ void RB_SetParallaxScale(shaderProgram_t *sp, float scale, shaderStage_t *pStage
 void RB_SetStageImageDimensions(shaderProgram_t *sp, shaderStage_t *pStage)
 {
 	vec2_t dimensions;
+#ifdef ___SHADER_GENERATOR___
 	if (!pStage->bundle[0].image[0]) {
-		if (pStage->bundle[0].image[1])
-			pStage->bundle[0].image[0] = pStage->bundle[0].image[1]; // argh!
-		else 
-			pStage->bundle[0].image[0] = tr.whiteImage; // argh!
+		pStage->bundle[0].image[0] = tr.whiteImage; // argh!
 	}
+#endif //___SHADER_GENERATOR___
 	dimensions[0] = pStage->bundle[0].image[0]->width;
 	dimensions[1] = pStage->bundle[0].image[0]->height;
 

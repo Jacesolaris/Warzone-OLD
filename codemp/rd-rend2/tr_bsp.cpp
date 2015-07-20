@@ -3135,6 +3135,7 @@ AIMOD_NODES_LoadNodes ( void )
 		if (!haveClose)
 		{
 			VectorCopy(vec, waypoints[gWPNum]);
+			waypoints[gWPNum][2]+=32.0;
 			gWPNum++;
 		}
 	}

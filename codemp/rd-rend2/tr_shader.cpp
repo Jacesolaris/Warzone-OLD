@@ -4512,6 +4512,7 @@ most world construction surfaces.
 ===============
 */
 
+#ifdef ___SHADER_GENERATOR___
 qboolean R_ShaderExists( const char *name, const int *lightmapIndexes, const byte *styles, qboolean mipRawImage ) {
 	char		strippedName[MAX_QPATH];
 	int			hash;
@@ -4579,12 +4580,10 @@ char uniqueGenericPlayerShader[] = "{\n"\
 "}\n"\
 "";
 
-char uniqueGenericShader[] = "{\n"\
-"cull	twosided\n"\
-"q3map_onlyvertexlighting\n"\
+char uniqueGenericWeaponShader[] = "{\n"\
+"q3map_nolightmap\n"\
 "{\n"\
 "map %s\n"\
-"blendFunc GL_ONE GL_ZERO\n"\
 "rgbGen lightingDiffuse\n"\
 "}\n"\
 "}\n"\
@@ -4592,14 +4591,28 @@ char uniqueGenericShader[] = "{\n"\
 
 /*
 char uniqueGenericShader[] = "{\n"\
-"cull	twosided\n"\
+"q3map_nolightmap\n"\
 "{\n"\
 "map %s\n"\
-"blendFunc GL_ONE GL_ONE\n"\
+"RgbGen identityLighting\n"\
 "}\n"\
 "}\n"\
 "";
 */
+
+char uniqueGenericShader[] = "{\n"\
+"{\n"\
+"map %s\n"\
+"rgbGen vertex\n"\
+"}\n"\
+"{\n"\
+"map %s\n"\
+"blendFunc GL_SRC_ALPHA GL_ONE\n"\
+"detail\n"\
+"alphaGen lightingSpecular\n"\
+"}\n"\
+"}\n"\
+"";
 
 shader_t *R_CreateGenericAdvancedShader( const char *name, const int *lightmapIndexes, const byte *styles, qboolean mipRawImage ) {
 	char		strippedName[MAX_QPATH];
@@ -4648,10 +4661,12 @@ shader_t *R_CreateGenericAdvancedShader( const char *name, const int *lightmapIn
 	Com_Memcpy (shader.styles, styles, sizeof (shader.styles));
 
 	// Generate the shader...
-	//if (StringContainsWord(strippedName, "player"))
+	if (StringContainsWord(strippedName, "player"))
 		sprintf(myShader, uniqueGenericPlayerShader, strippedName, strippedName);
-	//else
-	//	sprintf(myShader, uniqueGenericShader, strippedName);
+	if (StringContainsWord(strippedName, "weapon"))
+		sprintf(myShader, uniqueGenericWeaponShader, strippedName, strippedName);
+	else
+		sprintf(myShader, uniqueGenericShader, strippedName, strippedName);
 
 	//ri->Printf(PRINT_WARNING, "GENERATED SHADER:\n%s\n", myShader);
 	//Com_Error(ERR_FATAL, "GENERATED SHADER:\n%s\n", myShader);
@@ -4671,8 +4686,9 @@ shader_t *R_CreateGenericAdvancedShader( const char *name, const int *lightmapIn
 
 		if ( !ParseShader( name, &shaderText ) ) {
 			// had errors, so use default shader
-			shader.defaultShader = qtrue;
+			//shader.defaultShader = qtrue;
 			//Com_Error(ERR_FATAL, "GENERATED SHADER FAILED:\n%s\n", myShader);
+			return NULL;
 		}
 		if (!shader.defaultShader)
 		{
@@ -4764,6 +4780,7 @@ shader_t *R_CreateGenericAdvancedShader( const char *name, const int *lightmapIn
 
 	return FinishShader();
 }
+#endif //___SHADER_GENERATOR___
 
 shader_t *R_FindShader( const char *name, const int *lightmapIndexes, const byte *styles, qboolean mipRawImage ) {
 	char		strippedName[MAX_QPATH];
