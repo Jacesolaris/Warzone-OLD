@@ -79,7 +79,7 @@ enum
 };
 
 //max char size of individual holster.cfg files
-#define		MAX_HOLSTER_INFO_SIZE					8192
+#define		MAX_HOLSTER_INFO_SIZE					2*8192
 //max char size for the individual holster.cfg holster type data
 #define		MAX_HOLSTER_GROUP_SIZE					MAX_HOLSTER_INFO_SIZE/3
 

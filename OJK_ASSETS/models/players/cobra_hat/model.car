@@ -1,4 +1,0 @@
-$aseanimgrabinit
-$aseanimgrab models/players/cobra_hat/root.xsi -loop -1
-$aseanimgrabfinalize
-$aseanimconvertmdx_noask models/players/cobra_hat/root -makeskel /models/players/cobra_hat/cobra_hat -origin 0 0 24
