@@ -224,11 +224,20 @@ void BASS_UnloadSamples ( void )
 }
 
 
+qboolean			MUSIC_LOADING = qfalse;
 HINSTANCE			bass = 0;								// bass handle
 char				tempfile[MAX_PATH+1];						// temporary BASS.DLL
 
 void BASS_Shutdown ( void )
 {
+	BASS_UPDATE_THREAD_STOP = qtrue;
+	BASS_MUSIC_UPDATE_THREAD_STOP = qtrue;
+
+	while (MUSIC_LOADING)
+	{
+		Sleep(1);
+	}
+
 	if (BASS_ChannelIsActive(MUSIC_CHANNEL.channel) == BASS_ACTIVE_PLAYING)
 	{
 		BASS_ChannelStop(MUSIC_CHANNEL.channel);
@@ -256,7 +265,8 @@ void BASS_Shutdown ( void )
 		BASS_UPDATE_THREAD_STOP = qtrue;
 
 		// Wait for update thread to finish...
-		//BASS_UPDATE_THREAD->join();
+		if (BASS_UPDATE_THREAD->joinable())
+			BASS_UPDATE_THREAD->join();
 	}
 
 	if (BASS_MUSIC_UPDATE_THREAD && thread::hardware_concurrency() > 1)
@@ -264,7 +274,8 @@ void BASS_Shutdown ( void )
 		BASS_MUSIC_UPDATE_THREAD_STOP = qtrue;
 	
 		// Wait for update thread to finish...
-		//BASS_MUSIC_UPDATE_THREAD->join();
+		if (BASS_MUSIC_UPDATE_THREAD->joinable())
+			BASS_MUSIC_UPDATE_THREAD->join();
 	}
 
 	BASS_Free();
@@ -892,16 +903,21 @@ DWORD BASS_LoadMusicSample ( void *memory, int length )
 		flags = BASS_SAMPLE_LOOP;
 	}
 
+	MUSIC_LOADING = qtrue;
+
 	// Try to load the sample with the highest quality options we support...
 	if (newchan=BASS_SampleLoad(TRUE,memory,0,(DWORD)length,1,flags|BASS_SAMPLE_FLOAT))
 	{
+		MUSIC_LOADING = qfalse;
 		return newchan;
 	}
 	else if (newchan=BASS_SampleLoad(TRUE,memory,0,(DWORD)length,1,flags))
 	{
+		MUSIC_LOADING = qfalse;
 		return newchan;
 	}
 
+	MUSIC_LOADING = qfalse;
 	return -1;
 }
 
