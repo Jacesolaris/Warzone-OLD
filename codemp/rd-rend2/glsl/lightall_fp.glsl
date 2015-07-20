@@ -472,7 +472,7 @@ void main()
 		if (length(u_SpecularScale) != 0.0 && length(u_SpecularScale) != 1.0) // Shader Specified...
 			specular *= u_SpecularScale;
 	#if defined(USE_CUBEMAP)
-		else if (var_Local1.b < 0.9)
+		else if (var_Local1.b <= 0.8)
 			specular *= var_Local1.b * 0.6;
 		else if (var_Local1.b < 0.95)
 			specular *= var_Local1.b * 0.9;

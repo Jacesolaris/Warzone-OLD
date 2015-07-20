@@ -1337,8 +1337,8 @@ void R_Register( void )
 	r_specularMapping = ri->Cvar_Get( "r_specularMapping", "1", CVAR_ARCHIVE | CVAR_LATCH );
 	r_deluxeMapping = ri->Cvar_Get( "r_deluxeMapping", "1", CVAR_ARCHIVE | CVAR_LATCH );
 	r_parallaxMapping = ri->Cvar_Get( "r_parallaxMapping", "0", CVAR_ARCHIVE | CVAR_LATCH );
-	r_cubeMapping = ri->Cvar_Get( "r_cubeMapping", "0", CVAR_ARCHIVE | CVAR_LATCH ); 
-	r_cubeMapSize = ri->Cvar_Get( "r_cubeMapSize", "512", CVAR_ARCHIVE | CVAR_LATCH ); 
+	r_cubeMapping = ri->Cvar_Get( "r_cubeMapping", "1", CVAR_ARCHIVE | CVAR_LATCH ); 
+	r_cubeMapSize = ri->Cvar_Get( "r_cubeMapSize", "128", CVAR_ARCHIVE | CVAR_LATCH ); 
    	r_deluxeSpecular = ri->Cvar_Get( "r_deluxeSpecular", "0.3", CVAR_ARCHIVE ); 
    	r_specularIsMetallic = ri->Cvar_Get( "r_specularIsMetallic", "0", CVAR_ARCHIVE | CVAR_LATCH ); 
 	r_baseNormalX = ri->Cvar_Get( "r_baseNormalX", "1.0", CVAR_ARCHIVE );
