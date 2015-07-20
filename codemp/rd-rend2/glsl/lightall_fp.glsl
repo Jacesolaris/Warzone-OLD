@@ -438,8 +438,6 @@ void main()
 	if (var_Local1.g != 0.0)
 	{// Real specMap...
 		specular = texture2D(u_SpecularMap, texCoords);
-		//specular.a = 1.0 - specular.a;
-		//specular.a = ((specular.r + specular.g + specular.b) / 3.0);
 		specular.a = ((clamp((1.0 - specular.a), 0.0, 1.0) * 0.5) + 0.5);
 		specular.a = clamp((specular.a * 2.0) * specular.a, 0.2, 0.9);
 	}
@@ -471,10 +469,10 @@ void main()
 			specular *= u_SpecularScale;
 	#if defined(USE_CUBEMAP)
 		else if (var_Local1.b <= 0.8)
-			specular *= var_Local1.b * 0.6;
-		else if (var_Local1.b < 0.95)
-			specular *= var_Local1.b * 0.95;
-		else if (var_Local1.b >= 0.95)
+			specular *= var_Local1.b * 0.4;
+		else if (var_Local1.b <= 0.95)
+			specular *= var_Local1.b * 0.7;
+		else if (var_Local1.b > 0.95)
 			specular *= var_Local1.b * 1.0;
 	#endif
 		else // Material Defaults...
@@ -541,6 +539,7 @@ void main()
 #endif
 
   #if defined(USE_CUBEMAP)
+	if (var_Local1.b > 0.8) {
 	reflectance = EnvironmentBRDF(gloss, NE, specular.rgb);
 
 	vec3 R = reflect(E, N);
@@ -550,6 +549,7 @@ void main()
 	vec3 cubeLightColor = textureCubeLod(u_CubeMap, R + parallax, 7.0 - gloss * 7.0).rgb * u_EnableTextures.w;
 
 	gl_FragColor.rgb += cubeLightColor * reflectance;
+	}
   #endif
 
   #if defined(USE_PRIMARY_LIGHT)

@@ -1,6 +1,6 @@
 models/players/zamspeeder/ZamSpeederSkin
 {	  
-	q3map_nolightmap
+	//q3map_nolightmap
 	q3map_onlyvertexlighting
     {
         map models/players/zamspeeder/ZamSpeederSkin.JPEG
@@ -19,7 +19,7 @@ models/players/zamspeeder/ZamSpeederSkin
 
 models/players/zamspeeder/speederwindows
 {	  
-	q3map_nolightmap
+	//q3map_nolightmap
 	q3map_onlyvertexlighting
     {
         map models/players/zamspeeder/speederwindows.JPEG
@@ -38,7 +38,7 @@ models/players/zamspeeder/speederwindows
 
 models/players/zamspeeder/speederturbine
 {	  
-	q3map_nolightmap
+	//q3map_nolightmap
 	q3map_onlyvertexlighting
     {
         map models/players/zamspeeder/speederturbine.JPEG

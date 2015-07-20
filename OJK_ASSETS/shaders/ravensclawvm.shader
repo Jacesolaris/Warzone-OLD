@@ -1,11 +1,12 @@
 models/players/ravensclawvm/ravenbody
 {	  
-	q3map_nolightmap
+	//q3map_nolightmap
 	q3map_onlyvertexlighting
     {
         map models/players/ravensclawvm/ravenbody.JPEG
         blendFunc GL_ONE GL_ZERO
-        rgbGen lightingDiffuse
+        //rgbGen lightingDiffuse
+        rgbGen vertex
     }
     {
         map gfx/effects/clone
@@ -19,12 +20,13 @@ models/players/ravensclawvm/ravenbody
 
 models/players/ravensclawvm/raven_cap
 {	  
-	q3map_nolightmap
+	//q3map_nolightmap
 	q3map_onlyvertexlighting
     {
         map models/players/ravensclawvm/raven_cap.JPEG
         blendFunc GL_ONE GL_ZERO
-        rgbGen lightingDiffuse
+        //rgbGen lightingDiffuse
+        rgbGen vertex
     }
     {
         map gfx/effects/clone
@@ -39,12 +41,13 @@ models/players/ravensclawvm/raven_cap
 
 models/players/ravensclawvm/ravengine
 {	  
-	q3map_nolightmap
+	//q3map_nolightmap
 	q3map_onlyvertexlighting
     {
         map models/players/ravensclawvm/ravengine.JPEG
         blendFunc GL_ONE GL_ZERO
-        rgbGen lightingDiffuse
+        //rgbGen lightingDiffuse
+        rgbGen vertex
     }
     {
         map gfx/effects/clone

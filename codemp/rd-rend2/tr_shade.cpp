@@ -1621,7 +1621,7 @@ void RB_SetParallaxScale(shaderProgram_t *sp, float scale, shaderStage_t *pStage
 		specularScale = 0.92;
 		break;
 	case MATERIAL_ARMOR:			// 30			// body armor
-		specularScale = 0.92;
+		specularScale = 0.94;
 		break;
 	case MATERIAL_ICE:				// 15			// packed snow/solid ice
 		specularScale = 0.95;

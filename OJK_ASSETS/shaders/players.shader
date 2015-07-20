@@ -4632,3 +4632,274 @@ models/players/reborn_new/head_hat
     }
 }
 
+models/players/reborn/basic_hand
+{
+	qer_editorimage	models/players/reborn/basic_hand
+	q3map_nolightmap
+	cull	twosided
+    {
+        map models/players/reborn/basic_hand
+        rgbGen lightingDiffuse
+    }
+}
+
+models/players/reborn/boots_hips
+{
+	qer_editorimage	models/players/reborn/boots_hips
+	q3map_nolightmap
+	cull	twosided
+    {
+        map models/players/reborn/boots_hips
+        rgbGen lightingDiffuse
+    }
+}
+models/players/reborn/boots_hips_blue
+{
+	qer_editorimage	models/players/reborn/boots_hips_blue
+	q3map_nolightmap
+	cull	twosided
+    {
+        map models/players/reborn/boots_hips_blue
+        rgbGen lightingDiffuse
+    }
+}
+models/players/reborn/boss_boots_hips
+{
+	qer_editorimage	models/players/reborn/boss_boots_hips
+	q3map_nolightmap
+	cull	twosided
+    {
+        map models/players/reborn/boss_boots_hips
+        rgbGen lightingDiffuse
+    }
+}
+models/players/reborn/boss_face
+{
+	qer_editorimage	models/players/reborn/boss_face
+	q3map_nolightmap
+	cull	twosided
+    {
+        map models/players/reborn/boss_face
+        rgbGen lightingDiffuse
+    }
+}
+models/players/reborn/boss_flap
+{
+	qer_editorimage	models/players/reborn/boss_flap
+	q3map_nolightmap
+	cull	twosided
+    {
+        map models/players/reborn/boss_flap
+        rgbGen lightingDiffuse
+    }
+}
+models/players/reborn/boss_hand
+{
+	qer_editorimage	models/players/reborn/boss_hand
+	q3map_nolightmap
+	cull	twosided
+    {
+        map models/players/reborn/boss_hand
+        rgbGen lightingDiffuse
+    }
+}
+models/players/reborn/boss_hood
+{
+	qer_editorimage	models/players/reborn/boss_hood
+	q3map_nolightmap
+	cull	twosided
+    {
+        map models/players/reborn/boss_hood
+        rgbGen lightingDiffuse
+    }
+}
+models/players/reborn/boss_legs
+{
+	qer_editorimage	models/players/reborn/boss_legs
+	q3map_nolightmap
+	cull	twosided
+    {
+        map models/players/reborn/boss_legs
+        rgbGen lightingDiffuse
+    }
+}
+models/players/reborn/boss_torso
+{
+	qer_editorimage	models/players/reborn/boss_torso
+	q3map_nolightmap
+	cull	twosided
+    {
+        map models/players/reborn/boss_torso
+        rgbGen lightingDiffuse
+    }
+}
+models/players/reborn/face
+{
+	qer_editorimage	models/players/reborn/face
+	q3map_nolightmap
+	cull	twosided
+    {
+        map models/players/reborn/face
+        rgbGen lightingDiffuse
+    }
+}
+models/players/reborn/flap
+{
+	qer_editorimage	models/players/reborn/flap
+	q3map_nolightmap
+	cull	twosided
+    {
+        map models/players/reborn/flap
+        rgbGen lightingDiffuse
+    }
+}
+models/players/reborn/flap_blue
+{
+	qer_editorimage	models/players/reborn/flap_blue
+	q3map_nolightmap
+	cull	twosided
+    {
+        map models/players/reborn/flap_blue
+        rgbGen lightingDiffuse
+    }
+}
+models/players/reborn/forc_boots_hips
+{
+	qer_editorimage	models/players/reborn/forc_boots_hips
+	q3map_nolightmap
+	cull	twosided
+    {
+        map models/players/reborn/forc_boots_hips
+        rgbGen lightingDiffuse
+    }
+}
+models/players/reborn/forc_face
+{
+	qer_editorimage	models/players/reborn/forc_face
+	q3map_nolightmap
+	cull	twosided
+    {
+        map models/players/reborn/forc_face
+        rgbGen lightingDiffuse
+    }
+}
+models/players/reborn/forc_flap
+{
+	qer_editorimage	models/players/reborn/forc_flap
+	q3map_nolightmap
+	cull	twosided
+    {
+        map models/players/reborn/forc_flap
+        rgbGen lightingDiffuse
+    }
+}
+models/players/reborn/forc_hand
+{
+	qer_editorimage	models/players/reborn/forc_hand
+	q3map_nolightmap
+	cull	twosided
+    {
+        map models/players/reborn/forc_hand
+        rgbGen lightingDiffuse
+    }
+}
+models/players/reborn/forc_hood
+{
+	qer_editorimage	models/players/reborn/forc_hood
+	q3map_nolightmap
+	cull	twosided
+    {
+        map models/players/reborn/forc_hood
+        rgbGen lightingDiffuse
+    }
+}
+models/players/reborn/forc_legs
+{
+	qer_editorimage	models/players/reborn/forc_legs
+	q3map_nolightmap
+	cull	twosided
+    {
+        map models/players/reborn/forc_legs
+        rgbGen lightingDiffuse
+    }
+}
+models/players/reborn/forc_torso
+{
+	qer_editorimage	models/players/reborn/forc_torso
+	q3map_nolightmap
+	cull	twosided
+    {
+        map models/players/reborn/forc_torso
+        rgbGen lightingDiffuse
+    }
+}
+models/players/reborn/hood_blue
+{
+	qer_editorimage	models/players/reborn/hood_blue
+	q3map_nolightmap
+	cull	twosided
+    {
+        map models/players/reborn/hood_blue
+        rgbGen lightingDiffuse
+    }
+}
+models/players/reborn/hood_red
+{
+	qer_editorimage	models/players/reborn/hood_red
+	q3map_nolightmap
+	cull	twosided
+    {
+        map models/players/reborn/hood_red
+        rgbGen lightingDiffuse
+    }
+}
+models/players/reborn/mouth_eyes
+{
+	qer_editorimage	models/players/reborn/mouth_eyes
+	q3map_nolightmap
+	cull	twosided
+    {
+        map models/players/reborn/mouth_eyes
+        rgbGen lightingDiffuse
+    }
+}
+models/players/reborn/reborn_legs_blue
+{
+	qer_editorimage	models/players/reborn/reborn_legs_blue
+	q3map_nolightmap
+	cull	twosided
+    {
+        map models/players/reborn/reborn_legs_blue
+        rgbGen lightingDiffuse
+    }
+}
+models/players/reborn/reborn_legs_red
+{
+	qer_editorimage	models/players/reborn/reborn_legs_red
+	q3map_nolightmap
+	cull	twosided
+    {
+        map models/players/reborn/reborn_legs_red
+        rgbGen lightingDiffuse
+    }
+}
+models/players/reborn/reborn_torso_blue
+{
+	qer_editorimage	models/players/reborn/reborn_torso_blue
+	q3map_nolightmap
+	cull	twosided
+    {
+        map models/players/reborn/reborn_torso_blue
+        rgbGen lightingDiffuse
+    }
+}
+models/players/reborn/reborn_torso_red
+{
+	qer_editorimage	models/players/reborn/reborn_torso_red
+	q3map_nolightmap
+	cull	twosided
+    {
+        map models/players/reborn/reborn_torso_red
+        rgbGen lightingDiffuse
+    }
+}

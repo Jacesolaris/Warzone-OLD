@@ -2422,7 +2422,7 @@ static qboolean ParseShader( const char *name, const char **text )
 
 		if (StringsContainWord(name, token, "reborn"))
 		{
-			ri->Printf(PRINT_WARNING, "Reborn seen in shader %s.\n", name);
+			//ri->Printf(PRINT_WARNING, "Reborn seen in shader %s.\n", name);
 			if (!(shader.surfaceFlags & MATERIAL_PLASTIC)) shader.surfaceFlags |= MATERIAL_PLASTIC;
 		}
 
@@ -2704,12 +2704,14 @@ static qboolean ParseShader( const char *name, const char **text )
 			shader.surfaceFlags |= MATERIAL_PLASTIC;//MATERIAL_SOLIDMETAL;
 		else if (StringsContainWord(name, name, "plastic") || StringsContainWord(name, name, "trooper") || StringsContainWord(name, name, "reborn") || StringsContainWord(name, name, "medpac") || StringsContainWord(name, name, "bacta") || StringsContainWord(name, name, "mp/flag") || StringsContainWord(name, name, "xwing") || StringsContainWord(name, name, "tie_") || StringsContainWord(name, name, "ship"))
 			shader.surfaceFlags |= MATERIAL_PLASTIC;
+		else if (StringsContainWord(name, name, "boba"))
+			shader.surfaceFlags |= MATERIAL_ARMOR;
 		//
 		// Stuff we can be pretty sure of...
 		//
 		else if (StringsContainWord(name, name, "bespin"))
 			shader.surfaceFlags |= MATERIAL_MARBLE;
-		else if (StringsContainWord(name, name, "metal") || StringsContainWord(name, name, "pipe") || StringsContainWord(name, name, "shaft") || StringsContainWord(name, name, "scope") || StringsContainWord(name, name, "blaster") || StringsContainWord(name, name, "pistol") || StringsContainWord(name, name, "thermal") || StringsContainWord(name, name, "bowcaster") || StringsContainWord(name, name, "cannon") || StringsContainWord(name, name, "saber") || StringsContainWord(name, name, "rifle") || StringsContainWord(name, name, "jetpack") || StringsContainWord(name, name, "door") || StringsContainWord(name, name, "antenna") || StringsContainWord(name, name, "xwing") || StringsContainWord(name, name, "tie_") || StringsContainWord(name, name, "raven") || StringsContainWord(name, name, "falcon") || StringsContainWord(name, name, "engine") || StringsContainWord(name, name, "rocket") || StringsContainWord(name, name, "elevator") || StringsContainWord(name, name, "floor"))
+		else if (StringsContainWord(name, name, "metal") || StringsContainWord(name, name, "pipe") || StringsContainWord(name, name, "shaft") || StringsContainWord(name, name, "scope") || StringsContainWord(name, name, "blaster") || StringsContainWord(name, name, "pistol") || StringsContainWord(name, name, "thermal") || StringsContainWord(name, name, "bowcaster") || StringsContainWord(name, name, "cannon") || StringsContainWord(name, name, "saber") || StringsContainWord(name, name, "rifle") || StringsContainWord(name, name, "jetpack") || StringsContainWord(name, name, "antenna") || StringsContainWord(name, name, "xwing") || StringsContainWord(name, name, "tie_") || StringsContainWord(name, name, "raven") || StringsContainWord(name, name, "falcon") || StringsContainWord(name, name, "engine") || StringsContainWord(name, name, "rocket") || StringsContainWord(name, name, "elevator") || StringsContainWord(name, name, "floor"))
 			shader.surfaceFlags |= MATERIAL_SOLIDMETAL;
 		else if (StringsContainWord(name, name, "glass") || StringsContainWord(name, name, "light") || StringsContainWord(name, name, "screen") || StringsContainWord(name, name, "lamp"))
 			shader.surfaceFlags |= MATERIAL_GLASS;
@@ -2719,9 +2721,9 @@ static qboolean ParseShader( const char *name, const char **text )
 			shader.surfaceFlags |= MATERIAL_GRAVEL;
 		else if (StringsContainWord(name, name, "dirt"))
 			shader.surfaceFlags |= MATERIAL_DIRT;
-		else if (StringsContainWord(name, name, "concrete"))
+		else if (StringsContainWord(name, name, "concrete") || StringsContainWord(name, name, "stucco"))
 			shader.surfaceFlags |= MATERIAL_CONCRETE;
-		else if (StringsContainWord(name, name, "marble") || StringsContainWord(name, name, "teeth") || StringsContainWord(name, name, "stucco"))
+		else if (StringsContainWord(name, name, "marble") || StringsContainWord(name, name, "teeth"))
 			shader.surfaceFlags |= MATERIAL_MARBLE;
 		else if (StringsContainWord(name, name, "snow"))
 			shader.surfaceFlags |= MATERIAL_SNOW;
@@ -2767,13 +2769,13 @@ static qboolean ParseShader( const char *name, const char **text )
 		else if (StringsContainWord(name, name, "yavin") && (StringsContainWord(name, name, "trim") || StringsContainWord(name, name, "step") || StringsContainWord(name, name, "pad")))
 			shader.surfaceFlags |= MATERIAL_ROCK;
 		else if (StringsContainWord(name, name, "outside"))
-			shader.surfaceFlags |= MATERIAL_ROCK; // Outside, assume rocks...
+			shader.surfaceFlags |= MATERIAL_CONCRETE; // Outside, assume concrete...
 		else if (StringsContainWord(name, name, "out") && (StringsContainWord(name, name, "trim") || StringsContainWord(name, name, "step") || StringsContainWord(name, name, "pad")))
-			shader.surfaceFlags |= MATERIAL_ROCK; // Outside, assume rocks...
+			shader.surfaceFlags |= MATERIAL_CONCRETE; // Outside, assume concrete...
 		else if (StringsContainWord(name, name, "out") && (StringsContainWord(name, name, "frame") || StringsContainWord(name, name, "wall") || StringsContainWord(name, name, "round") || StringsContainWord(name, name, "crate") || StringsContainWord(name, name, "trim") || StringsContainWord(name, name, "support") || StringsContainWord(name, name, "step") || StringsContainWord(name, name, "pad") || StringsContainWord(name, name, "weapon") || StringsContainWord(name, name, "gun")))
-			shader.surfaceFlags |= MATERIAL_ROCK; // Outside, assume rocks...
+			shader.surfaceFlags |= MATERIAL_CONCRETE; // Outside, assume concrete...
 		else if (StringsContainWord(name, name, "frame") || StringsContainWord(name, name, "wall") || StringsContainWord(name, name, "round") || StringsContainWord(name, name, "crate") || StringsContainWord(name, name, "trim") || StringsContainWord(name, name, "support") || StringsContainWord(name, name, "step") || StringsContainWord(name, name, "pad") || StringsContainWord(name, name, "weapon") || StringsContainWord(name, name, "gun"))
-			shader.surfaceFlags |= MATERIAL_SOLIDMETAL;
+			shader.surfaceFlags |= MATERIAL_CONCRETE;
 		else if (StringsContainWord(name, name, "yavin"))
 			shader.surfaceFlags |= MATERIAL_ROCK; // On yavin maps, assume rock for anything else...
 		else if (StringsContainWord(name, name, "black") || StringsContainWord(name, name, "boon") || StringsContainWord(name, name, "items") || StringsContainWord(name, name, "shield"))
@@ -2782,8 +2784,6 @@ static qboolean ParseShader( const char *name, const char **text )
 			shader.surfaceFlags |= MATERIAL_PLASTIC;
 		else if (StringsContainWord(name, name, "map_objects"))
 			shader.surfaceFlags |= MATERIAL_SOLIDMETAL; // hmmm, maybe... testing...
-		else if (StringsContainWord(name, name, "boba"))
-			shader.surfaceFlags |= MATERIAL_ARMOR;
 		else if (StringsContainWord(name, name, "rodian"))
 			shader.surfaceFlags |= MATERIAL_FLESH;
 		else
@@ -4513,72 +4513,16 @@ most world construction surfaces.
 */
 
 #ifdef ___SHADER_GENERATOR___
-qboolean R_ShaderExists( const char *name, const int *lightmapIndexes, const byte *styles, qboolean mipRawImage ) {
-	char		strippedName[MAX_QPATH];
-	int			hash;
-	shader_t	*sh;
-	const char	*shaderText;
-	char		myShader[512] = {0};
-
-	if ( name[0] == 0 ) {
-		return qtrue;
-	}
-
-	// use (fullbright) vertex lighting if the bsp file doesn't have
-	// lightmaps
-	if ( lightmapIndexes[0] >= 0 && lightmapIndexes[0] >= tr.numLightmaps ) {
-		lightmapIndexes = lightmapsVertex;
-	} else if ( lightmapIndexes[0] < LIGHTMAP_2D ) {
-		// negative lightmap indexes cause stray pointers (think tr.lightmaps[lightmapIndex])
-		ri->Printf( PRINT_WARNING, "WARNING: shader '%s' has invalid lightmap index of %d\n", name, lightmapIndexes[0]  );
-		lightmapIndexes = lightmapsVertex;
-	}
-
-	COM_StripExtension(name, strippedName, sizeof(strippedName));
-
-	hash = generateHashValue(strippedName, FILE_HASH_SIZE);
-
-	//
-	// see if the shader is already loaded
-	//
-	for (sh = hashTable[hash]; sh; sh = sh->next) {
-		// NOTE: if there was no shader or image available with the name strippedName
-		// then a default shader is created with lightmapIndex == LIGHTMAP_NONE, so we
-		// have to check all default shaders otherwise for every call to R_FindShader
-		// with that same strippedName a new default shader is created.
-		if ( IsShader (sh, strippedName, lightmapIndexes, styles) ) {
-			// match found
-			return qtrue;
-		}
-	}
-
-	// clear the global shader
-	ClearGlobalShader();
-	Q_strncpyz(shader.name, strippedName, sizeof(shader.name));
-	Com_Memcpy (shader.lightmapIndex, lightmapIndexes, sizeof (shader.lightmapIndex));
-	Com_Memcpy (shader.styles, styles, sizeof (shader.styles));
-
-	//
-	// attempt to define shader from an explicit parameter file
-	//
-	shaderText = FindShaderInShaderText( strippedName );
-	if ( shaderText ) {
-		return qtrue;
-	}
-
-	return qfalse;
-}
-
 char uniqueGenericPlayerShader[] = "{\n"\
 "qer_editorimage	%s\n"\
 "q3map_nolightmap\n"\
-"cull	twosided\n"\
 "{\n"\
 "map %s\n"\
 "rgbGen lightingDiffuse\n"\
 "}\n"\
 "}\n"\
 "";
+//rgbGen identity
 
 char uniqueGenericWeaponShader[] = "{\n"\
 "q3map_nolightmap\n"\
@@ -4601,6 +4545,7 @@ char uniqueGenericShader[] = "{\n"\
 */
 
 char uniqueGenericShader[] = "{\n"\
+"qer_editorimage	%s\n"\
 "{\n"\
 "map %s\n"\
 "rgbGen vertex\n"\
@@ -4608,178 +4553,12 @@ char uniqueGenericShader[] = "{\n"\
 "{\n"\
 "map %s\n"\
 "blendFunc GL_SRC_ALPHA GL_ONE\n"\
-"detail\n"\
+"rgbGen lightingDiffuse\n"\
 "alphaGen lightingSpecular\n"\
+"detail\n"\
 "}\n"\
 "}\n"\
 "";
-
-shader_t *R_CreateGenericAdvancedShader( const char *name, const int *lightmapIndexes, const byte *styles, qboolean mipRawImage ) {
-	char		strippedName[MAX_QPATH];
-	int			hash, flags;
-	const char	*shaderText;
-	image_t		*image;
-	shader_t	*sh;
-	char		myShader[512] = {0};
-
-	if ( name[0] == 0 ) {
-		return tr.defaultShader;
-	}
-
-	// use (fullbright) vertex lighting if the bsp file doesn't have
-	// lightmaps
-	if ( lightmapIndexes[0] >= 0 && lightmapIndexes[0] >= tr.numLightmaps ) {
-		lightmapIndexes = lightmapsVertex;
-	} else if ( lightmapIndexes[0] < LIGHTMAP_2D ) {
-		// negative lightmap indexes cause stray pointers (think tr.lightmaps[lightmapIndex])
-		ri->Printf( PRINT_WARNING, "WARNING: shader '%s' has invalid lightmap index of %d\n", name, lightmapIndexes[0]  );
-		lightmapIndexes = lightmapsVertex;
-	}
-
-	COM_StripExtension(name, strippedName, sizeof(strippedName));
-
-	hash = generateHashValue(strippedName, FILE_HASH_SIZE);
-
-	//
-	// see if the shader is already loaded
-	//
-	for (sh = hashTable[hash]; sh; sh = sh->next) {
-		// NOTE: if there was no shader or image available with the name strippedName
-		// then a default shader is created with lightmapIndex == LIGHTMAP_NONE, so we
-		// have to check all default shaders otherwise for every call to R_FindShader
-		// with that same strippedName a new default shader is created.
-		if ( IsShader (sh, strippedName, lightmapIndexes, styles) ) {
-			// match found
-			return sh;
-		}
-	}
-
-	// clear the global shader
-	ClearGlobalShader();
-	Q_strncpyz(shader.name, strippedName, sizeof(shader.name));
-	Com_Memcpy (shader.lightmapIndex, lightmapIndexes, sizeof (shader.lightmapIndex));
-	Com_Memcpy (shader.styles, styles, sizeof (shader.styles));
-
-	// Generate the shader...
-	if (StringContainsWord(strippedName, "player"))
-		sprintf(myShader, uniqueGenericPlayerShader, strippedName, strippedName);
-	if (StringContainsWord(strippedName, "weapon"))
-		sprintf(myShader, uniqueGenericWeaponShader, strippedName, strippedName);
-	else
-		sprintf(myShader, uniqueGenericShader, strippedName, strippedName);
-
-	//ri->Printf(PRINT_WARNING, "GENERATED SHADER:\n%s\n", myShader);
-	//Com_Error(ERR_FATAL, "GENERATED SHADER:\n%s\n", myShader);
-
-	//
-	// attempt to define shader from an explicit parameter file
-	//
-	//shaderText = FindShaderInShaderText( strippedName );
-	shaderText = myShader;
-	
-	if ( shaderText ) {
-		// enable this when building a pak file to get a global list
-		// of all explicit shaders
-		if ( r_printShaders->integer ) {
-			ri->Printf( PRINT_ALL, "*SHADER* %s\n", name );
-		}
-
-		if ( !ParseShader( name, &shaderText ) ) {
-			// had errors, so use default shader
-			//shader.defaultShader = qtrue;
-			//Com_Error(ERR_FATAL, "GENERATED SHADER FAILED:\n%s\n", myShader);
-			return NULL;
-		}
-		if (!shader.defaultShader)
-		{
-			sh = FinishShader();
-			return sh;
-		}
-	}
-
-	//
-	// if not defined in the in-memory shader descriptions,
-	// look for a single supported image file
-	//
-
-	flags = IMGFLAG_NONE;
-
-	if (r_srgb->integer)
-		flags |= IMGFLAG_SRGB;
-
-	if (mipRawImage)
-	{
-		flags |= IMGFLAG_MIPMAP | IMGFLAG_PICMIP;
-
-		if (r_genNormalMaps->integer)
-			flags |= IMGFLAG_GENNORMALMAP;
-	}
-	else
-	{
-		flags |= IMGFLAG_CLAMPTOEDGE;
-	}
-
-	image = R_FindImageFile( name, IMGTYPE_COLORALPHA, flags );
-	if ( !image ) {
-		image = tr.defaultImage;
-		//ri->Printf( PRINT_DEVELOPER, "Couldn't find image file for shader %s\n", name );
-		//shader.defaultShader = qtrue;
-		//return FinishShader();
-	}
-
-	//
-	// create the default shading commands
-	//
-	if ( shader.lightmapIndex[0] == LIGHTMAP_NONE ) {
-		// dynamic colors at vertexes
-		stages[0].bundle[0].image[0] = image;
-		stages[0].active = qtrue;
-		stages[0].rgbGen = CGEN_LIGHTING_DIFFUSE;
-		stages[0].stateBits = GLS_DEFAULT;
-	} else if ( shader.lightmapIndex[0] == LIGHTMAP_BY_VERTEX ) {
-		// explicit colors at vertexes
-		stages[0].bundle[0].image[0] = image;
-		stages[0].active = qtrue;
-		stages[0].rgbGen = CGEN_EXACT_VERTEX;
-		stages[0].alphaGen = AGEN_SKIP;
-		stages[0].stateBits = GLS_DEFAULT;
-	} else if ( shader.lightmapIndex[0] == LIGHTMAP_2D ) {
-		// GUI elements
-		stages[0].bundle[0].image[0] = image;
-		stages[0].active = qtrue;
-		stages[0].rgbGen = CGEN_VERTEX;
-		stages[0].alphaGen = AGEN_VERTEX;
-		stages[0].stateBits = GLS_DEPTHTEST_DISABLE |
-			  GLS_SRCBLEND_SRC_ALPHA |
-			  GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA;
-	} else if ( shader.lightmapIndex[0] == LIGHTMAP_WHITEIMAGE ) {
-		// fullbright level
-		stages[0].bundle[0].image[0] = tr.whiteImage;
-		stages[0].active = qtrue;
-		stages[0].rgbGen = CGEN_IDENTITY_LIGHTING;
-		stages[0].stateBits = GLS_DEFAULT;
-
-		stages[1].bundle[0].image[0] = image;
-		stages[1].active = qtrue;
-		stages[1].rgbGen = CGEN_IDENTITY;
-		stages[1].stateBits |= GLS_SRCBLEND_DST_COLOR | GLS_DSTBLEND_ZERO;
-	} else {
-		// two pass lightmap
-		stages[0].bundle[0].image[0] = tr.lightmaps[shader.lightmapIndex[0]];
-		stages[0].bundle[0].isLightmap = qtrue;
-		stages[0].active = qtrue;
-		stages[0].rgbGen = CGEN_IDENTITY;	// lightmaps are scaled on creation
-													// for identitylight
-		stages[0].stateBits = GLS_DEFAULT;
-
-		stages[1].bundle[0].image[0] = image;
-		stages[1].active = qtrue;
-		stages[1].rgbGen = CGEN_IDENTITY;
-		stages[1].stateBits |= GLS_SRCBLEND_DST_COLOR | GLS_DSTBLEND_ZERO;
-	}
-
-	return FinishShader();
-}
 #endif //___SHADER_GENERATOR___
 
 shader_t *R_FindShader( const char *name, const int *lightmapIndexes, const byte *styles, qboolean mipRawImage ) {
@@ -4788,6 +4567,9 @@ shader_t *R_FindShader( const char *name, const int *lightmapIndexes, const byte
 	const char	*shaderText;
 	image_t		*image;
 	shader_t	*sh;
+#ifdef ___SHADER_GENERATOR___
+	char		myShader[512] = {0};
+#endif //___SHADER_GENERATOR___
 
 	if ( name[0] == 0 ) {
 		return tr.defaultShader;
@@ -4844,10 +4626,56 @@ shader_t *R_FindShader( const char *name, const int *lightmapIndexes, const byte
 			// had errors, so use default shader
 			shader.defaultShader = qtrue;
 		}
+#ifdef ___SHADER_GENERATOR___
+		if (!shader.defaultShader || StringContainsWord(name, "icon") 
+			|| !(!strncmp(name, "textures/", 9) || !strncmp(name, "models/", 7)))
+		{
+			sh = FinishShader();
+			return sh;
+		}
+#else //!___SHADER_GENERATOR___
 		sh = FinishShader();
 		return sh;
+#endif //___SHADER_GENERATOR___
 	}
 
+#ifdef ___SHADER_GENERATOR___
+	if ((!strncmp(name, "textures/", 9) || !strncmp(name, "models/", 7)) && !StringContainsWord(name, "icon")) 
+	{
+		shader.defaultShader = qfalse;
+
+		// Generate the shader...
+		if (StringContainsWord(strippedName, "player"))
+			sprintf(myShader, uniqueGenericPlayerShader, strippedName, strippedName);
+		else if (StringContainsWord(strippedName, "weapon"))
+			sprintf(myShader, uniqueGenericPlayerShader/*uniqueGenericWeaponShader*/, strippedName, strippedName);
+		else
+			sprintf(myShader, uniqueGenericShader, strippedName, strippedName, strippedName);
+
+		//
+		// attempt to define shader from an explicit parameter file
+		//
+		shaderText = myShader;
+		if ( shaderText ) {
+			// enable this when building a pak file to get a global list
+			// of all explicit shaders
+			if ( r_printShaders->integer ) {
+				ri->Printf( PRINT_ALL, "*SHADER* %s\n", name );
+			}
+
+			//Com_Error(ERR_FATAL, "SHADER LOOKS LIKE:\n%s\n", shaderText);
+
+			if ( !ParseShader( name, &shaderText ) ) {
+				// had errors, so use default shader
+				shader.defaultShader = qtrue;
+			} else {
+				ri->Printf(PRINT_WARNING, "Advanced generic shader generated for image %s.\n", name);
+			}
+			sh = FinishShader();
+			return sh;
+		}
+	}
+#endif //___SHADER_GENERATOR___
 
 	//
 	// if not defined in the in-memory shader descriptions,

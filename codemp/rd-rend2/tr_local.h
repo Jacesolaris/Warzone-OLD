@@ -24,7 +24,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #ifndef TR_LOCAL_H
 #define TR_LOCAL_H
 
-//#define ___SHADER_GENERATOR___
+#define ___SHADER_GENERATOR___
+#define ___SHADER_GENERATOR_PLAYERS_ONLY___
 
 //#define __DYNAMIC_SHADOWS__
 #ifdef __DYNAMIC_SHADOWS__

@@ -453,10 +453,10 @@ void main()
 			specular *= u_SpecularScale;
 	#if defined(USE_CUBEMAP)
 		else if (var_Local1.b <= 0.8)
-			specular *= var_Local1.b * 0.6;
-		else if (var_Local1.b < 0.95)
-			specular *= var_Local1.b * 1.0;
-		else if (var_Local1.b >= 0.95)
+			specular *= var_Local1.b * 0.4;
+		else if (var_Local1.b <= 0.95)
+			specular *= var_Local1.b * 0.7;
+		else if (var_Local1.b > 0.95)
 			specular *= var_Local1.b * 1.0;
 	#endif
 		else // Material Defaults...
@@ -521,17 +521,18 @@ void main()
 #endif
 
   #if defined(USE_CUBEMAP)
+  if (var_Local1.b > 0.8) {
 	reflectance = EnvironmentBRDF(gloss, NE, specular.rgb);
 
 	vec3 R = reflect(E, N);
 
 	// parallax corrected cubemap (cheaper trick)
-	// from http://seblagarde.wordpress.com/2012/09/29/image-based-lighting-approaches-and-parallax-corrected-cubemap/
 	vec3 parallax = u_CubeMapInfo.xyz + u_CubeMapInfo.w * viewDir;
 
 	vec3 cubeLightColor = textureCubeLod(u_CubeMap, R + parallax, 7.0 - gloss * 7.0).rgb * u_EnableTextures.w;
 
 	gl_FragColor.rgb += cubeLightColor * reflectance;
+  }
   #endif
 
   #if defined(USE_PRIMARY_LIGHT)
