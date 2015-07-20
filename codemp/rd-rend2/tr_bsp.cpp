@@ -2983,6 +2983,196 @@ static void R_LoadCubemapEntities(const char *cubemapEntityName)
 	}
 }
 
+#define		MOD_DIRECTORY "JKG"
+#define		BOT_MOD_NAME	"aimod"
+float		NOD_VERSION = 1.1f;
+
+extern char currentMapName[128];
+
+int gWPNum = 0;
+vec3_t waypoints[32768];
+int skipzar = 0;
+
+qboolean
+AIMOD_NODES_LoadNodes ( void )
+{
+	fileHandle_t	f;
+	int				i, j;
+	char			filename[60];
+	short int		objNum[3] = { 0, 0, 0 },
+	objFlags, numLinks;
+	int				flags;
+	vec3_t			vec;
+	short int		fl2;
+	int				target;
+	char			name[] = BOT_MOD_NAME;
+	char			nm[64] = "";
+	float			version;
+	char			map[64] = "";
+	char			mp[64] = "";
+	/*short*/ int		numberNodes;
+	short int		temp, fix_aas_nodes;
+
+	gWPNum = 0;
+
+	i = 0;
+	strcpy( filename, "nodes/" );
+
+	////////////////////
+	//ri->Cvar_Register( &mapname, "mapname", "", CVAR_SERVERINFO | CVAR_ROM );
+
+	Q_strcat( filename, sizeof(filename), currentMapName );
+
+	///////////////////
+	//open the node file for reading, return false on error
+	ri->FS_FOpenFileRead( va( "%s.bwp", filename), &f, qfalse );
+	
+	if ( !f )
+	{
+		ri->FS_FCloseFile( f );
+		ri->Printf( PRINT_WARNING, "^1*** ^3%s^5: Rend2 - Failed to find waypoint file ^7%s.bwp^5.\n", "JKG", filename );
+		return qfalse;
+	}
+
+	strcpy( mp, currentMapName );
+	ri->FS_Read( &nm, strlen( name) + 1, f );									//read in a string the size of the mod name (+1 is because all strings end in hex '00')
+	ri->FS_Read( &version, sizeof(float), f );			//read and make sure the version is the same
+
+	if ( version != NOD_VERSION && version != 1.0f )
+	{
+		ri->Printf( PRINT_WARNING, "^1*** ^3WARNING^5: REND2 - Reading from ^7%s.bwp^3 failed^5!!!\n", filename );
+		ri->Printf( PRINT_WARNING, "^1*** ^3       ^5  Old node file detected.\n" );
+		ri->FS_FCloseFile( f );
+		return qfalse;
+	}
+
+	ri->FS_Read( &map, strlen( mp) + 1, f );			//make sure the file is for the current map
+	if ( Q_stricmp( map, mp) != 0 )
+	{
+		ri->Printf( PRINT_WARNING, "^1*** ^3WARNING^5: REND2 - Reading from ^7%s.bwp^3 failed^5!!!\n", filename );
+		ri->Printf( PRINT_WARNING, "^1*** ^3       ^5  Node file is not for this map!\n" );
+		ri->FS_FCloseFile( f );
+		return qfalse;
+	}
+
+	if (version == NOD_VERSION)
+	{
+		ri->FS_Read( &numberNodes, sizeof(/*short*/ int), f ); //read in the number of nodes in the map
+	}
+	else
+	{
+		ri->FS_Read( &temp, sizeof(short int), f ); //read in the number of nodes in the map
+		numberNodes = temp;
+	}
+
+	for ( i = 0; i < numberNodes; i++ )					//loop through all the nodes
+	{
+		int links[32];
+		int link_flags[32];
+		int new_flags = 0;
+
+		for (j = 0; j < 32; j++)
+		{
+			links[j] = -1;
+			link_flags[j] = -1;
+		}
+
+		//read in all the node info stored in the file
+		ri->FS_Read( &vec, sizeof(vec3_t), f );
+		ri->FS_Read( &flags, sizeof(int), f );
+		ri->FS_Read( objNum, sizeof(short int) * 3, f );
+		ri->FS_Read( &objFlags, sizeof(short int), f );
+		ri->FS_Read( &numLinks, sizeof(short int), f );
+
+		//Load_AddNode( vec, flags, objNum, objFlags );	//add the node
+
+		//loop through all of the links and read the data
+		for ( j = 0; j < numLinks; j++ )
+		{
+			if (version == NOD_VERSION)
+			{
+				ri->FS_Read( &target, sizeof(/*short*/ int), f );
+			}
+			else
+			{
+				ri->FS_Read( &temp, sizeof(short int), f );
+				target = temp;
+			}
+
+			ri->FS_Read( &fl2, sizeof(short int), f );
+			//ConnectNodes( i, target, fl2 );				//add any links
+			links[j] = target;
+			link_flags[j] = fl2;
+		}
+
+		// Set node objective flags..
+		//AIMOD_NODES_SetObjectiveFlags( i );
+		//CreateNewWP_FromAWPNode(i, vec, new_flags, 1/*weight*/, -1/*associated_entity*/, 64.0f/*disttonext*/, -1, numLinks, links, link_flags);
+		
+		/*
+		if (skipzar >= 4)
+		{
+			VectorCopy(vec, waypoints[gWPNum]);
+			gWPNum++;
+			//skipzar = 0;
+		}
+		else
+		{
+			skipzar++;
+		}
+		*/
+
+		qboolean haveClose = qfalse;
+
+		for (int z = 0; z < gWPNum; z++)
+		{
+			if (Distance(vec, waypoints[z]) < 128) {
+				haveClose = qtrue;
+				break;
+			}
+		}
+
+		if (!haveClose)
+		{
+			VectorCopy(vec, waypoints[gWPNum]);
+			gWPNum++;
+		}
+	}
+
+	ri->FS_Read( &fix_aas_nodes, sizeof(short int), f );
+	ri->FS_FCloseFile( f );							//close the file
+	ri->Printf( PRINT_WARNING, "^1*** ^3%s^5: Rend2 - Successfully loaded %i waypoints from advanced waypoint file ^7%s.bwp^5.\n", "JKG",
+			  numberNodes, filename );
+
+	return qtrue;
+}
+
+static void R_LoadCubemapWaypoints( void )
+{
+	int numCubemaps = 0;
+
+	// count cubemaps
+	numCubemaps = 0;
+
+	if (!AIMOD_NODES_LoadNodes()) return;
+
+	numCubemaps = gWPNum;
+
+	if (!numCubemaps)
+		return;
+
+	tr.numCubemaps = numCubemaps;
+	tr.cubemapOrigins = (vec3_t *)ri->Hunk_Alloc( tr.numCubemaps * sizeof(*tr.cubemapOrigins), h_low);
+	tr.cubemaps = (image_t **)ri->Hunk_Alloc( tr.numCubemaps * sizeof(*tr.cubemaps), h_low);
+
+	numCubemaps = 0;
+	for (int i = 0; i < gWPNum; i++)
+	{
+		VectorCopy(waypoints[i], tr.cubemapOrigins[numCubemaps]);
+		numCubemaps++;
+	}
+}
+
 static void R_AssignCubemapsToWorldSurfaces(void)
 {
 	world_t	*w;
@@ -3115,6 +3305,7 @@ void R_MergeLeafSurfaces(void)
 				continue;
 
 			fogIndex1 = surf1->fogIndex;
+			
 			cubemapIndex1 = surf1->cubemapIndex;
 
 			s_worldData.surfacesViewCount[surfNum1] = surfNum1;
@@ -3694,7 +3885,9 @@ void RE_LoadWorldMap( const char *name ) {
 		if (!tr.numCubemaps)
 		{
 			// use deathmatch spawn points as cubemaps
-			R_LoadCubemapEntities("info_player_deathmatch");
+			//R_LoadCubemapEntities("info_player_deathmatch");
+			// UQ1: Warzone can do better!
+			R_LoadCubemapWaypoints();
 		}
 
 		if (tr.numCubemaps)

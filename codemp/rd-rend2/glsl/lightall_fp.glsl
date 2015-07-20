@@ -425,13 +425,7 @@ void main()
   #if defined(USE_LIGHTMAP) || defined(USE_LIGHT_VERTEX)
 	ambientColor = lightColor;
 	float surfNL = clamp(dot(var_Normal.xyz, L), 0.0, 1.0);
-
-	// Scale the incoming light to compensate for the baked-in light angle
-	// attenuation.
 	lightColor /= max(surfNL, 0.25);
-
-	// Recover any unused light as ambient, in case attenuation is over 4x or
-	// light is below the surface
 	ambientColor = clamp(ambientColor - lightColor * surfNL, 0.0, 1.0);
   #endif
   
@@ -477,6 +471,14 @@ void main()
 	{
 		if (length(u_SpecularScale) != 0.0) // Shader Specified...
 			specular *= u_SpecularScale;
+	#if defined(USE_CUBEMAP)
+		else if (var_Local1.b < 0.9)
+			specular *= var_Local1.b * 0.6;
+		else if (var_Local1.b < 0.95)
+			specular *= var_Local1.b * 0.9;
+		else if (var_Local1.b >= 0.95)
+			specular *= var_Local1.b * 1.0;
+	#endif
 		else // Material Defaults...
 			specular *= var_Local1.b;
 	}
@@ -545,7 +547,6 @@ void main()
 
 	vec3 R = reflect(E, N);
 
-	// parallax corrected cubemap (cheaper trick)
 	vec3 parallax = u_CubeMapInfo.xyz + u_CubeMapInfo.w * viewDir;
 
 	vec3 cubeLightColor = textureCubeLod(u_CubeMap, R + parallax, 7.0 - gloss * 7.0).rgb * u_EnableTextures.w;

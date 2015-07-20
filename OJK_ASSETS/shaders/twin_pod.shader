@@ -1,7 +1,7 @@
 models/map_objects/bespin/twinpodccglow
 {
 	qer_editorimage	models/players/twin_pod/model
-	q3map_nolightmap
+	//q3map_nolightmap
 	q3map_onlyvertexlighting
     {
         map models/map_objects/bespin/twinpodcc

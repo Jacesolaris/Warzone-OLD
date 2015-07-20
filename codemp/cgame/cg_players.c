@@ -3253,7 +3253,9 @@ static void CG_SetLerpFrameAnimation( centity_t *cent, clientInfo_t *ci, lerpFra
 	lf->animationNumber = newAnimation;
 
 	if ( newAnimation < 0 || newAnimation >= MAX_TOTALANIMATIONS ) {
-		trap->Error( ERR_DROP, "Bad animation number: %i", newAnimation );
+		//trap->Error( ERR_DROP, "Bad animation number: %i", newAnimation );
+		trap->Print( "Bad animation number: %i on entity %i.\n", newAnimation, cent->currentState.number );
+		newAnimation = 0;
 	}
 
 	anim = &bgAllAnims[cent->localAnimIndex].anims[ newAnimation ];

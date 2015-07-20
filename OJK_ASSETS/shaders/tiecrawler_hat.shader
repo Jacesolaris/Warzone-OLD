@@ -1,6 +1,6 @@
 models/players/tiecrawler_hat/body
 {	  
-	q3map_nolightmap
+	//q3map_nolightmap
 	q3map_onlyvertexlighting
     {
         map models/players/tiecrawler_hat/body.JPEG
@@ -19,7 +19,7 @@ models/players/tiecrawler_hat/body
 
 models/players/tiecrawler_hat/hubcap
 {	  
-	q3map_nolightmap
+	//q3map_nolightmap
 	q3map_onlyvertexlighting
     {
         map models/players/tiecrawler_hat/hubcap.JPEG
@@ -38,7 +38,7 @@ models/players/tiecrawler_hat/hubcap
 
 models/players/tiecrawler_hat/pannel2
 {	  
-	q3map_nolightmap
+	//q3map_nolightmap
 	q3map_onlyvertexlighting
     {
         map models/players/juggernaut_hat/pannel2.JPEG
@@ -58,7 +58,7 @@ models/players/tiecrawler_hat/pannel2
 
 models/players/tiecrawler_hat/pannel3
 {	  
-	q3map_nolightmap
+	//q3map_nolightmap
 	q3map_onlyvertexlighting
     {
         map models/players/juggernaut_hat/pannel3.JPEG
@@ -78,7 +78,7 @@ models/players/tiecrawler_hat/pannel3
 
 models/players/tiecrawler_hat/tread
 {	  
-	q3map_nolightmap
+	//q3map_nolightmap
 	q3map_onlyvertexlighting
     {
         map models/players/tiecrawler_hat/tread.JPEG

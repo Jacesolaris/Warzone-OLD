@@ -451,6 +451,14 @@ void main()
 	{
 		if (length(u_SpecularScale) != 0.0) // Shader Specified...
 			specular *= u_SpecularScale;
+	#if defined(USE_CUBEMAP)
+		else if (var_Local1.b < 0.9)
+			specular *= var_Local1.b * 0.6;
+		else if (var_Local1.b < 0.95)
+			specular *= var_Local1.b * 0.9;
+		else if (var_Local1.b >= 0.95)
+			specular *= var_Local1.b * 1.0;
+	#endif
 		else // Material Defaults...
 			specular *= var_Local1.b;
 	}
@@ -461,13 +469,11 @@ void main()
 	float shininess = exp2(gloss * 13.0);
 
   #if defined(SPECULAR_IS_METALLIC)
-	// diffuse is actually base color, and red of specular is metallicness
 	float metallic = specular.r;
 
 	specular.rgb = (0.96 * metallic) * diffuse.rgb + vec3(0.04);
 	diffuse.rgb *= 1.0 - metallic;
   #else
-	// adjust diffuse by specular reflectance, to maintain energy conservation
 	diffuse.rgb *= vec3(1.0) - specular.rgb;
   #endif
 

@@ -2696,11 +2696,19 @@ static qboolean ParseShader( const char *name, const char **text )
 
 	if (!HaveSurfaceType(shader.surfaceFlags))
 	{
-		if (StringsContainWord(name, name, "plastic") || StringsContainWord(name, name, "trooper") || StringsContainWord(name, name, "medpack") || StringsContainWord(name, name, "reborn"))
+		//
+		// Special cases - where we are pretty sure we want lots of specular and reflection...
+		//
+		if (StringsContainWord(name, name, "xwing") || StringsContainWord(name, name, "xwbody") || StringsContainWord(name, name, "crate") || StringsContainWord(name, name, "cargo") || StringsContainWord(name, name, "freight") || StringsContainWord(name, name, "container") || StringsContainWord(name, name, "barrel") || StringsContainWord(name, name, "transport") || StringsContainWord(name, name, "airpur") || StringsContainWord(name, name, "tank"))
+			shader.surfaceFlags |= MATERIAL_PLASTIC;//MATERIAL_SOLIDMETAL;
+		else if (StringsContainWord(name, name, "plastic") || StringsContainWord(name, name, "trooper") || StringsContainWord(name, name, "reborn") || StringsContainWord(name, name, "medpac") || StringsContainWord(name, name, "bacta") || StringsContainWord(name, name, "mp/flag") || StringsContainWord(name, name, "xwing") || StringsContainWord(name, name, "tie_") || StringsContainWord(name, name, "ship"))
 			shader.surfaceFlags |= MATERIAL_PLASTIC;
-		else if (StringsContainWord(name, name, "metal") || StringsContainWord(name, name, "pipe") || StringsContainWord(name, name, "scope") || StringsContainWord(name, name, "blaster") || StringsContainWord(name, name, "pistol") || StringsContainWord(name, name, "thermal") || StringsContainWord(name, name, "bowcaster") || StringsContainWord(name, name, "cannon") || StringsContainWord(name, name, "saber") || StringsContainWord(name, name, "rifle") || StringsContainWord(name, name, "jetpack"))
+		//
+		// Stuff we can be pretty sure of...
+		//
+		else if (StringsContainWord(name, name, "metal") || StringsContainWord(name, name, "pipe") || StringsContainWord(name, name, "shaft") || StringsContainWord(name, name, "scope") || StringsContainWord(name, name, "blaster") || StringsContainWord(name, name, "pistol") || StringsContainWord(name, name, "thermal") || StringsContainWord(name, name, "bowcaster") || StringsContainWord(name, name, "cannon") || StringsContainWord(name, name, "saber") || StringsContainWord(name, name, "rifle") || StringsContainWord(name, name, "jetpack") || StringsContainWord(name, name, "door") || StringsContainWord(name, name, "antenna") || StringsContainWord(name, name, "xwing") || StringsContainWord(name, name, "tie_") || StringsContainWord(name, name, "raven") || StringsContainWord(name, name, "falcon") || StringsContainWord(name, name, "engine") || StringsContainWord(name, name, "rocket") || StringsContainWord(name, name, "elevator"))
 			shader.surfaceFlags |= MATERIAL_SOLIDMETAL;
-		else if (StringsContainWord(name, name, "glass") || StringsContainWord(name, name, "light"))
+		else if (StringsContainWord(name, name, "glass") || StringsContainWord(name, name, "light") || StringsContainWord(name, name, "screen") || StringsContainWord(name, name, "lamp"))
 			shader.surfaceFlags |= MATERIAL_GLASS;
 		else if (StringsContainWord(name, name, "sand"))
 			shader.surfaceFlags |= MATERIAL_SAND;
@@ -2726,27 +2734,68 @@ static qboolean ParseShader( const char *name, const char **text )
 			shader.surfaceFlags |= MATERIAL_CARPET;
 		else if (StringsContainWord(name, name, "plaster"))
 			shader.surfaceFlags |= MATERIAL_PLASTER;
-		else if (StringsContainWord(name, name, "computer") || StringsContainWord(name, name, "console") || StringsContainWord(name, name, "button") || StringsContainWord(name, name, "terminal") || StringsContainWord(name, name, "switch") || StringsContainWord(name, name, "panel"))
+		else if (StringsContainWord(name, name, "computer") || StringsContainWord(name, name, "console") || StringsContainWord(name, name, "button") || StringsContainWord(name, name, "terminal") || StringsContainWord(name, name, "switch") || StringsContainWord(name, name, "panel") || StringsContainWord(name, name, "control"))
 			shader.surfaceFlags |= MATERIAL_COMPUTER;
 		else if (StringsContainWord(name, name, "armor") || StringsContainWord(name, name, "armour"))
 			shader.surfaceFlags |= MATERIAL_ARMOR;
 		else if (StringsContainWord(name, name, "fabric"))
 			shader.surfaceFlags |= MATERIAL_FABRIC;
-		else if (StringsContainWord(name, name, "hood") || StringsContainWord(name, name, "robe") || StringsContainWord(name, name, "cloth") || StringsContainWord(name, name, "pants"))
-			shader.surfaceFlags |= MATERIAL_FABRIC;
 		else if (StringsContainWord(name, name, "tile") || StringsContainWord(name, name, "lift"))
 			shader.surfaceFlags |= MATERIAL_TILES;
-		else if (StringsContainWord(name, name, "leaf") || StringsContainWord(name, name, "leaves"))
+		else if (StringsContainWord(name, name, "leaf") || StringsContainWord(name, name, "leaves") || StringsContainWord(name, name, "fern") || StringsContainWord(name, name, "vine"))
 			shader.surfaceFlags |= MATERIAL_GREENLEAVES;
+		else if (StringsContainWord(name, name, "wood") || StringsContainWord(name, name, "tree"))
+			shader.surfaceFlags |= MATERIAL_SOLIDWOOD;
 		else if (StringsContainWord(name, name, "mud"))
 			shader.surfaceFlags |= MATERIAL_MUD;
 		else if (StringsContainWord(name, name, "ice"))
 			shader.surfaceFlags |= MATERIAL_ICE;
+		else if (StringsContainWord(name, name, "grass") && (StringsContainWord(name, name, "long") || StringsContainWord(name, name, "tall") || StringsContainWord(name, name, "thick")))
+			shader.surfaceFlags |= MATERIAL_LONGGRASS;
+		else if (StringsContainWord(name, name, "grass"))
+			shader.surfaceFlags |= MATERIAL_SHORTGRASS;
+		// Extra backup - backup stuff. Used when nothing better found...
+		else if (StringsContainWord(name, name, "hood") || StringsContainWord(name, name, "robe") || StringsContainWord(name, name, "cloth") || StringsContainWord(name, name, "pants"))
+			shader.surfaceFlags |= MATERIAL_FABRIC;
 		else if (StringsContainWord(name, name, "hair") || StringsContainWord(name, name, "chewbacca")) // use carpet
 			shader.surfaceFlags |= MATERIAL_CARPET;
+		else if (StringsContainWord(name, name, "red") || StringsContainWord(name, name, "blue") || StringsContainWord(name, name, "yellow") || StringsContainWord(name, name, "white") || StringsContainWord(name, name, "monitor"))
+			shader.surfaceFlags |= MATERIAL_PLASTIC;
+		else if (StringsContainWord(name, name, "yavin") && (StringsContainWord(name, name, "trim") || StringsContainWord(name, name, "step") || StringsContainWord(name, name, "pad")))
+			shader.surfaceFlags |= MATERIAL_ROCK;
+		else if (StringsContainWord(name, name, "outside"))
+			shader.surfaceFlags |= MATERIAL_ROCK; // Outside, assume rocks...
+		else if (StringsContainWord(name, name, "out") && (StringsContainWord(name, name, "trim") || StringsContainWord(name, name, "step") || StringsContainWord(name, name, "pad")))
+			shader.surfaceFlags |= MATERIAL_ROCK; // Outside, assume rocks...
+		else if (StringsContainWord(name, name, "out") && (StringsContainWord(name, name, "frame") || StringsContainWord(name, name, "wall") || StringsContainWord(name, name, "round") || StringsContainWord(name, name, "crate") || StringsContainWord(name, name, "trim") || StringsContainWord(name, name, "support") || StringsContainWord(name, name, "step") || StringsContainWord(name, name, "pad") || StringsContainWord(name, name, "weapon") || StringsContainWord(name, name, "gun")))
+			shader.surfaceFlags |= MATERIAL_ROCK; // Outside, assume rocks...
+		else if (StringsContainWord(name, name, "frame") || StringsContainWord(name, name, "wall") || StringsContainWord(name, name, "round") || StringsContainWord(name, name, "crate") || StringsContainWord(name, name, "trim") || StringsContainWord(name, name, "support") || StringsContainWord(name, name, "step") || StringsContainWord(name, name, "pad") || StringsContainWord(name, name, "weapon") || StringsContainWord(name, name, "gun"))
+			shader.surfaceFlags |= MATERIAL_SOLIDMETAL;
+		else if (StringsContainWord(name, name, "yavin"))
+			shader.surfaceFlags |= MATERIAL_ROCK; // On yavin maps, assume rock for anything else...
+		else if (StringsContainWord(name, name, "black") || StringsContainWord(name, name, "boon") || StringsContainWord(name, name, "items") || StringsContainWord(name, name, "shield"))
+			shader.surfaceFlags |= MATERIAL_PLASTIC;
+		else if (StringsContainWord(name, name, "refract") || StringsContainWord(name, name, "reflect"))
+			shader.surfaceFlags |= MATERIAL_PLASTIC;
+		else if (StringsContainWord(name, name, "map_objects"))
+			shader.surfaceFlags |= MATERIAL_SOLIDMETAL; // hmmm, maybe... testing...
+		else if (StringsContainWord(name, name, "boba"))
+			shader.surfaceFlags |= MATERIAL_ARMOR;
+		else if (StringsContainWord(name, name, "rodian"))
+			shader.surfaceFlags |= MATERIAL_FLESH;
 		else
 		{
-			ri->Printf(PRINT_WARNING, "Could not work out a default surface type for shader %s. It will fallback to default parallax and specular.\n", name);
+			if (!StringsContainWord(name, name, "gfx/") 
+				&& !StringsContainWord(name, name, "hud")
+				&& !StringsContainWord(name, name, "fire")
+				&& !StringsContainWord(name, name, "force")
+				&& !StringsContainWord(name, name, "explo")
+				&& !StringsContainWord(name, name, "cursor")
+				&& !StringsContainWord(name, name, "sky")
+				&& !StringsContainWord(name, name, "powerup")
+				&& !StringsContainWord(name, name, "slider")
+				&& !StringsContainWord(name, name, "mp/dark_")) // Dont bother reporting gfx/ or hud items...
+				ri->Printf(PRINT_WARNING, "Could not work out a default surface type for shader %s. It will fallback to default parallax and specular.\n", name);
 		}
 	}
 	

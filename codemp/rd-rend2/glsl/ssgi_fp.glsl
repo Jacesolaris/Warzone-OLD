@@ -129,7 +129,7 @@ vec3 CalculateFlare ( vec3 flare_color, vec3 final_color )
 	if (bt > 0.666) 
 		bt *= 0.666; // Bright lights get dulled... (eg: white)
 	else if (bt < 0.333) 
-		bt *= 1.8; // Dull lights get amplified... (eg: blue)
+		bt *= 2.3; // Dull lights get amplified... (eg: blue)
 	else 
 		bt *= 1.1; // Mid range lights get amplified slightly... (eg: yellow)
 

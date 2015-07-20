@@ -378,10 +378,14 @@ void CModelCacheManager::AllocateShaders( const char *psFileName )
  * These processes occur outside of the CacheManager class. They are exported by the renderer.
  */
 
+char currentMapName[128];
+
 void C_LevelLoadBegin(const char *psMapName, ForceReload_e eForceReload)
 {
 	static char sPrevMapName[MAX_QPATH]={0};
 	bool bDeleteModels = eForceReload == eForceReload_MODELS || eForceReload == eForceReload_ALL;
+
+	strcpy(currentMapName, psMapName);
 
 	if( bDeleteModels )
 		CModelCache->DeleteAll();

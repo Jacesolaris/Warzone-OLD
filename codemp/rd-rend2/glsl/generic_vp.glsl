@@ -71,6 +71,16 @@ varying vec4   var_Color;
 
 varying vec2	var_Dimensions;
 
+attribute vec3		attr_LightDirection;
+uniform vec4		u_Local1; // parallaxScale, haveSpecular, specularScale, 0
+uniform mat4		u_ModelMatrix;
+uniform vec3		u_ViewOrigin;
+
+varying vec4		var_Local1; // parallaxScale, haveSpecular, specularScale, 0
+varying vec3		var_ViewDir;
+varying vec3		var_Normal;
+varying vec4		var_LightDir;
+
 #if defined(USE_DEFORM_VERTEXES)
 vec3 DeformPosition(const vec3 pos, const vec3 normal, const vec2 st)
 {
@@ -267,8 +277,16 @@ void main()
 #endif
 
 	var_Dimensions = u_Dimensions;
+	var_Local1 = u_Local1;
 
 #if defined(USE_FOG)
 	var_Color *= vec4(1.0) - u_FogColorMask * sqrt(clamp(CalcFog(position), 0.0, 1.0));
 #endif
+
+	vec3 viewDir = u_ViewOrigin - position;
+	var_ViewDir = viewDir;
+
+	var_Normal = normal;
+	vec3 L = attr_LightDirection * 2.0 - vec3(1.0);
+	var_LightDir = vec4(L, 0.0);
 }
