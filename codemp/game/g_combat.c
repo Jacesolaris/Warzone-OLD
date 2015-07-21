@@ -4268,7 +4268,7 @@ void G_CheckForDismemberment(gentity_t *ent, gentity_t *enemy, vec3_t point, int
 	}
 	else
 	{
-		if (d_saberGhoul2Collision.integer && ent->client && ent->client->g2LastSurfaceTime == level.time)
+		if (ent->client && ent->client->g2LastSurfaceTime == level.time)
 		{
 			char hitSurface[MAX_QPATH];
 
@@ -4435,8 +4435,8 @@ void G_LocationBasedDamageModifier(gentity_t *ent, vec3_t point, int mod, int df
 		return;
 	}
 
-	if ((d_saberGhoul2Collision.integer && ent->client && ent->client->g2LastSurfaceTime == level.time && mod == MOD_SABER) || //using ghoul2 collision? Then if the mod is a saber we should have surface data from the last hit (unless thrown).
-		(d_projectileGhoul2Collision.integer && ent->client && ent->client->g2LastSurfaceTime == level.time)) //It's safe to assume we died from the projectile that just set our surface index. So, go ahead and use that as the surf I guess.
+	if ((ent->client && ent->client->g2LastSurfaceTime == level.time && mod == MOD_SABER) || //using ghoul2 collision? Then if the mod is a saber we should have surface data from the last hit (unless thrown).
+		(ent->client && ent->client->g2LastSurfaceTime == level.time)) //It's safe to assume we died from the projectile that just set our surface index. So, go ahead and use that as the surf I guess.
 	{
 		char hitSurface[MAX_QPATH];
 
