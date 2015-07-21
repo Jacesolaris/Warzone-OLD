@@ -2568,7 +2568,8 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 			{ //saber block
 				int			blockFXID = cgs.effects.mSaberBlock;
 				qhandle_t	blockSound = trap->S_RegisterSound(va( "sound/weapons/saber/saberblock%d.wav", Q_irand(1, 9) ));
-				qboolean	noFlare = qfalse;
+				//removing the screen flare of the old clash effects
+				//qboolean	noFlare = qfalse;
 
 				if ( es->otherEntityNum2 >= 0
 					&& es->otherEntityNum2 < ENTITYNUM_NONE )
@@ -2608,10 +2609,13 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 								blockSound = client->saber[saberNum].blockSound[Q_irand(0,2)];
 							}
 						}
+						//removing the screen flare of the old clash effects
+						/*
 						if ( (client->saber[saberNum].saberFlags2&SFL2_NO_CLASH_FLARE) )
 						{
 							noFlare = qtrue;
 						}
+						*/
 					}
 				}
 
@@ -2626,11 +2630,14 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 					trap->S_StartSound(es->origin, es->number, CHAN_AUTO, blockSound );
 					PlayEffectID( blockFXID, es->origin, fxDir, -1, -1, qfalse );
 
+					//removing the screen flare of the old clash effects
+					/*
 					if ( !noFlare )
 					{
 						cg_saberFlashTime = cg.time-50;
 						VectorCopy( es->origin, cg_saberFlashPos );
 					}
+					*/
 				}
 			}
 			else

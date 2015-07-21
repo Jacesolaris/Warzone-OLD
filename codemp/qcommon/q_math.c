@@ -1338,13 +1338,3 @@ float G_PointDistFromLineSegment( const vec3_t start, const vec3_t end, const ve
 	//perpendicular intersection is between the 2 endpoints, return dist to it from from
 	return Distance( intersection, from );
 }
-
-//[SaberSys]
-//float VectorDistances(vec3_t v1, vec3_t v2)
-//{//returns the distance between the two points.
-//	vec3_t dir;
-//
-//	VectorSubtract(v2, v1, dir);
-//	return VectorLength(dir);
-//}
-//[/SaberSys]

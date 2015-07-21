@@ -903,7 +903,8 @@ struct gclient_s {
 	int			lastGenCmdTime;
 
 	//weapon fire mode chargetime
-	int			firemodeTimer;
+	int			DoSaberBlockDebounce;
+	int			saberBlockDebounce;
 
 	struct force {
 		int		regenDebounce;
