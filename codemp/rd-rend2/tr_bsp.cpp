@@ -3123,10 +3123,36 @@ AIMOD_NODES_LoadNodes ( void )
 		*/
 
 		qboolean haveClose = qfalse;
+		float wpDistance = 96.0;
+
+		if (numberNodes > 49170)
+		{// Increase distance between cubemap render positions...
+			wpDistance = 512.0;
+		}
+		else if (numberNodes > 32786)
+		{// Increase distance between cubemap render positions...
+			wpDistance = 384.0;
+		}
+		else if (numberNodes > 24576)
+		{// Increase distance between cubemap render positions...
+			wpDistance = 352.0;
+		}
+		else if (numberNodes > 16384)
+		{// Increase distance between cubemap render positions...
+			wpDistance = 256.0;
+		}
+		else if (numberNodes > 8192)
+		{// Increase distance between cubemap render positions...
+			wpDistance = 192.0;
+		}
+		else if (numberNodes > 4096)
+		{// Increase distance between cubemap render positions...
+			wpDistance = 128.0;
+		}
 
 		for (int z = 0; z < gWPNum; z++)
 		{
-			if (Distance(vec, waypoints[z]) < 128) {
+			if (Distance(vec, waypoints[z]) < wpDistance) {
 				haveClose = qtrue;
 				break;
 			}

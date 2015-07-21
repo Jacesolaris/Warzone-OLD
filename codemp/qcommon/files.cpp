@@ -372,14 +372,20 @@ static fileHandle_t FS_HandleForFile(void) {
 
 static FILE	*FS_FileForHandle( fileHandle_t f ) {
 	if ( f < 1 || f >= MAX_FILE_HANDLES ) {
-		Com_Error( ERR_DROP, "FS_FileForHandle: out of range" );
+		//Com_Error( ERR_DROP, "FS_FileForHandle: out of range" );
+		Com_Printf( "FS_FileForHandle: out of range" );
+		return NULL;
 	}
 	if (fsh[f].zipFile == qtrue) {
-		Com_Error( ERR_DROP, "FS_FileForHandle: can't get FILE on zip file" );
+		//Com_Error( ERR_DROP, "FS_FileForHandle: can't get FILE on zip file" );
+		Com_Printf( "FS_FileForHandle: can't get FILE on zip file" );
+		return NULL;
 	}
 	if ( ! fsh[f].handleFiles.file.o ) {
 		assert(0);
-		Com_Error( ERR_DROP, "FS_FileForHandle: NULL" );
+		//Com_Error( ERR_DROP, "FS_FileForHandle: NULL" );
+		Com_Printf( "FS_FileForHandle: NULL" );
+		return NULL;
 	}
 
 	return fsh[f].handleFiles.file.o;

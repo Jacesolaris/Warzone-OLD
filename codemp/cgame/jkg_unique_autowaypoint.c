@@ -120,6 +120,8 @@ qboolean DO_TRANSLUCENT = qfalse;
 //#include <asm-i386/processor.h>
 //#endif //__linux__*/
 
+qboolean WP_CheckInSolid (vec3_t position); // below
+
 float VectorDistance( const vec3_t p1, const vec3_t p2 ) {
 	vec3_t	v;
 
@@ -1258,6 +1260,7 @@ qboolean VisibleAllowEntType ( int type, int flags )
 
 qboolean AIMod_AutoWaypoint_Check_PlayerWidth ( vec3_t origin ) 
 {
+#if 0
 	trace_t		trace;
 	vec3_t		org, destorg;
 
@@ -1296,6 +1299,13 @@ qboolean AIMod_AutoWaypoint_Check_PlayerWidth ( vec3_t origin )
 	}
 
 	return qtrue;
+#else
+	vec3_t		org;
+	VectorCopy(origin, org);
+	org[2]+=18;
+	if (WP_CheckInSolid(org)) return qfalse;
+	return qtrue;
+#endif
 }
 
 float FloorHeightAt ( vec3_t org ); // below
@@ -4053,7 +4063,7 @@ void CG_ShowSurface ( void )
 	down_org[2] = -65536.0f;
 	
 	// Do forward test...
-	CG_Trace( &tr, org, NULL, NULL, down_org, cg.clientNum, MASK_PLAYERSOLID/*MASK_ALL*/ );
+	CG_Trace( &tr, org, NULL, NULL, down_org, cg.clientNum, MASK_PLAYERSOLID|CONTENTS_TRIGGER|CONTENTS_PLAYERCLIP|CONTENTS_MONSTERCLIP|CONTENTS_BOTCLIP|CONTENTS_SHOTCLIP|CONTENTS_NODROP|CONTENTS_SHOTCLIP|CONTENTS_TRANSLUCENT );
 
 	//
 	// Surface
@@ -6566,8 +6576,7 @@ void AIMod_AutoWaypoint_Free_Memory ( void )
 
 void AIMod_AutoWaypoint_Init_Memory ( void ); // below...
 void AIMod_AutoWaypoint_Optimizer ( void ); // below...
-//void AIMod_AutoWaypoint_Cleaner ( qboolean quiet, qboolean null_links_only, qboolean relink_only ); // below...
-void AIMod_AutoWaypoint_Cleaner ( qboolean quiet, qboolean null_links_only, qboolean relink_only, qboolean multipass, qboolean initial_pass, qboolean extra, qboolean marked_locations, qboolean extra_reach, qboolean reset_reach, qboolean convert_old );
+void AIMod_AutoWaypoint_Cleaner ( qboolean quiet, qboolean null_links_only, qboolean relink_only, qboolean multipass, qboolean initial_pass, qboolean extra, qboolean marked_locations, qboolean extra_reach, qboolean reset_reach, qboolean convert_old, qboolean pathtest );
 
 void AIMod_AutoWaypoint_Clean ( void )
 {
@@ -6597,39 +6606,39 @@ void AIMod_AutoWaypoint_Clean ( void )
 	
 	if ( Q_stricmp( str, "convert") == 0 )
 	{
-		AIMod_AutoWaypoint_Cleaner(qtrue, qfalse, qtrue, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse, qtrue);
+		AIMod_AutoWaypoint_Cleaner(qtrue, qfalse, qtrue, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse, qtrue, qfalse);
 	}
 	else if ( Q_stricmp( str, "relink") == 0 )
 	{
-		AIMod_AutoWaypoint_Cleaner(qtrue, qfalse, qtrue, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse);
+		AIMod_AutoWaypoint_Cleaner(qtrue, qfalse, qtrue, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse);
 	}
 	else if ( Q_stricmp( str, "pathtest") == 0 )
 	{
-		AIMod_AutoWaypoint_Cleaner(qtrue, qtrue, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse);
+		AIMod_AutoWaypoint_Cleaner(qtrue, qtrue, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse, qtrue);
 	}
 	else if ( Q_stricmp( str, "clean") == 0 )
 	{
-		AIMod_AutoWaypoint_Cleaner(qtrue, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse);
+		AIMod_AutoWaypoint_Cleaner(qtrue, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse);
 	}
 	else if ( Q_stricmp( str, "multipass") == 0 )
 	{
-		AIMod_AutoWaypoint_Cleaner(qtrue, qfalse, qfalse, qtrue, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse);
+		AIMod_AutoWaypoint_Cleaner(qtrue, qfalse, qfalse, qtrue, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse);
 	}
 	else if ( Q_stricmp( str, "extra") == 0 )
 	{
-		AIMod_AutoWaypoint_Cleaner(qtrue, qfalse, qfalse, qtrue, qfalse, qtrue, qfalse, qfalse, qfalse, qfalse);
+		AIMod_AutoWaypoint_Cleaner(qtrue, qfalse, qfalse, qtrue, qfalse, qtrue, qfalse, qfalse, qfalse, qfalse, qfalse);
 	}
 	else if ( Q_stricmp( str, "markedlocations") == 0 )
 	{
-		AIMod_AutoWaypoint_Cleaner(qtrue, qtrue, qfalse, qfalse, qfalse, qfalse, qtrue, qfalse, qfalse, qfalse);
+		AIMod_AutoWaypoint_Cleaner(qtrue, qtrue, qfalse, qfalse, qfalse, qfalse, qtrue, qfalse, qfalse, qfalse, qfalse);
 	}
 	else if ( Q_stricmp( str, "extrareach") == 0 )
 	{
-		AIMod_AutoWaypoint_Cleaner(qtrue, qfalse, qtrue, qfalse, qfalse, qfalse, qtrue, qtrue, qfalse, qfalse);
+		AIMod_AutoWaypoint_Cleaner(qtrue, qfalse, qtrue, qfalse, qfalse, qfalse, qtrue, qtrue, qfalse, qfalse, qfalse);
 	}
 	else if ( Q_stricmp( str, "resetreach") == 0 )
 	{
-		AIMod_AutoWaypoint_Cleaner(qtrue, qtrue, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse, qtrue, qfalse);
+		AIMod_AutoWaypoint_Cleaner(qtrue, qtrue, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse, qtrue, qfalse, qfalse);
 	}
 	else if ( Q_stricmp( str, "list") == 0 )
 	{
@@ -8122,9 +8131,54 @@ qboolean LocationIsNearTriggerHurt ( vec3_t origin )
 	return qfalse;
 }
 
+qboolean HasSameLinksAsNode (int node, int node2, qboolean LINKS_TO_US, qboolean WE_LINK_TO_THEM)
+{
+	int j;
+
+	for (j = 0; j < nodes[node].enodenum; j++)
+	{
+		int k = 0;
+		qboolean found = qfalse;
+
+		if (WE_LINK_TO_THEM && nodes[node].links[j].targetNode == node2)
+			continue; // this is a link to us.. ignore...
+
+		// See if this node has this link target node (j)
+		for (k = 0; k < nodes[node2].enodenum; k++)
+		{
+			if (nodes[node2].links[k].targetNode == nodes[node].links[j].targetNode)
+			{
+				found = qtrue;
+				break;
+			}
+		}
+
+		if (!found)
+		{// This one was not found... It does not have all our links...
+			return qfalse;
+		}
+	}
+
+	// If we got to here, then it has all our links...
+	return qtrue;
+}
+
+qboolean NodeLinksTo (int node, int nodeTo)
+{
+	int j;
+
+	for (j = 0; j < nodes[node].enodenum; j++)
+	{
+		if (nodes[node].links[j].targetNode == nodeTo)
+			return qtrue; // this is a link to us..
+	}
+
+	return qfalse;
+}
+
 int num_dupe_nodes = 0;
 
-void CheackForNearbyDupeNodes( int node )
+void CheckForNearbyDupeNodes( int node )
 {// Removes any nodes with the same links as this node to reduce numbers...
 	int i = 0;
 
@@ -8136,6 +8190,8 @@ void CheackForNearbyDupeNodes( int node )
 		int j = 0;
 		//int num_same = 0;
 		qboolean REMOVE_NODE = qtrue;
+		qboolean LINKS_TO_US = qfalse;
+		qboolean WE_LINK_TO_THEM = qfalse;
 
 		if (i == node)
 			continue;
@@ -8149,29 +8205,23 @@ void CheackForNearbyDupeNodes( int node )
 		if (VectorDistance(nodes[node].origin, nodes[i].origin) > waypoint_scatter_distance*waypoint_distance_multiplier)
 			continue;
 
-		if (nodes[i].enodenum > nodes[node].enodenum)
-			continue; // Never remove a better node...
+		if (NodeLinksTo(i, node))
+		{// This node links to us... Ignore this link...
+			LINKS_TO_US = qtrue;
 
-		for (j = 0; j < nodes[node].enodenum; j++)
-		{
-			int k = 0;
-			qboolean found = qfalse;
-
-			for (k = 0; k < nodes[i].enodenum; k++)
-			{
-				if (nodes[node].links[j].targetNode == nodes[i].links[k].targetNode)
-				{
-					found = qtrue;
-					break;
-				}
-			}
-
-			if (!found)
-			{
-				REMOVE_NODE = qfalse;
-				break;
-			}
+			if (nodes[i].enodenum-1 > nodes[node].enodenum)
+				continue; // Never remove a better node...
 		}
+		
+		if (NodeLinksTo(node, i))
+		{// We link to this node... Ignore us...
+			WE_LINK_TO_THEM = qtrue;
+
+			if (nodes[i].enodenum > nodes[node].enodenum-1)
+				continue; // Never remove a better node...
+		}
+
+		REMOVE_NODE = HasSameLinksAsNode(node, i, LINKS_TO_US, WE_LINK_TO_THEM);
 
 		if (REMOVE_NODE)
 		{// Node i is a dupe node! Disable it!
@@ -8185,6 +8235,99 @@ void CheackForNearbyDupeNodes( int node )
 				num_dupe_nodes++;
 			}
 		}
+	}
+}
+
+int num_skiped_nodes = 0;
+
+void CheckWalkAround ( int node )
+{// Removes any nodes that we can get to by another close route...
+	int i = 0;
+	qboolean HAS_ALL_LINKS = qtrue;
+
+	if (nodes[node].objectNum[0] == 1)
+		return; // This node is disabled already...
+
+	for (i = 0; i < nodes[node].enodenum; i++)
+	{// Go through each of this node's links to find a path around us...
+		qboolean REMOVE_NODE = qtrue;
+		qboolean LINKS_TO_US = qfalse;
+		qboolean WE_LINK_TO_THEM = qfalse;
+		int thisLink = nodes[node].links[i].targetNode;
+		int j;
+		int CAN_GET_TO_THISLINK = 0;
+		int CAN_GET_TO_THISLINK2 = 0;
+		int CAN_GET_TO_US = 0;
+		int CAN_GET_TO_US2 = 0;
+
+		if (thisLink == node)
+			continue; // this is just a link to us... ignore the link to us...
+
+		if (nodes[thisLink].enodenum <= 0)
+			continue; // This link has no links, ignore it...
+
+		if (nodes[thisLink].objectNum[0] == 1)
+			continue; // This link is disabled... Ignore it...
+
+		if (nodes[node].links[i].flags & NODE_JUMP) 
+			continue; // This is a jump-to node... Skip it...
+
+		// Looks like this is a valid place we need to be able to get to... See if the other links around us also go there...
+		for (j = 0; j < nodes[node].enodenum; j++)
+		{
+			int toLink = nodes[node].links[j].targetNode;
+
+			if (thisLink == toLink) 
+				continue; // The same link as we are searching for a link to, ignore...
+
+			if (nodes[toLink].objectNum[0] == 1)
+				continue; // This link is disabled... Ignore it...
+
+			if (nodes[toLink].enodenum <= 0)
+				continue; // This link has no links, ignore it...
+
+			//if (nodes[toLink].origin[2]-16 > nodes[thisLink].origin[2])
+			//	continue; // Always remove higher waypoints (ledges) instead... Hopefully this will force it to remove that link instead...
+
+			if ((CAN_GET_TO_THISLINK == 0 || CAN_GET_TO_THISLINK2 == 0) && NodeLinksTo(toLink, thisLink))
+			{// This link has a route to this wanted node...
+				if (toLink != CAN_GET_TO_US && toLink != CAN_GET_TO_US2) // Need both a from and a to node for a complete path...
+				{
+					if (!CAN_GET_TO_THISLINK)
+						CAN_GET_TO_THISLINK = toLink;
+					else
+						CAN_GET_TO_THISLINK2 = toLink;
+				}
+			}
+
+			if ((CAN_GET_TO_US == 0 || CAN_GET_TO_US2 == 0) && NodeLinksTo(thisLink, toLink))
+			{// We have a route to this wanted node...
+				if (toLink != CAN_GET_TO_THISLINK && toLink != CAN_GET_TO_THISLINK2) // Need both a from and a to node for a complete path...
+				{
+					if (!CAN_GET_TO_US)
+						CAN_GET_TO_US = toLink;
+					else
+						CAN_GET_TO_US2 = toLink;
+				}
+			}
+
+			if (CAN_GET_TO_THISLINK && CAN_GET_TO_US && CAN_GET_TO_THISLINK2 && CAN_GET_TO_US2)
+			{// Looks like we found a way around this node for this link...
+				break; // All is good for this link... Stop looking for ways there...
+			}
+		}
+
+		if (!(CAN_GET_TO_THISLINK && CAN_GET_TO_US && CAN_GET_TO_THISLINK2 && CAN_GET_TO_US2))
+		{// Looks like we never found a way around this node for this link... We can't delete this waypoint...
+			HAS_ALL_LINKS = qfalse;
+			break; // Early out...
+		}
+	}
+
+	if (HAS_ALL_LINKS)
+	{// Seems we found a way to every one of this node's links... Should be safe to remove it...
+		nodes[node].objectNum[0] = 1;
+		num_skiped_nodes++;
 	}
 }
 
@@ -8488,6 +8631,9 @@ int ASTAR_FindPathFast(int from, int to, int *pathlist, qboolean shorten)
 				if (newnode < 0)
 					continue;
 
+				if (nodes[newnode].objectNum[0] == 1)
+					continue; // This node was disabled already by the waypointer, never try to use it...
+
 				if (list[newnode] == 2)
 				{																		//if this node is on the closed list, skip it
 					continue;
@@ -8652,10 +8798,47 @@ void AIMod_AWC_GetSpawnPoint_f( void )
 	trap->Print("AUTOWAYPOINTER: Recieved a spawnpoint from server at %f %f %f.\n", AWC_SPAWNPOINT[0], AWC_SPAWNPOINT[1], AWC_SPAWNPOINT[2]);
 }
 
+qboolean WP_CheckInSolid (vec3_t position)
+{
+	trace_t	trace;
+	vec3_t	end, mins, maxs;
+	vec3_t pos;
+
+	int contents = CONTENTS_TRIGGER;
+	int clipmask = MASK_DEADSOLID;
+	
+	VectorSet(mins, -15, -15, DEFAULT_MINS_2);
+	VectorSet(maxs, 15, 15, DEFAULT_MAXS_2);
+
+	VectorCopy(position, pos);
+	pos[2]+=28;
+	VectorCopy(pos, end);
+	end[2] += mins[2];
+	mins[2] = 0;
+
+	CG_Trace(&trace, position, mins, maxs, end, -1, clipmask);
+	if(trace.allsolid || trace.startsolid)
+	{
+		return qtrue;
+	}
+
+	if(trace.fraction < 1.0)
+	{
+		return qtrue;
+	}
+
+	return qfalse;
+}
+
 qboolean JKG_CheckBelowWaypoint( int wp )
 {
 	trace_t tr;
 	vec3_t org, org2;
+
+	VectorCopy(nodes[wp].origin, org);
+	org[2]+=18;
+
+	if (WP_CheckInSolid(org)) return qfalse;
 
 	VectorCopy(nodes[wp].origin, org);
 	VectorCopy(nodes[wp].origin, org2);
@@ -8699,6 +8882,12 @@ qboolean JKG_CheckBelowWaypoint( int wp )
 		return qfalse;
 	}
 
+	if ( (tr.surfaceFlags & SURF_NOMARKS) && (tr.surfaceFlags & SURF_NODRAW) )
+	{
+		//trap->Print("Waypoint %i is in trigger.\n", wp);
+		return qfalse;
+	}
+
 	return qtrue;
 }
 
@@ -8711,21 +8900,7 @@ qboolean JKG_CheckRoutingFrom( int wp )
 	int pathsize = 0;
 	int pathlist[MAX_NODES];
 	int tests_completed = 0;
-
-	// Check for routing to a spawnpoint from a (spawn) waypoint...
-
-	wpCurrent = ClosestNodeTo(AWC_SPAWNPOINT, qfalse);
-
-	if (!wpCurrent) trap->Print("WAYPOINT REACHABILITY CHECK: Failed to find a waypoint for spawnpoint at %f %f %f!\n", AWC_SPAWNPOINT[0], AWC_SPAWNPOINT[1], AWC_SPAWNPOINT[2]);
-
-	memset(pathlist, -1, MAX_NODES);
-	
-	pathsize = ASTAR_FindPathFast(wpCurrent, goal, pathlist, qfalse);
-
-	if (pathsize > 0)
-	{
-		return qtrue; // Found a route... This waypoint looks good to spawn NPCs at!
-	}
+	int num_items = 0;
 
 	// Try other ents...
 	for (i = MAX_CLIENTS; i < MAX_GENTITIES;i++)
@@ -8742,16 +8917,18 @@ qboolean JKG_CheckRoutingFrom( int wp )
 			|| cent->currentState.eType == ET_NPC))
 		continue;
 		
-		if (tests_completed > 10) break;
-		if (tests_completed > 5 && Distance(cent->currentState.origin, nodes[goal].origin) > 128) continue;
-		if (tests_completed > 3 && Distance(cent->currentState.origin, nodes[goal].origin) > 256) continue;
-		if (tests_completed > 1 && Distance(cent->currentState.origin, nodes[goal].origin) > 512) continue;
+		//if (tests_completed > 10) break;
+		//if (tests_completed > 5 && Distance(cent->currentState.origin, nodes[goal].origin) > 128) continue;
+		//if (tests_completed > 3 && Distance(cent->currentState.origin, nodes[goal].origin) > 256) continue;
+		//if (tests_completed > 1 && Distance(cent->currentState.origin, nodes[goal].origin) > 512) continue;
 
 		wpCurrent = ClosestNodeTo(cent->currentState.origin, qfalse);
 		
 		if (wpCurrent)
 		{
 			pathsize = ASTAR_FindPathFast(wpCurrent, goal, pathlist, qfalse);
+
+			num_items++;
 
 			if (pathsize > 0)
 			{
@@ -8762,12 +8939,30 @@ qboolean JKG_CheckRoutingFrom( int wp )
 		tests_completed++;
 	}
 
+	// Check for routing to a spawnpoint from a (spawn) waypoint...
+
+	if (num_items < 1 || Distance(nodes[goal].origin, AWC_SPAWNPOINT) > 256)
+	{// If the given spawnpoint is too close to us, it could be bad if we have bad waypoints (in solid, etc). Only use if we had nothing else...
+		wpCurrent = ClosestNodeTo(AWC_SPAWNPOINT, qfalse);
+
+		if (!wpCurrent) trap->Print("WAYPOINT REACHABILITY CHECK: Failed to find a waypoint for spawnpoint at %f %f %f!\n", AWC_SPAWNPOINT[0], AWC_SPAWNPOINT[1], AWC_SPAWNPOINT[2]);
+
+		memset(pathlist, -1, MAX_NODES);
+	
+		pathsize = ASTAR_FindPathFast(wpCurrent, goal, pathlist, qfalse);
+
+		if (pathsize > 0)
+		{
+			return qtrue; // Found a route... This waypoint looks good to spawn NPCs at!
+		}
+	}
+
 	return qfalse;
 }
 
 /* */
 void
-AIMod_AutoWaypoint_Cleaner ( qboolean quiet, qboolean null_links_only, qboolean relink_only, qboolean multipass, qboolean initial_pass, qboolean extra, qboolean marked_locations, qboolean extra_reach, qboolean reset_reach, qboolean convert_old )
+AIMod_AutoWaypoint_Cleaner ( qboolean quiet, qboolean null_links_only, qboolean relink_only, qboolean multipass, qboolean initial_pass, qboolean extra, qboolean marked_locations, qboolean extra_reach, qboolean reset_reach, qboolean convert_old, qboolean pathtest )
 {
 	int i = 0;//, j = 0;//, k = 0, l = 0;//, m = 0;
 	int	total_calculations = 0;
@@ -8786,10 +8981,9 @@ AIMod_AutoWaypoint_Cleaner ( qboolean quiet, qboolean null_links_only, qboolean 
 	int	num_disabled_nodes = 0;
 	int num_nolink_nodes = 0;
 	int num_noroute_nodes = 0;
-	int num_trigger_hurt_nodes = 0;
+	int num_allsolid_nodes = 0;
 	int num_this_location_nodes = 0;
 	int num_marked_height_nodes = 0;
-	int num_skiped_nodes = 0;
 	int	node_disable_ratio = 2;
 	int total_removed = 0;
 //	qboolean	bad_surfaces_only = qfalse;
@@ -8812,6 +9006,7 @@ AIMod_AutoWaypoint_Cleaner ( qboolean quiet, qboolean null_links_only, qboolean 
 
 	aw_num_bad_surfaces = 0;
 	num_dupe_nodes = 0;
+	num_skiped_nodes = 0;
 
 	// UQ1: Check if we have an SSE CPU.. It can speed up our memory allocation by a lot!
 	if (!CPU_CHECKED)
@@ -8856,39 +9051,6 @@ AIMod_AutoWaypoint_Cleaner ( qboolean quiet, qboolean null_links_only, qboolean 
 	start_wp_total = number_of_nodes;
 
 	//areas = malloc( (sizeof(int)+1)*512000 );
-
-#if 0
-	//AIMod_GetMapBounts( mapMins, mapMaxs );
-	AIMod_GetMapBounts();
-
-	VectorCopy(cg.mapcoordsMins, mapMins);
-	VectorCopy(cg.mapcoordsMaxs, mapMaxs);
-
-	if (mapMaxs[0] < mapMins[0])
-	{
-		temp = mapMins[0];
-		mapMins[0] = mapMaxs[0];
-		mapMaxs[0] = temp;
-	}
-
-	if (mapMaxs[1] < mapMins[1])
-	{
-		temp = mapMins[1];
-		mapMins[1] = mapMaxs[1];
-		mapMaxs[1] = temp;
-	}
-
-	if (mapMaxs[2] < mapMins[2])
-	{
-		temp = mapMins[2];
-		mapMins[2] = mapMaxs[2];
-		mapMaxs[2] = temp;
-	}
-
-	map_size = VectorDistance(mapMins, mapMaxs);
-
-	trap->Print( va( "^4*** ^3AUTO-WAYPOINTER^4: ^5Map bounds (^7%f %f %f ^5by ^7%f %f %f^5).\n", mapMins[0], mapMins[1], mapMins[2], mapMaxs[0], mapMaxs[1], mapMaxs[2]) );
-#endif //0
 
 	trap->Print( va( "^4*** ^3AUTO-WAYPOINTER^4: ^5Cleaning waypoint list...\n") );
 	strcpy( task_string1, va("^7Cleaning waypoint list....") );
@@ -9134,7 +9296,7 @@ AIMod_AutoWaypoint_Cleaner ( qboolean quiet, qboolean null_links_only, qboolean 
 		num_nolink_nodes = 0;
 		num_noroute_nodes = 0;
 		num_disabled_nodes = 0;
-		num_trigger_hurt_nodes = 0;
+		num_allsolid_nodes = 0;
 		num_dupe_nodes = 0;
 		aw_num_bad_surfaces = 0;
 		num_skiped_nodes = 0;
@@ -9189,14 +9351,21 @@ AIMod_AutoWaypoint_Cleaner ( qboolean quiet, qboolean null_links_only, qboolean 
 						continue;
 					}
 
-					if (!JKG_CheckRoutingFrom( i ) || !JKG_CheckBelowWaypoint( i ))
+					if (!JKG_CheckBelowWaypoint( i ))
+					{// Removes all waypoints without any route to the server's specified spawnpoint location...
+						nodes[i].objectNum[0] = 1;
+						num_allsolid_nodes++;
+						continue;
+					}
+
+					if (pathtest && !JKG_CheckRoutingFrom( i ))
 					{// Removes all waypoints without any route to the server's specified spawnpoint location...
 						nodes[i].objectNum[0] = 1;
 						num_noroute_nodes++;
 						continue;
 					}
 
-					if (marked_locations)
+					if (NUM_BAD_HEIGHTS > 0 || NUM_REMOVAL_POINTS > 0/*marked_locations*/)
 					{
 						int z = 0;
 
@@ -9226,140 +9395,14 @@ AIMod_AutoWaypoint_Cleaner ( qboolean quiet, qboolean null_links_only, qboolean 
 					if (null_links_only)
 						continue;
 
-					/*
-					if (nodes[i].enodenum > 2 && LocationIsNearTriggerHurt(nodes[i].origin))
-					{// Lots of links, but also seems to be located close to barb wire (or other damage entity). Remove it!
-					nodes[i].objectNum[0] = 1;
-					num_trigger_hurt_nodes++;
-					continue;
-					}
-					*/
-
-#ifndef __TEST_CLEANER__
-					if (extra)
-					{
-						if (nodes[i].enodenum >= 12/*16*/)
-						{
-							/*if ((nodes[i].type & NODE_LAND_VEHICLE) && !CheckIfAnotherVehicleNodeIsNearby(i))
-							{// We need to never remove vehicle nodes when there is not enough others around...
-
-							}
-							else*/
-							//if (!CheckIfTooManyLinksRemoved(i, extra))
-							{
-								nodes[i].objectNum[0] = 1;
-								num_skiped_nodes++;
-								continue;
-							}
-						}
-					}
-					else if (nodes[i].enodenum >= 16/*16*/)
-					{
-						/*if ((nodes[i].type & NODE_LAND_VEHICLE) && !CheckIfAnotherVehicleNodeIsNearby(i))
-						{// We need to never remove vehicle nodes when there is not enough others around...
-
-						}
-						else*/
-						if (!CheckIfTooManyLinksRemoved(i, extra))
-						{
-							nodes[i].objectNum[0] = 1;
-							num_skiped_nodes++;
-							continue;
-						}
-					}
-
-					CheackForNearbyDupeNodes(i);
-#else //__TEST_CLEANER__
 					if (nodes[i].enodenum >= 1)
 					{
-						int num_links_alt_reachable = 0;
-						int current_link = 0;
-						int	reach_nodes[64];
-						int	num_reach_nodes = 0;
-
-						for (current_link = 0; current_link < nodes[i].enodenum; current_link++)
-						{
-							int			j = 0;
-							int			current_target_node = nodes[i].links[current_link].targetNode;
-							qboolean	return_to_start = qfalse;
-
-							num_reach_nodes = 0;
-
-							for (j = 0; j < nodes[i].enodenum; j++)
-							{
-								int k = 0;
-								int target_node1 = nodes[i].links[j].targetNode;
-
-								if (nodes[target_node1].objectNum[0] == 1)
-									continue;
-
-								for (k = 0; k < nodes[target_node1].enodenum; k++)
-								{
-									int target_node2 = nodes[target_node1].links[k].targetNode;
-
-									if (target_node2 == i)
-										continue;
-
-									if (target_node2 == current_target_node)
-									{
-										num_links_alt_reachable++;
-										reach_nodes[num_reach_nodes] = target_node2;
-										num_reach_nodes++;
-										return_to_start = qtrue;
-										break;
-									}
-								}
-
-								//if (return_to_start)
-								//	break;
-							}
-						}
-
-						if (num_links_alt_reachable >= nodes[i].enodenum*4)
-						{
-							int k = 0;
-							int num_alt_links = 0;
-
-							for (k = 0; k < num_reach_nodes; k++)
-							{
-								int j = 0;
-								int target_node1 = reach_nodes[k];
-
-								for (j = 0; j < nodes[i].enodenum; j++)
-								{
-									qboolean found = qfalse;
-									int l = 0;
-									int target_node2 = nodes[i].links[j].targetNode;
-
-									for (l = 0; l < nodes[target_node2].enodenum; l++)
-									{
-										int target_node3 = nodes[target_node2].links[l].targetNode;
-
-										if (target_node3 == target_node1)
-										{
-											num_alt_links++;
-											found = qtrue;
-											break;
-										}
-									}
-
-									//if (found)
-									//	break;
-								}
-							}
-
-							if (num_alt_links >= nodes[i].enodenum*3 && num_alt_links >= num_reach_nodes*4)
-							{
-								nodes[i].objectNum[0] = 1;
-								num_skiped_nodes++;
-								continue;
-							}
-						}
-
-						//CheackForNearbyDupeNodes(i);
+						CheckForNearbyDupeNodes(i);
+						
+						if (nodes[i].objectNum[0] != 1)
+							CheckWalkAround(i);
 					}
 				}
-#endif //__TEST_CLEANER__
 			}
 		}
 
@@ -9368,7 +9411,7 @@ AIMod_AutoWaypoint_Cleaner ( qboolean quiet, qboolean null_links_only, qboolean 
 
 		trap->Print("^4*** ^3AUTO-WAYPOINTER^4: ^5Disabled ^3%i^5 water/ice waypoints.\n", num_disabled_nodes);
 		trap->Print("^4*** ^3AUTO-WAYPOINTER^4: ^5Disabled ^3%i^5 bad surfaces.\n", aw_num_bad_surfaces);
-		trap->Print("^4*** ^3AUTO-WAYPOINTER^4: ^5Disabled ^3%i^5 trigger hurt waypoints.\n", num_trigger_hurt_nodes);
+		trap->Print("^4*** ^3AUTO-WAYPOINTER^4: ^5Disabled ^3%i^5 waypoints in solids.\n", num_allsolid_nodes);
 		trap->Print("^4*** ^3AUTO-WAYPOINTER^4: ^5Disabled ^3%i^5 waypoints without links.\n", num_nolink_nodes);
 		trap->Print("^4*** ^3AUTO-WAYPOINTER^4: ^5Disabled ^3%i^5 waypoints without valid routes.\n", num_noroute_nodes);
 		trap->Print("^4*** ^3AUTO-WAYPOINTER^4: ^5Disabled ^3%i^5 waypoints with duplicate links to a neighbor.\n", num_dupe_nodes);
@@ -9376,7 +9419,7 @@ AIMod_AutoWaypoint_Cleaner ( qboolean quiet, qboolean null_links_only, qboolean 
 		trap->Print("^4*** ^3AUTO-WAYPOINTER^4: ^5Disabled ^3%i^5 waypoints at your marked locations (removal spots).\n", num_this_location_nodes);
 		trap->Print("^4*** ^3AUTO-WAYPOINTER^4: ^5Disabled ^3%i^5 waypoints at your given bad heights (bad height spots).\n", num_marked_height_nodes);
 
-		total_removed = num_skiped_nodes + num_dupe_nodes + num_disabled_nodes + aw_num_bad_surfaces + num_nolink_nodes + num_noroute_nodes + num_trigger_hurt_nodes + num_this_location_nodes + num_marked_height_nodes;
+		total_removed = num_skiped_nodes + num_dupe_nodes + num_disabled_nodes + aw_num_bad_surfaces + num_nolink_nodes + num_noroute_nodes + num_allsolid_nodes + num_this_location_nodes + num_marked_height_nodes;
 
 		trap->Print("^4*** ^3AUTO-WAYPOINTER^4: ^5Disabled ^3%i^5 total waypoints in this run.\n", total_removed);
 
@@ -9493,7 +9536,7 @@ AIMod_AutoWaypoint_Cleaner ( qboolean quiet, qboolean null_links_only, qboolean 
 		node_clean_ticker = 0;
 		num_nolink_nodes = 0;
 		num_disabled_nodes = 0;
-		num_trigger_hurt_nodes = 0;
+		num_allsolid_nodes = 0;
 		num_dupe_nodes = 0;
 		aw_num_bad_surfaces = 0;
 		num_skiped_nodes = 0;

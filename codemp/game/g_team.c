@@ -1160,7 +1160,11 @@ gentity_t *SelectCTFSpawnPoint ( team_t team, int teamstate, vec3_t origin, vec3
 
 	spot = SelectRandomTeamSpawnPoint ( teamstate, team, -1 );
 
-	if (!spot) {
+	if (!spot || (spot->s.origin[0] == 0 && spot->s.origin[1] == 0)) {
+		spot = SelectRandomTeamSpawnPoint ( teamstate, team, -1 );
+	}
+
+	if (!spot || (spot->s.origin[0] == 0 && spot->s.origin[1] == 0)) {
 		return SelectSpawnPoint( vec3_origin, origin, angles, team, isbot );
 	}
 

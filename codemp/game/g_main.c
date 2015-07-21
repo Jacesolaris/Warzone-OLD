@@ -235,6 +235,7 @@ void Load_Model_Scales( void )
 
 extern void SP_info_player_deathmatch( gentity_t *ent );
 
+/*
 qboolean CheckSpawnPosition(vec3_t position)
 {
 	trace_t		tr;
@@ -249,11 +250,102 @@ qboolean CheckSpawnPosition(vec3_t position)
 
 	testPos[2] += 8.0;
 
-	//trap->Trace( &tr, testPos, NULL/*NPC->r.mins*/, NULL/*NPC->r.maxs*/, downPos, NPC->s.number, MASK_PLAYERSOLID, 0, 0, 0 );
+	//trap->Trace( &tr, testPos, NULL, NULL, downPos, NPC->s.number, MASK_PLAYERSOLID, 0, 0, 0 );
 	trap->Trace( &tr, testPos, mins, maxs, testPos, -1, MASK_PLAYERSOLID, 0, 0, 0 );
 
 	if (tr.startsolid || tr.allsolid)
 	{
+		return qfalse;
+	}
+
+	return qtrue;
+}
+*/
+
+qboolean WP_CheckInSolid (vec3_t position)
+{
+	trace_t	trace;
+	vec3_t	end, mins, maxs;
+	vec3_t pos;
+
+	int contents = CONTENTS_TRIGGER;
+	int clipmask = MASK_DEADSOLID;
+	
+	VectorSet(mins, -15, -15, DEFAULT_MINS_2);
+	VectorSet(maxs, 15, 15, DEFAULT_MAXS_2);
+
+	VectorCopy(position, pos);
+	pos[2]+=28;
+	VectorCopy(pos, end);
+	end[2] += mins[2];
+	mins[2] = 0;
+
+	trap->Trace(&trace, pos, mins, maxs, end, -1, clipmask, qfalse, 0, 0);
+	if(trace.allsolid || trace.startsolid)
+	{
+		return qtrue;
+	}
+
+	if(trace.fraction < 1.0)
+	{
+		return qtrue;
+	}
+
+	return qfalse;
+}
+
+qboolean CheckSpawnPosition( vec3_t position )
+{
+	trace_t tr;
+	vec3_t org, org2;
+	
+	if (WP_CheckInSolid(position)) return qfalse;
+
+	VectorCopy(position, org);
+	VectorCopy(position, org2);
+	org2[2] = -65536.0f;//org[2] - 256;
+
+	trap->Trace( &tr, org, NULL, NULL, org2, -1, MASK_PLAYERSOLID|CONTENTS_TRIGGER|CONTENTS_PLAYERCLIP|CONTENTS_MONSTERCLIP|CONTENTS_BOTCLIP|CONTENTS_SHOTCLIP|CONTENTS_NODROP|CONTENTS_SHOTCLIP|CONTENTS_TRANSLUCENT, 0, qfalse, 0);
+	
+	if ( tr.startsolid )
+	{
+		//trap->Print("Waypoint %i is in solid.\n", wp);
+		return qfalse;
+	}
+
+	if ( tr.allsolid )
+	{
+		//trap->Print("Waypoint %i is in solid.\n", wp);
+		return qfalse;
+	}
+
+	if ( tr.fraction == 1 )
+	{
+		//trap->Print("Waypoint %i is too high above ground.\n", wp);
+		return qfalse;
+	}
+
+	if ( tr.contents & CONTENTS_LAVA )
+	{
+		//trap->Print("Waypoint %i is in lava.\n", wp);
+		return qfalse;
+	}
+	
+	if ( tr.contents & CONTENTS_SLIME )
+	{
+		//trap->Print("Waypoint %i is in slime.\n", wp);
+		return qfalse;
+	}
+
+	if ( tr.contents & CONTENTS_TRIGGER )
+	{
+		//trap->Print("Waypoint %i is in trigger.\n", wp);
+		return qfalse;
+	}
+
+	if ( (tr.surfaceFlags & SURF_NOMARKS) && (tr.surfaceFlags & SURF_NODRAW) )
+	{
+		//trap->Print("Waypoint %i is in trigger.\n", wp);
 		return qfalse;
 	}
 
@@ -354,6 +446,8 @@ void CreateSpawnpoints( void )
 			// Find waypoints close to the edge of the map to make into spawnpoints...
 			for (i = 0; i < gWPNum; i++)
 			{
+				if (gWPArray[i]->origin[0] == 0 && gWPArray[i]->origin[1] == 0) continue;
+
 				if (!CheckSpawnPosition(gWPArray[i]->origin)) continue;
 
 				if (G_PointInBounds( gWPArray[i]->origin, blue_mins, blue_maxs ))
@@ -450,6 +544,8 @@ void CreateSpawnpoints( void )
 		// Find waypoints close to the edge of the map to make into spawnpoints...
 		for (i = 0; i < gWPNum; i++)
 		{
+			if (gWPArray[i]->origin[0] == 0 && gWPArray[i]->origin[1] == 0) continue;
+
 			if (!CheckSpawnPosition(gWPArray[i]->origin)) continue;
 
 			if (G_PointInBounds( gWPArray[i]->origin, blue_mins, blue_maxs ))

@@ -243,7 +243,6 @@ void main()
 	{// Specular mapping on this stuff, pls...
 		vec3 reflectance;
 		float fakedepth = SampleDepth(u_DiffuseMap, texCoords);
-		//vec4 specular = vec4(1.0-fakedepth) * color;
 		vec4 specular = vec4(0.0, 0.0, 0.0, 1.0);
 		specular.a = ((clamp((1.0 - fakedepth), 0.0, 1.0) * 0.5) + 0.5);
 		specular.a = clamp((specular.a * 2.0) * specular.a, 0.2, 0.9);
@@ -265,14 +264,12 @@ void main()
 
 		reflectance += CalcSpecular(specular.rgb, NH, NL, NE, EH, adjGloss, adjShininess);
 
-		//color.rgb  = (color.rgb + color.rgb + ((color.rgb   * reflectance * (attenuation * NL)) * 2.0) + (color.rgb   * (reflectance * specular.a) * (attenuation * NL))) / 5.0;
-
-		//vec3 reflection = color.rgb   * (reflectance * specular.a) * (attenuation * NL);
-		//color.rgb  = (color.rgb + color.rgb + color.rgb + reflection) / 3.5;
-
 		vec3 reflection = (reflectance * specular.a) * (attenuation * NL);
-		//vec3 reflection = vec3(1.0);
-		color.rgb  = color.rgb + reflection;
+		float reduce = ((reflection.r + reflection.g + reflection.b) / 3.0) * specular.a;
+		float bright = ((color.r + color.g + color.b) / 3.0);
+		
+		if (bright > 0.0)
+			color.rgb  = clamp((color.rgb - vec3(reduce)) + (reflection * specular.a), 0.0, 1.0);
 	}
 
 	gl_FragColor = color * var_Color;

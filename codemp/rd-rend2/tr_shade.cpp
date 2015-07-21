@@ -1546,10 +1546,10 @@ void RB_SetParallaxScale(shaderProgram_t *sp, float scale, shaderStage_t *pStage
 		specularScale = 1.5;
 		break;
 	case MATERIAL_SHORTGRASS:		// 5			// manicured lawn
-		specularScale = 0.5;
+		specularScale = 0.6;
 		break;
 	case MATERIAL_LONGGRASS:		// 6			// long jungle grass
-		specularScale = 0.5;
+		specularScale = 0.6;
 		break;
 	case MATERIAL_SAND:				// 8			// sandy beach
 		specularScale = 0.4;
@@ -1564,7 +1564,7 @@ void RB_SetParallaxScale(shaderProgram_t *sp, float scale, shaderStage_t *pStage
 		specularScale = 0.5;
 		break;
 	case MATERIAL_TILES:			// 26			// tiled floor
-		specularScale = 0.8;
+		specularScale = 0.86;
 		break;
 	case MATERIAL_SOLIDWOOD:		// 1			// freshly cut timber
 		specularScale = 0.3;
@@ -1585,10 +1585,10 @@ void RB_SetParallaxScale(shaderProgram_t *sp, float scale, shaderStage_t *pStage
 		specularScale = 0.6;
 		break;
 	case MATERIAL_FABRIC:			// 21			// Cotton sheets
-		specularScale = 0.6;
+		specularScale = 0.79;
 		break;
 	case MATERIAL_CANVAS:			// 22			// tent material
-		specularScale = 0.6;
+		specularScale = 0.7;
 		break;
 	case MATERIAL_MARBLE:			// 12			// marble floors
 		specularScale = 0.92;
@@ -1600,19 +1600,19 @@ void RB_SetParallaxScale(shaderProgram_t *sp, float scale, shaderStage_t *pStage
 		specularScale = 0.6;
 		break;
 	case MATERIAL_DIRT:				// 7			// hard mud
-		specularScale = 0.5;
+		specularScale = 0.4;
 		break;
 	case MATERIAL_CONCRETE:			// 11			// hardened concrete pavement
 		specularScale = 0.4;
 		break;
 	case MATERIAL_FLESH:			// 16			// hung meat, corpses in the world
-		specularScale = 0.4;
+		specularScale = 0.5;
 		break;
 	case MATERIAL_RUBBER:			// 24			// hard tire like rubber
 		specularScale = 0.2;
 		break;
 	case MATERIAL_PLASTIC:			// 25			//
-		specularScale = 0.92;
+		specularScale = 0.88;
 		break;
 	case MATERIAL_PLASTER:			// 28			// drywall style plaster
 		specularScale = 0.5;
@@ -1633,7 +1633,7 @@ void RB_SetParallaxScale(shaderProgram_t *sp, float scale, shaderStage_t *pStage
 		specularScale = 0.95;
 		break;
 	case MATERIAL_COMPUTER:			// 31			// computers/electronic equipment
-		specularScale = 0.7;
+		specularScale = 0.92;
 		break;
 	default:
 		//specularScale = 0.4;

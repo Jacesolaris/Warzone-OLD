@@ -102,7 +102,7 @@ out vec4 out_Glow;
 			return 1.0 - texture2D(normalMap, t).a;
 		#endif
 	}
-  #endif //USE_PARALLAXMAP
+  #endif
 
   #if defined(USE_PARALLAXMAP_NONORMALS)
 	float SampleDepth(sampler2D normalMap, vec2 t)
@@ -129,12 +129,12 @@ out vec4 out_Glow;
 
 		return clamp(1.0 - combined_color2, 0.0, 1.0);
 	}
-  #endif //USE_PARALLAXMAP_NONORMALS
+  #endif
 
 
 float RayIntersectDisplaceMap(vec2 dp, vec2 ds, sampler2D normalMap)
 {
-#if !defined(FAST_PARALLAX)
+  #if !defined(FAST_PARALLAX)
 	float MAX_SIZE = var_Local1.x / 3.0;//1.25;//1.5;//1.0;
 	if (MAX_SIZE > 1.75) MAX_SIZE = 1.75;
 	if (MAX_SIZE < 1.0) MAX_SIZE = 1.0;
@@ -150,7 +150,7 @@ float RayIntersectDisplaceMap(vec2 dp, vec2 ds, sampler2D normalMap)
 	// best match found (starts with last position 1.0)
 	float bestDepth = MAX_SIZE;
 
-#if 1
+    #if 1
 	// search front to back for first point inside object
 	for(int i = 0; i < linearSearchSteps - 1; ++i)
 	{
@@ -163,9 +163,9 @@ float RayIntersectDisplaceMap(vec2 dp, vec2 ds, sampler2D normalMap)
 			if(depth >= t)
 				bestDepth = depth;	// store best depth
 	}
-#else
+    #else
 	bestDepth = MAX_SIZE;
-#endif
+    #endif
 
 	depth = bestDepth;
 	
@@ -186,26 +186,20 @@ float RayIntersectDisplaceMap(vec2 dp, vec2 ds, sampler2D normalMap)
 	}
 
 	return bestDepth * var_Local1.x;
-#else //FAST_PARALLAX
+  #else
 	float depth = SampleDepth(normalMap, dp) - 1.0;
 	return depth * var_Local1.x;
-#endif //FAST_PARALLAX
+  #endif
 }
-#endif //USE_PARALLAXMAP || USE_PARALLAXMAP_NONORMALS
+#endif
 
 vec3 EnvironmentBRDF(float gloss, float NE, vec3 specular)
 {
-  #if 1
 	vec4 t = vec4( 1/0.96, 0.475, (0.0275 - 0.25 * 0.04)/0.96,0.25 ) * gloss;
 	t += vec4( 0.0, 0.0, (0.015 - 0.75 * 0.04)/0.96,0.75 );
 	float a0 = t.x * min( t.y, exp2( -9.28 * NE ) ) + t.z;
 	float a1 = t.w;
 	return clamp( a0 + specular * ( a1 - a0 ), 0.0, 1.0 );
-  #elif 0
-	return specular + CalcFresnel(NE) * clamp(vec3(gloss) - specular, 0.0, 1.0);
-  #else
-	return mix(specular.rgb, vec3(1.0), CalcFresnel(NE) / (4.0 - 3.0 * gloss));
-  #endif
 }
 
 float CalcGGX(float NH, float gloss)
@@ -217,19 +211,7 @@ float CalcGGX(float NH, float gloss)
 
 float CalcFresnel(float EH)
 {
-#if 1
 	return exp2(-10.0 * EH);
-#elif 0
-	return exp2((-5.55473 * EH - 6.98316) * EH);
-#elif 0
-	float blend = 1.0 - EH;
-	float blend2 = blend * blend;
-	blend *= blend2 * blend2;
-	
-	return blend;
-#else
-	return pow(1.0 - EH, 5.0);
-#endif
 }
 
 float CalcVisibility(float NH, float NL, float NE, float EH, float gloss)
@@ -344,7 +326,6 @@ void main()
 #if defined(USE_PARALLAXMAP) || defined(USE_PARALLAXMAP_NONORMALS)
 	vec3 offsetDir = normalize(E * tangentToWorld);
 
-	//offsetDir.xy *= -u_NormalScale.a / offsetDir.z;
 	offsetDir.xy *= tex_offset * -var_Local1.x;//-4.0;//-5.0; // -3.0
 
   #if defined(USE_NORMALMAP)
@@ -352,7 +333,7 @@ void main()
   #else
 	texCoords += offsetDir.xy * RayIntersectDisplaceMap(texCoords, offsetDir.xy, u_DiffuseMap);
   #endif
-#endif //USE_PARALLAXMAP || USE_PARALLAXMAP_NONORMALS
+#endif
 
 	vec4 diffuse = texture2D(u_DiffuseMap, texCoords);
 
@@ -413,7 +394,6 @@ void main()
 	vec3 shadowColor = u_PrimaryLightAmbient * lightColor;
 
       #if 0
-	// Only shadow when the world light is parallel to the primary light
 	shadowValue = 1.0 + (shadowValue - 1.0) * clamp(dot(L, var_PrimaryLightDir.xyz), 0.0, 1.0);
       #endif
 	lightColor = mix(shadowColor, lightColor, shadowValue);
@@ -448,7 +428,6 @@ void main()
 			specular = vec4(1.0-fakedepth) * diffuse;
 			specular.a = ((clamp((1.0 - fakedepth), 0.0, 1.0) * 0.5) + 0.5);
 			specular.a = clamp((specular.a * 2.0) * specular.a, 0.2, 0.9);
-			//specular.a = 1.0;
 		}
 		else
 		{
@@ -468,12 +447,8 @@ void main()
 		if (length(u_SpecularScale) != 0.0 && length(u_SpecularScale) != 1.0) // Shader Specified...
 			specular *= u_SpecularScale;
 	#if defined(USE_CUBEMAP)
-		else if (var_Local1.b <= 0.8)
-			specular *= var_Local1.b * 0.4;
-		else if (var_Local1.b <= 0.95)
-			specular *= var_Local1.b * 0.7;
-		else if (var_Local1.b > 0.95)
-			specular *= var_Local1.b * 1.0;
+		else if (var_Local1.b > 0.0)
+			specular *= var_Local1.b;// * var_Local1.b;
 	#endif
 		else // Material Defaults...
 			specular *= var_Local1.b;
@@ -481,25 +456,20 @@ void main()
 	else
 		specular *= u_SpecularScale;
 
-	float gloss = specular.a;
-	float shininess = exp2(gloss * 13.0);
-
   #if defined(SPECULAR_IS_METALLIC)
-	// diffuse is actually base color, and red of specular is metallicness
 	float metallic = specular.r;
 
 	specular.rgb = (0.96 * metallic) * diffuse.rgb + vec3(0.04);
 	diffuse.rgb *= 1.0 - metallic;
   #else
-	// adjust diffuse by specular reflectance, to maintain energy conservation
 	diffuse.rgb *= vec3(1.0) - specular.rgb;
   #endif
 
 	reflectance = diffuse.rgb;
 
   #if defined(r_deluxeSpecular) || defined(USE_LIGHT_VECTOR)
-	float adjGloss = gloss;
-	float adjShininess = shininess;
+	float adjGloss = specular.a;
+	float adjShininess = exp2(specular.a * 13.0);
 
     #if !defined(USE_LIGHT_VECTOR)
 	adjGloss *= r_deluxeSpecular;
@@ -518,18 +488,17 @@ void main()
     #endif
   #endif
 
-	if (var_Local1.b > 0.0)
-		gl_FragColor.rgb  = (((lightColor   * reflectance * (attenuation * NL)) * 2.0) + (lightColor   * (reflectance * specular.a) * (attenuation * NL))) / 3.0;
-	else
-		gl_FragColor.rgb  = lightColor   * reflectance * (attenuation * NL);
+  if (var_Local1.b > 0.0)
+	gl_FragColor.rgb  = (((lightColor   * reflectance * (attenuation * NL)) * 2.0) + (lightColor   * (reflectance * specular.a) * (attenuation * NL))) / 3.0;
+  else
+	gl_FragColor.rgb  = lightColor   * reflectance * (attenuation * NL);
 
 #if 0
-	vec3 aSpecular = EnvironmentBRDF(gloss, NE, specular.rgb);
+	vec3 aSpecular = EnvironmentBRDF(specular.a, NE, specular.rgb);
 
-	// do ambient as two hemisphere lights, one straight up one straight down
 	float hemiDiffuseUp    = N.z * 0.5 + 0.5;
 	float hemiDiffuseDown  = 1.0 - hemiDiffuseUp;
-	float hemiSpecularUp   = mix(hemiDiffuseUp, float(N.z >= 0.0), gloss);
+	float hemiSpecularUp   = mix(hemiDiffuseUp, float(N.z >= 0.0), specular.a);
 	float hemiSpecularDown = 1.0 - hemiSpecularUp;
 
 	gl_FragColor.rgb += ambientColor * 0.75 * (diffuse.rgb * hemiDiffuseUp   + aSpecular * hemiSpecularUp);
@@ -540,15 +509,15 @@ void main()
 
   #if defined(USE_CUBEMAP)
 	if (var_Local1.b > 0.8) {
-	reflectance = EnvironmentBRDF(gloss, NE, specular.rgb);
+		reflectance = EnvironmentBRDF(specular.a, NE, specular.rgb);
 
-	vec3 R = reflect(E, N);
+		vec3 R = reflect(E, N);
 
-	vec3 parallax = u_CubeMapInfo.xyz + u_CubeMapInfo.w * viewDir;
+		vec3 parallax = u_CubeMapInfo.xyz + u_CubeMapInfo.w * viewDir;
 
-	vec3 cubeLightColor = textureCubeLod(u_CubeMap, R + parallax, 7.0 - gloss * 7.0).rgb * u_EnableTextures.w;
+		vec3 cubeLightColor = textureCubeLod(u_CubeMap, R + parallax, 7.0 - specular.a * 7.0).rgb * u_EnableTextures.w;
 
-	gl_FragColor.rgb += cubeLightColor * reflectance;
+		gl_FragColor.rgb += cubeLightColor * reflectance;
 	}
   #endif
 
@@ -569,7 +538,7 @@ void main()
 	NH2 = clamp(dot(N, H2), 0.0, 1.0);
 
 	reflectance  = diffuse.rgb;
-	reflectance += CalcSpecular(specular.rgb, NH2, NL2, NE, EH2, gloss, shininess);
+	reflectance += CalcSpecular(specular.rgb, NH2, NL2, NE, EH2, specular.a, exp2(specular.a * 13.0));
 
 	lightColor = u_PrimaryLightColor * var_Color.rgb;
 

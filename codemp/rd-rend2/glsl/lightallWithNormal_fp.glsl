@@ -242,8 +242,6 @@ vec3 CalcSpecular(vec3 specular, float NH, float NL, float NE, float EH, float g
 
 float CalcLightAttenuation(float point, float normDist)
 {
-	// zero light at 1.0, approximating q3 style
-	// also don't attenuate directional light
 	float attenuation = (0.5 * normDist - 1.5) * point + 1.0;
 
 	// clamp attenuation
@@ -256,7 +254,6 @@ float CalcLightAttenuation(float point, float normDist)
 	return attenuation;
 }
 
-// from http://www.thetenthplanet.de/archives/1180
 mat3 cotangent_frame( vec3 N, vec3 p, vec2 uv )
 {
 	// get edge vectors of the pixel triangle
@@ -325,7 +322,6 @@ void main()
 #if defined(USE_PARALLAXMAP) || defined(USE_PARALLAXMAP_NONORMALS)
 	vec3 offsetDir = normalize(E * tangentToWorld);
 
-	//offsetDir.xy *= -u_NormalScale.a / offsetDir.z;
 	offsetDir.xy *= tex_offset * -var_Local1.x;//-4.0;//-5.0; // -3.0
 
   #if defined(USE_NORMALMAP)
@@ -432,7 +428,6 @@ void main()
 			specular = vec4(1.0-fakedepth) * diffuse;
 			specular.a = ((clamp((1.0 - fakedepth), 0.0, 1.0) * 0.5) + 0.5);
 			specular.a = clamp((specular.a * 2.0) * specular.a, 0.2, 0.9);
-			//specular.a = 1.0;
 		}
 		else
 		{
@@ -465,9 +460,6 @@ void main()
 	else
 		specular *= u_SpecularScale;
 
-	float gloss = specular.a;
-	float shininess = exp2(gloss * 13.0);
-
   #if defined(SPECULAR_IS_METALLIC)
 	float metallic = specular.r;
 
@@ -480,8 +472,8 @@ void main()
 	reflectance = diffuse.rgb;
 
   #if defined(r_deluxeSpecular) || defined(USE_LIGHT_VECTOR)
-	float adjGloss = gloss;
-	float adjShininess = shininess;
+	float adjGloss = specular.a;
+	float adjShininess = exp2(specular.a * 13.0);
 
     #if !defined(USE_LIGHT_VECTOR)
 	adjGloss *= r_deluxeSpecular;
@@ -500,18 +492,18 @@ void main()
     #endif
   #endif
 
-	if (var_Local1.b > 0.0)
+    if (var_Local1.b > 0.0)
 		gl_FragColor.rgb  = (((lightColor   * reflectance * (attenuation * NL)) * 2.0) + (lightColor   * (reflectance * specular.a) * (attenuation * NL))) / 3.0;
 	else
 		gl_FragColor.rgb  = lightColor   * reflectance * (attenuation * NL);
 
 #if 0
-	vec3 aSpecular = EnvironmentBRDF(gloss, NE, specular.rgb);
+	vec3 aSpecular = EnvironmentBRDF(specular.a, NE, specular.rgb);
 
 	// do ambient as two hemisphere lights, one straight up one straight down
 	float hemiDiffuseUp    = N.z * 0.5 + 0.5;
 	float hemiDiffuseDown  = 1.0 - hemiDiffuseUp;
-	float hemiSpecularUp   = mix(hemiDiffuseUp, float(N.z >= 0.0), gloss);
+	float hemiSpecularUp   = mix(hemiDiffuseUp, float(N.z >= 0.0), specular.a);
 	float hemiSpecularDown = 1.0 - hemiSpecularUp;
 
 	gl_FragColor.rgb += ambientColor * 0.75 * (diffuse.rgb * hemiDiffuseUp   + aSpecular * hemiSpecularUp);
@@ -522,14 +514,14 @@ void main()
 
   #if defined(USE_CUBEMAP)
   if (var_Local1.b > 0.8) {
-	reflectance = EnvironmentBRDF(gloss, NE, specular.rgb);
+	reflectance = EnvironmentBRDF(specular.a, NE, specular.rgb);
 
 	vec3 R = reflect(E, N);
 
 	// parallax corrected cubemap (cheaper trick)
 	vec3 parallax = u_CubeMapInfo.xyz + u_CubeMapInfo.w * viewDir;
 
-	vec3 cubeLightColor = textureCubeLod(u_CubeMap, R + parallax, 7.0 - gloss * 7.0).rgb * u_EnableTextures.w;
+	vec3 cubeLightColor = textureCubeLod(u_CubeMap, R + parallax, 7.0 - specular.a * 7.0).rgb * u_EnableTextures.w;
 
 	gl_FragColor.rgb += cubeLightColor * reflectance;
   }
@@ -552,7 +544,7 @@ void main()
 	NH2 = clamp(dot(N, H2), 0.0, 1.0);
 
 	reflectance  = diffuse.rgb;
-	reflectance += CalcSpecular(specular.rgb, NH2, NL2, NE, EH2, gloss, shininess);
+	reflectance += CalcSpecular(specular.rgb, NH2, NL2, NE, EH2, specular.a, exp2(specular.a * 13.0));
 
 	lightColor = u_PrimaryLightColor * var_Color.rgb;
 
