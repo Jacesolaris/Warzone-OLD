@@ -617,9 +617,9 @@ void main()
   if (MaterialThickness > 0.0)
   {
   #if defined(USE_PRIMARY_LIGHT)
-	gl_FragColor += subScatterFS(gl_FragColor, specular, L2, lightColor.xyz, E, N, specular.a);
+	gl_FragColor += subScatterFS(gl_FragColor, specular, L2, lightColor.xyz, E, N);
   #else
-	gl_FragColor += subScatterFS(gl_FragColor, specular, L, var_Color.xyz, E, N, specular.a);
+	gl_FragColor += subScatterFS(gl_FragColor, specular, L, var_Color.xyz, E, N);
   #endif
   }
   #endif
