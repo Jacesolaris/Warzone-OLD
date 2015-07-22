@@ -1886,7 +1886,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 					GLSL_SetUniformFloat(sp, UNIFORM_TIME, backEnd.refdef.floatTime);
 					RB_SetParallaxScale(sp, 3.0, pStage);
 					break;
-				case MATERIAL_HOLLOWMETAL:		// 4			// hollow metal machines
+				case MATERIAL_HOLLOWMETAL:		// 4			// hollow metal machines -- UQ1: Used for weapons to force low parallax...
 					GLSL_BindProgram(sp);
 					GLSL_SetUniformFloat(sp, UNIFORM_TIME, backEnd.refdef.floatTime);
 					RB_SetParallaxScale(sp, 0.005, pStage);
