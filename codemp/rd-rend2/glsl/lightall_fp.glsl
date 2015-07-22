@@ -1,5 +1,7 @@
 uniform sampler2D u_DiffuseMap;
 varying vec4	var_Local1; // parallaxScale, haveSpecular, specularScale, 0
+varying vec4	u_Local2; // ExtinctionCoefficient
+varying vec4	u_Local3; // RimScalar, MaterialThickness
 varying vec2	var_Dimensions;
 
 #if defined(USE_LIGHTMAP)
@@ -35,6 +37,7 @@ uniform vec4      u_EnableTextures;
 #if defined(USE_LIGHT_VECTOR) && !defined(USE_FAST_LIGHT)
 uniform vec3      u_DirectedLight;
 uniform vec3      u_AmbientLight;
+uniform vec4		u_LightOrigin;
 #endif
 
 #if defined(USE_PRIMARY_LIGHT) || defined(USE_SHADOWMAP)
@@ -87,6 +90,8 @@ varying vec4      var_LightDir;
 #if defined(USE_PRIMARY_LIGHT) || defined(USE_SHADOWMAP)
 varying vec4      var_PrimaryLightDir;
 #endif
+
+varying vec3   var_vertPos;
 
 out vec4 out_Glow;
 
@@ -276,6 +281,55 @@ mat3 cotangent_frame( vec3 N, vec3 p, vec2 uv )
 	float invmax = inversesqrt( max( dot(T,T), dot(B,B) ) );
 	return mat3( T * invmax, B * invmax, N );
 }
+ 
+#if defined(USE_LIGHT_VECTOR) && !defined(USE_FAST_LIGHT)
+float halfLambert(in vec3 vect1, in vec3 vect2)
+{
+    float product = dot(vect1,vect2);
+    return product * 0.5 + 0.5;
+}
+ 
+float blinnPhongSpecular(in vec3 normalVec, in vec3 lightVec, in float specPower)
+{
+    vec3 halfAngle = normalize(normalVec + lightVec);
+    return pow(clamp(0.0,1.0,dot(normalVec,halfAngle)),specPower);
+}
+ 
+// Main fake sub-surface scatter lighting function
+
+vec3 ExtinctionCoefficient = u_Local2.xyz;
+float RimScalar = u_Local3.x;
+float MaterialThickness = u_Local3.y;
+
+vec4 subScatterFS(vec4 BaseColor, vec4 SpecColor, vec3 lightVec, vec3 LightColor, vec3 eyeVec, vec3 worldNormal, float SpecPower)
+{
+    float attenuation = 10.0 * (1.0 / distance(u_LightOrigin.xyz,var_vertPos.xyz));
+    vec3 eVec = normalize(eyeVec);
+    vec3 lVec = normalize(lightVec);
+    vec3 wNorm = normalize(worldNormal);
+     
+    vec4 dotLN = vec4(halfLambert(lVec,wNorm) * attenuation);
+    dotLN *= BaseColor;
+     
+    vec3 indirectLightComponent = vec3(MaterialThickness * max(0.0,dot(-wNorm,lVec)));
+    indirectLightComponent += MaterialThickness * halfLambert(-eVec,lVec);
+    indirectLightComponent *= attenuation;
+    indirectLightComponent.r *= ExtinctionCoefficient.r;
+    indirectLightComponent.g *= ExtinctionCoefficient.g;
+    indirectLightComponent.b *= ExtinctionCoefficient.b;
+     
+    vec3 rim = vec3(1.0 - max(0.0,dot(wNorm,eVec)));
+    rim *= rim;
+    rim *= max(0.0,dot(wNorm,lVec)) * SpecColor.rgb;
+     
+    vec4 finalCol = dotLN + vec4(indirectLightComponent,1.0);
+    finalCol.rgb += (rim * RimScalar * attenuation * finalCol.a);
+    finalCol.rgb += vec3(blinnPhongSpecular(wNorm,lVec,SpecPower) * attenuation * SpecColor * finalCol.a * 0.05);
+    finalCol.rgb *= LightColor.rgb;
+     
+    return finalCol;   
+}
+#endif
 
 void main()
 {
@@ -556,6 +610,18 @@ void main()
   #endif
 
   gl_FragColor.a = diffuse.a * var_Color.a;
+
+  #if defined(USE_LIGHT_VECTOR) && !defined(USE_FAST_LIGHT)
+  // Let's add some sub-surface scatterring shall we???
+  if (MaterialThickness > 0.0)
+  {
+  #if defined(USE_PRIMARY_LIGHT)
+	gl_FragColor += subScatterFS(gl_FragColor, specular, L2, lightColor.xyz, E, N, specular.a);
+  #else
+	gl_FragColor += subScatterFS(gl_FragColor, specular, L, var_Color.xyz, E, N, specular.a);
+  #endif
+  }
+  #endif
 #else
 	lightColor = var_Color.rgb;
   #if defined(USE_LIGHTMAP) 

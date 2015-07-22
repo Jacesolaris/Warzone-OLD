@@ -104,6 +104,8 @@ varying vec4   var_LightDir;
 varying vec4   var_PrimaryLightDir;
 #endif
 
+varying vec3   var_vertPos;
+
 #if defined(USE_TCGEN)
 vec2 GenTexCoords(int TCGen, vec3 position, vec3 normal, vec3 TCGenVector0, vec3 TCGenVector1)
 {
@@ -292,5 +294,6 @@ void main()
 
   var_Dimensions = u_Dimensions;
   var_Local1 = u_Local1;
+  var_vertPos = gl_Position.xyz;
 #endif
 }

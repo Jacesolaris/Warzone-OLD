@@ -1537,7 +1537,7 @@ static void UpdateTexCoords ( const shaderStage_t *stage )
 
 void RB_SetParallaxScale(shaderProgram_t *sp, float scale, shaderStage_t *pStage)
 {
-	vec4_t	local1;
+	vec4_t	local1, local3;
 	float	specularScale = 1.0;
 
 	switch( tess.shader->surfaceFlags & MATERIAL_MASK )
@@ -1645,6 +1645,9 @@ void RB_SetParallaxScale(shaderProgram_t *sp, float scale, shaderStage_t *pStage
 
 	VectorSet4(local1, scale, (float)pStage->hasSpecular, specularScale, 0.0);
 	GLSL_SetUniformVec4(sp, UNIFORM_LOCAL1, local1);
+	GLSL_SetUniformVec4(sp, UNIFORM_LOCAL2, pStage->subsurfaceExtinctionCoefficient);
+	VectorSet4(local3, pStage->subsurfaceRimScalar, pStage->subsurfaceMaterialThickness, 0.0, 0.0);
+	GLSL_SetUniformVec4(sp, UNIFORM_LOCAL3, local3);
 }
 
 void RB_SetStageImageDimensions(shaderProgram_t *sp, shaderStage_t *pStage)

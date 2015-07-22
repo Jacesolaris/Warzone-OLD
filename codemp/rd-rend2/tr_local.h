@@ -810,8 +810,12 @@ typedef struct {
 	struct shaderProgram_s *glslShaderGroup;
 	int glslShaderIndex;
 
-	vec4_t normalScale;
-	vec4_t specularScale;
+	vec4_t			normalScale;
+	vec4_t			specularScale;
+
+	float			subsurfaceRimScalar;
+	float			subsurfaceMaterialThickness;
+	vec4_t			subsurfaceExtinctionCoefficient;
 
 	qboolean		isSurfaceSprite;
 

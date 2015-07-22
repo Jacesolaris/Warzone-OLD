@@ -41,22 +41,27 @@ void DoTextToSpeech (char* text, char *voice, int entityNum, vec3_t origin)
 
 	sprintf(USE_VOICE, voice);
 
-	if (strlen(text) > 60) FILENAME_TOO_LONG = qtrue;
-
-	if (FILENAME_TOO_LONG)
 	{// Shorten the text to fit a decent filename length...
 		char	SHORTENED_TEXT[64] = { 0 };
 
 		strncpy(SHORTENED_TEXT, text, 60);
+		if (strlen(SHORTENED_TEXT) > 2 && text[strlen(SHORTENED_TEXT)] == '.' && text[strlen(SHORTENED_TEXT)-1] == '.' && text[strlen(SHORTENED_TEXT)-2] == '.')
+		{
+			SHORTENED_TEXT[strlen(SHORTENED_TEXT)] = 0;
+			SHORTENED_TEXT[strlen(SHORTENED_TEXT)-1] = 0;
+			SHORTENED_TEXT[strlen(SHORTENED_TEXT)-2] = 0;
+		}
+		else if (strlen(SHORTENED_TEXT) > 1 && text[strlen(SHORTENED_TEXT)] == '.' && text[strlen(SHORTENED_TEXT)-1] == '.')
+		{
+			SHORTENED_TEXT[strlen(SHORTENED_TEXT)] = 0;
+			SHORTENED_TEXT[strlen(SHORTENED_TEXT)-1] = 0;
+		}
+		else if (strlen(SHORTENED_TEXT) > 0 && text[strlen(SHORTENED_TEXT)] == '.')
+		{
+			SHORTENED_TEXT[strlen(SHORTENED_TEXT)] = 0;
+		}
 		sprintf(filename, "OJK/sound/tts/%s/%s.mp3", voice, SHORTENED_TEXT);
 		sprintf(filename2, "sound/tts/%s/%s.mp3", voice, SHORTENED_TEXT);
-
-		if (SHORTENED_TEXT == "") return;
-	}
-	else
-	{// This name is fine...
-		sprintf(filename, "OJK/sound/tts/%s/%s.mp3", voice, text);
-		sprintf(filename2, "sound/tts/%s/%s.mp3", voice, text);
 	}
 
 	if ( !strcmp("chatvoice", voice) ) IS_CHAT = qtrue;
@@ -267,20 +272,27 @@ qboolean S_DownloadVoice( const char *text, const char *voice )
 
 	sprintf(USE_VOICE, voice);
 
-	if (strlen(text) > 60) FILENAME_TOO_LONG = qtrue;
-
-	if (FILENAME_TOO_LONG)
 	{// Shorten the text to fit a decent filename length...
 		char	SHORTENED_TEXT[64] = { 0 };
 
 		strncpy(SHORTENED_TEXT, text, 60);
+		if (strlen(SHORTENED_TEXT) > 2 && text[strlen(SHORTENED_TEXT)] == '.' && text[strlen(SHORTENED_TEXT)-1] == '.' && text[strlen(SHORTENED_TEXT)-2] == '.')
+		{
+			SHORTENED_TEXT[strlen(SHORTENED_TEXT)] = 0;
+			SHORTENED_TEXT[strlen(SHORTENED_TEXT)-1] = 0;
+			SHORTENED_TEXT[strlen(SHORTENED_TEXT)-2] = 0;
+		}
+		else if (strlen(SHORTENED_TEXT) > 1 && text[strlen(SHORTENED_TEXT)] == '.' && text[strlen(SHORTENED_TEXT)-1] == '.')
+		{
+			SHORTENED_TEXT[strlen(SHORTENED_TEXT)] = 0;
+			SHORTENED_TEXT[strlen(SHORTENED_TEXT)-1] = 0;
+		}
+		else if (strlen(SHORTENED_TEXT) > 0 && text[strlen(SHORTENED_TEXT)] == '.')
+		{
+			SHORTENED_TEXT[strlen(SHORTENED_TEXT)] = 0;
+		}
 		sprintf(filename, "OJK/sound/tts/%s/%s.mp3", voice, SHORTENED_TEXT);
 		sprintf(filename2, "sound/tts/%s/%s.mp3", voice, SHORTENED_TEXT);
-	}
-	else
-	{// This name is fine...
-		sprintf(filename, "OJK/sound/tts/%s/%s.mp3", voice, text);
-		sprintf(filename2, "sound/tts/%s/%s.mp3", voice, text);
 	}
 
 	if ( FS_FileExists( filename ) )

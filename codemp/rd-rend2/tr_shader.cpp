@@ -1483,6 +1483,58 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 				continue;
 			}
 		}
+		else if (!Q_stricmp(token, "subsurfaceRimScalar"))
+		{
+			token = COM_ParseExt(text, qfalse);
+			if ( token[0] == 0 )
+			{
+				ri->Printf( PRINT_WARNING, "WARNING: missing parameter for subsurfaceRimScalar in shader '%s'\n", shader.name );
+				continue;
+			}
+			stage->subsurfaceRimScalar = atof( token );
+		}
+		else if (!Q_stricmp(token, "subsurfaceMaterialThickness"))
+		{
+			token = COM_ParseExt(text, qfalse);
+			if ( token[0] == 0 )
+			{
+				ri->Printf( PRINT_WARNING, "WARNING: missing parameter for subsurfaceMaterialThickness in shader '%s'\n", shader.name );
+				continue;
+			}
+			stage->subsurfaceMaterialThickness = atof( token );
+		}
+		else if (!Q_stricmp(token, "subsurfaceExtinctionCoefficient"))
+		{
+			token = COM_ParseExt(text, qfalse);
+			if ( token[0] == 0 )
+			{
+				ri->Printf( PRINT_WARNING, "WARNING: missing parameter for subsurfaceExtinctionCoefficient in shader '%s'\n", shader.name );
+				continue;
+			}
+
+			stage->subsurfaceExtinctionCoefficient[0] = atof( token );
+
+			token = COM_ParseExt(text, qfalse);
+			if ( token[0] == 0 )
+			{
+				ri->Printf( PRINT_WARNING, "WARNING: missing parameter for specularScale in shader '%s'\n", shader.name );
+				continue;
+			}
+
+			stage->subsurfaceExtinctionCoefficient[1] = atof( token );
+
+			token = COM_ParseExt(text, qfalse);
+			if ( token[0] == 0 )
+			{
+				// two values, rgb then gloss
+				stage->specularScale[3] = stage->specularScale[1];
+				stage->specularScale[1] =
+				stage->specularScale[2] = stage->specularScale[0];
+				continue;
+			}
+
+			stage->subsurfaceExtinctionCoefficient[2] = atof( token );
+		}
 		//
 		// specularReflectance <value>
 		//
