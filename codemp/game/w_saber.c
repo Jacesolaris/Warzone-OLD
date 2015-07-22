@@ -4183,6 +4183,10 @@ static QINLINE qboolean CheckSaberDamage(gentity_t *self, int rSaberNum, int rBl
 		tr.entityNum != self->s.number &&
 		g_entities[tr.entityNum].inuse)
 	{//hit something that had health and takes damage
+		//damage the thing we hit
+		qboolean doDismemberment = qfalse;
+		int	knockbackFlags = 0;
+
 		if (idleDamage &&
 			g_entities[tr.entityNum].client &&
 			OnSameTeam(self, &g_entities[tr.entityNum]) &&
@@ -4249,10 +4253,6 @@ static QINLINE qboolean CheckSaberDamage(gentity_t *self, int rSaberNum, int rBl
 		self->client->ps.saberIdleWound = level.time + g_saberDmgDelay_Idle.integer;
 
 		didHit = qtrue;
-
-		//damage the thing we hit
-		qboolean doDismemberment = qfalse;
-		int	knockbackFlags = 0;
 
 		if (g_entities[tr.entityNum].client)
 		{ //not a "jedi", so make them suffer more

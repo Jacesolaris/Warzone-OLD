@@ -2702,7 +2702,7 @@ static qboolean ParseShader( const char *name, const char **text )
 		//
 		if (StringsContainWord(name, name, "xwing") || StringsContainWord(name, name, "xwbody") || StringsContainWord(name, name, "crate") || StringsContainWord(name, name, "cargo") || StringsContainWord(name, name, "freight") || StringsContainWord(name, name, "container") || StringsContainWord(name, name, "barrel") || StringsContainWord(name, name, "transport") || StringsContainWord(name, name, "airpur") || StringsContainWord(name, name, "tank"))
 			shader.surfaceFlags |= MATERIAL_ARMOR;//MATERIAL_SOLIDMETAL;
-		else if (StringsContainWord(name, name, "plastic") || StringsContainWord(name, name, "trooper") || StringsContainWord(name, name, "reborn") || StringsContainWord(name, name, "medpac") || StringsContainWord(name, name, "bacta") || StringsContainWord(name, name, "mp/flag") || StringsContainWord(name, name, "xwing") || StringsContainWord(name, name, "tie_") || StringsContainWord(name, name, "ship"))
+		else if (StringsContainWord(name, name, "plastic") || StringsContainWord(name, name, "trooper") || StringsContainWord(name, name, "reborn") || StringsContainWord(name, name, "medpac") || StringsContainWord(name, name, "bacta") || StringsContainWord(name, name, "mp/flag") || StringsContainWord(name, name, "xwing") || StringsContainWord(name, name, "tie_") || StringsContainWord(name, name, "ship") || StringsContainWord(name, name, "shuttle") || StringsContainWord(name, name, "pilot"))
 			shader.surfaceFlags |= MATERIAL_PLASTIC;
 		else if (StringsContainWord(name, name, "boba"))
 			shader.surfaceFlags |= MATERIAL_ARMOR;
@@ -2774,6 +2774,8 @@ static qboolean ParseShader( const char *name, const char **text )
 			shader.surfaceFlags |= MATERIAL_ROCK;
 		else if (!StringsContainWord(name, name, "players") && (StringsContainWord(name, name, "deathstar") || StringsContainWord(name, name, "imperial") || StringsContainWord(name, name, "shuttle") || StringsContainWord(name, name, "destroyer")))
 			shader.surfaceFlags |= MATERIAL_TILES;
+		else if (!StringsContainWord(name, name, "players") && StringsContainWord(name, name, "dantooine"))
+			shader.surfaceFlags |= MATERIAL_MARBLE;
 		else if (StringsContainWord(name, name, "outside"))
 			shader.surfaceFlags |= MATERIAL_CONCRETE; // Outside, assume concrete...
 		else if (StringsContainWord(name, name, "out") && (StringsContainWord(name, name, "trim") || StringsContainWord(name, name, "step") || StringsContainWord(name, name, "pad")))
