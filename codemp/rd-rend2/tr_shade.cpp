@@ -1882,10 +1882,14 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				case MATERIAL_SOLIDWOOD:		// 1			// freshly cut timber
 				case MATERIAL_HOLLOWWOOD:		// 2			// termite infested creaky wood
 				case MATERIAL_SOLIDMETAL:		// 3			// solid girders
-				case MATERIAL_HOLLOWMETAL:		// 4			// hollow metal machines
 					GLSL_BindProgram(sp);
 					GLSL_SetUniformFloat(sp, UNIFORM_TIME, backEnd.refdef.floatTime);
 					RB_SetParallaxScale(sp, 3.0, pStage);
+					break;
+				case MATERIAL_HOLLOWMETAL:		// 4			// hollow metal machines
+					GLSL_BindProgram(sp);
+					GLSL_SetUniformFloat(sp, UNIFORM_TIME, backEnd.refdef.floatTime);
+					RB_SetParallaxScale(sp, 0.005, pStage);
 					break;
 				case MATERIAL_DRYLEAVES:		// 19			// dried up leaves on the floor
 				case MATERIAL_GREENLEAVES:		// 20			// fresh leaves still on a tree
