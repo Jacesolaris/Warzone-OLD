@@ -302,7 +302,7 @@ float RimScalar = u_Local3.x;
 float MaterialThickness = u_Local3.y;
 float SpecPower = u_Local3.z;
 
-vec4 subScatterFS(vec4 BaseColor, vec4 SpecColor, vec3 lightVec, vec3 LightColor, vec3 eyeVec, vec3 worldNormal, float SpecPower)
+vec4 subScatterFS(vec4 BaseColor, vec4 SpecColor, vec3 lightVec, vec3 LightColor, vec3 eyeVec, vec3 worldNormal)
 {
     float attenuation = 10.0 * (1.0 / distance(u_LightOrigin.xyz,var_vertPos.xyz));
     vec3 eVec = normalize(eyeVec);
