@@ -92,6 +92,12 @@ varying vec4      var_LightDir;
 varying vec4      var_PrimaryLightDir;
 #endif
 
+varying vec3   var_vertPos;
+
+#if defined(USE_LIGHT_VECTOR)
+uniform vec4   u_LightOrigin;
+#endif
+
 out vec4 out_Glow;
 
 #define EPSILON 0.00000001
