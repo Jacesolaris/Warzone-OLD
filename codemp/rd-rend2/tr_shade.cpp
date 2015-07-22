@@ -1646,7 +1646,7 @@ void RB_SetParallaxScale(shaderProgram_t *sp, float scale, shaderStage_t *pStage
 	VectorSet4(local1, scale, (float)pStage->hasSpecular, specularScale, 0.0);
 	GLSL_SetUniformVec4(sp, UNIFORM_LOCAL1, local1);
 	GLSL_SetUniformVec4(sp, UNIFORM_LOCAL2, pStage->subsurfaceExtinctionCoefficient);
-	VectorSet4(local3, pStage->subsurfaceRimScalar, pStage->subsurfaceMaterialThickness, 0.0, 0.0);
+	VectorSet4(local3, pStage->subsurfaceRimScalar, pStage->subsurfaceMaterialThickness, pStage->subsurfaceSpecularPower, 0.0);
 	GLSL_SetUniformVec4(sp, UNIFORM_LOCAL3, local3);
 }
 

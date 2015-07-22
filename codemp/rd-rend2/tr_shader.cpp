@@ -1503,6 +1503,16 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 			}
 			stage->subsurfaceMaterialThickness = atof( token );
 		}
+		else if (!Q_stricmp(token, "subsurfaceSpecularPower"))
+		{
+			token = COM_ParseExt(text, qfalse);
+			if ( token[0] == 0 )
+			{
+				ri->Printf( PRINT_WARNING, "WARNING: missing parameter for subsurfaceSpecularPower in shader '%s'\n", shader.name );
+				continue;
+			}
+			stage->subsurfaceSpecularPower = atof( token );
+		}
 		else if (!Q_stricmp(token, "subsurfaceExtinctionCoefficient"))
 		{
 			token = COM_ParseExt(text, qfalse);

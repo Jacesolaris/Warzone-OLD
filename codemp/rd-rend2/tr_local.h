@@ -815,6 +815,7 @@ typedef struct {
 
 	float			subsurfaceRimScalar;
 	float			subsurfaceMaterialThickness;
+	float			subsurfaceSpecularPower;
 	vec4_t			subsurfaceExtinctionCoefficient;
 
 	qboolean		isSurfaceSprite;

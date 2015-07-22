@@ -1,7 +1,7 @@
 uniform sampler2D u_DiffuseMap;
 varying vec4	var_Local1; // parallaxScale, haveSpecular, specularScale, 0
 varying vec4	u_Local2; // ExtinctionCoefficient
-varying vec4	u_Local3; // RimScalar, MaterialThickness
+varying vec4	u_Local3; // RimScalar, MaterialThickness, subSpecPower
 varying vec2	var_Dimensions;
 
 #if defined(USE_LIGHTMAP)
@@ -300,6 +300,7 @@ float blinnPhongSpecular(in vec3 normalVec, in vec3 lightVec, in float specPower
 vec3 ExtinctionCoefficient = u_Local2.xyz;
 float RimScalar = u_Local3.x;
 float MaterialThickness = u_Local3.y;
+float SpecPower = u_Local3.z;
 
 vec4 subScatterFS(vec4 BaseColor, vec4 SpecColor, vec3 lightVec, vec3 LightColor, vec3 eyeVec, vec3 worldNormal, float SpecPower)
 {
