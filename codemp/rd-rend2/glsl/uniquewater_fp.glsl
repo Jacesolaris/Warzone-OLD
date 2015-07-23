@@ -523,13 +523,14 @@ void main()
 	//gl_FragColor.rgb += ambientColor * (diffuse.rgb + specular.rgb);
 	//gl_FragColor.rgb += ambientColor * diffuse.rgb;
 
+  #if defined(USE_CUBEMAP)
 	// Cubemapping...
 	reflectance = EnvironmentBRDF(specular.a, NE, specular.rgb);
 	vec3 R = reflect(E, N);
 	vec3 parallax = u_CubeMapInfo.xyz + u_CubeMapInfo.w * viewDir;
 	vec3 cubeLightColor = textureCubeLod(u_CubeMap, R + parallax, 7.0 - specular.a * 7.0).rgb * u_EnableTextures.w;
 	gl_FragColor.rgb += (cubeLightColor * reflectance) * 3.0;
-
+  #endif
 
   #if defined(USE_PRIMARY_LIGHT)
 	vec3 L2, H2;
