@@ -1,8 +1,9 @@
 uniform sampler2D u_DiffuseMap;
-varying vec4	var_Local1; // parallaxScale, haveSpecular, specularScale, meterialType
-varying vec4	u_Local2; // ExtinctionCoefficient
-varying vec4	u_Local3; // RimScalar, MaterialThickness, subSpecPower
+varying vec4	var_Local1; // parallaxScale, haveSpecular, specularScale, materialType
 varying vec2	var_Dimensions;
+uniform vec4	u_Local2; // ExtinctionCoefficient
+uniform vec4	u_Local3; // RimScalar, MaterialThickness, subSpecPower, cubemapScale
+uniform vec4	u_Local4; // haveNormalMap, isMetalic, 0.0, 0.0
 
 varying float  var_Time;
 
@@ -418,16 +419,30 @@ void main()
 
 #if defined(USE_PARALLAXMAP) || defined(USE_PARALLAXMAP_NONORMALS)
   #if defined(USE_NORMALMAP)
-	float norm = (fakedepth - 0.5);
-	float norm2 = 0.0 - (fakedepth - 0.5);
-    #if defined(SWIZZLE_NORMALMAP)
-		N.xy = vec2(norm, norm2);
+    if (u_Local4.r != 0.0)
+	{// Have a real normal map...
+	#if defined(SWIZZLE_NORMALMAP)
+		N.xy = texture2D(u_NormalMap, texCoords).ag - vec2(0.5);
     #else
-		N.xy = vec2(norm, norm2);
+		N.xy = texture2D(u_NormalMap, texCoords).rg - vec2(0.5);
     #endif
-	N.xy *= u_NormalScale.xy;
-	N.z = sqrt(clamp((0.25 - N.x * N.x) - N.y * N.y, 0.0, 1.0));
-	N = tangentToWorld * N;
+		N.xy *= u_NormalScale.xy;
+		N.z = sqrt(clamp((0.25 - N.x * N.x) - N.y * N.y, 0.0, 1.0));
+		N = tangentToWorld * N;
+	}
+	else
+	{
+		float norm = (fakedepth - 0.5);
+		float norm2 = 0.0 - (fakedepth - 0.5);
+	#if defined(SWIZZLE_NORMALMAP)
+			N.xy = vec2(norm, norm2);
+    #else
+			N.xy = vec2(norm, norm2);
+    #endif
+		N.xy *= u_NormalScale.xy;
+		N.z = sqrt(clamp((0.25 - N.x * N.x) - N.y * N.y, 0.0, 1.0));
+		N = tangentToWorld * N;
+	}
   #else
 	N = var_Normal.xyz;
   #endif
@@ -467,14 +482,17 @@ void main()
 	NL = clamp(dot(N, L), 0.0, 1.0);
 	NE = clamp(dot(N, E), 0.0, 1.0);
 
+	gl_FragColor = vec4(0.0);
+
   #if defined(USE_SPECULARMAP)
 	vec4 specular;
 
 	if (var_Local1.g != 0.0)
 	{// Real specMap...
 		specular = texture2D(u_SpecularMap, texCoords);
-		specular.a = ((clamp((1.0 - specular.a), 0.0, 1.0) * 0.5) + 0.5);
-		specular.a = clamp((specular.a * 2.0) * specular.a, 0.2, 0.9);
+		//specular.a = (specular.r + specular.g + specular.b) / 3.0;
+		//specular.a = ((clamp((1.0 - specular.a), 0.0, 1.0) * 0.5) + 0.5);
+		//specular.a = clamp((specular.a * 2.0) * specular.a, 0.2, 0.9);
 	}
 	else
 	{// Fake it...
@@ -499,7 +517,7 @@ void main()
 
 	if (var_Local1.b > 0.0)
 	{
-		if (length(u_SpecularScale) != 0.0 && length(u_SpecularScale) != 1.0) // Shader Specified...
+		if (u_SpecularScale.r + u_SpecularScale.g + u_SpecularScale.b + u_SpecularScale.a != 0.0) // Shader Specified...
 			specular *= u_SpecularScale;
 	#if defined(USE_CUBEMAP)
 		else if (var_Local1.b > 0.0)
@@ -511,15 +529,18 @@ void main()
 	else
 		specular *= u_SpecularScale;
 
-  #if defined(SPECULAR_IS_METALLIC)
-	float metallic = specular.r;
+	if (u_Local4 != 0.0)
+	{// Metalic...
+		float metallic = specular.r;
 
-	specular.rgb = (0.96 * metallic) * diffuse.rgb + vec3(0.04);
-	diffuse.rgb *= 1.0 - metallic;
-  #else
-	diffuse.rgb *= vec3(1.0) - specular.rgb;
-  #endif
-
+		specular.rgb = (0.96 * metallic) * diffuse.rgb + vec3(0.04);
+		diffuse.rgb *= 1.0 - metallic;
+	}
+	else
+	{// Non Metalic...
+		diffuse.rgb *= vec3(1.0) - specular.rgb;
+	}
+  
 	reflectance = diffuse.rgb;
 
   #if defined(r_deluxeSpecular) || defined(USE_LIGHT_VECTOR)
@@ -544,9 +565,9 @@ void main()
   #endif
 
   if (var_Local1.b > 0.0)
-	gl_FragColor.rgb  = (((lightColor   * reflectance * (attenuation * NL)) * 2.0) + (lightColor   * (reflectance * specular.a) * (attenuation * NL))) / 3.0;
+	gl_FragColor.rgb  += (((lightColor   * reflectance * (attenuation * NL)) * 2.0) + (lightColor   * (reflectance * specular.a) * (attenuation * NL))) / 3.0;
   else
-	gl_FragColor.rgb  = lightColor   * reflectance * (attenuation * NL);
+	gl_FragColor.rgb  += lightColor   * reflectance * (attenuation * NL);
 
 #if 0
 	vec3 aSpecular = EnvironmentBRDF(specular.a, NE, specular.rgb);
@@ -563,7 +584,7 @@ void main()
 #endif
 
   #if defined(USE_CUBEMAP)
-	if (var_Local1.b >= 0.85) {
+	if (u_Local3.a > 0.0) {
 		reflectance = EnvironmentBRDF(specular.a, NE, specular.rgb);
 
 		vec3 R = reflect(E, N);
@@ -572,7 +593,7 @@ void main()
 
 		vec3 cubeLightColor = textureCubeLod(u_CubeMap, R + parallax, 7.0 - specular.a * 7.0).rgb * u_EnableTextures.w;
 
-		gl_FragColor.rgb += cubeLightColor * reflectance;
+		gl_FragColor.rgb += cubeLightColor * reflectance * u_Local3.a;
 	}
   #endif
 

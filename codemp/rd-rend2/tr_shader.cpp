@@ -1483,6 +1483,16 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 				continue;
 			}
 		}
+		else if (!Q_stricmp(token, "cubeMapScale"))
+		{
+			token = COM_ParseExt(text, qfalse);
+			if ( token[0] == 0 )
+			{
+				ri->Printf( PRINT_WARNING, "WARNING: missing parameter for cubeMapScale in shader '%s'\n", shader.name );
+				continue;
+			}
+			stage->cubeMapScale = atof( token );
+		}
 		else if (!Q_stricmp(token, "subsurfaceRimScalar"))
 		{
 			token = COM_ParseExt(text, qfalse);
@@ -1527,19 +1537,17 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 			token = COM_ParseExt(text, qfalse);
 			if ( token[0] == 0 )
 			{
-				ri->Printf( PRINT_WARNING, "WARNING: missing parameter for specularScale in shader '%s'\n", shader.name );
+				ri->Printf( PRINT_WARNING, "WARNING: missing parameter for subsurfaceExtinctionCoefficient in shader '%s'\n", shader.name );
 				continue;
 			}
 
 			stage->subsurfaceExtinctionCoefficient[1] = atof( token );
 
 			token = COM_ParseExt(text, qfalse);
+
 			if ( token[0] == 0 )
 			{
-				// two values, rgb then gloss
-				stage->specularScale[3] = stage->specularScale[1];
-				stage->specularScale[1] =
-				stage->specularScale[2] = stage->specularScale[0];
+				ri->Printf( PRINT_WARNING, "WARNING: missing parameter for subsurfaceExtinctionCoefficient in shader '%s'\n", shader.name );
 				continue;
 			}
 
@@ -2764,11 +2772,11 @@ static qboolean ParseShader( const char *name, const char **text )
 		//
 		if (StringsContainWord(name, name, "xwing") || StringsContainWord(name, name, "xwbody") || StringsContainWord(name, name, "crate") || StringsContainWord(name, name, "cargo") || StringsContainWord(name, name, "freight") || StringsContainWord(name, name, "container") || StringsContainWord(name, name, "barrel") || StringsContainWord(name, name, "transport") || StringsContainWord(name, name, "airpur") || StringsContainWord(name, name, "tank"))
 			shader.surfaceFlags |= MATERIAL_ARMOR;//MATERIAL_SOLIDMETAL;
-		else if (StringsContainWord(name, name, "plastic") || StringsContainWord(name, name, "trooper") || StringsContainWord(name, name, "medpac") || StringsContainWord(name, name, "bacta") || StringsContainWord(name, name, "mp/flag") || StringsContainWord(name, name, "xwing") || StringsContainWord(name, name, "tie_") || StringsContainWord(name, name, "ship") || StringsContainWord(name, name, "shuttle") || StringsContainWord(name, name, "pilot"))
+		else if (StringsContainWord(name, name, "plastic") || StringsContainWord(name, name, "stormtrooper") || StringsContainWord(name, name, "snowtrooper") || StringsContainWord(name, name, "medpac") || StringsContainWord(name, name, "bacta") || StringsContainWord(name, name, "mp/flag") || StringsContainWord(name, name, "xwing") || StringsContainWord(name, name, "tie_") || StringsContainWord(name, name, "ship") || StringsContainWord(name, name, "shuttle"))
 			shader.surfaceFlags |= MATERIAL_PLASTIC;
-		else if (StringsContainWord(name, name, "reborn"))
+		else if (StringsContainWord(name, name, "reborn") || StringsContainWord(name, name, "trooper"))
 			shader.surfaceFlags |= MATERIAL_ARMOR;
-		else if (StringsContainWord(name, name, "boba"))
+		else if (StringsContainWord(name, name, "boba") || StringsContainWord(name, name, "pilot"))
 			shader.surfaceFlags |= MATERIAL_ARMOR;
 		else if (!StringsContainWord(name, name, "players") && (StringsContainWord(name, name, "bespin") || StringsContainWord(name, name, "_cc")))
 			shader.surfaceFlags |= MATERIAL_MARBLE;
@@ -2990,7 +2998,7 @@ static void ComputeVertexAttribs(void)
 			break;
 		}
 
-		if (pStage->glslShaderGroup == tr.lightallShader || pStage->glslShaderGroup == tr.lightallWithNormalShader)
+		if (pStage->glslShaderGroup == tr.lightallShader)
 		{
 			shader.vertexAttribs |= ATTR_NORMAL;
 
@@ -3386,10 +3394,11 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 
 	if (hasRealNormalMap)
 	{
-		diffuse->glslShaderGroup = tr.lightallWithNormalShader;
+		diffuse->hasRealNormalMap = true;
 	}
 	else
 	{
+		diffuse->hasRealNormalMap = false;
 		diffuse->glslShaderGroup = tr.lightallShader;
 	}
 
@@ -3722,10 +3731,12 @@ static qboolean CollapseStagesToGLSL(void)
 
 			if (pStage->bundle[TB_DIFFUSEMAP].tcGen >= TCGEN_LIGHTMAP && pStage->bundle[TB_DIFFUSEMAP].tcGen <= TCGEN_LIGHTMAP3)
 			{
+				pStage->hasRealNormalMap = false;
+
 				if (hasRealNormalMap) 
-					pStage->glslShaderGroup = tr.lightallWithNormalShader;
-				else
-					pStage->glslShaderGroup = tr.lightallShader;
+					pStage->hasRealNormalMap = true;
+
+				pStage->glslShaderGroup = tr.lightallShader;
 
 				pStage->glslShaderIndex = LIGHTDEF_USE_LIGHTMAP;
 				pStage->bundle[TB_LIGHTMAP] = pStage->bundle[TB_DIFFUSEMAP];
@@ -3754,10 +3765,12 @@ static qboolean CollapseStagesToGLSL(void)
 			{
 				if (pStage->glslShaderGroup != tr.lightallShader)
 				{
+					pStage->hasRealNormalMap = false;
+
 					if (hasRealNormalMap) 
-						pStage->glslShaderGroup = tr.lightallWithNormalShader;
-					else
-						pStage->glslShaderGroup = tr.lightallShader;
+						pStage->hasRealNormalMap = true;
+
+					pStage->glslShaderGroup = tr.lightallShader;
 
 					pStage->glslShaderIndex = LIGHTDEF_USE_LIGHT_VECTOR;
 				}
@@ -3785,10 +3798,14 @@ static qboolean CollapseStagesToGLSL(void)
 		}
 
 		if (hasRealNormalMap) 
-			stage->glslShaderGroup = tr.lightallWithNormalShader;
+		{
+			stage->hasRealNormalMap = true;
+		}
 
 		if (hasRealSpecularMap)
+		{
 			stage->hasSpecular = qtrue;
+		}
 
 		ri->Printf (PRINT_DEVELOPER, "-> %s\n", stage->bundle[0].image[0]->imgName);
 	}

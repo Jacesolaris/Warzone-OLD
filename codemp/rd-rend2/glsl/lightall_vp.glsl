@@ -1,10 +1,10 @@
 attribute vec2 attr_TexCoord0;
 
-uniform vec4	u_Local1; // parallaxScale, haveSpecular, specularScale, meterialType
+uniform vec4	u_Local1; // parallaxScale, haveSpecular, specularScale, materialType
 uniform vec2	u_Dimensions;
 uniform float	u_Time;
 
-varying vec4	var_Local1; // parallaxScale, haveSpecular, specularScale, meterialType
+varying vec4	var_Local1; // parallaxScale, haveSpecular, specularScale, materialType
 varying vec2	var_Dimensions;
 
 #if defined(USE_LIGHTMAP) || defined(USE_TCGEN)

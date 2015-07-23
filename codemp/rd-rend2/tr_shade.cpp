@@ -1537,15 +1537,17 @@ static void UpdateTexCoords ( const shaderStage_t *stage )
 
 void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage)
 {
-	vec4_t	local1, local3;
+	vec4_t	local1, local3, local4;
 	float	specularScale = 1.0;
-	float	meterialType = 0.0;
+	float	materialType = 0.0;
 	float   parallaxScale = 1.0;
+	float	cubemapScale = 0.0;
+	float	isMetalic = 0.0;
 
 	if (pStage->isWater)
 	{
 		specularScale = 1.5;
-		meterialType = (float)MATERIAL_WATER;
+		materialType = (float)MATERIAL_WATER;
 		parallaxScale = 4.0;
 	}
 	else
@@ -1554,175 +1556,212 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage)
 		{
 		case MATERIAL_WATER:			// 13			// light covering of water on a surface
 			specularScale = 1.0;
-			meterialType = (float)MATERIAL_WATER;
+			cubemapScale = 1.5;
+			materialType = (float)MATERIAL_WATER;
 			parallaxScale = 4.0;
 			break;
 		case MATERIAL_SHORTGRASS:		// 5			// manicured lawn
 			specularScale = 0.53;
-			meterialType = (float)MATERIAL_SHORTGRASS;
+			cubemapScale = 0.0;
+			materialType = (float)MATERIAL_SHORTGRASS;
 			parallaxScale = 4.0;
 			break;
 		case MATERIAL_LONGGRASS:		// 6			// long jungle grass
 			specularScale = 0.5;
-			meterialType = (float)MATERIAL_LONGGRASS;
+			cubemapScale = 0.0;
+			materialType = (float)MATERIAL_LONGGRASS;
 			parallaxScale = 5.0;
 			break;
 		case MATERIAL_SAND:				// 8			// sandy beach
-			specularScale = 0.4;
-			meterialType = (float)MATERIAL_SAND;
+			specularScale = 0.0;
+			cubemapScale = 0.0;
+			materialType = (float)MATERIAL_SAND;
 			parallaxScale = 3.0;
 			break;
 		case MATERIAL_CARPET:			// 27			// lush carpet
-			specularScale = 0.35;
-			meterialType = (float)MATERIAL_CARPET;
+			specularScale = 0.0;
+			cubemapScale = 0.0;
+			materialType = (float)MATERIAL_CARPET;
 			parallaxScale = 3.0;
 			break;
 		case MATERIAL_GRAVEL:			// 9			// lots of small stones
-			specularScale = 0.3;
-			meterialType = (float)MATERIAL_GRAVEL;
+			specularScale = 0.0;
+			cubemapScale = 0.0;
+			materialType = (float)MATERIAL_GRAVEL;
 			parallaxScale = 4.0;
 			break;
 		case MATERIAL_ROCK:				// 23			//
-			specularScale = 0.4;
-			meterialType = (float)MATERIAL_ROCK;
+			specularScale = 0.0;
+			cubemapScale = 0.0;
+			materialType = (float)MATERIAL_ROCK;
 			parallaxScale = 4.0;
 			break;
 		case MATERIAL_TILES:			// 26			// tiled floor
 			specularScale = 0.86;
-			meterialType = (float)MATERIAL_TILES;
+			cubemapScale = 0.9;
+			materialType = (float)MATERIAL_TILES;
 			parallaxScale = 3.0;
 			break;
 		case MATERIAL_SOLIDWOOD:		// 1			// freshly cut timber
-			specularScale = 0.3;
-			meterialType = (float)MATERIAL_SOLIDWOOD;
+			specularScale = 0.0;
+			cubemapScale = 0.0;
+			materialType = (float)MATERIAL_SOLIDWOOD;
 			parallaxScale = 3.0;
 			break;
 		case MATERIAL_HOLLOWWOOD:		// 2			// termite infested creaky wood
-			specularScale = 0.3;
-			meterialType = (float)MATERIAL_HOLLOWWOOD;
+			specularScale = 0.0;
+			cubemapScale = 0.0;
+			materialType = (float)MATERIAL_HOLLOWWOOD;
 			parallaxScale = 3.0;
 			break;
 		case MATERIAL_SOLIDMETAL:		// 3			// solid girders
 			specularScale = 0.92;
-			meterialType = (float)MATERIAL_SOLIDMETAL;
+			cubemapScale = 0.92;
+			materialType = (float)MATERIAL_SOLIDMETAL;
 			parallaxScale = 0.005;
+			isMetalic = 1.0;
 			break;
 		case MATERIAL_HOLLOWMETAL:		// 4			// hollow metal machines -- UQ1: Used for weapons to force lower parallax...
 			specularScale = 0.92;
-			meterialType = (float)MATERIAL_HOLLOWMETAL;
+			cubemapScale = 0.92;
+			materialType = (float)MATERIAL_HOLLOWMETAL;
 			parallaxScale = 2.0;
+			isMetalic = 1.0;
 			break;
 		case MATERIAL_DRYLEAVES:		// 19			// dried up leaves on the floor
-			specularScale = 0.3;
-			meterialType = (float)MATERIAL_DRYLEAVES;
+			specularScale = 0.0;
+			cubemapScale = 0.0;
+			materialType = (float)MATERIAL_DRYLEAVES;
 			parallaxScale = 5.0;
 			break;
 		case MATERIAL_GREENLEAVES:		// 20			// fresh leaves still on a tree
-			specularScale = 0.4;
-			meterialType = (float)MATERIAL_GREENLEAVES;
+			specularScale = 0.0;
+			cubemapScale = 0.0;
+			materialType = (float)MATERIAL_GREENLEAVES;
 			parallaxScale = 5.0;
 			break;
 		case MATERIAL_FABRIC:			// 21			// Cotton sheets
 			specularScale = 0.48;
-			meterialType = (float)MATERIAL_FABRIC;
+			cubemapScale = 0.0;
+			materialType = (float)MATERIAL_FABRIC;
 			parallaxScale = 3.0;
 			break;
 		case MATERIAL_CANVAS:			// 22			// tent material
 			specularScale = 0.45;
-			meterialType = (float)MATERIAL_CANVAS;
+			cubemapScale = 0.0;
+			materialType = (float)MATERIAL_CANVAS;
 			parallaxScale = 3.0;
 			break;
 		case MATERIAL_MARBLE:			// 12			// marble floors
 			specularScale = 0.86;
-			meterialType = (float)MATERIAL_MARBLE;
+			cubemapScale = 1.0;
+			materialType = (float)MATERIAL_MARBLE;
 			parallaxScale = 2.0;
 			break;
 		case MATERIAL_SNOW:				// 14			// freshly laid snow
 			specularScale = 0.65;
-			meterialType = (float)MATERIAL_SNOW;
+			cubemapScale = 0.0;
+			materialType = (float)MATERIAL_SNOW;
 			parallaxScale = 5.0;
 			break;
 		case MATERIAL_MUD:				// 17			// wet soil
-			specularScale = 0.45;
-			meterialType = (float)MATERIAL_MUD;
+			specularScale = 0.0;
+			cubemapScale = 0.0;
+			materialType = (float)MATERIAL_MUD;
 			parallaxScale = 4.0;
 			break;
 		case MATERIAL_DIRT:				// 7			// hard mud
-			specularScale = 0.3;
-			meterialType = (float)MATERIAL_DIRT;
+			specularScale = 0.0;
+			cubemapScale = 0.0;
+			materialType = (float)MATERIAL_DIRT;
 			parallaxScale = 5.0;
 			break;
 		case MATERIAL_CONCRETE:			// 11			// hardened concrete pavement
 			specularScale = 0.3;
-			meterialType = (float)MATERIAL_CONCRETE;
+			cubemapScale = 0.0;
+			materialType = (float)MATERIAL_CONCRETE;
 			parallaxScale = 5.0;
 			break;
 		case MATERIAL_FLESH:			// 16			// hung meat, corpses in the world
-			specularScale = 0.3;
-			meterialType = (float)MATERIAL_FLESH;
+			specularScale = 0.2;
+			cubemapScale = 0.0;
+			materialType = (float)MATERIAL_FLESH;
 			parallaxScale = 1.0;
 			break;
 		case MATERIAL_RUBBER:			// 24			// hard tire like rubber
-			specularScale = 0.1;
-			meterialType = (float)MATERIAL_RUBBER;
+			specularScale = 0.0;
+			cubemapScale = 0.0;
+			materialType = (float)MATERIAL_RUBBER;
 			parallaxScale = 1.0;
 			break;
 		case MATERIAL_PLASTIC:			// 25			//
 			specularScale = 0.88;
-			meterialType = (float)MATERIAL_PLASTIC;
+			cubemapScale = 0.1;
+			materialType = (float)MATERIAL_PLASTIC;
 			parallaxScale = 1.0;
 			break;
 		case MATERIAL_PLASTER:			// 28			// drywall style plaster
 			specularScale = 0.4;
-			meterialType = (float)MATERIAL_PLASTER;
+			cubemapScale = 0.0;
+			materialType = (float)MATERIAL_PLASTER;
 			parallaxScale = 2.0;
 			break;
 		case MATERIAL_SHATTERGLASS:		// 29			// glass with the Crisis Zone style shattering
 			specularScale = 0.88;
-			meterialType = (float)MATERIAL_SHATTERGLASS;
+			cubemapScale = 1.0;
+			materialType = (float)MATERIAL_SHATTERGLASS;
 			parallaxScale = 1.0;
 			break;
 		case MATERIAL_ARMOR:			// 30			// body armor
-			specularScale = 0.7;
-			meterialType = (float)MATERIAL_ARMOR;
+			specularScale = 0.4;
+			cubemapScale = 2.0;
+			materialType = (float)MATERIAL_ARMOR;
 			parallaxScale = 2.0;
+			isMetalic = 1.0;
 			break;
 		case MATERIAL_ICE:				// 15			// packed snow/solid ice
 			specularScale = 0.9;
+			cubemapScale = 0.8;
 			parallaxScale = 2.0;
-			meterialType = (float)MATERIAL_ICE;
+			materialType = (float)MATERIAL_ICE;
 			break;
 		case MATERIAL_GLASS:			// 10			//
 			specularScale = 0.95;
-			meterialType = (float)MATERIAL_GLASS;
+			cubemapScale = 1.0;
+			materialType = (float)MATERIAL_GLASS;
 			parallaxScale = 1.0;
 			break;
 		case MATERIAL_BPGLASS:			// 18			// bulletproof glass
 			specularScale = 0.93;
-			meterialType = (float)MATERIAL_BPGLASS;
+			cubemapScale = 0.93;
+			materialType = (float)MATERIAL_BPGLASS;
 			parallaxScale = 1.0;
 			break;
 		case MATERIAL_COMPUTER:			// 31			// computers/electronic equipment
 			specularScale = 0.92;
-			meterialType = (float)MATERIAL_COMPUTER;
+			cubemapScale = 0.92;
+			materialType = (float)MATERIAL_COMPUTER;
 			parallaxScale = 2.0;
 			break;
 		default:
-			//specularScale = 0.4;
-			specularScale = 0.1;
-			//specularScale = 0.4;
-			//specularScale = 1.0;
-			meterialType = (float)0.0;
+			specularScale = 0.0;
+			cubemapScale = 0.0;
+			materialType = (float)0.0;
 			parallaxScale = 2.0;
 			break;
 		}
 	}
 
-	VectorSet4(local1, parallaxScale, (float)pStage->hasSpecular, specularScale, meterialType);
+	// Shader overrides material...
+	if (pStage->cubeMapScale) cubemapScale = pStage->cubeMapScale;
+
+	VectorSet4(local1, parallaxScale, (float)pStage->hasSpecular, specularScale, materialType);
 	GLSL_SetUniformVec4(sp, UNIFORM_LOCAL1, local1);
 	GLSL_SetUniformVec4(sp, UNIFORM_LOCAL2, pStage->subsurfaceExtinctionCoefficient);
-	VectorSet4(local3, pStage->subsurfaceRimScalar, pStage->subsurfaceMaterialThickness, pStage->subsurfaceSpecularPower, 0.0);
+	VectorSet4(local3, pStage->subsurfaceRimScalar, pStage->subsurfaceMaterialThickness, pStage->subsurfaceSpecularPower, cubemapScale);
 	GLSL_SetUniformVec4(sp, UNIFORM_LOCAL3, local3);
+	VectorSet4(local4, (float)pStage->hasRealNormalMap, isMetalic, 0.0, 0.0);
+	GLSL_SetUniformVec4(sp, UNIFORM_LOCAL4, local4);
 	//GLSL_SetUniformFloat(sp, UNIFORM_TIME, tess.shaderTime);
 	GLSL_SetUniformFloat(sp, UNIFORM_TIME, backEnd.refdef.floatTime);
 }
@@ -1792,7 +1831,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 		if (backEnd.depthFill)
 		{
-			if (pStage->glslShaderGroup == tr.lightallShader || pStage->glslShaderGroup == tr.lightallWithNormalShader)
+			if (pStage->glslShaderGroup == tr.lightallShader)
 			{
 				int index = 0;
 
@@ -1847,7 +1886,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				isGeneric = qtrue;
 			}
 		}
-		else if (pStage->glslShaderGroup == tr.lightallShader || pStage->glslShaderGroup == tr.lightallWithNormalShader)
+		else if (pStage->glslShaderGroup == tr.lightallShader)
 		{
 			int index = pStage->glslShaderIndex;
 
@@ -2113,7 +2152,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			else if ( pStage->bundle[TB_COLORMAP].image[0] != 0 )
 				R_BindAnimatedImageToTMU( &pStage->bundle[TB_COLORMAP], TB_COLORMAP );
 		}
-		else if ( !isGeneric && (pStage->glslShaderGroup == tr.lightallShader || pStage->glslShaderGroup == tr.lightallWithNormalShader || pStage->isWater) )
+		else if ( !isGeneric && (pStage->glslShaderGroup == tr.lightallShader || pStage->isWater) )
 		{
 			int i;
 			vec4_t enableTextures;

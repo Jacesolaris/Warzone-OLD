@@ -788,6 +788,7 @@ typedef struct {
 	qboolean		isDetail;
 	int				isWater;
 	bool			hasSpecular;
+	bool			hasRealNormalMap;
 	qboolean		glow;
 	
 	textureBundle_t	bundle[NUM_TEXTURE_BUNDLES];
@@ -812,6 +813,8 @@ typedef struct {
 
 	vec4_t			normalScale;
 	vec4_t			specularScale;
+
+	float			cubeMapScale;
 
 	float			subsurfaceRimScalar;
 	float			subsurfaceMaterialThickness;
@@ -1306,6 +1309,8 @@ typedef enum
 	UNIFORM_LOCAL1,
 	UNIFORM_LOCAL2,
 	UNIFORM_LOCAL3,
+	UNIFORM_LOCAL4,
+	UNIFORM_LOCAL5,
 	UNIFORM_TEXTURE0,
 	UNIFORM_TEXTURE1,
 	UNIFORM_TEXTURE2,
@@ -2262,7 +2267,6 @@ typedef struct trGlobals_s {
 	shaderProgram_t fogShader[FOGDEF_COUNT];
 	shaderProgram_t dlightShader[DLIGHTDEF_COUNT];
 	shaderProgram_t lightallShader[LIGHTDEF_COUNT];
-	shaderProgram_t lightallWithNormalShader[LIGHTDEF_COUNT];
 	shaderProgram_t shadowmapShader;
 	shaderProgram_t pshadowShader;
 	shaderProgram_t down4xShader;

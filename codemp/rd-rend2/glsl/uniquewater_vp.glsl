@@ -80,12 +80,12 @@ uniform vec2	u_Dimensions;
 uniform vec3	u_ViewOrigin;
 uniform float	u_Time;
 uniform vec4	u_Local0; // (1=water, 2=lava), 0, 0, 0
-uniform vec4	u_Local1; // parallaxScale, haveSpecular, specularScale, meterialType
+uniform vec4	u_Local1; // parallaxScale, haveSpecular, specularScale, materialType
 
 varying vec2	var_TexCoords;
 varying float	time;
 varying vec4	var_Local0; // (1=water, 2=lava), 0, 0, 0
-varying vec4	var_Local1; // parallaxScale, haveSpecular, specularScale, meterialType
+varying vec4	var_Local1; // parallaxScale, haveSpecular, specularScale, materialType
 varying vec2	var_Dimensions;
 varying vec3	var_vertPos;
 varying float	var_Time;

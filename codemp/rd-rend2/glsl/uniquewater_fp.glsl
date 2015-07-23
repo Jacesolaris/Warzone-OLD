@@ -1,5 +1,5 @@
 uniform sampler2D u_DiffuseMap;
-varying vec4	var_Local1; // parallaxScale, haveSpecular, specularScale, meterialType
+varying vec4	var_Local1; // parallaxScale, haveSpecular, specularScale, materialType
 varying vec4	u_Local2; // ExtinctionCoefficient
 varying vec4	u_Local3; // RimScalar, MaterialThickness, subSpecPower
 varying vec2	var_Dimensions;

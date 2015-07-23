@@ -40,8 +40,6 @@ extern const char *fallbackShader_generic_vp;
 extern const char *fallbackShader_generic_fp;
 extern const char *fallbackShader_lightall_vp;
 extern const char *fallbackShader_lightall_fp;
-extern const char *fallbackShader_lightallWithNormal_vp;
-extern const char *fallbackShader_lightallWithNormal_fp;
 extern const char *fallbackShader_pshadow_vp;
 extern const char *fallbackShader_pshadow_fp;
 extern const char *fallbackShader_shadowfill_vp;
@@ -311,6 +309,8 @@ static uniformInfo_t uniformsInfo[] =
 	{ "u_Local1",				GLSL_VEC4, 1  },
 	{ "u_Local2",				GLSL_VEC4, 1  },
 	{ "u_Local3",				GLSL_VEC4, 1  },
+	{ "u_Local4",				GLSL_VEC4, 1  },
+	{ "u_Local5",				GLSL_VEC4, 1  },
 	{ "u_Texture0",				GLSL_INT, 1 },
 	{ "u_Texture1",				GLSL_INT, 1 },
 	{ "u_Texture2",				GLSL_INT, 1 },
@@ -1411,11 +1411,6 @@ int GLSL_BeginLoadGPUShaders(void)
 		{
 			ri->Error(ERR_FATAL, "Could not load lightall shader!");
 		}
-
-		if (!GLSL_BeginLoadGPUShader(&tr.lightallWithNormalShader[i], "lightallWithNormal", attribs, qtrue, extradefines, qtrue, fallbackShader_lightallWithNormal_vp, fallbackShader_lightallWithNormal_fp))
-		{
-			ri->Error(ERR_FATAL, "Could not load lightallWithNormal shader!");
-		}
 	}
 	
 	attribs = ATTR_POSITION | ATTR_POSITION2 | ATTR_NORMAL | ATTR_NORMAL2 | ATTR_TEXCOORD0;
@@ -2001,41 +1996,7 @@ void GLSL_EndLoadGPUShaders ( int startTime )
 		numLightShaders++;
 	}
 
-	for (i = 0; i < LIGHTDEF_COUNT; i++)
-	{
-		int lightType = i & LIGHTDEF_LIGHTTYPE_MASK;
-		qboolean fastLight = (qboolean)!(r_normalMapping->integer || r_specularMapping->integer);
-
-		// skip impossible combos
-		if (!GLSL_IsValidPermutationForLight (lightType, i))
-		{
-			continue;
-		}
-
-		if (!GLSL_EndLoadGPUShader(&tr.lightallWithNormalShader[i]))
-		{
-			ri->Error(ERR_FATAL, "Could not load lightallWithNormal shader!");
-		}
-		
-		GLSL_InitUniforms(&tr.lightallWithNormalShader[i]);
-
-		qglUseProgram(tr.lightallWithNormalShader[i].program);
-		GLSL_SetUniformInt(&tr.lightallWithNormalShader[i], UNIFORM_DIFFUSEMAP,  TB_DIFFUSEMAP);
-		GLSL_SetUniformInt(&tr.lightallWithNormalShader[i], UNIFORM_LIGHTMAP,    TB_LIGHTMAP);
-		GLSL_SetUniformInt(&tr.lightallWithNormalShader[i], UNIFORM_NORMALMAP,   TB_NORMALMAP);
-		GLSL_SetUniformInt(&tr.lightallWithNormalShader[i], UNIFORM_DELUXEMAP,   TB_DELUXEMAP);
-		GLSL_SetUniformInt(&tr.lightallWithNormalShader[i], UNIFORM_SPECULARMAP, TB_SPECULARMAP);
-		GLSL_SetUniformInt(&tr.lightallWithNormalShader[i], UNIFORM_SHADOWMAP,   TB_SHADOWMAP);
-		GLSL_SetUniformInt(&tr.lightallWithNormalShader[i], UNIFORM_CUBEMAP,     TB_CUBEMAP);
-		qglUseProgram(0);
-
-#if defined(_DEBUG)
-		GLSL_FinishGPUShader(&tr.lightallWithNormalShader[i]);
-#endif
-		
-		numLightShaders++;
-	}
-
+	
 	if (!GLSL_EndLoadGPUShader(&tr.shadowmapShader))
 	{
 		ri->Error(ERR_FATAL, "Could not load shadowfill shader!");
@@ -3121,9 +3082,6 @@ void GLSL_ShutdownGPUShaders(void)
 
 	for ( i = 0; i < LIGHTDEF_COUNT; i++)
 		GLSL_DeleteGPUShader(&tr.lightallShader[i]);
-
-	for ( i = 0; i < LIGHTDEF_COUNT; i++)
-		GLSL_DeleteGPUShader(&tr.lightallWithNormalShader[i]);
 
 	GLSL_DeleteGPUShader(&tr.shadowmapShader);
 	GLSL_DeleteGPUShader(&tr.pshadowShader);
