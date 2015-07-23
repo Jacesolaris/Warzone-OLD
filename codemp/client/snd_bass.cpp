@@ -735,7 +735,7 @@ void BASS_UpdateSounds_REAL ( void )
 		}
 		else
 		{// Finished. Remove the channel...
-			if (SOUND_CHANNELS[c].isActive)
+			//if (SOUND_CHANNELS[c].isActive)
 			{// Still marked as active. Stop the channel and reset it...
 				//Com_Printf("Removing inactive channel %i.\n", c);
 				BASS_StopChannel(c);
@@ -770,7 +770,7 @@ void BASS_UpdateThread(void * aArg)
 
 		BASS_UpdateSounds_REAL();
 
-		this_thread::sleep_for(chrono::milliseconds(10));
+		this_thread::sleep_for(chrono::milliseconds(1));
 
 		if (BASS_CheckSoundDisabled())
 		{
@@ -1374,7 +1374,10 @@ void BASS_UpdateDynamicMusic( void )
 void BASS_AddMemoryChannel ( DWORD samplechan, int entityNum, int entityChannel, vec3_t origin, float volume )
 {
 	int chan = BASS_FindFreeChannel();
+
 	if (BASS_CheckSoundDisabled()) return;
+
+	if (origin)	if (Distance(cl.snap.ps.origin, origin) > MAX_SOUND_RANGE) return;
 
 	if (chan < 0)
 	{// No channel left to play on...
@@ -1401,10 +1404,12 @@ void BASS_AddMemoryLoopChannel ( DWORD samplechan, int entityNum, int entityChan
 {
 	if (BASS_CheckSoundDisabled()) return;
 
+	if (origin)	if (Distance(cl.snap.ps.origin, origin) > MAX_SOUND_RANGE) return;
+
 	//
 	// UQ1: Since it seems these also re-call this function to update positions, etc, run a check first...
 	//
-	if (origin)
+	//if (origin)
 	{// If there's no origin, surely this can't be an update...
 		qboolean FOUND = qfalse;
 
@@ -1417,7 +1422,7 @@ void BASS_AddMemoryLoopChannel ( DWORD samplechan, int entityNum, int entityChan
 			{// This is active and looping...
 				if (SOUND_CHANNELS[ch].entityChannel == entityChannel 
 					&& (SOUND_CHANNELS[ch].entityNum == entityNum || entityNum == -1)
-					&& SOUND_CHANNELS[ch].originalChannel == samplechan)
+					/*&& SOUND_CHANNELS[ch].originalChannel == samplechan*/)
 				{// This is our sound! Just update it (and then return)...
 					Channel *c = &SOUND_CHANNELS[ch];
 					VectorCopy(origin, c->origin);
@@ -1431,6 +1436,8 @@ void BASS_AddMemoryLoopChannel ( DWORD samplechan, int entityNum, int entityChan
 
 		if (FOUND) return;
 	}
+
+	//Com_Printf("BASS DEBUG: Sound %i for entity %i channel %i position (%f %f %f) and volume (%f) added.\n", (int)samplechan, entityNum, entityChannel, origin[0], origin[1], origin[2], volume);
 
 	int chan = BASS_FindFreeChannel();
 
