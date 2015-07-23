@@ -1887,7 +1887,7 @@ int PM_SaberDeflectionForQuad( int quad );
 extern stringID_table_t animTable[MAX_ANIMATIONS+1];
 static QINLINE qboolean WP_GetSaberDeflectionAngle( gentity_t *attacker, gentity_t *defender, float saberHitFraction )
 {
-	qboolean animBasedDeflection = qtrue;
+	qboolean animBasedDeflection = !(g_saberTweaks.integer & SABERTWEAK_POSDEFLECTION);
 	int attSaberLevel, defSaberLevel;
 
 	if ( !attacker || !attacker->client || !attacker->ghoul2 )
@@ -6062,39 +6062,34 @@ QINLINE int VectorCompare2( const vec3_t v1, const vec3_t v2 ) {
 }
 
 #define MAX_SABER_SWING_INC 0.33f
-void G_SPSaberDamageTraceLerped( gentity_t *self, int saberNum, int bladeNum, vec3_t baseNew, vec3_t endNew, int clipmask )
-{
+void G_SPSaberDamageTraceLerped(gentity_t *self, int saberNum, int bladeNum, float *baseNew, float *endNew, int clipmask) {
 	vec3_t baseOld, endOld;
 	vec3_t mp1, mp2;
 	vec3_t md1, md2;
 
-	if ( (level.time-self->client->saber[saberNum].blade[bladeNum].trail.lastTime) > 100 )
-	{//no valid last pos, use current
+	if ((level.time - self->client->saber[saberNum].blade[bladeNum].trail.lastTime) > 100) {//no valid last pos, use current
 		VectorCopy(baseNew, baseOld);
 		VectorCopy(endNew, endOld);
 	}
-	else
-	{//trace from last pos
-		VectorCopy( self->client->saber[saberNum].blade[bladeNum].trail.base, baseOld );
-		VectorCopy( self->client->saber[saberNum].blade[bladeNum].trail.tip, endOld );
+	else {//trace from last pos
+		VectorCopy(self->client->saber[saberNum].blade[bladeNum].trail.base, baseOld);
+		VectorCopy(self->client->saber[saberNum].blade[bladeNum].trail.tip, endOld);
 	}
 
-	VectorCopy( baseOld, mp1 );
-	VectorCopy( baseNew, mp2 );
-	VectorSubtract( endOld, baseOld, md1 );
-	VectorNormalize( md1 );
-	VectorSubtract( endNew, baseNew, md2 );
-	VectorNormalize( md2 );
+	VectorCopy(baseOld, mp1);
+	VectorCopy(baseNew, mp2);
+	VectorSubtract(endOld, baseOld, md1);
+	VectorNormalize(md1);
+	VectorSubtract(endNew, baseNew, md2);
+	VectorNormalize(md2);
 
 	saberHitWall = qfalse;
 	saberHitSaber = qfalse;
 	saberHitFraction = 1.0f;
-	if ( VectorCompare2( baseOld, baseNew ) && VectorCompare2( endOld, endNew ) )
-	{//no diff
-		CheckSaberDamage( self, saberNum, bladeNum, baseNew, endNew, qfalse, clipmask, qfalse );
+	if (VectorCompare2(baseOld, baseNew) && VectorCompare2(endOld, endNew)) {//no diff
+		CheckSaberDamage(self, saberNum, bladeNum, baseNew, endNew, qfalse, clipmask, qfalse);
 	}
-	else
-	{//saber moved, lerp
+	else {//saber moved, lerp
 		float step = 8, stepsize = 8;//aveLength,
 		vec3_t	ma1, ma2, md2ang, curBase1, curBase2;
 		int	xx;
@@ -6104,136 +6099,130 @@ void G_SPSaberDamageTraceLerped( gentity_t *self, int saberNum, int bladeNum, ve
 		qboolean extrapolate = qtrue;
 
 		//do the trace at the base first
-		VectorCopy( baseOld, bladePointOld );
-		VectorCopy( baseNew, bladePointNew );
-		CheckSaberDamage( self, saberNum, bladeNum, bladePointOld, bladePointNew, qfalse, clipmask, qtrue );
+		VectorCopy(baseOld, bladePointOld);
+		VectorCopy(baseNew, bladePointNew);
+		CheckSaberDamage(self, saberNum, bladeNum, bladePointOld, bladePointNew, qfalse, clipmask, qtrue);
 
 		//if hit a saber, shorten rest of traces to match
-		if ( saberHitFraction < 1.0f )
-		{
+		if (saberHitFraction < 1.0f) {
 			//adjust muzzleDir...
-			vectoangles( md1, ma1 );
-			vectoangles( md2, ma2 );
-			for ( xx = 0; xx < 3; xx++ )
-			{
-				md2ang[xx] = LerpAngle( ma1[xx], ma2[xx], saberHitFraction );
+			vec3_t tmp_ma1, tmp_ma2;
+			vec3_t outma1, outma2;
+
+			if (g_saberTweaks.integer & SABERTWEAK_INTERPOLATE) {
+				outma1 || ma1;
+				outma2 || ma2;
 			}
-			AngleVectors( md2ang, md2, NULL, NULL );
+			else {
+				outma1 || tmp_ma1;
+				outma2 || tmp_ma2;
+			}
+
+			vectoangles(md1, outma1);
+			vectoangles(md2, outma2);
+			for (xx = 0; xx < 3; xx++) {
+				md2ang[xx] = LerpAngle(outma1[xx], outma2[xx], saberHitFraction);
+			}
+			AngleVectors(md2ang, md2, NULL, NULL);
 			//shorten the base pos
-			VectorSubtract( mp2, mp1, baseDiff );
-			VectorMA( mp1, saberHitFraction, baseDiff, baseNew );
-			VectorMA( baseNew, self->client->saber[saberNum].blade[bladeNum].lengthMax, md2, endNew );
+			VectorSubtract(mp2, mp1, baseDiff);
+			VectorMA(mp1, saberHitFraction, baseDiff, baseNew);
+			VectorMA(baseNew, self->client->saber[saberNum].blade[bladeNum].lengthMax, md2, endNew);
 		}
 
 		//If the angle diff in the blade is high, need to do it in chunks of 33 to avoid flattening of the arc
-		if ( BG_SaberInAttack( self->client->ps.saberMove )
-			|| BG_SaberInSpecialAttack( self->client->ps.torsoAnim )
-			|| BG_SpinningSaberAnim( self->client->ps.torsoAnim )
-			|| BG_InSpecialJump( self->client->ps.torsoAnim ) )
+		if (BG_SaberInAttack(self->client->ps.saberMove)
+			|| BG_SaberInSpecialAttack(self->client->ps.torsoAnim)
+			|| BG_SpinningSaberAnim(self->client->ps.torsoAnim)
+			|| BG_InSpecialJump(self->client->ps.torsoAnim))
 			//|| (g_timescale->value<1.0f&&BG_SaberInTransitionAny( ent->client->ps.saberMove )) )
 		{
-			curDirFrac = DotProduct( md1, md2 );
+			curDirFrac = DotProduct(md1, md2);
 		}
-		else
-		{
+		else {
 			curDirFrac = 1.0f;
 		}
 		//NOTE: if saber spun at least 180 degrees since last damage trace, this is not reliable...!
-		if ( fabs(curDirFrac) < 1.0f - MAX_SABER_SWING_INC )
-		{//the saber blade spun more than 33 degrees since the last damage trace
-			curDirFrac = dirInc = 1.0f/((1.0f - curDirFrac)/MAX_SABER_SWING_INC);
+		if (fabsf(curDirFrac) < 1.0f - MAX_SABER_SWING_INC) {//the saber blade spun more than 33 degrees since the last damage trace
+			curDirFrac = dirInc = 1.0f / ((1.0f - curDirFrac) / MAX_SABER_SWING_INC);
 		}
-		else
-		{
+		else {
 			curDirFrac = 1.0f;
 			dirInc = 0.0f;
 		}
 		//qboolean hit_saber = qfalse;
 
-		vectoangles( md1, ma1 );
-		vectoangles( md2, ma2 );
+		vectoangles(md1, ma1);
+		vectoangles(md2, ma2);
 
 		//VectorSubtract( md2, md1, mdDiff );
-		VectorCopy( md1, curMD2 );
-		VectorCopy( baseOld, curBase2 );
+		VectorCopy(md1, curMD2);
+		VectorCopy(baseOld, curBase2);
 
-		while ( 1 )
-		{
-			VectorCopy( curMD2, curMD1 );
-			VectorCopy( curBase2, curBase1 );
-			if ( curDirFrac >= 1.0f )
-			{
-				VectorCopy( md2, curMD2 );
-				VectorCopy( baseNew, curBase2 );
+		while (1) {
+			VectorCopy(curMD2, curMD1);
+			VectorCopy(curBase2, curBase1);
+			if (curDirFrac >= 1.0f) {
+				VectorCopy(md2, curMD2);
+				VectorCopy(baseNew, curBase2);
 			}
-			else
-			{
-				for ( xx = 0; xx < 3; xx++ )
-				{
-					md2ang[xx] = LerpAngle( ma1[xx], ma2[xx], curDirFrac );
+			else {
+				for (xx = 0; xx < 3; xx++) {
+					md2ang[xx] = LerpAngle(ma1[xx], ma2[xx], curDirFrac);
 				}
-				AngleVectors( md2ang, curMD2, NULL, NULL );
+				AngleVectors(md2ang, curMD2, NULL, NULL);
 				//VectorMA( md1, curDirFrac, mdDiff, curMD2 );
-				VectorSubtract( baseNew, baseOld, baseDiff );
-				VectorMA( baseOld, curDirFrac, baseDiff, curBase2 );
+				VectorSubtract(baseNew, baseOld, baseDiff);
+				VectorMA(baseOld, curDirFrac, baseDiff, curBase2);
 			}
 			// Move up the blade in intervals of stepsize
-			for ( step = stepsize; step <= self->client->saber[saberNum].blade[bladeNum].lengthMax /*&& step < self->client->saber[saberNum].blade[bladeNum].lengthOld*/; step += stepsize )
-			{
-				VectorMA( curBase1, step, curMD1, bladePointOld );
-				VectorMA( curBase2, step, curMD2, bladePointNew );
+			for (step = stepsize; step <= self->client->saber[saberNum].blade[bladeNum].lengthMax /*&& step < self->client->saber[saberNum].blade[bladeNum].lengthOld*/; step += stepsize) {
+				VectorMA(curBase1, step, curMD1, bladePointOld);
+				VectorMA(curBase2, step, curMD2, bladePointNew);
 
-				if ( step+stepsize >= self->client->saber[saberNum].blade[bladeNum].lengthMax )
-				{
+				if (step + stepsize >= self->client->saber[saberNum].blade[bladeNum].lengthMax) {
 					extrapolate = qfalse;
 				}
 				//do the damage trace
-				CheckSaberDamage( self, saberNum, bladeNum, bladePointOld, bladePointNew, qfalse, clipmask, extrapolate );
+				CheckSaberDamage(self, saberNum, bladeNum, bladePointOld, bladePointNew, qfalse, clipmask, extrapolate);
 				/*
 				if ( WP_SaberDamageForTrace( ent->s.number, bladePointOld, bladePointNew, baseDamage, curMD2,
-					qfalse, entPowerLevel, ent->client->ps.saber[saberNum].type, qtrue,
-					saberNum, bladeNum ) )
+				qfalse, entPowerLevel, ent->client->ps.saber[saberNum].type, qtrue,
+				saberNum, bladeNum ) )
 				{
-					hit_wall = qtrue;
+				hit_wall = qtrue;
 				}
 				*/
 
 				//if hit a saber, shorten rest of traces to match
-				if ( saberHitFraction < 1.0f )
-				{
+				if (saberHitFraction < 1.0f) {
 					vec3_t curMA1, curMA2;
 					//adjust muzzle endpoint
-					VectorSubtract( mp2, mp1, baseDiff );
-					VectorMA( mp1, saberHitFraction, baseDiff, baseNew );
-					VectorMA( baseNew, self->client->saber[saberNum].blade[bladeNum].lengthMax, curMD2, endNew );
+					VectorSubtract(mp2, mp1, baseDiff);
+					VectorMA(mp1, saberHitFraction, baseDiff, baseNew);
+					VectorMA(baseNew, self->client->saber[saberNum].blade[bladeNum].lengthMax, curMD2, endNew);
 					//adjust muzzleDir...
-					vectoangles( curMD1, curMA1 );
-					vectoangles( curMD2, curMA2 );
-					for ( xx = 0; xx < 3; xx++ )
-					{
-						md2ang[xx] = LerpAngle( curMA1[xx], curMA2[xx], saberHitFraction );
+					vectoangles(curMD1, curMA1);
+					vectoangles(curMD2, curMA2);
+					for (xx = 0; xx < 3; xx++) {
+						md2ang[xx] = LerpAngle(curMA1[xx], curMA2[xx], saberHitFraction);
 					}
-					AngleVectors( md2ang, curMD2, NULL, NULL );
+					AngleVectors(md2ang, curMD2, NULL, NULL);
 					saberHitSaber = qtrue;
 				}
-				if (saberHitWall)
-				{
+				if (saberHitWall) {
 					break;
 				}
 			}
-			if ( saberHitWall || saberHitSaber )
-			{
+			if (saberHitWall || saberHitSaber) {
 				break;
 			}
-			if ( curDirFrac >= 1.0f )
-			{
+			if (curDirFrac >= 1.0f) {
 				break;
 			}
-			else
-			{
+			else {
 				curDirFrac += dirInc;
-				if ( curDirFrac >= 1.0f )
-				{
+				if (curDirFrac >= 1.0f) {
 					curDirFrac = 1.0f;
 				}
 			}
@@ -6245,14 +6234,14 @@ void G_SPSaberDamageTraceLerped( gentity_t *self, int saberNum, int bladeNum, ve
 		aveLength = (ent->client->ps.saber[saberNum].blade[bladeNum].lengthOld + ent->client->ps.saber[saberNum].blade[bladeNum].length)/2;
 		if ( step > aveLength )
 		{//less dmg if the last interval was not stepsize
-			tipDmgMod = (stepsize-(step-aveLength))/stepsize;
+		tipDmgMod = (stepsize-(step-aveLength))/stepsize;
 		}
 		//NOTE: since this is the tip, we do not extrapolate the extra 16
 		if ( WP_SaberDamageForTrace( ent->s.number, endOld, endNew, tipDmgMod*baseDamage, md2,
-			qfalse, entPowerLevel, ent->client->ps.saber[saberNum].type, qfalse,
-			saberNum, bladeNum ) )
+		qfalse, entPowerLevel, ent->client->ps.saber[saberNum].type, qfalse,
+		saberNum, bladeNum ) )
 		{
-			hit_wall = qtrue;
+		hit_wall = qtrue;
 		}
 		*/
 	}
@@ -9636,23 +9625,23 @@ nextStep:
 			{ //don't to saber 1 if the left arm is broken
 				break;
 			}
-			if (rSaberNum > 0
-				&& self->client->saber[1].model[0]
-				&& self->client->ps.saberHolstered == 1 )
-			{ //don't to saber 2 if it's off
+			if (!(g_saberTweaks.integer & SABERTWEAK_TWOBLADEDEFLECTFIX) && rSaberNum > 0
+				&& self->client->saber[1].model[0] && self->client->ps.saberHolstered == 1)
+			{
+				//don't do saber 2 if it's off
 				break;
 			}
 			rBladeNum = 0;
-			while (rBladeNum < self->client->saber[rSaberNum].numBlades)
-			{
+			while (rBladeNum < self->client->saber[rSaberNum].numBlades) {
 				//update muzzle data for the blade
 				VectorCopy(self->client->saber[rSaberNum].blade[rBladeNum].muzzlePoint, self->client->saber[rSaberNum].blade[rBladeNum].muzzlePointOld);
 				VectorCopy(self->client->saber[rSaberNum].blade[rBladeNum].muzzleDir, self->client->saber[rSaberNum].blade[rBladeNum].muzzleDirOld);
 
-				if ( rBladeNum > 0 //more than one blade
-					&& (!self->client->saber[1].model[0])//not using dual blades
-					&& self->client->saber[rSaberNum].numBlades > 1//using a multi-bladed saber
-					&& self->client->ps.saberHolstered == 1 )//
+				if (!(g_saberTweaks.integer & SABERTWEAK_TWOBLADEDEFLECTFIX)
+					&& rBladeNum > 0 //more than one blade
+					&& !self->client->saber[1].model[0] //not using dual blades
+					&& self->client->saber[rSaberNum].numBlades > 1 //using a multi-bladed saber
+					&& self->client->ps.saberHolstered == 1)
 				{ //don't to extra blades if they're off
 					break;
 				}
