@@ -80,6 +80,15 @@ extern vec3_t gPainPoint;
 
 #define FL_BBRUSH					0x04000000 //I am a breakable brush
 
+#define SABERTWEAK_INTERPOLATE			(0x0001u) // use SP style interpolation, also fix various small issues
+#define SABERTWEAK_PROLONGDAMAGE		(0x0002u) // allow damaging in wind-up and return animations
+#define SABERTWEAK_POSDEFLECTION		(0x0004u) // calculate deflection based on position rather than animation
+#define SABERTWEAK_SPECIALMOVES			(0x0008u) // tweak damages for special moves
+#define SABERTWEAK_TRACESIZE			(0x0010u) // use SP saber trace size or based off radius defined in .sab file
+#define SABERTWEAK_REDUCEBLOCKS			(0x0020u) // reduce chance of blocking based on saber stance
+#define SABERTWEAK_TWOBLADEDEFLECTFIX	(0x0040u) // fix deflection bug when toggling second saber
+#define SABERTWEAK_NERFDMG				(0x0080u) // nerf moves like roll-stab
+
 #ifndef FINAL_BUILD
 #define DEBUG_SABER_BOX
 #endif
@@ -1548,7 +1557,7 @@ qboolean HasSetSaberOnly(void);
 void WP_ForcePowerStop( gentity_t *self, forcePowers_t forcePower );
 void WP_SaberPositionUpdate( gentity_t *self, usercmd_t *ucmd );
 
-int WP_SaberCanBlock(gentity_t *self, vec3_t point, int dflags, int mod, qboolean projectile, int attackStr);
+int WP_SaberCanBlock(gentity_t *self, float *point, uint32_t dflags, int mod, qboolean projectile, int attackStr);
 
 void WP_SaberInitBladeData( gentity_t *ent );
 void WP_InitForcePowers( gentity_t *ent );
