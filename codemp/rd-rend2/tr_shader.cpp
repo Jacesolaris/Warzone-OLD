@@ -2876,7 +2876,7 @@ static qboolean ParseShader( const char *name, const char **text )
 		}
 	}
 	
-	if (StringsContainWord(name, *text, "plastic") || StringsContainWord(name, *text, "trooper") || StringsContainWord(name, *text, "medpack") || StringsContainWord(name, *text, "reborn"))
+	if (StringsContainWord(name, *text, "plastic") || StringsContainWord(name, *text, "trooper") || StringsContainWord(name, *text, "medpack"))
 		if (!(shader.surfaceFlags & MATERIAL_PLASTIC)) shader.surfaceFlags |= MATERIAL_PLASTIC;
 	
 
