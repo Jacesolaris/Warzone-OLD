@@ -1412,11 +1412,11 @@ void BASS_AddMemoryLoopChannel ( DWORD samplechan, int entityNum, int entityChan
 		for (int ch = 0; ch < MAX_BASS_CHANNELS; ch++) 
 		{
 			if (FOUND) continue;
-
+			
 			if (SOUND_CHANNELS[ch].isActive && SOUND_CHANNELS[ch].isLooping)
 			{// This is active and looping...
 				if (SOUND_CHANNELS[ch].entityChannel == entityChannel 
-					&& SOUND_CHANNELS[ch].entityNum == entityNum 
+					&& (SOUND_CHANNELS[ch].entityNum == entityNum || entityNum == -1)
 					&& SOUND_CHANNELS[ch].originalChannel == samplechan)
 				{// This is our sound! Just update it (and then return)...
 					Channel *c = &SOUND_CHANNELS[ch];

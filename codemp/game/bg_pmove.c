@@ -8363,8 +8363,8 @@ static void PM_Animate( void ) {
 			}
 		}
 
-		if ( pm->ps->torsoTimer < 1 && pm->ps->forceHandExtend == HANDEXTEND_NONE &&
-			pm->ps->legsTimer < 1 && pm->ps->weaponTime < 1 && pm->ps->saberLockTime < pm->cmd.serverTime) {
+		if ( /*pm->ps->torsoTimer < 1 &&*/ pm->ps->forceHandExtend == HANDEXTEND_NONE &&
+			/*pm->ps->legsTimer < 1 &&*/ pm->ps->weaponTime < 1 && pm->ps->saberLockTime < pm->cmd.serverTime) {
 
 			pm->ps->forceHandExtend = HANDEXTEND_TAUNT;
 
