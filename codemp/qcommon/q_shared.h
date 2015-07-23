@@ -2556,6 +2556,8 @@ enum {
 };
 
 void NET_AddrToString( char *out, size_t size, void *addr );
+float Q_clamp(float min, float value, float max);
+int Q_clampi(int min, int value, int max);
 
 qboolean StringContainsWord(const char *haystack, const char *needle);
 qboolean HaveWeapon( playerState_t *ps, int weapon );
