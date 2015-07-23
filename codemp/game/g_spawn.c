@@ -638,7 +638,7 @@ spawn_t	spawns[] = {
 	{ "npc_reborn_new",						SP_NPC_Reborn_New },
 	{ "npc_reelo",							SP_NPC_Reelo },
 	{ "npc_rodian",							SP_NPC_Rodian },
-	{ "npc_rosh_penin",						SP_NPC_Rosh_Penin },
+//	{ "npc_rosh_penin",						SP_NPC_Rosh_Penin },
 	{ "npc_saboteur",						SP_NPC_Saboteur },
 	{ "npc_shadowtrooper",					SP_NPC_ShadowTrooper },
 	{ "npc_snowtrooper",					SP_NPC_Snowtrooper },

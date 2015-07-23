@@ -1,9 +1,10 @@
 attribute vec2 attr_TexCoord0;
 
-uniform vec4	u_Local1; // parallaxScale, 0, 0, 0
+uniform vec4	u_Local1; // parallaxScale, haveSpecular, specularScale, meterialType
 uniform vec2	u_Dimensions;
+uniform float	u_Time;
 
-varying vec4	var_Local1; // parallaxScale, 0, 0, 0
+varying vec4	var_Local1; // parallaxScale, haveSpecular, specularScale, meterialType
 varying vec2	var_Dimensions;
 
 #if defined(USE_LIGHTMAP) || defined(USE_TCGEN)
@@ -105,6 +106,7 @@ varying vec4   var_PrimaryLightDir;
 #endif
 
 varying vec3   var_vertPos;
+varying float  var_Time;
 
 #if defined(USE_TCGEN)
 vec2 GenTexCoords(int TCGen, vec3 position, vec3 normal, vec3 TCGenVector0, vec3 TCGenVector1)
@@ -295,5 +297,6 @@ void main()
   var_Dimensions = u_Dimensions;
   var_Local1 = u_Local1;
   var_vertPos = gl_Position.xyz;
+  var_Time = u_Time;
 #endif
 }

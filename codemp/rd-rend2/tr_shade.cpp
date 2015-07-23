@@ -1535,137 +1535,228 @@ static void UpdateTexCoords ( const shaderStage_t *stage )
 	}
 }
 
-void RB_SetParallaxScale(shaderProgram_t *sp, float scale, shaderStage_t *pStage)
+void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage)
 {
 	vec4_t	local1, local3;
 	float	specularScale = 1.0;
+	float	meterialType = 0.0;
+	float   parallaxScale = 1.0;
 
-	switch( tess.shader->surfaceFlags & MATERIAL_MASK )
+	if (pStage->isWater)
 	{
-	case MATERIAL_WATER:			// 13			// light covering of water on a surface
 		specularScale = 1.5;
-		break;
-	case MATERIAL_SHORTGRASS:		// 5			// manicured lawn
-		specularScale = 0.6;
-		break;
-	case MATERIAL_LONGGRASS:		// 6			// long jungle grass
-		specularScale = 0.6;
-		break;
-	case MATERIAL_SAND:				// 8			// sandy beach
-		specularScale = 0.4;
-		break;
-	case MATERIAL_CARPET:			// 27			// lush carpet
-		specularScale = 0.4;
-		break;
-	case MATERIAL_GRAVEL:			// 9			// lots of small stones
-		specularScale = 0.5;
-		break;
-	case MATERIAL_ROCK:				// 23			//
-		specularScale = 0.5;
-		break;
-	case MATERIAL_TILES:			// 26			// tiled floor
-		specularScale = 0.86;
-		break;
-	case MATERIAL_SOLIDWOOD:		// 1			// freshly cut timber
-		specularScale = 0.3;
-		break;
-	case MATERIAL_HOLLOWWOOD:		// 2			// termite infested creaky wood
-		specularScale = 0.3;
-		break;
-	case MATERIAL_SOLIDMETAL:		// 3			// solid girders
-		specularScale = 0.92;
-		break;
-	case MATERIAL_HOLLOWMETAL:		// 4			// hollow metal machines
-		specularScale = 0.92;
-		break;
-	case MATERIAL_DRYLEAVES:		// 19			// dried up leaves on the floor
-		specularScale = 0.4;
-		break;
-	case MATERIAL_GREENLEAVES:		// 20			// fresh leaves still on a tree
-		specularScale = 0.6;
-		break;
-	case MATERIAL_FABRIC:			// 21			// Cotton sheets
-		specularScale = 0.79;
-		break;
-	case MATERIAL_CANVAS:			// 22			// tent material
-		specularScale = 0.7;
-		break;
-	case MATERIAL_MARBLE:			// 12			// marble floors
-		specularScale = 0.92;
-		break;
-	case MATERIAL_SNOW:				// 14			// freshly laid snow
-		specularScale = 0.7;
-		break;
-	case MATERIAL_MUD:				// 17			// wet soil
-		specularScale = 0.6;
-		break;
-	case MATERIAL_DIRT:				// 7			// hard mud
-		specularScale = 0.4;
-		break;
-	case MATERIAL_CONCRETE:			// 11			// hardened concrete pavement
-		specularScale = 0.4;
-		break;
-	case MATERIAL_FLESH:			// 16			// hung meat, corpses in the world
-		specularScale = 0.5;
-		break;
-	case MATERIAL_RUBBER:			// 24			// hard tire like rubber
-		specularScale = 0.2;
-		break;
-	case MATERIAL_PLASTIC:			// 25			//
-		specularScale = 0.88;
-		break;
-	case MATERIAL_PLASTER:			// 28			// drywall style plaster
-		specularScale = 0.5;
-		break;
-	case MATERIAL_SHATTERGLASS:		// 29			// glass with the Crisis Zone style shattering
-		specularScale = 0.92;
-		break;
-	case MATERIAL_ARMOR:			// 30			// body armor
-		specularScale = 0.94;
-		break;
-	case MATERIAL_ICE:				// 15			// packed snow/solid ice
-		specularScale = 0.95;
-		break;
-	case MATERIAL_GLASS:			// 10			//
-		specularScale = 0.95;
-		break;
-	case MATERIAL_BPGLASS:			// 18			// bulletproof glass
-		specularScale = 0.95;
-		break;
-	case MATERIAL_COMPUTER:			// 31			// computers/electronic equipment
-		specularScale = 0.92;
-		break;
-	default:
-		//specularScale = 0.4;
-		//specularScale = 0.0;
-		specularScale = 0.4;
-		//specularScale = 1.0;
-		break;
+		meterialType = (float)MATERIAL_WATER;
+		parallaxScale = 4.0;
+	}
+	else
+	{
+		switch( tess.shader->surfaceFlags & MATERIAL_MASK )
+		{
+		case MATERIAL_WATER:			// 13			// light covering of water on a surface
+			specularScale = 1.0;
+			meterialType = (float)MATERIAL_WATER;
+			parallaxScale = 4.0;
+			break;
+		case MATERIAL_SHORTGRASS:		// 5			// manicured lawn
+			specularScale = 0.53;
+			meterialType = (float)MATERIAL_SHORTGRASS;
+			parallaxScale = 4.0;
+			break;
+		case MATERIAL_LONGGRASS:		// 6			// long jungle grass
+			specularScale = 0.5;
+			meterialType = (float)MATERIAL_LONGGRASS;
+			parallaxScale = 5.0;
+			break;
+		case MATERIAL_SAND:				// 8			// sandy beach
+			specularScale = 0.4;
+			meterialType = (float)MATERIAL_SAND;
+			parallaxScale = 3.0;
+			break;
+		case MATERIAL_CARPET:			// 27			// lush carpet
+			specularScale = 0.35;
+			meterialType = (float)MATERIAL_CARPET;
+			parallaxScale = 3.0;
+			break;
+		case MATERIAL_GRAVEL:			// 9			// lots of small stones
+			specularScale = 0.3;
+			meterialType = (float)MATERIAL_GRAVEL;
+			parallaxScale = 4.0;
+			break;
+		case MATERIAL_ROCK:				// 23			//
+			specularScale = 0.4;
+			meterialType = (float)MATERIAL_ROCK;
+			parallaxScale = 4.0;
+			break;
+		case MATERIAL_TILES:			// 26			// tiled floor
+			specularScale = 0.86;
+			meterialType = (float)MATERIAL_TILES;
+			parallaxScale = 3.0;
+			break;
+		case MATERIAL_SOLIDWOOD:		// 1			// freshly cut timber
+			specularScale = 0.3;
+			meterialType = (float)MATERIAL_SOLIDWOOD;
+			parallaxScale = 3.0;
+			break;
+		case MATERIAL_HOLLOWWOOD:		// 2			// termite infested creaky wood
+			specularScale = 0.3;
+			meterialType = (float)MATERIAL_HOLLOWWOOD;
+			parallaxScale = 3.0;
+			break;
+		case MATERIAL_SOLIDMETAL:		// 3			// solid girders
+			specularScale = 0.92;
+			meterialType = (float)MATERIAL_SOLIDMETAL;
+			parallaxScale = 0.005;
+			break;
+		case MATERIAL_HOLLOWMETAL:		// 4			// hollow metal machines -- UQ1: Used for weapons to force lower parallax...
+			specularScale = 0.92;
+			meterialType = (float)MATERIAL_HOLLOWMETAL;
+			parallaxScale = 2.0;
+			break;
+		case MATERIAL_DRYLEAVES:		// 19			// dried up leaves on the floor
+			specularScale = 0.3;
+			meterialType = (float)MATERIAL_DRYLEAVES;
+			parallaxScale = 5.0;
+			break;
+		case MATERIAL_GREENLEAVES:		// 20			// fresh leaves still on a tree
+			specularScale = 0.4;
+			meterialType = (float)MATERIAL_GREENLEAVES;
+			parallaxScale = 5.0;
+			break;
+		case MATERIAL_FABRIC:			// 21			// Cotton sheets
+			specularScale = 0.48;
+			meterialType = (float)MATERIAL_FABRIC;
+			parallaxScale = 3.0;
+			break;
+		case MATERIAL_CANVAS:			// 22			// tent material
+			specularScale = 0.45;
+			meterialType = (float)MATERIAL_CANVAS;
+			parallaxScale = 3.0;
+			break;
+		case MATERIAL_MARBLE:			// 12			// marble floors
+			specularScale = 0.86;
+			meterialType = (float)MATERIAL_MARBLE;
+			parallaxScale = 2.0;
+			break;
+		case MATERIAL_SNOW:				// 14			// freshly laid snow
+			specularScale = 0.65;
+			meterialType = (float)MATERIAL_SNOW;
+			parallaxScale = 5.0;
+			break;
+		case MATERIAL_MUD:				// 17			// wet soil
+			specularScale = 0.45;
+			meterialType = (float)MATERIAL_MUD;
+			parallaxScale = 4.0;
+			break;
+		case MATERIAL_DIRT:				// 7			// hard mud
+			specularScale = 0.3;
+			meterialType = (float)MATERIAL_DIRT;
+			parallaxScale = 5.0;
+			break;
+		case MATERIAL_CONCRETE:			// 11			// hardened concrete pavement
+			specularScale = 0.3;
+			meterialType = (float)MATERIAL_CONCRETE;
+			parallaxScale = 5.0;
+			break;
+		case MATERIAL_FLESH:			// 16			// hung meat, corpses in the world
+			specularScale = 0.3;
+			meterialType = (float)MATERIAL_FLESH;
+			parallaxScale = 1.0;
+			break;
+		case MATERIAL_RUBBER:			// 24			// hard tire like rubber
+			specularScale = 0.1;
+			meterialType = (float)MATERIAL_RUBBER;
+			parallaxScale = 1.0;
+			break;
+		case MATERIAL_PLASTIC:			// 25			//
+			specularScale = 0.88;
+			meterialType = (float)MATERIAL_PLASTIC;
+			parallaxScale = 1.0;
+			break;
+		case MATERIAL_PLASTER:			// 28			// drywall style plaster
+			specularScale = 0.4;
+			meterialType = (float)MATERIAL_PLASTER;
+			parallaxScale = 2.0;
+			break;
+		case MATERIAL_SHATTERGLASS:		// 29			// glass with the Crisis Zone style shattering
+			specularScale = 0.88;
+			meterialType = (float)MATERIAL_SHATTERGLASS;
+			parallaxScale = 1.0;
+			break;
+		case MATERIAL_ARMOR:			// 30			// body armor
+			specularScale = 0.7;
+			meterialType = (float)MATERIAL_ARMOR;
+			parallaxScale = 2.0;
+			break;
+		case MATERIAL_ICE:				// 15			// packed snow/solid ice
+			specularScale = 0.9;
+			parallaxScale = 2.0;
+			meterialType = (float)MATERIAL_ICE;
+			break;
+		case MATERIAL_GLASS:			// 10			//
+			specularScale = 0.95;
+			meterialType = (float)MATERIAL_GLASS;
+			parallaxScale = 1.0;
+			break;
+		case MATERIAL_BPGLASS:			// 18			// bulletproof glass
+			specularScale = 0.93;
+			meterialType = (float)MATERIAL_BPGLASS;
+			parallaxScale = 1.0;
+			break;
+		case MATERIAL_COMPUTER:			// 31			// computers/electronic equipment
+			specularScale = 0.92;
+			meterialType = (float)MATERIAL_COMPUTER;
+			parallaxScale = 2.0;
+			break;
+		default:
+			//specularScale = 0.4;
+			specularScale = 0.1;
+			//specularScale = 0.4;
+			//specularScale = 1.0;
+			meterialType = (float)0.0;
+			parallaxScale = 2.0;
+			break;
+		}
 	}
 
-	VectorSet4(local1, scale, (float)pStage->hasSpecular, specularScale, 0.0);
+	VectorSet4(local1, parallaxScale, (float)pStage->hasSpecular, specularScale, meterialType);
 	GLSL_SetUniformVec4(sp, UNIFORM_LOCAL1, local1);
 	GLSL_SetUniformVec4(sp, UNIFORM_LOCAL2, pStage->subsurfaceExtinctionCoefficient);
 	VectorSet4(local3, pStage->subsurfaceRimScalar, pStage->subsurfaceMaterialThickness, pStage->subsurfaceSpecularPower, 0.0);
 	GLSL_SetUniformVec4(sp, UNIFORM_LOCAL3, local3);
+	//GLSL_SetUniformFloat(sp, UNIFORM_TIME, tess.shaderTime);
+	GLSL_SetUniformFloat(sp, UNIFORM_TIME, backEnd.refdef.floatTime);
 }
 
 void RB_SetStageImageDimensions(shaderProgram_t *sp, shaderStage_t *pStage)
 {
 	vec2_t dimensions;
-#ifdef ___SHADER_GENERATOR___
-	if (!pStage->bundle[0].image[0]) {
-		pStage->bundle[0].image[0] = tr.whiteImage; // argh!
-	}
-#endif //___SHADER_GENERATOR___
+
 	dimensions[0] = pStage->bundle[0].image[0]->width;
 	dimensions[1] = pStage->bundle[0].image[0]->height;
+
+	if (pStage->bundle[TB_DIFFUSEMAP].image[0])
+	{
+		dimensions[0] = pStage->bundle[TB_DIFFUSEMAP].image[0]->width;
+		dimensions[1] = pStage->bundle[TB_DIFFUSEMAP].image[0]->height;
+	}
+	else if (pStage->bundle[TB_NORMALMAP].image[0])
+	{
+		dimensions[0] = pStage->bundle[TB_NORMALMAP].image[0]->width;
+		dimensions[1] = pStage->bundle[TB_NORMALMAP].image[0]->height;
+	}
+	else if (pStage->bundle[TB_SPECULARMAP].image[0])
+	{
+		dimensions[0] = pStage->bundle[TB_SPECULARMAP].image[0]->width;
+		dimensions[1] = pStage->bundle[TB_SPECULARMAP].image[0]->height;
+	}
 
 	GLSL_SetUniformVec2(sp, UNIFORM_DIMENSIONS, dimensions);
 }
 
 extern qboolean modelviewProjectionChanged;
 extern qboolean modelviewChanged;
+
+shaderProgram_t *currentShaderProgram = NULL;
 
 static void RB_IterateStagesGeneric( shaderCommands_t *input )
 {
@@ -1811,8 +1902,10 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			backEnd.pc.c_genericDraws++;
 		}
 
-		/*if (pStage->isWater)
+		if (pStage->isWater)
 		{
+			if (stage > 0) break;
+
 			sp = &tr.waterShader;
 			pStage->glslShaderGroup = &tr.waterShader;
 			GLSL_BindProgram(sp);
@@ -1825,257 +1918,20 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				VectorSet4(loc0, (float)2.0, 0, 0, 0); // force it to use the old water fx...
 
 			GLSL_SetUniformVec4(sp, UNIFORM_LOCAL0, loc0);
+			RB_SetMaterialBasedProperties(sp, pStage);
+
 			isGeneric = qfalse;
 		}
-		else*/
+		else
 		{
-			if (isGeneric)
-			{// Special case to test for switch to water shader...
-				switch( tess.shader->surfaceFlags & MATERIAL_MASK )
-				{
-				case MATERIAL_WATER:			// 13			// light covering of water on a surface
-					/*sp = &tr.waterShader;
-					pStage->glslShaderGroup = &tr.waterShader;
-					GLSL_BindProgram(sp);
-					GLSL_SetUniformFloat(sp, UNIFORM_TIME, tess.shaderTime);
-					isGeneric = qfalse;
-					*/
-					GLSL_BindProgram(sp);
-					GLSL_SetUniformFloat(sp, UNIFORM_TIME, backEnd.refdef.floatTime);
-					RB_SetParallaxScale(sp, 4.0, pStage);
-					break;
-				case MATERIAL_SHORTGRASS:		// 5			// manicured lawn
-					GLSL_BindProgram(sp);
-					GLSL_SetUniformFloat(sp, UNIFORM_TIME, backEnd.refdef.floatTime);
-					RB_SetParallaxScale(sp, 4.0, pStage);
-					break;
-				case MATERIAL_LONGGRASS:		// 6			// long jungle grass
-					GLSL_BindProgram(sp);
-					GLSL_SetUniformFloat(sp, UNIFORM_TIME, backEnd.refdef.floatTime);
-					RB_SetParallaxScale(sp, 5.0, pStage);
-					break;
-				case MATERIAL_SAND:				// 8			// sandy beach
-					GLSL_BindProgram(sp);
-					GLSL_SetUniformFloat(sp, UNIFORM_TIME, backEnd.refdef.floatTime);
-					RB_SetParallaxScale(sp, 3.0, pStage);
-					break;
-				case MATERIAL_CARPET:			// 27			// lush carpet
-					GLSL_BindProgram(sp);
-					GLSL_SetUniformFloat(sp, UNIFORM_TIME, backEnd.refdef.floatTime);
-					RB_SetParallaxScale(sp, 3.0, pStage);
-					break;
-				case MATERIAL_GRAVEL:			// 9			// lots of small stones
-					GLSL_BindProgram(sp);
-					GLSL_SetUniformFloat(sp, UNIFORM_TIME, backEnd.refdef.floatTime);
-					RB_SetParallaxScale(sp, 4.0, pStage);
-					break;
-				case MATERIAL_ROCK:				// 23			//
-					GLSL_BindProgram(sp);
-					GLSL_SetUniformFloat(sp, UNIFORM_TIME, backEnd.refdef.floatTime);
-					RB_SetParallaxScale(sp, 4.0, pStage);
-					break;
-				case MATERIAL_TILES:			// 26			// tiled floor
-					GLSL_BindProgram(sp);
-					GLSL_SetUniformFloat(sp, UNIFORM_TIME, backEnd.refdef.floatTime);
-					RB_SetParallaxScale(sp, 3.0, pStage);
-					break;
-				case MATERIAL_SOLIDWOOD:		// 1			// freshly cut timber
-				case MATERIAL_HOLLOWWOOD:		// 2			// termite infested creaky wood
-				case MATERIAL_SOLIDMETAL:		// 3			// solid girders
-					GLSL_BindProgram(sp);
-					GLSL_SetUniformFloat(sp, UNIFORM_TIME, backEnd.refdef.floatTime);
-					RB_SetParallaxScale(sp, 3.0, pStage);
-					break;
-				case MATERIAL_HOLLOWMETAL:		// 4			// hollow metal machines -- UQ1: Used for weapons to force low parallax...
-					GLSL_BindProgram(sp);
-					GLSL_SetUniformFloat(sp, UNIFORM_TIME, backEnd.refdef.floatTime);
-					RB_SetParallaxScale(sp, 0.005, pStage);
-					break;
-				case MATERIAL_DRYLEAVES:		// 19			// dried up leaves on the floor
-				case MATERIAL_GREENLEAVES:		// 20			// fresh leaves still on a tree
-					GLSL_BindProgram(sp);
-					GLSL_SetUniformFloat(sp, UNIFORM_TIME, backEnd.refdef.floatTime);
-					RB_SetParallaxScale(sp, 5.0, pStage);
-					break;
-				case MATERIAL_FABRIC:			// 21			// Cotton sheets
-				case MATERIAL_CANVAS:			// 22			// tent material
-					GLSL_BindProgram(sp);
-					GLSL_SetUniformFloat(sp, UNIFORM_TIME, backEnd.refdef.floatTime);
-					RB_SetParallaxScale(sp, 3.0, pStage);
-					break;
-				case MATERIAL_MARBLE:			// 12			// marble floors
-					GLSL_BindProgram(sp);
-					GLSL_SetUniformFloat(sp, UNIFORM_TIME, backEnd.refdef.floatTime);
-					RB_SetParallaxScale(sp, 2.0, pStage);
-					break;
-				case MATERIAL_SNOW:				// 14			// freshly laid snow
-					GLSL_BindProgram(sp);
-					GLSL_SetUniformFloat(sp, UNIFORM_TIME, backEnd.refdef.floatTime);
-					RB_SetParallaxScale(sp, 5.0, pStage);
-					break;
-				case MATERIAL_MUD:				// 17			// wet soil
-					GLSL_BindProgram(sp);
-					GLSL_SetUniformFloat(sp, UNIFORM_TIME, backEnd.refdef.floatTime);
-					RB_SetParallaxScale(sp, 4.0, pStage);
-					break;
-				case MATERIAL_FLESH:			// 16			// hung meat, corpses in the world
-				case MATERIAL_RUBBER:			// 24			// hard tire like rubber
-				case MATERIAL_PLASTIC:			// 25			//
-				case MATERIAL_SHATTERGLASS:		// 29			// glass with the Crisis Zone style shattering
-					GLSL_BindProgram(sp);
-					GLSL_SetUniformFloat(sp, UNIFORM_TIME, backEnd.refdef.floatTime);
-					RB_SetParallaxScale(sp, 1.0, pStage);
-					break;
-				case MATERIAL_ARMOR:			// 30			// body armor
-				case MATERIAL_ICE:				// 15			// packed snow/solid ice
-					GLSL_BindProgram(sp);
-					GLSL_SetUniformFloat(sp, UNIFORM_TIME, backEnd.refdef.floatTime);
-					RB_SetParallaxScale(sp, 2.0, pStage);
-					break;
-				case MATERIAL_GLASS:			// 10			//
-				case MATERIAL_BPGLASS:			// 18			// bulletproof glass
-				case MATERIAL_COMPUTER:			// 31			// computers/electronic equipment
-					GLSL_BindProgram(sp);
-					GLSL_SetUniformFloat(sp, UNIFORM_TIME, backEnd.refdef.floatTime);
-					RB_SetParallaxScale(sp, 1.0, pStage);
-					break;
-				case MATERIAL_DIRT:				// 7			// hard mud
-				case MATERIAL_CONCRETE:			// 11			// hardened concrete pavement
-					GLSL_BindProgram(sp);
-					GLSL_SetUniformFloat(sp, UNIFORM_TIME, backEnd.refdef.floatTime);
-					RB_SetParallaxScale(sp, 5.0, pStage);
-					break;
-				case MATERIAL_PLASTER:			// 28			// drywall style plaster
-				default:
-					// Generic shaders do not need parallax set... They do now...
-					GLSL_BindProgram(sp);
-					GLSL_SetUniformFloat(sp, UNIFORM_TIME, backEnd.refdef.floatTime);
-					RB_SetParallaxScale(sp, 2.0, pStage);
-					break;
-				}
-			}
-			else
-			{// Non-Generic always checks the shader for surface and sets parallax values...
-				//check for foot-steppable surface flag
-				switch( tess.shader->surfaceFlags & MATERIAL_MASK )
-				{
-				case MATERIAL_WATER:			// 13			// light covering of water on a surface
-					/*
-					sp = &tr.waterShader;
-					pStage->glslShaderGroup = &tr.waterShader;
-					GLSL_BindProgram(sp);
-					GLSL_SetUniformFloat(sp, UNIFORM_TIME, tess.shaderTime);
-					isGeneric = qfalse;
-					*/
-					GLSL_BindProgram(sp);
-					GLSL_SetUniformFloat(sp, UNIFORM_TIME, backEnd.refdef.floatTime);
-					RB_SetParallaxScale(sp, 4.0, pStage);
-					break;
-				case MATERIAL_SHORTGRASS:		// 5			// manicured lawn
-					GLSL_BindProgram(sp);
-					GLSL_SetUniformFloat(sp, UNIFORM_TIME, backEnd.refdef.floatTime);
-					RB_SetParallaxScale(sp, 4.0, pStage);
-					break;
-				case MATERIAL_LONGGRASS:		// 6			// long jungle grass
-					GLSL_BindProgram(sp);
-					GLSL_SetUniformFloat(sp, UNIFORM_TIME, backEnd.refdef.floatTime);
-					RB_SetParallaxScale(sp, 5.0, pStage);
-					break;
-				case MATERIAL_SAND:				// 8			// sandy beach
-					GLSL_BindProgram(sp);
-					GLSL_SetUniformFloat(sp, UNIFORM_TIME, backEnd.refdef.floatTime);
-					RB_SetParallaxScale(sp, 3.0, pStage);
-					break;
-				case MATERIAL_CARPET:			// 27			// lush carpet
-					GLSL_BindProgram(sp);
-					GLSL_SetUniformFloat(sp, UNIFORM_TIME, backEnd.refdef.floatTime);
-					RB_SetParallaxScale(sp, 3.0, pStage);
-					break;
-				case MATERIAL_GRAVEL:			// 9			// lots of small stones
-					GLSL_BindProgram(sp);
-					GLSL_SetUniformFloat(sp, UNIFORM_TIME, backEnd.refdef.floatTime);
-					RB_SetParallaxScale(sp, 4.0, pStage);
-					break;
-				case MATERIAL_ROCK:				// 23			//
-					GLSL_BindProgram(sp);
-					GLSL_SetUniformFloat(sp, UNIFORM_TIME, backEnd.refdef.floatTime);
-					RB_SetParallaxScale(sp, 4.0, pStage);
-					break;
-				case MATERIAL_TILES:			// 26			// tiled floor
-					GLSL_BindProgram(sp);
-					GLSL_SetUniformFloat(sp, UNIFORM_TIME, backEnd.refdef.floatTime);
-					RB_SetParallaxScale(sp, 3.0, pStage);
-					break;
-				case MATERIAL_SOLIDWOOD:		// 1			// freshly cut timber
-				case MATERIAL_HOLLOWWOOD:		// 2			// termite infested creaky wood
-				case MATERIAL_SOLIDMETAL:		// 3			// solid girders
-				case MATERIAL_HOLLOWMETAL:		// 4			// hollow metal machines
-					GLSL_BindProgram(sp);
-					GLSL_SetUniformFloat(sp, UNIFORM_TIME, backEnd.refdef.floatTime);
-					RB_SetParallaxScale(sp, 3.0, pStage);
-					break;
-				case MATERIAL_DRYLEAVES:		// 19			// dried up leaves on the floor
-				case MATERIAL_GREENLEAVES:		// 20			// fresh leaves still on a tree
-					GLSL_BindProgram(sp);
-					GLSL_SetUniformFloat(sp, UNIFORM_TIME, backEnd.refdef.floatTime);
-					RB_SetParallaxScale(sp, 5.0, pStage);
-					break;
-				case MATERIAL_FABRIC:			// 21			// Cotton sheets
-				case MATERIAL_CANVAS:			// 22			// tent material
-					GLSL_BindProgram(sp);
-					GLSL_SetUniformFloat(sp, UNIFORM_TIME, backEnd.refdef.floatTime);
-					RB_SetParallaxScale(sp, 3.0, pStage);
-					break;
-				case MATERIAL_MARBLE:			// 12			// marble floors
-					GLSL_BindProgram(sp);
-					GLSL_SetUniformFloat(sp, UNIFORM_TIME, backEnd.refdef.floatTime);
-					RB_SetParallaxScale(sp, 2.0, pStage);
-					break;
-				case MATERIAL_SNOW:				// 14			// freshly laid snow
-					GLSL_BindProgram(sp);
-					GLSL_SetUniformFloat(sp, UNIFORM_TIME, backEnd.refdef.floatTime);
-					RB_SetParallaxScale(sp, 5.0, pStage);
-					break;
-				case MATERIAL_MUD:				// 17			// wet soil
-					GLSL_BindProgram(sp);
-					GLSL_SetUniformFloat(sp, UNIFORM_TIME, backEnd.refdef.floatTime);
-					RB_SetParallaxScale(sp, 4.0, pStage);
-					break;
-				case MATERIAL_FLESH:			// 16			// hung meat, corpses in the world
-				case MATERIAL_RUBBER:			// 24			// hard tire like rubber
-				case MATERIAL_PLASTIC:			// 25			//
-				case MATERIAL_SHATTERGLASS:		// 29			// glass with the Crisis Zone style shattering
-					GLSL_BindProgram(sp);
-					GLSL_SetUniformFloat(sp, UNIFORM_TIME, backEnd.refdef.floatTime);
-					RB_SetParallaxScale(sp, 1.0, pStage);
-					break;
-				case MATERIAL_ARMOR:			// 30			// body armor
-				case MATERIAL_ICE:				// 15			// packed snow/solid ice
-					GLSL_BindProgram(sp);
-					GLSL_SetUniformFloat(sp, UNIFORM_TIME, backEnd.refdef.floatTime);
-					RB_SetParallaxScale(sp, 2.0, pStage);
-					break;
-				case MATERIAL_GLASS:			// 10			//
-				case MATERIAL_BPGLASS:			// 18			// bulletproof glass
-				case MATERIAL_COMPUTER:			// 31			// computers/electronic equipment
-					GLSL_BindProgram(sp);
-					GLSL_SetUniformFloat(sp, UNIFORM_TIME, backEnd.refdef.floatTime);
-					RB_SetParallaxScale(sp, 1.0, pStage);
-					break;
-				case MATERIAL_DIRT:				// 7			// hard mud
-				case MATERIAL_CONCRETE:			// 11			// hardened concrete pavement
-					GLSL_BindProgram(sp);
-					GLSL_SetUniformFloat(sp, UNIFORM_TIME, backEnd.refdef.floatTime);
-					RB_SetParallaxScale(sp, 5.0, pStage);
-					break;
-				case MATERIAL_PLASTER:			// 28			// drywall style plaster
-				default:
-					GLSL_BindProgram(sp);
-					GLSL_SetUniformFloat(sp, UNIFORM_TIME, backEnd.refdef.floatTime);
-					RB_SetParallaxScale(sp, 2.0, pStage);
-					break;
-				}
-			}
+			//if (sp != currentShaderProgram)
+			//	GLSL_BindProgram(sp);
+
+			//currentShaderProgram = sp;
+
+			GLSL_BindProgram(sp);
+
+			RB_SetMaterialBasedProperties(sp, pStage);
 		}
 		
 		stateBits = pStage->stateBits;
@@ -2171,7 +2027,8 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			}
 
 			if (pStage->rgbGen == CGEN_LIGHTING_DIFFUSE ||
-				pStage->rgbGen == CGEN_LIGHTING_DIFFUSE_ENTITY)
+				pStage->rgbGen == CGEN_LIGHTING_DIFFUSE_ENTITY ||
+				pStage->isWater)
 			{
 				vec4_t vec;
 
@@ -2225,7 +2082,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			//
 			// testing cube map
 			//
-			if (!isGeneric && !(tr.viewParms.flags & VPF_NOCUBEMAPS) && input->cubemapIndex && r_cubeMapping->integer)
+			if (!(tr.viewParms.flags & VPF_NOCUBEMAPS) && input->cubemapIndex && r_cubeMapping->integer)
 			{
 				vec4_t vec;
 
@@ -2256,7 +2113,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			else if ( pStage->bundle[TB_COLORMAP].image[0] != 0 )
 				R_BindAnimatedImageToTMU( &pStage->bundle[TB_COLORMAP], TB_COLORMAP );
 		}
-		else if ( !isGeneric && (pStage->glslShaderGroup == tr.lightallShader || pStage->glslShaderGroup == tr.lightallWithNormalShader) )
+		else if ( !isGeneric && (pStage->glslShaderGroup == tr.lightallShader || pStage->glslShaderGroup == tr.lightallWithNormalShader || pStage->isWater) )
 		{
 			int i;
 			vec4_t enableTextures;
@@ -2310,7 +2167,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				//  - disable texture sampling in glsl shader with #ifdefs, as before
 				//     -> increases the number of shaders that must be compiled
 				//
-				if (light && !fastLight)
+				if ((light || pStage->isWater) && !fastLight)
 				{
 					if (pStage->bundle[TB_NORMALMAP].image[0])
 					{
@@ -2543,14 +2400,21 @@ void RB_StageIteratorGeneric( void )
 	if ((tess.shader->contentFlags & CONTENTS_WATER) || (tess.shader->contentFlags & CONTENTS_LAVA) || (tess.shader->surfaceFlags & MATERIAL_MASK) == MATERIAL_WATER) 
 	{
 		if (input->xstages[0]->isWater == 0) // In case it is already set, no need looping more then once on the same shader...
+		{
+			int isWater = 1;
+
+			if (tess.shader->contentFlags & CONTENTS_LAVA)
+				isWater = 2;
+
 			for ( int stage = 0; stage < MAX_SHADER_STAGES; stage++ )
+			{
 				if (input->xstages[stage])
 				{
-					if (tess.shader->contentFlags & CONTENTS_LAVA)
-						input->xstages[stage]->isWater = 2;
-					else
-						input->xstages[stage]->isWater = 1;
+					input->xstages[stage]->isWater = isWater;
+					//input->xstages[stage]->glslShaderGroup = tr.lightallShader;
 				}
+			}
+		}
 	}
 
 	//

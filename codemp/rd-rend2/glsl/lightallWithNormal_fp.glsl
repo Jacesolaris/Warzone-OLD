@@ -1,7 +1,7 @@
 //#define FAST_PARALLAX
 
 uniform sampler2D u_DiffuseMap;
-varying vec4	var_Local1; // parallaxScale, 0, 0, 0
+varying vec4	var_Local1; // parallaxScale, haveSpecular, specularScale, meterialType
 varying vec4	u_Local2; // ExtinctionCoefficient
 varying vec4	u_Local3; // RimScalar, MaterialThickness, subSpecPower
 varying vec2	var_Dimensions;
@@ -505,12 +505,8 @@ void main()
 		if (length(u_SpecularScale) != 0.0 && length(u_SpecularScale) != 1.0) // Shader Specified...
 			specular *= u_SpecularScale;
 	#if defined(USE_CUBEMAP)
-		else if (var_Local1.b <= 0.8)
-			specular *= var_Local1.b * 0.4;
-		else if (var_Local1.b <= 0.95)
-			specular *= var_Local1.b * 0.7;
-		else if (var_Local1.b > 0.95)
-			specular *= var_Local1.b * 1.0;
+		else if (var_Local1.b > 0.0)
+			specular *= var_Local1.b;
 	#endif
 		else // Material Defaults...
 			specular *= var_Local1.b;
@@ -571,7 +567,7 @@ void main()
 #endif
 
   #if defined(USE_CUBEMAP)
-  if (var_Local1.b > 0.8) {
+  if (var_Local1.b >= 0.85) {
 	reflectance = EnvironmentBRDF(specular.a, NE, specular.rgb);
 
 	vec3 R = reflect(E, N);

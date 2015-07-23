@@ -49,7 +49,6 @@ uniform vec4   u_FogColorMask;
 #if defined(USE_DEFORM_VERTEXES)
 uniform int    u_DeformGen;
 uniform float  u_DeformParams[5];
-uniform float  u_Time;
 #endif
 
 uniform mat4   u_ModelViewProjectionMatrix;
@@ -79,16 +78,19 @@ varying vec4   var_Color;
 
 uniform vec2	u_Dimensions;
 uniform vec3	u_ViewOrigin;
-#ifndef USE_DEFORM_VERTEXES
 uniform float	u_Time;
-#endif
-
 uniform vec4	u_Local0; // (1=water, 2=lava), 0, 0, 0
+uniform vec4	u_Local1; // parallaxScale, haveSpecular, specularScale, meterialType
 
 varying vec2	var_TexCoords;
-varying vec2	var_Dimensions;
 varying float	time;
 varying vec4	var_Local0; // (1=water, 2=lava), 0, 0, 0
+varying vec4	var_Local1; // parallaxScale, haveSpecular, specularScale, meterialType
+varying vec2	var_Dimensions;
+varying vec3	var_vertPos;
+varying float	var_Time;
+varying vec3	var_Normal;
+varying vec3	var_ViewDir;
 
 #if defined(USE_DEFORM_VERTEXES)
 vec3 DeformPosition(const vec3 pos, const vec3 normal, const vec2 st)
@@ -275,4 +277,9 @@ void main()
 	time = u_Time;
 
 	var_Local0 = u_Local0;
+	var_Local1 = u_Local1;
+	var_vertPos = gl_Position.xyz;
+	var_Time = u_Time;
+	var_Normal = normal;
+	var_ViewDir = u_ViewOrigin - position;
 }

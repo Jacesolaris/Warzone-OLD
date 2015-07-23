@@ -1766,8 +1766,97 @@ int GLSL_BeginLoadGPUShaders(void)
 	*/
 
 
-	attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_NORMAL | ATTR_COLOR;
+	attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL;
 	extradefines[0] = '\0';
+
+	if (r_deluxeSpecular->value > 0.000001f)
+		Q_strcat(extradefines, 1024, va("#define r_deluxeSpecular %f\n", r_deluxeSpecular->value));
+
+	if (r_specularIsMetallic->value)
+		Q_strcat(extradefines, 1024, "#define SPECULAR_IS_METALLIC\n");
+
+	if (r_dlightMode->integer >= 2)
+		Q_strcat(extradefines, 1024, "#define USE_SHADOWMAP\n");
+
+	if (1)
+		Q_strcat(extradefines, 1024, "#define SWIZZLE_NORMALMAP\n");
+
+	if (r_hdr->integer && !glRefConfig.floatLightmap)
+		Q_strcat(extradefines, 1024, "#define RGBM_LIGHTMAP\n");
+
+	Q_strcat(extradefines, 1024, "#define USE_LIGHT\n");
+
+	Q_strcat(extradefines, 1024, "#define USE_LIGHTMAP\n");
+
+	if (r_deluxeMapping->integer)
+		Q_strcat(extradefines, 1024, "#define USE_DELUXEMAP\n");
+
+	attribs |= ATTR_TEXCOORD1 | ATTR_LIGHTDIRECTION;
+
+	if (r_normalMapping->integer)
+	{
+		Q_strcat(extradefines, 1024, "#define USE_NORMALMAP\n");
+
+		if (r_normalMapping->integer == 2)
+			Q_strcat(extradefines, 1024, "#define USE_OREN_NAYAR\n");
+
+		if (r_normalMapping->integer == 3)
+			Q_strcat(extradefines, 1024, "#define USE_TRIACE_OREN_NAYAR\n");
+
+#ifdef USE_VERT_TANGENT_SPACE
+		Q_strcat(extradefines, 1024, "#define USE_VERT_TANGENT_SPACE\n");
+		attribs |= ATTR_TANGENT;
+#endif
+
+		Q_strcat(extradefines, 1024, "#define USE_PARALLAXMAP_NONORMALS\n");
+	}
+
+	if (r_specularMapping->integer)
+	{
+		Q_strcat(extradefines, 1024, "#define USE_SPECULARMAP\n");
+	}
+
+	if (r_cubeMapping->integer)
+		Q_strcat(extradefines, 1024, "#define USE_CUBEMAP\n");
+
+	Q_strcat(extradefines, 1024, "#define USE_SHADOWMAP\n");
+
+	if (r_sunlightMode->integer == 1)
+		Q_strcat(extradefines, 1024, "#define SHADOWMAP_MODULATE\n");
+	else if (r_sunlightMode->integer == 2)
+		Q_strcat(extradefines, 1024, "#define USE_PRIMARY_LIGHT\n");
+
+	//if (i & LIGHTDEF_USE_TCGEN_AND_TCMOD)
+	{
+		Q_strcat(extradefines, 1024, "#define USE_TCGEN\n");
+		Q_strcat(extradefines, 1024, "#define USE_TCMOD\n");
+	}
+
+	//if (i & LIGHTDEF_ENTITY)
+	{
+		//if (i & LIGHTDEF_USE_VERTEX_ANIMATION)
+		{
+			Q_strcat(extradefines, 1024, "#define USE_VERTEX_ANIMATION\n");
+		}
+		/*else if (i & LIGHTDEF_USE_SKELETAL_ANIMATION)
+		{
+			Q_strcat(extradefines, 1024, "#define USE_SKELETAL_ANIMATION\n");
+			attribs |= ATTR_BONE_INDEXES | ATTR_BONE_WEIGHTS;
+		}*/
+
+		Q_strcat(extradefines, 1024, "#define USE_MODELMATRIX\n");
+		attribs |= ATTR_POSITION2 | ATTR_NORMAL2;
+
+#ifdef USE_VERT_TANGENT_SPACE
+		if (r_normalMapping->integer)
+		{
+			attribs |= ATTR_TANGENT2;
+		}
+#endif
+	}
+
+	//if (i & LIGHTDEF_USE_GLOW_BUFFER)
+		Q_strcat(extradefines, 1024, "#define USE_GLOW_BUFFER\n");
 
 	if (!GLSL_BeginLoadGPUShader(&tr.waterShader, "uniquewater", attribs, qtrue, extradefines, qtrue, fallbackShader_uniquewater_vp, fallbackShader_uniquewater_fp))
 	{
@@ -2658,7 +2747,6 @@ void GLSL_EndLoadGPUShaders ( int startTime )
 	qglUseProgram(tr.underwaterShader.program);
 
 	GLSL_SetUniformInt(&tr.underwaterShader, UNIFORM_TEXTUREMAP, TB_COLORMAP);
-	GLSL_SetUniformInt(&tr.underwaterShader, UNIFORM_LEVELSMAP,  TB_LEVELSMAP);
 	
 	{
 		vec4_t viewInfo;

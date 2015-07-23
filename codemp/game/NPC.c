@@ -1975,6 +1975,8 @@ void NPC_ExecuteBState ( gentity_t *self)//, int msec )
 {
 	bState_t	bState;
 
+	if (NPCS.NPC->s.weapon < 0) NPCS.NPC->s.weapon = WP_NONE;
+
 	NPC_HandleAIFlags();
 
 	//FIXME: these next three bits could be a function call, some sort of setup/cleanup func

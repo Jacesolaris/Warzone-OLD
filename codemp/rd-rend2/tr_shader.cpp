@@ -2485,7 +2485,7 @@ static qboolean ParseShader( const char *name, const char **text )
 		if (StringsContainWord(name, token, "reborn"))
 		{
 			//ri->Printf(PRINT_WARNING, "Reborn seen in shader %s.\n", name);
-			if (!(shader.surfaceFlags & MATERIAL_PLASTIC)) shader.surfaceFlags |= MATERIAL_PLASTIC;
+			if (!(shader.surfaceFlags & MATERIAL_ARMOR)) shader.surfaceFlags |= MATERIAL_ARMOR;
 		}
 
 		// end of shader definition
@@ -2764,8 +2764,10 @@ static qboolean ParseShader( const char *name, const char **text )
 		//
 		if (StringsContainWord(name, name, "xwing") || StringsContainWord(name, name, "xwbody") || StringsContainWord(name, name, "crate") || StringsContainWord(name, name, "cargo") || StringsContainWord(name, name, "freight") || StringsContainWord(name, name, "container") || StringsContainWord(name, name, "barrel") || StringsContainWord(name, name, "transport") || StringsContainWord(name, name, "airpur") || StringsContainWord(name, name, "tank"))
 			shader.surfaceFlags |= MATERIAL_ARMOR;//MATERIAL_SOLIDMETAL;
-		else if (StringsContainWord(name, name, "plastic") || StringsContainWord(name, name, "trooper") || StringsContainWord(name, name, "reborn") || StringsContainWord(name, name, "medpac") || StringsContainWord(name, name, "bacta") || StringsContainWord(name, name, "mp/flag") || StringsContainWord(name, name, "xwing") || StringsContainWord(name, name, "tie_") || StringsContainWord(name, name, "ship") || StringsContainWord(name, name, "shuttle") || StringsContainWord(name, name, "pilot"))
+		else if (StringsContainWord(name, name, "plastic") || StringsContainWord(name, name, "trooper") || StringsContainWord(name, name, "medpac") || StringsContainWord(name, name, "bacta") || StringsContainWord(name, name, "mp/flag") || StringsContainWord(name, name, "xwing") || StringsContainWord(name, name, "tie_") || StringsContainWord(name, name, "ship") || StringsContainWord(name, name, "shuttle") || StringsContainWord(name, name, "pilot"))
 			shader.surfaceFlags |= MATERIAL_PLASTIC;
+		else if (StringsContainWord(name, name, "reborn"))
+			shader.surfaceFlags |= MATERIAL_ARMOR;
 		else if (StringsContainWord(name, name, "boba"))
 			shader.surfaceFlags |= MATERIAL_ARMOR;
 		else if (!StringsContainWord(name, name, "players") && (StringsContainWord(name, name, "bespin") || StringsContainWord(name, name, "_cc")))
@@ -2796,13 +2798,13 @@ static qboolean ParseShader( const char *name, const char **text )
 		else if (StringsContainWord(name, name, "hood") || StringsContainWord(name, name, "robe") || StringsContainWord(name, name, "cloth") || StringsContainWord(name, name, "pants"))
 			shader.surfaceFlags |= MATERIAL_FABRIC;
 		else if (StringsContainWord(name, name, "hair") || StringsContainWord(name, name, "chewbacca")) // use carpet
-			shader.surfaceFlags |= MATERIAL_TILES;//MATERIAL_CARPET; Just because it has a bit of parallax and suitable specular...
+			shader.surfaceFlags |= MATERIAL_FABRIC;//MATERIAL_CARPET; Just because it has a bit of parallax and suitable specular...
 		else if (StringsContainWord(name, name, "armor") || StringsContainWord(name, name, "armour"))
-			shader.surfaceFlags |= MATERIAL_ARMOR;
-		else if (StringsContainWord(name, name, "players") && StringsContainWord(name, name, "skirt"))
 			shader.surfaceFlags |= MATERIAL_ARMOR;
 		else if (StringsContainWord(name, name, "flesh") || StringsContainWord(name, name, "body") || StringsContainWord(name, name, "leg") || StringsContainWord(name, name, "hand") || StringsContainWord(name, name, "head") || StringsContainWord(name, name, "hips") || StringsContainWord(name, name, "torso") || StringsContainWord(name, name, "tentacles") || StringsContainWord(name, name, "face") || StringsContainWord(name, name, "arms"))
 			shader.surfaceFlags |= MATERIAL_FLESH;
+		else if (StringsContainWord(name, name, "players") && StringsContainWord(name, name, "skirt"))
+			shader.surfaceFlags |= MATERIAL_FABRIC;
 		else if (StringsContainWord(name, name, "canvas"))
 			shader.surfaceFlags |= MATERIAL_CANVAS;
 		else if (StringsContainWord(name, name, "rock"))
@@ -4594,27 +4596,40 @@ char uniqueGenericPlayerShader[] = "{\n"\
 "}\n"\
 "}\n"\
 "";
-//rgbGen identity
-
-char uniqueGenericWeaponShader[] = "{\n"\
-"q3map_nolightmap\n"\
-"{\n"\
-"map %s\n"\
-"rgbGen lightingDiffuse\n"\
-"}\n"\
-"}\n"\
-"";
 
 /*
-char uniqueGenericShader[] = "{\n"\
-"q3map_nolightmap\n"\
+char uniqueGenericPlayerShader[] = "{\n"\
+"qer_editorimage	%s\n"\
 "{\n"\
 "map %s\n"\
-"RgbGen identityLighting\n"\
+"rgbGen entity\n"\
+"}\n"\
+"{\n"\
+"map %s\n"\
+"blendFunc GL_SRC_ALPHA GL_ONE\n"\
+"rgbGen lightingDiffuse\n"\
+"alphaGen lightingSpecular\n"\
+"detail\n"\
 "}\n"\
 "}\n"\
 "";
 */
+
+char uniqueGenericWeaponShader[] = "{\n"\
+"qer_editorimage	%s\n"\
+"{\n"\
+"map %s\n"\
+"rgbGen entity\n"\
+"}\n"\
+"{\n"\
+"map %s\n"\
+"blendFunc GL_SRC_ALPHA GL_ONE\n"\
+"rgbGen lightingDiffuse\n"\
+"alphaGen lightingSpecular\n"\
+"detail\n"\
+"}\n"\
+"}\n"\
+"";
 
 char uniqueGenericShader[] = "{\n"\
 "qer_editorimage	%s\n"\
@@ -4719,8 +4734,10 @@ shader_t *R_FindShader( const char *name, const int *lightmapIndexes, const byte
 		// Generate the shader...
 		if (StringContainsWord(strippedName, "player"))
 			sprintf(myShader, uniqueGenericPlayerShader, strippedName, strippedName);
+			//sprintf(myShader, uniqueGenericPlayerShader, strippedName, strippedName, strippedName);
 		else if (StringContainsWord(strippedName, "weapon"))
-			sprintf(myShader, uniqueGenericPlayerShader/*uniqueGenericWeaponShader*/, strippedName, strippedName);
+		//	sprintf(myShader, uniqueGenericPlayerShader/*uniqueGenericWeaponShader*/, strippedName, strippedName);
+			sprintf(myShader, uniqueGenericWeaponShader, strippedName, strippedName, strippedName);
 		else
 			sprintf(myShader, uniqueGenericShader, strippedName, strippedName, strippedName);
 

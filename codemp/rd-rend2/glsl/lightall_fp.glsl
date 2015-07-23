@@ -1,8 +1,10 @@
 uniform sampler2D u_DiffuseMap;
-varying vec4	var_Local1; // parallaxScale, haveSpecular, specularScale, 0
+varying vec4	var_Local1; // parallaxScale, haveSpecular, specularScale, meterialType
 varying vec4	u_Local2; // ExtinctionCoefficient
 varying vec4	u_Local3; // RimScalar, MaterialThickness, subSpecPower
 varying vec2	var_Dimensions;
+
+varying float  var_Time;
 
 #if defined(USE_LIGHTMAP)
 uniform sampler2D u_LightMap;
@@ -94,8 +96,6 @@ varying vec4      var_PrimaryLightDir;
 varying vec3   var_vertPos;
 
 out vec4 out_Glow;
-
-#define EPSILON 0.00000001
 
 #if defined(USE_PARALLAXMAP) || defined(USE_PARALLAXMAP_NONORMALS)
   #if defined(USE_PARALLAXMAP)
@@ -503,7 +503,7 @@ void main()
 			specular *= u_SpecularScale;
 	#if defined(USE_CUBEMAP)
 		else if (var_Local1.b > 0.0)
-			specular *= var_Local1.b;// * var_Local1.b;
+			specular *= var_Local1.b;
 	#endif
 		else // Material Defaults...
 			specular *= var_Local1.b;
@@ -563,7 +563,7 @@ void main()
 #endif
 
   #if defined(USE_CUBEMAP)
-	if (var_Local1.b > 0.8) {
+	if (var_Local1.b >= 0.85) {
 		reflectance = EnvironmentBRDF(specular.a, NE, specular.rgb);
 
 		vec3 R = reflect(E, N);

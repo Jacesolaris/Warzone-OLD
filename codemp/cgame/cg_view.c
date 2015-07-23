@@ -2636,7 +2636,7 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 	// decide on third person view
 	cg.renderingThirdPerson = qfalse;
 
-	if (cg_thirdPerson.integer || (cg.snap->ps.stats[STAT_HEALTH] <= 0))
+	if ((cg_thirdPerson.integer || (cg.snap->ps.stats[STAT_HEALTH] <= 0)) && !(cg.refdef.rdflags & RDF_UNDERWATER))
 		cg.renderingThirdPerson = qtrue;
 
 	if (cg.snap->ps.stats[STAT_HEALTH] > 0)
@@ -2679,6 +2679,11 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 		//[/TrueView]
 		else if (cg.snap->ps.scopeType)
 		{ //always force first person when zoomed
+			cg.renderingThirdPerson = qfalse;
+		}
+
+		if (cg.refdef.rdflags & RDF_UNDERWATER)
+		{ //always force first person when underwater
 			cg.renderingThirdPerson = qfalse;
 		}
 	}
