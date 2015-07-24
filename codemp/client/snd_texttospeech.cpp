@@ -45,21 +45,7 @@ void DoTextToSpeech (char* text, char *voice, int entityNum, vec3_t origin)
 		char	SHORTENED_TEXT[64] = { 0 };
 
 		strncpy(SHORTENED_TEXT, text, 60);
-		if (strlen(SHORTENED_TEXT) > 2 && text[strlen(SHORTENED_TEXT)] == '.' && text[strlen(SHORTENED_TEXT)-1] == '.' && text[strlen(SHORTENED_TEXT)-2] == '.')
-		{
-			SHORTENED_TEXT[strlen(SHORTENED_TEXT)] = 0;
-			SHORTENED_TEXT[strlen(SHORTENED_TEXT)-1] = 0;
-			SHORTENED_TEXT[strlen(SHORTENED_TEXT)-2] = 0;
-		}
-		else if (strlen(SHORTENED_TEXT) > 1 && text[strlen(SHORTENED_TEXT)] == '.' && text[strlen(SHORTENED_TEXT)-1] == '.')
-		{
-			SHORTENED_TEXT[strlen(SHORTENED_TEXT)] = 0;
-			SHORTENED_TEXT[strlen(SHORTENED_TEXT)-1] = 0;
-		}
-		else if (strlen(SHORTENED_TEXT) > 0 && text[strlen(SHORTENED_TEXT)] == '.')
-		{
-			SHORTENED_TEXT[strlen(SHORTENED_TEXT)] = 0;
-		}
+		COM_StripExtension( text, SHORTENED_TEXT, sizeof( SHORTENED_TEXT ) );
 		sprintf(filename, "OJK/sound/tts/%s/%s.mp3", voice, SHORTENED_TEXT);
 		sprintf(filename2, "sound/tts/%s/%s.mp3", voice, SHORTENED_TEXT);
 	}
@@ -276,21 +262,7 @@ qboolean S_DownloadVoice( const char *text, const char *voice )
 		char	SHORTENED_TEXT[64] = { 0 };
 
 		strncpy(SHORTENED_TEXT, text, 60);
-		if (strlen(SHORTENED_TEXT) > 2 && text[strlen(SHORTENED_TEXT)] == '.' && text[strlen(SHORTENED_TEXT)-1] == '.' && text[strlen(SHORTENED_TEXT)-2] == '.')
-		{
-			SHORTENED_TEXT[strlen(SHORTENED_TEXT)] = 0;
-			SHORTENED_TEXT[strlen(SHORTENED_TEXT)-1] = 0;
-			SHORTENED_TEXT[strlen(SHORTENED_TEXT)-2] = 0;
-		}
-		else if (strlen(SHORTENED_TEXT) > 1 && text[strlen(SHORTENED_TEXT)] == '.' && text[strlen(SHORTENED_TEXT)-1] == '.')
-		{
-			SHORTENED_TEXT[strlen(SHORTENED_TEXT)] = 0;
-			SHORTENED_TEXT[strlen(SHORTENED_TEXT)-1] = 0;
-		}
-		else if (strlen(SHORTENED_TEXT) > 0 && text[strlen(SHORTENED_TEXT)] == '.')
-		{
-			SHORTENED_TEXT[strlen(SHORTENED_TEXT)] = 0;
-		}
+		COM_StripExtension( text, SHORTENED_TEXT, sizeof( SHORTENED_TEXT ) );
 		sprintf(filename, "OJK/sound/tts/%s/%s.mp3", voice, SHORTENED_TEXT);
 		sprintf(filename2, "sound/tts/%s/%s.mp3", voice, SHORTENED_TEXT);
 	}

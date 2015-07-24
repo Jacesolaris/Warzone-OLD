@@ -1293,5 +1293,18 @@ void CG_DownloadAllTextToSpeechSounds ( void )
 				trap->UpdateScreen();
 			}
 		}
+
+		trap->Print("Generating TTS \"My health is low.\" sound for voice %s.\n", voice);
+
+		while (!trap->S_DownloadVoice("My health is low.", voice))
+		{// Wait and retry...
+			trap->Print("Failed. Waiting a moment before continuing.\n");
+
+			for (wait_time = 0; wait_time < 500; wait_time++)
+			{// Do some random silly stuff as we have no sleep() function;
+				int ran = irand(0,100);
+				trap->UpdateScreen();
+			}
+		}
 	}
 }

@@ -1268,12 +1268,25 @@ textures/yavin/ground_grasssprite
 {
 	qer_editorimage	textures/yavin/ground
 	q3map_material	ShortGrass
+	cull	twosided
     {
         map $lightmap
     }
     {
         map textures/yavin/ground
         blendFunc GL_DST_COLOR GL_ZERO
+    }
+    {
+        map gfx/sprites/grass2
+            surfaceSprites vertical 32 24 42 500
+            ssFademax 1500
+            ssFadescale 1
+            ssVariance 1 2
+            ssWind 0.5
+        alphaFunc GE192
+        blendFunc GL_SRC_ALPHA GL_ONE_MINUS_SRC_ALPHA
+        depthWrite
+        rgbGen vertex
     }
 }
 
@@ -1321,6 +1334,7 @@ textures/yavin/ground
 {
 	qer_editorimage	textures/yavin/ground
 	q3map_material	ShortGrass
+	cull	twosided
     {
         map $lightmap
     }
@@ -1466,27 +1480,43 @@ textures/yavin/temple_interiorsmallwb_vertex
 
 textures/yavin/ground_Phong_vertex
 {
+	q3map_shadeangle	120
 	qer_editorimage	textures/yavin/ground
 	q3map_material	ShortGrass
-    {
-        map $lightmap
-    }
+	q3map_nolightmap
+	q3map_nonplanar
+	q3map_splotchfix
+	q3map_onlyvertexlighting
     {
         map textures/yavin/ground
-        blendFunc GL_DST_COLOR GL_ZERO
+        rgbGen vertex
     }
 }
 
 textures/yavin/ground_grasssprite_Phong_vertex
 {
+	q3map_shadeangle	120
 	qer_editorimage	textures/yavin/ground
 	q3map_material	ShortGrass
-    {
-        map $lightmap
-    }
+	q3map_nolightmap
+	q3map_nonplanar
+	q3map_splotchfix
+	q3map_onlyvertexlighting
+	cull	twosided
     {
         map textures/yavin/ground
-        blendFunc GL_DST_COLOR GL_ZERO
+        rgbGen vertex
+    }
+    {
+        clampmap gfx/sprites/y_grass_tall
+            surfaceSprites vertical 24 24 42 500
+//          ssFademax 1500
+//          ssFadescale 1
+            ssVariance 1 2
+            ssWind 0.5
+        alphaFunc GE192
+        depthWrite
+        rgbGen vertex
     }
 }
 
@@ -1510,27 +1540,62 @@ textures/yavin/dugdirt_Phong
 
 textures/yavin/ground_Phong
 {
+// q3map_nolightmap
+
+// q3map_onlyvertexlighting
+
+	q3map_shadeangle	60
 	qer_editorimage	textures/yavin/ground
 	q3map_material	ShortGrass
+	q3map_nonplanar
+	q3map_splotchfix
     {
-        map $lightmap
+// rgbGen vertex
+
+        map textures/yavin/ground
+        rgbGen identity
     }
     {
-        map textures/yavin/ground
+        map $lightmap
         blendFunc GL_DST_COLOR GL_ZERO
+        rgbGen identity
     }
 }
 
 textures/yavin/ground_grasssprite_Phong
 {
+// q3map_nolightmap
+
+// q3map_onlyvertexlighting
+
+	q3map_shadeangle	60
 	qer_editorimage	textures/yavin/ground
 	q3map_material	ShortGrass
+	q3map_nonplanar
+	q3map_splotchfix
+	cull	twosided
     {
-        map $lightmap
+// rgbGen vertex
+
+        map textures/yavin/ground
+        rgbGen identity
     }
     {
-        map textures/yavin/ground
+        map $lightmap
         blendFunc GL_DST_COLOR GL_ZERO
+        rgbGen identity
+    }
+    {
+        map gfx/sprites/y_grass_tall
+            surfaceSprites vertical 24 24 42 500
+            ssFademax 1500
+            ssFadescale 1
+            ssVariance 1 2
+            ssWind 0.5
+        alphaFunc GE192
+        blendFunc GL_SRC_ALPHA GL_ONE_MINUS_SRC_ALPHA
+        depthWrite
+        rgbGen vertex
     }
 }
 
