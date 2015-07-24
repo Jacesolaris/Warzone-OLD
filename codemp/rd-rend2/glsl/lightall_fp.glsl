@@ -529,7 +529,7 @@ void main()
 	else
 		specular *= u_SpecularScale;
 
-	if (u_Local4 != 0.0)
+	if (u_Local4.b != 0.0)
 	{// Metalic...
 		float metallic = specular.r;
 
