@@ -708,8 +708,8 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 						GL_SetProjectionMatrix( backEnd.viewParms.projectionMatrix );
 					}
 
-					if (!sunflare)
-						qglDepthRange (0, 1);
+					if( !sunflare )
+						qglDepthRange( 0.0f, 1.0f );
 
 					depth[0] = 0;
 					depth[1] = 1;
@@ -725,12 +725,9 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 						GL_SetProjectionMatrix( temp.projectionMatrix );
 					}
 
-					if(!oldDepthRange)
-					{
-						depth[0] = 0;
-						depth[1] = 0.3f;
-						qglDepthRange (depth[0], depth[1]);
-					}
+					if ( !oldDepthRange )
+ 							qglDepthRange( 0.0f, 0.3f );
+
 					break;
 
 				case 2:
@@ -743,12 +740,9 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 						GL_SetProjectionMatrix( temp.projectionMatrix );
 					}
 
-					if(!oldDepthRange)
-					{
-						depth[0] = 0.0f;
-						depth[1] = 0.0f;
-						qglDepthRange (depth[0], depth[1]);
-					}
+					if ( !oldDepthRange )
+ 							qglDepthRange( 0.0f, 0.0f );
+
 					break;
 				}
 
@@ -780,6 +774,8 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 	GL_SetModelviewMatrix( backEnd.viewParms.world.modelMatrix );
 
 	//qglDepthRange (0, 1);
+	// Restore depth range for subsequent rendering
+	qglDepthRange( 0.0f, 1.0f );
 }
 
 
