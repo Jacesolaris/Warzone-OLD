@@ -210,69 +210,69 @@ bool CParticle::UpdateOrigin(void)
 			trace_t	trace;
 			float	dot;
 
-			if (mFlags & FX_USE_BBOX)
+			if ( mFlags & FX_USE_BBOX )
 			{
 				if (mFlags & FX_GHOUL2_TRACE)
 				{
-					theFxHelper.G2Trace(trace, mOrigin1, mMin, mMax, new_origin, -1, MASK_SOLID);
+					theFxHelper.G2Trace( trace, mOrigin1, mMin, mMax, new_origin, -1, MASK_SOLID );
 				}
 				else
 				{
-					theFxHelper.Trace(trace, mOrigin1, mMin, mMax, new_origin, -1, MASK_SOLID);
+					theFxHelper.Trace( trace, mOrigin1, mMin, mMax, new_origin, -1, MASK_SOLID );
 				}
 			}
 			else
 			{
 				if (mFlags & FX_GHOUL2_TRACE)
 				{
-					theFxHelper.G2Trace(trace, mOrigin1, NULL, NULL, new_origin, -1, MASK_PLAYERSOLID);
+					theFxHelper.G2Trace( trace, mOrigin1, NULL, NULL, new_origin, -1, MASK_PLAYERSOLID );
 				}
 				else
 				{
-					theFxHelper.Trace(trace, mOrigin1, NULL, NULL, new_origin, -1, MASK_SOLID);
+					theFxHelper.Trace( trace, mOrigin1, NULL, NULL, new_origin, -1, MASK_SOLID );
 				}
 			}
+
 
 			// Hit something
 			if (trace.startsolid || trace.allsolid)
 			{
-				VectorClear(mVel);
-				VectorClear(mAccel);
+				VectorClear( mVel );
+				VectorClear( mAccel );
 
 				if ((mFlags & FX_GHOUL2_TRACE) && (mFlags & FX_IMPACT_RUNS_FX))
 				{
-					static vec3_t bsNormal = { 0, 1, 0 };
-
-					theFxScheduler.PlayEffect(mImpactFxID, trace.endpos, bsNormal);
+					static vec3_t bsNormal = {0, 1, 0};
+					theFxScheduler.PlayEffect( mImpactFxID, trace.endpos, bsNormal );
 				}
 
 				mFlags &= ~(FX_APPLY_PHYSICS | FX_IMPACT_RUNS_FX);
 
 				return true;
 			}
-			else if (trace.fraction < 1.0f)//&& !trace.startsolid && !trace.allsolid )
+			else if ( trace.fraction < 1.0f )//&& !trace.startsolid && !trace.allsolid )
 			{
-				if (mFlags & FX_IMPACT_RUNS_FX && !(trace.surfaceFlags & SURF_NOIMPACT))
+				if ( mFlags & FX_IMPACT_RUNS_FX && !(trace.surfaceFlags & SURF_NOIMPACT ))
 				{
-					theFxScheduler.PlayEffect(mImpactFxID, trace.endpos, trace.plane.normal);
+					theFxScheduler.PlayEffect( mImpactFxID, trace.endpos, trace.plane.normal );
 				}
 
 				// may need to interact with the material type we hit
 				theFxScheduler.MaterialImpact(&trace, (CEffect*)this);
 
-				if (mFlags & FX_KILL_ON_IMPACT)
+				if ( mFlags & FX_KILL_ON_IMPACT	)
 				{
 					// time to die
 					return false;
 				}
 
-				VectorMA(mVel, theFxHelper.mRealTime * trace.fraction, mAccel, mVel);
+				VectorMA( mVel, theFxHelper.mRealTime * trace.fraction, mAccel, mVel );
 
-				dot = DotProduct(mVel, trace.plane.normal);
+				dot = DotProduct( mVel, trace.plane.normal );
 
-				VectorMA(mVel, -2.0f * dot, trace.plane.normal, mVel);
+				VectorMA( mVel, -2.0f * dot, trace.plane.normal, mVel );
 
-				VectorScale(mVel, mElasticity, mVel);
+				VectorScale( mVel, mElasticity, mVel );
 				mElasticity *= 0.5f;
 
 				// If the velocity is too low, make it stop moving, rotating, and turn off physics to avoid
@@ -280,14 +280,14 @@ bool CParticle::UpdateOrigin(void)
 				//if ( trace.plane.normal[2] > 0.33f && mVel[2] < 10.0f )
 				if (VectorLengthSquared(mVel) < 100.0f)
 				{
-					VectorClear(mVel);
-					VectorClear(mAccel);
+					VectorClear( mVel );
+					VectorClear( mAccel );
 
 					mFlags &= ~(FX_APPLY_PHYSICS | FX_IMPACT_RUNS_FX);
 				}
 
 				// Set the origin to the exact impact point
-				VectorMA(trace.endpos, 1.0f, trace.plane.normal, mOrigin1);
+				VectorMA( trace.endpos, 1.0f, trace.plane.normal, mOrigin1 );
 				return true;
 			}
 		}
