@@ -12,6 +12,19 @@
 extern size_t GetHttpPostData(char *address, char *poststr, char *recvdata);
 extern void GetHttpDownload(char *address, char *out_file);
 
+qboolean TTS_FileExists( const char *file )
+{
+	fileHandle_t hFile;
+	FS_FOpenFileRead(file, &hFile, qfalse);
+	
+	if (hFile) {
+		FS_FCloseFile(hFile);
+		return qtrue;
+	}
+
+	return qfalse;
+}
+
 extern sfx_t		s_knownSfx[MAX_SFX];
 
 void DoTextToSpeech (char* text, char *voice, int entityNum, vec3_t origin)
@@ -44,7 +57,6 @@ void DoTextToSpeech (char* text, char *voice, int entityNum, vec3_t origin)
 	{// Shorten the text to fit a decent filename length...
 		char	SHORTENED_TEXT[64] = { 0 };
 
-		strncpy(SHORTENED_TEXT, text, 60);
 		COM_StripExtension( text, SHORTENED_TEXT, sizeof( SHORTENED_TEXT ) );
 		sprintf(filename, "warzone/sound/tts/%s/%s.mp3", voice, SHORTENED_TEXT);
 		sprintf(filename2, "sound/tts/%s/%s.mp3", voice, SHORTENED_TEXT);
@@ -57,7 +69,7 @@ void DoTextToSpeech (char* text, char *voice, int entityNum, vec3_t origin)
 	{
 
 	}
-	else if ( FS_FileExists( filename ) )
+	else if ( TTS_FileExists( filename ) )
 	{// We have a local file...
 		sfxHandle_t sfxHandle = S_RegisterSound(filename);
 
@@ -70,7 +82,7 @@ void DoTextToSpeech (char* text, char *voice, int entityNum, vec3_t origin)
 
 		return;
 	}
-	else if ( FS_FileExists( filename2 ) )
+	else if ( TTS_FileExists( filename2 ) )
 	{// We have a local file...
 		sfxHandle_t sfxHandle = S_RegisterSound(filename2);
 
@@ -125,7 +137,7 @@ void DoTextToSpeech (char* text, char *voice, int entityNum, vec3_t origin)
 	{// Download and play the new file from the new local copy...
 		GetHttpDownload(MP3_ADDRESS, filename);
 
-		if ( FS_FileExists( filename ) )
+		if ( TTS_FileExists( filename ) )
 		{// We have a local file...
 			sfxHandle_t sfxHandle = S_RegisterSound(filename);
 
@@ -140,7 +152,7 @@ void DoTextToSpeech (char* text, char *voice, int entityNum, vec3_t origin)
 
 			return;
 		}
-		else if ( FS_FileExists( filename2 ) )
+		else if ( TTS_FileExists( filename2 ) )
 		{// We have a local file...
 			sfxHandle_t sfxHandle = S_RegisterSound(filename2);
 
@@ -261,17 +273,16 @@ qboolean S_DownloadVoice( const char *text, const char *voice )
 	{// Shorten the text to fit a decent filename length...
 		char	SHORTENED_TEXT[64] = { 0 };
 
-		strncpy(SHORTENED_TEXT, text, 60);
 		COM_StripExtension( text, SHORTENED_TEXT, sizeof( SHORTENED_TEXT ) );
 		sprintf(filename, "warzone/sound/tts/%s/%s.mp3", voice, SHORTENED_TEXT);
 		sprintf(filename2, "sound/tts/%s/%s.mp3", voice, SHORTENED_TEXT);
 	}
 
-	if ( FS_FileExists( filename ) )
+	if ( TTS_FileExists( filename ) )
 	{// We have a local file...
 		return qtrue;
 	}
-	else if ( FS_FileExists( filename2 ) )
+	else if ( TTS_FileExists( filename2 ) )
 	{// We have a local file...
 		return qtrue;
 	}
@@ -311,7 +322,7 @@ qboolean S_DownloadVoice( const char *text, const char *voice )
 	// Download the new file...
 	GetHttpDownload(MP3_ADDRESS, filename);
 
-	if ( FS_FileExists( filename ) || FS_FileExists( filename2 ) ) 
+	if ( TTS_FileExists( filename ) || TTS_FileExists( filename2 ) ) 
 		return qtrue; // it worked...
 
 	return qfalse; // it failed...
