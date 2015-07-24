@@ -1564,13 +1564,15 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage)
 			specularScale = 0.53;
 			cubemapScale = 0.0;
 			materialType = (float)MATERIAL_SHORTGRASS;
-			parallaxScale = 4.0;
+			//parallaxScale = 4.0;
+			parallaxScale = 6.0;
 			break;
 		case MATERIAL_LONGGRASS:		// 6			// long jungle grass
 			specularScale = 0.5;
 			cubemapScale = 0.0;
 			materialType = (float)MATERIAL_LONGGRASS;
-			parallaxScale = 5.0;
+			//parallaxScale = 5.0;
+			parallaxScale = 8.0;
 			break;
 		case MATERIAL_SAND:				// 8			// sandy beach
 			specularScale = 0.0;
