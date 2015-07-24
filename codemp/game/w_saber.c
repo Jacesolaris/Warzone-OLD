@@ -3731,17 +3731,8 @@ static qboolean saberDoClashEffect = qfalse;
 static vec3_t saberClashPos = { 0 };
 static vec3_t saberClashNorm = { 0 };
 static int saberClashEventParm = 1;
-static int saberClashOther = -1;  //the clientNum for the other player involved in the saber clash.
-static qboolean saberDoBodyHitEffect = qfalse;
-static vec3_t saberBodyHitPos = { 0 };
-static vec3_t saberBodyHitNorm = { 0 };
-static int saberBodyHitEventParm = 0;
-void WP_SaberDoClash(gentity_t *self, int saberNum, int bladeNum)
-{
-	if (saberDoClashEffect)
-	{
-
-		gentity_t *otherOwner;
+void WP_SaberDoClash(gentity_t *self, int saberNum, int bladeNum) {
+	if (saberDoClashEffect) {
 		gentity_t *te = G_TempEntity(saberClashPos, EV_SABER_BLOCK);
 		VectorCopy(saberClashPos, te->s.origin);
 		VectorCopy(saberClashNorm, te->s.angles);
@@ -3749,14 +3740,7 @@ void WP_SaberDoClash(gentity_t *self, int saberNum, int bladeNum)
 		te->s.otherEntityNum2 = self->s.number;
 		te->s.weapon = saberNum;
 		te->s.legsAnim = bladeNum;
-
-		if (saberClashOther != -1 && PM_SaberInParry(g_entities[saberClashOther].client->ps.saberMove))
-		{
-			otherOwner = &g_entities[saberClashOther];
-		}
 	}
-	saberDoClashEffect = qfalse;
-
 }
 
 void WP_SaberBounceSound( gentity_t *ent, int saberNum, int bladeNum )
