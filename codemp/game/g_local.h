@@ -618,10 +618,6 @@ typedef struct clientPersistant_s {
 	int			vote, teamvote; // 0 = none, 1 = yes, 2 = no
 
 	char		guid[33];
-	//[ClassSyS]
-	//pclass_t    playerclasses;
-	//pclass_t    nextplayerclasses;
-	//[/ClassSyS]
 } clientPersistant_t;
 
 typedef struct renderInfo_s

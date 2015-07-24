@@ -1115,12 +1115,6 @@ Ghoul2 Insert End
 	int numSpawnVarChars;
 	char spawnVarChars[MAX_SPAWN_VARS_CHARS];
 
-	//[EXPsys]
-	int					experianceEarned;
-	int					experianceTime;
-	int					maxExperience;
-	//[/EXPsys]
-
 	vec3_t		mapcoordsMins;
 	vec3_t		mapcoordsMaxs;
 	qboolean	mapcoordsValid;

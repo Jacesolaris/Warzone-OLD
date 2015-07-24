@@ -2225,7 +2225,7 @@ void MSG_WriteDeltaPlayerstate( msg_t *msg, struct playerState_s *from, struct p
 			{
 #ifdef __MMO__
 #define MAX_STAT_BITS 32
-				if (i == STAT_HEALTH || i == STAT_MAX_HEALTH || i == STAT_ARMOR || i == STAT_EXP || i == STAT_EXP_COUNT)
+				if (i == STAT_HEALTH || i == STAT_MAX_HEALTH || i == STAT_ARMOR )
 				{ //ugly.. but we're gonna need it anyway -rww
 					//(just send this one in MAX_STAT_BITS bits, so that we can add up to MAX_STAT_BITS weaps without hassle)
 					MSG_WriteBits(msg, to->stats[i], MAX_STAT_BITS);
@@ -2419,7 +2419,7 @@ void MSG_ReadDeltaPlayerstate (msg_t *msg, playerState_t *from, playerState_t *t
 				if (bits & (1<<i) )
 				{
 #ifdef __MMO__
-					if (i == STAT_HEALTH || i == STAT_MAX_HEALTH || i == STAT_ARMOR || i == STAT_EXP || i == STAT_EXP_COUNT)
+					if (i == STAT_HEALTH || i == STAT_MAX_HEALTH || i == STAT_ARMOR )
 					{ //ugly.. but we're gonna need it anyway -rww
 						//(just send this one in MAX_STAT_BITS bits, so that we can add up to MAX_STAT_BITS weaps without hassle)
 						to->stats[i] = MSG_ReadBits(msg, MAX_STAT_BITS);

@@ -1745,7 +1745,6 @@ qboolean BG_FullBodyTauntAnim( int anim )
 	return qfalse;
 }
 
-
 /*
 =============
 BG_AnimLength

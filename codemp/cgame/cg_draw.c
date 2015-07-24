@@ -1333,68 +1333,6 @@ void CG_DrawArmorBar(void)										// Function that will draw the fuel bar
 	CG_DrawPic(x - 40.0f, y - 10, HPFUELBAR_W + 71, HPFUELBAR_H + 20, cgs.media.currentBackground);
 }
 
-
-//[EXPBAR]Stoiss
-#define EXPFUELBAR_H			8.5f//15.0f//500.0f	//H : Højde i pixel.	// These two decides the size of the fuel bar / Disse to bestemmer størrelsen på ... fuel bar'n =p
-#define EXPFUELBAR_W			500.0f//15.0f//W : Bredde i pixels. 
-#define EXPFUELBAR_X		    64.0f //X : X-position. For eksempel angiver "x0 y0" ville position kontrol i øverste venstre hjørne af vinduet klient område, // This here decides where on screen it's drawn. / Bestemmer hvor på skjermen det blir skrevet.
-#define EXPFUELBAR_Y			460.0f	//Y : Y-position. Hvis Y er udeladt, men ikke X , vil kontrollen blive placeret under alle de tidligere tilføjede kontrol, som kan opfattes som at starte en ny "række".
-
-// This too / Denne også, x and y
-//[/EXPBAR]Stoiss
-// Du må justere DFUELBAR_X og DFUELBAR_Y ovenfor for å flytte hvor den blir tegnet.
-// Prøv nå =p
-void CG_DrawExpBar(void)										// Function that will draw the fuel bar 
-{
-	vec4_t aColor;
-	vec4_t bColor;
-	vec4_t cColor;
-	//	vec4_t oColor;	// overflow color
-	float x = EXPFUELBAR_X;
-	float y = EXPFUELBAR_Y;
-	float percent = ((float)cg.snap->ps.stats[STAT_EXP] / /*cg.snap->ps.stats[PERS_EXPERIANCE_COUNT]*/cg.maxExperience)*EXPFUELBAR_W;
-
-	if (percent > EXPFUELBAR_W)// We want it to go sideways, not upwards. So we will be using width instead of height.
-	{
-		return;
-	}
-
-	if (percent < 0.1f)
-	{
-		percent = 0.1f;
-	}
-	//color of the bar			This is the colors, you can change them as you want later. R G B A
-	/*	aColor[0] = 0.5f;			// Mengde rødt (Alle verdier fra 0.0 til 1.0) R G B ikke R B G xP
-	aColor[1] = 0.0f;			// mengde grønt
-	aColor[2] = 0.0f;			// mengde blått
-	aColor[3] = 0.8f;			// gjennomsiktighet / transperency.
-	*/
-	VectorCopy4(colorTable[CT_BLUE3], aColor);
-
-	//color of the border
-	bColor[0] = 0.0f;
-	bColor[1] = 0.0f;
-	bColor[2] = 0.0f;
-	bColor[3] = 0.3f;
-
-	//color of greyed out "missing fuel"
-	cColor[0] = 0.5f;
-	cColor[1] = 0.5f;
-	cColor[2] = 0.5f;
-	cColor[3] = 0.1f;
-
-	//now draw the part to show how much health there is in the color specified
-	CG_FillRect(x + 1.0f, y + 1.0f, EXPFUELBAR_W - 1.0f - (EXPFUELBAR_W - percent), EXPFUELBAR_H - 1.0f, aColor);
-
-	//then draw the other part greyed out
-	CG_FillRect(x + 1.0f + percent, y + 1.0f, EXPFUELBAR_W - percent, EXPFUELBAR_H - 1.0f, cColor);
-
-	//draw the background (black)
-	CG_DrawRect(x, y, EXPFUELBAR_W, EXPFUELBAR_H, 1.0f, colorTable[CT_BLACK]);
-
-
-}
-
 //draw meter showing jetpack fuel when it's not full
 #define JETPACFUELBAR_H			100.0f
 #define JETPACFUELBAR_W			15.0f
@@ -1820,7 +1758,6 @@ void CG_DrawHUD(centity_t	*cent)
 		CG_DrawArmorBar();
 #endif //__OLD_UI__
 		//CG_DrawForceQuickBar();
-		CG_DrawExpBar();
 		//CG_DrawJetPackBar();
 		//CG_DrawCloakBar();
 
@@ -1917,13 +1854,6 @@ void CG_DrawHUD(centity_t	*cent)
 		{	// Don't draw a bias.
 			scoreStr = va("%s: %i", CG_GetStringEdString("MP_INGAME", "SCORE"), cg.snap->ps.persistant[PERS_SCORE]);
 		}
-
-		{
-			//[EXPsys]
-			scoreStr = va("%s %s: %i ", scoreStr, CG_GetStringEdString("EXPSYSTEM", "EXP"), cg.snap->ps.stats[STAT_EXP], scoreBiasStr);
-			//[/EXPsys]
-		}
-
 
 		menuHUD = Menus_FindByName("righthud");
 		Menu_Paint( menuHUD, qtrue );

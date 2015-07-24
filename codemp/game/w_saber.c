@@ -4,6 +4,7 @@
 //#include "ai_main.h"
 #include "ghoul2/G2.h"
 
+#define _BLOCK_COLLISION_TEST
 #define SABER_BOX_SIZE 16.0f
 //extern bot_state_t *botstates[MAX_CLIENTS];
 extern qboolean InFront( vec3_t spot, vec3_t from, vec3_t fromAngles, float threshHold );
@@ -4575,6 +4576,34 @@ static qboolean CheckSaberDamage(gentity_t *self, int rSaberNum, int rBladeNum, 
 			&& otherOwner->client->ps.saberInFlight ) {//don't do extra collision checking vs sabers in air
 		}
 		else {//hit an in-hand saber, do extra collision check against it
+#ifdef _BLOCK_COLLISION_TEST
+			if (((otherOwner->client 
+				&& otherOwner->client->ps.stats[STAT_HEALTH] > 0) 
+				|| (!otherOwner->client && g_entities[otherOwner->s.number].health > 0)) 
+				&& !BG_SaberInSpecialAttack(self->client->ps.torsoAnim) // Unless we're doing a special attack...
+				&& !didHit && irand(1,100) < 99) // would make it block 99% of the time
+			{//The attack didn't kill your opponent, bounce the saber back to prevent nasty passthru.
+				if (SaberAttacking(self))
+				{
+					self->client->ps.saberMove = PM_SaberBounceForAttack(self->client->ps.saberMove);
+					self->client->ps.saberBlocked = BLOCKED_BOUNCE_MOVE;
+				}
+				else
+				{
+					self->client->ps.saberBlocked = BLOCKED_ATK_BOUNCE;
+				}
+			}
+
+			/*if (SaberAttacking(self))
+			{
+				self->client->ps.saberMove = PM_SaberBounceForAttack(self->client->ps.saberMove);
+				self->client->ps.saberBlocked = BLOCKED_BOUNCE_MOVE;
+			}
+			else
+			{
+				self->client->ps.saberBlocked = BLOCKED_ATK_BOUNCE;
+			}*/
+#else
 			if (d_saberSPStyleDamage.integer || g_saberTweaks.integer & SABERTWEAK_REDUCEBLOCKS) {//use SP-style blade-collision test
 				if ( !WP_SabersIntersect( self, rSaberNum, rBladeNum, otherOwner, qfalse ) ) {//sabers did not actually intersect
 					return qfalse;
@@ -4586,6 +4615,7 @@ static qboolean CheckSaberDamage(gentity_t *self, int rSaberNum, int rBladeNum, 
 					return qfalse;
 				}
 			}
+#endif // _BLOCK_COLLISION_TEST
 		}
 
 		if ( OnSameTeam( self, otherOwner ) &&
