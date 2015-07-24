@@ -340,6 +340,27 @@ void main()
 	float NL, NH, NE, EH, attenuation;
 	vec2 tex_offset = vec2(1.0 / var_Dimensions.x, 1.0 / var_Dimensions.y);
 
+#if 0
+	if (var_Local1.a == 5)
+	{
+		gl_FragColor = vec4((0.0, 0.0, 1.0, 1.0) + (texture2D(u_DiffuseMap, var_TexCoords.xy)*2.0)) / 3.0;
+		out_Glow = gl_FragColor;
+		return;
+	}
+	else if (var_Local1.a == 6)
+	{
+		gl_FragColor = vec4((1.0, 0.0, 0.0, 1.0) + (texture2D(u_DiffuseMap, var_TexCoords.xy)*2.0)) / 3.0;
+		out_Glow = gl_FragColor;
+		return;
+	}
+	else
+	{
+		gl_FragColor = (vec4(0.0, 1.0, 0.0, 1.0) + (texture2D(u_DiffuseMap, var_TexCoords.xy)*2.0)) / 3.0;
+		out_Glow = gl_FragColor;
+		return;
+	}
+#endif
+
 #if defined(USE_LIGHT) && !defined(USE_FAST_LIGHT)
   #if defined(USE_VERT_TANGENT_SPACE)
 	//mat3 tangentToWorld = mat3(var_Tangent.xyz, var_Bitangent.xyz, var_Normal.xyz);
@@ -529,7 +550,7 @@ void main()
 	else
 		specular *= u_SpecularScale;
 
-	if (u_Local4 != 0.0)
+	if (u_Local4.b != 0.0)
 	{// Metalic...
 		float metallic = specular.r;
 

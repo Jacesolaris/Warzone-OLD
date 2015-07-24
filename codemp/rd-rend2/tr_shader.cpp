@@ -1566,7 +1566,7 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 			}
 			stage->specularScale[0] = 
 			stage->specularScale[1] = 
-			stage->specularScale[2] = atof( token );
+			stage->specularScale[2] = Com_Clamp( 0.0f, 1.0f, atof( token ) );
 		}
 		//
 		// specularExponent <value>
@@ -1686,7 +1686,7 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 				continue;
 			}
 
-			stage->specularScale[2] = atof( token );
+			stage->specularScale[2] = Com_Clamp( 0.0f, 1.0f, atof( token ) );
 
 			token = COM_ParseExt(text, qfalse);
 			if ( token[0] == 0 )
