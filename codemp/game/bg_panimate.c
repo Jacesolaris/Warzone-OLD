@@ -144,6 +144,19 @@ qboolean BG_InSpecialJump( int anim )
 	return qfalse;
 }
 
+qboolean PM_Stagger(int anim)
+{
+	switch (anim)
+	{
+	case BOTH_H1_S1_TL:
+	case BOTH_BASHED1:
+	case BOTH_H1_S1_BR:
+	case BOTH_H1_S1_T_:
+		return qtrue;
+	default: return qfalse;
+	}
+}
+
 qboolean BG_InSaberStandAnim(int anim)
 {
 	switch ((anim))

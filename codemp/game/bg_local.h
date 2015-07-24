@@ -109,3 +109,4 @@ void PM_SetSaberMove(short newMove);
 void PM_SetForceJumpZStart(float value);
 
 void BG_CycleInven(playerState_t *ps, int direction);
+qboolean PM_Stagger(int anim);
