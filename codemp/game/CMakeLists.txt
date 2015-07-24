@@ -1,9 +1,9 @@
 cmake_minimum_required(VERSION 2.8.8)
 
 # Make sure the user is not executing this script directly
-if(NOT InOpenJK)
+if(NOT InWarzone)
 	message(FATAL_ERROR "Use the top-level cmake script!")
-endif(NOT InOpenJK)
+endif(NOT InWarzone)
 
 set(MPGameIncludeDirectories "${MPDir}")
 if(WIN32)
@@ -201,13 +201,13 @@ if(NOT WIN32)
 endif(NOT WIN32)
 
 if(WIN32)
-	install(TARGETS ${MPGame} RUNTIME DESTINATION "OpenJK")
+	install(TARGETS ${MPGame} RUNTIME DESTINATION "Warzone")
 else(WIN32)
 	if(MakeApplicationBundles AND BuildMPEngine)
-		install(TARGETS ${MPGame} LIBRARY DESTINATION "${MPEngine}.app/Contents/MacOS/OpenJK")
+		install(TARGETS ${MPGame} LIBRARY DESTINATION "${MPEngine}.app/Contents/MacOS/Warzone")
 		install(TARGETS ${MPGame} LIBRARY DESTINATION "${MPEngine}.app/Contents/MacOS/base")
 	else(MakeApplicationBundles AND BuildMPEngine)
-		install(TARGETS ${MPGame} LIBRARY DESTINATION "OpenJK")
+		install(TARGETS ${MPGame} LIBRARY DESTINATION "Warzone")
 	endif(MakeApplicationBundles AND BuildMPEngine)
 endif(WIN32)
 set_target_properties(${MPGame} PROPERTIES COMPILE_DEFINITIONS_RELWITHDEBINFO "${MPGameDefines};${ReleaseDefines}")

@@ -27,7 +27,7 @@ void G_TestLine(vec3_t start, vec3_t end, int color, int time)
 
 //extern qboolean AIMOD_LoadCoverPoints ( void );
 
-#define		MOD_DIRECTORY "JKG"
+#define		MOD_DIRECTORY "Warzone"
 #define		BOT_MOD_NAME	"aimod"
 float		NOD_VERSION = 1.1f;
 
@@ -438,11 +438,11 @@ AIMOD_NODES_LoadNodes ( void )
 	return qtrue;
 }
 
-extern qboolean JKG_CheckRoutingFrom( int wp );
-extern qboolean JKG_CheckBelowWaypoint( int wp );
+extern qboolean Warzone_CheckRoutingFrom( int wp );
+extern qboolean Warzone_CheckBelowWaypoint( int wp );
 extern qboolean PATHING_IGNORE_FRAME_TIME;
 
-void JKG_WaypointCheck ( void )
+void Warzone_WaypointCheck ( void )
 {
 /*
 	//
@@ -463,8 +463,8 @@ void JKG_WaypointCheck ( void )
 		gWPArray[i]->wpIsBad = qfalse;
 		gWPArray[i]->inuse = qtrue;
 
-		wpOK = JKG_CheckRoutingFrom( i );
-		if (wpOK) wpOK = JKG_CheckBelowWaypoint( i );
+		wpOK = Warzone_CheckRoutingFrom( i );
+		if (wpOK) wpOK = Warzone_CheckBelowWaypoint( i );
 
 		if (wpOK)
 		{
@@ -495,7 +495,7 @@ int LoadPathData(const char *filename)
 {
 	if (AIMOD_NODES_LoadNodes()) 
 	{
-		JKG_WaypointCheck();
+		Warzone_WaypointCheck();
 		return 1; // UQ1: Load/Convert Auto-Waypoint Nodes... (Now default)
 	}
 

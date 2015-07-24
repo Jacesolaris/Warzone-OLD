@@ -1244,7 +1244,7 @@ typedef struct cgMedia_s {
 	qhandle_t sfxSaberBladeShader;
 	qhandle_t sfxSaberBlade2Shader;
 	qhandle_t sfxSaberEndShader;
-	qhandle_t sfxSaberEnd2Shader;
+	qhandle_t sfxSabewarzoneShader;
 	//[/SFXSabers]
 
 	//[Movie Sabers]

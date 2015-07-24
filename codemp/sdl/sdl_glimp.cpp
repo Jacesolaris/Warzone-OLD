@@ -1,6 +1,6 @@
 #include <SDL.h>
 #include "qcommon/qcommon.h"
-#include "../rd-vanilla/tr_local.h"
+#include "../rd-warzone/tr_local.h"
 #include "sdl_qgl.h"
 #include "sys/sys_local.h"
 
@@ -691,7 +691,7 @@ static void GLimp_InitExtensions( void )
 		{
 			Com_Printf ("...ignoring GL_EXT_texture_filter_anisotropic\n" );
 		}
-		
+
 		if ( r_ext_texture_filter_anisotropic->value > glConfig.maxTextureFilterAnisotropy )
 		{
 			ri->Cvar_SetValue( "r_ext_texture_filter_anisotropic", glConfig.maxTextureFilterAnisotropy );
@@ -1004,7 +1004,7 @@ success:
 	glConfig.renderer_string = (const char *) qglGetString (GL_RENDERER);
 	glConfig.version_string = (const char *) qglGetString (GL_VERSION);
 	glConfig.extensions_string = (const char *) qglGetString (GL_EXTENSIONS);
-	
+
 	glConfigExt.originalExtensionString = glConfig.extensions_string;
 	glConfig.extensions_string = TruncateGLExtensionsString (glConfigExt.originalExtensionString, 128);
 

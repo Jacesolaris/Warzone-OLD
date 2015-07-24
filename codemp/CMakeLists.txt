@@ -1,9 +1,9 @@
 cmake_minimum_required(VERSION 2.8.8)
 
 # Make sure the user is not executing this script directly
-if(NOT InOpenJK)
+if(NOT InWarzone)
 	message(FATAL_ERROR "Use the top-level cmake script!")
-endif(NOT InOpenJK)
+endif(NOT InWarzone)
 
 set(MPSharedDefines ${SharedDefines})
 
@@ -22,16 +22,10 @@ if(BuildMPUI)
 	add_subdirectory("${MPDir}/ui")
 endif(BuildMPUI)
 
-#	 Add Vanilla JKA Renderer Project
-if(BuildMPRdVanilla)
-	add_subdirectory("${MPDir}/rd-vanilla")
-endif(BuildMPRdVanilla)
-
 #	Add rend2 JKA Renderer Project
-if(BuildMPRend2)
-	add_subdirectory("${MPDir}/rd-rend2")
-endif(BuildMPRend2)
-
+if(BuildMPWarzone)
+	add_subdirectory("${MPDir}/rd-warzone")
+endif(BuildMPWarzone)
 
 #    Common things between Engine and Dedicated Server
 if(BuildMPEngine OR BuildMPDed)
@@ -132,40 +126,40 @@ if(BuildMPEngine OR BuildMPDed)
 		set(MPEngineAndDedLibraries ${MPEngineAndDedLibraries} "winmm" "wsock32" "../../lib/bass" "../../lib/libmad")
 	endif(WIN32)
 	# Include directories
-	set(MPEngineAndDedIncludeDirectories ${MPDir} ${OpenJKLibDir}) # codemp folder, since includes are not always relative in the files
+	set(MPEngineAndDedIncludeDirectories ${MPDir} ${WarzoneLibDir}) # codemp folder, since includes are not always relative in the files
 
 	if(UseInternalZlib)
 		set(MPEngineAndDedZLibFiles
-			"${OpenJKLibDir}/zlib/adler32.c"
-			"${OpenJKLibDir}/zlib/compress.c"
-			"${OpenJKLibDir}/zlib/crc32.c"
-			"${OpenJKLibDir}/zlib/deflate.c"
-			"${OpenJKLibDir}/zlib/gzclose.c"
-			"${OpenJKLibDir}/zlib/gzlib.c"
-			"${OpenJKLibDir}/zlib/gzread.c"
-			"${OpenJKLibDir}/zlib/gzwrite.c"
-			"${OpenJKLibDir}/zlib/infback.c"
-			"${OpenJKLibDir}/zlib/inffast.c"
-			"${OpenJKLibDir}/zlib/inflate.c"
-			"${OpenJKLibDir}/zlib/inftrees.c"
-			"${OpenJKLibDir}/zlib/trees.c"
-			"${OpenJKLibDir}/zlib/uncompr.c"
-			"${OpenJKLibDir}/zlib/zutil.c"
-			"${OpenJKLibDir}/zlib/crc32.h"
-			"${OpenJKLibDir}/zlib/deflate.h"
-			"${OpenJKLibDir}/zlib/gzguts.h"
-			"${OpenJKLibDir}/zlib/inffast.h"
-			"${OpenJKLibDir}/zlib/inffixed.h"
-			"${OpenJKLibDir}/zlib/inflate.h"
-			"${OpenJKLibDir}/zlib/inftrees.h"
-			"${OpenJKLibDir}/zlib/trees.h"
-			"${OpenJKLibDir}/zlib/zconf.h"
-			"${OpenJKLibDir}/zlib/zlib.h"
-			"${OpenJKLibDir}/zlib/zutil.h")
+			"${WarzoneLibDir}/zlib/adler32.c"
+			"${WarzoneLibDir}/zlib/compress.c"
+			"${WarzoneLibDir}/zlib/crc32.c"
+			"${WarzoneLibDir}/zlib/deflate.c"
+			"${WarzoneLibDir}/zlib/gzclose.c"
+			"${WarzoneLibDir}/zlib/gzlib.c"
+			"${WarzoneLibDir}/zlib/gzread.c"
+			"${WarzoneLibDir}/zlib/gzwrite.c"
+			"${WarzoneLibDir}/zlib/infback.c"
+			"${WarzoneLibDir}/zlib/inffast.c"
+			"${WarzoneLibDir}/zlib/inflate.c"
+			"${WarzoneLibDir}/zlib/inftrees.c"
+			"${WarzoneLibDir}/zlib/trees.c"
+			"${WarzoneLibDir}/zlib/uncompr.c"
+			"${WarzoneLibDir}/zlib/zutil.c"
+			"${WarzoneLibDir}/zlib/crc32.h"
+			"${WarzoneLibDir}/zlib/deflate.h"
+			"${WarzoneLibDir}/zlib/gzguts.h"
+			"${WarzoneLibDir}/zlib/inffast.h"
+			"${WarzoneLibDir}/zlib/inffixed.h"
+			"${WarzoneLibDir}/zlib/inflate.h"
+			"${WarzoneLibDir}/zlib/inftrees.h"
+			"${WarzoneLibDir}/zlib/trees.h"
+			"${WarzoneLibDir}/zlib/zconf.h"
+			"${WarzoneLibDir}/zlib/zlib.h"
+			"${WarzoneLibDir}/zlib/zutil.h")
 		source_group("zlib" FILES ${MPEngineAndDedZLibFiles})
 		set(MPEngineAndDedFiles ${MPEngineAndDedFiles} ${MPEngineAndDedZLibFiles})
-		
-		set(MPEngineAndDedIncludeDirectories ${MPEngineAndDedIncludeDirectories} "${OpenJKLibDir}/zlib")
+
+		set(MPEngineAndDedIncludeDirectories ${MPEngineAndDedIncludeDirectories} "${WarzoneLibDir}/zlib")
 	else()
 		find_package(ZLIB REQUIRED)
 		set(MPEngineAndDedIncludeDirectories ${MPEngineAndDedIncludeDirectories} ${ZLIB_INCLUDE_DIR})
@@ -315,10 +309,10 @@ if(BuildMPEngine OR BuildMPDed)
 	set(MPEngineAndDedFiles ${MPEngineAndDedFiles} ${MPEngineAndDedUiFiles})
 
 	set(MPEngineAndDedMinizipFiles
-		"${OpenJKLibDir}/minizip/ioapi.c"
-		"${OpenJKLibDir}/minizip/ioapi.h"
-		"${OpenJKLibDir}/minizip/unzip.cpp"
-		"${OpenJKLibDir}/minizip/unzip.h"
+		"${WarzoneLibDir}/minizip/ioapi.c"
+		"${WarzoneLibDir}/minizip/ioapi.h"
+		"${WarzoneLibDir}/minizip/unzip.cpp"
+		"${WarzoneLibDir}/minizip/unzip.h"
 		)
 	source_group("minizip" FILES ${MPEngineAndDedMinizipFiles})
 	set(MPEngineAndDedFiles ${MPEngineAndDedFiles} ${MPEngineAndDedMinizipFiles})
@@ -474,7 +468,7 @@ if(BuildMPEngine)
 			"${MPDir}/win32/win_snd.cpp"
 			"${MPDir}/win32/win_syscon.cpp"
 			"${MPDir}/win32/win_wndproc.cpp"
-			"${MPDir}/win32/openjk.rc"
+			"${MPDir}/win32/Warzone.rc"
 			)
 		source_group("win32" FILES ${MPEngineWin32Files})
 		set(MPEngineFiles ${MPEngineFiles} ${MPEngineWin32Files})
@@ -496,9 +490,9 @@ if(BuildMPEngine)
 	# todo: windows resources
 
 	if(MakeApplicationBundles)
-		set(MACOSX_BUNDLE_ICON_FILE OpenJK.icns)
-		set_source_files_properties(${MPDir}/macosx/OpenJK.icns PROPERTIES MACOSX_PACKAGE_LOCATION Resources)
-		set(MPEngineFiles ${MPEngineFiles} ${MPDir}/macosx/OpenJK.icns)
+		set(MACOSX_BUNDLE_ICON_FILE Warzone.icns)
+		set_source_files_properties(${MPDir}/macosx/Warzone.icns PROPERTIES MACOSX_PACKAGE_LOCATION Resources)
+		set(MPEngineFiles ${MPEngineFiles} ${MPDir}/macosx/Warzone.icns)
 	endif(MakeApplicationBundles)
 
 	if(WIN32)
@@ -570,7 +564,7 @@ if(BuildMPDed)
 	if(WIN32)
 		set(MPDedWin32Files
 			"${MPDir}/win32/win_main_ded.cpp"
-			"${MPDir}/win32/openjkded.rc"
+			"${MPDir}/win32/WarzoneDed.rc"
 			)
 		source_group("win32" FILES ${MPDedWin32Files})
 		set(MPDedFiles ${MPDedFiles} ${MPDedWin32Files})

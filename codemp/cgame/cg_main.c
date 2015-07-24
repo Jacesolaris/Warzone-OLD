@@ -708,7 +708,7 @@ static void CG_RegisterSounds( void ) {
 	cgs.media.sfxSaberBladeShader = trap->R_RegisterShader("gfx/effects/SFX_Sabers/saber_blade");
 	cgs.media.sfxSaberBlade2Shader = trap->R_RegisterShader("gfx/effects/SFX_Sabers/saber_blade_rgb");
 	cgs.media.sfxSaberEndShader = trap->R_RegisterShader("gfx/effects/SFX_Sabers/saber_end");
-	cgs.media.sfxSaberEnd2Shader = trap->R_RegisterShader("gfx/effects/SFX_Sabers/saber_end_rgb");
+	cgs.media.sfxSabewarzoneShader = trap->R_RegisterShader("gfx/effects/SFX_Sabers/saber_end_rgb");
 	//[/SFXSabers]
 
 	//[Movie Sabers]

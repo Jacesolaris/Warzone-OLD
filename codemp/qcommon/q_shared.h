@@ -16,12 +16,12 @@
 // Disable stupid warnings...
 #pragma warning( disable : 4996 )
 
-#define PRODUCT_NAME			"openjk"
+#define PRODUCT_NAME			"Warzone"
 
-#define CLIENT_WINDOW_TITLE "OpenJK (MP)"
-#define CLIENT_CONSOLE_TITLE "OpenJK Console (MP)"
-#define HOMEPATH_NAME_UNIX "openjk"
-#define HOMEPATH_NAME_WIN "OpenJK"
+#define CLIENT_WINDOW_TITLE "Star Wars Warzone"
+#define CLIENT_CONSOLE_TITLE "Warzone Console"
+#define HOMEPATH_NAME_UNIX "warzone"
+#define HOMEPATH_NAME_WIN "warzone"
 #define HOMEPATH_NAME_MACOSX HOMEPATH_NAME_WIN
 
 #define	BASEGAME "base"
@@ -2307,7 +2307,7 @@ typedef struct entityState_s {
 	int			maxhealth; //so I know how to draw the stupid health bar
 
 	//int			Shield;
-	//int			maxShield;	// Shieldbar -- UQ1: Stois, you can't add fields to entityState_t. 
+	//int			maxShield;	// Shieldbar -- UQ1: Stois, you can't add fields to entityState_t.
 								// It has to remain at it's original exact size as the engine sends only that size of data.
 								// We may be better off forgetting shields and just increasing HP.
 

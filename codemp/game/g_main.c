@@ -176,7 +176,7 @@ void Load_Model_Scales( void )
 	trap->FS_Read( buf, len, f );
 	trap->FS_Close( f );
 
-	trap->Print("^4*** ^3JKG^4: ^5Loading player model scales database from file ^7%s^5.\n", "modelscale.cfg");
+	trap->Print("^4*** ^3Warzone^4: ^5Loading player model scales database from file ^7%s^5.\n", "modelscale.cfg");
 
 	for (t = s = buf; *t; /* */ ) 
 	{
@@ -225,7 +225,7 @@ void Load_Model_Scales( void )
 
 	num_scale_models--;
 
-	trap->Print("^4*** ^3JKG^4: ^5There are ^7%i^5 player model scales in the current database.\n", num_scale_models);
+	trap->Print("^4*** ^3Warzone^4: ^5There are ^7%i^5 player model scales in the current database.\n", num_scale_models);
 
 	//if (num_scale_models > 0)
 	scale_models_loaded = qtrue;

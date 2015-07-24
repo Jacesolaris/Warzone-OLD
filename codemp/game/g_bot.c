@@ -782,7 +782,7 @@ extern vec3_t		MOVER_LIST[1024];
 extern vec3_t		MOVER_LIST_TOP[1024];
 extern int			MOVER_LIST_NUM;
 
-qboolean JKG_PointNearMoverEntityLocation( vec3_t org )
+qboolean Warzone_PointNearMoverEntityLocation( vec3_t org )
 {// Never spawn near a mover location...
 	int i = 0;
 	qboolean found = qfalse;
@@ -800,7 +800,7 @@ qboolean JKG_PointNearMoverEntityLocation( vec3_t org )
 	return found;
 }
 
-qboolean JKG_SpawnpointNearMoverEntityLocation( vec3_t org )
+qboolean Warzone_SpawnpointNearMoverEntityLocation( vec3_t org )
 {// Never spawn near a mover location...
 	int i = 0;
 	qboolean found = qfalse;
@@ -818,7 +818,7 @@ qboolean JKG_SpawnpointNearMoverEntityLocation( vec3_t org )
 	return found;
 }
 
-qboolean JKG_CheckBelowWaypoint( int wp )
+qboolean Warzone_CheckBelowWaypoint( int wp )
 {
 	trace_t tr;
 	vec3_t org, org2;
@@ -871,7 +871,7 @@ qboolean JKG_CheckBelowWaypoint( int wp )
 extern gentity_t *SelectInitialSpawnPoint( vec3_t origin, vec3_t angles, team_t team );
 extern int DOM_GetBestWaypoint(vec3_t org, int ignore, int badwp);
 extern int DOM_FindIdealPathtoWP(bot_state_t *bs, int from, int to, int badwp2, int *pathlist);
-qboolean JKG_CheckRoutingFrom( int wp )
+qboolean Warzone_CheckRoutingFrom( int wp )
 {
 	gentity_t *spot = NULL;
 
@@ -952,9 +952,9 @@ void G_CheckVendorNPCs( void )
 		int			random = irand(0,36);
 		int			tries = 0;
 
-		while (gWPArray[waypoint]->inuse == qfalse || gWPArray[waypoint]->wpIsBad == qtrue || JKG_SpawnpointNearMoverEntityLocation(gWPArray[waypoint]->origin)
+		while (gWPArray[waypoint]->inuse == qfalse || gWPArray[waypoint]->wpIsBad == qtrue || Warzone_SpawnpointNearMoverEntityLocation(gWPArray[waypoint]->origin)
 #ifndef __WAYPOINTS_PRECHECKED__
-			|| !JKG_CheckBelowWaypoint(waypoint) || !JKG_CheckRoutingFrom( waypoint )
+			|| !Warzone_CheckBelowWaypoint(waypoint) || !Warzone_CheckRoutingFrom( waypoint )
 #endif //__WAYPOINTS_PRECHECKED__
 			)
 		{
@@ -1034,9 +1034,9 @@ void G_CheckCivilianNPCs( void )
 		int			random = irand(0,36);
 		int			tries = 0;
 
-		while (gWPArray[waypoint]->inuse == qfalse || gWPArray[waypoint]->wpIsBad == qtrue || JKG_SpawnpointNearMoverEntityLocation(gWPArray[waypoint]->origin)
+		while (gWPArray[waypoint]->inuse == qfalse || gWPArray[waypoint]->wpIsBad == qtrue || Warzone_SpawnpointNearMoverEntityLocation(gWPArray[waypoint]->origin)
 #ifndef __WAYPOINTS_PRECHECKED__
-			|| !JKG_CheckBelowWaypoint(waypoint) || !JKG_CheckRoutingFrom( waypoint )
+			|| !Warzone_CheckBelowWaypoint(waypoint) || !Warzone_CheckRoutingFrom( waypoint )
 #endif //__WAYPOINTS_PRECHECKED__
 			)
 		{
@@ -1399,9 +1399,9 @@ void G_CheckMinimumNpcs( void ) {
 			}
 			else
 			{
-				while (gWPArray[waypoint]->inuse == qfalse || gWPArray[waypoint]->wpIsBad == qtrue || JKG_SpawnpointNearMoverEntityLocation(gWPArray[waypoint]->origin)
+				while (gWPArray[waypoint]->inuse == qfalse || gWPArray[waypoint]->wpIsBad == qtrue || Warzone_SpawnpointNearMoverEntityLocation(gWPArray[waypoint]->origin)
 #ifndef __WAYPOINTS_PRECHECKED__
-					|| !JKG_CheckBelowWaypoint(waypoint) || !JKG_CheckRoutingFrom( waypoint )
+					|| !Warzone_CheckBelowWaypoint(waypoint) || !Warzone_CheckRoutingFrom( waypoint )
 #endif //__WAYPOINTS_PRECHECKED__
 					)
 				{

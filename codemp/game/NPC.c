@@ -2973,7 +2973,7 @@ int NPC_SelectBestAvoidanceMethod ( void )
 		
 				if (tr.fraction == 1.0f)
 				{
-					//if (JKG_CheckBelowPoint(org1))
+					//if (Warzone_CheckBelowPoint(org1))
 					//{
 						return AVOIDANCE_STRAFE_RIGHT;
 					//}
@@ -2997,7 +2997,7 @@ int NPC_SelectBestAvoidanceMethod ( void )
 		
 				if (tr.fraction == 1.0f)
 				{
-					//if (JKG_CheckBelowPoint(org1))
+					//if (Warzone_CheckBelowPoint(org1))
 					//{
 						return AVOIDANCE_STRAFE_LEFT;
 					//}

@@ -451,7 +451,7 @@ qboolean BASS_Initialize ( void )
 	//BASS_SetConfig(BASS_CONFIG_CURVE_VOL, true);
 
 	// UQ1: Play a BASS startup sound...
-	//BASS_AddStreamChannel ( "OJK/sound/startup.wav", -1, s_volume->value, NULL );
+	//BASS_AddStreamChannel ( "warzone/sound/startup.wav", -1, s_volume->value, NULL );
 
 	s_soundStarted = 1;
 	s_numSfx = 0;
@@ -1099,7 +1099,7 @@ void BASS_GetPsyTracks( void )
 
 	DIR *dir;
 	struct dirent *ent;
-	if ((dir = opendir ("OJK/music/psy")) != NULL) {
+	if ((dir = opendir ("warzone/music/psy")) != NULL) {
 		/* all the files and directories within psy directory */
 		while ((ent = readdir (dir)) != NULL) {
 			if (ent->d_name[0] == '.') continue; // skip back directory...
@@ -1138,7 +1138,7 @@ void BASS_GetCustomTracks( void )
 
 	DIR *dir;
 	struct dirent *ent;
-	if ((dir = opendir ("OJK/music/custom")) != NULL) {
+	if ((dir = opendir ("warzone/music/custom")) != NULL) {
 		/* all the files and directories within psy directory */
 		while ((ent = readdir (dir)) != NULL) {
 			if (ent->d_name[0] == '.') continue; // skip back directory...

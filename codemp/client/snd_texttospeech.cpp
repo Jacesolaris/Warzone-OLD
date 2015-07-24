@@ -46,7 +46,7 @@ void DoTextToSpeech (char* text, char *voice, int entityNum, vec3_t origin)
 
 		strncpy(SHORTENED_TEXT, text, 60);
 		COM_StripExtension( text, SHORTENED_TEXT, sizeof( SHORTENED_TEXT ) );
-		sprintf(filename, "OJK/sound/tts/%s/%s.mp3", voice, SHORTENED_TEXT);
+		sprintf(filename, "warzone/sound/tts/%s/%s.mp3", voice, SHORTENED_TEXT);
 		sprintf(filename2, "sound/tts/%s/%s.mp3", voice, SHORTENED_TEXT);
 	}
 
@@ -263,7 +263,7 @@ qboolean S_DownloadVoice( const char *text, const char *voice )
 
 		strncpy(SHORTENED_TEXT, text, 60);
 		COM_StripExtension( text, SHORTENED_TEXT, sizeof( SHORTENED_TEXT ) );
-		sprintf(filename, "OJK/sound/tts/%s/%s.mp3", voice, SHORTENED_TEXT);
+		sprintf(filename, "warzone/sound/tts/%s/%s.mp3", voice, SHORTENED_TEXT);
 		sprintf(filename2, "sound/tts/%s/%s.mp3", voice, SHORTENED_TEXT);
 	}
 

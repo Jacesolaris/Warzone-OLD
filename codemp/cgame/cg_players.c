@@ -7285,7 +7285,7 @@ void CG_DoEp1Saber(vec3_t blade_muz, vec3_t blade_tip, vec3_t trail_tip, vec3_t 
 
 		if (color == SABER_RGB || color == SABER_PIMP || color == SABER_WHITE || color == SABER_SCRIPTED)
 		{
-			sbak.customShader = cgs.media.sfxSaberEnd2Shader;
+			sbak.customShader = cgs.media.sfxSabewarzoneShader;
 			sbak.reType = RT_LINE;
 			sbak.shaderTexCoord[0] = sbak.shaderTexCoord[1] = 1.0f;
 			sbak.shaderRGBA[0] = sbak.shaderRGBA[1] = sbak.shaderRGBA[2] = sbak.shaderRGBA[3] = 0xff;
@@ -7823,7 +7823,7 @@ void CG_DoEp2Saber(vec3_t blade_muz, vec3_t blade_tip, vec3_t trail_tip, vec3_t 
 
 		if (color == SABER_RGB || color == SABER_PIMP || color == SABER_WHITE || color == SABER_SCRIPTED)
 		{
-			sbak.customShader = cgs.media.sfxSaberEnd2Shader;
+			sbak.customShader = cgs.media.sfxSabewarzoneShader;
 			sbak.reType = RT_LINE;
 			sbak.shaderTexCoord[0] = sbak.shaderTexCoord[1] = 1.0f;
 			sbak.shaderRGBA[0] = sbak.shaderRGBA[1] = sbak.shaderRGBA[2] = sbak.shaderRGBA[3] = 0xff;
@@ -8349,7 +8349,7 @@ void CG_DoEp3Saber(vec3_t blade_muz, vec3_t blade_tip, vec3_t trail_tip, vec3_t 
 
 		if (color == SABER_RGB || color == SABER_PIMP || color == SABER_WHITE || color == SABER_SCRIPTED)
 		{
-			sbak.customShader = cgs.media.sfxSaberEnd2Shader;
+			sbak.customShader = cgs.media.sfxSabewarzoneShader;
 			sbak.reType = RT_LINE;
 			sbak.shaderTexCoord[0] = sbak.shaderTexCoord[1] = 1.0f;
 			sbak.shaderRGBA[0] = sbak.shaderRGBA[1] = sbak.shaderRGBA[2] = sbak.shaderRGBA[3] = 0xff;
@@ -8845,7 +8845,7 @@ void CG_DoOTSaber(vec3_t blade_muz, vec3_t blade_tip, vec3_t trail_tip, vec3_t t
 
 		if (color == SABER_RGB || color == SABER_PIMP || color == SABER_WHITE || color == SABER_SCRIPTED)
 		{
-			sbak.customShader = cgs.media.sfxSaberEnd2Shader;
+			sbak.customShader = cgs.media.sfxSabewarzoneShader;
 			sbak.shaderRGBA[0] = saber.shaderRGBA[1] = saber.shaderRGBA[2] = saber.shaderRGBA[3] = 0xff;
 			sbak.radius = (coreradius * AngleScale);
 			AddRefEntityToScene(&sbak);
@@ -9311,7 +9311,7 @@ void CG_DoSFXSaber(vec3_t blade_muz, vec3_t blade_tip, vec3_t trail_tip, vec3_t 
 		if (color == SABER_RGB || color == SABER_PIMP || color == SABER_WHITE || color == SABER_SCRIPTED)
 		{
 
-			sbak.customShader = cgs.media.sfxSaberEnd2Shader;
+			sbak.customShader = cgs.media.sfxSabewarzoneShader;
 			saber.reType = RT_LINE;
 			saber.shaderTexCoord[0] = saber.shaderTexCoord[1] = 1.0f;
 			saber.shaderRGBA[0] = saber.shaderRGBA[1] = saber.shaderRGBA[2] = saber.shaderRGBA[3] = 0xff;

@@ -1,9 +1,9 @@
 cmake_minimum_required(VERSION 2.8.8)
 # For checks in subdirectories
-set(InOpenJK TRUE)
+set(InWarzone TRUE)
 
 # Project name
-set(ProjectName "OpenJK" CACHE STRING "Project Name")
+set(ProjectName "Warzone" CACHE STRING "Project Name")
 project(${ProjectName})
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
@@ -11,13 +11,12 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 # Customizable options
 option(BuildPortableVersion "Build portable version (does not read or write files from your user/home directory" OFF)
 
-option(BuildMPEngine "Whether to create projects for the MP client (openjk.exe)" ON)
-option(BuildMPRdVanilla "Whether to create projects for the MP default renderer (rd-vanilla_x86.dll)" ON)
-option(BuildMPDed "Whether to create projects for the MP dedicated server (openjkded.exe)" ON)
+option(BuildMPEngine "Whether to create projects for the MP client (Warzone.exe)" ON)
+option(BuildMPDed "Whether to create projects for the MP dedicated server (Warzoneded.exe)" ON)
 option(BuildMPGame "Whether to create projects for the MP server-side gamecode (jampgamex86.dll)" ON)
 option(BuildMPCGame "Whether to create projects for the MP clientside gamecode (cgamex86.dll)" ON)
 option(BuildMPUI "Whether to create projects for the MP UI code (uix86.dll)" ON)
-option(BuildMPRend2 "Whether to create projects for the EXPERIMENTAL MP rend2 renderer (rd-rend2_x86.dll)" ON)
+option(BuildMPWarzone "Whether to create projects for the EXPERIMENTAL MP Warzone renderer (rd-warzone_x86.dll)" ON)
 
 # Customizable libraries
 if(WIN32)
@@ -72,13 +71,12 @@ get_git_head_revision(GIT_REFSPEC GIT_SHA1)
 message("Git revision is ${GIT_SHA1}")
 
 # Binary names
-set(MPEngine "openjk.${Architecture}")
-set(MPVanillaRenderer "rd-vanilla_${Architecture}")
-set(MPDed "openjkded.${Architecture}")
+set(MPEngine "Warzone.${Architecture}")
+set(MPDed "Warzoneded.${Architecture}")
 set(MPGame "jampgame${Architecture}")
 set(MPCGame "cgame${Architecture}")
 set(MPUI "ui${Architecture}")
-set(MPRend2 "rd-rend2_${Architecture}")
+set(MPWarzone "rd-warzone_${Architecture}")
 # Library names
 set(MPBotLib "botlib")
 
@@ -89,14 +87,14 @@ set(MPDir "${CMAKE_SOURCE_DIR}/codemp")
 if(WIN32)
 	if(MSVC)
 		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /arch:SSE2 /MP /openmp /Ox /Ot /GT") # enable parallel compilation
-		
+
 		# mark 32 bit executables large address aware so they can use > 2GB address space
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /LARGEADDRESSAWARE")
 	endif(MSVC)
 	if(WIN64)
 		if(MSVC)
 			set(SharedDefines "WIN64" "_CRT_SECURE_NO_WARNINGS")
-			
+
 			# mark 32 bit executables large address aware so they can use > 2GB address space
       set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /LARGEADDRESSAWARE")
 		else()
@@ -106,7 +104,7 @@ if(WIN32)
 			set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /arch:SSE2 /openmp /MD /Ox /Ot /GT /Ob2 /D NDEBUG")
 			set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} /arch:SSE2 /openmp /MD /Zi /Ox /Ot /GT /Ob1 /D NDEBUG")
 			set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /arch:SSE2 /openmp /D_DEBUG /MDd /Zi /Od /Ot /GT /Ob0 /RTC1")
-			
+
 			# mark 32 bit executables large address aware so they can use > 2GB address space
       set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /LARGEADDRESSAWARE")
 		endif()
@@ -118,7 +116,7 @@ if(WIN32)
 			set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /arch:SSE2 /openmp /MD /Ox /Ot /GT /Ob2 /D NDEBUG")
 			set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} /arch:SSE2 /openmp /MD /Zi /Ox /Ot /GT /Ob1 /D NDEBUG")
 			set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /arch:SSE2 /openmp /D_DEBUG /MDd /Zi /Od /Ot /GT /Ob0 /RTC1")
-			
+
 			# mark 32 bit executables large address aware so they can use > 2GB address space
       set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /LARGEADDRESSAWARE")
 		endif()
@@ -185,7 +183,7 @@ if(BuildPortableVersion)
 	set(SharedDefines ${SharedDefines} "_PORTABLE_VERSION")
 endif()
 
-set(OpenJKLibDir "${CMAKE_SOURCE_DIR}/lib")
+set(WarzoneLibDir "${CMAKE_SOURCE_DIR}/lib")
 
 if(NOT MSVC)
 	# CMake already defines _DEBUG for MSVC.
@@ -203,7 +201,7 @@ set(CPACK_PACKAGE_VERSION_MAJOR "0")
 set(CPACK_PACKAGE_VERSION_MINOR "1")
 set(CPACK_PACKAGE_VERSION_PATCH "0")
 # I'm just not appending the version for now
-set(CPACK_PACKAGE_FILE_NAME "OpenJK-${CMAKE_SYSTEM_NAME}-${Architecture}")
+set(CPACK_PACKAGE_FILE_NAME "Warzone-${CMAKE_SYSTEM_NAME}-${Architecture}")
 
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "An improved Jedi Academy")
 set(CPACK_PACKAGE_VENDOR "JACoders")

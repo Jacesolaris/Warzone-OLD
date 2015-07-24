@@ -2387,7 +2387,7 @@ qboolean ClientUserinfoChanged( int clientNum ) {
 
 				found = qtrue;
 
-				trap->Print("^4*** ^3JKG^4: ^5Scale set to ^7%f^5x normal for model %s.\n", model_scale_list[loop].scale/100.0f, model);
+				trap->Print("^4*** ^3Warzone^4: ^5Scale set to ^7%f^5x normal for model %s.\n", model_scale_list[loop].scale/100.0f, model);
 				break;
 			}
 		}
@@ -2405,7 +2405,7 @@ qboolean ClientUserinfoChanged( int clientNum ) {
 			ent->client->ps.standheight = DEFAULT_MAXS_2 * ent->modelScale[2];
 			ent->client->ps.crouchheight = CROUCH_MAXS_2 * ent->modelScale[2];
 
-			trap->Print("^4*** ^3JKG^4: ^5Scale set to ^7%f^5x normal for model %s.\n", model_scale_list[loop].scale/100.0f, model);
+			trap->Print("^4*** ^3Warzone^4: ^5Scale set to ^7%f^5x normal for model %s.\n", model_scale_list[loop].scale/100.0f, model);
 		}
 	}
 

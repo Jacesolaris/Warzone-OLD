@@ -353,6 +353,6 @@ typedef struct glconfig_s {
 	qboolean				isFullscreen;
 	qboolean				stereoEnabled;
 
-	// specific to rend2
+	// specific to warzone
 	int						numTextureUnits;
 } glconfig_t;

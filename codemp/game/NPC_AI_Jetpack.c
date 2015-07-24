@@ -10,7 +10,7 @@ extern int GROUND_TIME[MAX_GENTITIES];
 extern int DOM_GetNearestWP(vec3_t org, int badwp);
 extern int NPC_GetNextNode(gentity_t *NPC);
 extern qboolean UQ1_UcmdMoveForDir ( gentity_t *self, usercmd_t *cmd, vec3_t dir, qboolean walk, vec3_t dest );
-extern qboolean JKG_PointNearMoverEntityLocation( vec3_t org );
+extern qboolean Warzone_PointNearMoverEntityLocation( vec3_t org );
 
 qboolean NPC_IsJetpacking ( gentity_t *self )
 {
@@ -240,9 +240,9 @@ void NPC_JetpackTravelThink ( void )
 
 	if (self->wpCurrent >= 0 
 		&& self->wpCurrent < gWPNum
-		&& (JKG_PointNearMoverEntityLocation(self->r.currentOrigin) || JKG_PointNearMoverEntityLocation(gWPArray[self->wpCurrent]->origin)))
+		&& (Warzone_PointNearMoverEntityLocation(self->r.currentOrigin) || Warzone_PointNearMoverEntityLocation(gWPArray[self->wpCurrent]->origin)))
 	{// We can use the jetpack for this instead of waiting...
-		while ((self->wpCurrent >= 0 && self->wpCurrent < gWPNum) && JKG_PointNearMoverEntityLocation(gWPArray[self->wpCurrent]->origin))
+		while ((self->wpCurrent >= 0 && self->wpCurrent < gWPNum) && Warzone_PointNearMoverEntityLocation(gWPArray[self->wpCurrent]->origin))
 		{// Find the first waypoint in our path that is not near the mover to head to...
 			self->wpLast = self->wpCurrent;
 			self->wpCurrent = self->wpNext;

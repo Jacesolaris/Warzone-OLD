@@ -26,7 +26,7 @@ extern vec3_t gPainPoint;
 //==================================================================
 
 // the "gameversion" client command will print this plus compile date
-#define	GAMEVERSION	"OpenJK"
+#define	GAMEVERSION	"Warzone"
 
 #define SECURITY_LOG "security.log"
 
@@ -445,7 +445,7 @@ struct gentity_s {
 	//[Account System]
 	account_t	account;		// Only have an account if you are a player, is NULL if not a player. Might change this soon.
 	//[/Account System]
-	// OpenJK add
+	// Warzone add
 	int			useDebounceTime;	// for cultist_destroyer
 
 	// For NPC waypoint following..
@@ -1660,7 +1660,7 @@ extern gameImport_t *trap;
 
 
 /**************************************************
-* jkg_astar.cpp - New A* Routing Implementation.
+* Warzone_astar.cpp - New A* Routing Implementation.
 **************************************************/
 extern qboolean PATHING_IGNORE_FRAME_TIME;
 

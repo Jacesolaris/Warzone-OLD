@@ -5932,7 +5932,7 @@ blockStuff:
 					//}
 
 					// SABERFIXME: change this stagger algo, it's so ugly that it makes me cry --eez
-					//if( JKG_ShouldDisarm( otherOwner, self ) )
+					//if( Warzone_ShouldDisarm( otherOwner, self ) )
 					//{
 					//	if (self->client->ps.saberEntityNum)
 					//	{

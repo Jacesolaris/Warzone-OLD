@@ -44,7 +44,7 @@
 
 //#pragma warning( disable : 4133 )	// signed/unsigned mismatch
 
-#define MOD_DIRECTORY "OJK"
+#define MOD_DIRECTORY "warzone"
 
 //#define MAX_MAP_SIZE 16384
 #define MAX_MAP_SIZE 64000
@@ -5212,7 +5212,7 @@ void AIMod_AutoWaypoint_StandardMethod( void )
 	int			wp_loop = 0;
 	float		remove_ratio = 1.0;
 
-	trap->Cvar_Set("jkg_waypoint_render", "0");
+	trap->Cvar_Set("warzone_waypoint_render", "0");
 	trap->UpdateScreen();
 	trap->UpdateScreen();
 	trap->UpdateScreen();
@@ -5839,7 +5839,7 @@ omp_set_nested(0);
 					float temp_roof, temp_ground;
 					vec3_t temp_org, temp_org2;
 					//
-					// Well... this is fucked... Seems OpenJK can only trace movers your player is standing at... WHY???
+					// Well... this is fucked... Seems Warzone can only trace movers your player is standing at... WHY???
 					//
 
 					//trap->Print("Mover at %f %f %f.\n", org[0], org[1], org[2]);
@@ -6587,7 +6587,7 @@ void AIMod_AutoWaypoint_Clean ( void )
 		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^7Usage:\n" );
 		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3/awc <method>^5.\n" );
 		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^5Available methods are: Generally only a pathtest pass is needed.\n" );
-		//trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3\"convert\" ^5- Convert old JKA wp file to JKG format.\n");
+		//trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3\"convert\" ^5- Convert old JKA wp file to Warzone format.\n");
 		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3\"relink\" ^5- Just do relinking.\n");
 		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3\"pathtest\" ^5- Remove waypoints with no path to server's first spawnpoint.\n");
 		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3\"extrareach\" ^5- Remove waypoints nearby your marked locations (awc_addremovalspot & awc_addbadheight) and add extra reachability (wp link ranges).\n");
@@ -7440,7 +7440,7 @@ AIMod_AutoWaypoint_Optimizer ( void )
 	qboolean	nowaterremove = qfalse;
 //	vmCvar_t	mapname;
 
-	trap->Cvar_Set("jkg_waypoint_render", "0");
+	trap->Cvar_Set("warzone_waypoint_render", "0");
 	trap->UpdateScreen();
 	trap->UpdateScreen();
 	trap->UpdateScreen();
@@ -8830,7 +8830,7 @@ qboolean WP_CheckInSolid (vec3_t position)
 	return qfalse;
 }
 
-qboolean JKG_CheckBelowWaypoint( int wp )
+qboolean Warzone_CheckBelowWaypoint( int wp )
 {
 	trace_t tr;
 	vec3_t org, org2;
@@ -8891,7 +8891,7 @@ qboolean JKG_CheckBelowWaypoint( int wp )
 	return qtrue;
 }
 
-qboolean JKG_CheckRoutingFrom( int wp )
+qboolean Warzone_CheckRoutingFrom( int wp )
 {
 	int i;
 	centity_t *spot = NULL;
@@ -8999,7 +8999,7 @@ AIMod_AutoWaypoint_Cleaner ( qboolean quiet, qboolean null_links_only, qboolean 
 	float		original_wp_scatter_multiplier = 0;
 	qboolean	SCREENDRAW_ACTIVE = qfalse;
 
-	trap->Cvar_Set("jkg_waypoint_render", "0");
+	trap->Cvar_Set("warzone_waypoint_render", "0");
 	trap->UpdateScreen();
 	trap->UpdateScreen();
 	trap->UpdateScreen();
@@ -9351,14 +9351,14 @@ AIMod_AutoWaypoint_Cleaner ( qboolean quiet, qboolean null_links_only, qboolean 
 						continue;
 					}
 
-					if (!JKG_CheckBelowWaypoint( i ))
+					if (!Warzone_CheckBelowWaypoint( i ))
 					{// Removes all waypoints without any route to the server's specified spawnpoint location...
 						nodes[i].objectNum[0] = 1;
 						num_allsolid_nodes++;
 						continue;
 					}
 
-					if (pathtest && !JKG_CheckRoutingFrom( i ))
+					if (pathtest && !Warzone_CheckRoutingFrom( i ))
 					{// Removes all waypoints without any route to the server's specified spawnpoint location...
 						nodes[i].objectNum[0] = 1;
 						num_noroute_nodes++;
@@ -9666,7 +9666,7 @@ void CG_AddWaypointLinkLine( int wp_from, int wp_to, int link_flags )
 	AddRefEntityToScene( &re );
 }
 
-extern vmCvar_t jkg_waypoint_render;
+extern vmCvar_t warzone_waypoint_render;
 
 qboolean CURRENTLY_RENDERRING = qfalse;
 
@@ -9692,7 +9692,7 @@ void DrawWaypoints()
 {
 	int node = 0;
 	
-	if (jkg_waypoint_render.integer <= 0)
+	if (warzone_waypoint_render.integer <= 0)
 	{
 		if (CURRENTLY_RENDERRING)
 		{

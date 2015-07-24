@@ -24,7 +24,7 @@ to be sent to the authorize server.
 When an authorizeip is returned, a challenge response will be
 sent to that ip.
 
-ioquake3/openjk: we added a possibility for clients to add a challenge
+ioquake3/Warzone: we added a possibility for clients to add a challenge
 to their packets, to make it more difficult for malicious servers
 to hi-jack client connections.
 =================

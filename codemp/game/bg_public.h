@@ -20,7 +20,7 @@
 #define	MAX_SPAWN_VARS_CHARS	4096
 
 
-#define	GAME_VERSION		"JKGalaxies"
+#define	GAME_VERSION		"Warzone"
 
 #define DEFAULT_SABER			"Kyle"
 #define DEFAULT_SABER_STAFF		"dual_1"
