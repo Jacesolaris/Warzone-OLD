@@ -120,18 +120,18 @@ out vec4 out_Glow;
 		vec3 color2 = ((color - const_1) * const_2);
 #define const_3 ( 125.0 / 255.0)
 #define const_4 (255.0 / 115.0)
-		
 		color = ((color - const_3) * const_4);
 
-		color = clamp(color * color * (color * 5.0), 0.0, 1.0); // testing
+		color = clamp(color * color * (color * 5.0), 0.0, 1.0); // 1st half "color * color" darkens, 2nd half "* color * 5.0" increases the mids...
 
 		vec3 orig_color = color + color2;
 
-		orig_color = clamp(orig_color * 2.5, 0.0, 1.0); // testing
+		orig_color = clamp(orig_color * 2.5, 0.0, 1.0); // Lightens the new mixed version...
 
 		float combined_color2 = orig_color.r + orig_color.g + orig_color.b;
-		combined_color2 /= 4.0;
+		combined_color2 /= 4.0; // Darkens the whole thing a litttle...
 
+		// Returns inverse of the height. Result is mostly around 1.0 (so we don't stand on a surface far below us), with deep dark areas (cracks, edges, etc)...
 		return clamp(1.0 - combined_color2, 0.0, 1.0);
 	}
   #endif
