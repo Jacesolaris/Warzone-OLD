@@ -1103,6 +1103,7 @@ void BASS_GetPsyTracks( void )
 		/* all the files and directories within psy directory */
 		while ((ent = readdir (dir)) != NULL) {
 			if (ent->d_name[0] == '.') continue; // skip back directory...
+			if (ent->d_namlen < 3) continue;
 
 			sprintf(PSY_TRACKS[PSY_TRACKS_NUM].name, "music/psy/%s", ent->d_name);
 			//Com_Printf("Added psy track %s.\n", PSY_TRACKS[PSY_TRACKS_NUM].name);
@@ -1142,6 +1143,7 @@ void BASS_GetCustomTracks( void )
 		/* all the files and directories within psy directory */
 		while ((ent = readdir (dir)) != NULL) {
 			if (ent->d_name[0] == '.') continue; // skip back directory...
+			if (ent->d_namlen < 3) continue;
 
 			sprintf(CUSTOM_TRACKS[CUSTOM_TRACKS_NUM].name, "music/custom/%s", ent->d_name);
 			//Com_Printf("Added custom track %s.\n", CUSTOM_TRACKS[CUSTOM_TRACKS_NUM].name);
