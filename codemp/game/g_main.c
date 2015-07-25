@@ -3690,29 +3690,24 @@ void G_RunFrame( int levelTime ) {
 				}
 			}
 
-#define JETPACK_DEFUEL_RATE		350 //approx. 20 seconds of idle use from a fully charged fuel amt
-#define JETPACK_REFUEL_RATE		400 //seems fair
+#define JETPACK_DEFUEL_RATE			400 //approx. 20 seconds of idle use from a fully charged fuel amt
+#define JETPACK_REFUEL_RATE			300 //seems fair
+#define JETPACK_COOLDOWN			5
 			if (ent->client->jetPackOn)
 			{ //using jetpack, drain fuel
 				if (ent->client->jetPackDebReduce < level.time)
 				{
-					//[JetpackSys]
 					if (ent->client->pers.cmd.forwardmove || ent->client->pers.cmd.upmove || ent->client->pers.cmd.rightmove)
 					{ //only use fuel when actually boosting.
-						ent->client->ps.jetpackFuel -= 4;
+						if (ent->client->pers.cmd.upmove > 0)
+						{ //take more if they're thrusting
+							ent->client->ps.jetpackFuel -= 2;
+						}
+						else
+						{
+							ent->client->ps.jetpackFuel--;
+						}
 					}
-
-					/*
-					if (ent->client->pers.cmd.upmove > 0)
-					{ //take more if they're thrusting
-					ent->client->ps.jetpackFuel -= 2;
-					}
-					else
-					{
-					ent->client->ps.jetpackFuel--;
-					}
-					*/
-					//[/JetpackSys]
 					if (ent->client->ps.jetpackFuel <= 0)
 					{ //turn it off
 						ent->client->ps.jetpackFuel = 0;

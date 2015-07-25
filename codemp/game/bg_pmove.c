@@ -58,11 +58,10 @@ float	pm_friction = 6.0f;
 float	pm_waterfriction = 1.0f;
 float	pm_flightfriction = 3.0f;
 float	pm_spectatorfriction = 5.0f;
-//[JetpackSystem]
 float	pm_jetpackspeed = 5.0f;
 float	pm_jetpackaccelerate = 0.3f;
 float	pm_jetpackfriction = 0.4f;
-//[/JetpackSystem]
+
 int		c_pmove = 0;
 
 float forceSpeedLevels[4] =
@@ -1334,7 +1333,7 @@ static void PM_Friction( void ) {
 	{
 		drop = 0;
 	}
-	//[JetpackSystem]
+
 	if ( pm->ps->pm_type == PM_SPECTATOR || pm->ps->pm_type == PM_FLOAT || pm->ps->pm_type == PM_JETPACK )
 	{
 		if (pm->ps->pm_type == PM_FLOAT)
@@ -1362,7 +1361,6 @@ static void PM_Friction( void ) {
 	vel[1] = vel[1] * newspeed;
 	vel[2] = vel[2] * newspeed;
 }
-//[/JetpackSystem]
 
 /*
 ==============
@@ -2048,7 +2046,6 @@ static qboolean PM_CheckJump( void )
 		return qfalse;
 	}
 
-	//[JetpackSystem]
 	if (pm->ps->eFlags & EF_JETPACK_ACTIVE && !(pm->ps->eFlags & EF_DEAD))
 	{ //there's no actual jumping while we jetpack
 		if ((!BG_InSpecialJump(pm->ps->legsAnim)//not in a special jump anim
@@ -2126,7 +2123,7 @@ static qboolean PM_CheckJump( void )
 	{
 		return qfalse;
 	}
-	//[/JetpackSystem]
+
 	//Don't allow jump until all buttons are up
 	if ( pm->ps->pm_flags & PMF_RESPAWNED ) {
 		return qfalse;
@@ -4132,7 +4129,7 @@ static void PM_CrashLand( void ) {
 	if ( pm->ps->pm_flags & PMF_DUCKED ) {
 		delta *= 2;
 	}
-	//[JetpackSystem]
+
 	if (pm->ps->pm_type != PM_JETPACK)
 	{
 		if (pm->ps->legsAnim == BOTH_A7_KICK_F_AIR ||
@@ -4207,7 +4204,7 @@ static void PM_CrashLand( void ) {
 			}
 		}
 	}
-	//[/JetpackSystem]
+
 
 	if (pm->ps->weapon != WP_SABER && pm->ps->weapon != WP_MELEE && !PM_IsRocketTrooper())
 	{ //saber handles its own anims
@@ -11084,7 +11081,7 @@ void PM_MoveForKata(usercmd_t *ucmd)
 	}
 }
 
-//[JetpackSystem]
+
 /*
 ===================
 PM_JetpackMove
@@ -11158,7 +11155,7 @@ static void PM_JetpackMove(void) {
 		pml.previous_origin[2] = pm->ps->origin[2];
 	}
 }
-//[/JetpackSystem]
+
 
 int GROUND_TIME[MAX_GENTITIES];
 
@@ -11994,12 +11991,12 @@ void PmoveSingle (pmove_t *pmove) {
 		&&pm->ps->m_iVehicleNum)
 	{//don't even run physics on a player if he's on a vehicle - he goes where the vehicle goes
 	}
-	//[JetpackSystem]
+
 	else if (pm->ps->pm_type == PM_JETPACK && !pml.groundPlane)// Handle jetpack movement
 	{
 		PM_JetpackMove();
 	}
-	//[/JetpackSystem]
+
 	else
 	{ //don't even run physics on a player if he's on a vehicle - he goes where the vehicle goes
 		if (pm->ps->pm_type == PM_FLOAT
