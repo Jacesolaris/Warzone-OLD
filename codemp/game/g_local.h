@@ -158,27 +158,6 @@ typedef enum
 	HL_MAX
 } hitLocation_t;
 
-//[Account System]
-// Account system structure
-#define ACCOUNT_VERSION 6 // Remember to change this each time we add something, any changes really :D
-typedef struct account_t
-{
-	char		username[64];
-	char		password[64]; // This should be hashed, but it's a pain to add quickly so maybe later.
-	int			playerclass;
-	int         playerclasses;
-
-	int			experience;	// Experience, only used for saving! Use ent->client->ps.persistent[PERS_EXPERIENCE] in code!
-	int			permissions; //Just an example variable
-	int			level;
-	// Add any other variables you need here later. Then it will save it automaticly and load them with the system i'll make.
-	// and you can access them with something like this: ent->account.<variable>; ent being the player entity (gentity_t)
-
-}account_t;
-
-qboolean hasAccount(account_t *account);
-qboolean UpdateAccount(account_t *account, gentity_t *ent);
-
 //[Linux]
 #ifndef __linux__
 typedef enum
@@ -442,9 +421,6 @@ struct gentity_s {
 	float		epGravFactor;
 
 	gitem_t		*item;			// for bonus items
-	//[Account System]
-	account_t	account;		// Only have an account if you are a player, is NULL if not a player. Might change this soon.
-	//[/Account System]
 	// Warzone add
 	int			useDebounceTime;	// for cultist_destroyer
 
@@ -906,10 +882,6 @@ struct gclient_s {
 
 	int			lastGenCmd;
 	int			lastGenCmdTime;
-
-	//weapon fire mode chargetime
-	int			DoSaberBlockDebounce;
-	int			saberBlockDebounce;
 
 	struct force {
 		int		regenDebounce;
