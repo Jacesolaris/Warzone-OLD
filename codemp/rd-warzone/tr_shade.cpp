@@ -1943,7 +1943,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 		if (pStage->isWater)
 		{
-			if (stage > 0) break;
+			if (stage > 0) break; // Since we instead draw glsl generated water, don't draw the other stages of water...
 
 			sp = &tr.waterShader;
 			pStage->glslShaderGroup = &tr.waterShader;

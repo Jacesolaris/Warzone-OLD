@@ -129,7 +129,6 @@ out vec4 out_Glow;
 
 		orig_color = clamp(orig_color * 2.5, 0.0, 1.0); // testing
 
-		orig_color = clamp(orig_color, 0.0, 1.0);
 		float combined_color2 = orig_color.r + orig_color.g + orig_color.b;
 		combined_color2 /= 4.0;
 
