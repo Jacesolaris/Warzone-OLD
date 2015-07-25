@@ -1805,7 +1805,8 @@ tryJetPack:
 	{
 		if (ent->client->jetPackOn || ent->client->ps.groundEntityNum == ENTITYNUM_NONE)
 		{
-			ItemUse_Jetpack(ent);
+			/*ItemUse_Jetpack(ent);*/
+			Jetpack_Off(ent);
 			return;
 		}
 	}

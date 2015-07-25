@@ -3056,12 +3056,10 @@ void BG_TouchJumpPad(playerState_t *ps, entityState_t *jumppad) {
 	float p;
 	int effectNum;
 
-	//[JetpackSystem]
 	// spectators don't use jump pads
 	if (ps->pm_type != PM_NORMAL && ps->pm_type != PM_JETPACK && ps->pm_type != PM_FLOAT) {
 		return;
 	}
-	//[/JetpackSystem]
 
 	// if we didn't hit this same jumppad the previous frame
 	// then don't play the event sound again if we are in a fat trigger

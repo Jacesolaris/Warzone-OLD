@@ -670,7 +670,7 @@ qboolean	PM_SlideMove( qboolean gravity ) {
 
 	VectorCopy (pm->ps->velocity, primal_velocity);
 	VectorCopy (pm->ps->velocity, endVelocity);
-	//[JetpackSystem]
+
 	if (gravity) {
 		VectorCopy(pm->ps->velocity, endVelocity);
 		endVelocity[2] -= pm->ps->gravity * pml.frametime;
@@ -684,7 +684,7 @@ qboolean	PM_SlideMove( qboolean gravity ) {
 			}
 		}
 	}
-	//[/JetpackSystem]
+
 	time_left = pml.frametime;
 
 	// never turn against the ground plane
