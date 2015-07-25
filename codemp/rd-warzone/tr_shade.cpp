@@ -1797,8 +1797,6 @@ void RB_SetStageImageDimensions(shaderProgram_t *sp, shaderStage_t *pStage)
 extern qboolean modelviewProjectionChanged;
 extern qboolean modelviewChanged;
 
-shaderProgram_t *currentShaderProgram = NULL;
-
 static void RB_IterateStagesGeneric( shaderCommands_t *input )
 {
 	vec4_t	fogDistanceVector, fogDepthVector = {0, 0, 0, 0};
@@ -1965,11 +1963,6 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		}
 		else
 		{
-			//if (sp != currentShaderProgram)
-			//	GLSL_BindProgram(sp);
-
-			//currentShaderProgram = sp;
-
 			GLSL_BindProgram(sp);
 
 			RB_SetMaterialBasedProperties(sp, pStage);

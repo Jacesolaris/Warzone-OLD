@@ -567,15 +567,15 @@ void main()
   #endif
 
 	//gl_FragColor.rgb = N;
-	if (scaleWater > 1.0)
+	if (scaleWater >= 10.0)
 	{
 		gl_FragColor.rgb = clamp((gl_FragColor.rgb + orig_diffuse.rgb) / 2.0, 0.0, 1.0);
 		gl_FragColor.a = clamp(waveheight, 0.5, 1.0);//diffuse.a * var_Color.a;
 
 #if defined(USE_GLOW_BUFFER)
 		out_Glow = gl_FragColor;
-		out_Glow.a = 1.0;
-		//out_Glow = vec4(0.0);
+		//out_Glow.a = 1.0;
+		out_Glow = vec4(0.0);
 #else
 		out_Glow = vec4(0.0);
 #endif
@@ -586,9 +586,9 @@ void main()
 		gl_FragColor.a = clamp(waveheight, 0.0, 1.0);//diffuse.a * var_Color.a;
 
 #if defined(USE_GLOW_BUFFER)
-		out_Glow = gl_FragColor;
-		out_Glow.a = 0.3;
-		//out_Glow = vec4(0.0);
+		//out_Glow = gl_FragColor;
+		//out_Glow.a = 0.3;
+		out_Glow = vec4(0.0);
 #else
 		out_Glow = vec4(0.0);
 #endif
