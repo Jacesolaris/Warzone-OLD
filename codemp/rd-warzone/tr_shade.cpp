@@ -2211,7 +2211,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				//  - disable texture sampling in glsl shader with #ifdefs, as before
 				//     -> increases the number of shaders that must be compiled
 				//
-				if ((light || pStage->isWater) && !fastLight)
+				if ((light || pStage->isWater || pStage->hasRealNormalMap || pStage->hasSpecular || pStage->hasRealSubsurfaceMap) && !fastLight)
 				{
 					if (pStage->bundle[TB_NORMALMAP].image[0])
 					{
@@ -2246,7 +2246,6 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 					if (pStage->bundle[TB_SUBSURFACEMAP].image[0])
 					{
 						R_BindAnimatedImageToTMU( &pStage->bundle[TB_SUBSURFACEMAP], TB_SUBSURFACEMAP);
-						enableTextures[2] = 1.0f;
 					}
 					else
 					{

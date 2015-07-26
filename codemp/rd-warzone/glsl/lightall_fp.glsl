@@ -312,13 +312,34 @@ vec4 subScatterFS(vec4 BaseColor, vec4 SpecColor, vec3 lightVec, vec3 LightColor
 	{// We have a subsurface image, use it instead...
 		subsurface = texture2D(u_SubsurfaceMap, texCoords.xy);
 	}
+	else if (length(ExtinctionCoefficient) == 0.0)
+	{// Default if not specified...
+		subsurface.rgb = vec3(BaseColor.rgb);
+	}
+
+	if (MaterialThickness == 0.0)
+	{// Default if not specified...
+		MaterialThickness = 0.8;
+	}
 	
 	if (subsurface.a == 0.0 && MaterialThickness != 0.0)
 	{// Backup in case image is missing alpha channel...
 		subsurface.a = MaterialThickness;
 	}
 
-    float attenuation = 10.0 * (1.0 / distance(u_LightOrigin.xyz,var_vertPos.xyz));
+	subsurface.a = 1.0 - subsurface.a;
+
+	if (RimScalar == 0.0)
+	{// Default if not specified...
+		RimScalar = 0.5;
+	}
+
+	if (SpecPower == 0.0)
+	{// Default if not specified...
+		SpecPower = 0.3;
+	}
+
+	float attenuation = 10.0 * (1.0 / distance(u_LightOrigin.xyz,var_vertPos.xyz));
     vec3 eVec = normalize(eyeVec);
     vec3 lVec = normalize(lightVec);
     vec3 wNorm = normalize(worldNormal);
@@ -669,13 +690,16 @@ void main()
 
   #if defined(USE_LIGHT_VECTOR) && !defined(USE_FAST_LIGHT)
   // Let's add some sub-surface scatterring shall we???
-  if (MaterialThickness > 0.0 || u_Local4.z != 0.0)
+  if (MaterialThickness > 0.0 || u_Local4.z != 0.0 /*|| var_Local1.a == 5 || var_Local1.a == 6 || var_Local1.a == 12 
+	|| var_Local1.a == 14 || var_Local1.a == 15 || var_Local1.a == 16 || var_Local1.a == 17 || var_Local1.a == 19 
+	|| var_Local1.a == 20 || var_Local1.a == 21 || var_Local1.a == 22*/)
   {
   #if defined(USE_PRIMARY_LIGHT)
-	gl_FragColor += subScatterFS(gl_FragColor, specular, L2, lightColor.xyz, E, N, texCoords);
+	gl_FragColor.rgb += subScatterFS(gl_FragColor, specular, L2, lightColor.xyz, E, N, texCoords).rgb;
   #else
-	gl_FragColor += subScatterFS(gl_FragColor, specular, L, var_Color.xyz, E, N, texCoords);
+	gl_FragColor.rgb += subScatterFS(gl_FragColor, specular, L, var_Color.xyz, E, N, texCoords).rgb;
   #endif
+	gl_FragColor = clamp(gl_FragColor, 0.0, 1.0);
   }
   #endif
 #else

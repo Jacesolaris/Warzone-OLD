@@ -105,6 +105,7 @@ static void ClearGlobalShader(void)
 
 		// default normal/specular
 		VectorSet4(stages[i].normalScale, 0.0f, 0.0f, 0.0f, 0.0f);
+		VectorSet4(stages[i].subsurfaceExtinctionCoefficient, 0.0f, 0.0f, 0.0f, 0.0f);
 		/*
 		stages[i].specularScale[0] = 
 		stages[i].specularScale[1] =
@@ -3389,20 +3390,20 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 	{
 		image_t *diffuseImg = diffuse->bundle[TB_DIFFUSEMAP].image[0];
 
-		if (diffuse && diffuse->bundle[TB_SUBSURFACEMAP].specularLoaded)
+		if (diffuse && diffuse->bundle[TB_SUBSURFACEMAP].subsurfaceLoaded)
 		{// Got one...
 			diffuse->bundle[TB_SUBSURFACEMAP] = specular->bundle[0];
-			VectorCopy4(specular->subsurfaceExtinctionCoefficient, diffuse->subsurfaceExtinctionCoefficient);
+			VectorCopy4(subsurface->subsurfaceExtinctionCoefficient, diffuse->subsurfaceExtinctionCoefficient);
 			hasRealSubsurfaceMap = qtrue;
 		}
-		else if (diffuse && !diffuse->bundle[TB_SUBSURFACEMAP].specularLoaded)
+		else if (diffuse && !diffuse->bundle[TB_SUBSURFACEMAP].subsurfaceLoaded)
 		{// Check if we can load one...
 			char specularName[MAX_QPATH];
 			char specularName2[MAX_QPATH];
 			image_t *specularImg;
 			int specularFlags = (diffuseImg->flags & ~(IMGFLAG_GENNORMALMAP | IMGFLAG_SRGB)) | IMGFLAG_NOLIGHTSCALE;
 
-			diffuse->bundle[TB_SUBSURFACEMAP].specularLoaded = qtrue;
+			diffuse->bundle[TB_SUBSURFACEMAP].subsurfaceLoaded = qtrue;
 
 			COM_StripExtension( diffuseImg->imgName, specularName, sizeof( specularName ) );
 			StripCrap( specularName, specularName2, sizeof(specularName));
@@ -3421,7 +3422,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 
 			if (specularImg)
 			{
-				//ri->Printf(PRINT_WARNING, "+++++++++++++++ Loaded specular map %s.\n", specularName2);
+				//ri->Printf(PRINT_WARNING, "+++++++++++++++ Loaded subsurface map %s.\n", specularName2);
 				diffuse->bundle[TB_SUBSURFACEMAP] = diffuse->bundle[0];
 				diffuse->bundle[TB_SUBSURFACEMAP].numImageAnimations = 0;
 				diffuse->bundle[TB_SUBSURFACEMAP].image[0] = specularImg;
@@ -3429,10 +3430,11 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 				VectorCopy4(subsurface->subsurfaceExtinctionCoefficient, subsurface->subsurfaceExtinctionCoefficient);
 				hasRealSubsurfaceMap = qtrue;
 			}
-			//else
-			//{
-			//	ri->Printf(PRINT_WARNING, "!!!!!!!!!!!!!! No specular map %s.\n", specularName2);
-			//}
+			else
+			{
+				VectorSet4(diffuse->subsurfaceExtinctionCoefficient, 0.0f, 0.0f, 0.0f, 0.0f);
+				hasRealSubsurfaceMap = qfalse;
+			}
 		}
 	}
 
@@ -3459,12 +3461,13 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 
 	if (hasRealNormalMap)
 	{
+		diffuse->glslShaderGroup = tr.lightallShader;
 		diffuse->hasRealNormalMap = true;
 	}
 	else
 	{
-		diffuse->hasRealNormalMap = false;
 		diffuse->glslShaderGroup = tr.lightallShader;
+		diffuse->hasRealNormalMap = false;
 	}
 
 	if (hasRealSpecularMap)
@@ -3474,9 +3477,11 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 		if (specular) specular->hasSpecular = true;
 	}
 
-	if (hasRealSpecularMap)
+	if (hasRealSubsurfaceMap)
 	{
-		if (diffuse) diffuse->hasSpecular = true;
+		if (diffuse) diffuse->hasRealSubsurfaceMap = true;
+		if (subsurface) subsurface->hasRealSubsurfaceMap = true;
+		diffuse->glslShaderGroup = tr.lightallShader;
 	}
 
 	diffuse->glslShaderIndex = defs;

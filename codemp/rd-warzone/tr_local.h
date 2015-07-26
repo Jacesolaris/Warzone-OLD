@@ -748,6 +748,7 @@ typedef struct {
 	qboolean		oneShotAnimMap;
 	qboolean		isVideoMap;
 	qboolean		specularLoaded;
+	qboolean		subsurfaceLoaded;
 } textureBundle_t;
 
 enum
