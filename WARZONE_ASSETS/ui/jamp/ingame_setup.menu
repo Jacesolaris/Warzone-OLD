@@ -1201,7 +1201,7 @@
 		{
 			name				applybutton_glow
 			style				WINDOW_STYLE_SHADER
-			rect				260 265 200 18
+			rect				260 305 200 18
 			background			"gfx/menus/menu_blendbox"
 			forecolor			1 0.5 0.5 1
 			visible			0
@@ -1215,7 +1215,7 @@
 			text				@MENUS_APPLY_CHANGES
 			type				ITEM_TYPE_BUTTON
 			style				WINDOW_STYLE_EMPTY
-			rect				260 260 200 30
+			rect				260 300 200 30
 			font				4
 			textscale			1
 			textalignx			100
@@ -1698,7 +1698,7 @@
 			font 				4
 			textscale 			1
 			forecolor		.615 .615 .956 1
-			cvarFloatList		{  "No" 0 "Normal" 1 "Extended" 2 "Insane" 3 }
+			cvarFloatList		{  "No" 0 "Normal" 1 "Extended" 2 "Extended+" 3 "Insane" 4 }
 			descText			"Enable Enhanced FX?"
 			cvar				"cg_enhancedFX"
 
@@ -1713,6 +1713,9 @@
 			action 
 			{
 				play			"sound/interface/button1"
+				uiScript		glCustom
+				setcvar			ui_r_modified	1
+				show			applyChanges
 			}
 		}
 		

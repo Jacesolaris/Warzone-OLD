@@ -354,21 +354,24 @@ bool CPrimitiveTemplate::ParseMax( const char *val )
 // return:
 //	success of parse operation.
 //------------------------------------------------------
-bool CPrimitiveTemplate::ParseLife( const char *grpName, const char *val, SEffectTemplate *effect )
+bool CPrimitiveTemplate::ParseLife( const char *grpName, const char *val, void *effect )
 {
 	float min, max;
+	SEffectTemplate *ef = (SEffectTemplate *)effect;
 
 	if ( ParseFloat( val, &min, &max ) == true )
 	{
+		cg_enhancedFX = Cvar_Get( "cg_enhancedFX", "1", CVAR_ARCHIVE );
+
 		if (cg_enhancedFX->integer == 1)
 		{// UQ1: With cg_enahancedFX == 1, cap minimum to repeatDelay/2 and maximum to repeatDelay to stop massive FPS drops...
-			int use_min = 100;
-			int use_max = 200;
+			int use_min = 200;
+			int use_max = 300;
 
-			if (effect->mRepeatDelay > 0)
+			if (ef->mRepeatDelay > 0)
 			{
-				use_min = effect->mRepeatDelay / 2.0;
-				use_max = effect->mRepeatDelay;
+				use_min = ef->mRepeatDelay / 2.0;
+				use_max = ef->mRepeatDelay;
 			}
 
 			//if ( StringContainsWord(grpName, "Light" ) 
@@ -381,13 +384,32 @@ bool CPrimitiveTemplate::ParseLife( const char *grpName, const char *val, SEffec
 		}
 		else if (cg_enhancedFX->integer == 2)
 		{// UQ1: With cg_enahancedFX == 2, cap minimum to repeatDelay and maximum to repeatDelay*2 to stop massive FPS drops...
-			int use_min = 200;
-			int use_max = 300;
+			int use_min = 300;
+			int use_max = 500;
 
-			if (effect->mRepeatDelay > 0)
+			if (ef->mRepeatDelay > 0)
 			{
-				use_min = effect->mRepeatDelay;
-				use_max = effect->mRepeatDelay*2.0;
+				use_min = ef->mRepeatDelay;
+				use_max = ef->mRepeatDelay*2.0;
+			}
+
+			//if ( StringContainsWord(grpName, "Light" ) 
+			//	|| (StringContainsWord(grpName, "Particle" ) && (StringContainsWord(mName, "Smoke" ) || StringContainsWord(mName, "smoke" ) || StringContainsWord(mName, "Dust" ) || StringContainsWord(mName, "dust" ))) )
+			{// UQ1: Sanity for weapon FX...
+				//Com_Printf("Effect %s has had smoke/dust life reduced.\n", grpName);
+				if (min > use_min) min = use_min;
+				if (max > use_max) max = use_max;
+			}
+		}
+		else if (cg_enhancedFX->integer == 3)
+		{// UQ1: With cg_enahancedFX == 3, cap minimum to repeatDelay*2 and maximum to repeatDelay*3 to stop massive FPS drops...
+			int use_min = 400;
+			int use_max = 500;
+
+			if (ef->mRepeatDelay > 0)
+			{
+				use_min = ef->mRepeatDelay*2.0;
+				use_max = ef->mRepeatDelay*3.0;
 			}
 
 			//if ( StringContainsWord(grpName, "Light" ) 
@@ -2101,7 +2123,7 @@ bool CPrimitiveTemplate::ParseLength( CGPGroup *grp )
 // Parse a primitive, apply defaults first, grab any base level
 //	key pairs, then process any sub groups we may contain.
 //------------------------------------------------------
-bool CPrimitiveTemplate::ParsePrimitive( CGPGroup *grp, SEffectTemplate *effect )
+bool CPrimitiveTemplate::ParsePrimitive( CGPGroup *grp, void *effect )
 {
 	CGPGroup	*subGrp;
 	CGPValue	*pairs;
