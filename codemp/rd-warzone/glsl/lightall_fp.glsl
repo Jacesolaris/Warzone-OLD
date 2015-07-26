@@ -3,7 +3,7 @@ varying vec4	var_Local1; // parallaxScale, haveSpecular, specularScale, material
 varying vec2	var_Dimensions;
 uniform vec4	u_Local2; // ExtinctionCoefficient
 uniform vec4	u_Local3; // RimScalar, MaterialThickness, subSpecPower, cubemapScale
-uniform vec4	u_Local4; // haveNormalMap, isMetalic, 0.0, 0.0
+uniform vec4	u_Local4; // haveNormalMap, isMetalic, hasRealSubsurfaceMap, 0.0
 
 varying float  var_Time;
 
@@ -31,6 +31,8 @@ uniform sampler2D u_ShadowMap;
 #define textureCubeLod textureLod // UQ1: > ver 140 support
 uniform samplerCube u_CubeMap;
 #endif
+
+uniform sampler2D u_SubsurfaceMap;
 
 #if defined(USE_NORMALMAP) || defined(USE_DELUXEMAP) || defined(USE_SPECULARMAP) || defined(USE_CUBEMAP)
 // y = deluxe, w = cube
@@ -302,8 +304,20 @@ float RimScalar = u_Local3.x;
 float MaterialThickness = u_Local3.y;
 float SpecPower = u_Local3.z;
 
-vec4 subScatterFS(vec4 BaseColor, vec4 SpecColor, vec3 lightVec, vec3 LightColor, vec3 eyeVec, vec3 worldNormal)
+vec4 subScatterFS(vec4 BaseColor, vec4 SpecColor, vec3 lightVec, vec3 LightColor, vec3 eyeVec, vec3 worldNormal, vec2 texCoords)
 {
+	vec4 subsurface = vec4(ExtinctionCoefficient, MaterialThickness);
+
+	if (u_Local4.z != 0.0)
+	{// We have a subsurface image, use it instead...
+		subsurface = texture2D(u_SubsurfaceMap, texCoords.xy);
+	}
+	
+	if (subsurface.a == 0.0 && MaterialThickness != 0.0)
+	{// Backup in case image is missing alpha channel...
+		subsurface.a = MaterialThickness;
+	}
+
     float attenuation = 10.0 * (1.0 / distance(u_LightOrigin.xyz,var_vertPos.xyz));
     vec3 eVec = normalize(eyeVec);
     vec3 lVec = normalize(lightVec);
@@ -312,12 +326,12 @@ vec4 subScatterFS(vec4 BaseColor, vec4 SpecColor, vec3 lightVec, vec3 LightColor
     vec4 dotLN = vec4(halfLambert(lVec,wNorm) * attenuation);
     dotLN *= BaseColor;
      
-    vec3 indirectLightComponent = vec3(MaterialThickness * max(0.0,dot(-wNorm,lVec)));
-    indirectLightComponent += MaterialThickness * halfLambert(-eVec,lVec);
+    vec3 indirectLightComponent = vec3(subsurface.a * max(0.0,dot(-wNorm,lVec)));
+    indirectLightComponent += subsurface.a * halfLambert(-eVec,lVec);
     indirectLightComponent *= attenuation;
-    indirectLightComponent.r *= ExtinctionCoefficient.r;
-    indirectLightComponent.g *= ExtinctionCoefficient.g;
-    indirectLightComponent.b *= ExtinctionCoefficient.b;
+    indirectLightComponent.r *= subsurface.r;
+    indirectLightComponent.g *= subsurface.g;
+    indirectLightComponent.b *= subsurface.b;
      
     vec3 rim = vec3(1.0 - max(0.0,dot(wNorm,eVec)));
     rim *= rim;
@@ -655,12 +669,12 @@ void main()
 
   #if defined(USE_LIGHT_VECTOR) && !defined(USE_FAST_LIGHT)
   // Let's add some sub-surface scatterring shall we???
-  if (MaterialThickness > 0.0)
+  if (MaterialThickness > 0.0 || u_Local4.z != 0.0)
   {
   #if defined(USE_PRIMARY_LIGHT)
-	gl_FragColor += subScatterFS(gl_FragColor, specular, L2, lightColor.xyz, E, N);
+	gl_FragColor += subScatterFS(gl_FragColor, specular, L2, lightColor.xyz, E, N, texCoords);
   #else
-	gl_FragColor += subScatterFS(gl_FragColor, specular, L, var_Color.xyz, E, N);
+	gl_FragColor += subScatterFS(gl_FragColor, specular, L, var_Color.xyz, E, N, texCoords);
   #endif
   }
   #endif

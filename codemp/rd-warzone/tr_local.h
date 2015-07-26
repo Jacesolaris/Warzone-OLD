@@ -403,7 +403,8 @@ typedef enum
 	IMGTYPE_NORMAL,
 	IMGTYPE_SPECULAR,
 	IMGTYPE_NORMALHEIGHT,
-	IMGTYPE_DELUXE // normals are swizzled, deluxe are not
+	IMGTYPE_DELUXE, // normals are swizzled, deluxe are not
+	IMGTYPE_SUBSURFACE
 } imgType_t;
 
 typedef enum
@@ -762,7 +763,8 @@ enum
 	TB_SPECULARMAP = 4,
 	TB_SHADOWMAP   = 5,
 	TB_CUBEMAP     = 6,
-	NUM_TEXTURE_BUNDLES = 7
+	TB_SUBSURFACEMAP    = 7,
+	NUM_TEXTURE_BUNDLES = 8
 };
 
 typedef enum
@@ -773,6 +775,7 @@ typedef enum
 	ST_NORMALMAP,
 	ST_NORMALPARALLAXMAP,
 	ST_SPECULARMAP,
+	ST_SUBSURFACEMAP,
 	ST_GLSL
 } stageType_t;
 
@@ -789,6 +792,7 @@ typedef struct {
 	int				isWater;
 	bool			hasSpecular;
 	bool			hasRealNormalMap;
+	bool			hasRealSubsurfaceMap;
 	qboolean		glow;
 	
 	textureBundle_t	bundle[NUM_TEXTURE_BUNDLES];
@@ -1132,6 +1136,7 @@ typedef enum
 	UNIFORM_TEXTUREMAP,
 	UNIFORM_LEVELSMAP,
 	UNIFORM_CUBEMAP,
+	UNIFORM_SUBSURFACEMAP,
 
 	UNIFORM_SCREENIMAGEMAP,
 	UNIFORM_SCREENDEPTHMAP,

@@ -2731,95 +2731,32 @@ static void R_CreateSpecularMap ( const char *name, byte *pic, int width, int he
 		Q_strcat(specularName, MAX_QPATH, "_spec");
 		specularImage = R_FindImageFile(specularName, IMGTYPE_SPECULAR, normalFlags);
 	}
+}
+
+static void R_CreateSubsurfaceMap ( const char *name, byte *pic, int width, int height, int flags )
+{
+	char SubsurfaceName[MAX_QPATH];
+	image_t *SubsurfaceImage;
+	int normalFlags;
 	
-#if 0
-	// if not, generate it
-	if (normalImage == NULL)
+	normalFlags = (flags & ~(IMGFLAG_GENNORMALMAP | IMGFLAG_SRGB)) | IMGFLAG_NOLIGHTSCALE;
+	
+	COM_StripExtension(name, SubsurfaceName, MAX_QPATH);
+	Q_strcat(SubsurfaceName, MAX_QPATH, "_sub");
+	
+	// find normalmap in case it's there
+	SubsurfaceImage = R_FindImageFile(SubsurfaceName, IMGTYPE_SUBSURFACE, normalFlags);
+
+	//if (normalImage != NULL) ri->Printf(PRINT_WARNING, "Loaded real normal map file %s.\n", normalName);
+	//else ri->Printf(PRINT_WARNING, "No real normal map file %s.\n", normalName);
+
+	if (SubsurfaceImage == NULL)
 	{
-		byte *normalPic;
-		int x, y;
-		
-		normalWidth = width;
-		normalHeight = height;
-		normalPic = (byte *)Z_Malloc(width * height * 4, TAG_GENERAL);
-		RGBAtoNormal(pic, normalPic, width, height, (qboolean)(flags & IMGFLAG_CLAMPTOEDGE));
-		
-#if 1
-		// Brighten up the original image to work with the normal map
-		RGBAtoYCoCgA(pic, pic, width, height);
-		for (y = 0; y < height; y++)
-		{
-			byte *picbyte  = pic       + y * width * 4;
-			byte *normbyte = normalPic + y * width * 4;
-			for (x = 0; x < width; x++)
-			{
-				int div = MAX(normbyte[2] - 127, 16);
-				picbyte[0] = CLAMP(picbyte[0] * 128 / div, 0, 255);
-				picbyte  += 4;
-				normbyte += 4;
-			}
-		}
-		YCoCgAtoRGBA(pic, pic, width, height);
-#else
-		// Blur original image's luma to work with the normal map
-		{
-			byte *blurPic;
-			
-			RGBAtoYCoCgA(pic, pic, width, height);
-			blurPic = ri.Malloc(width * height);
-			
-			for (y = 1; y < height - 1; y++)
-			{
-				byte *picbyte  = pic     + y * width * 4;
-				byte *blurbyte = blurPic + y * width;
-				
-				picbyte += 4;
-				blurbyte += 1;
-				
-				for (x = 1; x < width - 1; x++)
-				{
-					int result;
-					
-					result = *(picbyte - (width + 1) * 4) + *(picbyte - width * 4) + *(picbyte - (width - 1) * 4) +
-					*(picbyte -          1  * 4) + *(picbyte            ) + *(picbyte +          1  * 4) +
-					*(picbyte + (width - 1) * 4) + *(picbyte + width * 4) + *(picbyte + (width + 1) * 4);
-					
-					result /= 9;
-					
-					*blurbyte = result;
-					picbyte += 4;
-					blurbyte += 1;
-				}
-			}
-			
-			// FIXME: do borders
-			
-			for (y = 1; y < height - 1; y++)
-			{
-				byte *picbyte  = pic     + y * width * 4;
-				byte *blurbyte = blurPic + y * width;
-				
-				picbyte += 4;
-				blurbyte += 1;
-				
-				for (x = 1; x < width - 1; x++)
-				{
-					picbyte[0] = *blurbyte;
-					picbyte += 4;
-					blurbyte += 1;
-				}
-			}
-			
-			ri->Free(blurPic);
-			
-			YCoCgAtoRGBA(pic, pic, width, height);
-		}
-#endif
-		
-		R_CreateImage( normalName, normalPic, normalWidth, normalHeight, IMGTYPE_NORMAL, normalFlags, 0 );
-		Z_Free( normalPic );
+		memset(SubsurfaceName, 0, sizeof(SubsurfaceName));
+		COM_StripExtension(name, SubsurfaceName, MAX_QPATH);
+		Q_strcat(SubsurfaceName, MAX_QPATH, "_subsurface");
+		SubsurfaceImage = R_FindImageFile(SubsurfaceName, IMGTYPE_SUBSURFACE, normalFlags);
 	}
-#endif
 }
 
 /*
@@ -2871,10 +2808,11 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, int flags )
 		return NULL;
 	}
 
-	if (type != IMGTYPE_NORMAL && type != IMGTYPE_SPECULAR)
+	if (type != IMGTYPE_NORMAL && type != IMGTYPE_SPECULAR  && type != IMGTYPE_SUBSURFACE)
 	{
 		if (r_normalMapping->integer) R_CreateNormalMap( name, pic, width, height, flags );
 		if (r_specularMapping->integer) R_CreateSpecularMap( name, pic, width, height, flags );
+		R_CreateSubsurfaceMap( name, pic, width, height, flags );
 	}
 
 	image = R_CreateImage( name, pic, width, height, type, flags, GL_RGBA8 );

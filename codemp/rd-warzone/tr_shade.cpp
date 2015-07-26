@@ -1234,6 +1234,11 @@ static void ForwardDlight( void ) {
 		else if (r_specularMapping->integer)
 			GL_BindToTMU( tr.whiteImage, TB_SPECULARMAP );
 
+		if (pStage->bundle[TB_SUBSURFACEMAP].image[0])
+			R_BindAnimatedImageToTMU( &pStage->bundle[TB_SUBSURFACEMAP], TB_SUBSURFACEMAP);
+		else
+			GL_BindToTMU( tr.whiteImage, TB_SUBSURFACEMAP );
+
 		{
 			vec4_t enableTextures;
 
@@ -1762,7 +1767,7 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage)
 	GLSL_SetUniformVec4(sp, UNIFORM_LOCAL2, pStage->subsurfaceExtinctionCoefficient);
 	VectorSet4(local3, pStage->subsurfaceRimScalar, pStage->subsurfaceMaterialThickness, pStage->subsurfaceSpecularPower, cubemapScale);
 	GLSL_SetUniformVec4(sp, UNIFORM_LOCAL3, local3);
-	VectorSet4(local4, (float)pStage->hasRealNormalMap, isMetalic, 0.0, 0.0);
+	VectorSet4(local4, (float)pStage->hasRealNormalMap, isMetalic, (float)pStage->hasRealSubsurfaceMap, 0.0);
 	GLSL_SetUniformVec4(sp, UNIFORM_LOCAL4, local4);
 	//GLSL_SetUniformFloat(sp, UNIFORM_TIME, tess.shaderTime);
 	GLSL_SetUniformFloat(sp, UNIFORM_TIME, backEnd.refdef.floatTime);
@@ -1789,6 +1794,11 @@ void RB_SetStageImageDimensions(shaderProgram_t *sp, shaderStage_t *pStage)
 	{
 		dimensions[0] = pStage->bundle[TB_SPECULARMAP].image[0]->width;
 		dimensions[1] = pStage->bundle[TB_SPECULARMAP].image[0]->height;
+	}
+	else if (pStage->bundle[TB_SUBSURFACEMAP].image[0])
+	{
+		dimensions[0] = pStage->bundle[TB_SUBSURFACEMAP].image[0]->width;
+		dimensions[1] = pStage->bundle[TB_SUBSURFACEMAP].image[0]->height;
 	}
 
 	GLSL_SetUniformVec2(sp, UNIFORM_DIMENSIONS, dimensions);
@@ -2231,6 +2241,16 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 					else if (r_specularMapping->integer)
 					{
 						GL_BindToTMU( tr.whiteImage, TB_SPECULARMAP );
+					}
+
+					if (pStage->bundle[TB_SUBSURFACEMAP].image[0])
+					{
+						R_BindAnimatedImageToTMU( &pStage->bundle[TB_SUBSURFACEMAP], TB_SUBSURFACEMAP);
+						enableTextures[2] = 1.0f;
+					}
+					else
+					{
+						GL_BindToTMU( tr.whiteImage, TB_SUBSURFACEMAP );
 					}
 				}
 

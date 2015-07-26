@@ -1193,6 +1193,11 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 					type = IMGTYPE_SPECULAR;
 					flags |= IMGFLAG_NOLIGHTSCALE;
 				}
+				else if (stage->type == ST_SUBSURFACEMAP)
+				{
+					type = IMGTYPE_SUBSURFACE;
+					flags |= IMGFLAG_NOLIGHTSCALE;
+				}
 				else
 				{
 					if (r_genNormalMaps->integer)
@@ -1476,6 +1481,12 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 				stage->type = ST_SPECULARMAP;
 				//VectorSet4(stage->specularScale, r_baseSpecular->integer, r_baseSpecular->integer, r_baseSpecular->integer, 1.0f);
 				VectorSet4(stage->specularScale, 1.0f, 1.0f, 1.0f, 1.0f);
+			}
+			else if(!Q_stricmp(token, "subsurfaceMap"))
+			{
+				stage->type = ST_SUBSURFACEMAP;
+				//VectorSet4(stage->specularScale, r_baseSpecular->integer, r_baseSpecular->integer, r_baseSpecular->integer, 1.0f);
+				VectorSet4(stage->subsurfaceExtinctionCoefficient, 0.0f, 0.0f, 0.0f, 0.0f);
 			}
 			else
 			{
@@ -3246,12 +3257,13 @@ void StripCrap( const char *in, char *out, int destsize )
 }
 
 static void CollapseStagesToLightall(shaderStage_t *diffuse, 
-	shaderStage_t *normal, shaderStage_t *specular, shaderStage_t *lightmap, 
+	shaderStage_t *normal, shaderStage_t *specular, shaderStage_t *lightmap, shaderStage_t *subsurface, 
 	qboolean useLightVector, qboolean useLightVertex, qboolean parallax, qboolean tcgen)
 {
 	int defs = 0;
 	qboolean hasRealNormalMap = qfalse;
 	qboolean hasRealSpecularMap = qfalse;
+	qboolean hasRealSubsurfaceMap = qfalse;
 
 	//ri->Printf(PRINT_ALL, "shader %s has diffuse %s", shader.name, diffuse->bundle[0].image[0]->imgName);
 
@@ -3373,6 +3385,57 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 		}
 	}
 
+	if (1)
+	{
+		image_t *diffuseImg = diffuse->bundle[TB_DIFFUSEMAP].image[0];
+
+		if (diffuse && diffuse->bundle[TB_SUBSURFACEMAP].specularLoaded)
+		{// Got one...
+			diffuse->bundle[TB_SUBSURFACEMAP] = specular->bundle[0];
+			VectorCopy4(specular->subsurfaceExtinctionCoefficient, diffuse->subsurfaceExtinctionCoefficient);
+			hasRealSubsurfaceMap = qtrue;
+		}
+		else if (diffuse && !diffuse->bundle[TB_SUBSURFACEMAP].specularLoaded)
+		{// Check if we can load one...
+			char specularName[MAX_QPATH];
+			char specularName2[MAX_QPATH];
+			image_t *specularImg;
+			int specularFlags = (diffuseImg->flags & ~(IMGFLAG_GENNORMALMAP | IMGFLAG_SRGB)) | IMGFLAG_NOLIGHTSCALE;
+
+			diffuse->bundle[TB_SUBSURFACEMAP].specularLoaded = qtrue;
+
+			COM_StripExtension( diffuseImg->imgName, specularName, sizeof( specularName ) );
+			StripCrap( specularName, specularName2, sizeof(specularName));
+			Q_strcat( specularName2, sizeof( specularName2 ), "_sub" );
+
+			specularImg = R_FindImageFile(specularName2, IMGTYPE_SUBSURFACE, specularFlags);
+
+			if (!specularImg)
+			{
+				COM_StripExtension( diffuseImg->imgName, specularName, sizeof( specularName ) );
+				StripCrap( specularName, specularName2, sizeof(specularName));
+				Q_strcat( specularName2, sizeof( specularName2 ), "_subsurface" );
+
+				specularImg = R_FindImageFile(specularName2, IMGTYPE_SUBSURFACE, specularFlags);
+			}
+
+			if (specularImg)
+			{
+				//ri->Printf(PRINT_WARNING, "+++++++++++++++ Loaded specular map %s.\n", specularName2);
+				diffuse->bundle[TB_SUBSURFACEMAP] = diffuse->bundle[0];
+				diffuse->bundle[TB_SUBSURFACEMAP].numImageAnimations = 0;
+				diffuse->bundle[TB_SUBSURFACEMAP].image[0] = specularImg;
+				if (!subsurface) subsurface = diffuse;
+				VectorCopy4(subsurface->subsurfaceExtinctionCoefficient, subsurface->subsurfaceExtinctionCoefficient);
+				hasRealSubsurfaceMap = qtrue;
+			}
+			//else
+			//{
+			//	ri->Printf(PRINT_WARNING, "!!!!!!!!!!!!!! No specular map %s.\n", specularName2);
+			//}
+		}
+	}
+
 	if (!hasRealNormalMap && r_parallaxMapping->integer && !(defs & LIGHTDEF_USE_PARALLAXMAP))
 	{
 		// UQ1: My parallax changes no longer require any normal map...
@@ -3406,9 +3469,14 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 
 	if (hasRealSpecularMap)
 	{
-		if (diffuse) diffuse->hasSpecular = qtrue;
-		if (normal) normal->hasSpecular = qtrue;
-		if (specular) specular->hasSpecular = qtrue;
+		if (diffuse) diffuse->hasSpecular = true;
+		if (normal) normal->hasSpecular = true;
+		if (specular) specular->hasSpecular = true;
+	}
+
+	if (hasRealSpecularMap)
+	{
+		if (diffuse) diffuse->hasSpecular = true;
 	}
 
 	diffuse->glslShaderIndex = defs;
@@ -3421,6 +3489,7 @@ static qboolean CollapseStagesToGLSL(void)
 	qboolean skip = qfalse;
 	qboolean hasRealNormalMap = qfalse;
 	qboolean hasRealSpecularMap = qfalse;
+	qboolean hasRealSubsurfaceMap = qfalse;
 
 	ri->Printf (PRINT_DEVELOPER, "Collapsing stages for shader '%s'\n", shader.name);
 
@@ -3553,7 +3622,7 @@ static qboolean CollapseStagesToGLSL(void)
 		for (i = 0; i < MAX_SHADER_STAGES; i++)
 		{
 			shaderStage_t *pStage = &stages[i];
-			shaderStage_t *diffuse, *normal, *specular, *lightmap;
+			shaderStage_t *diffuse, *normal, *specular, *lightmap, *subsurface;
 			qboolean parallax, tcgen, diffuselit, vertexlit;
 
 			if (!pStage->active)
@@ -3572,6 +3641,7 @@ static qboolean CollapseStagesToGLSL(void)
 			parallax = qfalse;
 			specular = NULL;
 			lightmap = NULL;
+			subsurface = NULL;
 
 
 			// we have a diffuse map, find matching normal, specular, and lightmap
@@ -3612,6 +3682,14 @@ static qboolean CollapseStagesToGLSL(void)
 						}
 						break;
 
+					case ST_SUBSURFACEMAP:
+						if (!subsurface)
+						{
+							hasRealSubsurfaceMap = qtrue;
+							subsurface = pStage2;
+						}
+						break;
+
 					case ST_COLORMAP:
 						if (pStage2->bundle[0].tcGen >= TCGEN_LIGHTMAP &&
 							pStage2->bundle[0].tcGen <= TCGEN_LIGHTMAP3 &&
@@ -3649,7 +3727,7 @@ static qboolean CollapseStagesToGLSL(void)
 				vertexlit = qtrue;
 			}
 
-			CollapseStagesToLightall(diffuse, normal, specular, lightmap, diffuselit, vertexlit, parallax, tcgen);
+			CollapseStagesToLightall(diffuse, normal, specular, lightmap, subsurface, diffuselit, vertexlit, parallax, tcgen);
 		}
 
 		// deactivate lightmap stages
@@ -3693,7 +3771,13 @@ static qboolean CollapseStagesToGLSL(void)
 		{
 			hasRealSpecularMap = qtrue;
 			pStage->active = qfalse;
-		}			
+		}
+
+		if (pStage->type == ST_SUBSURFACEMAP)
+		{
+			hasRealSubsurfaceMap = qtrue;
+			pStage->active = qfalse;
+		}
 	}
 
 	// remove inactive stages
@@ -3807,6 +3891,11 @@ static qboolean CollapseStagesToGLSL(void)
 		if (hasRealSpecularMap)
 		{
 			stage->hasSpecular = qtrue;
+		}
+
+		if (hasRealSubsurfaceMap)
+		{
+			stage->hasRealSubsurfaceMap = qtrue;
 		}
 
 		ri->Printf (PRINT_DEVELOPER, "-> %s\n", stage->bundle[0].image[0]->imgName);
