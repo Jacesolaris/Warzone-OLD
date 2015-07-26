@@ -731,7 +731,7 @@ typedef struct weaponInfo_s {
 
 	qhandle_t		ammoModel;
 
-	sfxHandle_t		flashSound[4];		// fast firing weapons randomly choose
+	sfxHandle_t		flashSound[8];		// fast firing weapons randomly choose
 	sfxHandle_t		firingSound;
 	sfxHandle_t		chargeSound;
 	fxHandle_t		muzzleEffect;
@@ -744,7 +744,7 @@ typedef struct weaponInfo_s {
 	int				powerupShotRenderfx;
 	sfxHandle_t		missileHitSound;
 
-	sfxHandle_t		altFlashSound[4];
+	sfxHandle_t		altFlashSound[8];
 	sfxHandle_t		altFiringSound;
 	sfxHandle_t		altChargeSound;
 	fxHandle_t		altMuzzleEffect;
