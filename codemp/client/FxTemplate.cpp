@@ -363,7 +363,7 @@ bool CPrimitiveTemplate::ParseLife( const char *grpName, const char *val, SEffec
 		if (cg_enhancedFX->integer == 1)
 		{// UQ1: With cg_enahancedFX == 1, cap minimum to repeatDelay/2 and maximum to repeatDelay to stop massive FPS drops...
 			int use_min = 100;
-			int use_max = 100;
+			int use_max = 200;
 
 			if (effect->mRepeatDelay > 0)
 			{
@@ -382,7 +382,7 @@ bool CPrimitiveTemplate::ParseLife( const char *grpName, const char *val, SEffec
 		else if (cg_enhancedFX->integer == 2)
 		{// UQ1: With cg_enahancedFX == 2, cap minimum to repeatDelay and maximum to repeatDelay*2 to stop massive FPS drops...
 			int use_min = 200;
-			int use_max = 200;
+			int use_max = 300;
 
 			if (effect->mRepeatDelay > 0)
 			{
