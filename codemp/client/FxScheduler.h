@@ -133,6 +133,8 @@ enum EPrimType
 	ScreenFlash
 };
 
+// forward declaration
+struct SEffectTemplate;
 
 //-----------------------------------------------------------------
 //
@@ -263,7 +265,7 @@ public:
 	bool ParseMax( const char *val );
 	bool ParseDelay( const char *val );
 	bool ParseCount( const char *val );
-	bool ParseLife( const char *grpName, const char *val );
+	bool ParseLife( const char *grpName, const char *val, SEffectTemplate *effect );
 	bool ParseElasticity( const char *val );
 	bool ParseFlags( const char *val );
 	bool ParseSpawnFlags( const char *val );
@@ -332,13 +334,10 @@ public:
 	CPrimitiveTemplate();
 	~CPrimitiveTemplate()	{};
 
-	bool ParsePrimitive( CGPGroup *grp );
+	bool ParsePrimitive( CGPGroup *grp, SEffectTemplate *effect );
 
 	CPrimitiveTemplate &operator=(const CPrimitiveTemplate &that);
 };
-
-// forward declaration
-struct SEffectTemplate;
 
 // Effects are built of one or more primitives
 struct SEffectTemplate

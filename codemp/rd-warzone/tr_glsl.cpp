@@ -2419,6 +2419,18 @@ void GLSL_EndLoadGPUShaders ( int startTime )
 		GLSL_SetUniformVec2(&tr.ssgiShader, UNIFORM_DIMENSIONS, screensize);
 	}
 
+	{
+		vec4_t viewInfo;
+
+		float zmax = backEnd.viewParms.zFar;
+		float zmin = r_znear->value;
+
+		VectorSet4(viewInfo, zmax / zmin, zmax, 0.0, 0.0);
+		//VectorSet4(viewInfo, zmin, zmax, 0.0, 0.0);
+
+		GLSL_SetUniformVec4(&tr.ssgiShader, UNIFORM_VIEWINFO, viewInfo);
+	}
+
 	qglUseProgram(0);
 
 #if defined(_DEBUG)

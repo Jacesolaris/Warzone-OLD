@@ -2083,15 +2083,11 @@ void RB_SSGI(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 
 	{
 		vec4_t viewInfo;
-
 		float zmax = backEnd.viewParms.zFar;
+		float ymax = zmax * tan(backEnd.viewParms.fovY * M_PI / 360.0f);
+		float xmax = zmax * tan(backEnd.viewParms.fovX * M_PI / 360.0f);
 		float zmin = r_znear->value;
-		//float zmin = backEnd.viewParms.zNear;
-
-		VectorSet4(viewInfo, zmin, zmax, zmax / zmin, 0.0);
-
-		//ri->Printf(PRINT_WARNING, "Sent zmin %f, zmax %f, zmax/zmin %f.\n", zmin, zmax, zmax / zmin);
-
+		VectorSet4(viewInfo, zmax / zmin, zmax, 0.0, 0.0);
 		GLSL_SetUniformVec4(&tr.ssgiShader, UNIFORM_VIEWINFO, viewInfo);
 	}
 
