@@ -473,7 +473,7 @@ qboolean Padawan_CheckForce ( void )
 		&& (NPCS.NPC->client->ps.fd.forcePowersKnown&(1<<FP_TEAM_HEAL)) != 0
 		&& (NPCS.NPC->client->ps.fd.forcePowersActive&(1<<FP_TEAM_HEAL)) == 0
 		&& (NPCS.NPC->s.NPC_class == CLASS_PADAWAN)
-		&& NPCS.NPC->parent->client->ps.stats[STAT_HEALTH] < NPCS.NPC->parent->client->ps.stats[STAT_MAX_HEALTH] * 0.5
+		&& NPCS.NPC->parent->health < NPCS.NPC->parent->maxHealth * 0.5
 		&& NPCS.NPC->parent->health > 0 
 		&& Q_irand( 0, 20 ) < 2)
 	{// Team heal our jedi???
@@ -487,7 +487,7 @@ qboolean Padawan_CheckForce ( void )
 		&& (NPCS.NPC->client->ps.fd.forcePowersActive&(1<<FP_HEAL)) == 0
 		&& (NPCS.NPC->s.NPC_class == CLASS_PADAWAN)
 		//&& NPCS.NPC->health < NPCS.NPC->maxHealth * 0.5)
-		&& NPCS.NPC->client->ps.stats[STAT_HEALTH] < NPCS.NPC->client->ps.stats[STAT_MAX_HEALTH] * 0.5
+		&& NPCS.NPC->health < NPCS.NPC->maxHealth * 0.5
 		&& NPCS.NPC->health > 0
 		&& Q_irand( 0, 20 ) < 2)
 		//&& NPCS.NPC->client->ps.stats[STAT_HEALTH] < NPCS.NPC->client->ps.stats[STAT_MAX_HEALTH] * 0.5

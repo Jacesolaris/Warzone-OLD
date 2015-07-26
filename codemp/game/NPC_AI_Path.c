@@ -522,6 +522,18 @@ void NPC_SetNewGoalAndPath( void )
 	//	if (NPC_CopyPathFromNearbyNPC()) 
 	//		return;
 
+	if (NPC_IsJedi(NPC) && (!(NPC->client->ps.fd.forcePowersKnown & (1 << FP_LEVITATION)) || NPC->client->ps.fd.forcePowerLevel[FP_LEVITATION] < 3))
+	{
+		// Give all Jedi/Sith NPCs jump 3...
+		NPC->client->ps.fd.forcePowersKnown |= (1 << FP_LEVITATION);
+		NPC->client->ps.fd.forcePowerLevel[FP_LEVITATION] = 3;
+	}
+	else if (!(NPC->client->ps.fd.forcePowersKnown & (1 << FP_LEVITATION)) || NPC->client->ps.fd.forcePowerLevel[FP_LEVITATION] < 2) 
+	{// Give all NPCs jump 2 just for pathing the map and not getting stuck..
+		NPC->client->ps.fd.forcePowersKnown |= (1 << FP_LEVITATION);
+		NPC->client->ps.fd.forcePowerLevel[FP_LEVITATION] = 2;
+	}
+
 	if (NPC->wpSeenTime > level.time)
 	{
 		NPC_PickRandomIdleAnimantion(NPC);

@@ -7312,10 +7312,10 @@ qboolean Jedi_CheckForce ( void )
 		&& Distance(NPCS.NPC->padawan->r.currentOrigin, NPCS.NPC->r.currentOrigin) < 256
 		&& (NPCS.NPC->client->ps.fd.forcePowersKnown&(1<<FP_TEAM_HEAL)) != 0
 		&& (NPCS.NPC->client->ps.fd.forcePowersActive&(1<<FP_TEAM_HEAL)) == 0
-		&& NPCS.NPC->padawan->client->ps.stats[STAT_HEALTH] < NPCS.NPC->padawan->client->ps.stats[STAT_MAX_HEALTH] * 0.5
+		&& NPCS.NPC->padawan->health < NPCS.NPC->padawan->maxHealth * 0.5
 		&& NPCS.NPC->padawan->health > 0
 		&& Q_irand( 0, 20 ) < 2)
-	{// Team heal our jedi???
+	{// Team heal our padawan???
 		NPC_FacePosition(NPCS.NPC->padawan->r.currentOrigin, qtrue);
 		ForceTeamHeal( NPCS.NPC );
 		TIMER_Set( NPCS.NPC, "teamheal", irand(5000, 15000) );
@@ -7327,7 +7327,7 @@ qboolean Jedi_CheckForce ( void )
 		&& Distance(NPCS.NPC->parent->r.currentOrigin, NPCS.NPC->r.currentOrigin) < 256
 		&& (NPCS.NPC->client->ps.fd.forcePowersKnown&(1<<FP_TEAM_HEAL)) != 0
 		&& (NPCS.NPC->client->ps.fd.forcePowersActive&(1<<FP_TEAM_HEAL)) == 0
-		&& NPCS.NPC->parent->client->ps.stats[STAT_HEALTH] < NPCS.NPC->parent->client->ps.stats[STAT_MAX_HEALTH] * 0.5
+		&& NPCS.NPC->parent->health < NPCS.NPC->parent->maxHealth * 0.5
 		&& NPCS.NPC->parent->health > 0 
 		&& Q_irand( 0, 20 ) < 2)
 	{// Team heal our jedi???
@@ -7340,7 +7340,7 @@ qboolean Jedi_CheckForce ( void )
 		&& (NPCS.NPC->client->ps.fd.forcePowersKnown&(1<<FP_HEAL)) != 0
 		&& (NPCS.NPC->client->ps.fd.forcePowersActive&(1<<FP_HEAL)) == 0
 		&& (NPCS.NPC->s.NPC_class == CLASS_PADAWAN || Q_irand( 0, 5 ) <= 2)
-		&& NPCS.NPC->client->ps.stats[STAT_HEALTH] < NPCS.NPC->client->ps.stats[STAT_MAX_HEALTH] * 0.5
+		&& NPCS.NPC->health < NPCS.NPC->maxHealth * 0.5
 		&& Q_irand( 0, 20 ) < 2)
 	{
 		//trap->Print("%s is using heal.\n", NPCS.NPC->NPC_type);
@@ -7352,7 +7352,7 @@ qboolean Jedi_CheckForce ( void )
 		&& (NPCS.NPC->client->ps.fd.forcePowersKnown&(1<<FP_DRAIN)) != 0
 		&& (NPCS.NPC->client->ps.fd.forcePowersActive&(1<<FP_DRAIN)) == 0
 		&& NPC_Jedi_EnemyInForceRange()
-		&& NPCS.NPC->client->ps.stats[STAT_HEALTH] < NPCS.NPC->client->ps.stats[STAT_MAX_HEALTH] * 0.5
+		&& NPCS.NPC->health < NPCS.NPC->maxHealth * 0.5
 		&& Q_irand( 0, 20 ) < 2)
 	{
 		//trap->Print("%s is using drain.\n", NPCS.NPC->NPC_type);

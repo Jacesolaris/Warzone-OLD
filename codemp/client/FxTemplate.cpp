@@ -362,11 +362,11 @@ bool CPrimitiveTemplate::ParseLife( const char *grpName, const char *val )
 	{
 		if (cg_enhancedFX->integer == 1)
 		{
-			if ( StringContainsWord(grpName, "Light" ) 
-				|| (StringContainsWord(grpName, "Particle" ) && (StringContainsWord(mName, "Smoke" ) || StringContainsWord(mName, "smoke" ) || StringContainsWord(mName, "Dust" ) || StringContainsWord(mName, "dust" ))) )
+			//if ( StringContainsWord(grpName, "Light" ) 
+			//	|| (StringContainsWord(grpName, "Particle" ) && (StringContainsWord(mName, "Smoke" ) || StringContainsWord(mName, "smoke" ) || StringContainsWord(mName, "Dust" ) || StringContainsWord(mName, "dust" ))) )
 			{// UQ1: Sanity for weapon FX...
 				//Com_Printf("Effect %s has had smoke/dust life reduced.\n", grpName);
-				if (min > 300) min = 300;
+				if (min > 200) min = 200;
 				if (max > 500) max = 500;
 			}
 		}
