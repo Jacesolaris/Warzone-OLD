@@ -622,7 +622,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altMissileTrailFunc = FX_WeaponAltProjectileThink;
 
 		weaponInfo->missileRenderfx = trap->FX_RegisterEffect("blasters/shot_blue_small");
-		weaponInfo->altMissileRenderfx = trap->FX_RegisterEffect("clone_rifle/alt_projectile");
+		weaponInfo->altMissileRenderfx = trap->FX_RegisterEffect("blasters/shot_Blue_Ball_big");
 
 		weaponInfo->missileWallImpactfx = trap->FX_RegisterEffect("clone_rifle/wall_impact");
 		weaponInfo->altMissileWallImpactfx = trap->FX_RegisterEffect("clone_rifle/concussion");
@@ -666,7 +666,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altMissileTrailFunc = FX_WeaponAltProjectileThink;
 
 		weaponInfo->missileRenderfx = trap->FX_RegisterEffect("blasters/shot_blue_small");
-		weaponInfo->altMissileRenderfx = trap->FX_RegisterEffect("clone_rifle/alt_projectile");
+		weaponInfo->altMissileRenderfx = trap->FX_RegisterEffect("blasters/shot_Blue_Ball_big");
 
 		weaponInfo->missileWallImpactfx = trap->FX_RegisterEffect("clone_rifle/wall_impact");
 		weaponInfo->altMissileWallImpactfx = trap->FX_RegisterEffect("clone_rifle/concussion");
@@ -762,7 +762,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->flashSound[0] = trap->S_RegisterSound("sound/weapons/demp2/fire.wav");
 		weaponInfo->firingSound = NULL_SOUND;
 		weaponInfo->chargeSound = NULL_SOUND;
-		weaponInfo->muzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash2_Blue_medium");
+		weaponInfo->muzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash2_Blue_small");
 		weaponInfo->missileModel = NULL_HANDLE;
 
 		weaponInfo->missileSound = NULL_SOUND;
@@ -773,7 +773,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altFlashSound[0] = trap->S_RegisterSound("sound/weapons/demp2/altfire.wav");
 		weaponInfo->altFiringSound = NULL_SOUND;
 		weaponInfo->altChargeSound = trap->S_RegisterSound("sound/weapons/demp2/altCharge.wav");
-		weaponInfo->altMuzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash2_Blue_medium");
+		weaponInfo->altMuzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash2_Blue_small");
 		weaponInfo->altMissileModel = NULL_HANDLE;
 
 		weaponInfo->altMissileSound = NULL_SOUND;
@@ -1223,29 +1223,39 @@ void CG_RegisterWeapon( int weaponNum) {
 
 	case WP_E60_ROCKET_LAUNCHER:
 		weaponInfo->selectSound = trap->S_RegisterSound("sound/weapons/rocket/select.wav");
-		weaponInfo->flashSound[0] = trap->S_RegisterSound("sound/weapons/rocket/fire.wav");
+		weaponInfo->flashSound[0] = trap->S_RegisterSound("sound/weapons/slugthrowers/rocketlauncher1.wav");
+		weaponInfo->flashSound[1] = trap->S_RegisterSound("sound/weapons/slugthrowers/rocketlauncher2.wav");
+		weaponInfo->flashSound[2] = trap->S_RegisterSound("sound/weapons/slugthrowers/rocketlauncher3.wav");
+		weaponInfo->flashSound[3] = trap->S_RegisterSound("sound/weapons/slugthrowers/rocketlauncher4.wav");
+		weaponInfo->flashSound[4] = trap->S_RegisterSound("sound/weapons/slugthrowers/rocketlauncher5.wav");
+		weaponInfo->flashSound[5] = trap->S_RegisterSound("sound/weapons/slugthrowers/rocketlauncher6.wav");
 		weaponInfo->firingSound = NULL_SOUND;
 		weaponInfo->chargeSound = NULL_SOUND;
-		weaponInfo->muzzleEffect = trap->FX_RegisterEffect("rocket/muzzle_flash.efx");
-		weaponInfo->missileModel = trap->R_RegisterModel("models/weapons3/cw_launcher/projectile.md3");
-		weaponInfo->missileSound = trap->S_RegisterSound("sound/weapons/rocket/missleloop.wav");
+		weaponInfo->muzzleEffect = trap->FX_RegisterEffect("slugthrowers/muzzleflash_big");
+		weaponInfo->missileModel = trap->R_RegisterModel("models/ammo/rocket1_proj.md3");
+		weaponInfo->missileSound = trap->S_RegisterSound("sound/weapons/slugthrowers/rocketlauncher_loop.wav");
 		weaponInfo->missileDlight = 125;
 		VectorSet(weaponInfo->missileDlightColor, 1.0, 1.0, 0.5);
 		weaponInfo->missileHitSound = NULL_SOUND;
 		weaponInfo->missileTrailFunc = FX_RocketProjectileThink;
-		weaponInfo->altFlashSound[0] = trap->S_RegisterSound("sound/weapons/rocket/alt_fire.wav");
+		weaponInfo->altFlashSound[0] = trap->S_RegisterSound("sound/weapons/slugthrowers/rocketlauncher1.wav");
+		weaponInfo->altFlashSound[1] = trap->S_RegisterSound("sound/weapons/slugthrowers/rocketlauncher2.wav");
+		weaponInfo->altFlashSound[2] = trap->S_RegisterSound("sound/weapons/slugthrowers/rocketlauncher3.wav");
+		weaponInfo->altFlashSound[3] = trap->S_RegisterSound("sound/weapons/slugthrowers/rocketlauncher4.wav");
+		weaponInfo->altFlashSound[4] = trap->S_RegisterSound("sound/weapons/slugthrowers/rocketlauncher5.wav");
+		weaponInfo->altFlashSound[5] = trap->S_RegisterSound("sound/weapons/slugthrowers/rocketlauncher6.wav");
 		weaponInfo->altFiringSound = NULL_SOUND;
 		weaponInfo->altChargeSound = NULL_SOUND;
-		weaponInfo->altMuzzleEffect = trap->FX_RegisterEffect("pulserocket/muzzle_flash.efx");
-		weaponInfo->altMissileModel = trap->R_RegisterModel("models/weapons3/cw_launcher/projectile.md3");
-		weaponInfo->altMissileSound = trap->S_RegisterSound("sound/weapons/rocket/missleloop.wav");
+		weaponInfo->altMuzzleEffect = trap->FX_RegisterEffect("slugthrowers/muzzleflash_big");
+		weaponInfo->altMissileModel = trap->R_RegisterModel("models/ammo/rocket1_proj.md3");
+		weaponInfo->altMissileSound = trap->S_RegisterSound("sound/weapons/slugthrowers/rocketlauncher_loop.wav");
 		weaponInfo->altMissileDlight = 125;
 		VectorSet(weaponInfo->altMissileDlightColor, 1.0, 1.0, 0.5);
 		weaponInfo->altMissileHitSound = NULL_SOUND;
 		weaponInfo->altMissileTrailFunc = FX_PulseRocketAltProjectileThink;
 
-		weaponInfo->missileRenderfx = trap->FX_RegisterEffect("rocket/rocket_shot");
-		weaponInfo->altMissileRenderfx = trap->FX_RegisterEffect("rocket/rocket_alt_shot");
+		weaponInfo->missileRenderfx = trap->FX_RegisterEffect("explosives/shot_rpg");
+		weaponInfo->altMissileRenderfx = trap->FX_RegisterEffect("explosives/shot_rpg");
 
 		weaponInfo->missileWallImpactfx = trap->FX_RegisterEffect("ships/mine_impact");
 		weaponInfo->altMissileWallImpactfx = trap->FX_RegisterEffect("pulserocket/explosion");
@@ -1260,29 +1270,39 @@ void CG_RegisterWeapon( int weaponNum) {
 
 	case WP_CW_ROCKET_LAUNCHER:
 		weaponInfo->selectSound = trap->S_RegisterSound("sound/weapons/rocket/select.wav");
-		weaponInfo->flashSound[0] = trap->S_RegisterSound("sound/weapons/rocket/fire.wav");
+		weaponInfo->flashSound[0] = trap->S_RegisterSound("sound/weapons/slugthrowers/rocketlauncher1.wav");
+		weaponInfo->flashSound[1] = trap->S_RegisterSound("sound/weapons/slugthrowers/rocketlauncher2.wav");
+		weaponInfo->flashSound[2] = trap->S_RegisterSound("sound/weapons/slugthrowers/rocketlauncher3.wav");
+		weaponInfo->flashSound[3] = trap->S_RegisterSound("sound/weapons/slugthrowers/rocketlauncher4.wav");
+		weaponInfo->flashSound[4] = trap->S_RegisterSound("sound/weapons/slugthrowers/rocketlauncher5.wav");
+		weaponInfo->flashSound[5] = trap->S_RegisterSound("sound/weapons/slugthrowers/rocketlauncher6.wav");
 		weaponInfo->firingSound = NULL_SOUND;
 		weaponInfo->chargeSound = NULL_SOUND;
-		weaponInfo->muzzleEffect = trap->FX_RegisterEffect("rocket/muzzle_flash.efx");
-		weaponInfo->missileModel = trap->R_RegisterModel("models/weapons3/cw_launcher/projectile.md3");
-		weaponInfo->missileSound = trap->S_RegisterSound("sound/weapons/rocket/missleloop.wav");
+		weaponInfo->muzzleEffect = trap->FX_RegisterEffect("slugthrowers/muzzleflash_big");
+		weaponInfo->missileModel = trap->R_RegisterModel("models/ammo/rocket1_proj.md3");
+		weaponInfo->missileSound = trap->S_RegisterSound("sound/weapons/slugthrowers/rocketlauncher_loop.wav");
 		weaponInfo->missileDlight = 125;
 		VectorSet(weaponInfo->missileDlightColor, 1.0, 1.0, 0.5);
 		weaponInfo->missileHitSound = NULL_SOUND;
 		weaponInfo->missileTrailFunc = FX_RocketProjectileThink;
-		weaponInfo->altFlashSound[0] = trap->S_RegisterSound("sound/weapons/rocket/alt_fire.wav");
+		weaponInfo->altFlashSound[0] = trap->S_RegisterSound("sound/weapons/slugthrowers/rocketlauncher1.wav");
+		weaponInfo->altFlashSound[1] = trap->S_RegisterSound("sound/weapons/slugthrowers/rocketlauncher2.wav");
+		weaponInfo->altFlashSound[2] = trap->S_RegisterSound("sound/weapons/slugthrowers/rocketlauncher3.wav");
+		weaponInfo->altFlashSound[3] = trap->S_RegisterSound("sound/weapons/slugthrowers/rocketlauncher4.wav");
+		weaponInfo->altFlashSound[4] = trap->S_RegisterSound("sound/weapons/slugthrowers/rocketlauncher5.wav");
+		weaponInfo->altFlashSound[5] = trap->S_RegisterSound("sound/weapons/slugthrowers/rocketlauncher6.wav");
 		weaponInfo->altFiringSound = NULL_SOUND;
 		weaponInfo->altChargeSound = NULL_SOUND;
-		weaponInfo->altMuzzleEffect = trap->FX_RegisterEffect("pulserocket/muzzle_flash.efx");
-		weaponInfo->altMissileModel = trap->R_RegisterModel("models/weapons3/cw_launcher/projectile.md3");
-		weaponInfo->altMissileSound = trap->S_RegisterSound("sound/weapons/rocket/missleloop.wav");
+		weaponInfo->altMuzzleEffect = trap->FX_RegisterEffect("slugthrowers/muzzleflash_big");
+		weaponInfo->altMissileModel = trap->R_RegisterModel("models/ammo/rocket1_proj.md3");
+		weaponInfo->altMissileSound = trap->S_RegisterSound("sound/weapons/slugthrowers/rocketlauncher_loop.wav");
 		weaponInfo->altMissileDlight = 125;
 		VectorSet(weaponInfo->altMissileDlightColor, 1.0, 1.0, 0.5);
 		weaponInfo->altMissileHitSound = NULL_SOUND;
 		weaponInfo->altMissileTrailFunc = FX_PulseRocketAltProjectileThink;
 
-		weaponInfo->missileRenderfx = trap->FX_RegisterEffect("rocket/rocket_shot");
-		weaponInfo->altMissileRenderfx = trap->FX_RegisterEffect("rocket/rocket_alt_shot");
+		weaponInfo->missileRenderfx = trap->FX_RegisterEffect("explosives/shot_rpg");
+		weaponInfo->altMissileRenderfx = trap->FX_RegisterEffect("explosives/shot_rpg");
 
 		weaponInfo->missileWallImpactfx = trap->FX_RegisterEffect("ships/mine_impact");
 		weaponInfo->altMissileWallImpactfx = trap->FX_RegisterEffect("pulserocket/explosion");
