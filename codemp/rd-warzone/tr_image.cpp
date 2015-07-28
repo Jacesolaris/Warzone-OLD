@@ -2599,7 +2599,265 @@ done:
 		ri->Hunk_FreeTempMemory( resampledBuffer );
 }
 
-static void R_CreateNormalMap ( const char *name, byte *pic, int width, int height, int flags )
+extern FBO_t *FBO_Create(const char *name, int width, int height);
+extern void FBO_AttachTextureImage(image_t *img, int index);
+extern void FBO_SetupDrawBuffers();
+extern qboolean R_CheckFBO(const FBO_t * fbo);
+
+FBO_t *R_CreateNormalMapDestinationFBO ( void )
+{
+	if (tr.NormalMapDestinationFBO) return tr.NormalMapDestinationFBO;
+
+	tr.NormalMapDestinationFBO = FBO_Create("_generateImageDst", 8192, 8192);
+	return tr.NormalMapDestinationFBO;
+}
+
+image_t *R_TextureESharpenGLSL ( const char *name, byte *pic, int width, int height, int flags, image_t *srcImage )
+{
+	int			normalFlags;
+	vec4i_t		box;
+	FBO_t		*dstFbo = NULL;
+	image_t		*dstImage;
+	imgType_t	type = srcImage->type;
+	int			format = srcImage->internalFormat;
+
+	if (!tr.esharpeningShader.program || !tr.esharpeningShader.uniformBuffer) return NULL; // Will get done later after init on usage...
+
+	memset(srcImage->imgName, 0, sizeof(srcImage->imgName));
+	sprintf(srcImage->imgName, "deleted");
+
+	ri->Printf(PRINT_WARNING, "ESharpening [%ix%i] texture %s.\n", width, height, name);
+	
+	normalFlags = flags;
+
+	dstFbo = R_CreateNormalMapDestinationFBO();
+	FBO_Bind (dstFbo);
+	dstImage = R_CreateImage( name, pic, width, height, type, normalFlags, format );
+	qglBindTexture(GL_TEXTURE_2D, dstImage->texnum);
+	FBO_AttachTextureImage(dstImage, 0);
+	FBO_SetupDrawBuffers();
+	R_CheckFBO(dstFbo);
+	
+	GLSL_BindProgram(&tr.esharpeningShader);
+	GL_BindToTMU(srcImage, TB_LEVELSMAP);
+
+	vec2_t screensize;
+	screensize[0] = width;
+	screensize[1] = height;
+	GLSL_SetUniformVec2(&tr.esharpeningShader, UNIFORM_DIMENSIONS, screensize);
+	GLSL_SetUniformMatrix16(&tr.esharpeningShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
+
+	box[0] = 0;
+	box[1] = 0;
+	box[2] = width;
+	box[3] = height;
+
+	//qglGetTexImage
+
+	FBO_BlitFromTexture(srcImage, box, NULL, dstFbo, box, &tr.esharpeningShader, NULL, 0);
+
+	qglDeleteTextures( 1, &srcImage->texnum );
+
+	return dstImage;
+}
+
+image_t *R_TextureESharpen2GLSL ( const char *name, byte *pic, int width, int height, int flags, image_t *srcImage )
+{
+	int			normalFlags;
+	vec4i_t		box;
+	FBO_t		*dstFbo = NULL;
+	image_t		*dstImage;
+	imgType_t	type = srcImage->type;
+	int			format = srcImage->internalFormat;
+
+	if (!tr.esharpening2Shader.program || !tr.esharpening2Shader.uniformBuffer) return NULL; // Will get done later after init on usage...
+
+	memset(srcImage->imgName, 0, sizeof(srcImage->imgName));
+	sprintf(srcImage->imgName, "deleted");
+
+	ri->Printf(PRINT_WARNING, "ESharpening 2 [%ix%i] texture %s.\n", width, height, name);
+	
+	normalFlags = flags;
+
+	dstFbo = R_CreateNormalMapDestinationFBO();
+	FBO_Bind (dstFbo);
+	dstImage = R_CreateImage( name, pic, width, height, type, normalFlags, format );
+	qglBindTexture(GL_TEXTURE_2D, dstImage->texnum);
+	FBO_AttachTextureImage(dstImage, 0);
+	FBO_SetupDrawBuffers();
+	R_CheckFBO(dstFbo);
+	
+	GLSL_BindProgram(&tr.esharpening2Shader);
+	GL_BindToTMU(srcImage, TB_LEVELSMAP);
+
+	vec2_t screensize;
+	screensize[0] = width;
+	screensize[1] = height;
+	GLSL_SetUniformVec2(&tr.esharpening2Shader, UNIFORM_DIMENSIONS, screensize);
+	GLSL_SetUniformMatrix16(&tr.esharpening2Shader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
+
+	box[0] = 0;
+	box[1] = 0;
+	box[2] = width;
+	box[3] = height;
+
+	//qglGetTexImage
+
+	FBO_BlitFromTexture(srcImage, box, NULL, dstFbo, box, &tr.esharpening2Shader, NULL, 0);
+
+	qglDeleteTextures( 1, &srcImage->texnum );
+
+	return dstImage;
+}
+
+image_t *R_TextureDarkExpandGLSL ( const char *name, byte *pic, int width, int height, int flags, image_t *srcImage )
+{
+	int			normalFlags;
+	vec4i_t		box;
+	FBO_t		*dstFbo = NULL;
+	image_t		*dstImage;
+	imgType_t	type = srcImage->type;
+	int			format = srcImage->internalFormat;
+
+	if (!tr.darkexpandShader.program || !tr.darkexpandShader.uniformBuffer) return NULL; // Will get done later after init on usage...
+
+	memset(srcImage->imgName, 0, sizeof(srcImage->imgName));
+	sprintf(srcImage->imgName, "deleted");
+
+	ri->Printf(PRINT_WARNING, "DarkXpand [%ix%i] texture %s.\n", width, height, name);
+	
+	normalFlags = flags;
+
+	dstFbo = R_CreateNormalMapDestinationFBO();
+	FBO_Bind (dstFbo);
+	dstImage = R_CreateImage( name, pic, width, height, type, normalFlags, format );
+	qglBindTexture(GL_TEXTURE_2D, dstImage->texnum);
+	FBO_AttachTextureImage(dstImage, 0);
+	FBO_SetupDrawBuffers();
+	R_CheckFBO(dstFbo);
+	
+	GLSL_BindProgram(&tr.darkexpandShader);
+	GL_BindToTMU(srcImage, TB_LEVELSMAP);
+
+	vec2_t screensize;
+	screensize[0] = width;
+	screensize[1] = height;
+	GLSL_SetUniformVec2(&tr.darkexpandShader, UNIFORM_DIMENSIONS, screensize);
+	GLSL_SetUniformMatrix16(&tr.darkexpandShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
+
+	box[0] = 0;
+	box[1] = 0;
+	box[2] = width;
+	box[3] = height;
+
+	//qglGetTexImage
+
+	FBO_BlitFromTexture(srcImage, box, NULL, dstFbo, box, &tr.darkexpandShader, NULL, 0);
+
+	qglDeleteTextures( 1, &srcImage->texnum );
+
+	return dstImage;
+}
+
+image_t *R_TextureCleanGLSL ( const char *name, byte *pic, int width, int height, int flags, image_t *srcImage )
+{
+	int			normalFlags;
+	vec4i_t		box;
+	FBO_t		*dstFbo = NULL;
+	image_t		*dstImage;
+	imgType_t	type = srcImage->type;
+	int			format = srcImage->internalFormat;
+
+	if (!tr.texturecleanShader.program || !tr.texturecleanShader.uniformBuffer) return NULL; // Will get done later after init on usage...
+
+	memset(srcImage->imgName, 0, sizeof(srcImage->imgName));
+	sprintf(srcImage->imgName, "deleted");
+
+	ri->Printf(PRINT_WARNING, "Cleaning [%ix%i] texture %s.\n", width, height, name);
+	
+	normalFlags = flags;
+
+	dstFbo = R_CreateNormalMapDestinationFBO();
+	FBO_Bind (dstFbo);
+	dstImage = R_CreateImage( name, pic, width, height, type, normalFlags, format );
+	qglBindTexture(GL_TEXTURE_2D, dstImage->texnum);
+	FBO_AttachTextureImage(dstImage, 0);
+	FBO_SetupDrawBuffers();
+	R_CheckFBO(dstFbo);
+	
+	GLSL_BindProgram(&tr.texturecleanShader);
+	GL_BindToTMU(srcImage, TB_DIFFUSEMAP);
+
+	vec2_t screensize;
+	screensize[0] = width;
+	screensize[1] = height;
+	GLSL_SetUniformVec2(&tr.texturecleanShader, UNIFORM_DIMENSIONS, screensize);
+	GLSL_SetUniformMatrix16(&tr.texturecleanShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
+
+	vec4_t local0;
+	VectorSet4(local0, r_textureCleanSigma->value, r_textureCleanBSigma->value, r_textureCleanMSize->value, 0);
+	GLSL_SetUniformVec4(&tr.texturecleanShader, UNIFORM_LOCAL0, local0);
+
+	box[0] = 0;
+	box[1] = 0;
+	box[2] = width;
+	box[3] = height;
+
+	//qglGetTexImage
+
+	FBO_BlitFromTexture(srcImage, box, NULL, dstFbo, box, &tr.texturecleanShader, NULL, 0);
+	
+	qglDeleteTextures( 1, &srcImage->texnum );
+
+	return dstImage;
+}
+
+image_t *R_CreateNormalMapGLSL ( const char *name, byte *pic, int width, int height, int flags, image_t	*srcImage )
+{
+	int			normalFlags;
+	vec4i_t		box;
+	FBO_t		*dstFbo = NULL;
+	image_t		*dstImage;
+
+	if (!tr.generateNormalMapShader.program || !tr.generateNormalMapShader.uniformBuffer) return NULL; // Will get done later after init on usage...
+
+	//ri->Printf(PRINT_WARNING, "Generating [%ix%i] normal map %s.\n", width, height, name);
+	
+	normalFlags = (flags & ~(IMGFLAG_GENNORMALMAP | IMGFLAG_SRGB)) | IMGFLAG_NOLIGHTSCALE;
+
+	dstFbo = R_CreateNormalMapDestinationFBO();
+	FBO_Bind (dstFbo);
+	dstImage = R_CreateImage( name, pic, width, height, IMGTYPE_NORMAL, normalFlags, GL_RGBA8 );
+	qglBindTexture(GL_TEXTURE_2D, dstImage->texnum);
+	FBO_AttachTextureImage(dstImage, 0);
+	FBO_SetupDrawBuffers();
+	R_CheckFBO(dstFbo);
+	
+	GLSL_BindProgram(&tr.generateNormalMapShader);
+	GL_BindToTMU(srcImage, TB_DIFFUSEMAP);
+
+	vec2_t screensize;
+	screensize[0] = width;
+	screensize[1] = height;
+	GLSL_SetUniformVec2(&tr.generateNormalMapShader, UNIFORM_DIMENSIONS, screensize);
+	GLSL_SetUniformMatrix16(&tr.generateNormalMapShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
+
+	box[0] = 0;
+	box[1] = 0;
+	box[2] = width;
+	box[3] = height;
+
+	//qglGetTexImage
+
+	//qglViewport(0, 0, width, height);
+	//qglScissor(0, 0, width, height);
+
+	FBO_BlitFromTexture(srcImage, box, NULL, dstFbo, box, &tr.generateNormalMapShader, NULL, 0);
+
+	return dstImage;
+}
+
+image_t *R_CreateNormalMap ( const char *name, byte *pic, int width, int height, int flags, image_t	*srcImage )
 {
 	char normalName[MAX_QPATH];
 	image_t *normalImage;
@@ -2617,6 +2875,12 @@ static void R_CreateNormalMap ( const char *name, byte *pic, int width, int heig
 	//if (normalImage != NULL) ri->Printf(PRINT_WARNING, "Loaded real normal map file %s.\n", normalName);
 	//else ri->Printf(PRINT_WARNING, "No real normal map file %s.\n", normalName);
 	
+	if (normalImage == NULL)
+	{
+		return R_CreateNormalMapGLSL( normalName, pic, width, height, flags, srcImage );
+	}
+
+	return normalImage;
 #if 0
 	// if not, generate it
 	if (normalImage == NULL)
@@ -2772,6 +3036,8 @@ extern qboolean R_ShaderExists( const char *name, const int *lightmapIndexes, co
 
 char previous_name_loaded[256];
 
+extern void StripCrap( const char *in, char *out, int destsize );
+
 image_t	*R_FindImageFile( const char *name, imgType_t type, int flags )
 {
 	image_t	*image;
@@ -2804,21 +3070,75 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, int flags )
 	// load the pic from disk
 	//
 	R_LoadImage( name, &pic, &width, &height );
+
 	if ( pic == NULL ) {
+		if (StringContainsWord(name, "sky") 
+			|| StringContainsWord(name, "skies") 
+			|| StringContainsWord(name, "cloud") 
+			|| StringContainsWord(name, "glow")
+			|| StringContainsWord(name, "gfx/")) return NULL;
+
+		if (r_normalMapping->integer && type == IMGTYPE_NORMAL /*&& (flags & IMGFLAG_PICMIP) && (flags & IMGFLAG_MIPMAP)*/)
+		{// If this was a normal map, and we have none, then generate one now and return it...
+			char cleanedName[128];
+			StripCrap(name, cleanedName, sizeof(cleanedName)); // Remove any _n, etc... The generator will re-add it...
+			R_LoadImage( cleanedName, &pic, &width, &height );
+			if ( pic != NULL ) 
+			{
+				image_t *n = R_CreateNormalMapGLSL( name, pic, width, height, flags, image );
+				Z_Free( pic );
+				return n;
+			}
+		}
 		return NULL;
 	}
 
+	image = R_CreateImage( name, pic, width, height, type, flags, GL_RGBA8 );
+	qglBindTexture(GL_TEXTURE_2D, image->texnum);
+
 	if (type != IMGTYPE_NORMAL && type != IMGTYPE_SPECULAR  && type != IMGTYPE_SUBSURFACE)
 	{
-		if (r_normalMapping->integer) R_CreateNormalMap( name, pic, width, height, flags );
-		if (r_specularMapping->integer) R_CreateSpecularMap( name, pic, width, height, flags );
+		if (image && r_textureClean->integer)
+		{
+			image = R_TextureCleanGLSL( name, pic, width, height, flags, image );
+		}
+
+		/*
+		if (image && r_esharpening->integer)
+		{
+			image = R_TextureESharpenGLSL( name, pic, width, height, flags, image );
+		}
+
+		if (image && r_esharpening2->integer)
+		{
+			image = R_TextureESharpen2GLSL( name, pic, width, height, flags, image );
+		}
+
+		if (image && r_darkexpand->integer)
+		{
+			image = R_TextureDarkExpandGLSL( name, pic, width, height, flags, image );
+		}
+		*/
+
+		if (r_normalMapping->integer /*&& (flags & IMGFLAG_PICMIP) && (flags & IMGFLAG_MIPMAP)*/) 
+		{
+			if (!(StringContainsWord(name, "sky") 
+				|| StringContainsWord(name, "skies") 
+				|| StringContainsWord(name, "cloud") 
+				|| StringContainsWord(name, "glow")
+				|| StringContainsWord(name, "gfx/")))
+			{
+				R_CreateNormalMap( name, pic, width, height, flags, image );
+			}
+		}
+
+		if (r_specularMapping->integer) 
+			R_CreateSpecularMap( name, pic, width, height, flags );
+
 		R_CreateSubsurfaceMap( name, pic, width, height, flags );
 	}
 
-	image = R_CreateImage( name, pic, width, height, type, flags, GL_RGBA8 );
 	Z_Free( pic );
-
-	qglBindTexture(GL_TEXTURE_2D, image->texnum);
 	
 	return image;
 }

@@ -20,6 +20,7 @@ void main()
     vec4 sum = vec4(0.0);
     int x=0;
     int y=0;
+	//vec4 origColor = texture2D(u_TextureMap, var_TexCoords);
 
     vec2 recipres = vec2(1.0f / viewWidth, 1.0f / viewHeight);
 
@@ -68,5 +69,7 @@ void main()
 //#define const_2 (255.0 / 242.0)
 //	gl_FragColor = ((gl_FragColor - const_1) * const_2);
 
+	//gl_FragColor.a = origColor.a;
+	//gl_FragColor.a = s.a;
 	gl_FragColor.a = 1.0;
 }

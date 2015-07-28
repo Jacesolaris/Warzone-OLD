@@ -191,11 +191,11 @@ vec3 CameraPath( float t )
 //--------------------------------------------------------------------------
 void main(void)
 {
-#if 0
-	gTime = time*.65 + 70. + 0.07*length(gl_FragCoord)/length(resolution);
+#if 1
+	gTime = time*.65 + 70. + 0.07*length(texCoord1)/length(resolution);
 	cloudy = cos(gTime * .27+.15) * .2;
 	
-    vec2 xy = gl_FragCoord.xy / resolution.xy;
+    vec2 xy = texCoord1.xy;// / resolution.xy;
 	vec2 uv = (-1.0 + 2.0 * xy) * vec2(resolution.x/resolution.y,1.0);
 	
 	//vec3 cameraPos	   = vec3(1.0, 1.0, 1.0);
@@ -237,6 +237,7 @@ void main(void)
 	// Don't gamma too much to keep the moody look...
 	col = pow(col, vec3(.7));
 	gl_FragColor=vec4(col, 1.0);
-#endif
+#else
 	gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
+#endif
 }

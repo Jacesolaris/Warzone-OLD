@@ -100,6 +100,72 @@ varying vec3   var_vertPos;
 
 out vec4 out_Glow;
 
+vec4 generateEnhancedNormal( vec2 fragCoord )
+{// Generates a normal map with enhanced edges... Not so good for parallax...
+	vec2 uv = fragCoord.xy;
+    float u = uv.x;
+    float v = uv.y;
+    
+    float threshold = 0.085;
+    float px = 1.0/var_Dimensions.x;
+    
+    vec3 rgb = texture2D(u_DiffuseMap, uv).rgb;
+    vec3 bw = vec3(1);
+    vec3 bw2 = vec3(1);
+
+    vec3 rgbUp = texture2D(u_DiffuseMap, vec2(u,v+px)).rgb;
+    vec3 rgbDown = texture2D(u_DiffuseMap, vec2(u,v-px)).rgb;
+    vec3 rgbLeft = texture2D(u_DiffuseMap, vec2(u+px,v)).rgb;
+    vec3 rgbRight = texture2D(u_DiffuseMap, vec2(u-px,v)).rgb;
+
+    float rgbAvr = (rgb.r + rgb.g + rgb.b) / 3.;
+    float rgbUpAvr = (rgbUp.r + rgbUp.g + rgbUp.b) / 3.;
+    float rgbDownAvr = (rgbDown.r + rgbDown.g + rgbDown.b) / 3.;
+    float rgbLeftAvr = (rgbLeft.r + rgbLeft.g + rgbLeft.b) / 3.;
+    float rgbRightAvr = (rgbRight.r + rgbRight.g + rgbRight.b) / 3.;
+
+    float dx = abs(rgbRightAvr - rgbLeftAvr);
+    float dy = abs(rgbUpAvr - rgbDownAvr);
+    
+    if (dx > threshold)
+        bw = vec3(1);
+    else if (dy > threshold)
+        bw = vec3(1);
+    else
+        bw = vec3(0);
+    
+    // inigo code!
+    // o.5 + 0.5 * acts as a remapping function
+    bw = 0.5 + 0.5*normalize( vec3(rgbRightAvr - rgbLeftAvr, 100.0*px, rgbUpAvr - rgbDownAvr) ).xzy;
+    
+    return vec4(bw,0);
+}
+
+vec4 generateBumpyNormal( vec2 fragCoord )
+{// Generates an extra bumpy normal map...
+	vec2 tex_offset = vec2(1.0 / var_Dimensions.x, 1.0 / var_Dimensions.y);
+	vec2 uv = fragCoord;
+	//uv.y=1.0-uv.y;
+	
+	float x=1.;
+	float y=1.;
+	
+	float M =abs(texture2D(u_DiffuseMap, uv + vec2(0., 0.)*tex_offset).r); 
+	float L =abs(texture2D(u_DiffuseMap, uv + vec2(x, 0.)*tex_offset).r);
+	float R =abs(texture2D(u_DiffuseMap, uv + vec2(-x, 0.)*tex_offset).r);	
+	float U =abs(texture2D(u_DiffuseMap, uv + vec2(0., y)*tex_offset).r);
+	float D =abs(texture2D(u_DiffuseMap, uv + vec2(0., -y)*tex_offset).r);
+	float X = ((R-M)+(M-L))*.5;
+	float Y = ((D-M)+(M-U))*.5;
+	
+	float strength =.01;
+	vec4 N = vec4(normalize(vec3(X, Y, strength)), 1.0);
+//	vec4 N = vec4(normalize(vec3(X, Y, .01))-.5, 1.0);
+
+	vec4 col = vec4(N.xyz * 0.5 + 0.5,1.);
+	return col;
+}
+
 #if defined(USE_PARALLAXMAP) || defined(USE_PARALLAXMAP_NONORMALS)
   #if defined(USE_PARALLAXMAP)
 	float SampleDepth(sampler2D normalMap, vec2 t)
@@ -114,7 +180,7 @@ out vec4 out_Glow;
 
   #if defined(USE_PARALLAXMAP_NONORMALS)
 	float SampleDepth(sampler2D normalMap, vec2 t)
-	{
+	{// Provides enhanced parallax depths without stupid distortions... Also provides a nice backup specular map...
 		vec3 color = texture2D(u_DiffuseMap, t).rgb;
 
 #define const_1 ( 16.0 / 255.0)
@@ -134,7 +200,19 @@ out vec4 out_Glow;
 		combined_color2 /= 4.0; // Darkens the whole thing a litttle...
 
 		// Returns inverse of the height. Result is mostly around 1.0 (so we don't stand on a surface far below us), with deep dark areas (cracks, edges, etc)...
-		return clamp(1.0 - combined_color2, 0.0, 1.0);
+		float height = clamp(1.0 - combined_color2, 0.0, 1.0);
+		return height;
+
+		/*
+		// Mix it with an extra-bumpy normal map... (UQ1: decided not worth the fps loss)
+		float norm = generateBumpyNormal( t ).r;
+		// I don't want this much bumpiness (and this is to be used as a multipier), so move the whole thing closer to 1.0...
+		norm *= 0.5;
+		norm += 0.5;
+		norm *= 0.5;
+		norm += 0.5;
+		return (height + (norm * height)) / 2.0;
+		*/
 	}
   #endif
 
@@ -367,12 +445,62 @@ vec4 subScatterFS(vec4 BaseColor, vec4 SpecColor, vec3 lightVec, vec3 LightColor
 }
 #endif
 
+//---------------------------------------------------------
+// get pseudo 3d bump background
+//---------------------------------------------------------
+vec4 BumpyBackground (sampler2D texture, vec2 pos)
+{
+  #define LINEAR_STEPS 20.0
+  #define DISTANCE 0.16
+  #define FEATURES 0.5
+
+  vec4 color = vec4(0.0);
+  vec2 dir = -(vec2(pos - vec2(0.5, 0.5)) * (DISTANCE / LINEAR_STEPS)) * 0.5;
+    
+  for (float i = 0.0; i < LINEAR_STEPS; i++) 
+  {
+    vec4 pixel1 = texture2D(texture, pos - i * dir);
+    if (pow(length(pixel1.rgb) / 1.4, 0.20) * (1.0 - FEATURES)
+       +pow(length(texture2D(texture, (pos - i * dir) * 2.0).rgb) / 1.4, 0.90) * FEATURES
+       > i / LINEAR_STEPS) 
+    //color = pixel1 * i / LINEAR_STEPS;
+    color += 0.16 * pixel1 * i / LINEAR_STEPS;
+  }
+  return color;
+}
+
 void main()
 {
 	vec3 viewDir, lightColor, ambientColor;
 	vec3 L, N, E, H;
 	float NL, NH, NE, EH, attenuation;
 	vec2 tex_offset = vec2(1.0 / var_Dimensions.x, 1.0 / var_Dimensions.y);
+
+/*
+#if defined(USE_NORMALMAP)
+	if (u_Local4.r != 0.0)
+	{
+		gl_FragColor = vec4(texture2D(u_NormalMap, var_TexCoords.xy).a);
+		//gl_FragColor = texture2D(u_NormalMap, var_TexCoords.xy);
+		//gl_FragColor = vec4(1.0,0.0,0.0,1.0);
+		out_Glow = vec4(0.0);
+		return;
+	}
+	else
+	{
+		//gl_FragColor = vec4(0.0,1.0,0.0,1.0);
+		//gl_FragColor = texture2D(u_NormalMap, var_TexCoords.xy);
+		gl_FragColor = vec4(texture2D(u_NormalMap, var_TexCoords.xy).a);
+		out_Glow = vec4(0.0);
+		return;
+	}
+#else
+	gl_FragColor = vec4(0.0,0.0,1.0,1.0);
+	out_Glow = vec4(0.0);
+	return;
+#endif
+*/
+
 
 #if 0
 	if (var_Local1.a == 5)
@@ -447,15 +575,24 @@ void main()
 #endif
 
 	vec4 diffuse = texture2D(u_DiffuseMap, texCoords);
+	//vec4 diffuse = BumpyBackground(u_DiffuseMap, texCoords);
 
 #if defined(USE_GAMMA2_TEXTURES)
 	diffuse.rgb *= diffuse.rgb;
 #endif
 
 #if defined(USE_PARALLAXMAP) || defined(USE_PARALLAXMAP_NONORMALS)
+  #if defined(USE_NORMALMAP)
+	float fakedepth = texture2D(u_NormalMap, texCoords).a;
+  #else
 	float fakedepth = SampleDepth(u_DiffuseMap, texCoords);
+  #endif
 #else
+  #if defined(USE_NORMALMAP)
+	float fakedepth = texture2D(u_NormalMap, texCoords).a;
+  #else
 	float fakedepth = (diffuse.r + diffuse.g + diffuse.b) / 3.0; // meh
+  #endif
 #endif
 
 #if defined(USE_LIGHT) && !defined(USE_FAST_LIGHT)
@@ -473,6 +610,7 @@ void main()
   #endif
 
 #if defined(USE_PARALLAXMAP) || defined(USE_PARALLAXMAP_NONORMALS)
+  /*
   #if defined(USE_NORMALMAP)
     if (u_Local4.r != 0.0)
 	{// Have a real normal map...
@@ -489,11 +627,7 @@ void main()
 	{
 		float norm = (fakedepth - 0.5);
 		float norm2 = 0.0 - (fakedepth - 0.5);
-	#if defined(SWIZZLE_NORMALMAP)
-			N.xy = vec2(norm, norm2);
-    #else
-			N.xy = vec2(norm, norm2);
-    #endif
+		N.xy = vec2(norm, norm2);
 		N.xy *= u_NormalScale.xy;
 		N.z = sqrt(clamp((0.25 - N.x * N.x) - N.y * N.y, 0.0, 1.0));
 		N = tangentToWorld * N;
@@ -501,6 +635,7 @@ void main()
   #else
 	N = var_Normal.xyz;
   #endif
+  */
   N = var_Normal.xyz;
 #endif
 

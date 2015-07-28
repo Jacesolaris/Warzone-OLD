@@ -301,7 +301,7 @@ void FBO_AttachTextureImage(image_t *img, int index)
 	glState.currentFBO->colorBuffers[index] = img->texnum;
 }
 
-static void FBO_SetupDrawBuffers()
+void FBO_SetupDrawBuffers()
 {
 	if (!glState.currentFBO)
 	{

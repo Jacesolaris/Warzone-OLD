@@ -1553,7 +1553,7 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage)
 	{
 		specularScale = 1.5;
 		materialType = (float)MATERIAL_WATER;
-		parallaxScale = 4.0;
+		parallaxScale = 2.0;
 	}
 	else
 	{
@@ -1563,63 +1563,61 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage)
 			specularScale = 1.0;
 			cubemapScale = 1.5;
 			materialType = (float)MATERIAL_WATER;
-			parallaxScale = 4.0;
+			parallaxScale = 2.0;
 			break;
 		case MATERIAL_SHORTGRASS:		// 5			// manicured lawn
 			specularScale = 0.53;
 			cubemapScale = 0.0;
 			materialType = (float)MATERIAL_SHORTGRASS;
-			//parallaxScale = 4.0;
-			parallaxScale = 6.0;
+			parallaxScale = 2.5;
 			break;
 		case MATERIAL_LONGGRASS:		// 6			// long jungle grass
 			specularScale = 0.5;
 			cubemapScale = 0.0;
 			materialType = (float)MATERIAL_LONGGRASS;
-			//parallaxScale = 5.0;
-			parallaxScale = 8.0;
+			parallaxScale = 3.0;
 			break;
 		case MATERIAL_SAND:				// 8			// sandy beach
 			specularScale = 0.0;
 			cubemapScale = 0.0;
 			materialType = (float)MATERIAL_SAND;
-			parallaxScale = 3.0;
+			parallaxScale = 2.5;
 			break;
 		case MATERIAL_CARPET:			// 27			// lush carpet
 			specularScale = 0.0;
 			cubemapScale = 0.0;
 			materialType = (float)MATERIAL_CARPET;
-			parallaxScale = 3.0;
+			parallaxScale = 2.5;
 			break;
 		case MATERIAL_GRAVEL:			// 9			// lots of small stones
 			specularScale = 0.0;
 			cubemapScale = 0.0;
 			materialType = (float)MATERIAL_GRAVEL;
-			parallaxScale = 4.0;
+			parallaxScale = 3.0;
 			break;
 		case MATERIAL_ROCK:				// 23			//
 			specularScale = 0.0;
 			cubemapScale = 0.0;
 			materialType = (float)MATERIAL_ROCK;
-			parallaxScale = 4.0;
+			parallaxScale = 3.0;
 			break;
 		case MATERIAL_TILES:			// 26			// tiled floor
 			specularScale = 0.86;
 			cubemapScale = 0.9;
 			materialType = (float)MATERIAL_TILES;
-			parallaxScale = 3.0;
+			parallaxScale = 2.5;
 			break;
 		case MATERIAL_SOLIDWOOD:		// 1			// freshly cut timber
 			specularScale = 0.0;
 			cubemapScale = 0.0;
 			materialType = (float)MATERIAL_SOLIDWOOD;
-			parallaxScale = 3.0;
+			parallaxScale = 2.5;
 			break;
 		case MATERIAL_HOLLOWWOOD:		// 2			// termite infested creaky wood
 			specularScale = 0.0;
 			cubemapScale = 0.0;
 			materialType = (float)MATERIAL_HOLLOWWOOD;
-			parallaxScale = 3.0;
+			parallaxScale = 2.5;
 			break;
 		case MATERIAL_SOLIDMETAL:		// 3			// solid girders
 			specularScale = 0.92;
@@ -1639,25 +1637,25 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage)
 			specularScale = 0.0;
 			cubemapScale = 0.0;
 			materialType = (float)MATERIAL_DRYLEAVES;
-			parallaxScale = 5.0;
+			parallaxScale = 3.0;
 			break;
 		case MATERIAL_GREENLEAVES:		// 20			// fresh leaves still on a tree
 			specularScale = 0.0;
 			cubemapScale = 0.0;
 			materialType = (float)MATERIAL_GREENLEAVES;
-			parallaxScale = 5.0;
+			parallaxScale = 3.0;
 			break;
 		case MATERIAL_FABRIC:			// 21			// Cotton sheets
 			specularScale = 0.48;
 			cubemapScale = 0.0;
 			materialType = (float)MATERIAL_FABRIC;
-			parallaxScale = 3.0;
+			parallaxScale = 2.5;
 			break;
 		case MATERIAL_CANVAS:			// 22			// tent material
 			specularScale = 0.45;
 			cubemapScale = 0.0;
 			materialType = (float)MATERIAL_CANVAS;
-			parallaxScale = 3.0;
+			parallaxScale = 2.5;
 			break;
 		case MATERIAL_MARBLE:			// 12			// marble floors
 			specularScale = 0.86;
@@ -1669,25 +1667,25 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage)
 			specularScale = 0.65;
 			cubemapScale = 0.0;
 			materialType = (float)MATERIAL_SNOW;
-			parallaxScale = 5.0;
+			parallaxScale = 3.0;
 			break;
 		case MATERIAL_MUD:				// 17			// wet soil
 			specularScale = 0.0;
 			cubemapScale = 0.0;
 			materialType = (float)MATERIAL_MUD;
-			parallaxScale = 4.0;
+			parallaxScale = 3.0;
 			break;
 		case MATERIAL_DIRT:				// 7			// hard mud
 			specularScale = 0.0;
 			cubemapScale = 0.0;
 			materialType = (float)MATERIAL_DIRT;
-			parallaxScale = 5.0;
+			parallaxScale = 3.0;
 			break;
 		case MATERIAL_CONCRETE:			// 11			// hardened concrete pavement
 			specularScale = 0.3;
 			cubemapScale = 0.0;
 			materialType = (float)MATERIAL_CONCRETE;
-			parallaxScale = 5.0;
+			parallaxScale = 3.0;
 			break;
 		case MATERIAL_FLESH:			// 16			// hung meat, corpses in the world
 			specularScale = 0.2;
@@ -1754,7 +1752,7 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage)
 			specularScale = 0.0;
 			cubemapScale = 0.0;
 			materialType = (float)0.0;
-			parallaxScale = 2.0;
+			parallaxScale = 1.0;
 			break;
 		}
 	}
@@ -2213,6 +2211,19 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				//
 				if ((light || pStage->isWater || pStage->hasRealNormalMap || pStage->hasSpecular || pStage->hasRealSubsurfaceMap) && !fastLight)
 				{
+					if (!pStage->bundle[TB_NORMALMAP].image[0] 
+						&& pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName[0] 
+						&& pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName[0] != '*'
+							&& pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName[0] != '$'
+						&& r_normalMapping->integer)
+					{// How did this happen??? Oh well, generate a normal map now...
+						char imgname[64];
+						sprintf(imgname, "%s_n", pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName);
+						pStage->bundle[TB_NORMALMAP].image[0] = R_FindImageFile( imgname, IMGTYPE_NORMAL, GL_RGBA8 );
+						pStage->hasRealNormalMap = true;
+						RB_SetMaterialBasedProperties(sp, pStage);
+					}
+					
 					if (pStage->bundle[TB_NORMALMAP].image[0])
 					{
 						R_BindAnimatedImageToTMU( &pStage->bundle[TB_NORMALMAP], TB_NORMALMAP);
@@ -2450,7 +2461,7 @@ void RB_StageIteratorGeneric( void )
 	// UQ1: Set up any special shaders needed for this surface/contents type...
 	//
 
-	if ((tess.shader->contentFlags & CONTENTS_WATER) || (tess.shader->contentFlags & CONTENTS_LAVA) || (tess.shader->surfaceFlags & MATERIAL_MASK) == MATERIAL_WATER) 
+	if ((tess.shader->contentFlags & CONTENTS_WATER) /*|| (tess.shader->contentFlags & CONTENTS_LAVA)*/ || (tess.shader->surfaceFlags & MATERIAL_MASK) == MATERIAL_WATER) 
 	{
 		if (input->xstages[0]->isWater == 0) // In case it is already set, no need looping more then once on the same shader...
 		{

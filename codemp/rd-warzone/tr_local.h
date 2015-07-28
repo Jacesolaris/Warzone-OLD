@@ -747,6 +747,7 @@ typedef struct {
 	qboolean		isLightmap;
 	qboolean		oneShotAnimMap;
 	qboolean		isVideoMap;
+	qboolean		normalsLoaded;
 	qboolean		specularLoaded;
 	qboolean		subsurfaceLoaded;
 } textureBundle_t;
@@ -2290,13 +2291,14 @@ typedef struct trGlobals_s {
 	// UQ1: Added shaders...
 	//
 
+	shaderProgram_t generateNormalMapShader;
 	shaderProgram_t darkexpandShader;
 	shaderProgram_t hdrShader;
 	shaderProgram_t dofShader;
 	shaderProgram_t fakedepthShader;
 	shaderProgram_t fakedepthSteepParallaxShader;
 	shaderProgram_t anaglyphShader;
-	//shaderProgram_t uniqueskyShader;
+	shaderProgram_t uniqueskyShader;
 	shaderProgram_t waterShader;
 	shaderProgram_t ssao2Shader;
 	shaderProgram_t esharpeningShader;
@@ -2324,6 +2326,7 @@ typedef struct trGlobals_s {
 	FBO_t          *bloomRenderFBO[3];
 	FBO_t          *anamorphicRenderFBO[3];
 	FBO_t		   *genericFbo;
+	FBO_t		   *NormalMapDestinationFBO;
 
 	//
 	// UQ1: End Added shaders...

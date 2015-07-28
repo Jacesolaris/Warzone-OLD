@@ -22,6 +22,8 @@ float height = viewHeight;
 #define Edge_threshold  0.2
 #define Sharpen_val0    2.0
 #define Sharpen_val1    0.125
+//#define Sharpen_val0    1.0
+//#define Sharpen_val1    0.125
 
 void main()
 {

@@ -79,30 +79,6 @@ vec3 SampleNormals(sampler2D normalMap, in vec2 coord)
 	 return normal_from_depth(depth, coord);
 }
 
-/*
-vec4 SampleNormals(sampler2D normalMap, vec2 t)
-{
-	vec3 color = texture2D(normalMap, t).rgb;
-
-#define const_1 ( 16.0 / 255.0)
-#define const_2 (255.0 / 219.0)
-	vec3 color2 = ((color - const_1) * const_2);
-#define const_3 ( 125.0 / 255.0)
-#define const_4 (255.0 / 115.0)
-		
-	color = ((color - const_3) * const_4);
-
-	//vec3 orig_color = color * 2.0;
-	vec3 orig_color = color + color2;
-
-	orig_color = clamp(orig_color, 0.0, 1.0);
-	float combined_color2 = orig_color.r + orig_color.g + orig_color.b;
-	combined_color2 /= 4.0;
-
-	return vec4(clamp(1.0 - combined_color2, 0.0, 1.0));
-}
-*/
-
 #define PI  3.14159265
 
 float width = var_Dimensions.x; //texture width
@@ -129,7 +105,7 @@ vec3 CalculateFlare ( vec3 flare_color, vec3 final_color )
 	if (bt > 0.666) 
 		bt *= 0.666; // Bright lights get dulled... (eg: white)
 	else if (bt < 0.333) 
-		bt *= 2.3; // Dull lights get amplified... (eg: blue)
+		bt *= 1.8; // Dull lights get amplified... (eg: blue)
 	else 
 		bt *= 1.1; // Mid range lights get amplified slightly... (eg: yellow)
 
@@ -266,7 +242,7 @@ void main()
 			// UQ1: Let's add some of the flare color as well... Just to boost colors/glows...
 			vec3 flare_color = clamp(texture2D(u_NormalMap, texCoord.st).rgb, 0.0, 1.0);
 			vec3 add_flare = CalculateFlare(flare_color, final_color);
-			final_color = clamp((final_color + final_color + add_flare) / 3.0, 0.0, 1.0);
+			final_color = clamp((final_color + final_color + final_color + add_flare) / 4.0, 0.0, 1.0);
 
 			gl_FragColor = vec4(final_color,1.0);
 		}
@@ -283,7 +259,7 @@ void main()
 			// UQ1: Let's add some of the flare color as well... Just to boost colors/glows...
 			vec3 flare_color = clamp(texture2D(u_NormalMap, texCoord.st).rgb, 0.0, 1.0);
 			vec3 add_flare = CalculateFlare(flare_color, final_color);
-			final_color = clamp((final_color + final_color + add_flare) / 3.0, 0.0, 1.0);
+			final_color = clamp((final_color + final_color + final_color + add_flare) / 4.0, 0.0, 1.0);
 
 			gl_FragColor = vec4(final_color,1.0);
 		}
@@ -296,7 +272,7 @@ void main()
 			// UQ1: Let's add some of the flare color as well... Just to boost colors/glows...
 			vec3 flare_color = clamp(texture2D(u_NormalMap, texCoord.st).rgb, 0.0, 1.0);
 			vec3 add_flare = CalculateFlare(flare_color, final_color);
-			final_color = clamp((final_color + final_color + add_flare) / 3.0, 0.0, 1.0);
+			final_color = clamp((final_color + final_color + final_color + add_flare) / 4.0, 0.0, 1.0);
 
 			gl_FragColor = vec4(final_color,1.0);
 		}
@@ -308,7 +284,7 @@ void main()
 		// UQ1: Let's add some of the flare color as well... Just to boost colors/glows...
 		vec3 flare_color = clamp(texture2D(u_NormalMap, texCoord.st).rgb, 0.0, 1.0);
 		vec3 add_flare = CalculateFlare(flare_color, final_color);
-		final_color = clamp((final_color + final_color + add_flare) / 3.0, 0.0, 1.0);
+		final_color = clamp((final_color + final_color + final_color + add_flare) / 4.0, 0.0, 1.0);
 
 		gl_FragColor = vec4(final_color,1.0);
 	}

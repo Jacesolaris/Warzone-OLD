@@ -2462,11 +2462,347 @@ qboolean HaveSurfaceType( int surfaceFlags )
 	return qfalse;
 }
 
+void DebugSurfaceTypeSelection( const char *name, int surfaceFlags )
+{
+	if (StringContainsWord(name, "gfx/") || StringContainsWord(name, "sprites/") || StringContainsWord(name, "powerups/"))
+		return; // Ignore all these to reduce spam for now...
+
+	if (StringContainsWord(name, "models/weapon"))
+		return; // Ignore all these to reduce spam for now...
+
+	if (StringContainsWord(name, "models/player"))
+		return; // Ignore all these to reduce spam for now...
+
+	switch( surfaceFlags & MATERIAL_MASK )
+	{
+	case MATERIAL_WATER:			// 13			// light covering of water on a surface
+		ri->Printf(PRINT_WARNING, "Surface %s was set to MATERIAL_WATER.\n", name);
+		break;
+	case MATERIAL_SHORTGRASS:		// 5			// manicured lawn
+		ri->Printf(PRINT_WARNING, "Surface %s was set to MATERIAL_SHORTGRASS.\n", name);
+		break;
+	case MATERIAL_LONGGRASS:		// 6			// long jungle grass
+		ri->Printf(PRINT_WARNING, "Surface %s was set to MATERIAL_LONGGRASS.\n", name);
+		break;
+	case MATERIAL_SAND:				// 8			// sandy beach
+		ri->Printf(PRINT_WARNING, "Surface %s was set to MATERIAL_SAND.\n", name);
+		break;
+	case MATERIAL_CARPET:			// 27			// lush carpet
+		ri->Printf(PRINT_WARNING, "Surface %s was set to MATERIAL_CARPET.\n", name);
+		break;
+	case MATERIAL_GRAVEL:			// 9			// lots of small stones
+		ri->Printf(PRINT_WARNING, "Surface %s was set to MATERIAL_GRAVEL.\n", name);
+		break;
+	case MATERIAL_ROCK:				// 23			//
+		ri->Printf(PRINT_WARNING, "Surface %s was set to MATERIAL_ROCK.\n", name);
+		break;
+	case MATERIAL_TILES:			// 26			// tiled floor
+		ri->Printf(PRINT_WARNING, "Surface %s was set to MATERIAL_TILES.\n", name);
+		break;
+	case MATERIAL_SOLIDWOOD:		// 1			// freshly cut timber
+		ri->Printf(PRINT_WARNING, "Surface %s was set to MATERIAL_SOLIDWOOD.\n", name);
+		break;
+	case MATERIAL_HOLLOWWOOD:		// 2			// termite infested creaky wood
+		ri->Printf(PRINT_WARNING, "Surface %s was set to MATERIAL_HOLLOWWOOD.\n", name);
+		break;
+	case MATERIAL_SOLIDMETAL:		// 3			// solid girders
+		ri->Printf(PRINT_WARNING, "Surface %s was set to MATERIAL_SOLIDMETAL.\n", name);
+		break;
+	case MATERIAL_HOLLOWMETAL:		// 4			// hollow metal machines
+		ri->Printf(PRINT_WARNING, "Surface %s was set to MATERIAL_HOLLOWMETAL.\n", name);
+		break;
+	case MATERIAL_DRYLEAVES:		// 19			// dried up leaves on the floor
+		ri->Printf(PRINT_WARNING, "Surface %s was set to MATERIAL_DRYLEAVES.\n", name);
+		break;
+	case MATERIAL_GREENLEAVES:		// 20			// fresh leaves still on a tree
+		ri->Printf(PRINT_WARNING, "Surface %s was set to MATERIAL_GREENLEAVES.\n", name);
+		break;
+	case MATERIAL_FABRIC:			// 21			// Cotton sheets
+		ri->Printf(PRINT_WARNING, "Surface %s was set to MATERIAL_FABRIC.\n", name);
+		break;
+	case MATERIAL_CANVAS:			// 22			// tent material
+		ri->Printf(PRINT_WARNING, "Surface %s was set to MATERIAL_CANVAS.\n", name);
+		break;
+	case MATERIAL_MARBLE:			// 12			// marble floors
+		ri->Printf(PRINT_WARNING, "Surface %s was set to MATERIAL_MARBLE.\n", name);
+		break;
+	case MATERIAL_SNOW:				// 14			// freshly laid snow
+		ri->Printf(PRINT_WARNING, "Surface %s was set to MATERIAL_SNOW.\n", name);
+		break;
+	case MATERIAL_MUD:				// 17			// wet soil
+		ri->Printf(PRINT_WARNING, "Surface %s was set to MATERIAL_MUD.\n", name);
+		break;
+	case MATERIAL_DIRT:				// 7			// hard mud
+		ri->Printf(PRINT_WARNING, "Surface %s was set to MATERIAL_DIRT.\n", name);
+		break;
+	case MATERIAL_CONCRETE:			// 11			// hardened concrete pavement
+		ri->Printf(PRINT_WARNING, "Surface %s was set to MATERIAL_CONCRETE.\n", name);
+		break;
+	case MATERIAL_FLESH:			// 16			// hung meat, corpses in the world
+		ri->Printf(PRINT_WARNING, "Surface %s was set to MATERIAL_FLESH.\n", name);
+		break;
+	case MATERIAL_RUBBER:			// 24			// hard tire like rubber
+		ri->Printf(PRINT_WARNING, "Surface %s was set to MATERIAL_RUBBER.\n", name);
+		break;
+	case MATERIAL_PLASTIC:			// 25			//
+		ri->Printf(PRINT_WARNING, "Surface %s was set to MATERIAL_PLASTIC.\n", name);
+		break;
+	case MATERIAL_PLASTER:			// 28			// drywall style plaster
+		ri->Printf(PRINT_WARNING, "Surface %s was set to MATERIAL_PLASTER.\n", name);
+		break;
+	case MATERIAL_SHATTERGLASS:		// 29			// glass with the Crisis Zone style shattering
+		ri->Printf(PRINT_WARNING, "Surface %s was set to MATERIAL_SHATTERGLASS.\n", name);
+		break;
+	case MATERIAL_ARMOR:			// 30			// body armor
+		ri->Printf(PRINT_WARNING, "Surface %s was set to MATERIAL_ARMOR.\n", name);
+		break;
+	case MATERIAL_ICE:				// 15			// packed snow/solid ice
+		ri->Printf(PRINT_WARNING, "Surface %s was set to MATERIAL_ICE.\n", name);
+		break;
+	case MATERIAL_GLASS:			// 10			//
+		ri->Printf(PRINT_WARNING, "Surface %s was set to MATERIAL_GLASS.\n", name);
+		break;
+	case MATERIAL_BPGLASS:			// 18			// bulletproof glass
+		ri->Printf(PRINT_WARNING, "Surface %s was set to MATERIAL_BPGLASS.\n", name);
+		break;
+	case MATERIAL_COMPUTER:			// 31			// computers/electronic equipment
+		ri->Printf(PRINT_WARNING, "Surface %s was set to MATERIAL_COMPUTER.\n", name);
+		break;
+	default:
+		ri->Printf(PRINT_WARNING, "Surface %s was set to MATERIAL_NONE.\n", name);
+		break;
+	}
+}
+
 qboolean StringsContainWord ( const char *heystack, const char *heystack2,  char *needle )
 {
 	if (StringContainsWord(heystack, needle)) return qtrue;
 	if (StringContainsWord(heystack2, needle)) return qtrue;
 	return qfalse;
+}
+
+qboolean IsKnownShinyMap2 ( const char *heystack )
+{
+	if (StringContainsWord(heystack, "/players/")) return qfalse;
+	if (StringContainsWord(heystack, "/bespin/")) return qtrue;
+	if (StringContainsWord(heystack, "/cloudcity/")) return qtrue;
+	if (StringContainsWord(heystack, "/byss/")) return qtrue;
+	if (StringContainsWord(heystack, "/cairn/")) return qtrue;
+	if (StringContainsWord(heystack, "/doomgiver/")) return qtrue;
+	if (StringContainsWord(heystack, "/factory/")) return qtrue;
+	if (StringContainsWord(heystack, "/hoth/")) return qtrue;
+	if (StringContainsWord(heystack, "/impdetention/")) return qtrue;
+	if (StringContainsWord(heystack, "/imperial/")) return qtrue;
+	if (StringContainsWord(heystack, "/impgarrison/")) return qtrue;
+	if (StringContainsWord(heystack, "/kejim/")) return qtrue;
+	if (StringContainsWord(heystack, "/nar_hideout/")) return qtrue;
+	if (StringContainsWord(heystack, "/nar_streets/")) return qtrue;
+	if (StringContainsWord(heystack, "/narshaddaa/")) return qtrue;
+	if (StringContainsWord(heystack, "/rail/")) return qtrue;
+	if (StringContainsWord(heystack, "/rooftop/")) return qtrue;
+	if (StringContainsWord(heystack, "/taspir/")) return qtrue; // lots of metal... will try this
+	if (StringContainsWord(heystack, "/vjun/")) return qtrue;
+	if (StringContainsWord(heystack, "/wedge/")) return qtrue;
+	
+	return qfalse;
+}
+
+qboolean IsKnownShinyMap ( const char *heystack )
+{
+	if (IsKnownShinyMap2( heystack ))
+	{
+		ri->Printf(PRINT_WARNING, "Surface %s is known shiny.\n", heystack);
+		return qtrue;
+	}
+	
+	return qfalse;
+}
+
+void AssignMaterialType ( const char *name, const char *text )
+{
+	if (!HaveSurfaceType(shader.surfaceFlags))
+	{
+		//
+		// Special cases - where we are pretty sure we want lots of specular and reflection...
+		//
+		if (StringsContainWord(name, name, "plastic") || StringsContainWord(name, name, "stormtrooper") || StringsContainWord(name, name, "snowtrooper") || StringsContainWord(name, name, "medpac") || StringsContainWord(name, name, "bacta") || StringsContainWord(name, name, "helmet") || StringsContainWord(name, name, "feather"))
+			shader.surfaceFlags |= MATERIAL_PLASTIC;
+		else if (StringsContainWord(name, name, "mp/flag") || StringsContainWord(name, name, "xwing") || StringsContainWord(name, name, "xwbody") || StringsContainWord(name, name, "tie_") || StringsContainWord(name, name, "ship") || StringsContainWord(name, name, "shuttle") || StringsContainWord(name, name, "falcon") || StringsContainWord(name, name, "freight") || StringsContainWord(name, name, "transport") || StringsContainWord(name, name, "crate") || StringsContainWord(name, name, "container") || StringsContainWord(name, name, "barrel") || StringsContainWord(name, name, "crane") || StringsContainWord(name, name, "plate") || StringsContainWord(name, name, "cargo"))
+			shader.surfaceFlags |= MATERIAL_SOLIDMETAL;
+		else if (!StringsContainWord(name, name, "trainer") && StringsContainWord(name, name, "train"))
+			shader.surfaceFlags |= MATERIAL_SOLIDMETAL;
+		else if (StringsContainWord(name, name, "reborn") || StringsContainWord(name, name, "trooper"))
+			shader.surfaceFlags |= MATERIAL_ARMOR;
+		else if (StringsContainWord(name, name, "boba") || StringsContainWord(name, name, "pilot"))
+			shader.surfaceFlags |= MATERIAL_ARMOR;
+		else if (!StringsContainWord(name, name, "players") && (StringsContainWord(name, name, "bespin") || StringsContainWord(name, name, "_cc")))
+			shader.surfaceFlags |= MATERIAL_MARBLE;
+		else if (!StringsContainWord(name, name, "players") && (StringsContainWord(name, name, "coruscant") || StringsContainWord(name, name, "/rooftop/") || StringsContainWord(name, name, "/nar_") || StringsContainWord(name, name, "/imperial/")))
+			shader.surfaceFlags |= MATERIAL_TILES;
+		//
+		// Stuff we can be pretty sure of...
+		//
+		else if (StringsContainWord(name, name, "concrete"))
+			shader.surfaceFlags |= MATERIAL_CONCRETE;
+		else if (StringsContainWord(name, name, "models/weapon") && StringsContainWord(name, name, "saber") && !StringsContainWord(name, name, "glow"))
+			shader.surfaceFlags |= MATERIAL_HOLLOWMETAL; // UQ1: Using hollowmetal for weapons to force low parallax setting...
+		else if (StringsContainWord(name, name, "/weapon") || StringsContainWord(name, name, "scope") || StringsContainWord(name, name, "blaster") || StringsContainWord(name, name, "pistol") || StringsContainWord(name, name, "thermal") || StringsContainWord(name, name, "bowcaster") || StringsContainWord(name, name, "cannon") || StringsContainWord(name, name, "saber") || StringsContainWord(name, name, "rifle") || StringsContainWord(name, name, "rocket"))
+			shader.surfaceFlags |= MATERIAL_HOLLOWMETAL; // UQ1: Using hollowmetal for weapons to force low parallax setting...
+		else if (StringsContainWord(name, name, "metal") || StringsContainWord(name, name, "pipe") || StringsContainWord(name, name, "shaft") || StringsContainWord(name, name, "jetpack") || StringsContainWord(name, name, "antenna") || StringsContainWord(name, name, "xwing") || StringsContainWord(name, name, "tie_") || StringsContainWord(name, name, "raven") || StringsContainWord(name, name, "falcon") || StringsContainWord(name, name, "engine") || StringsContainWord(name, name, "elevator") || StringsContainWord(name, name, "evaporator") || StringsContainWord(name, name, "airpur") || StringsContainWord(name, name, "gonk") || StringsContainWord(name, name, "droid") || StringsContainWord(name, name, "cart") || StringsContainWord(name, name, "vent") || StringsContainWord(name, name, "tank") || StringsContainWord(name, name, "transformer") || StringsContainWord(name, name, "generator") || StringsContainWord(name, name, "grate") || StringsContainWord(name, name, "rack") || StringsContainWord(name, name, "mech") || StringsContainWord(name, name, "turbolift") || StringsContainWord(name, name, "grate") || StringsContainWord(name, name, "tube") || StringsContainWord(name, name, "coil"))
+			shader.surfaceFlags |= MATERIAL_SOLIDMETAL;
+		else if (StringsContainWord(name, name, "eye"))
+			shader.surfaceFlags |= MATERIAL_GLASS;
+		else if (StringsContainWord(name, name, "sand"))
+			shader.surfaceFlags |= MATERIAL_SAND;
+		else if (StringsContainWord(name, name, "gravel"))
+			shader.surfaceFlags |= MATERIAL_GRAVEL;
+		else if (StringsContainWord(name, name, "dirt") || StringsContainWord(name, name, "ground"))
+			shader.surfaceFlags |= MATERIAL_DIRT;
+		else if (IsKnownShinyMap(name) && StringsContainWord(name, name, "stucco"))
+			shader.surfaceFlags |= MATERIAL_TILES;
+		else if (StringsContainWord(name, name, "rift") && StringsContainWord(name, name, "piller"))
+			shader.surfaceFlags |= MATERIAL_MARBLE;
+		else if (StringsContainWord(name, name, "stucco") || StringsContainWord(name, name, "piller"))
+			shader.surfaceFlags |= MATERIAL_CONCRETE;
+		else if (StringsContainWord(name, name, "marbl") || StringsContainWord(name, name, "teeth"))
+			shader.surfaceFlags |= MATERIAL_MARBLE;
+		else if (StringsContainWord(name, name, "snow"))
+			shader.surfaceFlags |= MATERIAL_SNOW;
+		else if (StringsContainWord(name, name, "hood") || StringsContainWord(name, name, "robe") || StringsContainWord(name, name, "cloth") || StringsContainWord(name, name, "pants"))
+			shader.surfaceFlags |= MATERIAL_FABRIC;
+		else if (StringsContainWord(name, name, "hair") || StringsContainWord(name, name, "chewbacca")) // use carpet
+			shader.surfaceFlags |= MATERIAL_FABRIC;//MATERIAL_CARPET; Just because it has a bit of parallax and suitable specular...
+		else if (StringsContainWord(name, name, "armor") || StringsContainWord(name, name, "armour"))
+			shader.surfaceFlags |= MATERIAL_ARMOR;
+		else if (StringsContainWord(name, name, "flesh") || StringsContainWord(name, name, "body") || StringsContainWord(name, name, "leg") || StringsContainWord(name, name, "hand") || StringsContainWord(name, name, "head") || StringsContainWord(name, name, "hips") || StringsContainWord(name, name, "torso") || StringsContainWord(name, name, "tentacles") || StringsContainWord(name, name, "face") || StringsContainWord(name, name, "arms"))
+			shader.surfaceFlags |= MATERIAL_FLESH;
+		else if (StringsContainWord(name, name, "players") && (StringsContainWord(name, name, "skirt") || StringsContainWord(name, name, "boots") || StringsContainWord(name, name, "accesories") || StringsContainWord(name, name, "accessories") || StringsContainWord(name, name, "vest") || StringsContainWord(name, name, "holster") || StringsContainWord(name, name, "cap")))
+			shader.surfaceFlags |= MATERIAL_FABRIC;
+		else if (StringsContainWord(name, name, "canvas"))
+			shader.surfaceFlags |= MATERIAL_CANVAS;
+		else if (StringsContainWord(name, name, "rock"))
+			shader.surfaceFlags |= MATERIAL_ROCK;
+		else if (StringsContainWord(name, name, "rubber"))
+			shader.surfaceFlags |= MATERIAL_RUBBER;
+		else if (StringsContainWord(name, name, "carpet"))
+			shader.surfaceFlags |= MATERIAL_CARPET;
+		else if (StringsContainWord(name, name, "plaster"))
+			shader.surfaceFlags |= MATERIAL_PLASTER;
+		else if (StringsContainWord(name, name, "computer") || StringsContainWord(name, name, "console") || StringsContainWord(name, name, "button") || StringsContainWord(name, name, "terminal") || StringsContainWord(name, name, "switch") || StringsContainWord(name, name, "panel") || StringsContainWord(name, name, "control"))
+			shader.surfaceFlags |= MATERIAL_COMPUTER;
+		else if (StringsContainWord(name, name, "fabric"))
+			shader.surfaceFlags |= MATERIAL_FABRIC;
+		else if (StringsContainWord(name, name, "leaf") || StringsContainWord(name, name, "leaves") || StringsContainWord(name, name, "fern") || StringsContainWord(name, name, "vine"))
+			shader.surfaceFlags |= MATERIAL_GREENLEAVES;
+		else if (StringsContainWord(name, name, "wood") || StringsContainWord(name, name, "tree"))
+			shader.surfaceFlags |= MATERIAL_SOLIDWOOD;
+		else if (StringsContainWord(name, name, "mud"))
+			shader.surfaceFlags |= MATERIAL_MUD;
+		else if (StringsContainWord(name, name, "ice"))
+			shader.surfaceFlags |= MATERIAL_ICE;
+		else if (StringsContainWord(name, name, "grass") && (StringsContainWord(name, name, "long") || StringsContainWord(name, name, "tall") || StringsContainWord(name, name, "thick")))
+			shader.surfaceFlags |= MATERIAL_LONGGRASS;
+		else if (StringsContainWord(name, name, "grass"))
+			shader.surfaceFlags |= MATERIAL_SHORTGRASS;
+		else if (IsKnownShinyMap(name) && StringsContainWord(name, name, "floor"))
+			shader.surfaceFlags |= MATERIAL_TILES;
+		else if (StringsContainWord(name, name, "floor"))
+			shader.surfaceFlags |= MATERIAL_CONCRETE;
+		else if (IsKnownShinyMap(name) && StringsContainWord(name, name, "frame"))
+			shader.surfaceFlags |= MATERIAL_SOLIDMETAL;
+		else if (IsKnownShinyMap(name) && StringsContainWord(name, name, "wall"))
+			shader.surfaceFlags |= MATERIAL_SOLIDMETAL;
+		else if (StringsContainWord(name, name, "wall"))
+			shader.surfaceFlags |= MATERIAL_CONCRETE;
+		else if (IsKnownShinyMap(name) && StringsContainWord(name, name, "door"))
+			shader.surfaceFlags |= MATERIAL_SOLIDMETAL;
+		else if (StringsContainWord(name, name, "door"))
+			shader.surfaceFlags |= MATERIAL_CONCRETE;
+		else if (IsKnownShinyMap(name) && StringsContainWord(name, name, "ground"))
+			shader.surfaceFlags |= MATERIAL_TILES; // dunno about this one
+		else if (StringsContainWord(name, name, "ground"))
+			shader.surfaceFlags |= MATERIAL_CONCRETE;
+		else if (StringsContainWord(name, name, "desert"))
+			shader.surfaceFlags |= MATERIAL_CONCRETE;
+		else if (IsKnownShinyMap(name) && (StringsContainWord(name, name, "tile") || StringsContainWord(name, name, "lift")))
+			shader.surfaceFlags |= MATERIAL_SOLIDMETAL;
+		else if (StringsContainWord(name, name, "tile") || StringsContainWord(name, name, "lift"))
+			shader.surfaceFlags |= MATERIAL_TILES;
+		else if (StringsContainWord(name, name, "glass") || StringsContainWord(name, name, "light") || StringsContainWord(name, name, "screen") || StringsContainWord(name, name, "lamp") || StringsContainWord(name, name, "crystal"))
+			shader.surfaceFlags |= MATERIAL_GLASS;
+		else if (StringsContainWord(name, name, "flag"))
+			shader.surfaceFlags |= MATERIAL_FABRIC;
+		else if (StringsContainWord(name, name, "column") || StringsContainWord(name, name, "stone") || StringsContainWord(name, name, "statue"))
+			shader.surfaceFlags |= MATERIAL_MARBLE;
+		// Extra backup - backup stuff. Used when nothing better found...
+		else if (StringsContainWord(name, name, "red") || StringsContainWord(name, name, "blue") || StringsContainWord(name, name, "yellow") || StringsContainWord(name, name, "white") || StringsContainWord(name, name, "monitor"))
+			shader.surfaceFlags |= MATERIAL_PLASTIC;
+		else if (StringsContainWord(name, name, "yavin") && (StringsContainWord(name, name, "trim") || StringsContainWord(name, name, "step") || StringsContainWord(name, name, "pad")))
+			shader.surfaceFlags |= MATERIAL_ROCK;
+		else if (!StringsContainWord(name, name, "players") && (StringsContainWord(name, name, "deathstar") || StringsContainWord(name, name, "imperial") || StringsContainWord(name, name, "shuttle") || StringsContainWord(name, name, "destroyer")))
+			shader.surfaceFlags |= MATERIAL_TILES;
+		else if (!StringsContainWord(name, name, "players") && StringsContainWord(name, name, "dantooine"))
+			shader.surfaceFlags |= MATERIAL_MARBLE;
+		else if (StringsContainWord(name, name, "outside"))
+			shader.surfaceFlags |= MATERIAL_CONCRETE; // Outside, assume concrete...
+		else if (StringsContainWord(name, name, "out") && (StringsContainWord(name, name, "trim") || StringsContainWord(name, name, "step") || StringsContainWord(name, name, "pad")))
+			shader.surfaceFlags |= MATERIAL_CONCRETE; // Outside, assume concrete...
+		else if (StringsContainWord(name, name, "out") && (StringsContainWord(name, name, "frame") || StringsContainWord(name, name, "wall") || StringsContainWord(name, name, "round") || StringsContainWord(name, name, "crate") || StringsContainWord(name, name, "trim") || StringsContainWord(name, name, "support") || StringsContainWord(name, name, "step") || StringsContainWord(name, name, "pad") || StringsContainWord(name, name, "weapon") || StringsContainWord(name, name, "gun")))
+			shader.surfaceFlags |= MATERIAL_CONCRETE; // Outside, assume concrete...
+		else if (StringsContainWord(name, name, "frame") || StringsContainWord(name, name, "wall") || StringsContainWord(name, name, "round") || StringsContainWord(name, name, "crate") || StringsContainWord(name, name, "trim") || StringsContainWord(name, name, "support") || StringsContainWord(name, name, "step") || StringsContainWord(name, name, "pad") || StringsContainWord(name, name, "weapon") || StringsContainWord(name, name, "gun"))
+			shader.surfaceFlags |= MATERIAL_CONCRETE;
+		else if (StringsContainWord(name, name, "yavin"))
+			shader.surfaceFlags |= MATERIAL_ROCK; // On yavin maps, assume rock for anything else...
+		else if (StringsContainWord(name, name, "black") || StringsContainWord(name, name, "boon") || StringsContainWord(name, name, "items") || StringsContainWord(name, name, "shield"))
+			shader.surfaceFlags |= MATERIAL_PLASTIC;
+		else if (StringsContainWord(name, name, "refract") || StringsContainWord(name, name, "reflect"))
+			shader.surfaceFlags |= MATERIAL_PLASTIC;
+		else if (StringsContainWord(name, name, "map_objects"))
+			shader.surfaceFlags |= MATERIAL_SOLIDMETAL; // hmmm, maybe... testing...
+		else if (StringsContainWord(name, name, "rodian"))
+			shader.surfaceFlags |= MATERIAL_FLESH;
+		else if (IsKnownShinyMap(name)) // Chances are it's shiny...
+			shader.surfaceFlags |= MATERIAL_TILES;
+		else
+		{
+			if (!StringsContainWord(name, name, "gfx/") 
+				&& !StringsContainWord(name, name, "hud")
+				&& !StringsContainWord(name, name, "fire")
+				&& !StringsContainWord(name, name, "force")
+				&& !StringsContainWord(name, name, "explo")
+				&& !StringsContainWord(name, name, "cursor")
+				&& !StringsContainWord(name, name, "sky")
+				&& !StringsContainWord(name, name, "powerup")
+				&& !StringsContainWord(name, name, "slider")
+				&& !StringsContainWord(name, name, "mp/dark_")) // Dont bother reporting gfx/ or hud items...
+				ri->Printf(PRINT_WARNING, "Could not work out a default surface type for shader %s. It will fallback to default parallax and specular.\n", name);
+		}
+	}
+	else
+	{
+		//
+		// Special cases - where we are pretty sure we want lots of specular and reflection... Override!
+		//
+		if (StringsContainWord(name, name, "plastic") || StringsContainWord(name, name, "stormtrooper") || StringsContainWord(name, name, "snowtrooper") || StringsContainWord(name, name, "medpac") || StringsContainWord(name, name, "bacta") || StringsContainWord(name, name, "helmet"))
+			shader.surfaceFlags |= MATERIAL_PLASTIC;
+		else if (StringsContainWord(name, name, "mp/flag") || StringsContainWord(name, name, "xwing") || StringsContainWord(name, name, "xwbody") || StringsContainWord(name, name, "tie_") || StringsContainWord(name, name, "ship") || StringsContainWord(name, name, "shuttle") || StringsContainWord(name, name, "falcon") || StringsContainWord(name, name, "freight") || StringsContainWord(name, name, "transport") || StringsContainWord(name, name, "crate") || StringsContainWord(name, name, "container") || StringsContainWord(name, name, "barrel") || StringsContainWord(name, name, "train") || StringsContainWord(name, name, "crane") || StringsContainWord(name, name, "plate") || StringsContainWord(name, name, "cargo"))
+			shader.surfaceFlags |= MATERIAL_PLASTIC;//MATERIAL_SOLIDMETAL;
+		else if (StringsContainWord(name, name, "reborn") || StringsContainWord(name, name, "trooper"))
+			shader.surfaceFlags |= MATERIAL_ARMOR;
+		else if (StringsContainWord(name, name, "boba") || StringsContainWord(name, name, "pilot"))
+			shader.surfaceFlags |= MATERIAL_ARMOR;
+		//else if (!StringsContainWord(name, name, "players") && (StringsContainWord(name, name, "bespin") || StringsContainWord(name, name, "_cc")))
+		//	shader.surfaceFlags |= MATERIAL_MARBLE;
+		//else if (!StringsContainWord(name, name, "players") && (StringsContainWord(name, name, "coruscant") || StringsContainWord(name, name, "/rooftop/") || StringsContainWord(name, name, "/nar_") || StringsContainWord(name, name, "/imperial/")))
+		//	shader.surfaceFlags |= MATERIAL_TILES;
+	}
+	
+	if (StringsContainWord(name, text, "plastic") || StringsContainWord(name, text, "trooper") || StringsContainWord(name, text, "medpack"))
+		if (!(shader.surfaceFlags & MATERIAL_PLASTIC)) shader.surfaceFlags |= MATERIAL_PLASTIC;
+	else if (StringsContainWord(name, text, "water"))
+		if (!(shader.surfaceFlags & MATERIAL_WATER)) shader.surfaceFlags |= MATERIAL_WATER;
+
+	DebugSurfaceTypeSelection(name, shader.surfaceFlags);
 }
 
 /*
@@ -2777,129 +3113,7 @@ static qboolean ParseShader( const char *name, const char **text )
 	// UQ1: If we do not have any material type for this shader, try to guess as a backup (for parallax and specular settings)...
 	//
 
-	if (!HaveSurfaceType(shader.surfaceFlags))
-	{
-		//
-		// Special cases - where we are pretty sure we want lots of specular and reflection...
-		//
-		if (StringsContainWord(name, name, "xwing") || StringsContainWord(name, name, "xwbody") || StringsContainWord(name, name, "crate") || StringsContainWord(name, name, "cargo") || StringsContainWord(name, name, "freight") || StringsContainWord(name, name, "container") || StringsContainWord(name, name, "barrel") || StringsContainWord(name, name, "transport") || StringsContainWord(name, name, "airpur") || StringsContainWord(name, name, "tank"))
-			shader.surfaceFlags |= MATERIAL_ARMOR;//MATERIAL_SOLIDMETAL;
-		else if (StringsContainWord(name, name, "plastic") || StringsContainWord(name, name, "stormtrooper") || StringsContainWord(name, name, "snowtrooper") || StringsContainWord(name, name, "medpac") || StringsContainWord(name, name, "bacta") || StringsContainWord(name, name, "mp/flag") || StringsContainWord(name, name, "xwing") || StringsContainWord(name, name, "tie_") || StringsContainWord(name, name, "ship") || StringsContainWord(name, name, "shuttle"))
-			shader.surfaceFlags |= MATERIAL_PLASTIC;
-		else if (StringsContainWord(name, name, "reborn") || StringsContainWord(name, name, "trooper"))
-			shader.surfaceFlags |= MATERIAL_ARMOR;
-		else if (StringsContainWord(name, name, "boba") || StringsContainWord(name, name, "pilot"))
-			shader.surfaceFlags |= MATERIAL_ARMOR;
-		else if (!StringsContainWord(name, name, "players") && (StringsContainWord(name, name, "bespin") || StringsContainWord(name, name, "_cc")))
-			shader.surfaceFlags |= MATERIAL_MARBLE;
-		else if (!StringsContainWord(name, name, "players") && (StringsContainWord(name, name, "coruscant") || StringsContainWord(name, name, "/rooftop/") || StringsContainWord(name, name, "/nar_") || StringsContainWord(name, name, "/imperial/")))
-			shader.surfaceFlags |= MATERIAL_TILES;
-		//
-		// Stuff we can be pretty sure of...
-		//
-		else if (StringsContainWord(name, name, "/weapon") || StringsContainWord(name, name, "scope") || StringsContainWord(name, name, "blaster") || StringsContainWord(name, name, "pistol") || StringsContainWord(name, name, "thermal") || StringsContainWord(name, name, "bowcaster") || StringsContainWord(name, name, "cannon") || StringsContainWord(name, name, "saber") || StringsContainWord(name, name, "rifle") || StringsContainWord(name, name, "rocket"))
-			shader.surfaceFlags |= MATERIAL_HOLLOWMETAL; // UQ1: Using hollowmetal for weapons to force low parallax setting...
-		else if (StringsContainWord(name, name, "metal") || StringsContainWord(name, name, "pipe") || StringsContainWord(name, name, "shaft") || StringsContainWord(name, name, "jetpack") || StringsContainWord(name, name, "antenna") || StringsContainWord(name, name, "xwing") || StringsContainWord(name, name, "tie_") || StringsContainWord(name, name, "raven") || StringsContainWord(name, name, "falcon") || StringsContainWord(name, name, "engine")|| StringsContainWord(name, name, "elevator") || StringsContainWord(name, name, "floor"))
-			shader.surfaceFlags |= MATERIAL_SOLIDMETAL;
-		else if (StringsContainWord(name, name, "glass") || StringsContainWord(name, name, "light") || StringsContainWord(name, name, "screen") || StringsContainWord(name, name, "lamp"))
-			shader.surfaceFlags |= MATERIAL_GLASS;
-		else if (StringsContainWord(name, name, "sand"))
-			shader.surfaceFlags |= MATERIAL_SAND;
-		else if (StringsContainWord(name, name, "gravel"))
-			shader.surfaceFlags |= MATERIAL_GRAVEL;
-		else if (StringsContainWord(name, name, "dirt"))
-			shader.surfaceFlags |= MATERIAL_DIRT;
-		else if (StringsContainWord(name, name, "concrete") || StringsContainWord(name, name, "stucco"))
-			shader.surfaceFlags |= MATERIAL_CONCRETE;
-		else if (StringsContainWord(name, name, "marble") || StringsContainWord(name, name, "teeth"))
-			shader.surfaceFlags |= MATERIAL_MARBLE;
-		else if (StringsContainWord(name, name, "snow"))
-			shader.surfaceFlags |= MATERIAL_SNOW;
-		else if (StringsContainWord(name, name, "hood") || StringsContainWord(name, name, "robe") || StringsContainWord(name, name, "cloth") || StringsContainWord(name, name, "pants"))
-			shader.surfaceFlags |= MATERIAL_FABRIC;
-		else if (StringsContainWord(name, name, "hair") || StringsContainWord(name, name, "chewbacca")) // use carpet
-			shader.surfaceFlags |= MATERIAL_FABRIC;//MATERIAL_CARPET; Just because it has a bit of parallax and suitable specular...
-		else if (StringsContainWord(name, name, "armor") || StringsContainWord(name, name, "armour"))
-			shader.surfaceFlags |= MATERIAL_ARMOR;
-		else if (StringsContainWord(name, name, "flesh") || StringsContainWord(name, name, "body") || StringsContainWord(name, name, "leg") || StringsContainWord(name, name, "hand") || StringsContainWord(name, name, "head") || StringsContainWord(name, name, "hips") || StringsContainWord(name, name, "torso") || StringsContainWord(name, name, "tentacles") || StringsContainWord(name, name, "face") || StringsContainWord(name, name, "arms"))
-			shader.surfaceFlags |= MATERIAL_FLESH;
-		else if (StringsContainWord(name, name, "players") && StringsContainWord(name, name, "skirt"))
-			shader.surfaceFlags |= MATERIAL_FABRIC;
-		else if (StringsContainWord(name, name, "canvas"))
-			shader.surfaceFlags |= MATERIAL_CANVAS;
-		else if (StringsContainWord(name, name, "rock"))
-			shader.surfaceFlags |= MATERIAL_ROCK;
-		else if (StringsContainWord(name, name, "rubber"))
-			shader.surfaceFlags |= MATERIAL_RUBBER;
-		else if (StringsContainWord(name, name, "carpet"))
-			shader.surfaceFlags |= MATERIAL_CARPET;
-		else if (StringsContainWord(name, name, "plaster"))
-			shader.surfaceFlags |= MATERIAL_PLASTER;
-		else if (StringsContainWord(name, name, "computer") || StringsContainWord(name, name, "console") || StringsContainWord(name, name, "button") || StringsContainWord(name, name, "terminal") || StringsContainWord(name, name, "switch") || StringsContainWord(name, name, "panel") || StringsContainWord(name, name, "control"))
-			shader.surfaceFlags |= MATERIAL_COMPUTER;
-		else if (StringsContainWord(name, name, "fabric"))
-			shader.surfaceFlags |= MATERIAL_FABRIC;
-		else if (StringsContainWord(name, name, "tile") || StringsContainWord(name, name, "lift"))
-			shader.surfaceFlags |= MATERIAL_TILES;
-		else if (StringsContainWord(name, name, "leaf") || StringsContainWord(name, name, "leaves") || StringsContainWord(name, name, "fern") || StringsContainWord(name, name, "vine"))
-			shader.surfaceFlags |= MATERIAL_GREENLEAVES;
-		else if (StringsContainWord(name, name, "wood") || StringsContainWord(name, name, "tree"))
-			shader.surfaceFlags |= MATERIAL_SOLIDWOOD;
-		else if (StringsContainWord(name, name, "mud"))
-			shader.surfaceFlags |= MATERIAL_MUD;
-		else if (StringsContainWord(name, name, "ice"))
-			shader.surfaceFlags |= MATERIAL_ICE;
-		else if (StringsContainWord(name, name, "grass") && (StringsContainWord(name, name, "long") || StringsContainWord(name, name, "tall") || StringsContainWord(name, name, "thick")))
-			shader.surfaceFlags |= MATERIAL_LONGGRASS;
-		else if (StringsContainWord(name, name, "grass"))
-			shader.surfaceFlags |= MATERIAL_SHORTGRASS;
-		// Extra backup - backup stuff. Used when nothing better found...
-		else if (StringsContainWord(name, name, "red") || StringsContainWord(name, name, "blue") || StringsContainWord(name, name, "yellow") || StringsContainWord(name, name, "white") || StringsContainWord(name, name, "monitor"))
-			shader.surfaceFlags |= MATERIAL_PLASTIC;
-		else if (StringsContainWord(name, name, "yavin") && (StringsContainWord(name, name, "trim") || StringsContainWord(name, name, "step") || StringsContainWord(name, name, "pad")))
-			shader.surfaceFlags |= MATERIAL_ROCK;
-		else if (!StringsContainWord(name, name, "players") && (StringsContainWord(name, name, "deathstar") || StringsContainWord(name, name, "imperial") || StringsContainWord(name, name, "shuttle") || StringsContainWord(name, name, "destroyer")))
-			shader.surfaceFlags |= MATERIAL_TILES;
-		else if (!StringsContainWord(name, name, "players") && StringsContainWord(name, name, "dantooine"))
-			shader.surfaceFlags |= MATERIAL_MARBLE;
-		else if (StringsContainWord(name, name, "outside"))
-			shader.surfaceFlags |= MATERIAL_CONCRETE; // Outside, assume concrete...
-		else if (StringsContainWord(name, name, "out") && (StringsContainWord(name, name, "trim") || StringsContainWord(name, name, "step") || StringsContainWord(name, name, "pad")))
-			shader.surfaceFlags |= MATERIAL_CONCRETE; // Outside, assume concrete...
-		else if (StringsContainWord(name, name, "out") && (StringsContainWord(name, name, "frame") || StringsContainWord(name, name, "wall") || StringsContainWord(name, name, "round") || StringsContainWord(name, name, "crate") || StringsContainWord(name, name, "trim") || StringsContainWord(name, name, "support") || StringsContainWord(name, name, "step") || StringsContainWord(name, name, "pad") || StringsContainWord(name, name, "weapon") || StringsContainWord(name, name, "gun")))
-			shader.surfaceFlags |= MATERIAL_CONCRETE; // Outside, assume concrete...
-		else if (StringsContainWord(name, name, "frame") || StringsContainWord(name, name, "wall") || StringsContainWord(name, name, "round") || StringsContainWord(name, name, "crate") || StringsContainWord(name, name, "trim") || StringsContainWord(name, name, "support") || StringsContainWord(name, name, "step") || StringsContainWord(name, name, "pad") || StringsContainWord(name, name, "weapon") || StringsContainWord(name, name, "gun"))
-			shader.surfaceFlags |= MATERIAL_CONCRETE;
-		else if (StringsContainWord(name, name, "yavin"))
-			shader.surfaceFlags |= MATERIAL_ROCK; // On yavin maps, assume rock for anything else...
-		else if (StringsContainWord(name, name, "black") || StringsContainWord(name, name, "boon") || StringsContainWord(name, name, "items") || StringsContainWord(name, name, "shield"))
-			shader.surfaceFlags |= MATERIAL_PLASTIC;
-		else if (StringsContainWord(name, name, "refract") || StringsContainWord(name, name, "reflect"))
-			shader.surfaceFlags |= MATERIAL_PLASTIC;
-		else if (StringsContainWord(name, name, "map_objects"))
-			shader.surfaceFlags |= MATERIAL_SOLIDMETAL; // hmmm, maybe... testing...
-		else if (StringsContainWord(name, name, "rodian"))
-			shader.surfaceFlags |= MATERIAL_FLESH;
-		else
-		{
-			if (!StringsContainWord(name, name, "gfx/") 
-				&& !StringsContainWord(name, name, "hud")
-				&& !StringsContainWord(name, name, "fire")
-				&& !StringsContainWord(name, name, "force")
-				&& !StringsContainWord(name, name, "explo")
-				&& !StringsContainWord(name, name, "cursor")
-				&& !StringsContainWord(name, name, "sky")
-				&& !StringsContainWord(name, name, "powerup")
-				&& !StringsContainWord(name, name, "slider")
-				&& !StringsContainWord(name, name, "mp/dark_")) // Dont bother reporting gfx/ or hud items...
-				ri->Printf(PRINT_WARNING, "Could not work out a default surface type for shader %s. It will fallback to default parallax and specular.\n", name);
-		}
-	}
-	
-	if (StringsContainWord(name, *text, "plastic") || StringsContainWord(name, *text, "trooper") || StringsContainWord(name, *text, "medpack"))
-		if (!(shader.surfaceFlags & MATERIAL_PLASTIC)) shader.surfaceFlags |= MATERIAL_PLASTIC;
-	else if (StringsContainWord(name, *text, "water"))
-		if (!(shader.surfaceFlags & MATERIAL_WATER)) shader.surfaceFlags |= MATERIAL_WATER;
+	AssignMaterialType(name, *text);
 	
 
 	shader.explicitlyDefined = qtrue;
@@ -3265,6 +3479,10 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 	qboolean hasRealNormalMap = qfalse;
 	qboolean hasRealSpecularMap = qfalse;
 	qboolean hasRealSubsurfaceMap = qfalse;
+	qboolean checkNormals = qtrue;
+
+	if (shader.isPortal || shader.isSky)
+		checkNormals = qfalse;
 
 	//ri->Printf(PRINT_ALL, "shader %s has diffuse %s", shader.name, diffuse->bundle[0].image[0]->imgName);
 
@@ -3280,11 +3498,56 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 	else if (useLightVector)
 	{
 		defs |= LIGHTDEF_USE_LIGHT_VECTOR;
+		useLightVector = qtrue;
 	}
 	else if (useLightVertex)
 	{
 		defs |= LIGHTDEF_USE_LIGHT_VERTEX;
+		useLightVertex = qtrue;
 	}
+	/*else if (checkNormals && !diffuse->glow)
+	{// UQ1: If we marked this as a material (and it's not a portal or sky), override no light with vertex light for reflection and specular...
+		switch( shader.surfaceFlags & MATERIAL_MASK )
+		{
+		case MATERIAL_WATER:			// 13			// light covering of water on a surface
+		case MATERIAL_SHORTGRASS:		// 5			// manicured lawn
+		case MATERIAL_LONGGRASS:		// 6			// long jungle grass
+		case MATERIAL_TILES:			// 26			// tiled floor
+		case MATERIAL_SOLIDMETAL:		// 3			// solid girders
+		case MATERIAL_HOLLOWMETAL:		// 4			// hollow metal machines -- UQ1: Used for weapons to force lower parallax...
+		case MATERIAL_GREENLEAVES:		// 20			// fresh leaves still on a tree
+		case MATERIAL_FABRIC:			// 21			// Cotton sheets
+		case MATERIAL_CANVAS:			// 22			// tent material
+		case MATERIAL_MARBLE:			// 12			// marble floors
+		case MATERIAL_SNOW:				// 14			// freshly laid snow
+		case MATERIAL_PLASTIC:			// 25			//
+		case MATERIAL_SHATTERGLASS:		// 29			// glass with the Crisis Zone style shattering
+		case MATERIAL_ARMOR:			// 30			// body armor
+		case MATERIAL_ICE:				// 15			// packed snow/solid ice
+		case MATERIAL_GLASS:			// 10			//
+		case MATERIAL_BPGLASS:			// 18			// bulletproof glass
+		case MATERIAL_COMPUTER:			// 31			// computers/electronic equipment
+			defs |= LIGHTDEF_USE_LIGHT_VECTOR;//LIGHTDEF_USE_LIGHT_VERTEX;
+			//useLightVertex = qtrue;
+			useLightVector = qtrue;
+			break;
+		case MATERIAL_SAND:				// 8			// sandy beach
+		case MATERIAL_CARPET:			// 27			// lush carpet
+		case MATERIAL_GRAVEL:			// 9			// lots of small stones
+		case MATERIAL_ROCK:				// 23			//
+		case MATERIAL_SOLIDWOOD:		// 1			// freshly cut timber
+		case MATERIAL_HOLLOWWOOD:		// 2			// termite infested creaky wood
+		case MATERIAL_DRYLEAVES:		// 19			// dried up leaves on the floor
+		case MATERIAL_MUD:				// 17			// wet soil
+		case MATERIAL_DIRT:				// 7			// hard mud
+		case MATERIAL_CONCRETE:			// 11			// hardened concrete pavement
+		case MATERIAL_FLESH:			// 16			// hung meat, corpses in the world
+		case MATERIAL_RUBBER:			// 24			// hard tire like rubber
+		case MATERIAL_PLASTER:			// 28			// drywall style plaster
+		default:
+			break;
+		}
+	}*/
 
 	if (r_deluxeMapping->integer && tr.worldDeluxeMapping && lightmap)
 	{
@@ -3293,10 +3556,21 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 		diffuse->bundle[TB_DELUXEMAP].image[0] = tr.deluxemaps[shader.lightmapIndex[0]];
 	}
 
-	if (r_normalMapping->integer)
+	// UQ1: Can't we do all this in one stage ffs???
+	if (r_normalMapping->integer && checkNormals)
 	{
-		image_t *diffuseImg;
-		if (normal)
+		image_t *diffuseImg = diffuse->bundle[TB_DIFFUSEMAP].image[0];
+
+		if (diffuse->bundle[TB_NORMALMAP].image[0])
+		{
+			if (parallax && r_parallaxMapping->integer)
+				defs |= LIGHTDEF_USE_PARALLAXMAP;
+
+			VectorCopy4(normal->normalScale, diffuse->normalScale);
+
+			hasRealNormalMap = qtrue;
+		}
+		/*else if (normal)
 		{
 			//ri->Printf(PRINT_ALL, ", normalmap %s", normal->bundle[0].image[0]->imgName);
 			diffuse->bundle[TB_NORMALMAP] = normal->bundle[0];
@@ -3306,9 +3580,8 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 			VectorCopy4(normal->normalScale, diffuse->normalScale);
 
 			hasRealNormalMap = qtrue;
-		}
-		else if ((lightmap || useLightVector || useLightVertex) 
-			&& (diffuseImg = diffuse->bundle[TB_DIFFUSEMAP].image[0]))
+		}*/
+		else if (!diffuse->bundle[TB_DIFFUSEMAP].normalsLoaded)//if (lightmap || useLightVector || useLightVertex)
 		{
 			char normalName[MAX_QPATH];
 			image_t *normalImg;
@@ -3333,26 +3606,26 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 				hasRealNormalMap = qtrue;
 			}
 		}
+
+		diffuse->bundle[TB_DIFFUSEMAP].normalsLoaded = qtrue;
 	}
 
-	if (diffuse && r_specularMapping->integer)
+	if (r_specularMapping->integer && checkNormals)
 	{
 		image_t *diffuseImg = diffuse->bundle[TB_DIFFUSEMAP].image[0];
 
-		if (diffuse && diffuse->bundle[TB_SPECULARMAP].specularLoaded)
+		if (diffuse->bundle[TB_SPECULARMAP].image[0])
 		{// Got one...
 			diffuse->bundle[TB_SPECULARMAP] = specular->bundle[0];
-			VectorCopy4(specular->specularScale, diffuse->specularScale);
+			if (specular) VectorCopy4(specular->specularScale, diffuse->specularScale);
 			hasRealSpecularMap = qtrue;
 		}
-		else if (diffuse && !diffuse->bundle[TB_SPECULARMAP].specularLoaded)
+		else if (!diffuse->bundle[TB_SPECULARMAP].specularLoaded)
 		{// Check if we can load one...
 			char specularName[MAX_QPATH];
 			char specularName2[MAX_QPATH];
 			image_t *specularImg;
 			int specularFlags = (diffuseImg->flags & ~(IMGFLAG_GENNORMALMAP | IMGFLAG_SRGB)) | IMGFLAG_NOLIGHTSCALE;
-
-			diffuse->bundle[TB_SPECULARMAP].specularLoaded = qtrue;
 
 			COM_StripExtension( diffuseImg->imgName, specularName, sizeof( specularName ) );
 			StripCrap( specularName, specularName2, sizeof(specularName));
@@ -3375,35 +3648,31 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 				diffuse->bundle[TB_SPECULARMAP] = diffuse->bundle[0];
 				diffuse->bundle[TB_SPECULARMAP].numImageAnimations = 0;
 				diffuse->bundle[TB_SPECULARMAP].image[0] = specularImg;
-				if (!specular) specular = diffuse;
-				VectorCopy4(specular->specularScale, diffuse->specularScale);
+				//if (!specular) specular = diffuse;
+				if (specular) VectorCopy4(specular->specularScale, diffuse->specularScale);
 				hasRealSpecularMap = qtrue;
 			}
-			//else
-			//{
-			//	ri->Printf(PRINT_WARNING, "!!!!!!!!!!!!!! No specular map %s.\n", specularName2);
-			//}
 		}
+
+		diffuse->bundle[TB_SPECULARMAP].specularLoaded = qtrue;
 	}
 
-	if (1)
+	if (1 && checkNormals)
 	{
 		image_t *diffuseImg = diffuse->bundle[TB_DIFFUSEMAP].image[0];
 
-		if (diffuse && diffuse->bundle[TB_SUBSURFACEMAP].subsurfaceLoaded)
+		if (diffuse->bundle[TB_SUBSURFACEMAP].image[0])
 		{// Got one...
 			diffuse->bundle[TB_SUBSURFACEMAP] = specular->bundle[0];
-			VectorCopy4(subsurface->subsurfaceExtinctionCoefficient, diffuse->subsurfaceExtinctionCoefficient);
+			if (subsurface) VectorCopy4(subsurface->subsurfaceExtinctionCoefficient, diffuse->subsurfaceExtinctionCoefficient);
 			hasRealSubsurfaceMap = qtrue;
 		}
-		else if (diffuse && !diffuse->bundle[TB_SUBSURFACEMAP].subsurfaceLoaded)
+		else if (!diffuse->bundle[TB_SUBSURFACEMAP].subsurfaceLoaded)
 		{// Check if we can load one...
 			char specularName[MAX_QPATH];
 			char specularName2[MAX_QPATH];
 			image_t *specularImg;
 			int specularFlags = (diffuseImg->flags & ~(IMGFLAG_GENNORMALMAP | IMGFLAG_SRGB)) | IMGFLAG_NOLIGHTSCALE;
-
-			diffuse->bundle[TB_SUBSURFACEMAP].subsurfaceLoaded = qtrue;
 
 			COM_StripExtension( diffuseImg->imgName, specularName, sizeof( specularName ) );
 			StripCrap( specularName, specularName2, sizeof(specularName));
@@ -3422,12 +3691,10 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 
 			if (specularImg)
 			{
-				//ri->Printf(PRINT_WARNING, "+++++++++++++++ Loaded subsurface map %s.\n", specularName2);
 				diffuse->bundle[TB_SUBSURFACEMAP] = diffuse->bundle[0];
 				diffuse->bundle[TB_SUBSURFACEMAP].numImageAnimations = 0;
 				diffuse->bundle[TB_SUBSURFACEMAP].image[0] = specularImg;
-				if (!subsurface) subsurface = diffuse;
-				VectorCopy4(subsurface->subsurfaceExtinctionCoefficient, subsurface->subsurfaceExtinctionCoefficient);
+				if (subsurface) VectorCopy4(subsurface->subsurfaceExtinctionCoefficient, diffuse->subsurfaceExtinctionCoefficient);
 				hasRealSubsurfaceMap = qtrue;
 			}
 			else
@@ -3436,17 +3703,8 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 				hasRealSubsurfaceMap = qfalse;
 			}
 		}
-	}
 
-	if (!hasRealNormalMap && r_parallaxMapping->integer && !(defs & LIGHTDEF_USE_PARALLAXMAP))
-	{
-		// UQ1: My parallax changes no longer require any normal map...
-		diffuse->bundle[TB_NORMALMAP] = diffuse->bundle[0];
-		diffuse->bundle[TB_NORMALMAP].numImageAnimations = 0;
-		diffuse->bundle[TB_NORMALMAP].image[0] = diffuse->bundle[TB_DIFFUSEMAP].image[0];
-		//diffuse->bundle[TB_NORMALMAP].image[0] = tr.whiteImage;
-
-		VectorSet4(diffuse->normalScale, r_baseNormalX->value, r_baseNormalY->value, 1.0f, r_baseParallax->value);
+		diffuse->bundle[TB_SUBSURFACEMAP].subsurfaceLoaded = qtrue;
 	}
 
 	if (tcgen || diffuse->bundle[0].numTexMods)
@@ -3461,29 +3719,20 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 
 	if (hasRealNormalMap)
 	{
-		diffuse->glslShaderGroup = tr.lightallShader;
 		diffuse->hasRealNormalMap = true;
-	}
-	else
-	{
-		diffuse->glslShaderGroup = tr.lightallShader;
-		diffuse->hasRealNormalMap = false;
 	}
 
 	if (hasRealSpecularMap)
 	{
-		if (diffuse) diffuse->hasSpecular = true;
-		if (normal) normal->hasSpecular = true;
-		if (specular) specular->hasSpecular = true;
+		diffuse->hasSpecular = true;
 	}
 
 	if (hasRealSubsurfaceMap)
 	{
-		if (diffuse) diffuse->hasRealSubsurfaceMap = true;
-		if (subsurface) subsurface->hasRealSubsurfaceMap = true;
-		diffuse->glslShaderGroup = tr.lightallShader;
+		diffuse->hasRealSubsurfaceMap = true;
 	}
 
+	diffuse->glslShaderGroup = tr.lightallShader;
 	diffuse->glslShaderIndex = defs;
 }
 
@@ -3507,6 +3756,7 @@ static qboolean CollapseStagesToGLSL(void)
 
 	ri->Printf (PRINT_DEVELOPER, "> Original shader stage order:\n");
 
+/*
 	for ( int i = 0; i < MAX_SHADER_STAGES; i++ )
 	{
 		shaderStage_t *stage = &stages[i];
@@ -3518,6 +3768,7 @@ static qboolean CollapseStagesToGLSL(void)
 
 		ri->Printf (PRINT_DEVELOPER, "-> %s\n", stage->bundle[0].image[0]->imgName);
 	}
+*/
 
 	if (!skip)
 	{
@@ -3544,9 +3795,9 @@ static qboolean CollapseStagesToGLSL(void)
 				stages[0].stateBits = stateBits0;
 				stages[1].stateBits = stateBits1;
 
-				ri->Printf (PRINT_DEVELOPER, "> Swapped first and second stage.\n");
-				ri->Printf (PRINT_DEVELOPER, "-> First stage is now: %s\n", stages[0].bundle[0].image[0]->imgName);
-				ri->Printf (PRINT_DEVELOPER, "-> Second stage is now: %s\n", stages[1].bundle[0].image[0]->imgName);
+				//ri->Printf (PRINT_DEVELOPER, "> Swapped first and second stage.\n");
+				//ri->Printf (PRINT_DEVELOPER, "-> First stage is now: %s\n", stages[0].bundle[0].image[0]->imgName);
+				//ri->Printf (PRINT_DEVELOPER, "-> Second stage is now: %s\n", stages[1].bundle[0].image[0]->imgName);
 			}
 		}
 	}
@@ -3611,6 +3862,7 @@ static qboolean CollapseStagesToGLSL(void)
 	{
 		shaderStage_t *lightmaps[MAX_SHADER_STAGES] = {};
 
+#pragma omp parallel for
 		for (i = 0; i < MAX_SHADER_STAGES; i++)
 		{
 			shaderStage_t *pStage = &stages[i];
@@ -3624,6 +3876,7 @@ static qboolean CollapseStagesToGLSL(void)
 			}
 		}
 
+#pragma omp parallel for
 		for (i = 0; i < MAX_SHADER_STAGES; i++)
 		{
 			shaderStage_t *pStage = &stages[i];
@@ -3700,7 +3953,7 @@ static qboolean CollapseStagesToGLSL(void)
 							pStage2->bundle[0].tcGen <= TCGEN_LIGHTMAP3 &&
 							pStage2->rgbGen != CGEN_EXACT_VERTEX)
 						{
-							ri->Printf (PRINT_DEVELOPER, "> Setting lightmap for %s to %s\n", pStage->bundle[0].image[0]->imgName, pStage2->bundle[0].image[0]->imgName);
+							//ri->Printf (PRINT_DEVELOPER, "> Setting lightmap for %s to %s\n", pStage->bundle[0].image[0]->imgName, pStage2->bundle[0].image[0]->imgName);
 							lightmap = pStage2;
 							lightmaps[j] = NULL;
 						}
@@ -3736,6 +3989,7 @@ static qboolean CollapseStagesToGLSL(void)
 		}
 
 		// deactivate lightmap stages
+#pragma omp parallel for
 		for (i = 0; i < MAX_SHADER_STAGES; i++)
 		{
 			shaderStage_t *pStage = &stages[i];
@@ -3753,6 +4007,7 @@ static qboolean CollapseStagesToGLSL(void)
 	}
 
 	// deactivate normal and specular stages
+#pragma omp parallel for
 	for (i = 0; i < MAX_SHADER_STAGES; i++)
 	{
 		shaderStage_t *pStage = &stages[i];
@@ -3810,6 +4065,7 @@ static qboolean CollapseStagesToGLSL(void)
 	// only do this with r_sunlightMode non-zero, as it's only for correct shadows.
 	if (r_sunlightMode->integer && shader.numDeforms == 0)
 	{
+#pragma omp parallel for
 		for (i = 0; i < MAX_SHADER_STAGES; i++)
 		{
 			shaderStage_t *pStage = &stages[i];
@@ -3822,10 +4078,7 @@ static qboolean CollapseStagesToGLSL(void)
 
 			if (pStage->bundle[TB_DIFFUSEMAP].tcGen >= TCGEN_LIGHTMAP && pStage->bundle[TB_DIFFUSEMAP].tcGen <= TCGEN_LIGHTMAP3)
 			{
-				pStage->hasRealNormalMap = false;
-
-				if (hasRealNormalMap) 
-					pStage->hasRealNormalMap = true;
+				if (hasRealNormalMap) pStage->hasRealNormalMap = true;
 
 				pStage->glslShaderGroup = tr.lightallShader;
 
@@ -3841,6 +4094,7 @@ static qboolean CollapseStagesToGLSL(void)
 	// convert any remaining lightingdiffuse stages to a lighting pass
 	if (shader.numDeforms == 0)
 	{
+#pragma omp parallel for
 		for (i = 0; i < MAX_SHADER_STAGES; i++)
 		{
 			shaderStage_t *pStage = &stages[i];
@@ -3856,10 +4110,7 @@ static qboolean CollapseStagesToGLSL(void)
 			{
 				if (pStage->glslShaderGroup != tr.lightallShader)
 				{
-					pStage->hasRealNormalMap = false;
-
-					if (hasRealNormalMap) 
-						pStage->hasRealNormalMap = true;
+					if (hasRealNormalMap) pStage->hasRealNormalMap = true;
 
 					pStage->glslShaderGroup = tr.lightallShader;
 
@@ -3879,6 +4130,7 @@ static qboolean CollapseStagesToGLSL(void)
 
 	ri->Printf (PRINT_DEVELOPER, "> New shader stage order:\n");
 
+#pragma omp parallel for
 	for ( int i = 0; i < MAX_SHADER_STAGES; i++ )
 	{
 		shaderStage_t *stage = &stages[i];
@@ -3895,15 +4147,15 @@ static qboolean CollapseStagesToGLSL(void)
 
 		if (hasRealSpecularMap)
 		{
-			stage->hasSpecular = qtrue;
+			stage->hasSpecular = true;
 		}
 
 		if (hasRealSubsurfaceMap)
 		{
-			stage->hasRealSubsurfaceMap = qtrue;
+			stage->hasRealSubsurfaceMap = true;
 		}
 
-		ri->Printf (PRINT_DEVELOPER, "-> %s\n", stage->bundle[0].image[0]->imgName);
+		//ri->Printf (PRINT_DEVELOPER, "-> %s\n", stage->bundle[0].image[0]->imgName);
 	}
 
 	return (qboolean)numStages;
@@ -4710,24 +4962,6 @@ char uniqueGenericPlayerShader[] = "{\n"\
 "}\n"\
 "";
 
-/*
-char uniqueGenericPlayerShader[] = "{\n"\
-"qer_editorimage	%s\n"\
-"{\n"\
-"map %s\n"\
-"rgbGen entity\n"\
-"}\n"\
-"{\n"\
-"map %s\n"\
-"blendFunc GL_SRC_ALPHA GL_ONE\n"\
-"rgbGen lightingDiffuse\n"\
-"alphaGen lightingSpecular\n"\
-"detail\n"\
-"}\n"\
-"}\n"\
-"";
-*/
-
 char uniqueGenericWeaponShader[] = "{\n"\
 "qer_editorimage	%s\n"\
 "{\n"\
@@ -4759,6 +4993,25 @@ char uniqueGenericShader[] = "{\n"\
 "}\n"\
 "}\n"\
 "";
+
+qboolean R_ForceGenericShader ( const char *name, const char *text )
+{
+	if (text && (StringsContainWord(name, text, "glow") || StringsContainWord(name, name, "icon")))
+		return qfalse;
+	else if (!text && (StringsContainWord(name, name, "glow") || StringsContainWord(name, name, "icon")))
+		return qfalse;
+	else if (StringsContainWord(name, name, "plastic") || StringsContainWord(name, name, "stormtrooper") || StringsContainWord(name, name, "snowtrooper") || StringsContainWord(name, name, "medpac") || StringsContainWord(name, name, "bacta") || StringsContainWord(name, name, "helmet"))
+		return qtrue;
+	else if (StringsContainWord(name, name, "mp/flag") || StringsContainWord(name, name, "xwing") || StringsContainWord(name, name, "xwbody") || StringsContainWord(name, name, "tie_") || StringsContainWord(name, name, "ship") || StringsContainWord(name, name, "shuttle") || StringsContainWord(name, name, "falcon") || StringsContainWord(name, name, "freight") || StringsContainWord(name, name, "transport") || StringsContainWord(name, name, "crate") || StringsContainWord(name, name, "container") || StringsContainWord(name, name, "barrel") || StringsContainWord(name, name, "train") || StringsContainWord(name, name, "crane") || StringsContainWord(name, name, "plate") || StringsContainWord(name, name, "cargo"))
+		return qtrue;
+	else if (StringsContainWord(name, name, "reborn") || StringsContainWord(name, name, "trooper"))
+		return qtrue;
+	else if (StringsContainWord(name, name, "boba") || StringsContainWord(name, name, "pilot"))
+		return qtrue;
+
+	return qfalse;
+}
+
 #endif //___SHADER_GENERATOR___
 
 shader_t *R_FindShader( const char *name, const int *lightmapIndexes, const byte *styles, qboolean mipRawImage ) {
@@ -4813,7 +5066,11 @@ shader_t *R_FindShader( const char *name, const int *lightmapIndexes, const byte
 	// attempt to define shader from an explicit parameter file
 	//
 	shaderText = FindShaderInShaderText( strippedName );
+#ifdef ___SHADER_GENERATOR___
+	if ( shaderText && !R_ForceGenericShader(name, shaderText) ) {
+#else //!___SHADER_GENERATOR___
 	if ( shaderText ) {
+#endif //___SHADER_GENERATOR___
 		// enable this when building a pak file to get a global list
 		// of all explicit shaders
 		if ( r_printShaders->integer ) {
@@ -4827,8 +5084,7 @@ shader_t *R_FindShader( const char *name, const int *lightmapIndexes, const byte
 			shader.defaultShader = qtrue;
 		}
 #ifdef ___SHADER_GENERATOR___
-		if (!shader.defaultShader || StringContainsWord(name, "icon") 
-			|| !(!strncmp(name, "textures/", 9) || !strncmp(name, "models/", 7)))
+		if (!shader.defaultShader || StringContainsWord(name, "icon") || !(!strncmp(name, "textures/", 9) || !strncmp(name, "models/", 7)))
 		{
 			sh = FinishShader();
 			return sh;
@@ -4840,16 +5096,14 @@ shader_t *R_FindShader( const char *name, const int *lightmapIndexes, const byte
 	}
 
 #ifdef ___SHADER_GENERATOR___
-	if ((!strncmp(name, "textures/", 9) || !strncmp(name, "models/", 7)) && !StringContainsWord(name, "icon")) 
+	if (R_ForceGenericShader(name, shaderText) || (!strncmp(name, "textures/", 9) || !strncmp(name, "models/", 7)) && !StringContainsWord(name, "icon")) 
 	{
 		shader.defaultShader = qfalse;
 
 		// Generate the shader...
 		if (StringContainsWord(strippedName, "player"))
 			sprintf(myShader, uniqueGenericPlayerShader, strippedName, strippedName);
-			//sprintf(myShader, uniqueGenericPlayerShader, strippedName, strippedName, strippedName);
 		else if (StringContainsWord(strippedName, "weapon"))
-		//	sprintf(myShader, uniqueGenericPlayerShader/*uniqueGenericWeaponShader*/, strippedName, strippedName);
 			sprintf(myShader, uniqueGenericWeaponShader, strippedName, strippedName, strippedName);
 		else
 			sprintf(myShader, uniqueGenericShader, strippedName, strippedName, strippedName);
@@ -4871,7 +5125,8 @@ shader_t *R_FindShader( const char *name, const int *lightmapIndexes, const byte
 				// had errors, so use default shader
 				shader.defaultShader = qtrue;
 			} else {
-				ri->Printf(PRINT_WARNING, "Advanced generic shader generated for image %s.\n", name);
+				if (!StringContainsWord(name, "models/player") && !StringContainsWord(name, "models/weapon")) // skip this spam for now...
+					ri->Printf(PRINT_WARNING, "Advanced generic shader generated for image %s.\n", name);
 			}
 			sh = FinishShader();
 			return sh;

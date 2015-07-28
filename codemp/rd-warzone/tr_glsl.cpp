@@ -56,6 +56,8 @@ extern const char *fallbackShader_gaussian_blur_vp;
 extern const char *fallbackShader_gaussian_blur_fp;
 
 // UQ1: Added...
+extern const char *fallbackShader_generateNormalMap_vp;
+extern const char *fallbackShader_generateNormalMap_fp;
 extern const char *fallbackShader_truehdr_vp;
 extern const char *fallbackShader_truehdr_fp;
 extern const char *fallbackShader_volumelight_vp;
@@ -1276,8 +1278,8 @@ int GLSL_BeginLoadGPUShaders(void)
 		if (r_dlightMode->integer >= 2)
 			Q_strcat(extradefines, 1024, "#define USE_SHADOWMAP\n");
 
-		if (1)
-			Q_strcat(extradefines, 1024, "#define SWIZZLE_NORMALMAP\n");
+		//if (1)
+		//	Q_strcat(extradefines, 1024, "#define SWIZZLE_NORMALMAP\n");
 
 		if (r_hdr->integer && !glRefConfig.floatLightmap)
 			Q_strcat(extradefines, 1024, "#define RGBM_LIGHTMAP\n");
@@ -1295,6 +1297,8 @@ int GLSL_BeginLoadGPUShaders(void)
 			//Q_strcat(extradefines, 1024, "#define USE_TCMOD\n");
 		}
 		
+		//if (!lightType /*|| lightType == LIGHTDEF_USE_LIGHT_VECTOR*/)
+		//	lightType = LIGHTDEF_USE_LIGHT_VERTEX;
 
 		if (lightType)
 		{
@@ -1337,17 +1341,20 @@ int GLSL_BeginLoadGPUShaders(void)
 				attribs |= ATTR_TANGENT;
 #endif
 
-				if ((i & LIGHTDEF_USE_PARALLAXMAP) && r_parallaxMapping->integer)
+				//if ((i & LIGHTDEF_USE_PARALLAXMAP) && r_parallaxMapping->integer)
 					Q_strcat(extradefines, 1024, "#define USE_PARALLAXMAP\n");
-				else if (r_parallaxMapping->integer) // Parallax without normal maps...
-					Q_strcat(extradefines, 1024, "#define USE_PARALLAXMAP_NONORMALS\n");
+				//else if (r_parallaxMapping->integer) // Parallax without normal maps...
+				//	Q_strcat(extradefines, 1024, "#define USE_PARALLAXMAP_NONORMALS\n");
 
 				if (r_parallaxMapping->integer && r_parallaxMapping->integer < 2) // Fast parallax mapping...
 					Q_strcat(extradefines, 1024, "#define FAST_PARALLAX\n");
 			}
 			else if (r_parallaxMapping->integer) // Parallax without normal maps...
 			{
-				Q_strcat(extradefines, 1024, "#define USE_PARALLAXMAP_NONORMALS\n");
+				Q_strcat(extradefines, 1024, "#define USE_NORMALMAP\n");
+
+				//Q_strcat(extradefines, 1024, "#define USE_PARALLAXMAP_NONORMALS\n");
+				Q_strcat(extradefines, 1024, "#define USE_PARALLAXMAP\n");
 #ifdef USE_VERT_TANGENT_SPACE
 				Q_strcat(extradefines, 1024, "#define USE_VERT_TANGENT_SPACE\n");
 				attribs |= ATTR_TANGENT;
@@ -1365,6 +1372,18 @@ int GLSL_BeginLoadGPUShaders(void)
 			if (r_cubeMapping->integer)
 				Q_strcat(extradefines, 1024, "#define USE_CUBEMAP\n");
 		}
+		/*else if (r_normalMapping->integer)
+		{
+			if (r_parallaxMapping->integer)
+				Q_strcat(extradefines, 1024, "#define USE_PARALLAXMAP\n");
+
+#ifdef USE_VERT_TANGENT_SPACE
+			Q_strcat(extradefines, 1024, "#define USE_VERT_TANGENT_SPACE\n");
+			attribs |= ATTR_TANGENT;
+#endif
+
+			Q_strcat(extradefines, 1024, "#define USE_NORMALMAP\n");
+		}*/
 
 		if (i & LIGHTDEF_USE_SHADOWMAP)
 		{
@@ -1721,6 +1740,14 @@ int GLSL_BeginLoadGPUShaders(void)
 	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
 	extradefines[0] = '\0';
 
+	if (!GLSL_BeginLoadGPUShader(&tr.generateNormalMapShader, "generateNormalMap", attribs, qtrue, extradefines, qtrue, fallbackShader_generateNormalMap_vp, fallbackShader_generateNormalMap_fp))
+	{
+		ri->Error(ERR_FATAL, "Could not load generateNormalMap shader!");
+	}
+
+	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
+	extradefines[0] = '\0';
+
 	if (!GLSL_BeginLoadGPUShader(&tr.underwaterShader, "underwater", attribs, qtrue, extradefines, qtrue, fallbackShader_underwater_vp, fallbackShader_underwater_fp))
 	{
 		ri->Error(ERR_FATAL, "Could not load underwater shader!");
@@ -1751,7 +1778,7 @@ int GLSL_BeginLoadGPUShaders(void)
 		ri->Error(ERR_FATAL, "Could not load anaglyph shader!");
 	}
 
-	/*
+	
 	attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_NORMAL | ATTR_COLOR;
 	extradefines[0] = '\0';
 
@@ -1759,7 +1786,7 @@ int GLSL_BeginLoadGPUShaders(void)
 	{
 		ri->Error(ERR_FATAL, "Could not load uniquesky shader!");
 	}
-	*/
+	
 
 
 	attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL;
@@ -2710,6 +2737,48 @@ void GLSL_EndLoadGPUShaders ( int startTime )
 	
 	numEtcShaders++;
 
+	//generateNormalMap
+	if (!GLSL_EndLoadGPUShader(&tr.generateNormalMapShader))
+	{
+		ri->Error(ERR_FATAL, "Could not load generateNormalMap shader!");
+	}
+	
+	GLSL_InitUniforms(&tr.generateNormalMapShader);
+
+	qglUseProgram(tr.generateNormalMapShader.program);
+
+	GLSL_SetUniformInt(&tr.generateNormalMapShader, UNIFORM_TEXTUREMAP, TB_COLORMAP);
+	GLSL_SetUniformInt(&tr.generateNormalMapShader, UNIFORM_LEVELSMAP,  TB_LEVELSMAP);
+	
+	{
+		vec4_t viewInfo;
+
+		float zmax = backEnd.viewParms.zFar;
+		float zmin = r_znear->value;
+
+		VectorSet4(viewInfo, zmax / zmin, zmax, 0.0, 0.0);
+		//VectorSet4(viewInfo, zmin, zmax, 0.0, 0.0);
+
+		GLSL_SetUniformVec4(&tr.generateNormalMapShader, UNIFORM_VIEWINFO, viewInfo);
+	}
+
+	{
+		vec2_t screensize;
+		screensize[0] = glConfig.vidWidth;
+		screensize[1] = glConfig.vidHeight;
+
+		GLSL_SetUniformVec2(&tr.generateNormalMapShader, UNIFORM_DIMENSIONS, screensize);
+
+		//ri->Printf(PRINT_WARNING, "Sent dimensions %f %f.\n", screensize[0], screensize[1]);
+	}
+
+	qglUseProgram(0);
+
+#if defined(_DEBUG)
+	GLSL_FinishGPUShader(&tr.generateNormalMapShader);
+#endif
+	
+	numEtcShaders++;
 
 	//underwaterShader
 	if (!GLSL_EndLoadGPUShader(&tr.underwaterShader))
@@ -2946,7 +3015,7 @@ void GLSL_EndLoadGPUShaders ( int startTime )
 	numEtcShaders++;
 
 
-	/*
+	
 	if (!GLSL_EndLoadGPUShader(&tr.uniqueskyShader))
 	{
 		ri->Error(ERR_FATAL, "Could not load uniqueskyShader shader!");
@@ -2978,7 +3047,7 @@ void GLSL_EndLoadGPUShaders ( int startTime )
 #endif
 	
 	numEtcShaders++;
-	*/
+	
 	
 		
 		if (!GLSL_EndLoadGPUShader(&tr.waterShader))
@@ -3133,8 +3202,17 @@ void GLSL_ShutdownGPUShaders(void)
 	GLSL_DeleteGPUShader(&tr.anamorphicDarkenShader);
 	GLSL_DeleteGPUShader(&tr.anamorphicBlurShader);
 	GLSL_DeleteGPUShader(&tr.anamorphicCombineShader);
-	//GLSL_DeleteGPUShader(&tr.uniqueskyShader);
 
+	GLSL_DeleteGPUShader(&tr.dofShader);
+	GLSL_DeleteGPUShader(&tr.fxaaShader);
+	GLSL_DeleteGPUShader(&tr.underwaterShader);
+	GLSL_DeleteGPUShader(&tr.texturecleanShader);
+	GLSL_DeleteGPUShader(&tr.ssgiShader);
+	GLSL_DeleteGPUShader(&tr.volumelightShader);
+	GLSL_DeleteGPUShader(&tr.vibrancyShader);
+	GLSL_DeleteGPUShader(&tr.testshaderShader);
+	GLSL_DeleteGPUShader(&tr.uniqueskyShader);
+	GLSL_DeleteGPUShader(&tr.generateNormalMapShader);
 
 
 	glState.currentProgram = 0;

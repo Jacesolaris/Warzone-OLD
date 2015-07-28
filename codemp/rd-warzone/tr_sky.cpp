@@ -836,7 +836,44 @@ void RB_DrawSun( float scale, shader_t *shader ) {
 }
 
 
+void DrawSkyDome ( shader_t *skyShader )
+{
+	vec4_t color;
 
+	// bloom
+	color[0] =
+		color[1] =
+		color[2] = pow(2, r_cameraExposure->value);
+	color[3] = 1.0f;
+
+	GLSL_BindProgram(&tr.uniqueskyShader);
+	GL_BindToTMU(skyShader->sky.outerbox[0], TB_LEVELSMAP);
+
+	GLSL_SetUniformMatrix16(&tr.uniqueskyShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
+	GLSL_SetUniformFloat(&tr.uniqueskyShader, UNIFORM_TIME, backEnd.refdef.floatTime*5.0/*tr.refdef.floatTime*/);
+
+	{
+		vec2_t screensize;
+		screensize[0] = skyShader->sky.outerbox[0]->width;
+		screensize[1] = skyShader->sky.outerbox[0]->height;
+
+		GLSL_SetUniformVec2(&tr.uniqueskyShader, UNIFORM_DIMENSIONS, screensize);
+	}
+
+	vec4i_t		imageBox;
+	imageBox[0] = 0;
+	imageBox[1] = 0;
+	imageBox[2] = skyShader->sky.outerbox[0]->width;
+	imageBox[3] = skyShader->sky.outerbox[0]->height;
+
+	vec4i_t		screenBox;
+	screenBox[0] = 0;
+	screenBox[1] = 0;
+	screenBox[2] = glConfig.vidWidth;
+	screenBox[3] = glConfig.vidHeight;
+	
+	FBO_BlitFromTexture(skyShader->sky.outerbox[0], imageBox, NULL, glState.currentFBO, screenBox, &tr.uniqueskyShader, NULL, 0);
+}
 
 /*
 ================
@@ -847,7 +884,11 @@ All of the visible sky triangles are in tess
 Other things could be stuck in here, like birds in the sky, etc
 ================
 */
+
+#define ___NO_SKYDOME___
+
 void RB_StageIteratorSky( void ) {
+#ifdef ___NO_SKYDOME___
 	if ( r_fastsky->integer ) {
 		return;
 	}
@@ -903,6 +944,9 @@ void RB_StageIteratorSky( void ) {
 	// generate the vertexes for all the clouds, which will be drawn
 	// by the generic shader routine
 	R_BuildCloudData( &tess );
+#else
+	DrawSkyDome(tess.shader);
+#endif
 
 	RB_StageIteratorGeneric();
 
