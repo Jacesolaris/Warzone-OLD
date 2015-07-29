@@ -13,16 +13,16 @@ vec4 generateEnhancedNormal( vec2 fragCoord )
     float v = uv.y;
     
     float threshold = 0.085;
-    float px = 1.0/u_Dimensions.x;
+    vec2 px = vec2(1.0/u_Dimensions.x, 1.0/u_Dimensions.y);
     
     vec3 rgb = texture2D(u_DiffuseMap, uv).rgb;
     vec3 bw = vec3(1);
     vec3 bw2 = vec3(1);
 
-    vec3 rgbUp = texture2D(u_DiffuseMap, vec2(u,v+px)).rgb;
-    vec3 rgbDown = texture2D(u_DiffuseMap, vec2(u,v-px)).rgb;
-    vec3 rgbLeft = texture2D(u_DiffuseMap, vec2(u+px,v)).rgb;
-    vec3 rgbRight = texture2D(u_DiffuseMap, vec2(u-px,v)).rgb;
+    vec3 rgbUp = texture2D(u_DiffuseMap, vec2(u,v+px.y)).rgb;
+    vec3 rgbDown = texture2D(u_DiffuseMap, vec2(u,v-px.y)).rgb;
+    vec3 rgbLeft = texture2D(u_DiffuseMap, vec2(u+px.x,v)).rgb;
+    vec3 rgbRight = texture2D(u_DiffuseMap, vec2(u-px.x,v)).rgb;
 
     float rgbAvr = (rgb.r + rgb.g + rgb.b) / 3.;
     float rgbUpAvr = (rgbUp.r + rgbUp.g + rgbUp.b) / 3.;
@@ -41,7 +41,7 @@ vec4 generateEnhancedNormal( vec2 fragCoord )
         bw = vec3(0);
     
     // o.5 + 0.5 * acts as a remapping function
-    bw = 0.5 + 0.5*normalize( vec3(rgbRightAvr - rgbLeftAvr, 100.0*px, rgbUpAvr - rgbDownAvr) ).xzy;
+    bw = 0.5 + 0.5*normalize( vec3(rgbRightAvr - rgbLeftAvr, 100.0*px.x, rgbUpAvr - rgbDownAvr) ).xzy;
     
     return vec4(bw,0);
 }
@@ -111,7 +111,10 @@ float SampleHeight(vec2 t)
 
 void main ( void )
 {
-	vec4 normal = generateEnhancedNormal(var_TexCoords.xy);
+	vec4 enhanced = generateEnhancedNormal(var_TexCoords.xy);
+	vec4 bumpy = generateBumpyNormal(var_TexCoords.xy);
+	vec4 normal = (enhanced + bumpy) / 2.0;
+	//normal = 1.0 - normal;
 	normal.a = SampleHeight(var_TexCoords.xy);
 	//vec4 normal = vec4(var_TexCoords.xy,var_TexCoords.xy);
 	//normal.a = 1.0;

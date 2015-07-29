@@ -480,8 +480,8 @@ void main()
 #if defined(USE_NORMALMAP)
 	if (u_Local4.r != 0.0)
 	{
-		gl_FragColor = vec4(texture2D(u_NormalMap, var_TexCoords.xy).a);
-		//gl_FragColor = texture2D(u_NormalMap, var_TexCoords.xy);
+		//gl_FragColor = vec4(texture2D(u_NormalMap, var_TexCoords.xy).a);
+		gl_FragColor = texture2D(u_NormalMap, var_TexCoords.xy);
 		//gl_FragColor = vec4(1.0,0.0,0.0,1.0);
 		out_Glow = vec4(0.0);
 		return;
@@ -490,14 +490,14 @@ void main()
 	{
 		//gl_FragColor = vec4(0.0,1.0,0.0,1.0);
 		//gl_FragColor = texture2D(u_NormalMap, var_TexCoords.xy);
-		gl_FragColor = vec4(texture2D(u_NormalMap, var_TexCoords.xy).a);
-		out_Glow = vec4(0.0);
-		return;
+		//gl_FragColor = vec4(texture2D(u_NormalMap, var_TexCoords.xy).a);
+		//out_Glow = vec4(0.0);
+		//return;
 	}
 #else
-	gl_FragColor = vec4(0.0,0.0,1.0,1.0);
-	out_Glow = vec4(0.0);
-	return;
+	//gl_FragColor = vec4(0.0,0.0,1.0,1.0);
+	//out_Glow = vec4(0.0);
+	//return;
 #endif
 */
 
@@ -610,32 +610,38 @@ void main()
   #endif
 
 #if defined(USE_PARALLAXMAP) || defined(USE_PARALLAXMAP_NONORMALS)
-  /*
+/*
+	// WOW - There is something wrong with this. Just makes everything black... Normal maps are correct, but something seems to be wrong here...
   #if defined(USE_NORMALMAP)
     if (u_Local4.r != 0.0)
 	{// Have a real normal map...
-	#if defined(SWIZZLE_NORMALMAP)
-		N.xy = texture2D(u_NormalMap, texCoords).ag - vec2(0.5);
-    #else
+	//#if defined(SWIZZLE_NORMALMAP)
+	//	N.xy = texture2D(u_NormalMap, texCoords).ag - vec2(0.5);
+    //#else
 		N.xy = texture2D(u_NormalMap, texCoords).rg - vec2(0.5);
-    #endif
+    //#endif
 		N.xy *= u_NormalScale.xy;
 		N.z = sqrt(clamp((0.25 - N.x * N.x) - N.y * N.y, 0.0, 1.0));
 		N = tangentToWorld * N;
+		
+		//N.xyz *= 2.0;
+		//N.xyz += var_Normal.xyz;
+		//N /= 3.0;
 	}
 	else
 	{
-		float norm = (fakedepth - 0.5);
-		float norm2 = 0.0 - (fakedepth - 0.5);
-		N.xy = vec2(norm, norm2);
-		N.xy *= u_NormalScale.xy;
-		N.z = sqrt(clamp((0.25 - N.x * N.x) - N.y * N.y, 0.0, 1.0));
-		N = tangentToWorld * N;
+		//float norm = (fakedepth - 0.5);
+		//float norm2 = 0.0 - (fakedepth - 0.5);
+		//N.xy = vec2(norm, norm2);
+		//N.xy *= u_NormalScale.xy;
+		//N.z = sqrt(clamp((0.25 - N.x * N.x) - N.y * N.y, 0.0, 1.0));
+		//N = tangentToWorld * N;
+		N = var_Normal.xyz;
 	}
   #else
 	N = var_Normal.xyz;
   #endif
-  */
+*/
   N = var_Normal.xyz;
 #endif
 

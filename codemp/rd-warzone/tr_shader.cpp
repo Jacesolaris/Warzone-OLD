@@ -3862,7 +3862,7 @@ static qboolean CollapseStagesToGLSL(void)
 	{
 		shaderStage_t *lightmaps[MAX_SHADER_STAGES] = {};
 
-#pragma omp parallel for
+//#pragma omp parallel for
 		for (i = 0; i < MAX_SHADER_STAGES; i++)
 		{
 			shaderStage_t *pStage = &stages[i];
@@ -3876,7 +3876,7 @@ static qboolean CollapseStagesToGLSL(void)
 			}
 		}
 
-#pragma omp parallel for
+//#pragma omp parallel for
 		for (i = 0; i < MAX_SHADER_STAGES; i++)
 		{
 			shaderStage_t *pStage = &stages[i];
@@ -3989,7 +3989,7 @@ static qboolean CollapseStagesToGLSL(void)
 		}
 
 		// deactivate lightmap stages
-#pragma omp parallel for
+//#pragma omp parallel for
 		for (i = 0; i < MAX_SHADER_STAGES; i++)
 		{
 			shaderStage_t *pStage = &stages[i];
@@ -4007,7 +4007,7 @@ static qboolean CollapseStagesToGLSL(void)
 	}
 
 	// deactivate normal and specular stages
-#pragma omp parallel for
+//#pragma omp parallel for
 	for (i = 0; i < MAX_SHADER_STAGES; i++)
 	{
 		shaderStage_t *pStage = &stages[i];
@@ -4065,7 +4065,7 @@ static qboolean CollapseStagesToGLSL(void)
 	// only do this with r_sunlightMode non-zero, as it's only for correct shadows.
 	if (r_sunlightMode->integer && shader.numDeforms == 0)
 	{
-#pragma omp parallel for
+//#pragma omp parallel for
 		for (i = 0; i < MAX_SHADER_STAGES; i++)
 		{
 			shaderStage_t *pStage = &stages[i];
@@ -4094,7 +4094,7 @@ static qboolean CollapseStagesToGLSL(void)
 	// convert any remaining lightingdiffuse stages to a lighting pass
 	if (shader.numDeforms == 0)
 	{
-#pragma omp parallel for
+//#pragma omp parallel for
 		for (i = 0; i < MAX_SHADER_STAGES; i++)
 		{
 			shaderStage_t *pStage = &stages[i];
@@ -4130,7 +4130,7 @@ static qboolean CollapseStagesToGLSL(void)
 
 	ri->Printf (PRINT_DEVELOPER, "> New shader stage order:\n");
 
-#pragma omp parallel for
+//#pragma omp parallel for
 	for ( int i = 0; i < MAX_SHADER_STAGES; i++ )
 	{
 		shaderStage_t *stage = &stages[i];
