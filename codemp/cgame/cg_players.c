@@ -17327,8 +17327,6 @@ SkipTrueView:
 		CG_DrawPlayerSphere(cent, cent->lerpOrigin, 2.0f, cgs.media.enlightenmentShader );
 	}
 
-	//[TrueView]
-
 	if (cent->currentState.eFlags & EF_INVULNERABLE)
 	{
 		// Jedi Knight Galaxies

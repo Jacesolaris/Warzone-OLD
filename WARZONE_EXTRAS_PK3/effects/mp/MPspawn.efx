@@ -1,0 +1,143 @@
+repeatDelay				200
+
+Line
+{
+	name				MainBeam
+
+	spawnFlags			org2fromTrace
+
+	life				800
+
+	rgb
+	{
+		start			0.651 1 0.949
+	}
+
+	alpha
+	{
+		start			0.5
+		end				0
+		flags			linear
+	}
+
+	size
+	{
+		start			70
+		end				50
+		parm			8
+		flags			wave
+	}
+
+	shaders
+	[
+		gfx/misc/spawn_line
+	]
+}
+
+Line
+{
+	name				Beam1
+
+	spawnFlags			org2fromTrace
+
+	count				4 5
+
+	life				700
+
+	origin				0 -20 -20 0 20 20
+
+	rgb
+	{
+		start			0.651 1 0.949
+	}
+
+	alpha
+	{
+		end				0
+		flags			linear
+	}
+
+	size
+	{
+		start			8
+		end				6
+		parm			8
+		flags			wave
+	}
+
+	shaders
+	[
+		gfx/misc/spawn
+	]
+}
+
+Line
+{
+	name				Beam2
+
+	spawnFlags			org2fromTrace
+
+	count				4 5
+
+	life				700
+
+	origin				0 -20 -20 0 20 20
+
+	rgb
+	{
+		start			0 1 0.698 0 1 0.502
+	}
+
+	alpha
+	{
+		start			0.8 0.9
+		end				0
+		flags			linear
+	}
+
+	size
+	{
+		start			40
+		end				36
+		parm			8
+		flags			wave
+	}
+
+	shaders
+	[
+		gfx/misc/spawn
+	]
+}
+
+Emitter
+{
+	name				Bolts
+
+	flags				expensivePhysics usePhysics impactKills impactFx emitFx
+
+	life				8000
+
+	velocity			3000 0 0
+
+	density				100
+
+	impactfx
+	[
+		mp/beam_impact
+	]
+
+	emitfx
+	[
+		mp/beam_lights
+	]
+}
+
+FxRunner
+{
+	name				Origin
+
+	playfx
+	[
+		mp/beam_impact
+	]
+}

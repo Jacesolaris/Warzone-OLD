@@ -1,0 +1,129 @@
+Information file for model 'model.glm'
+
+
+GLM Header info:
+
+->ident:             1296518194
+->version:           6
+->name:              model.glm
+->animName:          /models/players/juggernaut_hat/juggernaut_hat
+->animIndex:         ( only used by game, but defaulted to 0 )
+->numBones:          13
+->numLODs:           1
+->ofsLODs:           4872
+->numSurfaces:       31
+->ofsSurfHierarchy:  288
+->ofsEnd:            393584  ( also gives overall filesize )
+
+
+Shader Info:
+
+1 unique shaders used, list follows:
+[nomaterial]
+
+Rendering Info:
+
+0 surfaces out of 31 default to OFF
+6 surfaces out of 31 are tags only
+...therefore default rendered surface total = 25
+
+LOD 0/1:
+{
+Total Verts:                 7515
+Total Tris :                 7216
+Unique Bone Refs:            12
+
+Default rendered Verts:      7497
+Default rendered Tris:       7210
+Default rendered Bone Refs:  12
+}
+
+
+
+GLA Header info:
+
+->ident:             1095191602
+->version:           6
+->name:              /models/players/juggernaut_hat/juggernaut_hat
+->numFrames:         31
+->ofsFrames:         2436
+->numBones:          13
+->ofsCompBonePool:   3648
+->ofsSkel:           152
+->ofsEnd:            3704  ( also gives overall filesize )
+
+
+Total  animation matrices:                     403   ( 13 bones * 31 frames )
+Unique animation matrices:                     4
+Total bytes for unpooled animation matrices:   5642
+Total bytes for   pooled animation matrices:   56
+Index bytes for pooling:                       152   ( 38 total bone references * sizeof(int) )
+Bytes saved via pooling:                       5434
+
+
+Complete list of all 13 bones:
+
+Bone   0:   "MAXSceneRoot":
+            Parent: ""  (index -1)
+            #Kids:  12
+            Child 0: (index 1), name "turret3_lr"
+            Child 1: (index 2), name "turret3_ud"
+            Child 2: (index 3), name "turret2_lr"
+            Child 3: (index 4), name "turret2_ud"
+            Child 4: (index 5), name "turret1_lr"
+            Child 5: (index 6), name "turret1_ud"
+            Child 6: (index 7), name "wheel1_b"
+            Child 7: (index 8), name "wheel5_b"
+            Child 8: (index 9), name "wheel4_b"
+            Child 9: (index 10), name "wheel3_b"
+            Child 10: (index 11), name "wheel2_b"
+            Child 11: (index 12), name "pelvis"
+
+Bone   1:   "turret3_lr":
+            Parent: "MAXSceneRoot"  (index 0)
+            #Kids:  0
+
+Bone   2:   "turret3_ud":
+            Parent: "MAXSceneRoot"  (index 0)
+            #Kids:  0
+
+Bone   3:   "turret2_lr":
+            Parent: "MAXSceneRoot"  (index 0)
+            #Kids:  0
+
+Bone   4:   "turret2_ud":
+            Parent: "MAXSceneRoot"  (index 0)
+            #Kids:  0
+
+Bone   5:   "turret1_lr":
+            Parent: "MAXSceneRoot"  (index 0)
+            #Kids:  0
+
+Bone   6:   "turret1_ud":
+            Parent: "MAXSceneRoot"  (index 0)
+            #Kids:  0
+
+Bone   7:   "wheel1_b":
+            Parent: "MAXSceneRoot"  (index 0)
+            #Kids:  0
+
+Bone   8:   "wheel5_b":
+            Parent: "MAXSceneRoot"  (index 0)
+            #Kids:  0
+
+Bone   9:   "wheel4_b":
+            Parent: "MAXSceneRoot"  (index 0)
+            #Kids:  0
+
+Bone  10:   "wheel3_b":
+            Parent: "MAXSceneRoot"  (index 0)
+            #Kids:  0
+
+Bone  11:   "wheel2_b":
+            Parent: "MAXSceneRoot"  (index 0)
+            #Kids:  0
+
+Bone  12:   "pelvis":
+            Parent: "MAXSceneRoot"  (index 0)
+            #Kids:  0
+

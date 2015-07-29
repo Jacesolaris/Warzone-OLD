@@ -1,0 +1,159 @@
+repeatDelay				1500
+
+OrientedParticle
+{
+	name				RipplesInwards
+
+	flags				useAlpha
+
+	spawnFlags			evenDistribution
+
+	count				0.6 1.5
+
+	life				4000
+
+	delay				0 600
+
+	origin				-5 0 0
+
+	rotation			-180 180
+
+	rotationDelta		-2 3
+
+	size
+	{
+		start			140 150
+		end				40 0
+		flags			linear
+	}
+
+	shaders
+	[
+		gfx/water/overlay_ripple
+		gfx/water/overlay_ripple2
+		gfx/water/overlay_ripple3
+		gfx/water/overlay_ripple4
+		gfx/water/overlay_ripple5
+	]
+}
+
+OrientedParticle
+{
+	name				RipplesOutwards
+
+	flags				useAlpha
+
+	spawnFlags			evenDistribution
+
+	count				0.6 1.5
+
+	life				4000
+
+	delay				0 600
+
+	origin				-5 0 0
+
+	rotation			-180 180
+
+	rotationDelta		-2 3
+
+	size
+	{
+		start			40 0
+		end				140 150
+		flags			linear
+	}
+
+	shaders
+	[
+		gfx/water/overlay_ripple
+		gfx/water/overlay_ripple2
+		gfx/water/overlay_ripple3
+		gfx/water/overlay_ripple4
+		gfx/water/overlay_ripple5
+	]
+}
+
+OrientedParticle
+{
+	name				FrontRipplesInwards
+
+	flags				useAlpha
+
+	spawnFlags			evenDistribution
+
+	count				0.51 0.55
+
+	life				4000
+
+	delay				0 600
+
+	origin				5 0 0
+
+	rotation			-180 180
+
+	rotationDelta		-2 3
+
+	size
+	{
+		start			140 150
+		end				40 0
+		flags			linear
+	}
+
+	shaders
+	[
+		gfx/water/overlay_ripple
+		gfx/water/overlay_ripple2
+		gfx/water/overlay_ripple3
+		gfx/water/overlay_ripple4
+		gfx/water/overlay_ripple5
+	]
+}
+
+OrientedParticle
+{
+	name				Traces
+
+	spawnFlags			evenDistribution
+
+	count				5 6
+
+	life				250
+
+	delay				900 3700
+
+	origin				5 0 -3
+
+	rotation			0 360
+
+	rotationDelta		-3 1
+
+	rgb
+	{
+		start			1 1 1 0.6588 0.6902 1
+	}
+
+	alpha
+	{
+		start			0
+		end				0.2 0.8
+		parm			8
+		flags			wave
+	}
+
+	size
+	{
+		start			80 60
+		end				70 100
+		flags			linear
+	}
+
+	shaders
+	[
+		textures/aMace_Vault/sg_eh1_glow2
+		textures/aMace_Vault/sg_eh2_glow2
+		textures/aMace_Vault/sg_eh3_glow2
+		textures/aMace_Vault/sg_eh4_glow2
+	]
+}

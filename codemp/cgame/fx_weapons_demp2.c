@@ -51,7 +51,7 @@ void FX_Clonepistol_HitWall(vec3_t origin, vec3_t normal, int weapon, qboolean a
 
 	// Set fx to primary weapon fx.
 	fxHandle_t fx = cg_weapons[weapon].missileWallImpactfx;
-	fxHandle_t fx2 = cg_weapons[weapon].wallImpactEffectEnhancedFX;
+	fxHandle_t fx2 = cg_weapons[weapon].EnhancedFX_missileWallImpactfx;
 
 	if (!fx) {
 		// If there is no primary (missileWallImpactfx) fx. Use original blaster fx.
@@ -68,9 +68,9 @@ void FX_Clonepistol_HitWall(vec3_t origin, vec3_t normal, int weapon, qboolean a
 			fx = cg_weapons[weapon].altMissileWallImpactfx;
 		}
 
-		if (cg_weapons[weapon].altWallImpactEffectEnhancedFX)
+		if (cg_weapons[weapon].EnhancedFX_altmissileWallImpactfx)
 		{// We have enhanced alt. Use it.
-			fx2 = cg_weapons[weapon].altWallImpactEffectEnhancedFX;
+			fx2 = cg_weapons[weapon].EnhancedFX_altmissileWallImpactfx;
 		}
 		else
 		{// We have no alt enhanced fx.
@@ -101,7 +101,7 @@ void FX_Clonepistol_BounceWall(vec3_t origin, vec3_t normal, int weapon, qboolea
 
 	// Set fx to primary weapon fx.
 	fxHandle_t fx = cg_weapons[weapon].WallBounceEffectFX;
-	fxHandle_t fx2 = cg_weapons[weapon].WallBounceEffectEnhancedFX;
+	fxHandle_t fx2 = cg_weapons[weapon].EnhancedFX_WallBouncefx;
 
 	if (!fx) {
 		// If there is no primary (WallBounceEffectFX) fx. Use original blaster fx.
@@ -118,9 +118,9 @@ void FX_Clonepistol_BounceWall(vec3_t origin, vec3_t normal, int weapon, qboolea
 			fx = cg_weapons[weapon].altWallBounceEffectFX;
 		}
 
-		if (cg_weapons[weapon].altWallBounceEnhancedEffectFX)
+		if (cg_weapons[weapon].EnhancedFX_altWallBouncefx)
 		{// We have enhanced alt. Use it.
-			fx2 = cg_weapons[weapon].altWallBounceEnhancedEffectFX;
+			fx2 = cg_weapons[weapon].EnhancedFX_altWallBouncefx;
 		}
 		else
 		{// We have no alt enhanced fx.
@@ -153,7 +153,7 @@ void FX_Clonepistol_HitPlayer(vec3_t origin, vec3_t normal, qboolean humanoid, i
 {
 	// Set fx to primary weapon fx.
 	fxHandle_t fx = cg_weapons[weapon].fleshImpactEffect;
-	fxHandle_t fx2 = cg_weapons[weapon].fleshImpactEnhancedEffect;
+	fxHandle_t fx2 = cg_weapons[weapon].EnhancedFX_fleshImpact;
 
 	if (!fx) {
 		// If there is no primary (missileWallImpactfx) fx. Use original blaster fx.
@@ -170,9 +170,9 @@ void FX_Clonepistol_HitPlayer(vec3_t origin, vec3_t normal, qboolean humanoid, i
 			fx = cg_weapons[weapon].altFleshImpactEffect;
 		}
 
-		if (cg_weapons[weapon].altFleshImpactEnhancedEffect)
+		if (cg_weapons[weapon].EnhancedFX_altfleshImpact)
 		{// We have enhanced alt. Use it.
-			fx2 = cg_weapons[weapon].altFleshImpactEnhancedEffect;
+			fx2 = cg_weapons[weapon].EnhancedFX_altfleshImpact;
 		}
 		else
 		{// We have no alt enhanced fx.
@@ -245,7 +245,7 @@ void FX_DEMP2_HitWall(vec3_t origin, vec3_t normal, int weapon, qboolean altFire
 		PlayEffectID(fx, origin, normal, -1, -1, qfalse);
 	else
 		PlayEffectID(
-		CG_EnableEnhancedFX(cgs.effects.demp2WallImpactEffect, cgs.effects.demp2WallImpactEffectEnhancedFX), origin, normal, -1, -1, qfalse);
+		CG_EnableEnhancedFX(cgs.effects.demp2WallImpactEffect, cgs.effects.demp2EnhancedFX_missileWallImpactfx), origin, normal, -1, -1, qfalse);
 }
 
 /*
@@ -258,7 +258,7 @@ void FX_DEMP2_HitPlayer(vec3_t origin, vec3_t normal, qboolean humanoid, int wea
 {
 	// Set fx to primary weapon fx.
 	fxHandle_t fx = cg_weapons[weapon].fleshImpactEffect;
-	fxHandle_t fx2 = cg_weapons[weapon].fleshImpactEnhancedEffect;
+	fxHandle_t fx2 = cg_weapons[weapon].EnhancedFX_fleshImpact;
 
 	if (!fx) {
 		// If there is no primary (missileWallImpactfx) fx. Use original blaster fx.
@@ -275,9 +275,9 @@ void FX_DEMP2_HitPlayer(vec3_t origin, vec3_t normal, qboolean humanoid, int wea
 			fx = cg_weapons[weapon].altFleshImpactEffect;
 		}
 
-		if (cg_weapons[weapon].altFleshImpactEnhancedEffect)
+		if (cg_weapons[weapon].EnhancedFX_altfleshImpact)
 		{// We have enhanced alt. Use it.
-			fx2 = cg_weapons[weapon].altFleshImpactEnhancedEffect;
+			fx2 = cg_weapons[weapon].EnhancedFX_altfleshImpact;
 		}
 		else
 		{// We have no alt enhanced fx.

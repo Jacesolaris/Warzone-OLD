@@ -1,0 +1,138 @@
+repeatDelay				1500
+
+Cylinder
+{
+	name				Lightbeam
+
+	life				2000
+
+	origin				5 0 -3
+
+	rgb
+	{
+		start			0.7451 0.7176 1 0.6588 0.6902 1
+		end				0.851 0.8902 1 0.7059 0.7059 0.7059
+		flags			linear
+	}
+
+	alpha
+	{
+		start			0
+		parm			1
+		flags			wave
+	}
+
+	size
+	{
+		start			0
+		end				93 98
+		parm			50 60
+		flags			linear nonlinear
+	}
+
+	size2
+	{
+		start			95
+		end				100 110
+		flags			linear
+	}
+
+	length
+	{
+		start			2 3
+		end				5 6
+		flags			linear
+	}
+
+	shaders
+	[
+		textures/amace_vault/sg_dissolve
+	]
+}
+
+OrientedParticle
+{
+	name				Filler
+
+	life				500
+
+	origin				5 0 -3
+
+	rotation			0 360
+
+	rotationDelta		-2 2
+
+	alpha
+	{
+		start			0
+		end				0.7 0.8
+		parm			4
+		flags			wave
+	}
+
+	size
+	{
+		start			90 95
+		end				100 120
+		parm			10 25
+		flags			linear clamp
+	}
+
+	shaders
+	[
+		textures/amace_vault/sg_dissolvefiller
+	]
+}
+
+OrientedParticle
+{
+	name				Traces
+
+	spawnFlags			evenDistribution
+
+	count				5 6
+
+	life				400
+
+	delay				0 1100
+
+	origin				5 0 -3
+
+	rotation			0 360
+
+	rotationDelta		-6 3
+
+	alpha
+	{
+		start			0
+		end				0.4 0.8
+		parm			5
+		flags			wave
+	}
+
+	size
+	{
+		start			70 80
+		end				80 110
+		parm			10 25
+		flags			linear clamp
+	}
+
+	shaders
+	[
+		textures/aMace_Vault/sg_eh1_glow2
+		textures/aMace_Vault/sg_eh2_glow2
+		textures/aMace_Vault/sg_eh3_glow2
+		textures/aMace_Vault/sg_eh4_glow2
+	]
+}
+
+Sound
+{
+	name				Lockdown
+
+	sounds
+	[
+		sound/effects/sg_close.wav
+	]
+}

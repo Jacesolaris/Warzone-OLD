@@ -11,7 +11,11 @@
 #define MASK_CAMERACLIP (MASK_SOLID)
 #endif //__DISABLE_PLAYERCLIP__
 #define CAMERA_SIZE	4
-
+//[TrueView]
+#define		MAX_TRUEVIEW_INFO_SIZE					8192
+char		true_view_info[MAX_TRUEVIEW_INFO_SIZE];
+int			true_view_valid;
+//[/TrueView]
 
 /*
 =============================================================================
@@ -1802,7 +1806,7 @@ void CG_DrawSkyBoxPortal(const char *cstr)
 			fov_x = cg_fov.value;
 		}
 		//fov_x = cg_fov.value;
-		//[TrueView]
+		//[/TrueView]
 	}
 	else
 	{
@@ -2834,4 +2838,70 @@ void CheckCameraLocation(vec3_t OldeyeOrigin)
 		VectorCopy(trace.endpos, cg.refdef.vieworg);
 	}
 }
+
+
+//Loads in the True View auto eye positioning data so you don't have to worry about disk access later in the 
+//game
+//Based on CG_InitSagaMode and tck's tck_InitBuffer
+void CG_TrueViewInit(void)
+{
+	int				len = 0;
+	fileHandle_t	f;
+
+
+	len = trap->FS_Open("trueview.cfg", &f, FS_READ);
+
+	if (!f)
+	{
+		//	trap->Print("Error: File Not Found: trueview.cfg\n");
+		true_view_valid = 0;
+		return;
+	}
+
+	if (len >= MAX_TRUEVIEW_INFO_SIZE)
+	{
+		trap->Print("Error: trueview.cfg is over the filesize limit. (%i)\n", MAX_TRUEVIEW_INFO_SIZE);
+		trap->FS_Close(f);
+		true_view_valid = 0;
+		return;
+	}
+
+
+	trap->FS_Read(true_view_info, len, f);
+
+	true_view_valid = 1;
+
+	trap->FS_Close(f);
+
+	return;
+
+}
+
+
+//Tries to adjust the eye position from the data in cfg file if possible.
+void CG_AdjustEyePos(const char *modelName)
+{
+	//eye position
+	char	eyepos[MAX_QPATH];
+
+	if (true_view_valid)
+	{
+
+		if (BG_SiegeGetPairedValue(true_view_info, (char*)modelName, eyepos))
+		{
+			trap->Print("True View Eye Adjust Loaded for %s.\n", modelName);
+			trap->Cvar_Set("cg_trueeyeposition", eyepos);
+		}
+		else
+		{//Couldn't find an entry for the desired model.  Not nessicarily a bad thing.
+			trap->Cvar_Set("cg_trueeyeposition", "0");
+		}
+	}
+	else
+	{//The model eye position list is messed up.  Default to 0.0 for the eye position
+		trap->Cvar_Set("cg_trueeyeposition", "0");
+	}
+
+}
+//[/TrueView]
 //[/TrueView]

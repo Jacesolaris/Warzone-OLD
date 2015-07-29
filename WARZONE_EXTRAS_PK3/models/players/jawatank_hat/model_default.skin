@@ -1,0 +1,11 @@
+body,models/players/jawatank_hat/hull.tga
+body2,models/players/jawatank_hat/hull.tga
+body3,models/players/jawatank_hat/hull.tga
+colors,models/players/jawatank_hat/colors.tga
+console,models/players/jawatank_hat/console.tga
+pannel1-1,models/players/jawatank_hat/pannel1.tga
+pannel3-1,models/players/jawatank_hat/pannel3.tga
+pannel3-2,models/players/jawatank_hat/pannel3.tga
+pannel3-3,models/players/jawatank_hat/pannel3.tga
+tracks,models/players/jawatank_hat/track.tga
+wheels,models/players/jawatank_hat/wheels.tga

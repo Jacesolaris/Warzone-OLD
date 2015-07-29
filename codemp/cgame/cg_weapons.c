@@ -1003,7 +1003,7 @@ void CG_AddViewWeapon( playerState_t *ps ) {
 		cgFov = cg_fov.value;
 	}
 	//float	cgFov = cg_fov.value;
-	//[TrueView]
+	//[/TrueView]
 
 
 	if (cgFov < 1)
@@ -1023,7 +1023,7 @@ void CG_AddViewWeapon( playerState_t *ps ) {
 	cgFov = 97;
 	}
 	*/
-	//[TrueView]
+	//[/TrueView]
 
 	if ( ps->pm_type == PM_INTERMISSION ) {
 		return;
@@ -2146,7 +2146,8 @@ void CG_ThermalImpactEffect(qboolean altFire, vec3_t origin, vec3_t dir, vec3_t 
 			cgs.effects.thermalExplosionEffectEnhancedFX), origin, dir, -1, -1, qfalse);
 	}
 
-	PlayEffectID(cgs.effects.thermalShockwaveEffect, origin, up, -1, -1, qfalse);
+	PlayEffectID(CG_EnableEnhancedFX(cgs.effects.thermalShockwaveEffect,
+		cgs.effects.thermalShockwaveEffectEffectEnhancedFX), origin, dir, -1, -1, qfalse);
 }
 
 /*

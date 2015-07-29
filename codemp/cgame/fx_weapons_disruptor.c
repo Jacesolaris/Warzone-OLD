@@ -144,7 +144,7 @@ void FX_DisruptorHitWall(vec3_t origin, vec3_t normal, int weapon, qboolean altF
 	if (fx)
 		PlayEffectID(fx, origin, normal, -1, -1, qfalse);
 	else
-		PlayEffectID(CG_EnableEnhancedFX(cgs.effects.disruptorWallImpactEffect, cgs.effects.disruptorWallImpactEffectEnhancedFX), origin, normal, -1, -1, qfalse);
+		PlayEffectID(CG_EnableEnhancedFX(cgs.effects.disruptorWallImpactEffect, cgs.effects.disruptorEnhancedFX_missileWallImpactfx), origin, normal, -1, -1, qfalse);
 }
 
 /*

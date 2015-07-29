@@ -753,17 +753,17 @@ typedef struct weaponInfo_s {
 	fxHandle_t		altMissileWallImpactfx;
 	fxHandle_t		fleshImpactEffect; // should we do these or use generic ones?
 	fxHandle_t		altFleshImpactEffect;
-	fxHandle_t		fleshImpactEnhancedEffect; // should we do these or use generic ones?
-	fxHandle_t		altFleshImpactEnhancedEffect;
-	fxHandle_t		wallImpactEffectEnhancedFX;
-	fxHandle_t		altWallImpactEffectEnhancedFX;
-	fxHandle_t		WallBounceEffectEnhancedFX;
-	fxHandle_t		explotionImpactEffect;
-	fxHandle_t		ionBlastShotEffect;
 	fxHandle_t		WallBounceEffectFX;
 	fxHandle_t		altWallBounceEffectFX;
-	fxHandle_t		altWallBounceEnhancedEffectFX;
 	fxHandle_t		ProjectileEffectFX;
+	//all enhanced stuff under here.
+	fxHandle_t		EnhancedFX_WallBouncefx;
+	fxHandle_t		EnhancedFX_altWallBouncefx;
+	fxHandle_t		EnhancedFX_fleshImpact; // should we do these or use generic ones?
+	fxHandle_t		EnhancedFX_altfleshImpact;
+	fxHandle_t		EnhancedFX_missileWallImpactfx;
+	fxHandle_t		EnhancedFX_altmissileWallImpactfx;
+	
 	
 	qhandle_t		altMissileModel;
 	sfxHandle_t		altMissileSound;
@@ -1567,14 +1567,13 @@ typedef struct cgEffects_s {
 	fxHandle_t	concussionAltShotEffect;
 	fxHandle_t	concussionAltImpactEffect;
 	fxHandle_t	concussionImpactEffect;
-	fxHandle_t	ionBlastShotEffect;
 
 	// BRYAR PISTOL
 	fxHandle_t	bryarShotEffect;
 	fxHandle_t  bryarShotEffect1;
 	fxHandle_t	bryarPowerupShotEffect;
 	fxHandle_t	bryarWallImpactEffect;
-	fxHandle_t	bryarWallImpactEffectEnhancedFX;
+	fxHandle_t	bryarEnhancedFX_missileWallImpactfx;
 	fxHandle_t	bryarWallImpactEffect2;
 	fxHandle_t	bryarWallImpactEffect2EnhancedFX;
 	fxHandle_t	bryarWallImpactEffect3;
@@ -1585,7 +1584,7 @@ typedef struct cgEffects_s {
 	// BLASTER
 	fxHandle_t  blasterShotEffect;
 	fxHandle_t  blasterWallImpactEffect;
-	fxHandle_t  blasterWallImpactEffectEnhancedFX;
+	fxHandle_t  blasterEnhancedFX_missileWallImpactfx;
 	fxHandle_t  blasterFleshImpactEffect;
 	fxHandle_t  blasterDroidImpactEffect;
 
@@ -1593,7 +1592,7 @@ typedef struct cgEffects_s {
 	fxHandle_t  disruptorRingsEffect;
 	fxHandle_t  disruptorProjectileEffect;
 	fxHandle_t  disruptorWallImpactEffect;
-	fxHandle_t  disruptorWallImpactEffectEnhancedFX;
+	fxHandle_t  disruptorEnhancedFX_missileWallImpactfx;
 	fxHandle_t  disruptorFleshImpactEffect;
 	fxHandle_t  disruptorAltMissEffect;
 	fxHandle_t  disruptorAltHitEffect;
@@ -1607,7 +1606,7 @@ typedef struct cgEffects_s {
 	fxHandle_t  repeaterProjectileEffect;
 	fxHandle_t  repeaterAltProjectileEffect;
 	fxHandle_t  repeaterWallImpactEffect;
-	fxHandle_t  repeaterWallImpactEffectEnhancedFX;
+	fxHandle_t  repeaterEnhancedFX_missileWallImpactfx;
 	fxHandle_t  repeaterFleshImpactEffect;
 	fxHandle_t  repeaterAltWallImpactEffect;
 
@@ -1615,7 +1614,7 @@ typedef struct cgEffects_s {
 	fxHandle_t  demp2ProjectileEffect;
 	fxHandle_t  demp2SecShotEffect;
 	fxHandle_t  demp2WallImpactEffect;
-	fxHandle_t  demp2WallImpactEffectEnhancedFX;
+	fxHandle_t  demp2EnhancedFX_missileWallImpactfx;
 	fxHandle_t  demp2WallBounceEffect;
 	fxHandle_t  demp2WallBounceEffectEnhancedFX;
 	fxHandle_t  demp2FleshImpactEffect;
@@ -1624,7 +1623,7 @@ typedef struct cgEffects_s {
 	fxHandle_t	flechetteShotEffect;
 	fxHandle_t	flechetteAltShotEffect;
 	fxHandle_t	flechetteWallImpactEffect;
-	fxHandle_t	flechetteWallImpactEffectEnhancedFX;
+	fxHandle_t	flechetteEnhancedFX_missileWallImpactfx;
 	fxHandle_t	flechetteFleshImpactEffect;
 
 	//EE-3
@@ -1659,6 +1658,7 @@ typedef struct cgEffects_s {
 	fxHandle_t	thermalExplosionAltEffect;
 	fxHandle_t	thermalExplosionAltEffectEnhancedFX;
 	fxHandle_t	thermalShockwaveEffect;
+	fxHandle_t  thermalShockwaveEffectEffectEnhancedFX;
 	fxHandle_t	thermalRealExplosion;
 	fxHandle_t	thermalRealExplosionEnhancedFX;
 	fxHandle_t	fireGrenadeFireBlob;
@@ -2297,8 +2297,9 @@ void FX_WeaponAltProjectileThink(  centity_t *cent, const struct weaponInfo_s *w
 void FX_WeaponHitWall( vec3_t origin, vec3_t normal, int weapon, qboolean altFire );
 void FX_WeaponAltHitWall(vec3_t origin, vec3_t normal, int power, int weapon, qboolean altFire);
 void FX_WeaponHitPlayer(vec3_t origin, vec3_t normal, qboolean humanoid, int weapon, qboolean altFire);
+void FX_PulseRocketHitPlayer(vec3_t origin, vec3_t normal, qboolean humanoid, int weapon, qboolean altFire);
 void FX_WeaponAltHitPlayer(vec3_t origin, vec3_t normal, qboolean humanoid, int weapon, qboolean altFire);
-
+void FX_RocketHitPlayer(vec3_t origin, vec3_t normal, qboolean humanoid, int weapon, qboolean altFire);
 void FX_BryarAltProjectileThink(  centity_t *cent, const struct weaponInfo_s *weapon );
 
 void FX_Clonepistol_HitWall(vec3_t origin, vec3_t normal, int weapon, qboolean altFire);

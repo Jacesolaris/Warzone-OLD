@@ -1,0 +1,26 @@
+Light
+{
+	life				40
+
+	rgb
+	{
+		start			0 0.949 1 0 0.7765 1
+	}
+
+	size
+	{
+		start			300
+		end				0
+		flags			linear
+	}
+}
+
+FxRunner
+{
+	count				0 0.6
+
+	playfx
+	[
+		mp/beam_bolts
+	]
+}

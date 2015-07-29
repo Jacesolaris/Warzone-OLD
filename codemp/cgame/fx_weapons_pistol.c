@@ -51,7 +51,7 @@ void FX_BryarAltHitWall(vec3_t origin, vec3_t normal, int power, int weapon, qbo
 {
 	// Set fx to primary weapon fx.
 	fxHandle_t fx = cg_weapons[weapon].missileWallImpactfx;
-	fxHandle_t fx2 = cg_weapons[weapon].wallImpactEffectEnhancedFX;
+	fxHandle_t fx2 = cg_weapons[weapon].EnhancedFX_missileWallImpactfx;
 
 	if (!fx) {
 		// If there is no primary (missileWallImpactfx) fx. Use original blaster fx.
@@ -68,9 +68,9 @@ void FX_BryarAltHitWall(vec3_t origin, vec3_t normal, int power, int weapon, qbo
 			fx = cg_weapons[weapon].altMissileWallImpactfx;
 		}
 
-		if (cg_weapons[weapon].altWallImpactEffectEnhancedFX)
+		if (cg_weapons[weapon].EnhancedFX_altmissileWallImpactfx)
 		{// We have enhanced alt. Use it.
-			fx2 = cg_weapons[weapon].altWallImpactEffectEnhancedFX;
+			fx2 = cg_weapons[weapon].EnhancedFX_altmissileWallImpactfx;
 		}
 		else
 		{// We have no alt enhanced fx.

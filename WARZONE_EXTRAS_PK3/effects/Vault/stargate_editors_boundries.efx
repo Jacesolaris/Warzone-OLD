@@ -1,0 +1,237 @@
+repeatDelay				1500
+
+OrientedParticle
+{
+	name				Caustics
+
+	life				4990
+
+	origin				5 0 0
+
+	rotation			-180 180
+
+	rotationDelta		-2 3
+
+	rgb
+	{
+		start			0 0 0
+		end				0.9529 0.9333 0.8863 0.5725 0.749 0.8941
+		parm			0.4
+		flags			wave
+	}
+
+	alpha
+	{
+		start			0
+		end				0.6 1
+		parm			0.4
+		flags			wave
+	}
+
+	size
+	{
+		start			70 90
+		end				100 30
+		flags			linear
+	}
+
+	shaders
+	[
+		textures/amace_vault/sg_caustics1
+		textures/amace_vault/sg_caustics2
+		textures/amace_vault/sg_caustics3
+	]
+}
+
+OrientedParticle
+{
+	name				RipplesInwards
+
+	flags				useAlpha
+
+	spawnFlags			evenDistribution
+
+	count				0.6 1.5
+
+	life				4000
+
+	delay				0 600
+
+	origin				5 0 0
+
+	rotation			-180 180
+
+	rotationDelta		-2 3
+
+	rgb
+	{
+		end				1 1 1 0.502 0.502 0.502
+	}
+
+	alpha
+	{
+		start			0
+		end				0.4 1
+		parm			0.5
+		flags			wave
+	}
+
+	size
+	{
+		start			140 150
+		end				40 0
+		flags			linear
+	}
+
+	shaders
+	[
+		gfx/water/overlay_ripple
+		gfx/water/overlay_ripple2
+		gfx/water/overlay_ripple3
+		gfx/water/overlay_ripple4
+		gfx/water/overlay_ripple5
+	]
+}
+
+OrientedParticle
+{
+	name				RipplesOutwards
+
+	flags				useAlpha
+
+	spawnFlags			evenDistribution
+
+	count				0.6 1.5
+
+	life				4000
+
+	delay				0 600
+
+	origin				5 0 0
+
+	rotation			-180 180
+
+	rotationDelta		-2 3
+
+	rgb
+	{
+		end				1 1 1 0.502 0.502 0.502
+	}
+
+	alpha
+	{
+		start			0
+		end				0.4 1
+		parm			0.5
+		flags			wave
+	}
+
+	size
+	{
+		start			40 0
+		end				140 150
+		flags			linear
+	}
+
+	shaders
+	[
+		gfx/water/overlay_ripple
+		gfx/water/overlay_ripple2
+		gfx/water/overlay_ripple3
+		gfx/water/overlay_ripple4
+		gfx/water/overlay_ripple5
+	]
+}
+
+OrientedParticle
+{
+	name				Flare
+
+	spawnFlags			evenDistribution
+
+	count				2 3
+
+	life				1990
+
+	delay				0 500
+
+	origin				5 0 0
+
+	rotation			-180 180
+
+	rotationDelta		-2 3
+
+	rgb
+	{
+		start			0.5451 0.8275 0.9216 0.8078 0.9098 0.7569
+		end				0.9529 0.9333 0.8863
+	}
+
+	alpha
+	{
+		start			0
+		end				0.4 1
+		parm			1
+		flags			wave
+	}
+
+	size
+	{
+		start			50 160
+		end				130 0
+		flags			linear
+	}
+
+	shaders
+	[
+		gfx/flares/flare_blue
+		gfx/flares/flare_white
+	]
+}
+
+Cylinder
+{
+	name				Lightbeam
+
+	life				2000
+
+	delay				600 700
+
+	origin				0 0 -2
+
+	rgb
+	{
+		start			0.5961 0.7765 0.9961 0.502 0.6392 1
+	}
+
+	alpha
+	{
+		start			0
+		end				0.3 0.5
+		parm			1
+		flags			wave
+	}
+
+	size
+	{
+		start			93 98
+	}
+
+	size2
+	{
+		start			90
+	}
+
+	length
+	{
+		start			40 45
+		end				40 50
+		parm			1
+		flags			wave
+	}
+
+	shaders
+	[
+		gfx/flares/lightbeam_pillar
+	]
+}

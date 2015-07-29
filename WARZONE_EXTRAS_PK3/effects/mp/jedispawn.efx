@@ -1,0 +1,374 @@
+repeatDelay				200
+
+Particle
+{
+	name				Sparks
+
+	flags				depthHack
+
+	spawnFlags			cheapOrgCalc orgOnCylinder axisFromSphere
+
+	count				10 20
+
+	life				1200 1600
+
+	delay				0 200
+
+	origin				0 0 20
+
+	height				20
+
+	rotationDelta		-5 6
+
+	velocity			200 -100 -100 300 100 100
+
+	acceleration		-400 -50 -50 -500 50 50
+
+	gravity				-80 60
+
+	rgb
+	{
+		end				0.3569 0.2039 0
+		parm			85 90
+		flags			linear nonlinear
+	}
+
+	alpha
+	{
+		end				0
+		parm			80
+		flags			linear nonlinear
+	}
+
+	size
+	{
+		start			10 15
+		end				20 30
+		parm			40
+		flags			linear clamp
+	}
+
+	shaders
+	[
+		gfx/flares/flare_golden
+	]
+}
+
+OrientedParticle
+{
+	name				Explosion
+
+	flags				depthHack
+
+	count				2 3
+
+	life				500 600
+
+	origin				2 0 0
+
+	wind				10 40
+
+	rotation			-180 180
+
+	rotationDelta		-13 13
+
+	rgb
+	{
+		start			1 0.7765 0 0.9333 0.6745 0.06667
+		end				0.7255 0.3098 0 0.7255 0.4863 0
+		flags			linear
+	}
+
+	alpha
+	{
+		end				0
+		parm			60 70
+		flags			linear clamp
+	}
+
+	size
+	{
+		start			3 5
+		end				90 100
+		flags			linear
+	}
+
+	shaders
+	[
+		gfx/flames/particle_fire1
+		gfx/flames/particle_fire2
+		gfx/flames/particle_fire3
+		gfx/flames/particle_fire4
+		gfx/flames/particle_fire5
+		gfx/flames/particle_fire6
+		gfx/flames/particle_fire7
+		gfx/flames/particle_fire8
+	]
+}
+
+Particle
+{
+	name				Explosion
+
+	flags				depthHack
+
+	count				3 4
+
+	life				500 600
+
+	wind				10 40
+
+	rotation			-180 180
+
+	rotationDelta		-13 13
+
+	velocity			5 -3 -3 40 3 3
+
+	gravity				1 8
+
+	rgb
+	{
+		start			1 0.7765 0 0.9333 0.6745 0.06667
+		end				0.7255 0.3098 0 0.7255 0.4863 0
+		flags			linear
+	}
+
+	alpha
+	{
+		end				0
+		parm			60 70
+		flags			linear clamp
+	}
+
+	size
+	{
+		start			3 5
+		end				80 90
+		flags			linear
+	}
+
+	shaders
+	[
+		gfx/flames/particle_fire1
+		gfx/flames/particle_fire2
+		gfx/flames/particle_fire3
+		gfx/flames/particle_fire4
+		gfx/flames/particle_fire5
+		gfx/flames/particle_fire6
+		gfx/flames/particle_fire7
+		gfx/flames/particle_fire8
+	]
+}
+
+Light
+{
+	name				Illumination
+
+	flags				depthHack
+
+	life				400
+
+	rgb
+	{
+		start			1 0.7765 0 0.9333 0.6745 0.06667
+	}
+
+	size
+	{
+		start			300
+		end				0
+		flags			linear
+	}
+}
+
+Line
+{
+	name				MainBeam
+
+	flags				depthHack
+
+	spawnFlags			org2fromTrace
+
+	count				4 5
+
+	life				500
+
+	origin				0 -10 -10 0 10 10
+
+	rgb
+	{
+		start			1 0.8863 0.549 0.9373 0.7412 0.06275
+	}
+
+	alpha
+	{
+		end				0
+		flags			linear
+	}
+
+	size
+	{
+		start			70
+		end				50
+		parm			8
+		flags			wave
+	}
+
+	shaders
+	[
+		gfx/misc/spawn
+	]
+}
+
+Particle
+{
+	name				Flare Core
+
+	flags				depthHack
+
+	spawnFlags			cheapOrgCalc
+
+	life				400
+
+	origin				0 0 50
+
+	rotation			-180 180
+
+	rotationDelta		-13 13
+
+	alpha
+	{
+		start			0.8
+	}
+
+	size
+	{
+		start			40 50
+		end				10 20
+		parm			60 70
+		flags			linear nonlinear
+	}
+
+	shaders
+	[
+		gfx/flares/flare_white
+	]
+}
+
+Particle
+{
+	name				Flare Stream Additive
+
+	flags				depthHack
+
+	spawnFlags			cheapOrgCalc
+
+	life				400
+
+	origin				0 0 50
+
+	rgb
+	{
+		start			0.4863 0.5373 0.9882
+	}
+
+	alpha
+	{
+		start			0.2
+	}
+
+	size
+	{
+		start			300 400
+		end				10 20
+		parm			60 70
+		flags			random linear nonlinear
+	}
+
+	shaders
+	[
+		gfx/flares/flare_beam
+	]
+}
+
+Particle
+{
+	name				Flare Additive
+
+	flags				depthHack
+
+	spawnFlags			cheapOrgCalc
+
+	life				400
+
+	origin				0 0 50
+
+	rotation			-180 180
+
+	rotationDelta		-13 13
+
+	rgb
+	{
+		start			0.9882 0.7059 0.3216 0.9882 0.7529 0.4392
+		end				0.9961 0.9922 0.8392
+	}
+
+	alpha
+	{
+		start			0.8
+	}
+
+	size
+	{
+		start			150 160
+		end				20 30
+		parm			60 70
+		flags			linear nonlinear
+	}
+
+	shaders
+	[
+		gfx/flares/flare_golden
+	]
+}
+
+Particle
+{
+	name				Flare Stream core
+
+	flags				depthHack
+
+	spawnFlags			cheapOrgCalc
+
+	life				400
+
+	origin				0 0 50
+
+	alpha
+	{
+		start			0.1 0.2
+	}
+
+	size
+	{
+		start			60 70
+		end				10 20
+		parm			60 70
+		flags			random linear nonlinear
+	}
+
+	shaders
+	[
+		gfx/flares/flare_beam
+	]
+}
+
+Sound
+{
+	flags				depthHack
+
+	sounds
+	[
+		sound/player/teleout.mp3
+	]
+}

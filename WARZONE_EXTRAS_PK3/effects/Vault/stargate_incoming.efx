@@ -1,0 +1,176 @@
+repeatDelay				1500
+
+OrientedParticle
+{
+	name				RipplesInwards
+
+	flags				useAlpha
+
+	spawnFlags			evenDistribution
+
+	count				0.6 1.5
+
+	life				4000
+
+	delay				0 600
+
+	origin				-5 0 0
+
+	rotation			-180 180
+
+	rotationDelta		-2 3
+
+	size
+	{
+		start			140 150
+		end				40 0
+		flags			linear
+	}
+
+	shaders
+	[
+		gfx/water/overlay_ripple
+		gfx/water/overlay_ripple2
+		gfx/water/overlay_ripple3
+		gfx/water/overlay_ripple4
+		gfx/water/overlay_ripple5
+	]
+}
+
+OrientedParticle
+{
+	name				RipplesOutwards
+
+	flags				useAlpha
+
+	spawnFlags			evenDistribution
+
+	count				0.6 1.5
+
+	life				4000
+
+	delay				0 600
+
+	origin				-5 0 0
+
+	rotation			-180 180
+
+	rotationDelta		-2 3
+
+	size
+	{
+		start			40 0
+		end				140 150
+		flags			linear
+	}
+
+	shaders
+	[
+		gfx/water/overlay_ripple
+		gfx/water/overlay_ripple2
+		gfx/water/overlay_ripple3
+		gfx/water/overlay_ripple4
+		gfx/water/overlay_ripple5
+	]
+}
+
+OrientedParticle
+{
+	name				FrontRipplesOutwards
+
+	flags				useAlpha
+
+	spawnFlags			evenDistribution
+
+	count				0.55 1
+
+	life				4000
+
+	delay				0 600
+
+	origin				5 0 0
+
+	rotation			-180 180
+
+	rotationDelta		-2 3
+
+	size
+	{
+		start			40 0
+		end				140 150
+		flags			linear
+	}
+
+	shaders
+	[
+		gfx/water/overlay_ripple
+		gfx/water/overlay_ripple2
+		gfx/water/overlay_ripple3
+		gfx/water/overlay_ripple4
+		gfx/water/overlay_ripple5
+	]
+}
+
+OrientedParticle
+{
+	name				Flare
+
+	spawnFlags			evenDistribution
+
+	count				2 3
+
+	life				1990
+
+	delay				0 500
+
+	origin				5 0 0
+
+	rotation			-180 180
+
+	rotationDelta		-2 3
+
+	rgb
+	{
+		start			0.5451 0.8275 0.9216 0.8078 0.9098 0.7569
+		end				0.9529 0.9333 0.8863
+	}
+
+	alpha
+	{
+		start			0
+		end				0.4 1
+		parm			1
+		flags			wave
+	}
+
+	size
+	{
+		start			50 160
+		end				130 0
+		flags			linear
+	}
+
+	shaders
+	[
+		gfx/flares/flare_blue
+		gfx/flares/flare_white
+	]
+}
+
+Emitter
+{
+	name				Lightbeam
+
+	flags				useModel
+
+	life				1500
+
+	origin				0 0 2
+
+	angle				0 0 0
+
+	models
+	[
+		models/effects/sg_lightbeam.md3
+	]
+}
