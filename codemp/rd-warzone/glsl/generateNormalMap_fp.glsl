@@ -112,8 +112,9 @@ float SampleHeight(vec2 t)
 void main ( void )
 {
 	vec4 enhanced = generateEnhancedNormal(var_TexCoords.xy);
-	vec4 bumpy = generateBumpyNormal(var_TexCoords.xy);
-	vec4 normal = (enhanced + bumpy) / 2.0;
+	//vec4 bumpy = generateBumpyNormal(var_TexCoords.xy);
+	vec4 normal = enhanced;
+	//vec4 normal = (enhanced + bumpy) / 2.0;
 	//normal = 1.0 - normal;
 	normal.a = SampleHeight(var_TexCoords.xy);
 	//vec4 normal = vec4(var_TexCoords.xy,var_TexCoords.xy);

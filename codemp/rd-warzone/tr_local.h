@@ -442,6 +442,8 @@ typedef struct image_s {
 	imgType_t   type;
 	int			flags;
 
+	bool		generatedNormalMap;
+
 	struct image_s*	next;
 } image_t;
 

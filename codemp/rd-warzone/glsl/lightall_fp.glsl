@@ -11,9 +11,9 @@ varying float  var_Time;
 uniform sampler2D u_LightMap;
 #endif
 
-#if defined(USE_NORMALMAP)
+//#if defined(USE_NORMALMAP)
 uniform sampler2D u_NormalMap;
-#endif
+//#endif
 
 #if defined(USE_DELUXEMAP)
 uniform sampler2D u_DeluxeMap;
@@ -34,10 +34,10 @@ uniform samplerCube u_CubeMap;
 
 uniform sampler2D u_SubsurfaceMap;
 
-#if defined(USE_NORMALMAP) || defined(USE_DELUXEMAP) || defined(USE_SPECULARMAP) || defined(USE_CUBEMAP)
+//#if defined(USE_NORMALMAP) || defined(USE_DELUXEMAP) || defined(USE_SPECULARMAP) || defined(USE_CUBEMAP)
 // y = deluxe, w = cube
 uniform vec4      u_EnableTextures;
-#endif
+//#endif
 
 #if defined(USE_LIGHT_VECTOR) && !defined(USE_FAST_LIGHT)
 uniform vec3      u_DirectedLight;
@@ -567,11 +567,11 @@ void main()
 
 	offsetDir.xy *= tex_offset * -var_Local1.x;//-4.0;//-5.0; // -3.0
 
-  #if defined(USE_NORMALMAP)
+//  #if defined(USE_NORMALMAP)
 	texCoords += offsetDir.xy * RayIntersectDisplaceMap(texCoords, offsetDir.xy, u_NormalMap);
-  #else
-	texCoords += offsetDir.xy * RayIntersectDisplaceMap(texCoords, offsetDir.xy, u_DiffuseMap);
-  #endif
+//  #else
+//	texCoords += offsetDir.xy * RayIntersectDisplaceMap(texCoords, offsetDir.xy, u_DiffuseMap);
+//  #endif
 #endif
 
 	vec4 diffuse = texture2D(u_DiffuseMap, texCoords);
@@ -582,17 +582,17 @@ void main()
 #endif
 
 #if defined(USE_PARALLAXMAP) || defined(USE_PARALLAXMAP_NONORMALS)
-  #if defined(USE_NORMALMAP)
+//  #if defined(USE_NORMALMAP)
 	float fakedepth = texture2D(u_NormalMap, texCoords).a;
-  #else
-	float fakedepth = SampleDepth(u_DiffuseMap, texCoords);
-  #endif
+//  #else
+//	float fakedepth = SampleDepth(u_DiffuseMap, texCoords);
+//  #endif
 #else
-  #if defined(USE_NORMALMAP)
+//  #if defined(USE_NORMALMAP)
 	float fakedepth = texture2D(u_NormalMap, texCoords).a;
-  #else
-	float fakedepth = (diffuse.r + diffuse.g + diffuse.b) / 3.0; // meh
-  #endif
+//  #else
+//	float fakedepth = (diffuse.r + diffuse.g + diffuse.b) / 3.0; // meh
+//  #endif
 #endif
 
 #if defined(USE_LIGHT) && !defined(USE_FAST_LIGHT)
@@ -610,39 +610,27 @@ void main()
   #endif
 
 #if defined(USE_PARALLAXMAP) || defined(USE_PARALLAXMAP_NONORMALS)
-/*
+
 	// WOW - There is something wrong with this. Just makes everything black... Normal maps are correct, but something seems to be wrong here...
-  #if defined(USE_NORMALMAP)
+//  #if defined(USE_NORMALMAP)
     if (u_Local4.r != 0.0)
 	{// Have a real normal map...
-	//#if defined(SWIZZLE_NORMALMAP)
-	//	N.xy = texture2D(u_NormalMap, texCoords).ag - vec2(0.5);
-    //#else
+	#if defined(SWIZZLE_NORMALMAP)
+		N.xy = texture2D(u_NormalMap, texCoords).ag - vec2(0.5);
+    #else
 		N.xy = texture2D(u_NormalMap, texCoords).rg - vec2(0.5);
-    //#endif
+    #endif
 		N.xy *= u_NormalScale.xy;
 		N.z = sqrt(clamp((0.25 - N.x * N.x) - N.y * N.y, 0.0, 1.0));
 		N = tangentToWorld * N;
-		
-		//N.xyz *= 2.0;
-		//N.xyz += var_Normal.xyz;
-		//N /= 3.0;
 	}
 	else
 	{
-		//float norm = (fakedepth - 0.5);
-		//float norm2 = 0.0 - (fakedepth - 0.5);
-		//N.xy = vec2(norm, norm2);
-		//N.xy *= u_NormalScale.xy;
-		//N.z = sqrt(clamp((0.25 - N.x * N.x) - N.y * N.y, 0.0, 1.0));
-		//N = tangentToWorld * N;
 		N = var_Normal.xyz;
 	}
-  #else
-	N = var_Normal.xyz;
-  #endif
-*/
-  N = var_Normal.xyz;
+//  #else
+//	N = var_Normal.xyz;
+//  #endif
 #endif
 
 	N = normalize(N);
