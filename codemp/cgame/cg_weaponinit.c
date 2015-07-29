@@ -631,16 +631,16 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->missileRenderfx = trap->FX_RegisterEffect("blasters/shot_blue_small");
 		weaponInfo->altMissileRenderfx = trap->FX_RegisterEffect("blasters/shot_Blue_Ball_big");
 
-		weaponInfo->fleshImpactEffect = trap->FX_RegisterEffect("orginal_weapon_efx/clone_rifle/flesh_impact");
-		weaponInfo->altFleshImpactEffect = trap->FX_RegisterEffect("orginal_weapon_efx/clone_rifle/concussion"); // not sure about this one
-		weaponInfo->missileWallImpactfx = trap->FX_RegisterEffect("orginal_weapon_efx/clone_rifle/wall_impact");
-		weaponInfo->altMissileWallImpactfx = trap->FX_RegisterEffect("orginal_weapon_efx/clone_rifle/concussion");
+		weaponInfo->fleshImpactEffect = trap->FX_RegisterEffect("orginal_weapon_efx/blaster/flesh_impact");
+		weaponInfo->altFleshImpactEffect = trap->FX_RegisterEffect("orginal_weapon_efx/imperial_repeater/concussion"); // not sure about this one
+		weaponInfo->missileWallImpactfx = trap->FX_RegisterEffect("orginal_weapon_efx/blaster/wall_impact");
+		weaponInfo->altMissileWallImpactfx = trap->FX_RegisterEffect("orginal_weapon_efx/imperial_repeater/concussion");
 		
 
 		weaponInfo->EnhancedFX_fleshImpact = trap->FX_RegisterEffect("blasters/red_flesh_impact");
-		weaponInfo->EnhancedFX_altfleshImpact = trap->FX_RegisterEffect("orginal_weapon_efx/clone_rifle/concussion");
+		weaponInfo->EnhancedFX_altfleshImpact = trap->FX_RegisterEffect("orginal_weapon_efx/concussion/explosion");
 		weaponInfo->EnhancedFX_missileWallImpactfx = trap->FX_RegisterEffect("weapons/blaster_impact_blue_medium_fire");
-		weaponInfo->EnhancedFX_altmissileWallImpactfx = trap->FX_RegisterEffect("orginal_weapon_efx/clone_rifle/concussion");
+		weaponInfo->EnhancedFX_altmissileWallImpactfx = trap->FX_RegisterEffect("orginal_weapon_efx/concussion/explosion");
 		trap->FX_RegisterEffect("blasters/blue_deflect");
 		break;
 
@@ -664,7 +664,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altFlashSound[0] = trap->S_RegisterSound("sound/weapons/dc17m/alt_fire.wav");
 		weaponInfo->altFiringSound = NULL_SOUND;
 		weaponInfo->altChargeSound = trap->S_RegisterSound("sound/weapons/SBDarm/cannon_charge.mp3");
-		weaponInfo->altMuzzleEffect = trap->FX_RegisterEffect("clone_blaster/altmuzzle_flash");
+		weaponInfo->altMuzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash2_Blue_medium");
 		weaponInfo->altMissileModel = NULL_HANDLE;
 		weaponInfo->altMissileSound = NULL_SOUND;
 		weaponInfo->altMissileDlight = 0;
@@ -676,16 +676,16 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->missileRenderfx = trap->FX_RegisterEffect("blasters/shot_blue_small");
 		weaponInfo->altMissileRenderfx = trap->FX_RegisterEffect("blasters/shot_Blue_Ball_big");
 
-		weaponInfo->fleshImpactEffect = trap->FX_RegisterEffect("orginal_weapon_efx/clone_rifle/flesh_impact");
-		weaponInfo->altFleshImpactEffect = trap->FX_RegisterEffect("orginal_weapon_efx/clone_rifle/concussion"); // not sure about this one
-		weaponInfo->missileWallImpactfx = trap->FX_RegisterEffect("orginal_weapon_efx/clone_rifle/wall_impact");
-		weaponInfo->altMissileWallImpactfx = trap->FX_RegisterEffect("orginal_weapon_efx/clone_rifle/concussion");
+		weaponInfo->fleshImpactEffect = trap->FX_RegisterEffect("orginal_weapon_efx/blaster/flesh_impact");
+		weaponInfo->altFleshImpactEffect = trap->FX_RegisterEffect("orginal_weapon_efx/concussion/explosion"); // not sure about this one
+		weaponInfo->missileWallImpactfx = trap->FX_RegisterEffect("orginal_weapon_efx/blaster/wall_impact");
+		weaponInfo->altMissileWallImpactfx = trap->FX_RegisterEffect("orginal_weapon_efx/concussion/explosion");
 		
 		
 		weaponInfo->EnhancedFX_fleshImpact = trap->FX_RegisterEffect("blasters/blue_flesh_impact");
-		weaponInfo->EnhancedFX_altfleshImpact = trap->FX_RegisterEffect("orginal_weapon_efx/clone_rifle/concussion");
+		weaponInfo->EnhancedFX_altfleshImpact = trap->FX_RegisterEffect("orginal_weapon_efx/imperial_repeater/concussion");
 		weaponInfo->EnhancedFX_missileWallImpactfx = trap->FX_RegisterEffect("weapons/blaster_impact_blue_medium_fire");
-		weaponInfo->EnhancedFX_altmissileWallImpactfx = trap->FX_RegisterEffect("orginal_weapon_efx/clone_rifle/concussion");
+		weaponInfo->EnhancedFX_altmissileWallImpactfx = trap->FX_RegisterEffect("orginal_weapon_efx/imperial_repeater/concussion");
 		trap->FX_RegisterEffect("blasters/blue_deflect");
 		break;
 
@@ -798,10 +798,10 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->missileRenderfx = trap->FX_RegisterEffect("blasters/shot_Blue_small");
 		weaponInfo->altMissileRenderfx = trap->FX_RegisterEffect("blasters/shot_Blue_small");
 
-		weaponInfo->fleshImpactEffect = trap->FX_RegisterEffect("orginal_weapon_efx/clone_pistol_1/flesh_impact");
-		weaponInfo->altFleshImpactEffect = trap->FX_RegisterEffect("orginal_weapon_efx/clone_pistol_1/flesh_impact");
-		weaponInfo->missileWallImpactfx = trap->FX_RegisterEffect("orginal_weapon_efx/clone_pistol_1/wall_impact");
-		weaponInfo->altWallBounceEffectFX = trap->FX_RegisterEffect("orginal_weapon_efx/clone_pistol_1/wall_bounce");
+		weaponInfo->fleshImpactEffect = trap->FX_RegisterEffect("orginal_weapon_efx/blaster/flesh_impact");
+		weaponInfo->altFleshImpactEffect = trap->FX_RegisterEffect("orginal_weapon_efx/blaster/wall_impact");
+		weaponInfo->missileWallImpactfx = trap->FX_RegisterEffect("orginal_weapon_efx/blaster/wall_impact");
+		weaponInfo->altWallBounceEffectFX = trap->FX_RegisterEffect("orginal_weapon_efx/blaster/wall_impact");
 		
 		
 		weaponInfo->EnhancedFX_fleshImpact = trap->FX_RegisterEffect("blasters/blue_flesh_impact");
@@ -888,10 +888,10 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->missileRenderfx = trap->FX_RegisterEffect("blasters/shot_blue_small");
 		weaponInfo->altMissileRenderfx = trap->FX_RegisterEffect("blasters/shot_Blue_Ball_big");
 
-		weaponInfo->fleshImpactEffect = trap->FX_RegisterEffect("orginal_weapon_efx/clone_rifle/flesh_impact");
-		weaponInfo->altFleshImpactEffect = trap->FX_RegisterEffect("orginal_weapon_efx/clone_rifle/concussion"); // not sure about this one
-		weaponInfo->missileWallImpactfx = trap->FX_RegisterEffect("orginal_weapon_efx/clone_rifle/wall_impact");
-		weaponInfo->altMissileWallImpactfx = trap->FX_RegisterEffect("orginal_weapon_efx/clone_rifle/concussion");
+		weaponInfo->fleshImpactEffect = trap->FX_RegisterEffect("orginal_weapon_efx/blaster/flesh_impact");
+		weaponInfo->altFleshImpactEffect = trap->FX_RegisterEffect("orginal_weapon_efx/concussion/explosion"); // not sure about this one
+		weaponInfo->missileWallImpactfx = trap->FX_RegisterEffect("orginal_weapon_efx/blaster/wall_impact");
+		weaponInfo->altMissileWallImpactfx = trap->FX_RegisterEffect("orginal_weapon_efx/concussion/explosion");
 		
 		
 		weaponInfo->EnhancedFX_fleshImpact = trap->FX_RegisterEffect("blasters/blue_flesh_impact");
@@ -966,10 +966,10 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->missileRenderfx = trap->FX_RegisterEffect("blasters/shot_greenblue_small");
 		weaponInfo->altMissileRenderfx = trap->FX_RegisterEffect("blasters/shot_greenblue_small");
 
-		weaponInfo->fleshImpactEffect = trap->FX_RegisterEffect("orginal_weapon_efx/greenblaster/flesh_impact");
-		weaponInfo->altFleshImpactEffect = trap->FX_RegisterEffect("orginal_weapon_efx/greenblaster/flesh_impact");
-		weaponInfo->missileWallImpactfx = trap->FX_RegisterEffect("orginal_weapon_efx/greenblaster/wall_impact");
-		weaponInfo->altMissileWallImpactfx = trap->FX_RegisterEffect("orginal_weapon_efx/greenblaster/wall_impact");
+		weaponInfo->fleshImpactEffect = trap->FX_RegisterEffect("orginal_weapon_efx/blaster/flesh_impact");
+		weaponInfo->altFleshImpactEffect = trap->FX_RegisterEffect("orginal_weapon_efx/blaster/flesh_impact");
+		weaponInfo->missileWallImpactfx = trap->FX_RegisterEffect("orginal_weapon_efx/blaster/wall_impact");
+		weaponInfo->altMissileWallImpactfx = trap->FX_RegisterEffect("orginal_weapon_efx/blaster/wall_impact");
 		
 		
 		weaponInfo->EnhancedFX_fleshImpact = trap->FX_RegisterEffect("blasters/green_flesh_impact");
@@ -1047,16 +1047,16 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->missileRenderfx = trap->FX_RegisterEffect("blasters/shot_blue_small");
 		weaponInfo->altMissileRenderfx = trap->FX_RegisterEffect("blasters/shot_Blue_Ball_big");
 
-		weaponInfo->fleshImpactEffect = trap->FX_RegisterEffect("orginal_weapon_efx/z6/flesh_impact");
-		weaponInfo->altFleshImpactEffect = trap->FX_RegisterEffect("orginal_weapon_efx/z6/alt_flesh_lmpact"); // not sure about this one
-		weaponInfo->missileWallImpactfx = trap->FX_RegisterEffect("orginal_weapon_efx/z6/wall_impact");
-		weaponInfo->altMissileWallImpactfx = trap->FX_RegisterEffect("orginal_weapon_efx/z6/alt_shot_explode");
+		weaponInfo->fleshImpactEffect = trap->FX_RegisterEffect("orginal_weapon_efx/blaster/flesh_impact");
+		weaponInfo->altFleshImpactEffect = trap->FX_RegisterEffect("orginal_weapon_efx/concussion/explosion"); // not sure about this one
+		weaponInfo->missileWallImpactfx = trap->FX_RegisterEffect("orginal_weapon_efx/blaster/wall_impact");
+		weaponInfo->altMissileWallImpactfx = trap->FX_RegisterEffect("orginal_weapon_efx/concussion/explosion");
 		
 
 		weaponInfo->EnhancedFX_fleshImpact = trap->FX_RegisterEffect("blasters/blue_flesh_impact");
 		weaponInfo->EnhancedFX_altfleshImpact = trap->FX_RegisterEffect("blasters/blue_flesh_impact");
 		weaponInfo->EnhancedFX_missileWallImpactfx = trap->FX_RegisterEffect("weapons/blaster_impact_blue_medium_fire");//prime efx
-		weaponInfo->EnhancedFX_altmissileWallImpactfx = trap->FX_RegisterEffect("orginal_weapon_efx/z6/alt_shot_explode_enhanced2");
+		weaponInfo->EnhancedFX_altmissileWallImpactfx = trap->FX_RegisterEffect("orginal_weapon_efx/concussion/explosion");
 		trap->FX_RegisterEffect("blasters/blue_deflect");
 		cgs.media.cannonChargeFlash = trap->R_RegisterShader("gfx/misc/lightningFlash");
 		break;
@@ -1192,10 +1192,10 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->missileRenderfx = trap->FX_RegisterEffect("blasters/shot_Blue_medium");
 		weaponInfo->altMissileRenderfx = trap->FX_RegisterEffect("blasters/shot_Blue_medium");
 
-		weaponInfo->fleshImpactEffect = trap->FX_RegisterEffect("orginal_weapon_efx/clone_rifle/flesh_impact");
-		weaponInfo->altFleshImpactEffect = trap->FX_RegisterEffect("orginal_weapon_efx/clone_rifle/flesh_impact"); // not sure about this one
-		weaponInfo->missileWallImpactfx = trap->FX_RegisterEffect("orginal_weapon_efx/clone_rifle/wall_impact");
-		weaponInfo->altMissileWallImpactfx = trap->FX_RegisterEffect("orginal_weapon_efx/clone_rifle/wall_impact"); // etc here.. then..
+		weaponInfo->fleshImpactEffect = trap->FX_RegisterEffect("orginal_weapon_efx/blaster/flesh_impact");
+		weaponInfo->altFleshImpactEffect = trap->FX_RegisterEffect("orginal_weapon_efx/blaster/flesh_impact"); // not sure about this one
+		weaponInfo->missileWallImpactfx = trap->FX_RegisterEffect("orginal_weapon_efx/blaster/wall_impact");
+		weaponInfo->altMissileWallImpactfx = trap->FX_RegisterEffect("orginal_weapon_efx/blaster/wall_impact"); // etc here.. then..
 		
 
 		weaponInfo->EnhancedFX_fleshImpact = trap->FX_RegisterEffect("blasters/blue_flesh_impact");
@@ -1230,10 +1230,10 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->missileRenderfx = trap->FX_RegisterEffect("blasters/shot_Blue_medium");
 		weaponInfo->altMissileRenderfx = trap->FX_RegisterEffect("blasters/shot_BluePurple_Ball_medium");
 
-		weaponInfo->fleshImpactEffect = trap->FX_RegisterEffect("dc-15_ext/flesh_impact");
-		weaponInfo->altFleshImpactEffect = trap->FX_RegisterEffect("orginal_weapon_efx/clone_rifle/flesh_impact"); // not sure about this one
-		weaponInfo->missileWallImpactfx = trap->FX_RegisterEffect("orginal_weapon_efx/dc-15_ext/wall_impact");
-		weaponInfo->altMissileWallImpactfx = trap->FX_RegisterEffect("orginal_weapon_efx/dc-15_ext/explosion");
+		weaponInfo->fleshImpactEffect = trap->FX_RegisterEffect("orginal_weapon_efx/blaster/flesh_impact");
+		weaponInfo->altFleshImpactEffect = trap->FX_RegisterEffect("orginal_weapon_efx/concussion/explosion"); // not sure about this one
+		weaponInfo->missileWallImpactfx = trap->FX_RegisterEffect("orginal_weapon_efx/blaster/wall_impact");
+		weaponInfo->altMissileWallImpactfx = trap->FX_RegisterEffect("orginal_weapon_efx/concussion/explosion");
 		
 
 		weaponInfo->EnhancedFX_fleshImpact = trap->FX_RegisterEffect("blasters/blue_flesh_impact");
@@ -1404,8 +1404,10 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->missileWallImpactfx = trap->FX_RegisterEffect("weapons/grenaderibbon_red");
 		weaponInfo->altMissileWallImpactfx = trap->FX_RegisterEffect("weapons/grenaderibbon_red");
 
-		weaponInfo->fleshImpactEffect = trap->FX_RegisterEffect("explosives/fragmedium");
-		weaponInfo->altFleshImpactEffect = trap->FX_RegisterEffect("explosives/fragmedium"); // not sure about this one
+		weaponInfo->fleshImpactEffect = trap->FX_RegisterEffect("orginal_weapon_efx/rocket/explosion");
+		weaponInfo->altFleshImpactEffect = trap->FX_RegisterEffect("orginal_weapon_efx/rocket/explosion"); // not sure about this one
+		weaponInfo->missileWallImpactfx = trap->FX_RegisterEffect("orginal_weapon_efx/rocket/explosion");
+		weaponInfo->altMissileWallImpactfx = trap->FX_RegisterEffect("orginal_weapon_efx/rocket/explosion");
 		
 		weaponInfo->EnhancedFX_fleshImpact = trap->FX_RegisterEffect("explosives/fragmedium");
 		weaponInfo->EnhancedFX_altfleshImpact = trap->FX_RegisterEffect("explosives/fragmedium");
@@ -1443,8 +1445,10 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->missileWallImpactfx = trap->FX_RegisterEffect("weapons/grenaderibbon_red");
 		weaponInfo->altMissileWallImpactfx = trap->FX_RegisterEffect("weapons/grenaderibbon_red");
 
-		weaponInfo->fleshImpactEffect = trap->FX_RegisterEffect("explosives/fragmedium");
-		weaponInfo->altFleshImpactEffect = trap->FX_RegisterEffect("explosives/fragmedium"); // not sure about this one
+		weaponInfo->fleshImpactEffect = trap->FX_RegisterEffect("orginal_weapon_efx/rocket/explosion");
+		weaponInfo->altFleshImpactEffect = trap->FX_RegisterEffect("orginal_weapon_efx/rocket/explosion"); // not sure about this one
+		weaponInfo->missileWallImpactfx = trap->FX_RegisterEffect("orginal_weapon_efx/rocket/explosion");
+		weaponInfo->altMissileWallImpactfx = trap->FX_RegisterEffect("orginal_weapon_efx/rocket/explosion");
 		
 		weaponInfo->EnhancedFX_fleshImpact = trap->FX_RegisterEffect("explosives/fragmedium");
 		weaponInfo->EnhancedFX_altfleshImpact = trap->FX_RegisterEffect("explosives/fragmedium");
@@ -1486,10 +1490,10 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->missileRenderfx = trap->FX_RegisterEffect("blasters/shot_Blue_small");
 		weaponInfo->altMissileRenderfx = trap->FX_RegisterEffect("blasters/shot_Blue_small");
 
-		weaponInfo->fleshImpactEffect = trap->FX_RegisterEffect("orginal_weapon_efx/clone_pistol_1/flesh_impact");
-		weaponInfo->altFleshImpactEffect = trap->FX_RegisterEffect("orginal_weapon_efx/clone_pistol_1/flesh_impact");
-		weaponInfo->missileWallImpactfx = trap->FX_RegisterEffect("orginal_weapon_efx/clone_pistol_1/wall_impact");
-		weaponInfo->altWallBounceEffectFX = trap->FX_RegisterEffect("orginal_weapon_efx/clone_pistol_1/wall_bounce");
+		weaponInfo->fleshImpactEffect = trap->FX_RegisterEffect("orginal_weapon_efx/blaster/flesh_impact");
+		weaponInfo->altFleshImpactEffect = trap->FX_RegisterEffect("orginal_weapon_efx/blaster/wall_impact");
+		weaponInfo->missileWallImpactfx = trap->FX_RegisterEffect("orginal_weapon_efx/blaster/wall_impact");
+		weaponInfo->altWallBounceEffectFX = trap->FX_RegisterEffect("orginal_weapon_efx/blaster/wall_impact");
 		
 		
 		weaponInfo->EnhancedFX_fleshImpact = trap->FX_RegisterEffect("blasters/blue_flesh_impact");
@@ -1579,7 +1583,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altMissileTrailFunc = 0;
 
 		cgs.effects.thermalShockwaveEffect = trap->FX_RegisterEffect("orginal_weapon_efx/thermal/shockwave");
-		cgs.effects.thermalExplosionAltEffect = trap->FX_RegisterEffect("orginal_weapon_efx/thermal/realthermal");
+		cgs.effects.thermalExplosionAltEffect = trap->FX_RegisterEffect("orginal_weapon_efx/thermal/explosion");
 
 		cgs.effects.thermalShockwaveEffectEffectEnhancedFX = trap->FX_RegisterEffect("explosives/shockwave");
 		cgs.effects.thermalExplosionEffectEnhancedFX = trap->FX_RegisterEffect("explosives/fragmedium");

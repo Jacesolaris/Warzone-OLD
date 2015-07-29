@@ -64,6 +64,14 @@ Light
 	}
 }
 
+Sound
+{
+	sounds
+	[
+		sound/weapons/repeater/fire.wav
+	]
+}
+
 forcefeedback
 {
 	forces

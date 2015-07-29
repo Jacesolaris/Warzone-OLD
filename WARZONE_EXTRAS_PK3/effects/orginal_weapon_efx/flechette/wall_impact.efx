@@ -1,273 +1,97 @@
-repeatDelay				100
-
-Line
+Particle
 {
-	name				Lines
+	count				2 3
 
-	count				10 14
+	life				800 1400
 
-	life				150 200
-
-	delay				0.1
-
-	origin2				12 -10 -10 20 10 10
+	rotation			0 360
 
 	rgb
 	{
-		start			1 1 1 0.9961 0.9922 0.8039
+		start			0.9 0.3 0.1 1 0.8 0.3
+		end				0.1 0.1 0.1
+		parm			40
+		flags			linear clamp
 	}
 
 	alpha
 	{
-		start			0.45 1
 		end				0
-		flags			linear
+		parm			70
+		flags			linear nonlinear
 	}
 
 	size
 	{
-		start			0.25 0.8
+		start			2 6
+		parm			70
+		flags			nonlinear
 	}
 
 	shaders
 	[
-		gfx/effects/whiteFlare
-		gfx/misc/exp01_1
-		gfx/misc/spikeb
+		gfx/effects/whiteGlow
+		gfx/effects/flare1
 	]
 }
 
 Particle
 {
-	name				SmokepuffwhiteThick
+	count				4
 
-	flags				useAlpha
+	life				600 800
 
-	spawnFlags			rgbComponentInterpolation affectedByWind
+	delay				0 100
 
-	count				1 2
+	cullrange			250
 
-	life				1000 2000
+	velocity			5 -3 -3 55 3 3
 
-	intensity			0.1
-
-	origin				1 0 0
-
-	wind				5 40
-
-	rotation			-180 180
-
-	rotationDelta		-18 18
-
-	velocity			9 -7 -7 13 7 7
-
-	gravity				4 8
-
-	rgb
-	{
-		end				0.302 0.302 0.3686
-		parm			200 0
-		flags			linear nonlinear
-	}
+	gravity				15 40
 
 	alpha
 	{
-		start			0.1 0.3
+		start			0.1
 		end				0
 		flags			linear
 	}
 
 	size
 	{
-		start			6 8
-		end				30
+		start			2 3
+		end				6
 		flags			linear
 	}
 
 	shaders
 	[
-		gfx/effects/puffa1
-		gfx/effects/puffa2
-	]
-}
-
-OrientedParticle
-{
-	name				ImpactBurn
-
-	life				2500 6000
-
-	rotation			-180 180
-
-	rgb
-	{
-		start			0.9843 0.6588 0.4157
-		end				1 0 0 0.502 0 0
-		flags			linear
-	}
-
-	alpha
-	{
-		end				0
-		flags			linear
-	}
-
-	size
-	{
-		start			4 5
-		end				0
-	}
-
-	shaders
-	[
-		gfx/effects/embers
+		gfx/misc/steam
 	]
 }
 
 Decal
 {
-	name				ImpactDamage
-
-	rotation			-180 180
+	cullrange			900
 
 	size
 	{
-		start			2 7
+		start			5.5 7
 	}
 
 	shaders
 	[
 		gfx/damage/burnmark4
-		gfx/damage/burnmark1
 	]
 }
 
 Sound
 {
-	name				WallhitSounds
+	count 	0 1
+
+	cullrange			600
 
 	sounds
 	[
-		sound/weapons/bryar/hit_wall24.wav
-	]
-}
-
-Particle
-{
-	name				SmokepuffWhiteViolent
-
-	life				500 700
-
-	wind				10 40
-
-	rotation			-180 180
-
-	rotationDelta		-13 13
-
-	velocity			5 -3 -3 20 3 3
-
-	gravity				1 8
-
-	rgb
-	{
-		start			1 0.7294 0.4588 0.9922 0.5176 0.451
-		end				0.7216 0.3451 0.003922
-		flags			linear
-	}
-
-	alpha
-	{
-		start			0.2
-		end				0
-		flags			linear
-	}
-
-	size
-	{
-		start			8 11
-		end				17 20
-		flags			linear
-	}
-
-	shaders
-	[
-		gfx/exp/expa1
-		gfx/exp/expa2
-		gfx/exp/expa3
-		gfx/exp/expa4
-		gfx/exp/expa5
-	]
-}
-
-Emitter
-{
-	name				chunkies
-
-	flags				useModel
-
-	count				20
-
-	life				500 1000
-
-	intensity			0.2 0.3
-
-	origin				1 -2 -2 2 2 2
-
-	angle				0 0 500 360 360 0
-
-	angleDelta			-20 -20 500 20 20 0
-
-	velocity			0 -100 -100 260 100 100
-
-	gravity				-400 -600
-
-	size
-	{
-		start			0.1 0.3
-	}
-
-	models
-	[
-		models/chunks/metal/metal1_1.md3
-		models/chunks/metal/metal1_2.md3
-		models/chunks/metal/metal1_3.md3
-		models/chunks/metal/metal1_4.md3
-	]
-}
-
-Particle
-{
-	name				Flare
-
-	count				1 2
-
-	life				200
-
-	cullrange			20
-
-	origin				1 0 0
-
-	rgb
-	{
-		start			0.9922 0.6902 0.6588
-	}
-
-	alpha
-	{
-		start			0.7
-		end				0
-		flags			linear
-	}
-
-	size
-	{
-		start			45 55
-		end				30
-		flags			linear
-	}
-
-	shaders
-	[
-		gfx/misc/colflare
+		sound/weapons/flechette/shot_death.wav
 	]
 }

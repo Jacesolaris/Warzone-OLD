@@ -69,6 +69,14 @@ Light
 	}
 }
 
+Sound
+{
+	sounds
+	[
+		sound/weapons/eweb/eweb_fire.mp3
+	]
+}
+
 CameraShake
 {
 	life				80
