@@ -1760,12 +1760,22 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage)
 	// Shader overrides material...
 	if (pStage->cubeMapScale) cubemapScale = pStage->cubeMapScale;
 
+	qboolean realNormalMap = qfalse;
+
+	if (pStage->bundle[TB_NORMALMAP].image[0])
+	{
+		if (!pStage->bundle[TB_NORMALMAP].image[0]->generatedNormalMap)
+		{
+			realNormalMap = qtrue;
+		}
+	}
+
 	VectorSet4(local1, parallaxScale, (float)pStage->hasSpecular, specularScale, materialType);
 	GLSL_SetUniformVec4(sp, UNIFORM_LOCAL1, local1);
 	GLSL_SetUniformVec4(sp, UNIFORM_LOCAL2, pStage->subsurfaceExtinctionCoefficient);
 	VectorSet4(local3, pStage->subsurfaceRimScalar, pStage->subsurfaceMaterialThickness, pStage->subsurfaceSpecularPower, cubemapScale);
 	GLSL_SetUniformVec4(sp, UNIFORM_LOCAL3, local3);
-	VectorSet4(local4, (float)pStage->hasRealNormalMap, isMetalic, (float)pStage->hasRealSubsurfaceMap, 0.0);
+	VectorSet4(local4, (float)realNormalMap, isMetalic, (float)pStage->hasRealSubsurfaceMap, 0.0);
 	GLSL_SetUniformVec4(sp, UNIFORM_LOCAL4, local4);
 	//GLSL_SetUniformFloat(sp, UNIFORM_TIME, tess.shaderTime);
 	GLSL_SetUniformFloat(sp, UNIFORM_TIME, backEnd.refdef.floatTime);

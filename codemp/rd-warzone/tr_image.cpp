@@ -2853,7 +2853,7 @@ image_t *R_CreateNormalMapGLSL ( const char *name, byte *pic, int width, int hei
 	//qglScissor(0, 0, width, height);
 
 	FBO_BlitFromTexture(srcImage, box, NULL, dstFbo, box, &tr.generateNormalMapShader, NULL, 0);
-
+	dstImage->generatedNormalMap = true;
 	return dstImage;
 }
 
