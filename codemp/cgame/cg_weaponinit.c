@@ -194,8 +194,8 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->missileWallImpactfx = trap->FX_RegisterEffect( "orginal_weapon_efx/concussion/explosion" );
 		weaponInfo->altMissileWallImpactfx = trap->FX_RegisterEffect( "orginal_weapon_efx/concussion/explosion" );
 
-		trap->R_RegisterShader("gfx/effects/blueLine");
-		trap->R_RegisterShader("gfx/misc/whiteline2");
+		trap->R_RegisterShader("gfx_base/effects/blueLine");
+		trap->R_RegisterShader("gfx_base/misc/whiteline2");
 		break;
 
 	case WP_BRYAR_PISTOL:
@@ -238,7 +238,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->EnhancedFX_altfleshImpact = trap->FX_RegisterEffect("blasters/red_flesh_impact");
 		weaponInfo->EnhancedFX_missileWallImpactfx = trap->FX_RegisterEffect("weapons/blaster_impact_red_medium_fire");
 		weaponInfo->EnhancedFX_altmissileWallImpactfx = trap->FX_RegisterEffect("weapons/blaster_impact_red_medium_fire");
-		cgs.media.bryarFrontFlash = trap->R_RegisterShader("gfx/effects/bryarFrontFlash");
+		cgs.media.bryarFrontFlash = trap->R_RegisterShader("gfx_base/effects/bryarFrontFlash");
 		trap->FX_RegisterEffect("blasters/red_deflect");
 
 		break;
@@ -284,7 +284,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->EnhancedFX_missileWallImpactfx = trap->FX_RegisterEffect("weapons/blaster_impact_red_medium_fire");
 		weaponInfo->EnhancedFX_altmissileWallImpactfx = trap->FX_RegisterEffect("weapons/blaster_impact_red_medium_fire");
 		trap->FX_RegisterEffect("blasters/red_deflect");
-		cgs.media.bryarFrontFlash = trap->R_RegisterShader("gfx/effects/bryarFrontFlash");
+		cgs.media.bryarFrontFlash = trap->R_RegisterShader("gfx_base/effects/bryarFrontFlash");
 		break;
 	case WP_BLASTER:
 	case WP_EMPLACED_GUN: //rww - just use the same as this for now..
@@ -365,9 +365,9 @@ void CG_RegisterWeapon( int weaponNum) {
 
 
 
-		trap->R_RegisterShader( "gfx/effects/redLine" );
-		trap->R_RegisterShader( "gfx/misc/whiteline2" );
-		trap->R_RegisterShader( "gfx/effects/smokeTrail" );
+		trap->R_RegisterShader( "gfx_base/effects/redLine" );
+		trap->R_RegisterShader( "gfx_base/misc/whiteline2" );
+		trap->R_RegisterShader( "gfx_base/effects/smokeTrail" );
 
 
 		trap->S_RegisterSound("sound/weapons/disruptor/zoomstart.wav");
@@ -437,7 +437,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->flashSound[0]		= trap->S_RegisterSound( "sound/weapons/imperial_repeater/fire.wav");
 		weaponInfo->firingSound			= NULL_SOUND;
 		weaponInfo->chargeSound			= NULL_SOUND;
-		weaponInfo->muzzleEffect		= trap->FX_RegisterEffect( "muzzleflash2_Yellow_medium" );
+		weaponInfo->muzzleEffect		= trap->FX_RegisterEffect( "blasters/muzzleflash2_Yellow_medium" );
 		weaponInfo->missileModel		= NULL_HANDLE;
 		weaponInfo->missileSound		= NULL_SOUND;
 		weaponInfo->missileDlight		= 0;
@@ -446,7 +446,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altFlashSound[0]	= trap->S_RegisterSound( "sound/weapons/imperial_repeater/alt_fire.wav");
 		weaponInfo->altFiringSound		= NULL_SOUND;
 		weaponInfo->altChargeSound		= NULL_SOUND;
-		weaponInfo->altMuzzleEffect		= trap->FX_RegisterEffect( "muzzleflash2_Yellow_medium" );
+		weaponInfo->altMuzzleEffect		= trap->FX_RegisterEffect( "blasters/muzzleflash2_Blue_medium" );
 		weaponInfo->altMissileModel		= NULL_HANDLE;
 		weaponInfo->altMissileSound		= NULL_SOUND;
 		weaponInfo->altMissileDlight	= 0;
@@ -505,8 +505,8 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->EnhancedFX_altmissileWallImpactfx = trap->FX_RegisterEffect("orginal_weapon_efx/demp2/altdetonate");
 
 		cgs.media.demp2Shell = trap->R_RegisterModel( "models/items/sphere.md3" );
-		cgs.media.demp2ShellShader = trap->R_RegisterShader( "gfx/effects/demp2shell" );
-		cgs.media.lightningFlash = trap->R_RegisterShader("gfx/misc/lightningFlash");
+		cgs.media.demp2ShellShader = trap->R_RegisterShader( "gfx_base/effects/demp2shell" );
+		cgs.media.lightningFlash = trap->R_RegisterShader("gfx_base/misc/lightningFlash");
 		break;
 
 	case WP_FLECHETTE:

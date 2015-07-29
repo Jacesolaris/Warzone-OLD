@@ -214,6 +214,26 @@ gfx_base/effects/saberFlare
     }
 }
 
+gfx_base/effects/redsideflash
+{
+	cull	twosided
+    {
+        map gfx/effects/redfrontflash
+        blendFunc GL_ONE GL_ONE
+        rgbGen vertex
+    }
+}
+
+gfx_base/effects/redfrontflash
+{
+	cull	twosided
+    {
+        map gfx/effects/redfrontflash
+        blendFunc GL_ONE GL_ONE
+        rgbGen vertex
+    }
+}
+
 gfx_base/effects/blasterSideFlash
 {
 	cull	twosided

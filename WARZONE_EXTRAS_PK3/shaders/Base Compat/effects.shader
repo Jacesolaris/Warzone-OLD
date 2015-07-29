@@ -321,6 +321,26 @@ gfx/effects/bryar_blob
     }
 }
 
+gfx/effects/redsideflash
+{
+	cull	twosided
+    {
+        map gfx/effects/redfrontflash
+        blendFunc GL_ONE GL_ONE
+        rgbGen vertex
+    }
+}
+
+gfx/effects/redfrontflash
+{
+	cull	twosided
+    {
+        map gfx/effects/redfrontflash
+        blendFunc GL_ONE GL_ONE
+        rgbGen vertex
+    }
+}
+
 gfx/effects/blasterSideFlash
 {
 	cull	twosided
