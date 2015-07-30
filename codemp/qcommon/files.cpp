@@ -21,6 +21,9 @@
 	#include <unistd.h>
 #endif
 
+#include "../client/fast_mutex.h"
+#include "../client/tinythread.h"
+
 /*
 =============================================================================
 
@@ -258,7 +261,7 @@ static char		*fs_serverPakNames[MAX_SEARCH_PATHS];			// pk3 names
 // all the pk3 files that are referenced at the server side
 static int		fs_numServerReferencedPaks;
 static int		fs_serverReferencedPaks[MAX_SEARCH_PATHS];			// checksums
-static char	*fs_serverReferencedPakNames[MAX_SEARCH_PATHS];		// pk3 names
+static char		*fs_serverReferencedPakNames[MAX_SEARCH_PATHS];		// pk3 names
 
 // last valid game folder used
 char lastValidBase[MAX_OSPATH];
@@ -1282,21 +1285,25 @@ long FS_FOpenFileRead( const char *filename, fileHandle_t *file, qboolean unique
 
 	//FS_WaitForThreads();
 	//FS_IN_USE = qtrue;
+	tthread::fast_mutex::fast_mutex().lock();
 
 	hash = 0;
 
 	if ( !fs_searchpaths ) {
 		//FS_IN_USE = qfalse;
+		tthread::fast_mutex::fast_mutex().unlock();
 		Com_Error( ERR_FATAL, "Filesystem call made without initialization\n" );
 	}
 
 	if ( file == NULL ) {
 		//FS_IN_USE = qfalse;
+		tthread::fast_mutex::fast_mutex().unlock();
 		Com_Error( ERR_FATAL, "FS_FOpenFileRead: NULL 'file' parameter passed\n" );
 	}
 
 	if ( !filename ) {
 		//FS_IN_USE = qfalse;
+		tthread::fast_mutex::fast_mutex().unlock();
 		Com_Error( ERR_FATAL, "FS_FOpenFileRead: NULL 'filename' parameter passed\n" );
 	}
 
@@ -1311,6 +1318,7 @@ long FS_FOpenFileRead( const char *filename, fileHandle_t *file, qboolean unique
 	if ( strstr( filename, ".." ) || strstr( filename, "::" ) ) {
 		*file = 0;
 		//FS_IN_USE = qfalse;
+		tthread::fast_mutex::fast_mutex().unlock();
 		return -1;
 	}
 
@@ -1319,6 +1327,7 @@ long FS_FOpenFileRead( const char *filename, fileHandle_t *file, qboolean unique
 	if( com_fullyInitialized && strstr( filename, "q3key" ) ) {
 		*file = 0;
 		//FS_IN_USE = qfalse;
+		tthread::fast_mutex::fast_mutex().unlock();
 		return -1;
 	}
 
@@ -1471,6 +1480,7 @@ long FS_FOpenFileRead( const char *filename, fileHandle_t *file, qboolean unique
 	#endif
 	#endif // DEDICATED
 						//FS_IN_USE = qfalse;
+						tthread::fast_mutex::fast_mutex().unlock();
 						return pakFile->len;
 					}
 					pakFile = pakFile->next;
@@ -1600,6 +1610,7 @@ long FS_FOpenFileRead( const char *filename, fileHandle_t *file, qboolean unique
 	#endif
 	#endif // dedicated
 				//FS_IN_USE = qfalse;
+				tthread::fast_mutex::fast_mutex().unlock();
 				return FS_fplength(fsh[*file].handleFiles.file.o);
 			}
 		}
@@ -1614,6 +1625,7 @@ long FS_FOpenFileRead( const char *filename, fileHandle_t *file, qboolean unique
 #endif
 	*file = 0;
 	//FS_IN_USE = qfalse;
+	tthread::fast_mutex::fast_mutex().unlock();
 	return -1;
 }
 
@@ -1875,6 +1887,8 @@ int	FS_FileIsInPAK(const char *filename, int *pChecksum ) {
 	fileInPack_t	*pakFile;
 	long			hash = 0;
 
+	tthread::fast_mutex::fast_mutex().lock();
+
 	if ( !fs_searchpaths ) {
 		Com_Error( ERR_FATAL, "Filesystem call made without initialization\n" );
 	}
@@ -1892,6 +1906,7 @@ int	FS_FileIsInPAK(const char *filename, int *pChecksum ) {
 	// The searchpaths do guarantee that something will always
 	// be prepended, so we don't need to worry about "c:" or "//limbo"
 	if ( strstr( filename, ".." ) || strstr( filename, "::" ) ) {
+		tthread::fast_mutex::fast_mutex().unlock();
 		return -1;
 	}
 
@@ -1920,12 +1935,14 @@ int	FS_FileIsInPAK(const char *filename, int *pChecksum ) {
 					if (pChecksum) {
 						*pChecksum = pak->pure_checksum;
 					}
+					tthread::fast_mutex::fast_mutex().unlock();
 					return 1;
 				}
 				pakFile = pakFile->next;
 			} while(pakFile != NULL);
 		}
 	}
+	tthread::fast_mutex::fast_mutex().unlock();
 	return -1;
 }
 
@@ -3079,10 +3096,13 @@ static void FS_AddGameDirectory( const char *path, const char *dir ) {
 
 	FS_WaitForThreads();
 
+	tthread::fast_mutex::fast_mutex().lock();
+
 	// this fixes the case where fs_basepath is the same as fs_cdpath
 	// which happens on full installs
 	for ( sp = fs_searchpaths ; sp ; sp = sp->next ) {
 		if ( sp->dir && Sys_PathCmp(sp->dir->path, path) && !Q_stricmp(sp->dir->gamedir, dir)) {
+			tthread::fast_mutex::fast_mutex().unlock();
 			return;			// we've already got this one
 		}
 	}
@@ -3154,6 +3174,7 @@ static void FS_AddGameDirectory( const char *path, const char *dir ) {
 
 	// done
 	Sys_FreeFileList( pakfiles );
+	tthread::fast_mutex::fast_mutex().unlock();
 }
 
 /*
@@ -3990,6 +4011,8 @@ int		FS_FOpenFileByMode( const char *qpath, fileHandle_t *f, fsMode_t mode ) {
 	int		r;
 	qboolean	sync;
 
+	tthread::fast_mutex::fast_mutex().lock();
+
 	sync = qfalse;
 
 	switch( mode ) {
@@ -4018,6 +4041,7 @@ int		FS_FOpenFileByMode( const char *qpath, fileHandle_t *f, fsMode_t mode ) {
 	}
 
 	if (!f) {
+		tthread::fast_mutex::fast_mutex().unlock();
 		return r;
 	}
 
@@ -4026,6 +4050,7 @@ int		FS_FOpenFileByMode( const char *qpath, fileHandle_t *f, fsMode_t mode ) {
 	}
 	fsh[*f].handleSync = sync;
 
+	tthread::fast_mutex::fast_mutex().unlock();
 	return r;
 }
 
