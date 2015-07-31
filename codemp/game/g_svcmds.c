@@ -351,6 +351,12 @@ void	Svcmd_EntityList_f (void) {
 		case ET_MOVER_MARKER:
 			trap->Print("ET_MOVER_MARKER     ");
 			break;
+		case ET_SPAWNPOINT:
+			trap->Print("ET_SPAWNPOINT       ");
+			break;
+		case ET_TRIGGER_HURT:
+			trap->Print("ET_TRIGGER_HURT     ");
+			break;
 		case ET_FREED:
 			trap->Print("ET_FREED            ");
 			break;

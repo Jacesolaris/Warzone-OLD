@@ -93,6 +93,7 @@ int outdoor_waypoint_scatter_distance = 192;
 qboolean optimize_again = qfalse;
 qboolean DO_THOROUGH = qfalse;
 qboolean DO_TRANSLUCENT = qfalse;
+qboolean DO_FAST_LINK = qfalse;
 
 // warning C4996: 'strcpy' was declared deprecated
 #pragma warning( disable : 4996 )
@@ -126,6 +127,32 @@ float VectorDistance( const vec3_t p1, const vec3_t p2 ) {
 	vec3_t	v;
 
 	VectorSubtract (p2, p1, v);
+	return VectorLength( v );
+}
+
+float HeightDistance( const vec3_t p1, const vec3_t p2 ) {
+	vec3_t	v, p1a, p2a;
+	VectorCopy(p1, p1a);
+	p1a[0] = 0;
+	p1a[1] = 0;
+	
+	VectorCopy(p2, p2a);
+	p2a[0] = 0;
+	p2a[1] = 0;
+
+	VectorSubtract (p2a, p1a, v);
+	return VectorLength( v );
+}
+
+float VerticalDistance( const vec3_t p1, const vec3_t p2 ) {
+	vec3_t	v, p1a, p2a;
+	VectorCopy(p1, p1a);
+	p1a[2] = 0;
+	
+	VectorCopy(p2, p2a);
+	p2a[2] = 0;
+
+	VectorSubtract (p2a, p1a, v);
 	return VectorLength( v );
 }
 
@@ -539,7 +566,8 @@ void sse_memset(void *dst, int n32, unsigned long i)
 
 #define	G_MAX_SCRIPT_ACCUM_BUFFERS 10
 #define MAX_NODELINKS       32              // Maximum Node Links (12)
-#define MAX_NODES           65536//48000//65536//19500//10000//8000//32000//16000	// Maximum Nodes (8000)
+//#define MAX_NODES           65536
+#define MAX_NODES           131072
 #define INVALID				-1
 
 //vec3_t			botTraceMins = { -20, -20, -1 };
@@ -1193,16 +1221,19 @@ BAD_WP_Distance ( vec3_t start, vec3_t end, qboolean double_distance )
 		return ( qtrue );
 	}
 
-	if (NodeIsOnMover(start))
+	if (!DO_FAST_LINK)
 	{
-		// Too far, even for mover node...
-		hitsmover = qtrue;
-	}
+		if (NodeIsOnMover(start))
+		{
+			// Too far, even for mover node...
+			hitsmover = qtrue;
+		}
 
-	if (!hitsmover && length_diff * 0.8 < height_diff)
-	{
-		// This slope looks too sharp...
-		return ( qtrue );
+		if (!hitsmover && length_diff * 0.8 < height_diff)
+		{
+			// This slope looks too sharp...
+			return ( qtrue );
+		}
 	}
 
 	// Looks good...
@@ -1397,8 +1428,7 @@ int NodeVisible_WithExtraHeightAtTraceEnd( vec3_t from, vec3_t dest, int ignore 
 		if (!ent) continue;
 
 		// Too far???
-		if (Distance(from, ent->currentState.pos.trBase) > waypoint_scatter_distance*waypoint_distance_multiplier
-			|| Distance(from, ent->currentState.pos.trBase) > waypoint_scatter_distance*waypoint_distance_multiplier)
+		if (Distance(from, ent->currentState.pos.trBase) > 64/*waypoint_scatter_distance*waypoint_distance_multiplier*/)
 			continue;
 
 		if (ent->currentState.eType == ET_GENERAL || ent->currentState.eType == ET_SPEAKER)
@@ -1473,8 +1503,7 @@ int NodeVisible( vec3_t from, vec3_t dest, int ignore )
 		if (!ent) continue;
 
 		// Too far???
-		if (Distance(from, ent->currentState.pos.trBase) > waypoint_scatter_distance*waypoint_distance_multiplier
-			|| Distance(from, ent->currentState.pos.trBase) > waypoint_scatter_distance*waypoint_distance_multiplier)
+		if (Distance(from, ent->currentState.pos.trBase) > 64/*waypoint_scatter_distance*waypoint_distance_multiplier*/)
 			continue;
 
 		if (ent->currentState.eType == ET_GENERAL || ent->currentState.eType == ET_SPEAKER)
@@ -2411,7 +2440,6 @@ AIMOD_MAPPING_CreateNodeLinks ( int node )
 				break; // Already have enough links for this one...
 		}
 
-//#pragma omp parallel for ordered schedule(dynamic) num_threads(32)
 		for ( loop = 0; loop < number_of_nodes; loop++ )
 		{
 			if (loop == node)
@@ -2427,6 +2455,32 @@ AIMOD_MAPPING_CreateNodeLinks ( int node )
 			{
 				int		visCheck = 0;
 				vec3_t	this_org;
+
+				if (DO_FAST_LINK)
+				{// It's in range... Just accept the linkage... Could easy be bad, but oh well...
+#pragma omp critical (__CREATE_NODE_LINKS__)
+					{
+						nodes[node].links[linknum].targetNode = loop;
+						nodes[node].links[linknum].cost = VectorDistance(nodes[loop].origin, nodes[node].origin) + (VerticalDistance(nodes[loop].origin, nodes[node].origin)*VerticalDistance(nodes[loop].origin, nodes[node].origin));
+						nodes[node].links[linknum].flags = 0;
+
+						if (HeightDistance(nodes[node].origin, nodes[loop].origin) > VerticalDistance(nodes[node].origin, nodes[loop].origin))
+						{// Force jump...
+							nodes[node].links[linknum].flags |= NODE_JUMP;
+						}
+						else if (AIMod_Check_Slope_Between(tmp, this_org))
+						{// No need for jump...
+
+						}
+						else if (AWP_Jump( tmp, this_org ))
+						{// Can jump there!
+							nodes[node].links[linknum].flags |= NODE_JUMP;
+						}
+
+						linknum++;
+					}
+					continue;
+				}
 
 				VectorCopy(nodes[loop].origin, this_org);
 				this_org[2]+=8;
@@ -2591,32 +2645,35 @@ AIMOD_MAPPING_CreateSpecialNodeFlags ( int node )
 	vec3_t	tankMaxsSize = {96, 96, 0};
 	vec3_t	tankMinsSize = {-96, -96, 0};
 
-	VectorCopy( nodes[node].origin, temp );
-	temp[2] += 1;
-	nodes[node].type &= ~NODE_DUCK;
-	VectorCopy( nodes[node].origin, up );
-	up[2] += 16550;
-	CG_Trace( &tr, nodes[node].origin, NULL, NULL, up, -1, MASK_SHOT | MASK_OPAQUE | MASK_WATER /*MASK_ALL*/ );
-	
-	if ( VectorDistance( nodes[node].origin, tr.endpos) <= 72 )
-	{	// Could not see the up pos.. Need to duck to go here!
-		nodes[node].type |= NODE_DUCK;
-		//trap->Print( "^4*** ^3%s^5: Node ^7%i^5 marked as a duck node.\n", GAME_VERSION, node );
+	if (!DO_FAST_LINK)
+	{
+		VectorCopy( nodes[node].origin, temp );
+		temp[2] += 1;
+		nodes[node].type &= ~NODE_DUCK;
+		VectorCopy( nodes[node].origin, up );
+		up[2] += 16550;
+		CG_Trace( &tr, nodes[node].origin, NULL, NULL, up, -1, MASK_SHOT | MASK_OPAQUE | MASK_WATER /*MASK_ALL*/ );
+
+		if ( VectorDistance( nodes[node].origin, tr.endpos) <= 72 )
+		{	// Could not see the up pos.. Need to duck to go here!
+			nodes[node].type |= NODE_DUCK;
+			//trap->Print( "^4*** ^3%s^5: Node ^7%i^5 marked as a duck node.\n", GAME_VERSION, node );
+		}
+
+		if ( AI_PM_SlickTrace( nodes[node].origin, -1) )
+		{	// This node is on slippery ice... Mark it...
+			nodes[node].type |= NODE_ICE;
+			//trap->Print( "^4*** ^3%s^5: Node ^7%i^5 marked as an ice (slick) node.\n", GAME_VERSION, node );
+		}
+
+		VectorCopy(nodes[node].origin, uporg);
+		uporg[2]+=104;
+
+		//if ( TankNodeVisible( nodes[node].origin, uporg, tankMinsSize, tankMaxsSize, -1) == 1 )
+		//{
+		//	nodes[node].type |= NODE_LAND_VEHICLE;
+		//}
 	}
-
-	if ( AI_PM_SlickTrace( nodes[node].origin, -1) )
-	{	// This node is on slippery ice... Mark it...
-		nodes[node].type |= NODE_ICE;
-		//trap->Print( "^4*** ^3%s^5: Node ^7%i^5 marked as an ice (slick) node.\n", GAME_VERSION, node );
-	}
-
-	VectorCopy(nodes[node].origin, uporg);
-	uporg[2]+=104;
-
-	//if ( TankNodeVisible( nodes[node].origin, uporg, tankMinsSize, tankMaxsSize, -1) == 1 )
-	//{
-	//	nodes[node].type |= NODE_LAND_VEHICLE;
-	//}
 }
 
 //#define __BOT_AUTOWAYPOINT_OPTIMIZE__
@@ -2655,35 +2712,31 @@ AIMOD_MAPPING_MakeLinks ( void )
 	aw_percent_complete = 0.0f;
 	trap->UpdateScreen();
 
-	//number_of_nodes = total_good_count;
-	
-//#pragma omp parallel for ordered schedule(dynamic) num_threads(32)
-	for ( loop = 0; loop < number_of_nodes; loop++ )
-	{// Do links...
-		nodes[loop].enodenum = 0;
+	{
+#pragma omp parallel for ordered schedule(dynamic)// num_threads(32)
+		for ( loop = 0; loop < number_of_nodes; loop++ )
+		{// Do links...
+			nodes[loop].enodenum = 0;
 
-		// Draw a nice little progress bar ;)
-		aw_percent_complete = (float)((float)((float)loop/(float)number_of_nodes)*100.0f);
+			// Draw a nice little progress bar ;)
+			aw_percent_complete = (float)((float)((float)loop/(float)number_of_nodes)*100.0f);
 
-		update_timer++;
+			update_timer++;
 
-		if(omp_get_thread_num() == 0)
-		{
-			if (update_timer >= 100)
+			if(omp_get_thread_num() == 0)
 			{
-				trap->UpdateScreen();
-				update_timer = 0;
+				if (update_timer >= 100)
+				{
+					trap->UpdateScreen();
+					update_timer = 0;
+				}
 			}
-		}
 
-		// Also check if the node needs special flags...
-		AIMOD_MAPPING_CreateSpecialNodeFlags( loop );
-
-//#pragma omp ordered
-		{
-#pragma omp critical (__CREATE_NODE_LINKS__)
+			// Also check if the node needs special flags...
+			AIMOD_MAPPING_CreateSpecialNodeFlags( loop );
+			AIMOD_MAPPING_CreateNodeLinks( loop );
+			#pragma omp critical (__CREATE_NODE_LINKS_UPDATE__)
 			{
-				AIMOD_MAPPING_CreateNodeLinks( loop );
 				strcpy( last_node_added_string, va("^5Created ^3%i ^5links for waypoint ^7%i^5.", nodes[loop].enodenum, loop) );
 			}
 		}
@@ -5386,7 +5439,7 @@ omp_set_nested(0);
 
 			x = startx - (parallel_x * scatter_x);
 
-//#pragma omp parallel for ordered schedule(dynamic) num_threads(32)
+#pragma omp parallel for ordered schedule(dynamic) //num_threads(32)
 			for (parallel_y = 0; parallel_y < parallel_y_max; parallel_y++) // To OMP this sucker...
 			{
 				int		z, y;
@@ -5432,7 +5485,7 @@ omp_set_nested(0);
 					// Set this test location's origin...
 					VectorSet(new_org, x, y, z);
 
-#pragma omp critical (__FLOOR_CHECK__)
+//#pragma omp critical (__FLOOR_CHECK__)
 					{
 						// Find the ground at this point...
 						floor = FloorHeightAt(new_org);
@@ -5473,7 +5526,7 @@ omp_set_nested(0);
 
 					if (force_continue) continue; // because omp critical can not "continue"...
 
-#pragma omp critical (__PLAYER__WIDTH_CHECK__)
+//#pragma omp critical (__PLAYER__WIDTH_CHECK__)
 					{
 						if (!AIMod_AutoWaypoint_Check_PlayerWidth(org))
 						{// Not wide enough for a player to fit!
@@ -6585,7 +6638,7 @@ void AIMod_AutoWaypoint_Clean ( void )
 	if ( trap->Cmd_Argc() < 2 )
 	{
 		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^7Usage:\n" );
-		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3/awc <method>^5.\n" );
+		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3/awc <method> <vischeck>^5. (vicheck can be anything)\n" );
 		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^5Available methods are: Generally only a pathtest pass is needed.\n" );
 		//trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3\"convert\" ^5- Convert old JKA wp file to Warzone format.\n");
 		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3\"relink\" ^5- Just do relinking.\n");
@@ -6601,6 +6654,11 @@ void AIMod_AutoWaypoint_Clean ( void )
 		trap->UpdateScreen();
 		return;
 	}
+
+	if ( trap->Cmd_Argc() >= 2 )
+		DO_FAST_LINK = qfalse;
+	else
+		DO_FAST_LINK = qtrue;
 
 	trap->Cmd_Argv( 1, str, sizeof(str) );
 	
@@ -6644,6 +6702,8 @@ void AIMod_AutoWaypoint_Clean ( void )
 	{
 		int i;
 
+		DO_FAST_LINK = qfalse;
+
 		AIMod_AutoWaypoint_Init_Memory();
 
 		if (number_of_nodes > 0)
@@ -6680,6 +6740,8 @@ void AIMod_AutoWaypoint_Clean ( void )
 	}
 	else if ( Q_stricmp( str, "cover") == 0 )
 	{
+		DO_FAST_LINK = qfalse;
+
 		AIMod_AutoWaypoint_Init_Memory();
 
 		if (number_of_nodes > 0)
@@ -6713,6 +6775,8 @@ void AIMod_AutoWaypoint_Clean ( void )
 
 		AIMod_AutoWaypoint_Free_Memory();
 	}
+
+	DO_FAST_LINK = qfalse;
 }
 
 /* */
@@ -6734,6 +6798,7 @@ AIMod_AutoWaypoint ( void )
 		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3\"standard\" ^5- For standard multi-level maps.\n");
 		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3\"thorough\" ^5- Use extensive fall waypoint checking.\n");
 		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3\"translucent\" ^5- Allow translucent surfaces (for maps with surfaces being ignored by standard).\n");
+		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3\"fast\" ^5- For standard multi-level maps. This version does not visibility check waypoint links.\n");
 		//trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3\"noclean\" ^5- For standard multi-level maps (with no cleaning passes).\n");
 		//trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3\"outdoor_only\" ^5- For standard single level maps.\n");
 		trap->UpdateScreen();
@@ -6742,6 +6807,7 @@ AIMod_AutoWaypoint ( void )
 
 	DO_THOROUGH = qfalse;
 	DO_TRANSLUCENT = qfalse;
+	DO_FAST_LINK = qfalse;
 
 	trap->Cmd_Argv( 1, str, sizeof(str) );
 	
@@ -6772,6 +6838,40 @@ AIMod_AutoWaypoint ( void )
 		{
 			AIMod_AutoWaypoint_StandardMethod();
 		}
+	}
+	else if ( Q_stricmp( str, "fast") == 0 )
+	{
+		DO_FAST_LINK = qtrue;
+		//DO_TRANSLUCENT = qtrue;
+
+		if ( trap->Cmd_Argc() >= 2 )
+		{
+			// Override normal scatter distance...
+			int dist = waypoint_scatter_distance;
+
+			trap->Cmd_Argv( 2, str, sizeof(str) );
+			dist = atoi(str);
+
+			if (dist <= 20)
+			{
+				// Fallback and warning...
+				dist = original_wp_scatter_dist;
+
+				trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^7Warning: ^5Invalid scatter distance set (%i). Using default (%i)...\n", atoi(str), original_wp_scatter_dist );
+			}
+
+			waypoint_scatter_distance = dist;
+			AIMod_AutoWaypoint_StandardMethod();
+
+			waypoint_scatter_distance = original_wp_scatter_dist;
+		}
+		else
+		{
+			AIMod_AutoWaypoint_StandardMethod();
+		}
+
+		DO_FAST_LINK = qfalse;
+		//DO_TRANSLUCENT = qfalse;
 	}
 	else if ( Q_stricmp( str, "thorough") == 0 )
 	{
@@ -6934,239 +7034,6 @@ GetFCost ( centity_t *bot, int to, int num, int parentNum, float *gcost )
 #endif //__COVER_SPOTS__
 
 	return (int) ( gc + hc );
-}
-
-#define MAX_PATHLIST_NODES  4096/*8192*//*MAX_NODES*///1024	// MAX_NODES??
-
-int
-CreatePathAStar ( centity_t *bot, int from, int to, int *pathlist )
-{
-	int	openlist[MAX_NODES*2 + 1];												//add 1 because it's a binary heap, and they don't use 0 - 1 is the first used index
-	float		gcost[MAX_NODES];
-	int			fcost[MAX_NODES];
-	char			list[MAX_NODES];														//0 is neither, 1 is open, 2 is closed - char because it's the smallest data type
-	int	parent[MAX_NODES];
-	int	numOpen = 0;
-	int	atNode, temp, newnode = -1;
-	qboolean	found = qfalse;
-	int			count = -1;
-	float		gc;
-	int			i, j, u, v, m;
-	vec3_t		vec;
-
-	//clear out all the arrays - UQ1: Added - only allocate total nodes for map for speed...
-	if (SSE_CPU)
-	{
-		sse_memset( openlist, 0, ((sizeof(int)) * (number_of_nodes + 1))/8 );
-		sse_memset( fcost, 0, ((sizeof(int)) * number_of_nodes)/8 );
-		sse_memset( list, 0, ((sizeof(char)) * number_of_nodes)/8 );
-		sse_memset( parent, 0, ((sizeof(int)) * number_of_nodes)/8 );
-		sse_memset( gcost, 0, ((sizeof(float)) * number_of_nodes)/8 );
-	}
-	else
-	{
-		memset( openlist, 0, ((sizeof(int)) * (number_of_nodes + 1)) );
-		memset( fcost, 0, ((sizeof(int)) * number_of_nodes) );
-		memset( list, 0, ((sizeof(char)) * number_of_nodes) );
-		memset( parent, 0, ((sizeof(int)) * number_of_nodes) );
-		memset( gcost, 0, ((sizeof(float)) * number_of_nodes) );
-	}
-
-	openlist[MAX_NODES+1] = 0;
-
-	if ( (from == NODE_INVALID) || (to == NODE_INVALID) || (from >= MAX_NODES) || (to >= MAX_NODES) || (from == to) )
-	{
-		return ( -1 );
-	}
-
-	openlist[1] = from;																	//add the starting node to the open list
-	numOpen++;
-	gcost[from] = 0;																	//its f and g costs are obviously 0
-	fcost[from] = 0;
-
-	while ( 1 )
-	{
-		if ( numOpen != 0 )																//if there are still items in the open list
-		{
-			//pop the top item off of the list
-			atNode = openlist[1];
-			list[atNode] = 2;															//put the node on the closed list so we don't check it again
-			numOpen--;
-			openlist[1] = openlist[numOpen + 1];										//move the last item in the list to the top position
-			v = 1;
-
-			//this while loop reorders the list so that the new lowest fcost is at the top again
-			while ( 1 )
-			{
-				u = v;
-				if ( (2 * u + 1) < numOpen )											//if both children exist
-				{
-					if ( fcost[openlist[u]] >= fcost[openlist[2 * u]] )
-					{
-						v = 2 * u;
-					}
-
-					if ( fcost[openlist[v]] >= fcost[openlist[2 * u + 1]] )
-					{
-						v = 2 * u + 1;
-					}
-				}
-				else
-				{
-					if ( (2 * u) < numOpen )											//if only one child exists
-					{
-						if ( fcost[openlist[u]] >= fcost[openlist[2 * u]] )
-						{
-							v = 2 * u;
-						}
-					}
-				}
-
-				if ( u != v )															//if they're out of order, swap this item with its parent
-				{
-					temp = openlist[u];
-					openlist[u] = openlist[v];
-					openlist[v] = temp;
-				}
-				else
-				{
-					break;
-				}
-			}
-
-			if (nodes[atNode].enodenum <= MAX_NODELINKS)
-			for ( i = 0; i < nodes[atNode].enodenum; i++ )								//loop through all the links for this node
-			{
-				newnode = nodes[atNode].links[i].targetNode;
-
-				if (newnode > number_of_nodes)
-					continue;
-
-				if (newnode < 0)
-					continue;
-
-				if (nodes[newnode].objectNum[0] == 1)
-					continue; // Skip water/ice disabled node!
-
-				if ( list[newnode] == 2 )
-				{																		//if this node is on the closed list, skip it
-					continue;
-				}
-
-				if ( list[newnode] != 1 )												//if this node is not already on the open list
-				{
-					openlist[++numOpen] = newnode;										//add the new node to the open list
-					list[newnode] = 1;
-					parent[newnode] = atNode;											//record the node's parent
-					if ( newnode == to )
-					{																	//if we've found the goal, don't keep computing paths!
-						break;															//this will break the 'for' and go all the way to 'if (list[to] == 1)'
-					}
-
-					fcost[newnode] = GetFCost( bot, to, newnode, parent[newnode], gcost );	//store it's f cost value
-
-					//this loop re-orders the heap so that the lowest fcost is at the top
-					m = numOpen;
-
-					while ( m != 1 )													//while this item isn't at the top of the heap already
-					{
-						if ( fcost[openlist[m]] <= fcost[openlist[m / 2]] )				//if it has a lower fcost than its parent
-						{
-							temp = openlist[m / 2];
-							openlist[m / 2] = openlist[m];
-							openlist[m] = temp;											//swap them
-							m /= 2;
-						}
-						else
-						{
-							break;
-						}
-					}
-				}
-				else										//if this node is already on the open list
-				{
-					gc = gcost[atNode];
-					//VectorSubtract( nodes[newnode].origin, nodes[atNode].origin, vec );
-					//gc += VectorLength( vec );				//calculate what the gcost would be if we reached this node along the current path
-					if (nodes[atNode].links[i].cost)
-					{// UQ1: Already have a cost value, skip the calculations!
-						gc += nodes[atNode].links[i].cost;
-					}
-					else
-					{
-						VectorSubtract( nodes[newnode].origin, nodes[atNode].origin, vec );
-						gc += VectorLength( vec );				//calculate what the gcost would be if we reached this node along the current path
-						nodes[atNode].links[i].cost = gc;
-					}
-
-					if ( gc < gcost[newnode] )				//if the new gcost is less (ie, this path is shorter than what we had before)
-					{
-						parent[newnode] = atNode;			//set the new parent for this node
-						gcost[newnode] = gc;				//and the new g cost
-
-						for ( j = 1; j < numOpen; j++ )		//loop through all the items on the open list
-						{
-							if ( openlist[j] == newnode )	//find this node in the list
-							{
-
-								//calculate the new fcost and store it
-								fcost[newnode] = GetFCost( bot, to, newnode, parent[newnode], gcost );
-
-								//reorder the list again, with the lowest fcost item on top
-								m = j;
-
-								while ( m != 1 )
-								{
-									if ( fcost[openlist[m]] < fcost[openlist[m / 2]] )	//if the item has a lower fcost than it's parent
-									{
-										temp = openlist[m / 2];
-										openlist[m / 2] = openlist[m];
-										openlist[m] = temp;								//swap them
-										m /= 2;
-									}
-									else
-									{
-										break;
-									}
-								}
-								break;													//exit the 'for' loop because we already changed this node
-							}															//if
-						}																//for
-					}											//if (gc < gcost[newnode])
-				}												//if (list[newnode] != 1) --> else
-			}													//for (loop through links)
-		}														//if (numOpen != 0)
-		else
-		{
-			found = qfalse;										//there is no path between these nodes
-			break;
-		}
-
-		if ( list[to] == 1 )									//if the destination node is on the open list, we're done
-		{
-			found = qtrue;
-			break;
-		}
-	}															//while (1)
-
-	if ( found == qtrue )							//if we found a path, and are trying to store the pathlist...
-	{
-		count = 0;
-		temp = to;												//start at the end point
-		while ( temp != from )									//travel along the path (backwards) until we reach the starting point
-		{
-			if (count+1 >= MAX_PATHLIST_NODES)
-				return -1; // UQ1: Added to stop crash if path is too long for the memory allocation...
-
-			pathlist[count++] = temp;							//add the node to the pathlist and increment the count
-			temp = parent[temp];								//move to the parent of this node to continue the path
-		}
-
-		pathlist[count++] = from;								//add the beginning node to the end of the pathlist
-		return ( count );
-	}
-
-	return ( count );											//return the number of nodes in the path, -1 if not found
 }
 
 qboolean wp_optimize_memory_initialized = qfalse;
@@ -7412,659 +7279,6 @@ qboolean IsPathDataTooLarge(const char *mapname)
 
 	return qfalse;
 }
-
-/* */
-void
-AIMod_AutoWaypoint_Optimizer ( void )
-{
-	qboolean quiet = qfalse;
-	qboolean null_links_only = qfalse;
-	int i = 0, j = 0, k = 0, l = 0;//, m = 0;
-	int	total_calculations = 0;
-	int	calculations_complete = 0;
-	int	*areas;//[16550];
-	int num_areas = 0;
-	float map_size;
-	vec3_t mapMins, mapMaxs;
-	float temp;
-	float AREA_SEPERATION = DEFAULT_AREA_SEPERATION;
-	int screen_update_timer = 0;
-	int entities_start = 0;
-	char	str[MAX_TOKEN_CHARS];
-	int	node_disable_ticker = 0;
-	int	num_disabled_nodes = 0;
-	int num_nolink_nodes = 0;
-	int	node_disable_ratio = 2;
-	qboolean	bad_surfaces_only = qfalse;
-	qboolean	noiceremove = qfalse;
-	qboolean	nowaterremove = qfalse;
-//	vmCvar_t	mapname;
-
-	trap->Cvar_Set("warzone_waypoint_render", "0");
-	trap->UpdateScreen();
-	trap->UpdateScreen();
-	trap->UpdateScreen();
-
-	aw_num_bad_surfaces = 0;
-
-	// UQ1: start - First handle the command line options...
-	trap->Cmd_Argv( 1, str, sizeof(str) );
-
-	if (!quiet && str && str[0])
-	{// Use player specified area seperation...
-		float area_sep = 0.0f;
-
-		if (!Q_stricmp(str, "help") || !Q_stricmp(str, "commands"))
-		{
-			trap->Print("^4*** ^3AUTO-WAYPOINTER^4: ^7NOTE: The following command line options are available...\n");
-			trap->Print("^4*** ^3AUTO-WAYPOINTER^4: ^3badsurfsonly  ^4- ^5Remove waypoints on bad surfaces only (includes sky, ice, water).\n");
-			trap->Print("^4*** ^3AUTO-WAYPOINTER^4: ^3nulllinksonly ^4- ^5Remove waypoints with no links to nearby waypoints (can be used with badsurfsonly).\n");
-			trap->Print("^4*** ^3AUTO-WAYPOINTER^4: ^3noiceremove   ^4- ^5Do not automaticly remove some waypoints on ice (can be used with badsurfsonly).\n");
-			trap->Print("^4*** ^3AUTO-WAYPOINTER^4: ^3nowaterremove ^4- ^5Do not automaticly remove some waypoints on/in water (can be used with badsurfsonly).\n");
-			trap->Print("^4*** ^3AUTO-WAYPOINTER^4: ^3#             ^4- ^5Use specified area scatter distance (default is ^7%i^5).\n", (int)DEFAULT_AREA_SEPERATION);
-			return;
-		}
-
-		if (!Q_stricmp(str, "badsurfsonly"))
-			bad_surfaces_only = qtrue;
-		else if (!Q_stricmp(str, "noiceremove"))
-			noiceremove = qtrue;
-		else if (!Q_stricmp(str, "nowaterremove"))
-			nowaterremove = qtrue;
-		else if (!Q_stricmp(str, "nulllinksonly"))
-			null_links_only = qtrue;
-		else
-			area_sep = atof(str);
-
-		trap->Cmd_Argv( 2, str, sizeof(str) );
-
-		if (str && str[0])
-		{// Use player specified area seperation...
-			if (!Q_stricmp(str, "badsurfsonly"))
-				bad_surfaces_only = qtrue;
-			else if (!Q_stricmp(str, "noiceremove"))
-				noiceremove = qtrue;
-			else if (!Q_stricmp(str, "nowaterremove"))
-				nowaterremove = qtrue;
-			else if (!Q_stricmp(str, "nulllinksonly"))
-				null_links_only = qtrue;
-			else
-				area_sep = atof(str);
-
-			trap->Cmd_Argv( 3, str, sizeof(str) );
-
-			if (str && str[0])
-			{// Use player specified area seperation...
-				if (!Q_stricmp(str, "badsurfsonly"))
-					bad_surfaces_only = qtrue;
-				else if (!Q_stricmp(str, "noiceremove"))
-					noiceremove = qtrue;
-				else if (!Q_stricmp(str, "nowaterremove"))
-					nowaterremove = qtrue;
-				else if (!Q_stricmp(str, "nulllinksonly"))
-					null_links_only = qtrue;
-				else
-					area_sep = atof(str);
-
-				trap->Cmd_Argv( 4, str, sizeof(str) );
-
-				if (str && str[0])
-				{// Use player specified area seperation...
-					if (!Q_stricmp(str, "badsurfsonly"))
-						bad_surfaces_only = qtrue;
-					else if (!Q_stricmp(str, "noiceremove"))
-						noiceremove = qtrue;
-					else if (!Q_stricmp(str, "nowaterremove"))
-						nowaterremove = qtrue;
-					else if (!Q_stricmp(str, "nulllinksonly"))
-						null_links_only = qtrue;
-					else
-						area_sep = atof(str);
-
-					trap->Cmd_Argv( 5, str, sizeof(str) );
-
-					if (str && str[0])
-					{// Use player specified area seperation...
-						if (!Q_stricmp(str, "badsurfsonly"))
-							bad_surfaces_only = qtrue;
-						else if (!Q_stricmp(str, "noiceremove"))
-							noiceremove = qtrue;
-						else if (!Q_stricmp(str, "nowaterremove"))
-							nowaterremove = qtrue;
-						else if (!Q_stricmp(str, "nulllinksonly"))
-							null_links_only = qtrue;
-						else
-							area_sep = atof(str);
-					}
-				}
-			}
-		}
-
-		if (area_sep != 0)
-			AREA_SEPERATION = area_sep;
-	}
-	else if (!quiet)
-	{
-		trap->Print("^4*** ^3AUTO-WAYPOINTER^4: ^7NOTE: The following command line options are available...\n");
-		trap->Print("^4*** ^3AUTO-WAYPOINTER^4: ^3badsurfsonly  ^4- ^5Remove waypoints on bad surfaces only (includes sky, ice, water).\n");
-		trap->Print("^4*** ^3AUTO-WAYPOINTER^4: ^3nulllinksonly ^4- ^5Remove waypoints with no links to nearby waypoints (can be used with badsurfsonly).\n");
-		trap->Print("^4*** ^3AUTO-WAYPOINTER^4: ^3noiceremove   ^4- ^5Do not automaticly remove some waypoints on ice (can be used with badsurfsonly).\n");
-		trap->Print("^4*** ^3AUTO-WAYPOINTER^4: ^3nowaterremove ^4- ^5Do not automaticly remove some waypoints on/in water (can be used with badsurfsonly).\n");
-		trap->Print("^4*** ^3AUTO-WAYPOINTER^4: ^3#             ^4- ^5Use specified area scatter distance (default is ^7%i^5).\n", (int)DEFAULT_AREA_SEPERATION);
-		trap->Print("^4*** ^3AUTO-WAYPOINTER^4: ^7No command line specified, using defaults...\n");
-	}
-	// UQ1: end - First handle the command line options...
-
-	// UQ1: Check if we have an SSE CPU.. It can speed up our memory allocation by a lot!
-	if (!CPU_CHECKED)
-		UQ_Get_CPU_Info();
-
-	AIMod_AutoWaypoint_Init_Memory();
-	AIMod_AutoWaypoint_Optimize_Init_Memory();
-
-	if (number_of_nodes > 0)
-	{// UQ1: Init nodes list!
-		number_of_nodes = 0; 
-		optimized_number_of_nodes = 0;
-		
-		if (SSE_CPU)
-		{
-			sse_memset( nodes, 0, ((sizeof(node_t)+1)*MAX_NODES)/8 );
-			sse_memset( optimized_nodes, 0, ((sizeof(node_t)+1)*MAX_NODES)/8 );
-		}
-		else
-		{
-			memset( nodes, 0, ((sizeof(node_t)+1)*MAX_NODES) );
-			memset( optimized_nodes, 0, ((sizeof(node_t)+1)*MAX_NODES) );
-		}
-	}
-
-	AIMOD_NODES_LoadNodes();
-
-	if (number_of_nodes <= 0)
-	{
-		AIMod_AutoWaypoint_Free_Memory();
-		AIMod_AutoWaypoint_Optimize_Free_Memory();
-		return;
-	}
-
-	areas = malloc( (sizeof(int)+1)*512000 );
-
-	//AIMod_GetMapBounts( mapMins, mapMaxs );
-	AIMod_GetMapBounts();
-	VectorCopy(cg.mapcoordsMins, mapMins);
-	VectorCopy(cg.mapcoordsMaxs, mapMaxs);
-
-	if (mapMaxs[0] < mapMins[0])
-	{
-		temp = mapMins[0];
-		mapMins[0] = mapMaxs[0];
-		mapMaxs[0] = temp;
-	}
-
-	if (mapMaxs[1] < mapMins[1])
-	{
-		temp = mapMins[1];
-		mapMins[1] = mapMaxs[1];
-		mapMaxs[1] = temp;
-	}
-
-	if (mapMaxs[2] < mapMins[2])
-	{
-		temp = mapMins[2];
-		mapMins[2] = mapMaxs[2];
-		mapMaxs[2] = temp;
-	}
-
-	map_size = VectorDistance(mapMins, mapMaxs);
-
-	trap->Print( va( "^4*** ^3AUTO-WAYPOINTER^4: ^5Map bounds (^7%f %f %f ^5by ^7%f %f %f^5).\n", mapMins[0], mapMins[1], mapMins[2], mapMaxs[0], mapMaxs[1], mapMaxs[2]) );
-
-	trap->Print( va( "^4*** ^3AUTO-WAYPOINTER^4: ^5Optimizing waypoint list...\n") );
-	strcpy( task_string1, va("^7Optimizing waypoint list....") );
-	trap->UpdateScreen();
-
-	trap->Print( va( "^4*** ^3AUTO-WAYPOINTER^4: ^7This should not take too long...\n") );
-	strcpy( task_string2, va("^7This should not take too long...") );
-	trap->UpdateScreen();
-
-	if (!bad_surfaces_only)
-	{
-		trap->Print( va( "^4*** ^3AUTO-WAYPOINTER^4: ^5First pass. Creating area lists... Please wait...\n") );
-		strcpy( task_string3, va("^5First pass. Creating area lists... Please wait...") );
-		trap->UpdateScreen();
-	}
-
-	// UQ1: Set node types..
-	AIMOD_AI_InitNodeContentsFlags();
-
-	/*if (number_of_nodes > 128000)
-		node_disable_ratio = 24;
-	else if (number_of_nodes > 96000)
-		node_disable_ratio = 22;
-	else if (number_of_nodes > 72000)
-		node_disable_ratio = 20;
-	else if (number_of_nodes > 64000)
-		node_disable_ratio = 18;
-	else if (number_of_nodes > 48000)
-		node_disable_ratio = 16;
-	else*/ if (number_of_nodes > 32000)
-		node_disable_ratio = 8;
-	else if (number_of_nodes > 24000)
-		node_disable_ratio = 6;
-	else if (number_of_nodes > 16000)
-		node_disable_ratio = 4;
-	else if (number_of_nodes > 8000)
-		node_disable_ratio = 2;
-
-	// Disable some ice/water ndoes...
-	for (i = 0; i < number_of_nodes; i++)
-	{
-		if (!nowaterremove && (nodes[i].type & NODE_WATER))
-		{
-			node_disable_ticker++;
-
-			if (node_disable_ticker < node_disable_ratio)
-			{// Remove 2 out of every (node_disable_ratio)..
-				nodes[i].objectNum[0] = 1;
-				num_disabled_nodes++;
-			}
-			else
-			{
-				node_disable_ticker = 0;
-			}
-		}
-		
-		if (!noiceremove && (nodes[i].type & NODE_ICE))
-		{
-			node_disable_ticker++;
-
-			if (node_disable_ticker < node_disable_ratio)
-			{// Remove 2 out of every (node_disable_ratio)..
-				nodes[i].objectNum[0] = 1;
-				num_disabled_nodes++;
-			}
-			else
-			{
-				node_disable_ticker = 0;
-			}
-		}
-		
-		if (nodes[i].enodenum <= 0)
-		{// Remove all waypoints without any links...
-			nodes[i].objectNum[0] = 1;
-			num_nolink_nodes++;
-		}
-	}
-
-	trap->Print("^4*** ^3AUTO-WAYPOINTER^4: ^5Disabled ^3%i^5 water/ice waypoints.\n", num_disabled_nodes);
-	trap->Print("^4*** ^3AUTO-WAYPOINTER^4: ^5Disabled ^3%i^5 bad surfaces.\n", aw_num_bad_surfaces);
-	trap->Print("^4*** ^3AUTO-WAYPOINTER^4: ^5Disabled ^3%i^5 waypoints without links.\n", num_nolink_nodes);
-
-	if ((null_links_only || bad_surfaces_only) && num_disabled_nodes == 0 && aw_num_bad_surfaces == 0 && num_nolink_nodes == 0)
-	{// No point relinking and saving...
-		free(areas);
-		AIMod_AutoWaypoint_Free_Memory();
-		AIMod_AutoWaypoint_Optimize_Free_Memory();
-		return;
-	}
-
-	aw_percent_complete = 0.0f;
-	aw_stage_start_time = clock();
-
-	if (!bad_surfaces_only && !null_links_only)
-	{
-		i = mapMins[0]-MAP_BOUNDS_OFFSET;
-		j = mapMins[1]-MAP_BOUNDS_OFFSET;
-		k = mapMins[2]-MAP_BOUNDS_OFFSET;
-
-		while (i < mapMaxs[0]+MAP_BOUNDS_OFFSET)
-		{
-			while (j < mapMaxs[1]+MAP_BOUNDS_OFFSET)
-			{
-				while (k < mapMaxs[2]+MAP_BOUNDS_OFFSET)
-				{
-					total_calculations++;
-
-					k += AREA_SEPERATION;
-				}
-
-				j += AREA_SEPERATION/**1.5*/;
-				k = mapMins[2]-MAP_BOUNDS_OFFSET;
-			}
-
-			i += AREA_SEPERATION/**1.5*/;
-			j = mapMins[1]-MAP_BOUNDS_OFFSET;
-		}
-
-		//trap->Print("Total calcs is %i\n", total_calculations);
-
-		i = mapMins[0]-MAP_BOUNDS_OFFSET;
-		j = mapMins[1]-MAP_BOUNDS_OFFSET;
-		k = mapMins[2]-MAP_BOUNDS_OFFSET;
-	
-		calculations_complete = 0;
-
-		while (i < mapMaxs[0]+MAP_BOUNDS_OFFSET)
-		{
-			int num_nodes_added = 0;
-
-			while (j < mapMaxs[1]+MAP_BOUNDS_OFFSET)
-			{
-				while (k < mapMaxs[2]+MAP_BOUNDS_OFFSET)
-				{
-					vec3_t		area_org;
-					int			closest_node = -1;
-					qboolean	skip = qfalse;
-
-					calculations_complete++;
-
-					// Draw a nice little progress bar ;)
-					aw_percent_complete = (float)((float)((float)(calculations_complete)/(float)(total_calculations))*100.0f);
-
-					num_nodes_added++;
-				
-					if (num_nodes_added > 20)
-					{
-						trap->UpdateScreen();
-						num_nodes_added = 0;
-					}
-
-					area_org[0] = i;
-					area_org[1] = j;
-					area_org[2] = k;
-
-					closest_node = ClosestNodeTo(area_org, qfalse);
-
-					if (closest_node == -1)
-					{
-						//trap->Print("No closest node at %f %f %f.\n", area_org[0], area_org[1], area_org[2]);
-						k += AREA_SEPERATION;
-						continue;
-					}
-
-					for (l = 0; l < num_areas; l++)
-					{
-						if (areas[l] == closest_node)
-						{
-							//trap->Print("area %i skipped\n", l);
-							skip = qtrue;
-							break;
-						}
-					}
-
-					if (!skip)
-					{
-						strcpy( last_node_added_string, va("^5Adding area ^3%i ^5at ^7%f %f %f^5.", num_areas, nodes[closest_node].origin[0], nodes[closest_node].origin[1], nodes[closest_node].origin[2]) );
-						areas[num_areas] = closest_node;
-						num_areas++;
-					}
-
-					k += AREA_SEPERATION;
-				}
-
-				j += AREA_SEPERATION/**1.5*/;
-				k = mapMins[2]-MAP_BOUNDS_OFFSET;
-			}
-
-			i += AREA_SEPERATION/**1.5*/;
-			j = mapMins[1]-MAP_BOUNDS_OFFSET;
-		}
-
-		trap->Print( va( "^4*** ^3AUTO-WAYPOINTER^4: ^5Second pass. Adding goal area entities... Please wait...\n") );
-		strcpy( task_string3, va("^5Second pass. Adding goal area entities... Please wait...") );
-		trap->UpdateScreen();
-
-		entities_start = num_areas;
-
-		for (i = MAX_CLIENTS; i < MAX_GENTITIES; i++)
-		{
-			centity_t	*cent = &cg_entities[i];
-			int				closest_node = -1;
-			qboolean	skip = qfalse;
-
-			// Draw a nice little progress bar ;)
-			aw_percent_complete = (float)((float)((float)(i-MAX_CLIENTS)/(float)(MAX_GENTITIES-MAX_CLIENTS))*100.0f);
-
-			screen_update_timer++;
-				
-			if (screen_update_timer > 10)
-			{
-				trap->UpdateScreen();
-				screen_update_timer = 0;
-			}
-
-			if (!cent)
-				continue;
-
-			if (!Is_Waypoint_Entity(cent->currentState.eType))
-				continue;
-
-			closest_node = ClosestNodeTo(cent->currentState.origin, qtrue);
-
-			if (closest_node == -1)
-			{
-				continue;
-			}
-
-			for (l = 0; l < num_areas; l++)
-			{
-				if (areas[l] == closest_node)
-				{
-					skip = qtrue;
-					break;
-				}
-			}
-
-			if (!skip)
-			{
-				strcpy( last_node_added_string, va("^5Adding (entity) area ^3%i ^5at ^7%f %f %f^5.", num_areas, nodes[closest_node].origin[0], nodes[closest_node].origin[1], nodes[closest_node].origin[2]) );
-				areas[num_areas] = closest_node;
-				num_areas++;
-			}
-		}
-
-		trap->Print("^4*** ^3AUTO-WAYPOINTER^4: ^5Generated ^3%i^5 areas.\n", num_areas);
-
-		trap->Print( va( "^4*** ^3AUTO-WAYPOINTER^4: ^5Final pass. Creating waypoints... Please wait...\n") );
-		strcpy( task_string3, va("^5Final pass. Creating waypoints... Please wait...") );
-		trap->UpdateScreen();
-
-		total_calculations = num_areas*num_areas;
-		calculations_complete = 0;
-
-		for (i = 0; i < num_areas; i++)
-		{
-			vec3_t		org;
-			int				num_nodes_added = 0;
-
-			VectorCopy(nodes[areas[i]].origin, org);
-		
-			for (j = 0; j < num_areas; j++)
-			{
-				vec3_t		org2;
-				int				pathlist[MAX_NODES];
-				int				pathsize = 0;
-				int				node = -1;
-
-				calculations_complete++;
-
-				// Draw a nice little progress bar ;)
-				aw_percent_complete = (float)((float)((float)(calculations_complete)/(float)(total_calculations))*100.0f);
-
-				num_nodes_added++;
-				
-				if (num_nodes_added > 50)
-				{
-					trap->UpdateScreen();
-					num_nodes_added = 0;
-				}
-
-				if (i == j)
-					continue;
-
-				VectorCopy(nodes[areas[j]].origin, org2);
-
-				if (i >= entities_start || j >= entities_start)
-				{// Extra checking for entities!
-					if (VectorDistance(org, org2) > AREA_SEPERATION*8/*6*//*2*//*8*/)
-						continue;
-				}
-				else
-				{
-					if (VectorDistance(org, org2) > AREA_SEPERATION*1.6/*2*//*8*/)
-						continue;
-				}
-
-				pathsize = CreatePathAStar( NULL, areas[i], areas[j], pathlist );
-						
-				if (pathsize > 0)
-				{
-					node = areas[i];	//pathlist is in reverse order
-
-					while (node != -1 && pathsize > 0)
-					{
-						short int		objNum[3] = { 0, 0, 0 };
-						qboolean	skip = qfalse;
-
-						if (!skip && nodes[node].objEntity != 1)
-						{
-							strcpy( last_node_added_string, va("^5Adding waypoint ^3%i ^5at ^7%f %f %f^5.", optimized_number_of_nodes, nodes[node].origin[0], nodes[node].origin[1], nodes[node].origin[2]) );
-							num_nodes_added++;
-
-							if (num_nodes_added > 100)
-							{
-								trap->UpdateScreen();
-								num_nodes_added = 0;
-							}
-
-							Optimize_AddNode( nodes[node].origin, 0, objNum, 0 );	//add the node
-							nodes[node].objEntity = 1;
-						}
-
-						node = pathlist[pathsize - 1];	//pathlist is in reverse order
-						pathsize--;
-					}
-				}
-			}
-		}
-	}
-	else
-	{// bad_surfaces_only
-		trap->Print( va( "^4*** ^3AUTO-WAYPOINTER^4: ^5Final pass. Creating waypoints... Please wait...\n") );
-		strcpy( task_string3, va("^5Creating waypoints... Please wait...") );
-		trap->UpdateScreen();
-
-		total_calculations = number_of_nodes;
-		calculations_complete = 0;
-
-		aw_percent_complete = 0.0f;
-		aw_stage_start_time = clock();
-
-		for (i = 0; i < number_of_nodes; i++)
-		{
-			int				num_nodes_added = 0;
-			short int		objNum[3] = { 0, 0, 0 };
-
-			if (nodes[i].objEntity != 1 && nodes[i].objectNum[0] != 1)
-			{
-				strcpy( last_node_added_string, va("^5Adding waypoint ^3%i ^5at ^7%f %f %f^5.", optimized_number_of_nodes, nodes[i].origin[0], nodes[i].origin[1], nodes[i].origin[2]) );
-				num_nodes_added++;
-
-				if (num_nodes_added > 100)
-				{
-					trap->UpdateScreen();
-					num_nodes_added = 0;
-				}
-
-				Optimize_AddNode( nodes[i].origin, 0, objNum, 0 );	//add the node
-				nodes[i].objEntity = 1;
-			}
-		}
-
-		aw_percent_complete = 0.0f;
-		trap->UpdateScreen();
-	}
-
-	free(areas);
-
-	trap->Print( va( "^4*** ^3AUTO-WAYPOINTER^4: ^5Waypoint list reduced from ^3%i^5 waypoints to ^3%i^5 waypoints.\n", number_of_nodes, optimized_number_of_nodes) );
-
-	// Work out the best scatter distance to use for this map size...
-	if (map_size > 96000)
-	{
-		waypoint_scatter_distance *= 5;
-	}
-	else if (map_size > 32768)
-	{
-		waypoint_scatter_distance *= 4;
-	}
-	else if (map_size > 24000)
-	{
-		waypoint_scatter_distance *= 3;
-	}
-	else if (map_size > 20000)
-	{
-		waypoint_scatter_distance *= 2;
-	}
-	else if (map_size > 16550)
-	{
-		waypoint_scatter_distance *= 1.5;
-	}
-	else if (map_size > 8192)
-	{
-		waypoint_scatter_distance *= 1.12;
-	}
-
-	number_of_nodes = 0;
-
-	// Copy over the new list!
-	memcpy(nodes, optimized_nodes, (sizeof(node_t)*MAX_NODES)+1);
-	number_of_nodes = optimized_number_of_nodes;
-
-	/*for (i = 0; i < optimized_number_of_nodes; i++)
-	{
-		VectorCopy(optimized_nodes[i].origin, nodes[number_of_nodes].origin);
-		optimized_nodes[i].enodenum = 0;
-		number_of_nodes++;
-	}*/
-
-	aw_num_nodes = number_of_nodes;
-
-	// Save the new list...
-	AIMOD_NODES_SaveNodes_Autowaypointed();
-
-	aw_percent_complete = 0.0f;
-	trap->UpdateScreen();
-
-#ifdef __COVER_SPOTS__
-	// Remake cover spots...
-	AIMOD_Generate_Cover_Spots(); // UQ1: Want to add these to JKA???
-#endif //__COVER_SPOTS__
-
-	aw_percent_complete = 0.0f;
-	trap->UpdateScreen();
-
-	AIMod_AutoWaypoint_Free_Memory();
-	AIMod_AutoWaypoint_Optimize_Free_Memory();
-
-	//trap->SendConsoleCommand( "set bot_wp_visconnect 1\n" );
-	//trap->SendConsoleCommand( "bot_wp_convert_awp\n" );
-
-	//trap->Cvar_Register( &mapname, "mapname", "", CVAR_SERVERINFO | CVAR_ROM );
-
-	//if (!IsPathDataTooLarge(mapname.string))
-	//{
-	//	optimize_again = qfalse;
-	//}
-	//else
-	//{
-	//	optimize_again = qtrue;
-	//}
-
-	trap->SendConsoleCommand( "!loadAWPnodes\n" );
-}
-
 extern int Q_TrueRand ( int low, int high );
 
 qboolean AIMod_AutoWaypoint_Cleaner_NodeHasLinkWithFewLinks ( int node )
@@ -8552,16 +7766,12 @@ int ASTAR_FindPathFast(int from, int to, int *pathlist, qboolean shorten)
 	memset(list, 0, (sizeof(char)* MAX_NODES));
 	memset(parent, 0, (sizeof(int)* MAX_NODES));
 
-	for (i = 0; i < gWPNum; i++)
 	{
-		float ht = 0;
-		gcost[i] = Distance(nodes[i].origin, nodes[to].origin);
-
-		// UQ1: Prefer flat...
-		ht = nodes[i].origin - nodes[to].origin;
-		if (ht < 0) ht *= -1.0f;
-		if (ht > STEPSIZE)
-			gcost[i] *= (ht / 17);
+//#pragma omp parallel for ordered schedule(dynamic)
+		for (i = 0; i < gWPNum; i++)
+		{
+			gcost[i] = Distance(nodes[i].origin, nodes[to].origin);
+		}
 	}
 
 	openlist[gWPNum + 1] = 0;
@@ -8779,25 +7989,6 @@ int ASTAR_FindPathFast(int from, int to, int *pathlist, qboolean shorten)
 	return (-1);											//return the number of nodes in the path, -1 if not found
 }
 
-vec3_t AWC_SPAWNPOINT;
-
-void AIMod_AWC_GetSpawnPoint_f( void ) 
-{
-	int			indexNum = 0;
-	int			argNum = trap->Cmd_Argc();
-
-	if ( argNum < 3 ) {
-		assert( 0 );
-		return;
-	}
-
-	AWC_SPAWNPOINT[0] = atof( CG_Argv( 1 ) );
-	AWC_SPAWNPOINT[1] = atof( CG_Argv( 2 ) );
-	AWC_SPAWNPOINT[2] = atof( CG_Argv( 3 ) );
-
-	trap->Print("AUTOWAYPOINTER: Recieved a spawnpoint from server at %f %f %f.\n", AWC_SPAWNPOINT[0], AWC_SPAWNPOINT[1], AWC_SPAWNPOINT[2]);
-}
-
 qboolean WP_CheckInSolid (vec3_t position)
 {
 	trace_t	trace;
@@ -8891,6 +8082,38 @@ qboolean Warzone_CheckBelowWaypoint( int wp )
 	return qtrue;
 }
 
+/*
+typedef enum {
+	ET_GENERAL,
+	ET_PLAYER,
+	ET_ITEM,
+	ET_MISSILE,
+	ET_SPECIAL,				// rww - force fields
+	ET_HOLOCRON,			// rww - holocron icon displays
+	ET_MOVER,
+	ET_BEAM,
+	ET_PORTAL,
+	ET_SPEAKER,
+	ET_PUSH_TRIGGER,
+	ET_TELEPORT_TRIGGER,
+	ET_INVISIBLE,
+	ET_NPC,					// ghoul2 player-like entity
+	ET_TEAM,
+	ET_BODY,
+	ET_TERRAIN,
+	ET_FX,
+	ET_MOVER_MARKER,
+	ET_SPAWNPOINT,
+	ET_TRIGGER_HURT,
+
+	ET_FREED,				// UQ1: Added to mark freed entities...
+
+	ET_EVENTS				// any of the EV_* events can be added freestanding
+							// by setting eType to ET_EVENTS + eventNum
+							// this avoids having to set eFlags and eventNum
+} entityType_t;
+*/
+
 qboolean Warzone_CheckRoutingFrom( int wp )
 {
 	int i;
@@ -8909,19 +8132,27 @@ qboolean Warzone_CheckRoutingFrom( int wp )
 
 		if (!cent) continue;
 
-		if (!(cent->currentState.eType == ET_ITEM
-			|| cent->currentState.eType == ET_HOLOCRON
-			|| cent->currentState.eType == ET_PORTAL
-			|| cent->currentState.eType == ET_PUSH_TRIGGER
-			|| cent->currentState.eType == ET_TELEPORT_TRIGGER
-			|| cent->currentState.eType == ET_NPC))
+#if 0
+		if (cent->currentState.eType != ET_ITEM
+			&& cent->currentState.eType != ET_HOLOCRON
+			&& cent->currentState.eType != ET_PORTAL
+			&& cent->currentState.eType != ET_PUSH_TRIGGER
+			&& cent->currentState.eType != ET_TELEPORT_TRIGGER
+			//&& cent->currentState.eType != ET_NPC
+			//&& cent->currentState.eType != ET_GENERAL
+			&& cent->currentState.eType != ET_MOVER_MARKER)
 		continue;
-		
-		//if (tests_completed > 10) break;
-		//if (tests_completed > 5 && Distance(cent->currentState.origin, nodes[goal].origin) > 128) continue;
-		//if (tests_completed > 3 && Distance(cent->currentState.origin, nodes[goal].origin) > 256) continue;
-		//if (tests_completed > 1 && Distance(cent->currentState.origin, nodes[goal].origin) > 512) continue;
+#else
+		if (cent->currentState.eType != ET_SPAWNPOINT)
+			continue;
+#endif
 
+		if ( cent->currentState.origin[0] == 0 && cent->currentState.origin[1] == 0 && cent->currentState.origin[2] == 0)
+			continue;
+
+		if (Distance(cent->currentState.origin, nodes[goal].origin) < 512)
+			continue; // Need something harder...
+		
 		wpCurrent = ClosestNodeTo(cent->currentState.origin, qfalse);
 		
 		if (wpCurrent)
@@ -8932,29 +8163,11 @@ qboolean Warzone_CheckRoutingFrom( int wp )
 
 			if (pathsize > 0)
 			{
-				return qtrue; // Found a route... This waypoint looks good to spawn NPCs at!
+				return qtrue; // Found a route... This waypoint looks good...
 			}
 		}
 
 		tests_completed++;
-	}
-
-	// Check for routing to a spawnpoint from a (spawn) waypoint...
-
-	if (num_items < 1 || Distance(nodes[goal].origin, AWC_SPAWNPOINT) > 256)
-	{// If the given spawnpoint is too close to us, it could be bad if we have bad waypoints (in solid, etc). Only use if we had nothing else...
-		wpCurrent = ClosestNodeTo(AWC_SPAWNPOINT, qfalse);
-
-		if (!wpCurrent) trap->Print("WAYPOINT REACHABILITY CHECK: Failed to find a waypoint for spawnpoint at %f %f %f!\n", AWC_SPAWNPOINT[0], AWC_SPAWNPOINT[1], AWC_SPAWNPOINT[2]);
-
-		memset(pathlist, -1, MAX_NODES);
-	
-		pathsize = ASTAR_FindPathFast(wpCurrent, goal, pathlist, qfalse);
-
-		if (pathsize > 0)
-		{
-			return qtrue; // Found a route... This waypoint looks good to spawn NPCs at!
-		}
 	}
 
 	return qfalse;

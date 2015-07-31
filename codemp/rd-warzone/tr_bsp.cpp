@@ -3127,15 +3127,15 @@ AIMOD_NODES_LoadNodes ( void )
 
 		if (numberNodes > 49170)
 		{// Increase distance between cubemap render positions...
-			wpDistance = 512.0;
+			wpDistance = 768.0;
 		}
 		else if (numberNodes > 32786)
 		{// Increase distance between cubemap render positions...
-			wpDistance = 384.0;
+			wpDistance = 512.0;
 		}
 		else if (numberNodes > 24576)
 		{// Increase distance between cubemap render positions...
-			wpDistance = 352.0;
+			wpDistance = 384.0;
 		}
 		else if (numberNodes > 16384)
 		{// Increase distance between cubemap render positions...
@@ -3245,12 +3245,13 @@ static void R_RenderAllCubemaps(void)
 		cubemapFormat = GL_RGBA16F;
 	}
 
+#pragma omp parallel for
 	for (i = 0; i < tr.numCubemaps; i++)
 	{
 		//tr.cubemaps[i] = R_CreateImage (va ("*cubeMap%d", i), NULL, CUBE_MAP_SIZE, CUBE_MAP_SIZE, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE | IMGFLAG_MIPMAP | IMGFLAG_CUBEMAP, cubemapFormat);
 		tr.cubemaps[i] = R_CreateImage (va ("*cubeMap%d", i), NULL, r_cubeMapSize->integer, r_cubeMapSize->integer, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE | IMGFLAG_MIPMAP | IMGFLAG_CUBEMAP, cubemapFormat);
 	}
-	
+
 	for (i = 0; i < tr.numCubemaps; i++)
 	{
 		for (j = 0; j < 6; j++)

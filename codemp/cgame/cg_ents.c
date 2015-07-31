@@ -3438,9 +3438,13 @@ Ghoul2 Insert End
 
 	case ET_FREED:
 	case ET_INVISIBLE:
+	case ET_TEAM:
 	case ET_PUSH_TRIGGER:
 	case ET_TELEPORT_TRIGGER:
 	case ET_TERRAIN:
+	case ET_MOVER_MARKER:
+	case ET_SPAWNPOINT:
+	case ET_TRIGGER_HURT:
 		break;
 	case ET_GENERAL:
 		CG_General( cent );
@@ -3475,12 +3479,8 @@ Ghoul2 Insert End
 	case ET_NPC: //An entity that wants to be able to use ghoul2 humanoid (and other) anims. Like a player, but not.
 		CG_G2Animated( cent );
 		break;
-	case ET_TEAM:
-		break;
 	case ET_BODY:
 		CG_General( cent );
-		break;
-	case ET_MOVER_MARKER:
 		break;
 	}
 }

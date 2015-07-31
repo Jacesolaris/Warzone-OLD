@@ -1280,6 +1280,8 @@ typedef enum {
 	ET_TERRAIN,
 	ET_FX,
 	ET_MOVER_MARKER,
+	ET_SPAWNPOINT,
+	ET_TRIGGER_HURT,
 
 
 	ET_FREED,				// UQ1: Added to mark freed entities...

@@ -282,6 +282,96 @@ void CG_ShowLifts ( void )
 }
 //[/AUTOWAYPOINT]
 
+void	Clcmd_EntityList_f (void) {
+	int			e;
+	centity_t		*check;
+
+	check = cg_entities;
+	for (e = 0; e < MAX_GENTITIES ; e++, check++) {
+		if ( !check || check->currentState.eType == ET_FREED ) {
+			continue;
+		}
+		if ( check->currentState.origin[0] == 0 && check->currentState.origin[1] == 0 && check->currentState.origin[2] == 0) {
+			continue;
+		}
+		trap->Print("%3i:", e);
+		switch ( check->currentState.eType ) {
+		case ET_GENERAL:
+			trap->Print("ET_GENERAL          ");
+			break;
+		case ET_PLAYER:
+			trap->Print("ET_PLAYER           ");
+			break;
+		case ET_ITEM:
+			trap->Print("ET_ITEM             ");
+			break;
+		case ET_MISSILE:
+			trap->Print("ET_MISSILE          ");
+			break;
+		case ET_SPECIAL:
+			trap->Print("ET_SPECIAL          ");
+			break;
+		case ET_HOLOCRON:
+			trap->Print("ET_HOLOCRON         ");
+			break;
+		case ET_MOVER:
+			trap->Print("ET_MOVER            ");
+			break;
+		case ET_BEAM:
+			trap->Print("ET_BEAM             ");
+			break;
+		case ET_PORTAL:
+			trap->Print("ET_PORTAL           ");
+			break;
+		case ET_SPEAKER:
+			trap->Print("ET_SPEAKER          ");
+			break;
+		case ET_PUSH_TRIGGER:
+			trap->Print("ET_PUSH_TRIGGER     ");
+			break;
+		case ET_TELEPORT_TRIGGER:
+			trap->Print("ET_TELEPORT_TRIGGER ");
+			break;
+		case ET_INVISIBLE:
+			trap->Print("ET_INVISIBLE        ");
+			break;
+		case ET_NPC:
+			trap->Print("ET_NPC              ");
+			break;
+		case ET_TEAM:
+			trap->Print("ET_TEAM             ");
+			break;
+		case ET_BODY:
+			trap->Print("ET_BODY             ");
+			break;
+		case ET_TERRAIN:
+			trap->Print("ET_TERRAIN          ");
+			break;
+		case ET_FX:
+			trap->Print("ET_FX               ");
+			break;
+		case ET_MOVER_MARKER:
+			trap->Print("ET_MOVER_MARKER     ");
+			break;
+		case ET_SPAWNPOINT:
+			trap->Print("ET_SPAWNPOINT       ");
+			break;
+		case ET_FREED:
+			trap->Print("ET_FREED            ");
+			break;
+		case ET_TRIGGER_HURT:
+			trap->Print("ET_TRIGGER_HURT     ");
+			break;
+		default:
+			trap->Print("%-3i                ", check->currentState.eType);
+			break;
+		}
+
+		trap->Print(" - origin %f %f %f.", check->currentState.origin[0], check->currentState.origin[1], check->currentState.origin[2]);
+		trap->Print("\n");
+	}
+}
+
 typedef struct consoleCommand_s {
 	const char	*cmd;
 	void		(*func)(void);
@@ -306,6 +396,7 @@ static consoleCommand_t	commands[] = {
 	{ "awp",						AIMod_AutoWaypoint },
 	{ "awp_badheight",				AIMod_MarkBadHeight },
 	{ "briefing",					CG_SiegeBriefing_f },
+	{ "cg_entitylist",				Clcmd_EntityList_f },
 	{ "clientlist",					CG_ClientList_f },
 	{ "forcenext",					CG_NextForcePower_f },
 	{ "forceprev",					CG_PrevForcePower_f },

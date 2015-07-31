@@ -46,6 +46,13 @@ void SP_info_player_duel( gentity_t *ent )
 	if ( i ) {
 		ent->flags |= FL_NO_HUMANS;
 	}
+
+	ent->s.eType = ET_SPAWNPOINT;
+
+	if (ent->noWaypointTime == 0)
+	{
+		trap->LinkEntity((sharedEntity_t*)ent);
+	}
 }
 
 /*QUAKED info_player_duel1 (1 0 1) (-16 -16 -24) (16 16 32) initial
@@ -65,6 +72,13 @@ void SP_info_player_duel1( gentity_t *ent )
 	G_SpawnInt( "nohumans", "0", &i );
 	if ( i ) {
 		ent->flags |= FL_NO_HUMANS;
+	}
+
+	ent->s.eType = ET_SPAWNPOINT;
+
+	if (ent->noWaypointTime == 0)
+	{
+		trap->LinkEntity((sharedEntity_t*)ent);
 	}
 }
 
@@ -86,6 +100,13 @@ void SP_info_player_duel2( gentity_t *ent )
 	if ( i ) {
 		ent->flags |= FL_NO_HUMANS;
 	}
+
+	ent->s.eType = ET_SPAWNPOINT;
+
+	if (ent->noWaypointTime == 0)
+	{
+		trap->LinkEntity((sharedEntity_t*)ent);
+	}
 }
 
 /*QUAKED info_player_deathmatch (1 0 1) (-16 -16 -24) (16 16 32) initial
@@ -105,6 +126,13 @@ void SP_info_player_deathmatch( gentity_t *ent ) {
 	G_SpawnInt( "nohumans", "0", &i );
 	if ( i ) {
 		ent->flags |= FL_NO_HUMANS;
+	}
+
+	ent->s.eType = ET_SPAWNPOINT;
+
+	if (ent->noWaypointTime == 0)
+	{
+		trap->LinkEntity((sharedEntity_t*)ent);
 	}
 }
 
@@ -194,6 +222,13 @@ void SP_info_player_siegeteam1(gentity_t *ent) {
 	}
 
 	ent->use = SiegePointUse;
+
+	ent->s.eType = ET_SPAWNPOINT;
+
+	if (ent->noWaypointTime == 0)
+	{
+		trap->LinkEntity((sharedEntity_t*)ent);
+	}
 }
 
 /*QUAKED info_player_siegeteam2 (0 0 1) (-16 -16 -24) (16 16 32)
@@ -230,6 +265,13 @@ void SP_info_player_siegeteam2(gentity_t *ent) {
 	}
 
 	ent->use = SiegePointUse;
+
+	ent->s.eType = ET_SPAWNPOINT;
+
+	if (ent->noWaypointTime == 0)
+	{
+		trap->LinkEntity((sharedEntity_t*)ent);
+	}
 }
 
 /*QUAKED info_player_intermission (1 0 1) (-16 -16 -24) (16 16 32) RED BLUE
@@ -3642,27 +3684,6 @@ void ClientSpawn(gentity_t *ent) {
 	// ranging doesn't count this client
 	if ( client->sess.sessionTeam == TEAM_SPECTATOR ) {
 			spawnPoint = SelectSpectatorSpawnPoint (spawn_origin, spawn_angles);
-			
-			if (ent->client->pers.localClient)
-			{
-				// UQ1: For AUTO-WAYPOINTER - If local client, also send dm spawn origin for use by /AWC...
-				gentity_t *AW_SPAWN = NULL;
-				AW_SPAWN = G_Find(AW_SPAWN, FOFS(classname), "info_player_deathmatch");
-				if (!AW_SPAWN) AW_SPAWN = G_Find(AW_SPAWN, FOFS(classname), "info_player_start");
-				if (!AW_SPAWN) AW_SPAWN = G_Find(AW_SPAWN, FOFS(classname), "info_player_start_blue");
-				if (!AW_SPAWN) AW_SPAWN = G_Find(AW_SPAWN, FOFS(classname), "info_player_start_red");
-				if (!AW_SPAWN) AW_SPAWN = G_Find(AW_SPAWN, FOFS(classname), "info_player_siegeteam1");
-				if (!AW_SPAWN) AW_SPAWN = G_Find(AW_SPAWN, FOFS(classname), "info_player_siegeteam2");
-				if (!AW_SPAWN) AW_SPAWN = G_Find(AW_SPAWN, FOFS(classname), "info_player_duel");
-				if (!AW_SPAWN) AW_SPAWN = G_Find(AW_SPAWN, FOFS(classname), "info_player_duel1");
-				if (!AW_SPAWN) AW_SPAWN = G_Find(AW_SPAWN, FOFS(classname), "info_player_duel2");
-				if (!AW_SPAWN) AW_SPAWN = G_Find(AW_SPAWN, FOFS(classname), "info_jedimaster_start");
-				if (!AW_SPAWN) AW_SPAWN = G_Find(AW_SPAWN, FOFS(classname), "item_botroam");
-				if (!AW_SPAWN) AW_SPAWN = G_Find(AW_SPAWN, FOFS(classname), "info_camp");
-				if (!AW_SPAWN) AW_SPAWN = G_Find(AW_SPAWN, FOFS(classname), "info_camp");
-
-				if (AW_SPAWN) trap->SendServerCommand( client - level.clients, va("awps %f %f %f", AW_SPAWN->s.origin[0], AW_SPAWN->s.origin[1], AW_SPAWN->s.origin[2]) );
-			}
 	} else if (level.gametype == GT_CTF || level.gametype == GT_CTY) {
 		// all base oriented team games use the CTF spawn points
 		spawnPoint = SelectCTFSpawnPoint (
