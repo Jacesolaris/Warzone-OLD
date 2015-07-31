@@ -1188,6 +1188,7 @@ void CM_CalcExtents(const vec3_t start, const vec3_t end, const traceWork_t *tw,
 
 //======================================================================
 
+tthread::fast_mutex trace_lock;
 
 /*
 ==================
@@ -1197,7 +1198,8 @@ CM_Trace
 void CM_Trace( trace_t *trace, const vec3_t start, const vec3_t end,
 						  const vec3_t mins, const vec3_t maxs,
 						  clipHandle_t model, const vec3_t origin, int brushmask, int capsule, sphere_t *sphere ) {
-tthread::fast_mutex::fast_mutex().lock();
+trace_lock.lock();
+							  
 	int			i;
 	traceWork_t	tw;
 	vec3_t		offset;
@@ -1217,7 +1219,7 @@ tthread::fast_mutex::fast_mutex().lock();
 	VectorCopy(origin, tw.modelOrigin);
 
 	if (!local->numNodes) {
-tthread::fast_mutex::fast_mutex().unlock();
+trace_lock.unlock();
 		return;	// map not loaded, shouldn't happen
 	}
 
@@ -1437,7 +1439,7 @@ tthread::fast_mutex::fast_mutex().unlock();
                trace->fraction == 1.0 ||
                VectorLengthSquared(trace->plane.normal) > 0.9999);
 
-tthread::fast_mutex::fast_mutex().unlock();
+trace_lock.unlock();
 }
 
 /*

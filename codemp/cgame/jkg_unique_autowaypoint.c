@@ -2456,34 +2456,31 @@ AIMOD_MAPPING_CreateNodeLinks ( int node )
 				int		visCheck = 0;
 				vec3_t	this_org;
 
-				if (DO_FAST_LINK)
-				{// It's in range... Just accept the linkage... Could easy be bad, but oh well...
-#pragma omp critical (__CREATE_NODE_LINKS__)
-					{
-						nodes[node].links[linknum].targetNode = loop;
-						nodes[node].links[linknum].cost = VectorDistance(nodes[loop].origin, nodes[node].origin) + (VerticalDistance(nodes[loop].origin, nodes[node].origin)*VerticalDistance(nodes[loop].origin, nodes[node].origin));
-						nodes[node].links[linknum].flags = 0;
-
-						if (HeightDistance(nodes[node].origin, nodes[loop].origin) > VerticalDistance(nodes[node].origin, nodes[loop].origin))
-						{// Force jump...
-							nodes[node].links[linknum].flags |= NODE_JUMP;
-						}
-						else if (AIMod_Check_Slope_Between(tmp, this_org))
-						{// No need for jump...
-
-						}
-						else if (AWP_Jump( tmp, this_org ))
-						{// Can jump there!
-							nodes[node].links[linknum].flags |= NODE_JUMP;
-						}
-
-						linknum++;
-					}
-					continue;
-				}
-
 				VectorCopy(nodes[loop].origin, this_org);
 				this_org[2]+=8;
+
+				if (DO_FAST_LINK)
+				{// It's in range... Just accept the linkage... Could easy be bad, but oh well...
+					nodes[node].links[linknum].targetNode = loop;
+					nodes[node].links[linknum].cost = VectorDistance(nodes[loop].origin, nodes[node].origin) + (VerticalDistance(nodes[loop].origin, nodes[node].origin)*VerticalDistance(nodes[loop].origin, nodes[node].origin));
+					nodes[node].links[linknum].flags = 0;
+
+					if (HeightDistance(nodes[node].origin, nodes[loop].origin) > VerticalDistance(nodes[node].origin, nodes[loop].origin))
+					{// Force jump...
+						nodes[node].links[linknum].flags |= NODE_JUMP;
+					}
+					else if (AIMod_Check_Slope_Between(tmp, this_org))
+					{// No need for jump...
+
+					}
+					else if (AWP_Jump( tmp, this_org ))
+					{// Can jump there!
+						nodes[node].links[linknum].flags |= NODE_JUMP;
+					}
+
+					linknum++;
+					continue;
+				}
 
 //#pragma omp critical (__NODE_VISIBLE_CHECK__)
 				{
