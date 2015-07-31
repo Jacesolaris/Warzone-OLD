@@ -4,6 +4,9 @@
 
 #include "client/client.h" // hi i'm bad
 
+#include "../client/fast_mutex.h"
+#include "../client/tinythread.h"
+
 ////////////////////////////////////////////////
 //
 #ifdef TAGDEF	// itu?
@@ -152,23 +155,18 @@ StaticMem_t gNumberString[] = {
 
 qboolean gbMemFreeupOccured = qfalse;
 
-qboolean ZMALLOC_IN_USE = qfalse;
+tthread::fast_mutex zmalloc_lock;
 
 void *Z_Malloc(int iSize, memtag_t eTag, qboolean bZeroit /* = qfalse */, int iUnusedAlign /* = 4 */)
 {
+	zmalloc_lock.lock();
+
 	gbMemFreeupOccured = qfalse;
-
-	while (ZMALLOC_IN_USE)
-	{
-		Sleep(1);
-	}
-
-	ZMALLOC_IN_USE = qtrue;
 
 	if (iSize == 0)
 	{
 		zoneHeader_t *pMemory = (zoneHeader_t *) &gZeroMalloc;
-		ZMALLOC_IN_USE = qfalse;
+		zmalloc_lock.unlock();
 		return &pMemory[1];
 	}
 
@@ -242,7 +240,7 @@ void *Z_Malloc(int iSize, memtag_t eTag, qboolean bZeroit /* = qfalse */, int iU
 			Com_Printf(S_COLOR_RED"Z_Malloc(): Failed to alloc %d bytes (TAG_%s) !!!!!\n", iSize, psTagStrings[eTag]);
 			Z_Details_f();
 			Com_Error(ERR_FATAL,"(Repeat): Z_Malloc(): Failed to alloc %d bytes (TAG_%s) !!!!!\n", iSize, psTagStrings[eTag]);
-			ZMALLOC_IN_USE = qfalse;
+			zmalloc_lock.unlock();
 			return NULL;
 		}
 	}
@@ -282,7 +280,7 @@ void *Z_Malloc(int iSize, memtag_t eTag, qboolean bZeroit /* = qfalse */, int iU
 	Z_Validate();	// check for corruption
 
 	void *pvReturnMem = &pMemory[1];
-	ZMALLOC_IN_USE = qfalse;
+	zmalloc_lock.unlock();
 	return pvReturnMem;
 }
 
