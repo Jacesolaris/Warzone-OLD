@@ -630,7 +630,8 @@ typedef enum //# material_e
 } material_t;
 
 //rww - bot stuff that needs to be shared
-#define MAX_WPARRAY_SIZE 65536
+#define MAX_WPARRAY_SIZE 131072
+//#define MAX_WPARRAY_SIZE 65536
 //#define MAX_WPARRAY_SIZE 32000
 //#define MAX_WPARRAY_SIZE 4096
 #define MAX_NEIGHBOR_SIZE 32

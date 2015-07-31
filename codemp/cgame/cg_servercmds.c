@@ -1705,11 +1705,8 @@ int svcmdcmp( const void *a, const void *b ) {
 	return Q_stricmp( (const char *)a, ((serverCommand_t*)b)->cmd );
 }
 
-extern void AIMod_AWC_GetSpawnPoint_f( void );
-
 /* This array MUST be sorted correctly by alphabetical name field */
 static serverCommand_t	commands[] = {
-	{ "awps",				AIMod_AWC_GetSpawnPoint_f },
 	{ "chat",				CG_Chat_f },
 	{ "clientLevelShot",	CG_ClientLevelShot_f },
 	{ "cp",					CG_CenterPrint_f },

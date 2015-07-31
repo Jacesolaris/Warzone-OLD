@@ -3072,7 +3072,11 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, int flags )
 	R_LoadImage( name, &pic, &width, &height );
 
 	if ( pic == NULL ) {
-		if (StringContainsWord(name, "sky") 
+		if (name[0] == '*'
+			|| name[0] == '!'
+			|| name[0] == '$'
+			|| name[0] == '_'
+			|| StringContainsWord(name, "sky") 
 			|| StringContainsWord(name, "skies") 
 			|| StringContainsWord(name, "cloud") 
 			|| StringContainsWord(name, "glow")
@@ -3096,7 +3100,7 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, int flags )
 	image = R_CreateImage( name, pic, width, height, type, flags, GL_RGBA8 );
 	qglBindTexture(GL_TEXTURE_2D, image->texnum);
 
-	if (type != IMGTYPE_NORMAL && type != IMGTYPE_SPECULAR  && type != IMGTYPE_SUBSURFACE)
+	if (name[0] != '*' && name[0] != '!' && name[0] != '$' && name[0] != '_' && type != IMGTYPE_NORMAL && type != IMGTYPE_SPECULAR  && type != IMGTYPE_SUBSURFACE)
 	{
 		if (image && r_textureClean->integer)
 		{

@@ -1452,6 +1452,8 @@ void SP_trigger_hurt( gentity_t *self ) {
 		self->use = hurt_use;
 	}
 
+	self->s.eType = ET_TRIGGER_HURT;
+
 	// link in to the world if starting active
 	if ( ! (self->spawnflags & 1) ) {
 		trap->LinkEntity ((sharedEntity_t *)self);

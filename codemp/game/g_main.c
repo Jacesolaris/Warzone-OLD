@@ -458,6 +458,7 @@ void CreateSpawnpoints( void )
 						spawnpoint->classname = "team_CTF_bluespawn";
 						VectorCopy(gWPArray[i]->origin, spawnpoint->s.origin);
 						VectorCopy(blue_angles, spawnpoint->s.angles);
+						spawnpoint->noWaypointTime = 1; // Don't send auto-generated spawnpoints to client...
 						SP_info_player_deathmatch( spawnpoint );
 						//trap->Print("Created blue spawn at %f %f %f.\n", spawnpoint->s.origin[0], spawnpoint->s.origin[1], spawnpoint->s.origin[2]);
 						blue_count++;
@@ -471,6 +472,7 @@ void CreateSpawnpoints( void )
 						spawnpoint->classname = "team_CTF_redspawn";
 						VectorCopy(gWPArray[i]->origin, spawnpoint->s.origin);
 						VectorCopy(red_angles, spawnpoint->s.angles);
+						spawnpoint->noWaypointTime = 1; // Don't send auto-generated spawnpoints to client...
 						SP_info_player_deathmatch( spawnpoint );
 						//trap->Print("Created red spawn at %f %f %f.\n", spawnpoint->s.origin[0], spawnpoint->s.origin[1], spawnpoint->s.origin[2]);
 						red_count++;
@@ -556,6 +558,7 @@ void CreateSpawnpoints( void )
 					spawnpoint->classname = "info_player_deathmatch";
 					VectorCopy(gWPArray[i]->origin, spawnpoint->s.origin);
 					VectorCopy(blue_angles, spawnpoint->s.angles);
+					spawnpoint->noWaypointTime = 1; // Don't send auto-generated spawnpoints to client...
 					SP_info_player_deathmatch( spawnpoint );
 					count++;
 				}
@@ -568,6 +571,7 @@ void CreateSpawnpoints( void )
 					spawnpoint->classname = "info_player_deathmatch";
 					VectorCopy(gWPArray[i]->origin, spawnpoint->s.origin);
 					VectorCopy(red_angles, spawnpoint->s.angles);
+					spawnpoint->noWaypointTime = 1; // Don't send auto-generated spawnpoints to client...
 					SP_info_player_deathmatch( spawnpoint );
 					count++;
 				}
