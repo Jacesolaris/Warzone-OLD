@@ -1,33 +1,45 @@
-// Large black smoke effect, should be called about once every 100ms
+repeatDelay				200
 
 Particle
 {
-	count	4	5
-	life	800	1200
-	delay	0	120
+	flags				useAlpha
 
-	origin	4 -6 -6		4 6 6
-	vel	15 -12 -12		20 12 12
-	gravity	12	32
+	count				3 4
 
-	flags	useAlpha
+	life				1000
 
-	size
+	delay				0 120
+
+	origin				0 -6 -6 8 6 6
+
+	velocity			15 -12 -12 20 12 12
+
+	gravity				12 32
+
+	rgb
 	{
-		start 	4.0	10.0
-		end	12.0	24.0
-		flags	linear
+		start			0.4353 0.3765 0.2902 0.3412 0.3412 0.3412
 	}
 
 	alpha
 	{
-		start	0.6
-		end 	0.0
-		flags	linear
+		start			0
+		end				0.1 0.3
+		parm			2
+		flags			wave
 	}
 
-	shader
+	size
+	{
+		start			4 10
+		end				12 24
+		flags			linear
+	}
+
+	shaders
 	[
-		gfx/effects/black_smoke
+		gfx/atmospheric/cloud1_256
+		gfx/atmospheric/cloud3_256
+		gfx/atmospheric/cloud5_256
 	]
 }

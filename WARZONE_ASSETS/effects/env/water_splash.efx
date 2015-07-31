@@ -1,6 +1,56 @@
+repeatDelay				200
+
+Particle
+{
+	name				Droplets
+
+	flags				useAlpha
+
+	count				0 0.65
+
+	life				500 600
+
+	delay				0 200
+
+	cullrange			400
+
+	velocity			60 -90 -90 100 90 90
+
+	acceleration		-15 0 0
+
+	gravity				-150 -250
+
+	rgb
+	{
+		start			0.5608 0.6863 0.651
+	}
+
+	alpha
+	{
+		start			0.25
+		end				0
+		parm			50 60
+		flags			nonlinear
+	}
+
+	size
+	{
+		start			1 1.5
+		end				0
+		parm			1 3
+	}
+
+	shaders
+	[
+		gfx/effects/bubble
+	]
+}
+
 OrientedParticle
 {
-	count				0 0.54
+	name				Ripples
+
+	count				1 2
 
 	life				800 1600
 
@@ -12,11 +62,12 @@ OrientedParticle
 
 	rgb
 	{
-		start			0.1255 0.1255 0.1255 0.1255 0.1882 0.1882
+		start			0.6 0.6392 0.6824 0.502 0.502 0.502
 	}
 
 	alpha
 	{
+		start			0.5 0.8
 		end				0
 		parm			50 60
 		flags			linear nonlinear
@@ -25,23 +76,85 @@ OrientedParticle
 	size
 	{
 		start			5 16
-		end				64 96
+		end				100 150
 		flags			linear
 	}
 
 	shaders
 	[
-		wake
+		gfx/water/screen_ripple
+		gfx/water/screen_ripple_glow
+		gfx/water/screen_ripple2
+		gfx/water/screen_ripple2_glow
+		gfx/water/screen_ripple3
+		gfx/water/screen_ripple3_glow
+		gfx/water/screen_ripple4
+		gfx/water/screen_ripple4_glow
+		gfx/water/screen_ripple5
+		gfx/water/screen_ripple5_glow
+		gfx/water/screen_ripples
+		gfx/water/screen_ripples
+		gfx/water/screen_ripples_glow
+		gfx/water/screen_ripples_glow
+	]
+}
+
+Particle
+{
+	name				Bubbles
+
+	flags				useAlpha
+
+	count				0.5 0.65
+
+	life				600
+
+	delay				0 200
+
+	origin				0 -8 -8 0 8 8
+
+	rotationDelta		-4 4
+
+	velocity			-180 -40 -40 -220 40 40
+
+	acceleration		-15 0 0
+
+	gravity				450 500
+
+	alpha
+	{
+		start			0.4 0.5
+		end				0
+		parm			80
+		flags			nonlinear
+	}
+
+	size
+	{
+		start			20 30
+	}
+
+	shaders
+	[
+		gfx/water/alpha_bubbles
+		gfx/water/alpha_bubbles2
+		gfx/water/alpha_bubbles3
+		gfx/water/overlay_bubbles
+		gfx/water/overlay_bubbles2
+		gfx/water/overlay_bubbles3
+		gfx/water/overlay_bubbles4
+		gfx/water/overlay_bubbles5
+		gfx/water/overlay_bubbles6
 	]
 }
 
 OrientedParticle
 {
-	name				Copy of Unnamed OrientedParticl
+	name				DropsRipples
 
 	spawnFlags			orgOnCylinder
 
-	count				1 2
+	count				3 4
 
 	life				400 500
 
@@ -76,6 +189,17 @@ OrientedParticle
 
 	shaders
 	[
-		wake
+		gfx/water/screen_ripple
+		gfx/water/screen_ripple_glow
+		gfx/water/screen_ripple2
+		gfx/water/screen_ripple2_glow
+		gfx/water/screen_ripple3
+		gfx/water/screen_ripple3_glow
+		gfx/water/screen_ripple4
+		gfx/water/screen_ripple4_glow
+		gfx/water/screen_ripple5
+		gfx/water/screen_ripple5_glow
+		gfx/water/screen_ripples
+		gfx/water/screen_ripples_glow
 	]
 }

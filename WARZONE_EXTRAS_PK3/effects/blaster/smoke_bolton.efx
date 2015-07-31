@@ -1,9 +1,0 @@
-FxRunner
-{
-	name				Like in SP...
-
-	playfx
-	[
-		saber/limb_bolton
-	]
-}

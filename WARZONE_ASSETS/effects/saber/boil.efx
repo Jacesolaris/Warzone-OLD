@@ -1,10 +1,14 @@
+repeatDelay				142
+
 Particle
 {
+	name				Steam
+
 	spawnFlags			evenDistribution
 
-	count				15 18
+	count				2 3
 
-	life				400 500
+	life				700 800
 
 	delay				0 600
 
@@ -14,7 +18,7 @@ Particle
 
 	rotationDelta		-4 4
 
-	velocity			50 -12 -12 60 12 12
+	velocity			20 -12 -12 30 12 12
 
 	acceleration		-10 80 -10 10 110 10
 
@@ -36,12 +40,16 @@ Particle
 
 	shaders
 	[
-		gfx/misc/steam
+		gfx/atmospheric/cloud7_add_256
+		gfx/atmospheric/cloud8_add_256
+		gfx/atmospheric/cloud9_add_256
 	]
 }
 
 Sound
 {
+	name				Boiling
+
 	sounds
 	[
 		sound/weapons/saber/boiling.wav
@@ -50,29 +58,27 @@ Sound
 
 Particle
 {
+	name				Bubbles
+
 	flags				useAlpha
 
-	spawnFlags			orgOnCylinder axisFromSphere evenDistribution
+	spawnFlags			evenDistribution
 
-	count				30
+	count				0.6 1.5
 
-	life				200 300
+	life				600 800
 
 	delay				0 400
 
-	origin				-1 0 0
-
-	radius				1 8
-
-	height				0
+	origin				-5 -4 -4 -6 4 4
 
 	rotation			-10 10
 
 	rotationDelta		-4 4
 
-	velocity			5 0 0 -5 0 0
+	velocity			5 -5 -5 -5 5 5
 
-	gravity				14 24
+	gravity				8 10
 
 	alpha
 	{
@@ -83,24 +89,34 @@ Particle
 
 	size
 	{
-		start			0.1
-		end				1 3.5
+		start			2 3
+		end				16 18
 		flags			linear
 	}
 
 	shaders
 	[
-		gfx/effects/bubble
+		gfx/water/alpha_bubbles
+		gfx/water/alpha_bubbles2
+		gfx/water/alpha_bubbles3
+		gfx/water/overlay_bubbles
+		gfx/water/overlay_bubbles2
+		gfx/water/overlay_bubbles3
+		gfx/water/overlay_bubbles4
+		gfx/water/overlay_bubbles5
+		gfx/water/overlay_bubbles6
 	]
 }
 
 OrientedParticle
 {
+	name				Ripples
+
 	spawnFlags			orgOnCylinder evenDistribution
 
-	count				12 16
+	count				0.6 2
 
-	life				100 300
+	life				700
 
 	delay				0 600
 
@@ -126,94 +142,27 @@ OrientedParticle
 
 	shaders
 	[
-		wake
+		gfx/water/screen_ripple
+		gfx/water/screen_ripple_glow
+		gfx/water/screen_ripple2
+		gfx/water/screen_ripple2_glow
+		gfx/water/screen_ripple3
+		gfx/water/screen_ripple3_glow
+		gfx/water/screen_ripple4
+		gfx/water/screen_ripple4_glow
+		gfx/water/screen_ripple5
+		gfx/water/screen_ripple5_glow
+		gfx/water/screen_ripples
+		gfx/water/screen_ripples_glow
 	]
 }
 
-Particle
+FxRunner
 {
-	name				Copy of Unnamed Particle 2
+	name				Generic saberflare
 
-	flags				useAlpha
-
-	spawnFlags			orgOnCylinder axisFromSphere
-
-	count				5 10
-
-	life				250 400
-
-	delay				400 600
-
-	origin				-1 0 0
-
-	radius				1 8
-
-	rotation			-10 10
-
-	rotationDelta		-4 4
-
-	velocity			5 0 0 -5 0 0
-
-	gravity				14 24
-
-	alpha
-	{
-		end				0
-		parm			50 60
-		flags			nonlinear
-	}
-
-	size
-	{
-		start			0.1
-		end				1.5 4
-		flags			linear
-	}
-
-	shaders
+	playfx
 	[
-		gfx/effects/bubble
-	]
-}
-
-Particle
-{
-	name				Copy of Unnamed Particle 0
-
-	count				3 4
-
-	life				500 700
-
-	delay				600 700
-
-	origin				0 -6 -6 0 6 6
-
-	rotation			0 360
-
-	rotationDelta		-4 4
-
-	velocity			20 -12 -12 30 12 12
-
-	acceleration		-10 20 -10 10 30 10
-
-	gravity				12 24
-
-	alpha
-	{
-		start			0.4 0.6
-		end				0
-		flags			linear
-	}
-
-	size
-	{
-		start			3 4
-		end				10 24
-		flags			linear
-	}
-
-	shaders
-	[
-		gfx/misc/steam
+		saber/saber_friction
 	]
 }

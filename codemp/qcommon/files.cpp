@@ -1601,13 +1601,13 @@ long FS_FOpenFileRead( const char *filename, fileHandle_t *file, qboolean unique
 				}
 
 	#ifndef DEDICATED
-	#ifndef FINAL_BUILD
+	/*#ifndef FINAL_BUILD
 				// Check for unprecached files when in game but not in the menus
 				if((cls.state == CA_ACTIVE) && !(Key_GetCatcher( ) & KEYCATCH_UI))
 				{
 					Com_Printf(S_COLOR_YELLOW "WARNING: File %s not precached\n", filename);
 				}
-	#endif
+	#endif*/
 	#endif // dedicated
 				//FS_IN_USE = qfalse;
 				tthread::fast_mutex::fast_mutex().unlock();

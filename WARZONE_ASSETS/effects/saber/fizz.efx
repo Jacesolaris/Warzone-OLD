@@ -1,10 +1,12 @@
-repeatDelay				300
+repeatDelay				114
 
 Particle
 {
+	name				Steam
+
 	spawnFlags			evenDistribution
 
-	count				4 8
+	count				2 3
 
 	life				900 1000
 
@@ -33,12 +35,16 @@ Particle
 
 	shaders
 	[
-		gfx/misc/steam
+		gfx/atmospheric/cloud7_add_256
+		gfx/atmospheric/cloud8_add_256
+		gfx/atmospheric/cloud9_add_256
 	]
 }
 
 Sound
 {
+	name				Fizz
+
 	sounds
 	[
 		sound/weapons/saber/rainfizz1.wav
@@ -47,67 +53,12 @@ Sound
 	]
 }
 
-Particle
+FxRunner
 {
-	name				Unnamed Particle 1
+	name				Generic saberflare
 
-	flags				useAlpha
-
-	life				90 100
-
-	rotation			0 360
-
-	alpha
-	{
-		start			0.3 0.4
-		end				0.2
-		flags			linear
-	}
-
-	size
-	{
-		start			4 7
-		end				1 2
-		flags			linear
-	}
-
-	shaders
+	playfx
 	[
-		gfx/effects/whiteFlare
-	]
-}
-
-Particle
-{
-	name				Particle 0
-
-	flags				useAlpha
-
-	spawnFlags			rgbComponentInterpolation
-
-	count				3 4
-
-	life				50 65
-
-	delay				0 45
-
-	rotation			0 360
-
-	alpha
-	{
-		start			0.5 0.75
-		end				0.6
-		flags			linear
-	}
-
-	size
-	{
-		start			2 5
-		flags			linear
-	}
-
-	shaders
-	[
-		gfx/effects/flare1
+		saber/saber_friction
 	]
 }

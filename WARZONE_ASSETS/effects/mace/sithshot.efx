@@ -19,7 +19,7 @@ Tail
 {
 	flags				usePhysics
 
-	life				5000
+	life				500
 
 	origin				-100 0 0
 
@@ -55,7 +55,7 @@ Tail
 
 	flags				usePhysics
 
-	life				5000
+	life				500
 
 	origin				-100 0 0
 
