@@ -1506,6 +1506,238 @@ void CG_RegisterWeapon( int weaponNum) {
 		cgs.media.lightningFlash = trap->R_RegisterShader("gfx/misc/lightningFlash");
 		break;
 
+	case WP_SPOTING_BLASTER:
+		weaponInfo->selectSound = trap->S_RegisterSound("sound/weapons/blaster/select.wav");
+		weaponInfo->flashSound[0] = trap->S_RegisterSound("sound/weapons/blasters/e11b_1.mp3");
+		weaponInfo->flashSound[1] = trap->S_RegisterSound("sound/weapons/blasters/e11b_2.mp3");
+		weaponInfo->flashSound[2] = trap->S_RegisterSound("sound/weapons/blasters/e11b_3.mp3");
+		weaponInfo->flashSound[3] = trap->S_RegisterSound("sound/weapons/blasters/e11b_4.mp3");
+		weaponInfo->firingSound = NULL_SOUND;
+		weaponInfo->chargeSound = NULL_SOUND;
+		weaponInfo->muzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash2_Red_medium");
+		weaponInfo->missileModel = NULL_HANDLE;
+		weaponInfo->missileSound = NULL_SOUND;
+		weaponInfo->missileDlight = 0;
+		weaponInfo->missileHitSound = NULL_SOUND;
+		weaponInfo->missileTrailFunc = FX_WeaponProjectileThink;
+		weaponInfo->powerupShotRenderfx = NULL_FX;
+		weaponInfo->altFlashSound[0] = trap->S_RegisterSound("sound/weapons/blasters/e11b_1.mp3");
+		weaponInfo->altFlashSound[1] = trap->S_RegisterSound("sound/weapons/blasters/e11b_2.mp3");
+		weaponInfo->altFlashSound[2] = trap->S_RegisterSound("sound/weapons/blasters/e11b_3.mp3");
+		weaponInfo->altFlashSound[3] = trap->S_RegisterSound("sound/weapons/blasters/e11b_4.mp3");
+		weaponInfo->altFiringSound = NULL_SOUND;
+		weaponInfo->altChargeSound = NULL_SOUND;
+		weaponInfo->altMuzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash2_Red_medium");
+		weaponInfo->altMissileModel = NULL_HANDLE;
+		weaponInfo->altMissileSound = NULL_SOUND;
+		weaponInfo->altMissileDlight = 0;
+		weaponInfo->altMissileHitSound = NULL_SOUND;
+		weaponInfo->altMissileTrailFunc = FX_WeaponAltProjectileThink;//FX_WeaponProjectileThink;
+
+		weaponInfo->missileRenderfx = trap->FX_RegisterEffect("blasters/shot_red_small");
+		weaponInfo->altMissileRenderfx = trap->FX_RegisterEffect("blasters/shot_red_small");
+
+		weaponInfo->fleshImpactEffect = trap->FX_RegisterEffect("orginal_weapon_efx/blaster/flesh_impact");
+		weaponInfo->altFleshImpactEffect = trap->FX_RegisterEffect("orginal_weapon_efx/blaster/flesh_impact");
+		weaponInfo->missileWallImpactfx = trap->FX_RegisterEffect("orginal_weapon_efx/blaster/wall_impact");
+		weaponInfo->altMissileWallImpactfx = trap->FX_RegisterEffect("orginal_weapon_efx/blaster/wall_impact");
+
+
+		weaponInfo->EnhancedFX_fleshImpact = trap->FX_RegisterEffect("blasters/red_flesh_impact");
+		weaponInfo->EnhancedFX_altfleshImpact = trap->FX_RegisterEffect("blasters/red_flesh_impact");
+		weaponInfo->EnhancedFX_missileWallImpactfx = trap->FX_RegisterEffect("weapons/blaster_impact_red_medium_fire");
+		weaponInfo->EnhancedFX_altmissileWallImpactfx = trap->FX_RegisterEffect("weapons/blaster_impact_red_medium_fire");
+
+		trap->FX_RegisterEffect("blasters/red_deflect");
+
+		cgs.effects.blasterDroidImpactEffect = trap->FX_RegisterEffect("blaster/droid_impact");
+		break;
+
+	case WP_A200_ACP_BATTLERIFLE:
+		weaponInfo->selectSound = trap->S_RegisterSound("sound/weapons/blaster/select.wav");
+		weaponInfo->flashSound[0] = trap->S_RegisterSound("sound/weapons/blasters/arraygun1.mp3");
+		weaponInfo->flashSound[1] = trap->S_RegisterSound("sound/weapons/blasters/arraygun2.mp3");
+		weaponInfo->flashSound[2] = trap->S_RegisterSound("sound/weapons/blasters/arraygun3.mp3");
+		weaponInfo->flashSound[3] = trap->S_RegisterSound("sound/weapons/blasters/arraygun4.mp3");
+		weaponInfo->firingSound = NULL_SOUND;
+		weaponInfo->chargeSound = NULL_SOUND;
+		weaponInfo->muzzleEffect = trap->FX_RegisterEffect("Slugthrowers/muzzleflash_extrasmoke");
+		weaponInfo->missileModel = NULL_HANDLE;
+		weaponInfo->missileSound = NULL_SOUND;
+		weaponInfo->missileDlight = 0;
+		weaponInfo->missileHitSound = NULL_SOUND;
+		weaponInfo->missileTrailFunc = FX_WeaponProjectileThink;
+		weaponInfo->powerupShotRenderfx = NULL_FX;
+		weaponInfo->altFlashSound[0] = trap->S_RegisterSound("sound/weapons/blasters/arraygun1.mp3");
+		weaponInfo->altFlashSound[1] = trap->S_RegisterSound("sound/weapons/blasters/arraygun2.mp3");
+		weaponInfo->altFlashSound[2] = trap->S_RegisterSound("sound/weapons/blasters/arraygun3.mp3");
+		weaponInfo->altFlashSound[3] = trap->S_RegisterSound("sound/weapons/blasters/arraygun4.mp3");
+		weaponInfo->altFiringSound = NULL_SOUND;
+		weaponInfo->altChargeSound = NULL_SOUND;
+		weaponInfo->altMuzzleEffect = trap->FX_RegisterEffect("Slugthrowers/muzzleflash_extrasmoke");
+		weaponInfo->altMissileModel = NULL_HANDLE;
+		weaponInfo->altMissileSound = NULL_SOUND;
+		weaponInfo->altMissileDlight = 0;
+		weaponInfo->altMissileHitSound = NULL_SOUND;
+		weaponInfo->altMissileTrailFunc = FX_WeaponAltProjectileThink;//FX_WeaponProjectileThink;
+
+		weaponInfo->missileRenderfx = trap->FX_RegisterEffect("Slugthrowers/acp_shot_small");
+		weaponInfo->altMissileRenderfx = trap->FX_RegisterEffect("Slugthrowers/acp_shot_small");
+
+		weaponInfo->fleshImpactEffect = trap->FX_RegisterEffect("orginal_weapon_efx/blaster/flesh_impact");
+		weaponInfo->altFleshImpactEffect = trap->FX_RegisterEffect("orginal_weapon_efx/blaster/flesh_impact");
+		weaponInfo->missileWallImpactfx = trap->FX_RegisterEffect("orginal_weapon_efx/blaster/wall_impact");
+		weaponInfo->altMissileWallImpactfx = trap->FX_RegisterEffect("orginal_weapon_efx/blaster/wall_impact");
+
+
+		weaponInfo->EnhancedFX_fleshImpact = trap->FX_RegisterEffect("Slugthrowers/acp_flesh_impact");
+		weaponInfo->EnhancedFX_altfleshImpact = trap->FX_RegisterEffect("Slugthrowers/acp_flesh_impact");
+		weaponInfo->EnhancedFX_missileWallImpactfx = trap->FX_RegisterEffect("Slugthrowers/acp_impactsmall");
+		weaponInfo->EnhancedFX_altmissileWallImpactfx = trap->FX_RegisterEffect("Slugthrowers/acp_impactsmall");
+		//"weapons / laser_red"
+		trap->FX_RegisterEffect("blasters/red_deflect");
+
+		cgs.effects.blasterDroidImpactEffect = trap->FX_RegisterEffect("blaster/droid_impact");
+		break;
+
+	case WP_A200_ACP_PISTOL:
+		weaponInfo->selectSound = trap->S_RegisterSound("sound/weapons/blaster/select.wav");
+		weaponInfo->flashSound[0] = trap->S_RegisterSound("sound/weapons/slugthrowers/acp_pistol1.mp3");
+		weaponInfo->flashSound[1] = trap->S_RegisterSound("sound/weapons/slugthrowers/acp_pistol1.mp3");
+		weaponInfo->flashSound[2] = trap->S_RegisterSound("sound/weapons/slugthrowers/acp_pistol1.mp3");
+		weaponInfo->flashSound[3] = trap->S_RegisterSound("sound/weapons/slugthrowers/acp_pistol1.mp3");
+		weaponInfo->firingSound = NULL_SOUND;
+		weaponInfo->chargeSound = NULL_SOUND;
+		weaponInfo->muzzleEffect = trap->FX_RegisterEffect("slugthrowers/muzzleflash");
+		weaponInfo->missileModel = NULL_HANDLE;
+		weaponInfo->missileSound = NULL_SOUND;
+		weaponInfo->missileDlight = 0;
+		weaponInfo->missileHitSound = NULL_SOUND;
+		weaponInfo->missileTrailFunc = FX_WeaponProjectileThink;
+		weaponInfo->powerupShotRenderfx = NULL_FX;
+		weaponInfo->altFlashSound[0] = trap->S_RegisterSound("sound/weapons/slugthrowers/acp_pistol1.mp3");
+		weaponInfo->altFlashSound[1] = trap->S_RegisterSound("sound/weapons/slugthrowers/acp_pistol1.mp3");
+		weaponInfo->altFlashSound[2] = trap->S_RegisterSound("sound/weapons/slugthrowers/acp_pistol1.mp3");
+		weaponInfo->altFlashSound[3] = trap->S_RegisterSound("sound/weapons/slugthrowers/acp_pistol1.mp3");
+		weaponInfo->altFiringSound = NULL_SOUND;
+		weaponInfo->altChargeSound = NULL_SOUND;
+		weaponInfo->altMuzzleEffect = trap->FX_RegisterEffect("slugthrowers/muzzleflash");
+		weaponInfo->altMissileModel = NULL_HANDLE;
+		weaponInfo->altMissileSound = NULL_SOUND;
+		weaponInfo->altMissileDlight = 0;
+		weaponInfo->altMissileHitSound = NULL_SOUND;
+		weaponInfo->altMissileTrailFunc = FX_WeaponAltProjectileThink;//FX_WeaponProjectileThink;
+
+		weaponInfo->missileRenderfx = trap->FX_RegisterEffect("Slugthrowers/acp_shot_medium");
+		weaponInfo->altMissileRenderfx = trap->FX_RegisterEffect("Slugthrowers/acp_shot_medium");
+
+		weaponInfo->fleshImpactEffect = trap->FX_RegisterEffect("orginal_weapon_efx/blaster/flesh_impact");
+		weaponInfo->altFleshImpactEffect = trap->FX_RegisterEffect("orginal_weapon_efx/blaster/flesh_impact");
+		weaponInfo->missileWallImpactfx = trap->FX_RegisterEffect("orginal_weapon_efx/blaster/wall_impact");
+		weaponInfo->altMissileWallImpactfx = trap->FX_RegisterEffect("orginal_weapon_efx/blaster/wall_impact");
+
+
+		weaponInfo->EnhancedFX_fleshImpact = trap->FX_RegisterEffect("slugthrowers/acp_flesh_impact");
+		weaponInfo->EnhancedFX_altfleshImpact = trap->FX_RegisterEffect("slugthrowers/acp_flesh_impact");
+		weaponInfo->EnhancedFX_missileWallImpactfx = trap->FX_RegisterEffect("weapons/acp_impact_highcal");
+		weaponInfo->EnhancedFX_altmissileWallImpactfx = trap->FX_RegisterEffect("weapons/acp_impact_highcal");
+
+		trap->FX_RegisterEffect("blasters/red_deflect");
+
+		cgs.effects.blasterDroidImpactEffect = trap->FX_RegisterEffect("blaster/droid_impact");
+		break;
+
+	case WP_ACP_ARRAYGUN:
+		weaponInfo->selectSound = trap->S_RegisterSound("sound/weapons/blaster/select.wav");
+		weaponInfo->flashSound[0] = trap->S_RegisterSound("sound/weapons/blasters/pulseshotgun1.mp3");
+		weaponInfo->flashSound[1] = trap->S_RegisterSound("sound/weapons/blasters/pulseshotgun2.mp3");
+		weaponInfo->flashSound[2] = trap->S_RegisterSound("sound/weapons/blasters/pulseshotgun3.mp3");
+		weaponInfo->flashSound[3] = trap->S_RegisterSound("sound/weapons/blasters/pulseshotgun4.mp3");
+		weaponInfo->firingSound = NULL_SOUND;
+		weaponInfo->chargeSound = NULL_SOUND;
+		weaponInfo->muzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash2_Blue_big");
+		weaponInfo->missileModel = NULL_HANDLE;
+		weaponInfo->missileSound = NULL_SOUND;
+		weaponInfo->missileDlight = 0;
+		weaponInfo->missileHitSound = NULL_SOUND;
+		weaponInfo->missileTrailFunc = FX_WeaponProjectileThink;
+		weaponInfo->powerupShotRenderfx = NULL_FX;
+		weaponInfo->altFlashSound[0] = trap->S_RegisterSound("sound/weapons/blasters/pulseshotgun1.mp3");
+		weaponInfo->altFlashSound[1] = trap->S_RegisterSound("sound/weapons/blasters/pulseshotgun2.mp3");
+		weaponInfo->altFlashSound[2] = trap->S_RegisterSound("sound/weapons/blasters/pulseshotgun3.mp3");
+		weaponInfo->altFlashSound[3] = trap->S_RegisterSound("sound/weapons/blasters/pulseshotgun4.mp3");
+		weaponInfo->altFiringSound = NULL_SOUND;
+		weaponInfo->altChargeSound = NULL_SOUND;
+		weaponInfo->altMuzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash2_Blue_big");
+		weaponInfo->altMissileModel = NULL_HANDLE;
+		weaponInfo->altMissileSound = NULL_SOUND;
+		weaponInfo->altMissileDlight = 0;
+		weaponInfo->altMissileHitSound = NULL_SOUND;
+		weaponInfo->altMissileTrailFunc = FX_WeaponAltProjectileThink;//FX_WeaponProjectileThink;
+
+		weaponInfo->missileRenderfx = trap->FX_RegisterEffect("blasters/shot_GreenBlue_Ball_small");
+		weaponInfo->altMissileRenderfx = trap->FX_RegisterEffect("blasters/shot_GreenBlue_Ball_small");
+
+		weaponInfo->fleshImpactEffect = trap->FX_RegisterEffect("orginal_weapon_efx/blaster/flesh_impact");
+		weaponInfo->altFleshImpactEffect = trap->FX_RegisterEffect("orginal_weapon_efx/blaster/flesh_impact");
+		weaponInfo->missileWallImpactfx = trap->FX_RegisterEffect("orginal_weapon_efx/blaster/wall_impact");
+		weaponInfo->altMissileWallImpactfx = trap->FX_RegisterEffect("orginal_weapon_efx/blaster/wall_impact");
+
+
+		weaponInfo->EnhancedFX_fleshImpact = trap->FX_RegisterEffect("blasters/green_flesh_impact");
+		weaponInfo->EnhancedFX_altfleshImpact = trap->FX_RegisterEffect("blasters/green_flesh_impact");
+		weaponInfo->EnhancedFX_missileWallImpactfx = trap->FX_RegisterEffect("weapons/aa-35c_green_impacttiny");
+		weaponInfo->EnhancedFX_altmissileWallImpactfx = trap->FX_RegisterEffect("weapons/aa-35c_green_impacttiny");
+		//"weapons / laser_red"
+		trap->FX_RegisterEffect("blasters/red_deflect");
+
+		cgs.effects.blasterDroidImpactEffect = trap->FX_RegisterEffect("blaster/droid_impact");
+		break;
+
+	case WP_ACP_SNIPER_RIFLE:
+		weaponInfo->selectSound = trap->S_RegisterSound("sound/weapons/select_rifle.wav");
+		weaponInfo->flashSound[0] = trap->S_RegisterSound("sound/weapons/slugthrowers/acp_sniper1.mp3");
+		weaponInfo->flashSound[1] = trap->S_RegisterSound("sound/weapons/slugthrowers/acp_sniper2.mp3");
+		weaponInfo->flashSound[2] = trap->S_RegisterSound("sound/weapons/slugthrowers/acp_sniper3.mp3");
+		weaponInfo->flashSound[3] = trap->S_RegisterSound("sound/weapons/slugthrowers/acp_sniper4.mp3");
+		weaponInfo->firingSound = NULL_SOUND;
+		weaponInfo->chargeSound = NULL_SOUND;
+		weaponInfo->muzzleEffect = trap->FX_RegisterEffect("slugthrowers/muzzleflash");
+		weaponInfo->missileModel = NULL_FX;
+		weaponInfo->missileSound = NULL_SOUND;
+		weaponInfo->missileDlight = 0;
+		weaponInfo->missileHitSound = NULL_SOUND;
+		weaponInfo->missileTrailFunc = FX_WeaponProjectileThink;
+		weaponInfo->powerupShotRenderfx = NULL_FX;
+		weaponInfo->altFlashSound[0] = trap->S_RegisterSound("sound/weapons/slugthrowers/acp_sniper1.mp3");
+		weaponInfo->altFlashSound[1] = trap->S_RegisterSound("sound/weapons/slugthrowers/acp_sniper2.mp3");
+		weaponInfo->altFlashSound[2] = trap->S_RegisterSound("sound/weapons/slugthrowers/acp_sniper3.mp3");
+		weaponInfo->altFlashSound[3] = trap->S_RegisterSound("sound/weapons/slugthrowers/acp_sniper4.mp3");
+		weaponInfo->altFiringSound = NULL_SOUND;
+		weaponInfo->altChargeSound = NULL_SOUND;
+		weaponInfo->altMuzzleEffect = trap->FX_RegisterEffect("slugthrowers/muzzleflash");
+		weaponInfo->altMissileModel = NULL_FX;
+		weaponInfo->altMissileSound = NULL_SOUND;
+		weaponInfo->altMissileDlight = 0;
+		weaponInfo->altMissileHitSound = NULL_SOUND;
+		weaponInfo->altMissileTrailFunc = FX_WeaponAltProjectileThink;
+
+		weaponInfo->missileRenderfx = trap->FX_RegisterEffect("Slugthrowers/acp_shot_big");
+		weaponInfo->altMissileRenderfx = trap->FX_RegisterEffect("Slugthrowers/acp_shot_big");
+
+		weaponInfo->fleshImpactEffect = trap->FX_RegisterEffect("orginal_weapon_efx/blaster/flesh_impact");
+		weaponInfo->altFleshImpactEffect = trap->FX_RegisterEffect("orginal_weapon_efx/blaster/flesh_impact");
+		weaponInfo->missileWallImpactfx = trap->FX_RegisterEffect("orginal_weapon_efx/blaster/wall_impact");
+		weaponInfo->altMissileWallImpactfx = trap->FX_RegisterEffect("orginal_weapon_efx/blaster/wall_impact");
+
+
+		weaponInfo->EnhancedFX_fleshImpact = trap->FX_RegisterEffect("slugthrowers/acp_flesh_impact");
+		weaponInfo->EnhancedFX_altfleshImpact = trap->FX_RegisterEffect("slugthrowers/acp_flesh_impact");
+		weaponInfo->EnhancedFX_missileWallImpactfx = trap->FX_RegisterEffect("weapons/acp_impact_highcal");
+		weaponInfo->EnhancedFX_altmissileWallImpactfx = trap->FX_RegisterEffect("weapons/acp_impact_highcal");
+		trap->FX_RegisterEffect("blasters/red_deflect");
+		break;
+
 // old weapons don't add anything under here. Stoiss
 	case WP_ROCKET_LAUNCHER:
 		weaponInfo->selectSound = trap->S_RegisterSound("sound/weapons/rocket/select.wav");

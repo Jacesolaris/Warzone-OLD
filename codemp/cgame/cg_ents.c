@@ -2153,32 +2153,6 @@ Ghoul2 Insert End
 		case WP_DET_PACK:
 			cent->lerpOrigin[2] -= 16;
 			break;
-		/*case WP_A280:
-			cent->lerpOrigin[2] -= 13;
-			break;
-		case WP_DC15:
-			cent->lerpOrigin[2] -= 12;
-			break;
-		case WP_WESTARM5:
-			cent->lerpOrigin[2] -= 12;
-			break;
-		case WP_T21:
-			cent->lerpOrigin[2] -= 16;
-			break;
-		case WP_EE3:
-			cent->lerpOrigin[2] -= 16;
-			break;
-		case WP_CLONE_PISTOL1:
-			cent->lerpOrigin[2] -= 10;
-			break;
-		case WP_DLT20A:
-			cent->lerpOrigin[2] -= 16;
-		case WP_CLONERIFLE:
-			cent->lerpOrigin[2] -= 12;
-			break;
-		case WP_Z6_BLASTER_CANON:
-			cent->lerpOrigin[2] -= 12;
-			break;*/
 		default:
 			cent->lerpOrigin[2] -= 8;
 			break;

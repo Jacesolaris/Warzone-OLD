@@ -13333,10 +13333,17 @@ void CG_HolsteredWeaponRender(centity_t *cent, clientInfo_t *ci, int holsterType
 	case HLR_TESTGUN_R:
 		weaponType = WP_TESTGUN;
 		break;
+	case HLR_SPOTING_BLASTER_L:
+	case HLR_SPOTING_BLASTER_R:
+		weaponType = WP_SPOTING_BLASTER;
+		break;
+	case HLR_ACP_PISTOL_L:
+	case HLR_ACP_PISTOL_R:
+		weaponType = WP_A200_ACP_PISTOL;
+		break;
 	case HLR_FRAG_GRENADE:
 		weaponType = WP_FRAG_GRENADE;
 		break;
-
 	case HLR_FRAG_GRENADE_OLD:
 		weaponType = WP_FRAG_GRENADE_OLD;
 		break;
@@ -13348,6 +13355,15 @@ void CG_HolsteredWeaponRender(centity_t *cent, clientInfo_t *ci, int holsterType
 		break;
 	case HLR_DET_PACK:
 		weaponType = WP_DET_PACK;
+		break;
+	case HLR_A200_ACP_BATTLERIFLE:
+		weaponType = WP_A200_ACP_BATTLERIFLE;
+		break;
+	case HLR_ACP_ARRAYGUN:
+		weaponType = WP_ACP_ARRAYGUN;
+		break;
+	case HLR_ACP_SNIPER_RIFLE:
+		weaponType = WP_ACP_SNIPER_RIFLE;
 		break;
 	default:
 		trap->Print("Unknown weaponType for holsterType %i in CG_HolsteredWeaponRender.\n", holsterType);
@@ -14075,6 +14091,91 @@ void CG_VisualWeaponsUpdate(centity_t *cent, clientInfo_t *ci)
 			rightHipInUse = WP_TESTGUN;
 		}
 
+		if (rightHipInUse //hip in use already
+			|| (primaryWeapon != WP_SPOTING_BLASTER && secondaryWeapon != WP_SPOTING_BLASTER && temporaryWeapon != WP_SPOTING_BLASTER)
+			|| cent->currentState.weapon == WP_SPOTING_BLASTER) //currently using WP_BRYAR_PISTOL
+		{//don't render WP_BRYAR_PISTOL on right hip.
+			if (ci->holster_blaster != -1 && ci->blaster_holstered == WP_SPOTING_BLASTER)
+			{
+				if (trap->G2API_HasGhoul2ModelOnIndex(&(cent->ghoul2), G2MODEL_BLASTER_HOLSTERED))
+				{
+					trap->G2API_RemoveGhoul2Model(&(cent->ghoul2), G2MODEL_BLASTER_HOLSTERED);
+				}
+				ci->blaster_holstered = 0;
+			}
+		}
+		else
+		{//render WP_BRYAR_PISTOL on right hip
+			if (ci->holster_blaster != -1)
+			{//have specialized bolt
+				if (ci->blaster_holstered != WP_SPOTING_BLASTER)
+				{//don't already have the WP_BRYAR_PISTOL bolted.
+					if (ci->blaster_holstered != 0)
+					{//we have something else bolted there, remove it first.
+						if (trap->G2API_HasGhoul2ModelOnIndex(&(cent->ghoul2), G2MODEL_BLASTER_HOLSTERED))
+						{
+							trap->G2API_RemoveGhoul2Model(&(cent->ghoul2), G2MODEL_BLASTER_HOLSTERED);
+						}
+						ci->blaster_holstered = 0;
+					}
+
+					//now add the WP_BRYAR_PISTOL
+					trap->G2API_CopySpecificGhoul2Model(CG_G2WeaponInstance(cent, WP_SPOTING_BLASTER), 0, cent->ghoul2,
+						G2MODEL_BLASTER_HOLSTERED);
+					trap->G2API_SetBoltInfo(cent->ghoul2, G2MODEL_BLASTER_HOLSTERED, ci->holster_blaster);
+					ci->blaster_holstered = WP_SPOTING_BLASTER;
+				}
+			}
+			else
+			{//manually render the pistol
+				CG_HolsteredWeaponRender(cent, ci, HLR_SPOTING_BLASTER_R);
+			}
+			rightHipInUse = WP_SPOTING_BLASTER;
+		}
+
+
+		if (rightHipInUse //hip in use already
+			|| (primaryWeapon != WP_A200_ACP_PISTOL && secondaryWeapon != WP_A200_ACP_PISTOL && temporaryWeapon != WP_A200_ACP_PISTOL)
+			|| cent->currentState.weapon == WP_A200_ACP_PISTOL) //currently using WP_BRYAR_PISTOL
+		{//don't render WP_BRYAR_PISTOL on right hip.
+			if (ci->holster_blaster != -1 && ci->blaster_holstered == WP_A200_ACP_PISTOL)
+			{
+				if (trap->G2API_HasGhoul2ModelOnIndex(&(cent->ghoul2), G2MODEL_BLASTER_HOLSTERED))
+				{
+					trap->G2API_RemoveGhoul2Model(&(cent->ghoul2), G2MODEL_BLASTER_HOLSTERED);
+				}
+				ci->blaster_holstered = 0;
+			}
+		}
+		else
+		{//render WP_BRYAR_PISTOL on right hip
+			if (ci->holster_blaster != -1)
+			{//have specialized bolt
+				if (ci->blaster_holstered != WP_A200_ACP_PISTOL)
+				{//don't already have the WP_BRYAR_PISTOL bolted.
+					if (ci->blaster_holstered != 0)
+					{//we have something else bolted there, remove it first.
+						if (trap->G2API_HasGhoul2ModelOnIndex(&(cent->ghoul2), G2MODEL_BLASTER_HOLSTERED))
+						{
+							trap->G2API_RemoveGhoul2Model(&(cent->ghoul2), G2MODEL_BLASTER_HOLSTERED);
+						}
+						ci->blaster_holstered = 0;
+					}
+
+					//now add the WP_BRYAR_PISTOL
+					trap->G2API_CopySpecificGhoul2Model(CG_G2WeaponInstance(cent, WP_A200_ACP_PISTOL), 0, cent->ghoul2,
+						G2MODEL_BLASTER_HOLSTERED);
+					trap->G2API_SetBoltInfo(cent->ghoul2, G2MODEL_BLASTER_HOLSTERED, ci->holster_blaster);
+					ci->blaster_holstered = WP_A200_ACP_PISTOL;
+				}
+			}
+			else
+			{//manually render the pistol
+				CG_HolsteredWeaponRender(cent, ci, HLR_ACP_PISTOL_R);
+			}
+			rightHipInUse = WP_A200_ACP_PISTOL;
+		}
+
 
 		/*============================
 		* Start Left Hip Holster code
@@ -14552,6 +14653,90 @@ void CG_VisualWeaponsUpdate(centity_t *cent, clientInfo_t *ci)
 				CG_HolsteredWeaponRender(cent, ci, HLR_TESTGUN_L);
 			}
 			leftHipInUse = WP_TESTGUN;
+		}
+
+		if (leftHipInUse
+			|| (primaryWeapon != WP_SPOTING_BLASTER && secondaryWeapon != WP_SPOTING_BLASTER && temporaryWeapon != WP_SPOTING_BLASTER)  //don't have pistol 
+			|| cent->currentState.weapon == WP_SPOTING_BLASTER  //or are currently using pistol
+			|| rightHipInUse == WP_SPOTING_BLASTER)  //or the pistol is already on the right hip. 
+		{//don't need holstered pistol on left hip rendered
+			if (ci->holster_blaster2 != -1 && ci->blaster2_holstered == WP_SPOTING_BLASTER)
+			{//remove bolted holster instance.
+				if (trap->G2API_HasGhoul2ModelOnIndex(&(cent->ghoul2), G2MODEL_BLASTER2_HOLSTERED))
+				{
+					trap->G2API_RemoveGhoul2Model(&(cent->ghoul2), G2MODEL_BLASTER2_HOLSTERED);
+				}
+				ci->blaster2_holstered = 0;
+			}
+		}
+		else
+		{//need holstered pistol to be rendered
+			if (ci->holster_blaster2 != -1)
+			{//have specialized bolt
+				if (ci->blaster2_holstered != WP_SPOTING_BLASTER)
+				{//don't already have the pistol bolted.
+					if (ci->blaster2_holstered != 0)
+					{//we have something else bolted there, remove it first.
+						if (trap->G2API_HasGhoul2ModelOnIndex(&(cent->ghoul2), G2MODEL_BLASTER2_HOLSTERED))
+						{
+							trap->G2API_RemoveGhoul2Model(&(cent->ghoul2), G2MODEL_BLASTER2_HOLSTERED);
+						}
+						ci->blaster2_holstered = 0;
+					}
+
+					//now add the blaster
+					trap->G2API_CopySpecificGhoul2Model(CG_G2WeaponInstance(cent, WP_SPOTING_BLASTER), 0, cent->ghoul2, G2MODEL_BLASTER2_HOLSTERED);
+					trap->G2API_SetBoltInfo(cent->ghoul2, G2MODEL_BLASTER2_HOLSTERED, ci->holster_blaster2);
+					ci->blaster2_holstered = WP_SPOTING_BLASTER;
+				}
+			}
+			else
+			{//manually render the pistol
+				CG_HolsteredWeaponRender(cent, ci, HLR_SPOTING_BLASTER_L);
+			}
+			leftHipInUse = WP_SPOTING_BLASTER;
+		}
+
+		if (leftHipInUse
+			|| (primaryWeapon != WP_A200_ACP_PISTOL && secondaryWeapon != WP_A200_ACP_PISTOL && temporaryWeapon != WP_A200_ACP_PISTOL)  //don't have pistol 
+			|| cent->currentState.weapon == WP_A200_ACP_PISTOL  //or are currently using pistol
+			|| rightHipInUse == WP_A200_ACP_PISTOL)  //or the pistol is already on the right hip. 
+		{//don't need holstered pistol on left hip rendered
+			if (ci->holster_blaster2 != -1 && ci->blaster2_holstered == WP_A200_ACP_PISTOL)
+			{//remove bolted holster instance.
+				if (trap->G2API_HasGhoul2ModelOnIndex(&(cent->ghoul2), G2MODEL_BLASTER2_HOLSTERED))
+				{
+					trap->G2API_RemoveGhoul2Model(&(cent->ghoul2), G2MODEL_BLASTER2_HOLSTERED);
+				}
+				ci->blaster2_holstered = 0;
+			}
+		}
+		else
+		{//need holstered pistol to be rendered
+			if (ci->holster_blaster2 != -1)
+			{//have specialized bolt
+				if (ci->blaster2_holstered != WP_A200_ACP_PISTOL)
+				{//don't already have the pistol bolted.
+					if (ci->blaster2_holstered != 0)
+					{//we have something else bolted there, remove it first.
+						if (trap->G2API_HasGhoul2ModelOnIndex(&(cent->ghoul2), G2MODEL_BLASTER2_HOLSTERED))
+						{
+							trap->G2API_RemoveGhoul2Model(&(cent->ghoul2), G2MODEL_BLASTER2_HOLSTERED);
+						}
+						ci->blaster2_holstered = 0;
+					}
+
+					//now add the blaster
+					trap->G2API_CopySpecificGhoul2Model(CG_G2WeaponInstance(cent, WP_A200_ACP_PISTOL), 0, cent->ghoul2, G2MODEL_BLASTER2_HOLSTERED);
+					trap->G2API_SetBoltInfo(cent->ghoul2, G2MODEL_BLASTER2_HOLSTERED, ci->holster_blaster2);
+					ci->blaster2_holstered = WP_A200_ACP_PISTOL;
+				}
+			}
+			else
+			{//manually render the pistol
+				CG_HolsteredWeaponRender(cent, ci, HLR_ACP_PISTOL_L);
+			}
+			leftHipInUse = WP_A200_ACP_PISTOL;
 		}
 
 		/*============================
@@ -15577,6 +15762,134 @@ void CG_VisualWeaponsUpdate(centity_t *cent, clientInfo_t *ci)
 			else
 			{//manually render the blaster
 				CG_HolsteredWeaponRender(cent, ci, HLR_DET_PACK);
+			}
+			backInUse = qtrue;
+		}
+
+		//DC15_EXT
+		if (backInUse //back in use already
+			|| (primaryWeapon != WP_A200_ACP_BATTLERIFLE && secondaryWeapon != WP_A200_ACP_BATTLERIFLE && temporaryWeapon != WP_A200_ACP_BATTLERIFLE) //don't have weapon
+			|| cent->currentState.weapon == WP_A200_ACP_BATTLERIFLE) //currently using weapon
+		{//don't render weapon on back
+			if (ci->holster_launcher != -1 && ci->launcher_holstered == WP_A200_ACP_BATTLERIFLE)
+			{
+				if (trap->G2API_HasGhoul2ModelOnIndex(&(cent->ghoul2), G2MODEL_LAUNCHER_HOLSTERED))
+				{
+					trap->G2API_RemoveGhoul2Model(&(cent->ghoul2), G2MODEL_LAUNCHER_HOLSTERED);
+				}
+				ci->launcher_holstered = 0;
+			}
+		}
+		else
+		{//render weapon on back
+			if (ci->holster_launcher != -1)
+			{//have specialized bolt
+				if (ci->launcher_holstered != WP_A200_ACP_BATTLERIFLE)
+				{//don't already have the weapon bolted.
+					if (ci->launcher_holstered != 0)
+					{//we have something else bolted there, remove it first.
+						if (trap->G2API_HasGhoul2ModelOnIndex(&(cent->ghoul2), G2MODEL_LAUNCHER_HOLSTERED))
+						{
+							trap->G2API_RemoveGhoul2Model(&(cent->ghoul2), G2MODEL_LAUNCHER_HOLSTERED);
+						}
+						ci->launcher_holstered = 0;
+					}
+
+					//now bolt the weapon
+					trap->G2API_CopySpecificGhoul2Model(CG_G2WeaponInstance(cent, WP_A200_ACP_BATTLERIFLE), 0, cent->ghoul2,
+						G2MODEL_LAUNCHER_HOLSTERED);
+					trap->G2API_SetBoltInfo(cent->ghoul2, G2MODEL_LAUNCHER_HOLSTERED, ci->holster_launcher);
+					ci->launcher_holstered = WP_A200_ACP_BATTLERIFLE;
+				}
+			}
+			else
+			{//manually render the weapon
+				CG_HolsteredWeaponRender(cent, ci, HLR_A200_ACP_BATTLERIFLE);
+			}
+			backInUse = qtrue;
+		}
+
+		//DC15_EXT
+		if (backInUse //back in use already
+			|| (primaryWeapon != WP_ACP_ARRAYGUN && secondaryWeapon != WP_ACP_ARRAYGUN && temporaryWeapon != WP_ACP_ARRAYGUN) //don't have weapon
+			|| cent->currentState.weapon == WP_ACP_ARRAYGUN) //currently using weapon
+		{//don't render weapon on back
+			if (ci->holster_launcher != -1 && ci->launcher_holstered == WP_ACP_ARRAYGUN)
+			{
+				if (trap->G2API_HasGhoul2ModelOnIndex(&(cent->ghoul2), G2MODEL_LAUNCHER_HOLSTERED))
+				{
+					trap->G2API_RemoveGhoul2Model(&(cent->ghoul2), G2MODEL_LAUNCHER_HOLSTERED);
+				}
+				ci->launcher_holstered = 0;
+			}
+		}
+		else
+		{//render weapon on back
+			if (ci->holster_launcher != -1)
+			{//have specialized bolt
+				if (ci->launcher_holstered != WP_ACP_ARRAYGUN)
+				{//don't already have the weapon bolted.
+					if (ci->launcher_holstered != 0)
+					{//we have something else bolted there, remove it first.
+						if (trap->G2API_HasGhoul2ModelOnIndex(&(cent->ghoul2), G2MODEL_LAUNCHER_HOLSTERED))
+						{
+							trap->G2API_RemoveGhoul2Model(&(cent->ghoul2), G2MODEL_LAUNCHER_HOLSTERED);
+						}
+						ci->launcher_holstered = 0;
+					}
+
+					//now bolt the weapon
+					trap->G2API_CopySpecificGhoul2Model(CG_G2WeaponInstance(cent, WP_ACP_ARRAYGUN), 0, cent->ghoul2,
+						G2MODEL_LAUNCHER_HOLSTERED);
+					trap->G2API_SetBoltInfo(cent->ghoul2, G2MODEL_LAUNCHER_HOLSTERED, ci->holster_launcher);
+					ci->launcher_holstered = WP_ACP_ARRAYGUN;
+				}
+			}
+			else
+			{//manually render the weapon
+				CG_HolsteredWeaponRender(cent, ci, HLR_ACP_ARRAYGUN);
+			}
+			backInUse = qtrue;
+		}
+
+		if (backInUse //back in use already
+			|| (primaryWeapon != WP_ACP_SNIPER_RIFLE && secondaryWeapon != WP_ACP_SNIPER_RIFLE && temporaryWeapon != WP_ACP_SNIPER_RIFLE) //don't have weapon
+			|| cent->currentState.weapon == WP_ACP_SNIPER_RIFLE) //currently using weapon
+		{//don't render weapon on back
+			if (ci->holster_launcher != -1 && ci->launcher_holstered == WP_ACP_SNIPER_RIFLE)
+			{
+				if (trap->G2API_HasGhoul2ModelOnIndex(&(cent->ghoul2), G2MODEL_LAUNCHER_HOLSTERED))
+				{
+					trap->G2API_RemoveGhoul2Model(&(cent->ghoul2), G2MODEL_LAUNCHER_HOLSTERED);
+				}
+				ci->launcher_holstered = 0;
+			}
+		}
+		else
+		{//render weapon on back
+			if (ci->holster_launcher != -1)
+			{//have specialized bolt
+				if (ci->launcher_holstered != WP_ACP_SNIPER_RIFLE)
+				{//don't already have the weapon bolted.
+					if (ci->launcher_holstered != 0)
+					{//we have something else bolted there, remove it first.
+						if (trap->G2API_HasGhoul2ModelOnIndex(&(cent->ghoul2), G2MODEL_LAUNCHER_HOLSTERED))
+						{
+							trap->G2API_RemoveGhoul2Model(&(cent->ghoul2), G2MODEL_LAUNCHER_HOLSTERED);
+						}
+						ci->launcher_holstered = 0;
+					}
+
+					//now bolt the weapon
+					trap->G2API_CopySpecificGhoul2Model(CG_G2WeaponInstance(cent, WP_ACP_SNIPER_RIFLE), 0, cent->ghoul2,
+						G2MODEL_LAUNCHER_HOLSTERED);
+					trap->G2API_SetBoltInfo(cent->ghoul2, G2MODEL_LAUNCHER_HOLSTERED, ci->holster_launcher);
+					ci->launcher_holstered = WP_ACP_SNIPER_RIFLE;
+				}
+			}
+			else
+			{//manually render the weapon
+				CG_HolsteredWeaponRender(cent, ci, HLR_ACP_SNIPER_RIFLE);
 			}
 			backInUse = qtrue;
 		}

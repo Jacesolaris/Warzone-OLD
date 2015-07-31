@@ -27,7 +27,18 @@ static vec3_t muzzle;
 #define BLASTER_VELOCITY			2300
 #define BLASTER_DAMAGE				20
 #define BLASTER_CANON_DAMAGE		5
-#define RIFLE_SNIPER_DAMAGE				85
+#define RIFLE_SNIPER_DAMAGE			85
+#define BLASTER_ALT_DAMAGE			30
+
+// Double Barrel ArrayGun
+//---------
+#define DOUBLEBARREL_SHOTS			2
+#define DOUBLEBARREL_SPREAD			1.0f
+#define DOUBLEBARREL_DAMAGE			15
+#define DOUBLEBARREL_VEL				3500
+#define DOUBLEBARREL_SIZE				1
+#define DOUBLEBARREL_MINE_RADIUS_CHECK	256
+#define DOUBLEBARREL_ALT_DAMAGE		25
 
 // Tenloss Disruptor
 //----------
@@ -1501,6 +1512,44 @@ static void WP_FireDEMP2( gentity_t *ent, qboolean altFire )
 	else
 	{
 		WP_DEMP2_MainFire( ent );
+	}
+}
+
+//---------------------------------------------------------
+static void WP_DoubleBarrel_Guns_MainFire(gentity_t *ent, qboolean altFire, int velocity, int damage, float spread, int weapon)
+//---------------------------------------------------------
+{
+	vec3_t		fwd, angs;
+	gentity_t	*missile;
+	int i;
+
+	for (i = 0; i < DOUBLEBARREL_SHOTS; i++)
+	{
+		vectoangles(forward, angs);
+
+		if (i != 0)
+		{ //do nothing on the first shot, it will hit the crosshairs
+			angs[PITCH] += crandom() * DOUBLEBARREL_SPREAD;
+			angs[YAW] += crandom() * DOUBLEBARREL_SPREAD;
+		}
+
+		AngleVectors(angs, fwd, NULL, NULL);
+
+		missile = CreateMissile(muzzle, fwd, DOUBLEBARREL_VEL, 10000, ent, qfalse);
+
+		missile->classname = "flech_proj";
+		missile->s.weapon = ent->s.weapon;
+
+		VectorSet(missile->r.maxs, DOUBLEBARREL_SIZE, DOUBLEBARREL_SIZE, DOUBLEBARREL_SIZE);
+		VectorScale(missile->r.maxs, -1, missile->r.mins);
+
+		missile->damage = DOUBLEBARREL_DAMAGE;
+		//missile->dflags = DAMAGE_DEATH_KNOCKBACK;
+		missile->methodOfDeath = MOD_BLASTER;
+		missile->clipmask = MASK_SHOT | CONTENTS_LIGHTSABER;
+
+		// we don't want it to bounce forever
+		missile->bounceCount = 0;
 	}
 }
 
@@ -4967,6 +5016,7 @@ void FireWeapon( gentity_t *ent, qboolean altFire ) {
 		case WP_SABER:
 			break;
 		
+		
 		case WP_TESTGUN:
 		case WP_WOOKIES_PISTOL:
 		case WP_S5_PISTOL:
@@ -4985,7 +5035,27 @@ void FireWeapon( gentity_t *ent, qboolean altFire ) {
 			else
 				WP_FireConcussion( ent );
 			break;
-	
+
+		case WP_A200_ACP_PISTOL:
+		case WP_SPOTING_BLASTER:
+			if (altFire)
+				WP_FireBlaster(ent, altFire, BLASTER_VELOCITY * 3, BLASTER_DAMAGE, 0.0, ent->s.weapon);
+			else
+				WP_FireBlaster(ent, altFire, BLASTER_VELOCITY, BLASTER_DAMAGE, 0.0, ent->s.weapon);
+			CalcFirstMuzzlePoint(ent, forward, vright, up, muzzle);
+			CalcSecondMuzzlePoint(ent, forward, vright, up, secondmuzzle);
+			break;
+
+		case WP_ACP_ARRAYGUN:
+			
+			if (altFire)
+			{
+				WP_DoubleBarrel_Guns_MainFire(ent, altFire, DOUBLEBARREL_VEL, DOUBLEBARREL_ALT_DAMAGE, DOUBLEBARREL_SPREAD, ent->s.weapon);
+			}
+			else
+				WP_DoubleBarrel_Guns_MainFire(ent, altFire, DOUBLEBARREL_VEL, DOUBLEBARREL_DAMAGE, DOUBLEBARREL_SPREAD, ent->s.weapon);
+			break;
+		case WP_A200_ACP_BATTLERIFLE:
 		case WP_CLONE_BLASTER:
 		case WP_BLASTER:
 			WP_FireBlaster( ent, altFire, BLASTER_VELOCITY, BLASTER_DAMAGE, BLASTER_SPREAD, ent->s.weapon );
@@ -5010,6 +5080,7 @@ void FireWeapon( gentity_t *ent, qboolean altFire ) {
 			WP_FireBlaster( ent, altFire, BLASTER_VELOCITY, BLASTER_DAMAGE, BLASTER_SPREAD, ent->s.weapon );
 			break;
 
+		case WP_ACP_SNIPER_RIFLE:
 		case WP_EE3:
 			if (altFire)
 				WP_FireBlaster(ent, altFire, BLASTER_VELOCITY*2.5, RIFLE_SNIPER_DAMAGE*1.5, 0.0, ent->s.weapon);
