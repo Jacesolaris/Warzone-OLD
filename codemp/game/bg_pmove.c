@@ -8742,6 +8742,10 @@ void PM_AdjustAttackStates( pmove_t *pmove )
 					pmove->ps->scopeType = SCOPE_SCOPE_EE3_BLASTTECH_SHORT;
 					pmove->ps->zoomFov = 80.0f;//cg_fov.value;
 					break;
+				case WP_ACP_SNIPER_RIFLE:
+					pmove->ps->scopeType = SCOPE_SCOPE_ACP_SNIPER;
+					pmove->ps->zoomFov = 80.0f;//cg_fov.value;
+					break;
 				default:
 					pmove->ps->scopeType = SCOPE_SCOPE_DISRUPTOR;
 					pmove->ps->zoomFov = 80.0f;

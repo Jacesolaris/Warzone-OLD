@@ -270,6 +270,12 @@ int WeaponReadyAnim[WP_NUM_WEAPONS] =
 	TORSO_WEAPONREADY10,//WP_FRAG_GRENADE,
 	TORSO_WEAPONREADY10,//WP_FRAG_GRENADE_OLD,
 	TORSO_WEAPONREADY2,//WP_DC_17_CLONE_PISTOL,
+	TORSO_WEAPONREADY2,//WP_SPOTING_BLASTER,
+	TORSO_WEAPONREADY3,//WP_A200_ACP_BATTLERIFLE,
+	TORSO_WEAPONREADY2,// WP_A200_ACP_PISTOL,
+	TORSO_WEAPONREADY3,//WP_ACP_ARRAYGUN,
+	DC15_READY,//WP_ACP_SNIPER_RIFLE,
+
 
 	TORSO_WEAPONREADY3,//TORSO_WEAPONREADY9,//WP_ROCKET_LAUNCHER,
 
@@ -335,6 +341,11 @@ int WeaponReadyLegsAnim[WP_NUM_WEAPONS] =
 	BOTH_STAND1,//WP_FRAG_GRENADE,
 	BOTH_STAND1,//WP_FRAG_GRENADE_OLD,
 	BOTH_STAND1,//WP_DC_17_CLONE_PISTOL,
+	BOTH_STAND1,//WP_SPOTING_BLASTER,
+	BOTH_STAND1,//WP_A200_ACP_BATTLERIFLE,
+	BOTH_STAND1,// WP_A200_ACP_PISTOL,
+	BOTH_STAND1,//WP_ACP_ARRAYGUN,
+	BOTH_STAND1,//WP_ACP_SNIPER_RIFLE,
 
 	BOTH_STAND1,//TORSO_WEAPONREADY9,//WP_ROCKET_LAUNCHER,
 
@@ -399,6 +410,11 @@ int WeaponAttackAnim[WP_NUM_WEAPONS] =
 	BOTH_THERMAL_THROW,//WP_FRAG_GRENADE,
 	BOTH_THERMAL_THROW,//WP_FRAG_GRENADE_OLD,
 	BOTH_ATTACK2,//WP_DC_17_CLONE_PISTOL,
+	BOTH_ATTACK2,//WP_SPOTING_BLASTER,
+	DC15_FIRE,//WP_A200_ACP_BATTLERIFLE,
+	BOTH_ATTACK2,// WP_A200_ACP_PISTOL,
+	DC15_FIRE,//WP_ACP_ARRAYGUN,
+	DC15_FIRE,//WP_ACP_SNIPER_RIFLE,
 	
 	BOTH_ATTACK3,//BOTH_ATTACK9,//WP_ROCKET_LAUNCHER,
 
@@ -1837,6 +1853,96 @@ Don't place this
 	100,
 	IT_WEAPON,
 	WP_DC_17_CLONE_PISTOL,
+	/* precache */ "",
+	/* sounds */ "",
+	"@MENUS_THE_PRIMARY_WEAPON_OF"				// description
+},
+
+/*QUAKED WP_SPOTING_BLASTER (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+*/
+{
+	"weapon_Spoting_Blaster",
+	"sound/weapons/w_pkup.wav",
+	{ "models/weapons3/leias_pistol/blaster_pistol_w.glm",
+	0, 0, 0 },
+	/* view */		"models/weapons3/leias_pistol/blaster_pistol.md3",
+	/* icon */		"models/weapons3/leias_pistol/w_icon_leias_pistol",
+	/* pickup *///	"Clone Trooper Rifle",
+	100,
+	IT_WEAPON,
+	WP_SPOTING_BLASTER,
+	/* precache */ "",
+	/* sounds */ "",
+	"@MENUS_THE_PRIMARY_WEAPON_OF"				// description
+},
+
+/*QUAKED WP_SPOTING_BLASTER (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+*/
+{
+	"weapon_A200_ACP_BattleRifle",
+	"sound/weapons/w_pkup.wav",
+	{ "models/weapons/A200_ACP_BattleRifle/model.glm",
+	0, 0, 0 },
+	/* view */		"models/weapons/A200_ACP_BattleRifle/model.md3",
+	/* icon */		"models/weapons/A200_ACP_BattleRifle/icon_default",
+	/* pickup *///	"Clone Trooper Rifle",
+	100,
+	IT_WEAPON,
+	WP_A200_ACP_BATTLERIFLE,
+	/* precache */ "",
+	/* sounds */ "",
+	"@MENUS_THE_PRIMARY_WEAPON_OF"				// description
+},
+
+/*QUAKED WP_A200_ACP_PISTOL (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+*/
+{
+	"weapon_A200_ACP_Pistol",
+	"sound/weapons/w_pkup.wav",
+	{ "models/weapons/A200_ACP_Pistol/model.glm",
+	0, 0, 0 },
+	/* view */		"models/weapons/A200_ACP_Pistol/model.md3",
+	/* icon */		"models/weapons/A200_ACP_Pistol/icon_default",
+	/* pickup *///	"Clone Trooper Rifle",
+	100,
+	IT_WEAPON,
+	WP_A200_ACP_PISTOL,
+	/* precache */ "",
+	/* sounds */ "",
+	"@MENUS_THE_PRIMARY_WEAPON_OF"				// description
+},
+
+/*QUAKED WP_ACP_ARRAYGUN (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+*/
+{
+	"weapon_ACP_ArrayGun",
+	"sound/weapons/w_pkup.wav",
+	{ "models/weapons/ACP_ArrayGun/model.glm",
+	0, 0, 0 },
+	/* view */		"models/weapons/ACP_ArrayGun/model.md3",
+	/* icon */		"models/weapons/ACP_ArrayGun/icon_default",
+	/* pickup *///	"Clone Trooper Rifle",
+	100,
+	IT_WEAPON,
+	WP_ACP_ARRAYGUN,
+	/* precache */ "",
+	/* sounds */ "",
+	"@MENUS_THE_PRIMARY_WEAPON_OF"				// description
+},
+
+/*QUAKED WP_ACP_SNIPER_RIFLE (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+*/
+{
+	"weapon_Double_ACP_ArrayGun",
+	"sound/weapons/w_pkup.wav",
+	{ "models/weapons/ACP_SniperRifle/model.glm",
+	0, 0, 0 },
+	/* view */		"models/weapons/ACP_SniperRifle/model.md3",
+	/* icon */		"models/weapons/ACP_SniperRifle/icon_default",
+	/* pickup *///	"Clone Trooper Rifle",
+	100,
+	IT_WEAPON,
+	WP_ACP_SNIPER_RIFLE,
 	/* precache */ "",
 	/* sounds */ "",
 	"@MENUS_THE_PRIMARY_WEAPON_OF"				// description
