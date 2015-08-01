@@ -750,6 +750,7 @@ typedef struct {
 	qboolean		oneShotAnimMap;
 	qboolean		isVideoMap;
 	qboolean		normalsLoaded;
+	qboolean		normalsLoaded2;
 	qboolean		specularLoaded;
 	qboolean		subsurfaceLoaded;
 } textureBundle_t;
@@ -3541,5 +3542,7 @@ int C_GetLevel( void );
 void C_LevelLoadEnd( void );
 
 void RB_SurfaceGhoul( CRenderableSurface *surf );
+
+image_t *R_CreateNormalMapGLSL ( const char *name, byte *pic, int width, int height, int flags, image_t	*srcImage );
 
 #endif //TR_LOCAL_H

@@ -100,72 +100,6 @@ varying vec3   var_vertPos;
 
 out vec4 out_Glow;
 
-vec4 generateEnhancedNormal( vec2 fragCoord )
-{// Generates a normal map with enhanced edges... Not so good for parallax...
-	vec2 uv = fragCoord.xy;
-    float u = uv.x;
-    float v = uv.y;
-    
-    float threshold = 0.085;
-    float px = 1.0/var_Dimensions.x;
-    
-    vec3 rgb = texture2D(u_DiffuseMap, uv).rgb;
-    vec3 bw = vec3(1);
-    vec3 bw2 = vec3(1);
-
-    vec3 rgbUp = texture2D(u_DiffuseMap, vec2(u,v+px)).rgb;
-    vec3 rgbDown = texture2D(u_DiffuseMap, vec2(u,v-px)).rgb;
-    vec3 rgbLeft = texture2D(u_DiffuseMap, vec2(u+px,v)).rgb;
-    vec3 rgbRight = texture2D(u_DiffuseMap, vec2(u-px,v)).rgb;
-
-    float rgbAvr = (rgb.r + rgb.g + rgb.b) / 3.;
-    float rgbUpAvr = (rgbUp.r + rgbUp.g + rgbUp.b) / 3.;
-    float rgbDownAvr = (rgbDown.r + rgbDown.g + rgbDown.b) / 3.;
-    float rgbLeftAvr = (rgbLeft.r + rgbLeft.g + rgbLeft.b) / 3.;
-    float rgbRightAvr = (rgbRight.r + rgbRight.g + rgbRight.b) / 3.;
-
-    float dx = abs(rgbRightAvr - rgbLeftAvr);
-    float dy = abs(rgbUpAvr - rgbDownAvr);
-    
-    if (dx > threshold)
-        bw = vec3(1);
-    else if (dy > threshold)
-        bw = vec3(1);
-    else
-        bw = vec3(0);
-    
-    // inigo code!
-    // o.5 + 0.5 * acts as a remapping function
-    bw = 0.5 + 0.5*normalize( vec3(rgbRightAvr - rgbLeftAvr, 100.0*px, rgbUpAvr - rgbDownAvr) ).xzy;
-    
-    return vec4(bw,0);
-}
-
-vec4 generateBumpyNormal( vec2 fragCoord )
-{// Generates an extra bumpy normal map...
-	vec2 tex_offset = vec2(1.0 / var_Dimensions.x, 1.0 / var_Dimensions.y);
-	vec2 uv = fragCoord;
-	//uv.y=1.0-uv.y;
-	
-	float x=1.;
-	float y=1.;
-	
-	float M =abs(texture2D(u_DiffuseMap, uv + vec2(0., 0.)*tex_offset).r); 
-	float L =abs(texture2D(u_DiffuseMap, uv + vec2(x, 0.)*tex_offset).r);
-	float R =abs(texture2D(u_DiffuseMap, uv + vec2(-x, 0.)*tex_offset).r);	
-	float U =abs(texture2D(u_DiffuseMap, uv + vec2(0., y)*tex_offset).r);
-	float D =abs(texture2D(u_DiffuseMap, uv + vec2(0., -y)*tex_offset).r);
-	float X = ((R-M)+(M-L))*.5;
-	float Y = ((D-M)+(M-U))*.5;
-	
-	float strength =.01;
-	vec4 N = vec4(normalize(vec3(X, Y, strength)), 1.0);
-//	vec4 N = vec4(normalize(vec3(X, Y, .01))-.5, 1.0);
-
-	vec4 col = vec4(N.xyz * 0.5 + 0.5,1.);
-	return col;
-}
-
 #if defined(USE_PARALLAXMAP) || defined(USE_PARALLAXMAP_NONORMALS)
   #if defined(USE_PARALLAXMAP)
 	float SampleDepth(sampler2D normalMap, vec2 t)
@@ -202,17 +136,6 @@ vec4 generateBumpyNormal( vec2 fragCoord )
 		// Returns inverse of the height. Result is mostly around 1.0 (so we don't stand on a surface far below us), with deep dark areas (cracks, edges, etc)...
 		float height = clamp(1.0 - combined_color2, 0.0, 1.0);
 		return height;
-
-		/*
-		// Mix it with an extra-bumpy normal map... (UQ1: decided not worth the fps loss)
-		float norm = generateBumpyNormal( t ).r;
-		// I don't want this much bumpiness (and this is to be used as a multipier), so move the whole thing closer to 1.0...
-		norm *= 0.5;
-		norm += 0.5;
-		norm *= 0.5;
-		norm += 0.5;
-		return (height + (norm * height)) / 2.0;
-		*/
 	}
   #endif
 
@@ -476,12 +399,11 @@ void main()
 	float NL, NH, NE, EH, attenuation;
 	vec2 tex_offset = vec2(1.0 / var_Dimensions.x, 1.0 / var_Dimensions.y);
 
-/*
-#if defined(USE_NORMALMAP)
+	/*
 	if (u_Local4.r != 0.0)
 	{
-		//gl_FragColor = vec4(texture2D(u_NormalMap, var_TexCoords.xy).a);
-		gl_FragColor = texture2D(u_NormalMap, var_TexCoords.xy);
+		//gl_FragColor = vec4(vec3(texture2D(u_NormalMap, var_TexCoords.xy).a), 1.0);
+		gl_FragColor = vec4(texture2D(u_NormalMap, var_TexCoords.xy).rgb, 1.0);
 		//gl_FragColor = vec4(1.0,0.0,0.0,1.0);
 		out_Glow = vec4(0.0);
 		return;
@@ -490,39 +412,12 @@ void main()
 	{
 		//gl_FragColor = vec4(0.0,1.0,0.0,1.0);
 		//gl_FragColor = texture2D(u_NormalMap, var_TexCoords.xy);
-		//gl_FragColor = vec4(texture2D(u_NormalMap, var_TexCoords.xy).a);
-		//out_Glow = vec4(0.0);
-		//return;
-	}
-#else
-	//gl_FragColor = vec4(0.0,0.0,1.0,1.0);
-	//out_Glow = vec4(0.0);
-	//return;
-#endif
-*/
-
-
-#if 0
-	if (var_Local1.a == 5)
-	{
-		gl_FragColor = vec4((0.0, 0.0, 1.0, 1.0) + (texture2D(u_DiffuseMap, var_TexCoords.xy)*2.0)) / 3.0;
-		out_Glow = gl_FragColor;
+		gl_FragColor = vec4(vec3(texture2D(u_NormalMap, var_TexCoords.xy).a), 1.0);
+		out_Glow = vec4(0.0);
 		return;
 	}
-	else if (var_Local1.a == 6)
-	{
-		gl_FragColor = vec4((1.0, 0.0, 0.0, 1.0) + (texture2D(u_DiffuseMap, var_TexCoords.xy)*2.0)) / 3.0;
-		out_Glow = gl_FragColor;
-		return;
-	}
-	else
-	{
-		gl_FragColor = (vec4(0.0, 1.0, 0.0, 1.0) + (texture2D(u_DiffuseMap, var_TexCoords.xy)*2.0)) / 3.0;
-		out_Glow = gl_FragColor;
-		return;
-	}
-#endif
-
+	*/
+	
 #if defined(USE_LIGHT) && !defined(USE_FAST_LIGHT)
   #if defined(USE_VERT_TANGENT_SPACE)
 	//mat3 tangentToWorld = mat3(var_Tangent.xyz, var_Bitangent.xyz, var_Normal.xyz);
@@ -564,14 +459,8 @@ void main()
 
 #if defined(USE_PARALLAXMAP) || defined(USE_PARALLAXMAP_NONORMALS)
 	vec3 offsetDir = normalize(E * tangentToWorld);
-
 	offsetDir.xy *= tex_offset * -var_Local1.x;//-4.0;//-5.0; // -3.0
-
-//  #if defined(USE_NORMALMAP)
 	texCoords += offsetDir.xy * RayIntersectDisplaceMap(texCoords, offsetDir.xy, u_NormalMap);
-//  #else
-//	texCoords += offsetDir.xy * RayIntersectDisplaceMap(texCoords, offsetDir.xy, u_DiffuseMap);
-//  #endif
 #endif
 
 	vec4 diffuse = texture2D(u_DiffuseMap, texCoords);
@@ -581,19 +470,7 @@ void main()
 	diffuse.rgb *= diffuse.rgb;
 #endif
 
-#if defined(USE_PARALLAXMAP) || defined(USE_PARALLAXMAP_NONORMALS)
-//  #if defined(USE_NORMALMAP)
 	float fakedepth = texture2D(u_NormalMap, texCoords).a;
-//  #else
-//	float fakedepth = SampleDepth(u_DiffuseMap, texCoords);
-//  #endif
-#else
-//  #if defined(USE_NORMALMAP)
-	float fakedepth = texture2D(u_NormalMap, texCoords).a;
-//  #else
-//	float fakedepth = (diffuse.r + diffuse.g + diffuse.b) / 3.0; // meh
-//  #endif
-#endif
 
 #if defined(USE_LIGHT) && !defined(USE_FAST_LIGHT)
 	ambientColor = vec3 (0.0);
@@ -610,9 +487,7 @@ void main()
   #endif
 
 #if defined(USE_PARALLAXMAP) || defined(USE_PARALLAXMAP_NONORMALS)
-
 	// WOW - There is something wrong with this. Just makes everything black... Normal maps are correct, but something seems to be wrong here...
-//  #if defined(USE_NORMALMAP)
     if (u_Local4.r != 0.0)
 	{// Have a real normal map...
 	#if defined(SWIZZLE_NORMALMAP)
@@ -628,9 +503,9 @@ void main()
 	{
 		N = var_Normal.xyz;
 	}
-//  #else
-//	N = var_Normal.xyz;
-//  #endif
+
+#else
+	N = var_Normal.xyz;
 #endif
 
 	N = normalize(N);
@@ -674,9 +549,9 @@ void main()
 	if (var_Local1.g != 0.0)
 	{// Real specMap...
 		specular = texture2D(u_SpecularMap, texCoords);
-		//specular.a = (specular.r + specular.g + specular.b) / 3.0;
-		//specular.a = ((clamp((1.0 - specular.a), 0.0, 1.0) * 0.5) + 0.5);
-		//specular.a = clamp((specular.a * 2.0) * specular.a, 0.2, 0.9);
+		specular.a = (specular.r + specular.g + specular.b) / 3.0;
+		specular.a = ((clamp((1.0 - specular.a), 0.0, 1.0) * 0.5) + 0.5);
+		specular.a = clamp((specular.a * 2.0) * specular.a, 0.2, 0.9);
 	}
 	else
 	{// Fake it...
@@ -685,12 +560,16 @@ void main()
 			specular = vec4(1.0-fakedepth) * diffuse;
 			specular.a = ((clamp((1.0 - fakedepth), 0.0, 1.0) * 0.5) + 0.5);
 			specular.a = clamp((specular.a * 2.0) * specular.a, 0.2, 0.9);
+			//specular.a = 1.0;
+			//specular = vec4(1.0);
 		}
 		else
 		{
 			specular = vec4(1.0);
 		}
 	}
+
+	//specular = vec4(1.0);
 
     #if defined(USE_GAMMA2_TEXTURES)
 	specular.rgb *= specular.rgb;
@@ -703,10 +582,6 @@ void main()
 	{
 		if (u_SpecularScale.r + u_SpecularScale.g + u_SpecularScale.b + u_SpecularScale.a != 0.0) // Shader Specified...
 			specular *= u_SpecularScale;
-	#if defined(USE_CUBEMAP)
-		else if (var_Local1.b > 0.0)
-			specular *= var_Local1.b;
-	#endif
 		else // Material Defaults...
 			specular *= var_Local1.b;
 	}

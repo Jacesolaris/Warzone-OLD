@@ -2604,6 +2604,84 @@ qboolean IsKnownShinyMap2 ( const char *heystack )
 	if (StringContainsWord(heystack, "/vjun/")) return qtrue;
 	if (StringContainsWord(heystack, "/wedge/")) return qtrue;
 	
+	// MB2 Maps...
+	if (StringContainsWord(heystack, "/epiii_boc/")) return qtrue;
+	if (StringContainsWord(heystack, "/amace_cc/")) return qtrue;
+	if (StringContainsWord(heystack, "/bespinsp/")) return qtrue;
+	if (StringContainsWord(heystack, "/imm_cc/")) return qtrue;
+	if (StringContainsWord(heystack, "/com_tower/")) return qtrue;
+	if (StringContainsWord(heystack, "/imperial_tram/")) return qtrue;
+	if (StringContainsWord(heystack, "/corellia/")) return qtrue;
+	if (StringContainsWord(heystack, "/mb2_outlander/")) return qtrue;
+	if (StringContainsWord(heystack, "/falcon_sjc/")) return qtrue;
+	if (StringContainsWord(heystack, "/second-deathstar/")) return qtrue;
+	if (StringContainsWord(heystack, "/thedeathstar/")) return qtrue;
+	if (StringContainsWord(heystack, "/casa_del_paria/")) return qtrue;
+	if (StringContainsWord(heystack, "/evil3_")) return qtrue;
+	if (StringContainsWord(heystack, "/hanger/")) return qtrue;
+	if (StringContainsWord(heystack, "/naboo/")) return qtrue;
+	if (StringContainsWord(heystack, "/shinfl/")) return qtrue;
+	if (StringContainsWord(heystack, "/hangar/")) return qtrue;
+	if (StringContainsWord(heystack, "/lab/")) return qtrue;
+	if (StringContainsWord(heystack, "/mainhall/")) return qtrue;
+	if (StringContainsWord(heystack, "/amace_kamino/")) return qtrue;
+	if (StringContainsWord(heystack, "/kamino/")) return qtrue;
+	if (StringContainsWord(heystack, "/mb2_kamino/")) return qtrue;
+	if (StringContainsWord(heystack, "/plasma_Kamino/")) return qtrue;
+	if (StringContainsWord(heystack, "/plasma_Mustafar/")) return qtrue; // hmm... maybe???
+	if (StringContainsWord(heystack, "/mygeeto1a/")) return qtrue;
+	if (StringContainsWord(heystack, "/mygeeto1c/")) return qtrue;
+	if (StringContainsWord(heystack, "/ddee_hangarc/")) return qtrue;
+	if (StringContainsWord(heystack, "/droidee/")) return qtrue;
+	if (StringContainsWord(heystack, "/amace_detention/")) return qtrue;
+	if (StringContainsWord(heystack, "/amace_leviathan/")) return qtrue;
+	if (StringContainsWord(heystack, "/amace_reactor/")) return qtrue;
+	if (StringContainsWord(heystack, "/Asjc_battle_over/")) return qtrue;
+	if (StringContainsWord(heystack, "/Asjc_palp/")) return qtrue;
+	if (StringContainsWord(heystack, "/Asjc_starship/")) return qtrue;
+	if (StringContainsWord(heystack, "/Asjc_utapua/")) return qtrue;
+	if (StringContainsWord(heystack, "/mace_dark/")) return qtrue;
+	if (StringContainsWord(heystack, "/mace_hanger/")) return qtrue;
+	if (StringContainsWord(heystack, "/plasma_TantIV/")) return qtrue;
+	if (StringContainsWord(heystack, "/ship/")) return qtrue;
+	if (StringContainsWord(heystack, "/plasma_Exec/")) return qtrue;
+	if (StringContainsWord(heystack, "/tantive/")) return qtrue;
+	if (StringContainsWord(heystack, "/tantive1/")) return qtrue;
+	if (StringContainsWord(heystack, "/MMT/")) return qtrue;
+	if (StringContainsWord(heystack, "/plasma_Hangar/")) return qtrue;
+	if (StringContainsWord(heystack, "/plasma_TFed/")) return qtrue;
+	if (StringContainsWord(heystack, "/plasma_TFedTOO/")) return qtrue;
+	if (StringContainsWord(heystack, "/plasma_TradeFed/")) return qtrue;
+
+	// Misc Maps...
+	if (StringContainsWord(heystack, "/atlantica/")) return qtrue;
+	if (StringContainsWord(heystack, "/Carida/")) return qtrue;
+	if (StringContainsWord(heystack, "/bunker/")) return qtrue;
+	if (StringContainsWord(heystack, "/DF/")) return qtrue;
+	if (StringContainsWord(heystack, "/bespinnew/")) return qtrue;
+	if (StringContainsWord(heystack, "/cloudcity/")) return qtrue;
+	if (StringContainsWord(heystack, "/coruscantsjc/")) return qtrue;
+	if (StringContainsWord(heystack, "/ffawedge/")) return qtrue;
+	if (StringContainsWord(heystack, "/jenshotel/")) return qtrue;
+	if (StringContainsWord(heystack, "/CoruscantStreets/")) return qtrue;
+	if (StringContainsWord(heystack, "/ctf_fighterbays/")) return qtrue;
+	if (StringContainsWord(heystack, "/e3sjc/")) return qtrue;
+	if (StringContainsWord(heystack, "/mustafar_sjc/")) return qtrue;
+	if (StringContainsWord(heystack, "/fearis/")) return qtrue;
+	if (StringContainsWord(heystack, "/kotor_dantooine/")) return qtrue;
+	if (StringContainsWord(heystack, "/kotor_ebon_hawk/")) return qtrue;
+	if (StringContainsWord(heystack, "/deltaphantom/")) return qtrue;
+	if (StringContainsWord(heystack, "/pass_me_around/")) return qtrue;
+	if (StringContainsWord(heystack, "/AMegaCity/")) return qtrue;
+	if (StringContainsWord(heystack, "/mantell")) return qtrue;
+	if (StringContainsWord(heystack, "/rcruiser/")) return qtrue;
+	if (StringContainsWord(heystack, "/Asjc_padme/")) return qtrue;
+	if (StringContainsWord(heystack, "/Anaboo/")) return qtrue;
+	if (StringContainsWord(heystack, "/Asjc_imort/")) return qtrue;
+	if (StringContainsWord(heystack, "/Asjc_mygeeto/")) return qtrue;
+	if (StringContainsWord(heystack, "/ACrimeHutt/")) return qtrue;
+	if (StringContainsWord(heystack, "/ASenateBase/")) return qtrue;
+	
 	return qfalse;
 }
 
@@ -2635,10 +2713,6 @@ void AssignMaterialType ( const char *name, const char *text )
 			shader.surfaceFlags |= MATERIAL_ARMOR;
 		else if (StringsContainWord(name, name, "boba") || StringsContainWord(name, name, "pilot"))
 			shader.surfaceFlags |= MATERIAL_ARMOR;
-		else if (!StringsContainWord(name, name, "players") && (StringsContainWord(name, name, "bespin") || StringsContainWord(name, name, "_cc")))
-			shader.surfaceFlags |= MATERIAL_MARBLE;
-		else if (!StringsContainWord(name, name, "players") && (StringsContainWord(name, name, "coruscant") || StringsContainWord(name, name, "/rooftop/") || StringsContainWord(name, name, "/nar_") || StringsContainWord(name, name, "/imperial/")))
-			shader.surfaceFlags |= MATERIAL_TILES;
 		//
 		// Stuff we can be pretty sure of...
 		//
@@ -2694,7 +2768,7 @@ void AssignMaterialType ( const char *name, const char *text )
 			shader.surfaceFlags |= MATERIAL_FABRIC;
 		else if (StringsContainWord(name, name, "leaf") || StringsContainWord(name, name, "leaves") || StringsContainWord(name, name, "fern") || StringsContainWord(name, name, "vine"))
 			shader.surfaceFlags |= MATERIAL_GREENLEAVES;
-		else if (StringsContainWord(name, name, "wood") || StringsContainWord(name, name, "tree"))
+		else if (StringsContainWord(name, name, "wood") || (StringsContainWord(name, name, "tree") && !StringsContainWord(name, name, "street")))
 			shader.surfaceFlags |= MATERIAL_SOLIDWOOD;
 		else if (StringsContainWord(name, name, "mud"))
 			shader.surfaceFlags |= MATERIAL_MUD;
@@ -2705,6 +2779,10 @@ void AssignMaterialType ( const char *name, const char *text )
 		else if (StringsContainWord(name, name, "grass"))
 			shader.surfaceFlags |= MATERIAL_SHORTGRASS;
 		else if (IsKnownShinyMap(name) && StringsContainWord(name, name, "floor"))
+			shader.surfaceFlags |= MATERIAL_TILES;
+		else if (!StringsContainWord(name, name, "players") && (StringsContainWord(name, name, "bespin") || StringsContainWord(name, name, "_cc")))
+			shader.surfaceFlags |= MATERIAL_MARBLE;
+		else if (!StringsContainWord(name, name, "players") && (StringsContainWord(name, name, "coruscant") || StringsContainWord(name, name, "/rooftop/") || StringsContainWord(name, name, "/nar_") || StringsContainWord(name, name, "/imperial/")))
 			shader.surfaceFlags |= MATERIAL_TILES;
 		else if (StringsContainWord(name, name, "floor"))
 			shader.surfaceFlags |= MATERIAL_CONCRETE;
@@ -3566,11 +3644,14 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 			if (parallax && r_parallaxMapping->integer)
 				defs |= LIGHTDEF_USE_PARALLAXMAP;
 
-			VectorCopy4(normal->normalScale, diffuse->normalScale);
+			if (diffuse->normalScale[0] == 0 && diffuse->normalScale[1] == 0 && diffuse->normalScale[2] == 0)
+				VectorSet4(diffuse->normalScale, r_baseNormalX->value, r_baseNormalY->value, 1.0f, r_baseParallax->value);
+			
+			//VectorCopy4(normal->normalScale, diffuse->normalScale);
 
 			hasRealNormalMap = qtrue;
 		}
-		/*else if (normal)
+		else if (normal)
 		{
 			//ri->Printf(PRINT_ALL, ", normalmap %s", normal->bundle[0].image[0]->imgName);
 			diffuse->bundle[TB_NORMALMAP] = normal->bundle[0];
@@ -3579,8 +3660,9 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 
 			VectorCopy4(normal->normalScale, diffuse->normalScale);
 
+			diffuse->bundle[TB_DIFFUSEMAP].normalsLoaded = qtrue;
 			hasRealNormalMap = qtrue;
-		}*/
+		}
 		else if (!diffuse->bundle[TB_DIFFUSEMAP].normalsLoaded)//if (lightmap || useLightVector || useLightVertex)
 		{
 			char normalName[MAX_QPATH];
@@ -3604,10 +3686,15 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 				VectorSet4(diffuse->normalScale, r_baseNormalX->value, r_baseNormalY->value, 1.0f, r_baseParallax->value);
 
 				hasRealNormalMap = qtrue;
+				diffuse->bundle[TB_DIFFUSEMAP].normalsLoaded = qtrue;
+			}
+			else
+			{// Generate one...
+				diffuse->bundle[TB_NORMALMAP].image[0] = R_CreateNormalMapGLSL( normalName, NULL, diffuse->bundle[TB_DIFFUSEMAP].image[0]->width, diffuse->bundle[TB_DIFFUSEMAP].image[0]->height, GL_RGBA8, diffuse->bundle[TB_DIFFUSEMAP].image[0] );
+				if (diffuse->bundle[TB_NORMALMAP].image[0]) diffuse->hasRealNormalMap = true;
+				diffuse->bundle[TB_DIFFUSEMAP].normalsLoaded = qtrue;
 			}
 		}
-
-		diffuse->bundle[TB_DIFFUSEMAP].normalsLoaded = qtrue;
 	}
 
 	if (r_specularMapping->integer && checkNormals)
@@ -3652,9 +3739,9 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 				if (specular) VectorCopy4(specular->specularScale, diffuse->specularScale);
 				hasRealSpecularMap = qtrue;
 			}
-		}
 
-		diffuse->bundle[TB_SPECULARMAP].specularLoaded = qtrue;
+			diffuse->bundle[TB_SPECULARMAP].specularLoaded = qtrue;
+		}
 	}
 
 	if (1 && checkNormals)
@@ -3702,9 +3789,9 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 				VectorSet4(diffuse->subsurfaceExtinctionCoefficient, 0.0f, 0.0f, 0.0f, 0.0f);
 				hasRealSubsurfaceMap = qfalse;
 			}
-		}
 
-		diffuse->bundle[TB_SUBSURFACEMAP].subsurfaceLoaded = qtrue;
+			diffuse->bundle[TB_SUBSURFACEMAP].subsurfaceLoaded = qtrue;
+		}
 	}
 
 	if (tcgen || diffuse->bundle[0].numTexMods)

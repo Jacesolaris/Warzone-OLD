@@ -3038,6 +3038,136 @@ char previous_name_loaded[256];
 
 extern void StripCrap( const char *in, char *out, int destsize );
 
+#if 0
+image_t	*R_FindImageFile( const char *name, imgType_t type, int flags )
+{
+	image_t	*image;
+	int		width, height;
+	byte	*pic;
+	long	hash;
+
+	if (!name || ri->Cvar_VariableIntegerValue( "dedicated" )) {
+		return NULL;
+	}
+
+	hash = generateHashValue(name);
+
+	//
+	// see if the image is already loaded
+	//
+	for (image=hashTable[hash]; image; image=image->next) {
+		if ( !strcmp( name, image->imgName ) ) {
+			// the white image can be used with any set of parms, but other mismatches are errors
+			if ( strcmp( name, "*white" ) ) {
+				if ( image->flags != flags ) {
+					ri->Printf( PRINT_DEVELOPER, "WARNING: reused image %s with mixed flags (%i vs %i)\n", name, image->flags, flags );
+				}
+			}
+			return image;
+		}
+	}
+
+	if (name[0] == '*' || name[0] == '!' || name[0] == '$' || name[0] == '_')
+		return NULL;
+
+	//
+	// load the pic from disk
+	//
+	R_LoadImage( name, &pic, &width, &height );
+
+	if ( pic == NULL ) {
+		if (StringContainsWord(name, "sky") 
+			|| StringContainsWord(name, "skies") 
+			|| StringContainsWord(name, "cloud") 
+			|| StringContainsWord(name, "glow")
+			|| StringContainsWord(name, "gfx/")) 
+			return NULL;
+
+		if (r_normalMapping->integer && type == IMGTYPE_NORMAL)
+		{// If this was a normal map, and we have none, then generate one now and return it...
+			char cleanedName[128];
+			StripCrap(name, cleanedName, sizeof(cleanedName)); // Remove any _n, etc... The generator will re-add it...
+
+			if (!strcmp(name, cleanedName))
+			{
+				return NULL;
+			}
+
+			R_LoadImage( cleanedName, &pic, &width, &height );
+
+			if ( pic != NULL ) 
+			{
+				image = NULL;
+				for (image=hashTable[hash]; image; image=image->next)
+					if ( !strcmp( cleanedName, image->imgName ) )
+						break;
+
+				if (!image) image = R_CreateImage( cleanedName, pic, width, height, type, flags, GL_RGBA8 );
+
+				if (image)
+				{
+					qglBindTexture(GL_TEXTURE_2D, image->texnum);
+					image_t *n = R_CreateNormalMapGLSL( name, pic, width, height, flags, image );
+					Z_Free( pic );
+					return n;
+				}
+
+				Z_Free( pic );
+			}
+		}
+		return NULL;
+	}
+
+	image = R_CreateImage( name, pic, width, height, type, flags, GL_RGBA8 );
+	qglBindTexture(GL_TEXTURE_2D, image->texnum);
+
+	if (type != IMGTYPE_NORMAL && type != IMGTYPE_SPECULAR  && type != IMGTYPE_SUBSURFACE)
+	{
+		if (image && r_textureClean->integer)
+		{
+			image = R_TextureCleanGLSL( name, pic, width, height, flags, image );
+		}
+
+		/*
+		if (image && r_esharpening->integer)
+		{
+			image = R_TextureESharpenGLSL( name, pic, width, height, flags, image );
+		}
+
+		if (image && r_esharpening2->integer)
+		{
+			image = R_TextureESharpen2GLSL( name, pic, width, height, flags, image );
+		}
+
+		if (image && r_darkexpand->integer)
+		{
+			image = R_TextureDarkExpandGLSL( name, pic, width, height, flags, image );
+		}
+		*/
+
+		if (r_normalMapping->integer) 
+		{
+			if (!(StringContainsWord(name, "sky") 
+				|| StringContainsWord(name, "skies") 
+				|| StringContainsWord(name, "cloud") 
+				|| StringContainsWord(name, "glow")
+				|| StringContainsWord(name, "gfx/")))
+			{
+				R_CreateNormalMap( name, pic, width, height, flags, image );
+			}
+		}
+
+		if (r_specularMapping->integer) 
+			R_CreateSpecularMap( name, pic, width, height, flags );
+
+		R_CreateSubsurfaceMap( name, pic, width, height, flags );
+	}
+
+	Z_Free( pic );
+	
+	return image;
+}
+#else
 image_t	*R_FindImageFile( const char *name, imgType_t type, int flags )
 {
 	image_t	*image;
@@ -3072,66 +3202,43 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, int flags )
 	R_LoadImage( name, &pic, &width, &height );
 
 	if ( pic == NULL ) {
-		if (name[0] == '*'
-			|| name[0] == '!'
-			|| name[0] == '$'
-			|| name[0] == '_'
-			|| StringContainsWord(name, "sky") 
-			|| StringContainsWord(name, "skies") 
-			|| StringContainsWord(name, "cloud") 
-			|| StringContainsWord(name, "glow")
-			|| StringContainsWord(name, "gfx/")) return NULL;
-
-		if (r_normalMapping->integer && type == IMGTYPE_NORMAL /*&& (flags & IMGFLAG_PICMIP) && (flags & IMGFLAG_MIPMAP)*/)
-		{// If this was a normal map, and we have none, then generate one now and return it...
-			char cleanedName[128];
-			StripCrap(name, cleanedName, sizeof(cleanedName)); // Remove any _n, etc... The generator will re-add it...
-			R_LoadImage( cleanedName, &pic, &width, &height );
-			if ( pic != NULL ) 
-			{
-				image_t *n = R_CreateNormalMapGLSL( name, pic, width, height, flags, image );
-				Z_Free( pic );
-				return n;
-			}
-		}
 		return NULL;
 	}
 
 	image = R_CreateImage( name, pic, width, height, type, flags, GL_RGBA8 );
-	qglBindTexture(GL_TEXTURE_2D, image->texnum);
 
-	if (name[0] != '*' && name[0] != '!' && name[0] != '$' && name[0] != '_' && type != IMGTYPE_NORMAL && type != IMGTYPE_SPECULAR  && type != IMGTYPE_SUBSURFACE)
+	if (name[0] != '*' && name[0] != '!' && name[0] != '$' && name[0] != '_' && type != IMGTYPE_NORMAL && type != IMGTYPE_SPECULAR  && type != IMGTYPE_SUBSURFACE && !(flags & IMGFLAG_CUBEMAP))
 	{
 		if (image && r_textureClean->integer)
 		{
+			qglBindTexture(GL_TEXTURE_2D, image->texnum);
 			image = R_TextureCleanGLSL( name, pic, width, height, flags, image );
 		}
 
 		/*
 		if (image && r_esharpening->integer)
 		{
+			qglBindTexture(GL_TEXTURE_2D, image->texnum);
 			image = R_TextureESharpenGLSL( name, pic, width, height, flags, image );
 		}
-
 		if (image && r_esharpening2->integer)
 		{
+			qglBindTexture(GL_TEXTURE_2D, image->texnum);
 			image = R_TextureESharpen2GLSL( name, pic, width, height, flags, image );
 		}
-
 		if (image && r_darkexpand->integer)
 		{
+			qglBindTexture(GL_TEXTURE_2D, image->texnum);
 			image = R_TextureDarkExpandGLSL( name, pic, width, height, flags, image );
 		}
 		*/
 
-		if (r_normalMapping->integer /*&& (flags & IMGFLAG_PICMIP) && (flags & IMGFLAG_MIPMAP)*/) 
+		if (r_normalMapping->integer) 
 		{
-			if (!(StringContainsWord(name, "sky") 
-				|| StringContainsWord(name, "skies") 
-				|| StringContainsWord(name, "cloud") 
-				|| StringContainsWord(name, "glow")
-				|| StringContainsWord(name, "gfx/")))
+			if (image
+				&& !(StringContainsWord(name, "sky") || StringContainsWord(name, "skies") || StringContainsWord(name, "cloud") || StringContainsWord(name, "glow") || StringContainsWord(name, "gfx/")))
 			{
+				qglBindTexture(GL_TEXTURE_2D, image->texnum);
 				R_CreateNormalMap( name, pic, width, height, flags, image );
 			}
 		}
@@ -3146,7 +3253,7 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, int flags )
 	
 	return image;
 }
-
+#endif
 
 /*
 ================

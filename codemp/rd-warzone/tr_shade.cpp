@@ -1758,7 +1758,7 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage)
 	}
 
 	// Shader overrides material...
-	if (pStage->cubeMapScale) cubemapScale = pStage->cubeMapScale;
+	if (pStage->cubeMapScale > 0.0) cubemapScale = pStage->cubeMapScale;
 
 	qboolean realNormalMap = qfalse;
 
@@ -2221,17 +2221,27 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				//
 				if ((light || pStage->isWater || pStage->hasRealNormalMap || pStage->hasSpecular || pStage->hasRealSubsurfaceMap) && !fastLight)
 				{
-					if (!pStage->bundle[TB_NORMALMAP].image[0] 
+					if (r_normalMapping->integer
+						//&& !(stage > 0)
+						&& !pStage->bundle[TB_DIFFUSEMAP].normalsLoaded2
+						&& !pStage->bundle[TB_NORMALMAP].image[0] 
 						&& pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName[0] 
 						&& pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName[0] != '*'
-							&& pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName[0] != '$'
-						&& r_normalMapping->integer)
+						&& pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName[0] != '$'
+						&& pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName[0] != '_'
+						&& pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName[0] != '!'
+						&& !StringContainsWord(pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName, "sky") 
+						&& !StringContainsWord(pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName, "skies") 
+						&& !StringContainsWord(pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName, "cloud") 
+						&& !StringContainsWord(pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName, "glow") 
+						&& !StringContainsWord(pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName, "gfx/"))
 					{// How did this happen??? Oh well, generate a normal map now...
 						char imgname[64];
 						sprintf(imgname, "%s_n", pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName);
-						pStage->bundle[TB_NORMALMAP].image[0] = R_FindImageFile( imgname, IMGTYPE_NORMAL, GL_RGBA8 );
-						pStage->hasRealNormalMap = true;
+						pStage->bundle[TB_NORMALMAP].image[0] = R_CreateNormalMapGLSL( imgname, NULL, pStage->bundle[TB_DIFFUSEMAP].image[0]->width, pStage->bundle[TB_DIFFUSEMAP].image[0]->height, GL_RGBA8, pStage->bundle[TB_DIFFUSEMAP].image[0] );
+						if (pStage->bundle[TB_NORMALMAP].image[0]) pStage->hasRealNormalMap = true;
 						RB_SetMaterialBasedProperties(sp, pStage);
+						pStage->bundle[TB_DIFFUSEMAP].normalsLoaded2 = qtrue;
 					}
 					
 					if (pStage->bundle[TB_NORMALMAP].image[0])

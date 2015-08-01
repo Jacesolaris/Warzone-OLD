@@ -1742,15 +1742,16 @@ R_StitchAllPatches
 */
 void R_StitchAllPatches( void ) {
 	int i, stitched, numstitches;
-	srfBspSurface_t *grid1;
 
 	numstitches = 0;
 	do
 	{
 		stitched = qfalse;
+
+#pragma omp parallel for
 		for ( i = 0; i < s_worldData.numsurfaces; i++ ) {
 			//
-			grid1 = (srfBspSurface_t *) s_worldData.surfaces[i].data;
+			srfBspSurface_t *grid1 = (srfBspSurface_t *) s_worldData.surfaces[i].data;
 			// if this surface is not a grid
 			if ( grid1->surfaceType != SF_GRID )
 				continue;
@@ -1774,18 +1775,20 @@ R_MovePatchSurfacesToHunk
 ===============
 */
 void R_MovePatchSurfacesToHunk(void) {
-	int i, size;
-	srfBspSurface_t *grid, *hunkgrid;
+	int i;
 
+#pragma omp parallel for
 	for ( i = 0; i < s_worldData.numsurfaces; i++ ) {
+		int size;
+
 		//
-		grid = (srfBspSurface_t *) s_worldData.surfaces[i].data;
+		srfBspSurface_t *grid = (srfBspSurface_t *) s_worldData.surfaces[i].data;
 		// if this surface is not a grid
 		if ( grid->surfaceType != SF_GRID )
 			continue;
 		//
 		size = sizeof(*grid);
-		hunkgrid = (srfBspSurface_t *)ri->Hunk_Alloc(size, h_low);
+		srfBspSurface_t *hunkgrid = (srfBspSurface_t *)ri->Hunk_Alloc(size, h_low);
 		Com_Memcpy(hunkgrid, grid, size);
 
 		hunkgrid->widthLodError = (float *)ri->Hunk_Alloc( grid->width * 4, h_low );
@@ -3105,23 +3108,6 @@ AIMOD_NODES_LoadNodes ( void )
 			link_flags[j] = fl2;
 		}
 
-		// Set node objective flags..
-		//AIMOD_NODES_SetObjectiveFlags( i );
-		//CreateNewWP_FromAWPNode(i, vec, new_flags, 1/*weight*/, -1/*associated_entity*/, 64.0f/*disttonext*/, -1, numLinks, links, link_flags);
-		
-		/*
-		if (skipzar >= 4)
-		{
-			VectorCopy(vec, waypoints[gWPNum]);
-			gWPNum++;
-			//skipzar = 0;
-		}
-		else
-		{
-			skipzar++;
-		}
-		*/
-
 		qboolean haveClose = qfalse;
 		float wpDistance = 96.0;
 
@@ -3245,7 +3231,7 @@ static void R_RenderAllCubemaps(void)
 		cubemapFormat = GL_RGBA16F;
 	}
 
-#pragma omp parallel for
+//#pragma omp parallel for
 	for (i = 0; i < tr.numCubemaps; i++)
 	{
 		//tr.cubemaps[i] = R_CreateImage (va ("*cubeMap%d", i), NULL, CUBE_MAP_SIZE, CUBE_MAP_SIZE, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE | IMGFLAG_MIPMAP | IMGFLAG_CUBEMAP, cubemapFormat);
