@@ -4015,7 +4015,7 @@ void CalcFirstMuzzlePoint(gentity_t *ent, vec3_t forward, vec3_t right, vec3_t u
 	weapontype = ent->s.weapon;
 	VectorCopy(ent->s.pos.trBase, muzzlePoint);
 
-	VectorCopy(WP_FirstPistolMuzzle, muzzleOffPoint);
+	VectorCopy(WP_FirstPistolMuzzle[weapontype], muzzleOffPoint);
 
 	VectorMA(muzzlePoint, muzzleOffPoint[0], forward, muzzlePoint);
 	VectorMA(muzzlePoint, muzzleOffPoint[1], right, muzzlePoint);
@@ -4033,7 +4033,7 @@ void CalcSecondMuzzlePoint(gentity_t *ent, vec3_t forward, vec3_t right, vec3_t 
 	weapontype = ent->s.weapon;
 	VectorCopy(ent->s.pos.trBase, muzzlePoint);
 
-	VectorCopy(WP_SecondPistolMuzzle, muzzleOffPoint);
+	VectorCopy(WP_SecondPistolMuzzle[weapontype], muzzleOffPoint);
 
 	VectorMA(muzzlePoint, muzzleOffPoint[0], forward, muzzlePoint);
 	VectorMA(muzzlePoint, muzzleOffPoint[1], right, muzzlePoint);

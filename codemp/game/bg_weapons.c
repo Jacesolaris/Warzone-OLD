@@ -62,64 +62,72 @@ vec3_t WP_MuzzlePoint[WP_NUM_WEAPONS] =
 
 };
 //ready for 2 handed pistols when ready for it.
-vec3_t WP_FirstPistolMuzzle = { 12, 6, 0 };
-vec3_t WP_SecondPistolMuzzle = { 12, -6, 0 };
+vec3_t WP_FirstPistolMuzzle[WP_NUM_WEAPONS] = 
+{//	Fwd,	right,	up.
+	{ 12,	6,		0	},
+
+};
+vec3_t WP_SecondPistolMuzzle[WP_NUM_WEAPONS] = 
+{//	Fwd,	right,	up.
+	{ 12,  -6,		0	},
+
+};
 
 //New clean weapon table NOTE* need to remeber to put the WP_NAME same place as you have added it in BG_weapon.h else it gets messed up in the weapon table
 weaponData_t weaponData[WP_NUM_WEAPONS] = {
-	// char	classname[32];				ammoIndex			ammoLow		energyPerShot	fireTime	range		altEnergyPerShot	altFireTime		altRange	chargeSubTime	altChargeSubTime	chargeSub	altChargeSub	maxCharge	altMaxCharge
-	{ "No Weapon",						AMMO_NONE,			0,			0,				0,			0,			0,					0,				0,			0,				0,					0,			0,			 	0,			0	},
-	{ "Stun Baton",						AMMO_NONE,			5,			0,				400,		8192,		0,					400,			8192,		0,				0,					0,			0,				0,			0	},
-	{ "Melee",							AMMO_NONE,			5,			0,				400,		8192,		0,					400,			8192,		0,				0,					0,			0,				0,			0	},
-	{ "Light Saber",					AMMO_NONE,			5,			0,				100,		8192,		0,					100,			8192,		0,				0,					0,			0,				0,			0	},
-	{ "Bryar Pistol",					AMMO_BLASTER,		0,			0,				800,		8192,		0,					800,			8192,		0,				0,					0,			0,				0,			0	},
-	{ "Old Bryar Pistol",				AMMO_BLASTER,		15,			2,				600/*400*/,	8192,		2,					400,			8192,		0,				200,				0,			1,				0,			1500	},
-	{ "E-11 Blaster Rifle",				AMMO_BLASTER,		5,			2,				300/*350*/,	8192,		3,					250,			8192,		0,				200,				0,			3,				0,			1700	},
-	{ "Tenloss Disruptor Rifle",		AMMO_POWERCELL,		5,			5,				600,		8192,		6,					1300,			8192,		0,				0,					0,			0,				0,			0	},	
-	{ "Modified Wookie Crossbow",		AMMO_POWERCELL,		5,			5,				800/*1000*/,8192,		5,					750,			8192,		400,			0,					5,			0,				1700,		0	},
-	{ "Imperial Heavy Repeater",		AMMO_METAL_BOLTS,	5,			8,				175/*150*/,	8192,		15,					800,			8192,		0,				0,					0,			0,				0,			0	},
-	{ "DEMP 2",							AMMO_POWERCELL,		5,			8,				500,		8192,		6,					900,			8192,		0,				250,				0,			3,				0,			2100	},
-	{ "Golan Arms Flechette",			AMMO_METAL_BOLTS,	5,			10,				700,		8192,		15,					800,			8192,		0,				0,					0,			0,				0,			0	},
-	{ "Concussion Rifle",				AMMO_METAL_BOLTS,	40,			40,				800,		8192,		50,					1200,			8192,		0,				0,					0,			0,				0,			0	},
+	// char	classname[32];							fireTime	range		altFireTime		altRange	chargeSubTime	altChargeSubTime	chargeSub	altChargeSub	maxCharge	altMaxCharge
+	{ "No Weapon",									0,			0,			0,				0,			0,				0,					0,			0,			 	0,			0	},
+	{ "Stun Baton",									400,		8192,		400,			8192,		0,				0,					0,			0,				0,			0	},
+	{ "Melee",										400,		8192,		400,			8192,		0,				0,					0,			0,				0,			0	},
+	{ "Light Saber",								100,		8192,		100,			8192,		0,				0,					0,			0,				0,			0	},
+	{ "Bryar Pistol",								800,		8192,		800,			8192,		0,				0,					0,			0,				0,			0	},
+	{ "Old Bryar Pistol",							600,		8192,		400,			8192,		0,				200,				0,			1,				0,			1500	},
+	{ "E-11 Blaster Rifle",							300,		8192,		250,			8192,		0,				200,				0,			3,				0,			1700	},
+	{ "Tenloss Disruptor Rifle",					600,		8192,		1300,			8192,		0,				0,					0,			0,				0,			0	},	
+	{ "Modified Wookie Crossbow",					800,		8192,		750,			8192,		400,			0,					5,			0,				1700,		0	},
+	{ "Imperial Heavy Repeater",					175,		8192,		800,			8192,		0,				0,					0,			0,				0,			0	},
+	{ "DEMP 2",										500,		8192,		900,			8192,		0,				250,				0,			3,				0,			2100	},
+	{ "Golan Arms Flechette",						700,		8192,		800,			8192,		0,				0,					0,			0,				0,			0	},
+	{ "Concussion Rifle",							800,		8192,		1200,			8192,		0,				0,					0,			0,				0,			0	},
 	//Place new Guns under here.
-	{ "A280 Clone Blaster",				AMMO_BLASTER,		5,			5,				350,		8192,		6,					1500,			8192,		0,				0,					0,			3,				0,			1700	},
-	{ "DC-15 Blaster",					AMMO_METAL_BOLTS,	5,			8,				250/*200*/,	8192,		6,					900,			8192,		0,				3,					0,			3,			    0,			2100	},
-	{ "Westarm 5 Blaster",				AMMO_METAL_BOLTS,	5,			8,				250/*200*/,	8192,		6,					900,			8192,		0,				3,					0,			250,		    0,			2100	},
-	{ "T-21 Blaster Rifle",				AMMO_BLASTER,		5,			2,				350/*550*/,	8192,		3,					250,			8192,		0,				0,					0,			0,				0,			0	},
-	{ "EE-3 Blaster Rifle",				AMMO_BLASTER,		5,			2,				250,		8192,		3,					1200,			8192,		0,				0,					0,			0,				0,			0	},
-	{ "DC-15-S Blaster Pistol",			AMMO_POWERCELL,		5,			8,				450,		8192,		6,					900,			8192,		0,				250,				0,			3,				0,			2100	},
-	{ "DLT-20-A Blaster Rifle",			AMMO_BLASTER,		5,			2,				350,		8192,		3,					1200,			8192,		0,				0,					0,			0,				0,			0	},
-	{ "Clone Trooper Rifle",			AMMO_BLASTER,		5,			8,				250/*200*/,	8192,		6,					900,			8192,		0,				250,				0,			3,				0,			2100	},
-	{ "Wester Pistol",					AMMO_BLASTER,		15,			2,				400,		8192,		2,					400,			8192,		0,				200,				0,			1,				0,			1500	},
-	{ "ELG-3A Pistol",					AMMO_BLASTER,		15,			2,				400,		8192,		2,					400,			8192,		0,				200,				0,			1,				0,			1500	},
-	{ "S-5 Pistol",						AMMO_BLASTER,		15,			2,				400,		8192,		2,					250,			8192,		0,				200,				0,			1,				0,			1500	},
-	{ "Z-6 Rotary Blaster Cannon",		AMMO_METAL_BOLTS,	5,			1,				125,		8192,		15,					2800,			8192,		0,				0,					0,			0,				0,			0	},
-	{ "Wookiee Bowcaster",				AMMO_POWERCELL,		5,			5,				350,		8192,		5,					650,			8192,		0,				0,					5,			0,				1700,		0	},
-	{ "Wookie Pistol",					AMMO_BLASTER,		15,			2,				500,		8192,		2,					250,			8192,		0,				200,				0,			1,				0,			1500	},
-	{ "DC-15-S Clone Blaster",			AMMO_BLASTER,		5,			2,				325,		8192,		3,					145,			8192,		0,				0,					0,			0,				0,			0	},
-	{ "DC-15 Ext Blaster",				AMMO_BLASTER,		5,			8,				250/*200*/,	8192,		6,					900,			8192,		0,				250,				0,			3,				0,			2100	},
-	{ "E-60 Pulse Rocket Launcher",		AMMO_ROCKETS,		5,			4,				3000,		8192,		2,					5000,			8192,		0,				0,					0,			0,				0,			0	},
-	{ "CW Pulse Rocket Launcher",		AMMO_ROCKETS,		5,			4,				3000,		8192,		2,					5000,			8192,		0,				0,					0,			0,				0,			0	},
-	{ "TEST GUN",						AMMO_BLASTER,		5,			2,				350,		8192,		3,					500,			8192,		0,				0,					0,			0,				0,			0	},
-	{ "Frag Grenade",					AMMO_THERMAL,		0,			1,				800,		8192,		1,					400,			8192,		0,				0,					0,			0,				0,			0	},
-	{ "Old Frag Grenade",				AMMO_THERMAL,		0,			1,				800,		8192,		1,					400,			8192,		0,				0,					0,			0,				0,			0	},
-	{ "DC-17 Clone Blaster Pistol",		AMMO_POWERCELL,		5,			8,				375,		8192,		6,					875,			8192,		0,				250,				0,			3,				0,			2100	},
-	{ "Spoting Blaster",				AMMO_BLASTER,		5,			2,				350,		8192,		3,					500,			8192,		0,				0,					0,			0,				0,			0	},
-	{ "ACP ArrayGun",					AMMO_BLASTER,		5,			2,				350,		8192,		3,					500,			8192,		0,				0,					0,			0,				0,			0	},
-	{ "ACP Pistol",						AMMO_BLASTER,		5,			2,				350,		8192,		3,					500,			8192,		0,				0,					0,			0,				0,			0	},
-	{ "ACP DoubleBarrel ArrayGun",		AMMO_BLASTER,		5,			2,				350,		8192,		3,					500,			8192,		0,				0,					0,			0,				0,			0	},
-	{ "Acp Sniper Rifle",				AMMO_BLASTER,		5,			2,				850,		8192,		3,					1200,			8192,		0,				0,					0,			0,				0,			0	},
-	{ "Arc Caster Imperial",			AMMO_BLASTER,		5,			2,				150,		8192,		3,					200,			8192,		0,				0,					0,			0,				0,			0	},
-	{ "Rifle Bowcaster Classic",		AMMO_BLASTER,		5,			2,				300,		8192,		3,					225,			8192,		0,				0,					0,			3,				0,			1700	},
+	{ "A280 Clone Blaster",							350,		8192,		1500,			8192,		0,				0,					0,			3,				0,			1700	},
+	{ "DC-15 Blaster",								250,		8192,		900,			8192,		0,				3,					0,			3,			    0,			2100	},
+	{ "Westarm 5 Blaster",							250,		8192,		900,			8192,		0,				3,					0,			250,		    0,			2100	},
+	{ "T-21 Blaster Rifle",							350,		8192,		250,			8192,		0,				0,					0,			0,				0,			0	},
+	{ "EE-3 Blaster Rifle",							250,		8192,		1200,			8192,		0,				0,					0,			0,				0,			0	},
+	{ "DC-15-S Blaster Pistol",						450,		8192,		900,			8192,		0,				250,				0,			3,				0,			2100	},
+	{ "DLT-20-A Blaster Rifle",						350,		8192,		1200,			8192,		0,				0,					0,			0,				0,			0	},
+	{ "Clone Trooper Rifle",						250,		8192,		900,			8192,		0,				250,				0,			3,				0,			2100	},
+	{ "Wester Pistol",								400,		8192,		400,			8192,		0,				200,				0,			1,				0,			1500	},
+	{ "ELG-3A Pistol",								400,		8192,		400,			8192,		0,				200,				0,			1,				0,			1500	},
+	{ "S-5 Pistol",									400,		8192,		250,			8192,		0,				200,				0,			1,				0,			1500	},
+	{ "Z-6 Rotary Blaster Cannon",					125,		8192,		2800,			8192,		0,				0,					0,			0,				0,			0	},
+	{ "Wookiee Bowcaster",							350,		8192,		650,			8192,		0,				0,					5,			0,				1700,		0	},
+	{ "Wookie Pistol",								500,		8192,		250,			8192,		0,				200,				0,			1,				0,			1500	},
+	{ "DC-15-S Clone Blaster",						325,		8192,		145,			8192,		0,				0,					0,			0,				0,			0	},
+	{ "DC-15 Ext Blaster",							250,		8192,		900,			8192,		0,				250,				0,			3,				0,			2100	},
+	{ "E-60 Pulse Rocket Launcher",					3000,		8192,		5000,			8192,		0,				0,					0,			0,				0,			0	},
+	{ "CW Pulse Rocket Launcher",					3000,		8192,		5000,			8192,		0,				0,					0,			0,				0,			0	},
+	{ "TEST GUN",									350,		8192,		500,			8192,		0,				0,					0,			0,				0,			0	},
+	{ "Frag Grenade",								800,		8192,		400,			8192,		0,				0,					0,			0,				0,			0	},
+	{ "Old Frag Grenade",							800,		8192,		400,			8192,		0,				0,					0,			0,				0,			0	},
+	{ "DC-17 Clone Blaster Pistol",					375,		8192,		875,			8192,		0,				250,				0,			3,				0,			2100	},
+	{ "Spoting Blaster",							350,		8192,		500,			8192,		0,				0,					0,			0,				0,			0	},
+	{ "ACP ArrayGun",								350,		8192,		500,			8192,		0,				0,					0,			0,				0,			0	},
+	{ "ACP Pistol",									350,		8192,		500,			8192,		0,				0,					0,			0,				0,			0	},
+	{ "ACP DoubleBarrel ArrayGun",					350,		8192,		500,			8192,		0,				0,					0,			0,				0,			0	},
+	{ "Acp Sniper Rifle",							850,		8192,		1200,			8192,		0,				0,					0,			0,				0,			0	},
+	{ "Arc Caster Imperial",						150,		8192,		200,			8192,		0,				0,					0,			0,				0,			0	},
+	{ "Rifle Bowcaster Classic",					300,		8192,		225,			8192,		0,				0,					0,			3,				0,			1700	},
 
 
 	//Old Weapons. do not add anything under here only above where new guns is added. Stoiss
-	{ "Merr-Sonn Missile System",		AMMO_ROCKETS,		5,			4,				3000,		8192,		2,					5000,			8192,		0,				0,					0,			0,				0,			0	},
-	{ "Thermal Detonator",				AMMO_THERMAL,		0,			1,				800,		8192,		1,					400,			8192,		0,				0,					0,			0,				0,			0	},
-	{ "Trip Mine",						AMMO_TRIPMINE,		0,			1,				800,		8192,		1,					400,			8192,		0,				0,					0,			0,				0,			0	},	
-	{ "Det Pack",						AMMO_DETPACK,		0,			1,				800,		8192,		1,					400,			8192,		0,				0,					0,			0,				0,			0	},
-	{ "Emplaced Gun",					AMMO_NONE,			0,			0,				100,		8192,		3,					100,			8192,		0,				0,					0,			0,				0,			0	},
-	{ "Turret",							AMMO_NONE,			0,			0,				100,		8192,		3,					100,			8192,		0,				0,					0,			0,				0,			0	},
+	{ "Merr-Sonn Missile System",					3000,		8192,		5000,			8192,		0,				0,					0,			0,				0,			0	},
+	{ "Thermal Detonator",							800,		8192,		400,			8192,		0,				0,					0,			0,				0,			0	},
+	{ "Trip Mine",									800,		8192,		400,			8192,		0,				0,					0,			0,				0,			0	},	
+	{ "Det Pack",									800,		8192,		400,			8192,		0,				0,					0,			0,				0,			0	},
+	{ "Emplaced Gun",								100,		8192,		100,			8192,		0,				0,					0,			0,				0,			0	},
+	{ "Turret",										100,		8192,		100,			8192,		0,				0,					0,			0,				0,			0	},
 	
 	};
 

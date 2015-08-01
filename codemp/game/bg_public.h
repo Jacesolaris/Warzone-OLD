@@ -249,8 +249,8 @@ typedef enum { GENDER_MALE, GENDER_FEMALE, GENDER_NEUTER, GENDER_DROID } gender_
 extern vec3_t WP_MuzzlePoint[WP_NUM_WEAPONS];
 
 //ready for 2 handed pistols when we get there
-extern vec3_t WP_FirstPistolMuzzle;
-extern vec3_t WP_SecondPistolMuzzle;
+extern vec3_t WP_FirstPistolMuzzle[WP_NUM_WEAPONS];
+extern vec3_t WP_SecondPistolMuzzle[WP_NUM_WEAPONS];
 
 extern int forcePowerSorted[NUM_FORCE_POWERS];
 

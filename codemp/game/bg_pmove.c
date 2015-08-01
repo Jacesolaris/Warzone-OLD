@@ -7190,7 +7190,6 @@ extern int PM_KickMoveForConditions(void);
 static void PM_Weapon( void )
 {
 	int		addTime;
-	int amount;
 	int		killAfterItem = 0;
 	bgEntity_t *veh = NULL;
 	qboolean vehicleRocketLock = qfalse;
@@ -7812,8 +7811,6 @@ static void PM_Weapon( void )
 		}
 	}
 
-	amount = weaponData[pm->ps->weapon].energyPerShot;
-
 	// check for weapon change
 	// can't change if weapon is firing, but can change
 	// again if lowering or raising
@@ -8278,15 +8275,6 @@ static void PM_Weapon( void )
 	else
 	{
 		PM_StartTorsoAnim( WeaponAttackAnim[pm->ps->weapon] );
-	}
-
-	if ( pm->cmd.buttons & BUTTON_ALT_ATTACK )
-	{
-		amount = weaponData[pm->ps->weapon].altEnergyPerShot;
-	}
-	else
-	{
-		amount = weaponData[pm->ps->weapon].energyPerShot;
 	}
 
 	pm->ps->weaponstate = WEAPON_FIRING;

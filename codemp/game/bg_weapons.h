@@ -141,14 +141,9 @@ typedef struct weaponData_s
 {
 	char	classname[32];		// Spawning name
 
-	int		ammoIndex;			// Index to proper ammo slot
-	int		ammoLow;			// Count when ammo is low
-
-	int		energyPerShot;		// Amount of energy used per shot
 	int		fireTime;			// Amount of time between firings
 	int		range;				// Range of weapon
 
-	int		altEnergyPerShot;	// Amount of energy used for alt-fire
 	int		altFireTime;		// Amount of time between alt-firings
 	int		altRange;			// Range of alt-fire
 
