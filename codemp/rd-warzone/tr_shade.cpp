@@ -2234,7 +2234,8 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 						&& !StringContainsWord(pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName, "skies") 
 						&& !StringContainsWord(pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName, "cloud") 
 						&& !StringContainsWord(pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName, "glow") 
-						&& !StringContainsWord(pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName, "gfx/"))
+						&& !StringContainsWord(pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName, "gfx/")
+						&& !StringContainsWord(pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName, "gfx_base/"))
 					{// How did this happen??? Oh well, generate a normal map now...
 						char imgname[64];
 						sprintf(imgname, "%s_n", pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName);

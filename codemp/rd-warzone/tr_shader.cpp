@@ -2844,6 +2844,7 @@ void AssignMaterialType ( const char *name, const char *text )
 		else
 		{
 			if (!StringsContainWord(name, name, "gfx/") 
+				&& !StringsContainWord(name, name, "gfx_base/") 
 				&& !StringsContainWord(name, name, "hud")
 				&& !StringsContainWord(name, name, "fire")
 				&& !StringsContainWord(name, name, "force")

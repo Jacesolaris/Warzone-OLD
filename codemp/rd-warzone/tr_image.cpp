@@ -3080,7 +3080,8 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, int flags )
 			|| StringContainsWord(name, "skies") 
 			|| StringContainsWord(name, "cloud") 
 			|| StringContainsWord(name, "glow")
-			|| StringContainsWord(name, "gfx/")) 
+			|| StringContainsWord(name, "gfx/")
+			|| StringContainsWord(name, "gfx_base/")) 
 			return NULL;
 
 		if (r_normalMapping->integer && type == IMGTYPE_NORMAL)
@@ -3151,7 +3152,8 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, int flags )
 				|| StringContainsWord(name, "skies") 
 				|| StringContainsWord(name, "cloud") 
 				|| StringContainsWord(name, "glow")
-				|| StringContainsWord(name, "gfx/")))
+				|| StringContainsWord(name, "gfx/")
+				|| StringContainsWord(name, "gfx_base/")))
 			{
 				R_CreateNormalMap( name, pic, width, height, flags, image );
 			}
@@ -3236,7 +3238,7 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, int flags )
 		if (r_normalMapping->integer) 
 		{
 			if (image
-				&& !(StringContainsWord(name, "sky") || StringContainsWord(name, "skies") || StringContainsWord(name, "cloud") || StringContainsWord(name, "glow") || StringContainsWord(name, "gfx/")))
+				&& !(StringContainsWord(name, "sky") || StringContainsWord(name, "skies") || StringContainsWord(name, "cloud") || StringContainsWord(name, "glow") || StringContainsWord(name, "gfx/") || StringContainsWord(name, "gfx_base/")))
 			{
 				qglBindTexture(GL_TEXTURE_2D, image->texnum);
 				R_CreateNormalMap( name, pic, width, height, flags, image );
