@@ -1823,7 +1823,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->EnhancedFX_fleshImpact = trap->FX_RegisterEffect("blasters/green_flesh_impact");
 		weaponInfo->EnhancedFX_altfleshImpact = trap->FX_RegisterEffect("blasters/green_flesh_impact");
 		weaponInfo->EnhancedFX_missileWallImpactfx = trap->FX_RegisterEffect("weapons/blaster_impact_green_medium");
-		weaponInfo->EnhancedFX_altmissileWallImpactfx = trap->FX_RegisterEffect("weapons/blaster_impact_green_big");
+		weaponInfo->EnhancedFX_altmissileWallImpactfx = trap->FX_RegisterEffect("weapons/blaster_impact_green_medium");
 		trap->FX_RegisterEffect("blasters/green_deflect");
 		break;
 
