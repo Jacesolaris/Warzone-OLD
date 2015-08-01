@@ -52,6 +52,8 @@ vec3_t WP_MuzzlePoint[WP_NUM_WEAPONS] =
 	{70,    4,		-1	},	// WP_A200_ACP_PISTOL,
 	{70,    4,		-1	},	// WP_ACP_ARRAYGUN,
 	{70,	6,	    -6	},	// WP_ACP_SNIPER_RIFLE,
+	{12,	6,		-6	},	// WP_ARC_CASTER_IMPERIAL,
+	{30,	3.5,	-6	},	// WP_BOWCASTER_CLASSIC,
 	//old weapons
 	{30,	6,		-14	},	// WP_ROCKET_LAUNCHER,
 	{12,	0,		-4	},	// WP_THERMAL,
@@ -106,8 +108,11 @@ weaponData_t weaponData[WP_NUM_WEAPONS] = {
 	{ "ACP ArrayGun",					AMMO_BLASTER,		5,			2,				350,		8192,		3,					500,			8192,		0,				0,					0,			0,				0,			0	},
 	{ "ACP Pistol",						AMMO_BLASTER,		5,			2,				350,		8192,		3,					500,			8192,		0,				0,					0,			0,				0,			0	},
 	{ "ACP DoubleBarrel ArrayGun",		AMMO_BLASTER,		5,			2,				350,		8192,		3,					500,			8192,		0,				0,					0,			0,				0,			0	},
-	{ "EE-3 Blaster Rifle",				AMMO_BLASTER,		5,			2,				850,		8192,		3,					1200,			8192,		0,				0,					0,			0,				0,			0	},
-	
+	{ "Acp Sniper Rifle",				AMMO_BLASTER,		5,			2,				850,		8192,		3,					1200,			8192,		0,				0,					0,			0,				0,			0	},
+	{ "Arc Caster Imperial",			AMMO_BLASTER,		5,			2,				150,		8192,		3,					200,			8192,		0,				0,					0,			0,				0,			0	},
+	{ "Rifle Bowcaster Classic",		AMMO_BLASTER,		5,			2,				300,		8192,		3,					225,			8192,		0,				0,					0,			3,				0,			1700	},
+
+
 	//Old Weapons. do not add anything under here only above where new guns is added. Stoiss
 	{ "Merr-Sonn Missile System",		AMMO_ROCKETS,		5,			4,				3000,		8192,		2,					5000,			8192,		0,				0,					0,			0,				0,			0	},
 	{ "Thermal Detonator",				AMMO_THERMAL,		0,			1,				800,		8192,		1,					400,			8192,		0,				0,					0,			0,				0,			0	},
@@ -127,6 +132,7 @@ qboolean IsSniperRifle ( int weapon )
 	case WP_EE3:
 	case WP_ACP_SNIPER_RIFLE:
 	case WP_DLT20A:
+	case WP_BOWCASTER_CLASSIC:
 		return qtrue;
 	default:
 		break;
@@ -143,6 +149,7 @@ qboolean SniperRifleCharges ( int weapon )
 	case WP_DLT20A:
 	case WP_EE3:
 	case WP_ACP_SNIPER_RIFLE:
+	case WP_BOWCASTER_CLASSIC:
 		return qfalse;
 	default:
 		break;
@@ -184,5 +191,5 @@ scopeData_t scopeData[] = {
 	"Blastecg A280 Scope",							"",												"",												"gfx/2D/arcMask",						"gfx/2d/a280cropCircle2",					"gfx/2d/a280cropCircle",					"",												"",										"",										"sound/weapons/disruptor/zoomstart.wav",	"sound/weapons/disruptor/zoomend.wav",
 	"Blastech DLT 20A Scope",						"",												"",												"gfx/2D/arcMask",						"gfx/2d/a280cropCircle2",					"gfx/2d/a280cropCircle",					"",												"",										"",										"sound/weapons/disruptor/zoomstart.wav",	"sound/weapons/disruptor/zoomend.wav",
 	"BlastTech ACP HAMaR Scope",					"",												"",												"gfx/2d/acp_sniperrifle/scope_mask_overlay", "gfx/2d/acp_sniperrifle/scope_mask",	"",											"",												"",										"",										"sound/weapons/disruptor/zoomstart.wav",	"sound/weapons/disruptor/zoomend.wav",
-	/*"Type 5 Scope",									"",												"",												"gfx/2D/arcMask",						"gfx/2d/a280cropCircle2",					"gfx/2d/a280cropCircle",					"",												"",										"",										"sound/weapons/disruptor/zoomstart.wav",	"sound/weapons/disruptor/zoomend.wav",*/
+	"BlastTech Rifle Bowcaster",					"",												"",												"",										"gfx/2d/Bowcaster/lensmask",				"gfx/2d/Bowcaster/lensmask_zoom",			"",												"",										"",										"sound/weapons/disruptor/zoomstart.wav",	"sound/weapons/disruptor/zoomend.wav",
 };

@@ -8746,6 +8746,10 @@ void PM_AdjustAttackStates( pmove_t *pmove )
 					pmove->ps->scopeType = SCOPE_SCOPE_ACP_SNIPER;
 					pmove->ps->zoomFov = 80.0f;//cg_fov.value;
 					break;
+				case WP_BOWCASTER_CLASSIC:
+					pmove->ps->scopeType = SCOPE_SCOPE_BOWCASTER_CLASSIC;
+					pmove->ps->zoomFov = 80.0f;//cg_fov.value;
+					break;
 				default:
 					pmove->ps->scopeType = SCOPE_SCOPE_DISRUPTOR;
 					pmove->ps->zoomFov = 80.0f;

@@ -1390,6 +1390,8 @@ void CG_G2MarkEvent(entityState_t *es)
 	case WP_A200_ACP_PISTOL:
 	case WP_ACP_ARRAYGUN:
 	case WP_ACP_SNIPER_RIFLE:
+	case WP_ARC_CASTER_IMPERIAL:
+	case WP_BOWCASTER_CLASSIC:
 		if ( !size )
 		{
 			size = 4.0f;

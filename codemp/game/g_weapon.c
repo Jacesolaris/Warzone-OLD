@@ -1126,6 +1126,7 @@ static void WP_BowcasterMainFire( gentity_t *ent )
 	}
 }
 
+
 //---------------------------------------------------------
 static void WP_FireBowcaster( gentity_t *ent, qboolean altFire )
 //---------------------------------------------------------
@@ -5055,6 +5056,8 @@ void FireWeapon( gentity_t *ent, qboolean altFire ) {
 			else
 				WP_DoubleBarrel_Guns_MainFire(ent, altFire, DOUBLEBARREL_VEL, DOUBLEBARREL_DAMAGE, DOUBLEBARREL_SPREAD, ent->s.weapon);
 			break;
+
+		case WP_ARC_CASTER_IMPERIAL://NOTE needs it own function to handle the lightning stuff to charge up with
 		case WP_A200_ACP_BATTLERIFLE:
 		case WP_CLONE_BLASTER:
 		case WP_BLASTER:
@@ -5129,6 +5132,13 @@ void FireWeapon( gentity_t *ent, qboolean altFire ) {
 				WP_FireBlobGrenade(ent);
 			else
 				WP_FireRepeater(ent, altFire);
+			break;
+
+		case WP_BOWCASTER_CLASSIC:
+			if (altFire)
+				WP_FireBlaster(ent, altFire, BLASTER_VELOCITY*2.5, BRYAR_PISTOL_DAMAGE, 0.0, ent->s.weapon);
+			else
+				WP_FireBlaster(ent, altFire, BLASTER_VELOCITY, BOWCASTER_DAMAGE, BLASTER_SPREAD, ent->s.weapon);
 			break;
 
 		case WP_DISRUPTOR:
