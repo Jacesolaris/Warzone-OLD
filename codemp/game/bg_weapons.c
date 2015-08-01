@@ -62,8 +62,16 @@ vec3_t WP_MuzzlePoint[WP_NUM_WEAPONS] =
 
 };
 //ready for 2 handed pistols when ready for it.
-vec3_t WP_FirstPistolMuzzle = { 12, 6, 0 };
-vec3_t WP_SecondPistolMuzzle = { 12, -6, 0 };
+vec3_t WP_FirstPistolMuzzle[WP_NUM_WEAPONS] = 
+{//	Fwd,	right,	up.
+	{ 12,	6,		0	},
+
+};
+vec3_t WP_SecondPistolMuzzle[WP_NUM_WEAPONS] = 
+{//	Fwd,	right,	up.
+	{ 12,  -6,		0	},
+
+};
 
 //New clean weapon table NOTE* need to remeber to put the WP_NAME same place as you have added it in BG_weapon.h else it gets messed up in the weapon table
 weaponData_t weaponData[WP_NUM_WEAPONS] = {
