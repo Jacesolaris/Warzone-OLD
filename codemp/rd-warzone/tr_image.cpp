@@ -168,6 +168,32 @@ int R_SumOfUsedImages( void ) {
 	return total;
 }
 
+static float GetReadableSize( int bytes, char **units )
+{
+	float result = bytes;
+	*units = "b ";
+
+	if (result >= 1024.0f)
+	{
+		result /= 1024.0f;
+		*units = "kb";
+	}
+
+	if (result >= 1024.0f)
+	{
+		result /= 1024.0f;
+		*units = "Mb";
+	}
+
+	if (result >= 1024.0f)
+	{
+		result /= 1024.0f;
+		*units = "Gb";
+	}
+
+	return result;
+}
+
 /*
 ===============
 R_ImageList_f
@@ -176,6 +202,7 @@ R_ImageList_f
 void R_ImageList_f( void ) {
 	int i;
 	int estTotalSize = 0;
+	char *sizeSuffix;
 
 	ri->Printf(PRINT_ALL, "\n      -w-- -h-- type  -size- --name-------\n");
 
@@ -183,9 +210,7 @@ void R_ImageList_f( void ) {
 	{
 		image_t *image = tr.images[i];
 		char *format = "???? ";
-		char *sizeSuffix;
 		int estSize;
-		int displaySize;
 
 		estSize = image->uploadHeight * image->uploadWidth;
 
@@ -276,39 +301,25 @@ void R_ImageList_f( void ) {
 				// 2 byte per pixel?
 				estSize *= 2;
 				break;
+			case GL_DEPTH_COMPONENT24:
+				format = "D24  ";
+				break;
 		}
 
 		// mipmap adds about 50%
 		if (image->flags & IMGFLAG_MIPMAP)
 			estSize += estSize / 2;
 
-		sizeSuffix = "b ";
-		displaySize = estSize;
+		float printSize = GetReadableSize(estSize, &sizeSuffix);
 
-		if (displaySize > 1024)
-		{
-			displaySize /= 1024;
-			sizeSuffix = "kb";
-		}
-
-		if (displaySize > 1024)
-		{
-			displaySize /= 1024;
-			sizeSuffix = "Mb";
-		}
-
-		if (displaySize > 1024)
-		{
-			displaySize /= 1024;
-			sizeSuffix = "Gb";
-		}
-
-		ri->Printf(PRINT_ALL, "%4i: %4ix%4i %s %4i%s %s\n", i, image->uploadWidth, image->uploadHeight, format, displaySize, sizeSuffix, image->imgName);
+		ri->Printf(PRINT_ALL, "%4i: %4ix%4i %s %7.2f%s %s\n", i, image->uploadWidth, image->uploadHeight, format, printSize, sizeSuffix, image->imgName);
 		estTotalSize += estSize;
 	}
 
+	float printSize = GetReadableSize(estTotalSize, &sizeSuffix);
+
 	ri->Printf (PRINT_ALL, " ---------\n");
-	ri->Printf (PRINT_ALL, " approx %i bytes\n", estTotalSize);
+	ri->Printf (PRINT_ALL, " approx %i bytes (%.2f%s)\n", estTotalSize, printSize, sizeSuffix);
 	ri->Printf (PRINT_ALL, " %i total images\n\n", tr.numImages );
 }
 
@@ -3038,138 +3049,6 @@ char previous_name_loaded[256];
 
 extern void StripCrap( const char *in, char *out, int destsize );
 
-#if 0
-image_t	*R_FindImageFile( const char *name, imgType_t type, int flags )
-{
-	image_t	*image;
-	int		width, height;
-	byte	*pic;
-	long	hash;
-
-	if (!name || ri->Cvar_VariableIntegerValue( "dedicated" )) {
-		return NULL;
-	}
-
-	hash = generateHashValue(name);
-
-	//
-	// see if the image is already loaded
-	//
-	for (image=hashTable[hash]; image; image=image->next) {
-		if ( !strcmp( name, image->imgName ) ) {
-			// the white image can be used with any set of parms, but other mismatches are errors
-			if ( strcmp( name, "*white" ) ) {
-				if ( image->flags != flags ) {
-					ri->Printf( PRINT_DEVELOPER, "WARNING: reused image %s with mixed flags (%i vs %i)\n", name, image->flags, flags );
-				}
-			}
-			return image;
-		}
-	}
-
-	if (name[0] == '*' || name[0] == '!' || name[0] == '$' || name[0] == '_')
-		return NULL;
-
-	//
-	// load the pic from disk
-	//
-	R_LoadImage( name, &pic, &width, &height );
-
-	if ( pic == NULL ) {
-		if (StringContainsWord(name, "sky") 
-			|| StringContainsWord(name, "skies") 
-			|| StringContainsWord(name, "cloud") 
-			|| StringContainsWord(name, "glow")
-			|| StringContainsWord(name, "gfx/")
-			|| StringContainsWord(name, "gfx_base/")) 
-			return NULL;
-
-		if (r_normalMapping->integer && type == IMGTYPE_NORMAL)
-		{// If this was a normal map, and we have none, then generate one now and return it...
-			char cleanedName[128];
-			StripCrap(name, cleanedName, sizeof(cleanedName)); // Remove any _n, etc... The generator will re-add it...
-
-			if (!strcmp(name, cleanedName))
-			{
-				return NULL;
-			}
-
-			R_LoadImage( cleanedName, &pic, &width, &height );
-
-			if ( pic != NULL ) 
-			{
-				image = NULL;
-				for (image=hashTable[hash]; image; image=image->next)
-					if ( !strcmp( cleanedName, image->imgName ) )
-						break;
-
-				if (!image) image = R_CreateImage( cleanedName, pic, width, height, type, flags, GL_RGBA8 );
-
-				if (image)
-				{
-					qglBindTexture(GL_TEXTURE_2D, image->texnum);
-					image_t *n = R_CreateNormalMapGLSL( name, pic, width, height, flags, image );
-					Z_Free( pic );
-					return n;
-				}
-
-				Z_Free( pic );
-			}
-		}
-		return NULL;
-	}
-
-	image = R_CreateImage( name, pic, width, height, type, flags, GL_RGBA8 );
-	qglBindTexture(GL_TEXTURE_2D, image->texnum);
-
-	if (type != IMGTYPE_NORMAL && type != IMGTYPE_SPECULAR  && type != IMGTYPE_SUBSURFACE)
-	{
-		if (image && r_textureClean->integer)
-		{
-			image = R_TextureCleanGLSL( name, pic, width, height, flags, image );
-		}
-
-		/*
-		if (image && r_esharpening->integer)
-		{
-			image = R_TextureESharpenGLSL( name, pic, width, height, flags, image );
-		}
-
-		if (image && r_esharpening2->integer)
-		{
-			image = R_TextureESharpen2GLSL( name, pic, width, height, flags, image );
-		}
-
-		if (image && r_darkexpand->integer)
-		{
-			image = R_TextureDarkExpandGLSL( name, pic, width, height, flags, image );
-		}
-		*/
-
-		if (r_normalMapping->integer) 
-		{
-			if (!(StringContainsWord(name, "sky") 
-				|| StringContainsWord(name, "skies") 
-				|| StringContainsWord(name, "cloud") 
-				|| StringContainsWord(name, "glow")
-				|| StringContainsWord(name, "gfx/")
-				|| StringContainsWord(name, "gfx_base/")))
-			{
-				R_CreateNormalMap( name, pic, width, height, flags, image );
-			}
-		}
-
-		if (r_specularMapping->integer) 
-			R_CreateSpecularMap( name, pic, width, height, flags );
-
-		R_CreateSubsurfaceMap( name, pic, width, height, flags );
-	}
-
-	Z_Free( pic );
-	
-	return image;
-}
-#else
 image_t	*R_FindImageFile( const char *name, imgType_t type, int flags )
 {
 	image_t	*image;
@@ -3255,7 +3134,7 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, int flags )
 	
 	return image;
 }
-#endif
+
 
 /*
 ================
