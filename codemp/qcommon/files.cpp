@@ -280,6 +280,9 @@ FILE*		missingFiles = NULL;
 #  endif
 #endif
 
+tthread::fast_mutex fs_lock;
+
+/*
 qboolean FS_IN_USE = qfalse;
 
 void FS_WaitForThreads( void )
@@ -289,6 +292,7 @@ void FS_WaitForThreads( void )
 		Sleep(1);
 	}
 }
+*/
 
 /*
 ==============
@@ -775,8 +779,12 @@ fileHandle_t FS_SV_FOpenFileWrite( const char *filename ) {
 	char *ospath;
 	fileHandle_t	f;
 
+	/*
 	FS_WaitForThreads();
 	FS_IN_USE = qtrue;
+	*/
+
+	fs_lock.lock();
 
 	if ( !fs_searchpaths ) {
 		Com_Error( ERR_FATAL, "Filesystem call made without initialization\n" );
@@ -795,7 +803,8 @@ fileHandle_t FS_SV_FOpenFileWrite( const char *filename ) {
 	FS_CheckFilenameIsMutable( ospath, __func__ );
 
 	if( FS_CreatePath( ospath ) ) {
-		FS_IN_USE = qfalse;
+		//FS_IN_USE = qfalse;
+		fs_lock.unlock();
 		return 0;
 	}
 
@@ -808,7 +817,8 @@ fileHandle_t FS_SV_FOpenFileWrite( const char *filename ) {
 	if (!fsh[f].handleFiles.file.o) {
 		f = 0;
 	}
-	FS_IN_USE = qfalse;
+	//FS_IN_USE = qfalse;
+	fs_lock.unlock();
 	return f;
 }
 
@@ -823,11 +833,16 @@ int FS_SV_FOpenFileRead( const char *filename, fileHandle_t *fp ) {
 	char *ospath;
 	fileHandle_t	f = 0;
 
+	/*
 	FS_WaitForThreads();
 	FS_IN_USE = qtrue;
+	*/
+
+	fs_lock.lock();
 
 	if ( !fs_searchpaths ) {
-		FS_IN_USE = qfalse;
+		//FS_IN_USE = qfalse;
+		fs_lock.unlock();
 		Com_Error( ERR_FATAL, "Filesystem call made without initialization\n" );
 	}
 
@@ -893,10 +908,12 @@ int FS_SV_FOpenFileRead( const char *filename, fileHandle_t *fp ) {
 
 	*fp = f;
 	if (f) {
-		FS_IN_USE = qfalse;
+		//FS_IN_USE = qfalse;
+		fs_lock.unlock();
 		return FS_filelength(f);
 	}
-	FS_IN_USE = qfalse;
+	//FS_IN_USE = qfalse;
+	fs_lock.unlock();
 	return 0;
 }
 
@@ -1048,11 +1065,16 @@ fileHandle_t FS_FOpenFileAppend( const char *filename ) {
 	char			*ospath;
 	fileHandle_t	f;
 
+	/*
 	FS_WaitForThreads();
 	FS_IN_USE = qtrue;
+	*/
+
+	fs_lock.lock();
 
 	if ( !fs_searchpaths ) {
-		FS_IN_USE = qfalse;
+		//FS_IN_USE = qfalse;
+		fs_lock.unlock();
 		Com_Error( ERR_FATAL, "Filesystem call made without initialization\n" );
 	}
 
@@ -1070,7 +1092,8 @@ fileHandle_t FS_FOpenFileAppend( const char *filename ) {
 	FS_CheckFilenameIsMutable( ospath, __func__ );
 
 	if( FS_CreatePath( ospath ) ) {
-		FS_IN_USE = qfalse;
+		//FS_IN_USE = qfalse;
+		fs_lock.unlock();
 		return 0;
 	}
 
@@ -1079,7 +1102,8 @@ fileHandle_t FS_FOpenFileAppend( const char *filename ) {
 	if (!fsh[f].handleFiles.file.o) {
 		f = 0;
 	}
-	FS_IN_USE = qfalse;
+	//FS_IN_USE = qfalse;
+	fs_lock.unlock();
 	return f;
 }
 
@@ -1284,9 +1308,6 @@ long FS_FOpenFileRead( const char *filename, fileHandle_t *file, qboolean unique
 	//unz_s			*zfi;
 	//void			*temp;
 	int				l;
-
-	//FS_WaitForThreads();
-	//FS_IN_USE = qtrue;
 
 	fsread_lock.lock();
 
@@ -1666,9 +1687,6 @@ int FS_Read( void *buffer, int len, fileHandle_t f ) {
 	byte	*buf;
 	int		tries;
 
-	//FS_WaitForThreads();
-	//FS_IN_USE = qtrue;
-
 	if ( !fs_searchpaths ) {
 		Com_Error( ERR_FATAL, "Filesystem call made without initialization\n" );
 	}
@@ -1966,16 +1984,22 @@ long FS_ReadFile( const char *qpath, void **buffer ) {
 	qboolean		isConfig;
 	long				len;
 
+	/*
 	FS_WaitForThreads();
 	FS_IN_USE = qtrue;
+	*/
+
+	fs_lock.lock();
 
 	if ( !fs_searchpaths ) {
-		FS_IN_USE = qfalse;
+		//FS_IN_USE = qfalse;
+		fs_lock.unlock();
 		Com_Error( ERR_FATAL, "Filesystem call made without initialization\n" );
 	}
 
 	if ( !qpath || !qpath[0] ) {
-		FS_IN_USE = qfalse;
+		//FS_IN_USE = qfalse;
+		fs_lock.unlock();
 		Com_Error( ERR_FATAL, "FS_ReadFile with empty name\n" );
 	}
 
@@ -1992,21 +2016,25 @@ long FS_ReadFile( const char *qpath, void **buffer ) {
 			r = FS_Read( &len, sizeof( len ), com_journalDataFile );
 			if ( r != sizeof( len ) ) {
 				if (buffer != NULL) *buffer = NULL;
-				FS_IN_USE = qfalse;
+				//FS_IN_USE = qfalse;
+				fs_lock.unlock();
 				return -1;
 			}
 			// if the file didn't exist when the journal was created
 			if (!len) {
 				if (buffer == NULL) {
-					FS_IN_USE = qfalse;
+					//FS_IN_USE = qfalse;
+					fs_lock.unlock();
 					return 1;			// hack for old journal files
 				}
 				*buffer = NULL;
-				FS_IN_USE = qfalse;
+				//FS_IN_USE = qfalse;
+				fs_lock.unlock();
 				return -1;
 			}
 			if (buffer == NULL) {
-				FS_IN_USE = qfalse;
+				//FS_IN_USE = qfalse;
+				fs_lock.unlock();
 				return len;
 			}
 
@@ -2026,7 +2054,8 @@ long FS_ReadFile( const char *qpath, void **buffer ) {
 			// guarantee that it will have a trailing 0 for string operations
 			buf[len] = 0;
 
-			FS_IN_USE = qfalse;
+			//FS_IN_USE = qfalse;
+			fs_lock.unlock();
 			return len;
 		}
 	} else {
@@ -2046,7 +2075,8 @@ long FS_ReadFile( const char *qpath, void **buffer ) {
 			FS_Write( &len, sizeof( len ), com_journalDataFile );
 			FS_Flush( com_journalDataFile );
 		}
-		FS_IN_USE = qfalse;
+		//FS_IN_USE = qfalse;
+		fs_lock.unlock();
 		return -1;
 	}
 
@@ -2057,7 +2087,8 @@ long FS_ReadFile( const char *qpath, void **buffer ) {
 			FS_Flush( com_journalDataFile );
 		}
 		FS_FCloseFile( h);
-		FS_IN_USE = qfalse;
+		//FS_IN_USE = qfalse;
+		fs_lock.unlock();
 		return len;
 	}
 
@@ -2086,7 +2117,8 @@ long FS_ReadFile( const char *qpath, void **buffer ) {
 		FS_Write( buf, len, com_journalDataFile );
 		FS_Flush( com_journalDataFile );
 	}
-	FS_IN_USE = qfalse;
+	//FS_IN_USE = qfalse;
+	fs_lock.unlock();
 	return len;
 }
 
@@ -2133,30 +2165,38 @@ Filename are reletive to the quake search path
 void FS_WriteFile( const char *qpath, const void *buffer, int size ) {
 	fileHandle_t f;
 
+	/*
 	FS_WaitForThreads();
 	FS_IN_USE = qtrue;
+	*/
+
+	fs_lock.lock();
 
 	if ( !fs_searchpaths ) {
-		FS_IN_USE = qfalse;
+		//FS_IN_USE = qfalse;
+		fs_lock.unlock();
 		Com_Error( ERR_FATAL, "Filesystem call made without initialization\n" );
 	}
 
 	if ( !qpath || !buffer ) {
-		FS_IN_USE = qfalse;
+		//FS_IN_USE = qfalse;
+		fs_lock.unlock();
 		Com_Error( ERR_FATAL, "FS_WriteFile: NULL parameter" );
 	}
 
 	f = FS_FOpenFileWrite( qpath );
 	if ( !f ) {
 		Com_Printf( "Failed to open %s\n", qpath );
-		FS_IN_USE = qfalse;
+		//FS_IN_USE = qfalse;
+		fs_lock.unlock();
 		return;
 	}
 
 	FS_Write( buffer, size, f );
 
 	FS_FCloseFile( f );
-	FS_IN_USE = qfalse;
+	//FS_IN_USE = qfalse;
+	fs_lock.unlock();
 }
 
 /*
@@ -2191,8 +2231,12 @@ static pack_t *FS_LoadZipFile( const char *zipfile, const char *basename )
 	int				*fs_headerLongs;
 	char			*namePtr;
 
+	/*
 	FS_WaitForThreads();
 	FS_IN_USE = qtrue;
+	*/
+
+	fs_lock.lock();
 
 	fs_numHeaderLongs = 0;
 
@@ -2201,7 +2245,8 @@ static pack_t *FS_LoadZipFile( const char *zipfile, const char *basename )
 
 	if (err != UNZ_OK)
 	{
-		FS_IN_USE = qfalse;
+		//FS_IN_USE = qfalse;
+		fs_lock.unlock();
 		return NULL;
 	}
 
@@ -2279,7 +2324,8 @@ static pack_t *FS_LoadZipFile( const char *zipfile, const char *basename )
 	Z_Free(fs_headerLongs);
 
 	pack->buildBuffer = buildBuffer;
-	FS_IN_USE = qfalse;
+	//FS_IN_USE = qfalse;
+	fs_lock.unlock();
 	return pack;
 }
 
@@ -3102,7 +3148,7 @@ static void FS_AddGameDirectory( const char *path, const char *dir ) {
 	char			**pakfiles;
 	char			*sorted[MAX_PAKFILES];
 
-	FS_WaitForThreads();
+	//FS_WaitForThreads();
 
 	addgamedir_lock.lock();
 
@@ -3457,7 +3503,8 @@ void FS_Startup( const char *gameName ) {
 
 	FS_STARTUP_COMPLETE = qfalse;
 
-	FS_WaitForThreads();
+	fs_lock.lock();
+	//FS_WaitForThreads();
 
 	Com_Printf( "----- FS_Startup -----\n" );
 
@@ -3551,6 +3598,7 @@ void FS_Startup( const char *gameName ) {
 #endif
 	Com_Printf( "%d files in pk3 files\n", fs_packFiles );
 
+	fs_lock.unlock();
 	FS_STARTUP_COMPLETE = qtrue;
 }
 

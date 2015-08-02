@@ -2994,6 +2994,9 @@ Ghoul2 Insert End
 //	CG_LoadingString( "Clearing light styles" );
 	CG_ClearLightStyles();
 
+	CG_LoadingString( "Adding Warzone Weather" );
+	CG_AtmosphericKludge();
+
 //	CG_LoadingString( "Creating automap data" );
 	//init automap
 	trap->R_InitializeWireframeAutomap();

@@ -2356,6 +2356,11 @@ extern void CG_SaySillyTextTest ( void );
 extern void TextToSpeech( const char *text, const char *voice, int entityNum, vec3_t origin );
 extern char *CG_GetTextToSpeechVoiceForEntity(centity_t *ent);
 
+// cg_marks.c (atmospherics/weather)
+void CG_EffectParse( const char *effectstr );
+void CG_AddAtmosphericEffects();
+qboolean CG_AtmosphericKludge();
+
 /*
 Ghoul2 Insert End
 */

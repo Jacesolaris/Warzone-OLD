@@ -1,0 +1,77 @@
+Electricity
+{
+	flags				useModel useBBox usePhysics
+
+	spawnFlags			org2fromTrace
+
+	count				1 2
+
+	life				100 150
+
+	bounce				5 8
+
+	alpha
+	{
+		end				0
+	}
+
+	size
+	{
+		start			25 30
+		end				4
+		parm			40
+		flags			nonlinear
+	}
+
+	shaders
+	[
+		gfx/misc/whitelightning
+	]
+}
+
+Particle
+{
+	count	40
+//life	100	150
+	delay	0 100
+
+	origin	10 -10 -10		30 10 10
+
+	size
+	{
+		start	60.0
+		end 	45.0
+		flags	linear
+	}
+
+	rgb
+	{
+		start	0.5 0.6 1.0
+	}
+
+	alpha
+	{
+		start 0.2
+		end	0.0
+		parms	50
+		flags	linear nonlinear
+	}
+
+	shaders
+	[
+		gfx/misc/lightningFlash
+	]
+}
+
+Sound
+{
+	name				Boom
+	spawnflags		lessAttenuation
+
+	sounds
+	[
+		sound/atmospherics/thunder0.wav
+		sound/atmospherics/thunder1.wav
+		sound/atmospherics/thunder2.wav
+	]
+}
