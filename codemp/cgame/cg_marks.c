@@ -344,7 +344,7 @@ void CG_AddMarks( void ) {
 #define MIN_ATMOSPHERIC_HEIGHT  	  	-65536//-8096  	// minimum world height (FIXME: since 1.27 this should be -65536)
 #define MAX_ATMOSPHERIC_EFFECTSHADERS  	6  	  	// maximum different effectshaders for an atmospheric effect
 #define ATMOSPHERIC_RAIN_DROPDELAY  	30
-#define ATMOSPHERIC_SNOW_DROPDELAY  	30
+#define ATMOSPHERIC_SNOW_DROPDELAY  	1//30
 #define ATMOSPHERIC_CUTHEIGHT  	  	  	800
 
 #define ATMOSPHERIC_RAIN_SPEED  	  	2.1f * DEFAULT_GRAVITY
@@ -353,10 +353,10 @@ void CG_AddMarks( void ) {
 #define ATMOSPHERIC_STORM_SPEED  	  	2.9f * DEFAULT_GRAVITY
 #define ATMOSPHERIC_STORM_HEIGHT  	  	150
 
-#define ATMOSPHERIC_SNOW_SPEED  	  	0.1f * DEFAULT_GRAVITY
+#define ATMOSPHERIC_SNOW_SPEED  	  	0.4f/*0.1f*/ * DEFAULT_GRAVITY
 #define ATMOSPHERIC_SNOW_HEIGHT  	  	10
 
-#define ATMOSPHERIC_HEAVY_SNOW_SPEED  	0.25f * DEFAULT_GRAVITY
+#define ATMOSPHERIC_HEAVY_SNOW_SPEED  	0.6f/*0.25f*/ * DEFAULT_GRAVITY
 #define ATMOSPHERIC_HEAVY_SNOW_HEIGHT  	10
 
 
@@ -978,7 +978,7 @@ static qboolean CG_SnowParticleGenerate( cg_atmosphericParticle_t *particle, vec
   	VectorNormalize2( particle->delta, particle->deltaNormalized );
   	particle->height = ATMOSPHERIC_SNOW_HEIGHT + crandom() * 8;
   	particle->weight = particle->height * 0.5f;
-  	particle->effectshader = &cg_atmFx.effectshaders[ (int) (random() * ( cg_atmFx.numEffectShaders - 1 )) ];
+  	particle->effectshader = &cg_atmFx.effectshaders[ irand(0,cg_atmFx.numEffectShaders-1) ];
 
   	distance =  	((float)(tr.endpos[2] - MIN_ATMOSPHERIC_HEIGHT)) / -particle->delta[2];
   	VectorMA( tr.endpos, distance, particle->delta, testend );
@@ -1070,7 +1070,7 @@ static void CG_SnowParticleRender( cg_atmosphericParticle_t *particle )
 
 	if (rand()%600 < 2)
 	{
-		//trap->FX_PlayEffectID(trap->FX_RegisterEffect("effects/env/snow.efx"), start, particle->deltaNormalized);
+		//trap->FX_PlayEffectID(trap->FX_RegisterEffect("effects/env/snow.efx"), start, particle->deltaNormalized, 0, 0, qfalse);
 		trap->FX_PlayEffectID(trap->FX_RegisterEffect("effects/env/fog.efx"), start, particle->deltaNormalized, 0, 0, qfalse);
 		//particle->active = qfalse;
 		//return;
@@ -1160,7 +1160,7 @@ static qboolean CG_HeavySnowParticleGenerate( cg_atmosphericParticle_t *particle
   	VectorNormalize2( particle->delta, particle->deltaNormalized );
   	particle->height = ATMOSPHERIC_HEAVY_SNOW_HEIGHT + crandom() * 8;
   	particle->weight = particle->height * 0.5f;
-  	particle->effectshader = &cg_atmFx.effectshaders[ (int) (random() * ( cg_atmFx.numEffectShaders - 1 )) ];
+  	particle->effectshader = &cg_atmFx.effectshaders[ irand(0,cg_atmFx.numEffectShaders-1) ];
 
   	distance =  	((float)(tr.endpos[2] - MIN_ATMOSPHERIC_HEIGHT)) / -particle->delta[2];
   	VectorMA( tr.endpos, distance, particle->delta, testend );
@@ -1743,7 +1743,8 @@ qboolean CG_AtmosphericKludge()
 	//
 	if( !Q_stricmp( cgs.mapname, "maps/mp/ctf2.bsp" ) )
   	{// hoth
-  	  	CG_EffectParse( "T=SNOW" );
+  	  	//CG_EffectParse( "T=SNOW" );
+		CG_EffectParse( "T=HEAVYSNOW" );
 		ATMOSPHERIC_DROPDELAY = ATMOSPHERIC_SNOW_DROPDELAY;
   	  	return( kludgeResult = qtrue );
   	}
