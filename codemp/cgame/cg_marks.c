@@ -1574,7 +1574,56 @@ qboolean CG_AtmosphericKludge()
 	storm = qfalse;
 	rain = qfalse;
 
-	// Supported Game Maps.
+	//
+	// Supported Game Maps...
+	//
+	if( !Q_stricmp( cgs.mapname, "maps/mp/ctf2.bsp" ) )
+  	{// hoth
+  	  	CG_EffectParse( "T=SNOW" );
+		ATMOSPHERIC_DROPDELAY = ATMOSPHERIC_SNOW_DROPDELAY;
+  	  	return( kludgeResult = qtrue );
+  	}
+
+	if( !Q_stricmp( cgs.mapname, "maps/mp/ctf3.bsp" ) )
+  	{// yavin
+  	  	CG_EffectParse( "T=STORM" );
+		storm = qtrue;
+		ATMOSPHERIC_DROPDELAY = ATMOSPHERIC_RAIN_DROPDELAY;
+  	  	return( kludgeResult = qtrue );
+  	}
+
+	if( !Q_stricmp( cgs.mapname, "maps/mp/ctf4.bsp" ) )
+  	{// coruscant streets
+  	  	CG_EffectParse( "T=RAIN" );
+		rain = qtrue;
+  	  	return( kludgeResult = qtrue );
+  	}
+
+	if( !Q_stricmp( cgs.mapname, "maps/mp/duel6.bsp" ) )
+  	{// yavin training
+  	  	CG_EffectParse( "T=STORM" );
+		storm = qtrue;
+		ATMOSPHERIC_DROPDELAY = ATMOSPHERIC_RAIN_DROPDELAY;
+  	  	return( kludgeResult = qtrue );
+  	}
+
+	if( !Q_stricmp( cgs.mapname, "maps/mp/duel9.bsp" ) )
+  	{// hoth canyon
+  	  	CG_EffectParse( "T=SNOW" );
+		ATMOSPHERIC_DROPDELAY = ATMOSPHERIC_SNOW_DROPDELAY;
+  	  	return( kludgeResult = qtrue );
+  	}
+
+	if( !Q_stricmp( cgs.mapname, "maps/hoth2.bsp" ) )
+  	{// hoth 2 sp
+  	  	CG_EffectParse( "T=SNOW" );
+		ATMOSPHERIC_DROPDELAY = ATMOSPHERIC_SNOW_DROPDELAY;
+  	  	return( kludgeResult = qtrue );
+  	}
+
+	//
+	// JK2 Maps...
+	//
   	if( !Q_stricmp( cgs.mapname, "maps/ffa_bespin.bsp" ) )
   	{
   	  	CG_EffectParse( "T=STORM" );
