@@ -1748,7 +1748,7 @@ void R_StitchAllPatches( void ) {
 	{
 		stitched = qfalse;
 
-#pragma omp parallel for
+//#pragma omp parallel for
 		for ( i = 0; i < s_worldData.numsurfaces; i++ ) {
 			//
 			srfBspSurface_t *grid1 = (srfBspSurface_t *) s_worldData.surfaces[i].data;
@@ -1777,7 +1777,7 @@ R_MovePatchSurfacesToHunk
 void R_MovePatchSurfacesToHunk(void) {
 	int i;
 
-#pragma omp parallel for
+//#pragma omp parallel for
 	for ( i = 0; i < s_worldData.numsurfaces; i++ ) {
 		int size;
 
