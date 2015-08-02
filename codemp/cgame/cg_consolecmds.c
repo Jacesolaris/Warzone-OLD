@@ -259,6 +259,7 @@ extern void AIMod_AddLiftPoint ( void );
 extern void AIMod_AWC_MarkBadHeight ( void );
 extern void AIMod_AddWayPoint ( void );
 extern void CG_ShowSurface ( void );
+extern void CG_ShowSkySurface ( void );
 extern void CG_ShowSlope ( void );
 
 void CG_ShowLifts ( void )
@@ -408,6 +409,7 @@ static consoleCommand_t	commands[] = {
 	{ "prevframe",					CG_TestModelPrevFrame_f },
 	{ "prevskin",					CG_TestModelPrevSkin_f },
 	{ "showlifts",					CG_ShowLifts },
+	{ "showskysurface",				CG_ShowSkySurface },
 	{ "showslope",					CG_ShowSlope },
 	{ "showsurface",				CG_ShowSurface },
 	{ "siegeCompleteCvarUpdate",	CG_SiegeCompleteCvarUpdate_f },

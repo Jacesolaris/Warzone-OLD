@@ -340,11 +340,11 @@ void CG_AddMarks( void ) {
 
 #define MAX_ATMOSPHERIC_PARTICLES  	  	10000  	// maximum # of particles
 #define MAX_ATMOSPHERIC_DISTANCE  	  	2000  	// maximum distance from refdef origin that particles are visible
-#define MAX_ATMOSPHERIC_HEIGHT  	  	8096  	// maximum world height (FIXME: since 1.27 this should be 65536)
-#define MIN_ATMOSPHERIC_HEIGHT  	  	-8096  	// minimum world height (FIXME: since 1.27 this should be -65536)
+#define MAX_ATMOSPHERIC_HEIGHT  	  	65536//8096  	// maximum world height (FIXME: since 1.27 this should be 65536)
+#define MIN_ATMOSPHERIC_HEIGHT  	  	-65536//-8096  	// minimum world height (FIXME: since 1.27 this should be -65536)
 #define MAX_ATMOSPHERIC_EFFECTSHADERS  	6  	  	// maximum different effectshaders for an atmospheric effect
 #define ATMOSPHERIC_RAIN_DROPDELAY  	30
-#define ATMOSPHERIC_SNOW_DROPDELAY  	100
+#define ATMOSPHERIC_SNOW_DROPDELAY  	30
 #define ATMOSPHERIC_CUTHEIGHT  	  	  	800
 
 #define ATMOSPHERIC_RAIN_SPEED  	  	2.1f * DEFAULT_GRAVITY
@@ -499,16 +499,49 @@ static qboolean CG_RainParticleGenerate( cg_atmosphericParticle_t *particle, vec
   	  	if( testend[2] >= MAX_ATMOSPHERIC_HEIGHT )
   	  	  	testend[2] = MAX_ATMOSPHERIC_HEIGHT - 1;
   	  	CG_Trace( &tr, testpoint, NULL, NULL, testend, ENTITYNUM_NONE, MASK_SOLID|MASK_WATER );
-  	  	if( tr.startsolid )  	  	  	// Stuck in something, skip over it.
+  	  	if( tr.startsolid || tr.allsolid )  	  	  	// Stuck in something, skip over it.
   	  	{
   	  	  	testpoint[2] += 64;
   	  	  	testend[2] = testpoint[2] + MAX_ATMOSPHERIC_HEIGHT;
   	  	}
   	  	else if( tr.fraction == 1 )  	  	// Didn't hit anything, we're (probably) outside the world
+		{
   	  	  	return( qfalse );
+		}
   	  	else if( tr.surfaceFlags & SURF_SKY )  	// Hit sky, this is where we start.
+		{
+			testpoint[2] -= 128.0; // UQ1: because jka seems to use wierd skies...
   	  	  	break;
-  	  	else return( qfalse );
+		}
+		else if( (tr.surfaceFlags & SURF_NODRAW) && (tr.contents & CONTENTS_SOLID) && (tr.contents & CONTENTS_OPAQUE) && (tr.contents & CONTENTS_TRANSLUCENT) )  	// Hit sky, this is where we start.
+		{
+			testpoint[2] -= 128.0; // UQ1: because jka seems to use wierd skies...
+  	  	  	break;
+		}
+		else if( (tr.surfaceFlags & SURF_NOMARKS) && (tr.surfaceFlags & SURF_NODRAW) && (tr.contents & CONTENTS_SOLID) && (tr.contents & CONTENTS_OPAQUE) )  	// Hit sky, this is where we start.
+		{
+			testpoint[2] -= 128.0; // UQ1: because jka seems to use wierd skies...
+  	  	  	break;
+		}
+		else if( (tr.surfaceFlags & SURF_NOMARKS) && (tr.surfaceFlags & SURF_NOIMPACT) && (tr.contents & CONTENTS_SOLID) && (tr.contents & CONTENTS_OPAQUE) )  	// Hit sky, this is where we start.
+		{
+			testpoint[2] -= 128.0; // UQ1: because jka seems to use wierd skies...
+  	  	  	break;
+		}
+		else if( (tr.surfaceFlags & SURF_NOIMPACT) && (tr.surfaceFlags & SURF_NODRAW) && (tr.contents & CONTENTS_TRANSLUCENT) )  	// Hit sky, this is where we start.
+		{
+			testpoint[2] -= 128.0; // UQ1: because jka seems to use wierd skies...
+  	  	  	break;
+		}
+		else if( (tr.surfaceFlags & SURF_NOMARKS) && (tr.surfaceFlags & SURF_NODRAW) && (tr.contents & CONTENTS_TRANSLUCENT) )  	// Hit sky, this is where we start.
+		{
+			testpoint[2] -= 128.0; // UQ1: because jka seems to use wierd skies...
+  	  	  	break;
+		}
+  	  	else 
+		{
+			return( qfalse );
+		}
   	}
 
   	particle->active = qtrue;
@@ -585,7 +618,7 @@ static void CG_RainParticleRender( cg_atmosphericParticle_t *particle )
 				{
 					if (rand()%50 < 2)
 					{
-						trap->FX_PlayEffectID(trap->FX_RegisterEffect("effects/env/water_splash.efx"), start, particle->deltaNormalized, 0, 8, qfalse);
+						trap->FX_PlayEffectID(trap->FX_RegisterEffect("effects/env/water_splash_rain.efx"), start, particle->deltaNormalized, 0, 0, qfalse);
 						return;
 					}
 
@@ -669,16 +702,49 @@ static qboolean CG_StormParticleGenerate( cg_atmosphericParticle_t *particle, ve
   	  	if( testend[2] >= MAX_ATMOSPHERIC_HEIGHT )
   	  	  	testend[2] = MAX_ATMOSPHERIC_HEIGHT - 1;
   	  	CG_Trace( &tr, testpoint, NULL, NULL, testend, ENTITYNUM_NONE, MASK_SOLID|MASK_WATER );
-  	  	if( tr.startsolid )  	  	  	// Stuck in something, skip over it.
+  	  	if( tr.startsolid || tr.allsolid )  	  	  	// Stuck in something, skip over it.
   	  	{
   	  	  	testpoint[2] += 64;
   	  	  	testend[2] = testpoint[2] + MAX_ATMOSPHERIC_HEIGHT;
   	  	}
   	  	else if( tr.fraction == 1 )  	  	// Didn't hit anything, we're (probably) outside the world
+		{
   	  	  	return( qfalse );
+		}
   	  	else if( tr.surfaceFlags & SURF_SKY )  	// Hit sky, this is where we start.
+		{
+			testpoint[2] -= 128.0; // UQ1: because jka seems to use wierd skies...
   	  	  	break;
-  	  	else return( qfalse );
+		}
+		else if( (tr.surfaceFlags & SURF_NODRAW) && (tr.contents & CONTENTS_SOLID) && (tr.contents & CONTENTS_OPAQUE) && (tr.contents & CONTENTS_TRANSLUCENT) )  	// Hit sky, this is where we start.
+		{
+			testpoint[2] -= 128.0; // UQ1: because jka seems to use wierd skies...
+  	  	  	break;
+		}
+		else if( (tr.surfaceFlags & SURF_NOMARKS) && (tr.surfaceFlags & SURF_NODRAW) && (tr.contents & CONTENTS_SOLID) && (tr.contents & CONTENTS_OPAQUE) )  	// Hit sky, this is where we start.
+		{
+			testpoint[2] -= 128.0; // UQ1: because jka seems to use wierd skies...
+  	  	  	break;
+		}
+		else if( (tr.surfaceFlags & SURF_NOMARKS) && (tr.surfaceFlags & SURF_NOIMPACT) && (tr.contents & CONTENTS_SOLID) && (tr.contents & CONTENTS_OPAQUE) )  	// Hit sky, this is where we start.
+		{
+			testpoint[2] -= 128.0; // UQ1: because jka seems to use wierd skies...
+  	  	  	break;
+		}
+		else if( (tr.surfaceFlags & SURF_NOIMPACT) && (tr.surfaceFlags & SURF_NODRAW) && (tr.contents & CONTENTS_TRANSLUCENT) )  	// Hit sky, this is where we start.
+		{
+			testpoint[2] -= 128.0; // UQ1: because jka seems to use wierd skies...
+  	  	  	break;
+		}
+		else if( (tr.surfaceFlags & SURF_NOMARKS) && (tr.surfaceFlags & SURF_NODRAW) && (tr.contents & CONTENTS_TRANSLUCENT) )  	// Hit sky, this is where we start.
+		{
+			testpoint[2] -= 128.0; // UQ1: because jka seems to use wierd skies...
+  	  	  	break;
+		}
+  	  	else 
+		{
+			return( qfalse );
+		}
   	}
 
   	particle->active = qtrue;
@@ -753,7 +819,7 @@ static void CG_StormParticleRender( cg_atmosphericParticle_t *particle )
 				{
 					if (rand()%100 < 2)
 					{
-						trap->FX_PlayEffectID(trap->FX_RegisterEffect("effects/env/water_splash.efx"), start, particle->deltaNormalized, 0, 8, qfalse);
+						trap->FX_PlayEffectID(trap->FX_RegisterEffect("effects/env/water_splash_rain.efx"), start, particle->deltaNormalized, 0, 0, qfalse);
 						return;
 					}
 					CG_ImpactMark( cg_atmFx.effectlandshader, start, particle->surfacenormal, 0, 1, 1, 1, frac * 0.5, qfalse, 3 - frac * 2, qtrue );
@@ -857,16 +923,49 @@ static qboolean CG_SnowParticleGenerate( cg_atmosphericParticle_t *particle, vec
   	  	if( testend[2] >= MAX_ATMOSPHERIC_HEIGHT )
   	  	  	testend[2] = MAX_ATMOSPHERIC_HEIGHT - 1;
   	  	CG_Trace( &tr, testpoint, NULL, NULL, testend, ENTITYNUM_NONE, MASK_SOLID|MASK_WATER );
-  	  	if( tr.startsolid )  	  	  	// Stuck in something, skip over it.
+  	  	if( tr.startsolid || tr.allsolid )  	  	  	// Stuck in something, skip over it.
   	  	{
   	  	  	testpoint[2] += 64;
   	  	  	testend[2] = testpoint[2] + MAX_ATMOSPHERIC_HEIGHT;
   	  	}
   	  	else if( tr.fraction == 1 )  	  	// Didn't hit anything, we're (probably) outside the world
+		{
   	  	  	return( qfalse );
+		}
   	  	else if( tr.surfaceFlags & SURF_SKY )  	// Hit sky, this is where we start.
+		{
+			testpoint[2] -= 128.0; // UQ1: because jka seems to use wierd skies...
   	  	  	break;
-  	  	else return( qfalse );
+		}
+		else if( (tr.surfaceFlags & SURF_NODRAW) && (tr.contents & CONTENTS_SOLID) && (tr.contents & CONTENTS_OPAQUE) && (tr.contents & CONTENTS_TRANSLUCENT) )  	// Hit sky, this is where we start.
+		{
+			testpoint[2] -= 128.0; // UQ1: because jka seems to use wierd skies...
+  	  	  	break;
+		}
+		else if( (tr.surfaceFlags & SURF_NOMARKS) && (tr.surfaceFlags & SURF_NODRAW) && (tr.contents & CONTENTS_SOLID) && (tr.contents & CONTENTS_OPAQUE) )  	// Hit sky, this is where we start.
+		{
+			testpoint[2] -= 128.0; // UQ1: because jka seems to use wierd skies...
+  	  	  	break;
+		}
+		else if( (tr.surfaceFlags & SURF_NOMARKS) && (tr.surfaceFlags & SURF_NOIMPACT) && (tr.contents & CONTENTS_SOLID) && (tr.contents & CONTENTS_OPAQUE) )  	// Hit sky, this is where we start.
+		{
+			testpoint[2] -= 128.0; // UQ1: because jka seems to use wierd skies...
+  	  	  	break;
+		}
+		else if( (tr.surfaceFlags & SURF_NOIMPACT) && (tr.surfaceFlags & SURF_NODRAW) && (tr.contents & CONTENTS_TRANSLUCENT) )  	// Hit sky, this is where we start.
+		{
+			testpoint[2] -= 128.0; // UQ1: because jka seems to use wierd skies...
+  	  	  	break;
+		}
+		else if( (tr.surfaceFlags & SURF_NOMARKS) && (tr.surfaceFlags & SURF_NODRAW) && (tr.contents & CONTENTS_TRANSLUCENT) )  	// Hit sky, this is where we start.
+		{
+			testpoint[2] -= 128.0; // UQ1: because jka seems to use wierd skies...
+  	  	  	break;
+		}
+  	  	else 
+		{
+			return( qfalse );
+		}
   	}
 
   	particle->active = qtrue;
@@ -1006,16 +1105,49 @@ static qboolean CG_HeavySnowParticleGenerate( cg_atmosphericParticle_t *particle
   	  	if( testend[2] >= MAX_ATMOSPHERIC_HEIGHT )
   	  	  	testend[2] = MAX_ATMOSPHERIC_HEIGHT - 1;
   	  	CG_Trace( &tr, testpoint, NULL, NULL, testend, ENTITYNUM_NONE, MASK_SOLID|MASK_WATER );
-  	  	if( tr.startsolid )  	  	  	// Stuck in something, skip over it.
+  	  	if( tr.startsolid || tr.allsolid )  	  	  	// Stuck in something, skip over it.
   	  	{
   	  	  	testpoint[2] += 64;
   	  	  	testend[2] = testpoint[2] + MAX_ATMOSPHERIC_HEIGHT;
   	  	}
   	  	else if( tr.fraction == 1 )  	  	// Didn't hit anything, we're (probably) outside the world
+		{
   	  	  	return( qfalse );
+		}
   	  	else if( tr.surfaceFlags & SURF_SKY )  	// Hit sky, this is where we start.
+		{
+			testpoint[2] -= 128.0; // UQ1: because jka seems to use wierd skies...
   	  	  	break;
-  	  	else return( qfalse );
+		}
+		else if( (tr.surfaceFlags & SURF_NODRAW) && (tr.contents & CONTENTS_SOLID) && (tr.contents & CONTENTS_OPAQUE) && (tr.contents & CONTENTS_TRANSLUCENT) )  	// Hit sky, this is where we start.
+		{
+			testpoint[2] -= 128.0; // UQ1: because jka seems to use wierd skies...
+  	  	  	break;
+		}
+		else if( (tr.surfaceFlags & SURF_NOMARKS) && (tr.surfaceFlags & SURF_NODRAW) && (tr.contents & CONTENTS_SOLID) && (tr.contents & CONTENTS_OPAQUE) )  	// Hit sky, this is where we start.
+		{
+			testpoint[2] -= 128.0; // UQ1: because jka seems to use wierd skies...
+  	  	  	break;
+		}
+		else if( (tr.surfaceFlags & SURF_NOMARKS) && (tr.surfaceFlags & SURF_NOIMPACT) && (tr.contents & CONTENTS_SOLID) && (tr.contents & CONTENTS_OPAQUE) )  	// Hit sky, this is where we start.
+		{
+			testpoint[2] -= 128.0; // UQ1: because jka seems to use wierd skies...
+  	  	  	break;
+		}
+		else if( (tr.surfaceFlags & SURF_NOIMPACT) && (tr.surfaceFlags & SURF_NODRAW) && (tr.contents & CONTENTS_TRANSLUCENT) )  	// Hit sky, this is where we start.
+		{
+			testpoint[2] -= 128.0; // UQ1: because jka seems to use wierd skies...
+  	  	  	break;
+		}
+		else if( (tr.surfaceFlags & SURF_NOMARKS) && (tr.surfaceFlags & SURF_NODRAW) && (tr.contents & CONTENTS_TRANSLUCENT) )  	// Hit sky, this is where we start.
+		{
+			testpoint[2] -= 128.0; // UQ1: because jka seems to use wierd skies...
+  	  	  	break;
+		}
+  	  	else 
+		{
+			return( qfalse );
+		}
   	}
 
   	particle->active = qtrue;
@@ -1440,17 +1572,49 @@ void CG_LightningFlash( vec3_t currvec )
   	  	if( testend[2] >= MAX_ATMOSPHERIC_HEIGHT )
   	  	  	testend[2] = MAX_ATMOSPHERIC_HEIGHT - 1;
   	  	CG_Trace( &tr, testpoint, NULL, NULL, testend, ENTITYNUM_NONE, MASK_SOLID|MASK_WATER );
-  	  	if( tr.startsolid )  	  	  	// Stuck in something, skip over it.
+		if( tr.startsolid || tr.allsolid )  	  	  	// Stuck in something, skip over it.
   	  	{
   	  	  	testpoint[2] += 64;
   	  	  	testend[2] = testpoint[2] + MAX_ATMOSPHERIC_HEIGHT;
   	  	}
   	  	else if( tr.fraction == 1 )  	  	// Didn't hit anything, we're (probably) outside the world
+		{
   	  	  	return;
+		}
   	  	else if( tr.surfaceFlags & SURF_SKY )  	// Hit sky, this is where we start.
+		{
+			testpoint[2] -= 128.0; // UQ1: because jka seems to use wierd skies...
   	  	  	break;
+		}
+		else if( (tr.surfaceFlags & SURF_NODRAW) && (tr.contents & CONTENTS_SOLID) && (tr.contents & CONTENTS_OPAQUE) && (tr.contents & CONTENTS_TRANSLUCENT) )  	// Hit sky, this is where we start.
+		{
+			testpoint[2] -= 128.0; // UQ1: because jka seems to use wierd skies...
+  	  	  	break;
+		}
+		else if( (tr.surfaceFlags & SURF_NOMARKS) && (tr.surfaceFlags & SURF_NODRAW) && (tr.contents & CONTENTS_SOLID) && (tr.contents & CONTENTS_OPAQUE) )  	// Hit sky, this is where we start.
+		{
+			testpoint[2] -= 128.0; // UQ1: because jka seems to use wierd skies...
+  	  	  	break;
+		}
+		else if( (tr.surfaceFlags & SURF_NOMARKS) && (tr.surfaceFlags & SURF_NOIMPACT) && (tr.contents & CONTENTS_SOLID) && (tr.contents & CONTENTS_OPAQUE) )  	// Hit sky, this is where we start.
+		{
+			testpoint[2] -= 128.0; // UQ1: because jka seems to use wierd skies...
+  	  	  	break;
+		}
+		else if( (tr.surfaceFlags & SURF_NOIMPACT) && (tr.surfaceFlags & SURF_NODRAW) && (tr.contents & CONTENTS_TRANSLUCENT) )  	// Hit sky, this is where we start.
+		{
+			testpoint[2] -= 128.0; // UQ1: because jka seems to use wierd skies...
+  	  	  	break;
+		}
+		else if( (tr.surfaceFlags & SURF_NOMARKS) && (tr.surfaceFlags & SURF_NODRAW) && (tr.contents & CONTENTS_TRANSLUCENT) )  	// Hit sky, this is where we start.
+		{
+			testpoint[2] -= 128.0; // UQ1: because jka seems to use wierd skies...
+  	  	  	break;
+		}
   	  	else 
+		{
 			return;
+		}
   	}
 
 	if (lightning1 == -1)
