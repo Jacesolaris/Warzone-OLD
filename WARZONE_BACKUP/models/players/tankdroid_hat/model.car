@@ -1,4 +1,0 @@
-$aseanimgrabinit
-$aseanimgrab models/players/tankdroid_hat/root.xsi -loop -1
-$aseanimgrabfinalize
-$aseanimconvertmdx_noask models/players/tankdroid_hat/root -makeskel /models/players/tankdroid_hat/tankdroid_hat -origin 0 0 24

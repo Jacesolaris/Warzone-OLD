@@ -1777,10 +1777,10 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->EnhancedFX_missileWallImpactfx = trap->FX_RegisterEffect("blasters/electric_impacttiny");
 		weaponInfo->EnhancedFX_altmissileWallImpactfx = trap->FX_RegisterEffect("blasters/electric_impacttiny");
 
-		weaponInfo->chargingfx = trap->FX_RegisterEffect("weapons/charge_samus");
-		weaponInfo->EnhancedFX_chargingfx = trap->FX_RegisterEffect("weapons/charge_samus");
-		trap->R_RegisterShader("gfx/blasters/electricity_deform");
-		trap->R_RegisterShader("gfx/blasters/BlasterBolt_Beam2_Blue");
+		cgs.media.cannonChargeFlash = trap->FX_RegisterEffect("weapons/charge_samus");
+		
+		cgs.media.lightningbeam = trap->R_RegisterShader("gfx/blasters/electricity_deform");
+		cgs.media.lightningbeam = trap->R_RegisterShader("gfx/blasters/BlasterBolt_Beam2_Blue");
 		break;
 
 	case WP_BOWCASTER_CLASSIC:

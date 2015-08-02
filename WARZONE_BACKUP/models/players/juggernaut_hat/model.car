@@ -1,4 +1,0 @@
-$aseanimgrabinit
-$aseanimgrab models/players/juggernaut_hat/root.xsi -loop -1
-$aseanimgrabfinalize
-$aseanimconvertmdx_noask models/players/juggernaut_hat/root -makeskel /models/players/juggernaut_hat/juggernaut_hat -origin 0 0 24
