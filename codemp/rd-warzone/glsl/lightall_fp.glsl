@@ -488,22 +488,18 @@ void main()
 
 #if defined(USE_PARALLAXMAP) || defined(USE_PARALLAXMAP_NONORMALS)
 	// WOW - There is something wrong with this. Just makes everything black... Normal maps are correct, but something seems to be wrong here...
-    if (u_Local4.r != 0.0)
+    /*if (u_Local4.r != 0.0)
 	{// Have a real normal map...
-	#if defined(SWIZZLE_NORMALMAP)
-		N.xy = texture2D(u_NormalMap, texCoords).ag - vec2(0.5);
-    #else
 		N.xy = texture2D(u_NormalMap, texCoords).rg - vec2(0.5);
-    #endif
 		N.xy *= u_NormalScale.xy;
-		N.z = sqrt(clamp((0.25 - N.x * N.x) - N.y * N.y, 0.0, 1.0));
+		N.z = 1.0 - N.z;
+		//N.z = sqrt(clamp((0.25 - N.x * N.x) - N.y * N.y, 0.0, 1.0));
 		N = tangentToWorld * N;
 	}
-	else
+	else*/
 	{
 		N = var_Normal.xyz;
 	}
-
 #else
 	N = var_Normal.xyz;
 #endif
