@@ -3066,7 +3066,7 @@ void GLSL_EndLoadGPUShaders ( int startTime )
 		GLSL_SetUniformInt(&tr.waterShader, UNIFORM_SPECULARMAP, TB_SPECULARMAP);
 		GLSL_SetUniformInt(&tr.waterShader, UNIFORM_SHADOWMAP,   TB_SHADOWMAP);
 		GLSL_SetUniformInt(&tr.waterShader, UNIFORM_CUBEMAP,     TB_CUBEMAP);
-		GLSL_SetUniformInt(&tr.lightallShader[i], UNIFORM_SUBSURFACEMAP, TB_SUBSURFACEMAP);
+		GLSL_SetUniformInt(&tr.waterShader, UNIFORM_SUBSURFACEMAP, TB_SUBSURFACEMAP);
 
 		{
 			vec4_t viewInfo;
