@@ -1,9 +1,0 @@
-FxRunner
-{
-	name				Wallvariants
-
-	playfx
-	[
-		repeater/Wall_impact
-	]
-}

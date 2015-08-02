@@ -1,4 +1,0 @@
-$aseanimgrabinit
-$aseanimgrab models/players/tiecrawler_hat/root.xsi -loop -1
-$aseanimgrabfinalize
-$aseanimconvertmdx_noask models/players/tiecrawler_hat/root -makeskel /models/players/tiecrawler_hat/tiecrawler_hat -origin 0 0 24

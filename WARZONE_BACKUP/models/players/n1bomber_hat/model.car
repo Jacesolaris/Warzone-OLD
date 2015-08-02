@@ -1,4 +1,0 @@
-$aseanimgrabinit
-$aseanimgrab models/players/n1bomber_hat/root.xsi -loop -1
-$aseanimgrabfinalize
-$aseanimconvertmdx_noask models/players/n1bomber_hat/root -makeskel /models/players/n1bomber_hat/n1bomber_hat -origin 0 0 24

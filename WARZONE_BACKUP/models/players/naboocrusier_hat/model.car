@@ -1,4 +1,0 @@
-$aseanimgrabinit
-$aseanimgrab models/players/naboocrusier_hat/root.xsi -loop -1
-$aseanimgrabfinalize
-$aseanimconvertmdx_noask models/players/naboocrusier_hat/root -makeskel /models/players/naboocrusier_hat/naboocrusier_hat -origin 0 0 -100
