@@ -3503,7 +3503,6 @@ void FS_Startup( const char *gameName ) {
 
 	FS_STARTUP_COMPLETE = qfalse;
 
-	fs_lock.lock();
 	//FS_WaitForThreads();
 
 	Com_Printf( "----- FS_Startup -----\n" );
@@ -3598,7 +3597,6 @@ void FS_Startup( const char *gameName ) {
 #endif
 	Com_Printf( "%d files in pk3 files\n", fs_packFiles );
 
-	fs_lock.unlock();
 	FS_STARTUP_COMPLETE = qtrue;
 }
 
