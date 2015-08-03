@@ -1201,7 +1201,7 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 				}
 				else
 				{
-					if (r_genNormalMaps->integer)
+					//if (r_genNormalMaps->integer)
 						flags |= IMGFLAG_GENNORMALMAP;
 
 					if (r_srgb->integer)
@@ -1259,7 +1259,7 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 			}
 			else
 			{
-				if (r_genNormalMaps->integer)
+				//if (r_genNormalMaps->integer)
 					flags |= IMGFLAG_GENNORMALMAP;
 
 				if (r_srgb->integer)
@@ -3691,10 +3691,36 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 			}
 			else
 			{// Generate one...
-				diffuse->bundle[TB_NORMALMAP].image[0] = R_CreateNormalMapGLSL( normalName, NULL, diffuse->bundle[TB_DIFFUSEMAP].image[0]->width, diffuse->bundle[TB_DIFFUSEMAP].image[0]->height, GL_RGBA8, diffuse->bundle[TB_DIFFUSEMAP].image[0] );
-				if (diffuse->bundle[TB_NORMALMAP].image[0]) diffuse->hasRealNormalMap = true;
+				if (!diffuse->bundle[TB_DIFFUSEMAP].normalsLoaded
+					&& !diffuse->bundle[TB_NORMALMAP].image[0] 
+					&& diffuse->bundle[TB_DIFFUSEMAP].image[0]->imgName[0] 
+					&& diffuse->bundle[TB_DIFFUSEMAP].image[0]->imgName[0] != '*'
+					&& diffuse->bundle[TB_DIFFUSEMAP].image[0]->imgName[0] != '$'
+					&& diffuse->bundle[TB_DIFFUSEMAP].image[0]->imgName[0] != '_'
+					&& diffuse->bundle[TB_DIFFUSEMAP].image[0]->imgName[0] != '!'
+					&& !(diffuse->bundle[TB_DIFFUSEMAP].image[0]->flags & IMGFLAG_CUBEMAP)
+					//&& (diffuse->bundle[TB_DIFFUSEMAP].image[0]->flags & IMGFLAG_GENNORMALMAP)
+					&& !StringContainsWord(diffuse->bundle[TB_DIFFUSEMAP].image[0]->imgName, "renderCube") 
+					&& !StringContainsWord(diffuse->bundle[TB_DIFFUSEMAP].image[0]->imgName, "shadowcubemap") 
+					&& !StringContainsWord(diffuse->bundle[TB_DIFFUSEMAP].image[0]->imgName, "_env") 
+					&& !StringContainsWord(diffuse->bundle[TB_DIFFUSEMAP].image[0]->imgName, "sky") 
+					&& !StringContainsWord(diffuse->bundle[TB_DIFFUSEMAP].image[0]->imgName, "skies") 
+					&& !StringContainsWord(diffuse->bundle[TB_DIFFUSEMAP].image[0]->imgName, "cloud") 
+					&& !StringContainsWord(diffuse->bundle[TB_DIFFUSEMAP].image[0]->imgName, "glow") 
+					&& !StringContainsWord(diffuse->bundle[TB_DIFFUSEMAP].image[0]->imgName, "gfx/")
+					&& !StringContainsWord(diffuse->bundle[TB_DIFFUSEMAP].image[0]->imgName, "gfx_base/"))
+				{
+					diffuse->bundle[TB_NORMALMAP].image[0] = R_CreateNormalMapGLSL( normalName, NULL, diffuse->bundle[TB_DIFFUSEMAP].image[0]->width, diffuse->bundle[TB_DIFFUSEMAP].image[0]->height, GL_RGBA8, diffuse->bundle[TB_DIFFUSEMAP].image[0] );
+					
+					if (diffuse->bundle[TB_NORMALMAP].image[0]) diffuse->hasRealNormalMap = true;
+					
+					if (diffuse->normalScale[0] == 0 && diffuse->normalScale[1] == 0 && diffuse->normalScale[2] == 0)
+						VectorSet4(diffuse->normalScale, r_baseNormalX->value, r_baseNormalY->value, 1.0f, r_baseParallax->value);
+				}
 				diffuse->bundle[TB_DIFFUSEMAP].normalsLoaded = qtrue;
 			}
+
+			diffuse->bundle[TB_DIFFUSEMAP].normalsLoaded = qtrue;
 		}
 	}
 
@@ -5236,7 +5262,7 @@ shader_t *R_FindShader( const char *name, const int *lightmapIndexes, const byte
 	{
 		flags |= IMGFLAG_MIPMAP | IMGFLAG_PICMIP;
 
-		if (r_genNormalMaps->integer)
+		//if (r_genNormalMaps->integer)
 			flags |= IMGFLAG_GENNORMALMAP;
 	}
 	else

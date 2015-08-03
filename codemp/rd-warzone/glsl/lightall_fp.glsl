@@ -5,6 +5,8 @@ uniform vec4	u_Local2; // ExtinctionCoefficient
 uniform vec4	u_Local3; // RimScalar, MaterialThickness, subSpecPower, cubemapScale
 uniform vec4	u_Local4; // haveNormalMap, isMetalic, hasRealSubsurfaceMap, 0.0
 
+#define ARGHFUCKTHISSHIT
+
 varying float  var_Time;
 
 #if defined(USE_LIGHTMAP)
@@ -492,14 +494,21 @@ void main()
 	{// Have a real normal map...
 		N.xy = texture2D(u_NormalMap, texCoords).rg - vec2(0.5);
 		N.xy *= u_NormalScale.xy;
-		N.z = 1.0 - N.z;
-		//N.z = sqrt(clamp((0.25 - N.x * N.x) - N.y * N.y, 0.0, 1.0));
+		N.z = sqrt(clamp((0.25 - N.x * N.x) - N.y * N.y, 0.0, 1.0));
+		//N.z = 1.0 - N.z;
 		N = tangentToWorld * N;
 	}
-	else*/
+	else
 	{
 		N = var_Normal.xyz;
-	}
+	}*/
+	vec3 norm = texture2D(u_NormalMap, texCoords).xyz;
+	N = norm.xyz * 2.0 - 1.0;
+	N.xy *= u_NormalScale.xy;
+	N.z = sqrt(clamp((0.25 - N.x * N.x) - N.y * N.y, 0.0, 1.0));
+
+	N = tangentToWorld * N;
+	
 #else
 	N = var_Normal.xyz;
 #endif
@@ -584,6 +593,9 @@ void main()
 	else
 		specular *= u_SpecularScale;
 
+	//float specularv = pow(clamp(dot(reflect(-L, N), E), 0.0, 1.0), var_Local1.b );
+	//specular = specular * specularv;
+
 	if (u_Local4.b != 0.0)
 	{// Metalic...
 		float metallic = specular.r;
@@ -648,7 +660,7 @@ void main()
 
 		vec3 cubeLightColor = textureCubeLod(u_CubeMap, R + parallax, 7.0 - specular.a * 7.0).rgb * u_EnableTextures.w;
 
-		gl_FragColor.rgb += cubeLightColor * reflectance * u_Local3.a;
+		gl_FragColor.rgb += cubeLightColor * reflectance * (u_Local3.a * 2.0);
 	}
   #endif
 
@@ -702,6 +714,7 @@ void main()
 	gl_FragColor = clamp(gl_FragColor, 0.0, 1.0);
   }
   #endif
+
 #else
 	lightColor = var_Color.rgb;
   #if defined(USE_LIGHTMAP) 
@@ -710,7 +723,7 @@ void main()
 
   gl_FragColor = vec4 (diffuse.rgb * lightColor, diffuse.a * var_Color.a);
 #endif
-	
+
 #if defined(USE_GLOW_BUFFER)
 	out_Glow = gl_FragColor;
 #else

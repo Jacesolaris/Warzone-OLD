@@ -752,6 +752,28 @@ void FBO_Init(void)
 	FBO_Bind(NULL);
 }
 
+void FBO_Delete(FBO_t *fbo)
+{
+	int             j;
+
+	FBO_Bind(NULL);
+
+	for(j = 0; j < glRefConfig.maxColorAttachments; j++)
+	{
+		if(fbo->colorBuffers[j])
+			qglDeleteRenderbuffers(1, &fbo->colorBuffers[j]);
+	}
+
+	if(fbo->depthBuffer)
+		qglDeleteRenderbuffers(1, &fbo->depthBuffer);
+
+	if(fbo->stencilBuffer)
+		qglDeleteRenderbuffers(1, &fbo->stencilBuffer);
+
+	if(fbo->frameBuffer)
+		qglDeleteFramebuffers(1, &fbo->frameBuffer);
+}
+
 /*
 ============
 FBO_Shutdown

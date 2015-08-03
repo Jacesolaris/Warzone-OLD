@@ -2611,15 +2611,24 @@ done:
 }
 
 extern FBO_t *FBO_Create(const char *name, int width, int height);
+extern void FBO_Delete(FBO_t *fbo);
 extern void FBO_AttachTextureImage(image_t *img, int index);
 extern void FBO_SetupDrawBuffers();
 extern qboolean R_CheckFBO(const FBO_t * fbo);
 
-FBO_t *R_CreateNormalMapDestinationFBO ( void )
+FBO_t *R_CreateNormalMapDestinationFBO( int width, int height )
 {
+	/*
 	if (tr.NormalMapDestinationFBO) return tr.NormalMapDestinationFBO;
-
 	tr.NormalMapDestinationFBO = FBO_Create("_generateImageDst", 8192, 8192);
+	return tr.NormalMapDestinationFBO;
+	*/
+
+	if (tr.NormalMapDestinationFBO) {
+		FBO_Delete(tr.NormalMapDestinationFBO);
+		tr.numFBOs--; // Assume for now we are not threading...
+	}
+	tr.NormalMapDestinationFBO = FBO_Create("_generateImageDst", width, height);
 	return tr.NormalMapDestinationFBO;
 }
 
@@ -2641,7 +2650,7 @@ image_t *R_TextureESharpenGLSL ( const char *name, byte *pic, int width, int hei
 	
 	normalFlags = flags;
 
-	dstFbo = R_CreateNormalMapDestinationFBO();
+	dstFbo = R_CreateNormalMapDestinationFBO(width, height);
 	FBO_Bind (dstFbo);
 	dstImage = R_CreateImage( name, pic, width, height, type, normalFlags, format );
 	qglBindTexture(GL_TEXTURE_2D, dstImage->texnum);
@@ -2690,7 +2699,7 @@ image_t *R_TextureESharpen2GLSL ( const char *name, byte *pic, int width, int he
 	
 	normalFlags = flags;
 
-	dstFbo = R_CreateNormalMapDestinationFBO();
+	dstFbo = R_CreateNormalMapDestinationFBO(width, height);
 	FBO_Bind (dstFbo);
 	dstImage = R_CreateImage( name, pic, width, height, type, normalFlags, format );
 	qglBindTexture(GL_TEXTURE_2D, dstImage->texnum);
@@ -2739,7 +2748,7 @@ image_t *R_TextureDarkExpandGLSL ( const char *name, byte *pic, int width, int h
 	
 	normalFlags = flags;
 
-	dstFbo = R_CreateNormalMapDestinationFBO();
+	dstFbo = R_CreateNormalMapDestinationFBO(width, height);
 	FBO_Bind (dstFbo);
 	dstImage = R_CreateImage( name, pic, width, height, type, normalFlags, format );
 	qglBindTexture(GL_TEXTURE_2D, dstImage->texnum);
@@ -2788,7 +2797,7 @@ image_t *R_TextureCleanGLSL ( const char *name, byte *pic, int width, int height
 	
 	normalFlags = flags;
 
-	dstFbo = R_CreateNormalMapDestinationFBO();
+	dstFbo = R_CreateNormalMapDestinationFBO(width, height);
 	FBO_Bind (dstFbo);
 	dstImage = R_CreateImage( name, pic, width, height, type, normalFlags, format );
 	qglBindTexture(GL_TEXTURE_2D, dstImage->texnum);
@@ -2823,6 +2832,71 @@ image_t *R_TextureCleanGLSL ( const char *name, byte *pic, int width, int height
 	return dstImage;
 }
 
+void R_SaveNormalMap (const char *name, image_t *dstImage)
+{
+	char filename[128];
+	sprintf(filename, "%s.tga", name);
+
+	byte *allbuf, *buffer;
+	byte *srcptr, *destptr;
+	byte *endline, *endmem;
+	byte temp;
+	
+	int linelen, padlen;
+	size_t offset = 18, memcount;
+
+	allbuf = (byte *)ri->Hunk_AllocateTempMemory(4 * dstImage->width * dstImage->height);
+
+	GL_Bind(dstImage);
+	qglReadPixels(0, 0, dstImage->width, dstImage->height, GL_RGBA, GL_UNSIGNED_BYTE, allbuf);
+		
+	buffer = allbuf + offset - 18;
+	
+	Com_Memset (buffer, 0, 18);
+	buffer[2] = 2;		// uncompressed type
+	buffer[12] = dstImage->width & 255;
+	buffer[13] = dstImage->width >> 8;
+	buffer[14] = dstImage->height & 255;
+	buffer[15] = dstImage->height >> 8;
+	buffer[16] = 32;	// pixel size
+	buffer[17] = 0x20;
+
+	// swap rgb to bgr and remove padding from line endings
+	linelen = dstImage->width * 4;
+	
+	srcptr = destptr = allbuf + offset;
+	endmem = srcptr + (linelen + padlen) * dstImage->height;
+	
+	while(srcptr < endmem)
+	{
+		endline = srcptr + linelen;
+
+		while(srcptr < endline)
+		{
+			temp = srcptr[0];
+			*destptr++ = srcptr[2];
+			*destptr++ = srcptr[1];
+			*destptr++ = srcptr[3];
+			*destptr++ = temp;
+			
+			srcptr += 4;
+		}
+		
+		// Skip the pad
+		srcptr += padlen;
+	}
+
+	memcount = linelen * dstImage->height;
+
+	// gamma correct
+	if(glConfig.deviceSupportsGamma)
+		R_GammaCorrect(allbuf + offset, memcount);
+
+	ri->FS_WriteFile(filename, buffer, memcount + 18);
+
+	ri->Hunk_FreeTempMemory(allbuf);
+}
+
 image_t *R_CreateNormalMapGLSL ( const char *name, byte *pic, int width, int height, int flags, image_t	*srcImage )
 {
 	int			normalFlags;
@@ -2834,24 +2908,28 @@ image_t *R_CreateNormalMapGLSL ( const char *name, byte *pic, int width, int hei
 
 	//ri->Printf(PRINT_WARNING, "Generating [%ix%i] normal map %s.\n", width, height, name);
 	
-	normalFlags = (flags & ~(IMGFLAG_GENNORMALMAP | IMGFLAG_SRGB)) | IMGFLAG_NOLIGHTSCALE;
+	normalFlags = (flags & ~(IMGFLAG_GENNORMALMAP | IMGFLAG_SRGB | IMGFLAG_CLAMPTOEDGE)) | IMGFLAG_NOLIGHTSCALE | IMGFLAG_NO_COMPRESSION;
 
-	dstFbo = R_CreateNormalMapDestinationFBO();
+	dstFbo = R_CreateNormalMapDestinationFBO(width, height);
 	FBO_Bind (dstFbo);
-	dstImage = R_CreateImage( name, pic, width, height, IMGTYPE_NORMAL, normalFlags, GL_RGBA8 );
-	qglBindTexture(GL_TEXTURE_2D, dstImage->texnum);
+	//dstImage = R_CreateImage( name, pic, width, height, IMGTYPE_NORMAL, normalFlags, GL_RGBA8 );
+	dstImage = R_CreateImage( name, NULL, width, height, IMGTYPE_NORMAL, normalFlags, 0 );
+	//qglBindTexture(GL_TEXTURE_2D, dstImage->texnum);
 	FBO_AttachTextureImage(dstImage, 0);
 	FBO_SetupDrawBuffers();
 	R_CheckFBO(dstFbo);
+
+	GL_Bind(srcImage);
 	
 	GLSL_BindProgram(&tr.generateNormalMapShader);
+	GLSL_SetUniformInt(&tr.generateNormalMapShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
 	GL_BindToTMU(srcImage, TB_DIFFUSEMAP);
 
 	vec2_t screensize;
 	screensize[0] = width;
 	screensize[1] = height;
 	GLSL_SetUniformVec2(&tr.generateNormalMapShader, UNIFORM_DIMENSIONS, screensize);
-	GLSL_SetUniformMatrix16(&tr.generateNormalMapShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
+	//GLSL_SetUniformMatrix16(&tr.generateNormalMapShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
 
 	box[0] = 0;
 	box[1] = 0;
@@ -2860,11 +2938,19 @@ image_t *R_CreateNormalMapGLSL ( const char *name, byte *pic, int width, int hei
 
 	//qglGetTexImage
 
-	//qglViewport(0, 0, width, height);
-	//qglScissor(0, 0, width, height);
+	qglViewport(0, 0, width, height);
+	qglScissor(0, 0, width, height);
 
-	FBO_BlitFromTexture(srcImage, box, NULL, dstFbo, box, &tr.generateNormalMapShader, NULL, 0);
+	vec4_t color;
+	VectorSet4(color, 0.0, 0.0, 0.0, 0.0);
+
+	FBO_BlitFromTexture(srcImage, NULL/*box*/, NULL, dstFbo, NULL/*box*/, &tr.generateNormalMapShader, color, 0);
 	dstImage->generatedNormalMap = true;
+	dstImage->height = height;
+	dstImage->width = width;
+
+	R_SaveNormalMap(name, dstImage);
+
 	return dstImage;
 }
 
@@ -2886,10 +2972,10 @@ image_t *R_CreateNormalMap ( const char *name, byte *pic, int width, int height,
 	//if (normalImage != NULL) ri->Printf(PRINT_WARNING, "Loaded real normal map file %s.\n", normalName);
 	//else ri->Printf(PRINT_WARNING, "No real normal map file %s.\n", normalName);
 	
-	if (normalImage == NULL)
+	/*if (normalImage == NULL)
 	{
 		return R_CreateNormalMapGLSL( normalName, pic, width, height, flags, srcImage );
-	}
+	}*/
 
 	return normalImage;
 #if 0
@@ -3092,24 +3178,24 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, int flags )
 	{
 		if (image && r_textureClean->integer)
 		{
-			qglBindTexture(GL_TEXTURE_2D, image->texnum);
+			GL_Bind(image);
 			image = R_TextureCleanGLSL( name, pic, width, height, flags, image );
 		}
 
 		/*
 		if (image && r_esharpening->integer)
 		{
-			qglBindTexture(GL_TEXTURE_2D, image->texnum);
+			GL_Bind(image);
 			image = R_TextureESharpenGLSL( name, pic, width, height, flags, image );
 		}
 		if (image && r_esharpening2->integer)
 		{
-			qglBindTexture(GL_TEXTURE_2D, image->texnum);
+			GL_Bind(image);
 			image = R_TextureESharpen2GLSL( name, pic, width, height, flags, image );
 		}
 		if (image && r_darkexpand->integer)
 		{
-			qglBindTexture(GL_TEXTURE_2D, image->texnum);
+			GL_Bind(image);
 			image = R_TextureDarkExpandGLSL( name, pic, width, height, flags, image );
 		}
 		*/
@@ -3119,7 +3205,7 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, int flags )
 			if (image
 				&& !(StringContainsWord(name, "sky") || StringContainsWord(name, "skies") || StringContainsWord(name, "cloud") || StringContainsWord(name, "glow") || StringContainsWord(name, "gfx/") || StringContainsWord(name, "gfx_base/")))
 			{
-				qglBindTexture(GL_TEXTURE_2D, image->texnum);
+				GL_Bind(image);
 				R_CreateNormalMap( name, pic, width, height, flags, image );
 			}
 		}

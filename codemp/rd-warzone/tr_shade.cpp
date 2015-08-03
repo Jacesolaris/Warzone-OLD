@@ -2222,7 +2222,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				if ((light || pStage->isWater || pStage->hasRealNormalMap || pStage->hasSpecular || pStage->hasRealSubsurfaceMap) && !fastLight)
 				{
 					if (r_normalMapping->integer
-						//&& !(stage > 0)
+						&& !(stage > 0)
 						&& !pStage->bundle[TB_DIFFUSEMAP].normalsLoaded2
 						&& !pStage->bundle[TB_NORMALMAP].image[0] 
 						&& pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName[0] 
@@ -2230,6 +2230,11 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 						&& pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName[0] != '$'
 						&& pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName[0] != '_'
 						&& pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName[0] != '!'
+						&& !(pStage->bundle[TB_DIFFUSEMAP].image[0]->flags & IMGFLAG_CUBEMAP)
+						//&& (pStage->bundle[TB_DIFFUSEMAP].image[0]->flags & IMGFLAG_GENNORMALMAP)
+						&& !StringContainsWord(pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName, "renderCube") 
+						&& !StringContainsWord(pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName, "shadowcubemap") 
+						&& !StringContainsWord(pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName, "_env") 
 						&& !StringContainsWord(pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName, "sky") 
 						&& !StringContainsWord(pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName, "skies") 
 						&& !StringContainsWord(pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName, "cloud") 
@@ -2243,6 +2248,12 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 						if (pStage->bundle[TB_NORMALMAP].image[0]) pStage->hasRealNormalMap = true;
 						RB_SetMaterialBasedProperties(sp, pStage);
 						pStage->bundle[TB_DIFFUSEMAP].normalsLoaded2 = qtrue;
+
+						if (pStage->normalScale[0] == 0 && pStage->normalScale[1] == 0 && pStage->normalScale[2] == 0)
+						{
+							VectorSet4(pStage->normalScale, r_baseNormalX->value, r_baseNormalY->value, 1.0f, r_baseParallax->value);
+							GLSL_SetUniformVec4(sp, UNIFORM_NORMALSCALE, pStage->normalScale);
+						}
 					}
 					
 					if (pStage->bundle[TB_NORMALMAP].image[0])

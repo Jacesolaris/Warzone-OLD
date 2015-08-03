@@ -96,29 +96,23 @@ float SampleHeight(vec2 t)
 	// Returns inverse of the height. Result is mostly around 1.0 (so we don't stand on a surface far below us), with deep dark areas (cracks, edges, etc)...
 	float height = clamp(1.0 - combined_color2, 0.0, 1.0);
 	return height;
-
-	/*
-	// Mix it with an extra-bumpy normal map... (UQ1: decided not worth the fps loss)
-	float norm = generateBumpyNormal( t ).r;
-	// I don't want this much bumpiness (and this is to be used as a multipier), so move the whole thing closer to 1.0...
-	norm *= 0.5;
-	norm += 0.5;
-	norm *= 0.5;
-	norm += 0.5;
-	return (height + (norm * height)) / 2.0;
-	*/
 }
 
 void main ( void )
 {
 	vec4 enhanced = generateEnhancedNormal(var_TexCoords.xy);
 	//vec4 bumpy = generateBumpyNormal(var_TexCoords.xy);
+
 	vec4 normal = enhanced;
+	//vec4 normal = bumpy;
 	//vec4 normal = (enhanced + bumpy) / 2.0;
+
 	//normal = 1.0 - normal;
+
 	normal.a = SampleHeight(var_TexCoords.xy);
-	//vec4 normal = vec4(var_TexCoords.xy,var_TexCoords.xy);
-	//normal.a = 1.0;
+
 	gl_FragColor = normal;
 	//gl_FragColor = vec4(normal.a,normal.a,normal.a,1.0);
+	//gl_FragColor = vec4(var_TexCoords.x, 0.0, var_TexCoords.y, 1.0);
+	//gl_FragColor = texture2D(u_DiffuseMap, var_TexCoords.xy);
 }
