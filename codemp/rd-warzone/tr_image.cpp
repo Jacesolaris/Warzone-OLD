@@ -2842,7 +2842,7 @@ void R_SaveNormalMap (const char *name, image_t *dstImage)
 	byte *endline, *endmem;
 	byte temp;
 	
-	int linelen, padlen;
+	int linelen, padlen = 0;
 	size_t offset = 18, memcount;
 
 	allbuf = (byte *)ri->Hunk_AllocateTempMemory(4 * dstImage->width * dstImage->height);
