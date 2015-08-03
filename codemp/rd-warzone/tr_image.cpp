@@ -2862,7 +2862,7 @@ void R_SaveNormalMap (const char *name, image_t *dstImage)
 	buffer[16] = 32;	// pixel size
 	buffer[17] = 0x20;
 
-	// swap rgb to bgr and remove padding from line endings
+	// swap rgb to bgr and remove padding from line endings -- UQ1: DT says this is incorrect for normals - I switched them back...
 	linelen = dstImage->width * 4;
 	
 	srcptr = destptr = allbuf + offset;
@@ -2875,8 +2875,8 @@ void R_SaveNormalMap (const char *name, image_t *dstImage)
 		while(srcptr < endline)
 		{
 			temp = srcptr[0];
-			*destptr++ = srcptr[2];
 			*destptr++ = srcptr[1];
+			*destptr++ = srcptr[2];
 			*destptr++ = srcptr[3];
 			*destptr++ = temp;
 			

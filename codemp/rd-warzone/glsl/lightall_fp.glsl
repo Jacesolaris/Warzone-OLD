@@ -502,7 +502,7 @@ void main()
 	{
 		N = var_Normal.xyz;
 	}*/
-	vec3 norm = texture2D(u_NormalMap, texCoords).xyz;
+	vec3 norm = texture2D(u_NormalMap, texCoords).xzy;
 	N = norm.xyz * 2.0 - 1.0;
 	N.xy *= u_NormalScale.xy;
 	N.z = sqrt(clamp((0.25 - N.x * N.x) - N.y * N.y, 0.0, 1.0));
