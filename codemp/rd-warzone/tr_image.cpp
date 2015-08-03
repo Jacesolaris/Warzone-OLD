@@ -2845,7 +2845,8 @@ void R_SaveNormalMap (const char *name, image_t *dstImage)
 	int linelen, padlen = 0;
 	size_t offset = 18, memcount;
 
-	allbuf = (byte *)ri->Hunk_AllocateTempMemory(4 * dstImage->width * dstImage->height);
+	//allbuf = (byte *)ri->Hunk_AllocateTempMemory(4 * dstImage->width * dstImage->height);
+	allbuf = (byte *)malloc((4 * dstImage->width * dstImage->height) + offset);
 
 	GL_Bind(dstImage);
 	qglReadPixels(0, 0, dstImage->width, dstImage->height, GL_RGBA, GL_UNSIGNED_BYTE, allbuf);
@@ -2894,7 +2895,8 @@ void R_SaveNormalMap (const char *name, image_t *dstImage)
 
 	ri->FS_WriteFile(filename, buffer, memcount + 18);
 
-	ri->Hunk_FreeTempMemory(allbuf);
+	//ri->Hunk_FreeTempMemory(allbuf);
+	free(allbuf);
 }
 
 image_t *R_CreateNormalMapGLSL ( const char *name, byte *pic, int width, int height, int flags, image_t	*srcImage )

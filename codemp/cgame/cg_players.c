@@ -13372,6 +13372,9 @@ void CG_HolsteredWeaponRender(centity_t *cent, clientInfo_t *ci, int holsterType
 	case HLR_BOWCASTER_CLASSIC:
 		weaponType = WP_BOWCASTER_CLASSIC;
 		break;
+	case HLR_WOOKIE_BOWCASTER_SCOPE:
+		weaponType = WP_WOOKIE_BOWCASTER_SCOPE;
+		break;
 	default:
 		trap->Print("Unknown weaponType for holsterType %i in CG_HolsteredWeaponRender.\n", holsterType);
 		return;
@@ -16016,6 +16019,47 @@ void CG_VisualWeaponsUpdate(centity_t *cent, clientInfo_t *ci)
 			else
 			{//manually render the weapon
 				CG_HolsteredWeaponRender(cent, ci, HLR_BOWCASTER_CLASSIC);
+			}
+			backInUse = qtrue;
+		}
+		if (backInUse //back in use already
+			|| (primaryWeapon != WP_WOOKIE_BOWCASTER_SCOPE && secondaryWeapon != WP_WOOKIE_BOWCASTER_SCOPE && temporaryWeapon != WP_WOOKIE_BOWCASTER_SCOPE) //don't have weapon
+			|| cent->currentState.weapon == WP_WOOKIE_BOWCASTER_SCOPE) //currently using weapon
+		{//don't render weapon on back
+			if (ci->holster_launcher != -1 && ci->launcher_holstered == WP_WOOKIE_BOWCASTER_SCOPE)
+			{
+				if (trap->G2API_HasGhoul2ModelOnIndex(&(cent->ghoul2), G2MODEL_LAUNCHER_HOLSTERED))
+				{
+					trap->G2API_RemoveGhoul2Model(&(cent->ghoul2), G2MODEL_LAUNCHER_HOLSTERED);
+				}
+				ci->launcher_holstered = 0;
+			}
+		}
+		else
+		{//render weapon on back
+			if (ci->holster_launcher != -1)
+			{//have specialized bolt
+				if (ci->launcher_holstered != WP_WOOKIE_BOWCASTER_SCOPE)
+				{//don't already have the weapon bolted.
+					if (ci->launcher_holstered != 0)
+					{//we have something else bolted there, remove it first.
+						if (trap->G2API_HasGhoul2ModelOnIndex(&(cent->ghoul2), G2MODEL_LAUNCHER_HOLSTERED))
+						{
+							trap->G2API_RemoveGhoul2Model(&(cent->ghoul2), G2MODEL_LAUNCHER_HOLSTERED);
+						}
+						ci->launcher_holstered = 0;
+					}
+
+					//now bolt the weapon
+					trap->G2API_CopySpecificGhoul2Model(CG_G2WeaponInstance(cent, WP_WOOKIE_BOWCASTER_SCOPE), 0, cent->ghoul2,
+						G2MODEL_LAUNCHER_HOLSTERED);
+					trap->G2API_SetBoltInfo(cent->ghoul2, G2MODEL_LAUNCHER_HOLSTERED, ci->holster_launcher);
+					ci->launcher_holstered = WP_WOOKIE_BOWCASTER_SCOPE;
+				}
+			}
+			else
+			{//manually render the weapon
+				CG_HolsteredWeaponRender(cent, ci, HLR_WOOKIE_BOWCASTER_SCOPE);
 			}
 			backInUse = qtrue;
 		}

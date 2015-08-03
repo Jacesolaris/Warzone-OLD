@@ -277,6 +277,7 @@ int WeaponReadyAnim[WP_NUM_WEAPONS] =
 	DC15_READY,//WP_ACP_SNIPER_RIFLE,
 	TORSO_WEAPONREADY3,//WP_ARC_CASTER_IMPERIAL,
 	TORSO_WEAPONREADY3,//WP_BOWCASTER_CLASSIC,
+	TORSO_WEAPONREADY3,//WP_WOOKIE_BOWCASTER_SCOPE,
 
 
 	TORSO_WEAPONREADY3,//TORSO_WEAPONREADY9,//WP_ROCKET_LAUNCHER,
@@ -350,6 +351,7 @@ int WeaponReadyLegsAnim[WP_NUM_WEAPONS] =
 	BOTH_STAND1,//WP_ACP_SNIPER_RIFLE,
 	BOTH_STAND1,//WP_ARC_CASTER_IMPERIAL,
 	BOTH_STAND1,//WP_BOWCASTER_CLASSIC,
+	BOTH_STAND1,//WP_WOOKIE_BOWCASTER_SCOPE,
 
 	BOTH_STAND1,//TORSO_WEAPONREADY9,//WP_ROCKET_LAUNCHER,
 
@@ -421,6 +423,7 @@ int WeaponAttackAnim[WP_NUM_WEAPONS] =
 	DC15_FIRE,//WP_ACP_SNIPER_RIFLE,
 	BOTH_ATTACK3,//WP_ARC_CASTER_IMPERIAL,
 	DC15_FIRE,// WP_BOWCASTER_CLASSIC,
+	DC15_FIRE,// WP_WOOKIE_BOWCASTER_SCOPE,
 	
 	BOTH_ATTACK3,//BOTH_ATTACK9,//WP_ROCKET_LAUNCHER,
 
@@ -1985,6 +1988,24 @@ Don't place this
 	100,
 	IT_WEAPON,
 	WP_BOWCASTER_CLASSIC,
+	/* precache */ "",
+	/* sounds */ "",
+	"@MENUS_THE_PRIMARY_WEAPON_OF"				// description
+},
+
+/*QUAKED WP_BOWCASTER_CLASSIC (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+*/
+{
+	"weapon_Rifle_Bowcaster_Classic",
+	"sound/weapons/w_pkup.wav",
+	{ "models/weapons/Bowcaster_Heavy/model_scope.glm",
+	0, 0, 0 },
+	/* view */		"models/weapons/Bowcaster_Heavy/model_scope.md3",
+	/* icon */		"models/weapons/Bowcaster_Heavy/icon_scope",
+	/* pickup *///	"Wookie Bowcaster",
+	100,
+	IT_WEAPON,
+	WP_WOOKIE_BOWCASTER_SCOPE,
 	/* precache */ "",
 	/* sounds */ "",
 	"@MENUS_THE_PRIMARY_WEAPON_OF"				// description

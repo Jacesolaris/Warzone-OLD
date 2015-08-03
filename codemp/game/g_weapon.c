@@ -53,12 +53,12 @@ static vec3_t muzzle;
 
 // Wookiee Bowcaster
 //----------
-#define	BOWCASTER_DAMAGE			50
+#define	BOWCASTER_DAMAGE			30
 #define	BOWCASTER_VELOCITY			1300
 #define BOWCASTER_SPLASH_DAMAGE		0
 #define BOWCASTER_SPLASH_RADIUS		0
 #define BOWCASTER_SIZE				2
-
+#define	BOWCASTER_ALT_DAMAGE		25
 #define BOWCASTER_ALT_SPREAD		5.0f
 #define BOWCASTER_VEL_RANGE			0.3f
 #define BOWCASTER_CHARGE_UNIT		200.0f	// bowcaster charging gives us one more unit every 200ms--if you change this, you'll have to do the same in bg_pmove
@@ -5134,9 +5134,10 @@ void FireWeapon( gentity_t *ent, qboolean altFire ) {
 				WP_FireRepeater(ent, altFire);
 			break;
 
+		case WP_WOOKIE_BOWCASTER_SCOPE:
 		case WP_BOWCASTER_CLASSIC:
 			if (altFire)
-				WP_FireBlaster(ent, altFire, BLASTER_VELOCITY*2.5, BRYAR_PISTOL_DAMAGE, 0.0, ent->s.weapon);
+				WP_FireBlaster(ent, altFire, BLASTER_VELOCITY, BOWCASTER_ALT_DAMAGE, 0.0, ent->s.weapon);
 			else
 				WP_FireBlaster(ent, altFire, BLASTER_VELOCITY, BOWCASTER_DAMAGE, BLASTER_SPREAD, ent->s.weapon);
 			break;

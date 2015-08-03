@@ -1,4 +1,0 @@
-$aseanimgrabinit
-$aseanimgrab models/players/jawatank_hat/root.xsi -loop -1
-$aseanimgrabfinalize
-$aseanimconvertmdx_noask models/players/jawatank_hat/root -makeskel /models/players/jawatank_hat/jawatank_hat -origin 0 0 24

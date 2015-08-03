@@ -8738,6 +8738,10 @@ void PM_AdjustAttackStates( pmove_t *pmove )
 					pmove->ps->scopeType = SCOPE_SCOPE_BOWCASTER_CLASSIC;
 					pmove->ps->zoomFov = 80.0f;//cg_fov.value;
 					break;
+				case WP_WOOKIE_BOWCASTER_SCOPE:
+					pmove->ps->scopeType = SCOPE_SCOPE_BOWCASTER_CLASSIC;
+					pmove->ps->zoomFov = 80.0f;//cg_fov.value;
+					break;
 				default:
 					pmove->ps->scopeType = SCOPE_SCOPE_DISRUPTOR;
 					pmove->ps->zoomFov = 80.0f;

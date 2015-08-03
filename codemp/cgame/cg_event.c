@@ -1392,6 +1392,7 @@ void CG_G2MarkEvent(entityState_t *es)
 	case WP_ACP_SNIPER_RIFLE:
 	case WP_ARC_CASTER_IMPERIAL:
 	case WP_BOWCASTER_CLASSIC:
+	case WP_WOOKIE_BOWCASTER_SCOPE:
 		if ( !size )
 		{
 			size = 4.0f;
