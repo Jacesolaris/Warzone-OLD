@@ -31,7 +31,6 @@ gfx/atmosphere/raindropsolid
 
 gfx/atmosphere/snowflake00
 {
-	nopicmip
 	cull none
 	polygonoffset
 	{
@@ -43,7 +42,6 @@ gfx/atmosphere/snowflake00
 
 gfx/atmosphere/snowflake01
 {
-	nopicmip
 	cull none
 	polygonoffset
 	{
@@ -55,7 +53,6 @@ gfx/atmosphere/snowflake01
 
 gfx/atmosphere/snowflake02
 {
-	nopicmip
 	cull none
 	polygonoffset
 	{
@@ -67,7 +64,6 @@ gfx/atmosphere/snowflake02
 
 gfx/atmosphere/snowflake03
 {
-	nopicmip
 	cull none
 	polygonoffset
 	{
@@ -79,7 +75,6 @@ gfx/atmosphere/snowflake03
 
 gfx/atmosphere/snowflake04
 {
-	nopicmip
 	cull none
 	polygonoffset
 	{
@@ -91,7 +86,6 @@ gfx/atmosphere/snowflake04
 
 gfx/atmosphere/snowflake05
 {
-	nopicmip
 	cull none
 	polygonoffset
 	{
