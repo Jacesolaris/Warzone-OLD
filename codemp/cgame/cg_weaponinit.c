@@ -1058,7 +1058,8 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->EnhancedFX_missileWallImpactfx = trap->FX_RegisterEffect("weapons/blaster_impact_blue_medium_fire");//prime efx
 		weaponInfo->EnhancedFX_altmissileWallImpactfx = trap->FX_RegisterEffect("orginal_weapon_efx/concussion/explosion");
 		trap->FX_RegisterEffect("blasters/blue_deflect");
-		cgs.media.cannonChargeFlash = trap->R_RegisterShader("gfx/misc/lightningFlash");
+		//cgs.media.cannonChargeFlash = trap->R_RegisterShader("gfx_base/misc/lightningFlash");
+		cgs.media.lightningFlash = trap->R_RegisterShader("gfx/misc/lightningFlash");
 		break;
 
 	case WP_WOOKIE_BOWCASTER:

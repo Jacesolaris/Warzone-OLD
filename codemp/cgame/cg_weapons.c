@@ -825,7 +825,8 @@ Ghoul2 Insert End
 		{
 			// Hardcoded max charge time of 1 second
 			val = (cg.time - cent->currentState.constantLight) * 0.001f;
-			shader = cgs.media.cannonChargeFlash;
+			//shader = cgs.media.cannonChargeFlash;
+			shader = cgs.media.lightningFlash;
 			scale = 1.75f;
 		}
 		else if (cent->currentState.weapon == WP_DC_17_CLONE_PISTOL)
