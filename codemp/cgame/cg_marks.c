@@ -1484,6 +1484,8 @@ void CG_EffectParse( const char *effectstr )
 
   	  	// Load graphics
 
+	//trap_FX_PlayEffectID(cgs.effects.rain, tr.endpos, angles, -1, 1);
+
   	// Rain
   	if( type == "rain" ) {
   	  	cg_atmFx.numEffectShaders = 1;

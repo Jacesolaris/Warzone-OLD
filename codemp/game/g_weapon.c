@@ -5057,11 +5057,15 @@ void FireWeapon( gentity_t *ent, qboolean altFire ) {
 				WP_DoubleBarrel_Guns_MainFire(ent, altFire, DOUBLEBARREL_VEL, DOUBLEBARREL_DAMAGE, DOUBLEBARREL_SPREAD, ent->s.weapon);
 			break;
 
+		case WP_BRYAR_CARBINE:
 		case WP_ARC_CASTER_IMPERIAL://NOTE needs it own function to handle the lightning stuff to charge up with
 		case WP_A200_ACP_BATTLERIFLE:
 		case WP_CLONE_BLASTER:
 		case WP_BLASTER:
-			WP_FireBlaster( ent, altFire, BLASTER_VELOCITY, BLASTER_DAMAGE, BLASTER_SPREAD, ent->s.weapon );
+			if (altFire)
+				WP_FireBlaster(ent, altFire, BLASTER_VELOCITY, BLASTER_DAMAGE, BLASTER_SPREAD, ent->s.weapon);
+			else
+				WP_FireBlaster(ent, altFire, BLASTER_VELOCITY, BLASTER_DAMAGE, 0.0, ent->s.weapon);
 			break;
 
 		case WP_A280: // UQ1: Example. Should have it's own code...
@@ -5072,17 +5076,25 @@ void FireWeapon( gentity_t *ent, qboolean altFire ) {
 			break;
 
 		case WP_DC15:
-			WP_FireRepeater(ent, altFire);
+			if (altFire)
+				WP_RepeaterAltFire(ent);
+			else
+				WP_FireBlaster(ent, altFire, BLASTER_VELOCITY, REPEATER_DAMAGE, 0.0, ent->s.weapon);
 			break;
 
 		case WP_WESTARM5:
-			WP_FireRepeater(ent, altFire);
+			if (altFire)
+				WP_RepeaterAltFire(ent);
+			else
+				WP_FireBlaster(ent, altFire, BLASTER_VELOCITY, REPEATER_DAMAGE, 0.0, ent->s.weapon);
 			break;
 
 		case WP_T21:
 			WP_FireBlaster( ent, altFire, BLASTER_VELOCITY, BLASTER_DAMAGE, BLASTER_SPREAD, ent->s.weapon );
 			break;
 
+		case WP_BRYAR_RIFLE:
+		case WP_BRYAR_RIFLE_SCOPE:
 		case WP_ACP_SNIPER_RIFLE:
 		case WP_EE3:
 			if (altFire)
@@ -5108,7 +5120,10 @@ void FireWeapon( gentity_t *ent, qboolean altFire ) {
 
 		
 		case WP_CLONERIFLE:
-			WP_FireRepeater(ent, altFire);
+			if (altFire)
+				WP_RepeaterAltFire(ent);
+			else
+				WP_FireBlaster(ent, altFire, BLASTER_VELOCITY, REPEATER_DAMAGE, 0.0, ent->s.weapon);
 			break;
 
 		case WP_Z6_BLASTER_CANON:
@@ -5131,7 +5146,7 @@ void FireWeapon( gentity_t *ent, qboolean altFire ) {
 			if (altFire)
 				WP_FireBlobGrenade(ent);
 			else
-				WP_FireRepeater(ent, altFire);
+				WP_FireBlaster(ent, altFire, BLASTER_VELOCITY, REPEATER_DAMAGE, 0.0, ent->s.weapon);
 			break;
 
 		case WP_WOOKIE_BOWCASTER_SCOPE:

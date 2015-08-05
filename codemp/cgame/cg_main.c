@@ -1893,8 +1893,8 @@ Ghoul2 Insert End
 
 	trap->FX_RegisterEffect("force/force_touch");
 	//Weather
-	//cgs.effects.saberFizz = trap->FX_RegisterEffect("saber/fizz.efx");
-	//cgs.effects.rain = trap->FX_RegisterEffect("effects/rain");
+	cgs.effects.saberFizz = trap->FX_RegisterEffect("saber/fizz.efx");
+	cgs.effects.rain = trap->FX_RegisterEffect("effects/rain");
 }
 
 const char *CG_GetStringEdString(char *refSection, char *refName)

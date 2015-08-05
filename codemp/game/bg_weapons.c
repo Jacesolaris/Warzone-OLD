@@ -55,6 +55,9 @@ vec3_t WP_MuzzlePoint[WP_NUM_WEAPONS] =
 	{12,	6,		-6	},	// WP_ARC_CASTER_IMPERIAL,
 	{30,	3.5,	-6	},	// WP_BOWCASTER_CLASSIC,
 	{30,	3.5,	-6	},	// WP_WOOKIE_BOWCASTER_SCOPE,
+	{30,	3.5,	-6	},	// WP_BRYAR_CARBINE,
+	{70,	6,	    -6	},	// WP_BRYAR_RIFLE,
+	{70,	6,	    -6	},	// WP_BRYAR_RIFLE_SCOPE,
 	//old weapons
 	{30,	6,		-14	},	// WP_ROCKET_LAUNCHER,
 	{12,	0,		-4	},	// WP_THERMAL,
@@ -121,8 +124,9 @@ weaponData_t weaponData[WP_NUM_WEAPONS] = {
 	{ "Arc Caster Imperial",						150,		8192,		200,			8192,		0,				0,					0,			0,				0,			0	},
 	{ "Rifle Bowcaster Classic",					550,		8192,		350,			8192,		0,				0,					0,			3,				0,			1700	},
 	{ "Heavy Wookie Bowcaster",						550,		8192,		350,			8192,		0,				0,					0,			3,				0,			1700	},
-
-
+	{ "Bryar Carbine Blaster",						400,		8192,		350,			8192,		0,				200,				0,			3,				0,			1700	},
+	{ "Bryar Rifle",								350,		8192,		700,			8192,		0,				0,					0,			0,				0,			0	},
+	{ "Bryar Sniper Rifle",							250,		8192,		1200,			8192,		0,				0,					0,			0,				0,			0	},
 	//Old Weapons. do not add anything under here only above where new guns is added. Stoiss
 	{ "Merr-Sonn Missile System",					3000,		8192,		5000,			8192,		0,				0,					0,			0,				0,			0	},
 	{ "Thermal Detonator",							800,		8192,		400,			8192,		0,				0,					0,			0,				0,			0	},
@@ -144,6 +148,7 @@ qboolean IsSniperRifle ( int weapon )
 	case WP_DLT20A:
 	case WP_BOWCASTER_CLASSIC:
 	case WP_WOOKIE_BOWCASTER_SCOPE:
+	case WP_BRYAR_RIFLE_SCOPE:
 		return qtrue;
 	default:
 		break;
@@ -162,6 +167,7 @@ qboolean SniperRifleCharges ( int weapon )
 	case WP_ACP_SNIPER_RIFLE:
 	case WP_BOWCASTER_CLASSIC:
 	case WP_WOOKIE_BOWCASTER_SCOPE:
+	case WP_BRYAR_RIFLE_SCOPE:
 		return qfalse;
 	default:
 		break;
@@ -205,4 +211,5 @@ scopeData_t scopeData[] = {
 	"BlastTech ACP HAMaR Scope",					"",												"",												"gfx/2d/acp_sniperrifle/scope_mask_overlay", "gfx/2d/acp_sniperrifle/scope_mask",	"",											"",												"",										"",										"sound/weapons/disruptor/zoomstart.wav",	"sound/weapons/disruptor/zoomend.wav",
 	"BlastTech Rifle Bowcaster",					"",												"",												"",										"gfx/2d/Bowcaster/lensmask",				"gfx/2d/Bowcaster/lensmask_zoom",			"",												"",										"",										"sound/weapons/disruptor/zoomstart.wav",	"sound/weapons/disruptor/zoomend.wav",
 	"BlastTech Rifle Heavy Bowcaster",				"",												"",												"gfx/2d/Bowcaster_Heavy/scope_mask_overlay","gfx/2d/Bowcaster_Heavy/scope_mask",	"",											"",												"",										"",										"sound/weapons/disruptor/zoomstart.wav",	"sound/weapons/disruptor/zoomend.wav",
+	"BlastTech Bryal Sniper Rifle",					"",												"",												"",										"gfx/2d/Bryar_Rifle/scope_mask",			"",											"",												"",										"",										"sound/weapons/disruptor/zoomstart.wav",	"sound/weapons/disruptor/zoomend.wav",
 };
