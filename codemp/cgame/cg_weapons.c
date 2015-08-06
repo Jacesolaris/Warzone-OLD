@@ -804,7 +804,7 @@ Ghoul2 Insert End
 		else if (cent->currentState.weapon == WP_DC_15S_CLONE_PISTOL 
 			|| cent->currentState.weapon == WP_DC15_EXT 
 			|| cent->currentState.weapon == WP_Z6_BLASTER_CANON 
-			|| cent->currentState.weapon == WP_DC15_EXT)
+			|| cent->currentState.weapon == WP_DC_17_CLONE_PISTOL)
 		{
 			val = (cg.time - cent->currentState.constantLight) * 0.001f;
 			shader = cgs.media.lightningFlash;

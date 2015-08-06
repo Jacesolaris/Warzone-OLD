@@ -17,7 +17,7 @@ static vec3_t muzzle;
 // Bryar Pistol
 //--------
 #define BRYAR_PISTOL_VEL			1600
-#define BRYAR_PISTOL_DAMAGE			10
+#define BRYAR_PISTOL_DAMAGE			5//10
 #define BRYAR_CHARGE_UNIT			200.0f	// bryar charging gives us one more unit every 200ms--if you change this, you'll have to do the same in bg_pmove
 #define BRYAR_ALT_SIZE				1.0f
 
@@ -25,20 +25,21 @@ static vec3_t muzzle;
 //---------
 #define BLASTER_SPREAD				1.6f//1.2f
 #define BLASTER_VELOCITY			2300
-#define BLASTER_DAMAGE				20
+#define BLASTER_DAMAGE				10//20
 #define BLASTER_CANON_DAMAGE		5
 #define RIFLE_SNIPER_DAMAGE			85
-#define BLASTER_ALT_DAMAGE			30
+#define RIFLE_SNIPER_NON_SCOPE		30
+#define BLASTER_ALT_DAMAGE			13//30
 
 // Double Barrel ArrayGun
 //---------
 #define DOUBLEBARREL_SHOTS			2
 #define DOUBLEBARREL_SPREAD			1.0f
-#define DOUBLEBARREL_DAMAGE			15
+#define DOUBLEBARREL_DAMAGE			11//15
 #define DOUBLEBARREL_VEL				3500
 #define DOUBLEBARREL_SIZE				1
 #define DOUBLEBARREL_MINE_RADIUS_CHECK	256
-#define DOUBLEBARREL_ALT_DAMAGE		25
+#define DOUBLEBARREL_ALT_DAMAGE		13//25
 
 // Tenloss Disruptor
 //----------
@@ -53,12 +54,12 @@ static vec3_t muzzle;
 
 // Wookiee Bowcaster
 //----------
-#define	BOWCASTER_DAMAGE			30
+#define	BOWCASTER_DAMAGE			10//30
 #define	BOWCASTER_VELOCITY			1300
 #define BOWCASTER_SPLASH_DAMAGE		0
 #define BOWCASTER_SPLASH_RADIUS		0
 #define BOWCASTER_SIZE				2
-#define	BOWCASTER_ALT_DAMAGE		25
+#define	BOWCASTER_ALT_DAMAGE		13//25
 #define BOWCASTER_ALT_SPREAD		5.0f
 #define BOWCASTER_VEL_RANGE			0.3f
 #define BOWCASTER_CHARGE_UNIT		200.0f	// bowcaster charging gives us one more unit every 200ms--if you change this, you'll have to do the same in bg_pmove
@@ -66,11 +67,11 @@ static vec3_t muzzle;
 // Heavy Repeater
 //----------
 #define REPEATER_SPREAD				1.4f
-#define	REPEATER_DAMAGE				14
+#define	REPEATER_DAMAGE				10//14
 #define	REPEATER_VELOCITY			1600
 
 #define REPEATER_ALT_SIZE				3	// half of bbox size
-#define	REPEATER_ALT_DAMAGE				60
+#define	REPEATER_ALT_DAMAGE				15//60
 #define REPEATER_ALT_SPLASH_DAMAGE		60
 #define REPEATER_ALT_SPLASH_RADIUS		128
 #define REPEATER_ALT_SPLASH_RAD_SIEGE	80
@@ -78,7 +79,7 @@ static vec3_t muzzle;
 
 // DEMP2
 //----------
-#define	DEMP2_DAMAGE				35
+#define	DEMP2_DAMAGE				10//35
 #define	DEMP2_VELOCITY				1800
 #define	DEMP2_SIZE					2		// half of bbox size
 
@@ -91,19 +92,19 @@ static vec3_t muzzle;
 //---------
 #define FLECHETTE_SHOTS				5
 #define FLECHETTE_SPREAD			4.0f
-#define FLECHETTE_DAMAGE			12//15
+#define FLECHETTE_DAMAGE			10//12//15
 #define FLECHETTE_VEL				3500
 #define FLECHETTE_SIZE				1
 #define FLECHETTE_MINE_RADIUS_CHECK	256
-#define FLECHETTE_ALT_DAMAGE		60
+#define FLECHETTE_ALT_DAMAGE		15//60
 #define FLECHETTE_ALT_SPLASH_DAM	60
 #define FLECHETTE_ALT_SPLASH_RAD	128
 
 // Personal Rocket Launcher
 //---------
 #define	ROCKET_VELOCITY				900
-#define	ROCKET_DAMAGE				100
-#define	ROCKET_SPLASH_DAMAGE		100
+#define	ROCKET_DAMAGE				60//100
+#define	ROCKET_SPLASH_DAMAGE		65//100
 #define	ROCKET_SPLASH_RADIUS		160
 #define ROCKET_SIZE					3
 #define ROCKET_ALT_THINK_TIME		100
@@ -128,14 +129,14 @@ static vec3_t muzzle;
 
 // Stun Baton
 //--------------
-#define STUN_BATON_DAMAGE			20
-#define STUN_BATON_ALT_DAMAGE		20
+#define STUN_BATON_DAMAGE			5//20
+#define STUN_BATON_ALT_DAMAGE		8//20
 #define STUN_BATON_RANGE			8
 
 // Melee
 //--------------
-#define MELEE_SWING1_DAMAGE			10
-#define MELEE_SWING2_DAMAGE			12
+#define MELEE_SWING1_DAMAGE			2//10
+#define MELEE_SWING2_DAMAGE			3//12
 #define MELEE_RANGE					8
 
 // ATST Main Gun
@@ -5094,11 +5095,17 @@ void FireWeapon( gentity_t *ent, qboolean altFire ) {
 			break;
 
 		case WP_BRYAR_RIFLE:
+			if (altFire)
+				WP_FireBlaster(ent, altFire, BLASTER_VELOCITY*2.5, RIFLE_SNIPER_NON_SCOPE, 0.0, ent->s.weapon);
+			else
+				WP_FireBlaster(ent, altFire, BLASTER_VELOCITY, BLASTER_DAMAGE, BLASTER_SPREAD, ent->s.weapon);
+			break;
+
 		case WP_BRYAR_RIFLE_SCOPE:
 		case WP_ACP_SNIPER_RIFLE:
 		case WP_EE3:
 			if (altFire)
-				WP_FireBlaster(ent, altFire, BLASTER_VELOCITY*2.5, RIFLE_SNIPER_DAMAGE*1.5, 0.0, ent->s.weapon);
+				WP_FireBlaster(ent, altFire, BLASTER_VELOCITY*2.5, RIFLE_SNIPER_DAMAGE, 0.0, ent->s.weapon);
 			else
 				WP_FireBlaster(ent, altFire, BLASTER_VELOCITY, BLASTER_DAMAGE, BLASTER_SPREAD, ent->s.weapon);
 			break;
