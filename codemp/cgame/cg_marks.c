@@ -329,7 +329,7 @@ void CG_AddMarks( void ) {
 
 */
 
-/*efine MAX_ATMOSPHERIC_PARTICLES  	  	2000  	// maximum # of particles
+/*define MAX_ATMOSPHERIC_PARTICLES  	  	2000  	// maximum # of particles
 #define MAX_ATMOSPHERIC_DISTANCE  	  	1000  	// maximum distance from refdef origin that particles are visible
 #define MAX_ATMOSPHERIC_HEIGHT  	  	4096  	// maximum world height (FIXME: since 1.27 this should be 65536)
 #define MIN_ATMOSPHERIC_HEIGHT  	  	-4096  	// minimum world height (FIXME: since 1.27 this should be -65536)
@@ -1483,6 +1483,8 @@ void CG_EffectParse( const char *effectstr )
   	  	cg_atmFx.numDrops = MAX_ATMOSPHERIC_PARTICLES;
 
   	  	// Load graphics
+
+	//trap_FX_PlayEffectID(cgs.effects.rain, tr.endpos, angles, -1, 1);
 
   	// Rain
   	if( type == "rain" ) {

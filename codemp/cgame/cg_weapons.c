@@ -801,7 +801,10 @@ Ghoul2 Insert End
 			scale = 1.75f;
 		}
 		
-		else if (cent->currentState.weapon == WP_DC_15S_CLONE_PISTOL)
+		else if (cent->currentState.weapon == WP_DC_15S_CLONE_PISTOL 
+			|| cent->currentState.weapon == WP_DC15_EXT 
+			|| cent->currentState.weapon == WP_Z6_BLASTER_CANON 
+			|| cent->currentState.weapon == WP_DC_17_CLONE_PISTOL)
 		{
 			val = (cg.time - cent->currentState.constantLight) * 0.001f;
 			shader = cgs.media.lightningFlash;
@@ -814,26 +817,27 @@ Ghoul2 Insert End
 			shader = cgs.media.greenFrontFlash;
 			scale = 1.75f;
 		}
-		else if (cent->currentState.weapon == WP_DC15_EXT)
-		{
-			// Hardcoded max charge time of 1 second
-			val = (cg.time - cent->currentState.constantLight) * 0.001f;
-			shader = cgs.media.lightningFlash;
-			scale = 1.75f;
-		}
-		else if (cent->currentState.weapon == WP_Z6_BLASTER_CANON)
-		{
-			// Hardcoded max charge time of 1 second
-			val = (cg.time - cent->currentState.constantLight) * 0.001f;
-			shader = cgs.media.cannonChargeFlash;
-			scale = 1.75f;
-		}
-		else if (cent->currentState.weapon == WP_DC_17_CLONE_PISTOL)
-		{
-			val = (cg.time - cent->currentState.constantLight) * 0.001f;
-			shader = cgs.media.lightningFlash;
-			scale = 1.75f;
-		}
+		//else if (cent->currentState.weapon == WP_DC15_EXT)
+		//{
+		//	// Hardcoded max charge time of 1 second
+		//	val = (cg.time - cent->currentState.constantLight) * 0.001f;
+		//	shader = cgs.media.lightningFlash;
+		//	scale = 1.75f;
+		//}
+		//else if (cent->currentState.weapon == WP_Z6_BLASTER_CANON)
+		//{
+		//	// Hardcoded max charge time of 1 second
+		//	val = (cg.time - cent->currentState.constantLight) * 0.001f;
+		//	//shader = cgs.media.cannonChargeFlash;
+		//	shader = cgs.media.lightningFlash;
+		//	scale = 1.75f;
+		//}
+		//else if (cent->currentState.weapon == WP_DC_17_CLONE_PISTOL)
+		//{
+		//	val = (cg.time - cent->currentState.constantLight) * 0.001f;
+		//	shader = cgs.media.lightningFlash;
+		//	scale = 1.75f;
+		//}
 
 		if ( val < 0.0f )
 		{
@@ -2363,12 +2367,6 @@ qboolean CG_CalcMuzzlePoint( int entityNum, vec3_t muzzle ) {
 		centity_t *pEnt = &cg_entities[cg.predictedPlayerState.clientNum];
 
 		VectorCopy(WP_MuzzlePoint[weapontype], weaponMuzzle);
-
-/*		if (weapontype == WP_DISRUPTOR || weapontype == WP_A280 || weapontype == WP_DLT20A || weapontype == WP_EE3 || weapontype == WP_STUN_BATON || weapontype == WP_MELEE || weapontype == WP_SABER)
-		{
-			VectorClear(weaponMuzzle);
-		}
-*/
 
 		if (cg.renderingThirdPerson)
 		{

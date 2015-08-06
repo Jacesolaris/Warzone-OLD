@@ -278,6 +278,9 @@ int WeaponReadyAnim[WP_NUM_WEAPONS] =
 	TORSO_WEAPONREADY3,//WP_ARC_CASTER_IMPERIAL,
 	TORSO_WEAPONREADY3,//WP_BOWCASTER_CLASSIC,
 	TORSO_WEAPONREADY3,//WP_WOOKIE_BOWCASTER_SCOPE,
+	TORSO_WEAPONREADY3,//WP_BRYAR_CARBINE,
+	TORSO_WEAPONREADY3,//WP_BRYAR_RIFLE,
+	TORSO_WEAPONREADY3,//WP_BRYAR_RIFLE_SCOPE,
 
 
 	TORSO_WEAPONREADY3,//TORSO_WEAPONREADY9,//WP_ROCKET_LAUNCHER,
@@ -352,6 +355,9 @@ int WeaponReadyLegsAnim[WP_NUM_WEAPONS] =
 	BOTH_STAND1,//WP_ARC_CASTER_IMPERIAL,
 	BOTH_STAND1,//WP_BOWCASTER_CLASSIC,
 	BOTH_STAND1,//WP_WOOKIE_BOWCASTER_SCOPE,
+	BOTH_STAND1,//WP_BRYAR_CARBINE,
+	BOTH_STAND1,//WP_BRYAR_RIFLE,
+	BOTH_STAND1,//WP_BRYAR_RIFLE_SCOPE,
 
 	BOTH_STAND1,//TORSO_WEAPONREADY9,//WP_ROCKET_LAUNCHER,
 
@@ -386,29 +392,29 @@ int WeaponAttackAnim[WP_NUM_WEAPONS] =
 	//
 	BOTH_ATTACK2,//WP_BRYAR_PISTOL,
 	BOTH_ATTACK2,//WP_BRYAR_OLD,
-	BOTH_ATTACK3,//WP_BLASTER,
+	DC15_FIRE,//WP_BLASTER,
 	BOTH_ATTACK3,//BOTH_ATTACK4,//WP_DISRUPTOR,
-	BOTH_ATTACK3,//BOTH_ATTACK5,//WP_BOWCASTER,
-	BOTH_ATTACK3,//BOTH_ATTACK6,//WP_REPEATER,
-	BOTH_ATTACK2,//BOTH_ATTACK7,//WP_DEMP2,
+	DC15_FIRE,//BOTH_ATTACK5,//WP_BOWCASTER,
+	DC15_FIRE,//BOTH_ATTACK6,//WP_REPEATER,
+	BOTH_ATTACK3,//BOTH_ATTACK7,//WP_DEMP2,
 	BOTH_ATTACK3,//BOTH_ATTACK8,//WP_FLECHETTE,
 	BOTH_ATTACK3,//WP_CONCUSSION,
 	//add new guns here
-	BOTH_ATTACK3,//WP_A280,
+	DC15_FIRE,//WP_A280,
 	DC15_FIRE,//WP_DC15,
 	DC15_FIRE,//WP_WESTARM5,
 	BOTH_ATTACK3,//WP_T21,
 	DC15_FIRE,//WP_EE3,
 	BOTH_ATTACK2,//WP_DC_15S_CLONE_PISTOL,
-	BOTH_ATTACK3, //WP_DLT20A,
+	DC15_FIRE, //WP_DLT20A,
 	DC15_FIRE,//WP_CLONERIFLE,
 	BOTH_ATTACK2,//WP_WESTER_PISTOL,
 	BOTH_ATTACK2,//WP_ELG_3A,
 	BOTH_ATTACK2,//WP_S5_PISTOL,
 	MINIGUN_FIRE, //WP_Z6_BLASTER_CANON,
-	BOTH_ATTACK3,//WP_WOOKIE_BOWCASTER,
+	DC15_FIRE,//WP_WOOKIE_BOWCASTER,
 	BOTH_ATTACK2,//WP_WOOKIES_PISTOL
-	BOTH_ATTACK3,//WP_CLONE_BLASTER,
+	DC15_FIRE,//WP_CLONE_BLASTER,
 	DC15_FIRE, //WP_DC15_EXT,
 	PLX1_FIRE,//WP_E60_ROCKET_LAUNCHER,
 	PLX1_FIRE,//WP_CW_ROCKET_LAUNCHER,
@@ -421,9 +427,12 @@ int WeaponAttackAnim[WP_NUM_WEAPONS] =
 	BOTH_ATTACK2,// WP_A200_ACP_PISTOL,
 	DC15_FIRE,//WP_ACP_ARRAYGUN,
 	DC15_FIRE,//WP_ACP_SNIPER_RIFLE,
-	BOTH_ATTACK3,//WP_ARC_CASTER_IMPERIAL,
+	DC15_FIRE,//WP_ARC_CASTER_IMPERIAL,
 	DC15_FIRE,// WP_BOWCASTER_CLASSIC,
 	DC15_FIRE,// WP_WOOKIE_BOWCASTER_SCOPE,
+	DC15_FIRE,// WP_BRYAR_CARBINE,
+	DC15_FIRE,//WP_BRYAR_RIFLE,
+	DC15_FIRE,//WP_BRYAR_RIFLE_SCOPE,
 	
 	BOTH_ATTACK3,//BOTH_ATTACK9,//WP_ROCKET_LAUNCHER,
 
@@ -2011,6 +2020,59 @@ Don't place this
 	"@MENUS_THE_PRIMARY_WEAPON_OF"				// description
 },
 
+/*QUAKED WP_BRYAR_CARBINE (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+*/
+{
+	"weapon_bryar_carbine",
+	"sound/weapons/w_pkup.wav",
+	{ "models/weapons/Bryar_Carbine/model.glm",
+	0, 0, 0 },
+	/* view */		"models/weapons/Bryar_Carbine/model.md3",
+	/* icon */		"models/weapons/Bryar_Carbine/icon_default",
+	/* pickup *///	"E11 Blaster Rifle",
+	100,
+	IT_WEAPON,
+	WP_BRYAR_CARBINE,
+	/* precache */ "",
+	/* sounds */ "",
+	"@MENUS_THE_PRIMARY_WEAPON_OF"				// description
+},
+
+/*QUAKED WP_BRYAR_RIFLE (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+*/
+{
+	"weapon_sniper_bryar_rifle",
+	"sound/weapons/w_pkup.wav",
+	{ "models/weapons/Bryar_Rifle/model.glm",
+	0, 0, 0 },
+	/* view */		"models/weapons/Bryar_Rifle/model.md3",
+	/* icon */		"models/weapons/Bryar_Rifle/icon_default",
+	/* pickup *///	"t-21",
+	100,
+	IT_WEAPON,
+	WP_BRYAR_RIFLE,
+	/* precache */ "",
+	/* sounds */ "",
+	"@MENUS_THE_PRIMARY_WEAPON_OF"				// description
+},
+
+/*QUAKED WP_BRYAR_RIFLE_SCOPE (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+*/
+{
+	"weapon_sniper_bryar_rifle_scope",
+	"sound/weapons/w_pkup.wav",
+	{ "models/weapons/Bryar_Rifle/model_scope.glm",
+	0, 0, 0 },
+	/* view */		"models/weapons/Bryar_Rifle/model_scope.md3",
+	/* icon */		"models/weapons/Bryar_Rifle/icon_scope",
+	/* pickup *///	"t-21",
+	100,
+	IT_WEAPON,
+	WP_BRYAR_RIFLE_SCOPE,
+	/* precache */ "",
+	/* sounds */ "",
+	"@MENUS_THE_PRIMARY_WEAPON_OF"				// description
+},
 #ifndef __MMO__
 /*QUAKED ammo_thermal (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
 */

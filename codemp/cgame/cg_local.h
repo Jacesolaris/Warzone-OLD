@@ -1790,6 +1790,9 @@ typedef struct cgEffects_s {
 	fxHandle_t lavaSplashMissile;
 	fxHandle_t acidSplash;
 	fxHandle_t acidSplashMissile;
+	//WEATHER
+	fxHandle_t	saberFizz;
+	fxHandle_t	rain;
 } cgEffects_t;
 
 #define MAX_STATIC_MODELS 4000

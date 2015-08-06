@@ -1058,7 +1058,8 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->EnhancedFX_missileWallImpactfx = trap->FX_RegisterEffect("weapons/blaster_impact_blue_medium_fire");//prime efx
 		weaponInfo->EnhancedFX_altmissileWallImpactfx = trap->FX_RegisterEffect("orginal_weapon_efx/concussion/explosion");
 		trap->FX_RegisterEffect("blasters/blue_deflect");
-		cgs.media.cannonChargeFlash = trap->R_RegisterShader("gfx/misc/lightningFlash");
+		//cgs.media.cannonChargeFlash = trap->R_RegisterShader("gfx_base/misc/lightningFlash");
+		cgs.media.lightningFlash = trap->R_RegisterShader("gfx/misc/lightningFlash");
 		break;
 
 	case WP_WOOKIE_BOWCASTER:
@@ -1873,6 +1874,141 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->EnhancedFX_missileWallImpactfx = trap->FX_RegisterEffect("weapons/blaster_impact_green_medium");
 		weaponInfo->EnhancedFX_altmissileWallImpactfx = trap->FX_RegisterEffect("weapons/blaster_impact_green_medium");
 		trap->FX_RegisterEffect("blasters/green_deflect");
+		break;
+
+	case WP_BRYAR_CARBINE:
+		weaponInfo->selectSound = trap->S_RegisterSound("sound/weapons/blaster/select.wav");
+		weaponInfo->flashSound[0] = trap->S_RegisterSound("sound/weapons/blasters/bryar_rifle1.mp3");
+		weaponInfo->flashSound[1] = trap->S_RegisterSound("sound/weapons/blasters/bryar_rifle2.mp3");
+		weaponInfo->flashSound[2] = trap->S_RegisterSound("sound/weapons/blasters/bryar_rifle3.mp3");
+		weaponInfo->flashSound[3] = trap->S_RegisterSound("sound/weapons/blasters/bryar_rifle4.mp3");
+		weaponInfo->firingSound = NULL_SOUND;
+		weaponInfo->chargeSound = NULL_SOUND;
+		weaponInfo->muzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash2_Red_medium");
+		weaponInfo->missileModel = NULL_HANDLE;
+		weaponInfo->missileSound = NULL_SOUND;
+		weaponInfo->missileDlight = 0;
+		weaponInfo->missileHitSound = NULL_SOUND;
+		weaponInfo->missileTrailFunc = FX_WeaponProjectileThink;
+		weaponInfo->powerupShotRenderfx = NULL_FX;
+		weaponInfo->altFlashSound[0] = trap->S_RegisterSound("sound/weapons/blasters/bryar_rifle1.mp3");
+		weaponInfo->altFlashSound[1] = trap->S_RegisterSound("sound/weapons/blasters/bryar_rifle2.mp3");
+		weaponInfo->altFlashSound[2] = trap->S_RegisterSound("sound/weapons/blasters/bryar_rifle3.mp3");
+		weaponInfo->altFlashSound[3] = trap->S_RegisterSound("sound/weapons/blasters/bryar_rifle4.mp3");
+		weaponInfo->altFiringSound = NULL_SOUND;
+		weaponInfo->altChargeSound = NULL_SOUND;
+		weaponInfo->altMuzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash2_Red_medium");
+		weaponInfo->altMissileModel = NULL_HANDLE;
+		weaponInfo->altMissileSound = NULL_SOUND;
+		weaponInfo->altMissileDlight = 0;
+		weaponInfo->altMissileHitSound = NULL_SOUND;
+		weaponInfo->altMissileTrailFunc = FX_WeaponAltProjectileThink;//FX_WeaponProjectileThink;
+
+		weaponInfo->missileRenderfx = trap->FX_RegisterEffect("blasters/shot_redorange_medium");
+		weaponInfo->altMissileRenderfx = trap->FX_RegisterEffect("blasters/shot_redorange_medium");
+
+		weaponInfo->fleshImpactEffect = trap->FX_RegisterEffect("orginal_weapon_efx/blaster/flesh_impact");
+		weaponInfo->altFleshImpactEffect = trap->FX_RegisterEffect("orginal_weapon_efx/blaster/flesh_impact");
+		weaponInfo->missileWallImpactfx = trap->FX_RegisterEffect("orginal_weapon_efx/blaster/wall_impact");
+		weaponInfo->altMissileWallImpactfx = trap->FX_RegisterEffect("orginal_weapon_efx/blaster/wall_impact");
+
+
+		weaponInfo->EnhancedFX_fleshImpact = trap->FX_RegisterEffect("blasters/red_flesh_impact");
+		weaponInfo->EnhancedFX_altfleshImpact = trap->FX_RegisterEffect("blasters/red_flesh_impact");
+		weaponInfo->EnhancedFX_missileWallImpactfx = trap->FX_RegisterEffect("weapons/blaster_impact_red_medium_fire");
+		weaponInfo->EnhancedFX_altmissileWallImpactfx = trap->FX_RegisterEffect("weapons/blaster_impact_red_medium_fire");
+
+		trap->FX_RegisterEffect("blasters/red_deflect");
+
+		cgs.effects.blasterDroidImpactEffect = trap->FX_RegisterEffect("blaster/droid_impact");
+		break;
+
+	case WP_BRYAR_RIFLE:
+		weaponInfo->selectSound = trap->S_RegisterSound("sound/weapons/blaster/select.wav");
+		weaponInfo->selectSound = trap->S_RegisterSound("sound/weapons/blaster/select.wav");
+		weaponInfo->flashSound[0] = trap->S_RegisterSound("sound/weapons/blasters/bryar_rifle1.mp3");
+		weaponInfo->flashSound[1] = trap->S_RegisterSound("sound/weapons/blasters/bryar_rifle2.mp3");
+		weaponInfo->flashSound[2] = trap->S_RegisterSound("sound/weapons/blasters/bryar_rifle3.mp3");
+		weaponInfo->flashSound[3] = trap->S_RegisterSound("sound/weapons/blasters/bryar_rifle4.mp3");
+		weaponInfo->firingSound = NULL_SOUND;
+		weaponInfo->chargeSound = NULL_SOUND;
+		weaponInfo->muzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash2_Red_medium");
+		weaponInfo->missileModel = NULL_HANDLE;
+		weaponInfo->missileSound = NULL_SOUND;
+		weaponInfo->missileDlight = 0;
+		weaponInfo->missileHitSound = NULL_SOUND;
+		weaponInfo->missileTrailFunc = FX_WeaponProjectileThink;
+		weaponInfo->altFlashSound[0] = trap->S_RegisterSound("sound/weapons/blasters/bryar_rifle1.mp3");
+		weaponInfo->altFlashSound[1] = trap->S_RegisterSound("sound/weapons/blasters/bryar_rifle2.mp3");
+		weaponInfo->altFlashSound[2] = trap->S_RegisterSound("sound/weapons/blasters/bryar_rifle3.mp3");
+		weaponInfo->altFlashSound[3] = trap->S_RegisterSound("sound/weapons/blasters/bryar_rifle4.mp3");
+		weaponInfo->altFiringSound = NULL_SOUND;
+		weaponInfo->altChargeSound = NULL_SOUND;
+		weaponInfo->altMissileModel = NULL_HANDLE;
+		weaponInfo->altMissileSound = NULL_SOUND;
+		weaponInfo->altMissileDlight = 0;
+		weaponInfo->altMissileHitSound = NULL_SOUND;
+		weaponInfo->altMuzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash2_Red_medium");
+		weaponInfo->altMissileTrailFunc = FX_WeaponAltProjectileThink;
+
+		weaponInfo->missileRenderfx = trap->FX_RegisterEffect("blasters/shot_red_small");
+		weaponInfo->altMissileRenderfx = trap->FX_RegisterEffect("blasters/shot_RedOrange_Flare_medium");
+
+		weaponInfo->fleshImpactEffect = trap->FX_RegisterEffect("orginal_weapon_efx/blaster/flesh_impact");
+		weaponInfo->altFleshImpactEffect = trap->FX_RegisterEffect("orginal_weapon_efx/blaster/flesh_impact");
+		weaponInfo->missileWallImpactfx = trap->FX_RegisterEffect("orginal_weapon_efx/blaster/wall_impact");
+		weaponInfo->altMissileWallImpactfx = trap->FX_RegisterEffect("orginal_weapon_efx/blaster/wall_impact");
+
+
+		weaponInfo->EnhancedFX_fleshImpact = trap->FX_RegisterEffect("blasters/red_flesh_impact");
+		weaponInfo->EnhancedFX_altfleshImpact = trap->FX_RegisterEffect("blasters/red_flesh_impact");
+		weaponInfo->EnhancedFX_missileWallImpactfx = trap->FX_RegisterEffect("weapons/blaster_impact_red_medium_fire");
+		weaponInfo->EnhancedFX_altmissileWallImpactfx = trap->FX_RegisterEffect("weapons/blaster_impact_red_medium_fire");
+		trap->FX_RegisterEffect("blasters/red_deflect");
+		break;
+
+	case WP_BRYAR_RIFLE_SCOPE:
+		weaponInfo->selectSound = trap->S_RegisterSound("sound/weapons/blaster/select.wav");
+		weaponInfo->selectSound = trap->S_RegisterSound("sound/weapons/blaster/select.wav");
+		weaponInfo->flashSound[0] = trap->S_RegisterSound("sound/weapons/blasters/bryar_rifle1.mp3");
+		weaponInfo->flashSound[1] = trap->S_RegisterSound("sound/weapons/blasters/bryar_rifle2.mp3");
+		weaponInfo->flashSound[2] = trap->S_RegisterSound("sound/weapons/blasters/bryar_rifle3.mp3");
+		weaponInfo->flashSound[3] = trap->S_RegisterSound("sound/weapons/blasters/bryar_rifle4.mp3");
+		weaponInfo->firingSound = NULL_SOUND;
+		weaponInfo->chargeSound = NULL_SOUND;
+		weaponInfo->muzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash2_Red_medium");
+		weaponInfo->missileModel = NULL_HANDLE;
+		weaponInfo->missileSound = NULL_SOUND;
+		weaponInfo->missileDlight = 0;
+		weaponInfo->missileHitSound = NULL_SOUND;
+		weaponInfo->missileTrailFunc = FX_WeaponProjectileThink;
+		weaponInfo->altFlashSound[0] = trap->S_RegisterSound("sound/weapons/blasters/bryar_rifle1.mp3");
+		weaponInfo->altFlashSound[1] = trap->S_RegisterSound("sound/weapons/blasters/bryar_rifle2.mp3");
+		weaponInfo->altFlashSound[2] = trap->S_RegisterSound("sound/weapons/blasters/bryar_rifle3.mp3");
+		weaponInfo->altFlashSound[3] = trap->S_RegisterSound("sound/weapons/blasters/bryar_rifle4.mp3");
+		weaponInfo->altFiringSound = NULL_SOUND;
+		weaponInfo->altChargeSound = NULL_SOUND;
+		weaponInfo->altMissileModel = NULL_HANDLE;
+		weaponInfo->altMissileSound = NULL_SOUND;
+		weaponInfo->altMissileDlight = 0;
+		weaponInfo->altMissileHitSound = NULL_SOUND;
+		weaponInfo->altMuzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash2_Red_medium");
+		weaponInfo->altMissileTrailFunc = FX_WeaponAltProjectileThink;
+
+		weaponInfo->missileRenderfx = trap->FX_RegisterEffect("blasters/shot_red_small");
+		weaponInfo->altMissileRenderfx = trap->FX_RegisterEffect("blasters/shot_RedOrange_Flare_medium");
+
+		weaponInfo->fleshImpactEffect = trap->FX_RegisterEffect("orginal_weapon_efx/blaster/flesh_impact");
+		weaponInfo->altFleshImpactEffect = trap->FX_RegisterEffect("orginal_weapon_efx/blaster/flesh_impact");
+		weaponInfo->missileWallImpactfx = trap->FX_RegisterEffect("orginal_weapon_efx/blaster/wall_impact");
+		weaponInfo->altMissileWallImpactfx = trap->FX_RegisterEffect("orginal_weapon_efx/blaster/wall_impact");
+
+
+		weaponInfo->EnhancedFX_fleshImpact = trap->FX_RegisterEffect("blasters/red_flesh_impact");
+		weaponInfo->EnhancedFX_altfleshImpact = trap->FX_RegisterEffect("blasters/red_flesh_impact");
+		weaponInfo->EnhancedFX_missileWallImpactfx = trap->FX_RegisterEffect("weapons/blaster_impact_red_medium_fire");
+		weaponInfo->EnhancedFX_altmissileWallImpactfx = trap->FX_RegisterEffect("weapons/blaster_impact_red_medium_fire");
+		trap->FX_RegisterEffect("blasters/red_deflect");
 		break;
 
 // old weapons don't add anything under here. Stoiss
