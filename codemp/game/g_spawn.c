@@ -786,7 +786,7 @@ char *G_NewString( const char *string )
 	int i=0, len=0;
 
 	len = strlen( string )+1;
-	new_p = newb = (char *)G_Alloc( len );
+	new_p = newb = (char *)G_Alloc( len, "G_NewString" );
 
 	for ( i=0; i<len; i++ )
 	{// turn \n into a real linefeed

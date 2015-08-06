@@ -1842,10 +1842,10 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			break;
 		}
 
-		if ( pStage->isSurfaceSprite )
+		/*if ( pStage->isSurfaceSprite )
 		{
 			continue;
-		}
+		}*/
 
 		if (backEnd.depthFill)
 		{
@@ -1959,25 +1959,41 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			backEnd.pc.c_genericDraws++;
 		}
 
-		if (pStage->isWater)
+		if ( pStage->isSurfaceSprite )
 		{
-			if (stage > 0) break; // Since we instead draw glsl generated water, don't draw the other stages of water...
-
-			sp = &tr.waterShader;
-			pStage->glslShaderGroup = &tr.waterShader;
+			sp = &tr.surfaceSpriteShader;
+			pStage->glslShaderGroup = &tr.surfaceSpriteShader;
 			GLSL_BindProgram(sp);
 			GLSL_SetUniformFloat(sp, UNIFORM_TIME, tess.shaderTime);
-			vec4_t loc0;
-			
-			if (r_testshader->integer)
-				VectorSet4(loc0, (float)pStage->isWater, 0, 0, 0); // allow for reflections...
-			else
-				VectorSet4(loc0, (float)2.0, 0, 0, 0); // force it to use the old water fx...
-
-			GLSL_SetUniformVec4(sp, UNIFORM_LOCAL0, loc0);
 			RB_SetMaterialBasedProperties(sp, pStage);
-
 			isGeneric = qfalse;
+		}
+
+		if (pStage->isWater)
+		{
+			//if (stage <= 0) 
+			if (pStage->bundle[TB_DIFFUSEMAP].image[0])
+			{
+				sp = &tr.waterShader;
+				pStage->glslShaderGroup = &tr.waterShader;
+				GLSL_BindProgram(sp);
+				GLSL_SetUniformFloat(sp, UNIFORM_TIME, tess.shaderTime);
+				vec4_t loc0;
+			
+				if (r_testshader->integer)
+					VectorSet4(loc0, (float)pStage->isWater, 0, 0, 0); // allow for reflections...
+				else
+					VectorSet4(loc0, (float)2.0, 0, 0, 0); // force it to use the old water fx...
+
+				GLSL_SetUniformVec4(sp, UNIFORM_LOCAL0, loc0);
+				RB_SetMaterialBasedProperties(sp, pStage);
+
+				isGeneric = qfalse;
+			}
+			else
+			{
+				continue;
+			}
 		}
 		else
 		{

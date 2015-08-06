@@ -2,11 +2,40 @@
 
 #include "g_local.h"
 #include "bg_saga.h"
-
-
+#include "../botlib/be_ai_goal.h"
+#include "../botlib/be_ai_move.h"
+#include "../botlib/botlib.h"
 
 #define __DOMINANCE_AI__ // UnqueOne's AI.
 
+#ifdef __AAS_AI_TESTING__
+//travel types
+#define MAX_TRAVELTYPES				32
+#define TRAVEL_INVALID				1		//temporary not possible
+#define TRAVEL_WALK					2		//walking
+#define TRAVEL_CROUCH				3		//crouching
+#define TRAVEL_BARRIERJUMP			4		//jumping onto a barrier
+#define TRAVEL_JUMP					5		//jumping
+#define TRAVEL_LADDER				6		//climbing a ladder
+#define TRAVEL_WALKOFFLEDGE			7		//walking of a ledge
+#define TRAVEL_SWIM					8		//swimming
+#define TRAVEL_WATERJUMP			9		//jump out of the water
+#define TRAVEL_TELEPORT				10		//teleportation
+#define TRAVEL_ELEVATOR				11		//travel by elevator
+#define TRAVEL_ROCKETJUMP			12		//rocket jumping required for travel
+#define TRAVEL_BFGJUMP				13		//bfg jumping required for travel
+#define TRAVEL_GRAPPLEHOOK			14		//grappling hook required for travel
+#define TRAVEL_DOUBLEJUMP			15		//double jump
+#define TRAVEL_RAMPJUMP				16		//ramp jump
+#define TRAVEL_STRAFEJUMP			17		//strafe jump
+#define TRAVEL_JUMPPAD				18		//jump pad
+#define TRAVEL_FUNCBOB				19		//func bob
+
+//additional travel flags
+#define TRAVELTYPE_MASK				0xFFFFFF
+#define TRAVELFLAG_NOTTEAM1			(1 << 24)
+#define TRAVELFLAG_NOTTEAM2			(2 << 24)
+#endif //__AAS_AI_TESTING__
 
 
 //#define FORCEJUMP_INSTANTMETHOD 1
@@ -460,6 +489,10 @@ typedef struct bot_state_s
 	int					next_path_calculate_time;
 	qboolean			ready_to_calculate_path;
 	//end rww
+
+#ifdef __AAS_AI_TESTING__
+	bot_goal_t			goal;
+#endif //__AAS_AI_TESTING__
 } bot_state_t;
 
 //used for objective dependancy stuff

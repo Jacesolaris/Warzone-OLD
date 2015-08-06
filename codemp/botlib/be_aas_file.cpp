@@ -366,12 +366,12 @@ int AAS_LoadAASFile(char *filename)
 	} //end if
 	//
 	aasworld.bspchecksum = atoi(LibVarGetString( "sv_mapChecksum"));
-	if (LittleLong(header.bspchecksum) != aasworld.bspchecksum)
-	{
+	/*if (LittleLong(header.bspchecksum) != aasworld.bspchecksum)
+	{// UQ1: Fixme... AAS generator doesnt load lightmaps, so checksum is incorrect...
 		AAS_Error("aas file %s is out of date\n", filename);
 		botimport.FS_FCloseFile(fp);
 		return BLERR_WRONGAASFILEVERSION;
-	} //end if
+	}*/ //end if
 	//load the lumps:
 	//bounding boxes
 	offset = LittleLong(header.lumps[AASLUMP_BBOXES].fileofs);

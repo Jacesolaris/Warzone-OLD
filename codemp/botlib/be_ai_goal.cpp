@@ -1761,19 +1761,19 @@ void BotFreeGoalState(int handle)
 //===========================================================================
 int BotSetupGoalAI(void)
 {
-	char *filename;
+	//char *filename;
 
 	//check if teamplay is on
 	g_gametype = LibVarValue("g_gametype", "0");
 	//item configuration file
-	filename = LibVarString("itemconfig", "items.c");
+	//filename = LibVarString("itemconfig", "items.c");
 	//load the item configuration
-	itemconfig = LoadItemConfig(filename);
-	if (!itemconfig)
-	{
-		botimport.Print(PRT_FATAL, "couldn't load item config\n");
-		return BLERR_CANNOTLOADITEMCONFIG;
-	} //end if
+	//itemconfig = LoadItemConfig(filename);
+	//if (!itemconfig)
+	//{
+	//	botimport.Print(PRT_FATAL, "couldn't load item config\n");
+	//	return BLERR_CANNOTLOADITEMCONFIG;
+	//} //end if
 	//
 	droppedweight = LibVar("droppedweight", "1000");
 	//everything went ok

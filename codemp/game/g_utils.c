@@ -438,7 +438,7 @@ void G_CreateFakeClient(int entNum, gentity_t *ent)
 	{
 		//gClPtrs[entNum] = (gclient_t *) BG_Alloc(sizeof(gclient_t));
 		//gClPtrs[entNum] = (gclient_t *) dlmalloc/*G_Alloc*/(sizeof(gclient_t));
-		gClPtrs[entNum] = (gclient_t *) G_Alloc(sizeof(gclient_t));
+		gClPtrs[entNum] = (gclient_t *) G_Alloc(sizeof(gclient_t), "G_CreateFakeClient");
 	}
 	ent->client = gClPtrs[entNum];
 	ent->s.number = entNum;

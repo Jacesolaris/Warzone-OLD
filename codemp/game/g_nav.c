@@ -1751,6 +1751,7 @@ void NAV_CalculatePaths( const char *filename, int checksum )
 #if _HARD_CONNECT
 
 	//Find all connections and hard connect them
+#pragma omp parallel for schedule(dynamic)
 	for ( i = 0; i < numStoredWaypoints; i++ )
 	{
 		//Find the first connection

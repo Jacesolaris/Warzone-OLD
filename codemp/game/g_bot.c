@@ -80,7 +80,7 @@ int G_ParseInfos( char *buf, int max, char *infos[] ) {
 			Info_SetValueForKey( info, key, token );
 		}
 		//NOTE: extra space for arena number
-		infos[count] = (char *) G_Alloc(strlen(info) + strlen("\\num\\") + strlen(va("%d", MAX_ARENAS)) + 1);
+		infos[count] = (char *) G_Alloc(strlen(info) + strlen("\\num\\") + strlen(va("%d", MAX_ARENAS)) + 1, "G_ParseInfos");
 		if (infos[count]) {
 			strcpy(infos[count], info);
 			count++;
@@ -766,6 +766,7 @@ vmCvar_t npc_pathing;
 
 #ifdef __NPC_MINPLAYERS__
 
+vmCvar_t npc_wptonav;
 vmCvar_t npc_enemies;
 vmCvar_t npc_civilians;
 vmCvar_t npc_vendors;
@@ -2025,7 +2026,8 @@ void G_InitBots( void ) {
 	trap->Cvar_Register( &npc_enemies, "npc_enemies", "0", CVAR_ARCHIVE );
 	trap->Cvar_Register( &npc_civilians, "npc_civilians", "0", CVAR_ARCHIVE );
 	trap->Cvar_Register( &npc_vendors, "npc_vendors", "0", CVAR_ARCHIVE );
-	trap->Cvar_Register( &npc_pathing, "npc_pathing", "0", CVAR_ARCHIVE );
+	trap->Cvar_Register( &npc_pathing, "npc_pathing", "2", CVAR_ARCHIVE );
+	trap->Cvar_Register( &npc_wptonav, "npc_wptonav", "1", CVAR_ARCHIVE );
 #endif //__NPC_MINPLAYERS__
 
 	//rww - new bot route stuff

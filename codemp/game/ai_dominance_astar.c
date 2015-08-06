@@ -45,11 +45,11 @@ void AllocatePathFindingMemory()
 {
 	if (PATHFINDING_MEMORY_ALLOCATED) return;
 
-	openlist = (int *)G_Alloc(sizeof(int)*(MAX_WPARRAY_SIZE));
-	gcost = (float *)G_Alloc(sizeof(float)*(MAX_WPARRAY_SIZE));
-	fcost = (int *)G_Alloc(sizeof(int)*(MAX_WPARRAY_SIZE));
-	list = (char *)G_Alloc(sizeof(char)*(MAX_WPARRAY_SIZE));
-	parent = (int *)G_Alloc(sizeof(int)*(MAX_WPARRAY_SIZE));
+	openlist = (int *)G_Alloc(sizeof(int)*(MAX_WPARRAY_SIZE), "AllocatePathFindingMemory (openlist)");
+	gcost = (float *)G_Alloc(sizeof(float)*(MAX_WPARRAY_SIZE), "AllocatePathFindingMemory (gcost)");
+	fcost = (int *)G_Alloc(sizeof(int)*(MAX_WPARRAY_SIZE), "AllocatePathFindingMemory (fcost)");
+	list = (char *)G_Alloc(sizeof(char)*(MAX_WPARRAY_SIZE), "AllocatePathFindingMemory (list)");
+	parent = (int *)G_Alloc(sizeof(int)*(MAX_WPARRAY_SIZE), "AllocatePathFindingMemory (parent)");
 
 	PATHFINDING_MEMORY_ALLOCATED = qtrue;
 }

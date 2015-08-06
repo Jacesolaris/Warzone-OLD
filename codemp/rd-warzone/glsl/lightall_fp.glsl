@@ -554,9 +554,9 @@ void main()
 	if (var_Local1.g != 0.0)
 	{// Real specMap...
 		specular = texture2D(u_SpecularMap, texCoords);
-		specular.a = (specular.r + specular.g + specular.b) / 3.0;
-		specular.a = ((clamp((1.0 - specular.a), 0.0, 1.0) * 0.5) + 0.5);
-		specular.a = clamp((specular.a * 2.0) * specular.a, 0.2, 0.9);
+		//specular.a = (specular.r + specular.g + specular.b) / 3.0;
+		//specular.a = ((clamp((1.0 - specular.a), 0.0, 1.0) * 0.5) + 0.5);
+		//specular.a = clamp((specular.a * 2.0) * specular.a, 0.2, 0.9);
 	}
 	else
 	{// Fake it...

@@ -12,6 +12,8 @@
 
 #define WAYPOINT_NONE -1
 
+extern bot_state_t *botstates[MAX_GENTITIES];
+
 extern vec3_t playerMins;
 extern vec3_t playerMaxs;
 extern void G_SoundOnEnt( gentity_t *ent, soundChannel_t channel, const char *soundPath );
@@ -3913,6 +3915,21 @@ void NPC_Think ( gentity_t *self)//, int msec )
 
 	SetNPCGlobals( self );
 
+	if (!botstates[self->s.number])
+	{// Set up bot state for this npc if required...
+		bot_settings_t	settings;
+		memset(&settings, 0, sizeof(bot_settings_t));
+
+		settings.skill = 5;
+		if (self->client->sess.sessionTeam == TEAM_RED)
+			strcpy(settings.team, "RED");
+		else
+			strcpy(settings.team, "BLUE");
+
+		BotAISetupClient(self->s.number, &settings, qfalse);
+	}
+	botstates[self->s.number]->client = self->s.number;
+
 	//if (!(self->s.eFlags & EF_CLIENTSMOOTH)) self->s.eFlags |= EF_CLIENTSMOOTH;
 
 	memset( &NPCS.ucmd, 0, sizeof( NPCS.ucmd ) );
@@ -4282,6 +4299,176 @@ void NPC_Think ( gentity_t *self)//, int msec )
 				{
 					NPC_GenericFrameCode( self );
 				}
+#ifdef __USE_NAV_PATHING__
+				else if (!self->isPadawan && use_pathing && !self->enemy)
+				{
+					
+					//if (!self->waypoint)
+					//	self->waypoint = trap->Nav_GetNearestNode((sharedEntity_t *)self, self->waypoint, 0x00000002/*NF_CLEAR_PATH*/, -1/*WAYPOINT_NONE*/);
+
+					//if (!self->longTermGoal)
+						//self->longTermGoal = trap->Nav_GetNearestNode((sharedEntity_t *)self, self->waypoint, 0x00000002/*NF_CLEAR_PATH*/, -1/*WAYPOINT_NONE*/);
+					//	self->longTermGoal = irand(0, trap->Nav_GetNumNodes()-1);
+					
+					//self->wpCurrent = trap->Nav_GetBestNode(self->waypoint, self->longTermGoal);
+					//if (!self->wpCurrent) self->wpCurrent = trap->Nav_GetBestNodeAltRoute( self->waypoint, self->longTermGoal, &self->pathsize, -1 );
+
+					if (!NPCS.NPCInfo->goalEntity && self->npc_dumb_route_time < level.time) 
+					{
+						int i = 0;
+						qboolean found = qfalse;
+
+						for (i = 0; i < ENTITYNUM_MAX_NORMAL; i++)
+						{
+							gentity_t *ent = &g_entities[i];
+
+							if (!ent) continue;
+							if (!ent->inuse) continue;
+							if (ent->s.eType != ET_PLAYER && ent->s.eType != ET_NPC && ent->s.eType != ET_ITEM) continue;
+							if (OnSameTeam(self, ent)) continue;
+							
+							//if (irand(0, 3) < 1)
+							{
+								found = qtrue;
+								break;
+							}
+						}
+
+						if (found)
+						{
+							NPCS.NPCInfo->goalEntity = &g_entities[i];
+							//trap->Print("NPC %s found a goal.\n", self->NPC_type);
+						}
+
+						self->npc_dumb_route_time = level.time + 5000;
+					}
+
+					if (NPCS.NPCInfo->goalEntity)
+					{
+						//trap->Print("NPC %s following path.\n", self->NPC_type);
+						NPC_SlideMoveToGoal();
+					}
+				}
+#else //!__USE_NAV_PATHING__
+
+#ifdef __AAS_AI_TESTING__
+				else if (!self->isPadawan && use_pathing && !self->enemy)
+				{
+					if ((!NPCS.NPCInfo->goalEntity || Distance(NPCS.NPCInfo->goalEntity->r.currentOrigin, self->r.currentOrigin) < 64) 
+						&& self->npc_dumb_route_time < level.time) 
+					{
+						int i = 0;
+						qboolean found = qfalse;
+
+						for (i = 0; i < ENTITYNUM_MAX_NORMAL; i++)
+						{
+							gentity_t *ent = &g_entities[i];
+
+							if (!ent) continue;
+							if (!ent->inuse) continue;
+							if (ent->s.eType != ET_PLAYER && ent->s.eType != ET_NPC && ent->s.eType != ET_ITEM) continue;
+							if (ent->s.eType == ET_PLAYER && ent->client->sess.sessionTeam == TEAM_SPECTATOR) continue;
+							if (!NPC_ValidEnemy(ent)) continue;
+							
+							//if (irand(0, 3) < 1)
+							{
+								found = qtrue;
+								break;
+							}
+						}
+
+						if (found)
+						{
+							NPCS.NPCInfo->goalEntity = &g_entities[i];
+							//trap->Print("NPC %s found a goal.\n", self->NPC_type);
+						}
+
+						self->npc_dumb_route_time = level.time + 5000;
+					}
+
+					if (NPCS.NPCInfo->goalEntity)
+					{
+						bot_moveresult_t moveresult;
+						bot_state_t *bs = botstates[self->s.number];
+
+						if ((bs->goal.origin[0] == 0 && bs->goal.origin[1] == 0 && bs->goal.origin[2] == 0)
+							|| Distance(self->r.currentOrigin, bs->goal.origin) < 64)
+						{// New goal
+							VectorCopy(NPCS.NPCInfo->goalEntity->r.currentOrigin, bs->goal.origin);
+							VectorCopy(NPCS.NPCInfo->goalEntity->r.mins, bs->goal.mins);
+							VectorCopy(NPCS.NPCInfo->goalEntity->r.maxs, bs->goal.maxs);
+							bs->goal.areanum = trap->AAS_PointAreaNum(NPCS.NPCInfo->goalEntity->r.currentOrigin);
+							bs->goal.entitynum = NPCS.NPCInfo->goalEntity->s.number;
+							bs->goal.flags = 0;
+							bs->goal.iteminfo = 0;
+							bs->goal.number = 0;
+						}
+
+						trap->BotUpdateEntityItems();
+						trap->BotCalculatePaths(0);
+						
+						trap->EA_ResetInput(self->s.number);
+						BotUpdateInput(bs, level.time, 100);
+						//trap->Print("NPC %s following path.\n", self->NPC_type);
+						
+						self->wpCurrent = trap->AAS_PointAreaNum(self->s.origin);
+
+						trap->AAS_EnableRoutingArea(self->wpCurrent, qtrue);
+						trap->AAS_EnableRoutingArea(bs->goal.areanum, qtrue);
+
+						//self->longTermGoal = trap->AAS_PointAreaNum(NPCS.NPCInfo->goalEntity->r.currentOrigin);
+						self->pathsize = trap->AAS_PredictRoute(self->pathlist, self->wpCurrent, self->r.currentOrigin, bs->goal.areanum, 0, -1, -1, -1, -1, -1, -1);
+						trap->BotMoveToGoal(&moveresult, bs->ms, &bs->goal, 0);
+						
+						//VectorCopy(moveresult.movedir, self->movedir);
+						
+						if (!moveresult.blocked && !moveresult.blockentity && !moveresult.failure)
+						{
+							vec3_t angles, forward, right, up, movePos;
+							bot_input_t bi;
+
+							//vectoangles(moveresult.movedir, angles);
+							//AngleVectors( moveresult.ideal_viewangles, forward, right, up );
+
+							//VectorMA(self->r.currentOrigin, 256, forward, movePos);
+
+							//NPC_FacePosition(moveresult.ideal_viewangles, qfalse);
+							
+							//VectorNormalize(moveresult.movedir);
+
+							//self->movedir[0] = moveresult.movedir[1];
+							//self->movedir[1] = moveresult.movedir[0];
+							//self->movedir[2] = moveresult.movedir[2];
+
+							trap->BotUserCommand(self->s.number, &NPCS.ucmd);
+							
+							//UQ1_UcmdMoveForDir( self, &NPCS.ucmd, self->movedir, qfalse, movePos );
+							//trap->BotMoveInDirection(bs->ms, bi.dir, bi.speed, 0);
+
+							AngleVectors( bi.viewangles, forward, right, up );
+							VectorMA(self->r.currentOrigin, 256, forward, movePos);
+							NPC_FacePosition(bi.viewangles, qfalse);
+							
+							//trap->EA_GetInput(self->s.number, 100, &bi);
+							
+							
+							//moveresult.movedir[0] = -moveresult.movedir[0];
+							//moveresult.movedir[1] = -moveresult.movedir[1];
+							VectorNormalize(forward);
+							UQ1_UcmdMoveForDir( self, &NPCS.ucmd, forward/*bi.dir*/, qfalse, movePos );
+							//trap->BotUserCommand(self->s.number, &NPCS.ucmd);
+
+							trap->Print("move to entity %i. %f %f %f. dir %f %f %f. ucmd %i %i %i.\n"
+								, NPCS.NPCInfo->goalEntity->s.number
+								, movePos[0], movePos[1], movePos[2]
+								, forward[0], forward[1], forward[2]
+								, (int)NPCS.ucmd.forwardmove, (int)NPCS.ucmd.rightmove, (int)NPCS.ucmd.upmove);
+						}
+					}
+
+					NPC_GenericFrameCode( self );
+				}
+#else
 				else if (!self->isPadawan && use_pathing && NPC_FollowRoutes()) 
 				{
 					//trap->Print("NPCBOT DEBUG: NPC is following routes.\n");
@@ -4294,6 +4481,9 @@ void NPC_Think ( gentity_t *self)//, int msec )
 
 					NPC_GenericFrameCode( self );
 				}
+#endif //__AAS_AI_TESTING__
+
+#endif //__USE_NAV_PATHING__
 				//
 				// Patroling...
 				//

@@ -97,6 +97,7 @@ varying vec3   var_vertPos;
 
 out vec4 out_Glow;
 
+
 float SampleDepth(sampler2D normalMap, vec2 t)
 {
 	vec3 color = texture2D(u_DiffuseMap, t).rgb;

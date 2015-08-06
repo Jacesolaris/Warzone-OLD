@@ -6,7 +6,7 @@
 
 #define _BLOCK_COLLISION_TEST
 #define SABER_BOX_SIZE 16.0f
-//extern bot_state_t *botstates[MAX_CLIENTS];
+//extern bot_state_t *botstates[MAX_GENTITIES];
 extern qboolean InFront( vec3_t spot, vec3_t from, vec3_t fromAngles, float threshHold );
 extern void G_TestLine(vec3_t start, vec3_t end, int color, int time);
 

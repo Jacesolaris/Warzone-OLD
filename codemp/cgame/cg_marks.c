@@ -1757,13 +1757,6 @@ qboolean CG_AtmosphericKludge()
   	  	return( kludgeResult = qtrue );
   	}
 
-	if( !Q_stricmp( cgs.mapname, "maps/mp/ctf4.bsp" ) )
-  	{// coruscant streets
-  	  	CG_EffectParse( "T=RAIN" );
-		rain = qtrue;
-  	  	return( kludgeResult = qtrue );
-  	}
-
 	if( !Q_stricmp( cgs.mapname, "maps/mp/duel6.bsp" ) )
   	{// yavin training
   	  	CG_EffectParse( "T=STORM" );

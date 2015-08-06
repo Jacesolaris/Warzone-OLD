@@ -601,6 +601,8 @@ bool CNavigator::Load( const char *filename, int checksum )
 {
 	fileHandle_t	file;
 
+	Free();
+
 	//Attempt to load the file
 	FS_FOpenFileByMode( va( "maps/%s.nav", filename ), &file, FS_READ );
 
@@ -885,13 +887,15 @@ void CNavigator::CalculatePaths( qboolean recalc )
 #else
 #endif
 
-	for ( size_t i = 0; i < m_nodes.size(); i++ )
+#pragma omp parallel for schedule(dynamic)
+	for ( int/*size_t*/ i = 0; i < m_nodes.size(); i++ )
 	{
 		//Allocate the needed memory
 		m_nodes[i]->InitRanks( m_nodes.size() );
 	}
 
-	for ( size_t i = 0; i < m_nodes.size(); i++ )
+#pragma omp parallel for schedule(dynamic)
+	for ( int/*size_t*/ i = 0; i < m_nodes.size(); i++ )
 	{
 		CalculatePath( m_nodes[i] );
 	}

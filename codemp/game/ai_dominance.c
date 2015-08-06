@@ -37,7 +37,7 @@ extern void NPC_Think ( gentity_t *self);
 #endif //__DOMINANCE_AI__
 
 //bot states
-bot_state_t	*botstates[MAX_CLIENTS];
+bot_state_t	*botstates[MAX_GENTITIES];
 //number of bots
 int numbots;
 //floating point time
@@ -50,7 +50,7 @@ float regularupdate_time;
 extern int rebel_attackers;
 extern int imperial_attackers;
 
-boteventtracker_t gBotEventTracker[MAX_CLIENTS];
+boteventtracker_t gBotEventTracker[MAX_GENTITIES];
 
 //rww - new bot cvars..
 vmCvar_t bot_forcepowers;
@@ -92,7 +92,7 @@ gentity_t *droppedBlueFlag;
 extern npcStatic_t NPCS;
 
 //externs
-extern bot_state_t	*botstates[MAX_CLIENTS];
+extern bot_state_t	*botstates[MAX_GENTITIES];
 //Local Variables
 //extern gentity_t		*NPC;
 //extern gNPC_t			*NPCInfo;
@@ -1674,7 +1674,7 @@ BotAISetupClient
 int BotAISetupClient(int client, struct bot_settings_s *settings, qboolean restart) {
 	bot_state_t *bs;
 
-	if (!botstates[client]) botstates[client] = (bot_state_t *) G_Alloc(sizeof(bot_state_t));
+	if (!botstates[client]) botstates[client] = (bot_state_t *) G_Alloc(sizeof(bot_state_t), "BotAISetupClient");
 																			  //rww - G_Alloc bad! B_Alloc good.
 
 	memset(botstates[client], 0, sizeof(bot_state_t));
@@ -2056,6 +2056,18 @@ int BotAISetup( int restart ) {
 	{
 		return qfalse; //wts?!
 	}
+
+#ifdef __AAS_AI_TESTING__
+	{
+		vmCvar_t	mapname;
+		int loaded = 0;
+		trap->Cvar_Register( &mapname, "mapname", "", CVAR_SERVERINFO | CVAR_ROM );
+		loaded = trap->BotLibLoadMap(mapname.string);
+		//trap->Print("BOTLIB LOAD MAP: %i.\n", loaded);
+	}
+#endif //__AAS_AI_TESTING__
+
+	trap->Print("-------- BotAISetup Completed ---------\n");
 
 	return qtrue;
 }

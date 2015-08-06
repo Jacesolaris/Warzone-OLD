@@ -3815,6 +3815,12 @@ void ClientThink( int clientNum, usercmd_t *ucmd ) {
 
 	if (!ent->client) return; // memory must have been freed and the engine has not updated yet...
 
+	//if (ent->client->pers.localClient)
+	//{
+	//	int wp = trap->Nav_GetNearestNode((sharedEntity_t *)ent, ent->waypoint, 0x00000002/*NF_CLEAR_PATH*/, -1/*WAYPOINT_NONE*/);
+	//	trap->Nav_ShowPath(wp, trap->Nav_GetNumNodes()-1);
+	//}
+
 	// mark the time we got info, so we can display the
 	// phone jack if they don't get any for a while
 	ent->client->lastCmdTime = level.time;

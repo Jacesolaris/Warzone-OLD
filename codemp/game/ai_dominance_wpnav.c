@@ -42,7 +42,7 @@ void CreateNewWP_FromAWPNode(int index, vec3_t origin, int flags, int weight, in
 
 	if (!gWPArray[gWPNum])
 	{
-		gWPArray[gWPNum] = (wpobject_t *)G_Alloc(sizeof(wpobject_t));
+		gWPArray[gWPNum] = (wpobject_t *)G_Alloc(sizeof(wpobject_t), "CreateNewWP_FromAWPNode");
 	}
 
 	if (!gWPArray[gWPNum])
@@ -227,6 +227,7 @@ AIMOD_NODES_LoadNodes2 ( void )
 	}
 
 	fread( &map, strlen( mp) + 1, 1, f);
+	
 	if ( Q_stricmp( map, mp) != 0 )
 	{
 		trap->Print( "^1*** ^3WARNING^5: Reading from ^7nodes/%s.bwp^3 failed^5!!!\n", mapname.string );
@@ -364,6 +365,7 @@ AIMOD_NODES_LoadNodes ( void )
 	}
 
 	trap->FS_Read( &map, strlen( mp) + 1, f );			//make sure the file is for the current map
+	
 	if ( Q_stricmp( map, mp) != 0 )
 	{
 		trap->Print( "^1*** ^3WARNING^5: Reading from ^7nodes/%s.bwp^3 failed^5!!!\n", filename );
@@ -491,10 +493,52 @@ void Warzone_WaypointCheck ( void )
 */
 }
 
+int num_nav_waypoints = 0;
+int nav_waypoints[MAX_WPARRAY_SIZE];
+
+extern vmCvar_t npc_wptonav;
+
 int LoadPathData(const char *filename)
 {
 	if (AIMOD_NODES_LoadNodes()) 
 	{
+		if (gWPNum > 8000 && npc_wptonav.integer < 2)
+		{
+			trap->Print("* Have too many waypoints to add them to the nav system. Set npc_wptonav to 2 to force addition.\n");
+		}
+		else if (trap->Nav_GetNumNodes() < gWPNum && npc_wptonav.integer)
+		{// This nav file does not have all our extra waypoints... Add them now...
+			int i = 0, j = 0, k = 0, original_count = 0, new_count = 0;
+
+			original_count = trap->Nav_GetNumNodes();
+
+			trap->Print("* Navigation system had %i nodes. Adding warzone nodes.\n", original_count);
+
+//#pragma omp parallel for schedule(dynamic)
+			for (i = 0; i < gWPNum; i++)
+			{
+				nav_waypoints[i] = trap->Nav_AddRawPoint(gWPArray[i]->origin, 0, 64);
+				num_nav_waypoints++;
+			}
+
+			new_count = trap->Nav_GetNumNodes();
+
+			// Now hard link them as like our normal waypoint array...
+			trap->Print("* Navigation system linking %i new nodes.\n", new_count - original_count);
+
+//#pragma omp parallel for schedule(dynamic)
+			for (j = 0; j < gWPNum; j++)
+			{
+				for (k = 0; k < gWPArray[j]->neighbornum; k++)
+				{
+					trap->Nav_HardConnect(nav_waypoints[j], nav_waypoints[gWPArray[j]->neighbors[k].num]);
+				}
+			}
+
+			trap->Nav_CalculatePaths(qtrue);
+			trap->Print("* Navigation system now has %i nodes.\n", new_count);
+		}
+
 		Warzone_WaypointCheck();
 		return 1; // UQ1: Load/Convert Auto-Waypoint Nodes... (Now default)
 	}

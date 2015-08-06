@@ -74,6 +74,8 @@ extern const char *fallbackShader_uniquesky_fp;
 extern const char *fallbackShader_uniquesky_vp;
 extern const char *fallbackShader_uniquewater_fp;
 extern const char *fallbackShader_uniquewater_vp;
+extern const char *fallbackShader_surfaceSprite_fp;
+extern const char *fallbackShader_surfaceSprite_vp;
 extern const char *fallbackShader_ssao2_vp;
 extern const char *fallbackShader_ssao2_fp;
 extern const char *fallbackShader_esharpening_vp;
@@ -1892,6 +1894,14 @@ int GLSL_BeginLoadGPUShaders(void)
 	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
 	extradefines[0] = '\0';
 
+	if (!GLSL_BeginLoadGPUShader(&tr.surfaceSpriteShader, "surfaceSprite", attribs, qtrue, extradefines, qtrue, NULL, fallbackShader_surfaceSprite_vp, fallbackShader_surfaceSprite_fp))
+	{
+		ri->Error(ERR_FATAL, "Could not load surfaceSprite shader!");
+	}
+
+	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
+	extradefines[0] = '\0';
+
 	if (!GLSL_BeginLoadGPUShader(&tr.ssao2Shader, "ssao2", attribs, qtrue, extradefines, qfalse, NULL, fallbackShader_ssao2_vp, fallbackShader_ssao2_fp))
 	{
 		ri->Error(ERR_FATAL, "Could not load ssao2 shader!");
@@ -3102,6 +3112,56 @@ void GLSL_EndLoadGPUShaders ( int startTime )
 		numEtcShaders++;
 
 
+
+		if (!GLSL_EndLoadGPUShader(&tr.surfaceSpriteShader))
+		{
+			ri->Error(ERR_FATAL, "Could not load surfaceSprite shader!");
+		}
+		
+		GLSL_InitUniforms(&tr.surfaceSpriteShader);
+
+		qglUseProgram(tr.surfaceSpriteShader.program);
+
+		GLSL_SetUniformInt(&tr.surfaceSpriteShader, UNIFORM_DIFFUSEMAP,  TB_DIFFUSEMAP);
+		GLSL_SetUniformInt(&tr.surfaceSpriteShader, UNIFORM_LIGHTMAP,    TB_LIGHTMAP);
+		GLSL_SetUniformInt(&tr.surfaceSpriteShader, UNIFORM_NORMALMAP,   TB_NORMALMAP);
+		GLSL_SetUniformInt(&tr.surfaceSpriteShader, UNIFORM_DELUXEMAP,   TB_DELUXEMAP);
+		GLSL_SetUniformInt(&tr.surfaceSpriteShader, UNIFORM_SPECULARMAP, TB_SPECULARMAP);
+		GLSL_SetUniformInt(&tr.surfaceSpriteShader, UNIFORM_SHADOWMAP,   TB_SHADOWMAP);
+		GLSL_SetUniformInt(&tr.surfaceSpriteShader, UNIFORM_CUBEMAP,     TB_CUBEMAP);
+		GLSL_SetUniformInt(&tr.surfaceSpriteShader, UNIFORM_SUBSURFACEMAP, TB_SUBSURFACEMAP);
+
+		{
+			vec4_t viewInfo;
+
+			float zmax = backEnd.viewParms.zFar;
+			float zmin = r_znear->value;
+
+			VectorSet4(viewInfo, zmax / zmin, zmax, 0.0, 0.0);
+			//VectorSet4(viewInfo, zmin, zmax, 0.0, 0.0);
+
+			GLSL_SetUniformVec4(&tr.surfaceSpriteShader, UNIFORM_VIEWINFO, viewInfo);
+		}
+
+		{
+			vec2_t screensize;
+			screensize[0] = glConfig.vidWidth;
+			screensize[1] = glConfig.vidHeight;
+
+			GLSL_SetUniformVec2(&tr.surfaceSpriteShader, UNIFORM_DIMENSIONS, screensize);
+
+			//ri->Printf(PRINT_WARNING, "Sent dimensions %f %f.\n", screensize[0], screensize[1]);
+		}
+
+		qglUseProgram(0);
+
+#if defined(_DEBUG)
+		GLSL_FinishGPUShader(&tr.surfaceSpriteShader);
+#endif
+		
+		numEtcShaders++;
+
+
 		if (!GLSL_EndLoadGPUShader(&tr.ssao2Shader))
 		{
 			ri->Error(ERR_FATAL, "Could not load ssao2 shader!");
@@ -3196,6 +3256,7 @@ void GLSL_ShutdownGPUShaders(void)
 	GLSL_DeleteGPUShader(&tr.fakedepthSteepParallaxShader);
 	GLSL_DeleteGPUShader(&tr.anaglyphShader);
 	GLSL_DeleteGPUShader(&tr.waterShader);
+	GLSL_DeleteGPUShader(&tr.surfaceSpriteShader);
 	GLSL_DeleteGPUShader(&tr.ssao2Shader);
 	GLSL_DeleteGPUShader(&tr.bloomDarkenShader);
 	GLSL_DeleteGPUShader(&tr.bloomBlurShader);

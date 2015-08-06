@@ -165,7 +165,7 @@ void Load_Model_Scales( void )
 		return;
 	}
 
-	buf = (char *)G_Alloc(len+1);
+	buf = (char *)G_Alloc(len+1, "Load_Model_Scales");
 
 	if ( buf == NULL )
 	{//alloc memory for buffer

@@ -784,6 +784,28 @@ typedef enum
 	ST_GLSL
 } stageType_t;
 
+#define SURFSPRITE_NONE			0
+#define SURFSPRITE_VERTICAL		1
+#define SURFSPRITE_ORIENTED		2
+#define SURFSPRITE_EFFECT		3
+#define SURFSPRITE_WEATHERFX	4
+#define SURFSPRITE_FLATTENED	5
+
+#define SURFSPRITE_FACING_NORMAL	0
+#define SURFSPRITE_FACING_UP		1
+#define SURFSPRITE_FACING_DOWN		2
+#define SURFSPRITE_FACING_ANY		3
+
+
+typedef struct surfaceSprite_s
+{
+	int				surfaceSpriteType;
+	float			width, height, density, wind, windIdle, fadeDist, fadeMax, fadeScale;
+	float			fxAlphaStart, fxAlphaEnd, fxDuration, vertSkew;
+	vec2_t			variance, fxGrow;
+	int				facing;		// Hangdown on vertical sprites, faceup on others.
+} surfaceSprite_t;
+
 // any change in the LIGHTMAP_* defines here MUST be reflected in
 // R_FindShader() in tr_bsp.c
 #define LIGHTMAP_2D         -4	// shader is for 2D rendering
@@ -831,6 +853,8 @@ typedef struct {
 	vec4_t			subsurfaceExtinctionCoefficient;
 
 	qboolean		isSurfaceSprite;
+
+	surfaceSprite_t	*ss;
 
 } shaderStage_t;
 
@@ -2304,6 +2328,7 @@ typedef struct trGlobals_s {
 	shaderProgram_t anaglyphShader;
 	shaderProgram_t uniqueskyShader;
 	shaderProgram_t waterShader;
+	shaderProgram_t surfaceSpriteShader;
 	shaderProgram_t ssao2Shader;
 	shaderProgram_t esharpeningShader;
 	shaderProgram_t esharpening2Shader;

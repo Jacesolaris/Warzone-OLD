@@ -92,6 +92,7 @@ varying float	var_Time;
 varying vec3	var_Normal;
 varying vec3	var_ViewDir;
 
+
 #if defined(USE_DEFORM_VERTEXES)
 vec3 DeformPosition(const vec3 pos, const vec3 normal, const vec2 st)
 {
@@ -283,3 +284,4 @@ void main()
 	var_Normal = normal;
 	var_ViewDir = u_ViewOrigin - position;
 }
+

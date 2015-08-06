@@ -14,7 +14,7 @@ extern void Jedi_Decloak( gentity_t *self );
 
 extern qboolean BG_FullBodyTauntAnim( int anim );
 
-extern bot_state_t *botstates[MAX_CLIENTS];
+extern bot_state_t *botstates[MAX_GENTITIES];
 
 int		speedLoopSound		= 0;
 int		rageLoopSound		= 0;

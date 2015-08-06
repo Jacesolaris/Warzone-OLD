@@ -69,11 +69,11 @@ int Sys_MilliSeconds(void)
 //===========================================================================
 qboolean ValidClientNumber(int num, char *str)
 {
-	if (num < 0 || num > botlibglobals.maxclients)
+	if (num < 0 || num > botlibglobals.maxentities)
 	{
 		//weird: the disabled stuff results in a crash
 		botimport.Print(PRT_ERROR, "%s: invalid client number %d, [0, %d]\n",
-										str, num, botlibglobals.maxclients);
+										str, num, botlibglobals.maxentities);
 		return qfalse;
 	} //end if
 	return qtrue;
@@ -121,7 +121,7 @@ int Export_BotLibSetup(void)
 	int		errnum;
 
 	botDeveloper = LibVarGetValue("bot_developer");
-  memset( &botlibglobals, 0, sizeof(botlibglobals) ); // bk001207 - init
+	memset( &botlibglobals, 0, sizeof(botlibglobals) ); // bk001207 - init
 	//initialize byte swapping (litte endian etc.)
 //	Swap_Init();
 
@@ -149,27 +149,60 @@ int Export_BotLibSetup(void)
 		Log_Open(logfilename);
 	}
 	//
-//	botimport.Print(PRT_MESSAGE, "------- BotLib Initialization -------\n");
+	botimport.Print(PRT_MESSAGE, "------- BotLib Initialization --------\n");
 	//
 	botlibglobals.maxclients = (int) LibVarValue("maxclients", "128");
-	botlibglobals.maxentities = (int) LibVarValue("maxentities", "1024");
+	botlibglobals.maxentities = (int) LibVarValue("maxentities", "2048");
 
+	botimport.Print(PRT_MESSAGE, "* Running AAS_Setup.\n");
 	errnum = AAS_Setup();			//be_aas_main.c
-	if (errnum != BLERR_NOERROR) return errnum;
+	if (errnum != BLERR_NOERROR) {
+		botimport.Print(PRT_MESSAGE, "AAS_Setup failed.\n");
+		return errnum;
+	}
+	botimport.Print(PRT_MESSAGE, "* Running EA_Setup.\n");
 	errnum = EA_Setup();			//be_ea.c
-	if (errnum != BLERR_NOERROR) return errnum;
+	if (errnum != BLERR_NOERROR) {
+		botimport.Print(PRT_MESSAGE, "EA_Setup failed.\n");
+		return errnum;
+	}
+	
 	/*
+	botimport.Print(PRT_MESSAGE, "* Running BotSetupWeaponAI.\n");
 	errnum = BotSetupWeaponAI();	//be_ai_weap.c
-	if (errnum != BLERR_NOERROR)return errnum;
+	if (errnum != BLERR_NOERROR) {
+		botimport.Print(PRT_MESSAGE, "BotSetupWeaponAI failed.\n");
+		return errnum;
+	}
+	
+	botimport.Print(PRT_MESSAGE, "* Running BotSetupGoalAI.\n");
 	errnum = BotSetupGoalAI();		//be_ai_goal.c
-	if (errnum != BLERR_NOERROR) return errnum;
+	if (errnum != BLERR_NOERROR) {
+		botimport.Print(PRT_MESSAGE, "BotSetupGoalAI failed.\n");
+		return errnum;
+	}
+
+	botimport.Print(PRT_MESSAGE, "* Running BotSetupChatAI.\n");
 	errnum = BotSetupChatAI();		//be_ai_chat.c
-	if (errnum != BLERR_NOERROR) return errnum;
-	errnum = BotSetupMoveAI();		//be_ai_move.c
-	if (errnum != BLERR_NOERROR) return errnum;
+	if (errnum != BLERR_NOERROR) {
+		botimport.Print(PRT_MESSAGE, "BotSetupChatAI failed.\n");
+		return errnum;
+	}
 	*/
+
+	botimport.Print(PRT_MESSAGE, "* Running BotSetupMoveAI.\n");
+	errnum = BotSetupMoveAI();		//be_ai_move.c
+	if (errnum != BLERR_NOERROR) {
+		botimport.Print(PRT_MESSAGE, "BotSetupMoveAI failed.\n");
+		return errnum;
+	}
+
 	botlibsetup = qtrue;
 	botlibglobals.botlibsetup = qtrue;
+
+	//
+	botimport.Print(PRT_MESSAGE, "--- BotLib Initialization Completed ---\n");
+	//
 
 	return BLERR_NOERROR;
 } //end of the function Export_BotLibSetup

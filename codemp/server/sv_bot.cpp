@@ -591,6 +591,7 @@ SV_BotLibSetup
 */
 int SV_BotLibSetup( void ) {
 	if (!bot_enable) {
+		Com_Printf( S_COLOR_RED "Error: SV_BotLibSetup - bot_enable is disabled\n" );
 		return 0;
 	}
 
@@ -653,6 +654,7 @@ void SV_BotInitCvars(void) {
 	Cvar_Get("bot_challenge", "0", 0);					//challenging bot
 	Cvar_Get("bot_minplayers", "0", 0);					//minimum players in a team or the game
 	Cvar_Get("npc_pathing", "0", 0);					//should npcs use astar pathing?
+	Cvar_Get("npc_wptonav", "1", 0);					//should we add wp system waypoints to nav system? 2 will force even large lists to be added...
 	Cvar_Get("npc_enemies", "0", 0);					//minimum NPC enemies
 	Cvar_Get("npc_civilians", "0", 0);					//minimum NPC civilians
 	Cvar_Get("npc_vendors", "0", 0);					//minimum NPC vendors

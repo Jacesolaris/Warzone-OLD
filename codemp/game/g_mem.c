@@ -23,25 +23,25 @@
 
 //#define POOLSIZE	(256 * 1024)
 //#define POOLSIZE	(2560 * 1024)
-#define POOLSIZE	(64 * 1024 * 1024) // UQ1: 64mb - Now that we removed B_Alloc system...
+#define POOLSIZE	(256 * 1024 * 1024) // UQ1: 256mb - Now that we removed B_Alloc system...
 
 static char		memoryPool[POOLSIZE];
 static int		allocPoint;
 
-void *G_Alloc( int size ) {
+void *G_Alloc( int size, char *requestedBy ) {
 	char	*p;
 
 	if ( size <= 0 ) {
-		trap->Error( ERR_DROP, "G_Alloc: zero-size allocation\n", size );
+		trap->Error( ERR_DROP, "G_Alloc: zero-size allocation requested from %s\n", size, requestedBy );
 		return NULL;
 	}
 
 	if ( g_debugAlloc.integer ) {
-		trap->Print( "G_Alloc of %i bytes (%i left)\n", size, POOLSIZE - allocPoint - ( ( size + 31 ) & ~31 ) );
+		trap->Print( "G_Alloc: %s requested %i bytes (%i left)\n", requestedBy, size, POOLSIZE - allocPoint - ( ( size + 31 ) & ~31 ) );
 	}
 
 	if ( allocPoint + size > POOLSIZE ) {
-	  trap->Error( ERR_DROP, "G_Alloc: failed on allocation of %i bytes\n", size ); // bk010103 - was %u, but is signed
+	  trap->Error( ERR_DROP, "G_Alloc: %s failed on allocation of %i bytes\n", requestedBy, size ); // bk010103 - was %u, but is signed
 		return NULL;
 	}
 
