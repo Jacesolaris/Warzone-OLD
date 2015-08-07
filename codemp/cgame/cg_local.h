@@ -1186,6 +1186,7 @@ typedef struct cgMedia_s {
 	qhandle_t	lightningFlash;
 	qhandle_t	redFrontFlash;
 	qhandle_t	cannonChargeFlash;
+	qhandle_t	Chargelightningbeam;
 	qhandle_t	lightningbeam;
 
 	qhandle_t	itemHoloModel;
