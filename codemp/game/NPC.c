@@ -3915,6 +3915,7 @@ void NPC_Think ( gentity_t *self)//, int msec )
 
 	SetNPCGlobals( self );
 
+#ifdef __AAS_AI_TESTING__
 	if (!botstates[self->s.number])
 	{// Set up bot state for this npc if required...
 		bot_settings_t	settings;
@@ -3929,6 +3930,7 @@ void NPC_Think ( gentity_t *self)//, int msec )
 		BotAISetupClient(self->s.number, &settings, qfalse);
 	}
 	botstates[self->s.number]->client = self->s.number;
+#endif //__AAS_AI_TESTING__
 
 	//if (!(self->s.eFlags & EF_CLIENTSMOOTH)) self->s.eFlags |= EF_CLIENTSMOOTH;
 

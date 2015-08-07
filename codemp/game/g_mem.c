@@ -23,7 +23,11 @@
 
 //#define POOLSIZE	(256 * 1024)
 //#define POOLSIZE	(2560 * 1024)
-#define POOLSIZE	(256 * 1024 * 1024) // UQ1: 256mb - Now that we removed B_Alloc system...
+#ifdef __AAS_AI_TESTING__
+#define POOLSIZE	(256 * 1024 * 1024) // UQ1: 256mb - Now that we removed B_Alloc system and npc's use a botinfo...
+#else //!__AAS_AI_TESTING__
+#define POOLSIZE	(64 * 1024 * 1024) // UQ1: 64mb - Now that we removed B_Alloc system...
+#endif //__AAS_AI_TESTING__
 
 static char		memoryPool[POOLSIZE];
 static int		allocPoint;
