@@ -704,12 +704,13 @@ Does NOT produce any GL calls
 Called by both the front end and the back end
 =================
 */
+float	glMatrix[16];
+
 void R_RotateForEntity( const trRefEntity_t *ent, const viewParms_t *viewParms,
 					   orientationr_t *ori ) {
-	float	glMatrix[16];
 	vec3_t	delta;
 	float	axisLength;
-
+	
 	if ( ent->e.reType != RT_MODEL ) {
 		*ori = viewParms->world;
 		return;

@@ -320,6 +320,17 @@ void RE_StretchPic ( float x, float y, float w, float h,
 	cmd->t2 = t2;
 }
 
+void RE_RenderWorldEffects(void)
+{
+	drawBufferCommand_t	*cmd;
+
+	cmd = (drawBufferCommand_t *)R_GetCommandBuffer( sizeof( *cmd ) );
+	if ( !cmd ) {
+		return;
+	}
+	cmd->commandId = RC_WORLD_EFFECTS;
+}
+
 #define MODE_RED_CYAN	1
 #define MODE_RED_BLUE	2
 #define MODE_RED_GREEN	3

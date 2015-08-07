@@ -103,6 +103,18 @@ In JA, we define these in the tr_local.h, which is much more logical
 =====================================================
 */
 
+extern cvar_t	*r_weather;
+extern cvar_t	*r_surfaceSprites;
+extern cvar_t	*r_surfaceWeather;
+
+extern cvar_t	*r_windSpeed;
+extern cvar_t	*r_windAngle;
+extern cvar_t	*r_windGust;
+extern cvar_t	*r_windDampFactor;
+extern cvar_t	*r_windPointForce;
+extern cvar_t	*r_windPointX;
+extern cvar_t	*r_windPointY;
+
 extern cvar_t	*r_flareSize;
 extern cvar_t	*r_flareFade;
 extern cvar_t	*r_flareCoeff;
@@ -2906,6 +2918,8 @@ struct shaderCommands_s
 	void		(*currentStageIteratorFunc)( void );
 	shaderStage_t	**xstages;
 
+	qboolean	SSInitializedWind;
+
 	// JA specific
 	bool		fading;
 };
@@ -3382,6 +3396,7 @@ typedef enum {
 	RC_COLORMASK,
 	RC_CLEARDEPTH,
 	RC_CAPSHADOWMAP,
+	RC_WORLD_EFFECTS,
 	RC_POSTPROCESS
 } renderCommand_t;
 

@@ -415,7 +415,7 @@ static void RB_Hyperspace( void ) {
 }
 
 
-static void SetViewportAndScissor( void ) {
+void SetViewportAndScissor( void ) {
 	GL_SetProjectionMatrix( backEnd.viewParms.projectionMatrix );
 
 	// set the window clipping
@@ -1866,6 +1866,29 @@ const void	*RB_SwapBuffers( const void *data ) {
 	return (const void *)(cmd + 1);
 }
 
+extern void RB_RenderWorldEffects(void);
+
+const void	*RB_WorldEffects( const void *data )
+{
+	const drawBufferCommand_t	*cmd;
+
+	cmd = (const drawBufferCommand_t *)data;
+
+	// Always flush the tess buffer
+	if ( tess.shader && tess.numIndexes )
+	{
+		RB_EndSurface();
+	}
+	RB_RenderWorldEffects();
+
+	if(tess.shader)
+	{
+		RB_BeginSurface( tess.shader, tess.fogNum, tess.cubemapIndex/*0*/ );
+	}
+
+	return (const void *)(cmd + 1);
+}
+
 /*
 =============
 RB_CapShadowMap
@@ -2379,6 +2402,9 @@ void RB_ExecuteRenderCommands( const void *data ) {
 			break;
 		case RC_POSTPROCESS:
 			data = RB_PostProcess(data);
+			break;
+		case RC_WORLD_EFFECTS:
+			data = RB_WorldEffects( data );
 			break;
 		case RC_END_OF_LIST:
 		default:

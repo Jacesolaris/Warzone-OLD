@@ -32,6 +32,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 color4ub_t	styleColors[MAX_LIGHT_STYLES];
 
+extern void RB_DrawSurfaceSprites( shaderStage_t *stage, shaderCommands_t *input);
 
 /*
 ==================
@@ -70,7 +71,7 @@ R_BindAnimatedImageToTMU
 
 =================
 */
-static void R_BindAnimatedImageToTMU( textureBundle_t *bundle, int tmu ) {
+void R_BindAnimatedImageToTMU( textureBundle_t *bundle, int tmu ) {
 	int		index;
 
 	if ( bundle->isVideoMap ) {
@@ -1842,10 +1843,10 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			break;
 		}
 
-		/*if ( pStage->isSurfaceSprite )
+		if ( pStage->isSurfaceSprite )
 		{
 			continue;
-		}*/
+		}
 
 		if (backEnd.depthFill)
 		{
@@ -2352,7 +2353,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		UpdateTexCoords (pStage);
 
 		GL_State( stateBits );
-
+		
 		//
 		// draw
 		//
@@ -2431,7 +2432,6 @@ static void RB_RenderShadowmap( shaderCommands_t *input )
 		}
 	}
 }
-
 
 
 /*
@@ -2635,6 +2635,22 @@ void RB_StageIteratorGeneric( void )
 		}
 	}
 #endif //___OLD_DLIGHT_CODE___
+
+	// Now check for surfacesprites.
+	if (r_surfaceSprites->integer)
+	{
+		//for ( int stage = 1; stage < MAX_SHADER_STAGES/*tess.shader->numUnfoggedPasses*/; stage++ )
+		for ( int stage = 0; stage < MAX_SHADER_STAGES/*tess.shader->numUnfoggedPasses*/; stage++ )
+		{
+			if (tess.xstages[stage])
+			{
+				if (tess.xstages[stage]->ss && tess.xstages[stage]->ss->surfaceSpriteType)
+				{	// Draw the surfacesprite
+					RB_DrawSurfaceSprites( tess.xstages[stage], input);
+				}
+			}
+		}
+	}
 
 	//
 	// now do fog

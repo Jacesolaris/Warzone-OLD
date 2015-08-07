@@ -1891,10 +1891,10 @@ int GLSL_BeginLoadGPUShaders(void)
 		ri->Error(ERR_FATAL, "Could not load water shader!");
 	}
 
-	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
+	attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_NORMAL;
 	extradefines[0] = '\0';
 
-	if (!GLSL_BeginLoadGPUShader(&tr.surfaceSpriteShader, "surfaceSprite", attribs, qtrue, extradefines, qtrue, NULL, fallbackShader_surfaceSprite_vp, fallbackShader_surfaceSprite_fp))
+	if (!GLSL_BeginLoadGPUShader(&tr.surfaceSpriteShader, "surfaceSprite", attribs, qtrue, extradefines, qtrue, "130", fallbackShader_surfaceSprite_vp, fallbackShader_surfaceSprite_fp))
 	{
 		ri->Error(ERR_FATAL, "Could not load surfaceSprite shader!");
 	}

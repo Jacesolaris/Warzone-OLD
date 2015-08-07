@@ -36,6 +36,18 @@ glstate_t	glState;
 static void GfxInfo_f( void );
 static void GfxMemInfo_f( void );
 
+cvar_t	*r_weather;
+cvar_t	*r_surfaceSprites;
+cvar_t	*r_surfaceWeather;
+
+cvar_t	*r_windSpeed;
+cvar_t	*r_windAngle;
+cvar_t	*r_windGust;
+cvar_t	*r_windDampFactor;
+cvar_t	*r_windPointForce;
+cvar_t	*r_windPointX;
+cvar_t	*r_windPointY;
+
 cvar_t	*se_language;
 
 cvar_t	*r_flareSize;
@@ -1482,6 +1494,17 @@ void R_Register( void )
 	r_mergeMultidraws = ri->Cvar_Get("r_mergeMultidraws", "1", CVAR_ARCHIVE); // UQ1: Disabled. FPS.
 	r_mergeLeafSurfaces = ri->Cvar_Get("r_mergeLeafSurfaces", "1", CVAR_ARCHIVE); // UQ1: Disabled. FPS.
 
+	r_weather							= ri->Cvar_Get( "r_weather",					"0",						CVAR_TEMP );
+	r_surfaceSprites					= ri->Cvar_Get( "r_surfaceSprites",					"0",						CVAR_TEMP );
+	r_surfaceWeather					= ri->Cvar_Get( "r_surfaceWeather",					"0",						CVAR_TEMP );
+	r_windSpeed							= ri->Cvar_Get( "r_windSpeed",						"0",						CVAR_NONE );
+	r_windAngle							= ri->Cvar_Get( "r_windAngle",						"0",						CVAR_NONE );
+	r_windGust							= ri->Cvar_Get( "r_windGust",						"0",						CVAR_NONE );
+	r_windDampFactor					= ri->Cvar_Get( "r_windDampFactor",					"0.1",						CVAR_NONE );
+	r_windPointForce					= ri->Cvar_Get( "r_windPointForce",					"0",						CVAR_NONE );
+	r_windPointX						= ri->Cvar_Get( "r_windPointX",						"0",						CVAR_NONE );
+	r_windPointY						= ri->Cvar_Get( "r_windPointY",						"0",						CVAR_NONE );
+
 	//
 	// temporary variables that can change at any time
 	//
@@ -1576,6 +1599,8 @@ Ghoul2 Insert End
 	ri->Cmd_AddCommand( "gfxinfo", GfxInfo_f );
 	ri->Cmd_AddCommand( "minimize", GLimp_Minimize );
 	ri->Cmd_AddCommand( "gfxmeminfo", GfxMemInfo_f );
+extern void R_WorldEffect_f(void);	//TR_WORLDEFFECTS.CPP
+	ri->Cmd_AddCommand( "r_we", R_WorldEffect_f );
 }
 
 void R_InitQueries(void)
@@ -1687,6 +1712,9 @@ void R_Init( void ) {
 
 	R_InitDecals();
 
+extern void R_InitWorldEffects(void);
+	R_InitWorldEffects();
+
 	R_InitQueries();
 
 	GLSL_EndLoadGPUShaders (shadersStartTime);
@@ -1707,6 +1735,7 @@ void R_Init( void ) {
 RE_Shutdown
 ===============
 */
+extern void R_ShutdownWorldEffects(void);
 void RE_Shutdown( qboolean destroyWindow, qboolean restarting ) {	
 
 	ri->Printf( PRINT_ALL, "RE_Shutdown( %i )\n", destroyWindow );
@@ -1724,6 +1753,7 @@ void RE_Shutdown( qboolean destroyWindow, qboolean restarting ) {
 	ri->Cmd_RemoveCommand( "modelist" );
 	ri->Cmd_RemoveCommand( "shaderstate" );
 	ri->Cmd_RemoveCommand( "gfxmeminfo" );
+	ri->Cmd_RemoveCommand( "r_we" );
 
 
 	if ( tr.registered ) {
@@ -1740,6 +1770,7 @@ void RE_Shutdown( qboolean destroyWindow, qboolean restarting ) {
 		}
 	}
 
+	R_ShutdownWorldEffects();
 	R_ShutdownFonts();
 
 	// shut down platform specific OpenGL stuff
@@ -1815,6 +1846,9 @@ void stub_RE_GetBModelVerts (int bModel, vec3_t *vec, float *normal) {}
 void stub_RE_WorldEffectCommand ( const char *cmd ){}
 void stub_RE_AddWeatherZone ( vec3_t mins, vec3_t maxs ) {}
 static void RE_SetRefractionProperties ( float distortionAlpha, float distortionStretch, qboolean distortionPrePost, qboolean distortionNegate ) { }
+
+extern void RE_WorldEffectCommand(const char *command);
+extern void RE_AddWeatherZone(vec3_t mins, vec3_t maxs);
 
 /*
 @@@@@@@@@@@@@@@@@@@@@
@@ -1901,8 +1935,8 @@ Q_EXPORT refexport_t* QDECL GetRefAPI ( int apiVersion, refimport_t *rimp ) {
 	re.GetRealRes = GetRealRes;
 	// R_AutomapElevationAdjustment
 	re.InitializeWireframeAutomap = stub_InitializeWireframeAutomap;
-	re.AddWeatherZone = stub_RE_AddWeatherZone;
-	re.WorldEffectCommand = stub_RE_WorldEffectCommand;
+	re.AddWeatherZone = RE_AddWeatherZone;//stub_RE_AddWeatherZone;
+	re.WorldEffectCommand = RE_WorldEffectCommand;//stub_RE_WorldEffectCommand;
 	re.RegisterMedia_LevelLoadBegin = C_LevelLoadBegin;
 	re.RegisterMedia_LevelLoadEnd = C_LevelLoadEnd;
 	re.RegisterMedia_GetLevel = C_GetLevel;

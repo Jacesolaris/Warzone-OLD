@@ -603,6 +603,12 @@ void RE_RenderScene( const refdef_t *fd ) {
 	if(!( fd->rdflags & RDF_NOWORLDMODEL ))
 		R_AddPostProcessCmd();
 
+	if (r_weather->integer)
+	{
+extern void RE_RenderWorldEffects(void);
+		RE_RenderWorldEffects();
+	}
+
 	RE_EndScene();
 
 	tr.frontEndMsec += ri->Milliseconds() - startTime;
