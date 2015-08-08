@@ -7,6 +7,7 @@ varying vec2	var_TexCoords;
 
 out vec4 out_Glow;
 
+#if 0
 void main()
 {
 	gl_FragColor = texture2D(u_DiffuseMap, var_TexCoords.xy);
@@ -18,3 +19,20 @@ void main()
 	out_Glow = vec4(0.0);
 #endif
 }
+#else
+varying lowp vec4 vColor;
+varying highp vec2 vTexCoord;
+
+void main()
+{
+    lowp vec4 col = texture2D( u_DiffuseMap, vTexCoord );
+    if(col.r > 0.5) discard;
+    gl_FragColor = col;
+
+#if defined(USE_GLOW_BUFFER)
+	out_Glow = vec4(0.0);
+#else
+	out_Glow = vec4(0.0);
+#endif
+}
+#endif

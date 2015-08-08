@@ -574,11 +574,11 @@ static void RB_DrawVerticalSurfaceSprites( shaderStage_t *stage, shaderCommands_
 	}
 
 	// Quickly calc all the alphas and windstuff for each vertex
-	for (curvert=0; curvert<input->numVertexes; curvert++)
+	for (curvert=0; curvert<input->numIndexes/*numVertexes*/; curvert++)
 	{
 		VectorSubtract(ssViewOrigin, input->xyz[curvert], dist);
-		SSVertAlpha[curvert] = 1.0 - (VectorLengthSquared(dist) - fadedist2) * inv_fadediff;
-		//ri->Printf(PRINT_WARNING, "ssVieworg %f %f %f - vert %f %f %f - dist %f %f %f. Alpha %f.\n", ssViewOrigin[0], ssViewOrigin[1], ssViewOrigin[2], input->xyz[curvert][0], input->xyz[curvert][1], input->xyz[curvert][2], dist[0], dist[1], dist[2], SSVertAlpha[curvert]);
+		SSVertAlpha[curvert] = 0.5;//1.0 - (VectorLengthSquared(dist) - fadedist2) * inv_fadediff;
+		//ri->Printf(PRINT_WARNING, "ssVieworg %f %f %f - vert %f %f %f - dist %f %f %f. Alpha %f. fadedist2 %f. inv_fadediff %f.\n", ssViewOrigin[0], ssViewOrigin[1], ssViewOrigin[2], input->xyz[curvert][0], input->xyz[curvert][1], input->xyz[curvert][2], dist[0], dist[1], dist[2], SSVertAlpha[curvert], fadedist2, inv_fadediff);
 	}
 
 	// Wind only needs initialization once per tess.
@@ -627,7 +627,7 @@ static void RB_DrawVerticalSurfaceSprites( shaderStage_t *stage, shaderCommands_
 			R_VboUnpackNormal(tNormal, input->normal[curvert]);
 			if (tNormal[1] > -0.5)
 			{
-				continue;
+				//continue;
 			}
 		}
 		else
@@ -636,7 +636,7 @@ static void RB_DrawVerticalSurfaceSprites( shaderStage_t *stage, shaderCommands_
 			R_VboUnpackNormal(tNormal, input->normal[curvert]);
 			if (tNormal[1] < 0.5)
 			{
-				continue;
+				//continue;
 			}
 		}
 		l1 = input->vertexColors[curvert][2];
@@ -655,7 +655,7 @@ static void RB_DrawVerticalSurfaceSprites( shaderStage_t *stage, shaderCommands_
 			R_VboUnpackNormal(tNormal, input->normal[curvert]);
 			if (tNormal[1] > -0.5)
 			{
-				continue;
+				//continue;
 			}
 		}
 		else
@@ -664,7 +664,7 @@ static void RB_DrawVerticalSurfaceSprites( shaderStage_t *stage, shaderCommands_
 			R_VboUnpackNormal(tNormal, input->normal[curvert]);
 			if (tNormal[1] < 0.5)
 			{
-				continue;
+				//continue;
 			}
 		}
 		l2 = input->vertexColors[curvert][2];
@@ -683,7 +683,7 @@ static void RB_DrawVerticalSurfaceSprites( shaderStage_t *stage, shaderCommands_
 			R_VboUnpackNormal(tNormal, input->normal[curvert]);
 			if (tNormal[1] > -0.5)
 			{
-				continue;
+				//continue;
 			}
 		}
 		else
@@ -692,7 +692,7 @@ static void RB_DrawVerticalSurfaceSprites( shaderStage_t *stage, shaderCommands_
 			R_VboUnpackNormal(tNormal, input->normal[curvert]);
 			if (tNormal[1] < 0.5)
 			{
-				continue;
+				//continue;
 			}
 		}
 		l3 = input->vertexColors[curvert][2];
@@ -721,8 +721,9 @@ static void RB_DrawVerticalSurfaceSprites( shaderStage_t *stage, shaderCommands_
 		if (triarea <= 1.0)
 		{	// Insanely small abhorrent triangle.
 			//ri->Printf(PRINT_WARNING, "triarea <= 1.0\n");
-			continue;
+			//continue;
 			//triarea *= 100.0;
+			triarea = 2.0;
 		}
 		step = stage->ss->density * Q_rsqrt(triarea);
 

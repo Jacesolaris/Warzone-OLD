@@ -1961,7 +1961,7 @@ static int CalcNumMipmapLevels ( int width, int height )
 	return static_cast<int>(ceil ((double)log2 (max (width, height))) + 1);
 }
 
-static void RawImage_UploadTexture( byte *data, int x, int y, int width, int height, GLenum internalFormat, imgType_t type, int flags, qboolean subtexture )
+void RawImage_UploadTexture( byte *data, int x, int y, int width, int height, GLenum internalFormat, imgType_t type, int flags, qboolean subtexture )
 {
 	int dataFormat, dataType;
 
@@ -2084,7 +2084,7 @@ Upload32
 ===============
 */
 extern qboolean charSet;
-static void Upload32( byte *data, int width, int height, imgType_t type, int flags,
+void Upload32( byte *data, int width, int height, imgType_t type, int flags,
 	qboolean lightMap, GLenum internalFormat, int *pUploadWidth, int *pUploadHeight)
 {
 	byte		*scaledBuffer = NULL;

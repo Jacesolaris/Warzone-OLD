@@ -1622,9 +1622,6 @@ const void	*RB_DrawSurfs( const void *data ) {
 #ifdef ___WARZONE_FLASH___
 		gameswf_drawflash( "interface/test.swf" );
 #endif //___WARZONE_FLASH___
-#ifdef ___WARZONE_AWESOMIUM___
-		DrawAwesomium( "http://www.google.com.au" );
-#endif //___WARZONE_AWESOMIUM___
 	}
 
 	if (tr.renderCubeFbo != NULL && backEnd.viewParms.targetFbo == tr.renderCubeFbo)
@@ -1866,6 +1863,7 @@ const void	*RB_SwapBuffers( const void *data ) {
 	return (const void *)(cmd + 1);
 }
 
+#ifdef __SURFACESPRITES__
 extern void RB_RenderWorldEffects(void);
 
 const void	*RB_WorldEffects( const void *data )
@@ -1879,6 +1877,7 @@ const void	*RB_WorldEffects( const void *data )
 	{
 		RB_EndSurface();
 	}
+
 	RB_RenderWorldEffects();
 
 	if(tess.shader)
@@ -1888,6 +1887,7 @@ const void	*RB_WorldEffects( const void *data )
 
 	return (const void *)(cmd + 1);
 }
+#endif //__SURFACESPRITES__
 
 /*
 =============
@@ -2240,6 +2240,16 @@ const void *RB_PostProcess(const void *data)
 	if (1)
 		RB_BokehBlur(NULL, srcBox, NULL, dstBox, backEnd.refdef.blurFactor);
 
+#ifdef ___WARZONE_AWESOMIUM___
+	if (srcFbo)
+	{
+		//DrawAwesomium( "https://www.youtube.com/watch?v=Nzq9epS2b1A", srcFbo );
+		//DrawAwesomium( "http://www.google.com.au", srcFbo );
+		//DrawAwesomium( "file://warzone/interface/Google.html", srcFbo );
+		//DrawAwesomium( "data:text/html,<h1>Hello World</h1>", srcFbo );
+	}
+#endif //___WARZONE_AWESOMIUM___
+
 	if (0 && r_sunlightMode->integer)
 	{
 		vec4i_t dstBox;
@@ -2403,9 +2413,11 @@ void RB_ExecuteRenderCommands( const void *data ) {
 		case RC_POSTPROCESS:
 			data = RB_PostProcess(data);
 			break;
+#ifdef __SURFACESPRITES__
 		case RC_WORLD_EFFECTS:
 			data = RB_WorldEffects( data );
 			break;
+#endif //__SURFACESPRITES__
 		case RC_END_OF_LIST:
 		default:
 			// finish any 2D drawing if needed

@@ -20,6 +20,7 @@ set(MPWarzoneFiles
 	"${MPDir}/rd-warzone/G2_misc.cpp"
 	"${MPDir}/rd-warzone/G2_surfaces.cpp"
 	"${MPDir}/rd-warzone/tr_animation.cpp"
+	"${MPDir}/rd-warzone/tr_awesomium.cpp"
 	"${MPDir}/rd-warzone/tr_backend.cpp"
 	"${MPDir}/rd-warzone/tr_bsp.cpp"
 	"${MPDir}/rd-warzone/tr_cache.cpp"
@@ -46,8 +47,6 @@ set(MPWarzoneFiles
 	"${MPDir}/rd-warzone/tr_model_iqm.cpp"
 	"${MPDir}/rd-warzone/tr_postprocess.cpp"
 	"${MPDir}/rd-warzone/tr_postprocess.h"
-	"${MPDir}/rd-warzone/tr_quicksprite.cpp"
-	"${MPDir}/rd-warzone/tr_quicksprite.h"
 	"${MPDir}/rd-warzone/tr_scene.cpp"
 	"${MPDir}/rd-warzone/tr_shade.cpp"
 	"${MPDir}/rd-warzone/tr_shade_calc.cpp"
@@ -57,11 +56,8 @@ set(MPWarzoneFiles
 	"${MPDir}/rd-warzone/tr_sky.cpp"
 	"${MPDir}/rd-warzone/tr_subs.cpp"
 	"${MPDir}/rd-warzone/tr_surface.cpp"
-	"${MPDir}/rd-warzone/tr_surfacesprites.cpp"
 	"${MPDir}/rd-warzone/tr_vbo.cpp"
 	"${MPDir}/rd-warzone/tr_world.cpp"
-	"${MPDir}/rd-warzone/tr_WorldEffects.cpp"
-	"${MPDir}/rd-warzone/tr_WorldEffects.h"
 	"${MPDir}/game/ckheap.h"
 	"${MPDir}/game/malloc.c"
 	)
@@ -78,6 +74,35 @@ set(MPWarzoneGhoul2Files
 	"${MPDir}/ghoul2/G2_gore.h")
 source_group("ghoul2" FILES ${MPWarzoneGhoul2Files})
 set(MPWarzoneFiles ${MPWarzoneFiles} ${MPWarzoneGhoul2Files})
+
+set(MPWarzoneAwesomiumFiles
+	"${MPDir}/rd-warzone/Awesomium/BitmapSurface.h"
+	"${MPDir}/rd-warzone/Awesomium/ChildProcess.h"
+	"${MPDir}/rd-warzone/Awesomium/DataPak.h"
+	"${MPDir}/rd-warzone/Awesomium/DataSource.h"
+	"${MPDir}/rd-warzone/Awesomium/JSArray.h"
+	"${MPDir}/rd-warzone/Awesomium/JSObject.h"
+	"${MPDir}/rd-warzone/Awesomium/JSValue.h"
+	"${MPDir}/rd-warzone/Awesomium/Platform.h"
+	"${MPDir}/rd-warzone/Awesomium/PrintConfig.h"
+	"${MPDir}/rd-warzone/Awesomium/ResourceInterceptor.h"
+	"${MPDir}/rd-warzone/Awesomium/STLHelpers.h"
+	"${MPDir}/rd-warzone/Awesomium/Surface.h"
+	"${MPDir}/rd-warzone/Awesomium/WebConfig.h"
+	"${MPDir}/rd-warzone/Awesomium/WebCore.h"
+	"${MPDir}/rd-warzone/Awesomium/WebKeyboardCodes.h"
+	"${MPDir}/rd-warzone/Awesomium/WebKeyboardEvent.h"
+	"${MPDir}/rd-warzone/Awesomium/WebMenuItem.h"
+	"${MPDir}/rd-warzone/Awesomium/WebPreferences.h"
+	"${MPDir}/rd-warzone/Awesomium/WebSession.h"
+	"${MPDir}/rd-warzone/Awesomium/WebString.h"
+	"${MPDir}/rd-warzone/Awesomium/WebStringArray.h"
+	"${MPDir}/rd-warzone/Awesomium/WebTouchEvent.h"
+	"${MPDir}/rd-warzone/Awesomium/WebURL.h"
+	"${MPDir}/rd-warzone/Awesomium/WebView.h"
+	"${MPDir}/rd-warzone/Awesomium/WebViewListener.h")
+source_group("Awesomium Headers" FILES ${MPWarzoneAwesomiumFiles})
+set(MPWarzoneFiles ${MPWarzoneFiles} ${MPWarzoneAwesomiumFiles})
 
 set(MPWarzoneRdCommonFiles
 	"${MPDir}/rd-common/mdx_format.h"

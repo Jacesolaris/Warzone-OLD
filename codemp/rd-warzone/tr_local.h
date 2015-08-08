@@ -26,6 +26,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #define ___SHADER_GENERATOR___
 #define ___SHADER_GENERATOR_PLAYERS_ONLY___
+//#define __SURFACESPRITES__
 
 //#define __DYNAMIC_SHADOWS__
 #ifdef __DYNAMIC_SHADOWS__
@@ -59,14 +60,14 @@ typedef unsigned int glIndex_t;
 #define BUFFER_OFFSET(i) ((char *)NULL + (i))
 
 //#define ___WARZONE_FLASH___
-//#define ___WARZONE_AWESOMIUM___
+#define ___WARZONE_AWESOMIUM___
 
 #ifdef ___WARZONE_FLASH___
 extern void gameswf_drawflash ( char *filename );
 #endif //___WARZONE_FLASH___
 
 #ifdef ___WARZONE_AWESOMIUM___
-extern int DrawAwesomium( char *URL );
+extern int DrawAwesomium( char *URL, FBO_t *srcFbo );
 #endif //___WARZONE_AWESOMIUM___
 
 // 14 bits
@@ -102,6 +103,10 @@ In JA, we define these in the tr_local.h, which is much more logical
 
 =====================================================
 */
+
+extern cvar_t	*r_rotatex;
+extern cvar_t	*r_rotatey;
+extern cvar_t	*r_rotatez;
 
 extern cvar_t	*r_weather;
 extern cvar_t	*r_surfaceSprites;

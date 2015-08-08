@@ -70,7 +70,7 @@ void CQuickSpriteSystem::Flush(void)
 	//
 	// render the main pass
 	//
-	qglLoadIdentity ();
+	//qglLoadIdentity ();
 
 	R_BindAnimatedImageToTMU( mTexBundle, TB_DIFFUSEMAP );
 	//GL_State(mGLStateBits);
@@ -119,6 +119,9 @@ void CQuickSpriteSystem::Flush(void)
 		VectorCopy2(mTextureCoords[i+2], t[2]);
 		VectorCopy2(mTextureCoords[i+3], t[3]);
 		RB_InstantQuad2(v, t);
+		
+		if(r_surfaceSprites->integer >= 4)
+			ri->Printf(PRINT_WARNING, "v[0] %f %f %f %f v[1] %f %f %f %f v[2] %f %f %f %f v[3] %f %f %f %f\n", v[0][0], v[0][1], v[0][2], v[0][3], v[1][0], v[1][1], v[1][2], v[1][3], v[2][0], v[2][1], v[2][2], v[2][3], v[3][0], v[3][1], v[3][2], v[3][3]);
 	}
 	//RB_InstantQuad2(mVerts, mTextureCoords);
 
@@ -174,7 +177,7 @@ void CQuickSpriteSystem::StartGroup(textureBundle_t *bundle, uint32_t glbits, in
 	mNextVert = 0;
 
 	mTexBundle = bundle;
-	mGLStateBits = glbits;
+	//mGLStateBits = glbits;
 	if (fogIndex != -1)
 	{
 		mUseFog = qtrue;
@@ -185,7 +188,7 @@ void CQuickSpriteSystem::StartGroup(textureBundle_t *bundle, uint32_t glbits, in
 		mUseFog = qfalse;
 	}
 
-	qglDisable(GL_CULL_FACE);
+	//qglDisable(GL_CULL_FACE);
 }
 
 
@@ -193,8 +196,8 @@ void CQuickSpriteSystem::EndGroup(void)
 {
 	Flush();
 
-	qglColor4ub(255,255,255,255);
-	qglEnable(GL_CULL_FACE);
+	//qglColor4ub(255,255,255,255);
+	//qglEnable(GL_CULL_FACE);
 }
 
 

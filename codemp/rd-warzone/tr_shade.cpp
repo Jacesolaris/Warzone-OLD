@@ -1845,7 +1845,10 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 		if ( pStage->isSurfaceSprite )
 		{
-			continue;
+			if (!r_surfaceSprites->integer)
+			{
+				continue;
+			}
 		}
 
 		if (backEnd.depthFill)
@@ -1967,6 +1970,9 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			GLSL_BindProgram(sp);
 			GLSL_SetUniformFloat(sp, UNIFORM_TIME, tess.shaderTime);
 			RB_SetMaterialBasedProperties(sp, pStage);
+			vec4_t loc5;
+			VectorSet4(loc5, r_rotatex->value, r_rotatey->value, r_rotatez->value, 0);
+			GLSL_SetUniformVec4(sp, UNIFORM_LOCAL5, loc5);
 			isGeneric = qfalse;
 		}
 
@@ -2637,6 +2643,7 @@ void RB_StageIteratorGeneric( void )
 #endif //___OLD_DLIGHT_CODE___
 
 	// Now check for surfacesprites.
+#if 0
 	if (r_surfaceSprites->integer)
 	{
 		//for ( int stage = 1; stage < MAX_SHADER_STAGES/*tess.shader->numUnfoggedPasses*/; stage++ )
@@ -2651,6 +2658,7 @@ void RB_StageIteratorGeneric( void )
 			}
 		}
 	}
+#endif
 
 	//
 	// now do fog
