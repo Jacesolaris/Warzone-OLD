@@ -280,6 +280,7 @@ static void CG_LightningBolt( centity_t *cent, vec3_t origin ) {
 	if (cent->currentState.weapon == WP_DC15_EXT && cent->currentState.eFlags & EF_ALT_FIRING)
 	if (cent->currentState.weapon == WP_Z6_BLASTER_CANON && cent->currentState.eFlags & EF_ALT_FIRING)
 	if (cent->currentState.weapon == WP_DC_17_CLONE_PISTOL && cent->currentState.eFlags & EF_ALT_FIRING)
+	if (cent->currentState.weapon == WP_ARC_CASTER_IMPERIAL && cent->currentState.eFlags & EF_ALT_FIRING)
 	{ /*nothing*/ }
 	else
 	{
@@ -739,6 +740,7 @@ Ghoul2 Insert End
 		  (cent->currentState.weapon == WP_DC15_EXT && cent->currentState.modelindex2 == WEAPON_CHARGING_ALT) ||
 		  (cent->currentState.weapon == WP_Z6_BLASTER_CANON && cent->currentState.modelindex2 == WEAPON_CHARGING_ALT) ||
 		  (cent->currentState.weapon == WP_S5_PISTOL && cent->currentState.modelindex2 == WEAPON_CHARGING_ALT) ||
+		  (cent->currentState.weapon == WP_ARC_CASTER_IMPERIAL && cent->currentState.modelindex2 == WEAPON_CHARGING) ||
 		  (cent->currentState.weapon == WP_DC_17_CLONE_PISTOL && cent->currentState.modelindex2 == WEAPON_CHARGING_ALT)))
 	{
 		int		shader = 0;
@@ -817,13 +819,13 @@ Ghoul2 Insert End
 			shader = cgs.media.greenFrontFlash;
 			scale = 1.75f;
 		}
-		//else if (cent->currentState.weapon == WP_DC15_EXT)
-		//{
-		//	// Hardcoded max charge time of 1 second
-		//	val = (cg.time - cent->currentState.constantLight) * 0.001f;
-		//	shader = cgs.media.lightningFlash;
-		//	scale = 1.75f;
-		//}
+		else if (cent->currentState.weapon == WP_ARC_CASTER_IMPERIAL)
+		{
+			// Hardcoded max charge time of 1 second
+			val = (cg.time - cent->currentState.constantLight) * 0.001f;
+			shader = cgs.media.Chargelightningbeam;
+			scale = 1.75f;
+		}
 		//else if (cent->currentState.weapon == WP_Z6_BLASTER_CANON)
 		//{
 		//	// Hardcoded max charge time of 1 second
@@ -861,21 +863,28 @@ Ghoul2 Insert End
 
 		val += random() * 0.5f;
 
-		VectorCopy(flashorigin, fxSArgs.origin);
-		VectorClear(fxSArgs.vel);
-		VectorClear(fxSArgs.accel);
-		fxSArgs.scale = 3.0f*val*scale;
-		fxSArgs.dscale = 0.0f;
-		fxSArgs.sAlpha = 0.7f;
-		fxSArgs.eAlpha = 0.7f;
-		fxSArgs.rotation = random()*360;
-		fxSArgs.bounce = 0.0f;
-		fxSArgs.life = 1.0f;
-		fxSArgs.shader = shader;
-		fxSArgs.flags = 0x08000000;
+		if (cent->currentState.weapon == WP_ARC_CASTER_IMPERIAL)
+		{
+			PlayEffectID(shader, flashorigin, flashdir, -1, -1, qfalse);
+		}
+		else
+		{
+			VectorCopy(flashorigin, fxSArgs.origin);
+			VectorClear(fxSArgs.vel);
+			VectorClear(fxSArgs.accel);
+			fxSArgs.scale = 3.0f*val*scale;
+			fxSArgs.dscale = 0.0f;
+			fxSArgs.sAlpha = 0.7f;
+			fxSArgs.eAlpha = 0.7f;
+			fxSArgs.rotation = random() * 360;
+			fxSArgs.bounce = 0.0f;
+			fxSArgs.life = 1.0f;
+			fxSArgs.shader = shader;
+			fxSArgs.flags = 0x08000000;
 
-		//FX_AddSprite( flash.origin, NULL, NULL, 3.0f * val, 0.0f, 0.7f, 0.7f, WHITE, WHITE, random() * 360, 0.0f, 1.0f, shader, FX_USE_ALPHA );
-		trap->FX_AddSprite(&fxSArgs);
+			//FX_AddSprite( flash.origin, NULL, NULL, 3.0f * val, 0.0f, 0.7f, 0.7f, WHITE, WHITE, random() * 360, 0.0f, 1.0f, shader, FX_USE_ALPHA );
+			trap->FX_AddSprite(&fxSArgs);
+		}
 	}
 
 	// make sure we aren't looking at cg.predictedPlayerEntity for LG
@@ -1980,6 +1989,7 @@ void CG_FireWeapon( centity_t *cent, qboolean altFire ) {
 			(ent->weapon == WP_ELG_3A && altFire) ||
 			//(ent->weapon == WP_WOOKIE_BOWCASTER && !altFire) ||
 			//(ent->weapon == WP_WOOKIES_PISTOL && !altFire) ||
+			(ent->weapon == WP_ARC_CASTER_IMPERIAL && !altFire) ||
 			(ent->weapon == WP_S5_PISTOL && altFire ||
 			(ent->weapon == WP_DC_17_CLONE_PISTOL && altFire)))
 			

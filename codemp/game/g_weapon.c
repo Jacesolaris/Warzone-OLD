@@ -535,6 +535,69 @@ static void WP_FireBlaster( gentity_t *ent, qboolean altFire, int velocity, int 
 
 int G_GetHitLocation(gentity_t *target, vec3_t ppoint);
 
+void WP_MainLightningBeam(gentity_t *ent) {
+	trace_t		tr;
+	vec3_t		end;
+	gentity_t	*traceEnt, *tent;
+	int			damage, i, passent;
+
+	damage = 8;
+
+	passent = ent->s.number;
+	for (i = 0; i < 10; i++) {
+		VectorMA(muzzle, LIGHTNING_RANGE, forward, end);
+
+		trap->Trace(&tr, muzzle, NULL, NULL, end, passent, MASK_SHOT, qfalse, 0, 0);
+
+		if (tr.entityNum == ENTITYNUM_NONE) {
+			return;
+		}
+
+		traceEnt = &g_entities[tr.entityNum];
+
+		if (traceEnt->takedamage) {
+			G_Damage(traceEnt, ent, ent, forward, tr.endpos,
+				damage, 0, MOD_BLASTER);
+
+		}
+
+		if (traceEnt->takedamage && traceEnt->client) {
+			tent = G_TempEntity(tr.endpos, EV_MISSILE_HIT);
+			tent->s.otherEntityNum = traceEnt->s.number;
+			tent->s.eventParm = DirToByte(tr.plane.normal);
+			tent->s.weapon = ent->s.weapon;
+			if (LogAccuracyHit(traceEnt, ent)) {
+				ent->client->accuracy_hits++;
+			}
+		}
+		else if (!(tr.surfaceFlags & SURF_NOIMPACT)) {
+			tent = G_TempEntity(tr.endpos, EV_MISSILE_MISS);
+			tent->s.eventParm = DirToByte(tr.plane.normal);
+		}
+
+		break;
+	}
+}
+
+static void WP_FlechetteMainFire(gentity_t *ent);
+//---------------------------------------------------------
+static void WP_FireLightningbeam(gentity_t *ent, qboolean altFire)
+//---------------------------------------------------------
+{
+	if (!ent || !ent->client)
+	{ //do not ever let it do the alt fire when not zoomed
+		altFire = qfalse;
+	}
+	if (altFire)
+	{
+		WP_MainLightningBeam(ent);
+	}
+	else
+	{
+		WP_FlechetteMainFire(ent);
+	}
+}
+
 /*
 ======================================================================
 
@@ -3542,14 +3605,14 @@ static void WP_FireConcussionAlt( gentity_t *ent )
 #endif
 }
 
+#define BLOB_GRENADE_CHARGE_UNIT			700.0f	
 static void WP_FireBlobGrenade(gentity_t *ent)
 {//a fast rocket-like projectile
 	vec3_t	start;
 	int		damage = 60;
 	float	vel = CONC_VELOCITY;
 	gentity_t *missile;
-	int		ChargeGrenadeBlobs = ent->s.weapon == WP_DC15_EXT;
-	int		GrenadeBlobs = ent->s.weapon == WP_Z6_BLASTER_CANON;
+	int		ChargeGrenadeBlobs = 0;
 
 	VectorCopy(muzzle, start);
 	WP_TraceSetStart(ent, start, vec3_origin, vec3_origin);
@@ -3579,34 +3642,9 @@ static void WP_FireBlobGrenade(gentity_t *ent)
 	missile->clipmask = MASK_SHOT | CONTENTS_LIGHTSABER;
 	missile->genericValue1 = ChargeGrenadeBlobs;
 	
-	if (ChargeGrenadeBlobs)
+	if (ChargeGrenadeBlobs == ent->s.weapon == WP_DC15_EXT || ent->s.weapon == WP_Z6_BLASTER_CANON)
 	{
-		int time = (level.time - ent->client->ps.weaponChargeTime);
-		float ratio;
-
-		if (time > GRENADE_MAX_CHARGE_TIME)
-		{
-			time = GRENADE_MAX_CHARGE_TIME;
-		}
-		else if (time <= 150)
-		{
-			time = 150;
-		}
-
-		ratio = (float)time / (float)GRENADE_MAX_CHARGE_TIME;
-		missile->splashDamage = 20.0f * ratio;
-		missile->damage = missile->splashDamage * 1.25f; //bonus for direct hit
-		missile->s.userFloat2 = time / 2000.0f + 0.75f;
-		//Close enough.
-		missile->splashRadius = (GRENADE_MAX_CHARGE_TIME / 2000.0f + 0.75f) * 50.0f;
-		missile->s.pos.trType = TR_GRAVITY;
-		missile->methodOfDeath = missile->splashMethodOfDeath = MOD_CONC;
-		//radius
-		missile->mass = 5;
-	}
-	else if (GrenadeBlobs)
-	{
-		int time = (level.time - ent->client->ps.weaponChargeTime);
+		int time = (level.time - ent->client->ps.weaponChargeTime / BLOB_GRENADE_CHARGE_UNIT);
 		float ratio;
 
 		if (time > GRENADE_MAX_CHARGE_TIME)
@@ -5059,7 +5097,6 @@ void FireWeapon( gentity_t *ent, qboolean altFire ) {
 			break;
 
 		case WP_BRYAR_CARBINE:
-		case WP_ARC_CASTER_IMPERIAL://NOTE needs it own function to handle the lightning stuff to charge up with
 		case WP_A200_ACP_BATTLERIFLE:
 		case WP_CLONE_BLASTER:
 		case WP_BLASTER:
@@ -5164,6 +5201,9 @@ void FireWeapon( gentity_t *ent, qboolean altFire ) {
 				WP_FireBlaster(ent, altFire, BLASTER_VELOCITY, BOWCASTER_DAMAGE, BLASTER_SPREAD, ent->s.weapon);
 			break;
 
+		case WP_ARC_CASTER_IMPERIAL://NOTE needs it own function to handle the lightning stuff to charge up with
+			WP_FireLightningbeam(ent, altFire);
+			break;
 		case WP_DISRUPTOR:
 			WP_FireDisruptor( ent, altFire );
 			break;
@@ -5179,7 +5219,6 @@ void FireWeapon( gentity_t *ent, qboolean altFire ) {
 		case WP_DEMP2:
 			WP_FireDEMP2( ent, altFire );
 			break;
-
 		case WP_FLECHETTE:
 			WP_FireFlechette( ent, altFire );
 			break;

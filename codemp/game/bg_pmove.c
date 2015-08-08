@@ -6645,6 +6645,7 @@ static qboolean PM_DoChargedWeapons( qboolean vehicleRocketLock, bgEntity_t *veh
 				break;
 
 				//------------------
+			case WP_ARC_CASTER_IMPERIAL:
 			case WP_BOWCASTER:
 
 				// primary fire charges the weapon

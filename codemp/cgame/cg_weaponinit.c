@@ -110,6 +110,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponNum == WP_CONCUSSION 	||	
 		weaponNum == WP_Z6_BLASTER_CANON ||
 		weaponNum == WP_E60_ROCKET_LAUNCHER ||
+		weaponNum == WP_ARC_CASTER_IMPERIAL ||
 		weaponNum == WP_CW_ROCKET_LAUNCHER)
 
 	{
@@ -1749,7 +1750,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->missileSound = NULL_SOUND;
 		weaponInfo->missileDlight = 0;
 		weaponInfo->missileHitSound = NULL_SOUND;
-		weaponInfo->missileTrailFunc = FX_WeaponProjectileThink;
+		weaponInfo->missileTrailFunc = 0;
 		weaponInfo->powerupShotRenderfx = NULL_FX;
 		weaponInfo->altFlashSound[0] = trap->S_RegisterSound("sound/effects/spark1_improved.wav");
 		weaponInfo->altFlashSound[1] = trap->S_RegisterSound("sound/effects/spark1_improved.wav");
@@ -1762,7 +1763,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altMissileSound  = NULL_SOUND;
 		weaponInfo->altMissileDlight = 0;
 		weaponInfo->altMissileHitSound = NULL_SOUND;
-		weaponInfo->altMissileTrailFunc = FX_WeaponAltProjectileThink;//FX_WeaponProjectileThink;
+		weaponInfo->altMissileTrailFunc = 0;
 
 		weaponInfo->missileRenderfx = trap->FX_RegisterEffect("blasters/shot_electricity");
 		weaponInfo->altMissileRenderfx = trap->FX_RegisterEffect("blasters/shot_electricity");
@@ -1778,10 +1779,9 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->EnhancedFX_missileWallImpactfx = trap->FX_RegisterEffect("blasters/electric_impacttiny");
 		weaponInfo->EnhancedFX_altmissileWallImpactfx = trap->FX_RegisterEffect("blasters/electric_impacttiny");
 
-		cgs.media.cannonChargeFlash = trap->FX_RegisterEffect("weapons/charge_samus");
-		
-		cgs.media.lightningbeam = trap->R_RegisterShader("gfx/blasters/electricity_deform");
-		cgs.media.lightningbeam = trap->R_RegisterShader("gfx/blasters/BlasterBolt_Beam2_Blue");
+		cgs.media.cannonChargeFlash = trap->FX_RegisterEffect("effects/weapons/charge_samus.efx");
+		trap->R_RegisterShader("gfx/blasters/electricity_deform");
+		trap->R_RegisterShader("gfx/blasters/BlasterBolt_Beam2_Blue");
 		break;
 
 	case WP_BOWCASTER_CLASSIC:
