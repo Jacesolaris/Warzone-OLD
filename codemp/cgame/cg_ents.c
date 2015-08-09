@@ -2509,7 +2509,26 @@ static void CG_Missile( centity_t *cent ) {
 	// calculate the axis
 	VectorCopy( s1->angles, cent->lerpAngles);
 
-	if ( s1->otherEntityNum2 && s1->weapon != WP_SABER )
+	if (s1->weapon == WP_ARC_CASTER_IMPERIAL)
+	{// Special projectile for arc caster...
+		vec3_t forward;
+
+		if ( VectorNormalize2( cent->currentState.pos.trDelta, forward ) == 0.0f )
+		{
+			forward[2] = 1.0f;
+		}
+
+		PlayEffectID( trap->FX_RegisterEffect("blasters/muzzleflash_arccaster"), cent->lerpOrigin, forward, -1, -1, qfalse );
+		if ( s1->loopSound )
+		{
+			vec3_t	velocity;
+			BG_EvaluateTrajectoryDelta( &cent->currentState.pos, cg.time, velocity );
+			trap->S_AddLoopingSound( cent->currentState.number, cent->lerpOrigin, velocity, s1->loopSound );
+		}
+		//FIXME: if has a custom model, too, then set it and do rest of code below?
+		return;
+	}
+	else if ( s1->otherEntityNum2 && s1->weapon != WP_SABER )
 	{//using an over-ridden trail effect!
 		vec3_t forward;
 

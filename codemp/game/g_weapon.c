@@ -41,7 +41,7 @@ static vec3_t muzzle;
 #define DOUBLEBARREL_MINE_RADIUS_CHECK	256
 #define DOUBLEBARREL_ALT_DAMAGE		13//25
 
-#define LIGHTNING_BEAM_SHOTS			2
+#define LIGHTNING_BEAM_SHOTS			8//2 // UQ1: If it's only going to fire every 1.5 secs, we need more power to each shot
 #define LIGHTNING_BEAM_SPREAD			0.4f
 #define LIGHTNING_BEAM_DAMAGE			10//12//15
 #define LIGHTNING_BEAM_VEL				7000
@@ -573,7 +573,7 @@ static void WP_MainLightningBeamFire(gentity_t *ent)
 
 		AngleVectors(angs, fwd, NULL, NULL);
 
-		missile = CreateMissile(muzzle, fwd, FLECHETTE_VEL, 10000, ent, qfalse);
+		missile = CreateMissile(muzzle, fwd, BLASTER_VELOCITY, 10000, ent, qfalse);
 
 		missile->classname = "blaster_proj";
 		missile->s.weapon = ent->s.weapon;
@@ -588,53 +588,55 @@ static void WP_MainLightningBeamFire(gentity_t *ent)
 
 		// we don't want it to bounce forever
 		missile->bounceCount = 0;
-
 	}
 }
 
-void WP_MainLightningBeam(gentity_t *ent, int MAX_BEAMS) {
+void WP_AltLightningBeam(gentity_t *ent, int MAX_BEAMS) {
 	trace_t		tr;
 	vec3_t		end;
 	gentity_t	*traceEnt, *tent;
-	int			damage, i, passent;
+	int			damage, passent;
 
-	damage = 8;
+	damage = LIGHTNING_BEAM_ALT_DAMAGE;
 
 	passent = ent->s.number;
-	for (i = 0; i < MAX_BEAMS; i++) {
-		VectorMA(muzzle, LIGHTNING_RANGE, forward, end);
 
-		trap->Trace(&tr, muzzle, NULL, NULL, end, passent, MASK_SHOT, qfalse, 0, 0);
+	VectorMA(muzzle, LIGHTNING_RANGE, forward, end);
 
-		if (tr.entityNum == ENTITYNUM_NONE) {
-			return;
+	trap->Trace(&tr, muzzle, NULL, NULL, end, passent, MASK_SHOT, qfalse, 0, 0);
+
+	traceEnt = &g_entities[tr.entityNum];
+
+	if (traceEnt->takedamage) {
+		G_Damage(traceEnt, ent, ent, forward, tr.endpos,
+			damage, 0, MOD_BLASTER);
+	}
+
+	if (traceEnt->takedamage && traceEnt->client) { // Hit a player/npc. Beam locks on their position.
+		tent = G_TempEntity(tr.endpos, EV_MISSILE_HIT);
+		tent->s.otherEntityNum = traceEnt->s.number;
+		tent->s.eventParm = DirToByte(tr.plane.normal);
+		tent->s.weapon = WP_ARC_CASTER_IMPERIAL;
+		tent->s.primaryWeapon = ent->s.number;
+		if (LogAccuracyHit(traceEnt, ent)) {
+			ent->client->accuracy_hits++;
 		}
-
-		traceEnt = &g_entities[tr.entityNum];
-
-		if (traceEnt->takedamage) {
-			G_Damage(traceEnt, ent, ent, forward, tr.endpos,
-				damage, 0, MOD_BLASTER);
-
-		}
-
-		if (traceEnt->takedamage && traceEnt->client) { // Hit a player/npc. Beam locks on their position.
-			tent = G_TempEntity(tr.endpos, EV_MISSILE_HIT);
-			tent->s.otherEntityNum = traceEnt->s.number;
-			tent->s.eventParm = DirToByte(tr.plane.normal);
-			tent->s.weapon = ent->s.weapon;
-			tent->s.otherEntityNum2 = ent->s.number;
-			if (LogAccuracyHit(traceEnt, ent)) {
-				ent->client->accuracy_hits++;
-			}
-		}
-		else if (!(tr.surfaceFlags & SURF_NOIMPACT)) { // Hit no players. Draw straight toward hit end point.
-			tent = G_TempEntity(tr.endpos, EV_MISSILE_MISS);
-			tent->s.eventParm = DirToByte(tr.plane.normal);
-			tent->s.otherEntityNum2 = ent->s.number;
-		}
-
-		break;
+		//trap->Print("ARC hit!\n");
+	}
+	else if (!(tr.surfaceFlags & SURF_NOIMPACT)) { // Hit no players. Draw straight toward hit end point.
+		tent = G_TempEntity(tr.endpos, EV_MISSILE_MISS);
+		tent->s.eventParm = DirToByte(tr.plane.normal);
+		tent->s.weapon = WP_ARC_CASTER_IMPERIAL;
+		tent->s.primaryWeapon = ent->s.number;
+		//trap->Print("ARC miss wall!\n");
+	}
+	else
+	{
+		tent = G_TempEntity(tr.endpos, EV_MISSILE_MISS);
+		tent->s.eventParm = DirToByte(tr.plane.normal);
+		tent->s.weapon = WP_ARC_CASTER_IMPERIAL;
+		tent->s.primaryWeapon = ent->s.number;
+		//trap->Print("ARC miss!\n");
 	}
 }
 
@@ -644,8 +646,7 @@ static void WP_FireLightningbeam(gentity_t *ent, qboolean altFire)
 {
 	if (altFire)
 	{
-		//WP_LightningBeamAltFire(ent);
-		WP_MainLightningBeam(ent, 1); // MAX_BEAMS (1) is for future modifications. Can allow some to hit multiple targets at once.
+		WP_AltLightningBeam(ent, 1); // MAX_BEAMS (1) is for future modifications. Can allow some to hit multiple targets at once.
 	}
 	else
 	{

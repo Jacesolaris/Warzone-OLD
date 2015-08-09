@@ -296,6 +296,8 @@ void FX_DEMP2_HitPlayer(vec3_t origin, vec3_t normal, qboolean humanoid, int wea
 	PlayEffectID( cgs.effects.demp2FleshImpactEffect, origin, normal, -1, -1, qfalse );
 }
 
+extern qboolean CG_CalcMuzzlePoint( int entityNum, vec3_t muzzle );
+
 void FX_Lightning_AltBeam(centity_t *shotby, vec3_t end, qboolean hit)
 {// "hit" is only used when hitting target. set to qfalse to shoot normal.
 
@@ -303,24 +305,27 @@ void FX_Lightning_AltBeam(centity_t *shotby, vec3_t end, qboolean hit)
 	vec3_t muzzlePos, hitPos;
 	int i = 0;
 	static vec3_t white = { 1.0f, 1.0f, 1.0f }; // will need to be adjusted to match gun height
-	vec3_t hitPosition = { 13.0, 0.0, 4.6 };
 	float minimumBeamThickness = 2.0;
-	float maximumBeamThickness = 28.0f;
+	float maximumBeamThickness = 5.0f;//28.0f;
 	float lifeTimeOfBeamInMilliseconds = 300;
+	
 	if (hit)
 	{
 		VectorCopy(end, hitPos);
-		VectorAdd(WP_MuzzlePoint[WP_ARC_CASTER_IMPERIAL], shotby->lerpOrigin, muzzlePos);
+		//VectorAdd(WP_MuzzlePoint[WP_ARC_CASTER_IMPERIAL], shotby->lerpOrigin, muzzlePos);
+		CG_CalcMuzzlePoint( shotby->currentState.number, muzzlePos );
+
+		//trap->Print("Hit beam between %f %f %f and %f %f %f.\n", muzzlePos[0], muzzlePos[1], muzzlePos[2], hitPos[0], hitPos[1], hitPos[2]);
 	}
 	else
 	{
 		VectorCopy(end, hitPos);
-		VectorAdd(WP_MuzzlePoint[WP_ARC_CASTER_IMPERIAL], shotby->lerpOrigin, muzzlePos);
+		CG_CalcMuzzlePoint( shotby->currentState.number, muzzlePos );
+
+		//trap->Print("Miss beam between %f %f %f and %f %f %f.\n", muzzlePos[0], muzzlePos[1], muzzlePos[2], hitPos[0], hitPos[1], hitPos[2]);
 	}
 
-	for (i = 0; i < 3; i++)
-	{// This means do it 3 times. Should get 3 beams all converging on the target.
-		trap->FX_AddLine(
+	trap->FX_AddLine(
 			muzzlePos, hitPos,
 			minimumBeamThickness,
 			maximumBeamThickness,
@@ -330,9 +335,31 @@ void FX_Lightning_AltBeam(centity_t *shotby, vec3_t end, qboolean hit)
 			white,
 			0.0f,
 			lifeTimeOfBeamInMilliseconds,
-			trap->R_RegisterShader("gfx/blasters/electricity_deform"),
+			trap->R_RegisterShader("gfx/electricity/electricity_deform"),
 			FX_SIZE_LINEAR |
 			FX_ALPHA_LINEAR);
+
+	// Add fx all the way along the line... Poor FPS...
+	{
+		vec3_t currentPos, fxDir;
+		float dist = Distance(muzzlePos, hitPos);
+		float fxAt = 0;
+		float nextFxAt = 8.0;
+
+		weaponInfo_t	*weapon = &cg_weapons[shotby->currentState.weapon];
+
+		VectorCopy(muzzlePos, currentPos);
+		VectorSubtract(hitPos, currentPos, fxDir);
+		vectoangles ( fxDir, fxDir );
+		AngleVectors(fxDir, fxDir, NULL, NULL);
+
+		for (fxAt = nextFxAt; fxAt < dist; fxAt += nextFxAt)
+		{// Draw a bunch of efx along this line...
+			VectorMA(currentPos, nextFxAt, fxDir, currentPos);
+			//nextFxAt *= 1.25;
+			//trap->Print("FX drawn at range %f pos %f %f %f.\n", fxAt, currentPos[0], currentPos[1], currentPos[2]);
+			PlayEffectID(weapon->altMuzzleEffect, currentPos, fxDir, -1, -1, qfalse);
+		}
 	}
 }
 

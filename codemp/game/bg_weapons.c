@@ -121,7 +121,7 @@ weaponData_t weaponData[WP_NUM_WEAPONS] = {
 	{ "ACP Pistol",									350,		8192,		500,			8192,		0,				0,					0,			0,				0,			0	},
 	{ "ACP DoubleBarrel ArrayGun",					350,		8192,		500,			8192,		0,				0,					0,			0,				0,			0	},
 	{ "Acp Sniper Rifle",							850,		8192,		1200,			8192,		0,				0,					0,			0,				0,			0	},
-	{ "Arc Caster Imperial",						1200,		8192,		150,			8192,		0,				0,					0,			0,				1500,			0	},
+	{ "Arc Caster Imperial",						1200,		8192,		300,			8192,		0,				0,					0,			0,				1500,			0	},
 	{ "Rifle Bowcaster Classic",					550,		8192,		350,			8192,		0,				0,					0,			3,				0,			1700	},
 	{ "Heavy Wookie Bowcaster",						550,		8192,		350,			8192,		0,				0,					0,			3,				0,			1700	},
 	{ "Bryar Carbine Blaster",						350,		8192,		250,			8192,		0,				200,				0,			3,				0,			1700	},

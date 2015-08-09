@@ -865,7 +865,9 @@ Ghoul2 Insert End
 
 		if (cent->currentState.weapon == WP_ARC_CASTER_IMPERIAL)
 		{
-			PlayEffectID(shader, flashorigin, flashdir, -1, -1, qfalse);
+			int i;
+			for (i = 0; i < 10; i++)
+				PlayEffectID(shader, flashorigin, flashdir, -1, -1, qfalse);
 		}
 		else
 		{
@@ -945,7 +947,43 @@ Ghoul2 Insert End
 			BG_GiveMeVectorFromMatrix(&boltMatrix, POSITIVE_X, flashdir);
 		}
 
-		if ( cg.time - cent->muzzleFlashTime <= MUZZLE_FLASH_TIME + 10 )
+		if (cent->currentState.weapon == WP_ARC_CASTER_IMPERIAL)
+		{	// Handle muzzle flashes
+			//int i;
+
+			//for (i = 0; i < 8; i++)
+			{// Draw multiple lightning beams... *sigh* this is gonna be a massive hit on FPS...
+				if ( cent->currentState.eFlags & EF_ALT_FIRING )
+				{	// Check the alt firing first.
+					if (weapon->altMuzzleEffect)
+					{
+						if (!thirdPerson)
+						{
+							trap->FX_PlayEntityEffectID(weapon->altMuzzleEffect, flashorigin, flash.axis, -1, -1, 128/*-1*/, 128/*-1*/  );
+						}
+						else
+						{
+							PlayEffectID(weapon->altMuzzleEffect, flashorigin, flashdir, 128/*-1*/, 128/*-1*/, qfalse);
+						}
+					}
+				}
+				else
+				{	// Regular firing
+					if (weapon->muzzleEffect)
+					{
+						if (!thirdPerson)
+						{
+							trap->FX_PlayEntityEffectID(weapon->muzzleEffect, flashorigin, flash.axis, -1, -1, 128/*-1*/, 128/*-1*/  );
+						}
+						else
+						{
+							PlayEffectID(weapon->muzzleEffect, flashorigin, flashdir, 128/*-1*/, 128/*-1*/, qfalse);
+						}
+					}
+				}
+			}
+		}
+		else if ( cg.time - cent->muzzleFlashTime <= MUZZLE_FLASH_TIME + 10 )
 		{	// Handle muzzle flashes
 			if ( cent->currentState.eFlags & EF_ALT_FIRING )
 			{	// Check the alt firing first.
@@ -967,7 +1005,7 @@ Ghoul2 Insert End
 				{
 					if (!thirdPerson)
 					{
-						trap->FX_PlayEntityEffectID(weapon->muzzleEffect, flashorigin, flash.axis, -1, -1, -1, -1  );
+						trap->FX_PlayEntityEffectID(weapon->muzzleEffect, flashorigin, flash.axis, -1, -1, 128/*-1*/, 128/*-1*/  );
 					}
 					else
 					{

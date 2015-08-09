@@ -3255,8 +3255,11 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 			CG_G2MarkEvent(es);
 		}
 
-		if (cent->currentState.weapon == WP_ARC_CASTER_IMPERIAL)
-			FX_Lightning_AltBeam(&cg_entities[cent->currentState.otherEntityNum2] /* Player location */, cent->currentState.origin /* Hit location*/, qfalse); // this should draw a beam to each target i think
+		//if (es->primaryWeapon == cg.clientNum)
+		//	trap->Print("HIT! alt: %i. weap: %i (%i). pos: %f %f %f.\n", (int)(cg_entities[es->otherEntityNum2].currentState.eFlags & EF_ALT_FIRING), es->weapon, cg_entities[es->primaryWeapon].currentState.weapon, position[0], position[1], position[2]);
+
+		if (es->weapon == WP_ARC_CASTER_IMPERIAL && (cg_entities[es->otherEntityNum2].currentState.eFlags & EF_ALT_FIRING))
+			FX_Lightning_AltBeam(&cg_entities[es->primaryWeapon] /* Player location */, position /* Hit location*/, qtrue);
 		
 		break;
 
@@ -3293,9 +3296,13 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 			CG_G2MarkEvent(es);
 		}
 
+		//if (es->primaryWeapon == cg.clientNum)
+		//	trap->Print("MISS! alt: %i. weap: %i (%i). pos: %f %f %f.\n", (int)(cg_entities[es->otherEntityNum2].currentState.eFlags & EF_ALT_FIRING), es->weapon, cg_entities[es->primaryWeapon].currentState.weapon, position[0], position[1], position[2]);
+
 		// Secondary effect - the beam between the 2 points. 
-		if (cent->currentState.weapon == WP_ARC_CASTER_IMPERIAL)
-			FX_Lightning_AltBeam(&cg_entities[cent->currentState.otherEntityNum2] /* Player location */, cent->currentState.origin /* Hit location*/, qfalse); // this should draw a beam to each target it misses i think
+		if (es->weapon == WP_ARC_CASTER_IMPERIAL && (cg_entities[es->otherEntityNum2].currentState.eFlags & EF_ALT_FIRING))
+			FX_Lightning_AltBeam(&cg_entities[es->otherEntityNum2] /* Player location */, position /* Hit location*/, qfalse);
+
 		break;
 
 	case EV_MISSILE_MISS_METAL:

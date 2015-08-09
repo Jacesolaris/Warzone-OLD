@@ -245,7 +245,7 @@ set_target_properties(${MPWarzone} PROPERTIES COMPILE_DEFINITIONS_RELEASE "${Sha
 set_target_properties(${MPWarzone} PROPERTIES COMPILE_DEFINITIONS_DEBUG "${SharedDefines};${DebugDefines}")
 set_target_properties(${MPWarzone} PROPERTIES INCLUDE_DIRECTORIES "${MPWarzoneIncludeDirectories}")
 set_target_properties(${MPWarzone} PROPERTIES PROJECT_LABEL "MP Warzone Renderer")
-target_link_libraries(${MPWarzone} ${MPWarzoneLibraries})
+target_link_libraries(${MPWarzone} ${MPWarzoneLibraries} "../../../lib/awesomium")
 
 # GLSL shader file generator
 add_executable(compact_glsl ${MPDir}/rd-warzone/glsl/compact.cpp)
