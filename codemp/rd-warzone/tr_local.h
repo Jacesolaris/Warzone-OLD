@@ -108,6 +108,8 @@ extern cvar_t	*r_rotatex;
 extern cvar_t	*r_rotatey;
 extern cvar_t	*r_rotatez;
 
+extern cvar_t	*r_materialDebug;
+
 extern cvar_t	*r_weather;
 extern cvar_t	*r_surfaceSprites;
 extern cvar_t	*r_surfaceWeather;

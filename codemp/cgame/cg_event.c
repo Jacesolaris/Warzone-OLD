@@ -2788,6 +2788,7 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 				}
 			}
 		}
+		
 		FX_DisruptorMainShot(cent->currentState.origin2, cent->lerpOrigin);
 		break;
 
@@ -3253,6 +3254,10 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 		{ //flag to place a ghoul2 mark
 			CG_G2MarkEvent(es);
 		}
+
+		if (cent->currentState.weapon == WP_ARC_CASTER_IMPERIAL)
+			FX_Lightning_AltBeam(&cg_entities[cent->currentState.otherEntityNum2] /* Player location */, cent->currentState.origin /* Hit location*/, qfalse); // this should draw a beam to each target i think
+		
 		break;
 
 	case EV_MISSILE_MISS:
@@ -3287,6 +3292,10 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 		{ //flag to place a ghoul2 mark
 			CG_G2MarkEvent(es);
 		}
+
+		// Secondary effect - the beam between the 2 points. 
+		if (cent->currentState.weapon == WP_ARC_CASTER_IMPERIAL)
+			FX_Lightning_AltBeam(&cg_entities[cent->currentState.otherEntityNum2] /* Player location */, cent->currentState.origin /* Hit location*/, qfalse); // this should draw a beam to each target it misses i think
 		break;
 
 	case EV_MISSILE_MISS_METAL:

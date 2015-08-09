@@ -296,6 +296,46 @@ void FX_DEMP2_HitPlayer(vec3_t origin, vec3_t normal, qboolean humanoid, int wea
 	PlayEffectID( cgs.effects.demp2FleshImpactEffect, origin, normal, -1, -1, qfalse );
 }
 
+void FX_Lightning_AltBeam(centity_t *shotby, vec3_t end, qboolean hit)
+{// "hit" is only used when hitting target. set to qfalse to shoot normal.
+
+	// When you want to draw the beam
+	vec3_t muzzlePos, hitPos;
+	int i = 0;
+	static vec3_t white = { 1.0f, 1.0f, 1.0f }; // will need to be adjusted to match gun height
+	vec3_t hitPosition = { 13.0, 0.0, 4.6 };
+	float minimumBeamThickness = 2.0;
+	float maximumBeamThickness = 28.0f;
+	float lifeTimeOfBeamInMilliseconds = 300;
+	if (hit)
+	{
+		VectorCopy(end, hitPos);
+		VectorAdd(WP_MuzzlePoint[WP_ARC_CASTER_IMPERIAL], shotby->lerpOrigin, muzzlePos);
+	}
+	else
+	{
+		VectorCopy(end, hitPos);
+		VectorAdd(WP_MuzzlePoint[WP_ARC_CASTER_IMPERIAL], shotby->lerpOrigin, muzzlePos);
+	}
+
+	for (i = 0; i < 3; i++)
+	{// This means do it 3 times. Should get 3 beams all converging on the target.
+		trap->FX_AddLine(
+			muzzlePos, hitPos,
+			minimumBeamThickness,
+			maximumBeamThickness,
+			0.0f,
+			1.0f, 0.0f, 0.0f,
+			white,
+			white,
+			0.0f,
+			lifeTimeOfBeamInMilliseconds,
+			trap->R_RegisterShader("gfx/blasters/electricity_deform"),
+			FX_SIZE_LINEAR |
+			FX_ALPHA_LINEAR);
+	}
+}
+
 /*
 ---------------------------
 FX_DEMP2_AltBeam
@@ -312,14 +352,14 @@ void FX_DEMP2_AltBeam( vec3_t start, vec3_t end, vec3_t normal, //qboolean spark
 	trap->FX_AddLine( start, end, 0.3f, 15.0f, 0.0f,
 							1.0f, 0.0f, 0.0f,
 							WHITE, WHITE, 0.0f,
-							175, trap->R_RegisterShader( "gfx/misc/lightningFlash"/*"gfx/effects/blueLine"*/ ),
+							175, trap->R_RegisterShader( "gfx_base/misc/lightningFlash"/*"gfx/effects/blueLine"*/ ),
 							FX_SIZE_LINEAR | FX_ALPHA_LINEAR );
 
 	// add some beef
 	trap->FX_AddLine( start, end, 0.3f, 11.0f, 0.0f,
 						1.0f, 0.0f, 0.0f,
 						BRIGHT, BRIGHT, 0.0f,
-						150, trap->R_RegisterShader( "gfx/misc/electric2"/*"gfx/misc/whiteline2"*/ ),
+						150, trap->R_RegisterShader( "gfx_base/misc/electric2"/*"gfx/misc/whiteline2"*/ ),
 						FX_SIZE_LINEAR | FX_ALPHA_LINEAR );
 }
 

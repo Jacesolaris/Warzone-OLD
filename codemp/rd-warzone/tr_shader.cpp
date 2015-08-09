@@ -2956,6 +2956,8 @@ qboolean HaveSurfaceType( int surfaceFlags )
 
 void DebugSurfaceTypeSelection( const char *name, int surfaceFlags )
 {
+	if (!r_materialDebug->integer)	return; // disable debugging for now
+
 	if (StringContainsWord(name, "gfx/") || StringContainsWord(name, "sprites/") || StringContainsWord(name, "powerups/"))
 		return; // Ignore all these to reduce spam for now...
 
@@ -3181,7 +3183,8 @@ qboolean IsKnownShinyMap ( const char *heystack )
 {
 	if (IsKnownShinyMap2( heystack ))
 	{
-		ri->Printf(PRINT_WARNING, "Surface %s is known shiny.\n", heystack);
+		if (r_materialDebug->integer)
+			ri->Printf(PRINT_WARNING, "Surface %s is known shiny.\n", heystack);
 		return qtrue;
 	}
 	
@@ -3346,7 +3349,8 @@ void AssignMaterialType ( const char *name, const char *text )
 				&& !StringsContainWord(name, name, "powerup")
 				&& !StringsContainWord(name, name, "slider")
 				&& !StringsContainWord(name, name, "mp/dark_")) // Dont bother reporting gfx/ or hud items...
-				ri->Printf(PRINT_WARNING, "Could not work out a default surface type for shader %s. It will fallback to default parallax and specular.\n", name);
+				if (r_materialDebug->integer)
+					ri->Printf(PRINT_WARNING, "Could not work out a default surface type for shader %s. It will fallback to default parallax and specular.\n", name);
 		}
 	}
 	else
@@ -5750,7 +5754,8 @@ shader_t *R_FindShader( const char *name, const int *lightmapIndexes, const byte
 				shader.defaultShader = qtrue;
 			} else {
 				if (!StringContainsWord(name, "models/player") && !StringContainsWord(name, "models/weapon")) // skip this spam for now...
-					ri->Printf(PRINT_WARNING, "Advanced generic shader generated for image %s.\n", name);
+					if (r_materialDebug->integer)
+						ri->Printf(PRINT_WARNING, "Advanced generic shader generated for image %s.\n", name);
 			}
 			sh = FinishShader();
 			return sh;

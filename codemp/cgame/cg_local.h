@@ -765,7 +765,7 @@ typedef struct weaponInfo_s {
 	fxHandle_t		EnhancedFX_altfleshImpact;
 	fxHandle_t		EnhancedFX_missileWallImpactfx;
 	fxHandle_t		EnhancedFX_altmissileWallImpactfx;
-	
+	qhandle_t		tracelineShader;
 	
 	qhandle_t		altMissileModel;
 	sfxHandle_t		altMissileSound;
@@ -2314,6 +2314,7 @@ void FX_Clonepistol_BounceWall(vec3_t origin, vec3_t normal, int weapon, qboolea
 void FX_Clonepistol_HitPlayer(vec3_t origin, vec3_t normal, qboolean humanoid, int weapon, qboolean altFire);
 void FX_Clonepistol_ProjectileThink(centity_t *cent, const struct weaponInfo_s *weapon);
 
+void FX_Lightning_AltBeam(centity_t *shotby, vec3_t end, qboolean hit);
 
 void FX_ForceDrained(vec3_t origin, vec3_t dir);
 

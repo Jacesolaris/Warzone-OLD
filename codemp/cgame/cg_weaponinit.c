@@ -52,6 +52,8 @@ void CG_RegisterWeapon( int weaponNum) {
 		return;
 	}
 
+	cgs.effects.blasterWallImpactEffect = trap->FX_RegisterEffect("orginal_weapon_efx/bryar/wall_impact");
+
 	//if ( cgs.wDisable & (1<<weaponNum) )
 	//	return;
 
@@ -1774,12 +1776,16 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altMissileWallImpactfx = trap->FX_RegisterEffect("orginal_weapon_efx/blaster/wall_impact");
 
 
+
+
+		//weaponInfo->tracelineShader = trap->R_RegisterShader("gfx/blasters/electricity_deform");
+
 		weaponInfo->EnhancedFX_fleshImpact = trap->FX_RegisterEffect("blasters/electric_impacttiny");
 		weaponInfo->EnhancedFX_altfleshImpact = trap->FX_RegisterEffect("blasters/electric_impacttiny");
-		weaponInfo->EnhancedFX_missileWallImpactfx = trap->FX_RegisterEffect("blasters/electric_impacttiny");
-		weaponInfo->EnhancedFX_altmissileWallImpactfx = trap->FX_RegisterEffect("blasters/electric_impacttiny");
+		weaponInfo->EnhancedFX_missileWallImpactfx = trap->FX_RegisterEffect("blasters/electric_impactmedium");
+		weaponInfo->EnhancedFX_altmissileWallImpactfx = trap->FX_RegisterEffect("blasters/electric_impactmedium");
 
-		cgs.media.cannonChargeFlash = trap->FX_RegisterEffect("effects/weapons/charge_samus.efx");
+		//cgs.media.cannonChargeFlash = trap->FX_RegisterEffect("effects/weapons/charge_samus.efx");
 		trap->R_RegisterShader("gfx/blasters/electricity_deform");
 		trap->R_RegisterShader("gfx/blasters/BlasterBolt_Beam2_Blue");
 		break;

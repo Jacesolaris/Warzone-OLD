@@ -6,6 +6,8 @@
 #include "tr_local.h"
 #include "glext.h"
 
+#include <algorithm>
+
 extern void Upload32( byte *data, int width, int height, imgType_t type, int flags, qboolean lightMap, GLenum internalFormat, int *pUploadWidth, int *pUploadHeight);
 extern void RawImage_UploadTexture( byte *data, int x, int y, int width, int height, GLenum internalFormat, imgType_t type, int flags, qboolean subtexture );
 

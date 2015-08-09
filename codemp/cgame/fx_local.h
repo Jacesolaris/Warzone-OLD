@@ -75,3 +75,4 @@ void FX_Clonepistol_HitWall(vec3_t origin, vec3_t normal, int weapon, qboolean a
 void FX_Clonepistol_BounceWall(vec3_t origin, vec3_t normal, int weapon, qboolean altFire);
 void FX_Clonepistol_HitPlayer(vec3_t origin, vec3_t normal, qboolean humanoid, int weapon, qboolean altFire);
 void FX_Clonepistol_ProjectileThink(centity_t *cent, const struct weaponInfo_s *weapon);
+void FX_Lightning_AltBeam(centity_t *shotby, vec3_t end, qboolean hit);

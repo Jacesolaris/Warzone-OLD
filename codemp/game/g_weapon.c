@@ -41,6 +41,16 @@ static vec3_t muzzle;
 #define DOUBLEBARREL_MINE_RADIUS_CHECK	256
 #define DOUBLEBARREL_ALT_DAMAGE		13//25
 
+#define LIGHTNING_BEAM_SHOTS			2
+#define LIGHTNING_BEAM_SPREAD			0.4f
+#define LIGHTNING_BEAM_DAMAGE			10//12//15
+#define LIGHTNING_BEAM_VEL				7000
+#define LIGHTNING_BEAM_SIZE				1
+#define LIGHTNING_BEAM_MINE_RADIUS_CHECK	256
+#define LIGHTNING_BEAM_ALT_DAMAGE		15//60
+#define LIGHTNING_BEAM_ALT_SPLASH_DAM	60
+#define LIGHTNING_BEAM_ALT_SPLASH_RAD	128
+
 // Tenloss Disruptor
 //----------
 #define DISRUPTOR_MAIN_DAMAGE			30 //40
@@ -535,7 +545,54 @@ static void WP_FireBlaster( gentity_t *ent, qboolean altFire, int velocity, int 
 
 int G_GetHitLocation(gentity_t *target, vec3_t ppoint);
 
-void WP_MainLightningBeam(gentity_t *ent) {
+/*
+======================================================================
+
+FLECHETTE
+
+======================================================================
+*/
+
+//---------------------------------------------------------
+static void WP_MainLightningBeamFire(gentity_t *ent)
+//---------------------------------------------------------
+{
+	vec3_t		fwd, angs;
+	gentity_t	*missile;
+	int i;
+
+	for (i = 0; i < LIGHTNING_BEAM_SHOTS; i++)
+	{
+		vectoangles(forward, angs);
+
+		if (i != 0)
+		{ //do nothing on the first shot, it will hit the crosshairs
+			angs[PITCH] += crandom() * LIGHTNING_BEAM_SPREAD;
+			angs[YAW] += crandom() * LIGHTNING_BEAM_SPREAD;
+		}
+
+		AngleVectors(angs, fwd, NULL, NULL);
+
+		missile = CreateMissile(muzzle, fwd, FLECHETTE_VEL, 10000, ent, qfalse);
+
+		missile->classname = "blaster_proj";
+		missile->s.weapon = ent->s.weapon;
+
+		VectorSet(missile->r.maxs, LIGHTNING_BEAM_SIZE, LIGHTNING_BEAM_SIZE, LIGHTNING_BEAM_SIZE);
+		VectorScale(missile->r.maxs, -1, missile->r.mins);
+
+		missile->damage = LIGHTNING_BEAM_DAMAGE;
+		missile->dflags = DAMAGE_DEATH_KNOCKBACK;
+		missile->methodOfDeath = MOD_BLASTER;
+		missile->clipmask = MASK_SHOT | CONTENTS_LIGHTSABER;
+
+		// we don't want it to bounce forever
+		missile->bounceCount = 0;
+
+	}
+}
+
+void WP_MainLightningBeam(gentity_t *ent, int MAX_BEAMS) {
 	trace_t		tr;
 	vec3_t		end;
 	gentity_t	*traceEnt, *tent;
@@ -544,7 +601,7 @@ void WP_MainLightningBeam(gentity_t *ent) {
 	damage = 8;
 
 	passent = ent->s.number;
-	for (i = 0; i < 10; i++) {
+	for (i = 0; i < MAX_BEAMS; i++) {
 		VectorMA(muzzle, LIGHTNING_RANGE, forward, end);
 
 		trap->Trace(&tr, muzzle, NULL, NULL, end, passent, MASK_SHOT, qfalse, 0, 0);
@@ -561,40 +618,38 @@ void WP_MainLightningBeam(gentity_t *ent) {
 
 		}
 
-		if (traceEnt->takedamage && traceEnt->client) {
+		if (traceEnt->takedamage && traceEnt->client) { // Hit a player/npc. Beam locks on their position.
 			tent = G_TempEntity(tr.endpos, EV_MISSILE_HIT);
 			tent->s.otherEntityNum = traceEnt->s.number;
 			tent->s.eventParm = DirToByte(tr.plane.normal);
 			tent->s.weapon = ent->s.weapon;
+			tent->s.otherEntityNum2 = ent->s.number;
 			if (LogAccuracyHit(traceEnt, ent)) {
 				ent->client->accuracy_hits++;
 			}
 		}
-		else if (!(tr.surfaceFlags & SURF_NOIMPACT)) {
+		else if (!(tr.surfaceFlags & SURF_NOIMPACT)) { // Hit no players. Draw straight toward hit end point.
 			tent = G_TempEntity(tr.endpos, EV_MISSILE_MISS);
 			tent->s.eventParm = DirToByte(tr.plane.normal);
+			tent->s.otherEntityNum2 = ent->s.number;
 		}
 
 		break;
 	}
 }
 
-static void WP_FlechetteMainFire(gentity_t *ent);
 //---------------------------------------------------------
 static void WP_FireLightningbeam(gentity_t *ent, qboolean altFire)
 //---------------------------------------------------------
 {
-	if (!ent || !ent->client)
-	{ //do not ever let it do the alt fire when not zoomed
-		altFire = qfalse;
-	}
 	if (altFire)
 	{
-		WP_MainLightningBeam(ent);
+		//WP_LightningBeamAltFire(ent);
+		WP_MainLightningBeam(ent, 1); // MAX_BEAMS (1) is for future modifications. Can allow some to hit multiple targets at once.
 	}
 	else
 	{
-		WP_FlechetteMainFire(ent);
+		WP_MainLightningBeamFire(ent);
 	}
 }
 

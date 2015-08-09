@@ -40,6 +40,8 @@ cvar_t	*r_rotatex;
 cvar_t	*r_rotatey;
 cvar_t	*r_rotatez;
 
+cvar_t	*r_materialDebug;
+
 cvar_t	*r_weather;
 cvar_t	*r_surfaceSprites;
 cvar_t	*r_surfaceWeather;
@@ -1501,6 +1503,8 @@ void R_Register( void )
 	r_rotatex							= ri->Cvar_Get( "r_rotatex",					"0",						CVAR_TEMP );
 	r_rotatey							= ri->Cvar_Get( "r_rotatey",					"0",						CVAR_TEMP );
 	r_rotatez							= ri->Cvar_Get( "r_rotatez",					"0",						CVAR_TEMP );
+
+	r_materialDebug						= ri->Cvar_Get("r_materialDebug",				"0",						CVAR_ARCHIVE);
 
 	r_weather							= ri->Cvar_Get( "r_weather",					"0",						CVAR_TEMP );
 	r_surfaceSprites					= ri->Cvar_Get( "r_surfaceSprites",					"0",						CVAR_TEMP );
