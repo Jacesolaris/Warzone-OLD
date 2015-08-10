@@ -3,7 +3,7 @@ varying vec4	var_Local1; // parallaxScale, haveSpecular, specularScale, material
 varying vec2	var_Dimensions;
 uniform vec4	u_Local2; // ExtinctionCoefficient
 uniform vec4	u_Local3; // RimScalar, MaterialThickness, subSpecPower, cubemapScale
-uniform vec4	u_Local4; // haveNormalMap, isMetalic, hasRealSubsurfaceMap, 0.0
+uniform vec4	u_Local4; // haveNormalMap, isMetalic, hasRealSubsurfaceMap, useSteepParallax
 
 #define ARGHFUCKTHISSHIT
 
@@ -370,6 +370,51 @@ vec4 subScatterFS(vec4 BaseColor, vec4 SpecColor, vec3 lightVec, vec3 LightColor
 }
 #endif
 
+vec2 ParallaxMapping(vec2 texCoords, vec3 viewDir)
+{ 
+	vec2 tex_offset = vec2(1.0 / var_Dimensions.x, 1.0 / var_Dimensions.y);
+    // number of depth layers
+	float height_scale = var_Local1.x;
+    const float minLayers = 10;
+    const float maxLayers = 20;
+    float numLayers = mix(maxLayers, minLayers, abs(dot(vec3(0.0, 0.0, 1.0), viewDir)));  
+    // calculate the size of each layer
+    float layerDepth = 1.0 / numLayers;
+    // depth of current layer
+    float currentLayerDepth = 0.0;
+    // the amount to shift the texture coordinates per layer (from vector P)
+    vec2 P = viewDir.xy / viewDir.z * height_scale * tex_offset; 
+    vec2 deltaTexCoords = P / numLayers;
+  
+    // get initial values
+    vec2  currentTexCoords     = texCoords;
+    float currentDepthMapValue = texture2D(u_NormalMap, currentTexCoords).a;
+      
+    while(currentLayerDepth < currentDepthMapValue)
+    {
+        // shift texture coordinates along direction of P
+        currentTexCoords -= deltaTexCoords;
+        // get depthmap value at current texture coordinates
+        currentDepthMapValue = texture2D(u_NormalMap, currentTexCoords).a;  
+        // get depth of next layer
+        currentLayerDepth += layerDepth;  
+    }
+    
+    // -- parallax occlusion mapping interpolation from here on
+    // get texture coordinates before collision (reverse operations)
+    vec2 prevTexCoords = currentTexCoords + deltaTexCoords;
+
+    // get depth after and before collision for linear interpolation
+    float afterDepth  = currentDepthMapValue - currentLayerDepth;
+    float beforeDepth = texture2D(u_NormalMap, prevTexCoords).a - currentLayerDepth + layerDepth;
+ 
+    // interpolation of texture coordinates
+    float weight = afterDepth / (afterDepth - beforeDepth);
+    vec2 finalTexCoords = prevTexCoords * weight + currentTexCoords * (1.0 - weight);
+
+    return finalTexCoords;
+}
+
 //---------------------------------------------------------
 // get pseudo 3d bump background
 //---------------------------------------------------------
@@ -458,15 +503,35 @@ void main()
 #endif
 
 	vec2 texCoords = var_TexCoords.xy;
+	vec4 diffuse;
+	//vec4 diffuse = texture2D(u_DiffuseMap, texCoords);
+	//vec4 diffuse = BumpyBackground(u_DiffuseMap, texCoords);
 
 #if defined(USE_PARALLAXMAP) || defined(USE_PARALLAXMAP_NONORMALS)
-	vec3 offsetDir = normalize(E * tangentToWorld);
-	offsetDir.xy *= tex_offset * -var_Local1.x;//-4.0;//-5.0; // -3.0
-	texCoords += offsetDir.xy * RayIntersectDisplaceMap(texCoords, offsetDir.xy, u_NormalMap);
-#endif
+	if (u_Local4.a == 0.0)
+	{// Normal parallax...
+		vec3 offsetDir = normalize(E * tangentToWorld);
+		offsetDir.xy *= tex_offset * -var_Local1.x;//-4.0;//-5.0; // -3.0
+		texCoords += offsetDir.xy * RayIntersectDisplaceMap(texCoords, offsetDir.xy, u_NormalMap);
+		diffuse = texture2D(u_DiffuseMap, texCoords);
+	}
+	else
+	{// Use steep parallax... (below)
+#if 0
+		diffuse = texture2D(u_DiffuseMap, texCoords);
+#else
+		vec3 offsetDir = normalize(E * tangentToWorld);
+		texCoords = ParallaxMapping(var_TexCoords.xy, offsetDir);
 
-	vec4 diffuse = texture2D(u_DiffuseMap, texCoords);
-	//vec4 diffuse = BumpyBackground(u_DiffuseMap, texCoords);
+		//if(texCoords.x > 1.0 || texCoords.y > 1.0 || texCoords.x < 0.0 || texCoords.y < 0.0)
+		//	discard;
+
+		diffuse = texture2D(u_DiffuseMap, texCoords);
+#endif
+	}
+#else
+	diffuse = texture2D(u_DiffuseMap, texCoords);
+#endif
 
 #if defined(USE_GAMMA2_TEXTURES)
 	diffuse.rgb *= diffuse.rgb;
@@ -607,6 +672,114 @@ void main()
 	{// Non Metalic...
 		diffuse.rgb *= vec3(1.0) - specular.rgb;
 	}
+
+  #if defined(USE_PARALLAXMAP) || defined(USE_PARALLAXMAP_NONORMALS)
+	if (u_Local4.a != 0.0)
+	{// Use steep parallax...
+#if 0
+		vec3 specularColor = specular.rgb;
+		float shininess = specular.a;
+		float scale = var_Local1.x * 20.0;
+		float shadow = 1.0;
+
+		float bumpScale = scale;
+     
+		// normalize the other tangent space vectors
+		vec3 viewVector = E;
+		vec3 lightVector = normalize(L);
+     
+		//vec3 tsE = viewDir.xyz + var_LightDir.xyz;
+		vec3 tsE = normalize(E * tangentToWorld);
+ 
+		const float numSteps = 30.0; // How many steps the UV ray tracing should take
+		float height = 1.0;
+		float step = 1.0 / numSteps;
+ 
+		vec2 offset = texCoords;
+		vec4 NB = texture2D(u_NormalMap, offset);
+ 
+		vec2 delta = vec2(-tsE.x, -tsE.y) * bumpScale / (tsE.z * numSteps) * tex_offset;
+ 
+		// find UV offset
+		for (float i = 0.0; i < numSteps; i++) {
+			if (NB.a < height) {
+				height -= step;
+				offset += delta;
+				NB = texture2D(u_NormalMap, offset);
+			} else {
+				break;
+			}
+		}
+     
+		vec3 color = texture2D(u_DiffuseMap, offset).rgb;
+     
+        vec3 normal = texture2D(u_NormalMap, offset).rgb * 2.0 - 1.0;
+ 
+		// calculate this pixel's lighting
+        float nxDir = max(0.0, dot(normal, lightVector));
+        /*vec3 ambient = ambientColor * color;
+ 
+        float specularPower = 0.0;
+        
+		if(nxDir != 0.0)
+        {
+			vec3 halfVector = normalize(lightVector + viewVector);
+            float nxHalf = max(0.0, dot(normal, halfVector));
+            specularPower = pow(nxHalf, shininess);
+        }
+
+        specular.rgb = specularColor * specularPower;
+     
+        vec3 pixel_color = ambient + (nxDir * color) + specular.rgb;
+		*/
+		vec3 pixel_color = nxDir * color;
+     
+		// find shadowing if enabled
+        if (shadow == 1.0) {
+            vec2 shadow_offset = offset;
+			vec3 tsH = normalize(lightVector + tsE);
+			float NdotL = max(0.0, dot(normal, lightVector));
+         
+			float selfShadow = 0.0;
+         
+			if (NdotL > 0.0) {
+				const float numShadowSteps = 10.0;
+				step = 1.0 / numShadowSteps;
+				delta = vec2(lightVector.x, lightVector.y) * bumpScale / (numShadowSteps * lightVector.z);
+             
+				height = NB.a + step * .1;
+             
+				for (float i = 0.0; i < numShadowSteps; i++) {
+					if (NB.a < height && height < 1.0) {
+						height += step;
+						shadow_offset += delta;
+						NB = texture2D(u_NormalMap, shadow_offset);
+					} else {
+						break;
+					}
+				}
+             
+				selfShadow = float(NB.a < height);
+             
+			}
+         
+			if (selfShadow == 0.0) {
+				pixel_color *= .5;
+			}
+		}
+     
+		/*
+		diffuse = vec4(pixel_color, 1.0);
+     
+		if (offset.x < 0.0 || offset.x > 1.0 || offset.y < 0.0 || offset.y > 1.0) {
+			diffuse.a = 0.0;
+		}
+		*/
+
+		diffuse.rgb = pixel_color.rgb;
+#endif
+	}
+  #endif
   
 	reflectance = diffuse.rgb;
 

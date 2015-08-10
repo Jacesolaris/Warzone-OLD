@@ -1549,6 +1549,7 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage)
 	float   parallaxScale = 1.0;
 	float	cubemapScale = 0.0;
 	float	isMetalic = 0.0;
+	float	useSteepParallax = 0.0;
 
 	if (pStage->isWater)
 	{
@@ -1601,24 +1602,28 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage)
 			cubemapScale = 0.0;
 			materialType = (float)MATERIAL_ROCK;
 			parallaxScale = 3.0;
+			useSteepParallax = 1.0;
 			break;
 		case MATERIAL_TILES:			// 26			// tiled floor
 			specularScale = 0.86;
 			cubemapScale = 0.9;
 			materialType = (float)MATERIAL_TILES;
 			parallaxScale = 2.5;
+			useSteepParallax = 1.0;
 			break;
 		case MATERIAL_SOLIDWOOD:		// 1			// freshly cut timber
 			specularScale = 0.0;
 			cubemapScale = 0.0;
 			materialType = (float)MATERIAL_SOLIDWOOD;
 			parallaxScale = 2.5;
+			//useSteepParallax = 1.0;
 			break;
 		case MATERIAL_HOLLOWWOOD:		// 2			// termite infested creaky wood
 			specularScale = 0.0;
 			cubemapScale = 0.0;
 			materialType = (float)MATERIAL_HOLLOWWOOD;
 			parallaxScale = 2.5;
+			//useSteepParallax = 1.0;
 			break;
 		case MATERIAL_SOLIDMETAL:		// 3			// solid girders
 			specularScale = 0.92;
@@ -1639,12 +1644,14 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage)
 			cubemapScale = 0.0;
 			materialType = (float)MATERIAL_DRYLEAVES;
 			parallaxScale = 3.0;
+			//useSteepParallax = 1.0;
 			break;
 		case MATERIAL_GREENLEAVES:		// 20			// fresh leaves still on a tree
 			specularScale = 0.0;
 			cubemapScale = 0.0;
 			materialType = (float)MATERIAL_GREENLEAVES;
 			parallaxScale = 3.0;
+			//useSteepParallax = 1.0;
 			break;
 		case MATERIAL_FABRIC:			// 21			// Cotton sheets
 			specularScale = 0.48;
@@ -1663,30 +1670,35 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage)
 			cubemapScale = 1.0;
 			materialType = (float)MATERIAL_MARBLE;
 			parallaxScale = 2.0;
+			//useSteepParallax = 1.0;
 			break;
 		case MATERIAL_SNOW:				// 14			// freshly laid snow
 			specularScale = 0.65;
 			cubemapScale = 0.0;
 			materialType = (float)MATERIAL_SNOW;
 			parallaxScale = 3.0;
+			useSteepParallax = 1.0;
 			break;
 		case MATERIAL_MUD:				// 17			// wet soil
 			specularScale = 0.0;
 			cubemapScale = 0.0;
 			materialType = (float)MATERIAL_MUD;
 			parallaxScale = 3.0;
+			useSteepParallax = 1.0;
 			break;
 		case MATERIAL_DIRT:				// 7			// hard mud
 			specularScale = 0.0;
 			cubemapScale = 0.0;
 			materialType = (float)MATERIAL_DIRT;
 			parallaxScale = 3.0;
+			useSteepParallax = 1.0;
 			break;
 		case MATERIAL_CONCRETE:			// 11			// hardened concrete pavement
 			specularScale = 0.3;
 			cubemapScale = 0.0;
 			materialType = (float)MATERIAL_CONCRETE;
 			parallaxScale = 3.0;
+			//useSteepParallax = 1.0;
 			break;
 		case MATERIAL_FLESH:			// 16			// hung meat, corpses in the world
 			specularScale = 0.2;
@@ -1730,6 +1742,7 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage)
 			cubemapScale = 0.8;
 			parallaxScale = 2.0;
 			materialType = (float)MATERIAL_ICE;
+			useSteepParallax = 1.0;
 			break;
 		case MATERIAL_GLASS:			// 10			//
 			specularScale = 0.95;
@@ -1776,7 +1789,7 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage)
 	GLSL_SetUniformVec4(sp, UNIFORM_LOCAL2, pStage->subsurfaceExtinctionCoefficient);
 	VectorSet4(local3, pStage->subsurfaceRimScalar, pStage->subsurfaceMaterialThickness, pStage->subsurfaceSpecularPower, cubemapScale);
 	GLSL_SetUniformVec4(sp, UNIFORM_LOCAL3, local3);
-	VectorSet4(local4, (float)realNormalMap, isMetalic, (float)pStage->hasRealSubsurfaceMap, 0.0);
+	VectorSet4(local4, (float)realNormalMap, isMetalic, (float)pStage->hasRealSubsurfaceMap, useSteepParallax);
 	GLSL_SetUniformVec4(sp, UNIFORM_LOCAL4, local4);
 	//GLSL_SetUniformFloat(sp, UNIFORM_TIME, tess.shaderTime);
 	GLSL_SetUniformFloat(sp, UNIFORM_TIME, backEnd.refdef.floatTime);
