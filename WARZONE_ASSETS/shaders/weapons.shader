@@ -1,44 +1,3 @@
-models/weapons2/blaster_pistol/blaster_pistol_inworld
-{
-	q3map_nolightmap
-    {
-        map models/weapons2/blaster_pistol/blaster_pistol_inworld
-        rgbGen lightingDiffuse
-    }
-}
-
-models/weapons2/blaster_pistol/blaster_pistol_inview_alpha
-{
-	q3map_nolightmap
-    {
-        map models/weapons2/blaster_pistol/blaster_pistol_inview_alpha
-        blendFunc GL_SRC_ALPHA GL_ONE_MINUS_SRC_ALPHA
-        depthWrite
-        rgbGen lightingDiffuse
-    }
-    {
-        map models/weapons2/blaster_pistol/w_suppressor_spec
-        blendFunc GL_SRC_ALPHA GL_ONE
-        detail
-        alphaGen lightingSpecular
-    }
-}
-
-models/weapons2/blaster_pistol/blaster_pistol_inview
-{
-	q3map_nolightmap
-    {
-        map models/weapons2/blaster_pistol/blaster_pistol_inview
-        rgbGen lightingDiffuse
-    }
-    {
-        map models/weapons2/blaster_pistol/w_blaster_pistol_inview_spec
-        blendFunc GL_SRC_ALPHA GL_ONE
-        detail
-        alphaGen lightingSpecular
-    }
-}
-
 models/weapons2/concussion/rifle_energy
 {
     {
@@ -91,66 +50,6 @@ models/weapons2/concussion/rifle_energy_old
     }
 }
 
-models/weapons2/blaster_r/blaster_r
-{
-	q3map_nolightmap
-    {
-        map models/weapons2/blaster_r/blaster_r
-        rgbGen lightingDiffuse
-    }
-    {
-        map models/weapons2/blaster_r/blaster_r_spec
-        blendFunc GL_SRC_ALPHA GL_ONE
-        detail
-        alphaGen lightingSpecular
-    }
-}
-
-models/weapons2/blaster_r/scope
-{
-	q3map_nolightmap
-    {
-        map models/weapons2/blaster_r/scope
-        rgbGen lightingDiffuse
-    }
-    {
-        map models/weapons2/blaster_r/scope_spec
-        blendFunc GL_SRC_ALPHA GL_ONE
-        detail
-        alphaGen lightingSpecular
-    }
-}
-
-models/weapons2/disruptor/disruptor
-{
-	q3map_nolightmap
-    {
-        map models/weapons2/disruptor/disruptor
-        rgbGen lightingDiffuse
-    }
-    {
-        map models/weapons2/disruptor/disprutor_spec
-        blendFunc GL_SRC_ALPHA GL_ONE
-        detail
-        alphaGen lightingSpecular
-    }
-}
-
-models/weapons2/disruptor/hand
-{
-	q3map_nolightmap
-    {
-        map models/weapons2/disruptor/hand
-        rgbGen lightingDiffuse
-    }
-    {
-        map models/weapons2/disruptor/hand
-        blendFunc GL_SRC_ALPHA GL_ONE
-        detail
-        alphaGen lightingSpecular
-    }
-}
-
 models/weapons2/bowcaster/bowcaster
 {
 	q3map_nolightmap
@@ -160,21 +59,6 @@ models/weapons2/bowcaster/bowcaster
     }
     {
         map models/weapons2/bowcaster/bow_caster_spec
-        blendFunc GL_SRC_ALPHA GL_ONE
-        detail
-        alphaGen lightingSpecular
-    }
-}
-
-models/weapons2/heavy_repeater/heavy_repeater
-{
-	q3map_nolightmap
-    {
-        map models/weapons2/heavy_repeater/heavy_repeater
-        rgbGen lightingDiffuse
-    }
-    {
-        map models/weapons2/heavy_repeater/heavy_repeater_spec
         blendFunc GL_SRC_ALPHA GL_ONE
         detail
         alphaGen lightingSpecular
@@ -211,96 +95,6 @@ models/weapons2/golan_arms/canister2
     }
 }
 
-models/weapons2/merr_sonn/merr_sonn_inview
-{
-	q3map_nolightmap
-    {
-        map models/weapons2/merr_sonn/merr_sonn_inview
-        rgbGen lightingDiffuse
-    }
-    {
-        map models/weapons2/merr_sonn/merr_sonn_inview_spec
-        blendFunc GL_SRC_ALPHA GL_ONE
-        detail
-        alphaGen lightingSpecular
-    }
-}
-
-models/weapons2/thermal/thermal
-{
-	q3map_nolightmap
-    {
-        map models/weapons2/thermal/thermal
-        rgbGen lightingDiffuse
-    }
-    {
-        map models/weapons2/thermal/thermal_spec
-        blendFunc GL_SRC_ALPHA GL_ONE
-        detail
-        alphaGen lightingSpecular
-    }
-}
-
-models/weapons2/thermal/hand
-{
-	q3map_nolightmap
-    {
-        map models/weapons2/thermal/hand
-        rgbGen lightingDiffuse
-    }
-    {
-        map models/weapons2/thermal/hand_spec
-        blendFunc GL_SRC_ALPHA GL_ONE
-        detail
-        alphaGen lightingSpecular
-    }
-}
-
-models/weapons2/laser_trap/laser_trap
-{
-	q3map_nolightmap
-    {
-        map models/weapons2/laser_trap/laser_trap
-        rgbGen lightingDiffuse
-    }
-    {
-        map models/weapons2/laser_trap/trip_mine_spec
-        blendFunc GL_SRC_ALPHA GL_ONE
-        detail
-        alphaGen lightingSpecular
-    }
-}
-
-models/weapons2/laser_trap/hand
-{
-	q3map_nolightmap
-    {
-        map models/weapons2/laser_trap/hand
-        rgbGen lightingDiffuse
-    }
-    {
-        map models/weapons2/laser_trap/hand_spec
-        blendFunc GL_SRC_ALPHA GL_ONE
-        detail
-        alphaGen lightingSpecular
-    }
-}
-
-models/weapons2/detpack/pack
-{
-	q3map_nolightmap
-    {
-        map models/weapons2/detpack/pack
-        rgbGen lightingDiffuse
-    }
-    {
-        map models/weapons2/detpack/detpack_spec
-        blendFunc GL_SRC_ALPHA GL_ONE
-        detail
-        alphaGen lightingSpecular
-    }
-}
-
 models/weapons2/detpack/lights
 {
 	q3map_nolightmap
@@ -310,21 +104,6 @@ models/weapons2/detpack/lights
     }
     {
         map models/weapons2/detpack/detpak_light_spec
-        blendFunc GL_SRC_ALPHA GL_ONE
-        detail
-        alphaGen lightingSpecular
-    }
-}
-
-models/weapons2/demp2/demp2
-{
-	q3map_nolightmap
-    {
-        map models/weapons2/demp2/demp2
-        rgbGen lightingDiffuse
-    }
-    {
-        map models/weapons2/demp2/demp2_spec
         blendFunc GL_SRC_ALPHA GL_ONE
         detail
         alphaGen lightingSpecular

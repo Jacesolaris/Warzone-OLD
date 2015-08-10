@@ -3183,8 +3183,9 @@ qboolean IsKnownShinyMap ( const char *heystack )
 {
 	if (IsKnownShinyMap2( heystack ))
 	{
-		if (r_materialDebug->integer)
+		if (r_materialDebug->integer >= 2)
 			ri->Printf(PRINT_WARNING, "Surface %s is known shiny.\n", heystack);
+
 		return qtrue;
 	}
 	
@@ -4098,7 +4099,8 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 		defs |= LIGHTDEF_USE_LIGHT_VERTEX;
 		useLightVertex = qtrue;
 	}
-	/*else if (checkNormals && !diffuse->glow)
+#ifdef __EXTRA_PRETTY__
+	else if (checkNormals && !diffuse->glow)
 	{// UQ1: If we marked this as a material (and it's not a portal or sky), override no light with vertex light for reflection and specular...
 		switch( shader.surfaceFlags & MATERIAL_MASK )
 		{
@@ -4107,7 +4109,6 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 		case MATERIAL_LONGGRASS:		// 6			// long jungle grass
 		case MATERIAL_TILES:			// 26			// tiled floor
 		case MATERIAL_SOLIDMETAL:		// 3			// solid girders
-		case MATERIAL_HOLLOWMETAL:		// 4			// hollow metal machines -- UQ1: Used for weapons to force lower parallax...
 		case MATERIAL_GREENLEAVES:		// 20			// fresh leaves still on a tree
 		case MATERIAL_FABRIC:			// 21			// Cotton sheets
 		case MATERIAL_CANVAS:			// 22			// tent material
@@ -4120,9 +4121,14 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 		case MATERIAL_GLASS:			// 10			//
 		case MATERIAL_BPGLASS:			// 18			// bulletproof glass
 		case MATERIAL_COMPUTER:			// 31			// computers/electronic equipment
-			defs |= LIGHTDEF_USE_LIGHT_VECTOR;//LIGHTDEF_USE_LIGHT_VERTEX;
-			//useLightVertex = qtrue;
-			useLightVector = qtrue;
+			defs |= LIGHTDEF_USE_LIGHT_VERTEX;
+			useLightVertex = qtrue;
+			//defs |= LIGHTDEF_USE_LIGHT_VECTOR;
+			//useLightVector = qtrue;
+			break;
+		case MATERIAL_HOLLOWMETAL:		// 4			// hollow metal machines -- UQ1: Used for weapons to force lower parallax...
+			//defs |= LIGHTDEF_USE_LIGHT_VECTOR;
+			//useLightVector = qtrue;
 			break;
 		case MATERIAL_SAND:				// 8			// sandy beach
 		case MATERIAL_CARPET:			// 27			// lush carpet
@@ -4140,7 +4146,8 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 		default:
 			break;
 		}
-	}*/
+	}
+#endif //__EXTRA_PRETTY__
 
 	if (r_deluxeMapping->integer && tr.worldDeluxeMapping && lightmap)
 	{
@@ -4364,7 +4371,6 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 	diffuse->glslShaderIndex = defs;
 }
 
-
 static qboolean CollapseStagesToGLSL(void)
 {
 	int i, j, numStages;
@@ -4470,13 +4476,17 @@ static qboolean CollapseStagesToGLSL(void)
 				case TCGEN_VECTOR:
 					break;
 				default:
+#ifndef __EXTRA_PRETTY__
 					skip = qtrue;
+#endif //__EXTRA_PRETTY__
 					break;
 			}
 
 			switch(pStage->alphaGen)
 			{
+#ifndef __EXTRA_PRETTY__
 				case AGEN_LIGHTING_SPECULAR:
+#endif //__EXTRA_PRETTY__
 				case AGEN_PORTAL:
 					skip = qtrue;
 					break;
@@ -5754,7 +5764,7 @@ shader_t *R_FindShader( const char *name, const int *lightmapIndexes, const byte
 				shader.defaultShader = qtrue;
 			} else {
 				if (!StringContainsWord(name, "models/player") && !StringContainsWord(name, "models/weapon")) // skip this spam for now...
-					if (r_materialDebug->integer)
+					if (r_genericShaderDebug->integer)
 						ri->Printf(PRINT_WARNING, "Advanced generic shader generated for image %s.\n", name);
 			}
 			sh = FinishShader();

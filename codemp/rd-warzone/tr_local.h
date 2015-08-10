@@ -27,6 +27,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define ___SHADER_GENERATOR___
 #define ___SHADER_GENERATOR_PLAYERS_ONLY___
 //#define __SURFACESPRITES__
+#define __EXTRA_PRETTY__
 
 //#define __DYNAMIC_SHADOWS__
 #ifdef __DYNAMIC_SHADOWS__
@@ -109,6 +110,7 @@ extern cvar_t	*r_rotatey;
 extern cvar_t	*r_rotatez;
 
 extern cvar_t	*r_materialDebug;
+extern cvar_t	*r_genericShaderDebug;
 
 extern cvar_t	*r_weather;
 extern cvar_t	*r_surfaceSprites;

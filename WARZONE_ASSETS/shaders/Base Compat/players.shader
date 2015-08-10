@@ -1,427 +1,3 @@
-// JKG_ShaderPatches: BlasTech - adds my glowing spec map to shine up armor (fake bloom effect). 
-
-models/players/stormtrooper/armor
-{
-	cull	twosided
-    {
-        map models/players/stormtrooper/armor
-        blendFunc GL_ONE GL_ZERO
-        rgbGen lightingDiffuse
-    }
-    {
-        map envmap_spec
-        blendFunc GL_SRC_ALPHA GL_ONE
-        glow
-        detail
-        rgbGen lightingDiffuse
-        alphaGen lightingSpecular
-        tcGen environment
-    }
-    {
-        map models/players/stormtrooper/armor_spec
-        blendFunc GL_SRC_ALPHA GL_ONE
-        detail
-        alphaGen lightingSpecular
-    }
-}
-
-models/players/stormtrooper/helmet
-{
-    {
-        map models/players/stormtrooper/helmet
-        rgbGen lightingDiffuse
-    }
-    {
-        map envmap_spec
-        blendFunc GL_SRC_ALPHA GL_ONE
-        glow
-        detail
-        rgbGen lightingDiffuse
-        alphaGen lightingSpecular
-        tcGen environment
-    }
-    {
-        map models/players/stormtrooper/helmet_spec
-        blendFunc GL_SRC_ALPHA GL_ONE
-        detail
-        alphaGen lightingSpecular
-    }
-}
-
-models/players/stormtrooper/torso_legs
-{
-    {
-        map models/players/stormtrooper/torso_legs
-        rgbGen lightingDiffuse
-    }
-    {
-        map envmap_spec
-        blendFunc GL_SRC_ALPHA GL_ONE
-        glow
-        detail
-        rgbGen lightingDiffuse
-        alphaGen lightingSpecular
-        tcGen environment
-    }
-    {
-        map models/players/stormtrooper/torso_legs_spec
-        blendFunc GL_SRC_ALPHA GL_ONE
-        detail
-        alphaGen lightingSpecular
-    }
-}
-
-models/players/stormtrooper/armor_blue
-{
-    {
-        map models/players/stormtrooper/armor_blue
-        rgbGen lightingDiffuse
-    }
-    {
-        map envmap_spec
-        blendFunc GL_SRC_ALPHA GL_ONE
-        glow
-        detail
-        rgbGen lightingDiffuse
-        alphaGen lightingSpecular
-        tcGen environment
-    }
-    {
-        map models/players/stormtrooper/armor_spec
-        blendFunc GL_SRC_ALPHA GL_ONE
-        detail
-        alphaGen lightingSpecular
-    }
-}
-
-models/players/stormtrooper/armor_red
-{
-    {
-        map models/players/stormtrooper/armor_red
-        rgbGen lightingDiffuse
-    }
-    {
-        map envmap_spec
-        blendFunc GL_SRC_ALPHA GL_ONE
-        glow
-        detail
-        rgbGen lightingDiffuse
-        alphaGen lightingSpecular
-        tcGen environment
-    }
-    {
-        map models/players/stormtrooper/armor_spec
-        blendFunc GL_SRC_ALPHA GL_ONE
-        detail
-        alphaGen lightingSpecular
-    }
-}
-
-models/players/stormtrooper/helmet_blue
-{
-    {
-        map models/players/stormtrooper/helmet_blue
-        rgbGen lightingDiffuse
-    }
-    {
-        map envmap_spec
-        blendFunc GL_SRC_ALPHA GL_ONE
-        glow
-        detail
-        rgbGen lightingDiffuse
-        alphaGen lightingSpecular
-        tcGen environment
-    }
-    {
-        map models/players/stormtrooper/helmet_spec
-        blendFunc GL_SRC_ALPHA GL_ONE
-        detail
-        alphaGen lightingSpecular
-    }
-}
-
-models/players/stormtrooper/helmet_red
-{
-    {
-        map models/players/stormtrooper/helmet_red
-        rgbGen lightingDiffuse
-    }
-    {
-        map envmap_spec
-        blendFunc GL_SRC_ALPHA GL_ONE
-        glow
-        detail
-        rgbGen lightingDiffuse
-        alphaGen lightingSpecular
-        tcGen environment
-    }
-    {
-        map models/players/stormtrooper/helmet_spec
-        blendFunc GL_SRC_ALPHA GL_ONE
-        detail
-        alphaGen lightingSpecular
-    }
-}
-
-models/players/stormtrooper/torso_legs_blue
-{
-    {
-        map models/players/stormtrooper/torso_legs_blue
-        rgbGen lightingDiffuse
-    }
-    {
-        map envmap_spec
-        blendFunc GL_SRC_ALPHA GL_ONE
-        glow
-        detail
-        rgbGen lightingDiffuse
-        alphaGen lightingSpecular
-        tcGen environment
-    }
-    {
-        map models/players/stormtrooper/torso_legs_spec
-        blendFunc GL_SRC_ALPHA GL_ONE
-        detail
-        alphaGen lightingSpecular
-    }
-}
-
-models/players/stormtrooper/torso_legs_red
-{
-    {
-        map models/players/stormtrooper/torso_legs_red
-        rgbGen lightingDiffuse
-    }
-    {
-        map envmap_spec
-        blendFunc GL_SRC_ALPHA GL_ONE
-        glow
-        detail
-        rgbGen lightingDiffuse
-        alphaGen lightingSpecular
-        tcGen environment
-    }
-    {
-        map models/players/stormtrooper/torso_legs_spec
-        blendFunc GL_SRC_ALPHA GL_ONE
-        detail
-        alphaGen lightingSpecular
-    }
-}
-
-models/players/snowtrooper/snowtrooper_cape
-{
-	cull	twosided
-    {
-        map models/players/snowtrooper/snowtrooper_cape
-        rgbGen lightingDiffuse
-    }
-}
-
-models/players/snowtrooper/snowtrooper_armor_blue
-{
-    {
-        map models/players/snowtrooper/snowtrooper_armor_blue
-        rgbGen lightingDiffuse
-    }
-    {
-        map envmap_spec
-        blendFunc GL_SRC_ALPHA GL_ONE
-        glow
-        detail
-        rgbGen lightingDiffuse
-        alphaGen lightingSpecular
-        tcGen environment
-    }
-    {
-        map models/players/snowtrooper/snowtrooper_armor_spec
-        blendFunc GL_SRC_ALPHA GL_ONE
-        detail
-        alphaGen lightingSpecular
-    }
-}
-
-models/players/snowtrooper/snowtrooper_armor_red
-{
-    {
-        map models/players/snowtrooper/snowtrooper_armor_red
-        rgbGen lightingDiffuse
-    }
-    {
-        map envmap_spec
-        blendFunc GL_SRC_ALPHA GL_ONE
-        glow
-        detail
-        rgbGen lightingDiffuse
-        alphaGen lightingSpecular
-        tcGen environment
-    }
-    {
-        map models/players/snowtrooper/snowtrooper_armor_spec
-        blendFunc GL_SRC_ALPHA GL_ONE
-        detail
-        alphaGen lightingSpecular
-    }
-}
-
-models/players/snowtrooper/snowtrooper_cape_blue
-{
-	cull	twosided
-    {
-        map models/players/snowtrooper/snowtrooper_cape_blue
-        rgbGen lightingDiffuse
-    }
-}
-
-models/players/snowtrooper/snowtrooper_cape_red
-{
-	cull	twosided
-    {
-        map models/players/snowtrooper/snowtrooper_cape_red
-        rgbGen lightingDiffuse
-    }
-}
-
-models/players/snowtrooper/snowtrooper_legs
-{
-    {
-        map models/players/snowtrooper/snowtrooper_legs
-        rgbGen lightingDiffuse
-    }
-    {
-        map envmap_spec
-        blendFunc GL_SRC_ALPHA GL_ONE
-        glow
-        detail
-        rgbGen lightingDiffuse
-        alphaGen lightingSpecular
-        tcGen environment
-    }
-    {
-        map models/players/snowtrooper/snowtrooper_legs_spec
-        blendFunc GL_SRC_ALPHA GL_ONE
-        detail
-        alphaGen lightingSpecular
-    }
-}
-
-models/players/snowtrooper/snowtrooper_legs_blue
-{
-    {
-        map models/players/snowtrooper/snowtrooper_legs_blue
-        rgbGen lightingDiffuse
-    }
-    {
-        map envmap_spec
-        blendFunc GL_SRC_ALPHA GL_ONE
-        glow
-        detail
-        rgbGen lightingDiffuse
-        alphaGen lightingSpecular
-        tcGen environment
-    }
-    {
-        map models/players/snowtrooper/snowtrooper_legs_spec
-        blendFunc GL_SRC_ALPHA GL_ONE
-        detail
-        alphaGen lightingSpecular
-    }
-}
-
-models/players/snowtrooper/snowtrooper_legs_red
-{
-    {
-        map models/players/snowtrooper/snowtrooper_legs_red
-        rgbGen lightingDiffuse
-    }
-    {
-        map envmap_spec
-        blendFunc GL_SRC_ALPHA GL_ONE
-        glow
-        detail
-        rgbGen lightingDiffuse
-        alphaGen lightingSpecular
-        tcGen environment
-    }
-    {
-        map models/players/snowtrooper/snowtrooper_legs_spec
-        blendFunc GL_SRC_ALPHA GL_ONE
-        detail
-        alphaGen lightingSpecular
-    }
-}
-
-models/players/snowtrooper/snowtrooper_torso
-{
-    {
-        map models/players/snowtrooper/snowtrooper_torso
-        rgbGen lightingDiffuse
-    }
-    {
-        map envmap_spec
-        blendFunc GL_SRC_ALPHA GL_ONE
-        glow
-        detail
-        rgbGen lightingDiffuse
-        alphaGen lightingSpecular
-        tcGen environment
-    }
-    {
-        map models/players/snowtrooper/snowtrooper_torso_spec
-        blendFunc GL_SRC_ALPHA GL_ONE
-        detail
-        alphaGen lightingSpecular
-    }
-}
-
-models/players/snowtrooper/snowtrooper_torso_blue
-{
-    {
-        map models/players/snowtrooper/snowtrooper_torso_blue
-        rgbGen lightingDiffuse
-    }
-    {
-        map envmap_spec
-        blendFunc GL_SRC_ALPHA GL_ONE
-        glow
-        detail
-        rgbGen lightingDiffuse
-        alphaGen lightingSpecular
-        tcGen environment
-    }
-    {
-        map models/players/snowtrooper/snowtrooper_torso_spec
-        blendFunc GL_SRC_ALPHA GL_ONE
-        detail
-        alphaGen lightingSpecular
-    }
-}
-
-models/players/snowtrooper/snowtrooper_armor
-{
-    {
-        map models/players/snowtrooper/snowtrooper_armor
-        rgbGen lightingDiffuse
-    }
-    {
-        map envmap_spec
-        blendFunc GL_SRC_ALPHA GL_ONE
-        glow
-        detail
-        rgbGen lightingDiffuse
-        alphaGen lightingSpecular
-        tcGen environment
-    }
-    {
-        map models/players/snowtrooper/snowtrooper_armor_spec
-        blendFunc GL_SRC_ALPHA GL_ONE
-        detail
-        alphaGen lightingSpecular
-    }
-}
-
-// ________________________________________________________
-
 models/players/sentry/sentry
 {
     {
@@ -605,24 +181,6 @@ models/players/protocol/imp_arm_torso
     }
 }
 
-models/players/stormpilot/helmet
-{
-    {
-        map models/players/stormpilot/helmet
-    }
-    {
-        map gfx/effects/chr_white_add_mild
-        blendFunc GL_SRC_ALPHA GL_ONE
-        tcGen environment
-    }
-    {
-        map models/players/stormpilot/helmet_s
-        blendFunc GL_SRC_ALPHA GL_ONE
-        detail
-        alphaGen lightingSpecular
-    }
-}
-
 models/players/mark1/torso
 {
     {
@@ -662,6 +220,273 @@ models/players/mark1/arms
     }
     {
         map models/players/mark1/arms_s
+        blendFunc GL_SRC_ALPHA GL_ONE
+        detail
+        alphaGen lightingSpecular
+    }
+}
+
+models/players/stormtrooper/armor
+{
+	cull	twosided
+    {
+        map models/players/stormtrooper/armor
+        blendFunc GL_ONE GL_ZERO
+        rgbGen lightingDiffuse
+    }
+    {
+        map models/players/stormtrooper/armor_spec
+        blendFunc GL_SRC_ALPHA GL_ONE
+        detail
+        alphaGen lightingSpecular
+    }
+}
+
+models/players/stormtrooper/helmet
+{
+    {
+        map models/players/stormtrooper/helmet
+        rgbGen lightingDiffuse
+    }
+    {
+        map models/players/stormtrooper/helmet_spec
+        blendFunc GL_SRC_ALPHA GL_ONE
+        detail
+        alphaGen lightingSpecular
+    }
+}
+
+models/players/stormtrooper/torso_legs
+{
+    {
+        map models/players/stormtrooper/torso_legs
+        rgbGen lightingDiffuse
+    }
+    {
+        map models/players/stormtrooper/torso_legs_spec
+        blendFunc GL_SRC_ALPHA GL_ONE
+        detail
+        alphaGen lightingSpecular
+    }
+}
+
+models/players/stormtrooper/armor_blue
+{
+    {
+        map models/players/stormtrooper/armor_blue
+        rgbGen lightingDiffuse
+    }
+    {
+        map models/players/stormtrooper/armor_spec
+        blendFunc GL_SRC_ALPHA GL_ONE
+        detail
+        alphaGen lightingSpecular
+    }
+}
+
+models/players/stormtrooper/armor_red
+{
+    {
+        map models/players/stormtrooper/armor_red
+        rgbGen lightingDiffuse
+    }
+    {
+        map models/players/stormtrooper/armor_spec
+        blendFunc GL_SRC_ALPHA GL_ONE
+        detail
+        alphaGen lightingSpecular
+    }
+}
+
+models/players/stormtrooper/helmet_blue
+{
+    {
+        map models/players/stormtrooper/helmet_blue
+        rgbGen lightingDiffuse
+    }
+    {
+        map models/players/stormtrooper/helmet_spec
+        blendFunc GL_SRC_ALPHA GL_ONE
+        detail
+        alphaGen lightingSpecular
+    }
+}
+
+models/players/stormtrooper/helmet_red
+{
+    {
+        map models/players/stormtrooper/helmet_red
+        rgbGen lightingDiffuse
+    }
+    {
+        map models/players/stormtrooper/helmet_spec
+        blendFunc GL_SRC_ALPHA GL_ONE
+        detail
+        alphaGen lightingSpecular
+    }
+}
+
+models/players/stormtrooper/torso_legs_blue
+{
+    {
+        map models/players/stormtrooper/torso_legs_blue
+        rgbGen lightingDiffuse
+    }
+    {
+        map models/players/stormtrooper/torso_legs_spec
+        blendFunc GL_SRC_ALPHA GL_ONE
+        detail
+        alphaGen lightingSpecular
+    }
+}
+
+models/players/stormtrooper/torso_legs_red
+{
+    {
+        map models/players/stormtrooper/torso_legs_red
+        rgbGen lightingDiffuse
+    }
+    {
+        map models/players/stormtrooper/torso_legs_spec
+        blendFunc GL_SRC_ALPHA GL_ONE
+        detail
+        alphaGen lightingSpecular
+    }
+}
+
+models/players/snowtrooper/snowtrooper_cape
+{
+	cull	twosided
+    {
+        map models/players/snowtrooper/snowtrooper_cape
+        rgbGen lightingDiffuse
+    }
+}
+
+models/players/snowtrooper/snowtrooper_armor_blue
+{
+    {
+        map models/players/snowtrooper/snowtrooper_armor_blue
+        rgbGen lightingDiffuse
+    }
+    {
+        map models/players/snowtrooper/snowtrooper_armor_spec
+        blendFunc GL_SRC_ALPHA GL_ONE
+        detail
+        alphaGen lightingSpecular
+    }
+}
+
+models/players/snowtrooper/snowtrooper_armor_red
+{
+    {
+        map models/players/snowtrooper/snowtrooper_armor_red
+        rgbGen lightingDiffuse
+    }
+    {
+        map models/players/snowtrooper/snowtrooper_armor_spec
+        blendFunc GL_SRC_ALPHA GL_ONE
+        detail
+        alphaGen lightingSpecular
+    }
+}
+
+models/players/snowtrooper/snowtrooper_cape_blue
+{
+	cull	twosided
+    {
+        map models/players/snowtrooper/snowtrooper_cape_blue
+        rgbGen lightingDiffuse
+    }
+}
+
+models/players/snowtrooper/snowtrooper_cape_red
+{
+	cull	twosided
+    {
+        map models/players/snowtrooper/snowtrooper_cape_red
+        rgbGen lightingDiffuse
+    }
+}
+
+models/players/snowtrooper/snowtrooper_legs
+{
+    {
+        map models/players/snowtrooper/snowtrooper_legs
+        rgbGen lightingDiffuse
+    }
+    {
+        map models/players/snowtrooper/snowtrooper_legs_spec
+        blendFunc GL_SRC_ALPHA GL_ONE
+        detail
+        alphaGen lightingSpecular
+    }
+}
+
+models/players/snowtrooper/snowtrooper_legs_blue
+{
+    {
+        map models/players/snowtrooper/snowtrooper_legs_blue
+        rgbGen lightingDiffuse
+    }
+    {
+        map models/players/snowtrooper/snowtrooper_legs_spec
+        blendFunc GL_SRC_ALPHA GL_ONE
+        detail
+        alphaGen lightingSpecular
+    }
+}
+
+models/players/snowtrooper/snowtrooper_legs_red
+{
+    {
+        map models/players/snowtrooper/snowtrooper_legs_red
+        rgbGen lightingDiffuse
+    }
+    {
+        map models/players/snowtrooper/snowtrooper_legs_spec
+        blendFunc GL_SRC_ALPHA GL_ONE
+        detail
+        alphaGen lightingSpecular
+    }
+}
+
+models/players/snowtrooper/snowtrooper_torso
+{
+    {
+        map models/players/snowtrooper/snowtrooper_torso
+        rgbGen lightingDiffuse
+    }
+    {
+        map models/players/snowtrooper/snowtrooper_torso_spec
+        blendFunc GL_SRC_ALPHA GL_ONE
+        detail
+        alphaGen lightingSpecular
+    }
+}
+
+models/players/snowtrooper/snowtrooper_torso_blue
+{
+    {
+        map models/players/snowtrooper/snowtrooper_torso_blue
+        rgbGen lightingDiffuse
+    }
+    {
+        map models/players/snowtrooper/snowtrooper_torso_spec
+        blendFunc GL_SRC_ALPHA GL_ONE
+        detail
+        alphaGen lightingSpecular
+    }
+}
+
+models/players/snowtrooper/snowtrooper_armor
+{
+    {
+        map models/players/snowtrooper/snowtrooper_armor
+        rgbGen lightingDiffuse
+    }
+    {
+        map models/players/snowtrooper/snowtrooper_armor_spec
         blendFunc GL_SRC_ALPHA GL_ONE
         detail
         alphaGen lightingSpecular
@@ -1431,6 +1256,7 @@ models/players/rodian/tint_l_boot
 
 models/players/jedi_rm/head03_alpha
 {
+	cull	twosided
     {
         map models/players/jedi_rm/head03_alpha
         blendFunc GL_SRC_ALPHA GL_ONE_MINUS_SRC_ALPHA
@@ -1440,6 +1266,7 @@ models/players/jedi_rm/head03_alpha
 
 models/players/jedi_rm/head02_alpha
 {
+	cull	twosided
     {
         map models/players/jedi_rm/head02_alpha
         blendFunc GL_SRC_ALPHA GL_ONE_MINUS_SRC_ALPHA
@@ -1449,6 +1276,7 @@ models/players/jedi_rm/head02_alpha
 
 models/players/jedi_rm/head01_alpha
 {
+	cull	twosided
     {
         map models/players/jedi_rm/head01_alpha
         blendFunc GL_SRC_ALPHA GL_ONE_MINUS_SRC_ALPHA
@@ -1458,7 +1286,7 @@ models/players/jedi_rm/head01_alpha
 
 models/players/jedi_rm/torso_06_lower
 {
-//	cull	twosided
+	cull	twosided
     {
         map models/players/jedi_rm/torso_06_lower
         blendFunc GL_ONE GL_ZERO
@@ -1529,6 +1357,7 @@ models/players/jedi_rm/torso_03
 
 models/players/jedi_rm/torso_03_lower
 {
+	cull	twosided
     {
         map models/players/jedi_rm/torso_03_lower
         blendFunc GL_ONE GL_ZERO
@@ -1676,7 +1505,7 @@ models/players/jedi_rm/icon_torso_f1
 
 models/players/jedi_rm/torso_04_lower
 {
-//	cull	twosided
+	cull	twosided
     {
         map models/players/jedi_rm/torso_04_lower
         blendFunc GL_ONE GL_ZERO
@@ -1762,7 +1591,7 @@ models/players/jedi_rm/icon_lower_d1
 
 models/players/jedi_rm/pants01
 {
-//	cull	twosided
+	cull	twosided
     {
         map models/players/jedi_rm/pants01
         blendFunc GL_ONE GL_ZERO
@@ -1777,7 +1606,7 @@ models/players/jedi_rm/pants01
 
 models/players/jedi_rm/pants02
 {
-//	cull	twosided
+	cull	twosided
     {
         map models/players/jedi_rm/pants02
         blendFunc GL_ONE GL_ZERO
@@ -1792,7 +1621,7 @@ models/players/jedi_rm/pants02
 
 models/players/jedi_rm/pants03
 {
-//	cull	twosided
+	cull	twosided
     {
         map models/players/jedi_rm/pants03
         blendFunc GL_ONE GL_ZERO
@@ -1807,7 +1636,7 @@ models/players/jedi_rm/pants03
 
 models/players/jedi_rm/pants04
 {
-//	cull	twosided
+	cull	twosided
     {
         map models/players/jedi_rm/pants04
         blendFunc GL_ONE GL_ZERO
@@ -2087,7 +1916,7 @@ models/players/jedi_hm/robes01_arms
 
 models/players/jedi_hm/robes01_lower
 {
-//	cull	twosided
+	cull	twosided
     {
         map models/players/jedi_hm/robes01_lower
         blendFunc GL_ONE GL_ZERO
@@ -2130,7 +1959,7 @@ models/players/jedi_hm/robes02_arms
 
 models/players/jedi_hm/robes02_lower
 {
-//	cull	twosided
+	cull	twosided
     {
         map models/players/jedi_hm/robes02_lower
         blendFunc GL_ONE GL_ZERO
@@ -4785,3 +4614,274 @@ models/players/reborn_new/head_hat
     }
 }
 
+models/players/reborn/basic_hand
+{
+	qer_editorimage	models/players/reborn/basic_hand
+	q3map_nolightmap
+	cull	twosided
+    {
+        map models/players/reborn/basic_hand
+        rgbGen lightingDiffuse
+    }
+}
+
+models/players/reborn/boots_hips
+{
+	qer_editorimage	models/players/reborn/boots_hips
+	q3map_nolightmap
+	cull	twosided
+    {
+        map models/players/reborn/boots_hips
+        rgbGen lightingDiffuse
+    }
+}
+models/players/reborn/boots_hips_blue
+{
+	qer_editorimage	models/players/reborn/boots_hips_blue
+	q3map_nolightmap
+	cull	twosided
+    {
+        map models/players/reborn/boots_hips_blue
+        rgbGen lightingDiffuse
+    }
+}
+models/players/reborn/boss_boots_hips
+{
+	qer_editorimage	models/players/reborn/boss_boots_hips
+	q3map_nolightmap
+	cull	twosided
+    {
+        map models/players/reborn/boss_boots_hips
+        rgbGen lightingDiffuse
+    }
+}
+models/players/reborn/boss_face
+{
+	qer_editorimage	models/players/reborn/boss_face
+	q3map_nolightmap
+	cull	twosided
+    {
+        map models/players/reborn/boss_face
+        rgbGen lightingDiffuse
+    }
+}
+models/players/reborn/boss_flap
+{
+	qer_editorimage	models/players/reborn/boss_flap
+	q3map_nolightmap
+	cull	twosided
+    {
+        map models/players/reborn/boss_flap
+        rgbGen lightingDiffuse
+    }
+}
+models/players/reborn/boss_hand
+{
+	qer_editorimage	models/players/reborn/boss_hand
+	q3map_nolightmap
+	cull	twosided
+    {
+        map models/players/reborn/boss_hand
+        rgbGen lightingDiffuse
+    }
+}
+models/players/reborn/boss_hood
+{
+	qer_editorimage	models/players/reborn/boss_hood
+	q3map_nolightmap
+	cull	twosided
+    {
+        map models/players/reborn/boss_hood
+        rgbGen lightingDiffuse
+    }
+}
+models/players/reborn/boss_legs
+{
+	qer_editorimage	models/players/reborn/boss_legs
+	q3map_nolightmap
+	cull	twosided
+    {
+        map models/players/reborn/boss_legs
+        rgbGen lightingDiffuse
+    }
+}
+models/players/reborn/boss_torso
+{
+	qer_editorimage	models/players/reborn/boss_torso
+	q3map_nolightmap
+	cull	twosided
+    {
+        map models/players/reborn/boss_torso
+        rgbGen lightingDiffuse
+    }
+}
+models/players/reborn/face
+{
+	qer_editorimage	models/players/reborn/face
+	q3map_nolightmap
+	cull	twosided
+    {
+        map models/players/reborn/face
+        rgbGen lightingDiffuse
+    }
+}
+models/players/reborn/flap
+{
+	qer_editorimage	models/players/reborn/flap
+	q3map_nolightmap
+	cull	twosided
+    {
+        map models/players/reborn/flap
+        rgbGen lightingDiffuse
+    }
+}
+models/players/reborn/flap_blue
+{
+	qer_editorimage	models/players/reborn/flap_blue
+	q3map_nolightmap
+	cull	twosided
+    {
+        map models/players/reborn/flap_blue
+        rgbGen lightingDiffuse
+    }
+}
+models/players/reborn/forc_boots_hips
+{
+	qer_editorimage	models/players/reborn/forc_boots_hips
+	q3map_nolightmap
+	cull	twosided
+    {
+        map models/players/reborn/forc_boots_hips
+        rgbGen lightingDiffuse
+    }
+}
+models/players/reborn/forc_face
+{
+	qer_editorimage	models/players/reborn/forc_face
+	q3map_nolightmap
+	cull	twosided
+    {
+        map models/players/reborn/forc_face
+        rgbGen lightingDiffuse
+    }
+}
+models/players/reborn/forc_flap
+{
+	qer_editorimage	models/players/reborn/forc_flap
+	q3map_nolightmap
+	cull	twosided
+    {
+        map models/players/reborn/forc_flap
+        rgbGen lightingDiffuse
+    }
+}
+models/players/reborn/forc_hand
+{
+	qer_editorimage	models/players/reborn/forc_hand
+	q3map_nolightmap
+	cull	twosided
+    {
+        map models/players/reborn/forc_hand
+        rgbGen lightingDiffuse
+    }
+}
+models/players/reborn/forc_hood
+{
+	qer_editorimage	models/players/reborn/forc_hood
+	q3map_nolightmap
+	cull	twosided
+    {
+        map models/players/reborn/forc_hood
+        rgbGen lightingDiffuse
+    }
+}
+models/players/reborn/forc_legs
+{
+	qer_editorimage	models/players/reborn/forc_legs
+	q3map_nolightmap
+	cull	twosided
+    {
+        map models/players/reborn/forc_legs
+        rgbGen lightingDiffuse
+    }
+}
+models/players/reborn/forc_torso
+{
+	qer_editorimage	models/players/reborn/forc_torso
+	q3map_nolightmap
+	cull	twosided
+    {
+        map models/players/reborn/forc_torso
+        rgbGen lightingDiffuse
+    }
+}
+models/players/reborn/hood_blue
+{
+	qer_editorimage	models/players/reborn/hood_blue
+	q3map_nolightmap
+	cull	twosided
+    {
+        map models/players/reborn/hood_blue
+        rgbGen lightingDiffuse
+    }
+}
+models/players/reborn/hood_red
+{
+	qer_editorimage	models/players/reborn/hood_red
+	q3map_nolightmap
+	cull	twosided
+    {
+        map models/players/reborn/hood_red
+        rgbGen lightingDiffuse
+    }
+}
+models/players/reborn/mouth_eyes
+{
+	qer_editorimage	models/players/reborn/mouth_eyes
+	q3map_nolightmap
+	cull	twosided
+    {
+        map models/players/reborn/mouth_eyes
+        rgbGen lightingDiffuse
+    }
+}
+models/players/reborn/reborn_legs_blue
+{
+	qer_editorimage	models/players/reborn/reborn_legs_blue
+	q3map_nolightmap
+	cull	twosided
+    {
+        map models/players/reborn/reborn_legs_blue
+        rgbGen lightingDiffuse
+    }
+}
+models/players/reborn/reborn_legs_red
+{
+	qer_editorimage	models/players/reborn/reborn_legs_red
+	q3map_nolightmap
+	cull	twosided
+    {
+        map models/players/reborn/reborn_legs_red
+        rgbGen lightingDiffuse
+    }
+}
+models/players/reborn/reborn_torso_blue
+{
+	qer_editorimage	models/players/reborn/reborn_torso_blue
+	q3map_nolightmap
+	cull	twosided
+    {
+        map models/players/reborn/reborn_torso_blue
+        rgbGen lightingDiffuse
+    }
+}
+models/players/reborn/reborn_torso_red
+{
+	qer_editorimage	models/players/reborn/reborn_torso_red
+	q3map_nolightmap
+	cull	twosided
+    {
+        map models/players/reborn/reborn_torso_red
+        rgbGen lightingDiffuse
+    }
+}

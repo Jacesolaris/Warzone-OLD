@@ -1702,7 +1702,7 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage)
 			break;
 		case MATERIAL_PLASTIC:			// 25			//
 			specularScale = 0.88;
-			cubemapScale = 0.1;
+			cubemapScale = 0.5;
 			materialType = (float)MATERIAL_PLASTIC;
 			parallaxScale = 1.0;
 			break;
