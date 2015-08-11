@@ -5749,8 +5749,8 @@ shader_t *R_FindShader( const char *name, const int *lightmapIndexes, const byte
 		//
 		// attempt to define shader from an explicit parameter file
 		//
-		shaderText = myShader;
-		if ( shaderText ) {
+		const char *shaderText2 = myShader;
+		if ( shaderText2 ) {
 			// enable this when building a pak file to get a global list
 			// of all explicit shaders
 			if ( r_printShaders->integer ) {
@@ -5759,7 +5759,7 @@ shader_t *R_FindShader( const char *name, const int *lightmapIndexes, const byte
 
 			//Com_Error(ERR_FATAL, "SHADER LOOKS LIKE:\n%s\n", shaderText);
 
-			if ( !ParseShader( name, &shaderText ) ) {
+			if ( !ParseShader( name, &shaderText2 ) ) {
 				// had errors, so use default shader
 				shader.defaultShader = qtrue;
 			} else {

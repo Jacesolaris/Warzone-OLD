@@ -430,6 +430,47 @@ static void GLSL_PrintShaderSource(GLuint shader)
 	Z_Free(msg);
 }
 
+char		GLSL_MAX_VERSION[24] = {0};
+
+char *GLSL_GetHighestSupportedVersion( void )
+{
+	if (GLSL_MAX_VERSION[0] == '#') return GLSL_MAX_VERSION;
+
+	// UQ1: Use the highest level of GL that is supported... Check once and record for all future glsl loading...
+	if (glRefConfig.glslMajorVersion >= 5)
+		sprintf(GLSL_MAX_VERSION, "#version 500 core\n");
+	else if (glRefConfig.glslMajorVersion >= 4 && glRefConfig.glslMinorVersion >= 20)
+		sprintf(GLSL_MAX_VERSION, "#version 420 core\n");
+	else if (glRefConfig.glslMajorVersion >= 4 && glRefConfig.glslMinorVersion >= 10)
+		sprintf(GLSL_MAX_VERSION, "#version 410 core\n");
+	else if (glRefConfig.glslMajorVersion >= 4)
+		sprintf(GLSL_MAX_VERSION, "#version 400 core\n");
+	else if (glRefConfig.glslMajorVersion >= 3 && glRefConfig.glslMinorVersion >= 30)
+		sprintf(GLSL_MAX_VERSION, "#version 330\n");
+	else if (glRefConfig.glslMajorVersion >= 3 && glRefConfig.glslMinorVersion >= 20)
+		sprintf(GLSL_MAX_VERSION, "#version 320\n");
+	else if (glRefConfig.glslMajorVersion >= 3 && glRefConfig.glslMinorVersion >= 10)
+		sprintf(GLSL_MAX_VERSION, "#version 310\n");
+	else if (glRefConfig.glslMajorVersion >= 3)
+		sprintf(GLSL_MAX_VERSION, "#version 300\n");
+	else if (glRefConfig.glslMajorVersion >= 2 && glRefConfig.glslMinorVersion >= 20)
+		sprintf(GLSL_MAX_VERSION, "#version 220\n");
+	else if (glRefConfig.glslMajorVersion >= 2 && glRefConfig.glslMinorVersion >= 10)
+		sprintf(GLSL_MAX_VERSION, "#version 210\n");
+	else if (glRefConfig.glslMajorVersion >= 2)
+		sprintf(GLSL_MAX_VERSION, "#version 200\n");
+	else //if (glRefConfig.glslMinorVersion >= 50)
+		sprintf(GLSL_MAX_VERSION, "#version 150\n");
+	/*else if (glRefConfig.glslMinorVersion >= 40)
+	sprintf(GLSL_MAX_VERSION, "#version 140\n");
+	else if (glRefConfig.glslMinorVersion >= 30)
+	sprintf(GLSL_MAX_VERSION, "#version 130\n");*/
+
+	ri->Printf(PRINT_WARNING, "GLSL shader version set to highest available version: %s", GLSL_MAX_VERSION);
+
+	return GLSL_MAX_VERSION;
+}
+
 static void GLSL_GetShaderHeader( GLenum shaderType, const GLcharARB *extra, char *dest, int size, char *forceVersion )
 {
 	float fbufWidthScale, fbufHeightScale;
@@ -439,8 +480,9 @@ static void GLSL_GetShaderHeader( GLenum shaderType, const GLcharARB *extra, cha
 	if (forceVersion)
 		sprintf(dest, "#version %s\n", forceVersion);
 	else
-		Q_strcat(dest, size, "#version 150 core\n");
-
+		//Q_strcat(dest, size, "#version 150 core\n");
+		sprintf(dest, GLSL_GetHighestSupportedVersion());
+	
 	if(shaderType == GL_VERTEX_SHADER)
 	{
 		Q_strcat(dest, size, "#define attribute in\n");
