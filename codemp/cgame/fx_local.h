@@ -42,6 +42,7 @@ void FX_WeaponAltHitPlayer(vec3_t origin, vec3_t normal, qboolean humanoid, int 
 
 // DEMP2
 void FX_DEMP2_ProjectileThink( centity_t *cent, const struct weaponInfo_s *weapon );
+void FX_DEMP2_AltProjectileThink(centity_t *cent, const struct weaponInfo_s *weapon);
 void FX_DEMP2_HitWall(vec3_t origin, vec3_t normal, int weapon, qboolean altFire);
 void FX_DEMP2_BounceWall(vec3_t origin, vec3_t normal, int weapon, qboolean altFire);
 void FX_DEMP2_HitPlayer(vec3_t origin, vec3_t normal, qboolean humanoid, int weapon, qboolean altFire);

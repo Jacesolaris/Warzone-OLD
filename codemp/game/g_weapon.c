@@ -5184,7 +5184,10 @@ void FireWeapon( gentity_t *ent, qboolean altFire ) {
 			break;
 
 		case WP_T21:
-			WP_FireBlaster( ent, altFire, BLASTER_VELOCITY, BLASTER_DAMAGE, BLASTER_SPREAD, ent->s.weapon );
+			if (altFire)
+				WP_FireBlaster(ent, altFire, BLASTER_VELOCITY, BLASTER_DAMAGE, 0.0, ent->s.weapon);
+			else
+				WP_FireBlaster( ent, altFire, BLASTER_VELOCITY, BLASTER_DAMAGE, 0.0, ent->s.weapon );
 			break;
 
 		case WP_BRYAR_RIFLE:

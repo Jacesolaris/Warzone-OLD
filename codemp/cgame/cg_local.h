@@ -1521,6 +1521,8 @@ typedef struct cgMedia_s {
 
 	qhandle_t demp2Shell;
 	qhandle_t demp2ShellShader;
+	qhandle_t LightningtradeShader;
+	qhandle_t LightningtradeShader2;
 
 	qhandle_t cursor;
 	qhandle_t selectCursor;
@@ -1794,6 +1796,8 @@ typedef struct cgEffects_s {
 	//WEATHER
 	fxHandle_t	saberFizz;
 	fxHandle_t	rain;
+
+	fxHandle_t AltChargeMuzzleEnhacnedFX;
 } cgEffects_t;
 
 #define MAX_STATIC_MODELS 4000

@@ -230,6 +230,38 @@ void FX_DEMP2_ProjectileThink(centity_t *cent, const struct weaponInfo_s *weapon
 	//AddLightToScene( cent->lerpOrigin, 200 + (rand()&31), 1.0f, 1.0f, 1.0f );
 }
 
+void FX_DEMP2_AltProjectileThink(centity_t *cent, const struct weaponInfo_s *weapon)
+{
+	vec3_t forward;
+	int t;
+
+	if (VectorNormalize2(cent->currentState.pos.trDelta, forward) == 0.0f)
+	{
+		forward[2] = 1.0f;
+	}
+
+	if (cent->currentState.generic1 == 6)
+	{
+		for (t = 1; t < (cent->currentState.generic1 - 1); t++)
+		{
+			PlayEffectID(weapon->altMissileRenderfx, cent->lerpOrigin, forward, -1, -1, qfalse);
+		}
+	}
+	else
+	{
+		if (weapon->altMissileRenderfx)
+		{
+			PlayEffectID(weapon->altMissileRenderfx, cent->lerpOrigin, forward, -1, -1, qfalse);
+		}
+		else
+		{
+			PlayEffectID(cgs.effects.demp2ProjectileEffect, cent->lerpOrigin, forward, -1, -1, qfalse);
+		}
+	}
+
+	//AddLightToScene( cent->lerpOrigin, 200 + (rand()&31), 1.0f, 1.0f, 1.0f );
+}
+
 /*
 ---------------------------
 FX_DEMP2_HitWall
@@ -238,15 +270,60 @@ FX_DEMP2_HitWall
 
 void FX_DEMP2_HitWall(vec3_t origin, vec3_t normal, int weapon, qboolean altFire)
 {
+	// Set fx to primary weapon fx.
 	fxHandle_t fx = cg_weapons[weapon].missileWallImpactfx;
-	if (altFire) fx = cg_weapons[weapon].altMissileWallImpactfx;
+	fxHandle_t fx2 = cg_weapons[weapon].EnhancedFX_missileWallImpactfx;
+
+	if (!fx) {
+		// If there is no primary (missileWallImpactfx) fx. Use original blaster fx.
+		fx = cgs.effects.demp2WallImpactEffect;
+
+		// If falling back to normal concussion fx, we have no enhanced.
+		fx2 = fx; // Force normal fx.
+	}
+
+	if (altFire) {
+		// If this is alt fire. Override all fx with alt fire fx...
+		if (cg_weapons[weapon].altMissileWallImpactfx)
+		{// We have alt fx for this weapon. Use it.
+			fx = cg_weapons[weapon].altMissileWallImpactfx;
+		}
+
+		if (cg_weapons[weapon].EnhancedFX_altmissileWallImpactfx)
+		{// We have enhanced alt. Use it.
+			fx2 = cg_weapons[weapon].EnhancedFX_altmissileWallImpactfx;
+		}
+		else
+		{// We have no alt enhanced fx.
+			fx2 = fx; // Force normal fx.
+		}
+	}
+
+	// If fx2 (enhanced) does not exist (set fx2 to -1 above), this should return normal fx.
+	fx = CG_EnableEnhancedFX(fx, fx2);
 
 	if (fx)
+	{// We have fx for this. Play it.
 		PlayEffectID(fx, origin, normal, -1, -1, qfalse);
+	}
 	else
+	{// This should never be possible, but just in case, fall back to concussion here.
 		PlayEffectID(
-		CG_EnableEnhancedFX(cgs.effects.demp2WallImpactEffect, cgs.effects.demp2EnhancedFX_missileWallImpactfx), origin, normal, -1, -1, qfalse);
+			CG_EnableEnhancedFX(cgs.effects.demp2WallImpactEffect, cgs.effects.demp2EnhancedFX_missileWallImpactfx), origin, normal, -1, -1, qfalse);
+	}
 }
+
+//void FX_DEMP2_HitWall(vec3_t origin, vec3_t normal, int weapon, qboolean altFire)
+//{
+//	fxHandle_t fx = cg_weapons[weapon].missileWallImpactfx;
+//	if (altFire) fx = cg_weapons[weapon].altMissileWallImpactfx;
+//
+//	if (fx)
+//		PlayEffectID(fx, origin, normal, -1, -1, qfalse);
+//	else
+//		PlayEffectID(
+//		CG_EnableEnhancedFX(cgs.effects.demp2WallImpactEffect, cgs.effects.demp2EnhancedFX_missileWallImpactfx), origin, normal, -1, -1, qfalse);
+//}
 
 /*
 ---------------------------
@@ -262,7 +339,7 @@ void FX_DEMP2_HitPlayer(vec3_t origin, vec3_t normal, qboolean humanoid, int wea
 
 	if (!fx) {
 		// If there is no primary (missileWallImpactfx) fx. Use original blaster fx.
-		fx = cgs.effects.blasterFleshImpactEffect;
+		fx = cgs.effects.demp2WallImpactEffect;
 
 		// If falling back to normal concussion fx, we have no enhanced.
 		fx2 = fx; // Force normal fx.
@@ -295,74 +372,6 @@ void FX_DEMP2_HitPlayer(vec3_t origin, vec3_t normal, qboolean humanoid, int wea
 	else
 	PlayEffectID( cgs.effects.demp2FleshImpactEffect, origin, normal, -1, -1, qfalse );
 }
-
-extern qboolean CG_CalcMuzzlePoint( int entityNum, vec3_t muzzle );
-
-void FX_Lightning_AltBeam(centity_t *shotby, vec3_t end, qboolean hit)
-{// "hit" is only used when hitting target. set to qfalse to shoot normal.
-
-	// When you want to draw the beam
-	vec3_t muzzlePos, hitPos;
-	int i = 0;
-	static vec3_t white = { 1.0f, 1.0f, 1.0f }; // will need to be adjusted to match gun height
-	float minimumBeamThickness = 2.0;
-	float maximumBeamThickness = 5.0f;//28.0f;
-	float lifeTimeOfBeamInMilliseconds = 300;
-	
-	if (hit)
-	{
-		VectorCopy(end, hitPos);
-		//VectorAdd(WP_MuzzlePoint[WP_ARC_CASTER_IMPERIAL], shotby->lerpOrigin, muzzlePos);
-		CG_CalcMuzzlePoint( shotby->currentState.number, muzzlePos );
-
-		//trap->Print("Hit beam between %f %f %f and %f %f %f.\n", muzzlePos[0], muzzlePos[1], muzzlePos[2], hitPos[0], hitPos[1], hitPos[2]);
-	}
-	else
-	{
-		VectorCopy(end, hitPos);
-		CG_CalcMuzzlePoint( shotby->currentState.number, muzzlePos );
-
-		//trap->Print("Miss beam between %f %f %f and %f %f %f.\n", muzzlePos[0], muzzlePos[1], muzzlePos[2], hitPos[0], hitPos[1], hitPos[2]);
-	}
-
-	trap->FX_AddLine(
-			muzzlePos, hitPos,
-			minimumBeamThickness,
-			maximumBeamThickness,
-			0.0f,
-			1.0f, 0.0f, 0.0f,
-			white,
-			white,
-			0.0f,
-			lifeTimeOfBeamInMilliseconds,
-			trap->R_RegisterShader("gfx/electricity/electricity_deform"),
-			FX_SIZE_LINEAR |
-			FX_ALPHA_LINEAR);
-
-	// Add fx all the way along the line... Poor FPS...
-	{
-		vec3_t currentPos, fxDir;
-		float dist = Distance(muzzlePos, hitPos);
-		float fxAt = 0;
-		float nextFxAt = 8.0;
-
-		weaponInfo_t	*weapon = &cg_weapons[shotby->currentState.weapon];
-
-		VectorCopy(muzzlePos, currentPos);
-		VectorSubtract(hitPos, currentPos, fxDir);
-		vectoangles ( fxDir, fxDir );
-		AngleVectors(fxDir, fxDir, NULL, NULL);
-
-		for (fxAt = nextFxAt; fxAt < dist; fxAt += nextFxAt)
-		{// Draw a bunch of efx along this line...
-			VectorMA(currentPos, nextFxAt, fxDir, currentPos);
-			//nextFxAt *= 1.25;
-			//trap->Print("FX drawn at range %f pos %f %f %f.\n", fxAt, currentPos[0], currentPos[1], currentPos[2]);
-			PlayEffectID(weapon->altMuzzleEffect, currentPos, fxDir, -1, -1, qfalse);
-		}
-	}
-}
-
 /*
 ---------------------------
 FX_DEMP2_AltBeam
@@ -410,4 +419,92 @@ void FX_DEMP2_AltDetonate( vec3_t org, float size )
 	VectorCopy( org, ex->refEntity.origin );
 
 	ex->color[0] = ex->color[1] = ex->color[2] = 255.0f;
+}
+
+//void FX_Lightning_AltBeam(vec3_t org, float size)
+//{
+//	localEntity_t	*ex;
+//
+//	ex = CG_AllocLocalEntity();
+//	ex->leType = LE_FADE_SCALE_MODEL;
+//	memset(&ex->refEntity, 0, sizeof(refEntity_t));
+//
+//	ex->refEntity.renderfx |= RF_VOLUMETRIC;
+//
+//	ex->startTime = cg.time;
+//	ex->endTime = ex->startTime + 800;//1600;
+//
+//	ex->radius = size;
+//	ex->refEntity.customShader = cgs.media.LightningtradeShader;
+//	ex->refEntity.hModel = cgs.media.LightningtradeShader2;
+//	VectorCopy(org, ex->refEntity.origin);
+//
+//	ex->color[0] = ex->color[1] = ex->color[2] = 255.0f;
+//}
+
+extern qboolean CG_CalcMuzzlePoint(int entityNum, vec3_t muzzle);
+
+void FX_Lightning_AltBeam(centity_t *shotby, vec3_t end, qboolean hit)
+{// "hit" is only used when hitting target. set to qfalse to shoot normal.
+
+	// When you want to draw the beam
+	vec3_t muzzlePos, hitPos;
+	int i = 0;
+	static vec3_t white = { 1.0f, 1.0f, 1.0f }; // will need to be adjusted to match gun height
+	float minimumBeamThickness = 2.0;
+	float maximumBeamThickness = 5.0f;//28.0f;
+	float lifeTimeOfBeamInMilliseconds = 300;
+
+	if (hit)
+	{
+		VectorCopy(end, hitPos);
+		//VectorAdd(WP_MuzzlePoint[WP_ARC_CASTER_IMPERIAL], shotby->lerpOrigin, muzzlePos);
+		CG_CalcMuzzlePoint(shotby->currentState.number, muzzlePos);
+
+		//trap->Print("Hit beam between %f %f %f and %f %f %f.\n", muzzlePos[0], muzzlePos[1], muzzlePos[2], hitPos[0], hitPos[1], hitPos[2]);
+	}
+	else
+	{
+		VectorCopy(end, hitPos);
+		CG_CalcMuzzlePoint(shotby->currentState.number, muzzlePos);
+
+		//trap->Print("Miss beam between %f %f %f and %f %f %f.\n", muzzlePos[0], muzzlePos[1], muzzlePos[2], hitPos[0], hitPos[1], hitPos[2]);
+	}
+
+	trap->FX_AddLine(
+		muzzlePos, hitPos,
+		minimumBeamThickness,
+		maximumBeamThickness,
+		0.0f,
+		1.0f, 0.0f, 0.0f,
+		white,
+		white,
+		0.0f,
+		lifeTimeOfBeamInMilliseconds,
+		trap->R_RegisterShader("gfx/electricity/electricity_deform"),
+		FX_SIZE_LINEAR |
+		FX_ALPHA_LINEAR);
+
+	// Add fx all the way along the line... Poor FPS...
+	{
+		vec3_t currentPos, fxDir;
+		float dist = Distance(muzzlePos, hitPos);
+		float fxAt = 0;
+		float nextFxAt = 8.0;
+
+		weaponInfo_t	*weapon = &cg_weapons[shotby->currentState.weapon];
+
+		VectorCopy(muzzlePos, currentPos);
+		VectorSubtract(hitPos, currentPos, fxDir);
+		vectoangles(fxDir, fxDir);
+		AngleVectors(fxDir, fxDir, NULL, NULL);
+
+		for (fxAt = nextFxAt; fxAt < dist; fxAt += nextFxAt)
+		{// Draw a bunch of efx along this line...
+			VectorMA(currentPos, nextFxAt, fxDir, currentPos);
+			//nextFxAt *= 1.25;
+			//trap->Print("FX drawn at range %f pos %f %f %f.\n", fxAt, currentPos[0], currentPos[1], currentPos[2]);
+			PlayEffectID(weapon->altMuzzleEffect, currentPos, fxDir, -1, -1, qfalse);
+		}
+	}
 }

@@ -52,7 +52,8 @@ void FX_WeaponHitWall(vec3_t origin, vec3_t normal, int weapon, qboolean altFire
 	}
 	else
 	{// This should never be possible, but just in case, fall back to concussion here.
-		PlayEffectID(cgs.effects.blasterWallImpactEffect, origin, normal, -1, -1, qfalse);
+		PlayEffectID(
+			CG_EnableEnhancedFX(cgs.effects.demp2WallImpactEffect, cgs.effects.blasterEnhancedFX_missileWallImpactfx), origin, normal, -1, -1, qfalse);
 	}
 }
 
