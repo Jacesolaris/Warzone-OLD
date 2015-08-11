@@ -1,11 +1,12 @@
 uniform sampler2D u_TextureMap;
+
 varying float	total_time;
 varying vec2	vTexCoord0;
-bool infinite = true;
-
 varying vec2	resolution;
 
-float PI = 2.0 * asin(1.0);
+const bool infinite = true;
+
+const float PI = 2.0 * asin(1.0);
 
 struct WaveEmitter {
 	vec2 mPosition; // = vec2(0.5, 0.5);
@@ -18,7 +19,7 @@ struct WaveEmitter {
 	}
 };
 
-float emitter_size = 3.0;
+const float emitter_size = 3.0;
 WaveEmitter emitter[3];
 
 

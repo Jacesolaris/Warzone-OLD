@@ -1,34 +1,24 @@
 uniform sampler2D u_TextureMap;
 uniform sampler2D u_LevelsMap;
-uniform vec4      u_Color;
-uniform vec2      u_AutoExposureMinMax;
-uniform vec3      u_ToneMinAvgMaxLinear;
 
 varying vec2		var_TexCoords;
 varying vec2		var_Dimensions;
 varying vec2		var_ScreenTex;
 
-uniform vec4		u_ViewInfo; // zfar / znear, zfar
 uniform vec2		u_Dimensions;
 
-float near = u_ViewInfo.x;
-float far = u_ViewInfo.y;
-float viewWidth = var_Dimensions.x;
-float viewHeight = var_Dimensions.y;
+vec2 recipres = vec2(1.0f / var_Dimensions.x, 1.0f / var_Dimensions.y);
 
-vec2 texCoord = var_TexCoords;
+const float Vibrance = 0.15;
 
-//float Vibrance = 0.35;
-float Vibrance = 0.15;
+#define Vibrance_RGB_balance vec3(1.00, 1.00, 1.00)
+#define Vibrance_coeff vec3(Vibrance_RGB_balance * Vibrance)
+
+const vec3 lumCoeff = vec3(0.212656, 0.715158, 0.072186);  //Values to calculate luma with
 
 vec4 VibrancePass( vec4 colorInput )
 {
-	#define Vibrance_RGB_balance vec3(1.00, 1.00, 1.00)
-	#define Vibrance_coeff vec3(Vibrance_RGB_balance * Vibrance)
-
 	vec4 color = colorInput; //original input color
-	vec3 lumCoeff = vec3(0.212656, 0.715158, 0.072186);  //Values to calculate luma with
-
 	float luma = dot(lumCoeff, color.rgb); //calculate luma (grey)
 
 	float max_color = max(colorInput.r, max(colorInput.g, colorInput.b)); //Find the strongest color
@@ -51,14 +41,12 @@ vec4 VibrancePass( vec4 colorInput )
 
 vec4 GetHDR( vec3 col2 )
 {
-	vec3 lumask = vec3(0.2125, 0.7154, 0.0721);
 	float USE_FILTER = 1.0f;
 	vec3 color = col2.rgb;
 
 	if (USE_FILTER > 0.0)
 	{
-		vec2 recipres = vec2(1.0f / viewWidth, 1.0f / viewHeight);
-		vec2 tc = texCoord.st, add = recipres;
+		vec2 tc = var_TexCoords.st, add = recipres;
 
 		color = 0.25*(
 			texture2D(u_TextureMap, tc+add.xy)+
@@ -68,27 +56,17 @@ vec4 GetHDR( vec3 col2 )
 		).rgb;
 	}
 
-	float bright = log(dot(color, lumask) + 0.25);
+	float bright = log(dot(color, lumCoeff) + 0.25);
 	color += 0.2*sin(-10.0*color/(color+2.0));
 	return vec4(color, bright);
 }
 
 void main()
 {
-	vec4 color = texture2D(u_TextureMap, texCoord);
-
-	// Original - Only HDR...
-//	gl_FragColor = GetHDR( color.rgb );
-//	gl_FragColor.a = 1.0;
-
-	// Mix HDR/Normal 50/50...
-//	gl_FragColor = (color + GetHDR( color.rgb )) * 0.5;
-//	gl_FragColor.a = 1.0;
+	vec4 color = texture2D(u_TextureMap, var_TexCoords);
+	vec4 HDR = GetHDR( color.rgb );
 
 	// Use HDR+VIBRANCE mix...
-//	float luminance = dot( color.rgb, vec3( 0.6, 0.2, 0.2 ) );
-//	gl_FragColor.rgb = mix( color.rgb, GetHDR( color.rgb ).rgb, luminance * luminance ).rgb;
-	gl_FragColor.rgb = GetHDR( color.rgb ).rgb;
-	gl_FragColor.rgba = VibrancePass( (gl_FragColor.rgba + color.rgba + color.rgba) * 0.33333 ).rgba;
-	gl_FragColor.a = 1.0;
+	gl_FragColor = VibrancePass( HDR + color + color * 0.33333 );
+	//gl_FragColor.a = 1.0;
 }

@@ -9,9 +9,6 @@ varying vec4		var_ViewInfo; // znear, zfar, zfar / znear, 0
 
 varying vec4		var_Local0; // dofValue, 0, 0, 0
 
-//smooth vec2 texcoord;
-vec2 texcoord = var_TexCoords;
-
 #define PI  3.14159265
 
 float width = var_Dimensions.x; //texture width
@@ -19,87 +16,60 @@ float height = var_Dimensions.y; //texture height
 
 vec2 texel = vec2(1.0/width,1.0/height);
 
-//uniform variables from external script
-
-/*
-uniform float focalDepth;  //focal distance value in meters, but you may use autofocus option below
-uniform float focalLength; //focal length in mm
-uniform float fstop; //f-stop value
-uniform bool showFocus; //show debug focus point and focal range (red = focal point, green = focal range)
-*/
-//float focalDepth = 1.5;
-//float focalDepth = -0.01587;
-float focalDepth = -0.01581;
-float focalLength = 12.0;
-//float focalDepth = var_Local0.x;
-//float focalLength = var_Local0.y;
-float fstop = 2.0;
-bool showFocus = false;
-//bool showFocus = true;
+const float focalDepth = -0.01581;
+const float focalLength = 12.0;
+const float fstop = 2.0;
+const bool showFocus = false;
 
 /* 
 make sure that these two values are the same for your camera, otherwise distances will be wrong.
 */
 
-//float znear = 0.1; //camera clipping start
-//float zfar = 100.0; //camera clipping end
 float znear = var_ViewInfo.x; //camera clipping start
 float zfar = var_ViewInfo.y; //camera clipping end
 
 //------------------------------------------
 //user variables
 
-int samples = 4; //samples on the first ring
-int rings = 4; //ring count
+const int samples = 4; //samples on the first ring
+const int rings = 4; //ring count
 
-bool manualdof = false; //manual dof calculation
-//bool manualdof = true; //manual dof calculation
+const bool manualdof = false; //manual dof calculation
 
-//float ndofstart = 1.0; //near dof blur start
-//float ndofdist = 2.0; //near dof blur falloff distance
-//float fdofstart = 1.0; //far dof blur start
-//float fdofdist = 3.0; //far dof blur falloff distance
+const float ndofstart = 1.0; //near dof blur start
+const float ndofdist = 2.0; //near dof blur falloff distance
+const float fdofstart = 1.0; //far dof blur start
+const float fdofdist = 3.0; //far dof blur falloff distance
 
-float ndofstart = 1.0; //near dof blur start
-float ndofdist = 2.0; //near dof blur falloff distance
-float fdofstart = 1.0; //far dof blur start
-float fdofdist = 3.0; //far dof blur falloff distance
+const float CoC = 0.03;//circle of confusion size in mm (35mm film = 0.03mm)
 
-float CoC = 0.03;//circle of confusion size in mm (35mm film = 0.03mm)
-
-bool vignetting = false; //use optical lens vignetting?
-float vignout = 1.3; //vignetting outer border
-float vignin = 0.0; //vignetting inner border
-float vignfade = 22.0; //f-stops till vignete fades
+const bool vignetting = false; //use optical lens vignetting?
+const float vignout = 1.3; //vignetting outer border
+const float vignin = 0.0; //vignetting inner border
+const float vignfade = 22.0; //f-stops till vignete fades
 
 bool autofocus = false; //use autofocus in shader? disable if you use external focalDepth value
-//bool autofocus = true; //use autofocus in shader? disable if you use external focalDepth value
-vec2 focus = vec2(0.5,0.5); // autofocus point on screen (0.0,0.0 - left lower corner, 1.0,1.0 - upper right)
-float maxblur = 1.0; //clamp value of max blur (0.0 = no blur,1.0 default)
-//float maxblur = 2.0; //clamp value of max blur (0.0 = no blur,1.0 default)
+const vec2 focus = vec2(0.5,0.5); // autofocus point on screen (0.0,0.0 - left lower corner, 1.0,1.0 - upper right)
+const float maxblur = 1.0; //clamp value of max blur (0.0 = no blur,1.0 default)
 
-bool blur_distant_only = false; // only blur distant objects, not the objects closer to the camera then the focus point.
-bool blur_less_close = true; // blur objects close to the camera less.
+const bool blur_distant_only = false; // only blur distant objects, not the objects closer to the camera then the focus point.
+const bool blur_less_close = true; // blur objects close to the camera less.
 
-bool constant_distant_blur = true; // Blur all distant objects.
-float constant_distant_blur_depth = 0.01578; // UQ1: JKA Optimized value.
-float constant_distant_blur_strength = -0.011; // UQ1: JKA Optimized value.
+const bool constant_distant_blur = true; // Blur all distant objects.
+const float constant_distant_blur_depth = 0.01578; // UQ1: JKA Optimized value.
+const float constant_distant_blur_strength = -0.011; // UQ1: JKA Optimized value.
 
-//float threshold = 0.7; //highlight threshold;
-//float threshold = 5.7; //highlight threshold;
-float threshold = 0.95; //highlight threshold;
-//float threshold = 0.01; //highlight threshold;
-float gain = 100.0; //highlight gain;
-//float gain = 1.2; //highlight gain;
+const float threshold = 0.95; //highlight threshold;
+const float gain = 100.0; //highlight gain;
 
-float bias = 0.5; //bokeh edge bias
-float fringe = 0.7; //bokeh chromatic aberration/fringing
+const float bias = 0.5; //bokeh edge bias
+const float fringe = 0.7; //bokeh chromatic aberration/fringing
 
-bool noise = false; //use noise instead of pattern for sample dithering
-float namount = 0.0001; //dither amount
+const bool noise = false; //use noise instead of pattern for sample dithering
+const float namount = 0.0001; //dither amount
 
-bool depthblur = false; //blur the depth buffer?
-float dbsize = 1.25; //depthblursize
+const bool depthblur = false; //blur the depth buffer?
+const float dbsize = 1.25; //depthblursize
 
 /*
 next part is experimental
@@ -107,23 +77,23 @@ not looking good with small sample and ring count
 looks okay starting from samples = 4, rings = 4
 */
 
-bool pentagon = true; //use pentagon as bokeh shape?
-float feather = 3.0;//0.4; //pentagon shape feather
+const bool pentagon = true; //use pentagon as bokeh shape?
+const float feather = 3.0;//0.4; //pentagon shape feather
 
 //------------------------------------------
 
 
 float penta(vec2 coords) //pentagonal shape
 {
-	float scale = float(rings) - 1.3;
-	vec4  HS0 = vec4( 1.0,         0.0,         0.0,  1.0);
-	vec4  HS1 = vec4( 0.309016994, 0.951056516, 0.0,  1.0);
-	vec4  HS2 = vec4(-0.809016994, 0.587785252, 0.0,  1.0);
-	vec4  HS3 = vec4(-0.809016994,-0.587785252, 0.0,  1.0);
-	vec4  HS4 = vec4( 0.309016994,-0.951056516, 0.0,  1.0);
-	vec4  HS5 = vec4( 0.0        ,0.0         , 1.0,  1.0);
+	const float scale = float(rings) - 1.3;
+	const vec4  HS0 = vec4( 1.0,         0.0,         0.0,  1.0);
+	const vec4  HS1 = vec4( 0.309016994, 0.951056516, 0.0,  1.0);
+	const vec4  HS2 = vec4(-0.809016994, 0.587785252, 0.0,  1.0);
+	const vec4  HS3 = vec4(-0.809016994,-0.587785252, 0.0,  1.0);
+	const vec4  HS4 = vec4( 0.309016994,-0.951056516, 0.0,  1.0);
+	const vec4  HS5 = vec4( 0.0        ,0.0         , 1.0,  1.0);
 	
-	vec4  one = vec4( 1.0 );
+	const vec4  one = vec4( 1.0 );
 	
 	vec4 P = vec4((coords),vec2(scale, scale)); 
 	
@@ -151,8 +121,12 @@ float penta(vec2 coords) //pentagonal shape
 float bdepth(vec2 coords) //blurring depth
 {
 	float d = 0.0;
-	float kernel[9];
+	const float kernel[9] = float[9](1.0/16.0, 2.0/16.0, 1.0/16.0, 2.0/16.0, 4.0/16.0, 2.0/16.0, 1.0/16.0, 2.0/16.0, 1.0/16.0);
 	vec2 offset[9];
+
+	//kernel[0] = 1.0/16.0;   kernel[1] = 2.0/16.0;   kernel[2] = 1.0/16.0;
+	//kernel[3] = 2.0/16.0;   kernel[4] = 4.0/16.0;   kernel[5] = 2.0/16.0;
+	//kernel[6] = 1.0/16.0;   kernel[7] = 2.0/16.0;   kernel[8] = 1.0/16.0;
 	
 	vec2 wh = vec2(texel.x, texel.y) * dbsize;
 	
@@ -167,11 +141,6 @@ float bdepth(vec2 coords) //blurring depth
 	offset[6] = vec2(-wh.x, wh.y);
 	offset[7] = vec2( 0.0,  wh.y);
 	offset[8] = vec2( wh.x, wh.y);
-	
-	kernel[0] = 1.0/16.0;   kernel[1] = 2.0/16.0;   kernel[2] = 1.0/16.0;
-	kernel[3] = 2.0/16.0;   kernel[4] = 4.0/16.0;   kernel[5] = 2.0/16.0;
-	kernel[6] = 1.0/16.0;   kernel[7] = 2.0/16.0;   kernel[8] = 1.0/16.0;
-	
 	
 	for( int i=0; i<9; i++ )
 	{
@@ -191,7 +160,7 @@ vec3 color(vec2 coords,float blur) //processing the sample
 	col.g = texture2D(u_TextureMap,coords + vec2(-0.866,-0.5)*texel*fringe*blur).g;
 	col.b = texture2D(u_TextureMap,coords + vec2(0.866,-0.5)*texel*fringe*blur).b;
 	
-	vec3 lumcoeff = vec3(0.299,0.587,0.114);
+	const vec3 lumcoeff = vec3(0.299,0.587,0.114);
 	float lum = dot(col.rgb, lumcoeff);
 	float thresh = max((lum-threshold)*gain, 0.0);
 	return col+mix(vec3(0.0),col,thresh*blur);
@@ -229,8 +198,7 @@ float linearize(float depth)
 
 float vignette()
 {
-	//float dist = distance(gl_TexCoord[3].xy, vec2(0.5,0.5));
-	float dist = distance(texcoord.xy, vec2(0.5,0.5));
+	float dist = distance(var_TexCoords.xy, vec2(0.5,0.5));
 	dist = smoothstep(vignout+(fstop/vignfade), vignin+(fstop/vignfade), dist);
 	return clamp(dist,0.0,1.0);
 }
@@ -241,11 +209,11 @@ void main()
 
 	//scene depth calculation
 	
-	float depth = linearize(texture2D(u_ScreenDepthMap,texcoord.xy).x * 255);
+	float depth = linearize(texture2D(u_ScreenDepthMap,var_TexCoords.xy).x * 255);
 	
 	if (depthblur)
 	{
-		depth = linearize(bdepth(texcoord.xy));
+		depth = linearize(bdepth(var_TexCoords.xy));
 	}
 	
 	//focal plane calculation
@@ -259,13 +227,13 @@ void main()
 
 	if (!autofocus && depth <= fDepth)
 	{
-		gl_FragColor.rgb = texture(u_TextureMap, texcoord.xy).rgb;
+		gl_FragColor.rgb = texture(u_TextureMap, var_TexCoords.xy).rgb;
 		gl_FragColor.a = 1.0;
 		return;
 	}
 	else if (autofocus && blur_distant_only && depth <= fDepth && (constant_distant_blur && 0.0 - depth > constant_distant_blur_depth))
 	{
-		gl_FragColor.rgb = texture(u_TextureMap, texcoord.xy).rgb;
+		gl_FragColor.rgb = texture(u_TextureMap, var_TexCoords.xy).rgb;
 		gl_FragColor.a = 1.0;
 		return;
 	}
@@ -324,7 +292,7 @@ void main()
 	
 	// calculation of pattern for ditering
 	
-	vec2 noise = rand(texcoord.xy)*namount*blur;
+	vec2 noise = rand(var_TexCoords.xy)*namount*blur;
 	
 	// getting blur x and y step factor
 	
@@ -337,11 +305,11 @@ void main()
 	
 	if(blur < 0.05) //some optimization thingy
 	{
-		col = texture2D(u_TextureMap, texcoord.xy).rgb;
+		col = texture2D(u_TextureMap, var_TexCoords.xy).rgb;
 	}
 	else
 	{
-		col = texture2D(u_TextureMap, texcoord.xy).rgb;
+		col = texture2D(u_TextureMap, var_TexCoords.xy).rgb;
 		float s = 1.0;
 		int ringsamples;
 		
@@ -359,7 +327,7 @@ void main()
 				{ 
 					p = penta(vec2(pw,ph));
 				}
-				col += color(texcoord.xy + vec2(pw*w,ph*h),blur)*mix(1.0,(float(i))/(float(rings)),bias)*p;  
+				col += color(var_TexCoords.xy + vec2(pw*w,ph*h),blur)*mix(1.0,(float(i))/(float(rings)),bias)*p;  
 				s += 1.0*mix(1.0,(float(i))/(float(rings)),bias)*p;   
 			}
 		}
@@ -380,20 +348,3 @@ void main()
 	gl_FragColor.rgb = col;
 	gl_FragColor.a = 1.0;
 }
-
-/*
-uniform sampler2D u_TextureMap;
-uniform sampler2D u_ScreenDepthMap;
-
-out vec4 color;
-
-smooth in vec2 texcoord;
-
-void main()
-{
-	vec4 c	=	texture(u_TextureMap, texcoord);
-	// grabbing values out of the depth buffer causes program to fail.
-	float z	=	texture(u_ScreenDepthMap, texcoord).x;
-	color	=	texture(u_TextureMap, texcoord) + (z * 0.000001);
-}
-*/

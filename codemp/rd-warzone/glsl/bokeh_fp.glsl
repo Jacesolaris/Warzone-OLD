@@ -44,7 +44,7 @@ void main()
 	gl_FragColor = color * 0.04166667 * u_Color;
 #endif
 
-	float c[5] = float[5](1.0, 0.9238795325, 0.7071067812, 0.3826834324, 0.0);
+	const float c[5] = float[5](1.0, 0.9238795325, 0.7071067812, 0.3826834324, 0.0);
 
 	tc = var_TexCoords + u_InvTexRes * vec2(  c[0],  c[4]);  color =  texture2D(u_TextureMap, tc);
 	tc = var_TexCoords + u_InvTexRes * vec2(  c[1],  c[3]);  color += texture2D(u_TextureMap, tc);

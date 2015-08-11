@@ -11,27 +11,25 @@ varying vec2		var_Dimensions;
 float viewWidth =	var_Dimensions.x;
 float viewHeight =	var_Dimensions.y;
 
-vec2 texc = var_TexCoords;
-float scale = 1.0;
-float thresh = 0.93;
+const float scale = 1.0;
+const float thresh = 0.93;
 
 void main()
 {
     vec4 sum = vec4(0.0);
     int x=0;
     int y=0;
-	//vec4 origColor = texture2D(u_TextureMap, var_TexCoords);
 
     vec2 recipres = vec2(1.0f / viewWidth, 1.0f / viewHeight);
 
 	for(y=-1; y<=1; y++)
 	{
-		for(x=-1; x<=1; x++) sum+=texture2D(u_TextureMap, texc + (vec2(x,y) * recipres));
+		for(x=-1; x<=1; x++) sum+=texture2D(u_TextureMap, var_TexCoords + (vec2(x,y) * recipres));
 	}
 
     sum/=(3*3);
 
-    vec4 s = texture2D(u_TextureMap, texc);
+    vec4 s = texture2D(u_TextureMap, var_TexCoords);
     gl_FragColor = s;
 
 #ifdef BLUR_METHOD
@@ -61,13 +59,6 @@ void main()
 		gl_FragColor -= vec4(diff);
     }
 #endif //BLUR_METHOD
-
-	// UQ1: Over-all dark/light enhancement maybe???
-////#define const_1 ( 16.0 / 255.0)
-////#define const_2 (255.0 / 219.0)
-//#define const_1 ( 4.0 / 255.0)
-//#define const_2 (255.0 / 242.0)
-//	gl_FragColor = ((gl_FragColor - const_1) * const_2);
 
 	//gl_FragColor.a = origColor.a;
 	//gl_FragColor.a = s.a;

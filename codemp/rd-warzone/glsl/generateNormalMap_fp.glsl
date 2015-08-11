@@ -6,23 +6,20 @@ uniform vec2		u_Dimensions;
 
 uniform sampler2D	u_DiffuseMap;
 
+vec2 tex_offset = vec2(1.0 / u_Dimensions.x, 1.0 / u_Dimensions.y);
+
 vec4 generateEnhancedNormal( vec2 fragCoord )
 {// Generates a normal map with enhanced edges... Not so good for parallax...
-	vec2 uv = fragCoord.xy;
-    float u = uv.x;
-    float v = uv.y;
-    
-    float threshold = 0.085;
-    vec2 px = vec2(1.0/u_Dimensions.x, 1.0/u_Dimensions.y);
-    
-    vec3 rgb = texture2D(u_DiffuseMap, uv).rgb;
+    const float threshold = 0.085;
+   
+    vec3 rgb = texture2D(u_DiffuseMap, fragCoord).rgb;
     vec3 bw = vec3(1);
     vec3 bw2 = vec3(1);
 
-    vec3 rgbUp = texture2D(u_DiffuseMap, vec2(u,v+px.y)).rgb;
-    vec3 rgbDown = texture2D(u_DiffuseMap, vec2(u,v-px.y)).rgb;
-    vec3 rgbLeft = texture2D(u_DiffuseMap, vec2(u+px.x,v)).rgb;
-    vec3 rgbRight = texture2D(u_DiffuseMap, vec2(u-px.x,v)).rgb;
+    vec3 rgbUp = texture2D(u_DiffuseMap, vec2(fragCoord.x,fragCoord.y+tex_offset.y)).rgb;
+    vec3 rgbDown = texture2D(u_DiffuseMap, vec2(fragCoord.x,fragCoord.y-tex_offset.y)).rgb;
+    vec3 rgbLeft = texture2D(u_DiffuseMap, vec2(fragCoord.x+tex_offset.x,fragCoord.y)).rgb;
+    vec3 rgbRight = texture2D(u_DiffuseMap, vec2(fragCoord.x-tex_offset.x,fragCoord.y)).rgb;
 
     float rgbAvr = (rgb.r + rgb.g + rgb.b) / 3.;
     float rgbUpAvr = (rgbUp.r + rgbUp.g + rgbUp.b) / 3.;
@@ -41,31 +38,26 @@ vec4 generateEnhancedNormal( vec2 fragCoord )
         bw = vec3(0);
     
     // o.5 + 0.5 * acts as a remapping function
-    bw = 0.5 + 0.5*normalize( vec3(rgbRightAvr - rgbLeftAvr, 100.0*px.x, rgbUpAvr - rgbDownAvr) ).xzy;
+    bw = 0.5 + 0.5*normalize( vec3(rgbRightAvr - rgbLeftAvr, 100.0*tex_offset.x, rgbUpAvr - rgbDownAvr) ).xzy;
     
     return vec4(bw,0);
 }
 
 vec4 generateBumpyNormal( vec2 fragCoord )
 {// Generates an extra bumpy normal map...
-	vec2 tex_offset = vec2(1.0 / u_Dimensions.x, 1.0 / u_Dimensions.y);
-	vec2 uv = fragCoord;
-	//uv.y=1.0-uv.y;
+	const float x=1.;
+	const float y=1.;
 	
-	float x=1.;
-	float y=1.;
-	
-	float M =abs(texture2D(u_DiffuseMap, uv + vec2(0., 0.)*tex_offset).r); 
-	float L =abs(texture2D(u_DiffuseMap, uv + vec2(x, 0.)*tex_offset).r);
-	float R =abs(texture2D(u_DiffuseMap, uv + vec2(-x, 0.)*tex_offset).r);	
-	float U =abs(texture2D(u_DiffuseMap, uv + vec2(0., y)*tex_offset).r);
-	float D =abs(texture2D(u_DiffuseMap, uv + vec2(0., -y)*tex_offset).r);
+	float M =abs(texture2D(u_DiffuseMap, fragCoord + vec2(0., 0.)*tex_offset).r); 
+	float L =abs(texture2D(u_DiffuseMap, fragCoord + vec2(x, 0.)*tex_offset).r);
+	float R =abs(texture2D(u_DiffuseMap, fragCoord + vec2(-x, 0.)*tex_offset).r);	
+	float U =abs(texture2D(u_DiffuseMap, fragCoord + vec2(0., y)*tex_offset).r);
+	float D =abs(texture2D(u_DiffuseMap, fragCoord + vec2(0., -y)*tex_offset).r);
 	float X = ((R-M)+(M-L))*.5;
 	float Y = ((D-M)+(M-U))*.5;
 	
-	float strength =.01;
+	const float strength =.01;
 	vec4 N = vec4(normalize(vec3(X, Y, strength)), 1.0);
-//	vec4 N = vec4(normalize(vec3(X, Y, .01))-.5, 1.0);
 
 	vec4 col = vec4(N.xyz * 0.5 + 0.5,1.);
 	return col;

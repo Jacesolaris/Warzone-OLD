@@ -6,19 +6,9 @@ varying vec2	var_TexCoords;
 
 void main(void)
 {
-/*
-  vec3 col0 = texture2D(u_DiffuseMap, var_TexCoords.xy).rgb;
-  vec3 col1 = texture2D(u_DiffuseMap, var_TexCoords.xy + (var_Local0.st / var_Dimensions)).rgb;
-  vec3 col2 = texture2D(u_DiffuseMap, var_TexCoords.xy + ((var_Local0.st * 2.0) / var_Dimensions)).rgb;
-  vec3 col3 = texture2D(u_DiffuseMap, var_TexCoords.xy - (var_Local0.st / var_Dimensions)).rgb;
-  vec3 col4 = texture2D(u_DiffuseMap, var_TexCoords.xy - ((var_Local0.st * 2.0) / var_Dimensions)).rgb;
-  gl_FragColor.rgb = (col0 / 2) + (col1 + col2 + col3 + col4) / 8.5;
-  gl_FragColor.a	= 1.0;
-*/
-
   vec2 PIXEL_OFFSET = vec2(1.0 / var_Dimensions.x, 1.0 / var_Dimensions.y);
-  vec2 X_AXIS = vec2(1.0, 0.0);
-  vec2 Y_AXIS = vec2(0.0, 1.0);
+  const vec2 X_AXIS = vec2(1.0, 0.0);
+  const vec2 Y_AXIS = vec2(0.0, 1.0);
 
   vec3 color = vec3(0.0, 0.0, 0.0);
   vec3 col0 = texture2D(u_DiffuseMap, var_TexCoords.xy).rgb;

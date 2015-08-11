@@ -5,8 +5,7 @@ varying vec2		var_ScreenTex;
 varying vec2		var_Dimensions;
 varying vec4		var_Local0;
 
-//float depthMult = 255.0;
-float depthMult = 255.0;
+const float depthMult = 255.0;
 
 vec3 normal_from_depth(float depth, vec2 texcoords) {
   

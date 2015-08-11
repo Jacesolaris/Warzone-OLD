@@ -3,7 +3,6 @@ uniform sampler2D	u_NormalMap; // glowmap
 uniform sampler2D	u_ScreenDepthMap; // depthmap
 
 varying vec2		var_Dimensions;
-varying vec4		var_ViewInfo; // znear, zfar, zfar / znear, 0
 varying vec2		var_LightScreenPos;
 varying vec2		var_TexCoords;
 varying vec4		var_Local0; // lightOrg, num_lights_on_screen
@@ -17,9 +16,6 @@ float decay		=	var_Local3.g;
 float density	=	var_Local3.b;
 float weight	=	var_Local3.a;
 
-float znear = var_ViewInfo.x; //camera clipping start
-float zfar = var_ViewInfo.y; //camera clipping end
-
 float NUM_SAMPLES = var_Local2.a;
 //const int NUM_SAMPLES = 100;
 //const int NUM_SAMPLES = 50;
@@ -28,16 +24,9 @@ float NUM_SAMPLES = var_Local2.a;
 float OcclusionFromDepth(vec2 pos)
 {
 	int closer = 0;
-	//float lightDepthSample = texture2D(u_ScreenDepthMap, var_LightScreenPos).x;
 	float depthSample = texture2D(u_ScreenDepthMap, pos).x;
-	//if (lightDepthSample*0.7 > depthSample) closer = 1;
 	depthSample = pow(depthSample, 256/*2048*/);
 	if (depthSample > 0.98) depthSample = 0.0;
-	//if (closer != 1)
-	//{
-		//float distance = length(var_TexCoords - var_LightScreenPos);
-		//if (distance < 0.1) depthSample += (((0.1-distance) / 0.1) * 0.25);
-	//}
 	depthSample *= 256.0;
 	depthSample = clamp(depthSample, 0.0, 1.0);
 	return depthSample;
@@ -49,7 +38,6 @@ void main()
 	vec4 origColor = texture2D(u_DiffuseMap, var_TexCoords);
 
 	vec4 origLightColor = var_Local1;
-	//float brightness = clamp(length(origColor.rgb) / 3.0, 0.0, 1.0);
 
     vec2 deltaTextCoord = vec2( texCoord - var_LightScreenPos.xy );  
     deltaTextCoord *= 1.0 / float(NUM_SAMPLES) * density;  
@@ -60,15 +48,6 @@ void main()
 
     for (float i = 0.0; i < NUM_SAMPLES; i+=1.0) {  
         texCoord -= deltaTextCoord;  
-
-		/*
-		if (length(texCoord - var_LightScreenPos.xy) > 0.5)
-		{// UQ1: This increases FPS a little and only samples the color near the light source...
-			illuminationDecay *= decay;
-			continue;
-		}
-		*/
-		
 		float shadowSample = OcclusionFromDepth(texCoord);
 		shadowSample *= illuminationDecay * weight;
         tmpShadow += shadowSample;

@@ -1,22 +1,9 @@
 uniform sampler2D u_TextureMap;
 
-uniform vec4	u_ViewInfo; // zfar / znear, zfar
 uniform vec2	u_Dimensions;
 
 varying vec2   var_TexCoords;
-varying vec4	var_ViewInfo; // zfar / znear, zfar
 varying vec2   var_Dimensions;
-varying vec4   var_Local0; // num_passes, 0, 0, 0
-
-vec2 texCoord = var_TexCoords;
-
-float near = u_ViewInfo.x;
-float far = u_ViewInfo.y;
-float viewWidth = var_Dimensions.x;
-float viewHeight = var_Dimensions.y;
-
-float width = viewWidth;
-float height = viewHeight;
 
 #define NbPixel     1
 #define Edge_threshold  0.2
@@ -30,8 +17,8 @@ void main()
 	vec2 tex = var_TexCoords.xy;
 
 	// size of NbPixel pixels
-	float dx = NbPixel / width;
-	float dy = NbPixel / height;
+	float dx = NbPixel / var_Dimensions.x;
+	float dy = NbPixel / var_Dimensions.y;
 	vec4 Res = vec4(0.0, 0.0, 0.0, 0.0);
 
 	// Edge detection using Prewitt operator
