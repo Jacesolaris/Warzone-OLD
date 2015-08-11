@@ -437,7 +437,7 @@ char *GLSL_GetHighestSupportedVersion( void )
 	if (GLSL_MAX_VERSION[0] == '#') return GLSL_MAX_VERSION;
 
 	// UQ1: Use the highest level of GL that is supported... Check once and record for all future glsl loading...
-	if (glRefConfig.glslMajorVersion >= 5)
+	/*if (glRefConfig.glslMajorVersion >= 5)
 		sprintf(GLSL_MAX_VERSION, "#version 500 core\n");
 	else if (glRefConfig.glslMajorVersion >= 4 && glRefConfig.glslMinorVersion >= 20)
 		sprintf(GLSL_MAX_VERSION, "#version 420 core\n");
@@ -445,7 +445,7 @@ char *GLSL_GetHighestSupportedVersion( void )
 		sprintf(GLSL_MAX_VERSION, "#version 410 core\n");
 	else if (glRefConfig.glslMajorVersion >= 4)
 		sprintf(GLSL_MAX_VERSION, "#version 400 core\n");
-	else if (glRefConfig.glslMajorVersion >= 3 && glRefConfig.glslMinorVersion >= 30)
+	else*/ if (glRefConfig.glslMajorVersion >= 3 && glRefConfig.glslMinorVersion >= 30)
 		sprintf(GLSL_MAX_VERSION, "#version 330\n");
 	else if (glRefConfig.glslMajorVersion >= 3 && glRefConfig.glslMinorVersion >= 20)
 		sprintf(GLSL_MAX_VERSION, "#version 320\n");
