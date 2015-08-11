@@ -437,6 +437,7 @@ void RB_BeginDrawingView (void) {
 	int clearBits = 0;
 
 	// sync with gl if needed
+#ifdef __USE_QGL_FINISH__
 	if ( r_finish->integer == 1 && !glState.finishCalled ) {
 		qglFinish ();
 		glState.finishCalled = qtrue;
@@ -444,6 +445,7 @@ void RB_BeginDrawingView (void) {
 	if ( r_finish->integer == 0 ) {
 		glState.finishCalled = qtrue;
 	}
+#endif //__USE_QGL_FINISH__
 
 	// we will need to change the projection matrix before drawing
 	// 2D images again
@@ -869,7 +871,9 @@ void RE_StretchRaw (int x, int y, int w, int h, int cols, int rows, const byte *
 	}
 
 	// we definately want to sync every frame for the cinematics
+#ifdef __USE_QGL_FINISH__
 	qglFinish();
+#endif //__USE_QGL_FINISH__
 
 	start = 0;
 	if ( r_speeds->integer ) {
@@ -1688,7 +1692,9 @@ void RB_ShowImages( void ) {
 
 	qglClear( GL_COLOR_BUFFER_BIT );
 
+#ifdef __USE_QGL_FINISH__
 	qglFinish();
+#endif //__USE_QGL_FINISH__
 
 	start = ri->Milliseconds();
 
@@ -1720,7 +1726,9 @@ void RB_ShowImages( void ) {
 		}
 	}
 
+#ifdef __USE_QGL_FINISH__
 	qglFinish();
+#endif //__USE_QGL_FINISH__
 
 	end = ri->Milliseconds();
 	ri->Printf( PRINT_ALL, "%i msec to draw all images\n", end - start );
@@ -1852,9 +1860,11 @@ const void	*RB_SwapBuffers( const void *data ) {
 		}
 	}
 
+#ifdef __USE_QGL_FINISH__
 	if ( !glState.finishCalled ) {
 		qglFinish();
 	}
+#endif //__USE_QGL_FINISH__
 
 	GLimp_LogComment( "***************** RB_SwapBuffers *****************\n\n\n" );
 
@@ -2036,6 +2046,15 @@ const void *RB_PostProcess(const void *data)
 		// UQ1: Added...
 		//
 
+		if (r_dof->integer)
+		{
+			//for (int pass_num = 0; pass_num < 3; pass_num++) // FIXME: Add passes cvar? - 3 is best though!
+			{
+				RB_DOF(srcFbo, srcBox, tr.genericFbo, dstBox);
+				FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+			}
+		}
+
 		if (r_underwater->integer)
 		{
 			/*
@@ -2175,15 +2194,6 @@ const void *RB_PostProcess(const void *data)
 			for (int i = 0; i < r_depthPasses->integer / 2; i++)
 			{
 				RB_FakeDepth(srcFbo, srcBox, tr.genericFbo, dstBox);
-				FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_NEAREST);
-			}
-		}
-
-		if (r_dof->integer)
-		{
-			for (int pass_num = 0; pass_num < 3; pass_num++) // FIXME: Add passes cvar? - 3 is best though!
-			{
-				RB_DOF(srcFbo, srcBox, tr.genericFbo, dstBox);
 				FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 			}
 		}

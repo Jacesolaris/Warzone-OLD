@@ -191,8 +191,8 @@ void RB_BeginSurface( shader_t *shader, int fogNum, int cubemapIndex ) {
 	tess.shader = state;
 	tess.fogNum = fogNum;
 	tess.cubemapIndex = cubemapIndex;
-	tess.dlightBits = 0;		// will be OR'd in by surface functions
-	tess.pshadowBits = 0;       // will be OR'd in by surface functions
+	//tess.dlightBits = 0;		// will be OR'd in by surface functions
+	//tess.pshadowBits = 0;       // will be OR'd in by surface functions
 	tess.xstages = state->stages;
 	tess.numPasses = state->numUnfoggedPasses;
 	tess.currentStageIteratorFunc = state->optimalStageIteratorFunc;
@@ -351,92 +351,6 @@ static void ComputeDeformValues(int *deformGen, vec5_t deformParams)
 	}
 }
 
-#ifdef ___OLD_DLIGHT_CODE___
-static void ProjectDlightTexture( void ) {
-	int		l;
-	vec3_t	origin;
-	float	scale;
-	float	radius;
-	int deformGen;
-	vec5_t deformParams;
-
-	if ( !backEnd.refdef.num_dlights ) {
-		return;
-	}
-
-	ComputeDeformValues(&deformGen, deformParams);
-
-	for ( l = 0 ; l < backEnd.refdef.num_dlights ; l++ ) {
-		dlight_t	*dl;
-		shaderProgram_t *sp;
-		vec4_t vector;
-
-		if ( !( tess.dlightBits & ( 1 << l ) ) ) {
-			continue;	// this surface definately doesn't have any of this light
-		}
-
-		dl = &backEnd.refdef.dlights[l];
-		VectorCopy( dl->transformed, origin );
-		radius = dl->radius;
-		scale = 1.0f / radius;
-
-		sp = &tr.dlightShader[deformGen == DGEN_NONE ? 0 : 1];
-
-		backEnd.pc.c_dlightDraws++;
-
-		GLSL_BindProgram(sp);
-
-		GLSL_SetUniformMatrix16(sp, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
-
-		GLSL_SetUniformFloat(sp, UNIFORM_VERTEXLERP, glState.vertexAttribsInterpolation);
-		
-		GLSL_SetUniformInt(sp, UNIFORM_DEFORMGEN, deformGen);
-		if (deformGen != DGEN_NONE)
-		{
-			GLSL_SetUniformFloat5(sp, UNIFORM_DEFORMPARAMS, deformParams);
-			GLSL_SetUniformFloat(sp, UNIFORM_TIME, tess.shaderTime);
-		}
-
-		vector[0] = dl->color[0];
-		vector[1] = dl->color[1];
-		vector[2] = dl->color[2];
-		vector[3] = 1.0f;
-		GLSL_SetUniformVec4(sp, UNIFORM_COLOR, vector);
-
-		vector[0] = origin[0];
-		vector[1] = origin[1];
-		vector[2] = origin[2];
-		vector[3] = scale;
-		GLSL_SetUniformVec4(sp, UNIFORM_DLIGHTINFO, vector);
-	  
-		GL_Bind( tr.dlightImage );
-
-		// include GLS_DEPTHFUNC_EQUAL so alpha tested surfaces don't add light
-		// where they aren't rendered
-		if ( dl->additive ) {
-			GL_State( GLS_ATEST_GT_0 | GLS_SRCBLEND_ONE | GLS_DSTBLEND_ONE | GLS_DEPTHFUNC_EQUAL );
-		}
-		else {
-			GL_State( GLS_ATEST_GT_0 | GLS_SRCBLEND_DST_COLOR | GLS_DSTBLEND_ONE | GLS_DEPTHFUNC_EQUAL );
-		}
-
-		if (tess.multiDrawPrimitives)
-		{
-			shaderCommands_t *input = &tess;
-			R_DrawMultiElementsVBO(input->multiDrawPrimitives, input->multiDrawMinIndex, input->multiDrawMaxIndex, input->multiDrawNumIndexes, input->multiDrawFirstIndex);
-		}
-		else
-		{
-			R_DrawElementsVBO(tess.numIndexes, tess.firstIndex, tess.minIndex, tess.maxIndex);
-		}
-
-		backEnd.pc.c_totalIndexes += tess.numIndexes;
-		backEnd.pc.c_dlightIndexes += tess.numIndexes;
-		backEnd.pc.c_dlightVertexes += tess.numVertexes;
-	}
-}
-#else //!___OLD_DLIGHT_CODE___
-
 //#define __MERGE_DLIGHTS__ // UQ1: Works but makes little difference to over all speed... Down to personal preference on looks if we use or not I guess...
 
 //float DLIGHT_SIZE_MULTIPLIER = 5.0;
@@ -495,11 +409,6 @@ static void ProjectDlightTexture( void ) {
 			dlight_t	*dl;
 			vec4_t		vector;
 
-			
-			//if ( !( tess.dlightBits & ( 1 << l ) ) ) {
-			//	continue;	// this surface definately doesn't have any of this light
-			//}
-
 			dl = &backEnd.refdef.dlights[l];
 			if (dl->radius < 0.0) dl->radius = 0.0 - dl->radius;
 			VectorCopy( dl->transformed, origin );
@@ -555,10 +464,6 @@ static void ProjectDlightTexture( void ) {
 		dlight_t	*dl;
 		shaderProgram_t *sp;
 		vec4_t vector;
-
-		//if ( !( tess.dlightBits & ( 1 << l ) ) ) {
-		//	continue;	// this surface definately doesn't have any of this light
-		//}
 
 		dl = &backEnd.refdef.dlights[l];
 		if (dl->radius < 0.0) dl->radius = 0.0 - dl->radius;
@@ -794,7 +699,6 @@ static void ProjectDlightTexture( void ) {
 #endif //__MERGE_DLIGHTS__
 #endif //__SINGLE_PASS__
 }
-#endif //___OLD_DLIGHT_CODE___
 
 static void ComputeShaderColors( shaderStage_t *pStage, vec4_t baseColor, vec4_t vertColor, int blend, colorGen_t *forceRGBGen, alphaGen_t *forceAlphaGen )
 {
@@ -1125,10 +1029,6 @@ static void ForwardDlight( void ) {
 		vec4_t texMatrix;
 		vec4_t texOffTurb;
 
-		//if ( !( tess.dlightBits & ( 1 << l ) ) ) {
-		//	continue;	// this surface definately doesn't have any of this light
-		//}
-
 		dl = &backEnd.refdef.dlights[l];
 		//VectorCopy( dl->transformed, origin );
 		if (dl->radius < 0.0) dl->radius = 0.0 - dl->radius;
@@ -1286,6 +1186,7 @@ static void ForwardDlight( void ) {
 
 
 static void ProjectPshadowVBOGLSL( void ) {
+#if 0
 	int		l;
 	vec3_t	origin;
 	float	radius;
@@ -1357,6 +1258,7 @@ static void ProjectPshadowVBOGLSL( void ) {
 		backEnd.pc.c_totalIndexes += tess.numIndexes;
 		//backEnd.pc.c_dlightIndexes += tess.numIndexes;
 	}
+#endif
 }
 
 
@@ -2592,36 +2494,10 @@ void RB_StageIteratorGeneric( void )
 	//
 	RB_IterateStagesGeneric( input );
 
-#ifdef ___OLD_DLIGHT_CODE___ // UQ1: <= SS_OPAQUE and dlightBits tracking is a joke - light is light. surfaces are surfaces! this makes absolutely no sense!
-	//
-	// pshadows!
-	//
-	if (r_shadows->integer == 4 && tess.pshadowBits &&
-		tess.shader->sort <= SS_OPAQUE && !(tess.shader->surfaceFlags & (SURF_NODLIGHT | SURF_SKY))) {
-		ProjectPshadowVBOGLSL();
-	}
-
-
-	// 
-	// now do any dynamic lighting needed
-	//
-	if ( tess.dlightBits && tess.shader->sort <= SS_OPAQUE
-		&& !(tess.shader->surfaceFlags & (SURF_NODLIGHT | SURF_SKY) ) ) {
-		if (tess.shader->numUnfoggedPasses == 1 && tess.xstages[0]->glslShaderGroup == tr.lightallShader
-			&& (tess.xstages[0]->glslShaderIndex & LIGHTDEF_LIGHTTYPE_MASK) && r_dlightMode->integer)
-		{
-			ForwardDlight();
-		}
-		else
-		{
-			ProjectDlightTexture();
-		}
-	}
-#else //!___OLD_DLIGHT_CODE___
 	// 
 	// now do any dynamic lighting needed. UQ1: A generic method to rule them all... A SANE real world style lighting with a blacklist - not a whitelist!
 	//
-	if ( !(tess.shader->surfaceFlags & (SURF_NODLIGHT | SURF_SKY)) && tess.dlightBits && tess.shader->sort <= SS_OPAQUE ) 
+	if ( !(tess.shader->surfaceFlags & (SURF_NODLIGHT | SURF_SKY)) && tess.shader->sort <= SS_OPAQUE ) 
 	{
 		switch(int(tess.shader->sort))
 		{
@@ -2653,7 +2529,6 @@ void RB_StageIteratorGeneric( void )
 			break;
 		}
 	}
-#endif //___OLD_DLIGHT_CODE___
 
 	// Now check for surfacesprites.
 #if 0

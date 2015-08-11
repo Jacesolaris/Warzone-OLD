@@ -465,8 +465,8 @@ void RE_BeginScene(const refdef_t *fd)
 	tr.refdef.numPolys = r_numpolys - r_firstScenePoly;
 	tr.refdef.polys = &backEndData->polys[r_firstScenePoly];
 
-	tr.refdef.num_pshadows = 0;
-	tr.refdef.pshadows = &backEndData->pshadows[0];
+	//tr.refdef.num_pshadows = 0;
+	//tr.refdef.pshadows = &backEndData->pshadows[0];
 
 	// turn off dynamic lighting globally by clearing all the
 	// dlights if it needs to be disabled or if vertex lighting is enabled
@@ -490,6 +490,10 @@ void RE_EndScene()
 	r_firstSceneEntity = r_numentities;
 	r_firstSceneDlight = r_numdlights;
 	r_firstScenePoly = r_numpolys;
+	
+	qglClearColor( 1.0f, 1.0f, 1.0f, 1.0f );
+	qglClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	qglClearDepth( 1.0f );
 }
 
 /*

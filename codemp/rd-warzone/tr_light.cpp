@@ -62,7 +62,7 @@ void R_DlightBmodel( bmodel_t *bmodel ) {
 	int			i, j;
 	dlight_t	*dl;
 	int			mask;
-	msurface_t	*surf;
+	//msurface_t	*surf;
 
 	// transform all the lights
 	R_TransformDlights( tr.refdef.num_dlights, tr.refdef.dlights, &tr.ori );
@@ -91,6 +91,7 @@ void R_DlightBmodel( bmodel_t *bmodel ) {
 	tr.currentEntity->needDlights = (qboolean)(mask != 0);
 
 	// set the dlight bits in all the surfaces
+	/*
 	for ( i = 0 ; i < bmodel->numSurfaces ; i++ ) {
 		surf = tr.world->surfaces + bmodel->firstSurface + i;
 
@@ -107,6 +108,7 @@ void R_DlightBmodel( bmodel_t *bmodel ) {
 				break;
 		}
 	}
+	*/
 }
 
 

@@ -24,6 +24,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #ifndef TR_LOCAL_H
 #define TR_LOCAL_H
 
+//#define __USE_QGL_FINISH__
 #define ___SHADER_GENERATOR___
 #define ___SHADER_GENERATOR_PLAYERS_ONLY___
 //#define __SURFACESPRITES__
@@ -1428,9 +1429,9 @@ typedef struct {
 	int			numDrawSurfs;
 	struct drawSurf_s	*drawSurfs;
 
-	unsigned int dlightMask;
-	int         num_pshadows;
-	struct pshadow_s *pshadows;
+	//unsigned int dlightMask;
+	//int         num_pshadows;
+	//struct pshadow_s *pshadows;
 
 #ifdef __DYNAMIC_SHADOWS__
 	float       dlightShadowMvp[MAX_DYNAMIC_SHADOWS][3][16];
@@ -1587,8 +1588,8 @@ typedef struct srfBspSurface_s
 	surfaceType_t   surfaceType;
 
 	// dynamic lighting information
-	int				dlightBits;
-	int             pshadowBits;
+	//int				dlightBits;
+	//int             pshadowBits;
 
 	// culling information
 	vec3_t			cullBounds[2];
@@ -1821,14 +1822,14 @@ typedef struct {
 	int			numsurfaces;
 	msurface_t	*surfaces;
 	int         *surfacesViewCount;
-	int         *surfacesDlightBits;
-	int			*surfacesPshadowBits;
+	//int         *surfacesDlightBits;
+	//int			*surfacesPshadowBits;
 
 	int			numMergedSurfaces;
 	msurface_t	*mergedSurfaces;
 	int         *mergedSurfacesViewCount;
-	int         *mergedSurfacesDlightBits;
-	int			*mergedSurfacesPshadowBits;
+	//int         *mergedSurfacesDlightBits;
+	//int			*mergedSurfacesPshadowBits;
 
 	int			nummarksurfaces;
 	int         *marksurfaces;
@@ -2182,23 +2183,23 @@ typedef struct {
 // all state modified by the back end is seperated
 // from the front end state
 typedef struct {
-	trRefdef_t	refdef;
-	viewParms_t	viewParms;
-	orientationr_t	ori;
+	trRefdef_t			refdef;
+	viewParms_t			viewParms;
+	orientationr_t		ori;
 	backEndCounters_t	pc;
-	qboolean	isHyperspace;
-	trRefEntity_t	*currentEntity;
-	qboolean	skyRenderedThisView;	// flag for drawing sun
+	qboolean			isHyperspace;
+	trRefEntity_t		*currentEntity;
+	qboolean			skyRenderedThisView;	// flag for drawing sun
 
-	qboolean	projection2D;	// if qtrue, drawstretchpic doesn't need to change modes
-	byte		color2D[4];
-	qboolean	vertexes2D;		// shader needs to be finished
-	trRefEntity_t	entity2D;	// currentEntity will point at this when doing 2D rendering
+	qboolean			projection2D;	// if qtrue, drawstretchpic doesn't need to change modes
+	byte				color2D[4];
+	qboolean			vertexes2D;		// shader needs to be finished
+	trRefEntity_t		entity2D;	// currentEntity will point at this when doing 2D rendering
 
-	FBO_t *last2DFBO;
-	qboolean    colorMask[4];
-	qboolean    framePostProcessed;
-	qboolean    depthFill;
+	FBO_t				*last2DFBO;
+	qboolean			colorMask[4];
+	qboolean			framePostProcessed;
+	qboolean			depthFill;
 } backEndState_t;
 
 /*
@@ -2906,8 +2907,8 @@ struct shaderCommands_s
 	int			fogNum;
 	int         cubemapIndex;
 
-	int			dlightBits;	// or together of all vertexDlightBits
-	int         pshadowBits;
+	//int			dlightBits;	// or together of all vertexDlightBits
+	//int         pshadowBits;
 
 	int			firstIndex;
 	int			numIndexes;
