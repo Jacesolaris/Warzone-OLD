@@ -3401,7 +3401,8 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 
 			break;
 		case EFFECT_EXPLOSION_FLECHETTE:
-			eID = cgs.effects.mFlechetteAltBlow;
+			eID = CG_EnableEnhancedFX(cgs.effects.mFlechetteAltBlow,
+				cgs.effects.mEnhancedFlechetteAltBlow);
 			break;
 		case EFFECT_STUNHIT:
 			eID = cgs.effects.mStunBatonFleshImpact;

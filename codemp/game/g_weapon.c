@@ -28,7 +28,7 @@ static vec3_t muzzle;
 #define BLASTER_DAMAGE				10//20
 #define BLASTER_CANON_DAMAGE		5
 #define RIFLE_SNIPER_DAMAGE			85
-#define RIFLE_SNIPER_NON_SCOPE		30
+#define RIFLE_SNIPER_NON_SCOPE		15
 #define BLASTER_ALT_DAMAGE			13//30
 
 // Double Barrel ArrayGun
@@ -129,7 +129,7 @@ static vec3_t muzzle;
 #define	CONC_NPC_DAMAGE_EASY		40
 #define	CONC_NPC_DAMAGE_NORMAL		80
 #define	CONC_NPC_DAMAGE_HARD		100
-#define	CONC_SPLASH_DAMAGE			40 //50
+#define	CONC_SPLASH_DAMAGE			65 //50
 #define	CONC_SPLASH_RADIUS			200 //300
 //alt
 #define CONC_ALT_DAMAGE				25 //100
@@ -5185,7 +5185,7 @@ void FireWeapon( gentity_t *ent, qboolean altFire ) {
 
 		case WP_T21:
 			if (altFire)
-				WP_FireBlaster(ent, altFire, BLASTER_VELOCITY, BLASTER_DAMAGE, 0.0, ent->s.weapon);
+				WP_FireBlaster(ent, altFire, BLASTER_VELOCITY, BLASTER_ALT_DAMAGE, 0.0, ent->s.weapon);
 			else
 				WP_FireBlaster( ent, altFire, BLASTER_VELOCITY, BLASTER_DAMAGE, 0.0, ent->s.weapon );
 			break;
@@ -5235,8 +5235,6 @@ void FireWeapon( gentity_t *ent, qboolean altFire ) {
 			else
 				WP_FireBlaster(ent, altFire, BLASTER_VELOCITY, BLASTER_CANON_DAMAGE, BLASTER_SPREAD, ent->s.weapon);
 			break;
-			/*WP_FireRepeater(ent, altFire);
-			break;*/
 
 		case WP_WOOKIE_BOWCASTER:
 			if (altFire)

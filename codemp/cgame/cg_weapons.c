@@ -799,7 +799,7 @@ Ghoul2 Insert End
 		else if ( cent->currentState.weapon == WP_DEMP2 )
 		{
 			val = ( cg.time - cent->currentState.constantLight ) * 0.001f;
-			shader = cgs.media.lightningFlash;
+			shader = cgs.media.DemplightningFlash;
 			scale = 1.75f;
 		}
 		

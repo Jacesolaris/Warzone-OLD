@@ -202,10 +202,10 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->missileWallImpactfx = trap->FX_RegisterEffect( "orginal_weapon_efx/concussion/explosion" );
 		weaponInfo->altMissileWallImpactfx = trap->FX_RegisterEffect( "orginal_weapon_efx/concussion/explosion" );
 
-		weaponInfo->EnhancedFX_fleshImpact = trap->FX_RegisterEffect("explosives/concussion1medium");
-		weaponInfo->EnhancedFX_altfleshImpact = trap->FX_RegisterEffect("explosives/concussion3medium");
-		weaponInfo->EnhancedFX_missileWallImpactfx = trap->FX_RegisterEffect("explosives/concussion1medium");
-		weaponInfo->EnhancedFX_altmissileWallImpactfx = trap->FX_RegisterEffect("explosives/concussion3medium");
+		weaponInfo->EnhancedFX_fleshImpact = trap->FX_RegisterEffect("explosives/concussion3medium");
+		weaponInfo->EnhancedFX_altfleshImpact = trap->FX_RegisterEffect("explosives/concussion1medium");
+		weaponInfo->EnhancedFX_missileWallImpactfx = trap->FX_RegisterEffect("explosives/concussion3medium");
+		weaponInfo->EnhancedFX_altmissileWallImpactfx = trap->FX_RegisterEffect("explosives/concussion1medium");
 
 		trap->R_RegisterShader("gfx_base/effects/blueLine");
 		trap->R_RegisterShader("gfx_base/misc/whiteline2");
@@ -518,7 +518,7 @@ void CG_RegisterWeapon( int weaponNum) {
 
 		cgs.media.demp2Shell = trap->R_RegisterModel( "models/items/sphere.md3" );
 		cgs.media.demp2ShellShader = trap->R_RegisterShader( "gfx_base/effects/demp2shell" );
-		cgs.media.lightningFlash = trap->R_RegisterShader("gfx_base/misc/lightningFlash");
+		cgs.media.DemplightningFlash = trap->R_RegisterShader("gfx_base/misc/lightningFlash");
 		break;
 
 	case WP_FLECHETTE:
@@ -526,8 +526,8 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->flashSound[0]		= trap->S_RegisterSound( "sound/weapons/flechette/fire.wav");
 		weaponInfo->firingSound			= NULL_SOUND;
 		weaponInfo->chargeSound			= NULL_SOUND;
-		weaponInfo->muzzleEffect		= trap->FX_RegisterEffect( "flechette/muzzle_flash" );
-		weaponInfo->missileModel		= trap->R_RegisterModel("models/weapons2/golan_arms/projectileMain.md3");
+		weaponInfo->muzzleEffect		= trap->FX_RegisterEffect( "slugthrowers/muzzleflash" );
+		weaponInfo->missileModel		= trap->R_RegisterModel("models/ammo/flechette_missile.md3");
 		weaponInfo->missileSound		= NULL_SOUND;
 		weaponInfo->missileDlight		= 0;
 		weaponInfo->missileHitSound		= NULL_SOUND;
@@ -535,8 +535,8 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altFlashSound[0]	= trap->S_RegisterSound( "sound/weapons/flechette/alt_fire.wav");
 		weaponInfo->altFiringSound		= NULL_SOUND;
 		weaponInfo->altChargeSound		= NULL_SOUND;
-		weaponInfo->altMuzzleEffect		= trap->FX_RegisterEffect( "flechette/muzzle_flash" );
-		weaponInfo->altMissileModel		= trap->R_RegisterModel( "models/weapons2/golan_arms/projectile.md3" );
+		weaponInfo->altMuzzleEffect		= trap->FX_RegisterEffect( "slugthrowers/muzzleflash" );
+		weaponInfo->altMissileModel		= trap->R_RegisterModel( "models/ammo/flechette_missile.md3" );
 		weaponInfo->altMissileSound		= NULL_SOUND;
 		weaponInfo->altMissileDlight	= 0;
 		weaponInfo->altMissileHitSound	= NULL_SOUND;
@@ -551,10 +551,10 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altMissileWallImpactfx = trap->FX_RegisterEffect("orginal_weapon_efx/flechette/wall_impact");
 		
 		
-		//weaponInfo->EnhancedFX_fleshImpact = trap->FX_RegisterEffect("blasters/red_flesh_impact");
-		weaponInfo->EnhancedFX_altfleshImpact = trap->FX_RegisterEffect("orginal_weapon_efx/flechette/flesh_impact_enhanced2");
-		weaponInfo->EnhancedFX_missileWallImpactfx = trap->FX_RegisterEffect("orginal_weapon_efx/flechette/wall_impact_enhanced2");
-		weaponInfo->EnhancedFX_altmissileWallImpactfx = trap->FX_RegisterEffect("orginal_weapon_efx/flechette/wall_impact_enhanced2");
+		weaponInfo->EnhancedFX_fleshImpact = trap->FX_RegisterEffect("blasters/red_flesh_impact");
+		weaponInfo->EnhancedFX_altfleshImpact = trap->FX_RegisterEffect("effects/explosives/flechettemedium");
+		weaponInfo->EnhancedFX_missileWallImpactfx = trap->FX_RegisterEffect("blasters/red_flesh_impact");
+		weaponInfo->EnhancedFX_altmissileWallImpactfx = trap->FX_RegisterEffect("effects/explosives/flechettemedium");
 		break;
 
 		//Add new guns here

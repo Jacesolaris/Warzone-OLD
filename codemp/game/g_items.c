@@ -1192,8 +1192,8 @@ void Jetpack_Off(gentity_t *ent)
 	{ //aready off
 		return;
 	}
-
 	ent->client->jetPackOn = qfalse;
+	G_Sound(ent, CHAN_AUTO, G_SoundIndex("sound/jkg/jetpack/jetoff" /*"sound/boba/JETON"*/));
 }
 
 void Jetpack_On(gentity_t *ent)
@@ -1215,7 +1215,7 @@ void Jetpack_On(gentity_t *ent)
 		return;
 	}
 
-	G_Sound(ent, CHAN_AUTO, G_SoundIndex("sound/boba/JETON"));
+	G_Sound(ent, CHAN_AUTO, G_SoundIndex("sound/jkg/jetpack/jeton" /*"sound/boba/JETON"*/));
 
 	ent->client->jetPackOn = qtrue;
 }
