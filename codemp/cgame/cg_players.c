@@ -16650,29 +16650,32 @@ void CG_Player( centity_t *cent ) {
 				{ //create effects (fast movement) -- Afterburner...
 					//FIXME: Just one big effect -- UQ1: Done!
 					//Play the effect
-					PlayEffectID(cgs.effects.mBobaJetAfterburner, flamePos, flameDir, -1, -1, qfalse);
+					PlayEffectID(cgs.effects.mJetpack, flamePos, flameDir, -1, -1, qfalse);
+					PlayEffectID(cgs.effects.mJetpack, flamePos, flameDir, -1, -1, qfalse);
 					//PlayEffectID(cgs.effects.mBobaJetAfterburner, flamePos, flameDir, -1, -1, qfalse);
 
 					//Keep the jet fire sound looping
 					trap->S_AddLoopingSound( cent->currentState.number, cent->lerpOrigin, vec3_origin,
-						trap->S_RegisterSound( "sound/effects/fire_lp" ) );
+						trap->S_RegisterSound("sound/jkg/jetpack/jetlp" /*"sound/effects/fire_lp"*/));
 				}
 				else if (cent->currentState.eFlags & EF_JETPACK_ACTIVE)
 				{// Normal (not so fast movement)...
-					PlayEffectID(cgs.effects.mBobaJet, flamePos, flameDir, -1, -1, qfalse);
+					PlayEffectID(cgs.effects.mJetpack, flamePos, flameDir, -1, -1, qfalse);
+					/*PlayEffectID(cgs.effects.mBobaJet, flamePos, flameDir, -1, -1, qfalse);*/
 				}
 				else
 				{ //just idling
 					//FIXME: Different smaller effect for idle -- UQ1: Done!
 					//Play the effect
-					PlayEffectID(cgs.effects.mBobaJetHover, flamePos, flameDir, -1, -1, qfalse);
+					PlayEffectID(cgs.effects.mJetpack, flamePos, flameDir, -1, -1, qfalse);
+					/*PlayEffectID(cgs.effects.mBobaJetHover, flamePos, flameDir, -1, -1, qfalse);*/
 				}
 
 				n++;
 			}
 
 			trap->S_AddLoopingSound( cent->currentState.number, cent->lerpOrigin, vec3_origin,
-				trap->S_RegisterSound( "sound/boba/JETHOVER" ) );
+				trap->S_RegisterSound("sound/jkg/jetpack/jethover" /*"sound/effects/fire_lp"*/));
 		}
 	}
 	else if (trap->G2API_HasGhoul2ModelOnIndex(&(cent->ghoul2), 3))

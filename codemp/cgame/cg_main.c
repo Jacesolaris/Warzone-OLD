@@ -1503,7 +1503,7 @@ static void CG_RegisterGraphics( void ) {
 	cgs.effects.mTurretExplodeEnhancedFX = trap->FX_RegisterEffect("turret/explode_enhanced2.efx");
 	cgs.effects.mSparkExplosionEnhancedFX = trap->FX_RegisterEffect("sparks/spark_explosion_enhanced2.efx");
 	
-	cgs.effects.mAltDempDetonateEnhancedFX = trap->FX_RegisterEffect ("demp2/altDetonate_enhanced2.efx");
+	
 	cgs.effects.mAltDetonateEnhancedFX = trap->FX_RegisterEffect("sparks/spark_explosion_enhanced2.efx"); //("demp2/altDetonate_enhanced2.efx");
 	
 	cgs.effects.mSparksEnhancedFX = trap->FX_RegisterEffect("sparks/spark_nosnd_enhanced2.efx");
@@ -1522,8 +1522,10 @@ static void CG_RegisterGraphics( void ) {
 	cgs.effects.mTripmineExplosion = trap->FX_RegisterEffect("effects/tripMine/explosion.efx");
 	cgs.effects.mDetpackExplosion = trap->FX_RegisterEffect("effects/detpack/explosion.efx");
 	cgs.effects.mFlechetteAltBlow = trap->FX_RegisterEffect("effects/flechette/alt_blow.efx");
+	cgs.effects.mEnhancedFlechetteAltBlow = trap->FX_RegisterEffect("effects/explosives/flechettemedium.efx");
 	cgs.effects.mStunBatonFleshImpact = trap->FX_RegisterEffect("effects/stunBaton/flesh_impact.efx");
 	cgs.effects.mAltDetonate = trap->FX_RegisterEffect("effects/demp2/altDetonate.efx");
+	cgs.effects.mAltDempDetonateEnhancedFX = trap->FX_RegisterEffect("Blasters/electric_impactbig.efx");
 	
 	cgs.effects.mSparksExplodeNoSound = trap->FX_RegisterEffect("effects/sparks/spark_exp_nosnd");
 	cgs.effects.mTripMineLaser = trap->FX_RegisterEffect("effects/tripMine/laser.efx");
@@ -1537,7 +1539,7 @@ static void CG_RegisterGraphics( void ) {
 	cgs.effects.mBobaJet = trap->FX_RegisterEffect("effects/boba/jet.efx");
 	cgs.effects.mBobaJetAfterburner = trap->FX_RegisterEffect("effects/boba/jetsp.efx");
 	cgs.effects.mBobaJetHover = trap->FX_RegisterEffect("effects/boba/jethover.efx");
-
+	cgs.effects.mJetpack = trap->FX_RegisterEffect("effects/player/jetpack.efx");
 
 	cgs.effects.itemCone = trap->FX_RegisterEffect("effects/mp/itemcone.efx");
 	cgs.effects.mTurretMuzzleFlash = trap->FX_RegisterEffect("effects/turret/muzzle_flash.efx");

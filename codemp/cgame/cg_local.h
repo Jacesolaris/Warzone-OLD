@@ -1184,6 +1184,7 @@ typedef struct cgMedia_s {
 	qhandle_t	bryarFrontFlash;
 	qhandle_t	greenFrontFlash;
 	qhandle_t	lightningFlash;
+	qhandle_t	DemplightningFlash;
 	qhandle_t	redFrontFlash;
 	qhandle_t	cannonChargeFlash;
 	qhandle_t	Chargelightningbeam;
@@ -1761,6 +1762,7 @@ typedef struct cgEffects_s {
 	fxHandle_t	mTripmineExplosion;
 	fxHandle_t	mDetpackExplosion;
 	fxHandle_t	mFlechetteAltBlow;
+	fxHandle_t	mEnhancedFlechetteAltBlow;
 	fxHandle_t	mStunBatonFleshImpact;
 	fxHandle_t	mAltDetonate;
 	fxHandle_t	mSparksExplodeNoSound;
@@ -1774,6 +1776,8 @@ typedef struct cgEffects_s {
 	fxHandle_t	mBobaJet;
 	fxHandle_t	mBobaJetAfterburner;
 	fxHandle_t	mBobaJetHover;
+
+	fxHandle_t mJetpack;
 
 	//footstep effects
 	fxHandle_t footstepMud;

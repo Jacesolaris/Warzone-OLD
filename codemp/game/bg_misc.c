@@ -1041,8 +1041,11 @@ Do not place.
 		120,
 		IT_HOLDABLE,
 		HI_JETPACK,
-/* precache */ "effects/boba/jet.efx",
-/* sounds */ "sound/chars/boba/JETON.wav sound/chars/boba/JETHOVER.wav sound/effects/fire_lp.wav",
+
+///* precache */ "effects/boba/jet.efx",
+///* sounds */ "sound/chars/boba/JETON.wav sound/chars/boba/JETHOVER.wav sound/effects/fire_lp.wav",
+/* precache */ "effects/Player/jetpack.efx",
+/* sounds */ "sound/jkg/jetpack/JETON.wav sound/jkg/jetpack/jetoff.wav sound/jkg/jetpack/jethover.wav sound/jkg/jetpack/jetlp.wav",
 		"@MENUS_JETPACK_DESC"					// description
 	},
 
