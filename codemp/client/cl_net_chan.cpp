@@ -131,10 +131,25 @@ void CL_Netchan_Transmit( netchan_t *chan, msg_t* msg ) {
 //	for(i=CL_ENCODE_START;i<msg->cursize;i++) {
 //		chksum[i-CL_ENCODE_START] = msg->data[i];
 //	}
-
+	
 //	Huff_Compress( msg, CL_ENCODE_START );
+#ifndef __NET_ZLIB__
 	CL_Netchan_Encode( msg );
 	Netchan_Transmit( chan, msg->cursize, msg->data );
+#else //__NET_ZLIB__
+	CL_Netchan_Encode( msg );
+	msg_t cmsg;
+	memcpy(&cmsg, msg, sizeof(msg_t));
+	cmsg.data = (byte *)malloc(msg->maxsize);
+	memset(cmsg.data, 0, msg->maxsize);
+	cmsg.cursize = msg->maxsize;
+	int error = compress2((Bytef *)cmsg.data, &cmsg.cursize, (Bytef *)msg->data, msg->cursize, 9);
+	if (error != Z_OK) Com_Error(ERR_DROP, "compress error %i.\n", error);
+	cmsg.cursize/=(sizeof(byte);
+	Netchan_Transmit( chan, cmsg.cursize, cmsg.data );
+	free(cmsg.data);
+	Com_Printf("%i compressed to %i.\n", (int)msg->cursize, (int)cmsg.cursize);
+#endif //__NET_ZLIB__
 }
 
 extern 	int oldsize;
@@ -153,8 +168,11 @@ qboolean CL_Netchan_Process( netchan_t *chan, msg_t *msg ) {
 	ret = Netchan_Process( chan, msg );
 	if (!ret)
 		return qfalse;
+
+#ifndef __NET_ZLIB__
 	CL_Netchan_Decode( msg );
-//	Huff_Decompress( msg, CL_DECODE_START );
+
+	//	Huff_Decompress( msg, CL_DECODE_START );
 //	for(i=CL_DECODE_START+msg->readcount;i<msg->cursize;i++) {
 //		if (msg->data[i] != chksum[i-(CL_DECODE_START+msg->readcount)]) {
 //			Com_Error(ERR_DROP,"bad %d v %d\n", msg->data[i], chksum[i-(CL_DECODE_START+msg->readcount)]);
@@ -162,5 +180,20 @@ qboolean CL_Netchan_Process( netchan_t *chan, msg_t *msg ) {
 //	}
 	newsize += msg->cursize;
 //	Com_Printf("saved %d to %d (%d%%)\n", (oldsize>>3), newsize, 100-(newsize*100/(oldsize>>3)));
+#else //__NET_ZLIB__
+	msg_t cmsg;
+	memcpy(&cmsg, msg, sizeof(msg_t));
+	cmsg.data = (byte *)malloc(msg->maxsize);
+	memset(cmsg.data, 0, msg->maxsize);
+	cmsg.cursize = msg->maxsize;
+	int error = uncompress((Bytef *)cmsg.data, &cmsg.cursize, (Bytef *)msg->data, msg->cursize);
+	if (error != Z_OK) Com_Error(ERR_DROP, "uncompress error %i.\n", error);
+	cmsg.cursize = strlen((const char*)cmsg.data);
+	CL_Netchan_Decode( &cmsg );
+	free(cmsg.data);
+	newsize += cmsg.cursize;
+	Com_Printf("saved %d to %d (%d%%)\n", (oldsize>>3), newsize, 100-(newsize*100/(oldsize>>3)));
+#endif //__NET_ZLIB__
+
 	return qtrue;
 }

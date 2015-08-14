@@ -4,6 +4,12 @@
 
 #include "qcommon/q_shared.h"
 
+//#define __NET_ZLIB__
+
+#ifdef __NET_ZLIB__
+#include "zlib.h"
+#endif
+
 //============================================================================
 
 //
@@ -14,8 +20,13 @@ typedef struct msg_s {
 	qboolean	overflowed;		// set to true if the buffer size failed (with allowoverflow set)
 	qboolean	oob;			// set to true if the buffer size failed (with allowoverflow set)
 	byte	*data;
+#ifndef __NET_ZLIB__
 	int		maxsize;
 	int		cursize;
+#else //__NET_ZLIB__
+	uLongf	maxsize;
+	uLongf	cursize;
+#endif //__NET_ZLIB__
 	int		readcount;
 	int		bit;				// for bitwise reads and writes
 } msg_t;

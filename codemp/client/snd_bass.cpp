@@ -1327,9 +1327,14 @@ void BASS_MusicUpdateThread( void * aArg )
 		this_thread::sleep_for(chrono::milliseconds(1000)); // just in case fs_startup is running... give it a little time...
 
 		// Seems we need a new track... Select a random one and play it!
-		int trackChoice = irand(0, MUSIC_LIST_COUNT);
-		Com_Printf("Begin music track %s.\n", MUSIC_LIST[trackChoice].name);
-		S_StartBackgroundTrack_Actual( MUSIC_LIST[trackChoice].name, "" );
+		int trackChoice = irand(0, MUSIC_LIST_COUNT-1);
+		int trackChoice2 = irand(0, MUSIC_LIST_COUNT-1);
+		
+		if (trackChoice2 == trackChoice) // Try again to pick a different one if we can...
+			trackChoice2 = irand(0, MUSIC_LIST_COUNT-1);
+
+		Com_Printf("Queue music tracks %s and %s.\n", MUSIC_LIST[trackChoice].name, MUSIC_LIST[trackChoice2].name);
+		S_StartBackgroundTrack_Actual( MUSIC_LIST[trackChoice].name, MUSIC_LIST[trackChoice2].name );
 
 		this_thread::sleep_for(chrono::milliseconds(1000));
 	}

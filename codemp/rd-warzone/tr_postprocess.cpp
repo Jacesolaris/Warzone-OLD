@@ -1040,8 +1040,8 @@ qboolean RB_VolumetricDLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i
 		//if (dl->radius > 0.0) ri->Printf(PRINT_WARNING, "Light %i is volumetric.", l);
 		//else ri->Printf(PRINT_WARNING, "Light %i is not volumetric.", l);
 
-		if (dl->radius > 0.0) continue; // not a valumetric light...
-		dl->radius = 0.0 - dl->radius;
+		if (!r_volumelightAllLights->integer && dl->radius > 0.0) continue; // not a valumetric light...
+		if (!r_volumelightAllLights->integer && dl->radius < 0.0) dl->radius = 0.0 - dl->radius;
 		
 		distance = Distance(backEnd.refdef.vieworg, dl->origin);
 		
@@ -1223,7 +1223,7 @@ qboolean RB_VolumetricDLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i
 			local1[0] = dl->color[0];
 			local1[1] = dl->color[1];
 			local1[2] = dl->color[2];
-			local1[3] = 0.0;
+			local1[3] = r_volumelightShadowEnhancement->value;
 
 			GLSL_SetUniformVec4(&tr.volumelightShader, UNIFORM_LOCAL1, local1);
 		}

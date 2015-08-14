@@ -134,8 +134,23 @@ void SV_Netchan_Transmit( client_t *client, msg_t *msg) {	//int length, const by
 //		chksum[i-SV_ENCODE_START] = msg->data[i];
 //	}
 //	Huff_Compress( msg, SV_ENCODE_START );
+#ifndef __NET_ZLIB__
 	SV_Netchan_Encode( client, msg );
 	Netchan_Transmit( &client->netchan, msg->cursize, msg->data );
+#else //__NET_ZLIB__
+	SV_Netchan_Encode( client, msg );
+	msg_t cmsg;
+	memcpy(&cmsg, msg, sizeof(msg_t));
+	cmsg.data = (byte *)malloc(msg->maxsize);
+	memset(cmsg.data, 0, msg->maxsize);
+	cmsg.cursize = msg->maxsize;
+	int error = compress2((Bytef *)cmsg.data, &cmsg.cursize, (Bytef *)msg->data, msg->cursize, 9);
+	if (error != Z_OK) Com_Printf("compress error %i.\n", error);
+	cmsg.cursize/=(sizeof(byte);
+	Netchan_Transmit( &client->netchan, cmsg.cursize, cmsg.data );
+	free(cmsg.data);
+	Com_Printf("%i compressed to %i.\n", (int)msg->cursize, (int)cmsg.cursize);
+#endif //__NET_ZLIB__
 }
 
 /*
@@ -149,6 +164,8 @@ qboolean SV_Netchan_Process( client_t *client, msg_t *msg ) {
 	ret = Netchan_Process( &client->netchan, msg );
 	if (!ret)
 		return qfalse;
+
+#ifndef __NET_ZLIB__
 	SV_Netchan_Decode( client, msg );
 //	Huff_Decompress( msg, SV_DECODE_START );
 //	for(i=SV_DECODE_START+msg->readcount;i<msg->cursize;i++) {
@@ -156,6 +173,17 @@ qboolean SV_Netchan_Process( client_t *client, msg_t *msg ) {
 //			Com_Error(ERR_DROP,"bad\n");
 //		}
 //	}
+#else //__NET_ZLIB__
+	msg_t cmsg;
+	memcpy(&cmsg, msg, sizeof(msg_t));
+	cmsg.data = (byte *)malloc(msg->maxsize);
+	memset(cmsg.data, 0, msg->maxsize);
+	cmsg.cursize = msg->maxsize;
+	int error = uncompress((Bytef *)cmsg.data, &cmsg.cursize, (Bytef *)msg->data, msg->cursize);
+	if (error != Z_OK) Com_Printf("uncompress error %i.\n", error);
+	SV_Netchan_Decode( client, &cmsg );
+	free(cmsg.data);
+#endif //__NET_ZLIB__
 	return qtrue;
 }
 

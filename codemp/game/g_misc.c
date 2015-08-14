@@ -140,7 +140,7 @@ void misc_dlight_use ( gentity_t *ent, gentity_t *other, gentity_t *activator )
 void SP_light( gentity_t *self ) {
 	if (!self->targetname )
 	{//if i don't have a light style switch, the i go away
-#if 0
+#if 1
 		G_FreeEntity( self );
 		return;
 #else

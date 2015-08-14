@@ -6,11 +6,12 @@ varying vec2		var_Dimensions;
 varying vec2		var_LightScreenPos;
 varying vec2		var_TexCoords;
 varying vec4		var_Local0; // lightOrg, num_lights_on_screen
-varying vec4		var_Local1; // lightColor
+varying vec4		var_Local1; // lightColorR, lightColorG, lightColorB, volumelightShadowEnhancement
 varying vec4		var_Local2; // lightScreenPos (x,y), testvar, volumeSamples
 varying vec4		var_Local3; // exposure, decay, density, weight
 varying vec4		var_LightOrg;
 
+// UQ1: Sigh... This would run much faster if I made these all constants instead...
 float exposure	=	var_Local3.r;
 float decay		=	var_Local3.g;
 float density	=	var_Local3.b;
@@ -61,11 +62,11 @@ void main()
 	float bt = lightOutColor;
 
 	if (bt > 0.666) 
-		bt *= 0.666; // Bright lights get dulled... (eg: white)
+		bt *= 0.444; // Bright lights get dulled... (eg: white)
 	else if (bt < 0.333) 
-		bt *= 2.25; // Dull lights get amplified... (eg: blue)
+		bt *= 2.55; // Dull lights get amplified... (eg: blue)
 	else 
-		bt *= 1.5; // Mid range lights get amplified slightly... (eg: yellow)
+		bt *= 1.35; // Mid range lights get amplified slightly... (eg: yellow)
 
 	lightOutColor = clamp(lightOutColor * bt, 0.0, 1.0);
 
@@ -73,8 +74,16 @@ void main()
 
 	vec3 add_color = origLightColor.rgb * lightOutColor;
 #define const_1 ( 12.0 / 255.0)
-#define const_2 (255.0 / 219.0)
+#define const_2 (255.0 / 119.0)
 	add_color = ((clamp(add_color - const_1, 0.0, 1.0)) * const_2);
 
 	gl_FragColor = clamp(vec4(vec3(origColor.rgb + add_color), 1.0), 0.0, 1.0);
+
+	float origStrength = length(origColor.rgb) / 3.0;
+	float newStrength = length(gl_FragColor.rgb) / 3.0;
+
+	if (origStrength >= newStrength * var_Local1.a)
+	{// Enhance shadows...
+		gl_FragColor.rgb *= var_Local1.a;
+	}
 }
