@@ -235,7 +235,7 @@ float CalcFog(vec3 position)
 
 void main()
 {
-#if defined(USE_VERTEX_ANIMATION)
+/*#if defined(USE_VERTEX_ANIMATION)
 	vec3 position  = mix(attr_Position, attr_Position2, u_VertexLerp);
 	vec3 normal    = mix(attr_Normal,   attr_Normal2,   u_VertexLerp);
 	normal = normalize(normal - vec3(0.5));
@@ -255,22 +255,22 @@ void main()
 
 	vec3 position = position4.xyz;
 	vec3 normal = normalize(normal4.xyz);
-#else
+#else*/
 	vec3 position  = attr_Position;
 	vec3 normal    = attr_Normal * 2.0 - vec3(1.0);
-#endif
+//#endif
 
-#if defined(USE_DEFORM_VERTEXES)
-	position = DeformPosition(position, normal, attr_TexCoord0.st);
-#endif
+//#if defined(USE_DEFORM_VERTEXES)
+//	position = DeformPosition(position, normal, attr_TexCoord0.st);
+//#endif
 
 	gl_Position = u_ModelViewProjectionMatrix * vec4(position, 1.0);
 
-#if defined(USE_TCGEN)
-	vec2 tex = GenTexCoords(u_TCGen0, position, normal, u_TCGen0Vector0, u_TCGen0Vector1);
-#else
+//#if defined(USE_TCGEN)
+//	vec2 tex = GenTexCoords(u_TCGen0, position, normal, u_TCGen0Vector0, u_TCGen0Vector1);
+//#else
 	vec2 tex = attr_TexCoord0.st;
-#endif
+//#endif
 
 	var_TexCoords = tex;
 

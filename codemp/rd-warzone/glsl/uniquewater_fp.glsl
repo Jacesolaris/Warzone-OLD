@@ -428,8 +428,8 @@ void main()
 	float current_time = iGlobalTime * 0.3;
         
 	// ray
-	vec3 ang = vec3(0.0, 1.0, 0.0);
-	vec3 ori = vec3(1.0, 1.0, 1.0);
+	vec3 ang = vec3(0.0, 1.5, 0.0);
+	vec3 ori = vec3(0.0, 10.5, 0.0);
 	vec3 dir = normalize(vec3(uv.xy,-PI/*-2.0*/)); 
 	dir.z += length(uv) * 0.15;
 	dir = normalize(dir) * fromEuler(ang);
@@ -530,7 +530,7 @@ void main()
 	vec3 R = reflect(E, N);
 	vec3 parallax = u_CubeMapInfo.xyz + u_CubeMapInfo.w * viewDir;
 	vec3 cubeLightColor = textureCubeLod(u_CubeMap, R + parallax, 7.0 - specular.a * 7.0).rgb * u_EnableTextures.w;
-	gl_FragColor.rgb += (cubeLightColor * reflectance) * 3.0;
+	gl_FragColor.rgb += (cubeLightColor * reflectance);// * 3.0;
   #endif
 
   #if defined(USE_PRIMARY_LIGHT)
@@ -571,7 +571,7 @@ void main()
 	if (scaleWater >= 10.0)
 	{
 		gl_FragColor.rgb = clamp((gl_FragColor.rgb + orig_diffuse.rgb) / 2.0, 0.0, 1.0);
-		gl_FragColor.a = clamp(waveheight, 0.5, 1.0);//diffuse.a * var_Color.a;
+		gl_FragColor.a = clamp(waveheight, 0.1, 1.0);//diffuse.a * var_Color.a;
 
 #if defined(USE_GLOW_BUFFER)
 		out_Glow = gl_FragColor;
@@ -584,7 +584,7 @@ void main()
 	else
 	{
 		gl_FragColor.rgb = clamp((gl_FragColor.rgb + gl_FragColor.rgb + orig_diffuse.rgb) / 3.0, 0.0, 1.0);
-		gl_FragColor.a = clamp(waveheight, 0.0, 1.0);//diffuse.a * var_Color.a;
+		gl_FragColor.a = clamp(waveheight, 0.5, 1.0);//diffuse.a * var_Color.a;
 
 #if defined(USE_GLOW_BUFFER)
 		//out_Glow = gl_FragColor;
