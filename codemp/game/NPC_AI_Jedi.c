@@ -7231,11 +7231,13 @@ qboolean Jedi_CheckForce ( void )
 			NPCS.NPC->client->ps.fd.forcePowersKnown |= (1 << FP_GRIP);
 			NPCS.NPC->client->ps.fd.forcePowerLevel[FP_GRIP] = 3;
 		}
+		/*
 		if (!(NPCS.NPC->client->ps.fd.forcePowersKnown & (1 << FP_RAGE))) 
 		{
 			NPCS.NPC->client->ps.fd.forcePowersKnown |= (1 << FP_RAGE);
 			NPCS.NPC->client->ps.fd.forcePowerLevel[FP_RAGE] = 3;
 		}
+		*/
 	}
 	else
 	{// Not a jedi/sith???
@@ -7417,6 +7419,7 @@ qboolean Jedi_CheckForce ( void )
 		TIMER_Set( NPCS.NPC, "telepathy", irand(15000, 30000) );
 		return qtrue;
 	}
+	/*
 	else if ( TIMER_Done( NPCS.NPC, "rage" )
 		&& (NPCS.NPC->client->ps.fd.forcePowersKnown&(1<<FP_RAGE)) != 0
 		&& (NPCS.NPC->client->ps.fd.forcePowersActive&(1<<FP_RAGE)) == 0
@@ -7439,6 +7442,7 @@ qboolean Jedi_CheckForce ( void )
 		TIMER_Set( NPCS.NPC, "speed", irand(15000, 30000) );
 		return qtrue;
 	}
+	*/
 	else if ( TIMER_Done( NPCS.NPC, "push" )
 		&& (NPCS.NPC->client->ps.fd.forcePowersKnown&(1<<FP_PUSH)) != 0
 		&& (NPCS.NPC->client->ps.fd.forcePowersActive&(1<<FP_PUSH)) == 0

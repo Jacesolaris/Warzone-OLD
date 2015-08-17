@@ -223,14 +223,14 @@ qboolean NPC_PadawanMove( void )
 
 				if ( UpdateGoal() )
 				{
-					if (dist > 512 && !(NPC->client->ps.fd.forcePowersActive&(1<<FP_SPEED)))
+					/*if (dist > 512 && !(NPC->client->ps.fd.forcePowersActive&(1<<FP_SPEED)))
 					{// When the master is a fair way away, use force speed to get to him quicker...
 						if (!(NPC->client->ps.fd.forcePowersKnown & (1 << FP_SPEED))) NPC->client->ps.fd.forcePowersKnown |= (1 << FP_SPEED);
 						ForceSpeed(NPC, 500);
 					}
-					else if (dist > 512 && !(NPC->client->ps.fd.forcePowersActive&(1<<FP_PROTECT)))
+					else*/ if (dist > 512 && !(NPC->client->ps.fd.forcePowersActive&(1<<FP_PROTECT)))
 					{// When the master is a fair way away, use force protect to get to him safer...
-						if (!(NPC->client->ps.fd.forcePowersKnown & (1 << FP_SPEED))) NPC->client->ps.fd.forcePowersKnown |= (1 << FP_PROTECT);
+						if (!(NPC->client->ps.fd.forcePowersKnown & (1 << FP_PROTECT))) NPC->client->ps.fd.forcePowersKnown |= (1 << FP_PROTECT);
 						ForceProtect(NPC);
 					}
 
