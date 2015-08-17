@@ -67,6 +67,7 @@ void main()
 	vec4 HDR = GetHDR( color.rgb );
 
 	// Use HDR+VIBRANCE mix...
-	gl_FragColor = VibrancePass( HDR + color + color * 0.33333 );
+	gl_FragColor = ( HDR + color + color * 0.33333 );
+	//gl_FragColor = VibrancePass( HDR + color + color * 0.33333 );
 	//gl_FragColor.a = 1.0;
 }
