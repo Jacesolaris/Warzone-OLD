@@ -32,6 +32,112 @@ added to the sorting list.
 ================
 */
 static qboolean	R_CullSurface( msurface_t *surf ) {
+#if 1
+	if ( r_nocull->integer || surf->cullinfo.type == CULLINFO_NONE) {
+		return qfalse;
+	}
+
+	if ( *surf->data == SF_GRID && r_nocurves->integer ) {
+		return qtrue;
+	}
+
+	if ( *surf->data != SF_FACE && *surf->data != SF_TRIANGLES && *surf->data != SF_POLY && *surf->data != SF_VBO_MESH && *surf->data != SF_GRID )
+	{
+		return qtrue;
+	}
+
+	// plane cull
+	if ( *surf->data == SF_FACE && r_facePlaneCull->integer )
+	{
+		float d = DotProduct( tr.ori.viewOrigin, surf->cullinfo.plane.normal ) - surf->cullinfo.plane.dist;
+
+		// shadowmaps draw back surfaces
+		if ( tr.viewParms.flags & (VPF_SHADOWMAP | VPF_DEPTHSHADOW) )
+		{
+			if (surf->shader->cullType == CT_FRONT_SIDED)
+			{
+				surf->shader->cullType = CT_BACK_SIDED;
+			}
+			else
+			{
+				surf->shader->cullType = CT_FRONT_SIDED;
+			}
+		}
+
+		// do proper cull for orthographic projection
+		if (tr.viewParms.flags & VPF_ORTHOGRAPHIC) {
+			d = DotProduct(tr.viewParms.ori.axis[0], surf->cullinfo.plane.normal);
+			if ( surf->shader->cullType == CT_FRONT_SIDED ) {
+				if (d > 0)
+					return qtrue;
+			} else {
+				if (d < 0)
+					return qtrue;
+			}
+			return qfalse;
+		}
+
+		// don't cull exactly on the plane, because there are levels of rounding
+		// through the BSP, ICD, and hardware that may cause pixel gaps if an
+		// epsilon isn't allowed here
+		if ( surf->shader->cullType == CT_FRONT_SIDED )
+		{
+			if ( d < -8.0f )
+			{
+				return qtrue;
+			}
+		}
+		else if ( surf->shader->cullType == CT_BACK_SIDED )
+		{
+			if ( d > 8.0f )
+			{
+				return qtrue;
+			}
+		}
+		else if (surf->shader->cullType == CT_TWO_SIDED)
+		{
+			return qfalse;
+		}
+		else
+		{
+			return qfalse;
+		}
+	}
+
+	if (surf->cullinfo.type & CULLINFO_SPHERE)
+	{
+		int 	sphereCull;
+
+		if ( tr.currentEntityNum != REFENTITYNUM_WORLD ) {
+			sphereCull = R_CullLocalPointAndRadius( surf->cullinfo.localOrigin, surf->cullinfo.radius );
+		} else {
+			sphereCull = R_CullPointAndRadius( surf->cullinfo.localOrigin, surf->cullinfo.radius );
+		}
+
+		if ( sphereCull == CULL_OUT )
+		{
+			return qtrue;
+		}
+	}
+
+	if (surf->cullinfo.type & CULLINFO_BOX)
+	{
+		int boxCull;
+
+		if ( tr.currentEntityNum != REFENTITYNUM_WORLD ) {
+			boxCull = R_CullLocalBox( surf->cullinfo.bounds );
+		} else {
+			boxCull = R_CullBox( surf->cullinfo.bounds );
+		}
+
+		if ( boxCull == CULL_OUT )
+		{
+			return qtrue;
+		}
+	}
+
+	return qfalse;
+#else
 	if ( r_nocull->integer || surf->cullinfo.type == CULLINFO_NONE) {
 		return qfalse;
 	}
@@ -142,6 +248,7 @@ static qboolean	R_CullSurface( msurface_t *surf ) {
 	}
 
 	return qfalse;
+#endif
 }
 
 
@@ -811,8 +918,11 @@ qboolean G_BoxInBounds( vec3_t point, vec3_t mins, vec3_t maxs, vec3_t boundsMin
 R_AddWorldSurfaces
 =============
 */
-extern qboolean TR_InFOV( vec3_t spot, vec3_t from );
 extern bool TR_WorldToScreen(vec3_t worldCoord, float *x, float *y);
+extern qboolean R_InFOV( vec3_t spot, vec3_t from );
+
+int NUM_WORLD_FOV_CULLS = 0;
+int NUM_WORLDMERGED_FOV_CULLS = 0;
 
 void R_AddWorldSurfaces (void) {
 	int planeBits;//, dlightBits, pshadowBits;
@@ -824,6 +934,9 @@ void R_AddWorldSurfaces (void) {
 	if ( tr.refdef.rdflags & RDF_NOWORLDMODEL ) {
 		return;
 	}
+
+	NUM_WORLD_FOV_CULLS = 0;
+	NUM_WORLDMERGED_FOV_CULLS = 0;
 
 	tr.currentEntityNum = REFENTITYNUM_WORLD;
 	tr.shiftedEntityNum = tr.currentEntityNum << QSORT_REFENTITYNUM_SHIFT;
@@ -873,6 +986,27 @@ void R_AddWorldSurfaces (void) {
 			if (tr.world->surfacesViewCount[i] != tr.viewCount)
 				continue;
 
+			if (r_fovCull->integer)
+			{
+				vec3_t bounds[2];
+
+				bounds[0][0] = (tr.world->surfaces + i)->cullinfo.bounds[0][0];
+				bounds[0][1] = (tr.world->surfaces + i)->cullinfo.bounds[1][0];
+				bounds[0][2] = (tr.world->surfaces + i)->cullinfo.bounds[0][2];
+
+				bounds[1][0] = (tr.world->surfaces + i)->cullinfo.bounds[1][0];
+				bounds[1][1] = (tr.world->surfaces + i)->cullinfo.bounds[0][0];
+				bounds[1][2] = (tr.world->surfaces + i)->cullinfo.bounds[1][2];
+
+				if (!R_InFOV((tr.world->surfaces + i)->cullinfo.bounds[0], tr.refdef.vieworg)
+					&& !R_InFOV((tr.world->surfaces + i)->cullinfo.bounds[1], tr.refdef.vieworg)
+					&& !R_InFOV(bounds[0], tr.refdef.vieworg)
+					&& !R_InFOV(bounds[1], tr.refdef.vieworg)) {
+						NUM_WORLD_FOV_CULLS++;
+						continue;
+				}
+			}
+
 			R_AddWorldSurface( tr.world->surfaces + i, 0/*tr.world->surfacesDlightBits[i]*/, 0/*tr.world->surfacesPshadowBits[i]*/ );
 			//tr.refdef.dlightMask |= tr.world->surfacesDlightBits[i];
 		}
@@ -882,10 +1016,36 @@ void R_AddWorldSurfaces (void) {
 			if (tr.world->mergedSurfacesViewCount[i] != tr.viewCount)
 				continue;
 
+#if 0 // Ignore this - I have not seen it remove anything, no point wasting time checking...
+			if (r_fovCull->integer)
+			{
+				vec3_t bounds[2];
+
+				bounds[0][0] = (tr.world->mergedSurfaces + i)->cullinfo.bounds[0][0];
+				bounds[0][1] = (tr.world->mergedSurfaces + i)->cullinfo.bounds[1][0];
+				bounds[0][2] = (tr.world->mergedSurfaces + i)->cullinfo.bounds[0][2];
+
+				bounds[1][0] = (tr.world->mergedSurfaces + i)->cullinfo.bounds[1][0];
+				bounds[1][1] = (tr.world->mergedSurfaces + i)->cullinfo.bounds[0][0];
+				bounds[1][2] = (tr.world->mergedSurfaces + i)->cullinfo.bounds[1][2];
+
+				if (!R_InFOV((tr.world->mergedSurfaces + i)->cullinfo.bounds[0], tr.refdef.vieworg)
+					&& !R_InFOV((tr.world->mergedSurfaces + i)->cullinfo.bounds[1], tr.refdef.vieworg)
+					&& !R_InFOV(bounds[0], tr.refdef.vieworg)
+					&& !R_InFOV(bounds[1], tr.refdef.vieworg)) {
+					NUM_WORLDMERGED_FOV_CULLS++;
+					continue;
+				}
+			}
+#endif
+
 			R_AddWorldSurface( tr.world->mergedSurfaces + i, 0/*tr.world->mergedSurfacesDlightBits[i]*/, 0/*tr.world->mergedSurfacesPshadowBits[i]*/ );
 			//tr.refdef.dlightMask |= tr.world->mergedSurfacesDlightBits[i];
 		}
 
 		//tr.refdef.dlightMask = ~tr.refdef.dlightMask;
+
+		if (r_fovCull->integer >= 2)
+			ri->Printf(PRINT_WARNING, "Culled %i world surfaces. %i World and %i Merged.\n", NUM_WORLD_FOV_CULLS + NUM_WORLDMERGED_FOV_CULLS, NUM_WORLD_FOV_CULLS, NUM_WORLDMERGED_FOV_CULLS);
 	}
 }

@@ -98,6 +98,8 @@ cvar_t	*r_speeds;
 cvar_t	*r_fullbright;
 cvar_t	*r_novis;
 cvar_t	*r_nocull;
+cvar_t	*r_entityCull;
+cvar_t	*r_fovCull;
 cvar_t	*r_facePlaneCull;
 cvar_t	*r_showcluster;
 cvar_t	*r_nocurves;
@@ -1410,7 +1412,7 @@ void R_Register( void )
 	r_volumelightMaximum = ri->Cvar_Get( "r_volumelightMaximum", "6", CVAR_ARCHIVE );
 	r_volumelightSamples = ri->Cvar_Get( "r_volumelightSamples", "50", CVAR_ARCHIVE );
 	r_volumelightExposure = ri->Cvar_Get( "r_volumelightExposure", "0.45", CVAR_ARCHIVE );
-	r_volumelightDecay = ri->Cvar_Get( "r_volumelightDecay", "0.999", CVAR_ARCHIVE );
+	r_volumelightDecay = ri->Cvar_Get( "r_volumelightDecay", "0.995", CVAR_ARCHIVE );
 	r_volumelightDensity = ri->Cvar_Get( "r_volumelightDensity", "1.0", CVAR_ARCHIVE );
 	r_volumelightWeight = ri->Cvar_Get( "r_volumelightWeight", "0.01", CVAR_ARCHIVE );
 	r_volumelightMaxDistance = ri->Cvar_Get( "r_volumelightMaxDistance", "1024.0", CVAR_ARCHIVE );
@@ -1550,6 +1552,8 @@ void R_Register( void )
 	r_drawentities = ri->Cvar_Get ("r_drawentities", "1", CVAR_CHEAT );
 	r_ignore = ri->Cvar_Get( "r_ignore", "1", CVAR_CHEAT );
 	r_nocull = ri->Cvar_Get ("r_nocull", "0", CVAR_CHEAT);
+	r_entityCull = ri->Cvar_Get ("r_entityCull", "1", CVAR_CHEAT);
+	r_fovCull = ri->Cvar_Get ("r_fovCull", "1", CVAR_CHEAT);
 	r_novis = ri->Cvar_Get ("r_novis", "0", CVAR_CHEAT);
 	r_showcluster = ri->Cvar_Get ("r_showcluster", "0", CVAR_CHEAT);
 	r_speeds = ri->Cvar_Get ("r_speeds", "0", CVAR_CHEAT);

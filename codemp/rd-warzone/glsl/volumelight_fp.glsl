@@ -8,19 +8,25 @@ varying vec2		var_TexCoords;
 varying vec4		var_Local0; // lightOrg, num_lights_on_screen
 varying vec4		var_Local1; // lightColorR, lightColorG, lightColorB, volumelightShadowEnhancement
 varying vec4		var_Local2; // lightScreenPos (x,y), testvar, volumeSamples
-varying vec4		var_Local3; // exposure, decay, density, weight
+//varying vec4		var_Local3; // exposure, decay, density, weight
 varying vec4		var_LightOrg;
 
 // UQ1: Sigh... This would run much faster if I made these all constants instead...
-float exposure	=	var_Local3.r;
-float decay		=	var_Local3.g;
-float density	=	var_Local3.b;
-float weight	=	var_Local3.a;
+//float exposure	=	var_Local3.r;
+//float decay		=	var_Local3.g;
+//float density	=	var_Local3.b;
+//float weight	=	var_Local3.a;
 
-float NUM_SAMPLES = var_Local2.a;
+const float exposure	=	0.45;
+const float decay		=	0.995;
+const float density		=	1.0;
+const float weight		=	0.01;
+
+//float NUM_SAMPLES = var_Local2.a;
 //const int NUM_SAMPLES = 100;
 //const int NUM_SAMPLES = 50;
 //const int NUM_SAMPLES = 20;
+const float NUM_SAMPLES = 50;
 
 float OcclusionFromDepth(vec2 pos)
 {

@@ -945,15 +945,17 @@ bool TR_WorldToScreen(vec3_t worldCoord, float *x, float *y)
 
 qboolean TR_InFOV( vec3_t spot, vec3_t from )
 {
-	return qtrue;
+	//return qtrue;
 
 	vec3_t	deltaVector, angles, deltaAngles;
 	vec3_t	fromAnglesCopy;
 	vec3_t	fromAngles;
-	int hFOV = backEnd.refdef.fov_x * 0.5;
-	int vFOV = backEnd.refdef.fov_y * 0.5;
+	//int hFOV = backEnd.refdef.fov_x * 0.5;
+	//int vFOV = backEnd.refdef.fov_y * 0.5;
+	int hFOV = 120;
+	int vFOV = 120;
 
-	TR_AxisToAngles(backEnd.refdef.viewaxis, fromAngles);
+	TR_AxisToAngles(tr.refdef.viewaxis, fromAngles);
 
 	VectorSubtract ( spot, from, deltaVector );
 	vectoangles ( deltaVector, angles );
@@ -1168,7 +1170,7 @@ qboolean RB_VolumetricDLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i
 		GLSL_SetUniformInt(&tr.volumelightShader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
 		GL_BindToTMU(tr.renderDepthImage, TB_LIGHTMAP);
 
-
+		/*
 		{
 			vec4_t viewInfo;
 
@@ -1180,6 +1182,7 @@ qboolean RB_VolumetricDLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i
 
 			GLSL_SetUniformVec4(&tr.volumelightShader, UNIFORM_VIEWINFO, viewInfo);
 		}
+		*/
 
 		{
 			vec2_t screensize;
@@ -1228,7 +1231,7 @@ qboolean RB_VolumetricDLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i
 			GLSL_SetUniformVec4(&tr.volumelightShader, UNIFORM_LOCAL1, local1);
 		}
 
-		{
+		/*{
 			vec4_t local3;
 			local3[0] = r_volumelightExposure->value;
 			local3[1] = r_volumelightDecay->value;
@@ -1236,7 +1239,7 @@ qboolean RB_VolumetricDLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i
 			local3[3] = r_volumelightWeight->value;
 
 			GLSL_SetUniformVec4(&tr.volumelightShader, UNIFORM_LOCAL3, local3);
-		}
+		}*/
 
 		FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.volumelightShader, color, 0);
 		FBO_FastBlit(ldrFbo, ldrBox, hdrFbo, hdrBox, GL_COLOR_BUFFER_BIT, GL_NEAREST);

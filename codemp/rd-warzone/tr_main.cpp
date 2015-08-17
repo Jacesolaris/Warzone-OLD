@@ -1799,6 +1799,100 @@ void R_SortDrawSurfs( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 	R_AddDrawSurfCmd( drawSurfs, numDrawSurfs );
 }
 
+extern void TR_AxisToAngles ( const vec3_t axis[3], vec3_t angles );
+
+/*static*/ qboolean R_InFOV( vec3_t spot, vec3_t from )
+{
+	vec3_t	deltaVector, angles, deltaAngles;
+	vec3_t	fromAnglesCopy;
+	vec3_t	fromAngles;
+	int hFOV = 120; // If anyone has a FOV > 120 they are cheating anyway...
+	int vFOV = 120; // If anyone has a FOV > 120 they are cheating anyway...
+
+	TR_AxisToAngles(tr.refdef.viewaxis, fromAngles);
+
+	VectorSubtract ( spot, from, deltaVector );
+	vectoangles ( deltaVector, angles );
+	VectorCopy(fromAngles, fromAnglesCopy);
+	
+	deltaAngles[PITCH]	= AngleDelta ( fromAnglesCopy[PITCH], angles[PITCH] );
+	deltaAngles[YAW]	= AngleDelta ( fromAnglesCopy[YAW], angles[YAW] );
+
+	if ( fabs ( deltaAngles[PITCH] ) <= vFOV && fabs ( deltaAngles[YAW] ) <= hFOV ) 
+	{
+		return qtrue;
+	}
+
+	return qfalse;
+}
+
+int NUM_ENTS_CULLED = 0;
+int NUM_ENTS_FOV_CULLED = 0;
+int NUM_ENTS_PVS_CULLED = 0;
+
+qboolean	R_CullEntitySurface( trRefEntity_t	*ent ) {
+	if ( r_nocull->integer || !r_entityCull->integer) {
+		return qfalse;
+	}
+
+	//float msLength = VectorLength(ent->e.modelScale);
+
+	if (ent->e.radius <= 0.0 /*&& msLength <= 0.0*/) {
+		// Not safely cullable... Might be mover, etc...
+		return qfalse;
+	}
+
+	if (Distance(ent->e.origin, tr.refdef.vieworg) < 128) {
+		// Never cull close stuff...
+		return qfalse;
+	}
+
+
+	if (!R_InFOV(ent->e.origin, tr.refdef.vieworg)) {
+		// Not in FOV? Cull the bitch!
+		NUM_ENTS_FOV_CULLED++;
+		return qtrue;
+	}
+
+
+	if (!R_inPVS( tr.refdef.vieworg, ent->e.origin, tr.refdef.areamask )) {
+		// Not in PVS? Cull the bitch!
+		NUM_ENTS_PVS_CULLED++;
+		return qtrue;
+	}
+
+	if (ent->e.radius > 0.0)
+	{
+		float radius = ent->e.radius;
+
+		int sphereCull = R_CullPointAndRadius( ent->e.origin, radius );
+
+		if ( sphereCull == CULL_OUT )
+		{
+			return qtrue;
+		}
+	}
+	
+/*
+	if (msLength > 0.0)
+	{
+		vec3_t bounds[2];
+
+		VectorAdd(ent->e.origin, ent->e.modelScale, bounds[0]);
+		VectorSubtract(ent->e.origin, ent->e.modelScale, bounds[1]);
+
+		int boxCull = R_CullBox( bounds );
+
+		if ( boxCull == CULL_OUT )
+		{
+			return qtrue;
+		}
+	}
+*/
+
+	return qfalse;
+}
+
 static void R_AddEntitySurface (int entityNum)
 {
 	trRefEntity_t	*ent;
@@ -1840,6 +1934,13 @@ static void R_AddEntitySurface (int entityNum)
 		if ( (ent->e.renderfx & RF_THIRD_PERSON) && !tr.viewParms.isPortal) {
 			return;
 		}
+		
+		if ( R_CullEntitySurface( ent ) ) {
+			// Well, that's a lot of stuff we don't need to draw...
+			if (r_entityCull->integer >= 2) NUM_ENTS_CULLED++;
+			return;
+		}
+
 		shader = R_GetShaderByHandle( ent->e.customShader );
 		R_AddDrawSurf( &entitySurface, shader, R_SpriteFogNum( ent ), 0, R_IsPostRenderEntity (tr.currentEntityNum, ent), 0 /* cubeMap */ );
 		break;
@@ -1849,29 +1950,72 @@ static void R_AddEntitySurface (int entityNum)
 		R_RotateForEntity( ent, &tr.viewParms, &tr.ori );
 
 		tr.currentModel = R_GetModelByHandle( ent->e.hModel );
+
 		if (!tr.currentModel) {
+			if ( R_CullEntitySurface( ent ) ) {
+				// Well, that's a lot of stuff we don't need to draw...
+				if (r_entityCull->integer >= 2) NUM_ENTS_CULLED++;
+				return;
+			}
+
 			R_AddDrawSurf( &entitySurface, tr.defaultShader, 0, 0, R_IsPostRenderEntity (tr.currentEntityNum, ent), 0/* cubeMap */ );
 		} else {
 			switch ( tr.currentModel->type ) {
 			case MOD_MESH:
+				if ( R_CullEntitySurface( ent ) ) {
+					// Well, that's a lot of stuff we don't need to draw...
+					if (r_entityCull->integer >= 2) NUM_ENTS_CULLED++;
+					return;
+				}
+
 				R_AddMD3Surfaces( ent );
 				break;
 			case MOD_MDR:
+				if ( R_CullEntitySurface( ent ) ) {
+					// Well, that's a lot of stuff we don't need to draw...
+					if (r_entityCull->integer >= 2) NUM_ENTS_CULLED++;
+					return;
+				}
+
 				R_MDRAddAnimSurfaces( ent );
 				break;
 			case MOD_IQM:
+				if ( R_CullEntitySurface( ent ) ) {
+					// Well, that's a lot of stuff we don't need to draw...
+					if (r_entityCull->integer >= 2) NUM_ENTS_CULLED++;
+					return;
+				}
+
 				R_AddIQMSurfaces( ent );
 				break;
 			case MOD_BRUSH:
+				if ( R_CullEntitySurface( ent ) ) {
+					// Well, that's a lot of stuff we don't need to draw...
+					if (r_entityCull->integer >= 2) NUM_ENTS_CULLED++;
+					return;
+				}
+
 				R_AddBrushModelSurfaces( ent );
 				break;
 			case MOD_MDXM:
+				if ( R_CullEntitySurface( ent ) ) {
+					// Well, that's a lot of stuff we don't need to draw...
+					if (r_entityCull->integer >= 2) NUM_ENTS_CULLED++;
+					return;
+				}
+
 				if (ent->e.ghoul2)
 					R_AddGhoulSurfaces(ent);
 				break;
 			case MOD_BAD:		// null model axis
 				if ( (ent->e.renderfx & RF_THIRD_PERSON) && !tr.viewParms.isPortal) {
 					break;
+				}
+
+				if ( R_CullEntitySurface( ent ) ) {
+					// Well, that's a lot of stuff we don't need to draw...
+					if (r_entityCull->integer >= 2) NUM_ENTS_CULLED++;
+					return;
 				}
 
 				if( ent->e.ghoul2 && G2API_HaveWeGhoul2Models(*((CGhoul2Info_v *)ent->e.ghoul2)) )
@@ -1889,9 +2033,15 @@ static void R_AddEntitySurface (int entityNum)
 		}
 		break;
 	case RT_ENT_CHAIN:
-			shader = R_GetShaderByHandle( ent->e.customShader );
-			R_AddDrawSurf( &entitySurface, shader, R_SpriteFogNum( ent ), false, R_IsPostRenderEntity (tr.currentEntityNum, ent), 0 /* cubeMap */ );
-			break;
+		if ( R_CullEntitySurface( ent ) ) {
+			// Well, that's a lot of stuff we don't need to draw...
+			if (r_entityCull->integer >= 2) NUM_ENTS_CULLED++;
+			return;
+		}
+
+		shader = R_GetShaderByHandle( ent->e.customShader );
+		R_AddDrawSurf( &entitySurface, shader, R_SpriteFogNum( ent ), false, R_IsPostRenderEntity (tr.currentEntityNum, ent), 0 /* cubeMap */ );
+		break;
 	default:
 		ri->Error( ERR_DROP, "R_AddEntitySurfaces: Bad reType" );
 	}
@@ -1903,26 +2053,25 @@ R_AddEntitySurfaces
 =============
 */
 void R_AddEntitySurfaces (void) {
-	int i;//, NUM_CULLED = 0;
+	int i;
 
 	if ( !r_drawentities->integer ) {
 		return;
 	}
+
+	if (r_entityCull->integer >= 2) {
+		NUM_ENTS_CULLED = 0;
+		NUM_ENTS_FOV_CULLED = 0;
+		NUM_ENTS_PVS_CULLED = 0;
+	}
 	
 	for ( i = 0; i < tr.refdef.num_entities; i++)
 	{
-		/*
-		if (!tr.refdef.entities[i].e.ignoreCull && Distance(tr.refdef.entities[i].e.origin, tr.viewParms.pvsOrigin) > 3072.0)
-		{
-			//NUM_CULLED++;
-			continue;
-		}
-		*/
-
 		R_AddEntitySurface(i);
 	}
 
-	//ri->Printf(PRINT_WARNING, "Culled %i entities.\n", NUM_CULLED);
+	if (r_entityCull->integer >= 2)
+		ri->Printf(PRINT_WARNING, "Culled %i entities. %i FOV and %i PVS.\n", NUM_ENTS_CULLED, NUM_ENTS_FOV_CULLED, NUM_ENTS_PVS_CULLED);
 }
 
 /*
@@ -1930,43 +2079,10 @@ void R_AddEntitySurfaces (void) {
 R_GenerateDrawSurfs
 ====================
 */
-
-/*
-void CL_UpdateThread1(void * aArg)
-{
-	R_AddWorldSurfaces();
-}
-
-void CL_UpdateThread2(void * aArg)
-{
-	R_AddPolygonSurfaces();
-}
-
-#include "../client/fast_mutex.h"
-#include "../client/tinythread.h"
-
-using namespace tthread;
-*/
-
 void R_GenerateDrawSurfs( void ) 
 {
-	/*if (r_multithread2->integer)
-	{// Looks like I can run these in parallel... Seen no issues so far... *meh* little to no performance increase here...
-		thread *UPDATE_THREAD1;
-		thread *UPDATE_THREAD2;
-		UPDATE_THREAD1 = new thread (CL_UpdateThread1, (void *)0);
-		UPDATE_THREAD2 = new thread (CL_UpdateThread2, (void *)0);
-		// UQ1: And wait for finish...
-		UPDATE_THREAD1->join();
-		UPDATE_THREAD2->join();
-		UPDATE_THREAD1->~thread();
-		UPDATE_THREAD2->~thread();
-	}
-	else*/
-	{
-		R_AddWorldSurfaces();
-		R_AddPolygonSurfaces();
-	}
+	R_AddWorldSurfaces();
+	R_AddPolygonSurfaces();
 	
 	// set the projection matrix with the minimum zfar
 	// now that we have the world bounded

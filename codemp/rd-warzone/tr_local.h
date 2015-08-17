@@ -24,7 +24,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #ifndef TR_LOCAL_H
 #define TR_LOCAL_H
 
-//#define __USE_QGL_FINISH__
+#define __USE_QGL_FINISH__
 #define ___SHADER_GENERATOR___
 #define ___SHADER_GENERATOR_PLAYERS_ONLY___
 //#define __SURFACESPRITES__
@@ -164,6 +164,8 @@ extern cvar_t	*r_speeds;
 extern cvar_t	*r_fullbright;
 extern cvar_t	*r_novis;
 extern cvar_t	*r_nocull;
+extern cvar_t	*r_entityCull;
+extern cvar_t	*r_fovCull;
 extern cvar_t	*r_facePlaneCull;
 extern cvar_t	*r_showcluster;
 extern cvar_t	*r_nocurves;
@@ -2510,6 +2512,8 @@ extern	cvar_t	*r_speeds;				// various levels of information display
 extern  cvar_t	*r_detailTextures;		// enables/disables detail texturing stages
 extern	cvar_t	*r_novis;				// disable/enable usage of PVS
 extern	cvar_t	*r_nocull;
+extern cvar_t	*r_entityCull;
+extern cvar_t	*r_fovCull;
 extern	cvar_t	*r_facePlaneCull;		// enables culling of planar surfaces with back side test
 extern	cvar_t	*r_nocurves;
 extern	cvar_t	*r_showcluster;
