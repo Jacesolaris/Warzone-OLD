@@ -669,12 +669,17 @@ void main()
 	{// Non Metalic...
 		diffuse.rgb *= vec3(1.0) - specular.rgb;
 	}
+
+	// Reduce brightness of really bright spots (eg: light right above a reflective surface)
+	float refMult = (specular.r + specular.g + specular.b + specular.a) / 4.0;
+	refMult = 1.0 - refMult;
+	refMult = clamp(refMult, 0.25, 0.75);
   
 	reflectance = diffuse.rgb;
 
   #if defined(r_deluxeSpecular) || defined(USE_LIGHT_VECTOR)
-	float adjGloss = specular.a;
-	float adjShininess = exp2(specular.a * 13.0);
+	float adjGloss = specular.a * refMult;
+	float adjShininess = exp2(specular.a * refMult * 13.0);
 
     #if !defined(USE_LIGHT_VECTOR)
 	adjGloss *= r_deluxeSpecular;
@@ -687,34 +692,34 @@ void main()
 	NH = clamp(dot(N, H), 0.0, 1.0);
 
     #if !defined(USE_LIGHT_VECTOR)
-	reflectance += CalcSpecular(specular.rgb, NH, NL, NE, EH, adjGloss, adjShininess) * r_deluxeSpecular;
+	reflectance += CalcSpecular(specular.rgb * refMult, NH, NL, NE, EH, adjGloss, adjShininess) * r_deluxeSpecular;
     #else
-	reflectance += CalcSpecular(specular.rgb, NH, NL, NE, EH, adjGloss, adjShininess);
+	reflectance += CalcSpecular(specular.rgb * refMult, NH, NL, NE, EH, adjGloss, adjShininess);
     #endif
   #endif
 
   if (var_Local1.b > 0.0)
-	gl_FragColor.rgb  += (((lightColor   * reflectance * (attenuation * NL)) * 2.0) + (lightColor   * (reflectance * specular.a) * (attenuation * NL))) / 3.0;
+	gl_FragColor.rgb  += (((lightColor   * reflectance * (attenuation * NL)) * 2.0) + (lightColor   * (reflectance * specular.a * refMult) * (attenuation * NL))) / 3.0;
   else
 	gl_FragColor.rgb  += lightColor   * reflectance * (attenuation * NL);
 
 #if 0
-	vec3 aSpecular = EnvironmentBRDF(specular.a, NE, specular.rgb);
+	vec3 aSpecular = EnvironmentBRDF(specular.a * refMult, NE, specular.rgb * refMult);
 
 	float hemiDiffuseUp    = N.z * 0.5 + 0.5;
 	float hemiDiffuseDown  = 1.0 - hemiDiffuseUp;
-	float hemiSpecularUp   = mix(hemiDiffuseUp, float(N.z >= 0.0), specular.a);
+	float hemiSpecularUp   = mix(hemiDiffuseUp, float(N.z >= 0.0), specular.a * refMult);
 	float hemiSpecularDown = 1.0 - hemiSpecularUp;
 
 	gl_FragColor.rgb += ambientColor * 0.75 * (diffuse.rgb * hemiDiffuseUp   + aSpecular * hemiSpecularUp);
 	gl_FragColor.rgb += ambientColor * 0.25 * (diffuse.rgb * hemiDiffuseDown + aSpecular * hemiSpecularDown);
 #else
-	gl_FragColor.rgb += ambientColor * (diffuse.rgb + specular.rgb);
+	gl_FragColor.rgb += ambientColor * (diffuse.rgb + (specular.rgb * refMult));
 #endif
 
   #if defined(USE_CUBEMAP)
 	if (u_Local3.a > 0.0) {
-		reflectance = EnvironmentBRDF(specular.a, NE, specular.rgb);
+		reflectance = EnvironmentBRDF(specular.a * refMult, NE, specular.rgb * refMult);
 
 		vec3 R = reflect(E, N);
 
@@ -722,7 +727,7 @@ void main()
 
 		vec3 cubeLightColor = textureCubeLod(u_CubeMap, R + parallax, 7.0 - specular.a * 7.0).rgb * u_EnableTextures.w;
 
-		gl_FragColor.rgb += cubeLightColor * reflectance * (u_Local3.a /** 2.0*/);
+		gl_FragColor.rgb += cubeLightColor * reflectance * (u_Local3.a * refMult);
 	}
   #endif
 
@@ -743,7 +748,7 @@ void main()
 	NH2 = clamp(dot(N, H2), 0.0, 1.0);
 
 	reflectance  = diffuse.rgb;
-	reflectance += CalcSpecular(specular.rgb, NH2, NL2, NE, EH2, specular.a, exp2(specular.a * 13.0));
+	reflectance += CalcSpecular(specular.rgb * refMult, NH2, NL2, NE, EH2, specular.a * refMult, exp2(specular.a * refMult * 13.0));
 
 	lightColor = u_PrimaryLightColor * var_Color.rgb;
 
@@ -769,9 +774,9 @@ void main()
 	|| var_Local1.a == 20 || var_Local1.a == 21 || var_Local1.a == 22*/)
   {
   #if defined(USE_PRIMARY_LIGHT)
-	gl_FragColor.rgb += subScatterFS(gl_FragColor, specular, L2, lightColor.xyz, E, N, texCoords).rgb;
+	gl_FragColor.rgb += subScatterFS(gl_FragColor, specular * refMult, L2, lightColor.xyz, E, N, texCoords).rgb;
   #else
-	gl_FragColor.rgb += subScatterFS(gl_FragColor, specular, L, var_Color.xyz, E, N, texCoords).rgb;
+	gl_FragColor.rgb += subScatterFS(gl_FragColor, specular * refMult, L, var_Color.xyz, E, N, texCoords).rgb;
   #endif
 	gl_FragColor = clamp(gl_FragColor, 0.0, 1.0);
   }
