@@ -2020,15 +2020,23 @@ void RB_SSGI(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 	//
 	// Do the SSAO/SSGI...
 	//
+	shaderProgram_t *shader = &tr.ssgi1Shader;
 
-	GLSL_BindProgram(&tr.ssgiShader);
+	if (r_ssgi->integer >= 4)
+		shader = &tr.ssgi4Shader;
+	else if (r_ssgi->integer >= 3)
+		shader = &tr.ssgi3Shader;
+	else if (r_ssgi->integer >= 2)
+		shader = &tr.ssgi2Shader;
+
+	GLSL_BindProgram(shader);
 
 	GL_BindToTMU(tr.fixedLevelsImage, TB_LEVELSMAP);
 
-	GLSL_SetUniformInt(&tr.ssgiShader, UNIFORM_LEVELSMAP, TB_LEVELSMAP);
-	GLSL_SetUniformInt(&tr.ssgiShader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
+	GLSL_SetUniformInt(shader, UNIFORM_LEVELSMAP, TB_LEVELSMAP);
+	GLSL_SetUniformInt(shader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
 	GL_BindToTMU(tr.renderDepthImage, TB_LIGHTMAP);
-	GLSL_SetUniformInt(&tr.ssgiShader, UNIFORM_NORMALMAP, TB_NORMALMAP); // really scaled down dynamic glow map
+	GLSL_SetUniformInt(shader, UNIFORM_NORMALMAP, TB_NORMALMAP); // really scaled down dynamic glow map
 	GL_BindToTMU(tr.anamorphicRenderFBOImage[2], TB_NORMALMAP); // really scaled down dynamic glow map
 
 	{
@@ -2036,7 +2044,7 @@ void RB_SSGI(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 		screensize[0] = glConfig.vidWidth;
 		screensize[1] = glConfig.vidHeight;
 
-		GLSL_SetUniformVec2(&tr.ssgiShader, UNIFORM_DIMENSIONS, screensize);
+		GLSL_SetUniformVec2(shader, UNIFORM_DIMENSIONS, screensize);
 
 		//ri->Printf(PRINT_WARNING, "Sent dimensions %f %f.\n", screensize[0], screensize[1]);
 	}
@@ -2048,7 +2056,7 @@ void RB_SSGI(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 		float xmax = zmax * tan(backEnd.viewParms.fovX * M_PI / 360.0f);
 		float zmin = r_znear->value;
 		VectorSet4(viewInfo, zmax / zmin, zmax, 0.0, 0.0);
-		GLSL_SetUniformVec4(&tr.ssgiShader, UNIFORM_VIEWINFO, viewInfo);
+		GLSL_SetUniformVec4(shader, UNIFORM_VIEWINFO, viewInfo);
 	}
 
 	{
@@ -2058,12 +2066,12 @@ void RB_SSGI(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 		local0[2] = 0.0;
 		local0[3] = 0.0;
 
-		GLSL_SetUniformVec4(&tr.ssgiShader, UNIFORM_LOCAL0, local0);
+		GLSL_SetUniformVec4(shader, UNIFORM_LOCAL0, local0);
 
 		//ri->Printf(PRINT_WARNING, "Sent dimensions %f %f.\n", screensize[0], screensize[1]);
 	}
 
-	FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.ssgiShader, color, GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA);
+	FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, shader, color, GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA);
 }
 
 
