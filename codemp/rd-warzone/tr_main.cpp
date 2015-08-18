@@ -1835,9 +1835,9 @@ qboolean	R_CullEntitySurface( trRefEntity_t	*ent ) {
 		return qfalse;
 	}
 
-	//if ( backEnd.viewParms.targetFbo != tr.renderFbo ) {
-	//	return qfalse;
-	//}
+	if ( backEnd.viewParms.targetFbo == tr.renderCubeFbo ) {
+		return qfalse;
+	}
 
 	//float msLength = VectorLength(ent->e.modelScale);
 
