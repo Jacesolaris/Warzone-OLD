@@ -986,7 +986,7 @@ void R_AddWorldSurfaces (void) {
 			if (tr.world->surfacesViewCount[i] != tr.viewCount)
 				continue;
 
-			if (r_fovCull->integer)
+			if (r_fovCull->integer )//&& backEnd.viewParms.targetFbo == tr.renderFbo)
 			{
 				vec3_t bounds[2];
 
@@ -1017,7 +1017,7 @@ void R_AddWorldSurfaces (void) {
 				continue;
 
 #if 0 // Ignore this - I have not seen it remove anything, no point wasting time checking...
-			if (r_fovCull->integer)
+			if (r_fovCull->integer )//&& backEnd.viewParms.targetFbo == tr.renderFbo)
 			{
 				vec3_t bounds[2];
 

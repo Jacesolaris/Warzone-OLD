@@ -64,10 +64,20 @@ vec4 GetHDR( vec3 col2 )
 void main()
 {
 	vec4 color = texture2D(u_TextureMap, var_TexCoords);
-	vec4 HDR = GetHDR( color.rgb );
+	//vec4 HDR = GetHDR( color.rgb );
+
+//#define const_1 ( 12.0 / 255.0)
+//#define const_2 (255.0 / 219.0)
+	//HDR = ((clamp(HDR - const_1, 0.0, 1.0)) * const_2);
 
 	// Use HDR+VIBRANCE mix...
-	gl_FragColor = ( HDR + color + color * 0.33333 );
+	//gl_FragColor = ( (HDR + color + color) * 0.33333 );
 	//gl_FragColor = VibrancePass( HDR + color + color * 0.33333 );
 	//gl_FragColor.a = 1.0;
+
+#define const_1 ( 12.0 / 255.0)
+#define const_2 (255.0 / 219.0)
+	color = ((clamp(color - const_1, 0.0, 1.0)) * const_2);
+	color = ((clamp(color - const_1, 0.0, 1.0)) * const_2);
+	gl_FragColor = color;
 }
