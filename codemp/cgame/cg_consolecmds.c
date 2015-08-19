@@ -430,6 +430,8 @@ static consoleCommand_t	commands[] = {
 	{ "weaponclean",				CG_WeaponClean_f },
 	{ "weapprev",					CG_PrevWeapon_f },
 	{ "zzz",						CG_SaySillyTextTest },
+	{ "zoomin",						CG_ZoomIn_f	},
+	{ "zoomout",					CG_ZoomOut_f },
 };
 
 static const size_t numCommands = ARRAY_LEN( commands );

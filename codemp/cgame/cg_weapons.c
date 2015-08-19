@@ -1598,6 +1598,12 @@ void CG_NextWeapon_f( void ) {
 		return;
 	}
 
+	if (cg.predictedPlayerState.scopeType >= SCOPE_BINOCULARS)
+	{
+		CG_ZoomIn_f();
+		return;
+	}
+
 	cg.weaponSelectTime = cg.time;
 	original = cg.weaponSelect;
 
@@ -1644,6 +1650,12 @@ void CG_PrevWeapon_f( void ) {
 
 	if (cg.snap->ps.emplacedIndex)
 	{
+		return;
+	}
+
+	if (cg.predictedPlayerState.scopeType >= SCOPE_BINOCULARS)
+	{
+		CG_ZoomOut_f();
 		return;
 	}
 

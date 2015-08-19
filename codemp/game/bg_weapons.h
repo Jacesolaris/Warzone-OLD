@@ -186,7 +186,7 @@ typedef enum {
 	SCOPE_SCOPE_ACP_SNIPER, // Add anything you want. rename as you want.
 	SCOPE_SCOPE_BOWCASTER_CLASSIC,
 	SCOPE_SCOPE_WOOKIE_BOWCASTER_SCOPE,
-	SCOPE_SCOPE_WP_BRYAR_RIFLE_SCOPE,
+	SCOPE_SCOPE_BRYAR_RIFLE_SCOPE,
 	SCOPE_MAX_SCOPES
 } scopeTypes_t;
 
@@ -203,6 +203,9 @@ typedef struct scopeData_s
 	char	chargeShader[128];
 	char	zoomStartSound[128];
 	char	zoomEndSound[128];
+	int		instantZoom; // really a qboolean but it looks like qboolean is not set here. int == qboolean anyway
+	int		scopeZoomMin;
+	int		scopeZoomMax;
 } scopeData_t;
 
 extern scopeData_t scopeData[];

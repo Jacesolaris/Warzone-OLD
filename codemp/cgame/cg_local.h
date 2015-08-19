@@ -539,7 +539,6 @@ typedef struct markPoly_s {
 	polyVert_t	verts[MAX_VERTS_ON_POLY];
 } markPoly_t;
 
-
 typedef enum {
 	LE_MARK,
 	LE_EXPLOSION,
@@ -922,6 +921,10 @@ typedef struct cg_s {
 	qboolean	zoomed;
 	int			zoomTime;
 	float		zoomSensitivity;
+	//New zoom stuff. Stoiss
+	qboolean        zoomedBinoc;
+	int             zoomedScope;
+	float           zoomval;
 
 	// information screen text during loading
 	char		infoScreenText[MAX_STRING_CHARS];
@@ -1980,8 +1983,15 @@ void CG_TestModelNextFrame_f (void);
 void CG_TestModelPrevFrame_f (void);
 void CG_TestModelNextSkin_f (void);
 void CG_TestModelPrevSkin_f (void);
+
+#define __OLD_ZOOM_METHODE__
+#ifdef __OLD_ZOOM_METHODE__
+void CG_ZoomIn_f(void);
+void CG_ZoomOut_f(void);
+#else
 void CG_ZoomDown_f( void );
 void CG_ZoomUp_f( void );
+#endif //__OLD_ZOOM_METHODE__
 void CG_AddBufferedSound( sfxHandle_t sfx);
 
 void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demoPlayback );

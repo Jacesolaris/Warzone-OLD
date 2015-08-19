@@ -1122,6 +1122,54 @@ static void CG_OffsetFighterView( void )
 	// ...and of course we should copy the new view location to the proper spot too.
 	VectorCopy(camOrg, cg.refdef.vieworg);
 }
+#define __OLD_ZOOM_METHODE__
+#ifdef __OLD_ZOOM_METHODE__
+//======================================================================
+
+//
+// Zoom controls
+//
+
+
+void CG_AdjustZoomVal(float val, int type)
+{
+	cg.zoomval += val;
+	if (cg.zoomval > scopeData[type].scopeZoomMax)
+	{
+		cg.zoomval = scopeData[type].scopeZoomMax;
+	}
+	if (cg.zoomval < scopeData[type].scopeZoomMin)
+	{
+		cg.zoomval = scopeData[type].scopeZoomMin;
+	}
+}
+
+void CG_ZoomIn_f(void)
+{
+	// Gordon: fixed being able to "latch" your zoom by weaponcheck + quick zoomin
+	// OSP - change for zoom view in demos
+	if (scopeData[cg.predictedPlayerState.scopeType].instantZoom)
+	{
+		CG_AdjustZoomVal((100), cg.predictedPlayerState.scopeType); // 100 is more then any used, so max zoom in instantly
+	}
+	else
+	{
+		CG_AdjustZoomVal((1), cg.predictedPlayerState.scopeType);
+	}
+}
+
+void CG_ZoomOut_f(void)
+{
+	if (scopeData[cg.predictedPlayerState.scopeType].instantZoom)
+	{
+		CG_AdjustZoomVal(-(100), cg.predictedPlayerState.scopeType); // 100 is more then any used, so max zoom in instantly
+	}
+	else
+	{
+		CG_AdjustZoomVal(-(1), cg.predictedPlayerState.scopeType);
+	}
+}
+#else
 //======================================================================
 
 void CG_ZoomDown_f( void ) {
@@ -1139,7 +1187,7 @@ void CG_ZoomUp_f( void ) {
 	cg.zoomed = qfalse;
 	cg.zoomTime = cg.time;
 }
-
+#endif //__OLD_ZOOM_METHODE__
 /*
 ====================
 CG_CalcFov
