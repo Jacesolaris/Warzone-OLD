@@ -1709,12 +1709,6 @@ gfx_base/2d/cropCircle2
 	nomipmaps
 	cull	twosided
     {
-        map gfx_base/misc/scanline
-        blendFunc GL_DST_COLOR GL_SRC_COLOR
-        rgbGen vertex
-        tcMod scale 1 10.5
-    }
-    {
         map gfx_base/2d/cropcircle2
         blendFunc GL_SRC_ALPHA GL_ONE_MINUS_SRC_ALPHA
         rgbGen identity

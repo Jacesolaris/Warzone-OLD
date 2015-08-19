@@ -4,13 +4,6 @@ gfx/misc/zoom_mask2
 	nomipmaps
 	cull	disable
     {
-        map gfx/misc/scanline.tga
-        blendFunc GL_DST_COLOR GL_SRC_COLOR
-        detail
-        rgbGen identity
-        tcMod scale 10 12.5
-    }
-    {
         map gfx/misc/zoom_mask2.tga
         blendFunc GL_SRC_ALPHA GL_ONE_MINUS_SRC_ALPHA
         detail
@@ -47,13 +40,6 @@ gfx/2d/binocularWindow
         blendFunc GL_DST_COLOR GL_SRC_COLOR
         tcMod scroll 60 41.5
         rgbGen exactVertex
-    }
-    {
-        map gfx/misc/scanline.tga
-        blendFunc GL_DST_COLOR GL_SRC_COLOR
-        detail
-        rgbGen identity
-        tcMod scale 1 	5
     }
 }
 
@@ -118,13 +104,6 @@ gfx/2d/binocularNumOverlay
         blendFunc GL_ONE GL_ONE
         rgbGen identity
     }
-    {
-        map gfx/misc/scanline2.tga
-        blendFunc GL_DST_COLOR GL_SRC_COLOR
-        rgbGen identity
-        tcMod scale 1 		0.7
-	tcMod scroll 0	6.2
-    }
 }
 
 gfx/2d/zoomStatic
@@ -158,13 +137,6 @@ gfx/2d/disruptorMask
 {
 	nopicmip
 	cull	disable
-    {
-        map gfx/misc/scanline.tga
-        blendFunc GL_DST_COLOR GL_SRC_COLOR
-        detail
-        rgbGen identity
-        tcMod scale 1 9.5
-    }
     {
         map gfx/2d/disruptorMask.tga
         blendFunc GL_SRC_ALPHA GL_ONE_MINUS_SRC_ALPHA
@@ -295,11 +267,6 @@ gfx/2d/workingCamera
 		tcmod scale 2 2
 		tcmod scroll -30 10
 	}	
-	{
-		map gfx/misc/scanline2
-		blendFunc GL_DST_COLOR GL_SRC_COLOR
-		tcmod scale 1 10
-	}	
 }
 
 gfx/2d/brokenCamera
@@ -312,10 +279,5 @@ gfx/2d/brokenCamera
 		blendFunc GL_ONE GL_ZERO
 		tcmod scale 3.5 3
 		tcmod scroll -30 20
-	}	
-	{
-		map gfx/misc/scanline2
-		blendFunc GL_DST_COLOR GL_SRC_COLOR
-		tcmod scale 1 10
 	}	
 }
