@@ -2045,8 +2045,14 @@ const void *RB_PostProcess(const void *data)
 		//
 		// UQ1: Added...
 		//
+		qboolean SCREEN_BLUR = qfalse;
 
-		if (r_dof->integer)
+		if (backEnd.refdef.rdflags & RDF_BLUR)
+		{// Skip most of the fancy stuff when doing a blured screen...
+			SCREEN_BLUR = qtrue;
+		}
+
+		if (!SCREEN_BLUR && r_dof->integer)
 		{
 			//for (int pass_num = 0; pass_num < 3; pass_num++) // FIXME: Add passes cvar? - 3 is best though!
 			{
@@ -2075,6 +2081,19 @@ const void *RB_PostProcess(const void *data)
 			}
 		}
 
+		if (SCREEN_BLUR)
+		{
+			// Blur some times
+			float	spread = 1.0f;
+			int		numPasses = 8;
+
+			for ( int i = 0; i < numPasses; i++ )
+			{
+				RB_GaussianBlur(srcFbo, tr.genericFbo, srcFbo, spread);
+				spread += 0.6f * 0.25f;
+			}
+		}
+
 		if (r_testshader->integer)
 		{
 			int pass_num = 0;
@@ -2086,7 +2105,7 @@ const void *RB_PostProcess(const void *data)
 			}
 		}
 
-		if (r_darkexpand->integer)
+		if (!SCREEN_BLUR && r_darkexpand->integer)
 		{
 			for (int pass = 0; pass < 2; pass++)
 			{
@@ -2096,44 +2115,44 @@ const void *RB_PostProcess(const void *data)
 		}
 
 		/*
-		if (r_textureClean->integer)
+		if (!SCREEN_BLUR && r_textureClean->integer)
 		{
 			RB_TextureClean(srcFbo, srcBox, tr.genericFbo, dstBox);
 			FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 		}
 		*/
 
-		if (r_esharpening->integer)
+		if (!SCREEN_BLUR && r_esharpening->integer)
 		{
 			RB_ESharpening(srcFbo, srcBox, tr.genericFbo, dstBox);
 			FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 		}
 
-		if (r_esharpening2->integer)
+		if (!SCREEN_BLUR && r_esharpening2->integer)
 		{
 			RB_ESharpening2(srcFbo, srcBox, tr.genericFbo, dstBox);
 			FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 		}
 
-		if (r_multipost->integer)
+		if (!SCREEN_BLUR && r_multipost->integer)
 		{
 			RB_MultiPost(srcFbo, srcBox, tr.genericFbo, dstBox);
 			FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 		}
 
-		if (r_ssao->integer)
+		if (!SCREEN_BLUR && r_ssao->integer)
 		{
 			RB_SSAO(srcFbo, srcBox, tr.genericFbo, dstBox);
 			FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 		}
 
-		if (r_ssao2->integer)
+		if (!SCREEN_BLUR && r_ssao2->integer)
 		{
 			RB_SSAO2(srcFbo, srcBox, tr.genericFbo, dstBox);
 			FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 		}
 
-		if (r_depth->integer)
+		if (!SCREEN_BLUR && r_depth->integer)
 		{
 			// First run, before adding parallax and blooms, etc...
 			for (int i = 0; i < r_depthPasses->integer / 2; i++)
@@ -2143,7 +2162,7 @@ const void *RB_PostProcess(const void *data)
 			}
 		}
 
-		if (r_depthParallax->integer)
+		if (!SCREEN_BLUR && r_depthParallax->integer)
 		{
 			for (int i = 0; i < 4; i++)
 			{
@@ -2176,19 +2195,19 @@ const void *RB_PostProcess(const void *data)
 			FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 		}
 
-		if (r_lensflare->integer)
+		if (!SCREEN_BLUR && r_lensflare->integer)
 		{
 			RB_LensFlare(srcFbo, srcBox, tr.genericFbo, dstBox);
 			FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 		}
 
-		if (r_dynamiclight->integer >= 2)
+		if (!SCREEN_BLUR && r_dynamiclight->integer >= 2)
 		{
 			if (RB_VolumetricDLight(srcFbo, srcBox, tr.genericFbo, dstBox))
 				FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 		}
 
-		if (r_depth->integer)
+		if (!SCREEN_BLUR && r_depth->integer)
 		{
 			// Second run, after adding parallax and blooms, etc...
 			for (int i = 0; i < r_depthPasses->integer / 2; i++)
@@ -2210,7 +2229,7 @@ const void *RB_PostProcess(const void *data)
 			FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 		}
 
-		if (r_fxaa->integer)
+		if (!SCREEN_BLUR && r_fxaa->integer)
 		{
 			int i = 0;
 

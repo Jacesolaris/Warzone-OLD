@@ -61,9 +61,10 @@
 #define RDF_SKYBOXPORTAL	8
 #define RDF_DRAWSKYBOX		16		// the above marks a scene as being a 'portal sky'.  this flag says to draw it or not
 
-#define RDF_AUTOMAP			32		//means this scene is to draw the automap -rww
-#define	RDF_NOFOG			64		//no global fog in this scene (but still brush fog) -rww
+#define RDF_AUTOMAP			32		// means this scene is to draw the automap -rww
+#define	RDF_NOFOG			64		// no global fog in this scene (but still brush fog) -rww
 #define	RDF_UNDERWATER		128		//
+#define	RDF_BLUR			256		// tell renderer to blur the screen
 
 extern int	skyboxportal;
 extern int	drawskyboxportal;

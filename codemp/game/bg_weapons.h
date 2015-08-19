@@ -201,11 +201,16 @@ typedef struct scopeData_s
 	char	lightShader[128];
 	char	tickShader[128];
 	char	chargeShader[128];
+	int		scopeViewX;				// X position of the view inside the scope.
+	int		scopeViewY;				// Y position of the view inside the scope.
+	int		scopeViewW;				// Width of the view inside the scope.
+	int		scopeViewH;				// Height of the view inside the scope.
 	char	zoomStartSound[128];
 	char	zoomEndSound[128];
-	int		instantZoom; // really a qboolean but it looks like qboolean is not set here. int == qboolean anyway
-	int		scopeZoomMin;
-	int		scopeZoomMax;
+	int		instantZoom;			// Should this scope instantly zoom in/out? really a qboolean but it looks like qboolean is not set here. int == qboolean anyway
+	int		scopeZoomMin;			// Minimum Zoom Range.
+	int		scopeZoomMax;			// Maximum Zoom Range.
+	int		scopeZoomSpeed;			// How fast this scope zooms in/out.
 } scopeData_t;
 
 extern scopeData_t scopeData[];

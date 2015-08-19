@@ -12,6 +12,8 @@
 #include "ui/ui_shared.h"
 #include "ui/ui_public.h"
 
+extern qboolean drawingSniperScopeView;
+
 //[AUTOWAYPOINT]
 extern float aw_percent_complete;
 extern void AIMod_AutoWaypoint_DrawProgress( void );
@@ -169,6 +171,7 @@ CG_DrawZoomMask
 
 ================
 */
+
 static void CG_DrawZoomMask( void )
 {
 	vec4_t		color1;
@@ -279,8 +282,12 @@ static void CG_DrawZoomMask( void )
 			flip = !flip;
 		}
 	}
-	else if ( cg.predictedPlayerState.scopeType)
+	else if ( cg.predictedPlayerState.scopeType )
 	{
+		//
+		// Paint the scope itself over the view...
+		//
+
 		// disruptor zoom mode
 		level = (float)(50.0f - zoomFov) / 50.0f;//(float)(80.0f - zoomFov) / 80.0f;
 
@@ -301,7 +308,7 @@ static void CG_DrawZoomMask( void )
 		trap->R_SetColor( colorTable[CT_WHITE] );
 
 		if (strncmp(scopeData[cg.predictedPlayerState.scopeType].maskShader, "", strlen(scopeData[cg.predictedPlayerState.scopeType].maskShader)))
-			CG_DrawPic(0, 0, 640, 480, trap->R_RegisterShader(scopeData[cg.predictedPlayerState.scopeType].maskShader));// you left it here last night
+			CG_DrawPic(0, 0, 640, 480, trap->R_RegisterShader(scopeData[cg.predictedPlayerState.scopeType].maskShader));
 
 		// apparently 99.0f is the full zoom level
 		if ( level >= 99 )
@@ -375,7 +382,6 @@ static void CG_DrawZoomMask( void )
 				max = 1.0f;
 			}
 
-			trap->R_DrawStretchPic(257, 435, 134*max, 34, 0, 0, max, 1, cgs.media.disruptorChargeShader);
 			if (strncmp(scopeData[cg.predictedPlayerState.scopeType].chargeShader, "", strlen(scopeData[cg.predictedPlayerState.scopeType].chargeShader)))
 				trap->R_DrawStretchPic(257, 435, 134 * max, 34, 0, 0, max, 1, trap->R_RegisterShader(scopeData[cg.predictedPlayerState.scopeType].chargeShader));
 		}
@@ -10345,7 +10351,7 @@ static void CG_Draw2DScreenTints( void )
 	}
 }
 
-static void CG_Draw2D( void ) {
+void CG_Draw2D( void ) {
 	float			inTime = cg.invenSelectTime+WEAPON_SELECT_TIME;
 	float			wpTime = cg.weaponSelectTime+WEAPON_SELECT_TIME;
 	float			fallTime;
@@ -10817,13 +10823,14 @@ void CG_DrawActive( stereoFrame_t stereoView ) {
 	vec3_t		baseOrg;
 
 	// optionally draw the info screen instead
-	if ( !cg.snap ) {
+	if ( !drawingSniperScopeView && !cg.snap ) {
 		CG_DrawInformation();
 		return;
 	}
 
 	// optionally draw the tournament scoreboard instead
-	if ( cg.snap->ps.persistant[PERS_TEAM] == TEAM_SPECTATOR &&
+	if ( !drawingSniperScopeView &&
+		cg.snap->ps.persistant[PERS_TEAM] == TEAM_SPECTATOR &&
 		( cg.snap->ps.pm_flags & PMF_SCOREBOARD ) ) {
 		CG_DrawTourneyScoreboard();
 		return;
@@ -10846,7 +10853,8 @@ void CG_DrawActive( stereoFrame_t stereoView ) {
 
 
 	// clear around the rendered view if sized down
-	CG_TileClear();
+	if (!drawingSniperScopeView)
+		CG_TileClear();
 
 	// offset vieworg appropriately if we're doing stereo separation
 	VectorCopy( cg.refdef.vieworg, baseOrg );
@@ -10866,8 +10874,11 @@ void CG_DrawActive( stereoFrame_t stereoView ) {
 		VectorCopy( baseOrg, cg.refdef.vieworg );
 	}
 
-	// draw status bar and other floating elements
- 	CG_Draw2D();
+	/*if (!drawingSniperScopeView)
+	{
+		// draw status bar and other floating elements
+ 		CG_Draw2D();
+	}*/
 }
 
 

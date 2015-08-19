@@ -17,6 +17,8 @@ char		true_view_info[MAX_TRUEVIEW_INFO_SIZE];
 int			true_view_valid;
 //[/TrueView]
 
+#define __SCOPE_DEVELOPER__
+
 /*
 =============================================================================
 
@@ -1122,25 +1124,26 @@ static void CG_OffsetFighterView( void )
 	// ...and of course we should copy the new view location to the proper spot too.
 	VectorCopy(camOrg, cg.refdef.vieworg);
 }
-#define __OLD_ZOOM_METHODE__
-#ifdef __OLD_ZOOM_METHODE__
+
 //======================================================================
 
 //
 // Zoom controls
 //
 
+qboolean drawingSniperScopeView = qfalse;
+float lastfov = 0.0;
 
 void CG_AdjustZoomVal(float val, int type)
 {
 	cg.zoomval += val;
-	if (cg.zoomval > scopeData[type].scopeZoomMax)
+	if (cg.zoomval >= scopeData[type].scopeZoomMax)
 	{
-		cg.zoomval = scopeData[type].scopeZoomMax;
+		cg.zoomval = scopeData[type].scopeZoomMax-1;
 	}
-	if (cg.zoomval < scopeData[type].scopeZoomMin)
+	if (cg.zoomval <= scopeData[type].scopeZoomMin)
 	{
-		cg.zoomval = scopeData[type].scopeZoomMin;
+		cg.zoomval = scopeData[type].scopeZoomMin+1;
 	}
 }
 
@@ -1150,44 +1153,50 @@ void CG_ZoomIn_f(void)
 	// OSP - change for zoom view in demos
 	if (scopeData[cg.predictedPlayerState.scopeType].instantZoom)
 	{
-		CG_AdjustZoomVal((100), cg.predictedPlayerState.scopeType); // 100 is more then any used, so max zoom in instantly
+		CG_AdjustZoomVal(-100, cg.predictedPlayerState.scopeType); // 100 is more then any used, so max zoom in instantly
 	}
 	else
 	{
-		CG_AdjustZoomVal((1), cg.predictedPlayerState.scopeType);
+		CG_AdjustZoomVal(-scopeData[cg.predictedPlayerState.scopeType].scopeZoomSpeed, cg.predictedPlayerState.scopeType);
 	}
+
+	//trap->Print("Zoom in to %f.\n", cg.zoomval);
 }
 
 void CG_ZoomOut_f(void)
 {
 	if (scopeData[cg.predictedPlayerState.scopeType].instantZoom)
 	{
-		CG_AdjustZoomVal(-(100), cg.predictedPlayerState.scopeType); // 100 is more then any used, so max zoom in instantly
+		CG_AdjustZoomVal(100, cg.predictedPlayerState.scopeType); // 100 is more then any used, so max zoom in instantly
 	}
 	else
 	{
-		CG_AdjustZoomVal(-(1), cg.predictedPlayerState.scopeType);
+		CG_AdjustZoomVal(scopeData[cg.predictedPlayerState.scopeType].scopeZoomSpeed, cg.predictedPlayerState.scopeType);
 	}
-}
-#else
-//======================================================================
 
-void CG_ZoomDown_f( void ) {
-	if ( cg.zoomed ) {
-		return;
-	}
-	cg.zoomed = qtrue;
-	cg.zoomTime = cg.time;
+	//trap->Print("Zoom out to %f.\n", cg.zoomval);
 }
 
-void CG_ZoomUp_f( void ) {
-	if ( !cg.zoomed ) {
-		return;
+/*
+==============
+CG_Zoom
+==============
+*/
+void CG_Zoom( void )
+{
+	if ( (cg.snap->ps.pm_flags & PMF_FOLLOW) || cg.demoPlayback ) {
+		cg.predictedPlayerState.eFlags = cg.snap->ps.eFlags;
+		cg.predictedPlayerState.weapon = cg.snap->ps.weapon;
+		cg.predictedPlayerState.scopeType = cg.snap->ps.scopeType;
 	}
-	cg.zoomed = qfalse;
-	cg.zoomTime = cg.time;
+
+	if( cg.predictedPlayerState.scopeType >= SCOPE_BINOCULARS ) {
+		cg.zoomval = (cg.zoomval == 0) ? scopeData[cg.predictedPlayerState.scopeType].scopeZoomMin : cg.zoomval;
+	} else {
+		cg.zoomval = 0;
+	}
 }
-#endif //__OLD_ZOOM_METHODE__
+
 /*
 ====================
 CG_CalcFov
@@ -1204,11 +1213,20 @@ static int CG_CalcFov( void ) {
 	float	phase;
 	float	v;
 	float	fov_x, fov_y;
-	float	f;
+	//float	f;
 	int		inwater;
 	//[TrueView]
 	float cgFov;
 	//float	cgFov = cg_fov.value;
+
+	CG_Zoom();
+
+	if ( cg.predictedPlayerState.stats[STAT_HEALTH] <= 0 && !(cg.snap->ps.pm_flags & PMF_FOLLOW) ) 
+	{
+		cg.zoomedBinoc = qfalse;
+		cg.zoomTime = 0;
+		cg.zoomval = 0;
+	}
 
 	if (!cg.renderingThirdPerson && (cg_trueguns.integer || cg.predictedPlayerState.weapon == WP_SABER
 		|| cg.predictedPlayerState.weapon == WP_MELEE) && cg_trueFOV.value
@@ -1241,14 +1259,17 @@ static int CG_CalcFov( void ) {
 	*/
 	//[/TrueView]
 
-	if ( cg.predictedPlayerState.pm_type == PM_INTERMISSION ) {
+	if ( !drawingSniperScopeView ) {
+		// not drawing the inner zoom view, use standard fov.
+		fov_x = cgFov;
+	} else if ( cg.predictedPlayerState.pm_type == PM_INTERMISSION ) {
 		// if in intermission, use a fixed value
-		fov_x = 80;//90;
+		fov_x = cgFov;
 	} else {
 		// user selectable
 		if ( cgs.dmflags & DF_FIXED_FOV ) {
 			// dmflag to prevent wide fov for all clients
-			fov_x = 80;//90;
+			fov_x = 80;
 		} else {
 			fov_x = cgFov;
 			if ( fov_x < 1 ) {
@@ -1258,69 +1279,22 @@ static int CG_CalcFov( void ) {
 			}
 		}
 
-		if (cg.predictedPlayerState.scopeType == SCOPE_BINOCULARS)
-		{ //binoculars
-			if (zoomFov > 40.0f)
-			{
-				zoomFov -= cg.frametime * 0.075f;
+		//trap->Print("Zoom is %f.\n", cg.zoomval);
 
-				if (zoomFov < 40.0f)
-				{
-					zoomFov = 40.0f;
-				}
-				else if (zoomFov > cgFov)
-				{
-					zoomFov = cgFov;
-				}
+		// account for zooms
+		if(cg.zoomval) {
+			zoomFov = cg.zoomval;	// (SA) use user scrolled amount
+
+			if ( zoomFov < 1 ) {
+				zoomFov = 1;
+			} else if ( zoomFov > 160 ) {
+				zoomFov = 160;
 			}
 
-			fov_x = zoomFov;
-		}
-		else if (cg.predictedPlayerState.scopeType)
-		{
-			if (!cg.predictedPlayerState.zoomLocked)
-			{
-				if (zoomFov > 50)
-				{ //Now starting out at nearly half zoomed in
-					zoomFov = 50;
-				}
-				zoomFov -= cg.frametime * 0.035f;//0.075f;
-
-				if (zoomFov < MAX_ZOOM_FOV)
-				{
-					zoomFov = MAX_ZOOM_FOV;
-				}
-				else if (zoomFov > cgFov)
-				{
-					zoomFov = cgFov;
-				}
-				else
-				{	// Still zooming
-					static int zoomSoundTime = 0;
-
-					if (zoomSoundTime < cg.time || zoomSoundTime > cg.time + 10000)
-					{
-						trap->S_StartSound(cg.refdef.vieworg, ENTITYNUM_WORLD, CHAN_LOCAL, cgs.media.disruptorZoomLoop);
-						zoomSoundTime = cg.time + 300;
-					}
-				}
-			}
-
-			if (zoomFov < MAX_ZOOM_FOV)
-			{
-				zoomFov = 50;		// hack to fix zoom during vid restart
-			}
-			fov_x = zoomFov;
-		}
-		else
-		{
-			zoomFov = 80;
-
-			f = ( cg.time - cg.predictedPlayerState.zoomTime ) / ZOOM_OUT_TIME;
-			if ( f <= 1.0 )
-			{
-				fov_x = cg.predictedPlayerState.zoomFov + f * ( fov_x - cg.predictedPlayerState.zoomFov );
-			}
+			fov_x = scopeData[cg.predictedPlayerState.scopeType].scopeZoomMax - cg.zoomval;
+			lastfov = fov_x;
+		} else {
+			zoomFov = lastfov;
 		}
 	}
 
@@ -1353,15 +1327,33 @@ static int CG_CalcFov( void ) {
 		cg.refdef.rdflags &= ~RDF_UNDERWATER;
 	}
 
+	if (!drawingSniperScopeView && cg.predictedPlayerState.scopeType >= SCOPE_BINOCULARS)
+	{// Tell the renderer to blur the screen outside of the scope rectile...
+		if (!(cg.refdef.rdflags & RDF_BLUR))
+			cg.refdef.rdflags |= RDF_BLUR;
+	}
+	/*
+	else if (cg.clientNum == cg.predictedPlayerState.clientNum && cg.predictedPlayerState.eFlags & EF_DEAD)
+	{// Tell the renderer to blur the screen when dead...
+		if (!(cg.refdef.rdflags & RDF_BLUR))
+			cg.refdef.rdflags |= RDF_BLUR;
+	}
+	*/
+	else
+	{// Make sure the screen is not blurred...
+		if (cg.refdef.rdflags & RDF_BLUR)
+			cg.refdef.rdflags &= ~RDF_BLUR;
+	}
+
 	// set it
 	cg.refdef.fov_x = fov_x;
 	cg.refdef.fov_y = fov_y;
 
-	if (cg.predictedPlayerState.scopeType)
+	if (cg.predictedPlayerState.scopeType && drawingSniperScopeView)
 	{
 		cg.zoomSensitivity = zoomFov/cgFov;
 	}
-	else if ( !cg.zoomed ) {
+	else if ( !cg.zoomed || !drawingSniperScopeView ) {
 		cg.zoomSensitivity = 1;
 	} else {
 		cg.zoomSensitivity = cg.refdef.fov_y / 75.0;
@@ -1370,6 +1362,52 @@ static int CG_CalcFov( void ) {
 	return inwater;
 }
 
+
+/*
+================
+CG_DrawScopeView
+
+================
+*/
+
+/*
+extern void CG_DrawMiscStaticModels( void );
+
+void CG_DrawScopeView( float x, float y, float w, float h ) {
+	refdef_t		refdef, refdefBackup;
+
+	drawingSniperScopeView = qtrue;
+
+	CG_CalcFov();
+	
+	memcpy( &refdef, &cg.refdef, sizeof(refdef_t));
+	memcpy( &refdefBackup, &cg.refdef, sizeof(refdef_t));
+
+	refdef.x = x * cgs.screenXScale;
+	refdef.y = y * cgs.screenYScale;
+	refdef.width = w * cgs.screenXScale;
+	refdef.height = h * cgs.screenYScale;
+
+	refdef.time = cg.time;
+
+	//refdef.rdflags = 0;
+
+	memcpy( &cg.refdef, &refdef, sizeof(refdef_t));
+
+	if ( !cg.hyperspace)
+	{ //rww - also had to add this to add effects being rendered in portal sky areas properly.
+		trap->FX_AddScheduledEffects(qtrue);
+	}
+
+	CG_AddPacketEntities(qtrue);
+
+	trap->R_RenderScene( &refdef );
+
+	memcpy( &cg.refdef, &refdefBackup, sizeof(refdef_t));
+
+	drawingSniperScopeView = qfalse;
+}
+*/
 
 /*
 ===============
@@ -1596,14 +1634,17 @@ static int CG_CalcViewValues( void ) {
 	qboolean manningTurret = qfalse;
 	playerState_t	*ps;
 
-	memset( &cg.refdef, 0, sizeof( cg.refdef ) );
+	if (!drawingSniperScopeView)
+	{
+		memset( &cg.refdef, 0, sizeof( cg.refdef ) );
 
-	// strings for in game rendering
-	// Q_strncpyz( cg.refdef.text[0], "Park Ranger", sizeof(cg.refdef.text[0]) );
-	// Q_strncpyz( cg.refdef.text[1], "19", sizeof(cg.refdef.text[1]) );
+		// strings for in game rendering
+		// Q_strncpyz( cg.refdef.text[0], "Park Ranger", sizeof(cg.refdef.text[0]) );
+		// Q_strncpyz( cg.refdef.text[1], "19", sizeof(cg.refdef.text[1]) );
 
-	// calculate size of 3D view
-	CG_CalcVrect();
+		// calculate size of 3D view
+		CG_CalcVrect();
+	}
 
 	ps = &cg.predictedPlayerState;
 /*
@@ -2529,6 +2570,7 @@ extern void CG_ActualLoadDeferredPlayers( void );
 
 static int cg_siegeClassIndex = -2;
 
+extern void CG_Draw2D( void );
 extern void InventoryWindow ( void );
 
 void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demoPlayback ) {
@@ -2544,89 +2586,92 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 	qboolean	isFighter = qfalse;
 #endif
 
-	if (cgQueueLoad)
-	{ //do this before you start messing around with adding ghoul2 refents and crap
-		CG_ActualLoadDeferredPlayers();
-		cgQueueLoad = qfalse;
-	}
-
-	cg.time = serverTime;
-	cg.demoPlayback = demoPlayback;
-
-	if (cg.snap && ui_myteam.integer != cg.snap->ps.persistant[PERS_TEAM])
+	if (!drawingSniperScopeView)
 	{
-		trap->Cvar_Set ( "ui_myteam", va("%i", cg.snap->ps.persistant[PERS_TEAM]) );
-	}
-	if (cgs.gametype == GT_SIEGE &&
-		cg.snap &&
-		cg_siegeClassIndex != cgs.clientinfo[cg.snap->ps.clientNum].siegeIndex)
-	{
-		cg_siegeClassIndex = cgs.clientinfo[cg.snap->ps.clientNum].siegeIndex;
-		if (cg_siegeClassIndex == -1)
-		{
-			trap->Cvar_Set("ui_mySiegeClass", "<none>");
-		}
-		else
-		{
-			trap->Cvar_Set("ui_mySiegeClass", bgSiegeClasses[cg_siegeClassIndex].name);
-		}
-	}
-
-	// update cvars
-	CG_UpdateCvars();
-
-	// if we are only updating the screen as a loading
-	// pacifier, don't even try to read snapshots
-	if ( cg.infoScreenText[0] != 0 ) {
-		CG_DrawInformation();
-		return;
-	}
-
-	trap->FX_AdjustTime( cg.time );
-
-	CG_RunLightStyles();
-
-	// any looped sounds will be respecified as entities
-	// are added to the render list
-	trap->S_ClearLoopingSounds();
-
-	// clear all the render lists
-	trap->R_ClearScene();
-
-	// set up cg.snap and possibly cg.nextSnap
-	CG_ProcessSnapshots();
-
-	trap->ROFF_UpdateEntities();
-
-	// if we haven't received any snapshots yet, all
-	// we can draw is the information screen
-	if ( !cg.snap || ( cg.snap->snapFlags & SNAPFLAG_NOT_ACTIVE ) )
-	{
-#if 0
-		// Transition from zero to negative one on the snapshot timeout.
-		// The reason we do this is because the first client frame is responsible for
-		// some farily slow processing (such as weather) and we dont want to include
-		// that processing time into our calculations
-		if ( !cg.snapshotTimeoutTime )
-		{
-			cg.snapshotTimeoutTime = -1;
-		}
-		// Transition the snapshot timeout time from -1 to the current time in
-		// milliseconds which will start the timeout.
-		else if ( cg.snapshotTimeoutTime == -1 )
-		{
-			cg.snapshotTimeoutTime = trap->Milliseconds ( );
+		if (cgQueueLoad)
+		{ //do this before you start messing around with adding ghoul2 refents and crap
+			CG_ActualLoadDeferredPlayers();
+			cgQueueLoad = qfalse;
 		}
 
-		// If we have been waiting too long then just error out
-		if ( cg.snapshotTimeoutTime > 0 && (trap->Milliseconds ( ) - cg.snapshotTimeoutTime > cg_snapshotTimeout.integer * 1000) )
+		cg.time = serverTime;
+		cg.demoPlayback = demoPlayback;
+
+		if (cg.snap && ui_myteam.integer != cg.snap->ps.persistant[PERS_TEAM])
 		{
-			Com_Error ( ERR_DROP, CG_GetStringEdString("MP_SVGAME", "SNAPSHOT_TIMEOUT"));
+			trap->Cvar_Set ( "ui_myteam", va("%i", cg.snap->ps.persistant[PERS_TEAM]) );
+		}
+		if (cgs.gametype == GT_SIEGE &&
+			cg.snap &&
+			cg_siegeClassIndex != cgs.clientinfo[cg.snap->ps.clientNum].siegeIndex)
+		{
+			cg_siegeClassIndex = cgs.clientinfo[cg.snap->ps.clientNum].siegeIndex;
+			if (cg_siegeClassIndex == -1)
+			{
+				trap->Cvar_Set("ui_mySiegeClass", "<none>");
+			}
+			else
+			{
+				trap->Cvar_Set("ui_mySiegeClass", bgSiegeClasses[cg_siegeClassIndex].name);
+			}
+		}
+
+		// update cvars
+		CG_UpdateCvars();
+
+		// if we are only updating the screen as a loading
+		// pacifier, don't even try to read snapshots
+		if ( cg.infoScreenText[0] != 0 ) {
+			CG_DrawInformation();
 			return;
 		}
+
+		trap->FX_AdjustTime( cg.time );
+
+		CG_RunLightStyles();
+
+		// any looped sounds will be respecified as entities
+		// are added to the render list
+		trap->S_ClearLoopingSounds();
+
+		// clear all the render lists
+		trap->R_ClearScene();
+
+		// set up cg.snap and possibly cg.nextSnap
+		CG_ProcessSnapshots();
+
+		trap->ROFF_UpdateEntities();
+
+		// if we haven't received any snapshots yet, all
+		// we can draw is the information screen
+		if ( !cg.snap || ( cg.snap->snapFlags & SNAPFLAG_NOT_ACTIVE ) )
+		{
+#if 0
+			// Transition from zero to negative one on the snapshot timeout.
+			// The reason we do this is because the first client frame is responsible for
+			// some farily slow processing (such as weather) and we dont want to include
+			// that processing time into our calculations
+			if ( !cg.snapshotTimeoutTime )
+			{
+				cg.snapshotTimeoutTime = -1;
+			}
+			// Transition the snapshot timeout time from -1 to the current time in
+			// milliseconds which will start the timeout.
+			else if ( cg.snapshotTimeoutTime == -1 )
+			{
+				cg.snapshotTimeoutTime = trap->Milliseconds ( );
+			}
+
+			// If we have been waiting too long then just error out
+			if ( cg.snapshotTimeoutTime > 0 && (trap->Milliseconds ( ) - cg.snapshotTimeoutTime > cg_snapshotTimeout.integer * 1000) )
+			{
+				Com_Error ( ERR_DROP, CG_GetStringEdString("MP_SVGAME", "SNAPSHOT_TIMEOUT"));
+				return;
+			}
 #endif
-		CG_DrawInformation();
-		return;
+			CG_DrawInformation();
+			return;
+		}
 	}
 
 	// let the client system know what our weapon and zoom settings are
@@ -2659,95 +2704,101 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 	if ( !isFighter )
 #endif //VEH_CONTROL_SCHEME_4
 	{
-		if (cg.predictedPlayerState.m_iVehicleNum)
+		if (!drawingSniperScopeView)
 		{
-			veh = &cg_entities[cg.predictedPlayerState.m_iVehicleNum];
-		}
-		if (veh &&
-			veh->currentState.eType == ET_NPC &&
-			veh->currentState.NPC_class == CLASS_VEHICLE &&
-			veh->m_pVehicle &&
-			veh->m_pVehicle->m_pVehicleInfo->type == VH_FIGHTER &&
-			bg_fighterAltControl.integer)
-		{
-			trap->SetUserCmdValue( cg.weaponSelect, mSensitivity, mPitchOverride, mYawOverride, 0.0f, cg.forceSelect, cg.itemSelect, qtrue );
-			veh = NULL; //this is done because I don't want an extra assign each frame because I am so perfect and super efficient.
-		}
-		else
-		{
-			trap->SetUserCmdValue( cg.weaponSelect, mSensitivity, mPitchOverride, mYawOverride, 0.0f, cg.forceSelect, cg.itemSelect, qfalse );
+			if (cg.predictedPlayerState.m_iVehicleNum)
+			{
+				veh = &cg_entities[cg.predictedPlayerState.m_iVehicleNum];
+			}
+			if (veh &&
+				veh->currentState.eType == ET_NPC &&
+				veh->currentState.NPC_class == CLASS_VEHICLE &&
+				veh->m_pVehicle &&
+				veh->m_pVehicle->m_pVehicleInfo->type == VH_FIGHTER &&
+				bg_fighterAltControl.integer)
+			{
+				trap->SetUserCmdValue( cg.weaponSelect, mSensitivity, mPitchOverride, mYawOverride, 0.0f, cg.forceSelect, cg.itemSelect, qtrue );
+				veh = NULL; //this is done because I don't want an extra assign each frame because I am so perfect and super efficient.
+			}
+			else
+			{
+				trap->SetUserCmdValue( cg.weaponSelect, mSensitivity, mPitchOverride, mYawOverride, 0.0f, cg.forceSelect, cg.itemSelect, qfalse );
+			}
 		}
 	}
 
-	// this counter will be bumped for every valid scene we generate
-	cg.clientFrame++;
-
-	// update cg.predictedPlayerState
-	CG_PredictPlayerState();
-
-	// decide on third person view
-	cg.renderingThirdPerson = qfalse;
-
-	if ((cg_thirdPerson.integer || (cg.snap->ps.stats[STAT_HEALTH] <= 0)) && !(cg.refdef.rdflags & RDF_UNDERWATER))
-		cg.renderingThirdPerson = qtrue;
-
-	if (cg.snap->ps.stats[STAT_HEALTH] > 0)
+	if (!drawingSniperScopeView)
 	{
-		if (cg.predictedPlayerState.weapon == WP_EMPLACED_GUN && cg.predictedPlayerState.emplacedIndex /*&&
-			cg_entities[cg.predictedPlayerState.emplacedIndex].currentState.weapon == WP_NONE*/)
-		{ //force third person for e-web and emplaced use
-			cg.renderingThirdPerson = qtrue;
-		}
-		//[TrueView]
-		else if (cg_trueInvertSaber.integer == 2 && (cg.predictedPlayerState.weapon == WP_SABER || cg.predictedPlayerState.weapon == WP_MELEE))
-		{//force thirdperson for sabers/melee if in cg_trueinvertsaber.integer == 2
-			cg.renderingThirdPerson = qtrue;
-		}
-		else if (cg.predictedPlayerState.fallingToDeath || cg.predictedPlayerState.m_iVehicleNum
-			|| (cg_trueInvertSaber.integer == 1 && !cg_thirdPerson.integer && (cg.predictedPlayerState.weapon == WP_SABER || cg.predictedPlayerState.weapon == WP_MELEE)))
-		{
-			cg.renderingThirdPerson = qtrue;
-		}
-		else if (cg_trueInvertSaber.integer == 1 && cg_thirdPerson.integer && (cg.predictedPlayerState.weapon == WP_SABER || cg.predictedPlayerState.weapon == WP_MELEE))
-		{
-			cg.renderingThirdPerson = qfalse;
-		}
-		/*
-		else if (cg.predictedPlayerState.weapon == WP_SABER || cg.predictedPlayerState.weapon == WP_MELEE ||
-		BG_InGrappleMove(cg.predictedPlayerState.torsoAnim) || BG_InGrappleMove(cg.predictedPlayerState.legsAnim) ||
-		cg.predictedPlayerState.forceHandExtend == HANDEXTEND_KNOCKDOWN || cg.predictedPlayerState.fallingToDeath ||
-		cg.predictedPlayerState.m_iVehicleNum || PM_InKnockDown(&cg.predictedPlayerState))
-		{
-		if (cg_fpls.integer && cg.predictedPlayerState.weapon == WP_SABER)
-		{ //force to first person for fpls
+		// this counter will be bumped for every valid scene we generate
+		cg.clientFrame++;
+
+		// update cg.predictedPlayerState
+		CG_PredictPlayerState();
+
+		// decide on third person view
 		cg.renderingThirdPerson = qfalse;
-		}
-		else
+
+		if ((cg_thirdPerson.integer || (cg.snap->ps.stats[STAT_HEALTH] <= 0)) && !(cg.refdef.rdflags & RDF_UNDERWATER))
+			cg.renderingThirdPerson = qtrue;
+
+		if (cg.snap->ps.stats[STAT_HEALTH] > 0)
 		{
-		cg.renderingThirdPerson = qtrue;
+			if (cg.predictedPlayerState.weapon == WP_EMPLACED_GUN && cg.predictedPlayerState.emplacedIndex /*&&
+																										   cg_entities[cg.predictedPlayerState.emplacedIndex].currentState.weapon == WP_NONE*/)
+			{ //force third person for e-web and emplaced use
+				cg.renderingThirdPerson = qtrue;
+			}
+			//[TrueView]
+			else if (cg_trueInvertSaber.integer == 2 && (cg.predictedPlayerState.weapon == WP_SABER || cg.predictedPlayerState.weapon == WP_MELEE))
+			{//force thirdperson for sabers/melee if in cg_trueinvertsaber.integer == 2
+				cg.renderingThirdPerson = qtrue;
+			}
+			else if (cg.predictedPlayerState.fallingToDeath || cg.predictedPlayerState.m_iVehicleNum
+				|| (cg_trueInvertSaber.integer == 1 && !cg_thirdPerson.integer && (cg.predictedPlayerState.weapon == WP_SABER || cg.predictedPlayerState.weapon == WP_MELEE)))
+			{
+				cg.renderingThirdPerson = qtrue;
+			}
+			else if (cg_trueInvertSaber.integer == 1 && cg_thirdPerson.integer && (cg.predictedPlayerState.weapon == WP_SABER || cg.predictedPlayerState.weapon == WP_MELEE))
+			{
+				cg.renderingThirdPerson = qfalse;
+			}
+			/*
+			else if (cg.predictedPlayerState.weapon == WP_SABER || cg.predictedPlayerState.weapon == WP_MELEE ||
+			BG_InGrappleMove(cg.predictedPlayerState.torsoAnim) || BG_InGrappleMove(cg.predictedPlayerState.legsAnim) ||
+			cg.predictedPlayerState.forceHandExtend == HANDEXTEND_KNOCKDOWN || cg.predictedPlayerState.fallingToDeath ||
+			cg.predictedPlayerState.m_iVehicleNum || PM_InKnockDown(&cg.predictedPlayerState))
+			{
+			if (cg_fpls.integer && cg.predictedPlayerState.weapon == WP_SABER)
+			{ //force to first person for fpls
+			cg.renderingThirdPerson = qfalse;
+			}
+			else
+			{
+			cg.renderingThirdPerson = qtrue;
+			}
+			}
+			*/
+			//[/TrueView]
+			else if (cg.snap->ps.scopeType)
+			{ //always force first person when zoomed
+				cg.renderingThirdPerson = qfalse;
+			}
+
+			if (cg.refdef.rdflags & RDF_UNDERWATER)
+			{ //always force first person when underwater
+				cg.renderingThirdPerson = qfalse;
+			}
 		}
-		}
-		*/
-		//[/TrueView]
-		else if (cg.snap->ps.scopeType)
-		{ //always force first person when zoomed
+
+		if (cg.predictedPlayerState.pm_type == PM_SPECTATOR)
+		{ //always first person for spec
 			cg.renderingThirdPerson = qfalse;
 		}
 
-		if (cg.refdef.rdflags & RDF_UNDERWATER)
-		{ //always force first person when underwater
+		if (cg.snap->ps.persistant[PERS_TEAM] == TEAM_SPECTATOR)
+		{
 			cg.renderingThirdPerson = qfalse;
 		}
-	}
-
-	if (cg.predictedPlayerState.pm_type == PM_SPECTATOR)
-	{ //always first person for spec
-		cg.renderingThirdPerson = qfalse;
-	}
-
-	if (cg.snap->ps.persistant[PERS_TEAM] == TEAM_SPECTATOR)
-	{
-		cg.renderingThirdPerson = qfalse;
 	}
 
 	// build cg.refdef
@@ -2791,28 +2842,37 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 		CG_AddLocalEntities();
 		CG_AddAtmosphericEffects();  	// Add rain/snow etc.
 	}
-	CG_AddViewWeapon( &cg.predictedPlayerState );
+
+	if (!drawingSniperScopeView)
+		CG_AddViewWeapon( &cg.predictedPlayerState );
 
 	if ( !cg.hyperspace)
 	{
 		trap->FX_AddScheduledEffects(qfalse);
 	}
 
-	// add buffered sounds
-	CG_PlayBufferedSounds();
+	if (!drawingSniperScopeView)
+	{
+		// add buffered sounds
+		CG_PlayBufferedSounds();
+	}
 
 	// finish up the rest of the refdef
 	if ( cg.testModelEntity.hModel ) {
 		CG_AddTestModel();
 	}
+
 	cg.refdef.time = cg.time;
 	memcpy( cg.refdef.areamask, cg.snap->areamask, sizeof( cg.refdef.areamask ) );
 
-	// warning sounds when powerup is wearing off
-	CG_PowerupTimerSounds();
+	if (!drawingSniperScopeView)
+	{
+		// warning sounds when powerup is wearing off
+		CG_PowerupTimerSounds();
 
-	// if there are any entities flagged as sound trackers and attached to other entities, update their sound pos
-	CG_UpdateSoundTrackers();
+		// if there are any entities flagged as sound trackers and attached to other entities, update their sound pos
+		CG_UpdateSoundTrackers();
+	}
 
 	if (gCGHasFallVector)
 	{
@@ -2826,16 +2886,19 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 		AnglesToAxis(lookAng, cg.refdef.viewaxis);
 	}
 
-	//This is done from the vieworg to get origin for non-attenuated sounds
-	cstr = CG_ConfigString( CS_GLOBAL_AMBIENT_SET );
-
-	if (cstr && cstr[0])
+	if (!drawingSniperScopeView)
 	{
-		trap->S_UpdateAmbientSet( cstr, cg.refdef.vieworg );
-	}
+		//This is done from the vieworg to get origin for non-attenuated sounds
+		cstr = CG_ConfigString( CS_GLOBAL_AMBIENT_SET );
 
-	// update audio positions
-	trap->S_Respatialize( cg.snap->ps.clientNum, cg.refdef.vieworg, cg.refdef.viewaxis, inwater );
+		if (cstr && cstr[0])
+		{
+			trap->S_UpdateAmbientSet( cstr, cg.refdef.vieworg );
+		}
+
+		// update audio positions
+		trap->S_Respatialize( cg.snap->ps.clientNum, cg.refdef.vieworg, cg.refdef.viewaxis, inwater );
+	}
 
 	// make sure the lagometerSample and frame timing isn't done twice when in stereo
 	if ( stereoView != STEREO_RIGHT ) {
@@ -2844,7 +2907,9 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 			cg.frametime = 0;
 		}
 		cg.oldTime = cg.time;
-		CG_AddLagometerFrameInfo();
+		
+		if (!drawingSniperScopeView)
+			CG_AddLagometerFrameInfo();
 	}
 	if (timescale.value != cg_timescaleFadeEnd.value) {
 		if (timescale.value < cg_timescaleFadeEnd.value) {
@@ -2864,6 +2929,54 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 
 	// actually issue the rendering calls
 	CG_DrawActive( stereoView );
+	
+	if ( !drawingSniperScopeView && cg.predictedPlayerState.scopeType >= SCOPE_BINOCULARS )
+	{
+		//
+		// Draw the view inside the scope...
+		//
+
+		refdef_t		refdefBackup;
+
+		memcpy( &refdefBackup, &cg.refdef, sizeof(refdef_t));
+
+		drawingSniperScopeView = qtrue;
+
+		if (scopeData[cg.predictedPlayerState.scopeType].scopeViewX == 0 
+			&& scopeData[cg.predictedPlayerState.scopeType].scopeViewY == 0 
+			&& scopeData[cg.predictedPlayerState.scopeType].scopeViewW == 0 
+			&& scopeData[cg.predictedPlayerState.scopeType].scopeViewH == 0)
+		{// Unknown scope size for this, use the developer cvars to set size...
+			// UQ1: Using 640x480 screen size. Adjusted by the CG_DrawScopeView to match real size...
+#ifdef __SCOPE_DEVELOPER__
+			// *IMPORTANT* !!! Disable __SCOPE_DEVELOPER__ as soon as scopes have all had their size values set in scopeData !!!
+			cg.refdef.x = cg_scopeX.integer * cgs.screenXScale;
+			cg.refdef.y = cg_scopeY.integer * cgs.screenYScale;
+			cg.refdef.width = cg_scopeW.integer * cgs.screenXScale;
+			cg.refdef.height = cg_scopeH.integer * cgs.screenYScale;
+#else //!__SCOPE_DEVELOPER__
+			// When not in scope developer mode, 0,0,0,0 means this scope never draws a second view inside the scope picture(s)...
+#endif //__SCOPE_DEVELOPER__
+		}
+		else
+		{// Known scope. Use set scopeData values...
+			// UQ1: Using 640x480 screen size. Adjusted by the CG_DrawScopeView to match real size...
+			cg.refdef.x = scopeData[cg.predictedPlayerState.scopeType].scopeViewX * cgs.screenXScale;
+			cg.refdef.y = scopeData[cg.predictedPlayerState.scopeType].scopeViewY * cgs.screenYScale;
+			cg.refdef.width = scopeData[cg.predictedPlayerState.scopeType].scopeViewW * cgs.screenXScale;
+			cg.refdef.height = scopeData[cg.predictedPlayerState.scopeType].scopeViewH * cgs.screenYScale;
+		}
+	
+		CG_DrawActiveFrame( serverTime, stereoView, demoPlayback );
+
+		memcpy( &cg.refdef, &refdefBackup, sizeof(refdef_t));
+		drawingSniperScopeView = qfalse;
+		return;
+	}
+
+	// draw status bar and other floating elements
+	// UQ1: Now drawn here instead of CG_DrawActive() so we can overlay the zoom view above before drawing the scope graphics over that...
+	CG_Draw2D();
 
 	CG_DrawAutoMap();
 
