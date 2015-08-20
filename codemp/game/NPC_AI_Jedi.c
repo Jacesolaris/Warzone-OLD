@@ -1981,6 +1981,7 @@ static void Jedi_CombatDistance( int enemy_dist )
 		Jedi_Advance();
 	}
 
+#ifdef __FORCE_SPEED__
 	//if really really mad, rage!
 	if ( NPCS.NPCInfo->stats.aggression > Q_irand( 5, 15 )
 		&& NPCS.NPC->health < NPCS.NPC->client->pers.maxHealth*0.75f
@@ -1992,6 +1993,7 @@ static void Jedi_CombatDistance( int enemy_dist )
 			Jedi_Rage();
 		}
 	}
+#endif //__FORCE_SPEED__
 }
 
 static qboolean Jedi_Strafe( int strafeTimeMin, int strafeTimeMax, int nextStrafeTimeMin, int nextStrafeTimeMax, qboolean walking )
@@ -6794,6 +6796,7 @@ static void Jedi_Attack( void )
 		}
 	}
 
+#ifdef __FORCE_SPEED__
 	if ( NPCS.NPC->client->ps.weapon == WP_SABER/*NPC_IsJedi(NPCS.NPC)*/ )
 	{
 		if ( NPCS.NPC->client->NPC_class == CLASS_TAVION
@@ -6825,6 +6828,7 @@ static void Jedi_Attack( void )
 			}
 		}
 	}
+#endif //__FORCE_SPEED__
 }
 
 extern void WP_Explode( gentity_t *self );

@@ -1635,7 +1635,7 @@ void BotScheduleBotThink(void) {
 
 	botnum = 0;
 
-	for( i = 0; i < MAX_CLIENTS; i++ ) {
+	for( i = 0; i < MAX_GENTITIES; i++ ) {
 		if( !botstates[i] || !botstates[i]->inuse ) {
 			continue;
 		}
@@ -1822,7 +1822,7 @@ BotAILoadMap
 int BotAILoadMap( int restart ) {
 	int			i;
 
-	for (i = 0; i < MAX_CLIENTS; i++) {
+	for (i = 0; i < MAX_GENTITIES; i++) {
 		if (botstates[i] && botstates[i]->inuse) {
 			BotResetState( botstates[i] );
 			botstates[i]->setupcount = 4;
@@ -1911,7 +1911,7 @@ void UpdateEventTracker(void)
 
 	i = 0;
 
-	while (i < MAX_CLIENTS)
+	while (i < MAX_GENTITIES)
 	{
 		if (gBotEventTracker[i].eventSequence != level.clients[i].ps.eventSequence)
 		{ //updated event
@@ -1980,7 +1980,7 @@ int BotAIStartFrame(int time) {
 	else thinktime = BOT_THINK_TIME;
 
 	// execute scheduled bot AI
-	for( i = 0; i < MAX_CLIENTS; i++ ) {
+	for( i = 0; i < MAX_GENTITIES; i++ ) {
 		if( !botstates[i] || !botstates[i]->inuse ) {
 			continue;
 		}
@@ -1997,7 +1997,7 @@ int BotAIStartFrame(int time) {
 	}
 
 	// execute bot user commands every frame
-	for( i = 0; i < MAX_CLIENTS; i++ ) {
+	for( i = 0; i < MAX_GENTITIES; i++ ) {
 		if( !botstates[i] || !botstates[i]->inuse ) {
 			continue;
 		}
@@ -2084,7 +2084,7 @@ int BotAIShutdown( int restart ) {
 	//if the game is restarted for a tournament
 	if ( restart ) {
 		//shutdown all the bots in the botlib
-		for (i = 0; i < MAX_CLIENTS; i++) {
+		for (i = 0; i < MAX_GENTITIES; i++) {
 			if (botstates[i] && botstates[i]->inuse) {
 				BotAIShutdownClient(botstates[i]->client, restart);
 			}
