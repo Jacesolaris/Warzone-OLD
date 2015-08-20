@@ -3910,8 +3910,8 @@ void NPC_Think ( gentity_t *self)//, int msec )
 	int i = 0;
 	//gentity_t *player;
 
-	//self->nextthink = level.time + FRAMETIME;
-	self->nextthink = level.time;
+	self->nextthink = level.time + FRAMETIME;
+	//self->nextthink = level.time;
 
 	SetNPCGlobals( self );
 
