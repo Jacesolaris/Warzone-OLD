@@ -126,24 +126,21 @@ AIMOD_NODES_LoadGrass ( void )
 	char			mp[64] = "";
 	/*short*/ int		numberNodes;
 	short int		temp, fix_aas_nodes;
-	vmCvar_t		mapname;
 
 	NUM_GRASS_POSITIONS = 0;
 	GRASSES_LOADED = qfalse;
-	
-	trap->Cvar_Register( &mapname, "mapname", "", CVAR_SERVERINFO | CVAR_ROM );
 
 	i = 0;
 
 	///////////////////
 	//open the node file for reading, return false on error
-	trap->FS_Open( va( "nodes/%s.bwp", mapname.string), &f, FS_READ );
+	trap->FS_Open( va( "nodes/%s.bwp", cgs.currentmapname), &f, FS_READ );
 	if ( !f )
 	{
 		return;
 	}
 
-	strcpy( mp, mapname.string);
+	strcpy( mp, cgs.currentmapname);
 	trap->FS_Read( &nm, strlen( name) + 1, f );									//read in a string the size of the mod name (+1 is because all strings end in hex '00')
 	trap->FS_Read( &version, sizeof(float), f );			//read and make sure the version is the same
 
@@ -224,7 +221,7 @@ AIMOD_NODES_LoadGrass ( void )
 	trap->FS_Read( &fix_aas_nodes, sizeof(short int), f );
 	trap->FS_Close( f );							//close the file
 	trap->Print( "^1*** ^3%s^5: Successfully loaded %i grass points from waypoint file ^7nodes/%s.bwp^5.\n", GAME_VERSION,
-			  NUM_GRASS_POSITIONS, mapname.string );
+			  NUM_GRASS_POSITIONS, cgs.currentmapname );
 
 	return;
 }

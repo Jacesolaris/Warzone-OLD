@@ -3609,6 +3609,18 @@ static void R_CalcVertexLightDirs( void )
 	}
 }
 
+void StripMaps( const char *in, char *out, int destsize )
+{
+	const char *dot = strrchr(in, '_'), *slash;
+	if (dot && (!(slash = strrchr(in, '/')) || slash < dot))
+		destsize = (destsize < dot-in+1 ? destsize : dot-in+1);
+
+	if ( in == out && destsize > 1 )
+		out[destsize-1] = '\0';
+	else
+		Q_strncpyz(out, in, destsize);
+}
+
 
 /*
 =================
@@ -3617,6 +3629,9 @@ RE_LoadWorldMap
 Called directly from cgame
 =================
 */
+#include <algorithm>
+#include <string>
+
 void RE_LoadWorldMap( const char *name ) {
 	int			i;
 	dheader_t	*header;
@@ -3628,6 +3643,22 @@ void RE_LoadWorldMap( const char *name ) {
 
 	if ( tr.worldMapLoaded ) {
 		ri->Error( ERR_DROP, "ERROR: attempted to redundantly load world map" );
+	}
+
+	{// Set currentMapName string...
+		string str = name;
+		string str2 = "maps/";
+
+		// Find the word in the string
+		std::string::size_type pos = str.find(str2);
+
+		// If we find the word we replace it.
+		if(pos != std::string::npos)
+		{
+			str.replace(pos, str2.size(), "");
+		}
+
+		COM_StripExtension(str.c_str(), currentMapName, sizeof(currentMapName));
 	}
 
 	// set default map light scale

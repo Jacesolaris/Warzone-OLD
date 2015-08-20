@@ -1743,7 +1743,7 @@ qboolean CG_AtmosphericKludge()
 	//
 	// Supported Game Maps...
 	//
-	if( !Q_stricmp( cgs.mapname, "maps/mp/ctf2.bsp" ) )
+	if( !Q_stricmp( cgs.currentmapname, "mp/ctf2" ) )
   	{// hoth
   	  	//CG_EffectParse( "T=SNOW" );
 		CG_EffectParse( "T=HEAVYSNOW" );
@@ -1751,7 +1751,7 @@ qboolean CG_AtmosphericKludge()
   	  	return( kludgeResult = qtrue );
   	}
 
-	if( !Q_stricmp( cgs.mapname, "maps/mp/ctf3.bsp" ) )
+	if( !Q_stricmp( cgs.currentmapname, "mp/ctf3" ) )
   	{// yavin
   	  	CG_EffectParse( "T=STORM" );
 		storm = qtrue;
@@ -1759,7 +1759,7 @@ qboolean CG_AtmosphericKludge()
   	  	return( kludgeResult = qtrue );
   	}
 
-	if( !Q_stricmp( cgs.mapname, "maps/mp/duel6.bsp" ) )
+	if( !Q_stricmp( cgs.currentmapname, "mp/duel6" ) )
   	{// yavin training
   	  	CG_EffectParse( "T=STORM" );
 		storm = qtrue;
@@ -1767,14 +1767,14 @@ qboolean CG_AtmosphericKludge()
   	  	return( kludgeResult = qtrue );
   	}
 
-	if( !Q_stricmp( cgs.mapname, "maps/mp/duel9.bsp" ) )
+	if( !Q_stricmp( cgs.currentmapname, "mp/duel9" ) )
   	{// hoth canyon
   	  	CG_EffectParse( "T=SNOW" );
 		ATMOSPHERIC_DROPDELAY = ATMOSPHERIC_SNOW_DROPDELAY;
   	  	return( kludgeResult = qtrue );
   	}
 
-	if( !Q_stricmp( cgs.mapname, "maps/hoth2.bsp" ) )
+	if( !Q_stricmp( cgs.currentmapname, "maps/hoth2" ) )
   	{// hoth 2 sp
   	  	CG_EffectParse( "T=SNOW" );
 		ATMOSPHERIC_DROPDELAY = ATMOSPHERIC_SNOW_DROPDELAY;
@@ -1784,21 +1784,21 @@ qboolean CG_AtmosphericKludge()
 	//
 	// JK2 Maps...
 	//
-  	if( !Q_stricmp( cgs.mapname, "maps/ffa_bespin.bsp" ) )
+  	if( !Q_stricmp( cgs.currentmapname, "maps/ffa_bespin" ) )
   	{
   	  	CG_EffectParse( "T=STORM" );
 		storm = qtrue;
   	  	return( kludgeResult = qtrue );
   	}
 
-	if( !Q_stricmp( cgs.mapname, "maps/ffa_ns_streets.bsp" ) )
+	if( !Q_stricmp( cgs.currentmapname, "maps/ffa_ns_streets" ) )
   	{
   	  	CG_EffectParse( "T=RAIN" );
 		rain = qtrue;
   	  	return( kludgeResult = qtrue );
   	}
 
-	if( !Q_stricmp( cgs.mapname, "maps/ffa_yavin.bsp" ) )
+	if( !Q_stricmp( cgs.currentmapname, "maps/ffa_yavin" ) )
   	{
   	  	CG_EffectParse( "T=RAIN" );
 		rain = qtrue;
@@ -1806,7 +1806,7 @@ qboolean CG_AtmosphericKludge()
   	  	return( kludgeResult = qtrue );
   	}
 
-	if( !Q_stricmp( cgs.mapname, "maps/bespin_streets.bsp" ) )
+	if( !Q_stricmp( cgs.currentmapname, "maps/bespin_streets" ) )
   	{
   	  	CG_EffectParse( "T=STORM" );
 		storm = qtrue;
@@ -1814,7 +1814,7 @@ qboolean CG_AtmosphericKludge()
   	  	return( kludgeResult = qtrue );
   	}
 
-	if( !Q_stricmp( cgs.mapname, "maps/bespin_platform.bsp" ) )
+	if( !Q_stricmp( cgs.currentmapname, "maps/bespin_platform" ) )
   	{
   	  	CG_EffectParse( "T=STORM" );
 		storm = qtrue;
@@ -1822,14 +1822,14 @@ qboolean CG_AtmosphericKludge()
   	  	return( kludgeResult = qtrue );
   	}
 
-	if( !Q_stricmp( cgs.mapname, "maps/artus_topside.bsp" ) )
+	if( !Q_stricmp( cgs.currentmapname, "maps/artus_topside" ) )
   	{
   	  	CG_EffectParse( "T=SNOW" );
 		ATMOSPHERIC_DROPDELAY = ATMOSPHERIC_SNOW_DROPDELAY;
   	  	return( kludgeResult = qtrue );
   	}
 
-	if( !Q_stricmp( cgs.mapname, "maps/yavin_canyon.bsp" ) )
+	if( !Q_stricmp( cgs.currentmapname, "maps/yavin_canyon" ) )
   	{
   	  	CG_EffectParse( "T=STORM" );
 		storm = qtrue;
@@ -1837,7 +1837,7 @@ qboolean CG_AtmosphericKludge()
   	  	return( kludgeResult = qtrue );
   	}
 
-	if( !Q_stricmp( cgs.mapname, "maps/yavin_swamp.bsp" ) )
+	if( !Q_stricmp( cgs.currentmapname, "maps/yavin_swamp" ) )
   	{
   	  	CG_EffectParse( "T=RAIN" );
 		rain = qtrue;
@@ -1846,7 +1846,7 @@ qboolean CG_AtmosphericKludge()
   	}
 
 	// Supported user maps.
-	if( !Q_stricmp( cgs.mapname, "maps/ffa_coruscant.bsp" ) )
+	if( !Q_stricmp( cgs.currentmapname, "maps/ffa_coruscant" ) )
   	{
   	  	CG_EffectParse( "T=STORM" );
 		storm = qtrue;
@@ -1854,7 +1854,7 @@ qboolean CG_AtmosphericKludge()
   	  	return( kludgeResult = qtrue );
   	}
 
-	if( !Q_stricmp( cgs.mapname, "maps/ffa_coruscant.bsp" ) )
+	if( !Q_stricmp( cgs.currentmapname, "maps/ffa_coruscant" ) )
   	{
   	  	CG_EffectParse( "T=STORM" );
 		storm = qtrue;
@@ -1862,21 +1862,21 @@ qboolean CG_AtmosphericKludge()
   	  	return( kludgeResult = qtrue );
   	}
 
-	if( !Q_stricmp( cgs.mapname, "maps/imphoth_a.bsp" ) )
+	if( !Q_stricmp( cgs.currentmapname, "maps/imphoth_a" ) )
   	{
   	  	CG_EffectParse( "T=SNOW" );
 		ATMOSPHERIC_DROPDELAY = ATMOSPHERIC_SNOW_DROPDELAY;
   	  	return( kludgeResult = qtrue );
   	}
 
-	if( !Q_stricmp( cgs.mapname, "maps/imphoth_b.bsp" ) )
+	if( !Q_stricmp( cgs.currentmapname, "maps/imphoth_b" ) )
   	{
   	  	CG_EffectParse( "T=SNOW" );
 		ATMOSPHERIC_DROPDELAY = ATMOSPHERIC_SNOW_DROPDELAY;
   	  	return( kludgeResult = qtrue );
   	}
 
-	if( !Q_stricmp( cgs.mapname, "maps/jedicouncilgc2.bsp" ) )
+	if( !Q_stricmp( cgs.currentmapname, "maps/jedicouncilgc2" ) )
   	{
   	  	CG_EffectParse( "T=STORM" );
 		storm = qtrue;
@@ -1884,7 +1884,7 @@ qboolean CG_AtmosphericKludge()
   	  	return( kludgeResult = qtrue );
   	}
 
-	if( !Q_stricmp( cgs.mapname, "maps/jedicouncilgc.bsp" ) )
+	if( !Q_stricmp( cgs.currentmapname, "maps/jedicouncilgc" ) )
   	{
   	  	CG_EffectParse( "T=STORM" );
 		storm = qtrue;
@@ -1892,7 +1892,7 @@ qboolean CG_AtmosphericKludge()
   	  	return( kludgeResult = qtrue );
   	}
 
-	if( !Q_stricmp( cgs.mapname, "maps/bespinaflstyle3.bsp" ) )
+	if( !Q_stricmp( cgs.currentmapname, "maps/bespinaflstyle3" ) )
   	{
   	  	CG_EffectParse( "T=STORM" );
 		storm = qtrue;
@@ -1900,7 +1900,7 @@ qboolean CG_AtmosphericKludge()
   	  	return( kludgeResult = qtrue );
   	}
 
-	if( !Q_stricmp( cgs.mapname, "maps/ffa_kujarforest.bsp" ) )
+	if( !Q_stricmp( cgs.currentmapname, "maps/ffa_kujarforest" ) )
   	{
   	  	CG_EffectParse( "T=RAIN" );
 		rain = qtrue;
@@ -1908,7 +1908,7 @@ qboolean CG_AtmosphericKludge()
   	  	return( kludgeResult = qtrue );
   	}
 
-	if( !Q_stricmp( cgs.mapname, "maps/wookievillage.bsp" ) )
+	if( !Q_stricmp( cgs.currentmapname, "maps/wookievillage" ) )
   	{
   	  	CG_EffectParse( "T=RAIN" );
 		rain = qtrue;
@@ -1916,7 +1916,7 @@ qboolean CG_AtmosphericKludge()
   	  	return( kludgeResult = qtrue );
   	}
 
-	if( !Q_stricmp( cgs.mapname, "maps/ewok_village.bsp" ) )
+	if( !Q_stricmp( cgs.currentmapname, "maps/ewok_village" ) )
   	{
   	  	CG_EffectParse( "T=RAIN" );
 		rain = qtrue;
@@ -1924,7 +1924,7 @@ qboolean CG_AtmosphericKludge()
   	  	return( kludgeResult = qtrue );
   	}
 
-	if( !Q_stricmp( cgs.mapname, "maps/coruscant_promenade.bsp" ) )
+	if( !Q_stricmp( cgs.currentmapname, "maps/coruscant_promenade" ) )
   	{
   	  	CG_EffectParse( "T=RAIN" );
 		rain = qtrue;
