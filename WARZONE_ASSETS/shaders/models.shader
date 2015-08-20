@@ -1,4 +1,4 @@
-// JKG_ShaderPatches: BlasTech - deformvertexes parm to the flags, bloom to Portable Sentry Gun, lightmap to swoop & Z-95 for Mace's JKG_CargoHeist2. 
+// JKG_ShaderPatches: BlasTech - deformvertexes parm to the flags, bloom to Portable Sentry Gun, lightmap to swoop & Z-95 for Mace's JKG_CargoHeist2.
 // _______________________________________________________________________________________________________________________________
 
 models/map_objects/mp/flag
@@ -486,12 +486,12 @@ models/map_objects/imp_mine/mbay_monitor_screen
         rgbGen lightingDiffuse
     }
     {
-        animMap 4 models/map_objects/imp_mine/mbay_monitor_screen4 models/map_objects/imp_mine/mbay_monitor_screen5 models/map_objects/imp_mine/mbay_monitor_screen6 models/map_objects/imp_mine/mbay_monitor_screen7 models/map_objects/imp_mine/mbay_monitor_screen models/map_objects/imp_mine/mbay_monitor_screen1 models/map_objects/imp_mine/mbay_monitor_screen2 models/map_objects/imp_mine/mbay_monitor_screen3 
+        animMap 4 models/map_objects/imp_mine/mbay_monitor_screen4 models/map_objects/imp_mine/mbay_monitor_screen5 models/map_objects/imp_mine/mbay_monitor_screen6 models/map_objects/imp_mine/mbay_monitor_screen7 models/map_objects/imp_mine/mbay_monitor_screen models/map_objects/imp_mine/mbay_monitor_screen1 models/map_objects/imp_mine/mbay_monitor_screen2 models/map_objects/imp_mine/mbay_monitor_screen3
         blendFunc GL_ONE GL_ONE
         glow
     }
     {
-        animMap 8 models/map_objects/imp_mine/mbay_monitor_screen models/map_objects/imp_mine/mbay_monitor_screen1 models/map_objects/imp_mine/mbay_monitor_screen2 models/map_objects/imp_mine/mbay_monitor_screen3 models/map_objects/imp_mine/mbay_monitor_screen4 models/map_objects/imp_mine/mbay_monitor_screen5 models/map_objects/imp_mine/mbay_monitor_screen6 models/map_objects/imp_mine/mbay_monitor_screen7 
+        animMap 8 models/map_objects/imp_mine/mbay_monitor_screen models/map_objects/imp_mine/mbay_monitor_screen1 models/map_objects/imp_mine/mbay_monitor_screen2 models/map_objects/imp_mine/mbay_monitor_screen3 models/map_objects/imp_mine/mbay_monitor_screen4 models/map_objects/imp_mine/mbay_monitor_screen5 models/map_objects/imp_mine/mbay_monitor_screen6 models/map_objects/imp_mine/mbay_monitor_screen7
         blendFunc GL_ONE GL_ONE
         glow
         detail
@@ -691,7 +691,7 @@ models/map_objects/imp_mine/turret_cannon_base
         rgbGen lightingDiffuse
     }
     {
-        animMap 2 models/map_objects/imp_mine/turret_glow gfx/colors/black 
+        animMap 2 models/map_objects/imp_mine/turret_glow gfx/colors/black
         blendFunc GL_ONE GL_ONE
         glow
         rgbGen wave sin 0.3 1 0 1.5
@@ -1178,7 +1178,7 @@ models/map_objects/kejim/cargo_small_02
 models/map_objects/kejim/doorpad
 {
     {
-        animMap 4 models/map_objects/kejim/doorpad models/map_objects/kejim/doorpad1 
+        animMap 4 models/map_objects/kejim/doorpad models/map_objects/kejim/doorpad1
         blendFunc GL_ONE GL_ZERO
     }
 }
@@ -1187,7 +1187,7 @@ models/map_objects/kejim/doorpad_on
 {
 	qer_editorimage	models/map_objects/kejim/doorpad
     {
-        animMap 4 models/map_objects/kejim/doorpad1 models/map_objects/kejim/doorpad2 
+        animMap 4 models/map_objects/kejim/doorpad1 models/map_objects/kejim/doorpad2
         blendFunc GL_ONE GL_ZERO
     }
 }
@@ -1341,7 +1341,7 @@ models/map_objects/kejim/generator
 	q3map_nolightmap
 	q3map_onlyvertexlighting
     {
-        animMap 2 gfx/damage_overlays/electricity gfx/colors/black 
+        animMap 2 gfx/damage_overlays/electricity gfx/colors/black
         blendFunc GL_ONE GL_ZERO
         tcMod rotate 50
         tcMod scroll 45 75
@@ -1349,7 +1349,7 @@ models/map_objects/kejim/generator
         tcMod stretch sin 1 0.1 5 5
     }
     {
-        animMap 2 gfx/damage_overlays/electricity gfx/colors/black 
+        animMap 2 gfx/damage_overlays/electricity gfx/colors/black
         blendFunc GL_ONE GL_ONE
         glow
         tcMod rotate -50
@@ -1358,7 +1358,7 @@ models/map_objects/kejim/generator
         tcMod stretch sin 1 0.1 5 5
     }
     {
-        animMap 2 gfx/misc/lightningflash gfx/colors/black 
+        animMap 2 gfx/misc/lightningflash gfx/colors/black
         blendFunc GL_ONE GL_ONE
         glow
         tcMod turb 0 1 0 1
@@ -1492,6 +1492,7 @@ models/map_objects/yavin/grass
 	q3map_nolightmap
 	q3map_alphashadow
 	q3map_onlyvertexlighting
+	q3map_material	ShortGrass
 	cull	twosided
     {
         map models/map_objects/yavin/grass
@@ -1505,6 +1506,7 @@ models/map_objects/yavin/grass_tall
 	q3map_nolightmap
 	q3map_alphashadow
 	q3map_onlyvertexlighting
+	q3map_material	ShortGrass
 	cull	twosided
     {
         map models/map_objects/yavin/grass_tall
@@ -1771,6 +1773,7 @@ models/map_objects/yavin/grass_tall_b
 	q3map_nolightmap
 	q3map_alphashadow
 	q3map_onlyvertexlighting
+	q3map_material	ShortGrass
 	cull	twosided
     {
         map models/map_objects/yavin/grass_tall
@@ -1785,6 +1788,7 @@ models/map_objects/yavin/grass_b
 	q3map_nolightmap
 	q3map_alphashadow
 	q3map_onlyvertexlighting
+	q3map_material	ShortGrass
 	cull	twosided
     {
         map models/map_objects/yavin/grass

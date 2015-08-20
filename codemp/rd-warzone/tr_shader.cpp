@@ -3194,6 +3194,8 @@ qboolean IsKnownShinyMap ( const char *heystack )
 
 void AssignMaterialType ( const char *name, const char *text )
 {
+	//ri->Printf(PRINT_WARNING, "Check material type for %s.\n", name);
+
 	if (!HaveSurfaceType(shader.surfaceFlags))
 	{
 		//
@@ -3209,6 +3211,10 @@ void AssignMaterialType ( const char *name, const char *text )
 			shader.surfaceFlags |= MATERIAL_ARMOR;
 		else if (StringsContainWord(name, name, "boba") || StringsContainWord(name, name, "pilot"))
 			shader.surfaceFlags |= MATERIAL_ARMOR;
+		//else if (StringsContainWord(name, name, "water"))
+		//	shader.surfaceFlags |= MATERIAL_WATER;
+		else if (StringsContainWord(name, name, "grass") || StringsContainWord(name, name, "yavin/ground") || StringsContainWord(name, name, "mp/s_ground"))
+			shader.surfaceFlags |= MATERIAL_SHORTGRASS;
 		//
 		// Stuff we can be pretty sure of...
 		//
@@ -3371,12 +3377,18 @@ void AssignMaterialType ( const char *name, const char *text )
 		//	shader.surfaceFlags |= MATERIAL_MARBLE;
 		//else if (!StringsContainWord(name, name, "players") && (StringsContainWord(name, name, "coruscant") || StringsContainWord(name, name, "/rooftop/") || StringsContainWord(name, name, "/nar_") || StringsContainWord(name, name, "/imperial/")))
 		//	shader.surfaceFlags |= MATERIAL_TILES;
+		//else if (StringsContainWord(name, name, "water"))
+		//	shader.surfaceFlags |= MATERIAL_WATER;
+		else if (StringsContainWord(name, name, "grass") || StringsContainWord(name, name, "yavin/ground") || StringsContainWord(name, name, "mp/s_ground"))
+			shader.surfaceFlags |= MATERIAL_SHORTGRASS;
 	}
 	
 	if (StringsContainWord(name, text, "plastic") || StringsContainWord(name, text, "trooper") || StringsContainWord(name, text, "medpack"))
 		if (!(shader.surfaceFlags & MATERIAL_PLASTIC)) shader.surfaceFlags |= MATERIAL_PLASTIC;
-	else if (StringsContainWord(name, text, "water"))
+	else if (StringsContainWord(name, name, "water") && !StringsContainWord(name, name, "splash") && !StringsContainWord(name, name, "drip"))
 		if (!(shader.surfaceFlags & MATERIAL_WATER)) shader.surfaceFlags |= MATERIAL_WATER;
+	else if (StringsContainWord(name, name, "grass") || StringsContainWord(name, name, "yavin/ground") || StringsContainWord(name, name, "mp/s_ground"))
+		if (!(shader.surfaceFlags & MATERIAL_SHORTGRASS)) shader.surfaceFlags |= MATERIAL_SHORTGRASS;
 
 	DebugSurfaceTypeSelection(name, shader.surfaceFlags);
 }
@@ -3680,18 +3692,18 @@ static qboolean ParseShader( const char *name, const char **text )
 	}
 
 	//
+	// UQ1: If we do not have any material type for this shader, try to guess as a backup (for parallax and specular settings)...
+	//
+
+	if (!shader.isSky)
+		AssignMaterialType(name, *text);
+
+	//
 	// ignore shaders that don't have any stages, unless it is a sky or fog
 	//
 	if ( s == 0 && !shader.isSky && !(shader.contentFlags & CONTENTS_FOG ) ) {
 		return qfalse;
 	}
-
-	//
-	// UQ1: If we do not have any material type for this shader, try to guess as a backup (for parallax and specular settings)...
-	//
-
-	AssignMaterialType(name, *text);
-	
 
 	shader.explicitlyDefined = qtrue;
 
@@ -4105,11 +4117,10 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 		switch( shader.surfaceFlags & MATERIAL_MASK )
 		{
 		case MATERIAL_WATER:			// 13			// light covering of water on a surface
-		case MATERIAL_SHORTGRASS:		// 5			// manicured lawn
-		case MATERIAL_LONGGRASS:		// 6			// long jungle grass
+		//case MATERIAL_SHORTGRASS:		// 5			// manicured lawn
+		//case MATERIAL_LONGGRASS:		// 6			// long jungle grass
 		case MATERIAL_TILES:			// 26			// tiled floor
 		case MATERIAL_SOLIDMETAL:		// 3			// solid girders
-		case MATERIAL_GREENLEAVES:		// 20			// fresh leaves still on a tree
 		case MATERIAL_FABRIC:			// 21			// Cotton sheets
 		case MATERIAL_CANVAS:			// 22			// tent material
 		case MATERIAL_MARBLE:			// 12			// marble floors
@@ -4130,12 +4141,20 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 			//defs |= LIGHTDEF_USE_LIGHT_VECTOR;
 			//useLightVector = qtrue;
 			break;
+		case MATERIAL_GREENLEAVES:		// 20			// fresh leaves still on a tree
+		case MATERIAL_SOLIDWOOD:		// 1			// freshly cut timber
+		case MATERIAL_HOLLOWWOOD:		// 2			// termite infested creaky wood
+		case MATERIAL_SHORTGRASS:		// 5			// manicured lawn
+		case MATERIAL_LONGGRASS:		// 6			// long jungle grass
+			//defs |= LIGHTDEF_USE_LIGHT_VECTOR;
+			//useLightVector = qtrue;
+			defs |= LIGHTDEF_USE_LIGHT_VERTEX;
+			useLightVertex = qtrue;
+			break;
 		case MATERIAL_SAND:				// 8			// sandy beach
 		case MATERIAL_CARPET:			// 27			// lush carpet
 		case MATERIAL_GRAVEL:			// 9			// lots of small stones
 		case MATERIAL_ROCK:				// 23			//
-		case MATERIAL_SOLIDWOOD:		// 1			// freshly cut timber
-		case MATERIAL_HOLLOWWOOD:		// 2			// termite infested creaky wood
 		case MATERIAL_DRYLEAVES:		// 19			// dried up leaves on the floor
 		case MATERIAL_MUD:				// 17			// wet soil
 		case MATERIAL_DIRT:				// 7			// hard mud

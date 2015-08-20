@@ -4101,6 +4101,109 @@ void CG_ShowSlope ( void ) {
 	trap->Print("Slope is %f %f %f\n", pitch, yaw, roll);
 }
 
+void DebugSurfaceType( int surfaceFlags )
+{
+	switch( surfaceFlags & MATERIAL_MASK )
+	{
+	case MATERIAL_WATER:			// 13			// light covering of water on a surface
+		trap->Print("Surface material is MATERIAL_WATER.\n");
+		break;
+	case MATERIAL_SHORTGRASS:		// 5			// manicured lawn
+		trap->Print("Surface material is MATERIAL_SHORTGRASS.\n");
+		break;
+	case MATERIAL_LONGGRASS:		// 6			// long jungle grass
+		trap->Print("Surface material is MATERIAL_LONGGRASS.\n");
+		break;
+	case MATERIAL_SAND:				// 8			// sandy beach
+		trap->Print("Surface material is MATERIAL_SAND.\n");
+		break;
+	case MATERIAL_CARPET:			// 27			// lush carpet
+		trap->Print("Surface material is MATERIAL_CARPET.\n");
+		break;
+	case MATERIAL_GRAVEL:			// 9			// lots of small stones
+		trap->Print("Surface material is MATERIAL_GRAVEL.\n");
+		break;
+	case MATERIAL_ROCK:				// 23			//
+		trap->Print("Surface material is MATERIAL_ROCK.\n");
+		break;
+	case MATERIAL_TILES:			// 26			// tiled floor
+		trap->Print("Surface material is MATERIAL_TILES.\n");
+		break;
+	case MATERIAL_SOLIDWOOD:		// 1			// freshly cut timber
+		trap->Print("Surface material is MATERIAL_SOLIDWOOD.\n");
+		break;
+	case MATERIAL_HOLLOWWOOD:		// 2			// termite infested creaky wood
+		trap->Print("Surface material is MATERIAL_HOLLOWWOOD.\n");
+		break;
+	case MATERIAL_SOLIDMETAL:		// 3			// solid girders
+		trap->Print("Surface material is MATERIAL_SOLIDMETAL.\n");
+		break;
+	case MATERIAL_HOLLOWMETAL:		// 4			// hollow metal machines
+		trap->Print("Surface material is MATERIAL_HOLLOWMETAL.\n");
+		break;
+	case MATERIAL_DRYLEAVES:		// 19			// dried up leaves on the floor
+		trap->Print("Surface material is MATERIAL_DRYLEAVES.\n");
+		break;
+	case MATERIAL_GREENLEAVES:		// 20			// fresh leaves still on a tree
+		trap->Print("Surface material is MATERIAL_GREENLEAVES.\n");
+		break;
+	case MATERIAL_FABRIC:			// 21			// Cotton sheets
+		trap->Print("Surface material is MATERIAL_FABRIC.\n");
+		break;
+	case MATERIAL_CANVAS:			// 22			// tent material
+		trap->Print("Surface material is MATERIAL_CANVAS.\n");
+		break;
+	case MATERIAL_MARBLE:			// 12			// marble floors
+		trap->Print("Surface material is MATERIAL_MARBLE.\n");
+		break;
+	case MATERIAL_SNOW:				// 14			// freshly laid snow
+		trap->Print("Surface material is MATERIAL_SNOW.\n");
+		break;
+	case MATERIAL_MUD:				// 17			// wet soil
+		trap->Print("Surface material is MATERIAL_MUD.\n");
+		break;
+	case MATERIAL_DIRT:				// 7			// hard mud
+		trap->Print("Surface material is MATERIAL_DIRT.\n");
+		break;
+	case MATERIAL_CONCRETE:			// 11			// hardened concrete pavement
+		trap->Print("Surface material is MATERIAL_CONCRETE.\n");
+		break;
+	case MATERIAL_FLESH:			// 16			// hung meat, corpses in the world
+		trap->Print("Surface material is MATERIAL_FLESH.\n");
+		break;
+	case MATERIAL_RUBBER:			// 24			// hard tire like rubber
+		trap->Print("Surface material is MATERIAL_RUBBER.\n");
+		break;
+	case MATERIAL_PLASTIC:			// 25			//
+		trap->Print("Surface material is MATERIAL_PLASTIC.\n");
+		break;
+	case MATERIAL_PLASTER:			// 28			// drywall style plaster
+		trap->Print("Surface material is MATERIAL_PLASTER.\n");
+		break;
+	case MATERIAL_SHATTERGLASS:		// 29			// glass with the Crisis Zone style shattering
+		trap->Print("Surface material is MATERIAL_SHATTERGLASS.\n");
+		break;
+	case MATERIAL_ARMOR:			// 30			// body armor
+		trap->Print("Surface material is MATERIAL_ARMOR.\n");
+		break;
+	case MATERIAL_ICE:				// 15			// packed snow/solid ice
+		trap->Print("Surface material is MATERIAL_ICE.\n");
+		break;
+	case MATERIAL_GLASS:			// 10			//
+		trap->Print("Surface material is MATERIAL_GLASS.\n");
+		break;
+	case MATERIAL_BPGLASS:			// 18			// bulletproof glass
+		trap->Print("Surface material is MATERIAL_BPGLASS.\n");
+		break;
+	case MATERIAL_COMPUTER:			// 31			// computers/electronic equipment
+		trap->Print("Surface material is MATERIAL_COMPUTER.\n");
+		break;
+	default:
+		trap->Print("Surface material is MATERIAL_NONE.\n");
+		break;
+	}
+}
+
 void CG_ShowSurface ( void )
 {
 	vec3_t org, down_org;
@@ -4252,6 +4355,8 @@ void CG_ShowSurface ( void )
 		trap->Print("CONTENTS_TRANSLUCENT ");
 
 	trap->Print("\n");
+
+	DebugSurfaceType( tr.surfaceFlags );
 
 	// UQ1: May as well show the slope as well...
 	CG_ShowSlope();

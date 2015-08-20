@@ -901,7 +901,7 @@ textures/mp/s_flare_blue
 	surfaceparm	nonsolid
 	surfaceparm	trans
 	q3map_nolightmap
-	deformvertexes	autoSprite	
+	deformvertexes	autoSprite
     {
         map textures/doomgiver/flare_blue
         blendFunc GL_ONE GL_ONE
@@ -1092,6 +1092,8 @@ textures/mp/s_fatalsky
 
 textures/mp/s_ground
 {
+	q3map_material	ShortGrass
+
 	qer_editorimage	textures/yavin/ground
     {
         map $lightmap
@@ -1109,7 +1111,7 @@ textures/mp/s_blue_flare
 	surfaceparm	trans
 	q3map_nolightmap
 	cull	twosided
-	deformvertexes	autoSprite	
+	deformvertexes	autoSprite
     {
         map textures/flares/flare_blue
         blendFunc GL_ONE GL_ONE
@@ -1123,7 +1125,7 @@ textures/mp/s_red_flare
 	surfaceparm	trans
 	q3map_nolightmap
 	cull	twosided
-	deformvertexes	autoSprite	
+	deformvertexes	autoSprite
     {
         map textures/flares/flare_red
         blendFunc GL_ONE GL_ONE
@@ -1137,7 +1139,7 @@ textures/mp/s_flare
 	surfaceparm	trans
 	q3map_nolightmap
 	cull	twosided
-	deformvertexes	autoSprite	
+	deformvertexes	autoSprite
     {
         map textures/flares/standard_flare
         blendFunc GL_ONE GL_ONE

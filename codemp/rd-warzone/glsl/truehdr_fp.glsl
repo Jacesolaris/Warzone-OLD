@@ -78,6 +78,6 @@ void main()
 #define const_1 ( 12.0 / 255.0)
 #define const_2 (255.0 / 219.0)
 	color = ((clamp(color - const_1, 0.0, 1.0)) * const_2);
-	color = ((clamp(color - const_1, 0.0, 1.0)) * const_2);
+	//color = ((clamp(color - const_1, 0.0, 1.0)) * const_2);
 	gl_FragColor = color;
 }

@@ -1,124 +1,72 @@
-textures/yavin/grasspatchy_swampsprite
+textures/yavin/ground
 {
-	qer_editorimage	textures/yavin/groundjungle
-	q3map_material	ShortGrass
-	q3map_nolightmap
-	cull	twosided
-    {
-        map textures/yavin/groundjungle
+  q3map_material	ShortGrass
+	//q3map_nolightmap
+	{
+        map $lightmap
     }
     {
-        map gfx/sprites/y_grass_tall
-            surfaceSprites vertical 32 36 42 500
-            ssFademax 1500
-            ssFadescale 1
-            ssVariance 1 2
-            ssWind 0.5
-        alphaFunc GE192
-        blendFunc GL_SRC_ALPHA GL_ONE_MINUS_SRC_ALPHA
-        depthWrite
-        rgbGen vertex
+        map textures/yavin/ground
+    }
+}
+
+textures/yavin/ground.jpg
+{
+  q3map_material	ShortGrass
+	//q3map_nolightmap
+	{
+        map $lightmap
+    }
+    {
+        map textures/yavin/ground
+    }
+}
+
+textures/yavin/grasspatchy_swampsprite
+{
+	q3map_material	ShortGrass
+	//q3map_nolightmap
+	cull	twosided
+	{
+        map $lightmap
+    }
+    {
+        map textures/yavin/groundjungle
     }
 }
 
 textures/yavin/grasspatchy_reeds
 {
-	qer_editorimage	textures/yavin/groundjungle
-	q3map_nolightmap
-	cull	twosided
+	//q3map_nolightmap
+	q3map_material	ShortGrass
+	{
+        map $lightmap
+    }
     {
         map textures/yavin/groundjungle
-    }
-    {
-        map gfx/sprites/ss_grass_grasspatchy
-            surfaceSprites vertical 20 24 48 500
-            ssFademax 1500
-            ssFadescale 1
-            ssVariance 1 2
-            ssWind 0.5
-        alphaFunc GE192
-        blendFunc GL_SRC_ALPHA GL_ONE_MINUS_SRC_ALPHA
-        depthWrite
-        rgbGen vertex
-    }
-    {
-        map gfx/sprites/ss_cattail
-            surfaceSprites vertical 20 32 50 500
-            ssVariance 1 2.5
-            ssWind 0.8
-        alphaFunc GE192
-        blendFunc GL_SRC_ALPHA GL_ONE_MINUS_SRC_ALPHA
-        depthWrite
-        rgbGen vertex
     }
 }
 
 textures/yavin/grasspatchy_underwater
 {
-	qer_editorimage	textures/yavin/groundjungle
-	q3map_nolightmap
-	cull	twosided
+	//q3map_nolightmap
+	q3map_material	ShortGrass
+	{
+        map $lightmap
+    }
     {
         map textures/yavin/groundjungle
-    }
-    {
-        map gfx/sprites/ss_hangvine2
-            surfaceSprites vertical 10 16 30 300
-            ssVariance 1 2
-            ssWind 1
-        alphaFunc GE192
-        blendFunc GL_SRC_ALPHA GL_ONE_MINUS_SRC_ALPHA
-        depthWrite
-        rgbGen vertex
-    }
-    {
-        clampmap gfx/sprites/ss_bubbles
-            surfaceSprites effect 2.5 1 36 400
-            ssFademax 700
-            ssVariance 0.75 1
-            ssFXDuration 2500
-            ssFXGrow 2.5 30
-            ssFXAlphaRange 0.5 0
-            ssFXWeather
-        blendFunc GL_ONE GL_ONE
-        detail
     }
 }
 
 textures/yavin/s_rock1_vines
 {
-	qer_editorimage	textures/yavin/rockmossy
-	q3map_nolightmap
-	q3map_onlyvertexlighting
 	cull	twosided
+	{
+        map $lightmap
+    }
     {
         map textures/yavin/rockmossy
-    }
-    {
-        map gfx/sprites/ss_hangvine
-            surfaceSprites vertical 10 15 42 600
-            ssFademax 1400
-            ssVariance 2 6
-            ssHangDown
-            ssWind 0.4
-            ssWindidle 0.3
-        alphaFunc GE192
-        blendFunc GL_SRC_ALPHA GL_ONE_MINUS_SRC_ALPHA
-        depthWrite
-        rgbGen vertex
-    }
-    {
-        map gfx/sprites/ss_hangvine2
-            surfaceSprites vertical 6 12 49 500
-            ssFademax 1200
-            ssVariance 1 6
-            ssHangDown
-            ssWind 0.4
-            ssWindidle 0.3
-        alphaFunc GE192
-        blendFunc GL_SRC_ALPHA GL_ONE_MINUS_SRC_ALPHA
-        depthWrite
-        rgbGen vertex
     }
 }
 
@@ -129,12 +77,15 @@ textures/yavin/water1_2sided
 	surfaceparm	nonsolid
 	surfaceparm	water
 	surfaceparm	fog
-	surfaceparm	trans
+	//surfaceparm	trans
 	q3map_material	Water
-	q3map_nolightmap
-	q3map_onlyvertexlighting
+	//q3map_nolightmap
+	//q3map_onlyvertexlighting
 	fogparms	( 0.105098 0.147157 0.0431373 ) 128.0
 	cull	twosided
+	{
+        map $lightmap
+    }
     {
         map textures/yavin/water1
         blendFunc GL_ONE GL_ZERO
@@ -195,12 +146,15 @@ textures/yavin/water1_temple
 	surfaceparm	nonsolid
 	surfaceparm	water
 	surfaceparm	fog
-	surfaceparm	trans
+	//surfaceparm	trans
 	q3map_material	Water
-	q3map_nolightmap
-	q3map_onlyvertexlighting
+	//q3map_nolightmap
+	//q3map_onlyvertexlighting
 	fogparms	( 0.105098 0.147157 0.0431373 ) 512.0
 	cull	twosided
+	{
+        map $lightmap
+    }
     {
         map textures/yavin/water1
         blendFunc GL_ONE GL_ZERO
@@ -228,12 +182,15 @@ textures/yavin/water1_2sided_redux
 	surfaceparm	nonopaque
 	surfaceparm	water
 	surfaceparm	fog
-	surfaceparm	trans
+	//surfaceparm	trans
 	q3map_material	Water
-	q3map_nolightmap
-	q3map_onlyvertexlighting
+	//q3map_nolightmap
+	//q3map_onlyvertexlighting
 	fogparms	( 0.145098 0.192157 0.0431373 ) 512.0
 	cull	twosided
+	{
+        map $lightmap
+    }
     {
         map textures/yavin/water1
         blendFunc GL_ONE GL_ONE_MINUS_SRC_ALPHA
@@ -269,11 +226,14 @@ textures/yavin/water1
 	surfaceparm	nonsolid
 	surfaceparm	water
 	surfaceparm	fog
-	surfaceparm	trans
+	//surfaceparm	trans
 	q3map_material	Water
-	q3map_nolightmap
-	q3map_onlyvertexlighting
+	//q3map_nolightmap
+	//q3map_onlyvertexlighting
 	fogparms	( 0.115098 0.122157 0.0431373 ) 128.0
+	{
+        map $lightmap
+    }
     {
         map textures/yavin/water1
         blendFunc GL_ONE GL_ONE_MINUS_SRC_ALPHA
@@ -305,11 +265,11 @@ textures/yavin/water1
 
 textures/yavin/gravel
 {
-	qer_editorimage	textures/yavin/dugdirt
-	surfaceparm	slick
 	q3map_material	Gravel
-	q3map_nolightmap
 	q3map_vlight
+	{
+        map $lightmap
+    }
     {
         map textures/yavin/dugdirt
     }
@@ -366,6 +326,7 @@ textures/yavin/ycamera
         map textures/yavin/ycameraglow
         blendFunc GL_ONE GL_ONE
         rgbGen wave square 0 1 0 1
+        glow
     }
 }
 
@@ -382,6 +343,7 @@ textures/yavin/yswitch
         map textures/yavin/yswitchglow
         blendFunc GL_ONE GL_ONE
         rgbGen wave square 0 1 0 1
+        glow
     }
     {
         map textures/yavin/yswitcha
@@ -404,11 +366,13 @@ textures/yavin/yswitchon
         map textures/yavin/yswitchglow
         blendFunc GL_ONE GL_ONE
         rgbGen wave sin 1 0.2 0 5
+        glow
     }
     {
         map textures/yavin/yswitchglow2
         blendFunc GL_ONE GL_ONE
         rgbGen wave sin 1 0.05 0 5
+        glow
     }
 }
 
@@ -425,11 +389,13 @@ textures/yavin/ydoorswitch
         map textures/yavin/ydoorswitchglow1
         blendFunc GL_ONE GL_ONE
         rgbGen wave square 1 1 0 1
+        glow
     }
     {
         map textures/yavin/ydoorswitchglow1a
         blendFunc GL_ONE GL_ONE
         rgbGen wave sin 1 0.05 0 5
+        glow
     }
 }
 
@@ -447,10 +413,12 @@ textures/yavin/ydoorswitchon
         map textures/yavin/ydoorswitchglow2
         blendFunc GL_ONE GL_ONE
         rgbGen wave sin 1 0.05 -0.5 5
+        glow
     }
     {
         map textures/yavin/ydoorswitchglow1
         blendFunc GL_ONE GL_ONE
+        glow
     }
 }
 
@@ -468,11 +436,13 @@ textures/yavin/yeleswitchon
         map textures/yavin/yeleswitchglow
         blendFunc GL_ONE GL_ONE
         rgbGen identity
+        glow
     }
     {
         map textures/yavin/yeleswitchglow2
         blendFunc GL_ONE GL_ONE
         rgbGen wave sawtooth 0 1 0 1
+        glow
     }
 }
 
@@ -500,10 +470,13 @@ textures/yavin/water1_nofog
 	surfaceparm	nonsolid
 	surfaceparm	nonopaque
 	surfaceparm	water
-	surfaceparm	trans
+	//surfaceparm	trans
 	q3map_material	Water
-	q3map_nolightmap
-	q3map_onlyvertexlighting
+	//q3map_nolightmap
+	//q3map_onlyvertexlighting
+	{
+        map $lightmap
+    }
     {
         map textures/yavin/water1
         blendFunc GL_ONE GL_ONE_MINUS_SRC_ALPHA
@@ -547,12 +520,16 @@ textures/yavin/yeleswitch
         map textures/yavin/yeleswitchglow
         blendFunc GL_ONE GL_ONE
         rgbGen wave square 1 0.5 0 1
+        glow
     }
 }
 
 textures/yavin/rock2
 {
-	q3map_nolightmap
+	//q3map_nolightmap
+	{
+        map $lightmap
+    }
     {
         map textures/yavin/rock2
     }
@@ -588,6 +565,7 @@ textures/yavin/control01
         map textures/yavin/control01_glw
         blendFunc GL_ONE GL_ONE
         rgbGen identity
+        glow
     }
 }
 
@@ -635,11 +613,14 @@ textures/yavin/water_test
 	surfaceparm	nonopaque
 	surfaceparm	water
 	surfaceparm	fog
-	surfaceparm	trans
+	//surfaceparm	trans
 	q3map_material	Water
-	q3map_nolightmap
-	q3map_onlyvertexlighting
+	//q3map_nolightmap
+	//q3map_onlyvertexlighting
 	fogparms	( 0.145098 0.192157 0.0431373 ) 512.0
+	{
+        map $lightmap
+    }
     {
         map textures/yavin/water1
         blendFunc GL_ONE GL_ONE_MINUS_SRC_ALPHA
@@ -677,11 +658,14 @@ textures/yavin/water_test2
 	surfaceparm	nonopaque
 	surfaceparm	water
 	surfaceparm	fog
-	surfaceparm	trans
+	//surfaceparm	trans
 	q3map_material	Water
-	q3map_nolightmap
-	q3map_onlyvertexlighting
+	//q3map_nolightmap
+	//q3map_onlyvertexlighting
 	fogparms	( 0.145098 0.192157 0.0431373 ) 512.0
+	{
+        map $lightmap
+    }
     {
         map textures/yavin/water1
         blendFunc GL_ONE GL_ONE_MINUS_SRC_ALPHA
@@ -718,11 +702,14 @@ textures/yavin/water_test3
 	surfaceparm	nonopaque
 	surfaceparm	water
 	surfaceparm	fog
-	surfaceparm	trans
+	//surfaceparm	trans
 	q3map_material	Water
-	q3map_nolightmap
-	q3map_onlyvertexlighting
+	//q3map_nolightmap
+	//q3map_onlyvertexlighting
 	fogparms	( 0.145098 0.192157 0.0431373 ) 512.0
+	{
+        map $lightmap
+    }
     {
         map textures/yavin/water_test
         blendFunc GL_ONE GL_SRC_COLOR
@@ -753,11 +740,14 @@ textures/yavin/water_test4
 	surfaceparm	nonopaque
 	surfaceparm	water
 	surfaceparm	fog
-	surfaceparm	trans
+	//surfaceparm	trans
 	q3map_material	Water
-	q3map_nolightmap
-	q3map_onlyvertexlighting
+	//q3map_nolightmap
+	//q3map_onlyvertexlighting
 	fogparms	( 0.145098 0.192157 0.0431373 ) 512.0
+	{
+        map $lightmap
+    }
     {
         map textures/yavin/water_test3
         blendFunc GL_ONE GL_SRC_COLOR
@@ -788,11 +778,14 @@ textures/yavin/water_test5
 	surfaceparm	nonopaque
 	surfaceparm	water
 	surfaceparm	fog
-	surfaceparm	trans
+	//surfaceparm	trans
 	q3map_material	Water
-	q3map_nolightmap
-	q3map_onlyvertexlighting
+	//q3map_nolightmap
+	//q3map_onlyvertexlighting
 	fogparms	( 0.145098 0.192157 0.0431373 ) 512.0
+	{
+        map $lightmap
+    }
     {
         map textures/yavin/water1
         blendFunc GL_ONE GL_ONE_MINUS_SRC_ALPHA
@@ -844,10 +837,13 @@ textures/yavin/slime
 	surfaceparm	nonopaque
 	surfaceparm	lava
 	surfaceparm	water
-	surfaceparm	trans
+	//surfaceparm	trans
 	q3map_material	Water
-	q3map_nolightmap
-	q3map_onlyvertexlighting
+	//q3map_nolightmap
+	//q3map_onlyvertexlighting
+	{
+        map $lightmap
+    }
     {
         map textures/yavin/water1
         blendFunc GL_ONE GL_ONE_MINUS_SRC_ALPHA
@@ -879,116 +875,66 @@ textures/yavin/slime
 
 textures/yavin/grasspatchy_sprite
 {
-	qer_editorimage	textures/yavin/grasspatchy3
-	q3map_material	Gravel
-	q3map_nolightmap
-    {
-        map textures/yavin/grasspatchy3
+	q3map_material	ShortGrass
+	{
+        map $lightmap
     }
     {
-        map gfx/sprites/ss_grass_grasspatchy2
-            surfaceSprites vertical 32 20 35 800
-            ssFademax 1500
-            ssFadescale 2
-            ssVariance 1 2
-            ssWind 0.8
-        alphaFunc GE192
-        blendFunc GL_SRC_ALPHA GL_ONE_MINUS_SRC_ALPHA
-        depthWrite
-        rgbGen vertex
+        map textures/yavin/grasspatchy3
     }
 }
 
 textures/yavin/grasspatchy_sm_sprite
 {
-	qer_editorimage	textures/yavin/grasspatchy3
-	q3map_material	Gravel
-	q3map_nolightmap
-    {
-        map textures/yavin/grasspatchy3
+	q3map_material	ShortGrass
+	{
+        map $lightmap
     }
     {
-        map gfx/sprites/ss_grass_grasspatchy
-            surfaceSprites vertical 8 8 40 200
-            ssFademax 600
-            ssFadescale 2
-            ssVariance 1 1
-            ssWind 0.2
-        blendFunc GL_SRC_ALPHA GL_ONE_MINUS_SRC_ALPHA
-        rgbGen vertex
+        map textures/yavin/grasspatchy3
     }
 }
 
 textures/yavin/dirtgrasscorner_sprite
 {
-	qer_editorimage	textures/yavin/dirtgrasscorner
-	q3map_nolightmap
-    {
-        map textures/yavin/dirtgrasscorner
+	q3map_material	ShortGrass
+	{
+        map $lightmap
     }
     {
-        map gfx/sprites/rock_sm
-            surfaceSprites oriented 2 2 100 200
-            ssFademax 400
-            ssVariance 2 1.5
-        blendFunc GL_SRC_ALPHA GL_ONE_MINUS_SRC_ALPHA
-        rgbGen vertex
+        map textures/yavin/dirtgrasscorner
     }
 }
 
 textures/yavin/dirtgrassedge_sprite
 {
-	qer_editorimage	textures/yavin/dirtgrassedge
-	q3map_nolightmap
-    {
-        map textures/yavin/dirtgrassedge
+	q3map_material	ShortGrass
+	{
+        map $lightmap
     }
     {
-        map gfx/sprites/rock_sm
-            surfaceSprites oriented 2 2 100 200
-            ssFademax 400
-            ssVariance 2 1.5
-        blendFunc GL_SRC_ALPHA GL_ONE_MINUS_SRC_ALPHA
-        rgbGen vertex
+        map textures/yavin/dirtgrassedge
     }
 }
 
 textures/yavin/dirt1_sprite
 {
-	qer_editorimage	textures/yavin/dirt1
-	q3map_nolightmap
-    {
-        map textures/yavin/dirt1
+	{
+        map $lightmap
     }
     {
-        map gfx/sprites/rock_sm
-            surfaceSprites oriented 2 2 64 200
-            ssFademax 400
-            ssVariance 2 1.5
-        blendFunc GL_SRC_ALPHA GL_ONE_MINUS_SRC_ALPHA
-        rgbGen vertex
+        map textures/yavin/dirt1
     }
 }
 
 textures/yavin/grasspatchy2
 {
-	qer_editorimage	textures/yavin/grasspatchy3
-	q3map_material	Gravel
-	q3map_nolightmap
-    {
-        map textures/yavin/grasspatchy3
+	q3map_material	ShortGrass
+	{
+        map $lightmap
     }
     {
-        map gfx/sprites/ss_grass_grasspatchy
-            surfaceSprites vertical 32 20 35 800
-            ssFademax 1500
-            ssFadescale 2
-            ssVariance 1 2
-            ssWind 0.8
-        alphaFunc GE192
-        blendFunc GL_SRC_ALPHA GL_ONE_MINUS_SRC_ALPHA
-        depthWrite
-        rgbGen vertex
+        map textures/yavin/grasspatchy3
     }
 }
 
@@ -1032,10 +978,10 @@ textures/yavin/swater1
 	surfaceparm	nonsolid
 	surfaceparm	water
 	surfaceparm	fog
-	surfaceparm	trans
+	//surfaceparm	trans
 	q3map_material	Water
-	q3map_nolightmap
-	q3map_onlyvertexlighting
+	//q3map_nolightmap
+	//q3map_onlyvertexlighting
 	fogparms	( 0.113725 0.121569 0.0431373 ) 512.0
 }
 
@@ -1043,11 +989,14 @@ textures/yavin/swater1_2sided
 {
 	qer_editorimage	textures/yavin/water1
 	q3map_tesssize	256
-	surfaceparm	slick
+	//surfaceparm	slick
 	q3map_material	Water
-	q3map_nolightmap
-	q3map_onlyvertexlighting
+	//q3map_nolightmap
+	//q3map_onlyvertexlighting
 	cull	twosided
+	{
+        map $lightmap
+    }
     {
         map textures/yavin/water1
         blendFunc GL_ONE GL_ZERO
@@ -1104,11 +1053,14 @@ textures/yavin/swater_opaque_bottom
 {
 	qer_editorimage	textures/yavin/water1
 	q3map_tesssize	256
-	surfaceparm	slick
+	//surfaceparm	slick
 	q3map_material	Water
-	q3map_nolightmap
-	q3map_onlyvertexlighting
+	//q3map_nolightmap
+	//q3map_onlyvertexlighting
 	cull	twosided
+	{
+        map $lightmap
+    }
     {
         map textures/yavin/water1
         blendFunc GL_ONE GL_ZERO
@@ -1131,12 +1083,15 @@ textures/yavin/water_yavintrail
 	surfaceparm	nonopaque
 	surfaceparm	water
 	surfaceparm	fog
-	surfaceparm	trans
+	//surfaceparm	trans
 	q3map_material	Water
-	q3map_nolightmap
-	q3map_onlyvertexlighting
+	//q3map_nolightmap
+	//q3map_onlyvertexlighting
 	fogparms	( 0.145098 0.192157 0.0431373 ) 512.0
 	cull	twosided
+	{
+        map $lightmap
+    }
     {
         map textures/yavin/water1
         blendFunc GL_ONE GL_ONE_MINUS_SRC_ALPHA
@@ -1168,10 +1123,10 @@ textures/yavin/water_yavintrail
 
 textures/yavin/groundjungle
 {
-	qer_editorimage	textures/yavin/groundjungle
 	q3map_material	ShortGrass
-	q3map_nolightmap
-	cull	twosided
+	{
+        map $lightmap
+    }
     {
         map textures/yavin/groundjungle
     }
@@ -1180,11 +1135,14 @@ textures/yavin/groundjungle
 textures/yavin/waterfall
 {
 	qer_editorimage	textures/yavin/water1
-	surfaceparm	slick
+	//surfaceparm	slick
 	q3map_material	Water
-	q3map_nolightmap
-	q3map_onlyvertexlighting
+	//q3map_nolightmap
+	//q3map_onlyvertexlighting
 	cull	twosided
+	{
+        map $lightmap
+    }
     {
         map textures/yavin/water1
         blendFunc GL_ONE GL_ZERO
@@ -1214,15 +1172,13 @@ textures/yavin/waterfall
 
 textures/yavin/tree06b_test
 {
-	surfaceparm	slick
 	surfaceparm	noimpact
 	surfaceparm	nomarks
 	surfaceparm	nonsolid
-	surfaceparm	trans
-	q3map_nolightmap
-	q3map_alphashadow
-	q3map_onlyvertexlighting
-	cull	twosided
+	q3map_material	GreenLeaves
+	{
+        map $lightmap
+    }
     {
         map textures/yavin/tree06b_test
         blendFunc GL_SRC_ALPHA GL_ONE_MINUS_SRC_ALPHA
@@ -1234,11 +1190,10 @@ textures/yavin/tree09b_test
 {
 	surfaceparm	noimpact
 	surfaceparm	nomarks
-	surfaceparm	trans
-	q3map_nolightmap
-	q3map_alphashadow
-	q3map_onlyvertexlighting
-	cull	twosided
+	q3map_material	GreenLeaves
+	{
+        map $lightmap
+    }
     {
         map textures/yavin/tree09b_test
         blendFunc GL_SRC_ALPHA GL_ONE_MINUS_SRC_ALPHA
@@ -1266,9 +1221,7 @@ textures/yavin/mud_shadow
 
 textures/yavin/ground_grasssprite
 {
-	qer_editorimage	textures/yavin/ground
 	q3map_material	ShortGrass
-	cull	twosided
     {
         map $lightmap
     }
@@ -1276,40 +1229,16 @@ textures/yavin/ground_grasssprite
         map textures/yavin/ground
         blendFunc GL_DST_COLOR GL_ZERO
     }
-    {
-        map gfx/sprites/grass2
-            surfaceSprites vertical 32 24 42 500
-            ssFademax 1500
-            ssFadescale 1
-            ssVariance 1 2
-            ssWind 0.5
-        alphaFunc GE192
-        blendFunc GL_SRC_ALPHA GL_ONE_MINUS_SRC_ALPHA
-        depthWrite
-        rgbGen vertex
-    }
 }
 
 textures/yavin/mud_sprites
 {
-	qer_editorimage	textures/yavin/dugdirt
-	q3map_material	Mud
-	q3map_nolightmap
-	cull	twosided
-    {
-        map textures/yavin/dugdirt
+	q3map_material	ShortGrass
+	{
+        map $lightmap
     }
     {
-        map gfx/sprites/grass_cattail
-            surfaceSprites vertical 24 36 75 500
-            ssFademax 1500
-            ssFadescale 1
-            ssVariance 1 2
-            ssWind 0.5
-        alphaFunc GE192
-        blendFunc GL_SRC_ALPHA GL_ONE_MINUS_SRC_ALPHA
-        depthWrite
-        rgbGen vertex
+        map textures/yavin/dugdirt
     }
 }
 
@@ -1320,9 +1249,10 @@ textures/yavin/tree1
 	surfaceparm	nomarks
 	surfaceparm	nonsolid
 	surfaceparm	nonopaque
-	surfaceparm	trans
-	q3map_nolightmap
-	q3map_onlyvertexlighting
+	q3map_material	GreenLeaves
+	{
+        map $lightmap
+    }
     {
         map textures/yavin/tree1
         blendFunc GL_SRC_ALPHA GL_ONE_MINUS_SRC_ALPHA
@@ -1332,9 +1262,7 @@ textures/yavin/tree1
 
 textures/yavin/ground
 {
-	qer_editorimage	textures/yavin/ground
 	q3map_material	ShortGrass
-	cull	twosided
     {
         map $lightmap
     }
@@ -1346,6 +1274,7 @@ textures/yavin/ground
 
 textures/yavin/groundplants
 {
+  q3map_material	ShortGrass
     {
         map textures/yavin/groundplants
         blendFunc GL_SRC_ALPHA GL_ONE_MINUS_SRC_ALPHA
@@ -1363,10 +1292,13 @@ textures/yavin/bblock3_vertex
 // q3map_shadeangle	120
 
 	qer_editorimage	textures/yavin/bblock3
-	q3map_nolightmap
+	//q3map_nolightmap
 	q3map_nonplanar
 	q3map_splotchfix
-	q3map_onlyvertexlighting
+	//q3map_onlyvertexlighting
+	{
+        map $lightmap
+    }
     {
         map textures/yavin/bblock3
         rgbGen vertex
@@ -1378,10 +1310,13 @@ textures/yavin/stone_vertex
 // q3map_shadeangle	120
 
 	qer_editorimage	textures/yavin/stone
-	q3map_nolightmap
+	//q3map_nolightmap
 	q3map_nonplanar
 	q3map_splotchfix
-	q3map_onlyvertexlighting
+	//q3map_onlyvertexlighting
+	{
+        map $lightmap
+    }
     {
         map textures/yavin/stone
         rgbGen vertex
@@ -1393,10 +1328,13 @@ textures/yavin/stone_walk_vertex
 // q3map_shadeangle	120
 
 	qer_editorimage	textures/yavin/stone_walk
-	q3map_nolightmap
+	//q3map_nolightmap
 	q3map_nonplanar
 	q3map_splotchfix
-	q3map_onlyvertexlighting
+	//q3map_onlyvertexlighting
+	{
+        map $lightmap
+    }
     {
         map textures/yavin/stone_walk
         rgbGen vertex
@@ -1408,10 +1346,13 @@ textures/yavin/gardenwall3_vertex
 // q3map_shadeangle	120
 
 	qer_editorimage	textures/yavin/gardenwall3
-	q3map_nolightmap
+	//q3map_nolightmap
 	q3map_nonplanar
 	q3map_splotchfix
-	q3map_onlyvertexlighting
+	//q3map_onlyvertexlighting
+	{
+        map $lightmap
+    }
     {
         map textures/yavin/gardenwall3
         rgbGen vertex
@@ -1423,10 +1364,13 @@ textures/yavin/ceiling_vertex
 // q3map_shadeangle	120
 
 	qer_editorimage	textures/yavin/ceiling
-	q3map_nolightmap
+	//q3map_nolightmap
 	q3map_nonplanar
 	q3map_splotchfix
-	q3map_onlyvertexlighting
+	//q3map_onlyvertexlighting
+	{
+        map $lightmap
+    }
     {
         map textures/yavin/ceiling
         rgbGen vertex
@@ -1438,10 +1382,13 @@ textures/yavin/stonewall2_vertex
 // q3map_shadeangle	120
 
 	qer_editorimage	textures/yavin/stonewall2
-	q3map_nolightmap
+	//q3map_nolightmap
 	q3map_nonplanar
 	q3map_splotchfix
-	q3map_onlyvertexlighting
+	//q3map_onlyvertexlighting
+	{
+        map $lightmap
+    }
     {
         map textures/yavin/stonewall2
         rgbGen vertex
@@ -1453,10 +1400,13 @@ textures/yavin/strius_vertex
 // q3map_shadeangle	120
 
 	qer_editorimage	textures/yavin/strius
-	q3map_nolightmap
+	//q3map_nolightmap
 	q3map_nonplanar
 	q3map_splotchfix
-	q3map_onlyvertexlighting
+	//q3map_onlyvertexlighting
+	{
+        map $lightmap
+    }
     {
         map textures/yavin/strius
         rgbGen vertex
@@ -1468,10 +1418,13 @@ textures/yavin/temple_interiorsmallwb_vertex
 // q3map_shadeangle	120
 
 	qer_editorimage	textures/yavin/temple_interiorsmallwb
-	q3map_nolightmap
+	//q3map_nolightmap
 	q3map_nonplanar
 	q3map_splotchfix
-	q3map_onlyvertexlighting
+	//q3map_onlyvertexlighting
+	{
+        map $lightmap
+    }
     {
         map textures/yavin/temple_interiorsmallwb
         rgbGen vertex
@@ -1483,10 +1436,13 @@ textures/yavin/ground_Phong_vertex
 	q3map_shadeangle	120
 	qer_editorimage	textures/yavin/ground
 	q3map_material	ShortGrass
-	q3map_nolightmap
+	//q3map_nolightmap
 	q3map_nonplanar
 	q3map_splotchfix
-	q3map_onlyvertexlighting
+	//q3map_onlyvertexlighting
+	{
+        map $lightmap
+    }
     {
         map textures/yavin/ground
         rgbGen vertex
@@ -1498,11 +1454,14 @@ textures/yavin/ground_grasssprite_Phong_vertex
 	q3map_shadeangle	120
 	qer_editorimage	textures/yavin/ground
 	q3map_material	ShortGrass
-	q3map_nolightmap
+	//q3map_nolightmap
 	q3map_nonplanar
 	q3map_splotchfix
-	q3map_onlyvertexlighting
+	//q3map_onlyvertexlighting
 	cull	twosided
+	{
+        map $lightmap
+    }
     {
         map textures/yavin/ground
         rgbGen vertex
@@ -1528,10 +1487,13 @@ textures/yavin/dugdirt_Phong
 	q3map_shadeangle	60
 	qer_editorimage	textures/yavin/dugdirt
 	q3map_material	Dirt
-	q3map_nolightmap
+	//q3map_nolightmap
 	q3map_nonplanar
 	q3map_splotchfix
-	q3map_onlyvertexlighting
+	//q3map_onlyvertexlighting
+	{
+        map $lightmap
+    }
     {
         map textures/yavin/dugdirt
         rgbGen vertex
@@ -1540,15 +1502,18 @@ textures/yavin/dugdirt_Phong
 
 textures/yavin/ground_Phong
 {
-// q3map_nolightmap
+// //q3map_nolightmap
 
-// q3map_onlyvertexlighting
+// //q3map_onlyvertexlighting
 
 	q3map_shadeangle	60
 	qer_editorimage	textures/yavin/ground
 	q3map_material	ShortGrass
 	q3map_nonplanar
 	q3map_splotchfix
+	{
+        map $lightmap
+    }
     {
 // rgbGen vertex
 
@@ -1564,9 +1529,9 @@ textures/yavin/ground_Phong
 
 textures/yavin/ground_grasssprite_Phong
 {
-// q3map_nolightmap
+// //q3map_nolightmap
 
-// q3map_onlyvertexlighting
+// //q3map_onlyvertexlighting
 
 	q3map_shadeangle	60
 	qer_editorimage	textures/yavin/ground
@@ -1574,6 +1539,9 @@ textures/yavin/ground_grasssprite_Phong
 	q3map_nonplanar
 	q3map_splotchfix
 	cull	twosided
+	{
+        map $lightmap
+    }
     {
 // rgbGen vertex
 
@@ -1603,12 +1571,15 @@ textures/yavin/mud_sprites_Phong
 {
 	q3map_shadeangle	60
 	qer_editorimage	textures/yavin/dugdirt
-	q3map_material	Mud
-	q3map_nolightmap
+	q3map_material	ShortGrass
+	//q3map_nolightmap
 	q3map_nonplanar
 	q3map_splotchfix
-	q3map_onlyvertexlighting
+	//q3map_onlyvertexlighting
 	cull	twosided
+	{
+        map $lightmap
+    }
     {
         map textures/yavin/dugdirt
         rgbGen vertex
@@ -1677,16 +1648,18 @@ textures/yavin/tree_leaves
 
 textures/yavin/ground_plants
 {
-// q3map_alphashadow
+// //q3map_alphashadow
 
 	qer_editorimage	textures/yavin/groundplants
 	surfaceparm	noimpact
 	surfaceparm	nomarks
 	surfaceparm	trans
+	q3map_material	ShortGrass
 	polygonOffset
 	q3map_nolightmap
 	q3map_alphashadow
 	q3map_onlyvertexlighting
+	
     {
         map textures/yavin/groundplants
         blendFunc GL_SRC_ALPHA GL_ONE_MINUS_SRC_ALPHA
@@ -1703,7 +1676,10 @@ textures/yavin/ground_plants
 textures/yavin/obsidian_templebasic2
 {
 	qer_editorimage	textures/yavin/obsidian_templebasic2
-	q3map_nolightmap
+	//q3map_nolightmap
+	{
+        map $lightmap
+    }
     {
         map textures/yavin/obsidian_templebasic2
         rgbGen vertex
@@ -1720,7 +1696,10 @@ textures/yavin/obsidian_templebasic2
 textures/yavin/obsidian_templebasic
 {
 	qer_editorimage	textures/yavin/obsidian_templebasic
-	q3map_nolightmap
+	//q3map_nolightmap
+	{
+        map $lightmap
+    }
     {
         map textures/yavin/obsidian_templebasic
         rgbGen vertex
@@ -1737,7 +1716,10 @@ textures/yavin/obsidian_templebasic
 textures/yavin/obsidian_templebasic_trim
 {
 	qer_editorimage	textures/yavin/obsidian_templebasic_trim
-	q3map_nolightmap
+	//q3map_nolightmap
+	{
+        map $lightmap
+    }
     {
         map textures/yavin/obsidian_templebasic_trim
         rgbGen vertex
@@ -1754,7 +1736,10 @@ textures/yavin/obsidian_templebasic_trim
 textures/yavin/obsidian_templebasic_trim2
 {
 	qer_editorimage	textures/yavin/obsidian_templebasic_trim2
-	q3map_nolightmap
+	//q3map_nolightmap
+	{
+        map $lightmap
+    }
     {
         map textures/yavin/obsidian_templebasic_trim2
         rgbGen vertex
@@ -1773,10 +1758,13 @@ textures/rift/rock_color_vertex
 // q3map_shadeangle	120
 
 	qer_editorimage	textures/rift/rock_color
-	q3map_nolightmap
+	//q3map_nolightmap
 	q3map_nonplanar
 	q3map_splotchfix
-	q3map_onlyvertexlighting
+	//q3map_onlyvertexlighting
+	{
+        map $lightmap
+    }
     {
         map textures/rift/rock_color
         rgbGen vertex
@@ -1788,10 +1776,13 @@ textures/bounty/basic1_dark_vertex
 // q3map_shadeangle	120
 
 	qer_editorimage	textures/bounty/basic1_dark
-	q3map_nolightmap
+	//q3map_nolightmap
 	q3map_nonplanar
 	q3map_splotchfix
-	q3map_onlyvertexlighting
+	//q3map_onlyvertexlighting
+	{
+        map $lightmap
+    }
     {
         map textures/bounty/basic1_dark
         rgbGen vertex
@@ -1803,10 +1794,13 @@ textures/bounty/floor1_vertex
 // q3map_shadeangle	120
 
 	qer_editorimage	textures/bounty/floor1
-	q3map_nolightmap
+	//q3map_nolightmap
 	q3map_nonplanar
 	q3map_splotchfix
-	q3map_onlyvertexlighting
+	//q3map_onlyvertexlighting
+	{
+        map $lightmap
+    }
     {
         map textures/bounty/floor1
         rgbGen vertex
@@ -1833,8 +1827,11 @@ models/map_objects/yavin/ypboxill
 
 models/map_objects/yavin/ymix
 {
-	q3map_nolightmap
-	q3map_onlyvertexlighting
+	//q3map_nolightmap
+	//q3map_onlyvertexlighting
+	{
+        map $lightmap
+    }
     {
         map models/map_objects/yavin/ymix
         rgbGen vertex
@@ -1850,7 +1847,7 @@ models/map_objects/yavin/ymix
 
 models/map_objects/yavin/fern3b
 {
-	q3map_alphashadow
+	//q3map_alphashadow
     {
         map models/map_objects/yavin/fern3b
         blendFunc GL_SRC_ALPHA GL_ONE_MINUS_SRC_ALPHA
@@ -1860,7 +1857,7 @@ models/map_objects/yavin/fern3b
 models/map_objects/yavin/plant
 {
 	qer_editorimage	models/map_objects/yavin/plant
-	q3map_alphashadow
+	//q3map_alphashadow
 	cull	twosided
     {
         map models/map_objects/yavin/plant
@@ -1879,10 +1876,13 @@ models/map_objects/yavin/plant
 models/map_objects/yavin/plant_b
 {
 	qer_editorimage	models/map_objects/yavin/plant
-	q3map_nolightmap
-	q3map_alphashadow
-	q3map_onlyvertexlighting
+	//q3map_nolightmap
+	//q3map_alphashadow
+	//q3map_onlyvertexlighting
 	cull	twosided
+	{
+        map $lightmap
+    }
     {
         map models/map_objects/yavin/plant
         alphaFunc GE128
@@ -1899,10 +1899,14 @@ models/map_objects/yavin/plant_b
 
 models/map_objects/yavin/tree02_b
 {
-	q3map_nolightmap
-	q3map_alphashadow
-	q3map_onlyvertexlighting
+	//q3map_nolightmap
+	//q3map_alphashadow
+	//q3map_onlyvertexlighting
+	q3map_material	GreenLeaves
 	cull	twosided
+	{
+        map $lightmap
+    }
     {
         map models/map_objects/yavin/tree2
         alphaFunc GE128
@@ -1918,9 +1922,13 @@ models/map_objects/yavin/tree02_b
 
 models/map_objects/yavin/tree05_vines_b
 {
-	q3map_nolightmap
-	q3map_alphashadow
-	q3map_onlyvertexlighting
+	//q3map_nolightmap
+	//q3map_alphashadow
+	//q3map_onlyvertexlighting
+	q3map_material	GreenLeaves
+	{
+        map $lightmap
+    }
     {
         map models/map_objects/yavin/tree05_vines
         alphaFunc GE128
@@ -1948,8 +1956,11 @@ models/map_objects/yavin/locker_light
 models/map_objects/yavin/ymix_b
 {
 	qer_editorimage	models/map_objects/yavin/ymix
-	q3map_nolightmap
-	q3map_onlyvertexlighting
+	//q3map_nolightmap
+	//q3map_onlyvertexlighting
+	{
+        map $lightmap
+    }
     {
         map models/map_objects/yavin/ymix
         rgbGen lightingDiffuse
