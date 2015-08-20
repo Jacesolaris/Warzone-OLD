@@ -3932,7 +3932,13 @@ void NPC_Think ( gentity_t *self)//, int msec )
 	botstates[self->s.number]->client = self->s.number;
 #endif //__AAS_AI_TESTING__
 
-	//if (!(self->s.eFlags & EF_CLIENTSMOOTH)) self->s.eFlags |= EF_CLIENTSMOOTH;
+	if (!(self->s.eFlags & EF_CLIENTSMOOTH)) {
+		self->s.eFlags |= EF_CLIENTSMOOTH;
+	}
+
+	if (!(self->client->ps.eFlags & EF_CLIENTSMOOTH)) {
+		self->client->ps.eFlags |= EF_CLIENTSMOOTH;
+	}
 
 	memset( &NPCS.ucmd, 0, sizeof( NPCS.ucmd ) );
 
