@@ -368,7 +368,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altMissileHitSound	= NULL_SOUND;
 		weaponInfo->altMissileTrailFunc = 0;
 		cgs.effects.disruptorRingsEffect		= trap->FX_RegisterEffect( "orginal_weapon_efx/disruptor/rings" );
-		cgs.effects.disruptorProjectileEffect	= trap->FX_RegisterEffect( "orginal_weapon_efx/disruptor/projectile" );
+		cgs.effects.disruptorProjectileEffect	= trap->FX_RegisterEffect( "effects/weapons/laser_red" );
 		cgs.effects.disruptorWallImpactEffect	= trap->FX_RegisterEffect( "orginal_weapon_efx/disruptor/wall_impact" );
 		cgs.effects.disruptorFleshImpactEffect	= trap->FX_RegisterEffect( "orginal_weapon_efx/disruptor/flesh_impact" );
 		cgs.effects.disruptorEnhancedFX_missileWallImpactfx = trap->FX_RegisterEffect("weapons/blaster_impact_red_medium_fire");
@@ -2121,7 +2121,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->firingSound			= NULL_SOUND;
 		weaponInfo->chargeSound			= NULL_SOUND;
 		weaponInfo->muzzleEffect		= NULL_FX;
-		weaponInfo->missileModel		= 0;
+		weaponInfo->missileModel		= trap->R_RegisterModel( "models/Weapons/Mine_LaserTrip/projectile.md3" );
 		weaponInfo->missileSound		= NULL_SOUND;
 		weaponInfo->missileDlight		= 0;
 		weaponInfo->missileHitSound		= NULL_SOUND;
@@ -2130,14 +2130,14 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altFiringSound		= NULL_SOUND;
 		weaponInfo->altChargeSound		= NULL_SOUND;
 		weaponInfo->altMuzzleEffect		= NULL_FX;
-		weaponInfo->altMissileModel		= 0;
+		weaponInfo->altMissileModel		= trap->R_RegisterModel( "models/Weapons/Mine_LaserTrip/projectile.md3" );
 		weaponInfo->altMissileSound		= NULL_SOUND;
 		weaponInfo->altMissileDlight	= 0;
 		weaponInfo->altMissileHitSound	= NULL_SOUND;
 		weaponInfo->altMissileTrailFunc = 0;
-		cgs.effects.tripmineLaserFX = trap->FX_RegisterEffect("tripMine/laserMP.efx");
+		cgs.effects.tripmineLaserFX = trap->FX_RegisterEffect("weapons/laser_blue.efx");
 		cgs.effects.tripmineGlowFX = trap->FX_RegisterEffect("tripMine/glowbit.efx");
-		trap->FX_RegisterEffect( "tripMine/explosion" );
+		trap->FX_RegisterEffect( "explosives/demosmall" );
 		// NOTENOTE temp stuff
 		trap->S_RegisterSound( "sound/weapons/laser_trap/stick.wav" );
 		trap->S_RegisterSound( "sound/weapons/laser_trap/warning.wav" );
