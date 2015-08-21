@@ -251,7 +251,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->EnhancedFX_altfleshImpact = trap->FX_RegisterEffect("blasters/red_flesh_impact");
 		weaponInfo->EnhancedFX_missileWallImpactfx = trap->FX_RegisterEffect("weapons/blaster_impact_red_medium_fire");
 		weaponInfo->EnhancedFX_altmissileWallImpactfx = trap->FX_RegisterEffect("weapons/blaster_impact_red_medium_fire");
-		cgs.media.bryarFrontFlash = trap->R_RegisterShader("gfx_base/effects/bryarFrontFlash");
+		cgs.media.redFrontFlash = trap->R_RegisterShader("gfx_base/effects/bryarFrontFlash");
 		trap->FX_RegisterEffect("blasters/red_deflect");
 
 		break;
@@ -297,7 +297,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->EnhancedFX_missileWallImpactfx = trap->FX_RegisterEffect("weapons/blaster_impact_red_medium_fire");
 		weaponInfo->EnhancedFX_altmissileWallImpactfx = trap->FX_RegisterEffect("weapons/blaster_impact_red_medium_fire");
 		trap->FX_RegisterEffect("blasters/red_deflect");
-		cgs.media.bryarFrontFlash = trap->R_RegisterShader("gfx_base/effects/bryarFrontFlash");
+		cgs.media.redFrontFlash = trap->R_RegisterShader("gfx_base/effects/bryarFrontFlash");
 		break;
 	case WP_BLASTER:
 	case WP_EMPLACED_GUN: //rww - just use the same as this for now..
@@ -438,11 +438,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->EnhancedFX_missileWallImpactfx = trap->FX_RegisterEffect("weapons/blaster_impact_red_medium_fire");
 		weaponInfo->EnhancedFX_altmissileWallImpactfx = trap->FX_RegisterEffect("weapons/blaster_impact_red_medium_fire");
 		trap->FX_RegisterEffect("blasters/green_deflect");
-	
-		cgs.media.redFrontFlash				= trap->R_RegisterShader("gfx/effects/redfrontflash");
-
-		cgs.media.bowcasterMask				= trap->R_RegisterShaderNoMip("gfx/2d/bowMask");
-		cgs.media.bowcasterInsert			= trap->R_RegisterShaderNoMip("gfx/2d/bowInsert");
+		cgs.media.redFrontFlash = trap->R_RegisterShader("gfx_base/effects/bryarFrontFlash");
 		break;
 
 	case WP_REPEATER:
@@ -948,7 +944,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->EnhancedFX_missileWallImpactfx = trap->FX_RegisterEffect("weapons/blaster_impact_red_medium_fire");
 		weaponInfo->EnhancedFX_altmissileWallImpactfx = trap->FX_RegisterEffect("weapons/blaster_impact_red_medium_fire");
 		trap->FX_RegisterEffect("blasters/red_deflect");
-		cgs.media.bryarFrontFlash = trap->R_RegisterShader("gfx/effects/bryarFrontFlash");
+		cgs.media.redFrontFlash = trap->R_RegisterShader("gfx/effects/bryarFrontFlash");
 		break;
 
 	case WP_ELG_3A:
@@ -1029,7 +1025,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->EnhancedFX_missileWallImpactfx = trap->FX_RegisterEffect("weapons/blaster_impact_red_medium_fire");
 		weaponInfo->EnhancedFX_altmissileWallImpactfx = trap->FX_RegisterEffect("weapons/blaster_impact_red_medium_fire");
 		trap->FX_RegisterEffect("blasters/red_deflect");
-		cgs.media.bryarFrontFlash = trap->R_RegisterShader("gfx/effects/bryarFrontFlash");
+		cgs.media.redFrontFlash = trap->R_RegisterShader("gfx/effects/bryarFrontFlash");
 		break;
 
 	case WP_Z6_BLASTER_CANON:
@@ -1163,7 +1159,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->EnhancedFX_missileWallImpactfx = trap->FX_RegisterEffect("weapons/blaster_impact_red_medium_fire");
 		weaponInfo->EnhancedFX_altmissileWallImpactfx = trap->FX_RegisterEffect("weapons/blaster_impact_red_medium_fire");
 		trap->FX_RegisterEffect("blasters/red_deflect");
-		cgs.media.bryarFrontFlash = trap->R_RegisterShader("gfx/effects/bryarFrontFlash");
+		cgs.media.redFrontFlash = trap->R_RegisterShader("gfx/effects/bryarFrontFlash");
 
 		break;
 

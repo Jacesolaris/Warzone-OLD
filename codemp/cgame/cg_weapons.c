@@ -777,13 +777,8 @@ Ghoul2 Insert End
 			cent->currentState.weapon == WP_BRYAR_OLD ||
 			cent->currentState.weapon == WP_WESTER_PISTOL ||
 			cent->currentState.weapon == WP_WOOKIES_PISTOL ||
-			cent->currentState.weapon == WP_S5_PISTOL )
-		{
-			// Hardcoded max charge time of 1 second
-			val = ( cg.time - cent->currentState.constantLight ) * 0.001f;
-			shader = cgs.media.bryarFrontFlash;
-		}
-		else if ( cent->currentState.weapon == WP_BOWCASTER )
+			cent->currentState.weapon == WP_S5_PISTOL ||
+			cent->currentState.weapon == WP_BOWCASTER )
 		{
 			// Hardcoded max charge time of 1 second
 			val = ( cg.time - cent->currentState.constantLight ) * 0.001f;

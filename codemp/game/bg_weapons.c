@@ -137,6 +137,31 @@ weaponData_t weaponData[WP_NUM_WEAPONS] = {
 	
 	};
 
+qboolean IsRollWithPistols(int weapon)
+{
+	switch (weapon)
+	{
+	case WP_BRYAR_PISTOL:
+	case WP_BRYAR_OLD:
+	case WP_DC_15S_CLONE_PISTOL:
+	case WP_WESTER_PISTOL:
+	case WP_ELG_3A:
+	case WP_S5_PISTOL:
+	case WP_WOOKIES_PISTOL:
+	case WP_TESTGUN:
+	case WP_FRAG_GRENADE:
+	case WP_FRAG_GRENADE_OLD:
+	case WP_DC_17_CLONE_PISTOL:
+	case WP_SPOTING_BLASTER:
+	case WP_A200_ACP_PISTOL:
+		return qtrue;
+	default:
+		break;
+	}
+
+	return qfalse;
+}
+
 qboolean IsSniperRifle ( int weapon )
 {
 	switch (weapon)

@@ -2565,6 +2565,7 @@ qboolean StringContainsWord(const char *haystack, const char *needle);
 qboolean HaveWeapon( playerState_t *ps, int weapon );
 qboolean IsSniperRifle ( int weapon );
 qboolean SniperRifleCharges ( int weapon );
+qboolean IsRollWithPistols(int weapon);
 
 
 

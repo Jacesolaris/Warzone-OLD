@@ -3960,6 +3960,8 @@ static int PM_FootstepForSurface( void )
 	return ( pml.groundTrace.surfaceFlags & MATERIAL_MASK );
 }
 
+
+
 extern qboolean PM_CanRollFromSoulCal( playerState_t *ps );
 static int PM_TryRoll( void )
 {
@@ -3967,6 +3969,9 @@ static int PM_TryRoll( void )
 	int		anim = -1;
 	vec3_t fwd, right, traceto, mins, maxs, fwdAngles;
 
+	qboolean nRollWtihPistols = (IsRollWithPistols(pm->ps->weapon));
+
+	
 	if ( BG_SaberInAttack( pm->ps->saberMove ) || BG_SaberInSpecialAttack( pm->ps->torsoAnim )
 		|| BG_SpinningSaberAnim( pm->ps->legsAnim )
 		|| PM_SaberInStart( pm->ps->saberMove ) )

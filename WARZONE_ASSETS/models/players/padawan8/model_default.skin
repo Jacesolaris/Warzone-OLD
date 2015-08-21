@@ -10,8 +10,6 @@ l_hand,models/players/padawan2/handswindu.tga
 l_hand_cap_l_arm_off,models/players/stormtrooper/caps.tga
 l_arm_cap_l_hand_off,models/players/stormtrooper/caps.tga
 l_arm_cap_torso_off,models/players/stormtrooper/caps.tga
-torso_llower,models/players/blank
-torso_rlower,models/players/blank
 head,models/players/padawan2/headwindu.tga
 head_cap_torso_off,models/players/stormtrooper/caps.tga
 head_face,models/players/padawan2/facewindu.tga
