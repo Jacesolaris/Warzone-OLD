@@ -3033,7 +3033,7 @@ AIMOD_NODES_LoadNodes ( void )
 	if ( !f )
 	{
 		ri->FS_FCloseFile( f );
-		ri->Printf( PRINT_WARNING, "^1*** ^3%s^5: warzone - Failed to find waypoint file ^7%s.bwp^5.\n", "Warzone", filename );
+		ri->Printf( PRINT_WARNING, "^1*** ^3%s^5: Warzone (cube mapping) - Failed to find waypoint file ^7%s.bwp^5.\n", "Warzone", filename );
 		return qfalse;
 	}
 
@@ -3043,7 +3043,7 @@ AIMOD_NODES_LoadNodes ( void )
 
 	if ( version != NOD_VERSION && version != 1.0f )
 	{
-		ri->Printf( PRINT_WARNING, "^1*** ^3WARNING^5: warzone - Reading from ^7%s.bwp^3 failed^5!!!\n", filename );
+		ri->Printf( PRINT_WARNING, "^1*** ^3WARNING^5: Warzone (cube mapping) - Reading from ^7%s.bwp^3 failed^5!!!\n", filename );
 		ri->Printf( PRINT_WARNING, "^1*** ^3       ^5  Old node file detected.\n" );
 		ri->FS_FCloseFile( f );
 		return qfalse;
@@ -3052,7 +3052,7 @@ AIMOD_NODES_LoadNodes ( void )
 	ri->FS_Read( &map, strlen( mp) + 1, f );			//make sure the file is for the current map
 	if ( Q_stricmp( map, mp) != 0 )
 	{
-		ri->Printf( PRINT_WARNING, "^1*** ^3WARNING^5: warzone - Reading from ^7%s.bwp^3 failed^5!!!\n", filename );
+		ri->Printf( PRINT_WARNING, "^1*** ^3WARNING^5: Warzone (cube mapping) - Reading from ^7%s.bwp^3 failed^5!!!\n", filename );
 		ri->Printf( PRINT_WARNING, "^1*** ^3       ^5  Node file is not for this map!\n" );
 		ri->FS_FCloseFile( f );
 		return qfalse;
@@ -3154,7 +3154,7 @@ AIMOD_NODES_LoadNodes ( void )
 
 	ri->FS_Read( &fix_aas_nodes, sizeof(short int), f );
 	ri->FS_FCloseFile( f );							//close the file
-	ri->Printf( PRINT_WARNING, "^1*** ^3%s^5: warzone - Successfully loaded %i waypoints from advanced waypoint file ^7%s.bwp^5.\n", "Warzone",
+	ri->Printf( PRINT_WARNING, "^1*** ^3%s^5: Warzone (cube mapping) - Successfully loaded %i cubemap points from advanced waypoint file ^7%s.bwp^5.\n", "Warzone",
 			  numberNodes, filename );
 
 	return qtrue;

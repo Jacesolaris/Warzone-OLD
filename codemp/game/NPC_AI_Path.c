@@ -969,10 +969,12 @@ int WaitingForNow(vec3_t goalpos)
 		return 0;
 	}
 
+#if 0
 	if (CheckForFuncAbove(goalpos, NPCS.NPC->s.number) > 0 || (have_goalpos2 && CheckForFuncAbove(goalpos2, NPCS.NPC->s.number) > 0))
 	{// Squisher above alert!
 		return 1;
 	}
+#endif
 
 	VectorCopy(NPCS.NPC->r.currentOrigin, xybot);
 	VectorCopy(gWPArray[NPCS.NPC->wpCurrent]->origin, xywp);
@@ -1270,7 +1272,7 @@ qboolean NPC_FollowRoutes( void )
 		}
 	}
 
-	if (NPC->wpCurrent >= 0 
+	/*if (NPC->wpCurrent >= 0 
 		&& NPC->wpCurrent < gWPNum
 		&& WaitingForNow(gWPArray[NPC->wpCurrent]->origin))
 	{// We are on a mover/lift/etc... Idle...
@@ -1288,7 +1290,7 @@ qboolean NPC_FollowRoutes( void )
 		}
 
 		return qfalse; // next think...
-	}
+	}*/
 
 	/*if (NPC->wpSeenTime >= level.time - 5000
 		&& NPC->wpCurrent >= 0 
@@ -1419,7 +1421,36 @@ qboolean NPC_FollowRoutes( void )
 		NPCS.ucmd.rightmove = 0;
 		NPCS.ucmd.upmove = 0;
 		NPC_PickRandomIdleAnimantion(NPC);
+
+		if (DistanceHorizontal(gWPArray[NPC->wpCurrent]->origin, NPC->r.currentOrigin) < 48)
+		{// Most likely on an elevator... Allow hitting waypoints all the way up/down...
+			NPC->wpLast = NPC->wpCurrent;
+			NPC->wpCurrent = NPC->wpNext;
+			NPC->wpNext = NPC_GetNextNode(NPC);
+			NPC->wpSeenTime = level.time;
+		}
+
 		return qtrue;
+	}
+
+	if (NPC->wpCurrent >= 0 
+		&& NPC->wpCurrent < gWPNum
+		&& WaitingForNow(gWPArray[NPC->wpCurrent]->origin))
+	{// We are on a mover/lift/etc... Idle...
+		ucmd.forwardmove = 0;
+		ucmd.rightmove = 0;
+		ucmd.upmove = 0;
+		NPC_PickRandomIdleAnimantion(NPC);
+
+		if (DistanceHorizontal(gWPArray[NPC->wpCurrent]->origin, NPC->r.currentOrigin) < 48)
+		{// Most likely on an elevator... Allow hitting waypoints all the way up/down...
+			NPC->wpLast = NPC->wpCurrent;
+			NPC->wpCurrent = NPC->wpNext;
+			NPC->wpNext = NPC_GetNextNode(NPC);
+			NPC->wpSeenTime = level.time;
+		}
+
+		return qfalse; // next think...
 	}
 
 	if (NPC_RoutingJumpWaypoint( NPC->wpLast, NPC->wpCurrent ))

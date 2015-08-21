@@ -3211,8 +3211,8 @@ void AssignMaterialType ( const char *name, const char *text )
 			shader.surfaceFlags |= MATERIAL_ARMOR;
 		else if (StringsContainWord(name, name, "boba") || StringsContainWord(name, name, "pilot"))
 			shader.surfaceFlags |= MATERIAL_ARMOR;
-		//else if (StringsContainWord(name, name, "water"))
-		//	shader.surfaceFlags |= MATERIAL_WATER;
+		else if (StringsContainWord(name, name, "water") && !StringsContainWord(name, name, "splash") && !StringsContainWord(name, name, "drip") && !StringsContainWord(name, name, "ripple") && !StringsContainWord(name, name, "bubble") && !StringsContainWord(name, name, "woosh") && !StringsContainWord(name, name, "underwater") && !StringsContainWord(name, name, "bottom"))
+			shader.surfaceFlags |= MATERIAL_WATER;
 		else if (StringsContainWord(name, name, "grass") || StringsContainWord(name, name, "yavin/ground") || StringsContainWord(name, name, "mp/s_ground"))
 			shader.surfaceFlags |= MATERIAL_SHORTGRASS;
 		//
@@ -3377,7 +3377,7 @@ void AssignMaterialType ( const char *name, const char *text )
 		//	shader.surfaceFlags |= MATERIAL_MARBLE;
 		//else if (!StringsContainWord(name, name, "players") && (StringsContainWord(name, name, "coruscant") || StringsContainWord(name, name, "/rooftop/") || StringsContainWord(name, name, "/nar_") || StringsContainWord(name, name, "/imperial/")))
 		//	shader.surfaceFlags |= MATERIAL_TILES;
-		//else if (StringsContainWord(name, name, "water"))
+		//else if (StringsContainWord(name, name, "water") && !StringsContainWord(name, name, "splash") && !StringsContainWord(name, name, "drip") && !StringsContainWord(name, name, "ripple") && !StringsContainWord(name, name, "bubble") && !StringsContainWord(name, name, "woosh") && !StringsContainWord(name, name, "underwater") && !StringsContainWord(name, name, "bottom"))
 		//	shader.surfaceFlags |= MATERIAL_WATER;
 		else if (StringsContainWord(name, name, "grass") || StringsContainWord(name, name, "yavin/ground") || StringsContainWord(name, name, "mp/s_ground"))
 			shader.surfaceFlags |= MATERIAL_SHORTGRASS;
@@ -3385,7 +3385,7 @@ void AssignMaterialType ( const char *name, const char *text )
 	
 	if (StringsContainWord(name, text, "plastic") || StringsContainWord(name, text, "trooper") || StringsContainWord(name, text, "medpack"))
 		if (!(shader.surfaceFlags & MATERIAL_PLASTIC)) shader.surfaceFlags |= MATERIAL_PLASTIC;
-	else if (StringsContainWord(name, name, "water") && !StringsContainWord(name, name, "splash") && !StringsContainWord(name, name, "drip"))
+	else if (StringsContainWord(name, name, "water") && !StringsContainWord(name, name, "splash") && !StringsContainWord(name, name, "drip") && !StringsContainWord(name, name, "ripple") && !StringsContainWord(name, name, "bubble") && !StringsContainWord(name, name, "woosh") && !StringsContainWord(name, name, "underwater") && !StringsContainWord(name, name, "bottom"))
 		if (!(shader.surfaceFlags & MATERIAL_WATER)) shader.surfaceFlags |= MATERIAL_WATER;
 	else if (StringsContainWord(name, name, "grass") || StringsContainWord(name, name, "yavin/ground") || StringsContainWord(name, name, "mp/s_ground"))
 		if (!(shader.surfaceFlags & MATERIAL_SHORTGRASS)) shader.surfaceFlags |= MATERIAL_SHORTGRASS;

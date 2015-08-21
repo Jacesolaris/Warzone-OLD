@@ -294,6 +294,8 @@ qboolean WP_CheckInSolid (vec3_t position)
 	return qfalse;
 }
 
+extern qboolean Warzone_SpawnpointNearMoverEntityLocation( vec3_t org );
+
 qboolean CheckSpawnPosition( vec3_t position )
 {
 	trace_t tr;
@@ -301,56 +303,72 @@ qboolean CheckSpawnPosition( vec3_t position )
 	
 	if (WP_CheckInSolid(position)) return qfalse;
 
+	//return qtrue;
+
 	VectorCopy(position, org);
 	VectorCopy(position, org2);
-	org2[2] = -65536.0f;//org[2] - 256;
+	//org2[2] = -65536.0f;
+	org2[2] -= 64.0f;
 
 	trap->Trace( &tr, org, NULL, NULL, org2, -1, MASK_PLAYERSOLID|CONTENTS_TRIGGER|CONTENTS_PLAYERCLIP|CONTENTS_MONSTERCLIP|CONTENTS_BOTCLIP|CONTENTS_SHOTCLIP|CONTENTS_NODROP|CONTENTS_SHOTCLIP|CONTENTS_TRANSLUCENT, 0, qfalse, 0);
 	
-	if ( tr.startsolid )
+	/*if ( tr.startsolid )
 	{
-		//trap->Print("Waypoint %i is in solid.\n", wp);
+		trap->Print("Waypoint %i is in solid.\n");
 		return qfalse;
 	}
 
 	if ( tr.allsolid )
 	{
-		//trap->Print("Waypoint %i is in solid.\n", wp);
+		trap->Print("Waypoint %i is in solid.\n");
 		return qfalse;
-	}
+	}*/
 
 	if ( tr.fraction == 1 )
 	{
-		//trap->Print("Waypoint %i is too high above ground.\n", wp);
+		//trap->Print("Waypoint %i is too high above ground.\n");
 		return qfalse;
 	}
 
 	if ( tr.contents & CONTENTS_LAVA )
 	{
-		//trap->Print("Waypoint %i is in lava.\n", wp);
+		//trap->Print("Waypoint %i is in lava.\n");
 		return qfalse;
 	}
 	
 	if ( tr.contents & CONTENTS_SLIME )
 	{
-		//trap->Print("Waypoint %i is in slime.\n", wp);
+		//trap->Print("Waypoint %i is in slime.\n");
 		return qfalse;
 	}
 
 	if ( tr.contents & CONTENTS_TRIGGER )
 	{
-		//trap->Print("Waypoint %i is in trigger.\n", wp);
+		//trap->Print("Waypoint %i is in trigger.\n");
 		return qfalse;
 	}
 
 	if ( (tr.surfaceFlags & SURF_NOMARKS) && (tr.surfaceFlags & SURF_NODRAW) )
 	{
-		//trap->Print("Waypoint %i is in trigger.\n", wp);
+		//trap->Print("Waypoint %i is in trigger.\n");
+		return qfalse;
+	}
+
+	if (Warzone_SpawnpointNearMoverEntityLocation( position ) || Warzone_SpawnpointNearMoverEntityLocation( tr.endpos ))
+	{
+		//trap->Print("Waypoint %i is too close to mover.\n");
 		return qfalse;
 	}
 
 	return qtrue;
 }
+
+float HeightExageratedDistance ( vec3_t org, vec3_t org2 )
+{// Prefer height difference...
+	return (Distance(org, org2) * 0.5) + DistanceVertical(org, org2);
+}
+
+extern int DOM_GetNearestWP(vec3_t org, int badwp);
 
 void CreateSpawnpoints( void )
 {// UQ1: Create extra spawnpoints based on gametype from waypoint locations...
@@ -358,6 +376,9 @@ void CreateSpawnpoints( void )
 
 	if (g_gametype.integer >= GT_TEAM)
 	{// Create team spawnpoints...
+//#define __OLD_TEAM_SPAWNPOINT_METHOD__
+
+#ifdef __OLD_TEAM_SPAWNPOINT_METHOD__
 		int			blue_count = 0;
 		int			red_count = 0;
 		int			tries = 0;
@@ -365,6 +386,10 @@ void CreateSpawnpoints( void )
 		int			i = 0;
 		gentity_t	*spot = NULL;
 		vec3_t		mins, maxs, red_angles, blue_angles, blue_mins, blue_maxs, red_mins, red_maxs;
+		int			n = 0;
+		int			o = 0;
+		int			MOST_DISTANT_POINTS[2];
+		float		MOST_DISTANT_DISTANCE = 0.0f;
 
 		VectorSet(mins, 65536, 65536, 65536);
 		VectorSet(maxs, -65536, -65536, -65536);
@@ -484,6 +509,171 @@ void CreateSpawnpoints( void )
 		}
 
 		trap->Print("Generated %i extra blue spawnpoints and %i extra red spawnpoints.\n", blue_count, red_count);
+#else
+		int			blue_count = 0;
+		int			red_count = 0;
+		int			tries = 0;
+		int			i = 0;
+		gentity_t	*bluespot = NULL;
+		gentity_t	*redspot = NULL;
+		vec3_t		red_angles, blue_angles;
+		int			n = 0;
+		int			o = 0;
+		int			MOST_DISTANT_POINTS[2];
+		float		MOST_DISTANT_DISTANCE = 0.0f;
+		int			BLUE_BEST_LIST[32] = { -1 };
+		int			RED_BEST_LIST[32] = { -1 };
+		int			LIST_TOTAL = 0;
+
+		// Count the current number of spawnpoints...
+		while ((bluespot = G_Find (bluespot, FOFS(classname), "team_CTF_bluespawn")) != NULL) 
+		{
+			blue_count++;
+		}
+
+		if (blue_count >= 8) return; // Don't need any more...
+
+		while ((redspot = G_Find (redspot, FOFS(classname), "team_CTF_redspawn")) != NULL) 
+		{
+			red_count++;
+		}
+
+		if (red_count >= 8) return; // Don't need any more...
+
+		//
+		// Ok, we need more spawnpoints...
+		//
+
+		if (red_count > 0 && blue_count > 0)
+		{// Use the map's known spawnpoints for each team as the team start positions...
+			//trap->Print("Using real CTF spawn points to generate extra spawn points.\n");
+			MOST_DISTANT_POINTS[0] = DOM_GetNearestWP(bluespot->s.origin, -1);
+			MOST_DISTANT_POINTS[1] = DOM_GetNearestWP(redspot->s.origin, -1);
+			MOST_DISTANT_DISTANCE = HeightExageratedDistance(gWPArray[MOST_DISTANT_POINTS[0]]->origin, gWPArray[MOST_DISTANT_POINTS[1]]->origin);
+		}
+		else
+		{// We have no team spawnpoints, so find the furthest 2 points from eachother on the map as each team's start positions...
+			//trap->Print("Using FURTHEST map points to generate extra spawn points.\n");
+
+			MOST_DISTANT_POINTS[0] = -1;
+			MOST_DISTANT_POINTS[1] = -1;
+			MOST_DISTANT_DISTANCE = 0.0;
+
+			for (n = 0; n < gWPNum; n++)
+			{
+				if (Warzone_SpawnpointNearMoverEntityLocation( gWPArray[n]->origin )) 
+					continue;
+
+				for (o = 0; o < gWPNum; o++)
+				{
+					float dist;
+					if (n == o) continue;
+
+					if (Warzone_SpawnpointNearMoverEntityLocation( gWPArray[o]->origin )) 
+						continue;
+
+					dist = HeightExageratedDistance(gWPArray[n]->origin, gWPArray[o]->origin);
+
+					if (dist > MOST_DISTANT_DISTANCE || MOST_DISTANT_POINTS[0] == -1 || MOST_DISTANT_POINTS[1] == -1)
+					{
+						MOST_DISTANT_POINTS[0] = n;
+						MOST_DISTANT_POINTS[1] = o;
+						MOST_DISTANT_DISTANCE = dist;
+					}
+				}
+			}
+		}
+
+		//trap->Print("Furthest spawns are at (%f %f %f) and (%f %f %f). distance %f.\n", gWPArray[MOST_DISTANT_POINTS[0]]->origin[0], gWPArray[MOST_DISTANT_POINTS[0]]->origin[1], gWPArray[MOST_DISTANT_POINTS[0]]->origin[2], gWPArray[MOST_DISTANT_POINTS[1]]->origin[0], gWPArray[MOST_DISTANT_POINTS[1]]->origin[1], gWPArray[MOST_DISTANT_POINTS[1]]->origin[2], MOST_DISTANT_DISTANCE);
+
+		blue_count = 0;
+		red_count = 0;
+		tries = 0;
+
+		// Find add the best waypoint to the list until we have added 32 of each...
+		while (LIST_TOTAL < 32)
+		{
+			int		BLUE_CLOSEST = -1;
+			float	BLUE_CLOSEST_DIST = 0;
+			int		RED_CLOSEST = -1;
+			float	RED_CLOSEST_DIST = 0;
+
+			for (n = 0; n < gWPNum; n++)
+			{
+				qboolean alreadyInList = qfalse;
+				float bdist, rdist;
+
+				if (MOST_DISTANT_POINTS[0] == n || MOST_DISTANT_POINTS[1] == n)
+					continue;
+
+				if (!CheckSpawnPosition(gWPArray[n]->origin)) 
+					continue; // Bad spawnpoint position...
+
+				for (o = 0; o < LIST_TOTAL; o++)
+				{
+					if (n == BLUE_BEST_LIST[o] || n == RED_BEST_LIST[o])
+					{
+						alreadyInList = qtrue;
+						break;
+					}
+				}
+
+				if (alreadyInList)
+					continue;
+
+				// Not already on the list... See how close it is...
+				bdist = HeightExageratedDistance(gWPArray[MOST_DISTANT_POINTS[0]]->origin, gWPArray[n]->origin);
+				rdist = HeightExageratedDistance(gWPArray[MOST_DISTANT_POINTS[1]]->origin, gWPArray[n]->origin);
+
+				if (bdist < BLUE_CLOSEST_DIST || BLUE_CLOSEST == -1)
+				{// This one is better...
+					BLUE_CLOSEST_DIST = bdist;
+					BLUE_CLOSEST = n;
+				}
+				
+				if (rdist < RED_CLOSEST_DIST || RED_CLOSEST == -1)
+				{// This one is better...
+					RED_CLOSEST_DIST = rdist;
+					RED_CLOSEST = n;
+				}
+			}
+
+			// Add the best found ones to each team's list...
+			BLUE_BEST_LIST[LIST_TOTAL] = BLUE_CLOSEST;
+			RED_BEST_LIST[LIST_TOTAL] = RED_CLOSEST;
+			LIST_TOTAL++;
+		}
+
+		// We now have lists for each team... Make the spawnpoints...
+		for (n = 0; n < LIST_TOTAL; n++)
+		{
+			if (BLUE_BEST_LIST[n] != -1)
+			{
+				gentity_t *spawnpoint = G_Spawn();
+				spawnpoint->classname = "team_CTF_bluespawn";
+				VectorCopy(gWPArray[BLUE_BEST_LIST[n]]->origin, spawnpoint->s.origin);
+				VectorCopy(blue_angles, spawnpoint->s.angles);
+				spawnpoint->noWaypointTime = 1; // Don't send auto-generated spawnpoints to client...
+				SP_info_player_deathmatch( spawnpoint );
+				//trap->Print("Created blue spawn at %f %f %f.\n", spawnpoint->s.origin[0], spawnpoint->s.origin[1], spawnpoint->s.origin[2]);
+				blue_count++;
+			}
+
+			if (RED_BEST_LIST[n] != -1)
+			{
+				gentity_t *spawnpoint = G_Spawn();
+				spawnpoint->classname = "team_CTF_redspawn";
+				VectorCopy(gWPArray[RED_BEST_LIST[n]]->origin, spawnpoint->s.origin);
+				VectorCopy(red_angles, spawnpoint->s.angles);
+				spawnpoint->noWaypointTime = 1; // Don't send auto-generated spawnpoints to client...
+				SP_info_player_deathmatch( spawnpoint );
+				//trap->Print("Created red spawn at %f %f %f.\n", spawnpoint->s.origin[0], spawnpoint->s.origin[1], spawnpoint->s.origin[2]);
+				red_count++;
+			}
+		}
+
+		trap->Print("^1*** ^3%s^5: Generated %i extra blue spawnpoints and %i extra red spawnpoints.\n", GAME_VERSION, blue_count, red_count);
+#endif
 	}
 	else
 	{// Create ffa spawnpoints...

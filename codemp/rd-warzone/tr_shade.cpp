@@ -2432,7 +2432,7 @@ void RB_StageIteratorGeneric( void )
 
 	if ((tess.shader->contentFlags & CONTENTS_WATER) /*|| (tess.shader->contentFlags & CONTENTS_LAVA)*/ || (tess.shader->surfaceFlags & MATERIAL_MASK) == MATERIAL_WATER) 
 	{
-		if (input->xstages[0]->isWater == 0) // In case it is already set, no need looping more then once on the same shader...
+		if (input && input->xstages[0] && input->xstages[0]->isWater == 0) // In case it is already set, no need looping more then once on the same shader...
 		{
 			int isWater = 1;
 
