@@ -1545,14 +1545,14 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage)
 			specularScale = 0.0;
 			cubemapScale = 0.0;
 			materialType = (float)MATERIAL_DRYLEAVES;
-			parallaxScale = 3.0;
+			parallaxScale = 0.0;
 			//useSteepParallax = 1.0;
 			break;
 		case MATERIAL_GREENLEAVES:		// 20			// fresh leaves still on a tree
-			specularScale = 0.0;
+			specularScale = 0.75;
 			cubemapScale = 0.0;
 			materialType = (float)MATERIAL_GREENLEAVES;
-			parallaxScale = 3.0;
+			parallaxScale = 0.0; // GreenLeaves should NEVER be parallaxed.. It's used for surfaces with an alpha channel and parallax screws it up...
 			//useSteepParallax = 1.0;
 			break;
 		case MATERIAL_FABRIC:			// 21			// Cotton sheets

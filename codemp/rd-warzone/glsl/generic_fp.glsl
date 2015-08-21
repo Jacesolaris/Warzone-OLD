@@ -6,7 +6,7 @@ uniform sampler2D u_LightMap;
 uniform int       u_Texture1Env;
 #endif
 
-varying vec4		var_Local1; // parallaxScale, haveSpecular, specularScale, 0
+uniform vec4		u_Local1; // parallaxScale, haveSpecular, specularScale, 0
 varying vec3		var_ViewDir;
 varying vec3		var_Normal;
 varying vec4		var_LightDir;
@@ -19,7 +19,7 @@ varying vec2      var_LightTex;
 
 varying vec4      var_Color;
 
-varying vec2	var_Dimensions;
+uniform vec2	u_Dimensions;
 
 out vec4 out_Glow;
 
@@ -96,9 +96,9 @@ float RayIntersectDisplaceMap(vec2 dp, vec2 ds, sampler2D normalMap)
 		depth += size;
 	}
 
-	//return ((bestDepth * var_Local1.x) + (SampleDepth(normalMap, dp) - 1.0)) * 0.5;
+	//return ((bestDepth * u_Local1.x) + (SampleDepth(normalMap, dp) - 1.0)) * 0.5;
 	//return bestDepth;
-	return bestDepth * var_Local1.x;
+	return bestDepth * u_Local1.x;
 }
 
 float CalcGGX(float NH, float gloss)
@@ -206,8 +206,8 @@ void main()
 	NL = clamp(dot(N, L), 0.0, 1.0);
 	NE = clamp(dot(N, E), 0.0, 1.0);
 	
-	//vec2 offsetDir = vec2(1.0 / var_Dimensions.x, 1.0 / var_Dimensions.y);
-	vec3 offsetDir = normalize(E * tangentToWorld) * (1.0 / var_Dimensions.x);
+	//vec2 offsetDir = vec2(1.0 / u_Dimensions.x, 1.0 / u_Dimensions.y);
+	vec3 offsetDir = normalize(E * tangentToWorld) * (1.0 / u_Dimensions.x);
 
 	texCoords += offsetDir.xy * RayIntersectDisplaceMap(texCoords, offsetDir.xy, u_DiffuseMap);
 
@@ -239,14 +239,14 @@ void main()
 	//color = color * (u_Texture1Env.xxxx + color2 * u_Texture1Env.z) + color2 * u_Texture1Env.y;
 #endif
 
-	if (var_Local1.b > 0.0)
+	if (u_Local1.b > 0.0)
 	{// Specular mapping on this stuff, pls...
 		vec3 reflectance;
 		float fakedepth = SampleDepth(u_DiffuseMap, texCoords);
 		vec4 specular = vec4(0.0, 0.0, 0.0, 1.0);
 		specular.a = ((clamp((1.0 - fakedepth), 0.0, 1.0) * 0.5) + 0.5);
 		specular.a = clamp((specular.a * 2.0) * specular.a, 0.2, 0.9);
-		specular *= var_Local1.b;
+		specular *= u_Local1.b;
 
 		float gloss = specular.a;
 		float shininess = exp2(gloss * 13.0);

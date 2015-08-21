@@ -1,6 +1,6 @@
 uniform sampler2D u_DiffuseMap;
-varying vec4	var_Local1; // parallaxScale, haveSpecular, specularScale, materialType
-varying vec2	var_Dimensions;
+uniform vec2	u_Dimensions;
+uniform vec4	u_Local1; // parallaxScale, haveSpecular, specularScale, materialType
 uniform vec4	u_Local2; // ExtinctionCoefficient
 uniform vec4	u_Local3; // RimScalar, MaterialThickness, subSpecPower, cubemapScale
 uniform vec4	u_Local4; // haveNormalMap, isMetalic, hasRealSubsurfaceMap, useSteepParallax
@@ -144,8 +144,11 @@ out vec4 out_Glow;
 
 float RayIntersectDisplaceMap(vec2 dp, vec2 ds, sampler2D normalMap)
 {
+	if (u_Local1.x == 0.0)
+		return 0.0;
+	
   #if !defined(FAST_PARALLAX)
-	float MAX_SIZE = var_Local1.x / 3.0;//1.25;//1.5;//1.0;
+	float MAX_SIZE = u_Local1.x / 3.0;//1.25;//1.5;//1.0;
 	if (MAX_SIZE > 1.75) MAX_SIZE = 1.75;
 	if (MAX_SIZE < 1.0) MAX_SIZE = 1.0;
 	const int linearSearchSteps = 16;
@@ -195,11 +198,12 @@ float RayIntersectDisplaceMap(vec2 dp, vec2 ds, sampler2D normalMap)
 		depth += size;
 	}
 
-	return bestDepth * var_Local1.x;
+	return bestDepth * u_Local1.x;
   #else
 	float depth = SampleDepth(normalMap, dp) - 1.0;
-	return depth * var_Local1.x;
+	return depth * u_Local1.x;
   #endif
+  
 }
 #endif
 
@@ -372,9 +376,9 @@ vec4 subScatterFS(vec4 BaseColor, vec4 SpecColor, vec3 lightVec, vec3 LightColor
 
 vec2 ParallaxMapping(vec2 texCoords, vec3 viewDir)
 { 
-	vec2 tex_offset = vec2(1.0 / var_Dimensions.x, 1.0 / var_Dimensions.y);
+	vec2 tex_offset = vec2(1.0 / u_Dimensions.x, 1.0 / u_Dimensions.y);
     // number of depth layers
-	float height_scale = var_Local1.x;
+	float height_scale = u_Local1.x;
     const float minLayers = 10;
     const float maxLayers = 20;
     float numLayers = mix(maxLayers, minLayers, abs(dot(vec3(0.0, 0.0, 1.0), viewDir)));  
@@ -444,7 +448,7 @@ void main()
 	vec3 viewDir, lightColor, ambientColor;
 	vec3 L, N, E, H;
 	float NL, NH, NE, EH, attenuation;
-	vec2 tex_offset = vec2(1.0 / var_Dimensions.x, 1.0 / var_Dimensions.y);
+	vec2 tex_offset = vec2(1.0 / u_Dimensions.x, 1.0 / u_Dimensions.y);
 
 	/*
 	if (u_Local4.r != 0.0)
@@ -511,7 +515,7 @@ void main()
 	if (u_Local4.a == 0.0)
 	{// Normal parallax...
 		vec3 offsetDir = normalize(E * tangentToWorld);
-		offsetDir.xy *= tex_offset * -var_Local1.x;//-4.0;//-5.0; // -3.0
+		offsetDir.xy *= tex_offset * -u_Local1.x;//-4.0;//-5.0; // -3.0
 		texCoords += offsetDir.xy * RayIntersectDisplaceMap(texCoords, offsetDir.xy, u_NormalMap);
 		diffuse = texture2D(u_DiffuseMap, texCoords);
 	}
@@ -613,7 +617,7 @@ void main()
   #if defined(USE_SPECULARMAP)
 	vec4 specular;
 
-	if (var_Local1.g != 0.0)
+	if (u_Local1.g != 0.0)
 	{// Real specMap...
 		specular = texture2D(u_SpecularMap, texCoords);
 		//specular.a = (specular.r + specular.g + specular.b) / 3.0;
@@ -622,7 +626,7 @@ void main()
 	}
 	else
 	{// Fake it...
-		if (var_Local1.b > 0.0)
+		if (u_Local1.b > 0.0)
 		{
 			specular = vec4(1.0-fakedepth) * diffuse;
 			specular.a = ((clamp((1.0 - fakedepth), 0.0, 1.0) * 0.5) + 0.5);
@@ -645,17 +649,20 @@ void main()
 	vec4 specular = vec4(1.0);
   #endif
 
-	if (var_Local1.b > 0.0)
+	if (u_Local1.b > 0.0)
 	{
 		if (u_SpecularScale.r + u_SpecularScale.g + u_SpecularScale.b + u_SpecularScale.a != 0.0) // Shader Specified...
 			specular *= u_SpecularScale;
 		else // Material Defaults...
-			specular *= var_Local1.b;
+		{
+			specular *= u_Local1.b;
+			specular.rgb *= u_SpecularScale.rgb;
+		}
 	}
 	else
 		specular *= u_SpecularScale;
 
-	//float specularv = pow(clamp(dot(reflect(-L, N), E), 0.0, 1.0), var_Local1.b );
+	//float specularv = pow(clamp(dot(reflect(-L, N), E), 0.0, 1.0), u_Local1.b );
 	//specular = specular * specularv;
 
 	if (u_Local4.b != 0.0)
@@ -698,7 +705,7 @@ void main()
     #endif
   #endif
 
-  if (var_Local1.b > 0.0)
+  if (u_Local1.b > 0.0)
 	gl_FragColor.rgb  += (((lightColor   * reflectance * (attenuation * NL)) * 2.0) + (lightColor   * (reflectance * specular.a * refMult) * (attenuation * NL))) / 3.0;
   else
 	gl_FragColor.rgb  += lightColor   * reflectance * (attenuation * NL);
@@ -769,9 +776,9 @@ void main()
 
   #if defined(USE_LIGHT_VECTOR) && !defined(USE_FAST_LIGHT)
   // Let's add some sub-surface scatterring shall we???
-  if (MaterialThickness > 0.0 || u_Local4.z != 0.0 /*|| var_Local1.a == 5 || var_Local1.a == 6 || var_Local1.a == 12 
-	|| var_Local1.a == 14 || var_Local1.a == 15 || var_Local1.a == 16 || var_Local1.a == 17 || var_Local1.a == 19 
-	|| var_Local1.a == 20 || var_Local1.a == 21 || var_Local1.a == 22*/)
+  if (MaterialThickness > 0.0 || u_Local4.z != 0.0 /*|| u_Local1.a == 5 || u_Local1.a == 6 || u_Local1.a == 12 
+	|| u_Local1.a == 14 || u_Local1.a == 15 || u_Local1.a == 16 || u_Local1.a == 17 || u_Local1.a == 19 
+	|| u_Local1.a == 20 || u_Local1.a == 21 || u_Local1.a == 22*/)
   {
   #if defined(USE_PRIMARY_LIGHT)
 	gl_FragColor.rgb += subScatterFS(gl_FragColor, specular * refMult, L2, lightColor.xyz, E, N, texCoords).rgb;

@@ -1,11 +1,6 @@
 attribute vec2 attr_TexCoord0;
 
-uniform vec4	u_Local1; // parallaxScale, haveSpecular, specularScale, materialType
-uniform vec2	u_Dimensions;
 uniform float	u_Time;
-
-varying vec4	var_Local1; // parallaxScale, haveSpecular, specularScale, materialType
-varying vec2	var_Dimensions;
 
 #if defined(USE_LIGHTMAP) || defined(USE_TCGEN)
 attribute vec2 attr_TexCoord1;
@@ -294,8 +289,6 @@ void main()
 	var_Normal = normal;
   #endif
 
-  var_Dimensions = u_Dimensions;
-  var_Local1 = u_Local1;
   var_vertPos = gl_Position.xyz;
   var_Time = u_Time;
 #endif

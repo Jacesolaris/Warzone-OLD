@@ -933,6 +933,7 @@ typedef struct shader_s {
 	qboolean	entityMergable;			// merge across entites optimizable (smoke, blood)
 
 	qboolean	isSky;
+	qboolean	hasAlpha;
 	skyParms_t	sky;
 	fogParms_t	fogParms;
 

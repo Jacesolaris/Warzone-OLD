@@ -1860,6 +1860,7 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 			}
 
 			atestBits = NameToAFunc( token );
+			shader.hasAlpha = qtrue;
 		}
 		//
 		// depthFunc <func>
@@ -3268,9 +3269,9 @@ void AssignMaterialType ( const char *name, const char *text )
 			shader.surfaceFlags |= MATERIAL_COMPUTER;
 		else if (StringsContainWord(name, name, "fabric"))
 			shader.surfaceFlags |= MATERIAL_FABRIC;
-		else if (StringsContainWord(name, name, "leaf") || StringsContainWord(name, name, "leaves") || StringsContainWord(name, name, "fern") || StringsContainWord(name, name, "vine"))
+		else if (StringsContainWord(name, name, "tree") || StringsContainWord(name, name, "leaf") || StringsContainWord(name, name, "leaves") || StringsContainWord(name, name, "fern") || StringsContainWord(name, name, "vine"))
 			shader.surfaceFlags |= MATERIAL_GREENLEAVES;
-		else if (StringsContainWord(name, name, "wood") || (StringsContainWord(name, name, "tree") && !StringsContainWord(name, name, "street")))
+		else if (StringsContainWord(name, name, "wood") && !StringsContainWord(name, name, "street"))
 			shader.surfaceFlags |= MATERIAL_SOLIDWOOD;
 		else if (StringsContainWord(name, name, "mud"))
 			shader.surfaceFlags |= MATERIAL_MUD;
@@ -3383,7 +3384,13 @@ void AssignMaterialType ( const char *name, const char *text )
 			shader.surfaceFlags |= MATERIAL_SHORTGRASS;
 	}
 	
-	if (StringsContainWord(name, text, "plastic") || StringsContainWord(name, text, "trooper") || StringsContainWord(name, text, "medpack"))
+	if (shader.hasAlpha)
+	{// Always greenleaves... No parallax...
+		int oldmat = ( shader.surfaceFlags & MATERIAL_MASK );
+		if (oldmat) shader.surfaceFlags &= ~oldmat;
+		shader.surfaceFlags |= MATERIAL_GREENLEAVES;
+	}
+	else if (StringsContainWord(name, text, "plastic") || StringsContainWord(name, text, "trooper") || StringsContainWord(name, text, "medpack"))
 		if (!(shader.surfaceFlags & MATERIAL_PLASTIC)) shader.surfaceFlags |= MATERIAL_PLASTIC;
 	else if (StringsContainWord(name, name, "water") && !StringsContainWord(name, name, "splash") && !StringsContainWord(name, name, "drip") && !StringsContainWord(name, name, "ripple") && !StringsContainWord(name, name, "bubble") && !StringsContainWord(name, name, "woosh") && !StringsContainWord(name, name, "underwater") && !StringsContainWord(name, name, "bottom"))
 		if (!(shader.surfaceFlags & MATERIAL_WATER)) shader.surfaceFlags |= MATERIAL_WATER;

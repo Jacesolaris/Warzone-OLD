@@ -1788,7 +1788,6 @@ models/map_objects/yavin/grass_b
 	q3map_nolightmap
 	q3map_alphashadow
 	q3map_onlyvertexlighting
-	q3map_material	ShortGrass
 	cull	twosided
     {
         map models/map_objects/yavin/grass
