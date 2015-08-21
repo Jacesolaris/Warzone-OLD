@@ -2318,7 +2318,7 @@ void player_die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int
 		}
 	}
 
-	if ( /*self->NPC*/ self->s.eType == ET_NPC )
+	if ( self->NPC && self->s.eType == ET_NPC )
 	{
 		if (self->client && self->client->NPC_class==CLASS_ASSASSIN_DROID)
 		{

@@ -1122,6 +1122,55 @@ void NPC_BSSearch (void)
 	NPC_UpdateAngles( qtrue, qtrue );
 }
 
+void NPC_PickRandomTempGoal ( void )
+{
+	if (!NPCS.NPCInfo->tempGoal)
+	{// Pick a random enemy as a temp goal...
+		int i;
+		gentity_t	*bestEnt = NULL;
+		float		bestDist = 99999.9f;
+
+#pragma omp parallel for schedule(dynamic)
+		for (i = 0; i < MAX_GENTITIES; i++)
+		{
+			float dist;
+			gentity_t *ent = &g_entities[i];
+
+			if (!ent || !ent->inuse)
+				continue;
+
+			if ((ent->s.eType == ET_PLAYER || ent->s.eType == ET_NPC) && !NPC_ValidEnemy(ent))
+				continue;
+
+			switch (ent->s.eType)
+			{
+			case ET_ITEM:
+			case ET_HOLOCRON:
+			case ET_PUSH_TRIGGER:
+			case ET_TELEPORT_TRIGGER:
+			case ET_BODY:
+				break;
+			default:
+				continue;
+				break;
+			}
+
+			dist = Distance(ent->r.currentOrigin, NPCS.NPC->r.currentOrigin);
+
+			if (dist < bestDist)
+			{
+				if (bestEnt && irand(0,10) >= 10) 
+					continue;
+
+				bestDist = dist;
+				bestEnt = ent;
+			}
+		}
+
+		NPCS.NPCInfo->tempGoal = NPCS.NPC;
+	}
+}
+
 /*
 -------------------------
 NPC_BSSearchStart
@@ -1139,13 +1188,19 @@ void NPC_BSSearchStart( int homeWp, bState_t bState )
 			NPCS.NPC->waypoint = homeWp;
 		}
 	}
+
+	//NPC_PickRandomTempGoal();
+
+	if (!NPCS.NPCInfo->tempGoal) return; // Still nowhere to go...
+
 	NPCS.NPCInfo->homeWp = homeWp;
 	NPCS.NPCInfo->tempBehavior = bState;
 	NPCS.NPCInfo->aiFlags |= NPCAI_ENROUTE_TO_HOMEWP;
 	NPCS.NPCInfo->investigateDebounceTime = 0;
-	trap->Nav_GetNodePosition( homeWp, NPCS.NPCInfo->tempGoal->r.currentOrigin );
-	NPCS.NPCInfo->tempGoal->waypoint = homeWp;
+	//trap->Nav_GetNodePosition( homeWp, NPCS.NPCInfo->tempGoal->r.currentOrigin );
+	//NPCS.NPCInfo->tempGoal->waypoint = homeWp;
 	//Com_Printf("\nHeading for wp %d...\n", NPCInfo->homeWp);
+	NPCS.NPCInfo->tempGoal->waypoint = NAV_FindClosestWaypointForEnt( NPCS.NPCInfo->tempGoal, WAYPOINT_NONE );
 }
 
 /*

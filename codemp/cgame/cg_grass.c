@@ -6,12 +6,13 @@
 qboolean	GRASSES_LOADED = qfalse;
 int			NUM_GRASS_POSITIONS = 0;
 vec3_t		GRASS_POSITIONS[262144];
+int			GRASS_SELECTION[262144];
 float		GRASS_ANGLES[262144];
 float		GRASS_SCALE[262144];
 int			TREE_TYPE[262144];
 float		TREE_SCALE[262144];
 
-qhandle_t	GRASS_MODEL = 0;
+qhandle_t	GRASS_MODELS[7] = { 0, 0, 0, 0, 0, 0, 0 };
 qhandle_t	TREE_MODEL[3] = { 0, 0, 0 };
 
 void CG_AddGrassModel( int num ) {
@@ -20,9 +21,15 @@ void CG_AddGrassModel( int num ) {
 
 	memset( &re, 0, sizeof( re ) );
 
-	if (!GRASS_MODEL)
+	if (!GRASS_MODELS[0])
 	{
-		GRASS_MODEL = trap->R_RegisterModel( "models/map_objects/yavin/grass_b.md3" );
+		GRASS_MODELS[0] = trap->R_RegisterModel( "models/map_objects/yavin/grass_b.md3" );
+		GRASS_MODELS[1] = trap->R_RegisterModel( "models/pop/foliages/alp_weedy_c.md3" );
+		GRASS_MODELS[2] = trap->R_RegisterModel( "models/pop/foliages/sch_weed_a.md3" );
+		GRASS_MODELS[3] = trap->R_RegisterModel( "models/pop/foliages/sch_weed_b.md3" );
+		GRASS_MODELS[4] = trap->R_RegisterModel( "models/pop/foliages/pop_flower_a.md3" );
+		GRASS_MODELS[5] = trap->R_RegisterModel( "models/pop/foliages/pop_flower_b.md3" );
+		GRASS_MODELS[6] = trap->R_RegisterModel( "models/pop/foliages/pop_flower_c.md3" );
 		TREE_MODEL[0] = trap->R_RegisterModel( "models/map_objects/yavin/tree06_b.md3" );
 		TREE_MODEL[1] = trap->R_RegisterModel( "models/map_objects/yavin/tree08_b.md3" );
 		TREE_MODEL[2] = trap->R_RegisterModel( "models/map_objects/yavin/tree09_b.md3" );
@@ -33,7 +40,7 @@ void CG_AddGrassModel( int num ) {
 	angles[YAW] = GRASS_ANGLES[num];
 
 	re.reType = RT_MODEL;
-	re.hModel = GRASS_MODEL;
+	re.hModel = GRASS_MODELS[0];
 
 	VectorCopy(angles, re.angles);
 	AnglesToAxis(angles, re.axis);
@@ -45,11 +52,28 @@ void CG_AddGrassModel( int num ) {
 
 	if (TREE_TYPE[num] == 0)
 	{// Add a smaller version inside this one to fill the massive hole in the center of the model...
-		re.origin[2] += 12.0;
-		VectorSet(re.modelScale, GRASS_SCALE[num] / 2.0, GRASS_SCALE[num] / 2.0, GRASS_SCALE[num] / 2.0);
-		ScaleModelAxis( &re );
-
-		AddRefEntityToScene( &re );
+		if (GRASS_SELECTION[num] == 0)
+		{// Smaller grass...
+			re.origin[2] += 12.0;
+			VectorSet(re.modelScale, GRASS_SCALE[num] / 2.0, GRASS_SCALE[num] / 2.0, GRASS_SCALE[num] / 2.0);
+			ScaleModelAxis( &re );
+			AddRefEntityToScene( &re );
+		}
+		else if (GRASS_SELECTION[num] == 4 || GRASS_SELECTION[num] == 5 || GRASS_SELECTION[num] == 6)
+		{// Flowers...
+			re.origin[2] += 12.0;
+			re.hModel = GRASS_MODELS[GRASS_SELECTION[num]];
+			VectorSet(re.modelScale, GRASS_SCALE[num] * 0.2, GRASS_SCALE[num] * 0.2, GRASS_SCALE[num] * 0.2);
+			ScaleModelAxis( &re );
+			AddRefEntityToScene( &re );
+		}
+		else
+		{// Add one of the other random grass options inside...
+			re.hModel = GRASS_MODELS[GRASS_SELECTION[num]];
+			VectorSet(re.modelScale, GRASS_SCALE[num] * 1.5, GRASS_SCALE[num] * 1.5, GRASS_SCALE[num] * 1.5);
+			ScaleModelAxis( &re );
+			AddRefEntityToScene( &re );
+		}
 	}
 	else
 	{// Add a tree type...
@@ -184,8 +208,43 @@ AIMOD_NODES_LoadGrass ( void )
 		{
 			VectorCopy(vec, GRASS_POSITIONS[NUM_GRASS_POSITIONS]);
 			GRASS_POSITIONS[NUM_GRASS_POSITIONS][2] -= 18.0;
+			GRASS_SELECTION[NUM_GRASS_POSITIONS] = irand(0,6);
+			/*
+			switch(GRASS_SELECTION[NUM_GRASS_POSITIONS])
+			{
+			case 1:
+				GRASS_ANGLES[NUM_GRASS_POSITIONS] = irand(0,180);
+				GRASS_SCALE[NUM_GRASS_POSITIONS] = (float)((float)irand(65,95) / 100.0);
+				break;
+			case 2:
+				GRASS_ANGLES[NUM_GRASS_POSITIONS] = irand(0,180);
+				GRASS_SCALE[NUM_GRASS_POSITIONS] = (float)((float)irand(65,95) / 100.0);
+				break;
+			case 3:
+				GRASS_ANGLES[NUM_GRASS_POSITIONS] = irand(0,180);
+				GRASS_SCALE[NUM_GRASS_POSITIONS] = (float)((float)irand(65,95) / 100.0);
+				break;
+			case 4:
+				GRASS_ANGLES[NUM_GRASS_POSITIONS] = irand(0,180);
+				GRASS_SCALE[NUM_GRASS_POSITIONS] = (float)((float)irand(25,40) / 100.0);
+				break;
+			case 5:
+				GRASS_ANGLES[NUM_GRASS_POSITIONS] = irand(0,180);
+				GRASS_SCALE[NUM_GRASS_POSITIONS] = (float)((float)irand(25,40) / 100.0);
+				break;
+			case 6:
+				GRASS_ANGLES[NUM_GRASS_POSITIONS] = irand(0,180);
+				GRASS_SCALE[NUM_GRASS_POSITIONS] = (float)((float)irand(25,40) / 100.0);
+				break;
+			default:
+				GRASS_ANGLES[NUM_GRASS_POSITIONS] = irand(0,180);
+				GRASS_SCALE[NUM_GRASS_POSITIONS] = (float)((float)irand(65,95) / 100.0);
+				break;
+			}
+			*/
 			GRASS_ANGLES[NUM_GRASS_POSITIONS] = irand(0,180);
 			GRASS_SCALE[NUM_GRASS_POSITIONS] = (float)((float)irand(65,95) / 100.0);
+			
 
 			if (irand(0,10) >= 10)
 			{
