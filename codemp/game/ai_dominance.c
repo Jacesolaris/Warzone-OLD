@@ -1913,7 +1913,14 @@ void UpdateEventTracker(void)
 
 	while (i < MAX_GENTITIES)
 	{
-		if (gBotEventTracker[i].eventSequence != level.clients[i].ps.eventSequence)
+		if (i >= MAX_CLIENTS)
+		{
+			gBotEventTracker[i].eventSequence = g_entities[i].client->ps.eventSequence;
+			gBotEventTracker[i].events[0] = g_entities[i].client->ps.events[0];
+			gBotEventTracker[i].events[1] = g_entities[i].client->ps.events[1];
+			gBotEventTracker[i].eventTime = level.time + 0.5;
+		}
+		else if (gBotEventTracker[i].eventSequence != level.clients[i].ps.eventSequence)
 		{ //updated event
 			gBotEventTracker[i].eventSequence = level.clients[i].ps.eventSequence;
 			gBotEventTracker[i].events[0] = level.clients[i].ps.events[0];
