@@ -1433,6 +1433,10 @@ qboolean ValidEnemy(gentity_t *ent)
 			{//don't go after spectators
 				return qfalse;
 			}
+			else if ( ent->s.eType == ET_NPC && (ent->s.NPC_class == CLASS_VEHICLE || ent->client->NPC_class == CLASS_VEHICLE || ent->m_pVehicle) )
+			{// Don't go after empty vehicles :)
+				return qfalse;
+			}
 			else
 			{
 				int entTeam = TEAM_FREE;

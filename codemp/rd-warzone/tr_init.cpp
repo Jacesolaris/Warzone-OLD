@@ -1504,17 +1504,17 @@ void R_Register( void )
 	r_directedScale = ri->Cvar_Get( "r_directedScale", "1", CVAR_CHEAT );
 
 	r_anaglyphMode = ri->Cvar_Get("r_anaglyphMode", "0", CVAR_ARCHIVE);
-	r_mergeMultidraws = ri->Cvar_Get("r_mergeMultidraws", "1", CVAR_ARCHIVE); // UQ1: Disabled. FPS.
-	r_mergeLeafSurfaces = ri->Cvar_Get("r_mergeLeafSurfaces", "1", CVAR_ARCHIVE); // UQ1: Disabled. FPS.
+	r_mergeMultidraws = ri->Cvar_Get("r_mergeMultidraws", "1", CVAR_ARCHIVE);
+	r_mergeLeafSurfaces = ri->Cvar_Get("r_mergeLeafSurfaces", "1", CVAR_ARCHIVE);
 
-	r_rotatex							= ri->Cvar_Get( "r_rotatex",					"0",						CVAR_TEMP );
-	r_rotatey							= ri->Cvar_Get( "r_rotatey",					"0",						CVAR_TEMP );
-	r_rotatez							= ri->Cvar_Get( "r_rotatez",					"0",						CVAR_TEMP );
+	r_rotatex							= ri->Cvar_Get( "r_rotatex",						"0",						CVAR_TEMP );
+	r_rotatey							= ri->Cvar_Get( "r_rotatey",						"0",						CVAR_TEMP );
+	r_rotatez							= ri->Cvar_Get( "r_rotatez",						"0",						CVAR_TEMP );
 
-	r_materialDebug						= ri->Cvar_Get("r_materialDebug",				"0",						CVAR_ARCHIVE);
-	r_genericShaderDebug						= ri->Cvar_Get("r_genericShaderDebug",					"1",						CVAR_ARCHIVE);
+	r_materialDebug						= ri->Cvar_Get("r_materialDebug",					"0",						CVAR_ARCHIVE);
+	r_genericShaderDebug				= ri->Cvar_Get("r_genericShaderDebug",				"0",						CVAR_ARCHIVE);
 
-	r_weather							= ri->Cvar_Get( "r_weather",					"0",						CVAR_TEMP );
+	r_weather							= ri->Cvar_Get( "r_weather",						"0",						CVAR_TEMP );
 	r_surfaceSprites					= ri->Cvar_Get( "r_surfaceSprites",					"0",						CVAR_TEMP );
 	r_surfaceWeather					= ri->Cvar_Get( "r_surfaceWeather",					"0",						CVAR_TEMP );
 	r_windSpeed							= ri->Cvar_Get( "r_windSpeed",						"0",						CVAR_NONE );

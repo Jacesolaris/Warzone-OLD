@@ -3213,7 +3213,7 @@ void AssignMaterialType ( const char *name, const char *text )
 			shader.surfaceFlags |= MATERIAL_ARMOR;
 		else if (StringsContainWord(name, name, "water") && !StringsContainWord(name, name, "splash") && !StringsContainWord(name, name, "drip") && !StringsContainWord(name, name, "ripple") && !StringsContainWord(name, name, "bubble") && !StringsContainWord(name, name, "woosh") && !StringsContainWord(name, name, "underwater") && !StringsContainWord(name, name, "bottom"))
 			shader.surfaceFlags |= MATERIAL_WATER;
-		else if (StringsContainWord(name, name, "grass") || StringsContainWord(name, name, "yavin/ground") || StringsContainWord(name, name, "mp/s_ground"))
+		else if (StringsContainWord(name, name, "grass") || StringsContainWord(name, name, "yavin/ground") || StringsContainWord(name, name, "mp/s_ground") || StringsContainWord(name, name, "volcano/terrain") || StringsContainWord(name, name, "bay/terrain"))
 			shader.surfaceFlags |= MATERIAL_SHORTGRASS;
 		//
 		// Stuff we can be pretty sure of...
@@ -3238,7 +3238,7 @@ void AssignMaterialType ( const char *name, const char *text )
 			shader.surfaceFlags |= MATERIAL_TILES;
 		else if (StringsContainWord(name, name, "rift") && StringsContainWord(name, name, "piller"))
 			shader.surfaceFlags |= MATERIAL_MARBLE;
-		else if (StringsContainWord(name, name, "stucco") || StringsContainWord(name, name, "piller"))
+		else if (StringsContainWord(name, name, "stucco") || StringsContainWord(name, name, "piller") || StringsContainWord(name, name, "sith_jp"))
 			shader.surfaceFlags |= MATERIAL_CONCRETE;
 		else if (StringsContainWord(name, name, "marbl") || StringsContainWord(name, name, "teeth"))
 			shader.surfaceFlags |= MATERIAL_MARBLE;

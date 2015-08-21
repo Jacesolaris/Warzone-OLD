@@ -63,7 +63,8 @@
 // ==============================================================================================================================
 
 //float waypoint_distance_multiplier = 2.5f;
-float waypoint_distance_multiplier = 3.0f;
+//float waypoint_distance_multiplier = 3.0f;
+float waypoint_distance_multiplier = 4.5f;
 //float waypoint_distance_multiplier = 3.5f;
 //float area_distance_multiplier = 2.0f;
 float area_distance_multiplier = 1.5f;
@@ -94,6 +95,8 @@ qboolean optimize_again = qfalse;
 qboolean DO_THOROUGH = qfalse;
 qboolean DO_TRANSLUCENT = qfalse;
 qboolean DO_FAST_LINK = qfalse;
+qboolean DO_ULTRAFAST = qfalse;
+qboolean DO_NOWATER = qfalse;
 
 // warning C4996: 'strcpy' was declared deprecated
 #pragma warning( disable : 4996 )
@@ -3546,7 +3549,8 @@ float GroundHeightAt ( vec3_t org )
 	VectorCopy(org, org2);
 	org2[2]= -65536.0f;
 
-	CG_Trace( &tr, org1, NULL, NULL, org2, -1, MASK_PLAYERSOLID);
+	//CG_Trace( &tr, org1, NULL, NULL, org2, -1, MASK_PLAYERSOLID);
+	CG_Trace( &tr, org1, NULL, NULL, org2, cg.clientNum, MASK_PLAYERSOLID|CONTENTS_TRIGGER|CONTENTS_PLAYERCLIP|CONTENTS_MONSTERCLIP|CONTENTS_BOTCLIP|CONTENTS_SHOTCLIP|CONTENTS_NODROP|CONTENTS_TRANSLUCENT );
 	
 	if ( tr.startsolid || tr.allsolid )
 	{
@@ -3732,7 +3736,8 @@ float FloorHeightAt ( vec3_t org )
 	VectorCopy(org, org2);
 	org2[2]= -65536.0f;
 
-	CG_Trace( &tr, org1, NULL, NULL, org2, -1, MASK_PLAYERSOLID );
+	//CG_Trace( &tr, org1, NULL, NULL, org2, -1, MASK_PLAYERSOLID );
+	CG_Trace( &tr, org1, NULL, NULL, org2, cg.clientNum, MASK_PLAYERSOLID|CONTENTS_TRIGGER|CONTENTS_PLAYERCLIP|CONTENTS_MONSTERCLIP|CONTENTS_BOTCLIP|CONTENTS_SHOTCLIP|CONTENTS_NODROP|CONTENTS_TRANSLUCENT );
 	
 	if (tr.startsolid)
 	{
@@ -3876,7 +3881,7 @@ float FloorHeightAt ( vec3_t org )
 		return -65536.0f;
 	}
 
-	if (!DO_THOROUGH && (tr.surfaceFlags & SURF_NOMARKS) && (tr.surfaceFlags & SURF_NODRAW) && (tr.contents & CONTENTS_SOLID) && (tr.contents & CONTENTS_OPAQUE))
+	if (!DO_ULTRAFAST && !DO_THOROUGH && (tr.surfaceFlags & SURF_NOMARKS) && (tr.surfaceFlags & SURF_NODRAW) && (tr.contents & CONTENTS_SOLID) && (tr.contents & CONTENTS_OPAQUE))
 	{// Sky...
 		//trap->Print("SURF_SKY\n");
 		return 65536.0f;
@@ -3899,10 +3904,22 @@ float FloorHeightAt ( vec3_t org )
 	if ( tr.contents & CONTENTS_WATER )
 	{// Water... I'm just gonna ignore these!
 		//trap->Print("CONTENTS_WATER\n");
-		return 65536.0f;
+		if (DO_NOWATER)
+			return -65536.0f;
+		else
+			return 65536.0f;
 	}
 
-	if ( !DO_TRANSLUCENT && tr.contents & CONTENTS_TRANSLUCENT )
+	if ( (tr.surfaceFlags & MATERIAL_MASK) == MATERIAL_WATER )
+	{// Water... I'm just gonna ignore these!
+		//trap->Print("CONTENTS_WATER\n");
+		if (DO_NOWATER)
+			return -65536.0f;
+		else
+			return 65536.0f;
+	}
+
+	if ( !DO_NOWATER && !DO_ULTRAFAST && !DO_TRANSLUCENT && tr.contents & CONTENTS_TRANSLUCENT )
 	{// Invisible surface... I'm just gonna ignore these!
 		//trap->Print("CONTENTS_TRANSLUCENT\n");
 		return 65536.0f;
@@ -4009,7 +4026,8 @@ float RoofHeightAt ( vec3_t org )
 	VectorCopy(org, org2);
 	org2[2]= 65536.0f;
 
-	CG_Trace( &tr, org1, NULL, NULL, org2, cg.clientNum, MASK_PLAYERSOLID);
+	//CG_Trace( &tr, org1, NULL, NULL, org2, cg.clientNum, MASK_PLAYERSOLID);
+	CG_Trace( &tr, org1, NULL, NULL, org2, cg.clientNum, MASK_PLAYERSOLID|CONTENTS_TRIGGER|CONTENTS_PLAYERCLIP|CONTENTS_MONSTERCLIP|CONTENTS_BOTCLIP|CONTENTS_SHOTCLIP|CONTENTS_NODROP|CONTENTS_TRANSLUCENT );
 	
 	if ( tr.startsolid || tr.allsolid )
 	{
@@ -5575,6 +5593,7 @@ void AIMod_AutoWaypoint_StandardMethod( void )
 		float	scatter_x = 0;
 		clock_t	previous_time = 0;
 		qboolean sjc_jkg_preview = qfalse;
+		float	offsetY = 0.0;
 
 		// This is just for the sjc_jkg_preview incomplete map with large bad surfaces... Grrr....
 		if (!Q_stricmpn("sjc_jkg_preview", cgs.currentmapname, 15)) sjc_jkg_preview = qtrue;
@@ -5693,6 +5712,15 @@ omp_set_nested(0);
 
 			x = startx - (parallel_x * scatter_x);
 
+			if (offsetY == 0.0)
+				offsetY = (scatter_y * 0.25);
+			else if (offsetY == scatter_y * 0.25)
+				offsetY = (scatter_y * 0.5);
+			else if (offsetY == scatter_y * 0.5)
+				offsetY = (scatter_y * 0.75);
+			else
+				offsetY = 0.0;
+
 #pragma omp parallel for ordered schedule(dynamic) //num_threads(32)
 			for (parallel_y = 0; parallel_y < parallel_y_max; parallel_y++) // To OMP this sucker...
 			{
@@ -5705,7 +5733,7 @@ omp_set_nested(0);
 				else if (scatter_y == scatter) scatter_y = scatter_max;
 				else scatter_y = scatter;
 
-				y = starty - (parallel_y * scatter_y);
+				y = (starty + offsetY) - (parallel_y * scatter_y);
 
 				for (z = startz; z >= mapMins[2]; z -= scatter_min)
 				{
@@ -7050,9 +7078,12 @@ AIMod_AutoWaypoint ( void )
 		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3/autowaypoint <method> <scatter_distance> ^5or ^3/awp <method> <scatter_distance>^5. Distance is optional.\n" );
 		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^5Available methods are:\n" );
 		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3\"standard\" ^5- For standard multi-level maps.\n");
+		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3\"nowater\" ^5- For standard multi-level maps.\n");
 		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3\"thorough\" ^5- Use extensive fall waypoint checking.\n");
 		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3\"translucent\" ^5- Allow translucent surfaces (for maps with surfaces being ignored by standard).\n");
 		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3\"fast\" ^5- For standard multi-level maps. This version does not visibility check waypoint links.\n");
+		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3\"nowaterfast\" ^5- For standard multi-level maps. This version does not visibility check waypoint links.\n");
+		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3\"ultrafast\" ^5- For standard multi-level maps. This version does not visibility check waypoint links.\n");
 		//trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3\"noclean\" ^5- For standard multi-level maps (with no cleaning passes).\n");
 		//trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3\"outdoor_only\" ^5- For standard single level maps.\n");
 		trap->UpdateScreen();
@@ -7062,6 +7093,8 @@ AIMod_AutoWaypoint ( void )
 	DO_THOROUGH = qfalse;
 	DO_TRANSLUCENT = qfalse;
 	DO_FAST_LINK = qfalse;
+	DO_ULTRAFAST = qfalse;
+	DO_NOWATER = qfalse;
 
 	trap->Cmd_Argv( 1, str, sizeof(str) );
 	
@@ -7075,7 +7108,7 @@ AIMod_AutoWaypoint ( void )
 			trap->Cmd_Argv( 2, str, sizeof(str) );
 			dist = atoi(str);
 
-			if (dist <= 20)
+			if (dist <= 4)
 			{
 				// Fallback and warning...
 				dist = original_wp_scatter_dist;
@@ -7093,10 +7126,9 @@ AIMod_AutoWaypoint ( void )
 			AIMod_AutoWaypoint_StandardMethod();
 		}
 	}
-	else if ( Q_stricmp( str, "fast") == 0 )
+	else if ( Q_stricmp( str, "nowater") == 0 )
 	{
-		DO_FAST_LINK = qtrue;
-		//DO_TRANSLUCENT = qtrue;
+		DO_NOWATER = qtrue;
 
 		if ( trap->Cmd_Argc() >= 2 )
 		{
@@ -7106,7 +7138,39 @@ AIMod_AutoWaypoint ( void )
 			trap->Cmd_Argv( 2, str, sizeof(str) );
 			dist = atoi(str);
 
-			if (dist <= 20)
+			if (dist <= 4)
+			{
+				// Fallback and warning...
+				dist = original_wp_scatter_dist;
+
+				trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^7Warning: ^5Invalid scatter distance set (%i). Using default (%i)...\n", atoi(str), original_wp_scatter_dist );
+			}
+
+			waypoint_scatter_distance = dist;
+			AIMod_AutoWaypoint_StandardMethod();
+
+			waypoint_scatter_distance = original_wp_scatter_dist;
+		}
+		else
+		{
+			AIMod_AutoWaypoint_StandardMethod();
+		}
+
+		DO_NOWATER = qfalse;
+	}
+	else if ( Q_stricmp( str, "fast") == 0 )
+	{
+		DO_FAST_LINK = qtrue;
+
+		if ( trap->Cmd_Argc() >= 2 )
+		{
+			// Override normal scatter distance...
+			int dist = waypoint_scatter_distance;
+
+			trap->Cmd_Argv( 2, str, sizeof(str) );
+			dist = atoi(str);
+
+			if (dist <= 4)
 			{
 				// Fallback and warning...
 				dist = original_wp_scatter_dist;
@@ -7125,7 +7189,76 @@ AIMod_AutoWaypoint ( void )
 		}
 
 		DO_FAST_LINK = qfalse;
-		//DO_TRANSLUCENT = qfalse;
+	}
+	else if ( Q_stricmp( str, "ultrafast") == 0 )
+	{
+		DO_FAST_LINK = qtrue;
+		DO_ULTRAFAST = qtrue;
+
+		if ( trap->Cmd_Argc() >= 2 )
+		{
+			// Override normal scatter distance...
+			int dist = waypoint_scatter_distance;
+
+			trap->Cmd_Argv( 2, str, sizeof(str) );
+			dist = atoi(str);
+
+			if (dist <= 4)
+			{
+				// Fallback and warning...
+				dist = original_wp_scatter_dist;
+
+				trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^7Warning: ^5Invalid scatter distance set (%i). Using default (%i)...\n", atoi(str), original_wp_scatter_dist );
+			}
+
+			waypoint_scatter_distance = dist;
+			AIMod_AutoWaypoint_StandardMethod();
+
+			waypoint_scatter_distance = original_wp_scatter_dist;
+		}
+		else
+		{
+			AIMod_AutoWaypoint_StandardMethod();
+		}
+
+		DO_FAST_LINK = qfalse;
+		DO_ULTRAFAST = qfalse;
+	}
+	else if ( Q_stricmp( str, "nowaterfast") == 0 )
+	{
+		DO_FAST_LINK = qtrue;
+		DO_ULTRAFAST = qtrue;
+		DO_NOWATER = qtrue;
+
+		if ( trap->Cmd_Argc() >= 2 )
+		{
+			// Override normal scatter distance...
+			int dist = waypoint_scatter_distance;
+
+			trap->Cmd_Argv( 2, str, sizeof(str) );
+			dist = atoi(str);
+
+			if (dist <= 4)
+			{
+				// Fallback and warning...
+				dist = original_wp_scatter_dist;
+
+				trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^7Warning: ^5Invalid scatter distance set (%i). Using default (%i)...\n", atoi(str), original_wp_scatter_dist );
+			}
+
+			waypoint_scatter_distance = dist;
+			AIMod_AutoWaypoint_StandardMethod();
+
+			waypoint_scatter_distance = original_wp_scatter_dist;
+		}
+		else
+		{
+			AIMod_AutoWaypoint_StandardMethod();
+		}
+
+		DO_FAST_LINK = qfalse;
+		DO_ULTRAFAST = qfalse;
+		DO_NOWATER = qfalse;
 	}
 	else if ( Q_stricmp( str, "thorough") == 0 )
 	{
@@ -7137,7 +7270,7 @@ AIMod_AutoWaypoint ( void )
 			trap->Cmd_Argv( 2, str, sizeof(str) );
 			dist = atoi(str);
 
-			if (dist <= 20)
+			if (dist <= 4)
 			{
 				// Fallback and warning...
 				dist = original_wp_scatter_dist;
@@ -7170,7 +7303,7 @@ AIMod_AutoWaypoint ( void )
 			trap->Cmd_Argv( 2, str, sizeof(str) );
 			dist = atoi(str);
 
-			if (dist <= 20)
+			if (dist <= 4)
 			{
 				// Fallback and warning...
 				dist = original_wp_scatter_dist;

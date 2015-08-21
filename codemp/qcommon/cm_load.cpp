@@ -91,7 +91,7 @@ int GetMaterialType ( const char *name )
 		return MATERIAL_ARMOR;
 	//else if (StringsContainWord(name, name, "water"))
 	//	return MATERIAL_WATER;
-	else if (StringsContainWord(name, name, "grass") || StringsContainWord(name, name, "yavin/ground") || StringsContainWord(name, name, "mp/s_ground"))
+	else if (StringsContainWord(name, name, "grass") || StringsContainWord(name, name, "yavin/ground") || StringsContainWord(name, name, "mp/s_ground") || StringsContainWord(name, name, "volcano/terrain") || StringsContainWord(name, name, "bay/terrain"))
 		return MATERIAL_SHORTGRASS;
 	//
 	// Stuff we can be pretty sure of...
@@ -116,7 +116,7 @@ int GetMaterialType ( const char *name )
 		return MATERIAL_TILES;
 	else if (StringsContainWord(name, name, "rift") && StringsContainWord(name, name, "piller"))
 		return MATERIAL_MARBLE;
-	else if (StringsContainWord(name, name, "stucco") || StringsContainWord(name, name, "piller"))
+	else if (StringsContainWord(name, name, "stucco") || StringsContainWord(name, name, "piller") || StringsContainWord(name, name, "sith_jp"))
 		return MATERIAL_CONCRETE;
 	else if (StringsContainWord(name, name, "marbl") || StringsContainWord(name, name, "teeth"))
 		return MATERIAL_MARBLE;
