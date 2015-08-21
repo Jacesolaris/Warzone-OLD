@@ -1915,10 +1915,22 @@ void UpdateEventTracker(void)
 	{
 		if (i >= MAX_CLIENTS)
 		{
-			gBotEventTracker[i].eventSequence = g_entities[i].client->ps.eventSequence;
-			gBotEventTracker[i].events[0] = g_entities[i].client->ps.events[0];
-			gBotEventTracker[i].events[1] = g_entities[i].client->ps.events[1];
-			gBotEventTracker[i].eventTime = level.time + 0.5;
+			gentity_t *ent = &g_entities[i];
+
+			if (ent && ent->inuse && ent->client)
+			{
+				gBotEventTracker[i].eventSequence = ent->client->ps.eventSequence;
+				gBotEventTracker[i].events[0] = ent->client->ps.events[0];
+				gBotEventTracker[i].events[1] = ent->client->ps.events[1];
+				gBotEventTracker[i].eventTime = level.time + 0.5;
+			}
+			else
+			{
+				gBotEventTracker[i].eventSequence = 0;
+				gBotEventTracker[i].events[0] = 0;
+				gBotEventTracker[i].events[1] = 0;
+				gBotEventTracker[i].eventTime = 0;
+			}
 		}
 		else if (gBotEventTracker[i].eventSequence != level.clients[i].ps.eventSequence)
 		{ //updated event
