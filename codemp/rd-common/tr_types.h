@@ -70,7 +70,7 @@
 //#define RDF_NOFOG		0x0008		// don't apply fog to polys added using RE_AddPolyToScene
 #define RDF_EXTRA		512		// Makro - refdefex_t to follow after refdef_t
 #define RDF_SUNLIGHT    1024      // SmileTheory - render sunlight and shadows
-#define RDF_ForceSightOn 2048
+//#define RDF_ForceSightOn 512
 
 extern int	skyboxportal;
 extern int	drawskyboxportal;

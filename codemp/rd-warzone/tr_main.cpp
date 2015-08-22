@@ -204,16 +204,13 @@ void R_CalcTangentSpace(vec3_t tangent, vec3_t bitangent, vec3_t normal,
 	// normal, compute the cross product N=TxB
 	CrossProduct(tangent, bitangent, normal);
 	VectorNormalize(normal);
-
 	if(DotProduct(normal, faceNormal) < 0)
 	{
 		//VectorInverse(normal);
 		//VectorInverse(tangent);
 		//VectorInverse(bitangent);
-
 		// compute the cross product T=BxN
 		CrossProduct(bitangent, faceNormal, tangent);
-
 		// compute the cross product B=NxT
 		//CrossProduct(normal, tangent, bitangent);
 	}
@@ -272,16 +269,13 @@ void R_CalcTangentSpaceFast(vec3_t tangent, vec3_t bitangent, vec3_t normal,
 	// normal, compute the cross product N=TxB
 	CrossProduct(tangent, bitangent, normal);
 	VectorNormalizeFast(normal);
-
 	if(DotProduct(normal, faceNormal) < 0)
 	{
 		VectorInverse(normal);
 		//VectorInverse(tangent);
 		//VectorInverse(bitangent);
-
 		CrossProduct(normal, tangent, bitangent);
 	}
-
 	VectorCopy(faceNormal, normal);
 #else
 	// Gram-Schmidt orthogonalize
@@ -339,7 +333,6 @@ void R_CalcTbnFromNormalAndTexDirs(vec3_t tangent, vec3_t bitangent, vec3_t norm
 	VectorScale(bitangent, handedness, bitangent);
 }
 
-#ifdef USE_VERT_TANGENT_SPACE
 qboolean R_CalcTangentVectors(srfVert_t * dv[3])
 {
 	int             i;
@@ -396,7 +389,6 @@ qboolean R_CalcTangentVectors(srfVert_t * dv[3])
 
 	return qtrue;
 }
-#endif
 
 
 /*
@@ -415,28 +407,23 @@ int R_CullLocalBox(vec3_t localBounds[2]) {
 	cplane_t	*frust;
 	int			anyBack;
 	int			front, back;
-
 	if ( r_nocull->integer ) {
 		return CULL_CLIP;
 	}
-
 	// transform into world space
 	for (i = 0 ; i < 8 ; i++) {
 		v[0] = bounds[i&1][0];
 		v[1] = bounds[(i>>1)&1][1];
 		v[2] = bounds[(i>>2)&1][2];
-
 		VectorCopy( tr.ori.origin, transformed[i] );
 		VectorMA( transformed[i], v[0], tr.ori.axis[0], transformed[i] );
 		VectorMA( transformed[i], v[1], tr.ori.axis[1], transformed[i] );
 		VectorMA( transformed[i], v[2], tr.ori.axis[2], transformed[i] );
 	}
-
 	// check against frustum planes
 	anyBack = 0;
 	for (i = 0 ; i < 4 ; i++) {
 		frust = &tr.viewParms.frustum[i];
-
 		front = back = 0;
 		for (j = 0 ; j < 8 ; j++) {
 			dists[j] = DotProduct(transformed[j], frust->normal);
@@ -455,11 +442,9 @@ int R_CullLocalBox(vec3_t localBounds[2]) {
 		}
 		anyBack |= back;
 	}
-
 	if ( !anyBack ) {
 		return CULL_IN;		// completely inside frustum
 	}
-
 	return CULL_CLIP;		// partially clipped
 #else
 	int             j;
@@ -493,7 +478,6 @@ int R_CullLocalBox(vec3_t localBounds[2]) {
 /*
 =================
 R_CullBox
-
 Returns CULL_IN, CULL_CLIP, or CULL_OUT
 =================
 */
@@ -619,7 +603,6 @@ void R_LocalPointToWorld (const vec3_t local, vec3_t world) {
 /*
 =================
 R_WorldToLocal
-
 =================
 */
 void R_WorldToLocal (const vec3_t world, vec3_t local) {
@@ -634,16 +617,16 @@ R_TransformModelToClip
 
 ==========================
 */
-void R_TransformModelToClip( const vec3_t src, const float *modelMatrix, const float *projectionMatrix,
+void R_TransformModelToClip( const vec3_t src, const float *modelViewMatrix, const float *projectionMatrix,
 							vec4_t eye, vec4_t dst ) {
 	int i;
 
 	for ( i = 0 ; i < 4 ; i++ ) {
 		eye[i] = 
-			src[0] * modelMatrix[ i + 0 * 4 ] +
-			src[1] * modelMatrix[ i + 1 * 4 ] +
-			src[2] * modelMatrix[ i + 2 * 4 ] +
-			1 * modelMatrix[ i + 3 * 4 ];
+			src[0] * modelViewMatrix[ i + 0 * 4 ] +
+			src[1] * modelViewMatrix[ i + 1 * 4 ] +
+			src[2] * modelViewMatrix[ i + 2 * 4 ] +
+			1 * modelViewMatrix[ i + 3 * 4 ];
 	}
 
 	for ( i = 0 ; i < 4 ; i++ ) {
@@ -704,7 +687,6 @@ Does NOT produce any GL calls
 Called by both the front end and the back end
 =================
 */
-float	glMatrix[16];
 
 void R_RotateForEntity( const trRefEntity_t *ent, const viewParms_t *viewParms,
 					   orientationr_t *ori ) {
@@ -810,7 +792,6 @@ static void R_RotateForViewer(viewParms_t *viewParms)
 
 	// convert from our coordinate system (looking down X)
 	// to OpenGL's coordinate system (looking down -Z)
-
 	myGlMultMatrix( viewerMatrix, s_flipMatrix, tr.ori.modelMatrix );
 
 	viewParms->world = tr.ori;
@@ -940,7 +921,6 @@ void R_SetupFrustum (viewParms_t *dest, float xmin, float xmax, float ymax, floa
 	VectorScale(dest->ori.axis[0], oppleg, dest->frustum[3].normal);
 	VectorMA(dest->frustum[3].normal, -adjleg, dest->ori.axis[2], dest->frustum[3].normal);
 	
-#pragma omp parallel for /*ordered*/ schedule(dynamic) num_threads(4) if(r_multithread->integer > 0)
 	for (i=0 ; i<4 ; i++) {
 		dest->frustum[i].type = PLANE_NON_AXIAL;
 		dest->frustum[i].dist = DotProduct (ofsorigin, dest->frustum[i].normal);
@@ -1137,7 +1117,6 @@ void R_SetupProjectionOrtho(viewParms_t *dest, vec3_t viewBounds[2])
 	VectorMA(dest->ori.origin, -viewBounds[1][0], dest->frustum[4].normal, pop);
 	dest->frustum[4].dist = DotProduct(pop, dest->frustum[4].normal);
 	
-#pragma omp parallel for /*ordered*/ schedule(dynamic) num_threads(5) if(r_multithread->integer > 0)
 	for (i = 0; i < 5; i++)
 	{
 		dest->frustum[i].type = PLANE_NON_AXIAL;
@@ -1152,7 +1131,7 @@ void R_SetupProjectionOrtho(viewParms_t *dest, vec3_t viewBounds[2])
 R_MirrorPoint
 =================
 */
-void R_MirrorPoint (vec3_t in, orientation_t *surface, orientation_t *camera, vec3_t out) {
+	void R_MirrorPoint (vec3_t in, orientation_t *surface, orientation_t *camera, vec3_t out) {
 	int		i;
 	vec3_t	local;
 	vec3_t	transformed;
@@ -1218,7 +1197,7 @@ void R_PlaneForSurface (surfaceType_t *surfType, cplane_t *plane) {
 		return;
 	default:
 		Com_Memset (plane, 0, sizeof(*plane));
-		plane->normal[0] = 1;		
+		plane->normal[0] = 1;
 		return;
 	}
 }
@@ -1233,7 +1212,7 @@ be moving and rotating.
 Returns qtrue if it should be mirrored
 =================
 */
-qboolean R_GetPortalOrientations(drawSurf_t *drawSurf, int64_t entityNum,
+qboolean R_GetPortalOrientations( drawSurf_t *drawSurf, int entityNum, 
 							 orientation_t *surface, orientation_t *camera,
 							 vec3_t pvsOrigin, qboolean *mirror ) {
 	int			i;
@@ -1351,7 +1330,7 @@ qboolean R_GetPortalOrientations(drawSurf_t *drawSurf, int64_t entityNum,
 	return qfalse;
 }
 
-static qboolean IsMirror(const drawSurf_t *drawSurf, int64_t entityNum)
+static qboolean IsMirror( const drawSurf_t *drawSurf, int entityNum )
 {
 	int			i;
 	cplane_t	originalPlane, plane;
@@ -1422,7 +1401,6 @@ static qboolean SurfIsOffscreen( const drawSurf_t *drawSurf, vec4_t clipDest[128
 	int i;
 	unsigned int pointOr = 0;
 	unsigned int pointAnd = (unsigned int)~0;
-
 
 	R_RotateForViewer(&tr.viewParms);
 
