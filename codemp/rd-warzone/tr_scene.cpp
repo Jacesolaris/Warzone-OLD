@@ -93,16 +93,19 @@ void R_AddPolygonSurfaces( void ) {
 	srfPoly_t	*poly;
 	int		fogMask;
 
+	tr.currentEntityNum = REFENTITYNUM_WORLD;
+	tr.shiftedEntityNum = tr.currentEntityNum << QSORT_REFENTITYNUM_SHIFT;
 	fogMask = -((tr.refdef.rdflags & RDF_NOFOG) == 0);
 
 	poly = tr.refdef.polys;
 
+//#pragma omp parallel for ordered schedule(dynamic) // UQ1: Causes issues with saber trails...
 	for ( i = 0; i < tr.refdef.numPolys; i++) 
 	{
 		if (poly)
 		{
 			sh = R_GetShaderByHandle( poly->hShader );
-			R_AddDrawSurf( ( surfaceType_t * )poly, REFENTITYNUM_WORLD, sh, poly->fogIndex & fogMask, qfalse, R_IsPostRenderEntity (REFENTITYNUM_WORLD, tr.currentEntity), 0 /* cubemapIndex */ );
+			R_AddDrawSurf( ( surfaceType_t * )poly, sh, poly->fogIndex & fogMask, qfalse, R_IsPostRenderEntity (tr.currentEntityNum, tr.currentEntity), 0 /* cubemapIndex */ );
 		}
 
 		poly++;

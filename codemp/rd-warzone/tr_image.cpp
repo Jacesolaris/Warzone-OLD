@@ -2665,7 +2665,7 @@ image_t *R_TextureESharpenGLSL ( const char *name, byte *pic, int width, int hei
 	screensize[0] = width;
 	screensize[1] = height;
 	GLSL_SetUniformVec2(&tr.esharpeningShader, UNIFORM_DIMENSIONS, screensize);
-	GLSL_SetUniformMatrix4x4(&tr.esharpeningShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
+	GLSL_SetUniformMatrix16(&tr.esharpeningShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
 
 	box[0] = 0;
 	box[1] = 0;
@@ -2714,7 +2714,7 @@ image_t *R_TextureESharpen2GLSL ( const char *name, byte *pic, int width, int he
 	screensize[0] = width;
 	screensize[1] = height;
 	GLSL_SetUniformVec2(&tr.esharpening2Shader, UNIFORM_DIMENSIONS, screensize);
-	GLSL_SetUniformMatrix4x4(&tr.esharpening2Shader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
+	GLSL_SetUniformMatrix16(&tr.esharpening2Shader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
 
 	box[0] = 0;
 	box[1] = 0;
@@ -2763,7 +2763,7 @@ image_t *R_TextureDarkExpandGLSL ( const char *name, byte *pic, int width, int h
 	screensize[0] = width;
 	screensize[1] = height;
 	GLSL_SetUniformVec2(&tr.darkexpandShader, UNIFORM_DIMENSIONS, screensize);
-	GLSL_SetUniformMatrix4x4(&tr.darkexpandShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
+	GLSL_SetUniformMatrix16(&tr.darkexpandShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
 
 	box[0] = 0;
 	box[1] = 0;
@@ -2812,7 +2812,7 @@ image_t *R_TextureCleanGLSL ( const char *name, byte *pic, int width, int height
 	screensize[0] = width;
 	screensize[1] = height;
 	GLSL_SetUniformVec2(&tr.texturecleanShader, UNIFORM_DIMENSIONS, screensize);
-	GLSL_SetUniformMatrix4x4(&tr.texturecleanShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
+	GLSL_SetUniformMatrix16(&tr.texturecleanShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
 
 	vec4_t local0;
 	VectorSet4(local0, r_textureCleanSigma->value, r_textureCleanBSigma->value, r_textureCleanMSize->value, 0);
@@ -2931,7 +2931,7 @@ image_t *R_CreateNormalMapGLSL ( const char *name, byte *pic, int width, int hei
 	screensize[0] = width;
 	screensize[1] = height;
 	GLSL_SetUniformVec2(&tr.generateNormalMapShader, UNIFORM_DIMENSIONS, screensize);
-	//GLSL_SetUniformMatrix4x4(&tr.generateNormalMapShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
+	//GLSL_SetUniformMatrix16(&tr.generateNormalMapShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
 
 	box[0] = 0;
 	box[1] = 0;

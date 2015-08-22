@@ -401,9 +401,17 @@ A player has predicted a teleport, but hasn't arrived yet
 ================
 */
 static void RB_Hyperspace( void ) {
-	float c = ( backEnd.refdef.time & 255 ) / 255.0f;
-	vec4_t v = { c, c, c, 1.0f };
-	qglClearBufferfv( GL_COLOR, 0, v );
+	float		c;
+
+	if ( !backEnd.isHyperspace ) {
+		// do initialization shit
+	}
+
+	c = ( backEnd.refdef.time & 255 ) / 255.0f;
+	qglClearColor( c, c, c, 1 );
+	qglClear( GL_COLOR_BUFFER_BIT );
+
+	backEnd.isHyperspace = qtrue;
 }
 
 
@@ -526,6 +534,10 @@ void RB_BeginDrawingView (void) {
 		RB_Hyperspace();
 		return;
 	}
+	else
+	{
+		backEnd.isHyperspace = qfalse;
+	}
 
 	glState.faceCulling = -1;		// force face culling to set next time
 
@@ -565,13 +577,13 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 	FBO_t*			fbo = NULL;
 	shader_t		*oldShader = NULL;
 	qboolean		inQuery = qfalse;
-	int				oldFogNum = -1;
+	int64_t			oldFogNum = -1;
 	int64_t			oldEntityNum = -1;
-	int				oldDlighted = 0;
-	int				oldPostRender = 0;
+	int64_t			oldDlighted = 0;
+	int64_t			oldPostRender = 0;
 	int             oldCubemapIndex = -1;
 	int				oldDepthRange = 0;
-	int				oldSort = -1;
+	uint64_t		oldSort = (uint64_t) -1;
 	qboolean		CUBEMAPPING = (qboolean)r_cubeMapping->integer;
 
 	float			depth[2];
@@ -593,11 +605,11 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 	{
 		drawSurf_t		*drawSurf;
 		shader_t		*shader = NULL;
-		int				fogNum;
-		int64_t			entityNum = -1;
-		int				dlighted = 0;
-		int				postRender;
-		int             cubemapIndex = 0;
+		int64_t			fogNum;
+		int64_t			entityNum;
+		int64_t			dlighted;
+		int64_t			postRender;
+		int             cubemapIndex;
 		int				depthRange;
 
 		if (backEnd.depthFill && shader && shader->sort != SS_OPAQUE) continue; // UQ1: No point thinking any more on this one...
@@ -613,9 +625,7 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 		}
 
 		oldSort = drawSurf->sort;
-		R_DecomposeSort( drawSurf->sort, &shader, &fogNum, &postRender );
-		entityNum = drawSurf->entityNum;
-		dlighted = drawSurf->lit;
+		R_DecomposeSort( drawSurf->sort, &entityNum, &shader, &fogNum, &dlighted, &postRender );
 
 		if (CUBEMAPPING) cubemapIndex = drawSurf->cubemapIndex;
 
@@ -631,7 +641,8 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 				RB_EndSurface();
 			}
 
-			RB_BeginSurface( shader, fogNum, cubemapIndex );
+			if (CUBEMAPPING) RB_BeginSurface( shader, fogNum, cubemapIndex );
+			else  RB_BeginSurface( shader, fogNum, 0 );
 
 			backEnd.pc.c_surfBatches++;
 			oldShader = shader;
@@ -640,6 +651,11 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 			oldPostRender = postRender;
 			if (CUBEMAPPING) oldCubemapIndex = cubemapIndex;
 		}
+
+		// UQ1: Check if this surface should be culled, shall we???
+		//byte *mask;
+		//if ( entityNum != REFENTITYNUM_WORLD && !R_inPVS( backEnd.refdef.vieworg, backEnd.refdef.entities[entityNum].e.origin, mask ) ) continue;
+		//if ( entityNum != REFENTITYNUM_WORLD && R_GCullSurfaces(&backEnd.refdef.entities[entityNum]) == CULL_OUT ) continue;
 
 		//
 		// change the modelview matrix if needed
@@ -904,7 +920,7 @@ void RE_StretchRaw (int x, int y, int w, int h, int cols, int rows, const byte *
 
 	GLSL_BindProgram(&tr.textureColorShader);
 	
-	GLSL_SetUniformMatrix4x4(&tr.textureColorShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
+	GLSL_SetUniformMatrix16(&tr.textureColorShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
 	GLSL_SetUniformVec4(&tr.textureColorShader, UNIFORM_COLOR, colorWhite);
 
 	RB_InstantQuad2(quadVerts, texCoords);
@@ -944,10 +960,10 @@ const void	*RB_SetColor( const void *data ) {
 
 	cmd = (const setColorCommand_t *)data;
 
-	backEnd.color2D[0] = cmd->color[0];
-	backEnd.color2D[1] = cmd->color[1];
-	backEnd.color2D[2] = cmd->color[2];
-	backEnd.color2D[3] = cmd->color[3];
+	backEnd.color2D[0] = cmd->color[0] * 255;
+	backEnd.color2D[1] = cmd->color[1] * 255;
+	backEnd.color2D[2] = cmd->color[2] * 255;
+	backEnd.color2D[3] = cmd->color[3] * 255;
 
 	return (const void *)(cmd + 1);
 }
@@ -999,10 +1015,17 @@ const void *RB_StretchPic ( const void *data ) {
 	tess.indexes[ numIndexes + 4 ] = numVerts + 0;
 	tess.indexes[ numIndexes + 5 ] = numVerts + 1;
 
-	VectorCopy4(backEnd.color2D, tess.vertexColors[ numVerts ]);
-	VectorCopy4(backEnd.color2D, tess.vertexColors[ numVerts + 1 ]);
-	VectorCopy4(backEnd.color2D, tess.vertexColors[ numVerts + 2 ]);
-	VectorCopy4(backEnd.color2D, tess.vertexColors[ numVerts + 3 ]);
+	{
+		vec4_t color;
+
+		VectorScale4(backEnd.color2D, 1.0f / 255.0f, color);
+
+		VectorCopy4(color, tess.vertexColors[numVerts]);
+		VectorCopy4(color, tess.vertexColors[numVerts + 1]);
+		VectorCopy4(color, tess.vertexColors[numVerts + 2]);
+		VectorCopy4(color, tess.vertexColors[numVerts + 3]);
+	}
+
 
 	tess.xyz[ numVerts ][0] = cmd->x;
 	tess.xyz[ numVerts ][1] = cmd->y;
@@ -1092,10 +1115,16 @@ const void *RB_RotatePic ( const void *data )
 	tess.indexes[ numIndexes + 4 ] = numVerts + 0;
 	tess.indexes[ numIndexes + 5 ] = numVerts + 1;
 
-	VectorCopy4(backEnd.color2D, tess.vertexColors[ numVerts ]);
-	VectorCopy4(backEnd.color2D, tess.vertexColors[ numVerts + 1]);
-	VectorCopy4(backEnd.color2D, tess.vertexColors[ numVerts + 2]);
-	VectorCopy4(backEnd.color2D, tess.vertexColors[ numVerts + 3 ]);
+	{
+		vec4_t color;
+
+		VectorScale4(backEnd.color2D, 1.0f / 255.0f, color);
+
+		VectorCopy4(color, tess.vertexColors[numVerts]);
+		VectorCopy4(color, tess.vertexColors[numVerts + 1]);
+		VectorCopy4(color, tess.vertexColors[numVerts + 2]);
+		VectorCopy4(color, tess.vertexColors[numVerts + 3]);
+	}
 
 	tess.xyz[numVerts][0] = m[0][0] * (-cmd->w) + m[2][0];
 	tess.xyz[numVerts][1] = m[0][1] * (-cmd->w) + m[2][1];
@@ -1185,10 +1214,16 @@ const void *RB_RotatePic2 ( const void *data )
 	tess.indexes[ numIndexes + 4 ] = numVerts + 0;
 	tess.indexes[ numIndexes + 5 ] = numVerts + 1;
 
-	VectorCopy4(backEnd.color2D, tess.vertexColors[ numVerts ]);
-	VectorCopy4(backEnd.color2D, tess.vertexColors[ numVerts + 1]);
-	VectorCopy4(backEnd.color2D, tess.vertexColors[ numVerts + 2]);
-	VectorCopy4(backEnd.color2D, tess.vertexColors[ numVerts + 3 ]);
+	{
+		vec4_t color;
+
+		VectorScale4(backEnd.color2D, 1.0f / 255.0f, color);
+
+		VectorCopy4(color, tess.vertexColors[numVerts]);
+		VectorCopy4(color, tess.vertexColors[numVerts + 1]);
+		VectorCopy4(color, tess.vertexColors[numVerts + 2]);
+		VectorCopy4(color, tess.vertexColors[numVerts + 3]);
+	}
 
 	tess.xyz[numVerts][0] = m[0][0] * (-cmd->w * 0.5f) + m[1][0] * (-cmd->h * 0.5f) + m[2][0];
 	tess.xyz[numVerts][1] = m[0][1] * (-cmd->w * 0.5f) + m[1][1] * (-cmd->h * 0.5f) + m[2][1];
@@ -1325,9 +1360,9 @@ const void	*RB_DrawSurfs( const void *data ) {
 			GL_BindToTMU(tr.sunShadowDepthImage[1], TB_SHADOWMAP2);
 			GL_BindToTMU(tr.sunShadowDepthImage[2], TB_SHADOWMAP3);
 
-			GLSL_SetUniformMatrix4x4(&tr.shadowmaskShader, UNIFORM_SHADOWMVP,  backEnd.refdef.sunShadowMvp[0]);
-			GLSL_SetUniformMatrix4x4(&tr.shadowmaskShader, UNIFORM_SHADOWMVP2, backEnd.refdef.sunShadowMvp[1]);
-			GLSL_SetUniformMatrix4x4(&tr.shadowmaskShader, UNIFORM_SHADOWMVP3, backEnd.refdef.sunShadowMvp[2]);
+			GLSL_SetUniformMatrix16(&tr.shadowmaskShader, UNIFORM_SHADOWMVP,  backEnd.refdef.sunShadowMvp[0]);
+			GLSL_SetUniformMatrix16(&tr.shadowmaskShader, UNIFORM_SHADOWMVP2, backEnd.refdef.sunShadowMvp[1]);
+			GLSL_SetUniformMatrix16(&tr.shadowmaskShader, UNIFORM_SHADOWMVP3, backEnd.refdef.sunShadowMvp[2]);
 			
 			GLSL_SetUniformVec3(&tr.shadowmaskShader, UNIFORM_VIEWORIGIN,  backEnd.refdef.vieworg);
 			{
@@ -1418,9 +1453,9 @@ const void	*RB_DrawSurfs( const void *data ) {
 					GL_BindToTMU(tr.dlightShadowDepthImage[l][1], TB_SHADOWMAP2);
 					GL_BindToTMU(tr.dlightShadowDepthImage[l][2], TB_SHADOWMAP3);
 
-					GLSL_SetUniformMatrix4x4(&tr.shadowmaskShader, UNIFORM_SHADOWMVP,  backEnd.refdef.dlightShadowMvp[l][0]);
-					GLSL_SetUniformMatrix4x4(&tr.shadowmaskShader, UNIFORM_SHADOWMVP2, backEnd.refdef.dlightShadowMvp[l][1]);
-					GLSL_SetUniformMatrix4x4(&tr.shadowmaskShader, UNIFORM_SHADOWMVP3, backEnd.refdef.dlightShadowMvp[l][2]);
+					GLSL_SetUniformMatrix16(&tr.shadowmaskShader, UNIFORM_SHADOWMVP,  backEnd.refdef.dlightShadowMvp[l][0]);
+					GLSL_SetUniformMatrix16(&tr.shadowmaskShader, UNIFORM_SHADOWMVP2, backEnd.refdef.dlightShadowMvp[l][1]);
+					GLSL_SetUniformMatrix16(&tr.shadowmaskShader, UNIFORM_SHADOWMVP3, backEnd.refdef.dlightShadowMvp[l][2]);
 
 					GLSL_SetUniformVec3(&tr.shadowmaskShader, UNIFORM_VIEWORIGIN,  backEnd.refdef.vieworg);
 					{
@@ -1621,7 +1656,8 @@ const void	*RB_DrawBuffer( const void *data ) {
 	cmd = (const drawBufferCommand_t *)data;
 
 	// finish any 2D drawing if needed
-	RB_EndSurface();
+	if(tess.numIndexes)
+		RB_EndSurface();
 
 	FBO_Bind(NULL);
 

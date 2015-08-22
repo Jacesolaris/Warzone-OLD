@@ -280,14 +280,14 @@ R_AddMD3Surfaces
 
 =================
 */
-void R_AddMD3Surfaces( trRefEntity_t *ent, int entityNum ) {
+void R_AddMD3Surfaces( trRefEntity_t *ent ) {
 	int				i;
 	mdvModel_t		*model = NULL;
 	mdvSurface_t	*surface = NULL;
 	shader_t		*shader = NULL;
 	int				cull;
 	int				lod;
-	int				fogNum;
+	int64_t			fogNum;
 	int             cubemapIndex;
 	qboolean		personalModel;
 
@@ -390,7 +390,7 @@ void R_AddMD3Surfaces( trRefEntity_t *ent, int entityNum ) {
 		{
 			srfVBOMDVMesh_t *vboSurface = &model->vboSurfaces[i];
 
-			R_AddDrawSurf((surfaceType_t *)vboSurface, entityNum, shader, fogNum, qfalse, R_IsPostRenderEntity (entityNum, ent), cubemapIndex );
+			R_AddDrawSurf((surfaceType_t *)vboSurface, shader, fogNum, qfalse, R_IsPostRenderEntity (tr.currentEntityNum, ent), cubemapIndex );
 		}
 
 		surface++;

@@ -33,7 +33,7 @@ float AnaglyphMaxDistance = var_Local1.b;
 float AnaglyphParallax = var_Local1.a;
 
 //#define float4x4 row_major float4x4 mul
-//#define float4x4 row_major float4x4 mul(pos,modelMatrix);
+//#define float4x4 row_major float4x4 mul(pos,transformMatrix);
 //#define mul(a,b) mul((b),transpose(a))
 //#define mul(a,b) a*b
 
