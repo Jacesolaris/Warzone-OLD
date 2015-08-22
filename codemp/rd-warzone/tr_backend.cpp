@@ -797,14 +797,13 @@ static void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 	int				dlighted, oldDlighted;
 	int				postRender, oldPostRender;
 	int             cubemapIndex, oldCubemapIndex;
-	int		depthRange, oldDepthRange;
+	int				depthRange, oldDepthRange;
 	int				i;
 	drawSurf_t		*drawSurf;
 	int				oldSort;
 	float			originalTime;
 	FBO_t*			fbo = NULL;
 	qboolean		inQuery = qfalse;
-
 	float			depth[2];
 
 

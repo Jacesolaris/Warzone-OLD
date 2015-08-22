@@ -3446,7 +3446,7 @@ static inline float G2_GetVertBoneWeightNotSlow( const mdxmVertex_t *pVert, cons
 
 static void MDXABoneToMatrix ( const mdxaBone_t& bone, mat4x3_t& matrix )
 {
-	/*
+	
 	matrix[0] = bone.matrix[0][0];
 	matrix[1] = bone.matrix[1][0];
 	matrix[2] = bone.matrix[2][0];
@@ -3462,8 +3462,8 @@ static void MDXABoneToMatrix ( const mdxaBone_t& bone, mat4x3_t& matrix )
 	matrix[9] = bone.matrix[0][3];
 	matrix[10] = bone.matrix[1][3];
 	matrix[11] = bone.matrix[2][3];
-	*/
-
+	
+	/*
 	matrix[0] = 1.0f;
         matrix[1] = 0.0f;
         matrix[2] = 0.0f;
@@ -3479,6 +3479,7 @@ static void MDXABoneToMatrix ( const mdxaBone_t& bone, mat4x3_t& matrix )
         matrix[9] = 0.0f;
         matrix[10] = 0.0f;
         matrix[11] = 0.0f;
+		*/
 }
 
 //This is a slightly mangled version of the same function from the sof2sp base.
