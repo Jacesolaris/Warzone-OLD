@@ -1029,8 +1029,6 @@ typedef struct trGlobals_s {
 
 	trRefEntity_t			*currentEntity;
 	trRefEntity_t			worldEntity;		// point currentEntity at this when rendering world
-	int						currentEntityNum;
-	int						shiftedEntityNum;	// currentEntityNum << QSORT_ENTITYNUM_SHIFT
 	model_t					*currentModel;
 
 	viewParms_t				viewParms;

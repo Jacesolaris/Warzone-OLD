@@ -1423,6 +1423,7 @@ static qboolean SurfIsOffscreen( const drawSurf_t *drawSurf, vec4_t clipDest[128
 	unsigned int pointOr = 0;
 	unsigned int pointAnd = (unsigned int)~0;
 
+
 	R_RotateForViewer(&tr.viewParms);
 
 	R_DecomposeSort( drawSurf->sort, &shader, &fogNum, &postRender );

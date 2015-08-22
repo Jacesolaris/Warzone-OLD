@@ -2402,9 +2402,6 @@ void RenderSurfaces(CRenderSurface &RS, int entityNum) //also ended up just ripp
 #endif
 
 	assert(RS.currentModel);
-
-	if (!RS.currentModel) return;
-
 	assert(RS.currentModel->data.glm && RS.currentModel->data.glm->header);
 	// back track and get the surfinfo struct for this surface
 	mdxmSurface_t			*surface = (mdxmSurface_t *)G2_FindSurface(RS.currentModel, RS.surfaceNum, RS.lod);
@@ -2457,12 +2454,6 @@ void RenderSurfaces(CRenderSurface &RS, int entityNum) //also ended up just ripp
 		if ( !RS.personalModel ) 
 		{		// set the surface info to point at the where the transformed bone list is going to be for when the surface gets rendered out
 			CRenderableSurface *newSurf = AllocGhoul2RenderableSurface();
-
-			if (!RS.currentModel || !RS.currentModel->data.glm || !RS.currentModel->data.glm->vboModels) return;
-
-			// UQ1: ADDED - Something is wrong here! Not initialized/loaded???
-			assert(RS.currentModel->data.glm->vboModels);
-
 			newSurf->vboMesh = &RS.currentModel->data.glm->vboModels[RS.lod].vboMeshes[RS.surfaceNum];
 			assert (newSurf->vboMesh != NULL && RS.surfaceNum == surface->thisSurfaceIndex);
 			newSurf->surfaceData = surface;
@@ -2474,9 +2465,9 @@ void RenderSurfaces(CRenderSurface &RS, int entityNum) //also ended up just ripp
 			if (RS.gore_set && drawGore)
 			{
 				int curTime = G2API_GetTime(tr.refdef.time);
-				pair<multimap<int,SGoreSurface>::iterator,multimap<int,SGoreSurface>::iterator> range=
+				std::pair<std::multimap<int,SGoreSurface>::iterator,std::multimap<int,SGoreSurface>::iterator> range=
 					RS.gore_set->mGoreRecords.equal_range(RS.surfaceNum);
-				multimap<int,SGoreSurface>::iterator k,kcur;
+				std::multimap<int,SGoreSurface>::iterator k,kcur;
 				CRenderableSurface *last=newSurf;
 				for (k=range.first;k!=range.second;)
 				{
@@ -3455,6 +3446,7 @@ static inline float G2_GetVertBoneWeightNotSlow( const mdxmVertex_t *pVert, cons
 
 static void MDXABoneToMatrix ( const mdxaBone_t& bone, mat4x3_t& matrix )
 {
+	/*
 	matrix[0] = bone.matrix[0][0];
 	matrix[1] = bone.matrix[1][0];
 	matrix[2] = bone.matrix[2][0];
@@ -3470,6 +3462,23 @@ static void MDXABoneToMatrix ( const mdxaBone_t& bone, mat4x3_t& matrix )
 	matrix[9] = bone.matrix[0][3];
 	matrix[10] = bone.matrix[1][3];
 	matrix[11] = bone.matrix[2][3];
+	*/
+
+	matrix[0] = 1.0f;
+        matrix[1] = 0.0f;
+        matrix[2] = 0.0f;
+ 
+        matrix[3] = 0.0f;
+        matrix[4] = 1.0f;
+        matrix[5] = 0.0f;
+ 
+        matrix[6] = 0.0f;
+        matrix[7] = 0.0f;
+        matrix[8] = 1.0f;
+ 
+        matrix[9] = 0.0f;
+        matrix[10] = 0.0f;
+        matrix[11] = 0.0f;
 }
 
 //This is a slightly mangled version of the same function from the sof2sp base.
