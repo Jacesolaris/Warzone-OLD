@@ -428,7 +428,7 @@ static void DrawSkySide( struct image_s *image, const int mins[2], const int max
 		GLSL_VertexAttribsState(ATTR_POSITION | ATTR_TEXCOORD0);
 		GLSL_BindProgram(sp);
 		
-		GLSL_SetUniformMatrix16(sp, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
+		GLSL_SetUniformMatrix4x4(sp, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
 		
 		color[0] = 
 		color[1] = 
@@ -444,7 +444,7 @@ static void DrawSkySide( struct image_s *image, const int mins[2], const int max
 		GLSL_VertexAttribsState(ATTR_POSITION | ATTR_TEXCOORD0);
 		GLSL_BindProgram(sp);
 		
-		GLSL_SetUniformMatrix16(sp, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
+		GLSL_SetUniformMatrix4x4(sp, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
 		
 		color[0] = 
 		color[1] = 
@@ -849,7 +849,7 @@ void DrawSkyDome ( shader_t *skyShader )
 	GLSL_BindProgram(&tr.uniqueskyShader);
 	GL_BindToTMU(skyShader->sky.outerbox[0], TB_LEVELSMAP);
 
-	GLSL_SetUniformMatrix16(&tr.uniqueskyShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
+	GLSL_SetUniformMatrix4x4(&tr.uniqueskyShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
 	GLSL_SetUniformFloat(&tr.uniqueskyShader, UNIFORM_TIME, backEnd.refdef.floatTime*5.0/*tr.refdef.floatTime*/);
 
 	{

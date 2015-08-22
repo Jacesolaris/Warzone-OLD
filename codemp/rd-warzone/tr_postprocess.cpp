@@ -1164,8 +1164,8 @@ qboolean RB_VolumetricDLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i
 		GL_SetModelviewMatrix( backEnd.viewParms.ori.modelMatrix );
 		GL_SetProjectionMatrix( backEnd.viewParms.projectionMatrix );
 
-		GLSL_SetUniformMatrix16(&tr.volumelightShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, backEnd.viewParms.projectionMatrix);
-		GLSL_SetUniformMatrix16(&tr.volumelightShader, UNIFORM_MODELMATRIX, backEnd.viewParms.ori.modelMatrix);
+		GLSL_SetUniformMatrix4x4(&tr.volumelightShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, backEnd.viewParms.projectionMatrix);
+		GLSL_SetUniformMatrix4x4(&tr.volumelightShader, UNIFORM_MODELMATRIX, backEnd.viewParms.ori.modelMatrix);
 
 		GLSL_SetUniformInt(&tr.volumelightShader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
 		GL_BindToTMU(tr.renderDepthImage, TB_LIGHTMAP);
@@ -1456,8 +1456,8 @@ void RB_SSAO(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 
 	GLSL_BindProgram(&tr.ssaoShader);
 
-	GLSL_SetUniformMatrix16(&tr.ssaoShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
-	GLSL_SetUniformMatrix16(&tr.ssaoShader, UNIFORM_MODELMATRIX, backEnd.ori.transformMatrix);
+	GLSL_SetUniformMatrix4x4(&tr.ssaoShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
+	GLSL_SetUniformMatrix4x4(&tr.ssaoShader, UNIFORM_MODELMATRIX, backEnd.ori.transformMatrix);
 
 	GL_BindToTMU(tr.fixedLevelsImage, TB_DIFFUSEMAP);
 
@@ -1499,8 +1499,8 @@ void RB_SSAO2(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 
 	GLSL_BindProgram(&tr.ssao2Shader);
 
-	GLSL_SetUniformMatrix16(&tr.ssao2Shader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
-	GLSL_SetUniformMatrix16(&tr.ssao2Shader, UNIFORM_MODELMATRIX, backEnd.ori.transformMatrix);
+	GLSL_SetUniformMatrix4x4(&tr.ssao2Shader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
+	GLSL_SetUniformMatrix4x4(&tr.ssao2Shader, UNIFORM_MODELMATRIX, backEnd.ori.transformMatrix);
 
 	GL_BindToTMU(tr.fixedLevelsImage, TB_DIFFUSEMAP);
 
@@ -2148,7 +2148,7 @@ void RB_TestShader(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox,
 	GLSL_BindProgram(&tr.testshaderShader);
 	GL_BindToTMU(tr.fixedLevelsImage, TB_LEVELSMAP);
 
-	GLSL_SetUniformMatrix16(&tr.testshaderShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
+	GLSL_SetUniformMatrix4x4(&tr.testshaderShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
 
 	//GLSL_SetUniformFloat(&tr.testshaderShader, UNIFORM_TIME, backEnd.refdef.floatTime*5.0/*tr.refdef.floatTime*/);
 
@@ -2177,7 +2177,7 @@ void RB_Underwater(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 	GLSL_BindProgram(&tr.underwaterShader);
 	GL_BindToTMU(tr.fixedLevelsImage, TB_LEVELSMAP);
 
-	GLSL_SetUniformMatrix16(&tr.underwaterShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
+	GLSL_SetUniformMatrix4x4(&tr.underwaterShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
 
 	GLSL_SetUniformFloat(&tr.underwaterShader, UNIFORM_TIME, backEnd.refdef.floatTime*5.0/*tr.refdef.floatTime*/);
 
@@ -2205,7 +2205,7 @@ void RB_FXAA(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 	GLSL_BindProgram(&tr.fxaaShader);
 	GL_BindToTMU(tr.fixedLevelsImage, TB_LEVELSMAP);
 
-	GLSL_SetUniformMatrix16(&tr.fxaaShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
+	GLSL_SetUniformMatrix4x4(&tr.fxaaShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
 
 	{
 		vec2_t screensize;

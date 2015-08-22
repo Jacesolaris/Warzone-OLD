@@ -1007,7 +1007,9 @@ enum
 	// GPU vertex animations
 	ATTR_INDEX_POSITION2,
 	ATTR_INDEX_TANGENT2,
-	ATTR_INDEX_NORMAL2
+	ATTR_INDEX_NORMAL2,
+
+	ATTR_INDEX_MAX
 };
 
 enum
@@ -1178,7 +1180,8 @@ enum
 	GLSL_VEC2,
 	GLSL_VEC3,
 	GLSL_VEC4,
-	GLSL_MAT16
+	GLSL_MAT4x3,
+	GLSL_MAT4x4,
 };
 
 typedef enum
@@ -1536,10 +1539,32 @@ typedef enum {
 	SF_MAX = 0x7fffffff			// ensures that sizeof( surfaceType_t ) == sizeof( int )
 } surfaceType_t;
 
+/*
+the drawsurf sort data is packed into a single 32 bit value so it can be
+compared quickly during the qsorting process
+*/
+#define	QSORT_FOGNUM_SHIFT		0
+#define QSORT_FOGNUM_BITS		5
+#define QSORT_FOGNUM_MASK		((1 << QSORT_FOGNUM_BITS) - 1)
+
+#define	QSORT_SHADERNUM_SHIFT	(QSORT_FOGNUM_SHIFT + QSORT_FOGNUM_BITS)
+#define QSORT_SHADERNUM_BITS	SHADERNUM_BITS
+#define QSORT_SHADERNUM_MASK	((1 << QSORT_SHADERNUM_BITS) - 1)
+
+#define QSORT_POSTRENDER_SHIFT	(QSORT_SHADERNUM_SHIFT + QSORT_SHADERNUM_BITS)
+#define QSORT_POSTRENDER_BITS	1
+#define QSORT_POSTRENDER_MASK	((1 << QSORT_POSTRENDER_BITS) - 1)
+
+#if QSORT_POSTRENDER_SHIFT >= 32
+	#error "Sort field needs to be expanded"
+#endif
+
 typedef struct drawSurf_s {
-	uint64_t			sort;			// bit combination for fast compares
-	int                 cubemapIndex;
-	surfaceType_t		*surface;		// any of surface*_t
+	uint32_t sort; // bit combination for fast compares
+	int cubemapIndex;
+	int entityNum;
+	qboolean lit;
+	surfaceType_t *surface; // any of surface*_t
 } drawSurf_t;
 
 #define	MAX_FACE_POINTS		64
@@ -2035,44 +2060,7 @@ void		R_Modellist_f (void);
 #define	MAX_DRAWSURFS			0x10000
 #define	DRAWSURF_MASK			(MAX_DRAWSURFS-1)
 
-/*
-
-the drawsurf sort data is packed into a single 32 bit value so it can be
-compared quickly during the qsorting process
-
-the bits are allocated as follows:
-
-0 - 1	: dlightmap index
-//2		: used to be clipped flag REMOVED - 03.21.00 rad
-2 - 6	: fog index
-11 - 20	: entity index
-21 - 31	: sorted shader index
-
-	TTimo - 1.32
-0-1   : dlightmap index
-2-6   : fog index
-7-16  : entity index
-17-30 : sorted shader index
-
-    SmileTheory - for pshadows
-17-31 : sorted shader index
-7-16  : entity index
-2-6   : fog index
-1     : pshadow flag
-0     : dlight flag
-*/
-#define	QSORT_FOGNUM_SHIFT	1
-#define	QSORT_REFENTITYNUM_SHIFT	6
-#define	QSORT_SHADERNUM_SHIFT	(QSORT_REFENTITYNUM_SHIFT+REFENTITYNUM_BITS)
-#if (QSORT_SHADERNUM_SHIFT+SHADERNUM_BITS) > 64//32
-	#error "Need to update sorting, too many bits."
-#endif
-#define QSORT_POSTRENDER_SHIFT     (QSORT_SHADERNUM_SHIFT + SHADERNUM_BITS)
-#if QSORT_POSTRENDER_SHIFT >= 64//32
-	#error "Sort field needs to be expanded"
-#endif
-
-extern	int			gl_filter_min, gl_filter_max;
+extern	int gl_filter_min, gl_filter_max;
 
 /*
 ** performanceCounters_t
@@ -2110,7 +2098,7 @@ typedef struct glstate_s {
 	int				vertexAttribsTexCoordOffset[2];
 	qboolean        vertexAnimation;
 	qboolean		skeletalAnimation;
-	matrix_t       *boneMatrices;
+	mat4x3_t       *boneMatrices;
 	int				numBones;
 	shaderProgram_t *currentProgram;
 	FBO_t          *currentFBO;
@@ -2192,13 +2180,11 @@ typedef struct {
 	viewParms_t			viewParms;
 	orientationr_t		ori;
 	backEndCounters_t	pc;
-	qboolean			isHyperspace;
 	trRefEntity_t		*currentEntity;
 	qboolean			skyRenderedThisView;	// flag for drawing sun
 
 	qboolean			projection2D;	// if qtrue, drawstretchpic doesn't need to change modes
-	byte				color2D[4];
-	qboolean			vertexes2D;		// shader needs to be finished
+	float				color2D[4];
 	trRefEntity_t		entity2D;	// currentEntity will point at this when doing 2D rendering
 
 	FBO_t				*last2DFBO;
@@ -2317,8 +2303,6 @@ typedef struct trGlobals_s {
 
 	trRefEntity_t			*currentEntity;
 	trRefEntity_t			worldEntity;		// point currentEntity at this when rendering world
-	int64_t					currentEntityNum;
-	int64_t					shiftedEntityNum;	// currentEntityNum << QSORT_REFENTITYNUM_SHIFT
 	model_t					*currentModel;
 
 	//
@@ -2741,18 +2725,18 @@ void R_RenderCubemapSide( int cubemapIndex, int cubemapSide, qboolean subscene )
 void R_RenderDlightShadowMaps(const refdef_t *fd, int level);
 #endif //__DYNAMIC_SHADOWS__
 
-void R_AddMD3Surfaces( trRefEntity_t *e );
-void R_AddNullModelSurfaces( trRefEntity_t *e );
-void R_AddBeamSurfaces( trRefEntity_t *e );
+void R_AddMD3Surfaces( trRefEntity_t *e, int entityNum );
+void R_AddNullModelSurfaces( trRefEntity_t *e, int entityNum );
+void R_AddBeamSurfaces( trRefEntity_t *e, int entityNum );
 void R_AddRailSurfaces( trRefEntity_t *e, qboolean isUnderwater );
 void R_AddLightningBoltSurfaces( trRefEntity_t *e );
 
 void R_AddPolygonSurfaces( void );
 
-void R_DecomposeSort(const uint64_t sort, int64_t *entityNum, shader_t **shader, int64_t *fogNum, int64_t *dlightMap, int64_t *postRender);
+void R_DecomposeSort( uint32_t sort, shader_t **shader, int *fogNum, int *postRender );
+uint32_t R_CreateSortKey(int sortedShaderIndex, int fogIndex, int postRender);
+void R_AddDrawSurf( surfaceType_t *surface, int entityNum, shader_t *shader, int fogIndex, int dlightMap, int postRender, int cubemap );
 
-void R_AddDrawSurf( surfaceType_t *surface, shader_t *shader, 
-				   int64_t fogIndex, int64_t dlightMap, int64_t postRender, int cubemap );
 bool R_IsPostRenderEntity ( int refEntityNum, const trRefEntity_t *refEntity );
 
 void R_CalcTexDirs(vec3_t sdir, vec3_t tdir, const vec3_t v1, const vec3_t v2,
@@ -2982,7 +2966,7 @@ WORLD MAP
 ============================================================
 */
 
-void R_AddBrushModelSurfaces( trRefEntity_t *e );
+void R_AddBrushModelSurfaces( trRefEntity_t *e, int entityNum );
 void R_AddWorldSurfaces( void );
 qboolean R_inPVS( const vec3_t p1, const vec3_t p2, byte *mask );
 
@@ -3124,7 +3108,8 @@ void GLSL_SetUniformFloat5(shaderProgram_t *program, int uniformNum, const vec5_
 void GLSL_SetUniformVec2(shaderProgram_t *program, int uniformNum, const vec2_t v);
 void GLSL_SetUniformVec3(shaderProgram_t *program, int uniformNum, const vec3_t v);
 void GLSL_SetUniformVec4(shaderProgram_t *program, int uniformNum, const vec4_t v);
-void GLSL_SetUniformMatrix16(shaderProgram_t *program, int uniformNum, const float *matrix, int numElements = 1);
+void GLSL_SetUniformMatrix4x3(shaderProgram_t *program, int uniformNum, const float *matrix, int numElements = 1);
+void GLSL_SetUniformMatrix4x4(shaderProgram_t *program, int uniformNum, const float *matrix, int numElements = 1);
 
 shaderProgram_t *GLSL_GetGenericShaderProgram(int stage);
 
@@ -3175,10 +3160,10 @@ ANIMATED MODELS
 =============================================================
 */
 
-void R_MDRAddAnimSurfaces( trRefEntity_t *ent );
+void R_MDRAddAnimSurfaces( trRefEntity_t *ent, int entityNum );
 void RB_MDRSurfaceAnim( mdrSurface_t *surface );
 qboolean R_LoadIQM (model_t *mod, void *buffer, int filesize, const char *name );
-void R_AddIQMSurfaces( trRefEntity_t *ent );
+void R_AddIQMSurfaces( trRefEntity_t *ent, int entityNum );
 void RB_IQMSurfaceAnim( surfaceType_t *surface );
 int R_IQMLerpTag( orientation_t *tag, iqmData_t *data,
                   int startFrame, int endFrame,
@@ -3249,7 +3234,7 @@ CRenderableSurface():
 #endif
 };
 
-void R_AddGhoulSurfaces( trRefEntity_t *ent );
+void R_AddGhoulSurfaces( trRefEntity_t *ent, int entityNum );
 void RB_SurfaceGhoul( CRenderableSurface *surface );
 /*
 Ghoul2 Insert End
