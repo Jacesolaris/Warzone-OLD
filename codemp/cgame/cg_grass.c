@@ -307,13 +307,13 @@ void DrawGrass()
 		int		link = 0;
 		vec3_t	delta;
 
-		if (!InFOV( GRASS_POSITIONS[spot], cg.refdef.vieworg, cg.refdef.viewangles, cg.refdef.fov_x + 20, cg.refdef.fov_y + 20 ))
-			continue;
-
 		VectorSubtract( GRASS_POSITIONS[spot], cg.refdef.vieworg, delta );
 		len = VectorLength( delta );
 		
 		if ( len > 3192 ) continue;
+
+		if ( len > 96 && !InFOV( GRASS_POSITIONS[spot], cg.refdef.vieworg, cg.refdef.viewangles, cg.refdef.fov_x + 20, cg.refdef.fov_y + 20 ))
+			continue;
 
 		CG_AddGrassModel( spot );
 	}
