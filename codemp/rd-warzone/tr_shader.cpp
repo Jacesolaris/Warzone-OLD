@@ -4873,7 +4873,7 @@ static void FixRenderCommandList( int newShader ) {
 					drawSurf_t	*drawSurf;
 					shader_t	*shader;
 					int			fogNum;
-					int64_t		sortedIndex;
+					int			sortedIndex;
 					int			postRender;
 					const drawSurfsCommand_t *ds_cmd =  (const drawSurfsCommand_t *)curCmd;
 

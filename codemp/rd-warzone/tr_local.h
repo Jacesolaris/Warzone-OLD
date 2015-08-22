@@ -915,7 +915,7 @@ typedef struct shader_s {
 	byte		styles[MAXLIGHTMAPS];
 
 	int			index;					// this shader == tr.shaders[index]
-	int64_t		sortedIndex;			// this shader == tr.sortedShaders[sortedIndex]
+	int			sortedIndex;			// this shader == tr.sortedShaders[sortedIndex]
 
 	float		sort;					// lower numbered shaders draw before higher numbered
 
@@ -1577,7 +1577,7 @@ typedef struct drawSurf_s {
 typedef struct srfPoly_s {
 	surfaceType_t	surfaceType;
 	qhandle_t		hShader;
-	int64_t			fogIndex;
+	int				fogIndex;
 	int				numVerts;
 	polyVert_t		*verts;
 } srfPoly_t;
@@ -1785,7 +1785,7 @@ typedef struct cullinfo_s {
 typedef struct msurface_s {
 	//int					viewCount;		// if == tr.viewCount, already added
 	struct shader_s		*shader;
-	int64_t				fogIndex;
+	int					fogIndex;
 	int                 cubemapIndex;
 	cullinfo_t          cullinfo;
 

@@ -66,6 +66,12 @@
 #define	RDF_UNDERWATER		128		//
 #define	RDF_BLUR			256		// tell renderer to blur the screen
 
+// extra refdef flags start at 0x0008
+//#define RDF_NOFOG		0x0008		// don't apply fog to polys added using RE_AddPolyToScene
+#define RDF_EXTRA		512		// Makro - refdefex_t to follow after refdef_t
+#define RDF_SUNLIGHT    1024      // SmileTheory - render sunlight and shadows
+#define RDF_ForceSightOn 2048
+
 extern int	skyboxportal;
 extern int	drawskyboxportal;
 

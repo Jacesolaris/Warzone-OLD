@@ -708,9 +708,10 @@ float	glMatrix[16];
 
 void R_RotateForEntity( const trRefEntity_t *ent, const viewParms_t *viewParms,
 					   orientationr_t *ori ) {
+	float	glMatrix[16];
 	vec3_t	delta;
 	float	axisLength;
-	
+
 	if ( ent->e.reType != RT_MODEL ) {
 		*ori = viewParms->world;
 		return;
@@ -742,7 +743,7 @@ void R_RotateForEntity( const trRefEntity_t *ent, const viewParms_t *viewParms,
 	glMatrix[11] = 0;
 	glMatrix[15] = 1;
 
-	Matrix16Copy(glMatrix, ori->transformMatrix);
+	Matrix16Copy(glMatrix, ori->modelMatrix);
 	myGlMultMatrix( glMatrix, viewParms->world.modelMatrix, ori->modelMatrix );
 
 	// calculate the viewer origin in the model's space
@@ -1410,12 +1411,12 @@ static qboolean IsMirror(const drawSurf_t *drawSurf, int64_t entityNum)
 **
 ** Determines if a surface is completely offscreen.
 */
-static qboolean SurfIsOffscreen( const drawSurf_t *drawSurf, vec4_t clipDest[128] ) {
+static qboolean SurfIsOffscreen( const drawSurf_t *drawSurf, vec4_t clipDest[128], int *numVertices ) {
 	float shortest = 100000000;
-	int64_t entityNum;
+	int entityNum;
 	int numTriangles;
 	shader_t *shader;
-	int fogNum;
+	int		fogNum;
 	int postRender;
 	vec4_t clip, eye;
 	int i;
@@ -1430,15 +1431,22 @@ static qboolean SurfIsOffscreen( const drawSurf_t *drawSurf, vec4_t clipDest[128
 	RB_BeginSurface( shader, fogNum, drawSurf->cubemapIndex );
 	rb_surfaceTable[ *drawSurf->surface ]( drawSurf->surface );
 
-	assert( tess.numVertexes < 128 );
+	if ( tess.numVertexes > 128 )
+	{
+		// Don't bother trying, just assume it's off-screen and make it look bad. Besides, artists
+		// shouldn't be using this many vertices on a mirror surface anyway :)
+		return qtrue;
+	}
 
-#pragma omp parallel for /*ordered*/ schedule(dynamic) num_threads(16) if(r_multithread->integer > 0)
+	*numVertices = tess.numVertexes;
+
 	for ( i = 0; i < tess.numVertexes; i++ )
 	{
 		int j;
 		unsigned int pointFlags = 0;
 
 		R_TransformModelToClip( tess.xyz[i], tr.ori.modelMatrix, tr.viewParms.projectionMatrix, eye, clip );
+		VectorCopy4(clip, clipDest[i]);
 
 		for ( j = 0; j < 3; j++ )
 		{
@@ -1468,7 +1476,6 @@ static qboolean SurfIsOffscreen( const drawSurf_t *drawSurf, vec4_t clipDest[128
 	// we have in the game right now.
 	numTriangles = tess.numIndexes / 3;
 
-#pragma omp parallel for /*ordered*/ schedule(dynamic) num_threads(16) if(r_multithread->integer > 0)
 	for ( i = 0; i < tess.numIndexes; i += 3 )
 	{
 		vec3_t normal, tNormal;
@@ -1518,6 +1525,7 @@ Returns qtrue if another view has been rendered
 ========================
 */
 qboolean R_MirrorViewBySurface(drawSurf_t *drawSurf, int64_t entityNum) {
+	int				numVertices;
 	vec4_t			clipDest[128];
 	viewParms_t		newParms;
 	viewParms_t		oldParms;
@@ -1534,7 +1542,7 @@ qboolean R_MirrorViewBySurface(drawSurf_t *drawSurf, int64_t entityNum) {
 	}
 
 	// trivially reject portal/mirror
-	if ( SurfIsOffscreen( drawSurf, clipDest ) ) {
+	if ( SurfIsOffscreen( drawSurf, clipDest, &numVertices ) ) {
 		return qfalse;
 	}
 
@@ -1656,15 +1664,7 @@ static void R_RadixSort( drawSurf_t *source, int size )
   R_Radix( 1, size, scratch, source );
   R_Radix( 2, size, source, scratch );
   R_Radix( 3, size, scratch, source );
-  R_Radix( 4, size, source, scratch ); // added 4..7 for 64bit sorting
-  R_Radix( 5, size, scratch, source );
-  R_Radix( 6, size, source, scratch );
-  R_Radix( 7, size, scratch, source );
 #else
-  R_Radix( 7, size, source, scratch );
-  R_Radix( 6, size, scratch, source );
-  R_Radix( 5, size, source, scratch );
-  R_Radix( 4, size, scratch, source );
   R_Radix( 3, size, source, scratch );
   R_Radix( 2, size, scratch, source );
   R_Radix( 1, size, source, scratch );
@@ -1732,8 +1732,8 @@ void R_AddDrawSurf( surfaceType_t *surface, int entityNum, shader_t *shader,  in
 	// instead of checking for overflow, we just mask the index
 	// so it wraps around
 	index = tr.refdef.numDrawSurfs & DRAWSURF_MASK;
-
 	surf = tr.refdef.drawSurfs + index;
+
 	surf->sort = R_CreateSortKey(shader->sortedIndex, fogIndex, postRender);
 	surf->entityNum = entityNum;
 	surf->lit = (qboolean)dlightMap;

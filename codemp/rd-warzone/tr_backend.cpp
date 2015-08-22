@@ -565,13 +565,13 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 	FBO_t*			fbo = NULL;
 	shader_t		*oldShader = NULL;
 	qboolean		inQuery = qfalse;
-	int64_t			oldFogNum = -1;
-	int64_t			oldEntityNum = -1;
-	int64_t			oldDlighted = 0;
-	int64_t			oldPostRender = 0;
+	int				oldFogNum = -1;
+	int				oldEntityNum = -1;
+	int				oldDlighted = 0;
+	int				oldPostRender = 0;
 	int             oldCubemapIndex = -1;
 	int				oldDepthRange = 0;
-	uint64_t		oldSort = (uint64_t) -1;
+	int				oldSort = -1;
 	qboolean		CUBEMAPPING = (qboolean)r_cubeMapping->integer;
 
 	float			depth[2];
@@ -595,7 +595,7 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 		shader_t		*shader = NULL;
 		int				fogNum;
 		int64_t			entityNum;
-		int64_t			dlighted;
+		int				dlighted;
 		int				postRender;
 		int             cubemapIndex;
 		int				depthRange;
