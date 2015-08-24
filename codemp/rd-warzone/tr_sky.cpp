@@ -850,7 +850,8 @@ void DrawSkyDome ( shader_t *skyShader )
 	GL_BindToTMU(skyShader->sky.outerbox[0], TB_LEVELSMAP);
 
 	GLSL_SetUniformMatrix16(&tr.uniqueskyShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
-	GLSL_SetUniformFloat(&tr.uniqueskyShader, UNIFORM_TIME, backEnd.refdef.floatTime*5.0/*tr.refdef.floatTime*/);
+	GLSL_SetUniformFloat(&tr.uniqueskyShader, UNIFORM_TIME, backEnd.refdef.floatTime);
+	GLSL_SetUniformVec3(&tr.uniqueskyShader, UNIFORM_VIEWORIGIN,  backEnd.refdef.vieworg);
 
 	{
 		vec2_t screensize;

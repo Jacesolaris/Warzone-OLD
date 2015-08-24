@@ -1777,7 +1777,7 @@ void R_SortDrawSurfs( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 	for ( i = 0 ; i < numDrawSurfs ; i++ ) {
 		R_DecomposeSort( (drawSurfs+i)->sort, &entityNum, &shader, &fogNum, &dlighted, &postRender );
 
-		if ( shader->sort > SS_PORTAL ) {
+		if ( !shader || shader->sort > SS_PORTAL ) {
 			break;
 		}
 

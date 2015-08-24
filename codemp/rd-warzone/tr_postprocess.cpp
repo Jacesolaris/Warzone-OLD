@@ -1632,7 +1632,7 @@ void RB_ESharpening2(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBo
 }
 
 
-void RB_DOF(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
+void RB_DOF(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox, int direction)
 {
 	vec4_t color;
 
@@ -1642,47 +1642,94 @@ void RB_DOF(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 		color[2] = pow(2, r_cameraExposure->value);
 	color[3] = 1.0f;
 
-	GLSL_BindProgram(&tr.dofShader);
-
-	GL_BindToTMU(tr.fixedLevelsImage, TB_LEVELSMAP);
-
-	GLSL_SetUniformInt(&tr.dofShader, UNIFORM_LEVELSMAP, TB_LEVELSMAP);
-	GLSL_SetUniformInt(&tr.dofShader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
-	GL_BindToTMU(tr.renderDepthImage, TB_LIGHTMAP);
-
+	if (r_dof->integer >= 3)
 	{
-		vec2_t screensize;
-		screensize[0] = glConfig.vidWidth;
-		screensize[1] = glConfig.vidHeight;
+		GLSL_BindProgram(&tr.dof2Shader);
 
-		GLSL_SetUniformVec2(&tr.dofShader, UNIFORM_DIMENSIONS, screensize);
+		GL_BindToTMU(tr.fixedLevelsImage, TB_LEVELSMAP);
+
+		GLSL_SetUniformInt(&tr.dof2Shader, UNIFORM_LEVELSMAP, TB_LEVELSMAP);
+		GLSL_SetUniformInt(&tr.dof2Shader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
+		GL_BindToTMU(tr.renderDepthImage, TB_LIGHTMAP);
+
+		{
+			vec2_t screensize;
+			screensize[0] = glConfig.vidWidth;
+			screensize[1] = glConfig.vidHeight;
+
+			GLSL_SetUniformVec2(&tr.dof2Shader, UNIFORM_DIMENSIONS, screensize);
+		}
+
+		{
+			vec4_t viewInfo;
+
+			float zmax = backEnd.viewParms.zFar;
+			float zmin = r_znear->value;
+
+			VectorSet4(viewInfo, zmin, zmax, zmax / zmin, 0.0);
+
+			GLSL_SetUniformVec4(&tr.dof2Shader, UNIFORM_VIEWINFO, viewInfo);
+		}
+
+		{
+			vec4_t info;
+
+			info[0] = r_dof->value;
+			info[1] = r_testvalue0->value;
+			info[2] = r_testvalue1->value;
+			info[3] = direction;
+
+			VectorSet4(info, info[0], info[1], info[2], info[3]);
+
+			GLSL_SetUniformVec4(&tr.dof2Shader, UNIFORM_LOCAL0, info);
+		}
+
+		FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.dof2Shader, color, GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA);
 	}
-
+	else
 	{
-		vec4_t viewInfo;
+		GLSL_BindProgram(&tr.dofShader);
 
-		float zmax = backEnd.viewParms.zFar;
-		float zmin = r_znear->value;
+		GL_BindToTMU(tr.fixedLevelsImage, TB_LEVELSMAP);
 
-		VectorSet4(viewInfo, zmin, zmax, zmax / zmin, 0.0);
+		GLSL_SetUniformInt(&tr.dofShader, UNIFORM_LEVELSMAP, TB_LEVELSMAP);
+		GLSL_SetUniformInt(&tr.dofShader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
+		GL_BindToTMU(tr.renderDepthImage, TB_LIGHTMAP);
 
-		GLSL_SetUniformVec4(&tr.dofShader, UNIFORM_VIEWINFO, viewInfo);
+		{
+			vec2_t screensize;
+			screensize[0] = glConfig.vidWidth;
+			screensize[1] = glConfig.vidHeight;
+
+			GLSL_SetUniformVec2(&tr.dofShader, UNIFORM_DIMENSIONS, screensize);
+		}
+
+		{
+			vec4_t viewInfo;
+
+			float zmax = backEnd.viewParms.zFar;
+			float zmin = r_znear->value;
+
+			VectorSet4(viewInfo, zmin, zmax, zmax / zmin, 0.0);
+
+			GLSL_SetUniformVec4(&tr.dofShader, UNIFORM_VIEWINFO, viewInfo);
+		}
+
+		{
+			vec4_t info;
+
+			info[0] = r_dof->value;
+			info[1] = 0.0;//r_testvalue0->value;
+			info[2] = 0.0;
+			info[3] = 0.0;
+
+			VectorSet4(info, info[0], info[1], info[2], info[3]);
+
+			GLSL_SetUniformVec4(&tr.dofShader, UNIFORM_LOCAL0, info);
+		}
+
+		FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.dofShader, color, GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA);
 	}
-
-	{
-		vec4_t info;
-
-		info[0] = r_dof->value;
-		info[1] = 0.0;//r_testvalue0->value;
-		info[2] = 0.0;
-		info[3] = 0.0;
-
-		VectorSet4(info, info[0], info[1], info[2], info[3]);
-
-		GLSL_SetUniformVec4(&tr.dofShader, UNIFORM_LOCAL0, info);
-	}
-
-	FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.dofShader, color, GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA);
 }
 
 void RB_Vibrancy(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)

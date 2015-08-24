@@ -86,6 +86,8 @@ extern const char *fallbackShader_textureclean_vp;
 extern const char *fallbackShader_textureclean_fp;
 extern const char *fallbackShader_depthOfField_vp;
 extern const char *fallbackShader_depthOfField_fp;
+extern const char *fallbackShader_depthOfField2_vp;
+extern const char *fallbackShader_depthOfField2_fp;
 extern const char *fallbackShader_bloom_darken_vp;
 extern const char *fallbackShader_bloom_darken_fp;
 extern const char *fallbackShader_bloom_blur_vp;
@@ -1774,6 +1776,14 @@ int GLSL_BeginLoadGPUShaders(void)
 	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
 	extradefines[0] = '\0';
 
+	if (!GLSL_BeginLoadGPUShader(&tr.dof2Shader, "depthOfField2", attribs, qtrue, extradefines, qtrue, NULL, fallbackShader_depthOfField2_vp, fallbackShader_depthOfField2_fp))
+	{
+		ri->Error(ERR_FATAL, "Could not load depthOfField2 shader!");
+	}
+
+	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
+	extradefines[0] = '\0';
+
 	if (!GLSL_BeginLoadGPUShader(&tr.vibrancyShader, "vibrancy", attribs, qtrue, extradefines, qtrue, NULL, fallbackShader_vibrancy_vp, fallbackShader_vibrancy_fp))
 	{
 		ri->Error(ERR_FATAL, "Could not load vibrancy shader!");
@@ -2751,6 +2761,48 @@ void GLSL_EndLoadGPUShaders ( int startTime )
 	
 	numEtcShaders++;
 
+	if (!GLSL_EndLoadGPUShader(&tr.dof2Shader))
+	{
+		ri->Error(ERR_FATAL, "Could not load depthOfField2 shader!");
+	}
+	
+	GLSL_InitUniforms(&tr.dof2Shader);
+
+	qglUseProgram(tr.dof2Shader.program);
+
+	GLSL_SetUniformInt(&tr.dof2Shader, UNIFORM_TEXTUREMAP, TB_COLORMAP);
+	GLSL_SetUniformInt(&tr.dof2Shader, UNIFORM_LEVELSMAP,  TB_LEVELSMAP);
+	
+	{
+		vec4_t viewInfo;
+
+		float zmax = backEnd.viewParms.zFar;
+		float zmin = r_znear->value;
+
+		VectorSet4(viewInfo, zmax / zmin, zmax, 0.0, 0.0);
+		//VectorSet4(viewInfo, zmin, zmax, 0.0, 0.0);
+
+		GLSL_SetUniformVec4(&tr.dof2Shader, UNIFORM_VIEWINFO, viewInfo);
+	}
+
+	{
+		vec2_t screensize;
+		screensize[0] = glConfig.vidWidth;
+		screensize[1] = glConfig.vidHeight;
+
+		GLSL_SetUniformVec2(&tr.dof2Shader, UNIFORM_DIMENSIONS, screensize);
+
+		//ri->Printf(PRINT_WARNING, "Sent dimensions %f %f.\n", screensize[0], screensize[1]);
+	}
+
+	qglUseProgram(0);
+
+#if defined(_DEBUG)
+	GLSL_FinishGPUShader(&tr.dof2Shader);
+#endif
+	
+	numEtcShaders++;
+
 	if (!GLSL_EndLoadGPUShader(&tr.vibrancyShader))
 	{
 		ri->Error(ERR_FATAL, "Could not load vibrancy shader!");
@@ -3454,6 +3506,7 @@ void GLSL_ShutdownGPUShaders(void)
 	GLSL_DeleteGPUShader(&tr.anamorphicCombineShader);
 
 	GLSL_DeleteGPUShader(&tr.dofShader);
+	GLSL_DeleteGPUShader(&tr.dof2Shader);
 	GLSL_DeleteGPUShader(&tr.fxaaShader);
 	GLSL_DeleteGPUShader(&tr.underwaterShader);
 	GLSL_DeleteGPUShader(&tr.texturecleanShader);

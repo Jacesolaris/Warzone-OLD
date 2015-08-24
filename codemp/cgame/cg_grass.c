@@ -45,7 +45,7 @@ void CG_AddGrassModel( int num ) {
 	VectorCopy(angles, re.angles);
 	AnglesToAxis(angles, re.axis);
 
-	VectorSet(re.modelScale, GRASS_SCALE[num], GRASS_SCALE[num], GRASS_SCALE[num]);
+	VectorSet(re.modelScale, GRASS_SCALE[num], GRASS_SCALE[num], GRASS_SCALE[num]*0.85);
 	ScaleModelAxis( &re );
 
 	AddRefEntityToScene( &re );

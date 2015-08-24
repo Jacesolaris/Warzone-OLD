@@ -1891,8 +1891,8 @@
 			font 				4
 			textscale 			1
 			forecolor		.615 .615 .956 1
-			cvarFloatList		{  @MENUS_OFF 0 @MENUS_ON 1 "Cinematic" 2 }
-			descText			"Enable depth Of field technology?"
+			cvarFloatList		{  @MENUS_OFF 0 "Fast Static" 1 "Cinematic" 2 "Matso Static" 3 "Matso Cinematic" 4 }
+			descText			"Enable depth Of field technology? Highly recommend Matso unless your FPS is too low."
 			cvar				"r_dof"
 
 			mouseenter 

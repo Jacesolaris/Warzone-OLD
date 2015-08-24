@@ -3384,7 +3384,11 @@ void AssignMaterialType ( const char *name, const char *text )
 			shader.surfaceFlags |= MATERIAL_SHORTGRASS;
 	}
 	
-	if (shader.hasAlpha)
+	if (shader.hasAlpha && 
+		(StringsContainWord(name, name, "grass") || StringsContainWord(name, name, "yavin/ground") || StringsContainWord(name, name, "mp/s_ground") 
+		|| StringsContainWord(name, name, "tree") || StringsContainWord(name, name, "plant") || StringsContainWord(name, name, "bush") 
+		|| StringsContainWord(name, name, "shrub") || StringsContainWord(name, name, "leaf") || StringsContainWord(name, name, "leaves") 
+		|| StringsContainWord(name, name, "branch") || StringsContainWord(name, name, "flower") || StringsContainWord(name, name, "weed")))
 	{// Always greenleaves... No parallax...
 		int oldmat = ( shader.surfaceFlags & MATERIAL_MASK );
 		if (oldmat) shader.surfaceFlags &= ~oldmat;

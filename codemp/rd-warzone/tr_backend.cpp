@@ -2052,15 +2052,6 @@ const void *RB_PostProcess(const void *data)
 			SCREEN_BLUR = qtrue;
 		}
 
-		if (!SCREEN_BLUR && r_dof->integer)
-		{
-			//for (int pass_num = 0; pass_num < 3; pass_num++) // FIXME: Add passes cvar? - 3 is best though!
-			{
-				RB_DOF(srcFbo, srcBox, tr.genericFbo, dstBox);
-				FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_NEAREST);
-			}
-		}
-
 		if (r_underwater->integer)
 		{
 			/*
@@ -2078,6 +2069,37 @@ const void *RB_PostProcess(const void *data)
 			{
 				RB_Underwater(srcFbo, srcBox, tr.genericFbo, dstBox);
 				FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+			}
+		}
+
+		if (!SCREEN_BLUR && r_dof->integer)
+		{
+			if (r_dof->integer < 3)
+			{// Old method...
+				RB_DOF(srcFbo, srcBox, tr.genericFbo, dstBox, 0);
+				FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_LINEAR);
+				RB_DOF(srcFbo, srcBox, tr.genericFbo, dstBox, 0);
+				FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_LINEAR);
+			}
+			else
+			{// Matso method...
+				RB_DOF(srcFbo, srcBox, tr.genericFbo, dstBox, 2);
+				FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_LINEAR);
+				RB_DOF(srcFbo, srcBox, tr.genericFbo, dstBox, 3);
+				FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_LINEAR);
+				RB_DOF(srcFbo, srcBox, tr.genericFbo, dstBox, 0);
+				FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_LINEAR);
+				RB_DOF(srcFbo, srcBox, tr.genericFbo, dstBox, 1);
+				FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_LINEAR);
+
+				RB_DOF(srcFbo, srcBox, tr.genericFbo, dstBox, 2);
+				FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_LINEAR);
+				RB_DOF(srcFbo, srcBox, tr.genericFbo, dstBox, 3);
+				FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_LINEAR);
+				RB_DOF(srcFbo, srcBox, tr.genericFbo, dstBox, 0);
+				FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_LINEAR);
+				RB_DOF(srcFbo, srcBox, tr.genericFbo, dstBox, 1);
+				FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_LINEAR);
 			}
 		}
 

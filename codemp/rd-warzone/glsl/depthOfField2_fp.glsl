@@ -1,5 +1,3 @@
-//#version 330
-
 uniform sampler2D u_TextureMap;
 uniform sampler2D u_ScreenDepthMap;
 
@@ -9,384 +7,165 @@ varying vec4		var_ViewInfo; // znear, zfar, zfar / znear, 0
 
 varying vec4		var_Local0; // dofValue, 0, 0, 0
 
-//smooth vec2 texcoord;
-vec2 texcoord = var_TexCoords;
+//float DOF_MANUALFOCUSDEPTH = var_Local0.y;
 
-#define PI			3.1415926535897932384626433832795
+vec2 sampleOffset = vec2(1.0/var_Dimensions.x,1.0/var_Dimensions.y);
 
-float width = var_Dimensions.x; //texture width
-float height = var_Dimensions.y; //texture height
+#define PIOVER180 0.017453292
 
-vec2 texel = vec2(1.0/width,1.0/height);
+//MATSO DOF
+#define bMatsoDOFChromaEnable			// Enables Chromatic Abberation.
+#define bMatsoDOFBokehEnable			// Enables Bokeh weighting do define bright light spots and increase bokeh shape definiton.	
+#define fMatsoDOFChromaPow		2.4//	//[0.2 to 3.0] Amount of chromatic abberation color shifting.
+#define fMatsoDOFBokehCurve		6.0//7//2.0	//[0.5 to 20.0] Bokeh curve.
+#define fMatsoDOFBokehLight		1.0//0.512 	//[0.0 to 2.0] Bokeh brightening factor.
+#define iMatsoDOFBokehQuality		5	//[1 to 10] Blur quality as control value over tap count.
+#define fMatsoDOFBokehAngle		10	//[0 to 360] Rotation angle of bokeh shape.
 
-//uniform variables from external script
-float focalDepth = -0.01581;
-float focalLength = 12.0;
-float fstop = 2.0;
-bool showFocus = false;
-//bool showFocus = true;
+#define DOF_FOCUSPOINT	 		vec2(0.5,0.5)	//[0.0 to 1.0] Screen coordinates of focus point. First value is horizontal, second value is vertical position.
+//#define DOF_BLURRADIUS 			10.0	//[5.0 to 50.0] Blur radius approximately in pixels. Radius, not diameter.
+#define DOF_BLURRADIUS 			5
+//#define DOF_MANUALFOCUSDEPTH 		var_Local0.y//0.2	//[0.0 to 1.0] Manual focus depth. 0.0 means camera is focus plane, 1.0 means sky is focus plane.
+#define DOF_MANUALFOCUSDEPTH 		253.0	//[0.0 to 1.0] Manual focus depth. 0.0 means camera is focus plane, 1.0 means sky is focus plane.
 
-/* 
-make sure that these two values are the same for your camera, otherwise distances will be wrong.
-*/
-
-//float znear = 0.1; //camera clipping start
-//float zfar = 100.0; //camera clipping end
-float znear = var_ViewInfo.x; //camera clipping start
-float zfar = var_ViewInfo.y; //camera clipping end
-
-//------------------------------------------
-//user variables
-
-int samples = 3; //samples on the first ring
-int rings = 3; //ring count
-
-bool manualdof = false; //manual dof calculation
-//bool manualdof = true; //manual dof calculation
-
-float ndofstart = 1.0; //near dof blur start
-float ndofdist = 2.0; //near dof blur falloff distance
-float fdofstart = 1.0; //far dof blur start
-float fdofdist = 3.0; //far dof blur falloff distance
-
-float CoC = 0.03;//circle of confusion size in mm (35mm film = 0.03mm)
-
-vec2 focus = vec2(0.5,0.5); // autofocus point on screen (0.0,0.0 - left lower corner, 1.0,1.0 - upper right)
-float maxblur = 1.0; //clamp value of max blur (0.0 = no blur,1.0 default)
-
-bool blur_distant_only = false; // only blur distant objects, not the objects closer to the camera then the focus point.
-bool blur_less_close = true; // blur objects close to the camera less.
-
-bool constant_distant_blur = true; // Blur all distant objects.
-float constant_distant_blur_depth = 0.01578; // UQ1: JKA Optimized value.
-float constant_distant_blur_strength = -0.011; // UQ1: JKA Optimized value.
-
-//float threshold = 0.7; //highlight threshold;
-float threshold = 5.7; //highlight threshold;
-float gain = 100.0; //highlight gain;
-
-float bias = 0.5; //bokeh edge bias
-float fringe = 0.7; //bokeh chromatic aberration/fringing
-
-bool noise = false; //use noise instead of pattern for sample dithering
-float namount = 0.0001; //dither amount
-
-bool depthblur = false; //blur the depth buffer?
-float dbsize = 1.25; //depthblursize
-
-//------------------------------------------
-
-float linearize(float depth)
+float GetLinearDepth(float depth)
 {
-	return -zfar * znear / (depth * (zfar - znear) - zfar);
+	//return  1 / ((depth * ((var_ViewInfo.g - var_ViewInfo.r) / (-var_ViewInfo.g * var_ViewInfo.r)) + var_ViewInfo.g / (var_ViewInfo.g * var_ViewInfo.r)));
+	return depth * 255.0;
 }
 
-#define tex2D(tex, coord) texture2D(tex, coord)
-#define tex2Dlod(tex, coord) texture2D(tex, coord)
-#define lerp(a, b, t) mix(a, b, t)
-#define saturate(a) clamp(a, 0.0, 1.0)
-#define mad(a, b, c) (a * b + c)
-#define float2 vec2
-#define float3 vec3
-#define float4 vec4
-#define int2 ivec2
-#define int3 ivec3
-#define int4 ivec4
-#define bool2 bvec2
-#define bool3 bvec3
-#define bool4 bvec4
-#define frac fract
+float GetFocalDepth(vec2 focalpoint)
+{ 
+	if (var_Local0.r < 4.0)
+		return DOF_MANUALFOCUSDEPTH;
 
-/*==============================================================================================================
-	DOF MODES
-==============================================================================================================*/
+#if 1
+ 	float depthsum = 0;
+ 	//float fcRadius = var_Local0.y;//300.00;
+	
+#if 0
+	for(int r = 0; r < 6; r++)
+	{ 
+		highp float t = float(r);
+ 		t *= 3.1415*2/6; 
+ 		vec2 coord = vec2(cos(t),sin(t)); 
+ 		coord.y *= sampleOffset.y * fcRadius; 
+ 		//coord *= fcRadius; 
+ 		float depth = GetLinearDepth(texture2D(u_ScreenDepthMap,coord+focalpoint).x) * 0.999; 
+ 		depthsum+=depth; 
+ 	}
 
-#define USE_DYNAMIC_DOF				0	//0 for STATIC
-#define USE_NOT_BLURRING_SKY			0
-#define USE_TILT_SHIFT				0
-#define USE_POLYGONAL_BOKEH			1
+	depthsum = depthsum/6;
+#else
+	depthsum+=GetLinearDepth(texture2D(u_ScreenDepthMap,focalpoint).x) * 0.999;
+	depthsum+=GetLinearDepth(texture2D(u_ScreenDepthMap,focalpoint+vec2(0.0, 0.05)).x) * 0.999;
+	depthsum+=GetLinearDepth(texture2D(u_ScreenDepthMap,focalpoint+vec2(0.0, 0.1)).x) * 0.999;
+	depthsum+=GetLinearDepth(texture2D(u_ScreenDepthMap,focalpoint+vec2(0.0, 0.15)).x) * 0.999;
+	depthsum+=GetLinearDepth(texture2D(u_ScreenDepthMap,focalpoint+vec2(0.0, 0.2)).x) * 0.999;
+	depthsum+=GetLinearDepth(texture2D(u_ScreenDepthMap,focalpoint+vec2(0.0, 0.25)).x) * 0.999;
+	depthsum+=GetLinearDepth(texture2D(u_ScreenDepthMap,focalpoint+vec2(0.0, 0.3)).x) * 0.999;
+	depthsum+=GetLinearDepth(texture2D(u_ScreenDepthMap,focalpoint+vec2(0.0, 0.35)).x) * 0.999;
+	depthsum+=GetLinearDepth(texture2D(u_ScreenDepthMap,focalpoint+vec2(0.0, 0.4)).x) * 0.999;
+	depthsum+=GetLinearDepth(texture2D(u_ScreenDepthMap,focalpoint+vec2(0.0, 0.45)).x) * 0.999;
 
-vec4 Timer = vec4(1.0, 1.0, 1.0, 1.0);
+	depthsum = depthsum/10;
+#endif
 
-/*==============================================================================================================
-	Polygonal Bokeh Shape - Global
-	Works if USE_ENB_ADAPTIVE_QUALITY is disabled	
-==============================================================================================================*/
-
-#define POLYGON_NUM 6
-
-/*==============================================================================================================
-	Polygonal Bokeh Shape - DNI separated
-	Works if USE_ENB_ADAPTIVE_QUALITY is enabled
-==============================================================================================================*/
-
-#define fPolygons_Day				5
-#define fPolygons_Night				7
-#define fPolygons_Interior			6
-
-/*==============================================================================================================
-	DOF QUALITY LEVEL
-==============================================================================================================*/
-
-#define	DEPTH_OF_FIELD_QUALITY 			1 	//From 1 to 7 			//4, 5, 7	
-
-#define	USE_ENB_ADAPTIVE_QUALITY		1	//Works dynamically if enabled in enblocal.ini, otherwise enables alternative code
-
-/*==============================================================================================================
-	DYNAMIC DOF 
-==============================================================================================================*/
-
-#define fFocusPoint_Day				vec2(0.5, 0.5) 
-#define fFocusSampleRange_Day			1.0
-#define fNearBlurCurve_Day			14.55
-#define fFarBlurCurve_Day			1.675					//1.25, 1.55	
-#define fDepthClip_Day				150000.0 
-
-#define fFocusPoint_Night			vec2(0.5, 0.5)
-#define fFocusSampleRange_Night			1.0
-#define fNearBlurCurve_Night			14.45 
-#define fFarBlurCurve_Night			1.625			
-#define fDepthClip_Night			150000.0 
-
-#define fFocusPoint_Interior			vec2(0.5, 0.5)
-#define fFocusSampleRange_Interior		1.0
-#define fNearBlurCurve_Interior			10.00
-#define fFarBlurCurve_Interior			0.85					//0.825, 0.725, 0.5
-#define fDepthClip_Interior			150000.0  
-
-/*==============================================================================================================
-	STATIC DOF 
-==============================================================================================================*/
-
-#define	fFocalPlaneDepth_Day			0.00
-#define	fFarBlurDepth_Day			20.00	
-
-#define	fFocalPlaneDepth_Night			0.00
-#define	fFarBlurDepth_Night			20.00	
-
-#define	fFocalPlaneDepth_Interior		0.00
-#define	fFarBlurDepth_Interior			20.00	
-
-/*==============================================================================================================
-	BOKEH Effect Parameters
-==============================================================================================================*/
-
-#define	fBokehBias_Day				-0.00125
-#define	fBokehBiasCurve_Day			0.75
-#define	fBokehBrightnessThreshold_Day		0.975 
-#define	fBokehBrightnessMultiplier_Day		1.00
-#define	fRadiusScaleMultiplier_Day		2.23
-
-#define	fBokehBias_Night			0.00
-#define	fBokehBiasCurve_Night			0.75
-#define	fBokehBrightnessThreshold_Night		1.00
-#define	fBokehBrightnessMultiplier_Night	1.00
-#define	fRadiusScaleMultiplier_Night		2.23
-
-#define	fBokehBias_Interior			0.00
-#define	fBokehBiasCurve_Interior		0.75
-#define	fBokehBrightnessThreshold_Interior	0.975
-#define	fBokehBrightnessMultiplier_Interior	1.00
-#define	fRadiusScaleMultiplier_Interior		2.23
-
-/**
- *	If DYNAMIC VARS enabled, otherwise ignored
- */
-
-#define fIntensityFactor_BokehBright_Day		0.0		
-#define fTimeFactor_BokehBright_Day			300.0
-#define fFrequency_BokehBright_Day			0.45	
-#define fAmplitude_BokehBright_Day			0.45
-
-#define fIntensityFactor_BokehBright_Night		5.0
-#define fTimeFactor_BokehBright_Night			300.0
-#define fFrequency_BokehBright_Night			0.475
-#define fAmplitude_BokehBright_Night			0.475
-
-#define fIntensityFactor_BokehBright_Interior		7.0
-#define fTimeFactor_BokehBright_Interior		350.0
-#define fFrequency_BokehBright_Interior			0.45
-#define fAmplitude_BokehBright_Interior			0.45
-
-#define fIntensityFactor_BokehThreshold_Day		0.0		
-#define fTimeFactor_BokehThreshold_Day			100.0
-#define fFrequency_BokehThreshold_Day			0.45	
-#define fAmplitude_BokehThreshold_Day			0.45
-
-#define fIntensityFactor_BokehThreshold_Night		5.0
-#define fTimeFactor_BokehThreshold_Night		150.0
-#define fFrequency_BokehThreshold_Night			0.5
-#define fAmplitude_BokehThreshold_Night			0.5
-
-#define fIntensityFactor_BokehThreshold_Interior	8.0
-#define fTimeFactor_BokehThreshold_Interior		350.0
-#define fFrequency_BokehThreshold_Interior		0.5
-#define fAmplitude_BokehThreshold_Interior		0.5
-
-#define fIntensityFactor_RadiusScale_Day		0.0				
-#define fTimeFactor_RadiusScale_Day			50.0
-#define fFrequency_RadiusScale_Day			0.35		
-#define fAmplitude_RadiusScale_Day			0.35		
-
-#define fIntensityFactor_RadiusScale_Night		4.0
-#define fTimeFactor_RadiusScale_Night			100.0
-#define fFrequency_RadiusScale_Night			0.425
-#define fAmplitude_RadiusScale_Night			0.425
-
-#define fIntensityFactor_RadiusScale_Interior		8.0
-#define fTimeFactor_RadiusScale_Interior		250.0
-#define fFrequency_RadiusScale_Interior			0.5
-#define fAmplitude_RadiusScale_Interior			0.5
-
-#define ENightDayFactor 0.5
-#define EInteriorFactor 0.0
-#define SEED			1				//Set ' 1 ' instead for no time-dependancy
-
-void sincos(float x, float s, float c)
-{
-    s = sin(x);
-    c = cos(x);
+	return depthsum; 
+#else
+	return GetLinearDepth(texture2D(u_ScreenDepthMap,DOF_FOCUSPOINT).x) * 0.999;
+#endif
 }
 
-void main()
+float CircleOfConfusion(float t)
+{
+	return max(t * .04, (2.0 / var_Dimensions.y) * (1.0+t));
+}
+
+vec4 GetMatsoDOFCA(sampler2D col, vec2 tex, float CoC)
+{
+	vec3 chroma;
+	chroma.r = pow(0.5, fMatsoDOFChromaPow * CoC);
+	chroma.g = pow(1.0, fMatsoDOFChromaPow * CoC);
+	chroma.b = pow(1.5, fMatsoDOFChromaPow * CoC);
+
+	vec2 tr = ((2.0 * tex - 1.0) * chroma.r) * 0.5 + 0.5;
+	vec2 tg = ((2.0 * tex - 1.0) * chroma.g) * 0.5 + 0.5;
+	vec2 tb = ((2.0 * tex - 1.0) * chroma.b) * 0.5 + 0.5;
+	
+	vec3 color = vec3(texture2D(col, tr).r, texture2D(col, tg).g, texture2D(col, tb).b) * (1.0 - CoC);
+	
+	return vec4(color, 1.0);
+}
+
+vec4 GetMatsoDOFBlur(int axis, vec2 coord, sampler2D SamplerHDRX)
 {
 	vec4 res;
-	vec2 coord=texcoord.xy;
-	vec4 origcolor=texture2D(u_TextureMap, coord.xy);
-	float centerDepth=linearize(texture2D(u_ScreenDepthMap,texcoord.xy).x * 255);//origcolor.w;
-	vec2 pixelSize=texel;//ScreenSize.y;
-	//pixelSize.y*=ScreenSize.z;
+	vec4 tcol = texture2D(SamplerHDRX, coord.xy);
 	
-	float blurAmount=abs(centerDepth * 2.0 - 1.0);
-	float discRadius=blurAmount * float(DEPTH_OF_FIELD_QUALITY);
+	//float origCoC = CircleOfConfusion((tcol.r + tcol.g + tcol.b) / 3.0);
+	//vec2 discRadius = origCoC.x*((GetLinearDepth(texture2D(u_ScreenDepthMap, coord.xy).x) - GetFocalDepth(coord.xy))*DOF_BLURRADIUS) * sampleOffset.xy*0.5/iMatsoDOFBokehQuality;
+	float coordDepth = GetLinearDepth(texture2D(u_ScreenDepthMap, coord.xy).x);
+	float focalDepth = GetFocalDepth(DOF_FOCUSPOINT/*coord.xy*/);
+	float depthDiff = (coordDepth - focalDepth);
+	vec2 discRadius = /*origCoC **/ (depthDiff * DOF_BLURRADIUS) * sampleOffset.xy * 0.5 / iMatsoDOFBokehQuality;
+	
+	if (depthDiff < 0.0) // Close to camera pixels, blur much less so player model is not blury...
+		discRadius *= 0.06;//var_Local0.z;
 
-	float fRadiusScaleMultiplier =lerp( lerp( fRadiusScaleMultiplier_Day, fRadiusScaleMultiplier_Night, 1 - ENightDayFactor ), fRadiusScaleMultiplier_Interior, EInteriorFactor);	
-	float fNearBlurCurve =lerp( lerp( fNearBlurCurve_Day, fNearBlurCurve_Night, 1 - ENightDayFactor ), fNearBlurCurve_Interior, EInteriorFactor);
-	float fBokehBias =lerp( lerp( fBokehBias_Day, fBokehBias_Night, 1 - ENightDayFactor ), fBokehBias_Interior, EInteriorFactor);
-	float fBokehBrightnessThreshold =lerp( lerp( fBokehBrightnessThreshold_Day, fBokehBrightnessThreshold_Night, 1 - ENightDayFactor ), fBokehBrightnessThreshold_Interior, EInteriorFactor);
-	float fBokehBrightnessMultiplier =lerp( lerp( fBokehBrightnessMultiplier_Day, fBokehBrightnessMultiplier_Night, 1 - ENightDayFactor ), fBokehBrightnessMultiplier_Interior, EInteriorFactor);
-	float fBokehBiasCurve =lerp( lerp( fBokehBiasCurve_Day, fBokehBiasCurve_Night, 1 - ENightDayFactor ), fBokehBiasCurve_Interior, EInteriorFactor);
+	//if (var_Local0.r < 4.0) // Manual mode. Blur less...
+		discRadius *= 0.5;//0.333;
 
-	float fIntensityFactor_BokehBright =lerp( lerp( fIntensityFactor_BokehBright_Day, fIntensityFactor_BokehBright_Night, 1 - ENightDayFactor ), fIntensityFactor_BokehBright_Interior, EInteriorFactor);
-	float fFrequency_BokehBright =lerp( lerp( fFrequency_BokehBright_Day, fFrequency_BokehBright_Night, 1 - ENightDayFactor ), fFrequency_BokehBright_Interior, EInteriorFactor);
-	float fAmplitude_BokehBright =lerp( lerp( fAmplitude_BokehBright_Day, fAmplitude_BokehBright_Night, 1 - ENightDayFactor ), fAmplitude_BokehBright_Interior, EInteriorFactor);
-	float fTimeFactor_BokehBright =lerp( lerp( fTimeFactor_BokehBright_Day, fTimeFactor_BokehBright_Night, 1 - ENightDayFactor ), fTimeFactor_BokehBright_Interior, EInteriorFactor);
-	float TimeFactorBokehBright =(0.5 * sin(2 * PI * fFrequency_BokehBright * Timer.x * (fIntensityFactor_BokehBright * fTimeFactor_BokehBright)) + 0.75) * fAmplitude_BokehBright;	//+ 0.5 Non-Limiter
+	int passnumber=1;
 
-	float fIntensityFactor_BokehThreshold =lerp( lerp( fIntensityFactor_BokehThreshold_Day, fIntensityFactor_BokehThreshold_Night, 1 - ENightDayFactor ), fIntensityFactor_BokehThreshold_Interior, EInteriorFactor);
-	float fFrequency_BokehThreshold =lerp( lerp( fFrequency_BokehThreshold_Day, fFrequency_BokehThreshold_Night, 1 - ENightDayFactor ), fFrequency_BokehThreshold_Interior, EInteriorFactor);
-	float fAmplitude_BokehThreshold =lerp( lerp( fAmplitude_BokehThreshold_Day, fAmplitude_BokehThreshold_Night, 1 - ENightDayFactor ), fAmplitude_BokehThreshold_Interior, EInteriorFactor);
-	float fTimeFactor_BokehThreshold =lerp( lerp( fTimeFactor_BokehThreshold_Day, fTimeFactor_BokehThreshold_Night, 1 - ENightDayFactor ), fTimeFactor_BokehThreshold_Interior, EInteriorFactor);
-	float TimeFactorBokehThreshold =(0.5 * sin(2 * PI * fFrequency_BokehThreshold * Timer.x * (fIntensityFactor_BokehThreshold * fTimeFactor_BokehThreshold)) + 0.75) * fAmplitude_BokehThreshold;	//+ 0.5 Non-Limiter
+	float sf = 0;
 
-	float fIntensityFactor_RadiusScale =lerp( lerp( fIntensityFactor_RadiusScale_Day, fIntensityFactor_RadiusScale_Night, 1 - ENightDayFactor ), fIntensityFactor_RadiusScale_Interior, EInteriorFactor);
-	float fFrequency_RadiusScale =lerp( lerp( fFrequency_RadiusScale_Day, fFrequency_RadiusScale_Night, 1 - ENightDayFactor ), fFrequency_RadiusScale_Interior, EInteriorFactor);
-	float fAmplitude_RadiusScale =lerp( lerp( fAmplitude_RadiusScale_Day, fAmplitude_RadiusScale_Night, 1 - ENightDayFactor ), fAmplitude_RadiusScale_Interior, EInteriorFactor);
-	float fTimeFactor_RadiusScale =lerp( lerp( fTimeFactor_RadiusScale_Day, fTimeFactor_RadiusScale_Night, 1 - ENightDayFactor ), fTimeFactor_RadiusScale_Interior, EInteriorFactor);
-	float TimeFactorRadiusScale =(0.5 * sin(2 * PI * fFrequency_RadiusScale * Timer.x * (fIntensityFactor_RadiusScale * fTimeFactor_RadiusScale)) + 0.75) * fAmplitude_RadiusScale;	//+ 0.5 Non-Limiter
+	const vec2 tdirs[4] = vec2[4]( vec2(-0.306, 0.739), vec2(0.306, 0.739), vec2(-0.739, 0.306), vec2(-0.739, -0.306) );
 
-#if (USE_DYNAMIC_BOKEH_BRIGHT_PUSH == 1)
-	fBokehBrightnessMultiplier=fBokehBrightnessMultiplier + TimeFactorBokehBright;
-#endif
-#if (USE_DYNAMIC_BOKEH_BRIGHT_PULL == 1)
-	fBokehBrightnessMultiplier=fBokehBrightnessMultiplier - TimeFactorBokehBright;
-#endif	
-#if (USE_DYNAMIC_BOKEH_THRESH_PUSH == 1)
-	fBokehBrightnessThreshold=fBokehBrightnessThreshold - TimeFactorBokehThreshold;
-#endif
-#if (USE_DYNAMIC_BOKEH_THRESH_PULL == 1)
-	fBokehBrightnessThreshold=fBokehBrightnessThreshold + TimeFactorBokehThreshold;
-#endif
-#if (USE_DYNAMIC_RADIUS_SCALE_PUSH == 1)
-	fRadiusScaleMultiplier=fRadiusScaleMultiplier + TimeFactorRadiusScale;
-#endif
-#if (USE_DYNAMIC_RADIUS_SCALE_PULL == 1)
-	fRadiusScaleMultiplier=fRadiusScaleMultiplier - TimeFactorRadiusScale;
+#ifdef bMatsoDOFBokehEnable
+	float wValue = (1.0 + pow(length(tcol.rgb) + 0.1, fMatsoDOFBokehCurve)) * (1.0 - fMatsoDOFBokehLight);	// special recipe from papa Matso ;)
+#else
+	float wValue = 1.0;
 #endif
 
-	discRadius*=fRadiusScaleMultiplier;
-	
-	#if (USE_DYNAMIC_DOF == 1)
-	discRadius*=(centerDepth < 0.5) ? (1.0 / max(fNearBlurCurve, 1.0)) : 1.0;
-	#endif
-		
-	res.xyz=origcolor.xyz;
-	res.w=dot(res.xyz, vec3(0.3333));
-	res.w=max((res.w - fBokehBrightnessThreshold) * fBokehBrightnessMultiplier, 0.0);
-	res.xyz*=1.0 + res.w*blurAmount;
-	
-	res.w=1.0;
-	
-	int sampleCycle=0;
-	int sampleCycleCounter=0;
-	int sampleCounterInCycle=0;
-	
-	#if (USE_POLYGONAL_BOKEH == 1)
-		float basedAngle=360.0 / POLYGON_NUM;
-		vec2 currentVertex;
-		vec2 nextVertex;
-	
-		float	dofTaps=DEPTH_OF_FIELD_QUALITY * (DEPTH_OF_FIELD_QUALITY + 1) * POLYGON_NUM / 2.0;
-	#else
-		float	dofTaps=DEPTH_OF_FIELD_QUALITY * (DEPTH_OF_FIELD_QUALITY + 1) * 4;
-	#endif
-		
-	
-	for(float i=0; i < dofTaps; i++)
+	for (int i = -iMatsoDOFBokehQuality; i < iMatsoDOFBokehQuality; i++)
 	{
-		if(sampleCounterInCycle % sampleCycle == 0) 
-		{
-			sampleCounterInCycle=0;
-			sampleCycleCounter++;
-		
-			#if (USE_POLYGONAL_BOKEH == 1)
-				sampleCycle+=POLYGON_NUM;
-				currentVertex.xy=vec2(1.0, 0.0);
-				sincos(basedAngle* 0.017453292, nextVertex.y, nextVertex.x);	
-			#else	
-				sampleCycle+=8;
-			#endif
-		}
-		sampleCounterInCycle++;
-		
-		#if (USE_POLYGONAL_BOKEH == 1)
-			float sampleAngle=basedAngle / float(sampleCycleCounter) * sampleCounterInCycle;
-			float remainAngle=frac(sampleAngle / basedAngle) * basedAngle;
-		
-			if(remainAngle == 0)
-			{
-				currentVertex=nextVertex;
-				sincos((sampleAngle +  basedAngle) * 0.017453292, nextVertex.y, nextVertex.x);
-			}
+		vec2 taxis =  tdirs[axis];
 
-			vec2 sampleOffset=lerp(currentVertex.xy, nextVertex.xy, remainAngle / basedAngle);
-		#else
-			float sampleAngle=0.78539816 / float(sampleCycleCounter) * sampleCounterInCycle;
-			vec2 sampleOffset;
-			sincos(sampleAngle, sampleOffset.y, sampleOffset.x);
-		#endif
+		taxis.x = cos(fMatsoDOFBokehAngle*PIOVER180)*taxis.x-sin(fMatsoDOFBokehAngle*PIOVER180)*taxis.y;
+		taxis.y = sin(fMatsoDOFBokehAngle*PIOVER180)*taxis.x+cos(fMatsoDOFBokehAngle*PIOVER180)*taxis.y;
 		
-		sampleOffset*=sampleCycleCounter / float(DEPTH_OF_FIELD_QUALITY);
-		vec2  coordLow=coord.xy + (pixelSize.xy * sampleOffset.xy * discRadius);
-		vec4 tap=texture2D(u_TextureMap, coordLow.xy);
-		
-		float weight=(tap.w >= centerDepth) ? 1.0 : abs(tap.w * 2.0 - 1.0);
-		
-		float luma=dot(tap.xyz, vec3(0.3333));
-		float brightMultiplier=max((luma - fBokehBrightnessThreshold) * fBokehBrightnessMultiplier, 0.0);
-		tap.xyz*=1.0 + brightMultiplier*abs(tap.w*2.0 - 1.0);
-		
-		tap.xyz*=1.0 + fBokehBias * pow(float(sampleCycleCounter)/float(DEPTH_OF_FIELD_QUALITY), fBokehBiasCurve);
-		
-	    res.xyz+=tap.xyz * weight;
-	    res.w+=weight;
+		highp float fi = float(i);
+		vec2 tdir = taxis * fi * discRadius;
+		vec2 tcoord = coord.xy + tdir.xy;
+
+#ifdef bMatsoDOFChromaEnable
+		vec4 ct = GetMatsoDOFCA(SamplerHDRX, tcoord.xy, discRadius.x);
+#else
+		vec4 ct = texture2D(SamplerHDRX, tcoord.xy);
+#endif
+
+#ifndef bMatsoDOFBokehEnable
+		float w = 1.0 + abs(offset[i]);	// weight blur for better effect
+#else	
+		// my own pseudo-bokeh weighting
+		float b = dot(length(ct.rgb),0.333) + length(ct.rgb) + 0.1;
+		float w = pow(b, fMatsoDOFBokehCurve) + abs(fi);
+#endif
+		tcol += ct * w;
+		wValue += w;
 	}
 
-	res.xyz /= res.w;
-		
-	res.w=centerDepth;
+	tcol /= wValue;
 
-	gl_FragColor.rgb = res.rgb;
-	gl_FragColor.a = 1.0;
+	res.xyz = tcol.xyz;
+
+	res.w = 1.0;
+	return res;
 }
 
+void main ()
+{
+	highp int axis = int(var_Local0.a);
+	gl_FragColor = GetMatsoDOFBlur(axis, var_TexCoords, u_TextureMap);
+}

@@ -69,7 +69,7 @@ const bool noise = false; //use noise instead of pattern for sample dithering
 const float namount = 0.0001; //dither amount
 
 const bool depthblur = false; //blur the depth buffer?
-const float dbsize = 60.0;//4.0;//1.25; //depthblursize
+const float dbsize = 4.0;//1.25; //depthblursize
 
 /*
 next part is experimental
@@ -78,7 +78,7 @@ looks okay starting from samples = 4, rings = 4
 */
 
 const bool pentagon = true; //use pentagon as bokeh shape?
-const float feather = 0.1;//3.0;//0.4; //pentagon shape feather
+const float feather = 0.4;//3.0;//0.4; //pentagon shape feather
 
 //------------------------------------------
 

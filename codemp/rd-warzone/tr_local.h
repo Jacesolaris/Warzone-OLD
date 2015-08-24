@@ -2350,6 +2350,7 @@ typedef struct trGlobals_s {
 	shaderProgram_t darkexpandShader;
 	shaderProgram_t hdrShader;
 	shaderProgram_t dofShader;
+	shaderProgram_t dof2Shader;
 	shaderProgram_t fakedepthShader;
 	shaderProgram_t fakedepthSteepParallaxShader;
 	shaderProgram_t anaglyphShader;
