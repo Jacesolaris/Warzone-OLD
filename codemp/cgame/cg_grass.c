@@ -285,9 +285,50 @@ AIMOD_NODES_LoadGrass ( void )
 	return;
 }
 
+qboolean IgnoreGrassOnMap( void )
+{
+	if (StringContainsWord(cgs.currentmapname, "jkg_mos_eisley")
+		|| StringContainsWord(cgs.currentmapname, "eisley")
+		|| StringContainsWord(cgs.currentmapname, "desert")
+		|| StringContainsWord(cgs.currentmapname, "tatooine")
+		|| StringContainsWord(cgs.currentmapname, "ffa3")
+		|| StringContainsWord(cgs.currentmapname, "hoth")
+		|| StringContainsWord(cgs.currentmapname, "mp/ctf1")
+		|| StringContainsWord(cgs.currentmapname, "mp/ctf2")
+		|| StringContainsWord(cgs.currentmapname, "mp/ctf4")
+		|| StringContainsWord(cgs.currentmapname, "mp/ctf5")
+		|| StringContainsWord(cgs.currentmapname, "mp/ffa1")
+		|| StringContainsWord(cgs.currentmapname, "mp/ffa2")
+		|| StringContainsWord(cgs.currentmapname, "mp/ffa3")
+		|| StringContainsWord(cgs.currentmapname, "mp/ffa4")
+		|| StringContainsWord(cgs.currentmapname, "mp/ffa5")
+		|| StringContainsWord(cgs.currentmapname, "mp/duel1")
+		|| StringContainsWord(cgs.currentmapname, "mp/duel2")
+		|| StringContainsWord(cgs.currentmapname, "mp/duel3")
+		|| StringContainsWord(cgs.currentmapname, "mp/duel4")
+		|| StringContainsWord(cgs.currentmapname, "mp/duel5")
+		|| StringContainsWord(cgs.currentmapname, "mp/duel7")
+		|| StringContainsWord(cgs.currentmapname, "mp/duel9")
+		|| StringContainsWord(cgs.currentmapname, "mp/duel10")
+		|| StringContainsWord(cgs.currentmapname, "bespin_streets")
+		|| StringContainsWord(cgs.currentmapname, "bespin_platform"))
+	{// Ignore this map... We know we don't need grass here...
+		return qtrue;
+	}
+
+	return qfalse;
+}
+
 void DrawGrass()
 {
 	int spot = 0;
+
+	if (!GRASSES_LOADED && IgnoreGrassOnMap())
+	{// Ignore this map... We know we don't need grass here...
+		NUM_GRASS_POSITIONS = 0;
+		GRASSES_LOADED = qtrue;
+		return;
+	}
 
 	if (!GRASSES_LOADED)
 	{

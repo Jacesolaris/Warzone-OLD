@@ -54,6 +54,19 @@ void AllocatePathFindingMemory()
 	PATHFINDING_MEMORY_ALLOCATED = qtrue;
 }
 
+qboolean LinkCanReachMe ( int wp_from, int wp_to )
+{
+	int i = 0;
+
+	for (i = 0; i < gWPArray[wp_to]->neighbornum; i ++)
+	{
+		if (gWPArray[wp_to]->neighbors[i].num == wp_from)
+			return qtrue;
+	}
+
+	return qfalse;
+}
+
 qboolean ASTAR_COSTS_DONE = qfalse;
 
 void ASTAR_InitWaypointCosts ( void )
@@ -87,7 +100,12 @@ void ASTAR_InitWaypointCosts ( void )
 				gWPArray[i]->neighbors[j].cost *= ht;
 
 				if (gWPArray[i]->neighbors[j].forceJumpTo > 0)
-					gWPArray[i]->neighbors[j].cost *= 5.0;
+					gWPArray[i]->neighbors[j].cost *= 20.0;//5.0;
+
+				if (!LinkCanReachMe(i, gWPArray[i]->neighbors[j].num) || !LinkCanReachMe(gWPArray[i]->neighbors[j].num, i))
+				{// One way links are bad... Make them cost much more...
+					gWPArray[i]->neighbors[j].cost *= 200.0;//50.0;
+				}
 			}
 		}
 	}

@@ -3160,12 +3160,24 @@ AIMOD_NODES_LoadNodes ( void )
 	return qtrue;
 }
 
+qboolean IgnoreCubemapsOnMap( void )
+{// Maps with known really bad FPS... Let's just forget rendering cubemaps here...
+	if (StringContainsWord(currentMapName, "jkg_mos_eisley"))
+	{// Ignore this map... We know we don't need grass here...
+		return qtrue;
+	}
+
+	return qfalse;
+}
+
 static void R_LoadCubemapWaypoints( void )
 {
 	int numCubemaps = 0;
 
 	// count cubemaps
 	numCubemaps = 0;
+
+	if (IgnoreCubemapsOnMap()) return;
 
 	if (!AIMOD_NODES_LoadNodes()) return;
 
