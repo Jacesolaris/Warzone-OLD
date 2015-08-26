@@ -633,6 +633,9 @@ void main()
 			specular.a = clamp((specular.a * 2.0) * specular.a, 0.2, 0.9);
 			//specular.a = 1.0;
 			//specular = vec4(1.0);
+#define const_1 ( 12.0 / 255.0)
+#define const_2 (255.0 / 219.0)
+			specular.rgb = ((clamp(specular.rgb - const_1, 0.0, 1.0)) * const_2); // amplify light/dark
 		}
 		else
 		{
@@ -656,7 +659,19 @@ void main()
 		else // Material Defaults...
 		{
 			specular *= u_Local1.b;
-			specular.rgb *= u_SpecularScale.rgb;
+			
+			if (u_Local4.b != 0.0 /* METALS */
+				&& u_Local1.a != 30.0 /* ARMOR */ 
+				&& u_Local1.a != 10.0 /* GLASS */ 
+				&& u_Local1.a != 29.0 /* SHATTERGLASS */ 
+				&& u_Local1.a != 18.0 /* BPGLASS */ 
+				&& u_Local1.a != 31.0 /* COMPUTER */
+				&& u_Local1.a != 15.0 /* ICE */
+				&& u_Local1.a != 25.0 /* PLASTIC */
+				&& u_Local1.a != 12.0 /* MARBLE */)
+			{// Only if not metalic... Metals should remain nice and shiny...
+				specular.rgb *= u_SpecularScale.rgb;
+			}
 		}
 	}
 	else

@@ -3270,6 +3270,8 @@ R_MergeLeafSurfaces
 Merges surfaces that share a common leaf
 =================
 */
+#define __MERGE_MORE__
+
 void R_MergeLeafSurfaces(void)
 {
 	int i, j, k;
@@ -3317,8 +3319,10 @@ void R_MergeLeafSurfaces(void)
 
 			surf1 = s_worldData.surfaces + surfNum1;
 
+#ifndef __MERGE_MORE__
 			if ((*surf1->data != SF_GRID) && (*surf1->data != SF_TRIANGLES) && (*surf1->data != SF_FACE))
 				continue;
+#endif //__MERGE_MORE__
 
 			shader1 = surf1->shader;
 
@@ -3352,8 +3356,10 @@ void R_MergeLeafSurfaces(void)
 				
 				surf2 = s_worldData.surfaces + surfNum2;
 
+#ifndef __MERGE_MORE__
 				if ((*surf2->data != SF_GRID) && (*surf2->data != SF_TRIANGLES) && (*surf2->data != SF_FACE))
 					continue;
+#endif // __MERGE_MORE__
 
 				shader2 = surf2->shader;
 
@@ -3362,13 +3368,17 @@ void R_MergeLeafSurfaces(void)
 
 				fogIndex2 = surf2->fogIndex;
 
+#ifndef __MERGE_MORE__
 				if (fogIndex1 != fogIndex2)
 					continue;
+#endif //__MERGE_MORE__
 
 				cubemapIndex2 = surf2->cubemapIndex;
 
+#ifndef __MERGE_MORE__
 				if (cubemapIndex1 != cubemapIndex2)
 					continue;
+#endif //__MERGE_MORE__
 
 				s_worldData.surfacesViewCount[surfNum2] = surfNum1;
 			}

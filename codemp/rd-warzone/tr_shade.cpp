@@ -1528,15 +1528,15 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage)
 			//useSteepParallax = 1.0;
 			break;
 		case MATERIAL_SOLIDMETAL:		// 3			// solid girders
-			specularScale = 0.92;
-			cubemapScale = 0.92;
+			specularScale = 0.98;
+			cubemapScale = 0.98;
 			materialType = (float)MATERIAL_SOLIDMETAL;
 			parallaxScale = 0.005;
 			isMetalic = 1.0;
 			break;
-		case MATERIAL_HOLLOWMETAL:		// 4			// hollow metal machines -- UQ1: Used for weapons to force lower parallax...
-			specularScale = 0.92;
-			cubemapScale = 0.92;
+		case MATERIAL_HOLLOWMETAL:		// 4			// hollow metal machines -- UQ1: Used for weapons to force lower parallax and high reflection...
+			specularScale = 1.92;
+			cubemapScale = 1.92;
 			materialType = (float)MATERIAL_HOLLOWMETAL;
 			parallaxScale = 2.0;
 			isMetalic = 1.0;
@@ -1760,7 +1760,9 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 		if ( pStage->isSurfaceSprite )
 		{
+#ifdef __SURFACESPRITES__
 			if (!r_surfaceSprites->integer)
+#endif //__SURFACESPRITES__
 			{
 				continue;
 			}
@@ -1878,6 +1880,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			backEnd.pc.c_genericDraws++;
 		}
 
+#ifdef __SURFACESPRITES__
 		if ( pStage->isSurfaceSprite )
 		{
 			sp = &tr.surfaceSpriteShader;
@@ -1890,6 +1893,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			GLSL_SetUniformVec4(sp, UNIFORM_LOCAL5, loc5);
 			isGeneric = qfalse;
 		}
+#endif //__SURFACESPRITES__
 
 		if (pStage->isWater)
 		{

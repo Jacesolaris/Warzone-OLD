@@ -97,6 +97,7 @@ qboolean DO_TRANSLUCENT = qfalse;
 qboolean DO_FAST_LINK = qfalse;
 qboolean DO_ULTRAFAST = qfalse;
 qboolean DO_NOWATER = qfalse;
+qboolean DO_OPEN_AREA_SPREAD = qfalse;
 
 // warning C4996: 'strcpy' was declared deprecated
 #pragma warning( disable : 4996 )
@@ -3624,6 +3625,11 @@ float GroundHeightAt ( vec3_t org )
 //		return 65536.0f;
 //	}
 
+	if (WP_CheckInSolid(org))
+	{
+		return 65536.0f;
+	}
+
 	return tr.endpos[2];
 }
 
@@ -3712,6 +3718,68 @@ qboolean BadHeightNearby( vec3_t org )
 			return qtrue;
 
 	return qfalse;
+}
+
+float ShortestWallRangeFrom ( vec3_t org )
+{
+	trace_t tr;
+	vec3_t org1, org2;
+	float dist;
+	float closestRange = 65536.0f;
+
+	if (!DO_OPEN_AREA_SPREAD) return 0.0;
+
+	VectorCopy(org, org1);
+	org[2] += 32.0;
+	VectorCopy(org, org2);
+	org2[0] += 512.0f;
+
+	CG_Trace( &tr, org1, NULL, NULL, org2, -1, MASK_PLAYERSOLID );
+	
+	dist = Distance(tr.endpos, org);
+
+	if (dist < closestRange)
+	{
+		closestRange = dist;
+	}
+
+	VectorCopy(org, org2);
+	org2[0] -= 512.0f;
+
+	CG_Trace( &tr, org1, NULL, NULL, org2, -1, MASK_PLAYERSOLID );
+	
+	dist = Distance(tr.endpos, org);
+
+	if (dist < closestRange)
+	{
+		closestRange = dist;
+	}
+
+	VectorCopy(org, org2);
+	org2[1] += 512.0f;
+
+	CG_Trace( &tr, org1, NULL, NULL, org2, -1, MASK_PLAYERSOLID );
+	
+	dist = Distance(tr.endpos, org);
+
+	if (dist < closestRange)
+	{
+		closestRange = dist;
+	}
+
+	VectorCopy(org, org2);
+	org2[1] -= 512.0f;
+
+	CG_Trace( &tr, org1, NULL, NULL, org2, -1, MASK_PLAYERSOLID );
+	
+	dist = Distance(tr.endpos, org);
+
+	if (dist < closestRange)
+	{
+		closestRange = dist;
+	}
+
+	return closestRange;
 }
 
 qboolean aw_floor_trace_hit_mover = qfalse;
@@ -4007,6 +4075,11 @@ float FloorHeightAt ( vec3_t org )
 	}
 
 	if (DO_THOROUGH && BadHeightNearby( org ))
+	{
+		return 65536.0f;
+	}
+
+	if (WP_CheckInSolid(org))
 	{
 		return 65536.0f;
 	}
@@ -5704,13 +5777,18 @@ omp_set_nested(0);
 			int		x;
 			int		parallel_y = 0;
 			float	scatter_y = scatter;
+			float	scatter_mult_X = 1.0;
+			vec3_t	last_org;
 			
 			// Vary X scatter distance...
 			if (scatter_x == scatter) scatter_x = scatter_min;
 			else if (scatter_x == scatter) scatter_x = scatter_max;
 			else scatter_x = scatter;
 
-			x = startx - (parallel_x * scatter_x);
+			if (DO_OPEN_AREA_SPREAD && ShortestWallRangeFrom( last_org ) >= 256)
+				scatter_mult_X = 2.0;
+
+			x = startx - (parallel_x * (scatter_x * scatter_mult_X));
 
 			if (offsetY == 0.0)
 				offsetY = (scatter_y * 0.25);
@@ -5726,14 +5804,17 @@ omp_set_nested(0);
 			{
 				int		z, y;
 				float	current_height = mapMaxs[2]; // Init the current height to max map height...
-				vec3_t	last_org;
+				float	scatter_mult_Y = 1.0;
 
 				// Vary Y scatter distance...
 				if (scatter_y == scatter) scatter_y = scatter_min;
 				else if (scatter_y == scatter) scatter_y = scatter_max;
 				else scatter_y = scatter;
 
-				y = (starty + offsetY) - (parallel_y * scatter_y);
+				if (DO_OPEN_AREA_SPREAD && ShortestWallRangeFrom( last_org ) >= 256)
+					scatter_mult_Y = 2.0;
+
+				y = (starty + offsetY) - (parallel_y * (scatter_y * scatter_mult_Y));
 
 				for (z = startz; z >= mapMins[2]; z -= scatter_min)
 				{
@@ -7079,6 +7160,7 @@ AIMod_AutoWaypoint ( void )
 		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^5Available methods are:\n" );
 		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3\"standard\" ^5- For standard multi-level maps.\n");
 		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3\"nowater\" ^5- For standard multi-level maps.\n");
+		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3\"openspread\" ^5- This version spreads out waypoints in large open areas. May be inacurate indoors.\n");
 		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3\"thorough\" ^5- Use extensive fall waypoint checking.\n");
 		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3\"translucent\" ^5- Allow translucent surfaces (for maps with surfaces being ignored by standard).\n");
 		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3\"fast\" ^5- For standard multi-level maps. This version does not visibility check waypoint links.\n");
@@ -7095,6 +7177,7 @@ AIMod_AutoWaypoint ( void )
 	DO_FAST_LINK = qfalse;
 	DO_ULTRAFAST = qfalse;
 	DO_NOWATER = qfalse;
+	DO_OPEN_AREA_SPREAD = qfalse;
 
 	trap->Cmd_Argv( 1, str, sizeof(str) );
 	
@@ -7120,6 +7203,38 @@ AIMod_AutoWaypoint ( void )
 			AIMod_AutoWaypoint_StandardMethod();
 
 			waypoint_scatter_distance = original_wp_scatter_dist;
+		}
+		else
+		{
+			AIMod_AutoWaypoint_StandardMethod();
+		}
+	}
+	else if ( Q_stricmp( str, "openspread") == 0 )
+	{
+		if ( trap->Cmd_Argc() >= 2 )
+		{
+			// Override normal scatter distance...
+			int dist = waypoint_scatter_distance;
+
+			trap->Cmd_Argv( 2, str, sizeof(str) );
+			dist = atoi(str);
+
+			if (dist <= 4)
+			{
+				// Fallback and warning...
+				dist = original_wp_scatter_dist;
+
+				trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^7Warning: ^5Invalid scatter distance set (%i). Using default (%i)...\n", atoi(str), original_wp_scatter_dist );
+			}
+
+			DO_OPEN_AREA_SPREAD = qtrue;
+
+			waypoint_scatter_distance = dist;
+			AIMod_AutoWaypoint_StandardMethod();
+
+			waypoint_scatter_distance = original_wp_scatter_dist;
+
+			DO_OPEN_AREA_SPREAD = qfalse;
 		}
 		else
 		{

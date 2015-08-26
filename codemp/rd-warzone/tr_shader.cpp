@@ -2445,7 +2445,9 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 		{
 			// Mark this stage as a surface sprite so we can skip it for now
 			stage->isSurfaceSprite = qtrue;
-			//SkipRestOfLine( text );
+#ifndef __SURFACESPRITES__
+			SkipRestOfLine( text );
+#else //__SURFACESPRITES__
 			char buffer[1024] = "";
 
 			while ( 1 )
@@ -2458,7 +2460,7 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 			}
 
 			ParseSurfaceSprites( buffer, stage );
-
+#endif //__SURFACESPRITES__
 			continue;
 		}
 		//

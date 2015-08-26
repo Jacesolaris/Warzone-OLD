@@ -309,6 +309,8 @@ void CG_AddMarks( void ) {
 **  	Current supported effects are rain and snow.
 */
 
+//#define __WEATHER_USE_FOG__ // This uses more FPS...
+
 /*
 
 // The default values.
@@ -338,12 +340,12 @@ void CG_AddMarks( void ) {
 #define ATMOSPHERIC_SNOW_DROPDELAY  	1000
 #define ATMOSPHERIC_CUTHEIGHT  	  	  	800*/
 
-#define MAX_ATMOSPHERIC_PARTICLES  	  	10000  	// maximum # of particles
+#define MAX_ATMOSPHERIC_PARTICLES  	  	3000  	// maximum # of particles
 #define MAX_ATMOSPHERIC_DISTANCE  	  	2000  	// maximum distance from refdef origin that particles are visible
 #define MAX_ATMOSPHERIC_HEIGHT  	  	65536//8096  	// maximum world height (FIXME: since 1.27 this should be 65536)
 #define MIN_ATMOSPHERIC_HEIGHT  	  	-65536//-8096  	// minimum world height (FIXME: since 1.27 this should be -65536)
 #define MAX_ATMOSPHERIC_EFFECTSHADERS  	6  	  	// maximum different effectshaders for an atmospheric effect
-#define ATMOSPHERIC_RAIN_DROPDELAY  	30
+#define ATMOSPHERIC_RAIN_DROPDELAY  	10//30
 #define ATMOSPHERIC_SNOW_DROPDELAY  	1//30
 #define ATMOSPHERIC_CUTHEIGHT  	  	  	800
 
@@ -585,6 +587,7 @@ static void CG_RainParticleRender( cg_atmosphericParticle_t *particle )
   	VectorCopy( particle->pos, start );
   	len = particle->height;
 
+#ifdef __WEATHER_USE_FOG__
 	if (rand()%100 < 2)
 	{
 		//trap->FX_PlayEffectID(trap->FX_RegisterEffect("effects/env/rain.efx"), start, particle->deltaNormalized);
@@ -592,6 +595,7 @@ static void CG_RainParticleRender( cg_atmosphericParticle_t *particle )
 		//particle->active = qfalse;
 		//return;
 	}
+#endif //__WEATHER_USE_FOG__
 
   	if( start[2] <= particle->minz )
   	{
@@ -787,6 +791,8 @@ static void CG_StormParticleRender( cg_atmosphericParticle_t *particle )
 
   	VectorCopy( particle->pos, start );
   	len = particle->height;
+
+#ifdef __WEATHER_USE_FOG__
 	if (rand()%100 < 2)
 	{
 		//trap->FX_PlayEffectID(trap->FX_RegisterEffect("effects/env/rain.efx"), start, particle->deltaNormalized);
@@ -794,6 +800,7 @@ static void CG_StormParticleRender( cg_atmosphericParticle_t *particle )
 		//particle->active = qfalse;
 		//return;
 	}
+#endif //__WEATHER_USE_FOG__
 
   	if( start[2] <= particle->minz )
   	{
@@ -1068,6 +1075,7 @@ static void CG_SnowParticleRender( cg_atmosphericParticle_t *particle )
   	verts[3].modulate[2] = 255;
   	verts[3].modulate[3] = 255;
 
+#ifdef __WEATHER_USE_FOG__
 	if (rand()%600 < 2)
 	{
 		//trap->FX_PlayEffectID(trap->FX_RegisterEffect("effects/env/snow.efx"), start, particle->deltaNormalized, 0, 0, qfalse);
@@ -1075,6 +1083,8 @@ static void CG_SnowParticleRender( cg_atmosphericParticle_t *particle )
 		//particle->active = qfalse;
 		//return;
 	}
+#endif //__WEATHER_USE_FOG__
+
   	trap->R_AddPolysToScene( *particle->effectshader, 4, verts, 1 );
 }
 
@@ -1250,6 +1260,7 @@ static void CG_HeavySnowParticleRender( cg_atmosphericParticle_t *particle )
   	verts[3].modulate[2] = 255;
   	verts[3].modulate[3] = 255;
 
+#ifdef __WEATHER_USE_FOG__
 	if (rand()%70 < 2)
 	{
 		//trap->FX_PlayEffectID(trap->FX_RegisterEffect("effects/env/snow.efx"), start, particle->deltaNormalized);
@@ -1257,6 +1268,8 @@ static void CG_HeavySnowParticleRender( cg_atmosphericParticle_t *particle )
 		//particle->active = qfalse;
 		return;
 	}
+#endif //__WEATHER_USE_FOG__
+
   	trap->R_AddPolysToScene( *particle->effectshader, 4, verts, 1 );
 }
 
