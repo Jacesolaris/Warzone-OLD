@@ -83,6 +83,9 @@ void R_PerformanceCounters( void ) {
 R_IssueRenderCommands
 ====================
 */
+extern qboolean LOADSCREEN_POSTPROCESS;
+extern const void *RB_PostProcess(const void *data);
+
 void R_IssueRenderCommands( qboolean runPerformanceCounters ) {
 	renderCommandList_t	*cmdList;
 

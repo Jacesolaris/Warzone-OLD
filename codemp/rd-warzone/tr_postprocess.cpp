@@ -485,6 +485,48 @@ void RB_GaussianBlur(FBO_t *srcFbo, FBO_t *intermediateFbo, FBO_t *dstFbo, float
 	FBO_Blit (intermediateFbo, NULL, scale, dstFbo, NULL, &tr.gaussianBlurShader[1], NULL, GLS_SRCBLEND_ONE | GLS_DSTBLEND_ZERO);
 }
 
+void RB_BloomDownscale(image_t *sourceImage, FBO_t *destFBO)
+{
+	vec2_t invTexRes = { 1.0f / sourceImage->width, 1.0f / sourceImage->height };
+
+	FBO_Bind(destFBO);
+	GL_State(GLS_SRCBLEND_ONE | GLS_DSTBLEND_ZERO);
+
+	qglViewport(0, 0, destFBO->width, destFBO->height);
+	qglClearBufferfv(GL_COLOR, 0, colorBlack);
+
+	GLSL_BindProgram(&tr.dglowDownsample);
+	GLSL_SetUniformVec2(&tr.dglowDownsample, UNIFORM_INVTEXRES, invTexRes);
+	GL_BindToTMU(sourceImage, 0);
+
+	// Draw fullscreen triangle
+	qglDrawArrays(GL_TRIANGLES, 0, 3);
+}
+
+void RB_BloomDownscale2(FBO_t *sourceFBO, FBO_t *destFBO)
+{
+	RB_BloomDownscale(sourceFBO->colorImage[0], destFBO);
+}
+
+void RB_BloomUpscale(FBO_t *sourceFBO, FBO_t *destFBO)
+{
+	image_t *sourceImage = sourceFBO->colorImage[0];
+	vec2_t invTexRes = { 1.0f / sourceImage->width, 1.0f / sourceImage->height };
+
+	FBO_Bind(destFBO);
+	GL_State(GLS_SRCBLEND_ONE | GLS_DSTBLEND_ZERO);
+
+	qglViewport(0, 0, destFBO->width, destFBO->height);
+	qglClearBufferfv(GL_COLOR, 0, colorBlack);
+
+	GLSL_BindProgram(&tr.dglowUpsample);
+	GLSL_SetUniformVec2(&tr.dglowUpsample, UNIFORM_INVTEXRES, invTexRes);
+	GL_BindToTMU(sourceImage, 0);
+
+	// Draw fullscreen triangle
+	qglDrawArrays(GL_TRIANGLES, 0, 3);
+}
+
 
 // ======================================================================================================================================
 //
@@ -1790,41 +1832,15 @@ void RB_SSGI(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 		// Darken to VBO...
 		//
 
-		//if (r_dynamicGlow->integer)
-		{
-			FBO_BlitFromTexture(tr.glowFboScaled[0]->colorImage[0], NULL, NULL, tr.anamorphicRenderFBO[0], NULL, NULL, color, 0);
-		}
-		/*else
-		{
-			GLSL_BindProgram(&tr.anamorphicDarkenShader);
-
-			GL_BindToTMU(tr.fixedLevelsImage, TB_DIFFUSEMAP);
-
-			{
-				vec2_t screensize;
-				screensize[0] = glConfig.vidWidth;
-				screensize[1] = glConfig.vidHeight;
-
-				GLSL_SetUniformVec2(&tr.anamorphicDarkenShader, UNIFORM_DIMENSIONS, screensize);
-			}
-
-			{
-				vec4_t local0;
-				VectorSet4(local0, r_anamorphicDarkenPower->value, 0.0, 0.0, 0.0);
-				GLSL_SetUniformVec4(&tr.anamorphicDarkenShader, UNIFORM_LOCAL0, local0);
-			}
-
-			FBO_Blit(hdrFbo, NULL, texHalfScale, tr.anamorphicRenderFBO[1], NULL, &tr.anamorphicDarkenShader, color, 0);
-			FBO_FastBlit(tr.anamorphicRenderFBO[1], NULL, tr.anamorphicRenderFBO[0], NULL, GL_COLOR_BUFFER_BIT, GL_LINEAR);
-		}*/
+		FBO_BlitFromTexture(tr.glowFboScaled[0]->colorImage[0], NULL, NULL, tr.anamorphicRenderFBO[0], NULL, NULL, color, 0);
 
 		//
 		// Blur the new darken'ed VBO...
 		//
 
-		//float SCAN_WIDTH = 16.0;
-		float SCAN_WIDTH = r_ssgiWidth->value;//8.0;
+		float SCAN_WIDTH = r_ssgiWidth->value;
 
+		for (int i = 0; i < 2; i++)
 		{
 			//
 			// Bloom +-X axis... (to VBO 1)
@@ -1943,6 +1959,7 @@ void RB_SSGI(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 		// Do a final blur pass - but this time don't mark it as a ssgi one - so that it uses darkness as well...
 		//
 
+		for (int i = 0; i < 2; i++)
 		{
 			//
 			// Bloom +-X axis... (to VBO 1)

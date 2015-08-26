@@ -788,6 +788,7 @@ enum
 	TB_LIGHTMAP    = 1,
 	TB_LEVELSMAP   = 1,
 	TB_SHADOWMAP3  = 1,
+	TB_COLORMAP2   = 1,
 	TB_NORMALMAP   = 2,
 	TB_DELUXEMAP   = 3,
 	TB_SHADOWMAP2  = 3,
@@ -2250,7 +2251,11 @@ typedef struct trGlobals_s {
 
 	image_t					*renderImage;
 	image_t					*glowImage;
+#if 0
 	image_t					*glowImageScaled[4];
+#else
+	image_t					*glowImageScaled[6];
+#endif
 	image_t					*sunRaysImage;
 	image_t					*renderDepthImage;
 	image_t					*pshadowMaps[MAX_DRAWN_PSHADOWS];
@@ -2273,7 +2278,11 @@ typedef struct trGlobals_s {
 	image_t					*textureDepthImage;
 
 	FBO_t					*renderFbo;
+#if 0
 	FBO_t					*glowFboScaled[4];
+#else
+	FBO_t					*glowFboScaled[6];
+#endif
 #if 0
 	FBO_t					*msaaResolveFbo;
 #endif
@@ -2341,6 +2350,8 @@ typedef struct trGlobals_s {
 	shaderProgram_t testcubeShader;
 	shaderProgram_t gaussianBlurShader[2];
 	shaderProgram_t glowCompositeShader;
+	shaderProgram_t dglowDownsample;
+	shaderProgram_t dglowUpsample;
 
 	//
 	// UQ1: Added shaders...

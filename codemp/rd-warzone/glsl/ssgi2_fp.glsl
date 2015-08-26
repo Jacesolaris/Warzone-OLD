@@ -72,7 +72,7 @@ vec3 CalculateFlare ( vec3 flare_color, vec3 final_color )
 #define const_2 (255.0 / 219.0)
 	add_flare = ((clamp(add_flare - const_1, 0.0, 1.0)) * const_2);
 
-	return add_flare * 0.7;
+	return add_flare * 0.55;
 }
 
 void main()
@@ -149,7 +149,7 @@ void main()
 	// UQ1: Let's add some of the flare color as well... Just to boost colors/glows...
 	vec3 flare_color = clamp(texture2D(u_NormalMap, var_TexCoords.st).rgb, 0.0, 1.0);
 	vec3 add_flare = CalculateFlare(flare_color, final_color);
-	final_color = clamp((final_color + final_color + final_color + max(add_flare, final_color)) / 4.0, 0.0, 1.0);
+	final_color = clamp((final_color + (max((add_flare*0.5) + final_color, final_color) * max((add_flare*0.5) + final_color, final_color)) + (max((add_flare * final_color * 2.0), final_color) * max((add_flare * final_color * 2.0), final_color))) / 3.0, 0.0, 1.0);
 
 	gl_FragColor = vec4(final_color,1.0);
 }

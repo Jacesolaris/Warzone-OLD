@@ -2011,6 +2011,7 @@ const void *RB_PostProcess(const void *data)
 
 	if (r_dynamicGlow->integer || r_ssgi->integer || r_anamorphic->integer)
 	{
+#if 0
 		// Downscale 8x
 		FBO_BlitFromTexture (tr.glowImage, NULL, NULL, tr.glowFboScaled[0], NULL, &tr.textureColorShader, NULL, GLS_SRCBLEND_ONE | GLS_DSTBLEND_ZERO);
 		FBO_FastBlit (tr.glowFboScaled[0], NULL, tr.glowFboScaled[1], NULL, GL_COLOR_BUFFER_BIT, GL_LINEAR);
@@ -2034,6 +2035,15 @@ const void *RB_PostProcess(const void *data)
 
 		// Restore scissor rect
 		qglScissor (0, 0, glConfig.vidWidth, glConfig.vidHeight);
+#else
+		RB_BloomDownscale(tr.glowImage, tr.glowFboScaled[0]);
+		int numPasses = Com_Clampi(1, ARRAY_LEN(tr.glowFboScaled), r_dynamicGlowPasses->integer);
+		for ( int i = 1; i < numPasses; i++ )
+			RB_BloomDownscale2(tr.glowFboScaled[i - 1], tr.glowFboScaled[i]);
+ 
+		for ( int i = numPasses - 2; i >= 0; i-- )
+			RB_BloomUpscale(tr.glowFboScaled[i + 1], tr.glowFboScaled[i]);
+#endif
 	}
 	srcBox[0] = backEnd.viewParms.viewportX;
 	srcBox[1] = backEnd.viewParms.viewportY;
