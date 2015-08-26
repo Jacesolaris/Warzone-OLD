@@ -3204,7 +3204,7 @@ void AssignMaterialType ( const char *name, const char *text )
 		//
 		if (StringsContainWord(name, name, "plastic") || StringsContainWord(name, name, "stormtrooper") || StringsContainWord(name, name, "snowtrooper") || StringsContainWord(name, name, "medpac") || StringsContainWord(name, name, "bacta") || StringsContainWord(name, name, "helmet") || StringsContainWord(name, name, "feather"))
 			shader.surfaceFlags |= MATERIAL_PLASTIC;
-		else if (StringsContainWord(name, name, "mp/flag") || StringsContainWord(name, name, "xwing") || StringsContainWord(name, name, "xwbody") || StringsContainWord(name, name, "tie_") || StringsContainWord(name, name, "ship") || StringsContainWord(name, name, "shuttle") || StringsContainWord(name, name, "falcon") || StringsContainWord(name, name, "freight") || StringsContainWord(name, name, "transport") || StringsContainWord(name, name, "crate") || StringsContainWord(name, name, "container") || StringsContainWord(name, name, "barrel") || StringsContainWord(name, name, "crane") || StringsContainWord(name, name, "plate") || StringsContainWord(name, name, "cargo"))
+		else if (StringsContainWord(name, name, "mp/flag") || StringsContainWord(name, name, "xwing") || StringsContainWord(name, name, "xwbody") || StringsContainWord(name, name, "tie_") || StringsContainWord(name, name, "ship") || StringsContainWord(name, name, "shuttle") || StringsContainWord(name, name, "falcon") || StringsContainWord(name, name, "freight") || StringsContainWord(name, name, "transport") || StringsContainWord(name, name, "crate") || StringsContainWord(name, name, "container") || StringsContainWord(name, name, "barrel") || StringsContainWord(name, name, "crane") || StringsContainWord(name, name, "plate") || StringsContainWord(name, name, "cargo") || StringsContainWord(name, name, "edgetech") || StringsContainWord(name, name, "brace") || StringsContainWord(name, name, "lightground"))
 			shader.surfaceFlags |= MATERIAL_SOLIDMETAL;
 		else if (!StringsContainWord(name, name, "trainer") && StringsContainWord(name, name, "train"))
 			shader.surfaceFlags |= MATERIAL_SOLIDMETAL;
@@ -3214,7 +3214,7 @@ void AssignMaterialType ( const char *name, const char *text )
 			shader.surfaceFlags |= MATERIAL_ARMOR;
 		else if (StringsContainWord(name, name, "water") && !StringsContainWord(name, name, "splash") && !StringsContainWord(name, name, "drip") && !StringsContainWord(name, name, "ripple") && !StringsContainWord(name, name, "bubble") && !StringsContainWord(name, name, "woosh") && !StringsContainWord(name, name, "underwater") && !StringsContainWord(name, name, "bottom"))
 			shader.surfaceFlags |= MATERIAL_WATER;
-		else if (StringsContainWord(name, name, "grass") || StringsContainWord(name, name, "yavin/ground") || StringsContainWord(name, name, "mp/s_ground") || StringsContainWord(name, name, "volcano/terrain") || StringsContainWord(name, name, "bay/terrain"))
+		else if (StringsContainWord(name, name, "grass") || StringsContainWord(name, name, "yavin/ground") || StringsContainWord(name, name, "mp/s_ground") || StringsContainWord(name, name, "volcano/terrain") || StringsContainWord(name, name, "bay/terrain") || StringsContainWord(name, name, "towers/terrain"))
 			shader.surfaceFlags |= MATERIAL_SHORTGRASS;
 		//
 		// Stuff we can be pretty sure of...
