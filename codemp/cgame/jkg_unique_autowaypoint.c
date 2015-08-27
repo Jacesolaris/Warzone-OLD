@@ -3630,6 +3630,11 @@ float GroundHeightAt ( vec3_t org )
 		return 65536.0f;
 	}
 
+	if (!CG_HaveRoofAbove(org))
+	{
+		return 65536.0f;
+	}
+
 	return tr.endpos[2];
 }
 
@@ -3718,6 +3723,29 @@ qboolean BadHeightNearby( vec3_t org )
 			return qtrue;
 
 	return qfalse;
+}
+
+qboolean CG_HaveRoofAbove ( vec3_t origin )
+{// Hopefully this will stop awp from adding waypoints on map roofs...
+	vec3_t org, down_org;
+	trace_t tr;
+
+	VectorCopy(origin, org);
+	org[2]+=4.0;
+	VectorCopy(origin, down_org);
+	down_org[2] = +65536.0f;
+	
+	// Do forward test...
+	CG_Trace( &tr, org, NULL, NULL, down_org, cg.clientNum, MASK_PLAYERSOLID/*|CONTENTS_TRIGGER|CONTENTS_PLAYERCLIP|CONTENTS_MONSTERCLIP|CONTENTS_BOTCLIP|CONTENTS_SHOTCLIP|CONTENTS_NODROP|CONTENTS_SHOTCLIP|CONTENTS_TRANSLUCENT*/ );
+
+	//
+	// Surface
+	//
+
+	if (tr.surfaceFlags == 0 && tr.contents == 0)
+		return qfalse;
+
+	return qtrue;
 }
 
 float ShortestWallRangeFrom ( vec3_t org )
@@ -4080,6 +4108,11 @@ float FloorHeightAt ( vec3_t org )
 	}
 
 	if (WP_CheckInSolid(org))
+	{
+		return 65536.0f;
+	}
+
+	if (!CG_HaveRoofAbove(org))
 	{
 		return 65536.0f;
 	}
