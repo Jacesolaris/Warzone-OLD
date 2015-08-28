@@ -554,27 +554,11 @@ void main()
   #endif
 
 #if defined(USE_PARALLAXMAP) || defined(USE_PARALLAXMAP_NONORMALS)
-	// WOW - There is something wrong with this. Just makes everything black... Normal maps are correct, but something seems to be wrong here...
-    /*if (u_Local4.r != 0.0)
-	{// Have a real normal map...
-		N.xy = texture2D(u_NormalMap, texCoords).rg - vec2(0.5);
-		N.xy *= u_NormalScale.xy;
-		N.z = sqrt(clamp((0.25 - N.x * N.x) - N.y * N.y, 0.0, 1.0));
-		//N.z = 1.0 - N.z;
-		N = tangentToWorld * N;
-	}
-	else
-	{
-		N = var_Normal.xyz;
-	}*/
-	vec3 norm = texture2D(u_NormalMap, texCoords).xzy;
-	//N = norm.xyz * 2.0 - 1.0;
-	//N = norm.xyz - 0.5;
+	vec3 norm = texture2D(u_NormalMap, texCoords).xyz;
 	N.xy *= u_NormalScale.xy;
 	N.z = sqrt(clamp((0.25 - N.x * N.x) - N.y * N.y, 0.0, 1.0));
 
 	N = tangentToWorld * N;
-	
 #else
 	N = var_Normal.xyz;
 #endif
@@ -660,15 +644,18 @@ void main()
 		{
 			specular *= u_Local1.b;
 			
-			if (u_Local4.b != 0.0 /* METALS */
-				&& u_Local1.a != 30.0 /* ARMOR */ 
+			if (u_Local1.a == 30.0 /* ARMOR */ 
+				|| u_Local1.a == 25.0 /* PLASTIC */
+				|| u_Local1.a == 12.0 /* MARBLE */)
+			{// Armor, plastic, and marble should remain somewhat shiny...
+				specular.rgb *= 0.333;
+			}
+			else if (u_Local4.b != 0.0 /* METALS */
 				&& u_Local1.a != 10.0 /* GLASS */ 
 				&& u_Local1.a != 29.0 /* SHATTERGLASS */ 
 				&& u_Local1.a != 18.0 /* BPGLASS */ 
 				&& u_Local1.a != 31.0 /* COMPUTER */
-				&& u_Local1.a != 15.0 /* ICE */
-				&& u_Local1.a != 25.0 /* PLASTIC */
-				&& u_Local1.a != 12.0 /* MARBLE */)
+				&& u_Local1.a != 15.0 /* ICE */)
 			{// Only if not metalic... Metals should remain nice and shiny...
 				specular.rgb *= u_SpecularScale.rgb;
 			}

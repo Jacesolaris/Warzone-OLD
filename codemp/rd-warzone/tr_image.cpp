@@ -2840,7 +2840,6 @@ void R_SaveNormalMap (const char *name, image_t *dstImage)
 	byte *allbuf, *buffer;
 	byte *srcptr, *destptr;
 	byte *endline, *endmem;
-	byte temp;
 	
 	int linelen, padlen = 0;
 	size_t offset = 18, memcount;
@@ -2873,12 +2872,15 @@ void R_SaveNormalMap (const char *name, image_t *dstImage)
 		endline = srcptr + linelen;
 
 		while(srcptr < endline)
-		{
-			temp = srcptr[0];
-			*destptr++ = srcptr[1];
-			*destptr++ = srcptr[2];
-			*destptr++ = srcptr[3];
-			*destptr++ = temp;
+		{// This is correct according to visual studio... Not sure what the built-in code is doing...
+			byte r = srcptr[0];
+			byte a = srcptr[1];
+			byte b = srcptr[2];
+			byte g = srcptr[3];
+			*destptr++ = r;
+			*destptr++ = g;
+			*destptr++ = b;
+			*destptr++ = a;
 			
 			srcptr += 4;
 		}
@@ -2910,7 +2912,7 @@ image_t *R_CreateNormalMapGLSL ( const char *name, byte *pic, int width, int hei
 
 	//ri->Printf(PRINT_WARNING, "Generating [%ix%i] normal map %s.\n", width, height, name);
 	
-	normalFlags = (flags & ~(IMGFLAG_GENNORMALMAP | IMGFLAG_SRGB | IMGFLAG_CLAMPTOEDGE)) | IMGFLAG_NOLIGHTSCALE | IMGFLAG_NO_COMPRESSION;
+	normalFlags = (flags & ~(IMGFLAG_GENNORMALMAP | IMGFLAG_SRGB | IMGFLAG_CLAMPTOEDGE)) | IMGFLAG_NOLIGHTSCALE /*| IMGFLAG_NO_COMPRESSION*/;
 
 	dstFbo = R_CreateNormalMapDestinationFBO(width, height);
 	FBO_Bind (dstFbo);
@@ -2951,7 +2953,7 @@ image_t *R_CreateNormalMapGLSL ( const char *name, byte *pic, int width, int hei
 	dstImage->height = height;
 	dstImage->width = width;
 
-	R_SaveNormalMap(name, dstImage);
+	//R_SaveNormalMap(name, dstImage); // It seems the image loading code messes up loading tga files... Also causes load stutter loading them anyway...
 
 	return dstImage;
 }
@@ -2963,7 +2965,8 @@ image_t *R_CreateNormalMap ( const char *name, byte *pic, int width, int height,
 	//int normalWidth, normalHeight;
 	int normalFlags;
 	
-	normalFlags = (flags & ~(IMGFLAG_GENNORMALMAP | IMGFLAG_SRGB)) | IMGFLAG_NOLIGHTSCALE;
+	//normalFlags = (flags & ~(IMGFLAG_GENNORMALMAP | IMGFLAG_SRGB)) | IMGFLAG_NOLIGHTSCALE;
+	normalFlags = (flags & ~(IMGFLAG_GENNORMALMAP | IMGFLAG_SRGB | IMGFLAG_CLAMPTOEDGE)) | IMGFLAG_NOLIGHTSCALE /*| IMGFLAG_NO_COMPRESSION*/;
 	
 	COM_StripExtension(name, normalName, MAX_QPATH);
 	Q_strcat(normalName, MAX_QPATH, "_n");
