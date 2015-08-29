@@ -352,6 +352,8 @@ void DrawGrass()
 		len = VectorLength( delta );
 		
 		if ( len > 3192 ) continue;
+		//if ( len > 1024 && GRASS_POSITIONS[spot][2] > cg.refdef.vieworg[2] ) continue;
+		//if ( len > 2048 && GRASS_POSITIONS[spot][2] >= cg.refdef.vieworg[2]-16.0 ) continue;
 
 		if ( len > 96 && !InFOV( GRASS_POSITIONS[spot], cg.refdef.vieworg, cg.refdef.viewangles, cg.refdef.fov_x + 20, cg.refdef.fov_y + 20 ))
 			continue;

@@ -4152,11 +4152,8 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 		case MATERIAL_MARBLE:			// 12			// marble floors
 		case MATERIAL_SNOW:				// 14			// freshly laid snow
 		case MATERIAL_PLASTIC:			// 25			//
-		case MATERIAL_SHATTERGLASS:		// 29			// glass with the Crisis Zone style shattering
 		case MATERIAL_ARMOR:			// 30			// body armor
 		case MATERIAL_ICE:				// 15			// packed snow/solid ice
-		case MATERIAL_GLASS:			// 10			//
-		case MATERIAL_BPGLASS:			// 18			// bulletproof glass
 		case MATERIAL_COMPUTER:			// 31			// computers/electronic equipment
 			defs |= LIGHTDEF_USE_LIGHT_VERTEX;
 			useLightVertex = qtrue;
@@ -4164,8 +4161,13 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 			//useLightVector = qtrue;
 			break;
 		case MATERIAL_HOLLOWMETAL:		// 4			// hollow metal machines -- UQ1: Used for weapons to force lower parallax...
-			//defs |= LIGHTDEF_USE_LIGHT_VECTOR;
-			//useLightVector = qtrue;
+		case MATERIAL_SHATTERGLASS:		// 29			// glass with the Crisis Zone style shattering
+		case MATERIAL_GLASS:			// 10			//
+		case MATERIAL_BPGLASS:			// 18			// bulletproof glass
+			defs |= LIGHTDEF_USE_LIGHT_VECTOR;
+			useLightVector = qtrue;
+			//defs |= LIGHTDEF_USE_LIGHT_VERTEX;
+			//useLightVertex = qtrue;
 			break;
 		case MATERIAL_GREENLEAVES:		// 20			// fresh leaves still on a tree
 		case MATERIAL_SOLIDWOOD:		// 1			// freshly cut timber

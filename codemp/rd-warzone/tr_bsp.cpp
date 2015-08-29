@@ -3364,7 +3364,7 @@ void R_MergeLeafSurfaces(void)
 				shader2 = surf2->shader;
 
 				if (shader1 != shader2 
-					&& !(shader1->stages[0]->isWater && shader2->stages[0]->isWater)) // UQ1: Water can be safely merged I believe...
+					&& !(shader1 && shader1->stages[0] && shader1->stages[0]->isWater && shader2 && shader2->stages[0] && shader2->stages[0]->isWater)) // UQ1: Water can be safely merged I believe...
 					continue;
 
 				fogIndex2 = surf2->fogIndex;
