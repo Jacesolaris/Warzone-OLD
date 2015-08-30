@@ -109,6 +109,8 @@ extern const char *fallbackShader_ssgi1_fp;
 extern const char *fallbackShader_ssgi2_fp;
 extern const char *fallbackShader_ssgi3_fp;
 extern const char *fallbackShader_ssgi4_fp;
+extern const char *fallbackShader_ssgi_blur_vp;
+extern const char *fallbackShader_ssgi_blur_fp;
 extern const char *fallbackShader_darkexpand_vp;
 extern const char *fallbackShader_darkexpand_fp;
 extern const char *fallbackShader_lensflare_vp;
@@ -1776,6 +1778,14 @@ int GLSL_BeginLoadGPUShaders(void)
 	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
 	extradefines[0] = '\0';
 
+	if (!GLSL_BeginLoadGPUShader(&tr.ssgiBlurShader, "ssgi_blur", attribs, qtrue, extradefines, qtrue, NULL, fallbackShader_ssgi_blur_vp, fallbackShader_ssgi_blur_fp))
+	{
+		ri->Error(ERR_FATAL, "Could not load ssgi_blur shader!");
+	}
+
+	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
+	extradefines[0] = '\0';
+
 	if (!GLSL_BeginLoadGPUShader(&tr.testshaderShader, "testshader", attribs, qtrue, extradefines, qtrue, NULL, fallbackShader_testshader_vp, fallbackShader_testshader_fp))
 	{
 		ri->Error(ERR_FATAL, "Could not load testshader shader!");
@@ -2713,6 +2723,22 @@ void GLSL_EndLoadGPUShaders ( int startTime )
 
 #if defined(_DEBUG)
 	GLSL_FinishGPUShader(&tr.ssgi4Shader);
+#endif
+	
+	numEtcShaders++;
+
+	if (!GLSL_EndLoadGPUShader(&tr.ssgiBlurShader))
+	{
+		ri->Error(ERR_FATAL, "Could not load ssgi_blur shader!");
+	}
+	
+	GLSL_InitUniforms(&tr.ssgiBlurShader);
+	qglUseProgram(tr.ssgiBlurShader.program);
+	GLSL_SetUniformInt(&tr.ssgiBlurShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
+	qglUseProgram(0);
+
+#if defined(_DEBUG)
+	GLSL_FinishGPUShader(&tr.ssgiBlurShader);
 #endif
 	
 	numEtcShaders++;

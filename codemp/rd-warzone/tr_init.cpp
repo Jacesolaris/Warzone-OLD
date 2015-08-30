@@ -651,6 +651,8 @@ void RB_TakeScreenshot(int x, int y, int width, int height, char *fileName)
 	
 	int linelen, padlen;
 	size_t offset = 18, memcount;
+
+	FBO_Bind(tr.renderFbo);
 		
 	allbuf = RB_ReadPixels(x, y, width, height, &offset, &padlen);
 	buffer = allbuf + offset - 18;
@@ -708,6 +710,8 @@ void RB_TakeScreenshotPNG( int x, int y, int width, int height, char *fileName )
 	size_t offset = 0, memcount;
 	int padlen;
 
+	FBO_Bind(tr.renderFbo);
+
 	buffer = RB_ReadPixels( x, y, width, height, &offset, &padlen );
 	memcount = (width * 3 + padlen) * height;
 
@@ -730,6 +734,8 @@ void RB_TakeScreenshotJPEG(int x, int y, int width, int height, char *fileName)
 	byte *buffer;
 	size_t offset = 0, memcount;
 	int padlen;
+
+	FBO_Bind(tr.renderFbo);
 
 	buffer = RB_ReadPixels(x, y, width, height, &offset, &padlen);
 	memcount = (width * 3 + padlen) * height;
@@ -755,6 +761,8 @@ const void *RB_TakeScreenshotCmd( const void *data ) {
 	// finish any 2D drawing if needed
 	if(tess.numIndexes)
 		RB_EndSurface();
+
+	FBO_Bind(tr.renderFbo);
 
 	switch( cmd->format ) {
 		case SSF_JPEG:
@@ -1419,9 +1427,9 @@ void R_Register( void )
 	r_volumelightShadowEnhancement = ri->Cvar_Get( "r_volumelightShadowEnhancement", "0.95", CVAR_ARCHIVE );
 	r_anamorphic = ri->Cvar_Get( "r_anamorphic", "1", CVAR_ARCHIVE );
 	r_anamorphicDarkenPower = ri->Cvar_Get( "r_anamorphicDarkenPower", "256.0", CVAR_ARCHIVE );
-	r_ssgi = ri->Cvar_Get( "r_ssgi", "4", CVAR_ARCHIVE );
-	r_ssgiWidth = ri->Cvar_Get( "r_ssgiWidth", "64.0"/*"12.0"*/, CVAR_ARCHIVE );
-	r_ssgiSamples = ri->Cvar_Get( "r_ssgiSamples", "2", CVAR_ARCHIVE );
+	r_ssgi = ri->Cvar_Get( "r_ssgi", "1", CVAR_ARCHIVE );
+	r_ssgiWidth = ri->Cvar_Get( "r_ssgiWidth", "12.0", CVAR_ARCHIVE );
+	r_ssgiSamples = ri->Cvar_Get( "r_ssgiSamples", "4", CVAR_ARCHIVE );
 	r_depthParallax = ri->Cvar_Get( "r_depthParallax", "0", CVAR_ARCHIVE );
 	r_depthParallaxScale = ri->Cvar_Get( "r_depthParallaxScale", "2.0", CVAR_ARCHIVE );
 	r_depthParallaxMultiplier = ri->Cvar_Get( "r_depthParallaxMultiplier", "5.0", CVAR_ARCHIVE );

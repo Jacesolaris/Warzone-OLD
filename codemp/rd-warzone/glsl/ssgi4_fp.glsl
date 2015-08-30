@@ -56,23 +56,14 @@ float rand(vec2 co){
 
 vec3 CalculateFlare ( vec3 flare_color, vec3 final_color )
 {
-	float bt = (flare_color.r + flare_color.g + flare_color.b) / 3.0;
-
-	if (bt > 0.666) 
-		bt *= 0.666; // Bright lights get dulled... (eg: white)
-	else if (bt < 0.333) 
-		bt *= 1.8; // Dull lights get amplified... (eg: blue)
-	else 
-		bt *= 1.1; // Mid range lights get amplified slightly... (eg: yellow)
-
-	vec3 flare_color2 = clamp(flare_color * bt * 8.0, 0.0, 1.0);
-	vec3 add_flare = clamp(final_color * (flare_color2 * (1.25 - final_color) * 2.5), 0.0, 1.0);
-
+	float mult = clamp((3.0 - (flare_color.r + flare_color.g + flare_color.b)) + 0.1, 0.0, 3.0);
+	vec3 add_flare = clamp(flare_color.rgb * mult, 0.0, 1.0);
+#if 0
 #define const_1 ( 12.0 / 255.0)
 #define const_2 (255.0 / 219.0)
 	add_flare = ((clamp(add_flare - const_1, 0.0, 1.0)) * const_2);
-
-	return add_flare * 0.55;
+#endif
+	return clamp(((add_flare * add_flare * 0.5) + 1.0) * final_color, 0.0, 1.0);
 }
 
 void main()
@@ -183,7 +174,7 @@ void main()
 	// UQ1: Let's add some of the flare color as well... Just to boost colors/glows...
 	vec3 flare_color = clamp(texture2D(u_NormalMap, var_TexCoords.st).rgb, 0.0, 1.0);
 	vec3 add_flare = CalculateFlare(flare_color, final_color);
-	final_color = clamp((final_color + (max((add_flare*0.5) + final_color, final_color) * max((add_flare*0.5) + final_color, final_color)) + (max((add_flare * final_color * 2.0), final_color) * max((add_flare * final_color * 2.0), final_color))) / 3.0, 0.0, 1.0);
+	final_color = clamp(((final_color * 5.0) + max(add_flare, final_color)) / 6.0, 0.0, 1.0);
 
 	gl_FragColor = vec4(final_color,1.0);
 }

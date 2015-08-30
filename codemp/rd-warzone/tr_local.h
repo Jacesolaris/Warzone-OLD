@@ -2381,6 +2381,7 @@ typedef struct trGlobals_s {
 	shaderProgram_t ssgi2Shader;
 	shaderProgram_t ssgi3Shader;
 	shaderProgram_t ssgi4Shader;
+	shaderProgram_t ssgiBlurShader;
 	shaderProgram_t lensflareShader;
 	shaderProgram_t multipostShader;
 	shaderProgram_t anamorphicDarkenShader;
