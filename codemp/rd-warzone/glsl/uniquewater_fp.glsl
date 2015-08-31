@@ -96,7 +96,7 @@ varying vec4      var_PrimaryLightDir;
 varying vec3   var_vertPos;
 
 out vec4 out_Glow;
-
+out vec4 out_Normal;
 
 float SampleDepth(sampler2D normalMap, vec2 t)
 {
@@ -594,4 +594,9 @@ void main()
 		out_Glow = vec4(0.0);
 #endif
 	}
+
+	if (gl_FragColor.a < 1.0)
+		out_Normal = vec4(0.0);
+	else
+		out_Normal = vec4(N.xyz * 0.5 + 0.5, 0.0);
 }

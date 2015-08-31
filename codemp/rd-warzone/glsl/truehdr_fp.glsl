@@ -124,9 +124,8 @@ void main()
 	//gl_FragColor = vec4((color.rgb + (newHDR(frag) * 2.0)) / 3.0, 1.0);
 	//gl_FragColor = SexyTonemap(newHDR(frag));
 
-#define const_1 ( 26.0 / 255.0)
-#define const_2 (255.0 / 209.0)
-	//gl_FragColor.rgb = ((clamp(gl_FragColor.rgb - const_1, 0.0, 1.0)) * const_2);
+#define const_1 ( 12.0 / 255.0)
+#define const_2 (255.0 / 219.0)
 	gl_FragColor.rgb = ((clamp(color.rgb - const_1, 0.0, 1.0)) * const_2);
 	gl_FragColor.a = 1.0;
 }

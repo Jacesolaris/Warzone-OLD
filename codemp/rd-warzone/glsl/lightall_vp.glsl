@@ -2,6 +2,8 @@ attribute vec2 attr_TexCoord0;
 
 uniform float	u_Time;
 
+//#define USE_LIGHT
+
 #if defined(USE_LIGHTMAP) || defined(USE_TCGEN)
 attribute vec2 attr_TexCoord1;
 #endif

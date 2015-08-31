@@ -4192,6 +4192,8 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 		case MATERIAL_RUBBER:			// 24			// hard tire like rubber
 		case MATERIAL_PLASTER:			// 28			// drywall style plaster
 		default:
+			defs |= LIGHTDEF_USE_LIGHT_VERTEX; // Vertex currently most compatible...
+			useLightVertex = qtrue;
 			break;
 		}
 	}
@@ -4221,7 +4223,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 
 			hasRealNormalMap = qtrue;
 		}
-		else if (normal)
+		else if (normal && normal->bundle[0].image[0])
 		{
 			//ri->Printf(PRINT_ALL, ", normalmap %s", normal->bundle[0].image[0]->imgName);
 			diffuse->bundle[TB_NORMALMAP] = normal->bundle[0];
@@ -4261,14 +4263,17 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 			else
 			{// Generate one...
 				if (!diffuse->bundle[TB_DIFFUSEMAP].normalsLoaded
-					&& !diffuse->bundle[TB_NORMALMAP].image[0] 
+					&& !shader.isPortal
+					&& !shader.isSky
+					&& !diffuse->glow
+					&& (!diffuse->bundle[TB_NORMALMAP].image[0] || diffuse->bundle[TB_NORMALMAP].image[0] == tr.whiteImage || diffuse->bundle[TB_DIFFUSEMAP].image[0] == tr.whiteImage)
 					&& diffuse->bundle[TB_DIFFUSEMAP].image[0]->imgName[0] 
 					&& diffuse->bundle[TB_DIFFUSEMAP].image[0]->imgName[0] != '*'
 					&& diffuse->bundle[TB_DIFFUSEMAP].image[0]->imgName[0] != '$'
 					&& diffuse->bundle[TB_DIFFUSEMAP].image[0]->imgName[0] != '_'
 					&& diffuse->bundle[TB_DIFFUSEMAP].image[0]->imgName[0] != '!'
 					&& !(diffuse->bundle[TB_DIFFUSEMAP].image[0]->flags & IMGFLAG_CUBEMAP)
-					//&& (diffuse->bundle[TB_DIFFUSEMAP].image[0]->flags & IMGFLAG_GENNORMALMAP)
+					/*
 					&& !StringContainsWord(diffuse->bundle[TB_DIFFUSEMAP].image[0]->imgName, "renderCube") 
 					&& !StringContainsWord(diffuse->bundle[TB_DIFFUSEMAP].image[0]->imgName, "shadowcubemap") 
 					&& !StringContainsWord(diffuse->bundle[TB_DIFFUSEMAP].image[0]->imgName, "_env") 
@@ -4277,14 +4282,24 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 					&& !StringContainsWord(diffuse->bundle[TB_DIFFUSEMAP].image[0]->imgName, "cloud") 
 					&& !StringContainsWord(diffuse->bundle[TB_DIFFUSEMAP].image[0]->imgName, "glow") 
 					&& !StringContainsWord(diffuse->bundle[TB_DIFFUSEMAP].image[0]->imgName, "gfx/")
-					&& !StringContainsWord(diffuse->bundle[TB_DIFFUSEMAP].image[0]->imgName, "gfx_base/"))
+					&& !StringContainsWord(diffuse->bundle[TB_DIFFUSEMAP].image[0]->imgName, "gfx_base/")*/)
 				{
-					diffuse->bundle[TB_NORMALMAP].image[0] = R_CreateNormalMapGLSL( normalName, NULL, diffuse->bundle[TB_DIFFUSEMAP].image[0]->width, diffuse->bundle[TB_DIFFUSEMAP].image[0]->height, GL_RGBA8, diffuse->bundle[TB_DIFFUSEMAP].image[0] );
+					normalImg = R_CreateNormalMapGLSL( normalName, NULL, diffuse->bundle[TB_DIFFUSEMAP].image[0]->width, diffuse->bundle[TB_DIFFUSEMAP].image[0]->height, GL_RGBA8, diffuse->bundle[TB_DIFFUSEMAP].image[0] );
+
+					if (normalImg)
+					{
+						diffuse->bundle[TB_NORMALMAP] = diffuse->bundle[0];
+						diffuse->bundle[TB_NORMALMAP].numImageAnimations = 0;
+						diffuse->bundle[TB_NORMALMAP].image[0] = normalImg;
+
+						if (diffuse->bundle[TB_NORMALMAP].image[0]) diffuse->hasRealNormalMap = true;
 					
-					if (diffuse->bundle[TB_NORMALMAP].image[0]) diffuse->hasRealNormalMap = true;
-					
-					if (diffuse->normalScale[0] == 0 && diffuse->normalScale[1] == 0 && diffuse->normalScale[2] == 0)
-						VectorSet4(diffuse->normalScale, r_baseNormalX->value, r_baseNormalY->value, 1.0f, r_baseParallax->value);
+						if (diffuse->normalScale[0] == 0 && diffuse->normalScale[1] == 0 && diffuse->normalScale[2] == 0)
+							VectorSet4(diffuse->normalScale, r_baseNormalX->value, r_baseNormalY->value, 1.0f, r_baseParallax->value);
+
+						if (parallax && r_parallaxMapping->integer)
+							defs |= LIGHTDEF_USE_PARALLAXMAP;
+					}
 				}
 				diffuse->bundle[TB_DIFFUSEMAP].normalsLoaded = qtrue;
 			}

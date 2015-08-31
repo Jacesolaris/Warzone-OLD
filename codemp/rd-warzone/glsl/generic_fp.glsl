@@ -22,6 +22,7 @@ varying vec4      var_Color;
 uniform vec2	u_Dimensions;
 
 out vec4 out_Glow;
+//out vec4 out_Normal;
 
 float SampleDepth(sampler2D normalMap, vec2 t)
 {
@@ -279,4 +280,6 @@ void main()
 #else
 	out_Glow = vec4(0.0);
 #endif
+
+	//out_Normal = vec4(N.xyz * 0.5 + 0.5, 0.0);
 }

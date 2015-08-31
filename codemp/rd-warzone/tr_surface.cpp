@@ -444,7 +444,7 @@ static void RB_SurfaceVertsAndIndexes( int numVerts, srfVert_t *verts, int numIn
 	}
 
 	//tess.dlightBits |= dlightBits;
-	//tess.pshadowBits |= pshadowBits;
+	tess.pshadowBits |= pshadowBits;
 
 	tess.numVertexes += numVerts;
 }
@@ -467,7 +467,7 @@ static qboolean RB_SurfaceVbo(VBO_t *vbo, IBO_t *ibo, int numVerts, int numIndex
 	RB_CheckVBOandIBO(vbo, ibo);
 
 	//tess.dlightBits |= dlightBits;
-	//tess.pshadowBits |= pshadowBits;
+	tess.pshadowBits |= pshadowBits;
 
 	// merge this into any existing multidraw primitives
 	mergeForward = -1;
@@ -559,13 +559,13 @@ RB_SurfaceTriangles
 */
 static void RB_SurfaceTriangles( srfBspSurface_t *srf ) {
 	if( RB_SurfaceVbo (srf->vbo, srf->ibo, srf->numVerts, srf->numIndexes,
-				srf->firstIndex, srf->minIndex, srf->maxIndex, 0/*srf->dlightBits*/, 0/*srf->pshadowBits*/, qtrue ) )
+				srf->firstIndex, srf->minIndex, srf->maxIndex, 0/*srf->dlightBits*/, srf->pshadowBits, qtrue ) )
 	{
 		return;
 	}
 
 	RB_SurfaceVertsAndIndexes(srf->numVerts, srf->verts, srf->numIndexes,
-			srf->indexes, 0/*srf->dlightBits*/, 0/*srf->pshadowBits*/);
+			srf->indexes, 0/*srf->dlightBits*/, srf->pshadowBits);
 }
 
 
@@ -1686,13 +1686,13 @@ RB_SurfaceFace
 */
 static void RB_SurfaceFace( srfBspSurface_t *srf ) {
 	if( RB_SurfaceVbo (srf->vbo, srf->ibo, srf->numVerts, srf->numIndexes,
-				srf->firstIndex, srf->minIndex, srf->maxIndex, 0/*srf->dlightBits*/, 0/*srf->pshadowBits*/, qtrue ) )
+				srf->firstIndex, srf->minIndex, srf->maxIndex, 0/*srf->dlightBits*/, srf->pshadowBits, qtrue ) )
 	{
 		return;
 	}
 
 	RB_SurfaceVertsAndIndexes(srf->numVerts, srf->verts, srf->numIndexes,
-			srf->indexes, 0/*srf->dlightBits*/, 0/*srf->pshadowBits*/);
+			srf->indexes, 0/*srf->dlightBits*/, srf->pshadowBits);
 }
 
 
@@ -1752,11 +1752,11 @@ static void RB_SurfaceGrid( srfBspSurface_t *srf ) {
 	int		lodWidth, lodHeight;
 	int		numVertexes;
 	//int		dlightBits;
-	//int     pshadowBits;
+	int     pshadowBits;
 	//int		*vDlightBits;
 
 	if( RB_SurfaceVbo (srf->vbo, srf->ibo, srf->numVerts, srf->numIndexes,
-				srf->firstIndex, srf->minIndex, srf->maxIndex, 0/*srf->dlightBits*/, 0/*srf->pshadowBits*/, qtrue ) )
+				srf->firstIndex, srf->minIndex, srf->maxIndex, 0/*srf->dlightBits*/, srf->pshadowBits, qtrue ) )
 	{
 		return;
 	}
@@ -1764,8 +1764,8 @@ static void RB_SurfaceGrid( srfBspSurface_t *srf ) {
 	//dlightBits = srf->dlightBits;
 	//tess.dlightBits |= dlightBits;
 
-	//pshadowBits = srf->pshadowBits;
-	//tess.pshadowBits |= pshadowBits;
+	pshadowBits = srf->pshadowBits;
+	tess.pshadowBits |= pshadowBits;
 
 	// determine the allowable discrepance
 	lodError = LodErrorForVolume( srf->lodOrigin, srf->lodRadius );
@@ -2039,7 +2039,7 @@ static void RB_SurfaceFlare(srfFlare_t *surf)
 static void RB_SurfaceVBOMesh(srfBspSurface_t * srf)
 {
 	RB_SurfaceVbo (srf->vbo, srf->ibo, srf->numVerts, srf->numIndexes, srf->firstIndex,
-			srf->minIndex, srf->maxIndex, 0/*srf->dlightBits*/, 0/*srf->pshadowBits*/, qfalse );
+			srf->minIndex, srf->maxIndex, 0/*srf->dlightBits*/, srf->pshadowBits, qfalse );
 }
 
 void RB_SurfaceVBOMDVMesh(srfVBOMDVMesh_t * surface)

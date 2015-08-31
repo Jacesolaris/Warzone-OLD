@@ -7,6 +7,9 @@
 
 #include <string>
 
+#include "../client/fast_mutex.h"
+#include "../client/tinythread.h"
+
 /*
 ===============================================================================
 
@@ -55,9 +58,15 @@ int GetLittleLong(void)
 // returns qfalse if failed to load, else fills in *pData
 //
 extern	cvar_t	*com_buildScript;
+
+tthread::fast_mutex loadsound_lock; // UQ1: Since sound loading is always the problem, let's lock this f*ker down!!!
+
 static qboolean S_LoadSound_FileLoadAndNameAdjuster(char *psFilename, byte **pData, int *piSize, int iNameStrlen)
 {
 	char *psVoice = strstr(psFilename,"chars");
+
+	loadsound_lock.lock();
+
 	if (psVoice)
 	{
 		// cache foreign voices...
@@ -222,9 +231,11 @@ static qboolean S_LoadSound_FileLoadAndNameAdjuster(char *psFilename, byte **pDa
 
 	if (!*pData)
 	{
+		loadsound_lock.unlock();
 		return qfalse;	// sod it, give up...
 	}
 
+	loadsound_lock.unlock();
 	return qtrue;
 }
 

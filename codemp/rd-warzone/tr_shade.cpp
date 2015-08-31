@@ -192,7 +192,7 @@ void RB_BeginSurface( shader_t *shader, int fogNum, int cubemapIndex ) {
 	tess.fogNum = fogNum;
 	tess.cubemapIndex = cubemapIndex;
 	//tess.dlightBits = 0;		// will be OR'd in by surface functions
-	//tess.pshadowBits = 0;       // will be OR'd in by surface functions
+	tess.pshadowBits = 0;       // will be OR'd in by surface functions
 	tess.xstages = state->stages;
 	tess.numPasses = state->numUnfoggedPasses;
 	tess.currentStageIteratorFunc = state->optimalStageIteratorFunc;
@@ -1186,7 +1186,6 @@ static void ForwardDlight( void ) {
 
 
 static void ProjectPshadowVBOGLSL( void ) {
-#if 0
 	int		l;
 	vec3_t	origin;
 	float	radius;
@@ -1258,7 +1257,6 @@ static void ProjectPshadowVBOGLSL( void ) {
 		backEnd.pc.c_totalIndexes += tess.numIndexes;
 		//backEnd.pc.c_dlightIndexes += tess.numIndexes;
 	}
-#endif
 }
 
 
@@ -1844,23 +1842,14 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				} 
 			}
 
-#ifdef __DYNAMIC_SHADOWS__
-			if (index & LIGHTDEF_LIGHTTYPE_MASK)
-			{
-				index |= LIGHTDEF_USE_SHADOWMAP;
-			}
-#else //!__DYNAMIC_SHADOWS__
 			if (r_sunlightMode->integer && (backEnd.viewParms.flags & VPF_USESUNLIGHT) && (index & LIGHTDEF_LIGHTTYPE_MASK))
 			{
 				index |= LIGHTDEF_USE_SHADOWMAP;
 			}
-			/*
 			else if (r_dlightMode->integer >= 2 && tr.refdef.num_dlights && (index & LIGHTDEF_LIGHTTYPE_MASK))
 			{
 				index |= LIGHTDEF_USE_SHADOWMAP;
 			}
-			*/
-#endif //__DYNAMIC_SHADOWS__
 
 			if (r_lightmap->integer && index & LIGHTDEF_USE_LIGHTMAP)
 			{
@@ -2164,16 +2153,20 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				if ((light || pStage->isWater || pStage->hasRealNormalMap || pStage->hasSpecular || pStage->hasRealSubsurfaceMap) && !fastLight)
 				{
 					if (r_normalMapping->integer
+						&& !input->shader->isPortal
+						&& !input->shader->isSky
+						&& !pStage->glow
 						&& !(stage > 0)
 						&& !pStage->bundle[TB_DIFFUSEMAP].normalsLoaded2
-						&& !pStage->bundle[TB_NORMALMAP].image[0] 
+						&& (!pStage->bundle[TB_NORMALMAP].image[0] || pStage->bundle[TB_NORMALMAP].image[0] == tr.whiteImage || pStage->bundle[TB_DIFFUSEMAP].image[0] == tr.whiteImage)
 						&& pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName[0] 
 						&& pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName[0] != '*'
 						&& pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName[0] != '$'
 						&& pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName[0] != '_'
 						&& pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName[0] != '!'
 						&& !(pStage->bundle[TB_DIFFUSEMAP].image[0]->flags & IMGFLAG_CUBEMAP)
-						//&& (pStage->bundle[TB_DIFFUSEMAP].image[0]->flags & IMGFLAG_GENNORMALMAP)
+						/*
+						&& !StringContainsWord(pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName, "noshader") 
 						&& !StringContainsWord(pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName, "renderCube") 
 						&& !StringContainsWord(pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName, "shadowcubemap") 
 						&& !StringContainsWord(pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName, "_env") 
@@ -2182,7 +2175,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 						&& !StringContainsWord(pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName, "cloud") 
 						&& !StringContainsWord(pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName, "glow") 
 						&& !StringContainsWord(pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName, "gfx/")
-						&& !StringContainsWord(pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName, "gfx_base/"))
+						&& !StringContainsWord(pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName, "gfx_base/")*/)
 					{// How did this happen??? Oh well, generate a normal map now...
 						char imgname[64];
 						sprintf(imgname, "%s_n", pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName);
@@ -2203,7 +2196,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 						R_BindAnimatedImageToTMU( &pStage->bundle[TB_NORMALMAP], TB_NORMALMAP);
 						enableTextures[0] = 1.0f;
 					}
-					else if (r_normalMapping->integer)
+					else //if (r_normalMapping->integer)
 					{
 						GL_BindToTMU( tr.whiteImage, TB_NORMALMAP );
 					}
@@ -2213,7 +2206,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 						R_BindAnimatedImageToTMU( &pStage->bundle[TB_DELUXEMAP], TB_DELUXEMAP);
 						enableTextures[1] = 1.0f;
 					}
-					else if (r_deluxeMapping->integer)
+					else //if (r_deluxeMapping->integer)
 					{
 						GL_BindToTMU( tr.whiteImage, TB_DELUXEMAP );
 					}
@@ -2223,7 +2216,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 						R_BindAnimatedImageToTMU( &pStage->bundle[TB_SPECULARMAP], TB_SPECULARMAP);
 						enableTextures[2] = 1.0f;
 					}
-					else if (r_specularMapping->integer)
+					else //if (r_specularMapping->integer)
 					{
 						GL_BindToTMU( tr.whiteImage, TB_SPECULARMAP );
 					}
@@ -2238,12 +2231,15 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 					}
 				}
 
-				enableTextures[3] = (r_cubeMapping->integer && !(tr.viewParms.flags & VPF_NOCUBEMAPS) && input->cubemapIndex) ? 1.0f : 0.0f;
+				if (input->cubemapIndex)
+					enableTextures[3] = (r_cubeMapping->integer && !(tr.viewParms.flags & VPF_NOCUBEMAPS) && input->cubemapIndex) ? 1.0f : 0.0f;
+				else
+					enableTextures[3] = 0.0f;
 			}
 
 			GLSL_SetUniformVec4(sp, UNIFORM_ENABLETEXTURES, enableTextures);
 		}
-		else if ( pStage->bundle[1].image[0] != 0 )
+		else if ( pStage->bundle[TB_LIGHTMAP].image[0] != 0 )
 		{
 			R_BindAnimatedImageToTMU( &pStage->bundle[0], 0 );
 
@@ -2528,7 +2524,7 @@ void RB_StageIteratorGeneric( void )
 			//
 			// pshadows!
 			//
-			if (r_shadows->integer == 4 /*&& tess.pshadowBits*/)
+			if (r_shadows->integer == 4 && tess.pshadowBits)
 				ProjectPshadowVBOGLSL();
 			break;
 		}

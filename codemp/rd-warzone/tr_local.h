@@ -361,6 +361,7 @@ extern cvar_t  *r_textureClean;
 extern cvar_t  *r_textureCleanSigma;
 extern cvar_t  *r_textureCleanBSigma;
 extern cvar_t  *r_textureCleanMSize;
+extern cvar_t  *r_hbao;
 extern cvar_t  *r_ssao2;
 extern cvar_t  *r_ssao2passes;
 extern cvar_t	*r_steepParallax;
@@ -783,20 +784,21 @@ typedef struct {
 
 enum
 {
-	TB_COLORMAP    = 0,
-	TB_DIFFUSEMAP  = 0,
-	TB_LIGHTMAP    = 1,
-	TB_LEVELSMAP   = 1,
-	TB_SHADOWMAP3  = 1,
-	TB_COLORMAP2   = 1,
-	TB_NORMALMAP   = 2,
-	TB_DELUXEMAP   = 3,
-	TB_SHADOWMAP2  = 3,
-	TB_SPECULARMAP = 4,
-	TB_SHADOWMAP   = 5,
-	TB_CUBEMAP     = 6,
+	TB_COLORMAP			= 0,
+	TB_DIFFUSEMAP		= 0,
+	TB_LIGHTMAP			= 1,
+	TB_LEVELSMAP		= 1,
+	TB_SHADOWMAP3		= 1,
+	TB_COLORMAP2		= 1,
+	TB_NORMALMAP		= 2,
+	TB_DELUXEMAP		= 3,
+	TB_SHADOWMAP2		= 3,
+	TB_SPECULARMAP		= 4,
+	TB_SHADOWMAP		= 5,
+	TB_CUBEMAP			= 6,
 	TB_SUBSURFACEMAP    = 7,
-	NUM_TEXTURE_BUNDLES = 8
+	TB_GLOWMAP			= 8,
+	NUM_TEXTURE_BUNDLES = 9
 };
 
 typedef enum
@@ -808,6 +810,7 @@ typedef enum
 	ST_NORMALPARALLAXMAP,
 	ST_SPECULARMAP,
 	ST_SUBSURFACEMAP,
+	ST_GLOWMAP,
 	ST_GLSL
 } stageType_t;
 
@@ -1194,6 +1197,7 @@ typedef enum
 	UNIFORM_LEVELSMAP,
 	UNIFORM_CUBEMAP,
 	UNIFORM_SUBSURFACEMAP,
+	UNIFORM_GLOWMAP,
 
 	UNIFORM_SCREENIMAGEMAP,
 	UNIFORM_SCREENDEPTHMAP,
@@ -1338,6 +1342,8 @@ typedef enum
 
 	UNIFORM_MODELMATRIX,
 	UNIFORM_MODELVIEWPROJECTIONMATRIX,
+	UNIFORM_INVPROJECTIONMATRIX,
+	UNIFORM_INVEYEPROJECTIONMATRIX,
 
 	UNIFORM_TIME,
 	UNIFORM_VERTEXLERP,
@@ -1436,8 +1442,8 @@ typedef struct {
 	struct drawSurf_s	*drawSurfs;
 
 	//unsigned int dlightMask;
-	//int         num_pshadows;
-	//struct pshadow_s *pshadows;
+	int         num_pshadows;
+	struct pshadow_s *pshadows;
 
 #ifdef __DYNAMIC_SHADOWS__
 	float       dlightShadowMvp[MAX_DYNAMIC_SHADOWS][3][16];
@@ -1595,7 +1601,7 @@ typedef struct srfBspSurface_s
 
 	// dynamic lighting information
 	//int				dlightBits;
-	//int             pshadowBits;
+	int             pshadowBits;
 
 	// culling information
 	vec3_t			cullBounds[2];
@@ -1829,13 +1835,13 @@ typedef struct {
 	msurface_t	*surfaces;
 	int         *surfacesViewCount;
 	//int         *surfacesDlightBits;
-	//int			*surfacesPshadowBits;
+	int			*surfacesPshadowBits;
 
 	int			numMergedSurfaces;
 	msurface_t	*mergedSurfaces;
 	int         *mergedSurfacesViewCount;
 	//int         *mergedSurfacesDlightBits;
-	//int			*mergedSurfacesPshadowBits;
+	int			*mergedSurfacesPshadowBits;
 
 	int			nummarksurfaces;
 	int         *marksurfaces;
@@ -2120,6 +2126,8 @@ typedef struct glstate_s {
 	matrix_t        modelview;
 	matrix_t        projection;
 	matrix_t		modelviewProjection;
+	matrix_t		invProjection;
+	matrix_t		invEyeProjection;
 } glstate_t;
 
 typedef enum {
@@ -2251,6 +2259,7 @@ typedef struct trGlobals_s {
 
 	image_t					*renderImage;
 	image_t					*glowImage;
+	image_t					*normalImage;
 #if 0
 	image_t					*glowImageScaled[4];
 #else
@@ -2369,6 +2378,8 @@ typedef struct trGlobals_s {
 	shaderProgram_t waterShader;
 	shaderProgram_t surfaceSpriteShader;
 	shaderProgram_t ssao2Shader;
+	shaderProgram_t hbaoShader;
+	shaderProgram_t hbaoCombineShader;
 	shaderProgram_t esharpeningShader;
 	shaderProgram_t esharpening2Shader;
 	shaderProgram_t fxaaShader;
@@ -2394,10 +2405,12 @@ typedef struct trGlobals_s {
 	image_t        *bloomRenderFBOImage[3];
 	image_t        *anamorphicRenderFBOImage[3];
 	image_t        *genericFBOImage;
+	image_t        *genericFBO2Image;
 
 	FBO_t          *bloomRenderFBO[3];
 	FBO_t          *anamorphicRenderFBO[3];
 	FBO_t		   *genericFbo;
+	FBO_t		   *genericFbo2;
 	FBO_t		   *NormalMapDestinationFBO;
 
 	//
@@ -2933,7 +2946,7 @@ struct shaderCommands_s
 	int         cubemapIndex;
 
 	//int			dlightBits;	// or together of all vertexDlightBits
-	//int         pshadowBits;
+	int         pshadowBits;
 
 	int			firstIndex;
 	int			numIndexes;

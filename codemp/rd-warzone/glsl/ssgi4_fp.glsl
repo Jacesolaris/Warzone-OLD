@@ -1,11 +1,14 @@
 uniform sampler2D u_TextureMap;
 uniform sampler2D u_ScreenDepthMap;
-uniform sampler2D u_NormalMap; // actually saturation map image
+uniform sampler2D u_NormalMap;
+uniform sampler2D u_GlowMap; // actually saturation map image
 
 varying vec2		var_TexCoords;
 varying vec2		var_Dimensions;
 varying vec4		var_ViewInfo; // zmin, zmax, zmax / zmin
 varying vec4		var_Local0; // MODE, NUM_SAMPLES, 0, 0
+
+#if 1
 
 /*
 *CSSGI shader (Coherent Screen Space Global Illumination)
@@ -74,7 +77,7 @@ void main()
 
 	if (MODE >= 5.0)
 	{// Saturation map debug mode...
-		gl_FragColor = texture2D(u_NormalMap, var_TexCoords.st);
+		gl_FragColor = texture2D(u_GlowMap, var_TexCoords.st);
 		return;
 	}
 
@@ -135,7 +138,7 @@ void main()
 				}
 
 				//COLOR BLEEDING:
-				vec3 dcolor3 = texture2D(u_NormalMap, var_TexCoords.st+coords*rand(var_TexCoords)).xyz;
+				vec3 dcolor3 = texture2D(u_GlowMap, var_TexCoords.st+coords*rand(var_TexCoords)).xyz;
 
 				//if (length(dcolor2)>0.3){//color threshold
 				//if (length(dcolor2)>0.0){//color threshold
@@ -172,9 +175,140 @@ void main()
 	vec3 final_color = vec3((dcolor1* occlusion) + (bleeding));// * 1.25;
 
 	// UQ1: Let's add some of the flare color as well... Just to boost colors/glows...
-	vec3 flare_color = clamp(texture2D(u_NormalMap, var_TexCoords.st).rgb, 0.0, 1.0);
+	vec3 flare_color = clamp(texture2D(u_GlowMap, var_TexCoords.st).rgb, 0.0, 1.0);
 	vec3 add_flare = CalculateFlare(flare_color, final_color);
 	final_color = clamp(((final_color * 5.0) + max(add_flare, final_color)) / 6.0, 0.0, 1.0);
 
 	gl_FragColor = vec4(final_color,1.0);
 }
+
+#else
+
+#ifdef RANDOM_TEXTURE
+uniform sampler2D rand; // Random texture 
+#endif
+vec2 camerarange = var_ViewInfo.xy;
+//vec2 camerarange = vec2(1.0, 1024.0);
+      
+   float pw = 1.0/var_Dimensions.x;
+   float ph = 1.0/var_Dimensions.y;
+
+   float rand(vec2 co) {
+		//return 0.5+(fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453))*0.5;
+		return (fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453));
+   }
+
+   float readDepth(in vec2 coord)  
+   {  
+     if (coord.x<0||coord.y<0) return 1.0;
+	  float nearZ = camerarange.x;  
+      float farZ =camerarange.y;  
+      float posZ = texture2D(u_ScreenDepthMap, coord).x;   
+      return (2.0 * nearZ) / (nearZ + farZ - posZ * (farZ - nearZ));  
+   }
+
+   float compareDepths(in float depth1, in float depth2,inout int far)  
+   {
+     float diff = (depth1 - depth2)*100.0; //depth difference (0-100)
+     float gdisplace = 0.2; //gauss bell center
+     float garea = 2.0; //gauss bell width 2
+
+     //reduce left bell width to avoid self-shadowing
+     if (diff<gdisplace){ 
+        garea = 0.1;
+     }else{
+        far = 1;
+     }
+     float gauss = pow(2.7182,-2*(diff-gdisplace)*(diff-gdisplace)/(garea*garea));
+
+     return gauss;
+   }
+
+   vec3 readColor(in vec2 coord)  
+   {
+     //return texture2D(u_TextureMap, coord).xyz;
+	 //return texture2D(u_GlowMap, coord).xyz;
+	 return texture2D(u_TextureMap, coord).xyz + (texture2D(u_GlowMap, coord).xyz * 0.333);
+   }
+
+   vec3 calAO(float depth,float dw, float dh, inout float ao)  
+   {  
+	 vec3 bleed = vec3(0.0,0.0,0.0);
+     float temp = 0;
+     float temp2 = 0;
+     float coordw = var_TexCoords.x + dw/depth;
+     float coordh = var_TexCoords.y + dh/depth;
+     float coordw2 = var_TexCoords.x - dw/depth;
+     float coordh2 = var_TexCoords.y - dh/depth;
+
+     if (coordw  < 1.0 && coordw  > 0.0 && coordh < 1.0 && coordh  > 0.0) {
+     	vec2 coord = vec2(coordw , coordh);
+        vec2 coord2 = vec2(coordw2, coordh2);
+        int far = 0;
+     	temp = compareDepths(depth, readDepth(coord),far);
+		bleed = readColor(coord);
+
+        //DEPTH EXTRAPOLATION:
+        if (far > 0){
+          temp2 = compareDepths(readDepth(coord2),depth,far);
+          temp += (1.0-temp)*temp2; 
+		  //bleed = readColor(coord);
+        }
+     }
+ 
+     ao += temp;
+     return temp*bleed;
+   }
+     
+   void main(void)  
+   {  
+#ifdef RANDOM_TEXTURE
+	 //randomization texture:
+	 vec2 fres = vec2(20,20);
+     vec3 random = texture2D(rand, var_TexCoords.st*fres.xy);
+     random = random*2.0-vec3(1.0);
+#else
+	 //code random
+	 vec3 random = vec3(rand(var_TexCoords.st));
+     random = random*2.0-vec3(1.0);
+#endif
+
+     //initialize stuff:
+     float depth = readDepth(var_TexCoords);
+	 vec3 gi = vec3(0.0,0.0,0.0);
+     float ao = 0.0;
+
+     for(int i=0; i<4; ++i) 
+     {  
+       //calculate color bleeding and ao:
+       gi+=calAO(depth,  pw, ph, ao);  
+       gi+=calAO(depth,  pw, -ph, ao);  
+       gi+=calAO(depth,  -pw, ph, ao);  
+       gi+=calAO(depth,  -pw, -ph, ao);
+
+       gi+=calAO(depth,  pw*1.2, 0, ao);  
+       gi+=calAO(depth,  -pw*1.2, 0, ao);  
+       gi+=calAO(depth,  0, ph*1.2, ao);  
+       gi+=calAO(depth,  0, -ph*1.2, ao);
+     
+       //sample jittering:
+       pw += random.x*0.0007;
+       ph += random.y*0.0007;
+
+       //increase sampling area:
+       pw *= 1.7;  
+       ph *= 1.7;    
+     }
+
+     //final values, some adjusting:
+     vec3 finalAO = vec3(1.0-(ao/32.0)) * 0.25;
+	 vec3 finalGI = (gi/32)*0.6;
+
+	 vec4 color = texture2D(u_TextureMap, var_TexCoords.st);
+
+	 gl_FragColor = vec4((finalAO, 1.0) * color) + vec4(finalGI*0.5, 1.0);
+     //gl_FragColor = vec4((0.3+finalAO*0.7,1.0) * color) + vec4(finalGI*0.5, 1.0);
+	 //gl_FragColor = vec4((0.3+finalAO*0.7,1.0) * (color + vec4(finalGI*0.5, 1.0)));
+   }
+
+#endif

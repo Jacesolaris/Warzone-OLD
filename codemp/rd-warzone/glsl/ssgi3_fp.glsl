@@ -1,6 +1,7 @@
 uniform sampler2D u_TextureMap;
 uniform sampler2D u_ScreenDepthMap;
-uniform sampler2D u_NormalMap; // actually saturation map image
+uniform sampler2D u_NormalMap;
+uniform sampler2D u_GlowMap; // actually saturation map image
 
 varying vec2		var_TexCoords;
 varying vec2		var_Dimensions;
@@ -115,7 +116,7 @@ void main()
 
 				if (MODE >= 3.0)
 				{//COLOR BLEEDING:
-					vec3 dcolor3 = texture2D(u_NormalMap, var_TexCoords.st+coords*rand(var_TexCoords)).xyz;
+					vec3 dcolor3 = texture2D(u_GlowMap, var_TexCoords.st+coords*rand(var_TexCoords)).xyz;
 
 					//if (length(dcolor2)>0.3){//color threshold
 					//if (length(dcolor2)>0.0){//color threshold
@@ -152,7 +153,7 @@ void main()
 	vec3 final_color = vec3((dcolor1) + (bleeding));// * 1.25;
 
 	// UQ1: Let's add some of the flare color as well... Just to boost colors/glows...
-	vec3 flare_color = clamp(texture2D(u_NormalMap, var_TexCoords.st).rgb, 0.0, 1.0);
+	vec3 flare_color = clamp(texture2D(u_GlowMap, var_TexCoords.st).rgb, 0.0, 1.0);
 	vec3 add_flare = CalculateFlare(flare_color, final_color);
 	final_color = clamp(((final_color * 5.0) + max(add_flare, final_color)) / 6.0, 0.0, 1.0);
 

@@ -5,7 +5,7 @@ uniform vec4	u_Local2; // ExtinctionCoefficient
 uniform vec4	u_Local3; // RimScalar, MaterialThickness, subSpecPower, cubemapScale
 uniform vec4	u_Local4; // haveNormalMap, isMetalic, hasRealSubsurfaceMap, useSteepParallax
 
-#define ARGHFUCKTHISSHIT
+//#define USE_LIGHT
 
 varying float  var_Time;
 
@@ -101,6 +101,7 @@ varying vec4      var_PrimaryLightDir;
 varying vec3   var_vertPos;
 
 out vec4 out_Glow;
+out vec4 out_Normal;
 
 #if defined(USE_PARALLAXMAP) || defined(USE_PARALLAXMAP_NONORMALS)
   #if defined(USE_PARALLAXMAP)
@@ -447,6 +448,7 @@ void main()
 {
 	vec3 viewDir, lightColor, ambientColor;
 	vec3 L, N, E, H;
+	vec3 NORMAL = vec3(1.0);
 	float NL, NH, NE, EH, attenuation;
 	vec2 tex_offset = vec2(1.0 / u_Dimensions.x, 1.0 / u_Dimensions.y);
 
@@ -471,13 +473,12 @@ void main()
 	
 #if defined(USE_LIGHT) && !defined(USE_FAST_LIGHT)
   #if defined(USE_VERT_TANGENT_SPACE)
-	//mat3 tangentToWorld = mat3(var_Tangent.xyz, var_Bitangent.xyz, var_Normal.xyz);
-	//viewDir = vec3(var_Normal.w, var_Tangent.w, var_Bitangent.w);
-	mat3 tangentToWorld = cotangent_frame(var_Normal.xyz, -var_ViewDir, var_TexCoords.xy);
-	viewDir = var_ViewDir;
+	mat3 tangentToWorld = mat3(var_Tangent.xyz, var_Bitangent.xyz, var_Normal.xyz);
+	viewDir = vec3(var_Normal.w, var_Tangent.w, var_Bitangent.w);
+	//mat3 tangentToWorld = cotangent_frame(var_Normal.xyz, -var_ViewDir, var_TexCoords.xy);
+	//viewDir = var_ViewDir;
   #else
 	mat3 tangentToWorld = cotangent_frame(var_Normal.xyz, -var_ViewDir, var_TexCoords.xy);
-	//mat3 tangentToWorld = mat3(1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0);
 	viewDir = var_ViewDir;
   #endif
 
@@ -553,15 +554,25 @@ void main()
 	lightColor	= var_Color.rgb;
   #endif
 
-#if defined(USE_PARALLAXMAP) || defined(USE_PARALLAXMAP_NONORMALS)
+//#if defined(USE_PARALLAXMAP) || defined(USE_PARALLAXMAP_NONORMALS) || defined (USE_NORMALMAP)
 	vec3 norm = texture2D(u_NormalMap, texCoords).xyz;
+	
+	//NORMAL = var_Normal.xyz /** norm*/ * 0.5 + 0.5;
+	//NORMAL = normalize(((var_Normal.xyz + norm) * 0.5) * 2.0 - 1.0);
+	NORMAL = normalize(norm * 2.0 - 1.0);
+	//NORMAL = normalize(norm * 0.5 + 0.5);
+	NORMAL = tangentToWorld * NORMAL;
+
+	N = norm;
+	N = N * 0.5 + 0.5;
 	N.xy *= u_NormalScale.xy;
 	N.z = sqrt(clamp((0.25 - N.x * N.x) - N.y * N.y, 0.0, 1.0));
 
 	N = tangentToWorld * N;
-#else
-	N = var_Normal.xyz;
-#endif
+//#else
+//	N = var_Normal.xyz * 0.5 + 0.5;
+//	NORMAL = N;
+//#endif
 
 	N = normalize(N);
 	L /= sqrt(sqrLightDist);
@@ -727,7 +738,7 @@ void main()
 #endif
 
   #if defined(USE_CUBEMAP)
-	if (u_Local3.a > 0.0) {
+	if (u_Local3.a > 0.0 && u_EnableTextures.w > 0.0) {
 		reflectance = EnvironmentBRDF(specular.a * refMult, NE, specular.rgb * refMult);
 
 		vec3 R = reflect(E, N);
@@ -792,12 +803,22 @@ void main()
   #endif
 
 #else
+
 	lightColor = var_Color.rgb;
   #if defined(USE_LIGHTMAP) 
 	lightColor *= lightmapColor.rgb;
   #endif
 
-  gl_FragColor = vec4 (diffuse.rgb * lightColor, diffuse.a * var_Color.a);
+	vec3 norm = texture2D(u_NormalMap, texCoords).xyz;
+	
+	//NORMAL = var_Normal.xyz /** norm*/ * 0.5 + 0.5;
+	//NORMAL = normalize(((var_Normal.xyz + norm) * 0.5) * 2.0 - 1.0);
+	NORMAL = normalize(norm * 2.0 - 1.0);
+	//NORMAL = normalize(norm * 0.5 + 0.5);
+	NORMAL = tangentToWorld * NORMAL;
+
+	gl_FragColor = vec4 (diffuse.rgb * lightColor, diffuse.a * var_Color.a);
+
 #endif
 
 #if defined(USE_GLOW_BUFFER)
@@ -805,4 +826,7 @@ void main()
 #else
 	out_Glow = vec4(0.0);
 #endif
+
+	//if (u_EnableTextures.r > 0.0)
+		out_Normal = vec4(NORMAL.xyz, 0.0);
 }

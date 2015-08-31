@@ -441,6 +441,16 @@ void FBO_Init(void)
 		FBO_AttachTextureImage(tr.genericFBOImage, 0);
 		R_CheckFBO(tr.genericFbo);
 	}
+
+	//
+	// UQ1's Generic FBO2...
+	//
+	{
+		tr.genericFbo2 = FBO_Create("_generic2", tr.genericFBO2Image->width, tr.genericFBO2Image->height);
+		FBO_Bind(tr.genericFbo2);
+		FBO_AttachTextureImage(tr.genericFBO2Image, 0);
+		R_CheckFBO(tr.genericFbo2);
+	}
 	
 
 	//
@@ -509,6 +519,7 @@ void FBO_Init(void)
 		//FBO_CreateBuffer(tr.msaaResolveFbo, hdrFormat, 0, 0);
 		FBO_AttachTextureImage(tr.renderImage, 0);
 		FBO_AttachTextureImage(tr.glowImage, 1);
+		FBO_AttachTextureImage(tr.normalImage, 2);
 
 		//FBO_CreateBuffer(tr.msaaResolveFbo, GL_DEPTH_COMPONENT24, 0, 0);
 		R_AttachFBOTextureDepth(tr.renderDepthImage->texnum);
@@ -526,6 +537,7 @@ void FBO_Init(void)
 		//FBO_CreateBuffer(tr.renderFbo, hdrFormat, 0, 0);
 		FBO_AttachTextureImage(tr.renderImage, 0);
 		FBO_AttachTextureImage(tr.glowImage, 1);
+		FBO_AttachTextureImage(tr.normalImage, 2);
 
 		//FBO_CreateBuffer(tr.renderFbo, GL_DEPTH_COMPONENT24, 0, 0);
 		R_AttachFBOTextureDepth(tr.renderDepthImage->texnum);
@@ -709,7 +721,7 @@ void FBO_Init(void)
 		R_CheckFBO(tr.quarterFbo[i]);
 	}
 
-	if (r_ssao->integer || r_ssao2->integer)
+	if (r_ssao->integer || r_ssao2->integer || r_hbao->integer)
 	{
 		tr.hdrDepthFbo = FBO_Create("_hdrDepth", tr.hdrDepthImage->width, tr.hdrDepthImage->height);
 		FBO_Bind(tr.hdrDepthFbo);

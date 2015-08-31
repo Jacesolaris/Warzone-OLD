@@ -82,6 +82,10 @@ extern const char *fallbackShader_surfaceSprite_fp;
 extern const char *fallbackShader_surfaceSprite_vp;
 extern const char *fallbackShader_ssao2_vp;
 extern const char *fallbackShader_ssao2_fp;
+extern const char *fallbackShader_hbao_vp;
+extern const char *fallbackShader_hbao_fp;
+extern const char *fallbackShader_hbaoCombine_vp;
+extern const char *fallbackShader_hbaoCombine_fp;
 extern const char *fallbackShader_esharpening_vp;
 extern const char *fallbackShader_esharpening_fp;
 extern const char *fallbackShader_esharpening2_vp;
@@ -149,6 +153,7 @@ static uniformInfo_t uniformsInfo[] =
 	{ "u_LevelsMap",  GLSL_INT, 1 },
 	{ "u_CubeMap",    GLSL_INT, 1 },
 	{ "u_SubsurfaceMap",    GLSL_INT, 1 },
+	{ "u_GlowMap",   GLSL_INT, 1 },
 
 	{ "u_ScreenImageMap", GLSL_INT, 1 },
 	{ "u_ScreenDepthMap", GLSL_INT, 1 },
@@ -292,6 +297,8 @@ static uniformInfo_t uniformsInfo[] =
 
 	{ "u_ModelMatrix",               GLSL_MAT16, 1 },
 	{ "u_ModelViewProjectionMatrix", GLSL_MAT16, 1 },
+	{ "u_invProjectionMatrix", GLSL_MAT16, 1 },
+	{ "u_invEyeProjectionMatrix", GLSL_MAT16, 1 },
 
 	{ "u_Time",          GLSL_FLOAT, 1 },
 	{ "u_VertexLerp" ,   GLSL_FLOAT, 1 },
@@ -799,6 +806,7 @@ static bool GLSL_EndLoadGPUShader (shaderProgram_t *program)
 
 	qglBindFragDataLocation (program->program, 0, "out_Color");
 	qglBindFragDataLocation (program->program, 1, "out_Glow");
+	qglBindFragDataLocation (program->program, 2, "out_Normal");
 
 	if(attribs & ATTR_POSITION)
 		qglBindAttribLocation(program->program, ATTR_INDEX_POSITION, "attr_Position");
@@ -1341,22 +1349,25 @@ int GLSL_BeginLoadGPUShaders(void)
 
 		if (r_hdr->integer && !glRefConfig.floatLightmap)
 			Q_strcat(extradefines, 1024, "#define RGBM_LIGHTMAP\n");
-
-		{// Testing
-			//Q_strcat(extradefines, 1024, "#define USE_MODELMATRIX\n");
-			//attribs |= ATTR_POSITION2 | ATTR_NORMAL2;
-
-			//if (!lightType) lightType = LIGHTDEF_USE_LIGHT_VERTEX;
-
-			//Q_strcat(extradefines, 1024, "#define USE_VERT_TANGENT_SPACE\n");
-			//attribs |= ATTR_TANGENT;
-
-			//Q_strcat(extradefines, 1024, "#define USE_TCGEN\n");
-			//Q_strcat(extradefines, 1024, "#define USE_TCMOD\n");
-		}
 		
-		//if (!lightType /*|| lightType == LIGHTDEF_USE_LIGHT_VECTOR*/)
-		//	lightType = LIGHTDEF_USE_LIGHT_VERTEX;
+		/*
+		if (!lightType)
+		{// UQ1: Meh! Force it!
+			//lightType = LIGHTDEF_USE_LIGHT_VERTEX;
+			Q_strcat(extradefines, 1024, "#define USE_LIGHT\n");
+			Q_strcat(extradefines, 1024, "#define USE_LIGHT_VERTEX\n");
+			attribs |= ATTR_LIGHTDIRECTION;
+			Q_strcat(extradefines, 1024, "#define USE_NORMALMAP\n");
+
+			Q_strcat(extradefines, 1024, "#define USE_PARALLAXMAP\n");
+			if (r_parallaxMapping->integer && r_parallaxMapping->integer < 2) // Fast parallax mapping...
+				Q_strcat(extradefines, 1024, "#define FAST_PARALLAX\n");
+#ifdef USE_VERT_TANGENT_SPACE
+				Q_strcat(extradefines, 1024, "#define USE_VERT_TANGENT_SPACE\n");
+				attribs |= ATTR_TANGENT;
+#endif
+		}
+		*/
 
 		if (lightType)
 		{
@@ -1428,20 +1439,10 @@ int GLSL_BeginLoadGPUShaders(void)
 			}
 
 			if (r_cubeMapping->integer)
+			{
 				Q_strcat(extradefines, 1024, "#define USE_CUBEMAP\n");
+			}
 		}
-		/*else if (r_normalMapping->integer)
-		{
-			if (r_parallaxMapping->integer)
-				Q_strcat(extradefines, 1024, "#define USE_PARALLAXMAP\n");
-
-#ifdef USE_VERT_TANGENT_SPACE
-			Q_strcat(extradefines, 1024, "#define USE_VERT_TANGENT_SPACE\n");
-			attribs |= ATTR_TANGENT;
-#endif
-
-			Q_strcat(extradefines, 1024, "#define USE_NORMALMAP\n");
-		}*/
 
 		if (i & LIGHTDEF_USE_SHADOWMAP)
 		{
@@ -2010,6 +2011,22 @@ int GLSL_BeginLoadGPUShaders(void)
 	if (!GLSL_BeginLoadGPUShader(&tr.ssao2Shader, "ssao2", attribs, qtrue, extradefines, qfalse, NULL, fallbackShader_ssao2_vp, fallbackShader_ssao2_fp))
 	{
 		ri->Error(ERR_FATAL, "Could not load ssao2 shader!");
+	}
+
+	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
+	extradefines[0] = '\0';
+
+	if (!GLSL_BeginLoadGPUShader(&tr.hbaoShader, "hbao", attribs, qtrue, extradefines, qtrue, NULL, fallbackShader_hbao_vp, fallbackShader_hbao_fp))
+	{
+		ri->Error(ERR_FATAL, "Could not load hbao shader!");
+	}
+
+	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
+	extradefines[0] = '\0';
+
+	if (!GLSL_BeginLoadGPUShader(&tr.hbaoCombineShader, "hbaoCombine", attribs, qtrue, extradefines, qtrue, NULL, fallbackShader_hbaoCombine_vp, fallbackShader_hbaoCombine_fp))
+	{
+		ri->Error(ERR_FATAL, "Could not load hbaoCombine shader!");
 	}
 
 	//
@@ -3487,6 +3504,43 @@ void GLSL_EndLoadGPUShaders ( int startTime )
 
 		numEtcShaders++;
 
+		if (!GLSL_EndLoadGPUShader(&tr.hbaoShader))
+		{
+			ri->Error(ERR_FATAL, "Could not load hbao shader!");
+		}
+
+		GLSL_InitUniforms(&tr.hbaoShader);
+
+		qglUseProgram(tr.hbaoShader.program);
+		GLSL_SetUniformInt(&tr.hbaoShader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
+		GLSL_SetUniformInt(&tr.hbaoShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
+		GLSL_SetUniformInt(&tr.hbaoShader, UNIFORM_NORMALMAP, TB_NORMALMAP);
+		qglUseProgram(0);
+
+#if defined(_DEBUG)
+		GLSL_FinishGPUShader(&tr.hbaoShader);
+#endif
+
+		numEtcShaders++;
+
+		if (!GLSL_EndLoadGPUShader(&tr.hbaoCombineShader))
+		{
+			ri->Error(ERR_FATAL, "Could not load hbaoCombine shader!");
+		}
+
+		GLSL_InitUniforms(&tr.hbaoCombineShader);
+
+		qglUseProgram(tr.hbaoCombineShader.program);
+		GLSL_SetUniformInt(&tr.hbaoCombineShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
+		GLSL_SetUniformInt(&tr.hbaoCombineShader, UNIFORM_NORMALMAP, TB_NORMALMAP);
+		qglUseProgram(0);
+
+#if defined(_DEBUG)
+		GLSL_FinishGPUShader(&tr.hbaoCombineShader);
+#endif
+
+		numEtcShaders++;
+
 	//
 	// UQ1: End Added...
 	//
@@ -3564,6 +3618,8 @@ void GLSL_ShutdownGPUShaders(void)
 	GLSL_DeleteGPUShader(&tr.waterShader);
 	GLSL_DeleteGPUShader(&tr.surfaceSpriteShader);
 	GLSL_DeleteGPUShader(&tr.ssao2Shader);
+	GLSL_DeleteGPUShader(&tr.hbaoShader);
+	GLSL_DeleteGPUShader(&tr.hbaoCombineShader);
 	GLSL_DeleteGPUShader(&tr.bloomDarkenShader);
 	GLSL_DeleteGPUShader(&tr.bloomBlurShader);
 	GLSL_DeleteGPUShader(&tr.bloomCombineShader);

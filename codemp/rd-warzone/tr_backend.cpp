@@ -384,12 +384,16 @@ void GL_SetProjectionMatrix(matrix_t matrix)
 {
 	Matrix16Copy(matrix, glState.projection);
 	Matrix16Multiply(glState.projection, glState.modelview, glState.modelviewProjection);
+	Matrix16SimpleInverse( glState.projection, glState.invProjection);
+	Matrix16SimpleInverse( glState.modelviewProjection, glState.invEyeProjection);
 }
 
 void GL_SetModelviewMatrix(matrix_t matrix)
 {
 	Matrix16Copy(matrix, glState.modelview);
-	Matrix16Multiply(glState.projection, glState.modelview, glState.modelviewProjection);	
+	Matrix16Multiply(glState.projection, glState.modelview, glState.modelviewProjection);
+	Matrix16SimpleInverse( glState.projection, glState.invProjection);
+	Matrix16SimpleInverse( glState.modelviewProjection, glState.invEyeProjection);
 }
 
 
@@ -1309,7 +1313,7 @@ const void	*RB_DrawSurfs( const void *data ) {
 			qglCopyTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, 0, 0, glConfig.vidWidth, glConfig.vidHeight, 0);
 		}
 
-		if (r_ssao->integer || r_ssao2->integer)
+		if (r_ssao->integer || r_ssao2->integer || r_hbao->integer)
 		{
 			// need the depth in a texture we can do GL_LINEAR sampling on, so copy it to an HDR image
 			FBO_BlitFromTexture(tr.renderDepthImage, NULL, NULL, tr.hdrDepthFbo, NULL, NULL, NULL, 0);
@@ -2181,6 +2185,12 @@ const void *RB_PostProcess(const void *data)
 		if (!SCREEN_BLUR && r_ssao2->integer)
 		{
 			RB_SSAO2(srcFbo, srcBox, tr.genericFbo, dstBox);
+			FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+		}
+
+		if (!SCREEN_BLUR && r_hbao->integer)
+		{
+			RB_HBAO(srcFbo, srcBox, tr.genericFbo, dstBox);
 			FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 		}
 

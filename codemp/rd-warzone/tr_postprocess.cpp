@@ -1578,6 +1578,80 @@ void RB_SSAO2(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 	FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.ssao2Shader, color, 0);
 }
 
+void RB_HBAO(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
+{
+	vec4_t color;
+
+	// bloom
+	color[0] =
+		color[1] =
+		color[2] = pow(2, r_cameraExposure->value);
+	color[3] = 1.0f;
+
+	// Generate hbao image...
+	GLSL_BindProgram(&tr.hbaoShader);
+
+	GLSL_SetUniformMatrix16(&tr.hbaoShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
+	GLSL_SetUniformMatrix16(&tr.hbaoShader, UNIFORM_INVEYEPROJECTIONMATRIX, glState.invEyeProjection);
+	GLSL_SetUniformMatrix16(&tr.hbaoShader, UNIFORM_MODELMATRIX, backEnd.ori.transformMatrix);
+
+	GL_BindToTMU(tr.fixedLevelsImage, TB_DIFFUSEMAP);
+
+	GLSL_SetUniformInt(&tr.hbaoShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
+	GLSL_SetUniformInt(&tr.hbaoShader, UNIFORM_NORMALMAP, TB_NORMALMAP);
+	GL_BindToTMU(tr.normalImage, TB_NORMALMAP);
+	GLSL_SetUniformInt(&tr.hbaoShader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
+	GL_BindToTMU(tr.renderDepthImage, TB_LIGHTMAP);
+
+	{
+		vec2_t screensize;
+		screensize[0] = glConfig.vidWidth;
+		screensize[1] = glConfig.vidHeight;
+
+		GLSL_SetUniformVec2(&tr.hbaoShader, UNIFORM_DIMENSIONS, screensize);
+
+		//ri->Printf(PRINT_WARNING, "Sent dimensions %f %f.\n", screensize[0], screensize[1]);
+	}
+
+	{
+		vec4_t viewInfo;
+		float zmax = backEnd.viewParms.zFar;
+		float ymax = zmax * tan(backEnd.viewParms.fovY * M_PI / 360.0f);
+		float xmax = zmax * tan(backEnd.viewParms.fovX * M_PI / 360.0f);
+		float zmin = r_znear->value;
+		//VectorSet4(viewInfo, zmax / zmin, zmax, 0.0, 0.0);
+		VectorSet4(viewInfo, zmin, zmax, zmax / zmin, 0.0);
+		GLSL_SetUniformVec4(&tr.hbaoShader, UNIFORM_VIEWINFO, viewInfo);
+	}
+
+//#define HBAO_DEBUG
+
+#ifndef HBAO_DEBUG
+	FBO_Blit(hdrFbo, hdrBox, NULL, tr.genericFbo2, ldrBox, &tr.hbaoShader, color, 0);
+
+	// Combine render and hbao...
+	GLSL_BindProgram(&tr.hbaoCombineShader);
+
+	GLSL_SetUniformMatrix16(&tr.hbaoCombineShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
+	GLSL_SetUniformMatrix16(&tr.hbaoCombineShader, UNIFORM_MODELMATRIX, backEnd.ori.transformMatrix);
+
+	GL_BindToTMU(tr.fixedLevelsImage, TB_DIFFUSEMAP);
+
+	GLSL_SetUniformInt(&tr.hbaoCombineShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
+	GLSL_SetUniformInt(&tr.hbaoCombineShader, UNIFORM_NORMALMAP, TB_NORMALMAP);
+	GL_BindToTMU(tr.genericFBO2Image, TB_NORMALMAP);
+
+	vec2_t screensize;
+	screensize[0] = glConfig.vidWidth;
+	screensize[1] = glConfig.vidHeight;
+	GLSL_SetUniformVec2(&tr.hbaoCombineShader, UNIFORM_DIMENSIONS, screensize);
+
+	FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.hbaoCombineShader, color, 0);
+#else //HBAO_DEBUG
+	FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.hbaoShader, color, 0);
+#endif //HBAO_DEBUG
+}
+
 void RB_TextureClean(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 {
 	vec4_t color;
@@ -2095,13 +2169,14 @@ void RB_SSGI(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 
 	GLSL_BindProgram(shader);
 
-	GL_BindToTMU(tr.fixedLevelsImage, TB_LEVELSMAP);
-
 	GLSL_SetUniformInt(shader, UNIFORM_LEVELSMAP, TB_LEVELSMAP);
+	GL_BindToTMU(tr.fixedLevelsImage, TB_LEVELSMAP);
 	GLSL_SetUniformInt(shader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
 	GL_BindToTMU(tr.renderDepthImage, TB_LIGHTMAP);
-	GLSL_SetUniformInt(shader, UNIFORM_NORMALMAP, TB_NORMALMAP); // really scaled down dynamic glow map
-	GL_BindToTMU(tr.anamorphicRenderFBOImage[2], TB_NORMALMAP); // really scaled down dynamic glow map
+	GLSL_SetUniformInt(shader, UNIFORM_NORMALMAP, TB_NORMALMAP);
+	GL_BindToTMU(tr.normalImage, TB_NORMALMAP);
+	GLSL_SetUniformInt(shader, UNIFORM_GLOWMAP, TB_GLOWMAP);
+	GL_BindToTMU(tr.anamorphicRenderFBOImage[2], TB_GLOWMAP);
 
 	{
 		vec2_t screensize;
@@ -2119,7 +2194,8 @@ void RB_SSGI(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 		float ymax = zmax * tan(backEnd.viewParms.fovY * M_PI / 360.0f);
 		float xmax = zmax * tan(backEnd.viewParms.fovX * M_PI / 360.0f);
 		float zmin = r_znear->value;
-		VectorSet4(viewInfo, zmax / zmin, zmax, 0.0, 0.0);
+		//VectorSet4(viewInfo, zmax / zmin, zmax, 0.0, 0.0);
+		VectorSet4(viewInfo, zmin, zmax, zmax / zmin, 0.0);
 		GLSL_SetUniformVec4(shader, UNIFORM_VIEWINFO, viewInfo);
 	}
 
