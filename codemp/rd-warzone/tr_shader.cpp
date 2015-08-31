@@ -4113,7 +4113,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 	qboolean hasRealSubsurfaceMap = qfalse;
 	qboolean checkNormals = qtrue;
 
-	if (shader.isPortal || shader.isSky)
+	if (shader.isPortal || shader.isSky || diffuse->glow)
 		checkNormals = qfalse;
 
 	//ri->Printf(PRINT_ALL, "shader %s has diffuse %s", shader.name, diffuse->bundle[0].image[0]->imgName);
