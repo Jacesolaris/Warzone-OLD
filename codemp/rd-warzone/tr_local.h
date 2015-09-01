@@ -1442,8 +1442,8 @@ typedef struct {
 	struct drawSurf_s	*drawSurfs;
 
 	//unsigned int dlightMask;
-	int         num_pshadows;
-	struct pshadow_s *pshadows;
+	//int         num_pshadows;
+	//struct pshadow_s *pshadows;
 
 #ifdef __DYNAMIC_SHADOWS__
 	float       dlightShadowMvp[MAX_DYNAMIC_SHADOWS][3][16];
@@ -1601,7 +1601,7 @@ typedef struct srfBspSurface_s
 
 	// dynamic lighting information
 	//int				dlightBits;
-	int             pshadowBits;
+	//int             pshadowBits;
 
 	// culling information
 	vec3_t			cullBounds[2];
@@ -1835,13 +1835,13 @@ typedef struct {
 	msurface_t	*surfaces;
 	int         *surfacesViewCount;
 	//int         *surfacesDlightBits;
-	int			*surfacesPshadowBits;
+	//int			*surfacesPshadowBits;
 
 	int			numMergedSurfaces;
 	msurface_t	*mergedSurfaces;
 	int         *mergedSurfacesViewCount;
 	//int         *mergedSurfacesDlightBits;
-	int			*mergedSurfacesPshadowBits;
+	//int			*mergedSurfacesPshadowBits;
 
 	int			nummarksurfaces;
 	int         *marksurfaces;
@@ -2946,7 +2946,7 @@ struct shaderCommands_s
 	int         cubemapIndex;
 
 	//int			dlightBits;	// or together of all vertexDlightBits
-	int         pshadowBits;
+	//int         pshadowBits;
 
 	int			firstIndex;
 	int			numIndexes;
@@ -3468,7 +3468,7 @@ typedef struct backEndData_s {
 	trRefEntity_t	entities[MAX_REFENTITIES];
 	srfPoly_t	*polys;//[MAX_POLYS];
 	polyVert_t	*polyVerts;//[MAX_POLYVERTS];
-	pshadow_t pshadows[MAX_CALC_PSHADOWS];
+	//pshadow_t pshadows[MAX_CALC_PSHADOWS];
 	renderCommandList_t	commands;
 } backEndData_t;
 

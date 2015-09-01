@@ -3248,7 +3248,7 @@ void AssignMaterialType ( const char *name, const char *text )
 			shader.surfaceFlags |= MATERIAL_SAND;
 		else if (StringsContainWord(name, name, "gravel"))
 			shader.surfaceFlags |= MATERIAL_GRAVEL;
-		else if (StringsContainWord(name, name, "dirt") || StringsContainWord(name, name, "ground"))
+		else if ((StringsContainWord(name, name, "dirt") || StringsContainWord(name, name, "ground")) && !StringsContainWord(name, name, "menus/main_background"))
 			shader.surfaceFlags |= MATERIAL_DIRT;
 		else if (IsKnownShinyMap(name) && StringsContainWord(name, name, "stucco"))
 			shader.surfaceFlags |= MATERIAL_TILES;
@@ -4113,14 +4113,14 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 	qboolean hasRealSubsurfaceMap = qfalse;
 	qboolean checkNormals = qtrue;
 
-	if (shader.isPortal || shader.isSky || diffuse->glow)
+	if (shader.isPortal || shader.isSky || diffuse->glow || shader.hasAlpha)// || shader.noTC)
 		checkNormals = qfalse;
 
 	//ri->Printf(PRINT_ALL, "shader %s has diffuse %s", shader.name, diffuse->bundle[0].image[0]->imgName);
 
 	// reuse diffuse, mark others inactive
 	diffuse->type = ST_GLSL;
-
+	
 	if (lightmap)
 	{
 		//ri->Printf(PRINT_ALL, ", lightmap");
@@ -4138,7 +4138,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 		useLightVertex = qtrue;
 	}
 #ifdef __EXTRA_PRETTY__
-	else if (checkNormals && !diffuse->glow)
+	else if (checkNormals)
 	{// UQ1: If we marked this as a material (and it's not a portal or sky), override no light with vertex light for reflection and specular...
 		switch( shader.surfaceFlags & MATERIAL_MASK )
 		{
@@ -4184,16 +4184,20 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 		case MATERIAL_CARPET:			// 27			// lush carpet
 		case MATERIAL_GRAVEL:			// 9			// lots of small stones
 		case MATERIAL_ROCK:				// 23			//
+		case MATERIAL_CONCRETE:			// 11			// hardened concrete pavement
+		case MATERIAL_PLASTER:			// 28			// drywall style plaster
+		case MATERIAL_FLESH:			// 16			// hung meat, corpses in the world
+		case MATERIAL_RUBBER:			// 24			// hard tire like rubber
 		case MATERIAL_DRYLEAVES:		// 19			// dried up leaves on the floor
 		case MATERIAL_MUD:				// 17			// wet soil
 		case MATERIAL_DIRT:				// 7			// hard mud
-		case MATERIAL_CONCRETE:			// 11			// hardened concrete pavement
-		case MATERIAL_FLESH:			// 16			// hung meat, corpses in the world
-		case MATERIAL_RUBBER:			// 24			// hard tire like rubber
-		case MATERIAL_PLASTER:			// 28			// drywall style plaster
+			if (!shader.noTC)
+			{
+				defs |= LIGHTDEF_USE_LIGHT_VERTEX; // Vertex currently most compatible...
+				useLightVertex = qtrue;
+			}
+			break;
 		default:
-			defs |= LIGHTDEF_USE_LIGHT_VERTEX; // Vertex currently most compatible...
-			useLightVertex = qtrue;
 			break;
 		}
 	}
@@ -4266,13 +4270,15 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 					&& !shader.isPortal
 					&& !shader.isSky
 					&& !diffuse->glow
-					&& (!diffuse->bundle[TB_NORMALMAP].image[0] || diffuse->bundle[TB_NORMALMAP].image[0] == tr.whiteImage || diffuse->bundle[TB_DIFFUSEMAP].image[0] == tr.whiteImage)
+					//&& (!diffuse->bundle[TB_NORMALMAP].image[0])
+					&& (!diffuse->bundle[TB_NORMALMAP].image[0] || diffuse->bundle[TB_NORMALMAP].image[0] == tr.whiteImage)
 					&& diffuse->bundle[TB_DIFFUSEMAP].image[0]->imgName[0] 
 					&& diffuse->bundle[TB_DIFFUSEMAP].image[0]->imgName[0] != '*'
 					&& diffuse->bundle[TB_DIFFUSEMAP].image[0]->imgName[0] != '$'
 					&& diffuse->bundle[TB_DIFFUSEMAP].image[0]->imgName[0] != '_'
 					&& diffuse->bundle[TB_DIFFUSEMAP].image[0]->imgName[0] != '!'
 					&& !(diffuse->bundle[TB_DIFFUSEMAP].image[0]->flags & IMGFLAG_CUBEMAP)
+					//&& !StringContainsWord(diffuse->bundle[TB_DIFFUSEMAP].image[0]->imgName, "menus/main_background") // never, ever!
 					/*
 					&& !StringContainsWord(diffuse->bundle[TB_DIFFUSEMAP].image[0]->imgName, "renderCube") 
 					&& !StringContainsWord(diffuse->bundle[TB_DIFFUSEMAP].image[0]->imgName, "shadowcubemap") 

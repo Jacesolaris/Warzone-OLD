@@ -2280,6 +2280,7 @@ void R_RenderDlightCubemaps(const refdef_t *fd)
 
 void R_RenderPshadowMaps(const refdef_t *fd)
 {
+#if 0
 	viewParms_t		shadowParms;
 	int i;
 
@@ -2604,6 +2605,7 @@ void R_RenderPshadowMaps(const refdef_t *fd)
 			R_SortDrawSurfs( tr.refdef.drawSurfs + firstDrawSurf, tr.refdef.numDrawSurfs - firstDrawSurf );
 		}
 	}
+#endif
 }
 
 static float CalcSplit(float n, float f, float i, float m)

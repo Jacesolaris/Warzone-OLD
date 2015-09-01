@@ -1350,24 +1350,29 @@ int GLSL_BeginLoadGPUShaders(void)
 		if (r_hdr->integer && !glRefConfig.floatLightmap)
 			Q_strcat(extradefines, 1024, "#define RGBM_LIGHTMAP\n");
 		
-		/*
 		if (!lightType)
 		{// UQ1: Meh! Force it!
-			//lightType = LIGHTDEF_USE_LIGHT_VERTEX;
-			Q_strcat(extradefines, 1024, "#define USE_LIGHT\n");
-			Q_strcat(extradefines, 1024, "#define USE_LIGHT_VERTEX\n");
-			attribs |= ATTR_LIGHTDIRECTION;
-			Q_strcat(extradefines, 1024, "#define USE_NORMALMAP\n");
+			
+			if (!(i & LIGHTDEF_ENTITY|LIGHTDEF_USE_TCGEN_AND_TCMOD))
+			{
+				Q_strcat(extradefines, 1024, "#define USE_LIGHT\n");
+				Q_strcat(extradefines, 1024, "#define USE_LIGHT_VERTEX\n");
+				attribs |= ATTR_LIGHTDIRECTION;
+			}
 
+			Q_strcat(extradefines, 1024, "#define USE_NORMALMAP\n");
+			
+			/*
 			Q_strcat(extradefines, 1024, "#define USE_PARALLAXMAP\n");
 			if (r_parallaxMapping->integer && r_parallaxMapping->integer < 2) // Fast parallax mapping...
 				Q_strcat(extradefines, 1024, "#define FAST_PARALLAX\n");
-#ifdef USE_VERT_TANGENT_SPACE
-				Q_strcat(extradefines, 1024, "#define USE_VERT_TANGENT_SPACE\n");
-				attribs |= ATTR_TANGENT;
-#endif
+			*/
+			
+//#ifdef USE_VERT_TANGENT_SPACE
+//			Q_strcat(extradefines, 1024, "#define USE_VERT_TANGENT_SPACE\n");
+//			attribs |= ATTR_TANGENT;
+//#endif
 		}
-		*/
 
 		if (lightType)
 		{
