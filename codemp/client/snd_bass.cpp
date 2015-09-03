@@ -1333,7 +1333,7 @@ void BASS_MusicUpdateThread( void * aArg )
 		if (trackChoice2 == trackChoice) // Try again to pick a different one if we can...
 			trackChoice2 = irand(0, MUSIC_LIST_COUNT-1);
 
-		Com_Printf("Queue music tracks %s and %s.\n", MUSIC_LIST[trackChoice].name, MUSIC_LIST[trackChoice2].name);
+		//Com_Printf("Queue music tracks %s and %s.\n", MUSIC_LIST[trackChoice].name, MUSIC_LIST[trackChoice2].name);
 		S_StartBackgroundTrack_Actual( MUSIC_LIST[trackChoice].name, MUSIC_LIST[trackChoice2].name );
 
 		this_thread::sleep_for(chrono::milliseconds(1000));

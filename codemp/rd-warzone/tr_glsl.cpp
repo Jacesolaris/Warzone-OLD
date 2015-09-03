@@ -807,6 +807,7 @@ static bool GLSL_EndLoadGPUShader (shaderProgram_t *program)
 	qglBindFragDataLocation (program->program, 0, "out_Color");
 	qglBindFragDataLocation (program->program, 1, "out_Glow");
 	qglBindFragDataLocation (program->program, 2, "out_Normal");
+	qglBindFragDataLocation (program->program, 3, "out_DetailedNormal");
 
 	if(attribs & ATTR_POSITION)
 		qglBindAttribLocation(program->program, ATTR_INDEX_POSITION, "attr_Position");

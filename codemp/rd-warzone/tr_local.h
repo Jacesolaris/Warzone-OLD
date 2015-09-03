@@ -361,6 +361,7 @@ extern cvar_t  *r_textureClean;
 extern cvar_t  *r_textureCleanSigma;
 extern cvar_t  *r_textureCleanBSigma;
 extern cvar_t  *r_textureCleanMSize;
+extern cvar_t  *r_imageBasedLighting;
 extern cvar_t  *r_hbao;
 extern cvar_t  *r_ssao2;
 extern cvar_t  *r_ssao2passes;
@@ -2260,6 +2261,7 @@ typedef struct trGlobals_s {
 	image_t					*renderImage;
 	image_t					*glowImage;
 	image_t					*normalImage;
+	image_t					*normalDetailedImage;
 #if 0
 	image_t					*glowImageScaled[4];
 #else

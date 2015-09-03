@@ -17,7 +17,11 @@ float MODE = var_Local0.x;
 
 #define PI  3.14159265
 
+#define USE_DEPTHMAP
+
+#ifdef USE_DEPTHMAP
 const float depthMult = 255.0;
+#endif //USE_DEPTHMAP
 
 float ratex = (1.0/var_Dimensions.x);
 float ratey = (1.0/var_Dimensions.y);
@@ -25,6 +29,7 @@ float ratey = (1.0/var_Dimensions.y);
 vec2 offset1 = vec2(0.0, 1.0 / var_Dimensions.y);
 vec2 offset2 = vec2(1.0 / var_Dimensions.x, 0.0);
 
+#ifdef USE_DEPTHMAP
 vec3 normal_from_depth(float depth, vec2 texcoords) {
   float depth1 = texture2D(u_ScreenDepthMap, texcoords + offset1).r * depthMult;
   float depth2 = texture2D(u_ScreenDepthMap, texcoords + offset2).r * depthMult;
@@ -37,11 +42,16 @@ vec3 normal_from_depth(float depth, vec2 texcoords) {
   
   return normalize(normal);
 }
+#endif //USE_DEPTHMAP
 
 vec3 SampleNormals(sampler2D normalMap, in vec2 coord)  
-{  
+{
+#ifdef USE_DEPTHMAP
 	 float depth = texture2D(u_ScreenDepthMap, coord/*var_TexCoords*/).r * depthMult;
 	 return normal_from_depth(depth, coord);
+#else //!USE_DEPTHMAP
+	 return texture2D(u_NormalMap, coord).rgb;
+#endif //USE_DEPTHMAP
 }
 
 float rand2(vec2 coord) //generating noise/pattern texture for dithering
@@ -79,7 +89,8 @@ void main()
 	vec3 fcolor = vec3(0,0,0);
 
 	//far and near clip planes:
-	float zFar = 1.0;
+	//float zFar = 1.0;
+	float zFar = var_ViewInfo.y / var_Dimensions.y;
 	float zNear = var_ViewInfo.x / var_Dimensions.x;
 
 	//get depth at current pixel:
@@ -114,29 +125,27 @@ void main()
 				float prof2g = texture2D(u_ScreenDepthMap,var_TexCoords.st+coords2*rand(var_TexCoords)).x;
 				prof2g = zFar * zNear / (prof2g * (zFar - zNear) - zFar);  //linearize z sample
 
-				if (MODE >= 3.0)
-				{//COLOR BLEEDING:
-					vec3 dcolor3 = texture2D(u_GlowMap, var_TexCoords.st+coords*rand(var_TexCoords)).xyz;
+				//COLOR BLEEDING:
+				vec3 dcolor3 = texture2D(u_GlowMap, var_TexCoords.st+coords*rand(var_TexCoords)).xyz;
 
-					//if (length(dcolor2)>0.3){//color threshold
-					//if (length(dcolor2)>0.0){//color threshold
-					//if (length(dcolor2)>length(dcolor1)){//color threshold
-					//if (length(dcolor3)>length(dcolor1)){//color threshold
-					{
-						vec3 norm2 = normalize(vec3(SampleNormals(u_TextureMap,var_TexCoords.st+coords*rand(var_TexCoords)).xyz)*2.0-vec3(1.0)); 
+				//if (length(dcolor2)>0.3){//color threshold
+				//if (length(dcolor2)>0.0){//color threshold
+				//if (length(dcolor2)>length(dcolor1)){//color threshold
+				//if (length(dcolor3)>length(dcolor1)){//color threshold
+				{
+					vec3 norm2 = normalize(vec3(SampleNormals(u_TextureMap,var_TexCoords.st+coords*rand(var_TexCoords)).xyz)*2.0-vec3(1.0)); 
 
-						//calculate approximate pixel distance:
-						vec3 dist = vec3(coords,abs(prof-prof2));
+					//calculate approximate pixel distance:
+					vec3 dist = vec3(coords,abs(prof-prof2));
 
-						//calculate normal and sampling direction coherence:
-						float coherence = dot(normalize(-coords),normalize(vec2(norm2.xy)));
+					//calculate normal and sampling direction coherence:
+					float coherence = dot(normalize(-coords),normalize(vec2(norm2.xy)));
 
-						//if there is coherence, calculate bleeding:
-						if (coherence > 0){
-							float pformfactor = ((1.0-dot(norm,norm2)))/(3.1416*pow(abs(length(dist*2)),2.0)+0.5);//el 4: depthscale
-							//fcolor += dcolor2*(clamp(pformfactor,0.0,1.0));
-							fcolor += dcolor3*(clamp(pformfactor,0.0,1.0));
-						}
+					//if there is coherence, calculate bleeding:
+					if (coherence > 0){
+						float pformfactor = ((1.0-dot(norm,norm2)))/(3.1416*pow(abs(length(dist*2)),2.0)+0.5);//el 4: depthscale
+						//fcolor += dcolor2*(clamp(pformfactor,0.0,1.0));
+						fcolor += dcolor3*(clamp(pformfactor,0.0,1.0));
 					}
 				}
 			}

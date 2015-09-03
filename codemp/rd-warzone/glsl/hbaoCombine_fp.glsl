@@ -9,7 +9,7 @@ varying vec2		var_ScreenTex;
 //#define DEBUG
 
 // Shall we blur the result?
-//#define BLUR_WIDTH 2.0
+//#define BLUR_WIDTH 1.0
 
 // Shall we pixelize randomly the output? -- Sucks!
 //#define RANDOMIZE_PIXELS
@@ -61,9 +61,9 @@ void main()
 //	hbao.rgb = ((clamp(hbao.rgb - const_1, 0.0, 1.0)) * const_2);
 
 #ifdef RANDOMIZE_PIXELS
-	gl_FragColor.rgb *= vec3(1.0)-((vec3(1.0)-hbao)*random);// * 0.333 + 0.666; // UQ1: It's too strong... Dull it...
+	gl_FragColor.rgb *= vec3(1.0)-((vec3(1.0)-hbao)*random);
 #else
-	gl_FragColor.rgb *= hbao;
-	//gl_FragColor.rgb *= hbao * 0.333 + 0.666; // UQ1: It's too strong... Dull it...
+	//gl_FragColor.rgb *= hbao;
+	gl_FragColor.rgb = (gl_FragColor.rgb + (hbao * gl_FragColor.rgb)) / 2.0; // UQ1: Blending to reduce pixelation...
 #endif	
 }

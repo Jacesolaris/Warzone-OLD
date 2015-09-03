@@ -4,7 +4,7 @@ precision mediump float;
 varying vec2 vTexCoord0;
  
 //make sure to have a resolution uniform set to the screen size
-varying vec2 resolution;
+uniform vec2 u_Dimensions;
 
 uniform sampler2D u_TextureMap;
 
@@ -96,6 +96,6 @@ vec4 apply(sampler2D tex, vec2 fragCoord, vec2 resolution) {
 
 void main() {
     //can also use gl_FragCoord.xy
-    vec2 fragCoord = vTexCoord0 * resolution; 
-    gl_FragColor = apply(u_TextureMap, fragCoord, resolution);
+    vec2 fragCoord = vTexCoord0 * u_Dimensions; 
+    gl_FragColor = apply(u_TextureMap, fragCoord, u_Dimensions);
 }

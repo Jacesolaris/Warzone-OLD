@@ -6,10 +6,6 @@ uniform sampler2D	u_TextureMap;
 uniform vec2		u_Dimensions;
 
 varying vec2		var_TexCoords;
-varying vec2		var_Dimensions;
-
-float viewWidth =	var_Dimensions.x;
-float viewHeight =	var_Dimensions.y;
 
 const float scale = 1.0;
 const float thresh = 0.93;
@@ -20,7 +16,7 @@ void main()
     int x=0;
     int y=0;
 
-    vec2 recipres = vec2(1.0f / viewWidth, 1.0f / viewHeight);
+    vec2 recipres = vec2(1.0f / u_Dimensions.x, 1.0f / u_Dimensions.y);
 
 	for(y=-1; y<=1; y++)
 	{
@@ -60,7 +56,5 @@ void main()
     }
 #endif //BLUR_METHOD
 
-	//gl_FragColor.a = origColor.a;
-	//gl_FragColor.a = s.a;
 	gl_FragColor.a = 1.0;
 }

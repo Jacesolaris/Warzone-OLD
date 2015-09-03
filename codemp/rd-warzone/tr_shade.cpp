@@ -1445,7 +1445,7 @@ static void UpdateTexCoords ( const shaderStage_t *stage )
 
 void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage)
 {
-	vec4_t	local1, local3, local4;
+	vec4_t	local1, local3, local4, local5;
 	float	specularScale = 1.0;
 	float	materialType = 0.0;
 	float   parallaxScale = 1.0;
@@ -1693,6 +1693,18 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage)
 	GLSL_SetUniformVec4(sp, UNIFORM_LOCAL3, local3);
 	VectorSet4(local4, (float)realNormalMap, isMetalic, (float)pStage->hasRealSubsurfaceMap, useSteepParallax);
 	GLSL_SetUniformVec4(sp, UNIFORM_LOCAL4, local4);
+
+	/*if (backEnd.viewParms.targetFbo == tr.renderCubeFbo)
+	{
+		VectorSet4(local5, 0.0, 0.0, 0.0, 0.0);
+		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL5, local5);
+	}
+	else
+	{
+		VectorSet4(local5, r_imageBasedLighting->value, 0.0, 0.0, 0.0);
+		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL5, local5);
+	}*/
+
 	//GLSL_SetUniformFloat(sp, UNIFORM_TIME, tess.shaderTime);
 	GLSL_SetUniformFloat(sp, UNIFORM_TIME, backEnd.refdef.floatTime);
 }

@@ -170,7 +170,7 @@ void CNode::AddEdge( int ID, int cost, int flags )
 
 	m_numEdges++;
 
-	assert( m_numEdges < 9 );//8 is the max
+	//assert( m_numEdges < 9 );//8 is the max
 }
 
 /*
@@ -601,7 +601,7 @@ bool CNavigator::Load( const char *filename, int checksum )
 {
 	fileHandle_t	file;
 
-	Free();
+	Init();
 
 	//Attempt to load the file
 	FS_FOpenFileByMode( va( "maps/%s.nav", filename ), &file, FS_READ );

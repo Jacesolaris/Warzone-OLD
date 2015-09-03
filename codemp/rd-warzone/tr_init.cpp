@@ -295,6 +295,7 @@ cvar_t  *r_textureClean;
 cvar_t  *r_textureCleanSigma;
 cvar_t  *r_textureCleanBSigma;
 cvar_t  *r_textureCleanMSize;
+cvar_t  *r_imageBasedLighting;
 cvar_t  *r_hbao;
 cvar_t  *r_ssao2;
 cvar_t  *r_ssao2passes;
@@ -1454,6 +1455,7 @@ void R_Register( void )
 	r_textureCleanSigma = ri->Cvar_Get( "r_textureCleanSigma", "0.5", CVAR_ARCHIVE ); // 1.2
 	r_textureCleanBSigma = ri->Cvar_Get( "r_textureCleanBSigma", "0.1", CVAR_ARCHIVE );
 	r_textureCleanMSize = ri->Cvar_Get( "r_textureCleanMSize", "6.0", CVAR_ARCHIVE );
+	r_imageBasedLighting = ri->Cvar_Get( "r_imageBasedLighting", "1", CVAR_ARCHIVE );
 	r_hbao = ri->Cvar_Get( "r_hbao", "1", CVAR_ARCHIVE );
 	r_ssao2 = ri->Cvar_Get( "r_ssao2", "1", CVAR_ARCHIVE );
 	r_ssao2passes = ri->Cvar_Get( "r_ssao2passes", "1.0", CVAR_ARCHIVE ); // 3.0 is the original default, but 1.0 is faster and looks fine so we will use that.

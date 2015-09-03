@@ -6,7 +6,6 @@ varying vec2	var_Dimensions;
 varying vec2	var_TexCoords;
 
 out vec4 out_Glow;
-out vec4 out_Normal;
 
 #if 0
 void main()
@@ -35,7 +34,5 @@ void main()
 #else
 	out_Glow = vec4(0.0);
 #endif
-
-	//out_Normal = vec4(0.0);
 }
 #endif

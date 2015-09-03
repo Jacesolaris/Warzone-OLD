@@ -3,7 +3,7 @@ uniform sampler2D u_ScreenDepthMap;
 
 varying vec2		var_TexCoords;
 varying vec2		var_Dimensions;
-varying vec4		var_ViewInfo; // znear, zfar, zfar / znear, 0
+//varying vec4		var_ViewInfo; // znear, zfar, zfar / znear, 0
 
 varying vec4		var_Local0; // dofValue, 0, 0, 0
 
@@ -58,6 +58,7 @@ float GetFocalDepth(vec2 focalpoint)
 	depthsum = depthsum/6;
 #else
 	depthsum+=GetLinearDepth(texture2D(u_ScreenDepthMap,focalpoint).x) * 0.999;
+#ifdef BLUR_FOCUS
 	depthsum+=GetLinearDepth(texture2D(u_ScreenDepthMap,focalpoint+vec2(0.0, 0.05)).x) * 0.999;
 	depthsum+=GetLinearDepth(texture2D(u_ScreenDepthMap,focalpoint+vec2(0.0, 0.1)).x) * 0.999;
 	depthsum+=GetLinearDepth(texture2D(u_ScreenDepthMap,focalpoint+vec2(0.0, 0.15)).x) * 0.999;
@@ -69,6 +70,7 @@ float GetFocalDepth(vec2 focalpoint)
 	depthsum+=GetLinearDepth(texture2D(u_ScreenDepthMap,focalpoint+vec2(0.0, 0.45)).x) * 0.999;
 
 	depthsum = depthsum/10;
+#endif //BLUR_FOCUS
 #endif
 
 	return depthsum; 

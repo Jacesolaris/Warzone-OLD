@@ -549,6 +549,7 @@ void RB_DarkExpand(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 
 	GLSL_BindProgram(&tr.darkexpandShader);
 
+	GLSL_SetUniformInt(&tr.darkexpandShader, UNIFORM_LEVELSMAP, TB_LEVELSMAP);
 	GL_BindToTMU(tr.fixedLevelsImage, TB_LEVELSMAP);
 
 	{
@@ -559,7 +560,7 @@ void RB_DarkExpand(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 		GLSL_SetUniformVec2(&tr.darkexpandShader, UNIFORM_DIMENSIONS, screensize);
 	}
 
-	FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.darkexpandShader, color, GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA);
+	FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.darkexpandShader, color, 0);
 }
 
 void RB_Bloom(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
@@ -587,33 +588,7 @@ void RB_Bloom(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 	// Darken to VBO...
 	//
 	
-	//if (r_dynamicGlow->integer)
-	{
-		FBO_BlitFromTexture(tr.glowFboScaled[0]->colorImage[0], NULL, NULL, tr.bloomRenderFBO[0], NULL, NULL, color, 0);
-	}
-	/*else
-	{
-		GLSL_BindProgram(&tr.bloomDarkenShader);
-
-		GL_BindToTMU(tr.fixedLevelsImage, TB_DIFFUSEMAP);
-
-		{
-			vec2_t screensize;
-			screensize[0] = glConfig.vidWidth;
-			screensize[1] = glConfig.vidHeight;
-
-			GLSL_SetUniformVec2(&tr.bloomDarkenShader, UNIFORM_DIMENSIONS, screensize);
-		}
-
-		{
-			vec4_t local0;
-			VectorSet4(local0, r_bloomDarkenPower->value, 0.0, 0.0, 0.0);
-			GLSL_SetUniformVec4(&tr.bloomDarkenShader, UNIFORM_LOCAL0, local0);
-		}
-
-		FBO_Blit(hdrFbo, NULL, texHalfScale, tr.bloomRenderFBO[1], NULL, &tr.bloomDarkenShader, color, 0);
-		FBO_FastBlit(tr.bloomRenderFBO[1], NULL, tr.bloomRenderFBO[0], NULL, GL_COLOR_BUFFER_BIT, GL_LINEAR);
-	}*/
+	FBO_BlitFromTexture(tr.glowFboScaled[0]->colorImage[0], NULL, NULL, tr.bloomRenderFBO[0], NULL, NULL, color, 0);
 
 	//
 	// Blur the new darken'ed VBO...
@@ -621,58 +596,6 @@ void RB_Bloom(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 
 	for ( int i = 0; i < r_bloomPasses->integer; i++ ) 
 	{
-#ifdef ___BLOOM_AXIS_UNCOMBINED_SHADER___
-		//
-		// Bloom X axis... (to VBO 1)
-		//
-
-		GLSL_BindProgram(&tr.bloomBlurShader);
-
-		GL_BindToTMU(tr.bloomRenderFBOImage[0], TB_DIFFUSEMAP);
-
-		{
-			vec2_t screensize;
-			screensize[0] = tr.bloomRenderFBOImage[0]->width;
-			screensize[1] = tr.bloomRenderFBOImage[0]->height;
-
-			GLSL_SetUniformVec2(&tr.bloomBlurShader, UNIFORM_DIMENSIONS, screensize);
-		}
-
-		{
-			vec4_t local0;
-			VectorSet4(local0, 1.0, 0.0, 0.0, 0.0);
-			GLSL_SetUniformVec4(&tr.bloomBlurShader, UNIFORM_LOCAL0, local0);
-		}
-
-		FBO_Blit(tr.bloomRenderFBO[0], NULL, NULL, tr.bloomRenderFBO[1], NULL, &tr.bloomBlurShader, color, 0);
-		FBO_FastBlit(tr.bloomRenderFBO[1], NULL, tr.bloomRenderFBO[0], NULL, GL_COLOR_BUFFER_BIT, GL_LINEAR);
-
-		//
-		// Bloom Y axis... (back to VBO 0)
-		//
-
-		GLSL_BindProgram(&tr.bloomBlurShader);
-
-		GL_BindToTMU(tr.bloomRenderFBOImage[1], TB_DIFFUSEMAP);
-
-		{
-			vec2_t screensize;
-			screensize[0] = tr.bloomRenderFBOImage[1]->width;
-			screensize[1] = tr.bloomRenderFBOImage[1]->height;
-
-			GLSL_SetUniformVec2(&tr.bloomBlurShader, UNIFORM_DIMENSIONS, screensize);
-		}
-
-		{
-			vec4_t local0;
-			VectorSet4(local0, 0.0, 1.0, 0.0, 0.0);
-			GLSL_SetUniformVec4(&tr.bloomBlurShader, UNIFORM_LOCAL0, local0);
-		}
-
-		FBO_Blit(tr.bloomRenderFBO[0], NULL, NULL, tr.bloomRenderFBO[1], NULL, &tr.bloomBlurShader, color, 0);
-		FBO_FastBlit(tr.bloomRenderFBO[1], NULL, tr.bloomRenderFBO[0], NULL, GL_COLOR_BUFFER_BIT, GL_LINEAR);
-#else //___BLOOM_AXIS_UNCOMBINED_SHADER___
-
 		//
 		// Bloom X and Y axis... (to VBO 1)
 		//
@@ -698,8 +621,6 @@ void RB_Bloom(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 
 		FBO_Blit(tr.bloomRenderFBO[0], NULL, NULL, tr.bloomRenderFBO[1], NULL, &tr.bloomBlurShader, color, 0);
 		FBO_FastBlit(tr.bloomRenderFBO[1], NULL, tr.bloomRenderFBO[0], NULL, GL_COLOR_BUFFER_BIT, GL_LINEAR);
-
-#endif //___BLOOM_AXIS_UNCOMBINED_SHADER___
 	}
 	
 	//
@@ -725,7 +646,7 @@ void RB_Bloom(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 	{
 		vec4_t local0;
 		VectorSet4(local0, r_bloomScale->value, 0.0, 0.0, 0.0);
-		/*if (r_dynamicGlow->integer)*/ VectorSet4(local0, 0.5 * r_bloomScale->value, 0.0, 0.0, 0.0); // Account for already added glow...
+		VectorSet4(local0, 0.5 * r_bloomScale->value, 0.0, 0.0, 0.0); // Account for already added glow...
 		GLSL_SetUniformVec4(&tr.bloomCombineShader, UNIFORM_LOCAL0, local0);
 	}
 
@@ -764,69 +685,37 @@ void RB_Anamorphic(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 	// Darken to VBO...
 	//
 	
-	//if (r_dynamicGlow->integer)
-	{
-		FBO_BlitFromTexture(tr.glowFboScaled[0]->colorImage[0], NULL, NULL, tr.anamorphicRenderFBO[0], NULL, NULL, color, 0);
-	}
-	/*else
-	{
-		GLSL_BindProgram(&tr.anamorphicDarkenShader);
-
-		GL_BindToTMU(tr.fixedLevelsImage, TB_DIFFUSEMAP);
-
-		{
-			vec2_t screensize;
-			screensize[0] = glConfig.vidWidth;
-			screensize[1] = glConfig.vidHeight;
-
-			GLSL_SetUniformVec2(&tr.anamorphicDarkenShader, UNIFORM_DIMENSIONS, screensize);
-		}
-
-		{
-			vec4_t local0;
-			VectorSet4(local0, r_anamorphicDarkenPower->value, 0.0, 0.0, 0.0);
-			GLSL_SetUniformVec4(&tr.anamorphicDarkenShader, UNIFORM_LOCAL0, local0);
-		}
-
-		FBO_Blit(hdrFbo, NULL, texHalfScale, tr.anamorphicRenderFBO[1], NULL, &tr.anamorphicDarkenShader, color, 0);
-		FBO_FastBlit(tr.anamorphicRenderFBO[1], NULL, tr.anamorphicRenderFBO[0], NULL, GL_COLOR_BUFFER_BIT, GL_LINEAR);
-	}*/
-
+	FBO_BlitFromTexture(tr.glowFboScaled[0]->colorImage[0], NULL, NULL, tr.anamorphicRenderFBO[0], NULL, NULL, color, 0);
+	
 	//
 	// Blur the new darken'ed VBO...
 	//
 
-	for ( int i = 0; i < r_bloomPasses->integer; i++ ) 
+	//
+	// Bloom X axis... (to VBO 1)
+	//
+
+	GLSL_BindProgram(&tr.anamorphicBlurShader);
+
+	GL_BindToTMU(tr.anamorphicRenderFBOImage[0], TB_DIFFUSEMAP);
+
 	{
-		//
-		// Bloom X axis... (to VBO 1)
-		//
+		vec2_t screensize;
+		screensize[0] = tr.anamorphicRenderFBOImage[0]->width;
+		screensize[1] = tr.anamorphicRenderFBOImage[0]->height;
 
-		//for (int width = 1; width < 12 ; width++)
-		{
-			GLSL_BindProgram(&tr.anamorphicBlurShader);
-
-			GL_BindToTMU(tr.anamorphicRenderFBOImage[0], TB_DIFFUSEMAP);
-
-			{
-				vec2_t screensize;
-				screensize[0] = tr.anamorphicRenderFBOImage[0]->width;
-				screensize[1] = tr.anamorphicRenderFBOImage[0]->height;
-
-				GLSL_SetUniformVec2(&tr.anamorphicBlurShader, UNIFORM_DIMENSIONS, screensize);
-			}
-
-			{
-				vec4_t local0;
-				//VectorSet4(local0, (float)width, 0.0, 0.0, 0.0);
-				VectorSet4(local0, 1.0, 0.0, 16.0, 0.0);
-				GLSL_SetUniformVec4(&tr.anamorphicBlurShader, UNIFORM_LOCAL0, local0);
-			}
-
-			FBO_Blit(tr.anamorphicRenderFBO[0], NULL, NULL, tr.anamorphicRenderFBO[1], NULL, &tr.anamorphicBlurShader, color, 0);
-			FBO_FastBlit(tr.anamorphicRenderFBO[1], NULL, tr.anamorphicRenderFBO[0], NULL, GL_COLOR_BUFFER_BIT, GL_LINEAR);
-		}
+		GLSL_SetUniformVec2(&tr.anamorphicBlurShader, UNIFORM_DIMENSIONS, screensize);
 	}
+
+	{
+		vec4_t local0;
+		//VectorSet4(local0, (float)width, 0.0, 0.0, 0.0);
+		VectorSet4(local0, 1.0, 0.0, 16.0, 0.0);
+		GLSL_SetUniformVec4(&tr.anamorphicBlurShader, UNIFORM_LOCAL0, local0);
+	}
+
+	FBO_Blit(tr.anamorphicRenderFBO[0], NULL, NULL, tr.anamorphicRenderFBO[1], NULL, &tr.anamorphicBlurShader, color, 0);
+	FBO_FastBlit(tr.anamorphicRenderFBO[1], NULL, tr.anamorphicRenderFBO[0], NULL, GL_COLOR_BUFFER_BIT, GL_LINEAR);
 	
 	//
 	// Copy (and upscale) the bloom image to our full screen image...
@@ -837,7 +726,6 @@ void RB_Anamorphic(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 	//
 	// Combine the screen with the bloom'ed VBO...
 	//
-	
 	
 	GLSL_BindProgram(&tr.anamorphicCombineShader);
 	
@@ -850,11 +738,7 @@ void RB_Anamorphic(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 
 	{
 		vec4_t local0;
-		VectorSet4(local0, 0.6, 0.0, 0.0, 0.0);
-
-		//if (r_dynamicGlow->integer) VectorSet4(local0, 1.5, 0.0, 0.0, 0.0);
-		/*if (r_dynamicGlow->integer)*/ VectorSet4(local0, 1.0, 0.0, 0.0, 0.0); // Account for already added glow...
-
+		VectorSet4(local0, 1.0, 0.0, 0.0, 0.0); // Account for already added glow...
 		GLSL_SetUniformVec4(&tr.anamorphicCombineShader, UNIFORM_LOCAL0, local0);
 	}
 
@@ -978,10 +862,6 @@ bool TR_WorldToScreen(vec3_t worldCoord, float *x, float *y)
 	*x = (xcenter + xzi * transformed[0]);
 	*y = (ycenter - yzi * transformed[1]);
 
-	//if (*x < 0.0) *x = 0.0;
-	//if (*y < 0.0) *y = 0.0;
-	//if (*x > 640.0) *x = 640.0;
-	//if (*y > 480.0) *y = 480.0;
 	return true;
 }
 
@@ -1011,8 +891,6 @@ qboolean TR_InFOV( vec3_t spot, vec3_t from )
 		return qtrue;
 	}
 
-	//if (Distance(spot, from) < 512) return qtrue;
-
 	return qfalse;
 }
 
@@ -1021,7 +899,6 @@ qboolean TR_InFOV( vec3_t spot, vec3_t from )
 void Volumetric_Trace( trace_t *results, const vec3_t start, const vec3_t mins, const vec3_t maxs, const vec3_t end, const int passEntityNum, const int contentmask )
 {
 	results->entityNum = ENTITYNUM_NONE;
-	//SV_Trace(results, start, mins, maxs, end, passEntityNum, contentmask, eG2TraceType, useLod);
 	ri->CM_BoxTrace(results, start, end, mins, maxs, 0, contentmask, 0);
 	results->entityNum = results->fraction != 1.0 ? ENTITYNUM_WORLD : ENTITYNUM_NONE;
 }
@@ -1029,8 +906,6 @@ void Volumetric_Trace( trace_t *results, const vec3_t start, const vec3_t mins, 
 qboolean Volumetric_Visible(vec3_t from, vec3_t to)
 {
 	trace_t trace;
-
-	//if (Distance(to, from) < 256) return qtrue;
 
 	Volumetric_Trace( &trace, from, NULL, NULL, to, -1, (CONTENTS_SOLID|CONTENTS_TERRAIN) );
 
@@ -1080,9 +955,6 @@ qboolean RB_VolumetricDLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i
 		dlight_t	*dl = &backEnd.refdef.dlights[l];
 		
 		float x, y, distance;
-
-		//if (dl->radius > 0.0) ri->Printf(PRINT_WARNING, "Light %i is volumetric.", l);
-		//else ri->Printf(PRINT_WARNING, "Light %i is not volumetric.", l);
 
 		if (!r_volumelightAllLights->integer && dl->radius > 0.0) continue; // not a valumetric light...
 		if (!r_volumelightAllLights->integer && dl->radius < 0.0) dl->radius = 0.0 - dl->radius;
@@ -1177,25 +1049,19 @@ qboolean RB_VolumetricDLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i
 				CLOSEST_LIGHTS[CLOSEST_LIGHTS[closest_light]] = l;
 			}
 		}
-
-		//NUM_VISIBLE_LIGHTS++;
 	}
 
 	// None to draw...
 	if (NUM_CLOSE_LIGHTS <= 0) return qfalse;
 
-	//for ( int l = 0 ; l < backEnd.refdef.num_dlights ; l++ ) 
 	for (int l = 0; l < NUM_CLOSE_LIGHTS; l++)
 	{
 		dlight_t	*dl = &backEnd.refdef.dlights[CLOSEST_LIGHTS[l]];
 		
 		float x, y, distance;
 
-		//if (dl->radius <= 0.0) continue; // Marked as not visible...
-
 		distance = Distance(backEnd.refdef.vieworg, dl->origin);
 
-		//if (distance > 2048.0) continue; // too far away...
 		if (!TR_WorldToScreen(dl->origin, &x, &y)) continue; // not on screen...
 
 		GLSL_BindProgram(&tr.volumelightShader);
@@ -1212,20 +1078,6 @@ qboolean RB_VolumetricDLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i
 		GLSL_SetUniformInt(&tr.volumelightShader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
 		GL_BindToTMU(tr.renderDepthImage, TB_LIGHTMAP);
 
-		/*
-		{
-			vec4_t viewInfo;
-
-			float zmax = backEnd.viewParms.zFar;
-			float zmin = r_znear->value;
-
-			VectorSet4(viewInfo, zmax / zmin, zmax, 0.0, 0.0);
-			//VectorSet4(viewInfo, zmin, zmax, 0.0, 0.0);
-
-			GLSL_SetUniformVec4(&tr.volumelightShader, UNIFORM_VIEWINFO, viewInfo);
-		}
-		*/
-
 		{
 			vec2_t screensize;
 			screensize[0] = glConfig.vidWidth;
@@ -1239,14 +1091,7 @@ qboolean RB_VolumetricDLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i
 			local0[0] = dl->origin[0];
 			local0[1] = dl->origin[1];
 			local0[2] = dl->origin[2];
-			//local0[3] = ((2048.0 - (distance+0.001)) / 2048.0) / ((float)NUM_VISIBLE_LIGHTS/2.0);
-			//local0[3] = ((2048.0 - (distance+0.001)) / 2048.0) / ((float)NUM_CLOSE_LIGHTS/2.0);
 			local0[3] = ((r_volumelightMaxDistance->value - (distance+0.001)) / r_volumelightMaxDistance->value);
-
-			//float* local0b = local0;
-			//local0b+=4;
-
-			//ri->Printf(PRINT_WARNING, "Light %i is at %f %f %f.\n", l, local0[0], local0[1], local0[2]);
 
 			GLSL_SetUniformVec4(&tr.volumelightShader, UNIFORM_LOCAL0, local0);
 		}
@@ -1257,8 +1102,6 @@ qboolean RB_VolumetricDLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i
 			local2[1] = 1.0 - (y / 480);
 			local2[2] = r_testvar->value;
 			local2[3] = r_volumelightSamples->value;
-
-			//ri->Printf(PRINT_WARNING, "Light %i is at %f %f.\n", l, local2[0], local2[1]);
 
 			GLSL_SetUniformVec4(&tr.volumelightShader, UNIFORM_LOCAL2, local2);
 		}
@@ -1272,16 +1115,6 @@ qboolean RB_VolumetricDLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i
 
 			GLSL_SetUniformVec4(&tr.volumelightShader, UNIFORM_LOCAL1, local1);
 		}
-
-		/*{
-			vec4_t local3;
-			local3[0] = r_volumelightExposure->value;
-			local3[1] = r_volumelightDecay->value;
-			local3[2] = r_volumelightDensity->value;
-			local3[3] = r_volumelightWeight->value;
-
-			GLSL_SetUniformVec4(&tr.volumelightShader, UNIFORM_LOCAL3, local3);
-		}*/
 
 		FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.volumelightShader, color, 0);
 		FBO_FastBlit(ldrFbo, ldrBox, hdrFbo, hdrBox, GL_COLOR_BUFFER_BIT, GL_NEAREST);
@@ -1305,25 +1138,11 @@ void RB_HDR(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 	GL_BindToTMU(tr.fixedLevelsImage, TB_LEVELSMAP);
 
 	{
-		vec4_t viewInfo;
-
-		float zmax = backEnd.viewParms.zFar;
-		float zmin = r_znear->value;
-
-		VectorSet4(viewInfo, zmax / zmin, zmax, 0.0, 0.0);
-		//VectorSet4(viewInfo, zmin, zmax, 0.0, 0.0);
-
-		GLSL_SetUniformVec4(&tr.hdrShader, UNIFORM_VIEWINFO, viewInfo);
-	}
-
-	{
 		vec2_t screensize;
 		screensize[0] = glConfig.vidWidth;
 		screensize[1] = glConfig.vidHeight;
 
 		GLSL_SetUniformVec2(&tr.hdrShader, UNIFORM_DIMENSIONS, screensize);
-
-		//ri->Printf(PRINT_WARNING, "Sent dimensions %f %f.\n", screensize[0], screensize[1]);
 	}
 
 	FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.hdrShader, color, GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA);
@@ -1343,8 +1162,6 @@ void RB_FakeDepth(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 
 	GL_BindToTMU(tr.fixedLevelsImage, TB_LEVELSMAP);
 
-	//qglUseProgramObjectARB(tr.fakedepthShader.program);
-	
 	{
 		vec4_t viewInfo;
 
@@ -1352,7 +1169,6 @@ void RB_FakeDepth(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 		float zmin = r_znear->value;
 
 		VectorSet4(viewInfo, zmax / zmin, zmax, 0.0, 0.0);
-		//VectorSet4(viewInfo, zmin, zmax, 0.0, 0.0);
 
 		GLSL_SetUniformVec4(&tr.fakedepthShader, UNIFORM_VIEWINFO, viewInfo);
 	}
@@ -1363,8 +1179,6 @@ void RB_FakeDepth(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 		screensize[1] = glConfig.vidHeight;
 
 		GLSL_SetUniformVec2(&tr.fakedepthShader, UNIFORM_DIMENSIONS, screensize);
-
-		//ri->Printf(PRINT_WARNING, "Sent dimensions %f %f.\n", screensize[0], screensize[1]);
 	}
 	
 	{
@@ -1389,29 +1203,13 @@ void RB_FakeDepthParallax(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t 
 	GLSL_BindProgram(&tr.fakedepthSteepParallaxShader);
 
 	GL_BindToTMU(tr.fixedLevelsImage, TB_LEVELSMAP);
-
-	//qglUseProgramObjectARB(tr.fakedepthShader.program);
 	
-	{
-		vec4_t viewInfo;
-
-		float zmax = backEnd.viewParms.zFar;
-		float zmin = r_znear->value;
-
-		VectorSet4(viewInfo, zmax / zmin, zmax, 0.0, 0.0);
-		//VectorSet4(viewInfo, zmin, zmax, 0.0, 0.0);
-
-		GLSL_SetUniformVec4(&tr.fakedepthSteepParallaxShader, UNIFORM_VIEWINFO, viewInfo);
-	}
-
 	{
 		vec2_t screensize;
 		screensize[0] = glConfig.vidWidth;
 		screensize[1] = glConfig.vidHeight;
 
 		GLSL_SetUniformVec2(&tr.fakedepthSteepParallaxShader, UNIFORM_DIMENSIONS, screensize);
-
-		//ri->Printf(PRINT_WARNING, "Sent dimensions %f %f.\n", screensize[0], screensize[1]);
 	}
 	
 	{
@@ -1426,7 +1224,6 @@ void RB_FakeDepthParallax(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t 
 		GLSL_SetUniformVec4(&tr.fakedepthSteepParallaxShader, UNIFORM_LOCAL1, local1);
 	}
 
-	//FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.fakedepthSteepParallaxShader, color, GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA);
 	FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.fakedepthSteepParallaxShader, color, 0);
 }
 
@@ -1447,8 +1244,6 @@ void RB_Anaglyph(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 	GLSL_SetUniformInt(&tr.anaglyphShader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
 	GL_BindToTMU(tr.renderDepthImage, TB_LIGHTMAP);
 
-	//qglUseProgramObjectARB(tr.fakedepthShader.program);
-	
 	{
 		vec4_t viewInfo;
 
@@ -1456,7 +1251,6 @@ void RB_Anaglyph(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 		float zmin = r_znear->value;
 
 		VectorSet4(viewInfo, zmax / zmin, zmax, 0.0, 0.0);
-		//VectorSet4(viewInfo, zmin, zmax, 0.0, 0.0);
 
 		GLSL_SetUniformVec4(&tr.anaglyphShader, UNIFORM_VIEWINFO, viewInfo);
 	}
@@ -1467,8 +1261,6 @@ void RB_Anaglyph(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 		screensize[1] = glConfig.vidHeight;
 
 		GLSL_SetUniformVec2(&tr.anaglyphShader, UNIFORM_DIMENSIONS, screensize);
-
-		//ri->Printf(PRINT_WARNING, "Sent dimensions %f %f.\n", screensize[0], screensize[1]);
 	}
 	
 	{
@@ -1599,7 +1391,7 @@ void RB_HBAO(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 
 	GLSL_SetUniformInt(&tr.hbaoShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
 	GLSL_SetUniformInt(&tr.hbaoShader, UNIFORM_NORMALMAP, TB_NORMALMAP);
-	GL_BindToTMU(tr.normalImage, TB_NORMALMAP);
+	GL_BindToTMU(tr.normalDetailedImage, TB_NORMALMAP);
 	GLSL_SetUniformInt(&tr.hbaoShader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
 	GL_BindToTMU(tr.renderDepthImage, TB_LIGHTMAP);
 
@@ -1609,8 +1401,6 @@ void RB_HBAO(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 		screensize[1] = glConfig.vidHeight;
 
 		GLSL_SetUniformVec2(&tr.hbaoShader, UNIFORM_DIMENSIONS, screensize);
-
-		//ri->Printf(PRINT_WARNING, "Sent dimensions %f %f.\n", screensize[0], screensize[1]);
 	}
 
 	{
@@ -1619,7 +1409,6 @@ void RB_HBAO(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 		float ymax = zmax * tan(backEnd.viewParms.fovY * M_PI / 360.0f);
 		float xmax = zmax * tan(backEnd.viewParms.fovX * M_PI / 360.0f);
 		float zmin = r_znear->value;
-		//VectorSet4(viewInfo, zmax / zmin, zmax, 0.0, 0.0);
 		VectorSet4(viewInfo, zmin, zmax, zmax / zmin, 0.0);
 		GLSL_SetUniformVec4(&tr.hbaoShader, UNIFORM_VIEWINFO, viewInfo);
 	}
@@ -1666,39 +1455,19 @@ void RB_TextureClean(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBo
 	GL_BindToTMU(tr.fixedLevelsImage, TB_LEVELSMAP);
 	
 	{
-		vec4_t viewInfo;
-
-		float zmax = backEnd.viewParms.zFar;
-		float zmin = r_znear->value;
-
-		VectorSet4(viewInfo, zmax / zmin, zmax, 0.0, 0.0);
-		//VectorSet4(viewInfo, zmin, zmax, 0.0, 0.0);
-
-		GLSL_SetUniformVec4(&tr.texturecleanShader, UNIFORM_VIEWINFO, viewInfo);
-	}
-
-	{
 		vec2_t screensize;
 		screensize[0] = glConfig.vidWidth;
 		screensize[1] = glConfig.vidHeight;
 
 		GLSL_SetUniformVec2(&tr.texturecleanShader, UNIFORM_DIMENSIONS, screensize);
-
-		//ri->Printf(PRINT_WARNING, "Sent dimensions %f %f.\n", screensize[0], screensize[1]);
 	}
 	
-	/*
-	cvar_t  *r_textureCleanSigma;
-	cvar_t  *r_textureCleanBSigma;
-	cvar_t  *r_textureCleanMSize;
-	*/
 	{
 		vec4_t local0;
 		VectorSet4(local0, r_textureCleanSigma->value, r_textureCleanBSigma->value, r_textureCleanMSize->value, 0);
 		GLSL_SetUniformVec4(&tr.texturecleanShader, UNIFORM_LOCAL0, local0);
 	}
 
-	//FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.texturecleanShader, color, GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA);
 	FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.texturecleanShader, color, 0);
 }
 
@@ -1776,6 +1545,7 @@ void RB_DOF(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox, int di
 			GLSL_SetUniformVec2(&tr.dof2Shader, UNIFORM_DIMENSIONS, screensize);
 		}
 
+		/*
 		{
 			vec4_t viewInfo;
 
@@ -1786,6 +1556,7 @@ void RB_DOF(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox, int di
 
 			GLSL_SetUniformVec4(&tr.dof2Shader, UNIFORM_VIEWINFO, viewInfo);
 		}
+		*/
 
 		{
 			vec4_t info;
@@ -1800,7 +1571,7 @@ void RB_DOF(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox, int di
 			GLSL_SetUniformVec4(&tr.dof2Shader, UNIFORM_LOCAL0, info);
 		}
 
-		FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.dof2Shader, color, GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA);
+		FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.dof2Shader, color, 0);//GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA);
 	}
 	else
 	{
@@ -1844,7 +1615,7 @@ void RB_DOF(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox, int di
 			GLSL_SetUniformVec4(&tr.dofShader, UNIFORM_LOCAL0, info);
 		}
 
-		FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.dofShader, color, GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA);
+		FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.dofShader, color, 0);//GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA);
 	}
 }
 
@@ -1914,7 +1685,7 @@ void RB_SSGI(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 
 		float SCAN_WIDTH = r_ssgiWidth->value;
 
-		for (int i = 0; i < 2; i++)
+		//for (int i = 0; i < 2; i++)
 		{
 			//
 			// Bloom +-X axis... (to VBO 1)
@@ -2033,7 +1804,7 @@ void RB_SSGI(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 		// Do a final blur pass - but this time don't mark it as a ssgi one - so that it uses darkness as well...
 		//
 
-		for (int i = 0; i < 2; i++)
+		//for (int i = 0; i < 2; i++)
 		{
 			//
 			// Bloom +-X axis... (to VBO 1)
@@ -2174,7 +1945,8 @@ void RB_SSGI(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 	GLSL_SetUniformInt(shader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
 	GL_BindToTMU(tr.renderDepthImage, TB_LIGHTMAP);
 	GLSL_SetUniformInt(shader, UNIFORM_NORMALMAP, TB_NORMALMAP);
-	GL_BindToTMU(tr.normalImage, TB_NORMALMAP);
+	GL_BindToTMU(tr.normalDetailedImage, TB_NORMALMAP);
+	//GL_BindToTMU(tr.normalImage, TB_NORMALMAP);
 	GLSL_SetUniformInt(shader, UNIFORM_GLOWMAP, TB_GLOWMAP);
 	GL_BindToTMU(tr.anamorphicRenderFBOImage[2], TB_GLOWMAP);
 
@@ -2211,72 +1983,12 @@ void RB_SSGI(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 		//ri->Printf(PRINT_WARNING, "Sent dimensions %f %f.\n", screensize[0], screensize[1]);
 	}
 
-	FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, shader, color, GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA);
+	FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, shader, color, 0);//GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA);
 }
 
 
 void RB_TestShader(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox, int pass_num)
 {
-#if 0
-	vec4_t color;
-
-	// bloom
-	color[0] =
-		color[1] =
-		color[2] = pow(2, r_cameraExposure->value);
-	color[3] = 1.0f;
-
-	GLSL_BindProgram(&tr.testshaderShader);
-
-	GL_BindToTMU(tr.fixedLevelsImage, TB_LEVELSMAP);
-
-	GLSL_SetUniformInt(&tr.testshaderShader, UNIFORM_LEVELSMAP, TB_LEVELSMAP);
-	//GLSL_SetUniformInt(&tr.testshaderShader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
-	//GL_BindToTMU(tr.renderDepthImage, TB_LIGHTMAP);
-
-	//GL_SelectTexture(1);
-	//GL_Bind(tr.renderDepthImage);
-	//GL_SelectTexture(0);
-
-	{
-		vec2_t screensize;
-		screensize[0] = glConfig.vidWidth;
-		screensize[1] = glConfig.vidHeight;
-
-		GLSL_SetUniformVec2(&tr.testshaderShader, UNIFORM_DIMENSIONS, screensize);
-
-		//ri->Printf(PRINT_WARNING, "Sent dimensions %f %f.\n", screensize[0], screensize[1]);
-	}
-
-	{
-		vec4_t viewInfo;
-
-		float zmax = backEnd.viewParms.zFar;
-		float zmin = r_znear->value;
-		//float zmin = backEnd.viewParms.zNear;
-
-		VectorSet4(viewInfo, zmin, zmax, zmax / zmin, 0.0);
-
-		//ri->Printf(PRINT_WARNING, "Sent zmin %f, zmax %f, zmax/zmin %f.\n", zmin, zmax, zmax / zmin);
-
-		GLSL_SetUniformVec4(&tr.testshaderShader, UNIFORM_VIEWINFO, viewInfo);
-	}
-
-	{
-		vec4_t l0;
-		l0[0] = pass_num;
-		l0[1] = r_testshaderValue1->value;
-		l0[2] = r_testshaderValue2->value;
-		l0[3] = r_testshaderValue3->value;
-
-		GLSL_SetUniformVec4(&tr.testshaderShader, UNIFORM_LOCAL0, l0);
-
-		//ri->Printf(PRINT_WARNING, "Sent dimensions %f %f.\n", screensize[0], screensize[1]);
-	}
-
-	//FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.testshaderShader, color, GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA);
-	FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.testshaderShader, color, 0);
-#else
 	vec4_t color;
 
 	// bloom
@@ -2290,8 +2002,6 @@ void RB_TestShader(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox,
 
 	GLSL_SetUniformMatrix16(&tr.testshaderShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
 
-	//GLSL_SetUniformFloat(&tr.testshaderShader, UNIFORM_TIME, backEnd.refdef.floatTime*5.0/*tr.refdef.floatTime*/);
-
 	{
 		vec2_t screensize;
 		screensize[0] = glConfig.vidWidth;
@@ -2301,7 +2011,6 @@ void RB_TestShader(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox,
 	}
 	
 	FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.testshaderShader, color, GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA);
-#endif
 }
 
 void RB_Underwater(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
@@ -2343,6 +2052,7 @@ void RB_FXAA(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 	color[3] = 1.0f;
 
 	GLSL_BindProgram(&tr.fxaaShader);
+	GLSL_SetUniformInt(&tr.fxaaShader, UNIFORM_LEVELSMAP, TB_LEVELSMAP);
 	GL_BindToTMU(tr.fixedLevelsImage, TB_LEVELSMAP);
 
 	GLSL_SetUniformMatrix16(&tr.fxaaShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);

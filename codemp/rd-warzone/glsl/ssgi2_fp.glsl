@@ -17,7 +17,11 @@ float MODE = var_Local0.x;
 
 #define PI  3.14159265
 
+#define USE_DEPTHMAP
+
+#ifdef USE_DEPTHMAP
 const float depthMult = 255.0;
+#endif //USE_DEPTHMAP
 
 float ratex = (1.0/var_Dimensions.x);
 float ratey = (1.0/var_Dimensions.y);
@@ -25,6 +29,7 @@ float ratey = (1.0/var_Dimensions.y);
 vec2 offset1 = vec2(0.0, 1.0 / var_Dimensions.y);
 vec2 offset2 = vec2(1.0 / var_Dimensions.x, 0.0);
 
+#ifdef USE_DEPTHMAP
 vec3 normal_from_depth(float depth, vec2 texcoords) {
   float depth1 = texture2D(u_ScreenDepthMap, texcoords + offset1).r * depthMult;
   float depth2 = texture2D(u_ScreenDepthMap, texcoords + offset2).r * depthMult;
@@ -37,11 +42,16 @@ vec3 normal_from_depth(float depth, vec2 texcoords) {
   
   return normalize(normal);
 }
+#endif //USE_DEPTHMAP
 
 vec3 SampleNormals(sampler2D normalMap, in vec2 coord)  
-{  
+{
+#ifdef USE_DEPTHMAP
 	 float depth = texture2D(u_ScreenDepthMap, coord/*var_TexCoords*/).r * depthMult;
 	 return normal_from_depth(depth, coord);
+#else //!USE_DEPTHMAP
+	 return texture2D(u_NormalMap, coord).rgb;
+#endif //USE_DEPTHMAP
 }
 
 float rand2(vec2 coord) //generating noise/pattern texture for dithering
@@ -79,7 +89,8 @@ void main()
 	vec3 fcolor = vec3(0,0,0);
 
 	//far and near clip planes:
-	float zFar = 1.0;
+	//float zFar = 1.0;
+	float zFar = var_ViewInfo.y / var_Dimensions.y;
 	float zNear = var_ViewInfo.x / var_Dimensions.x;
 
 	//get depth at current pixel:

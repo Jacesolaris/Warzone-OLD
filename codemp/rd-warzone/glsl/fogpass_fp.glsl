@@ -3,7 +3,6 @@ uniform vec4  u_Color;
 varying float var_Scale;
 
 out vec4 out_Glow;
-out vec4 out_Normal;
 
 void main()
 {
@@ -15,6 +14,4 @@ void main()
 #else
 	out_Glow = vec4(0.0);
 #endif
-
-	//out_Normal = vec4(0.0);
 }

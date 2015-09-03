@@ -5,15 +5,12 @@ uniform vec2		u_AutoExposureMinMax;
 uniform vec3		u_ToneMinAvgMaxLinear;
 
 varying vec2		var_TexCoords;
-varying vec4		var_ViewInfo; // zfar / znear, zfar
 varying vec2		var_Dimensions;
 varying vec4		var_Local0; // depthScale, depthMultiplier, 0, 0
 varying vec4		var_Local1; // eyex, eyey, eyexz, grassSway
 
 vec2 texCoord = var_TexCoords;
 
-float near = var_ViewInfo.x;
-float far = var_ViewInfo.y;
 float viewWidth = var_Dimensions.x;
 float viewHeight = var_Dimensions.y;
 

@@ -4,8 +4,10 @@ uniform vec4	u_Local1; // parallaxScale, haveSpecular, specularScale, materialTy
 uniform vec4	u_Local2; // ExtinctionCoefficient
 uniform vec4	u_Local3; // RimScalar, MaterialThickness, subSpecPower, cubemapScale
 uniform vec4	u_Local4; // haveNormalMap, isMetalic, hasRealSubsurfaceMap, useSteepParallax
+//uniform vec4	u_Local5; // imageBasedLighting, 0.0, 0.0, 0.0
 
 //#define USE_LIGHT
+//#define SPHERICAL_HARMONICS
 
 varying float  var_Time;
 
@@ -102,6 +104,7 @@ varying vec3   var_vertPos;
 
 out vec4 out_Glow;
 out vec4 out_Normal;
+out vec4 out_DetailedNormal;
 
 #if defined(USE_PARALLAXMAP) || defined(USE_PARALLAXMAP_NONORMALS)
   #if defined(USE_PARALLAXMAP)
@@ -444,11 +447,58 @@ vec4 BumpyBackground (sampler2D texture, vec2 pos)
   return color;
 }
 
+#ifdef SPHERICAL_HARMONICS
+// constant that are used to adjust lighting
+const float C1 = 0.429043;
+const float C2 = 0.511664;
+const float C3 = 0.743125;
+const float C4 = 0.886227;
+const float C5 = 0.247708;
+
+// scale for restored amount of lighting
+const float u_scaleFactor = 3.0;
+
+// coefficients of spherical harmonics and possible values
+vec3 u_L00 = vec3(0.79, 0.44, 0.54);
+vec3 u_L1m1 = vec3(0.39, 0.35, 0.60);
+vec3 u_L10 = vec3(-0.34, -0.18, -0.27);
+vec3 u_L11 = vec3(-0.29, -0.06, 0.01);
+vec3 u_L2m2 = vec3(-0.26, -0.22, -0.47);
+vec3 u_L2m1 = vec3(-0.11, -0.05, -0.12);
+vec3 u_L20 = vec3(-0.16, -0.09, -0.15);
+vec3 u_L21 = vec3(0.56, 0.21, 0.14);
+vec3 u_L22 = vec3(0.21, -0.05, -0.30);
+
+///////////////////////////////////////////
+
+// function restores lighting at a vertex from normal and 
+// from coefficient of spherical harmonics
+vec3 sphericalHarmonics(vec3 N)
+{
+   return
+      // band 0, constant value, details of lowest frequency
+      C4 * u_L00 +
+
+      // band 1, oriented along main axes
+      2.0 * C2 * u_L11 * N.x +
+      2.0 * C2 * u_L1m1 * N.y +
+      2.0 * C2 * u_L10 * N.z +
+
+      // band 2, values depend on multiple axes, higher frequency details
+      C1 * u_L22 * (N.x * N.x - N.y * N.y) +
+      C3 * u_L20 * N.z * N.z - C5 * u_L20 +
+      2.0 * C1 * u_L2m2 * N.x * N.y +
+      2.0 * C1 * u_L21 * N.x * N.z +
+      2.0 * C1 * u_L2m1 * N.y * N.z;
+}
+#endif //SPHERICAL_HARMONICS
+
 void main()
 {
 	vec3 viewDir, lightColor, ambientColor;
 	vec3 L, N, E, H;
 	vec3 NORMAL = vec3(1.0);
+	vec3 DETAILED_NORMAL = vec3(1.0);
 	float NL, NH, NE, EH, attenuation;
 	vec2 tex_offset = vec2(1.0 / u_Dimensions.x, 1.0 / u_Dimensions.y);
 
@@ -557,10 +607,13 @@ void main()
 //#if defined(USE_PARALLAXMAP) || defined(USE_PARALLAXMAP_NONORMALS) || defined (USE_NORMALMAP)
 	vec3 norm = texture2D(u_NormalMap, texCoords).xyz;
 	
-	//NORMAL = var_Normal.xyz /** norm*/ * 0.5 + 0.5;
-	//NORMAL = normalize(((var_Normal.xyz + norm) * 0.5) * 2.0 - 1.0);
-	NORMAL = normalize(norm * 2.0 - 1.0);
-	//NORMAL = normalize(norm * 0.5 + 0.5);
+	//DETAILED_NORMAL = var_Normal.xyz /** norm*/ * 0.5 + 0.5;
+	//DETAILED_NORMAL = normalize(((var_Normal.xyz + norm) * 0.5) * 2.0 - 1.0);
+	DETAILED_NORMAL = normalize(norm * 2.0 - 1.0);
+	//DETAILED_NORMAL = normalize(norm * 0.5 + 0.5);
+	DETAILED_NORMAL = tangentToWorld * DETAILED_NORMAL;
+
+	NORMAL = normalize(var_Normal.xyz * 2.0 - 1.0);
 	NORMAL = tangentToWorld * NORMAL;
 
 	N = norm;
@@ -749,6 +802,23 @@ void main()
 
 		gl_FragColor.rgb += cubeLightColor * reflectance * (u_Local3.a * refMult);
 	}
+
+	/*if (u_Local5.r > 0.0)
+	{// Image based lighting...
+		// view vector reflected with respect to normal
+		vec3 R = reflect(E, DETAILED_NORMAL);
+
+		vec3 parallax = u_CubeMapInfo.xyz + u_CubeMapInfo.w * var_vertPos.xyz;
+
+		vec3 ambLighting	= textureCubeLod(u_CubeMap, DETAILED_NORMAL + parallax, 7.0 * 7.0).rgb;
+		vec3 speLighting	= textureCubeLod(u_CubeMap, R + parallax, 7.0 * 7.0).rgb;
+
+		vec3 ill = ((ambLighting * 0.6) + (speLighting * 0.4)) * 0.5 + 0.5;
+		ill *= u_Local5.r;
+		gl_FragColor.rgb *= clamp((ill * ((gl_FragColor.rgb * gl_FragColor.rgb) * 0.5 + 0.5)), 0.9, 3.0);
+		//gl_FragColor.rgb = ((ill * gl_FragColor.rgb) * (vec3(3.0)-length(gl_FragColor.rgb)) + (ill * gl_FragColor.rgb * gl_FragColor.rgb)) / 2.0;
+		gl_FragColor.rgb = clamp(gl_FragColor.rgb, 0.0, 1.0);
+	}*/
   #endif
 
   #if defined(USE_PRIMARY_LIGHT)
@@ -802,6 +872,10 @@ void main()
   }
   #endif
 
+#ifdef SPHERICAL_HARMONICS
+  gl_FragColor.rgb *= sphericalHarmonics(N) * u_scaleFactor;
+#endif //SPHERICAL_HARMONICS
+
 #else
 
 	lightColor = var_Color.rgb;
@@ -811,13 +885,20 @@ void main()
 
 	vec3 norm = texture2D(u_NormalMap, texCoords).xyz;
 	
-	//NORMAL = var_Normal.xyz /** norm*/ * 0.5 + 0.5;
-	//NORMAL = normalize(((var_Normal.xyz + norm) * 0.5) * 2.0 - 1.0);
-	NORMAL = normalize(norm * 2.0 - 1.0);
-	//NORMAL = normalize(norm * 0.5 + 0.5);
+	//DETAILED_NORMAL = var_Normal.xyz /** norm*/ * 0.5 + 0.5;
+	//DETAILED_NORMAL = normalize(((var_Normal.xyz + norm) * 0.5) * 2.0 - 1.0);
+	DETAILED_NORMAL = normalize(norm * 2.0 - 1.0);
+	//DETAILED_NORMAL = normalize(norm * 0.5 + 0.5);
+	DETAILED_NORMAL = tangentToWorld * DETAILED_NORMAL;
+
+	NORMAL = normalize(var_Normal.xyz * 2.0 - 1.0);
 	NORMAL = tangentToWorld * NORMAL;
 
 	gl_FragColor = vec4 (diffuse.rgb * lightColor, diffuse.a * var_Color.a);
+
+#ifdef SPHERICAL_HARMONICS
+  gl_FragColor.rgb *= sphericalHarmonics(N) * u_scaleFactor;
+#endif //SPHERICAL_HARMONICS
 
 #endif
 
@@ -828,5 +909,8 @@ void main()
 #endif
 
 	//if (u_EnableTextures.r > 0.0)
+	{
 		out_Normal = vec4(NORMAL.xyz, 0.0);
+		out_DetailedNormal = vec4(DETAILED_NORMAL.xyz, 0.0);
+	}
 }
