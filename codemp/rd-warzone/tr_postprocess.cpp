@@ -1370,6 +1370,92 @@ void RB_SSAO2(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 	FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.ssao2Shader, color, 0);
 }
 
+qboolean RB_SSS(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
+{
+	vec4_t		color;
+	dlight_t	*closestdl;
+	float		closestdlRange = 99999.9f;
+
+	//ri->Printf(PRINT_WARNING, "There are %i dlights.\n", backEnd.refdef.num_dlights);
+
+	if ( backEnd.refdef.num_dlights <= 0 )
+		return qfalse;
+
+	// bloom
+	color[0] =
+		color[1] =
+		color[2] = pow(2, r_cameraExposure->value);
+	color[3] = 1.0f;
+
+	GLSL_BindProgram(&tr.sssShader);
+
+	GLSL_SetUniformMatrix16(&tr.sssShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
+	GLSL_SetUniformMatrix16(&tr.sssShader, UNIFORM_INVPROJECTIONMATRIX, glState.invEyeProjection);
+	GLSL_SetUniformMatrix16(&tr.sssShader, UNIFORM_MODELMATRIX, backEnd.ori.transformMatrix);
+
+	GLSL_SetUniformInt(&tr.sssShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
+	GL_BindToTMU(tr.fixedLevelsImage, TB_DIFFUSEMAP);
+	GLSL_SetUniformInt(&tr.sssShader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
+	GL_BindToTMU(tr.renderDepthImage, TB_LIGHTMAP);
+	
+	for ( int l = 0 ; l < backEnd.refdef.num_dlights ; l++ ) {
+		dlight_t	*dl;
+		float dist;
+
+		dl = &backEnd.refdef.dlights[l];
+
+		dist = Distance(dl->origin, backEnd.refdef.vieworg);
+
+		if (dist < closestdlRange)
+		{
+			closestdl = dl;
+			closestdlRange = dist;
+		}
+	}
+
+	//GLSL_SetUniformVec4(&tr.sssShader, UNIFORM_LIGHTORIGIN, closestdl->origin);
+
+	vec4_t vector;
+	VectorCopy(closestdl->transformed, vector);
+	vector[3] = 1.0f;
+	GLSL_SetUniformVec4(&tr.sssShader, UNIFORM_LIGHTORIGIN, vector);
+
+	//ri->Printf(PRINT_WARNING, "Use dlight at %f %f %f.\n", closestdl->origin[0], closestdl->origin[1], closestdl->origin[2]);
+
+	{
+		vec4_t viewInfo;
+
+		float zmax = backEnd.viewParms.zFar;
+		float zmin = r_znear->value;
+
+		VectorSet4(viewInfo, zmin, zmax, zmax / zmin, 0.0);
+
+		GLSL_SetUniformVec4(&tr.sssShader, UNIFORM_VIEWINFO, viewInfo);
+	}
+
+	{
+		vec2_t screensize;
+		screensize[0] = glConfig.vidWidth;
+		screensize[1] = glConfig.vidHeight;
+
+		GLSL_SetUniformVec2(&tr.sssShader, UNIFORM_DIMENSIONS, screensize);
+	}
+
+	{
+		vec4_t viewInfo;
+		float zmax = backEnd.viewParms.zFar;
+		float ymax = zmax * tan(backEnd.viewParms.fovY * M_PI / 360.0f);
+		float xmax = zmax * tan(backEnd.viewParms.fovX * M_PI / 360.0f);
+		float zmin = r_znear->value;
+		VectorSet4(viewInfo, zmin, zmax, zmax / zmin, 0.0);
+		GLSL_SetUniformVec4(&tr.sssShader, UNIFORM_VIEWINFO, viewInfo);
+	}
+
+	FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.sssShader, color, 0);
+
+	return qtrue;
+}
+
 void RB_HBAO(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 {
 	vec4_t color;

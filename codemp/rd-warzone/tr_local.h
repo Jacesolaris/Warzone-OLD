@@ -362,6 +362,7 @@ extern cvar_t  *r_textureCleanSigma;
 extern cvar_t  *r_textureCleanBSigma;
 extern cvar_t  *r_textureCleanMSize;
 extern cvar_t  *r_imageBasedLighting;
+extern cvar_t  *r_sss;
 extern cvar_t  *r_hbao;
 extern cvar_t  *r_ssao2;
 extern cvar_t  *r_ssao2passes;
@@ -2378,7 +2379,7 @@ typedef struct trGlobals_s {
 	shaderProgram_t anaglyphShader;
 	shaderProgram_t uniqueskyShader;
 	shaderProgram_t waterShader;
-	shaderProgram_t surfaceSpriteShader;
+	shaderProgram_t sssShader;
 	shaderProgram_t ssao2Shader;
 	shaderProgram_t hbaoShader;
 	shaderProgram_t hbaoCombineShader;

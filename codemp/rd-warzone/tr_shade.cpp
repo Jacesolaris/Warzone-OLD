@@ -1445,7 +1445,7 @@ static void UpdateTexCoords ( const shaderStage_t *stage )
 
 void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage)
 {
-	vec4_t	local1, local3, local4, local5;
+	vec4_t	local1, local3, local4;//, local5;
 	float	specularScale = 1.0;
 	float	materialType = 0.0;
 	float   parallaxScale = 1.0;
@@ -1890,21 +1890,6 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 			backEnd.pc.c_genericDraws++;
 		}
-
-#ifdef __SURFACESPRITES__
-		if ( pStage->isSurfaceSprite )
-		{
-			sp = &tr.surfaceSpriteShader;
-			pStage->glslShaderGroup = &tr.surfaceSpriteShader;
-			GLSL_BindProgram(sp);
-			GLSL_SetUniformFloat(sp, UNIFORM_TIME, tess.shaderTime);
-			RB_SetMaterialBasedProperties(sp, pStage);
-			vec4_t loc5;
-			VectorSet4(loc5, r_rotatex->value, r_rotatey->value, r_rotatez->value, 0);
-			GLSL_SetUniformVec4(sp, UNIFORM_LOCAL5, loc5);
-			isGeneric = qfalse;
-		}
-#endif //__SURFACESPRITES__
 
 		if (pStage->isWater)
 		{

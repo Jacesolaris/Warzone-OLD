@@ -2141,6 +2141,14 @@ const void *RB_PostProcess(const void *data)
 			}
 		}
 
+		if (r_sss->integer)
+		{
+			if (RB_SSS(srcFbo, srcBox, tr.genericFbo, dstBox))
+			{
+				FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+			}
+		}
+
 		if (!SCREEN_BLUR && r_darkexpand->integer)
 		{
 			for (int pass = 0; pass < 2; pass++)
