@@ -1,3 +1,5 @@
+precision mediump float;
+precision lowp sampler2D;
 uniform sampler2D u_TextureMap;
 uniform sampler2D u_ScreenDepthMap;
 varying vec2 var_TexCoords;

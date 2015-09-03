@@ -1,3 +1,5 @@
+precision lowp float;
+precision lowp sampler2D;
 uniform sampler2D u_DiffuseMap;
 uniform sampler2D u_ScreenDepthMap;
 varying vec2 var_LightScreenPos;

@@ -1,3 +1,5 @@
+precision mediump float;
+precision lowp sampler2D;
 uniform sampler2D u_NormalMap;
 uniform sampler2D u_ScreenDepthMap;
 uniform mat4 u_invEyeProjectionMatrix;

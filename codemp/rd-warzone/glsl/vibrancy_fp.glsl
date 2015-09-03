@@ -1,3 +1,4 @@
+precision mediump float;
 uniform sampler2D u_TextureMap;
 varying vec2 var_TexCoords;
 varying vec4 var_Local0;

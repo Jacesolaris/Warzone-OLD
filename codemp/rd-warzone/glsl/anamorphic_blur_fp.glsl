@@ -1,3 +1,5 @@
+precision lowp float;
+precision lowp sampler2D;
 uniform sampler2D u_DiffuseMap;
 varying vec4 var_Local0;
 varying vec2 var_Dimensions;

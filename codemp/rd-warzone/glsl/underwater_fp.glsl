@@ -1,3 +1,4 @@
+precision lowp float;
 uniform sampler2D u_TextureMap;
 varying float total_time;
 varying vec2 vTexCoord0;
