@@ -1,60 +1,43 @@
-//
-// Cleans textures, expands depth, improves distant objects, and fixes the transparancy and bright edges bugs... In short, makes *everything* look better!
-//
-
-uniform sampler2D	u_TextureMap;
-uniform vec2		u_Dimensions;
-
-varying vec2		var_TexCoords;
-
-const float scale = 1.0;
-const float thresh = 0.93;
-
-void main()
+uniform sampler2D u_TextureMap;
+uniform vec2 u_Dimensions;
+varying vec2 var_TexCoords;
+void main ()
 {
-    vec4 sum = vec4(0.0);
-    int x=0;
-    int y=0;
-
-    vec2 recipres = vec2(1.0f / u_Dimensions.x, 1.0f / u_Dimensions.y);
-
-	for(y=-1; y<=1; y++)
-	{
-		for(x=-1; x<=1; x++) sum+=texture2D(u_TextureMap, var_TexCoords + (vec2(x,y) * recipres));
-	}
-
-    sum/=(3*3);
-
-    vec4 s = texture2D(u_TextureMap, var_TexCoords);
-    gl_FragColor = s;
-
-#ifdef BLUR_METHOD
-	//
-	// This version uses the blured color, which can also blur distant objects... Looks a little like dof in some ways...
-	//
-
-    vec4 out_color = sum*scale;
-
-    // use the blurred colour if it's darker
-    if ((sum.r + sum.g + sum.b) * 0.333 < ((s.r + s.g + s.b) * 0.333) * thresh)
-    {
-        //gl_FragColor = (out_color + s) / 2.0;
-		//gl_FragColor = (out_color + out_color + out_color + s) / 4.0;
-		gl_FragColor = out_color;
-    }
-#else //!BLUR_METHOD
-	//
-	// This version instead calculates the brightness difference and subtracts from original color (so no distant screen blur)...
-	//
-
-	// use the diff between this color and the blurred colour if the blurred color is darker
-    if ((sum.r + sum.g + sum.b) * 0.333 < ((s.r + s.g + s.b) * 0.333) * thresh)
-    {
-		float diff = ((s.r + s.g + s.b) - (sum.r + sum.g + sum.b)) * 0.33333;
-		gl_FragColor = s*scale;
-		gl_FragColor -= vec4(diff);
-    }
-#endif //BLUR_METHOD
-
-	gl_FragColor.a = 1.0;
+  vec4 sum_1;
+  vec2 tmpvar_2;
+  tmpvar_2 = (1.0/(u_Dimensions));
+  sum_1 = texture2D (u_TextureMap, (var_TexCoords - tmpvar_2));
+  sum_1 = (sum_1 + texture2D (u_TextureMap, (var_TexCoords + (vec2(0.0, -1.0) * tmpvar_2))));
+  sum_1 = (sum_1 + texture2D (u_TextureMap, (var_TexCoords + (vec2(1.0, -1.0) * tmpvar_2))));
+  sum_1 = (sum_1 + texture2D (u_TextureMap, (var_TexCoords + (vec2(-1.0, 0.0) * tmpvar_2))));
+  vec4 tmpvar_3;
+  tmpvar_3 = texture2D (u_TextureMap, var_TexCoords);
+  sum_1 = (sum_1 + tmpvar_3);
+  sum_1 = (sum_1 + texture2D (u_TextureMap, (var_TexCoords + (vec2(1.0, 0.0) * tmpvar_2))));
+  sum_1 = (sum_1 + texture2D (u_TextureMap, (var_TexCoords + (vec2(-1.0, 1.0) * tmpvar_2))));
+  sum_1 = (sum_1 + texture2D (u_TextureMap, (var_TexCoords + (vec2(0.0, 1.0) * tmpvar_2))));
+  sum_1 = (sum_1 + texture2D (u_TextureMap, (var_TexCoords + tmpvar_2)));
+  sum_1 = (sum_1 / 9.0);
+  gl_FragColor = tmpvar_3;
+  if ((((
+    (sum_1.x + sum_1.y)
+   + sum_1.z) * 0.333) < (0.30969 * (
+    (tmpvar_3.x + tmpvar_3.y)
+   + tmpvar_3.z)))) {
+    gl_FragColor = (tmpvar_3 - vec4(((
+      ((tmpvar_3.x + tmpvar_3.y) + tmpvar_3.z)
+     - 
+      ((sum_1.x + sum_1.y) + sum_1.z)
+    ) * 0.33333)));
+  };
+  gl_FragColor.w = 1.0;
 }
+
+
+// stats: 39 alu 9 tex 1 flow
+// inputs: 1
+//  #0: var_TexCoords (high float) 2x1 [-1]
+// uniforms: 1 (total size: 0)
+//  #0: u_Dimensions (high float) 2x1 [-1]
+// textures: 1
+//  #0: u_TextureMap (high 2d) 0x0 [-1]

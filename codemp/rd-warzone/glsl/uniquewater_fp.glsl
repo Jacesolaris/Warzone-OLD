@@ -1,619 +1,650 @@
 uniform sampler2D u_DiffuseMap;
-varying vec4	var_Local1; // parallaxScale, haveSpecular, specularScale, materialType
-varying vec4	u_Local2; // ExtinctionCoefficient
-varying vec4	u_Local3; // RimScalar, MaterialThickness, subSpecPower
-varying vec2	var_Dimensions;
-
-varying float  var_Time;
-
-#if defined(USE_LIGHTMAP)
-uniform sampler2D u_LightMap;
-#endif
-
-//#if defined(USE_NORMALMAP)
-uniform sampler2D u_NormalMap;
-//#endif
-
-#if defined(USE_DELUXEMAP)
-uniform sampler2D u_DeluxeMap;
-#endif
-
-#if defined(USE_SPECULARMAP)
-uniform sampler2D u_SpecularMap;
-#endif
-
-#if defined(USE_SHADOWMAP)
-uniform sampler2D u_ShadowMap;
-#endif
-
-#if defined(USE_CUBEMAP)
-#define textureCubeLod textureLod // UQ1: > ver 140 support
-uniform samplerCube u_CubeMap;
-#endif
-
-#if defined(USE_NORMALMAP) || defined(USE_DELUXEMAP) || defined(USE_SPECULARMAP) || defined(USE_CUBEMAP)
-// y = deluxe, w = cube
-uniform vec4      u_EnableTextures;
-#endif
-
-#if defined(USE_LIGHT_VECTOR) && !defined(USE_FAST_LIGHT)
-uniform vec3      u_DirectedLight;
-uniform vec3      u_AmbientLight;
-uniform vec4		u_LightOrigin;
-#endif
-
-#if defined(USE_PRIMARY_LIGHT) || defined(USE_SHADOWMAP)
-uniform vec3  u_PrimaryLightColor;
-uniform vec3  u_PrimaryLightAmbient;
-#endif
-
-//#if defined(USE_LIGHT) && !defined(USE_FAST_LIGHT)
-uniform vec4      u_NormalScale;
-uniform vec4      u_SpecularScale;
-//#endif
-
-#if defined(USE_LIGHT) && !defined(USE_FAST_LIGHT)
-#if defined(USE_CUBEMAP)
-uniform vec4      u_CubeMapInfo;
-#endif
-#endif
-
-
-varying vec4      var_TexCoords;
-
-varying vec4      var_Color;
-
-varying vec3   var_ViewDir;
-
-#if (defined(USE_LIGHT) && !defined(USE_FAST_LIGHT))
-  #if defined(USE_VERT_TANGENT_SPACE)
-varying vec4   var_Normal;
-varying vec4   var_Tangent;
-varying vec4   var_Bitangent;
-  #else
-varying vec3   var_Normal;
-  #endif
-#else
-  #if defined(USE_VERT_TANGENT_SPACE)
-varying vec4   var_Normal;
-varying vec4   var_Tangent;
-varying vec4   var_Bitangent;
-  #else
-varying vec3   var_Normal;
-  #endif
-#endif
-
-varying vec3 var_N;
-
-#if defined(USE_LIGHT) && !defined(USE_FAST_LIGHT)
-varying vec4      var_LightDir;
-#endif
-
-#if defined(USE_PRIMARY_LIGHT) || defined(USE_SHADOWMAP)
-varying vec4      var_PrimaryLightDir;
-#endif
-
-varying vec3   var_vertPos;
-
+varying vec2 var_Dimensions;
+varying float var_Time;
+uniform vec4 u_NormalScale;
+varying vec4 var_TexCoords;
+varying vec3 var_ViewDir;
+varying vec3 var_Normal;
 out vec4 out_Glow;
 out vec4 out_Normal;
 out vec4 out_DetailedNormal;
-
-float SampleDepth(sampler2D normalMap, vec2 t)
+float SEA_TIME;
+void main ()
 {
-	vec3 color = texture2D(u_DiffuseMap, t).rgb;
-
-#define const_1 ( 16.0 / 255.0)
-#define const_2 (255.0 / 219.0)
-	vec3 color2 = ((color - const_1) * const_2);
-#define const_3 ( 125.0 / 255.0)
-#define const_4 (255.0 / 115.0)
-		
-	color = ((color - const_3) * const_4);
-
-	color = clamp(color * color * (color * 5.0), 0.0, 1.0); // testing
-
-	vec3 orig_color = color + color2;
-
-	orig_color = clamp(orig_color * 2.5, 0.0, 1.0); // testing
-
-	orig_color = clamp(orig_color, 0.0, 1.0);
-	float combined_color2 = orig_color.r + orig_color.g + orig_color.b;
-	combined_color2 /= 4.0;
-
-	return clamp(1.0 - combined_color2, 0.0, 1.0);
-}
-
-vec3 EnvironmentBRDF(float gloss, float NE, vec3 specular)
-{
-	vec4 t = vec4( 1/0.96, 0.475, (0.0275 - 0.25 * 0.04)/0.96,0.25 ) * gloss;
-	t += vec4( 0.0, 0.0, (0.015 - 0.75 * 0.04)/0.96,0.75 );
-	float a0 = t.x * min( t.y, exp2( -9.28 * NE ) ) + t.z;
-	float a1 = t.w;
-	return clamp( a0 + specular * ( a1 - a0 ), 0.0, 1.0 );
-}
-
-float CalcGGX(float NH, float gloss)
-{
-	float a_sq = exp2(gloss * -13.0 + 1.0);
-	float d = ((NH * NH) * (a_sq - 1.0) + 1.0);
-	return a_sq / (d * d);
-}
-
-float CalcFresnel(float EH)
-{
-	return exp2(-10.0 * EH);
-}
-
-float CalcVisibility(float NH, float NL, float NE, float EH, float gloss)
-{
-	float roughness = exp2(gloss * -6.5);
-
-	float k = roughness + 1.0;
-	k *= k * 0.125;
-
-	float k2 = 1.0 - k;
-	
-	float invGeo1 = NL * k2 + k;
-	float invGeo2 = NE * k2 + k;
-
-	return 1.0 / (invGeo1 * invGeo2);
-}
-
-
-vec3 CalcSpecular(vec3 specular, float NH, float NL, float NE, float EH, float gloss, float shininess)
-{
-	float distrib = CalcGGX(NH, gloss);
-
-	vec3 fSpecular = mix(specular, vec3(1.0), CalcFresnel(EH));
-
-	float vis = CalcVisibility(NH, NL, NE, EH, gloss);
-
-	return fSpecular * (distrib * vis);
-}
-
-
-float CalcLightAttenuation(float point, float normDist)
-{
-	// zero light at 1.0, approximating q3 style
-	// also don't attenuate directional light
-	float attenuation = (0.5 * normDist - 1.5) * point + 1.0;
-
-	// clamp attenuation
-	#if defined(NO_LIGHT_CLAMP)
-	attenuation = max(attenuation, 0.0);
-	#else
-	attenuation = clamp(attenuation, 0.0, 1.0);
-	#endif
-
-	return attenuation;
-}
-
-mat3 cotangent_frame( vec3 N, vec3 p, vec2 uv )
-{
-	// get edge vectors of the pixel triangle
-	vec3 dp1 = dFdx( p );
-	vec3 dp2 = dFdy( p );
-	vec2 duv1 = dFdx( uv );
-	vec2 duv2 = dFdy( uv );
-
-	// solve the linear system
-	vec3 dp2perp = cross( dp2, N );
-	vec3 dp1perp = cross( N, dp1 );
-	vec3 T = dp2perp * duv1.x + dp1perp * duv2.x;
-	vec3 B = dp2perp * duv1.y + dp1perp * duv2.y;
-
-	// construct a scale-invariant frame 
-	float invmax = inversesqrt( max( dot(T,T), dot(B,B) ) );
-	return mat3( T * invmax, B * invmax, N );
-}
-
-// Water
-vec2 iResolution = var_Dimensions;
-
-float iGlobalTime = var_Time * 1.3;
-
-/*
-#define NUM_STEPS		8
-#define PI	 			3.1415
-//#define EPSILON			1e-3
-const float EPSILON		= 1e-3;
-//const float		= 0.1 / iResolution.x;
-const float EPSILON_NRM = 0.1 * tex_offset;
-*/
-
-const int NUM_STEPS = 8;
-const float PI	 	= 3.1415;
-const float EPSILON	= 1e-3;
-const float EPSILON_NRM	= 1.0;//0.1 / iResolution.x;
-
-// sea
-const int ITER_GEOMETRY = 3;
-const int ITER_FRAGMENT = 5;
-const float SEA_HEIGHT = 0.6;
-const float SEA_CHOPPY = 4.0;
-//const float SEA_SPEED = 0.8;
-//const float SEA_FREQ = 0.16;
-const float SEA_SPEED = 0.8;
-const float SEA_FREQ = 0.36;
-const vec3 SEA_BASE = vec3(0.1,0.19,0.22);
-const vec3 SEA_WATER_COLOR = vec3(0.8,0.9,0.6);
-float SEA_TIME = iGlobalTime * SEA_SPEED;
-const mat2 octave_m = mat2(1.6,1.2,-1.2,1.6);
-
-// math
-mat3 fromEuler(vec3 ang) {
-	vec2 a1 = vec2(sin(ang.x),cos(ang.x));
-    vec2 a2 = vec2(sin(ang.y),cos(ang.y));
-    vec2 a3 = vec2(sin(ang.z),cos(ang.z));
-    mat3 m;
-    m[0] = vec3(a1.y*a3.y+a1.x*a2.x*a3.x,a1.y*a2.x*a3.x+a3.y*a1.x,-a2.y*a3.x);
-	m[1] = vec3(-a2.y*a1.x,a1.y*a2.y,a2.x);
-	m[2] = vec3(a3.y*a1.x*a2.x+a1.y*a3.x,a1.x*a3.x-a1.y*a3.y*a2.x,a2.y*a3.y);
-	return m;
-}
-float hash( vec2 p ) {
-	float h = dot(p,vec2(127.1,311.7));	
-    return fract(sin(h)*43758.5453123);
-}
-float noise( in vec2 p ) {
-    vec2 i = floor( p );
-    vec2 f = fract( p );	
-	vec2 u = f*f*(3.0-2.0*f);
-    return -1.0+2.0*mix( mix( hash( i + vec2(0.0,0.0) ), 
-                     hash( i + vec2(1.0,0.0) ), u.x),
-                mix( hash( i + vec2(0.0,1.0) ), 
-                     hash( i + vec2(1.0,1.0) ), u.x), u.y);
-}
-
-// lighting
-float diffuser(vec3 n,vec3 l,float p) {
-    return pow(dot(n,l) * 0.4 + 0.6,p);
-}
-float specular(vec3 n,vec3 l,vec3 e,float s) {    
-    float nrm = (s + 8.0) / (3.1415 * 8.0);
-    return pow(max(dot(reflect(e,n),l),0.0),s) * nrm;
-}
-
-// sea
-float sea_octave(vec2 uv, float choppy) {
-    uv += noise(uv);        
-    vec2 wv = 1.0-abs(sin(uv));
-    vec2 swv = abs(cos(uv));    
-    wv = mix(wv,swv,wv);
-    //return pow(1.0-pow(wv.x * wv.y,0.65),choppy);
-	return pow(1.0-pow(wv.x * wv.y,0.65),choppy) * 0.3;
-}
-
-float map(vec3 p) {
-    float freq = SEA_FREQ;
-    float amp = SEA_HEIGHT;
-    float choppy = SEA_CHOPPY;
-    vec2 uv = p.xz; uv.x *= 0.75;
-    
-    float d, h = 0.0;    
-    for(int i = 0; i < ITER_GEOMETRY; i++) {        
-    	d = sea_octave((uv+SEA_TIME)*freq,choppy);
-    	d += sea_octave((uv-SEA_TIME)*freq,choppy);
-        h += d * amp;        
-    	uv *= octave_m; freq *= 1.9; amp *= 0.22;
-        choppy = mix(choppy,1.0,0.2);
-    }
-    return p.y - h;
-}
-
-float map_detailed(vec3 p, float scale) {
-    float freq = SEA_FREQ * scale;
-    float amp = SEA_HEIGHT * scale;
-    float choppy = SEA_CHOPPY * scale;
-    vec2 uv = p.xz; uv.x *= 0.75;
-    
-    float d, h = 0.0;    
-    for(int i = 0; i < ITER_FRAGMENT; i++) {        
-    	d = sea_octave((uv+SEA_TIME)*freq,choppy);
-    	d += sea_octave((uv-SEA_TIME)*freq,choppy);
-        h += d * amp;        
-    	uv *= octave_m; freq *= 1.9; amp *= 0.22;
-        choppy = mix(choppy,1.0,0.2);
-    }
-    return p.y - h;
-}
-
-vec3 getSeaColor(vec3 p, vec3 n, vec3 l, vec3 eye, vec3 dist) {  
-    float fresnel = 1.0 - max(dot(n,-eye),0.0);
-    fresnel = pow(fresnel,3.0) * 0.65;
-        
-    //vec3 reflected = getSkyColor(reflect(eye,n));    
-	vec3 reflected = vec3(0.2, 0.3, 0.5);
-    vec3 refracted = SEA_BASE + diffuser(n,l,80.0) * SEA_WATER_COLOR * 0.12; 
-    
-    vec3 color = mix(refracted,reflected,fresnel);
-    
-    float atten = max(1.0 - dot(dist,dist) * 0.001, 0.0);
-    color += SEA_WATER_COLOR * (p.y - SEA_HEIGHT) * 0.18 * atten;
-    
-    color += vec3(specular(n,l,eye,60.0));
-    
-    return color;
-}
-
-// tracing
-vec3 getNormal(vec3 p, float eps, float scale) {
-    vec3 n;
-    n.y = map_detailed(p, scale);    
-    n.x = map_detailed(vec3(p.x+eps,p.y,p.z), scale) - n.y;
-    n.z = map_detailed(vec3(p.x,p.y,p.z+eps), scale) - n.y;
-    n.y = eps;
-    return normalize(n);
-}
-
-float heightMapTracing(vec3 ori, vec3 dir, out vec3 p) {  
-    float tm = 0.0;
-    float tx = 1000.0;    
-    float hx = map(ori + dir * tx);
-    if(hx > 0.0) return tx;   
-    float hm = map(ori + dir * tm);    
-    float tmid = 0.0;
-    for(int i = 0; i < NUM_STEPS; i++) {
-        tmid = mix(tm,tx, hm/(hm-hx));                   
-        p = ori + dir * tmid;                   
-    	float hmid = map(p);
-		if(hmid < 0.0) {
-        	tx = tmid;
-            hx = hmid;
-        } else {
-            tm = tmid;
-            hm = hmid;
-        }
-    }
-    return tmid;
-}
-
-void main()
-{
-	vec3 viewDir, lightColor, ambientColor;
-	vec3 L, N, E, H;
-	vec3 NORMAL = vec3(1.0);
-	vec3 DETAILED_NORMAL = vec3(1.0);
-	float NL, NH, NE, EH, attenuation;
-	vec2 tex_offset = vec2(1.0 / var_Dimensions.x, 1.0 / var_Dimensions.y);
-
-	mat3 tangentToWorld = cotangent_frame(var_Normal.xyz, -var_ViewDir, var_TexCoords.xy);
-	viewDir = var_ViewDir;
-
-	E = normalize(viewDir);
-
-	L = var_LightDir.xyz;
-  #if defined(USE_DELUXEMAP)
-	L += (texture2D(u_DeluxeMap, var_TexCoords.zw).xyz - vec3(0.5)) * u_EnableTextures.y;
-  #endif
-	float sqrLightDist = dot(L, L);
-
-	vec4 lightmapColor = texture2D(u_LightMap, var_TexCoords.zw);
-  #if defined(RGBM_LIGHTMAP)
-	lightmapColor.rgb *= lightmapColor.a;
-  #endif
-
-  #if defined(USE_LIGHTMAP)
-	lightColor	= lightmapColor.rgb * var_Color.rgb;
-  #elif defined(USE_LIGHT_VECTOR)
-	lightColor	= u_DirectedLight * var_Color.rgb;
-	ambientColor = u_AmbientLight * var_Color.rgb;
-	attenuation = CalcLightAttenuation(float(var_LightDir.w > 0.0), var_LightDir.w / sqrLightDist);
-  #elif defined(USE_LIGHT_VERTEX)
-	lightColor	= var_Color.rgb;
-  #endif
-
-	vec2 texCoords = var_TexCoords.xy;
-	float fakedepth = SampleDepth(u_DiffuseMap, texCoords);
-
-	float norm = (fakedepth - 0.5);
-	float norm2 = 0.0 - (fakedepth - 0.5);
-    #if defined(SWIZZLE_NORMALMAP)
-		N.xy = vec2(norm, norm2);
-    #else
-		N.xy = vec2(norm, norm2);
-    #endif
-	N = N * 0.5 + 0.5;
-	N.xy *= u_NormalScale.xy;
-	N.z = sqrt(clamp((0.25 - N.x * N.x) - N.y * N.y, 0.0, 1.0));
-
-	N = tangentToWorld * N;
-
-	vec3 normal = texture2D(u_NormalMap, texCoords).xyz;
-	
-	//DETAILED_NORMAL = var_Normal.xyz /** normal*/ * 0.5 + 0.5;
-	//DETAILED_NORMAL = normalize(((var_Normal.xyz + normal) * 0.5) * 2.0 - 1.0);
-	DETAILED_NORMAL = normalize(normal * 2.0 - 1.0);
-	//DETAILED_NORMAL = normalize(normal * 0.5 + 0.5);
-	DETAILED_NORMAL = tangentToWorld * DETAILED_NORMAL;
-
-	NORMAL = normalize(var_Normal.xyz * 2.0 - 1.0);
-	NORMAL = tangentToWorld * NORMAL;
-
-	N = normalize(N);
-	L /= sqrt(sqrLightDist);
-
-	vec4 diffuse = texture2D(u_DiffuseMap, texCoords);
-	vec4 orig_diffuse = diffuse;
-
-	// Water/Lava Code...
-	vec2 uv = texCoords.xy;
-	uv = uv * 2.0 - 1.0;
-	uv.x *= iResolution.x / iResolution.y;
-	float current_time = iGlobalTime * 0.3;
-        
-	// ray
-	vec3 ang = vec3(0.0, 1.5, 0.0);
-	vec3 ori = vec3(0.0, 10.5, 0.0);
-	vec3 dir = normalize(vec3(uv.xy,-PI/*-2.0*/)); 
-	dir.z += length(uv) * 0.15;
-	dir = normalize(dir) * fromEuler(ang);
-		
-	// tracing
-	vec3 p;
-	heightMapTracing(ori,dir,p);
-		
-	vec3 dist = p - ori;
-	
-	float scaleWater = 1.0;
-	if (N.b < N.r && N.b < N.g) scaleWater = 10.0;
-	float d = length(dist);
-	vec3 n = getNormal(p, d*d*.0003, scaleWater);
-
-	vec3 light = normalize(vec3(0.0,1.0,0.8)); 
-	//vec3 light = normalize(vec3(0.0,0.4,0.3)); 
-	//vec3 light = normalize(lightColor.rgb);//normalize(vec3(0.0,1.0,0.8));
-		
-	// color
-	/*vec3 color = mix(
-		diffuse.rgb,
-		getSeaColor(p,n,light,dir,dist),
-   		pow(smoothstep(0.0,-0.05,dir.y),0.3));*/
-
-	vec3 color = getSeaColor(p,n,light,dir,dist);
-        
-	// post
-	diffuse.rgb = vec3(pow(color,vec3(0.75)));
-	//diffuse.rgb *= 0.75;
-	//diffuse.rgb = getSeaColor(p,n,light,dir,dist);
-
-	float waveheight = (diffuse.r + diffuse.g + diffuse.b) / 3.0;
-
-	gl_FragColor = vec4(diffuse.rgb, diffuse.a);
-	//out_Glow = vec4(0.0, 0.0, 0.0, 0.0);
-	//return;
-
-#if defined(USE_GAMMA2_TEXTURES)
-	diffuse.rgb *= diffuse.rgb;
-#endif
-
-	ambientColor = vec3 (0.0);
-	attenuation = 1.0;
-
-  #if defined(USE_SHADOWMAP) 
-	vec2 shadowTex = gl_FragCoord.xy * r_FBufScale;
-	float shadowValue = texture2D(u_ShadowMap, shadowTex).r;
-
-	// surfaces not facing the light are always shadowed
-	shadowValue *= float(dot(var_Normal.xyz, var_PrimaryLightDir.xyz) > 0.0);
-
-    #if defined(SHADOWMAP_MODULATE)
-	//vec3 shadowColor = min(u_PrimaryLightAmbient, lightColor);
-	vec3 shadowColor = u_PrimaryLightAmbient * lightColor;
-
-      #if 0
-	shadowValue = 1.0 + (shadowValue - 1.0) * clamp(dot(L, var_PrimaryLightDir.xyz), 0.0, 1.0);
-      #endif
-	lightColor = mix(shadowColor, lightColor, shadowValue);
-    #endif
-  #endif
-
-  #if defined(USE_LIGHTMAP) || defined(USE_LIGHT_VERTEX)
-	ambientColor = lightColor;
-	float surfNL = clamp(dot(var_Normal.xyz, L), 0.0, 1.0);
-	lightColor /= max(surfNL, 0.25);
-	ambientColor = clamp(ambientColor - lightColor * surfNL, 0.0, 1.0);
-  #endif
-  
-	vec3 reflectance;
-
-	NL = clamp(dot(N, L), 0.0, 1.0);
-	NE = clamp(dot(N, E), 0.0, 1.0);
-
-	vec4 specular;
-
-	specular = vec4(1.0-fakedepth) * diffuse;
-	specular.a = ((clamp((1.0 - fakedepth), 0.0, 1.0) * 0.5) + 0.5);
-	specular.a = clamp((specular.a * 2.0) * specular.a, 0.2, 0.9);
-
-    #if defined(USE_GAMMA2_TEXTURES)
-	specular.rgb *= specular.rgb;
-    #endif
-
-	specular *= 1.5;
-
-	diffuse.rgb *= vec3(1.0) - specular.rgb;
-
-	reflectance = diffuse.rgb;
-
-	//gl_FragColor.rgb += ambientColor * (diffuse.rgb + specular.rgb);
-	//gl_FragColor.rgb += ambientColor * diffuse.rgb;
-
-  #if defined(USE_CUBEMAP)
-	// Cubemapping...
-	reflectance = EnvironmentBRDF(specular.a, NE, specular.rgb);
-	vec3 R = reflect(E, N);
-	vec3 parallax = u_CubeMapInfo.xyz + u_CubeMapInfo.w * viewDir;
-	vec3 cubeLightColor = textureCubeLod(u_CubeMap, R + parallax, 7.0 - specular.a * 7.0).rgb * u_EnableTextures.w;
-	gl_FragColor.rgb += (cubeLightColor * reflectance);// * 3.0;
-  #endif
-
-  #if defined(USE_PRIMARY_LIGHT)
-	vec3 L2, H2;
-	float NL2, EH2, NH2;
-
-	L2 = var_PrimaryLightDir.xyz;
-
-	// enable when point lights are supported as primary lights
-	//sqrLightDist = dot(L2, L2);
-	//L2 /= sqrt(sqrLightDist);
-
-	NL2 = clamp(dot(N, L2), 0.0, 1.0);
-
-	H2 = normalize(L2 + E);
-	EH2 = clamp(dot(E, H2), 0.0, 1.0);
-	NH2 = clamp(dot(N, H2), 0.0, 1.0);
-
-	reflectance  = diffuse.rgb;
-	reflectance += CalcSpecular(specular.rgb, NH2, NL2, NE, EH2, specular.a, exp2(specular.a * 13.0));
-
-	lightColor = u_PrimaryLightColor * var_Color.rgb;
-
-	// enable when point lights are supported as primary lights
-	//lightColor *= CalcLightAttenuation(float(u_PrimaryLightDir.w > 0.0), u_PrimaryLightDir.w / sqrLightDist);
-
-    #if defined(USE_SHADOWMAP)
-	lightColor *= shadowValue;
-    #endif
-
-	// enable when point lights are supported as primary lights
-	//lightColor *= CalcLightAttenuation(float(u_PrimaryLightDir.w > 0.0), u_PrimaryLightDir.w / sqrLightDist);
-
-	gl_FragColor.rgb += lightColor * reflectance * NL2;
-  #endif
-
-	//gl_FragColor.rgb = N;
-	if (scaleWater >= 10.0)
-	{
-		gl_FragColor.rgb = clamp((gl_FragColor.rgb + orig_diffuse.rgb) / 2.0, 0.0, 1.0);
-		gl_FragColor.a = clamp(waveheight, 0.1, 1.0);//diffuse.a * var_Color.a;
-
-#if defined(USE_GLOW_BUFFER)
-		out_Glow = gl_FragColor;
-		//out_Glow.a = 1.0;
-		out_Glow = vec4(0.0);
-#else
-		out_Glow = vec4(0.0);
-#endif
-	}
-	else
-	{
-		gl_FragColor.rgb = clamp((gl_FragColor.rgb + gl_FragColor.rgb + orig_diffuse.rgb) / 3.0, 0.0, 1.0);
-		gl_FragColor.a = clamp(waveheight, 0.5, 1.0);//diffuse.a * var_Color.a;
-
+  SEA_TIME = (1.04 * var_Time);
+  vec4 specular_1;
+  float scaleWater_2;
+  vec3 dir_3;
+  vec2 uv_4;
+  vec4 diffuse_5;
+  vec3 N_6;
+  vec3 p_7;
+  p_7 = -(var_ViewDir);
+  vec3 tmpvar_8;
+  tmpvar_8 = dFdx(p_7);
+  vec3 tmpvar_9;
+  tmpvar_9 = dFdy(p_7);
+  vec2 tmpvar_10;
+  tmpvar_10 = dFdx(var_TexCoords.xy);
+  vec2 tmpvar_11;
+  tmpvar_11 = dFdy(var_TexCoords.xy);
+  vec3 tmpvar_12;
+  tmpvar_12 = ((tmpvar_9.yzx * var_Normal.zxy) - (tmpvar_9.zxy * var_Normal.yzx));
+  vec3 tmpvar_13;
+  tmpvar_13 = ((var_Normal.yzx * tmpvar_8.zxy) - (var_Normal.zxy * tmpvar_8.yzx));
+  vec3 tmpvar_14;
+  tmpvar_14 = ((tmpvar_12 * tmpvar_10.x) + (tmpvar_13 * tmpvar_11.x));
+  vec3 tmpvar_15;
+  tmpvar_15 = ((tmpvar_12 * tmpvar_10.y) + (tmpvar_13 * tmpvar_11.y));
+  float tmpvar_16;
+  tmpvar_16 = inversesqrt(max (dot (tmpvar_14, tmpvar_14), dot (tmpvar_15, tmpvar_15)));
+  mat3 tmpvar_17;
+  tmpvar_17[0] = (tmpvar_14 * tmpvar_16);
+  tmpvar_17[1] = (tmpvar_15 * tmpvar_16);
+  tmpvar_17[2] = var_Normal;
+  vec3 color_18;
+  vec4 tmpvar_19;
+  tmpvar_19 = texture2D (u_DiffuseMap, var_TexCoords.xy);
+  color_18 = ((tmpvar_19.xyz - 0.4901961) * 2.217391);
+  vec3 tmpvar_20;
+  tmpvar_20 = clamp (((color_18 * color_18) * (color_18 * 5.0)), 0.0, 1.0);
+  color_18 = tmpvar_20;
+  vec3 tmpvar_21;
+  tmpvar_21 = clamp (clamp ((
+    (tmpvar_20 + ((tmpvar_19.xyz - 0.0627451) * 1.164384))
+   * 2.5), 0.0, 1.0), 0.0, 1.0);
+  float tmpvar_22;
+  tmpvar_22 = clamp ((1.0 - (
+    ((tmpvar_21.x + tmpvar_21.y) + tmpvar_21.z)
+   / 4.0)), 0.0, 1.0);
+  vec2 tmpvar_23;
+  tmpvar_23.x = (tmpvar_22 - 0.5);
+  tmpvar_23.y = (0.5 - tmpvar_22);
+  N_6.xy = tmpvar_23;
+  N_6 = ((N_6 * 0.5) + 0.5);
+  N_6.xy = (N_6.xy * u_NormalScale.xy);
+  N_6.z = sqrt(clamp ((
+    (0.25 - (N_6.x * N_6.x))
+   - 
+    (N_6.y * N_6.y)
+  ), 0.0, 1.0));
+  N_6 = (tmpvar_17 * N_6);
+  N_6 = normalize(N_6);
+  diffuse_5 = tmpvar_19;
+  uv_4 = ((var_TexCoords.xy * 2.0) - 1.0);
+  uv_4.x = (uv_4.x * (var_Dimensions.x / var_Dimensions.y));
+  vec3 tmpvar_24;
+  tmpvar_24.z = -3.1415;
+  tmpvar_24.xy = uv_4;
+  vec3 tmpvar_25;
+  tmpvar_25 = normalize(tmpvar_24);
+  dir_3.xy = tmpvar_25.xy;
+  dir_3.z = (tmpvar_25.z + (sqrt(
+    dot (uv_4, uv_4)
+  ) * 0.15));
+  mat3 m_26;
+  vec3 tmpvar_27;
+  tmpvar_27.x = 1.0;
+  tmpvar_27.y = 0.0;
+  tmpvar_27.z = -0.0;
+  m_26[0] = tmpvar_27;
+  vec3 tmpvar_28;
+  tmpvar_28.x = -0.0;
+  tmpvar_28.y = 0.0707372;
+  tmpvar_28.z = 0.997495;
+  m_26[1] = tmpvar_28;
+  vec3 tmpvar_29;
+  tmpvar_29.x = 0.0;
+  tmpvar_29.y = -0.997495;
+  tmpvar_29.z = 0.0707372;
+  m_26[2] = tmpvar_29;
+  dir_3 = (normalize(dir_3) * m_26);
+  vec3 dir_30;
+  dir_30 = dir_3;
+  vec3 p_31;
+  float hm_33;
+  float hx_34;
+  float tx_35;
+  float tm_36;
+  tm_36 = 0.0;
+  tx_35 = 1000.0;
+  float tmpvar_37;
+  vec3 p_38;
+  p_38 = (vec3(0.0, 10.5, 0.0) + (dir_3 * 1000.0));
+  float h_40;
+  vec2 uv_41;
+  float choppy_42;
+  float amp_43;
+  float freq_44;
+  freq_44 = 0.36;
+  amp_43 = 0.6;
+  choppy_42 = 4.0;
+  uv_41.y = p_38.z;
+  uv_41.x = (p_38.x * 0.75);
+  h_40 = 0.0;
+  for (int i_39 = 0; i_39 < 3; i_39++) {
+    vec2 uv_45;
+    uv_45 = ((uv_41 + SEA_TIME) * freq_44);
+    vec2 tmpvar_46;
+    tmpvar_46 = floor(uv_45);
+    vec2 tmpvar_47;
+    tmpvar_47 = fract(uv_45);
+    vec2 tmpvar_48;
+    tmpvar_48 = ((tmpvar_47 * tmpvar_47) * (3.0 - (2.0 * tmpvar_47)));
+    uv_45 = (uv_45 + (-1.0 + (2.0 * 
+      mix (mix (fract((
+        sin(dot (tmpvar_46, vec2(127.1, 311.7)))
+       * 43758.55)), fract((
+        sin(dot ((tmpvar_46 + vec2(1.0, 0.0)), vec2(127.1, 311.7)))
+       * 43758.55)), tmpvar_48.x), mix (fract((
+        sin(dot ((tmpvar_46 + vec2(0.0, 1.0)), vec2(127.1, 311.7)))
+       * 43758.55)), fract((
+        sin(dot ((tmpvar_46 + vec2(1.0, 1.0)), vec2(127.1, 311.7)))
+       * 43758.55)), tmpvar_48.x), tmpvar_48.y)
+    )));
+    vec2 tmpvar_49;
+    tmpvar_49 = (1.0 - abs(sin(uv_45)));
+    vec2 tmpvar_50;
+    tmpvar_50 = mix (tmpvar_49, abs(cos(uv_45)), tmpvar_49);
+    vec2 uv_51;
+    uv_51 = ((uv_41 - SEA_TIME) * freq_44);
+    vec2 tmpvar_52;
+    tmpvar_52 = floor(uv_51);
+    vec2 tmpvar_53;
+    tmpvar_53 = fract(uv_51);
+    vec2 tmpvar_54;
+    tmpvar_54 = ((tmpvar_53 * tmpvar_53) * (3.0 - (2.0 * tmpvar_53)));
+    uv_51 = (uv_51 + (-1.0 + (2.0 * 
+      mix (mix (fract((
+        sin(dot (tmpvar_52, vec2(127.1, 311.7)))
+       * 43758.55)), fract((
+        sin(dot ((tmpvar_52 + vec2(1.0, 0.0)), vec2(127.1, 311.7)))
+       * 43758.55)), tmpvar_54.x), mix (fract((
+        sin(dot ((tmpvar_52 + vec2(0.0, 1.0)), vec2(127.1, 311.7)))
+       * 43758.55)), fract((
+        sin(dot ((tmpvar_52 + vec2(1.0, 1.0)), vec2(127.1, 311.7)))
+       * 43758.55)), tmpvar_54.x), tmpvar_54.y)
+    )));
+    vec2 tmpvar_55;
+    tmpvar_55 = (1.0 - abs(sin(uv_51)));
+    vec2 tmpvar_56;
+    tmpvar_56 = mix (tmpvar_55, abs(cos(uv_51)), tmpvar_55);
+    h_40 = (h_40 + ((
+      (pow ((1.0 - pow (
+        (tmpvar_50.x * tmpvar_50.y)
+      , 0.65)), choppy_42) * 0.3)
+     + 
+      (pow ((1.0 - pow (
+        (tmpvar_56.x * tmpvar_56.y)
+      , 0.65)), choppy_42) * 0.3)
+    ) * amp_43));
+    uv_41 = (uv_41 * mat2(1.6, 1.2, -1.2, 1.6));
+    freq_44 = (freq_44 * 1.9);
+    amp_43 = (amp_43 * 0.22);
+    choppy_42 = mix (choppy_42, 1.0, 0.2);
+  };
+  tmpvar_37 = (p_38.y - h_40);
+  hx_34 = tmpvar_37;
+  if ((tmpvar_37 <= 0.0)) {
+    float h_58;
+    vec2 uv_59;
+    float choppy_60;
+    float amp_61;
+    float freq_62;
+    freq_62 = 0.36;
+    amp_61 = 0.6;
+    choppy_60 = 4.0;
+    uv_59.y = 0.0;
+    uv_59.x = 0.0;
+    h_58 = 0.0;
+    for (int i_57 = 0; i_57 < 3; i_57++) {
+      vec2 uv_63;
+      uv_63 = ((uv_59 + SEA_TIME) * freq_62);
+      vec2 tmpvar_64;
+      tmpvar_64 = floor(uv_63);
+      vec2 tmpvar_65;
+      tmpvar_65 = fract(uv_63);
+      vec2 tmpvar_66;
+      tmpvar_66 = ((tmpvar_65 * tmpvar_65) * (3.0 - (2.0 * tmpvar_65)));
+      uv_63 = (uv_63 + (-1.0 + (2.0 * 
+        mix (mix (fract((
+          sin(dot (tmpvar_64, vec2(127.1, 311.7)))
+         * 43758.55)), fract((
+          sin(dot ((tmpvar_64 + vec2(1.0, 0.0)), vec2(127.1, 311.7)))
+         * 43758.55)), tmpvar_66.x), mix (fract((
+          sin(dot ((tmpvar_64 + vec2(0.0, 1.0)), vec2(127.1, 311.7)))
+         * 43758.55)), fract((
+          sin(dot ((tmpvar_64 + vec2(1.0, 1.0)), vec2(127.1, 311.7)))
+         * 43758.55)), tmpvar_66.x), tmpvar_66.y)
+      )));
+      vec2 tmpvar_67;
+      tmpvar_67 = (1.0 - abs(sin(uv_63)));
+      vec2 tmpvar_68;
+      tmpvar_68 = mix (tmpvar_67, abs(cos(uv_63)), tmpvar_67);
+      vec2 uv_69;
+      uv_69 = ((uv_59 - SEA_TIME) * freq_62);
+      vec2 tmpvar_70;
+      tmpvar_70 = floor(uv_69);
+      vec2 tmpvar_71;
+      tmpvar_71 = fract(uv_69);
+      vec2 tmpvar_72;
+      tmpvar_72 = ((tmpvar_71 * tmpvar_71) * (3.0 - (2.0 * tmpvar_71)));
+      uv_69 = (uv_69 + (-1.0 + (2.0 * 
+        mix (mix (fract((
+          sin(dot (tmpvar_70, vec2(127.1, 311.7)))
+         * 43758.55)), fract((
+          sin(dot ((tmpvar_70 + vec2(1.0, 0.0)), vec2(127.1, 311.7)))
+         * 43758.55)), tmpvar_72.x), mix (fract((
+          sin(dot ((tmpvar_70 + vec2(0.0, 1.0)), vec2(127.1, 311.7)))
+         * 43758.55)), fract((
+          sin(dot ((tmpvar_70 + vec2(1.0, 1.0)), vec2(127.1, 311.7)))
+         * 43758.55)), tmpvar_72.x), tmpvar_72.y)
+      )));
+      vec2 tmpvar_73;
+      tmpvar_73 = (1.0 - abs(sin(uv_69)));
+      vec2 tmpvar_74;
+      tmpvar_74 = mix (tmpvar_73, abs(cos(uv_69)), tmpvar_73);
+      h_58 = (h_58 + ((
+        (pow ((1.0 - pow (
+          (tmpvar_68.x * tmpvar_68.y)
+        , 0.65)), choppy_60) * 0.3)
+       + 
+        (pow ((1.0 - pow (
+          (tmpvar_74.x * tmpvar_74.y)
+        , 0.65)), choppy_60) * 0.3)
+      ) * amp_61));
+      uv_59 = (uv_59 * mat2(1.6, 1.2, -1.2, 1.6));
+      freq_62 = (freq_62 * 1.9);
+      amp_61 = (amp_61 * 0.22);
+      choppy_60 = mix (choppy_60, 1.0, 0.2);
+    };
+    hm_33 = (10.5 - h_58);
+    for (int i_32 = 0; i_32 < 8; i_32++) {
+      float tmpvar_75;
+      tmpvar_75 = mix (tm_36, tx_35, (hm_33 / (hm_33 - hx_34)));
+      p_31 = (vec3(0.0, 10.5, 0.0) + (dir_30 * tmpvar_75));
+      float tmpvar_76;
+      float h_78;
+      vec2 uv_79;
+      float choppy_80;
+      float amp_81;
+      float freq_82;
+      freq_82 = 0.36;
+      amp_81 = 0.6;
+      choppy_80 = 4.0;
+      uv_79.y = p_31.z;
+      uv_79.x = (p_31.x * 0.75);
+      h_78 = 0.0;
+      for (int i_77 = 0; i_77 < 3; i_77++) {
+        vec2 uv_83;
+        uv_83 = ((uv_79 + SEA_TIME) * freq_82);
+        vec2 tmpvar_84;
+        tmpvar_84 = floor(uv_83);
+        vec2 tmpvar_85;
+        tmpvar_85 = fract(uv_83);
+        vec2 tmpvar_86;
+        tmpvar_86 = ((tmpvar_85 * tmpvar_85) * (3.0 - (2.0 * tmpvar_85)));
+        uv_83 = (uv_83 + (-1.0 + (2.0 * 
+          mix (mix (fract((
+            sin(dot (tmpvar_84, vec2(127.1, 311.7)))
+           * 43758.55)), fract((
+            sin(dot ((tmpvar_84 + vec2(1.0, 0.0)), vec2(127.1, 311.7)))
+           * 43758.55)), tmpvar_86.x), mix (fract((
+            sin(dot ((tmpvar_84 + vec2(0.0, 1.0)), vec2(127.1, 311.7)))
+           * 43758.55)), fract((
+            sin(dot ((tmpvar_84 + vec2(1.0, 1.0)), vec2(127.1, 311.7)))
+           * 43758.55)), tmpvar_86.x), tmpvar_86.y)
+        )));
+        vec2 tmpvar_87;
+        tmpvar_87 = (1.0 - abs(sin(uv_83)));
+        vec2 tmpvar_88;
+        tmpvar_88 = mix (tmpvar_87, abs(cos(uv_83)), tmpvar_87);
+        vec2 uv_89;
+        uv_89 = ((uv_79 - SEA_TIME) * freq_82);
+        vec2 tmpvar_90;
+        tmpvar_90 = floor(uv_89);
+        vec2 tmpvar_91;
+        tmpvar_91 = fract(uv_89);
+        vec2 tmpvar_92;
+        tmpvar_92 = ((tmpvar_91 * tmpvar_91) * (3.0 - (2.0 * tmpvar_91)));
+        uv_89 = (uv_89 + (-1.0 + (2.0 * 
+          mix (mix (fract((
+            sin(dot (tmpvar_90, vec2(127.1, 311.7)))
+           * 43758.55)), fract((
+            sin(dot ((tmpvar_90 + vec2(1.0, 0.0)), vec2(127.1, 311.7)))
+           * 43758.55)), tmpvar_92.x), mix (fract((
+            sin(dot ((tmpvar_90 + vec2(0.0, 1.0)), vec2(127.1, 311.7)))
+           * 43758.55)), fract((
+            sin(dot ((tmpvar_90 + vec2(1.0, 1.0)), vec2(127.1, 311.7)))
+           * 43758.55)), tmpvar_92.x), tmpvar_92.y)
+        )));
+        vec2 tmpvar_93;
+        tmpvar_93 = (1.0 - abs(sin(uv_89)));
+        vec2 tmpvar_94;
+        tmpvar_94 = mix (tmpvar_93, abs(cos(uv_89)), tmpvar_93);
+        h_78 = (h_78 + ((
+          (pow ((1.0 - pow (
+            (tmpvar_88.x * tmpvar_88.y)
+          , 0.65)), choppy_80) * 0.3)
+         + 
+          (pow ((1.0 - pow (
+            (tmpvar_94.x * tmpvar_94.y)
+          , 0.65)), choppy_80) * 0.3)
+        ) * amp_81));
+        uv_79 = (uv_79 * mat2(1.6, 1.2, -1.2, 1.6));
+        freq_82 = (freq_82 * 1.9);
+        amp_81 = (amp_81 * 0.22);
+        choppy_80 = mix (choppy_80, 1.0, 0.2);
+      };
+      tmpvar_76 = (p_31.y - h_78);
+      if ((tmpvar_76 < 0.0)) {
+        tx_35 = tmpvar_75;
+        hx_34 = tmpvar_76;
+      } else {
+        tm_36 = tmpvar_75;
+        hm_33 = tmpvar_76;
+      };
+    };
+  };
+  vec3 tmpvar_95;
+  tmpvar_95 = (p_31 - vec3(0.0, 10.5, 0.0));
+  scaleWater_2 = 1.0;
+  if (((N_6.z < N_6.x) && (N_6.z < N_6.y))) {
+    scaleWater_2 = 10.0;
+  };
+  float tmpvar_96;
+  tmpvar_96 = sqrt(dot (tmpvar_95, tmpvar_95));
+  float eps_97;
+  eps_97 = ((tmpvar_96 * tmpvar_96) * 0.0003);
+  vec3 n_98;
+  float h_100;
+  vec2 uv_101;
+  float choppy_102;
+  float amp_103;
+  float freq_104;
+  freq_104 = (0.36 * scaleWater_2);
+  amp_103 = (0.6 * scaleWater_2);
+  choppy_102 = (4.0 * scaleWater_2);
+  uv_101.y = p_31.z;
+  uv_101.x = (p_31.x * 0.75);
+  h_100 = 0.0;
+  for (int i_99 = 0; i_99 < 5; i_99++) {
+    vec2 uv_105;
+    uv_105 = ((uv_101 + SEA_TIME) * freq_104);
+    vec2 tmpvar_106;
+    tmpvar_106 = floor(uv_105);
+    vec2 tmpvar_107;
+    tmpvar_107 = fract(uv_105);
+    vec2 tmpvar_108;
+    tmpvar_108 = ((tmpvar_107 * tmpvar_107) * (3.0 - (2.0 * tmpvar_107)));
+    uv_105 = (uv_105 + (-1.0 + (2.0 * 
+      mix (mix (fract((
+        sin(dot (tmpvar_106, vec2(127.1, 311.7)))
+       * 43758.55)), fract((
+        sin(dot ((tmpvar_106 + vec2(1.0, 0.0)), vec2(127.1, 311.7)))
+       * 43758.55)), tmpvar_108.x), mix (fract((
+        sin(dot ((tmpvar_106 + vec2(0.0, 1.0)), vec2(127.1, 311.7)))
+       * 43758.55)), fract((
+        sin(dot ((tmpvar_106 + vec2(1.0, 1.0)), vec2(127.1, 311.7)))
+       * 43758.55)), tmpvar_108.x), tmpvar_108.y)
+    )));
+    vec2 tmpvar_109;
+    tmpvar_109 = (1.0 - abs(sin(uv_105)));
+    vec2 tmpvar_110;
+    tmpvar_110 = mix (tmpvar_109, abs(cos(uv_105)), tmpvar_109);
+    vec2 uv_111;
+    uv_111 = ((uv_101 - SEA_TIME) * freq_104);
+    vec2 tmpvar_112;
+    tmpvar_112 = floor(uv_111);
+    vec2 tmpvar_113;
+    tmpvar_113 = fract(uv_111);
+    vec2 tmpvar_114;
+    tmpvar_114 = ((tmpvar_113 * tmpvar_113) * (3.0 - (2.0 * tmpvar_113)));
+    uv_111 = (uv_111 + (-1.0 + (2.0 * 
+      mix (mix (fract((
+        sin(dot (tmpvar_112, vec2(127.1, 311.7)))
+       * 43758.55)), fract((
+        sin(dot ((tmpvar_112 + vec2(1.0, 0.0)), vec2(127.1, 311.7)))
+       * 43758.55)), tmpvar_114.x), mix (fract((
+        sin(dot ((tmpvar_112 + vec2(0.0, 1.0)), vec2(127.1, 311.7)))
+       * 43758.55)), fract((
+        sin(dot ((tmpvar_112 + vec2(1.0, 1.0)), vec2(127.1, 311.7)))
+       * 43758.55)), tmpvar_114.x), tmpvar_114.y)
+    )));
+    vec2 tmpvar_115;
+    tmpvar_115 = (1.0 - abs(sin(uv_111)));
+    vec2 tmpvar_116;
+    tmpvar_116 = mix (tmpvar_115, abs(cos(uv_111)), tmpvar_115);
+    h_100 = (h_100 + ((
+      (pow ((1.0 - pow (
+        (tmpvar_110.x * tmpvar_110.y)
+      , 0.65)), choppy_102) * 0.3)
+     + 
+      (pow ((1.0 - pow (
+        (tmpvar_116.x * tmpvar_116.y)
+      , 0.65)), choppy_102) * 0.3)
+    ) * amp_103));
+    uv_101 = (uv_101 * mat2(1.6, 1.2, -1.2, 1.6));
+    freq_104 = (freq_104 * 1.9);
+    amp_103 = (amp_103 * 0.22);
+    choppy_102 = mix (choppy_102, 1.0, 0.2);
+  };
+  n_98.y = (p_31.y - h_100);
+  vec3 tmpvar_117;
+  tmpvar_117.x = (p_31.x + eps_97);
+  tmpvar_117.yz = p_31.yz;
+  float h_119;
+  vec2 uv_120;
+  float choppy_121;
+  float amp_122;
+  float freq_123;
+  freq_123 = (0.36 * scaleWater_2);
+  amp_122 = (0.6 * scaleWater_2);
+  choppy_121 = (4.0 * scaleWater_2);
+  uv_120.y = tmpvar_117.z;
+  uv_120.x = (tmpvar_117.x * 0.75);
+  h_119 = 0.0;
+  for (int i_118 = 0; i_118 < 5; i_118++) {
+    vec2 uv_124;
+    uv_124 = ((uv_120 + SEA_TIME) * freq_123);
+    vec2 tmpvar_125;
+    tmpvar_125 = floor(uv_124);
+    vec2 tmpvar_126;
+    tmpvar_126 = fract(uv_124);
+    vec2 tmpvar_127;
+    tmpvar_127 = ((tmpvar_126 * tmpvar_126) * (3.0 - (2.0 * tmpvar_126)));
+    uv_124 = (uv_124 + (-1.0 + (2.0 * 
+      mix (mix (fract((
+        sin(dot (tmpvar_125, vec2(127.1, 311.7)))
+       * 43758.55)), fract((
+        sin(dot ((tmpvar_125 + vec2(1.0, 0.0)), vec2(127.1, 311.7)))
+       * 43758.55)), tmpvar_127.x), mix (fract((
+        sin(dot ((tmpvar_125 + vec2(0.0, 1.0)), vec2(127.1, 311.7)))
+       * 43758.55)), fract((
+        sin(dot ((tmpvar_125 + vec2(1.0, 1.0)), vec2(127.1, 311.7)))
+       * 43758.55)), tmpvar_127.x), tmpvar_127.y)
+    )));
+    vec2 tmpvar_128;
+    tmpvar_128 = (1.0 - abs(sin(uv_124)));
+    vec2 tmpvar_129;
+    tmpvar_129 = mix (tmpvar_128, abs(cos(uv_124)), tmpvar_128);
+    vec2 uv_130;
+    uv_130 = ((uv_120 - SEA_TIME) * freq_123);
+    vec2 tmpvar_131;
+    tmpvar_131 = floor(uv_130);
+    vec2 tmpvar_132;
+    tmpvar_132 = fract(uv_130);
+    vec2 tmpvar_133;
+    tmpvar_133 = ((tmpvar_132 * tmpvar_132) * (3.0 - (2.0 * tmpvar_132)));
+    uv_130 = (uv_130 + (-1.0 + (2.0 * 
+      mix (mix (fract((
+        sin(dot (tmpvar_131, vec2(127.1, 311.7)))
+       * 43758.55)), fract((
+        sin(dot ((tmpvar_131 + vec2(1.0, 0.0)), vec2(127.1, 311.7)))
+       * 43758.55)), tmpvar_133.x), mix (fract((
+        sin(dot ((tmpvar_131 + vec2(0.0, 1.0)), vec2(127.1, 311.7)))
+       * 43758.55)), fract((
+        sin(dot ((tmpvar_131 + vec2(1.0, 1.0)), vec2(127.1, 311.7)))
+       * 43758.55)), tmpvar_133.x), tmpvar_133.y)
+    )));
+    vec2 tmpvar_134;
+    tmpvar_134 = (1.0 - abs(sin(uv_130)));
+    vec2 tmpvar_135;
+    tmpvar_135 = mix (tmpvar_134, abs(cos(uv_130)), tmpvar_134);
+    h_119 = (h_119 + ((
+      (pow ((1.0 - pow (
+        (tmpvar_129.x * tmpvar_129.y)
+      , 0.65)), choppy_121) * 0.3)
+     + 
+      (pow ((1.0 - pow (
+        (tmpvar_135.x * tmpvar_135.y)
+      , 0.65)), choppy_121) * 0.3)
+    ) * amp_122));
+    uv_120 = (uv_120 * mat2(1.6, 1.2, -1.2, 1.6));
+    freq_123 = (freq_123 * 1.9);
+    amp_122 = (amp_122 * 0.22);
+    choppy_121 = mix (choppy_121, 1.0, 0.2);
+  };
+  n_98.x = ((p_31.y - h_119) - n_98.y);
+  vec3 tmpvar_136;
+  tmpvar_136.xy = p_31.xy;
+  tmpvar_136.z = (p_31.z + eps_97);
+  float h_138;
+  vec2 uv_139;
+  float choppy_140;
+  float amp_141;
+  float freq_142;
+  freq_142 = (0.36 * scaleWater_2);
+  amp_141 = (0.6 * scaleWater_2);
+  choppy_140 = (4.0 * scaleWater_2);
+  uv_139.y = tmpvar_136.z;
+  uv_139.x = (p_31.x * 0.75);
+  h_138 = 0.0;
+  for (int i_137 = 0; i_137 < 5; i_137++) {
+    vec2 uv_143;
+    uv_143 = ((uv_139 + SEA_TIME) * freq_142);
+    vec2 tmpvar_144;
+    tmpvar_144 = floor(uv_143);
+    vec2 tmpvar_145;
+    tmpvar_145 = fract(uv_143);
+    vec2 tmpvar_146;
+    tmpvar_146 = ((tmpvar_145 * tmpvar_145) * (3.0 - (2.0 * tmpvar_145)));
+    uv_143 = (uv_143 + (-1.0 + (2.0 * 
+      mix (mix (fract((
+        sin(dot (tmpvar_144, vec2(127.1, 311.7)))
+       * 43758.55)), fract((
+        sin(dot ((tmpvar_144 + vec2(1.0, 0.0)), vec2(127.1, 311.7)))
+       * 43758.55)), tmpvar_146.x), mix (fract((
+        sin(dot ((tmpvar_144 + vec2(0.0, 1.0)), vec2(127.1, 311.7)))
+       * 43758.55)), fract((
+        sin(dot ((tmpvar_144 + vec2(1.0, 1.0)), vec2(127.1, 311.7)))
+       * 43758.55)), tmpvar_146.x), tmpvar_146.y)
+    )));
+    vec2 tmpvar_147;
+    tmpvar_147 = (1.0 - abs(sin(uv_143)));
+    vec2 tmpvar_148;
+    tmpvar_148 = mix (tmpvar_147, abs(cos(uv_143)), tmpvar_147);
+    vec2 uv_149;
+    uv_149 = ((uv_139 - SEA_TIME) * freq_142);
+    vec2 tmpvar_150;
+    tmpvar_150 = floor(uv_149);
+    vec2 tmpvar_151;
+    tmpvar_151 = fract(uv_149);
+    vec2 tmpvar_152;
+    tmpvar_152 = ((tmpvar_151 * tmpvar_151) * (3.0 - (2.0 * tmpvar_151)));
+    uv_149 = (uv_149 + (-1.0 + (2.0 * 
+      mix (mix (fract((
+        sin(dot (tmpvar_150, vec2(127.1, 311.7)))
+       * 43758.55)), fract((
+        sin(dot ((tmpvar_150 + vec2(1.0, 0.0)), vec2(127.1, 311.7)))
+       * 43758.55)), tmpvar_152.x), mix (fract((
+        sin(dot ((tmpvar_150 + vec2(0.0, 1.0)), vec2(127.1, 311.7)))
+       * 43758.55)), fract((
+        sin(dot ((tmpvar_150 + vec2(1.0, 1.0)), vec2(127.1, 311.7)))
+       * 43758.55)), tmpvar_152.x), tmpvar_152.y)
+    )));
+    vec2 tmpvar_153;
+    tmpvar_153 = (1.0 - abs(sin(uv_149)));
+    vec2 tmpvar_154;
+    tmpvar_154 = mix (tmpvar_153, abs(cos(uv_149)), tmpvar_153);
+    h_138 = (h_138 + ((
+      (pow ((1.0 - pow (
+        (tmpvar_148.x * tmpvar_148.y)
+      , 0.65)), choppy_140) * 0.3)
+     + 
+      (pow ((1.0 - pow (
+        (tmpvar_154.x * tmpvar_154.y)
+      , 0.65)), choppy_140) * 0.3)
+    ) * amp_141));
+    uv_139 = (uv_139 * mat2(1.6, 1.2, -1.2, 1.6));
+    freq_142 = (freq_142 * 1.9);
+    amp_141 = (amp_141 * 0.22);
+    choppy_140 = mix (choppy_140, 1.0, 0.2);
+  };
+  n_98.z = ((p_31.y - h_138) - n_98.y);
+  n_98.y = eps_97;
+  vec3 tmpvar_155;
+  tmpvar_155 = normalize(n_98);
+  vec3 color_156;
+  color_156 = (mix ((vec3(0.1, 0.19, 0.22) + 
+    (vec3(0.096, 0.108, 0.072) * pow (((
+      dot (tmpvar_155, vec3(0.0, 0.7808688, 0.6246951))
+     * 0.4) + 0.6), 80.0))
+  ), vec3(0.2, 0.3, 0.5), (
+    pow ((1.0 - max (dot (tmpvar_155, 
+      -(dir_3)
+    ), 0.0)), 3.0)
+   * 0.65)) + ((vec3(0.144, 0.162, 0.108) * 
+    (p_31.y - 0.6)
+  ) * max (
+    (1.0 - (dot (tmpvar_95, tmpvar_95) * 0.001))
+  , 0.0)));
+  color_156 = (color_156 + vec3((pow (
+    max (dot ((dir_3 - (2.0 * 
+      (dot (tmpvar_155, dir_3) * tmpvar_155)
+    )), vec3(0.0, 0.7808688, 0.6246951)), 0.0)
+  , 60.0) * 2.705714)));
+  diffuse_5.xyz = pow (color_156, vec3(0.75, 0.75, 0.75));
+  float tmpvar_157;
+  tmpvar_157 = (((diffuse_5.x + diffuse_5.y) + diffuse_5.z) / 3.0);
+  vec4 tmpvar_158;
+  tmpvar_158.xyz = diffuse_5.xyz;
+  tmpvar_158.w = diffuse_5.w;
+  gl_FragColor = tmpvar_158;
+  specular_1.xyz = (vec4((1.0 - tmpvar_22)) * diffuse_5).xyz;
+  specular_1.w = ((clamp (
+    (1.0 - tmpvar_22)
+  , 0.0, 1.0) * 0.5) + 0.5);
+  specular_1.w = clamp (((specular_1.w * 2.0) * specular_1.w), 0.2, 0.9);
+  specular_1 = (specular_1 * 1.5);
+  diffuse_5.xyz = (diffuse_5.xyz * (vec3(1.0, 1.0, 1.0) - specular_1.xyz));
+  if ((scaleWater_2 >= 10.0)) {
+    gl_FragColor.xyz = clamp (((tmpvar_158.xyz + tmpvar_19.xyz) / 2.0), 0.0, 1.0);
+    gl_FragColor.w = clamp (tmpvar_157, 0.1, 1.0);
 #if defined(USE_GLOW_BUFFER)
 		//out_Glow = gl_FragColor;
-		//out_Glow.a = 0.3;
 		out_Glow = vec4(0.0);
 #else
 		out_Glow = vec4(0.0);
 #endif
-	}
-
-	//if (u_EnableTextures.r > 0.0)
-	{
-		out_Normal = vec4(NORMAL.xyz, 0.0);
-		out_DetailedNormal = vec4(DETAILED_NORMAL.xyz, 0.0);
-	}
+  } else {
+    gl_FragColor.xyz = clamp (((
+      (gl_FragColor.xyz + gl_FragColor.xyz)
+     + tmpvar_19.xyz) / 3.0), 0.0, 1.0);
+    gl_FragColor.w = clamp (tmpvar_157, 0.5, 1.0);
+		out_Glow = vec4(0.0);
+  };
 }
+
+
+// stats: 785 alu 1 tex 18 flow
+// inputs: 5
+//  #0: var_Dimensions (high float) 2x1 [-1]
+//  #1: var_Time (high float) 1x1 [-1]
+//  #2: var_TexCoords (high float) 4x1 [-1]
+//  #3: var_ViewDir (high float) 3x1 [-1]
+//  #4: var_Normal (high float) 3x1 [-1]
+// uniforms: 1 (total size: 0)
+//  #0: u_NormalScale (high float) 4x1 [-1]
+// textures: 1
+//  #0: u_DiffuseMap (high 2d) 0x0 [-1]

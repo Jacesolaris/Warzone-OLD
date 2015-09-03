@@ -1,0 +1,218 @@
+//some stuff needed for kami-batch
+varying vec2		var_TexCoords;
+ 
+//make sure to have a u_Dimensions uniform set to the image size
+uniform vec2		u_Dimensions;
+
+uniform sampler2D	u_DiffuseMap;
+
+vec2 tex_offset = vec2(1.0 / u_Dimensions.x, 1.0 / u_Dimensions.y);
+
+// This makes the darker areas less bumpy but I like it
+#define USE_LINEAR_FOR_BUMPMAP
+
+struct C_Sample
+{
+	vec3 vAlbedo;
+	vec3 vNormal;
+};
+	
+C_Sample SampleMaterial(const in vec2 vUV, sampler2D sampler,  const in vec2 vTextureSize, const in float fNormalScale)
+{
+	C_Sample result;
+	
+	vec2 vInvTextureSize = vec2(1.0) / vTextureSize;
+	
+	vec3 cSampleNegXNegY = texture2D(sampler, vUV + (vec2(-1.0, -1.0)) * vInvTextureSize.xy).rgb;
+	vec3 cSampleZerXNegY = texture2D(sampler, vUV + (vec2( 0.0, -1.0)) * vInvTextureSize.xy).rgb;
+	vec3 cSamplePosXNegY = texture2D(sampler, vUV + (vec2( 1.0, -1.0)) * vInvTextureSize.xy).rgb;
+	
+	vec3 cSampleNegXZerY = texture2D(sampler, vUV + (vec2(-1.0, 0.0)) * vInvTextureSize.xy).rgb;
+	vec3 cSampleZerXZerY = texture2D(sampler, vUV + (vec2( 0.0, 0.0)) * vInvTextureSize.xy).rgb;
+	vec3 cSamplePosXZerY = texture2D(sampler, vUV + (vec2( 1.0, 0.0)) * vInvTextureSize.xy).rgb;
+	
+	vec3 cSampleNegXPosY = texture2D(sampler, vUV + (vec2(-1.0,  1.0)) * vInvTextureSize.xy).rgb;
+	vec3 cSampleZerXPosY = texture2D(sampler, vUV + (vec2( 0.0,  1.0)) * vInvTextureSize.xy).rgb;
+	vec3 cSamplePosXPosY = texture2D(sampler, vUV + (vec2( 1.0,  1.0)) * vInvTextureSize.xy).rgb;
+
+	// convert to linear	
+	vec3 cLSampleNegXNegY = cSampleNegXNegY * cSampleNegXNegY;
+	vec3 cLSampleZerXNegY = cSampleZerXNegY * cSampleZerXNegY;
+	vec3 cLSamplePosXNegY = cSamplePosXNegY * cSamplePosXNegY;
+
+	vec3 cLSampleNegXZerY = cSampleNegXZerY * cSampleNegXZerY;
+	vec3 cLSampleZerXZerY = cSampleZerXZerY * cSampleZerXZerY;
+	vec3 cLSamplePosXZerY = cSamplePosXZerY * cSamplePosXZerY;
+
+	vec3 cLSampleNegXPosY = cSampleNegXPosY * cSampleNegXPosY;
+	vec3 cLSampleZerXPosY = cSampleZerXPosY * cSampleZerXPosY;
+	vec3 cLSamplePosXPosY = cSamplePosXPosY * cSamplePosXPosY;
+
+	// Average samples to get albdeo colour
+	result.vAlbedo = ( cLSampleNegXNegY + cLSampleZerXNegY + cLSamplePosXNegY 
+		    	     + cLSampleNegXZerY + cLSampleZerXZerY + cLSamplePosXZerY
+		    	     + cLSampleNegXPosY + cLSampleZerXPosY + cLSamplePosXPosY ) / 9.0;	
+	
+	vec3 vScale = vec3(0.3333);
+	
+	#ifdef USE_LINEAR_FOR_BUMPMAP
+		
+		float fSampleNegXNegY = dot(cLSampleNegXNegY, vScale);
+		float fSampleZerXNegY = dot(cLSampleZerXNegY, vScale);
+		float fSamplePosXNegY = dot(cLSamplePosXNegY, vScale);
+		
+		float fSampleNegXZerY = dot(cLSampleNegXZerY, vScale);
+		float fSampleZerXZerY = dot(cLSampleZerXZerY, vScale);
+		float fSamplePosXZerY = dot(cLSamplePosXZerY, vScale);
+		
+		float fSampleNegXPosY = dot(cLSampleNegXPosY, vScale);
+		float fSampleZerXPosY = dot(cLSampleZerXPosY, vScale);
+		float fSamplePosXPosY = dot(cLSamplePosXPosY, vScale);
+	
+	#else
+	
+		float fSampleNegXNegY = dot(cSampleNegXNegY, vScale);
+		float fSampleZerXNegY = dot(cSampleZerXNegY, vScale);
+		float fSamplePosXNegY = dot(cSamplePosXNegY, vScale);
+		
+		float fSampleNegXZerY = dot(cSampleNegXZerY, vScale);
+		float fSampleZerXZerY = dot(cSampleZerXZerY, vScale);
+		float fSamplePosXZerY = dot(cSamplePosXZerY, vScale);
+		
+		float fSampleNegXPosY = dot(cSampleNegXPosY, vScale);
+		float fSampleZerXPosY = dot(cSampleZerXPosY, vScale);
+		float fSamplePosXPosY = dot(cSamplePosXPosY, vScale);	
+	
+	#endif
+	
+	// Sobel operator - http://en.wikipedia.org/wiki/Sobel_operator
+	
+	vec2 vEdge;
+	vEdge.x = (fSampleNegXNegY - fSamplePosXNegY) * 0.25 
+			+ (fSampleNegXZerY - fSamplePosXZerY) * 0.5
+			+ (fSampleNegXPosY - fSamplePosXPosY) * 0.25;
+
+	vEdge.y = (fSampleNegXNegY - fSampleNegXPosY) * 0.25 
+			+ (fSampleZerXNegY - fSampleZerXPosY) * 0.5
+			+ (fSamplePosXNegY - fSamplePosXPosY) * 0.25;
+
+	result.vNormal = normalize(vec3(vEdge * fNormalScale, 1.0));	
+	
+	return result;
+}
+
+vec4 generateEnhancedNormal( vec2 fragCoord )
+{// Generates a normal map with enhanced edges... Not so good for parallax...
+    const float threshold = 0.085;
+   
+    vec3 rgb = texture2D(u_DiffuseMap, fragCoord).rgb;
+    vec3 bw = vec3(1);
+    vec3 bw2 = vec3(1);
+
+    vec3 rgbUp = texture2D(u_DiffuseMap, vec2(fragCoord.x,fragCoord.y+tex_offset.y)).rgb;
+    vec3 rgbDown = texture2D(u_DiffuseMap, vec2(fragCoord.x,fragCoord.y-tex_offset.y)).rgb;
+    vec3 rgbLeft = texture2D(u_DiffuseMap, vec2(fragCoord.x+tex_offset.x,fragCoord.y)).rgb;
+    vec3 rgbRight = texture2D(u_DiffuseMap, vec2(fragCoord.x-tex_offset.x,fragCoord.y)).rgb;
+
+    float rgbAvr = (rgb.r + rgb.g + rgb.b) / 3.;
+    float rgbUpAvr = (rgbUp.r + rgbUp.g + rgbUp.b) / 3.;
+    float rgbDownAvr = (rgbDown.r + rgbDown.g + rgbDown.b) / 3.;
+    float rgbLeftAvr = (rgbLeft.r + rgbLeft.g + rgbLeft.b) / 3.;
+    float rgbRightAvr = (rgbRight.r + rgbRight.g + rgbRight.b) / 3.;
+
+    float dx = abs(rgbRightAvr - rgbLeftAvr);
+    float dy = abs(rgbUpAvr - rgbDownAvr);
+    
+    if (dx > threshold)
+        bw = vec3(1);
+    else if (dy > threshold)
+        bw = vec3(1);
+    else
+        bw = vec3(0);
+    
+    // o.5 + 0.5 * acts as a remapping function
+    bw = 0.5 + 0.5*normalize( vec3(rgbRightAvr - rgbLeftAvr, 100.0*tex_offset.x, rgbUpAvr - rgbDownAvr) ).xzy;
+    
+    return vec4(bw,0);
+}
+
+vec4 generateBumpyNormal( vec2 fragCoord )
+{// Generates an extra bumpy normal map...
+	const float x=1.;
+	const float y=1.;
+	
+	float M =abs(texture2D(u_DiffuseMap, fragCoord + vec2(0., 0.)*tex_offset).r); 
+	float L =abs(texture2D(u_DiffuseMap, fragCoord + vec2(x, 0.)*tex_offset).r);
+	float R =abs(texture2D(u_DiffuseMap, fragCoord + vec2(-x, 0.)*tex_offset).r);	
+	float U =abs(texture2D(u_DiffuseMap, fragCoord + vec2(0., y)*tex_offset).r);
+	float D =abs(texture2D(u_DiffuseMap, fragCoord + vec2(0., -y)*tex_offset).r);
+	float X = ((R-M)+(M-L))*.5;
+	float Y = ((D-M)+(M-U))*.5;
+	
+	const float strength =.01;
+	vec4 N = vec4(normalize(vec3(X, Y, strength)), 1.0);
+
+	vec4 col = vec4(N.xyz * 0.5 + 0.5,1.);
+	return col;
+}
+
+float SampleHeight(vec2 t)
+{// Provides enhanced parallax depths without stupid distortions... Also provides a nice backup specular map...
+	vec3 color = texture2D(u_DiffuseMap, t).rgb;
+#define const_1 ( 16.0 / 255.0)
+#define const_2 (255.0 / 219.0)
+	vec3 color2 = ((color - const_1) * const_2);
+#define const_3 ( 125.0 / 255.0)
+#define const_4 (255.0 / 115.0)
+	color = ((color - const_3) * const_4);
+
+	// 1st half "color * color" darkens, 2nd half "* color * 5.0" increases the mids...
+	color = clamp(color * color * (color * 5.0), 0.0, 1.0);
+
+	vec3 orig_color = color + color2;
+
+	// Lightens the new mixed version...
+	orig_color = clamp(orig_color * 2.5, 0.0, 1.0);
+
+	// Darkens the whole thing a litttle...
+	float combined_color2 = orig_color.r + orig_color.g + orig_color.b;
+	combined_color2 /= 4.0;
+
+	// Returns inverse of the height. Result is mostly around 1.0 (so we don't stand on a surface far below us), with deep dark areas (cracks, edges, etc)...
+	float height = clamp(1.0 - combined_color2, 0.0, 1.0);
+	return height;
+}
+
+void main ( void )
+{
+	vec4 enhanced = generateEnhancedNormal(var_TexCoords.xy);
+	vec4 bumpy = generateBumpyNormal(var_TexCoords.xy);
+
+	//vec4 normal = enhanced;
+	//vec4 normal = bumpy;
+	//vec4 normal = (enhanced + bumpy) / 2.0;
+
+	vec4 normal = enhanced;
+
+	// Mix methods...
+	float fNormalScale = 10.0;//2.0;
+	C_Sample sample = SampleMaterial(var_TexCoords.xy, u_DiffuseMap,  u_Dimensions, fNormalScale);
+	vec3 bumpMap = sample.vNormal;
+
+	normal.rgb += bumpMap.rgb;
+	normal.rgb += bumpy.rgb;
+	normal.rgb /= 3.0;
+
+	//normal = 1.0 - normal;
+
+	normal.a = SampleHeight(var_TexCoords.xy);
+	//normal.a = ((normal.r + normal.g) / 2.0) * (1.0 - normal.a);
+	normal.a += normal.b;
+	normal.a /= 2.0;
+	normal.a = 1.0 - normal.a;
+
+	gl_FragColor = normal;
+	//gl_FragColor = vec4(normal.a,normal.a,normal.a,1.0);
+	//gl_FragColor = vec4(var_TexCoords.x, 0.0, var_TexCoords.y, 1.0);
+	//gl_FragColor = texture2D(u_DiffuseMap, var_TexCoords.xy);
+}
