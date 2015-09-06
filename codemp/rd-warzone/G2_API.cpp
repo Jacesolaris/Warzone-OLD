@@ -2623,6 +2623,15 @@ char *G2API_GetGLAName(CGhoul2Info_v &ghoul2, int modelIndex)
 			//return mod->mdxm->animName;
 
 			assert(ghoul2[modelIndex].currentModel && ghoul2[modelIndex].currentModel->data.glm);
+
+			if (ghoul2[modelIndex].currentModel->data.glm->header->animName[0])
+			{
+				if (!strstr(ghoul2[modelIndex].currentModel->data.glm->header->animName, "players/_humanoid/"))
+				{// Not supported. let's try to force it to load anyway...
+					strcpy(ghoul2[modelIndex].currentModel->data.glm->header->animName, "models/players/_humanoid/_humanoid");
+				}
+			}
+
 			return ghoul2[modelIndex].currentModel->data.glm->header->animName;
 		}
 	}

@@ -783,6 +783,9 @@ static void ComputeShaderColors( shaderStage_t *pStage, vec4_t baseColor, vec4_t
 			break;
 		case CGEN_FOG:
 			{
+				if (!r_fog->integer)
+					break;
+
 				fog_t		*fog;
 
 				fog = tr.world->fogs + tess.fogNum;
@@ -935,6 +938,9 @@ static void ComputeFogValues(vec4_t fogDistanceVector, vec4_t fogDepthVector, fl
 	if (!tess.fogNum)
 		return;
 
+	if (!r_fog->integer)
+		return;
+
 	fog = tr.world->fogs + tess.fogNum;
 
 	VectorSubtract( backEnd.ori.origin, backEnd.viewParms.ori.origin, local );
@@ -965,32 +971,42 @@ static void ComputeFogValues(vec4_t fogDistanceVector, vec4_t fogDepthVector, fl
 
 static void ComputeFogColorMask( shaderStage_t *pStage, vec4_t fogColorMask )
 {
-	switch(pStage->adjustColorsForFog)
+	if (r_fog->integer)
 	{
+		switch(pStage->adjustColorsForFog)
+		{
 		case ACFF_MODULATE_RGB:
 			fogColorMask[0] =
-			fogColorMask[1] =
-			fogColorMask[2] = 1.0f;
+				fogColorMask[1] =
+				fogColorMask[2] = 1.0f;
 			fogColorMask[3] = 0.0f;
 			break;
 		case ACFF_MODULATE_ALPHA:
 			fogColorMask[0] =
-			fogColorMask[1] =
-			fogColorMask[2] = 0.0f;
+				fogColorMask[1] =
+				fogColorMask[2] = 0.0f;
 			fogColorMask[3] = 1.0f;
 			break;
 		case ACFF_MODULATE_RGBA:
 			fogColorMask[0] =
-			fogColorMask[1] =
-			fogColorMask[2] =
-			fogColorMask[3] = 1.0f;
+				fogColorMask[1] =
+				fogColorMask[2] =
+				fogColorMask[3] = 1.0f;
 			break;
 		default:
 			fogColorMask[0] =
+				fogColorMask[1] =
+				fogColorMask[2] =
+				fogColorMask[3] = 0.0f;
+			break;
+		}
+	}
+	else
+	{
+		fogColorMask[0] =
 			fogColorMask[1] =
 			fogColorMask[2] =
 			fogColorMask[3] = 0.0f;
-			break;
 	}
 }
 
@@ -2051,15 +2067,18 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				GLSL_SetUniformFloat(sp, UNIFORM_PORTALRANGE, tess.shader->portalRange);
 			}
 
-			if ( input->fogNum )
+			if (r_fog->integer)
 			{
-				vec4_t fogColorMask;
-				GLSL_SetUniformVec4(sp, UNIFORM_FOGDISTANCE, fogDistanceVector);
-				GLSL_SetUniformVec4(sp, UNIFORM_FOGDEPTH, fogDepthVector);
-				GLSL_SetUniformFloat(sp, UNIFORM_FOGEYET, eyeT);
-				
-				ComputeFogColorMask(pStage, fogColorMask);
-				GLSL_SetUniformVec4(sp, UNIFORM_FOGCOLORMASK, fogColorMask);
+				if ( input->fogNum )
+				{
+					vec4_t fogColorMask;
+					GLSL_SetUniformVec4(sp, UNIFORM_FOGDISTANCE, fogDistanceVector);
+					GLSL_SetUniformVec4(sp, UNIFORM_FOGDEPTH, fogDepthVector);
+					GLSL_SetUniformFloat(sp, UNIFORM_FOGEYET, eyeT);
+
+					ComputeFogColorMask(pStage, fogColorMask);
+					GLSL_SetUniformVec4(sp, UNIFORM_FOGCOLORMASK, fogColorMask);
+				}
 			}
 
 			GLSL_SetUniformInt(sp, UNIFORM_COLORGEN, forceRGBGen);
@@ -2557,7 +2576,7 @@ void RB_StageIteratorGeneric( void )
 	//
 	// now do fog
 	//
-	if ( tess.fogNum && tess.shader->fogPass ) {
+	if ( r_fog->integer && tess.fogNum && tess.shader->fogPass ) {
 		RB_FogPass();
 	}
 

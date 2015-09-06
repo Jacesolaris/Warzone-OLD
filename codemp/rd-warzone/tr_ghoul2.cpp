@@ -4233,6 +4233,45 @@ Bone  52:   "face_always_":
 
 */
 
+//#define __NIF_IMPORT_TEST__
+
+#ifdef __NIF_IMPORT_TEST__
+#include "nif_include/niflib.h"
+#include "nif_include/obj/NiGeometry.h"
+#include "nif_include/obj/NiGeometryData.h"
+#include "nif_include/obj/NiNode.h"
+#include "nif_include/obj/NiTriShape.h"
+#include "nif_include/obj/NiTriShapeData.h"
+#include "nif_include/Ref.h"
+#include "nif_include/RefObject.h"
+
+qboolean R_LoadNIF( model_t *mod, void *buffer, const char *mod_name, qboolean &bAlreadyCached ) {
+	using namespace Niflib;
+
+	try {
+		NiObjectRef root = ReadNifTree( mod_name );
+		NiNodeRef node = DynamicCast<NiNode>( root );
+		if ( node != NULL ) {
+			NiObjectRef niObj = new NiTriShapeData;
+			if ( niObj->IsDerivedType( NiGeometry::TYPE ) ) {
+				NiGeometryRef niGeom = DynamicCast<NiGeometry>(niObj);
+				Ref<NiGeometryData> niGeomData = DynamicCast<NiGeometryData>( niGeom->GetData() );
+				//niGeomData->GetVertices()
+			}
+		}
+	}
+	catch( exception & e ) {
+		cout << "Error: " << e.what() << endl;
+		return qfalse;
+	}
+	catch( ... ) {
+		cout << "Unknown Exception." << endl;
+		return qfalse;
+	}
+
+	return qtrue;
+}
+#endif //__NIF_IMPORT_TEST__
 
 qboolean R_LoadMDXM( model_t *mod, void *buffer, const char *mod_name, qboolean &bAlreadyCached ) {
 	int					i,l, j;
@@ -4242,6 +4281,13 @@ qboolean R_LoadMDXM( model_t *mod, void *buffer, const char *mod_name, qboolean 
 	int					version;
 	int					size;
 	mdxmSurfHierarchy_t	*surfInfo;
+
+#ifdef __NIF_IMPORT_TEST__
+	if (StringContainsWord(mod_name, ".nif"))
+	{
+		return R_LoadNIF( mod, buffer, mod_name, bAlreadyCached );
+	}
+#endif //__NIF_IMPORT_TEST__
     
 	pinmodel= (mdxmHeader_t *)buffer;
 	//

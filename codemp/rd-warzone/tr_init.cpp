@@ -248,6 +248,7 @@ cvar_t	*r_saveFontData;
 //
 // UQ1: Added...
 //
+cvar_t	*r_fog;
 cvar_t	*r_multithread;
 cvar_t	*r_multithread2;
 cvar_t	*r_testvar;
@@ -1407,6 +1408,7 @@ void R_Register( void )
 	//
 	// UQ1: Added...
 	//
+	r_fog = ri->Cvar_Get( "r_fog", "1", CVAR_ARCHIVE ); // UQ1: For disabling fog to test speeds...
 	r_multithread = ri->Cvar_Get( "r_multithread", "0", CVAR_ARCHIVE );
 	r_multithread2 = ri->Cvar_Get( "r_multithread2", "1", CVAR_ARCHIVE );
 	r_testvar = ri->Cvar_Get( "r_testvar", "1.0", CVAR_ARCHIVE );

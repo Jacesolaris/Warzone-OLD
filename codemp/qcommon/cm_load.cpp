@@ -91,7 +91,7 @@ int GetMaterialType ( const char *name )
 		return MATERIAL_ARMOR;
 	//else if (StringsContainWord(name, name, "water"))
 	//	return MATERIAL_WATER;
-	else if (StringsContainWord(name, name, "grass") || StringsContainWord(name, name, "yavin/ground") || StringsContainWord(name, name, "mp/s_ground") || StringsContainWord(name, name, "volcano/terrain") || StringsContainWord(name, name, "bay/terrain") || StringsContainWord(name, name, "towers/terrain"))
+	else if (StringsContainWord(name, name, "grass") || StringsContainWord(name, name, "yavin/ground") || StringsContainWord(name, name, "mp/s_ground") || StringsContainWord(name, name, "volcano/terrain") || StringsContainWord(name, name, "bay/terrain") || StringsContainWord(name, name, "towers/terrain") || StringsContainWord(name, name, "yavinassault/terrain"))
 		return MATERIAL_SHORTGRASS;
 	//
 	// Stuff we can be pretty sure of...
@@ -237,15 +237,12 @@ int GetMaterialType ( const char *name )
 	//	return MATERIAL_TILES;
 	//else if (StringsContainWord(name, name, "water"))
 	//	return MATERIAL_WATER;
-	else if (StringsContainWord(name, name, "grass") || StringsContainWord(name, name, "yavin/ground") || StringsContainWord(name, name, "mp/s_ground"))
+	else if (StringsContainWord(name, name, "grass") || StringsContainWord(name, name, "yavin/ground") || StringsContainWord(name, name, "mp/s_ground") || StringsContainWord(name, name, "yavinassault/terrain"))
 		return MATERIAL_SHORTGRASS;
-
 	if (StringsContainWord(name, name, "plastic") || StringsContainWord(name, name, "trooper") || StringsContainWord(name, name, "medpack"))
 		return MATERIAL_PLASTIC;
 	else if (StringsContainWord(name, name, "water") && !StringsContainWord(name, name, "splash") && !StringsContainWord(name, name, "drip"))
 		return MATERIAL_WATER;
-	else if (StringsContainWord(name, name, "grass") || StringsContainWord(name, name, "yavin/ground") || StringsContainWord(name, name, "mp/s_ground"))
-		return MATERIAL_SHORTGRASS;
 
 	return MATERIAL_TILES;
 }

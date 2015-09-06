@@ -462,6 +462,8 @@ CG_RegisterClientModelname
 qboolean BG_IsValidCharacterModel(const char *modelName, const char *skinName);
 qboolean BG_ValidateSkinForTeam( const char *modelName, char *skinName, int team, float *colors );
 
+#define ___ALLOW_ANY_GLM___
+
 static qboolean CG_RegisterClientModelname( clientInfo_t *ci, const char *modelName, const char *skinName, const char *teamName, int clientNum ) {
 	int handle;
 	char		afilename[MAX_QPATH];
@@ -660,17 +662,23 @@ retryModel:
 
 	if (!trap->G2API_SetBoneAnim(ci->ghoul2Model, 0, "model_root", 0, 12, BONE_ANIM_OVERRIDE_LOOP, 1.0f, cg.time, -1, -1))
 	{
+#ifndef ___ALLOW_ANY_GLM___
 		badModel = qtrue;
+#endif //___ALLOW_ANY_GLM___
 	}
 
 	if (!trap->G2API_SetBoneAngles(ci->ghoul2Model, 0, "upper_lumbar", tempVec, BONE_ANGLES_POSTMULT, POSITIVE_X, NEGATIVE_Y, NEGATIVE_Z, NULL, 0, cg.time))
 	{
+#ifndef ___ALLOW_ANY_GLM___
 		badModel = qtrue;
+#endif //___ALLOW_ANY_GLM___
 	}
 
 	if (!trap->G2API_SetBoneAngles(ci->ghoul2Model, 0, "cranium", tempVec, BONE_ANGLES_POSTMULT, POSITIVE_Z, NEGATIVE_Y, POSITIVE_X, NULL, 0, cg.time))
 	{
+#ifndef ___ALLOW_ANY_GLM___
 		badModel = qtrue;
+#endif //___ALLOW_ANY_GLM___
 	}
 
 	ci->bolt_lhand = trap->G2API_AddBolt(ci->ghoul2Model, 0, "*l_hand");
@@ -730,7 +738,9 @@ retryModel:
 
 	if (ci->bolt_rhand == -1 || ci->bolt_lhand == -1 || ci->bolt_head == -1 || ci->bolt_motion == -1 || ci->bolt_llumbar == -1)
 	{
+#ifndef ___ALLOW_ANY_GLM___
 		badModel = qtrue;
+#endif //___ALLOW_ANY_GLM___
 	}
 
 	if (badModel)

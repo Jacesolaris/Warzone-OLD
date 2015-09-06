@@ -564,6 +564,7 @@ void CreateSpawnpoints( void )
 				if (Warzone_SpawnpointNearMoverEntityLocation( gWPArray[n]->origin )) 
 					continue;
 
+#pragma omp parallel for schedule(dynamic)
 				for (o = 0; o < gWPNum; o++)
 				{
 					float dist;
@@ -598,6 +599,7 @@ void CreateSpawnpoints( void )
 			int		RED_CLOSEST = -1;
 			float	RED_CLOSEST_DIST = 0;
 
+#pragma omp parallel for schedule(dynamic)
 			for (n = 0; n < gWPNum; n++)
 			{
 				qboolean alreadyInList = qfalse;
@@ -698,6 +700,7 @@ void CreateSpawnpoints( void )
 		// Ok, we need more spawnpoints...
 		//
 
+#pragma omp parallel for schedule(dynamic)
 		for (i = 0; i < gWPNum; i++)
 		{// Find the map size from waypoints...
 			if (gWPArray[i]->origin[0] < mins[0]) mins[0] = gWPArray[i]->origin[0];
@@ -734,6 +737,7 @@ void CreateSpawnpoints( void )
 		red_angles[2] = 0;
 
 		// Find waypoints close to the edge of the map to make into spawnpoints...
+#pragma omp parallel for schedule(dynamic)
 		for (i = 0; i < gWPNum; i++)
 		{
 			if (gWPArray[i]->origin[0] == 0 && gWPArray[i]->origin[1] == 0) continue;
