@@ -433,7 +433,7 @@ void DrawGrass()
 {
 	int spot = 0;
 
-	if (!GRASSES_LOADED && IgnoreGrassOnMap())
+	if (IgnoreGrassOnMap())
 	{// Ignore this map... We know we don't need grass here...
 		NUM_GRASS_POSITIONS = 0;
 		GRASSES_LOADED = qtrue;

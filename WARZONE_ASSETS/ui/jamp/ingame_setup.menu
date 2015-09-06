@@ -1539,13 +1539,44 @@
 				play			"sound/interface/button1"
 			}
 		}
+		
+		itemDef 
+		{	
+			name				video_hbao
+			group				video2
+			type				ITEM_TYPE_MULTI
+			text				"HBAO:"
+			rect				220 181 300 14
+			textalign			ITEM_ALIGN_RIGHT
+			textalignx			174
+			textaligny			0
+			font 				4
+			textscale 			1
+			forecolor		.615 .615 .956 1
+			cvarFloatList		{  @MENUS_OFF 0 @MENUS_ON 1 }
+			descText			"Enable Horizon Based Ambient Occlusion technology?"
+			cvar				"r_hbao"
+
+			mouseenter 
+			{ 
+				show			highlight16
+			}
+			mouseexit 
+			{ 
+				hide			highlight16
+			} 
+			action 
+			{
+				play			"sound/interface/button1"
+			}
+		}
 
 		itemDef 
 		{			
 			name				dynamic_light
 			group				video2
       			type				ITEM_TYPE_MULTI
-			text				"Lighting System"
+			text				"Lighting System:"
 			cvar				"r_dynamiclight"	
 			cvarFloatList		
 			{ 
@@ -1553,7 +1584,7 @@
 				"Dynamic" 1
 				"Volumetric" 2
 			}
-			rect				220 181 300 14
+			rect				220 201 340 14
 	   		textalign			ITEM_ALIGN_RIGHT
 			textalignx			174
 			textaligny			0
@@ -1568,41 +1599,6 @@
 				play			"sound/interface/button1"
 			}
 
-			mouseenter 
-			{ 
-				show			highlight16
-			}
-			mouseexit 
-			{ 
-				hide			highlight16
-			} 
-		}
-
-		itemDef 
-		{	
-			name				dynamic_glow
-			group				video2
-      		type				ITEM_TYPE_MULTI
-			text				@MENUS_DYNAMIC_GLOW
-			cvar				r_dynamicglow
-			cvarFloatList		
-			{  
-				@MENUS_OFF 	0 
-				@MENUS_ON 	1 
-			}
-			rect				220 201 340 14
-	   		textalign			ITEM_ALIGN_RIGHT
-			textalignx			174
-			textaligny			0
-			font 				4
-			textscale 			1
-			forecolor			.615 .615 .956 1
-			visible				0
-			descText			@MENUS_DYNAMIC_GLOW_DESC
-			action
-			{ 
-				play			"sound/interface/button1"
-			}
 			mouseenter 
 			{ 
 				show			highlight17
@@ -1690,7 +1686,7 @@
 			name				video_enhancedFX
 			group				video2
 			type				ITEM_TYPE_MULTI
-			text				"Enhanced FX"
+			text				"Enhanced FX:"
 			rect				220 261 300 14
 			textalign			ITEM_ALIGN_RIGHT
 			textalignx			174
@@ -1718,7 +1714,7 @@
 				show			applyChanges
 			}
 		}
-		
+
 
     //----------------------------------------------------------------------------------------------
 		//
@@ -1726,13 +1722,48 @@
 		//
 		//----------------------------------------------------------------------------------------------
 
+    itemDef 
+		{	
+			name				dynamic_glow
+			group				video_advanced
+      		type				ITEM_TYPE_MULTI
+			text				"Dynamic Glow:"
+			cvar				r_dynamicglow
+			cvarFloatList		
+			{  
+				@MENUS_OFF 	0 
+				@MENUS_ON 	1 
+			}
+			rect				220 43 300 20
+	   		textalign			ITEM_ALIGN_RIGHT
+			textalignx			165
+			textaligny			0
+			font 				4
+			textscale 			1
+			forecolor			.615 .615 .956 1
+			visible				0
+			descText			@MENUS_DYNAMIC_GLOW_DESC
+			action
+			{ 
+				play			"sound/interface/button1"
+			}
+			mouseenter 
+			{ 
+				show			highlight1
+			}
+			mouseexit 
+			{ 
+				hide			highlight1
+			} 
+		}
+		
 		itemDef 
 		{	
 			name				video_bloom
 			group				video_advanced
 			type				ITEM_TYPE_MULTI
-			text				"Bloom"
-			rect				220 43 300 20
+			text				"Bloom:"
+			rect				220 63 300 20
 			textalign			ITEM_ALIGN_RIGHT
 			textalignx			165
 			textaligny			0
@@ -1742,37 +1773,6 @@
 			cvarFloatList		{  @MENUS_OFF 0 @MENUS_ON 1 }
 			descText			"Enable bloom?"
 			cvar				"r_bloom"
-
-			mouseenter 
-			{ 
-				show			highlight1
-			}
-			mouseexit 
-			{ 
-				hide			highlight1
-			} 
-			action 
-			{
-				play			"sound/interface/button1"
-			}
-		}
-		
-		itemDef 
-		{	
-			name				video_anamorphic
-			group				video_advanced
-			type				ITEM_TYPE_MULTI
-			text				"Anamorphic Lens Flares"
-			rect				220 63 300 20
-			textalign			ITEM_ALIGN_RIGHT
-			textalignx			165
-			textaligny			0
-			font 				4
-			textscale 			1
-			forecolor		.615 .615 .956 1
-			cvarFloatList		{  @MENUS_OFF 0 @MENUS_ON 1 }
-			descText			"Enable anamorphic lens flares?"
-			cvar				"r_anamorphic"
 
 			mouseenter 
 			{ 
@@ -1790,10 +1790,10 @@
 		
 		itemDef 
 		{	
-			name				video_darkxpand
+			name				video_anamorphic
 			group				video_advanced
 			type				ITEM_TYPE_MULTI
-			text				"Dark Xpand"
+			text				"Anamorphic Lens Flares:"
 			rect				220 83 300 20
 			textalign			ITEM_ALIGN_RIGHT
 			textalignx			165
@@ -1802,8 +1802,8 @@
 			textscale 			1
 			forecolor		.615 .615 .956 1
 			cvarFloatList		{  @MENUS_OFF 0 @MENUS_ON 1 }
-			descText			"Enable dark xpand technology?"
-			cvar				"r_darkexpand"
+			descText			"Enable anamorphic lens flares?"
+			cvar				"r_anamorphic"
 
 			mouseenter 
 			{ 
@@ -1821,10 +1821,10 @@
 		
 		itemDef 
 		{	
-			name				video_truehdr
+			name				video_darkxpand
 			group				video_advanced
 			type				ITEM_TYPE_MULTI
-			text				"True HDR"
+			text				"Dark Xpand:"
 			rect				220 103 300 20
 			textalign			ITEM_ALIGN_RIGHT
 			textalignx			165
@@ -1833,8 +1833,8 @@
 			textscale 			1
 			forecolor		.615 .615 .956 1
 			cvarFloatList		{  @MENUS_OFF 0 @MENUS_ON 1 }
-			descText			"Enable True HDR technology?"
-			cvar				"r_truehdr"
+			descText			"Enable dark xpand technology?"
+			cvar				"r_darkexpand"
 
 			mouseenter 
 			{ 
@@ -1852,10 +1852,10 @@
 		
 		itemDef 
 		{	
-			name				video_ssao2
+			name				video_truehdr
 			group				video_advanced
 			type				ITEM_TYPE_MULTI
-			text				"Ambient Occlusion"
+			text				"True HDR:"
 			rect				220 123 300 20
 			textalign			ITEM_ALIGN_RIGHT
 			textalignx			165
@@ -1864,8 +1864,8 @@
 			textscale 			1
 			forecolor		.615 .615 .956 1
 			cvarFloatList		{  @MENUS_OFF 0 @MENUS_ON 1 }
-			descText			"Enable screen space ambient occlusion technology?"
-			cvar				"r_ssao2"
+			descText			"Enable True HDR technology?"
+			cvar				"r_truehdr"
 
 			mouseenter 
 			{ 
@@ -1886,7 +1886,7 @@
 			name				video_dof
 			group				video_advanced
 			type				ITEM_TYPE_MULTI
-			text				"Depth Of Field"
+			text				"Depth Of Field:"
 			rect				220 143 300 20
 			textalign			ITEM_ALIGN_RIGHT
 			textalignx			165
@@ -1917,7 +1917,7 @@
 			name				video_esharpen
 			group				video_advanced
 			type				ITEM_TYPE_MULTI
-			text				"E-Sharpen"
+			text				"E-Sharpen:"
 			rect				220 163 300 20
 			textalign			ITEM_ALIGN_RIGHT
 			textalignx			165
@@ -1948,7 +1948,7 @@
 			name				video_krisp
 			group				video_advanced
 			type				ITEM_TYPE_MULTI
-			text				"Krisp"
+			text				"Krisp:"
 			rect				220 183 300 20
 			textalign			ITEM_ALIGN_RIGHT
 			textalignx			165
@@ -1979,7 +1979,7 @@
 			name				video_lensflare
 			group				video_advanced
 			type				ITEM_TYPE_MULTI
-			text				"Lens Flares"
+			text				"Lens Flares:"
 			rect				220 203 300 20
 			textalign			ITEM_ALIGN_RIGHT
 			textalignx			165
@@ -2010,7 +2010,7 @@
 			name				video_anaglyph
 			group				video_advanced
 			type				ITEM_TYPE_MULTI
-			text				"Stereo Vision (anaglyph)"
+			text				"Stereo Vision (anaglyph):"
 			rect				220 223 300 20
 			textalign			ITEM_ALIGN_RIGHT
 			textalignx			165
@@ -2041,7 +2041,7 @@
 			name				video_anaglyphseparation
 			group				video_advanced
 			type				ITEM_TYPE_SLIDER
-			text				"Stereo Vision Separation"
+			text				"Stereo Vision Separation:"
 			cvarfloat			"r_trueAnaglyphSeparation" 3 1 30
 			rect				220 243 300 20
 			textalign			ITEM_ALIGN_RIGHT
@@ -2074,7 +2074,7 @@
 			name				video_vibrancy
 			group				video_advanced
 			type				ITEM_TYPE_SLIDER
-			text				"Vibrancy"
+			text				"Vibrancy:"
 			cvarfloat			"r_vibrancy" .4 0 1
 			rect				220 263 300 20
 			textalign			ITEM_ALIGN_RIGHT

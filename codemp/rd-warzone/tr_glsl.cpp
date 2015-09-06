@@ -78,8 +78,6 @@ extern const char *fallbackShader_uniquesky_fp;
 extern const char *fallbackShader_uniquesky_vp;
 extern const char *fallbackShader_uniquewater_fp;
 extern const char *fallbackShader_uniquewater_vp;
-extern const char *fallbackShader_ssao2_vp;
-extern const char *fallbackShader_ssao2_fp;
 extern const char *fallbackShader_hbao_vp;
 extern const char *fallbackShader_hbao_fp;
 extern const char *fallbackShader_sss_vp;
@@ -1994,14 +1992,6 @@ int GLSL_BeginLoadGPUShaders(void)
 	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
 	extradefines[0] = '\0';
 
-	if (!GLSL_BeginLoadGPUShader(&tr.ssao2Shader, "ssao2", attribs, qtrue, extradefines, qfalse, NULL, fallbackShader_ssao2_vp, fallbackShader_ssao2_fp))
-	{
-		ri->Error(ERR_FATAL, "Could not load ssao2 shader!");
-	}
-
-	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
-	extradefines[0] = '\0';
-
 	if (!GLSL_BeginLoadGPUShader(&tr.hbaoShader, "hbao", attribs, qtrue, extradefines, qtrue, NULL, fallbackShader_hbao_vp, fallbackShader_hbao_fp))
 	{
 		ri->Error(ERR_FATAL, "Could not load hbao shader!");
@@ -3387,25 +3377,6 @@ void GLSL_EndLoadGPUShaders ( int startTime )
 		numEtcShaders++;
 
 
-		if (!GLSL_EndLoadGPUShader(&tr.ssao2Shader))
-		{
-			ri->Error(ERR_FATAL, "Could not load ssao2 shader!");
-		}
-
-		GLSL_InitUniforms(&tr.ssao2Shader);
-
-		qglUseProgram(tr.ssao2Shader.program);
-		GLSL_SetUniformInt(&tr.ssao2Shader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
-		GLSL_SetUniformInt(&tr.ssao2Shader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
-		GLSL_SetUniformInt(&tr.ssao2Shader, UNIFORM_NORMALMAP, TB_NORMALMAP);
-		qglUseProgram(0);
-
-#if defined(_DEBUG)
-		GLSL_FinishGPUShader(&tr.ssao2Shader);
-#endif
-
-		numEtcShaders++;
-
 		if (!GLSL_EndLoadGPUShader(&tr.sssShader))
 		{
 			ri->Error(ERR_FATAL, "Could not load sss shader!");
@@ -3538,7 +3509,6 @@ void GLSL_ShutdownGPUShaders(void)
 	GLSL_DeleteGPUShader(&tr.anaglyphShader);
 	GLSL_DeleteGPUShader(&tr.waterShader);
 	GLSL_DeleteGPUShader(&tr.sssShader);
-	GLSL_DeleteGPUShader(&tr.ssao2Shader);
 	GLSL_DeleteGPUShader(&tr.hbaoShader);
 	GLSL_DeleteGPUShader(&tr.hbaoCombineShader);
 	GLSL_DeleteGPUShader(&tr.bloomBlurShader);

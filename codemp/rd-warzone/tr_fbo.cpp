@@ -723,7 +723,7 @@ void FBO_Init(void)
 		R_CheckFBO(tr.quarterFbo[i]);
 	}
 
-	if (r_ssao->integer || r_ssao2->integer || r_hbao->integer)
+	if (r_ssao->integer || r_hbao->integer)
 	{
 		tr.hdrDepthFbo = FBO_Create("_hdrDepth", tr.hdrDepthImage->width, tr.hdrDepthImage->height);
 		FBO_Bind(tr.hdrDepthFbo);
