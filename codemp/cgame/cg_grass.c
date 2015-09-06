@@ -166,6 +166,71 @@ qboolean FloorIsGrassAt ( vec3_t org )
 	return qfalse;
 }
 
+qboolean LoadFoliagePositions( void )
+{
+	fileHandle_t	f;
+	int				i = 0;
+	
+	trap->FS_Open( va( "foliage/%s.foliage", cgs.currentmapname), &f, FS_READ );
+
+	if ( !f )
+	{
+		return qfalse;
+	}
+
+	trap->FS_Read( &NUM_GRASS_POSITIONS, sizeof(int), f );
+
+	for (i = 0; i < NUM_GRASS_POSITIONS; i++)
+	{
+		trap->FS_Read( &GRASS_POSITIONS[i], sizeof(vec3_t), f );
+		trap->FS_Read( &GRASS_SELECTION[i], sizeof(int), f );
+		trap->FS_Read( &GRASS_ANGLES[i], sizeof(float), f );
+		trap->FS_Read( &GRASS_SCALE[i], sizeof(float), f );
+		trap->FS_Read( &TREE_TYPE[i], sizeof(int), f );
+		trap->FS_Read( &TREE_SCALE[i], sizeof(float), f );
+	}
+
+	trap->FS_Close(f);
+
+	trap->Print( "^1*** ^3%s^5: Successfully loaded %i grass points from foliage file ^7foliage/%s.foliage^5.\n", GAME_VERSION,
+			  NUM_GRASS_POSITIONS, cgs.currentmapname );
+
+	return qtrue;
+}
+
+qboolean SaveFoliagePositions( void )
+{
+	fileHandle_t	f;
+	int				i = 0;
+	
+	trap->FS_Open( va( "foliage/%s.foliage", cgs.currentmapname), &f, FS_WRITE );
+
+	if ( !f )
+	{
+		trap->Print( "^1*** ^3%s^5: Failed to open foliage file ^7foliage/%s.foliage^5 for save.\n", GAME_VERSION, cgs.currentmapname );
+		return qfalse;
+	}
+
+	trap->FS_Write( &NUM_GRASS_POSITIONS, sizeof(int), f );
+
+	for (i = 0; i < NUM_GRASS_POSITIONS; i++)
+	{
+		trap->FS_Write( &GRASS_POSITIONS[i], sizeof(vec3_t), f );
+		trap->FS_Write( &GRASS_SELECTION[i], sizeof(int), f );
+		trap->FS_Write( &GRASS_ANGLES[i], sizeof(float), f );
+		trap->FS_Write( &GRASS_SCALE[i], sizeof(float), f );
+		trap->FS_Write( &TREE_TYPE[i], sizeof(int), f );
+		trap->FS_Write( &TREE_SCALE[i], sizeof(float), f );
+	}
+
+	trap->FS_Close(f);
+
+	trap->Print( "^1*** ^3%s^5: Successfully saved %i grass points to foliage file ^7foliage/%s.foliage^5.\n", GAME_VERSION,
+			  NUM_GRASS_POSITIONS, cgs.currentmapname );
+
+	return qtrue;
+}
+
 #define GRASS_MOD_NAME	"aimod"
 float	GRASS_NOD_VERSION = 1.1f;
 
@@ -193,11 +258,17 @@ AIMOD_NODES_LoadGrass ( void )
 	NUM_GRASS_POSITIONS = 0;
 	GRASSES_LOADED = qfalse;
 
+	if (LoadFoliagePositions())
+	{
+		return;
+	}
+
 	i = 0;
 
 	///////////////////
 	//open the node file for reading, return false on error
 	trap->FS_Open( va( "nodes/%s.bwp", cgs.currentmapname), &f, FS_READ );
+
 	if ( !f )
 	{
 		return;
@@ -318,19 +389,19 @@ AIMOD_NODES_LoadGrass ( void )
 
 	trap->FS_Read( &fix_aas_nodes, sizeof(short int), f );
 	trap->FS_Close( f );							//close the file
-	trap->Print( "^1*** ^3%s^5: Successfully loaded %i grass points from waypoint file ^7nodes/%s.bwp^5.\n", GAME_VERSION,
+
+	trap->Print( "^1*** ^3%s^5: Successfully generated %i grass points from waypoint file ^7nodes/%s.bwp^5.\n", GAME_VERSION,
 			  NUM_GRASS_POSITIONS, cgs.currentmapname );
 
-	return;
+	// Save the generated info to a file for next time...
+	SaveFoliagePositions();
 }
 
 qboolean IgnoreGrassOnMap( void )
 {
-	if (StringContainsWord(cgs.currentmapname, "jkg_mos_eisley")
-		|| StringContainsWord(cgs.currentmapname, "eisley")
+	if (StringContainsWord(cgs.currentmapname, "eisley")
 		|| StringContainsWord(cgs.currentmapname, "desert")
 		|| StringContainsWord(cgs.currentmapname, "tatooine")
-		|| StringContainsWord(cgs.currentmapname, "ffa3")
 		|| StringContainsWord(cgs.currentmapname, "hoth")
 		|| StringContainsWord(cgs.currentmapname, "mp/ctf1")
 		|| StringContainsWord(cgs.currentmapname, "mp/ctf2")
