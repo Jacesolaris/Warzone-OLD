@@ -2117,7 +2117,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->firingSound			= NULL_SOUND;
 		weaponInfo->chargeSound			= NULL_SOUND;
 		weaponInfo->muzzleEffect		= NULL_FX;
-		weaponInfo->missileModel		= trap->R_RegisterModel( "models/Weapons/Mine_LaserTrip/projectile.md3" );
+		weaponInfo->missileModel		= trap->R_RegisterModel("models/Weapons/Mine_LaserTrip/projectile.md3");
 		weaponInfo->missileSound		= NULL_SOUND;
 		weaponInfo->missileDlight		= 0;
 		weaponInfo->missileHitSound		= NULL_SOUND;
@@ -2126,7 +2126,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altFiringSound		= NULL_SOUND;
 		weaponInfo->altChargeSound		= NULL_SOUND;
 		weaponInfo->altMuzzleEffect		= NULL_FX;
-		weaponInfo->altMissileModel		= trap->R_RegisterModel( "models/Weapons/Mine_LaserTrip/projectile.md3" );
+		weaponInfo->altMissileModel		= trap->R_RegisterModel("models/Weapons/Mine_LaserTrip/projectile.md3");
 		weaponInfo->altMissileSound		= NULL_SOUND;
 		weaponInfo->altMissileDlight	= 0;
 		weaponInfo->altMissileHitSound	= NULL_SOUND;
