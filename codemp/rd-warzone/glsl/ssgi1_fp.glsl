@@ -1,5 +1,3 @@
-precision lowp float;
-precision lowp sampler2D;
 uniform sampler2D u_TextureMap;
 uniform sampler2D u_ScreenDepthMap;
 uniform sampler2D u_NormalMap;

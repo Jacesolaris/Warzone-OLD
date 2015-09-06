@@ -1,40 +1,38 @@
-precision lowp float;
-precision lowp sampler2D;
 uniform sampler2D u_DiffuseMap;
-varying vec4 var_Local0;
-varying vec2 var_Dimensions;
-varying vec2 var_TexCoords;
-void main ()
+
+varying vec4	var_Local0;
+varying vec2	var_Dimensions;
+varying vec2	var_TexCoords;
+
+void main(void)
 {
-  vec3 color2_2;
-  vec3 col0_4;
-  vec3 color_5;
-  vec2 PIXEL_OFFSET_6;
-  PIXEL_OFFSET_6 = (1.0/(var_Dimensions));
-  color_5 = vec3(0.0, 0.0, 0.0);
-  col0_4 = texture2D (u_DiffuseMap, var_TexCoords).xyz;
-  for (float width_3 = 0.0; width_3 < var_Local0.z; width_3 += 1.0) {
-    color_5 = (color_5 + ((col0_4 / 2.0) + (
-      (texture2D (u_DiffuseMap, (var_TexCoords + ((vec2(1.0, 0.0) * width_3) * PIXEL_OFFSET_6))).xyz + texture2D (u_DiffuseMap, (var_TexCoords - ((vec2(1.0, 0.0) * width_3) * PIXEL_OFFSET_6))).xyz)
-     / 4.0)));
-  };
-  color_5 = (color_5 / var_Local0.z);
-  color2_2 = vec3(0.0, 0.0, 0.0);
-  for (float width_1 = 0.0; width_1 < var_Local0.z; width_1 += 1.0) {
-    color2_2 = (color2_2 + ((col0_4 / 2.0) + (
-      (texture2D (u_DiffuseMap, (var_TexCoords + ((vec2(0.0, 1.0) * width_1) / var_Dimensions))).xyz + texture2D (u_DiffuseMap, (var_TexCoords - ((vec2(0.0, 1.0) * width_1) / var_Dimensions))).xyz)
-     / 4.0)));
-  };
-  color2_2 = (color2_2 / var_Local0.z);
-  gl_FragColor.xyz = ((color_5 + color2_2) / 2.0);
-  gl_FragColor.w = 1.0;
+  vec2 PIXEL_OFFSET = vec2(1.0 / var_Dimensions);
+  const vec2 X_AXIS = vec2(1.0, 0.0);
+  const vec2 Y_AXIS = vec2(0.0, 1.0);
+
+  vec3 color = vec3(0.0, 0.0, 0.0);
+  vec3 col0 = texture2D(u_DiffuseMap, var_TexCoords.xy).rgb;
+
+  for (float width = 0.0; width < var_Local0.z; width += 1.0)
+  {
+	vec3 col1 = texture2D(u_DiffuseMap, var_TexCoords.xy + ((X_AXIS.xy * width) * PIXEL_OFFSET)).rgb;
+	vec3 col2 = texture2D(u_DiffuseMap, var_TexCoords.xy - ((X_AXIS.xy * width) * PIXEL_OFFSET)).rgb;
+	color.rgb += (col0 / 2.0) + (col1 + col2) / 4.0;
+  }
+
+  color.rgb /= var_Local0.z;
+
+  vec3 color2 = vec3(0.0, 0.0, 0.0);
+
+  for (float width = 0.0; width < var_Local0.z; width += 1.0)
+  {
+	vec3 col1 = texture2D(u_DiffuseMap, var_TexCoords.xy + ((Y_AXIS.xy * width) / var_Dimensions)).rgb;
+	vec3 col2 = texture2D(u_DiffuseMap, var_TexCoords.xy - ((Y_AXIS.xy * width) / var_Dimensions)).rgb;
+	color2.rgb += (col0 / 2.0) + (col1 + col2) / 4.0;
+  }
+
+  color2.rgb /= var_Local0.z;
+
+  gl_FragColor.rgb = (color + color2) / 2.0;
+  gl_FragColor.a	= 1.0;
 }
-
-
-// stats: 36 alu 5 tex 4 flow
-// inputs: 3
-//  #0: var_Local0 (high float) 4x1 [-1]
-//  #1: var_Dimensions (high float) 2x1 [-1]
-//  #2: var_TexCoords (high float) 2x1 [-1]
-// textures: 1
-//  #0: u_DiffuseMap (high 2d) 0x0 [-1]

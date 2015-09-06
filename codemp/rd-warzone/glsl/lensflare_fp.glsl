@@ -1,92 +1,153 @@
-precision lowp float;
 uniform sampler2D u_DiffuseMap;
-varying vec2 var_TexCoords;
-varying vec2 var_Dimensions;
-void main ()
+//uniform sampler2D lensDirtTex; // UQ1: FIXME - Add one with Warzone assests later...
+
+varying vec2	var_TexCoords;
+varying vec3	var_Position;
+varying vec2	var_Dimensions;
+
+vec2 dist2(vec3 p)
 {
-  vec3 result_1;
-  vec2 tmpvar_2;
-  tmpvar_2 = (-(var_TexCoords) + vec2(1.0, 1.0));
-  vec2 tmpvar_3;
-  tmpvar_3 = ((vec2(0.5, 0.5) - tmpvar_2) * 0.7);
-  vec2 tmpvar_4;
-  tmpvar_4 = (1.0/(var_Dimensions));
-  vec3 tmpvar_5;
-  tmpvar_5.y = 0.0;
-  tmpvar_5.x = (-(tmpvar_4.x) * 4.0);
-  tmpvar_5.z = (tmpvar_4.x * 4.0);
-  vec2 tmpvar_6;
-  tmpvar_6 = normalize(tmpvar_3);
-  vec2 tmpvar_7;
-  tmpvar_7 = fract(tmpvar_2);
-  vec2 x_8;
-  x_8 = (vec2(0.5, 0.5) - tmpvar_7);
-  vec3 tmpvar_9;
-  tmpvar_9.x = texture2D (u_DiffuseMap, (tmpvar_7 + (tmpvar_6 * tmpvar_5.x))).x;
-  tmpvar_9.y = texture2D (u_DiffuseMap, tmpvar_7).y;
-  tmpvar_9.z = texture2D (u_DiffuseMap, (tmpvar_7 + (tmpvar_6 * tmpvar_5.z))).z;
-  result_1 = ((tmpvar_9 * 0.03) * pow ((1.0 - 
-    (sqrt(dot (x_8, x_8)) / 0.7071068)
-  ), 10.0));
-  vec2 tmpvar_10;
-  tmpvar_10 = fract((tmpvar_2 + tmpvar_3));
-  vec2 x_11;
-  x_11 = (vec2(0.5, 0.5) - tmpvar_10);
-  vec3 tmpvar_12;
-  tmpvar_12.x = texture2D (u_DiffuseMap, (tmpvar_10 + (tmpvar_6 * tmpvar_5.x))).x;
-  tmpvar_12.y = texture2D (u_DiffuseMap, tmpvar_10).y;
-  tmpvar_12.z = texture2D (u_DiffuseMap, (tmpvar_10 + (tmpvar_6 * tmpvar_5.z))).z;
-  result_1 = (result_1 + ((tmpvar_12 * 0.03) * pow (
-    (1.0 - (sqrt(dot (x_11, x_11)) / 0.7071068))
-  , 10.0)));
-  vec2 tmpvar_13;
-  tmpvar_13 = fract((tmpvar_2 + (tmpvar_3 * 2.0)));
-  vec2 x_14;
-  x_14 = (vec2(0.5, 0.5) - tmpvar_13);
-  vec3 tmpvar_15;
-  tmpvar_15.x = texture2D (u_DiffuseMap, (tmpvar_13 + (tmpvar_6 * tmpvar_5.x))).x;
-  tmpvar_15.y = texture2D (u_DiffuseMap, tmpvar_13).y;
-  tmpvar_15.z = texture2D (u_DiffuseMap, (tmpvar_13 + (tmpvar_6 * tmpvar_5.z))).z;
-  result_1 = (result_1 + ((tmpvar_15 * 0.03) * pow (
-    (1.0 - (sqrt(dot (x_14, x_14)) / 0.7071068))
-  , 10.0)));
-  vec2 tmpvar_16;
-  tmpvar_16 = fract((tmpvar_2 + (tmpvar_3 * 3.0)));
-  vec2 x_17;
-  x_17 = (vec2(0.5, 0.5) - tmpvar_16);
-  vec3 tmpvar_18;
-  tmpvar_18.x = texture2D (u_DiffuseMap, (tmpvar_16 + (tmpvar_6 * tmpvar_5.x))).x;
-  tmpvar_18.y = texture2D (u_DiffuseMap, tmpvar_16).y;
-  tmpvar_18.z = texture2D (u_DiffuseMap, (tmpvar_16 + (tmpvar_6 * tmpvar_5.z))).z;
-  result_1 = (result_1 + ((tmpvar_18 * 0.03) * pow (
-    (1.0 - (sqrt(dot (x_17, x_17)) / 0.7071068))
-  , 10.0)));
-  vec2 tmpvar_19;
-  tmpvar_19 = (normalize(tmpvar_3) * 0.4);
-  vec2 x_20;
-  x_20 = (vec2(0.5, 0.5) - fract((tmpvar_2 + tmpvar_19)));
-  vec2 texcoord_21;
-  texcoord_21 = (tmpvar_2 + tmpvar_19);
-  vec3 tmpvar_22;
-  tmpvar_22.x = texture2D (u_DiffuseMap, (texcoord_21 + (tmpvar_6 * tmpvar_5.x))).x;
-  tmpvar_22.y = texture2D (u_DiffuseMap, texcoord_21).y;
-  tmpvar_22.z = texture2D (u_DiffuseMap, (texcoord_21 + (tmpvar_6 * tmpvar_5.z))).z;
-  result_1 = (result_1 + ((tmpvar_22 * 0.03) * pow (
-    (1.0 - (sqrt(dot (x_20, x_20)) / 0.7071068))
-  , 20.0)));
-  result_1.x = (result_1.x * sin(var_TexCoords.x));
-  result_1.y = (result_1.y * var_TexCoords.y);
-  result_1.z = (result_1.z * cos(var_TexCoords.x));
-  vec4 tmpvar_23;
-  tmpvar_23.w = 1.0;
-  tmpvar_23.xyz = (texture2D (u_DiffuseMap, var_TexCoords).xyz + result_1);
-  gl_FragColor = tmpvar_23;
+	const vec2 f1 = vec2(1048576.0, 0.0);
+	const vec2 f2 = vec2(1048576.0, 0.0);
+	return vec2(min(f1.x,f2.x),f1.y+f2.y);
+}
+
+float dist(vec3 p)
+{
+	return dist2(p).x;
+}
+
+float amb_occ(vec3 p)
+{
+	float acc=0.0;
+	#define ambocce 1.9
+
+	acc+=dist(p+vec3(-ambocce,-ambocce,-ambocce));
+	acc+=dist(p+vec3(-ambocce,-ambocce,+ambocce));
+	acc+=dist(p+vec3(-ambocce,+ambocce,-ambocce));
+	acc+=dist(p+vec3(-ambocce,+ambocce,+ambocce));
+	acc+=dist(p+vec3(+ambocce,-ambocce,-ambocce));
+	acc+=dist(p+vec3(+ambocce,-ambocce,+ambocce));
+	acc+=dist(p+vec3(+ambocce,+ambocce,-ambocce));
+	acc+=dist(p+vec3(+ambocce,+ambocce,+ambocce));
+	return 0.5+acc /(16.0*ambocce);
 }
 
 
-// stats: 95 alu 16 tex 0 flow
-// inputs: 2
-//  #0: var_TexCoords (high float) 2x1 [-1]
-//  #1: var_Dimensions (high float) 2x1 [-1]
-// textures: 1
-//  #0: u_DiffuseMap (high 2d) 0x0 [-1]
+#define MAX_GHOSTS 4
+#define GHOST_DISPERSAL (0.7)
+#define HALO_WIDTH 0.4
+#define CHROMATIC_DISTORTION 4.0
+#define ENABLE_CHROMATIC_DISTORTION 1
+#define ENABLE_HALO 1
+
+float hash(vec2 p) {
+   float h = dot(p,vec2(127.1,311.7));
+   return -1.0 + 2.0*fract(sin(h)*43758.5453123);
+}
+
+float noise(in vec2 p) {
+   vec2 i = floor(p);
+   vec2 f = fract(p);
+   vec2 u = f*f*(3.0-2.0*f);
+
+   return mix(mix(hash(i + vec2(0.0,0.0)), 
+                  hash(i + vec2(1.0,0.0)), u.x),
+              mix(hash(i + vec2(0.0,1.0)), 
+                  hash(i + vec2(1.0,1.0)), u.x), u.y);
+}
+
+float fbm(vec2 p) {
+   float f = 0.0;
+   f += 0.5000 * noise(p); p *= 2.02;
+   f += 0.2500 * noise(p); p *= 2.03;
+   f += 0.1250 * noise(p); p *= 2.01;
+   f += 0.0625 * noise(p); p *= 2.04;
+   f /= 0.9375;
+   return f;
+}
+
+vec3 pattern(vec2 uv) {
+   vec2 p = -1.0 + 2.0 * uv;
+   float p2 = dot(p,p);
+   float f = fbm(vec2(15.0*p2)) / 2.0;
+   float r = 0.2 + 0.6 * sin(12.5*length(uv - vec2(0.5)));
+   float g = 0.2 + 0.6 * sin(20.5*length(uv - vec2(0.5)));
+   float b = 0.2 + 0.6 * sin(17.2*length(uv - vec2(0.5)));
+   return (1.0-f) * vec3(r,g,b);
+}
+
+vec3 textureDistorted(
+	in sampler2D tex,
+	in vec2 texcoord,
+	in vec2 direction, // direction of distortion
+	in vec3 distortion) // per-channel distortion factor  
+{
+#if ENABLE_CHROMATIC_DISTORTION
+	return vec3(
+		texture2D(tex, texcoord + direction * distortion.r).r,
+		texture2D(tex, texcoord + direction * distortion.g).g,
+		texture2D(tex, texcoord + direction * distortion.b).b) * 0.03;
+#else
+	return texture2D(tex, texcoord).rgb * 0.03;
+#endif
+}
+
+void main()
+{
+	//vec3 fColor;
+	vec3 fColor = texture2D(u_DiffuseMap, var_TexCoords).rgb;
+
+	vec2 texcoord = -var_TexCoords + vec2(1.0);
+
+	vec2 imgSize = vec2(var_Dimensions);
+
+	vec2 ghostVec = (vec2(0.5) - texcoord) * GHOST_DISPERSAL;
+
+	vec2 texelSize = 1.0 / vec2(var_Dimensions);
+
+	vec3 distortion = vec3(
+		-texelSize.x * CHROMATIC_DISTORTION, 
+		0.0, 
+		texelSize.x * CHROMATIC_DISTORTION);
+
+	float lenOfHalf = length(vec2(0.5));
+
+	vec2 direction = normalize(ghostVec);
+
+	vec3 result = vec3(0.0);
+
+	// sample ghosts:  
+	for(int i = 0; i < MAX_GHOSTS; ++i) 
+	{ 
+		vec2 offset = fract(texcoord + ghostVec * float(i));
+
+		float weight = length(vec2(0.5) - offset) / lenOfHalf;
+		weight = pow(1.0 - weight, 10.0);
+
+		result += textureDistorted(u_DiffuseMap, offset, direction, distortion) * weight;
+	}
+
+	// sample halo
+#if ENABLE_HALO
+	vec2 haloVec = normalize(ghostVec) * HALO_WIDTH;
+	float weight = 
+		length(vec2(0.5) - fract(texcoord + haloVec)) / lenOfHalf;
+	weight = pow(1.0 - weight, 20.0);
+	result += textureDistorted(u_DiffuseMap, texcoord + haloVec, direction, distortion) 
+		* weight;
+#endif
+
+	// lens dirt
+	//result *= texture2D(lensDirtTex, var_TexCoords).rgb; // UQ1: FIXME - Add one with Warzone assests later...
+	//result *= pattern(var_TexCoords); // UQ1: Crappy backup method... Disable this and enable above when we have the image...
+	result.r *= sin(var_TexCoords.x);
+	result.g *= var_TexCoords.y;
+	result.b *= cos(var_TexCoords.x);
+
+	// Write
+	//fColor -= clamp(amb_occ(var_Position.xyz), 0.0, 1.0) * 0.02; // UQ1: Just testing this. Not related to lensflare at all...
+	fColor += result;
+	gl_FragColor = vec4(fColor.rgb, 1.0);
+}
+

@@ -1,172 +1,170 @@
-precision mediump float;
-precision lowp sampler2D;
 uniform sampler2D u_TextureMap;
 uniform sampler2D u_ScreenDepthMap;
-uniform sampler2D u_GlowMap;
-varying vec2 var_TexCoords;
-varying vec2 var_Dimensions;
-varying vec4 var_ViewInfo;
-varying vec4 var_Local0;
-vec2 offset1;
-vec2 offset2;
-void main ()
+uniform sampler2D u_NormalMap;
+uniform sampler2D u_GlowMap; // actually saturation map image
+
+varying vec2		var_TexCoords;
+varying vec2		var_Dimensions;
+varying vec4		var_ViewInfo; // zmin, zmax, zmax / zmin
+varying vec4		var_Local0; // MODE, NUM_SAMPLES, 0, 0
+
+/*
+*CSSGI shader (Coherent Screen Space Global Illumination)
+*This shader requires a depth pass and a normal map pass.
+*/
+
+float MODE = var_Local0.x;
+
+#define PI  3.14159265
+
+#define USE_DEPTHMAP
+
+#ifdef USE_DEPTHMAP
+const float depthMult = 255.0;
+#endif //USE_DEPTHMAP
+
+float ratex = (1.0/var_Dimensions.x);
+float ratey = (1.0/var_Dimensions.y);
+
+vec2 offset1 = vec2(0.0, 1.0 / var_Dimensions.y);
+vec2 offset2 = vec2(1.0 / var_Dimensions.x, 0.0);
+
+#ifdef USE_DEPTHMAP
+vec3 normal_from_depth(float depth, vec2 texcoords) {
+  float depth1 = texture2D(u_ScreenDepthMap, texcoords + offset1).r * depthMult;
+  float depth2 = texture2D(u_ScreenDepthMap, texcoords + offset2).r * depthMult;
+  
+  vec3 p1 = vec3(offset1, depth1 - depth);
+  vec3 p2 = vec3(offset2, depth2 - depth);
+  
+  vec3 normal = cross(p1, p2);
+  normal.z = -normal.z;
+  
+  return normalize(normal);
+}
+#endif //USE_DEPTHMAP
+
+vec3 SampleNormals(sampler2D normalMap, in vec2 coord)  
 {
-  vec2 tmpvar_1;
-  vec2 tmpvar_2;
-  float tmpvar_3;
-  tmpvar_3 = (1.0/(var_Dimensions.x));
-  float tmpvar_4;
-  tmpvar_4 = (1.0/(var_Dimensions.y));
-  tmpvar_2.x = 0.0;
-  tmpvar_2.y = tmpvar_4;
-  offset1 = tmpvar_2;
-  tmpvar_1.y = 0.0;
-  tmpvar_1.x = tmpvar_3;
-  offset2 = tmpvar_1;
-  float incy_6;
-  float incx_7;
-  float hf_8;
-  vec3 norm_9;
-  float prof_10;
-  float zNear_11;
-  float zFar_12;
-  vec3 fcolor_13;
-  float NUM_SAMPLES_14;
-  NUM_SAMPLES_14 = var_Local0.y;
-  if ((var_Local0.y < 1.0)) {
-    NUM_SAMPLES_14 = 1.0;
-  };
-  fcolor_13 = vec3(0.0, 0.0, 0.0);
-  float tmpvar_15;
-  tmpvar_15 = (var_ViewInfo.y / var_Dimensions.y);
-  zFar_12 = tmpvar_15;
-  float tmpvar_16;
-  tmpvar_16 = (var_ViewInfo.x / var_Dimensions.x);
-  zNear_11 = tmpvar_16;
-  vec4 tmpvar_17;
-  tmpvar_17 = texture2D (u_ScreenDepthMap, var_TexCoords);
-  float tmpvar_18;
-  tmpvar_18 = roundEven((NUM_SAMPLES_14 / (0.5 + tmpvar_17.x)));
-  prof_10 = ((tmpvar_15 * tmpvar_16) / ((tmpvar_17.x * 
-    (tmpvar_15 - tmpvar_16)
-  ) - tmpvar_15));
-  float tmpvar_19;
-  tmpvar_19 = (tmpvar_17.x * 255.0);
-  vec3 normal_20;
-  vec3 tmpvar_21;
-  tmpvar_21.xy = tmpvar_2;
-  tmpvar_21.z = ((texture2D (u_ScreenDepthMap, (var_TexCoords + tmpvar_2)).x * 255.0) - tmpvar_19);
-  vec3 tmpvar_22;
-  tmpvar_22.xy = tmpvar_1;
-  tmpvar_22.z = ((texture2D (u_ScreenDepthMap, (var_TexCoords + tmpvar_1)).x * 255.0) - tmpvar_19);
-  vec3 tmpvar_23;
-  tmpvar_23 = ((tmpvar_21.yzx * tmpvar_22.zxy) - (tmpvar_21.zxy * tmpvar_22.yzx));
-  normal_20.xy = tmpvar_23.xy;
-  normal_20.z = -(tmpvar_23.z);
-  norm_9 = normalize(((
-    normalize(normal_20)
-   * 2.0) - vec3(1.0, 1.0, 1.0)));
-  vec4 tmpvar_24;
-  tmpvar_24 = texture2D (u_TextureMap, var_TexCoords);
-  float tmpvar_25;
-  tmpvar_25 = (tmpvar_18 / 2.0);
-  hf_8 = tmpvar_25;
-  incx_7 = (tmpvar_3 * 60.0);
-  incy_6 = (tmpvar_4 * 60.0);
-  for (float i_5 = -(tmpvar_25); i_5 < hf_8; i_5 += 1.0) {
-    for (float j_26 = -(hf_8); j_26 < hf_8; j_26 += 1.0) {
-      if (((i_5 != 0.0) || (j_26 != 0.0))) {
-        vec2 tmpvar_27;
-        tmpvar_27.x = (i_5 * incx_7);
-        tmpvar_27.y = (j_26 * incy_6);
-        vec2 tmpvar_28;
-        tmpvar_28 = (tmpvar_27 / prof_10);
-        float tmpvar_29;
-        tmpvar_29 = dot (var_TexCoords, vec2(12.9898, 78.233));
-        vec4 tmpvar_30;
-        tmpvar_30 = texture2D (u_GlowMap, (var_TexCoords + (tmpvar_28 * (0.5 + 
-          (fract((sin(tmpvar_29) * 43758.55)) * 0.5)
-        ))));
-        vec2 coord_31;
-        coord_31 = (var_TexCoords + (tmpvar_28 * (0.5 + 
-          (fract((sin(tmpvar_29) * 43758.55)) * 0.5)
-        )));
-        float tmpvar_32;
-        tmpvar_32 = (texture2D (u_ScreenDepthMap, coord_31).x * 255.0);
-        vec3 normal_33;
-        vec3 tmpvar_34;
-        tmpvar_34.xy = offset1;
-        tmpvar_34.z = ((texture2D (u_ScreenDepthMap, (coord_31 + offset1)).x * 255.0) - tmpvar_32);
-        vec3 tmpvar_35;
-        tmpvar_35.xy = offset2;
-        tmpvar_35.z = ((texture2D (u_ScreenDepthMap, (coord_31 + offset2)).x * 255.0) - tmpvar_32);
-        vec3 tmpvar_36;
-        tmpvar_36 = ((tmpvar_34.yzx * tmpvar_35.zxy) - (tmpvar_34.zxy * tmpvar_35.yzx));
-        normal_33.xy = tmpvar_36.xy;
-        normal_33.z = -(tmpvar_36.z);
-        vec3 tmpvar_37;
-        tmpvar_37 = normalize(((
-          normalize(normal_33)
-         * 2.0) - vec3(1.0, 1.0, 1.0)));
-        vec3 tmpvar_38;
-        tmpvar_38.xy = tmpvar_28;
-        tmpvar_38.z = abs((prof_10 - (
-          (zFar_12 * zNear_11)
-         / 
-          ((texture2D (u_ScreenDepthMap, (var_TexCoords + (tmpvar_28 * 
-            (0.5 + (fract((
-              sin(tmpvar_29)
-             * 43758.55)) * 0.5))
-          ))).x * (zFar_12 - zNear_11)) - zFar_12)
-        )));
-        float tmpvar_39;
-        tmpvar_39 = dot (normalize(-(tmpvar_28)), normalize(tmpvar_37.xy));
-        if ((tmpvar_39 > 0.0)) {
-          vec3 x_40;
-          x_40 = (tmpvar_38 * 2.0);
-          float tmpvar_41;
-          tmpvar_41 = abs(sqrt(dot (x_40, x_40)));
-          fcolor_13 = (fcolor_13 + (tmpvar_30.xyz * clamp (
-            ((1.0 - dot (norm_9, tmpvar_37)) / ((3.1416 * (tmpvar_41 * tmpvar_41)) + 0.5))
-          , 0.0, 1.0)));
-        };
-      };
-    };
-  };
-  vec3 tmpvar_42;
-  tmpvar_42 = (tmpvar_24.xyz + ((
-    (fcolor_13 / tmpvar_18)
-   * 0.5) * clamp (
-    ((sqrt(dot (tmpvar_24.xyz, tmpvar_24.xyz)) * 0.333) * (1.0 - clamp ((
-      sqrt(dot (tmpvar_24.xyz, tmpvar_24.xyz))
-     / 1.5), 0.0, 1.0)))
-  , 0.0, 1.0)));
-  vec3 tmpvar_43;
-  tmpvar_43 = clamp (texture2D (u_GlowMap, var_TexCoords).xyz, 0.0, 1.0);
-  vec3 tmpvar_44;
-  tmpvar_44 = clamp ((tmpvar_43 * clamp (
-    ((3.0 - ((tmpvar_43.x + tmpvar_43.y) + tmpvar_43.z)) + 0.1)
-  , 0.0, 3.0)), 0.0, 1.0);
-  vec4 tmpvar_45;
-  tmpvar_45.w = 1.0;
-  tmpvar_45.xyz = clamp (((
-    (tmpvar_42 * 5.0)
-   + 
-    max (clamp (((
-      ((tmpvar_44 * tmpvar_44) * 0.5)
-     + 1.0) * tmpvar_42), 0.0, 1.0), tmpvar_42)
-  ) / 6.0), 0.0, 1.0);
-  gl_FragColor = tmpvar_45;
+#ifdef USE_DEPTHMAP
+	 float depth = texture2D(u_ScreenDepthMap, coord/*var_TexCoords*/).r * depthMult;
+	 return normal_from_depth(depth, coord);
+#else //!USE_DEPTHMAP
+	 return texture2D(u_NormalMap, coord).rgb;
+#endif //USE_DEPTHMAP
 }
 
+float rand2(vec2 coord) //generating noise/pattern texture for dithering
+{
+	float noise = ((fract(1.0-coord.s*(var_Dimensions.x/2.0))*0.25)+(fract(coord.t*(var_Dimensions.y/2.0))*0.75))*2.0-1.0;
+	return noise;
+}
 
-// stats: 142 alu 10 tex 7 flow
-// inputs: 4
-//  #0: var_TexCoords (high float) 2x1 [-1]
-//  #1: var_Dimensions (high float) 2x1 [-1]
-//  #2: var_ViewInfo (high float) 4x1 [-1]
-//  #3: var_Local0 (high float) 4x1 [-1]
-// textures: 3
-//  #0: u_TextureMap (high 2d) 0x0 [-1]
-//  #1: u_ScreenDepthMap (high 2d) 0x0 [-1]
-//  #2: u_GlowMap (high 2d) 0x0 [-1]
+//noise producing function to eliminate banding (got it from someone else´s shader):
+float rand(vec2 co){
+	return 0.5+(fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453))*0.5;
+}
+
+vec3 CalculateFlare ( vec3 flare_color, vec3 final_color )
+{
+	float mult = clamp((3.0 - (flare_color.r + flare_color.g + flare_color.b)) + 0.1, 0.0, 3.0);
+	vec3 add_flare = clamp(flare_color.rgb * mult, 0.0, 1.0);
+#if 0
+#define const_1 ( 12.0 / 255.0)
+#define const_2 (255.0 / 219.0)
+	add_flare = ((clamp(add_flare - const_1, 0.0, 1.0)) * const_2);
+#endif
+	return clamp(((add_flare * add_flare * 0.5) + 1.0) * final_color, 0.0, 1.0);
+}
+
+void main()
+{   
+	float NUM_SAMPLES = var_Local0.y;
+
+	if (NUM_SAMPLES < 1.0) NUM_SAMPLES = 1.0; // Always at least one sample...
+
+	//calculate sampling rates:
+	//initialize occlusion sum and gi color:
+	float sum = 0.0;
+	vec3 fcolor = vec3(0,0,0);
+
+	//far and near clip planes:
+	//float zFar = 1.0;
+	float zFar = var_ViewInfo.y / var_Dimensions.y;
+	float zNear = var_ViewInfo.x / var_Dimensions.x;
+
+	//get depth at current pixel:
+	float prof = texture2D(u_ScreenDepthMap, var_TexCoords.st).x;
+	//scale sample number with depth:
+	float samples = round(NUM_SAMPLES/(0.5+prof));
+	prof = zFar * zNear / (prof * (zFar - zNear) - zFar);  //linearize z sample
+
+	//obtain normal and color at current pixel:
+	vec3 norm = normalize(vec3(SampleNormals(u_TextureMap,var_TexCoords.st).xyz)*2.0-vec3(1.0));
+	vec3 dcolor1 = texture2D(u_TextureMap, var_TexCoords.st).xyz;
+
+	float hf = samples/2.0;
+
+	//calculate kernel steps:
+	float incx = ratex*60.0;//30;//gi radius
+	float incy = ratey*60.0;//30;
+
+	float incx2 = ratex*8.0;//ao radius
+	float incy2 = ratey*8.0;
+
+	//do the actual calculations:
+	for(float i=-hf; i < hf; i+=1.0){
+		for(float j=-hf; j < hf; j+=1.0){
+			if (i != 0.0 || j != 0.0) {
+				vec2 coords = vec2(i*incx,j*incy)/prof;
+				vec2 coords2 = vec2(i*incx2,j*incy2)/prof;
+
+				float prof2 = texture2D(u_ScreenDepthMap,var_TexCoords.st+coords*rand(var_TexCoords)).x;
+				prof2 = zFar * zNear / (prof2 * (zFar - zNear) - zFar);  //linearize z sample
+
+				float prof2g = texture2D(u_ScreenDepthMap,var_TexCoords.st+coords2*rand(var_TexCoords)).x;
+				prof2g = zFar * zNear / (prof2g * (zFar - zNear) - zFar);  //linearize z sample
+
+				//COLOR BLEEDING:
+				vec3 dcolor3 = texture2D(u_GlowMap, var_TexCoords.st+coords*rand(var_TexCoords)).xyz;
+
+				//if (length(dcolor2)>0.3){//color threshold
+				//if (length(dcolor2)>0.0){//color threshold
+				//if (length(dcolor2)>length(dcolor1)){//color threshold
+				//if (length(dcolor3)>length(dcolor1)){//color threshold
+				{
+					vec3 norm2 = normalize(vec3(SampleNormals(u_TextureMap,var_TexCoords.st+coords*rand(var_TexCoords)).xyz)*2.0-vec3(1.0)); 
+
+					//calculate approximate pixel distance:
+					vec3 dist = vec3(coords,abs(prof-prof2));
+
+					//calculate normal and sampling direction coherence:
+					float coherence = dot(normalize(-coords),normalize(vec2(norm2.xy)));
+
+					//if there is coherence, calculate bleeding:
+					if (coherence > 0.0){
+						float pformfactor = ((1.0-dot(norm,norm2)))/(3.1416*pow(abs(length(dist*2.0)),2.0)+0.5);//el 4: depthscale
+						//fcolor += dcolor2*(clamp(pformfactor,0.0,1.0));
+						fcolor += dcolor3*(clamp(pformfactor,0.0,1.0));
+					}
+				}
+			}
+		}
+	}
+
+	// COLOR BLEED ONLY
+	float MODIFIER = 1.0 - clamp( length(dcolor1.rgb) / 1.5, 0.0, 1.0 );
+	vec3 bleeding = (fcolor/samples)*0.5;
+
+	// UQ1: Adjust bleed ammount...
+	bleeding *= clamp(length(dcolor1) * 0.333 * MODIFIER, 0.0, 1.0);
+
+	vec3 final_color = vec3((dcolor1) + (bleeding));// * 1.25;
+
+	// UQ1: Let's add some of the flare color as well... Just to boost colors/glows...
+	vec3 flare_color = clamp(texture2D(u_GlowMap, var_TexCoords.st).rgb, 0.0, 1.0);
+	vec3 add_flare = CalculateFlare(flare_color, final_color);
+	final_color = clamp(((final_color * 5.0) + max(add_flare, final_color)) / 6.0, 0.0, 1.0);
+
+	gl_FragColor = vec4(final_color,1.0);
+}
