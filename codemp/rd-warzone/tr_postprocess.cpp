@@ -1424,9 +1424,8 @@ void RB_HBAO(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 	GLSL_SetUniformMatrix16(&tr.hbaoShader, UNIFORM_INVEYEPROJECTIONMATRIX, glState.invEyeProjection);
 	GLSL_SetUniformMatrix16(&tr.hbaoShader, UNIFORM_MODELMATRIX, backEnd.ori.transformMatrix);
 
-	GL_BindToTMU(tr.fixedLevelsImage, TB_DIFFUSEMAP);
-
 	GLSL_SetUniformInt(&tr.hbaoShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
+	GL_BindToTMU(tr.fixedLevelsImage, TB_DIFFUSEMAP);
 	GLSL_SetUniformInt(&tr.hbaoShader, UNIFORM_NORMALMAP, TB_NORMALMAP);
 	GL_BindToTMU(tr.normalDetailedImage, TB_NORMALMAP);
 	GLSL_SetUniformInt(&tr.hbaoShader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
@@ -1451,8 +1450,9 @@ void RB_HBAO(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 	}
 
 //#define HBAO_DEBUG
+#define HBAO_SINGLE_PASS
 
-#ifndef HBAO_DEBUG
+#if !defined(HBAO_DEBUG) && !defined(HBAO_SINGLE_PASS)
 	FBO_Blit(hdrFbo, hdrBox, NULL, tr.genericFbo2, ldrBox, &tr.hbaoShader, color, 0);
 
 	// Combine render and hbao...
@@ -1473,9 +1473,9 @@ void RB_HBAO(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 	GLSL_SetUniformVec2(&tr.hbaoCombineShader, UNIFORM_DIMENSIONS, screensize);
 
 	FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.hbaoCombineShader, color, 0);
-#else //HBAO_DEBUG
+#else //defined(HBAO_DEBUG) || defined(HBAO_SINGLE_PASS)
 	FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.hbaoShader, color, 0);
-#endif //HBAO_DEBUG
+#endif //defined(HBAO_DEBUG) || defined(HBAO_SINGLE_PASS)
 }
 
 void RB_TextureClean(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)

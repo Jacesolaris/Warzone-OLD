@@ -135,5 +135,8 @@ void main()
 	total = 1.0 - filter(total);
 #endif //FILTER_RESULT
 
-    gl_FragColor = vec4(total, total, total, 1.0);
+    //gl_FragColor = vec4(total, total, total, 1.0);
+
+	gl_FragColor = texture2D(u_DiffuseMap, var_ScreenTex);
+	gl_FragColor.rgb = (gl_FragColor.rgb + (total * gl_FragColor.rgb)) / 2.0; // UQ1: Blending to reduce pixelation...
 }
