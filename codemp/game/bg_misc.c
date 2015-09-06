@@ -2154,7 +2154,7 @@ Don't place this
 	{
 		"weapon_trip_mine",
 		"sound/weapons/w_pkup.wav",
-		{ "models/weapons/Mine_LaserTrip/model.glm", "models/Weapons/Mine_LaserTrip/model.md3",
+		{ "models/weapons/Mine_LaserTrip/model.glm",
 		0, 0 },
 		/* view */		"models/Weapons/Mine_LaserTrip/model.md3",
 		/* icon */		"models/weapons/Mine_LaserTrip/icon_default",
