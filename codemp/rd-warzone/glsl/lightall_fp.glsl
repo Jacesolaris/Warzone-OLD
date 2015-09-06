@@ -103,7 +103,7 @@ varying vec4      var_PrimaryLightDir;
 varying vec3   var_vertPos;
 
 out vec4 out_Glow;
-out vec4 out_Normal;
+//out vec4 out_Normal;
 out vec4 out_DetailedNormal;
 
 #if defined(USE_PARALLAXMAP) || defined(USE_PARALLAXMAP_NONORMALS)
@@ -497,36 +497,17 @@ void main()
 {
 	vec3 viewDir, lightColor, ambientColor;
 	vec3 L, N, E, H;
-	vec3 NORMAL = vec3(1.0);
+	//vec3 NORMAL = vec3(1.0);
 	vec3 DETAILED_NORMAL = vec3(1.0);
 	float NL, NH, NE, EH, attenuation;
 	vec2 tex_offset = vec2(1.0 / u_Dimensions.x, 1.0 / u_Dimensions.y);
-
-	/*
-	if (u_Local4.r != 0.0)
-	{
-		//gl_FragColor = vec4(vec3(texture2D(u_NormalMap, var_TexCoords.xy).a), 1.0);
-		gl_FragColor = vec4(texture2D(u_NormalMap, var_TexCoords.xy).rgb, 1.0);
-		//gl_FragColor = vec4(1.0,0.0,0.0,1.0);
-		out_Glow = vec4(0.0);
-		return;
-	}
-	else
-	{
-		//gl_FragColor = vec4(0.0,1.0,0.0,1.0);
-		//gl_FragColor = texture2D(u_NormalMap, var_TexCoords.xy);
-		gl_FragColor = vec4(vec3(texture2D(u_NormalMap, var_TexCoords.xy).a), 1.0);
-		out_Glow = vec4(0.0);
-		return;
-	}
-	*/
 	
 #if defined(USE_LIGHT) && !defined(USE_FAST_LIGHT)
   #if defined(USE_VERT_TANGENT_SPACE)
-	mat3 tangentToWorld = mat3(var_Tangent.xyz, var_Bitangent.xyz, var_Normal.xyz);
-	viewDir = vec3(var_Normal.w, var_Tangent.w, var_Bitangent.w);
-	//mat3 tangentToWorld = cotangent_frame(var_Normal.xyz, -var_ViewDir, var_TexCoords.xy);
-	//viewDir = var_ViewDir;
+	//mat3 tangentToWorld = mat3(var_Tangent.xyz, var_Bitangent.xyz, var_Normal.xyz);
+	//viewDir = vec3(var_Normal.w, var_Tangent.w, var_Bitangent.w);
+	mat3 tangentToWorld = cotangent_frame(var_Normal.xyz, -var_ViewDir, var_TexCoords.xy);
+	viewDir = var_ViewDir;
   #else
 	mat3 tangentToWorld = cotangent_frame(var_Normal.xyz, -var_ViewDir, var_TexCoords.xy);
 	viewDir = var_ViewDir;
@@ -613,8 +594,8 @@ void main()
 	//DETAILED_NORMAL = normalize(norm * 0.5 + 0.5);
 	DETAILED_NORMAL = tangentToWorld * DETAILED_NORMAL;
 
-	NORMAL = normalize(var_Normal.xyz * 2.0 - 1.0);
-	NORMAL = tangentToWorld * NORMAL;
+	//NORMAL = normalize(var_Normal.xyz * 2.0 - 1.0);
+	//NORMAL = tangentToWorld * NORMAL;
 
 	N = norm;
 	N = N * 0.5 + 0.5;
@@ -891,8 +872,8 @@ void main()
 	//DETAILED_NORMAL = normalize(norm * 0.5 + 0.5);
 	DETAILED_NORMAL = tangentToWorld * DETAILED_NORMAL;
 
-	NORMAL = normalize(var_Normal.xyz * 2.0 - 1.0);
-	NORMAL = tangentToWorld * NORMAL;
+	//NORMAL = normalize(var_Normal.xyz * 2.0 - 1.0);
+	//NORMAL = tangentToWorld * NORMAL;
 
 	gl_FragColor = vec4 (diffuse.rgb * lightColor, diffuse.a * var_Color.a);
 
@@ -910,7 +891,7 @@ void main()
 
 	//if (u_EnableTextures.r > 0.0)
 	{
-		out_Normal = vec4(NORMAL.xyz, 0.0);
+		//out_Normal = vec4(NORMAL.xyz, 0.0);
 		out_DetailedNormal = vec4(DETAILED_NORMAL.xyz, 0.0);
 	}
 }

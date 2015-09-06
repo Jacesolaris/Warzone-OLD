@@ -96,7 +96,7 @@ varying vec4      var_PrimaryLightDir;
 varying vec3   var_vertPos;
 
 out vec4 out_Glow;
-out vec4 out_Normal;
+//out vec4 out_Normal;
 out vec4 out_DetailedNormal;
 
 float SampleDepth(sampler2D normalMap, vec2 t)
@@ -373,7 +373,7 @@ void main()
 {
 	vec3 viewDir, lightColor, ambientColor;
 	vec3 L, N, E, H;
-	vec3 NORMAL = vec3(1.0);
+	//vec3 NORMAL = vec3(1.0);
 	vec3 DETAILED_NORMAL = vec3(1.0);
 	float NL, NH, NE, EH, attenuation;
 	vec2 tex_offset = vec2(1.0 / var_Dimensions.x, 1.0 / var_Dimensions.y);
@@ -428,8 +428,8 @@ void main()
 	//DETAILED_NORMAL = normalize(normal * 0.5 + 0.5);
 	DETAILED_NORMAL = tangentToWorld * DETAILED_NORMAL;
 
-	NORMAL = normalize(var_Normal.xyz * 2.0 - 1.0);
-	NORMAL = tangentToWorld * NORMAL;
+	//NORMAL = normalize(var_Normal.xyz * 2.0 - 1.0);
+	//NORMAL = tangentToWorld * NORMAL;
 
 	N = normalize(N);
 	L /= sqrt(sqrLightDist);
@@ -613,7 +613,7 @@ void main()
 
 	//if (u_EnableTextures.r > 0.0)
 	{
-		out_Normal = vec4(NORMAL.xyz, 0.0);
+		//out_Normal = vec4(NORMAL.xyz, 0.0);
 		out_DetailedNormal = vec4(DETAILED_NORMAL.xyz, 0.0);
 	}
 }
