@@ -15,25 +15,33 @@ float		TREE_SCALE[262144];
 qhandle_t	GRASS_MODELS[7] = { 0, 0, 0, 0, 0, 0, 0 };
 qhandle_t	TREE_MODEL[3] = { 0, 0, 0 };
 
-void CG_AddGrassModel( int num ) {
+//omp_lock_t refent_lock;
+
+void AddFoliageEntityToScene ( refEntity_t *ent )
+{
+	//omp_set_lock(&refent_lock);
+	AddRefEntityToScene(ent);
+	//omp_unset_lock(&refent_lock);
+}
+
+void CG_AddGrassModel( int num, qboolean treeOnly ) {
 	refEntity_t		re;
 	vec3_t			angles;
+	qboolean		skip_smallStuff = qfalse;
+	qboolean		skip_mediumStuff = qfalse;
+	float			dist = Distance(GRASS_POSITIONS[num], cg.refdef.vieworg);
+
+	if (dist > 384.0)
+	{// Let's skip smaller models when far from camera for FPS sake...
+		skip_smallStuff = qtrue;
+	}
+	
+	if (dist > 1024.0)
+	{// Let's skip medium models when far from camera for FPS sake...
+		skip_mediumStuff = qtrue;
+	}
 
 	memset( &re, 0, sizeof( re ) );
-
-	if (!GRASS_MODELS[0])
-	{
-		GRASS_MODELS[0] = trap->R_RegisterModel( "models/map_objects/yavin/grass_b.md3" );
-		GRASS_MODELS[1] = trap->R_RegisterModel( "models/pop/foliages/alp_weedy_c.md3" );
-		GRASS_MODELS[2] = trap->R_RegisterModel( "models/pop/foliages/sch_weed_a.md3" );
-		GRASS_MODELS[3] = trap->R_RegisterModel( "models/pop/foliages/sch_weed_b.md3" );
-		GRASS_MODELS[4] = trap->R_RegisterModel( "models/pop/foliages/pop_flower_a.md3" );
-		GRASS_MODELS[5] = trap->R_RegisterModel( "models/pop/foliages/pop_flower_b.md3" );
-		GRASS_MODELS[6] = trap->R_RegisterModel( "models/pop/foliages/pop_flower_c.md3" );
-		TREE_MODEL[0] = trap->R_RegisterModel( "models/map_objects/yavin/tree06_b.md3" );
-		TREE_MODEL[1] = trap->R_RegisterModel( "models/map_objects/yavin/tree08_b.md3" );
-		TREE_MODEL[2] = trap->R_RegisterModel( "models/map_objects/yavin/tree09_b.md3" );
-	}
 
 	VectorCopy(GRASS_POSITIONS[num], re.origin);
 	angles[PITCH] = angles[ROLL] = 0.0f;
@@ -48,40 +56,71 @@ void CG_AddGrassModel( int num ) {
 	VectorSet(re.modelScale, GRASS_SCALE[num], GRASS_SCALE[num], GRASS_SCALE[num]*0.85);
 	ScaleModelAxis( &re );
 
-	AddRefEntityToScene( &re );
+	if (!treeOnly)
+	{
+		AddFoliageEntityToScene( &re );
+	}
 
 	if (TREE_TYPE[num] == 0)
 	{// Add a smaller version inside this one to fill the massive hole in the center of the model...
 		if (GRASS_SELECTION[num] == 0)
-		{// Smaller grass...
-			re.origin[2] += 12.0;
-			VectorSet(re.modelScale, GRASS_SCALE[num] / 2.0, GRASS_SCALE[num] / 2.0, GRASS_SCALE[num] / 2.0);
-			ScaleModelAxis( &re );
-			AddRefEntityToScene( &re );
+		{// Smaller grass... Only up close...
+			if (!treeOnly && !skip_smallStuff)
+			{
+				re.origin[2] += 12.0;
+				VectorSet(re.modelScale, GRASS_SCALE[num] / 2.0, GRASS_SCALE[num] / 2.0, GRASS_SCALE[num] / 2.0);
+				ScaleModelAxis( &re );
+				AddFoliageEntityToScene( &re );
+			}
+		}
+		else if (GRASS_SELECTION[num] == 2)
+		{// Medium grass... Only up to mid range...
+			if (!treeOnly && !skip_mediumStuff)
+			{
+				re.hModel = GRASS_MODELS[GRASS_SELECTION[num]];
+				VectorSet(re.modelScale, GRASS_SCALE[num] * 1.5, GRASS_SCALE[num] * 1.5, GRASS_SCALE[num] * 1.5);
+				ScaleModelAxis( &re );
+				AddFoliageEntityToScene( &re );
+			}
+		}
+		else if (GRASS_SELECTION[num] == 3)
+		{// Smaller grass... Only up close...
+			if (!treeOnly && !skip_smallStuff)
+			{
+				re.hModel = GRASS_MODELS[GRASS_SELECTION[num]];
+				VectorSet(re.modelScale, GRASS_SCALE[num] * 1.5, GRASS_SCALE[num] * 1.5, GRASS_SCALE[num] * 1.5);
+				ScaleModelAxis( &re );
+				AddFoliageEntityToScene( &re );
+			}
 		}
 		else if (GRASS_SELECTION[num] == 4 || GRASS_SELECTION[num] == 5 || GRASS_SELECTION[num] == 6)
-		{// Flowers...
-			re.origin[2] += 12.0;
-			re.hModel = GRASS_MODELS[GRASS_SELECTION[num]];
-			VectorSet(re.modelScale, GRASS_SCALE[num] * 0.2, GRASS_SCALE[num] * 0.2, GRASS_SCALE[num] * 0.2);
-			ScaleModelAxis( &re );
-			AddRefEntityToScene( &re );
+		{// Flowers... Only up close...
+			if (!treeOnly && !skip_smallStuff)
+			{
+				re.origin[2] += 12.0;
+				re.hModel = GRASS_MODELS[GRASS_SELECTION[num]];
+				VectorSet(re.modelScale, GRASS_SCALE[num] * 0.2, GRASS_SCALE[num] * 0.2, GRASS_SCALE[num] * 0.2);
+				ScaleModelAxis( &re );
+				AddFoliageEntityToScene( &re );
+			}
 		}
 		else
-		{// Add one of the other random grass options inside...
-			re.hModel = GRASS_MODELS[GRASS_SELECTION[num]];
-			VectorSet(re.modelScale, GRASS_SCALE[num] * 1.5, GRASS_SCALE[num] * 1.5, GRASS_SCALE[num] * 1.5);
-			ScaleModelAxis( &re );
-			AddRefEntityToScene( &re );
+		{// Add one of the other random grass options inside... Only up to mid range...
+			if (!treeOnly && !skip_mediumStuff)
+			{
+				re.hModel = GRASS_MODELS[GRASS_SELECTION[num]];
+				VectorSet(re.modelScale, GRASS_SCALE[num] * 1.5, GRASS_SCALE[num] * 1.5, GRASS_SCALE[num] * 1.5);
+				ScaleModelAxis( &re );
+				AddFoliageEntityToScene( &re );
+			}
 		}
 	}
 	else
-	{// Add a tree type...
+	{// Add a tree type... Always draw trees, even at distance...
 		re.hModel = TREE_MODEL[TREE_TYPE[num]];
 		VectorSet(re.modelScale, TREE_SCALE[num], TREE_SCALE[num], TREE_SCALE[num]);
 		ScaleModelAxis( &re );
-
-		AddRefEntityToScene( &re );
+		AddFoliageEntityToScene( &re );
 	}
 }
 
@@ -341,23 +380,48 @@ void DrawGrass()
 		return;
 	}
 
+	if (!GRASS_MODELS[0])
+	{// Init/register all foliage models...
+		GRASS_MODELS[0] = trap->R_RegisterModel( "models/map_objects/yavin/grass_b.md3" );
+		GRASS_MODELS[1] = trap->R_RegisterModel( "models/pop/foliages/alp_weedy_c.md3" );
+		GRASS_MODELS[2] = trap->R_RegisterModel( "models/pop/foliages/sch_weed_a.md3" );
+		GRASS_MODELS[3] = trap->R_RegisterModel( "models/pop/foliages/sch_weed_b.md3" );
+		GRASS_MODELS[4] = trap->R_RegisterModel( "models/pop/foliages/pop_flower_a.md3" );
+		GRASS_MODELS[5] = trap->R_RegisterModel( "models/pop/foliages/pop_flower_b.md3" );
+		GRASS_MODELS[6] = trap->R_RegisterModel( "models/pop/foliages/pop_flower_c.md3" );
+		TREE_MODEL[0] = trap->R_RegisterModel( "models/map_objects/yavin/tree06_b.md3" );
+		TREE_MODEL[1] = trap->R_RegisterModel( "models/map_objects/yavin/tree08_b.md3" );
+		TREE_MODEL[2] = trap->R_RegisterModel( "models/map_objects/yavin/tree09_b.md3" );
+	}
+
+	//omp_init_lock(&refent_lock);
+
+//#pragma omp parallel for schedule(dynamic) // multithreaded to speed this loop up...
 	for (spot = 0; spot < NUM_GRASS_POSITIONS; spot++)
 	{
 		// Draw anything closeish to us...
-		int		len = 0;
-		int		link = 0;
-		vec3_t	delta;
+		int			len = 0;
+		int			link = 0;
+		vec3_t		delta;
+		qboolean	treeOnly = qfalse;
 
 		VectorSubtract( GRASS_POSITIONS[spot], cg.refdef.vieworg, delta );
 		len = VectorLength( delta );
-		
-		if ( len > 3192 ) continue;
-		//if ( len > 1024 && GRASS_POSITIONS[spot][2] > cg.refdef.vieworg[2] ) continue;
-		//if ( len > 2048 && GRASS_POSITIONS[spot][2] >= cg.refdef.vieworg[2]-16.0 ) continue;
 
-		if ( len > 96 && !InFOV( GRASS_POSITIONS[spot], cg.refdef.vieworg, cg.refdef.viewangles, cg.refdef.fov_x + 20, cg.refdef.fov_y + 20 ))
+		if ( TREE_TYPE[spot] != 0 && len > 3192 )
+		{
+			treeOnly = qtrue;
+		}
+		else if ( len > 3192 ) 
+		{
+			continue;
+		}
+
+		if ( len > 256 && !InFOV( GRASS_POSITIONS[spot], cg.refdef.vieworg, cg.refdef.viewangles, cg.refdef.fov_x + 20, cg.refdef.fov_y + 20 ))
 			continue;
 
-		CG_AddGrassModel( spot );
+		CG_AddGrassModel( spot, treeOnly );
 	}
+
+	//omp_destroy_lock(&refent_lock);
 }

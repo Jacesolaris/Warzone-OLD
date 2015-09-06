@@ -1657,6 +1657,7 @@ int next_rain = 0; // Rain sound effects.
 
 void CG_AddAtmosphericEffects()
 {
+#if 0
   	// Add atmospheric effects (e.g. rain, snow etc.) to view
 
   	int curr, max, currnum;
@@ -1733,6 +1734,7 @@ void CG_AddAtmosphericEffects()
 	}
 
   	cg_atmFx.lastRainTime = cg.time;
+#endif
 }
 
 
@@ -1743,11 +1745,13 @@ void CG_AddAtmosphericEffects()
 static qboolean kludgeChecked, kludgeResult;
 qboolean CG_AtmosphericKludge()
 {
+#if 0
   	// Activate effects for specified kludge maps that don't
   	// have it specified for them.
 
   	if( kludgeChecked )
   	  	return( kludgeResult );
+
   	kludgeChecked = qtrue;
   	kludgeResult = qfalse;
 	storm = qfalse;
@@ -1946,5 +1950,8 @@ qboolean CG_AtmosphericKludge()
   	}
 
   	return( kludgeResult = qfalse );
+#else
+	return qfalse;
+#endif
 }
 
