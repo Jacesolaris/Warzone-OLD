@@ -3295,14 +3295,14 @@ void R_MergeLeafSurfaces(void)
 	numWorldSurfaces = s_worldData.numWorldSurfaces;
 
 	// use viewcount to keep track of mergers
-#pragma omp parallel for schedule(dynamic) if(numWorldSurfaces > 32)
+//#pragma omp parallel for schedule(dynamic) if(numWorldSurfaces > 32)
 	for (i = 0; i < numWorldSurfaces; i++)
 	{
 		s_worldData.surfacesViewCount[i] = -1;
 	}
 
 	// mark matching surfaces
-#pragma omp parallel for schedule(dynamic) if(numWorldSurfaces > 32)
+//#pragma omp parallel for schedule(dynamic) if(numWorldSurfaces > 32)
 	for (i = 0; i < s_worldData.numnodes - s_worldData.numDecisionNodes; i++)
 	{
 		mnode_t *leaf = s_worldData.nodes + s_worldData.numDecisionNodes + i;
@@ -3370,8 +3370,11 @@ void R_MergeLeafSurfaces(void)
 					&& !(shader1 && shader1->stages[0] && shader1->stages[0]->isWater && shader2 && shader2->stages[0] && shader2->stages[0]->isWater) // UQ1: Water can be safely merged I believe...
 #ifdef __MERGE_SAME_SHADER_NAMES__
 					// Cull matching shader names...
-					&& shader1->optimalStageIteratorFunc != RB_StageIteratorGeneric 
-					&& shader2->optimalStageIteratorFunc != RB_StageIteratorGeneric
+					//&& !shader1->hasAlpha
+					//&& !shader2->hasAlpha
+					//&& ((shader1->surfaceFlags & MATERIAL_MASK) == (shader2->surfaceFlags & MATERIAL_MASK))
+					//&& shader1->optimalStageIteratorFunc != RB_StageIteratorGeneric 
+					//&& shader2->optimalStageIteratorFunc != RB_StageIteratorGeneric
 					&& stricmp(shader1->name, shader2->name)
 #endif //__MERGE_SAME_SHADER_NAMES__
 					)
@@ -3407,7 +3410,7 @@ void R_MergeLeafSurfaces(void)
 	}
 
 	// don't add surfaces that don't merge to any others to the merged list
-#pragma omp parallel for schedule(dynamic) if(numWorldSurfaces > 32)
+//#pragma omp parallel for schedule(dynamic) if(numWorldSurfaces > 32)
 	for (i = 0; i < numWorldSurfaces; i++)
 	{
 		qboolean merges = qfalse;
@@ -3435,7 +3438,7 @@ void R_MergeLeafSurfaces(void)
 	numMergedSurfaces = 0;
 	numUnmergedSurfaces = 0;
 
-#pragma omp parallel for schedule(dynamic) if(numWorldSurfaces > 32)
+//#pragma omp parallel for schedule(dynamic) if(numWorldSurfaces > 32)
 	for (i = 0; i < numWorldSurfaces; i++)
 	{
 		if (s_worldData.surfacesViewCount[i] == i)
@@ -3460,7 +3463,7 @@ void R_MergeLeafSurfaces(void)
 	s_worldData.viewSurfaces = (int *)ri->Hunk_Alloc(sizeof(*s_worldData.viewSurfaces) * s_worldData.nummarksurfaces, h_low);
 
 	// copy view surfaces into mark surfaces
-#pragma omp parallel for schedule(dynamic) if(s_worldData.nummarksurfaces > 32)
+//#pragma omp parallel for schedule(dynamic) if(s_worldData.nummarksurfaces > 32)
 	for (i = 0; i < s_worldData.nummarksurfaces; i++)
 	{
 		s_worldData.viewSurfaces[i] = s_worldData.marksurfaces[i];
@@ -3503,7 +3506,7 @@ void R_MergeLeafSurfaces(void)
 		numIndexes = 0;
 		numVerts = 0;
 
-#pragma omp parallel for schedule(dynamic) if(numWorldSurfaces > 32)
+//#pragma omp parallel for schedule(dynamic) if(numWorldSurfaces > 32)
 		for (j = i; j < numWorldSurfaces; j++)
 		{
 			msurface_t *surf2;
@@ -3514,7 +3517,7 @@ void R_MergeLeafSurfaces(void)
 
 			surf2 = s_worldData.surfaces + j;
 
-#pragma omp critical
+//#pragma omp critical
 			{
 				bspSurf = (srfBspSurface_t *) surf2->data;
 				numIndexes += bspSurf->numIndexes;
@@ -3554,7 +3557,7 @@ void R_MergeLeafSurfaces(void)
 
 			bspSurf = (srfBspSurface_t *) surf2->data;
 
-#pragma omp parallel for schedule(dynamic) if(bspSurf->numIndexes > 512)
+//#pragma omp parallel for schedule(dynamic) if(bspSurf->numIndexes > 512)
 			for (k = 0; k < bspSurf->numIndexes; k++)
 			{
 				*outIboIndexes++ = bspSurf->indexes[k] + bspSurf->firstVert;
@@ -3578,7 +3581,7 @@ void R_MergeLeafSurfaces(void)
 		vboSurf->minIndex = *(iboIndexes + firstIndex);
 		vboSurf->maxIndex = *(iboIndexes + firstIndex);
 
-#pragma omp parallel for schedule(dynamic) if(numIndexes > 32)
+//#pragma omp parallel for schedule(dynamic) if(numIndexes > 32)
 		for (j = 0; j < numIndexes; j++)
 		{
 			vboSurf->minIndex = MIN(vboSurf->minIndex, *(iboIndexes + firstIndex + j));
@@ -3609,7 +3612,7 @@ void R_MergeLeafSurfaces(void)
    		Z_Free(iboIndexes);
 
 		// redirect view surfaces to this surf
-#pragma omp parallel for schedule(dynamic) if(numWorldSurfaces > 32)
+//#pragma omp parallel for schedule(dynamic) if(numWorldSurfaces > 32)
 		for (j = 0; j < numWorldSurfaces; j++)
 		{
 			if (s_worldData.surfacesViewCount[j] != i)
@@ -3635,7 +3638,7 @@ void R_MergeLeafSurfaces(void)
 		numWorldSurfaces, numMergedSurfaces, numUnmergedSurfaces, (endTime - startTime) / 1000.0f);
 
 	// reset viewcounts
-#pragma omp parallel for schedule(dynamic) if(numWorldSurfaces > 32)
+//#pragma omp parallel for schedule(dynamic) if(numWorldSurfaces > 32)
 	for (i = 0; i < numWorldSurfaces; i++)
 	{
 		s_worldData.surfacesViewCount[i] = -1;
