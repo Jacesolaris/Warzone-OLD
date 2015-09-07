@@ -2380,6 +2380,7 @@ typedef struct trGlobals_s {
 	shaderProgram_t waterShader;
 	shaderProgram_t sssShader;
 	shaderProgram_t hbaoShader;
+	shaderProgram_t hbao2Shader;
 	shaderProgram_t hbaoCombineShader;
 	shaderProgram_t esharpeningShader;
 	shaderProgram_t esharpening2Shader;
@@ -2393,6 +2394,9 @@ typedef struct trGlobals_s {
 	shaderProgram_t ssgi2Shader;
 	shaderProgram_t ssgi3Shader;
 	shaderProgram_t ssgi4Shader;
+	shaderProgram_t ssgi5Shader;
+	shaderProgram_t ssgi6Shader;
+	shaderProgram_t ssgi7Shader;
 	shaderProgram_t ssgiBlurShader;
 	shaderProgram_t lensflareShader;
 	shaderProgram_t multipostShader;

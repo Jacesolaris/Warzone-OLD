@@ -1731,6 +1731,8 @@ int GLSL_BeginLoadGPUShaders(void)
 	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
 	extradefines[0] = '\0';
 
+	Q_strcat(extradefines, 1024, "#define FAST_SSGI\n");
+
 	if (!GLSL_BeginLoadGPUShader(&tr.ssgi1Shader, "ssgi1", attribs, qtrue, extradefines, qtrue, NULL, fallbackShader_ssgi_vp, fallbackShader_ssgi1_fp))
 	{
 		ri->Error(ERR_FATAL, "Could not load ssgi1 shader!");
@@ -1738,6 +1740,8 @@ int GLSL_BeginLoadGPUShaders(void)
 
 	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
 	extradefines[0] = '\0';
+
+	Q_strcat(extradefines, 1024, "#define FAST_SSGI\n");
 
 	if (!GLSL_BeginLoadGPUShader(&tr.ssgi2Shader, "ssgi2", attribs, qtrue, extradefines, qtrue, NULL, fallbackShader_ssgi_vp, fallbackShader_ssgi2_fp))
 	{
@@ -1747,6 +1751,8 @@ int GLSL_BeginLoadGPUShaders(void)
 	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
 	extradefines[0] = '\0';
 
+	Q_strcat(extradefines, 1024, "#define FAST_SSGI\n");
+
 	if (!GLSL_BeginLoadGPUShader(&tr.ssgi3Shader, "ssgi3", attribs, qtrue, extradefines, qtrue, NULL, fallbackShader_ssgi_vp, fallbackShader_ssgi3_fp))
 	{
 		ri->Error(ERR_FATAL, "Could not load ssgi3 shader!");
@@ -1755,9 +1761,35 @@ int GLSL_BeginLoadGPUShaders(void)
 	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
 	extradefines[0] = '\0';
 
+	Q_strcat(extradefines, 1024, "#define FAST_SSGI\n");
+
 	if (!GLSL_BeginLoadGPUShader(&tr.ssgi4Shader, "ssgi4", attribs, qtrue, extradefines, qtrue, NULL, fallbackShader_ssgi_vp, fallbackShader_ssgi4_fp))
 	{
 		ri->Error(ERR_FATAL, "Could not load ssgi4 shader!");
+	}
+
+	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
+	extradefines[0] = '\0';
+
+	if (!GLSL_BeginLoadGPUShader(&tr.ssgi5Shader, "ssgi5", attribs, qtrue, extradefines, qtrue, NULL, fallbackShader_ssgi_vp, fallbackShader_ssgi2_fp))
+	{
+		ri->Error(ERR_FATAL, "Could not load ssgi5 shader!");
+	}
+
+	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
+	extradefines[0] = '\0';
+
+	if (!GLSL_BeginLoadGPUShader(&tr.ssgi6Shader, "ssgi6", attribs, qtrue, extradefines, qtrue, NULL, fallbackShader_ssgi_vp, fallbackShader_ssgi3_fp))
+	{
+		ri->Error(ERR_FATAL, "Could not load ssgi6 shader!");
+	}
+
+	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
+	extradefines[0] = '\0';
+
+	if (!GLSL_BeginLoadGPUShader(&tr.ssgi7Shader, "ssgi7", attribs, qtrue, extradefines, qtrue, NULL, fallbackShader_ssgi_vp, fallbackShader_ssgi4_fp))
+	{
+		ri->Error(ERR_FATAL, "Could not load ssgi7 shader!");
 	}
 
 	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
@@ -1776,6 +1808,7 @@ int GLSL_BeginLoadGPUShaders(void)
 		ri->Error(ERR_FATAL, "Could not load testshader shader!");
 	}
 
+#if 0
 	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
 	extradefines[0] = '\0';
 
@@ -1783,6 +1816,17 @@ int GLSL_BeginLoadGPUShaders(void)
 	{
 		ri->Error(ERR_FATAL, "Could not load depthOfField shader!");
 	}
+#else
+	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
+	extradefines[0] = '\0';
+
+	Q_strcat(extradefines, 1024, "#define FAST_DOF\n");
+
+	if (!GLSL_BeginLoadGPUShader(&tr.dofShader, "depthOfField2", attribs, qtrue, extradefines, qtrue, NULL, fallbackShader_depthOfField2_vp, fallbackShader_depthOfField2_fp))
+	{
+		ri->Error(ERR_FATAL, "Could not load depthOfField shader!");
+	}
+#endif
 
 	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
 	extradefines[0] = '\0';
@@ -1882,8 +1926,6 @@ int GLSL_BeginLoadGPUShaders(void)
 		ri->Error(ERR_FATAL, "Could not load uniquesky shader!");
 	}
 	
-
-
 	attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL;
 	extradefines[0] = '\0';
 
@@ -1992,9 +2034,19 @@ int GLSL_BeginLoadGPUShaders(void)
 	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
 	extradefines[0] = '\0';
 
+	Q_strcat(extradefines, 1024, "#define FAST_HBAO\n");
+
 	if (!GLSL_BeginLoadGPUShader(&tr.hbaoShader, "hbao", attribs, qtrue, extradefines, qtrue, NULL, fallbackShader_hbao_vp, fallbackShader_hbao_fp))
 	{
 		ri->Error(ERR_FATAL, "Could not load hbao shader!");
+	}
+
+	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
+	extradefines[0] = '\0';
+
+	if (!GLSL_BeginLoadGPUShader(&tr.hbao2Shader, "hbao2", attribs, qtrue, extradefines, qtrue, NULL, fallbackShader_hbao_vp, fallbackShader_hbao_fp))
+	{
+		ri->Error(ERR_FATAL, "Could not load hbao2 shader!");
 	}
 
 	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
@@ -2682,6 +2734,123 @@ void GLSL_EndLoadGPUShaders ( int startTime )
 
 #if defined(_DEBUG)
 	GLSL_FinishGPUShader(&tr.ssgi4Shader);
+#endif
+	
+	numEtcShaders++;
+
+	if (!GLSL_EndLoadGPUShader(&tr.ssgi5Shader))
+	{
+		ri->Error(ERR_FATAL, "Could not load ssgi4 shader!");
+	}
+	
+	GLSL_InitUniforms(&tr.ssgi5Shader);
+
+	qglUseProgram(tr.ssgi5Shader.program);
+
+	GLSL_SetUniformInt(&tr.ssgi5Shader, UNIFORM_LEVELSMAP,  TB_LEVELSMAP);
+	
+	{
+		vec2_t screensize;
+		screensize[0] = glConfig.vidWidth;
+		screensize[1] = glConfig.vidHeight;
+
+		GLSL_SetUniformVec2(&tr.ssgi5Shader, UNIFORM_DIMENSIONS, screensize);
+	}
+
+	{
+		vec4_t viewInfo;
+
+		float zmax = backEnd.viewParms.zFar;
+		float zmin = r_znear->value;
+
+		VectorSet4(viewInfo, zmax / zmin, zmax, 0.0, 0.0);
+		//VectorSet4(viewInfo, zmin, zmax, 0.0, 0.0);
+
+		GLSL_SetUniformVec4(&tr.ssgi5Shader, UNIFORM_VIEWINFO, viewInfo);
+	}
+
+	qglUseProgram(0);
+
+#if defined(_DEBUG)
+	GLSL_FinishGPUShader(&tr.ssgi5Shader);
+#endif
+	
+	numEtcShaders++;
+
+	if (!GLSL_EndLoadGPUShader(&tr.ssgi6Shader))
+	{
+		ri->Error(ERR_FATAL, "Could not load ssgi4 shader!");
+	}
+	
+	GLSL_InitUniforms(&tr.ssgi6Shader);
+
+	qglUseProgram(tr.ssgi6Shader.program);
+
+	GLSL_SetUniformInt(&tr.ssgi6Shader, UNIFORM_LEVELSMAP,  TB_LEVELSMAP);
+	
+	{
+		vec2_t screensize;
+		screensize[0] = glConfig.vidWidth;
+		screensize[1] = glConfig.vidHeight;
+
+		GLSL_SetUniformVec2(&tr.ssgi6Shader, UNIFORM_DIMENSIONS, screensize);
+	}
+
+	{
+		vec4_t viewInfo;
+
+		float zmax = backEnd.viewParms.zFar;
+		float zmin = r_znear->value;
+
+		VectorSet4(viewInfo, zmax / zmin, zmax, 0.0, 0.0);
+		//VectorSet4(viewInfo, zmin, zmax, 0.0, 0.0);
+
+		GLSL_SetUniformVec4(&tr.ssgi6Shader, UNIFORM_VIEWINFO, viewInfo);
+	}
+
+	qglUseProgram(0);
+
+#if defined(_DEBUG)
+	GLSL_FinishGPUShader(&tr.ssgi6Shader);
+#endif
+	
+	numEtcShaders++;
+
+	if (!GLSL_EndLoadGPUShader(&tr.ssgi7Shader))
+	{
+		ri->Error(ERR_FATAL, "Could not load ssgi4 shader!");
+	}
+	
+	GLSL_InitUniforms(&tr.ssgi7Shader);
+
+	qglUseProgram(tr.ssgi7Shader.program);
+
+	GLSL_SetUniformInt(&tr.ssgi7Shader, UNIFORM_LEVELSMAP,  TB_LEVELSMAP);
+	
+	{
+		vec2_t screensize;
+		screensize[0] = glConfig.vidWidth;
+		screensize[1] = glConfig.vidHeight;
+
+		GLSL_SetUniformVec2(&tr.ssgi7Shader, UNIFORM_DIMENSIONS, screensize);
+	}
+
+	{
+		vec4_t viewInfo;
+
+		float zmax = backEnd.viewParms.zFar;
+		float zmin = r_znear->value;
+
+		VectorSet4(viewInfo, zmax / zmin, zmax, 0.0, 0.0);
+		//VectorSet4(viewInfo, zmin, zmax, 0.0, 0.0);
+
+		GLSL_SetUniformVec4(&tr.ssgi7Shader, UNIFORM_VIEWINFO, viewInfo);
+	}
+
+	qglUseProgram(0);
+
+#if defined(_DEBUG)
+	GLSL_FinishGPUShader(&tr.ssgi7Shader);
 #endif
 	
 	numEtcShaders++;
@@ -3415,6 +3584,25 @@ void GLSL_EndLoadGPUShaders ( int startTime )
 
 		numEtcShaders++;
 
+		if (!GLSL_EndLoadGPUShader(&tr.hbao2Shader))
+		{
+			ri->Error(ERR_FATAL, "Could not load hbao2 shader!");
+		}
+
+		GLSL_InitUniforms(&tr.hbao2Shader);
+
+		qglUseProgram(tr.hbao2Shader.program);
+		GLSL_SetUniformInt(&tr.hbao2Shader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
+		GLSL_SetUniformInt(&tr.hbao2Shader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
+		GLSL_SetUniformInt(&tr.hbao2Shader, UNIFORM_NORMALMAP, TB_NORMALMAP);
+		qglUseProgram(0);
+
+#if defined(_DEBUG)
+		GLSL_FinishGPUShader(&tr.hbao2Shader);
+#endif
+
+		numEtcShaders++;
+
 		if (!GLSL_EndLoadGPUShader(&tr.hbaoCombineShader))
 		{
 			ri->Error(ERR_FATAL, "Could not load hbaoCombine shader!");
@@ -3510,6 +3698,7 @@ void GLSL_ShutdownGPUShaders(void)
 	GLSL_DeleteGPUShader(&tr.waterShader);
 	GLSL_DeleteGPUShader(&tr.sssShader);
 	GLSL_DeleteGPUShader(&tr.hbaoShader);
+	GLSL_DeleteGPUShader(&tr.hbao2Shader);
 	GLSL_DeleteGPUShader(&tr.hbaoCombineShader);
 	GLSL_DeleteGPUShader(&tr.bloomBlurShader);
 	GLSL_DeleteGPUShader(&tr.bloomCombineShader);
@@ -3526,6 +3715,9 @@ void GLSL_ShutdownGPUShaders(void)
 	GLSL_DeleteGPUShader(&tr.ssgi2Shader);
 	GLSL_DeleteGPUShader(&tr.ssgi3Shader);
 	GLSL_DeleteGPUShader(&tr.ssgi4Shader);
+	GLSL_DeleteGPUShader(&tr.ssgi5Shader);
+	GLSL_DeleteGPUShader(&tr.ssgi6Shader);
+	GLSL_DeleteGPUShader(&tr.ssgi7Shader);
 	GLSL_DeleteGPUShader(&tr.volumelightShader);
 	GLSL_DeleteGPUShader(&tr.vibrancyShader);
 	GLSL_DeleteGPUShader(&tr.testshaderShader);

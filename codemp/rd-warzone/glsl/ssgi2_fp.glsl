@@ -6,14 +6,11 @@ uniform sampler2D u_GlowMap; // actually saturation map image
 varying vec2		var_TexCoords;
 varying vec2		var_Dimensions;
 varying vec4		var_ViewInfo; // zmin, zmax, zmax / zmin
-varying vec4		var_Local0; // MODE, NUM_SAMPLES, 0, 0
 
 /*
 *CSSGI shader (Coherent Screen Space Global Illumination)
 *This shader requires a depth pass and a normal map pass.
 */
-
-float MODE = var_Local0.x;
 
 #define PI  3.14159265
 
@@ -78,10 +75,12 @@ vec3 CalculateFlare ( vec3 flare_color, vec3 final_color )
 }
 
 void main()
-{   
-	float NUM_SAMPLES = var_Local0.y;
-
-	if (NUM_SAMPLES < 1.0) NUM_SAMPLES = 1.0; // Always at least one sample...
+{
+#ifdef FAST_SSGI
+	const float NUM_SAMPLES = 2.0;
+#else //!FAST_SSGI
+	const float NUM_SAMPLES = 4.0;
+#endif //FAST_SSGI
 
 	//calculate sampling rates:
 	//initialize occlusion sum and gi color:
@@ -106,9 +105,6 @@ void main()
 	float hf = samples/2.0;
 
 	//calculate kernel steps:
-	float incx = ratex*60.0;//30;//gi radius
-	float incy = ratey*60.0;//30;
-
 	float incx2 = ratex*8.0;//ao radius
 	float incy2 = ratey*8.0;
 
@@ -117,11 +113,7 @@ void main()
 		for(float j=-hf; j < hf; j+=1.0){
 
 			if (i != 0.0 || j != 0.0) {
-				vec2 coords = vec2(i*incx,j*incy)/prof;
 				vec2 coords2 = vec2(i*incx2,j*incy2)/prof;
-
-				float prof2 = texture2D(u_ScreenDepthMap,var_TexCoords.st+coords*rand(var_TexCoords)).x;
-				prof2 = zFar * zNear / (prof2 * (zFar - zNear) - zFar);  //linearize z sample
 
 				float prof2g = texture2D(u_ScreenDepthMap,var_TexCoords.st+coords2*rand(var_TexCoords)).x;
 				prof2g = zFar * zNear / (prof2g * (zFar - zNear) - zFar);  //linearize z sample

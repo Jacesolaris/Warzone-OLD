@@ -7,7 +7,7 @@ varying vec2	var_TexCoords;
 void main(void)
 {
 	float NUM_VALUES = 1.0;
-	vec2 PIXEL_OFFSET = vec2(1.0 / var_Dimensions.x, 1.0 / var_Dimensions.y);
+	vec2 PIXEL_OFFSET = vec2(1.0 / var_Dimensions);
 
 	vec3 col0 = texture2D(u_DiffuseMap, var_TexCoords.xy).rgb;
 	gl_FragColor.rgb = col0.rgb;

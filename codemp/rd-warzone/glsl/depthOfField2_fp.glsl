@@ -9,8 +9,6 @@ varying vec2		var_Dimensions;
 
 varying vec4		var_Local0; // dofValue, 0, 0, 0
 
-//float DOF_MANUALFOCUSDEPTH = var_Local0.y;
-
 vec2 sampleOffset = vec2(1.0/var_Dimensions);
 
 #define PIOVER180 0.017453292
@@ -24,11 +22,17 @@ vec2 sampleOffset = vec2(1.0/var_Dimensions);
 #define iMatsoDOFBokehQuality		5	//[1 to 10] Blur quality as control value over tap count.
 #define fMatsoDOFBokehAngle		10	//[0 to 360] Rotation angle of bokeh shape.
 
-#define DOF_FOCUSPOINT	 		vec2(0.5,0.5)	//[0.0 to 1.0] Screen coordinates of focus point. First value is horizontal, second value is vertical position.
 //#define DOF_BLURRADIUS 			10.0	//[5.0 to 50.0] Blur radius approximately in pixels. Radius, not diameter.
-#define DOF_BLURRADIUS 			5
+
+#define DOF_FOCUSPOINT	 		vec2(0.5,0.5)	//[0.0 to 1.0] Screen coordinates of focus point. First value is horizontal, second value is vertical position.
+#ifdef FAST_DOF
+#define DOF_BLURRADIUS 			10.0
+#else //!FAST_DOF
+#define DOF_BLURRADIUS 			5.0
+#endif //FAST_DOF
+
 //#define DOF_MANUALFOCUSDEPTH 		var_Local0.y//0.2	//[0.0 to 1.0] Manual focus depth. 0.0 means camera is focus plane, 1.0 means sky is focus plane.
-#define DOF_MANUALFOCUSDEPTH 		253.0	//[0.0 to 1.0] Manual focus depth. 0.0 means camera is focus plane, 1.0 means sky is focus plane.
+#define DOF_MANUALFOCUSDEPTH 		253.8 //253.0	//[0.0 to 1.0] Manual focus depth. 0.0 means camera is focus plane, 1.0 means sky is focus plane.
 
 float GetLinearDepth(float depth)
 {
@@ -38,7 +42,7 @@ float GetLinearDepth(float depth)
 
 float GetFocalDepth(vec2 focalpoint)
 { 
-	if (var_Local0.r < 4.0)
+	if (var_Local0.r == 1.0 || var_Local0.r == 3.0)
 		return DOF_MANUALFOCUSDEPTH;
 
 #if 1
@@ -115,9 +119,9 @@ vec4 GetMatsoDOFBlur(int axis, vec2 coord, sampler2D SamplerHDRX)
 	vec2 discRadius = /*origCoC **/ (depthDiff * float(DOF_BLURRADIUS)) * sampleOffset.xy * 0.5 / float(iMatsoDOFBokehQuality);
 	
 	if (depthDiff < 0.0) // Close to camera pixels, blur much less so player model is not blury...
-		discRadius *= 0.06;//var_Local0.z;
+		discRadius *= 0.003;//var_Local0.z;
 
-	//if (var_Local0.r < 4.0) // Manual mode. Blur less...
+	//if (var_Local0.r == 2.0 || var_Local0.r == 4.0) // Manual mode. Blur less...
 		discRadius *= 0.5;//0.333;
 
 	int passnumber=1;

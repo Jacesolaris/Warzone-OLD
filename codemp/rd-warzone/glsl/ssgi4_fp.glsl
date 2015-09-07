@@ -6,7 +6,6 @@ uniform sampler2D u_GlowMap; // actually saturation map image
 varying vec2		var_TexCoords;
 varying vec2		var_Dimensions;
 varying vec4		var_ViewInfo; // zmin, zmax, zmax / zmin
-varying vec4		var_Local0; // MODE, NUM_SAMPLES, 0, 0
 
 #if 1
 
@@ -14,8 +13,6 @@ varying vec4		var_Local0; // MODE, NUM_SAMPLES, 0, 0
 *CSSGI shader (Coherent Screen Space Global Illumination)
 *This shader requires a depth pass and a normal map pass.
 */
-
-float MODE = var_Local0.x;
 
 #define PI  3.14159265
 
@@ -81,15 +78,11 @@ vec3 CalculateFlare ( vec3 flare_color, vec3 final_color )
 
 void main()
 {   
-	float NUM_SAMPLES = var_Local0.y;
-
-	if (NUM_SAMPLES < 1.0) NUM_SAMPLES = 1.0; // Always at least one sample...
-
-	if (MODE >= 5.0)
-	{// Saturation map debug mode...
-		gl_FragColor = texture2D(u_GlowMap, var_TexCoords.st);
-		return;
-	}
+#ifdef FAST_SSGI
+	const float NUM_SAMPLES = 2.0;
+#else //!FAST_SSGI
+	const float NUM_SAMPLES = 4.0;
+#endif //FAST_SSGI
 
 	//calculate sampling rates:
 	//initialize occlusion sum and gi color:
@@ -114,8 +107,8 @@ void main()
 	float hf = samples/2.0;
 
 	//calculate kernel steps:
-	float incx = ratex*60.0;//30;//gi radius
-	float incy = ratey*60.0;//30;
+	float incx = ratex*30.0;//gi radius
+	float incy = ratey*30.0;
 
 	float incx2 = ratex*8.0;//ao radius
 	float incy2 = ratey*8.0;

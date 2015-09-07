@@ -1442,13 +1442,13 @@ void R_Register( void )
 	r_depth = ri->Cvar_Get( "r_depth", "0", CVAR_ARCHIVE );
 	r_depthPasses = ri->Cvar_Get( "r_depthPasses", "4", CVAR_ARCHIVE );
 	r_depthScale = ri->Cvar_Get( "r_depthScale", "1024.0", CVAR_ARCHIVE );
-	r_darkexpand = ri->Cvar_Get( "r_darkexpand", "1", CVAR_ARCHIVE );
-	r_truehdr = ri->Cvar_Get( "r_truehdr", "0", CVAR_ARCHIVE );
+	r_darkexpand = ri->Cvar_Get( "r_darkexpand", "0", CVAR_ARCHIVE );
+	r_truehdr = ri->Cvar_Get( "r_truehdr", "1", CVAR_ARCHIVE );
 	r_dof = ri->Cvar_Get( "r_dof", "1", CVAR_ARCHIVE );
 	r_testvalue0 = ri->Cvar_Get( "r_testvalue0", "0", 0 );
 	r_testvalue1 = ri->Cvar_Get( "r_testvalue1", "0", 0 );
-	r_esharpening = ri->Cvar_Get( "r_esharpening", "1", CVAR_ARCHIVE );
-	r_esharpening2 = ri->Cvar_Get( "r_esharpening2", "1", CVAR_ARCHIVE );
+	r_esharpening = ri->Cvar_Get( "r_esharpening", "0", CVAR_ARCHIVE );
+	r_esharpening2 = ri->Cvar_Get( "r_esharpening2", "0", CVAR_ARCHIVE );
 	r_fxaa = ri->Cvar_Get( "r_fxaa", "2", CVAR_ARCHIVE );
 	r_underwater = ri->Cvar_Get( "r_underwater", "1", CVAR_ARCHIVE );
 	r_multipost = ri->Cvar_Get( "r_multipost", "0", CVAR_ARCHIVE );
@@ -1456,7 +1456,7 @@ void R_Register( void )
 	r_textureCleanSigma = ri->Cvar_Get( "r_textureCleanSigma", "0.5", CVAR_ARCHIVE ); // 1.2
 	r_textureCleanBSigma = ri->Cvar_Get( "r_textureCleanBSigma", "0.1", CVAR_ARCHIVE );
 	r_textureCleanMSize = ri->Cvar_Get( "r_textureCleanMSize", "6.0", CVAR_ARCHIVE );
-	r_imageBasedLighting = ri->Cvar_Get( "r_imageBasedLighting", "1", CVAR_ARCHIVE );
+	r_imageBasedLighting = ri->Cvar_Get( "r_imageBasedLighting", "0", CVAR_ARCHIVE );
 	r_sss = ri->Cvar_Get( "r_sss", "0", CVAR_ARCHIVE );
 	r_hbao = ri->Cvar_Get( "r_hbao", "1", CVAR_ARCHIVE );
 	r_trueAnaglyph = ri->Cvar_Get( "r_trueAnaglyph", "0", CVAR_ARCHIVE );

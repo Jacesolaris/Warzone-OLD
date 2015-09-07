@@ -12,10 +12,21 @@ varying vec4		u_ViewInfo; // zmin, zmax, zmax / zmin
 
 // Sampling radius is in view space...
 #define SAMPLING_RADIUS 0.5
+#ifdef FAST_HBAO
+#define NUM_SAMPLING_DIRECTIONS 4
+#else //!FAST_HBAO
 #define NUM_SAMPLING_DIRECTIONS 8
+#endif //FAST_HBAO
+
 // sampling step is in texture space
 #define SAMPLING_STEP 0.004
+
+#ifdef FAST_HBAO
+#define NUM_SAMPLING_STEPS 2
+#else //!FAST_HBAO
 #define NUM_SAMPLING_STEPS 4
+#endif //FAST_HBAO
+
 #define TANGENT_BIAS 0.2
 
 // Select a method...

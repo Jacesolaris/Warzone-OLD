@@ -2196,26 +2196,25 @@ const void *RB_PostProcess(const void *data)
 			FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 		}
 
-		if (r_anamorphic->integer)
-		{
-			RB_Anamorphic(srcFbo, srcBox, tr.genericFbo, dstBox);
-			FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_NEAREST);
-		}
-
-		if (r_ssgi->integer)
-		{
-			RB_SSGI(srcFbo, srcBox, tr.genericFbo, dstBox);
-			FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_NEAREST);
-		}
-
 		if (!SCREEN_BLUR && r_dof->integer)
 		{
 			if (r_dof->integer < 3)
 			{// Old method...
+#if 0
 				RB_DOF(srcFbo, srcBox, tr.genericFbo, dstBox, 0);
 				FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_LINEAR);
 				RB_DOF(srcFbo, srcBox, tr.genericFbo, dstBox, 0);
 				FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_LINEAR);
+#else
+				RB_DOF(srcFbo, srcBox, tr.genericFbo, dstBox, 2);
+				FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_LINEAR);
+				RB_DOF(srcFbo, srcBox, tr.genericFbo, dstBox, 3);
+				FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_LINEAR);
+				RB_DOF(srcFbo, srcBox, tr.genericFbo, dstBox, 0);
+				FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_LINEAR);
+				RB_DOF(srcFbo, srcBox, tr.genericFbo, dstBox, 1);
+				FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_LINEAR);
+#endif
 			}
 			else
 			{// Matso method...
@@ -2237,6 +2236,18 @@ const void *RB_PostProcess(const void *data)
 				RB_DOF(srcFbo, srcBox, tr.genericFbo, dstBox, 1);
 				FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_LINEAR);
 			}
+		}
+
+		if (r_anamorphic->integer)
+		{
+			RB_Anamorphic(srcFbo, srcBox, tr.genericFbo, dstBox);
+			FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+		}
+
+		if (r_ssgi->integer)
+		{
+			RB_SSGI(srcFbo, srcBox, tr.genericFbo, dstBox);
+			FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 		}
 
 		if (!SCREEN_BLUR && r_lensflare->integer)

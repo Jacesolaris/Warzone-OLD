@@ -6,7 +6,6 @@ uniform sampler2D u_GlowMap; // actually saturation map image
 varying vec2		var_TexCoords;
 varying vec2		var_Dimensions;
 varying vec4		var_ViewInfo; // zmin, zmax, zmax / zmin
-varying vec4		var_Local0; // MODE, NUM_SAMPLES, 0, 0
 
 vec3 CalculateFlare ( vec3 flare_color, vec3 final_color )
 {

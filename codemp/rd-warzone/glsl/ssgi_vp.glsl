@@ -6,12 +6,9 @@ uniform mat4   u_ModelViewProjectionMatrix;
 uniform vec2	u_Dimensions;
 uniform vec4	u_ViewInfo; // zfar / znear, zfar
 
-uniform vec4	u_Local0; // PASS_NUM, 0, 0, 0
-
 varying vec2   var_TexCoords;
 varying vec2   var_Dimensions;
 varying vec4   var_ViewInfo; // zmin, zmax, zmax / zmin
-varying vec4   var_Local0; // PASS_NUM, 0, 0, 0
 
 void main()
 {
@@ -19,5 +16,4 @@ void main()
 	var_TexCoords = attr_TexCoord0.st;
 	var_Dimensions = u_Dimensions.st;
 	var_ViewInfo = u_ViewInfo;
-	var_Local0 = u_Local0;
 }
