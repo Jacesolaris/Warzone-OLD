@@ -544,7 +544,10 @@ void CreateSpawnpoints( void )
 		// Ok, we need more spawnpoints...
 		//
 
-		if (red_count > 0 && blue_count > 0)
+		bluespot = G_Find (bluespot, FOFS(classname), "team_CTF_bluespawn");
+		redspot = G_Find (redspot, FOFS(classname), "team_CTF_redspawn");
+
+		if (red_count > 0 && blue_count > 0 && bluespot && redspot)
 		{// Use the map's known spawnpoints for each team as the team start positions...
 			//trap->Print("Using real CTF spawn points to generate extra spawn points.\n");
 			MOST_DISTANT_POINTS[0] = DOM_GetNearestWP(bluespot->s.origin, -1);

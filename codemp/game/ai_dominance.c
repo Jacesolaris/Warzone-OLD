@@ -459,9 +459,7 @@ int DOM_GetNearestWP(vec3_t org, int badwp)
 {
 	int i;
 	float bestdist;
-	float flLen;
 	int bestindex;
-	vec3_t a;
 
 	i = 0;
 	/*if (RMG.integer)
@@ -475,19 +473,14 @@ int DOM_GetNearestWP(vec3_t org, int badwp)
 	}
 	bestindex = -1;
 
-#pragma omp parallel for schedule(dynamic) num_threads(32) if(g_multithread.integer > 0)
 	for (i = 0; i < gWPNum; i++)
 	{
 		if (gWPArray[i] && gWPArray[i]->inuse && i != badwp)
 		{
-			VectorSubtract(org, gWPArray[i]->origin, a);
-			flLen = VectorLength(a);
+			float flLen = Distance(org, gWPArray[i]->origin);
 
 			if (gWPArray[i]->flags & WPFLAG_WAITFORFUNC
-				|| (gWPArray[i]->flags & WPFLAG_NOMOVEFUNC)/*
-														   || (gWPArray[i]->flags & WPFLAG_DESTROY_FUNCBREAK)
-														   || (gWPArray[i]->flags & WPFLAG_FORCEPUSH)
-														   || (gWPArray[i]->flags & WPFLAG_FORCEPULL)*/)
+				|| (gWPArray[i]->flags & WPFLAG_NOMOVEFUNC))
 			{//boost the distance for these waypoints so that we will try to avoid using them
 				//if at all possible
 				flLen = flLen + 500;
@@ -495,14 +488,8 @@ int DOM_GetNearestWP(vec3_t org, int badwp)
 
 			if (flLen < bestdist)
 			{
-#pragma omp critical (__ADD_BEST_WP__)
-				{
-//					if (flLen < bestdist)
-					{
-						bestdist = flLen;
-						bestindex = i;
-					}
-				}
+				bestdist = flLen;
+				bestindex = i;
 			}
 		}
 	}
@@ -515,9 +502,7 @@ int DOM_GetNearWP(vec3_t org, int badwp)
 {
 	int i;
 	float bestdist;
-	float flLen;
 	int bestindex;
-	vec3_t a;
 
 	i = 0;
 	/*if (RMG.integer)
@@ -531,19 +516,14 @@ int DOM_GetNearWP(vec3_t org, int badwp)
 	}
 	bestindex = -1;
 
-#pragma omp parallel for schedule(dynamic) num_threads(32) if(g_multithread.integer > 0)
 	for (i = 0; i < gWPNum; i++)
 	{
 		if (gWPArray[i] && gWPArray[i]->inuse && i != badwp)
 		{
-			VectorSubtract(org, gWPArray[i]->origin, a);
-			flLen = VectorLength(a);
+			float flLen = Distance(org, gWPArray[i]->origin);
 
 			if (gWPArray[i]->flags & WPFLAG_WAITFORFUNC
-				|| (gWPArray[i]->flags & WPFLAG_NOMOVEFUNC)/*
-														   || (gWPArray[i]->flags & WPFLAG_DESTROY_FUNCBREAK)
-														   || (gWPArray[i]->flags & WPFLAG_FORCEPUSH)
-														   || (gWPArray[i]->flags & WPFLAG_FORCEPULL)*/)
+				|| (gWPArray[i]->flags & WPFLAG_NOMOVEFUNC))
 			{//boost the distance for these waypoints so that we will try to avoid using them
 				//if at all possible
 				flLen = flLen + 500;
@@ -551,14 +531,8 @@ int DOM_GetNearWP(vec3_t org, int badwp)
 
 			if (flLen < bestdist && flLen >= 64)
 			{
-#pragma omp critical (__ADD_BEST_WP__)
-				{
-					//if (flLen < bestdist)
-					{
-						bestdist = flLen;
-						bestindex = i;
-					}
-				}
+				bestdist = flLen;
+				bestindex = i;
 			}
 		}
 	}
