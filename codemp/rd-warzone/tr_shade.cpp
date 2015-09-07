@@ -2176,7 +2176,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				//  - disable texture sampling in glsl shader with #ifdefs, as before
 				//     -> increases the number of shaders that must be compiled
 				//
-				//if ((light || pStage->isWater || pStage->hasRealNormalMap || pStage->hasSpecular || pStage->hasRealSubsurfaceMap) && !fastLight)
+				if ((light || pStage->isWater || pStage->hasRealNormalMap || pStage->hasSpecular || pStage->hasRealSubsurfaceMap) && !fastLight)
 				{
 					if (r_normalMapping->integer
 						&& !input->shader->isPortal
