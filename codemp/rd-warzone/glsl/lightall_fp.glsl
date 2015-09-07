@@ -6,8 +6,9 @@ uniform vec4	u_Local3; // RimScalar, MaterialThickness, subSpecPower, cubemapSca
 uniform vec4	u_Local4; // haveNormalMap, isMetalic, hasRealSubsurfaceMap, useSteepParallax
 //uniform vec4	u_Local5; // imageBasedLighting, 0.0, 0.0, 0.0
 
-//#define USE_LIGHT
 //#define SPHERICAL_HARMONICS
+//#define SUBSURFACE_SCATTER
+//#define STEEP_PARALLAX
 
 varying float  var_Time;
 
@@ -308,6 +309,7 @@ float blinnPhongSpecular(in vec3 normalVec, in vec3 lightVec, in float specPower
     return pow(clamp(0.0,1.0,dot(normalVec,halfAngle)),specPower);
 }
  
+ #ifdef SUBSURFACE_SCATTER
 // Main fake sub-surface scatter lighting function
 
 vec3 ExtinctionCoefficient = u_Local2.xyz;
@@ -376,15 +378,17 @@ vec4 subScatterFS(vec4 BaseColor, vec4 SpecColor, vec3 lightVec, vec3 LightColor
      
     return finalCol;   
 }
+#endif //SUBSURFACE_SCATTER
 #endif
 
+#ifdef STEEP_PARALLAX
 vec2 ParallaxMapping(vec2 texCoords, vec3 viewDir)
 { 
-	vec2 tex_offset = vec2(1.0 / u_Dimensions.x, 1.0 / u_Dimensions.y);
+	vec2 tex_offset = vec2(1.0 / u_Dimensions);
     // number of depth layers
 	float height_scale = u_Local1.x;
-    const float minLayers = 10;
-    const float maxLayers = 20;
+    const float minLayers = 10.0;
+    const float maxLayers = 20.0;
     float numLayers = mix(maxLayers, minLayers, abs(dot(vec3(0.0, 0.0, 1.0), viewDir)));  
     // calculate the size of each layer
     float layerDepth = 1.0 / numLayers;
@@ -422,6 +426,7 @@ vec2 ParallaxMapping(vec2 texCoords, vec3 viewDir)
 
     return finalTexCoords;
 }
+#endif //STEEP_PARALLAX
 
 //---------------------------------------------------------
 // get pseudo 3d bump background
@@ -500,14 +505,14 @@ void main()
 	//vec3 NORMAL = vec3(1.0);
 	vec3 DETAILED_NORMAL = vec3(1.0);
 	float NL, NH, NE, EH, attenuation;
-	vec2 tex_offset = vec2(1.0 / u_Dimensions.x, 1.0 / u_Dimensions.y);
+	vec2 tex_offset = vec2(1.0 / u_Dimensions);
 	
 #if defined(USE_LIGHT) && !defined(USE_FAST_LIGHT)
   #if defined(USE_VERT_TANGENT_SPACE)
-	//mat3 tangentToWorld = mat3(var_Tangent.xyz, var_Bitangent.xyz, var_Normal.xyz);
-	//viewDir = vec3(var_Normal.w, var_Tangent.w, var_Bitangent.w);
-	mat3 tangentToWorld = cotangent_frame(var_Normal.xyz, -var_ViewDir, var_TexCoords.xy);
-	viewDir = var_ViewDir;
+	mat3 tangentToWorld = mat3(var_Tangent.xyz, var_Bitangent.xyz, var_Normal.xyz);
+	viewDir = vec3(var_Normal.w, var_Tangent.w, var_Bitangent.w);
+	//mat3 tangentToWorld = cotangent_frame(var_Normal.xyz, -var_ViewDir, var_TexCoords.xy);
+	//viewDir = var_ViewDir;
   #else
 	mat3 tangentToWorld = cotangent_frame(var_Normal.xyz, -var_ViewDir, var_TexCoords.xy);
 	viewDir = var_ViewDir;
@@ -544,6 +549,8 @@ void main()
 	//vec4 diffuse = BumpyBackground(u_DiffuseMap, texCoords);
 
 #if defined(USE_PARALLAXMAP) || defined(USE_PARALLAXMAP_NONORMALS)
+#ifdef STEEP_PARALLAX
+	// Steep parallax looks much nicer but can be a big FPS hit...
 	if (u_Local4.a == 0.0)
 	{// Normal parallax...
 		vec3 offsetDir = normalize(E * tangentToWorld);
@@ -552,7 +559,7 @@ void main()
 		diffuse = texture2D(u_DiffuseMap, texCoords);
 	}
 	else
-	{// Use steep parallax... (below)
+	{// Use steep parallax...
 		vec3 offsetDir = normalize(E * tangentToWorld);
 		texCoords = ParallaxMapping(var_TexCoords.xy, offsetDir);
 
@@ -561,6 +568,13 @@ void main()
 
 		diffuse = texture2D(u_DiffuseMap, texCoords);
 	}
+#else //!STEEP_PARALLAX
+	// Faster but sucky...
+	vec3 offsetDir = normalize(E * tangentToWorld);
+	offsetDir.xy *= tex_offset * -u_Local1.x;//-4.0;//-5.0; // -3.0
+	texCoords += offsetDir.xy * RayIntersectDisplaceMap(texCoords, offsetDir.xy, u_NormalMap);
+	diffuse = texture2D(u_DiffuseMap, texCoords);
+#endif //STEEP_PARALLAX
 #else
 	diffuse = texture2D(u_DiffuseMap, texCoords);
 #endif
@@ -838,6 +852,7 @@ void main()
 
   gl_FragColor.a = diffuse.a * var_Color.a;
 
+#ifdef SUBSURFACE_SCATTER
   #if defined(USE_LIGHT_VECTOR) && !defined(USE_FAST_LIGHT)
   // Let's add some sub-surface scatterring shall we???
   if (MaterialThickness > 0.0 || u_Local4.z != 0.0 /*|| u_Local1.a == 5 || u_Local1.a == 6 || u_Local1.a == 12 
@@ -852,6 +867,7 @@ void main()
 	gl_FragColor = clamp(gl_FragColor, 0.0, 1.0);
   }
   #endif
+#endif //SUBSURFACE_SCATTER
 
 #ifdef SPHERICAL_HARMONICS
   gl_FragColor.rgb *= sphericalHarmonics(N) * u_scaleFactor;

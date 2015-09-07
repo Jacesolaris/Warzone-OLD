@@ -429,7 +429,7 @@ qboolean IgnoreGrassOnMap( void )
 	return qfalse;
 }
 
-void DrawGrass()
+void DrawGrass( void )
 {
 	int spot = 0;
 

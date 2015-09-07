@@ -3513,7 +3513,7 @@ void CG_ManualEntityRender(centity_t *cent)
 void DrawWaypoints();
 //[/AUTOWAYPOINT]
 
-void DrawGrass();
+void DrawGrass( void );
 
 /*
 ===============
