@@ -1628,6 +1628,7 @@ static QINLINE void R_Radix( int byte, int size, drawSurf_t *source, drawSurf_t 
 
   sortKey = ( (unsigned char *)&source[ 0 ].sort ) + byte;
   end = sortKey + ( size * sizeof( drawSurf_t ) );
+
   for( ; sortKey < end; sortKey += sizeof( drawSurf_t ) )
     ++count[ *sortKey ];
 

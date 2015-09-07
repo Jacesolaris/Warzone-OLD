@@ -380,6 +380,7 @@ static void RB_SurfaceVertsAndIndexes( int numVerts, srfVert_t *verts, int numIn
 
 	inIndex = indexes;
 	outIndex = &tess.indexes[ tess.numIndexes ];
+#pragma omp parallel for schedule(dynamic) if(numIndexes > 512)
 	for ( i = 0 ; i < numIndexes ; i++ ) {
 		*outIndex++ = tess.numVertexes + *inIndex++;
 	}
@@ -1660,6 +1661,8 @@ static void RB_SurfaceMesh(mdvSurface_t *surface) {
 
 	Bob = tess.numIndexes;
 	Doug = tess.numVertexes;
+
+#pragma omp parallel for schedule(dynamic) if(surface->numIndexes > 256)
 	for (j = 0 ; j < surface->numIndexes ; j++) {
 		tess.indexes[Bob + j] = Doug + surface->indexes[j];
 	}
@@ -1668,6 +1671,8 @@ static void RB_SurfaceMesh(mdvSurface_t *surface) {
 	texCoords = surface->st;
 
 	numVerts = surface->numVerts;
+
+#pragma omp parallel for schedule(dynamic) if(numVerts > 128)
 	for ( j = 0; j < numVerts; j++ ) {
 		tess.texCoords[Doug + j][0][0] = texCoords[j].st[0];
 		tess.texCoords[Doug + j][0][1] = texCoords[j].st[1];

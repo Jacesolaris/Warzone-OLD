@@ -2698,6 +2698,7 @@ void R_LoadLightGrid( lump_t *l ) {
 
 			w->hdrLightGrid = (float *)ri->Hunk_Alloc(size, h_low);
 
+#pragma omp parallel for schedule(dynamic) if(numGridDataElements > 64)
 			for (i = 0; i < numGridDataElements ; i++)
 			{
 				w->hdrLightGrid[i * 6    ] = hdrLightGrid[i * 6    ] * lightScale;
@@ -3270,7 +3271,13 @@ R_MergeLeafSurfaces
 Merges surfaces that share a common leaf
 =================
 */
+
+// Merge more stuff... As much as we can to reduce/stop CPU rend2 bottleneck...
 #define __MERGE_MORE__
+// Merge matching shader names...
+// This works for us (as far as I have seen so far) because we only actually use 2 light styles (MATERIAL_ overrides), 
+// and never should they be really using 2 different shaders. Rend2 just didn't know that when assigning them at load...
+#define __MERGE_SAME_SHADER_NAMES__
 
 void R_MergeLeafSurfaces(void)
 {
@@ -3360,7 +3367,14 @@ void R_MergeLeafSurfaces(void)
 				shader2 = surf2->shader;
 
 				if (shader1 != shader2 
-					&& !(shader1 && shader1->stages[0] && shader1->stages[0]->isWater && shader2 && shader2->stages[0] && shader2->stages[0]->isWater)) // UQ1: Water can be safely merged I believe...
+					&& !(shader1 && shader1->stages[0] && shader1->stages[0]->isWater && shader2 && shader2->stages[0] && shader2->stages[0]->isWater) // UQ1: Water can be safely merged I believe...
+#ifdef __MERGE_SAME_SHADER_NAMES__
+					// Cull matching shader names...
+					&& shader1->optimalStageIteratorFunc != RB_StageIteratorGeneric 
+					&& shader2->optimalStageIteratorFunc != RB_StageIteratorGeneric
+					&& stricmp(shader1->name, shader2->name)
+#endif //__MERGE_SAME_SHADER_NAMES__
+					)
 					continue;
 
 				fogIndex2 = surf2->fogIndex;
@@ -3539,6 +3553,8 @@ void R_MergeLeafSurfaces(void)
 			AddPointToBounds(surf2->cullinfo.bounds[1], bounds[0], bounds[1]);
 
 			bspSurf = (srfBspSurface_t *) surf2->data;
+
+#pragma omp parallel for schedule(dynamic) if(bspSurf->numIndexes > 512)
 			for (k = 0; k < bspSurf->numIndexes; k++)
 			{
 				*outIboIndexes++ = bspSurf->indexes[k] + bspSurf->firstVert;
@@ -3631,7 +3647,6 @@ static void R_CalcVertexLightDirs( void )
 {
 	int i, k;
 
-//#pragma omp parallel for schedule(dynamic) if(s_worldData.numsurfaces > 32)
 	for(k = 0; k < s_worldData.numsurfaces /* s_worldData.numWorldSurfaces */; k++)
 	{
 		msurface_t *surface = &s_worldData.surfaces[k];

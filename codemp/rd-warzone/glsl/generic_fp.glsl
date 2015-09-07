@@ -1,5 +1,7 @@
 uniform sampler2D u_DiffuseMap;
 
+#define FPS_BOOST
+
 #if defined(USE_LIGHTMAP)
 uniform sampler2D u_LightMap;
 
@@ -24,6 +26,7 @@ uniform vec2	u_Dimensions;
 out vec4 out_Glow;
 //out vec4 out_Normal;
 
+#ifndef FPS_BOOST
 float SampleDepth(sampler2D normalMap, vec2 t)
 {
 	vec3 color = texture2D(u_DiffuseMap, t).rgb;
@@ -187,9 +190,11 @@ mat3 cotangent_frame( vec3 N, vec3 p, vec2 uv )
 	float invmax = inversesqrt( max( dot(T,T), dot(B,B) ) );
 	return mat3( T * invmax, B * invmax, N );
 }
+#endif //FPS_BOOST
 
 void main()
 {
+#ifndef FPS_BOOST
 	vec3 viewDir;
 	vec3 L, N, E, H;
 	float NL, NH, NE, EH;
@@ -215,6 +220,10 @@ void main()
 	vec4 color = texture2D(u_DiffuseMap, texCoords);
 
 	//vec4 color  = texture2D(u_DiffuseMap, var_DiffuseTex);
+#else //FPS_BOOST
+	vec2 texCoords = var_DiffuseTex;
+	vec4 color = texture2D(u_DiffuseMap, texCoords);
+#endif //FPS_BOOST
 
 #if defined(USE_LIGHTMAP)
 	vec4 color2 = texture2D(u_LightMap, var_LightTex);
@@ -240,6 +249,7 @@ void main()
 	//color = color * (u_Texture1Env.xxxx + color2 * u_Texture1Env.z) + color2 * u_Texture1Env.y;
 #endif
 
+#ifndef FPS_BOOST
 	if (u_Local1.b > 0.0)
 	{// Specular mapping on this stuff, pls...
 		vec3 reflectance;
@@ -272,6 +282,7 @@ void main()
 		if (bright > 0.0)
 			color.rgb  = clamp((color.rgb - vec3(reduce)) + (reflection * specular.a), 0.0, 1.0);
 	}
+#endif //FPS_BOOST
 
 	gl_FragColor = color * var_Color;
 
@@ -281,5 +292,7 @@ void main()
 	out_Glow = vec4(0.0);
 #endif
 
+#ifndef FPS_BOOST
 	//out_Normal = vec4(N.xyz * 0.5 + 0.5, 0.0);
+#endif //FPS_BOOST
 }

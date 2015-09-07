@@ -55,6 +55,7 @@ static	image_t*		hashTable[FILE_HASH_SIZE];
 void R_GammaCorrect( byte *buffer, int bufSize ) {
 	int i;
 
+#pragma omp parallel for schedule(dynamic) if(bufSize >= 512)
 	for ( i = 0; i < bufSize; i++ ) {
 		buffer[i] = s_gammatable[buffer[i]];
 	}
@@ -1079,14 +1080,13 @@ static void DoLinear(byte *in, byte *out, int width, int height)
 
 static void ExpandHalfTextureToGrid( byte *data, int width, int height)
 {
-	int x, y;
-
-	for (y = height / 2; y > 0; y--)
+#pragma omp parallel for schedule(dynamic) if(height > 32)
+	for (int y = height / 2; y > 0; y--)
 	{
 		byte *outbyte = data + ((y * 2 - 1) * (width)     - 2) * 4;
 		byte *inbyte  = data + (y           * (width / 2) - 1) * 4;
 
-		for (x = width / 2; x > 0; x--)
+		for (int x = width / 2; x > 0; x--)
 		{
 			COPYSAMPLE(outbyte, inbyte);
 
@@ -1273,6 +1273,7 @@ void R_LightScaleTexture (byte *in, int inwidth, int inheight, qboolean only_gam
 			p = in;
 
 			c = inwidth*inheight;
+
 			for (i=0 ; i<c ; i++, p+=4)
 			{
 				p[0] = s_gammatable[p[0]];
@@ -1379,6 +1380,7 @@ static void R_MipMapsRGB( byte *in, int inWidth, int inHeight)
 	outHeight = inHeight >> 1;
 	temp = (byte *)ri->Hunk_AllocateTempMemory( outWidth * outHeight * 4 );
 
+#pragma omp parallel for schedule(dynamic) if(outHeight > 64)
 	for ( i = 0 ; i < outHeight ; i++ ) {
 		byte *outbyte = temp + (  i          * outWidth ) * 4;
 		byte *inbyte1 = in   + (  i * 2      * inWidth  ) * 4;
@@ -1472,6 +1474,7 @@ static void R_MipMapLuminanceAlpha (const byte *in, byte *out, int width, int he
 
 	if ( width == 0 || height == 0 ) {
 		width += height;	// get largest
+
 		for (i=0 ; i<width ; i++, out+=4, in+=8 ) {
 			out[0] = 
 			out[1] = 
@@ -2110,6 +2113,7 @@ void Upload32( byte *data, int width, int height, imgType_t type, int flags,
 	
 	if( r_greyscale->integer )
 	{
+#pragma omp parallel for schedule(dynamic) if(c >= 64)
 		for ( i = 0; i < c; i++ )
 		{
 			byte luma = LUMA(scan[i*4], scan[i*4 + 1], scan[i*4 + 2]);
@@ -2120,6 +2124,7 @@ void Upload32( byte *data, int width, int height, imgType_t type, int flags,
 	}
 	else if( r_greyscale->value )
 	{
+#pragma omp parallel for schedule(dynamic) if(c >= 32)
 		for ( i = 0; i < c; i++ )
 		{
 			float luma = LUMA(scan[i*4], scan[i*4 + 1], scan[i*4 + 2]);
@@ -3343,6 +3348,7 @@ static void R_CreateFogImage( void ) {
 	data = (byte *)ri->Hunk_AllocateTempMemory( FOG_S * FOG_T * 4 );
 
 	// S is distance, T is depth
+#pragma omp parallel for schedule(dynamic)
 	for (x=0 ; x<FOG_S ; x++) {
 		for (y=0 ; y<FOG_T ; y++) {
 			d = R_FogFactor( ( x + 0.5f ) / FOG_S, ( y + 0.5f ) / FOG_T );
@@ -3621,6 +3627,7 @@ void R_SetColorMappings( void ) {
 
 	g = r_gamma->value;
 
+#pragma omp parallel for schedule(dynamic)
 	for ( i = 0; i < 256; i++ ) {
 		int i2;
 

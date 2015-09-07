@@ -858,6 +858,8 @@ static void R_LevelShot( void ) {
 	// resample from source
 	xScale = glConfig.vidWidth / (4.0*LEVELSHOTSIZE);
 	yScale = glConfig.vidHeight / (3.0*LEVELSHOTSIZE);
+
+#pragma omp parallel for schedule(dynamic)
 	for ( y = 0 ; y < LEVELSHOTSIZE ; y++ ) {
 		for ( x = 0 ; x < LEVELSHOTSIZE ; x++ ) {
 			r = g = b = 0;
