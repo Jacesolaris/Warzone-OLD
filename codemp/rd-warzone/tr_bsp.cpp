@@ -3370,11 +3370,6 @@ void R_MergeLeafSurfaces(void)
 					&& !(shader1 && shader1->stages[0] && shader1->stages[0]->isWater && shader2 && shader2->stages[0] && shader2->stages[0]->isWater) // UQ1: Water can be safely merged I believe...
 #ifdef __MERGE_SAME_SHADER_NAMES__
 					// Cull matching shader names...
-					//&& !shader1->hasAlpha
-					//&& !shader2->hasAlpha
-					//&& ((shader1->surfaceFlags & MATERIAL_MASK) == (shader2->surfaceFlags & MATERIAL_MASK))
-					//&& shader1->optimalStageIteratorFunc != RB_StageIteratorGeneric 
-					//&& shader2->optimalStageIteratorFunc != RB_StageIteratorGeneric
 					&& stricmp(shader1->name, shader2->name)
 #endif //__MERGE_SAME_SHADER_NAMES__
 					)
