@@ -14,6 +14,7 @@ varying vec4		var_ViewInfo; // zmin, zmax, zmax / zmin
 
 #define PI  3.14159265
 
+//#define USE_GLOWMAP
 #define USE_DEPTHMAP
 
 #ifdef USE_DEPTHMAP
@@ -118,12 +119,13 @@ void main()
 				prof2 = zFar * zNear / (prof2 * (zFar - zNear) - zFar);  //linearize z sample
 
 				//COLOR BLEEDING:
-				vec3 dcolor3 = texture2D(u_GlowMap, var_TexCoords.st+coords*rand(var_TexCoords)).xyz;
-
-				//if (length(dcolor2)>0.3){//color threshold
-				//if (length(dcolor2)>0.0){//color threshold
-				//if (length(dcolor2)>length(dcolor1)){//color threshold
-				//if (length(dcolor3)>length(dcolor1)){//color threshold
+#ifdef USE_GLOWMAP
+				vec3 dcolor2 = texture2D(u_GlowMap, var_TexCoords.st+coords*rand(var_TexCoords)).xyz;
+#else //USE_GLOWMAP
+				vec3 dcolor2 = texture2D(u_TextureMap, var_TexCoords.st+coords*rand(var_TexCoords)).xyz;
+				
+				if (length(dcolor2)>0.3)//color threshold
+#endif //USE_GLOWMAP
 				{
 					vec3 norm2 = normalize(vec3(SampleNormals(u_TextureMap,var_TexCoords.st+coords*rand(var_TexCoords)).xyz)*2.0-vec3(1.0)); 
 
@@ -136,8 +138,7 @@ void main()
 					//if there is coherence, calculate bleeding:
 					if (coherence > 0.0){
 						float pformfactor = ((1.0-dot(norm,norm2)))/(3.1416*pow(abs(length(dist*2.0)),2.0)+0.5);//el 4: depthscale
-						//fcolor += dcolor2*(clamp(pformfactor,0.0,1.0));
-						fcolor += dcolor3*(clamp(pformfactor,0.0,1.0));
+						fcolor += dcolor2*(clamp(pformfactor,0.0,1.0));
 					}
 				}
 			}
@@ -149,9 +150,13 @@ void main()
 	vec3 bleeding = (fcolor/samples)*0.5;
 
 	// UQ1: Adjust bleed ammount...
+#ifdef USE_GLOWMAP
 	bleeding *= clamp(length(dcolor1) * 0.333 * MODIFIER, 0.0, 1.0);
-
-	vec3 final_color = vec3((dcolor1) + (bleeding));// * 1.25;
+	vec3 final_color = vec3((dcolor1) + (dcolor1));// * 1.25;
+#else //!USE_GLOWMAP
+	bleeding *= 0.5;
+	vec3 final_color = vec3((dcolor1) + (dcolor1 * bleeding));// * 1.25;
+#endif //USE_GLOWMAP
 
 	// UQ1: Let's add some of the flare color as well... Just to boost colors/glows...
 	vec3 flare_color = clamp(texture2D(u_GlowMap, var_TexCoords.st).rgb, 0.0, 1.0);
