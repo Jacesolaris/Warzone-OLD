@@ -15,7 +15,7 @@ varying vec4		var_ViewInfo; // zmin, zmax, zmax / zmin
 #define PI  3.14159265
 
 //#define USE_GLOWMAP
-//#define USE_DEPTHMAP
+#define USE_DEPTHMAP
 
 #ifdef USE_DEPTHMAP
 const float depthMult = 255.0;
@@ -146,13 +146,15 @@ void main()
 	}
 
 	// COLOR BLEED ONLY
+#ifdef USE_GLOWMAP
 	float MODIFIER = 1.0 - clamp( length(dcolor1.rgb) / 1.5, 0.0, 1.0 );
+#endif //USE_GLOWMAP
 	vec3 bleeding = (fcolor/samples)*0.5;
 
 	// UQ1: Adjust bleed ammount...
 #ifdef USE_GLOWMAP
 	bleeding *= clamp(length(dcolor1) * 0.333 * MODIFIER, 0.0, 1.0);
-	vec3 final_color = vec3((dcolor1) + (dcolor1));// * 1.25;
+	vec3 final_color = vec3((dcolor1) + (bleeding));// * 1.25;
 #else //!USE_GLOWMAP
 	bleeding *= 0.5;
 	vec3 final_color = vec3((dcolor1) + (dcolor1 * bleeding));// * 1.25;

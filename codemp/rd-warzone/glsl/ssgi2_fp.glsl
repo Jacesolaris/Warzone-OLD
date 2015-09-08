@@ -14,7 +14,7 @@ varying vec4		var_ViewInfo; // zmin, zmax, zmax / zmin
 
 #define PI  3.14159265
 
-//#define USE_DEPTHMAP
+#define USE_DEPTHMAP
 
 #ifdef USE_DEPTHMAP
 const float depthMult = 255.0;
@@ -139,7 +139,7 @@ void main()
 	// OCCLUSION ONLY
 	float MODIFIER = 1.0 - clamp( length(dcolor1.rgb) / 1.5, 0.0, 1.0 );
 	float occlusion = 1.0-((sum/samples) * 0.75 * MODIFIER);
-	vec3 final_color = vec3(dcolor1* occlusion);// * 1.25;
+	vec3 final_color = vec3(dcolor1 * occlusion);// * 1.25;
 
 	// UQ1: Let's add some of the flare color as well... Just to boost colors/glows...
 	vec3 flare_color = clamp(texture2D(u_GlowMap, var_TexCoords.st).rgb, 0.0, 1.0);
