@@ -15,7 +15,7 @@ varying vec4		var_ViewInfo; // zmin, zmax, zmax / zmin
 #define PI  3.14159265
 
 //#define USE_GLOWMAP
-#define USE_DEPTHMAP
+//#define USE_DEPTHMAP
 
 #ifdef USE_DEPTHMAP
 const float depthMult = 255.0;
@@ -24,8 +24,8 @@ const float depthMult = 255.0;
 float ratex = (1.0/var_Dimensions.x);
 float ratey = (1.0/var_Dimensions.y);
 
-vec2 offset1 = vec2(0.0, 1.0 / var_Dimensions.y);
-vec2 offset2 = vec2(1.0 / var_Dimensions.x, 0.0);
+vec2 offset1 = vec2(0.0, ratey);
+vec2 offset2 = vec2(ratex, 0.0);
 
 #ifdef USE_DEPTHMAP
 vec3 normal_from_depth(float depth, vec2 texcoords) {
