@@ -1442,7 +1442,7 @@ qboolean ForceGlow ( char *shader )
 	{
 		return qtrue;
 	}
-	else if (StringContains(shader, "shot", 0)) // GFX
+	else if (StringContains(shader, "shot", 0) && !StringContains(shader, "acp_arraygun", 0)) // GFX
 	{
 		return qtrue;
 	}
