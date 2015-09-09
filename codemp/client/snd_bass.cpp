@@ -1298,8 +1298,6 @@ void BASS_InitDynamicList ( void )
 
 void BASS_MusicUpdateThread( void * aArg )
 {
-	this_thread::sleep_for(chrono::milliseconds(5000));
-
 	while (!BASS_MUSIC_UPDATE_THREAD_STOP)
 	{
 		if (BASS_CheckSoundDisabled())
@@ -1309,7 +1307,7 @@ void BASS_MusicUpdateThread( void * aArg )
 
 		if (!FS_STARTUP_COMPLETE || !s_soundStarted || !s_allowDynamicMusic->integer || MUSIC_LIST_UPDATING)
 		{// wait...
-			this_thread::sleep_for(chrono::milliseconds(1000));
+			this_thread::sleep_for(chrono::milliseconds(100));
 			continue;
 		}
 
@@ -1320,11 +1318,9 @@ void BASS_MusicUpdateThread( void * aArg )
 		// Do we need a new track yet???
 		if (BASS_ChannelIsActive(MUSIC_CHANNEL.channel) == BASS_ACTIVE_PLAYING)
 		{// Still playing a track...
-			this_thread::sleep_for(chrono::milliseconds(1000));
+			this_thread::sleep_for(chrono::milliseconds(10));
 			continue;
 		}
-
-		this_thread::sleep_for(chrono::milliseconds(1000)); // just in case fs_startup is running... give it a little time...
 
 		// Seems we need a new track... Select a random one and play it!
 		int trackChoice = irand(0, MUSIC_LIST_COUNT-1);
@@ -1336,7 +1332,7 @@ void BASS_MusicUpdateThread( void * aArg )
 		//Com_Printf("Queue music tracks %s and %s.\n", MUSIC_LIST[trackChoice].name, MUSIC_LIST[trackChoice2].name);
 		S_StartBackgroundTrack_Actual( MUSIC_LIST[trackChoice].name, MUSIC_LIST[trackChoice2].name );
 
-		this_thread::sleep_for(chrono::milliseconds(1000));
+		this_thread::sleep_for(chrono::milliseconds(10));
 	}
 
 	BASS_MUSIC_UPDATE_THREAD_RUNNING = qfalse;
