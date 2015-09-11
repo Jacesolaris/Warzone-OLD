@@ -885,18 +885,22 @@ void S_StopBackgroundTrack( void )
 }
 
 extern DWORD S_LoadMusic( char *sSoundName );
+extern qboolean BASS_MUSIC_UPDATE_THREAD_STOP;
+extern qboolean BASS_UPDATE_THREAD_STOP;
 
 qboolean S_StartBackgroundTrack_Actual( const char *intro, const char *loop )
 {
 	DWORD	NEW_MUSIC_HANDLE = 0;
 	char	name[MAX_SOUNDPATH];
 
+	if (BASS_MUSIC_UPDATE_THREAD_STOP || BASS_UPDATE_THREAD_STOP) return qfalse;
+
 	Q_strncpyz( name, intro, sizeof( name ) - 4 );
 	COM_DefaultExtension( name, sizeof( name ), ".mp3" );
 
 	NEW_MUSIC_HANDLE = S_LoadMusic( name );
 
-	if (NEW_MUSIC_HANDLE)
+	if (NEW_MUSIC_HANDLE && !BASS_UPDATE_THREAD_STOP && !BASS_MUSIC_UPDATE_THREAD_STOP)
 	{
 		// Stop old track...
 		S_StopBackgroundTrack_Actual();

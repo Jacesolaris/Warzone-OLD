@@ -219,7 +219,7 @@ void S_TextToSpeech( const char *text, const char *voice, int entityNum, float *
 	if (!voice) return; // Not initialized yet.. wait...
 	if (cl.serverTime != 0 && PREVIOUS_TALK_TIME >= cl.serverTime - 1000) return;
 
-	ttsInfo = (ttsData_t *)malloc(sizeof(ttsData_t));
+	ttsInfo = (ttsData_t *)malloc(sizeof(ttsData_t)+1);
 
 	// Remove color codes...
 	memset(ttsInfo->voicename, '\0', sizeof(char)*32);

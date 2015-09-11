@@ -3,10 +3,10 @@ uniform sampler2D	u_NormalMap;
 uniform sampler2D	u_ScreenDepthMap;
 
 uniform mat4		u_invEyeProjectionMatrix;
+uniform vec4		u_ViewInfo; // zmin, zmax, zmax / zmin
 
 varying vec2		var_ScreenTex;
 varying vec2		u_Dimensions;
-varying vec4		u_ViewInfo; // zmin, zmax, zmax / zmin
 
 #define HBAO_PI		3.14159265358979323846f
 

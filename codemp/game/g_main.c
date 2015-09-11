@@ -165,7 +165,8 @@ void Load_Model_Scales( void )
 		return;
 	}
 
-	buf = (char *)G_Alloc(len+1, "Load_Model_Scales");
+	buf = (char *)malloc(len+1);
+	memset(buf, 0, len+1);
 
 	if ( buf == NULL )
 	{//alloc memory for buffer
@@ -226,6 +227,8 @@ void Load_Model_Scales( void )
 	num_scale_models--;
 
 	trap->Print("^4*** ^3Warzone^4: ^5There are ^7%i^5 player model scales in the current database.\n", num_scale_models);
+
+	free(buf);
 
 	//if (num_scale_models > 0)
 	scale_models_loaded = qtrue;

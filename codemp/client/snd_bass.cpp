@@ -21,7 +21,7 @@ extern qboolean S_StartBackgroundTrack_Actual( const char *intro, const char *lo
 qboolean BASS_INITIALIZED = qfalse;
 qboolean EAX_SUPPORTED = qtrue;
 
-#define MAX_BASS_CHANNELS	512
+#define MAX_BASS_CHANNELS	256
 
 #define SOUND_3D_METHOD					BASS_3DMODE_NORMAL //BASS_3DMODE_RELATIVE
 
@@ -67,11 +67,35 @@ typedef struct {
 Channel		MUSIC_CHANNEL;
 
 qboolean	SOUND_CHANNELS_INITIALIZED = qfalse;
-Channel		SOUND_CHANNELS[MAX_BASS_CHANNELS+1];
+Channel		SOUND_CHANNELS[MAX_BASS_CHANNELS];
 
 //
 // Channel Utils...
 //
+
+void BASS_InitChannel ( Channel *c )
+{
+	c->ang.x = 0;
+	c->ang.y = 0;
+	c->ang.z = 0;
+	c->vel.x = 0;
+	c->vel.y = 0;
+	c->vel.z = 0;
+	c->pos.x = 0;
+	c->pos.y = 0;
+	c->pos.z = 0;
+	c->origin[0] = 0;
+	c->origin[1] = 0;
+	c->origin[2] = 0;
+	c->channel = 0;
+	c->entityChannel = 0;
+	c->entityNum = 0;
+	c->isActive = qfalse;
+	c->isLooping = qfalse;
+	c->originalChannel = 0;
+	c->startRequest = qfalse;
+	c->volume = 0;
+}
 
 void BASS_InitializeChannels ( void )
 {
@@ -80,7 +104,7 @@ void BASS_InitializeChannels ( void )
 //#pragma omp parallel for
 		for (int c = 0; c < MAX_BASS_CHANNELS; c++) 
 		{// Set up this channel...
-			memset(&SOUND_CHANNELS[c],0,sizeof(Channel));
+			BASS_InitChannel(&SOUND_CHANNELS[c]);
 		}
 
 		SOUND_CHANNELS_INITIALIZED = qtrue;
@@ -271,7 +295,7 @@ void BASS_Shutdown ( void )
 		//BASS_UPDATE_THREAD_RUNNING = qfalse;
 	}
 
-	if (BASS_MUSIC_UPDATE_THREAD && thread::hardware_concurrency() > 1)
+	if (BASS_MUSIC_UPDATE_THREAD_RUNNING && thread::hardware_concurrency() > 1)
 	{// More then one CPU core. We need to shut down the update thread...
 		BASS_MUSIC_UPDATE_THREAD_STOP = qtrue;
 	
@@ -735,18 +759,15 @@ void BASS_UpdateSounds_REAL ( void )
 		}
 		else
 		{// Finished. Remove the channel...
-			//if (SOUND_CHANNELS[c].isActive)
-			{// Still marked as active. Stop the channel and reset it...
-				//Com_Printf("Removing inactive channel %i.\n", c);
+			if (BASS_ChannelIsActive(SOUND_CHANNELS[c].channel))
 				BASS_StopChannel(c);
-				//BASS_ChannelSetAttribute(SOUND_CHANNELS[c].channel, BASS_ATTRIB_VOL, 0.0);
-				if (SOUND_CHANNELS[c].channel != SOUND_CHANNELS[c].originalChannel) 
-				{// free the copied channel's sample memory...
-					BASS_SampleFree(SOUND_CHANNELS[c].channel);
-				}
-				memset(&SOUND_CHANNELS[c],0,sizeof(Channel));
-				//NUM_FREE++;
+
+			if (SOUND_CHANNELS[c].channel != SOUND_CHANNELS[c].originalChannel) 
+			{// free the copied channel's sample memory...
+				BASS_SampleFree(SOUND_CHANNELS[c].channel);
 			}
+
+			BASS_InitChannel(&SOUND_CHANNELS[c]);
 		}
 	}
 
@@ -1223,7 +1244,7 @@ void BASS_InitDynamicList ( void )
 		MUSIC_LIST_UPDATING = qtrue;
 		MUSIC_LIST_INITIALIZED = qfalse;
 		MUSIC_LIST_COUNT = 0;
-		memset(MUSIC_LIST, 0, sizeof(dMusicList_t) * MAX_DYNAMIC_LIST);
+		memset(MUSIC_LIST, 0, sizeof(MUSIC_LIST));
 		CURRENT_MUSIC_SELECTION = s_musicSelection->integer;
 		MUSIC_SELECTION_CHANGED = qtrue;
 	}
@@ -1235,7 +1256,7 @@ void BASS_InitDynamicList ( void )
 
 	MUSIC_LIST_UPDATING = qtrue;
 
-	memset(MUSIC_LIST, 0, sizeof(dMusicList_t)*MAX_DYNAMIC_LIST);
+	memset(MUSIC_LIST, 0, sizeof(MUSIC_LIST));
 
 	if (s_musicSelection->integer == 1)
 	{// Add all known PSY tracks to the list...
@@ -1329,8 +1350,17 @@ void BASS_MusicUpdateThread( void * aArg )
 		if (trackChoice2 == trackChoice) // Try again to pick a different one if we can...
 			trackChoice2 = irand(0, MUSIC_LIST_COUNT-1);
 
-		//Com_Printf("Queue music tracks %s and %s.\n", MUSIC_LIST[trackChoice].name, MUSIC_LIST[trackChoice2].name);
-		S_StartBackgroundTrack_Actual( MUSIC_LIST[trackChoice].name, MUSIC_LIST[trackChoice2].name );
+		if (BASS_MUSIC_UPDATE_THREAD_STOP)
+			break;
+
+		if (!BASS_UPDATE_THREAD_STOP)
+		{
+			//Com_Printf("Queue music tracks %s and %s.\n", MUSIC_LIST[trackChoice].name, MUSIC_LIST[trackChoice2].name);
+			S_StartBackgroundTrack_Actual( MUSIC_LIST[trackChoice].name, MUSIC_LIST[trackChoice2].name );
+		}
+
+		if (BASS_MUSIC_UPDATE_THREAD_STOP)
+			break;
 
 		this_thread::sleep_for(chrono::milliseconds(10));
 	}
@@ -1340,6 +1370,8 @@ void BASS_MusicUpdateThread( void * aArg )
 
 void BASS_UpdateDynamicMusic( void )
 {
+	if (!BASS_UPDATE_THREAD_RUNNING) return; // wait...
+
 	if ( thread::hardware_concurrency() > 1 )
 	{
 		if (!BASS_MUSIC_UPDATE_THREAD_RUNNING && !BASS_MUSIC_UPDATE_THREAD_STOP && !(!FS_STARTUP_COMPLETE || !s_soundStarted || !s_allowDynamicMusic->integer || MUSIC_LIST_UPDATING))

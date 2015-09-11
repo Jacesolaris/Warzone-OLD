@@ -1581,8 +1581,9 @@
 			cvarFloatList		
 			{ 
 				"Off" 0
-				"Dynamic" 1
-				"Volumetric" 2
+				"Fast Volumetric" 1
+				"Standard Volumetric" 2
+				"Quality Volumetric" 3
 			}
 			rect				220 201 340 14
 	   		textalign			ITEM_ALIGN_RIGHT

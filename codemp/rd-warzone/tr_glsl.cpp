@@ -30,8 +30,6 @@ extern const char *fallbackShader_calclevels4x_vp;
 extern const char *fallbackShader_calclevels4x_fp;
 extern const char *fallbackShader_depthblur_vp;
 extern const char *fallbackShader_depthblur_fp;
-extern const char *fallbackShader_dlight_vp;
-extern const char *fallbackShader_dlight_fp;
 extern const char *fallbackShader_down4x_vp;
 extern const char *fallbackShader_down4x_fp;
 extern const char *fallbackShader_fogpass_vp;
@@ -66,14 +64,14 @@ extern const char *fallbackShader_truehdr_vp;
 extern const char *fallbackShader_truehdr_fp;
 extern const char *fallbackShader_volumelight_vp;
 extern const char *fallbackShader_volumelight_fp;
+extern const char *fallbackShader_volumelightCombine_vp;
+extern const char *fallbackShader_volumelightCombine_fp;
 extern const char *fallbackShader_fakeDepth_vp;
 extern const char *fallbackShader_fakeDepth_fp;
 extern const char *fallbackShader_fakeDepthSteepParallax_vp;
 extern const char *fallbackShader_fakeDepthSteepParallax_fp;
 extern const char *fallbackShader_anaglyph_vp;
 extern const char *fallbackShader_anaglyph_fp;
-extern const char *fallbackShader_lightVolume_omni_vp;
-extern const char *fallbackShader_lightVolume_omni_fp;
 extern const char *fallbackShader_uniquesky_fp;
 extern const char *fallbackShader_uniquesky_vp;
 extern const char *fallbackShader_uniquewater_fp;
@@ -317,7 +315,7 @@ static uniformInfo_t uniformsInfo[] =
 
 	{ "u_CubeMapInfo", GLSL_VEC4, 1 },
 
-	{ "u_BoneMatrices",			GLSL_MAT16, 80 },
+	{ "u_BoneMatrices",			GLSL_MAT16, 20 },
 
 	// UQ1: Added...
 	{ "u_Dimensions",           GLSL_VEC2, 1 },
@@ -332,6 +330,9 @@ static uniformInfo_t uniformsInfo[] =
 	{ "u_Texture1",				GLSL_INT, 1 },
 	{ "u_Texture2",				GLSL_INT, 1 },
 	{ "u_Texture3",				GLSL_INT, 1 },
+
+	{ "u_lightCount",			GLSL_INT, 1 },
+	{ "u_lightPositions",		GLSL_VEC2, 16  },
 };
 
 static void GLSL_PrintProgramInfoLog(GLuint object, qboolean developerOnly)
@@ -1041,6 +1042,34 @@ void GLSL_SetUniformVec2(shaderProgram_t *program, int uniformNum, const vec2_t 
 	qglUniform2f(uniforms[uniformNum], v[0], v[1]);
 }
 
+void GLSL_SetUniformVec2x16(shaderProgram_t *program, int uniformNum, const vec2_t *elements, int numElements)
+{
+	GLint *uniforms = program->uniforms;
+	float *compare;
+
+	if (uniforms[uniformNum] == -1)
+		return;
+
+	if (uniformsInfo[uniformNum].type != GLSL_VEC2)
+	{
+		ri->Printf( PRINT_WARNING, "GLSL_SetUniformVec2x16: wrong type for uniform %i in program %s\n", uniformNum, program->name);
+		return;
+	}
+
+	if (uniformsInfo[uniformNum].size < numElements)
+		return;
+
+	compare = (float *)(program->uniformBuffer + program->uniformBufferOffsets[uniformNum]);
+	if (memcmp (elements, compare, sizeof (vec2_t) * numElements) == 0)
+	{
+		return;
+	}
+
+	Com_Memcpy (compare, elements, sizeof (vec2_t) * numElements);
+
+	qglUniform2fv(uniforms[uniformNum], numElements, (const GLfloat *)elements);
+}
+
 void GLSL_SetUniformVec3(shaderProgram_t *program, int uniformNum, const vec3_t v)
 {
 	GLint *uniforms = program->uniforms;
@@ -1296,24 +1325,6 @@ int GLSL_BeginLoadGPUShaders(void)
 			ri->Error(ERR_FATAL, "Could not load fogpass shader!");
 		}
 	}
-
-
-	for (i = 0; i < DLIGHTDEF_COUNT; i++)
-	{
-		attribs = ATTR_POSITION | ATTR_NORMAL | ATTR_TEXCOORD0;
-		extradefines[0] = '\0';
-
-		if (i & DLIGHTDEF_USE_DEFORM_VERTEXES)
-		{
-			Q_strcat(extradefines, 1024, "#define USE_DEFORM_VERTEXES\n");
-		}
-
-		if (!GLSL_BeginLoadGPUShader(&tr.dlightShader[i], "dlight", attribs, qtrue, extradefines, qfalse, NULL, fallbackShader_dlight_vp, fallbackShader_dlight_fp))
-		{
-			ri->Error(ERR_FATAL, "Could not load dlight shader!");
-		}
-	}
-
 
 	for (i = 0; i < LIGHTDEF_COUNT; i++)
 	{
@@ -1675,9 +1686,41 @@ int GLSL_BeginLoadGPUShaders(void)
 	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
 	extradefines[0] = '\0';
 
-	if (!GLSL_BeginLoadGPUShader(&tr.volumelightShader, "volumelight", attribs, qtrue, extradefines, qtrue, NULL, fallbackShader_volumelight_vp, fallbackShader_volumelight_fp))
+	Q_strcat(extradefines, 1024, "#define DUAL_PASS\n");
+
+	if (!GLSL_BeginLoadGPUShader(&tr.volumeLightShader[0], "volumelight", attribs, qtrue, extradefines, qtrue, NULL, fallbackShader_volumelight_vp, fallbackShader_volumelight_fp))
 	{
 		ri->Error(ERR_FATAL, "Could not load volumelight shader!");
+	}
+
+	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
+	extradefines[0] = '\0';
+
+	Q_strcat(extradefines, 1024, "#define DUAL_PASS\n");
+	Q_strcat(extradefines, 1024, "#define MQ_VOLUMETRIC\n");
+
+	if (!GLSL_BeginLoadGPUShader(&tr.volumeLightShader[1], "volumelight", attribs, qtrue, extradefines, qtrue, NULL, fallbackShader_volumelight_vp, fallbackShader_volumelight_fp))
+	{
+		ri->Error(ERR_FATAL, "Could not load volumelight shader!");
+	}
+
+	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
+	extradefines[0] = '\0';
+
+	Q_strcat(extradefines, 1024, "#define DUAL_PASS\n");
+	Q_strcat(extradefines, 1024, "#define HQ_VOLUMETRIC\n");
+
+	if (!GLSL_BeginLoadGPUShader(&tr.volumeLightShader[2], "volumelight", attribs, qtrue, extradefines, qtrue, NULL, fallbackShader_volumelight_vp, fallbackShader_volumelight_fp))
+	{
+		ri->Error(ERR_FATAL, "Could not load volumelight shader!");
+	}
+
+	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
+	extradefines[0] = '\0';
+
+	if (!GLSL_BeginLoadGPUShader(&tr.volumeLightCombineShader, "volumelightCombine", attribs, qtrue, extradefines, qtrue, NULL, fallbackShader_volumelightCombine_vp, fallbackShader_volumelightCombine_fp))
+	{
+		ri->Error(ERR_FATAL, "Could not load volumelightCombine shader!");
 	}
 
 	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
@@ -2131,27 +2174,6 @@ void GLSL_EndLoadGPUShaders ( int startTime )
 	}
 
 
-	for (i = 0; i < DLIGHTDEF_COUNT; i++)
-	{
-		if (!GLSL_EndLoadGPUShader(&tr.dlightShader[i]))
-		{
-			ri->Error(ERR_FATAL, "Could not load dlight shader!");
-		}
-		
-		GLSL_InitUniforms(&tr.dlightShader[i]);
-		
-		qglUseProgram(tr.dlightShader[i].program);
-		GLSL_SetUniformInt(&tr.dlightShader[i], UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
-		qglUseProgram(0);
-
-#if defined(_DEBUG)
-		GLSL_FinishGPUShader(&tr.dlightShader[i]);
-#endif
-		
-		numEtcShaders++;
-	}
-
-
 	for (i = 0; i < LIGHTDEF_COUNT; i++)
 	{
 		int lightType = i & LIGHTDEF_LIGHTTYPE_MASK;
@@ -2476,20 +2498,39 @@ void GLSL_EndLoadGPUShaders ( int startTime )
 	
 	numEtcShaders++;
 
-
-
-	if (!GLSL_EndLoadGPUShader(&tr.volumelightShader))
+	for (int i = 0; i < 3; i++)
+	{
+	if (!GLSL_EndLoadGPUShader(&tr.volumeLightShader[i]))
 	{
 		ri->Error(ERR_FATAL, "Could not load volumelight shader!");
 	}
 	
-	GLSL_InitUniforms(&tr.volumelightShader);
-	qglUseProgram(tr.volumelightShader.program);
-	GLSL_SetUniformInt(&tr.volumelightShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
+	GLSL_InitUniforms(&tr.volumeLightShader[i]);
+	qglUseProgram(tr.volumeLightShader[i].program);
+	GLSL_SetUniformInt(&tr.volumeLightShader[i], UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
+	GLSL_SetUniformInt(&tr.volumeLightShader[i], UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
 	qglUseProgram(0);
 
 #if defined(_DEBUG)
-	GLSL_FinishGPUShader(&tr.volumelightShader);
+	GLSL_FinishGPUShader(&tr.volumeLightShader[i]);
+#endif
+	
+	numEtcShaders++;
+	}
+
+	if (!GLSL_EndLoadGPUShader(&tr.volumeLightCombineShader))
+	{
+		ri->Error(ERR_FATAL, "Could not load volumelightCombine shader!");
+	}
+	
+	GLSL_InitUniforms(&tr.volumeLightCombineShader);
+	qglUseProgram(tr.volumeLightCombineShader.program);
+	GLSL_SetUniformInt(&tr.volumeLightCombineShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
+	GLSL_SetUniformInt(&tr.volumeLightCombineShader, UNIFORM_NORMALMAP, TB_NORMALMAP);
+	qglUseProgram(0);
+
+#if defined(_DEBUG)
+	GLSL_FinishGPUShader(&tr.volumeLightCombineShader);
 #endif
 	
 	numEtcShaders++;
@@ -3664,9 +3705,6 @@ void GLSL_ShutdownGPUShaders(void)
 	for ( i = 0; i < FOGDEF_COUNT; i++)
 		GLSL_DeleteGPUShader(&tr.fogShader[i]);
 
-	for ( i = 0; i < DLIGHTDEF_COUNT; i++)
-		GLSL_DeleteGPUShader(&tr.dlightShader[i]);
-
 	for ( i = 0; i < LIGHTDEF_COUNT; i++)
 		GLSL_DeleteGPUShader(&tr.lightallShader[i]);
 
@@ -3718,7 +3756,10 @@ void GLSL_ShutdownGPUShaders(void)
 	GLSL_DeleteGPUShader(&tr.ssgi5Shader);
 	GLSL_DeleteGPUShader(&tr.ssgi6Shader);
 	GLSL_DeleteGPUShader(&tr.ssgi7Shader);
-	GLSL_DeleteGPUShader(&tr.volumelightShader);
+	GLSL_DeleteGPUShader(&tr.volumeLightShader[0]);
+	GLSL_DeleteGPUShader(&tr.volumeLightShader[1]);
+	GLSL_DeleteGPUShader(&tr.volumeLightShader[2]);
+	GLSL_DeleteGPUShader(&tr.volumeLightCombineShader);
 	GLSL_DeleteGPUShader(&tr.vibrancyShader);
 	GLSL_DeleteGPUShader(&tr.testshaderShader);
 	GLSL_DeleteGPUShader(&tr.uniqueskyShader);

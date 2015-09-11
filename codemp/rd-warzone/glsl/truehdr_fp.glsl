@@ -1,5 +1,4 @@
 uniform sampler2D u_TextureMap;
-uniform sampler2D u_LevelsMap;
 
 varying vec2		var_TexCoords;
 varying vec2		var_Dimensions;

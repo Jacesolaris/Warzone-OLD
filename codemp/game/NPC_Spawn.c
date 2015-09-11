@@ -1528,7 +1528,7 @@ gNPC_t *New_NPC_t(int entNum)
 
 	if (!gNPCPtrs[entNum])
 	{
-		gNPCPtrs[entNum] = (gNPC_t *)BG_Alloc (sizeof(gNPC_t));
+		gNPCPtrs[entNum] = (gNPC_t *)G_Alloc (sizeof(gNPC_t), "New_NPC_t");
 	}
 
 	ptr = gNPCPtrs[entNum];
@@ -1537,7 +1537,7 @@ gNPC_t *New_NPC_t(int entNum)
 	{
 		// clear it...
 		//
-		memset(ptr, 0, sizeof( *ptr ) );
+		memset(ptr, 0, sizeof( gNPC_t/**ptr*/ ) );
 	}
 
 	return ptr;

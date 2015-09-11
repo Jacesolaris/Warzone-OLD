@@ -1,95 +1,116 @@
-uniform sampler2D	u_DiffuseMap; // screen
-uniform sampler2D	u_NormalMap; // glowmap
-uniform sampler2D	u_ScreenDepthMap; // depthmap
+uniform sampler2D	u_DiffuseMap;
+uniform sampler2D	u_GlowMap;
+uniform sampler2D	u_ScreenDepthMap;
 
-varying vec2		var_Dimensions;
-varying vec2		var_LightScreenPos;
+uniform int			u_lightCount;
+uniform vec2		u_lightPositions[16];
+
 varying vec2		var_TexCoords;
-varying vec4		var_Local0; // lightOrg, num_lights_on_screen
-varying vec4		var_Local1; // lightColorR, lightColorG, lightColorB, volumelightShadowEnhancement
-varying vec4		var_Local2; // lightScreenPos (x,y), testvar, volumeSamples
-//varying vec4		var_Local3; // exposure, decay, density, weight
-varying vec4		var_LightOrg;
+varying vec2		var_Dimensions;
 
-// UQ1: Sigh... This would run much faster if I made these all constants instead...
-//float exposure	=	var_Local3.r;
-//float decay		=	var_Local3.g;
-//float density	=	var_Local3.b;
-//float weight	=	var_Local3.a;
+uniform vec2		u_Dimensions;
+uniform vec4		u_ViewInfo; // zmin, zmax, zmax / zmin
 
-const float exposure	=	0.45;
-const float decay		=	0.995;
-const float density		=	1.0;
-const float weight		=	0.01;
+#if defined(HQ_VOLUMETRIC)
+const float	iBloomraySamples = 32.0;
+const float	fBloomrayDecay = 0.96875;
+#elif defined (MQ_VOLUMETRIC)
+const float	iBloomraySamples = 16.0;
+const float	fBloomrayDecay = 0.9375;
+#else //!defined(HQ_VOLUMETRIC) && !defined(MQ_VOLUMETRIC)
+const float	iBloomraySamples = 8.0;
+const float	fBloomrayDecay = 0.875;
+#endif //defined(HQ_VOLUMETRIC) && defined(MQ_VOLUMETRIC)
 
-//float NUM_SAMPLES = var_Local2.a;
-//const int NUM_SAMPLES = 100;
-//const int NUM_SAMPLES = 50;
-//const int NUM_SAMPLES = 20;
-const float NUM_SAMPLES = 50;
+const float	fBloomrayWeight = 0.5;
+const float	fBloomrayDensity = 1.0;
+const float fBloomrayFalloffRange = 0.2;
 
-float OcclusionFromDepth(vec2 pos)
+float linearize(float depth)
 {
-	int closer = 0;
-	float depthSample = texture2D(u_ScreenDepthMap, pos).x;
-	depthSample = pow(depthSample, 256/*2048*/);
-	if (depthSample > 0.98) depthSample = 0.0;
-	depthSample *= 256.0;
-	depthSample = clamp(depthSample, 0.0, 1.0);
-	return depthSample;
+	return (1.0 / mix(u_ViewInfo.z, 1.0, depth));
 }
 
-void main()
+void main ( void )
 {
-	vec2 texCoord = var_TexCoords; 
-	vec4 origColor = texture2D(u_DiffuseMap, var_TexCoords);
+	vec4 diffuseColor = texture2D(u_DiffuseMap, var_TexCoords.xy);
 
-	vec4 origLightColor = var_Local1;
-
-    vec2 deltaTextCoord = vec2( texCoord - var_LightScreenPos.xy );  
-    deltaTextCoord *= 1.0 / float(NUM_SAMPLES) * density;  
-
-    float illuminationDecay = 1.0;
-
-	float tmpShadow = 0.0;
-
-    for (float i = 0.0; i < NUM_SAMPLES; i+=1.0) {  
-        texCoord -= deltaTextCoord;  
-		float shadowSample = OcclusionFromDepth(texCoord);
-		shadowSample *= illuminationDecay * weight;
-        tmpShadow += shadowSample;
-        illuminationDecay *= decay;  
-    }
-
-	tmpShadow *= exposure;
-	
-	float lightOutColor = tmpShadow;// * (3.0 - brightness);
-
-	float bt = lightOutColor;
-
-	if (bt > 0.666) 
-		bt *= 0.444; // Bright lights get dulled... (eg: white)
-	else if (bt < 0.333) 
-		bt *= 2.55; // Dull lights get amplified... (eg: blue)
-	else 
-		bt *= 1.35; // Mid range lights get amplified slightly... (eg: yellow)
-
-	lightOutColor = clamp(lightOutColor * bt, 0.0, 1.0);
-
-	lightOutColor *= var_Local0.a; // distance mult - new
-
-	vec3 add_color = origLightColor.rgb * lightOutColor;
-#define const_1 ( 12.0 / 255.0)
-#define const_2 (255.0 / 119.0)
-	add_color = ((clamp(add_color - const_1, 0.0, 1.0)) * const_2);
-
-	gl_FragColor = clamp(vec4(vec3(origColor.rgb + add_color), 1.0), 0.0, 1.0);
-
-	float origStrength = length(origColor.rgb) / 3.0;
-	float newStrength = length(gl_FragColor.rgb) / 3.0;
-
-	if (origStrength >= newStrength * var_Local1.a)
-	{// Enhance shadows...
-		gl_FragColor.rgb *= var_Local1.a;
+	if (u_lightCount <= 0)
+	{
+#ifdef DUAL_PASS
+		gl_FragColor = vec4(0.0);
+#else //!DUAL_PASS
+		gl_FragColor = diffuseColor;
+#endif //DUAL_PASS
+		return;
 	}
+
+	vec2		inRangePositions[16];
+	float		fallOffRanges[16];
+	float		lightDepths[16];
+	int			numInRange = 0;
+
+	for (int i = 0; i < u_lightCount; i++)
+	{
+		float dist = length(var_TexCoords - u_lightPositions[i]);
+		float depth = 1.0 - linearize(texture2D(u_ScreenDepthMap, u_lightPositions[i]).r);
+		float fall = clamp((fBloomrayFalloffRange * depth * 2.0) - dist, 0.0, 1.0);
+
+		if (fall > 0.0)
+		{
+			inRangePositions[numInRange] = u_lightPositions[i];
+			lightDepths[numInRange] = depth;
+			fallOffRanges[numInRange] = (fall + (fall*fall)) / 2.0;
+			numInRange++;
+		}
+	}
+
+	if (numInRange <= 0)
+	{// Nothing in range...
+#ifdef DUAL_PASS
+		gl_FragColor = vec4(0.0);
+#else //!DUAL_PASS
+		gl_FragColor = diffuseColor;
+#endif //DUAL_PASS
+		return;
+	}
+
+	vec4 totalColor = vec4(0.0, 0.0, 0.0, 0.0);
+
+	for (int i = 0; i < numInRange; i++)
+	{
+		vec4	lens = vec4(0.0, 0.0, 0.0, 0.0);
+		vec2	ScreenLightPos = inRangePositions[i];
+		vec2	texCoord = var_TexCoords;
+		float	lightDepth = lightDepths[i];
+		vec2	deltaTexCoord = (texCoord.xy - ScreenLightPos.xy);
+
+		deltaTexCoord *= 1.0 / float(iBloomraySamples * fBloomrayDensity);
+
+		float illuminationDecay = 1.0;
+
+		for(int g = 0; g < iBloomraySamples; g++) {
+			texCoord -= deltaTexCoord;
+			vec4 sample2 = texture2D(u_DiffuseMap, texCoord.xy);
+			//sample2.rgb = vec3(linearize(sample2.x));
+			sample2.w = 1.0;
+			sample2 *= illuminationDecay * fBloomrayWeight;
+
+			lens.xyz += sample2.xyz*sample2.w;
+			illuminationDecay *= fBloomrayDecay;
+
+			if (illuminationDecay <= 0.0)
+				break;
+		}
+
+		totalColor += clamp((lens * lightDepth) * fallOffRanges[i], 0.0, 1.0);
+	}
+
+	totalColor.a = 0.0;
+
+#ifdef DUAL_PASS
+	gl_FragColor = totalColor;
+#else //!DUAL_PASS
+	gl_FragColor = diffuseColor + totalColor;
+#endif //DUAL_PASS
 }

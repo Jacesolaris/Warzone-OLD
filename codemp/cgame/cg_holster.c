@@ -242,7 +242,7 @@ void CG_LoadHolsterData (clientInfo_t *ci)
 	int				i;
 	fileHandle_t	f;
 	int				fLen = 0;
-	char			fileBuffer[MAX_HOLSTER_INFO_SIZE];
+	char			*fileBuffer;//[MAX_HOLSTER_INFO_SIZE];
 	char			holsterTypeValue[MAX_QPATH];
 	char			holsterTypeGroup[MAX_HOLSTER_INFO_SIZE];
 	char			*s;
@@ -289,6 +289,8 @@ void CG_LoadHolsterData (clientInfo_t *ci)
 		trap->FS_Close(f);
 		return;
 	}
+
+	fileBuffer = (char *)malloc(fLen+1);
 
 	trap->FS_Read(fileBuffer, fLen, f);
 
@@ -345,6 +347,8 @@ void CG_LoadHolsterData (clientInfo_t *ci)
 #ifdef _DEBUG
 	trap->Print("Holstered Weapon Data Loaded for %s.\n", ci->modelName);
 #endif
+
+	free(fileBuffer);
 }
 
 //[/VisualWeapons]

@@ -324,16 +324,6 @@ extern cvar_t	*r_bloomPasses;
 extern cvar_t	*r_bloomDarkenPower;
 extern cvar_t	*r_bloomScale;
 extern cvar_t	*r_lensflare;
-//extern cvar_t	*r_volumelight;
-extern cvar_t	*r_volumelightAllLights;
-extern cvar_t	*r_volumelightMaximum;
-extern cvar_t	*r_volumelightMaxDistance;
-extern cvar_t	*r_volumelightSamples;
-extern cvar_t	*r_volumelightExposure;
-extern cvar_t	*r_volumelightDecay;
-extern cvar_t	*r_volumelightDensity;
-extern cvar_t	*r_volumelightWeight;
-extern cvar_t	*r_volumelightShadowEnhancement;
 extern cvar_t	*r_anamorphic;
 extern cvar_t	*r_anamorphicDarkenPower;
 extern cvar_t	*r_ssgi;
@@ -1385,6 +1375,9 @@ typedef enum
 	UNIFORM_TEXTURE2,
 	UNIFORM_TEXTURE3,
 
+	UNIFORM_LIGHTCOUNT,
+	UNIFORM_LIGHTPOSITIONS,
+
 	UNIFORM_COUNT
 } uniform_t;
 
@@ -2403,7 +2396,8 @@ typedef struct trGlobals_s {
 	shaderProgram_t anamorphicDarkenShader;
 	shaderProgram_t anamorphicBlurShader;
 	shaderProgram_t anamorphicCombineShader;
-	shaderProgram_t volumelightShader;
+	shaderProgram_t volumeLightShader[3];
+	shaderProgram_t volumeLightCombineShader;
 	shaderProgram_t vibrancyShader;
 	shaderProgram_t testshaderShader;
 
@@ -2700,16 +2694,6 @@ extern cvar_t	*r_bloomPasses;
 extern cvar_t	*r_bloomDarkenPower;
 extern cvar_t	*r_bloomScale;
 extern cvar_t	*r_lensflare;
-//extern cvar_t	*r_volumelight;
-extern cvar_t	*r_volumelightAllLights;
-extern cvar_t	*r_volumelightMaximum;
-extern cvar_t	*r_volumelightMaxDistance;
-extern cvar_t	*r_volumelightSamples;
-extern cvar_t	*r_volumelightExposure;
-extern cvar_t	*r_volumelightDecay;
-extern cvar_t	*r_volumelightDensity;
-extern cvar_t	*r_volumelightWeight;
-extern cvar_t	*r_volumelightShadowEnhancement;
 extern cvar_t	*r_anamorphic;
 extern cvar_t	*r_anamorphicDarkenPower;
 extern cvar_t	*r_ssgi;
@@ -3154,6 +3138,7 @@ void GLSL_SetUniformVec2(shaderProgram_t *program, int uniformNum, const vec2_t 
 void GLSL_SetUniformVec3(shaderProgram_t *program, int uniformNum, const vec3_t v);
 void GLSL_SetUniformVec4(shaderProgram_t *program, int uniformNum, const vec4_t v);
 void GLSL_SetUniformMatrix16(shaderProgram_t *program, int uniformNum, const float *matrix, int numElements = 1);
+void GLSL_SetUniformVec2x16(shaderProgram_t *program, int uniformNum, const vec2_t *elements, int numElements);
 
 shaderProgram_t *GLSL_GetGenericShaderProgram(int stage);
 

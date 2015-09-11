@@ -926,7 +926,7 @@ void Volumetric_RoofHeight(vec3_t from)
 	VectorSet(roof, trace.endpos[0]-8.0, trace.endpos[1], trace.endpos[2]);
 }
 
-qboolean RB_VolumetricDLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
+qboolean RB_VolumetricLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 {
 	vec4_t color;
 	int NUM_VISIBLE_LIGHTS = 0;
@@ -938,17 +938,17 @@ qboolean RB_VolumetricDLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i
 	color[3] = 1.0f;
 
 	if ( !backEnd.refdef.num_dlights ) {
+		//ri->Printf(PRINT_WARNING, "0 dlights.\n");
 		return qfalse;
 	}
 
 	//
 	// UQ1: Now going to allow a maximum of MAX_VOLUMETRIC_LIGHTS volumetric lights on screen for FPS...
 	//
-	int MAX_VOLUMETRIC_LIGHTS = r_volumelightMaximum->integer; // Absolute maximum - probably should make it a cvar so players can choose...
-	int NUM_CLOSE_LIGHTS = 0;
-	int CLOSEST_LIGHTS[64];
-
-	if (MAX_VOLUMETRIC_LIGHTS > 64) MAX_VOLUMETRIC_LIGHTS = 64; // absolute max is 64...
+	const int	MAX_VOLUMETRIC_LIGHTS = 16;
+	int			NUM_CLOSE_LIGHTS = 0;
+	int			CLOSEST_LIGHTS[MAX_VOLUMETRIC_LIGHTS] = {0};
+	vec2_t		CLOSEST_LIGHTS_POSITIONS[MAX_VOLUMETRIC_LIGHTS] = {0};
 
 	for ( int l = 0 ; l < backEnd.refdef.num_dlights ; l++ ) 
 	{
@@ -956,34 +956,18 @@ qboolean RB_VolumetricDLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i
 		
 		float x, y, distance;
 
-		if (!r_volumelightAllLights->integer && dl->radius > 0.0) continue; // not a valumetric light...
-		if (!r_volumelightAllLights->integer && dl->radius < 0.0) dl->radius = 0.0 - dl->radius;
-		
 		distance = Distance(backEnd.refdef.vieworg, dl->origin);
-		
-		if (distance > r_volumelightMaxDistance->value)
-		{
-			dl->radius = 0.0;
-			continue; // too far away...
-		}
-
-		if (distance > 2048.0) 
-		{
-			dl->radius = 0.0;
-			continue; // too far away...
-		}
 
 		if (!TR_InFOV( dl->origin, backEnd.refdef.vieworg ))
 		{
-			dl->radius = 0.0;
 			continue; // not on screen...
 		}
 
-		if (!TR_WorldToScreen(dl->origin, &x, &y)) 
+		/*if (!TR_WorldToScreen(dl->origin, &x, &y)) 
 		{
-			dl->radius = 0.0;
 			continue; // not on screen...
 		}
+		*/
 
 		if (!Volumetric_Visible(backEnd.refdef.vieworg, dl->origin))
 		{// Trace to actual position failed... Try above...
@@ -1010,116 +994,149 @@ qboolean RB_VolumetricDLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i
 					VectorSet(eyeOrg, eyeRoof[0], backEnd.refdef.vieworg[1], backEnd.refdef.vieworg[2]);
 					if (!Volumetric_Visible(eyeOrg, tmpOrg))
 					{// Trace from/to above viewer failed...
-						dl->radius = 0.0;
 						continue; // Can't see this...
 					}
 				}
 			}
 		}
 
-		if (NUM_CLOSE_LIGHTS < MAX_VOLUMETRIC_LIGHTS)
+		int	xcenter, ycenter;
+		vec3_t	local, transformed;
+		vec3_t	vfwd, vright, vup, viewAngles;
+
+		TR_AxisToAngles(backEnd.refdef.viewaxis, viewAngles);
+
+		//NOTE: did it this way because most draw functions expect virtual 640x480 coords
+		//	and adjust them for current resolution
+		xcenter = 640 / 2;//gives screen coords in virtual 640x480, to be adjusted when drawn
+		ycenter = 480 / 2;//gives screen coords in virtual 640x480, to be adjusted when drawn
+
+		VectorSubtract (dl->origin, backEnd.refdef.vieworg, local);
+
+		AngleVectors (viewAngles, vfwd, vright, vup);
+
+		transformed[0] = DotProduct(local,vright);
+		transformed[1] = DotProduct(local,vup);
+		transformed[2] = DotProduct(local,vfwd);
+
+		// Make sure Z is not negative.
+		if(transformed[2] < 0.01)
+		{
+			//return false;
+			//transformed[2] = 2.0 - transformed[2];
+		}
+
+		// Simple convert to screen coords.
+		float xzi = xcenter / transformed[2] * (90.0/backEnd.refdef.fov_x);
+		float yzi = ycenter / transformed[2] * (90.0/backEnd.refdef.fov_y);
+
+		x = (xcenter + xzi * transformed[0]);
+		y = (ycenter - yzi * transformed[1]);
+
+		if (NUM_CLOSE_LIGHTS < MAX_VOLUMETRIC_LIGHTS-1)
 		{// Have free light slots for a new light...
 			CLOSEST_LIGHTS[NUM_CLOSE_LIGHTS] = l;
+			CLOSEST_LIGHTS_POSITIONS[NUM_CLOSE_LIGHTS][0] = x / 640;
+			CLOSEST_LIGHTS_POSITIONS[NUM_CLOSE_LIGHTS][1] = 1.0 - (y / 480);
 			NUM_CLOSE_LIGHTS++;
 			continue;
 		}
 		else
 		{// See if this is closer then one of our other lights...
-			int closest_light = 0;
-			vec3_t closest_pos;
-			VectorCopy(backEnd.refdef.dlights[CLOSEST_LIGHTS[0]].origin, closest_pos);
+			int		farthest_light = 0;
+			float	farthest_distance = 0.0;
 
-			for (int i = 1; i < MAX_VOLUMETRIC_LIGHTS; i++)
-			{
+			for (int i = 0; i < NUM_CLOSE_LIGHTS; i++)
+			{// Find the most distance light in our current list to replace, if this new option is closer...
 				dlight_t	*thisLight = &backEnd.refdef.dlights[CLOSEST_LIGHTS[i]];
+				float		dist = Distance(thisLight->origin, backEnd.refdef.vieworg);
 
-				if (Distance(thisLight->origin, backEnd.refdef.vieworg) < Distance(closest_pos, backEnd.refdef.vieworg))
-				{// This one is closer!
-					closest_light = i;
-					VectorCopy(thisLight->origin, closest_pos);
+				if (dist > farthest_distance)
+				{// This one is further!
+					farthest_light = i;
+					farthest_distance = dist;
 					break;
 				}
 			}
 
-			// We now have a closest light list in our array to check against...
-			dlight_t	*closestLight = &backEnd.refdef.dlights[CLOSEST_LIGHTS[closest_light]];
-
-			if (Distance(closestLight->origin, backEnd.refdef.vieworg) < Distance(dl->origin, backEnd.refdef.vieworg))
-			{// Thi light is closer. Replace this one in our array of closest lights...
-				CLOSEST_LIGHTS[CLOSEST_LIGHTS[closest_light]] = l;
+			if (Distance(dl->origin, backEnd.refdef.vieworg) < farthest_distance)
+			{// This light is closer. Replace this one in our array of closest lights...
+				CLOSEST_LIGHTS[farthest_light] = l;
+				CLOSEST_LIGHTS_POSITIONS[farthest_light][0] = x / 640;
+				CLOSEST_LIGHTS_POSITIONS[farthest_light][1] = 1.0 - (y / 480);
 			}
 		}
 	}
 
 	// None to draw...
-	if (NUM_CLOSE_LIGHTS <= 0) return qfalse;
-
-	for (int l = 0; l < NUM_CLOSE_LIGHTS; l++)
-	{
-		dlight_t	*dl = &backEnd.refdef.dlights[CLOSEST_LIGHTS[l]];
-		
-		float x, y, distance;
-
-		distance = Distance(backEnd.refdef.vieworg, dl->origin);
-
-		if (!TR_WorldToScreen(dl->origin, &x, &y)) continue; // not on screen...
-
-		GLSL_BindProgram(&tr.volumelightShader);
-
-		GL_BindToTMU(hdrFbo->colorImage[0], TB_DIFFUSEMAP);
-		GLSL_SetUniformInt(&tr.volumelightShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
-
-		GL_SetModelviewMatrix( backEnd.viewParms.ori.modelMatrix );
-		GL_SetProjectionMatrix( backEnd.viewParms.projectionMatrix );
-
-		GLSL_SetUniformMatrix16(&tr.volumelightShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, backEnd.viewParms.projectionMatrix);
-		GLSL_SetUniformMatrix16(&tr.volumelightShader, UNIFORM_MODELMATRIX, backEnd.viewParms.ori.modelMatrix);
-
-		GLSL_SetUniformInt(&tr.volumelightShader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
-		GL_BindToTMU(tr.renderDepthImage, TB_LIGHTMAP);
-
-		{
-			vec2_t screensize;
-			screensize[0] = glConfig.vidWidth;
-			screensize[1] = glConfig.vidHeight;
-
-			GLSL_SetUniformVec2(&tr.volumelightShader, UNIFORM_DIMENSIONS, screensize);
-		}
-		
-		{
-			vec4_t local0;
-			local0[0] = dl->origin[0];
-			local0[1] = dl->origin[1];
-			local0[2] = dl->origin[2];
-			local0[3] = ((r_volumelightMaxDistance->value - (distance+0.001)) / r_volumelightMaxDistance->value);
-
-			GLSL_SetUniformVec4(&tr.volumelightShader, UNIFORM_LOCAL0, local0);
-		}
-
-		{
-			vec4_t local2;
-			local2[0] = x / 640;
-			local2[1] = 1.0 - (y / 480);
-			local2[2] = r_testvar->value;
-			local2[3] = r_volumelightSamples->value;
-
-			GLSL_SetUniformVec4(&tr.volumelightShader, UNIFORM_LOCAL2, local2);
-		}
-
-		{
-			vec4_t local1;
-			local1[0] = dl->color[0];
-			local1[1] = dl->color[1];
-			local1[2] = dl->color[2];
-			local1[3] = r_volumelightShadowEnhancement->value;
-
-			GLSL_SetUniformVec4(&tr.volumelightShader, UNIFORM_LOCAL1, local1);
-		}
-
-		FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.volumelightShader, color, 0);
-		FBO_FastBlit(ldrFbo, ldrBox, hdrFbo, hdrBox, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+	if (NUM_CLOSE_LIGHTS <= 0) {
+		//ri->Printf(PRINT_WARNING, "0 visible dlights. %i total dlights.\n", backEnd.refdef.num_dlights);
+		return qfalse;
 	}
 
+	GLSL_BindProgram(&tr.volumeLightShader[r_dynamiclight->integer - 1]);
+
+	GL_BindToTMU(hdrFbo->colorImage[0], TB_DIFFUSEMAP);
+	GLSL_SetUniformInt(&tr.volumeLightShader[r_dynamiclight->integer - 1], UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
+	GL_BindToTMU(tr.renderDepthImage, TB_LIGHTMAP);
+	GLSL_SetUniformInt(&tr.volumeLightShader[r_dynamiclight->integer - 1], UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
+
+	GL_SetModelviewMatrix( backEnd.viewParms.ori.modelMatrix );
+	GL_SetProjectionMatrix( backEnd.viewParms.projectionMatrix );
+
+	GLSL_SetUniformMatrix16(&tr.volumeLightShader[r_dynamiclight->integer - 1], UNIFORM_MODELVIEWPROJECTIONMATRIX, backEnd.viewParms.projectionMatrix);
+
+	{
+		vec2_t screensize;
+		screensize[0] = glConfig.vidWidth;
+		screensize[1] = glConfig.vidHeight;
+
+		GLSL_SetUniformVec2(&tr.volumeLightShader[r_dynamiclight->integer - 1], UNIFORM_DIMENSIONS, screensize);
+	}
+
+	{
+		vec4_t viewInfo;
+
+		float zmax = backEnd.viewParms.zFar;
+		float zmin = r_znear->value;
+
+		VectorSet4(viewInfo, zmin, zmax, zmax / zmin, 0.0);
+
+		GLSL_SetUniformVec4(&tr.volumeLightShader[r_dynamiclight->integer - 1], UNIFORM_VIEWINFO, viewInfo);
+	}
+
+	GLSL_SetUniformInt(&tr.volumeLightShader[r_dynamiclight->integer - 1], UNIFORM_LIGHTCOUNT, NUM_CLOSE_LIGHTS);
+	GLSL_SetUniformVec2x16(&tr.volumeLightShader[r_dynamiclight->integer - 1], UNIFORM_LIGHTPOSITIONS, CLOSEST_LIGHTS_POSITIONS, MAX_VOLUMETRIC_LIGHTS);
+
+//#define VOLUME_LIGHT_DEBUG
+//#define VOLUME_LIGHT_SINGLE_PASS
+
+#if !defined(VOLUME_LIGHT_DEBUG) && !defined(VOLUME_LIGHT_SINGLE_PASS)
+	FBO_Blit(hdrFbo, hdrBox, NULL, tr.genericFbo2, ldrBox, &tr.volumeLightShader[r_dynamiclight->integer - 1], color, 0);
+
+	// Combine render and hbao...
+	GLSL_BindProgram(&tr.volumeLightCombineShader);
+
+	GLSL_SetUniformMatrix16(&tr.volumeLightCombineShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
+	GLSL_SetUniformMatrix16(&tr.volumeLightCombineShader, UNIFORM_MODELMATRIX, backEnd.ori.transformMatrix);
+
+	GL_BindToTMU(hdrFbo->colorImage[0], TB_DIFFUSEMAP);
+
+	GLSL_SetUniformInt(&tr.volumeLightCombineShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
+	GLSL_SetUniformInt(&tr.volumeLightCombineShader, UNIFORM_NORMALMAP, TB_NORMALMAP);
+	GL_BindToTMU(tr.genericFBO2Image, TB_NORMALMAP);
+
+	vec2_t screensize;
+	screensize[0] = glConfig.vidWidth;
+	screensize[1] = glConfig.vidHeight;
+	GLSL_SetUniformVec2(&tr.volumeLightCombineShader, UNIFORM_DIMENSIONS, screensize);
+
+	FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.volumeLightCombineShader, color, 0);
+#else //defined(VOLUME_LIGHT_DEBUG) || defined(VOLUME_LIGHT_SINGLE_PASS)
+	FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.volumeLightShader[r_dynamiclight->integer - 1], color, 0);
+#endif //defined(VOLUME_LIGHT_DEBUG) || defined(VOLUME_LIGHT_SINGLE_PASS)
+
+	//ri->Printf(PRINT_WARNING, "%i visible dlights. %i total dlights.\n", NUM_CLOSE_LIGHTS, backEnd.refdef.num_dlights);
 	return qtrue;
 }
 
