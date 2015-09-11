@@ -850,30 +850,53 @@ void DrawSkyDome ( shader_t *skyShader )
 	GL_BindToTMU(skyShader->sky.outerbox[0], TB_LEVELSMAP);
 
 	GLSL_SetUniformMatrix16(&tr.uniqueskyShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
+	GLSL_SetUniformMatrix16(&tr.uniqueskyShader, UNIFORM_INVPROJECTIONMATRIX, glState.invProjection);
 	GLSL_SetUniformFloat(&tr.uniqueskyShader, UNIFORM_TIME, backEnd.refdef.floatTime);
 	GLSL_SetUniformVec3(&tr.uniqueskyShader, UNIFORM_VIEWORIGIN,  backEnd.refdef.vieworg);
 
+	vec4_t vec;
+	VectorCopy(backEnd.currentEntity->lightDir, vec);
+	vec[3] = 0.0f;
+	GLSL_SetUniformVec4(&tr.uniqueskyShader, UNIFORM_LIGHTORIGIN, vec);
+
+	if (skyShader->sky.outerbox[0])
 	{
 		vec2_t screensize;
 		screensize[0] = skyShader->sky.outerbox[0]->width;
 		screensize[1] = skyShader->sky.outerbox[0]->height;
 
 		GLSL_SetUniformVec2(&tr.uniqueskyShader, UNIFORM_DIMENSIONS, screensize);
+
+		vec4i_t		imageBox;
+		imageBox[0] = 0;
+		imageBox[1] = 0;
+		imageBox[2] = skyShader->sky.outerbox[0]->width;
+		imageBox[3] = skyShader->sky.outerbox[0]->height;
+
+		vec4i_t		screenBox;
+		screenBox[0] = 0;
+		screenBox[1] = 0;
+		screenBox[2] = glConfig.vidWidth;
+		screenBox[3] = glConfig.vidHeight;
+
+		FBO_BlitFromTexture(skyShader->sky.outerbox[0], imageBox, NULL, glState.currentFBO, screenBox, &tr.uniqueskyShader, NULL, 0);
 	}
+	else
+	{
+		vec4i_t		imageBox;
+		imageBox[0] = 0;
+		imageBox[1] = 0;
+		imageBox[2] = tr.whiteImage->width;
+		imageBox[3] = tr.whiteImage->height;
 
-	vec4i_t		imageBox;
-	imageBox[0] = 0;
-	imageBox[1] = 0;
-	imageBox[2] = skyShader->sky.outerbox[0]->width;
-	imageBox[3] = skyShader->sky.outerbox[0]->height;
+		vec4i_t		screenBox;
+		screenBox[0] = 0;
+		screenBox[1] = 0;
+		screenBox[2] = glConfig.vidWidth;
+		screenBox[3] = glConfig.vidHeight;
 
-	vec4i_t		screenBox;
-	screenBox[0] = 0;
-	screenBox[1] = 0;
-	screenBox[2] = glConfig.vidWidth;
-	screenBox[3] = glConfig.vidHeight;
-	
-	FBO_BlitFromTexture(skyShader->sky.outerbox[0], imageBox, NULL, glState.currentFBO, screenBox, &tr.uniqueskyShader, NULL, 0);
+		FBO_BlitFromTexture(tr.whiteImage, imageBox, NULL, glState.currentFBO, screenBox, &tr.uniqueskyShader, NULL, 0);
+	}
 }
 
 /*
@@ -886,10 +909,10 @@ Other things could be stuck in here, like birds in the sky, etc
 ================
 */
 
-#define ___NO_SKYDOME___
+//#define ___FORCED_SKYDOME___
 
 void RB_StageIteratorSky( void ) {
-#ifdef ___NO_SKYDOME___
+#ifndef ___FORCED_SKYDOME___
 	if ( r_fastsky->integer ) {
 		return;
 	}
@@ -908,12 +931,18 @@ void RB_StageIteratorSky( void ) {
 		qglDepthRange( 1.0, 1.0 );
 	}
 
+	if ( !tess.shader->sky.outerbox[0] || tess.shader->sky.outerbox[0] == tr.defaultImage ) 
+	{// UQ1: Set a default image...
+		GL_State( 0 );
+		DrawSkyDome(tess.shader);
+	}
+	else
 	// draw the outer skybox
 	//if ( tess.shader->sky.outerbox[0] && tess.shader->sky.outerbox[0] != tr.defaultImage ) 
 	{
 		matrix_t oldmodelview;
 
-		if ( !tess.shader->sky.outerbox[0] || tess.shader->sky.outerbox[0] == tr.defaultImage ) 
+		/*if ( !tess.shader->sky.outerbox[0] || tess.shader->sky.outerbox[0] == tr.defaultImage ) 
 		{// UQ1: Set a default image...
 			tess.shader->sky.outerbox[0] = 
 				tess.shader->sky.outerbox[1] = 
@@ -921,7 +950,7 @@ void RB_StageIteratorSky( void ) {
 				tess.shader->sky.outerbox[3] = 
 				tess.shader->sky.outerbox[4] = 
 				tess.shader->sky.outerbox[5] = tr.fogImage;
-		}
+		}*/
 		
 		GL_State( 0 );
 		//qglTranslatef (backEnd.viewParms.ori.origin[0], backEnd.viewParms.ori.origin[1], backEnd.viewParms.ori.origin[2]);
@@ -945,9 +974,9 @@ void RB_StageIteratorSky( void ) {
 	// generate the vertexes for all the clouds, which will be drawn
 	// by the generic shader routine
 	R_BuildCloudData( &tess );
-#else
+#else //___FORCED_SKYDOME___
 	DrawSkyDome(tess.shader);
-#endif
+#endif //___FORCED_SKYDOME___
 
 	RB_StageIteratorGeneric();
 

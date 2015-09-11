@@ -1,3 +1,280 @@
+
+//#version 120
+ 
+
+varying vec3 rayleigh;
+varying vec3 mie;
+varying vec3 eye;
+varying vec3 hazeColor;
+varying float ct;
+varying float cphi;
+varying float delta_z;
+varying float alt;
+varying float earthShade;
+
+/*
+uniform float overcast;
+uniform float saturation;
+uniform float visibility;
+uniform float avisibility;
+uniform float scattering;
+uniform float terminator;
+uniform float cloud_self_shading;
+uniform float horizon_roughness;
+*/
+
+const float terminator = 100000.0;
+const float avisibility = 100000.0;
+const float visibility = 100000.0;
+
+const float overcast = 0.3;
+const float saturation = 0.15;
+const float scattering = 0.15;
+const float cloud_self_shading = 0.5;
+const float horizon_roughness = 0.15;
+
+const float EarthRadius = 5800000.0;
+
+float hash( vec2 p ) {
+	float h = dot(p,vec2(127.1,311.7));	
+    return fract(sin(h)*43758.5453123);
+}
+float noise( in vec2 p ) {
+    vec2 i = floor( p );
+    vec2 f = fract( p );	
+	vec2 u = f*f*(3.0-2.0*f);
+    return -1.0+2.0*mix( mix( hash( i + vec2(0.0,0.0) ), 
+                     hash( i + vec2(1.0,0.0) ), u.x),
+                mix( hash( i + vec2(0.0,1.0) ), 
+                     hash( i + vec2(1.0,1.0) ), u.x), u.y);
+}
+
+float Noise2D(in vec2 coord, in float wavelength)
+{
+	return noise(coord);
+}
+
+float fog_backscatter(in float avisibility)
+{
+	//return 0.5;
+	return fract(sin(avisibility)*43758.5453123);
+}
+
+float light_func (in float x, in float a, in float b, in float c, in float d, in float e)
+{
+x = x - 0.5;
+
+// use the asymptotics to shorten computations
+if (x > 30.0) {return e;}
+if (x < -15.0) {return 0.0;}
+
+return e / pow((1.0 + a * exp(-b * (x-c)) ),(1.0/d));
+}
+
+float miePhase(in float cosTheta, in float g)
+{
+  float g2 = g*g;
+  float a = 1.5 * (1.0 - g2);
+  float b = (2.0 + g2);
+  float c = 1.0 + cosTheta*cosTheta;
+  float d = pow(1.0 + g2 - 2.0 * g * cosTheta, 0.6667);
+ 
+  return (a*c) / (b*d);
+}
+ 
+float rayleighPhase(in float cosTheta)
+{
+  //return 1.5 * (1.0 + cosTheta*cosTheta);
+  return 1.5 * (2.0 + 0.5*cosTheta*cosTheta);
+}
+ 
+
+void main()
+{
+
+  //vec3 shadedFogColor = vec3(0.65, 0.67, 0.78);
+   vec3 shadedFogColor = vec3(0.55, 0.67, 0.88);
+  float cosTheta = dot(normalize(eye), gl_LightSource[0].position.xyz);
+ 
+  // position of the horizon line
+
+  float lAltitude = alt + delta_z;
+  float radiusEye = EarthRadius + alt;
+  float radiusLayer = EarthRadius + lAltitude;
+  float cthorizon;
+  float ctterrain;
+
+  if (radiusEye > radiusLayer) cthorizon = -sqrt(radiusEye * radiusEye - radiusLayer * radiusLayer)/radiusEye;
+  else cthorizon = sqrt(radiusLayer * radiusLayer - radiusEye * radiusEye)/radiusLayer;
+
+  ctterrain = -sqrt(radiusEye * radiusEye - EarthRadius * EarthRadius)/radiusEye;
+
+  vec3 color = rayleigh * rayleighPhase(cosTheta);
+  color += mie * miePhase(cosTheta, -0.8);
+
+  vec3 black = vec3(0.0,0.0,0.0);
+
+  
+  float ovc = overcast;
+
+
+
+  float sat = 1.0 - ((1.0 - saturation) * 2.0);
+  if (sat < 0.3) sat = 0.3;
+
+
+  
+
+if (color.r > 0.58) color.r = 1.0 - exp(-1.5 * color.r);
+if (color.g > 0.58) color.g = 1.0 - exp(-1.5 * color.g);
+if (color.b > 0.58) color.b = 1.0 - exp(-1.5 * color.b);
+  
+
+
+// fog computations for a ground haze layer, extending from zero to lAltitude
+
+
+
+float transmission;
+float vAltitude;
+float delta_zv;
+
+float costheta = ct;
+
+float vis = min(visibility, avisibility);
+
+
+ if (delta_z > 0.0) // we're inside the layer
+	{
+  	if (costheta>0.0 + ctterrain) // looking up, view ray intersecting upper layer edge
+		{
+		transmission  = exp(-min((delta_z/max(costheta,0.1)),25000.0)/vis);
+		//transmission = 1.0;
+		vAltitude = min(vis * costheta, delta_z);
+  		delta_zv = delta_z - vAltitude;
+		}
+
+	else // looking down, view range intersecting terrain (which may not be drawn)
+		{
+		transmission = exp(alt/vis/costheta);
+		vAltitude = min(-vis * costheta, alt);
+  		delta_zv = delta_z + vAltitude;
+		}
+	}
+  else // we see the layer from above
+	{	
+	if (costheta < 0.0 + cthorizon) 
+		{
+		transmission = exp(-min(lAltitude/abs(costheta),25000.0)/vis);
+		transmission = transmission * exp(-alt/avisibility/abs(costheta));
+		transmission = 1.0 - (1.0 - transmission) * smoothstep(0+cthorizon, -0.02+cthorizon, costheta);
+   		vAltitude = min(lAltitude, -vis * costheta);
+		delta_zv = vAltitude; 
+		}
+	else
+		{	
+		transmission = 1.0;
+		delta_zv = 0.0;
+		}
+	}
+
+// combined intensity reduction by cloud shading and fog self-shading, corrected for Weber-Fechner perception law
+float eqColorFactor = 1.0 - 0.1 * delta_zv/vis - (1.0 - min(scattering,cloud_self_shading));
+
+
+// there's always residual intensity, we should never be driven to zero
+if (eqColorFactor < 0.2) eqColorFactor = 0.2;
+
+
+// postprocessing of haze color
+vec3 hColor = hazeColor;
+
+
+// high altitude desaturation
+float intensity = length(hColor);
+hColor = intensity * normalize (mix(hColor, intensity * vec3 (1.0,1.0,1.0), 0.7 * smoothstep(5000.0, 50000.0, alt)));
+
+hColor = clamp(hColor,0.0,1.0);
+
+// blue hue
+hColor.x = 0.83 * hColor.x;
+hColor.y = 0.9 * hColor.y;
+
+
+
+// further blueshift when in shadow, either cloud shadow, or self-shadow or Earth shadow, dependent on indirect 
+// light
+
+float fade_out = max(0.65 - 0.3 *overcast, 0.45);
+intensity = length(hColor);
+vec3 oColor = hColor;
+oColor = intensity * normalize(mix(oColor,  shadedFogColor, (smoothstep(0.1,1.0,ovc)))); 
+oColor = clamp(oColor,0.0,1.0);
+color = ovc *  mix(color, oColor * earthShade ,smoothstep(-0.1+ctterrain, 0.0+ctterrain, ct)) + (1.0-ovc) * color; 
+
+
+hColor = intensity * normalize(mix(hColor,  1.5 * shadedFogColor, 1.0 -smoothstep(0.25, fade_out,earthShade) ));
+hColor = intensity * normalize(mix(hColor,  shadedFogColor, (1.0 - smoothstep(0.5,0.9,eqColorFactor)))); 
+hColor = hColor * earthShade;
+
+// accounting for overcast and saturation 
+
+
+
+color = sat * color + (1.0 - sat) * mix(color, black, smoothstep(0.4+cthorizon,0.2+cthorizon,ct));
+
+
+// the terrain below the horizon gets drawn in one optical thickness
+vec3 terrainHazeColor = eqColorFactor * hColor;	
+
+// determine a visibility-dependent angle for how smoothly the haze blends over the skydome
+
+float hazeBlendAngle = max(0.01,1000.0/avisibility + 0.3 * (1.0 - smoothstep(5000.0, 30000.0, avisibility)));
+float altFactor = smoothstep(-300.0, 0.0, delta_z);
+float altFactor2 =  0.2 + 0.8 * smoothstep(-3000.0, 0.0, delta_z);
+hazeBlendAngle = hazeBlendAngle + 0.1 * altFactor;
+hazeBlendAngle = hazeBlendAngle +  (1.0-horizon_roughness) * altFactor2 * 0.1 *  Noise2D(vec2(0.0,cphi), 0.3);
+
+terrainHazeColor = clamp(terrainHazeColor,0.0,1.0);
+
+
+// don't let the light fade out too rapidly
+float lightArg = (terminator + 200000.0)/100000.0;
+float minLightIntensity = min(0.2,0.16 * lightArg + 0.5);
+vec3 minLight = minLightIntensity * vec3 (0.2, 0.3, 0.4);
+
+// this is for the bare Rayleigh and Mie sky, highly altitude dependent
+color.rgb = max(color.rgb, minLight.rgb * (1.0- min(alt/100000.0,1.0)) * (1.0 - costheta));
+
+// this is for the terrain drawn
+terrainHazeColor = max(terrainHazeColor.rgb, minLight.rgb);
+
+color = mix(color, terrainHazeColor ,smoothstep(hazeBlendAngle + ctterrain, 0.0+ctterrain, ct));
+
+
+// add the brightening of fog by lights
+
+    vec3 secondary_light = vec3 (0.0,0.0,0.0);
+
+
+// mix fog the skydome with the right amount of haze
+
+hColor *= eqColorFactor;
+hColor = max(hColor.rgb, minLight.rgb);
+
+hColor = clamp(hColor,0.0,1.0);
+
+color = mix(hColor+secondary_light * fog_backscatter(avisibility),color, transmission);
+
+
+
+  gl_FragColor = vec4(color, 1.0);
+  gl_FragDepth = 0.1;
+}
+
+
+#if 0
+
 varying vec2	texCoord1;
 varying vec2	var_Dimensions;
 varying float	time;
@@ -5,256 +282,6 @@ varying vec3	pPos;
 varying vec3	viewPos;
 varying vec3	viewAngles;
 vec2 resolution = var_Dimensions;
-
-
-#if 0
-
-
-vec3 sunLight  = normalize( vec3(  0.35, 0.17,  0.3 ) );
-vec3 sunColour = vec3(1.0, .5, .24);
-float gTime;
-float cloudy;
-
-#define cloudLower 2000.0
-#define cloudUpper 2800.0
-//#define TEXTURE_NOISE
-
-
-//--------------------------------------------------------------------------
-float Hash( float n )
-{
-	return fract(sin(n)*43758.5453);
-}
-
-//--------------------------------------------------------------------------
-float Noise( in vec2 x )
-{
-    vec2 p = floor(x);
-    vec2 f = fract(x);
-    f = f*f*(3.0-2.0*f);
-    float n = p.x + p.y*57.0;
-    float res = mix(mix( Hash(n+  0.0), Hash(n+  1.0),f.x),
-                    mix( Hash(n+ 57.0), Hash(n+ 58.0),f.x),f.y);
-    return res;
-}
-//--------------------------------------------------------------------------
-float Hash(in vec3 p)
-{
-    return fract(sin(dot(p,vec3(37.1,61.7, 12.4)))*3758.5453123);
-}
-
-//--------------------------------------------------------------------------
-#ifdef TEXTURE_NOISE
-float Noise( in vec3 x )
-{
-    vec3 p = floor(x);
-    vec3 f = fract(x);
-	f = f*f*(3.0-2.0*f);
-	
-	vec2 uv = (p.xy+vec2(37.0,17.0)*p.z) + f.xy;
-	vec2 rg = texture2D( iChannel0, (uv+ 0.5)/256.0, -100.0 ).yx;
-	return mix( rg.x, rg.y, f.z );
-}
-#else
-float Noise(in vec3 p)
-{
-    vec3 i = floor(p);
-	vec3 f = fract(p); 
-	f *= f * (3.0-2.0*f);
-
-    return mix(
-		mix(mix(Hash(i + vec3(0.,0.,0.)), Hash(i + vec3(1.,0.,0.)),f.x),
-			mix(Hash(i + vec3(0.,1.,0.)), Hash(i + vec3(1.,1.,0.)),f.x),
-			f.y),
-		mix(mix(Hash(i + vec3(0.,0.,1.)), Hash(i + vec3(1.,0.,1.)),f.x),
-			mix(Hash(i + vec3(0.,1.,1.)), Hash(i + vec3(1.,1.,1.)),f.x),
-			f.y),
-		f.z);
-}
-#endif
-
-//--------------------------------------------------------------------------
-float FBM( vec3 p )
-{
-	p.xz *= .5;
-    float f;
-    f  = 0.5000   * Noise(p); p =  p * 3.52;
-    f += 0.2500   * Noise(p); p =  p * 3.53;
-    f += 0.1250   * Noise(p); p =  p * 3.51;
-    f += 0.0625   * Noise(p); p =  p * 3.515;
-	f += 0.03125  * Noise(p); p =  p * 3.52;
-	f += 0.015625 * Noise(p);
-    return f;
-}
-
-//--------------------------------------------------------------------------
-float SeaFBM( vec2 p )
-{
-    float f;
-	f = sin(sin(p.x *.22) + cos(p.y *.24)+p.x*.05+p.y*.03);
-    f += 0.5000 * Noise(p); p =  p * 2.12;
-    f += 0.2500 * Noise(p); p =  p * 2.27;
-    f += 0.1250 * Noise(p); p =  p * 2.13;
-    f += 0.0625 * Noise(p); p =  p * 2.03;
-
-	return f;
-}
-
-//--------------------------------------------------------------------------
-float Map(vec3 p)
-{
-	p.y -= gTime *.05 - 3.5;
-	float h = FBM(p);
-	return h-cloudy-.45;
-}
-
-//--------------------------------------------------------------------------
-float SeaMap(in vec2 pos)
-{
-	pos *= .008;
-	return SeaFBM(pos) * 15.0;
-}
-
-//--------------------------------------------------------------------------
-vec3 SeaNormal( in vec3 pos, in float d)
-{
-	float p = .01 * d * d / resolution.y;
-	vec3 nor  	= vec3(0.0,		    SeaMap(pos.xz), 0.0);
-	vec3 v2		= nor-vec3(p,		SeaMap(pos.xz+vec2(p,0.0)), 0.0);
-	vec3 v3		= nor-vec3(0.0,		SeaMap(pos.xz+vec2(0.0,-p)), -p);
-	nor = cross(v2, v3);
-	return normalize(nor);
-}
-
-//--------------------------------------------------------------------------
-// Grab all sky information for a given ray from camera
-vec3 GetSky(in vec3 pos,in vec3 rd)
-{
-	float sunAmount = max( dot( rd, sunLight), 0.0 );
-	// Do the blue and sun...	
-	vec3  sky = vec3(.2, .5, .75);
-	sky = sky + sunColour * min(pow(sunAmount, 1000.0) * 2.0, 1.0);
-	sky = sky + sunColour * min(pow(sunAmount, 10.0) * .85, 1.0);
-	
-	// Find the start and end of the cloud layer...
-	float beg = ((cloudLower-pos.y)/rd.y);
-	float end = ((cloudUpper-pos.y)/rd.y);
-	// Start position...
-	vec3 p = vec3(pos.x + rd.x * beg, cloudLower, pos.z + rd.z * beg);
-
-	// Trace clouds through that layer...
-	float d = 0.0;
-	float add = (end-beg) / 40.0;
-	vec4 sum = vec4(0.0);
-	// Horizon fog is just thicker clouds...
-	vec4 col = vec4(0, 0, 0, pow(1.0-rd.y,8.) * .1);
-	for (int i = 0; i < 40; i++)
-	{
-		if (col.a >= 1.0) continue;
-		vec3 pos = p + rd * d;
-		float h = Map(pos * .001);
-		col.a += max(-h, 0.0) * .09; 
-		col.rgb = mix(vec3((pos.y-cloudLower)/((cloudUpper-cloudLower) * .8)) * col.a, sunColour, max(.5-col.a, 0.0) * .05);
-		sum = sum + col*(1.0 - sum.a);
-		d += add;
-	}
-	sum.xyz += min((1.-sum.a) * pow(sunAmount, 3.0), 1.0);
-	sky = mix(sky, sum.xyz, sum.a);
-
-	return clamp(sky, 0.0, 1.0);
-}
-
-//--------------------------------------------------------------------------
-vec3 GetSea(in vec3 pos,in vec3 rd)
-{
-	vec3 sea;
-	float d = -pos.y/rd.y;
-	vec3 p = vec3(pos.x + rd.x * d, 0.0, pos.z + rd.z * d);
-	
-	float dis = length(p-pos);
-	vec3 nor = SeaNormal(p, dis);
-
-	vec3 ref = reflect(rd, nor);
-	sea = GetSky(p, ref);
-	
-	sea = mix(sea*.6, vec3(.15, .3, .4), .2);
-	
-	float glit = max(dot(ref, sunLight), 0.0);
-	sea += sunColour * pow(glit, 220.0) * max(-cloudy*100.0, 0.0);
-	
-	return sea;
-}
-
-//--------------------------------------------------------------------------
-vec3 CameraPath( float t )
-{
-	//t = time + t;
-    vec2 p = vec2(4000.0 * sin(.16*t), 4000.0 * cos(.155*t) );
-	return vec3(p.x+5.0,  0.0, -94.0+p.y);
-} 
-
-//--------------------------------------------------------------------------
-void main(void)
-{
-#if 0
-	gTime = time*.65 + 70. + 0.07*length(texCoord1)/length(resolution);
-	cloudy = cos(gTime * .27+.15) * .2;
-	
-    vec2 xy = texCoord1.xy;// / resolution.xy;
-	vec2 uv = (-1.0 + 2.0 * xy) * vec2(resolution.x/resolution.y,1.0);
-	
-	//vec3 cameraPos	   = vec3(1.0, 1.0, 1.0);
-	//vec3 cameraPos = CameraPath(gTime);
-	vec3 cameraPos = viewAngles.zxy;
-	//vec3 camTar	   = CameraPath(gTime + 1.0);
-	vec3 camTar	   = CameraPath(gTime + 1.0);
-	//camTar.z = viewAngles.z;
-	//vec3 camTar	   = vec3(0.0, 0.0, 0.0);
-	//camTar.y = cameraPos.y = sin(gTime) * 200.0 + 300.0;
-	camTar.y = sin(gTime) * 200.0 + 300.0;
-	//camTar.x = cameraPos.x = sin(gTime) * 200.0 + 300.0;
-	//camTar.z = cameraPos.z = sin(gTime) * 200.0 + 300.0;
-	//camTar.y = cameraPos.y = sin(viewAngles.y*gTime) * 200.0 + 300.0;
-	camTar.y += 300.0;
-	
-	//float roll = .1 * sin(gTime * .25);
-	float roll = 0.0;
-	//vec3 cw = normalize(camTar-cameraPos);
-	vec3 cw = normalize(viewAngles);
-	vec3 cp = vec3(sin(roll), cos(roll),0.0);
-	vec3 cu = cross(cw,cp);
-	vec3 cv = cross(cu,cw);
-	vec3 dir = normalize(uv.x*cu + uv.y*cv + 1.3*cw);
-	mat3 camMat = mat3(cu, cv, cw);
-
-	vec3 col;
-	float distance = 1e20;
-	float type = 0.0;
-
-	//if (dir.y > 0.0)
-	//{
-		col = GetSky(cameraPos, dir);
-	//}else
-	//{
-	//	col = GetSea(cameraPos, dir);
-	//}
-
-	// Don't gamma too much to keep the moody look...
-	col = pow(col, vec3(.7));
-	gl_FragColor=vec4(col, 1.0);
-#else
-	gTime = time*.65 + 70. + 0.07*length(texCoord1)/length(resolution);
-	cloudy = cos(gTime * .27+.15) * .2;
-
-	vec3 col = GetSky(viewPos, viewAngles);
-
-	// Don't gamma too much to keep the moody look...
-	col = pow(col, vec3(.7));
-	gl_FragColor=vec4(col, 1.0);
-#endif
-}
-
-#else
 
 
 // Clouds: slice based volumetric height-clouds with god-rays, density, sun-radiance/shadow
@@ -594,6 +621,4 @@ void main()
 
   gl_FragColor=vec4(col,1.0);
 }
-
-
 #endif

@@ -1921,7 +1921,7 @@ int GLSL_BeginLoadGPUShaders(void)
 	attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_NORMAL | ATTR_COLOR;
 	extradefines[0] = '\0';
 
-	if (!GLSL_BeginLoadGPUShader(&tr.uniqueskyShader, "uniquesky", attribs, qtrue, extradefines, qtrue, NULL, fallbackShader_uniquesky_vp, fallbackShader_uniquesky_fp))
+	if (!GLSL_BeginLoadGPUShader(&tr.uniqueskyShader, "uniquesky", attribs, qtrue, extradefines, qtrue, "130", fallbackShader_uniquesky_vp, fallbackShader_uniquesky_fp))
 	{
 		ri->Error(ERR_FATAL, "Could not load uniquesky shader!");
 	}
