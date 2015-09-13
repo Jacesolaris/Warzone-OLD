@@ -6,10 +6,6 @@ varying vec2	var_Dimensions;
 
 varying float  var_Time;
 
-#if defined(USE_LIGHTMAP)
-uniform sampler2D u_LightMap;
-#endif
-
 //#if defined(USE_NORMALMAP)
 uniform sampler2D u_NormalMap;
 //#endif
@@ -59,35 +55,15 @@ uniform vec4      u_CubeMapInfo;
 #endif
 
 
-varying vec4      var_TexCoords;
+varying vec2      var_TexCoords;
 
 varying vec4      var_Color;
 
 varying vec3   var_ViewDir;
 
-#if (defined(USE_LIGHT) && !defined(USE_FAST_LIGHT))
-  #if defined(USE_VERT_TANGENT_SPACE)
-varying vec4   var_Normal;
-varying vec4   var_Tangent;
-varying vec4   var_Bitangent;
-  #else
 varying vec3   var_Normal;
-  #endif
-#else
-  #if defined(USE_VERT_TANGENT_SPACE)
-varying vec4   var_Normal;
-varying vec4   var_Tangent;
-varying vec4   var_Bitangent;
-  #else
-varying vec3   var_Normal;
-  #endif
-#endif
 
 varying vec3 var_N;
-
-#if defined(USE_LIGHT) && !defined(USE_FAST_LIGHT)
-varying vec4      var_LightDir;
-#endif
 
 #if defined(USE_PRIMARY_LIGHT) || defined(USE_SHADOWMAP)
 varying vec4      var_PrimaryLightDir;
@@ -383,24 +359,14 @@ void main()
 
 	E = normalize(viewDir);
 
-	L = var_LightDir.xyz;
-  #if defined(USE_DELUXEMAP)
-	L += (texture2D(u_DeluxeMap, var_TexCoords.zw).xyz - vec3(0.5)) * u_EnableTextures.y;
-  #endif
+	L = vec3(0.0, 1.0, 1.0);
 	float sqrLightDist = dot(L, L);
 
-	vec4 lightmapColor = texture2D(u_LightMap, var_TexCoords.zw);
-  #if defined(RGBM_LIGHTMAP)
-	lightmapColor.rgb *= lightmapColor.a;
-  #endif
-
-  #if defined(USE_LIGHTMAP)
-	lightColor	= lightmapColor.rgb * var_Color.rgb;
-  #elif defined(USE_LIGHT_VECTOR)
+  #if defined(USE_LIGHT_VECTOR)
 	lightColor	= u_DirectedLight * var_Color.rgb;
 	ambientColor = u_AmbientLight * var_Color.rgb;
 	attenuation = CalcLightAttenuation(float(var_LightDir.w > 0.0), var_LightDir.w / sqrLightDist);
-  #elif defined(USE_LIGHT_VERTEX)
+  #else
 	lightColor	= var_Color.rgb;
   #endif
 
@@ -509,7 +475,7 @@ void main()
     #endif
   #endif
 
-  #if defined(USE_LIGHTMAP) || defined(USE_LIGHT_VERTEX)
+  #if defined(USE_LIGHT_VERTEX)
 	ambientColor = lightColor;
 	float surfNL = clamp(dot(var_Normal.xyz, L), 0.0, 1.0);
 	lightColor /= max(surfNL, 0.25);

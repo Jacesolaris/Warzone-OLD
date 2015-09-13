@@ -5358,11 +5358,77 @@ static shader_t *FinishShader( void ) {
 		}
 
     // check for a missing texture
-		if ( !pStage->bundle[0].image[0] ) {
+		/*if ( !pStage->bundle[0].image[0] ) {
 			ri->Printf( PRINT_WARNING, "Shader %s has a stage with no image\n", shader.name );
 			pStage->active = qfalse;
 			stage++;
 			continue;
+		}*/
+
+		// check for a missing texture
+		switch (pStage->type)
+		{
+			//case ST_LIGHTMAP:
+			//	// skip
+			//	break;
+
+			case ST_COLORMAP: // + ST_DIFFUSEMAP
+			default:
+			{
+				if(!pStage->bundle[0].image[0])
+				{
+					ri->Printf(PRINT_WARNING, "Shader %s has a colormap/diffusemap stage with no image\n", shader.name);
+					//pStage->active = qfalse;
+					//stage++;
+					//continue;
+					pStage->bundle[0].image[0] = tr.defaultImage;
+				}
+				break;
+			}
+
+			case ST_NORMALMAP:
+			{
+				if(!pStage->bundle[0].image[0])
+				{
+					ri->Printf(PRINT_WARNING, "Shader %s has a normalmap stage with no image\n", shader.name);
+					pStage->bundle[0].image[0] = tr.whiteImage;
+				}
+				break;
+			}
+
+			case ST_SPECULARMAP:
+			{
+				if(!pStage->bundle[0].image[0])
+				{
+					ri->Printf(PRINT_WARNING, "Shader %s has a specularmap stage with no image\n", shader.name);
+					pStage->bundle[0].image[0] = tr.whiteImage; // should be blackImage
+				}
+				break;
+			}
+
+			case ST_NORMALPARALLAXMAP:
+			{
+				if(!pStage->bundle[0].image[0])
+				{
+					ri->Printf(PRINT_WARNING, "Shader %s has a normalparallaxmap stage with no image\n", shader.name);
+					pStage->active = qfalse;
+					stage++;
+					continue;
+				}
+				break;
+			}
+
+			case ST_SUBSURFACEMAP:
+			{
+				if(!pStage->bundle[0].image[0])
+				{
+					ri->Printf(PRINT_WARNING, "Shader %s has a subsurfacemap stage with no image\n", shader.name);
+					pStage->active = qfalse;
+					stage++;
+					continue;
+				}
+				break;
+			}
 		}
 
 		//

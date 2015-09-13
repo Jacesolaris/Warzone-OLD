@@ -97,6 +97,7 @@ qboolean DO_TRANSLUCENT = qfalse;
 qboolean DO_FAST_LINK = qfalse;
 qboolean DO_ULTRAFAST = qfalse;
 qboolean DO_NOWATER = qfalse;
+qboolean DO_NOSKY = qfalse;
 qboolean DO_OPEN_AREA_SPREAD = qfalse;
 
 // warning C4996: 'strcpy' was declared deprecated
@@ -3526,6 +3527,8 @@ qboolean CG_HaveRoofAbove ( vec3_t origin )
 {// Hopefully this will stop awp from adding waypoints on map roofs...
 	vec3_t org, down_org;
 	trace_t tr;
+
+	if (DO_NOSKY) return qtrue;
 
 	VectorCopy(origin, org);
 	org[2]+=4.0;
@@ -7192,6 +7195,7 @@ AIMod_AutoWaypoint ( void )
 		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3/autowaypoint <method> <scatter_distance> ^5or ^3/awp <method> <scatter_distance>^5. Distance is optional.\n" );
 		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^5Available methods are:\n" );
 		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3\"standard\" ^5- For standard multi-level maps.\n");
+		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3\"nosky\" ^5- For standard multi-level maps. Don't check for sky.\n");
 		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3\"nowater\" ^5- For standard multi-level maps.\n");
 		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3\"openspread\" ^5- This version spreads out waypoints in large open areas. May be inacurate indoors.\n");
 		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3\"thorough\" ^5- Use extensive fall waypoint checking.\n");
@@ -7273,6 +7277,38 @@ AIMod_AutoWaypoint ( void )
 		{
 			AIMod_AutoWaypoint_StandardMethod();
 		}
+	}
+	else if ( Q_stricmp( str, "nosky") == 0 )
+	{
+		DO_NOSKY = qtrue;
+
+		if ( trap->Cmd_Argc() >= 2 )
+		{
+			// Override normal scatter distance...
+			int dist = waypoint_scatter_distance;
+
+			trap->Cmd_Argv( 2, str, sizeof(str) );
+			dist = atoi(str);
+
+			if (dist <= 4)
+			{
+				// Fallback and warning...
+				dist = original_wp_scatter_dist;
+
+				trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^7Warning: ^5Invalid scatter distance set (%i). Using default (%i)...\n", atoi(str), original_wp_scatter_dist );
+			}
+
+			waypoint_scatter_distance = dist;
+			AIMod_AutoWaypoint_StandardMethod();
+
+			waypoint_scatter_distance = original_wp_scatter_dist;
+		}
+		else
+		{
+			AIMod_AutoWaypoint_StandardMethod();
+		}
+
+		DO_NOSKY = qfalse;
 	}
 	else if ( Q_stricmp( str, "nowater") == 0 )
 	{

@@ -1024,6 +1024,14 @@ static void ParseTriSurf( dsurface_t *ds, drawVert_t *verts, float *hdrVertColor
 
 			R_ColorShiftLightingFloats( color, cv->verts[i].vertexColors[j], 1.0f / 255.0f );
 		}
+
+		/*switch ( LittleLong( ds->surfaceType ) ) {
+			case MST_FOLIAGE:
+			ri->Printf(PRINT_WARNING, "Loaded foliage surface at %f %f %f.\n", cv->verts[i].xyz[0], cv->verts[i].xyz[1], cv->verts[i].xyz[2]);
+			break;
+		default:
+			break;
+		}*/
 	}
 
 	// copy triangles
@@ -2195,6 +2203,7 @@ static	void R_LoadSurfaces( lump_t *surfs, lump_t *verts, lump_t *indexLump ) {
 			case MST_PATCH:
 				// FIXME: do this
 				break;
+			case MST_FOLIAGE:
 			case MST_TRIANGLE_SOUP:
 				out->data = (surfaceType_t *)ri->Hunk_Alloc( sizeof(srfBspSurface_t), h_low);
 				break;
@@ -2226,6 +2235,11 @@ static	void R_LoadSurfaces( lump_t *surfs, lump_t *verts, lump_t *indexLump ) {
 				out->cullinfo.radius = surface->cullRadius;
 			}
 			numMeshes++;
+			break;
+		case MST_FOLIAGE:
+			ParseTriSurf( in, dv, hdrVertColors, out, indexes );
+			//ri->Printf(PRINT_WARNING, "Loaded foliage surface at %f %f %f.\n", dv->xyz[0], dv->xyz[1], dv->xyz[2]);
+			numTriSurfs++;
 			break;
 		case MST_TRIANGLE_SOUP:
 			ParseTriSurf( in, dv, hdrVertColors, out, indexes );
@@ -3164,7 +3178,12 @@ AIMOD_NODES_LoadNodes ( void )
 qboolean IgnoreCubemapsOnMap( void )
 {// Maps with known really bad FPS... Let's just forget rendering cubemaps here...
 	if (StringContainsWord(currentMapName, "jkg_mos_eisley"))
-	{// Ignore this map... We know we don't need grass here...
+	{// Ignore this map... We know we don't need shiny here...
+		return qtrue;
+	}
+
+	if (StringContainsWord(currentMapName, "yavin7"))
+	{// Ignore this map... We know we don't need shiny here...
 		return qtrue;
 	}
 
