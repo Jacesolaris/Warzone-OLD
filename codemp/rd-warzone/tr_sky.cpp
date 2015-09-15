@@ -789,6 +789,11 @@ void R_InitSkyTexCoords( float heightCloud )
 
 //======================================================================================
 
+vec3_t		SUN_ORIGIN;
+qboolean	SUN_VISIBLE = qfalse;
+
+extern void R_WorldToLocal (const vec3_t world, vec3_t local);
+
 /*
 ** RB_DrawSun
 */
@@ -833,6 +838,17 @@ void RB_DrawSun( float scale, shader_t *shader ) {
 
 	// back to normal depth range
 	qglDepthRange( 0.0, 1.0 );
+
+	if (r_dynamiclight->integer)
+	{// Lets have some volumetrics with that!
+		vec3_t org, out;
+		VectorMA( backEnd.refdef.vieworg, dist, tr.sunDirection, out );
+		out[0]+=(size/2.0);
+		out[1]+=(size/2.0);
+		out[2]+=(size/2.0);
+		VectorCopy(out, SUN_ORIGIN);
+		SUN_VISIBLE = qtrue;
+	}
 }
 
 

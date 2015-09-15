@@ -437,6 +437,8 @@ Any mirrored or portaled views have already been drawn, so prepare
 to actually render the visible surfaces for this view
 =================
 */
+extern qboolean SUN_VISIBLE;
+
 void RB_BeginDrawingView (void) {
 	int clearBits = 0;
 
@@ -547,6 +549,7 @@ void RB_BeginDrawingView (void) {
 
 	// we will only draw a sun if there was sky rendered in this view
 	backEnd.skyRenderedThisView = qfalse;
+	SUN_VISIBLE = qfalse;
 
 	// clip to the plane of the portal
 	if ( backEnd.viewParms.isPortal ) {

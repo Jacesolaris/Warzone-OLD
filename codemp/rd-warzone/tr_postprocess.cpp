@@ -909,7 +909,7 @@ qboolean Volumetric_Visible(vec3_t from, vec3_t to)
 
 	Volumetric_Trace( &trace, from, NULL, NULL, to, -1, (CONTENTS_SOLID|CONTENTS_TERRAIN) );
 
-	if (trace.fraction != 1.0 && Distance(trace.endpos, to) > 64)
+	if (trace.fraction != 1.0 && Distance(trace.endpos, to) > 64 && !(trace.surfaceFlags & SURF_SKY))
 		return qfalse;
 
 	return qtrue;
@@ -926,10 +926,14 @@ void Volumetric_RoofHeight(vec3_t from)
 	VectorSet(roof, trace.endpos[0]-8.0, trace.endpos[1], trace.endpos[2]);
 }
 
+extern vec3_t SUN_ORIGIN;
+extern qboolean SUN_VISIBLE;
+
 qboolean RB_VolumetricLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 {
 	vec4_t color;
 	int NUM_VISIBLE_LIGHTS = 0;
+	int SUN_ID = 17;
 
 	// bloom
 	color[0] =
@@ -937,7 +941,7 @@ qboolean RB_VolumetricLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_
 		color[2] = pow(2, r_cameraExposure->value);
 	color[3] = 1.0f;
 
-	if ( !backEnd.refdef.num_dlights ) {
+	if ( !backEnd.refdef.num_dlights && !SUN_VISIBLE ) {
 		//ri->Printf(PRINT_WARNING, "0 dlights.\n");
 		return qfalse;
 	}
@@ -1068,6 +1072,76 @@ qboolean RB_VolumetricLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_
 		}
 	}
 
+	if ( SUN_VISIBLE )
+	{// Add sun...
+		//SUN_ORIGIN
+		float x, y;
+		int	xcenter, ycenter;
+		vec3_t	local, transformed;
+		vec3_t	vfwd, vright, vup, viewAngles;
+
+		TR_AxisToAngles(backEnd.refdef.viewaxis, viewAngles);
+
+		//NOTE: did it this way because most draw functions expect virtual 640x480 coords
+		//	and adjust them for current resolution
+		xcenter = 640 / 2;//gives screen coords in virtual 640x480, to be adjusted when drawn
+		ycenter = 480 / 2;//gives screen coords in virtual 640x480, to be adjusted when drawn
+
+		VectorSubtract (SUN_ORIGIN, backEnd.refdef.vieworg, local);
+
+		AngleVectors (viewAngles, vfwd, vright, vup);
+
+		transformed[0] = DotProduct(local,vright);
+		transformed[1] = DotProduct(local,vup);
+		transformed[2] = DotProduct(local,vfwd);
+
+		// Make sure Z is not negative.
+		if(transformed[2] < 0.01)
+		{
+			//return false;
+			//transformed[2] = 2.0 - transformed[2];
+		}
+
+		// Simple convert to screen coords.
+		float xzi = xcenter / transformed[2] * (90.0/backEnd.refdef.fov_x);
+		float yzi = ycenter / transformed[2] * (90.0/backEnd.refdef.fov_y);
+
+		x = (xcenter + xzi * transformed[0]);
+		y = (ycenter - yzi * transformed[1]);
+
+		if (NUM_CLOSE_LIGHTS < MAX_VOLUMETRIC_LIGHTS-1)
+		{// Have free light slots for a new light...
+			CLOSEST_LIGHTS_POSITIONS[NUM_CLOSE_LIGHTS][0] = x / 640;
+			CLOSEST_LIGHTS_POSITIONS[NUM_CLOSE_LIGHTS][1] = 1.0 - (y / 480);
+			SUN_ID = NUM_CLOSE_LIGHTS;
+			NUM_CLOSE_LIGHTS++;
+		}
+		else
+		{// See if this is closer then one of our other lights...
+			int		farthest_light = 0;
+			float	farthest_distance = 0.0;
+
+			for (int i = 0; i < NUM_CLOSE_LIGHTS; i++)
+			{// Find the most distance light in our current list to replace, if this new option is closer...
+				dlight_t	*thisLight = &backEnd.refdef.dlights[CLOSEST_LIGHTS[i]];
+				float		dist = Distance(thisLight->origin, backEnd.refdef.vieworg);
+
+				if (dist > farthest_distance)
+				{// This one is further!
+					farthest_light = i;
+					farthest_distance = dist;
+					break;
+				}
+			}
+
+			CLOSEST_LIGHTS_POSITIONS[farthest_light][0] = x / 640;
+			CLOSEST_LIGHTS_POSITIONS[farthest_light][1] = 1.0 - (y / 480);
+			SUN_ID = farthest_light;
+		}
+	}
+
+	//ri->Printf(PRINT_WARNING, "%i volume lights.\n", NUM_CLOSE_LIGHTS);
+
 	// None to draw...
 	if (NUM_CLOSE_LIGHTS <= 0) {
 		//ri->Printf(PRINT_WARNING, "0 visible dlights. %i total dlights.\n", backEnd.refdef.num_dlights);
@@ -1100,7 +1174,7 @@ qboolean RB_VolumetricLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_
 		float zmax = backEnd.viewParms.zFar;
 		float zmin = r_znear->value;
 
-		VectorSet4(viewInfo, zmin, zmax, zmax / zmin, 0.0);
+		VectorSet4(viewInfo, zmin, zmax, zmax / zmin, (float)SUN_ID);
 
 		GLSL_SetUniformVec4(&tr.volumeLightShader[r_dynamiclight->integer - 1], UNIFORM_VIEWINFO, viewInfo);
 	}

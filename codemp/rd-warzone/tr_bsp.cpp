@@ -958,7 +958,7 @@ static void ParseTriSurf( dsurface_t *ds, drawVert_t *verts, float *hdrVertColor
 	numVerts = LittleLong(ds->numVerts);
 	numIndexes = LittleLong(ds->numIndexes);
 
-	//cv = ri->Hunk_Alloc(sizeof(*cv), h_low);
+	//cv = (srfBspSurface_t *)ri->Hunk_Alloc(sizeof(*cv), h_low);
 	cv = (srfBspSurface_t *)surf->data;
 	cv->surfaceType = SF_TRIANGLES;
 
@@ -975,7 +975,6 @@ static void ParseTriSurf( dsurface_t *ds, drawVert_t *verts, float *hdrVertColor
 	ClearBounds(surf->cullinfo.bounds[0], surf->cullinfo.bounds[1]);
 	verts += LittleLong(ds->firstVert);
 
-
 	for(i = 0; i < numVerts; i++)
 	{
 		vec4_t color;
@@ -985,7 +984,16 @@ static void ParseTriSurf( dsurface_t *ds, drawVert_t *verts, float *hdrVertColor
 			cv->verts[i].xyz[j] = LittleFloat(verts[i].xyz[j]);
 			cv->verts[i].normal[j] = LittleFloat(verts[i].normal[j]);
 		}
-
+		/*
+		switch ( LittleLong( ds->surfaceType ) ) {
+			case MST_FOLIAGE:
+				ri->Printf(PRINT_WARNING, "Loaded foliage surface at %f %f %f (%f %f %f) org: %f %f %f - %f %f %f.\n", cv->verts[i].xyz[0], cv->verts[i].xyz[1], cv->verts[i].xyz[2], verts[i].xyz[0], verts[i].xyz[1], verts[i].xyz[2]
+				, cv->verts->xyz[0], cv->verts->xyz[1], cv->verts->xyz[2], cv->cullOrigin[0], cv->cullOrigin[1], cv->cullOrigin[2]);
+				break;
+			default:
+				break;
+		}
+		*/
 		AddPointToBounds( cv->verts[i].xyz, surf->cullinfo.bounds[0], surf->cullinfo.bounds[1] );
 
 		for(j = 0; j < 2; j++)
@@ -1024,14 +1032,6 @@ static void ParseTriSurf( dsurface_t *ds, drawVert_t *verts, float *hdrVertColor
 
 			R_ColorShiftLightingFloats( color, cv->verts[i].vertexColors[j], 1.0f / 255.0f );
 		}
-
-		/*switch ( LittleLong( ds->surfaceType ) ) {
-			case MST_FOLIAGE:
-			ri->Printf(PRINT_WARNING, "Loaded foliage surface at %f %f %f.\n", cv->verts[i].xyz[0], cv->verts[i].xyz[1], cv->verts[i].xyz[2]);
-			break;
-		default:
-			break;
-		}*/
 	}
 
 	// copy triangles
@@ -1072,6 +1072,8 @@ static void ParseTriSurf( dsurface_t *ds, drawVert_t *verts, float *hdrVertColor
 			dv[0] = &cv->verts[tri[0]];
 			dv[1] = &cv->verts[tri[1]];
 			dv[2] = &cv->verts[tri[2]];
+			
+			//ri->Printf(PRINT_WARNING, "Loaded foliage surface at %f %f %f, %f %f %f, %f %f %f.\n", dv[0]->xyz[0], dv[0]->xyz[1], dv[0]->xyz[2], dv[1]->xyz[0], dv[1]->xyz[1], dv[1]->xyz[2], dv[2]->xyz[0], dv[2]->xyz[1], dv[2]->xyz[2]);
 
 			R_CalcTangentVectors(dv);
 		}

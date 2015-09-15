@@ -9,7 +9,7 @@ varying vec2		var_TexCoords;
 varying vec2		var_Dimensions;
 
 uniform vec2		u_Dimensions;
-uniform vec4		u_ViewInfo; // zmin, zmax, zmax / zmin
+uniform vec4		u_ViewInfo; // zmin, zmax, zmax / zmin, SUN_ID
 
 #if defined(HQ_VOLUMETRIC)
 const float	iBloomraySamples = 32.0;
@@ -34,6 +34,7 @@ float linearize(float depth)
 void main ( void )
 {
 	vec4 diffuseColor = texture2D(u_DiffuseMap, var_TexCoords.xy);
+	int  SUN_ID = int(u_ViewInfo.a);
 
 	if (u_lightCount <= 0)
 	{
@@ -45,6 +46,10 @@ void main ( void )
 		return;
 	}
 
+	//float depth = 1.0 - linearize(texture2D(u_ScreenDepthMap, var_TexCoords).r);
+	//gl_FragColor = vec4(depth, depth, depth, 1.0);
+	//return;
+
 	vec2		inRangePositions[16];
 	float		fallOffRanges[16];
 	float		lightDepths[16];
@@ -55,6 +60,8 @@ void main ( void )
 		float dist = length(var_TexCoords - u_lightPositions[i]);
 		float depth = 1.0 - linearize(texture2D(u_ScreenDepthMap, u_lightPositions[i]).r);
 		float fall = clamp((fBloomrayFalloffRange * depth * 2.0) - dist, 0.0, 1.0);
+
+		//if (i == SUN_ID) fall = 0.2;
 
 		if (fall > 0.0)
 		{
