@@ -37,7 +37,7 @@
 
 
 
-#define MAX_FOLIAGE_INSTANCES   8192
+#define MAX_FOLIAGE_INSTANCES   32768//8192
 
 static int numFoliageInstances;
 static foliageInstance_t foliageInstances[ MAX_FOLIAGE_INSTANCES ];
@@ -60,6 +60,7 @@ static void SubdivideFoliageTriangle_r( mapDrawSurface_t *ds, foliage_t *foliage
 		return;
 	}
 
+#if 1
 	/* plane test */
 	{
 		vec4_t plane;
@@ -75,6 +76,7 @@ static void SubdivideFoliageTriangle_r( mapDrawSurface_t *ds, foliage_t *foliage
 			return;
 		}
 	}
+#endif
 
 	/* subdivide calc */
 	{
@@ -168,7 +170,6 @@ static void SubdivideFoliageTriangle_r( mapDrawSurface_t *ds, foliage_t *foliage
 }
 
 
-
 /*
    GenFoliage()
    generates a foliage file for a bsp
@@ -216,23 +217,191 @@ void Foliage( mapDrawSurface_t *src ){
 			}
 			break;
 
+		// UQ1: NOTE: Wolf did not do foliage for SURFACE_FACE (I added this). This looks right from the output, but could be wrong!!!
+#if 0
 		case SURFACE_FACE:
 			{
-				/* map the triangles */
-				for ( i = 0; i < src->numVerts-2; i += 3 )
+				bspDrawVert_t centroid;
+				float alpha;
+				ds = src;
+
+				/* calculate centroid */
+				memset( &centroid, 0, sizeof( centroid ) );
+				alpha = 0.0f;
+
+				/* walk verts */
+				for ( i = 0; i < ds->numVerts; i++ )
 				{
-					dv[ 0 ] = &src->verts[ i % src->numVerts ];
-					dv[ 1 ] = &src->verts[ ( i + 1 ) % src->numVerts ];
-					dv[ 2 ] = &src->verts[ ( i + 2 ) % src->numVerts ];
+					VectorAdd( centroid.xyz, ds->verts[ i ].xyz, centroid.xyz );
+					VectorAdd( centroid.normal, ds->verts[ i ].normal, centroid.normal );
+					centroid.st[ 0 ] += ds->verts[ i ].st[ 0 ];
+					centroid.st[ 1 ] += ds->verts[ i ].st[ 1 ];
+					alpha += ds->verts[ i ].color[ 0 ][ 3 ];
+				}
 
-					//if (dv[0]->xyz == 0 && dv[1]->xyz == 0 && dv[2]->xyz == 0) continue;
+				/* average */
+				centroid.xyz[ 0 ] /= ds->numVerts;
+				centroid.xyz[ 1 ] /= ds->numVerts;
+				centroid.xyz[ 2 ] /= ds->numVerts;
+				if ( VectorNormalize( centroid.normal, centroid.normal ) == 0.0f ) {
+					VectorCopy( ds->verts[ 0 ].normal, centroid.normal );
+				}
+				centroid.st[ 0 ]  /= ds->numVerts;
+				centroid.st[ 1 ]  /= ds->numVerts;
+				alpha /= ds->numVerts;
+				centroid.color[ 0 ][ 0 ] = 0xFF;
+				centroid.color[ 0 ][ 1 ] = 0xFF;
+				centroid.color[ 0 ][ 2 ] = 0xFF;
+				centroid.color[ 0 ][ 2 ] = ( alpha > 255.0f ? 0xFF : alpha );
 
-					//Sys_Printf( "!!! dv at %f %f %f, %f %f %f, %f %f %f !!!\n", dv[0]->xyz[0], dv[0]->xyz[1], dv[0]->xyz[2], dv[1]->xyz[0], dv[1]->xyz[1], dv[1]->xyz[2], dv[2]->xyz[0], dv[2]->xyz[1], dv[2]->xyz[2] );
+				/* head vert is centroid */
+				dv[ 0 ] = &centroid;
 
-					SubdivideFoliageTriangle_r( src, foliage, dv );
+				/* walk fanned triangles */
+				for ( i = 0; i < ds->numVerts; i++ )
+				{
+					/* set triangle */
+					dv[ 1 ] = &ds->verts[ i ];
+					dv[ 2 ] = &ds->verts[ ( i + 1 ) % ds->numVerts ];
+
+					/* create models */
+					SubdivideFoliageTriangle_r( ds, foliage, dv );
+
+					/*
+					{
+						bspDrawVert_t       *dv2[ 3 ], *dv3[ 3 ];
+
+						dv2[0] = dv[1];
+						dv2[1] = dv[2];
+						dv2[2] = dv[0];
+
+						SubdivideFoliageTriangle_r( ds, foliage, dv2 );
+
+						dv2[0] = dv[2];
+						dv2[1] = dv[0];
+						dv2[2] = dv[1];
+
+						SubdivideFoliageTriangle_r( ds, foliage, dv2 );
+
+						dv2[0] = dv[2];
+						dv2[1] = dv[1];
+						dv2[2] = dv[0];
+
+						SubdivideFoliageTriangle_r( ds, foliage, dv2 );
+
+						dv2[0] = dv[1];
+						dv2[1] = dv[0];
+						dv2[2] = dv[2];
+
+						SubdivideFoliageTriangle_r( ds, foliage, dv2 );
+					}
+					*/
+
+#if 0
+					{
+						float density = foliage->density;
+						float x, y, z, maxx = -65000, minx = 65000, maxy = -65000, miny = 65000, maxz = -65000, minz = 65000;
+						int l;
+						bspDrawVert_t       dv2[ 3 ];
+						bspDrawVert_t       *dv3[ 3 ];
+
+						for (l = 0; l < 3; l++)
+						{
+							if (dv[l]->xyz[0] < minx)
+								minx = dv[l]->xyz[0];
+							if (dv[l]->xyz[0] < maxx)
+								maxx = dv[l]->xyz[0];
+
+							if (dv[l]->xyz[1] < miny)
+								miny = dv[l]->xyz[1];
+							if (dv[l]->xyz[1] < maxy)
+								maxy = dv[l]->xyz[1];
+
+							if (dv[l]->xyz[2] < minz)
+								minz = dv[l]->xyz[2];
+							if (dv[l]->xyz[2] < maxz)
+								maxz = dv[l]->xyz[2];
+						}
+
+						for (minx = 0; x < maxx; x+= density)
+						{
+							for (miny = 0; y < maxy; y += density)
+							{
+								for (minz = 0; z < maxy; z += density)
+								{
+									dv2[0].xyz[0] = x;
+									dv2[0].xyz[1] = y;
+									dv2[0].xyz[2] = z;
+
+									dv2[1].xyz[1] = x;
+									dv2[1].xyz[2] = y;
+									dv2[1].xyz[0] = z;
+
+									dv2[2].xyz[2] = x;
+									dv2[2].xyz[1] = y;
+									dv2[2].xyz[0] = z;
+
+									dv3[0] = &dv2[0];
+									dv3[1] = &dv2[1];
+									dv3[2] = &dv2[2];
+								
+									SubdivideFoliageTriangle_r( ds, foliage, dv3 );
+								}
+							}
+						}
+					}
+#endif
 				}
 			}
 			break;
+#else
+		case SURFACE_FACE:
+			/* get verts */
+			verts = src->verts;
+			
+			/* map the triangles */
+			//for ( i = 0; i < src->numVerts-2; i += 3 )
+			for ( i = 0; i < src->numVerts; i+=3 )
+			{
+				dv[ 0 ] = &verts[ i % src->numVerts ];
+				dv[ 1 ] = &verts[ ( i + 1 ) % src->numVerts ];
+				dv[ 2 ] = &verts[ ( i + 2 ) % src->numVerts ];
+
+				//if (dv[0]->xyz[0] < 128 && dv[0]->xyz[0] > -128 && dv[0]->xyz[1] < 128 && dv[0]->xyz[1] > -128)
+				//Sys_Printf( "!!! dv at %f %f %f, %f %f %f, %f %f %f !!!\n", dv[0]->xyz[0], dv[0]->xyz[1], dv[0]->xyz[2], dv[1]->xyz[0], dv[1]->xyz[1], dv[1]->xyz[2], dv[2]->xyz[0], dv[2]->xyz[1], dv[2]->xyz[2] );
+
+				SubdivideFoliageTriangle_r( src, foliage, dv );
+
+				{
+					bspDrawVert_t       *dv2[ 3 ], *dv3[ 3 ];
+
+					dv2[0] = dv[1];
+					dv2[1] = dv[2];
+					dv2[2] = dv[0];
+
+					SubdivideFoliageTriangle_r( ds, foliage, dv2 );
+
+					dv2[0] = dv[2];
+					dv2[1] = dv[0];
+					dv2[2] = dv[1];
+
+					SubdivideFoliageTriangle_r( ds, foliage, dv2 );
+
+					dv2[0] = dv[2];
+					dv2[1] = dv[1];
+					dv2[2] = dv[0];
+
+					SubdivideFoliageTriangle_r( ds, foliage, dv2 );
+
+					dv2[0] = dv[1];
+					dv2[1] = dv[0];
+					dv2[2] = dv[2];
+
+					SubdivideFoliageTriangle_r( ds, foliage, dv2 );
+				}
+			}
+			break;
+#endif
 
 		case SURFACE_PATCH:
 			/* make a mesh from the drawsurf */
@@ -310,7 +479,11 @@ void Foliage( mapDrawSurface_t *src ){
 			ds = &mapDrawSurfs[ i ];
 
 			/* set up */
+#ifdef FOLIAGE_AS_TRIANGLE_SOUP
+			ds->type = SURFACE_TRIANGLES;
+#else //FOLIAGE_AS_TRIANGLE_SOUP
 			ds->type = SURFACE_FOLIAGE;
+#endif //FOLIAGE_AS_TRIANGLE_SOUP
 			ds->numFoliageInstances = numFoliageInstances;
 
 			/* a wee hack */
@@ -337,7 +510,7 @@ void Foliage( mapDrawSurface_t *src ){
 				VectorCopy( foliageInstances[ j ].xyz, fi->xyz );
 				VectorCopy( foliageInstances[ j ].normal, fi->normal );
 
-				Sys_Printf( "!!! foliage vert created at %f %f %f !!!\n", fi->xyz[0], fi->xyz[1], fi->xyz[2] );
+				//Sys_Printf( "!!! foliage vert created at %f %f %f !!!\n", fi->xyz[0], fi->xyz[1], fi->xyz[2] );
 
 				/* ydnar: set color */
 				for ( k = 0; k < MAX_LIGHTMAPS; k++ )

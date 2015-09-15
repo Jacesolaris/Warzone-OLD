@@ -2247,12 +2247,20 @@ static int FilterTrianglesIntoTree( mapDrawSurface_t *ds, tree_t *tree ){
    filters a foliage surface (wolf et/splash damage)
  */
 
+static float VectorDistance(vec3_t p1, vec3_t p2)
+{
+	vec3_t dir;
+
+	VectorSubtract(p2, p1, dir);
+	return VectorLength(dir);
+}
+
 static int FilterFoliageIntoTree( mapDrawSurface_t *ds, tree_t *tree ){
 	int f, i, refs;
 	bspDrawVert_t   *instance;
 	vec3_t xyz;
 	winding_t       *w;
-
+	bspDrawVert_t	*instanceOwner[1024];
 
 	/* walk origin list */
 	refs = 0;
@@ -2264,6 +2272,8 @@ static int FilterFoliageIntoTree( mapDrawSurface_t *ds, tree_t *tree ){
 		/* walk triangle list */
 		for ( i = 0; i < ds->numIndexes; i += 3 )
 		{
+			instanceOwner[i] = instance;
+
 			/* error check */
 			if ( ds->indexes[ i ] >= ds->numVerts ||
 				 ds->indexes[ i + 1 ] >= ds->numVerts ||
@@ -2277,6 +2287,14 @@ static int FilterFoliageIntoTree( mapDrawSurface_t *ds, tree_t *tree ){
 			VectorAdd( instance->xyz, ds->verts[ ds->indexes[ i ] ].xyz, w->p[ 0 ] );
 			VectorAdd( instance->xyz, ds->verts[ ds->indexes[ i + 1 ] ].xyz, w->p[ 1 ] );
 			VectorAdd( instance->xyz, ds->verts[ ds->indexes[ i + 2 ] ].xyz, w->p[ 2 ] );
+
+			/*
+			Sys_Printf( "instance->xyz: %f %f %f. ds->verts->xyz: %f %f %f. w->p->xyz: %f %f %f.\n"
+				, instance->xyz[0], instance->xyz[1], instance->xyz[2]
+				, ds->verts[ ds->indexes[ i ] ].xyz[0], ds->verts[ ds->indexes[ i ] ].xyz[1], ds->verts[ ds->indexes[ i ] ].xyz[2]
+				, w->p[0][0], w->p[0][1], w->p[0][2]);
+			*/
+
 			refs += FilterWindingIntoTree_r( w, ds, tree->headnode );
 		}
 
@@ -2284,8 +2302,71 @@ static int FilterFoliageIntoTree( mapDrawSurface_t *ds, tree_t *tree ){
 		for ( i = 0; i < ( ds->numVerts - ds->numFoliageInstances ); i++ )
 		{
 			VectorAdd( instance->xyz, ds->verts[ i ].xyz, xyz );
+			
+			/*
+			Sys_Printf( "instance->xyz: %f %f %f. ds->verts->xyz: %f %f %f. w->p->xyz: %f %f %f.\n"
+				, instance->xyz[0], instance->xyz[1], instance->xyz[2]
+				, ds->verts[ i ].xyz[0], ds->verts[ i ].xyz[1], ds->verts[ i ].xyz[2]
+				, xyz[0], xyz[1], xyz[2]);
+			*/
+
 			refs += FilterPointIntoTree_r( xyz, ds, tree->headnode );
 		}
+	}
+
+	/*
+	for ( i = 0; i < ds->numIndexes; i += 3 )
+	{
+		bspDrawVert_t *v1 = &ds->verts[ ds->indexes[ i ] ];
+		bspDrawVert_t *v2 = &ds->verts[ ds->indexes[ i + 1 ] ];
+		bspDrawVert_t *v3 = &ds->verts[ ds->indexes[ i + 2 ] ];
+
+		instance = instanceOwner[i];
+
+		VectorAdd( v1->xyz, instance->xyz, v1->xyz );
+		VectorAdd( v2->xyz, instance->xyz, v2->xyz );
+		//VectorAdd( v3->xyz, instance->xyz, v3->xyz );
+
+		Sys_Printf( "instance->xyz: %f %f %f. v1->xyz: %f %f %f. v2->xyz: %f %f %f. v3->xyz: %f %f %f.\n"
+			, instance->xyz[0], instance->xyz[1], instance->xyz[2]
+			, v1->xyz[0], v1->xyz[1], v1->xyz[2]
+			, v2->xyz[0], v2->xyz[1], v2->xyz[2]
+			, v3->xyz[0], v3->xyz[1], v3->xyz[2]);
+	}
+	*/
+
+	/* UQ1: COMPLETE HACK!!! BUT IT'S WORKING - YAY!!! */
+	for ( i = 0; i < ds->numIndexes; i += 3 )
+	{
+		bspDrawVert_t *v1 = &ds->verts[ ds->indexes[ i ] ];
+		bspDrawVert_t *v2 = &ds->verts[ ds->indexes[ i + 1 ] ];
+		bspDrawVert_t *v3 = &ds->verts[ ds->indexes[ i + 2 ] ];
+
+		instance = instanceOwner[i];
+
+		if (VectorDistance(v1->xyz, instance->xyz) > 512)
+		{
+			VectorAdd( v1->xyz, instance->xyz, v1->xyz );
+			v1->xyz[2] -= 18.0;
+		}
+		if (VectorDistance(v2->xyz, instance->xyz) > 512)
+		{
+			VectorAdd( v2->xyz, instance->xyz, v2->xyz );
+			v2->xyz[2] -= 18.0;
+		}
+		if (VectorDistance(v3->xyz, instance->xyz) > 512)
+		{
+			VectorAdd( v3->xyz, instance->xyz, v3->xyz );
+			v3->xyz[2] -= 18.0;
+		}
+
+		/*
+		Sys_Printf( "instance->xyz: %f %f %f. v1->xyz: %f %f %f. v2->xyz: %f %f %f. v3->xyz: %f %f %f.\n"
+			, instance->xyz[0], instance->xyz[1], instance->xyz[2]
+			, v1->xyz[0], v1->xyz[1], v1->xyz[2]
+			, v2->xyz[0], v2->xyz[1], v2->xyz[2]
+			, v3->xyz[0], v3->xyz[1], v3->xyz[2]);
+		*/
 	}
 
 	return refs;
@@ -2754,8 +2835,7 @@ static void OptimizeTriangleSurface( mapDrawSurface_t *ds ){
 static void EmitTriangleSurface( mapDrawSurface_t *ds ){
 	int i, temp;
 	bspDrawSurface_t        *out;
-
-
+	
 	/* invert the surface if necessary */
 	if ( ds->backSide || ds->shaderInfo->invert ) {
 		/* walk the indexes, reverse the triangle order */
@@ -2785,7 +2865,12 @@ static void EmitTriangleSurface( mapDrawSurface_t *ds ){
 
 	/* ydnar/sd: handle wolf et foliage surfaces */
 	if ( ds->type == SURFACE_FOLIAGE ) {
+#ifdef FOLIAGE_AS_TRIANGLE_SOUP
+		out->surfaceType = MST_TRIANGLE_SOUP;
+		ds->type = SURFACE_TRIANGLES;
+#else //!FOLIAGE_AS_TRIANGLE_SOUP
 		out->surfaceType = MST_FOLIAGE;
+#endif //FOLIAGE_AS_TRIANGLE_SOUP
 	}
 
 	/* ydnar: gs mods: handle lightmapped terrain (force to planar type) */
@@ -2874,6 +2959,191 @@ static void EmitTriangleSurface( mapDrawSurface_t *ds ){
 	/* emit the verts and indexes */
 	EmitDrawVerts( ds, out );
 	EmitDrawIndexes( ds, out );
+
+	/*
+	for ( i = 0; i < ds->numIndexes; i += 3 )
+	{
+		bspDrawVert_t   *a, *b, *c;
+
+		a = &ds->verts[ ds->indexes[ i ] ];
+		b = &ds->verts[ ds->indexes[ i + 1 ] ];
+		c = &ds->verts[ ds->indexes[ i + 2 ] ];
+	
+		Sys_Printf( "a->xyz: %f %f %f. b->xyz: %f %f %f. c->xyz: %f %f %f.\n"
+				, a->xyz[0], a->xyz[1], a->xyz[2]
+				, b->xyz[0], b->xyz[1], b->xyz[2]
+				, c->xyz[0], c->xyz[1], c->xyz[2]);
+	}
+	*/
+
+	/* add to count */
+	numSurfacesByType[ ds->type ]++;
+}
+
+/*
+   EmitFoliageSurface()
+   UQ1: modified this from above because something is going wrong with foliage origins here...
+ */
+
+static void EmitFoliageSurface( mapDrawSurface_t *ds ){
+	int i, temp;
+	bspDrawSurface_t        *out;
+
+	/*
+	for ( i = 0; i < ds->numIndexes; i += 3 )
+	{
+		bspDrawVert_t   *a, *b, *c;
+
+		a = &ds->verts[ ds->indexes[ i ] ];
+		b = &ds->verts[ ds->indexes[ i + 1 ] ];
+		c = &ds->verts[ ds->indexes[ i + 2 ] ];
+	
+		Sys_Printf( "a->xyz: %f %f %f. b->xyz: %f %f %f. c->xyz: %f %f %f.\n"
+				, a->xyz[0], a->xyz[1], a->xyz[2]
+				, b->xyz[0], b->xyz[1], b->xyz[2]
+				, c->xyz[0], c->xyz[1], c->xyz[2]);
+	}
+	*/
+	
+	/* invert the surface if necessary */
+	if ( ds->backSide || ds->shaderInfo->invert ) {
+		/* walk the indexes, reverse the triangle order */
+		for ( i = 0; i < ds->numIndexes; i += 3 )
+		{
+			temp = ds->indexes[ i ];
+			ds->indexes[ i ] = ds->indexes[ i + 1 ];
+			ds->indexes[ i + 1 ] = temp;
+		}
+
+		/* walk the verts, flip the normal */
+		for ( i = 0; i < ds->numVerts; i++ )
+			VectorScale( ds->verts[ i ].normal, -1.0f, ds->verts[ i ].normal );
+
+		/* invert facing */
+		VectorScale( ds->lightmapVecs[ 2 ], -1.0f, ds->lightmapVecs[ 2 ] );
+	}
+
+	/* allocate a new surface */
+	if ( numBSPDrawSurfaces == MAX_MAP_DRAW_SURFS ) {
+		Error( "MAX_MAP_DRAW_SURFS" );
+	}
+	out = &bspDrawSurfaces[ numBSPDrawSurfaces ];
+	ds->outputNum = numBSPDrawSurfaces;
+	numBSPDrawSurfaces++;
+	memset( out, 0, sizeof( *out ) );
+
+	/* ydnar/sd: handle wolf et foliage surfaces */
+	if ( ds->type == SURFACE_FOLIAGE ) {
+#ifdef FOLIAGE_AS_TRIANGLE_SOUP
+		out->surfaceType = MST_TRIANGLE_SOUP;
+		ds->type = SURFACE_TRIANGLES;
+#else //!FOLIAGE_AS_TRIANGLE_SOUP
+		out->surfaceType = MST_FOLIAGE;
+#endif //FOLIAGE_AS_TRIANGLE_SOUP
+	}
+
+	/* ydnar: gs mods: handle lightmapped terrain (force to planar type) */
+	//%	else if( VectorLength( ds->lightmapAxis ) <= 0.0f || ds->type == SURFACE_TRIANGLES || ds->type == SURFACE_FOGHULL || debugSurfaces )
+	else if ( ( VectorLength( ds->lightmapAxis ) <= 0.0f && ds->planar == qfalse ) ||
+			  ds->type == SURFACE_TRIANGLES ||
+			  ds->type == SURFACE_FOGHULL ||
+			  ds->numVerts > maxLMSurfaceVerts ||
+			  debugSurfaces  ) {
+		out->surfaceType = MST_TRIANGLE_SOUP;
+	}
+
+	/* set to a planar face */
+	else{
+		out->surfaceType = MST_PLANAR;
+	}
+
+	/* set it up */
+	if ( debugSurfaces ) {
+		out->shaderNum = EmitShader( "debugsurfaces", NULL, NULL );
+	}
+	else{
+		out->shaderNum = EmitShader( ds->shaderInfo->shader, &ds->shaderInfo->contentFlags, &ds->shaderInfo->surfaceFlags );
+	}
+	out->patchWidth = ds->patchWidth;
+	out->patchHeight = ds->patchHeight;
+	out->fogNum = ds->fogNum;
+
+	/* debug inset (push each triangle vertex towards the center of each triangle it is on */
+	if ( debugInset ) {
+		bspDrawVert_t   *a, *b, *c;
+		vec3_t cent, dir;
+
+
+		/* walk triangle list */
+		for ( i = 0; i < ds->numIndexes; i += 3 )
+		{
+			/* get verts */
+			a = &ds->verts[ ds->indexes[ i ] ];
+			b = &ds->verts[ ds->indexes[ i + 1 ] ];
+			c = &ds->verts[ ds->indexes[ i + 2 ] ];
+
+			/* calculate centroid */
+			VectorCopy( a->xyz, cent );
+			VectorAdd( cent, b->xyz, cent );
+			VectorAdd( cent, c->xyz, cent );
+			VectorScale( cent, 1.0f / 3.0f, cent );
+
+			/* offset each vertex */
+			VectorSubtract( cent, a->xyz, dir );
+			VectorNormalize( dir, dir );
+			VectorAdd( a->xyz, dir, a->xyz );
+			VectorSubtract( cent, b->xyz, dir );
+			VectorNormalize( dir, dir );
+			VectorAdd( b->xyz, dir, b->xyz );
+			VectorSubtract( cent, c->xyz, dir );
+			VectorNormalize( dir, dir );
+			VectorAdd( c->xyz, dir, c->xyz );
+		}
+	}
+
+	/* RBSP */
+	for ( i = 0; i < MAX_LIGHTMAPS; i++ )
+	{
+		out->lightmapNum[ i ] = -3;
+		out->lightmapStyles[ i ] = LS_NONE;
+		out->vertexStyles[ i ] = LS_NONE;
+	}
+	out->lightmapStyles[ 0 ] = LS_NORMAL;
+	out->vertexStyles[ 0 ] = LS_NORMAL;
+
+	/* lightmap vectors (lod bounds for patches */
+	VectorCopy( ds->lightmapOrigin, out->lightmapOrigin );
+	VectorCopy( ds->lightmapVecs[ 0 ], out->lightmapVecs[ 0 ] );
+	VectorCopy( ds->lightmapVecs[ 1 ], out->lightmapVecs[ 1 ] );
+	VectorCopy( ds->lightmapVecs[ 2 ], out->lightmapVecs[ 2 ] );
+
+	/* ydnar: gs mods: clear out the plane normal */
+	if ( ds->planar == qfalse ) {
+		VectorClear( out->lightmapVecs[ 2 ] );
+	}
+
+	/* optimize the surface's triangles */
+	OptimizeTriangleSurface( ds );
+
+	/* emit the verts and indexes */
+	EmitDrawVerts( ds, out );
+	EmitDrawIndexes( ds, out );
+
+	/*
+	for ( i = 0; i < ds->numIndexes; i += 3 )
+	{
+		bspDrawVert_t   *a, *b, *c;
+
+		a = &ds->verts[ ds->indexes[ i ] ];
+		b = &ds->verts[ ds->indexes[ i + 1 ] ];
+		c = &ds->verts[ ds->indexes[ i + 2 ] ];
+	
+		Sys_Printf( "a->xyz: %f %f %f. b->xyz: %f %f %f. c->xyz: %f %f %f.\n"
+				, a->xyz[0], a->xyz[1], a->xyz[2]
+				, b->xyz[0], b->xyz[1], b->xyz[2]
+				, c->xyz[0], c->xyz[1], c->xyz[2]);
+	}
+	*/
 
 	/* add to count */
 	numSurfacesByType[ ds->type ]++;
@@ -3494,9 +3764,30 @@ void FilterDrawsurfsIntoTree( entity_t *e, tree_t *tree ){
 	int refs;
 	int numSurfs, numRefs, numSkyboxSurfaces;
 
-
 	/* note it */
 	Sys_FPrintf( SYS_STD, "--- FilterDrawsurfsIntoTree ---\n" );
+
+#ifdef FORCE_TRIANGLES
+	for ( i = 0; i < numMapDrawSurfs; i++ )
+	{
+		/* get surface and try to early out */
+		ds = &mapDrawSurfs[ i ];
+		if ( ds->numVerts == 0 && ds->type != SURFACE_FLARE && ds->type != SURFACE_SHADER ) {
+			continue;
+		}
+
+		/* get shader */
+		si = ds->shaderInfo;
+
+		if ( si->foliage != NULL )
+		{
+			if (ds->type == SURFACE_FACE) 
+			{
+				ds->type = SURFACE_TRIANGLES;
+			}
+		}
+	}
+#endif //FORCE_TRIANGLES
 
 	/* filter surfaces into the tree */
 	numSurfs = 0;
@@ -3617,10 +3908,15 @@ void FilterDrawsurfsIntoTree( entity_t *e, tree_t *tree ){
 		case SURFACE_FOLIAGE:
 			Sys_FPrintf( SYS_STD, "Surface %4d: [%d] %4d verts %s\n", numSurfs, ds->numFoliageInstances, ds->numVerts, si->shader );
 			if ( refs == 0 ) {
+#ifdef FOLIAGE_AS_TRIANGLE_SOUP
+				ds->type = SURFACE_TRIANGLES;
+				refs = FilterTrianglesIntoTree( ds, tree );
+#else //!FOLIAGE_AS_TRIANGLE_SOUP
 				refs = FilterFoliageIntoTree( ds, tree );
+#endif //FOLIAGE_AS_TRIANGLE_SOUP
 			}
 			if ( refs > 0 ) {
-				EmitTriangleSurface( ds );
+				EmitFoliageSurface( ds );
 			}
 			break;
 
