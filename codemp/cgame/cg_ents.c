@@ -1450,6 +1450,8 @@ Ghoul2 Insert End
 		//Rotate them
 		VectorCopy( cg.autoAngles, cent->lerpAngles );
 		AxisCopy( cg.autoAxis, ent.axis );
+
+		AddLightToScene( cent->lerpOrigin, 255.0, 1.0f, 1.0f, 0.2f ); // UQ1: Let there be volume light...
 	}
 	else if (!doNotSetModel)
 	{
@@ -2344,6 +2346,20 @@ Ghoul2 Insert End
 				AnglesToAxis( spinAngles, ent.axis );
 
 				AddRefEntityToScene( &ent );
+			}
+		}
+
+		if (item->giType == IT_POWERUP)
+		{
+			ent.origin[2] += 8;
+
+			if (item->giTag == PW_FORCE_ENLIGHTENED_LIGHT || item->giTag == PW_FORCE_BOON)
+			{
+				AddLightToScene( ent.origin, 255.0, 1.0f, 1.0f, 1.0f ); // UQ1: Let there be volume light...
+			}
+			else if (item->giTag == PW_FORCE_ENLIGHTENED_DARK)
+			{
+				AddLightToScene( ent.origin, 255.0, 1.0f, 0.2f, 0.2f ); // UQ1: Let there be volume light...
 			}
 		}
 	}

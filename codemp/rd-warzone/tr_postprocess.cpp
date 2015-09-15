@@ -909,7 +909,7 @@ qboolean Volumetric_Visible(vec3_t from, vec3_t to)
 
 	Volumetric_Trace( &trace, from, NULL, NULL, to, -1, (CONTENTS_SOLID|CONTENTS_TERRAIN) );
 
-	if (trace.fraction != 1.0 && Distance(trace.endpos, to) > 64 && !(trace.surfaceFlags & SURF_SKY))
+	if (trace.fraction != 1.0 && Distance(trace.endpos, to) > 64)
 		return qfalse;
 
 	return qtrue;
