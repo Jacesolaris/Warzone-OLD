@@ -2347,17 +2347,17 @@ static int FilterFoliageIntoTree( mapDrawSurface_t *ds, tree_t *tree ){
 		if (VectorDistance(v1->xyz, instance->xyz) > 512)
 		{
 			VectorAdd( v1->xyz, instance->xyz, v1->xyz );
-			v1->xyz[2] -= 18.0;
+			v1->xyz[2] -= 8.0;
 		}
 		if (VectorDistance(v2->xyz, instance->xyz) > 512)
 		{
 			VectorAdd( v2->xyz, instance->xyz, v2->xyz );
-			v2->xyz[2] -= 18.0;
+			v2->xyz[2] -= 8.0;
 		}
 		if (VectorDistance(v3->xyz, instance->xyz) > 512)
 		{
 			VectorAdd( v3->xyz, instance->xyz, v3->xyz );
-			v3->xyz[2] -= 18.0;
+			v3->xyz[2] -= 8.0;
 		}
 
 		/*
@@ -3763,6 +3763,8 @@ void FilterDrawsurfsIntoTree( entity_t *e, tree_t *tree ){
 	vec3_t origin, mins, maxs;
 	int refs;
 	int numSurfs, numRefs, numSkyboxSurfaces;
+	int repeats;
+	int MAX_FOLIAGE_PASSES = 4;
 
 	/* note it */
 	Sys_FPrintf( SYS_STD, "--- FilterDrawsurfsIntoTree ---\n" );
@@ -3793,6 +3795,32 @@ void FilterDrawsurfsIntoTree( entity_t *e, tree_t *tree ){
 	numSurfs = 0;
 	numRefs = 0;
 	numSkyboxSurfaces = 0;
+	MAX_FOLIAGE_PASSES = 4;
+
+	for ( repeats = 1; repeats <= MAX_FOLIAGE_PASSES; repeats++)
+	{
+		Sys_FPrintf( SYS_STD, "Generating foliage... (Pass %i of %i)\n", repeats, MAX_FOLIAGE_PASSES );
+
+		for ( i = e->firstDrawSurf; i < numMapDrawSurfs; i++ )
+		{
+			/* get surface and try to early out */
+			ds = &mapDrawSurfs[ i ];
+			if ( ds->numVerts == 0 && ds->type != SURFACE_FLARE && ds->type != SURFACE_SHADER ) {
+				continue;
+			}
+
+			if ( ds->skybox ) continue;
+
+			/* get shader */
+			si = ds->shaderInfo;
+
+			/* ydnar/sd: make foliage surfaces */
+			if ( si->foliage != NULL ) {
+				Foliage( ds );
+			}
+		}
+	}
+
 	for ( i = e->firstDrawSurf; i < numMapDrawSurfs; i++ )
 	{
 		/* get surface and try to early out */
@@ -3830,9 +3858,9 @@ void FilterDrawsurfsIntoTree( entity_t *e, tree_t *tree ){
 			}
 
 			/* ydnar/sd: make foliage surfaces */
-			if ( si->foliage != NULL ) {
+			/*if ( si->foliage != NULL ) {
 				Foliage( ds );
-			}
+			}*/
 
 			/* create a flare surface if necessary */
 			if ( si->flareShader != NULL && si->flareShader[ 0 ] ) {

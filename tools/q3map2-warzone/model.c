@@ -246,7 +246,7 @@ void InsertModel( char *name, int frame, m4x4_t transform, remap_t *remap, shade
 
 
 	/* get model */
-	Sys_FPrintf( SYS_STD, "Loading Model:%s\n", name );
+	//Sys_FPrintf( SYS_STD, "Loading Model:%s\n", name );
 	model = LoadModel( name, frame );
 	if ( model == NULL ) {
 		return;

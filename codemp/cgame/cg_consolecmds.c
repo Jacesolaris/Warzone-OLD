@@ -373,6 +373,8 @@ void	Clcmd_EntityList_f (void) {
 	}
 }
 
+extern void FOLIAGE_GenerateFoliage ( void );
+
 typedef struct consoleCommand_s {
 	const char	*cmd;
 	void		(*func)(void);
@@ -401,6 +403,8 @@ static consoleCommand_t	commands[] = {
 	{ "clientlist",					CG_ClientList_f },
 	{ "forcenext",					CG_NextForcePower_f },
 	{ "forceprev",					CG_PrevForcePower_f },
+	{ "generatefoliagepositions",	FOLIAGE_GenerateFoliage },
+	{ "genfoliage",					FOLIAGE_GenerateFoliage },
 	{ "invnext",					CG_NextInventory_f },
 	{ "invprev",					CG_PrevInventory_f },
 	{ "loaddeferred",				CG_LoadDeferredPlayers },

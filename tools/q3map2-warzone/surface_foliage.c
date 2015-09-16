@@ -185,7 +185,6 @@ void Foliage( mapDrawSurface_t *src ){
 	vec3_t scale;
 	m4x4_t transform;
 
-
 	/* get shader */
 	si = src->shaderInfo;
 	if ( si == NULL || si->foliage == NULL ) {
@@ -367,11 +366,37 @@ void Foliage( mapDrawSurface_t *src ){
 				dv[ 1 ] = &verts[ ( i + 1 ) % src->numVerts ];
 				dv[ 2 ] = &verts[ ( i + 2 ) % src->numVerts ];
 
+				/*
 				//if (dv[0]->xyz[0] < 128 && dv[0]->xyz[0] > -128 && dv[0]->xyz[1] < 128 && dv[0]->xyz[1] > -128)
-				//Sys_Printf( "!!! dv at %f %f %f, %f %f %f, %f %f %f !!!\n", dv[0]->xyz[0], dv[0]->xyz[1], dv[0]->xyz[2], dv[1]->xyz[0], dv[1]->xyz[1], dv[1]->xyz[2], dv[2]->xyz[0], dv[2]->xyz[1], dv[2]->xyz[2] );
+				if (dv[0]->xyz[2] < dv[1]->xyz[2] - 96 || dv[1]->xyz[2] < dv[0]->xyz[2] - 96
+					|| dv[0]->xyz[2] < dv[2]->xyz[2] - 96 || dv[2]->xyz[2] < dv[0]->xyz[2] - 96
+					|| dv[1]->xyz[2] < dv[2]->xyz[2] - 96 || dv[2]->xyz[2] < dv[1]->xyz[2] - 96)
+				Sys_Printf( "!!! dv at %f %f %f, %f %f %f, %f %f %f !!!\n", dv[0]->xyz[0], dv[0]->xyz[1], dv[0]->xyz[2], dv[1]->xyz[0], dv[1]->xyz[1], dv[1]->xyz[2], dv[2]->xyz[0], dv[2]->xyz[1], dv[2]->xyz[2] );
+				*/
+
+				/*
+				if (dv[0]->xyz[2] < dv[1]->xyz[2] - 96)
+					dv[0]->xyz[2] = dv[1]->xyz[2];
+					
+				if (dv[1]->xyz[2] < dv[0]->xyz[2] - 96)
+					dv[1]->xyz[2] = dv[0]->xyz[2];
+
+				if (dv[0]->xyz[2] < dv[2]->xyz[2] - 96)
+					dv[0]->xyz[2] = dv[2]->xyz[2];
+				
+				if (dv[2]->xyz[2] < dv[0]->xyz[2] - 96)
+					dv[2]->xyz[2] = dv[0]->xyz[2];
+				
+				if (dv[1]->xyz[2] < dv[2]->xyz[2] - 96)
+					dv[1]->xyz[2] = dv[2]->xyz[2];
+				
+				if (dv[2]->xyz[2] < dv[1]->xyz[2] - 96)
+					dv[2]->xyz[2] = dv[1]->xyz[2];
+				*/
 
 				SubdivideFoliageTriangle_r( src, foliage, dv );
 
+#if 0
 				{
 					bspDrawVert_t       *dv2[ 3 ], *dv3[ 3 ];
 
@@ -399,6 +424,7 @@ void Foliage( mapDrawSurface_t *src ){
 
 					SubdivideFoliageTriangle_r( ds, foliage, dv2 );
 				}
+#endif
 			}
 			break;
 #endif

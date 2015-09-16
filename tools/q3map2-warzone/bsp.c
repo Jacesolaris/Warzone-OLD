@@ -294,7 +294,7 @@ void ProcessWorldModel( void ){
 #endif
 		leaked = qtrue;
 
-		Sys_Printf( "--- ClipSidesIntoTree ---\n" );
+		//Sys_Printf( "--- ClipSidesIntoTree ---\n" );
 
 		/* chop the sides to the convex hull of their visible fragments, giving us the smallest polygons */
 		ClipSidesIntoTree( e, tree );
@@ -303,64 +303,64 @@ void ProcessWorldModel( void ){
 	/* save out information for visibility processing */
 	NumberClusters( tree );
 	if ( !leaked ) {
-		Sys_Printf( "--- WritePortalFile ---\n" );
+		//Sys_Printf( "--- WritePortalFile ---\n" );
 		WritePortalFile( tree );
 	}
 
-	Sys_Printf( "--- FloodAreas ---\n" );
+	//Sys_Printf( "--- FloodAreas ---\n" );
 
 	/* flood from entities */
 	FloodAreas( tree );
 
 	//Old Add Models
 
-	Sys_Printf( "--- AddEntitySurfaceModels ---\n" );
+	//Sys_Printf( "--- AddEntitySurfaceModels ---\n" );
 
 	/* create drawsurfs for surface models */
 	AddEntitySurfaceModels( e );
 
-	Sys_Printf( "--- EmitBrushes ---\n" );
+	//Sys_Printf( "--- EmitBrushes ---\n" );
 
 	/* generate bsp brushes from map brushes */
 	EmitBrushes( e->brushes, &e->firstBrush, &e->numBrushes );
 
-	Sys_Printf( "--- FilterDetailBrushesIntoTree ---\n" );
+	//Sys_Printf( "--- FilterDetailBrushesIntoTree ---\n" );
 
 	/* add references to the detail brushes */
 	FilterDetailBrushesIntoTree( e, tree );
 
 	/* drawsurfs that cross fog boundaries will need to be split along the fog boundary */
 	if ( !nofog ) {
-		Sys_Printf( "--- FogDrawSurfaces ---\n" );
+		//Sys_Printf( "--- FogDrawSurfaces ---\n" );
 
 		FogDrawSurfaces( e );
 	}
 
 	/* subdivide each drawsurf as required by shader tesselation */
 	if ( !nosubdivide ) {
-		Sys_Printf( "--- SubdivideFaceSurfaces ---\n" );
+		//Sys_Printf( "--- SubdivideFaceSurfaces ---\n" );
 
 		SubdivideFaceSurfaces( e, tree );
 	}
 
 	/* add in any vertexes required to fix t-junctions */
 	if ( !notjunc ) {
-		Sys_Printf( "--- FixTJunctions ---\n" );
+		//Sys_Printf( "--- FixTJunctions ---\n" );
 
 		FixTJunctions( e );
 	}
 
-	Sys_Printf( "--- ClassifyEntitySurfaces ---\n" );
+	//Sys_Printf( "--- ClassifyEntitySurfaces ---\n" );
 
 	/* ydnar: classify the surfaces */
 	ClassifyEntitySurfaces( e );
 
-	Sys_Printf( "--- MakeEntityDecals ---\n" );
+	//Sys_Printf( "--- MakeEntityDecals ---\n" );
 
 	/* ydnar: project decals */
 	MakeEntityDecals( e );
 
-	Sys_Printf( "--- MakeEntityMetaTriangles ---\n" );
+	//Sys_Printf( "--- MakeEntityMetaTriangles ---\n" );
 
 	/* ydnar: meta surfaces */
 	MakeEntityMetaTriangles( e );
@@ -373,7 +373,7 @@ void ProcessWorldModel( void ){
 		MakeDebugPortalSurfs( tree );
 	}
 
-	Sys_Printf( "--- MakeFogHullSurfs ---\n" );
+	//Sys_Printf( "--- MakeFogHullSurfs ---\n" );
 
 	/* ydnar: fog hull */
 	value = ValueForKey( &entities[ 0 ], "_foghull" );
@@ -382,7 +382,7 @@ void ProcessWorldModel( void ){
 		MakeFogHullSurfs( e, tree, shader );
 	}
 
-	Sys_Printf( "--- DrawSurfaceForFlare ---\n" );
+	//Sys_Printf( "--- DrawSurfaceForFlare ---\n" );
 
 	/* ydnar: bug 645: do flares for lights */
 	for ( i = 0; i < numEntities && emitFlares; i++ )
@@ -435,12 +435,10 @@ void ProcessWorldModel( void ){
 		}
 	}
 
-	Sys_Printf( "--- FilterDrawsurfsIntoTree ---\n" );
-
 	/* add references to the final drawsurfs in the apropriate clusters */
 	FilterDrawsurfsIntoTree( e, tree );
 
-	Sys_Printf( "--- FixBrushSides ---\n" );
+	//Sys_Printf( "--- FixBrushSides ---\n" );
 
 	/* match drawsurfaces back to original brushsides (sof2) */
 	FixBrushSides( e );

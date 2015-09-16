@@ -3529,7 +3529,7 @@ void CG_ManualEntityRender(centity_t *cent)
 void DrawWaypoints();
 //[/AUTOWAYPOINT]
 
-void DrawGrass( void );
+void FOLIAGE_DrawGrass( void );
 
 /*
 ===============
@@ -3541,7 +3541,7 @@ void CG_AddPacketEntities( qboolean isPortal ) {
 	int					num;
 	playerState_t		*ps;
 
-	DrawGrass();
+	FOLIAGE_DrawGrass();
 
 //[AUTOWAYPOINT]
 	DrawWaypoints();

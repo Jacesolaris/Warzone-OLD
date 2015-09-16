@@ -4881,6 +4881,8 @@ static const char *g_bindCommands[] = {
 	"awc_addremovalspot",
 	"awc_addbadheight",
 	//[/AUTOWAYPOINT]
+	"generatefoliagepositions",
+	"genfoliage",
 };
 
 #define g_bindCount ARRAY_LEN(g_bindCommands)
