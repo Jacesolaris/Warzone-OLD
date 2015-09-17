@@ -21,6 +21,82 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 #include "tr_local.h"
 
+int NUM_WORLD_FOV_CULLS = 0;
+int NUM_WORLDMERGED_FOV_CULLS = 0;
+
+extern bool TR_WorldToScreen(vec3_t worldCoord, float *x, float *y);
+extern void TR_AxisToAngles ( const vec3_t axis[3], vec3_t angles );
+
+qboolean R_CULL_InFOV( vec3_t spot, vec3_t from )
+{
+	vec3_t	deltaVector, angles, deltaAngles;
+	vec3_t	fromAnglesCopy;
+	vec3_t	fromAngles;
+	//int hFOV = tr.refdef.fov_x + 5.0;
+	//int vFOV = tr.refdef.fov_y + 5.0;
+	int hFOV = 120;//backEnd.refdef.fov_x + 5.0;//100;
+	int vFOV = 120;//backEnd.refdef.fov_y + 5.0;//100;
+	
+	TR_AxisToAngles(tr.refdef.viewaxis, fromAngles);
+
+	VectorSubtract ( spot, from, deltaVector );
+	vectoangles ( deltaVector, angles );
+	VectorCopy(fromAngles, fromAnglesCopy);
+	
+	deltaAngles[PITCH]	= AngleDelta ( fromAnglesCopy[PITCH], angles[PITCH] );
+	deltaAngles[YAW]	= AngleDelta ( fromAnglesCopy[YAW], angles[YAW] );
+
+	if ( fabs ( deltaAngles[PITCH] ) <= vFOV && fabs ( deltaAngles[YAW] ) <= hFOV ) 
+	{
+		return qtrue;
+	}
+
+	return qfalse;
+}
+
+static qboolean	R_FovCullSurface( msurface_t *surf ) 
+{
+	if (r_fovCull->integer && backEnd.viewParms.targetFbo != tr.renderCubeFbo)
+	{
+		vec3_t bounds[2];
+
+		bounds[0][0] = surf->cullinfo.bounds[0][0];
+		bounds[0][1] = surf->cullinfo.bounds[1][0];
+		bounds[0][2] = surf->cullinfo.bounds[0][2];
+
+		bounds[1][0] = surf->cullinfo.bounds[1][0];
+		bounds[1][1] = surf->cullinfo.bounds[0][0];
+		bounds[1][2] = surf->cullinfo.bounds[1][2];
+
+		if (!R_CULL_InFOV(surf->cullinfo.bounds[0], tr.refdef.vieworg)
+			&& !R_CULL_InFOV(surf->cullinfo.bounds[1], tr.refdef.vieworg)
+			&& !R_CULL_InFOV(bounds[0], tr.refdef.vieworg)
+			&& !R_CULL_InFOV(bounds[1], tr.refdef.vieworg)) {
+				NUM_WORLD_FOV_CULLS++;
+				return qtrue;
+		}
+
+		/*if (!R_CULL_InFOV(surf->cullinfo.bounds[0], backEnd.refdef.vieworg)
+			&& !R_CULL_InFOV(surf->cullinfo.bounds[1], backEnd.refdef.vieworg)
+			&& !R_CULL_InFOV(bounds[0], backEnd.refdef.vieworg)
+			&& !R_CULL_InFOV(bounds[1], backEnd.refdef.vieworg)) {
+				NUM_WORLD_FOV_CULLS++;
+				return qtrue;
+		}*/
+
+		/*if (!R_inPVS( tr.refdef.vieworg, surf->cullinfo.bounds[0], tr.refdef.areamask )
+			&& !R_inPVS( tr.refdef.vieworg, surf->cullinfo.bounds[1], tr.refdef.areamask )
+			&& !R_inPVS( tr.refdef.vieworg, bounds[0], tr.refdef.areamask )
+			&& !R_inPVS( tr.refdef.vieworg, bounds[1], tr.refdef.areamask )) 
+		{
+			// Not in PVS? Cull the bitch!
+			NUM_WORLD_FOV_CULLS++;
+			return qtrue;
+		}*/
+	}
+
+	return qfalse;
+}
 
 
 /*
@@ -428,7 +504,6 @@ static int R_PshadowSurface( msurface_t *surf, int pshadowBits ) {
 #endif
 }
 
-
 /*
 ======================
 R_AddWorldSurface
@@ -438,7 +513,7 @@ static void R_AddWorldSurface( msurface_t *surf, int dlightBits, int pshadowBits
 	// FIXME: bmodel fog?
 
 	// try to cull before dlighting or adding
-	if ( R_CullSurface( surf ) ) {
+	if ( R_CullSurface( surf ) || R_FovCullSurface( surf ) ) {
 		return;
 	}
 
@@ -921,11 +996,6 @@ qboolean G_BoxInBounds( vec3_t point, vec3_t mins, vec3_t maxs, vec3_t boundsMin
 R_AddWorldSurfaces
 =============
 */
-extern bool TR_WorldToScreen(vec3_t worldCoord, float *x, float *y);
-extern qboolean R_InFOV( vec3_t spot, vec3_t from );
-
-int NUM_WORLD_FOV_CULLS = 0;
-int NUM_WORLDMERGED_FOV_CULLS = 0;
 
 void R_AddWorldSurfaces (void) {
 	int planeBits;//, pshadowBits;//, dlightBits;
@@ -987,27 +1057,6 @@ void R_AddWorldSurfaces (void) {
 			if (tr.world->surfacesViewCount[i] != tr.viewCount)
 				continue;
 
-			if (r_fovCull->integer && backEnd.viewParms.targetFbo != tr.renderCubeFbo)
-			{
-				vec3_t bounds[2];
-
-				bounds[0][0] = (tr.world->surfaces + i)->cullinfo.bounds[0][0];
-				bounds[0][1] = (tr.world->surfaces + i)->cullinfo.bounds[1][0];
-				bounds[0][2] = (tr.world->surfaces + i)->cullinfo.bounds[0][2];
-
-				bounds[1][0] = (tr.world->surfaces + i)->cullinfo.bounds[1][0];
-				bounds[1][1] = (tr.world->surfaces + i)->cullinfo.bounds[0][0];
-				bounds[1][2] = (tr.world->surfaces + i)->cullinfo.bounds[1][2];
-
-				if (!R_InFOV((tr.world->surfaces + i)->cullinfo.bounds[0], tr.refdef.vieworg)
-					&& !R_InFOV((tr.world->surfaces + i)->cullinfo.bounds[1], tr.refdef.vieworg)
-					&& !R_InFOV(bounds[0], tr.refdef.vieworg)
-					&& !R_InFOV(bounds[1], tr.refdef.vieworg)) {
-						NUM_WORLD_FOV_CULLS++;
-						continue;
-				}
-			}
-
 			R_AddWorldSurface( tr.world->surfaces + i, 0/*tr.world->surfacesDlightBits[i]*/, 0/*tr.world->surfacesPshadowBits[i]*/ );
 			//tr.refdef.dlightMask |= tr.world->surfacesDlightBits[i];
 		}
@@ -1017,29 +1066,6 @@ void R_AddWorldSurfaces (void) {
 			if (tr.world->mergedSurfacesViewCount[i] != tr.viewCount)
 				continue;
 
-#if 0 // Ignore this - I have not seen it remove anything, no point wasting time checking...
-			if (r_fovCull->integer && backEnd.viewParms.targetFbo != tr.renderCubeFbo)
-			{
-				vec3_t bounds[2];
-
-				bounds[0][0] = (tr.world->mergedSurfaces + i)->cullinfo.bounds[0][0];
-				bounds[0][1] = (tr.world->mergedSurfaces + i)->cullinfo.bounds[1][0];
-				bounds[0][2] = (tr.world->mergedSurfaces + i)->cullinfo.bounds[0][2];
-
-				bounds[1][0] = (tr.world->mergedSurfaces + i)->cullinfo.bounds[1][0];
-				bounds[1][1] = (tr.world->mergedSurfaces + i)->cullinfo.bounds[0][0];
-				bounds[1][2] = (tr.world->mergedSurfaces + i)->cullinfo.bounds[1][2];
-
-				if (!R_InFOV((tr.world->mergedSurfaces + i)->cullinfo.bounds[0], tr.refdef.vieworg)
-					&& !R_InFOV((tr.world->mergedSurfaces + i)->cullinfo.bounds[1], tr.refdef.vieworg)
-					&& !R_InFOV(bounds[0], tr.refdef.vieworg)
-					&& !R_InFOV(bounds[1], tr.refdef.vieworg)) {
-					NUM_WORLDMERGED_FOV_CULLS++;
-					continue;
-				}
-			}
-#endif
-
 			R_AddWorldSurface( tr.world->mergedSurfaces + i, 0/*tr.world->mergedSurfacesDlightBits[i]*/, 0/*tr.world->mergedSurfacesPshadowBits[i]*/ );
 			//tr.refdef.dlightMask |= tr.world->mergedSurfacesDlightBits[i];
 		}
@@ -1047,6 +1073,6 @@ void R_AddWorldSurfaces (void) {
 		//tr.refdef.dlightMask = ~tr.refdef.dlightMask;
 
 		if (r_fovCull->integer >= 2)
-			ri->Printf(PRINT_WARNING, "Culled %i world surfaces. %i World and %i Merged.\n", NUM_WORLD_FOV_CULLS + NUM_WORLDMERGED_FOV_CULLS, NUM_WORLD_FOV_CULLS, NUM_WORLDMERGED_FOV_CULLS);
+			ri->Printf(PRINT_WARNING, "There are %i world and %i merged surfaces. Culled %i. %i World and %i Merged.\n", tr.world->numWorldSurfaces, tr.world->numMergedSurfaces, NUM_WORLD_FOV_CULLS + NUM_WORLDMERGED_FOV_CULLS, NUM_WORLD_FOV_CULLS, NUM_WORLDMERGED_FOV_CULLS);
 	}
 }

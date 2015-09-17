@@ -10,7 +10,7 @@ models/warzone/foliage/plant01
 	//q3map_nolightmap
 	q3map_alphashadow
 	//q3map_onlyvertexlighting
-	q3map_material	ShortGrass
+	q3map_material	GreenLeaves
 	
 	surfaceparm trans
 	surfaceparm	noimpact
@@ -42,7 +42,7 @@ models/warzone/foliage/plant02
 	//q3map_nolightmap
 	q3map_alphashadow
 	//q3map_onlyvertexlighting
-	q3map_material	ShortGrass
+	q3map_material	GreenLeaves
 	
 	surfaceparm trans
 	surfaceparm	noimpact
@@ -74,7 +74,7 @@ models/warzone/foliage/plant03
 	//q3map_nolightmap
 	q3map_alphashadow
 	//q3map_onlyvertexlighting
-	q3map_material	ShortGrass
+	q3map_material	GreenLeaves
 	
 	surfaceparm trans
 	surfaceparm	noimpact
@@ -106,7 +106,7 @@ models/warzone/foliage/plant04
 	//q3map_nolightmap
 	q3map_alphashadow
 	//q3map_onlyvertexlighting
-	q3map_material	ShortGrass
+	q3map_material	GreenLeaves
 	
 	surfaceparm trans
 	surfaceparm	noimpact
@@ -138,7 +138,7 @@ models/warzone/foliage/plant05
 	//q3map_nolightmap
 	q3map_alphashadow
 	//q3map_onlyvertexlighting
-	q3map_material	ShortGrass
+	q3map_material	GreenLeaves
 	
 	surfaceparm trans
 	surfaceparm	noimpact
@@ -170,7 +170,7 @@ models/warzone/foliage/plant06
 	//q3map_nolightmap
 	q3map_alphashadow
 	//q3map_onlyvertexlighting
-	q3map_material	ShortGrass
+	q3map_material	GreenLeaves
 	
 	surfaceparm trans
 	surfaceparm	noimpact
@@ -202,7 +202,7 @@ models/warzone/foliage/plant07
 	//q3map_nolightmap
 	q3map_alphashadow
 	//q3map_onlyvertexlighting
-	q3map_material	ShortGrass
+	q3map_material	GreenLeaves
 	
 	surfaceparm trans
 	surfaceparm	noimpact
@@ -234,7 +234,7 @@ models/warzone/foliage/plant08
 	//q3map_nolightmap
 	q3map_alphashadow
 	//q3map_onlyvertexlighting
-	q3map_material	ShortGrass
+	q3map_material	GreenLeaves
 	
 	surfaceparm trans
 	surfaceparm	noimpact
@@ -266,7 +266,7 @@ models/warzone/foliage/plant09
 	//q3map_nolightmap
 	q3map_alphashadow
 	//q3map_onlyvertexlighting
-	q3map_material	ShortGrass
+	q3map_material	GreenLeaves
 	
 	surfaceparm trans
 	surfaceparm	noimpact
@@ -298,7 +298,7 @@ models/warzone/foliage/plant10
 	//q3map_nolightmap
 	q3map_alphashadow
 	//q3map_onlyvertexlighting
-	q3map_material	ShortGrass
+	q3map_material	GreenLeaves
 	
 	surfaceparm trans
 	surfaceparm	noimpact
@@ -330,7 +330,7 @@ models/warzone/foliage/plant11
 	//q3map_nolightmap
 	q3map_alphashadow
 	//q3map_onlyvertexlighting
-	q3map_material	ShortGrass
+	q3map_material	GreenLeaves
 	
 	surfaceparm trans
 	surfaceparm	noimpact
@@ -362,7 +362,7 @@ models/warzone/foliage/plant12
 	//q3map_nolightmap
 	q3map_alphashadow
 	//q3map_onlyvertexlighting
-	q3map_material	ShortGrass
+	q3map_material	GreenLeaves
 	
 	surfaceparm trans
 	surfaceparm	noimpact
@@ -394,7 +394,7 @@ models/warzone/foliage/plant13
 	//q3map_nolightmap
 	q3map_alphashadow
 	//q3map_onlyvertexlighting
-	q3map_material	ShortGrass
+	q3map_material	GreenLeaves
 	
 	surfaceparm trans
 	surfaceparm	noimpact
@@ -426,7 +426,7 @@ models/warzone/foliage/plant14
 	//q3map_nolightmap
 	q3map_alphashadow
 	//q3map_onlyvertexlighting
-	q3map_material	ShortGrass
+	q3map_material	GreenLeaves
 	
 	surfaceparm trans
 	surfaceparm	noimpact
@@ -458,7 +458,7 @@ models/warzone/foliage/plant15
 	//q3map_nolightmap
 	q3map_alphashadow
 	//q3map_onlyvertexlighting
-	q3map_material	ShortGrass
+	q3map_material	GreenLeaves
 	
 	surfaceparm trans
 	surfaceparm	noimpact
@@ -490,7 +490,7 @@ models/warzone/foliage/plant16
 	//q3map_nolightmap
 	q3map_alphashadow
 	//q3map_onlyvertexlighting
-	q3map_material	ShortGrass
+	q3map_material	GreenLeaves
 	
 	surfaceparm trans
 	surfaceparm	noimpact
@@ -522,7 +522,7 @@ models/warzone/foliage/plant17
 	//q3map_nolightmap
 	q3map_alphashadow
 	//q3map_onlyvertexlighting
-	q3map_material	ShortGrass
+	q3map_material	GreenLeaves
 	
 	surfaceparm trans
 	surfaceparm	noimpact
@@ -554,7 +554,7 @@ models/warzone/foliage/plant18
 	//q3map_nolightmap
 	q3map_alphashadow
 	//q3map_onlyvertexlighting
-	q3map_material	ShortGrass
+	q3map_material	GreenLeaves
 	
 	surfaceparm trans
 	surfaceparm	noimpact
@@ -586,7 +586,7 @@ models/warzone/foliage/plant19
 	//q3map_nolightmap
 	q3map_alphashadow
 	//q3map_onlyvertexlighting
-	q3map_material	ShortGrass
+	q3map_material	GreenLeaves
 	
 	surfaceparm trans
 	surfaceparm	noimpact
@@ -618,7 +618,7 @@ models/warzone/foliage/plant20
 	//q3map_nolightmap
 	q3map_alphashadow
 	//q3map_onlyvertexlighting
-	q3map_material	ShortGrass
+	q3map_material	GreenLeaves
 	
 	surfaceparm trans
 	surfaceparm	noimpact
@@ -650,7 +650,7 @@ models/warzone/foliage/plant21
 	//q3map_nolightmap
 	q3map_alphashadow
 	//q3map_onlyvertexlighting
-	q3map_material	ShortGrass
+	q3map_material	GreenLeaves
 	
 	surfaceparm trans
 	surfaceparm	noimpact
@@ -682,7 +682,7 @@ models/warzone/foliage/plant22
 	//q3map_nolightmap
 	q3map_alphashadow
 	//q3map_onlyvertexlighting
-	q3map_material	ShortGrass
+	q3map_material	GreenLeaves
 	
 	surfaceparm trans
 	surfaceparm	noimpact
@@ -714,7 +714,7 @@ models/warzone/foliage/plant23
 	//q3map_nolightmap
 	q3map_alphashadow
 	//q3map_onlyvertexlighting
-	q3map_material	ShortGrass
+	q3map_material	GreenLeaves
 	
 	surfaceparm trans
 	surfaceparm	noimpact
@@ -746,7 +746,7 @@ models/warzone/foliage/plant24
 	//q3map_nolightmap
 	q3map_alphashadow
 	//q3map_onlyvertexlighting
-	q3map_material	ShortGrass
+	q3map_material	GreenLeaves
 	
 	surfaceparm trans
 	surfaceparm	noimpact
@@ -778,7 +778,7 @@ models/warzone/foliage/plant25
 	//q3map_nolightmap
 	q3map_alphashadow
 	//q3map_onlyvertexlighting
-	q3map_material	ShortGrass
+	q3map_material	GreenLeaves
 	
 	surfaceparm trans
 	surfaceparm	noimpact
@@ -810,7 +810,7 @@ models/warzone/foliage/plant26
 	//q3map_nolightmap
 	q3map_alphashadow
 	//q3map_onlyvertexlighting
-	q3map_material	ShortGrass
+	q3map_material	GreenLeaves
 	
 	surfaceparm trans
 	surfaceparm	noimpact
@@ -842,7 +842,7 @@ models/warzone/foliage/plant27
 	//q3map_nolightmap
 	q3map_alphashadow
 	//q3map_onlyvertexlighting
-	q3map_material	ShortGrass
+	q3map_material	GreenLeaves
 	
 	surfaceparm trans
 	surfaceparm	noimpact
@@ -874,7 +874,7 @@ models/warzone/foliage/plant28
 	//q3map_nolightmap
 	q3map_alphashadow
 	//q3map_onlyvertexlighting
-	q3map_material	ShortGrass
+	q3map_material	GreenLeaves
 	
 	surfaceparm trans
 	surfaceparm	noimpact
@@ -906,7 +906,7 @@ models/warzone/foliage/plant29
 	//q3map_nolightmap
 	q3map_alphashadow
 	//q3map_onlyvertexlighting
-	q3map_material	ShortGrass
+	q3map_material	GreenLeaves
 	
 	surfaceparm trans
 	surfaceparm	noimpact
@@ -938,7 +938,7 @@ models/warzone/foliage/plant30
 	//q3map_nolightmap
 	q3map_alphashadow
 	//q3map_onlyvertexlighting
-	q3map_material	ShortGrass
+	q3map_material	GreenLeaves
 	
 	surfaceparm trans
 	surfaceparm	noimpact
@@ -970,7 +970,7 @@ models/warzone/foliage/plant31
 	//q3map_nolightmap
 	q3map_alphashadow
 	//q3map_onlyvertexlighting
-	q3map_material	ShortGrass
+	q3map_material	GreenLeaves
 	
 	surfaceparm trans
 	surfaceparm	noimpact
@@ -1002,7 +1002,7 @@ models/warzone/foliage/plant32
 	//q3map_nolightmap
 	q3map_alphashadow
 	//q3map_onlyvertexlighting
-	q3map_material	ShortGrass
+	q3map_material	GreenLeaves
 	
 	surfaceparm trans
 	surfaceparm	noimpact
@@ -1034,7 +1034,7 @@ models/warzone/foliage/plant33
 	//q3map_nolightmap
 	q3map_alphashadow
 	//q3map_onlyvertexlighting
-	q3map_material	ShortGrass
+	q3map_material	GreenLeaves
 	
 	surfaceparm trans
 	surfaceparm	noimpact
@@ -1066,7 +1066,7 @@ models/warzone/foliage/plant34
 	//q3map_nolightmap
 	q3map_alphashadow
 	//q3map_onlyvertexlighting
-	q3map_material	ShortGrass
+	q3map_material	GreenLeaves
 	
 	surfaceparm trans
 	surfaceparm	noimpact
@@ -1098,7 +1098,7 @@ models/warzone/foliage/plant35
 	//q3map_nolightmap
 	q3map_alphashadow
 	//q3map_onlyvertexlighting
-	q3map_material	ShortGrass
+	q3map_material	GreenLeaves
 	
 	surfaceparm trans
 	surfaceparm	noimpact
@@ -1130,7 +1130,7 @@ models/warzone/foliage/plant36
 	//q3map_nolightmap
 	q3map_alphashadow
 	//q3map_onlyvertexlighting
-	q3map_material	ShortGrass
+	q3map_material	GreenLeaves
 	
 	surfaceparm trans
 	surfaceparm	noimpact
@@ -1155,3 +1155,100 @@ models/warzone/foliage/plant36
     depthFunc equal // sets the alpha to the same as the stages that wrote it
   }
 }
+
+models/warzone/foliage/plant37
+{
+  qer_editorimage	models/warzone/foliage/plant37.png
+	//q3map_nolightmap
+	q3map_alphashadow
+	//q3map_onlyvertexlighting
+	q3map_material	GreenLeaves
+	
+	surfaceparm trans
+	surfaceparm	noimpact
+	surfaceparm	nomarks
+	//surfaceparm	nonopaque
+	
+	sort seethrough
+	
+	cull	twosided
+  {
+    map models/warzone/foliage/plant37.png
+    blendfunc GL_ONE GL_ZERO
+    alphaFunc GE128
+    //rgbGen lightingDiffuse
+    depthWrite // writes the alpha map for other stages to use
+    rgbGen identity
+  }
+  {
+    map $lightmap
+    blendfunc GL_DST_COLOR GL_ZERO
+    rgbGen identity
+    depthFunc equal // sets the alpha to the same as the stages that wrote it
+  }
+}
+
+models/warzone/foliage/plant38
+{
+  qer_editorimage	models/warzone/foliage/plant38.png
+	//q3map_nolightmap
+	q3map_alphashadow
+	//q3map_onlyvertexlighting
+	q3map_material	GreenLeaves
+	
+	surfaceparm trans
+	surfaceparm	noimpact
+	surfaceparm	nomarks
+	//surfaceparm	nonopaque
+	
+	sort seethrough
+	
+	cull	twosided
+  {
+    map models/warzone/foliage/plant38.png
+    blendfunc GL_ONE GL_ZERO
+    alphaFunc GE128
+    //rgbGen lightingDiffuse
+    depthWrite // writes the alpha map for other stages to use
+    rgbGen identity
+  }
+  {
+    map $lightmap
+    blendfunc GL_DST_COLOR GL_ZERO
+    rgbGen identity
+    depthFunc equal // sets the alpha to the same as the stages that wrote it
+  }
+}
+
+models/warzone/foliage/plant39
+{
+  qer_editorimage	models/warzone/foliage/plant39.png
+	//q3map_nolightmap
+	q3map_alphashadow
+	//q3map_onlyvertexlighting
+	q3map_material	GreenLeaves
+	
+	surfaceparm trans
+	surfaceparm	noimpact
+	surfaceparm	nomarks
+	//surfaceparm	nonopaque
+	
+	sort seethrough
+	
+	cull	twosided
+  {
+    map models/warzone/foliage/plant39.png
+    blendfunc GL_ONE GL_ZERO
+    alphaFunc GE128
+    //rgbGen lightingDiffuse
+    depthWrite // writes the alpha map for other stages to use
+    rgbGen identity
+  }
+  {
+    map $lightmap
+    blendfunc GL_DST_COLOR GL_ZERO
+    rgbGen identity
+    depthFunc equal // sets the alpha to the same as the stages that wrote it
+  }
+}
+

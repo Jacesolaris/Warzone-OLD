@@ -1802,30 +1802,7 @@ void R_SortDrawSurfs( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 
 extern void TR_AxisToAngles ( const vec3_t axis[3], vec3_t angles );
 
-/*static*/ qboolean R_InFOV( vec3_t spot, vec3_t from )
-{
-	vec3_t	deltaVector, angles, deltaAngles;
-	vec3_t	fromAnglesCopy;
-	vec3_t	fromAngles;
-	int hFOV = 120; // If anyone has a FOV > 120 they are cheating anyway...
-	int vFOV = 120; // If anyone has a FOV > 120 they are cheating anyway...
-
-	TR_AxisToAngles(tr.refdef.viewaxis, fromAngles);
-
-	VectorSubtract ( spot, from, deltaVector );
-	vectoangles ( deltaVector, angles );
-	VectorCopy(fromAngles, fromAnglesCopy);
-	
-	deltaAngles[PITCH]	= AngleDelta ( fromAnglesCopy[PITCH], angles[PITCH] );
-	deltaAngles[YAW]	= AngleDelta ( fromAnglesCopy[YAW], angles[YAW] );
-
-	if ( fabs ( deltaAngles[PITCH] ) <= vFOV && fabs ( deltaAngles[YAW] ) <= hFOV ) 
-	{
-		return qtrue;
-	}
-
-	return qfalse;
-}
+extern qboolean R_CULL_InFOV( vec3_t spot, vec3_t from );
 
 int NUM_ENTS_CULLED = 0;
 int NUM_ENTS_FOV_CULLED = 0;
@@ -1853,7 +1830,7 @@ qboolean	R_CullEntitySurface( trRefEntity_t	*ent ) {
 	}
 
 
-	if (!R_InFOV(ent->e.origin, tr.refdef.vieworg)) {
+	if (!R_CULL_InFOV(ent->e.origin, tr.refdef.vieworg)) {
 		// Not in FOV? Cull the bitch!
 		NUM_ENTS_FOV_CULLED++;
 		return qtrue;

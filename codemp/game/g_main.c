@@ -820,7 +820,7 @@ void CreateSpawnpoints( void )
 
 		trap->Print("Generated %i extra ffa spawnpoints.\n", count);
 
-		SaveSpawnpointPositions( qfalse, count, SPAWNPOINTS, NULL, NULL );
+		SaveSpawnpointPositions( qfalse, count, SPAWNPOINTS, 0, (vec3_t*)NULL );
 	}
 }
 

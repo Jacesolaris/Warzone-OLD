@@ -926,7 +926,7 @@ static void ParseShaderFile( const char *filename ){
 	int i, val;
 	shaderInfo_t    *si;
 	char            *suffix, temp[ 1024 ];
-	char shaderText[ 8192 ];            /* ydnar: fixme (make this bigger?) */
+	char shaderText[ 131072 ];            /* ydnar: fixme (make this bigger?) */
 
 
 	/* init */

@@ -10,7 +10,7 @@ models/map_objects/yavin/grass
 	//q3map_nolightmap
 	q3map_alphashadow
 	//q3map_onlyvertexlighting
-	q3map_material	ShortGrass
+	q3map_material	GreenLeaves
 	
 	surfaceparm trans
 	surfaceparm	noimpact
@@ -43,7 +43,7 @@ models/map_objects/yavin/grass_tall
 	//q3map_nolightmap
 	q3map_alphashadow
 	//q3map_onlyvertexlighting
-	q3map_material	ShortGrass
+	q3map_material	GreenLeaves
 	
 	surfaceparm trans
 	surfaceparm	noimpact
@@ -138,7 +138,7 @@ models/pop/foliages/alp_weedy_c
 	//q3map_nolightmap
 	q3map_alphashadow
 	//q3map_onlyvertexlighting
-	q3map_material	ShortGrass
+	q3map_material	GreenLeaves
 	
 	surfaceparm trans
 	surfaceparm	noimpact
@@ -171,7 +171,7 @@ models/pop/foliages/sch_weed_a
 	//q3map_nolightmap
 	q3map_alphashadow
 	//q3map_onlyvertexlighting
-	q3map_material	ShortGrass
+	q3map_material	GreenLeaves
 	
 	surfaceparm trans
 	surfaceparm	noimpact
@@ -204,7 +204,7 @@ models/pop/foliages/sch_weed_b
 	//q3map_nolightmap
 	q3map_alphashadow
 	//q3map_onlyvertexlighting
-	q3map_material	ShortGrass
+	q3map_material	GreenLeaves
 	
 	surfaceparm trans
 	surfaceparm	noimpact
@@ -237,7 +237,7 @@ models/pop/foliages/pop_flower_a
 	//q3map_nolightmap
 	q3map_alphashadow
 	//q3map_onlyvertexlighting
-	q3map_material	ShortGrass
+	q3map_material	GreenLeaves
 	
 	surfaceparm trans
 	surfaceparm	noimpact
@@ -270,7 +270,7 @@ models/pop/foliages/pop_flower_b
 	//q3map_nolightmap
 	q3map_alphashadow
 	//q3map_onlyvertexlighting
-	q3map_material	ShortGrass
+	q3map_material	GreenLeaves
 	
 	surfaceparm trans
 	surfaceparm	noimpact
@@ -303,7 +303,7 @@ models/pop/foliages/pop_flower_c
 	//q3map_nolightmap
 	q3map_alphashadow
 	//q3map_onlyvertexlighting
-	q3map_material	ShortGrass
+	q3map_material	GreenLeaves
 	
 	surfaceparm trans
 	surfaceparm	noimpact
@@ -342,7 +342,7 @@ models/map_objects/yavin/fern
 	//q3map_nolightmap
 	q3map_alphashadow
 	//q3map_onlyvertexlighting
-	q3map_material	ShortGrass
+	q3map_material	GreenLeaves
 	
 	surfaceparm trans
 	surfaceparm	noimpact
@@ -374,7 +374,7 @@ models/map_objects/yavin/fern2
 	//q3map_nolightmap
 	q3map_alphashadow
 	//q3map_onlyvertexlighting
-	q3map_material	ShortGrass
+	q3map_material	GreenLeaves
 	
 	surfaceparm trans
 	surfaceparm	noimpact
@@ -406,7 +406,7 @@ models/map_objects/yavin/fern3
 	//q3map_nolightmap
 	q3map_alphashadow
 	//q3map_onlyvertexlighting
-	q3map_material	ShortGrass
+	q3map_material	GreenLeaves
 	
 	surfaceparm trans
 	surfaceparm	noimpact
@@ -445,7 +445,7 @@ models/map_objects/yavin/fern3_b
 	//q3map_nolightmap
 	q3map_alphashadow
 	//q3map_onlyvertexlighting
-	q3map_material	ShortGrass
+	q3map_material	GreenLeaves
 	
 	surfaceparm trans
 	surfaceparm	noimpact
@@ -490,7 +490,7 @@ models/map_objects/yavin/plant
 	//q3map_nolightmap
 	q3map_alphashadow
 	//q3map_onlyvertexlighting
-	q3map_material	ShortGrass
+	q3map_material	GreenLeaves
 	
 	surfaceparm trans
 	surfaceparm	noimpact
@@ -522,7 +522,7 @@ models/map_objects/yavin/plant_b
 	//q3map_nolightmap
 	q3map_alphashadow
 	//q3map_onlyvertexlighting
-	q3map_material	ShortGrass
+	q3map_material	GreenLeaves
 	
 	surfaceparm trans
 	surfaceparm	noimpact
@@ -560,7 +560,7 @@ models/map_objects/yavin/vines
 	//q3map_nolightmap
 	q3map_alphashadow
 	//q3map_onlyvertexlighting
-	q3map_material	ShortGrass
+	q3map_material	GreenLeaves
 	
 	surfaceparm trans
 	surfaceparm	noimpact
@@ -592,7 +592,7 @@ models/map_objects/yavin/vines_b
 	//q3map_nolightmap
 	q3map_alphashadow
 	//q3map_onlyvertexlighting
-	q3map_material	ShortGrass
+	q3map_material	GreenLeaves
 	
 	surfaceparm trans
 	surfaceparm	noimpact

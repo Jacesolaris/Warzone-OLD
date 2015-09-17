@@ -3184,6 +3184,16 @@ qboolean IgnoreCubemapsOnMap( void )
 		return qtrue;
 	}
 
+	if (StringContainsWord(currentMapName, "yavin_forest"))
+	{// Ignore this map... We know we don't need shiny here...
+		return qtrue;
+	}
+
+	if (StringContainsWord(currentMapName, "yavin_small"))
+	{// Ignore this map... We know we don't need shiny here...
+		return qtrue;
+	}
+
 	if (StringContainsWord(currentMapName, "yavin7"))
 	{// Ignore this map... We know we don't need shiny here...
 		return qtrue;
@@ -3284,6 +3294,110 @@ static void R_RenderAllCubemaps(void)
 	}
 }
 
+qboolean R_MaterialUsesCubemap ( int surfaceFlags )
+{
+	switch( surfaceFlags & MATERIAL_MASK )
+	{
+	case MATERIAL_WATER:			// 13			// light covering of water on a surface
+		return qtrue;
+		break;
+	case MATERIAL_SHORTGRASS:		// 5			// manicured lawn
+		return qfalse;
+		break;
+	case MATERIAL_LONGGRASS:		// 6			// long jungle grass
+		return qfalse;
+		break;
+	case MATERIAL_SAND:				// 8			// sandy beach
+		return qfalse;
+		break;
+	case MATERIAL_CARPET:			// 27			// lush carpet
+		return qfalse;
+		break;
+	case MATERIAL_GRAVEL:			// 9			// lots of small stones
+		return qfalse;
+		break;
+	case MATERIAL_ROCK:				// 23			//
+		return qfalse;
+		break;
+	case MATERIAL_TILES:			// 26			// tiled floor
+		return qtrue;
+		break;
+	case MATERIAL_SOLIDWOOD:		// 1			// freshly cut timber
+		return qfalse;
+		break;
+	case MATERIAL_HOLLOWWOOD:		// 2			// termite infested creaky wood
+		return qfalse;
+		break;
+	case MATERIAL_SOLIDMETAL:		// 3			// solid girders
+		return qtrue;
+		break;
+	case MATERIAL_HOLLOWMETAL:		// 4			// hollow metal machines -- UQ1: Used for weapons to force lower parallax and high reflection...
+		return qtrue;
+		break;
+	case MATERIAL_DRYLEAVES:		// 19			// dried up leaves on the floor
+		return qfalse;
+		break;
+	case MATERIAL_GREENLEAVES:		// 20			// fresh leaves still on a tree
+		return qfalse;
+		break;
+	case MATERIAL_FABRIC:			// 21			// Cotton sheets
+		return qfalse;
+		break;
+	case MATERIAL_CANVAS:			// 22			// tent material
+		return qfalse;
+		break;
+	case MATERIAL_MARBLE:			// 12			// marble floors
+		return qtrue;
+		break;
+	case MATERIAL_SNOW:				// 14			// freshly laid snow
+		return qfalse;
+		break;
+	case MATERIAL_MUD:				// 17			// wet soil
+		return qfalse;
+		break;
+	case MATERIAL_DIRT:				// 7			// hard mud
+		return qfalse;
+		break;
+	case MATERIAL_CONCRETE:			// 11			// hardened concrete pavement
+		return qfalse;
+		break;
+	case MATERIAL_FLESH:			// 16			// hung meat, corpses in the world
+		return qfalse;
+		break;
+	case MATERIAL_RUBBER:			// 24			// hard tire like rubber
+		return qfalse;
+		break;
+	case MATERIAL_PLASTIC:			// 25			//
+		return qtrue;
+		break;
+	case MATERIAL_PLASTER:			// 28			// drywall style plaster
+		return qfalse;
+		break;
+	case MATERIAL_SHATTERGLASS:		// 29			// glass with the Crisis Zone style shattering
+		return qtrue;
+		break;
+	case MATERIAL_ARMOR:			// 30			// body armor
+		return qtrue;
+		break;
+	case MATERIAL_ICE:				// 15			// packed snow/solid ice
+		return qtrue;
+		break;
+	case MATERIAL_GLASS:			// 10			//
+		return qtrue;
+		break;
+	case MATERIAL_BPGLASS:			// 18			// bulletproof glass
+		return qtrue;
+		break;
+	case MATERIAL_COMPUTER:			// 31			// computers/electronic equipment
+		return qtrue;
+		break;
+	default:
+		return qfalse;
+		break;
+	}
+
+	return qfalse;
+}
 
 /*
 =================
@@ -3323,13 +3437,13 @@ void R_MergeLeafSurfaces(void)
 	}
 
 	// mark matching surfaces
-//#pragma omp parallel for schedule(dynamic) if(numWorldSurfaces > 32)
 	for (i = 0; i < s_worldData.numnodes - s_worldData.numDecisionNodes; i++)
 	{
 		mnode_t *leaf = s_worldData.nodes + s_worldData.numDecisionNodes + i;
 
 		for (j = 0; j < leaf->nummarksurfaces; j++)
 		{
+#ifdef __MERGE_MORE__
 			msurface_t *surf1;
 			shader_t *shader1;
 			int fogIndex1;
@@ -3342,11 +3456,6 @@ void R_MergeLeafSurfaces(void)
 				continue;
 
 			surf1 = s_worldData.surfaces + surfNum1;
-
-#ifndef __MERGE_MORE__
-			if ((*surf1->data != SF_GRID) && (*surf1->data != SF_TRIANGLES) && (*surf1->data != SF_FACE))
-				continue;
-#endif //__MERGE_MORE__
 
 			shader1 = surf1->shader;
 
@@ -3380,48 +3489,118 @@ void R_MergeLeafSurfaces(void)
 				
 				surf2 = s_worldData.surfaces + surfNum2;
 
-#ifndef __MERGE_MORE__
-				if ((*surf2->data != SF_GRID) && (*surf2->data != SF_TRIANGLES) && (*surf2->data != SF_FACE))
-					continue;
-#endif // __MERGE_MORE__
-
 				shader2 = surf2->shader;
 
-				if (shader1 != shader2 
-					&& !(shader1 && shader1->stages[0] && shader1->stages[0]->isWater && shader2 && shader2->stages[0] && shader2->stages[0]->isWater) // UQ1: Water can be safely merged I believe...
 #ifdef __MERGE_SAME_SHADER_NAMES__
+				if (shader1 && shader2 && shader1->stages[0] && shader2->stages[0] && shader1->stages[0]->isWater && shader2->stages[0]->isWater)
+				{// UQ1: All water can be safely merged I believe...
+					s_worldData.surfacesViewCount[surfNum2] = surfNum1;
+					continue;
+				}
+				else if (shader1 != shader2
 					// Cull matching shader names...
-					&& stricmp(shader1->name, shader2->name)
+					&& stricmp(shader1->name, shader2->name))
+				{
+					continue;
+				}
+#else //!__MERGE_SAME_SHADER_NAMES__
+				if (shader1 && shader2 && shader1->stages[0] && shader2->stages[0] && shader1->stages[0]->isWater && shader2->stages[0]->isWater)
+				{// UQ1: All water can be safely merged I believe...
+					s_worldData.surfacesViewCount[surfNum2] = surfNum1;
+					continue;
+				}
+				else if (shader1 != shader2)
+				{
+					continue;
+				}
 #endif //__MERGE_SAME_SHADER_NAMES__
-					)
-					continue;
-
-				fogIndex2 = surf2->fogIndex;
-
-#ifndef __MERGE_MORE__
-				if (fogIndex1 != fogIndex2)
-					continue;
-#endif //__MERGE_MORE__
 
 				cubemapIndex2 = surf2->cubemapIndex;
 
-#ifdef __MERGE_MORE__
-				if (cubemapIndex1 != cubemapIndex2)
+				if (cubemapIndex1 != cubemapIndex2 
+					&& R_MaterialUsesCubemap(shader1->surfaceFlags) 
+					&& R_MaterialUsesCubemap(shader2->surfaceFlags))
 				{
 					if (Distance(tr.cubemapOrigins[cubemapIndex1], tr.cubemapOrigins[cubemapIndex2]) > 512.0)
 					{// Too far from original cubemap, let's not merge this one...
 						continue;
 					}
 				}
-#endif //__MERGE_MORE__
-
-#ifndef __MERGE_MORE__
-				if (cubemapIndex1 != cubemapIndex2)
-					continue;
-#endif //__MERGE_MORE__
 
 				s_worldData.surfacesViewCount[surfNum2] = surfNum1;
 			}
+#else //!__MERGE_MORE__
+			msurface_t *surf1;
+			shader_t *shader1;
+			int fogIndex1;
+			int cubemapIndex1;
+			int surfNum1;
+
+			surfNum1 = *(s_worldData.marksurfaces + leaf->firstmarksurface + j);
+
+			if (s_worldData.surfacesViewCount[surfNum1] != -1)
+				continue;
+
+			surf1 = s_worldData.surfaces + surfNum1;
+
+			if ((*surf1->data != SF_GRID) && (*surf1->data != SF_TRIANGLES) && (*surf1->data != SF_FACE))
+				continue;
+
+			shader1 = surf1->shader;
+
+			if(shader1->isSky)
+				continue;
+
+			if(shader1->isPortal)
+				continue;
+
+			if(ShaderRequiresCPUDeforms(shader1))
+				continue;
+
+			fogIndex1 = surf1->fogIndex;
+			
+			cubemapIndex1 = surf1->cubemapIndex;
+
+			s_worldData.surfacesViewCount[surfNum1] = surfNum1;
+
+			for (k = j + 1; k < leaf->nummarksurfaces; k++)
+			{
+				msurface_t *surf2;
+				shader_t *shader2;
+				int fogIndex2;
+				int cubemapIndex2;
+				int surfNum2;
+
+				surfNum2 = *(s_worldData.marksurfaces + leaf->firstmarksurface + k);
+
+				if (s_worldData.surfacesViewCount[surfNum2] != -1)
+					continue;
+				
+				surf2 = s_worldData.surfaces + surfNum2;
+
+				if ((*surf2->data != SF_GRID) && (*surf2->data != SF_TRIANGLES) && (*surf2->data != SF_FACE))
+					continue;
+
+				shader2 = surf2->shader;
+
+				if (shader1 != shader2)
+				{
+					continue;
+				}
+
+				fogIndex2 = surf2->fogIndex;
+
+				if (fogIndex1 != fogIndex2)
+					continue;
+
+				cubemapIndex2 = surf2->cubemapIndex;
+
+				if (cubemapIndex1 != cubemapIndex2)
+					continue;
+
+				s_worldData.surfacesViewCount[surfNum2] = surfNum1;
+			}
+#endif //__MERGE_MORE__
 		}
 	}
 
