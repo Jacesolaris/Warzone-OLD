@@ -160,18 +160,40 @@ qhandle_t RE_RegisterIndividualSkin( const char *name , qhandle_t hSkin)
 	return hSkin;
 }
 
-qhandle_t RE_RegisterSkin( const char *name ) {
+std::string StripSinglePlayerSkinCrap(const std::string& filename) {
+    size_t lastdot = filename.find_first_of("|");
+    if (lastdot == std::string::npos) return filename;
+    return filename.substr(0, lastdot); 
+}
+
+qhandle_t RE_RegisterSkin( const char *origName ) {
 	qhandle_t	hSkin;
 	skin_t		*skin;
+	char		name[MAX_QPATH] = { 0 };
 
-	if ( !name || !name[0] ) {
+	if ( !origName || !origName[0] ) {
 		Com_Printf( "Empty name passed to RE_RegisterSkin\n" );
 		return 0;
 	}
 
-	if ( strlen( name ) >= MAX_QPATH ) {
-		Com_Printf( "Skin name exceeds MAX_QPATH\n" );
-		return 0;
+	if ( strlen( origName ) >= MAX_QPATH ) {
+		// UQ1: Try to strip single player extra data and use the base skin...
+		char temp[MAX_QPATH] = { 0 };
+		strcpy(temp, StripSinglePlayerSkinCrap( origName ).c_str());
+		sprintf(name, "%s.skin", temp);
+
+		if ( strlen( name ) >= MAX_QPATH ) {
+			Com_Printf( "Skin name %s exceeds MAX_QPATH\n", name );
+			return 0;
+		}
+		else
+		{
+			//ri->Printf(PRINT_WARNING, "Skin name %s was stripped down to base name %s.\n", origName, name);
+		}
+	}
+	else
+	{
+		strcpy(name, origName);
 	}
 
 	// see if the skin is already loaded

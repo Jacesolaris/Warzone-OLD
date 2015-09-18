@@ -1256,9 +1256,9 @@ void G_CheckMinimumNpcs( void ) {
 
 	if (minplayers <= 0) return;
 
-	if (minplayers > 512)
+	if (minplayers > ENTITYNUM_MAX_NORMAL - MAX_CLIENTS*3)
 	{
-		minplayers = 512;
+		minplayers = ENTITYNUM_MAX_NORMAL - MAX_CLIENTS*3;
 	}
 
 #pragma omp parallel for schedule(dynamic) num_threads(32) if(g_multithread.integer > 0)

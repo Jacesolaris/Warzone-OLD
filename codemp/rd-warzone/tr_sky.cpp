@@ -841,7 +841,7 @@ void RB_DrawSun( float scale, shader_t *shader ) {
 
 	if (r_dynamiclight->integer)
 	{// Lets have some volumetrics with that!
-		vec3_t org, out;
+		vec3_t out;
 		VectorMA( backEnd.refdef.vieworg, dist, tr.sunDirection, out );
 		out[0]+=(size/2.0);
 		out[1]+=(size/2.0);

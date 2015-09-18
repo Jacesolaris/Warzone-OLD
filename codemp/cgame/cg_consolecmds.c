@@ -250,6 +250,8 @@ static void CG_SiegeCompleteCvarUpdate_f(void)
 	CG_SiegeBriefingDisplay(SIEGETEAM_TEAM2, 1);
 }
 
+extern void FOLIAGE_GenerateFoliage ( void );
+
 //[AUTOWAYPOINT]
 extern void AIMod_AutoWaypoint ( void );
 extern void AIMod_AutoWaypoint_Clean ( void );
@@ -372,8 +374,6 @@ void	Clcmd_EntityList_f (void) {
 		trap->Print("\n");
 	}
 }
-
-extern void FOLIAGE_GenerateFoliage ( void );
 
 typedef struct consoleCommand_s {
 	const char	*cmd;

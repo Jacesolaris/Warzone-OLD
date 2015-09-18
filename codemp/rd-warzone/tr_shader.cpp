@@ -3232,7 +3232,10 @@ void AssignMaterialType ( const char *name, const char *text )
 		else if (StringsContainWord(name, name, "boba") || StringsContainWord(name, name, "pilot"))
 			shader.surfaceFlags |= MATERIAL_ARMOR;
 		else if (StringsContainWord(name, name, "water") && !StringsContainWord(name, name, "splash") && !StringsContainWord(name, name, "drip") && !StringsContainWord(name, name, "ripple") && !StringsContainWord(name, name, "bubble") && !StringsContainWord(name, name, "woosh") && !StringsContainWord(name, name, "underwater") && !StringsContainWord(name, name, "bottom"))
+		{
 			shader.surfaceFlags |= MATERIAL_WATER;
+			shader.isWater = qtrue;
+		}
 		else if (StringsContainWord(name, name, "grass") || StringsContainWord(name, name, "yavin/ground") || StringsContainWord(name, name, "mp/s_ground") || StringsContainWord(name, name, "volcano/terrain") || StringsContainWord(name, name, "bay/terrain") || StringsContainWord(name, name, "towers/terrain") || StringsContainWord(name, name, "yavinassault/terrain"))
 			shader.surfaceFlags |= MATERIAL_SHORTGRASS;
 		//
@@ -3393,17 +3396,18 @@ void AssignMaterialType ( const char *name, const char *text )
 			shader.surfaceFlags |= MATERIAL_ARMOR;
 		else if (StringsContainWord(name, name, "boba") || StringsContainWord(name, name, "pilot"))
 			shader.surfaceFlags |= MATERIAL_ARMOR;
-		//else if (!StringsContainWord(name, name, "players") && (StringsContainWord(name, name, "bespin") || StringsContainWord(name, name, "_cc")))
-		//	shader.surfaceFlags |= MATERIAL_MARBLE;
-		//else if (!StringsContainWord(name, name, "players") && (StringsContainWord(name, name, "coruscant") || StringsContainWord(name, name, "/rooftop/") || StringsContainWord(name, name, "/nar_") || StringsContainWord(name, name, "/imperial/")))
-		//	shader.surfaceFlags |= MATERIAL_TILES;
-		//else if (StringsContainWord(name, name, "water") && !StringsContainWord(name, name, "splash") && !StringsContainWord(name, name, "drip") && !StringsContainWord(name, name, "ripple") && !StringsContainWord(name, name, "bubble") && !StringsContainWord(name, name, "woosh") && !StringsContainWord(name, name, "underwater") && !StringsContainWord(name, name, "bottom"))
-		//	shader.surfaceFlags |= MATERIAL_WATER;
 		else if (StringsContainWord(name, name, "grass") || StringsContainWord(name, name, "yavin/ground") || StringsContainWord(name, name, "mp/s_ground") || StringsContainWord(name, name, "yavinassault/terrain"))
 			shader.surfaceFlags |= MATERIAL_SHORTGRASS;
 	}
 	
-	if (shader.hasAlpha && 
+	if (StringsContainWord(name, name, "common/water") && !StringsContainWord(name, name, "splash") && !StringsContainWord(name, name, "drip") && !StringsContainWord(name, name, "ripple") && !StringsContainWord(name, name, "bubble") && !StringsContainWord(name, name, "woosh") && !StringsContainWord(name, name, "underwater") && !StringsContainWord(name, name, "bottom"))
+	{
+		int oldmat = ( shader.surfaceFlags & MATERIAL_MASK );
+		if (oldmat) shader.surfaceFlags &= ~oldmat;
+		shader.surfaceFlags |= MATERIAL_WATER;
+		shader.isWater = qtrue;
+	}
+	else if (shader.hasAlpha && 
 		(StringsContainWord(name, name, "grass") || StringsContainWord(name, name, "yavin/ground") || StringsContainWord(name, name, "mp/s_ground") || StringsContainWord(name, name, "yavinassault/terrain")
 		|| StringsContainWord(name, name, "tree") || StringsContainWord(name, name, "plant") || StringsContainWord(name, name, "bush") 
 		|| StringsContainWord(name, name, "shrub") || StringsContainWord(name, name, "leaf") || StringsContainWord(name, name, "leaves") 
@@ -3413,10 +3417,8 @@ void AssignMaterialType ( const char *name, const char *text )
 		if (oldmat) shader.surfaceFlags &= ~oldmat;
 		shader.surfaceFlags |= MATERIAL_GREENLEAVES;
 	}
-	else if (StringsContainWord(name, text, "plastic") || StringsContainWord(name, text, "trooper") || StringsContainWord(name, text, "medpack"))
+	else if (StringsContainWord(name, name, "plastic") || StringsContainWord(name, name, "trooper") || StringsContainWord(name, name, "medpack"))
 		if (!(shader.surfaceFlags & MATERIAL_PLASTIC)) shader.surfaceFlags |= MATERIAL_PLASTIC;
-	else if (StringsContainWord(name, name, "water") && !StringsContainWord(name, name, "splash") && !StringsContainWord(name, name, "drip") && !StringsContainWord(name, name, "ripple") && !StringsContainWord(name, name, "bubble") && !StringsContainWord(name, name, "woosh") && !StringsContainWord(name, name, "underwater") && !StringsContainWord(name, name, "bottom"))
-		if (!(shader.surfaceFlags & MATERIAL_WATER)) shader.surfaceFlags |= MATERIAL_WATER;
 	else if (StringsContainWord(name, name, "grass") || StringsContainWord(name, name, "yavin/ground") || StringsContainWord(name, name, "mp/s_ground") || StringsContainWord(name, name, "yavinassault/terrain"))
 		if (!(shader.surfaceFlags & MATERIAL_SHORTGRASS)) shader.surfaceFlags |= MATERIAL_SHORTGRASS;
 

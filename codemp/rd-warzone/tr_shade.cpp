@@ -1582,7 +1582,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			else if ( pStage->bundle[TB_COLORMAP].image[0] != 0 )
 				R_BindAnimatedImageToTMU( &pStage->bundle[TB_COLORMAP], TB_COLORMAP );
 		}
-		else if ( !isGeneric && (pStage->glslShaderGroup == tr.lightallShader || pStage->isWater) )
+		else if ( !isGeneric && (pStage->glslShaderGroup == tr.lightallShader || pStage->isWater ) )
 		{
 			int i;
 			vec4_t enableTextures;
@@ -1666,6 +1666,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 						&& !StringContainsWord(pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName, "gfx_base/")*/)
 					{// How did this happen??? Oh well, generate a normal map now...
 						char imgname[64];
+						ri->Printf(PRINT_WARNING, "Realtime generating normal map for %s.\n", pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName);
 						sprintf(imgname, "%s_n", pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName);
 						pStage->bundle[TB_NORMALMAP].image[0] = R_CreateNormalMapGLSL( imgname, NULL, pStage->bundle[TB_DIFFUSEMAP].image[0]->width, pStage->bundle[TB_DIFFUSEMAP].image[0]->height, GL_RGBA8, pStage->bundle[TB_DIFFUSEMAP].image[0] );
 						if (pStage->bundle[TB_NORMALMAP].image[0]) pStage->hasRealNormalMap = true;
@@ -1770,6 +1771,11 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		else
 		{
 			R_DrawElementsVBO(input->numIndexes, input->firstIndex, input->minIndex, input->maxIndex);
+		}
+
+		if (pStage->isWater)
+		{
+			break;
 		}
 		
 		// allow skipping out to show just lightmaps during development
@@ -1915,7 +1921,10 @@ void RB_StageIteratorGeneric( void )
 	// UQ1: Set up any special shaders needed for this surface/contents type...
 	//
 
-	if ((tess.shader->contentFlags & CONTENTS_WATER) /*|| (tess.shader->contentFlags & CONTENTS_LAVA)*/ || (tess.shader->surfaceFlags & MATERIAL_MASK) == MATERIAL_WATER) 
+	if (tess.shader->isWater 
+		|| (tess.shader->contentFlags & CONTENTS_WATER) 
+		/*|| (tess.shader->contentFlags & CONTENTS_LAVA)*/ 
+		|| (tess.shader->surfaceFlags & MATERIAL_MASK) == MATERIAL_WATER) 
 	{
 		if (input && input->xstages[0] && input->xstages[0]->isWater == 0) // In case it is already set, no need looping more then once on the same shader...
 		{
@@ -1929,7 +1938,7 @@ void RB_StageIteratorGeneric( void )
 				if (input->xstages[stage])
 				{
 					input->xstages[stage]->isWater = isWater;
-					//input->xstages[stage]->glslShaderGroup = tr.lightallShader;
+					input->xstages[stage]->glslShaderGroup = tr.lightallShader;
 				}
 			}
 		}

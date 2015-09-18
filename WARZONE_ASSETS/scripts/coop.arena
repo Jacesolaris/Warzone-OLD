@@ -202,13 +202,6 @@ type			"coop instance supremacy"
 }
 
 {
-map			"yavin1"
-longname		"Yavin 1"
-fraglimit		10
-type			"coop instance"
-}
-
-{
 map			"yavin1b"
 longname		"Crashed on Yavin"
 fraglimit		10

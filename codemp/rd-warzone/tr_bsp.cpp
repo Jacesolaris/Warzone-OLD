@@ -3478,7 +3478,6 @@ void R_MergeLeafSurfaces(void)
 			{
 				msurface_t *surf2;
 				shader_t *shader2;
-				int fogIndex2;
 				int cubemapIndex2;
 				int surfNum2;
 

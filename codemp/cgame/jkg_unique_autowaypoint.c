@@ -3875,10 +3875,10 @@ float FloorHeightAt ( vec3_t org )
 		}
 	}
 
-	if (tr.endpos[2] > cg.mapcoordsMaxs[2]+2000)
-		return 65536.0f;
+	//if (tr.endpos[2] > cg.mapcoordsMaxs[2]+2000)
+	//	return 65536.0f;
 
-	if (tr.endpos[2] < -65000 || tr.endpos[2] < cg.mapcoordsMins[2]-2000)
+	if (tr.endpos[2] < -65535.0f /*|| tr.endpos[2] < cg.mapcoordsMins[2]-2000*/)
 		return -65536.0f;
 
 	if ( tr.surfaceFlags & SURF_SKY )
@@ -3957,6 +3957,8 @@ float FloorHeightAt ( vec3_t org )
             *surfaceparm     nomiscents
             surfaceparm     nodrop
 */
+
+#if 0
 	if ( tr.surfaceFlags & SURF_NODRAW
 		&& tr.surfaceFlags & CONTENTS_ABSEIL
 		&& tr.surfaceFlags & SURF_NODAMAGE
@@ -3979,12 +3981,19 @@ float FloorHeightAt ( vec3_t org )
 		//trap->Print("Ignore Area Surface\n");
 		return -65536.0f;
 	}
+#endif
 
-	if (!DO_ULTRAFAST && !DO_THOROUGH && (tr.surfaceFlags & SURF_NOMARKS) && (tr.surfaceFlags & SURF_NODRAW) && (tr.contents & CONTENTS_SOLID) && (tr.contents & CONTENTS_OPAQUE))
+#if 0
+	if (!DO_ULTRAFAST && !DO_THOROUGH 
+		&& (tr.surfaceFlags & SURF_NOMARKS) 
+		&& (tr.surfaceFlags & SURF_NODRAW) 
+		&& (tr.contents & CONTENTS_SOLID) 
+		&& (tr.contents & CONTENTS_OPAQUE))
 	{// Sky...
 		//trap->Print("SURF_SKY\n");
 		return 65536.0f;
 	}
+#endif
 	
 #ifdef __MORE_SURFACE_CULLING__
 	if ( tr.surfaceFlags & SURF_NOMISCENTS )
@@ -4018,7 +4027,7 @@ float FloorHeightAt ( vec3_t org )
 			return 65536.0f;
 	}
 
-	if ( !DO_NOWATER && !DO_ULTRAFAST && !DO_TRANSLUCENT && tr.contents & CONTENTS_TRANSLUCENT )
+	if ( !DO_NOWATER && !DO_ULTRAFAST && !DO_TRANSLUCENT && (tr.contents & CONTENTS_TRANSLUCENT) )
 	{// Invisible surface... I'm just gonna ignore these!
 		//trap->Print("CONTENTS_TRANSLUCENT\n");
 		return 65536.0f;
