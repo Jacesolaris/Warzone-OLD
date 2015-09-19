@@ -475,6 +475,7 @@ struct gentity_s {
 
 	int						beStillTime;
 
+	int						next_enemy_check_time;
 	int                     next_weapon_switch;
 	int                     next_rifle_butt_time;
 	int                     next_flamer_time;

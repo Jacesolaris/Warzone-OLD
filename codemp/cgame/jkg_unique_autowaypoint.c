@@ -2906,13 +2906,13 @@ AIMOD_NODES_LoadNodes2 ( void )
 	}
 
 	fread( &map, strlen( mp) + 1, 1, f);
-	if ( Q_stricmp( map, cgs.currentmapname) != 0 )
+	/*if ( Q_stricmp( map, cgs.currentmapname) != 0 )
 	{
 		trap->Print( "^1*** ^3WARNING^5: Reading from ^7nodes/%s.bwp^3 failed^5!!!\n", cgs.currentmapname);
 		trap->Print( "^1*** ^3       ^5  Node file is not for this map!\n" );
 		fclose(f);
 		return;
-	}
+	}*/
 
 	if (version == NOD_VERSION)
 	{
@@ -3835,7 +3835,7 @@ float FloorHeightAt ( vec3_t org )
 	VectorCopy(org, org2);
 	org2[2]= -65536.0f;
 
-	CG_Trace( &tr, org1, NULL, NULL, org2, -1, MASK_PLAYERSOLID );
+	CG_Trace( &tr, org1, NULL, NULL, org2, -1, MASK_PLAYERSOLID|CONTENTS_WATER );
 	//CG_Trace( &tr, org1, NULL, NULL, org2, cg.clientNum, MASK_PLAYERSOLID|CONTENTS_TRIGGER|CONTENTS_PLAYERCLIP|CONTENTS_MONSTERCLIP|CONTENTS_BOTCLIP|CONTENTS_SHOTCLIP|CONTENTS_NODROP|CONTENTS_TRANSLUCENT );
 	
 	if (tr.startsolid)
@@ -3843,13 +3843,7 @@ float FloorHeightAt ( vec3_t org )
 		return 65536.0f;
 	}
 
-	/*if (HasPortalFlags(tr.surfaceFlags, tr.contents))
-	{
-		aw_floor_trace_hit_mover = qtrue;
-		aw_floor_trace_hit_ent = tr.entityNum;
-		return tr.endpos[2];
-	}
-	else*/ if ( tr.fraction != 1 
+	if ( tr.fraction != 1 
 		&& tr.entityNum != ENTITYNUM_NONE 
 		&& tr.entityNum < ENTITYNUM_MAX_NORMAL )
 	{
@@ -3875,9 +3869,6 @@ float FloorHeightAt ( vec3_t org )
 		}
 	}
 
-	//if (tr.endpos[2] > cg.mapcoordsMaxs[2]+2000)
-	//	return 65536.0f;
-
 	if (tr.endpos[2] < -65535.0f /*|| tr.endpos[2] < cg.mapcoordsMins[2]-2000*/)
 		return -65536.0f;
 
@@ -3887,138 +3878,13 @@ float FloorHeightAt ( vec3_t org )
 		return 65536.0f;
 	}
 
-//	if ( (tr.surfaceFlags & SURF_NODRAW) && (tr.surfaceFlags & SURF_NOMARKS) 
-//		/*&& !Waypoint_FloorSurfaceOK(tr.surfaceFlags) 
-//		&& !HasPortalFlags(tr.surfaceFlags, tr.contents)*/)
-//	{// Sky...
-//		//trap->Print("(tr.surfaceFlags & SURF_NODRAW) && (tr.surfaceFlags & SURF_NOMARKS)\n");
-//		return 65536.0f;
-//	}
-
-/*
-
-#define	CONTENTS_SOLID			0x00000001	// Default setting. An eye is never valid in a solid
-#define	CONTENTS_LAVA			0x00000002
-#define	CONTENTS_WATER			0x00000004
-#define	CONTENTS_FOG			0x00000008
-#define	CONTENTS_PLAYERCLIP		0x00000010
-#define	CONTENTS_MONSTERCLIP	0x00000020	// Physically block bots
-#define CONTENTS_BOTCLIP		0x00000040	// A hint for bots - do not enter this brush by navigation (if possible)
-#define CONTENTS_SHOTCLIP		0x00000080
-#define	CONTENTS_BODY			0x00000100	// should never be on a brush, only in game
-#define	CONTENTS_CORPSE			0x00000200	// should never be on a brush, only in game
-#define	CONTENTS_TRIGGER		0x00000400
-#define	CONTENTS_NODROP			0x00000800	// don't leave bodies or items (death fog, lava)
-#define CONTENTS_TERRAIN		0x00001000	// volume contains terrain data
-#define CONTENTS_LADDER			0x00002000
-#define CONTENTS_ABSEIL			0x00004000  // (SOF2) used like ladder to define where an NPC can abseil
-#define CONTENTS_OPAQUE			0x00008000	// defaults to on, when off, solid can be seen through
-#define CONTENTS_OUTSIDE		0x00010000	// volume is considered to be in the outside (i.e. not indoors)
-
-#define	CONTENTS_INSIDE			0x10000000	// volume is considered to be inside (i.e. indoors)
-
-#define CONTENTS_SLIME			0x00020000	// CHC needs this since we use same tools
-#define CONTENTS_LIGHTSABER		0x00040000	// ""
-#define CONTENTS_TELEPORTER		0x00080000	// ""
-#define CONTENTS_ITEM			0x00100000	// ""
-#define CONTENTS_NOSHOT			0x00200000	// shots pass through me
-#define	CONTENTS_DETAIL			0x08000000	// brushes not used for the bsp
-#define	CONTENTS_TRANSLUCENT	0x80000000	// don't consume surface fragments inside
-
-#define	SURF_SKY				0x00002000	// lighting from environment map
-#define	SURF_SLICK				0x00004000	// affects game physics
-#define	SURF_METALSTEPS			0x00008000	// CHC needs this since we use same tools (though this flag is temp?)
-#define SURF_FORCEFIELD			0x00010000	// CHC ""			(but not temp)
-#define	SURF_NODAMAGE			0x00040000	// never give falling damage
-#define	SURF_NOIMPACT			0x00080000	// don't make missile explosions
-#define	SURF_NOMARKS			0x00100000	// don't leave missile marks
-#define	SURF_NODRAW				0x00200000	// don't generate a drawsurface at all
-#define	SURF_NOSTEPS			0x00400000	// no footstep sounds
-#define	SURF_NODLIGHT			0x00800000	// don't dlight even if solid (solid lava, skies)
-#define	SURF_NOMISCENTS			0x01000000	// no client models allowed on this surface
-
-
-			*surfaceparm     nodraw
-            *surfaceparm     nonsolid
-            *surfaceparm     nonopaque
-            *surfaceparm     trans
-            *surfaceparm     abseil
-            *surfaceparm     ladder
-    // Useless commands, AWP uses this to check intention of
-    // the brush as Notrace bounds.
-            *surfaceparm     monsterclip
-            *surfaceparm     playerclip
-            *surfaceparm     botclip
-            *surfaceparm     nodamage
-            *surfaceparm     noimpact
-            *surfaceparm     nomarks
-            *surfaceparm     nosteps
-            *surfaceparm     nodlight
-            *surfaceparm     nomiscents
-            surfaceparm     nodrop
-*/
-
-#if 0
-	if ( tr.surfaceFlags & SURF_NODRAW
-		&& tr.surfaceFlags & CONTENTS_ABSEIL
-		&& tr.surfaceFlags & SURF_NODAMAGE
-		&& tr.surfaceFlags & SURF_NOIMPACT
-		&& tr.surfaceFlags & SURF_NOMARKS
-		&& tr.surfaceFlags & SURF_NOSTEPS
-		&& tr.surfaceFlags & SURF_NODLIGHT
-		&& tr.surfaceFlags & SURF_NOMISCENTS
-		//&& !(tr.contents & CONTENTS_SOLID)
-		&& tr.contents & CONTENTS_OPAQUE
-		&& tr.contents & CONTENTS_TRANSLUCENT
-		&& tr.contents & CONTENTS_LADDER
-#ifndef __DISABLE_PLAYERCLIP__
-		&& tr.contents & CONTENTS_PLAYERCLIP
-#endif //__DISABLE_PLAYERCLIP__
-		&& tr.contents & CONTENTS_MONSTERCLIP
-		&& tr.contents & CONTENTS_BOTCLIP
-		&& tr.contents & CONTENTS_NODROP)
-	{// Special flags - Mapped out Z axis here...
-		//trap->Print("Ignore Area Surface\n");
-		return -65536.0f;
-	}
-#endif
-
-#if 0
-	if (!DO_ULTRAFAST && !DO_THOROUGH 
-		&& (tr.surfaceFlags & SURF_NOMARKS) 
-		&& (tr.surfaceFlags & SURF_NODRAW) 
-		&& (tr.contents & CONTENTS_SOLID) 
-		&& (tr.contents & CONTENTS_OPAQUE))
-	{// Sky...
-		//trap->Print("SURF_SKY\n");
-		return 65536.0f;
-	}
-#endif
-	
-#ifdef __MORE_SURFACE_CULLING__
-	if ( tr.surfaceFlags & SURF_NOMISCENTS )
-	{// Sky...
-		//trap->Print("SURF_NOMISCENTS\n");
-		return 65536.0f;
-	}
-#endif //__MORE_SURFACE_CULLING__
-
 	if ( tr.contents & CONTENTS_LAVA )
 	{// Lava...
 		//trap->Print("CONTENTS_LAVA\n");
 		return 65536.0f;
 	}
 
-	if ( tr.contents & CONTENTS_WATER )
-	{// Water... I'm just gonna ignore these!
-		//trap->Print("CONTENTS_WATER\n");
-		if (DO_NOWATER)
-			return -65536.0f;
-		else
-			return 65536.0f;
-	}
-
-	if ( (tr.surfaceFlags & MATERIAL_MASK) == MATERIAL_WATER )
+	if ( /*tr.contents & CONTENTS_WATER ||*/ (tr.surfaceFlags & MATERIAL_MASK) == MATERIAL_WATER )
 	{// Water... I'm just gonna ignore these!
 		//trap->Print("CONTENTS_WATER\n");
 		if (DO_NOWATER)
@@ -4032,63 +3898,6 @@ float FloorHeightAt ( vec3_t org )
 		//trap->Print("CONTENTS_TRANSLUCENT\n");
 		return 65536.0f;
 	}
-
-	/*
-	if ( tr.contents == 0 && tr.surfaceFlags == 0 )
-	{// Dont know what to do about these... Gonna try disabling them and see what happens...
-		//trap->Print("Hit noflag zone.\n");
-		return 65536.0f;
-	}
-	*/
-
-	/*if (tr.surfaceFlags & SURF_NODRAW)
-	{// Sky...
-		//trap->Print("((tr.contents & CONTENTS_TRANSLUCENT) && (tr.surfaceFlags & SURF_NOMARKS))\n");
-		return 65536.0f;
-	}*/
-
-#ifdef __MORE_SURFACE_CULLING__
-	if ( ((tr.contents & CONTENTS_TRANSLUCENT) && (tr.surfaceFlags & SURF_NOMARKS) && !(tr.contents & CONTENTS_PLAYERCLIP)) )
-	{// Sky...
-		//trap->Print("((tr.contents & CONTENTS_TRANSLUCENT) && (tr.surfaceFlags & SURF_NOMARKS))\n");
-		return 65536.0f;
-	}
-
-	if ( ((tr.contents & CONTENTS_TRANSLUCENT) && (tr.surfaceFlags & SURF_NOMARKS) && (tr.contents & CONTENTS_DETAIL)) )
-	{// Sky...
-		//trap->Print("((tr.contents & CONTENTS_TRANSLUCENT) && (tr.surfaceFlags & SURF_NOMARKS))\n");
-		if (AIMOD_IsWaypointHeightMarkedAsBad( tr.endpos ))
-			return 65536.0f;
-	}
-
-	/*if ( ((tr.contents & CONTENTS_TRANSLUCENT) && (tr.surfaceFlags & SURF_NOMARKS) && (tr.surfaceFlags & SURF_NOIMPACT)) )
-	{// Sky...
-		//trap->Print("((tr.contents & CONTENTS_TRANSLUCENT) && (tr.surfaceFlags & SURF_NOMARKS))\n");
-		return 65536.0f;
-	}*/
-
-	if ((tr.surfaceFlags & SURF_NOMARKS) && (tr.surfaceFlags & SURF_NODRAW) && (tr.contents & CONTENTS_SOLID) && (tr.contents & CONTENTS_OPAQUE))
-	{// Sky...
-		//trap->Print("((tr.contents & CONTENTS_TRANSLUCENT) && (tr.surfaceFlags & SURF_NOMARKS))\n");
-		if (AIMOD_IsWaypointHeightMarkedAsBad( tr.endpos ))
-			return 65536.0f;
-	}
-
-	/*if ( !((tr.contents & CONTENTS_OPAQUE) && (tr.contents & CONTENTS_SOLID)) )
-	{// Sky...
-		//trap->Print("((tr.contents & CONTENTS_OPAQUE) && (tr.contents & CONTENTS_SOLID))\n");
-		return 65536.0f;
-	}*/
-#endif //__MORE_SURFACE_CULLING__
-
-	/*
-	if (tr.contents & CONTENTS_TRIGGER)
-	{// Mover???
-		aw_floor_trace_hit_mover = qtrue;
-		aw_floor_trace_hit_ent = tr.entityNum;
-		return tr.endpos[2];
-	}
-	*/
 
 	aw_floor_trace_hit_mover = qfalse;
 	aw_floor_trace_hit_ent = -1;
@@ -4109,7 +3918,7 @@ float FloorHeightAt ( vec3_t org )
 	if (pitch > 46.0f || pitch < -46.0f)
 		return 65536.0f; // bad slope...
 
-	if ( tr.startsolid || tr.allsolid /*|| tr.contents & CONTENTS_WATER*/ )
+	if ( tr.startsolid || tr.allsolid )
 	{
 		return 65536.0f;
 	}

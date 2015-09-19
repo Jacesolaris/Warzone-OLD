@@ -21,7 +21,7 @@ qboolean DOM_NPC_ClearPathToSpot( gentity_t *NPC, vec3_t dest, int impactEntNum 
 extern int DOM_GetRandomCloseVisibleWP(gentity_t *ent, vec3_t org, int ignoreEnt, int badwp);
 
 
-
+#if 0
 int NPC_GetPatrolWP(gentity_t *NPC)
 {
 	int		i, NUM_FOUND = 0, FOUND_LIST[1024];
@@ -212,3 +212,66 @@ qboolean NPC_PatrolArea( void )
 
 	return qtrue;
 }
+#else
+qboolean NPC_PatrolArea( void ) 
+{// Quick method of patroling... The fastest way possible. Single waypoint using it's neighbours...
+	gentity_t	*NPC = NPCS.NPC;
+
+	if (gWPNum <= 0)
+	{// No waypoints available...
+		NPC_PickRandomIdleAnimantion(NPC);
+		return qfalse;
+	}
+
+	if (NPC->noWaypointTime > level.time)
+	{// Wait...
+		NPC_PickRandomIdleAnimantion(NPC);
+		return qtrue;
+	}
+
+	if (NPC->longTermGoal < 0 || NPC->longTermGoal >= gWPNum)
+	{// Should only ever happen once...
+		NPC->longTermGoal = DOM_GetNearestWP(NPC->r.currentOrigin, -1);
+	}
+
+	if (gWPArray[NPC->longTermGoal]->neighbornum <= 0)
+	{// This wp happens to have no neighbours.. Just stand idle...
+		NPC_PickRandomIdleAnimantion(NPC);
+		return qfalse;
+	}
+
+	if (NPC->wpCurrent < 0 || NPC->wpCurrent >= gWPNum)
+	{// Pick a new patrol neighbour...
+		if (NPC->wpLast == NPC->longTermGoal)
+		{// At home wp. Head to a random link...
+			int choice = irand(0, gWPArray[NPC->longTermGoal]->neighbornum-1);
+			NPC->wpCurrent = gWPArray[NPC->longTermGoal]->neighbors[choice].num;
+		}
+		else
+		{// At a link. Head home...
+			NPC->wpCurrent = NPC->longTermGoal;
+		}
+	}
+
+	if (Distance(gWPArray[NPC->wpCurrent]->origin, NPC->r.currentOrigin) < 64)
+	{// We're at out goal! Wait, then find a new goal...
+		NPC->wpLast = NPC->wpCurrent;
+		NPC->wpCurrent = -1;
+		NPC->noWaypointTime = level.time + 10000;
+		NPC_PickRandomIdleAnimantion(NPC);
+		return qfalse; // next think...
+	}
+
+	NPC_FacePosition( gWPArray[NPC->wpCurrent]->origin, qfalse );
+	VectorSubtract( gWPArray[NPC->wpCurrent]->origin, NPC->r.currentOrigin, NPC->movedir );
+	UQ1_UcmdMoveForDir( NPC, &NPCS.ucmd, NPC->movedir, qtrue, gWPArray[NPC->wpCurrent]->origin );
+	VectorCopy( NPC->movedir, NPC->client->ps.moveDir );
+
+	if (NPCS.ucmd.forwardmove == 0 && NPCS.ucmd.rightmove == 0 && NPCS.ucmd.upmove == 0)
+		NPC_PickRandomIdleAnimantion(NPC);
+	else
+		NPC_SelectMoveAnimation(qtrue);
+
+	return qtrue;
+}
+#endif

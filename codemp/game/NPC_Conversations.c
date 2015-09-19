@@ -777,7 +777,7 @@ void NPC_FindConversationPartner()
 
 	if (NPC->NPC->conversationSearchTime > level.time) return;
 
-	NPC->NPC->conversationSearchTime = level.time + 2000 + irand(0, 3000);
+	NPC->NPC->conversationSearchTime = level.time + 5000 + irand(0, 10000);
 
 	if (NPC->client->NPC_class == CLASS_STORMTROOPER || NPC->client->NPC_class == CLASS_STORMTROOPER_ADVANCED)
 	{

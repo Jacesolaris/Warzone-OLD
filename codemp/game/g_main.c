@@ -422,7 +422,7 @@ qboolean LoadSpawnpointPositions( qboolean IsTeam )
 			{
 				gentity_t *spawnpoint = G_Spawn();
 				spawnpoint->classname = "team_CTF_redspawn";
-				VectorCopy(BLUE_SPAWNPOINTS[i], spawnpoint->s.origin);
+				VectorCopy(RED_SPAWNPOINTS[i], spawnpoint->s.origin);
 				VectorCopy(red_angles, spawnpoint->s.angles);
 				spawnpoint->noWaypointTime = 1; // Don't send auto-generated spawnpoints to client...
 				SP_info_player_deathmatch( spawnpoint );
@@ -497,7 +497,7 @@ qboolean SaveSpawnpointPositions( qboolean IsTeam, int NUM_BLUE_POSITIONS, vec3_
 
 		trap->FS_Write( &NUM_RED_POSITIONS, sizeof(int), f );
 
-		for (i = 0; i < NUM_BLUE_POSITIONS; i++)
+		for (i = 0; i < NUM_RED_POSITIONS; i++)
 		{
 			trap->FS_Write( &RED_SPAWNPOINTS[i], sizeof(vec3_t), f );
 		}

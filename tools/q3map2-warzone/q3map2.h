@@ -311,7 +311,7 @@
 /* ok to increase these at the expense of more memory */
 #if 1
 #define MAX_MAP_MODELS          0x400
-#define MAX_MAP_BRUSHES         0x8000
+#define MAX_MAP_BRUSHES         0x80000
 #define MAX_MAP_ENTITIES        0x1000      //%	0x800	/* ydnar */
 #define MAX_MAP_ENTSTRING       0x80000     //%	0x40000	/* ydnar */
 #define MAX_MAP_SHADERS         0x800       //%	0x400	/* ydnar */
@@ -327,9 +327,9 @@
 #define MAX_MAP_PORTALS         0x20000
 #define MAX_MAP_LIGHTING        0x800000
 #define MAX_MAP_LIGHTGRID       0x100000    //%	0x800000 /* ydnar: set to points, not bytes */
-#define MAX_MAP_VISIBILITY      0x200000
+#define MAX_MAP_VISIBILITY      0xF000000
 
-#define MAX_MAP_DRAW_SURFS      0x20000
+#define MAX_MAP_DRAW_SURFS      0x80000
 #define MAX_MAP_DRAW_VERTS      0x800000
 #define MAX_MAP_DRAW_INDEXES    0x800000
 #else

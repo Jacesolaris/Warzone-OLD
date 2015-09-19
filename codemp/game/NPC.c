@@ -4101,13 +4101,15 @@ void NPC_Think ( gentity_t *self)//, int msec )
 
 			if (npc_pathing.integer > 0)
 			{
-				if (is_civilian || is_jedi || is_bot || self->client->NPC_class == CLASS_SABER_DROID) use_pathing = qtrue;
+				//if (is_civilian || is_jedi || is_bot || self->client->NPC_class == CLASS_SABER_DROID) use_pathing = qtrue;
+				if (is_civilian || is_bot) use_pathing = qtrue;
 
 				if (g_gametype.integer >= GT_TEAM) use_pathing = qtrue;
 			}
 			else
 			{
-				if (is_civilian || is_jedi || is_bot || self->client->NPC_class == CLASS_SABER_DROID) use_pathing = qtrue;
+				//if (is_civilian || is_jedi || is_bot || self->client->NPC_class == CLASS_SABER_DROID) use_pathing = qtrue;
+				if (is_civilian || is_bot) use_pathing = qtrue;
 			}
 
 			NPC_DoPadawanStuff(); // check any padawan stuff we might need to do...
@@ -4123,7 +4125,7 @@ void NPC_Think ( gentity_t *self)//, int msec )
 				G_ClearEnemy(self);
 			}
 
-			if ((!self->enemy || !NPC_IsAlive(self->enemy)) && !is_civilian)
+			if ((!self->enemy || !NPC_IsAlive(self->enemy)) && !is_civilian && self->next_enemy_check_time < level.time)
 			{
 				NPC_FindEnemy( qtrue );
 
@@ -4147,6 +4149,8 @@ void NPC_Think ( gentity_t *self)//, int msec )
 						G_AddVoiceEvent( self, Q_irand( EV_DETECTED1, EV_DETECTED5 ), 15000 + irand(0, 30000) );
 					}
 				}
+
+				self->next_enemy_check_time = level.time + irand(4000, 10000);
 			}
 
 			if ( self->enemy ) 

@@ -474,10 +474,17 @@ static void SV_AddEntitiesVisibleFromPoint( vec3_t origin, clientSnapshot_t *fra
 			// calculate the diameter
 			VectorSubtract(ent->r.absmax, ent->r.absmin, difference);
 			radius = VectorLength(difference);
+#ifdef __MMO__
+			if (length-radius >= g_svCullDist || length-radius >= 3072.0)
+			{ //then don't add it
+				continue;
+			}
+#else //!__MMO__
 			if (length-radius >= g_svCullDist)
 			{ //then don't add it
 				continue;
 			}
+#endif //__MMO__
 		}
 
 		// add it

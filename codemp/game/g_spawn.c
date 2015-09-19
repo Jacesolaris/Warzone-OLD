@@ -1437,7 +1437,7 @@ void SP_worldspawn( void )
 #ifdef __MMO__
 	// UQ1: In MMO mode, we ALWAYS cull to less then 3072.0...
 	G_SpawnFloat("distanceCull", "3072.0", &g_cullDistance);
-	if (g_cullDistance > 3072.0) g_cullDistance = 3072.0;
+	//if (g_cullDistance > 3072.0) g_cullDistance = 3072.0;
 	trap->SetServerCull(g_cullDistance);
 #else //!__MMO__
 	G_SpawnFloat("distanceCull", "6000.0", &g_cullDistance);

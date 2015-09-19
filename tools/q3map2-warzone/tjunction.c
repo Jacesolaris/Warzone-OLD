@@ -63,7 +63,7 @@ typedef struct {
 	bspDrawVert_t   *dv[2];
 } originalEdge_t;
 
-#define MAX_ORIGINAL_EDGES  0x10000
+#define MAX_ORIGINAL_EDGES  0x100000
 originalEdge_t originalEdges[MAX_ORIGINAL_EDGES];
 int numOriginalEdges;
 

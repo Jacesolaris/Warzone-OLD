@@ -44,7 +44,7 @@ set(MPCGameCgameFiles
 	"${MPDir}/cgame/cg_effects.c"
 	"${MPDir}/cgame/cg_ents.c"
 	"${MPDir}/cgame/cg_event.c"
-	"${MPDir}/cgame/cg_grass.c"
+	"${MPDir}/cgame/cg_grass.cpp"
 	"${MPDir}/cgame/cg_info.c"
 	"${MPDir}/cgame/cg_light.c"
 	"${MPDir}/cgame/cg_localents.c"
@@ -83,6 +83,9 @@ set(MPCGameCgameFiles
 	"${MPDir}/cgame/fx_local.h"
 	"${MPDir}/game/ckheap.h"
 	"${MPDir}/game/malloc.c"
+	"${MPDir}/client/tinythread.cpp"
+	"${MPDir}/client/tinythread.h"
+	"${MPDir}/client/fast_mutex.h"
 	)
 source_group("cgame" FILES ${MPCGameCgameFiles})
 set(MPCGameFiles ${MPCGameFiles} ${MPCGameCgameFiles})

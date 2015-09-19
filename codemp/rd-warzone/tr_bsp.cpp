@@ -3003,11 +3003,119 @@ static void R_LoadCubemapEntities(const char *cubemapEntityName)
 	}
 }
 
+qboolean R_MaterialUsesCubemap ( int surfaceFlags )
+{
+	switch( surfaceFlags & MATERIAL_MASK )
+	{
+	case MATERIAL_WATER:			// 13			// light covering of water on a surface
+		return qtrue;
+		break;
+	case MATERIAL_SHORTGRASS:		// 5			// manicured lawn
+		return qfalse;
+		break;
+	case MATERIAL_LONGGRASS:		// 6			// long jungle grass
+		return qfalse;
+		break;
+	case MATERIAL_SAND:				// 8			// sandy beach
+		return qfalse;
+		break;
+	case MATERIAL_CARPET:			// 27			// lush carpet
+		return qfalse;
+		break;
+	case MATERIAL_GRAVEL:			// 9			// lots of small stones
+		return qfalse;
+		break;
+	case MATERIAL_ROCK:				// 23			//
+		return qfalse;
+		break;
+	case MATERIAL_TILES:			// 26			// tiled floor
+		return qtrue;
+		break;
+	case MATERIAL_SOLIDWOOD:		// 1			// freshly cut timber
+		return qfalse;
+		break;
+	case MATERIAL_HOLLOWWOOD:		// 2			// termite infested creaky wood
+		return qfalse;
+		break;
+	case MATERIAL_SOLIDMETAL:		// 3			// solid girders
+		return qtrue;
+		break;
+	case MATERIAL_HOLLOWMETAL:		// 4			// hollow metal machines -- UQ1: Used for weapons to force lower parallax and high reflection...
+		return qtrue;
+		break;
+	case MATERIAL_DRYLEAVES:		// 19			// dried up leaves on the floor
+		return qfalse;
+		break;
+	case MATERIAL_GREENLEAVES:		// 20			// fresh leaves still on a tree
+		return qfalse;
+		break;
+	case MATERIAL_FABRIC:			// 21			// Cotton sheets
+		return qfalse;
+		break;
+	case MATERIAL_CANVAS:			// 22			// tent material
+		return qfalse;
+		break;
+	case MATERIAL_MARBLE:			// 12			// marble floors
+		return qtrue;
+		break;
+	case MATERIAL_SNOW:				// 14			// freshly laid snow
+		return qfalse;
+		break;
+	case MATERIAL_MUD:				// 17			// wet soil
+		return qfalse;
+		break;
+	case MATERIAL_DIRT:				// 7			// hard mud
+		return qfalse;
+		break;
+	case MATERIAL_CONCRETE:			// 11			// hardened concrete pavement
+		return qfalse;
+		break;
+	case MATERIAL_FLESH:			// 16			// hung meat, corpses in the world
+		return qfalse;
+		break;
+	case MATERIAL_RUBBER:			// 24			// hard tire like rubber
+		return qfalse;
+		break;
+	case MATERIAL_PLASTIC:			// 25			//
+		return qtrue;
+		break;
+	case MATERIAL_PLASTER:			// 28			// drywall style plaster
+		return qfalse;
+		break;
+	case MATERIAL_SHATTERGLASS:		// 29			// glass with the Crisis Zone style shattering
+		return qtrue;
+		break;
+	case MATERIAL_ARMOR:			// 30			// body armor
+		return qtrue;
+		break;
+	case MATERIAL_ICE:				// 15			// packed snow/solid ice
+		return qtrue;
+		break;
+	case MATERIAL_GLASS:			// 10			//
+		return qtrue;
+		break;
+	case MATERIAL_BPGLASS:			// 18			// bulletproof glass
+		return qtrue;
+		break;
+	case MATERIAL_COMPUTER:			// 31			// computers/electronic equipment
+		return qtrue;
+		break;
+	default:
+		return qfalse;
+		break;
+	}
+
+	return qfalse;
+}
+
+//#define CUBEMAPS_AT_WAYPOINTS
+
+extern char currentMapName[128];
+
+#ifdef CUBEMAPS_AT_WAYPOINTS
 #define		MOD_DIRECTORY "Warzone"
 #define		BOT_MOD_NAME	"aimod"
 float		NOD_VERSION = 1.1f;
-
-extern char currentMapName[128];
 
 int gWPNum = 0;
 vec3_t waypoints[32768];
@@ -3176,9 +3284,11 @@ AIMOD_NODES_LoadNodes ( void )
 
 	return qtrue;
 }
+#endif //CUBEMAPS_AT_WAYPOINTS
 
 qboolean IgnoreCubemapsOnMap( void )
 {// Maps with known really bad FPS... Let's just forget rendering cubemaps here...
+#if 0
 	if (StringContainsWord(currentMapName, "jkg_mos_eisley"))
 	{// Ignore this map... We know we don't need shiny here...
 		return qtrue;
@@ -3199,6 +3309,12 @@ qboolean IgnoreCubemapsOnMap( void )
 		return qtrue;
 	}
 
+	if (StringContainsWord(currentMapName, "yavin8"))
+	{// Ignore this map... We know we don't need shiny here...
+		return qtrue;
+	}
+#endif
+
 	return qfalse;
 }
 
@@ -3210,6 +3326,11 @@ static void R_LoadCubemapWaypoints( void )
 	numCubemaps = 0;
 
 	if (IgnoreCubemapsOnMap()) return;
+
+#ifdef CUBEMAPS_AT_WAYPOINTS
+	//
+	// Generate cubemaps at waypoints...
+	//
 
 	if (!AIMOD_NODES_LoadNodes()) return;
 
@@ -3228,6 +3349,80 @@ static void R_LoadCubemapWaypoints( void )
 		VectorCopy(waypoints[i], tr.cubemapOrigins[numCubemaps]);
 		numCubemaps++;
 	}
+
+	ri->Printf(PRINT_WARNING, "^1*** ^3%s^5: Warzone (cube mapping) - Selected %i waypoints for cubemaps.\n", "Warzone", numCubemaps);
+#else //!CUBEMAPS_AT_WAYPOINTS
+	//
+	// How about we look at the material types and select surfaces that need cubemaps and generate them there instead? :)
+	//
+
+	world_t	*w;
+	vec3_t	*cubeOrgs;
+	int		numcubeOrgs = 0;
+
+	cubeOrgs = (vec3_t *)malloc(sizeof(vec3_t)*1048576);
+
+	w = &s_worldData;
+
+#pragma omp parallel for ordered schedule(dynamic)
+	for (int i = 0; i < w->numsurfaces; i++)
+	{// Get a count of how many we need... Add them to temp list if not too close to another...
+		msurface_t *surf =	&w->surfaces[i];
+		vec3_t				surfOrigin;
+		qboolean			bad = qfalse;
+
+		if (R_MaterialUsesCubemap( surf->shader->surfaceFlags ))
+		{// Ok, this surface is shiny... Make a cubemap here...
+			if (surf->cullinfo.type & CULLINFO_SPHERE)
+			{
+				VectorCopy(surf->cullinfo.localOrigin, surfOrigin);
+			}
+			else if (surf->cullinfo.type & CULLINFO_BOX)
+			{
+				surfOrigin[0] = (surf->cullinfo.bounds[0][0] + surf->cullinfo.bounds[1][0]) * 0.5f;
+				surfOrigin[1] = (surf->cullinfo.bounds[0][1] + surf->cullinfo.bounds[1][1]) * 0.5f;
+				surfOrigin[2] = (surf->cullinfo.bounds[0][2] + surf->cullinfo.bounds[1][2]) * 0.5f;
+			}
+			else
+			{
+				continue;
+			}
+
+			for (int j = 0; j < numcubeOrgs; j++)
+			{
+				if (Distance(cubeOrgs[j], surfOrigin) < 256)
+				{
+					bad = qtrue;
+					break;
+				}
+			}
+
+			if (bad) continue;
+
+#pragma omp critical
+			{
+				VectorCopy(surfOrigin, cubeOrgs[numcubeOrgs]);
+				numcubeOrgs++;
+			}
+		}
+	}
+
+	tr.numCubemaps = numcubeOrgs;
+	tr.cubemapOrigins = (vec3_t *)ri->Hunk_Alloc( tr.numCubemaps * sizeof(*tr.cubemapOrigins), h_low);
+	tr.cubemaps = (image_t **)ri->Hunk_Alloc( tr.numCubemaps * sizeof(*tr.cubemaps), h_low);
+
+	numCubemaps = 0;
+
+	for (int i = 0; i < numcubeOrgs; i++)
+	{// Copy to real list...
+		VectorCopy(cubeOrgs[i], tr.cubemapOrigins[numCubemaps]);
+		numCubemaps++;
+	}
+
+	free(cubeOrgs);
+
+	ri->Printf(PRINT_WARNING, "^1*** ^3%s^5: Warzone (cube mapping) - Selected %i surfaces for cubemaps.\n", "Warzone", numCubemaps);
+#endif //CUBEMAPS_AT_WAYPOINTS
 }
 
 static void R_AssignCubemapsToWorldSurfaces(void)
@@ -3242,6 +3437,11 @@ static void R_AssignCubemapsToWorldSurfaces(void)
 	{
 		msurface_t *surf = &w->surfaces[i];
 		vec3_t surfOrigin;
+
+		if (!R_MaterialUsesCubemap( surf->shader->surfaceFlags ))
+		{
+			surf->cubemapIndex = 0;
+		}
 
 		if (surf->cullinfo.type & CULLINFO_SPHERE)
 		{
@@ -3292,111 +3492,6 @@ static void R_RenderAllCubemaps(void)
 			R_InitNextFrame();
 		}
 	}
-}
-
-qboolean R_MaterialUsesCubemap ( int surfaceFlags )
-{
-	switch( surfaceFlags & MATERIAL_MASK )
-	{
-	case MATERIAL_WATER:			// 13			// light covering of water on a surface
-		return qtrue;
-		break;
-	case MATERIAL_SHORTGRASS:		// 5			// manicured lawn
-		return qfalse;
-		break;
-	case MATERIAL_LONGGRASS:		// 6			// long jungle grass
-		return qfalse;
-		break;
-	case MATERIAL_SAND:				// 8			// sandy beach
-		return qfalse;
-		break;
-	case MATERIAL_CARPET:			// 27			// lush carpet
-		return qfalse;
-		break;
-	case MATERIAL_GRAVEL:			// 9			// lots of small stones
-		return qfalse;
-		break;
-	case MATERIAL_ROCK:				// 23			//
-		return qfalse;
-		break;
-	case MATERIAL_TILES:			// 26			// tiled floor
-		return qtrue;
-		break;
-	case MATERIAL_SOLIDWOOD:		// 1			// freshly cut timber
-		return qfalse;
-		break;
-	case MATERIAL_HOLLOWWOOD:		// 2			// termite infested creaky wood
-		return qfalse;
-		break;
-	case MATERIAL_SOLIDMETAL:		// 3			// solid girders
-		return qtrue;
-		break;
-	case MATERIAL_HOLLOWMETAL:		// 4			// hollow metal machines -- UQ1: Used for weapons to force lower parallax and high reflection...
-		return qtrue;
-		break;
-	case MATERIAL_DRYLEAVES:		// 19			// dried up leaves on the floor
-		return qfalse;
-		break;
-	case MATERIAL_GREENLEAVES:		// 20			// fresh leaves still on a tree
-		return qfalse;
-		break;
-	case MATERIAL_FABRIC:			// 21			// Cotton sheets
-		return qfalse;
-		break;
-	case MATERIAL_CANVAS:			// 22			// tent material
-		return qfalse;
-		break;
-	case MATERIAL_MARBLE:			// 12			// marble floors
-		return qtrue;
-		break;
-	case MATERIAL_SNOW:				// 14			// freshly laid snow
-		return qfalse;
-		break;
-	case MATERIAL_MUD:				// 17			// wet soil
-		return qfalse;
-		break;
-	case MATERIAL_DIRT:				// 7			// hard mud
-		return qfalse;
-		break;
-	case MATERIAL_CONCRETE:			// 11			// hardened concrete pavement
-		return qfalse;
-		break;
-	case MATERIAL_FLESH:			// 16			// hung meat, corpses in the world
-		return qfalse;
-		break;
-	case MATERIAL_RUBBER:			// 24			// hard tire like rubber
-		return qfalse;
-		break;
-	case MATERIAL_PLASTIC:			// 25			//
-		return qtrue;
-		break;
-	case MATERIAL_PLASTER:			// 28			// drywall style plaster
-		return qfalse;
-		break;
-	case MATERIAL_SHATTERGLASS:		// 29			// glass with the Crisis Zone style shattering
-		return qtrue;
-		break;
-	case MATERIAL_ARMOR:			// 30			// body armor
-		return qtrue;
-		break;
-	case MATERIAL_ICE:				// 15			// packed snow/solid ice
-		return qtrue;
-		break;
-	case MATERIAL_GLASS:			// 10			//
-		return qtrue;
-		break;
-	case MATERIAL_BPGLASS:			// 18			// bulletproof glass
-		return qtrue;
-		break;
-	case MATERIAL_COMPUTER:			// 31			// computers/electronic equipment
-		return qtrue;
-		break;
-	default:
-		return qfalse;
-		break;
-	}
-
-	return qfalse;
 }
 
 /*

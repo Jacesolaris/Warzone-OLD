@@ -132,6 +132,9 @@ set(MPGameGameFiles
 	"${MPDir}/game/w_saber.h"
 	"${MPDir}/game/ckheap.h"
 	"${MPDir}/game/malloc.c"
+	"${MPDir}/client/tinythread.cpp"
+	"${MPDir}/client/tinythread.h"
+	"${MPDir}/client/fast_mutex.h"
 	)
 source_group("game" FILES ${MPGameGameFiles})
 set(MPGameFiles ${MPGameFiles} ${MPGameGameFiles})
