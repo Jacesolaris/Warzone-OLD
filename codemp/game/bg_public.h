@@ -1074,15 +1074,18 @@ typedef enum {
 } global_team_sound_t;
 
 
-
 typedef enum {
-	TEAM_FREE,
-	TEAM_RED,
-	TEAM_BLUE,
-	TEAM_SPECTATOR,
+	FACTION_FREE,
+	FACTION_EMPIRE, // red
+	FACTION_REBEL, // blue
+	FACTION_MANDALORIAN, // orange
+	FACTION_MERC, // green
+	FACTION_SPECTATOR,
 
-	TEAM_NUM_TEAMS
+	FACTION_NUM_FACTIONS
 } team_t;
+
+extern char *factionNames[FACTION_NUM_FACTIONS];
 
 typedef enum {
 	DUELTEAM_FREE,

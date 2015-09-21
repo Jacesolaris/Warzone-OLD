@@ -135,7 +135,7 @@ void G_InitSessionData( gclient_t *client, char *userinfo, qboolean isBot ) {
 
 	sess = &client->sess;
 
-	client->sess.siegeDesiredTeam = TEAM_FREE;
+	client->sess.siegeDesiredTeam = FACTION_FREE;
 
 	// initial team determination
 	if ( level.gametype >= GT_TEAM ) {
@@ -146,18 +146,18 @@ void G_InitSessionData( gclient_t *client, char *userinfo, qboolean isBot ) {
 			// always spawn as spectator in team games
 			if (!isBot)
 			{
-				sess->sessionTeam = TEAM_SPECTATOR;
+				sess->sessionTeam = FACTION_SPECTATOR;
 			}
 			else
 			{ //Bots choose their team on creation
 				value = Info_ValueForKey( userinfo, "team" );
 				if (value[0] == 'r' || value[0] == 'R')
 				{
-					sess->sessionTeam = TEAM_RED;
+					sess->sessionTeam = FACTION_EMPIRE;
 				}
 				else if (value[0] == 'b' || value[0] == 'B')
 				{
-					sess->sessionTeam = TEAM_BLUE;
+					sess->sessionTeam = FACTION_REBEL;
 				}
 				else
 				{
@@ -170,7 +170,7 @@ void G_InitSessionData( gclient_t *client, char *userinfo, qboolean isBot ) {
 		value = Info_ValueForKey( userinfo, "team" );
 		if ( value[0] == 's' ) {
 			// a willing spectator, not a waiting-in-line
-			sess->sessionTeam = TEAM_SPECTATOR;
+			sess->sessionTeam = FACTION_SPECTATOR;
 		} else {
 			switch ( level.gametype ) {
 			default:
@@ -181,17 +181,17 @@ void G_InitSessionData( gclient_t *client, char *userinfo, qboolean isBot ) {
 			case GT_INSTANCE:
 				if ( g_maxGameClients.integer > 0 &&
 					level.numNonSpectatorClients >= g_maxGameClients.integer ) {
-					sess->sessionTeam = TEAM_SPECTATOR;
+					sess->sessionTeam = FACTION_SPECTATOR;
 				} else {
-					sess->sessionTeam = TEAM_FREE;
+					sess->sessionTeam = FACTION_FREE;
 				}
 				break;
 			case GT_DUEL:
 				// if the game is full, go into a waiting mode
 				if ( level.numNonSpectatorClients >= 2 ) {
-					sess->sessionTeam = TEAM_SPECTATOR;
+					sess->sessionTeam = FACTION_SPECTATOR;
 				} else {
-					sess->sessionTeam = TEAM_FREE;
+					sess->sessionTeam = FACTION_FREE;
 				}
 				break;
 			case GT_POWERDUEL:
@@ -211,7 +211,7 @@ void G_InitSessionData( gclient_t *client, char *userinfo, qboolean isBot ) {
 						sess->duelTeam = DUELTEAM_LONE;
 					}
 				}
-				sess->sessionTeam = TEAM_SPECTATOR;
+				sess->sessionTeam = FACTION_SPECTATOR;
 				break;
 			}
 		}

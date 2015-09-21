@@ -2784,8 +2784,8 @@ void CG_CheckPlayerG2Weapons(playerState_t *ps, centity_t *cent)
 		return;
 	}
 
-	if (cgs.clientinfo[ps->clientNum].team == TEAM_SPECTATOR ||
-		ps->persistant[PERS_TEAM] == TEAM_SPECTATOR)
+	if (cgs.clientinfo[ps->clientNum].team == FACTION_SPECTATOR ||
+		ps->persistant[PERS_TEAM] == FACTION_SPECTATOR)
 	{
 		cent->ghoul2weapon = cg_entities[ps->clientNum].ghoul2weapon = NULL;
 		cent->weapon = cg_entities[ps->clientNum].weapon = 0;

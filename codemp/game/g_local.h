@@ -990,7 +990,7 @@ typedef struct level_locals_s {
 
 	int			startTime;				// level.time the map was started
 
-	int			teamScores[TEAM_NUM_TEAMS];
+	int			teamScores[FACTION_NUM_FACTIONS];
 	int			lastTeamLocationTime;		// last time of client team location update
 
 	qboolean	newSession;				// don't use any old session data, because

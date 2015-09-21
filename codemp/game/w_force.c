@@ -214,9 +214,9 @@ void WP_InitForcePowers( gentity_t *ent ) {
 		Q_strncpyz( forcePowers, botstates[ent->s.number]->forceinfo, sizeof( forcePowers ) );
 
 	if ( g_forceBasedTeams.integer ) {
-		if ( ent->client->sess.sessionTeam == TEAM_RED )
+		if ( ent->client->sess.sessionTeam == FACTION_EMPIRE )
 			warnClient = !(BG_LegalizedForcePowers( forcePowers, sizeof (forcePowers), g_maxForceRank.integer, HasSetSaberOnly(), FORCE_DARKSIDE, level.gametype, g_forcePowerDisable.integer ));
-		else if ( ent->client->sess.sessionTeam == TEAM_BLUE )
+		else if ( ent->client->sess.sessionTeam == FACTION_REBEL )
 			warnClient = !(BG_LegalizedForcePowers( forcePowers, sizeof (forcePowers), g_maxForceRank.integer, HasSetSaberOnly(), FORCE_LIGHTSIDE, level.gametype, g_forcePowerDisable.integer ));
 		else
 			warnClient = !(BG_LegalizedForcePowers( forcePowers, sizeof (forcePowers), g_maxForceRank.integer, HasSetSaberOnly(), 0, level.gametype, g_forcePowerDisable.integer ));
@@ -351,7 +351,7 @@ void WP_InitForcePowers( gentity_t *ent ) {
 				if ( !(ent->r.svFlags & SVF_BOT) && ent->s.eType != ET_NPC ) {
 					if ( !g_teamAutoJoin.integer ) {
 						// make them a spectator so they can set their powerups up without being bothered.
-						ent->client->sess.sessionTeam = TEAM_SPECTATOR;
+						ent->client->sess.sessionTeam = FACTION_SPECTATOR;
 						ent->client->sess.spectatorState = SPECTATOR_FREE;
 						ent->client->sess.spectatorClient = 0;
 
@@ -653,7 +653,7 @@ qboolean WP_ForcePowerUsable( gentity_t *self, forcePowers_t forcePower )
 	{ //specs can't use powers through people
 		return qfalse;
 	}
-	if (self->client->sess.sessionTeam == TEAM_SPECTATOR)
+	if (self->client->sess.sessionTeam == FACTION_SPECTATOR)
 	{
 		return qfalse;
 	}
@@ -2642,12 +2642,12 @@ qboolean ForceTelepathyCheckDirectNPCTarget( gentity_t *self, trace_t *tr, qbool
 						}
 						else
 						{//client/bot
-							if ( self->client->sess.sessionTeam == TEAM_BLUE )
+							if ( self->client->sess.sessionTeam == FACTION_REBEL )
 							{//rebel
 								newPlayerTeam = NPCTEAM_PLAYER;
 								newEnemyTeam = NPCTEAM_ENEMY;
 							}
-							else if ( self->client->sess.sessionTeam == TEAM_RED )
+							else if ( self->client->sess.sessionTeam == FACTION_EMPIRE )
 							{//imperial
 								newPlayerTeam = NPCTEAM_ENEMY;
 								newEnemyTeam = NPCTEAM_PLAYER;
@@ -2813,7 +2813,7 @@ void ForceTelepathy(gentity_t *self)
 			g_entities[tr.entityNum].inuse &&
 			g_entities[tr.entityNum].client &&
 			g_entities[tr.entityNum].client->pers.connected &&
-			g_entities[tr.entityNum].client->sess.sessionTeam != TEAM_SPECTATOR)
+			g_entities[tr.entityNum].client->sess.sessionTeam != FACTION_SPECTATOR)
 		{
 			WP_AddAsMindtricked(&self->client->ps.fd, tr.entityNum);
 			if ( !tookPower )
@@ -5160,7 +5160,7 @@ void WP_ForcePowersUpdate( gentity_t *self, usercmd_t *ucmd )
 	{ //not a "real" game client, it's a spectator following someone
 		return;
 	}
-	if (self->client->sess.sessionTeam == TEAM_SPECTATOR)
+	if (self->client->sess.sessionTeam == FACTION_SPECTATOR)
 	{
 		return;
 	}

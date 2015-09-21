@@ -5,9 +5,9 @@
 #include "ghoul2/G2.h"
 #include "ai_dominance_main.h"
 
-int	teamNumbers[TEAM_NUM_TEAMS];
-int	teamStrength[TEAM_NUM_TEAMS];
-int	teamCounter[TEAM_NUM_TEAMS];
+int	teamNumbers[FACTION_NUM_FACTIONS];
+int	teamStrength[FACTION_NUM_FACTIONS];
+int	teamCounter[FACTION_NUM_FACTIONS];
 
 #define	VALID_ATTACK_CONE	2.0f	//Degrees
 extern void G_DebugPrint( int level, const char *format, ... );
@@ -832,7 +832,7 @@ void SetTeamNumbers (void)
 	gentity_t	*found;
 	int			i;
 
-	for( i = 0; i < TEAM_NUM_TEAMS; i++ )
+	for( i = 0; i < FACTION_NUM_FACTIONS; i++ )
 	{
 		teamNumbers[i] = 0;
 		teamStrength[i] = 0;
@@ -853,7 +853,7 @@ void SetTeamNumbers (void)
 		}
 	}
 
-	for( i = 0; i < TEAM_NUM_TEAMS; i++ )
+	for( i = 0; i < FACTION_NUM_FACTIONS; i++ )
 	{//Get the average health
 		teamStrength[i] = floor( ((float)(teamStrength[i])) / ((float)(teamNumbers[i])) );
 	}
@@ -1056,7 +1056,7 @@ qboolean NPC_SomeoneLookingAtMe(gentity_t *ent)
 	{
 		pEnt = &g_entities[i];
 
-		if (pEnt && pEnt->inuse && pEnt->client && pEnt->client->sess.sessionTeam != TEAM_SPECTATOR &&
+		if (pEnt && pEnt->inuse && pEnt->client && pEnt->client->sess.sessionTeam != FACTION_SPECTATOR &&
 			pEnt->client->tempSpectate < level.time && !(pEnt->client->ps.pm_flags & PMF_FOLLOW) && pEnt->s.weapon != WP_NONE)
 		{
 			if (trap->InPVS(ent->r.currentOrigin, pEnt->r.currentOrigin))
@@ -1104,7 +1104,7 @@ extern qboolean NPC_IsAlive ( gentity_t *NPC );
 
 qboolean NPC_ValidEnemy( gentity_t *ent )
 {
-	int entTeam = TEAM_FREE;
+	int entTeam = FACTION_FREE;
 
 	if ( ent == NULL )
 	{//Must be a valid pointer
@@ -1145,7 +1145,7 @@ qboolean NPC_ValidEnemy( gentity_t *ent )
 
 	if ( ent->client )
 	{// Special client checks...
-		if ( ent->client->sess.sessionTeam == TEAM_SPECTATOR )
+		if ( ent->client->sess.sessionTeam == FACTION_SPECTATOR )
 		{//don't go after spectators
 			//trap->Print("spec1 %i\n", ent->s.number);
 			return qfalse;
@@ -1223,7 +1223,7 @@ qboolean NPC_ValidEnemy( gentity_t *ent )
 
 	if ( ent->client )
 	{// Special client checks...
-		if (NPCS.NPC->client->enemyTeam == NPCTEAM_FREE && ent->client->NPC_class != NPCS.NPC->client->NPC_class )
+		if (NPCS.NPC->client->enemyTeam == NPCFACTION_FREE && ent->client->NPC_class != NPCS.NPC->client->NPC_class )
 		{//I get mad at anyone and this guy isn't the same class as me
 			return qtrue;
 		}
@@ -1239,9 +1239,10 @@ qboolean NPC_ValidEnemy( gentity_t *ent )
 		}
 	}
 
+#if 0
 	if ( ent->NPC && ent->client )
 	{
-		if (NPCS.NPC->client->enemyTeam == TEAM_FREE)
+		if (NPCS.NPC->client->enemyTeam == FACTION_FREE)
 		{
 			entTeam = NPCS.NPC->client->enemyTeam;
 		}
@@ -1251,11 +1252,11 @@ qboolean NPC_ValidEnemy( gentity_t *ent )
 		}
 		else
 		{
-			if ( ent->client->sess.sessionTeam == TEAM_BLUE )
+			if ( ent->client->sess.sessionTeam == FACTION_REBEL )
 			{
 				entTeam = NPCTEAM_PLAYER;
 			}
-			else if ( ent->client->sess.sessionTeam == TEAM_RED )
+			else if ( ent->client->sess.sessionTeam == FACTION_EMPIRE )
 			{
 				entTeam = NPCTEAM_ENEMY;
 			}
@@ -1267,7 +1268,7 @@ qboolean NPC_ValidEnemy( gentity_t *ent )
 	}
 	else if ( ent->client )
 	{
-		if (NPCS.NPC->client->enemyTeam == TEAM_FREE)
+		if (NPCS.NPC->client->enemyTeam == FACTION_FREE)
 		{
 			entTeam = NPCS.NPC->client->enemyTeam;
 		}
@@ -1277,11 +1278,11 @@ qboolean NPC_ValidEnemy( gentity_t *ent )
 		}
 		else
 		{
-			if ( ent->client->sess.sessionTeam == TEAM_BLUE )
+			if ( ent->client->sess.sessionTeam == FACTION_REBEL )
 			{
 				entTeam = NPCTEAM_PLAYER;
 			}
-			else if ( ent->client->sess.sessionTeam == TEAM_RED )
+			else if ( ent->client->sess.sessionTeam == FACTION_EMPIRE )
 			{
 				entTeam = NPCTEAM_ENEMY;
 			}
@@ -1291,10 +1292,11 @@ qboolean NPC_ValidEnemy( gentity_t *ent )
 			}
 		}
 	}
+#endif
 
-	if (entTeam == NPCTEAM_FREE 
+	if (entTeam == NPCFACTION_FREE 
 		&& ent->client
-		&& ent->client->enemyTeam == NPCTEAM_FREE 
+		&& ent->client->enemyTeam == NPCFACTION_FREE 
 		&& ent->enemy 
 		&& ent->enemy->client 
 		&& (ent->enemy->client->playerTeam == NPCS.NPC->client->playerTeam || (ent->enemy->client->playerTeam != NPCTEAM_ENEMY && NPCS.NPC->client->playerTeam == NPCTEAM_PLAYER)))
@@ -1346,11 +1348,12 @@ qboolean NPC_ValidEnemy( gentity_t *ent )
 			&& NPCS.NPC->client 
 			&& ent->client) 
 		{// In team games all NPCs and BotNPCs are enemies to other team...
-			if ( ent->client->sess.sessionTeam == TEAM_BLUE && NPCS.NPC->client->sess.sessionTeam == TEAM_RED )
+			/*
+			if ( ent->client->sess.sessionTeam == FACTION_REBEL && NPCS.NPC->client->sess.sessionTeam == FACTION_EMPIRE )
 			{
 				return qtrue;
 			}
-			else if ( ent->client->sess.sessionTeam == TEAM_RED && NPCS.NPC->client->sess.sessionTeam == TEAM_BLUE )
+			else if ( ent->client->sess.sessionTeam == FACTION_EMPIRE && NPCS.NPC->client->sess.sessionTeam == FACTION_REBEL )
 			{
 				return qtrue;
 			}
@@ -1359,6 +1362,9 @@ qboolean NPC_ValidEnemy( gentity_t *ent )
 				//trap->Print("team\n");
 				return qfalse;
 			}
+			*/
+			if (!OnSameTeam(ent, NPCS.NPC)) 
+				return qtrue;
 		}
 	}
 	
@@ -1367,7 +1373,7 @@ qboolean NPC_ValidEnemy( gentity_t *ent )
 
 qboolean NPC_ValidEnemy2( gentity_t *self, gentity_t *ent )
 {
-	int entTeam = TEAM_FREE;
+	int entTeam = FACTION_FREE;
 
 	if ( ent == NULL )
 	{//Must be a valid pointer
@@ -1408,7 +1414,7 @@ qboolean NPC_ValidEnemy2( gentity_t *self, gentity_t *ent )
 
 	if ( ent->client )
 	{// Special client checks...
-		if ( ent->client->sess.sessionTeam == TEAM_SPECTATOR )
+		if ( ent->client->sess.sessionTeam == FACTION_SPECTATOR )
 		{//don't go after spectators
 			//trap->Print("spec1 %i\n", ent->s.number);
 			return qfalse;
@@ -1486,7 +1492,7 @@ qboolean NPC_ValidEnemy2( gentity_t *self, gentity_t *ent )
 
 	if ( ent->client )
 	{// Special client checks...
-		if (self->client->enemyTeam == NPCTEAM_FREE && ent->client->NPC_class != self->client->NPC_class )
+		if (self->client->enemyTeam == NPCFACTION_FREE && ent->client->NPC_class != self->client->NPC_class )
 		{//I get mad at anyone and this guy isn't the same class as me
 			return qtrue;
 		}
@@ -1502,9 +1508,10 @@ qboolean NPC_ValidEnemy2( gentity_t *self, gentity_t *ent )
 		}
 	}
 
+#if 0
 	if ( ent->NPC && ent->client )
 	{
-		if (self->client->enemyTeam == TEAM_FREE)
+		if (self->client->enemyTeam == FACTION_FREE)
 		{
 			entTeam = self->client->enemyTeam;
 		}
@@ -1514,11 +1521,11 @@ qboolean NPC_ValidEnemy2( gentity_t *self, gentity_t *ent )
 		}
 		else
 		{
-			if ( ent->client->sess.sessionTeam == TEAM_BLUE )
+			if ( ent->client->sess.sessionTeam == FACTION_REBEL )
 			{
 				entTeam = NPCTEAM_PLAYER;
 			}
-			else if ( ent->client->sess.sessionTeam == TEAM_RED )
+			else if ( ent->client->sess.sessionTeam == FACTION_EMPIRE )
 			{
 				entTeam = NPCTEAM_ENEMY;
 			}
@@ -1530,7 +1537,7 @@ qboolean NPC_ValidEnemy2( gentity_t *self, gentity_t *ent )
 	}
 	else if ( ent->client )
 	{
-		if (self->client->enemyTeam == TEAM_FREE)
+		if (self->client->enemyTeam == FACTION_FREE)
 		{
 			entTeam = self->client->enemyTeam;
 		}
@@ -1540,11 +1547,11 @@ qboolean NPC_ValidEnemy2( gentity_t *self, gentity_t *ent )
 		}
 		else
 		{
-			if ( ent->client->sess.sessionTeam == TEAM_BLUE )
+			if ( ent->client->sess.sessionTeam == FACTION_REBEL )
 			{
 				entTeam = NPCTEAM_PLAYER;
 			}
-			else if ( ent->client->sess.sessionTeam == TEAM_RED )
+			else if ( ent->client->sess.sessionTeam == FACTION_EMPIRE )
 			{
 				entTeam = NPCTEAM_ENEMY;
 			}
@@ -1554,10 +1561,11 @@ qboolean NPC_ValidEnemy2( gentity_t *self, gentity_t *ent )
 			}
 		}
 	}
+#endif
 
-	if (entTeam == NPCTEAM_FREE 
+	if (entTeam == NPCFACTION_FREE 
 		&& ent->client
-		&& ent->client->enemyTeam == NPCTEAM_FREE 
+		&& ent->client->enemyTeam == NPCFACTION_FREE 
 		&& ent->enemy 
 		&& ent->enemy->client 
 		&& (ent->enemy->client->playerTeam == self->client->playerTeam || (ent->enemy->client->playerTeam != NPCTEAM_ENEMY && self->client->playerTeam == NPCTEAM_PLAYER)))
@@ -1609,11 +1617,12 @@ qboolean NPC_ValidEnemy2( gentity_t *self, gentity_t *ent )
 			&& self->client 
 			&& ent->client) 
 		{// In team games all NPCs and BotNPCs are enemies to other team...
-			if ( ent->client->sess.sessionTeam == TEAM_BLUE && self->client->sess.sessionTeam == TEAM_RED )
+			/*
+			if ( ent->client->sess.sessionTeam == FACTION_REBEL && self->client->sess.sessionTeam == FACTION_EMPIRE )
 			{
 				return qtrue;
 			}
-			else if ( ent->client->sess.sessionTeam == TEAM_RED && self->client->sess.sessionTeam == TEAM_BLUE )
+			else if ( ent->client->sess.sessionTeam == FACTION_EMPIRE && self->client->sess.sessionTeam == FACTION_REBEL )
 			{
 				return qtrue;
 			}
@@ -1622,6 +1631,10 @@ qboolean NPC_ValidEnemy2( gentity_t *self, gentity_t *ent )
 				//trap->Print("team\n");
 				return qfalse;
 			}
+			*/
+
+			if (!OnSameTeam(ent, self)) 
+				return qtrue;
 		}
 	}
 	
@@ -1776,10 +1789,13 @@ int NPC_FindNearestEnemy( gentity_t *ent )
 		}
 	}
 
-	if (nearestEntID && NPC_EntityIsBreakable(ent, &g_entities[nearestEntID]))
+	if (nearestEntID > 0 && nearestEntID < ENTITYNUM_MAX_NORMAL)
 	{
-		radEnt = &g_entities[nearestEntID];
-		//trap->Print("Target breakable at %f %f %f.\n", radEnt->breakableOrigin[0], radEnt->breakableOrigin[1], radEnt->breakableOrigin[2]);
+		if (NPC_EntityIsBreakable(ent, &g_entities[nearestEntID]))
+		{
+			radEnt = &g_entities[nearestEntID];
+			//trap->Print("Target breakable at %f %f %f.\n", radEnt->breakableOrigin[0], radEnt->breakableOrigin[1], radEnt->breakableOrigin[2]);
+		}
 	}
 
 	return nearestEntID;

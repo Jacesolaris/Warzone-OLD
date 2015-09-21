@@ -620,10 +620,10 @@ static void CG_TouchItem( centity_t *cent ) {
 	// We don't predict touching our own flag
 	// Make sure the item type is also a flag too
 	if( cgs.gametype == GT_CTF || cgs.gametype == GT_CTY ) {
-		if (cg.predictedPlayerState.persistant[PERS_TEAM] == TEAM_RED &&
+		if (cg.predictedPlayerState.persistant[PERS_TEAM] == FACTION_EMPIRE &&
 			item->giType == IT_TEAM && item->giTag == PW_REDFLAG)
 			return;
-		if (cg.predictedPlayerState.persistant[PERS_TEAM] == TEAM_BLUE &&
+		if (cg.predictedPlayerState.persistant[PERS_TEAM] == FACTION_REBEL &&
 			item->giType == IT_TEAM && item->giTag == PW_BLUEFLAG)
 			return;
 	}
@@ -967,7 +967,7 @@ void CG_PredictPlayerState( void ) {
 		if (cg.snap &&
 			pEnt->ghoul2 &&
 			!(cg.snap->ps.pm_flags & PMF_FOLLOW) &&
-			cg.snap->ps.persistant[PERS_TEAM] != TEAM_SPECTATOR)
+			cg.snap->ps.persistant[PERS_TEAM] != FACTION_SPECTATOR)
 		{
 			cg_pmove.ghoul2 = pEnt->ghoul2;
 			cg_pmove.g2Bolts_LFoot = trap->G2API_AddBolt(pEnt->ghoul2, 0, "*l_leg_foot");
@@ -991,7 +991,7 @@ void CG_PredictPlayerState( void ) {
 	else {
 		cg_pmove.tracemask = MASK_PLAYERSOLID;
 	}
-	if ( cg.snap->ps.persistant[PERS_TEAM] == TEAM_SPECTATOR || cg.snap->ps.pm_type == PM_SPECTATOR ) {
+	if ( cg.snap->ps.persistant[PERS_TEAM] == FACTION_SPECTATOR || cg.snap->ps.pm_type == PM_SPECTATOR ) {
 		cg_pmove.tracemask &= ~CONTENTS_BODY;	// spectators can fly through bodies
 	}
 	cg_pmove.noFootsteps = ( cgs.dmflags & DF_NO_FOOTSTEPS ) > 0;

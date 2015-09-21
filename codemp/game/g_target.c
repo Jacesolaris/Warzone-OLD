@@ -50,11 +50,11 @@ void Use_target_remove_powerups( gentity_t *ent, gentity_t *other, gentity_t *ac
 	}
 
 	if( activator->client->ps.powerups[PW_REDFLAG] ) {
-		Team_ReturnFlag( TEAM_RED );
+		Team_ReturnFlag( FACTION_EMPIRE );
 	} else if( activator->client->ps.powerups[PW_BLUEFLAG] ) {
-		Team_ReturnFlag( TEAM_BLUE );
+		Team_ReturnFlag( FACTION_REBEL );
 	} else if( activator->client->ps.powerups[PW_NEUTRALFLAG] ) {
-		Team_ReturnFlag( TEAM_FREE );
+		Team_ReturnFlag( FACTION_FREE );
 	}
 
 	memset( activator->client->ps.powerups, 0, sizeof( activator->client->ps.powerups ) );
@@ -208,21 +208,21 @@ void Use_Target_Print (gentity_t *ent, gentity_t *other, gentity_t *activator)
 		if ( ent->spawnflags & 1 ) {
 			if (ent->message[0] == '@' && ent->message[1] != '@')
 			{
-				G_TeamCommand( TEAM_RED, va("cps \"%s\"", ent->message) );
+				G_TeamCommand( FACTION_EMPIRE, va("cps \"%s\"", ent->message) );
 			}
 			else
 			{
-				G_TeamCommand( TEAM_RED, va("cp \"%s\"", ent->message) );
+				G_TeamCommand( FACTION_EMPIRE, va("cp \"%s\"", ent->message) );
 			}
 		}
 		if ( ent->spawnflags & 2 ) {
 			if (ent->message[0] == '@' && ent->message[1] != '@')
 			{
-				G_TeamCommand( TEAM_BLUE, va("cps \"%s\"", ent->message) );
+				G_TeamCommand( FACTION_REBEL, va("cps \"%s\"", ent->message) );
 			}
 			else
 			{
-				G_TeamCommand( TEAM_BLUE, va("cp \"%s\"", ent->message) );
+				G_TeamCommand( FACTION_REBEL, va("cp \"%s\"", ent->message) );
 			}
 		}
 		return;
@@ -481,11 +481,11 @@ wait - set to -1 to use it only once
 void target_relay_use (gentity_t *self, gentity_t *other, gentity_t *activator) {
 	qboolean ranscript = qfalse;
 	if ( ( self->spawnflags & 1 ) && activator->client
-		&& activator->client->sess.sessionTeam != TEAM_RED ) {
+		&& activator->client->sess.sessionTeam != FACTION_EMPIRE ) {
 		return;
 	}
 	if ( ( self->spawnflags & 2 ) && activator->client
-		&& activator->client->sess.sessionTeam != TEAM_BLUE ) {
+		&& activator->client->sess.sessionTeam != FACTION_REBEL ) {
 		return;
 	}
 

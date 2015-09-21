@@ -467,8 +467,8 @@ static int UI_GetIndexFromSelection(int actual);
 static void UI_SiegeClassCnt( const int team );
 
 int ProcessNewUI( int command, int arg0, int arg1, int arg2, int arg3, int arg4, int arg5, int arg6 );
-int	uiSkinColor=TEAM_FREE;
-int	uiHoldSkinColor=TEAM_FREE;	// Stores the skin color so that in non-team games, the player screen remembers the team you chose, in case you're coming back from the force powers screen.
+int	uiSkinColor=FACTION_FREE;
+int	uiHoldSkinColor=FACTION_FREE;	// Stores the skin color so that in non-team games, the player screen remembers the team you chose, in case you're coming back from the force powers screen.
 
 static const char *skillLevels[] = {
 	"SKILL1", // "Initiate"
@@ -506,11 +506,11 @@ static const int numNetNames = ARRAY_LEN( netNames ) - 1;
 const char *UI_GetStringEdString(const char *refSection, const char *refName);
 
 const char *UI_TeamName(int team) {
-	if (team==TEAM_RED)
+	if (team==FACTION_EMPIRE)
 		return "RED";
-	else if (team==TEAM_BLUE)
+	else if (team==FACTION_REBEL)
 		return "BLUE";
-	else if (team==TEAM_SPECTATOR)
+	else if (team==FACTION_SPECTATOR)
 		return "SPECTATOR";
 	return "FREE";
 }
@@ -867,7 +867,7 @@ static void UI_BuildPlayerList() {
 		trap->Cvar_Set("cg_selectedPlayerName", "Everyone");
 	}
 
-	if (!team || team == TEAM_SPECTATOR || !uiInfo.teamLeader)
+	if (!team || team == FACTION_SPECTATOR || !uiInfo.teamLeader)
 	{
 		n = uiInfo.myTeamCount;
 		trap->Cvar_Set("cg_selectedPlayer", va("%d", n));
@@ -1739,12 +1739,12 @@ static void UI_DrawSkinColor(rectDef_t *rect, float scale, vec4_t color, int tex
 	switch(val)
 	{
 #ifdef __FORCED_TEAM_COLORS__
-	case TEAM_RED:
-		trap->SE_GetStringTextString("MENUS_TEAM_RED", s, sizeof(s));
+	case FACTION_EMPIRE:
+		trap->SE_GetStringTextString("MENUS_FACTION_EMPIRE", s, sizeof(s));
 //		Com_sprintf(s, sizeof(s), "Red\0");
 		break;
-	case TEAM_BLUE:
-		trap->SE_GetStringTextString("MENUS_TEAM_BLUE", s, sizeof(s));
+	case FACTION_REBEL:
+		trap->SE_GetStringTextString("MENUS_FACTION_REBEL", s, sizeof(s));
 //		Com_sprintf(s, sizeof(s), "Blue\0");
 		break;
 #endif //__FORCED_TEAM_COLORS__
@@ -1771,13 +1771,13 @@ static void UI_DrawForceSide(rectDef_t *rect, float scale, vec4_t color, int tex
 	{
 		switch((int)(trap->Cvar_VariableValue("ui_myteam")))
 		{
-		case TEAM_RED:
+		case FACTION_EMPIRE:
 			uiForceSide = FORCE_DARKSIDE;
 			color[0] = 0.2f;
 			color[1] = 0.2f;
 			color[2] = 0.2f;
 			break;
-		case TEAM_BLUE:
+		case FACTION_REBEL:
 			uiForceSide = FORCE_LIGHTSIDE;
 			color[0] = 0.2f;
 			color[1] = 0.2f;
@@ -2213,7 +2213,7 @@ void UpdateForceStatus()
 		}
 
 		// The leftmost button should be "apply" unless you are in spectator, where you can join any team.
-		if ((int)(trap->Cvar_VariableValue("ui_myteam")) != TEAM_SPECTATOR)
+		if ((int)(trap->Cvar_VariableValue("ui_myteam")) != FACTION_SPECTATOR)
 		{
 			Menu_ShowItemByName(menu, "playerapply", qtrue);
 			Menu_ShowItemByName(menu, "playerforcejoin", qfalse);
@@ -2272,11 +2272,11 @@ void UpdateForceStatus()
 		switch((int)(trap->Cvar_VariableValue("ui_myteam")))
 		{
 #ifdef __FORCED_TEAM_COLORS__
-		case TEAM_RED:
-			uiSkinColor = TEAM_RED;
+		case FACTION_EMPIRE:
+			uiSkinColor = FACTION_EMPIRE;
 			break;
-		case TEAM_BLUE:
-			uiSkinColor = TEAM_BLUE;
+		case FACTION_REBEL:
+			uiSkinColor = FACTION_REBEL;
 			break;
 #endif //__FORCED_TEAM_COLORS__
 		default:
@@ -2284,7 +2284,7 @@ void UpdateForceStatus()
 
 			if (atoi(Info_ValueForKey(info, "g_gametype")) >= GT_TEAM)
 			{
-				uiSkinColor = TEAM_FREE;
+				uiSkinColor = FACTION_FREE;
 			}
 			else	// A bit of a hack so non-team games will remember which skin set you chose in the player menu
 			{
@@ -2574,13 +2574,13 @@ static int UI_OwnerDrawWidth(int ownerDraw, float scale) {
     case UI_SKIN_COLOR:
 		switch(uiSkinColor) {
 #ifdef __FORCED_TEAM_COLORS__
-		case TEAM_RED:
+		case FACTION_EMPIRE:
 //			s = "Red";
-			s = (char *)UI_GetStringEdString("MENUS", "TEAM_RED");
+			s = (char *)UI_GetStringEdString("MENUS", "FACTION_EMPIRE");
 			break;
-		case TEAM_BLUE:
+		case FACTION_REBEL:
 //			s = "Blue";
-			s = (char *)UI_GetStringEdString("MENUS", "TEAM_BLUE");
+			s = (char *)UI_GetStringEdString("MENUS", "FACTION_REBEL");
 			break;
 #endif //__FORCED_TEAM_COLORS__
 		default:
@@ -2677,13 +2677,13 @@ static int UI_OwnerDrawWidth(int ownerDraw, float scale) {
     case UI_BLUETEAMNAME:
 		i = UI_TeamIndexFromName(UI_Cvar_VariableString("ui_blueTeam"));
 		if (i >= 0 && i < uiInfo.teamCount) {
-			s = va("%s: %s", (char *)UI_GetStringEdString("MENUS", "TEAM_BLUE"), uiInfo.teamList[i].teamName);
+			s = va("%s: %s", (char *)UI_GetStringEdString("MENUS", "FACTION_REBEL"), uiInfo.teamList[i].teamName);
 		}
       break;
     case UI_REDTEAMNAME:
 		i = UI_TeamIndexFromName(UI_Cvar_VariableString("ui_redTeam"));
 		if (i >= 0 && i < uiInfo.teamCount) {
-			s = va("%s: %s",  (char *)UI_GetStringEdString("MENUS", "TEAM_RED"), uiInfo.teamList[i].teamName);
+			s = va("%s: %s",  (char *)UI_GetStringEdString("MENUS", "FACTION_EMPIRE"), uiInfo.teamList[i].teamName);
 		}
       break;
     case UI_BLUETEAM1:
@@ -2991,7 +2991,7 @@ static void UI_OwnerDraw(float x, float y, float w, float h, float text_x, float
       UI_DrawHandicap(&rect, scale, color, textStyle, iMenuFont);
       break;
     case UI_SKIN_COLOR:
-      UI_DrawSkinColor(&rect, scale, color, textStyle, uiSkinColor, TEAM_FREE, TEAM_BLUE, iMenuFont);
+      UI_DrawSkinColor(&rect, scale, color, textStyle, uiSkinColor, FACTION_FREE, FACTION_REBEL, iMenuFont);
       break;
 	case UI_FORCE_SIDE:
       UI_DrawForceSide(&rect, scale, color, textStyle, uiForceSide, 1, 2, iMenuFont);
@@ -4154,7 +4154,7 @@ static qboolean UI_OwnerDrawHandleKey(int ownerDraw, int flags, float *special, 
       return UI_Handicap_HandleKey(flags, special, key);
       break;
     case UI_SKIN_COLOR:
-      return UI_SkinColor_HandleKey(flags, special, key, uiSkinColor, TEAM_FREE, TEAM_BLUE, ownerDraw);
+      return UI_SkinColor_HandleKey(flags, special, key, uiSkinColor, FACTION_FREE, FACTION_REBEL, ownerDraw);
       break;
     case UI_FORCE_SIDE:
       return UI_ForceSide_HandleKey(flags, special, key, uiForceSide, 1, 2, ownerDraw);
@@ -5098,13 +5098,13 @@ void UI_FindCurrentSiegeTeamClass( void )
 		return;
 	}
 
-	if (( myTeam != TEAM_RED ) && ( myTeam != TEAM_BLUE ))
+	if (( myTeam != FACTION_EMPIRE ) && ( myTeam != FACTION_REBEL ))
 	{
 		return;
 	}
 
 	// If the player is on a team,
-	if ( myTeam == TEAM_RED )
+	if ( myTeam == FACTION_EMPIRE )
 	{
 		itemDef_t *item;
 		item = (itemDef_t *) Menu_FindItemByName(menu, "onteam1" );
@@ -5113,7 +5113,7 @@ void UI_FindCurrentSiegeTeamClass( void )
 		    Item_RunScript(item, item->action);
 		}
 	}
-	else if ( myTeam == TEAM_BLUE )
+	else if ( myTeam == FACTION_REBEL )
 	{
 		itemDef_t *item;
 		item = (itemDef_t *) Menu_FindItemByName(menu, "onteam2" );
@@ -6378,7 +6378,7 @@ static void UI_RunMenuScript(char **args)
 				else if ( Q_stricmp( "same", teamArg ) == 0 )
 				{//stay on current team
 					int myTeam = (int)(trap->Cvar_VariableValue("ui_myteam"));
-					if ( myTeam != TEAM_SPECTATOR )
+					if ( myTeam != FACTION_SPECTATOR )
 					{
 						UI_UpdateClientForcePowers(UI_TeamName(myTeam));//will cause him to respawn, if it's been 5 seconds since last one
 					}
@@ -7306,10 +7306,10 @@ static int UI_HeadCountByColor(void) {
 	switch(uiSkinColor)
 	{
 #ifdef __FORCED_TEAM_COLORS__
-		case TEAM_BLUE:
+		case FACTION_REBEL:
 			teamname = "/blue";
 			break;
-		case TEAM_RED:
+		case FACTION_EMPIRE:
 			teamname = "/red";
 			break;
 #endif //__FORCED_TEAM_COLORS__
@@ -8154,10 +8154,10 @@ static const char *UI_SelectedTeamHead(int index, int *actual) {
 
 	switch(uiSkinColor)
 	{
-		case TEAM_BLUE:
+		case FACTION_REBEL:
 			teamname = "/blue";
 			break;
-		case TEAM_RED:
+		case FACTION_EMPIRE:
 			teamname = "/red";
 			break;
 		default:

@@ -2514,7 +2514,7 @@ static void Q3_SetHealth( int entID, int data )
 	if ( data == 0 )
 	{
 		ent->health = 1;
-		if ( ent->client->sess.sessionTeam == TEAM_SPECTATOR )
+		if ( ent->client->sess.sessionTeam == FACTION_SPECTATOR )
 		{ //this would be silly
 			return;
 		}

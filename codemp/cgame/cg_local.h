@@ -1863,11 +1863,11 @@ typedef struct cgs_s {
 	qboolean		voteModified;			// beep whenever changed
 	char			voteString[MAX_STRING_TOKENS];
 
-	int				teamVoteTime[2];
-	int				teamVoteYes[2];
-	int				teamVoteNo[2];
-	qboolean		teamVoteModified[2];	// beep whenever changed
-	char			teamVoteString[2][MAX_STRING_TOKENS];
+	int				teamVoteTime[FACTION_NUM_FACTIONS];
+	int				teamVoteYes[FACTION_NUM_FACTIONS];
+	int				teamVoteNo[FACTION_NUM_FACTIONS];
+	qboolean		teamVoteModified[FACTION_NUM_FACTIONS];	// beep whenever changed
+	char			teamVoteString[FACTION_NUM_FACTIONS][MAX_STRING_TOKENS];
 
 	int				levelStartTime;
 

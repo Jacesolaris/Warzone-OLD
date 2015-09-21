@@ -25,7 +25,7 @@ void TeleportNPC( gentity_t *player, vec3_t origin, vec3_t angles ) {
 	// use temp events at source and destination to prevent the effect
 	// from getting dropped by a second player event
 #if 0 // UQ1: We don't want fx...
-	if ( player->client->sess.sessionTeam != TEAM_SPECTATOR ) {
+	if ( player->client->sess.sessionTeam != FACTION_SPECTATOR ) {
 		tent = G_TempEntity( player->client->ps.origin, EV_PLAYER_TELEPORT_OUT );
 		tent->s.clientNum = player->s.clientNum;
 
@@ -56,7 +56,7 @@ void TeleportNPC( gentity_t *player, vec3_t origin, vec3_t angles ) {
 
 #if 0 // UQ1: Nope...
 	// kill anything at the destination
-	if ( player->client->sess.sessionTeam != TEAM_SPECTATOR ) {
+	if ( player->client->sess.sessionTeam != FACTION_SPECTATOR ) {
 		G_KillBox (player);
 	}
 #endif //0
@@ -72,7 +72,7 @@ void TeleportNPC( gentity_t *player, vec3_t origin, vec3_t angles ) {
 	// use the precise origin for linking
 	VectorCopy( player->client->ps.origin, player->r.currentOrigin );
 
-	if ( player->client->sess.sessionTeam != TEAM_SPECTATOR ) {
+	if ( player->client->sess.sessionTeam != FACTION_SPECTATOR ) {
 		trap->LinkEntity ((sharedEntity_t *)player);
 	}
 }
@@ -376,7 +376,7 @@ qboolean NPC_NeedPadawan_Spawn ( void )
 		if ( parent2
 			&& NPC_IsAlive(parent2)
 			&& parent2->client
-			&& parent2->client->sess.sessionTeam == TEAM_BLUE
+			&& parent2->client->sess.sessionTeam == FACTION_REBEL
 			&& (parent2->client->NPC_class == CLASS_JEDI || parent2->client->NPC_class == CLASS_LUKE || parent2->client->NPC_class == CLASS_KYLE || (parent2->s.eType == ET_PLAYER && parent2->s.primaryWeapon == WP_SABER)))
 		{// This is a jedi on our team...
 //#pragma omp atomic
@@ -385,11 +385,11 @@ qboolean NPC_NeedPadawan_Spawn ( void )
 		else if ( parent2
 			&& parent2->client
 			&& NPC_IsAlive(parent2)
-			//&& parent2->client->sess.sessionTeam == TEAM_BLUE
+			//&& parent2->client->sess.sessionTeam == FACTION_REBEL
 			&& parent2->client->NPC_class == CLASS_PADAWAN)
 		{// This is a padawan on our team...
-			if (parent2->client->sess.sessionTeam != TEAM_BLUE)
-				parent2->client->sess.sessionTeam = TEAM_BLUE; // must have been manually spawned.. set team info...
+			if (parent2->client->sess.sessionTeam != FACTION_REBEL)
+				parent2->client->sess.sessionTeam = FACTION_REBEL; // must have been manually spawned.. set team info...
 
 //#pragma omp atomic
 			padawan_count++;
@@ -601,8 +601,8 @@ void NPC_DoPadawanStuff ( void )
 
 	me->NPC->combatMove = qtrue;
 
-	if (me->client->sess.sessionTeam != TEAM_BLUE)
-		me->client->sess.sessionTeam = TEAM_BLUE; // must have been manually spawned.. set team info...
+	if (me->client->sess.sessionTeam != FACTION_REBEL)
+		me->client->sess.sessionTeam = FACTION_REBEL; // must have been manually spawned.. set team info...
 
 	if (parent && NPC_IsAlive(parent))
 	{

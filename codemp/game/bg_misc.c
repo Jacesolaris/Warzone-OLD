@@ -15,6 +15,15 @@
 
 extern qboolean BG_HaveWeapon ( const playerState_t *ps, int weapon );
 
+char *factionNames[FACTION_NUM_FACTIONS] = {
+	"Free",
+	"Empire", // red
+	"Rebels", // blue
+	"Mandalorians", // orange
+	"Mercenaries", // green
+	"Spectator",
+};
+
 const char *bgToggleableSurfaces[BG_NUM_TOGGLEABLE_SURFACES] =
 {
 	"l_arm_key",					//0
@@ -2933,12 +2942,12 @@ qboolean BG_CanItemBeGrabbed( int gametype, const entityState_t *ent, const play
 			// ent->modelindex2 is non-zero on items if they are dropped
 			// we need to know this because we can pick up our dropped flag (and return it)
 			// but we can't pick up our flag at base
-			if (ps->persistant[PERS_TEAM] == TEAM_RED) {
+			if (ps->persistant[PERS_TEAM] == FACTION_EMPIRE) {
 				if (item->giTag == PW_BLUEFLAG ||
 					(item->giTag == PW_REDFLAG && ent->modelindex2) ||
 					(item->giTag == PW_REDFLAG && ps->powerups[PW_BLUEFLAG]) )
 					return qtrue;
-			} else if (ps->persistant[PERS_TEAM] == TEAM_BLUE) {
+			} else if (ps->persistant[PERS_TEAM] == FACTION_REBEL) {
 				if (item->giTag == PW_REDFLAG ||
 					(item->giTag == PW_BLUEFLAG && ent->modelindex2) ||
 					(item->giTag == PW_BLUEFLAG && ps->powerups[PW_REDFLAG]) )
@@ -3250,6 +3259,7 @@ char *eventnames[] = {
 	"EV_STOPLOOPINGSOUND",
 	"EV_STARTLOOPINGSOUND",
 	"EV_TAUNT",
+
 //fixme, added a bunch that aren't here!
 };
 
@@ -3400,13 +3410,13 @@ qboolean BG_ValidateSkinForTeam( const char *modelName, char *skinName, int team
 #ifdef __FORCED_TEAM_COLORS__
 	if (strlen (modelName) > 5 && Q_stricmpn (modelName, "jedi_", 5) == 0)
 	{ //argh, it's a custom player skin!
-		if (team == TEAM_RED && colors)
+		if (team == FACTION_EMPIRE && colors)
 		{
 			colors[0] = 1.0f;
 			colors[1] = 0.0f;
 			colors[2] = 0.0f;
 		}
-		else if (team == TEAM_BLUE && colors)
+		else if (team == FACTION_REBEL && colors)
 		{
 			colors[0] = 0.0f;
 			colors[1] = 0.0f;
@@ -3415,7 +3425,7 @@ qboolean BG_ValidateSkinForTeam( const char *modelName, char *skinName, int team
 		return qtrue;
 	}
 
-	if (team == TEAM_RED)
+	if (team == FACTION_EMPIRE)
 	{
 		if ( Q_stricmp( "red", skinName ) != 0 )
 		{//not "red"
@@ -3460,7 +3470,7 @@ qboolean BG_ValidateSkinForTeam( const char *modelName, char *skinName, int team
 		}
 
 	}
-	else if (team == TEAM_BLUE)
+	else if (team == FACTION_REBEL)
 	{
 		if ( Q_stricmp( "blue", skinName ) != 0 )
 		{

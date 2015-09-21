@@ -435,7 +435,7 @@ static qboolean turret_find_enemies( gentity_t *self )
 		{
 			continue;
 		}
-		if ( target->client->sess.sessionTeam == TEAM_SPECTATOR )
+		if ( target->client->sess.sessionTeam == FACTION_SPECTATOR )
 		{
 			continue;
 		}
@@ -539,7 +539,7 @@ void turret_base_think( gentity_t *self )
 			turnOff = qfalse;
 		}
 	}
-	else if ( self->enemy->client && self->enemy->client->sess.sessionTeam == TEAM_SPECTATOR )
+	else if ( self->enemy->client && self->enemy->client->sess.sessionTeam == FACTION_SPECTATOR )
 	{//don't keep going after spectators
 		self->enemy = NULL;
 	}

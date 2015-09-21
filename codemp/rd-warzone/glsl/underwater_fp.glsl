@@ -341,6 +341,6 @@ void main() {
 #define const_2 (255.0 / 128.0)
 	coolStuff = ((clamp(coolStuff - const_1, 0.0, 1.0)) * const_2);
 
-	gl_FragColor = vec4((coolStuff*2.0 + screen.rgb) / 3.0, screen.a);
+	gl_FragColor = vec4((coolStuff + screen.rgb) / 2.0, screen.a);
 	//gl_FragColor = vec4(coolStuff, 1.0);
 }

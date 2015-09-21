@@ -182,9 +182,9 @@ extern qboolean NPC_ParseParms( const char *NPCName, gentity_t *NPC );
 extern void NPC_LoadParms( void );
 
 //NPC_utils
-extern int	teamNumbers[TEAM_NUM_TEAMS];
-extern int	teamStrength[TEAM_NUM_TEAMS];
-extern int	teamCounter[TEAM_NUM_TEAMS];
+extern int	teamNumbers[FACTION_NUM_FACTIONS];
+extern int	teamStrength[FACTION_NUM_FACTIONS];
+extern int	teamCounter[FACTION_NUM_FACTIONS];
 extern void CalcEntitySpot ( const gentity_t *ent, const spot_t spot, vec3_t point );
 extern qboolean NPC_UpdateAngles ( qboolean doPitch, qboolean doYaw );
 extern void NPC_UpdateShootAngles (vec3_t angles, qboolean doPitch, qboolean doYaw );

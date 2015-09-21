@@ -10,11 +10,18 @@ extern "C" {
 	//
 	// =======================================================================================================================================
 
-	//#define		FOLIAGE_MAX_FOLIAGES 262144
-	//#define		FOLIAGE_MAX_FOLIAGES 524288
-#define		FOLIAGE_MAX_FOLIAGES 1048576
+//#define		FOLIAGE_MAX_FOLIAGES 262144
+//#define		FOLIAGE_MAX_FOLIAGES 524288
+#define			FOLIAGE_MAX_FOLIAGES 1048576
 
-//#define __FOLIAGE_MULTITHREADED_IN_RANGE__
+//#define		__USE_CLOSE_TREE_CULL__ // Can help FPS a bit but can cause stuff to flash into/out-of existance a little...
+//#define		__DEBUG_CLOSE_FOV_CULLS__
+
+#define			__USE_CLOSE_FOV_TREE_CULL__ // Can help FPS a lot in dense tree areas...
+//#define		 __DEBUG_CLOSE_TREE_CULL__
+
+//#define		__NO_GRASS_AT_TREES__ // Don't draw grass at the same position as a tree (for FPS)... Little impact..
+//#define		__NO_GRASS_AT_PLANTS__ // Don't draw grass at the same position as a plant (for FPS)... Little impact..
 
 	qboolean	FOLIAGE_LOADED = qfalse;
 	int			FOLIAGE_NUM_POSITIONS = 0;
@@ -29,7 +36,6 @@ extern "C" {
 	float		FOLIAGE_TREE_ANGLES[FOLIAGE_MAX_FOLIAGES];
 	float		FOLIAGE_TREE_SCALE[FOLIAGE_MAX_FOLIAGES];
 
-	int			IN_RANGE_FOLIAGES_TIME = 0;
 	int			IN_RANGE_FOLIAGES[65536];
 	int			IN_RANGE_FOLIAGES_COUNT = 0;
 
@@ -60,6 +66,14 @@ thread		*FOLIAGE_UPDATE_THREAD = NULL;
 qboolean	FOLIAGE_UPDATE_THREAD_RUNNING = qfalse;
 qboolean	FOLIAGE_UPDATE_THREAD_QUIT = qfalse;
 
+#ifdef __USE_CLOSE_TREE_CULL__
+#ifdef __DEBUG_CLOSE_TREE_CULL__
+int			LAST_CULL_INFO = 0;
+#endif //__DEBUG_CLOSE_TREE_CULL__
+#endif //__USE_CLOSE_TREE_CULL__
+
+vec3_t		LAST_ORG = { 0 };
+
 tthread::fast_mutex foliage_update_lock;
 
 void FOLIAGE_UpdateThread (void * aArg)
@@ -71,94 +85,165 @@ void FOLIAGE_UpdateThread (void * aArg)
 		VectorCopy(cg.refdef.vieworg, viewOrg);
 		VectorCopy(cg.refdef.viewangles, viewAngles);
 
-		if (IN_RANGE_FOLIAGES_TIME < cg.time)
+		if (Distance(cg.refdef.vieworg, LAST_ORG) > 128.0)
 		{// Update in range list...
-#ifndef __FOLIAGE_MULTITHREADED_IN_RANGE__
-			foliage_update_lock.lock();
-#endif //__FOLIAGE_MULTITHREADED_IN_RANGE__
+			int		NEW_IN_RANGE_FOLIAGES[65536];
+			int		NEW_IN_RANGE_FOLIAGES_COUNT = 0;
+			int		NUM_CLOSE_TREES = 0;
 
-			IN_RANGE_FOLIAGES_COUNT = 0;
+			VectorCopy(cg.refdef.vieworg, LAST_ORG);
+
+#ifdef __USE_CLOSE_TREE_CULL__
+			for (int spot = 0; spot < FOLIAGE_NUM_POSITIONS; spot++)
+			{
+				float dist = Distance( FOLIAGE_POSITIONS[spot], viewOrg);
+
+				if (FOLIAGE_TREE_SELECTION[spot] != 0 && dist < 1024.0 )
+				{
+					NUM_CLOSE_TREES++;
+					
+					if (NUM_CLOSE_TREES > 13) break;
+				}
+			}
+#endif //__USE_CLOSE_TREE_CULL__
+
+			NEW_IN_RANGE_FOLIAGES_COUNT = 0;
 
 			for (int spot = 0; spot < FOLIAGE_NUM_POSITIONS; spot++)
 			{
-				if (Distance( FOLIAGE_POSITIONS[spot], viewOrg) < 12000/*16550*/)
+				float MAX_DIST = 10000.0;//12000;//8192.0;//12000;//16550;
+				float USE_DIST = MAX_DIST;
+				float USE_TREE_DIST = MAX_DIST;
+				float dist = Distance( FOLIAGE_POSITIONS[spot], viewOrg);
+
+#ifdef __USE_CLOSE_TREE_CULL__
+				// Scale how much we add by how many blocking trees are close to us...
+				if (NUM_CLOSE_TREES > 11)
 				{
-					IN_RANGE_FOLIAGES[IN_RANGE_FOLIAGES_COUNT] = spot;
-					IN_RANGE_FOLIAGES_COUNT++;
+					USE_DIST = 1500.0;
+					USE_TREE_DIST = 4096.0;
+#ifdef __DEBUG_CLOSE_TREE_CULL__
+					LAST_CULL_INFO = 5;
+#endif //__DEBUG_CLOSE_TREE_CULL__
+				}
+				else if (NUM_CLOSE_TREES > 9)
+				{
+					USE_DIST = 2048.0;
+					USE_TREE_DIST = 6144.0;
+#ifdef __DEBUG_CLOSE_TREE_CULL__
+					LAST_CULL_INFO = 4;
+#endif //__DEBUG_CLOSE_TREE_CULL__
+				}
+				else if (NUM_CLOSE_TREES > 7)
+				{
+					USE_DIST = 3192.0;
+					USE_TREE_DIST = 8192.0;
+#ifdef __DEBUG_CLOSE_TREE_CULL__
+					LAST_CULL_INFO = 3;
+#endif //__DEBUG_CLOSE_TREE_CULL__
+				}
+				else if (NUM_CLOSE_TREES > 6)
+				{
+					USE_DIST = 5512.0;
+					USE_TREE_DIST = 10000.0;
+#ifdef __DEBUG_CLOSE_TREE_CULL__
+					LAST_CULL_INFO = 2;
+#endif //__DEBUG_CLOSE_TREE_CULL__
+				}
+				else if (NUM_CLOSE_TREES > 5)
+				{
+					USE_DIST = 5512.0;
+					USE_TREE_DIST = MAX_DIST;
+#ifdef __DEBUG_CLOSE_TREE_CULL__
+					LAST_CULL_INFO = 1;
+#endif //__DEBUG_CLOSE_TREE_CULL__
+				}
+#ifdef __DEBUG_CLOSE_TREE_CULL__
+				else
+				{
+					LAST_CULL_INFO = 0;
+				}
+#endif //__DEBUG_CLOSE_TREE_CULL__
+#endif //__USE_CLOSE_TREE_CULL__
+
+				if (dist < USE_DIST)
+				{
+					if (FOLIAGE_TREE_SELECTION[spot] != 0 && FOLIAGE_TREE_SCALE[spot] >= 1.0)
+					{// Distant large trees are ok...
+						NEW_IN_RANGE_FOLIAGES[NEW_IN_RANGE_FOLIAGES_COUNT] = spot;
+						NEW_IN_RANGE_FOLIAGES_COUNT++;
+					}
+					else if (dist < 10000 && FOLIAGE_TREE_SELECTION[spot] != 0)
+					{// Less distant smaller trees are ok...
+						NEW_IN_RANGE_FOLIAGES[NEW_IN_RANGE_FOLIAGES_COUNT] = spot;
+						NEW_IN_RANGE_FOLIAGES_COUNT++;
+					}
+					else if (dist < 5000.0 && FOLIAGE_GRASS_SCALE[spot] >= 1.0)
+					{// Medium range large grasses are ok...
+						NEW_IN_RANGE_FOLIAGES[NEW_IN_RANGE_FOLIAGES_COUNT] = spot;
+						NEW_IN_RANGE_FOLIAGES_COUNT++;
+					}
+					else if (dist < 5000.0 && FOLIAGE_PLANT_SELECTION[spot] != 0 && FOLIAGE_PLANT_SCALE[spot] >= 1.0)
+					{// Medium range large plants are ok...
+						NEW_IN_RANGE_FOLIAGES[NEW_IN_RANGE_FOLIAGES_COUNT] = spot;
+						NEW_IN_RANGE_FOLIAGES_COUNT++;
+					}
+					else if (dist < 2048.0 && FOLIAGE_GRASS_SCALE[spot] > 0.75)
+					{// Small stuff at close range is ok...
+						NEW_IN_RANGE_FOLIAGES[NEW_IN_RANGE_FOLIAGES_COUNT] = spot;
+						NEW_IN_RANGE_FOLIAGES_COUNT++;
+					}
+					else if (dist < 2048.0 && FOLIAGE_PLANT_SELECTION[spot] != 0 && FOLIAGE_PLANT_SCALE[spot] > 0.75)
+					{// Small stuff at close range is ok...
+						NEW_IN_RANGE_FOLIAGES[NEW_IN_RANGE_FOLIAGES_COUNT] = spot;
+						NEW_IN_RANGE_FOLIAGES_COUNT++;
+					}
+					else if (dist < 1024.0 && FOLIAGE_GRASS_SCALE[spot] > 0.5)
+					{// Small stuff at close range is ok...
+						NEW_IN_RANGE_FOLIAGES[NEW_IN_RANGE_FOLIAGES_COUNT] = spot;
+						NEW_IN_RANGE_FOLIAGES_COUNT++;
+					}
+					else if (dist < 1024.0 && FOLIAGE_PLANT_SELECTION[spot] != 0 && FOLIAGE_PLANT_SCALE[spot] > 0.5)
+					{// Small stuff at close range is ok...
+						NEW_IN_RANGE_FOLIAGES[NEW_IN_RANGE_FOLIAGES_COUNT] = spot;
+						NEW_IN_RANGE_FOLIAGES_COUNT++;
+					}
+					else if (dist < 768.0)
+					{// Tiny stuff at close range is ok...
+						NEW_IN_RANGE_FOLIAGES[NEW_IN_RANGE_FOLIAGES_COUNT] = spot;
+						NEW_IN_RANGE_FOLIAGES_COUNT++;
+					}
+				}
+				else if (dist < USE_TREE_DIST)
+				{
+					if (FOLIAGE_TREE_SELECTION[spot] != 0 && FOLIAGE_TREE_SCALE[spot] >= 1.0)
+					{// Distant large trees are ok...
+						NEW_IN_RANGE_FOLIAGES[NEW_IN_RANGE_FOLIAGES_COUNT] = spot;
+						NEW_IN_RANGE_FOLIAGES_COUNT++;
+					}
+					else if (dist < 10000 && FOLIAGE_TREE_SELECTION[spot] != 0)
+					{// Less distant smaller trees are ok...
+						NEW_IN_RANGE_FOLIAGES[NEW_IN_RANGE_FOLIAGES_COUNT] = spot;
+						NEW_IN_RANGE_FOLIAGES_COUNT++;
+					}
 				}
 			}
 
-			IN_RANGE_FOLIAGES_TIME = cg.time + 5000; // Update every 5 seconds???
-			
-#ifndef __FOLIAGE_MULTITHREADED_IN_RANGE__
+			foliage_update_lock.lock();
+			memcpy(IN_RANGE_FOLIAGES, NEW_IN_RANGE_FOLIAGES, sizeof(int)*65536);
+			IN_RANGE_FOLIAGES_COUNT = NEW_IN_RANGE_FOLIAGES_COUNT;
 			foliage_update_lock.unlock();
-#endif //__FOLIAGE_MULTITHREADED_IN_RANGE__
 		}
 
-#ifdef __FOLIAGE_MULTITHREADED_IN_RANGE__
-		foliage_update_lock.lock();
-
-		VISIBLE_FOLIAGES_COUNT = 0;
-
-		//
-		// Select and draw visible foliages from the in-range list...
-		//
-		for (int spot = 0; spot < IN_RANGE_FOLIAGES_COUNT; spot++)
-		{// Draw anything closeish to us...
-			qboolean	treeOnly = qfalse;
-			float		len = Distance(FOLIAGE_POSITIONS[IN_RANGE_FOLIAGES[spot]], viewOrg);
-
-			if ( (FOLIAGE_TREE_SELECTION[IN_RANGE_FOLIAGES[spot]] != 0 && len > 3192.0) 
-				|| (len < 5000.0 && FOLIAGE_GRASS_SCALE[IN_RANGE_FOLIAGES[spot]] >= 1.0))
-			{
-				treeOnly = qtrue;
-			}
-			else if ( len > 3192.0 ) 
-			{
-				continue;
-			}
-
-			if ( FOLIAGE_TREE_SELECTION[spot] != 0 )
-			{// Tree here, wider view FOV check...
-				if ( len > 4096 && !InFOV( FOLIAGE_POSITIONS[IN_RANGE_FOLIAGES[spot]], viewOrg, viewAngles, cg.refdef.fov_x + 3, cg.refdef.fov_y + 3 ))
-					continue;
-				else if ( len > 2048 && !InFOV( FOLIAGE_POSITIONS[IN_RANGE_FOLIAGES[spot]], viewOrg, viewAngles, cg.refdef.fov_x + 5, cg.refdef.fov_y + 5 ))
-					continue;
-				else if ( len > 1024 && !InFOV( FOLIAGE_POSITIONS[IN_RANGE_FOLIAGES[spot]], viewOrg, viewAngles, cg.refdef.fov_x + 10, cg.refdef.fov_y + 10 ))
-					continue;
-				else if ( len > 256 && !InFOV( FOLIAGE_POSITIONS[IN_RANGE_FOLIAGES[spot]], viewOrg, viewAngles, cg.refdef.fov_x + 20, cg.refdef.fov_y + 20 ))
-					continue;
-			}
-			else
-			{// No tree here, can use minimal FOV check...
-				if ( len > 4096 && !InFOV( FOLIAGE_POSITIONS[IN_RANGE_FOLIAGES[spot]], viewOrg, viewAngles, cg.refdef.fov_x + 1, cg.refdef.fov_y + 1 ))
-					continue;
-				else if ( len > 2048 && !InFOV( FOLIAGE_POSITIONS[IN_RANGE_FOLIAGES[spot]], viewOrg, viewAngles, cg.refdef.fov_x + 2, cg.refdef.fov_y + 2 ))
-					continue;
-				else if ( len > 1024 && !InFOV( FOLIAGE_POSITIONS[IN_RANGE_FOLIAGES[spot]], viewOrg, viewAngles, cg.refdef.fov_x + 3, cg.refdef.fov_y + 3 ))
-					continue;
-				else if ( len > 256 && !InFOV( FOLIAGE_POSITIONS[IN_RANGE_FOLIAGES[spot]], viewOrg, viewAngles, cg.refdef.fov_x + 20, cg.refdef.fov_y + 20 ))
-					continue;
-			}
-
-			VISIBLE_FOLIAGES[VISIBLE_FOLIAGES_COUNT] = IN_RANGE_FOLIAGES[spot];
-			
-			if (treeOnly)
-				VISIBLE_FOLIAGES_VISTYPE[VISIBLE_FOLIAGES_COUNT] = FOLIAGE_VISIBLE_TREE_ONLY;
-			else
-				VISIBLE_FOLIAGES_VISTYPE[VISIBLE_FOLIAGES_COUNT] = FOLIAGE_VISIBLE_FULL;
-
-			VISIBLE_FOLIAGES_COUNT++;
-		}
-
-		foliage_update_lock.unlock();
-#endif //__FOLIAGE_MULTITHREADED_IN_RANGE__
+		this_thread::sleep_for(chrono::milliseconds(200));
 	}
+
+	FOLIAGE_UPDATE_THREAD_RUNNING = qfalse;
 }
 
 void FOLIAGE_StartUpdateThread ( void )
 {
-	if (!FOLIAGE_UPDATE_THREAD_RUNNING)
+	if (!FOLIAGE_UPDATE_THREAD_RUNNING && !FOLIAGE_UPDATE_THREAD_QUIT)
 	{// Run in background thread...
 		FOLIAGE_UPDATE_THREAD_QUIT = qfalse;
 		FOLIAGE_UPDATE_THREAD_RUNNING = qtrue;
@@ -169,8 +254,11 @@ void FOLIAGE_StartUpdateThread ( void )
 void FOLIAGE_ShutdownUpdateThread ( void )
 {
 	FOLIAGE_UPDATE_THREAD_QUIT = qtrue;
-	FOLIAGE_UPDATE_THREAD->join();
-	FOLIAGE_UPDATE_THREAD_RUNNING = qfalse;
+	
+	while (FOLIAGE_UPDATE_THREAD_RUNNING)
+	{
+		this_thread::sleep_for(chrono::milliseconds(1));
+	}
 }
 
 extern "C" {
@@ -223,14 +311,42 @@ extern "C" {
 			&& !(skip_smallStuff && FOLIAGE_GRASS_SCALE[num] <= 0.75)
 			&& !(skip_tinyStuff && FOLIAGE_GRASS_SCALE[num] <= 0.5)*/)
 		{// Graw grass...
-			re.hModel = FOLIAGE_GRASS_MODEL[0];
-			VectorSet(re.modelScale, FOLIAGE_GRASS_SCALE[num], FOLIAGE_GRASS_SCALE[num], FOLIAGE_GRASS_SCALE[num]);
-			angles[PITCH] = angles[ROLL] = 0.0f;
-			angles[YAW] = FOLIAGE_GRASS_ANGLES[num];
-			VectorCopy(angles, re.angles);
-			AnglesToAxis(angles, re.axis);
-			ScaleModelAxis( &re );
-			FOLIAGE_AddFoliageEntityToScene( &re );
+#ifdef __NO_GRASS_AT_TREES__
+			if (FOLIAGE_TREE_SELECTION[num] == 0)
+			{
+#ifdef __NO_GRASS_AT_PLANTS__
+				if (FOLIAGE_PLANT_SELECTION[num] == 0)
+				{
+#endif //__NO_GRASS_AT_PLANTS__
+					re.hModel = FOLIAGE_GRASS_MODEL[0];
+					VectorSet(re.modelScale, FOLIAGE_GRASS_SCALE[num], FOLIAGE_GRASS_SCALE[num], FOLIAGE_GRASS_SCALE[num]);
+					angles[PITCH] = angles[ROLL] = 0.0f;
+					angles[YAW] = FOLIAGE_GRASS_ANGLES[num];
+					VectorCopy(angles, re.angles);
+					AnglesToAxis(angles, re.axis);
+					ScaleModelAxis( &re );
+					FOLIAGE_AddFoliageEntityToScene( &re );
+#ifdef __NO_GRASS_AT_PLANTS__
+				}
+#endif //__NO_GRASS_AT_PLANTS__
+			}
+#else //!__NO_GRASS_AT_TREES__
+#ifdef __NO_GRASS_AT_PLANTS__
+			if (FOLIAGE_PLANT_SELECTION[num] == 0)
+			{
+#endif //__NO_GRASS_AT_PLANTS__
+				re.hModel = FOLIAGE_GRASS_MODEL[0];
+				VectorSet(re.modelScale, FOLIAGE_GRASS_SCALE[num], FOLIAGE_GRASS_SCALE[num], FOLIAGE_GRASS_SCALE[num]);
+				angles[PITCH] = angles[ROLL] = 0.0f;
+				angles[YAW] = FOLIAGE_GRASS_ANGLES[num];
+				VectorCopy(angles, re.angles);
+				AnglesToAxis(angles, re.axis);
+				ScaleModelAxis( &re );
+				FOLIAGE_AddFoliageEntityToScene( &re );
+#ifdef __NO_GRASS_AT_PLANTS__
+			}
+#endif //__NO_GRASS_AT_PLANTS__
+#endif //__NO_GRASS_AT_TREES__
 		}
 
 		if (FOLIAGE_TREE_SELECTION[num] != 0)
@@ -260,46 +376,6 @@ extern "C" {
 			ScaleModelAxis( &re );
 			FOLIAGE_AddFoliageEntityToScene( &re );
 		}
-	}
-
-	qboolean FOLIAGE_FloorIsGrassAt ( vec3_t org )
-	{
-		trace_t tr;
-		vec3_t org1, org2;
-		float pitch = 0;
-
-		VectorCopy(org, org1);
-		VectorCopy(org, org2);
-		org2[2] -= 20.0f;
-
-		CG_Trace( &tr, org1, NULL, NULL, org2, -1, CONTENTS_SOLID|CONTENTS_TERRAIN );
-
-		if (tr.startsolid || tr.allsolid)
-		{
-			return qfalse;
-		}
-
-		if (tr.fraction == 1.0)
-		{
-			return qfalse;
-		}
-
-		if (Distance(org, tr.endpos) >= 20.0)
-		{
-			return qfalse;
-		}
-
-		switch (tr.surfaceFlags & MATERIAL_MASK)
-		{
-		case MATERIAL_SHORTGRASS:
-		case MATERIAL_LONGGRASS:
-			return qtrue;
-			break;
-		default:
-			break;
-		}
-
-		return qfalse;
 	}
 
 	qboolean FOLIAGE_LoadFoliagePositions( void )
@@ -476,7 +552,6 @@ extern "C" {
 
 		FOLIAGE_CheckUpdateThread();
 
-#ifndef __FOLIAGE_MULTITHREADED_IN_RANGE__
 		vec3_t viewOrg, viewAngles;
 
 		VectorCopy(cg.refdef.vieworg, viewOrg);
@@ -484,11 +559,69 @@ extern "C" {
 
 		foliage_update_lock.lock();
 
+		//clock_t waitBegin = clock();
 		VISIBLE_FOLIAGES_COUNT = 0;
+		//clock_t waitEnd = clock();
+		//int waitTime = waitEnd - waitBegin;
+
+		//if (waitTime > 0) trap->Print("Foliage system waited %i ms for lock.\n");
+
+#ifdef __DEBUG_CLOSE_TREE_CULL__
+		trap->Print("Foliage cull type: %i.\n", LAST_CULL_INFO);
+#endif //__DEBUG_CLOSE_TREE_CULL__
+
+#ifdef __USE_CLOSE_FOV_TREE_CULL__
+		int FOV_CLOSE_TREE_COUNT = 0;
+
+		for (int spot = 0; spot < IN_RANGE_FOLIAGES_COUNT; spot++)
+		{// Draw anything closeish to us...
+			qboolean	treeOnly = qfalse;
+			float		len = Distance(FOLIAGE_POSITIONS[IN_RANGE_FOLIAGES[spot]], viewOrg);
+
+			if (FOV_CLOSE_TREE_COUNT > 9) break;
+
+			if ( FOLIAGE_TREE_SELECTION[IN_RANGE_FOLIAGES[spot]] != 0 )
+			{
+				if (len <= 850.0)
+				{
+					if ( /*len <= 192.0 ||*/ InFOV( FOLIAGE_POSITIONS[IN_RANGE_FOLIAGES[spot]], viewOrg, viewAngles, cg.refdef.fov_x + 20, cg.refdef.fov_y + 20 ))
+						FOV_CLOSE_TREE_COUNT++;
+					else
+						continue;
+				}
+			}
+		}
+
+		int FOV_ULTRA_CLOSE_TREE_COUNT = 0;
+
+		for (int spot = 0; spot < IN_RANGE_FOLIAGES_COUNT; spot++)
+		{// Draw anything closeish to us...
+			qboolean	treeOnly = qfalse;
+			float		len = Distance(FOLIAGE_POSITIONS[IN_RANGE_FOLIAGES[spot]], viewOrg);
+
+			if (FOV_ULTRA_CLOSE_TREE_COUNT > 3) break;
+
+			if ( FOLIAGE_TREE_SELECTION[IN_RANGE_FOLIAGES[spot]] != 0 )
+			{
+				if (len <= 450.0)
+				{
+					if ( len <= 96.0 || InFOV( FOLIAGE_POSITIONS[IN_RANGE_FOLIAGES[spot]], viewOrg, viewAngles, 150, 150 ))
+						FOV_ULTRA_CLOSE_TREE_COUNT++;
+					else
+						continue;
+				}
+			}
+		}
+#endif //__USE_CLOSE_FOV_TREE_CULL__
 
 		//
 		// Select and draw visible foliages from the in-range list...
 		//
+
+#ifdef __DEBUG_CLOSE_FOV_CULLS__
+		int NUM_CLOSE_FOV_TREE_CULLS = 0;
+#endif //__DEBUG_CLOSE_FOV_CULLS__
+
 		for (int spot = 0; spot < IN_RANGE_FOLIAGES_COUNT; spot++)
 		{// Draw anything closeish to us...
 			qboolean	treeOnly = qfalse;
@@ -504,7 +637,7 @@ extern "C" {
 				continue;
 			}
 
-			if ( FOLIAGE_TREE_SELECTION[spot] != 0 )
+			if ( FOLIAGE_TREE_SELECTION[IN_RANGE_FOLIAGES[spot]] != 0 )
 			{// Tree here, wider view FOV check...
 				if ( len > 4096 && !InFOV( FOLIAGE_POSITIONS[IN_RANGE_FOLIAGES[spot]], viewOrg, viewAngles, cg.refdef.fov_x + 3, cg.refdef.fov_y + 3 ))
 					continue;
@@ -514,6 +647,28 @@ extern "C" {
 					continue;
 				else if ( len > 256 && !InFOV( FOLIAGE_POSITIONS[IN_RANGE_FOLIAGES[spot]], viewOrg, viewAngles, cg.refdef.fov_x + 20, cg.refdef.fov_y + 20 ))
 					continue;
+
+#ifdef __USE_CLOSE_FOV_TREE_CULL__
+				if ( (FOV_CLOSE_TREE_COUNT > 7 || FOV_ULTRA_CLOSE_TREE_COUNT > 3) 
+					&& len > 2048.0 
+					&& InFOV( FOLIAGE_POSITIONS[IN_RANGE_FOLIAGES[spot]], viewOrg, viewAngles, cg.refdef.fov_x + 20, cg.refdef.fov_y + 20 ))
+				{
+#ifdef __DEBUG_CLOSE_FOV_CULLS__
+					NUM_CLOSE_FOV_TREE_CULLS++;
+#endif //__DEBUG_CLOSE_FOV_CULLS__
+					continue; // Trees cover this up hopefully...
+				}
+
+				if ( FOV_CLOSE_TREE_COUNT > 9 
+					&& len > 3192.0 
+					&& InFOV( FOLIAGE_POSITIONS[IN_RANGE_FOLIAGES[spot]], viewOrg, viewAngles, cg.refdef.fov_x + 20, cg.refdef.fov_y + 20 ))
+				{
+#ifdef __DEBUG_CLOSE_FOV_CULLS__
+					NUM_CLOSE_FOV_TREE_CULLS++;
+#endif //__DEBUG_CLOSE_FOV_CULLS__
+					continue; // Trees cover this up hopefully...
+				}
+#endif //__USE_CLOSE_FOV_TREE_CULL__
 			}
 			else
 			{// No tree here, can use minimal FOV check...
@@ -523,8 +678,30 @@ extern "C" {
 					continue;
 				else if ( len > 1024 && !InFOV( FOLIAGE_POSITIONS[IN_RANGE_FOLIAGES[spot]], viewOrg, viewAngles, cg.refdef.fov_x + 3, cg.refdef.fov_y + 3 ))
 					continue;
-				else if ( len > 256 && !InFOV( FOLIAGE_POSITIONS[IN_RANGE_FOLIAGES[spot]], viewOrg, viewAngles, cg.refdef.fov_x + 20, cg.refdef.fov_y + 20 ))
+				else if ( len > 256 && !InFOV( FOLIAGE_POSITIONS[IN_RANGE_FOLIAGES[spot]], viewOrg, viewAngles, cg.refdef.fov_x + 20, cg.refdef.fov_y + 5 ))
 					continue;
+
+#ifdef __USE_CLOSE_FOV_TREE_CULL__
+				if ( (FOV_CLOSE_TREE_COUNT > 7 || FOV_ULTRA_CLOSE_TREE_COUNT > 3) 
+					&& len > 1500.0 
+					&& InFOV( FOLIAGE_POSITIONS[IN_RANGE_FOLIAGES[spot]], viewOrg, viewAngles, cg.refdef.fov_x + 20, cg.refdef.fov_y + 20 ))
+				{
+#ifdef __DEBUG_CLOSE_FOV_CULLS__
+					NUM_CLOSE_FOV_TREE_CULLS++;
+#endif //__DEBUG_CLOSE_FOV_CULLS__
+					continue; // Trees cover this up hopefully...
+				}
+
+				if ( FOV_CLOSE_TREE_COUNT > 9 
+					&& len > 2048.0 
+					&& InFOV( FOLIAGE_POSITIONS[IN_RANGE_FOLIAGES[spot]], viewOrg, viewAngles, cg.refdef.fov_x + 5, cg.refdef.fov_y + 5 ))
+				{
+#ifdef __DEBUG_CLOSE_FOV_CULLS__
+					NUM_CLOSE_FOV_TREE_CULLS++;
+#endif //__DEBUG_CLOSE_FOV_CULLS__
+					continue; // Trees cover this up hopefully...
+				}
+#endif //__USE_CLOSE_FOV_TREE_CULL__
 			}
 
 			VISIBLE_FOLIAGES[VISIBLE_FOLIAGES_COUNT] = IN_RANGE_FOLIAGES[spot];
@@ -536,11 +713,10 @@ extern "C" {
 
 			VISIBLE_FOLIAGES_COUNT++;
 		}
-#endif //__FOLIAGE_MULTITHREADED_IN_RANGE__
 
-#ifdef __FOLIAGE_MULTITHREADED_IN_RANGE__
-		foliage_update_lock.lock();
-#endif //__FOLIAGE_MULTITHREADED_IN_RANGE__
+#ifdef __DEBUG_CLOSE_FOV_CULLS__
+		trap->Print("Foliage CLOSE FOV culls: %i.\n", NUM_CLOSE_FOV_TREE_CULLS);
+#endif //__DEBUG_CLOSE_FOV_CULLS__
 
 		for (spot = 0; spot < VISIBLE_FOLIAGES_COUNT; spot++)
 		{
@@ -682,8 +858,48 @@ extern "C" {
 	typedef long int	intvec_t;
 	typedef intvec_t	intvec3_t[3];
 
+	qboolean FOLIAGE_FloorIsGrassAt ( vec3_t org )
+	{
+		trace_t tr;
+		vec3_t org1, org2;
+		float pitch = 0;
+
+		VectorCopy(org, org1);
+		VectorCopy(org, org2);
+		org2[2] -= 20.0f;
+
+		CG_Trace( &tr, org1, NULL, NULL, org2, -1, CONTENTS_SOLID|CONTENTS_TERRAIN );
+
+		if (tr.startsolid || tr.allsolid)
+		{
+			return qfalse;
+		}
+
+		if (tr.fraction == 1.0)
+		{
+			return qfalse;
+		}
+
+		if (Distance(org, tr.endpos) >= 20.0)
+		{
+			return qfalse;
+		}
+
+		switch (tr.surfaceFlags & MATERIAL_MASK)
+		{
+		case MATERIAL_SHORTGRASS:
+		case MATERIAL_LONGGRASS:
+			return qtrue;
+			break;
+		default:
+			break;
+		}
+
+		return qfalse;
+	}
+
 #define FOLIAGE_MOD_NAME		"aimod"
-	float	FOLIAGE_FILE_VERSION =	1.1f;
+float	FOLIAGE_FILE_VERSION =	1.1f;
 
 	void FOLIAGE_GenerateFoliage_Real ( qboolean USE_WAYPOINTS, float density )
 	{
@@ -1076,17 +1292,17 @@ extern "C" {
 							current_height = z - scatter_min;
 							continue;
 						}
-						else if (Distance(org, last_org) < density)
+						/*else if (Distance(org, last_org) < density)
 						{
 							current_height = floor;
 							continue;
-						}
+						}*/
 
-						if (!FOLIAGE_Check_Width(org))
+						/*if (!FOLIAGE_Check_Width(org))
 						{// Not wide enough for a player to fit!
 							current_height = floor;
-							continue; // because omp critical can not "continue"...
-						}
+							continue;
+						}*/
 
 #pragma omp critical (__ADD_TEMP_NODE__)
 						{

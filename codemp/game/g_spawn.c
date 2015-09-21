@@ -457,11 +457,11 @@ void SP_gametype_item ( gentity_t* ent )
 	{
 		if ( Q_stricmp ( level.mTeamFilter, "red") == 0 )
 		{
-			team = TEAM_RED;
+			team = FACTION_EMPIRE;
 		}
 		else if ( Q_stricmp ( level.mTeamFilter, "blue") == 0 )
 		{
-			team = TEAM_BLUE;
+			team = FACTION_REBEL;
 		}
 	}
 
@@ -471,7 +471,7 @@ void SP_gametype_item ( gentity_t* ent )
 		{
 			if (strstr(ent->targetname, "flag"))
 			{
-				if (team == TEAM_RED)
+				if (team == FACTION_EMPIRE)
 				{
 					item = BG_FindItem("team_CTF_redflag");
 				}

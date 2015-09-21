@@ -78,16 +78,16 @@ static void CG_DrawClientScore( int y, score_t *score, float *color, float fade,
 	if ( ci->powerups & (1<<PW_NEUTRALFLAG) )
 	{
 		if ( largeFormat )
-			CG_DrawFlagModel( iconx, y - (32 - BIGCHAR_HEIGHT) / 2, iconSize, iconSize, TEAM_FREE, qfalse );
+			CG_DrawFlagModel( iconx, y - (32 - BIGCHAR_HEIGHT) / 2, iconSize, iconSize, FACTION_FREE, qfalse );
 		else
-			CG_DrawFlagModel( iconx, y, iconSize, iconSize, TEAM_FREE, qfalse );
+			CG_DrawFlagModel( iconx, y, iconSize, iconSize, FACTION_FREE, qfalse );
 	}
 
 	else if ( ci->powerups & ( 1 << PW_REDFLAG ) )
-		CG_DrawFlagModel( iconx, y, iconSize, iconSize, TEAM_RED, qfalse );
+		CG_DrawFlagModel( iconx, y, iconSize, iconSize, FACTION_EMPIRE, qfalse );
 
 	else if ( ci->powerups & ( 1 << PW_BLUEFLAG ) )
-		CG_DrawFlagModel( iconx, y, iconSize, iconSize, TEAM_BLUE, qfalse );
+		CG_DrawFlagModel( iconx, y, iconSize, iconSize, FACTION_REBEL, qfalse );
 
 	else if ( cgs.gametype == GT_POWERDUEL && (ci->duelTeam == DUELTEAM_LONE || ci->duelTeam == DUELTEAM_DOUBLE) )
 	{
@@ -116,7 +116,7 @@ static void CG_DrawClientScore( int y, score_t *score, float *color, float fade,
 
 		localClient = qtrue;
 
-		if ( cg.snap->ps.persistant[PERS_TEAM] == TEAM_SPECTATOR
+		if ( cg.snap->ps.persistant[PERS_TEAM] == FACTION_SPECTATOR
 			|| cgs.gametype >= GT_TEAM ) {
 			rank = -1;
 		} else {
@@ -148,7 +148,7 @@ static void CG_DrawClientScore( int y, score_t *score, float *color, float fade,
 
 	if ( score->ping != -1 )
 	{
-		if ( ci->team != TEAM_SPECTATOR || cgs.gametype == GT_DUEL || cgs.gametype == GT_POWERDUEL )
+		if ( ci->team != FACTION_SPECTATOR || cgs.gametype == GT_DUEL || cgs.gametype == GT_POWERDUEL )
 		{
 			if (cgs.gametype == GT_DUEL || cgs.gametype == GT_POWERDUEL)
 			{
@@ -386,7 +386,7 @@ qboolean CG_DrawOldScoreboard( void ) {
 	{ //do nothing?
 	}
 	else if ( cgs.gametype < GT_TEAM) {
-		if (cg.snap->ps.persistant[PERS_TEAM] != TEAM_SPECTATOR )
+		if (cg.snap->ps.persistant[PERS_TEAM] != FACTION_SPECTATOR )
 		{
 			char sPlace[256];
 			char sOf[256];
@@ -495,8 +495,8 @@ qboolean CG_DrawOldScoreboard( void ) {
 		y += lineHeight/2;
 
 		if ( cg.teamScores[0] >= cg.teamScores[1] ) {
-			int team1MaxCl = CG_GetTeamCount(TEAM_RED, maxClients);
-			int team2MaxCl = CG_GetTeamCount(TEAM_BLUE, maxClients);
+			int team1MaxCl = CG_GetTeamCount(FACTION_EMPIRE, maxClients);
+			int team2MaxCl = CG_GetTeamCount(FACTION_REBEL, maxClients);
 
 			if (team1MaxCl > 10 && (team1MaxCl+team2MaxCl) > maxClients)
 			{
@@ -512,24 +512,24 @@ qboolean CG_DrawOldScoreboard( void ) {
 
 			team2MaxCl = (maxClients-team1MaxCl); //team2 can display however many is left over after team1's display
 
-			n1 = CG_TeamScoreboard( y, TEAM_RED, fade, team1MaxCl, lineHeight, qtrue );
-			CG_DrawTeamBackground( SB_SCORELINE_X - 5, y - topBorderSize, 640 - SB_SCORELINE_X * 2 + 10, n1 * lineHeight + bottomBorderSize, 0.33f, TEAM_RED );
-			CG_TeamScoreboard( y, TEAM_RED, fade, team1MaxCl, lineHeight, qfalse );
+			n1 = CG_TeamScoreboard( y, FACTION_EMPIRE, fade, team1MaxCl, lineHeight, qtrue );
+			CG_DrawTeamBackground( SB_SCORELINE_X - 5, y - topBorderSize, 640 - SB_SCORELINE_X * 2 + 10, n1 * lineHeight + bottomBorderSize, 0.33f, FACTION_EMPIRE );
+			CG_TeamScoreboard( y, FACTION_EMPIRE, fade, team1MaxCl, lineHeight, qfalse );
 			y += (n1 * lineHeight) + BIGCHAR_HEIGHT;
 
 			//maxClients -= n1;
 
-			n2 = CG_TeamScoreboard( y, TEAM_BLUE, fade, team2MaxCl, lineHeight, qtrue );
-			CG_DrawTeamBackground( SB_SCORELINE_X - 5, y - topBorderSize, 640 - SB_SCORELINE_X * 2 + 10, n2 * lineHeight + bottomBorderSize, 0.33f, TEAM_BLUE );
-			CG_TeamScoreboard( y, TEAM_BLUE, fade, team2MaxCl, lineHeight, qfalse );
+			n2 = CG_TeamScoreboard( y, FACTION_REBEL, fade, team2MaxCl, lineHeight, qtrue );
+			CG_DrawTeamBackground( SB_SCORELINE_X - 5, y - topBorderSize, 640 - SB_SCORELINE_X * 2 + 10, n2 * lineHeight + bottomBorderSize, 0.33f, FACTION_REBEL );
+			CG_TeamScoreboard( y, FACTION_REBEL, fade, team2MaxCl, lineHeight, qfalse );
 			y += (n2 * lineHeight) + BIGCHAR_HEIGHT;
 
 			//maxClients -= n2;
 
 			maxClients -= (team1MaxCl+team2MaxCl);
 		} else {
-			int team1MaxCl = CG_GetTeamCount(TEAM_BLUE, maxClients);
-			int team2MaxCl = CG_GetTeamCount(TEAM_RED, maxClients);
+			int team1MaxCl = CG_GetTeamCount(FACTION_REBEL, maxClients);
+			int team2MaxCl = CG_GetTeamCount(FACTION_EMPIRE, maxClients);
 
 			if (team1MaxCl > 10 && (team1MaxCl+team2MaxCl) > maxClients)
 			{
@@ -545,16 +545,16 @@ qboolean CG_DrawOldScoreboard( void ) {
 
 			team2MaxCl = (maxClients-team1MaxCl); //team2 can display however many is left over after team1's display
 
-			n1 = CG_TeamScoreboard( y, TEAM_BLUE, fade, team1MaxCl, lineHeight, qtrue );
-			CG_DrawTeamBackground( SB_SCORELINE_X - 5, y - topBorderSize, 640 - SB_SCORELINE_X * 2 + 10, n1 * lineHeight + bottomBorderSize, 0.33f, TEAM_BLUE );
-			CG_TeamScoreboard( y, TEAM_BLUE, fade, team1MaxCl, lineHeight, qfalse );
+			n1 = CG_TeamScoreboard( y, FACTION_REBEL, fade, team1MaxCl, lineHeight, qtrue );
+			CG_DrawTeamBackground( SB_SCORELINE_X - 5, y - topBorderSize, 640 - SB_SCORELINE_X * 2 + 10, n1 * lineHeight + bottomBorderSize, 0.33f, FACTION_REBEL );
+			CG_TeamScoreboard( y, FACTION_REBEL, fade, team1MaxCl, lineHeight, qfalse );
 			y += (n1 * lineHeight) + BIGCHAR_HEIGHT;
 
 			//maxClients -= n1;
 
-			n2 = CG_TeamScoreboard( y, TEAM_RED, fade, team2MaxCl, lineHeight, qtrue );
-			CG_DrawTeamBackground( SB_SCORELINE_X - 5, y - topBorderSize, 640 - SB_SCORELINE_X * 2 + 10, n2 * lineHeight + bottomBorderSize, 0.33f, TEAM_RED );
-			CG_TeamScoreboard( y, TEAM_RED, fade, team2MaxCl, lineHeight, qfalse );
+			n2 = CG_TeamScoreboard( y, FACTION_EMPIRE, fade, team2MaxCl, lineHeight, qtrue );
+			CG_DrawTeamBackground( SB_SCORELINE_X - 5, y - topBorderSize, 640 - SB_SCORELINE_X * 2 + 10, n2 * lineHeight + bottomBorderSize, 0.33f, FACTION_EMPIRE );
+			CG_TeamScoreboard( y, FACTION_EMPIRE, fade, team2MaxCl, lineHeight, qfalse );
 			y += (n2 * lineHeight) + BIGCHAR_HEIGHT;
 
 			//maxClients -= n2;
@@ -562,16 +562,16 @@ qboolean CG_DrawOldScoreboard( void ) {
 			maxClients -= (team1MaxCl+team2MaxCl);
 		}
 		maxClients = realMaxClients;
-		n1 = CG_TeamScoreboard( y, TEAM_SPECTATOR, fade, maxClients, lineHeight, qfalse );
+		n1 = CG_TeamScoreboard( y, FACTION_SPECTATOR, fade, maxClients, lineHeight, qfalse );
 		y += (n1 * lineHeight) + BIGCHAR_HEIGHT;
 
 	} else {
 		//
 		// free for all scoreboard
 		//
-		n1 = CG_TeamScoreboard( y, TEAM_FREE, fade, maxClients, lineHeight, qfalse );
+		n1 = CG_TeamScoreboard( y, FACTION_FREE, fade, maxClients, lineHeight, qfalse );
 		y += (n1 * lineHeight) + BIGCHAR_HEIGHT;
-		n2 = CG_TeamScoreboard( y, TEAM_SPECTATOR, fade, maxClients - n1, lineHeight, qfalse );
+		n2 = CG_TeamScoreboard( y, FACTION_SPECTATOR, fade, maxClients - n1, lineHeight, qfalse );
 		y += (n2 * lineHeight) + BIGCHAR_HEIGHT;
 	}
 

@@ -46,7 +46,7 @@ static qboolean shoot;
 static float	enemyDist;
 static vec3_t	impactPos;
 
-int groupSpeechDebounceTime[TEAM_NUM_TEAMS];//used to stop several group AI from speaking all at once
+int groupSpeechDebounceTime[FACTION_NUM_FACTIONS];//used to stop several group AI from speaking all at once
 
 //Local state enums
 enum

@@ -23,7 +23,7 @@ extern void G_AddVoiceEvent( gentity_t *self, int event, int speakDebounceTime )
 
 extern void Q3_SetParm (int entID, int parmNum, const char *parmValue);
 extern team_t TranslateTeamName( const char *name );
-extern char	*TeamNames[TEAM_NUM_TEAMS];
+extern char	*TeamNames[FACTION_NUM_FACTIONS];
 
 extern void PM_SetTorsoAnimTimer( gentity_t *ent, int *torsoAnimTimer, int time );
 extern void PM_SetLegsAnimTimer( gentity_t *ent, int *legsAnimTimer, int time );
@@ -624,7 +624,7 @@ void NPC_SetMiscDefaultData( gentity_t *ent )
 			}
 			else
 			{
-				ent->client->sess.sessionTeam = TEAM_FREE;
+				ent->client->sess.sessionTeam = FACTION_FREE;
 			}
 		}
 	}
@@ -1957,21 +1957,21 @@ gentity_t *NPC_Spawn_Do( gentity_t *ent )
 	{//specified team directly?
 		newent->client->sess.sessionTeam = atoi(ent->team);
 	}
-	else if ( newent->s.teamowner != TEAM_FREE )
+	else if ( newent->s.teamowner != FACTION_FREE )
 	{
 		newent->client->sess.sessionTeam = newent->s.teamowner;
 	}
-	else if ( newent->alliedTeam != TEAM_FREE )
+	else if ( newent->alliedTeam != FACTION_FREE )
 	{
 		newent->client->sess.sessionTeam = newent->alliedTeam;
 	}
-	else if ( newent->teamnodmg != TEAM_FREE )
+	else if ( newent->teamnodmg != FACTION_FREE )
 	{
 		newent->client->sess.sessionTeam = newent->teamnodmg;
 	}
 	else
 	{
-		newent->client->sess.sessionTeam = TEAM_FREE;
+		newent->client->sess.sessionTeam = FACTION_FREE;
 	}
 
 	newent->client->ps.persistant[PERS_TEAM] = newent->client->sess.sessionTeam;
@@ -2939,9 +2939,9 @@ NPC_targetname - NPC's targetname AND script_targetname
 NPC_target - NPC's target to fire when killed
 health - starting health (default = 100)
 playerTeam - Who not to shoot! (default is TEAM_STARFLEET)
-	TEAM_FREE (none) = 0
-	TEAM_RED = 1
-	TEAM_BLUE = 2
+	FACTION_FREE (none) = 0
+	FACTION_EMPIRE = 1
+	FACTION_REBEL = 2
 	TEAM_GOLD = 3
 	TEAM_GREEN = 4
 	TEAM_STARFLEET = 5
@@ -5347,7 +5347,7 @@ gentity_t *NPC_SpawnType( gentity_t *ent, char *npc_type, char *targetname, qboo
 
 	//NPCspawner->spawnflags |= SFB_NOTSOLID;
 
-	//NPCspawner->playerTeam = TEAM_FREE;
+	//NPCspawner->playerTeam = FACTION_FREE;
 	//NPCspawner->behaviorSet[BSET_SPAWN] = "common/guard";
 
 	if ( isVehicle )
@@ -5462,7 +5462,7 @@ void NPC_Kill_f( void )
 	int			n;
 	gentity_t	*player;
 	char		name[1024];
-	npcteam_t	killTeam = NPCTEAM_FREE;
+	npcteam_t	killTeam = NPCFACTION_FREE;
 	qboolean	killNonSF = qfalse;
 
 	trap->Argv(2, name, 1024);
@@ -5486,7 +5486,7 @@ void NPC_Kill_f( void )
 		{
 			Com_Printf( S_COLOR_RED"NPC_Kill Error: 'npc kill team' requires a team name!\n" );
 			Com_Printf( S_COLOR_RED"Valid team names are:\n");
-			for ( n = (TEAM_FREE + 1); n < TEAM_NUM_TEAMS; n++ )
+			for ( n = (FACTION_FREE + 1); n < FACTION_NUM_FACTIONS; n++ )
 			{
 				Com_Printf( S_COLOR_RED"%s\n", TeamNames[n] );
 			}
@@ -5502,11 +5502,11 @@ void NPC_Kill_f( void )
 		{
 			killTeam = GetIDForString( TeamTable, name );
 
-			if ( killTeam == NPCTEAM_FREE )
+			if ( killTeam == NPCFACTION_FREE )
 			{
 				Com_Printf( S_COLOR_RED"NPC_Kill Error: team '%s' not recognized\n", name );
 				Com_Printf( S_COLOR_RED"Valid team names are:\n");
-				for ( n = (TEAM_FREE + 1); n < TEAM_NUM_TEAMS; n++ )
+				for ( n = (FACTION_FREE + 1); n < FACTION_NUM_FACTIONS; n++ )
 				{
 					Com_Printf( S_COLOR_RED"%s\n", TeamNames[n] );
 				}
@@ -5549,7 +5549,7 @@ void NPC_Kill_f( void )
 		}
 		else if ( player && player->NPC && player->client )
 		{
-			if ( killTeam != NPCTEAM_FREE )
+			if ( killTeam != NPCFACTION_FREE )
 			{
 				if ( player->client->playerTeam == killTeam )
 				{

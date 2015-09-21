@@ -1,7 +1,7 @@
 SwampTrooper
 {
 	playerModel swamptrooper
-	weapon		WP_FLECHETTE
+	weapon		WP_A200_ACP_PISTOL
 	headPitchRangeDown 30
 	health		70
 	reactions	3

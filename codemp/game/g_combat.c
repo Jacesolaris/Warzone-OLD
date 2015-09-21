@@ -811,7 +811,7 @@ void CheckAlmostCapture( gentity_t *self, gentity_t *attacker ) {
 		self->client->ps.powerups[PW_NEUTRALFLAG] ) {
 		// get the goal flag this player should have been going for
 		if ( level.gametype == GT_CTF || level.gametype == GT_CTY ) {
-			if ( self->client->sess.sessionTeam == TEAM_BLUE ) {
+			if ( self->client->sess.sessionTeam == FACTION_REBEL ) {
 				classname = "team_CTF_blueflag";
 			}
 			else {
@@ -819,7 +819,7 @@ void CheckAlmostCapture( gentity_t *self, gentity_t *attacker ) {
 			}
 		}
 		else {
-			if ( self->client->sess.sessionTeam == TEAM_BLUE ) {
+			if ( self->client->sess.sessionTeam == FACTION_REBEL ) {
 				classname = "team_CTF_redflag";
 			}
 			else {
@@ -2022,7 +2022,7 @@ void G_AddPowerDuelScore(int team, int score)
 		if (check->inuse && check->client &&
 			check->client->pers.connected == CON_CONNECTED && !check->client->iAmALoser &&
 			check->client->ps.stats[STAT_HEALTH] > 0 &&
-			check->client->sess.sessionTeam != TEAM_SPECTATOR &&
+			check->client->sess.sessionTeam != FACTION_SPECTATOR &&
 			check->client->sess.duelTeam == team)
 		{ //found a living client on the specified team
 			check->client->sess.wins += score;
@@ -2042,7 +2042,7 @@ void G_AddPowerDuelLoserScore(int team, int score)
 		check = &g_entities[i];
 		if (check->inuse && check->client &&
 			check->client->pers.connected == CON_CONNECTED &&
-			(check->client->iAmALoser || (check->client->ps.stats[STAT_HEALTH] <= 0 && check->client->sess.sessionTeam != TEAM_SPECTATOR)) &&
+			(check->client->iAmALoser || (check->client->ps.stats[STAT_HEALTH] <= 0 && check->client->sess.sessionTeam != FACTION_SPECTATOR)) &&
 			check->client->sess.duelTeam == team)
 		{ //found a living client on the specified team
 			check->client->sess.losses += score;
@@ -2112,7 +2112,7 @@ void player_die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int
 		self->client->ps.pm_type = PM_DEAD;
 
 		if (self->s.eType == ET_NPC)
-			self->client->ps.persistant[PERS_TEAM] = TEAM_SPECTATOR;
+			self->client->ps.persistant[PERS_TEAM] = FACTION_SPECTATOR;
 	}
 
 	if ( !attacker )
@@ -2685,15 +2685,15 @@ extern void RunEmplacedWeapon( gentity_t *ent, usercmd_t **ucmd );
 	// if I committed suicide, the flag does not fall, it returns.
 	if (meansOfDeath == MOD_SUICIDE) {
 		if ( self->client->ps.powerups[PW_NEUTRALFLAG] ) {		// only happens in One Flag CTF
-			Team_ReturnFlag( TEAM_FREE );
+			Team_ReturnFlag( FACTION_FREE );
 			self->client->ps.powerups[PW_NEUTRALFLAG] = 0;
 		}
 		else if ( self->client->ps.powerups[PW_REDFLAG] ) {		// only happens in standard CTF
-			Team_ReturnFlag( TEAM_RED );
+			Team_ReturnFlag( FACTION_EMPIRE );
 			self->client->ps.powerups[PW_REDFLAG] = 0;
 		}
 		else if ( self->client->ps.powerups[PW_BLUEFLAG] ) {	// only happens in standard CTF
-			Team_ReturnFlag( TEAM_BLUE );
+			Team_ReturnFlag( FACTION_REBEL );
 			self->client->ps.powerups[PW_BLUEFLAG] = 0;
 		}
 	}
@@ -2706,15 +2706,15 @@ extern void RunEmplacedWeapon( gentity_t *ent, usercmd_t **ucmd );
 	}
 	else {
 		if ( self->client->ps.powerups[PW_NEUTRALFLAG] ) {		// only happens in One Flag CTF
-			Team_ReturnFlag( TEAM_FREE );
+			Team_ReturnFlag( FACTION_FREE );
 			self->client->ps.powerups[PW_NEUTRALFLAG] = 0;
 		}
 		else if ( self->client->ps.powerups[PW_REDFLAG] ) {		// only happens in standard CTF
-			Team_ReturnFlag( TEAM_RED );
+			Team_ReturnFlag( FACTION_EMPIRE );
 			self->client->ps.powerups[PW_REDFLAG] = 0;
 		}
 		else if ( self->client->ps.powerups[PW_BLUEFLAG] ) {	// only happens in standard CTF
-			Team_ReturnFlag( TEAM_BLUE );
+			Team_ReturnFlag( FACTION_REBEL );
 			self->client->ps.powerups[PW_BLUEFLAG] = 0;
 		}
 	}
@@ -2736,7 +2736,7 @@ extern void RunEmplacedWeapon( gentity_t *ent, usercmd_t **ucmd );
 		if ( cl->pers.connected != CON_CONNECTED ) {
 			continue;
 		}
-		if ( cl->sess.sessionTeam != TEAM_SPECTATOR ) {
+		if ( cl->sess.sessionTeam != FACTION_SPECTATOR ) {
 			continue;
 		}
 		if ( cl->sess.spectatorClient == self->s.number ) {
@@ -2945,7 +2945,7 @@ extern void RunEmplacedWeapon( gentity_t *ent, usercmd_t **ucmd );
 				if (check->inuse && check->client && check->s.number != self->s.number &&
 					check->client->pers.connected == CON_CONNECTED && !check->client->iAmALoser &&
 					check->client->ps.stats[STAT_HEALTH] > 0 &&
-					check->client->sess.sessionTeam != TEAM_SPECTATOR &&
+					check->client->sess.sessionTeam != FACTION_SPECTATOR &&
 					check->client->sess.duelTeam == DUELTEAM_DOUBLE)
 				{ //still an active living paired duelist so it's not over yet.
 					heLives = qtrue;
@@ -3566,13 +3566,13 @@ void G_Dismember( gentity_t *ent, gentity_t *enemy, vec3_t point, int limbType, 
 	{//Team game
 		switch ( ent->client->sess.sessionTeam )
 		{
-		case TEAM_RED:
+		case FACTION_EMPIRE:
 			limb->s.customRGBA[0] = 255;
 			limb->s.customRGBA[1] = 0;
 			limb->s.customRGBA[2] = 0;
 			break;
 
-		case TEAM_BLUE:
+		case FACTION_REBEL:
 			limb->s.customRGBA[0] = 0;
 			limb->s.customRGBA[1] = 0;
 			limb->s.customRGBA[2] = 255;

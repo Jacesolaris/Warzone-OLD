@@ -492,8 +492,8 @@ void G_AddRandomBot( int team ) {
 			num--;
 			if (num <= 0) {
 				skill = trap->Cvar_VariableIntegerValue( "g_npcspskill" );
-				if (team == TEAM_RED) teamstr = "red";
-				else if (team == TEAM_BLUE) teamstr = "blue";
+				if (team == FACTION_EMPIRE) teamstr = "red";
+				else if (team == FACTION_REBEL) teamstr = "blue";
 				else teamstr = "";
 				Q_strncpyz(netname, value, sizeof(netname));
 				Q_CleanStr(netname);
@@ -510,8 +510,8 @@ void G_AddRandomBot( int team ) {
 	value = Info_ValueForKey( level.bots.infos[num], "name" );
 
 	skill = trap->Cvar_VariableIntegerValue( "g_npcspskill" );
-	if (team == TEAM_RED) teamstr = "red";
-	else if (team == TEAM_BLUE) teamstr = "blue";
+	if (team == FACTION_EMPIRE) teamstr = "red";
+	else if (team == FACTION_REBEL) teamstr = "blue";
 	else teamstr = "";
 	Q_strncpyz(netname, value, sizeof(netname));
 	Q_CleanStr(netname);
@@ -536,7 +536,7 @@ int G_RemoveRandomBot( int team ) {
 		if ( !(g_entities[i].r.svFlags & SVF_BOT) )
 			continue;
 
-		if ( cl->sess.sessionTeam == TEAM_SPECTATOR && cl->sess.spectatorState == SPECTATOR_FOLLOW )
+		if ( cl->sess.sessionTeam == FACTION_SPECTATOR && cl->sess.spectatorState == SPECTATOR_FOLLOW )
 			continue;
 
 		if ( level.gametype == GT_SIEGE && team >= 0 && cl->sess.siegeDesiredTeam != team )
@@ -674,7 +674,7 @@ void G_CheckMinimumPlayers( void ) {
 	else if ((humanplayers+botplayers) > minplayers && botplayers)
 	{
 		// try to remove spectators first
-		if (!G_RemoveRandomBot(TEAM_SPECTATOR))
+		if (!G_RemoveRandomBot(FACTION_SPECTATOR))
 		{
 			// just remove the bot that is playing
 			G_RemoveRandomBot(-1);
@@ -688,31 +688,31 @@ void G_CheckMinimumPlayers( void ) {
 			minplayers = (sv_maxclients.integer / 2) -1;
 		}
 
-		humanplayers = G_CountHumanPlayers( TEAM_RED );
-		botplayers = G_CountBotPlayers(	TEAM_RED );
-		humanplayers2 = G_CountHumanPlayers( TEAM_BLUE );
-		botplayers2 = G_CountBotPlayers( TEAM_BLUE );
+		humanplayers = G_CountHumanPlayers( FACTION_EMPIRE );
+		botplayers = G_CountBotPlayers(	FACTION_EMPIRE );
+		humanplayers2 = G_CountHumanPlayers( FACTION_REBEL );
+		botplayers2 = G_CountBotPlayers( FACTION_REBEL );
 		//
 		if ((humanplayers+botplayers+humanplayers2+botplayers) < minplayers)
 		{
 			if ((humanplayers+botplayers) < (humanplayers2+botplayers2))
 			{
-				G_AddRandomBot( TEAM_RED );
+				G_AddRandomBot( FACTION_EMPIRE );
 			}
 			else
 			{
-				G_AddRandomBot( TEAM_BLUE );
+				G_AddRandomBot( FACTION_REBEL );
 			}
 		}
 		else if ((humanplayers+botplayers+humanplayers2+botplayers) > minplayers && botplayers)
 		{
 			if ((humanplayers+botplayers) < (humanplayers2+botplayers2))
 			{
-				G_RemoveRandomBot( TEAM_BLUE );
+				G_RemoveRandomBot( FACTION_REBEL );
 			}
 			else
 			{
-				G_RemoveRandomBot( TEAM_RED );
+				G_RemoveRandomBot( FACTION_EMPIRE );
 			}
 		}
 	}
@@ -724,10 +724,10 @@ void G_CheckMinimumPlayers( void ) {
 		botplayers = G_CountBotPlayers( -1 );
 		//
 		if (humanplayers + botplayers < minplayers) {
-			G_AddRandomBot( TEAM_FREE );
+			G_AddRandomBot( FACTION_FREE );
 		} else if (humanplayers + botplayers > minplayers && botplayers) {
 			// try to remove spectators first
-			if (!G_RemoveRandomBot( TEAM_SPECTATOR )) {
+			if (!G_RemoveRandomBot( FACTION_SPECTATOR )) {
 				// just remove the bot that is playing
 				G_RemoveRandomBot( -1 );
 			}
@@ -737,26 +737,26 @@ void G_CheckMinimumPlayers( void ) {
 		if (minplayers >= sv_maxclients.integer) {
 			minplayers = sv_maxclients.integer-1;
 		}
-		humanplayers = G_CountHumanPlayers( TEAM_FREE );
-		botplayers = G_CountBotPlayers( TEAM_FREE );
+		humanplayers = G_CountHumanPlayers( FACTION_FREE );
+		botplayers = G_CountBotPlayers( FACTION_FREE );
 		//
 		if (humanplayers + botplayers < minplayers) {
-			G_AddRandomBot( TEAM_FREE );
+			G_AddRandomBot( FACTION_FREE );
 		} else if (humanplayers + botplayers > minplayers && botplayers) {
-			G_RemoveRandomBot( TEAM_FREE );
+			G_RemoveRandomBot( FACTION_FREE );
 		}
 	}
 	else if (level.gametype == GT_HOLOCRON || level.gametype == GT_JEDIMASTER) {
 		if (minplayers >= sv_maxclients.integer) {
 			minplayers = sv_maxclients.integer-1;
 		}
-		humanplayers = G_CountHumanPlayers( TEAM_FREE );
-		botplayers = G_CountBotPlayers( TEAM_FREE );
+		humanplayers = G_CountHumanPlayers( FACTION_FREE );
+		botplayers = G_CountBotPlayers( FACTION_FREE );
 		//
 		if (humanplayers + botplayers < minplayers) {
-			G_AddRandomBot( TEAM_FREE );
+			G_AddRandomBot( FACTION_FREE );
 		} else if (humanplayers + botplayers > minplayers && botplayers) {
-			G_RemoveRandomBot( TEAM_FREE );
+			G_RemoveRandomBot( FACTION_FREE );
 		}
 	}
 	*/
@@ -1191,7 +1191,7 @@ G_CheckMinimumNpcs
 ===============
 */
 
-int		NPC_SPAWN_TEAM = TEAM_RED;
+int		NPC_SPAWN_TEAM = FACTION_EMPIRE;
 
 extern vec3_t NPC_SPAWNPOINT;
 extern int NPC_SPAWNFLAG;
@@ -1200,6 +1200,10 @@ extern void NPC_SelectWarzoneSpawnpoint ( int TEAM );
 extern int GetNumberOfWarzoneFlags ( void );
 extern int WARZONE_GetNumberOfBlueFlags();
 extern int WARZONE_GetNumberOfRedFlags();
+
+qboolean	SPAWN_FACTIONS_CHECKED = qfalse;
+qboolean	HAVE_MANDALORIANS = qfalse;
+qboolean	HAVE_MERCS = qfalse;
 
 void G_CheckMinimumNpcs( void ) {
 	int			minplayers;
@@ -1277,18 +1281,36 @@ void G_CheckMinimumNpcs( void ) {
 
 	if (botplayers < minplayers)
 	{
+		vmCvar_t	mapname;
 		int			waypoint = irand(0, gWPNum-1);
 		int			random = irand(0,22);
 		int			tries = 0;
 		vec3_t		position;
 		int			selectedTeam;
 
+		trap->Cvar_Register( &mapname, "mapname", "", CVAR_SERVERINFO | CVAR_ROM );
+		
+		if (!SPAWN_FACTIONS_CHECKED)
+		{
+			group = GetSpawnGroup(va("%s_mandalorians", mapname.string), RARITY_SPAM);
+			if (group.npcCount) HAVE_MANDALORIANS = qtrue;
+		
+			group = GetSpawnGroup(va("%s_mercs", mapname.string), RARITY_SPAM);
+			if (group.npcCount) HAVE_MERCS = qtrue;
+
+			SPAWN_FACTIONS_CHECKED = qtrue;
+		}
+
 		if (g_gametype.integer == GT_WARZONE)
 		{// Who (which team) needs this NPC???
 			int RED_NPCS = 0;
 			int BLUE_NPCS = 0;
+			int MANDALORIAN_NPCS = 0;
+			int MERC_NPCS = 0;
+			int LOWEST_TEAM;
+			int	LOWEST_TEAM_COUNT;
 
-#pragma omp parallel for schedule(dynamic) num_threads(32) if(g_multithread.integer > 0)
+#pragma omp parallel for schedule(dynamic) if(g_multithread.integer > 0)
 			for (i = level.maxclients; i < MAX_GENTITIES; i++)
 			{
 				gentity_t *npc = &g_entities[i];
@@ -1298,108 +1320,104 @@ void G_CheckMinimumNpcs( void ) {
 				if (NPC_IsCivilian(npc)) continue;
 				if (NPC_IsVendor(npc)) continue;
 
-				if (npc->client->playerTeam == NPCTEAM_ENEMY)
+				if (npc->client->playerTeam == FACTION_EMPIRE)
 #pragma omp atomic
 					RED_NPCS++;
-				else if (npc->client->playerTeam == NPCTEAM_PLAYER)
+				else if (npc->client->playerTeam == FACTION_REBEL)
 #pragma omp atomic
 					BLUE_NPCS++;
+				else if (HAVE_MANDALORIANS && npc->client->playerTeam == FACTION_MANDALORIAN)
+#pragma omp atomic
+					MANDALORIAN_NPCS++;
+				else if (HAVE_MERCS && npc->client->playerTeam == FACTION_MERC)
+#pragma omp atomic
+					MERC_NPCS++;
 			}
 
-			if (RED_NPCS < BLUE_NPCS)
+			LOWEST_TEAM_COUNT = RED_NPCS;
+			LOWEST_TEAM = FACTION_EMPIRE;
+
+			if (BLUE_NPCS < LOWEST_TEAM_COUNT)
 			{
-				NPC_SPAWN_TEAM = TEAM_RED;
+				LOWEST_TEAM = FACTION_REBEL;
+				LOWEST_TEAM_COUNT = BLUE_NPCS;
 			}
-			else if (RED_NPCS > BLUE_NPCS)
+
+			if (HAVE_MANDALORIANS && MANDALORIAN_NPCS < LOWEST_TEAM_COUNT)
 			{
-				NPC_SPAWN_TEAM = TEAM_BLUE;
+				LOWEST_TEAM = FACTION_MANDALORIAN;
+				LOWEST_TEAM_COUNT = MANDALORIAN_NPCS;
 			}
-			else // Equal... Spawn red...
+
+			if (HAVE_MERCS && MERC_NPCS < LOWEST_TEAM_COUNT)
 			{
-				NPC_SPAWN_TEAM = TEAM_RED;
+				LOWEST_TEAM = FACTION_MERC;
+				LOWEST_TEAM_COUNT = MERC_NPCS;
+			}
+
+			NPC_SPAWN_TEAM = LOWEST_TEAM;
+
+			group = GetSpawnGroup(va("%s_%s", mapname.string, factionNames[NPC_SPAWN_TEAM]), RARITY_SPAM);
+
+			if (!group.npcCount)
+			{// Seems we only have red/blue teams for this map...
+				if (RED_NPCS < BLUE_NPCS)
+				{
+					NPC_SPAWN_TEAM = FACTION_EMPIRE;
+				}
+				else if (BLUE_NPCS < RED_NPCS)
+				{
+					NPC_SPAWN_TEAM = FACTION_REBEL;
+				}
 			}
 		}
 
-		if (NPC_SPAWN_TEAM == TEAM_RED)
-		{// Imperial NPCs...
-			if (random >= 16)
-			{
-				group = GetSpawnGroup("default_red", RARITY_SPAM);
-			}
-			else if (random >= 11)
-			{
-				group = GetSpawnGroup("default_red", RARITY_COMMON);
-			}
-			else if (random >= 7)
-			{
-				group = GetSpawnGroup("default_red", RARITY_OFFICER);
-			}
-			else if (random >= 4)
-			{// Officers/Specials...
-				group = GetSpawnGroup("default_red", RARITY_ELITE);
-			}
-			else if (random >= 1)
-			{// Jedi...
-				group = GetSpawnGroup("default_red", RARITY_BOSS);
-			}
-			else
-			{
-				group = GetSpawnGroup("default_red", RARITY_SPAM);
-			}
-
-			// Next NPC spawns as rebel...
-			if ( g_gametype.integer >= GT_TEAM /*&& g_gametype.integer != GT_WARZONE*/ )
-				NPC_SPAWN_TEAM = TEAM_BLUE;
+		if (random >= 16)
+		{
+			group = GetSpawnGroup(va("%s_%s", mapname.string, factionNames[NPC_SPAWN_TEAM]), RARITY_SPAM);
+			if (!group.npcCount) group = GetSpawnGroup(va("default_%s", factionNames[NPC_SPAWN_TEAM]), RARITY_SPAM);
+		}
+		else if (random >= 11)
+		{
+			group = GetSpawnGroup(va("%s_%s", mapname.string, factionNames[NPC_SPAWN_TEAM]), RARITY_COMMON);
+			if (!group.npcCount) group = GetSpawnGroup(va("default_%s", factionNames[NPC_SPAWN_TEAM]), RARITY_COMMON);
+		}
+		else if (random >= 7)
+		{
+			group = GetSpawnGroup(va("%s_%s", mapname.string, factionNames[NPC_SPAWN_TEAM]), RARITY_OFFICER);
+			if (!group.npcCount) group = GetSpawnGroup(va("default_%s", factionNames[NPC_SPAWN_TEAM]), RARITY_OFFICER);
+		}
+		else if (random >= 4)
+		{// Officers/Specials...
+			group = GetSpawnGroup(va("%s_%s", mapname.string, factionNames[NPC_SPAWN_TEAM]), RARITY_ELITE);
+			if (!group.npcCount) group = GetSpawnGroup(va("default_%s", factionNames[NPC_SPAWN_TEAM]), RARITY_ELITE);
+		}
+		else if (random >= 1)
+		{// Jedi...
+			group = GetSpawnGroup(va("%s_%s", mapname.string, factionNames[NPC_SPAWN_TEAM]), RARITY_BOSS);
+			if (!group.npcCount) group = GetSpawnGroup(va("default_%s", factionNames[NPC_SPAWN_TEAM]), RARITY_BOSS);
 		}
 		else
-		{// Rebel NPCs...
-			if (random >= 16)
-			{
-				group = GetSpawnGroup("default_blue", RARITY_SPAM);
-			}
-			else if (random >= 11)
-			{
-				group = GetSpawnGroup("default_blue", RARITY_COMMON);
-			}
-			else if (random >= 7)
-			{
-				group = GetSpawnGroup("default_blue", RARITY_OFFICER);
-			}
-			else if (random >= 4)
-			{// Officers/Specials...
-				group = GetSpawnGroup("default_blue", RARITY_ELITE);
-			}
-			else if (random >= 1)
-			{// Jedi...
-				group = GetSpawnGroup("default_blue", RARITY_BOSS);
-			}
-			else
-			{
-				group = GetSpawnGroup("default_blue", RARITY_SPAM);
-			}
-
-			// Next NPC spawns as imperial...
-			if ( g_gametype.integer >= GT_TEAM )
-				NPC_SPAWN_TEAM = TEAM_RED;
-		}
-		
 		{
-			if ( npc_pathing.integer && g_gametype.integer >= GT_TEAM )
-			{
-				// New War Zone Instances (not JKG style)... Get CTF spawnpoints...
-				team_t SPAWN_TEAM = TEAM_FREE;
+			group = GetSpawnGroup(va("%s_%s", mapname.string, factionNames[NPC_SPAWN_TEAM]), RARITY_SPAM);
+			if (!group.npcCount) group = GetSpawnGroup(va("default_%s", factionNames[NPC_SPAWN_TEAM]), RARITY_SPAM);
+		}
+
+		//trap->Print("Spawning %s.\n", group.npcNames[0]);
+
+		{
+			if ( npc_pathing.integer && g_gametype.integer >= GT_TEAM && (NPC_SPAWN_TEAM == FACTION_EMPIRE || NPC_SPAWN_TEAM == FACTION_REBEL) )
+			{// New War Zone Instances (not JKG style)... Get CTF spawnpoints...
+				team_t SPAWN_TEAM = FACTION_FREE;
 				gentity_t spawnPoint;
-
-				if (NPC_SPAWN_TEAM == TEAM_BLUE) SPAWN_TEAM = TEAM_RED;
-				if (NPC_SPAWN_TEAM == TEAM_RED) SPAWN_TEAM = TEAM_BLUE;
+				SPAWN_TEAM = (team_t)NPC_SPAWN_TEAM;
 				selectedTeam = SPAWN_TEAM;
-
 				spawnPoint = *SelectCTFSpawnPoint ( SPAWN_TEAM, 0, position, position, qtrue );
 				VectorCopy(spawnPoint.s.origin, position);
 				position[2]+=32; // Drop down...
 			}
 			else
-			{
+			{// Mandalorians and Mercs always spawn at random waypoints (for now)...
 				while (gWPArray[waypoint]->inuse == qfalse || gWPArray[waypoint]->wpIsBad == qtrue || Warzone_SpawnpointNearMoverEntityLocation(gWPArray[waypoint]->origin)
 #ifndef __WAYPOINTS_PRECHECKED__
 					|| !Warzone_CheckBelowWaypoint(waypoint) || !Warzone_CheckRoutingFrom( waypoint )
@@ -1423,11 +1441,8 @@ void G_CheckMinimumNpcs( void ) {
 
 				if (g_gametype.integer >= GT_TEAM)
 				{
-					team_t SPAWN_TEAM = TEAM_FREE;
-
-					if (NPC_SPAWN_TEAM == TEAM_BLUE) SPAWN_TEAM = TEAM_RED;
-					if (NPC_SPAWN_TEAM == TEAM_RED) SPAWN_TEAM = TEAM_BLUE;
-
+					team_t SPAWN_TEAM = FACTION_FREE;
+					SPAWN_TEAM = (team_t)NPC_SPAWN_TEAM;
 					selectedTeam = SPAWN_TEAM;
 				}
 				else
@@ -1440,6 +1455,14 @@ void G_CheckMinimumNpcs( void ) {
 		}
 		
 		SP_NPC_Spawner_Group( group, position, selectedTeam );
+
+		// Next NPC spawns as rebel...
+		if ( g_gametype.integer >= GT_TEAM )
+			NPC_SPAWN_TEAM = FACTION_REBEL;
+
+		// Next NPC spawns as imperial...
+		if ( g_gametype.integer >= GT_TEAM )
+			NPC_SPAWN_TEAM = FACTION_EMPIRE;
 	}
 }
 #endif //__NPC_MINPLAYERS__
@@ -1546,7 +1569,7 @@ G_AddBot
 */
 static void G_AddBot( const char *name, float skill, const char *team, int delay, char *altname) {
 	gentity_t		*bot = NULL;
-	int				clientNum, preTeam = TEAM_FREE;
+	int				clientNum, preTeam = FACTION_FREE;
 	char			userinfo[MAX_INFO_STRING] = {0},
 					*botinfo = NULL, *key = NULL, *s = NULL, *botname = NULL, *model = NULL;
 
@@ -1657,7 +1680,7 @@ static void G_AddBot( const char *name, float skill, const char *team, int delay
 	// initialize the bot settings
 	if ( !team || !*team ) {
 		if ( level.gametype >= GT_TEAM ) {
-			if ( PickTeam( clientNum ) == TEAM_RED)
+			if ( PickTeam( clientNum ) == FACTION_EMPIRE)
 				team = "red";
 			else
 				team = "blue";
@@ -1677,9 +1700,9 @@ static void G_AddBot( const char *name, float skill, const char *team, int delay
 	if ( level.gametype >= GT_TEAM )
 	{
 		if ( team && !Q_stricmp( team, "red" ) )
-			bot->client->sess.sessionTeam = TEAM_RED;
+			bot->client->sess.sessionTeam = FACTION_EMPIRE;
 		else if ( team && !Q_stricmp( team, "blue" ) )
-			bot->client->sess.sessionTeam = TEAM_BLUE;
+			bot->client->sess.sessionTeam = FACTION_REBEL;
 		else
 			bot->client->sess.sessionTeam = PickTeam( -1 );
 	}
@@ -1687,7 +1710,7 @@ static void G_AddBot( const char *name, float skill, const char *team, int delay
 	if ( level.gametype == GT_SIEGE )
 	{
 		bot->client->sess.siegeDesiredTeam = bot->client->sess.sessionTeam;
-		bot->client->sess.sessionTeam = TEAM_SPECTATOR;
+		bot->client->sess.sessionTeam = FACTION_SPECTATOR;
 	}
 
 	preTeam = bot->client->sess.sessionTeam;
@@ -1702,15 +1725,15 @@ static void G_AddBot( const char *name, float skill, const char *team, int delay
 	{
 		trap->GetUserinfo( clientNum, userinfo, sizeof( userinfo ) );
 
-		if ( bot->client->sess.sessionTeam == TEAM_SPECTATOR )
+		if ( bot->client->sess.sessionTeam == FACTION_SPECTATOR )
 			bot->client->sess.sessionTeam = preTeam;
 
-		if ( bot->client->sess.sessionTeam == TEAM_RED )
+		if ( bot->client->sess.sessionTeam == FACTION_EMPIRE )
 			team = "Red";
 		else
 		{
 			if ( level.gametype == GT_SIEGE )
-				team = (bot->client->sess.sessionTeam == TEAM_BLUE) ? "Blue" : "s";
+				team = (bot->client->sess.sessionTeam == FACTION_REBEL) ? "Blue" : "s";
 			else
 				team = "Blue";
 		}
@@ -1744,7 +1767,7 @@ static void G_AddBot( const char *name, float skill, const char *team, int delay
             bot->client->sess.duelTeam = DUELTEAM_LONE;
 		}
 
-		bot->client->sess.sessionTeam = TEAM_SPECTATOR;
+		bot->client->sess.sessionTeam = FACTION_SPECTATOR;
 		SetTeam(bot, "s");
 	}
 	else

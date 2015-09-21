@@ -892,7 +892,7 @@ void DOM_InitFakeNPC(gentity_t *bot)
 	{
 		bot->client->sess.sessionTeam = orig_team;
 
-		if (orig_team == TEAM_RED) bot->client->playerTeam = bot->s.teamowner = NPCTEAM_ENEMY;
+		if (orig_team == FACTION_EMPIRE) bot->client->playerTeam = bot->s.teamowner = NPCTEAM_ENEMY;
 		else bot->client->playerTeam = bot->s.teamowner = NPCTEAM_PLAYER;
 	}
 }

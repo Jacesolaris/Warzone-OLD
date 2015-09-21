@@ -1124,13 +1124,21 @@ void ItemUse_Seeker(gentity_t *ent)
 		{//set it to my team
 			remote->s.owner = remote->r.ownerNum = ent->s.number;
 			remote->activator = ent;
-			if ( ent->client->sess.sessionTeam == TEAM_BLUE )
+			if ( ent->client->sess.sessionTeam == FACTION_REBEL )
 			{
 				remote->client->playerTeam = NPCTEAM_PLAYER;
 			}
-			else if ( ent->client->sess.sessionTeam == TEAM_RED )
+			else if ( ent->client->sess.sessionTeam == FACTION_EMPIRE )
 			{
 				remote->client->playerTeam = NPCTEAM_ENEMY;
+			}
+			else if ( ent->client->sess.sessionTeam == FACTION_MANDALORIAN )
+			{
+				remote->client->playerTeam = NPCTEAM_NEUTRAL;
+			}
+			else if ( ent->client->sess.sessionTeam == FACTION_MERC )
+			{
+				remote->client->playerTeam = NPCTEAM_NEUTRAL;
 			}
 			else
 			{
@@ -3170,7 +3178,7 @@ void G_RunItem( gentity_t *ent ) {
 	contents = trap->PointContents( ent->r.currentOrigin, -1 );
 	if ( contents & CONTENTS_NODROP ) {
 		if (ent->item && ent->item->giType == IT_TEAM) {
-			Team_FreeEntity(ent);
+			FACTION_FREEEntity(ent);
 		} else if(ent->genericValue15 == HI_SENTRY_GUN) {
 			turret_free(ent);
 		} else {

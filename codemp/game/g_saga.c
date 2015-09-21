@@ -803,7 +803,7 @@ void SetTeamQuick(gentity_t *ent, int team, qboolean doBegin)
 
 	ent->client->sess.sessionTeam = team;
 
-	if (team == TEAM_SPECTATOR)
+	if (team == FACTION_SPECTATOR)
 	{
 		ent->client->sess.spectatorState = SPECTATOR_FREE;
 		Info_SetValueForKey(userinfo, "team", "s");
@@ -811,11 +811,11 @@ void SetTeamQuick(gentity_t *ent, int team, qboolean doBegin)
 	else
 	{
 		ent->client->sess.spectatorState = SPECTATOR_NOT;
-		if (team == TEAM_RED)
+		if (team == FACTION_EMPIRE)
 		{
 			Info_SetValueForKey(userinfo, "team", "r");
 		}
-		else if (team == TEAM_BLUE)
+		else if (team == FACTION_REBEL)
 		{
 			Info_SetValueForKey(userinfo, "team", "b");
 		}
@@ -869,14 +869,14 @@ void SiegeBeginRound(int entNum)
 
 			if (ent->inuse && ent->client)
 			{
-				if (ent->client->sess.sessionTeam != TEAM_SPECTATOR &&
+				if (ent->client->sess.sessionTeam != FACTION_SPECTATOR &&
 					!(ent->client->ps.pm_flags & PMF_FOLLOW))
 				{ //not a spec, just respawn them
 					spawnEnt = qtrue;
 				}
-				else if (ent->client->sess.sessionTeam == TEAM_SPECTATOR &&
-					(ent->client->sess.siegeDesiredTeam == TEAM_RED ||
-					 ent->client->sess.siegeDesiredTeam == TEAM_BLUE))
+				else if (ent->client->sess.sessionTeam == FACTION_SPECTATOR &&
+					(ent->client->sess.siegeDesiredTeam == FACTION_EMPIRE ||
+					 ent->client->sess.siegeDesiredTeam == FACTION_REBEL))
 				{ //spectator but has a desired team
 					spawnEnt = qtrue;
 				}

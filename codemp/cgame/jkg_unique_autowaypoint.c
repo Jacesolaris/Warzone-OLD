@@ -2826,7 +2826,7 @@ Load_AddNode ( vec3_t origin, int fl, short int *ents, int objFl )
 		{
 			AlliedOnlyFirstNode = number_of_nodes;
 		}
-		nodes[number_of_nodes].objTeam |= TEAM_BLUE;
+		nodes[number_of_nodes].objTeam |= FACTION_REBEL;
 		numAlliedOnlyNodes++;
 	}
 
@@ -2836,7 +2836,7 @@ Load_AddNode ( vec3_t origin, int fl, short int *ents, int objFl )
 		{
 			AxisOnlyFirstNode = number_of_nodes;
 		}
-		nodes[number_of_nodes].objTeam |= TEAM_RED;
+		nodes[number_of_nodes].objTeam |= FACTION_EMPIRE;
 		numAxisOnlyNodes++;
 	}
 
@@ -3542,7 +3542,7 @@ qboolean CG_HaveRoofAbove ( vec3_t origin )
 	// Surface
 	//
 
-	if (tr.surfaceFlags == 0 && tr.contents == 0)
+	if (tr.fraction >= 1.0 || tr.endpos[2] >= down_org[2])//tr.surfaceFlags == 0 && tr.contents == 0)
 		return qfalse;
 
 	return qtrue;
@@ -3651,12 +3651,15 @@ float GroundHeightAt ( vec3_t org )
 //		return 65536.0f;
 //	}
 
-	if (WP_CheckInSolid(org))
+	VectorCopy(org, org1);
+	org1[2]+=18;
+
+	if (WP_CheckInSolid(org1))
 	{
 		return 65536.0f;
 	}
 
-	if (!CG_HaveRoofAbove(org))
+	if (!CG_HaveRoofAbove(org1))
 	{
 		return 65536.0f;
 	}
@@ -3824,13 +3827,15 @@ float FloorHeightAt ( vec3_t org )
 
 	aw_floor_trace_hit_mover = qfalse;
 
+	/*
 	if (AIMOD_IsWaypointHeightMarkedAsBad( org ))
 	{
 		return 65536.0f;
 	}
+	*/
 
 	VectorCopy(org, org1);
-	//org1[2]+=48;
+	org1[2]+=8;
 
 	VectorCopy(org, org2);
 	org2[2]= -65536.0f;
@@ -3870,7 +3875,9 @@ float FloorHeightAt ( vec3_t org )
 	}
 
 	if (tr.endpos[2] < -65535.0f /*|| tr.endpos[2] < cg.mapcoordsMins[2]-2000*/)
+	{
 		return -65536.0f;
+	}
 
 	if ( tr.surfaceFlags & SURF_SKY )
 	{// Sky...
@@ -3920,21 +3927,28 @@ float FloorHeightAt ( vec3_t org )
 
 	if ( tr.startsolid || tr.allsolid )
 	{
+		//trap->Print("ALLSOLID\n");
 		return 65536.0f;
 	}
 
 	if (DO_THOROUGH && BadHeightNearby( org ))
 	{
+		//trap->Print("BAD_HEIGHT\n");
 		return 65536.0f;
 	}
 
-	if (WP_CheckInSolid(org))
+	VectorCopy(org, org1);
+	org1[2]+=18;
+
+	if (WP_CheckInSolid(org1))
 	{
+		//trap->Print("INSOLID\n");
 		return 65536.0f;
 	}
 
-	if (!CG_HaveRoofAbove(org))
+	if (!CG_HaveRoofAbove(org1))
 	{
+		//trap->Print("NOROOF\n");
 		return 65536.0f;
 	}
 

@@ -31,7 +31,7 @@ boba_fett
 	hfov			120
 	vfov			100
 	rank			captain
-	playerTeam		TEAM_ENEMY
+	playerTeam		TEAM_MANDALORIANS
 	enemyTeam		TEAM_PLAYER
 	class			CLASS_BOBAFETT
 	walkSpeed		80

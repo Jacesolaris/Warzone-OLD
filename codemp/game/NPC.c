@@ -228,7 +228,11 @@ void NPC_RemoveBody( gentity_t *self )
 			if ( !self->activator || !self->activator->client || !(self->activator->client->ps.eFlags2&EF2_HELD_BY_MONSTER) )
 			{//not being held by a Rancor
 				self->s.eType = ET_INVISIBLE;
-				G_FreeEntity( self );
+				
+				//G_FreeEntity( self );
+
+				self->think = G_FreeEntity;
+				self->nextthink = level.time + FRAMETIME;
 			}
 			else
 				trap->Print("NPC %s not removed because of activator1.\n", self->NPC_type);
@@ -243,37 +247,16 @@ void NPC_RemoveBody( gentity_t *self )
 		self->r.maxs[2] = -8;
 	}
 
+	/*
 	if ( self->client->NPC_class == CLASS_GALAKMECH )
 	{//never disappears
 		return;
 	}
+	*/
+
 	if ( self->NPC && self->NPC->timeOfDeath <= level.time )
 	{
 		self->NPC->timeOfDeath = level.time + 1000;
-		// Only do all of this nonsense for Scav boys ( and girls )
-	///	if ( self->client->playerTeam == NPCTEAM_SCAVENGERS || self->client->playerTeam == NPCTEAM_KLINGON
-	//		|| self->client->playerTeam == NPCTEAM_HIROGEN || self->client->playerTeam == NPCTEAM_MALON )
-		// should I check NPC_class here instead of TEAM ? - dmv
-		if( self->client->playerTeam == NPCTEAM_ENEMY || self->client->NPC_class == CLASS_PROTOCOL )
-		{
-			self->nextthink = level.time + FRAMETIME; // try back in a second
-
-			/*
-			if ( DistanceSquared( g_entities[0].r.currentOrigin, self->r.currentOrigin ) <= REMOVE_DISTANCE_SQR )
-			{
-				return;
-			}
-
-			if ( (InFOV( self, &g_entities[0], 110, 90 )) ) // generous FOV check
-			{
-				if ( (NPC_ClearLOS2( &g_entities[0], self->r.currentOrigin )) )
-				{
-					return;
-				}
-			}
-			*/
-			//Don't care about this for MP I guess.
-		}
 
 		//FIXME: there are some conditions - such as heavy combat - in which we want
 		//			to remove the bodies... but in other cases it's just weird, like
@@ -281,7 +264,7 @@ void NPC_RemoveBody( gentity_t *self )
 		//			placed as dead NPCs by a designer...
 		//			For now we just assume that a corpse with no enemy was
 		//			placed in the map as a corpse
-		if ( self->enemy )
+		//if ( self->enemy )
 		{
 			//if (!trap->ICARUS_IsRunning(self->s.number))
 			{
@@ -290,6 +273,7 @@ void NPC_RemoveBody( gentity_t *self )
 					if ( self->client && self->client->ps.saberEntityNum > 0 && self->client->ps.saberEntityNum < ENTITYNUM_WORLD )
 					{
 						gentity_t *saberent = &g_entities[self->client->ps.saberEntityNum];
+
 						if ( saberent )
 						{
 							saberent->s.eType = ET_INVISIBLE;
@@ -299,7 +283,11 @@ void NPC_RemoveBody( gentity_t *self )
 
 					trap->ICARUS_FreeEnt((sharedEntity_t*)self); // UQ1: This???
 					self->s.eType = ET_INVISIBLE;
-					G_FreeEntity( self );
+
+					//G_FreeEntity( self );
+
+					self->think = G_FreeEntity;
+					self->nextthink = level.time + FRAMETIME;
 				}
 				else
 					trap->Print("NPC %s not removed because of activator2.\n", self->NPC_type);
@@ -614,80 +602,66 @@ static void DeadThink ( void )
 	}
 	//HACKHACKHACKHACKHACK
 
-	//FIXME: tilt and fall off of ledges?
-	//NPC_PostDeathThink();
-
-	/*
-	if ( !NPCInfo->timeOfDeath && NPC->client != NULL && NPCInfo != NULL )
+	//death anim done (or were given a specific amount of time to wait before removal), wait the requisite amount of time them remove
+	if ( level.time >= NPCS.NPCInfo->timeOfDeath + BodyRemovalPadTime( NPCS.NPC ) )
 	{
-		//haven't finished death anim yet and were NOT given a specific amount of time to wait before removal
-		int				legsAnim	= NPC->client->ps.legsAnim;
-		animation_t		*animations	= knownAnimFileSets[NPC->client->clientInfo.animFileIndex].animations;
-
-		NPC->bounceCount = -1; // This is a cheap hack for optimizing the pointcontents check below
-
-		//ghoul doesn't tell us this anymore
-		//if ( NPC->client->renderInfo.legsFrame == animations[legsAnim].firstFrame + (animations[legsAnim].numFrames - 1) )
+		if ( NPCS.NPC->client->ps.eFlags & EF_NODRAW )
 		{
-			//reached the end of the death anim
-			NPCInfo->timeOfDeath = level.time + BodyRemovalPadTime( NPC );
-		}
-	}
-	else
-	*/
-	{
-		//death anim done (or were given a specific amount of time to wait before removal), wait the requisite amount of time them remove
-		if ( level.time >= NPCS.NPCInfo->timeOfDeath + BodyRemovalPadTime( NPCS.NPC ) )
-		{
-			if ( NPCS.NPC->client->ps.eFlags & EF_NODRAW )
+			//if (!trap->ICARUS_IsRunning(NPCS.NPC->s.number))
 			{
-				//if (!trap->ICARUS_IsRunning(NPCS.NPC->s.number))
+				if ( NPCS.NPC->client && NPCS.NPC->client->ps.saberEntityNum > 0 && NPCS.NPC->client->ps.saberEntityNum < ENTITYNUM_WORLD )
 				{
-					//NPCS.NPC->think = G_FreeEntity;
-					//NPCS.NPC->nextthink = level.time + FRAMETIME;
+					gentity_t *saberent = &g_entities[NPCS.NPC->client->ps.saberEntityNum];
 
-					if ( NPCS.NPC->client && NPCS.NPC->client->ps.saberEntityNum > 0 && NPCS.NPC->client->ps.saberEntityNum < ENTITYNUM_WORLD )
+					if ( saberent )
 					{
-						gentity_t *saberent = &g_entities[NPCS.NPC->client->ps.saberEntityNum];
-						
-						if ( saberent )
-						{
-							G_FreeEntity( saberent );
-						}
+						G_FreeEntity( saberent );
 					}
-
-					trap->ICARUS_FreeEnt((sharedEntity_t*)NPCS.NPC); // UQ1: This???
-					G_FreeEntity( NPCS.NPC );
 				}
-				//trap->ICARUS_FreeEnt(NPCS.NPC); // UQ1: This???
+
+				trap->ICARUS_FreeEnt((sharedEntity_t*)NPCS.NPC); // UQ1: This???
+				//G_FreeEntity( NPCS.NPC );
+
+				NPCS.NPC->think = G_FreeEntity;
+				NPCS.NPC->nextthink = level.time + FRAMETIME;
+			}
+			//trap->ICARUS_FreeEnt(NPCS.NPC); // UQ1: This???
+		}
+		else
+		{
+			class_t	npc_class;
+
+			// Start the body effect first, then delay 400ms before ditching the corpse
+			NPC_RemoveBodyEffect();
+
+			if ( NPCS.NPC->client && NPCS.NPC->client->ps.saberEntityNum > 0 && NPCS.NPC->client->ps.saberEntityNum < ENTITYNUM_WORLD )
+			{
+				gentity_t *saberent = &g_entities[NPCS.NPC->client->ps.saberEntityNum];
+
+				if ( saberent )
+				{
+					G_FreeEntity( saberent );
+				}
+			}
+
+			//FIXME: keep it running through physics somehow?
+			NPCS.NPC->think = NPC_RemoveBody;
+			NPCS.NPC->nextthink = level.time + FRAMETIME;
+
+			npc_class = NPCS.NPC->client->NPC_class;
+
+			// check for droids
+			if ( npc_class == CLASS_SEEKER || npc_class == CLASS_REMOTE || npc_class == CLASS_PROBE || npc_class == CLASS_MOUSE ||
+				npc_class == CLASS_GONK || npc_class == CLASS_R2D2 || npc_class == CLASS_R5D2 ||
+				npc_class == CLASS_MARK2 || npc_class == CLASS_SENTRY )//npc_class == CLASS_PROTOCOL ||
+			{
+				NPCS.NPC->client->ps.eFlags |= EF_NODRAW;
+				NPCS.NPCInfo->timeOfDeath = level.time + FRAMETIME * 8;
 			}
 			else
-			{
-				class_t	npc_class;
-
-				// Start the body effect first, then delay 400ms before ditching the corpse
-				NPC_RemoveBodyEffect();
-
-				//FIXME: keep it running through physics somehow?
-				NPCS.NPC->think = NPC_RemoveBody;
-				NPCS.NPC->nextthink = level.time + FRAMETIME;
-			//	if ( NPC->client->playerTeam == NPCTEAM_FORGE )
-			//		NPCInfo->timeOfDeath = level.time + FRAMETIME * 8;
-			//	else if ( NPC->client->playerTeam == NPCTEAM_BOTS )
-				npc_class = NPCS.NPC->client->NPC_class;
-				// check for droids
-				if ( npc_class == CLASS_SEEKER || npc_class == CLASS_REMOTE || npc_class == CLASS_PROBE || npc_class == CLASS_MOUSE ||
-					 npc_class == CLASS_GONK || npc_class == CLASS_R2D2 || npc_class == CLASS_R5D2 ||
-					 npc_class == CLASS_MARK2 || npc_class == CLASS_SENTRY )//npc_class == CLASS_PROTOCOL ||
-				{
-					NPCS.NPC->client->ps.eFlags |= EF_NODRAW;
-					NPCS.NPCInfo->timeOfDeath = level.time + FRAMETIME * 8;
-				}
-				else
-					NPCS.NPCInfo->timeOfDeath = level.time + FRAMETIME * 4;
-			}
-			return;
+				NPCS.NPCInfo->timeOfDeath = level.time + FRAMETIME * 4;
 		}
+		return;
 	}
 
 	// If the player is on the ground and the resting position contents haven't been set yet...(BounceCount tracks the contents)
@@ -3724,6 +3698,11 @@ qboolean UQ1_UcmdMoveForDir ( gentity_t *self, usercmd_t *cmd, vec3_t dir, qbool
 			cmd->rightmove += 127.0;
 	}*/
 
+	if (trap->PointContents( self->r.currentOrigin, self->s.number ) & CONTENTS_WATER)
+	{// Always go to surface...
+		cmd->upmove = 127.0;
+	}
+
 	if (!jumping && !UQ_MoveDirClear( cmd->forwardmove, cmd->rightmove, qfalse ))
 	{// Dir not clear, or we would fall!
 		cmd->forwardmove = 0;
@@ -3922,7 +3901,7 @@ void NPC_Think ( gentity_t *self)//, int msec )
 		memset(&settings, 0, sizeof(bot_settings_t));
 
 		settings.skill = 5;
-		if (self->client->sess.sessionTeam == TEAM_RED)
+		if (self->client->sess.sessionTeam == FACTION_EMPIRE)
 			strcpy(settings.team, "RED");
 		else
 			strcpy(settings.team, "BLUE");
@@ -4005,7 +3984,7 @@ void NPC_Think ( gentity_t *self)//, int msec )
 
 		if (player == self) continue;
 
-		if (player->inuse && player->client && player->client->sess.sessionTeam != TEAM_SPECTATOR &&
+		if (player->inuse && player->client && player->client->sess.sessionTeam != FACTION_SPECTATOR &&
 			!(player->client->ps.pm_flags & PMF_FOLLOW))
 		{
 			//if ( player->client->ps.viewEntity == self->s.number )
@@ -4147,6 +4126,11 @@ void NPC_Think ( gentity_t *self)//, int msec )
 					else
 					{
 						G_AddVoiceEvent( self, Q_irand( EV_DETECTED1, EV_DETECTED5 ), 15000 + irand(0, 30000) );
+					}
+
+					if (!self->enemy->enemy || (self->enemy->enemy && !NPC_IsAlive(self->enemy->enemy)))
+					{// Make me their enemy if they have none too...
+						self->enemy->enemy = self;
 					}
 				}
 
@@ -4379,7 +4363,7 @@ void NPC_Think ( gentity_t *self)//, int msec )
 							if (!ent) continue;
 							if (!ent->inuse) continue;
 							if (ent->s.eType != ET_PLAYER && ent->s.eType != ET_NPC && ent->s.eType != ET_ITEM) continue;
-							if (ent->s.eType == ET_PLAYER && ent->client->sess.sessionTeam == TEAM_SPECTATOR) continue;
+							if (ent->s.eType == ET_PLAYER && ent->client->sess.sessionTeam == FACTION_SPECTATOR) continue;
 							if (!NPC_ValidEnemy(ent)) continue;
 							
 							//if (irand(0, 3) < 1)
@@ -4714,7 +4698,7 @@ void NPC_InitGame( void )
 //	NPC_InitAnimTable();
 	/*
 	ResetTeamCounters();
-	for ( int team = NPCTEAM_FREE; team < NPCTEAM_NUM_TEAMS; team++ )
+	for ( int team = NPCFACTION_FREE; team < NPCFACTION_NUM_FACTIONS; team++ )
 	{
 		teamLastEnemyTime[team] = -10000;
 	}

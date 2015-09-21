@@ -14,9 +14,11 @@ extern qboolean BG_FileExists(const char *fileName);
 
 stringID_table_t TeamTable[] =
 {
-	ENUM2STRING(NPCTEAM_FREE),			// caution, some code checks a team_t via "if (!team_t_varname)" so I guess this should stay as entry 0, great or what? -slc
+	ENUM2STRING(NPCFACTION_FREE),			// caution, some code checks a team_t via "if (!team_t_varname)" so I guess this should stay as entry 0, great or what? -slc
 	ENUM2STRING(NPCTEAM_PLAYER),
 	ENUM2STRING(NPCTEAM_ENEMY),
+	ENUM2STRING(NPCTEAM_MANDALORIANS),
+	ENUM2STRING(NPCTEAM_MERCS),
 	ENUM2STRING(NPCTEAM_NEUTRAL),	// most droids are team_neutral, there are some exceptions like Probe,Seeker,Interrogator
 	{"",	-1}
 };
@@ -160,23 +162,9 @@ stringID_table_t BSETTable[] =
 extern stringID_table_t WPTable[];
 extern stringID_table_t FPTable[];
 
-char	*TeamNames[TEAM_NUM_TEAMS] =
+char	*TeamNames[FACTION_NUM_FACTIONS] =
 {
 	"",
-//	"starfleet",
-//	"borg",
-//	"parasite",
-//	"scavengers",
-//	"klingon",
-//	"malon",
-//	"hirogen",
-//	"imperial",
-//	"stasis",
-//	"species8472",
-//	"dreadnought",
-//	"forge",
-//	"disguise",
-//	"player (not valid)"
 	"player",
 	"enemy",
 	"neutral"
@@ -269,7 +257,7 @@ team_t TranslateTeamName( const char *name )
 {
 	int n;
 
-	for ( n = (NPCTEAM_FREE + 1); n < NPCTEAM_NUM_TEAMS; n++ )
+	for ( n = (NPCFACTION_FREE + 1); n < NPCFACTION_NUM_FACTIONS; n++ )
 	{
 		if ( Q_stricmp( TeamNames[n], name ) == 0 )
 		{
@@ -277,7 +265,7 @@ team_t TranslateTeamName( const char *name )
 		}
 	}
 
-	return NPCTEAM_FREE;
+	return NPCFACTION_FREE;
 }
 
 class_t TranslateClassName( const char *name )
@@ -592,7 +580,7 @@ Precaches NPC skins, tgas and md3s.
 */
 void NPC_Precache ( gentity_t *spawner )
 {
-	npcteam_t	playerTeam = NPCTEAM_FREE;
+	npcteam_t	playerTeam = NPCFACTION_FREE;
 	const char	*token;
 	const char	*value;
 	const char	*p;
@@ -3954,6 +3942,8 @@ qboolean NPC_LoadSpawnList( char *listname )
 	return qtrue;
 }
 
+spawnGroup_t emptySpawnGroup = { 0 };
+
 spawnGroup_t GetSpawnGroup(char *filename, int RARITY)
 {
 	int groupDataSelection;
@@ -3962,98 +3952,43 @@ spawnGroup_t GetSpawnGroup(char *filename, int RARITY)
 	spawnGroupList_t *spawnGroupList = NULL;
 	spawnGroupLists_t *spawnGroupLists = NULL;
 	int TEAM = 0;
-	
-	if (StringContainsWord(filename, "blue")) TEAM = TEAM_BLUE;
-	else TEAM = TEAM_RED;
 
-	/*
-	{ 
-		int i;
-		int groupDataSelection;
-		int spawnGroupInt = 0;
-		spawnGroup_t *spawnGroupSelection = NULL;
-		spawnGroupList_t *spawnGroupList = NULL;
-		spawnGroupLists_t *spawnGroupLists = NULL;
-		int TEAM = 0;
+	//trap->Print("Filename: %s.\n", Q_strlwr(filename));
 
-		if (StringContainsWord(filename, "blue")) TEAM = TEAM_BLUE;
-		else TEAM = TEAM_RED;
-
-		for (groupDataSelection = 0; groupDataSelection < spawnGroupFilesLoaded; groupDataSelection++)
-		{
-			spawnGroupLists = &spawnGroupData[groupDataSelection];
-
-			for (i = 0; i <= RARITY_MAX; i++)
-			{
-				spawnGroupList = &spawnGroupLists->spawnGroupLists[i];
-				Com_Printf("Rarity %i has %i groups.\n", i, spawnGroupList->spawnGroupTotal);
-
-				//if (spawnGroupList->spawnGroupTotal > 1000) break; // wtf? where is this corruption comming from???
-
-				for (spawnGroupInt = 0; spawnGroupInt < spawnGroupList->spawnGroupTotal; spawnGroupInt++)
-				{
-					int j;
-					spawnGroupSelection = &spawnGroupList->spawnGroups[spawnGroupInt];
-
-					Com_Printf("List:");
-
-					for (j = 0; j < spawnGroupSelection->npcCount; j++)
-					{
-						Com_Printf(" %s", spawnGroupSelection->npcNames[j]);
-					}
-					Com_Printf("\n");
-				}
-			}
-		}
-	}
-	*/
-	
+	if (StringContainsWord(Q_strlwr(filename), "rebels")) TEAM = FACTION_REBEL;
+	else if (StringContainsWord(Q_strlwr(filename), "empire")) TEAM = FACTION_EMPIRE;
+	else if (StringContainsWord(Q_strlwr(filename), "mandalorians")) TEAM = FACTION_MANDALORIAN;
+	else if (StringContainsWord(Q_strlwr(filename), "mercenaries")) TEAM = FACTION_MERC;
+	else return emptySpawnGroup;
 
 	for (groupDataSelection = 0; groupDataSelection < spawnGroupFilesLoaded; groupDataSelection++)
 	{
-		if (!strcmp(spawnGroupData[groupDataSelection].spawnGroupFilename, filename))
+		if (!strcmp(Q_strlwr(spawnGroupData[groupDataSelection].spawnGroupFilename), Q_strlwr(filename)))
 			break; // found our wanted groupDataStucture...
 	}
 
 	if (groupDataSelection >= spawnGroupFilesLoaded) {
-		Com_Printf("Fallback!\n");
+		//Com_Printf("Fallback!\n");
 		for (groupDataSelection = 0; groupDataSelection < spawnGroupFilesLoaded; groupDataSelection++)
 		{
-			if (TEAM == TEAM_BLUE && StringContainsWord(spawnGroupData[groupDataSelection].spawnGroupFilename, "blue"))
+			if (TEAM == FACTION_REBEL && StringContainsWord(Q_strlwr(spawnGroupData[groupDataSelection].spawnGroupFilename), "rebels"))
 				break; // found our wanted groupDataStucture...
 
-			if (TEAM == TEAM_RED && StringContainsWord(spawnGroupData[groupDataSelection].spawnGroupFilename, "red"))
+			if (TEAM == FACTION_EMPIRE && StringContainsWord(Q_strlwr(spawnGroupData[groupDataSelection].spawnGroupFilename), "empire"))
+				break; // found our wanted groupDataStucture...
+
+			if (TEAM == FACTION_MANDALORIAN && StringContainsWord(Q_strlwr(spawnGroupData[groupDataSelection].spawnGroupFilename), "mandalorians"))
+				break; // found our wanted groupDataStucture...
+
+			if (TEAM == FACTION_MERC && StringContainsWord(Q_strlwr(spawnGroupData[groupDataSelection].spawnGroupFilename), "mercenaries"))
 				break; // found our wanted groupDataStucture...
 		}
 	}
 
-	//Com_Printf("Rarity selection is %i.\n", RARITY);
-
 	spawnGroupLists = &spawnGroupData[groupDataSelection];
-
 	spawnGroupList = &spawnGroupLists->spawnGroupLists[RARITY];
-
-	//Com_Printf("Have %i groups.\n", spawnGroupList->spawnGroupTotal);
-
-	/*if (spawnGroupList->spawnGroupTotal > 1000 || spawnGroupList->spawnGroupTotal <= 0)
-	{// Temporary override for memory corruption workaround... GRRRRR!!!!!
-		spawnGroupList = &spawnGroupLists->spawnGroupLists[RARITY_COMMON];
-	}*/
-
 	spawnGroupInt = irand(0, spawnGroupList->spawnGroupTotal-1);
-
-	//Com_Printf("Selected group %i.\n", spawnGroupInt);
-
 	spawnGroupSelection = &spawnGroupList->spawnGroups[spawnGroupInt];
-
-	//Com_Printf("Group has %i names.\n", spawnGroupSelection->npcCount);
-
-	/*Com_Printf("Selected spawn list:");
-	for (i = 0; i < spawnGroupSelection->npcCount; i++)
-	{
-		Com_Printf(" %s", spawnGroupSelection->npcNames[i]);
-	}
-	Com_Printf("\n");*/
 
 	return *spawnGroupSelection;
 }

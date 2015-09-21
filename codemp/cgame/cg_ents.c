@@ -467,7 +467,7 @@ void FX_DrawPortableShield(centity_t *cent)
 	start[2] += height/2;
 	end[2] += height/2;
 
-	if (team == TEAM_RED)
+	if (team == FACTION_EMPIRE)
 	{
 		if (cent->currentState.trickedentindex)
 		{
@@ -2730,7 +2730,7 @@ Ghoul2 Insert End
 	}
 
 	// add to refresh list, possibly with quad glow
-	CG_AddRefEntityWithPowerups( &ent, s1, TEAM_FREE );
+	CG_AddRefEntityWithPowerups( &ent, s1, FACTION_FREE );
 
 	if (s1->weapon == WP_SABER && cgs.gametype == GT_JEDIMASTER)
 	{ //in jedimaster always make the saber glow when on the ground
@@ -3064,7 +3064,7 @@ void CG_AdjustPositionForMover( const vec3_t in, int moverNum, int fromTime, int
 	vec3_t	oldOrigin, origin, deltaOrigin;
 	vec3_t	oldAngles, angles, deltaAngles;
 
-	if ( cg.predictedPlayerState.persistant[PERS_TEAM] == TEAM_SPECTATOR )
+	if ( cg.predictedPlayerState.persistant[PERS_TEAM] == FACTION_SPECTATOR )
 	{
 		VectorCopy( in, out );
 		return;
@@ -3402,7 +3402,7 @@ static void CG_AddCEntity( centity_t *cent ) {
 	}
 
 	// don't render when we are in spec, happens occasionally on map_restart and such
-	if ( cg.predictedPlayerState.clientNum == cent->currentState.number && cg.predictedPlayerState.persistant[PERS_TEAM] == TEAM_SPECTATOR )
+	if ( cg.predictedPlayerState.clientNum == cent->currentState.number && cg.predictedPlayerState.persistant[PERS_TEAM] == FACTION_SPECTATOR )
 		return;
 
 

@@ -116,22 +116,32 @@ void CG_ClientList_f( void )
 
 		switch( ci->team )
 		{
-		case TEAM_FREE:
+		case FACTION_FREE:
 			Com_Printf( "%2d " S_COLOR_YELLOW "F   " S_COLOR_WHITE "%s" S_COLOR_WHITE "%s\n", i, ci->name, (ci->botSkill != -1) ? " (bot)" : "" );
 			break;
 
-		case TEAM_RED:
+		case FACTION_EMPIRE:
 			Com_Printf( "%2d " S_COLOR_RED "R   " S_COLOR_WHITE "%s" S_COLOR_WHITE "%s\n", i,
 				ci->name, (ci->botSkill != -1) ? " (bot)" : "" );
 			break;
 
-		case TEAM_BLUE:
+		case FACTION_REBEL:
 			Com_Printf( "%2d " S_COLOR_BLUE "B   " S_COLOR_WHITE "%s" S_COLOR_WHITE "%s\n", i,
 				ci->name, (ci->botSkill != -1) ? " (bot)" : "" );
 			break;
 
+		case FACTION_MANDALORIAN:
+			Com_Printf( "%2d " S_COLOR_ORANGE "B   " S_COLOR_WHITE "%s" S_COLOR_WHITE "%s\n", i,
+				ci->name, (ci->botSkill != -1) ? " (bot)" : "" );
+			break;
+
+		case FACTION_MERC:
+			Com_Printf( "%2d " S_COLOR_GREEN "B   " S_COLOR_WHITE "%s" S_COLOR_WHITE "%s\n", i,
+				ci->name, (ci->botSkill != -1) ? " (bot)" : "" );
+			break;
+
 		default:
-		case TEAM_SPECTATOR:
+		case FACTION_SPECTATOR:
 			Com_Printf( "%2d " S_COLOR_YELLOW "S   " S_COLOR_WHITE "%s" S_COLOR_WHITE "%s\n", i, ci->name, (ci->botSkill != -1) ? " (bot)" : "" );
 			break;
 		}

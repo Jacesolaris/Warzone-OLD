@@ -2346,7 +2346,7 @@ void CG_DrawAutoMap(void)
 		return;
 	}
 
-	if ( (cg.predictedPlayerState.pm_flags & PMF_FOLLOW) || cg.predictedPlayerState.persistant[PERS_TEAM] == TEAM_SPECTATOR )
+	if ( (cg.predictedPlayerState.pm_flags & PMF_FOLLOW) || cg.predictedPlayerState.persistant[PERS_TEAM] == FACTION_SPECTATOR )
 	{ //don't show when spec
 		return;
 	}
@@ -2795,7 +2795,7 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 			cg.renderingThirdPerson = qfalse;
 		}
 
-		if (cg.snap->ps.persistant[PERS_TEAM] == TEAM_SPECTATOR)
+		if (cg.snap->ps.persistant[PERS_TEAM] == FACTION_SPECTATOR)
 		{
 			cg.renderingThirdPerson = qfalse;
 		}

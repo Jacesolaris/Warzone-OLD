@@ -416,7 +416,7 @@ void Client_CheckImpactBBrush( gentity_t *self, gentity_t *other )
 	}
 	if (!self || !self->inuse || !self->client ||
 		self->client->tempSpectate >= level.time ||
-		self->client->sess.sessionTeam == TEAM_SPECTATOR)
+		self->client->sess.sessionTeam == FACTION_SPECTATOR)
 	{ //hmm.. let's not let spectators ram into breakables.
 		return;
 	}
@@ -557,7 +557,7 @@ void	G_TouchTriggers( gentity_t *ent ) {
 		}
 
 		// ignore most entities if a spectator
-		if ( ent->client->sess.sessionTeam == TEAM_SPECTATOR ) {
+		if ( ent->client->sess.sessionTeam == FACTION_SPECTATOR ) {
 			if ( hit->s.eType != ET_TELEPORT_TRIGGER &&
 				// this is ugly but adding a new ET_? type will
 				// most likely cause network incompatibilities
@@ -1324,7 +1324,7 @@ void G_CheckToggleBlock(gentity_t *ent, usercmd_t *ucmd)
 	}
 
 	if (ent->health <= 0 || ent->client->ps.stats[STAT_HEALTH] <= 0 ||
-		ent->client->sess.sessionTeam == TEAM_SPECTATOR || (ent->client->ps.pm_flags & PMF_FOLLOW))
+		ent->client->sess.sessionTeam == FACTION_SPECTATOR || (ent->client->ps.pm_flags & PMF_FOLLOW))
 	{
 		ent->client->ps.powerups[PW_BLOCK] = 0;
 		ent->blockToggleTime = 0;
@@ -1367,7 +1367,7 @@ void G_CheckClientIdle( gentity_t *ent, usercmd_t *ucmd )
 	int buttons;
 
 	if ( !ent || !ent->client || ent->health <= 0 || ent->client->ps.stats[STAT_HEALTH] <= 0 ||
-		ent->client->sess.sessionTeam == TEAM_SPECTATOR || (ent->client->ps.pm_flags & PMF_FOLLOW))
+		ent->client->sess.sessionTeam == FACTION_SPECTATOR || (ent->client->ps.pm_flags & PMF_FOLLOW))
 	{
 		return;
 	}
@@ -2279,7 +2279,7 @@ void ClientThink_real( gentity_t *ent ) {
 	}
 
 	// spectators don't do much
-	if ( client->sess.sessionTeam == TEAM_SPECTATOR || client->tempSpectate >= level.time ) {
+	if ( client->sess.sessionTeam == FACTION_SPECTATOR || client->tempSpectate >= level.time ) {
 		if ( client->sess.spectatorState == SPECTATOR_SCOREBOARD ) {
 			return;
 		}
@@ -2778,7 +2778,7 @@ void ClientThink_real( gentity_t *ent ) {
 		gentity_t *throwee = &g_entities[ent->client->throwingIndex];
 
 		if (!throwee->inuse || !throwee->client || throwee->health < 1 ||
-			throwee->client->sess.sessionTeam == TEAM_SPECTATOR ||
+			throwee->client->sess.sessionTeam == FACTION_SPECTATOR ||
 			(throwee->client->ps.pm_flags & PMF_FOLLOW) ||
 			throwee->client->throwingIndex != ent->s.number)
 		{
@@ -2803,7 +2803,7 @@ void ClientThink_real( gentity_t *ent ) {
 		gentity_t *thrower = &g_entities[ent->client->throwingIndex];
 
 		if (!thrower->inuse || !thrower->client || thrower->health < 1 ||
-			thrower->client->sess.sessionTeam == TEAM_SPECTATOR ||
+			thrower->client->sess.sessionTeam == FACTION_SPECTATOR ||
 			(thrower->client->ps.pm_flags & PMF_FOLLOW) ||
 			thrower->client->throwingIndex != ent->s.number)
 		{
@@ -3780,7 +3780,7 @@ void G_CheckClientTimeouts ( gentity_t *ent )
 	}
 
 	// Already a spectator, no need to boot them to spectator
-	if ( ent->client->sess.sessionTeam == TEAM_SPECTATOR )
+	if ( ent->client->sess.sessionTeam == FACTION_SPECTATOR )
 	{
 		return;
 	}
@@ -3939,7 +3939,7 @@ void SpectatorClientEndFrame( gentity_t *ent ) {
 		}
 		if ( clientNum >= 0 ) {
 			cl = &level.clients[ clientNum ];
-			if ( cl->pers.connected == CON_CONNECTED && cl->sess.sessionTeam != TEAM_SPECTATOR ) {
+			if ( cl->pers.connected == CON_CONNECTED && cl->sess.sessionTeam != FACTION_SPECTATOR ) {
 				//flags = (cl->mGameFlags & ~(PSG_VOTED | PSG_TEAMVOTED)) | (ent->client->mGameFlags & (PSG_VOTED | PSG_TEAMVOTED));
 				//ent->client->mGameFlags = flags;
 				ent->client->ps.eFlags = cl->ps.eFlags;
@@ -3981,7 +3981,7 @@ void ClientEndFrame( gentity_t *ent ) {
 		isNPC = qtrue;
 	}
 
-	if ( ent->client->sess.sessionTeam == TEAM_SPECTATOR ) {
+	if ( ent->client->sess.sessionTeam == FACTION_SPECTATOR ) {
 		SpectatorClientEndFrame( ent );
 		return;
 	}

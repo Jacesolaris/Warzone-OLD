@@ -88,7 +88,7 @@ extern void G_AddPadawanCombatCommentEvent( gentity_t *self, int event, int spea
 
 extern int bg_parryDebounce[];
 
-int	jediSpeechDebounceTime[TEAM_NUM_TEAMS];//used to stop several jedi from speaking all at once
+int	jediSpeechDebounceTime[FACTION_NUM_FACTIONS];//used to stop several jedi from speaking all at once
 //Local state enums
 enum
 {
@@ -6247,7 +6247,7 @@ finish:
 				if ( target && target != NPCS.NPC && target->inuse && (target->s.eType == ET_NPC || target->s.eType == ET_PLAYER) )
 				{
 					if ((target->s.eType == ET_NPC || target->s.eType == ET_PLAYER)
-						&& (target->client->ps.pm_type == PM_SPECTATOR || target->client->sess.sessionTeam == TEAM_SPECTATOR))
+						&& (target->client->ps.pm_type == PM_SPECTATOR || target->client->sess.sessionTeam == FACTION_SPECTATOR))
 						continue;
 
 					targets[NUM_TARGETS] = target;
@@ -6277,7 +6277,7 @@ finish:
 				if ( target && target != NPCS.NPC && target->inuse )
 				{
 					if ((target->s.eType == ET_NPC || target->s.eType == ET_PLAYER)
-						&& (target->client->ps.pm_type == PM_SPECTATOR || target->client->sess.sessionTeam == TEAM_SPECTATOR))
+						&& (target->client->ps.pm_type == PM_SPECTATOR || target->client->sess.sessionTeam == FACTION_SPECTATOR))
 						continue;
 
 					targets[NUM_TARGETS] = target;
@@ -6941,7 +6941,7 @@ qboolean Jedi_InSpecialMove( void )
 			if ( NPCS.NPC->useDebounceTime <= level.time )
 			{
 				//this should damage everyone - FIXME: except other destroyers?
-				NPCS.NPC->client->playerTeam = NPCTEAM_FREE;//FIXME: will this destroy wampas, tusken & rancors?
+				NPCS.NPC->client->playerTeam = NPCFACTION_FREE;//FIXME: will this destroy wampas, tusken & rancors?
 				NPCS.NPC->splashDamage = 200;	// rough match to SP
 				NPCS.NPC->splashRadius = 512;	// see above
 				WP_Explode( NPCS.NPC );

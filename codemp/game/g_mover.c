@@ -1270,7 +1270,7 @@ void Touch_DoorTrigger( gentity_t *ent, gentity_t *other, trace_t *trace )
 
 	//trap->Print("MOVER DEBUG: Door %i trigger touched.\n", ent->parent->s.number);
 
-	if ( other->client && other->client->sess.sessionTeam == TEAM_SPECTATOR )
+	if ( other->client && other->client->sess.sessionTeam == FACTION_SPECTATOR )
 	{
 		// if the door is not open and not opening
 		if ( ent->parent->moverState != MOVER_1TO2 &&
@@ -3129,7 +3129,7 @@ void SP_func_breakable( gentity_t *self )
 	if ( self->team && self->team[0] )
 	{
 		self->alliedTeam = TranslateTeamName( self->team );
-		if(self->alliedTeam == TEAM_FREE)
+		if(self->alliedTeam == FACTION_FREE)
 		{
 			trap->Error( ERR_DROP, "team name %s not recognized\n", self->team );
 		}

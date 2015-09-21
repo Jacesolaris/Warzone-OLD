@@ -2,13 +2,15 @@
 
 typedef enum //# team_e
 {
-	NPCTEAM_FREE,			// also TEAM_FREE - caution, some code checks a team_t via "if (!team_t_varname)" so I guess this should stay as entry 0, great or what? -slc
-	NPCTEAM_ENEMY,			// also TEAM_RED
-	NPCTEAM_PLAYER,			// also TEAM_BLUE
-	NPCTEAM_NEUTRAL,		// also TEAM_SPECTATOR - most droids are team_neutral, there are some exceptions like Probe,Seeker,Interrogator
+	NPCFACTION_FREE,			// also FACTION_FREE - caution, some code checks a team_t via "if (!team_t_varname)" so I guess this should stay as entry 0, great or what? -slc
+	NPCTEAM_ENEMY,			// also FACTION_EMPIRE
+	NPCTEAM_PLAYER,			// also FACTION_REBEL
+	NPCTEAM_MANDALORIANS,
+	NPCTEAM_MERCS,
+	NPCTEAM_NEUTRAL,		// also FACTION_SPECTATOR - most droids are team_neutral, there are some exceptions like Probe,Seeker,Interrogator
 
 	//# #eol
-	NPCTEAM_NUM_TEAMS
+	NPCFACTION_NUM_FACTIONS
 } npcteam_t;
 
 // This list is made up from the model directories, this MUST be in the same order as the ClassNames array in NPC_stats.cpp

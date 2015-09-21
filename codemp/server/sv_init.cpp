@@ -943,7 +943,7 @@ void SV_Init (void) {
 #ifdef __MMO__
 	sv_snapsMin = Cvar_Get ("sv_snapsMin", "5", CVAR_ARCHIVE ); // 1 <=> sv_snapsMax
 	sv_snapsMax = Cvar_Get ("sv_snapsMax", "20", CVAR_ARCHIVE ); // sv_snapsMin <=> sv_fps
-	sv_fps = Cvar_Get ("sv_fps", "20", CVAR_SERVERINFO );
+	sv_fps = Cvar_Get ("sv_fps", "15", CVAR_SERVERINFO );
 #else //!__MMO__
 	sv_snapsMin = Cvar_Get ("sv_snapsMin", "10", CVAR_ARCHIVE ); // 1 <=> sv_snapsMax
 	sv_snapsMax = Cvar_Get ("sv_snapsMax", "40", CVAR_ARCHIVE ); // sv_snapsMin <=> sv_fps

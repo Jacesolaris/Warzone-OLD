@@ -445,7 +445,7 @@ void Touch_Multi( gentity_t *self, gentity_t *other, trace_t *trace )
 		}
 
 		if ((other->client->ps.weaponTime > 0 && other->client->ps.torsoAnim != BOTH_BUTTON_HOLD && other->client->ps.torsoAnim != BOTH_CONSOLE1) || other->health < 1 ||
-			(other->client->ps.pm_flags & PMF_FOLLOW) || other->client->sess.sessionTeam == TEAM_SPECTATOR ||
+			(other->client->ps.pm_flags & PMF_FOLLOW) || other->client->sess.sessionTeam == FACTION_SPECTATOR ||
 			other->client->ps.forceHandExtend != HANDEXTEND_NONE)
 		{ //player has to be free of other things to use.
 			return;
@@ -1237,7 +1237,7 @@ void trigger_teleporter_touch (gentity_t *self, gentity_t *other, trace_t *trace
 	}
 	// Spectators only?
 	if ( ( self->spawnflags & 1 ) &&
-		other->client->sess.sessionTeam != TEAM_SPECTATOR ) {
+		other->client->sess.sessionTeam != FACTION_SPECTATOR ) {
 		return;
 	}
 

@@ -232,7 +232,7 @@ void TeleportPlayer( gentity_t *player, vec3_t origin, vec3_t angles ) {
 	// use temp events at source and destination to prevent the effect
 	// from getting dropped by a second player event
 #if 0 // UQ1: Nope. waste of bandwidth...
-	if ( player->client->sess.sessionTeam != TEAM_SPECTATOR ) {
+	if ( player->client->sess.sessionTeam != FACTION_SPECTATOR ) {
 		tent = G_TempEntity( player->client->ps.origin, EV_PLAYER_TELEPORT_OUT );
 		tent->s.clientNum = player->s.clientNum;
 
@@ -262,7 +262,7 @@ void TeleportPlayer( gentity_t *player, vec3_t origin, vec3_t angles ) {
 	player->client->ps.eFlags ^= EF_TELEPORT_BIT;
 
 	// kill anything at the destination
-	if ( player->client->sess.sessionTeam != TEAM_SPECTATOR ) {
+	if ( player->client->sess.sessionTeam != FACTION_SPECTATOR ) {
 		G_KillBox (player);
 	}
 
@@ -276,7 +276,7 @@ void TeleportPlayer( gentity_t *player, vec3_t origin, vec3_t angles ) {
 	// use the precise origin for linking
 	VectorCopy( player->client->ps.origin, player->r.currentOrigin );
 
-	if ( player->client->sess.sessionTeam != TEAM_SPECTATOR ) {
+	if ( player->client->sess.sessionTeam != FACTION_SPECTATOR ) {
 		trap->LinkEntity ((sharedEntity_t *)player);
 	}
 }
@@ -2481,7 +2481,7 @@ void Use_Target_Escapetrig( gentity_t *ent, gentity_t *other, gentity_t *activat
 		while (i < MAX_CLIENTS)
 		{ //all of the survivors get 100 points!
 			if (g_entities[i].inuse && g_entities[i].client && g_entities[i].health > 0 &&
-				g_entities[i].client->sess.sessionTeam != TEAM_SPECTATOR &&
+				g_entities[i].client->sess.sessionTeam != FACTION_SPECTATOR &&
 				!(g_entities[i].client->ps.pm_flags & PMF_FOLLOW))
 			{
 				AddScore(&g_entities[i], g_entities[i].client->ps.origin, 100);

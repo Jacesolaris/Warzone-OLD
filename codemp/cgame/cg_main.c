@@ -1638,14 +1638,14 @@ static void CG_RegisterGraphics( void ) {
 	}
 
 	if ( cgs.gametype >= GT_TEAM || com_buildScript.integer ) {
-		cgs.media.teamRedShader = trap->R_RegisterShader( "sprites/team_red" );
-		cgs.media.teamBlueShader = trap->R_RegisterShader( "sprites/team_blue" );
+		cgs.media.teamRedShader = trap->R_RegisterShader( "sprites/FACTION_EMPIRE" );
+		cgs.media.teamBlueShader = trap->R_RegisterShader( "sprites/FACTION_REBEL" );
 		//cgs.media.redQuadShader = trap->R_RegisterShader("powerups/blueflag" );
 		cgs.media.teamStatusBar = trap->R_RegisterShader( "gfx/2d/colorbar.tga" );
 	}
 	else if ( cgs.gametype == GT_JEDIMASTER )
 	{
-		cgs.media.teamRedShader = trap->R_RegisterShader( "sprites/team_red" );
+		cgs.media.teamRedShader = trap->R_RegisterShader( "sprites/FACTION_EMPIRE" );
 	}
 
 	if (cgs.gametype == GT_POWERDUEL || com_buildScript.integer)
@@ -1916,9 +1916,9 @@ void CG_SiegeCountCvars( void )
 {
 	int classGfx[6];
 
-	trap->Cvar_Set( "ui_tm1_cnt",va("%d",CG_GetTeamNonScoreCount(TEAM_RED )));
-	trap->Cvar_Set( "ui_tm2_cnt",va("%d",CG_GetTeamNonScoreCount(TEAM_BLUE )));
-	trap->Cvar_Set( "ui_tm3_cnt",va("%d",CG_GetTeamNonScoreCount(TEAM_SPECTATOR )));
+	trap->Cvar_Set( "ui_tm1_cnt",va("%d",CG_GetTeamNonScoreCount(FACTION_EMPIRE )));
+	trap->Cvar_Set( "ui_tm2_cnt",va("%d",CG_GetTeamNonScoreCount(FACTION_REBEL )));
+	trap->Cvar_Set( "ui_tm3_cnt",va("%d",CG_GetTeamNonScoreCount(FACTION_SPECTATOR )));
 
 	// This is because the only way we can match up classes is by the gfx handle.
 	classGfx[0] = trap->R_RegisterShaderNoMip("gfx/mp/c_icon_infantry");
@@ -1928,19 +1928,19 @@ void CG_SiegeCountCvars( void )
 	classGfx[4] = trap->R_RegisterShaderNoMip("gfx/mp/c_icon_support");
 	classGfx[5] = trap->R_RegisterShaderNoMip("gfx/mp/c_icon_jedi_general");
 
-	trap->Cvar_Set( "ui_tm1_c0_cnt",va("%d",CG_GetClassCount(TEAM_RED,classGfx[0])));
-	trap->Cvar_Set( "ui_tm1_c1_cnt",va("%d",CG_GetClassCount(TEAM_RED,classGfx[1])));
-	trap->Cvar_Set( "ui_tm1_c2_cnt",va("%d",CG_GetClassCount(TEAM_RED,classGfx[2])));
-	trap->Cvar_Set( "ui_tm1_c3_cnt",va("%d",CG_GetClassCount(TEAM_RED,classGfx[3])));
-	trap->Cvar_Set( "ui_tm1_c4_cnt",va("%d",CG_GetClassCount(TEAM_RED,classGfx[4])));
-	trap->Cvar_Set( "ui_tm1_c5_cnt",va("%d",CG_GetClassCount(TEAM_RED,classGfx[5])));
+	trap->Cvar_Set( "ui_tm1_c0_cnt",va("%d",CG_GetClassCount(FACTION_EMPIRE,classGfx[0])));
+	trap->Cvar_Set( "ui_tm1_c1_cnt",va("%d",CG_GetClassCount(FACTION_EMPIRE,classGfx[1])));
+	trap->Cvar_Set( "ui_tm1_c2_cnt",va("%d",CG_GetClassCount(FACTION_EMPIRE,classGfx[2])));
+	trap->Cvar_Set( "ui_tm1_c3_cnt",va("%d",CG_GetClassCount(FACTION_EMPIRE,classGfx[3])));
+	trap->Cvar_Set( "ui_tm1_c4_cnt",va("%d",CG_GetClassCount(FACTION_EMPIRE,classGfx[4])));
+	trap->Cvar_Set( "ui_tm1_c5_cnt",va("%d",CG_GetClassCount(FACTION_EMPIRE,classGfx[5])));
 
-	trap->Cvar_Set( "ui_tm2_c0_cnt",va("%d",CG_GetClassCount(TEAM_BLUE,classGfx[0])));
-	trap->Cvar_Set( "ui_tm2_c1_cnt",va("%d",CG_GetClassCount(TEAM_BLUE,classGfx[1])));
-	trap->Cvar_Set( "ui_tm2_c2_cnt",va("%d",CG_GetClassCount(TEAM_BLUE,classGfx[2])));
-	trap->Cvar_Set( "ui_tm2_c3_cnt",va("%d",CG_GetClassCount(TEAM_BLUE,classGfx[3])));
-	trap->Cvar_Set( "ui_tm2_c4_cnt",va("%d",CG_GetClassCount(TEAM_BLUE,classGfx[4])));
-	trap->Cvar_Set( "ui_tm2_c5_cnt",va("%d",CG_GetClassCount(TEAM_BLUE,classGfx[5])));
+	trap->Cvar_Set( "ui_tm2_c0_cnt",va("%d",CG_GetClassCount(FACTION_REBEL,classGfx[0])));
+	trap->Cvar_Set( "ui_tm2_c1_cnt",va("%d",CG_GetClassCount(FACTION_REBEL,classGfx[1])));
+	trap->Cvar_Set( "ui_tm2_c2_cnt",va("%d",CG_GetClassCount(FACTION_REBEL,classGfx[2])));
+	trap->Cvar_Set( "ui_tm2_c3_cnt",va("%d",CG_GetClassCount(FACTION_REBEL,classGfx[3])));
+	trap->Cvar_Set( "ui_tm2_c4_cnt",va("%d",CG_GetClassCount(FACTION_REBEL,classGfx[4])));
+	trap->Cvar_Set( "ui_tm2_c5_cnt",va("%d",CG_GetClassCount(FACTION_REBEL,classGfx[5])));
 
 }
 
@@ -1958,7 +1958,7 @@ void CG_BuildSpectatorString(void) {
 	CG_SiegeCountCvars();
 
 	for (i = 0; i < MAX_CLIENTS; i++) {
-		if (cgs.clientinfo[i].infoValid && cgs.clientinfo[i].team == TEAM_SPECTATOR ) {
+		if (cgs.clientinfo[i].infoValid && cgs.clientinfo[i].team == FACTION_SPECTATOR ) {
 			Q_strcat(cg.spectatorList, sizeof(cg.spectatorList), va("%s     ", cgs.clientinfo[i].name));
 		}
 	}
@@ -2307,13 +2307,13 @@ static int CG_FeederCount(float feederID) {
 	count = 0;
 	if (feederID == FEEDER_REDTEAM_LIST) {
 		for (i = 0; i < cg.numScores; i++) {
-			if (cg.scores[i].team == TEAM_RED) {
+			if (cg.scores[i].team == FACTION_EMPIRE) {
 				count++;
 			}
 		}
 	} else if (feederID == FEEDER_BLUETEAM_LIST) {
 		for (i = 0; i < cg.numScores; i++) {
-			if (cg.scores[i].team == TEAM_BLUE) {
+			if (cg.scores[i].team == FACTION_REBEL) {
 				count++;
 			}
 		}
@@ -2330,9 +2330,9 @@ void CG_SetScoreSelection(void *p) {
 	int i, red, blue;
 	red = blue = 0;
 	for (i = 0; i < cg.numScores; i++) {
-		if (cg.scores[i].team == TEAM_RED) {
+		if (cg.scores[i].team == FACTION_EMPIRE) {
 			red++;
-		} else if (cg.scores[i].team == TEAM_BLUE) {
+		} else if (cg.scores[i].team == FACTION_REBEL) {
 			blue++;
 		}
 		if (ps->clientNum == cg.scores[i].client) {
@@ -2348,7 +2348,7 @@ void CG_SetScoreSelection(void *p) {
 	if ( cgs.gametype >= GT_TEAM ) {
 		int feeder = FEEDER_REDTEAM_LIST;
 		i = red;
-		if (cg.scores[cg.selectedScore].team == TEAM_BLUE) {
+		if (cg.scores[cg.selectedScore].team == FACTION_REBEL) {
 			feeder = FEEDER_BLUETEAM_LIST;
 			i = blue;
 		}
@@ -2388,9 +2388,9 @@ static const char *CG_FeederItemText(float feederID, int index, int column,
 	*handle1 = *handle2 = *handle3 = -1;
 
 	if (feederID == FEEDER_REDTEAM_LIST) {
-		team = TEAM_RED;
+		team = FACTION_EMPIRE;
 	} else if (feederID == FEEDER_BLUETEAM_LIST) {
-		team = TEAM_BLUE;
+		team = FACTION_REBEL;
 	}
 
 	info = CG_InfoFromScoreIndex(index, team, &scoreIndex);
@@ -2432,7 +2432,7 @@ static const char *CG_FeederItemText(float feederID, int index, int column,
 				if (team == -1) {
 					if (cgs.gametype == GT_DUEL || cgs.gametype == GT_POWERDUEL) {
 						return va("%i/%i", info->wins, info->losses);
-					} else if (info->infoValid && info->team == TEAM_SPECTATOR ) {
+					} else if (info->infoValid && info->team == FACTION_SPECTATOR ) {
 						return "Spectator";
 					} else {
 						return "";
@@ -2471,7 +2471,7 @@ static qhandle_t CG_FeederItemImage(float feederID, int index) {
 static qboolean CG_FeederSelection(float feederID, int index, itemDef_t *item) {
 	if ( cgs.gametype >= GT_TEAM ) {
 		int i, count;
-		int team = (feederID == FEEDER_REDTEAM_LIST) ? TEAM_RED : TEAM_BLUE;
+		int team = (feederID == FEEDER_REDTEAM_LIST) ? FACTION_EMPIRE : FACTION_REBEL;
 		count = 0;
 		for (i = 0; i < cg.numScores; i++) {
 			if (cg.scores[i].team == team) {

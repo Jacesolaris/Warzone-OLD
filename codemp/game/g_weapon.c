@@ -2750,7 +2750,7 @@ void proxMineThink(gentity_t *ent)
 		cl = &g_entities[i];
 
 		if (cl->inuse && cl->client && cl->client->pers.connected == CON_CONNECTED &&
-			owner != cl && cl->client->sess.sessionTeam != TEAM_SPECTATOR &&
+			owner != cl && cl->client->sess.sessionTeam != FACTION_SPECTATOR &&
 			cl->client->tempSpectate < level.time && cl->health > 0)
 		{
 			if (!OnSameTeam(owner, cl) || g_friendlyFire.integer)

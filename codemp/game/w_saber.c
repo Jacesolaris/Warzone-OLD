@@ -280,7 +280,7 @@ void SaberUpdateSelf(gentity_t *ent)
 
 	if (!g_entities[ent->r.ownerNum].inuse ||
 		!g_entities[ent->r.ownerNum].client/* ||
-		g_entities[ent->r.ownerNum].client->sess.sessionTeam == TEAM_SPECTATOR*/)
+		g_entities[ent->r.ownerNum].client->sess.sessionTeam == FACTION_SPECTATOR*/)
 	{
 		ent->think = G_FreeEntity;
 		ent->nextthink = level.time;
@@ -299,7 +299,7 @@ void SaberUpdateSelf(gentity_t *ent)
 	if (g_entities[ent->r.ownerNum].client->ps.weapon != WP_SABER ||
 		(g_entities[ent->r.ownerNum].client->ps.pm_flags & PMF_FOLLOW) ||
 		//RWW ADDED 7-19-03 BEGIN
-		g_entities[ent->r.ownerNum].client->sess.sessionTeam == TEAM_SPECTATOR ||
+		g_entities[ent->r.ownerNum].client->sess.sessionTeam == FACTION_SPECTATOR ||
 		g_entities[ent->r.ownerNum].client->tempSpectate >= level.time ||
 		//RWW ADDED 7-19-03 END
 		g_entities[ent->r.ownerNum].health < 1 ||
@@ -5357,7 +5357,7 @@ void WP_SaberStartMissileBlockCheck( gentity_t *self, usercmd_t *ucmd  )
 			ent->client &&
 			(ent->s.eType == ET_NPC || ent->s.eType == ET_PLAYER) &&
 			!OnSameTeam(ent, self) &&
-			ent->client->sess.sessionTeam != TEAM_SPECTATOR &&
+			ent->client->sess.sessionTeam != FACTION_SPECTATOR &&
 			!(ent->client->ps.pm_flags & PMF_FOLLOW) &&
 			(ent->s.eType != ET_NPC || ent->s.NPC_class != CLASS_VEHICLE) && //don't look at vehicle NPCs
 			ent->health > 0)
@@ -5664,7 +5664,7 @@ static QINLINE qboolean CheckThrownSaberDamaged(gentity_t *saberent, gentity_t *
 	if (ent && ent->client && ent->inuse && ent->s.number != saberOwner->s.number &&
 		ent->health > 0 && ent->takedamage &&
 		trap->InPVS(ent->client->ps.origin, saberent->r.currentOrigin) &&
-		ent->client->sess.sessionTeam != TEAM_SPECTATOR &&
+		ent->client->sess.sessionTeam != FACTION_SPECTATOR &&
 		(ent->client->pers.connected || ent->s.eType == ET_NPC))
 	{ //hit a client
 		if (ent->inuse && ent->client &&
@@ -6143,7 +6143,7 @@ void DownedSaberThink(gentity_t *saberent)
 	if (!saberOwn ||
 		!saberOwn->inuse ||
 		!saberOwn->client ||
-		saberOwn->client->sess.sessionTeam == TEAM_SPECTATOR ||
+		saberOwn->client->sess.sessionTeam == FACTION_SPECTATOR ||
 		(saberOwn->client->ps.pm_flags & PMF_FOLLOW))
 	{
 		MakeDeadSaber(saberent);
@@ -6729,7 +6729,7 @@ void saberBackToOwner(gentity_t *saberent)
 
 	if (!saberOwner->inuse ||
 		!saberOwner->client ||
-		saberOwner->client->sess.sessionTeam == TEAM_SPECTATOR)
+		saberOwner->client->sess.sessionTeam == FACTION_SPECTATOR)
 	{
 		MakeDeadSaber(saberent);
 
@@ -6930,7 +6930,7 @@ void saberFirstThrown(gentity_t *saberent)
 	if (!saberOwn ||
 		!saberOwn->inuse ||
 		!saberOwn->client ||
-		saberOwn->client->sess.sessionTeam == TEAM_SPECTATOR)
+		saberOwn->client->sess.sessionTeam == FACTION_SPECTATOR)
 	{
 		MakeDeadSaber(saberent);
 

@@ -83,7 +83,7 @@ void DeathmatchScoreboardMessage( gentity_t *ent ) {
 	i = level.numConnectedClients;
 
 	trap->SendServerCommand( ent-g_entities, va("scores %i %i %i%s", i,
-		level.teamScores[TEAM_RED], level.teamScores[TEAM_BLUE],
+		level.teamScores[FACTION_EMPIRE], level.teamScores[FACTION_REBEL],
 		string ) );
 #endif //__MMO__
 }
@@ -364,7 +364,7 @@ void Cmd_GiveOther_f( gentity_t *ent )
 		return;
 	}
 
-	if ( (otherEnt->health <= 0 || otherEnt->client->tempSpectate >= level.time || otherEnt->client->sess.sessionTeam == TEAM_SPECTATOR) )
+	if ( (otherEnt->health <= 0 || otherEnt->client->tempSpectate >= level.time || otherEnt->client->sess.sessionTeam == FACTION_SPECTATOR) )
 	{
 		// Intentionally displaying for the command user
 		trap->SendServerCommand( ent-g_entities, va( "print \"%s\n\"", G_GetStringEdString( "MP_SVGAME", "MUSTBEALIVE" ) ) );
@@ -543,7 +543,7 @@ void Cmd_KillOther_f( gentity_t *ent )
 		return;
 	}
 
-	if ( (otherEnt->health <= 0 || otherEnt->client->tempSpectate >= level.time || otherEnt->client->sess.sessionTeam == TEAM_SPECTATOR) )
+	if ( (otherEnt->health <= 0 || otherEnt->client->tempSpectate >= level.time || otherEnt->client->sess.sessionTeam == FACTION_SPECTATOR) )
 	{
 		// Intentionally displaying for the command user
 		trap->SendServerCommand( ent-g_entities, va( "print \"%s\n\"", G_GetStringEdString( "MP_SVGAME", "MUSTBEALIVE" ) ) );
@@ -562,7 +562,7 @@ gentity_t *G_GetDuelWinner(gclient_t *client)
 		wCl = &level.clients[i];
 
 		if (wCl && wCl != client && /*wCl->ps.clientNum != client->ps.clientNum &&*/
-			wCl->pers.connected == CON_CONNECTED && wCl->sess.sessionTeam != TEAM_SPECTATOR)
+			wCl->pers.connected == CON_CONNECTED && wCl->sess.sessionTeam != FACTION_SPECTATOR)
 		{
 			return &g_entities[wCl->ps.clientNum];
 		}
@@ -588,16 +588,16 @@ void BroadcastTeamChange( gclient_t *client, int oldTeam )
 	}
 
 #ifndef __MMO__
-	if ( client->sess.sessionTeam == TEAM_RED ) {
+	if ( client->sess.sessionTeam == FACTION_EMPIRE ) {
 		trap->SendServerCommand( -1, va("cp \"%s" S_COLOR_WHITE " %s\n\"",
 			client->pers.netname, G_GetStringEdString("MP_SVGAME", "JOINEDTHEREDTEAM")) );
-	} else if ( client->sess.sessionTeam == TEAM_BLUE ) {
+	} else if ( client->sess.sessionTeam == FACTION_REBEL ) {
 		trap->SendServerCommand( -1, va("cp \"%s" S_COLOR_WHITE " %s\n\"",
 		client->pers.netname, G_GetStringEdString("MP_SVGAME", "JOINEDTHEBLUETEAM")));
-	} else if ( client->sess.sessionTeam == TEAM_SPECTATOR && oldTeam != TEAM_SPECTATOR ) {
+	} else if ( client->sess.sessionTeam == FACTION_SPECTATOR && oldTeam != FACTION_SPECTATOR ) {
 		trap->SendServerCommand( -1, va("cp \"%s" S_COLOR_WHITE " %s\n\"",
 		client->pers.netname, G_GetStringEdString("MP_SVGAME", "JOINEDTHESPECTATORS")));
-	} else if ( client->sess.sessionTeam == TEAM_FREE ) {
+	} else if ( client->sess.sessionTeam == FACTION_FREE ) {
 		if (level.gametype == GT_DUEL || level.gametype == GT_POWERDUEL)
 		{
 			/*
@@ -682,26 +682,26 @@ void SetTeam( gentity_t *ent, char *s ) {
 	specClient = 0;
 	specState = SPECTATOR_NOT;
 	if ( !Q_stricmp( s, "scoreboard" ) || !Q_stricmp( s, "score" )  ) {
-		team = TEAM_SPECTATOR;
+		team = FACTION_SPECTATOR;
 		specState = SPECTATOR_FREE; // SPECTATOR_SCOREBOARD disabling this for now since it is totally broken on client side
 	} else if ( !Q_stricmp( s, "follow1" ) ) {
-		team = TEAM_SPECTATOR;
+		team = FACTION_SPECTATOR;
 		specState = SPECTATOR_FOLLOW;
 		specClient = -1;
 	} else if ( !Q_stricmp( s, "follow2" ) ) {
-		team = TEAM_SPECTATOR;
+		team = FACTION_SPECTATOR;
 		specState = SPECTATOR_FOLLOW;
 		specClient = -2;
 	} else if ( !Q_stricmp( s, "spectator" ) || !Q_stricmp( s, "s" ) ) {
-		team = TEAM_SPECTATOR;
+		team = FACTION_SPECTATOR;
 		specState = SPECTATOR_FREE;
 	} else if ( level.gametype >= GT_TEAM ) {
 		// if running a team game, assign player to one of the teams
 		specState = SPECTATOR_NOT;
 		if ( !Q_stricmp( s, "red" ) || !Q_stricmp( s, "r" ) ) {
-			team = TEAM_RED;
+			team = FACTION_EMPIRE;
 		} else if ( !Q_stricmp( s, "blue" ) || !Q_stricmp( s, "b" ) ) {
-			team = TEAM_BLUE;
+			team = FACTION_REBEL;
 		} else {
 			// pick the team with the least number of players
 			//For now, don't do this. The legalize function will set powers properly now.
@@ -710,11 +710,11 @@ void SetTeam( gentity_t *ent, char *s ) {
 			{
 				if (ent->client->ps.fd.forceSide == FORCE_LIGHTSIDE)
 				{
-					team = TEAM_BLUE;
+					team = FACTION_REBEL;
 				}
 				else
 				{
-					team = TEAM_RED;
+					team = FACTION_EMPIRE;
 				}
 			}
 			else
@@ -725,14 +725,14 @@ void SetTeam( gentity_t *ent, char *s ) {
 		}
 
 		if ( g_teamForceBalance.integer && !g_jediVmerc.integer ) {
-			int		counts[TEAM_NUM_TEAMS];
+			int		counts[FACTION_NUM_FACTIONS];
 
 			//JAC: Invalid clientNum was being used
-			counts[TEAM_BLUE] = TeamCount( ent-g_entities, TEAM_BLUE );
-			counts[TEAM_RED] = TeamCount( ent-g_entities, TEAM_RED );
+			counts[FACTION_REBEL] = TeamCount( ent-g_entities, FACTION_REBEL );
+			counts[FACTION_EMPIRE] = TeamCount( ent-g_entities, FACTION_EMPIRE );
 
 			// We allow a spread of two
-			if ( team == TEAM_RED && counts[TEAM_RED] - counts[TEAM_BLUE] > 1 ) {
+			if ( team == FACTION_EMPIRE && counts[FACTION_EMPIRE] - counts[FACTION_REBEL] > 1 ) {
 				//For now, don't do this. The legalize function will set powers properly now.
 				/*
 				if (g_forceBasedTeams.integer && ent->client->ps.fd.forceSide == FORCE_DARKSIDE)
@@ -749,7 +749,7 @@ void SetTeam( gentity_t *ent, char *s ) {
 				}
 				return; // ignore the request
 			}
-			if ( team == TEAM_BLUE && counts[TEAM_BLUE] - counts[TEAM_RED] > 1 ) {
+			if ( team == FACTION_REBEL && counts[FACTION_REBEL] - counts[FACTION_EMPIRE] > 1 ) {
 				//For now, don't do this. The legalize function will set powers properly now.
 				/*
 				if (g_forceBasedTeams.integer && ent->client->ps.fd.forceSide == FORCE_LIGHTSIDE)
@@ -774,12 +774,12 @@ void SetTeam( gentity_t *ent, char *s ) {
 		/*
 		if (g_forceBasedTeams.integer)
 		{
-			if (team == TEAM_BLUE && ent->client->ps.fd.forceSide != FORCE_LIGHTSIDE)
+			if (team == FACTION_REBEL && ent->client->ps.fd.forceSide != FORCE_LIGHTSIDE)
 			{
 				trap->SendServerCommand( ent-g_entities, va("print \"%s\n\"", G_GetStringEdString("MP_SVGAME", "MUSTBELIGHT")) );
 				return;
 			}
-			if (team == TEAM_RED && ent->client->ps.fd.forceSide != FORCE_DARKSIDE)
+			if (team == FACTION_EMPIRE && ent->client->ps.fd.forceSide != FORCE_DARKSIDE)
 			{
 				trap->SendServerCommand( ent-g_entities, va("print \"%s\n\"", G_GetStringEdString("MP_SVGAME", "MUSTBEDARK")) );
 				return;
@@ -789,7 +789,7 @@ void SetTeam( gentity_t *ent, char *s ) {
 
 	} else {
 		// force them to spectators if there aren't any spots free
-		team = TEAM_FREE;
+		team = FACTION_FREE;
 	}
 
 	oldTeam = client->sess.sessionTeam;
@@ -797,18 +797,18 @@ void SetTeam( gentity_t *ent, char *s ) {
 	if (level.gametype == GT_SIEGE)
 	{
 		if (client->tempSpectate >= level.time &&
-			team == TEAM_SPECTATOR)
+			team == FACTION_SPECTATOR)
 		{ //sorry, can't do that.
 			return;
 		}
 
-		if ( team == oldTeam && team != TEAM_SPECTATOR )
+		if ( team == oldTeam && team != FACTION_SPECTATOR )
 			return;
 
 		client->sess.siegeDesiredTeam = team;
 		//oh well, just let them go.
 		/*
-		if (team != TEAM_SPECTATOR)
+		if (team != FACTION_SPECTATOR)
 		{ //can't switch to anything in siege unless you want to switch to being a fulltime spectator
 			//fill them in on their objectives for this team now
 			trap->SendServerCommand(ent-g_entities, va("sb %i", client->sess.siegeDesiredTeam));
@@ -817,8 +817,8 @@ void SetTeam( gentity_t *ent, char *s ) {
 			return;
 		}
 		*/
-		if (client->sess.sessionTeam != TEAM_SPECTATOR &&
-			team != TEAM_SPECTATOR)
+		if (client->sess.sessionTeam != FACTION_SPECTATOR &&
+			team != FACTION_SPECTATOR)
 		{ //not a spectator now, and not switching to spec, so you have to wait til you die.
 			//trap->SendServerCommand( ent-g_entities, va("print \"You will be on the selected team the next time you respawn.\n\"") );
 			qboolean doBegin;
@@ -855,23 +855,23 @@ void SetTeam( gentity_t *ent, char *s ) {
 	if ( (level.gametype == GT_DUEL)
 		&& level.numNonSpectatorClients >= 2 )
 	{
-		team = TEAM_SPECTATOR;
+		team = FACTION_SPECTATOR;
 	}
 	else if ( (level.gametype == GT_POWERDUEL)
 		&& (level.numPlayingClients >= 3 || G_PowerDuelCheckFail(ent)) )
 	{
-		team = TEAM_SPECTATOR;
+		team = FACTION_SPECTATOR;
 	}
 	else if ( g_maxGameClients.integer > 0 &&
 		level.numNonSpectatorClients >= g_maxGameClients.integer )
 	{
-		team = TEAM_SPECTATOR;
+		team = FACTION_SPECTATOR;
 	}
 
 	//
 	// decide if we will allow the change
 	//
-	if ( team == oldTeam && team != TEAM_SPECTATOR ) {
+	if ( team == oldTeam && team != FACTION_SPECTATOR ) {
 		return;
 	}
 
@@ -880,19 +880,19 @@ void SetTeam( gentity_t *ent, char *s ) {
 	//
 
 	//If it's siege then show the mission briefing for the team you just joined.
-//	if (level.gametype == GT_SIEGE && team != TEAM_SPECTATOR)
+//	if (level.gametype == GT_SIEGE && team != FACTION_SPECTATOR)
 //	{
 //		trap->SendServerCommand(clientNum, va("sb %i", team));
 //	}
 
 	// if the player was dead leave the body
-	if ( client->ps.stats[STAT_HEALTH] <= 0 && client->sess.sessionTeam != TEAM_SPECTATOR ) {
+	if ( client->ps.stats[STAT_HEALTH] <= 0 && client->sess.sessionTeam != FACTION_SPECTATOR ) {
 		MaintainBodyQueue(ent);
 	}
 
 	// he starts at 'base'
 	client->pers.teamState.state = TEAM_BEGIN;
-	if ( oldTeam != TEAM_SPECTATOR ) {
+	if ( oldTeam != FACTION_SPECTATOR ) {
 		// Kill him (makes sure he loses flags, etc)
 		ent->flags &= ~FL_GODMODE;
 		ent->client->ps.stats[STAT_HEALTH] = ent->health = 0;
@@ -902,11 +902,11 @@ void SetTeam( gentity_t *ent, char *s ) {
 
 	}
 	// they go to the end of the line for tournaments
-	if ( team == TEAM_SPECTATOR && oldTeam != team )
+	if ( team == FACTION_SPECTATOR && oldTeam != team )
 		AddTournamentQueue( client );
 
 	// clear votes if going to spectator (specs can't vote)
-	if ( team == TEAM_SPECTATOR )
+	if ( team == FACTION_SPECTATOR )
 		G_ClearVote( ent );
 	// also clear team votes if switching red/blue or going to spec
 	G_ClearTeamVote( ent, oldTeam );
@@ -916,7 +916,7 @@ void SetTeam( gentity_t *ent, char *s ) {
 	client->sess.spectatorClient = specClient;
 
 	client->sess.teamLeader = qfalse;
-	if ( team == TEAM_RED || team == TEAM_BLUE ) {
+	if ( team == FACTION_EMPIRE || team == FACTION_REBEL ) {
 		teamLeader = TeamLeader( team );
 		// if there is no team leader or the team leader is a bot and this client is not a bot
 		if ( teamLeader == -1 || ( !(g_entities[clientNum].r.svFlags & SVF_BOT) && (g_entities[teamLeader].r.svFlags & SVF_BOT) ) ) {
@@ -924,7 +924,7 @@ void SetTeam( gentity_t *ent, char *s ) {
 		}
 	}
 	// make sure there is a team leader on the team the player came from
-	if ( oldTeam == TEAM_RED || oldTeam == TEAM_BLUE ) {
+	if ( oldTeam == FACTION_EMPIRE || oldTeam == FACTION_REBEL ) {
 		CheckTeamLeader( oldTeam );
 	}
 
@@ -932,7 +932,7 @@ void SetTeam( gentity_t *ent, char *s ) {
 
 	//make a disappearing effect where they were before teleporting them to the appropriate spawn point,
 	//if we were not on the spec team
-	if (oldTeam != TEAM_SPECTATOR)
+	if (oldTeam != FACTION_SPECTATOR)
 	{
 		gentity_t *tent = G_TempEntity( client->ps.origin, EV_PLAYER_TELEPORT_OUT );
 		tent->s.clientNum = clientNum;
@@ -959,8 +959,8 @@ to free floating spectator mode
 extern void G_LeaveVehicle( gentity_t *ent, qboolean ConCheck );
 void StopFollowing( gentity_t *ent ) {
 	int i=0;
-	ent->client->ps.persistant[ PERS_TEAM ] = TEAM_SPECTATOR;
-	ent->client->sess.sessionTeam = TEAM_SPECTATOR;
+	ent->client->ps.persistant[ PERS_TEAM ] = FACTION_SPECTATOR;
+	ent->client->sess.sessionTeam = FACTION_SPECTATOR;
 	ent->client->sess.spectatorState = SPECTATOR_FREE;
 	ent->client->ps.pm_flags &= ~PMF_FOLLOW;
 	ent->r.svFlags &= ~SVF_BOT;
@@ -1004,16 +1004,16 @@ void Cmd_Team_f( gentity_t *ent ) {
 
 	if ( trap->Argc() != 2 ) {
 		switch ( oldTeam ) {
-		case TEAM_BLUE:
+		case FACTION_REBEL:
 			trap->SendServerCommand( ent-g_entities, va("print \"%s\n\"", G_GetStringEdString("MP_SVGAME", "PRINTBLUETEAM")) );
 			break;
-		case TEAM_RED:
+		case FACTION_EMPIRE:
 			trap->SendServerCommand( ent-g_entities, va("print \"%s\n\"", G_GetStringEdString("MP_SVGAME", "PRINTREDTEAM")) );
 			break;
-		case TEAM_FREE:
+		case FACTION_FREE:
 			trap->SendServerCommand( ent-g_entities, va("print \"%s\n\"", G_GetStringEdString("MP_SVGAME", "PRINTFREETEAM")) );
 			break;
-		case TEAM_SPECTATOR:
+		case FACTION_SPECTATOR:
 			trap->SendServerCommand( ent-g_entities, va("print \"%s\n\"", G_GetStringEdString("MP_SVGAME", "PRINTSPECTEAM")) );
 			break;
 		}
@@ -1032,7 +1032,7 @@ void Cmd_Team_f( gentity_t *ent ) {
 
 	// if they are playing a tournament game, count as a loss
 	if ( level.gametype == GT_DUEL
-		&& ent->client->sess.sessionTeam == TEAM_FREE ) {//in a tournament game
+		&& ent->client->sess.sessionTeam == FACTION_FREE ) {//in a tournament game
 		//disallow changing teams
 		trap->SendServerCommand( ent-g_entities, "print \"Cannot switch teams in Duel\n\"" );
 		return;
@@ -1071,7 +1071,7 @@ void Cmd_DuelTeam_f(gentity_t *ent)
 	}
 
 	/*
-	if (ent->client->sess.sessionTeam != TEAM_SPECTATOR)
+	if (ent->client->sess.sessionTeam != FACTION_SPECTATOR)
 	{
 		trap->SendServerCommand( ent-g_entities, va("print \"You cannot change your duel team unless you are a spectator.\n\""));
 		return;
@@ -1130,7 +1130,7 @@ void Cmd_DuelTeam_f(gentity_t *ent)
 		return;
 	}
 
-	if (ent->client->sess.sessionTeam != TEAM_SPECTATOR)
+	if (ent->client->sess.sessionTeam != FACTION_SPECTATOR)
 	{ //ok..die
 		int curTeam = ent->client->sess.duelTeam;
 		ent->client->sess.duelTeam = oldTeam;
@@ -1221,7 +1221,7 @@ void Cmd_SiegeClass_f( gentity_t *ent )
 		return;
 	}
 
-	if (ent->client->sess.sessionTeam == TEAM_SPECTATOR)
+	if (ent->client->sess.sessionTeam == FACTION_SPECTATOR)
 	{
 		startedAsSpec = qtrue;
 	}
@@ -1235,14 +1235,14 @@ void Cmd_SiegeClass_f( gentity_t *ent )
 		return;
 	}
 
-	if (ent->client->sess.sessionTeam != team && ent->client->sess.sessionTeam != TEAM_FREE)
+	if (ent->client->sess.sessionTeam != team && ent->client->sess.sessionTeam != FACTION_FREE)
 	{ //try changing it then
 		g_preventTeamBegin = qtrue;
-		if (team == TEAM_RED)
+		if (team == FACTION_EMPIRE)
 		{
 			SetTeam(ent, "red");
 		}
-		else if (team == TEAM_BLUE)
+		else if (team == FACTION_REBEL)
 		{
 			SetTeam(ent, "blue");
 		}
@@ -1250,7 +1250,7 @@ void Cmd_SiegeClass_f( gentity_t *ent )
 
 		if (ent->client->sess.sessionTeam != team)
 		{ //failed, oh well
-			if (ent->client->sess.sessionTeam != TEAM_SPECTATOR ||
+			if (ent->client->sess.sessionTeam != FACTION_SPECTATOR ||
 				ent->client->sess.siegeDesiredTeam != team)
 			{
 				trap->SendServerCommand( ent-g_entities, va("print \"%s\n\"", G_GetStringEdString("MP_SVGAME", "NOCLASSTEAM")) );
@@ -1282,7 +1282,7 @@ void Cmd_SiegeClass_f( gentity_t *ent )
 			player_die (ent, ent, ent, 100000, MOD_SUICIDE);
 		}
 
-		if (ent->client->sess.sessionTeam == TEAM_SPECTATOR || startedAsSpec)
+		if (ent->client->sess.sessionTeam == FACTION_SPECTATOR || startedAsSpec)
 		{ //respawn them instantly.
 			ClientBegin( ent->s.number, qfalse );
 		}
@@ -1303,7 +1303,7 @@ void Cmd_ForceChanged_f( gentity_t *ent )
 	char fpChStr[1024];
 	const char *buf;
 //	Cmd_Kill_f(ent);
-	if (ent->client->sess.sessionTeam == TEAM_SPECTATOR)
+	if (ent->client->sess.sessionTeam == FACTION_SPECTATOR)
 	{ //if it's a spec, just make the changes now
 		//trap->SendServerCommand( ent-g_entities, va("print \"%s\n\"", G_GetStringEdString("MP_SVGAME", "FORCEAPPLIED")) );
 		//No longer print it, as the UI calls this a lot.
@@ -1415,7 +1415,7 @@ void Cmd_Follow_f( gentity_t *ent ) {
 	}
 
 	// can't follow another spectator
-	if ( level.clients[ i ].sess.sessionTeam == TEAM_SPECTATOR ) {
+	if ( level.clients[ i ].sess.sessionTeam == FACTION_SPECTATOR ) {
 		return;
 	}
 
@@ -1425,16 +1425,16 @@ void Cmd_Follow_f( gentity_t *ent ) {
 
 	// if they are playing a tournament game, count as a loss
 	if ( (level.gametype == GT_DUEL || level.gametype == GT_POWERDUEL)
-		&& ent->client->sess.sessionTeam == TEAM_FREE ) {
+		&& ent->client->sess.sessionTeam == FACTION_FREE ) {
 		//WTF???
 		ent->client->sess.losses++;
 	}
 
 	// first set them to spectator
-	if ( ent->client->sess.sessionTeam != TEAM_SPECTATOR ) {
+	if ( ent->client->sess.sessionTeam != FACTION_SPECTATOR ) {
 		SetTeam( ent, "spectator" );
 		// fix: update team switch time only if team change really happend
-		if (ent->client->sess.sessionTeam == TEAM_SPECTATOR)
+		if (ent->client->sess.sessionTeam == FACTION_SPECTATOR)
 			ent->client->switchTeamTime = level.time + 5000;
 	}
 
@@ -1459,7 +1459,7 @@ void Cmd_FollowCycle_f( gentity_t *ent, int dir ) {
 
 	// if they are playing a tournament game, count as a loss
 	if ( (level.gametype == GT_DUEL || level.gametype == GT_POWERDUEL)
-		&& ent->client->sess.sessionTeam == TEAM_FREE ) {\
+		&& ent->client->sess.sessionTeam == FACTION_FREE ) {\
 		//WTF???
 		ent->client->sess.losses++;
 	}
@@ -1467,7 +1467,7 @@ void Cmd_FollowCycle_f( gentity_t *ent, int dir ) {
 	if ( ent->client->sess.spectatorState == SPECTATOR_NOT ) {
 		SetTeam( ent, "spectator" );
 		// fix: update team switch time only if team change really happend
-		if (ent->client->sess.sessionTeam == TEAM_SPECTATOR)
+		if (ent->client->sess.sessionTeam == FACTION_SPECTATOR)
 			ent->client->switchTeamTime = level.time + 5000;
 	}
 
@@ -1513,7 +1513,7 @@ void Cmd_FollowCycle_f( gentity_t *ent, int dir ) {
 		}
 
 		// can't follow another spectator
-		if ( level.clients[ clientnum ].sess.sessionTeam == TEAM_SPECTATOR ) {
+		if ( level.clients[ clientnum ].sess.sessionTeam == FACTION_SPECTATOR ) {
 			continue;
 		}
 
@@ -1565,8 +1565,8 @@ static void G_SayTo( gentity_t *ent, gentity_t *other, int mode, int color, cons
 	/*
 	// no chatting to players in tournaments
 	if ( (level.gametype == GT_DUEL || level.gametype == GT_POWERDUEL)
-		&& other->client->sess.sessionTeam == TEAM_FREE
-		&& ent->client->sess.sessionTeam != TEAM_FREE ) {
+		&& other->client->sess.sessionTeam == FACTION_FREE
+		&& ent->client->sess.sessionTeam != FACTION_FREE ) {
 		//Hmm, maybe some option to do so if allowed?  Or at least in developer mode...
 		return;
 	}
@@ -1574,8 +1574,8 @@ static void G_SayTo( gentity_t *ent, gentity_t *other, int mode, int color, cons
 	//They've requested I take this out.
 
 	if (level.gametype == GT_SIEGE &&
-		ent->client && (ent->client->tempSpectate >= level.time || ent->client->sess.sessionTeam == TEAM_SPECTATOR) &&
-		other->client->sess.sessionTeam != TEAM_SPECTATOR &&
+		ent->client && (ent->client->tempSpectate >= level.time || ent->client->sess.sessionTeam == FACTION_SPECTATOR) &&
+		other->client->sess.sessionTeam != FACTION_SPECTATOR &&
 		other->client->tempSpectate < level.time)
 	{ //siege temp spectators should not communicate to ingame players
 		return;
@@ -1772,7 +1772,7 @@ static void Cmd_VoiceCommand_f(gentity_t *ent)
 		return;
 	}
 
-	if (ent->client->sess.sessionTeam == TEAM_SPECTATOR ||
+	if (ent->client->sess.sessionTeam == FACTION_SPECTATOR ||
 		ent->client->tempSpectate >= level.time)
 	{
 		trap->SendServerCommand( ent-g_entities, va("print \"%s\n\"", G_GetStringEdString("MP_SVGAME", "NOVOICECHATASSPEC")) );
@@ -1869,7 +1869,7 @@ Cmd_Where_f
 */
 void Cmd_Where_f( gentity_t *ent ) {
 	//JAC: This wasn't working for non-spectators since s.origin doesn't update for active players.
-	if(ent->client && ent->client->sess.sessionTeam != TEAM_SPECTATOR )
+	if(ent->client && ent->client->sess.sessionTeam != FACTION_SPECTATOR )
 	{//active players use currentOrigin
 		trap->SendServerCommand( ent-g_entities, va("print \"%s\n\"", vtos( ent->r.currentOrigin ) ) );
 	}
@@ -2152,7 +2152,7 @@ void Cmd_CallVote_f( gentity_t *ent ) {
 	}
 
 	// can't vote as a spectator, except in (power)duel
-	else if ( level.gametype != GT_DUEL && level.gametype != GT_POWERDUEL && ent->client->sess.sessionTeam == TEAM_SPECTATOR ) {
+	else if ( level.gametype != GT_DUEL && level.gametype != GT_POWERDUEL && ent->client->sess.sessionTeam == FACTION_SPECTATOR ) {
 		trap->SendServerCommand( ent-g_entities, va( "print \"%s\n\"", G_GetStringEdString( "MP_SVGAME", "NOSPECVOTE" ) ) );
 		return;
 	}
@@ -2295,7 +2295,7 @@ void Cmd_Vote_f( gentity_t *ent ) {
 	}
 	if (level.gametype != GT_DUEL && level.gametype != GT_POWERDUEL)
 	{
-		if ( ent->client->sess.sessionTeam == TEAM_SPECTATOR ) {
+		if ( ent->client->sess.sessionTeam == FACTION_SPECTATOR ) {
 			trap->SendServerCommand( ent-g_entities, va("print \"%s\n\"", G_GetStringEdString("MP_SVGAME", "NOVOTEASSPEC")) );
 			return;
 		}
@@ -2355,9 +2355,9 @@ void Cmd_CallTeamVote_f( gentity_t *ent ) {
 	char	arg1[MAX_CVAR_VALUE_STRING] = {0};
 	char	arg2[MAX_CVAR_VALUE_STRING] = {0};
 
-	if ( team == TEAM_RED )
+	if ( team == FACTION_EMPIRE )
 		cs_offset = 0;
-	else if ( team == TEAM_BLUE )
+	else if ( team == FACTION_REBEL )
 		cs_offset = 1;
 	else
 		return;
@@ -2375,7 +2375,7 @@ void Cmd_CallTeamVote_f( gentity_t *ent ) {
 	}
 
 	// can't vote as a spectator
-	else if ( ent->client->sess.sessionTeam == TEAM_SPECTATOR ) {
+	else if ( ent->client->sess.sessionTeam == FACTION_SPECTATOR ) {
 		trap->SendServerCommand( ent-g_entities, va("print \"%s\n\"", G_GetStringEdString("MP_SVGAME", "NOSPECVOTE")) );
 		return;
 	}
@@ -2444,9 +2444,9 @@ void Cmd_TeamVote_f( gentity_t *ent ) {
 	int			cs_offset=0;
 	char		msg[64] = {0};
 
-	if ( team == TEAM_RED )
+	if ( team == FACTION_EMPIRE )
 		cs_offset = 0;
-	else if ( team == TEAM_BLUE )
+	else if ( team == FACTION_REBEL )
 		cs_offset = 1;
 	else
 		return;
@@ -2459,7 +2459,7 @@ void Cmd_TeamVote_f( gentity_t *ent ) {
 		trap->SendServerCommand( ent-g_entities, va("print \"%s\n\"", G_GetStringEdString("MP_SVGAME", "TEAMVOTEALREADYCAST")) );
 		return;
 	}
-	if ( ent->client->sess.sessionTeam == TEAM_SPECTATOR ) {
+	if ( ent->client->sess.sessionTeam == FACTION_SPECTATOR ) {
 		trap->SendServerCommand( ent-g_entities, va("print \"%s\n\"", G_GetStringEdString("MP_SVGAME", "NOVOTEASSPEC")) );
 		return;
 	}
@@ -3637,7 +3637,7 @@ void ClientCommand( int clientNum ) {
 	else if ( (command->flags & CMD_ALIVE)
 		&& (ent->health <= 0
 			|| ent->client->tempSpectate >= level.time
-			|| ent->client->sess.sessionTeam == TEAM_SPECTATOR) )
+			|| ent->client->sess.sessionTeam == FACTION_SPECTATOR) )
 	{
 		trap->SendServerCommand( clientNum, va( "print \"%s\n\"", G_GetStringEdString( "MP_SVGAME", "MUSTBEALIVE" ) ) );
 		return;

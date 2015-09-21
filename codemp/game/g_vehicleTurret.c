@@ -238,7 +238,7 @@ static qboolean VEH_TurretFindEnemies( Vehicle_t *pVeh,
 			}
 			//else: we will shoot at bbrushes!
 		}
-		else if ( target->client->sess.sessionTeam == TEAM_SPECTATOR )
+		else if ( target->client->sess.sessionTeam == FACTION_SPECTATOR )
 		{
 			continue;
 		}
@@ -364,7 +364,7 @@ void VEH_TurretThink( Vehicle_t *pVeh, gentity_t *parent, int turretNum )
 			|| turretEnemy == ((gentity_t*)pVeh->m_pPilot)//enemy became my pilot///?
 			|| turretEnemy == parent
 			|| turretEnemy->r.ownerNum == parent->s.number // a passenger?
-			|| ( turretEnemy->client && turretEnemy->client->sess.sessionTeam == TEAM_SPECTATOR )
+			|| ( turretEnemy->client && turretEnemy->client->sess.sessionTeam == FACTION_SPECTATOR )
 			|| ( turretEnemy->client && turretEnemy->client->tempSpectate >= level.time ) )
 		{//don't keep going after spectators, pilot, self, dead people, etc.
 			turretEnemy = NULL;

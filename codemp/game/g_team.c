@@ -26,9 +26,9 @@ void Team_InitGame( void ) {
 	case GT_CTF:
 	case GT_CTY:
 		teamgame.redStatus = -1; // Invalid to force update
-		Team_SetFlagStatus( TEAM_RED, FLAG_ATBASE );
+		Team_SetFlagStatus( FACTION_EMPIRE, FLAG_ATBASE );
 		teamgame.blueStatus = -1; // Invalid to force update
-		Team_SetFlagStatus( TEAM_BLUE, FLAG_ATBASE );
+		Team_SetFlagStatus( FACTION_REBEL, FLAG_ATBASE );
 		break;
 	default:
 		break;
@@ -36,39 +36,39 @@ void Team_InitGame( void ) {
 }
 
 int OtherTeam(int team) {
-	if (team==TEAM_RED)
-		return TEAM_BLUE;
-	else if (team==TEAM_BLUE)
-		return TEAM_RED;
+	if (team==FACTION_EMPIRE)
+		return FACTION_REBEL;
+	else if (team==FACTION_REBEL)
+		return FACTION_EMPIRE;
 	return team;
 }
 
 const char *TeamName(int team)  {
-	if (team==TEAM_RED)
+	if (team==FACTION_EMPIRE)
 		return "RED";
-	else if (team==TEAM_BLUE)
+	else if (team==FACTION_REBEL)
 		return "BLUE";
-	else if (team==TEAM_SPECTATOR)
+	else if (team==FACTION_SPECTATOR)
 		return "SPECTATOR";
 	return "FREE";
 }
 
 const char *OtherTeamName(int team) {
-	if (team==TEAM_RED)
+	if (team==FACTION_EMPIRE)
 		return "BLUE";
-	else if (team==TEAM_BLUE)
+	else if (team==FACTION_REBEL)
 		return "RED";
-	else if (team==TEAM_SPECTATOR)
+	else if (team==FACTION_SPECTATOR)
 		return "SPECTATOR";
 	return "FREE";
 }
 
 const char *TeamColorString(int team) {
-	if (team==TEAM_RED)
+	if (team==FACTION_EMPIRE)
 		return S_COLOR_RED;
-	else if (team==TEAM_BLUE)
+	else if (team==FACTION_REBEL)
 		return S_COLOR_BLUE;
-	else if (team==TEAM_SPECTATOR)
+	else if (team==FACTION_SPECTATOR)
 		return S_COLOR_YELLOW;
 	return S_COLOR_WHITE;
 }
@@ -117,13 +117,13 @@ void PrintCTFMessage(int plIndex, int teamIndex, int ctfMessage)
 	te->s.trickedentindex = plIndex;
 	if (ctfMessage == CTFMESSAGE_PLAYER_CAPTURED_FLAG)
 	{
-		if (teamIndex == TEAM_RED)
+		if (teamIndex == FACTION_EMPIRE)
 		{
-			te->s.trickedentindex2 = TEAM_BLUE;
+			te->s.trickedentindex2 = FACTION_REBEL;
 		}
 		else
 		{
-			te->s.trickedentindex2 = TEAM_RED;
+			te->s.trickedentindex2 = FACTION_EMPIRE;
 		}
 	}
 	else
@@ -146,13 +146,13 @@ void AddTeamScore(vec3_t origin, int team, int score) {
 	te = G_TempEntity(origin, EV_GLOBAL_TEAM_SOUND );
 	te->r.svFlags |= SVF_BROADCAST;
 
-	if ( team == TEAM_RED ) {
-		if ( level.teamScores[ TEAM_RED ] + score == level.teamScores[ TEAM_BLUE ] ) {
+	if ( team == FACTION_EMPIRE ) {
+		if ( level.teamScores[ FACTION_EMPIRE ] + score == level.teamScores[ FACTION_REBEL ] ) {
 			//teams are tied sound
 			te->s.eventParm = GTS_TEAMS_ARE_TIED;
 		}
-		else if ( level.teamScores[ TEAM_RED ] <= level.teamScores[ TEAM_BLUE ] &&
-					level.teamScores[ TEAM_RED ] + score > level.teamScores[ TEAM_BLUE ]) {
+		else if ( level.teamScores[ FACTION_EMPIRE ] <= level.teamScores[ FACTION_REBEL ] &&
+					level.teamScores[ FACTION_EMPIRE ] + score > level.teamScores[ FACTION_REBEL ]) {
 			// red took the lead sound
 			te->s.eventParm = GTS_REDTEAM_TOOK_LEAD;
 		}
@@ -162,12 +162,12 @@ void AddTeamScore(vec3_t origin, int team, int score) {
 		}
 	}
 	else {
-		if ( level.teamScores[ TEAM_BLUE ] + score == level.teamScores[ TEAM_RED ] ) {
+		if ( level.teamScores[ FACTION_REBEL ] + score == level.teamScores[ FACTION_EMPIRE ] ) {
 			//teams are tied sound
 			te->s.eventParm = GTS_TEAMS_ARE_TIED;
 		}
-		else if ( level.teamScores[ TEAM_BLUE ] <= level.teamScores[ TEAM_RED ] &&
-					level.teamScores[ TEAM_BLUE ] + score > level.teamScores[ TEAM_RED ]) {
+		else if ( level.teamScores[ FACTION_REBEL ] <= level.teamScores[ FACTION_EMPIRE ] &&
+					level.teamScores[ FACTION_REBEL ] + score > level.teamScores[ FACTION_EMPIRE ]) {
 			// blue took the lead sound
 			te->s.eventParm = GTS_BLUETEAM_TOOK_LEAD;
 		}
@@ -206,7 +206,7 @@ qboolean OnSameTeam( gentity_t *ent1, gentity_t *ent2 ) {
 	if (ent1->s.eType == ET_NPC &&
 		ent1->s.NPC_class == CLASS_VEHICLE /*&&
 		ent1->client &&
-		ent1->client->sess.sessionTeam != TEAM_FREE &&
+		ent1->client->sess.sessionTeam != FACTION_FREE &&
 		ent2->client &&
 		ent1->client->sess.sessionTeam == ent2->client->sess.sessionTeam*/)
 	{
@@ -215,7 +215,7 @@ qboolean OnSameTeam( gentity_t *ent1, gentity_t *ent2 ) {
 	if (ent2->s.eType == ET_NPC &&
 		ent2->s.NPC_class == CLASS_VEHICLE /*&&
 		ent2->client &&
-		ent2->client->sess.sessionTeam != TEAM_FREE &&
+		ent2->client->sess.sessionTeam != FACTION_FREE &&
 		ent1->client &&
 		ent2->client->sess.sessionTeam == ent1->client->sess.sessionTeam*/)
 	{
@@ -248,8 +248,8 @@ qboolean OnSameTeam( gentity_t *ent1, gentity_t *ent2 ) {
 		return qtrue;
 	}
 
-	if (ent1->client->sess.sessionTeam == TEAM_FREE &&
-		ent2->client->sess.sessionTeam == TEAM_FREE &&
+	if (ent1->client->sess.sessionTeam == FACTION_FREE &&
+		ent2->client->sess.sessionTeam == FACTION_FREE &&
 		ent1->s.eType == ET_NPC &&
 		ent2->s.eType == ET_NPC)
 	{ //NPCs don't do normal team rules
@@ -281,21 +281,21 @@ void Team_SetFlagStatus( int team, flagStatus_t status ) {
 	qboolean modified = qfalse;
 
 	switch( team ) {
-	case TEAM_RED:	// CTF
+	case FACTION_EMPIRE:	// CTF
 		if( teamgame.redStatus != status ) {
 			teamgame.redStatus = status;
 			modified = qtrue;
 		}
 		break;
 
-	case TEAM_BLUE:	// CTF
+	case FACTION_REBEL:	// CTF
 		if( teamgame.blueStatus != status ) {
 			teamgame.blueStatus = status;
 			modified = qtrue;
 		}
 		break;
 
-	case TEAM_FREE:	// One Flag CTF
+	case FACTION_FREE:	// One Flag CTF
 		if( teamgame.flagStatus != status ) {
 			teamgame.flagStatus = status;
 			modified = qtrue;
@@ -318,13 +318,13 @@ void Team_SetFlagStatus( int team, flagStatus_t status ) {
 
 void Team_CheckDroppedItem( gentity_t *dropped ) {
 	if( dropped->item->giTag == PW_REDFLAG ) {
-		Team_SetFlagStatus( TEAM_RED, FLAG_DROPPED );
+		Team_SetFlagStatus( FACTION_EMPIRE, FLAG_DROPPED );
 	}
 	else if( dropped->item->giTag == PW_BLUEFLAG ) {
-		Team_SetFlagStatus( TEAM_BLUE, FLAG_DROPPED );
+		Team_SetFlagStatus( FACTION_REBEL, FLAG_DROPPED );
 	}
 	else if( dropped->item->giTag == PW_NEUTRALFLAG ) {
-		Team_SetFlagStatus( TEAM_FREE, FLAG_DROPPED );
+		Team_SetFlagStatus( FACTION_FREE, FLAG_DROPPED );
 	}
 }
 
@@ -359,7 +359,7 @@ void Team_FragBonuses(gentity_t *targ, gentity_t *inflictor, gentity_t *attacker
 		return; // whoever died isn't on a team
 
 	// same team, if the flag at base, check to he has the enemy flag
-	if (team == TEAM_RED) {
+	if (team == FACTION_EMPIRE) {
 		flag_pw = PW_REDFLAG;
 		enemy_flag_pw = PW_BLUEFLAG;
 	} else {
@@ -443,10 +443,10 @@ void Team_FragBonuses(gentity_t *targ, gentity_t *inflictor, gentity_t *attacker
 
 	// find the flag
 	switch (attacker->client->sess.sessionTeam) {
-	case TEAM_RED:
+	case FACTION_EMPIRE:
 		c = "team_CTF_redflag";
 		break;
-	case TEAM_BLUE:
+	case FACTION_REBEL:
 		c = "team_CTF_blueflag";
 		break;
 	default:
@@ -525,7 +525,7 @@ void Team_CheckHurtCarrier(gentity_t *targ, gentity_t *attacker)
 	if (!targ->client || !attacker->client)
 		return;
 
-	if (targ->client->sess.sessionTeam == TEAM_RED)
+	if (targ->client->sess.sessionTeam == FACTION_EMPIRE)
 		flag_pw = PW_BLUEFLAG;
 	else
 		flag_pw = PW_REDFLAG;
@@ -547,13 +547,13 @@ gentity_t *Team_ResetFlag( int team ) {
 	gentity_t *ent, *rent = NULL;
 
 	switch (team) {
-	case TEAM_RED:
+	case FACTION_EMPIRE:
 		c = "team_CTF_redflag";
 		break;
-	case TEAM_BLUE:
+	case FACTION_REBEL:
 		c = "team_CTF_blueflag";
 		break;
-	case TEAM_FREE:
+	case FACTION_FREE:
 		c = "team_CTF_neutralflag";
 		break;
 	default:
@@ -577,8 +577,8 @@ gentity_t *Team_ResetFlag( int team ) {
 
 void Team_ResetFlags( void ) {
 	if( level.gametype == GT_CTF || level.gametype == GT_CTY ) {
-		Team_ResetFlag( TEAM_RED );
-		Team_ResetFlag( TEAM_BLUE );
+		Team_ResetFlag( FACTION_EMPIRE );
+		Team_ResetFlag( FACTION_REBEL );
 	}
 }
 
@@ -591,7 +591,7 @@ void Team_ReturnFlagSound( gentity_t *ent, int team ) {
 	}
 
 	te = G_TempEntity( ent->s.pos.trBase, EV_GLOBAL_TEAM_SOUND );
-	if( team == TEAM_BLUE ) {
+	if( team == FACTION_REBEL ) {
 		te->s.eventParm = GTS_RED_RETURN;
 	}
 	else {
@@ -611,7 +611,7 @@ void Team_TakeFlagSound( gentity_t *ent, int team ) {
 	// only play sound when the flag was at the base
 	// or not picked up the last 10 seconds
 	switch(team) {
-		case TEAM_RED:
+		case FACTION_EMPIRE:
 			if( teamgame.blueStatus != FLAG_ATBASE ) {
 				if (teamgame.blueTakenTime > level.time - 10000)
 					return;
@@ -619,7 +619,7 @@ void Team_TakeFlagSound( gentity_t *ent, int team ) {
 			teamgame.blueTakenTime = level.time;
 			break;
 
-		case TEAM_BLUE:	// CTF
+		case FACTION_REBEL:	// CTF
 			if( teamgame.redStatus != FLAG_ATBASE ) {
 				if (teamgame.redTakenTime > level.time - 10000)
 					return;
@@ -629,7 +629,7 @@ void Team_TakeFlagSound( gentity_t *ent, int team ) {
 	}
 
 	te = G_TempEntity( ent->s.pos.trBase, EV_GLOBAL_TEAM_SOUND );
-	if( team == TEAM_BLUE ) {
+	if( team == FACTION_REBEL ) {
 		te->s.eventParm = GTS_RED_TAKEN;
 	}
 	else {
@@ -647,7 +647,7 @@ void Team_CaptureFlagSound( gentity_t *ent, int team ) {
 	}
 
 	te = G_TempEntity( ent->s.pos.trBase, EV_GLOBAL_TEAM_SOUND );
-	if( team == TEAM_BLUE ) {
+	if( team == FACTION_REBEL ) {
 		te->s.eventParm = GTS_BLUE_CAPTURE;
 	}
 	else {
@@ -658,7 +658,7 @@ void Team_CaptureFlagSound( gentity_t *ent, int team ) {
 
 void Team_ReturnFlag( int team ) {
 	Team_ReturnFlagSound(Team_ResetFlag(team), team);
-	if( team == TEAM_FREE ) {
+	if( team == FACTION_FREE ) {
 		//PrintMsg(NULL, "The flag has returned!\n" );
 	}
 	else { //flag should always have team in normal CTF
@@ -667,15 +667,15 @@ void Team_ReturnFlag( int team ) {
 	}
 }
 
-void Team_FreeEntity( gentity_t *ent ) {
+void FACTION_FREEEntity( gentity_t *ent ) {
 	if( ent->item->giTag == PW_REDFLAG ) {
-		Team_ReturnFlag( TEAM_RED );
+		Team_ReturnFlag( FACTION_EMPIRE );
 	}
 	else if( ent->item->giTag == PW_BLUEFLAG ) {
-		Team_ReturnFlag( TEAM_BLUE );
+		Team_ReturnFlag( FACTION_REBEL );
 	}
 	else if( ent->item->giTag == PW_NEUTRALFLAG ) {
-		Team_ReturnFlag( TEAM_FREE );
+		Team_ReturnFlag( FACTION_FREE );
 	}
 }
 
@@ -689,16 +689,16 @@ Flags are unique in that if they are dropped, the base flag must be respawned wh
 ==============
 */
 void Team_DroppedFlagThink(gentity_t *ent) {
-	int		team = TEAM_FREE;
+	int		team = FACTION_FREE;
 
 	if( ent->item->giTag == PW_REDFLAG ) {
-		team = TEAM_RED;
+		team = FACTION_EMPIRE;
 	}
 	else if( ent->item->giTag == PW_BLUEFLAG ) {
-		team = TEAM_BLUE;
+		team = FACTION_REBEL;
 	}
 	else if( ent->item->giTag == PW_NEUTRALFLAG ) {
-		team = TEAM_FREE;
+		team = FACTION_FREE;
 	}
 
 	Team_ReturnFlagSound( Team_ResetFlag( team ), team );
@@ -731,7 +731,7 @@ int Team_TouchOurFlag( gentity_t *ent, gentity_t *other, int team ) {
 	gentity_t*	enemy;
 	float		enemyDist, dist;
 
-	if (cl->sess.sessionTeam == TEAM_RED) {
+	if (cl->sess.sessionTeam == FACTION_EMPIRE) {
 		enemy_flag = PW_BLUEFLAG;
 	} else {
 		enemy_flag = PW_REDFLAG;
@@ -769,10 +769,10 @@ int Team_TouchOurFlag( gentity_t *ent, gentity_t *other, int team ) {
 
 	dist = Distance( ent->s.pos.trBase, other->client->ps.origin );
 
-	if (other->client->sess.sessionTeam == TEAM_RED)
-		enemyTeam = TEAM_BLUE;
+	if (other->client->sess.sessionTeam == FACTION_EMPIRE)
+		enemyTeam = FACTION_REBEL;
 	else
-		enemyTeam = TEAM_RED;
+		enemyTeam = FACTION_EMPIRE;
 
 	for (j = 0; j < num; j++) {
 		enemy = (g_entities + touch[j]);
@@ -788,11 +788,11 @@ int Team_TouchOurFlag( gentity_t *ent, gentity_t *other, int team ) {
 			continue;		// dead people can't pickup
 
 		//ignore specs
-		if (enemy->client->sess.sessionTeam == TEAM_SPECTATOR)
+		if (enemy->client->sess.sessionTeam == FACTION_SPECTATOR)
 			continue;
 
 		//check if this is enemy
-		if ((enemy->client->sess.sessionTeam != TEAM_RED && enemy->client->sess.sessionTeam != TEAM_BLUE) ||
+		if ((enemy->client->sess.sessionTeam != FACTION_EMPIRE && enemy->client->sess.sessionTeam != FACTION_REBEL) ||
 			enemy->client->sess.sessionTeam != enemyTeam){
 			continue;
 		}
@@ -881,7 +881,7 @@ int Team_TouchEnemyFlag( gentity_t *ent, gentity_t *other, int team ) {
 
 	dist = Distance(ent->s.pos.trBase, other->client->ps.origin);
 
-	if (other->client->sess.sessionTeam == TEAM_RED){
+	if (other->client->sess.sessionTeam == FACTION_EMPIRE){
 		ourFlag   = PW_REDFLAG;
 	} else {
 		ourFlag   = PW_BLUEFLAG;
@@ -895,7 +895,7 @@ int Team_TouchEnemyFlag( gentity_t *ent, gentity_t *other, int team ) {
 		}
 
 		//ignore specs
-		if (enemy->client->sess.sessionTeam == TEAM_SPECTATOR)
+		if (enemy->client->sess.sessionTeam == FACTION_SPECTATOR)
 			continue;
 
 		//check if its alive
@@ -920,7 +920,7 @@ int Team_TouchEnemyFlag( gentity_t *ent, gentity_t *other, int team ) {
 	//	other->client->pers.netname, TeamName(team));
 	PrintCTFMessage(other->s.number, team, CTFMESSAGE_PLAYER_GOT_FLAG);
 
-	if (team == TEAM_RED)
+	if (team == FACTION_EMPIRE)
 		cl->ps.powerups[PW_REDFLAG] = INT_MAX; // flags never expire
 	else
 		cl->ps.powerups[PW_BLUEFLAG] = INT_MAX; // flags never expire
@@ -940,13 +940,13 @@ int Pickup_Team( gentity_t *ent, gentity_t *other ) {
 
 	// figure out what team this flag is
 	if( strcmp(ent->classname, "team_CTF_redflag") == 0 ) {
-		team = TEAM_RED;
+		team = FACTION_EMPIRE;
 	}
 	else if( strcmp(ent->classname, "team_CTF_blueflag") == 0 ) {
-		team = TEAM_BLUE;
+		team = FACTION_REBEL;
 	}
 	else if( strcmp(ent->classname, "team_CTF_neutralflag") == 0  ) {
-		team = TEAM_FREE;
+		team = FACTION_FREE;
 	}
 	else {
 //		PrintMsg ( other, "Don't know what team the flag is on.\n");
@@ -1063,16 +1063,16 @@ gentity_t *SelectRandomTeamSpawnPoint( int teamstate, team_t team, int siegeClas
 	else
 	{
 		if (teamstate == TEAM_BEGIN) {
-			if (team == TEAM_RED)
+			if (team == FACTION_EMPIRE)
 				classname = "team_CTF_redplayer";
-			else if (team == TEAM_BLUE)
+			else if (team == FACTION_REBEL)
 				classname = "team_CTF_blueplayer";
 			else
 				return NULL;
 		} else {
-			if (team == TEAM_RED)
+			if (team == FACTION_EMPIRE)
 				classname = "team_CTF_redspawn";
-			else if (team == TEAM_BLUE)
+			else if (team == FACTION_REBEL)
 				classname = "team_CTF_bluespawn";
 			else
 				return NULL;
@@ -1103,9 +1103,9 @@ gentity_t *SelectRandomTeamSpawnPoint( int teamstate, team_t team, int siegeClas
 
 		spot = NULL;
 
-		if (team == TEAM_RED)
+		if (team == FACTION_EMPIRE)
 			classname = "team_CTF_redspawn";
-		else if (team == TEAM_BLUE)
+		else if (team == FACTION_REBEL)
 			classname = "team_CTF_bluespawn";
 		else
 			classname = "info_player_deathmatch";
@@ -1239,7 +1239,7 @@ void TeamplayInfoMessage( gentity_t *ent ) {
 		return;
 
 	// send team info to spectator for team of followed client
-	if (ent->client->sess.sessionTeam == TEAM_SPECTATOR) {
+	if (ent->client->sess.sessionTeam == FACTION_SPECTATOR) {
 		if ( ent->client->sess.spectatorState != SPECTATOR_FOLLOW
 			|| ent->client->sess.spectatorClient < 0 ) {
 				return;
@@ -1249,7 +1249,7 @@ void TeamplayInfoMessage( gentity_t *ent ) {
 		team = ent->client->sess.sessionTeam;
 	}
 
-	if (team != TEAM_RED && team != TEAM_BLUE) {
+	if (team != FACTION_EMPIRE && team != FACTION_REBEL) {
 		return;
 	}
 
@@ -1325,7 +1325,7 @@ void CheckTeamStatus(void) {
 				continue;
 			}
 
-			if (ent->inuse && (ent->client->sess.sessionTeam == TEAM_RED ||	ent->client->sess.sessionTeam == TEAM_BLUE)) {
+			if (ent->inuse && (ent->client->sess.sessionTeam == FACTION_EMPIRE ||	ent->client->sess.sessionTeam == FACTION_REBEL)) {
 				loc = Team_GetLocation( ent );
 				if (loc)
 					ent->client->pers.teamState.location = loc->cs_index;

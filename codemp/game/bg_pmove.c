@@ -7696,7 +7696,7 @@ static void PM_Weapon( void )
 	}
 
 	// ignore if spectator
-	if ( pm->ps->clientNum < MAX_CLIENTS && pm->ps->persistant[PERS_TEAM] == TEAM_SPECTATOR ) {
+	if ( pm->ps->clientNum < MAX_CLIENTS && pm->ps->persistant[PERS_TEAM] == FACTION_SPECTATOR ) {
 			return;
 	}
 
@@ -9074,7 +9074,7 @@ void BG_AdjustClientSpeed(playerState_t *ps, usercmd_t *cmd, int svTime)
 		ps->speed *= 0.5f;
 	}
 
-	if ( ps->fd.forceGripCripple && pm->ps->persistant[PERS_TEAM] != TEAM_SPECTATOR ) {
+	if ( ps->fd.forceGripCripple && pm->ps->persistant[PERS_TEAM] != FACTION_SPECTATOR ) {
 		if ( ps->fd.forcePowersActive & (1 << FP_RAGE) )
 			ps->speed *= 0.9f;
 		else if ( ps->fd.forcePowersActive & (1 << FP_SPEED) )

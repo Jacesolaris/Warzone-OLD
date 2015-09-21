@@ -97,9 +97,9 @@ float CG_GetValue(int ownerDraw) {
 qboolean CG_OtherTeamHasFlag(void) {
 	if (cgs.gametype == GT_CTF || cgs.gametype == GT_CTY) {
 		int team = cg.snap->ps.persistant[PERS_TEAM];
-		if (team == TEAM_RED && cgs.redflag == FLAG_TAKEN) {
+		if (team == FACTION_EMPIRE && cgs.redflag == FLAG_TAKEN) {
 			return qtrue;
-		} else if (team == TEAM_BLUE && cgs.blueflag == FLAG_TAKEN) {
+		} else if (team == FACTION_REBEL && cgs.blueflag == FLAG_TAKEN) {
 			return qtrue;
 		} else {
 			return qfalse;
@@ -111,9 +111,9 @@ qboolean CG_OtherTeamHasFlag(void) {
 qboolean CG_YourTeamHasFlag(void) {
 	if (cgs.gametype == GT_CTF || cgs.gametype == GT_CTY) {
 		int team = cg.snap->ps.persistant[PERS_TEAM];
-		if (team == TEAM_RED && cgs.blueflag == FLAG_TAKEN) {
+		if (team == FACTION_EMPIRE && cgs.blueflag == FLAG_TAKEN) {
 			return qtrue;
-		} else if (team == TEAM_BLUE && cgs.redflag == FLAG_TAKEN) {
+		} else if (team == FACTION_REBEL && cgs.redflag == FLAG_TAKEN) {
 			return qtrue;
 		} else {
 			return qfalse;
@@ -222,7 +222,7 @@ const char *CG_GetGameStatusText(void) {
 	}
 	else if ( cgs.gametype < GT_TEAM)
 	{
-		if (cg.snap->ps.persistant[PERS_TEAM] != TEAM_SPECTATOR )
+		if (cg.snap->ps.persistant[PERS_TEAM] != FACTION_SPECTATOR )
 		{
 			char sPlaceWith[256];
 			trap->SE_GetStringTextString("MP_INGAME_PLACE_WITH", sPlaceWith, sizeof(sPlaceWith));
@@ -865,17 +865,30 @@ qboolean CG_DeferMenuScript (char **args)
 }
 
 void CG_GetTeamColor(vec4_t *color) {
-	if (cg.snap->ps.persistant[PERS_TEAM] == TEAM_RED) {
+	if (cg.snap->ps.persistant[PERS_TEAM] == FACTION_EMPIRE) {
 		(*color)[0] = 1.0f;
+		(*color)[1] = 0.0f;
 		(*color)[3] = 0.25f;
-		(*color)[1] = (*color)[2] = 0.0f;
-	} else if (cg.snap->ps.persistant[PERS_TEAM] == TEAM_BLUE) {
-		(*color)[0] = (*color)[1] = 0.0f;
+		(*color)[2] = 0.0f;
+	} else if (cg.snap->ps.persistant[PERS_TEAM] == FACTION_REBEL) {
+		(*color)[0] = 0.0f;
+		(*color)[1] = 0.0f;
 		(*color)[2] = 1.0f;
 		(*color)[3] = 0.25f;
+	} else if (cg.snap->ps.persistant[PERS_TEAM] == FACTION_MANDALORIAN) {
+		(*color)[0] = 0.75f;
+		(*color)[1] = 0.75f;
+		(*color)[2] = 0.0f;
+		(*color)[3] = 0.25f;
+	} else if (cg.snap->ps.persistant[PERS_TEAM] == FACTION_MERC) {
+		(*color)[0] = 0.0f;
+		(*color)[1] = 1.0f;
+		(*color)[2] = 0.25f;
+		(*color)[3] = 0.25f;
 	} else {
-		(*color)[0] = (*color)[2] = 0.0f;
+		(*color)[0] = 0.0f;
 		(*color)[1] = 0.17f;
+		(*color)[2] = 0.0f;
 		(*color)[3] = 0.25f;
 	}
 }

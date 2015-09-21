@@ -799,30 +799,37 @@ gentity_t *G_Spawn( void ) {
 
 	e = NULL;	// shut up warning
 	i = 0;		// shut up warning
-	for ( force = 0 ; force < 2 ; force++ ) {
+
+	//for ( force = 0 ; force < 2 ; force++ ) {
 		// if we go through all entities and can't find one to free,
 		// override the normal minimum times before use
 		e = &g_entities[MAX_CLIENTS];
-		for ( i = MAX_CLIENTS ; i<level.num_entities ; i++, e++) {
-			if ( e->inuse ) {
+
+		for ( i = MAX_CLIENTS; i < level.num_entities; i++, e++) 
+		{
+			if ( e->inuse ) 
+			{
 				continue;
 			}
 
 			// the first couple seconds of server time can involve a lot of
 			// freeing and allocating, so relax the replacement policy
-			if ( !force && e->freetime > level.startTime + 2000 && level.time - e->freetime < 1000 )
-			{
-				continue;
-			}
+			//if ( !force && e->freetime > level.startTime + 2000 && level.time - e->freetime < 1000 )
+			//{
+			//	continue;
+			//}
 
 			// reuse this slot
 			G_InitGentity( e );
+
 			return e;
 		}
-		if ( i != MAX_GENTITIES ) {
-			break;
-		}
-	}
+
+		//if ( i != MAX_GENTITIES ) {
+		//	break;
+		//}
+	//}
+
 	if ( i == ENTITYNUM_MAX_NORMAL ) {
 		/*
 		for (i = 0; i < MAX_GENTITIES; i++) {
@@ -841,6 +848,7 @@ gentity_t *G_Spawn( void ) {
 		&level.clients[0].ps, sizeof( level.clients[0] ) );
 
 	G_InitGentity( e );
+
 	return e;
 }
 
@@ -994,6 +1002,12 @@ void G_FreeEntity( gentity_t *ed ) {
 			i++;
 		}
 
+		ed->NPC_type = 0;
+		ed->s.NPC_class = 0;
+		ed->s.NPC_NAME_ID = -1;
+		ed->s.health = 0;
+		ed->client->NPC_class = CLASS_NONE;
+
 		G_FreeFakeClient(ed);
 	}
 
@@ -1039,6 +1053,7 @@ void G_FreeEntity( gentity_t *ed ) {
 	memset (ed, 0, sizeof(*ed));
 	ed->classname = "freed";
 	ed->freetime = level.time;
+	G_InitGentity( ed );
 	ed->inuse = qfalse;
 	ed->s.eType = ET_FREED;
 }
@@ -1586,7 +1601,7 @@ void TryUse( gentity_t *ent )
 	}
 
 	if (!ent || !ent->client || (ent->client->ps.weaponTime > 0 && ent->client->ps.torsoAnim != BOTH_BUTTON_HOLD && ent->client->ps.torsoAnim != BOTH_CONSOLE1) || ent->health < 1 ||
-		(ent->client->ps.pm_flags & PMF_FOLLOW) || ent->client->sess.sessionTeam == TEAM_SPECTATOR || ent->client->tempSpectate >= level.time ||
+		(ent->client->ps.pm_flags & PMF_FOLLOW) || ent->client->sess.sessionTeam == FACTION_SPECTATOR || ent->client->tempSpectate >= level.time ||
 		(ent->client->ps.forceHandExtend != HANDEXTEND_NONE && ent->client->ps.forceHandExtend != HANDEXTEND_DRAGGING))
 	{
 		return;

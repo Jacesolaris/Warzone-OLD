@@ -351,7 +351,7 @@ void UpdateForceUsed()
 			{
 				int myTeam;
 				myTeam = (int)(trap->Cvar_VariableValue("ui_myteam"));
-				if ( myTeam != TEAM_SPECTATOR )
+				if ( myTeam != FACTION_SPECTATOR )
 				{
 					UI_UpdateClientForcePowers(UI_TeamName(myTeam));//will cause him to respawn, if it's been 5 seconds since last one
 				}
@@ -497,10 +497,10 @@ void UI_ReadLegalForce(void)
 	{
 		switch((int)(trap->Cvar_VariableValue("ui_myteam")))
 		{
-		case TEAM_RED:
+		case FACTION_EMPIRE:
 			forceTeam = FORCE_DARKSIDE;
 			break;
-		case TEAM_BLUE:
+		case FACTION_REBEL:
 			forceTeam = FORCE_LIGHTSIDE;
 			break;
 		default:
@@ -807,9 +807,9 @@ qboolean UI_ForceSide_HandleKey(int flags, float *special, int key, int num, int
 	{
 		switch((int)(trap->Cvar_VariableValue("ui_myteam")))
 		{
-		case TEAM_RED:
+		case FACTION_EMPIRE:
 			return qfalse;
-		case TEAM_BLUE:
+		case FACTION_REBEL:
 			return qfalse;
 		default:
 			break;
@@ -912,7 +912,7 @@ qboolean UI_JediNonJedi_HandleKey(int flags, float *special, int key, int num, i
 				uiForcePowersRank[x] = 0;
 				x++;
 			}
-			if ( myTeam != TEAM_SPECTATOR )
+			if ( myTeam != FACTION_SPECTATOR )
 			{
 				UI_UpdateClientForcePowers(UI_TeamName(myTeam));//will cause him to respawn, if it's been 5 seconds since last one
 			}
@@ -1197,10 +1197,10 @@ void UI_ForceConfigHandle( int oldindex, int newindex )
 	{
 		switch((int)(trap->Cvar_VariableValue("ui_myteam")))
 		{
-		case TEAM_RED:
+		case FACTION_EMPIRE:
 			forceTeam = FORCE_DARKSIDE;
 			break;
-		case TEAM_BLUE:
+		case FACTION_REBEL:
 			forceTeam = FORCE_LIGHTSIDE;
 			break;
 		default:

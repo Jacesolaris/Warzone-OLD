@@ -1635,8 +1635,8 @@ void NPC_SetNewEnemyGoalAndPath( void )
 	NPC->wpTravelTime = level.time + 10000;
 }
 
-extern int jediSpeechDebounceTime[TEAM_NUM_TEAMS];//used to stop several jedi AI from speaking all at once
-extern int groupSpeechDebounceTime[TEAM_NUM_TEAMS];//used to stop several group AI from speaking all at once
+extern int jediSpeechDebounceTime[FACTION_NUM_FACTIONS];//used to stop several jedi AI from speaking all at once
+extern int groupSpeechDebounceTime[FACTION_NUM_FACTIONS];//used to stop several group AI from speaking all at once
 
 qboolean NPC_FollowEnemyRoute( void ) 
 {// Quick method of following bot routes...

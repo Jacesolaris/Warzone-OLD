@@ -1283,7 +1283,7 @@ void CG_LoadClientInfo( clientInfo_t *ci ) {
 	ci->deferred = qfalse;
 
 	/*
-	if (ci->team == TEAM_SPECTATOR)
+	if (ci->team == FACTION_SPECTATOR)
 	{
 		// reset any existing players and bodies, because they might be in bad
 		// frames for this new model
@@ -1306,7 +1306,7 @@ void CG_LoadClientInfo( clientInfo_t *ci ) {
 
 	teamname[0] = 0;
 	if( cgs.gametype >= GT_TEAM) {
-		if( ci->team == TEAM_BLUE ) {
+		if( ci->team == FACTION_REBEL ) {
 			Q_strncpyz(teamname, DEFAULT_BLUETEAM_NAME/*cg_blueTeamName.string*/, sizeof(teamname) );
 		} else {
 			Q_strncpyz(teamname, DEFAULT_REDTEAM_NAME/*cg_redTeamName.string*/, sizeof(teamname) );
@@ -1317,7 +1317,7 @@ void CG_LoadClientInfo( clientInfo_t *ci ) {
 	}
 	modelloaded = qtrue;
 	if (cgs.gametype == GT_SIEGE &&
-		(ci->team == TEAM_SPECTATOR || ci->siegeIndex == -1))
+		(ci->team == FACTION_SPECTATOR || ci->siegeIndex == -1))
 	{ //yeah.. kind of a hack I guess. Don't care until they are actually ingame with a valid class.
 		if ( !CG_RegisterClientModelname( ci, fallbackModel, "default", teamname, -1 ) )
 		{
@@ -1334,7 +1334,7 @@ void CG_LoadClientInfo( clientInfo_t *ci ) {
 			// fall back to default team name
 			if( cgs.gametype >= GT_TEAM) {
 				// keep skin name
-				if( ci->team == TEAM_BLUE ) {
+				if( ci->team == FACTION_REBEL ) {
 					Q_strncpyz(teamname, DEFAULT_BLUETEAM_NAME, sizeof(teamname) );
 				} else {
 					Q_strncpyz(teamname, DEFAULT_REDTEAM_NAME, sizeof(teamname) );
@@ -1389,7 +1389,7 @@ void CG_LoadClientInfo( clientInfo_t *ci ) {
 
 	// sounds
 	if (cgs.gametype == GT_SIEGE &&
-		(ci->team == TEAM_SPECTATOR || ci->siegeIndex == -1))
+		(ci->team == FACTION_SPECTATOR || ci->siegeIndex == -1))
 	{ //don't need to load sounds
 	}
 	else
@@ -1772,7 +1772,7 @@ static void CG_SetDeferredClientInfo( clientInfo_t *ci ) {
 			 Q_stricmp( ci->modelName, match->modelName ) ||
 //			 Q_stricmp( ci->headModelName, match->headModelName ) ||
 //			 Q_stricmp( ci->headSkinName, match->headSkinName ) ||
-			 (cgs.gametype >= GT_TEAM && ci->team != match->team && ci->team != TEAM_SPECTATOR) ) {
+			 (cgs.gametype >= GT_TEAM && ci->team != match->team && ci->team != FACTION_SPECTATOR) ) {
 			continue;
 		}
 
@@ -1796,7 +1796,7 @@ static void CG_SetDeferredClientInfo( clientInfo_t *ci ) {
 			if ( !match->infoValid || match->deferred ) {
 				continue;
 			}
-			if ( ci->team != TEAM_SPECTATOR &&
+			if ( ci->team != FACTION_SPECTATOR &&
 				(Q_stricmp( ci->skinName, match->skinName ) ||
 				 (cgs.gametype >= GT_TEAM && ci->team != match->team)) ) {
 				continue;
@@ -10035,11 +10035,11 @@ void CG_AddSaberBlade(centity_t *cent, centity_t *scent, refEntity_t *saber, int
 		*/
 		//[/RGBSabers]
 	{
-		if (client->team == TEAM_RED)
+		if (client->team == FACTION_EMPIRE)
 		{
 			scolor = SABER_RED;
 		}
-		else if (client->team == TEAM_BLUE)
+		else if (client->team == FACTION_REBEL)
 		{
 			scolor = SABER_BLUE;
 		}
@@ -16520,7 +16520,7 @@ void CG_Player( centity_t *cent ) {
 				cent->npcClient->bolt_motion = -1;
 				cent->npcClient->bolt_llumbar = -1;
 			}
-			cent->npcClient->team = TEAM_FREE;
+			cent->npcClient->team = FACTION_FREE;
 			cent->npcClient->infoValid = qtrue;
 		}
 		ci = cent->npcClient;
@@ -16831,7 +16831,7 @@ void CG_Player( centity_t *cent ) {
 		!(cent->currentState.eFlags & EF_DEAD) && !cent->torsoBolt &&
 		cg.snap && (cent->currentState.number != cg.snap->ps.clientNum || (cg.snap->ps.pm_flags & PMF_FOLLOW)))
 	{
-		if (ci->team == TEAM_SPECTATOR)
+		if (ci->team == FACTION_SPECTATOR)
 		{
 			cent->ghoul2weapon = NULL;
 			cent->weapon = 0;
@@ -16934,7 +16934,7 @@ void CG_Player( centity_t *cent ) {
 		cent->currentState.eType != ET_NPC)
 	{	// If the view is either a spectator or on the same team as this character, show a symbol above their head.
 #if 0 // UQ1: Disabled because we now have NPC/Player name tags...
-		if ((cg.snap->ps.persistant[PERS_TEAM] == TEAM_SPECTATOR || cg.snap->ps.persistant[PERS_TEAM] == team) &&
+		if ((cg.snap->ps.persistant[PERS_TEAM] == FACTION_SPECTATOR || cg.snap->ps.persistant[PERS_TEAM] == team) &&
 			!(cent->currentState.eFlags & EF_DEAD))
 		{
 			if (cgs.gametype == GT_SIEGE)
@@ -16964,11 +16964,11 @@ void CG_Player( centity_t *cent ) {
 			}
 			else
 			{ //generic teamplay
-				if (team == TEAM_RED)
+				if (team == FACTION_EMPIRE)
 				{
 					CG_PlayerFloatSprite( cent, cgs.media.teamRedShader); // UQ1: Disabled because we now have NPC/Player name tags...
 				}
-				else	// if (team == TEAM_BLUE)
+				else	// if (team == FACTION_REBEL)
 				{
 					CG_PlayerFloatSprite( cent, cgs.media.teamBlueShader); // UQ1: Disabled because we now have NPC/Player name tags...
 				}
@@ -16979,7 +16979,7 @@ void CG_Player( centity_t *cent ) {
 	else if (cgs.gametype == GT_POWERDUEL && cg_drawFriend.integer &&
 		cent->currentState.number != cg.snap->ps.clientNum)
 	{
-		if (cg.predictedPlayerState.persistant[PERS_TEAM] != TEAM_SPECTATOR &&
+		if (cg.predictedPlayerState.persistant[PERS_TEAM] != FACTION_SPECTATOR &&
 			cent->currentState.number < MAX_CLIENTS &&
 			!(cent->currentState.eFlags & EF_DEAD) &&
 			ci &&
@@ -16987,7 +16987,7 @@ void CG_Player( centity_t *cent ) {
 		{ //ally in powerduel, so draw the icon
 			CG_PlayerFloatSprite( cent, cgs.media.powerDuelAllyShader);
 		}
-		else if (cg.predictedPlayerState.persistant[PERS_TEAM] == TEAM_SPECTATOR &&
+		else if (cg.predictedPlayerState.persistant[PERS_TEAM] == FACTION_SPECTATOR &&
 			cent->currentState.number < MAX_CLIENTS &&
 			!(cent->currentState.eFlags & EF_DEAD) &&
 			ci->duelTeam == DUELTEAM_DOUBLE)
@@ -16999,7 +16999,7 @@ void CG_Player( centity_t *cent ) {
 	if (cgs.gametype == GT_JEDIMASTER && cg_drawFriend.integer &&
 		cent->currentState.number != cg.snap->ps.clientNum)			// Don't show a sprite above a player's own head in 3rd person.
 	{	// If the view is either a spectator or on the same team as this character, show a symbol above their head.
-		if ((cg.snap->ps.persistant[PERS_TEAM] == TEAM_SPECTATOR || cg.snap->ps.persistant[PERS_TEAM] == team) &&
+		if ((cg.snap->ps.persistant[PERS_TEAM] == FACTION_SPECTATOR || cg.snap->ps.persistant[PERS_TEAM] == team) &&
 			!(cent->currentState.eFlags & EF_DEAD))
 		{
 			if (CG_ThereIsAMaster())
@@ -17275,7 +17275,7 @@ SkipTrueView:
 	return;
 	}
 	}
-	else if (ci->team == TEAM_SPECTATOR || (cg.snap && (cg.snap->ps.pm_flags & PMF_FOLLOW)))
+	else if (ci->team == FACTION_SPECTATOR || (cg.snap && (cg.snap->ps.pm_flags & PMF_FOLLOW)))
 	{ //don't allow this when spectating
 	if (cgFPLSState != 0)
 	{
@@ -19104,7 +19104,7 @@ stillDoSaber:
 	{
 		if (cgs.gametype == GT_SIEGE)
 		{	// A team game
-			if ( ci->team == TEAM_SPECTATOR || ci->team == TEAM_FREE )
+			if ( ci->team == FACTION_SPECTATOR || ci->team == FACTION_FREE )
 			{//yellow
 				legs.shaderRGBA[0] = 255;
 				legs.shaderRGBA[1] = 255;
@@ -19128,17 +19128,26 @@ stillDoSaber:
 		{	// A team game
 			switch(ci->team)
 			{
-			case TEAM_RED:
+			case FACTION_EMPIRE:
 				legs.shaderRGBA[0] = 255;
 				legs.shaderRGBA[1] = 50;
 				legs.shaderRGBA[2] = 50;
 				break;
-			case TEAM_BLUE:
+			case FACTION_REBEL:
 				legs.shaderRGBA[0] = 75;
 				legs.shaderRGBA[1] = 75;
 				legs.shaderRGBA[2] = 255;
 				break;
-
+			case FACTION_MANDALORIAN:
+				legs.shaderRGBA[0] = 175;
+				legs.shaderRGBA[1] = 175;
+				legs.shaderRGBA[2] = 50;
+				break;
+			case FACTION_MERC:
+				legs.shaderRGBA[0] = 50;
+				legs.shaderRGBA[1] = 255;
+				legs.shaderRGBA[2] = 50;
+				break;
 			default:
 				legs.shaderRGBA[0] = 255;
 				legs.shaderRGBA[1] = 255;

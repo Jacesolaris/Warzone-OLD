@@ -725,11 +725,11 @@ gentity_t *SelectRandomFurthestSpawnPoint ( vec3_t avoidPoint, vec3_t origin, ve
 
 	//in Team DM, look for a team start spot first, if any
 	if ( level.gametype == GT_TEAM
-		&& team != TEAM_FREE
-		&& team != TEAM_SPECTATOR )
+		&& team != FACTION_FREE
+		&& team != FACTION_SPECTATOR )
 	{
 		char *classname = NULL;
-		if ( team == TEAM_RED )
+		if ( team == FACTION_EMPIRE )
 		{
 			classname = "info_player_start_red";
 		}
@@ -1258,7 +1258,7 @@ void ClientRespawn( gentity_t *ent ) {
 
 	if (gEscaping || level.gametype == GT_POWERDUEL)
 	{
-		ent->client->sess.sessionTeam = TEAM_SPECTATOR;
+		ent->client->sess.sessionTeam = FACTION_SPECTATOR;
 		ent->client->sess.spectatorState = SPECTATOR_FREE;
 		ent->client->sess.spectatorClient = 0;
 
@@ -1378,22 +1378,22 @@ PickTeam
 ================
 */
 team_t PickTeam( int ignoreClientNum ) {
-	int		counts[TEAM_NUM_TEAMS];
+	int		counts[FACTION_NUM_FACTIONS];
 
-	counts[TEAM_BLUE] = TeamCount( ignoreClientNum, TEAM_BLUE );
-	counts[TEAM_RED] = TeamCount( ignoreClientNum, TEAM_RED );
+	counts[FACTION_REBEL] = TeamCount( ignoreClientNum, FACTION_REBEL );
+	counts[FACTION_EMPIRE] = TeamCount( ignoreClientNum, FACTION_EMPIRE );
 
-	if ( counts[TEAM_BLUE] > counts[TEAM_RED] ) {
-		return TEAM_RED;
+	if ( counts[FACTION_REBEL] > counts[FACTION_EMPIRE] ) {
+		return FACTION_EMPIRE;
 	}
-	if ( counts[TEAM_RED] > counts[TEAM_BLUE] ) {
-		return TEAM_BLUE;
+	if ( counts[FACTION_EMPIRE] > counts[FACTION_REBEL] ) {
+		return FACTION_REBEL;
 	}
 	// equal team count, so join the team with the lowest score
-	if ( level.teamScores[TEAM_BLUE] > level.teamScores[TEAM_RED] ) {
-		return TEAM_RED;
+	if ( level.teamScores[FACTION_REBEL] > level.teamScores[FACTION_EMPIRE] ) {
+		return FACTION_EMPIRE;
 	}
-	return TEAM_BLUE;
+	return FACTION_REBEL;
 }
 
 /*
@@ -2164,7 +2164,7 @@ void StripModelName( const char *in, char *out, int destsize )
 qboolean ClientUserinfoChanged( int clientNum ) {
 	gentity_t *ent = g_entities + clientNum;
 	gclient_t *client = ent->client;
-	int team=TEAM_FREE, health=100, maxHealth=100, teamLeader;
+	int team=FACTION_FREE, health=100, maxHealth=100, teamLeader;
 	const char *s=NULL;
 	char *value=NULL, userinfo[MAX_INFO_STRING], buf[MAX_INFO_STRING], oldClientinfo[MAX_INFO_STRING], model[MAX_QPATH],
 		forcePowers[DEFAULT_FORCEPOWERS_LEN], oldname[MAX_NETNAME], className[MAX_QPATH], color1[16], color2[16];
@@ -2218,7 +2218,7 @@ qboolean ClientUserinfoChanged( int clientNum ) {
 		Q_StripColor( client->pers.netname_nocolor );
 	}
 
-	if ( client->sess.sessionTeam == TEAM_SPECTATOR && client->sess.spectatorState == SPECTATOR_SCOREBOARD ) {
+	if ( client->sess.sessionTeam == FACTION_SPECTATOR && client->sess.spectatorState == SPECTATOR_SCOREBOARD ) {
 		Q_strncpyz( client->pers.netname, "scoreboard", sizeof( client->pers.netname ) );
 		Q_strncpyz( client->pers.netname_nocolor, "scoreboard", sizeof( client->pers.netname_nocolor ) );
 	}
@@ -2471,9 +2471,9 @@ qboolean ClientUserinfoChanged( int clientNum ) {
 	if ( level.gametype >= GT_TEAM && g_entities[clientNum].r.svFlags & SVF_BOT ) {
 		s = Info_ValueForKey( userinfo, "team" );
 		if ( !Q_stricmp( s, "red" ) || !Q_stricmp( s, "r" ) )
-			team = TEAM_RED;
+			team = FACTION_EMPIRE;
 		else if ( !Q_stricmp( s, "blue" ) || !Q_stricmp( s, "b" ) )
-			team = TEAM_BLUE;
+			team = FACTION_REBEL;
 		else
 			team = PickTeam( clientNum ); // pick the team with the least number of players
 	}
@@ -2991,17 +2991,17 @@ char *ClientConnect( int clientNum, qboolean firstTime, qboolean isBot ) {
 	}
 
 
-	if (level.gametype == GT_SIEGE && client->sess.sessionTeam != TEAM_SPECTATOR)
+	if (level.gametype == GT_SIEGE && client->sess.sessionTeam != FACTION_SPECTATOR)
 	{
 		if (firstTime || level.newSession)
 		{ //start as spec
 			client->sess.siegeDesiredTeam = client->sess.sessionTeam;
-			client->sess.sessionTeam = TEAM_SPECTATOR;
+			client->sess.sessionTeam = FACTION_SPECTATOR;
 		}
 	}
-	else if (level.gametype == GT_POWERDUEL && client->sess.sessionTeam != TEAM_SPECTATOR)
+	else if (level.gametype == GT_POWERDUEL && client->sess.sessionTeam != FACTION_SPECTATOR)
 	{
-		client->sess.sessionTeam = TEAM_SPECTATOR;
+		client->sess.sessionTeam = FACTION_SPECTATOR;
 	}
 
 	if( isBot && ent->s.eType != ET_NPC) {
@@ -3039,7 +3039,7 @@ char *ClientConnect( int clientNum, qboolean firstTime, qboolean isBot ) {
 #endif //__MMO__
 
 	if ( level.gametype >= GT_TEAM &&
-		client->sess.sessionTeam != TEAM_SPECTATOR ) {
+		client->sess.sessionTeam != FACTION_SPECTATOR ) {
 		BroadcastTeamChange( client, -1 );
 	}
 
@@ -3095,12 +3095,12 @@ void ClientBegin( int clientNum, qboolean allowTeamReset ) {
 			ent->client->sess.sessionTeam = PickTeam(-1);
 			trap->GetUserinfo(clientNum, userinfo, MAX_INFO_STRING);
 
-			if (ent->client->sess.sessionTeam == TEAM_SPECTATOR)
+			if (ent->client->sess.sessionTeam == FACTION_SPECTATOR)
 			{
-				ent->client->sess.sessionTeam = TEAM_RED;
+				ent->client->sess.sessionTeam = FACTION_EMPIRE;
 			}
 
-			if (ent->client->sess.sessionTeam == TEAM_RED)
+			if (ent->client->sess.sessionTeam == FACTION_EMPIRE)
 			{
 				team = "Red";
 			}
@@ -3194,19 +3194,19 @@ void ClientBegin( int clientNum, qboolean allowTeamReset ) {
 	if ( ent->ghoul2 && ent->client )
 		ent->client->renderInfo.lastG2 = NULL; //update the renderinfo bolts next update.
 
-	if ( level.gametype == GT_POWERDUEL && client->sess.sessionTeam != TEAM_SPECTATOR && client->sess.duelTeam == DUELTEAM_FREE )
+	if ( level.gametype == GT_POWERDUEL && client->sess.sessionTeam != FACTION_SPECTATOR && client->sess.duelTeam == DUELTEAM_FREE )
 		SetTeam( ent, "s" );
 	else
 	{
 		if ( level.gametype == GT_SIEGE && (!gSiegeRoundBegun || gSiegeRoundEnded) )
-			SetTeamQuick( ent, TEAM_SPECTATOR, qfalse );
+			SetTeamQuick( ent, FACTION_SPECTATOR, qfalse );
 
 		// locate ent at a spawn point
 		ClientSpawn( ent );
 	}
 
 #ifndef __MMO__
-	if ( client->sess.sessionTeam != TEAM_SPECTATOR ) {
+	if ( client->sess.sessionTeam != FACTION_SPECTATOR ) {
 		if ( level.gametype != GT_DUEL || level.gametype == GT_POWERDUEL ) {
 			trap->SendServerCommand( -1, va("print \"%s" S_COLOR_WHITE " %s\n\"", client->pers.netname, G_GetStringEdString("MP_SVGAME", "PLENTER")) );
 		}
@@ -3682,7 +3682,7 @@ void ClientSpawn(gentity_t *ent) {
 	// find a spawn point
 	// do it before setting health back up, so farthest
 	// ranging doesn't count this client
-	if ( client->sess.sessionTeam == TEAM_SPECTATOR ) {
+	if ( client->sess.sessionTeam == FACTION_SPECTATOR ) {
 			spawnPoint = SelectSpectatorSpawnPoint (spawn_origin, spawn_angles);
 	} else if (level.gametype == GT_CTF || level.gametype == GT_CTY) {
 		// all base oriented team games use the CTF spawn points
@@ -3919,17 +3919,17 @@ void ClientSpawn(gentity_t *ent) {
 		&& !AllForceDisabled( g_forcePowerDisable.integer )
 		&& g_jediVmerc.integer )
 	{
-		if ( level.gametype >= GT_TEAM && (client->sess.sessionTeam == TEAM_BLUE || client->sess.sessionTeam == TEAM_RED) )
+		if ( level.gametype >= GT_TEAM && (client->sess.sessionTeam == FACTION_REBEL || client->sess.sessionTeam == FACTION_EMPIRE) )
 		{//In Team games, force one side to be merc and other to be jedi
 			if ( level.numPlayingClients > 0 )
 			{//already someone in the game
-				int forceTeam = TEAM_SPECTATOR;
+				int forceTeam = FACTION_SPECTATOR;
 				for ( i = 0 ; i < level.maxclients ; i++ )
 				{
 					if ( level.clients[i].pers.connected == CON_DISCONNECTED ) {
 						continue;
 					}
-					if ( level.clients[i].sess.sessionTeam == TEAM_BLUE || level.clients[i].sess.sessionTeam == TEAM_RED )
+					if ( level.clients[i].sess.sessionTeam == FACTION_REBEL || level.clients[i].sess.sessionTeam == FACTION_EMPIRE )
 					{//in-game
 						if ( WP_HasForcePowers( &level.clients[i].ps ) )
 						{//this side is using force
@@ -3937,13 +3937,13 @@ void ClientSpawn(gentity_t *ent) {
 						}
 						else
 						{//other team is using force
-							if ( level.clients[i].sess.sessionTeam == TEAM_BLUE )
+							if ( level.clients[i].sess.sessionTeam == FACTION_REBEL )
 							{
-								forceTeam = TEAM_RED;
+								forceTeam = FACTION_EMPIRE;
 							}
 							else
 							{
-								forceTeam = TEAM_BLUE;
+								forceTeam = FACTION_REBEL;
 							}
 						}
 						break;
@@ -4042,7 +4042,7 @@ void ClientSpawn(gentity_t *ent) {
 	*/
 
 	if (/*level.gametype == GT_SIEGE &&*/ client->siegeClass != -1 &&
-		client->sess.sessionTeam != TEAM_SPECTATOR)
+		client->sess.sessionTeam != FACTION_SPECTATOR)
 	{ //well then, we will use a custom weaponset for our class
 		int m = 0;
 
@@ -4083,7 +4083,7 @@ void ClientSpawn(gentity_t *ent) {
 
 	if (/*level.gametype == GT_SIEGE &&*/
 		client->siegeClass != -1 &&
-		client->sess.sessionTeam != TEAM_SPECTATOR)
+		client->sess.sessionTeam != FACTION_SPECTATOR)
 	{ //use class-specified inventory
 		client->ps.stats[STAT_HOLDABLE_ITEMS] = bgSiegeClasses[client->siegeClass].invenItems;
 		client->ps.stats[STAT_HOLDABLE_ITEM] = 0;
@@ -4097,7 +4097,7 @@ void ClientSpawn(gentity_t *ent) {
 	if (/*level.gametype == GT_SIEGE &&*/
 		client->siegeClass != -1 &&
 		bgSiegeClasses[client->siegeClass].powerups &&
-		client->sess.sessionTeam != TEAM_SPECTATOR)
+		client->sess.sessionTeam != FACTION_SPECTATOR)
 	{ //this class has some start powerups
 		i = 0;
 		while (i < PW_NUM_POWERUPS)
@@ -4110,7 +4110,7 @@ void ClientSpawn(gentity_t *ent) {
 		}
 	}
 
-	if ( client->sess.sessionTeam == TEAM_SPECTATOR )
+	if ( client->sess.sessionTeam == FACTION_SPECTATOR )
 	{
 		client->ps.primaryWeapon = 0;
 		client->ps.secondaryWeapon = 0;
@@ -4220,7 +4220,7 @@ void ClientSpawn(gentity_t *ent) {
 	client->latched_buttons = 0;
 
 	if (!level.intermissiontime) {
-		if (ent->client->sess.sessionTeam != TEAM_SPECTATOR) {
+		if (ent->client->sess.sessionTeam != FACTION_SPECTATOR) {
 			G_KillBox(ent);
 			// force the base weapon up
 			//client->ps.weapon = WP_BRYAR_PISTOL;
@@ -4321,7 +4321,7 @@ void ClientSpawn(gentity_t *ent) {
 
 	if ((g_gametype.integer == GT_WARZONE || g_gametype.integer == GT_INSTANCE) 
 		&& ent->s.primaryWeapon == WP_SABER
-		&& ent->client->sess.sessionTeam == TEAM_BLUE)
+		&& ent->client->sess.sessionTeam == FACTION_REBEL)
 	{// Spawn a padawan for this jedi player...
 		if (NPC_NeedPadawan_Spawn())
 		{// Only if we do not already have a padawan...
@@ -4386,8 +4386,8 @@ void G_ClearVote( gentity_t *ent ) {
 void G_ClearTeamVote( gentity_t *ent, int team ) {
 	int voteteam;
 
-		 if ( team == TEAM_RED )	voteteam = 0;
-	else if ( team == TEAM_BLUE )	voteteam = 1;
+		 if ( team == FACTION_EMPIRE )	voteteam = 0;
+	else if ( team == FACTION_REBEL )	voteteam = 1;
 	else							return;
 
 	if ( level.teamVoteTime[voteteam] ) {
@@ -4421,7 +4421,7 @@ void ClientDisconnect( int clientNum ) {
 	if (ent->client) 
 	{
 		ent->client->ps.pm_type = PM_DEAD;
-		ent->client->ps.persistant[PERS_TEAM] = TEAM_SPECTATOR;
+		ent->client->ps.persistant[PERS_TEAM] = FACTION_SPECTATOR;
 	}
 
 	if ( !ent->client || ent->client->pers.connected == CON_DISCONNECTED ) {
@@ -4460,7 +4460,7 @@ void ClientDisconnect( int clientNum ) {
 	// stop any following clients
 #pragma omp parallel for schedule(dynamic) num_threads(32) if(g_multithread.integer > 0)
 	for ( i = 0 ; i < level.maxclients ; i++ ) {
-		if ( level.clients[i].sess.sessionTeam == TEAM_SPECTATOR
+		if ( level.clients[i].sess.sessionTeam == FACTION_SPECTATOR
 			&& level.clients[i].sess.spectatorState == SPECTATOR_FOLLOW
 			&& level.clients[i].sess.spectatorClient == clientNum ) {
 			StopFollowing( &g_entities[i] );
@@ -4469,7 +4469,7 @@ void ClientDisconnect( int clientNum ) {
 
 	// send effect if they were completely connected
 	if ( ent->client->pers.connected == CON_CONNECTED
-		&& ent->client->sess.sessionTeam != TEAM_SPECTATOR ) {
+		&& ent->client->sess.sessionTeam != FACTION_SPECTATOR ) {
 		tent = G_TempEntity( ent->client->ps.origin, EV_PLAYER_TELEPORT_OUT );
 		tent->s.clientNum = ent->s.clientNum;
 
@@ -4494,7 +4494,7 @@ void ClientDisconnect( int clientNum ) {
 		}
 	}
 
-	if ( level.gametype == GT_DUEL && ent->client->sess.sessionTeam == TEAM_FREE && level.intermissiontime ) {
+	if ( level.gametype == GT_DUEL && ent->client->sess.sessionTeam == FACTION_FREE && level.intermissiontime ) {
 		trap->SendConsoleCommand( EXEC_APPEND, "map_restart 0\n" );
 		level.restarted = qtrue;
 		level.changemap = NULL;
@@ -4523,8 +4523,8 @@ void ClientDisconnect( int clientNum ) {
 	ent->inuse = qfalse;
 	ent->classname = "disconnected";
 	ent->client->pers.connected = CON_DISCONNECTED;
-	ent->client->ps.persistant[PERS_TEAM] = TEAM_FREE;
-	ent->client->sess.sessionTeam = TEAM_FREE;
+	ent->client->ps.persistant[PERS_TEAM] = FACTION_FREE;
+	ent->client->sess.sessionTeam = FACTION_FREE;
 	ent->r.contents = 0;
 
 	if (ent->client->holdingObjectiveItem > 0)

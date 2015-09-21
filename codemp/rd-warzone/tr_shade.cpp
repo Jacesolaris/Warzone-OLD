@@ -1938,7 +1938,7 @@ void RB_StageIteratorGeneric( void )
 				if (input->xstages[stage])
 				{
 					input->xstages[stage]->isWater = isWater;
-					input->xstages[stage]->glslShaderGroup = tr.lightallShader;
+					//input->xstages[stage]->glslShaderGroup = tr.lightallShader;
 				}
 			}
 		}

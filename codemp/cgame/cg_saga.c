@@ -547,7 +547,7 @@ void CG_ParseSiegeObjectiveStatus(const char *str)
 		i++;
 	}
 
-	if (cg.predictedPlayerState.persistant[PERS_TEAM] != TEAM_SPECTATOR)
+	if (cg.predictedPlayerState.persistant[PERS_TEAM] != FACTION_SPECTATOR)
 	{ //update menu cvars
 		CG_SiegeBriefingDisplay(cg.predictedPlayerState.persistant[PERS_TEAM], 1);
 	}
@@ -585,7 +585,7 @@ void CG_SiegeRoundOver(centity_t *ent, int won)
 
 	myTeam = ps->persistant[PERS_TEAM];
 
-	if (myTeam == TEAM_SPECTATOR)
+	if (myTeam == FACTION_SPECTATOR)
 	{
 		return;
 	}
@@ -720,7 +720,7 @@ void CG_SiegeBriefingDisplay(int team, int dontshow)
 		return;
 	}
 
-	if (team == TEAM_SPECTATOR)
+	if (team == FACTION_SPECTATOR)
 	{
 		return;
 	}
@@ -897,7 +897,7 @@ void CG_SiegeObjectiveCompleted(centity_t *ent, int won, int objectivenum)
 
 	myTeam = ps->persistant[PERS_TEAM];
 
-	if (myTeam == TEAM_SPECTATOR)
+	if (myTeam == FACTION_SPECTATOR)
 	{
 		return;
 	}

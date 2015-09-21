@@ -497,11 +497,11 @@ void CG_DrawFlagModel( float x, float y, float w, float h, int team, qboolean fo
 
 		angles[YAW] = 60 * sin( cg.time / 2000.0 );;
 
-		if( team == TEAM_RED ) {
+		if( team == FACTION_EMPIRE ) {
 			handle = cgs.media.redFlagModel;
-		} else if( team == TEAM_BLUE ) {
+		} else if( team == FACTION_REBEL ) {
 			handle = cgs.media.blueFlagModel;
-		} else if( team == TEAM_FREE ) {
+		} else if( team == FACTION_FREE ) {
 			handle = 0;//cgs.media.neutralFlagModel;
 		} else {
 			return;
@@ -510,11 +510,11 @@ void CG_DrawFlagModel( float x, float y, float w, float h, int team, qboolean fo
 	} else if ( cg_drawIcons.integer ) {
 		gitem_t *item;
 
-		if( team == TEAM_RED ) {
+		if( team == FACTION_EMPIRE ) {
 			item = BG_FindItemForPowerup( PW_REDFLAG );
-		} else if( team == TEAM_BLUE ) {
+		} else if( team == FACTION_REBEL ) {
 			item = BG_FindItemForPowerup( PW_BLUEFLAG );
-		} else if( team == TEAM_FREE ) {
+		} else if( team == FACTION_FREE ) {
 			item = BG_FindItemForPowerup( PW_NEUTRALFLAG );
 		} else {
 			return;
@@ -3270,11 +3270,19 @@ void CG_DrawTeamBackground( int x, int y, int w, int h, float alpha, int team )
 	vec4_t		hcolor;
 
 	hcolor[3] = alpha;
-	if ( team == TEAM_RED ) {
+	if ( team == FACTION_EMPIRE ) {
 		hcolor[0] = 1;
 		hcolor[1] = .2f;
 		hcolor[2] = .2f;
-	} else if ( team == TEAM_BLUE ) {
+	} else if ( team == FACTION_REBEL ) {
+		hcolor[0] = .2f;
+		hcolor[1] = .2f;
+		hcolor[2] = 1;
+	} else if ( team == FACTION_MANDALORIAN ) {
+		hcolor[0] = .2f;
+		hcolor[1] = .2f;
+		hcolor[2] = 1;
+	} else if ( team == FACTION_MERC ) {
 		hcolor[0] = .2f;
 		hcolor[1] = .2f;
 		hcolor[2] = 1;
@@ -3715,6 +3723,15 @@ void CG_DrawEnemyStatus( void )
 		return; // nothing to show...
 	}
 
+	if (crosshairEnt->currentState.eType == ET_NPC)
+	{
+		if (!crosshairEnt->npcClient || !crosshairEnt->npcClient->ghoul2Model)
+			return;
+
+		if ( !crosshairEnt->npcClient->infoValid )
+			return;
+	}
+
 	if (!crosshairEnt->ghoul2)
 	{
 		return;
@@ -3751,12 +3768,12 @@ void CG_DrawEnemyStatus( void )
 		return;
 	}
 
-	if (ci->team == TEAM_SPECTATOR)
+	if (ci->team == FACTION_SPECTATOR)
 	{
 		return;
 	}
 
-	if (crosshairEnt->playerState->persistant[PERS_TEAM] == TEAM_SPECTATOR)
+	if (crosshairEnt->playerState->persistant[PERS_TEAM] == FACTION_SPECTATOR)
 		return;
 
 	if (crosshairEnt->playerState->fd.forcePowerMax <= 0) crosshairEnt->playerState->fd.forcePowerMax = 100;
@@ -4083,13 +4100,13 @@ void CG_DrawEnemyStatus( void )
 			break;
 		case CLASS_MERC:
 			sprintf(str2, "< Mercenary >");
-			tclr[0] = 1.0f;
-			tclr[1] = 0.125f;
+			tclr[0] = 0.125f;
+			tclr[1] = 1.0f;
 			tclr[2] = 0.125f;
 			tclr[3] = 1.0f;
 
-			tclr2[0] = 1.0f;
-			tclr2[1] = 0.125f;
+			tclr2[0] = 0.125f;
+			tclr2[1] = 1.0f;
 			tclr2[2] = 0.125f;
 			tclr2[3] = 1.0f;
 			break;
@@ -4127,15 +4144,15 @@ void CG_DrawEnemyStatus( void )
 			tclr2[3] = 1.0f;
 			break;
 		case CLASS_BOBAFETT:
-			sprintf(str2, "< Bounty Hunter >");
+			sprintf(str2, "< Mandalorian >");
 			tclr[0] = 1.0f;
-			tclr[1] = 0.225f;
-			tclr[2] = 0.125f;
+			tclr[1] = 0.5f;
+			tclr[2] = 0.0f;
 			tclr[3] = 1.0f;
 
 			tclr2[0] = 1.0f;
-			tclr2[1] = 0.225f;
-			tclr2[2] = 0.125f;
+			tclr2[1] = 0.5f;
+			tclr2[2] = 0.0f;
 			tclr2[3] = 1.0f;
 			break;
 		case CLASS_ATST:
@@ -4283,20 +4300,20 @@ void CG_DrawEnemyStatus( void )
 
 		sprintf(str1, "%s", ci->cleanname);
 		
-		if (cgs.clientinfo[currentCrosshairEntity].team == TEAM_RED)
+		if (cgs.clientinfo[currentCrosshairEntity].team == FACTION_EMPIRE)
 		{
 			sprintf(str2, "< Imperial >");
-			tclr[0] = 0.5f;
+			tclr[0] = 0.75f;
 			tclr[1] = 0.5f;
 			tclr[2] = 0.125f;
 			tclr[3] = 1.0f;
 
-			tclr2[0] = 0.5f;
+			tclr2[0] = 0.75f;
 			tclr2[1] = 0.5f;
 			tclr2[2] = 0.125f;
 			tclr2[3] = 1.0f;
 		}
-		else if (cgs.clientinfo[currentCrosshairEntity].team == TEAM_BLUE)
+		else if (cgs.clientinfo[currentCrosshairEntity].team == FACTION_REBEL)
 		{
 			sprintf(str2, "< Rebel >");
 			tclr[0] = 0.125f;
@@ -4307,6 +4324,32 @@ void CG_DrawEnemyStatus( void )
 			tclr2[0] = 0.125f;
 			tclr2[1] = 0.125f;
 			tclr2[2] = 0.7f;
+			tclr2[3] = 1.0f;
+		}
+		else if (cgs.clientinfo[currentCrosshairEntity].team == FACTION_MANDALORIAN)
+		{
+			sprintf(str2, "< Mandalorian >");
+			tclr[0] = 1.0f;
+			tclr[1] = 0.5f;
+			tclr[2] = 0.0f;
+			tclr[3] = 1.0f;
+
+			tclr2[0] = 1.0f;
+			tclr2[1] = 0.5f;
+			tclr2[2] = 0.0f;
+			tclr2[3] = 1.0f;
+		}
+		else if (cgs.clientinfo[currentCrosshairEntity].team == FACTION_MERC)
+		{
+			sprintf(str2, "< Mercenary >");
+			tclr[0] = 0.125f;
+			tclr[1] = 1.0f;
+			tclr[2] = 0.125f;
+			tclr[3] = 1.0f;
+
+			tclr2[0] = 0.125f;
+			tclr2[1] = 1.0f;
+			tclr2[2] = 0.125f;
 			tclr2[3] = 1.0f;
 		}
 		else
@@ -4463,7 +4506,7 @@ static float CG_DrawEnemyInfo ( float y )
 		title = CG_GetStringEdString("MP_INGAME", "DUELING");
 		clientNum = cg.snap->ps.duelIndex;
 	}
-	else if ( cgs.gametype == GT_DUEL && cgs.clientinfo[cg.snap->ps.clientNum].team != TEAM_SPECTATOR)
+	else if ( cgs.gametype == GT_DUEL && cgs.clientinfo[cg.snap->ps.clientNum].team != FACTION_SPECTATOR)
 	{
 		title = CG_GetStringEdString("MP_INGAME", "DUELING");
 		if (cg.snap->ps.clientNum == cgs.duelist1)
@@ -4546,7 +4589,7 @@ static float CG_DrawEnemyInfo ( float y )
 //	CG_Text_Paint( 630 - CG_Text_Width ( title, 0.7f, FONT_MEDIUM ) + xOffset, y, 0.7f, colorWhite, title, 0, 0, 0, FONT_MEDIUM );
 	CG_Text_Paint( 630 - CG_Text_Width ( title, 1.0f, FONT_SMALL2 ) + xOffset, y, 1.0f, colorWhite, title, 0, 0, 0, FONT_SMALL2 );
 
-	if ( (cgs.gametype == GT_DUEL || cgs.gametype == GT_POWERDUEL) && cgs.clientinfo[cg.snap->ps.clientNum].team != TEAM_SPECTATOR)
+	if ( (cgs.gametype == GT_DUEL || cgs.gametype == GT_POWERDUEL) && cgs.clientinfo[cg.snap->ps.clientNum].team != FACTION_SPECTATOR)
 	{//also print their score
 		char text[1024];
 		y += 15;
@@ -4722,7 +4765,7 @@ float CG_DrawRadar ( float y )
 		return y;
 	}
 
-	if ( (cg.predictedPlayerState.pm_flags & PMF_FOLLOW) || cg.predictedPlayerState.persistant[PERS_TEAM] == TEAM_SPECTATOR )
+	if ( (cg.predictedPlayerState.pm_flags & PMF_FOLLOW) || cg.predictedPlayerState.persistant[PERS_TEAM] == FACTION_SPECTATOR )
 	{
 		return y;
 	}
@@ -5373,7 +5416,10 @@ static float CG_DrawTeamOverlay( float y, qboolean right, qboolean upper ) {
 		return y;
 	}
 
-	if ( cg.snap->ps.persistant[PERS_TEAM] != TEAM_RED && cg.snap->ps.persistant[PERS_TEAM] != TEAM_BLUE ) {
+	if ( cg.snap->ps.persistant[PERS_TEAM] != FACTION_EMPIRE 
+		&& cg.snap->ps.persistant[PERS_TEAM] != FACTION_REBEL
+		&& cg.snap->ps.persistant[PERS_TEAM] != FACTION_MANDALORIAN
+		&& cg.snap->ps.persistant[PERS_TEAM] != FACTION_MERC ) {
 		return y; // Not on any team
 	}
 
@@ -5431,17 +5477,28 @@ static float CG_DrawTeamOverlay( float y, qboolean right, qboolean upper ) {
 		ret_y = y;
 	}
 
-	if ( cg.snap->ps.persistant[PERS_TEAM] == TEAM_RED ) {
+	if ( cg.snap->ps.persistant[PERS_TEAM] == FACTION_EMPIRE ) {
 		hcolor[0] = 1.0f;
 		hcolor[1] = 0.0f;
 		hcolor[2] = 0.0f;
 		hcolor[3] = 0.33f;
-	} else { // if ( cg.snap->ps.persistant[PERS_TEAM] == TEAM_BLUE )
+	} else if (cg.snap->ps.persistant[PERS_TEAM] == FACTION_MANDALORIAN) {
+		hcolor[0] = 0.75f;
+		hcolor[1] = 0.75f;
+		hcolor[2] = 0.125f;
+		hcolor[3] = 1.0f;
+	} else if (cg.snap->ps.persistant[PERS_TEAM] == FACTION_MERC) {
+		hcolor[0] = 0.125f;
+		hcolor[1] = 0.75f;
+		hcolor[2] = 0.125f;
+		hcolor[3] = 1.0f;
+	} else { // if ( cg.snap->ps.persistant[PERS_TEAM] == FACTION_REBEL )
 		hcolor[0] = 0.0f;
 		hcolor[1] = 0.0f;
 		hcolor[2] = 1.0f;
 		hcolor[3] = 0.33f;
 	}
+
 	trap->R_SetColor( hcolor );
 	CG_DrawPic( x + xOffset, y, w, h, cgs.media.teamStatusBar );
 	trap->R_SetColor( NULL );
@@ -6601,8 +6658,10 @@ static void CG_DrawCrosshair( vec3_t worldPoint, int chEntValid ) {
 						ecolor[2] = 0.0f;//B
 					}
 				}
-				else if ( crossEnt->currentState.teamowner == TEAM_RED
-					|| crossEnt->currentState.teamowner == TEAM_BLUE )
+				else if ( crossEnt->currentState.teamowner == FACTION_EMPIRE
+					|| crossEnt->currentState.teamowner == FACTION_REBEL
+					|| crossEnt->currentState.teamowner == FACTION_MANDALORIAN
+					|| crossEnt->currentState.teamowner == FACTION_MERC)
 				{
 					if (cgs.gametype < GT_TEAM)
 					{ //not teamplay, just neutral then
@@ -7186,7 +7245,7 @@ static void CG_DrawHolocronIcons(void)
 		return;
 	}
 
-	if (cgs.clientinfo[cg.snap->ps.clientNum].team == TEAM_SPECTATOR)
+	if (cgs.clientinfo[cg.snap->ps.clientNum].team == FACTION_SPECTATOR)
 	{
 		return;
 	}
@@ -7241,7 +7300,7 @@ static void CG_DrawActivePowers(void)
 		return;
 	}
 
-	if (cgs.clientinfo[cg.snap->ps.clientNum].team == TEAM_SPECTATOR)
+	if (cgs.clientinfo[cg.snap->ps.clientNum].team == FACTION_SPECTATOR)
 	{
 		return;
 	}
@@ -7291,7 +7350,7 @@ static void CG_DrawRocketLocking( int lockEntNum, int lockTime )
 		return;
 	}
 
-	if (cgs.clientinfo[cg.snap->ps.clientNum].team == TEAM_SPECTATOR)
+	if (cgs.clientinfo[cg.snap->ps.clientNum].team == FACTION_SPECTATOR)
 	{
 		return;
 	}
@@ -7616,16 +7675,22 @@ void CG_DrawNPCNames( void )
 		if (cent->currentState.eType != ET_NPC && cent->currentState.eType != ET_PLAYER)
 			continue;
 
-		if (!cent->ghoul2)
-			continue;
+		if (cent->currentState.eType == ET_NPC)
+		{
+			if (!cent->npcClient || !cent->npcClient->ghoul2Model)
+				continue;
 
-		if (!cent->npcClient && cent->currentState.eType != ET_PLAYER)
+			if ( !cent->npcClient->infoValid )
+				continue;
+		}
+
+		if (!cent->ghoul2)
 			continue;
 
 		if (cent->cloaked)
 			continue;
 
-		if (cent->currentState.eType == ET_PLAYER && cgs.clientinfo[i].team == TEAM_SPECTATOR)
+		if (cent->currentState.eType == ET_PLAYER && cgs.clientinfo[i].team == FACTION_SPECTATOR)
 			continue;
 
 		if (cent->currentState.eFlags & EF_DEAD)
@@ -7662,17 +7727,17 @@ void CG_DrawNPCNames( void )
 			continue;
 		}
 
-		if (ci->team == TEAM_SPECTATOR)
+		if (ci->team == FACTION_SPECTATOR)
 		{
 			continue;
 		}
 
-		if (cent->playerState->persistant[PERS_TEAM] == TEAM_SPECTATOR)
+		if (cent->playerState->persistant[PERS_TEAM] == FACTION_SPECTATOR)
 			continue;
 
 		if (cent->currentState.eType == ET_PLAYER)
 		{
-			if (cgs.clientinfo[i].team == TEAM_RED)
+			if (cgs.clientinfo[i].team == FACTION_EMPIRE)
 			{
 				sprintf(str2, "< Imperial >");
 				tclr[0] = 0.5f;
@@ -7685,7 +7750,7 @@ void CG_DrawNPCNames( void )
 				tclr2[2] = 0.125f;
 				tclr2[3] = 1.0f;
 			}
-			else if (cgs.clientinfo[i].team == TEAM_BLUE)
+			else if (cgs.clientinfo[i].team == FACTION_REBEL)
 			{
 				sprintf(str2, "< Rebel >");
 				tclr[0] = 0.125f;
@@ -7696,6 +7761,32 @@ void CG_DrawNPCNames( void )
 				tclr2[0] = 0.125f;
 				tclr2[1] = 0.125f;
 				tclr2[2] = 0.7f;
+				tclr2[3] = 1.0f;
+			}
+			else if (cgs.clientinfo[i].team == FACTION_MANDALORIAN)
+			{
+				sprintf(str2, "< Mandalorian >");
+				tclr[0] = 0.75f;
+				tclr[1] = 0.75f;
+				tclr[2] = 0.125f;
+				tclr[3] = 1.0f;
+
+				tclr[0] = 0.75f;
+				tclr[1] = 0.75f;
+				tclr[2] = 0.125f;
+				tclr2[3] = 1.0f;
+			}
+			else if (cgs.clientinfo[i].team == FACTION_MERC)
+			{
+				sprintf(str2, "< Mercenary >");
+				tclr[0] = 0.125f;
+				tclr[1] = 0.75f;
+				tclr[2] = 0.125f;
+				tclr[3] = 1.0f;
+
+				tclr[0] = 0.125f;
+				tclr[1] = 0.75f;
+				tclr[2] = 0.125f;
 				tclr2[3] = 1.0f;
 			}
 			else
@@ -7953,15 +8044,15 @@ void CG_DrawNPCNames( void )
 				tclr2[3] = 1.0f;
 				break;
 			case CLASS_BOBAFETT:
-				sprintf(str2, "< Bounty Hunter >");
+				sprintf(str2, "< Mandalorian >");
 				tclr[0] = 1.0f;
-				tclr[1] = 0.225f;
-				tclr[2] = 0.125f;
+				tclr[1] = 0.5f;
+				tclr[2] = 0.0f;
 				tclr[3] = 1.0f;
 
-				tclr2[0] = 1.0f;
-				tclr2[1] = 0.225f;
-				tclr2[2] = 0.125f;
+				tclr[0] = 1.0f;
+				tclr2[1] = 0.5f;
+				tclr2[2] = 0.0f;
 				tclr2[3] = 1.0f;
 				break;
 			case CLASS_ATST:
@@ -8702,7 +8793,7 @@ static void CG_ScanForCrosshairEntity( void ) {
 		}
 	}
 
-	if (cg.snap->ps.persistant[PERS_TEAM] != TEAM_SPECTATOR)
+	if (cg.snap->ps.persistant[PERS_TEAM] != FACTION_SPECTATOR)
 	{
 		if (trace.entityNum < /*MAX_CLIENTS*/ENTITYNUM_WORLD)
 		{
@@ -8816,7 +8907,7 @@ static void CG_DrawCrosshairNames( void ) {
 		}
 		else
 		{
-			if (cgs.clientinfo[cg.crosshairClientNum].team == TEAM_RED)
+			if (cgs.clientinfo[cg.crosshairClientNum].team == FACTION_EMPIRE)
 			{
 				baseColor = CT_RED;
 			}
@@ -8830,7 +8921,7 @@ static void CG_DrawCrosshairNames( void ) {
 	{
 		//baseColor = CT_WHITE;
 		if (cgs.gametype == GT_POWERDUEL &&
-			cgs.clientinfo[cg.snap->ps.clientNum].team != TEAM_SPECTATOR &&
+			cgs.clientinfo[cg.snap->ps.clientNum].team != FACTION_SPECTATOR &&
 			cgs.clientinfo[cg.crosshairClientNum].duelTeam == cgs.clientinfo[cg.predictedPlayerState.clientNum].duelTeam)
 		{ //on the same duel team in powerduel, so he's a friend
 			baseColor = CT_GREEN;
@@ -9027,7 +9118,7 @@ static void CG_DrawVote(void) {
 	else
 		s = va( "%s(%i):<%s> %s:%i %s:%i",    sVote, sec, sCmd,        sYes, cgs.voteYes, sNo, cgs.voteNo);
 	CG_DrawSmallString( 4, 58, s, 1.0F );
-	if ( cgs.clientinfo[cg.clientNum].team != TEAM_SPECTATOR ) {
+	if ( cgs.clientinfo[cg.clientNum].team != FACTION_SPECTATOR ) {
 		s = CG_GetStringEdString( "MP_INGAME", "OR_PRESS_ESC_THEN_CLICK_VOTE" );	//	s = "or press ESC then click Vote";
 		CG_DrawSmallString( 4, 58 + SMALLCHAR_HEIGHT + 2, s, 1.0F );
 	}
@@ -9042,10 +9133,14 @@ static void CG_DrawTeamVote(void) {
 	char	*s;
 	int		sec, cs_offset;
 
-	if ( cgs.clientinfo[cg.clientNum].team == TEAM_RED )
+	if ( cgs.clientinfo[cg.clientNum].team == FACTION_EMPIRE )
 		cs_offset = 0;
-	else if ( cgs.clientinfo[cg.clientNum].team == TEAM_BLUE )
+	else if ( cgs.clientinfo[cg.clientNum].team == FACTION_REBEL )
 		cs_offset = 1;
+	else if ( cgs.clientinfo[cg.clientNum].team == FACTION_MANDALORIAN )
+		cs_offset = 2;
+	else if ( cgs.clientinfo[cg.clientNum].team == FACTION_MERC )
+		cs_offset = 3;
 	else
 		return;
 
@@ -9284,7 +9379,7 @@ static void CG_DrawWarmup( void ) {
 		else
 		{
 			for ( i = 0 ; i < cgs.maxclients ; i++ ) {
-				if ( cgs.clientinfo[i].infoValid && cgs.clientinfo[i].team == TEAM_FREE ) {
+				if ( cgs.clientinfo[i].infoValid && cgs.clientinfo[i].team == FACTION_FREE ) {
 					if ( !ci1 ) {
 						ci1 = &cgs.clientinfo[i];
 					} else {
@@ -9411,7 +9506,7 @@ void CG_DrawFlagStatus()
 
 	if (cgs.gametype == GT_CTY)
 	{
-		if (team == TEAM_RED)
+		if (team == FACTION_EMPIRE)
 		{
 			myFlagTakenShader = trap->R_RegisterShaderNoMip( "gfx/hud/mpi_rflag_x" );
 			theirFlagShader = trap->R_RegisterShaderNoMip( "gfx/hud/mpi_bflag_ys" );
@@ -9424,7 +9519,7 @@ void CG_DrawFlagStatus()
 	}
 	else
 	{
-		if (team == TEAM_RED)
+		if (team == FACTION_EMPIRE)
 		{
 			myFlagTakenShader = trap->R_RegisterShaderNoMip( "gfx/hud/mpi_rflag_x" );
 			theirFlagShader = trap->R_RegisterShaderNoMip( "gfx/hud/mpi_bflag" );
@@ -9938,7 +10033,7 @@ static void CG_Draw2DScreenTints( void )
 {
 	float			rageTime, rageRecTime, absorbTime, protectTime, ysalTime;
 	vec4_t			hcolor;
-	if (cgs.clientinfo[cg.snap->ps.clientNum].team != TEAM_SPECTATOR)
+	if (cgs.clientinfo[cg.snap->ps.clientNum].team != FACTION_SPECTATOR)
 	{
 		if (cg.snap->ps.fd.forcePowersActive & (1 << FP_RAGE))
 		{
@@ -10363,7 +10458,7 @@ void CG_Draw2D( void ) {
 		return;
 	}
 
-	if (cgs.clientinfo[cg.snap->ps.clientNum].team == TEAM_SPECTATOR)
+	if (cgs.clientinfo[cg.snap->ps.clientNum].team == FACTION_SPECTATOR)
 	{
 		cgRageTime = 0;
 		cgRageFadeTime = 0;
@@ -10440,7 +10535,7 @@ void CG_Draw2D( void ) {
 		return;
 	}
 */
-	if ( cg.snap->ps.persistant[PERS_TEAM] == TEAM_SPECTATOR ) {
+	if ( cg.snap->ps.persistant[PERS_TEAM] == FACTION_SPECTATOR ) {
 		CG_DrawSpectator();
 		CG_DrawCrosshair(NULL, 0);
 		//CG_DrawCrosshairNames(); // UQ1: Now use NPC style display of names...
@@ -10653,7 +10748,7 @@ void CG_Draw2D( void ) {
 	}
 	else if (cgSiegeRoundBeganTime)
 	{ //Draw how much time is left in the round based on local info.
-		int timedTeam = TEAM_FREE;
+		int timedTeam = FACTION_FREE;
 		int timedValue = 0;
 
 		if (cgSiegeEntityRender)
@@ -10663,7 +10758,7 @@ void CG_Draw2D( void ) {
 
 		if (team1Timed)
 		{
-			timedTeam = TEAM_RED; //team 1
+			timedTeam = FACTION_EMPIRE; //team 1
 			if (cg_beatingSiegeTime)
 			{
 				timedValue = cg_beatingSiegeTime;
@@ -10675,7 +10770,7 @@ void CG_Draw2D( void ) {
 		}
 		else if (team2Timed)
 		{
-			timedTeam = TEAM_BLUE; //team 2
+			timedTeam = FACTION_REBEL; //team 2
 			if (cg_beatingSiegeTime)
 			{
 				timedValue = cg_beatingSiegeTime;
@@ -10686,7 +10781,7 @@ void CG_Draw2D( void ) {
 			}
 		}
 
-		if (timedTeam != TEAM_FREE)
+		if (timedTeam != FACTION_FREE)
 		{ //one of the teams has a timer
 			int timeRemaining;
 			qboolean isMyTeam = qfalse;
@@ -10830,7 +10925,7 @@ void CG_DrawActive( stereoFrame_t stereoView ) {
 
 	// optionally draw the tournament scoreboard instead
 	if ( !drawingSniperScopeView &&
-		cg.snap->ps.persistant[PERS_TEAM] == TEAM_SPECTATOR &&
+		cg.snap->ps.persistant[PERS_TEAM] == FACTION_SPECTATOR &&
 		( cg.snap->ps.pm_flags & PMF_SCOREBOARD ) ) {
 		CG_DrawTourneyScoreboard();
 		return;

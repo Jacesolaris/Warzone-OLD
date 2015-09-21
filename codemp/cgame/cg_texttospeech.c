@@ -198,7 +198,7 @@ qboolean CG_IsSith(centity_t *ent, team_t team)
 {
 	clientInfo_t	*ci = CG_GetClientInfoForEnt(ent);
 
-	if (team == TEAM_RED && ent->currentState.primaryWeapon == WP_SABER) 
+	if (team == FACTION_EMPIRE && ent->currentState.primaryWeapon == WP_SABER) 
 		return qtrue;
 
 	if (!ci) return qfalse;

@@ -772,11 +772,15 @@ void CG_ReattachLimb(centity_t *source)
 
 const char *CG_TeamName(int team)
 {
-	if (team==TEAM_RED)
-		return "RED";
-	else if (team==TEAM_BLUE)
-		return "BLUE";
-	else if (team==TEAM_SPECTATOR)
+	if (team==FACTION_EMPIRE)
+		return "Empire";
+	else if (team==FACTION_REBEL)
+		return "Rebel";
+	else if (team==FACTION_MANDALORIAN)
+		return "Mandalorian";
+	else if (team==FACTION_MERC)
+		return "Merc";
+	else if (team==FACTION_SPECTATOR)
 		return "SPECTATOR";
 	return "FREE";
 }
@@ -1808,7 +1812,7 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 	case EV_GLOBAL_DUEL:
 		DEBUGNAME("EV_GLOBAL_DUEL");
 		//used for beginning of power duels
-		//if (cg.predictedPlayerState.persistant[PERS_TEAM] != TEAM_SPECTATOR)
+		//if (cg.predictedPlayerState.persistant[PERS_TEAM] != FACTION_SPECTATOR)
 		if (es->otherEntityNum == cg.predictedPlayerState.clientNum ||
 			es->otherEntityNum2 == cg.predictedPlayerState.clientNum ||
 			es->groundEntityNum == cg.predictedPlayerState.clientNum)
