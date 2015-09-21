@@ -4698,7 +4698,7 @@ void NPC_InitGame( void )
 //	NPC_InitAnimTable();
 	/*
 	ResetTeamCounters();
-	for ( int team = NPCFACTION_FREE; team < NPCFACTION_NUM_FACTIONS; team++ )
+	for ( int team = NPCTEAM_FREE; team < NPCFACTION_NUM_FACTIONS; team++ )
 	{
 		teamLastEnemyTime[team] = -10000;
 	}

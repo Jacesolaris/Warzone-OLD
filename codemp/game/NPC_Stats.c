@@ -14,7 +14,7 @@ extern qboolean BG_FileExists(const char *fileName);
 
 stringID_table_t TeamTable[] =
 {
-	ENUM2STRING(NPCFACTION_FREE),			// caution, some code checks a team_t via "if (!team_t_varname)" so I guess this should stay as entry 0, great or what? -slc
+	ENUM2STRING(NPCTEAM_FREE),			// caution, some code checks a team_t via "if (!team_t_varname)" so I guess this should stay as entry 0, great or what? -slc
 	ENUM2STRING(NPCTEAM_PLAYER),
 	ENUM2STRING(NPCTEAM_ENEMY),
 	ENUM2STRING(NPCTEAM_MANDALORIANS),
@@ -257,7 +257,7 @@ team_t TranslateTeamName( const char *name )
 {
 	int n;
 
-	for ( n = (NPCFACTION_FREE + 1); n < NPCFACTION_NUM_FACTIONS; n++ )
+	for ( n = (NPCTEAM_FREE + 1); n < NPCFACTION_NUM_FACTIONS; n++ )
 	{
 		if ( Q_stricmp( TeamNames[n], name ) == 0 )
 		{
@@ -265,7 +265,7 @@ team_t TranslateTeamName( const char *name )
 		}
 	}
 
-	return NPCFACTION_FREE;
+	return NPCTEAM_FREE;
 }
 
 class_t TranslateClassName( const char *name )
@@ -580,7 +580,7 @@ Precaches NPC skins, tgas and md3s.
 */
 void NPC_Precache ( gentity_t *spawner )
 {
-	npcteam_t	playerTeam = NPCFACTION_FREE;
+	npcteam_t	playerTeam = NPCTEAM_FREE;
 	const char	*token;
 	const char	*value;
 	const char	*p;

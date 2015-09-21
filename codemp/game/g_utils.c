@@ -794,7 +794,7 @@ angles and bad trails.
 =================
 */
 gentity_t *G_Spawn( void ) {
-	int			i, force;
+	int			i;//, force;
 	gentity_t	*e;
 
 	e = NULL;	// shut up warning

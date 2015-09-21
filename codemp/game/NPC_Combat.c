@@ -69,7 +69,7 @@ qboolean G_TeamEnemy( gentity_t *self )
 	int	i;
 	gentity_t	*ent;
 
-	if ( !self->client || self->client->playerTeam == NPCFACTION_FREE )
+	if ( !self->client || self->client->playerTeam == NPCTEAM_FREE )
 	{
 		return qfalse;
 	}
@@ -1462,8 +1462,8 @@ qboolean ValidEnemy(gentity_t *ent)
 					entTeam = NPCTEAM_NEUTRAL;
 				}
 			}
-			if( entTeam == NPCFACTION_FREE
-				|| NPCS.NPC->client->enemyTeam == NPCFACTION_FREE
+			if( entTeam == NPCTEAM_FREE
+				|| NPCS.NPC->client->enemyTeam == NPCTEAM_FREE
 				|| entTeam == NPCS.NPC->client->enemyTeam )
 			{
 				if ( entTeam != NPCS.NPC->client->playerTeam )

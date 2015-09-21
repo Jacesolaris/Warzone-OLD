@@ -6941,7 +6941,7 @@ qboolean Jedi_InSpecialMove( void )
 			if ( NPCS.NPC->useDebounceTime <= level.time )
 			{
 				//this should damage everyone - FIXME: except other destroyers?
-				NPCS.NPC->client->playerTeam = NPCFACTION_FREE;//FIXME: will this destroy wampas, tusken & rancors?
+				NPCS.NPC->client->playerTeam = NPCTEAM_FREE;//FIXME: will this destroy wampas, tusken & rancors?
 				NPCS.NPC->splashDamage = 200;	// rough match to SP
 				NPCS.NPC->splashRadius = 512;	// see above
 				WP_Explode( NPCS.NPC );

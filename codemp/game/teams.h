@@ -2,7 +2,7 @@
 
 typedef enum //# team_e
 {
-	NPCFACTION_FREE,			// also FACTION_FREE - caution, some code checks a team_t via "if (!team_t_varname)" so I guess this should stay as entry 0, great or what? -slc
+	NPCTEAM_FREE,			// also FACTION_FREE - caution, some code checks a team_t via "if (!team_t_varname)" so I guess this should stay as entry 0, great or what? -slc
 	NPCTEAM_ENEMY,			// also FACTION_EMPIRE
 	NPCTEAM_PLAYER,			// also FACTION_REBEL
 	NPCTEAM_MANDALORIANS,

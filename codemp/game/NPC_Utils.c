@@ -1223,7 +1223,7 @@ qboolean NPC_ValidEnemy( gentity_t *ent )
 
 	if ( ent->client )
 	{// Special client checks...
-		if (NPCS.NPC->client->enemyTeam == NPCFACTION_FREE && ent->client->NPC_class != NPCS.NPC->client->NPC_class )
+		if (NPCS.NPC->client->enemyTeam == NPCTEAM_FREE && ent->client->NPC_class != NPCS.NPC->client->NPC_class )
 		{//I get mad at anyone and this guy isn't the same class as me
 			return qtrue;
 		}
@@ -1294,9 +1294,9 @@ qboolean NPC_ValidEnemy( gentity_t *ent )
 	}
 #endif
 
-	if (entTeam == NPCFACTION_FREE 
+	if (entTeam == NPCTEAM_FREE 
 		&& ent->client
-		&& ent->client->enemyTeam == NPCFACTION_FREE 
+		&& ent->client->enemyTeam == NPCTEAM_FREE 
 		&& ent->enemy 
 		&& ent->enemy->client 
 		&& (ent->enemy->client->playerTeam == NPCS.NPC->client->playerTeam || (ent->enemy->client->playerTeam != NPCTEAM_ENEMY && NPCS.NPC->client->playerTeam == NPCTEAM_PLAYER)))
@@ -1492,7 +1492,7 @@ qboolean NPC_ValidEnemy2( gentity_t *self, gentity_t *ent )
 
 	if ( ent->client )
 	{// Special client checks...
-		if (self->client->enemyTeam == NPCFACTION_FREE && ent->client->NPC_class != self->client->NPC_class )
+		if (self->client->enemyTeam == NPCTEAM_FREE && ent->client->NPC_class != self->client->NPC_class )
 		{//I get mad at anyone and this guy isn't the same class as me
 			return qtrue;
 		}
@@ -1563,9 +1563,9 @@ qboolean NPC_ValidEnemy2( gentity_t *self, gentity_t *ent )
 	}
 #endif
 
-	if (entTeam == NPCFACTION_FREE 
+	if (entTeam == NPCTEAM_FREE 
 		&& ent->client
-		&& ent->client->enemyTeam == NPCFACTION_FREE 
+		&& ent->client->enemyTeam == NPCTEAM_FREE 
 		&& ent->enemy 
 		&& ent->enemy->client 
 		&& (ent->enemy->client->playerTeam == self->client->playerTeam || (ent->enemy->client->playerTeam != NPCTEAM_ENEMY && self->client->playerTeam == NPCTEAM_PLAYER)))

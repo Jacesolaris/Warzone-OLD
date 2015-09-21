@@ -5462,7 +5462,7 @@ void NPC_Kill_f( void )
 	int			n;
 	gentity_t	*player;
 	char		name[1024];
-	npcteam_t	killTeam = NPCFACTION_FREE;
+	npcteam_t	killTeam = NPCTEAM_FREE;
 	qboolean	killNonSF = qfalse;
 
 	trap->Argv(2, name, 1024);
@@ -5502,7 +5502,7 @@ void NPC_Kill_f( void )
 		{
 			killTeam = GetIDForString( TeamTable, name );
 
-			if ( killTeam == NPCFACTION_FREE )
+			if ( killTeam == NPCTEAM_FREE )
 			{
 				Com_Printf( S_COLOR_RED"NPC_Kill Error: team '%s' not recognized\n", name );
 				Com_Printf( S_COLOR_RED"Valid team names are:\n");
@@ -5549,7 +5549,7 @@ void NPC_Kill_f( void )
 		}
 		else if ( player && player->NPC && player->client )
 		{
-			if ( killTeam != NPCFACTION_FREE )
+			if ( killTeam != NPCTEAM_FREE )
 			{
 				if ( player->client->playerTeam == killTeam )
 				{

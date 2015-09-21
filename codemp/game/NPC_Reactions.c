@@ -359,7 +359,7 @@ NPC_Pain
 */
 void NPC_Pain(gentity_t *self, gentity_t *attacker, int damage)
 {
-	npcteam_t otherTeam = NPCFACTION_FREE;
+	npcteam_t otherTeam = NPCTEAM_FREE;
 	int		voiceEvent = -1;
 	gentity_t *other = attacker;
 	int mod = gPainMOD;
