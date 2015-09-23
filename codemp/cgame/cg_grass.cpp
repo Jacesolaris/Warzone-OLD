@@ -20,6 +20,9 @@ extern "C" {
 #define			__USE_CLOSE_FOV_TREE_CULL__ // Can help FPS a lot in dense tree areas...
 //#define		 __DEBUG_CLOSE_TREE_CULL__
 
+//#define			__USE_PVS_CULLS__
+//#define			__DEBUG_PVS_CULLS__
+
 //#define		__NO_GRASS_AT_TREES__ // Don't draw grass at the same position as a tree (for FPS)... Little impact..
 //#define		__NO_GRASS_AT_PLANTS__ // Don't draw grass at the same position as a plant (for FPS)... Little impact..
 
@@ -621,6 +624,10 @@ extern "C" {
 #ifdef __DEBUG_CLOSE_FOV_CULLS__
 		int NUM_CLOSE_FOV_TREE_CULLS = 0;
 #endif //__DEBUG_CLOSE_FOV_CULLS__
+		
+#ifdef __DEBUG_PVS_CULLS__
+		int NUM_PVS_CULLS = 0;
+#endif //__DEBUG_PVS_CULLS__
 
 		for (int spot = 0; spot < IN_RANGE_FOLIAGES_COUNT; spot++)
 		{// Draw anything closeish to us...
@@ -704,6 +711,16 @@ extern "C" {
 #endif //__USE_CLOSE_FOV_TREE_CULL__
 			}
 
+#ifdef __USE_PVS_CULLS__
+			if( !trap->R_InPVS( FOLIAGE_POSITIONS[IN_RANGE_FOLIAGES[spot]], viewOrg, cg.refdef.areamask ) ) 
+			{
+#ifdef __DEBUG_PVS_CULLS__
+				NUM_PVS_CULLS++;
+#endif //__DEBUG_PVS_CULLS__
+				continue;
+			}
+#endif //__USE_PVS_CULLS__
+
 			VISIBLE_FOLIAGES[VISIBLE_FOLIAGES_COUNT] = IN_RANGE_FOLIAGES[spot];
 			
 			if (treeOnly)
@@ -717,6 +734,9 @@ extern "C" {
 #ifdef __DEBUG_CLOSE_FOV_CULLS__
 		trap->Print("Foliage CLOSE FOV culls: %i.\n", NUM_CLOSE_FOV_TREE_CULLS);
 #endif //__DEBUG_CLOSE_FOV_CULLS__
+#ifdef __DEBUG_PVS_CULLS__
+		trap->Print("Foliage PVS culls: %i.\n", NUM_PVS_CULLS);
+#endif //__DEBUG_PVS_CULLS__
 
 		for (spot = 0; spot < VISIBLE_FOLIAGES_COUNT; spot++)
 		{
