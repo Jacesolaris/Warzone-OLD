@@ -128,6 +128,7 @@ XCVAR_DEF( cg_thirdPersonTargetDamp,			"0.5",					NULL,					CVAR_ARCHIVE )
 XCVAR_DEF( cg_thirdPersonVertOffset,			"16",					NULL,					CVAR_ARCHIVE )
 XCVAR_DEF( cg_timescaleFadeEnd,					"1",					NULL,					CVAR_NONE )
 XCVAR_DEF( cg_timescaleFadeSpeed,				"0",					NULL,					CVAR_NONE )
+XCVAR_DEF( cg_ttsPlayerVoice,					"1",					NULL,					CVAR_ARCHIVE )
 XCVAR_DEF( cg_trueEyePosition,				    "0.0",					NULL,					CVAR_ARCHIVE)//[TrueView]
 XCVAR_DEF( cg_trueFlip,							"0",					NULL,					CVAR_ARCHIVE)//[TrueView]
 XCVAR_DEF( cg_trueFOV,							"80",					NULL,					CVAR_ARCHIVE)//[TrueView]

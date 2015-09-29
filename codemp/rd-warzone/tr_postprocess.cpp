@@ -2110,6 +2110,8 @@ void RB_SSGI(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 	//GL_BindToTMU(tr.normalImage, TB_NORMALMAP);
 	GLSL_SetUniformInt(shader, UNIFORM_GLOWMAP, TB_GLOWMAP);
 	GL_BindToTMU(tr.anamorphicRenderFBOImage[2], TB_GLOWMAP);
+	GLSL_SetUniformInt(shader, UNIFORM_RANDOMMAP, TB_RANDOMMAP);
+	GL_BindToTMU(tr.randomImage, TB_RANDOMMAP);
 
 	{
 		vec2_t screensize;
@@ -2132,19 +2134,19 @@ void RB_SSGI(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 		GLSL_SetUniformVec4(shader, UNIFORM_VIEWINFO, viewInfo);
 	}
 
-	/*
-	{
+	
+	/*{
 		vec4_t local0;
-		local0[0] = r_ssgi->value;
-		local0[1] = r_ssgiSamples->value;
+		local0[0] = r_testvalue1->value;
+		local0[1] = 0.0;
 		local0[2] = 0.0;
 		local0[3] = 0.0;
 
 		GLSL_SetUniformVec4(shader, UNIFORM_LOCAL0, local0);
 
 		//ri->Printf(PRINT_WARNING, "Sent dimensions %f %f.\n", screensize[0], screensize[1]);
-	}
-	*/
+	}*/
+	
 
 	FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, shader, color, 0);//GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA);
 }

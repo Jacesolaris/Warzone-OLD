@@ -145,6 +145,7 @@ static uniformInfo_t uniformsInfo[] =
 	{ "u_LevelsMap",  GLSL_INT, 1 },
 	{ "u_CubeMap",    GLSL_INT, 1 },
 	{ "u_SubsurfaceMap",    GLSL_INT, 1 },
+	{ "u_RandomMap",    GLSL_INT, 1 },
 	{ "u_GlowMap",   GLSL_INT, 1 },
 
 	{ "u_ScreenImageMap", GLSL_INT, 1 },

@@ -2,6 +2,7 @@ uniform sampler2D u_TextureMap;
 uniform sampler2D u_ScreenDepthMap;
 uniform sampler2D u_NormalMap;
 uniform sampler2D u_GlowMap; // actually saturation map image
+uniform sampler2D u_RandomMap;
 
 varying vec2		var_TexCoords;
 varying vec2		var_Dimensions;
@@ -13,6 +14,8 @@ varying vec4		var_ViewInfo; // zmin, zmax, zmax / zmin
 */
 
 #define PI  3.14159265
+
+#define USE_RANDOMMAP
 
 //#define USE_GLOWMAP
 #define USE_DEPTHMAP
@@ -52,6 +55,16 @@ vec3 SampleNormals(sampler2D normalMap, in vec2 coord)
 #endif //USE_DEPTHMAP
 }
 
+#ifdef USE_RANDOMMAP
+float rand2(vec2 coord)
+{
+	return texture2D(u_RandomMap, coord*vec2(var_Dimensions)*vec2(1./256.)).r;
+}
+
+float rand(vec2 co){
+	return texture2D(u_RandomMap, co*vec2(var_Dimensions)*vec2(1./256.)).b;
+}
+#else //!USE_RANDOMMAP
 float rand2(vec2 coord) //generating noise/pattern texture for dithering
 {
 	float noise = ((fract(1.0-coord.s*(var_Dimensions.x/2.0))*0.25)+(fract(coord.t*(var_Dimensions.y/2.0))*0.75))*2.0-1.0;
@@ -62,6 +75,7 @@ float rand2(vec2 coord) //generating noise/pattern texture for dithering
 float rand(vec2 co){
 	return 0.5+(fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453))*0.5;
 }
+#endif //USE_RANDOMMAP
 
 vec3 CalculateFlare ( vec3 flare_color, vec3 final_color )
 {

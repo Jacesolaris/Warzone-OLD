@@ -1616,7 +1616,7 @@ static void CG_Chat_f( void ) {
 			CG_RemoveChatEscapeChar( text );
 			CG_ChatBox_AddString( text );
 			trap->Print( "*%s\n", text );
-			TextToSpeech(text, "chatvoice", cg.clientNum, cg.snap->ps.origin);
+			if (cg_ttsPlayerVoice.integer) TextToSpeech(text, "chatvoice", cg.clientNum, cg.snap->ps.origin);
 		}
 	}
 	else if ( !strcmp( cmd, "lchat" ) ) {
@@ -1642,7 +1642,7 @@ static void CG_Chat_f( void ) {
 			CG_RemoveChatEscapeChar( text );
 			CG_ChatBox_AddString( text );
 			trap->Print( "*%s\n", text );
-			TextToSpeech(text, "chatvoice", cg.clientNum, cg.snap->ps.origin);
+			if (cg_ttsPlayerVoice.integer) TextToSpeech(text, "chatvoice", cg.clientNum, cg.snap->ps.origin);
 		}
 	}
 	else if ( !strcmp( cmd, "tchat" ) ) {
@@ -1652,7 +1652,7 @@ static void CG_Chat_f( void ) {
 		CG_RemoveChatEscapeChar( text );
 		CG_ChatBox_AddString( text );
 		trap->Print( "*%s\n", text );
-		TextToSpeech(text, "chatvoice", cg.clientNum, cg.snap->ps.origin);
+		if (cg_ttsPlayerVoice.integer) TextToSpeech(text, "chatvoice", cg.clientNum, cg.snap->ps.origin);
 	}
 	else if ( !strcmp( cmd, "ltchat" ) ) {
 		char	name[MAX_NETNAME]={0},	loc[MAX_STRING_CHARS]={0},
@@ -1676,7 +1676,7 @@ static void CG_Chat_f( void ) {
 		CG_RemoveChatEscapeChar( text );
 		CG_ChatBox_AddString( text );
 		trap->Print( "*%s\n", text );
-		TextToSpeech(text, "chatvoice", cg.clientNum, cg.snap->ps.origin);
+		if (cg_ttsPlayerVoice.integer) TextToSpeech(text, "chatvoice", cg.clientNum, cg.snap->ps.origin);
 	}
 }
 

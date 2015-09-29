@@ -788,8 +788,9 @@ enum
 	TB_SHADOWMAP		= 5,
 	TB_CUBEMAP			= 6,
 	TB_SUBSURFACEMAP    = 7,
-	TB_GLOWMAP			= 8,
-	NUM_TEXTURE_BUNDLES = 9
+	TB_RANDOMMAP		= 8,
+	TB_GLOWMAP			= 9,
+	NUM_TEXTURE_BUNDLES = 10
 };
 
 typedef enum
@@ -1190,6 +1191,7 @@ typedef enum
 	UNIFORM_LEVELSMAP,
 	UNIFORM_CUBEMAP,
 	UNIFORM_SUBSURFACEMAP,
+	UNIFORM_RANDOMMAP,
 	UNIFORM_GLOWMAP,
 
 	UNIFORM_SCREENIMAGEMAP,
@@ -2249,6 +2251,7 @@ typedef struct trGlobals_s {
 	image_t					*flareImage;
 	image_t					*whiteImage;			// full of 0xff
 	image_t					*identityLightImage;	// full of tr.identityLightByte
+	image_t					*randomImage;
 
 	image_t                 *shadowCubemaps[MAX_DLIGHTS];
 	

@@ -1386,6 +1386,11 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				GLSL_SetUniformVec4(sp, UNIFORM_LOCAL0, loc0);
 				RB_SetMaterialBasedProperties(sp, pStage);
 
+				GLSL_SetUniformInt(sp, UNIFORM_RANDOMMAP, TB_RANDOMMAP);
+				GL_BindToTMU(tr.randomImage, TB_RANDOMMAP);
+				GLSL_SetUniformInt(sp, UNIFORM_SCREENDEPTHMAP, TB_LEVELSMAP);
+				GL_BindToTMU(tr.renderDepthImage, TB_LEVELSMAP);
+
 				isGeneric = qfalse;
 			}
 			else
