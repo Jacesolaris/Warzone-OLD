@@ -921,7 +921,7 @@ extern "C" {
 #define FOLIAGE_MOD_NAME		"aimod"
 float	FOLIAGE_FILE_VERSION =	1.1f;
 
-	void FOLIAGE_GenerateFoliage_Real ( qboolean USE_WAYPOINTS, float density )
+	void FOLIAGE_GenerateFoliage_Real ( qboolean USE_WAYPOINTS, float density, qboolean ADD_MORE )
 	{
 		fileHandle_t	f;
 		int				i, j;
@@ -948,18 +948,21 @@ float	FOLIAGE_FILE_VERSION =	1.1f;
 			return;
 		}
 
-		FOLIAGE_NUM_POSITIONS = 0;
+		if (!ADD_MORE)
+		{
+			FOLIAGE_NUM_POSITIONS = 0;
 
-		for (i = 0; i < FOLIAGE_MAX_FOLIAGES; i++)
-		{// Make sure our list is empty...
-			FOLIAGE_GRASS_SELECTION[i] = 0;
-			FOLIAGE_PLANT_SELECTION[i] = 0;
-			FOLIAGE_TREE_SELECTION[i] = 0;
+			for (i = 0; i < FOLIAGE_MAX_FOLIAGES; i++)
+			{// Make sure our list is empty...
+				FOLIAGE_GRASS_SELECTION[i] = 0;
+				FOLIAGE_PLANT_SELECTION[i] = 0;
+				FOLIAGE_TREE_SELECTION[i] = 0;
+			}
 		}
 
 		i = 0;
 
-		if (USE_WAYPOINTS)
+		if (USE_WAYPOINTS && !ADD_MORE)
 		{
 			///////////////////
 			//open the node file for reading, return false on error
@@ -1358,13 +1361,16 @@ float	FOLIAGE_FILE_VERSION =	1.1f;
 
 			aw_percent_complete = 0.0f;
 
-			FOLIAGE_NUM_POSITIONS = 0;
+			if (!ADD_MORE) 
+			{
+				FOLIAGE_NUM_POSITIONS = 0;
 
-			for (i = 0; i < FOLIAGE_MAX_FOLIAGES; i++)
-			{// Make sure our list is empty...
-				FOLIAGE_GRASS_SELECTION[i] = 0;
-				FOLIAGE_PLANT_SELECTION[i] = 0;
-				FOLIAGE_TREE_SELECTION[i] = 0;
+				for (i = 0; i < FOLIAGE_MAX_FOLIAGES; i++)
+				{// Make sure our list is empty...
+					FOLIAGE_GRASS_SELECTION[i] = 0;
+					FOLIAGE_PLANT_SELECTION[i] = 0;
+					FOLIAGE_TREE_SELECTION[i] = 0;
+				}
 			}
 
 			if (grassSpotCount > 0)
@@ -1477,6 +1483,7 @@ float	FOLIAGE_FILE_VERSION =	1.1f;
 			trap->Print( "^4*** ^3AUTO-FOLIAGE^4: ^5Available methods are:\n" );
 			trap->Print( "^4*** ^3AUTO-FOLIAGE^4: ^3\"standard\" ^5- Standard method. Allows you to set a density.\n");
 			trap->Print( "^4*** ^3AUTO-FOLIAGE^4: ^3\"waypoints\" ^5- Use waypoint locations. Density is ignored.\n");
+			trap->Print( "^4*** ^3AUTO-FOLIAGE^4: ^3\"add\" ^5- Standard method. Allows you to set a density. This one adds to current list of foliages.\n");
 			trap->UpdateScreen();
 			return;
 		}
@@ -1498,16 +1505,38 @@ float	FOLIAGE_FILE_VERSION =	1.1f;
 					trap->Print( "^4*** ^3AUTO-FOLIAGE^4: ^7Warning: ^5Invalid density set (%i). Using default (%i)...\n", atoi(str), 32 );
 				}
 
-				FOLIAGE_GenerateFoliage_Real(qfalse, (float)dist);
+				FOLIAGE_GenerateFoliage_Real(qfalse, (float)dist, qfalse);
 			}
 			else
 			{
-				FOLIAGE_GenerateFoliage_Real(qfalse, 32.0);
+				FOLIAGE_GenerateFoliage_Real(qfalse, 32.0, qfalse);
 			}
 		}
 		else if ( Q_stricmp( str, "waypoints") == 0 )
 		{
-			FOLIAGE_GenerateFoliage_Real(qtrue, 32.0);
+			FOLIAGE_GenerateFoliage_Real(qtrue, 32.0, qfalse);
+		}
+		else if ( Q_stricmp( str, "add") == 0 )
+		{
+			if ( trap->Cmd_Argc() >= 2 )
+			{// Override normal density...
+				int dist = 32;
+
+				trap->Cmd_Argv( 2, str, sizeof(str) );
+				dist = atoi(str);
+
+				if (dist <= 4)
+				{// Fallback and warning...
+					dist = 32;
+					trap->Print( "^4*** ^3AUTO-FOLIAGE^4: ^7Warning: ^5Invalid density set (%i). Using default (%i)...\n", atoi(str), 32 );
+				}
+
+				FOLIAGE_GenerateFoliage_Real(qfalse, (float)dist, qtrue);
+			}
+			else
+			{
+				FOLIAGE_GenerateFoliage_Real(qfalse, 32.0, qtrue);
+			}
 		}
 	}
 }
