@@ -1,4 +1,5 @@
 uniform sampler2D u_ScreenDepthMap;
+uniform sampler2D u_RandomMap;
 
 uniform sampler2D u_ShadowMap;
 #if defined(USE_SHADOW_CASCADE)
@@ -18,6 +19,8 @@ uniform vec4   u_ViewInfo; // zfar / znear, zfar
 varying vec2   var_DepthTex;
 varying vec3   var_ViewDir;
 
+#define USE_RANDOMMAP
+
 // depth is GL_DEPTH_COMPONENT24
 // so the maximum error is 1.0 / 2^24
 #define DEPTH_MAX_ERROR 0.000000059604644775390625
@@ -30,6 +33,9 @@ varying vec3   var_ViewDir;
 
 float random( const vec2 p )
 {
+#ifdef USE_RANDOMMAP
+	return texture2D(u_RandomMap, (p/r_shadowMapSize)*vec2(1./256.)).b;
+#else //!USE_RANDOMMAP
   // We need irrationals for pseudo randomness.
   // Most (all?) known transcendental numbers will (generally) work.
   const vec2 r = vec2(
@@ -37,6 +43,7 @@ float random( const vec2 p )
      2.6651441426902251); // 2^sqrt(2) (Gelfond-Schneider constant)
   //return fract( cos( mod( 123456789., 1e-7 + 256. * dot(p,r) ) ) );
   return mod( 123456789., 1e-7 + 256. * dot(p,r) );  
+#endif //USE_RANDOMMAP
 }
 
 float PCF(const sampler2D shadowmap, const vec2 st, const float dist)
@@ -128,6 +135,6 @@ void main()
 	}
 #endif
 		
-	//gl_FragColor = vec4(vec3(result), 1.0);
-	gl_FragColor = vec4(vec3(result), 0.5);
+	gl_FragColor = vec4(vec3(result), 1.0);
+	//gl_FragColor = vec4(vec3(result), 0.5);
 }

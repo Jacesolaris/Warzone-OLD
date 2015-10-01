@@ -1389,7 +1389,7 @@ void R_Register( void )
 
 	r_sunShadows = ri->Cvar_Get( "r_sunShadows", "0", CVAR_ARCHIVE | CVAR_LATCH );
 	r_shadowFilter = ri->Cvar_Get( "r_shadowFilter", "1", CVAR_ARCHIVE | CVAR_LATCH );
-	r_shadowMapSize = ri->Cvar_Get( "r_shadowMapSize", "1024", CVAR_ARCHIVE | CVAR_LATCH );
+	r_shadowMapSize = ri->Cvar_Get( "r_shadowMapSize", "2048", CVAR_ARCHIVE | CVAR_LATCH );
 	r_shadowCascadeZNear = ri->Cvar_Get( "r_shadowCascadeZNear", "4", CVAR_ARCHIVE | CVAR_LATCH );
 	r_shadowCascadeZFar = ri->Cvar_Get( "r_shadowCascadeZFar", "3072", CVAR_ARCHIVE | CVAR_LATCH );
 	r_shadowCascadeZBias = ri->Cvar_Get( "r_shadowCascadeZBias", "-320", CVAR_ARCHIVE | CVAR_LATCH );
@@ -1547,7 +1547,7 @@ void R_Register( void )
 	r_ignore = ri->Cvar_Get( "r_ignore", "1", CVAR_CHEAT );
 	r_nocull = ri->Cvar_Get ("r_nocull", "0", CVAR_CHEAT);
 	r_entityCull = ri->Cvar_Get ("r_entityCull", "1", CVAR_CHEAT);
-	r_fovCull = ri->Cvar_Get ("r_fovCull", "1", CVAR_CHEAT);
+	r_fovCull = ri->Cvar_Get ("r_fovCull", "0", CVAR_CHEAT);
 	r_novis = ri->Cvar_Get ("r_novis", "0", CVAR_CHEAT);
 	r_showcluster = ri->Cvar_Get ("r_showcluster", "0", CVAR_CHEAT);
 	r_speeds = ri->Cvar_Get ("r_speeds", "0", CVAR_CHEAT);

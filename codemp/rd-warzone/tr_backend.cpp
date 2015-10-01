@@ -1366,6 +1366,9 @@ const void	*RB_DrawSurfs( const void *data ) {
 			GL_BindToTMU(tr.sunShadowDepthImage[0], TB_SHADOWMAP);
 			GL_BindToTMU(tr.sunShadowDepthImage[1], TB_SHADOWMAP2);
 			GL_BindToTMU(tr.sunShadowDepthImage[2], TB_SHADOWMAP3);
+			
+			GLSL_SetUniformInt(&tr.shadowmaskShader, UNIFORM_RANDOMMAP, TB_RANDOMMAP);
+			GL_BindToTMU(tr.randomImage, TB_RANDOMMAP);
 
 			GLSL_SetUniformMatrix16(&tr.shadowmaskShader, UNIFORM_SHADOWMVP,  backEnd.refdef.sunShadowMvp[0]);
 			GLSL_SetUniformMatrix16(&tr.shadowmaskShader, UNIFORM_SHADOWMVP2, backEnd.refdef.sunShadowMvp[1]);
