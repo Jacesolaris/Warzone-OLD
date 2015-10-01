@@ -2949,6 +2949,7 @@ void R_RenderSunShadowMaps(const refdef_t *fd, int level)
 	qboolean lightViewIndependentOfCameraView = qfalse;
 	qboolean isDlightShadow = qfalse;
 
+#if 0
 	if (r_dlightShadows->integer)
 	{
 		dlight_t	*closestDL = NULL;
@@ -2961,7 +2962,9 @@ void R_RenderSunShadowMaps(const refdef_t *fd, int level)
 			VectorCopy4(tr.refdef.sunDir, lightDir);
 		}
 	}
-	else if (r_forceSun->integer == 2)
+	else 
+#endif
+	if (r_forceSun->integer == 2)
 	{
 		int scale = 32768;
 		float angle = (fd->time % scale) / (float)scale * M_PI;

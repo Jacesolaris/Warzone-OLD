@@ -2368,7 +2368,7 @@ const void *RB_PostProcess(const void *data)
 		FBO_BlitFromTexture(tr.sunRaysImage, NULL, NULL, NULL, dstBox, NULL, NULL, 0);
 	}
 
-	if (tr.refdef.num_dlights && r_dlightMode->integer >= 2)
+	if (0)//tr.refdef.num_dlights && r_dlightMode->integer >= 2)
 	{
 		vec4i_t dstBox;
 		VectorSet4(dstBox, 256, glConfig.vidHeight - 256, 256, 256);

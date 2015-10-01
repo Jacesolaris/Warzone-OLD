@@ -1400,6 +1400,12 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		}
 		else
 		{
+			if (!sp || !sp->program)
+			{
+				pStage->glslShaderGroup = tr.lightallShader;
+				sp = &pStage->glslShaderGroup[0];
+			}
+
 			GLSL_BindProgram(sp);
 
 			RB_SetMaterialBasedProperties(sp, pStage);
@@ -1592,7 +1598,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			int i;
 			vec4_t enableTextures;
 
-			if (r_sunlightMode->integer && (backEnd.viewParms.flags & VPF_USESUNLIGHT) && (pStage->glslShaderIndex & LIGHTDEF_LIGHTTYPE_MASK))
+			if (r_sunlightMode->integer && (backEnd.viewParms.flags & VPF_USESUNLIGHT) /*&& (pStage->glslShaderIndex & LIGHTDEF_LIGHTTYPE_MASK)*/)
 			{
 				GL_BindToTMU(tr.screenShadowImage, TB_SHADOWMAP);
 				GLSL_SetUniformVec3(sp, UNIFORM_PRIMARYLIGHTAMBIENT, backEnd.refdef.sunAmbCol);
