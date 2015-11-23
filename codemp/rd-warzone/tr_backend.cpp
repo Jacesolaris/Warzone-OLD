@@ -2133,6 +2133,12 @@ const void *RB_PostProcess(const void *data)
 		}
 		*/
 
+		if (!SCREEN_BLUR && r_rbm->integer)
+		{
+			RB_RBM(srcFbo, srcBox, tr.genericFbo, dstBox);
+			FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+		}
+
 		if (!SCREEN_BLUR && r_ssao->integer)
 		{
 			RB_SSAO(srcFbo, srcBox, tr.genericFbo, dstBox);
@@ -2189,6 +2195,12 @@ const void *RB_PostProcess(const void *data)
 				RB_FakeDepthParallax(srcFbo, srcBox, tr.genericFbo, dstBox);
 				FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 			}
+		}
+
+		if (r_magicdetail->integer)
+		{
+			RB_MagicDetail(srcFbo, srcBox, tr.genericFbo, dstBox);
+			FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 		}
 
 		if (r_truehdr->integer)

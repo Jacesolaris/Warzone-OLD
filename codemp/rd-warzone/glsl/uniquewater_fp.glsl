@@ -192,180 +192,6 @@ vec2 iResolution = var_Dimensions;
 
 float iGlobalTime = var_Time * 1.3;
 
-#ifdef OLD_WATER
-
-/*
-#define NUM_STEPS		8
-#define PI	 			3.1415
-//#define EPSILON			1e-3
-const float EPSILON		= 1e-3;
-//const float		= 0.1 / iResolution.x;
-const float EPSILON_NRM = 0.1 * tex_offset;
-*/
-
-const int NUM_STEPS = 8;
-const float PI	 	= 3.1415;
-const float EPSILON	= 1e-3;
-const float EPSILON_NRM	= 1.0;//0.1 / iResolution.x;
-
-// sea
-const int ITER_GEOMETRY = 3;
-const int ITER_FRAGMENT = 5;
-const float SEA_HEIGHT = 0.6;
-const float SEA_CHOPPY = 4.0;
-//const float SEA_SPEED = 0.8;
-//const float SEA_FREQ = 0.16;
-const float SEA_SPEED = 0.8;
-const float SEA_FREQ = 0.36;
-const vec3 SEA_BASE = vec3(0.1,0.19,0.22);
-const vec3 SEA_WATER_COLOR = vec3(0.8,0.9,0.6);
-float SEA_TIME = iGlobalTime * SEA_SPEED;
-const mat2 octave_m = mat2(1.6,1.2,-1.2,1.6);
-
-// math
-mat3 fromEuler(vec3 ang) {
-	vec2 a1 = vec2(sin(ang.x),cos(ang.x));
-    vec2 a2 = vec2(sin(ang.y),cos(ang.y));
-    vec2 a3 = vec2(sin(ang.z),cos(ang.z));
-    mat3 m;
-    m[0] = vec3(a1.y*a3.y+a1.x*a2.x*a3.x,a1.y*a2.x*a3.x+a3.y*a1.x,-a2.y*a3.x);
-	m[1] = vec3(-a2.y*a1.x,a1.y*a2.y,a2.x);
-	m[2] = vec3(a3.y*a1.x*a2.x+a1.y*a3.x,a1.x*a3.x-a1.y*a3.y*a2.x,a2.y*a3.y);
-	return m;
-}
-float rand( vec2 p ) {
-	return texture2D(u_RandomMap, p).r;
-}
-float hash( vec2 p ) {
-	float h = dot(p,vec2(127.1,311.7));	
-    return fract(sin(h)*43758.5453123);
-}
-float noise( in vec2 p ) {
-    vec2 i = floor( p );
-    vec2 f = fract( p );	
-	vec2 u = f*f*(3.0-2.0*f);
-    return -1.0+2.0*mix( mix( hash( i + vec2(0.0,0.0) ), 
-                     hash( i + vec2(1.0,0.0) ), u.x),
-                mix( hash( i + vec2(0.0,1.0) ), 
-                     hash( i + vec2(1.0,1.0) ), u.x), u.y);
-}
-
-// lighting
-float diffuser(vec3 n,vec3 l,float p) {
-    return pow(dot(n,l) * 0.4 + 0.6,p);
-}
-float specular(vec3 n,vec3 l,vec3 e,float s) {    
-    float nrm = (s + 8.0) / (3.1415 * 8.0);
-    return pow(max(dot(reflect(e,n),l),0.0),s) * nrm;
-}
-
-// sea
-float sea_octave(vec2 uv, float choppy) {
-    uv += noise(uv);        
-    vec2 wv = 1.0-abs(sin(uv));
-    vec2 swv = abs(cos(uv));    
-    wv = mix(wv,swv,wv);
-    //return pow(1.0-pow(wv.x * wv.y,0.65),choppy);
-	return pow(1.0-pow(wv.x * wv.y,0.65),choppy) * 0.3;
-}
-
-float map(vec3 p) {
-    float freq = SEA_FREQ;
-    float amp = SEA_HEIGHT;
-    float choppy = SEA_CHOPPY;
-    vec2 uv = p.xz;
-
-	uv = (uv + rand(uv.xy)) / 2.0;
-	
-	uv.x *= 0.75;
-
-    float d, h = 0.0;    
-    for(int i = 0; i < ITER_GEOMETRY; i++) {        
-    	d = sea_octave((uv+SEA_TIME)*freq,choppy);
-    	d += sea_octave((uv-SEA_TIME)*freq,choppy);
-        h += d * amp;        
-    	uv *= octave_m; freq *= 1.9; amp *= 0.22;
-        choppy = mix(choppy,1.0,0.2);
-    }
-    return p.y - h;
-}
-
-float map_detailed(vec3 p, float scale) {
-    float freq = SEA_FREQ * scale;
-    float amp = SEA_HEIGHT * scale;
-    float choppy = SEA_CHOPPY * scale;
-    vec2 uv = p.xz; uv.x *= 0.75;
-    
-    float d, h = 0.0;    
-    for(int i = 0; i < ITER_FRAGMENT; i++) {        
-    	d = sea_octave((uv+SEA_TIME)*freq,choppy);
-    	d += sea_octave((uv-SEA_TIME)*freq,choppy);
-        h += d * amp;        
-    	uv *= octave_m; freq *= 1.9; amp *= 0.22;
-        choppy = mix(choppy,1.0,0.2);
-    }
-    return p.y - h;
-}
-
-vec3 getSeaColor(vec3 p, vec3 n, vec3 l, vec3 eye, vec3 dist) {  
-    float fresnel = 1.0 - max(dot(n,-eye),0.0);
-    fresnel = pow(fresnel,3.0) * 0.65;
-        
-    //vec3 reflected = getSkyColor(reflect(eye,n));    
-	vec3 reflected = vec3(0.2, 0.3, 0.5);
-    vec3 refracted = SEA_BASE + diffuser(n,l,80.0) * SEA_WATER_COLOR * 0.12; 
-    
-    vec3 color = mix(refracted,reflected,fresnel);
-    
-    float atten = max(1.0 - dot(dist,dist) * 0.001, 0.0);
-    color += SEA_WATER_COLOR * (p.y - SEA_HEIGHT) * 0.18 * atten;
-    
-    color += vec3(specular(n,l,eye,60.0));
-    
-    return color;
-}
-
-// tracing
-vec3 getNormal(vec3 p, float eps, float scale) {
-    vec3 n;
-    n.y = map_detailed(p, scale);    
-    n.x = map_detailed(vec3(p.x+eps,p.y,p.z), scale) - n.y;
-    n.z = map_detailed(vec3(p.x,p.y,p.z+eps), scale) - n.y;
-    n.y = eps;
-    return normalize(n);
-}
-
-float heightMapTracing(vec3 ori, vec3 dir, out vec3 p) {  
-    float tm = 0.0;
-    float tx = 1000.0;    
-    float hx = map(ori + dir * tx);
-    
-	//if(hx > 0.0) return tx;   
-	if(hx > 0.0) hx = 0.0 - hx;
-
-    float hm = map(ori + dir * tm);    
-    float tmid = 0.0;
-
-	//if(hm > 0.0) hm = 0.0 - hm;
-
-    for(int i = 0; i < NUM_STEPS; i++) {
-        tmid = mix(tm,tx, hm/(hm-hx));                   
-        p = ori + dir * tmid;                   
-    	float hmid = map(p);
-		if(hmid < 0.0) {
-        	tx = tmid;
-            hx = hmid;
-        } else {
-            tm = tmid;
-            hm = hmid;
-        }
-    }
-
-    return tmid;
-}
-
-#else //!OLD_WATER
-
 float coast2water_fadedepth = 0.10;
 float large_waveheight      = 0.;//0.50; // change to adjust the "heavy" waves
 float large_wavesize        = 0.;//4.;  // factor to adjust the large wave size
@@ -515,8 +341,9 @@ vec3 CalcTerrain(vec2 uv, float height)
   return col;
 }
 
+vec3 DETAILED_NORMAL = vec3(0.0);
 
-vec4 doWater( in vec2 fragCoord )
+vec4 doWater( in vec2 fragCoord, in mat3 tangentToWorld )
 {
 	vec2 uv = (fragCoord.xy - vec2(-0.12, +0.25));
 
@@ -549,6 +376,14 @@ vec4 doWater( in vec2 fragCoord )
         float h4 = water_map(pos+dif.yx,waveheight);
         vec3 normwater = normalize(vec3(h3-h4, h1-h2, .125)); // norm-vector of the 'bumpy' water-plane
         uv += normwater.xy*.002*(level-height);
+
+		//DETAILED_NORMAL = clamp(var_Normal + vec3(h3-h4, h1-h2, .125), -1.0, 1.0);
+		DETAILED_NORMAL = clamp(vec3(h3-h4, h1-h2, .125), -1.0, 1.0);
+		//DETAILED_NORMAL = var_Normal;
+		//DETAILED_NORMAL = normwater;
+		//DETAILED_NORMAL = normwater * 2.0 - 1.0;
+		//DETAILED_NORMAL = normwater * 0.5 + 0.5;
+		DETAILED_NORMAL *= tangentToWorld;
         
         col = CalcTerrain(uv, height);
 
@@ -576,14 +411,13 @@ vec4 doWater( in vec2 fragCoord )
     
 	return vec4(col , 1.0);
 }
-#endif //OLD_WATER
 
 void main()
 {
 	vec3 viewDir, lightColor, ambientColor;
+	vec4 specular = vec4(1.0);
 	vec3 L, N, E, H;
 	//vec3 NORMAL = vec3(1.0);
-	vec3 DETAILED_NORMAL = vec3(1.0);
 	float NL, NH, NE, EH, attenuation;
 	vec2 tex_offset = vec2(1.0 / var_Dimensions.x, 1.0 / var_Dimensions.y);
 
@@ -619,16 +453,10 @@ void main()
 
 	N = tangentToWorld * N;
 
-	vec3 normal = texture2D(u_NormalMap, texCoords).xyz;
-	
-	//DETAILED_NORMAL = var_Normal.xyz /** normal*/ * 0.5 + 0.5;
-	//DETAILED_NORMAL = normalize(((var_Normal.xyz + normal) * 0.5) * 2.0 - 1.0);
-	DETAILED_NORMAL = normalize(normal * 2.0 - 1.0);
-	//DETAILED_NORMAL = normalize(normal * 0.5 + 0.5);
-	DETAILED_NORMAL = tangentToWorld * DETAILED_NORMAL;
-
-	//NORMAL = normalize(var_Normal.xyz * 2.0 - 1.0);
-	//NORMAL = tangentToWorld * NORMAL;
+	//vec3 normal = texture2D(u_NormalMap, texCoords).xyz;
+	//DETAILED_NORMAL = normalize(normal * 2.0 - 1.0);
+	//DETAILED_NORMAL = tangentToWorld * DETAILED_NORMAL;
+	//DETAILED_NORMAL = N;
 
 	N = normalize(N);
 	L /= sqrt(sqrLightDist);
@@ -636,64 +464,12 @@ void main()
 	vec4 diffuse = texture2D(u_DiffuseMap, texCoords);
 	vec4 orig_diffuse = diffuse;
 
-#ifdef OLD_WATER
-	// Water/Lava Code...
-	vec2 uv = texCoords.xy;
-	uv = uv * 2.0 - 1.0;
-	uv.x *= iResolution.x / iResolution.y;
-	float current_time = iGlobalTime * 0.3;
-        
-	// ray
-	vec3 ang = vec3(0.0, 1.5, 0.0);
-	vec3 ori = vec3(0.0, 10.5, 0.0);
-	vec3 dir = normalize(vec3(uv.xy,-PI/*-2.0*/)); 
-	dir.z += length(uv) * 0.15;
-	dir = normalize(dir) * fromEuler(ang);
-
-	//dir *= tangentToWorld;
-		
-	// tracing
-	vec3 p;
-	heightMapTracing(ori,dir,p);
-
-	vec3 dist = p - ori;
-
 	float scaleWater = 1.0;
 	if (N.b < N.r && N.b < N.g) scaleWater = 10.0;
-	float d = length(dist);
-	vec3 n = getNormal(p, d*d*.0003, scaleWater);
-
-	vec3 light = normalize(vec3(0.0,1.0,0.8)); 
-	//vec3 light = normalize(vec3(0.0,0.4,0.3)); 
-	//vec3 light = normalize(lightColor.rgb);//normalize(vec3(0.0,1.0,0.8));
-		
-	// color
-	/*vec3 color = mix(
-		diffuse.rgb,
-		getSeaColor(p,n,light,dir,dist),
-   		pow(smoothstep(0.0,-0.05,dir.y),0.3));*/
-
-	vec3 color = getSeaColor(p,n,light,dir,dist);
-        
-	// post
-	diffuse.rgb = vec3(pow(color,vec3(0.75)));
-	//diffuse.rgb *= 0.75;
-	//diffuse.rgb = getSeaColor(p,n,light,dir,dist);
-
-	float waveheight = (diffuse.r + diffuse.g + diffuse.b) / 3.0;
-
-	gl_FragColor = vec4(diffuse.rgb, diffuse.a);
-	//out_Glow = vec4(0.0, 0.0, 0.0, 0.0);
-	//return;
-
-#else //!OLD_WATER
-	float scaleWater = 1.0;
-	if (N.b < N.r && N.b < N.g) scaleWater = 10.0;
-	//diffuse.rgb = (diffuse.rgb + clamp(vec3(0.1,0.19,0.22) + vec3(pow(doWater( texCoords.xy ).rgb * 2.0,vec3(0.75))), 0.0, 1.0)) / 2.0;
-	diffuse.rgb = clamp(vec3(0.1,0.19,0.22) + vec3(pow(doWater( texCoords.xy ).rgb * 2.0,vec3(0.75))), 0.0, 1.0);
+	//diffuse.rgb = (diffuse.rgb + clamp(vec3(0.1,0.19,0.22) + vec3(pow(doWater( texCoords.xy, tangentToWorld ).rgb * 2.0,vec3(0.75))), 0.0, 1.0)) / 2.0;
+	diffuse.rgb = clamp(vec3(0.1,0.19,0.22) + vec3(pow(doWater( texCoords.xy, tangentToWorld ).rgb * 2.0,vec3(0.75))), 0.0, 1.0);
 	float waveheight = (diffuse.r + diffuse.g + diffuse.b) / 3.0;
 	gl_FragColor = vec4(diffuse.rgb, diffuse.a);
-#endif //OLD_WATER
 
 #if defined(USE_GAMMA2_TEXTURES)
 	diffuse.rgb *= diffuse.rgb;
@@ -731,8 +507,6 @@ void main()
 
 	NL = clamp(dot(N, L), 0.0, 1.0);
 	NE = clamp(dot(N, E), 0.0, 1.0);
-
-	vec4 specular;
 
 	specular = vec4(1.0-fakedepth) * diffuse;
 	specular.a = ((clamp((1.0 - fakedepth), 0.0, 1.0) * 0.5) + 0.5);
@@ -795,10 +569,11 @@ void main()
   #endif
 
 	//gl_FragColor.rgb = N;
+
 	if (scaleWater >= 10.0)
 	{
-		gl_FragColor.rgb = clamp((gl_FragColor.rgb + orig_diffuse.rgb) / 2.0, 0.0, 1.0);
-		gl_FragColor.a = clamp(waveheight, 0.1, 1.0);//diffuse.a * var_Color.a;
+		//gl_FragColor.rgb = clamp((gl_FragColor.rgb + orig_diffuse.rgb) / 2.0, 0.0, 1.0);
+		gl_FragColor.a = clamp(waveheight, 0.5, 1.0);//diffuse.a * var_Color.a;
 
 #if defined(USE_GLOW_BUFFER)
 		out_Glow = gl_FragColor;
@@ -810,8 +585,8 @@ void main()
 	}
 	else
 	{
-		gl_FragColor.rgb = clamp((gl_FragColor.rgb + gl_FragColor.rgb + orig_diffuse.rgb) / 3.0, 0.0, 1.0);
-		gl_FragColor.a = clamp(waveheight, 0.5, 1.0);//diffuse.a * var_Color.a;
+		//gl_FragColor.rgb = clamp((gl_FragColor.rgb + gl_FragColor.rgb + orig_diffuse.rgb) / 3.0, 0.0, 1.0);
+		gl_FragColor.a = clamp(waveheight, 0.1, 1.0);//diffuse.a * var_Color.a;
 
 #if defined(USE_GLOW_BUFFER)
 		//out_Glow = gl_FragColor;
@@ -825,6 +600,7 @@ void main()
 	//if (u_EnableTextures.r > 0.0)
 	{
 		//out_Normal = vec4(NORMAL.xyz, 0.0);
-		out_DetailedNormal = vec4(DETAILED_NORMAL.xyz, 0.0);
+		out_DetailedNormal = vec4(DETAILED_NORMAL.xyz, 0.75);
+		//out_DetailedNormal = vec4(N.xyz, 0.75);
 	}
 }

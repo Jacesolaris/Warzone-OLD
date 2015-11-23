@@ -501,6 +501,7 @@ vec3 sphericalHarmonics(vec3 N)
 void main()
 {
 	vec3 viewDir, lightColor, ambientColor;
+	vec4 specular = vec4(0.0);
 	vec3 L, N, E, H;
 	//vec3 NORMAL = vec3(1.0);
 	vec3 DETAILED_NORMAL = vec3(1.0);
@@ -658,7 +659,6 @@ void main()
 	gl_FragColor = vec4(0.0);
 
   #if defined(USE_SPECULARMAP)
-	vec4 specular;
 
 	if (u_Local1.g != 0.0)
 	{// Real specMap...
@@ -691,8 +691,6 @@ void main()
     #if defined(USE_GAMMA2_TEXTURES)
 	specular.rgb *= specular.rgb;
     #endif
-  #else
-	vec4 specular = vec4(1.0);
   #endif
 
 	if (u_Local1.b > 0.0)
@@ -887,6 +885,7 @@ void main()
 	DETAILED_NORMAL = normalize(norm * 2.0 - 1.0);
 	//DETAILED_NORMAL = normalize(norm * 0.5 + 0.5);
 	DETAILED_NORMAL = tangentToWorld * DETAILED_NORMAL;
+	//DETAILED_NORMAL = vec3(1.0, 0.0, 0.0);
 
 	//NORMAL = normalize(var_Normal.xyz * 2.0 - 1.0);
 	//NORMAL = tangentToWorld * NORMAL;
@@ -908,6 +907,7 @@ void main()
 	//if (u_EnableTextures.r > 0.0)
 	{
 		//out_Normal = vec4(NORMAL.xyz, 0.0);
-		out_DetailedNormal = vec4(DETAILED_NORMAL.xyz, 0.0);
+		//if (DETAILED_NORMAL.x + DETAILED_NORMAL.y + DETAILED_NORMAL.z == 3.0) DETAILED_NORMAL.xyz = vec3(0.0);
+		out_DetailedNormal = vec4(DETAILED_NORMAL.xyz, specular.a / 8.0);
 	}
 }

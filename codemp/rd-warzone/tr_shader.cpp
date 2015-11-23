@@ -3236,7 +3236,7 @@ void AssignMaterialType ( const char *name, const char *text )
 			shader.surfaceFlags |= MATERIAL_WATER;
 			shader.isWater = qtrue;
 		}
-		else if (StringsContainWord(name, name, "grass") || StringsContainWord(name, name, "yavin/ground") || StringsContainWord(name, name, "mp/s_ground") || StringsContainWord(name, name, "volcano/terrain") || StringsContainWord(name, name, "bay/terrain") || StringsContainWord(name, name, "towers/terrain") || StringsContainWord(name, name, "yavinassault/terrain"))
+		else if (StringsContainWord(name, name, "grass") || StringsContainWord(name, name, "foliage") || StringsContainWord(name, name, "yavin/ground") || StringsContainWord(name, name, "mp/s_ground") || StringsContainWord(name, name, "volcano/terrain") || StringsContainWord(name, name, "bay/terrain") || StringsContainWord(name, name, "towers/terrain") || StringsContainWord(name, name, "yavinassault/terrain"))
 			shader.surfaceFlags |= MATERIAL_SHORTGRASS;
 		//
 		// Stuff we can be pretty sure of...
@@ -3299,9 +3299,9 @@ void AssignMaterialType ( const char *name, const char *text )
 			shader.surfaceFlags |= MATERIAL_MUD;
 		else if (StringsContainWord(name, name, "ice"))
 			shader.surfaceFlags |= MATERIAL_ICE;
-		else if (StringsContainWord(name, name, "grass") && (StringsContainWord(name, name, "long") || StringsContainWord(name, name, "tall") || StringsContainWord(name, name, "thick")))
+		else if ((StringsContainWord(name, name, "grass") || StringsContainWord(name, name, "foliage")) && (StringsContainWord(name, name, "long") || StringsContainWord(name, name, "tall") || StringsContainWord(name, name, "thick")))
 			shader.surfaceFlags |= MATERIAL_LONGGRASS;
-		else if (StringsContainWord(name, name, "grass"))
+		else if (StringsContainWord(name, name, "grass") || StringsContainWord(name, name, "foliage"))
 			shader.surfaceFlags |= MATERIAL_SHORTGRASS;
 		else if (IsKnownShinyMap(name) && StringsContainWord(name, name, "floor"))
 			shader.surfaceFlags |= MATERIAL_TILES;
@@ -3396,7 +3396,7 @@ void AssignMaterialType ( const char *name, const char *text )
 			shader.surfaceFlags |= MATERIAL_ARMOR;
 		else if (StringsContainWord(name, name, "boba") || StringsContainWord(name, name, "pilot"))
 			shader.surfaceFlags |= MATERIAL_ARMOR;
-		else if (StringsContainWord(name, name, "grass") || StringsContainWord(name, name, "yavin/ground") || StringsContainWord(name, name, "mp/s_ground") || StringsContainWord(name, name, "yavinassault/terrain"))
+		else if (StringsContainWord(name, name, "grass") || StringsContainWord(name, name, "foliage") || StringsContainWord(name, name, "yavin/ground") || StringsContainWord(name, name, "mp/s_ground") || StringsContainWord(name, name, "yavinassault/terrain"))
 			shader.surfaceFlags |= MATERIAL_SHORTGRASS;
 	}
 	
@@ -3408,7 +3408,8 @@ void AssignMaterialType ( const char *name, const char *text )
 		shader.isWater = qtrue;
 	}
 	else if (shader.hasAlpha && 
-		(StringsContainWord(name, name, "grass") || StringsContainWord(name, name, "yavin/ground") || StringsContainWord(name, name, "mp/s_ground") || StringsContainWord(name, name, "yavinassault/terrain")
+		(StringsContainWord(name, name, "grass") || StringsContainWord(name, name, "foliage") || StringsContainWord(name, name, "yavin/ground") 
+		|| StringsContainWord(name, name, "mp/s_ground") || StringsContainWord(name, name, "yavinassault/terrain")
 		|| StringsContainWord(name, name, "tree") || StringsContainWord(name, name, "plant") || StringsContainWord(name, name, "bush") 
 		|| StringsContainWord(name, name, "shrub") || StringsContainWord(name, name, "leaf") || StringsContainWord(name, name, "leaves") 
 		|| StringsContainWord(name, name, "branch") || StringsContainWord(name, name, "flower") || StringsContainWord(name, name, "weed")))
@@ -3419,7 +3420,8 @@ void AssignMaterialType ( const char *name, const char *text )
 	}
 	else if (StringsContainWord(name, name, "plastic") || StringsContainWord(name, name, "trooper") || StringsContainWord(name, name, "medpack"))
 		if (!(shader.surfaceFlags & MATERIAL_PLASTIC)) shader.surfaceFlags |= MATERIAL_PLASTIC;
-	else if (StringsContainWord(name, name, "grass") || StringsContainWord(name, name, "yavin/ground") || StringsContainWord(name, name, "mp/s_ground") || StringsContainWord(name, name, "yavinassault/terrain"))
+	else if (StringsContainWord(name, name, "grass") || StringsContainWord(name, name, "foliage") || StringsContainWord(name, name, "yavin/ground") 
+		|| StringsContainWord(name, name, "mp/s_ground") || StringsContainWord(name, name, "yavinassault/terrain"))
 		if (!(shader.surfaceFlags & MATERIAL_SHORTGRASS)) shader.surfaceFlags |= MATERIAL_SHORTGRASS;
 
 	DebugSurfaceTypeSelection(name, shader.surfaceFlags);
@@ -4119,7 +4121,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 	qboolean hasRealSubsurfaceMap = qfalse;
 	qboolean checkNormals = qtrue;
 
-	if (shader.isPortal || shader.isSky || diffuse->glow || shader.hasAlpha)// || shader.noTC)
+	if (shader.isPortal || shader.isSky || diffuse->glow /*|| shader.hasAlpha*/)// || shader.noTC)
 		checkNormals = qfalse;
 
 	//ri->Printf(PRINT_ALL, "shader %s has diffuse %s", shader.name, diffuse->bundle[0].image[0]->imgName);
@@ -4144,7 +4146,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 		useLightVertex = qtrue;
 	}
 #ifdef __EXTRA_PRETTY__
-	else if (checkNormals)
+	else if (checkNormals && !shader.hasAlpha)
 	{// UQ1: If we marked this as a material (and it's not a portal or sky), override no light with vertex light for reflection and specular...
 		switch( shader.surfaceFlags & MATERIAL_MASK )
 		{
@@ -4221,7 +4223,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 	{
 		image_t *diffuseImg = diffuse->bundle[TB_DIFFUSEMAP].image[0];
 
-		if (diffuse->bundle[TB_NORMALMAP].image[0])
+		if (diffuse->bundle[TB_NORMALMAP].image[0] && normal->bundle[TB_NORMALMAP].image[0] != tr.whiteImage)
 		{
 			if (parallax && r_parallaxMapping->integer)
 				defs |= LIGHTDEF_USE_PARALLAXMAP;
@@ -4233,7 +4235,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 
 			hasRealNormalMap = qtrue;
 		}
-		else if (normal && normal->bundle[0].image[0])
+		else if (normal && normal->bundle[0].image[0] && normal->bundle[0].image[0] != tr.whiteImage)
 		{
 			//ri->Printf(PRINT_ALL, ", normalmap %s", normal->bundle[0].image[0]->imgName);
 			diffuse->bundle[TB_NORMALMAP] = normal->bundle[0];

@@ -62,6 +62,8 @@ extern const char *fallbackShader_generateNormalMap_vp;
 extern const char *fallbackShader_generateNormalMap_fp;
 extern const char *fallbackShader_truehdr_vp;
 extern const char *fallbackShader_truehdr_fp;
+extern const char *fallbackShader_magicdetail_vp;
+extern const char *fallbackShader_magicdetail_fp;
 extern const char *fallbackShader_volumelight_vp;
 extern const char *fallbackShader_volumelight_fp;
 extern const char *fallbackShader_volumelightCombine_vp;
@@ -80,6 +82,8 @@ extern const char *fallbackShader_hbao_vp;
 extern const char *fallbackShader_hbao_fp;
 extern const char *fallbackShader_sss_vp;
 extern const char *fallbackShader_sss_fp;
+extern const char *fallbackShader_rbm_vp;
+extern const char *fallbackShader_rbm_fp;
 extern const char *fallbackShader_hbaoCombine_vp;
 extern const char *fallbackShader_hbaoCombine_fp;
 extern const char *fallbackShader_esharpening_vp;
@@ -1775,6 +1779,14 @@ int GLSL_BeginLoadGPUShaders(void)
 	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
 	extradefines[0] = '\0';
 
+	if (!GLSL_BeginLoadGPUShader(&tr.magicdetailShader, "magicdetail", attribs, qtrue, extradefines, qtrue, NULL, fallbackShader_magicdetail_vp, fallbackShader_magicdetail_fp))
+	{
+		ri->Error(ERR_FATAL, "Could not load magicdetail shader!");
+	}
+
+	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
+	extradefines[0] = '\0';
+
 	Q_strcat(extradefines, 1024, "#define FAST_SSGI\n");
 
 	if (!GLSL_BeginLoadGPUShader(&tr.ssgi1Shader, "ssgi1", attribs, qtrue, extradefines, qtrue, NULL, fallbackShader_ssgi_vp, fallbackShader_ssgi1_fp))
@@ -2073,6 +2085,14 @@ int GLSL_BeginLoadGPUShaders(void)
 	if (!GLSL_BeginLoadGPUShader(&tr.sssShader, "sss", attribs, qtrue, extradefines, qfalse, NULL, fallbackShader_sss_vp, fallbackShader_sss_fp))
 	{
 		ri->Error(ERR_FATAL, "Could not load sss shader!");
+	}
+
+	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
+	extradefines[0] = '\0';
+
+	if (!GLSL_BeginLoadGPUShader(&tr.rbmShader, "rbm", attribs, qtrue, extradefines, qfalse, NULL, fallbackShader_rbm_vp, fallbackShader_rbm_fp))
+	{
+		ri->Error(ERR_FATAL, "Could not load rbm shader!");
 	}
 
 	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
@@ -2957,6 +2977,49 @@ void GLSL_EndLoadGPUShaders ( int startTime )
 	numEtcShaders++;
 
 
+	if (!GLSL_EndLoadGPUShader(&tr.magicdetailShader))
+	{
+		ri->Error(ERR_FATAL, "Could not load magicdetail shader!");
+	}
+	
+	GLSL_InitUniforms(&tr.magicdetailShader);
+
+	qglUseProgram(tr.magicdetailShader.program);
+
+	GLSL_SetUniformInt(&tr.magicdetailShader, UNIFORM_TEXTUREMAP, TB_COLORMAP);
+	GLSL_SetUniformInt(&tr.magicdetailShader, UNIFORM_LEVELSMAP,  TB_LEVELSMAP);
+	
+	{
+		vec4_t viewInfo;
+
+		float zmax = backEnd.viewParms.zFar;
+		float zmin = r_znear->value;
+
+		VectorSet4(viewInfo, zmax / zmin, zmax, 0.0, 0.0);
+		//VectorSet4(viewInfo, zmin, zmax, 0.0, 0.0);
+
+		GLSL_SetUniformVec4(&tr.magicdetailShader, UNIFORM_VIEWINFO, viewInfo);
+	}
+
+	{
+		vec2_t screensize;
+		screensize[0] = glConfig.vidWidth;
+		screensize[1] = glConfig.vidHeight;
+
+		GLSL_SetUniformVec2(&tr.magicdetailShader, UNIFORM_DIMENSIONS, screensize);
+
+		//ri->Printf(PRINT_WARNING, "Sent dimensions %f %f.\n", screensize[0], screensize[1]);
+	}
+
+	qglUseProgram(0);
+
+#if defined(_DEBUG)
+	GLSL_FinishGPUShader(&tr.magicdetailShader);
+#endif
+	
+	numEtcShaders++;
+
+
 	if (!GLSL_EndLoadGPUShader(&tr.dofShader))
 	{
 		ri->Error(ERR_FATAL, "Could not load depthOfField shader!");
@@ -3607,6 +3670,27 @@ void GLSL_EndLoadGPUShaders ( int startTime )
 
 		numEtcShaders++;
 
+
+		if (!GLSL_EndLoadGPUShader(&tr.rbmShader))
+		{
+			ri->Error(ERR_FATAL, "Could not load rbm shader!");
+		}
+
+		GLSL_InitUniforms(&tr.rbmShader);
+
+		qglUseProgram(tr.rbmShader.program);
+		GLSL_SetUniformInt(&tr.rbmShader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
+		GLSL_SetUniformInt(&tr.rbmShader, UNIFORM_NORMALMAP, TB_NORMALMAP);
+		GLSL_SetUniformInt(&tr.rbmShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
+		qglUseProgram(0);
+
+#if defined(_DEBUG)
+		GLSL_FinishGPUShader(&tr.rbmShader);
+#endif
+
+		numEtcShaders++;
+
+
 		if (!GLSL_EndLoadGPUShader(&tr.hbaoShader))
 		{
 			ri->Error(ERR_FATAL, "Could not load hbao shader!");
@@ -3729,6 +3813,7 @@ void GLSL_ShutdownGPUShaders(void)
 	// UQ1: Added...
 	GLSL_DeleteGPUShader(&tr.darkexpandShader);
 	GLSL_DeleteGPUShader(&tr.hdrShader);
+	GLSL_DeleteGPUShader(&tr.magicdetailShader);
 	GLSL_DeleteGPUShader(&tr.esharpeningShader);
 	GLSL_DeleteGPUShader(&tr.esharpening2Shader);
 	GLSL_DeleteGPUShader(&tr.fakedepthShader);
@@ -3736,6 +3821,7 @@ void GLSL_ShutdownGPUShaders(void)
 	GLSL_DeleteGPUShader(&tr.anaglyphShader);
 	GLSL_DeleteGPUShader(&tr.waterShader);
 	GLSL_DeleteGPUShader(&tr.sssShader);
+	GLSL_DeleteGPUShader(&tr.rbmShader);
 	GLSL_DeleteGPUShader(&tr.hbaoShader);
 	GLSL_DeleteGPUShader(&tr.hbao2Shader);
 	GLSL_DeleteGPUShader(&tr.hbaoCombineShader);

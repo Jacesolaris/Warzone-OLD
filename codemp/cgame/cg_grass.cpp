@@ -14,17 +14,30 @@ extern "C" {
 //#define		FOLIAGE_MAX_FOLIAGES 524288
 #define			FOLIAGE_MAX_FOLIAGES 1048576
 
+//#define		__USE_ALL_GRASSES__ // Use all available grass shaders? Slower!
+//#define		__USE_ALL_PLANTS__ // Use all available plant shaders? Slower!
+
+#define			__USE_FOV_CULL__ // Enables FOV culling...
+
 //#define		__USE_CLOSE_TREE_CULL__ // Can help FPS a bit but can cause stuff to flash into/out-of existance a little...
 //#define		__DEBUG_CLOSE_FOV_CULLS__
 
 #define			__USE_CLOSE_FOV_TREE_CULL__ // Can help FPS a lot in dense tree areas...
 //#define		 __DEBUG_CLOSE_TREE_CULL__
 
-//#define			__USE_PVS_CULLS__
-//#define			__DEBUG_PVS_CULLS__
+//#define		__USE_PVS_CULLS__
+//#define		__DEBUG_PVS_CULLS__
 
 //#define		__NO_GRASS_AT_TREES__ // Don't draw grass at the same position as a tree (for FPS)... Little impact..
 //#define		__NO_GRASS_AT_PLANTS__ // Don't draw grass at the same position as a plant (for FPS)... Little impact..
+//#define		__NO_TREES__ // Don't draw trees...
+
+#ifndef __USE_ALL_GRASSES__
+#define		GRASS_SCALE_MULTIPLIER 1.0 // Scale down grass model by this much...
+#else //__USE_ALL_GRASSES__
+#define		GRASS_SCALE_MULTIPLIER 0.6 // Scale down grass model by this much...
+//#define		GRASS_SCALE_MULTIPLIER 1.0 // Scale down grass model by this much...
+#endif //__USE_ALL_GRASSES__
 
 	qboolean	FOLIAGE_LOADED = qfalse;
 	int			FOLIAGE_NUM_POSITIONS = 0;
@@ -54,8 +67,13 @@ extern "C" {
 	qboolean	VISIBLE_FOLIAGES_UPDATING = qfalse;
 
 	qhandle_t	FOLIAGE_GRASS_MODEL[3] = { 0 };
+	int			FOLIAGE_GRASS_SHADERNUM[FOLIAGE_MAX_FOLIAGES] = { 0 };
 	qhandle_t	FOLIAGE_PLANT_MODEL[27] = { 0 };
+	int			FOLIAGE_PLANT_SHADERNUM[FOLIAGE_MAX_FOLIAGES] = { 0 };
 	qhandle_t	FOLIAGE_TREE_MODEL[3] = { 0 };
+	
+	qhandle_t	FOLIAGE_GRASS_SHADERS[37] = {0};
+	qhandle_t	FOLIAGE_PLANT_SHADERS[81] = {0};
 
 	extern qboolean InFOV( vec3_t spot, vec3_t from, vec3_t fromAngles, int hFOV, int vFOV );
 }
@@ -114,7 +132,7 @@ void FOLIAGE_UpdateThread (void * aArg)
 
 			for (int spot = 0; spot < FOLIAGE_NUM_POSITIONS; spot++)
 			{
-				float MAX_DIST = 10000.0;//12000;//8192.0;//12000;//16550;
+				float MAX_DIST = 8192.0;//16550.0;//10000.0;//12000;//8192.0;//12000;//16550;
 				float USE_DIST = MAX_DIST;
 				float USE_TREE_DIST = MAX_DIST;
 				float dist = Distance( FOLIAGE_POSITIONS[spot], viewOrg);
@@ -171,6 +189,7 @@ void FOLIAGE_UpdateThread (void * aArg)
 
 				if (dist < USE_DIST)
 				{
+#ifndef __NO_TREES__
 					if (FOLIAGE_TREE_SELECTION[spot] != 0 && FOLIAGE_TREE_SCALE[spot] >= 1.0)
 					{// Distant large trees are ok...
 						NEW_IN_RANGE_FOLIAGES[NEW_IN_RANGE_FOLIAGES_COUNT] = spot;
@@ -181,42 +200,45 @@ void FOLIAGE_UpdateThread (void * aArg)
 						NEW_IN_RANGE_FOLIAGES[NEW_IN_RANGE_FOLIAGES_COUNT] = spot;
 						NEW_IN_RANGE_FOLIAGES_COUNT++;
 					}
-					else if (dist < 5000.0 && FOLIAGE_GRASS_SCALE[spot] >= 1.0)
+					else 
+#endif //__NO_TREES__
+					if (dist < 2048.0/*5000.0*/ && FOLIAGE_GRASS_SCALE[spot] >= 1.0)
 					{// Medium range large grasses are ok...
 						NEW_IN_RANGE_FOLIAGES[NEW_IN_RANGE_FOLIAGES_COUNT] = spot;
 						NEW_IN_RANGE_FOLIAGES_COUNT++;
 					}
-					else if (dist < 5000.0 && FOLIAGE_PLANT_SELECTION[spot] != 0 && FOLIAGE_PLANT_SCALE[spot] >= 1.0)
+					else if (dist < 2048.0/*5000.0*/ && FOLIAGE_PLANT_SELECTION[spot] != 0 && FOLIAGE_PLANT_SCALE[spot] >= 1.0)
 					{// Medium range large plants are ok...
 						NEW_IN_RANGE_FOLIAGES[NEW_IN_RANGE_FOLIAGES_COUNT] = spot;
 						NEW_IN_RANGE_FOLIAGES_COUNT++;
 					}
-					else if (dist < 2048.0 && FOLIAGE_GRASS_SCALE[spot] > 0.75)
+					else if (dist < 1024.0/*2048.0*/ && FOLIAGE_GRASS_SCALE[spot] > 0.75)
 					{// Small stuff at close range is ok...
 						NEW_IN_RANGE_FOLIAGES[NEW_IN_RANGE_FOLIAGES_COUNT] = spot;
 						NEW_IN_RANGE_FOLIAGES_COUNT++;
 					}
-					else if (dist < 2048.0 && FOLIAGE_PLANT_SELECTION[spot] != 0 && FOLIAGE_PLANT_SCALE[spot] > 0.75)
+					else if (dist < 1024.0/*2048.0*/ && FOLIAGE_PLANT_SELECTION[spot] != 0 && FOLIAGE_PLANT_SCALE[spot] > 0.75)
 					{// Small stuff at close range is ok...
 						NEW_IN_RANGE_FOLIAGES[NEW_IN_RANGE_FOLIAGES_COUNT] = spot;
 						NEW_IN_RANGE_FOLIAGES_COUNT++;
 					}
-					else if (dist < 1024.0 && FOLIAGE_GRASS_SCALE[spot] > 0.5)
+					else if (dist < 512.0/*1024.0*/ && FOLIAGE_GRASS_SCALE[spot] > 0.5)
 					{// Small stuff at close range is ok...
 						NEW_IN_RANGE_FOLIAGES[NEW_IN_RANGE_FOLIAGES_COUNT] = spot;
 						NEW_IN_RANGE_FOLIAGES_COUNT++;
 					}
-					else if (dist < 1024.0 && FOLIAGE_PLANT_SELECTION[spot] != 0 && FOLIAGE_PLANT_SCALE[spot] > 0.5)
+					else if (dist < 512.0/*1024.0*/ && FOLIAGE_PLANT_SELECTION[spot] != 0 && FOLIAGE_PLANT_SCALE[spot] > 0.5)
 					{// Small stuff at close range is ok...
 						NEW_IN_RANGE_FOLIAGES[NEW_IN_RANGE_FOLIAGES_COUNT] = spot;
 						NEW_IN_RANGE_FOLIAGES_COUNT++;
 					}
-					else if (dist < 768.0)
+					else if (dist < 256.0/*768.0*/)
 					{// Tiny stuff at close range is ok...
 						NEW_IN_RANGE_FOLIAGES[NEW_IN_RANGE_FOLIAGES_COUNT] = spot;
 						NEW_IN_RANGE_FOLIAGES_COUNT++;
 					}
 				}
+#ifndef __NO_TREES__
 				else if (dist < USE_TREE_DIST)
 				{
 					if (FOLIAGE_TREE_SELECTION[spot] != 0 && FOLIAGE_TREE_SCALE[spot] >= 1.0)
@@ -230,6 +252,7 @@ void FOLIAGE_UpdateThread (void * aArg)
 						NEW_IN_RANGE_FOLIAGES_COUNT++;
 					}
 				}
+#endif //__NO_TREES__
 			}
 
 			foliage_update_lock.lock();
@@ -288,6 +311,10 @@ extern "C" {
 		qboolean		skip_mediumStuff = qfalse;
 		float			dist = Distance(FOLIAGE_POSITIONS[num], cg.refdef.vieworg);
 
+#ifdef __NO_TREES__
+		if (treeOnly) return;
+#endif //__NO_TREES__
+
 		if (dist > 384.0)
 		{// Let's skip smaller models when far from camera for FPS sake...
 			skip_tinyStuff = qtrue;
@@ -314,6 +341,13 @@ extern "C" {
 			&& !(skip_smallStuff && FOLIAGE_GRASS_SCALE[num] <= 0.75)
 			&& !(skip_tinyStuff && FOLIAGE_GRASS_SCALE[num] <= 0.5)*/)
 		{// Graw grass...
+#ifdef __USE_ALL_GRASSES__
+			if (FOLIAGE_GRASS_SHADERNUM[num] > 0)
+			{// Need to specify a shader...
+				re.customShader = FOLIAGE_GRASS_SHADERS[FOLIAGE_GRASS_SHADERNUM[num]];
+			}
+#endif //__USE_ALL_GRASSES__
+
 #ifdef __NO_GRASS_AT_TREES__
 			if (FOLIAGE_TREE_SELECTION[num] == 0)
 			{
@@ -322,7 +356,7 @@ extern "C" {
 				{
 #endif //__NO_GRASS_AT_PLANTS__
 					re.hModel = FOLIAGE_GRASS_MODEL[0];
-					VectorSet(re.modelScale, FOLIAGE_GRASS_SCALE[num], FOLIAGE_GRASS_SCALE[num], FOLIAGE_GRASS_SCALE[num]);
+					VectorSet(re.modelScale, FOLIAGE_GRASS_SCALE[num] * GRASS_SCALE_MULTIPLIER, FOLIAGE_GRASS_SCALE[num] * GRASS_SCALE_MULTIPLIER, FOLIAGE_GRASS_SCALE[num] * GRASS_SCALE_MULTIPLIER);
 					angles[PITCH] = angles[ROLL] = 0.0f;
 					angles[YAW] = FOLIAGE_GRASS_ANGLES[num];
 					VectorCopy(angles, re.angles);
@@ -339,7 +373,7 @@ extern "C" {
 			{
 #endif //__NO_GRASS_AT_PLANTS__
 				re.hModel = FOLIAGE_GRASS_MODEL[0];
-				VectorSet(re.modelScale, FOLIAGE_GRASS_SCALE[num], FOLIAGE_GRASS_SCALE[num], FOLIAGE_GRASS_SCALE[num]);
+				VectorSet(re.modelScale, FOLIAGE_GRASS_SCALE[num] * GRASS_SCALE_MULTIPLIER, FOLIAGE_GRASS_SCALE[num] * GRASS_SCALE_MULTIPLIER, FOLIAGE_GRASS_SCALE[num] * GRASS_SCALE_MULTIPLIER);
 				angles[PITCH] = angles[ROLL] = 0.0f;
 				angles[YAW] = FOLIAGE_GRASS_ANGLES[num];
 				VectorCopy(angles, re.angles);
@@ -352,6 +386,9 @@ extern "C" {
 #endif //__NO_GRASS_AT_TREES__
 		}
 
+		re.customShader = 0;
+
+#ifndef __NO_TREES__
 		if (FOLIAGE_TREE_SELECTION[num] != 0)
 		{// Add the tree model...
 			re.hModel = FOLIAGE_TREE_MODEL[FOLIAGE_TREE_SELECTION[num]-1];
@@ -364,12 +401,21 @@ extern "C" {
 			ScaleModelAxis( &re );
 			FOLIAGE_AddFoliageEntityToScene( &re );
 		}
-		else if (FOLIAGE_PLANT_SELECTION[num] != 0 
+		else 
+#endif //__NO_TREES__
+		if (FOLIAGE_PLANT_SELECTION[num] != 0 
 			&& !treeOnly || (dist < 5000.0 && FOLIAGE_PLANT_SCALE[num] >= 1.0)
 			&& (!(skip_mediumStuff && FOLIAGE_PLANT_SCALE[num] > 0.75) || (dist < 5000.0 && FOLIAGE_PLANT_SCALE[num] >= 1.0))
 			&& !(skip_smallStuff && FOLIAGE_PLANT_SCALE[num] <= 0.75)
 			&& !(skip_tinyStuff && FOLIAGE_GRASS_SCALE[num] <= 0.5))
 		{// Add plant model as well...
+#ifdef __USE_ALL_PLANTS__
+			if (FOLIAGE_PLANT_SHADERNUM[num] > 0)
+			{// Need to specify a shader...
+				re.customShader = FOLIAGE_PLANT_SHADERS[FOLIAGE_PLANT_SHADERNUM[num]];
+			}
+#endif //__USE_ALL_PLANTS__
+
 			re.hModel = FOLIAGE_PLANT_MODEL[FOLIAGE_PLANT_SELECTION[num]-1];
 			VectorSet(re.modelScale, FOLIAGE_PLANT_SCALE[num], FOLIAGE_PLANT_SCALE[num], FOLIAGE_PLANT_SCALE[num]);
 			angles[PITCH] = angles[ROLL] = 0.0f;
@@ -416,6 +462,12 @@ extern "C" {
 		}
 
 		trap->FS_Close(f);
+
+		for (i = 0; i < FOLIAGE_NUM_POSITIONS; i++)
+		{
+			FOLIAGE_GRASS_SHADERNUM[i] = irand(1,36);
+			FOLIAGE_PLANT_SHADERNUM[i] = irand(1,81);
+		}
 
 		trap->Print( "^1*** ^3%s^5: Successfully loaded %i grass points from foliage file ^7foliage/%s.foliage^5.\n", GAME_VERSION,
 			FOLIAGE_NUM_POSITIONS, cgs.currentmapname );
@@ -519,7 +571,13 @@ extern "C" {
 			FOLIAGE_GRASS_MODEL[0] = trap->R_RegisterModel( "models/pop/foliages/sch_weed_a.md3" );
 			FOLIAGE_GRASS_MODEL[1] = trap->R_RegisterModel( "models/pop/foliages/sch_weed_b.md3" );
 			FOLIAGE_GRASS_MODEL[2] = trap->R_RegisterModel( "models/warzone/foliage/grass33.md3" );
+			//FOLIAGE_GRASS_MODEL[0] = trap->R_RegisterModel( "models/warzone/foliage/grass_dense.md3" );
+			//FOLIAGE_GRASS_MODEL[1] = trap->R_RegisterModel( "models/warzone/foliage/grass_cross.md3" );
+			//FOLIAGE_GRASS_MODEL[2] = trap->R_RegisterModel( "models/warzone/foliage/grass_cross.md3" );
+			//FOLIAGE_GRASS_MODEL[1] = trap->R_RegisterModel( "models/warzone/foliage/grass_dense.md3" );
+			//FOLIAGE_GRASS_MODEL[2] = trap->R_RegisterModel( "models/warzone/foliage/grass_dense.md3" );
 
+#ifndef __USE_ALL_GRASSES__
 			FOLIAGE_PLANT_MODEL[0] = trap->R_RegisterModel( "models/warzone/foliage/plant03.md3" );
 			FOLIAGE_PLANT_MODEL[1] = trap->R_RegisterModel( "models/warzone/foliage/plant05.md3" );
 			FOLIAGE_PLANT_MODEL[2] = trap->R_RegisterModel( "models/warzone/foliage/plant10.md3" );
@@ -547,10 +605,65 @@ extern "C" {
 			FOLIAGE_PLANT_MODEL[24] = trap->R_RegisterModel( "models/warzone/foliage/plant79.md3" );
 			FOLIAGE_PLANT_MODEL[25] = trap->R_RegisterModel( "models/warzone/foliage/plant80.md3" );
 			FOLIAGE_PLANT_MODEL[26] = trap->R_RegisterModel( "models/warzone/foliage/plant81.md3" );
+#else //__USE_ALL_GRASSES__
+			int last = 0;
+
+			for (int i = 0; i < 27; i++)
+			{
+				/*if (last > 8) last = 0;
+
+				if (last >= 7)
+				{
+					FOLIAGE_PLANT_MODEL[i] = trap->R_RegisterModel("models/pop/foliages/sch_weed_a.md3");
+				}
+				else if (last >= 6)
+				{
+					FOLIAGE_PLANT_MODEL[i] = trap->R_RegisterModel("models/pop/foliages/sch_weed_b.md3");
+				}
+				else if (last >= 4)
+				{
+					FOLIAGE_PLANT_MODEL[i] = trap->R_RegisterModel("models/warzone/foliage/plant03.md3");
+				}
+				else
+				{
+					FOLIAGE_PLANT_MODEL[i] = trap->R_RegisterModel("models/warzone/foliage/grass_cross.md3");
+				}
+
+				last++;*/
+
+				FOLIAGE_PLANT_MODEL[i] = trap->R_RegisterModel("models/warzone/foliage/plant03.md3");
+			}
+#endif //__USE_ALL_GRASSES__
 
 			FOLIAGE_TREE_MODEL[0] = trap->R_RegisterModel( "models/map_objects/yavin/tree08_b.md3" );
 			FOLIAGE_TREE_MODEL[1] = trap->R_RegisterModel( "models/map_objects/yavin/tree08_b.md3" );
 			FOLIAGE_TREE_MODEL[2] = trap->R_RegisterModel( "models/map_objects/yavin/tree08_b.md3" );
+
+			for (int i = 1; i < 37; i++)
+			{
+				char	shaderName[128] = {0};
+				int		shaderNum = i;//irand(1,36);
+
+				if (shaderNum < 10)
+					sprintf(shaderName, "models/warzone/foliage/grass0%i.png", shaderNum);
+				else
+					sprintf(shaderName, "models/warzone/foliage/grass%i.png", shaderNum);
+
+				FOLIAGE_GRASS_SHADERS[i] = trap->R_RegisterShader(shaderName);
+			}
+
+			for (int i = 1; i < 81; i++)
+			{
+				char	shaderName[128] = {0};
+				int		shaderNum = i;//irand(1,81);
+
+				if (shaderNum < 10)
+					sprintf(shaderName, "models/warzone/foliage/plant0%i.png", shaderNum);
+				else
+					sprintf(shaderName, "models/warzone/foliage/plant%i.png", shaderNum);
+
+				FOLIAGE_PLANT_SHADERS[i] = trap->R_RegisterShader(shaderName);
+			}
 		}
 
 		FOLIAGE_CheckUpdateThread();
@@ -569,6 +682,8 @@ extern "C" {
 
 		//if (waitTime > 0) trap->Print("Foliage system waited %i ms for lock.\n");
 
+#ifdef __USE_FOV_CULL__
+
 #ifdef __DEBUG_CLOSE_TREE_CULL__
 		trap->Print("Foliage cull type: %i.\n", LAST_CULL_INFO);
 #endif //__DEBUG_CLOSE_TREE_CULL__
@@ -576,6 +691,7 @@ extern "C" {
 #ifdef __USE_CLOSE_FOV_TREE_CULL__
 		int FOV_CLOSE_TREE_COUNT = 0;
 
+#ifndef __NO_TREES__
 		for (int spot = 0; spot < IN_RANGE_FOLIAGES_COUNT; spot++)
 		{// Draw anything closeish to us...
 			qboolean	treeOnly = qfalse;
@@ -594,9 +710,11 @@ extern "C" {
 				}
 			}
 		}
+#endif //__NO_TREES__
 
 		int FOV_ULTRA_CLOSE_TREE_COUNT = 0;
 
+#ifndef __NO_TREES__
 		for (int spot = 0; spot < IN_RANGE_FOLIAGES_COUNT; spot++)
 		{// Draw anything closeish to us...
 			qboolean	treeOnly = qfalse;
@@ -615,6 +733,7 @@ extern "C" {
 				}
 			}
 		}
+#endif //__NO_TREES__
 #endif //__USE_CLOSE_FOV_TREE_CULL__
 
 		//
@@ -634,16 +753,20 @@ extern "C" {
 			qboolean	treeOnly = qfalse;
 			float		len = Distance(FOLIAGE_POSITIONS[IN_RANGE_FOLIAGES[spot]], viewOrg);
 
+#ifndef __NO_TREES__
 			if ( (FOLIAGE_TREE_SELECTION[IN_RANGE_FOLIAGES[spot]] != 0 && len > 3192.0) 
 				|| (len < 5000.0 && FOLIAGE_GRASS_SCALE[IN_RANGE_FOLIAGES[spot]] >= 1.0))
 			{
 				treeOnly = qtrue;
 			}
-			else if ( len > 3192.0 ) 
+			else 
+#endif //__NO_TREES__
+			if ( len > 3192.0 ) 
 			{
 				continue;
 			}
 
+#ifndef __NO_TREES__
 			if ( FOLIAGE_TREE_SELECTION[IN_RANGE_FOLIAGES[spot]] != 0 )
 			{// Tree here, wider view FOV check...
 				if ( len > 4096 && !InFOV( FOLIAGE_POSITIONS[IN_RANGE_FOLIAGES[spot]], viewOrg, viewAngles, cg.refdef.fov_x + 3, cg.refdef.fov_y + 3 ))
@@ -678,6 +801,7 @@ extern "C" {
 #endif //__USE_CLOSE_FOV_TREE_CULL__
 			}
 			else
+#endif //__NO_TREES__
 			{// No tree here, can use minimal FOV check...
 				if ( len > 4096 && !InFOV( FOLIAGE_POSITIONS[IN_RANGE_FOLIAGES[spot]], viewOrg, viewAngles, cg.refdef.fov_x + 1, cg.refdef.fov_y + 1 ))
 					continue;
@@ -745,6 +869,19 @@ extern "C" {
 			else
 				FOLIAGE_AddToScreen( VISIBLE_FOLIAGES[spot], qfalse );
 		}
+
+#else //!__USE_FOV_CULL__
+		for (int spot = 0; spot < IN_RANGE_FOLIAGES_COUNT; spot++)
+		{
+			float		len = Distance(FOLIAGE_POSITIONS[IN_RANGE_FOLIAGES[spot]], viewOrg);
+
+			if ( (FOLIAGE_TREE_SELECTION[IN_RANGE_FOLIAGES[spot]] != 0 && len > 3192.0) 
+				|| (len < 5000.0 && FOLIAGE_GRASS_SCALE[IN_RANGE_FOLIAGES[spot]] >= 1.0))
+				FOLIAGE_AddToScreen( IN_RANGE_FOLIAGES[spot], qtrue );
+			else
+				FOLIAGE_AddToScreen( IN_RANGE_FOLIAGES[spot], qfalse );
+		}
+#endif //__USE_FOV_CULL__
 
 		foliage_update_lock.unlock();
 	}
@@ -1070,6 +1207,12 @@ float	FOLIAGE_FILE_VERSION =	1.1f;
 
 			trap->FS_Read( &fix_aas_nodes, sizeof(short int), f );
 			trap->FS_Close( f );							//close the file
+
+			for (i = 0; i < FOLIAGE_NUM_POSITIONS; i++)
+			{
+				FOLIAGE_GRASS_SHADERNUM[i] = irand(1,36);
+				FOLIAGE_PLANT_SHADERNUM[i] = irand(1,81);
+			}
 
 			trap->Print( "^1*** ^3%s^5: Successfully generated %i grass points from waypoint file ^7nodes/%s.bwp^5.\n", GAME_VERSION,
 				FOLIAGE_NUM_POSITIONS, cgs.currentmapname );
@@ -1447,6 +1590,12 @@ float	FOLIAGE_FILE_VERSION =	1.1f;
 					}
 
 					FOLIAGE_NUM_POSITIONS++;
+				}
+
+				for (i = 0; i < FOLIAGE_NUM_POSITIONS; i++)
+				{
+					FOLIAGE_GRASS_SHADERNUM[i] = irand(1,36);
+					FOLIAGE_PLANT_SHADERNUM[i] = irand(1,81);
 				}
 
 				trap->Print( "^1*** ^3%s^5: Successfully generated %i grass points...\n", GAME_VERSION, FOLIAGE_NUM_POSITIONS );

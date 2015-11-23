@@ -1369,7 +1369,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 		if (pStage->isWater)
 		{
-			if (stage <= 0) 
+			//if (stage <= 0) 
 			//if (pStage->bundle[TB_DIFFUSEMAP].image[0])
 			{
 				sp = &tr.waterShader;
@@ -1393,10 +1393,10 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 				isGeneric = qfalse;
 			}
-			else
-			{
-				continue;
-			}
+			//else
+			//{
+			//	continue;
+			//}
 		}
 		else
 		{
@@ -1653,7 +1653,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 						&& !input->shader->isPortal
 						&& !input->shader->isSky
 						&& !pStage->glow
-						&& !(stage > 0)
+						//&& !(stage > 0)
 						&& !pStage->bundle[TB_DIFFUSEMAP].normalsLoaded2
 						//&& (!pStage->bundle[TB_NORMALMAP].image[0])
 						&& (!pStage->bundle[TB_NORMALMAP].image[0] || pStage->bundle[TB_NORMALMAP].image[0] == tr.whiteImage)
