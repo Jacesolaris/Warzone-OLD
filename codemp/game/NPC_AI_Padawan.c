@@ -9,6 +9,7 @@ extern int DOM_GetNearestWP(vec3_t org, int badwp);
 extern int NPC_GetNextNode(gentity_t *NPC);
 extern qboolean UQ1_UcmdMoveForDir ( gentity_t *self, usercmd_t *cmd, vec3_t dir, qboolean walk, vec3_t dest );
 extern qboolean NPC_ValidEnemy2( gentity_t *self, gentity_t *ent );
+extern qboolean NPC_FindEnemy( qboolean checkAlerts );
 
 void TeleportNPC( gentity_t *player, vec3_t origin, vec3_t angles ) {
 //	gentity_t	*tent;
@@ -79,8 +80,43 @@ void TeleportNPC( gentity_t *player, vec3_t origin, vec3_t angles ) {
 
 int NPC_FindPadawanGoal( gentity_t *NPC )
 {
-	int waypoint = DOM_GetNearWP(NPC->parent->r.currentOrigin, NPC->parent->wpCurrent);
-	return waypoint;
+	vec3_t traceGoal, fwd, right, up, start, end;
+	trace_t tr;
+
+	if (NPC->padawanNoWaypointTime > level.time) return -1;
+	if (!NPC->parent) return -1;
+	if (!NPC_IsAlive(NPC->parent)) return -1;
+
+	AngleVectors( NPC->parent->client->ps.viewangles, fwd, right, up );
+	CalcMuzzlePoint( NPC->parent, fwd, right, up, end );
+	VectorMA( end, 512, fwd, traceGoal );
+	VectorCopy(NPC->parent->r.currentOrigin, start);
+	start[2] += 48;
+	trap->Trace( &tr, start, NULL, NULL, traceGoal, NPCS.NPC->s.number, MASK_SHOT, qfalse, 0, 0 );
+	//trap->Print("Trace end %f %f %f.\n", tr.endpos[0], tr.endpos[1], tr.endpos[2]);
+
+	if (NPC->longTermGoal < 0 
+		|| NPC->longTermGoal > gWPNum 
+		|| Distance(gWPArray[NPC->longTermGoal]->origin, NPC->r.currentOrigin) > 1000
+		|| Distance(gWPArray[NPC->longTermGoal]->origin, tr.endpos) > 192)
+	{// Only if we need a new goal...
+		int goalWP = DOM_GetNearWP(tr.endpos, -1);
+
+		if (goalWP < 0) goalWP = DOM_GetNearWP(NPC->parent->r.currentOrigin, -1);
+
+		NPC->padawanNoWaypointTime = level.time + 1000;
+
+		if (Distance(gWPArray[goalWP]->origin, NPC->r.currentOrigin) < 128)
+		{
+			//trap->Print("Padawan failed to find a goal WP\n");
+			return -1;
+		}
+
+		//trap->Print("Padawan found a goal WP: %i. Distance %f. Postition %f %f %f.\n", goalWP, Distance(gWPArray[goalWP]->origin, NPC->r.currentOrigin), gWPArray[goalWP]->origin[0], gWPArray[goalWP]->origin[1], gWPArray[goalWP]->origin[2]);
+		return goalWP;
+	}
+
+	return -1;
 }
 
 extern void G_SpeechEvent( gentity_t *self, int event );
@@ -204,22 +240,120 @@ qboolean NPC_PadawanMove( void )
 	{// Keep fighting who we are fighting...
 		return qtrue;
 	}
-	
+
 	if (NPC->s.NPC_class == CLASS_PADAWAN)
 	{
 		G_ClearEnemy( NPCS.NPC );
 
 		if (NPC->parent && NPC_IsAlive(NPC->parent))
 		{
-			float dist = DistanceHorizontal(NPC->parent->r.currentOrigin, NPC->r.currentOrigin);
+			int			goalWP = -1;
+			vec3_t		goal, angles;
+			float		dist;
+			gentity_t	*goalEnt = NULL;
+
+			if (!NPC->padawanGoalEntity)
+			{
+				NPC->padawanGoalEntity = G_Spawn();
+				NPC->padawanGoalEntity->s.eType = ET_NPCGOAL;
+				NPC->padawanGoalEntity->inuse = qtrue;
+				trap->LinkEntity ((sharedEntity_t *)NPC->padawanGoalEntity);
+			}
+
+			goalEnt = NPC->padawanGoalEntity;
+
+			if (NPC->padawanWaitTime > level.time)
+			{// Wait a moment where you are...
+				vec3_t traceGoal, fwd, right, up, start, end;
+				trace_t tr;
+
+				AngleVectors( NPC->parent->client->ps.viewangles, fwd, right, up );
+				CalcMuzzlePoint( NPC->parent, fwd, right, up, end );
+				VectorMA( end, 512, fwd, traceGoal );
+				VectorCopy(NPC->parent->r.currentOrigin, start);
+				start[2] += 48;
+				trap->Trace( &tr, start, NULL, NULL, traceGoal, NPCS.NPC->s.number, MASK_SHOT, qfalse, 0, 0 );
+
+				if (NPC->longTermGoal >= 0 
+					&& (Distance(gWPArray[NPC->longTermGoal]->origin, NPC->r.currentOrigin) > 1000 || Distance(gWPArray[NPC->longTermGoal]->origin, tr.endpos) > 192))
+				{// Player has looked somewhere else, start moving there instantly...
+					NPC->padawanWaitTime = 0;
+
+					NPC_FindEnemy( qtrue );
+				}
+				else if (NPC->longTermGoal >= 0 && NPC->padawanWaitTime < level.time + 500 && NPC->padawanReturnToPlayerTime < level.time)
+				{// Head back to jedi...
+					NPC->padawanReturnToPlayerTime = level.time + 5000;
+					NPC->longTermGoal = -1;
+
+					ucmd->forwardmove = 0;
+					ucmd->rightmove = 0;
+					ucmd->upmove = 0;
+					NPC_PickRandomIdleAnimantion(NPC);
+
+					NPC_FindEnemy( qtrue );
+
+					return qtrue;
+				}
+				else
+				{// Wait here for a second...
+					ucmd->forwardmove = 0;
+					ucmd->rightmove = 0;
+					ucmd->upmove = 0;
+					NPC_PickRandomIdleAnimantion(NPC);
+
+					NPC_FindEnemy( qtrue );
+
+					return qtrue;
+				}
+			}
+
+			if (NPC->padawanReturnToPlayerTime >= level.time)
+			{
+				goalWP = -1;
+				NPC->longTermGoal = goalWP;
+			}
+			else
+			{
+				goalWP = NPC_FindPadawanGoal(NPC);
+			}
+
+			if (goalWP >= 0) 
+			{// Have a new goal... Set it up...
+				NPC->longTermGoal = goalWP;
+			}
+
+			if (NPC->longTermGoal < 0 || NPC->longTermGoal > gWPNum) NPC->longTermGoal = -1;
+
+			goalWP = NPC->longTermGoal;
+
+			if (goalWP < 0)
+			{// Have no current goal... Head to jedi master...
+				VectorCopy(NPC->parent->r.currentOrigin, goal);
+			}
+			else
+			{
+				VectorCopy(gWPArray[goalWP]->origin, goal);
+			}
+
+			dist = DistanceHorizontal(goal, NPC->r.currentOrigin);
+
+			VectorCopy(goal, goalEnt->r.currentOrigin);
+			VectorCopy(goal, goalEnt->s.origin);
+			G_SetOrigin( goalEnt, goal );
+
+			VectorSet(angles, 0.0, 0.0, 0.0);
+			G_SetAngles( goalEnt, angles );
 
 			if (dist > 112 && dist < 1024)
 			{// If clear then move stright there...
-				NPC_FacePosition( NPC->parent->r.currentOrigin, qfalse );
+				NPC_FacePosition( goal, qfalse );
 
-				NPCS.NPCInfo->goalEntity = NPC->parent;
+				NPCS.NPCInfo->goalEntity = goalEnt;
 				//NPCS.NPCInfo->goalRadius = 96.0;
 				//NPCS.NPCInfo->greetEnt = NPC->parent;
+
+				//trap->Print("Moving to %f %f %f. I am at %f %f %f.\n", goal[0], goal[1], goal[2], NPC->r.currentOrigin[0], NPC->r.currentOrigin[1], NPC->r.currentOrigin[2]);
 
 				if ( UpdateGoal() )
 				{
@@ -252,7 +386,7 @@ qboolean NPC_PadawanMove( void )
 
 						return qtrue;
 					}
-					else if (Jedi_Jump( NPC->parent->r.currentOrigin, NPC->parent->s.number ))
+					else if (Jedi_Jump( goal, ENTITYNUM_NONE ))
 					{// Backup... Can we jump there???
 						return qtrue;
 					}
@@ -268,9 +402,9 @@ qboolean NPC_PadawanMove( void )
 //#if 0
 			else if (dist < 96)
 			{// If clear then move back a bit...
-				NPC_FacePosition( NPC->parent->r.currentOrigin, qfalse );
+				NPC_FacePosition( goal, qfalse );
 
-				NPCS.NPCInfo->goalEntity = NPC->parent;
+				NPCS.NPCInfo->goalEntity = goalEnt;
 
 				if ( UpdateGoal() )
 				{
@@ -306,6 +440,8 @@ qboolean NPC_PadawanMove( void )
 					G_AddPadawanCommentEvent( NPC, EV_PADAWAN_IDLE, 30000+irand(0,30000) );
 				}
 
+				NPC->padawanWaitTime = level.time + 1500;
+
 				return qtrue;
 			}
 			else if (NPC->parent->s.groundEntityNum != ENTITYNUM_NONE
@@ -333,7 +469,6 @@ qboolean NPC_PadawanMove( void )
 					if (waypoint >= 0 && waypoint < gWPNum)
 					{
 						TeleportNPC( NPC, gWPArray[waypoint]->origin, NPC->s.angles );
-
 
 						NPC_ClearGoal();
 						NPCS.NPCInfo->goalEntity = NULL;

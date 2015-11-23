@@ -221,6 +221,10 @@ struct gentity_s {
 	int				lastWaypoint;		//To make sure you don't double-back
 	int				lastValidWaypoint;	//ALWAYS valid -used for tracking someone you lost
 	int				noWaypointTime;		//Debouncer - so don't keep checking every waypoint in existance every frame that you can't find one
+	int				padawanNoWaypointTime;		//Debouncer - so don't keep checking every waypoint in existance every frame that you can't find one
+	int				padawanReturnToPlayerTime;
+	int				padawanWaitTime;
+	gentity_t		*padawanGoalEntity;
 	int				combatPoint;
 	int				failedWaypoints[MAX_FAILED_NODES];
 	int				failedWaypointCheckTime;

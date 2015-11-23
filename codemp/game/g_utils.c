@@ -940,6 +940,12 @@ void G_FreeEntity( gentity_t *ed ) {
 		return;
 	}
 
+	if (ed->padawanGoalEntity)
+	{// This is a padawan with a goal entity... Remove the entity as well...
+		G_FreeEntity(ed->padawanGoalEntity);
+		ed->padawanGoalEntity = NULL;
+	}
+
 	trap->UnlinkEntity ((sharedEntity_t *)ed);		// unlink from world
 
 	trap->ICARUS_FreeEnt( (sharedEntity_t *)ed );	//ICARUS information must be added after this point

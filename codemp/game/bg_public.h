@@ -1285,6 +1285,7 @@ typedef enum {
 	ET_MOVER_MARKER,
 	ET_SPAWNPOINT,
 	ET_TRIGGER_HURT,
+	ET_NPCGOAL,
 
 
 	ET_FREED,				// UQ1: Added to mark freed entities...

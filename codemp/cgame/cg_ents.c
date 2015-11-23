@@ -859,6 +859,35 @@ void CG_AddBracketedEnt(centity_t *cent)
 	}
 	cg.bracketedEntities[cg.bracketedEntityCount++] = cent->currentState.number;
 }
+
+void CG_NPC_Goal( centity_t *cent ) {
+	refEntity_t			ent;
+
+	memset (&ent, 0, sizeof(ent));
+
+	ent.reType = RT_MODEL;
+
+	ent.shaderRGBA[0] = cent->currentState.customRGBA[0];
+	ent.shaderRGBA[1] = cent->currentState.customRGBA[1];
+	ent.shaderRGBA[2] = cent->currentState.customRGBA[2];
+	ent.shaderRGBA[3] = cent->currentState.customRGBA[3];
+
+	ent.hModel = trap->R_RegisterModel( "models/flags/b_flag.md3" );
+	ent.customShader = 0;
+
+	VectorCopy(cent->lerpOrigin, ent.origin);
+	
+	VectorSet(ent.modelScale, 1.0f, 1.0f, 1.0f);
+	ent.angles[PITCH] = ent.angles[ROLL] = ent.angles[YAW] = 0.0f;
+	AnglesToAxis(ent.angles, ent.axis);
+	ScaleModelAxis( &ent );
+
+	// add to refresh list
+	AddRefEntityToScene (&ent);
+
+	trap->Print("NPC GOAL AT %f %f %f.\n", ent.origin[0], ent.origin[1], ent.origin[2]);
+}
+
 /*
 ==================
 CG_General
@@ -3480,6 +3509,9 @@ Ghoul2 Insert End
 	case ET_MOVER_MARKER:
 	case ET_SPAWNPOINT:
 	case ET_TRIGGER_HURT:
+		break;
+	case ET_NPCGOAL:
+		CG_NPC_Goal( cent );
 		break;
 	case ET_GENERAL:
 		CG_General( cent );
