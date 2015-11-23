@@ -17999,6 +17999,29 @@ SkipTrueView:
 		CG_DrawPlayerSphere(cent, cent->lerpOrigin, 2.0f, cgs.media.enlightenmentShader );
 	}
 
+	if (cent->currentState.healFxTime > cg.time || cent->playerState->healFxTime > cg.time)
+	{// Draw healing fx...
+		int		timeleft = cg.time - cent->currentState.healFxTime;
+		float	intensity = 0;
+		float	percentComplete = 0;
+		float	glowMult = 0;
+		vec3_t	org;
+
+		if (cent->playerState->healFxTime > cent->currentState.healFxTime) timeleft = cg.time - cent->playerState->healFxTime;
+
+		percentComplete = timeleft / 2000.0;
+
+		glowMult = (percentComplete * 2.0);
+
+		if (glowMult > 1.0) glowMult = 2.0 - glowMult; // Light grows larger, max at mid completion, then grow smaller again and vanish...
+
+		intensity = glowMult * 255.0;
+
+		VectorCopy(cent->lerpOrigin, org);
+		org[2]+=24;
+		AddLightToScene( org, intensity, 0.4f, 1.0f, 0.4f );
+	}
+
 	if (cent->currentState.eFlags & EF_INVULNERABLE)
 	{
 		// Jedi Knight Galaxies

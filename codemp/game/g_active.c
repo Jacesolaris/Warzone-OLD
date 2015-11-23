@@ -2019,6 +2019,18 @@ void ClientThink_real( gentity_t *ent ) {
 		return;
 	}
 
+	// UQ1: Why do we have 2 health stats in JKA???
+	if (ent->s.eType == ET_NPC)
+	{
+		ent->client->ps.stats[STAT_HEALTH] = ent->health;
+		ent->client->ps.stats[STAT_MAX_HEALTH] = ent->maxHealth;
+	}
+	else
+	{
+		ent->health = ent->client->ps.stats[STAT_HEALTH];
+		ent->maxHealth = ent->client->ps.stats[STAT_MAX_HEALTH];
+	}
+
 	// UQ1: Always update scales. I think icarus keeps overwriting it...
 	client->ps.iModelScale = ent->modelScale[0] * 100.0f;
 	ent->s.iModelScale = ent->modelScale[0] * 100.0f;

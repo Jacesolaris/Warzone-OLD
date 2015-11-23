@@ -1939,6 +1939,8 @@ typedef struct playerState_s {
 	// UQ1: Added - Extra flags...
 	int			extra_flags;
 
+	int			healFxTime;
+
 	//index values for each type of sound, gets the folder the sounds
 	//are in. I wish there were a better way to do this,
 	int		csSounds_Std;
@@ -2369,6 +2371,8 @@ typedef struct entityState_s {
 
 	// UQ1: Added - Extra flags...
 	int			extra_flags;
+
+	int			healFxTime;
 
 	//rww - spare values specifically for use by mod authors.
 	//See netf_overrides.txt if you want to increase the send

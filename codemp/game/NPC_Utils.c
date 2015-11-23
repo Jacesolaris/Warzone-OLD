@@ -1200,8 +1200,8 @@ qboolean NPC_ValidEnemy( gentity_t *ent )
 			else
 #endif //0
 			{
-				if (Distance(NPCS.NPC->r.currentOrigin, ent->r.currentOrigin) > 384
-					|| Distance(NPCS.NPC->parent->r.currentOrigin, ent->r.currentOrigin) > 384)
+				if (Distance(NPCS.NPC->r.currentOrigin, ent->r.currentOrigin) > 1024
+					|| Distance(NPCS.NPC->parent->r.currentOrigin, ent->r.currentOrigin) > 1024)
 				{// Too far from me or my master...
 					return qfalse;
 				}
@@ -1469,8 +1469,8 @@ qboolean NPC_ValidEnemy2( gentity_t *self, gentity_t *ent )
 			else
 #endif //0
 			{
-				if (Distance(self->r.currentOrigin, ent->r.currentOrigin) > 850
-					|| Distance(self->parent->r.currentOrigin, ent->r.currentOrigin) > 850)
+				if (Distance(self->r.currentOrigin, ent->r.currentOrigin) > 1024
+					|| Distance(self->parent->r.currentOrigin, ent->r.currentOrigin) > 1024)
 				{// Too far from me or my master...
 					return qfalse;
 				}

@@ -1131,6 +1131,8 @@ void ForceHeal( gentity_t *self )
 	*/
 	//NOTE: Decided to make all levels instant.
 
+	self->client->ps.healFxTime = self->s.healFxTime = level.time + 2000;
+
 	G_Sound( self, CHAN_ITEM, G_SoundIndex("sound/weapons/force/heal.wav") );
 }
 
@@ -1170,7 +1172,7 @@ void ForceTeamHeal( gentity_t *self )
 
 	if ( self->health <= 0 )
 	{
-		trap->Print("dead!\n");
+		//trap->Print("dead!\n");
 		return;
 	}
 
@@ -1213,7 +1215,8 @@ void ForceTeamHeal( gentity_t *self )
 		if (!ent) continue;
 		if (ent->health <= 0) continue;
 		if (!ent->client) continue;
-		if (ent->health >= ent->client->ps.stats[STAT_MAX_HEALTH]) continue;
+		if (ent->s.eType == ET_PLAYER && ent->health >= ent->client->ps.stats[STAT_MAX_HEALTH]) continue;
+		if (ent->s.eType == ET_NPC && ent->health >= ent->maxHealth) continue;
 
 		if (ent->s.eType == ET_NPC)
 		{
@@ -1272,20 +1275,39 @@ void ForceTeamHeal( gentity_t *self )
 	{
 		if (g_entities[pl[i]].health > 0)
 		{
-			if (g_entities[pl[i]].client->ps.stats[STAT_HEALTH] > g_entities[pl[i]].health)
+			gentity_t *plEnt = &g_entities[pl[i]];
+			int curHealth = plEnt->client->ps.stats[STAT_HEALTH];
+			int maxHealth = plEnt->client->ps.stats[STAT_MAX_HEALTH];
+
+			if (plEnt->s.eType == ET_NPC) 
 			{
-				g_entities[pl[i]].health = g_entities[pl[i]].client->ps.stats[STAT_HEALTH];
+				maxHealth = g_entities[pl[i]].maxHealth;
+				curHealth = g_entities[pl[i]].health;
+				plEnt->client->ps.stats[STAT_HEALTH] = plEnt->health;
+				plEnt->client->ps.stats[STAT_MAX_HEALTH] = plEnt->maxHealth;
 			}
-			else if (g_entities[pl[i]].health > g_entities[pl[i]].client->ps.stats[STAT_HEALTH])
+			else
 			{
-				g_entities[pl[i]].client->ps.stats[STAT_HEALTH] = g_entities[pl[i]].health;
+				if (plEnt->client->ps.stats[STAT_HEALTH] > plEnt->health)
+				{
+					plEnt->health = plEnt->client->ps.stats[STAT_HEALTH];
+				}
+				else if (plEnt->health > plEnt->client->ps.stats[STAT_HEALTH])
+				{
+					plEnt->client->ps.stats[STAT_HEALTH] = plEnt->health;
+				}
 			}
 
-			g_entities[pl[i]].health += healthadd;
+			plEnt->health += healthadd;
 
-			if (g_entities[pl[i]].health > g_entities[pl[i]].maxHealth) g_entities[pl[i]].health = g_entities[pl[i]].maxHealth;
+			if (plEnt->health > maxHealth)
+			{
+				plEnt->health = maxHealth;
+			}
 
-			g_entities[pl[i]].client->ps.stats[STAT_HEALTH] = g_entities[pl[i]].health;
+			plEnt->client->ps.stats[STAT_HEALTH] = plEnt->health;
+
+			plEnt->client->ps.healFxTime = plEnt->s.healFxTime = level.time + 2000;
 
 			//At this point we know we got one, so add him into the collective event client bitflag
 			if (!te)

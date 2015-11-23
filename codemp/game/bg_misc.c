@@ -3766,6 +3766,8 @@ void BG_PlayerStateToEntityState( playerState_t *ps, entityState_t *s, qboolean 
 	// UQ1: Added - Event Index... So we can send an extra value with events without creating a whole new entity each time...
 	s->eventIndex = ps->eventIndex;
 
+	s->healFxTime = ps->healFxTime;
+
 	// UQ1: Added - NPC sounds...
 	s->csSounds_Std = ps->csSounds_Std;
 	s->csSounds_Combat = ps->csSounds_Combat;
@@ -4034,6 +4036,8 @@ void BG_PlayerStateToEntityStateExtraPolate( playerState_t *ps, entityState_t *s
 
 	// UQ1: Added - Event Index... So we can send an extra value with events without creating a whole new entity each time...
 	s->eventIndex = ps->eventIndex;
+
+	s->healFxTime = ps->healFxTime;
 
 	// UQ1: Added - NPC sounds...
 	s->csSounds_Std = ps->csSounds_Std;
