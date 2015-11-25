@@ -1431,7 +1431,7 @@ void R_Register( void )
 	r_darkexpand = ri->Cvar_Get( "r_darkexpand", "0", CVAR_ARCHIVE );
 	r_truehdr = ri->Cvar_Get( "r_truehdr", "1", CVAR_ARCHIVE );
 	r_magicdetail = ri->Cvar_Get( "r_magicdetail", "1", CVAR_ARCHIVE );
-	r_magicdetailStrength = ri->Cvar_Get( "r_magicdetailStrength", "0.004", CVAR_ARCHIVE );
+	r_magicdetailStrength = ri->Cvar_Get( "r_magicdetailStrength", "0.015", CVAR_ARCHIVE );
 	r_dof = ri->Cvar_Get( "r_dof", "1", CVAR_ARCHIVE );
 	r_testvalue0 = ri->Cvar_Get( "r_testvalue0", "0", 0 );
 	r_testvalue1 = ri->Cvar_Get( "r_testvalue1", "0", 0 );

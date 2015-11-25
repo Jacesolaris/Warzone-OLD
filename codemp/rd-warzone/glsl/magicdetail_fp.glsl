@@ -1,10 +1,12 @@
-uniform sampler2D u_TextureMap;
+uniform sampler2D	u_TextureMap;
+uniform sampler2D	u_ScreenDepthMap;
 
 varying vec2		var_TexCoords;
 varying vec2		var_Dimensions;
 varying vec2		var_ScreenTex;
 
 uniform vec2		u_Dimensions;
+uniform vec4		u_ViewInfo; // zfar / znear, zfar
 uniform mat4		u_invEyeProjectionMatrix;
 uniform vec4		u_Local0;
 
@@ -12,7 +14,7 @@ vec2 PixelSize = vec2(1.0f / var_Dimensions.x, 1.0f / var_Dimensions.y);
 
 #define   MAGICDETAIL_STRENGTH u_Local0.x
 
-vec3 GenerateDetail( vec2 fragCoord )
+float GenerateDetail( vec2 fragCoord )
 {
 	float M =abs(length(texture2D(u_TextureMap, fragCoord + vec2(0., 0.)*PixelSize).rgb) / 3.0);
 	float L =abs(length(texture2D(u_TextureMap, fragCoord + vec2(1.0, 0.)*PixelSize).rgb) / 3.0);
@@ -24,17 +26,33 @@ vec3 GenerateDetail( vec2 fragCoord )
 	
 	vec4 N = vec4(normalize(vec3(X, Y, MAGICDETAIL_STRENGTH)), 1.0);
 
-	vec4 col = vec4(N.xyz * 0.5 + 0.5, 1.0);
-	return col.rgb;
+	vec3 col = N.xyz * 0.5 + 0.5;
+	return (length(col) / 3.0) * 2.0;
+}
+
+float getLinearDepth(sampler2D depthMap, const vec2 tex, const float zFarDivZNear)
+{
+		float sampleZDivW = texture2D(depthMap, tex).r;
+		return 1.0 / mix(zFarDivZNear, 1.0, sampleZDivW);
+		//return -var_ViewInfo.a * var_ViewInfo.z / (sampleZDivW * (var_ViewInfo.a - var_ViewInfo.z) - var_ViewInfo.a);
 }
 
 void main()
 {
 	vec4 inColor = texture2D(u_TextureMap, var_TexCoords);
-	vec4 mult = vec4(GenerateDetail(var_TexCoords.xy), 1.0);
-	//gl_FragColor.rgb = mult.rgb;
-	gl_FragColor.rgb = inColor.rgb * ((mult.r + mult.g + mult.b) / 3.0);
-	gl_FragColor.rgb = gl_FragColor.rgb * ((mult.r + mult.g + mult.b) / 3.0);
-	gl_FragColor.rgb = ((inColor.rgb * 2.0) + gl_FragColor.rgb) / 3.0;
+	float inDepth = getLinearDepth(u_ScreenDepthMap, var_TexCoords, u_ViewInfo.x);
+
+	// DEBUG: Depth check...
+	//gl_FragColor.rgb = vec3(inDepth);
+	//gl_FragColor.a = 1.0;
+	//return;
+
+	float strength = GenerateDetail(var_TexCoords.xy);
+	strength *= (strength * 1.4);
+	
+	vec4 color = vec4( (inColor.rgb * (strength * (1.0 - inDepth))) + (inColor.rgb * inDepth), 1.0);
+	color = clamp(color, 0.0, 1.0);
+
+	gl_FragColor.rgb = color.rgb;
 	gl_FragColor.a = 1.0;
 }
