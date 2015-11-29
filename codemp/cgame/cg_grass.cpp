@@ -15,7 +15,8 @@ extern "C" {
 #define			FOLIAGE_MAX_FOLIAGES 1048576
 
 //#define		__USE_ALL_GRASSES__ // Use all available grass shaders? Slower!
-//#define		__USE_ALL_PLANTS__ // Use all available plant shaders? Slower!
+#define		__USE_EXTRA_GRASSES__ // Use extra available grass shaders? Slower!
+#define		__USE_ALL_PLANTS__ // Use all available plant shaders? Slower!
 
 #define			__USE_FOV_CULL__ // Enables FOV culling...
 
@@ -33,7 +34,12 @@ extern "C" {
 //#define		__NO_TREES__ // Don't draw trees...
 
 #ifndef __USE_ALL_GRASSES__
+#ifndef __USE_EXTRA_GRASSES__
 #define		GRASS_SCALE_MULTIPLIER 1.0 // Scale down grass model by this much...
+#else //!__USE_EXTRA_GRASSES__
+//#define		GRASS_SCALE_MULTIPLIER 0.6 // Scale down grass model by this much...
+#define		GRASS_SCALE_MULTIPLIER 1.0 // Scale down grass model by this much...
+#endif //__USE_EXTRA_GRASSES__
 #else //__USE_ALL_GRASSES__
 #define		GRASS_SCALE_MULTIPLIER 0.6 // Scale down grass model by this much...
 //#define		GRASS_SCALE_MULTIPLIER 1.0 // Scale down grass model by this much...
@@ -348,6 +354,13 @@ extern "C" {
 			}
 #endif //__USE_ALL_GRASSES__
 
+#ifdef __USE_EXTRA_GRASSES__
+			if (FOLIAGE_GRASS_SHADERNUM[num] > 0)
+			{// Need to specify a shader...
+				re.customShader = FOLIAGE_GRASS_SHADERS[FOLIAGE_GRASS_SHADERNUM[num]];
+			}
+#endif //__USE_EXTRA_GRASSES__
+
 #ifdef __NO_GRASS_AT_TREES__
 			if (FOLIAGE_TREE_SELECTION[num] == 0)
 			{
@@ -465,7 +478,14 @@ extern "C" {
 
 		for (i = 0; i < FOLIAGE_NUM_POSITIONS; i++)
 		{
+#ifdef __USE_EXTRA_GRASSES__
+			if (irand(0,5) <= 3)
+				FOLIAGE_GRASS_SHADERNUM[i] = 0;
+			else
+				FOLIAGE_GRASS_SHADERNUM[i] = irand(1,36);
+#else //!__USE_EXTRA_GRASSES__
 			FOLIAGE_GRASS_SHADERNUM[i] = irand(1,36);
+#endif //__USE_EXTRA_GRASSES__
 			FOLIAGE_PLANT_SHADERNUM[i] = irand(1,81);
 		}
 
@@ -577,7 +597,7 @@ extern "C" {
 			//FOLIAGE_GRASS_MODEL[1] = trap->R_RegisterModel( "models/warzone/foliage/grass_dense.md3" );
 			//FOLIAGE_GRASS_MODEL[2] = trap->R_RegisterModel( "models/warzone/foliage/grass_dense.md3" );
 
-#ifndef __USE_ALL_GRASSES__
+#if !defined (__USE_ALL_GRASSES__) && !defined (__USE_EXTRA_GRASSES__)
 			FOLIAGE_PLANT_MODEL[0] = trap->R_RegisterModel( "models/warzone/foliage/plant03.md3" );
 			FOLIAGE_PLANT_MODEL[1] = trap->R_RegisterModel( "models/warzone/foliage/plant05.md3" );
 			FOLIAGE_PLANT_MODEL[2] = trap->R_RegisterModel( "models/warzone/foliage/plant10.md3" );
@@ -605,7 +625,7 @@ extern "C" {
 			FOLIAGE_PLANT_MODEL[24] = trap->R_RegisterModel( "models/warzone/foliage/plant79.md3" );
 			FOLIAGE_PLANT_MODEL[25] = trap->R_RegisterModel( "models/warzone/foliage/plant80.md3" );
 			FOLIAGE_PLANT_MODEL[26] = trap->R_RegisterModel( "models/warzone/foliage/plant81.md3" );
-#else //__USE_ALL_GRASSES__
+#else //!__USE_ALL_GRASSES__ && !__USE_EXTRA_GRASSES__
 			int last = 0;
 
 			for (int i = 0; i < 27; i++)
@@ -1210,7 +1230,14 @@ float	FOLIAGE_FILE_VERSION =	1.1f;
 
 			for (i = 0; i < FOLIAGE_NUM_POSITIONS; i++)
 			{
+#ifdef __USE_EXTRA_GRASSES__
+				if (irand(0,5) <= 3)
+					FOLIAGE_GRASS_SHADERNUM[i] = 0;
+				else
+					FOLIAGE_GRASS_SHADERNUM[i] = irand(1,36);
+#else //!__USE_EXTRA_GRASSES__
 				FOLIAGE_GRASS_SHADERNUM[i] = irand(1,36);
+#endif //__USE_EXTRA_GRASSES__
 				FOLIAGE_PLANT_SHADERNUM[i] = irand(1,81);
 			}
 
@@ -1594,7 +1621,14 @@ float	FOLIAGE_FILE_VERSION =	1.1f;
 
 				for (i = 0; i < FOLIAGE_NUM_POSITIONS; i++)
 				{
+#ifdef __USE_EXTRA_GRASSES__
+					if (irand(0,5) <= 3)
+						FOLIAGE_GRASS_SHADERNUM[i] = 0;
+					else
+						FOLIAGE_GRASS_SHADERNUM[i] = irand(1,36);
+#else //!__USE_EXTRA_GRASSES__
 					FOLIAGE_GRASS_SHADERNUM[i] = irand(1,36);
+#endif //__USE_EXTRA_GRASSES__
 					FOLIAGE_PLANT_SHADERNUM[i] = irand(1,81);
 				}
 
