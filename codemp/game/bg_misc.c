@@ -1588,10 +1588,10 @@ NOTENOTE This weapon is not yet complete.  Don't place it.
 {
 	"weapon_CloneTrooper_Rifle",
 	"sound/weapons/w_pkup.wav",
-	{ "models/weapons3/heavy_repeater/heavy_repeater_w.glm",
+	{ "models/weapons/DC-15A_Rifle/model.glm",
 	0, 0, 0 },
-	/* view */		"models/weapons3/heavy_repeater/heavy_repeater.md3",
-	/* icon */		"gfx/hud/w_icon_clonerifle",
+	/* view */		"models/weapons/DC-15A_Rifle/model.md3",
+	/* icon */		"models/weapons/DC-15A_Rifle/icon_default.tga",
 	/* pickup *///	"Clone Trooper Rifle",
 	100,
 	IT_WEAPON,
