@@ -64,7 +64,7 @@ vec3 GetBumpNormals ( vec2 texCoord ) {
 #endif //!BUMPNORMALS_FROM_DIFFUSE
 }
 
-//#define NORMALS_FROM_DEPTH
+#define NORMALS_FROM_DEPTH
 
 #ifdef NORMALS_FROM_DEPTH
 float GetProDepth(vec2 coords) //not really linear but better for normal map generation

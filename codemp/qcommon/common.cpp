@@ -5,6 +5,11 @@
 #include "qcommon/game_version.h"
 #include "../server/NPCNav/navigator.h"
 
+#include "../client/fast_mutex.h"
+#include "../client/tinythread.h"
+
+extern tthread::fast_mutex fs_lock;
+
 #define	MAXPRINTMSG	4096
 
 FILE *debuglogfile;
@@ -1323,6 +1328,8 @@ void Com_Init( char *commandLine ) {
 void Com_WriteConfigToFile( const char *filename ) {
 	fileHandle_t	f;
 
+	fs_lock.lock();
+
 	f = FS_FOpenFileWrite( filename );
 	if ( !f ) {
 		Com_Printf ("Couldn't write %s.\n", filename );
@@ -1333,6 +1340,8 @@ void Com_WriteConfigToFile( const char *filename ) {
 	Key_WriteBindings (f);
 	Cvar_WriteVariables (f);
 	FS_FCloseFile( f );
+
+	fs_lock.unlock();
 }
 
 

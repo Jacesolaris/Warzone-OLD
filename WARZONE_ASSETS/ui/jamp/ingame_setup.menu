@@ -1977,10 +1977,10 @@
 		
 		itemDef 
 		{	
-			name				video_lensflare
+			name				video_magicdetail
 			group				video_advanced
 			type				ITEM_TYPE_MULTI
-			text				"Lens Flares:"
+			text				"Magic Detail:"
 			rect				220 203 300 20
 			textalign			ITEM_ALIGN_RIGHT
 			textalignx			165
@@ -1989,8 +1989,8 @@
 			textscale 			1
 			forecolor		.615 .615 .956 1
 			cvarFloatList		{  @MENUS_OFF 0 @MENUS_ON 1 }
-			descText			"Enable Lens Flares?"
-			cvar				"r_lensflare"
+			descText			"Enable Magic Detail?"
+			cvar				"r_magicdetail"
 
 			mouseenter 
 			{ 
@@ -2306,11 +2306,73 @@
 		
 		itemDef 
 		{	
+			name				video_lensflare
+			group				video_advanced2
+			type				ITEM_TYPE_MULTI
+			text				"Lens Flares:"
+			rect				220 163 300 20
+			textalign			ITEM_ALIGN_RIGHT
+			textalignx			165
+			textaligny			0
+			font 				4
+			textscale 			1
+			forecolor		.615 .615 .956 1
+			cvarFloatList		{  @MENUS_OFF 0 @MENUS_ON 1 }
+			descText			"Enable Lens Flares?"
+			cvar				"r_lensflare"
+
+			mouseenter 
+			{ 
+				show			highlight7
+			}
+			mouseexit 
+			{ 
+				hide			highlight7
+			} 
+			action 
+			{
+				play			"sound/interface/button1"
+			}
+		}
+		
+		itemDef 
+		{	
+			name				video_rbm
+			group				video_advanced2
+			type				ITEM_TYPE_MULTI
+			text				"Reflective Bump Mapping:"
+			rect				220 183 300 20
+			textalign			ITEM_ALIGN_RIGHT
+			textalignx			165
+			textaligny			0
+			font 				4
+			textscale 			1
+			forecolor		.615 .615 .956 1
+			cvarFloatList		{  @MENUS_OFF 0 @MENUS_ON 1 }
+			descText			"Enable Reflective Bump Mapping?"
+			cvar				"r_rbm"
+
+			mouseenter 
+			{ 
+				show			highlight8
+			}
+			mouseexit 
+			{ 
+				hide			highlight8
+			} 
+			action 
+			{
+				play			"sound/interface/button1"
+			}
+		}
+		
+		itemDef 
+		{	
 			name				video_cubemapping
 			group				video_advanced2
 			type				ITEM_TYPE_MULTI
 			text				"Cube Mapping"
-			rect				220 163 300 20
+			rect				220 203 300 20
 			textalign			ITEM_ALIGN_RIGHT
 			textalignx			165
 			textaligny			0
@@ -2323,11 +2385,11 @@
 
 			mouseenter 
 			{ 
-				show			highlight7
+				show			highlight9
 			}
 			mouseexit 
 			{ 
-				hide			highlight7
+				hide			highlight9
 			} 
 			action 
 			{
@@ -2344,7 +2406,7 @@
 			group				video_advanced2
 			type				ITEM_TYPE_MULTI
 			text				"Cube Map Detail"
-			rect				220 183 300 20
+			rect				220 223 300 20
 			textalign			ITEM_ALIGN_RIGHT
 			textalignx			165
 			textaligny			0
@@ -2357,11 +2419,11 @@
 
 			mouseenter 
 			{ 
-				show			highlight8
+				show			highlight10
 			}
 			mouseexit 
 			{ 
-				hide			highlight8
+				hide			highlight10
 			} 
 			action 
 			{
@@ -2381,7 +2443,7 @@
 			cvarTest			r_ext_texture_filter_anisotropic_avail
 			disableCvar			{ 0 }     
 			cvarfloat				r_ext_texture_filter_anisotropic 1 0 16
-			rect				220 203 300 20
+			rect				220 243 300 20
 			textalign			ITEM_ALIGN_RIGHT
 			textalignx			174
 			textaligny			0
@@ -2401,11 +2463,11 @@
 
 			mouseenter 
 			{ 
-				show			highlight9
+				show			highlight11
 			}
 			mouseexit 
 			{ 
-				hide			highlight9
+				hide			highlight11
 			} 
 		}
 		
