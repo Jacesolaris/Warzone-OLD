@@ -1239,21 +1239,8 @@ static int CG_CalcFov( void ) {
 		cgFov = cg_fov.value;
 	}
 
-	if ( !drawingSniperScopeView ) {
-		// not drawing the inner zoom view, use standard fov.
-		if (cgFov < 1)
-		{
-			cgFov = 1;
-		}
-
-		if (cgFov > 180)
-		{
-			cgFov = 180;
-		}
-
-		fov_x = cgFov;
-	} else if ( cg.predictedPlayerState.pm_type == PM_INTERMISSION ) {
-		// if in intermission, use a fixed value
+	if ( !drawingSniperScopeView || cg.predictedPlayerState.pm_type == PM_INTERMISSION) {
+		// not drawing the inner zoom view, or intermission, use standard fov.
 		if (cgFov < 1)
 		{
 			cgFov = 1;
