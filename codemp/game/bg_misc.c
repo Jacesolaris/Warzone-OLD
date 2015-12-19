@@ -263,8 +263,8 @@ int WeaponReadyAnim[WP_NUM_WEAPONS] =
 	TORSO_WEAPONREADY3,//WP_T21,
 	DC15_READY,//WP_EE3,
 	TORSO_WEAPONREADY2,//WP_DC_15S_CLONE_PISTOL,
-	TORSO_WEAPONREADY3,//WP_DLT20A,
-	DC15_READY,//WP_CLONERIFLE,
+	TORSO_WEAPONREADY3,//WP_DLT_19,
+	DC15_READY,//WP_DC_15A_Rifle,
 	TORSO_WEAPONREADY2,//WP_WESTER_PISTOL,
 	TORSO_WEAPONREADY2, //WP_ELG_3A,
 	TORSO_WEAPONREADY2, //WP_S5_PISTOL,
@@ -290,6 +290,9 @@ int WeaponReadyAnim[WP_NUM_WEAPONS] =
 	TORSO_WEAPONREADY3,//WP_BRYAR_CARBINE,
 	TORSO_WEAPONREADY3,//WP_BRYAR_RIFLE,
 	TORSO_WEAPONREADY3,//WP_BRYAR_RIFLE_SCOPE,
+	DC15_READY,//WP_PULSECANON,
+	DC15_READY,//WP_PROTON_CARBINE_RIFLE,
+	TORSO_WEAPONREADY2,//WP_DH_17_PISTOL,
 
 
 	TORSO_WEAPONREADY3,//TORSO_WEAPONREADY9,//WP_ROCKET_LAUNCHER,
@@ -340,8 +343,8 @@ int WeaponReadyLegsAnim[WP_NUM_WEAPONS] =
 	BOTH_STAND1,//WP_T21,
 	BOTH_STAND1,//WP_EE3,
 	BOTH_STAND1,//WP_DC_15S_CLONE_PISTOL,
-	BOTH_STAND1,//WP_DLT20A,
-	BOTH_STAND1,//WP_CLONERIFLE,
+	BOTH_STAND1,//WP_DLT_19,
+	BOTH_STAND1,//WP_DC_15A_Rifle,
 	BOTH_STAND1,//WP_WESTER_PISTOL,
 	BOTH_STAND1,//WP_ELG_3A,
 	BOTH_STAND1,//WP_S5_PISTOL,
@@ -367,6 +370,9 @@ int WeaponReadyLegsAnim[WP_NUM_WEAPONS] =
 	BOTH_STAND1,//WP_BRYAR_CARBINE,
 	BOTH_STAND1,//WP_BRYAR_RIFLE,
 	BOTH_STAND1,//WP_BRYAR_RIFLE_SCOPE,
+	BOTH_STAND1,//WP_PULSECANON,
+	BOTH_STAND1,//WP_PROTON_CARBINE_RIFLE,
+	BOTH_STAND1,//WP_DH_17_PISTOL,
 
 	BOTH_STAND1,//TORSO_WEAPONREADY9,//WP_ROCKET_LAUNCHER,
 
@@ -415,8 +421,8 @@ int WeaponAttackAnim[WP_NUM_WEAPONS] =
 	BOTH_ATTACK3,//WP_T21,
 	DC15_FIRE,//WP_EE3,
 	BOTH_ATTACK2,//WP_DC_15S_CLONE_PISTOL,
-	DC15_FIRE, //WP_DLT20A,
-	DC15_FIRE,//WP_CLONERIFLE,
+	DC15_FIRE, //WP_DLT_19,
+	DC15_FIRE,//WP_DC_15A_Rifle,
 	BOTH_ATTACK2,//WP_WESTER_PISTOL,
 	BOTH_ATTACK2,//WP_ELG_3A,
 	BOTH_ATTACK2,//WP_S5_PISTOL,
@@ -442,6 +448,9 @@ int WeaponAttackAnim[WP_NUM_WEAPONS] =
 	DC15_FIRE,// WP_BRYAR_CARBINE,
 	DC15_FIRE,//WP_BRYAR_RIFLE,
 	DC15_FIRE,//WP_BRYAR_RIFLE_SCOPE,
+	DC15_FIRE,//WP_PULSECANON,
+	DC15_FIRE,//WP_PROTON_CARBINE_RIFLE,
+	BOTH_ATTACK2,//WP_DH_17_PISTOL,
 	
 	BOTH_ATTACK3,//BOTH_ATTACK9,//WP_ROCKET_LAUNCHER,
 
@@ -1334,10 +1343,10 @@ Don't place this
 	{
 		"weapon_blaster",
 		"sound/weapons/w_pkup.wav",
-        { "models/weapons3/blaster_r/blaster_w.glm",
+        { "models/weapons/E-11_Rifle/model.glm",
 		0, 0, 0},
-/* view */		"models/weapons3/blaster_r/blaster.md3",
-/* icon */		"gfx/hud/w_icon_E11",
+/* view */		"models/weapons/E-11_Rifle/model.glm",
+/* icon */		"models/weapons/E-11_Rifle/icon_default",
 /* pickup *///	"E11 Blaster Rifle",
 		100,
 		IT_WEAPON,
@@ -1550,9 +1559,9 @@ NOTENOTE This weapon is not yet complete.  Don't place it.
 {
 	"weapon_ee-3",
 	"sound/weapons/w_pkup.wav",
-	{ "models/weapons3/ee-3/ee-3_w.glm",
+	{ "models/weapons/EE3_Rifle/model.glm",
 	0, 0, 0 },
-	/* view */		"models/weapons3/ee-3/ee-3.md3",
+	/* view */		"models/weapons/EE3_Rifle/model.glm",
 	/* icon */		"gfx/hud/w_icon_ee-3",
 	/* pickup *///	"t-21",
 	100,
@@ -1569,14 +1578,14 @@ NOTENOTE This weapon is not yet complete.  Don't place it.
 {
 	"weapon_DLT-20a",
 	"sound/weapons/w_pkup.wav",
-	{ "models/weapons3/dlt20a/dlt20a_w.glm",
+	{ "models/weapons/DLT-19_HeavyBlaster/model_scope.glm",
 	0, 0, 0 },
-	/* view */		"models/weapons3/dlt20a/dlt20a.md3",
-	/* icon */		"gfx/hud/w_icon_dlt20a",
+	/* view */		"models/weapons/DLT-19_HeavyBlaster/model_scope.md3",
+	/* icon */		"models/weapons/DLT-19_HeavyBlaster/icon_scope",
 	/* pickup *///	"t-21",
 	100,
 	IT_WEAPON,
-	WP_DLT20A,
+	WP_DLT_19,
 	/* precache */ "",
 	/* sounds */ "",
 	"@MENUS_THE_PRIMARY_WEAPON_OF"				// description
@@ -1595,7 +1604,7 @@ NOTENOTE This weapon is not yet complete.  Don't place it.
 	/* pickup *///	"Clone Trooper Rifle",
 	100,
 	IT_WEAPON,
-	WP_CLONERIFLE,
+	WP_DC_15A_Rifle,
 	/* precache */ "",
 	/* sounds */ "",
 	"@MENUS_THE_PRIMARY_WEAPON_OF"				// description
@@ -2085,6 +2094,60 @@ Don't place this
 	/* sounds */ "",
 	"@MENUS_THE_PRIMARY_WEAPON_OF"				// description
 },
+
+/*QUAKED weapon_CloneTrooper_Rifle (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+*/
+{
+	"weapon_Pulse_Canon",
+	"sound/weapons/w_pkup.wav",
+	{ "models/weapons/PulseCannon/model.glm",
+	0, 0, 0 },
+	/* view */		"models/weapons/PulseCannon/model.md3",
+	/* icon */		"models/weapons/PulseCannon/icon_default.tga",
+	/* pickup *///	"Clone Trooper Rifle",
+	100,
+	IT_WEAPON,
+	WP_PULSECANON,
+	/* precache */ "",
+	/* sounds */ "",
+	"@MENUS_THE_PRIMARY_WEAPON_OF"				// description
+},
+
+/*QUAKED weapon_ee-3 (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+*/
+{
+	"weapon_ee-3",
+	"sound/weapons/w_pkup.wav",
+	{ "models/weapons/ProtonCarbine/model.glm",
+	0, 0, 0 },
+	/* view */		"models/weapons/ProtonCarbine/model.md3",
+	/* icon */		"models/weapons/ProtonCarbine/icon_default",
+	/* pickup *///	"t-21",
+	100,
+	IT_WEAPON,
+	WP_PROTON_CARBINE_RIFLE,
+	/* precache */ "",
+	/* sounds */ "",
+	"@MENUS_THE_PRIMARY_WEAPON_OF"				// description
+},
+
+/*QUAKED weapon_blaster (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+*/
+{
+	"weapon_DH_17_Pistol",
+	"sound/weapons/w_pkup.wav",
+	{ "models/weapons/DH-17_Pistol/model.glm",
+	0, 0, 0},
+	/* view */		"models/weapons/DH-17_Pistol/model.glm",
+	/* icon */		"models/weapons/DH-17_Pistol/icon_default",
+	/* pickup *///	"E11 Blaster Rifle",
+	100,
+	IT_WEAPON,
+	WP_DH_17_PISTOL,
+	/* precache */ "",
+	/* sounds */ "",
+	"@MENUS_THE_PRIMARY_WEAPON_OF"				// description
+},
 #ifndef __MMO__
 /*QUAKED ammo_thermal (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
 */
@@ -2145,10 +2208,10 @@ Don't place this
 	{
 		"weapon_thermal",
 		"sound/weapons/w_pkup.wav",
-        { "models/weapons2/thermal/thermal_w.glm", "models/weapons2/thermal/thermal_pu.md3",
+		{ "models/weapons/Grenade_Thermal/model.glm", "models/weapons/Grenade_Thermal/model_proj.md3",
 		0, 0 },
-/* view */		"models/weapons2/thermal/thermal.md3",
-/* icon */		"gfx/hud/w_icon_thermal",
+/* view */		"models/weapons/Grenade_Thermal/model.md3",
+/* icon */		"models/weapons/Grenade_Thermal/icon_default",
 /* pickup *///	"Thermal Detonator",
 		4,
 		IT_WEAPON,

@@ -278,9 +278,10 @@ static void CG_LightningBolt( centity_t *cent, vec3_t origin ) {
 	if (cent->currentState.weapon == WP_DC_15S_CLONE_PISTOL && cent->currentState.eFlags & EF_ALT_FIRING)
 	if (cent->currentState.weapon == WP_WOOKIE_BOWCASTER && cent->currentState.eFlags & EF_ALT_FIRING)
 	if (cent->currentState.weapon == WP_DC15_EXT && cent->currentState.eFlags & EF_ALT_FIRING)
-	if (cent->currentState.weapon == WP_Z6_BLASTER_CANON && cent->currentState.eFlags & EF_ALT_FIRING)
+	if (cent->currentState.weapon == WP_PULSECANON && cent->currentState.eFlags & EF_ALT_FIRING)
 	if (cent->currentState.weapon == WP_DC_17_CLONE_PISTOL && cent->currentState.eFlags & EF_ALT_FIRING)
 	if (cent->currentState.weapon == WP_ARC_CASTER_IMPERIAL && cent->currentState.eFlags & EF_ALT_FIRING)
+	if (cent->currentState.weapon == WP_PULSECANON && cent->currentState.eFlags & EF_ALT_FIRING)
 	{ /*nothing*/ }
 	else
 	{
@@ -741,6 +742,7 @@ Ghoul2 Insert End
 		  (cent->currentState.weapon == WP_Z6_BLASTER_CANON && cent->currentState.modelindex2 == WEAPON_CHARGING_ALT) ||
 		  (cent->currentState.weapon == WP_S5_PISTOL && cent->currentState.modelindex2 == WEAPON_CHARGING_ALT) ||
 		  (cent->currentState.weapon == WP_ARC_CASTER_IMPERIAL && cent->currentState.modelindex2 == WEAPON_CHARGING) ||
+		  (cent->currentState.weapon == WP_PULSECANON && cent->currentState.modelindex2 == WEAPON_CHARGING_ALT) ||
 		  (cent->currentState.weapon == WP_DC_17_CLONE_PISTOL && cent->currentState.modelindex2 == WEAPON_CHARGING_ALT)))
 	{
 		int		shader = 0;
@@ -801,6 +803,7 @@ Ghoul2 Insert End
 		else if (cent->currentState.weapon == WP_DC_15S_CLONE_PISTOL 
 			|| cent->currentState.weapon == WP_DC15_EXT 
 			|| cent->currentState.weapon == WP_Z6_BLASTER_CANON 
+			|| cent->currentState.weapon == WP_PULSECANON
 			|| cent->currentState.weapon == WP_DC_17_CLONE_PISTOL)
 		{
 			val = (cg.time - cent->currentState.constantLight) * 0.001f;
@@ -895,8 +898,13 @@ Ghoul2 Insert End
 	}
 
 	// add the flash
-	if ((weaponNum == WP_DEMP2 || weaponNum == WP_DC_15S_CLONE_PISTOL || weaponNum == WP_WOOKIE_BOWCASTER
-		|| weaponNum == WP_DC15_EXT || weaponNum == WP_Z6_BLASTER_CANON || weaponNum == WP_DC_17_CLONE_PISTOL)
+	if ((weaponNum == WP_DEMP2 
+		|| weaponNum == WP_DC_15S_CLONE_PISTOL 
+		|| weaponNum == WP_WOOKIE_BOWCASTER
+		|| weaponNum == WP_DC15_EXT 
+		|| weaponNum == WP_Z6_BLASTER_CANON 
+		|| weaponNum == WP_DC_17_CLONE_PISTOL
+		|| weaponNum == WP_PULSECANON)
 		&& ( nonPredictedCent->currentState.eFlags & EF_FIRING ) )
 	{
 		// continuous flash
@@ -2062,6 +2070,7 @@ void CG_FireWeapon( centity_t *cent, qboolean altFire ) {
 			ent->weapon == WP_FLECHETTE ||
 			(ent->weapon == WP_DC15_EXT && altFire) ||
 			(ent->weapon == WP_Z6_BLASTER_CANON && altFire) ||
+			(ent->weapon == WP_PULSECANON && altFire) ||
 			(ent->weapon == WP_CONCUSSION && !altFire))))
 		{
 			if (ent->weapon == WP_CONCUSSION)
@@ -2090,6 +2099,10 @@ void CG_FireWeapon( centity_t *cent, qboolean altFire ) {
 				CGCam_Shake(flrand(2, 3), 350);
 			}
 			else if (ent->weapon == WP_Z6_BLASTER_CANON)
+			{
+				CGCam_Shake(flrand(2, 3), 350);
+			}
+			else if (ent->weapon == WP_PULSECANON)
 			{
 				CGCam_Shake(flrand(2, 3), 350);
 			}

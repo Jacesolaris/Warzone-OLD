@@ -3681,6 +3681,10 @@ static void WP_FireBlobGrenade(gentity_t *ent)
 	{// Since we want alt fx on client, we need to send this as alt fire.
 		missile = CreateMissile(start, forward, vel, 10000, ent, qtrue);
 	}
+	else if (ent->s.weapon == WP_PULSECANON)
+	{// Since we want alt fx on client, we need to send this as alt fire.
+		missile = CreateMissile(start, forward, vel, 10000, ent, qtrue);
+	}
 	else
 		missile = CreateMissile(start, forward, vel, 10000, ent, qfalse);
 
@@ -3698,7 +3702,9 @@ static void WP_FireBlobGrenade(gentity_t *ent)
 	missile->clipmask = MASK_SHOT | CONTENTS_LIGHTSABER;
 	missile->genericValue1 = ChargeGrenadeBlobs;
 	
-	if (ChargeGrenadeBlobs == ent->s.weapon == WP_DC15_EXT || ent->s.weapon == WP_Z6_BLASTER_CANON)
+	if (ChargeGrenadeBlobs == ent->s.weapon == WP_DC15_EXT 
+		|| ent->s.weapon == WP_Z6_BLASTER_CANON
+		|| ent->s.weapon == WP_PULSECANON)
 	{
 		int time = (level.time - ent->client->ps.weaponChargeTime / BLOB_GRENADE_CHARGE_UNIT);
 		float ratio;
@@ -5152,6 +5158,8 @@ void FireWeapon( gentity_t *ent, qboolean altFire ) {
 				WP_DoubleBarrel_Guns_MainFire(ent, altFire, DOUBLEBARREL_VEL, DOUBLEBARREL_DAMAGE, DOUBLEBARREL_SPREAD, ent->s.weapon);
 			break;
 
+		case WP_DH_17_PISTOL:
+		case WP_PROTON_CARBINE_RIFLE:
 		case WP_BRYAR_CARBINE:
 		case WP_A200_ACP_BATTLERIFLE:
 		case WP_CLONE_BLASTER:
@@ -5159,7 +5167,7 @@ void FireWeapon( gentity_t *ent, qboolean altFire ) {
 			if (altFire)
 				WP_FireBlaster(ent, altFire, BLASTER_VELOCITY, BLASTER_DAMAGE, BLASTER_SPREAD, ent->s.weapon);
 			else
-				WP_FireBlaster(ent, altFire, BLASTER_VELOCITY, BLASTER_DAMAGE, 0.0, ent->s.weapon);
+				WP_FireBlaster(ent, altFire, BLASTER_VELOCITY, BLASTER_DAMAGE, 0.5, ent->s.weapon);
 			break;
 
 		case WP_A280: // UQ1: Example. Should have it's own code...
@@ -5214,15 +5222,22 @@ void FireWeapon( gentity_t *ent, qboolean altFire ) {
 				WP_FireBlaster( ent, altFire, BLASTER_VELOCITY, BLASTER_DAMAGE, BLASTER_SPREAD, ent->s.weapon );
 			break;
 
-		case WP_DLT20A:
+		case WP_DLT_19:
 			if (altFire)
 				WP_FireBlaster(ent, altFire, BLASTER_VELOCITY*2.5, RIFLE_SNIPER_DAMAGE*1.5, 0.0, ent->s.weapon);
 			else
-				WP_FireBlaster(ent, altFire, BLASTER_VELOCITY, BLASTER_DAMAGE, BLASTER_SPREAD, ent->s.weapon);
+				WP_FireRepeater(ent, altFire);
 			break;
 
 		
-		case WP_CLONERIFLE:
+		case WP_DC_15A_Rifle:
+			if (altFire)
+				WP_RepeaterAltFire(ent);
+			else
+				WP_FireBlaster(ent, altFire, BLASTER_VELOCITY, REPEATER_DAMAGE, 0.0, ent->s.weapon);
+			break;
+
+		case WP_PULSECANON:
 			if (altFire)
 				WP_RepeaterAltFire(ent);
 			else

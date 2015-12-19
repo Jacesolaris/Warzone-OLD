@@ -31,8 +31,8 @@ vec3_t WP_MuzzlePoint[WP_NUM_WEAPONS] =
 	{70,	4,		-6	},	// WP_T21,
 	{70,	7,		-6	},	// WP_EE3,
 	{70, 	3,		-1	},	// WP_DC_15S_CLONE_PISTOL,
-	{70,	7,		-6	},	// WP_DLT20A,
-	{70,	9,	    -6	},	// WP_CLONERIFLE,
+	{70,	7,		-6	},	// WP_DLT_19,
+	{70,	9,	    -6	},	// WP_DC_15A_Rifle,
 	{70, 	3.5,  	-1	},	// WP_WESTER_PISTOL,
 	{70, 	3.5,  	-1	},	// WP_ELG_3A,
 	{70, 	3,  	-1	},	// WP_S5_PISTOL,
@@ -58,6 +58,9 @@ vec3_t WP_MuzzlePoint[WP_NUM_WEAPONS] =
 	{30,	7.5,	-6	},	// WP_BRYAR_CARBINE,
 	{70,	7.5,	-6	},	// WP_BRYAR_RIFLE,
 	{70,	7.5,	-6	},	// WP_BRYAR_RIFLE_SCOPE,
+	{70,	9,	    -6	},	// WP_PULSECANON,
+	{70,	7,		-6	},	// WP_PROTON_CARBINE_RIFLE,
+	{70, 	2.5,	-1	},	// WP_DH_17_PISTOL,
 	//old weapons
 	{30,	6,		-14	},	// WP_ROCKET_LAUNCHER,
 	{12,	0,		-4	},	// WP_THERMAL,
@@ -97,18 +100,18 @@ weaponData_t weaponData[WP_NUM_WEAPONS] = {
 	{ "A280 Clone Blaster",							250,		8192,		1500,			8192,		0,				0,					0,			3,				0,			1700	},
 	{ "DC-15 Blaster",								175,		8192,		900,			8192,		0,				3,					0,			3,			    0,			2100	},
 	{ "Westarm 5 Blaster",							175,		8192,		900,			8192,		0,				3,					0,			250,		    0,			2100	},
-	{ "T-21 Blaster Rifle",							175,		8192,		1200,			8192,		0,				100,					0,			0,				0,			0	},
+	{ "T-21 Blaster Rifle",							175,		8192,		1200,			8192,		0,				100,				0,			0,				0,			0	},
 	{ "EE-3 Blaster Rifle",							250,		8192,		1200,			8192,		0,				0,					0,			0,				0,			0	},
 	{ "DC-15-S Blaster Pistol",						450,		8192,		900,			8192,		0,				250,				0,			3,				0,			2100	},
-	{ "DLT-20-A Blaster Rifle",						350,		8192,		1200,			8192,		0,				0,					0,			0,				0,			0	},
-	{ "Clone Trooper Rifle",						175,		8192,		900,			8192,		0,				250,				0,			3,				0,			2100	},
+	{ "DLT-19 Heavy Blaster Rifle",					175,		8192,		1200,			8192,		0,				0,					0,			0,				0,			0	},
+	{ "DC-15A_Rifle",								175,		8192,		900,			8192,		0,				250,				0,			3,				0,			2100	},
 	{ "Wester Pistol",								800,		8192,		800,			8192,		0,				200,				0,			1,				0,			1500	},
 	{ "ELG-3A Pistol",								800,		8192,		800,			8192,		0,				200,				0,			1,				0,			1500	},
 	{ "S-5 Pistol",									800,		8192,		800,			8192,		0,				200,				0,			1,				0,			1500	},
 	{ "Z-6 Rotary Blaster Cannon",					125,		8192,		2800,			8192,		0,				0,					0,			0,				0,			0	},
 	{ "Wookiee Bowcaster",							350,		8192,		650,			8192,		0,				0,					5,			0,				1700,		0	},
 	{ "Wookie Pistol",								500,		8192,		250,			8192,		0,				200,				0,			1,				0,			1500	},
-	{ "DC-15-S Clone Blaster",						350,		8192,		275,			8192,		0,				0,					0,			0,				0,			0	},
+	{ "DC-15-S Blaster",							350,		8192,		275,			8192,		0,				0,					0,			0,				0,			0	},
 	{ "DC-15 Ext Blaster",							175,		8192,		900,			8192,		0,				250,				0,			3,				0,			2100	},
 	{ "E-60 Pulse Rocket Launcher",					3000,		8192,		5000,			8192,		0,				0,					0,			0,				0,			0	},
 	{ "CW Pulse Rocket Launcher",					3000,		8192,		5000,			8192,		0,				0,					0,			0,				0,			0	},
@@ -127,6 +130,9 @@ weaponData_t weaponData[WP_NUM_WEAPONS] = {
 	{ "Bryar Carbine Blaster",						350,		8192,		250,			8192,		0,				200,				0,			3,				0,			1700	},
 	{ "Bryar Rifle",								275,		8192,		600,			8192,		0,				0,					0,			0,				0,			0	},
 	{ "Bryar Sniper Rifle",							250,		8192,		1200,			8192,		0,				0,					0,			0,				0,			0	},
+	{ "Pulse Canon",								200,		8192,		2800,			8192,		0,				0,					0,			0,				0,			0	},
+	{ "Proton Carbine Rifle",						350,		8192,		275,			8192,		0,				200,				0,			3,				0,			1700	},
+	{ "DH-17 Pistol",								325,		8192,		275,			8192,		0,				200,				0,			3,				0,			1700	},
 	//Old Weapons. do not add anything under here only above where new guns is added. Stoiss
 	{ "Merr-Sonn Missile System",					3000,		8192,		5000,			8192,		0,				0,					0,			0,				0,			0	},
 	{ "Thermal Detonator",							800,		8192,		400,			8192,		0,				0,					0,			0,				0,			0	},
@@ -170,10 +176,11 @@ qboolean IsSniperRifle ( int weapon )
 	case WP_A280:
 	case WP_EE3:
 	case WP_ACP_SNIPER_RIFLE:
-	case WP_DLT20A:
+	case WP_DLT_19:
 	case WP_BOWCASTER_CLASSIC:
 	case WP_WOOKIE_BOWCASTER_SCOPE:
 	case WP_BRYAR_RIFLE_SCOPE:
+	case WP_DH_17_PISTOL:
 		return qtrue;
 	default:
 		break;
@@ -187,7 +194,7 @@ qboolean SniperRifleCharges ( int weapon )
 	switch (weapon)
 	{
 	case WP_A280:
-	case WP_DLT20A:
+	case WP_DLT_19:
 	case WP_EE3:
 	case WP_ACP_SNIPER_RIFLE:
 	case WP_BOWCASTER_CLASSIC:
@@ -232,9 +239,10 @@ scopeData_t scopeData[] = {
 	"Blastech Bowcaster Scope",						"",												"",												"",										"gfx/2d/bowMask",							"gfx/2d/bowInsert",							"",												"",										"",										0,				0,				0,				0,					"sound/weapons/disruptor/zoomstart.wav",	"sound/weapons/disruptor/zoomend.wav",  qfalse,					35,					55,					4,
 	"Blastech EE3 Scope",							"",												"",												"",										"gfx/2d/fett/cropCircle2",					"gfx/2d/fett/cropCircle",					"gfx/2d/fett/cropCircleGlow",					"",										"gfx/2d/fett/crop_charge",				0,				0,				640,			480,				"sound/weapons/disruptor/zoomstart.wav",	"sound/weapons/disruptor/zoomend.wav",	qfalse,					45,					55,					3,
 	"Blastech A280 Scope",							"",												"",												"gfx/2D/arcMask",						"gfx/2d/a280cropCircle2",					"gfx/2d/a280cropCircle",					"",												"",										"",										134,			56,				364,			364,				"sound/weapons/disruptor/zoomstart.wav",	"sound/weapons/disruptor/zoomend.wav",	qfalse,					45,					55,					2,
-	"Blastech DLT 20A Scope",						"",												"",												"gfx/2D/arcMask",						"gfx/2d/a280cropCircle2",					"gfx/2d/a280cropCircle",					"",												"",										"",										134,			56,				364,			364,				"sound/weapons/disruptor/zoomstart.wav",	"sound/weapons/disruptor/zoomend.wav",	qfalse,					45,					55,					2,
+	"Blastech DLT 19 Scope",						"",												"",												"gfx/2d/DLT-19_HeavyBlaster/scope_mask_overlay","gfx/2d/DLT-19_HeavyBlaster/scope_mask",					"gfx/2d/a280cropCircle",					"",												"",										"",										134,			56,				364,			364,				"sound/weapons/disruptor/zoomstart.wav",	"sound/weapons/disruptor/zoomend.wav",	qfalse,					45,					55,					2,
 	"BlastTech ACP HAMaR Scope",					"",												"",												"gfx/2d/acp_sniperrifle/scope_mask_overlay", "gfx/2d/acp_sniperrifle/scope_mask",	"",											"",												"",										"",										162,			20,				316,			440,				"sound/weapons/disruptor/zoomstart.wav",	"sound/weapons/disruptor/zoomend.wav",	qfalse,					50,					85,					2,
 	"BlastTech Rifle Bowcaster Scope",				"",												"",												"",										"gfx/2d/Bowcaster/lensmask",				"gfx/2d/Bowcaster/lensmask_zoom",			"",												"",										"",										0,				0,				640,			480,				"sound/weapons/disruptor/zoomstart.wav",	"sound/weapons/disruptor/zoomend.wav",	qtrue,					35,					45,					0,
 	"BlastTech Rifle Heavy Bowcaster Scope",		"",												"",												"gfx/2d/Bowcaster_Heavy/scope_mask_overlay","gfx/2d/Bowcaster_Heavy/scope_mask",	"",											"",												"",										"",										0,				0,				640,			480,				"sound/weapons/disruptor/zoomstart.wav",	"sound/weapons/disruptor/zoomend.wav",	qtrue,					45,					65,					0,
 	"BlastTech Bryar Sniper Scope",					"",												"",												"",										"gfx/2d/Bryar_Rifle/scope_mask",			"",											"",												"",										"",										112,			36,				414,			414,				"sound/weapons/disruptor/zoomstart.wav",	"sound/weapons/disruptor/zoomend.wav",	qfalse,					35,					65,					2,
+	"BlastTech DH-17 Pistol Scope",					"",												"",												"gfx/2d/DH-17_Pistol/scope_mask_overlay","gfx/2d/DH-17_Pistol/scope_mask",			"",											"",												"",										"",										0,				0,				640,			480,				"sound/weapons/disruptor/zoomstart.wav",	"sound/weapons/disruptor/zoomend.wav",	qtrue,					4,					20,					0,
 };

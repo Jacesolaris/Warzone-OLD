@@ -323,7 +323,7 @@ static void CG_DrawZoomMask( void )
 		}
 
 		// Draw rotating insert
-		if (cg.predictedPlayerState.scopeType == SCOPE_SCOPE_DISRUPTOR)
+		if (cg.predictedPlayerState.scopeType == SCOPE_DISRUPTOR)
 		{
 			if (strncmp(scopeData[cg.predictedPlayerState.scopeType].insertShader, "", strlen(scopeData[cg.predictedPlayerState.scopeType].insertShader)))
 				CG_DrawRotatePic2(320, 240, 640, 480, -level, trap->R_RegisterShader(scopeData[cg.predictedPlayerState.scopeType].insertShader));

@@ -3328,9 +3328,9 @@ void Cmd_Load_Dungeon_F(gentity_t *ent){
 //			break;
 //		case WP_DC_15S_CLONE_PISTOL:
 //			break;
-//		case WP_DLT20A:
+//		case WP_DLT_19:
 //			break;
-//		case WP_CLONERIFLE:
+//		case WP_DC_15A_Rifle:
 //			break;
 //		case WP_Z6_BLASTER_CANON:
 //			break;

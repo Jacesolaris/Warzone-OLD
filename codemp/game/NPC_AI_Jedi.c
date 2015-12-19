@@ -7000,16 +7000,16 @@ void Commando_SelectBestWeapon( void )
 void AdvancedGunner_SelectBestWeapon( void )
 {
 	if ( NPCS.NPC->enemy
-		&& NPCS.NPC->client->ps.weapon != WP_DLT20A 
+		&& NPCS.NPC->client->ps.weapon != WP_DLT_19
 		&& Distance( NPCS.NPC->r.currentOrigin, NPCS.NPC->enemy->r.currentOrigin ) > 800 )
 	{
-		Boba_ChangeWeapon( WP_DLT20A );
+		Boba_ChangeWeapon(WP_DLT_19);
 	}
 	else if (NPCS.NPC->enemy
-		&& NPCS.NPC->client->ps.weapon != WP_CLONERIFLE
+		&& NPCS.NPC->client->ps.weapon != WP_DC_15A_Rifle
 		&& Distance( NPCS.NPC->r.currentOrigin, NPCS.NPC->enemy->r.currentOrigin ) > 400 )
 	{
-		Boba_ChangeWeapon(WP_CLONERIFLE);
+		Boba_ChangeWeapon(WP_DC_15A_Rifle);
 	}
 	else if (NPCS.NPC->client->ps.weapon != WP_WESTARM5)
 	{

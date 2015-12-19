@@ -6701,6 +6701,7 @@ static qboolean PM_DoChargedWeapons( qboolean vehicleRocketLock, bgEntity_t *veh
 			case WP_DC15_EXT:
 			case WP_WOOKIE_BOWCASTER:
 			case WP_DC_15S_CLONE_PISTOL:
+			case WP_PULSECANON:
 				if (pm->cmd.buttons & BUTTON_ALT_ATTACK)
 				{
 					altFire = qtrue; // override default of not being an alt-fire
@@ -8721,14 +8722,14 @@ void PM_AdjustAttackStates( pmove_t *pmove )
 				switch (pmove->ps->weapon)
 				{
 				case WP_DISRUPTOR:
-					pmove->ps->scopeType = SCOPE_SCOPE_DISRUPTOR;
+					pmove->ps->scopeType = SCOPE_DISRUPTOR;
 					pmove->ps->zoomFov = 80.0f;//cg_fov.value;
 					break;
 				case WP_A280:// etc
 					pmove->ps->scopeType = SCOPE_SCOPE_A280_BLASTTECH_LONG_SHORT;
 					pmove->ps->zoomFov = 80.0f;//cg_fov.value;
 					break;
-				case WP_DLT20A:// etc
+				case WP_DLT_19:// etc
 					pmove->ps->scopeType = SCOPE_SCOPE_DLT20A_BLASTTECH_LONG_SHORT;
 					pmove->ps->zoomFov = 80.0f;//cg_fov.value;
 					break;
@@ -8741,19 +8742,23 @@ void PM_AdjustAttackStates( pmove_t *pmove )
 					pmove->ps->zoomFov = 80.0f;//cg_fov.value;
 					break;
 				case WP_BOWCASTER_CLASSIC:
-					pmove->ps->scopeType = SCOPE_SCOPE_BOWCASTER_CLASSIC;
+					pmove->ps->scopeType = SCOPE_BOWCASTER_CLASSIC;
 					pmove->ps->zoomFov = 80.0f;//cg_fov.value;
 					break;
 				case WP_WOOKIE_BOWCASTER_SCOPE:
-					pmove->ps->scopeType = SCOPE_SCOPE_BOWCASTER_CLASSIC;
+					pmove->ps->scopeType = SCOPE_BOWCASTER_CLASSIC;
 					pmove->ps->zoomFov = 80.0f;//cg_fov.value;
 					break;
 				case WP_BRYAR_RIFLE_SCOPE:// etc
 					pmove->ps->scopeType = SCOPE_SCOPE_BRYAR_RIFLE_SCOPE;
 					pmove->ps->zoomFov = 80.0f;//cg_fov.value;
 					break;
+				case WP_DH_17_PISTOL:// etc
+					pmove->ps->scopeType = SCOPE_DH_17_PISTOL;
+					pmove->ps->zoomFov = 20.0f;//cg_fov.value;
+					break;
 				default:
-					pmove->ps->scopeType = SCOPE_SCOPE_DISRUPTOR;
+					pmove->ps->scopeType = SCOPE_DISRUPTOR;
 					pmove->ps->zoomFov = 80.0f;
 					break;
 				}

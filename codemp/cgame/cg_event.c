@@ -1377,8 +1377,8 @@ void CG_G2MarkEvent(entityState_t *es)
 	case WP_T21:
 	case WP_EE3:
 	case WP_DC_15S_CLONE_PISTOL:
-	case WP_DLT20A:
-	case WP_CLONERIFLE:
+	case WP_DLT_19:
+	case WP_DC_15A_Rifle:
 	case WP_WESTER_PISTOL:
 	case WP_ELG_3A:
 	case WP_S5_PISTOL:
@@ -1400,6 +1400,9 @@ void CG_G2MarkEvent(entityState_t *es)
 	case WP_BRYAR_CARBINE:
 	case WP_BRYAR_RIFLE:
 	case WP_BRYAR_RIFLE_SCOPE:
+	case WP_PULSECANON:
+	case WP_PROTON_CARBINE_RIFLE:
+	case WP_DH_17_PISTOL:
 		if ( !size )
 		{
 			size = 4.0f;

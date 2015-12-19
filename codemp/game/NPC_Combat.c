@@ -224,7 +224,7 @@ void G_AttackDelay( gentity_t *self, gentity_t *enemy )
 			
 			WP_EE3:
 			WP_DC_15S_CLONE_PISTOL:
-			WP_DLT20A:
+			WP_DLT_19:
 			
 			WP_WESTER_PISTOL:
 			WP_ELG_3A:
@@ -257,7 +257,7 @@ void G_AttackDelay( gentity_t *self, gentity_t *enemy )
 
 		case WP_DC15:
 		case WP_WESTARM5:
-		case WP_CLONERIFLE:
+		case WP_DC_15A_Rifle:
 		case WP_REPEATER:
 			if ( !(self->NPC->scriptFlags&SCF_ALT_FIRE) )
 			{//rapid-fire blasters
