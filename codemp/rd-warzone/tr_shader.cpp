@@ -5757,7 +5757,9 @@ char uniqueGenericShader[] = "{\n"\
 
 qboolean R_ForceGenericShader ( const char *name, const char *text )
 {
-	if (text && (StringsContainWord(name, text, "glow") || StringsContainWord(name, name, "icon")))
+	if (text && StringsContainWord(name, text, "gfx"))
+		return qfalse;
+	else if (text && (StringsContainWord(name, text, "glow") || StringsContainWord(name, name, "icon")))
 		return qfalse;
 	else if (!text && (StringsContainWord(name, name, "glow") || StringsContainWord(name, name, "icon")))
 		return qfalse;

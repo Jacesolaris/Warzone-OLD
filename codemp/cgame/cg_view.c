@@ -1272,10 +1272,10 @@ static int CG_CalcFov( void ) {
 			fov_x = 80;
 		} else {
 			fov_x = cgFov;
-			if ( fov_x < 1 ) {
-				fov_x = 1;
-			} else if ( fov_x > 160 ) {
-				fov_x = 160;
+			if ( fov_x < scopeData[cg.predictedPlayerState.scopeType].scopeZoomMin ) {
+				fov_x = scopeData[cg.predictedPlayerState.scopeType].scopeZoomMin;
+			} else if ( fov_x > scopeData[cg.predictedPlayerState.scopeType].scopeZoomMax ) {
+				fov_x = scopeData[cg.predictedPlayerState.scopeType].scopeZoomMax;
 			}
 		}
 
@@ -1285,10 +1285,10 @@ static int CG_CalcFov( void ) {
 		if(cg.zoomval) {
 			zoomFov = cg.zoomval;	// (SA) use user scrolled amount
 
-			if ( zoomFov < 1 ) {
-				zoomFov = 1;
-			} else if ( zoomFov > 160 ) {
-				zoomFov = 160;
+			if ( zoomFov < scopeData[cg.predictedPlayerState.scopeType].scopeZoomMin ) {
+				zoomFov = scopeData[cg.predictedPlayerState.scopeType].scopeZoomMin;
+			} else if ( zoomFov > scopeData[cg.predictedPlayerState.scopeType].scopeZoomMax ) {
+				zoomFov = scopeData[cg.predictedPlayerState.scopeType].scopeZoomMax;
 			}
 
 			fov_x = scopeData[cg.predictedPlayerState.scopeType].scopeZoomMax - cg.zoomval;
