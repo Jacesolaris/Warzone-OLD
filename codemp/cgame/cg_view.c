@@ -1213,11 +1213,8 @@ static int CG_CalcFov( void ) {
 	float	phase;
 	float	v;
 	float	fov_x, fov_y;
-	//float	f;
 	int		inwater;
-	//[TrueView]
-	float cgFov;
-	//float	cgFov = cg_fov.value;
+	float	cgFov;
 
 	CG_Zoom();
 
@@ -1241,60 +1238,46 @@ static int CG_CalcFov( void ) {
 	{
 		cgFov = cg_fov.value;
 	}
-	//[/TrueView]
 
-	if (drawingSniperScopeView)
-	{
-		if (cgFov < scopeData[cg.predictedPlayerState.scopeType].scopeZoomMin)
-		{
-			cgFov = scopeData[cg.predictedPlayerState.scopeType].scopeZoomMin;
-		}
-
-		if (cgFov > scopeData[cg.predictedPlayerState.scopeType].scopeZoomMax)
-		{
-			cgFov = scopeData[cg.predictedPlayerState.scopeType].scopeZoomMax;
-		}
-	}
-	else
-	{
+	if ( !drawingSniperScopeView ) {
+		// not drawing the inner zoom view, use standard fov.
 		if (cgFov < 1)
 		{
 			cgFov = 1;
 		}
-		//[TrueView]
-		//Allow larger Fields of View
+
 		if (cgFov > 180)
 		{
 			cgFov = 180;
 		}
-		/*
-		if (cgFov > 97)
-		{
-		cgFov = 97;
-		}
-		*/
-		//[/TrueView]
-	}
 
-	if ( !drawingSniperScopeView ) {
-		// not drawing the inner zoom view, use standard fov.
 		fov_x = cgFov;
 	} else if ( cg.predictedPlayerState.pm_type == PM_INTERMISSION ) {
 		// if in intermission, use a fixed value
+		if (cgFov < 1)
+		{
+			cgFov = 1;
+		}
+
+		if (cgFov > 180)
+		{
+			cgFov = 180;
+		}
+
 		fov_x = cgFov;
 	} else {
 		// user selectable
-		if ( cgs.dmflags & DF_FIXED_FOV ) {
-			// dmflag to prevent wide fov for all clients
-			fov_x = 80;
-		} else {
-			fov_x = cgFov;
-			if ( fov_x < scopeData[cg.predictedPlayerState.scopeType].scopeZoomMin ) {
-				fov_x = scopeData[cg.predictedPlayerState.scopeType].scopeZoomMin;
-			} else if ( fov_x > scopeData[cg.predictedPlayerState.scopeType].scopeZoomMax ) {
-				fov_x = scopeData[cg.predictedPlayerState.scopeType].scopeZoomMax;
-			}
+		if (cgFov > scopeData[cg.predictedPlayerState.scopeType].scopeZoomMax - scopeData[cg.predictedPlayerState.scopeType].scopeZoomMin)
+		{
+			cgFov = scopeData[cg.predictedPlayerState.scopeType].scopeZoomMax - scopeData[cg.predictedPlayerState.scopeType].scopeZoomMin;
 		}
+
+		if (cgFov < 1)
+		{
+			cgFov = 1;
+		}
+
+		fov_x = cgFov;
 
 		//trap->Print("Zoom is %f.\n", cg.zoomval);
 
@@ -1304,11 +1287,14 @@ static int CG_CalcFov( void ) {
 
 			if ( zoomFov < scopeData[cg.predictedPlayerState.scopeType].scopeZoomMin ) {
 				zoomFov = scopeData[cg.predictedPlayerState.scopeType].scopeZoomMin;
-			} else if ( zoomFov > scopeData[cg.predictedPlayerState.scopeType].scopeZoomMax ) {
+			} 
+			
+			if ( zoomFov > scopeData[cg.predictedPlayerState.scopeType].scopeZoomMax ) {
 				zoomFov = scopeData[cg.predictedPlayerState.scopeType].scopeZoomMax;
 			}
 
 			fov_x = scopeData[cg.predictedPlayerState.scopeType].scopeZoomMax - zoomFov;
+
 			lastfov = fov_x;
 		} else {
 			zoomFov = lastfov;
