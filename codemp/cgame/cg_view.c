@@ -1344,8 +1344,8 @@ static int CG_CalcFov( void ) {
 	cg.refdef.fov_y = fov_y;
 
 	if (cg.predictedPlayerState.scopeType && drawingSniperScopeView)
-	{
-		cg.zoomSensitivity = zoomFov/cgFov;
+	{// Adjust rotation speed while zooming... Very slow at high zooms, a little slower then normal at low zooms...
+		cg.zoomSensitivity = 0.25 + ((scopeData[cg.predictedPlayerState.scopeType].scopeZoomMax - cg.zoomval) * 0.5);
 	}
 	else if ( !cg.zoomed || !drawingSniperScopeView ) {
 		cg.zoomSensitivity = 1;
