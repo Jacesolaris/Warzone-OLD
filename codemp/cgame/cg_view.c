@@ -1228,8 +1228,10 @@ static int CG_CalcFov( void ) {
 		cg.zoomval = 0;
 	}
 
-	if (!cg.renderingThirdPerson && (cg_trueguns.integer || cg.predictedPlayerState.weapon == WP_SABER
-		|| cg.predictedPlayerState.weapon == WP_MELEE) && cg_trueFOV.value
+	if (!cg.renderingThirdPerson 
+		&& !drawingSniperScopeView
+		&& (cg_trueguns.integer || cg.predictedPlayerState.weapon == WP_SABER || cg.predictedPlayerState.weapon == WP_MELEE) 
+		&& cg_trueFOV.value
 		&& (cg.predictedPlayerState.pm_type != PM_SPECTATOR)
 		&& (cg.predictedPlayerState.pm_type != PM_INTERMISSION))
 	{
@@ -1241,23 +1243,38 @@ static int CG_CalcFov( void ) {
 	}
 	//[/TrueView]
 
-	if (cgFov < 1)
+	if (drawingSniperScopeView)
 	{
-		cgFov = 1;
+		if (cgFov < scopeData[cg.predictedPlayerState.scopeType].scopeZoomMin)
+		{
+			cgFov = scopeData[cg.predictedPlayerState.scopeType].scopeZoomMin;
+		}
+
+		if (cgFov > scopeData[cg.predictedPlayerState.scopeType].scopeZoomMax)
+		{
+			cgFov = scopeData[cg.predictedPlayerState.scopeType].scopeZoomMax;
+		}
 	}
-	//[TrueView]
-	//Allow larger Fields of View
-	if (cgFov > 180)
+	else
 	{
-		cgFov = 180;
+		if (cgFov < 1)
+		{
+			cgFov = 1;
+		}
+		//[TrueView]
+		//Allow larger Fields of View
+		if (cgFov > 180)
+		{
+			cgFov = 180;
+		}
+		/*
+		if (cgFov > 97)
+		{
+		cgFov = 97;
+		}
+		*/
+		//[/TrueView]
 	}
-	/*
-	if (cgFov > 97)
-	{
-	cgFov = 97;
-	}
-	*/
-	//[/TrueView]
 
 	if ( !drawingSniperScopeView ) {
 		// not drawing the inner zoom view, use standard fov.
@@ -1291,7 +1308,7 @@ static int CG_CalcFov( void ) {
 				zoomFov = scopeData[cg.predictedPlayerState.scopeType].scopeZoomMax;
 			}
 
-			fov_x = scopeData[cg.predictedPlayerState.scopeType].scopeZoomMax - cg.zoomval;
+			fov_x = scopeData[cg.predictedPlayerState.scopeType].scopeZoomMax - zoomFov;
 			lastfov = fov_x;
 		} else {
 			zoomFov = lastfov;
