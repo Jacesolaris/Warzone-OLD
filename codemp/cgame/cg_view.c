@@ -1137,13 +1137,15 @@ float lastfov = 0.0;
 void CG_AdjustZoomVal(float val, int type)
 {
 	cg.zoomval += val;
-	if (cg.zoomval >= scopeData[type].scopeZoomMax)
+
+	if (cg.zoomval > scopeData[type].scopeZoomMax)
 	{
-		cg.zoomval = scopeData[type].scopeZoomMax-1;
+		cg.zoomval = scopeData[type].scopeZoomMax;
 	}
-	if (cg.zoomval <= scopeData[type].scopeZoomMin)
+
+	if (cg.zoomval < scopeData[type].scopeZoomMin)
 	{
-		cg.zoomval = scopeData[type].scopeZoomMin+1;
+		cg.zoomval = scopeData[type].scopeZoomMin;
 	}
 }
 
@@ -1191,7 +1193,15 @@ void CG_Zoom( void )
 	}
 
 	if( cg.predictedPlayerState.scopeType >= SCOPE_BINOCULARS ) {
-		cg.zoomval = (cg.zoomval == 0) ? scopeData[cg.predictedPlayerState.scopeType].scopeZoomMin : cg.zoomval;
+		if (cg.zoomval < scopeData[cg.predictedPlayerState.scopeType].scopeZoomMin)
+		{
+			cg.zoomval = scopeData[cg.predictedPlayerState.scopeType].scopeZoomMin;
+		}
+
+		if (cg.zoomval > scopeData[cg.predictedPlayerState.scopeType].scopeZoomMax)
+		{
+			cg.zoomval = scopeData[cg.predictedPlayerState.scopeType].scopeZoomMax;
+		}
 	} else {
 		cg.zoomval = 0;
 	}
@@ -1239,37 +1249,29 @@ static int CG_CalcFov( void ) {
 		cgFov = cg_fov.value;
 	}
 
+	if (cgFov < 1)
+	{
+		cgFov = 1;
+	}
+
+	if (cgFov > 180)
+	{
+		cgFov = 180;
+	}
+
 	if ( !drawingSniperScopeView || cg.predictedPlayerState.pm_type == PM_INTERMISSION) {
 		// not drawing the inner zoom view, or intermission, use standard fov.
-		if (cgFov < 1)
-		{
-			cgFov = 1;
-		}
-
-		if (cgFov > 180)
-		{
-			cgFov = 180;
-		}
-
 		fov_x = cgFov;
 	} else {
 		// user selectable
-		if (cgFov > scopeData[cg.predictedPlayerState.scopeType].scopeZoomMax - scopeData[cg.predictedPlayerState.scopeType].scopeZoomMin)
-		{
-			cgFov = scopeData[cg.predictedPlayerState.scopeType].scopeZoomMax - scopeData[cg.predictedPlayerState.scopeType].scopeZoomMin;
-		}
-
-		if (cgFov < 1)
-		{
-			cgFov = 1;
-		}
-
 		fov_x = cgFov;
 
 		//trap->Print("Zoom is %f.\n", cg.zoomval);
 
 		// account for zooms
 		if(cg.zoomval) {
+			// Zoom multiplier is set...
+
 			zoomFov = cg.zoomval;	// (SA) use user scrolled amount
 
 			if ( zoomFov < scopeData[cg.predictedPlayerState.scopeType].scopeZoomMin ) {
@@ -1280,11 +1282,13 @@ static int CG_CalcFov( void ) {
 				zoomFov = scopeData[cg.predictedPlayerState.scopeType].scopeZoomMax;
 			}
 
-			fov_x = scopeData[cg.predictedPlayerState.scopeType].scopeZoomMax - zoomFov;
+			fov_x = fov_x / zoomFov;
 
 			lastfov = fov_x;
 		} else {
-			zoomFov = lastfov;
+			// Nothing set yet, so set to minimum zoom for this scope...
+			fov_x = lastfov;
+			zoomFov = fov_x * scopeData[cg.predictedPlayerState.scopeType].scopeZoomMin;
 		}
 	}
 

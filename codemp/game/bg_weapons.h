@@ -214,9 +214,9 @@ typedef struct scopeData_s
 	char	zoomStartSound[128];
 	char	zoomEndSound[128];
 	int		instantZoom;			// Should this scope instantly zoom in/out? really a qboolean but it looks like qboolean is not set here. int == qboolean anyway
-	int		scopeZoomMin;			// Minimum Zoom Range.
-	int		scopeZoomMax;			// Maximum Zoom Range.
-	int		scopeZoomSpeed;			// How fast this scope zooms in/out.
+	float	scopeZoomMin;			// Minimum Zoom Range.
+	float	scopeZoomMax;			// Maximum Zoom Range.
+	float	scopeZoomSpeed;			// How fast this scope zooms in/out.
 } scopeData_t;
 
 extern scopeData_t scopeData[];
