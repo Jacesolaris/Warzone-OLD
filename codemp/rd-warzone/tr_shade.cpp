@@ -919,15 +919,58 @@ static void UpdateTexCoords ( const shaderStage_t *stage )
 	}
 }
 
+
+int			overlaySwayTime = 0;
+qboolean	overlaySwayDown = qfalse;
+float		overlaySway = 0.0;
+
+void RB_AdvanceOverlaySway ( void )
+{
+	if (overlaySwayTime > ri->Milliseconds()) 
+		return;
+
+	if (overlaySwayDown)
+	{
+		overlaySway -= 0.00016;
+
+		if (overlaySway < 0.0)
+		{
+			overlaySway += 0.00032;
+			overlaySwayDown = qfalse;
+		}
+	}
+	else
+	{
+		overlaySway += 0.00016;
+
+		if (overlaySway > 0.0016)
+		{
+			overlaySway -= 0.00032;
+			overlaySwayDown = qtrue;
+		}
+	}
+
+	overlaySwayTime = ri->Milliseconds() + 50;
+}
+
 void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage)
 {
-	vec4_t	local1, local3, local4;//, local5;
+	vec4_t	local1, local3, local4, local5;
 	float	specularScale = 1.0;
 	float	materialType = 0.0;
 	float   parallaxScale = 1.0;
 	float	cubemapScale = 0.0;
 	float	isMetalic = 0.0;
 	float	useSteepParallax = 0.0;
+	float	hasOverlay = 0.0;
+	float	doSway = 0.0;
+
+	if (pStage->bundle[TB_OVERLAYMAP].overlayLoaded 
+		&& pStage->hasRealOverlayMap 
+		&& pStage->bundle[TB_OVERLAYMAP].image[0] != tr.blackImage)
+	{
+		hasOverlay = 1.0;
+	}
 
 	if (pStage->isWater)
 	{
@@ -1162,13 +1205,24 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage)
 		}
 	}
 
+	if (pStage->bundle[TB_DIFFUSEMAP].image[0] && (StringContainsWord(pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName, "foliage/") || StringContainsWord(pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName, "foliages/")))
+	{
+		doSway = 0.7;
+	}
+	else if (pStage->bundle[TB_DIFFUSEMAP].image[0] && StringContainsWord(pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName, "yavin/tree"))
+	{
+		doSway = 0.7;
+	}
+
 	VectorSet4(local1, parallaxScale, (float)pStage->hasSpecular, specularScale, materialType);
 	GLSL_SetUniformVec4(sp, UNIFORM_LOCAL1, local1);
 	GLSL_SetUniformVec4(sp, UNIFORM_LOCAL2, pStage->subsurfaceExtinctionCoefficient);
 	VectorSet4(local3, pStage->subsurfaceRimScalar, pStage->subsurfaceMaterialThickness, pStage->subsurfaceSpecularPower, cubemapScale);
 	GLSL_SetUniformVec4(sp, UNIFORM_LOCAL3, local3);
-	VectorSet4(local4, (float)realNormalMap, isMetalic, (float)pStage->hasRealSubsurfaceMap, useSteepParallax);
+	VectorSet4(local4, (float)realNormalMap, isMetalic, (float)pStage->hasRealSubsurfaceMap, doSway);
 	GLSL_SetUniformVec4(sp, UNIFORM_LOCAL4, local4);
+	VectorSet4(local5, hasOverlay, overlaySway, 0.0, 0.0);
+	GLSL_SetUniformVec4(sp, UNIFORM_LOCAL5, local5);
 
 	/*if (backEnd.viewParms.targetFbo == tr.renderCubeFbo)
 	{
@@ -1211,6 +1265,11 @@ void RB_SetStageImageDimensions(shaderProgram_t *sp, shaderStage_t *pStage)
 	{
 		dimensions[0] = pStage->bundle[TB_SUBSURFACEMAP].image[0]->width;
 		dimensions[1] = pStage->bundle[TB_SUBSURFACEMAP].image[0]->height;
+	}
+	else if (pStage->bundle[TB_OVERLAYMAP].image[0])
+	{
+		dimensions[0] = pStage->bundle[TB_OVERLAYMAP].image[0]->width;
+		dimensions[1] = pStage->bundle[TB_OVERLAYMAP].image[0]->height;
 	}
 
 	GLSL_SetUniformVec2(sp, UNIFORM_DIMENSIONS, dimensions);
@@ -1384,6 +1443,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 					VectorSet4(loc0, (float)2.0, 0, 0, 0); // force it to use the old water fx...
 
 				GLSL_SetUniformVec4(sp, UNIFORM_LOCAL0, loc0);
+
 				RB_SetMaterialBasedProperties(sp, pStage);
 
 				GLSL_SetUniformInt(sp, UNIFORM_RANDOMMAP, TB_RANDOMMAP);
@@ -1407,9 +1467,9 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			}
 
 			GLSL_BindProgram(sp);
-
-			RB_SetMaterialBasedProperties(sp, pStage);
 		}
+
+		RB_SetMaterialBasedProperties(sp, pStage);
 		
 		stateBits = pStage->stateBits;
 
@@ -1583,6 +1643,24 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		//
 		//
 
+		if (pStage->bundle[TB_SUBSURFACEMAP].image[0])
+		{
+			R_BindAnimatedImageToTMU( &pStage->bundle[TB_SUBSURFACEMAP], TB_SUBSURFACEMAP);
+		}
+		else
+		{
+			GL_BindToTMU( tr.whiteImage, TB_SUBSURFACEMAP );
+		}
+
+		if (pStage->bundle[TB_OVERLAYMAP].image[0])
+		{
+			R_BindAnimatedImageToTMU( &pStage->bundle[TB_OVERLAYMAP], TB_OVERLAYMAP);
+		}
+		else
+		{
+			GL_BindToTMU( tr.blackImage, TB_OVERLAYMAP );
+		}
+
 		//
 		// do multitexture
 		//
@@ -1647,7 +1725,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				//  - disable texture sampling in glsl shader with #ifdefs, as before
 				//     -> increases the number of shaders that must be compiled
 				//
-				if ((light || pStage->isWater || pStage->hasRealNormalMap || pStage->hasSpecular || pStage->hasRealSubsurfaceMap) && !fastLight)
+				if ((light || pStage->isWater || pStage->hasRealNormalMap || pStage->hasSpecular || pStage->hasRealSubsurfaceMap || pStage->hasRealOverlayMap) && !fastLight)
 				{
 					if (r_normalMapping->integer
 						&& !input->shader->isPortal
@@ -1719,15 +1797,6 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 					else if (r_specularMapping->integer)
 					{
 						GL_BindToTMU( tr.whiteImage, TB_SPECULARMAP );
-					}
-
-					if (pStage->bundle[TB_SUBSURFACEMAP].image[0])
-					{
-						R_BindAnimatedImageToTMU( &pStage->bundle[TB_SUBSURFACEMAP], TB_SUBSURFACEMAP);
-					}
-					else
-					{
-						GL_BindToTMU( tr.whiteImage, TB_SUBSURFACEMAP );
 					}
 				}
 

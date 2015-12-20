@@ -443,6 +443,25 @@ static void DrawSkySide( struct image_s *image, const int mins[2], const int max
 
 		GLSL_VertexAttribsState(ATTR_POSITION | ATTR_TEXCOORD0);
 		GLSL_BindProgram(sp);
+
+		VectorSet4(vector, 0.0, 0.0, 0.0, 0.0);
+		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL1, vector);
+		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL2, vector);
+		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL3, vector);
+		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL4, vector);
+		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL5, vector);
+
+		GL_BindToTMU( tr.whiteImage, TB_SUBSURFACEMAP );
+		GL_BindToTMU( tr.blackImage, TB_OVERLAYMAP );
+
+		GL_BindToTMU( tr.whiteImage, TB_NORMALMAP );
+		GL_BindToTMU( tr.whiteImage, TB_DELUXEMAP );
+		GL_BindToTMU( tr.whiteImage, TB_SPECULARMAP );
+
+		GLSL_SetUniformVec4(sp, UNIFORM_ENABLETEXTURES, vector);
+
+		VectorSet4(vector, r_baseNormalX->value, r_baseNormalY->value, 1.0f, r_baseParallax->value);
+		GLSL_SetUniformVec4(sp, UNIFORM_NORMALSCALE, vector);
 		
 		GLSL_SetUniformMatrix16(sp, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
 		

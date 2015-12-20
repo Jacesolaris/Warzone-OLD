@@ -3084,7 +3084,7 @@ static void R_CreateSpecularMap ( const char *name, byte *pic, int width, int he
 	image_t *specularImage;
 	int normalFlags;
 	
-	normalFlags = (flags & ~(IMGFLAG_GENNORMALMAP | IMGFLAG_SRGB)) | IMGFLAG_NOLIGHTSCALE;
+	normalFlags = (flags & ~(IMGFLAG_GENNORMALMAP | IMGFLAG_SRGB | IMGFLAG_CLAMPTOEDGE)) | IMGFLAG_NOLIGHTSCALE;
 	
 	COM_StripExtension(name, specularName, MAX_QPATH);
 	Q_strcat(specularName, MAX_QPATH, "_s");
@@ -3110,7 +3110,7 @@ static void R_CreateSubsurfaceMap ( const char *name, byte *pic, int width, int 
 	image_t *SubsurfaceImage;
 	int normalFlags;
 	
-	normalFlags = (flags & ~(IMGFLAG_GENNORMALMAP | IMGFLAG_SRGB)) | IMGFLAG_NOLIGHTSCALE;
+	normalFlags = (flags & ~(IMGFLAG_GENNORMALMAP | IMGFLAG_SRGB | IMGFLAG_CLAMPTOEDGE)) | IMGFLAG_NOLIGHTSCALE;
 	
 	COM_StripExtension(name, SubsurfaceName, MAX_QPATH);
 	Q_strcat(SubsurfaceName, MAX_QPATH, "_sub");
@@ -3127,6 +3127,32 @@ static void R_CreateSubsurfaceMap ( const char *name, byte *pic, int width, int 
 		COM_StripExtension(name, SubsurfaceName, MAX_QPATH);
 		Q_strcat(SubsurfaceName, MAX_QPATH, "_subsurface");
 		SubsurfaceImage = R_FindImageFile(SubsurfaceName, IMGTYPE_SUBSURFACE, normalFlags);
+	}
+}
+
+static void R_CreateOverlayMap ( const char *name, byte *pic, int width, int height, int flags )
+{
+	char SubsurfaceName[MAX_QPATH];
+	image_t *SubsurfaceImage;
+	int normalFlags;
+	
+	normalFlags = (flags & ~(IMGFLAG_GENNORMALMAP | IMGFLAG_SRGB | IMGFLAG_CLAMPTOEDGE)) | IMGFLAG_NOLIGHTSCALE;
+	
+	COM_StripExtension(name, SubsurfaceName, MAX_QPATH);
+	Q_strcat(SubsurfaceName, MAX_QPATH, "_o");
+	
+	// find normalmap in case it's there
+	SubsurfaceImage = R_FindImageFile(SubsurfaceName, IMGTYPE_OVERLAY, normalFlags);
+
+	//if (normalImage != NULL) ri->Printf(PRINT_WARNING, "Loaded real normal map file %s.\n", normalName);
+	//else ri->Printf(PRINT_WARNING, "No real normal map file %s.\n", normalName);
+
+	if (SubsurfaceImage == NULL)
+	{
+		memset(SubsurfaceName, 0, sizeof(SubsurfaceName));
+		COM_StripExtension(name, SubsurfaceName, MAX_QPATH);
+		Q_strcat(SubsurfaceName, MAX_QPATH, "_overlay");
+		SubsurfaceImage = R_FindImageFile(SubsurfaceName, IMGTYPE_OVERLAY, normalFlags);
 	}
 }
 
@@ -3184,7 +3210,7 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, int flags )
 
 	image = R_CreateImage( name, pic, width, height, type, flags, GL_RGBA8 );
 
-	if (name[0] != '*' && name[0] != '!' && name[0] != '$' && name[0] != '_' && type != IMGTYPE_NORMAL && type != IMGTYPE_SPECULAR  && type != IMGTYPE_SUBSURFACE && !(flags & IMGFLAG_CUBEMAP))
+	if (name[0] != '*' && name[0] != '!' && name[0] != '$' && name[0] != '_' && type != IMGTYPE_NORMAL && type != IMGTYPE_SPECULAR && type != IMGTYPE_SUBSURFACE && type != IMGTYPE_OVERLAY && !(flags & IMGFLAG_CUBEMAP))
 	{
 		if (image && r_textureClean->integer)
 		{
@@ -3224,6 +3250,8 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, int flags )
 			R_CreateSpecularMap( name, pic, width, height, flags );
 
 		R_CreateSubsurfaceMap( name, pic, width, height, flags );
+
+		R_CreateOverlayMap( name, pic, width, height, flags );
 	}
 
 	Z_Free( pic );
@@ -3417,12 +3445,16 @@ R_CreateBuiltinImages
 void R_CreateBuiltinImages( void ) {
 	int		x,y;
 	byte	data[DEFAULT_SIZE][DEFAULT_SIZE][4];
+	byte	data2[DEFAULT_SIZE][DEFAULT_SIZE][4];
 
 	R_CreateDefaultImage();
 
 	// we use a solid white image instead of disabling texturing
 	Com_Memset( data, 255, sizeof( data ) );
 	tr.whiteImage = R_CreateImage("*white", (byte *)data, 8, 8, IMGTYPE_COLORALPHA, IMGFLAG_NONE, 0);
+
+	Com_Memset( data2, 0, sizeof( data2 ) );
+	tr.blackImage = R_CreateImage("*black", (byte *)data2, 8, 8, IMGTYPE_COLORALPHA, IMGFLAG_NONE, 0);
 
 	tr.randomImage = R_FindImageFile("gfx/random.png", IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION);
 

@@ -3,12 +3,11 @@ uniform vec2	u_Dimensions;
 uniform vec4	u_Local1; // parallaxScale, haveSpecular, specularScale, materialType
 uniform vec4	u_Local2; // ExtinctionCoefficient
 uniform vec4	u_Local3; // RimScalar, MaterialThickness, subSpecPower, cubemapScale
-uniform vec4	u_Local4; // haveNormalMap, isMetalic, hasRealSubsurfaceMap, useSteepParallax
-//uniform vec4	u_Local5; // imageBasedLighting, 0.0, 0.0, 0.0
+uniform vec4	u_Local4; // haveNormalMap, isMetalic, hasRealSubsurfaceMap, sway
+uniform vec4	u_Local5; // hasRealOverlayMap, overlaySway, 0.0, 0.0
 
 //#define SPHERICAL_HARMONICS
 //#define SUBSURFACE_SCATTER
-//#define STEEP_PARALLAX
 
 varying float  var_Time;
 
@@ -38,6 +37,8 @@ uniform samplerCube u_CubeMap;
 #endif
 
 uniform sampler2D u_SubsurfaceMap;
+
+uniform sampler2D u_OverlayMap;
 
 //#if defined(USE_NORMALMAP) || defined(USE_DELUXEMAP) || defined(USE_SPECULARMAP) || defined(USE_CUBEMAP)
 // y = deluxe, w = cube
@@ -381,53 +382,6 @@ vec4 subScatterFS(vec4 BaseColor, vec4 SpecColor, vec3 lightVec, vec3 LightColor
 #endif //SUBSURFACE_SCATTER
 #endif
 
-#ifdef STEEP_PARALLAX
-vec2 ParallaxMapping(vec2 texCoords, vec3 viewDir)
-{ 
-	vec2 tex_offset = vec2(1.0 / u_Dimensions);
-    // number of depth layers
-	float height_scale = u_Local1.x;
-    const float minLayers = 10.0;
-    const float maxLayers = 20.0;
-    float numLayers = mix(maxLayers, minLayers, abs(dot(vec3(0.0, 0.0, 1.0), viewDir)));  
-    // calculate the size of each layer
-    float layerDepth = 1.0 / numLayers;
-    // depth of current layer
-    float currentLayerDepth = 0.0;
-    // the amount to shift the texture coordinates per layer (from vector P)
-    vec2 P = viewDir.xy / viewDir.z * height_scale * tex_offset; 
-    vec2 deltaTexCoords = P / numLayers;
-  
-    // get initial values
-    vec2  currentTexCoords     = texCoords;
-    float currentDepthMapValue = texture2D(u_NormalMap, currentTexCoords).a;
-      
-    while(currentLayerDepth < currentDepthMapValue)
-    {
-        // shift texture coordinates along direction of P
-        currentTexCoords -= deltaTexCoords;
-        // get depthmap value at current texture coordinates
-        currentDepthMapValue = texture2D(u_NormalMap, currentTexCoords).a;  
-        // get depth of next layer
-        currentLayerDepth += layerDepth;  
-    }
-    
-    // -- parallax occlusion mapping interpolation from here on
-    // get texture coordinates before collision (reverse operations)
-    vec2 prevTexCoords = currentTexCoords + deltaTexCoords;
-
-    // get depth after and before collision for linear interpolation
-    float afterDepth  = currentDepthMapValue - currentLayerDepth;
-    float beforeDepth = texture2D(u_NormalMap, prevTexCoords).a - currentLayerDepth + layerDepth;
- 
-    // interpolation of texture coordinates
-    float weight = afterDepth / (afterDepth - beforeDepth);
-    vec2 finalTexCoords = prevTexCoords * weight + currentTexCoords * (1.0 - weight);
-
-    return finalTexCoords;
-}
-#endif //STEEP_PARALLAX
-
 //---------------------------------------------------------
 // get pseudo 3d bump background
 //---------------------------------------------------------
@@ -507,7 +461,7 @@ void main()
 	vec3 DETAILED_NORMAL = vec3(1.0);
 	float NL, NH, NE, EH, attenuation;
 	vec2 tex_offset = vec2(1.0 / u_Dimensions);
-	
+
 #if defined(USE_LIGHT) && !defined(USE_FAST_LIGHT)
   #if defined(USE_VERT_TANGENT_SPACE)
 	mat3 tangentToWorld = mat3(var_Tangent.xyz, var_Bitangent.xyz, var_Normal.xyz);
@@ -545,40 +499,48 @@ void main()
 #endif
 
 	vec2 texCoords = var_TexCoords.xy;
+
+	if (u_Local4.a > 0.0)
+	{// Sway...
+		texCoords += vec2(u_Local5.y * u_Local4.a * ((1.0 - var_TexCoords.y) + 1.0), 0.0);
+	}
+
 	vec4 diffuse;
 	//vec4 diffuse = texture2D(u_DiffuseMap, texCoords);
 	//vec4 diffuse = BumpyBackground(u_DiffuseMap, texCoords);
 
 #if defined(USE_PARALLAXMAP) || defined(USE_PARALLAXMAP_NONORMALS)
-#ifdef STEEP_PARALLAX
-	// Steep parallax looks much nicer but can be a big FPS hit...
-	if (u_Local4.a == 0.0)
-	{// Normal parallax...
-		vec3 offsetDir = normalize(E * tangentToWorld);
-		offsetDir.xy *= tex_offset * -u_Local1.x;//-4.0;//-5.0; // -3.0
-		texCoords += offsetDir.xy * RayIntersectDisplaceMap(texCoords, offsetDir.xy, u_NormalMap);
-		diffuse = texture2D(u_DiffuseMap, texCoords);
-	}
-	else
-	{// Use steep parallax...
-		vec3 offsetDir = normalize(E * tangentToWorld);
-		texCoords = ParallaxMapping(var_TexCoords.xy, offsetDir);
-
-		//if(texCoords.x > 1.0 || texCoords.y > 1.0 || texCoords.x < 0.0 || texCoords.y < 0.0)
-		//	discard;
-
-		diffuse = texture2D(u_DiffuseMap, texCoords);
-	}
-#else //!STEEP_PARALLAX
 	// Faster but sucky...
 	vec3 offsetDir = normalize(E * tangentToWorld);
 	offsetDir.xy *= tex_offset * -u_Local1.x;//-4.0;//-5.0; // -3.0
 	texCoords += offsetDir.xy * RayIntersectDisplaceMap(texCoords, offsetDir.xy, u_NormalMap);
 	diffuse = texture2D(u_DiffuseMap, texCoords);
-#endif //STEEP_PARALLAX
 #else
 	diffuse = texture2D(u_DiffuseMap, texCoords);
 #endif
+
+#define OVERLAY_HEIGHT 40.0
+
+	if (u_Local5.x > 0.0)
+	{// Have overlay map...
+		vec2 ovCoords = var_TexCoords.xy + vec2(u_Local5.y); // u_Local5.y == sway ammount
+		vec4 overlay = texture2D(u_OverlayMap, ovCoords);
+
+		if (overlay.a > 0.1)
+		{// Have an overlay, and it is visible here... Set it as diffuse instead...
+			diffuse = overlay;
+		}
+		else
+		{// Have an overlay, but it is not visibile at this pixel... Still need to check if we need a shadow casted on this pixel...
+			vec2 ovCoords2 = ovCoords - (tex_offset * OVERLAY_HEIGHT);
+			vec4 overlay2 = texture2D(u_OverlayMap, ovCoords2);
+
+			if (overlay2.a > 0.1)
+			{// Add shadow...
+				diffuse.rgb *= 0.25;
+			}
+		}
+	}
 
 #if defined(USE_GAMMA2_TEXTURES)
 	diffuse.rgb *= diffuse.rgb;
@@ -795,23 +757,6 @@ void main()
 
 		gl_FragColor.rgb += cubeLightColor * reflectance * (u_Local3.a * refMult);
 	}
-
-	/*if (u_Local5.r > 0.0)
-	{// Image based lighting...
-		// view vector reflected with respect to normal
-		vec3 R = reflect(E, DETAILED_NORMAL);
-
-		vec3 parallax = u_CubeMapInfo.xyz + u_CubeMapInfo.w * var_vertPos.xyz;
-
-		vec3 ambLighting	= textureCubeLod(u_CubeMap, DETAILED_NORMAL + parallax, 7.0 * 7.0).rgb;
-		vec3 speLighting	= textureCubeLod(u_CubeMap, R + parallax, 7.0 * 7.0).rgb;
-
-		vec3 ill = ((ambLighting * 0.6) + (speLighting * 0.4)) * 0.5 + 0.5;
-		ill *= u_Local5.r;
-		gl_FragColor.rgb *= clamp((ill * ((gl_FragColor.rgb * gl_FragColor.rgb) * 0.5 + 0.5)), 0.9, 3.0);
-		//gl_FragColor.rgb = ((ill * gl_FragColor.rgb) * (vec3(3.0)-length(gl_FragColor.rgb)) + (ill * gl_FragColor.rgb * gl_FragColor.rgb)) / 2.0;
-		gl_FragColor.rgb = clamp(gl_FragColor.rgb, 0.0, 1.0);
-	}*/
   #endif
 
   #if defined(USE_PRIMARY_LIGHT)

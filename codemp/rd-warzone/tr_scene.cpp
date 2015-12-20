@@ -522,13 +522,19 @@ Rendering a scene may require multiple views to be rendered
 to handle mirrors,
 @@@@@@@@@@@@@@@@@@@@@
 */
+
+extern void RB_AdvanceOverlaySway ( void );
+
 void RE_RenderScene( const refdef_t *fd ) {
 	viewParms_t		parms;
 	int				startTime;
 
+	RB_AdvanceOverlaySway();
+
 	if ( !tr.registered ) {
 		return;
 	}
+
 	GLimp_LogComment( "====== RE_RenderScene =====\n" );
 
 	if ( r_norefresh->integer ) {

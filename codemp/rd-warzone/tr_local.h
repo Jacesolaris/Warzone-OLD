@@ -426,7 +426,8 @@ typedef enum
 	IMGTYPE_SPECULAR,
 	IMGTYPE_NORMALHEIGHT,
 	IMGTYPE_DELUXE, // normals are swizzled, deluxe are not
-	IMGTYPE_SUBSURFACE
+	IMGTYPE_SUBSURFACE,
+	IMGTYPE_OVERLAY
 } imgType_t;
 
 typedef enum
@@ -775,6 +776,7 @@ typedef struct {
 	qboolean		normalsLoaded2;
 	qboolean		specularLoaded;
 	qboolean		subsurfaceLoaded;
+	qboolean		overlayLoaded;
 } textureBundle_t;
 
 enum
@@ -792,9 +794,10 @@ enum
 	TB_SHADOWMAP		= 5,
 	TB_CUBEMAP			= 6,
 	TB_SUBSURFACEMAP    = 7,
-	TB_RANDOMMAP		= 8,
-	TB_GLOWMAP			= 9,
-	NUM_TEXTURE_BUNDLES = 10
+	TB_OVERLAYMAP		= 8,
+	TB_RANDOMMAP		= 9,
+	TB_GLOWMAP			= 10,
+	NUM_TEXTURE_BUNDLES = 11
 };
 
 typedef enum
@@ -806,6 +809,7 @@ typedef enum
 	ST_NORMALPARALLAXMAP,
 	ST_SPECULARMAP,
 	ST_SUBSURFACEMAP,
+	ST_OVERLAYMAP,
 	ST_GLOWMAP,
 	ST_GLSL
 } stageType_t;
@@ -846,6 +850,7 @@ typedef struct {
 	bool			hasSpecular;
 	bool			hasRealNormalMap;
 	bool			hasRealSubsurfaceMap;
+	bool			hasRealOverlayMap;
 	qboolean		glow;
 	
 	textureBundle_t	bundle[NUM_TEXTURE_BUNDLES];
@@ -1195,6 +1200,7 @@ typedef enum
 	UNIFORM_LEVELSMAP,
 	UNIFORM_CUBEMAP,
 	UNIFORM_SUBSURFACEMAP,
+	UNIFORM_OVERLAYMAP,
 	UNIFORM_RANDOMMAP,
 	UNIFORM_GLOWMAP,
 
@@ -2254,6 +2260,7 @@ typedef struct trGlobals_s {
 	image_t					*dlightImage;	// inverse-quare highlight for projective adding
 	image_t					*flareImage;
 	image_t					*whiteImage;			// full of 0xff
+	image_t					*blackImage;			// full of 0x00
 	image_t					*identityLightImage;	// full of tr.identityLightByte
 	image_t					*randomImage;
 

@@ -1695,6 +1695,11 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 					type = IMGTYPE_SUBSURFACE;
 					flags |= IMGFLAG_NOLIGHTSCALE;
 				}
+				else if (stage->type == ST_OVERLAYMAP)
+				{
+					type = IMGTYPE_OVERLAY;
+					flags |= IMGFLAG_NOLIGHTSCALE;
+				}
 				else
 				{
 					//if (r_genNormalMaps->integer)
@@ -1985,6 +1990,10 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 				stage->type = ST_SUBSURFACEMAP;
 				//VectorSet4(stage->specularScale, r_baseSpecular->integer, r_baseSpecular->integer, r_baseSpecular->integer, 1.0f);
 				VectorSet4(stage->subsurfaceExtinctionCoefficient, 0.0f, 0.0f, 0.0f, 0.0f);
+			}
+			else if(!Q_stricmp(token, "overlayMap"))
+			{
+				stage->type = ST_OVERLAYMAP;
 			}
 			else
 			{
@@ -4112,13 +4121,14 @@ void StripCrap( const char *in, char *out, int destsize )
 }
 
 static void CollapseStagesToLightall(shaderStage_t *diffuse, 
-	shaderStage_t *normal, shaderStage_t *specular, shaderStage_t *lightmap, shaderStage_t *subsurface, 
+	shaderStage_t *normal, shaderStage_t *specular, shaderStage_t *lightmap, shaderStage_t *subsurface, shaderStage_t *overlay, 
 	qboolean useLightVector, qboolean useLightVertex, qboolean parallax, qboolean tcgen)
 {
 	int defs = 0;
 	qboolean hasRealNormalMap = qfalse;
 	qboolean hasRealSpecularMap = qfalse;
 	qboolean hasRealSubsurfaceMap = qfalse;
+	qboolean hasRealOverlayMap = qfalse;
 	qboolean checkNormals = qtrue;
 
 	if (shader.isPortal || shader.isSky || diffuse->glow /*|| shader.hasAlpha*/)// || shader.noTC)
@@ -4373,7 +4383,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 	{
 		image_t *diffuseImg = diffuse->bundle[TB_DIFFUSEMAP].image[0];
 
-		if (diffuse->bundle[TB_SUBSURFACEMAP].image[0])
+		if (diffuse->bundle[TB_SUBSURFACEMAP].image[0] && diffuse->bundle[TB_SUBSURFACEMAP].image[0] != tr.whiteImage)
 		{// Got one...
 			diffuse->bundle[TB_SUBSURFACEMAP] = specular->bundle[0];
 			if (subsurface) VectorCopy4(subsurface->subsurfaceExtinctionCoefficient, diffuse->subsurfaceExtinctionCoefficient);
@@ -4384,7 +4394,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 			char specularName[MAX_QPATH];
 			char specularName2[MAX_QPATH];
 			image_t *specularImg;
-			int specularFlags = (diffuseImg->flags & ~(IMGFLAG_GENNORMALMAP | IMGFLAG_SRGB)) | IMGFLAG_NOLIGHTSCALE;
+			int specularFlags = (diffuseImg->flags & ~(IMGFLAG_GENNORMALMAP | IMGFLAG_SRGB | IMGFLAG_CLAMPTOEDGE)) | IMGFLAG_NOLIGHTSCALE;
 
 			COM_StripExtension( diffuseImg->imgName, specularName, sizeof( specularName ) );
 			StripCrap( specularName, specularName2, sizeof(specularName));
@@ -4417,6 +4427,69 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 
 			diffuse->bundle[TB_SUBSURFACEMAP].subsurfaceLoaded = qtrue;
 		}
+		else
+		{
+			hasRealSubsurfaceMap = qfalse;
+		}
+	}
+
+	if (1 && checkNormals)
+	{
+		image_t *diffuseImg = diffuse->bundle[TB_DIFFUSEMAP].image[0];
+
+		if (diffuse->bundle[TB_OVERLAYMAP].image[0] && diffuse->bundle[TB_OVERLAYMAP].image[0] != tr.whiteImage)
+		{// Got one...
+			diffuse->bundle[TB_OVERLAYMAP] = specular->bundle[0];
+			hasRealOverlayMap = qtrue;
+		}
+		else if (!diffuse->bundle[TB_OVERLAYMAP].overlayLoaded)
+		{// Check if we can load one...
+			char specularName[MAX_QPATH];
+			char specularName2[MAX_QPATH];
+			image_t *specularImg;
+			int specularFlags = (diffuseImg->flags & ~(IMGFLAG_GENNORMALMAP | IMGFLAG_SRGB | IMGFLAG_CLAMPTOEDGE)) | IMGFLAG_NOLIGHTSCALE;
+
+			COM_StripExtension( diffuseImg->imgName, specularName, sizeof( specularName ) );
+			StripCrap( specularName, specularName2, sizeof(specularName));
+			Q_strcat( specularName2, sizeof( specularName2 ), "_o" );
+
+			specularImg = R_FindImageFile(specularName2, IMGTYPE_OVERLAY, specularFlags);
+
+			if (!specularImg)
+			{
+				COM_StripExtension( diffuseImg->imgName, specularName, sizeof( specularName ) );
+				StripCrap( specularName, specularName2, sizeof(specularName));
+				Q_strcat( specularName2, sizeof( specularName2 ), "_overlay" );
+
+				specularImg = R_FindImageFile(specularName2, IMGTYPE_OVERLAY, specularFlags);
+			}
+
+			/*
+			// This is a possibility, but requires more work...
+			if (!specularImg && (StringContainsWord(specularName, "foliage/grass") || StringContainsWord(specularName, "foliages/sch")))
+			{// Testing adding extra grass textures like this...
+				specularImg = diffuseImg;
+			}
+			*/
+
+			if (specularImg)
+			{
+				diffuse->bundle[TB_OVERLAYMAP] = diffuse->bundle[0];
+				diffuse->bundle[TB_OVERLAYMAP].numImageAnimations = 0;
+				diffuse->bundle[TB_OVERLAYMAP].image[0] = specularImg;
+				hasRealOverlayMap = qtrue;
+			}
+			else
+			{
+				hasRealOverlayMap = qfalse;
+			}
+
+			diffuse->bundle[TB_OVERLAYMAP].overlayLoaded = qtrue;
+		}
+		else
+		{
+			hasRealOverlayMap = qfalse;
+		}
 	}
 
 	if (tcgen || diffuse->bundle[0].numTexMods)
@@ -4433,15 +4506,36 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 	{
 		diffuse->hasRealNormalMap = true;
 	}
+	else
+	{
+		diffuse->hasRealNormalMap = false;
+	}
 
 	if (hasRealSpecularMap)
 	{
 		diffuse->hasSpecular = true;
 	}
+	else
+	{
+		diffuse->hasSpecular = false;
+	}
 
 	if (hasRealSubsurfaceMap)
 	{
 		diffuse->hasRealSubsurfaceMap = true;
+	}
+	else
+	{
+		diffuse->hasRealSubsurfaceMap = false;
+	}
+
+	if (hasRealOverlayMap)
+	{
+		diffuse->hasRealOverlayMap = true;
+	}
+	else
+	{
+		diffuse->hasRealOverlayMap = false;
 	}
 
 	diffuse->glslShaderGroup = tr.lightallShader;
@@ -4455,6 +4549,7 @@ static qboolean CollapseStagesToGLSL(void)
 	qboolean hasRealNormalMap = qfalse;
 	qboolean hasRealSpecularMap = qfalse;
 	qboolean hasRealSubsurfaceMap = qfalse;
+	qboolean hasRealOverlayMap = qfalse;
 
 	ri->Printf (PRINT_DEVELOPER, "Collapsing stages for shader '%s'\n", shader.name);
 
@@ -4595,7 +4690,7 @@ static qboolean CollapseStagesToGLSL(void)
 		for (i = 0; i < MAX_SHADER_STAGES; i++)
 		{
 			shaderStage_t *pStage = &stages[i];
-			shaderStage_t *diffuse, *normal, *specular, *lightmap, *subsurface;
+			shaderStage_t *diffuse, *normal, *specular, *lightmap, *subsurface, *overlay;
 			qboolean parallax, tcgen, diffuselit, vertexlit;
 
 			if (!pStage->active)
@@ -4615,6 +4710,7 @@ static qboolean CollapseStagesToGLSL(void)
 			specular = NULL;
 			lightmap = NULL;
 			subsurface = NULL;
+			overlay = NULL;
 
 
 			// we have a diffuse map, find matching normal, specular, and lightmap
@@ -4663,6 +4759,14 @@ static qboolean CollapseStagesToGLSL(void)
 						}
 						break;
 
+					case ST_OVERLAYMAP:
+						if (!overlay)
+						{
+							hasRealOverlayMap = qtrue;
+							overlay = pStage2;
+						}
+						break;
+
 					case ST_COLORMAP:
 						if (pStage2->bundle[0].tcGen >= TCGEN_LIGHTMAP &&
 							pStage2->bundle[0].tcGen <= TCGEN_LIGHTMAP3 &&
@@ -4700,7 +4804,7 @@ static qboolean CollapseStagesToGLSL(void)
 				vertexlit = qtrue;
 			}
 
-			CollapseStagesToLightall(diffuse, normal, specular, lightmap, subsurface, diffuselit, vertexlit, parallax, tcgen);
+			CollapseStagesToLightall(diffuse, normal, specular, lightmap, subsurface, overlay, diffuselit, vertexlit, parallax, tcgen);
 		}
 
 		// deactivate lightmap stages
@@ -4732,25 +4836,31 @@ static qboolean CollapseStagesToGLSL(void)
 
 		if (pStage->type == ST_NORMALMAP)
 		{
-			hasRealNormalMap = qtrue;
+			hasRealNormalMap = qfalse;
 			pStage->active = qfalse;
 		}
 
 		if (pStage->type == ST_NORMALPARALLAXMAP)
 		{
-			hasRealNormalMap = qtrue;
+			hasRealNormalMap = qfalse;
 			pStage->active = qfalse;
 		}
 
 		if (pStage->type == ST_SPECULARMAP)
 		{
-			hasRealSpecularMap = qtrue;
+			hasRealSpecularMap = qfalse;
 			pStage->active = qfalse;
 		}
 
 		if (pStage->type == ST_SUBSURFACEMAP)
 		{
-			hasRealSubsurfaceMap = qtrue;
+			hasRealSubsurfaceMap = qfalse;
+			pStage->active = qfalse;
+		}
+
+		if (pStage->type == ST_OVERLAYMAP)
+		{
+			hasRealOverlayMap = qfalse;
 			pStage->active = qfalse;
 		}
 	}
@@ -4868,6 +4978,11 @@ static qboolean CollapseStagesToGLSL(void)
 		if (hasRealSubsurfaceMap)
 		{
 			stage->hasRealSubsurfaceMap = true;
+		}
+
+		if (hasRealOverlayMap)
+		{
+			stage->hasRealOverlayMap = true;
 		}
 
 		//ri->Printf (PRINT_DEVELOPER, "-> %s\n", stage->bundle[0].image[0]->imgName);
@@ -5427,6 +5542,18 @@ static shader_t *FinishShader( void ) {
 				if(!pStage->bundle[0].image[0])
 				{
 					ri->Printf(PRINT_WARNING, "Shader %s has a subsurfacemap stage with no image\n", shader.name);
+					pStage->active = qfalse;
+					stage++;
+					continue;
+				}
+				break;
+			}
+
+			case ST_OVERLAYMAP:
+			{
+				if(!pStage->bundle[0].image[0])
+				{
+					ri->Printf(PRINT_WARNING, "Shader %s has a overlaymap stage with no image\n", shader.name);
 					pStage->active = qfalse;
 					stage++;
 					continue;
