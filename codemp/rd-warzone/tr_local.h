@@ -106,6 +106,8 @@ In JA, we define these in the tr_local.h, which is much more logical
 =====================================================
 */
 
+extern cvar_t	*r_superSampleMultiplier;
+
 extern cvar_t	*r_rotatex;
 extern cvar_t	*r_rotatey;
 extern cvar_t	*r_rotatez;

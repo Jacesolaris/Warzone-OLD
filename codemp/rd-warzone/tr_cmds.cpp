@@ -38,7 +38,7 @@ void R_PerformanceCounters( void ) {
 		ri->Printf (PRINT_ALL, "%i/%i/%i shaders/batches/surfs %i leafs %i verts %i/%i tris %.2f mtex %.2f dc\n",
 			backEnd.pc.c_shaders, backEnd.pc.c_surfBatches, backEnd.pc.c_surfaces, tr.pc.c_leafs, backEnd.pc.c_vertexes, 
 			backEnd.pc.c_indexes/3, backEnd.pc.c_totalIndexes/3, 
-			R_SumOfUsedImages()/(1000000.0f), backEnd.pc.c_overDraw / (float)(glConfig.vidWidth * glConfig.vidHeight) ); 
+			R_SumOfUsedImages()/(1000000.0f), backEnd.pc.c_overDraw / ((float)(glConfig.vidWidth * r_superSampleMultiplier->value) * (glConfig.vidHeight * r_superSampleMultiplier->value)) ); 
 	} else if (r_speeds->integer == 2) {
 		ri->Printf (PRINT_ALL, "(patch) %i sin %i sclip  %i sout %i bin %i bclip %i bout\n",
 			tr.pc.c_sphere_cull_patch_in, tr.pc.c_sphere_cull_patch_clip, tr.pc.c_sphere_cull_patch_out, 
@@ -243,6 +243,17 @@ void	RE_SetColor( const float *rgba ) {
 	cmd->color[3] = rgba[3];
 }
 
+void RE_AdjustForSuperSample ( float *x, float *y, float *w, float *h )
+{
+	if ( r_superSampleMultiplier->value <= 1.0) return;
+
+	//*x *= (*x / r_superSampleMultiplier->value);
+	*x /= 2.0;
+	*y += 240 - (*y / 2.0);
+	*w /= 2.0;
+	*h *= (240 / (*y * 2.0));
+}
+
 /*
 =============
 RE_RotatePic
@@ -262,6 +273,7 @@ void RE_RotatePic ( float x, float y, float w, float h,
 	cmd->y = y;
 	cmd->w = w;
 	cmd->h = h;
+	RE_AdjustForSuperSample(&cmd->x, &cmd->y, &cmd->w, &cmd->h);
 	cmd->s1 = s1;
 	cmd->t1 = t1;
 	cmd->s2 = s2;
@@ -288,6 +300,7 @@ void RE_RotatePic2 ( float x, float y, float w, float h,
 	cmd->y = y;
 	cmd->w = w;
 	cmd->h = h;
+	RE_AdjustForSuperSample(&cmd->x, &cmd->y, &cmd->w, &cmd->h);
 	cmd->s1 = s1;
 	cmd->t1 = t1;
 	cmd->s2 = s2;
@@ -317,6 +330,7 @@ void RE_StretchPic ( float x, float y, float w, float h,
 	cmd->y = y;
 	cmd->w = w;
 	cmd->h = h;
+	RE_AdjustForSuperSample(&cmd->x, &cmd->y, &cmd->w, &cmd->h);
 	cmd->s1 = s1;
 	cmd->t1 = t1;
 	cmd->s2 = s2;

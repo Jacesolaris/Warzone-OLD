@@ -36,6 +36,8 @@ glstate_t	glState;
 static void GfxInfo_f( void );
 static void GfxMemInfo_f( void );
 
+cvar_t	*r_superSampleMultiplier;
+
 cvar_t	*r_rotatex;
 cvar_t	*r_rotatey;
 cvar_t	*r_rotatez;
@@ -387,10 +389,10 @@ void R_Splash()
 
 	const int width = 640;
 	const int height = 480;
-	const float x1 = 320 - width / 2;
-	const float x2 = 320 + width / 2;
-	const float y1 = 240 - height / 2;
-	const float y2 = 240 + height / 2;
+	const float x1 = (320 - width / 2);
+	const float x2 = (320 + width / 2);
+	const float y1 = (240 - height / 2);
+	const float y2 = (240 + height / 2);
 
 
 	qglBegin (GL_TRIANGLE_STRIP);
@@ -430,7 +432,7 @@ static void InitOpenGL( void )
 	//		- r_gamma
 	//
 	
-	if ( glConfig.vidWidth == 0 )
+	if ( glConfig.vidWidth * r_superSampleMultiplier->value == 0 )
 	{
 		GLint		temp;
 		
@@ -837,7 +839,7 @@ static void R_LevelShot( void ) {
 
 	Com_sprintf( checkname, sizeof(checkname), "levelshots/%s.tga", tr.world->baseName );
 
-	allsource = RB_ReadPixels(0, 0, glConfig.vidWidth, glConfig.vidHeight, &offset, &padlen);
+	allsource = RB_ReadPixels(0, 0, glConfig.vidWidth * r_superSampleMultiplier->value, glConfig.vidHeight * r_superSampleMultiplier->value, &offset, &padlen);
 	source = allsource + offset;
 
 	buffer = (byte *)ri->Hunk_AllocateTempMemory(LEVELSHOTSIZE * LEVELSHOTSIZE*3 + 18);
@@ -849,9 +851,11 @@ static void R_LevelShot( void ) {
 	buffer[15] = LEVELSHOTSIZE >> 8;
 	buffer[16] = 24;	// pixel size
 
+	int vidWidth = glConfig.vidWidth * r_superSampleMultiplier->value;
+
 	// resample from source
-	xScale = glConfig.vidWidth / (4.0*LEVELSHOTSIZE);
-	yScale = glConfig.vidHeight / (3.0*LEVELSHOTSIZE);
+	xScale = (glConfig.vidWidth * r_superSampleMultiplier->value) / (4.0*LEVELSHOTSIZE);
+	yScale = (glConfig.vidHeight * r_superSampleMultiplier->value) / (3.0*LEVELSHOTSIZE);
 
 #pragma omp parallel for schedule(dynamic)
 	for ( y = 0 ; y < LEVELSHOTSIZE ; y++ ) {
@@ -859,7 +863,7 @@ static void R_LevelShot( void ) {
 			r = g = b = 0;
 			for ( yy = 0 ; yy < 3 ; yy++ ) {
 				for ( xx = 0 ; xx < 4 ; xx++ ) {
-					src = source + 3 * ( glConfig.vidWidth * (int)( (y*3+yy)*yScale ) + (int)( (x*4+xx)*xScale ) );
+					src = source + 3 * ( vidWidth * (int)( (y*3+yy)*yScale ) + (int)( (x*4+xx)*xScale ) );
 					r += src[0];
 					g += src[1];
 					b += src[2];
@@ -923,7 +927,7 @@ void R_ScreenShotTGA_f (void) {
  		}
 	}
 
-	R_TakeScreenshot( 0, 0, glConfig.vidWidth, glConfig.vidHeight, checkname, SSF_TGA );
+	R_TakeScreenshot( 0, 0, glConfig.vidWidth * r_superSampleMultiplier->value, glConfig.vidHeight * r_superSampleMultiplier->value, checkname, SSF_TGA );
 
 	if ( !silent )
 		ri->Printf (PRINT_ALL, "Wrote %s\n", checkname);
@@ -955,7 +959,7 @@ void R_ScreenShotPNG_f (void) {
  		}
 	}
 
-	R_TakeScreenshot( 0, 0, glConfig.vidWidth, glConfig.vidHeight, checkname, SSF_PNG );
+	R_TakeScreenshot( 0, 0, glConfig.vidWidth * r_superSampleMultiplier->value, glConfig.vidHeight * r_superSampleMultiplier->value, checkname, SSF_PNG );
 
 	if ( !silent )
 		ri->Printf (PRINT_ALL, "Wrote %s\n", checkname);
@@ -987,7 +991,7 @@ void R_ScreenShotJPEG_f (void) {
  		}
 	}
 
-	R_TakeScreenshot( 0, 0, glConfig.vidWidth, glConfig.vidHeight, checkname, SSF_JPEG );
+	R_TakeScreenshot( 0, 0, glConfig.vidWidth * r_superSampleMultiplier->value, glConfig.vidHeight * r_superSampleMultiplier->value, checkname, SSF_JPEG );
 
 	if ( !silent )
 		ri->Printf (PRINT_ALL, "Wrote %s\n", checkname);
@@ -1180,7 +1184,7 @@ static void GfxInfo_f( void )
 	ri->Printf( PRINT_ALL, "GL_MAX_TEXTURE_SIZE: %d\n", glConfig.maxTextureSize );
 	ri->Printf( PRINT_ALL, "GL_MAX_TEXTURE_UNITS_ARB: %d\n", glConfig.numTextureUnits );
 	ri->Printf( PRINT_ALL, "\nPIXELFORMAT: color(%d-bits) Z(%d-bit) stencil(%d-bits)\n", glConfig.colorBits, glConfig.depthBits, glConfig.stencilBits );
-	ri->Printf( PRINT_ALL, "MODE: %d, %d x %d %s hz:", r_mode->integer, glConfig.vidWidth, glConfig.vidHeight, fsstrings[r_fullscreen->integer == 1] );
+	ri->Printf( PRINT_ALL, "MODE: %d, %d x %d %s hz:", r_mode->integer, glConfig.vidWidth * r_superSampleMultiplier->value, glConfig.vidHeight * r_superSampleMultiplier->value, fsstrings[r_fullscreen->integer == 1] );
 	if ( glConfig.displayFrequency )
 	{
 		ri->Printf( PRINT_ALL, "%d\n", glConfig.displayFrequency );
@@ -1284,6 +1288,8 @@ R_Register
 */
 void R_Register( void ) 
 {
+	r_superSampleMultiplier = ri->Cvar_Get( "r_superSampleMultiplier", "1", CVAR_ARCHIVE | CVAR_LATCH );
+
 	//
 	// latched and archived variables
 	//
@@ -1843,8 +1849,8 @@ static float GetDistanceCull( void ) { return tr.distanceCull; }
 extern void R_SVModelInit( void ); //tr_model.cpp
 
 static void GetRealRes( int *w, int *h ) {
-	*w = glConfig.vidWidth;
-	*h = glConfig.vidHeight;
+	*w = glConfig.vidWidth * r_superSampleMultiplier->value;
+	*h = glConfig.vidHeight * r_superSampleMultiplier->value;
 }
 
 // STUBS, REPLACEME

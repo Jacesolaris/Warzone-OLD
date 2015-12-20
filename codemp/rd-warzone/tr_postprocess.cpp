@@ -258,10 +258,10 @@ static void RB_RadialBlur(FBO_t *srcFbo, FBO_t *dstFbo, int passes, float stretc
 			}
 			else
 			{
-				srcBox[0] = s0 * glConfig.vidWidth;
-				srcBox[1] = t0 * glConfig.vidHeight;
-				srcBox[2] = (s1 - s0) * glConfig.vidWidth;
-				srcBox[3] = (t1 - t0) * glConfig.vidHeight;
+				srcBox[0] = s0 * glConfig.vidWidth * r_superSampleMultiplier->value;
+				srcBox[1] = t0 * glConfig.vidHeight * r_superSampleMultiplier->value;
+				srcBox[2] = (s1 - s0) * glConfig.vidWidth * r_superSampleMultiplier->value;
+				srcBox[3] = (t1 - t0) * glConfig.vidHeight * r_superSampleMultiplier->value;
 			}
 			
 			FBO_Blit(srcFbo, srcBox, texScale, dstFbo, dstBox, &tr.textureColorShader, color, GLS_SRCBLEND_ONE | GLS_DSTBLEND_ONE );
@@ -362,10 +362,10 @@ void RB_SunRays(FBO_t *srcFbo, vec4i_t srcBox, FBO_t *dstFbo, vec4i_t dstBox)
 		}
 		else
 		{
-			rayBox[0] = srcBox[0] * tr.sunRaysFbo->width  / glConfig.vidWidth;
-			rayBox[1] = srcBox[1] * tr.sunRaysFbo->height / glConfig.vidHeight;
-			rayBox[2] = srcBox[2] * tr.sunRaysFbo->width  / glConfig.vidWidth;
-			rayBox[3] = srcBox[3] * tr.sunRaysFbo->height / glConfig.vidHeight;
+			rayBox[0] = srcBox[0] * tr.sunRaysFbo->width  / (glConfig.vidWidth * r_superSampleMultiplier->value);
+			rayBox[1] = srcBox[1] * tr.sunRaysFbo->height / (glConfig.vidHeight * r_superSampleMultiplier->value);
+			rayBox[2] = srcBox[2] * tr.sunRaysFbo->width  / (glConfig.vidWidth * r_superSampleMultiplier->value);
+			rayBox[3] = srcBox[3] * tr.sunRaysFbo->height / (glConfig.vidHeight * r_superSampleMultiplier->value);
 		}
 
 		quarterBox[0] = 0;
@@ -554,8 +554,8 @@ void RB_DarkExpand(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 
 	{
 		vec2_t screensize;
-		screensize[0] = glConfig.vidWidth;
-		screensize[1] = glConfig.vidHeight;
+		screensize[0] = glConfig.vidWidth * r_superSampleMultiplier->value;
+		screensize[1] = glConfig.vidHeight * r_superSampleMultiplier->value;
 
 		GLSL_SetUniformVec2(&tr.darkexpandShader, UNIFORM_DIMENSIONS, screensize);
 	}
@@ -579,10 +579,10 @@ void RB_Bloom(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 		color[2] = pow(2, r_cameraExposure->value);
 	color[3] = 1.0f;
 
-	halfBox[0] = backEnd.viewParms.viewportX      * tr.bloomRenderFBOImage[0]->width  / (float)glConfig.vidWidth;
-	halfBox[1] = backEnd.viewParms.viewportY      * tr.bloomRenderFBOImage[0]->height / (float)glConfig.vidHeight;
-	halfBox[2] = backEnd.viewParms.viewportWidth  * tr.bloomRenderFBOImage[0]->width  / (float)glConfig.vidWidth;
-	halfBox[3] = backEnd.viewParms.viewportHeight * tr.bloomRenderFBOImage[0]->height / (float)glConfig.vidHeight;
+	halfBox[0] = backEnd.viewParms.viewportX      * tr.bloomRenderFBOImage[0]->width  / ((float)glConfig.vidWidth * r_superSampleMultiplier->value);
+	halfBox[1] = backEnd.viewParms.viewportY      * tr.bloomRenderFBOImage[0]->height / ((float)glConfig.vidHeight * r_superSampleMultiplier->value);
+	halfBox[2] = backEnd.viewParms.viewportWidth  * tr.bloomRenderFBOImage[0]->width  / ((float)glConfig.vidWidth * r_superSampleMultiplier->value);
+	halfBox[3] = backEnd.viewParms.viewportHeight * tr.bloomRenderFBOImage[0]->height / ((float)glConfig.vidHeight * r_superSampleMultiplier->value);
 
 	//
 	// Darken to VBO...
@@ -676,10 +676,10 @@ void RB_Anamorphic(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 		color[2] = pow(2, r_cameraExposure->value);
 	color[3] = 1.0f;
 
-	halfBox[0] = backEnd.viewParms.viewportX      * tr.anamorphicRenderFBOImage[0]->width  / (float)glConfig.vidWidth;
-	halfBox[1] = backEnd.viewParms.viewportY      * tr.anamorphicRenderFBOImage[0]->height / (float)glConfig.vidHeight;
-	halfBox[2] = backEnd.viewParms.viewportWidth  * tr.anamorphicRenderFBOImage[0]->width  / (float)glConfig.vidWidth;
-	halfBox[3] = backEnd.viewParms.viewportHeight * tr.anamorphicRenderFBOImage[0]->height / (float)glConfig.vidHeight;
+	halfBox[0] = backEnd.viewParms.viewportX      * tr.anamorphicRenderFBOImage[0]->width  / ((float)glConfig.vidWidth * r_superSampleMultiplier->value);
+	halfBox[1] = backEnd.viewParms.viewportY      * tr.anamorphicRenderFBOImage[0]->height / ((float)glConfig.vidHeight * r_superSampleMultiplier->value);
+	halfBox[2] = backEnd.viewParms.viewportWidth  * tr.anamorphicRenderFBOImage[0]->width  / ((float)glConfig.vidWidth * r_superSampleMultiplier->value);
+	halfBox[3] = backEnd.viewParms.viewportHeight * tr.anamorphicRenderFBOImage[0]->height / ((float)glConfig.vidHeight * r_superSampleMultiplier->value);
 
 	//
 	// Darken to VBO...
@@ -767,8 +767,8 @@ void RB_LensFlare(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 	GL_BindToTMU(hdrFbo->colorImage[0], TB_LEVELSMAP);
 
 	vec2_t screensize;
-	screensize[0] = glConfig.vidWidth;
-	screensize[1] = glConfig.vidHeight;
+	screensize[0] = glConfig.vidWidth * r_superSampleMultiplier->value;
+	screensize[1] = glConfig.vidHeight * r_superSampleMultiplier->value;
 	GLSL_SetUniformVec2(&tr.lensflareShader, UNIFORM_DIMENSIONS, screensize);
 
 	FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.lensflareShader, color, 0);
@@ -791,8 +791,8 @@ void RB_MultiPost(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 
 	{
 		vec2_t screensize;
-		screensize[0] = glConfig.vidWidth;
-		screensize[1] = glConfig.vidHeight;
+		screensize[0] = glConfig.vidWidth * r_superSampleMultiplier->value;
+		screensize[1] = glConfig.vidHeight * r_superSampleMultiplier->value;
 
 		GLSL_SetUniformVec2(&tr.multipostShader, UNIFORM_DIMENSIONS, screensize);
 	}
@@ -1162,8 +1162,8 @@ qboolean RB_VolumetricLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_
 
 	{
 		vec2_t screensize;
-		screensize[0] = glConfig.vidWidth;
-		screensize[1] = glConfig.vidHeight;
+		screensize[0] = glConfig.vidWidth * r_superSampleMultiplier->value;
+		screensize[1] = glConfig.vidHeight * r_superSampleMultiplier->value;
 
 		GLSL_SetUniformVec2(&tr.volumeLightShader[r_dynamiclight->integer - 1], UNIFORM_DIMENSIONS, screensize);
 	}
@@ -1201,8 +1201,8 @@ qboolean RB_VolumetricLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_
 	GL_BindToTMU(tr.genericFBO2Image, TB_NORMALMAP);
 
 	vec2_t screensize;
-	screensize[0] = glConfig.vidWidth;
-	screensize[1] = glConfig.vidHeight;
+	screensize[0] = glConfig.vidWidth * r_superSampleMultiplier->value;
+	screensize[1] = glConfig.vidHeight * r_superSampleMultiplier->value;
 	GLSL_SetUniformVec2(&tr.volumeLightCombineShader, UNIFORM_DIMENSIONS, screensize);
 
 	FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.volumeLightCombineShader, color, 0);
@@ -1230,8 +1230,8 @@ void RB_HDR(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 
 	{
 		vec2_t screensize;
-		screensize[0] = glConfig.vidWidth;
-		screensize[1] = glConfig.vidHeight;
+		screensize[0] = glConfig.vidWidth * r_superSampleMultiplier->value;
+		screensize[1] = glConfig.vidHeight * r_superSampleMultiplier->value;
 
 		GLSL_SetUniformVec2(&tr.hdrShader, UNIFORM_DIMENSIONS, screensize);
 	}
@@ -1259,8 +1259,8 @@ void RB_MagicDetail(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox
 
 	{
 		vec2_t screensize;
-		screensize[0] = glConfig.vidWidth;
-		screensize[1] = glConfig.vidHeight;
+		screensize[0] = glConfig.vidWidth * r_superSampleMultiplier->value;
+		screensize[1] = glConfig.vidHeight * r_superSampleMultiplier->value;
 
 		GLSL_SetUniformVec2(&tr.magicdetailShader, UNIFORM_DIMENSIONS, screensize);
 	}
@@ -1312,8 +1312,8 @@ void RB_FakeDepth(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 
 	{
 		vec2_t screensize;
-		screensize[0] = glConfig.vidWidth;
-		screensize[1] = glConfig.vidHeight;
+		screensize[0] = glConfig.vidWidth * r_superSampleMultiplier->value;
+		screensize[1] = glConfig.vidHeight * r_superSampleMultiplier->value;
 
 		GLSL_SetUniformVec2(&tr.fakedepthShader, UNIFORM_DIMENSIONS, screensize);
 	}
@@ -1343,8 +1343,8 @@ void RB_FakeDepthParallax(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t 
 	
 	{
 		vec2_t screensize;
-		screensize[0] = glConfig.vidWidth;
-		screensize[1] = glConfig.vidHeight;
+		screensize[0] = glConfig.vidWidth * r_superSampleMultiplier->value;
+		screensize[1] = glConfig.vidHeight * r_superSampleMultiplier->value;
 
 		GLSL_SetUniformVec2(&tr.fakedepthSteepParallaxShader, UNIFORM_DIMENSIONS, screensize);
 	}
@@ -1394,8 +1394,8 @@ void RB_Anaglyph(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 
 	{
 		vec2_t screensize;
-		screensize[0] = glConfig.vidWidth;
-		screensize[1] = glConfig.vidHeight;
+		screensize[0] = glConfig.vidWidth * r_superSampleMultiplier->value;
+		screensize[1] = glConfig.vidHeight * r_superSampleMultiplier->value;
 
 		GLSL_SetUniformVec2(&tr.anaglyphShader, UNIFORM_DIMENSIONS, screensize);
 	}
@@ -1449,8 +1449,8 @@ void RB_SSAO(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 
 	{
 		vec2_t screensize;
-		screensize[0] = glConfig.vidWidth;
-		screensize[1] = glConfig.vidHeight;
+		screensize[0] = glConfig.vidWidth * r_superSampleMultiplier->value;
+		screensize[1] = glConfig.vidHeight * r_superSampleMultiplier->value;
 
 		GLSL_SetUniformVec2(&tr.ssaoShader, UNIFORM_DIMENSIONS, screensize);
 	}
@@ -1490,8 +1490,8 @@ void RB_RBM(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 
 	{
 		vec2_t screensize;
-		screensize[0] = glConfig.vidWidth;
-		screensize[1] = glConfig.vidHeight;
+		screensize[0] = glConfig.vidWidth * r_superSampleMultiplier->value;
+		screensize[1] = glConfig.vidHeight * r_superSampleMultiplier->value;
 
 		GLSL_SetUniformVec2(&tr.rbmShader, UNIFORM_DIMENSIONS, screensize);
 	}
@@ -1574,8 +1574,8 @@ qboolean RB_SSS(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 
 	{
 		vec2_t screensize;
-		screensize[0] = glConfig.vidWidth;
-		screensize[1] = glConfig.vidHeight;
+		screensize[0] = glConfig.vidWidth * r_superSampleMultiplier->value;
+		screensize[1] = glConfig.vidHeight * r_superSampleMultiplier->value;
 
 		GLSL_SetUniformVec2(&tr.sssShader, UNIFORM_DIMENSIONS, screensize);
 	}
@@ -1626,8 +1626,8 @@ void RB_HBAO(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 
 	{
 		vec2_t screensize;
-		screensize[0] = glConfig.vidWidth;
-		screensize[1] = glConfig.vidHeight;
+		screensize[0] = glConfig.vidWidth * r_superSampleMultiplier->value;
+		screensize[1] = glConfig.vidHeight * r_superSampleMultiplier->value;
 
 		GLSL_SetUniformVec2(shader, UNIFORM_DIMENSIONS, screensize);
 	}
@@ -1661,8 +1661,8 @@ void RB_HBAO(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 	GL_BindToTMU(tr.genericFBO2Image, TB_NORMALMAP);
 
 	vec2_t screensize;
-	screensize[0] = glConfig.vidWidth;
-	screensize[1] = glConfig.vidHeight;
+	screensize[0] = glConfig.vidWidth * r_superSampleMultiplier->value;
+	screensize[1] = glConfig.vidHeight * r_superSampleMultiplier->value;
 	GLSL_SetUniformVec2(&tr.hbaoCombineShader, UNIFORM_DIMENSIONS, screensize);
 
 	FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.hbaoCombineShader, color, 0);
@@ -1686,8 +1686,8 @@ void RB_TextureClean(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBo
 	
 	{
 		vec2_t screensize;
-		screensize[0] = glConfig.vidWidth;
-		screensize[1] = glConfig.vidHeight;
+		screensize[0] = glConfig.vidWidth * r_superSampleMultiplier->value;
+		screensize[1] = glConfig.vidHeight * r_superSampleMultiplier->value;
 
 		GLSL_SetUniformVec2(&tr.texturecleanShader, UNIFORM_DIMENSIONS, screensize);
 	}
@@ -1717,8 +1717,8 @@ void RB_ESharpening(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox
 	GL_BindToTMU(hdrFbo->colorImage[0], TB_LEVELSMAP);
 
 	vec2_t screensize;
-	screensize[0] = glConfig.vidWidth;
-	screensize[1] = glConfig.vidHeight;
+	screensize[0] = glConfig.vidWidth * r_superSampleMultiplier->value;
+	screensize[1] = glConfig.vidHeight * r_superSampleMultiplier->value;
 	GLSL_SetUniformVec2(&tr.esharpeningShader, UNIFORM_DIMENSIONS, screensize);
 	
 	FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.esharpeningShader, color, 0);
@@ -1741,8 +1741,8 @@ void RB_ESharpening2(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBo
 	GL_BindToTMU(hdrFbo->colorImage[0], TB_LEVELSMAP);
 
 	vec2_t screensize;
-	screensize[0] = glConfig.vidWidth;
-	screensize[1] = glConfig.vidHeight;
+	screensize[0] = glConfig.vidWidth * r_superSampleMultiplier->value;
+	screensize[1] = glConfig.vidHeight * r_superSampleMultiplier->value;
 	GLSL_SetUniformVec2(&tr.esharpening2Shader, UNIFORM_DIMENSIONS, screensize);
 
 	FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.esharpening2Shader, color, 0);
@@ -1771,8 +1771,8 @@ void RB_DOF(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox, int di
 
 		{
 			vec2_t screensize;
-			screensize[0] = glConfig.vidWidth;
-			screensize[1] = glConfig.vidHeight;
+			screensize[0] = glConfig.vidWidth * r_superSampleMultiplier->value;
+			screensize[1] = glConfig.vidHeight * r_superSampleMultiplier->value;
 
 			GLSL_SetUniformVec2(&tr.dof2Shader, UNIFORM_DIMENSIONS, screensize);
 		}
@@ -1805,8 +1805,8 @@ void RB_DOF(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox, int di
 
 		{
 			vec2_t screensize;
-			screensize[0] = glConfig.vidWidth;
-			screensize[1] = glConfig.vidHeight;
+			screensize[0] = glConfig.vidWidth * r_superSampleMultiplier->value;
+			screensize[1] = glConfig.vidHeight * r_superSampleMultiplier->value;
 
 			GLSL_SetUniformVec2(&tr.dofShader, UNIFORM_DIMENSIONS, screensize);
 		}
@@ -1847,8 +1847,8 @@ void RB_DOF(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox, int di
 
 		{
 			vec2_t screensize;
-			screensize[0] = glConfig.vidWidth;
-			screensize[1] = glConfig.vidHeight;
+			screensize[0] = glConfig.vidWidth * r_superSampleMultiplier->value;
+			screensize[1] = glConfig.vidHeight * r_superSampleMultiplier->value;
 
 			GLSL_SetUniformVec2(&tr.dofShader, UNIFORM_DIMENSIONS, screensize);
 		}
@@ -1920,10 +1920,10 @@ void RB_SSGI(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 		texHalfScale[0] = texHalfScale[1] = texScale[0] / 8.0;
 		texDoubleScale[0] = texDoubleScale[1] = texScale[0] * 8.0;
 
-		halfBox[0] = backEnd.viewParms.viewportX      * tr.anamorphicRenderFBOImage[0]->width  / (float)glConfig.vidWidth;
-		halfBox[1] = backEnd.viewParms.viewportY      * tr.anamorphicRenderFBOImage[0]->height / (float)glConfig.vidHeight;
-		halfBox[2] = backEnd.viewParms.viewportWidth  * tr.anamorphicRenderFBOImage[0]->width  / (float)glConfig.vidWidth;
-		halfBox[3] = backEnd.viewParms.viewportHeight * tr.anamorphicRenderFBOImage[0]->height / (float)glConfig.vidHeight;
+		halfBox[0] = backEnd.viewParms.viewportX      * tr.anamorphicRenderFBOImage[0]->width  / ((float)glConfig.vidWidth * r_superSampleMultiplier->value);
+		halfBox[1] = backEnd.viewParms.viewportY      * tr.anamorphicRenderFBOImage[0]->height / ((float)glConfig.vidHeight * r_superSampleMultiplier->value);
+		halfBox[2] = backEnd.viewParms.viewportWidth  * tr.anamorphicRenderFBOImage[0]->width  / ((float)glConfig.vidWidth * r_superSampleMultiplier->value);
+		halfBox[3] = backEnd.viewParms.viewportHeight * tr.anamorphicRenderFBOImage[0]->height / ((float)glConfig.vidHeight * r_superSampleMultiplier->value);
 
 		//
 		// Darken to VBO...
@@ -2212,8 +2212,8 @@ void RB_SSGI(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 
 	{
 		vec2_t screensize;
-		screensize[0] = glConfig.vidWidth;
-		screensize[1] = glConfig.vidHeight;
+		screensize[0] = glConfig.vidWidth * r_superSampleMultiplier->value;
+		screensize[1] = glConfig.vidHeight * r_superSampleMultiplier->value;
 
 		GLSL_SetUniformVec2(shader, UNIFORM_DIMENSIONS, screensize);
 
@@ -2266,8 +2266,8 @@ void RB_TestShader(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox,
 
 	{
 		vec2_t screensize;
-		screensize[0] = glConfig.vidWidth;
-		screensize[1] = glConfig.vidHeight;
+		screensize[0] = glConfig.vidWidth * r_superSampleMultiplier->value;
+		screensize[1] = glConfig.vidHeight * r_superSampleMultiplier->value;
 
 		GLSL_SetUniformVec2(&tr.testshaderShader, UNIFORM_DIMENSIONS, screensize);
 	}
@@ -2294,8 +2294,8 @@ void RB_Underwater(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 
 	{
 		vec2_t screensize;
-		screensize[0] = glConfig.vidWidth;
-		screensize[1] = glConfig.vidHeight;
+		screensize[0] = glConfig.vidWidth * r_superSampleMultiplier->value;
+		screensize[1] = glConfig.vidHeight * r_superSampleMultiplier->value;
 
 		GLSL_SetUniformVec2(&tr.underwaterShader, UNIFORM_DIMENSIONS, screensize);
 	}
@@ -2321,8 +2321,8 @@ void RB_FXAA(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 
 	{
 		vec2_t screensize;
-		screensize[0] = glConfig.vidWidth;
-		screensize[1] = glConfig.vidHeight;
+		screensize[0] = glConfig.vidWidth * r_superSampleMultiplier->value;
+		screensize[1] = glConfig.vidHeight * r_superSampleMultiplier->value;
 
 		GLSL_SetUniformVec2(&tr.fxaaShader, UNIFORM_DIMENSIONS, screensize);
 	}

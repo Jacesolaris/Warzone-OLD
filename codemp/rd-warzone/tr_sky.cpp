@@ -911,8 +911,8 @@ void DrawSkyDome ( shader_t *skyShader )
 		vec4i_t		screenBox;
 		screenBox[0] = 0;
 		screenBox[1] = 0;
-		screenBox[2] = glConfig.vidWidth;
-		screenBox[3] = glConfig.vidHeight;
+		screenBox[2] = glConfig.vidWidth * r_superSampleMultiplier->value;
+		screenBox[3] = glConfig.vidHeight * r_superSampleMultiplier->value;
 
 		FBO_BlitFromTexture(skyShader->sky.outerbox[0], imageBox, NULL, glState.currentFBO, screenBox, &tr.uniqueskyShader, NULL, 0);
 	}
@@ -927,8 +927,8 @@ void DrawSkyDome ( shader_t *skyShader )
 		vec4i_t		screenBox;
 		screenBox[0] = 0;
 		screenBox[1] = 0;
-		screenBox[2] = glConfig.vidWidth;
-		screenBox[3] = glConfig.vidHeight;
+		screenBox[2] = glConfig.vidWidth * r_superSampleMultiplier->value;
+		screenBox[3] = glConfig.vidHeight * r_superSampleMultiplier->value;
 
 		FBO_BlitFromTexture(tr.whiteImage, imageBox, NULL, glState.currentFBO, screenBox, &tr.uniqueskyShader, NULL, 0);
 	}

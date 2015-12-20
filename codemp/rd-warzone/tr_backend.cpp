@@ -824,8 +824,8 @@ void	RB_SetGL2D (void) {
 	}
 	else
 	{
-		width = glConfig.vidWidth;
-		height = glConfig.vidHeight;
+		width = glConfig.vidWidth * r_superSampleMultiplier->value;
+		height = glConfig.vidHeight * r_superSampleMultiplier->value;
 	}
 
 	// set 2D virtual screen size
@@ -1313,7 +1313,7 @@ const void	*RB_DrawSurfs( const void *data ) {
 		{
 			// If we're rendering directly to the screen, copy the depth to a texture
 			GL_BindToTMU(tr.renderDepthImage, 0);
-			qglCopyTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, 0, 0, glConfig.vidWidth, glConfig.vidHeight, 0);
+			qglCopyTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, 0, 0, glConfig.vidWidth * r_superSampleMultiplier->value, glConfig.vidHeight * r_superSampleMultiplier->value, 0);
 		}
 
 		if (r_ssao->integer || r_hbao->integer)
@@ -1330,18 +1330,18 @@ const void	*RB_DrawSurfs( const void *data ) {
 
 			FBO_Bind(tr.screenShadowFbo);
 
-			box[0] = backEnd.viewParms.viewportX      * tr.screenShadowFbo->width  / (float)glConfig.vidWidth;
-			box[1] = backEnd.viewParms.viewportY      * tr.screenShadowFbo->height / (float)glConfig.vidHeight;
-			box[2] = backEnd.viewParms.viewportWidth  * tr.screenShadowFbo->width  / (float)glConfig.vidWidth;
-			box[3] = backEnd.viewParms.viewportHeight * tr.screenShadowFbo->height / (float)glConfig.vidHeight;
+			box[0] = backEnd.viewParms.viewportX      * tr.screenShadowFbo->width  / ((float)glConfig.vidWidth * r_superSampleMultiplier->value);
+			box[1] = backEnd.viewParms.viewportY      * tr.screenShadowFbo->height / ((float)glConfig.vidHeight * r_superSampleMultiplier->value);
+			box[2] = backEnd.viewParms.viewportWidth  * tr.screenShadowFbo->width  / ((float)glConfig.vidWidth * r_superSampleMultiplier->value);
+			box[3] = backEnd.viewParms.viewportHeight * tr.screenShadowFbo->height / ((float)glConfig.vidHeight * r_superSampleMultiplier->value);
 
 			qglViewport(box[0], box[1], box[2], box[3]);
 			qglScissor(box[0], box[1], box[2], box[3]);
 
-			box[0] = backEnd.viewParms.viewportX               / (float)glConfig.vidWidth;
-			box[1] = backEnd.viewParms.viewportY               / (float)glConfig.vidHeight;
-			box[2] = box[0] + backEnd.viewParms.viewportWidth  / (float)glConfig.vidWidth;
-			box[3] = box[1] + backEnd.viewParms.viewportHeight / (float)glConfig.vidHeight;
+			box[0] = backEnd.viewParms.viewportX               / ((float)glConfig.vidWidth * r_superSampleMultiplier->value);
+			box[1] = backEnd.viewParms.viewportY               / ((float)glConfig.vidHeight * r_superSampleMultiplier->value);
+			box[2] = box[0] + backEnd.viewParms.viewportWidth  / ((float)glConfig.vidWidth * r_superSampleMultiplier->value);
+			box[3] = box[1] + backEnd.viewParms.viewportHeight / ((float)glConfig.vidHeight * r_superSampleMultiplier->value);
 
 			texCoords[0][0] = box[0]; texCoords[0][1] = box[3];
 			texCoords[1][0] = box[2]; texCoords[1][1] = box[3];
@@ -1426,18 +1426,18 @@ const void	*RB_DrawSurfs( const void *data ) {
 
 					FBO_Bind(tr.screenShadowFbo);
 
-					box[0] = backEnd.viewParms.viewportX      * tr.screenShadowFbo->width  / (float)glConfig.vidWidth;
-					box[1] = backEnd.viewParms.viewportY      * tr.screenShadowFbo->height / (float)glConfig.vidHeight;
-					box[2] = backEnd.viewParms.viewportWidth  * tr.screenShadowFbo->width  / (float)glConfig.vidWidth;
-					box[3] = backEnd.viewParms.viewportHeight * tr.screenShadowFbo->height / (float)glConfig.vidHeight;
+					box[0] = backEnd.viewParms.viewportX      * tr.screenShadowFbo->width  / ((float)glConfig.vidWidth * r_superSampleMultiplier->value);
+					box[1] = backEnd.viewParms.viewportY      * tr.screenShadowFbo->height / ((float)glConfig.vidHeight * r_superSampleMultiplier->value);
+					box[2] = backEnd.viewParms.viewportWidth  * tr.screenShadowFbo->width  / ((float)glConfig.vidWidth * r_superSampleMultiplier->value);
+					box[3] = backEnd.viewParms.viewportHeight * tr.screenShadowFbo->height / ((float)glConfig.vidHeight * r_superSampleMultiplier->value);
 
 					qglViewport(box[0], box[1], box[2], box[3]);
 					qglScissor(box[0], box[1], box[2], box[3]);
 
-					box[0] = backEnd.viewParms.viewportX               / (float)glConfig.vidWidth;
-					box[1] = backEnd.viewParms.viewportY               / (float)glConfig.vidHeight;
-					box[2] = box[0] + backEnd.viewParms.viewportWidth  / (float)glConfig.vidWidth;
-					box[3] = box[1] + backEnd.viewParms.viewportHeight / (float)glConfig.vidHeight;
+					box[0] = backEnd.viewParms.viewportX               / ((float)glConfig.vidWidth * r_superSampleMultiplier->value);
+					box[1] = backEnd.viewParms.viewportY               / ((float)glConfig.vidHeight * r_superSampleMultiplier->value);
+					box[2] = box[0] + backEnd.viewParms.viewportWidth  / ((float)glConfig.vidWidth * r_superSampleMultiplier->value);
+					box[3] = box[1] + backEnd.viewParms.viewportHeight / ((float)glConfig.vidHeight * r_superSampleMultiplier->value);
 
 					texCoords[0][0] = box[0]; texCoords[0][1] = box[3];
 					texCoords[1][0] = box[2]; texCoords[1][1] = box[3];
@@ -1711,8 +1711,8 @@ void RB_ShowImages( void ) {
 	for ( i=0 ; i<tr.numImages ; i++ ) {
 		image = tr.images[i];
 
-		w = glConfig.vidWidth / 20;
-		h = glConfig.vidHeight / 15;
+		w = (glConfig.vidWidth * r_superSampleMultiplier->value) / 20;
+		h = (glConfig.vidHeight * r_superSampleMultiplier->value) / 15;
 		x = i % 20 * w;
 		y = i / 20 * h;
 
@@ -1842,10 +1842,10 @@ const void	*RB_SwapBuffers( const void *data ) {
 		long sum = 0;
 		unsigned char *stencilReadback;
 
-		stencilReadback = (unsigned char *)ri->Hunk_AllocateTempMemory( glConfig.vidWidth * glConfig.vidHeight );
-		qglReadPixels( 0, 0, glConfig.vidWidth, glConfig.vidHeight, GL_STENCIL_INDEX, GL_UNSIGNED_BYTE, stencilReadback );
+		stencilReadback = (unsigned char *)ri->Hunk_AllocateTempMemory( (glConfig.vidWidth * r_superSampleMultiplier->value) * (glConfig.vidHeight * r_superSampleMultiplier->value) );
+		qglReadPixels( 0, 0, glConfig.vidWidth * r_superSampleMultiplier->value, glConfig.vidHeight * r_superSampleMultiplier->value, GL_STENCIL_INDEX, GL_UNSIGNED_BYTE, stencilReadback );
 
-		for ( i = 0; i < glConfig.vidWidth * glConfig.vidHeight; i++ ) {
+		for ( i = 0; i < (glConfig.vidWidth * r_superSampleMultiplier->value) * (glConfig.vidHeight * r_superSampleMultiplier->value); i++ ) {
 			sum += stencilReadback[i];
 		}
 
@@ -2006,10 +2006,10 @@ const void *RB_PostProcess(const void *data)
 	/*
 	if (r_ssao->integer)
 	{
-		srcBox[0] = backEnd.viewParms.viewportX      * tr.screenSsaoImage->width  / (float)glConfig.vidWidth;
-		srcBox[1] = backEnd.viewParms.viewportY      * tr.screenSsaoImage->height / (float)glConfig.vidHeight;
-		srcBox[2] = backEnd.viewParms.viewportWidth  * tr.screenSsaoImage->width  / (float)glConfig.vidWidth;
-		srcBox[3] = backEnd.viewParms.viewportHeight * tr.screenSsaoImage->height / (float)glConfig.vidHeight;
+		srcBox[0] = backEnd.viewParms.viewportX      * tr.screenSsaoImage->width  / ((float)glConfig.vidWidth * r_superSampleMultiplier->value);
+		srcBox[1] = backEnd.viewParms.viewportY      * tr.screenSsaoImage->height / ((float)glConfig.vidHeight * r_superSampleMultiplier->value);
+		srcBox[2] = backEnd.viewParms.viewportWidth  * tr.screenSsaoImage->width  / ((float)glConfig.vidWidth * r_superSampleMultiplier->value);
+		srcBox[3] = backEnd.viewParms.viewportHeight * tr.screenSsaoImage->height / ((float)glConfig.vidHeight * r_superSampleMultiplier->value);
 
 		//FBO_BlitFromTexture(tr.screenSsaoImage, srcBox, NULL, srcFbo, dstBox, NULL, NULL, GLS_SRCBLEND_DST_COLOR | GLS_DSTBLEND_ZERO);
 		srcBox[1] = tr.screenSsaoImage->height - srcBox[1];
@@ -2044,7 +2044,7 @@ const void *RB_PostProcess(const void *data)
 		FBO_FastBlit (tr.glowFboScaled[1], NULL, tr.glowFboScaled[0], NULL, GL_COLOR_BUFFER_BIT, GL_LINEAR);
 
 		// Restore scissor rect
-		qglScissor (0, 0, glConfig.vidWidth, glConfig.vidHeight);
+		qglScissor (0, 0, glConfig.vidWidth * r_superSampleMultiplier->value, glConfig.vidHeight * r_superSampleMultiplier->value);
 #else
 		RB_BloomDownscale(tr.glowImage, tr.glowFboScaled[0]);
 		int numPasses = Com_Clampi(1, ARRAY_LEN(tr.glowFboScaled), r_dynamicGlowPasses->integer);
@@ -2459,6 +2459,14 @@ const void *RB_PostProcess(const void *data)
 		}
 
 		FBO_BlitFromTexture (tr.glowFboScaled[0]->colorImage[0], NULL, NULL, NULL, NULL, NULL, color, blendFunc);
+	}
+
+	if (r_superSampleMultiplier->value > 1.0)
+	{
+		VectorSet4(srcBox, 0, 0, glConfig.vidHeight * r_superSampleMultiplier->value, glConfig.vidHeight * r_superSampleMultiplier->value);
+		VectorSet4(dstBox, glConfig.vidHeight * (r_superSampleMultiplier->value - 1.0), glConfig.vidHeight * (r_superSampleMultiplier->value - 1.0), glConfig.vidHeight, glConfig.vidHeight);
+		FBO_FastBlit(srcFbo, srcBox, tr.genericFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_LINEAR);
+		FBO_FastBlit(tr.genericFbo, dstBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_LINEAR);
 	}
 
 	backEnd.framePostProcessed = qtrue;

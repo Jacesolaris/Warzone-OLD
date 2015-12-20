@@ -103,12 +103,13 @@ static const char *GoodPlantsList[] = {
 	float		FOLIAGE_TREE_ANGLES[FOLIAGE_MAX_FOLIAGES];
 	float		FOLIAGE_TREE_SCALE[FOLIAGE_MAX_FOLIAGES];
 
-	float	FOLIAGE_AREA_SIZE =				1024;
-	float	FOLIAGE_VISIBLE_DISTANCE =		FOLIAGE_AREA_SIZE*2;
-	float	FOLIAGE_TREE_VISIBLE_DISTANCE = FOLIAGE_AREA_SIZE*5;
+	float		FOLIAGE_AREA_SIZE =				1024;
+	float		FOLIAGE_STARTSCALE_DISTANCE =	FOLIAGE_AREA_SIZE;
+	float		FOLIAGE_VISIBLE_DISTANCE =		FOLIAGE_AREA_SIZE*2;
+	float		FOLIAGE_TREE_VISIBLE_DISTANCE = FOLIAGE_AREA_SIZE*5;
 
-	#define FOLIAGE_AREA_MAX				65550
-	#define FOLIAGE_AREA_MAX_FOLIAGES		256
+	#define		FOLIAGE_AREA_MAX				65550
+	#define		FOLIAGE_AREA_MAX_FOLIAGES		256
 
 	int			FOLIAGE_AREAS_COUNT = 0;
 	int			FOLIAGE_AREAS_LIST_COUNT[FOLIAGE_AREA_MAX];
@@ -350,6 +351,13 @@ extern "C" {
 		qboolean		skip_smallStuff = qfalse;
 		qboolean		skip_mediumStuff = qfalse;
 		float			dist = Distance(FOLIAGE_POSITIONS[num], cg.refdef.vieworg);
+		float			distFadeScale = 1.0;
+
+		/*if (dist >= FOLIAGE_STARTSCALE_DISTANCE)
+		{
+			float foliageMaxFadeDist = (FOLIAGE_VISIBLE_DISTANCE - FOLIAGE_STARTSCALE_DISTANCE);
+			distFadeScale = 1.0 - ((dist - FOLIAGE_STARTSCALE_DISTANCE) / foliageMaxFadeDist);
+		}*/
 
 #ifdef __NO_TREES__
 		if (treeOnly) return;
@@ -420,7 +428,7 @@ extern "C" {
 			if (FOLIAGE_PLANT_SELECTION[num] == 0)
 			{
 #endif //__NO_GRASS_AT_PLANTS__
-				float GRASS_SCALE = FOLIAGE_GRASS_SCALE[num] * GRASS_SCALE_MULTIPLIER * 1.5;
+				float GRASS_SCALE = FOLIAGE_GRASS_SCALE[num] * GRASS_SCALE_MULTIPLIER * 1.5 * distFadeScale;
 
 #ifdef __USE_BILLBOARDING__
 				if (dist > 2048)
@@ -490,7 +498,7 @@ extern "C" {
 			}
 #endif //defined(__USE_ALL_PLANTS__) || defined(__USE_EXTRA_PLANTS__)
 
-			float PLANT_SCALE = FOLIAGE_PLANT_SCALE[num]*PLANT_SCALE_MULTIPLIER;
+			float PLANT_SCALE = FOLIAGE_PLANT_SCALE[num]*PLANT_SCALE_MULTIPLIER*distFadeScale;
 
 #ifdef __USE_BILLBOARDING__
 			if (billBoard)

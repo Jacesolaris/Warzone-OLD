@@ -402,13 +402,13 @@ void FBO_Init(void)
 
 /*	if(glRefConfig.textureNonPowerOfTwo)
 	{
-		width = glConfig.vidWidth;
-		height = glConfig.vidHeight;
+		width = glConfig.vidWidth * r_superSampleMultiplier->value;
+		height = glConfig.vidHeight * r_superSampleMultiplier->value;
 	}
 	else
 	{
-		width = NextPowerOfTwo(glConfig.vidWidth);
-		height = NextPowerOfTwo(glConfig.vidHeight);
+		width = NextPowerOfTwo(glConfig.vidWidth * r_superSampleMultiplier->value);
+		height = NextPowerOfTwo(glConfig.vidHeight * r_superSampleMultiplier->value);
 	} */
 
 	hdrFormat = GL_RGBA8;
@@ -894,7 +894,7 @@ void FBO_BlitFromTexture(struct image_s *src, vec4i_t inSrcBox, vec2_t inSrcTexS
 	}
 	else
 	{
-		VectorSet4(dstBox, 0, glConfig.vidHeight, glConfig.vidWidth, 0);
+		VectorSet4(dstBox, 0, glConfig.vidHeight * r_superSampleMultiplier->value, glConfig.vidWidth * r_superSampleMultiplier->value, 0);
 	}
 
 	if (inSrcTexScale)
@@ -929,8 +929,8 @@ void FBO_BlitFromTexture(struct image_s *src, vec4i_t inSrcBox, vec2_t inSrcTexS
 	}
 	else
 	{
-		width = glConfig.vidWidth;
-		height = glConfig.vidHeight;
+		width = glConfig.vidWidth * r_superSampleMultiplier->value;
+		height = glConfig.vidHeight * r_superSampleMultiplier->value;
 	}
 
 	qglViewport( 0, 0, width, height );
@@ -1015,7 +1015,7 @@ void FBO_FastBlit(FBO_t *src, vec4i_t srcBox, FBO_t *dst, vec4i_t dstBox, int bu
 		}
 		else
 		{
-			VectorSet4(srcBoxFinal, 0, 0, glConfig.vidWidth, glConfig.vidHeight);
+			VectorSet4(srcBoxFinal, 0, 0, glConfig.vidWidth * r_superSampleMultiplier->value, glConfig.vidHeight * r_superSampleMultiplier->value);
 		}
 	}
 	else
@@ -1031,7 +1031,7 @@ void FBO_FastBlit(FBO_t *src, vec4i_t srcBox, FBO_t *dst, vec4i_t dstBox, int bu
 		}
 		else
 		{
-			VectorSet4(dstBoxFinal, 0, 0, glConfig.vidWidth, glConfig.vidHeight);
+			VectorSet4(dstBoxFinal, 0, 0, glConfig.vidWidth * r_superSampleMultiplier->value, glConfig.vidHeight * r_superSampleMultiplier->value);
 		}
 	}
 	else

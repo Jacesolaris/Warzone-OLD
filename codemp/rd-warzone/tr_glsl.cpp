@@ -595,8 +595,8 @@ static void GLSL_GetShaderHeader( GLenum shaderType, const GLcharARB *extra, cha
 								GL_ADD,
 								GL_REPLACE));
 
-	fbufWidthScale = 1.0f / ((float)glConfig.vidWidth);
-	fbufHeightScale = 1.0f / ((float)glConfig.vidHeight);
+	fbufWidthScale = 1.0f / ((float)glConfig.vidWidth * r_superSampleMultiplier->value);
+	fbufHeightScale = 1.0f / ((float)glConfig.vidHeight * r_superSampleMultiplier->value);
 	Q_strcat(dest, size,
 			 va("#ifndef r_FBufScale\n#define r_FBufScale vec2(%f, %f)\n#endif\n", fbufWidthScale, fbufHeightScale));
 
@@ -2487,8 +2487,8 @@ void GLSL_EndLoadGPUShaders ( int startTime )
 
 	{
 		vec2_t screensize;
-		screensize[0] = glConfig.vidWidth;
-		screensize[1] = glConfig.vidHeight;
+		screensize[0] = glConfig.vidWidth * r_superSampleMultiplier->value;
+		screensize[1] = glConfig.vidHeight * r_superSampleMultiplier->value;
 
 		GLSL_SetUniformVec2(&tr.darkexpandShader, UNIFORM_DIMENSIONS, screensize);
 
@@ -2659,8 +2659,8 @@ void GLSL_EndLoadGPUShaders ( int startTime )
 	
 	{
 		vec2_t screensize;
-		screensize[0] = glConfig.vidWidth;
-		screensize[1] = glConfig.vidHeight;
+		screensize[0] = glConfig.vidWidth * r_superSampleMultiplier->value;
+		screensize[1] = glConfig.vidHeight * r_superSampleMultiplier->value;
 
 		GLSL_SetUniformVec2(&tr.ssgi1Shader, UNIFORM_DIMENSIONS, screensize);
 	}
@@ -2698,8 +2698,8 @@ void GLSL_EndLoadGPUShaders ( int startTime )
 	
 	{
 		vec2_t screensize;
-		screensize[0] = glConfig.vidWidth;
-		screensize[1] = glConfig.vidHeight;
+		screensize[0] = glConfig.vidWidth * r_superSampleMultiplier->value;
+		screensize[1] = glConfig.vidHeight * r_superSampleMultiplier->value;
 
 		GLSL_SetUniformVec2(&tr.ssgi2Shader, UNIFORM_DIMENSIONS, screensize);
 	}
@@ -2737,8 +2737,8 @@ void GLSL_EndLoadGPUShaders ( int startTime )
 	
 	{
 		vec2_t screensize;
-		screensize[0] = glConfig.vidWidth;
-		screensize[1] = glConfig.vidHeight;
+		screensize[0] = glConfig.vidWidth * r_superSampleMultiplier->value;
+		screensize[1] = glConfig.vidHeight * r_superSampleMultiplier->value;
 
 		GLSL_SetUniformVec2(&tr.ssgi3Shader, UNIFORM_DIMENSIONS, screensize);
 	}
@@ -2776,8 +2776,8 @@ void GLSL_EndLoadGPUShaders ( int startTime )
 	
 	{
 		vec2_t screensize;
-		screensize[0] = glConfig.vidWidth;
-		screensize[1] = glConfig.vidHeight;
+		screensize[0] = glConfig.vidWidth * r_superSampleMultiplier->value;
+		screensize[1] = glConfig.vidHeight * r_superSampleMultiplier->value;
 
 		GLSL_SetUniformVec2(&tr.ssgi4Shader, UNIFORM_DIMENSIONS, screensize);
 	}
@@ -2815,8 +2815,8 @@ void GLSL_EndLoadGPUShaders ( int startTime )
 	
 	{
 		vec2_t screensize;
-		screensize[0] = glConfig.vidWidth;
-		screensize[1] = glConfig.vidHeight;
+		screensize[0] = glConfig.vidWidth * r_superSampleMultiplier->value;
+		screensize[1] = glConfig.vidHeight * r_superSampleMultiplier->value;
 
 		GLSL_SetUniformVec2(&tr.ssgi5Shader, UNIFORM_DIMENSIONS, screensize);
 	}
@@ -2854,8 +2854,8 @@ void GLSL_EndLoadGPUShaders ( int startTime )
 	
 	{
 		vec2_t screensize;
-		screensize[0] = glConfig.vidWidth;
-		screensize[1] = glConfig.vidHeight;
+		screensize[0] = glConfig.vidWidth * r_superSampleMultiplier->value;
+		screensize[1] = glConfig.vidHeight * r_superSampleMultiplier->value;
 
 		GLSL_SetUniformVec2(&tr.ssgi6Shader, UNIFORM_DIMENSIONS, screensize);
 	}
@@ -2893,8 +2893,8 @@ void GLSL_EndLoadGPUShaders ( int startTime )
 	
 	{
 		vec2_t screensize;
-		screensize[0] = glConfig.vidWidth;
-		screensize[1] = glConfig.vidHeight;
+		screensize[0] = glConfig.vidWidth * r_superSampleMultiplier->value;
+		screensize[1] = glConfig.vidHeight * r_superSampleMultiplier->value;
 
 		GLSL_SetUniformVec2(&tr.ssgi7Shader, UNIFORM_DIMENSIONS, screensize);
 	}
@@ -2962,8 +2962,8 @@ void GLSL_EndLoadGPUShaders ( int startTime )
 
 	{
 		vec2_t screensize;
-		screensize[0] = glConfig.vidWidth;
-		screensize[1] = glConfig.vidHeight;
+		screensize[0] = glConfig.vidWidth * r_superSampleMultiplier->value;
+		screensize[1] = glConfig.vidHeight * r_superSampleMultiplier->value;
 
 		GLSL_SetUniformVec2(&tr.hdrShader, UNIFORM_DIMENSIONS, screensize);
 
@@ -3005,8 +3005,8 @@ void GLSL_EndLoadGPUShaders ( int startTime )
 
 	{
 		vec2_t screensize;
-		screensize[0] = glConfig.vidWidth;
-		screensize[1] = glConfig.vidHeight;
+		screensize[0] = glConfig.vidWidth * r_superSampleMultiplier->value;
+		screensize[1] = glConfig.vidHeight * r_superSampleMultiplier->value;
 
 		GLSL_SetUniformVec2(&tr.magicdetailShader, UNIFORM_DIMENSIONS, screensize);
 
@@ -3048,8 +3048,8 @@ void GLSL_EndLoadGPUShaders ( int startTime )
 
 	{
 		vec2_t screensize;
-		screensize[0] = glConfig.vidWidth;
-		screensize[1] = glConfig.vidHeight;
+		screensize[0] = glConfig.vidWidth * r_superSampleMultiplier->value;
+		screensize[1] = glConfig.vidHeight * r_superSampleMultiplier->value;
 
 		GLSL_SetUniformVec2(&tr.dofShader, UNIFORM_DIMENSIONS, screensize);
 
@@ -3090,8 +3090,8 @@ void GLSL_EndLoadGPUShaders ( int startTime )
 
 	{
 		vec2_t screensize;
-		screensize[0] = glConfig.vidWidth;
-		screensize[1] = glConfig.vidHeight;
+		screensize[0] = glConfig.vidWidth * r_superSampleMultiplier->value;
+		screensize[1] = glConfig.vidHeight * r_superSampleMultiplier->value;
 
 		GLSL_SetUniformVec2(&tr.dof2Shader, UNIFORM_DIMENSIONS, screensize);
 
@@ -3119,8 +3119,8 @@ void GLSL_EndLoadGPUShaders ( int startTime )
 	
 	{
 		vec2_t screensize;
-		screensize[0] = glConfig.vidWidth;
-		screensize[1] = glConfig.vidHeight;
+		screensize[0] = glConfig.vidWidth * r_superSampleMultiplier->value;
+		screensize[1] = glConfig.vidHeight * r_superSampleMultiplier->value;
 
 		GLSL_SetUniformVec2(&tr.vibrancyShader, UNIFORM_DIMENSIONS, screensize);
 	}
@@ -3146,8 +3146,8 @@ void GLSL_EndLoadGPUShaders ( int startTime )
 	
 	{
 		vec2_t screensize;
-		screensize[0] = glConfig.vidWidth;
-		screensize[1] = glConfig.vidHeight;
+		screensize[0] = glConfig.vidWidth * r_superSampleMultiplier->value;
+		screensize[1] = glConfig.vidHeight * r_superSampleMultiplier->value;
 
 		GLSL_SetUniformVec2(&tr.testshaderShader, UNIFORM_DIMENSIONS, screensize);
 	}
@@ -3187,8 +3187,8 @@ void GLSL_EndLoadGPUShaders ( int startTime )
 
 	{
 		vec2_t screensize;
-		screensize[0] = glConfig.vidWidth;
-		screensize[1] = glConfig.vidHeight;
+		screensize[0] = glConfig.vidWidth * r_superSampleMultiplier->value;
+		screensize[1] = glConfig.vidHeight * r_superSampleMultiplier->value;
 
 		GLSL_SetUniformVec2(&tr.esharpeningShader, UNIFORM_DIMENSIONS, screensize);
 
@@ -3231,8 +3231,8 @@ void GLSL_EndLoadGPUShaders ( int startTime )
 
 	{
 		vec2_t screensize;
-		screensize[0] = glConfig.vidWidth;
-		screensize[1] = glConfig.vidHeight;
+		screensize[0] = glConfig.vidWidth * r_superSampleMultiplier->value;
+		screensize[1] = glConfig.vidHeight * r_superSampleMultiplier->value;
 
 		GLSL_SetUniformVec2(&tr.esharpening2Shader, UNIFORM_DIMENSIONS, screensize);
 
@@ -3275,8 +3275,8 @@ void GLSL_EndLoadGPUShaders ( int startTime )
 
 	{
 		vec2_t screensize;
-		screensize[0] = glConfig.vidWidth;
-		screensize[1] = glConfig.vidHeight;
+		screensize[0] = glConfig.vidWidth * r_superSampleMultiplier->value;
+		screensize[1] = glConfig.vidHeight * r_superSampleMultiplier->value;
 
 		GLSL_SetUniformVec2(&tr.fxaaShader, UNIFORM_DIMENSIONS, screensize);
 
@@ -3318,8 +3318,8 @@ void GLSL_EndLoadGPUShaders ( int startTime )
 
 	{
 		vec2_t screensize;
-		screensize[0] = glConfig.vidWidth;
-		screensize[1] = glConfig.vidHeight;
+		screensize[0] = glConfig.vidWidth * r_superSampleMultiplier->value;
+		screensize[1] = glConfig.vidHeight * r_superSampleMultiplier->value;
 
 		GLSL_SetUniformVec2(&tr.generateNormalMapShader, UNIFORM_DIMENSIONS, screensize);
 
@@ -3360,8 +3360,8 @@ void GLSL_EndLoadGPUShaders ( int startTime )
 
 	{
 		vec2_t screensize;
-		screensize[0] = glConfig.vidWidth;
-		screensize[1] = glConfig.vidHeight;
+		screensize[0] = glConfig.vidWidth * r_superSampleMultiplier->value;
+		screensize[1] = glConfig.vidHeight * r_superSampleMultiplier->value;
 
 		GLSL_SetUniformVec2(&tr.underwaterShader, UNIFORM_DIMENSIONS, screensize);
 
@@ -3403,8 +3403,8 @@ void GLSL_EndLoadGPUShaders ( int startTime )
 
 	{
 		vec2_t screensize;
-		screensize[0] = glConfig.vidWidth;
-		screensize[1] = glConfig.vidHeight;
+		screensize[0] = glConfig.vidWidth * r_superSampleMultiplier->value;
+		screensize[1] = glConfig.vidHeight * r_superSampleMultiplier->value;
 
 		GLSL_SetUniformVec2(&tr.texturecleanShader, UNIFORM_DIMENSIONS, screensize);
 
@@ -3447,8 +3447,8 @@ void GLSL_EndLoadGPUShaders ( int startTime )
 
 	{
 		vec2_t screensize;
-		screensize[0] = glConfig.vidWidth;
-		screensize[1] = glConfig.vidHeight;
+		screensize[0] = glConfig.vidWidth * r_superSampleMultiplier->value;
+		screensize[1] = glConfig.vidHeight * r_superSampleMultiplier->value;
 
 		GLSL_SetUniformVec2(&tr.fakedepthShader, UNIFORM_DIMENSIONS, screensize);
 
@@ -3496,8 +3496,8 @@ void GLSL_EndLoadGPUShaders ( int startTime )
 
 	{
 		vec2_t screensize;
-		screensize[0] = glConfig.vidWidth;
-		screensize[1] = glConfig.vidHeight;
+		screensize[0] = glConfig.vidWidth * r_superSampleMultiplier->value;
+		screensize[1] = glConfig.vidHeight * r_superSampleMultiplier->value;
 
 		GLSL_SetUniformVec2(&tr.fakedepthSteepParallaxShader, UNIFORM_DIMENSIONS, screensize);
 
@@ -3546,8 +3546,8 @@ void GLSL_EndLoadGPUShaders ( int startTime )
 
 	{
 		vec2_t screensize;
-		screensize[0] = glConfig.vidWidth;
-		screensize[1] = glConfig.vidHeight;
+		screensize[0] = glConfig.vidWidth * r_superSampleMultiplier->value;
+		screensize[1] = glConfig.vidHeight * r_superSampleMultiplier->value;
 
 		GLSL_SetUniformVec2(&tr.anaglyphShader, UNIFORM_DIMENSIONS, screensize);
 
@@ -3636,8 +3636,8 @@ void GLSL_EndLoadGPUShaders ( int startTime )
 
 		{
 			vec2_t screensize;
-			screensize[0] = glConfig.vidWidth;
-			screensize[1] = glConfig.vidHeight;
+			screensize[0] = glConfig.vidWidth * r_superSampleMultiplier->value;
+			screensize[1] = glConfig.vidHeight * r_superSampleMultiplier->value;
 
 			GLSL_SetUniformVec2(&tr.waterShader, UNIFORM_DIMENSIONS, screensize);
 

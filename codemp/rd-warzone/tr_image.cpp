@@ -3490,8 +3490,8 @@ void R_CreateBuiltinImages( void ) {
 
 	int width, height, hdrFormat, rgbFormat;
 
-	width = glConfig.vidWidth;
-	height = glConfig.vidHeight;
+	width = glConfig.vidWidth * r_superSampleMultiplier->value;
+	height = glConfig.vidHeight * r_superSampleMultiplier->value;
 
 	hdrFormat = GL_RGBA8;
 	if (r_hdr->integer)
