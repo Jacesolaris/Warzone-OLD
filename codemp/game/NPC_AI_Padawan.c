@@ -252,6 +252,7 @@ qboolean NPC_PadawanMove( void )
 			float		dist;
 			gentity_t	*goalEnt = NULL;
 
+#if 0
 			if (!NPC->padawanGoalEntity)
 			{
 				NPC->padawanGoalEntity = G_Spawn();
@@ -259,6 +260,7 @@ qboolean NPC_PadawanMove( void )
 				NPC->padawanGoalEntity->inuse = qtrue;
 				trap->LinkEntity ((sharedEntity_t *)NPC->padawanGoalEntity);
 			}
+#endif
 
 			goalEnt = NPC->padawanGoalEntity;
 

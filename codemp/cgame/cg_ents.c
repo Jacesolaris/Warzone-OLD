@@ -885,7 +885,7 @@ void CG_NPC_Goal( centity_t *cent ) {
 	// add to refresh list
 	AddRefEntityToScene (&ent);
 
-	trap->Print("NPC GOAL AT %f %f %f.\n", ent.origin[0], ent.origin[1], ent.origin[2]);
+	//trap->Print("NPC GOAL AT %f %f %f.\n", ent.origin[0], ent.origin[1], ent.origin[2]);
 }
 
 /*

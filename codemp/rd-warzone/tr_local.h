@@ -2390,6 +2390,7 @@ typedef struct trGlobals_s {
 	shaderProgram_t anaglyphShader;
 	shaderProgram_t uniqueskyShader;
 	shaderProgram_t waterShader;
+	shaderProgram_t grassShader;
 	shaderProgram_t sssShader;
 	shaderProgram_t rbmShader;
 	shaderProgram_t hbaoShader;

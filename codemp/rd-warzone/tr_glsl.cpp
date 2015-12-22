@@ -78,6 +78,8 @@ extern const char *fallbackShader_uniquesky_fp;
 extern const char *fallbackShader_uniquesky_vp;
 extern const char *fallbackShader_uniquewater_fp;
 extern const char *fallbackShader_uniquewater_vp;
+extern const char *fallbackShader_grass_fp;
+extern const char *fallbackShader_grass_vp;
 extern const char *fallbackShader_hbao_vp;
 extern const char *fallbackShader_hbao_fp;
 extern const char *fallbackShader_sss_vp;
@@ -1982,6 +1984,10 @@ int GLSL_BeginLoadGPUShaders(void)
 	{
 		ri->Error(ERR_FATAL, "Could not load uniquesky shader!");
 	}
+
+
+
+
 	
 	attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL;
 	extradefines[0] = '\0';
@@ -2079,6 +2085,109 @@ int GLSL_BeginLoadGPUShaders(void)
 	{
 		ri->Error(ERR_FATAL, "Could not load water shader!");
 	}
+
+
+
+
+	attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL;
+	extradefines[0] = '\0';
+
+	if (r_deluxeSpecular->value > 0.000001f)
+		Q_strcat(extradefines, 1024, va("#define r_deluxeSpecular %f\n", r_deluxeSpecular->value));
+
+	if (r_specularIsMetallic->value)
+		Q_strcat(extradefines, 1024, "#define SPECULAR_IS_METALLIC\n");
+
+	if (r_dlightMode->integer >= 2)
+		Q_strcat(extradefines, 1024, "#define USE_SHADOWMAP\n");
+
+	if (1)
+		Q_strcat(extradefines, 1024, "#define SWIZZLE_NORMALMAP\n");
+
+	if (r_hdr->integer && !glRefConfig.floatLightmap)
+		Q_strcat(extradefines, 1024, "#define RGBM_LIGHTMAP\n");
+
+	Q_strcat(extradefines, 1024, "#define USE_LIGHT\n");
+
+	Q_strcat(extradefines, 1024, "#define USE_LIGHTMAP\n");
+
+	if (r_deluxeMapping->integer)
+		Q_strcat(extradefines, 1024, "#define USE_DELUXEMAP\n");
+
+	attribs |= ATTR_TEXCOORD1 | ATTR_LIGHTDIRECTION;
+
+	if (r_normalMapping->integer)
+	{
+		Q_strcat(extradefines, 1024, "#define USE_NORMALMAP\n");
+
+		if (r_normalMapping->integer == 2)
+			Q_strcat(extradefines, 1024, "#define USE_OREN_NAYAR\n");
+
+		if (r_normalMapping->integer == 3)
+			Q_strcat(extradefines, 1024, "#define USE_TRIACE_OREN_NAYAR\n");
+
+#ifdef USE_VERT_TANGENT_SPACE
+		Q_strcat(extradefines, 1024, "#define USE_VERT_TANGENT_SPACE\n");
+		attribs |= ATTR_TANGENT;
+#endif
+
+		Q_strcat(extradefines, 1024, "#define USE_PARALLAXMAP_NONORMALS\n");
+	}
+
+	if (r_specularMapping->integer)
+	{
+		Q_strcat(extradefines, 1024, "#define USE_SPECULARMAP\n");
+	}
+
+	if (r_cubeMapping->integer)
+		Q_strcat(extradefines, 1024, "#define USE_CUBEMAP\n");
+
+	Q_strcat(extradefines, 1024, "#define USE_SHADOWMAP\n");
+
+	if (r_sunlightMode->integer == 1)
+		Q_strcat(extradefines, 1024, "#define SHADOWMAP_MODULATE\n");
+	else if (r_sunlightMode->integer == 2)
+		Q_strcat(extradefines, 1024, "#define USE_PRIMARY_LIGHT\n");
+
+	//if (i & LIGHTDEF_USE_TCGEN_AND_TCMOD)
+	{
+		Q_strcat(extradefines, 1024, "#define USE_TCGEN\n");
+		Q_strcat(extradefines, 1024, "#define USE_TCMOD\n");
+	}
+
+	//if (i & LIGHTDEF_ENTITY)
+	{
+		//if (i & LIGHTDEF_USE_VERTEX_ANIMATION)
+		{
+			Q_strcat(extradefines, 1024, "#define USE_VERTEX_ANIMATION\n");
+		}
+		/*else if (i & LIGHTDEF_USE_SKELETAL_ANIMATION)
+		{
+			Q_strcat(extradefines, 1024, "#define USE_SKELETAL_ANIMATION\n");
+			attribs |= ATTR_BONE_INDEXES | ATTR_BONE_WEIGHTS;
+		}*/
+
+		Q_strcat(extradefines, 1024, "#define USE_MODELMATRIX\n");
+		attribs |= ATTR_POSITION2 | ATTR_NORMAL2;
+
+#ifdef USE_VERT_TANGENT_SPACE
+		if (r_normalMapping->integer)
+		{
+			attribs |= ATTR_TANGENT2;
+		}
+#endif
+	}
+
+	//if (i & LIGHTDEF_USE_GLOW_BUFFER)
+		Q_strcat(extradefines, 1024, "#define USE_GLOW_BUFFER\n");
+
+	if (!GLSL_BeginLoadGPUShader(&tr.grassShader, "grass", attribs, qtrue, extradefines, qtrue, NULL, fallbackShader_grass_vp, fallbackShader_grass_fp))
+	{
+		ri->Error(ERR_FATAL, "Could not load grass shader!");
+	}
+
+
+
 
 	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
 	extradefines[0] = '\0';
@@ -3653,6 +3762,63 @@ void GLSL_EndLoadGPUShaders ( int startTime )
 		numEtcShaders++;
 
 
+
+
+
+		
+		
+		if (!GLSL_EndLoadGPUShader(&tr.grassShader))
+		{
+			ri->Error(ERR_FATAL, "Could not load grass shader!");
+		}
+		
+		GLSL_InitUniforms(&tr.grassShader);
+
+		qglUseProgram(tr.grassShader.program);
+
+		GLSL_SetUniformInt(&tr.grassShader, UNIFORM_DIFFUSEMAP,  TB_DIFFUSEMAP);
+		GLSL_SetUniformInt(&tr.grassShader, UNIFORM_LIGHTMAP,    TB_LIGHTMAP);
+		GLSL_SetUniformInt(&tr.grassShader, UNIFORM_NORMALMAP,   TB_NORMALMAP);
+		GLSL_SetUniformInt(&tr.grassShader, UNIFORM_DELUXEMAP,   TB_DELUXEMAP);
+		GLSL_SetUniformInt(&tr.grassShader, UNIFORM_SPECULARMAP, TB_SPECULARMAP);
+		GLSL_SetUniformInt(&tr.grassShader, UNIFORM_SHADOWMAP,   TB_SHADOWMAP);
+		GLSL_SetUniformInt(&tr.grassShader, UNIFORM_CUBEMAP,     TB_CUBEMAP);
+		GLSL_SetUniformInt(&tr.grassShader, UNIFORM_SUBSURFACEMAP, TB_SUBSURFACEMAP);
+
+		{
+			vec4_t viewInfo;
+
+			float zmax = backEnd.viewParms.zFar;
+			float zmin = r_znear->value;
+
+			VectorSet4(viewInfo, zmax / zmin, zmax, 0.0, 0.0);
+			//VectorSet4(viewInfo, zmin, zmax, 0.0, 0.0);
+
+			GLSL_SetUniformVec4(&tr.grassShader, UNIFORM_VIEWINFO, viewInfo);
+		}
+
+		{
+			vec2_t screensize;
+			screensize[0] = glConfig.vidWidth * r_superSampleMultiplier->value;
+			screensize[1] = glConfig.vidHeight * r_superSampleMultiplier->value;
+
+			GLSL_SetUniformVec2(&tr.grassShader, UNIFORM_DIMENSIONS, screensize);
+
+			//ri->Printf(PRINT_WARNING, "Sent dimensions %f %f.\n", screensize[0], screensize[1]);
+		}
+
+		qglUseProgram(0);
+
+#if defined(_DEBUG)
+		GLSL_FinishGPUShader(&tr.grassShader);
+#endif
+		
+		numEtcShaders++;
+
+
+
+
+
 		if (!GLSL_EndLoadGPUShader(&tr.sssShader))
 		{
 			ri->Error(ERR_FATAL, "Could not load sss shader!");
@@ -3822,6 +3988,7 @@ void GLSL_ShutdownGPUShaders(void)
 	GLSL_DeleteGPUShader(&tr.fakedepthSteepParallaxShader);
 	GLSL_DeleteGPUShader(&tr.anaglyphShader);
 	GLSL_DeleteGPUShader(&tr.waterShader);
+	GLSL_DeleteGPUShader(&tr.grassShader);
 	GLSL_DeleteGPUShader(&tr.sssShader);
 	GLSL_DeleteGPUShader(&tr.rbmShader);
 	GLSL_DeleteGPUShader(&tr.hbaoShader);

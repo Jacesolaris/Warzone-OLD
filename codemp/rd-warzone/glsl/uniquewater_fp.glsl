@@ -1,3 +1,5 @@
+//#define FASTWATER
+
 uniform sampler2D u_DiffuseMap;
 uniform sampler2D u_RandomMap;
 uniform sampler2D u_ScreenDepthMap;
@@ -461,6 +463,7 @@ void main()
 	N = normalize(N);
 	L /= sqrt(sqrLightDist);
 
+#ifndef FASTWATER
 	vec4 diffuse = texture2D(u_DiffuseMap, texCoords);
 	vec4 orig_diffuse = diffuse;
 
@@ -484,7 +487,19 @@ void main()
 
 	float waveheight = length(diffuse.rgb) / 3.0;
 	gl_FragColor = vec4(diffuse.rgb, diffuse.a);
+#else
+	float time = iGlobalTime;
+	vec2 cPos = -1.0 + 2.0 * texCoords.xy;
+	float cLength = length(cPos);
 
+	vec2 uv = texCoords.xy+(cPos/cLength)*cos(cLength*12.0-time*4.0)*0.03;
+	//diffuse.rgb = texture2D(tex,uv).xyz;
+	vec4 diffuse = texture2D(u_DiffuseMap, uv);
+	vec4 orig_diffuse = diffuse;
+	float waveheight = length(diffuse.rgb) / 3.0;
+
+	gl_FragColor = vec4(diffuse.rgb,1.0);
+#endif
 
 
 

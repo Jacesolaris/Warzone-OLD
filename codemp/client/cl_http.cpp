@@ -5,8 +5,10 @@ struct MemoryStruct {
   char *memory;
   size_t size;
 };
- 
- 
+
+CURL		*curl = NULL;
+struct		curl_slist *list = NULL;
+
 static size_t
 WriteMemoryCallback(void *contents, size_t size, size_t nmemb, void *userp)
 {
@@ -28,9 +30,86 @@ WriteMemoryCallback(void *contents, size_t size, size_t nmemb, void *userp)
   return realsize;
 }
 
+void CURL_Init( void )
+{
+	if (curl) return;
+
+	CURLcode	res;
+
+	/* In windows, this will init the winsock stuff */ 
+	curl_global_init(CURL_GLOBAL_ALL);
+
+	/* get a curl handle */ 
+	curl = curl_easy_init();
+
+	// NOW REQUIRES...
+	// Content-Type: application/x-www-form-urlencoded; charset=UTF-8
+	// Cookie: acabox=ouu8js0ke7tp15bmpeuct9f4g1
+
+	//curl_easy_setopt(curl, CURLOPT_USERAGENT, "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/46.0.2490.80 Safari/537.36 OPR/33.0.1990.58");
+
+	// EXTRAS - Just in case...
+	// Referer:https://acapela-box.com/AcaBox/index.php
+	// User-Agent:Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/46.0.2490.80 Safari/537.36 OPR/33.0.1990.58
+
+	if(curl) {
+		struct MemoryStruct chunk;
+
+		chunk.memory = (char *)malloc(1);  /* will be grown as needed by the realloc above */ 
+		chunk.size = 0;    /* no data at this point */ 
+
+		list = curl_slist_append(list, "Referer: https://acapela-box.com/AcaBox/index.php");
+		list = curl_slist_append(list, "User-Agent: Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/46.0.2490.80 Safari/537.36 OPR/33.0.1990.58");
+		list = curl_slist_append(list, "Content-Type: application/x-www-form-urlencoded; charset=UTF-8");
+		//list = curl_slist_append(list, "Cookie: acabox=ouu8js0ke7tp15bmpeuct9f4g1");
+		curl_easy_setopt(curl, CURLOPT_HTTPHEADER, list);
+
+		curl_easy_setopt(curl, CURLOPT_COOKIEFILE, "acapela-cookie.txt");
+
+		curl_easy_setopt(curl, CURLOPT_URL, "https://acapela-box.com/AcaBox/index.php");
+		curl_easy_setopt(curl, CURLOPT_POSTFIELDS, "");
+		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteMemoryCallback);
+		curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)&chunk);
+		res = curl_easy_perform(curl);
+
+		if(chunk.memory)
+		{
+			free(chunk.memory);
+		}
+
+		chunk.memory = (char *)malloc(1);  /* will be grown as needed by the realloc above */ 
+		chunk.size = 0;    /* no data at this point */ 
+
+		curl_easy_setopt(curl, CURLOPT_URL, "https://acapela-box.com/AcaBox/login.php");
+		curl_easy_setopt(curl, CURLOPT_POSTFIELDS, "");
+		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteMemoryCallback);
+		curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)&chunk);
+		res = curl_easy_perform(curl);
+
+		if(chunk.memory)
+		{
+			free(chunk.memory);
+		}
+	}
+}
+
+void CURL_Shutdown ( void )
+{
+	if (curl) 
+	{
+		curl_slist_free_all(list); /* free the list again */
+
+		/* always cleanup */ 
+		curl_easy_cleanup(curl);
+
+		curl_global_cleanup();
+
+		curl = NULL;
+	}
+}
+ 
 size_t GetHttpPostData(char *address, char *poststr, char *recvdata)
 {
-	CURL		*curl;
 	CURLcode	res;
 	size_t		size = 0;
 
@@ -38,12 +117,6 @@ size_t GetHttpPostData(char *address, char *poststr, char *recvdata)
 
 	chunk.memory = (char *)malloc(1);  /* will be grown as needed by the realloc above */ 
 	chunk.size = 0;    /* no data at this point */ 
-
-	/* In windows, this will init the winsock stuff */ 
-	curl_global_init(CURL_GLOBAL_ALL);
-
-	/* get a curl handle */ 
-	curl = curl_easy_init();
 
 	if(curl) {
 		/* First set the URL that is about to receive our POST. This URL can
@@ -66,15 +139,10 @@ size_t GetHttpPostData(char *address, char *poststr, char *recvdata)
 		/* Check for errors */ 
 		if(res != CURLE_OK)
 		{
-			Com_Printf("curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
+			printf("curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
 			return 0;
 		}
-
-		/* always cleanup */ 
-		curl_easy_cleanup(curl);
 	}
-
-	curl_global_cleanup();
 
 	if(chunk.memory)
 	{
@@ -91,7 +159,6 @@ size_t GetHttpPostData(char *address, char *poststr, char *recvdata)
 
 void GetHttpDownload(char *address, char *out_file)
 {
-	CURL		*curl;
 	CURLcode	res;
 	size_t		size = 0;
 
@@ -99,12 +166,6 @@ void GetHttpDownload(char *address, char *out_file)
 
 	chunk.memory = (char *)malloc(1);  /* will be grown as needed by the realloc above */ 
 	chunk.size = 0;    /* no data at this point */ 
-
-	/* In windows, this will init the winsock stuff */ 
-	curl_global_init(CURL_GLOBAL_ALL);
-
-	/* get a curl handle */ 
-	curl = curl_easy_init();
 
 	if(curl) {
 		/* First set the URL that is about to receive our POST. This URL can
@@ -124,26 +185,25 @@ void GetHttpDownload(char *address, char *out_file)
 		/* Check for errors */ 
 		if(res != CURLE_OK)
 		{
-			Com_Printf("curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
+			printf("curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
 			return;
 		}
-
-		/* always cleanup */ 
-		curl_easy_cleanup(curl);
 	}
-
-	curl_global_cleanup();
 
 	if(chunk.memory)
 	{
-		fileHandle_t fileOut = FS_SV_FOpenFileWrite(out_file);
+		FILE *fileOut = fopen(out_file, "wb");
 
-		if(fileOut)
+		if (fileOut)
 		{
-			FS_Write(chunk.memory, chunk.size, fileOut);
-			FS_FCloseFile(fileOut);
+			fwrite(chunk.memory, chunk.size, 1, fileOut);
+			fclose(fileOut);
 
-			//Com_Printf("TTS %s cached. Size %i.\n", out_file, chunk.size);
+			//printf("TTS %s cached. Size %i.\n", out_file, chunk.size);
+		}
+		else
+		{
+			printf("Failed to write %s.\n", out_file);
 		}
 
 		free(chunk.memory);

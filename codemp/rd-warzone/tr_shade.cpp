@@ -1278,6 +1278,8 @@ void RB_SetStageImageDimensions(shaderProgram_t *sp, shaderStage_t *pStage)
 extern qboolean modelviewProjectionChanged;
 extern qboolean modelviewChanged;
 
+vec3_t GRASSES_MINS, GRASSES_MAXS;
+
 static void RB_IterateStagesGeneric( shaderCommands_t *input )
 {
 	vec4_t	fogDistanceVector, fogDepthVector = {0, 0, 0, 0};
@@ -1458,6 +1460,35 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			//	continue;
 			//}
 		}
+		/*else if (( tess.shader->surfaceFlags & MATERIAL_MASK ) == MATERIAL_SHORTGRASS || ( tess.shader->surfaceFlags & MATERIAL_MASK ) == MATERIAL_LONGGRASS)
+		{
+			//if (stage <= 0) 
+			//if (pStage->bundle[TB_DIFFUSEMAP].image[0])
+			{
+				sp = &tr.grassShader;
+				pStage->glslShaderGroup = &tr.grassShader;
+				GLSL_BindProgram(sp);
+				GLSL_SetUniformFloat(sp, UNIFORM_TIME, tess.shaderTime);
+				vec4_t loc0;
+			
+				VectorSet4(loc0, (float)2.0, 0, 0, 0); // force it to use the old water fx...
+
+				GLSL_SetUniformVec4(sp, UNIFORM_LOCAL0, loc0);
+
+				RB_SetMaterialBasedProperties(sp, pStage);
+
+				GLSL_SetUniformInt(sp, UNIFORM_RANDOMMAP, TB_RANDOMMAP);
+				GL_BindToTMU(tr.randomImage, TB_RANDOMMAP);
+				GLSL_SetUniformInt(sp, UNIFORM_SCREENDEPTHMAP, TB_LEVELSMAP);
+				GL_BindToTMU(tr.renderDepthImage, TB_LEVELSMAP);
+
+				isGeneric = qfalse;
+			}
+			//else
+			//{
+			//	continue;
+			//}
+		}*/
 		else
 		{
 			if (!sp || !sp->program)

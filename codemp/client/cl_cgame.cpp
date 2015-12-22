@@ -472,6 +472,9 @@ rescan:
 	return qtrue;
 }
 
+extern void CURL_Init( void );
+extern void CURL_Shutdown ( void );
+
 /*
 ====================
 CL_ShutdonwCGame
@@ -487,6 +490,8 @@ void CL_ShutdownCGame( void ) {
 	cls.cgameStarted = qfalse;
 
 	CL_UnbindCGame();
+
+	CURL_Shutdown();
 }
 
 /*
@@ -546,6 +551,8 @@ void CL_InitCGame( void ) {
 
 	// clear anything that got printed
 	Con_ClearNotify ();
+
+	CURL_Init();
 }
 
 
