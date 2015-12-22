@@ -744,7 +744,10 @@ void CG_RegisterWeapon( int weaponNum) {
 
 	case WP_EE3:
 		weaponInfo->selectSound = trap->S_RegisterSound("sound/weapons/blaster/select.wav");
-		weaponInfo->flashSound[0] = trap->S_RegisterSound("sound/weapons/ee3/fire.wav");
+		weaponInfo->flashSound[0] = trap->S_RegisterSound("sound/weapons/blasters/dlt-19_1.mp3");
+		weaponInfo->flashSound[1] = trap->S_RegisterSound("sound/weapons/blasters/dlt-19_1.mp3");
+		weaponInfo->flashSound[2] = trap->S_RegisterSound("sound/weapons/blasters/dlt-19_1.mp3");
+		weaponInfo->flashSound[3] = trap->S_RegisterSound("sound/weapons/blasters/dlt-19_1.mp3");
 		weaponInfo->firingSound = NULL_SOUND;
 		weaponInfo->chargeSound = NULL_SOUND;
 		weaponInfo->muzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash2_Red_medium");
@@ -753,7 +756,10 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->missileDlight = 0;
 		weaponInfo->missileHitSound = NULL_SOUND;
 		weaponInfo->missileTrailFunc = FX_WeaponProjectileThink;
-		weaponInfo->altFlashSound[0] = trap->S_RegisterSound("sound/weapons/ee3/sniperfire.mp3");
+		weaponInfo->altFlashSound[0] = trap->S_RegisterSound("sound/weapons/blasters/genericweak1.mp3");
+		weaponInfo->altFlashSound[1] = trap->S_RegisterSound("sound/weapons/blasters/genericweak2.mp3");
+		weaponInfo->altFlashSound[2] = trap->S_RegisterSound("sound/weapons/blasters/genericweak3.mp3");
+		weaponInfo->altFlashSound[3] = trap->S_RegisterSound("sound/weapons/blasters/genericweak4.mp3");
 		weaponInfo->altFiringSound = NULL_SOUND;
 		weaponInfo->altChargeSound = NULL_SOUND;
 		weaponInfo->altMissileModel = NULL_HANDLE;
@@ -763,7 +769,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altMuzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash2_Red_medium");
 		weaponInfo->altMissileTrailFunc = FX_WeaponAltProjectileThink;
 
-		weaponInfo->missileRenderfx = trap->FX_RegisterEffect("blasters/shot_red_small");
+		weaponInfo->missileRenderfx = trap->FX_RegisterEffect("blasters/shot_redorange_medium");
 		weaponInfo->altMissileRenderfx = trap->FX_RegisterEffect("blasters/shot_RedOrange_Flare_medium");
 
 		weaponInfo->fleshImpactEffect = trap->FX_RegisterEffect("orginal_weapon_efx/blaster/flesh_impact");
@@ -774,8 +780,8 @@ void CG_RegisterWeapon( int weaponNum) {
 		
 		weaponInfo->EnhancedFX_fleshImpact = trap->FX_RegisterEffect("blasters/red_flesh_impact");
 		weaponInfo->EnhancedFX_altfleshImpact = trap->FX_RegisterEffect("blasters/red_flesh_impact");
-		weaponInfo->EnhancedFX_missileWallImpactfx = trap->FX_RegisterEffect("weapons/blaster_impact_red_medium_fire");
-		weaponInfo->EnhancedFX_altmissileWallImpactfx = trap->FX_RegisterEffect("weapons/blaster_impact_red_medium_fire");
+		weaponInfo->EnhancedFX_missileWallImpactfx = trap->FX_RegisterEffect("weapons/blaster_impact_red_medium");
+		weaponInfo->EnhancedFX_altmissileWallImpactfx = trap->FX_RegisterEffect("weapons/blaster_impact_red_medium");
 		trap->FX_RegisterEffect("blasters/red_deflect");
 		break;
 

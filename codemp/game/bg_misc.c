@@ -1343,10 +1343,10 @@ Don't place this
 	{
 		"weapon_blaster",
 		"sound/weapons/w_pkup.wav",
-        { "models/weapons/E-11_Rifle/model.glm",
+        { "models/weapons/E-11_Carbine/model.glm",
 		0, 0, 0},
-/* view */		"models/weapons/E-11_Rifle/model.glm",
-/* icon */		"models/weapons/E-11_Rifle/icon_default",
+/* view */		"models/weapons/E-11_Carbine/model.glm",
+/* icon */		"models/weapons/E-11_Carbine/icon_default",
 /* pickup *///	"E11 Blaster Rifle",
 		100,
 		IT_WEAPON,
@@ -1492,10 +1492,10 @@ NOTENOTE This weapon is not yet complete.  Don't place it.
 
 
 
-	/*QUAKED weapon_westarm 5 (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+	/*QUAKED weapon_dc_15_ext(.3 .3 1) (-16 -16 -16) (16 16 16) suspended
 	*/
 	{
-		"weapon_dc-15",
+		"weapon_dc_15_ext",
 		"sound/weapons/w_pkup.wav",
 		{ "models/weapons3/cw-w5/dc-15_ext_w.glm",
 		0, 0, 0 },
@@ -1529,10 +1529,10 @@ NOTENOTE This weapon is not yet complete.  Don't place it.
 },
 
 
-/*QUAKED weapon_t-21 (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+/*QUAKED weapon_t_21 (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
 */
 {
-	"weapon_t-21",
+	"weapon_t_21",
 	"sound/weapons/w_pkup.wav",
 	{ "models/Weapons/T-21_Repeater/model.glm",
 	0, 0, 0 },
@@ -1554,10 +1554,10 @@ NOTENOTE This weapon is not yet complete.  Don't place it.
 	"@MENUS_THE_PRIMARY_WEAPON_OF"				// description
 },
 
-/*QUAKED weapon_ee-3 (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+/*QUAKED weapon_ee3_Blaster (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
 */
 {
-	"weapon_ee-3",
+	"weapon_ee3_Blaster",
 	"sound/weapons/w_pkup.wav",
 	{ "models/weapons/EE3_Rifle/model.glm",
 	0, 0, 0 },
@@ -1573,10 +1573,10 @@ NOTENOTE This weapon is not yet complete.  Don't place it.
 },
 
 
-/*QUAKED weapon_t-21 (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+/*QUAKED weapon_DLT_19_Blaster(.3 .3 1) (-16 -16 -16) (16 16 16) suspended
 */
 {
-	"weapon_DLT-20a",
+	"weapon_DLT_19_Blaster",
 	"sound/weapons/w_pkup.wav",
 	{ "models/weapons/DLT-19_HeavyBlaster/model_scope.glm",
 	0, 0, 0 },
@@ -1592,10 +1592,10 @@ NOTENOTE This weapon is not yet complete.  Don't place it.
 },
 
 
-/*QUAKED weapon_CloneTrooper_Rifle (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+/*QUAKED weapon_DC_15A_Rifle (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
 */
 {
-	"weapon_CloneTrooper_Rifle",
+	"weapon_DC_15A_Rifle",
 	"sound/weapons/w_pkup.wav",
 	{ "models/weapons/DC-15A_Rifle/model.glm",
 	0, 0, 0 },
@@ -1610,10 +1610,10 @@ NOTENOTE This weapon is not yet complete.  Don't place it.
 	"@MENUS_THE_PRIMARY_WEAPON_OF"				// description
 },
 
-/*QUAKED weapon_clone_pistol_1 (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+/*QUAKED weapon_dc_17_pistol (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
 */
 {
-	"weapon_clone_pistol_1",
+	"weapon_dc_17_pistol",
 	"sound/weapons/w_pkup.wav",
 	{ "models/weapons3/dc-17/dc-17_w.glm",
 	0, 0, 0 },
@@ -1648,16 +1648,16 @@ Don't place this
 },
 
 //
-/*QUAKED weapon_egl-3e_pistol (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+/*QUAKED weapon_egl_3e_pistol (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
 Don't place this
 */
 {
 	"weapon_egl-3e_pistol",
 	"sound/weapons/w_pkup.wav",
-	{ "models/weapons3/elg-3a/blaster_pistol_w.glm",
+	{ "models/weapons/ELG-3A_Pistol/model.glm",
 	0, 0, 0 },
-	/* view */		"models/weapons3/elg-3a/blaster_pistol.md3",
-	/* icon */		"gfx/hud/w_icon_elg-3a",
+	/* view */		"models/weapons/ELG-3A_Pistol/model.md3",
+	/* icon */		"models/weapons/ELG-3A_Pistol/icon_default",
 	/* pickup *///	"Bryar Pistol",
 	100,
 	IT_WEAPON,
@@ -1752,10 +1752,10 @@ Don't place this
 
 
 
-/*QUAKED weapon_dc-15s_clone_blaster 5 (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+/*QUAKED weapon_dc-15s_blaster 5 (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
 */
 {
-	"weapon_dc-15s_clone_blaster",
+	"weapon_dc-15s_blaster",
 	"sound/weapons/w_pkup.wav",
 	{ "models/weapons3/cloneblaster_r/blaster_w.glm",
 	0, 0, 0 },
@@ -1771,7 +1771,7 @@ Don't place this
 },
 
 
-/*QUAKED weapon_CloneTrooper_Rifle (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+/*QUAKED weapon_dc-15_ext (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
 */
 {
 	"weapon_dc-15_ext",
@@ -1789,7 +1789,7 @@ Don't place this
 	"@MENUS_THE_PRIMARY_WEAPON_OF"				// description
 },
 
-/*QUAKED weapon_rocket_launcher (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+/*QUAKED weapon_e60r_launcher (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
 */
 {
 	"weapon_e60r_launcher",
@@ -1806,7 +1806,7 @@ Don't place this
 	"@MENUS_THE_PLX_2M_IS_AN_EXTREMELY"					// description
 },
 
-/*QUAKED weapon_rocket_launcher (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+/*QUAKED weapon_cw_launcher (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
 */
 {
 	"weapon_cw_launcher",
@@ -1843,7 +1843,7 @@ Don't place this
 	"@MENUS_THE_PRIMARY_WEAPON_OF"				// description
 },
 
-/*QUAKED weapon_thermal (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+/*QUAKED weapon_fraggrenade (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
 */
 {
 	"weapon_fraggrenade",
@@ -1861,7 +1861,7 @@ Don't place this
 	"@MENUS_THE_THERMAL_DETONATOR"					// description
 },
 
-/*QUAKED weapon_thermal (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+/*QUAKED weapon_old_fraggrenade (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
 */
 {
 	"weapon_old_fraggrenade",
@@ -1879,10 +1879,10 @@ Don't place this
 	"@MENUS_THE_THERMAL_DETONATOR"					// description
 },
 
-/*QUAKED weapon_clone_pistol_1 (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+/*QUAKED weapon_clone_pistol (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
 */
 {
-	"weapon_clone_pistol_1",
+	"weapon_clone_pistol",
 	"sound/weapons/w_pkup.wav",
 	{ "models/weapons3/demp2/demp2_w.glm",
 	0, 0, 0 },
@@ -1915,7 +1915,7 @@ Don't place this
 	"@MENUS_THE_PRIMARY_WEAPON_OF"				// description
 },
 
-/*QUAKED WP_SPOTING_BLASTER (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+/*QUAKED weapon_A200_ACP_BattleRifle (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
 */
 {
 	"weapon_A200_ACP_BattleRifle",
@@ -1933,7 +1933,7 @@ Don't place this
 	"@MENUS_THE_PRIMARY_WEAPON_OF"				// description
 },
 
-/*QUAKED WP_A200_ACP_PISTOL (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+/*QUAKED weapon_A200_ACP_Pistol (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
 */
 {
 	"weapon_A200_ACP_Pistol",
@@ -1951,7 +1951,7 @@ Don't place this
 	"@MENUS_THE_PRIMARY_WEAPON_OF"				// description
 },
 
-/*QUAKED WP_ACP_ARRAYGUN (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+/*QUAKED weapon_ACP_ArrayGun (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
 */
 {
 	"weapon_ACP_ArrayGun",
@@ -1969,7 +1969,7 @@ Don't place this
 	"@MENUS_THE_PRIMARY_WEAPON_OF"				// description
 },
 
-/*QUAKED WP_ACP_SNIPER_RIFLE (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+/*QUAKED weapon_Double_ACP_ArrayGun (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
 */
 {
 	"weapon_Double_ACP_ArrayGun",
@@ -1987,7 +1987,7 @@ Don't place this
 	"@MENUS_THE_PRIMARY_WEAPON_OF"				// description
 },
 
-/*QUAKED WP_ACP_SNIPER_RIFLE (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+/*QUAKED weapon_ARC_CasterImperial (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
 */
 {
 	"weapon_ARC_CasterImperial",
@@ -2005,7 +2005,7 @@ Don't place this
 	"@MENUS_THE_PRIMARY_WEAPON_OF"				// description
 },
 
-/*QUAKED WP_BOWCASTER_CLASSIC (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+/*QUAKED weapon_Rifle_Bowcaster_Classic (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
 */
 {
 	"weapon_Rifle_Bowcaster_Classic",
@@ -2023,7 +2023,7 @@ Don't place this
 	"@MENUS_THE_PRIMARY_WEAPON_OF"				// description
 },
 
-/*QUAKED WP_BOWCASTER_CLASSIC (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+/*QUAKED weapon_Rifle_Bowcaster_Classic (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
 */
 {
 	"weapon_Rifle_Bowcaster_Classic",
@@ -2041,7 +2041,7 @@ Don't place this
 	"@MENUS_THE_PRIMARY_WEAPON_OF"				// description
 },
 
-/*QUAKED WP_BRYAR_CARBINE (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+/*QUAKED weapon_bryar_carbine (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
 */
 {
 	"weapon_bryar_carbine",
@@ -2059,7 +2059,7 @@ Don't place this
 	"@MENUS_THE_PRIMARY_WEAPON_OF"				// description
 },
 
-/*QUAKED WP_BRYAR_RIFLE (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+/*QUAKED weapon_sniper_bryar_rifle (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
 */
 {
 	"weapon_sniper_bryar_rifle",
@@ -2077,7 +2077,7 @@ Don't place this
 	"@MENUS_THE_PRIMARY_WEAPON_OF"				// description
 },
 
-/*QUAKED WP_BRYAR_RIFLE_SCOPE (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+/*QUAKED weapon_sniper_bryar_rifle_scope (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
 */
 {
 	"weapon_sniper_bryar_rifle_scope",
@@ -2095,7 +2095,7 @@ Don't place this
 	"@MENUS_THE_PRIMARY_WEAPON_OF"				// description
 },
 
-/*QUAKED weapon_CloneTrooper_Rifle (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+/*QUAKED weapon_Pulse_Canon (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
 */
 {
 	"weapon_Pulse_Canon",
@@ -2131,7 +2131,7 @@ Don't place this
 	"@MENUS_THE_PRIMARY_WEAPON_OF"				// description
 },
 
-/*QUAKED weapon_blaster (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+/*QUAKED weapon_DH_17_Pistol (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
 */
 {
 	"weapon_DH_17_Pistol",
