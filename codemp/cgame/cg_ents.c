@@ -860,7 +860,10 @@ void CG_AddBracketedEnt(centity_t *cent)
 	cg.bracketedEntities[cg.bracketedEntityCount++] = cent->currentState.number;
 }
 
+//#define NPC_GOAL_DEBUG
+
 void CG_NPC_Goal( centity_t *cent ) {
+#ifdef NPC_GOAL_DEBUG
 	refEntity_t			ent;
 
 	memset (&ent, 0, sizeof(ent));
@@ -886,6 +889,7 @@ void CG_NPC_Goal( centity_t *cent ) {
 	AddRefEntityToScene (&ent);
 
 	//trap->Print("NPC GOAL AT %f %f %f.\n", ent.origin[0], ent.origin[1], ent.origin[2]);
+#endif //NPC_GOAL_DEBUG
 }
 
 /*
