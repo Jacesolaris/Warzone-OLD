@@ -2114,7 +2114,7 @@ const void *RB_PostProcess(const void *data)
 				RB_TestShader(srcFbo, srcBox, tr.genericFbo, dstBox, pass_num);
 				FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 			}
-		}
+		}*/
 
 		if (r_sss->integer)
 		{
@@ -2123,7 +2123,7 @@ const void *RB_PostProcess(const void *data)
 				FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 			}
 		}
-		*/
+		
 
 		/*
 		if (!SCREEN_BLUR && r_textureClean->integer)

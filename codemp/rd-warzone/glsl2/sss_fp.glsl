@@ -1,5 +1,6 @@
 uniform sampler2D				u_DiffuseMap;
 uniform sampler2D				u_ScreenDepthMap;
+uniform sampler2D				u_GlowMap;
 
 uniform mat4					u_ModelViewProjectionMatrix;
 uniform vec4					u_ViewInfo; // zmin, zmax, zmax / zmin
@@ -16,6 +17,8 @@ float linearize(float depth)
 	//return -u_ViewInfo.y * u_ViewInfo.x / (depth * (u_ViewInfo.y - u_ViewInfo.x) - u_ViewInfo.y);
 	//return depth / 4.0;
 	return 1.0 / mix(u_ViewInfo.z, 1.0, depth);
+
+	//return pow(depth, 255.0);
 }
 
 vec3 CalcPosition(void){
@@ -28,93 +31,48 @@ vec3 CalcPosition(void){
 }
 
 void main(void){
-	float out_SH = 1.0;
-    vec2 texel_size = vec2(1.0 / var_Dimensions);
-    vec3 origin = CalcPosition();
+	vec3 dglow = texture2D(u_GlowMap, var_ScreenTex).rgb;
+	float dglowStrength = clamp(length(dglow.rgb) * 3.0, 0.0, 1.0);
 
-	//gl_FragColor = vec4( origin, 1.0);
-	//return;
+	vec2 texel_size = vec2(1.0 / var_Dimensions);
+	float depth = texture2D(u_ScreenDepthMap, var_ScreenTex).r;
+	depth = linearize(depth);
+
+	float invDepth = 1.0 - depth;//(depth * depth);
+
+	vec2 distFromCenter = vec2((0.5 - var_ScreenTex.x) * 2.0, (1.0 - var_ScreenTex.y) * invDepth);
+
+	vec2 offset = distFromCenter * 40.0;
+	
+	vec2 pixOffset = (offset * texel_size) * invDepth;
+	vec2 pos = var_ScreenTex + pixOffset;
+
+	float d2 = texture2D(u_ScreenDepthMap, pos).r;
+	d2 = linearize(d2);
 
 	/*
-	if(origin.z < -99) 
+	if (pos.x < 0.6 && pos.x > 0.4)
 	{
-		//Don't check points at infinity
-		gl_FragColor = texture2D(u_DiffuseMap, var_ScreenTex);
-		//gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
-		return;
+	vec2 pos2 = pos;
+	pos2.x = (var_ScreenTex.x + (pixOffset.x * -1.0));
+	float d3 = texture2D(u_ScreenDepthMap, pos2).r;
+	d3 = linearize(d3);
+
+	d2 = (d2 + d3) / 2.0;
 	}
 	*/
 
-    vec2 pixOrigin = var_ScreenTex;
+	vec4 diffuse = texture2D(u_DiffuseMap, var_ScreenTex);
 
-    vec3 dir = normalize(light_p - origin);
+	float depthDiff = clamp((depth - d2) * 1024.0, 0.0, 1.0);
 
-	//gl_FragColor = vec4( dir, 1.0);
-	//return;
+	//if (d2 < 0.15/*0.999*/ && depth < 0.15/*0.999*/ && d2 > 0.0 && depth > 0.0 && depthDiff > 0.0/*001*/ /*&& depthDiff < 0.25*/)
+	{
+		vec3 shadow = diffuse.rgb * (0.25 + (0.75 * (1.0 - depthDiff)));
+		vec3 shadow2 = (shadow.rgb * (1.0 - d2)) + (diffuse.rgb * d2);
+		float invDglow = 1.0 - dglowStrength;
+		diffuse.rgb = (diffuse.rgb * dglowStrength) + (shadow2 * invDglow);
+	}
 
-    vec4 tempDir = u_ModelViewProjectionMatrix * vec4(dir, 0.0);
-    vec2 pixDir = -tempDir.xy / tempDir.w;
-    float dirLength = length(pixDir);
-    pixDir = pixDir / dirLength;
-
-    vec2 nextT, deltaT;
-
-    if(pixDir.x < 0){
-        deltaT.x = -texel_size.x / pixDir.x;
-        nextT.x = (floor(pixOrigin.x * var_Dimensions.x) * texel_size.x - pixOrigin.x) / pixDir.x;
-    }
-    else {
-        deltaT.x = texel_size.x / pixDir.x;
-        nextT.x = ((floor(pixOrigin.x * var_Dimensions.x) + 1.0) * texel_size.x - pixOrigin.x) / pixDir.x;
-    }
-    if(pixDir.y < 0){
-        deltaT.y = -texel_size.y / pixDir.y;
-        nextT.y = (floor(pixOrigin.y * var_Dimensions.y) * texel_size.y - pixOrigin.y) / pixDir.y;
-    }
-    else {
-        deltaT.y = texel_size.y / pixDir.y;
-        nextT.y = ((floor(pixOrigin.y * var_Dimensions.y) + 1.0) * texel_size.y - pixOrigin.y) / pixDir.y;
-    }
-
-
-    float t = 0.0;
-    ivec2 pixIndex = ivec2(pixOrigin / texel_size);
-
-    while(true){
-        //if(t > 0){
-            float rayDepth = (origin + t * dir).z;
-            vec2 texCoord = pixOrigin + 0.5 * pixDir * t * dirLength;
-            float depth = texture2D(u_ScreenDepthMap, texCoord).r;
-            //float linearDepth = projAB.y / (depth - projAB.x);
-			float linearDepth = linearize(depth);
-            if(linearDepth > rayDepth + 0.1){
-                out_SH = 0.2;
-				gl_FragColor = vec4(0.0, 1.0, 0.0, 1.0);
-				return;
-                break;
-            }
-        //}
-        if(nextT.x < nextT.y){
-            t = nextT.x;
-            nextT.x += deltaT.x;
-            if(pixDir.x < 0) pixIndex.x -= 1;
-            else pixIndex.x += 1;
-        }
-        else {
-            t = nextT.y;
-            nextT.y += deltaT.y;
-            if(pixDir.y < 0) pixIndex.y -= 1;
-            else pixIndex.y += 1;
-        }
-        if(pixIndex.x < 0 || pixIndex.x > var_Dimensions.x || pixIndex.y < 0 || pixIndex.y > var_Dimensions.y) 
-		{
-			break;
-			//gl_FragColor = vec4(0.0, 1.0, 0.0, 1.0);
-			//return;
-		}
-    }
-
-	gl_FragColor = texture2D(u_DiffuseMap, var_ScreenTex);
-	gl_FragColor.rgb *= out_SH;
-	gl_FragColor.a = 1.0;
+	gl_FragColor = diffuse;
 }

@@ -1512,6 +1512,7 @@ void RB_RBM(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 qboolean RB_SSS(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 {
 	vec4_t		color;
+#if 0
 	dlight_t	*closestdl;
 	float		closestdlRange = 99999.9f;
 
@@ -1519,6 +1520,7 @@ qboolean RB_SSS(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 
 	if ( backEnd.refdef.num_dlights <= 0 )
 		return qfalse;
+#endif
 
 	// bloom
 	color[0] =
@@ -1536,7 +1538,11 @@ qboolean RB_SSS(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 	GL_BindToTMU(hdrFbo->colorImage[0], TB_DIFFUSEMAP);
 	GLSL_SetUniformInt(&tr.sssShader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
 	GL_BindToTMU(tr.renderDepthImage, TB_LIGHTMAP);
-	
+	GLSL_SetUniformInt(&tr.sssShader, UNIFORM_GLOWMAP, TB_GLOWMAP);
+	//GL_BindToTMU(tr.anamorphicRenderFBOImage[2], TB_GLOWMAP);
+	GL_BindToTMU(tr.glowImage, TB_GLOWMAP);
+
+#if 0
 	for ( int l = 0 ; l < backEnd.refdef.num_dlights ; l++ ) {
 		dlight_t	*dl;
 		float dist;
@@ -1571,6 +1577,7 @@ qboolean RB_SSS(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 
 		GLSL_SetUniformVec4(&tr.sssShader, UNIFORM_VIEWINFO, viewInfo);
 	}
+#endif
 
 	{
 		vec2_t screensize;
