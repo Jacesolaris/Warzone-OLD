@@ -16,6 +16,9 @@
 #include "sys/sys_local.h"
 #endif
 
+extern void CURL_Init( void );
+extern void CURL_Shutdown ( void );
+
 cvar_t	*cl_renderer;
 
 cvar_t	*cl_nodelta;
@@ -2813,6 +2816,8 @@ void CL_Init( void ) {
 	Cvar_Get( "ja_guid", "", CVAR_USERINFO | CVAR_ROM );
 	CL_UpdateGUID( NULL, 0 );
 
+	CURL_Init();
+
 //	Com_Printf( "----- Client Initialization Complete -----\n" );
 }
 
@@ -2882,6 +2887,8 @@ void CL_Shutdown( void ) {
 
 	Com_Memset( &cls, 0, sizeof( cls ) );
 	Key_SetCatcher( 0 );
+
+	CURL_Shutdown();
 
 	//Com_Printf( "-----------------------\n" );
 
