@@ -20,6 +20,7 @@ extern "C" {
 
 //#define		__USE_ALL_GRASSES__ // Use all available grass shaders? Slower!
 //#define		__USE_EXTRA_GRASSES__ // Use extra available grass shaders? Slower!
+//#define		__NO_PLANTS__ // Disable plants...
 //#define		__USE_ALL_PLANTS__ // Use all available plant shaders? Slower!
 #define			__USE_EXTRA_PLANTS__ // Use extra available plant shaders? Slower!
 
@@ -39,14 +40,14 @@ extern "C" {
 
 #ifndef __USE_ALL_GRASSES__
 #ifndef __USE_EXTRA_GRASSES__
-#define		GRASS_SCALE_MULTIPLIER 1.0 // Scale down grass model by this much...
+#define		GRASS_SCALE_MULTIPLIER 0.8//1.0 // Scale down grass model by this much...
 #else //!__USE_EXTRA_GRASSES__
 //#define		GRASS_SCALE_MULTIPLIER 0.6 // Scale down grass model by this much...
 #define		GRASS_SCALE_MULTIPLIER 1.0 // Scale down grass model by this much...
 #endif //__USE_EXTRA_GRASSES__
 #else //__USE_ALL_GRASSES__
-#define		GRASS_SCALE_MULTIPLIER 0.6 // Scale down grass model by this much...
-//#define		GRASS_SCALE_MULTIPLIER 1.0 // Scale down grass model by this much...
+//#define		GRASS_SCALE_MULTIPLIER 0.6 // Scale down grass model by this much...
+#define		GRASS_SCALE_MULTIPLIER 1.0 // Scale down grass model by this much...
 #endif //__USE_ALL_GRASSES__
 
 #define		PLANT_SCALE_MULTIPLIER 0.4
@@ -359,6 +360,8 @@ extern "C" {
 			distFadeScale = 1.0 - ((dist - FOLIAGE_STARTSCALE_DISTANCE) / foliageMaxFadeDist);
 		}*/
 
+		//if (FOLIAGE_TREE_SELECTION[num] == 0) return;
+
 #ifdef __NO_TREES__
 		if (treeOnly) return;
 #endif //__NO_TREES__
@@ -441,7 +444,11 @@ extern "C" {
 				else
 #endif //__USE_BILLBOARDING__
 				{
+#if !defined(__USE_ALL_GRASSES__) && !defined(__USE_EXTRA_GRASSES)
 					re.origin[2] -= 48.0;
+#else //!defined(__USE_ALL_GRASSES__) && !defined(__USE_EXTRA_GRASSES)
+					re.origin[2] -= 16.0;
+#endif //!defined(__USE_ALL_GRASSES__) && !defined(__USE_EXTRA_GRASSES)
 					re.hModel = FOLIAGE_GRASS_MODEL[0];
 					VectorSet(re.modelScale, GRASS_SCALE, GRASS_SCALE, GRASS_SCALE);
 				}
@@ -451,6 +458,31 @@ extern "C" {
 				AnglesToAxis(angles, re.axis);
 				ScaleModelAxis( &re );
 				FOLIAGE_AddFoliageEntityToScene( &re );
+
+#if 0
+				/// Test add more in clumps around main object...
+				for (float x = -128.0; x < 128.0; x += 128.0)
+				{
+					for (float y = -128.0; y < 128.0; y += 128.0)
+					{
+						vec3_t tempPos;
+
+						if (y == 0.0 && x == 0.0) continue;
+
+						VectorCopy(FOLIAGE_POSITIONS[num], tempPos);
+						tempPos[0] += x;
+						tempPos[1] += y;
+						tempPos[2] -= 24.0;
+
+						VectorCopy(tempPos, re.origin);
+						FOLIAGE_AddFoliageEntityToScene( &re );
+					}
+				}
+
+				VectorCopy(FOLIAGE_POSITIONS[num], re.origin);
+				// End test...
+#endif
+
 #ifdef __NO_GRASS_AT_PLANTS__
 			}
 #endif //__NO_GRASS_AT_PLANTS__
@@ -473,6 +505,7 @@ extern "C" {
 			ScaleModelAxis( &re );
 			FOLIAGE_AddFoliageEntityToScene( &re );
 		}
+#ifndef __NO_PLANTS__
 		else 
 #endif //__NO_TREES__
 		if (FOLIAGE_PLANT_SELECTION[num] != 0 
@@ -492,10 +525,33 @@ extern "C" {
 #endif //__USE_BILLBOARDING__
 
 #if defined(__USE_ALL_PLANTS__) || defined(__USE_EXTRA_PLANTS__)
+
+			
 			if (FOLIAGE_PLANT_SHADERNUM[num] > 0)
 			{// Need to specify a shader...
 				re.customShader = FOLIAGE_PLANT_SHADERS[FOLIAGE_PLANT_SHADERNUM[num]];
 			}
+			
+			/*
+			// Origin based test...
+			float v0 = re.origin[0];
+			float v1 = re.origin[1];
+			float v2 = re.origin[2];
+
+			if (v0 < 0.0) v0 *= -1.0;
+			if (v1 < 0.0) v1 *= -1.0;
+			if (v2 < 0.0) v2 *= -1.0;
+
+			float t0 = sqrt(sqrt(v0+v1));
+			float t1 = sqrt(sqrt(v1+v2));
+			float t2 = sqrt(sqrt(v2+v0));
+
+			int		type = int(t0 + t1 + t2);
+
+			re.customShader = FOLIAGE_PLANT_SHADERS[type];
+			*/
+
+
 #endif //defined(__USE_ALL_PLANTS__) || defined(__USE_EXTRA_PLANTS__)
 
 			float PLANT_SCALE = FOLIAGE_PLANT_SCALE[num]*PLANT_SCALE_MULTIPLIER*distFadeScale;
@@ -521,6 +577,7 @@ extern "C" {
 			ScaleModelAxis( &re );
 			FOLIAGE_AddFoliageEntityToScene( &re );
 		}
+#endif //__NO_PLANTS__
 	}
 
 	qboolean FOLIAGE_LoadFoliagePositions( void )
