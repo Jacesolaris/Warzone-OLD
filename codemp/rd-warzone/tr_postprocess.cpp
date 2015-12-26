@@ -1541,6 +1541,8 @@ qboolean RB_SSS(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 	GLSL_SetUniformInt(&tr.sssShader, UNIFORM_GLOWMAP, TB_GLOWMAP);
 	//GL_BindToTMU(tr.anamorphicRenderFBOImage[2], TB_GLOWMAP);
 	GL_BindToTMU(tr.glowImage, TB_GLOWMAP);
+	GLSL_SetUniformInt(&tr.sssShader, UNIFORM_NORMALMAP, TB_LIGHTMAP);
+	GL_BindToTMU(tr.renderDepthImage, TB_LIGHTMAP);
 
 #if 0
 	for ( int l = 0 ; l < backEnd.refdef.num_dlights ; l++ ) {

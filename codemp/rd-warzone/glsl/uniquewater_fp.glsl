@@ -3,6 +3,7 @@
 uniform sampler2D u_DiffuseMap;
 uniform sampler2D u_RandomMap;
 uniform sampler2D u_ScreenDepthMap;
+uniform sampler2D u_OverlayMap; // sky diffuse
 
 varying vec4	var_Local1; // parallaxScale, haveSpecular, specularScale, materialType
 varying vec4	u_Local2; // ExtinctionCoefficient
@@ -486,6 +487,17 @@ void main()
 	diffuse.rgb = clamp(waterColor, 0.0, 1.0);
 
 	float waveheight = length(diffuse.rgb) / 3.0;
+
+	vec4 skyColor = texture2D(u_OverlayMap, texCoords);
+
+	/*
+	if (skyColor.a > 0.0)
+	{// Add some sky color...
+		//diffuse.rgb = ((diffuse.rgb * 2.0) + skyColor.rgb) / 3.0;
+		diffuse.rgb = skyColor.rgb;
+	}
+	*/
+
 	gl_FragColor = vec4(diffuse.rgb, diffuse.a);
 #else
 	float time = iGlobalTime;
@@ -640,18 +652,30 @@ void main()
 #endif //DISABLED_STUFF
 
 
-/*
-	// Cubemapping...
-	NL = clamp(dot(N, L), 0.0, 1.0);
-	NE = clamp(dot(N, E), 0.0, 1.0);
-	vec3 reflectance = EnvironmentBRDF(specular.a, NE, specular.rgb);
-	vec3 R = reflect(E, N);
-	vec3 parallax = u_CubeMapInfo.xyz + u_CubeMapInfo.w * viewDir;
-	vec3 cubeLightColor = textureCubeLod(u_CubeMap, R + parallax, 7.0 - specular.a * 7.0).rgb * u_EnableTextures.w;
-	gl_FragColor.rgb += (cubeLightColor * reflectance);
-*/
 
-	gl_FragColor.a = (waveheight * 0.4) + 0.5;
+	// Cubemapping...
+	//NL = clamp(dot(N, L), 0.0, 1.0);
+	//NE = clamp(dot(N, E), 0.0, 1.0);
+	//vec3 reflectance = EnvironmentBRDF(specular.a, NE, specular.rgb);
+	vec3 R = reflect(E, N);
+	//vec3 parallax = u_CubeMapInfo.xyz + u_CubeMapInfo.w * viewDir;
+	//vec3 cubeLightColor = textureCubeLod(u_CubeMap, R + parallax, 7.0 - specular.a * 7.0).rgb * u_EnableTextures.w;
+	//vec3 cubeLightColor = textureCubeLod(u_CubeMap, R, 7.0 - specular.a * 7.0).rgb;
+
+
+	float time = iGlobalTime;
+	vec2 cPos = -1.0 + 2.0 * texCoords.xy;
+	float cLength = length(cPos);
+
+	vec2 uv = R.xy+(cPos/cLength)*cos(cLength*12.0-time*4.0)*0.03;
+
+
+	vec3 cubeLightColor = textureCubeLod(u_CubeMap, vec3(uv, R.z) * viewDir, 7.0 - specular.a * 7.0).rgb;
+	gl_FragColor.rgb = ((gl_FragColor.rgb * 19.0) + cubeLightColor) / 20.0;//(cubeLightColor * reflectance);
+
+
+	//gl_FragColor.a = (waveheight * 0.4) + 0.5;
+	gl_FragColor.a = 1.0;//0.9;
 	out_Glow = vec4(0.0);
 
 

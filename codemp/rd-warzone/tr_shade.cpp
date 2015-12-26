@@ -1278,7 +1278,7 @@ void RB_SetStageImageDimensions(shaderProgram_t *sp, shaderStage_t *pStage)
 extern qboolean modelviewProjectionChanged;
 extern qboolean modelviewChanged;
 
-vec3_t GRASSES_MINS, GRASSES_MAXS;
+extern image_t *skyImage;
 
 static void RB_IterateStagesGeneric( shaderCommands_t *input )
 {
@@ -1689,7 +1689,27 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		}
 		else
 		{
-			GL_BindToTMU( tr.blackImage, TB_OVERLAYMAP );
+			/*
+			if (pStage->isWater)
+			{
+				if ( !skyImage ) 
+				{
+					//ri->Printf(PRINT_WARNING, "Have no skyImage!\n");
+					GLSL_SetUniformInt(sp, UNIFORM_OVERLAYMAP, TB_OVERLAYMAP);
+					GL_BindToTMU(tr.blackImage, TB_OVERLAYMAP);
+				}
+				else
+				{
+					//ri->Printf(PRINT_WARNING, "Have skyImage! YAY!\n");
+					GLSL_SetUniformInt(sp, UNIFORM_OVERLAYMAP, TB_OVERLAYMAP);
+					GL_BindToTMU(skyImage, TB_OVERLAYMAP);
+				}
+			}
+			else
+			*/
+			{
+				GL_BindToTMU( tr.blackImage, TB_OVERLAYMAP );
+			}
 		}
 
 		//

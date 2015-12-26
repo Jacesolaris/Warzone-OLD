@@ -944,6 +944,8 @@ Other things could be stuck in here, like birds in the sky, etc
 ================
 */
 
+image_t *skyImage = NULL;
+
 //#define ___FORCED_SKYDOME___
 
 void RB_StageIteratorSky( void ) {
@@ -976,6 +978,8 @@ void RB_StageIteratorSky( void ) {
 	//if ( tess.shader->sky.outerbox[0] && tess.shader->sky.outerbox[0] != tr.defaultImage ) 
 	{
 		matrix_t oldmodelview;
+
+		skyImage = tess.shader->sky.outerbox[5];
 
 		/*if ( !tess.shader->sky.outerbox[0] || tess.shader->sky.outerbox[0] == tr.defaultImage ) 
 		{// UQ1: Set a default image...
