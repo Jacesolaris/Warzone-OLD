@@ -1489,6 +1489,10 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			//	continue;
 			//}
 		}*/
+		/*else if (( tess.shader->surfaceFlags & MATERIAL_MASK ) == MATERIAL_GREENLEAVES)
+		{
+			
+		}*/
 		else
 		{
 			if (!sp || !sp->program)

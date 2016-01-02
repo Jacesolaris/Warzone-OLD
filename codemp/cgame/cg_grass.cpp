@@ -18,11 +18,14 @@ extern "C" {
 // BEGIN - FOLIAGE OPTIONS
 //
 
+//#define			__FOLIAGE_AREA_DEBUGGING__ // Enables debugging info display of foliages not assigned to an area...
+
 //#define		__USE_ALL_GRASSES__ // Use all available grass shaders? Slower!
 //#define		__USE_EXTRA_GRASSES__ // Use extra available grass shaders? Slower!
 //#define		__NO_PLANTS__ // Disable plants...
 //#define		__USE_ALL_PLANTS__ // Use all available plant shaders? Slower!
 #define			__USE_EXTRA_PLANTS__ // Use extra available plant shaders? Slower!
+//#define			__USE_SINGLE_GRASS__ // Use single plant shader/model only.. Just for testing fps difference.
 
 #define			__DISTANT_MEDIUM_PLANTLIFE__ // Draw medium and large plantlife further away?
 #define			__DISTANT_MEDIUM_PLANTLIFE_RANGE__ 3500.0 //5000.0
@@ -33,6 +36,7 @@ extern "C" {
 //#define		__NO_GRASS_AT_PLANTS__ // Don't draw grass at the same position as a plant (for FPS)... Little impact..
 //#define		__NO_TREES__ // Don't draw trees...
 
+#define			__USE_FOLIAGE_DENSITY__ // Turn on foliage density system...
 #define			__FOLIAGE_DENSITY__ cg_foliageDensity.value //96.0//64.0//32.0//16.0
 //
 // END - FOLIAGE OPTIONS
@@ -41,6 +45,7 @@ extern "C" {
 #ifndef __USE_ALL_GRASSES__
 #ifndef __USE_EXTRA_GRASSES__
 #define		GRASS_SCALE_MULTIPLIER 0.8//1.0 // Scale down grass model by this much...
+//#define		GRASS_SCALE_MULTIPLIER 1.0
 #else //!__USE_EXTRA_GRASSES__
 //#define		GRASS_SCALE_MULTIPLIER 0.6 // Scale down grass model by this much...
 #define		GRASS_SCALE_MULTIPLIER 1.0 // Scale down grass model by this much...
@@ -50,7 +55,8 @@ extern "C" {
 #define		GRASS_SCALE_MULTIPLIER 1.0 // Scale down grass model by this much...
 #endif //__USE_ALL_GRASSES__
 
-#define		PLANT_SCALE_MULTIPLIER 0.4
+//#define		PLANT_SCALE_MULTIPLIER 0.4
+#define		PLANT_SCALE_MULTIPLIER 1.0
 
 #ifdef __USE_ALL_PLANTS__
 #define		NUM_PLANT_SHADERS 81
@@ -135,9 +141,9 @@ static const char *GoodPlantsList[] = {
 		return qfalse;
 	}
 
-#if 0
 	void FOLIAGE_DEBUG_Check_Foliage_In_Areas( void )
 	{
+#ifdef __FOLIAGE_AREA_DEBUGGING__
 		for (int j = 0; j < FOLIAGE_NUM_POSITIONS; j++)
 		{
 			qboolean found = qfalse;
@@ -151,10 +157,10 @@ static const char *GoodPlantsList[] = {
 				}
 			}
 
-			if (!found) trap->Print("Foliage %i is not in an area.\n", j);
+			if (!found) trap->Print("Foliage %i (at %f %f %f) is not in an area.\n", j, FOLIAGE_POSITIONS[j][0], FOLIAGE_POSITIONS[j][1], FOLIAGE_POSITIONS[j][2]);
 		}
+#endif //__FOLIAGE_AREA_DEBUGGING__
 	}
-#endif
 
 	void FOLIAGE_Setup_Foliage_Areas( void )
 	{
@@ -182,6 +188,11 @@ static const char *GoodPlantsList[] = {
 				mapMaxs[1] = FOLIAGE_POSITIONS[i][1];
 		}
 
+		mapMins[0] -= 1024.0;
+		mapMins[1] -= 1024.0;
+		mapMaxs[0] += 1024.0;
+		mapMaxs[1] += 1024.0;
+
 		VectorSet(mins, mapMins[0], mapMins[1], 0);
 		VectorSet(maxs, mapMins[0] + FOLIAGE_AREA_SIZE, mapMins[1] + FOLIAGE_AREA_SIZE, 0);
 
@@ -190,11 +201,11 @@ static const char *GoodPlantsList[] = {
 
 		for (areaNum = 0; areaNum < FOLIAGE_AREA_MAX; areaNum++)
 		{
-			if (mins[1] >= mapMaxs[1]) break; // found our last area...
+			if (mins[1] > mapMaxs[1]) break; // found our last area...
 
 			FOLIAGE_AREAS_LIST_COUNT[areaNum] = 0;
 
-			while (FOLIAGE_AREAS_LIST_COUNT[areaNum] == 0 && mins[1] < mapMaxs[1])
+			while (FOLIAGE_AREAS_LIST_COUNT[areaNum] == 0 && mins[1] <= mapMaxs[1])
 			{// While loop is so we can skip zero size areas for speed...
 				VectorCopy(mins, FOLIAGE_AREAS_MINS[areaNum]);
 				VectorCopy(maxs, FOLIAGE_AREAS_MAXS[areaNum]);
@@ -204,6 +215,7 @@ static const char *GoodPlantsList[] = {
 				{
 					if (FOLIAGE_In_Bounds(areaNum, i))
 					{
+#ifdef __USE_FOLIAGE_DENSITY__
 						qboolean OVER_DENSITY = qfalse;
 
 						if (FOLIAGE_AREAS_LIST_COUNT[areaNum] > FOLIAGE_AREA_MAX_FOLIAGES)
@@ -233,6 +245,11 @@ static const char *GoodPlantsList[] = {
 							FOLIAGE_AREAS_LIST[areaNum][FOLIAGE_AREAS_LIST_COUNT[areaNum]] = i;
 							FOLIAGE_AREAS_LIST_COUNT[areaNum]++;
 						}
+
+#else //!__USE_FOLIAGE_DENSITY__
+						FOLIAGE_AREAS_LIST[areaNum][FOLIAGE_AREAS_LIST_COUNT[areaNum]] = i;
+						FOLIAGE_AREAS_LIST_COUNT[areaNum]++;
+#endif //__USE_FOLIAGE_DENSITY__
 					}
 				}
 
@@ -240,15 +257,15 @@ static const char *GoodPlantsList[] = {
 				//	trap->Print("Foliage area %i is between %f %f and %f %f. %i foliages in area.\n", areaNum, mins[0], mins[1], maxs[0], maxs[1], FOLIAGE_AREAS_LIST_COUNT[areaNum]);
 
 				mins[0] += FOLIAGE_AREA_SIZE;
-				maxs[0] += FOLIAGE_AREA_SIZE;
+				maxs[0] = mins[0] + FOLIAGE_AREA_SIZE;
 
-				if (mins[0] >= mapMaxs[0])
+				if (mins[0] > mapMaxs[0])
 				{
 					mins[0] = mapMins[0];
 					maxs[0] = mapMins[0] + FOLIAGE_AREA_SIZE;
 
 					mins[1] += FOLIAGE_AREA_SIZE;
-					maxs[1] += FOLIAGE_AREA_SIZE;
+					maxs[1] = mins[1] + FOLIAGE_AREA_SIZE;
 				}
 			}
 		}
@@ -256,7 +273,7 @@ static const char *GoodPlantsList[] = {
 		FOLIAGE_AREAS_COUNT = areaNum;
 		OLD_FOLIAGE_DENSITY = __FOLIAGE_DENSITY__;
 
-		//FOLIAGE_DEBUG_Check_Foliage_In_Areas();
+		FOLIAGE_DEBUG_Check_Foliage_In_Areas();
 
 		trap->Print("Generated %i foliage areas. %i total foliages. %i removed by density setting.\n", FOLIAGE_AREAS_COUNT, FOLIAGE_NUM_POSITIONS, DENSITY_REMOVED);
 	}
@@ -444,11 +461,12 @@ extern "C" {
 				else
 #endif //__USE_BILLBOARDING__
 				{
-#if !defined(__USE_ALL_GRASSES__) && !defined(__USE_EXTRA_GRASSES)
-					re.origin[2] -= 48.0;
-#else //!defined(__USE_ALL_GRASSES__) && !defined(__USE_EXTRA_GRASSES)
+//#if !defined(__USE_ALL_GRASSES__) && !defined(__USE_EXTRA_GRASSES)
+//					re.origin[2] -= 48.0;
+//#else //!defined(__USE_ALL_GRASSES__) && !defined(__USE_EXTRA_GRASSES)
 					re.origin[2] -= 16.0;
-#endif //!defined(__USE_ALL_GRASSES__) && !defined(__USE_EXTRA_GRASSES)
+//#endif //!defined(__USE_ALL_GRASSES__) && !defined(__USE_EXTRA_GRASSES)
+					re.customShader = FOLIAGE_GRASS_BILLBOARD_SHADER[0];
 					re.hModel = FOLIAGE_GRASS_MODEL[0];
 					VectorSet(re.modelScale, GRASS_SCALE, GRASS_SCALE, GRASS_SCALE);
 				}
@@ -524,7 +542,9 @@ extern "C" {
 			if (dist > 2048) billBoard = qtrue;
 #endif //__USE_BILLBOARDING__
 
-#if defined(__USE_ALL_PLANTS__) || defined(__USE_EXTRA_PLANTS__)
+#if defined(__USE_SINGLE_GRASS__)
+			re.customShader = FOLIAGE_PLANT_SHADERS[FOLIAGE_PLANT_SHADERNUM[1]];
+#elif defined(__USE_ALL_PLANTS__) || defined(__USE_EXTRA_PLANTS__)
 
 			
 			if (FOLIAGE_PLANT_SHADERNUM[num] > 0)
@@ -732,9 +752,12 @@ extern "C" {
 
 		if (!FOLIAGE_GRASS_MODEL[0])
 		{// Init/register all foliage models...
-			FOLIAGE_GRASS_MODEL[0] = trap->R_RegisterModel( "models/pop/foliages/sch_weed_a.md3" );
-			FOLIAGE_GRASS_MODEL[1] = trap->R_RegisterModel( "models/pop/foliages/sch_weed_b.md3" );
-			FOLIAGE_GRASS_MODEL[2] = trap->R_RegisterModel( "models/warzone/foliage/grass33.md3" );
+			//FOLIAGE_GRASS_MODEL[0] = trap->R_RegisterModel( "models/pop/foliages/sch_weed_a.md3" );
+			//FOLIAGE_GRASS_MODEL[1] = trap->R_RegisterModel( "models/pop/foliages/sch_weed_b.md3" );
+			//FOLIAGE_GRASS_MODEL[2] = trap->R_RegisterModel( "models/warzone/foliage/grass33.md3" );
+			FOLIAGE_GRASS_MODEL[0] = trap->R_RegisterModel( "models/warzone/foliage/grass01.md3" );
+			FOLIAGE_GRASS_MODEL[1] = FOLIAGE_GRASS_MODEL[0];
+			FOLIAGE_GRASS_MODEL[2] = FOLIAGE_GRASS_MODEL[0];
 
 			//FOLIAGE_GRASS_MODEL[0] = trap->R_RegisterModel( "models/warzone/foliage/grass_dense.md3" );
 			//FOLIAGE_GRASS_MODEL[1] = trap->R_RegisterModel( "models/warzone/foliage/grass_cross.md3" );
@@ -772,8 +795,8 @@ extern "C" {
 			FOLIAGE_PLANT_MODEL[26] = trap->R_RegisterModel( "models/warzone/foliage/plant81.md3" );
 #else //defined (__USE_ALL_PLANTS__) || defined (__USE_EXTRA_PLANTS__)
 			//int plantModel1 = trap->R_RegisterModel("models/warzone/foliage/plant03.md3");
-			int plantModel2 = trap->R_RegisterModel( "models/warzone/foliage/grass_dense.md3" );
-			int plantModel3 = trap->R_RegisterModel( "models/warzone/foliage/grass_cross.md3" );
+			int plantModel2 = FOLIAGE_GRASS_MODEL[0];//trap->R_RegisterModel( "models/warzone/foliage/grass_dense.md3" );
+			int plantModel3 = FOLIAGE_GRASS_MODEL[0];//trap->R_RegisterModel( "models/warzone/foliage/grass_cross.md3" );
 
 			for (int i = 0; i < 27; i++)
 			{
