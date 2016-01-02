@@ -476,10 +476,12 @@ static qboolean CG_RegisterClientModelname( clientInfo_t *ci, const char *modelN
 	int		checkSkin;
 	char	*useSkinName;
 
+#ifndef __NEW_TRUEVIEW__
 	//[TrueView]
 	//Warning flag for models that are incompatible with True View
 	trueviewwarning = qfalse;
 	//[/TrueView]
+#endif
 
 retryModel:
 	if (badModel)
@@ -1261,6 +1263,10 @@ This will usually be deferred to a safe time
 void CG_LoadHolsterData(clientInfo_t *ci);
 //[/VisualWeapons]
 
+#ifdef __NEW_TRUEVIEW__
+void CG_LoadTrueViewData(clientInfo_t* ci);
+#endif
+
 void CG_LoadClientInfo( clientInfo_t *ci ) {
 	qboolean	modelloaded;
 	int			clientNum, stored_clientNum;
@@ -1400,6 +1406,10 @@ void CG_LoadClientInfo( clientInfo_t *ci ) {
 		{
 			CG_LoadHolsterData(ci); //initialize our manual holster offset data.
 		}
+
+#ifdef __NEW_TRUEVIEW__
+		CG_LoadTrueViewData(ci);
+#endif
 	}
 
 	ci->deferred = qfalse;
@@ -1419,6 +1429,81 @@ void CG_LoadClientInfo( clientInfo_t *ci ) {
 	}
 }
 
+#ifdef __NEW_TRUEVIEW__
+#define		MAX_TRUEVIEWDATA_SIZE					8192
+
+void InitTrueViewData(clientInfo_t *ci)
+{
+	ci->trueViewData.forceDataLoad = qfalse;
+	ci->trueViewData.dataLoaded = qfalse;
+	strcpy(ci->trueViewData.tagName, "");
+	ci->trueViewData.tagIsBone = qfalse;
+	ci->trueViewData.eyeOffsetX = 0.0;
+}
+
+void CG_LoadTrueViewData(clientInfo_t* ci)
+{
+	fileHandle_t	f;
+	int				fLen = 0;
+	char			fileBuffer[MAX_TRUEVIEWDATA_SIZE];
+	char			parseBuf[4096];
+
+	InitTrueViewData(ci);
+	trueviewwarning = qfalse;
+	ci->trueViewData.forceDataLoad = qtrue;
+
+	fLen = trap->FS_Open(va("models/players/%s/trueview.cfg", ci->modelName), &f, FS_READ);
+
+	if (!f || fLen < 0)
+	{//couldn't open file, just use the defaults
+		return;
+	}
+
+	if (fLen == 0)
+	{//file was empty, just use the defaults
+		trap->FS_Close(f);
+		return;
+	}
+
+	if (fLen >= MAX_TRUEVIEWDATA_SIZE)
+	{
+		trap->Print("^1Error: trueview.cfg for %s is over the trueview.cfg filesize limit.^7\n", ci->modelName);
+		trap->FS_Close(f);
+		return;
+	}
+
+	trap->FS_Read(fileBuffer, fLen, f);
+	fileBuffer[fLen] = 0;
+	trap->FS_Close(f);
+
+	if (BG_SiegeGetPairedValue(fileBuffer, "tagName", parseBuf))
+	{
+		strcpy(ci->trueViewData.tagName, parseBuf);
+		ci->trueViewData.dataLoaded = qtrue;
+
+		if (BG_SiegeGetPairedValue(fileBuffer, "tagIsBone", parseBuf))
+		{
+			if (atoi(parseBuf))
+				ci->trueViewData.tagIsBone = qtrue;
+			else
+				ci->trueViewData.tagIsBone = qfalse;
+		}
+	}
+
+	if (BG_SiegeGetPairedValue(fileBuffer, "eyeOffsetX", parseBuf))
+	{
+		ci->trueViewData.eyeOffsetX = atof(parseBuf);
+
+		// Just use the old allowed range, it hasn't caused any problems.
+		if (ci->trueViewData.eyeOffsetX > 5.0)
+			ci->trueViewData.eyeOffsetX = 5.0;
+		else if (ci->trueViewData.eyeOffsetX < -3.0)
+			ci->trueViewData.eyeOffsetX = -3.0;
+
+		ci->trueViewData.dataLoaded = qtrue;
+	}
+}
+#endif
 
 //Take care of initializing all the ghoul2 saber stuff based on clientinfo data. -rww
 static void CG_InitG2SaberData(int saberNum, clientInfo_t *ci)
@@ -2283,6 +2368,7 @@ void CG_NewClientInfo( int clientNum, qboolean entitiesInitialized ) {
 		}
 	}
 
+#ifndef __NEW_TRUEVIEW__
 	//[TrueView]
 	if (cg.snap && cg.snap->ps.clientNum == clientNum)
 	{//adjust our True View position for this new model since this model is for this client
@@ -2291,7 +2377,7 @@ void CG_NewClientInfo( int clientNum, qboolean entitiesInitialized ) {
 		CG_AdjustEyePos(newInfo.modelName);
 	}
 	//[/TrueView]
-
+#endif
 	// replace whatever was there with the new one
 	newInfo.infoValid = qtrue;
 	if (ci->ghoul2Model &&
@@ -3753,7 +3839,7 @@ static void CG_PlayerAnimation( centity_t *cent, int *legsOld, int *legs, float 
 
 	clientNum = cent->currentState.clientNum;
 
-	if ( cg_noPlayerAnims.integer ) {
+	if (cg_noPlayerAnims.integer) {
 		*legsOld = *legs = *torsoOld = *torso = 0;
 		return;
 	}
@@ -16912,6 +16998,26 @@ void CG_Player( centity_t *cent ) {
 		return;
 	}
 
+#ifdef __NEW_TRUEVIEW__
+	//[Trueview]
+	if (cent->currentState.number == cg.snap->ps.clientNum)
+	{
+		if (cg_trueguns.integer && cg.predictedPlayerState.scopeType)
+		{
+			qboolean ReturnScopeType = qtrue;
+			// get the animation state (after rotation, to allow feet shuffle)
+			CG_PlayerAnimation(cent, &legs.oldframe, &legs.frame, &legs.backlerp,
+				&torso.oldframe, &torso.frame, &torso.backlerp);
+
+			if (ReturnScopeType)
+			{
+				return;
+			}
+		}
+	}
+	//[/Trueview]
+#endif
+
 	//If this client has tricked you.
 	if (CG_IsMindTricked(cent->currentState.trickedentindex,
 		cent->currentState.trickedentindex2,
@@ -17336,7 +17442,10 @@ void CG_Player( centity_t *cent ) {
 	if (cg.snap && cent->currentState.number == cg.snap->ps.clientNum)
 	{
 		if ( !cg.renderingThirdPerson && (cg_trueguns.integer || cent->currentState.weapon == WP_SABER 
-			|| cent->currentState.weapon == WP_MELEE) && !cg.predictedPlayerState.scopeType)	
+			|| cent->currentState.weapon == WP_MELEE) && !cg.predictedPlayerState.scopeType &&
+			(cg.predictedPlayerState.pm_type != PM_INTERMISSION &&
+			cg.predictedPlayerState.pm_type != PM_SPECTATOR) &&
+			ci->trueViewData.forceDataLoad)
 		{
 			//<True View varibles
 			mdxaBone_t 		eyeMatrix;
@@ -17347,7 +17456,28 @@ void CG_Player( centity_t *cent ) {
 			qboolean		boneBased = qfalse;
 
 			//make the player's be based on the ghoul2 model
-
+#if defined __NEW_TRUEVIEW__
+			if (ci->trueViewData.dataLoaded && Q_stricmp(ci->trueViewData.tagName, "")) // Something other than a blank string...
+			{
+				eyesBolt = trap->G2API_AddBolt(cent->ghoul2, 0, ci->trueViewData.tagName);
+				if (!trap->G2API_GetBoltMatrix(cent->ghoul2, 0, eyesBolt, &eyeMatrix, cent->turAngles, cent->lerpOrigin,
+					cg.time, cgs.gameModels, cent->modelScale))
+				{
+					if (!trueviewwarning)
+					{
+						trap->Print("^3WARNING: Missing tagName \"%s\" on model \"%s\". Trueview disabled.^7\n", ci->trueViewData.tagName, ci->modelName);
+						trueviewwarning = qtrue;
+					}
+					goto SkipTrueView;
+				}
+				if (ci->trueViewData.tagIsBone)
+				{
+					boneBased = qtrue;
+				}
+			}
+			else
+			{
+#endif
 			//grab the location data for the "*head_eyes" tag surface
 			eyesBolt = trap->G2API_AddBolt(cent->ghoul2, 0, "*head_eyes");
 			if( !trap->G2API_GetBoltMatrix(cent->ghoul2, 0, eyesBolt, &eyeMatrix, cent->turAngles, cent->lerpOrigin, 
@@ -17374,6 +17504,9 @@ void CG_Player( centity_t *cent ) {
 					}
 				}
 			}
+#if defined __NEW_TRUEVIEW__
+		}
+#endif
 
 			//Set the original eye Origin
 			VectorCopy( cg.refdef.vieworg, OldeyeOrigin);
@@ -17424,7 +17557,18 @@ void CG_Player( centity_t *cent ) {
 
 			//Shift the camera origin by cg_trueeyeposition
 			AngleVectors(eyeAngles, EyeAxis[0], NULL, NULL);
-			VectorMA(cg.refdef.vieworg, cg_trueEyePosition.value, EyeAxis[0], cg.refdef.vieworg);
+
+#ifdef __NEW_TRUEVIEW__
+			AngleVectors(eyeAngles, EyeAxis[1], NULL, NULL);
+			AngleVectors(eyeAngles, EyeAxis[2], NULL, NULL);
+
+			if (ci->trueViewData.dataLoaded)
+			{
+				VectorMA(cg.refdef.vieworg, ci->trueViewData.eyeOffsetX, EyeAxis[0], cg.refdef.vieworg);
+			}
+#else
+			VectorMA(cg.refdef.vieworg, cg_trueeyeposition.value, EyeAxis[0], cg.refdef.vieworg);
+#endif
 
 			//Trace to see if the bolt eye origin is ok to move to.  If it's not, place it at the last safe position.
 			CheckCameraLocation(OldeyeOrigin);
@@ -17442,66 +17586,6 @@ void CG_Player( centity_t *cent ) {
 	}
 
 SkipTrueView:
-
-	/*
-	#if 0
-	if (cg.renderingThirdPerson)
-	{
-	if (cgFPLSState != 0)
-	{
-	CG_ForceFPLSPlayerModel(cent, ci);
-	cgFPLSState = 0;
-	return;
-	}
-	}
-	else if (ci->team == FACTION_SPECTATOR || (cg.snap && (cg.snap->ps.pm_flags & PMF_FOLLOW)))
-	{ //don't allow this when spectating
-	if (cgFPLSState != 0)
-	{
-	trap_Cvar_Set("cg_fpls", "0");
-	cg_fpls.integer = 0;
-
-	CG_ForceFPLSPlayerModel(cent, ci);
-	cgFPLSState = 0;
-	return;
-	}
-
-	if (cg_fpls.integer)
-	{
-	trap_Cvar_Set("cg_fpls", "0");
-	}
-	}
-	else
-	{
-	if (cg_fpls.integer && cent->currentState.weapon == WP_SABER && cg.snap && cent->currentState.number == cg.snap->ps.clientNum)
-	{
-
-	if (cgFPLSState != cg_fpls.integer)
-	{
-	CG_ForceFPLSPlayerModel(cent, ci);
-	cgFPLSState = cg_fpls.integer;
-	return;
-	}
-
-	/*
-	mdxaBone_t 		headMatrix;
-	trap_G2API_GetBoltMatrix(cent->ghoul2, 0, ci->bolt_head, &headMatrix, cent->turAngles, cent->lerpOrigin, cg.time, cgs.gameModels, cent->modelScale);
-	BG_GiveMeVectorFromMatrix(&headMatrix, ORIGIN, cg.refdef.vieworg);
-	*/
-	/*
-	}
-	else if (!cg_fpls.integer && cgFPLSState)
-	{
-	if (cgFPLSState != cg_fpls.integer)
-	{
-	CG_ForceFPLSPlayerModel(cent, ci);
-	cgFPLSState = cg_fpls.integer;
-	return;
-	}
-	}
-	}
-	#endif
-	*/
 	//[/TrueView]
 
 	if (cent->currentState.eFlags & EF_DEAD)
