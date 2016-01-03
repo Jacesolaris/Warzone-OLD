@@ -25,12 +25,10 @@ extern "C" {
 //#define		__NO_PLANTS__ // Disable plants...
 //#define		__USE_ALL_PLANTS__ // Use all available plant shaders? Slower!
 #define			__USE_EXTRA_PLANTS__ // Use extra available plant shaders? Slower!
-//#define			__USE_SINGLE_GRASS__ // Use single plant shader/model only.. Just for testing fps difference.
+//#define		__USE_SINGLE_GRASS__ // Use single plant shader/model only.. Just for testing fps difference.
 
 #define			__DISTANT_MEDIUM_PLANTLIFE__ // Draw medium and large plantlife further away?
 #define			__DISTANT_MEDIUM_PLANTLIFE_RANGE__ 3500.0 //5000.0
-
-//#define			__USE_BILLBOARDING__ // Crappy LOD system...
 
 //#define		__NO_GRASS_AT_TREES__ // Don't draw grass at the same position as a tree (for FPS)... Little impact..
 //#define		__NO_GRASS_AT_PLANTS__ // Don't draw grass at the same position as a plant (for FPS)... Little impact..
@@ -44,8 +42,9 @@ extern "C" {
 
 #ifndef __USE_ALL_GRASSES__
 #ifndef __USE_EXTRA_GRASSES__
-#define		GRASS_SCALE_MULTIPLIER 0.8//1.0 // Scale down grass model by this much...
+//#define		GRASS_SCALE_MULTIPLIER 0.8//1.0 // Scale down grass model by this much...
 //#define		GRASS_SCALE_MULTIPLIER 1.0
+#define		GRASS_SCALE_MULTIPLIER 0.6
 #else //!__USE_EXTRA_GRASSES__
 //#define		GRASS_SCALE_MULTIPLIER 0.6 // Scale down grass model by this much...
 #define		GRASS_SCALE_MULTIPLIER 1.0 // Scale down grass model by this much...
@@ -450,17 +449,31 @@ extern "C" {
 #endif //__NO_GRASS_AT_PLANTS__
 				float GRASS_SCALE = FOLIAGE_GRASS_SCALE[num] * GRASS_SCALE_MULTIPLIER * 1.5 * distFadeScale;
 
-#ifdef __USE_BILLBOARDING__
-				if (dist > 2048)
+				if (cg_foliageBillboarding.integer && dist > cg_foliageBillboardDistance.value)
 				{
+					//re.reType = RT_ORIENTED_QUAD;
+					re.reType = RT_GRASS;
+
+					re.radius = GRASS_SCALE*24.0;
 					re.customShader = FOLIAGE_GRASS_BILLBOARD_SHADER[0];
-					re.origin[2] -= 24.0;
-					re.hModel = FOLIAGE_GRASS_BILLBOARD_MODEL[0];
-					VectorSet(re.modelScale, GRASS_SCALE * 1.2, GRASS_SCALE * 1.2, GRASS_SCALE * 1.2);
+					re.shaderRGBA[0] = 255;
+					re.shaderRGBA[1] = 255;
+					re.shaderRGBA[2] = 255;
+					re.shaderRGBA[3] = 255;
+
+					//re.origin[2] += re.radius/2.0;
+					re.origin[2] += re.radius;
+					//re.origin[2] -= 16.0;
+
+					angles[PITCH] = angles[ROLL] = 0.0f;
+					angles[YAW] = FOLIAGE_GRASS_ANGLES[num];
+
+					VectorCopy(angles, re.angles);
+					AnglesToAxis(angles, re.axis);
 				}
 				else
-#endif //__USE_BILLBOARDING__
 				{
+					re.reType = RT_MODEL;
 //#if !defined(__USE_ALL_GRASSES__) && !defined(__USE_EXTRA_GRASSES)
 //					re.origin[2] -= 48.0;
 //#else //!defined(__USE_ALL_GRASSES__) && !defined(__USE_EXTRA_GRASSES)
@@ -469,12 +482,14 @@ extern "C" {
 					re.customShader = FOLIAGE_GRASS_BILLBOARD_SHADER[0];
 					re.hModel = FOLIAGE_GRASS_MODEL[0];
 					VectorSet(re.modelScale, GRASS_SCALE, GRASS_SCALE, GRASS_SCALE);
+
+					angles[PITCH] = angles[ROLL] = 0.0f;
+					angles[YAW] = FOLIAGE_GRASS_ANGLES[num];
+					VectorCopy(angles, re.angles);
+					AnglesToAxis(angles, re.axis);
+					ScaleModelAxis( &re );
 				}
-				angles[PITCH] = angles[ROLL] = 0.0f;
-				angles[YAW] = FOLIAGE_GRASS_ANGLES[num];
-				VectorCopy(angles, re.angles);
-				AnglesToAxis(angles, re.axis);
-				ScaleModelAxis( &re );
+				
 				FOLIAGE_AddFoliageEntityToScene( &re );
 
 #if 0
@@ -509,18 +524,42 @@ extern "C" {
 
 		VectorCopy(FOLIAGE_POSITIONS[num], re.origin);
 		re.customShader = 0;
+		re.renderfx = 0;
 
 #ifndef __NO_TREES__
 		if (FOLIAGE_TREE_SELECTION[num] != 0)
 		{// Add the tree model...
-			re.hModel = FOLIAGE_TREE_MODEL[FOLIAGE_TREE_SELECTION[num]-1];
-			VectorSet(re.modelScale, FOLIAGE_TREE_SCALE[num], FOLIAGE_TREE_SCALE[num], FOLIAGE_TREE_SCALE[num]);
-			angles[PITCH] = angles[ROLL] = 0.0f;
-			angles[YAW] = FOLIAGE_TREE_ANGLES[num];
-			VectorCopy(angles, re.angles);
-			AnglesToAxis(angles, re.axis);
-			re.origin[2] += 128.0; // the tree model digs into ground too much...
-			ScaleModelAxis( &re );
+			/*if (cg_foliageBillboarding.integer && dist > cg_foliageBillboardDistance.value)
+			{
+				//re.reType = RT_ORIENTED_QUAD;
+				re.reType = RT_TREE;
+
+				re.radius = FOLIAGE_TREE_SCALE[num]*128.0;
+				re.customShader = FOLIAGE_GRASS_BILLBOARD_SHADER[0]; // This would require a BILLBOARD picture for the tree
+				re.shaderRGBA[0] = 255;
+				re.shaderRGBA[1] = 255;
+				re.shaderRGBA[2] = 255;
+				re.shaderRGBA[3] = 255;
+
+				angles[PITCH] = angles[ROLL] = 0.0f;
+				angles[YAW] = 0.0 - FOLIAGE_TREE_ANGLES[num];
+
+				VectorCopy(angles, re.angles);
+				AnglesToAxis(angles, re.axis);
+			}
+			else*/
+			{
+				re.reType = RT_MODEL;
+				re.hModel = FOLIAGE_TREE_MODEL[FOLIAGE_TREE_SELECTION[num]-1];
+				VectorSet(re.modelScale, FOLIAGE_TREE_SCALE[num], FOLIAGE_TREE_SCALE[num], FOLIAGE_TREE_SCALE[num]);
+				angles[PITCH] = angles[ROLL] = 0.0f;
+				angles[YAW] = FOLIAGE_TREE_ANGLES[num];
+				VectorCopy(angles, re.angles);
+				AnglesToAxis(angles, re.axis);
+				re.origin[2] += 128.0; // the tree model digs into ground too much...
+				ScaleModelAxis( &re );
+			}
+
 			FOLIAGE_AddFoliageEntityToScene( &re );
 		}
 #ifndef __NO_PLANTS__
@@ -536,11 +575,6 @@ extern "C" {
 			&& !(skip_smallStuff && FOLIAGE_PLANT_SCALE[num] <= 0.75)
 			&& !(skip_tinyStuff && FOLIAGE_GRASS_SCALE[num] <= 0.5)*/)
 		{// Add plant model as well...
-#ifdef __USE_BILLBOARDING__
-			qboolean billBoard = qfalse;
-
-			if (dist > 2048) billBoard = qtrue;
-#endif //__USE_BILLBOARDING__
 
 #if defined(__USE_SINGLE_GRASS__)
 			re.customShader = FOLIAGE_PLANT_SHADERS[FOLIAGE_PLANT_SHADERNUM[1]];
@@ -576,25 +610,41 @@ extern "C" {
 
 			float PLANT_SCALE = FOLIAGE_PLANT_SCALE[num]*PLANT_SCALE_MULTIPLIER*distFadeScale;
 
-#ifdef __USE_BILLBOARDING__
-			if (billBoard)
+			if (cg_foliageBillboarding.integer && dist > cg_foliageBillboardDistance.value)
 			{
-				PLANT_SCALE *= 1.2;
-				re.hModel = FOLIAGE_PLANT_BILLBOARD_MODEL[FOLIAGE_PLANT_SELECTION[num]-1];
-				VectorSet(re.modelScale, PLANT_SCALE, PLANT_SCALE, PLANT_SCALE);
+				//re.reType = RT_ORIENTED_QUAD;
+				re.reType = RT_PLANT;
+
+				re.radius = PLANT_SCALE*36.0;
+				//re.customShader = FOLIAGE_GRASS_BILLBOARD_SHADER[0];
+				re.shaderRGBA[0] = 255;
+				re.shaderRGBA[1] = 255;
+				re.shaderRGBA[2] = 255;
+				re.shaderRGBA[3] = 255;
+
+				//re.origin[2] += re.radius/2.0;
+				re.origin[2] += re.radius;
+				//re.origin[2] -= 16.0;
+
+				angles[PITCH] = angles[ROLL] = 0.0f;
+				angles[YAW] = FOLIAGE_PLANT_ANGLES[num];
+				
+				VectorCopy(angles, re.angles);
+				AnglesToAxis(angles, re.axis);
 			}
 			else
-#endif //__USE_BILLBOARDING__
 			{
+				re.reType = RT_MODEL;
 				re.hModel = FOLIAGE_PLANT_MODEL[FOLIAGE_PLANT_SELECTION[num]-1];
 				VectorSet(re.modelScale, PLANT_SCALE, PLANT_SCALE, PLANT_SCALE);
+
+				angles[PITCH] = angles[ROLL] = 0.0f;
+				angles[YAW] = FOLIAGE_PLANT_ANGLES[num];
+				VectorCopy(angles, re.angles);
+				AnglesToAxis(angles, re.axis);
+				ScaleModelAxis( &re );
 			}
 
-			angles[PITCH] = angles[ROLL] = 0.0f;
-			angles[YAW] = FOLIAGE_PLANT_ANGLES[num];
-			VectorCopy(angles, re.angles);
-			AnglesToAxis(angles, re.axis);
-			ScaleModelAxis( &re );
 			FOLIAGE_AddFoliageEntityToScene( &re );
 		}
 #endif //__NO_PLANTS__

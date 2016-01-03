@@ -972,7 +972,7 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage)
 		hasOverlay = 1.0;
 	}
 
-	if (pStage->isWater)
+	if (pStage->isWater && r_glslWater->integer)
 	{
 		specularScale = 1.5;
 		materialType = (float)MATERIAL_WATER;
@@ -1428,7 +1428,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			backEnd.pc.c_genericDraws++;
 		}
 
-		if (pStage->isWater)
+		if (pStage->isWater && r_glslWater->integer)
 		{
 			//if (stage <= 0) 
 			//if (pStage->bundle[TB_DIFFUSEMAP].image[0])
@@ -1600,7 +1600,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 			if (pStage->rgbGen == CGEN_LIGHTING_DIFFUSE ||
 				pStage->rgbGen == CGEN_LIGHTING_DIFFUSE_ENTITY ||
-				pStage->isWater)
+				(pStage->isWater && r_glslWater->integer))
 			{
 				vec4_t vec;
 
@@ -1694,7 +1694,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		else
 		{
 			/*
-			if (pStage->isWater)
+			if (pStage->isWater && r_glslWater->integer)
 			{
 				if ( !skyImage ) 
 				{
@@ -1726,7 +1726,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			else if ( pStage->bundle[TB_COLORMAP].image[0] != 0 )
 				R_BindAnimatedImageToTMU( &pStage->bundle[TB_COLORMAP], TB_COLORMAP );
 		}
-		else if ( !isGeneric && (pStage->glslShaderGroup == tr.lightallShader || pStage->isWater ) )
+		else if ( !isGeneric && (pStage->glslShaderGroup == tr.lightallShader || (pStage->isWater && r_glslWater->integer) ) )
 		{
 			int i;
 			vec4_t enableTextures;
@@ -1780,7 +1780,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				//  - disable texture sampling in glsl shader with #ifdefs, as before
 				//     -> increases the number of shaders that must be compiled
 				//
-				if ((light || pStage->isWater || pStage->hasRealNormalMap || pStage->hasSpecular || pStage->hasRealSubsurfaceMap || pStage->hasRealOverlayMap) && !fastLight)
+				if ((light || (pStage->isWater && r_glslWater->integer) || pStage->hasRealNormalMap || pStage->hasSpecular || pStage->hasRealSubsurfaceMap || pStage->hasRealOverlayMap) && !fastLight)
 				{
 					if (r_normalMapping->integer
 						&& !input->shader->isPortal
@@ -1908,7 +1908,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			R_DrawElementsVBO(input->numIndexes, input->firstIndex, input->minIndex, input->maxIndex);
 		}
 
-		if (pStage->isWater)
+		if (pStage->isWater && r_glslWater->integer)
 		{
 			break;
 		}
@@ -2056,12 +2056,12 @@ void RB_StageIteratorGeneric( void )
 	// UQ1: Set up any special shaders needed for this surface/contents type...
 	//
 
-	if (tess.shader->isWater 
+	if ((tess.shader->isWater && r_glslWater->integer)
 		|| (tess.shader->contentFlags & CONTENTS_WATER) 
 		/*|| (tess.shader->contentFlags & CONTENTS_LAVA)*/ 
 		|| (tess.shader->surfaceFlags & MATERIAL_MASK) == MATERIAL_WATER) 
 	{
-		if (input && input->xstages[0] && input->xstages[0]->isWater == 0) // In case it is already set, no need looping more then once on the same shader...
+		if (input && input->xstages[0] && input->xstages[0]->isWater == 0 && r_glslWater->integer) // In case it is already set, no need looping more then once on the same shader...
 		{
 			int isWater = 1;
 

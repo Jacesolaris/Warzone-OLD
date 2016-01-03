@@ -1898,6 +1898,13 @@ static void R_AddEntitySurface (int entityNum)
 		return;
 	}
 
+#ifdef __MERGE_MORE__
+	tr.defaultShader->entityMergable = qtrue;
+
+	if (!tr.defaultShader->cullType)
+		tr.defaultShader->cullType = CT_TWO_SIDED;
+#endif //__MERGE_MORE__
+
 	// simple generated models, like sprites and beams, are not culled
 	switch ( ent->e.reType ) {
 	case RT_PORTALSURFACE:
@@ -1910,21 +1917,29 @@ static void R_AddEntitySurface (int entityNum)
 	case RT_ORIENTEDLINE:
 	case RT_CYLINDER:
 	case RT_SABER_GLOW:
+	case RT_GRASS:
+	case RT_PLANT:
 		// self blood sprites, talk balloons, etc should not be drawn in the primary
 		// view.  We can't just do this check for all entities, because md3
 		// entities may still want to cast shadows from them
 		if ( (ent->e.renderfx & RF_THIRD_PERSON) && !tr.viewParms.isPortal) {
 			return;
 		}
-		
-		if ( R_CullEntitySurface( ent ) ) {
-			// Well, that's a lot of stuff we don't need to draw...
-			if (r_entityCull->integer >= 2) NUM_ENTS_CULLED++;
-			return;
-		}
 
-		shader = R_GetShaderByHandle( ent->e.customShader );
-		R_AddDrawSurf( &entitySurface, shader, R_SpriteFogNum( ent ), 0, R_IsPostRenderEntity (tr.currentEntityNum, ent), 0 /* cubeMap */ );
+		if (R_CullPointAndRadius( ent->e.origin, ent->e.radius ) != CULL_OUT)
+		{
+			if ( R_CullEntitySurface( ent ) ) {
+				// Well, that's a lot of stuff we don't need to draw...
+				if (r_entityCull->integer >= 2) NUM_ENTS_CULLED++;
+				return;
+			}
+
+			shader = R_GetShaderByHandle( ent->e.customShader );
+#ifdef __MERGE_MORE__
+			shader->entityMergable = qtrue;
+#endif //__MERGE_MORE__
+			R_AddDrawSurf( &entitySurface, shader, R_SpriteFogNum( ent ), 0, R_IsPostRenderEntity (tr.currentEntityNum, ent), 0 /* cubeMap */ );
+		}
 		break;
 
 	case RT_MODEL:
@@ -2022,6 +2037,9 @@ static void R_AddEntitySurface (int entityNum)
 		}
 
 		shader = R_GetShaderByHandle( ent->e.customShader );
+#ifdef __MERGE_MORE__
+		shader->entityMergable = qtrue;
+#endif //__MERGE_MORE__
 		R_AddDrawSurf( &entitySurface, shader, R_SpriteFogNum( ent ), false, R_IsPostRenderEntity (tr.currentEntityNum, ent), 0 /* cubeMap */ );
 		break;
 	default:

@@ -92,6 +92,10 @@ void RB_AddQuadStampExt( vec3_t origin, vec3_t left, vec3_t up, float color[4], 
 
 	ndx = tess.numVertexes;
 
+#ifdef __MERGE_MORE__
+	tess.shader->entityMergable = qtrue;
+#endif //__MERGE_MORE__
+
 	// triangle indexes for a simple quad
 	tess.indexes[ tess.numIndexes ] = ndx;
 	tess.indexes[ tess.numIndexes + 1 ] = ndx + 1;
@@ -231,6 +235,173 @@ void RB_InstantQuad(vec4_t quadVerts[4])
 	RB_InstantQuad2(quadVerts, texCoords);
 }
 
+extern void TR_AxisToAngles ( const vec3_t axis[3], vec3_t angles );
+
+static void RB_GrassQuad( void ) {
+	vec3_t	left, up;
+	float	radius;
+	float	color[4];
+
+	// calculate the xyz locations for the four corners
+	radius = backEnd.currentEntity->e.radius;
+//	MakeNormalVectors( backEnd.currentEntity->e.axis[0], left, up );
+	VectorCopy( backEnd.currentEntity->e.axis[1], left );
+	VectorCopy( backEnd.currentEntity->e.axis[2], up );
+
+	VectorScale( left, radius, left );
+	VectorScale( up, radius, up );
+
+	if ( backEnd.viewParms.isMirror ) 
+	{
+		VectorSubtract( vec3_origin, left, left );
+	}
+
+	VectorScale4 (backEnd.currentEntity->e.shaderRGBA, 1.0f / 255.0f, color);
+
+#ifdef __RENDERER_FOLIAGE__
+	// using renderer based foliage generation...
+	RB_AddQuadStamp( backEnd.currentEntity->e.origin, left, up, color );
+#else //!__RENDERER_FOLIAGE__
+
+	// Add clones around it...
+	vec3_t newOrg, viewAngles, vfwd, vright, vup;
+
+#ifndef __GRASS_BLOBS__
+	RB_AddQuadStamp( backEnd.currentEntity->e.origin, left, up, color );
+
+	TR_AxisToAngles(backEnd.currentEntity->e.axis, viewAngles);
+	AngleVectors (viewAngles, vfwd, vright, vup);
+
+	// Clone 1...
+	VectorMA( backEnd.currentEntity->e.origin, 64, vright, newOrg );
+	RB_AddQuadStamp( newOrg, left, up, color );
+
+	// Clone 2...
+	VectorMA( backEnd.currentEntity->e.origin, -64, vright, newOrg );
+	VectorMA( newOrg, -24, vfwd, newOrg );
+	RB_AddQuadStamp( newOrg, left, up, color );
+
+	// Clone 3...
+	VectorMA( backEnd.currentEntity->e.origin, -24, vright, newOrg );
+	VectorMA( newOrg, -48, vfwd, newOrg );
+	RB_AddQuadStamp( newOrg, left, up, color );
+#else //__GRASS_BLOBS__
+	//for (float angle = 0; angle <= 90; angle+=20)
+	{
+		TR_AxisToAngles(backEnd.currentEntity->e.axis, viewAngles);
+		//viewAngles[YAW] += angle;
+		AngleVectors(viewAngles, vfwd, vright, vup);
+
+		for (int offset1 = -48; offset1 <= 48; offset1 += 24)
+		{
+			for (int offset2 = -48; offset2 <= 48; offset2 += 24)
+			{
+				vec3_t c, p;
+				VectorSet(c, 0,0,0);
+				VectorSet(p, offset1, offset2, 0);
+				float radiusScale = 1.5 - ((Distance(c,p) / 48) * 0.5);
+				VectorCopy( backEnd.currentEntity->e.axis[1], left );
+				VectorCopy( backEnd.currentEntity->e.axis[2], up );
+
+				VectorScale( left, radius*radiusScale, left );
+				VectorScale( up, radius*radiusScale, up );
+
+				if ( backEnd.viewParms.isMirror ) 
+				{
+					VectorSubtract( vec3_origin, left, left );
+				}
+
+				VectorMA( backEnd.currentEntity->e.origin, offset1, vright, newOrg );
+				VectorMA( newOrg, offset2, vfwd, newOrg );
+				RB_AddQuadStamp( newOrg, left, up, color );
+			}
+		}
+	}
+#endif //__GRASS_BLOBS__
+#endif //__RENDERER_FOLIAGE__
+}
+
+static void RB_PlantQuad( void ) {
+	vec3_t	left, up;
+	float	radius;
+	float	color[4];
+
+	// calculate the xyz locations for the four corners
+	radius = backEnd.currentEntity->e.radius;
+//	MakeNormalVectors( backEnd.currentEntity->e.axis[0], left, up );
+	VectorCopy( backEnd.currentEntity->e.axis[1], left );
+	VectorCopy( backEnd.currentEntity->e.axis[2], up );
+
+	VectorScale( left, radius, left );
+	VectorScale( up, radius, up );
+
+	if ( backEnd.viewParms.isMirror ) 
+	{
+		VectorSubtract( vec3_origin, left, left );
+	}
+
+	VectorScale4 (backEnd.currentEntity->e.shaderRGBA, 1.0f / 255.0f, color);
+
+	RB_AddQuadStamp( backEnd.currentEntity->e.origin, left, up, color );
+
+	//ri->Printf(PRINT_WARNING, "PLANT at %f %f %f.\n", backEnd.currentEntity->e.origin[0], backEnd.currentEntity->e.origin[1], backEnd.currentEntity->e.origin[2]);
+
+#ifndef __GRASS_BLOBS__
+	// Add clones around it...
+	vec3_t newOrg, viewAngles, vfwd, vright, vup;
+
+	TR_AxisToAngles(backEnd.currentEntity->e.axis, viewAngles);
+	AngleVectors (viewAngles, vfwd, vright, vup);
+
+	// Clone 1...
+	VectorCopy( backEnd.currentEntity->e.axis[1], left );
+	VectorCopy( backEnd.currentEntity->e.axis[2], up );
+
+	VectorScale( left, radius * 0.6, left );
+	VectorScale( up, radius * 0.6, up );
+
+	if ( backEnd.viewParms.isMirror ) 
+	{
+		VectorSubtract( vec3_origin, left, left );
+	}
+
+	VectorMA( backEnd.currentEntity->e.origin, r_fOff1X->value, vright, newOrg );
+	VectorMA( newOrg, r_fOff1Y->value, vfwd, newOrg );
+	RB_AddQuadStamp( newOrg, left, up, color );
+
+	// Clone 2...
+	VectorCopy( backEnd.currentEntity->e.axis[1], left );
+	VectorCopy( backEnd.currentEntity->e.axis[2], up );
+
+	VectorScale( left, radius * 0.7, left );
+	VectorScale( up, radius * 0.7, up );
+
+	if ( backEnd.viewParms.isMirror ) 
+	{
+		VectorSubtract( vec3_origin, left, left );
+	}
+
+	VectorMA( backEnd.currentEntity->e.origin, r_fOff2X->value, vright, newOrg );
+	VectorMA( newOrg, r_fOff2Y->value, vfwd, newOrg );
+	RB_AddQuadStamp( newOrg, left, up, color );
+
+	// Clone 3...
+	VectorCopy( backEnd.currentEntity->e.axis[1], left );
+	VectorCopy( backEnd.currentEntity->e.axis[2], up );
+
+	VectorScale( left, radius * 0.9, left );
+	VectorScale( up, radius * 0.9, up );
+
+	if ( backEnd.viewParms.isMirror ) 
+	{
+		VectorSubtract( vec3_origin, left, left );
+	}
+
+	VectorMA( backEnd.currentEntity->e.origin, r_fOff3X->value, vright, newOrg );
+	VectorMA( newOrg, r_fOff3Y->value, vfwd, newOrg );
+	RB_AddQuadStamp( newOrg, left, up, color );
+#endif //__GRASS_BLOBS__
+}
 
 /*
 ==============
@@ -1981,6 +2152,12 @@ static void RB_SurfaceEntity( surfaceType_t *surfType ) {
 		break;
 	case RT_ORIENTED_QUAD:
 		RB_SurfaceOrientedQuad();
+		break;
+	case RT_GRASS:
+		RB_GrassQuad();
+		break;
+	case RT_PLANT:
+		RB_PlantQuad();
 		break;
 	case RT_BEAM:
 		RB_SurfaceBeam();

@@ -1000,6 +1000,312 @@ qboolean G_BoxInBounds( vec3_t point, vec3_t mins, vec3_t maxs, vec3_t boundsMin
 	return qtrue;
 }
 
+#ifdef __RENDERER_FOLIAGE__
+void R_FoliageQuadStamp(vec4_t quadVerts[4])
+{
+	vec2_t texCoords[4];
+
+	VectorSet2(texCoords[0], 0.0f, 0.0f);
+	VectorSet2(texCoords[1], 1.0f, 0.0f);
+	VectorSet2(texCoords[2], 1.0f, 1.0f);
+	VectorSet2(texCoords[3], 0.0f, 1.0f);
+
+	GLSL_BindProgram(&tr.textureColorShader);
+	
+	GLSL_SetUniformMatrix16(&tr.textureColorShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
+	GLSL_SetUniformVec4(&tr.textureColorShader, UNIFORM_COLOR, colorWhite);
+
+	RB_InstantQuad2(quadVerts, texCoords);
+}
+
+extern int64_t		r_numentities;
+extern int			r_firstSceneEntity;
+
+extern void TR_AxisToAngles ( const vec3_t axis[3], vec3_t angles );
+extern void R_WorldToLocal (const vec3_t world, vec3_t local);
+
+static void R_FoliageQuad2( vec3_t surfOrigin, cplane_t plane, vec3_t bounds[2], float scale ) {
+	vec3_t	left, up;
+	float	radius;
+	//float	color[4];
+
+	// calculate the xyz locations for the four corners
+	radius = 24.0 * scale;
+
+	vec3_t mins, maxs, newOrg, angles, vfwd, vright, vup;
+
+	VectorSet(mins, bounds[0][0], bounds[0][1], bounds[0][2]);
+	VectorSet(maxs, bounds[1][0], bounds[1][1], bounds[1][2]);
+
+	if (mins[0] > maxs[0])
+	{
+		float temp;
+		temp = mins[0];
+		mins[0] = maxs[0];
+		maxs[0] = temp;
+	}
+
+	if (mins[1] > maxs[1])
+	{
+		float temp;
+		temp = mins[1];
+		mins[1] = maxs[1];
+		maxs[1] = temp;
+	}
+
+	if (mins[2] > maxs[2])
+	{
+		float temp;
+		temp = mins[2];
+		mins[2] = maxs[2];
+		maxs[2] = temp;
+	}
+
+	float length = maxs[0] - mins[0];
+	mins[0] = -(length/2.0);
+	maxs[0] = (length/2.0);
+
+	length = maxs[1] - mins[1];
+	mins[1] = -(length/2.0);
+	maxs[1] = (length/2.0);
+
+	length = maxs[2] - mins[2];
+	mins[2] = -(length/2.0);
+	maxs[2] = (length/2.0);
+
+	//AngleVectors(plane.normal, vfwd, vright, vup);
+	matrix3_t axis;
+	VectorCopy( plane.normal, axis[0] );
+	PerpendicularVector( axis[1], axis[0] );
+	CrossProduct( axis[0], axis[1], axis[2] );
+
+	VectorCopy( axis[1], left );
+	VectorCopy( axis[2], up );
+
+	VectorScale( left, radius, left );
+	VectorScale( up, radius, up );
+
+	TR_AxisToAngles(axis, angles);
+	AngleVectors (angles, vfwd, vright, vup);
+
+	//ri->Printf(PRINT_WARNING, "mins %f %f %f, maxs %f %f %f, plane %f %f %f\n", mins[0], mins[1], mins[2], maxs[0], maxs[1], maxs[2], plane.normal[0], plane.normal[1], plane.normal[2]);
+
+	bool Ynerf = true;
+
+	for (float offsetX = mins[0]; offsetX < maxs[0]; offsetX += 32.0)
+	{
+		Ynerf = !Ynerf;
+
+		float ms1 = mins[1];
+		if (Ynerf) ms1 += 16.0;
+
+		for (float offsetY = ms1; offsetY < maxs[1]; offsetY += 32.0)
+		{
+			qhandle_t shader = RE_RegisterShader("models/pop/foliages/sch_weed_a.tga");
+
+			VectorCopy(surfOrigin, newOrg);
+			VectorMA( newOrg, offsetX, vright, newOrg );
+			VectorMA( newOrg, offsetY, vup, newOrg );
+
+			refEntity_t re;
+			memset( &re, 0, sizeof( re ) );
+			VectorCopy(newOrg, re.origin);
+			
+			re.reType = RT_GRASS;
+
+			re.radius = radius;
+			re.customShader = shader;
+			re.shaderRGBA[0] = 255;
+			re.shaderRGBA[1] = 255;
+			re.shaderRGBA[2] = 255;
+			re.shaderRGBA[3] = 255;
+
+			//re.origin[2] += re.radius;
+
+			angles[PITCH] = angles[ROLL] = 0.0f;
+			angles[YAW] = 0.0f;
+
+			VectorCopy(angles, re.angles);
+			AnglesToAxis(angles, re.axis);
+
+			//if (Distance(tr.refdef.vieworg, newOrg) < 64) ri->Printf(PRINT_WARNING, "org %f %f %f\n", newOrg[0], newOrg[1], newOrg[2]);
+
+			RE_AddRefEntityToScene( &re );
+
+			tr.refdef.num_entities = r_numentities - r_firstSceneEntity;
+			tr.refdef.entities = &backEndData->entities[r_firstSceneEntity];
+
+		}
+	}
+}
+
+/*
+static void R_FoliageQuad( vec3_t surfOrigin, cplane_t plane, vec3_t bounds[2], float scale ) {
+	vec3_t	left, up;
+	float	radius;
+	float	color[4];
+
+	// calculate the xyz locations for the four corners
+	radius = 128.0;//24.0 * scale;
+
+	VectorSet4(color, 1, 1, 1, 1);
+
+	vec3_t mins, maxs, newOrg, origin, angles, vfwd, vright, vup;
+
+	VectorSet(mins, bounds[0][0], bounds[0][1], bounds[0][2]);
+	VectorSet(maxs, bounds[1][0], bounds[1][1], bounds[1][2]);
+
+	if (mins[0] > maxs[0])
+	{
+		float temp;
+		temp = mins[0];
+		mins[0] = maxs[0];
+		maxs[0] = temp;
+	}
+
+	if (mins[1] > maxs[1])
+	{
+		float temp;
+		temp = mins[1];
+		mins[1] = maxs[1];
+		maxs[1] = temp;
+	}
+
+	if (mins[2] > maxs[2])
+	{
+		float temp;
+		temp = mins[2];
+		mins[2] = maxs[2];
+		maxs[2] = temp;
+	}
+
+	float length = maxs[0] - mins[0];
+	mins[0] = -(length/2.0);
+	maxs[0] = (length/2.0);
+
+	length = maxs[1] - mins[1];
+	mins[1] = -(length/2.0);
+	maxs[1] = (length/2.0);
+
+	length = maxs[2] - mins[2];
+	mins[2] = -(length/2.0);
+	maxs[2] = (length/2.0);
+
+	//AngleVectors(plane.normal, vfwd, vright, vup);
+	matrix3_t axis;
+	VectorCopy( plane.normal, axis[0] );
+	PerpendicularVector( axis[1], axis[0] );
+	CrossProduct( axis[0], axis[1], axis[2] );
+
+	VectorCopy( axis[1], left );
+	VectorCopy( axis[2], up );
+
+	VectorScale( left, radius, left );
+	VectorScale( up, radius, up );
+
+	TR_AxisToAngles(axis, angles);
+	AngleVectors (angles, vfwd, vright, vup);
+
+	//ri->Printf(PRINT_WARNING, "mins %f %f %f, maxs %f %f %f, plane %f %f %f\n", mins[0], mins[1], mins[2], maxs[0], maxs[1], maxs[2], plane.normal[0], plane.normal[1], plane.normal[2]);
+
+	for (float offsetX = mins[0]; offsetX < maxs[0]; offsetX += 64.0)
+	{
+		for (float offsetY = mins[1]; offsetY < maxs[1]; offsetY += 64.0)
+		{
+			VectorCopy(surfOrigin, newOrg);
+			newOrg[2] += radius;
+			VectorMA( newOrg, offsetX, vright, newOrg );
+			VectorMA( newOrg, offsetY, vup, newOrg );
+			//if (Distance(tr.refdef.vieworg, newOrg) < 64) ri->Printf(PRINT_WARNING, "org %f %f %f\n", newOrg[0], newOrg[1], newOrg[2]);
+
+			R_WorldToLocal(newOrg, origin);
+			//VectorCopy(newOrg, origin);
+
+			RB_AddQuadStamp( origin, left, up, color );
+
+#if 0
+			vec4_t quadVerts[4];
+			quadVerts[0][0] = origin[0] + left[0] + up[0];
+			quadVerts[0][1] = origin[1] + left[1] + up[1];
+			quadVerts[0][2] = origin[2] + left[2] + up[2];
+
+			quadVerts[1][0] = origin[0] - left[0] + up[0];
+			quadVerts[1][1] = origin[1] - left[1] + up[1];
+			quadVerts[1][2] = origin[2] - left[2] + up[2];
+
+			quadVerts[2][0] = origin[0] - left[0] - up[0];
+			quadVerts[2][1] = origin[1] - left[1] - up[1];
+			quadVerts[2][2] = origin[2] - left[2] - up[2];
+
+			quadVerts[3][0] = origin[0] + left[0] - up[0];
+			quadVerts[3][1] = origin[1] + left[1] - up[1];
+			quadVerts[3][2] = origin[2] + left[2] - up[2];
+			R_FoliageQuadStamp(quadVerts);
+#endif
+		}
+	}
+}
+
+
+int			FOLIAGE_NUM_SURFACES = 0;
+vec3_t		FOLIAGE_ORIGINS[65536];
+vec3_t		FOLIAGE_BOUNDS[65536][2];
+cplane_t	FOLIAGE_PLANES[65536];
+shader_t	*FOLIAGE_SHADERS[65536];
+
+
+void R_DrawFoliage (int surfaceNum) {
+	shader_t	*shader = FOLIAGE_SHADERS[surfaceNum];
+
+	if ((shader->surfaceFlags & MATERIAL_MASK ) == MATERIAL_SHORTGRASS)
+	{
+		R_FoliageQuad(FOLIAGE_ORIGINS[surfaceNum], FOLIAGE_PLANES[surfaceNum], FOLIAGE_BOUNDS[surfaceNum], 1.0);
+	}
+	else if ((shader->surfaceFlags & MATERIAL_MASK ) == MATERIAL_LONGGRASS)
+	{
+		R_FoliageQuad(FOLIAGE_ORIGINS[surfaceNum], FOLIAGE_PLANES[surfaceNum], FOLIAGE_BOUNDS[surfaceNum], 2.0);
+	}
+}
+
+void R_DrawAllFoliages ( void )
+{
+	for (int i = 0; i < FOLIAGE_NUM_SURFACES; i++)
+	{
+		R_DrawFoliage(i);
+	}
+
+	ri->Printf(PRINT_WARNING, "%i foliage surfaces drawn.\n", FOLIAGE_NUM_SURFACES);
+}
+*/
+
+void R_AddFoliage (msurface_t *surf) {
+	//RE_RegisterShader("models/warzone/foliage/grass01.png");
+	if ((surf->shader->surfaceFlags & MATERIAL_MASK ) == MATERIAL_SHORTGRASS || (surf->shader->surfaceFlags & MATERIAL_MASK ) == MATERIAL_LONGGRASS)
+	{
+		vec3_t		surfOrigin;
+
+		//shader_t	*shader = R_GetShaderByHandle(RE_RegisterShader("models/warzone/foliage/grass01.png"));
+
+		surfOrigin[0] = (surf->cullinfo.bounds[0][0] + surf->cullinfo.bounds[1][0]) * 0.5f;
+		surfOrigin[1] = (surf->cullinfo.bounds[0][1] + surf->cullinfo.bounds[1][1]) * 0.5f;
+		surfOrigin[2] = (surf->cullinfo.bounds[0][2] + surf->cullinfo.bounds[1][2]) * 0.5f;
+
+		if (Distance(surfOrigin, tr.refdef.vieworg) <= 2048)
+		{
+			/*
+			VectorCopy(surfOrigin, FOLIAGE_ORIGINS[FOLIAGE_NUM_SURFACES]);
+			VectorCopy(surf->cullinfo.bounds[0], FOLIAGE_BOUNDS[FOLIAGE_NUM_SURFACES][0]);
+			VectorCopy(surf->cullinfo.bounds[1], FOLIAGE_BOUNDS[FOLIAGE_NUM_SURFACES][1]);
+			FOLIAGE_PLANES[FOLIAGE_NUM_SURFACES] = surf->cullinfo.plane;
+			FOLIAGE_SHADERS[FOLIAGE_NUM_SURFACES] = shader;
+			FOLIAGE_NUM_SURFACES++;
+			*/
+			R_FoliageQuad2( surfOrigin, surf->cullinfo.plane, surf->cullinfo.bounds, 1.0 );
+		}
+	}
+}
+#endif //__RENDERER_FOLIAGE__
+
 /*
 =============
 R_AddWorldSurfaces
@@ -1019,6 +1325,11 @@ void R_AddWorldSurfaces (void) {
 
 	NUM_WORLD_FOV_CULLS = 0;
 	NUM_WORLDMERGED_FOV_CULLS = 0;
+/*
+#ifdef __RENDERER_FOLIAGE__
+	FOLIAGE_NUM_SURFACES = 0;
+#endif //__RENDERER_FOLIAGE__
+*/
 
 	tr.currentEntityNum = REFENTITYNUM_WORLD;
 	tr.shiftedEntityNum = tr.currentEntityNum << QSORT_REFENTITYNUM_SHIFT;
@@ -1065,9 +1376,12 @@ void R_AddWorldSurfaces (void) {
 		{
 			if (tr.world->surfacesViewCount[i] != tr.viewCount)
 				continue;
-
 			R_AddWorldSurface( tr.world->surfaces + i, 0/*tr.world->surfacesDlightBits[i]*/, 0/*tr.world->surfacesPshadowBits[i]*/ );
 			//tr.refdef.dlightMask |= tr.world->surfacesDlightBits[i];
+
+#ifdef __RENDERER_FOLIAGE__
+			R_AddFoliage(tr.world->surfaces + i);
+#endif //__RENDERER_FOLIAGE__
 		}
 
 		for (i = 0; i < tr.world->numMergedSurfaces; i++)
@@ -1077,7 +1391,17 @@ void R_AddWorldSurfaces (void) {
 
 			R_AddWorldSurface( tr.world->mergedSurfaces + i, 0/*tr.world->mergedSurfacesDlightBits[i]*/, 0/*tr.world->mergedSurfacesPshadowBits[i]*/ );
 			//tr.refdef.dlightMask |= tr.world->mergedSurfacesDlightBits[i];
+
+#ifdef __RENDERER_FOLIAGE__
+			R_AddFoliage(tr.world->mergedSurfaces + i);
+#endif //__RENDERER_FOLIAGE__
 		}
+
+/*
+#ifdef __RENDERER_FOLIAGE__
+		ri->Printf(PRINT_WARNING, "%i foliage surfaces added.\n", FOLIAGE_NUM_SURFACES);
+#endif //__RENDERER_FOLIAGE__
+*/
 
 		//tr.refdef.dlightMask = ~tr.refdef.dlightMask;
 
