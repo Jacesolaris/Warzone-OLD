@@ -72,6 +72,8 @@
 #endif
 */
 
+#define __NEW_TRUEVIEW__
+
 #ifndef FINAL_BUILD
 	// may want to enable timing and leak checking again. requires G2API changes.
 //	#define G2_PERFORMANCE_ANALYSIS
