@@ -2285,7 +2285,14 @@ typedef struct trGlobals_s {
 	image_t					*whiteImage;			// full of 0xff
 	image_t					*blackImage;			// full of 0x00
 	image_t					*identityLightImage;	// full of tr.identityLightByte
+
 	image_t					*randomImage;
+	image_t					*random2KImage;
+	image_t					*mapImage;
+	image_t					*heightMapImage;
+	image_t					*foliageMapImage;
+	image_t					*grassImage;
+	image_t					*grassMaskImage[10];
 
 	image_t                 *shadowCubemaps[MAX_DLIGHTS];
 	
@@ -2726,6 +2733,9 @@ extern cvar_t	*r_dynamicGlowHeight;
 // UQ1: Added...
 //
 extern cvar_t	*r_glslWater;
+extern cvar_t	*r_grassLength;
+extern cvar_t	*r_grassWaveSpeed;
+extern cvar_t	*r_grassWaveSize;
 extern cvar_t	*r_multithread;
 extern cvar_t	*r_multithread2;
 extern cvar_t	*r_testvar;

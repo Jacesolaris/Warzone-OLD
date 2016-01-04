@@ -230,7 +230,7 @@ float noise1( in vec2 x )
 
 float noise(vec2 p)
 {
-  return texture2D(u_RandomMap,p*vec2(1./256.)).x;
+  return texture2D(u_RandomMap,p*vec2(1./2048.)).x;
 }
 
 float height_map( vec2 p )
