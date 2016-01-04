@@ -3364,3 +3364,4 @@ void R_RenderCubemapSide( int cubemapIndex, int cubemapSide, qboolean subscene )
 		RE_EndScene();
 	}
 }
+
