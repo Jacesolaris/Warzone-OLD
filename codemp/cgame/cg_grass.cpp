@@ -370,6 +370,17 @@ extern "C" {
 		float			dist = Distance(FOLIAGE_POSITIONS[num], cg.refdef.vieworg);
 		float			distFadeScale = 1.0;
 
+		trace_t tr;
+		vec3_t	up, down, normal;
+		VectorCopy(FOLIAGE_POSITIONS[num], up);
+		up[2]+=128;
+		VectorCopy(FOLIAGE_POSITIONS[num], down);
+		down[2]-=128;
+		CG_Trace(&tr, up, NULL, NULL, down, -1, MASK_SOLID);
+		VectorCopy(tr.plane.normal, normal);
+		
+		//trap->Print("Normal is %f %f %f.\n", normal[0], normal[1], normal[2]);
+
 		/*if (dist >= FOLIAGE_STARTSCALE_DISTANCE)
 		{
 			float foliageMaxFadeDist = (FOLIAGE_VISIBLE_DISTANCE - FOLIAGE_STARTSCALE_DISTANCE);
@@ -483,8 +494,10 @@ extern "C" {
 					re.hModel = FOLIAGE_GRASS_MODEL[0];
 					VectorSet(re.modelScale, GRASS_SCALE, GRASS_SCALE, GRASS_SCALE);
 
-					angles[PITCH] = angles[ROLL] = 0.0f;
-					angles[YAW] = FOLIAGE_GRASS_ANGLES[num];
+					vectoangles( normal, angles );
+					angles[PITCH] += 90;
+					//angles[YAW] += FOLIAGE_GRASS_ANGLES[num];
+
 					VectorCopy(angles, re.angles);
 					AnglesToAxis(angles, re.axis);
 					ScaleModelAxis( &re );
@@ -551,12 +564,15 @@ extern "C" {
 			{
 				re.reType = RT_MODEL;
 				re.hModel = FOLIAGE_TREE_MODEL[FOLIAGE_TREE_SELECTION[num]-1];
-				VectorSet(re.modelScale, FOLIAGE_TREE_SCALE[num], FOLIAGE_TREE_SCALE[num], FOLIAGE_TREE_SCALE[num]);
+				if (FOLIAGE_TREE_SELECTION[num]-1 <= 1)
+					VectorSet(re.modelScale, FOLIAGE_TREE_SCALE[num]*2.5, FOLIAGE_TREE_SCALE[num]*2.5, FOLIAGE_TREE_SCALE[num]*2.5);
+				else
+					VectorSet(re.modelScale, FOLIAGE_TREE_SCALE[num], FOLIAGE_TREE_SCALE[num], FOLIAGE_TREE_SCALE[num]);
 				angles[PITCH] = angles[ROLL] = 0.0f;
 				angles[YAW] = FOLIAGE_TREE_ANGLES[num];
 				VectorCopy(angles, re.angles);
 				AnglesToAxis(angles, re.axis);
-				re.origin[2] += 128.0; // the tree model digs into ground too much...
+				if (FOLIAGE_TREE_SELECTION[num]-1 > 1) re.origin[2] += 128.0; // the tree model digs into ground too much...
 				ScaleModelAxis( &re );
 			}
 
@@ -638,8 +654,10 @@ extern "C" {
 				re.hModel = FOLIAGE_PLANT_MODEL[FOLIAGE_PLANT_SELECTION[num]-1];
 				VectorSet(re.modelScale, PLANT_SCALE, PLANT_SCALE, PLANT_SCALE);
 
-				angles[PITCH] = angles[ROLL] = 0.0f;
-				angles[YAW] = FOLIAGE_PLANT_ANGLES[num];
+				vectoangles( normal, angles );
+				angles[PITCH] += 90;
+				//angles[YAW] += FOLIAGE_PLANT_ANGLES[num];
+
 				VectorCopy(angles, re.angles);
 				AnglesToAxis(angles, re.axis);
 				ScaleModelAxis( &re );
@@ -697,6 +715,8 @@ extern "C" {
 			FOLIAGE_GRASS_SHADERNUM[i] = irand(1,36);
 #endif //__USE_EXTRA_GRASSES__
 			FOLIAGE_PLANT_SHADERNUM[i] = irand(1,NUM_PLANT_SHADERS-1);
+
+			if (FOLIAGE_TREE_SELECTION[i] > 0) FOLIAGE_TREE_SELECTION[i] = irand(1,3);
 		}
 
 		trap->Print( "^1*** ^3%s^5: Successfully loaded %i foliage points from foliage file ^7foliage/%s.foliage^5.\n", GAME_VERSION,
@@ -815,35 +835,6 @@ extern "C" {
 			FOLIAGE_GRASS_BILLBOARD_MODEL[0] = trap->R_RegisterModel( "models/warzone/foliage/grass_cross.md3" );
 			FOLIAGE_GRASS_BILLBOARD_SHADER[0] = trap->R_RegisterShader( "models/pop/foliages/sch_weed_a.tga" );
 
-#if !defined (__USE_ALL_PLANTS__) && !defined (__USE_EXTRA_PLANTS__)
-			FOLIAGE_PLANT_MODEL[0] = trap->R_RegisterModel( "models/warzone/foliage/plant03.md3" );
-			FOLIAGE_PLANT_MODEL[1] = trap->R_RegisterModel( "models/warzone/foliage/plant05.md3" );
-			FOLIAGE_PLANT_MODEL[2] = trap->R_RegisterModel( "models/warzone/foliage/plant10.md3" );
-			FOLIAGE_PLANT_MODEL[3] = trap->R_RegisterModel( "models/warzone/foliage/plant11.md3" );
-			FOLIAGE_PLANT_MODEL[4] = trap->R_RegisterModel( "models/warzone/foliage/plant12.md3" );
-			FOLIAGE_PLANT_MODEL[5] = trap->R_RegisterModel( "models/warzone/foliage/plant14.md3" );
-			FOLIAGE_PLANT_MODEL[6] = trap->R_RegisterModel( "models/warzone/foliage/plant16.md3" );
-			FOLIAGE_PLANT_MODEL[7] = trap->R_RegisterModel( "models/warzone/foliage/plant20.md3" );
-			FOLIAGE_PLANT_MODEL[8] = trap->R_RegisterModel( "models/warzone/foliage/plant21.md3" );
-			FOLIAGE_PLANT_MODEL[9] = trap->R_RegisterModel( "models/warzone/foliage/plant22.md3" );
-			FOLIAGE_PLANT_MODEL[10] = trap->R_RegisterModel( "models/warzone/foliage/plant23.md3" );
-			FOLIAGE_PLANT_MODEL[11] = trap->R_RegisterModel( "models/warzone/foliage/plant27.md3" );
-			FOLIAGE_PLANT_MODEL[12] = trap->R_RegisterModel( "models/warzone/foliage/plant28.md3" );
-			FOLIAGE_PLANT_MODEL[13] = trap->R_RegisterModel( "models/warzone/foliage/plant29.md3" );
-			FOLIAGE_PLANT_MODEL[14] = trap->R_RegisterModel( "models/warzone/foliage/plant30.md3" );
-			FOLIAGE_PLANT_MODEL[15] = trap->R_RegisterModel( "models/warzone/foliage/plant31.md3" );
-			FOLIAGE_PLANT_MODEL[16] = trap->R_RegisterModel( "models/warzone/foliage/plant32.md3" );
-			FOLIAGE_PLANT_MODEL[17] = trap->R_RegisterModel( "models/warzone/foliage/plant33.md3" );
-			FOLIAGE_PLANT_MODEL[18] = trap->R_RegisterModel( "models/warzone/foliage/plant36.md3" );
-			FOLIAGE_PLANT_MODEL[19] = trap->R_RegisterModel( "models/warzone/foliage/plant64.md3" );
-			FOLIAGE_PLANT_MODEL[20] = trap->R_RegisterModel( "models/warzone/foliage/plant65.md3" );
-			FOLIAGE_PLANT_MODEL[21] = trap->R_RegisterModel( "models/warzone/foliage/plant66.md3" );
-			FOLIAGE_PLANT_MODEL[22] = trap->R_RegisterModel( "models/warzone/foliage/plant68.md3" );
-			FOLIAGE_PLANT_MODEL[23] = trap->R_RegisterModel( "models/warzone/foliage/plant78.md3" );
-			FOLIAGE_PLANT_MODEL[24] = trap->R_RegisterModel( "models/warzone/foliage/plant79.md3" );
-			FOLIAGE_PLANT_MODEL[25] = trap->R_RegisterModel( "models/warzone/foliage/plant80.md3" );
-			FOLIAGE_PLANT_MODEL[26] = trap->R_RegisterModel( "models/warzone/foliage/plant81.md3" );
-#else //defined (__USE_ALL_PLANTS__) || defined (__USE_EXTRA_PLANTS__)
 			//int plantModel1 = trap->R_RegisterModel("models/warzone/foliage/plant03.md3");
 			int plantModel2 = FOLIAGE_GRASS_MODEL[0];//trap->R_RegisterModel( "models/warzone/foliage/grass_dense.md3" );
 			int plantModel3 = FOLIAGE_GRASS_MODEL[0];//trap->R_RegisterModel( "models/warzone/foliage/grass_cross.md3" );
@@ -859,10 +850,15 @@ extern "C" {
 
 				FOLIAGE_PLANT_BILLBOARD_MODEL[i] = plantModel3;
 			}
-#endif //!defined (__USE_ALL_PLANTS__) && !defined (__USE_EXTRA_PLANTS__)
 
-			FOLIAGE_TREE_MODEL[0] = trap->R_RegisterModel( "models/map_objects/yavin/tree08_b.md3" );
-			FOLIAGE_TREE_MODEL[1] = trap->R_RegisterModel( "models/map_objects/yavin/tree08_b.md3" );
+			//FOLIAGE_TREE_MODEL[0] = trap->R_RegisterModel( "models/map_objects/yavin/tree08_b.md3" );
+			//FOLIAGE_TREE_MODEL[1] = trap->R_RegisterModel( "models/map_objects/yavin/tree08_b.md3" );
+			//FOLIAGE_TREE_MODEL[2] = trap->R_RegisterModel( "models/map_objects/yavin/tree08_b.md3" );
+
+			FOLIAGE_TREE_MODEL[0] = trap->R_RegisterModel( "models/warzone/trees/fanpalm1.md3" );
+			FOLIAGE_TREE_MODEL[1] = FOLIAGE_TREE_MODEL[0];
+			//FOLIAGE_TREE_MODEL[2] = FOLIAGE_TREE_MODEL[0];
+			//FOLIAGE_TREE_MODEL[1] = trap->R_RegisterModel( "models/map_objects/yavin/tree08_b.md3" );
 			FOLIAGE_TREE_MODEL[2] = trap->R_RegisterModel( "models/map_objects/yavin/tree08_b.md3" );
 
 			for (int i = 1; i < 37; i++)
