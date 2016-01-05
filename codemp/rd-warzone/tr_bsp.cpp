@@ -23,6 +23,10 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #include "tr_local.h"
 
+extern char currentMapName[128];
+
+extern void R_LoadMapInfo ( void );
+
 /*
 
 Loads and prepares a map file for scene rendering.
@@ -33,7 +37,7 @@ void RE_LoadWorldMap( const char *name );
 
 */
 
-static	world_t		s_worldData;
+world_t				s_worldData;
 static	byte		*fileBase;
 
 int			c_subdivisions;
@@ -3110,8 +3114,6 @@ qboolean R_MaterialUsesCubemap ( int surfaceFlags )
 
 //#define CUBEMAPS_AT_WAYPOINTS
 
-extern char currentMapName[128];
-
 #ifdef CUBEMAPS_AT_WAYPOINTS
 #define		MOD_DIRECTORY "Warzone"
 #define		BOT_MOD_NAME	"aimod"
@@ -3494,6 +3496,7 @@ static void R_RenderAllCubemaps(void)
 	}
 }
 
+
 /*
 =================
 R_MergeLeafSurfaces
@@ -3501,13 +3504,6 @@ R_MergeLeafSurfaces
 Merges surfaces that share a common leaf
 =================
 */
-
-// Merge more stuff... As much as we can to reduce/stop CPU rend2 bottleneck...
-#define __MERGE_MORE__
-// Merge matching shader names...
-// This works for us (as far as I have seen so far) because we only actually use 2 light styles (MATERIAL_ overrides), 
-// and never should they be really using 2 different shaders. Rend2 just didn't know that when assigning them at load...
-#define __MERGE_SAME_SHADER_NAMES__
 
 void R_MergeLeafSurfaces(void)
 {
@@ -3586,7 +3582,7 @@ void R_MergeLeafSurfaces(void)
 				shader2 = surf2->shader;
 
 #ifdef __MERGE_SAME_SHADER_NAMES__
-				if (shader1 && shader2 && shader1->stages[0] && shader2->stages[0] && shader1->stages[0]->isWater && shader2->stages[0]->isWater)
+				if (shader1 && shader2 && shader1->stages[0] && shader2->stages[0] && ( r_glslWater->integer && shader1->stages[0]->isWater && shader2->stages[0]->isWater))
 				{// UQ1: All water can be safely merged I believe...
 					s_worldData.surfacesViewCount[surfNum2] = surfNum1;
 					continue;
@@ -3598,7 +3594,7 @@ void R_MergeLeafSurfaces(void)
 					continue;
 				}
 #else //!__MERGE_SAME_SHADER_NAMES__
-				if (shader1 && shader2 && shader1->stages[0] && shader2->stages[0] && shader1->stages[0]->isWater && shader2->stages[0]->isWater)
+				if (shader1 && shader2 && shader1->stages[0] && shader2->stages[0] && (r_glslWater->integer && shader1->stages[0]->isWater && shader2->stages[0]->isWater))
 				{// UQ1: All water can be safely merged I believe...
 					s_worldData.surfacesViewCount[surfNum2] = surfNum1;
 					continue;
@@ -4309,6 +4305,8 @@ void RE_LoadWorldMap( const char *name ) {
 	// make sure the VBO glState entries are safe
 	R_BindNullVBO();
 	R_BindNullIBO();
+
+	R_LoadMapInfo();
 
 	// Render all cubemaps
 	if (r_cubeMapping->integer && tr.numCubemaps)

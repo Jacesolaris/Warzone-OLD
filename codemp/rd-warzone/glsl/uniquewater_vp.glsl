@@ -1,23 +1,13 @@
-#define USE_VERTEX_ANIMATION
-//#define USE_SKELETAL_ANIMATION
+#extension GL_EXT_gpu_shader4 : enable
+
+#define WAVE
 
 #define USE_DEFORM_VERTEXES
 #define USE_TCGEN
 #define USE_TCMOD
-//#define USE_LIGHTMAP
-//#define USE_RGBAGEN
-//#define USE_FOG
 
 attribute vec3 attr_Position;
 attribute vec3 attr_Normal;
-
-#if defined(USE_VERTEX_ANIMATION)
-attribute vec3 attr_Position2;
-attribute vec3 attr_Normal2;
-#elif defined(USE_SKELETAL_ANIMATION)
-attribute vec4 attr_BoneIndexes;
-attribute vec4 attr_BoneWeights;
-#endif
 
 attribute vec4 attr_Color;
 attribute vec2 attr_TexCoord0;
@@ -29,7 +19,7 @@ attribute vec2 attr_TexCoord1;
 uniform vec4   u_DiffuseTexMatrix;
 uniform vec4   u_DiffuseTexOffTurb;
 
-#if defined(USE_TCGEN) || defined(USE_RGBAGEN)
+#if defined(USE_TCGEN)
 uniform vec3   u_LocalViewOrigin;
 #endif
 
@@ -39,53 +29,33 @@ uniform vec3   u_TCGen0Vector0;
 uniform vec3   u_TCGen0Vector1;
 #endif
 
-#if defined(USE_FOG)
-uniform vec4   u_FogDistance;
-uniform vec4   u_FogDepth;
-uniform float  u_FogEyeT;
-uniform vec4   u_FogColorMask;
-#endif
-
 #if defined(USE_DEFORM_VERTEXES)
 uniform int    u_DeformGen;
 uniform float  u_DeformParams[5];
 #endif
 
-uniform mat4   u_ModelViewProjectionMatrix;
-uniform vec4   u_BaseColor;
-uniform vec4   u_VertColor;
-
-#if defined(USE_RGBAGEN)
-uniform int    u_ColorGen;
-uniform int    u_AlphaGen;
-uniform vec3   u_AmbientLight;
-uniform vec3   u_DirectedLight;
-uniform vec3   u_ModelLightDir;
-uniform float  u_PortalRange;
-#endif
-
-#if defined(USE_VERTEX_ANIMATION)
-uniform float  u_VertexLerp;
-#elif defined(USE_SKELETAL_ANIMATION)
-uniform mat4   u_BoneMatrices[20];
-#endif
+uniform mat4	u_ModelViewProjectionMatrix;
+uniform mat4	u_ModelMatrix;
+uniform mat4	u_invEyeProjectionMatrix;
 
 varying vec2   var_DiffuseTex;
-#if defined(USE_LIGHTMAP)
-varying vec2   var_LightTex;
-#endif
 varying vec4   var_Color;
 
 uniform vec2	u_Dimensions;
 uniform vec3	u_ViewOrigin;
 uniform float	u_Time;
-uniform vec4	u_Local0; // (1=water, 2=lava), 0, 0, 0
-uniform vec4	u_Local1; // parallaxScale, haveSpecular, specularScale, materialType
+uniform vec4	u_Local5; // grassLength, grassLayer, wavespeed, wavesize
+
+#define m_Length	u_Local5.r
+#define m_Layer		u_Local5.g
+
+#ifdef WAVE
+bool	m_Wave = true;
+float	m_WaveSpeed = u_Local5.b;
+float	m_WaveSize = u_Local5.a;
+#endif
 
 varying vec2	var_TexCoords;
-varying float	time;
-varying vec4	var_Local0; // (1=water, 2=lava), 0, 0, 0
-varying vec4	var_Local1; // parallaxScale, haveSpecular, specularScale, materialType
 varying vec2	var_Dimensions;
 varying vec3	var_vertPos;
 varying float	var_Time;
@@ -185,103 +155,90 @@ vec2 ModTexCoords(vec2 st, vec3 position, vec4 texMatrix, vec4 offTurb)
 }
 #endif
 
-#if defined(USE_RGBAGEN)
-vec4 CalcColor(vec3 position, vec3 normal)
+
+
+int LFSR_Rand_Gen(in int n)
 {
-	vec4 color = u_VertColor * attr_Color + u_BaseColor;
-	
-	if (u_ColorGen == CGEN_LIGHTING_DIFFUSE)
-	{
-		float incoming = clamp(dot(normal, u_ModelLightDir), 0.0, 1.0);
-
-		color.rgb = clamp(u_DirectedLight * incoming + u_AmbientLight, 0.0, 1.0);
-	}
-	
-	vec3 viewer = u_LocalViewOrigin - position;
-
-	if (u_AlphaGen == AGEN_LIGHTING_SPECULAR)
-	{
-		vec3 lightDir = normalize(vec3(-960.0, 1980.0, 96.0) - position);
-		vec3 reflected = -reflect(lightDir, normal);
-		
-		color.a = clamp(dot(reflected, normalize(viewer)), 0.0, 1.0);
-		color.a *= color.a;
-		color.a *= color.a;
-	}
-	else if (u_AlphaGen == AGEN_PORTAL)
-	{
-		color.a = clamp(length(viewer) / u_PortalRange, 0.0, 1.0);
-	}
-	
-	return color;
+  // <<, ^ and & require GL_EXT_gpu_shader4.
+  n = (n << 13) ^ n;
+  return (n * (n*n*15731+789221) + 1376312589) & 0x7fffffff;
 }
-#endif
 
-#if defined(USE_FOG)
-float CalcFog(vec3 position)
+float LFSR_Rand_Gen_f(int n )
 {
-	float s = dot(vec4(position, 1.0), u_FogDistance) * 8.0;
-	float t = dot(vec4(position, 1.0), u_FogDepth);
-
-	float eyeOutside = float(u_FogEyeT < 0.0);
-	float fogged = float(t < eyeOutside);
-
-	t += 1e-6;
-	t *= fogged / (t - u_FogEyeT * eyeOutside);
-
-	return s * t;
+  return float(LFSR_Rand_Gen(n));
 }
-#endif
+
+
+float noise(vec3 p) {
+  ivec3 ip = ivec3(floor(p));
+  vec3 u = fract(p);
+  u = u*u*(3.0-2.0*u);
+
+  int n = ip.x + ip.y*57 + ip.z*113;
+
+  float res = mix(mix(mix(LFSR_Rand_Gen_f(n+(0+57*0+113*0)),
+                          LFSR_Rand_Gen_f(n+(1+57*0+113*0)),u.x),
+                      mix(LFSR_Rand_Gen_f(n+(0+57*1+113*0)),
+                          LFSR_Rand_Gen_f(n+(1+57*1+113*0)),u.x),u.y),
+                 mix(mix(LFSR_Rand_Gen_f(n+(0+57*0+113*1)),
+                          LFSR_Rand_Gen_f(n+(1+57*0+113*1)),u.x),
+                      mix(LFSR_Rand_Gen_f(n+(0+57*1+113*1)),
+                          LFSR_Rand_Gen_f(n+(1+57*1+113*1)),u.x),u.y),u.z);
+
+  return 1.0 - res*(1.0/1073741824.0);
+}
+
 
 void main()
 {
-/*#if defined(USE_VERTEX_ANIMATION)
-	vec3 position  = mix(attr_Position, attr_Position2, u_VertexLerp);
-	vec3 normal    = mix(attr_Normal,   attr_Normal2,   u_VertexLerp);
-	normal = normalize(normal - vec3(0.5));
-#elif defined(USE_SKELETAL_ANIMATION)
-	vec4 position4 = vec4(0.0);
-	vec4 normal4 = vec4(0.0);
-	vec4 originalPosition = vec4(attr_Position, 1.0);
-	vec4 originalNormal = vec4(attr_Normal - vec3 (0.5), 0.0);
-
-	for (int i = 0; i < 4; i++)
-	{
-		int boneIndex = int(attr_BoneIndexes[i]);
-
-		position4 += (u_BoneMatrices[boneIndex] * originalPosition) * attr_BoneWeights[i];
-		normal4 += (u_BoneMatrices[boneIndex] * originalNormal) * attr_BoneWeights[i];
-	}
-
-	vec3 position = position4.xyz;
-	vec3 normal = normalize(normal4.xyz);
-#else*/
 	vec3 position  = attr_Position;
 	vec3 normal    = attr_Normal * 2.0 - vec3(1.0);
-//#endif
 
-//#if defined(USE_DEFORM_VERTEXES)
-//	position = DeformPosition(position, normal, attr_TexCoord0.st);
-//#endif
+#if defined(USE_DEFORM_VERTEXES)
+	position = DeformPosition(position, normal, attr_TexCoord0.st);
+#endif
 
-	gl_Position = u_ModelViewProjectionMatrix * vec4(position, 1.0);
-
-//#if defined(USE_TCGEN)
-//	vec2 tex = GenTexCoords(u_TCGen0, position, normal, u_TCGen0Vector0, u_TCGen0Vector1);
-//#else
+#if defined(USE_TCGEN)
+	vec2 tex = GenTexCoords(u_TCGen0, position, normal, u_TCGen0Vector0, u_TCGen0Vector1);
+#else
 	vec2 tex = attr_TexCoord0.st;
-//#endif
+#endif
+
+
+	vec3 P = attr_Position + (normal * (m_Length*m_Layer));
+
+#ifdef WAVE
+	//Use a noise function to choose a movement group
+    float gravGroup = noise(attr_Position);
+
+    //cycle the bend factor based on the total time
+    //THIS LINE CAUSES THE WAVING EFFECT!  Tweak this depending on your application.
+    float bendAmt = sin((u_Time + gravGroup)*m_WaveSpeed);
+
+    vec3 vGravity = vec3(0,0,0);
+	float bendValue = bendAmt * 0.1 * m_WaveSize;
+    
+    if (gravGroup < 0.3) {
+       vGravity = (vec4((-0.1)+bendValue, (-0.1)+bendValue, 0, 0)*u_ModelViewProjectionMatrix).xyz;
+    } else if (gravGroup < 0.6) {
+       vGravity = (vec4((0.1)+bendValue, (0.1)+bendValue, 0, 0)*u_ModelViewProjectionMatrix).xyz;
+    } else {
+       vGravity = (vec4(0, 0, (-0.1)+bendValue, 0)*u_ModelViewProjectionMatrix).xyz;
+    }
+#else
+	vec3 vGravity = (vec4(-0.1,0,0,0)*u_ModelMatrix).xyz;
+#endif
+
+    float k =  pow(m_Layer, 3);  // The higher the exponent is, the closer to the tip the grass will start curving
+    P = P + vGravity*k;
+
+    gl_Position = u_ModelViewProjectionMatrix * vec4(P, 1.0);
 
 	var_TexCoords = tex;
-
 	var_Dimensions = u_Dimensions.st;
-	time = u_Time;
-
-	var_Local0 = u_Local0;
-	var_Local1 = u_Local1;
 	var_vertPos = gl_Position.xyz;
 	var_Time = u_Time;
 	var_Normal = normal;
 	var_ViewDir = u_ViewOrigin - position;
 }
-

@@ -2,9 +2,6 @@ uniform sampler2D u_DiffuseMap;
 uniform sampler2D u_RandomMap;
 uniform sampler2D u_ScreenDepthMap;
 
-varying vec4	var_Local1; // parallaxScale, haveSpecular, specularScale, materialType
-varying vec4	u_Local2; // ExtinctionCoefficient
-varying vec4	u_Local3; // RimScalar, MaterialThickness, subSpecPower
 varying vec2	var_Dimensions;
 
 varying float  var_Time;
@@ -59,14 +56,9 @@ uniform vec4      u_CubeMapInfo;
 
 
 varying vec2      var_TexCoords;
-
 varying vec4      var_Color;
-
-varying vec3   var_ViewDir;
-
-varying vec3   var_Normal;
-
-varying vec3 var_N;
+varying vec3	var_ViewDir;
+varying vec3	var_Normal;
 
 #if defined(USE_PRIMARY_LIGHT) || defined(USE_SHADOWMAP)
 varying vec4      var_PrimaryLightDir;
@@ -74,34 +66,11 @@ varying vec4      var_PrimaryLightDir;
 
 varying vec3   var_vertPos;
 
+
 out vec4 out_Glow;
 //out vec4 out_Normal;
 out vec4 out_DetailedNormal;
 
-float SampleDepth(sampler2D normalMap, vec2 t)
-{
-	vec3 color = texture2D(u_DiffuseMap, t).rgb;
-
-#define const_1 ( 16.0 / 255.0)
-#define const_2 (255.0 / 219.0)
-	vec3 color2 = ((color - const_1) * const_2);
-#define const_3 ( 125.0 / 255.0)
-#define const_4 (255.0 / 115.0)
-		
-	color = ((color - const_3) * const_4);
-
-	color = clamp(color * color * (color * 5.0), 0.0, 1.0); // testing
-
-	vec3 orig_color = color + color2;
-
-	orig_color = clamp(orig_color * 2.5, 0.0, 1.0); // testing
-
-	orig_color = clamp(orig_color, 0.0, 1.0);
-	float combined_color2 = orig_color.r + orig_color.g + orig_color.b;
-	combined_color2 /= 4.0;
-
-	return clamp(1.0 - combined_color2, 0.0, 1.0);
-}
 
 vec3 EnvironmentBRDF(float gloss, float NE, vec3 specular)
 {
@@ -189,22 +158,19 @@ mat3 cotangent_frame( vec3 N, vec3 p, vec2 uv )
 
 
 
+uniform vec4	u_Local5; // grassLayer, grassLength, wavespeed, wavesize
+
+#define m_Layer		u_Local5.r
+#define m_Length	u_Local5.g
+
+#ifdef WAVE
+bool	m_Wave = true;
+float	m_WaveSpeed = u_Local5.b;
+float	m_WaveSize = u_Local5.a;
+#endif
 
 
 vec3 DETAILED_NORMAL = vec3(0.0);
-
-vec4 doGrass( in vec2 fragCoord, in mat3 tangentToWorld )
-{
-#define m_GrassTexScale 1.0
-#define m_MaskScale 1.0
-
-	DETAILED_NORMAL = var_Normal.xyz * 2.0 - 1.0;
-	DETAILED_NORMAL *= tangentToWorld;
-        
-	vec4 color = texture2D( u_DiffuseMap, fragCoord * vec2(m_GrassTexScale,m_GrassTexScale));
-    color.a = (texture2D( u_RandomMap, fragCoord * m_MaskScale).a);
-	return color;
-}
 
 void main()
 {
@@ -232,35 +198,38 @@ void main()
   #endif
 
 	vec2 texCoords = var_TexCoords.xy;
-	float fakedepth = SampleDepth(u_DiffuseMap, texCoords);
-
-	float norm = (fakedepth - 0.5);
-	float norm2 = 0.0 - (fakedepth - 0.5);
-    #if defined(SWIZZLE_NORMALMAP)
-		N.xy = vec2(norm, norm2);
-    #else
-		N.xy = vec2(norm, norm2);
-    #endif
+	N = var_Normal.xyz;
 	N = N * 0.5 + 0.5;
 	N.xy *= u_NormalScale.xy;
 	N.z = sqrt(clamp((0.25 - N.x * N.x) - N.y * N.y, 0.0, 1.0));
 
 	N = tangentToWorld * N;
 
-	//vec3 normal = texture2D(u_NormalMap, texCoords).xyz;
-	//DETAILED_NORMAL = normalize(normal * 2.0 - 1.0);
-	//DETAILED_NORMAL = tangentToWorld * DETAILED_NORMAL;
-	//DETAILED_NORMAL = N;
-
 	N = normalize(N);
 	L /= sqrt(sqrLightDist);
 
-	vec4 diffuse = texture2D(u_DiffuseMap, texCoords);
-	vec4 orig_diffuse = diffuse;
+	DETAILED_NORMAL = var_Normal.xyz * 2.0 - 1.0;
+	DETAILED_NORMAL *= tangentToWorld;
 
-	vec3 grassColor = doGrass( texCoords.xy, tangentToWorld ).rgb;
-	diffuse.rgb = clamp(grassColor, 0.0, 1.0);
-	gl_FragColor = vec4(diffuse.rgb, diffuse.a);
+
+
+
+#define m_GrassTexScale 64.0
+#define m_MaskScale 256.0
+
+	vec4 color;
+	color.a = texture2D( u_RandomMap, texCoords*m_MaskScale ).g;
+
+	if (color.a == 0.0) discard;
+
+	color.rgb = texture2D( u_DiffuseMap, texCoords*m_GrassTexScale ).rgb;
+
+	//color.rgb = vec3(color.a);
+
+	gl_FragColor = color;
+
+
+
 
 
 /*

@@ -11,11 +11,14 @@
 #define MASK_CAMERACLIP (MASK_SOLID)
 #endif //__DISABLE_PLAYERCLIP__
 #define CAMERA_SIZE	4
+
+#ifndef __NEW_TRUEVIEW__
 //[TrueView]
-#define		MAX_TRUEVIEW_INFO_SIZE					8192
-char		true_view_info[MAX_TRUEVIEW_INFO_SIZE];
-int			true_view_valid;
+#define        MAX_TRUEVIEW_INFO_SIZE                    8192
+char        true_view_info[MAX_TRUEVIEW_INFO_SIZE];
+int            true_view_valid;
 //[/TrueView]
+#endif
 
 #define __SCOPE_DEVELOPER__
 
@@ -2999,6 +3002,7 @@ void CheckCameraLocation(vec3_t OldeyeOrigin)
 //Loads in the True View auto eye positioning data so you don't have to worry about disk access later in the 
 //game
 //Based on CG_InitSagaMode and tck's tck_InitBuffer
+#ifndef __NEW_TRUEVIEW__
 void CG_TrueViewInit(void)
 {
 	int				len = 0;
@@ -3032,9 +3036,10 @@ void CG_TrueViewInit(void)
 	return;
 
 }
-
+#endif
 
 //Tries to adjust the eye position from the data in cfg file if possible.
+#ifndef __NEW_TRUEVIEW__
 void CG_AdjustEyePos(const char *modelName)
 {
 	//eye position
@@ -3059,5 +3064,6 @@ void CG_AdjustEyePos(const char *modelName)
 	}
 
 }
+#endif
 //[/TrueView]
 //[/TrueView]

@@ -24,16 +24,37 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #ifndef TR_LOCAL_H
 #define TR_LOCAL_H
 
+
+
+// -----------------------------------------------------------------------------------------------------------------------------
+//                                                   Warzone Renderer Defines
+// -----------------------------------------------------------------------------------------------------------------------------
 #define __USE_QGL_FINISH__
+//#define __RENDERER_FOLIAGE__
 #define ___SHADER_GENERATOR___
 #define ___SHADER_GENERATOR_PLAYERS_ONLY___
 //#define __SURFACESPRITES__
 #define __EXTRA_PRETTY__
 
+
+
 //#define __DYNAMIC_SHADOWS__
 #ifdef __DYNAMIC_SHADOWS__
 #define MAX_DYNAMIC_SHADOWS 4
 #endif //__DYNAMIC_SHADOWS__
+
+
+
+// Merge more stuff... As much as we can to reduce/stop CPU rend2 bottleneck...
+#define __MERGE_MORE__
+// Merge matching shader names...
+// This works for us (as far as I have seen so far) because we only actually use 2 light styles (MATERIAL_ overrides), 
+// and never should they be really using 2 different shaders. Rend2 just didn't know that when assigning them at load...
+#define __MERGE_SAME_SHADER_NAMES__
+// -----------------------------------------------------------------------------------------------------------------------------
+
+
+
 
 #include "../qcommon/q_shared.h"
 #include "../qcommon/qfiles.h"
@@ -2264,7 +2285,14 @@ typedef struct trGlobals_s {
 	image_t					*whiteImage;			// full of 0xff
 	image_t					*blackImage;			// full of 0x00
 	image_t					*identityLightImage;	// full of tr.identityLightByte
+
 	image_t					*randomImage;
+	image_t					*random2KImage;
+	image_t					*mapImage;
+	image_t					*heightMapImage;
+	image_t					*foliageMapImage;
+	image_t					*grassImage;
+	image_t					*grassMaskImage[10];
 
 	image_t                 *shadowCubemaps[MAX_DLIGHTS];
 	
@@ -2704,6 +2732,10 @@ extern cvar_t	*r_dynamicGlowHeight;
 //
 // UQ1: Added...
 //
+extern cvar_t	*r_glslWater;
+extern cvar_t	*r_grassLength;
+extern cvar_t	*r_grassWaveSpeed;
+extern cvar_t	*r_grassWaveSize;
 extern cvar_t	*r_multithread;
 extern cvar_t	*r_multithread2;
 extern cvar_t	*r_testvar;
@@ -2734,6 +2766,12 @@ extern cvar_t	*r_truehdr;
 extern cvar_t  *r_magicdetail;
 extern cvar_t  *r_magicdetailStrength;
 extern cvar_t  *r_dof;
+extern cvar_t  *r_fOff1X;
+extern cvar_t  *r_fOff1Y;
+extern cvar_t  *r_fOff2X;
+extern cvar_t  *r_fOff2Y;
+extern cvar_t  *r_fOff3X;
+extern cvar_t  *r_fOff3Y;
 extern cvar_t  *r_testvalue0;
 extern cvar_t  *r_testvalue1;
 extern cvar_t  *r_esharpening;

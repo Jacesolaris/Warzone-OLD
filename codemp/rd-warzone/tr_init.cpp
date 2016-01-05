@@ -250,6 +250,10 @@ cvar_t	*r_saveFontData;
 //
 // UQ1: Added...
 //
+cvar_t	*r_glslWater;
+cvar_t  *r_grassLength;
+cvar_t  *r_grassWaveSpeed;
+cvar_t  *r_grassWaveSize;
 cvar_t	*r_fog;
 cvar_t	*r_multithread;
 cvar_t	*r_multithread2;
@@ -281,8 +285,14 @@ cvar_t  *r_truehdr;
 cvar_t  *r_magicdetail;
 cvar_t  *r_magicdetailStrength;
 cvar_t  *r_dof;
-cvar_t  *r_testvalue0;
+cvar_t  *r_fOff1X;
+cvar_t  *r_fOff1Y;
+cvar_t  *r_fOff2X;
+cvar_t  *r_fOff2Y;
+cvar_t  *r_fOff3X;
+cvar_t  *r_fOff3Y;
 cvar_t  *r_testvalue1;
+cvar_t  *r_testvalue0;
 cvar_t  *r_esharpening;
 cvar_t  *r_esharpening2;
 cvar_t  *r_multipost;
@@ -1408,9 +1418,20 @@ void R_Register( void )
 	//
 	// UQ1: Added...
 	//
+	r_glslWater = ri->Cvar_Get( "r_glslWater", "1", CVAR_ARCHIVE );
+	r_grassLength = ri->Cvar_Get( "r_grassLength", "0.4", CVAR_ARCHIVE );
+	r_grassWaveSpeed = ri->Cvar_Get( "r_grassWaveSpeed", "4.0", CVAR_ARCHIVE );
+	r_grassWaveSize = ri->Cvar_Get( "r_grassWaveSize", "0.5", CVAR_ARCHIVE );
+
 	r_fog = ri->Cvar_Get( "r_fog", "1", CVAR_ARCHIVE ); // UQ1: For disabling fog to test speeds...
 	r_multithread = ri->Cvar_Get( "r_multithread", "0", CVAR_ARCHIVE );
 	r_multithread2 = ri->Cvar_Get( "r_multithread2", "1", CVAR_ARCHIVE );
+	r_fOff1X = ri->Cvar_Get( "r_fOff1X", "-24.0", CVAR_ARCHIVE );
+	r_fOff1Y = ri->Cvar_Get( "r_fOff1Y", "-52.0", CVAR_ARCHIVE );
+	r_fOff2X = ri->Cvar_Get( "r_fOff2X", "28.0", CVAR_ARCHIVE );
+	r_fOff2Y = ri->Cvar_Get( "r_fOff2Y", "42.0", CVAR_ARCHIVE );
+	r_fOff3X = ri->Cvar_Get( "r_fOff3X", "-48.0", CVAR_ARCHIVE );
+	r_fOff3Y = ri->Cvar_Get( "r_fOff3Y", "10.0", CVAR_ARCHIVE );
 	r_testvar = ri->Cvar_Get( "r_testvar", "1.0", CVAR_ARCHIVE );
 	r_steepParallaxEyeX = ri->Cvar_Get( "r_steepParallaxEyeX", "0.0000", CVAR_ARCHIVE );
 	r_steepParallaxEyeY = ri->Cvar_Get( "r_steepParallaxEyeY", "0.0002", CVAR_ARCHIVE );
