@@ -155,7 +155,8 @@ typedef enum {
 	G2_MODELPART_RLEG
 } g2ModelParts_t;
 
-#define G2_MODEL_PART	50
+//#define G2_MODEL_PART	50
+#define G2_MODEL_PART	8192 // UQ1: Meh raven hacks!!!
 
 #define BG_NUM_TOGGLEABLE_SURFACES 32
 

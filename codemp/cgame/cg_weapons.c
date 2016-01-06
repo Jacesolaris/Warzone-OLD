@@ -1946,6 +1946,7 @@ The current weapon has just run out of ammo
 */
 void CG_OutOfAmmoChange( int oldWeapon )
 {
+#if 0
 	int		i;
 
 	cg.weaponSelectTime = cg.time;
@@ -1972,6 +1973,7 @@ void CG_OutOfAmmoChange( int oldWeapon )
 	}
 
 	trap->S_MuteSound(cg.snap->ps.clientNum, CHAN_WEAPON);
+#endif
 }
 
 

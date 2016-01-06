@@ -276,8 +276,6 @@ int WeaponReadyAnim[WP_NUM_WEAPONS] =
 	PLX1_WEAPONREADY, //WP_E60_ROCKET_LAUNCHER,
 	PLX1_WEAPONREADY, //WP_CW_ROCKET_LAUNCHER,
 	TORSO_WEAPONREADY2,// WP_TESTGUN,
-	TORSO_WEAPONREADY10,//WP_FRAG_GRENADE,
-	TORSO_WEAPONREADY10,//WP_FRAG_GRENADE_OLD,
 	TORSO_WEAPONREADY2,//WP_DC_17_CLONE_PISTOL,
 	TORSO_WEAPONREADY2,//WP_SPOTING_BLASTER,
 	TORSO_WEAPONREADY3,//WP_A200_ACP_BATTLERIFLE,
@@ -301,6 +299,8 @@ int WeaponReadyAnim[WP_NUM_WEAPONS] =
 	// Grenades + Explosives...
 	//
 	TORSO_WEAPONREADY10,//WP_THERMAL,
+	TORSO_WEAPONREADY10,//WP_FRAG_GRENADE,
+	TORSO_WEAPONREADY10,//WP_FRAG_GRENADE_OLD,
 	TORSO_WEAPONREADY10,//TORSO_WEAPONREADY11,//WP_TRIP_MINE,
 	TORSO_WEAPONREADY10,//TORSO_WEAPONREADY12,//WP_DET_PACK,
 
@@ -356,8 +356,6 @@ int WeaponReadyLegsAnim[WP_NUM_WEAPONS] =
 	PLX1_IDLE,//WP_E60_ROCKET_LAUNCHER,
 	PLX1_IDLE,//WP_CW_ROCKET_LAUNCHER,
 	BOTH_STAND1,// WP_TESTGUN,
-	BOTH_STAND1,//WP_FRAG_GRENADE,
-	BOTH_STAND1,//WP_FRAG_GRENADE_OLD,
 	BOTH_STAND1,//WP_DC_17_CLONE_PISTOL,
 	BOTH_STAND1,//WP_SPOTING_BLASTER,
 	BOTH_STAND1,//WP_A200_ACP_BATTLERIFLE,
@@ -380,6 +378,8 @@ int WeaponReadyLegsAnim[WP_NUM_WEAPONS] =
 	// Grenades + Explosives...
 	//
 	BOTH_STAND1,//WP_THERMAL,
+	BOTH_STAND1,//WP_FRAG_GRENADE,
+	BOTH_STAND1,//WP_FRAG_GRENADE_OLD,
 	BOTH_STAND1,//TORSO_WEAPONREADY11,//WP_TRIP_MINE,
 	BOTH_STAND1,//TORSO_WEAPONREADY12,//WP_DET_PACK,
 
@@ -434,8 +434,6 @@ int WeaponAttackAnim[WP_NUM_WEAPONS] =
 	PLX1_FIRE,//WP_E60_ROCKET_LAUNCHER,
 	PLX1_FIRE,//WP_CW_ROCKET_LAUNCHER,
 	BOTH_ATTACK2,// WP_TESTGUN,
-	BOTH_THERMAL_THROW,//WP_FRAG_GRENADE,
-	BOTH_THERMAL_THROW,//WP_FRAG_GRENADE_OLD,
 	BOTH_ATTACK2,//WP_DC_17_CLONE_PISTOL,
 	BOTH_ATTACK2,//WP_SPOTING_BLASTER,
 	DC15_FIRE,//WP_A200_ACP_BATTLERIFLE,
@@ -458,6 +456,8 @@ int WeaponAttackAnim[WP_NUM_WEAPONS] =
 	// Grenades + Explosives...
 	//
 	BOTH_THERMAL_THROW,//WP_THERMAL,
+	BOTH_THERMAL_THROW,//WP_FRAG_GRENADE,
+	BOTH_THERMAL_THROW,//WP_FRAG_GRENADE_OLD,
 	BOTH_ATTACK3,//BOTH_ATTACK11,//WP_TRIP_MINE,
 	BOTH_ATTACK3,//BOTH_ATTACK12,//WP_DET_PACK,
 
@@ -1843,42 +1843,6 @@ Don't place this
 	"@MENUS_THE_PRIMARY_WEAPON_OF"				// description
 },
 
-/*QUAKED weapon_fraggrenade (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-*/
-{
-	"weapon_fraggrenade",
-	"sound/weapons/w_pkup.wav",
-	{ "models/weapons3/fraggrenade/thermal_w.glm", "models/weapons3/fraggrenade/thermal_pu.md3",
-	0, 0 },
-	/* view */		"models/weapons3/fraggrenade/thermal.md3",
-	/* icon */		"gfx/hud/w_icon_fraggrenade",
-	/* pickup *///	"Thermal Detonator",
-	4,
-	IT_WEAPON,
-	WP_FRAG_GRENADE,
-	/* precache */ "",
-	/* sounds */ "",
-	"@MENUS_THE_THERMAL_DETONATOR"					// description
-},
-
-/*QUAKED weapon_old_fraggrenade (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
-*/
-{
-	"weapon_old_fraggrenade",
-	"sound/weapons/w_pkup.wav",
-	{ "models/weapons3/oldfraggrenade/thermal_w.glm", "models/weapons3/oldfraggrenade/thermal_pu.md3",
-	0, 0 },
-	/* view */		"models/weapons3/oldfraggrenade/thermal.md3",
-	/* icon */		"gfx/hud/w_icon_oldfraggrenade",
-	/* pickup *///	"Thermal Detonator",
-	4,
-	IT_WEAPON,
-	WP_FRAG_GRENADE_OLD,
-	/* precache */ "",
-	/* sounds */ "",
-	"@MENUS_THE_THERMAL_DETONATOR"					// description
-},
-
 /*QUAKED weapon_clone_pistol (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
 */
 {
@@ -2220,6 +2184,42 @@ Don't place this
 /* sounds */ "",
 		"@MENUS_THE_THERMAL_DETONATOR"					// description
 	},
+
+	/*QUAKED weapon_fraggrenade (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+*/
+{
+	"weapon_fraggrenade",
+	"sound/weapons/w_pkup.wav",
+	{ "models/weapons3/fraggrenade/thermal_w.glm", "models/weapons3/fraggrenade/thermal_pu.md3",
+	0, 0 },
+	/* view */		"models/weapons3/fraggrenade/thermal.md3",
+	/* icon */		"gfx/hud/w_icon_fraggrenade",
+	/* pickup *///	"Thermal Detonator",
+	4,
+	IT_WEAPON,
+	WP_FRAG_GRENADE,
+	/* precache */ "",
+	/* sounds */ "",
+	"@MENUS_THE_THERMAL_DETONATOR"					// description
+},
+
+/*QUAKED weapon_old_fraggrenade (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+*/
+{
+	"weapon_old_fraggrenade",
+	"sound/weapons/w_pkup.wav",
+	{ "models/weapons3/oldfraggrenade/thermal_w.glm", "models/weapons3/oldfraggrenade/thermal_pu.md3",
+	0, 0 },
+	/* view */		"models/weapons3/oldfraggrenade/thermal.md3",
+	/* icon */		"gfx/hud/w_icon_oldfraggrenade",
+	/* pickup *///	"Thermal Detonator",
+	4,
+	IT_WEAPON,
+	WP_FRAG_GRENADE_OLD,
+	/* precache */ "",
+	/* sounds */ "",
+	"@MENUS_THE_THERMAL_DETONATOR"					// description
+},
 
 /*QUAKED weapon_trip_mine (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
 */

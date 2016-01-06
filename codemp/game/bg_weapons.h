@@ -66,8 +66,6 @@ typedef enum {
 	WP_E60_ROCKET_LAUNCHER,
 	WP_CW_ROCKET_LAUNCHER,
 	WP_TESTGUN,
-	WP_FRAG_GRENADE,
-	WP_FRAG_GRENADE_OLD,
 	WP_DC_17_CLONE_PISTOL,
 	WP_SPOTING_BLASTER,
 	WP_A200_ACP_BATTLERIFLE,
@@ -103,11 +101,10 @@ typedef enum {
 	// =================================================================
 
 	WP_THERMAL,
-	WP_TRIP_MINE,
 	// Add new grenades/explosives here...
-
-
-
+	WP_FRAG_GRENADE,
+	WP_FRAG_GRENADE_OLD,
+	WP_TRIP_MINE,
 	// START: Do not change anything between these 2 comments...
 	WP_DET_PACK,
 	WP_NUM_USEABLE = WP_DET_PACK,

@@ -116,8 +116,6 @@ weaponData_t weaponData[WP_NUM_WEAPONS] = {
 	{ "E-60 Pulse Rocket Launcher",					3000,		8192,		5000,			8192,		0,				0,					0,			0,				0,			0	},
 	{ "CW Pulse Rocket Launcher",					3000,		8192,		5000,			8192,		0,				0,					0,			0,				0,			0	},
 	{ "TEST GUN",									350,		8192,		500,			8192,		0,				0,					0,			0,				0,			0	},
-	{ "Frag Grenade",								800,		8192,		400,			8192,		0,				0,					0,			0,				0,			0	},
-	{ "Old Frag Grenade",							800,		8192,		400,			8192,		0,				0,					0,			0,				0,			0	},
 	{ "DC-17 Clone Blaster Pistol",					375,		8192,		875,			8192,		0,				250,				0,			3,				0,			2100	},
 	{ "Spoting Blaster",							350,		8192,		500,			8192,		0,				0,					0,			0,				0,			0	},
 	{ "ACP ArrayGun",								350,		8192,		500,			8192,		0,				0,					0,			0,				0,			0	},
@@ -133,9 +131,11 @@ weaponData_t weaponData[WP_NUM_WEAPONS] = {
 	{ "Pulse Canon",								200,		8192,		2800,			8192,		0,				0,					0,			0,				0,			0	},
 	{ "Proton Carbine Rifle",						350,		8192,		275,			8192,		0,				200,				0,			3,				0,			1700	},
 	{ "DH-17 Pistol",								325,		8192,		275,			8192,		0,				200,				0,			3,				0,			1700	},
-	//Old Weapons. do not add anything under here only above where new guns is added. Stoiss
+	//Old Weapons. do not add anything under here only above where new guns is added. Stoiss - UQ1: Grenades should be below here.
 	{ "Merr-Sonn Missile System",					3000,		8192,		5000,			8192,		0,				0,					0,			0,				0,			0	},
 	{ "Thermal Detonator",							800,		8192,		400,			8192,		0,				0,					0,			0,				0,			0	},
+	{ "Frag Grenade",								800,		8192,		400,			8192,		0,				0,					0,			0,				0,			0	},
+	{ "Old Frag Grenade",							800,		8192,		400,			8192,		0,				0,					0,			0,				0,			0	},
 	{ "Trip Mine",									800,		8192,		400,			8192,		0,				0,					0,			0,				0,			0	},	
 	{ "Det Pack",									800,		8192,		400,			8192,		0,				0,					0,			0,				0,			0	},
 	{ "Emplaced Gun",								100,		8192,		100,			8192,		0,				0,					0,			0,				0,			0	},
@@ -155,6 +155,7 @@ qboolean IsRollWithPistols(int weapon)
 	case WP_S5_PISTOL:
 	case WP_WOOKIES_PISTOL:
 	case WP_TESTGUN:
+	case WP_THERMAL:
 	case WP_FRAG_GRENADE:
 	case WP_FRAG_GRENADE_OLD:
 	case WP_DC_17_CLONE_PISTOL:
