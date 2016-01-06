@@ -638,9 +638,9 @@ typedef enum {
 
 #define	EF_TALK					(1<<13)		// draw a talk balloon
 #define	EF_CONNECTION			(1<<14)		// draw a connection trouble sprite
-#define	EF_NOT_USED_6			(1<<15)		// not used
+#define	EF_WEAPON_CHARGE		(1<<15)		// Used for charge efx
 
-#define	EF_NOT_USED_2			(1<<16)		// not used
+#define	EF_WEAPON_ALT_CHARGE	(1<<16)		// not used
 #define	EF_NOT_USED_3			(1<<17)		// not used
 #define	EF_NOT_USED_4			(1<<18)		// not used
 

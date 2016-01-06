@@ -525,6 +525,11 @@ typedef struct centity_s {
 
 	int				lastOnGroundTime;
 
+	int altChargeTime;
+	int ChargeTime;
+
+
+
 } centity_t;
 
 
@@ -759,8 +764,8 @@ typedef struct weaponInfo_s {
 	fxHandle_t		WallBounceEffectFX;
 	fxHandle_t		altWallBounceEffectFX;
 	fxHandle_t		ProjectileEffectFX;
-	fxHandle_t		chargingfx;
-	fxHandle_t		EnhancedFX_chargingfx;
+	fxHandle_t		Chargingfx;
+	fxHandle_t		Altchargingfx;
 	//all enhanced stuff under here.
 	fxHandle_t		EnhancedFX_WallBouncefx;
 	fxHandle_t		EnhancedFX_altWallBouncefx;

@@ -775,55 +775,55 @@ Ghoul2 Insert End
 			BG_GiveMeVectorFromMatrix(&boltMatrix, POSITIVE_X, flashdir);
 		}
 
-		if ( cent->currentState.weapon == WP_BRYAR_PISTOL ||
-			cent->currentState.weapon == WP_BRYAR_OLD ||
-			cent->currentState.weapon == WP_WESTER_PISTOL ||
-			cent->currentState.weapon == WP_WOOKIES_PISTOL ||
-			cent->currentState.weapon == WP_S5_PISTOL ||
-			cent->currentState.weapon == WP_BOWCASTER )
-		{
-			// Hardcoded max charge time of 1 second
-			val = ( cg.time - cent->currentState.constantLight ) * 0.001f;
-			shader = cgs.media.redFrontFlash;
-		}
-		else if (cent->currentState.weapon == WP_ELG_3A)
-		{
-			// Hardcoded max charge time of 1 second
-			val = (cg.time - cent->currentState.constantLight) * 0.001f;
-			shader = cgs.media.greenFrontFlash;
-			scale = 1.75f;
-		}
-		else if ( cent->currentState.weapon == WP_DEMP2 )
-		{
-			val = ( cg.time - cent->currentState.constantLight ) * 0.001f;
-			shader = cgs.media.DemplightningFlash;
-			scale = 1.75f;
-		}
-		
-		else if (cent->currentState.weapon == WP_DC_15S_CLONE_PISTOL 
-			|| cent->currentState.weapon == WP_DC15_EXT 
-			|| cent->currentState.weapon == WP_Z6_BLASTER_CANON 
-			|| cent->currentState.weapon == WP_PULSECANON
-			|| cent->currentState.weapon == WP_DC_17_CLONE_PISTOL)
-		{
-			val = (cg.time - cent->currentState.constantLight) * 0.001f;
-			shader = cgs.media.lightningFlash;
-			scale = 1.75f;
-		}
-		else if (cent->currentState.weapon == WP_WOOKIE_BOWCASTER)
-		{
-			// Hardcoded max charge time of 1 second
-			val = (cg.time - cent->currentState.constantLight) * 0.001f;
-			shader = cgs.media.greenFrontFlash;
-			scale = 1.75f;
-		}
-		else if (cent->currentState.weapon == WP_ARC_CASTER_IMPERIAL)
-		{
-			// Hardcoded max charge time of 1 second
-			val = (cg.time - cent->currentState.constantLight) * 0.001f;
-			shader = cgs.media.Chargelightningbeam;
-			scale = 1.75f;
-		}
+		//if ( cent->currentState.weapon == WP_BRYAR_PISTOL ||
+		//	cent->currentState.weapon == WP_BRYAR_OLD ||
+		//	cent->currentState.weapon == WP_WESTER_PISTOL ||
+		//	cent->currentState.weapon == WP_WOOKIES_PISTOL ||
+		//	cent->currentState.weapon == WP_S5_PISTOL ||
+		//	cent->currentState.weapon == WP_BOWCASTER )
+		//{
+		//	// Hardcoded max charge time of 1 second
+		//	val = ( cg.time - cent->currentState.constantLight ) * 0.001f;
+		//	shader = cgs.media.redFrontFlash;
+		//}
+		//else if (cent->currentState.weapon == WP_ELG_3A)
+		//{
+		//	// Hardcoded max charge time of 1 second
+		//	val = (cg.time - cent->currentState.constantLight) * 0.001f;
+		//	shader = cgs.media.greenFrontFlash;
+		//	scale = 1.75f;
+		//}
+		//else if ( cent->currentState.weapon == WP_DEMP2 )
+		//{
+		//	val = ( cg.time - cent->currentState.constantLight ) * 0.001f;
+		//	shader = cgs.media.DemplightningFlash;
+		//	scale = 1.75f;
+		//}
+		//
+		//else if (cent->currentState.weapon == WP_DC_15S_CLONE_PISTOL 
+		//	|| cent->currentState.weapon == WP_DC15_EXT 
+		//	|| cent->currentState.weapon == WP_Z6_BLASTER_CANON 
+		//	|| cent->currentState.weapon == WP_PULSECANON
+		//	|| cent->currentState.weapon == WP_DC_17_CLONE_PISTOL)
+		//{
+		//	val = (cg.time - cent->currentState.constantLight) * 0.001f;
+		//	shader = cgs.media.lightningFlash;
+		//	scale = 1.75f;
+		//}
+		//else if (cent->currentState.weapon == WP_WOOKIE_BOWCASTER)
+		//{
+		//	// Hardcoded max charge time of 1 second
+		//	val = (cg.time - cent->currentState.constantLight) * 0.001f;
+		//	shader = cgs.media.greenFrontFlash;
+		//	scale = 1.75f;
+		//}
+		//else if (cent->currentState.weapon == WP_ARC_CASTER_IMPERIAL)
+		//{
+		//	// Hardcoded max charge time of 1 second
+		//	val = (cg.time - cent->currentState.constantLight) * 0.001f;
+		//	shader = cgs.media.Chargelightningbeam;
+		//	scale = 1.75f;
+		//}
 		//else if (cent->currentState.weapon == WP_Z6_BLASTER_CANON)
 		//{
 		//	// Hardcoded max charge time of 1 second
@@ -861,13 +861,31 @@ Ghoul2 Insert End
 
 		val += random() * 0.5f;
 
-		if (cent->currentState.weapon == WP_ARC_CASTER_IMPERIAL)
+		 // i think there could be somthing worng here - this doesnt exit. worst it would do is draw another shader as well- remove it if it dosnt get used so nothing gets confusing
+		/*if (cent->currentState.weapon == WP_ARC_CASTER_IMPERIAL
+			|| cent->currentState.weapon == WP_BRYAR_PISTOL
+			|| cent->currentState.weapon == WP_BRYAR_OLD
+			|| cent->currentState.weapon == WP_WESTER_PISTOL
+			|| cent->currentState.weapon == WP_WOOKIES_PISTOL
+			|| cent->currentState.weapon == WP_S5_PISTOL
+			|| cent->currentState.weapon == WP_ELG_3A
+			|| cent->currentState.weapon == WP_DEMP2
+			|| cent->currentState.weapon == WP_DC_15S_CLONE_PISTOL
+			|| cent->currentState.weapon == WP_DC15_EXT
+			|| cent->currentState.weapon == WP_Z6_BLASTER_CANON
+			|| cent->currentState.weapon == WP_PULSECANON
+			|| cent->currentState.weapon == WP_DC_17_CLONE_PISTOL
+			|| cent->currentState.weapon == WP_WOOKIE_BOWCASTER
+			|| cent->currentState.weapon == WP_Z6_BLASTER_CANON
+			|| cent->currentState.weapon == WP_DC_17_CLONE_PISTOL
+			|| cent->currentState.weapon == WP_BOWCASTER)
 		{
 			int i;
 			for (i = 0; i < 10; i++)
 				PlayEffectID(shader, flashorigin, flashdir, -1, -1, qfalse);
 		}
-		else
+		else*/
+		if (!weapon->muzzleEffect &&  !weapon->altMuzzleEffect)
 		{
 			VectorCopy(flashorigin, fxSArgs.origin);
 			VectorClear(fxSArgs.vel);
@@ -898,22 +916,22 @@ Ghoul2 Insert End
 	}
 
 	// add the flash
-	if ((weaponNum == WP_DEMP2 
-		|| weaponNum == WP_DC_15S_CLONE_PISTOL 
-		|| weaponNum == WP_WOOKIE_BOWCASTER
-		|| weaponNum == WP_DC15_EXT 
-		|| weaponNum == WP_Z6_BLASTER_CANON 
-		|| weaponNum == WP_DC_17_CLONE_PISTOL
-		|| weaponNum == WP_PULSECANON)
-		&& ( nonPredictedCent->currentState.eFlags & EF_FIRING ) )
-	{
-		// continuous flash
-	} else {
+	//if ((weaponNum == WP_DEMP2 
+	//	|| weaponNum == WP_DC_15S_CLONE_PISTOL 
+	//	|| weaponNum == WP_WOOKIE_BOWCASTER
+	//	|| weaponNum == WP_DC15_EXT 
+	//	|| weaponNum == WP_Z6_BLASTER_CANON 
+	//	|| weaponNum == WP_DC_17_CLONE_PISTOL
+	//	|| weaponNum == WP_PULSECANON)
+	//	&& ( nonPredictedCent->currentState.eFlags & EF_WEAPON_CHARGE ) )
+	//{
+	//	// continuous flash
+	//} else {
 		// impulse flash
-		if ( cg.time - cent->muzzleFlashTime > MUZZLE_FLASH_TIME) {
-			return;
-		}
-	}
+	//if ( cg.time - cent->muzzleFlashTime > MUZZLE_FLASH_TIME) {
+	//	return;
+	//}
+	//}
 
 	//[TrueView]
 	if (ps || cg.renderingThirdPerson || cg_trueguns.integer
@@ -950,74 +968,64 @@ Ghoul2 Insert End
 			BG_GiveMeVectorFromMatrix(&boltMatrix, POSITIVE_X, flashdir);
 		}
 
-		if (cent->currentState.weapon == WP_ARC_CASTER_IMPERIAL)
-		{	// Handle muzzle flashes
-			//int i;
-
-			//for (i = 0; i < 8; i++)
-			{// Draw multiple lightning beams... *sigh* this is gonna be a massive hit on FPS...
-				if ( cent->currentState.eFlags & EF_ALT_FIRING )
-				{	// Check the alt firing first.
-					if (weapon->altMuzzleEffect)
-					{
-						if (!thirdPerson)
-						{
-							trap->FX_PlayEntityEffectID(weapon->altMuzzleEffect, flashorigin, flash.axis, -1, -1, 128/*-1*/, 128/*-1*/  );
-						}
-						else
-						{
-							PlayEffectID(weapon->altMuzzleEffect, flashorigin, flashdir, 128/*-1*/, 128/*-1*/, qfalse);
-						}
-					}
-				}
-				else
-				{	// Regular firing
-					if (weapon->muzzleEffect)
-					{
-						if (!thirdPerson)
-						{
-							trap->FX_PlayEntityEffectID(weapon->muzzleEffect, flashorigin, flash.axis, -1, -1, 128/*-1*/, 128/*-1*/  );
-						}
-						else
-						{
-							PlayEffectID(weapon->muzzleEffect, flashorigin, flashdir, 128/*-1*/, 128/*-1*/, qfalse);
-						}
-					}
-				}
-			}
-		}
-		else if ( cg.time - cent->muzzleFlashTime <= MUZZLE_FLASH_TIME + 10 )
-		{	// Handle muzzle flashes
-			if ( cent->currentState.eFlags & EF_ALT_FIRING )
-			{	// Check the alt firing first.
-				if (weapon->altMuzzleEffect)
-				{
-					if (!thirdPerson)
-					{
-						trap->FX_PlayEntityEffectID(weapon->altMuzzleEffect, flashorigin, flash.axis, -1, -1, -1, -1  );
-					}
-					else
-					{
-						PlayEffectID(weapon->altMuzzleEffect, flashorigin, flashdir, -1, -1, qfalse);
-					}
-				}
+		//if ( cg.time - cent->muzzleFlashTime <= MUZZLE_FLASH_TIME + 10 )// this need to be there or else it fucks up the muzzle flash efx by playing it all the time
+		if ((cent->currentState.eFlags & EF_WEAPON_ALT_CHARGE) && weapon->Altchargingfx)
+		{	// Check the alt firing first.
+			if (!thirdPerson)
+			{
+				trap->FX_PlayEntityEffectID(weapon->Altchargingfx, flashorigin, flash.axis, -1, -1, -1, -1);
 			}
 			else
-			{	// Regular firing
-				if (weapon->muzzleEffect)
-				{
-					if (!thirdPerson)
-					{
-						trap->FX_PlayEntityEffectID(weapon->muzzleEffect, flashorigin, flash.axis, -1, -1, 128/*-1*/, 128/*-1*/  );
-					}
-					else
-					{
-						PlayEffectID(weapon->muzzleEffect, flashorigin, flashdir, -1, -1, qfalse);
-					}
-				}
+			{
+				PlayEffectID(weapon->Altchargingfx, flashorigin, flashdir, -1, -1, qfalse);
 			}
-		}
 
+			cent->altChargeTime = cg.time + 10;
+
+			trap->Print("ALT CHARGE\n");
+		}
+		else if ((cent->currentState.eFlags & EF_WEAPON_CHARGE) && weapon->Chargingfx)
+		{	// Check the alt firing first.
+			if (!thirdPerson)
+			{
+				trap->FX_PlayEntityEffectID(weapon->Chargingfx, flashorigin, flash.axis, -1, -1, -1, -1);
+			}
+			else
+			{
+				PlayEffectID(weapon->Chargingfx, flashorigin, flashdir, -1, -1, qfalse);
+			}
+
+			cent->ChargeTime = cg.time + 10;
+
+			trap->Print("CHARGE\n");
+		}
+		else if (cent->altChargeTime > cg.time && weapon->altMuzzleEffect)
+		{	// Check the alt firing first.
+			if (!thirdPerson)
+			{
+				trap->FX_PlayEntityEffectID(weapon->altMuzzleEffect, flashorigin, flash.axis, -1, -1, -1, -1);
+			}
+			else
+			{
+				PlayEffectID(weapon->altMuzzleEffect, flashorigin, flashdir, -1, -1, qfalse);
+			}
+
+			trap->Print("ALT FIRE\n");
+		}
+		else if (cent->ChargeTime > cg.time && weapon->muzzleEffect)
+		{	// Check the alt firing first.
+			if (!thirdPerson)
+			{
+				trap->FX_PlayEntityEffectID(weapon->muzzleEffect, flashorigin, flash.axis, -1, -1, -1, -1);
+			}
+			else
+			{
+				PlayEffectID(weapon->muzzleEffect, flashorigin, flashdir, -1, -1, qfalse);
+			}
+
+			trap->Print("FIRE\n");
+		}
+		
 		// add lightning bolt
 		CG_LightningBolt( nonPredictedCent, flashorigin );
 

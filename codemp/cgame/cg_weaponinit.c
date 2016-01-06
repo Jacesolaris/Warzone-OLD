@@ -237,6 +237,10 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altMissileSound = NULL_SOUND;
 		weaponInfo->altMissileDlight = 0;
 		weaponInfo->altMissileHitSound = NULL_SOUND;
+
+		weaponInfo->Chargingfx = NULL_FX;
+		weaponInfo->Altchargingfx = trap->FX_RegisterEffect("weapons/charge_bryar");
+
 		weaponInfo->altMissileTrailFunc = FX_BryarAltProjectileThink;
 
 		weaponInfo->missileRenderfx = trap->FX_RegisterEffect("blasters/shot_redorange_small");
@@ -252,7 +256,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->EnhancedFX_altfleshImpact = trap->FX_RegisterEffect("blasters/red_flesh_impact");
 		weaponInfo->EnhancedFX_missileWallImpactfx = trap->FX_RegisterEffect("weapons/blaster_impact_red_medium_fire");
 		weaponInfo->EnhancedFX_altmissileWallImpactfx = trap->FX_RegisterEffect("weapons/blaster_impact_red_medium_fire");
-		cgs.media.redFrontFlash = trap->R_RegisterShader("gfx_base/effects/bryarFrontFlash");
+		//cgs.media.redFrontFlash = trap->R_RegisterShader("gfx_base/effects/bryarFrontFlash");
 		trap->FX_RegisterEffect("blasters/red_deflect");
 
 		break;
@@ -1493,6 +1497,9 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altChargeSound = trap->S_RegisterSound("sound/weapons/demp2/altCharge.wav");
 		weaponInfo->altMuzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash2_Blue_small");
 		weaponInfo->altMissileModel = NULL_HANDLE;
+		
+		weaponInfo->Chargingfx = NULL_FX;
+		weaponInfo->Altchargingfx = trap->FX_RegisterEffect("weapons/charge_arc");
 
 		weaponInfo->altMissileSound = NULL_SOUND;
 		weaponInfo->altMissileDlight = 0;
@@ -1514,9 +1521,9 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->EnhancedFX_missileWallImpactfx = trap->FX_RegisterEffect("weapons/blaster_impact_blue_medium_fire");
 		weaponInfo->EnhancedFX_altWallBouncefx = trap->FX_RegisterEffect("weapons/blaster_impact_blue_medium_fire");
 		trap->FX_RegisterEffect("blasters/blue_deflect");
-		cgs.media.demp2Shell = trap->R_RegisterModel("models/items/sphere.md3");
-		cgs.media.demp2ShellShader = trap->R_RegisterShader("gfx/effects/demp2shell");
-		cgs.media.lightningFlash = trap->R_RegisterShader("gfx/misc/lightningFlash");
+		//cgs.media.demp2Shell = trap->R_RegisterModel("models/items/sphere.md3");
+		//cgs.media.demp2ShellShader = trap->R_RegisterShader("gfx/effects/demp2shell");
+		/*cgs.media.lightningFlash = trap->R_RegisterShader("gfx/misc/lightningFlash");*/
 		break;
 
 	case WP_SPOTING_BLASTER:

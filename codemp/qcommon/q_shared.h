@@ -13,6 +13,7 @@
 //#define __NPC_USE_SABER_BLOCKING__
 #define __NO_SILLY_SABER_SPINAROUND__
 //#define __AAS_AI_TESTING__
+#define __NEW_TRUEVIEW__
 
 // Disable stupid warnings...
 #pragma warning( disable : 4996 )
@@ -71,8 +72,6 @@
 #define MP_BONECACHE
 #endif
 */
-
-#define __NEW_TRUEVIEW__
 
 #ifndef FINAL_BUILD
 	// may want to enable timing and leak checking again. requires G2API changes.

@@ -6762,7 +6762,9 @@ static qboolean PM_DoChargedWeapons( qboolean vehicleRocketLock, bgEntity_t *veh
 
 		// dumb, but since we shoot a charged weapon on button-up, we need to repress this button for now
 		pm->cmd.buttons |= BUTTON_ATTACK;
-		pm->ps->eFlags |= EF_FIRING;
+		pm->ps->eFlags |= EF_WEAPON_CHARGE;
+		//pm->ps->eFlags &= ~EF_FIRING;
+		//return qtrue; // short-circuit rest of weapon code
 	}
 	else if ( pm->ps->weaponstate == WEAPON_CHARGING_ALT )
 	{
@@ -6773,7 +6775,17 @@ static qboolean PM_DoChargedWeapons( qboolean vehicleRocketLock, bgEntity_t *veh
 
 		// dumb, but since we shoot a charged weapon on button-up, we need to repress this button for now
 		pm->cmd.buttons |= BUTTON_ALT_ATTACK;
-		pm->ps->eFlags |= (EF_FIRING|EF_ALT_FIRING);
+		pm->ps->eFlags |= EF_WEAPON_ALT_CHARGE;
+		//pm->ps->eFlags &= ~EF_ALT_FIRING;
+		//return qtrue; // short-circuit rest of weapon code
+	}
+	else
+	{
+		if (pm->ps->eFlags & EF_WEAPON_CHARGE)
+			pm->ps->eFlags &= ~EF_WEAPON_CHARGE;
+
+		if (pm->ps->eFlags & EF_WEAPON_ALT_CHARGE)
+			pm->ps->eFlags &= ~EF_WEAPON_ALT_CHARGE;
 	}
 
 	return qfalse; // continue with the rest of the weapon code
