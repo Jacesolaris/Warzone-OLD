@@ -4,6 +4,198 @@
 //
 //
 
+models/warzone/foliage/maingrass1024
+{
+  qer_editorimage	models/warzone/foliage/maingrass1024.png
+	//q3map_nolightmap
+	q3map_alphashadow
+	//q3map_onlyvertexlighting
+	q3map_material	GreenLeaves
+	
+	surfaceparm trans
+	surfaceparm	noimpact
+	surfaceparm	nomarks
+	//surfaceparm	nonopaque
+	
+	sort seethrough
+	
+	cull	twosided
+  {
+    map models/warzone/foliage/maingrass1024.png
+    blendfunc GL_ONE GL_ZERO
+    alphaFunc GE128
+    //rgbGen lightingDiffuse
+    depthWrite // writes the alpha map for other stages to use
+    rgbGen identity
+  }
+  {
+    map $lightmap
+    blendfunc GL_DST_COLOR GL_ZERO
+    rgbGen identity
+    depthFunc equal // sets the alpha to the same as the stages that wrote it
+  }
+}
+
+models/warzone/foliage/maingrass512
+{
+  qer_editorimage	models/warzone/foliage/maingrass512.png
+	//q3map_nolightmap
+	q3map_alphashadow
+	//q3map_onlyvertexlighting
+	q3map_material	GreenLeaves
+	
+	surfaceparm trans
+	surfaceparm	noimpact
+	surfaceparm	nomarks
+	//surfaceparm	nonopaque
+	
+	sort seethrough
+	
+	cull	twosided
+  {
+    map models/warzone/foliage/maingrass512.png
+    blendfunc GL_ONE GL_ZERO
+    alphaFunc GE128
+    //rgbGen lightingDiffuse
+    depthWrite // writes the alpha map for other stages to use
+    rgbGen identity
+  }
+  {
+    map $lightmap
+    blendfunc GL_DST_COLOR GL_ZERO
+    rgbGen identity
+    depthFunc equal // sets the alpha to the same as the stages that wrote it
+  }
+}
+
+models/warzone/foliage/maingrass256
+{
+  qer_editorimage	models/warzone/foliage/maingrass256.png
+	//q3map_nolightmap
+	q3map_alphashadow
+	//q3map_onlyvertexlighting
+	q3map_material	GreenLeaves
+	
+	surfaceparm trans
+	surfaceparm	noimpact
+	surfaceparm	nomarks
+	//surfaceparm	nonopaque
+	
+	sort seethrough
+	
+	cull	twosided
+  {
+    map models/warzone/foliage/maingrass256.png
+    blendfunc GL_ONE GL_ZERO
+    alphaFunc GE128
+    //rgbGen lightingDiffuse
+    depthWrite // writes the alpha map for other stages to use
+    rgbGen identity
+  }
+  {
+    map $lightmap
+    blendfunc GL_DST_COLOR GL_ZERO
+    rgbGen identity
+    depthFunc equal // sets the alpha to the same as the stages that wrote it
+  }
+}
+
+models/warzone/foliage/maingrass128
+{
+  qer_editorimage	models/warzone/foliage/maingrass128.png
+	//q3map_nolightmap
+	q3map_alphashadow
+	//q3map_onlyvertexlighting
+	q3map_material	GreenLeaves
+	
+	surfaceparm trans
+	surfaceparm	noimpact
+	surfaceparm	nomarks
+	//surfaceparm	nonopaque
+	
+	sort seethrough
+	
+	cull	twosided
+  {
+    map models/warzone/foliage/maingrass128.png
+    blendfunc GL_ONE GL_ZERO
+    alphaFunc GE128
+    //rgbGen lightingDiffuse
+    depthWrite // writes the alpha map for other stages to use
+    rgbGen identity
+  }
+  {
+    map $lightmap
+    blendfunc GL_DST_COLOR GL_ZERO
+    rgbGen identity
+    depthFunc equal // sets the alpha to the same as the stages that wrote it
+  }
+}
+
+models/warzone/foliage/maingrass64
+{
+  qer_editorimage	models/warzone/foliage/maingrass64.png
+	//q3map_nolightmap
+	q3map_alphashadow
+	//q3map_onlyvertexlighting
+	q3map_material	GreenLeaves
+	
+	surfaceparm trans
+	surfaceparm	noimpact
+	surfaceparm	nomarks
+	//surfaceparm	nonopaque
+	
+	sort seethrough
+	
+	cull	twosided
+  {
+    map models/warzone/foliage/maingrass64.png
+    blendfunc GL_ONE GL_ZERO
+    alphaFunc GE128
+    //rgbGen lightingDiffuse
+    depthWrite // writes the alpha map for other stages to use
+    rgbGen identity
+  }
+  {
+    map $lightmap
+    blendfunc GL_DST_COLOR GL_ZERO
+    rgbGen identity
+    depthFunc equal // sets the alpha to the same as the stages that wrote it
+  }
+}
+
+models/warzone/foliage/maingrass
+{
+  qer_editorimage	models/warzone/foliage/maingrass.png
+	//q3map_nolightmap
+	q3map_alphashadow
+	//q3map_onlyvertexlighting
+	q3map_material	GreenLeaves
+	
+	surfaceparm trans
+	surfaceparm	noimpact
+	surfaceparm	nomarks
+	//surfaceparm	nonopaque
+	
+	sort seethrough
+	
+	cull	twosided
+  {
+    map models/warzone/foliage/maingrass.png
+    blendfunc GL_ONE GL_ZERO
+    alphaFunc GE128
+    //rgbGen lightingDiffuse
+    depthWrite // writes the alpha map for other stages to use
+    rgbGen identity
+  }
+  {
+    map $lightmap
+    blendfunc GL_DST_COLOR GL_ZERO
+    rgbGen identity
+    depthFunc equal // sets the alpha to the same as the stages that wrote it
+  }
+}
+
 models/warzone/foliage/grass01
 {
   qer_editorimage	models/warzone/foliage/grass01.png
