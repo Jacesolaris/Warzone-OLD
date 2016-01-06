@@ -44,7 +44,7 @@ extern "C" {
 #ifdef __USE_ALL_PLANTS__
 #define		NUM_PLANT_SHADERS 81
 #else //!__USE_ALL_PLANTS__
-#define		NUM_PLANT_SHADERS 29
+#define		NUM_PLANT_SHADERS 70
 
 static const char *GoodPlantsList[] = {
 "models/warzone/foliage/plant01.png",
@@ -66,6 +66,13 @@ static const char *GoodPlantsList[] = {
 "models/warzone/foliage/plant17.png",
 "models/warzone/foliage/plant18.png",
 "models/warzone/foliage/plant19.png",
+"models/warzone/foliage/plant20.png",
+"models/warzone/foliage/plant21.png",
+"models/warzone/foliage/plant22.png",
+"models/warzone/foliage/plant23.png",
+"models/warzone/foliage/plant24.png",
+"models/warzone/foliage/plant25.png",
+"models/warzone/foliage/plant26.png",
 "models/warzone/foliage/plant27.png",
 "models/warzone/foliage/plant28.png",
 "models/warzone/foliage/plant29.png",
@@ -73,9 +80,43 @@ static const char *GoodPlantsList[] = {
 "models/warzone/foliage/plant31.png",
 "models/warzone/foliage/plant32.png",
 "models/warzone/foliage/plant33.png",
+"models/warzone/foliage/plant34.png",
+"models/warzone/foliage/plant35.png",
+"models/warzone/foliage/plant36.png",
+"models/warzone/foliage/plant37.png",
+"models/warzone/foliage/plant38.png",
+"models/warzone/foliage/plant39.png",
+"models/warzone/foliage/plant40.png",
+"models/warzone/foliage/plant41.png",
+"models/warzone/foliage/plant42.png",
+"models/warzone/foliage/plant43.png",
+"models/warzone/foliage/plant44.png",
+"models/warzone/foliage/plant45.png",
+"models/warzone/foliage/plant46.png",
+"models/warzone/foliage/plant47.png",
+"models/warzone/foliage/plant48.png",
+"models/warzone/foliage/plant49.png",
+"models/warzone/foliage/plant50.png",
+"models/warzone/foliage/plant51.png",
+"models/warzone/foliage/plant52.png",
+"models/warzone/foliage/plant53.png",
+"models/warzone/foliage/plant54.png",
+"models/warzone/foliage/plant55.png",
+"models/warzone/foliage/plant56.png",
+"models/warzone/foliage/plant57.png",
+"models/warzone/foliage/plant58.png",
+"models/warzone/foliage/plant59.png",
+"models/warzone/foliage/plant60.png",
+"models/warzone/foliage/plant61.png",
+"models/warzone/foliage/plant62.png",
+"models/warzone/foliage/plant63.png",
 "models/warzone/foliage/plant64.png",
 "models/warzone/foliage/plant65.png",
 "models/warzone/foliage/plant66.png",
+"models/warzone/foliage/plant67.png",
+"models/warzone/foliage/plant68.png",
+"models/warzone/foliage/plant69.png",
+"models/warzone/foliage/plant70.png",
 };
 
 #endif //__USE_ALL_PLANTS__
