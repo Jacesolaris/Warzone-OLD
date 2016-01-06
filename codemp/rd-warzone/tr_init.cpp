@@ -1405,7 +1405,7 @@ void R_Register( void )
 	r_forceSunLightScale = ri->Cvar_Get( "r_forceSunLightScale", "1.0", CVAR_CHEAT );
 	r_forceSunAmbientScale = ri->Cvar_Get( "r_forceSunAmbientScale", "0.5", CVAR_CHEAT );
 	r_drawSunRays = ri->Cvar_Get( "r_drawSunRays", "0", CVAR_ARCHIVE | CVAR_LATCH );
-	r_sunlightMode = ri->Cvar_Get( "r_sunlightMode", "2", CVAR_ARCHIVE | CVAR_LATCH );
+	r_sunlightMode = ri->Cvar_Get( "r_sunlightMode", "1", CVAR_ARCHIVE | CVAR_LATCH );
 
 	r_sunShadows = ri->Cvar_Get( "r_sunShadows", "0", CVAR_ARCHIVE | CVAR_LATCH );
 	r_shadowFilter = ri->Cvar_Get( "r_shadowFilter", "1", CVAR_ARCHIVE | CVAR_LATCH );
@@ -1425,7 +1425,7 @@ void R_Register( void )
 
 	r_fog = ri->Cvar_Get( "r_fog", "1", CVAR_ARCHIVE ); // UQ1: For disabling fog to test speeds...
 	r_multithread = ri->Cvar_Get( "r_multithread", "0", CVAR_ARCHIVE );
-	r_multithread2 = ri->Cvar_Get( "r_multithread2", "1", CVAR_ARCHIVE );
+	r_multithread2 = ri->Cvar_Get( "r_multithread2", "0", CVAR_ARCHIVE );
 	r_fOff1X = ri->Cvar_Get( "r_fOff1X", "-24.0", CVAR_ARCHIVE );
 	r_fOff1Y = ri->Cvar_Get( "r_fOff1Y", "-52.0", CVAR_ARCHIVE );
 	r_fOff2X = ri->Cvar_Get( "r_fOff2X", "28.0", CVAR_ARCHIVE );
@@ -1458,7 +1458,7 @@ void R_Register( void )
 	r_darkexpand = ri->Cvar_Get( "r_darkexpand", "0", CVAR_ARCHIVE );
 	r_truehdr = ri->Cvar_Get( "r_truehdr", "0", CVAR_ARCHIVE );
 	r_magicdetail = ri->Cvar_Get( "r_magicdetail", "1", CVAR_ARCHIVE );
-	r_magicdetailStrength = ri->Cvar_Get( "r_magicdetailStrength", "0.015", CVAR_ARCHIVE );
+	r_magicdetailStrength = ri->Cvar_Get( "r_magicdetailStrength", "0.05", CVAR_ARCHIVE );
 	r_dof = ri->Cvar_Get( "r_dof", "0", CVAR_ARCHIVE );
 	r_testvalue0 = ri->Cvar_Get( "r_testvalue0", "0", 0 );
 	r_testvalue1 = ri->Cvar_Get( "r_testvalue1", "0", 0 );
@@ -1473,7 +1473,7 @@ void R_Register( void )
 	r_textureCleanMSize = ri->Cvar_Get( "r_textureCleanMSize", "6.0", CVAR_ARCHIVE );
 	r_imageBasedLighting = ri->Cvar_Get( "r_imageBasedLighting", "0", CVAR_ARCHIVE );
 	r_sss = ri->Cvar_Get( "r_sss", "0", CVAR_ARCHIVE );
-	r_rbm = ri->Cvar_Get( "r_rbm", "1", CVAR_ARCHIVE );
+	r_rbm = ri->Cvar_Get( "r_rbm", "0", CVAR_ARCHIVE );
 	r_rbmStrength = ri->Cvar_Get( "r_rbmStrength", "0.22", CVAR_ARCHIVE );
 	r_hbao = ri->Cvar_Get( "r_hbao", "1", CVAR_ARCHIVE );
 	r_trueAnaglyph = ri->Cvar_Get( "r_trueAnaglyph", "0", CVAR_ARCHIVE );

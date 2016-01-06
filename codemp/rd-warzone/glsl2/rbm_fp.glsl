@@ -8,6 +8,10 @@ varying vec3					var_ViewDir;
 
 uniform vec4					u_Local0;
 
+#define RBM
+
+#ifdef RBM
+
 #define lerp(a, b, t) mix(a, b, t)
 #define saturate(a) clamp(a, 0.0, 1.0)
 
@@ -154,6 +158,15 @@ void main ()
 	surfReflectiveness = (1.0 + surfReflectiveness) * fReflectionAmount;
 	res.xyz += bump.xyz * surfReflectiveness * fresnel;
 
-	gl_FragColor = res, 0.0, 1.0;
+	gl_FragColor = clamp(res, 0.0, 1.0);
 	gl_FragColor.a = 1.0;
 }
+
+#else //!RBM
+
+void main ()
+{
+	gl_FragColor = texture2D(u_NormalMap, var_ScreenTex.xy);
+}
+
+#endif //RBM

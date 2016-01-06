@@ -576,9 +576,9 @@ models/map_objects/yavin/tree09_vines_b
 //
 //
 
-textures/landscape/trees\fanpalm3
+textures/landscape/trees/fanpalm3
 {
-  qer_editorimage	textures/landscape/trees\fanpalm3.png
+  qer_editorimage	textures/landscape/trees/fanpalm3.png
 	//q3map_nolightmap
 	q3map_alphashadow
 	//q3map_onlyvertexlighting
@@ -593,7 +593,7 @@ textures/landscape/trees\fanpalm3
 	
 	cull	twosided
   {
-    map textures/landscape/trees\fanpalm3.png
+    map textures/landscape/trees/fanpalm3.png
     blendfunc GL_ONE GL_ZERO
     alphaFunc GE128
     //rgbGen lightingDiffuse
@@ -608,9 +608,9 @@ textures/landscape/trees\fanpalm3
   }
 }
 
-textures/landscape/trees\fanpalm4
+textures/landscape/trees/fanpalm4
 {
-  qer_editorimage	textures/landscape/trees\fanpalm4.png
+  qer_editorimage	textures/landscape/trees/fanpalm4.png
 	//q3map_nolightmap
 	q3map_alphashadow
 	//q3map_onlyvertexlighting
@@ -625,7 +625,7 @@ textures/landscape/trees\fanpalm4
 	
 	cull	twosided
   {
-    map textures/landscape/trees\fanpalm4.png
+    map textures/landscape/trees/fanpalm4.png
     blendfunc GL_ONE GL_ZERO
     alphaFunc GE128
     //rgbGen lightingDiffuse
@@ -640,9 +640,9 @@ textures/landscape/trees\fanpalm4
   }
 }
 
-textures/landscape/trees\fanpalm6
+textures/landscape/trees/fanpalm6
 {
-  qer_editorimage	textures/landscape/trees\fanpalm6.png
+  qer_editorimage	textures/landscape/trees/fanpalm6.png
 	//q3map_nolightmap
 	q3map_alphashadow
 	//q3map_onlyvertexlighting
@@ -657,7 +657,7 @@ textures/landscape/trees\fanpalm6
 	
 	cull	twosided
   {
-    map textures/landscape/trees\fanpalm6.png
+    map textures/landscape/trees/fanpalm6.png
     blendfunc GL_ONE GL_ZERO
     alphaFunc GE128
     //rgbGen lightingDiffuse
@@ -672,9 +672,9 @@ textures/landscape/trees\fanpalm6
   }
 }
 
-textures/landscape/trees\fanpalm7
+textures/landscape/trees/fanpalm7
 {
-  qer_editorimage	textures/landscape/trees\fanpalm7.png
+  qer_editorimage	textures/landscape/trees/fanpalm7.png
 	//q3map_nolightmap
 	q3map_alphashadow
 	//q3map_onlyvertexlighting
@@ -689,7 +689,7 @@ textures/landscape/trees\fanpalm7
 	
 	cull	twosided
   {
-    map textures/landscape/trees\fanpalm7.png
+    map textures/landscape/trees/fanpalm7.png
     blendfunc GL_ONE GL_ZERO
     alphaFunc GE128
     //rgbGen lightingDiffuse

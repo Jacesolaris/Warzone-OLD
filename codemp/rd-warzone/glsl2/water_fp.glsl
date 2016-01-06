@@ -83,6 +83,8 @@ out vec4 out_Water;
 //out vec4 out_Normal;
 out vec4 out_DetailedNormal;
 
+#if 0
+
 const int NUM_STEPS = 8;
 const float PI	 	= 3.1415;
 const float EPSILON	= 1e-3;
@@ -282,6 +284,8 @@ vec4 doWater( in vec2 fragCoord )
     // post
 	return vec4(pow(color,vec3(0.75)), 1.0);
 }
+
+#endif //0
 
 void main()
 {

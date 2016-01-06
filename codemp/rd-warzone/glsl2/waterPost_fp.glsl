@@ -14,6 +14,9 @@ varying vec3		var_viewOrg;
 
 #if 0
 
+
+#if 0
+
 const int NUM_STEPS = 8;
 const float PI	 	= 3.1415;
 const float EPSILON	= 1e-3;
@@ -629,4 +632,11 @@ void main()
 	{
 		gl_FragColor = origColor;
 	}
+}
+
+#endif
+
+void main()
+{
+	gl_FragColor = texture2D(u_TextureMap, var_TexCoords);
 }

@@ -1205,11 +1205,13 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage)
 		}
 	}
 
-	if (pStage->bundle[TB_DIFFUSEMAP].image[0] && (StringContainsWord(pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName, "foliage/") || StringContainsWord(pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName, "foliages/")))
+	if (pStage->bundle[TB_DIFFUSEMAP].image[0] 
+		&& (StringContainsWord(pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName, "foliage/") || StringContainsWord(pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName, "foliages/")))
 	{
 		doSway = 0.7;
 	}
-	else if (pStage->bundle[TB_DIFFUSEMAP].image[0] && StringContainsWord(pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName, "yavin/tree"))
+	else if (pStage->bundle[TB_DIFFUSEMAP].image[0] 
+		&& (StringContainsWord(pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName, "yavin/tree") || StringContainsWord(pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName, "trees")))
 	{
 		doSway = 0.7;
 	}

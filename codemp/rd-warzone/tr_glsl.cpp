@@ -878,6 +878,8 @@ static int GLSL_BeginLoadGPUShader(shaderProgram_t * program, const char *name,
 	char *postHeader;
 	int size;
 
+	//ri->Printf(PRINT_WARNING, "Begin GLSL load for %s.\n", name);
+
 	size = sizeof(vpCode);
 	if (addHeader)
 	{

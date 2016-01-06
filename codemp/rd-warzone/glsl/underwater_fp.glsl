@@ -4,6 +4,10 @@ varying float	total_time;
 varying vec2	vTexCoord0;
 varying vec2	resolution;
 
+
+#ifdef FULL_SHADER_ATI_BROKEN
+
+
 const bool infinite = true;
 
 float PI = 2.0 * asin(1.0);
@@ -343,4 +347,10 @@ void main() {
 
 	gl_FragColor = vec4((coolStuff + screen.rgb) / 2.0, screen.a);
 	//gl_FragColor = vec4(coolStuff, 1.0);
+}
+#endif //FULL_SHADER_ATI_BROKEN
+
+void main() 
+{
+	gl_FragColor = texture2D(u_TextureMap, vTexCoord0);
 }
