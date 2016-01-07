@@ -2385,6 +2385,7 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 			}
 			CG_FireWeapon( cent, qfalse );
 		}
+
 		break;
 
 	case EV_ALT_FIRE:

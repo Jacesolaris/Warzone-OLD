@@ -410,14 +410,19 @@ sound should only be done on the world model case.
 =============
 */
 void CG_AddPlayerWeapon( refEntity_t *parent, playerState_t *ps, centity_t *cent, int team, vec3_t newAngles, qboolean thirdPerson ) {
-	refEntity_t	gun;
-	refEntity_t	barrel;
-	vec3_t		angles;
-	weapon_t	weaponNum;
-	weaponInfo_t	*weapon;
-	centity_t	*nonPredictedCent;
-	refEntity_t	flash;
-	int dif = 0;
+	refEntity_t				gun;
+	refEntity_t				barrel;
+	vec3_t					angles;
+	weapon_t				weaponNum;
+	weaponInfo_t			*weapon;
+	centity_t				*nonPredictedCent;
+	refEntity_t				flash;
+	int						dif = 0;
+	int						shader = 0;
+	float					val = 0.0f;
+	float					scale = 1.0f;
+	addspriteArgStruct_t	fxSArgs;
+	vec3_t					flashorigin, flashdir;
 
 	weaponNum = cent->currentState.weapon;
 
@@ -434,11 +439,15 @@ void CG_AddPlayerWeapon( refEntity_t *parent, playerState_t *ps, centity_t *cent
 
 	CG_RegisterWeapon( weaponNum );
 	weapon = &cg_weapons[weaponNum];
+
+	fxSArgs.shader = 0;
+
 /*
 Ghoul2 Insert Start
 */
 
-	if ((cent->currentState.eFlags & EF_FIRING || ((ps) && ps->weaponstate == WEAPON_FIRING))) {
+	if ((cent->currentState.eFlags & EF_FIRING || ((ps) && ps->weaponstate == WEAPON_FIRING))) 
+	{
 		if (weapon->isBlasterCanon)
 		{
 			trap->S_AddLoopingSound(cent->currentState.number, cent->lerpOrigin, vec3_origin, weapon->spinSound);
@@ -603,16 +612,6 @@ Ghoul2 Insert Start
 			cg.snap->ps.clientNum))
 		{
 			CG_AddWeaponWithPowerups( &gun, cent->currentState.powerups ); //don't draw the weapon if the player is invisible
-			/*
-			if ( weaponNum == WP_STUN_BATON )
-			{
-				gun.shaderRGBA[0] = gun.shaderRGBA[1] = gun.shaderRGBA[2] = 25;
-
-				gun.customShader = trap->R_RegisterShader( "gfx/effects/stunPass" );
-				gun.renderfx = RF_RGB_TINT | RF_FIRST_PERSON | RF_DEPTHHACK;
-				AddRefEntityToScene( &gun );
-			}
-			*/
 		}
 
 		if (weaponNum == WP_STUN_BATON)
@@ -724,33 +723,10 @@ Ghoul2 Insert End
 
 	// Do special charge bits
 	//-----------------------
-	//[TrueView]
 	//Make the guns do their charging visual in True View.
-	if ((ps || cg.renderingThirdPerson || cg.predictedPlayerState.clientNum != cent->currentState.number || cg_trueguns.integer) &&
-		//if ( (ps || cg.renderingThirdPerson || cg.predictedPlayerState.clientNum != cent->currentState.number) &&
-		//[/TrueView]
-		( ( cent->currentState.modelindex2 == WEAPON_CHARGING_ALT && cent->currentState.weapon == WP_BRYAR_PISTOL ) ||
-		  ( cent->currentState.modelindex2 == WEAPON_CHARGING_ALT && cent->currentState.weapon == WP_BRYAR_OLD ) ||
-		  ( cent->currentState.weapon == WP_BOWCASTER && cent->currentState.modelindex2 == WEAPON_CHARGING ) ||
-		  ( cent->currentState.weapon == WP_DEMP2 && cent->currentState.modelindex2 == WEAPON_CHARGING_ALT) ||
-		  (cent->currentState.weapon == WP_DC_15S_CLONE_PISTOL && cent->currentState.modelindex2 == WEAPON_CHARGING_ALT) ||
-		  (cent->currentState.weapon == WP_WESTER_PISTOL && cent->currentState.modelindex2 == WEAPON_CHARGING_ALT ) ||
-		  (cent->currentState.weapon == WP_ELG_3A && cent->currentState.modelindex2 == WEAPON_CHARGING_ALT) ||
-		  (cent->currentState.weapon == WP_WOOKIE_BOWCASTER && cent->currentState.modelindex2 == WEAPON_CHARGING_ALT) ||
-		  (cent->currentState.weapon == WP_WOOKIES_PISTOL && cent->currentState.modelindex2 == WEAPON_CHARGING_ALT) ||
-		  (cent->currentState.weapon == WP_DC15_EXT && cent->currentState.modelindex2 == WEAPON_CHARGING_ALT) ||
-		  (cent->currentState.weapon == WP_Z6_BLASTER_CANON && cent->currentState.modelindex2 == WEAPON_CHARGING_ALT) ||
-		  (cent->currentState.weapon == WP_S5_PISTOL && cent->currentState.modelindex2 == WEAPON_CHARGING_ALT) ||
-		  (cent->currentState.weapon == WP_ARC_CASTER_IMPERIAL && cent->currentState.modelindex2 == WEAPON_CHARGING) ||
-		  (cent->currentState.weapon == WP_PULSECANON && cent->currentState.modelindex2 == WEAPON_CHARGING_ALT) ||
-		  (cent->currentState.weapon == WP_DC_17_CLONE_PISTOL && cent->currentState.modelindex2 == WEAPON_CHARGING_ALT)))
+	if ((ps || cg.renderingThirdPerson || cg.predictedPlayerState.clientNum != cent->currentState.number || cg_trueguns.integer) 
+		&& ( cent->currentState.modelindex2 == WEAPON_CHARGING_ALT || cent->currentState.modelindex2 == WEAPON_CHARGING ))
 	{
-		int		shader = 0;
-		float	val = 0.0f;
-		float	scale = 1.0f;
-		addspriteArgStruct_t fxSArgs;
-		vec3_t flashorigin, flashdir;
-
 		if (!thirdPerson)
 		{
 			VectorCopy(flash.origin, flashorigin);
@@ -775,70 +751,6 @@ Ghoul2 Insert End
 			BG_GiveMeVectorFromMatrix(&boltMatrix, POSITIVE_X, flashdir);
 		}
 
-		//if ( cent->currentState.weapon == WP_BRYAR_PISTOL ||
-		//	cent->currentState.weapon == WP_BRYAR_OLD ||
-		//	cent->currentState.weapon == WP_WESTER_PISTOL ||
-		//	cent->currentState.weapon == WP_WOOKIES_PISTOL ||
-		//	cent->currentState.weapon == WP_S5_PISTOL ||
-		//	cent->currentState.weapon == WP_BOWCASTER )
-		//{
-		//	// Hardcoded max charge time of 1 second
-		//	val = ( cg.time - cent->currentState.constantLight ) * 0.001f;
-		//	shader = cgs.media.redFrontFlash;
-		//}
-		//else if (cent->currentState.weapon == WP_ELG_3A)
-		//{
-		//	// Hardcoded max charge time of 1 second
-		//	val = (cg.time - cent->currentState.constantLight) * 0.001f;
-		//	shader = cgs.media.greenFrontFlash;
-		//	scale = 1.75f;
-		//}
-		//else if ( cent->currentState.weapon == WP_DEMP2 )
-		//{
-		//	val = ( cg.time - cent->currentState.constantLight ) * 0.001f;
-		//	shader = cgs.media.DemplightningFlash;
-		//	scale = 1.75f;
-		//}
-		//
-		//else if (cent->currentState.weapon == WP_DC_15S_CLONE_PISTOL 
-		//	|| cent->currentState.weapon == WP_DC15_EXT 
-		//	|| cent->currentState.weapon == WP_Z6_BLASTER_CANON 
-		//	|| cent->currentState.weapon == WP_PULSECANON
-		//	|| cent->currentState.weapon == WP_DC_17_CLONE_PISTOL)
-		//{
-		//	val = (cg.time - cent->currentState.constantLight) * 0.001f;
-		//	shader = cgs.media.lightningFlash;
-		//	scale = 1.75f;
-		//}
-		//else if (cent->currentState.weapon == WP_WOOKIE_BOWCASTER)
-		//{
-		//	// Hardcoded max charge time of 1 second
-		//	val = (cg.time - cent->currentState.constantLight) * 0.001f;
-		//	shader = cgs.media.greenFrontFlash;
-		//	scale = 1.75f;
-		//}
-		//else if (cent->currentState.weapon == WP_ARC_CASTER_IMPERIAL)
-		//{
-		//	// Hardcoded max charge time of 1 second
-		//	val = (cg.time - cent->currentState.constantLight) * 0.001f;
-		//	shader = cgs.media.Chargelightningbeam;
-		//	scale = 1.75f;
-		//}
-		//else if (cent->currentState.weapon == WP_Z6_BLASTER_CANON)
-		//{
-		//	// Hardcoded max charge time of 1 second
-		//	val = (cg.time - cent->currentState.constantLight) * 0.001f;
-		//	//shader = cgs.media.cannonChargeFlash;
-		//	shader = cgs.media.lightningFlash;
-		//	scale = 1.75f;
-		//}
-		//else if (cent->currentState.weapon == WP_DC_17_CLONE_PISTOL)
-		//{
-		//	val = (cg.time - cent->currentState.constantLight) * 0.001f;
-		//	shader = cgs.media.lightningFlash;
-		//	scale = 1.75f;
-		//}
-
 		if ( val < 0.0f )
 		{
 			val = 0.0f;
@@ -860,49 +772,6 @@ Ghoul2 Insert End
 		}
 
 		val += random() * 0.5f;
-
-		 // i think there could be somthing worng here - this doesnt exit. worst it would do is draw another shader as well- remove it if it dosnt get used so nothing gets confusing
-		/*if (cent->currentState.weapon == WP_ARC_CASTER_IMPERIAL
-			|| cent->currentState.weapon == WP_BRYAR_PISTOL
-			|| cent->currentState.weapon == WP_BRYAR_OLD
-			|| cent->currentState.weapon == WP_WESTER_PISTOL
-			|| cent->currentState.weapon == WP_WOOKIES_PISTOL
-			|| cent->currentState.weapon == WP_S5_PISTOL
-			|| cent->currentState.weapon == WP_ELG_3A
-			|| cent->currentState.weapon == WP_DEMP2
-			|| cent->currentState.weapon == WP_DC_15S_CLONE_PISTOL
-			|| cent->currentState.weapon == WP_DC15_EXT
-			|| cent->currentState.weapon == WP_Z6_BLASTER_CANON
-			|| cent->currentState.weapon == WP_PULSECANON
-			|| cent->currentState.weapon == WP_DC_17_CLONE_PISTOL
-			|| cent->currentState.weapon == WP_WOOKIE_BOWCASTER
-			|| cent->currentState.weapon == WP_Z6_BLASTER_CANON
-			|| cent->currentState.weapon == WP_DC_17_CLONE_PISTOL
-			|| cent->currentState.weapon == WP_BOWCASTER)
-		{
-			int i;
-			for (i = 0; i < 10; i++)
-				PlayEffectID(shader, flashorigin, flashdir, -1, -1, qfalse);
-		}
-		else*/
-		if (!weapon->muzzleEffect &&  !weapon->altMuzzleEffect)
-		{
-			VectorCopy(flashorigin, fxSArgs.origin);
-			VectorClear(fxSArgs.vel);
-			VectorClear(fxSArgs.accel);
-			fxSArgs.scale = 3.0f*val*scale;
-			fxSArgs.dscale = 0.0f;
-			fxSArgs.sAlpha = 0.7f;
-			fxSArgs.eAlpha = 0.7f;
-			fxSArgs.rotation = random() * 360;
-			fxSArgs.bounce = 0.0f;
-			fxSArgs.life = 1.0f;
-			fxSArgs.shader = shader;
-			fxSArgs.flags = 0x08000000;
-
-			//FX_AddSprite( flash.origin, NULL, NULL, 3.0f * val, 0.0f, 0.7f, 0.7f, WHITE, WHITE, random() * 360, 0.0f, 1.0f, shader, FX_USE_ALPHA );
-			trap->FX_AddSprite(&fxSArgs);
-		}
 	}
 
 	// make sure we aren't looking at cg.predictedPlayerEntity for LG
@@ -915,26 +784,10 @@ Ghoul2 Insert End
 		nonPredictedCent = cent;
 	}
 
-	// add the flash
-	//if ((weaponNum == WP_DEMP2 
-	//	|| weaponNum == WP_DC_15S_CLONE_PISTOL 
-	//	|| weaponNum == WP_WOOKIE_BOWCASTER
-	//	|| weaponNum == WP_DC15_EXT 
-	//	|| weaponNum == WP_Z6_BLASTER_CANON 
-	//	|| weaponNum == WP_DC_17_CLONE_PISTOL
-	//	|| weaponNum == WP_PULSECANON)
-	//	&& ( nonPredictedCent->currentState.eFlags & EF_WEAPON_CHARGE ) )
-	//{
-	//	// continuous flash
-	//} else {
-		// impulse flash
-	//if ( cg.time - cent->muzzleFlashTime > MUZZLE_FLASH_TIME) {
-	//	return;
-	//}
-	//}
-
 	//[TrueView]
-	if (ps || cg.renderingThirdPerson || cg_trueguns.integer
+	if (ps 
+		|| cg.renderingThirdPerson 
+		|| cg_trueguns.integer
 		|| cent->currentState.number != cg.predictedPlayerState.clientNum)
 		//[/TrueView] 
 	{	// Make sure we don't do the thirdperson model effects for the local player if we're in first person
@@ -969,61 +822,233 @@ Ghoul2 Insert End
 		}
 
 		//if ( cg.time - cent->muzzleFlashTime <= MUZZLE_FLASH_TIME + 10 )// this need to be there or else it fucks up the muzzle flash efx by playing it all the time
-		if ((cent->currentState.eFlags & EF_WEAPON_ALT_CHARGE) && weapon->Altchargingfx)
+		if (cent->currentState.modelindex2 == WEAPON_CHARGING_ALT)
 		{	// Check the alt firing first.
-			if (!thirdPerson)
+			if (weapon->Altchargingfx)
 			{
-				trap->FX_PlayEntityEffectID(weapon->Altchargingfx, flashorigin, flash.axis, -1, -1, -1, -1);
+				if (!thirdPerson)
+				{
+					trap->FX_PlayEntityEffectID(weapon->Altchargingfx, flashorigin, flash.axis, -1, -1, -1, -1);
+				}
+				else
+				{
+					PlayEffectID(weapon->Altchargingfx, flashorigin, flashdir, -1, -1, qfalse);
+				}
 			}
-			else
+			else if (fxSArgs.shader)
 			{
-				PlayEffectID(weapon->Altchargingfx, flashorigin, flashdir, -1, -1, qfalse);
+				VectorCopy(flashorigin, fxSArgs.origin);
+				VectorClear(fxSArgs.vel);
+				VectorClear(fxSArgs.accel);
+				fxSArgs.scale = 3.0f*val*scale;
+				fxSArgs.dscale = 0.0f;
+				fxSArgs.sAlpha = 0.7f;
+				fxSArgs.eAlpha = 0.7f;
+				fxSArgs.rotation = random() * 360;
+				fxSArgs.bounce = 0.0f;
+				fxSArgs.life = 1.0f;
+				fxSArgs.shader = shader;
+				fxSArgs.flags = 0x08000000;
+
+				//FX_AddSprite( flash.origin, NULL, NULL, 3.0f * val, 0.0f, 0.7f, 0.7f, WHITE, WHITE, random() * 360, 0.0f, 1.0f, shader, FX_USE_ALPHA );
+				trap->FX_AddSprite(&fxSArgs);
 			}
 
-			cent->altChargeTime = cg.time + 10;
+			cent->altChargeTime = cg.time + 100;
 
-			trap->Print("ALT CHARGE\n");
+			//trap->Print("ALT CHARGE\n");
 		}
-		else if ((cent->currentState.eFlags & EF_WEAPON_CHARGE) && weapon->Chargingfx)
+		else if (cent->currentState.modelindex2 == WEAPON_CHARGING)
 		{	// Check the alt firing first.
-			if (!thirdPerson)
+			if (weapon->Chargingfx)
 			{
-				trap->FX_PlayEntityEffectID(weapon->Chargingfx, flashorigin, flash.axis, -1, -1, -1, -1);
+				if (!thirdPerson)
+				{
+					trap->FX_PlayEntityEffectID(weapon->Chargingfx, flashorigin, flash.axis, -1, -1, -1, -1);
+				}
+				else
+				{
+					PlayEffectID(weapon->Chargingfx, flashorigin, flashdir, -1, -1, qfalse);
+				}
 			}
-			else
+			else if (fxSArgs.shader)
 			{
-				PlayEffectID(weapon->Chargingfx, flashorigin, flashdir, -1, -1, qfalse);
+				VectorCopy(flashorigin, fxSArgs.origin);
+				VectorClear(fxSArgs.vel);
+				VectorClear(fxSArgs.accel);
+				fxSArgs.scale = 3.0f*val*scale;
+				fxSArgs.dscale = 0.0f;
+				fxSArgs.sAlpha = 0.7f;
+				fxSArgs.eAlpha = 0.7f;
+				fxSArgs.rotation = random() * 360;
+				fxSArgs.bounce = 0.0f;
+				fxSArgs.life = 1.0f;
+				fxSArgs.shader = shader;
+				fxSArgs.flags = 0x08000000;
+
+				//FX_AddSprite( flash.origin, NULL, NULL, 3.0f * val, 0.0f, 0.7f, 0.7f, WHITE, WHITE, random() * 360, 0.0f, 1.0f, shader, FX_USE_ALPHA );
+				trap->FX_AddSprite(&fxSArgs);
 			}
 
-			cent->ChargeTime = cg.time + 10;
+			cent->ChargeTime = cg.time + 100;
 
-			trap->Print("CHARGE\n");
+			//trap->Print("CHARGE\n");
 		}
-		else if (cent->altChargeTime > cg.time && weapon->altMuzzleEffect)
+		else if (cent->altChargeTime > cg.time)
 		{	// Check the alt firing first.
-			if (!thirdPerson)
+			if (weapon->altMuzzleEffect)
 			{
-				trap->FX_PlayEntityEffectID(weapon->altMuzzleEffect, flashorigin, flash.axis, -1, -1, -1, -1);
+				if (!thirdPerson)
+				{
+					trap->FX_PlayEntityEffectID(weapon->altMuzzleEffect, flashorigin, flash.axis, -1, -1, -1, -1);
+				}
+				else
+				{
+					PlayEffectID(weapon->altMuzzleEffect, flashorigin, flashdir, -1, -1, qfalse);
+				}
 			}
-			else
+			else if (fxSArgs.shader)
 			{
-				PlayEffectID(weapon->altMuzzleEffect, flashorigin, flashdir, -1, -1, qfalse);
+				VectorCopy(flashorigin, fxSArgs.origin);
+				VectorClear(fxSArgs.vel);
+				VectorClear(fxSArgs.accel);
+				fxSArgs.scale = 3.0f*val*scale;
+				fxSArgs.dscale = 0.0f;
+				fxSArgs.sAlpha = 0.7f;
+				fxSArgs.eAlpha = 0.7f;
+				fxSArgs.rotation = random() * 360;
+				fxSArgs.bounce = 0.0f;
+				fxSArgs.life = 1.0f;
+				fxSArgs.shader = shader;
+				fxSArgs.flags = 0x08000000;
+
+				//FX_AddSprite( flash.origin, NULL, NULL, 3.0f * val, 0.0f, 0.7f, 0.7f, WHITE, WHITE, random() * 360, 0.0f, 1.0f, shader, FX_USE_ALPHA );
+				trap->FX_AddSprite(&fxSArgs);
 			}
 
-			trap->Print("ALT FIRE\n");
+			//trap->Print("ALT FIRE\n");
 		}
-		else if (cent->ChargeTime > cg.time && weapon->muzzleEffect)
+		else if (cent->ChargeTime > cg.time)
 		{	// Check the alt firing first.
-			if (!thirdPerson)
+			if (weapon->muzzleEffect)
 			{
-				trap->FX_PlayEntityEffectID(weapon->muzzleEffect, flashorigin, flash.axis, -1, -1, -1, -1);
+				if (!thirdPerson)
+				{
+					trap->FX_PlayEntityEffectID(weapon->muzzleEffect, flashorigin, flash.axis, -1, -1, -1, -1);
+				}
+				else
+				{
+					PlayEffectID(weapon->muzzleEffect, flashorigin, flashdir, -1, -1, qfalse);
+				}
 			}
-			else
+			else if (fxSArgs.shader)
 			{
-				PlayEffectID(weapon->muzzleEffect, flashorigin, flashdir, -1, -1, qfalse);
+				VectorCopy(flashorigin, fxSArgs.origin);
+				VectorClear(fxSArgs.vel);
+				VectorClear(fxSArgs.accel);
+				fxSArgs.scale = 3.0f*val*scale;
+				fxSArgs.dscale = 0.0f;
+				fxSArgs.sAlpha = 0.7f;
+				fxSArgs.eAlpha = 0.7f;
+				fxSArgs.rotation = random() * 360;
+				fxSArgs.bounce = 0.0f;
+				fxSArgs.life = 1.0f;
+				fxSArgs.shader = shader;
+				fxSArgs.flags = 0x08000000;
+
+				//FX_AddSprite( flash.origin, NULL, NULL, 3.0f * val, 0.0f, 0.7f, 0.7f, WHITE, WHITE, random() * 360, 0.0f, 1.0f, shader, FX_USE_ALPHA );
+				trap->FX_AddSprite(&fxSArgs);
 			}
 
-			trap->Print("FIRE\n");
+			//trap->Print("FIRE\n");
+		}
+		else if (fxSArgs.shader)
+		{
+			VectorCopy(flashorigin, fxSArgs.origin);
+			VectorClear(fxSArgs.vel);
+			VectorClear(fxSArgs.accel);
+			fxSArgs.scale = 3.0f*val*scale;
+			fxSArgs.dscale = 0.0f;
+			fxSArgs.sAlpha = 0.7f;
+			fxSArgs.eAlpha = 0.7f;
+			fxSArgs.rotation = random() * 360;
+			fxSArgs.bounce = 0.0f;
+			fxSArgs.life = 1.0f;
+			fxSArgs.shader = shader;
+			fxSArgs.flags = 0x08000000;
+
+			//FX_AddSprite( flash.origin, NULL, NULL, 3.0f * val, 0.0f, 0.7f, 0.7f, WHITE, WHITE, random() * 360, 0.0f, 1.0f, shader, FX_USE_ALPHA );
+			trap->FX_AddSprite(&fxSArgs);
+
+			//trap->Print("CHARGING SHADER\n");
+		}
+		else if ((cent->currentState.eFlags & EF_FIRING) && (cg.time - cent->muzzleFlashTime <= MUZZLE_FLASH_TIME + 10))
+		{
+			if (weapon->muzzleEffect)
+			{
+				if (!thirdPerson)
+				{
+					trap->FX_PlayEntityEffectID(weapon->muzzleEffect, flashorigin, flash.axis, -1, -1, -1, -1);
+				}
+				else
+				{
+					PlayEffectID(weapon->muzzleEffect, flashorigin, flashdir, -1, -1, qfalse);
+				}
+			}
+			else
+			{// No efx to use... Use shader...
+				VectorCopy(flashorigin, fxSArgs.origin);
+				VectorClear(fxSArgs.vel);
+				VectorClear(fxSArgs.accel);
+				fxSArgs.scale = 3.0f*val*scale;
+				fxSArgs.dscale = 0.0f;
+				fxSArgs.sAlpha = 0.7f;
+				fxSArgs.eAlpha = 0.7f;
+				fxSArgs.rotation = random() * 360;
+				fxSArgs.bounce = 0.0f;
+				fxSArgs.life = 1.0f;
+				fxSArgs.shader = cgs.media.bryarFrontFlash; // FIXME: STOISS FIXME - weapon->muzzleShader ???
+				fxSArgs.flags = 0x08000000;
+
+				//FX_AddSprite( flash.origin, NULL, NULL, 3.0f * val, 0.0f, 0.7f, 0.7f, WHITE, WHITE, random() * 360, 0.0f, 1.0f, shader, FX_USE_ALPHA );
+				trap->FX_AddSprite(&fxSArgs);
+			}
+
+			//trap->Print("FIRING2\n");
+		}
+		else if ((cent->currentState.eFlags & EF_ALT_FIRING) && (cg.time - cent->muzzleFlashTime <= MUZZLE_FLASH_TIME + 10))
+		{
+			if (weapon->muzzleEffect)
+			{
+				if (!thirdPerson)
+				{
+					trap->FX_PlayEntityEffectID(weapon->muzzleEffect, flashorigin, flash.axis, -1, -1, -1, -1);
+				}
+				else
+				{
+					PlayEffectID(weapon->muzzleEffect, flashorigin, flashdir, -1, -1, qfalse);
+				}
+			}
+			else
+			{// No efx to use... Use shader...
+				VectorCopy(flashorigin, fxSArgs.origin);
+				VectorClear(fxSArgs.vel);
+				VectorClear(fxSArgs.accel);
+				fxSArgs.scale = 3.0f*val*scale;
+				fxSArgs.dscale = 0.0f;
+				fxSArgs.sAlpha = 0.7f;
+				fxSArgs.eAlpha = 0.7f;
+				fxSArgs.rotation = random() * 360;
+				fxSArgs.bounce = 0.0f;
+				fxSArgs.life = 1.0f;
+				fxSArgs.shader = cgs.media.bryarFrontFlash; // FIXME: STOISS FIXME - weapon->muzzleShader ???
+				fxSArgs.flags = 0x08000000;
+
+				//FX_AddSprite( flash.origin, NULL, NULL, 3.0f * val, 0.0f, 0.7f, 0.7f, WHITE, WHITE, random() * 360, 0.0f, 1.0f, shader, FX_USE_ALPHA );
+				trap->FX_AddSprite(&fxSArgs);
+			}
+
+			//trap->Print("ALT FIRING2\n");
 		}
 		
 		// add lightning bolt
