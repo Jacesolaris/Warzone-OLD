@@ -442,18 +442,36 @@ static const char *GoodPlantsList[] = {
 	extern qboolean InFOV( vec3_t spot, vec3_t from, vec3_t fromAngles, int hFOV, int vFOV );
 }
 
-vec3_t		LAST_ORG = { 0 };
-
 int IN_RANGE_AREAS_LIST_COUNT = 0;
 int IN_RANGE_AREAS_LIST[1024];
 int IN_RANGE_TREE_AREAS_LIST_COUNT = 0;
 int IN_RANGE_TREE_AREAS_LIST[8192];
 
+qboolean FOLIAGE_Box_In_FOV ( vec3_t mins, vec3_t maxs )
+{
+	vec3_t edge, edge2;
+
+	VectorSet(edge, maxs[0], mins[1], maxs[2]);
+	VectorSet(edge2, mins[0], maxs[1], maxs[2]);
+
+	if (!InFOV( mins, cg.refdef.vieworg, cg.refdef.viewangles, 100, 140 )
+		&& !InFOV( maxs, cg.refdef.vieworg, cg.refdef.viewangles, 100, 140 )
+		&& !InFOV( edge, cg.refdef.vieworg, cg.refdef.viewangles, 100, 140 )
+		&& !InFOV( edge2, cg.refdef.vieworg, cg.refdef.viewangles, 100, 140 ))
+		return qfalse;
+
+	return qtrue;
+}
+
+vec3_t		LAST_ORG = { 0 };
+vec3_t		LAST_ANG = { 0 };
+
 void FOLIAGE_Calc_In_Range_Areas( void )
 {
-	if (Distance(cg.refdef.vieworg, LAST_ORG) > 128.0)
+	if (Distance(cg.refdef.vieworg, LAST_ORG) > 128.0 || Distance(cg.refdef.viewangles, LAST_ANG) > 30.0)
 	{// Update in range list...
 		VectorCopy(cg.refdef.vieworg, LAST_ORG);
+		VectorCopy(cg.refdef.viewangles, LAST_ANG);
 
 		IN_RANGE_AREAS_LIST_COUNT = 0;
 		IN_RANGE_TREE_AREAS_LIST_COUNT = 0;
@@ -464,14 +482,20 @@ void FOLIAGE_Calc_In_Range_Areas( void )
 			if (DistanceHorizontal(FOLIAGE_AREAS_MINS[i], cg.refdef.vieworg) < FOLIAGE_VISIBLE_DISTANCE 
 				|| DistanceHorizontal(FOLIAGE_AREAS_MAXS[i], cg.refdef.vieworg) < FOLIAGE_VISIBLE_DISTANCE)
 			{
-				IN_RANGE_AREAS_LIST[IN_RANGE_AREAS_LIST_COUNT] = i;
-				IN_RANGE_AREAS_LIST_COUNT++;
+				if (FOLIAGE_Box_In_FOV( FOLIAGE_AREAS_MINS[i], FOLIAGE_AREAS_MAXS[i] ))
+				{
+					IN_RANGE_AREAS_LIST[IN_RANGE_AREAS_LIST_COUNT] = i;
+					IN_RANGE_AREAS_LIST_COUNT++;
+				}
 			}
 			else if (DistanceHorizontal(FOLIAGE_AREAS_MINS[i], cg.refdef.vieworg) < FOLIAGE_TREE_VISIBLE_DISTANCE
 				|| DistanceHorizontal(FOLIAGE_AREAS_MAXS[i], cg.refdef.vieworg) < FOLIAGE_TREE_VISIBLE_DISTANCE)
 			{
-				IN_RANGE_TREE_AREAS_LIST[IN_RANGE_TREE_AREAS_LIST_COUNT] = i;
-				IN_RANGE_TREE_AREAS_LIST_COUNT++;
+				if (FOLIAGE_Box_In_FOV( FOLIAGE_AREAS_MINS[i], FOLIAGE_AREAS_MAXS[i] ))
+				{
+					IN_RANGE_TREE_AREAS_LIST[IN_RANGE_TREE_AREAS_LIST_COUNT] = i;
+					IN_RANGE_TREE_AREAS_LIST_COUNT++;
+				}
 			}
 		}
 
@@ -522,21 +546,6 @@ extern "C" {
 		CG_Trace(&tr, up, NULL, NULL, down, -1, MASK_SOLID);
 		VectorCopy(tr.plane.normal, normal);
 #endif //__PREGENERATE_NORMALS__
-		
-		//trap->Print("Normal is %f %f %f.\n", normal[0], normal[1], normal[2]);
-
-		/*if (dist >= FOLIAGE_STARTSCALE_DISTANCE)
-		{
-			float foliageMaxFadeDist = (FOLIAGE_VISIBLE_DISTANCE - FOLIAGE_STARTSCALE_DISTANCE);
-			distFadeScale = 1.0 - ((dist - FOLIAGE_STARTSCALE_DISTANCE) / foliageMaxFadeDist);
-		}*/
-
-		//if (FOLIAGE_TREE_SELECTION[num] == 0) return;
-
-		/*if (dist > 384.0)
-		{// Let's skip smaller models when far from camera for FPS sake...
-			skip_tinyStuff = qtrue;
-		}*/
 
 		if (dist > 1024.0)//512.0)
 		{// Let's skip smaller models when far from camera for FPS sake...
@@ -566,117 +575,56 @@ extern "C" {
 #endif //__NO_GRASS_AT_PLANTS__
 				float GRASS_SCALE = FOLIAGE_GRASS_SCALE[num] * GRASS_SCALE_MULTIPLIER * 1.5 * distFadeScale;
 
-				if (cg_foliageBillboarding.integer && dist > cg_foliageBillboardDistance.value)
+				re.reType = RT_MODEL;
+
+				re.origin[2] -= 16.0;
+
+				if (dist < 128)
 				{
-					//re.reType = RT_ORIENTED_QUAD;
-					re.reType = RT_GRASS;
-
-					re.radius = GRASS_SCALE*24.0;
-
-					if (dist < 128)
-						re.customShader = FOLIAGE_GRASS_BILLBOARD_SHADER[0];
-					else if (dist < 256)
-						re.customShader = FOLIAGE_GRASS_BILLBOARD_SHADER[1];
-					else if (dist < 512)
-						re.customShader = FOLIAGE_GRASS_BILLBOARD_SHADER[2];
-					else if (dist < 1024)
-						re.customShader = FOLIAGE_GRASS_BILLBOARD_SHADER[3];
-					else
-						re.customShader = FOLIAGE_GRASS_BILLBOARD_SHADER[4];
-
-					re.shaderRGBA[0] = 255;
-					re.shaderRGBA[1] = 255;
-					re.shaderRGBA[2] = 255;
-					re.shaderRGBA[3] = 255;
-
-					//re.origin[2] += re.radius/2.0;
-					re.origin[2] += re.radius;
-					//re.origin[2] -= 16.0;
-
-					angles[PITCH] = angles[ROLL] = 0.0f;
-					angles[YAW] = FOLIAGE_GRASS_ANGLES[num];
-
-					VectorCopy(angles, re.angles);
-					AnglesToAxis(angles, re.axis);
+					re.customShader = FOLIAGE_GRASS_BILLBOARD_SHADER[0];
+					re.hModel = FOLIAGE_GRASS_MODEL[0];
+				}
+				else if (dist < 256)
+				{
+					re.customShader = FOLIAGE_GRASS_BILLBOARD_SHADER[1];
+					re.hModel = FOLIAGE_GRASS_MODEL[0];
+				}
+				else if (dist < 384)
+				{
+					re.customShader = FOLIAGE_GRASS_BILLBOARD_SHADER[2];
+					re.hModel = FOLIAGE_GRASS_MODEL[1];
+				}
+				else if (dist < 512)
+				{
+					re.customShader = FOLIAGE_GRASS_BILLBOARD_SHADER[2];
+					re.hModel = FOLIAGE_GRASS_MODEL[1];
+				}
+				else if (dist < 1024)
+				{
+					re.customShader = FOLIAGE_GRASS_BILLBOARD_SHADER[3];
+					re.hModel = FOLIAGE_GRASS_MODEL[2];
 				}
 				else
 				{
-					re.reType = RT_MODEL;
+					re.customShader = FOLIAGE_GRASS_BILLBOARD_SHADER[4];
+					re.hModel = FOLIAGE_GRASS_MODEL[2];
+				}
 
-					re.origin[2] -= 16.0;
-					
-					if (dist < 128)
-					{
-						re.customShader = FOLIAGE_GRASS_BILLBOARD_SHADER[0];
-						re.hModel = FOLIAGE_GRASS_MODEL[0];
-					}
-					else if (dist < 256)
-					{
-						re.customShader = FOLIAGE_GRASS_BILLBOARD_SHADER[1];
-						re.hModel = FOLIAGE_GRASS_MODEL[0];
-					}
-					else if (dist < 384)
-					{
-						re.customShader = FOLIAGE_GRASS_BILLBOARD_SHADER[2];
-						re.hModel = FOLIAGE_GRASS_MODEL[1];
-					}
-					else if (dist < 512)
-					{
-						re.customShader = FOLIAGE_GRASS_BILLBOARD_SHADER[2];
-						re.hModel = FOLIAGE_GRASS_MODEL[1];
-					}
-					else if (dist < 1024)
-					{
-						re.customShader = FOLIAGE_GRASS_BILLBOARD_SHADER[3];
-						re.hModel = FOLIAGE_GRASS_MODEL[2];
-					}
-					else
-					{
-						re.customShader = FOLIAGE_GRASS_BILLBOARD_SHADER[4];
-						re.hModel = FOLIAGE_GRASS_MODEL[2];
-					}
-
-					VectorSet(re.modelScale, GRASS_SCALE, GRASS_SCALE, GRASS_SCALE);
+				VectorSet(re.modelScale, GRASS_SCALE, GRASS_SCALE, GRASS_SCALE);
 
 #ifdef __PREGENERATE_NORMALS__
-					vectoangles( FOLIAGE_NORMALS[num], angles );
+				vectoangles( FOLIAGE_NORMALS[num], angles );
 #else //!__PREGENERATE_NORMALS__
-					vectoangles( normal, angles );
+				vectoangles( normal, angles );
 #endif //__PREGENERATE_NORMALS__
-					angles[PITCH] += 90;
-					//angles[YAW] += FOLIAGE_GRASS_ANGLES[num];
+				angles[PITCH] += 90;
+				//angles[YAW] += FOLIAGE_GRASS_ANGLES[num];
 
-					VectorCopy(angles, re.angles);
-					AnglesToAxis(angles, re.axis);
-					ScaleModelAxis( &re );
-				}
-				
+				VectorCopy(angles, re.angles);
+				AnglesToAxis(angles, re.axis);
+				ScaleModelAxis( &re );
+
 				FOLIAGE_AddFoliageEntityToScene( &re );
-
-#if 0
-				/// Test add more in clumps around main object...
-				for (float x = -128.0; x < 128.0; x += 128.0)
-				{
-					for (float y = -128.0; y < 128.0; y += 128.0)
-					{
-						vec3_t tempPos;
-
-						if (y == 0.0 && x == 0.0) continue;
-
-						VectorCopy(FOLIAGE_POSITIONS[num], tempPos);
-						tempPos[0] += x;
-						tempPos[1] += y;
-						tempPos[2] -= 24.0;
-
-						VectorCopy(tempPos, re.origin);
-						FOLIAGE_AddFoliageEntityToScene( &re );
-					}
-				}
-
-				VectorCopy(FOLIAGE_POSITIONS[num], re.origin);
-				// End test...
-#endif
-
 #ifdef __NO_GRASS_AT_PLANTS__
 			}
 #endif //__NO_GRASS_AT_PLANTS__
@@ -710,18 +658,18 @@ extern "C" {
 #else //!__DISTANT_MEDIUM_PLANTLIFE__
 			&& !treeOnly
 #endif //__DISTANT_MEDIUM_PLANTLIFE__
-		)
+			)
 		{// Add plant model as well...
 
 #if defined(__USE_SINGLE_PLANT__)
 			re.customShader = FOLIAGE_PLANT_SHADERS[FOLIAGE_PLANT_SHADERNUM[1]];
 #elif defined(__USE_ALL_PLANTS__) || defined(__USE_EXTRA_PLANTS__)
-			
+
 			if (FOLIAGE_PLANT_SHADERNUM[num] > 0)
 			{// Need to specify a shader...
 				re.customShader = FOLIAGE_PLANT_SHADERS[FOLIAGE_PLANT_SHADERNUM[num]];
 			}
-			
+
 			/*
 			// Origin based test...
 			float v0 = re.origin[0];
@@ -741,76 +689,50 @@ extern "C" {
 			re.customShader = FOLIAGE_PLANT_SHADERS[type];
 			*/
 
-
 #endif //defined(__USE_ALL_PLANTS__) || defined(__USE_EXTRA_PLANTS__)
 
 			float PLANT_SCALE = FOLIAGE_PLANT_SCALE[num]*PLANT_SCALE_MULTIPLIER*distFadeScale;
 
-			if (cg_foliageBillboarding.integer && dist > cg_foliageBillboardDistance.value)
+			re.reType = RT_MODEL;
+
+			if (dist < 128)
 			{
-				//re.reType = RT_ORIENTED_QUAD;
-				re.reType = RT_PLANT;
-
-				re.radius = PLANT_SCALE*36.0;
-				re.shaderRGBA[0] = 255;
-				re.shaderRGBA[1] = 255;
-				re.shaderRGBA[2] = 255;
-				re.shaderRGBA[3] = 255;
-
-				//re.origin[2] += re.radius/2.0;
-				re.origin[2] += re.radius;
-				//re.origin[2] -= 16.0;
-
-				angles[PITCH] = angles[ROLL] = 0.0f;
-				angles[YAW] = FOLIAGE_PLANT_ANGLES[num];
-				
-				VectorCopy(angles, re.angles);
-				AnglesToAxis(angles, re.axis);
+				re.hModel = FOLIAGE_GRASS_MODEL[0];
+			}
+			else if (dist < 256)
+			{
+				re.hModel = FOLIAGE_GRASS_MODEL[0];
+			}
+			else if (dist < 384)
+			{
+				re.hModel = FOLIAGE_GRASS_MODEL[1];
+			}
+			else if (dist < 512)
+			{
+				re.hModel = FOLIAGE_GRASS_MODEL[1];
+			}
+			else if (dist < 1024)
+			{
+				re.hModel = FOLIAGE_GRASS_MODEL[2];
 			}
 			else
 			{
-				re.reType = RT_MODEL;
+				re.hModel = FOLIAGE_GRASS_MODEL[2];
+			}
 
-				if (dist < 128)
-				{
-					re.hModel = FOLIAGE_GRASS_MODEL[0];
-				}
-				else if (dist < 256)
-				{
-					re.hModel = FOLIAGE_GRASS_MODEL[0];
-				}
-				else if (dist < 384)
-				{
-					re.hModel = FOLIAGE_GRASS_MODEL[1];
-				}
-				else if (dist < 512)
-				{
-					re.hModel = FOLIAGE_GRASS_MODEL[1];
-				}
-				else if (dist < 1024)
-				{
-					re.hModel = FOLIAGE_GRASS_MODEL[2];
-				}
-				else
-				{
-					re.hModel = FOLIAGE_GRASS_MODEL[2];
-				}
-
-				//re.hModel = FOLIAGE_PLANT_MODEL[FOLIAGE_PLANT_SELECTION[num]-1];
-				VectorSet(re.modelScale, PLANT_SCALE, PLANT_SCALE, PLANT_SCALE);
+			VectorSet(re.modelScale, PLANT_SCALE, PLANT_SCALE, PLANT_SCALE);
 
 #ifdef __PREGENERATE_NORMALS__
-				vectoangles( FOLIAGE_NORMALS[num], angles );
+			vectoangles( FOLIAGE_NORMALS[num], angles );
 #else //!__PREGENERATE_NORMALS__
-				vectoangles( normal, angles );
+			vectoangles( normal, angles );
 #endif //__PREGENERATE_NORMALS__
-				angles[PITCH] += 90;
-				//angles[YAW] += FOLIAGE_PLANT_ANGLES[num];
+			angles[PITCH] += 90;
+			//angles[YAW] += FOLIAGE_PLANT_ANGLES[num];
 
-				VectorCopy(angles, re.angles);
-				AnglesToAxis(angles, re.axis);
-				ScaleModelAxis( &re );
-			}
+			VectorCopy(angles, re.angles);
+			AnglesToAxis(angles, re.axis);
+			ScaleModelAxis( &re );
 
 			FOLIAGE_AddFoliageEntityToScene( &re );
 		}
