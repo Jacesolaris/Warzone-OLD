@@ -1773,7 +1773,7 @@ void NPC_RunBehavior( int team, int bState )
 			case CLASS_TUSKEN:
 				Sniper_SelectBestWeapon();
 
-				if ( IsSniperRifle(NPCS.NPC->client->ps.weapon) && (NPCS.NPCInfo->scriptFlags & SCF_ALT_FIRE) )
+				if (WeaponSniperCharge(NPCS.NPC->client->ps.weapon) && (NPCS.NPCInfo->scriptFlags & SCF_ALT_FIRE))
 				{//a sniper
 					NPC_BehaviorSet_Sniper( bState );
 					return;
@@ -1787,7 +1787,7 @@ void NPC_RunBehavior( int team, int bState )
 			case CLASS_MERC:
 				Commando2_SelectBestWeapon();
 
-				if ( IsSniperRifle(NPCS.NPC->client->ps.weapon) && (NPCS.NPCInfo->scriptFlags & SCF_ALT_FIRE) )
+				if (WeaponSniperCharge(NPCS.NPC->client->ps.weapon) && (NPCS.NPCInfo->scriptFlags & SCF_ALT_FIRE))
 				{//a sniper
 					NPC_BehaviorSet_Sniper( bState );
 					return;
@@ -1804,7 +1804,7 @@ void NPC_RunBehavior( int team, int bState )
 			case CLASS_COMMANDO:
 				Commando2_SelectBestWeapon();
 
-				if ( IsSniperRifle(NPCS.NPC->client->ps.weapon) && (NPCS.NPCInfo->scriptFlags & SCF_ALT_FIRE) )
+				if (WeaponSniperCharge(NPCS.NPC->client->ps.weapon) && (NPCS.NPCInfo->scriptFlags & SCF_ALT_FIRE))
 				{//a sniper
 					NPC_BehaviorSet_Sniper( bState );
 					return;
@@ -1819,7 +1819,7 @@ void NPC_RunBehavior( int team, int bState )
 			case CLASS_IMPERIAL:
 			case CLASS_RODIAN:
 			case CLASS_TRANDOSHAN:
-				if ( IsSniperRifle(NPCS.NPC->client->ps.weapon) && (NPCS.NPCInfo->scriptFlags & SCF_ALT_FIRE) )
+				if (WeaponSniperCharge(NPCS.NPC->client->ps.weapon) && (NPCS.NPCInfo->scriptFlags & SCF_ALT_FIRE))
 				{//a sniper
 					NPC_BehaviorSet_Sniper( bState );
 					return;
@@ -1871,7 +1871,7 @@ void NPC_RunBehavior( int team, int bState )
 				NPC_BehaviorSet_Default( bState );
 				return;
 			}*/
-			/*else*/ if ( IsSniperRifle(NPCS.NPC->client->ps.weapon) && (NPCS.NPCInfo->scriptFlags & SCF_ALT_FIRE) )
+			/*else*/ if (WeaponSniperCharge(NPCS.NPC->client->ps.weapon) && (NPCS.NPCInfo->scriptFlags & SCF_ALT_FIRE))
 			{//a sniper
 				NPC_BehaviorSet_Sniper( bState );
 				return;

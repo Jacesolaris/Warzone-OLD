@@ -804,7 +804,7 @@ void Boba_FireDecide( void )
 			//FIXME: we can never go back to alt-fire this way since, after this, we don't know if we were initially supposed to use alt-fire or not...
 		}
 	}
-	else if ( IsSniperRifle(NPCS.NPC->client->ps.weapon) && Distance(NPCS.NPC->r.currentOrigin, NPCS.NPC->enemy->r.currentOrigin) >= 512.0 )
+	else if (WeaponSniperCharge(NPCS.NPC->client->ps.weapon) && Distance(NPCS.NPC->r.currentOrigin, NPCS.NPC->enemy->r.currentOrigin) >= 512.0)
 	{//sniping... should be assumed
 		if ( !(NPCS.NPCInfo->scriptFlags&SCF_ALT_FIRE) )
 		{//use primary fire
@@ -815,7 +815,7 @@ void Boba_FireDecide( void )
 			return;
 		}
 	}
-	else if ( IsSniperRifle(NPCS.NPC->client->ps.weapon) && Distance(NPCS.NPC->r.currentOrigin, NPCS.NPC->enemy->r.currentOrigin) >= 512.0 )
+	else if (WeaponSniperCharge(NPCS.NPC->client->ps.weapon) && Distance(NPCS.NPC->r.currentOrigin, NPCS.NPC->enemy->r.currentOrigin) >= 512.0)
 	{//sniper rifle, but too close...
 		if ( NPCS.NPCInfo->scriptFlags&SCF_ALT_FIRE )
 		{//use primary fire
@@ -3962,7 +3962,7 @@ static void Jedi_FaceEnemy( qboolean doPitch )
 	if ( (NPC_IsBountyHunter(NPCS.NPC) || NPCS.NPC->hasJetpack)
 		&& TIMER_Done( NPCS.NPC, "flameTime" )
 		&& NPCS.NPC->s.weapon != WP_NONE
-		&& !(IsSniperRifle(NPCS.NPC->s.weapon) && Distance(NPCS.NPC->r.currentOrigin, NPCS.NPC->enemy->r.currentOrigin) >= 512.0)
+		&& !(WeaponSniperCharge(NPCS.NPC->s.weapon) && Distance(NPCS.NPC->r.currentOrigin, NPCS.NPC->enemy->r.currentOrigin) >= 512.0)
 		&& (NPCS.NPC->s.weapon != WP_ROCKET_LAUNCHER||!(NPCS.NPCInfo->scriptFlags&SCF_ALT_FIRE))
 		&& NPCS.NPC->s.weapon != WP_THERMAL
 		&& NPCS.NPC->s.weapon != WP_TRIP_MINE
@@ -7738,7 +7738,7 @@ void NPC_BSJedi_Default( void )
 
 		NPC_SelectBestWeapon();
 
-		if ( IsSniperRifle(NPCS.NPC->client->ps.weapon) && Distance(NPCS.NPC->r.currentOrigin, NPCS.NPC->enemy->r.currentOrigin) >= 512.0 )
+		if (WeaponSniperCharge(NPCS.NPC->client->ps.weapon) && Distance(NPCS.NPC->r.currentOrigin, NPCS.NPC->enemy->r.currentOrigin) >= 512.0)
 		{// Using sniper rifle... Use sniper AI...
 			//NPCS.NPCInfo->scriptFlags |= SCF_ALT_FIRE;
 			NPC_BSSniper_Default();

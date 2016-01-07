@@ -168,20 +168,19 @@ qboolean IsRollWithPistols(int weapon)
 
 	return qfalse;
 }
-
-qboolean IsSniperRifle ( int weapon )
+//theses weapons have charge option if they not are listed under the WeaponIsSniperNoCharge function.
+qboolean WeaponSniperCharge(int weapon)
 {
 	switch (weapon)
 	{
 	case WP_DISRUPTOR:
+	case WP_DLT_19:
+	case WP_WOOKIE_BOWCASTER_SCOPE:
+	case WP_BRYAR_RIFLE_SCOPE:
 	case WP_A280:
 	case WP_EE3:
 	case WP_ACP_SNIPER_RIFLE:
-	case WP_DLT_19:
 	case WP_BOWCASTER_CLASSIC:
-	case WP_WOOKIE_BOWCASTER_SCOPE:
-	case WP_BRYAR_RIFLE_SCOPE:
-	case WP_DH_17_PISTOL:
 		return qtrue;
 	default:
 		break;
@@ -189,18 +188,15 @@ qboolean IsSniperRifle ( int weapon )
 
 	return qfalse;
 }
-
-qboolean SniperRifleCharges ( int weapon )
+// theses weapons only have scopes with no charge options.
+qboolean WeaponIsSniperNoCharge ( int weapon )
 {
 	switch (weapon)
 	{
 	case WP_A280:
-	case WP_DLT_19:
 	case WP_EE3:
 	case WP_ACP_SNIPER_RIFLE:
 	case WP_BOWCASTER_CLASSIC:
-	case WP_WOOKIE_BOWCASTER_SCOPE:
-	case WP_BRYAR_RIFLE_SCOPE:
 		return qfalse;
 	default:
 		break;

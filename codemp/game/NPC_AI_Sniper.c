@@ -687,7 +687,7 @@ void NPC_BSSniper_Attack( void )
 	
 	if ( enemyDist2 < 16384 )//128 squared
 	{//too close, so switch to primary fire
-		if ( IsSniperRifle(NPCS.NPC->client->ps.weapon) )
+		if (WeaponSniperCharge(NPCS.NPC->client->ps.weapon))
 		{//sniping... should be assumed
 			if ( NPCS.NPCInfo->scriptFlags & SCF_ALT_FIRE )
 			{//use primary fire
@@ -710,7 +710,7 @@ void NPC_BSSniper_Attack( void )
 	}
 	else if ( enemyDist2 > 65536 )//256 squared
 	{
-		if ( IsSniperRifle(NPCS.NPC->client->ps.weapon) )
+		if (WeaponSniperCharge(NPCS.NPC->client->ps.weapon))
 		{//sniping... should be assumed
 			if ( !(NPCS.NPCInfo->scriptFlags&SCF_ALT_FIRE) )
 			{//use primary fire

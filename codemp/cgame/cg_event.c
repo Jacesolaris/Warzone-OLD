@@ -3881,7 +3881,7 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 		{
 			trap->S_StartSound(NULL, es->number, CHAN_WEAPON, cg_weapons[es->eventParm].chargeSound);
 		}
-		else if (IsSniperRifle(es->eventParm))
+		else if (WeaponSniperCharge(es->eventParm))
 		{
 			trap->S_StartSound(NULL, es->number, CHAN_WEAPON, cgs.media.disruptorZoomLoop);
 		}

@@ -2550,7 +2550,7 @@ void NPC_BSST_Attack( void )
 	}
 	else if ( enemyDist > 65536 )//256 squared
 	{
-		if ( IsSniperRifle(NPCS.NPC->client->ps.weapon) )
+		if (WeaponSniperCharge(NPCS.NPC->client->ps.weapon))
 		{//sniping... should be assumed
 			if ( !(NPCS.NPCInfo->scriptFlags&SCF_ALT_FIRE) )
 			{//use primary fire

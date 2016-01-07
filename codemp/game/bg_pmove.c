@@ -4214,7 +4214,7 @@ static void PM_CrashLand( void ) {
 	if (pm->ps->weapon != WP_SABER && pm->ps->weapon != WP_MELEE && !PM_IsRocketTrooper())
 	{ //saber handles its own anims
 		//This will push us back into our weaponready stance from the land anim.
-		if (IsSniperRifle(pm->ps->weapon) && pm->ps->scopeType > SCOPE_BINOCULARS)
+		if (WeaponSniperCharge(pm->ps->weapon) && pm->ps->scopeType > SCOPE_BINOCULARS)
 		{
 			PM_StartTorsoAnim( TORSO_WEAPONREADY4 );
 		}
@@ -5729,7 +5729,7 @@ static void PM_Footsteps( void ) {
 					PM_ContinueLegsAnim( BOTH_CROUCH1IDLE );
 				}
 			} else {
-				if (IsSniperRifle(pm->ps->weapon) && pm->ps->scopeType > SCOPE_BINOCULARS)
+				if (WeaponSniperCharge(pm->ps->weapon) && pm->ps->scopeType > SCOPE_BINOCULARS)
 				{
 					///????  continue legs anim on a torso anim...??!!!
 					//yeah.. the anim has a valid pose for the legs, it uses it (you can't move while using disruptor)
@@ -6574,13 +6574,13 @@ static qboolean PM_DoChargedWeapons( qboolean vehicleRocketLock, bgEntity_t *veh
 	}
 	else
 	{
-		if (IsSniperRifle(pm->ps->weapon))
+		if (WeaponSniperCharge(pm->ps->weapon))
 		{
 			if ((pm->cmd.buttons & BUTTON_ATTACK) &&
 				pm->ps->scopeType > SCOPE_BINOCULARS &&
 				pm->ps->zoomLocked)
 			{
-				if (!SniperRifleCharges(pm->ps->weapon))
+				if (!WeaponIsSniperNoCharge(pm->ps->weapon))
 				{
 					charging = qfalse;
 					altFire = qtrue;
@@ -7282,7 +7282,7 @@ static void PM_Weapon( void )
 		}
 	}
 
-	if (!IsSniperRifle(pm->ps->weapon) //not using disruptor
+	if (!WeaponSniperCharge(pm->ps->weapon) //not using snipers
 		&& pm->ps->weapon != WP_ROCKET_LAUNCHER//not using rocket launcher
 		&& pm->ps->weapon != WP_E60_ROCKET_LAUNCHER//not using rocket launcher
 		&& pm->ps->weapon != WP_CW_ROCKET_LAUNCHER//not using rocket launcher
@@ -7317,7 +7317,7 @@ static void PM_Weapon( void )
 	{ //reset into weapon stance
 		if (pm->ps->weapon != WP_SABER && pm->ps->weapon != WP_MELEE && !PM_IsRocketTrooper())
 		{ //saber handles its own anims
-			if (IsSniperRifle(pm->ps->weapon) && pm->ps->scopeType > SCOPE_BINOCULARS)
+			if (WeaponSniperCharge(pm->ps->weapon) && pm->ps->scopeType > SCOPE_BINOCULARS)
 			{
 				//PM_StartTorsoAnim( TORSO_WEAPONREADY4 );
 				PM_StartTorsoAnim( TORSO_RAISEWEAP1);
@@ -7843,7 +7843,7 @@ static void PM_Weapon( void )
 		return;
 	}
 
-	if (IsSniperRifle(pm->ps->weapon) &&
+	if (WeaponSniperCharge(pm->ps->weapon) &&
 		pm->ps->scopeType > SCOPE_BINOCULARS)
 	{
 		if (pm_cancelOutZoom)
@@ -7884,7 +7884,7 @@ static void PM_Weapon( void )
 			}
 			else
 			{
-				if (IsSniperRifle(pm->ps->weapon) && pm->ps->scopeType > SCOPE_BINOCULARS)
+				if (WeaponSniperCharge(pm->ps->weapon) && pm->ps->scopeType > SCOPE_BINOCULARS)
 				{
 					PM_StartTorsoAnim( TORSO_WEAPONREADY4 );
 				}
@@ -7953,7 +7953,7 @@ static void PM_Weapon( void )
 
 	if (((pm->ps->torsoAnim) == TORSO_WEAPONREADY4 ||
 		(pm->ps->torsoAnim) == BOTH_ATTACK4) &&
-		(!IsSniperRifle(pm->ps->weapon) || pm->ps->scopeType <= SCOPE_BINOCULARS))
+		(!WeaponSniperCharge(pm->ps->weapon) || pm->ps->scopeType <= SCOPE_BINOCULARS))
 	{
 		if (pm->ps->weapon == WP_EMPLACED_GUN)
 		{
@@ -7967,7 +7967,7 @@ static void PM_Weapon( void )
 	else if (((pm->ps->torsoAnim) != TORSO_WEAPONREADY4 &&
 		(pm->ps->torsoAnim) != BOTH_ATTACK4) &&
 		PM_CanSetWeaponAnims() &&
-		(IsSniperRifle(pm->ps->weapon) && pm->ps->scopeType > SCOPE_BINOCULARS))
+		(WeaponSniperCharge(pm->ps->weapon) && pm->ps->scopeType > SCOPE_BINOCULARS))
 	{
 		PM_StartTorsoAnim( TORSO_WEAPONREADY4 );
 	}
@@ -8073,14 +8073,14 @@ static void PM_Weapon( void )
 		return;
 	}
 
-	if (IsSniperRifle(pm->ps->weapon) &&
+	if (WeaponSniperCharge(pm->ps->weapon) &&
 		(pm->cmd.buttons & BUTTON_ALT_ATTACK) &&
 		!pm->ps->zoomLocked)
 	{
 		return;
 	}
 
-	if (IsSniperRifle(pm->ps->weapon) &&
+	if (WeaponSniperCharge(pm->ps->weapon) &&
 		(pm->cmd.buttons & BUTTON_ALT_ATTACK) &&
 		pm->ps->scopeType == SCOPE_BINOCULARS)
 	{ //can't use disruptor secondary while zoomed binoculars
@@ -8120,7 +8120,7 @@ static void PM_Weapon( void )
 			//PM_SetAnim(pm,SETANIM_TORSO,BOTH_ATTACK3,SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_RESTART|SETANIM_FLAG_HOLDLESS);
 		}
 	}
-	else if (IsSniperRifle(pm->ps->weapon) && pm->ps->scopeType > SCOPE_BINOCULARS)
+	else if (WeaponSniperCharge(pm->ps->weapon) && pm->ps->scopeType > SCOPE_BINOCULARS)
 	{
 		PM_StartTorsoAnim( BOTH_ATTACK4 );
 	}
@@ -8305,7 +8305,7 @@ static void PM_Weapon( void )
 			PM_AddEvent( EV_FIRE_WEAPON );
 			addTime = weaponData[pm->ps->weapon].fireTime;
 		}
-		else if (IsSniperRifle(pm->ps->weapon) && pm->ps->scopeType <= SCOPE_BINOCULARS)
+		else if (WeaponSniperCharge(pm->ps->weapon) && pm->ps->scopeType <= SCOPE_BINOCULARS)
 		{
 			PM_AddEvent( EV_FIRE_WEAPON );
 			addTime = weaponData[pm->ps->weapon].fireTime;
@@ -8722,7 +8722,7 @@ void PM_AdjustAttackStates( pmove_t *pmove )
 	}
 
 	// disruptor alt-fire should toggle the zoom mode, but only bother doing this for the player?
-	if ( IsSniperRifle(pmove->ps->weapon) && pmove->ps->weaponstate == WEAPON_READY )
+	if (WeaponSniperCharge(pmove->ps->weapon) && pmove->ps->weaponstate == WEAPON_READY)
 	{
 		if ( !(pmove->ps->eFlags & EF_ALT_FIRING) && (pmove->cmd.buttons & BUTTON_ALT_ATTACK) &&
 			pmove->cmd.upmove <= 0 && !pmove->cmd.forwardmove && !pmove->cmd.rightmove)
@@ -8832,7 +8832,7 @@ void PM_AdjustAttackStates( pmove_t *pmove )
 		}
 		
 	}
-	else if (IsSniperRifle(pmove->ps->weapon)) //still perform certain checks, even if the weapon is not ready
+	else if (WeaponSniperCharge(pmove->ps->weapon)) //still perform certain checks, even if the weapon is not ready
 	{
 		if (pmove->cmd.upmove > 0 || pmove->cmd.forwardmove || pmove->cmd.rightmove)
 		{
@@ -8876,7 +8876,7 @@ void PM_AdjustAttackStates( pmove_t *pmove )
 	}
 
 	// disruptor should convert a main fire to an alt-fire if the gun is currently zoomed
-	if ( IsSniperRifle(pmove->ps->weapon) )
+	if (WeaponSniperCharge(pmove->ps->weapon))
 	{
 		if (pmove->cmd.buttons & BUTTON_ATTACK && pmove->ps->scopeType > SCOPE_BINOCULARS && pmove->ps->zoomLocked)
 		{
@@ -9085,7 +9085,7 @@ void BG_AdjustClientSpeed(playerState_t *ps, usercmd_t *cmd, int svTime)
 		ps->speed *= 0.75f;
 	}
 
-	if (IsSniperRifle(pm->ps->weapon) &&
+	if (WeaponSniperCharge(pm->ps->weapon) &&
 		pm->ps->scopeType > SCOPE_BINOCULARS && pm->ps->zoomLockTime < pm->cmd.serverTime)
 	{
 		ps->speed *= 0.5f;
@@ -11452,7 +11452,7 @@ void PmoveSingle (pmove_t *pmove) {
 	}
 
 	/*
-	if (IsSniperRifle(pm->ps->weapon) && pm->ps->weaponstate == WEAPON_CHARGING_ALT)
+	if (WeaponSniperCharge(pm->ps->weapon) && pm->ps->weaponstate == WEAPON_CHARGING_ALT)
 	{ //not allowed to move while charging the disruptor
 		pm->cmd.forwardmove = 0;
 		pm->cmd.rightmove = 0;
@@ -11463,7 +11463,7 @@ void PmoveSingle (pmove_t *pmove) {
 	}
 	*/
 
-	if (IsSniperRifle(pm->ps->weapon) && pm->ps->weaponstate == WEAPON_CHARGING_ALT)
+	if (WeaponSniperCharge(pm->ps->weapon) && pm->ps->weaponstate == WEAPON_CHARGING_ALT)
 	{ //not allowed to move while charging the disruptor
 		if (pm->cmd.forwardmove ||
 			pm->cmd.rightmove ||
@@ -11475,7 +11475,7 @@ void PmoveSingle (pmove_t *pmove) {
 			pm->cmd.upmove = 0;
 		}
 	}
-	else if (IsSniperRifle(pm->ps->weapon) && pm->ps->scopeType > SCOPE_BINOCULARS)
+	else if (WeaponSniperCharge(pm->ps->weapon) && pm->ps->scopeType > SCOPE_BINOCULARS)
 	{ //can't jump
 		if (pm->cmd.upmove > 0)
 		{
@@ -11523,7 +11523,7 @@ void PmoveSingle (pmove_t *pmove) {
 	}
 
 	pm_cancelOutZoom = qfalse;
-	if (IsSniperRifle(pm->ps->weapon) &&
+	if (WeaponSniperCharge(pm->ps->weapon) &&
 		pm->ps->scopeType > SCOPE_BINOCULARS)
 	{
 		if ((pm->cmd.buttons & BUTTON_ALT_ATTACK) &&
