@@ -47,7 +47,7 @@
 #define MOD_DIRECTORY "warzone"
 
 //#define MAX_MAP_SIZE 16384
-#define MAX_MAP_SIZE 64000
+#define MAX_MAP_SIZE 65536//64000
 
 #define Vector4Copy(a,b)		((b)[0]=(a)[0],(b)[1]=(a)[1],(b)[2]=(a)[2],(b)[3]=(a)[3])
 
@@ -5115,7 +5115,7 @@ AIMod_GetMapBounts ( void )
 	int		i;
 	float	startx = -MAX_MAP_SIZE, starty = -MAX_MAP_SIZE, startz = -MAX_MAP_SIZE;
 	float	highest_z_point = -MAX_MAP_SIZE;
-	float	INCRUMENT = 192.0;//128.0; //64.0;// 256.0
+	float	INCRUMENT = 128.0;//192.0;//128.0; //64.0;// 256.0
 	trace_t tr;
 	vec3_t	org1;
 	vec3_t	org2;
@@ -5140,18 +5140,6 @@ AIMod_GetMapBounts ( void )
 			if ( tr.endpos[2] < mapMins[2] )
 			{
 				mapMins[2] = tr.endpos[2];
-				starty += INCRUMENT;
-				continue;
-			}
-
-			if ( tr.startsolid || tr.allsolid )
-			{
-				starty += INCRUMENT;
-				continue;
-			}
-
-			if (!ContentsOK(tr.contents) && !HasPortalFlags(tr.surfaceFlags, tr.contents))
-			{
 				starty += INCRUMENT;
 				continue;
 			}
@@ -5181,12 +5169,6 @@ AIMod_GetMapBounts ( void )
 			if ( tr.endpos[2] > mapMaxs[2] )
 			{
 				mapMaxs[2] = tr.endpos[2];
-				starty -= INCRUMENT;
-				continue;
-			}
-
-			if ( tr.startsolid || tr.allsolid )
-			{
 				starty -= INCRUMENT;
 				continue;
 			}
@@ -5224,18 +5206,6 @@ AIMod_GetMapBounts ( void )
 				continue;
 			}
 
-			if ( tr.startsolid || tr.allsolid )
-			{
-				starty += INCRUMENT;
-				continue;
-			}
-
-			if (!ContentsOK(tr.contents) && !HasPortalFlags(tr.surfaceFlags, tr.contents))
-			{
-				starty += INCRUMENT;
-				continue;
-			}
-
 			starty += INCRUMENT;
 		}
 
@@ -5261,18 +5231,6 @@ AIMod_GetMapBounts ( void )
 			if ( tr.endpos[0] > mapMaxs[0] )
 			{
 				mapMaxs[0] = tr.endpos[0];
-				starty -= INCRUMENT;
-				continue;
-			}
-
-			if ( tr.startsolid || tr.allsolid )
-			{
-				starty -= INCRUMENT;
-				continue;
-			}
-
-			if (!ContentsOK(tr.contents) && !HasPortalFlags(tr.surfaceFlags, tr.contents))
-			{
 				starty -= INCRUMENT;
 				continue;
 			}
@@ -5310,18 +5268,6 @@ AIMod_GetMapBounts ( void )
 				continue;
 			}
 
-			if ( tr.startsolid || tr.allsolid )
-			{
-				startx += INCRUMENT;
-				continue;
-			}
-
-			if (!ContentsOK(tr.contents) && !HasPortalFlags(tr.surfaceFlags, tr.contents))
-			{
-				startx += INCRUMENT;
-				continue;
-			}
-
 			startx += INCRUMENT;
 		}
 
@@ -5351,18 +5297,6 @@ AIMod_GetMapBounts ( void )
 				continue;
 			}
 
-			if ( tr.startsolid || tr.allsolid )
-			{
-				startx -= INCRUMENT;
-				continue;
-			}
-
-			if (!ContentsOK(tr.contents) && !HasPortalFlags(tr.surfaceFlags, tr.contents))
-			{
-				startx -= INCRUMENT;
-				continue;
-			}
-
 			startx -= INCRUMENT;
 		}
 
@@ -5377,6 +5311,7 @@ AIMod_GetMapBounts ( void )
 	//
 	// Refine Z Top Point to highest ground height!
 	//
+	/*
 	startx = mapMaxs[0] - 32;
 	starty = mapMaxs[1] - 32;
 	startz = mapMaxs[2] - 32;
@@ -5390,17 +5325,6 @@ AIMod_GetMapBounts ( void )
 			VectorSet( org2, startx, starty, startz );
 			org2[2] -= (MAX_MAP_SIZE*2);
 			CG_Trace( &tr, org1, NULL, NULL, org2, ENTITYNUM_NONE, MASK_PLAYERSOLID | MASK_WATER );
-			if ( tr.startsolid || tr.allsolid )
-			{
-				starty -= INCRUMENT;
-				continue;
-			}
-
-			if (!ContentsOK(tr.contents) && !HasPortalFlags(tr.surfaceFlags, tr.contents))
-			{
-				starty -= INCRUMENT;
-				continue;
-			}
 
 			if ( tr.endpos[2] > highest_z_point )
 			{
@@ -5409,12 +5333,15 @@ AIMod_GetMapBounts ( void )
 				continue;
 			}
 
-			starty -= INCRUMENT / 4.0; //64 /*128*/ ;
+			starty -= INCRUMENT / 4.0; //64
 		}
 
-		startx -= INCRUMENT / 4.0; //64 /*128*/ ;
+		startx -= INCRUMENT / 4.0; //64
 		starty = mapMaxs[1];
 	}
+	*/
+
+	highest_z_point = mapMaxs[2];
 
 	//Com_Printf("Stage 7 completed.\n");
 

@@ -44,7 +44,7 @@ extern "C" {
 #ifdef __USE_ALL_PLANTS__
 #define		NUM_PLANT_SHADERS 81
 #else //!__USE_ALL_PLANTS__
-#define		NUM_PLANT_SHADERS 70
+#define		NUM_PLANT_SHADERS 182
 
 static const char *GoodPlantsList[] = {
 "models/warzone/foliage/plant01.png",
@@ -115,6 +115,120 @@ static const char *GoodPlantsList[] = {
 "models/warzone/foliage/plant66.png",
 "models/warzone/foliage/plant67.png",
 "models/warzone/foliage/plant68.png",
+"models/warzone/foliage/plant69.png",
+"models/warzone/foliage/plant70.png",
+// More of these because they add color
+"models/warzone/foliage/plant27.png",
+"models/warzone/foliage/plant28.png",
+"models/warzone/foliage/plant29.png",
+"models/warzone/foliage/plant30.png",
+"models/warzone/foliage/plant31.png",
+"models/warzone/foliage/plant32.png",
+"models/warzone/foliage/plant33.png",
+"models/warzone/foliage/plant27.png",
+"models/warzone/foliage/plant28.png",
+"models/warzone/foliage/plant29.png",
+"models/warzone/foliage/plant30.png",
+"models/warzone/foliage/plant31.png",
+"models/warzone/foliage/plant32.png",
+"models/warzone/foliage/plant33.png",
+"models/warzone/foliage/plant27.png",
+"models/warzone/foliage/plant28.png",
+"models/warzone/foliage/plant29.png",
+"models/warzone/foliage/plant30.png",
+"models/warzone/foliage/plant31.png",
+"models/warzone/foliage/plant32.png",
+"models/warzone/foliage/plant33.png",
+"models/warzone/foliage/plant27.png",
+"models/warzone/foliage/plant28.png",
+"models/warzone/foliage/plant29.png",
+"models/warzone/foliage/plant30.png",
+"models/warzone/foliage/plant31.png",
+"models/warzone/foliage/plant32.png",
+"models/warzone/foliage/plant33.png",
+"models/warzone/foliage/plant27.png",
+"models/warzone/foliage/plant28.png",
+"models/warzone/foliage/plant29.png",
+"models/warzone/foliage/plant30.png",
+"models/warzone/foliage/plant31.png",
+"models/warzone/foliage/plant32.png",
+"models/warzone/foliage/plant33.png",
+"models/warzone/foliage/plant27.png",
+"models/warzone/foliage/plant28.png",
+"models/warzone/foliage/plant29.png",
+"models/warzone/foliage/plant30.png",
+"models/warzone/foliage/plant31.png",
+"models/warzone/foliage/plant32.png",
+"models/warzone/foliage/plant33.png",
+"models/warzone/foliage/plant27.png",
+"models/warzone/foliage/plant28.png",
+"models/warzone/foliage/plant29.png",
+"models/warzone/foliage/plant30.png",
+"models/warzone/foliage/plant31.png",
+"models/warzone/foliage/plant32.png",
+"models/warzone/foliage/plant33.png",
+"models/warzone/foliage/plant27.png",
+"models/warzone/foliage/plant28.png",
+"models/warzone/foliage/plant29.png",
+"models/warzone/foliage/plant30.png",
+"models/warzone/foliage/plant31.png",
+"models/warzone/foliage/plant32.png",
+"models/warzone/foliage/plant33.png",
+"models/warzone/foliage/plant27.png",
+"models/warzone/foliage/plant28.png",
+"models/warzone/foliage/plant29.png",
+"models/warzone/foliage/plant30.png",
+"models/warzone/foliage/plant31.png",
+"models/warzone/foliage/plant32.png",
+"models/warzone/foliage/plant33.png",
+"models/warzone/foliage/plant27.png",
+"models/warzone/foliage/plant28.png",
+"models/warzone/foliage/plant29.png",
+"models/warzone/foliage/plant30.png",
+"models/warzone/foliage/plant31.png",
+"models/warzone/foliage/plant32.png",
+"models/warzone/foliage/plant33.png",
+"models/warzone/foliage/plant27.png",
+"models/warzone/foliage/plant28.png",
+"models/warzone/foliage/plant29.png",
+"models/warzone/foliage/plant30.png",
+"models/warzone/foliage/plant31.png",
+"models/warzone/foliage/plant32.png",
+"models/warzone/foliage/plant33.png",
+"models/warzone/foliage/plant27.png",
+"models/warzone/foliage/plant28.png",
+"models/warzone/foliage/plant29.png",
+"models/warzone/foliage/plant30.png",
+"models/warzone/foliage/plant31.png",
+"models/warzone/foliage/plant32.png",
+"models/warzone/foliage/plant33.png",
+
+"models/warzone/foliage/plant60.png",
+"models/warzone/foliage/plant61.png",
+"models/warzone/foliage/plant62.png",
+"models/warzone/foliage/plant63.png",
+"models/warzone/foliage/plant67.png",
+"models/warzone/foliage/plant69.png",
+"models/warzone/foliage/plant70.png",
+"models/warzone/foliage/plant60.png",
+"models/warzone/foliage/plant61.png",
+"models/warzone/foliage/plant62.png",
+"models/warzone/foliage/plant63.png",
+"models/warzone/foliage/plant67.png",
+"models/warzone/foliage/plant69.png",
+"models/warzone/foliage/plant70.png",
+"models/warzone/foliage/plant60.png",
+"models/warzone/foliage/plant61.png",
+"models/warzone/foliage/plant62.png",
+"models/warzone/foliage/plant63.png",
+"models/warzone/foliage/plant67.png",
+"models/warzone/foliage/plant69.png",
+"models/warzone/foliage/plant70.png",
+"models/warzone/foliage/plant60.png",
+"models/warzone/foliage/plant61.png",
+"models/warzone/foliage/plant62.png",
+"models/warzone/foliage/plant63.png",
+"models/warzone/foliage/plant67.png",
 "models/warzone/foliage/plant69.png",
 "models/warzone/foliage/plant70.png",
 };
@@ -323,7 +437,7 @@ static const char *GoodPlantsList[] = {
 	qhandle_t	FOLIAGE_TREE_MODEL[3] = { 0 };
 	
 	qhandle_t	FOLIAGE_GRASS_SHADERS[37] = {0};
-	qhandle_t	FOLIAGE_PLANT_SHADERS[81] = {0};
+	qhandle_t	FOLIAGE_PLANT_SHADERS[NUM_PLANT_SHADERS] = {0};
 
 	extern qboolean InFOV( vec3_t spot, vec3_t from, vec3_t fromAngles, int hFOV, int vFOV );
 }
@@ -492,17 +606,36 @@ extern "C" {
 					re.origin[2] -= 16.0;
 					
 					if (dist < 128)
+					{
 						re.customShader = FOLIAGE_GRASS_BILLBOARD_SHADER[0];
+						re.hModel = FOLIAGE_GRASS_MODEL[0];
+					}
 					else if (dist < 256)
+					{
 						re.customShader = FOLIAGE_GRASS_BILLBOARD_SHADER[1];
-					else if (dist < 512)
+						re.hModel = FOLIAGE_GRASS_MODEL[0];
+					}
+					else if (dist < 384)
+					{
 						re.customShader = FOLIAGE_GRASS_BILLBOARD_SHADER[2];
+						re.hModel = FOLIAGE_GRASS_MODEL[1];
+					}
+					else if (dist < 512)
+					{
+						re.customShader = FOLIAGE_GRASS_BILLBOARD_SHADER[2];
+						re.hModel = FOLIAGE_GRASS_MODEL[1];
+					}
 					else if (dist < 1024)
+					{
 						re.customShader = FOLIAGE_GRASS_BILLBOARD_SHADER[3];
+						re.hModel = FOLIAGE_GRASS_MODEL[2];
+					}
 					else
+					{
 						re.customShader = FOLIAGE_GRASS_BILLBOARD_SHADER[4];
+						re.hModel = FOLIAGE_GRASS_MODEL[2];
+					}
 
-					re.hModel = FOLIAGE_GRASS_MODEL[0];
 					VectorSet(re.modelScale, GRASS_SCALE, GRASS_SCALE, GRASS_SCALE);
 
 #ifdef __PREGENERATE_NORMALS__
@@ -637,7 +770,33 @@ extern "C" {
 			else
 			{
 				re.reType = RT_MODEL;
-				re.hModel = FOLIAGE_PLANT_MODEL[FOLIAGE_PLANT_SELECTION[num]-1];
+
+				if (dist < 128)
+				{
+					re.hModel = FOLIAGE_GRASS_MODEL[0];
+				}
+				else if (dist < 256)
+				{
+					re.hModel = FOLIAGE_GRASS_MODEL[0];
+				}
+				else if (dist < 384)
+				{
+					re.hModel = FOLIAGE_GRASS_MODEL[1];
+				}
+				else if (dist < 512)
+				{
+					re.hModel = FOLIAGE_GRASS_MODEL[1];
+				}
+				else if (dist < 1024)
+				{
+					re.hModel = FOLIAGE_GRASS_MODEL[2];
+				}
+				else
+				{
+					re.hModel = FOLIAGE_GRASS_MODEL[2];
+				}
+
+				//re.hModel = FOLIAGE_PLANT_MODEL[FOLIAGE_PLANT_SELECTION[num]-1];
 				VectorSet(re.modelScale, PLANT_SCALE, PLANT_SCALE, PLANT_SCALE);
 
 #ifdef __PREGENERATE_NORMALS__
@@ -816,15 +975,9 @@ extern "C" {
 
 		if (!FOLIAGE_GRASS_MODEL[0])
 		{// Init/register all foliage models...
-			//FOLIAGE_GRASS_MODEL[0] = trap->R_RegisterModel( "models/pop/foliages/sch_weed_a.md3" );
-			//FOLIAGE_GRASS_MODEL[1] = trap->R_RegisterModel( "models/pop/foliages/sch_weed_b.md3" );
-			//FOLIAGE_GRASS_MODEL[2] = trap->R_RegisterModel( "models/warzone/foliage/grass33.md3" );
-			FOLIAGE_GRASS_MODEL[0] = trap->R_RegisterModel( "models/warzone/foliage/grass01.md3" );
-			FOLIAGE_GRASS_MODEL[1] = FOLIAGE_GRASS_MODEL[0];
-			FOLIAGE_GRASS_MODEL[2] = FOLIAGE_GRASS_MODEL[0];
-
-			//FOLIAGE_GRASS_MODEL[0] = trap->R_RegisterModel( "models/warzone/foliage/grass_dense.md3" );
-			//FOLIAGE_GRASS_MODEL[1] = trap->R_RegisterModel( "models/warzone/foliage/grass_cross.md3" );
+			FOLIAGE_GRASS_MODEL[0] = trap->R_RegisterModel( "models/warzone/foliage/grass01_LOD0.md3" );
+			FOLIAGE_GRASS_MODEL[1] = trap->R_RegisterModel( "models/warzone/foliage/grass01_LOD1.md3" );
+			FOLIAGE_GRASS_MODEL[2] = trap->R_RegisterModel( "models/warzone/foliage/grass01_LOD2.md3" );
 
 			FOLIAGE_GRASS_BILLBOARD_MODEL[0] = trap->R_RegisterModel( "models/warzone/foliage/grass_cross.md3" );
 			FOLIAGE_GRASS_BILLBOARD_SHADER[0] = trap->R_RegisterShader( "models/warzone/foliage/maingrass1024.png" );
@@ -875,18 +1028,18 @@ extern "C" {
 #ifndef __USE_ALL_PLANTS__
 			int current = 0;
 
-			for (int i = 1; i < 81; i++)
+			for (int i = 1; i < NUM_PLANT_SHADERS; i++)
 			{
 				FOLIAGE_PLANT_SHADERS[i] = trap->R_RegisterShader(GoodPlantsList[current]);
 
 				// Loop the best list...
 				current++;
 
-				if (current >= 29)
-					current = 0; // Return to start...
+				//if (current >= 29)
+				//	current = 0; // Return to start...
 			}
 #else //!__USE_ALL_PLANTS__
-			for (int i = 1; i < 81/*NUM_PLANT_SHADERS*/; i++)
+			for (int i = 1; i < NUM_PLANT_SHADERS; i++)
 			{
 				char	shaderName[128] = {0};
 				int		shaderNum = i;
@@ -975,7 +1128,7 @@ extern "C" {
 	float FOLIAGE_FloorHeightAt ( vec3_t org )
 	{
 		trace_t tr;
-		vec3_t org1, org2, slopeangles;
+		vec3_t org1, org2;//, slopeangles;
 		float pitch = 0;
 
 		VectorCopy(org, org1);
@@ -1006,6 +1159,8 @@ extern "C" {
 			return -65536.0f;
 		}
 
+//#define __SLOPE_CHECK__
+#ifdef __SLOPE_CHECK__
 		// Added -- Check slope...
 		vectoangles( tr.plane.normal, slopeangles );
 
@@ -1026,6 +1181,7 @@ extern "C" {
 		{
 			return 65536.0f;
 		}
+#endif //__SLOPE_CHECK__
 
 		switch( tr.surfaceFlags & MATERIAL_MASK )
 		{
@@ -1133,6 +1289,106 @@ extern "C" {
 		}
 
 		return qfalse;
+	}
+
+
+#define GRASS_MODEL_WIDTH cg_foliageModelWidth.value
+#define GRASS_SLOPE_MAX_DIFF cg_foliageMaxSlopeChange.value
+
+	qboolean CheckSlopesAround(vec3_t pos, vec3_t down, vec3_t slope)
+	{
+		trace_t		tr;
+		vec3_t		pos2, down2;
+
+		VectorCopy(pos, pos2);
+		VectorCopy(down, down2);
+		pos2[0] += GRASS_MODEL_WIDTH;
+		down2[0] += GRASS_MODEL_WIDTH;
+
+		CG_Trace( &tr, pos2, NULL, NULL, down2, ENTITYNUM_NONE, MASK_PLAYERSOLID|CONTENTS_WATER );
+
+		// Slope too different...
+		if (Distance(slope, tr.plane.normal) > GRASS_SLOPE_MAX_DIFF) return qfalse;
+
+		VectorCopy(pos, pos2);
+		VectorCopy(down, down2);
+		pos2[0] -= GRASS_MODEL_WIDTH;
+		down2[0] -= GRASS_MODEL_WIDTH;
+
+		CG_Trace( &tr, pos2, NULL, NULL, down2, ENTITYNUM_NONE, MASK_PLAYERSOLID|CONTENTS_WATER );
+
+		// Slope too different...
+		if (Distance(slope, tr.plane.normal) > GRASS_SLOPE_MAX_DIFF) return qfalse;
+
+		VectorCopy(pos, pos2);
+		VectorCopy(down, down2);
+		pos2[1] += GRASS_MODEL_WIDTH;
+		down2[1] += GRASS_MODEL_WIDTH;
+
+		CG_Trace( &tr, pos2, NULL, NULL, down2, ENTITYNUM_NONE, MASK_PLAYERSOLID|CONTENTS_WATER );
+
+		// Slope too different...
+		if (Distance(slope, tr.plane.normal) > GRASS_SLOPE_MAX_DIFF) return qfalse;
+
+		VectorCopy(pos, pos2);
+		VectorCopy(down, down2);
+		pos2[1] -= GRASS_MODEL_WIDTH;
+		down2[1] -= GRASS_MODEL_WIDTH;
+
+		CG_Trace( &tr, pos2, NULL, NULL, down2, ENTITYNUM_NONE, MASK_PLAYERSOLID|CONTENTS_WATER );
+
+		// Slope too different...
+		if (Distance(slope, tr.plane.normal) > GRASS_SLOPE_MAX_DIFF) return qfalse;
+
+		VectorCopy(pos, pos2);
+		VectorCopy(down, down2);
+		pos2[0] += GRASS_MODEL_WIDTH;
+		pos2[1] += GRASS_MODEL_WIDTH;
+		down2[0] += GRASS_MODEL_WIDTH;
+		down2[1] += GRASS_MODEL_WIDTH;
+
+		CG_Trace( &tr, pos2, NULL, NULL, down2, ENTITYNUM_NONE, MASK_PLAYERSOLID|CONTENTS_WATER );
+
+		// Slope too different...
+		if (Distance(slope, tr.plane.normal) > GRASS_SLOPE_MAX_DIFF) return qfalse;
+
+		VectorCopy(pos, pos2);
+		VectorCopy(down, down2);
+		pos2[0] += GRASS_MODEL_WIDTH;
+		pos2[1] -= GRASS_MODEL_WIDTH;
+		down2[0] += GRASS_MODEL_WIDTH;
+		down2[1] -= GRASS_MODEL_WIDTH;
+
+		CG_Trace( &tr, pos2, NULL, NULL, down2, ENTITYNUM_NONE, MASK_PLAYERSOLID|CONTENTS_WATER );
+
+		// Slope too different...
+		if (Distance(slope, tr.plane.normal) > GRASS_SLOPE_MAX_DIFF) return qfalse;
+
+		VectorCopy(pos, pos2);
+		VectorCopy(down, down2);
+		pos2[0] -= GRASS_MODEL_WIDTH;
+		pos2[1] += GRASS_MODEL_WIDTH;
+		down2[0] -= GRASS_MODEL_WIDTH;
+		down2[1] += GRASS_MODEL_WIDTH;
+
+		CG_Trace( &tr, pos2, NULL, NULL, down2, ENTITYNUM_NONE, MASK_PLAYERSOLID|CONTENTS_WATER );
+
+		// Slope too different...
+		if (Distance(slope, tr.plane.normal) > GRASS_SLOPE_MAX_DIFF) return qfalse;
+
+		VectorCopy(pos, pos2);
+		VectorCopy(down, down2);
+		pos2[0] -= GRASS_MODEL_WIDTH;
+		pos2[1] -= GRASS_MODEL_WIDTH;
+		down2[0] -= GRASS_MODEL_WIDTH;
+		down2[1] -= GRASS_MODEL_WIDTH;
+
+		CG_Trace( &tr, pos2, NULL, NULL, down2, ENTITYNUM_NONE, MASK_PLAYERSOLID|CONTENTS_WATER );
+
+		// Slope too different...
+		if (Distance(slope, tr.plane.normal) > GRASS_SLOPE_MAX_DIFF) return qfalse;
+
+		return qtrue;
 	}
 
 #define FOLIAGE_MOD_NAME		"aimod"
@@ -1373,13 +1629,13 @@ float	FOLIAGE_FILE_VERSION =	1.1f;
 
 			trap->S_Shutup(qtrue);
 
-			mapMaxs[0]+=2048;
+			/*mapMaxs[0]+=2048;
 			mapMaxs[1]+=2048;
 			mapMaxs[2]+=2048;
 
 			mapMins[0]-=2048;
 			mapMins[1]-=2048;
-			mapMins[2]-=2048;
+			mapMins[2]-=2048;*/
 
 			startx = mapMaxs[0];
 			starty = mapMaxs[1];
@@ -1403,6 +1659,8 @@ float	FOLIAGE_FILE_VERSION =	1.1f;
 			// Create bulk temporary nodes...
 			//
 
+//#define __ORIGINAL_FOLIAGE_METHOD__
+#ifdef __ORIGINAL_FOLIAGE_METHOD__
 			// Let's vary the scatter distances :)
 			scatter = density;
 			scatter_min = scatter * 0.33;
@@ -1584,6 +1842,118 @@ float	FOLIAGE_FILE_VERSION =	1.1f;
 					break;
 				}
 			}
+#else //!__ORIGINAL_FOLIAGE_METHOD__
+			final_tests = 0;
+			previous_time = clock();
+			aw_stage_start_time = clock();
+			aw_percent_complete = 0;
+
+			grassSpotCount = 0;
+
+			// Create the map...
+			vec3_t MAP_INFO_SIZE;
+			
+			MAP_INFO_SIZE[0] = mapMaxs[0] - mapMins[0];
+			MAP_INFO_SIZE[1] = mapMaxs[1] - mapMins[1];
+			MAP_INFO_SIZE[2] = mapMaxs[2] - mapMins[2];
+
+//#pragma omp parallel for schedule(dynamic)
+			for (int x = (int)mapMins[0]; x <= (int)mapMaxs[0]; x += density)
+			{
+				if (grassSpotCount >= FOLIAGE_MAX_FOLIAGES)
+				{
+					continue;
+				}
+
+				float current =  MAP_INFO_SIZE[0] - (mapMaxs[0] - (float)x);
+				float complete = current / MAP_INFO_SIZE[0];
+
+				aw_percent_complete = (float)(complete * 100.0);
+
+				for (float y = mapMins[1]; y <= mapMaxs[1]; y += density)
+				{
+					if (grassSpotCount >= FOLIAGE_MAX_FOLIAGES)
+					{
+						break;
+					}
+
+					for (float z = mapMaxs[2]; z >= mapMins[2]; z -= 48.0)
+					{
+						if (grassSpotCount >= FOLIAGE_MAX_FOLIAGES)
+						{
+							break;
+						}
+
+						if(omp_get_thread_num() == 0)
+						{// Draw a nice little progress bar ;)
+							if (clock() - previous_time > 500) // update display every 500ms...
+							{
+								previous_time = clock();
+								trap->UpdateScreen();
+							}
+						}
+
+						trace_t		tr;
+						vec3_t		pos, down;
+						qboolean	FOUND = qfalse;
+
+						VectorSet(pos, x, y, z);
+						pos[2] += 8.0;
+						VectorCopy(pos, down);
+						down[2] = mapMins[2];
+
+						CG_Trace( &tr, pos, NULL, NULL, down, ENTITYNUM_NONE, MASK_PLAYERSOLID|CONTENTS_WATER );
+
+						if (tr.endpos[2] <= mapMins[2])
+						{// Went off map...
+							break;
+						}
+
+						if ( tr.surfaceFlags & SURF_SKY )
+						{// Sky...
+							continue;
+						}
+
+						if ( tr.surfaceFlags & SURF_NODRAW )
+						{// don't generate a drawsurface at all
+							continue;
+						}
+
+						if ( tr.contents & CONTENTS_WATER )
+						{// Anything below here is underwater...
+							break;
+						}
+
+						int MATERIAL_TYPE = (tr.surfaceFlags & MATERIAL_MASK);
+
+						switch( MATERIAL_TYPE )
+						{
+						case MATERIAL_SHORTGRASS:		// 5					// manicured lawn
+						case MATERIAL_LONGGRASS:		// 6					// long jungle grass
+						//case MATERIAL_MUD:				// 17					// wet soil
+						//case MATERIAL_DIRT:				// 7					// hard mud
+							// Look around here for a different slope angle... Cull if found...
+							if (CheckSlopesAround(pos, down, tr.plane.normal))
+							{
+#pragma omp critical (__ADD_TEMP_NODE__)
+							{
+								sprintf(last_node_added_string, "^5Adding foliage point ^3%i ^5at ^7%f %f %f^5.", grassSpotCount, tr.endpos[0], tr.endpos[1], tr.endpos[2]+8);
+
+								VectorSet(grassSpotList[grassSpotCount], tr.endpos[0], tr.endpos[1], tr.endpos[2]+8);
+								grassSpotCount++;
+							}
+							}
+							FOUND = qtrue;
+							break;
+						default:
+							break;
+						}
+
+						if (FOUND) break;
+					}
+				}
+			}
+#endif //__ORIGINAL_FOLIAGE_METHOD__
 
 			if (grassSpotCount >= FOLIAGE_MAX_FOLIAGES)
 			{
@@ -1651,8 +2021,8 @@ float	FOLIAGE_FILE_VERSION =	1.1f;
 					}
 					else if (density >= 48)
 					{
-						if (random() * 20 >= 19 && RoofHeightAt(vec) - vec[2] > 1024.0)
-						{// Add tree... 1 in every 20 positions... If there is room above for a tree...
+						if (random() * 12 >= 11 && RoofHeightAt(vec) - vec[2] > 1024.0)
+						{// Add tree... 1 in every 12 positions... If there is room above for a tree...
 							FOLIAGE_TREE_SELECTION[FOLIAGE_NUM_POSITIONS] = (int)(random() * 3);
 							FOLIAGE_TREE_ANGLES[FOLIAGE_NUM_POSITIONS] = (int)(random() * 180);
 							FOLIAGE_TREE_SCALE[FOLIAGE_NUM_POSITIONS] = (float)((float)irand(65,150) / 100.0);
@@ -1666,8 +2036,8 @@ float	FOLIAGE_FILE_VERSION =	1.1f;
 					}
 					else
 					{
-						if (random() * 30 >= 29 && RoofHeightAt(vec) - vec[2] > 1024.0)
-						{// Add tree... 1 in every 30 positions... If there is room above for a tree...
+						if (random() * 18 >= 17 && RoofHeightAt(vec) - vec[2] > 1024.0)
+						{// Add tree... 1 in every 17 positions... If there is room above for a tree...
 							FOLIAGE_TREE_SELECTION[FOLIAGE_NUM_POSITIONS] = (int)(random() * 3);
 							FOLIAGE_TREE_ANGLES[FOLIAGE_NUM_POSITIONS] = (int)(random() * 180);
 							FOLIAGE_TREE_SCALE[FOLIAGE_NUM_POSITIONS] = (float)((float)irand(65,150) / 100.0);

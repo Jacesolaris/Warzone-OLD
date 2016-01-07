@@ -506,6 +506,7 @@ Starts an ambient, 'one-shot" sound.
 
 void S_StartAmbientSound( const vec3_t origin, int entityNum, unsigned char volume, sfxHandle_t sfxHandle )
 {
+	if (sfxHandle >= MAX_SFX) return;
 	if (s_knownSfx[ sfxHandle ].bassSampleID < 0) return;
 	/*
 	if (origin)
@@ -544,6 +545,7 @@ entchannel 0 will never override a playing sound
 */
 void S_StartSound(const vec3_t origin, int entityNum, int entchannel, sfxHandle_t sfxHandle )
 {
+	if (sfxHandle >= MAX_SFX) return;
 	if (s_knownSfx[ sfxHandle ].bassSampleID < 0) return;
 
 	/*
@@ -605,6 +607,7 @@ void S_CIN_StopSound(sfxHandle_t sfxHandle)
 		Com_Error( ERR_DROP, "S_CIN_StopSound: handle %i out of range", sfxHandle );
 	}
 
+	if (sfxHandle >= MAX_SFX) return;
 	if (s_knownSfx[ sfxHandle ].bassSampleID < 0) return;
 
 	BASS_FindAndStopSound(s_knownSfx[ sfxHandle ].bassSampleID);
@@ -676,6 +679,7 @@ Include velocity in case I get around to doing doppler...
 ==================
 */
 void S_AddLoopingSound( int entityNum, const vec3_t origin, const vec3_t velocity, sfxHandle_t sfxHandle ) {
+	if (sfxHandle >= MAX_SFX) return;
 	if (s_knownSfx[ sfxHandle ].bassSampleID < 0) return;
 	
 	if (entityNum >= 0 /*&& (cl.entityBaselines[entityNum].eType == ET_NPC || cl.entityBaselines[entityNum].eType == ET_PLAYER)*/)
@@ -718,6 +722,7 @@ S_AddAmbientLoopingSound
 */
 void S_AddAmbientLoopingSound( const vec3_t origin, unsigned char volume, sfxHandle_t sfxHandle )
 {
+	if (sfxHandle >= MAX_SFX) return;
 	if (s_knownSfx[ sfxHandle ].bassSampleID < 0) return;
 
 	/*
