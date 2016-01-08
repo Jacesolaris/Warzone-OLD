@@ -1215,3 +1215,164 @@ models\warzone\trees\gkbpalmbark14
     depthFunc equal // sets the alpha to the same as the stages that wrote it
   }
 }
+
+models/warzone/trees/anvil_leafs02
+{
+  qer_editorimage	models/warzone/trees/anvil_leafs02.png
+	//q3map_nolightmap
+	q3map_alphashadow
+	//q3map_onlyvertexlighting
+	q3map_material	GreenLeaves
+	
+	surfaceparm trans
+	surfaceparm	noimpact
+	surfaceparm	nomarks
+	//surfaceparm	nonopaque
+	
+	sort seethrough
+	
+	cull	twosided
+  {
+    map models/warzone/trees/anvil_leafs02.png
+    blendfunc GL_ONE GL_ZERO
+    alphaFunc GE128
+    //rgbGen lightingDiffuse
+    depthWrite // writes the alpha map for other stages to use
+    rgbGen identity
+  }
+  {
+    map $lightmap
+    blendfunc GL_DST_COLOR GL_ZERO
+    rgbGen identity
+    depthFunc equal // sets the alpha to the same as the stages that wrote it
+  }
+}
+
+models/warzone/trees/anvilbarkpalm
+{
+  qer_editorimage	models/warzone/trees/anvilbarkpalm.png
+	//q3map_nolightmap
+	q3map_alphashadow
+	//q3map_onlyvertexlighting
+	q3map_material	GreenLeaves
+	
+	surfaceparm trans
+	surfaceparm	noimpact
+	surfaceparm	nomarks
+	//surfaceparm	nonopaque
+	
+	sort seethrough
+	
+	cull	twosided
+  {
+    map models/warzone/trees/anvilbarkpalm.png
+    blendfunc GL_ONE GL_ZERO
+    alphaFunc GE128
+    //rgbGen lightingDiffuse
+    depthWrite // writes the alpha map for other stages to use
+    rgbGen identity
+  }
+  {
+    map $lightmap
+    blendfunc GL_DST_COLOR GL_ZERO
+    rgbGen identity
+    depthFunc equal // sets the alpha to the same as the stages that wrote it
+  }
+}
+
+models/warzone/trees/anvilleafpalm02
+{
+  qer_editorimage	models/warzone/trees/anvilleafpalm02.png
+	//q3map_nolightmap
+	q3map_alphashadow
+	//q3map_onlyvertexlighting
+	q3map_material	GreenLeaves
+	
+	surfaceparm trans
+	surfaceparm	noimpact
+	surfaceparm	nomarks
+	//surfaceparm	nonopaque
+	
+	sort seethrough
+	
+	cull	twosided
+  {
+    map models/warzone/trees/anvilleafpalm02.png
+    blendfunc GL_ONE GL_ZERO
+    alphaFunc GE128
+    //rgbGen lightingDiffuse
+    depthWrite // writes the alpha map for other stages to use
+    rgbGen identity
+  }
+  {
+    map $lightmap
+    blendfunc GL_DST_COLOR GL_ZERO
+    rgbGen identity
+    depthFunc equal // sets the alpha to the same as the stages that wrote it
+  }
+}
+
+models/warzone/trees/giant_tree
+{
+  qer_editorimage	models/warzone/trees/giant_tree.png
+	//q3map_nolightmap
+	q3map_alphashadow
+	//q3map_onlyvertexlighting
+	q3map_material	GreenLeaves
+	
+	surfaceparm trans
+	surfaceparm	noimpact
+	surfaceparm	nomarks
+	//surfaceparm	nonopaque
+	
+	sort seethrough
+	
+	cull	twosided
+  {
+    map models/warzone/trees/giant_tree.png
+    blendfunc GL_ONE GL_ZERO
+    alphaFunc GE128
+    //rgbGen lightingDiffuse
+    depthWrite // writes the alpha map for other stages to use
+    rgbGen identity
+  }
+  {
+    map $lightmap
+    blendfunc GL_DST_COLOR GL_ZERO
+    rgbGen identity
+    depthFunc equal // sets the alpha to the same as the stages that wrote it
+  }
+}
+
+models/warzone/trees/mp_valenwood_tree01
+{
+  qer_editorimage	models/warzone/trees/mp_valenwood_tree01.png
+	//q3map_nolightmap
+	q3map_alphashadow
+	//q3map_onlyvertexlighting
+	q3map_material	GreenLeaves
+	
+	surfaceparm trans
+	surfaceparm	noimpact
+	surfaceparm	nomarks
+	//surfaceparm	nonopaque
+	
+	sort seethrough
+	
+	cull	twosided
+  {
+    map models/warzone/trees/mp_valenwood_tree01.png
+    blendfunc GL_ONE GL_ZERO
+    alphaFunc GE128
+    //rgbGen lightingDiffuse
+    depthWrite // writes the alpha map for other stages to use
+    rgbGen identity
+  }
+  {
+    map $lightmap
+    blendfunc GL_DST_COLOR GL_ZERO
+    rgbGen identity
+    depthFunc equal // sets the alpha to the same as the stages that wrote it
+  }
+}
+

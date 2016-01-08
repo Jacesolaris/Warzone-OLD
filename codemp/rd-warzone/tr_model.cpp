@@ -923,6 +923,7 @@ static qboolean R_LoadMD3(model_t * mod, int lod, void *buffer, const char *modN
 		LL(md3Surf->ofsXyzNormals);
 		LL(md3Surf->ofsEnd);
 
+#if 0
 		if(md3Surf->numVerts >= SHADER_MAX_VERTEXES)
 		{
 			ri->Printf(PRINT_WARNING, "R_LoadMD3: %s has more than %i verts on %s (%i).\n",
@@ -937,6 +938,7 @@ static qboolean R_LoadMD3(model_t * mod, int lod, void *buffer, const char *modN
 				md3Surf->numTriangles );
 			return qfalse;
 		}
+#endif
 
 		// change to surface identifier
 		surf->surfaceType = SF_MDV;
@@ -1405,6 +1407,7 @@ static qboolean R_LoadMDR( model_t *mod, void *buffer, int filesize, const char 
 			surf->numTriangles = LittleLong(cursurf->numTriangles);
 			// numBoneReferences and BoneReferences generally seem to be unused
 			
+#if 0
 			// now do the checks that may fail.
 			if ( surf->numVerts >= SHADER_MAX_VERTEXES ) 
 			{
@@ -1420,6 +1423,8 @@ static qboolean R_LoadMDR( model_t *mod, void *buffer, int filesize, const char 
 					  surf->numTriangles );
 				return qfalse;
 			}
+#endif
+
 			// lowercase the surface name so skin compares are faster
 			Q_strlwr( surf->name );
 

@@ -635,19 +635,21 @@ extern "C" {
 		re.customShader = 0;
 		re.renderfx = 0;
 
-		if (FOLIAGE_TREE_SELECTION[num] != 0)
+		if (FOLIAGE_TREE_SELECTION[num] > 0)
 		{// Add the tree model...
 			re.reType = RT_MODEL;
 			re.hModel = FOLIAGE_TREE_MODEL[FOLIAGE_TREE_SELECTION[num]-1];
-			if (FOLIAGE_TREE_SELECTION[num]-1 <= 1)
+
+			//if (FOLIAGE_TREE_SELECTION[num]-1 == 0)
 				VectorSet(re.modelScale, FOLIAGE_TREE_SCALE[num]*2.5, FOLIAGE_TREE_SCALE[num]*2.5, FOLIAGE_TREE_SCALE[num]*2.5);
-			else
-				VectorSet(re.modelScale, FOLIAGE_TREE_SCALE[num], FOLIAGE_TREE_SCALE[num], FOLIAGE_TREE_SCALE[num]);
+			//else
+			//	VectorSet(re.modelScale, FOLIAGE_TREE_SCALE[num], FOLIAGE_TREE_SCALE[num], FOLIAGE_TREE_SCALE[num]);
+
 			angles[PITCH] = angles[ROLL] = 0.0f;
 			angles[YAW] = FOLIAGE_TREE_ANGLES[num];
 			VectorCopy(angles, re.angles);
 			AnglesToAxis(angles, re.axis);
-			if (FOLIAGE_TREE_SELECTION[num]-1 > 1) re.origin[2] += 128.0; // the tree model digs into ground too much...
+			//if (FOLIAGE_TREE_SELECTION[num]-1 > 1) re.origin[2] += 128.0; // the tree model digs into ground too much...
 			ScaleModelAxis( &re );
 
 			FOLIAGE_AddFoliageEntityToScene( &re );
@@ -918,10 +920,12 @@ extern "C" {
 			//FOLIAGE_TREE_MODEL[2] = trap->R_RegisterModel( "models/map_objects/yavin/tree08_b.md3" );
 
 			FOLIAGE_TREE_MODEL[0] = trap->R_RegisterModel( "models/warzone/trees/fanpalm1.md3" );
-			FOLIAGE_TREE_MODEL[1] = FOLIAGE_TREE_MODEL[0];
+			//FOLIAGE_TREE_MODEL[1] = FOLIAGE_TREE_MODEL[0];
+			FOLIAGE_TREE_MODEL[1] = trap->R_RegisterModel( "models/warzone/trees/giant1.md3" );
 			//FOLIAGE_TREE_MODEL[2] = FOLIAGE_TREE_MODEL[0];
 			//FOLIAGE_TREE_MODEL[1] = trap->R_RegisterModel( "models/map_objects/yavin/tree08_b.md3" );
-			FOLIAGE_TREE_MODEL[2] = trap->R_RegisterModel( "models/map_objects/yavin/tree08_b.md3" );
+			//FOLIAGE_TREE_MODEL[2] = trap->R_RegisterModel( "models/map_objects/yavin/tree08_b.md3" );
+			FOLIAGE_TREE_MODEL[2] = trap->R_RegisterModel( "models/warzone/trees/anvilpalm1.md3" );
 
 			for (int i = 1; i < 37; i++)
 			{
