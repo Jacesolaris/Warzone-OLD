@@ -114,7 +114,9 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponNum == WP_E60_ROCKET_LAUNCHER ||
 		weaponNum == WP_ARC_CASTER_IMPERIAL ||
 		weaponNum == WP_PULSECANON ||
-		weaponNum == WP_CW_ROCKET_LAUNCHER)
+		weaponNum == WP_CW_ROCKET_LAUNCHER ||
+		weaponNum == WP_BRYAR_RIFLE_SCOPE ||
+		weaponNum == WP_DLT_19)
 
 	{
 		Q_strncpyz( path, item->view_model, sizeof(path) );
