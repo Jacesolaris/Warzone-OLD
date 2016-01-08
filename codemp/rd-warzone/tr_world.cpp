@@ -34,8 +34,8 @@ qboolean R_CULL_InFOV( vec3_t spot, vec3_t from )
 	vec3_t	fromAngles;
 	//int hFOV = tr.refdef.fov_x + 5.0;
 	//int vFOV = tr.refdef.fov_y + 5.0;
-	int hFOV = 120;//backEnd.refdef.fov_x + 5.0;//100;
-	int vFOV = 120;//backEnd.refdef.fov_y + 5.0;//100;
+	int hFOV = 100;//backEnd.refdef.fov_x + 5.0;//100;
+	int vFOV = 140;//backEnd.refdef.fov_y + 5.0;//100;
 	
 	TR_AxisToAngles(tr.refdef.viewaxis, fromAngles);
 
@@ -54,18 +54,35 @@ qboolean R_CULL_InFOV( vec3_t spot, vec3_t from )
 	return qfalse;
 }
 
+qboolean R_Box_In_FOV ( vec3_t mins, vec3_t maxs )
+{
+	vec3_t edge, edge2;
+
+	VectorSet(edge, maxs[0], mins[1], maxs[2]);
+	VectorSet(edge2, mins[0], maxs[1], maxs[2]);
+	
+	if (!R_CULL_InFOV( mins, tr.refdef.vieworg )
+		&& !R_CULL_InFOV( maxs, tr.refdef.vieworg )
+		&& !R_CULL_InFOV( edge, tr.refdef.vieworg )
+		&& !R_CULL_InFOV( edge2, tr.refdef.vieworg ))
+		return qfalse;
+
+	return qtrue;
+}
+
 static qboolean	R_FovCullSurface( msurface_t *surf ) 
 {
 	if (r_fovCull->integer && backEnd.viewParms.targetFbo != tr.renderCubeFbo)
 	{
+#if 1
 		vec3_t bounds[2];
 
 		bounds[0][0] = surf->cullinfo.bounds[0][0];
-		bounds[0][1] = surf->cullinfo.bounds[1][0];
+		bounds[0][1] = surf->cullinfo.bounds[1][1];
 		bounds[0][2] = surf->cullinfo.bounds[0][2];
 
 		bounds[1][0] = surf->cullinfo.bounds[1][0];
-		bounds[1][1] = surf->cullinfo.bounds[0][0];
+		bounds[1][1] = surf->cullinfo.bounds[0][1];
 		bounds[1][2] = surf->cullinfo.bounds[1][2];
 
 		if (Distance(surf->cullinfo.bounds[0], tr.refdef.vieworg) < 256
@@ -102,6 +119,10 @@ static qboolean	R_FovCullSurface( msurface_t *surf )
 			NUM_WORLD_FOV_CULLS++;
 			return qtrue;
 		}*/
+#else
+		if (!R_Box_In_FOV(surf->cullinfo.bounds[0], surf->cullinfo.bounds[1]))
+			return qtrue;
+#endif
 	}
 
 	return qfalse;

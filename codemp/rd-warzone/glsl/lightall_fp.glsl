@@ -850,15 +850,12 @@ void main()
 	out_Glow = vec4(0.0);
 #endif
 
-	//if (u_EnableTextures.r > 0.0)
-	{
-		//out_Normal = vec4(NORMAL.xyz, 0.0);
-		//if (DETAILED_NORMAL.x + DETAILED_NORMAL.y + DETAILED_NORMAL.z == 3.0) DETAILED_NORMAL.xyz = vec3(0.0);
-		out_DetailedNormal = vec4(DETAILED_NORMAL.xyz, specular.a / 8.0);
+	//out_Normal = vec4(NORMAL.xyz, 0.0);
+	//if (DETAILED_NORMAL.x + DETAILED_NORMAL.y + DETAILED_NORMAL.z == 3.0) DETAILED_NORMAL.xyz = vec3(0.0);
+	out_DetailedNormal = vec4(DETAILED_NORMAL.xyz, specular.a / 8.0);
 
-		if (u_Local1.a == 20) // Foliage/Plants
-			out_FoliageMap = vec4(1.0, 0.0, 0.0, 0.0);
-		else
-			out_FoliageMap = vec4(0.0, 0.0, 0.0, 0.0);
-	}
+	if (u_Local1.a == 20) // Foliage/Plants
+		out_FoliageMap = vec4(1.0, 0.0, 0.0, 0.0);
+	else
+		out_FoliageMap = vec4(0.0, 0.0, 0.0, 0.0);
 }

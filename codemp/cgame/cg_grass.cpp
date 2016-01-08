@@ -253,7 +253,6 @@ static const char *GoodPlantsList[] = {
 	float		FOLIAGE_TREE_SCALE[FOLIAGE_MAX_FOLIAGES];
 
 	float		FOLIAGE_AREA_SIZE =				1024;
-	float		FOLIAGE_STARTSCALE_DISTANCE =	FOLIAGE_AREA_SIZE;
 	float		FOLIAGE_VISIBLE_DISTANCE =		FOLIAGE_AREA_SIZE*2;
 	float		FOLIAGE_TREE_VISIBLE_DISTANCE = FOLIAGE_AREA_SIZE*5;
 
@@ -454,7 +453,7 @@ qboolean FOLIAGE_Box_In_FOV ( vec3_t mins, vec3_t maxs )
 
 	VectorSet(edge, maxs[0], mins[1], maxs[2]);
 	VectorSet(edge2, mins[0], maxs[1], maxs[2]);
-
+	
 	if (!InFOV( mins, cg.refdef.vieworg, cg.refdef.viewangles, 100, 140 )
 		&& !InFOV( maxs, cg.refdef.vieworg, cg.refdef.viewangles, 100, 140 )
 		&& !InFOV( edge, cg.refdef.vieworg, cg.refdef.viewangles, 100, 140 )
@@ -784,6 +783,32 @@ extern "C" {
 			VectorCopy(tr.plane.normal, FOLIAGE_NORMALS[i]);
 #endif //__PREGENERATE_NORMALS__
 		}
+		/*
+		if (FOLIAGE_NUM_POSITIONS > 100000)
+		{
+			FOLIAGE_AREA_SIZE =				512.0;
+			FOLIAGE_VISIBLE_DISTANCE =		FOLIAGE_AREA_SIZE*2;
+			FOLIAGE_TREE_VISIBLE_DISTANCE = FOLIAGE_AREA_SIZE*5;
+		}
+		else if (FOLIAGE_NUM_POSITIONS > 20000)
+		{
+			FOLIAGE_AREA_SIZE =				512.0;
+			FOLIAGE_VISIBLE_DISTANCE =		FOLIAGE_AREA_SIZE*3;
+			FOLIAGE_TREE_VISIBLE_DISTANCE = FOLIAGE_AREA_SIZE*7;
+		}
+		else if (FOLIAGE_NUM_POSITIONS > 10000)
+		{
+			FOLIAGE_AREA_SIZE =				768.0;
+			FOLIAGE_VISIBLE_DISTANCE =		FOLIAGE_AREA_SIZE*2;
+			FOLIAGE_TREE_VISIBLE_DISTANCE = FOLIAGE_AREA_SIZE*5;
+		}
+		else
+		{
+			FOLIAGE_AREA_SIZE =				1024.0;
+			FOLIAGE_VISIBLE_DISTANCE =		FOLIAGE_AREA_SIZE*2;
+			FOLIAGE_TREE_VISIBLE_DISTANCE = FOLIAGE_AREA_SIZE*5;
+		}
+		*/
 
 		trap->Print( "^1*** ^3%s^5: Successfully loaded %i foliage points from foliage file ^7foliage/%s.foliage^5.\n", GAME_VERSION,
 			FOLIAGE_NUM_POSITIONS, cgs.currentmapname );
@@ -1343,17 +1368,73 @@ float	FOLIAGE_FILE_VERSION =	1.1f;
 					FOLIAGE_GRASS_ANGLES[FOLIAGE_NUM_POSITIONS] = (int)(random() * 180);
 					FOLIAGE_GRASS_SCALE[FOLIAGE_NUM_POSITIONS] = (float)((float)irand(65,125) / 100.0);
 
-					if (random() * 30 >= 29 && RoofHeightAt(vec) - vec[2] > 1024.0)
-					{// Add tree... 1 in every 30 positions... If there is room above for a tree...
-						FOLIAGE_TREE_SELECTION[FOLIAGE_NUM_POSITIONS] = (int)(random() * 3);
-						FOLIAGE_TREE_ANGLES[FOLIAGE_NUM_POSITIONS] = (int)(random() * 180);
-						FOLIAGE_TREE_SCALE[FOLIAGE_NUM_POSITIONS] = (float)((float)irand(65,150) / 100.0);
+					if (FOLIAGE_NUM_POSITIONS >= 100000)
+					{
+						if (random() * 7 >= 6 && RoofHeightAt(vec) - vec[2] > 1024.0)
+						{// Add tree... 1 in every 8 positions... If there is room above for a tree...
+							FOLIAGE_TREE_SELECTION[FOLIAGE_NUM_POSITIONS] = (int)(random() * 3);
+							FOLIAGE_TREE_ANGLES[FOLIAGE_NUM_POSITIONS] = (int)(random() * 180);
+							FOLIAGE_TREE_SCALE[FOLIAGE_NUM_POSITIONS] = (float)((float)irand(65,150) / 100.0);
+						}
+						else if (random() * 100 >= 50)
+						{// Add plant... 1 in every 2 positions...
+							FOLIAGE_PLANT_SELECTION[FOLIAGE_NUM_POSITIONS] = (int)(random() * 27);
+							FOLIAGE_PLANT_ANGLES[FOLIAGE_NUM_POSITIONS] = (int)(random() * 180);
+
+							if (FOLIAGE_GRASS_SCALE[FOLIAGE_NUM_POSITIONS] == 0)
+								FOLIAGE_PLANT_SCALE[FOLIAGE_NUM_POSITIONS] = (float)((float)irand(35,125) / 100.0);
+						}
 					}
-					else if (random() * 100 >= 66)
-					{// Add plant... 1 in every 3 positions...
-						FOLIAGE_PLANT_SELECTION[FOLIAGE_NUM_POSITIONS] = (int)(random() * 27);
-						FOLIAGE_PLANT_ANGLES[FOLIAGE_NUM_POSITIONS] = (int)(random() * 180);
-						FOLIAGE_PLANT_SCALE[FOLIAGE_NUM_POSITIONS] = (float)((float)irand(35,125) / 100.0);
+					else if (FOLIAGE_NUM_POSITIONS >= 20000)
+					{
+						if (random() * 10 >= 9 && RoofHeightAt(vec) - vec[2] > 1024.0)
+						{// Add tree... 1 in every 10 positions... If there is room above for a tree...
+							FOLIAGE_TREE_SELECTION[FOLIAGE_NUM_POSITIONS] = (int)(random() * 3);
+							FOLIAGE_TREE_ANGLES[FOLIAGE_NUM_POSITIONS] = (int)(random() * 180);
+							FOLIAGE_TREE_SCALE[FOLIAGE_NUM_POSITIONS] = (float)((float)irand(65,150) / 100.0);
+						}
+						else if (random() * 100 >= 50)
+						{// Add plant... 1 in every 2 positions...
+							FOLIAGE_PLANT_SELECTION[FOLIAGE_NUM_POSITIONS] = (int)(random() * 27);
+							FOLIAGE_PLANT_ANGLES[FOLIAGE_NUM_POSITIONS] = (int)(random() * 180);
+
+							if (FOLIAGE_GRASS_SCALE[FOLIAGE_NUM_POSITIONS] == 0)
+								FOLIAGE_PLANT_SCALE[FOLIAGE_NUM_POSITIONS] = (float)((float)irand(35,125) / 100.0);
+						}
+					}
+					else if (FOLIAGE_NUM_POSITIONS >= 10000)
+					{
+						if (random() * 12 >= 11 && RoofHeightAt(vec) - vec[2] > 1024.0)
+						{// Add tree... 1 in every 12 positions... If there is room above for a tree...
+							FOLIAGE_TREE_SELECTION[FOLIAGE_NUM_POSITIONS] = (int)(random() * 3);
+							FOLIAGE_TREE_ANGLES[FOLIAGE_NUM_POSITIONS] = (int)(random() * 180);
+							FOLIAGE_TREE_SCALE[FOLIAGE_NUM_POSITIONS] = (float)((float)irand(65,150) / 100.0);
+						}
+						else if (random() * 100 >= 50)
+						{// Add plant... 1 in every 2 positions...
+							FOLIAGE_PLANT_SELECTION[FOLIAGE_NUM_POSITIONS] = (int)(random() * 27);
+							FOLIAGE_PLANT_ANGLES[FOLIAGE_NUM_POSITIONS] = (int)(random() * 180);
+
+							if (FOLIAGE_GRASS_SCALE[FOLIAGE_NUM_POSITIONS] == 0)
+								FOLIAGE_PLANT_SCALE[FOLIAGE_NUM_POSITIONS] = (float)((float)irand(35,125) / 100.0);
+						}
+					}
+					else
+					{
+						if (random() * 18 >= 17 && RoofHeightAt(vec) - vec[2] > 1024.0)
+						{// Add tree... 1 in every 17 positions... If there is room above for a tree...
+							FOLIAGE_TREE_SELECTION[FOLIAGE_NUM_POSITIONS] = (int)(random() * 3);
+							FOLIAGE_TREE_ANGLES[FOLIAGE_NUM_POSITIONS] = (int)(random() * 180);
+							FOLIAGE_TREE_SCALE[FOLIAGE_NUM_POSITIONS] = (float)((float)irand(65,150) / 100.0);
+						}
+						else if (random() * 100 >= 66)
+						{// Add plant... 1 in every 1.33 positions...
+							FOLIAGE_PLANT_SELECTION[FOLIAGE_NUM_POSITIONS] = (int)(random() * 27);
+							FOLIAGE_PLANT_ANGLES[FOLIAGE_NUM_POSITIONS] = (int)(random() * 180);
+
+							if (FOLIAGE_GRASS_SCALE[FOLIAGE_NUM_POSITIONS] == 0)
+								FOLIAGE_PLANT_SCALE[FOLIAGE_NUM_POSITIONS] = (float)((float)irand(35,125) / 100.0);
+						}
 					}
 
 #ifdef __PREGENERATE_NORMALS__
@@ -1651,7 +1732,24 @@ float	FOLIAGE_FILE_VERSION =	1.1f;
 					if (FOLIAGE_GRASS_SCALE[FOLIAGE_NUM_POSITIONS] == 0)
 						FOLIAGE_GRASS_SCALE[FOLIAGE_NUM_POSITIONS] = (float)((float)irand(65,125) / 100.0);
 
-					if (density >= 64)
+					if (density >= 96)
+					{
+						if (random() * 7 >= 6 && RoofHeightAt(vec) - vec[2] > 1024.0)
+						{// Add tree... 1 in every 8 positions... If there is room above for a tree...
+							FOLIAGE_TREE_SELECTION[FOLIAGE_NUM_POSITIONS] = (int)(random() * 3);
+							FOLIAGE_TREE_ANGLES[FOLIAGE_NUM_POSITIONS] = (int)(random() * 180);
+							FOLIAGE_TREE_SCALE[FOLIAGE_NUM_POSITIONS] = (float)((float)irand(65,150) / 100.0);
+						}
+						else if (random() * 100 >= 50)
+						{// Add plant... 1 in every 2 positions...
+							FOLIAGE_PLANT_SELECTION[FOLIAGE_NUM_POSITIONS] = (int)(random() * 27);
+							FOLIAGE_PLANT_ANGLES[FOLIAGE_NUM_POSITIONS] = (int)(random() * 180);
+
+							if (FOLIAGE_GRASS_SCALE[FOLIAGE_NUM_POSITIONS] == 0)
+								FOLIAGE_PLANT_SCALE[FOLIAGE_NUM_POSITIONS] = (float)((float)irand(35,125) / 100.0);
+						}
+					}
+					else if (density >= 64)
 					{
 						if (random() * 10 >= 9 && RoofHeightAt(vec) - vec[2] > 1024.0)
 						{// Add tree... 1 in every 10 positions... If there is room above for a tree...
@@ -1659,11 +1757,11 @@ float	FOLIAGE_FILE_VERSION =	1.1f;
 							FOLIAGE_TREE_ANGLES[FOLIAGE_NUM_POSITIONS] = (int)(random() * 180);
 							FOLIAGE_TREE_SCALE[FOLIAGE_NUM_POSITIONS] = (float)((float)irand(65,150) / 100.0);
 						}
-						else if (random() * 100 >= 25)
-						{// Add plant... 1 in every 1.25 positions...
+						else if (random() * 100 >= 50)
+						{// Add plant... 1 in every 2 positions...
 							FOLIAGE_PLANT_SELECTION[FOLIAGE_NUM_POSITIONS] = (int)(random() * 27);
 							FOLIAGE_PLANT_ANGLES[FOLIAGE_NUM_POSITIONS] = (int)(random() * 180);
-							
+
 							if (FOLIAGE_GRASS_SCALE[FOLIAGE_NUM_POSITIONS] == 0)
 								FOLIAGE_PLANT_SCALE[FOLIAGE_NUM_POSITIONS] = (float)((float)irand(35,125) / 100.0);
 						}
@@ -1694,7 +1792,7 @@ float	FOLIAGE_FILE_VERSION =	1.1f;
 							FOLIAGE_TREE_SCALE[FOLIAGE_NUM_POSITIONS] = (float)((float)irand(65,150) / 100.0);
 						}
 						else if (random() * 100 >= 66)
-						{// Add plant... 1 in every 3 positions...
+						{// Add plant... 1 in every 1.33 positions...
 							FOLIAGE_PLANT_SELECTION[FOLIAGE_NUM_POSITIONS] = (int)(random() * 27);
 							FOLIAGE_PLANT_ANGLES[FOLIAGE_NUM_POSITIONS] = (int)(random() * 180);
 
