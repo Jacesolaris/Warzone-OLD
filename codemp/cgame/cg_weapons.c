@@ -2287,6 +2287,8 @@ void CG_MissileHitWall(int weapon, int clientNum, vec3_t origin, vec3_t dir, imp
 		}
 		break;
 
+	case WP_BRYAR_RIFLE_SCOPE:
+	case WP_DLT_19:
 	case WP_WESTER_PISTOL:
 	case WP_BRYAR_OLD:
 		if ( altFire )

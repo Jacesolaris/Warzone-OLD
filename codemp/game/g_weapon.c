@@ -247,6 +247,64 @@ void W_TraceSetStart( gentity_t *ent, vec3_t start, vec3_t mins, vec3_t maxs )
 ----------------------------------------------
 */
 
+//----------------------------------------------
+static void WP_FireChargedShot(gentity_t *ent, qboolean altFire, float velocity, int count)
+//---------------------------------------------------------
+{
+	int damage = 10;// g_sniperdamage.integer;
+	gentity_t	*missile = CreateMissile(muzzle, forward, velocity, 10000, ent, altFire);
+
+	missile->classname = "bryar_proj";
+	missile->s.weapon = ent->s.weapon;
+
+	if (altFire)
+	{
+		float boxSize = 0;
+
+		count = (level.time - ent->client->ps.weaponChargeTime) / BRYAR_CHARGE_UNIT;
+
+		if (count < 1)
+		{
+			count = 1;
+		}
+		else if (count > 5)
+		{
+			count = 5;
+		}
+
+		if (count > 1)
+		{
+			damage *= (count*1.7);
+		}
+		else
+		{
+			damage *= (count*1.5);
+		}
+
+		missile->s.generic1 = count; // The missile will then render according to the charge level.
+
+		/*boxSize = BRYAR_ALT_SIZE*(maxCount*0.5);*/
+
+		VectorSet(missile->r.maxs, boxSize, boxSize, boxSize);
+		VectorSet(missile->r.mins, -boxSize, -boxSize, -boxSize);
+	}
+
+	missile->damage = damage;
+	missile->dflags = DAMAGE_DEATH_KNOCKBACK;
+	if (altFire)
+	{
+		missile->methodOfDeath = MOD_BRYAR_PISTOL_ALT;
+	}
+	else
+	{
+		missile->methodOfDeath = MOD_BRYAR_PISTOL;
+	}
+	missile->clipmask = MASK_SHOT | CONTENTS_LIGHTSABER;
+
+	// we don't want it to bounce forever
+	missile->bounceCount = 8;
+}
+
 /*
 ======================================================================
 
@@ -5205,7 +5263,7 @@ void FireWeapon( gentity_t *ent, qboolean altFire ) {
 				WP_FireBlaster(ent, altFire, BLASTER_VELOCITY, BLASTER_DAMAGE, BLASTER_SPREAD, ent->s.weapon);
 			break;
 
-		case WP_BRYAR_RIFLE_SCOPE:
+		
 		case WP_ACP_SNIPER_RIFLE:
 		case WP_EE3:
 			if (altFire)
@@ -5222,9 +5280,11 @@ void FireWeapon( gentity_t *ent, qboolean altFire ) {
 				WP_FireBlaster( ent, altFire, BLASTER_VELOCITY, BLASTER_DAMAGE, BLASTER_SPREAD, ent->s.weapon );
 			break;
 
+		case WP_BRYAR_RIFLE_SCOPE:
 		case WP_DLT_19:
 			if (altFire)
-				WP_FireBlaster(ent, altFire, BLASTER_VELOCITY*2.5, RIFLE_SNIPER_DAMAGE, 0.0, ent->s.weapon);
+				WP_FireChargedShot(ent, altFire, BLASTER_VELOCITY*2.5, 0.0);
+				//WP_FireBlaster(ent, altFire, BLASTER_VELOCITY*2.5, RIFLE_SNIPER_DAMAGE, 0.0, ent->s.weapon);
 			else
 				WP_FireBlaster(ent, altFire, BLASTER_VELOCITY, BLASTER_DAMAGE, BLASTER_SPREAD, ent->s.weapon);
 			break;

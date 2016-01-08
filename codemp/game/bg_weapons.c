@@ -181,6 +181,7 @@ qboolean WeaponSniperCharge(int weapon)
 	case WP_EE3:
 	case WP_ACP_SNIPER_RIFLE:
 	case WP_BOWCASTER_CLASSIC:
+	case WP_DH_17_PISTOL:
 		return qtrue;
 	default:
 		break;
@@ -197,6 +198,7 @@ qboolean WeaponIsSniperNoCharge ( int weapon )
 	case WP_EE3:
 	case WP_ACP_SNIPER_RIFLE:
 	case WP_BOWCASTER_CLASSIC:
+	case WP_DH_17_PISTOL:
 		return qfalse;
 	default:
 		break;
