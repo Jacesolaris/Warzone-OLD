@@ -192,6 +192,8 @@ if(BuildMPEngine OR BuildMPDed)
 	set(MPEngineAndDedFiles ${MPEngineAndDedFiles} ${MPEngineAndDedGameFiles})
 
 	set(MPEngineAndDedCommonFiles
+    "${MPDir}/qcommon/inifile.cpp"
+    "${MPDir}/qcommon/inifile.h"
 		"${MPDir}/qcommon/q_shared.h"
 		"${MPDir}/qcommon/q_platform.h"
 		"${MPDir}/qcommon/cm_load.cpp"

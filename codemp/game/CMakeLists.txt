@@ -140,6 +140,8 @@ source_group("game" FILES ${MPGameGameFiles})
 set(MPGameFiles ${MPGameFiles} ${MPGameGameFiles})
 
 set(MPGameCommonFiles
+  "${MPDir}/qcommon/inifile.cpp"
+  "${MPDir}/qcommon/inifile.h"
 	"${MPDir}/qcommon/q_math.c"
 	"${MPDir}/qcommon/q_shared.c"
 	"${MPDir}/qcommon/disablewarnings.h"

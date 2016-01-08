@@ -124,6 +124,8 @@ source_group("rd-common" FILES ${MPWarzoneRdCommonFiles})
 set(MPWarzoneFiles ${MPWarzoneFiles} ${MPWarzoneRdCommonFiles})
 
 set(MPWarzoneQcommonFiles
+  "${MPDir}/qcommon/inifile.cpp"
+  "${MPDir}/qcommon/inifile.h"
 	"${MPDir}/qcommon/GenericParser2.cpp"
 	"${MPDir}/qcommon/matcomp.cpp"
 	"${MPDir}/qcommon/q_math.cpp"

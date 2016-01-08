@@ -91,6 +91,8 @@ source_group("cgame" FILES ${MPCGameCgameFiles})
 set(MPCGameFiles ${MPCGameFiles} ${MPCGameCgameFiles})
 
 set(MPCGameCommonFiles
+  "${MPDir}/qcommon/inifile.cpp"
+  "${MPDir}/qcommon/inifile.h"
 	"${MPDir}/qcommon/q_math.c"
 	"${MPDir}/qcommon/q_shared.c"
 	"${MPDir}/qcommon/disablewarnings.h"
