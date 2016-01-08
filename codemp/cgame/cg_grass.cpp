@@ -1408,18 +1408,8 @@ float	FOLIAGE_FILE_VERSION =	1.1f;
 			float		*grassSpotScale;
 			float		map_size, temp;
 			vec3_t		mapMins, mapMaxs;
-			int			total_tests = 0, final_tests = 0;
 			int			start_time = trap->Milliseconds();
 			int			update_timer = 0;
-			int			parallel_x = 0;
-			int			parallel_x_max = 0;
-			int			parallel_y_max = 0;
-			float		scatter = 0;
-			float		scatter_avg = 0;
-			float		scatter_min = 0;
-			float		scatter_z = 0;
-			float		scatter_max = 0;
-			float		scatter_x = 0;
 			clock_t		previous_time = 0;
 			float		offsetY = 0.0;
 
@@ -1464,14 +1454,6 @@ float	FOLIAGE_FILE_VERSION =	1.1f;
 
 			trap->S_Shutup(qtrue);
 
-			/*mapMaxs[0]+=2048;
-			mapMaxs[1]+=2048;
-			mapMaxs[2]+=2048;
-
-			mapMins[0]-=2048;
-			mapMins[1]-=2048;
-			mapMins[2]-=2048;*/
-
 			startx = mapMaxs[0];
 			starty = mapMaxs[1];
 			startz = mapMaxs[2];
@@ -1494,7 +1476,6 @@ float	FOLIAGE_FILE_VERSION =	1.1f;
 			// Create bulk temporary nodes...
 			//
 
-			final_tests = 0;
 			previous_time = clock();
 			aw_stage_start_time = clock();
 			aw_percent_complete = 0;

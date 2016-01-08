@@ -99,6 +99,7 @@ qboolean DO_ULTRAFAST = qfalse;
 qboolean DO_NOWATER = qfalse;
 qboolean DO_NOSKY = qfalse;
 qboolean DO_OPEN_AREA_SPREAD = qfalse;
+qboolean DO_NEW_METHOD = qfalse;
 
 // warning C4996: 'strcpy' was declared deprecated
 #pragma warning( disable : 4996 )
@@ -5386,15 +5387,56 @@ AIMod_GetMapBounts ( void )
 	cg.mapcoordsValid = qtrue;
 }
 
-#define __NEW_AWP_METHOD__
+qboolean MaterialIsValidForWP(int materialType)
+{
+	switch( materialType )
+	{
+	case MATERIAL_SHORTGRASS:		// 5			// manicured lawn
+	case MATERIAL_LONGGRASS:		// 6			// long jungle grass
+	case MATERIAL_SAND:				// 8			// sandy beach
+	case MATERIAL_CARPET:			// 27			// lush carpet
+	case MATERIAL_GRAVEL:			// 9			// lots of small stones
+	case MATERIAL_ROCK:				// 23			//
+	case MATERIAL_TILES:			// 26			// tiled floor
+	case MATERIAL_SOLIDWOOD:		// 1			// freshly cut timber
+	case MATERIAL_HOLLOWWOOD:		// 2			// termite infested creaky wood
+	case MATERIAL_SOLIDMETAL:		// 3			// solid girders
+	case MATERIAL_HOLLOWMETAL:		// 4			// hollow metal machines
+	case MATERIAL_DRYLEAVES:		// 19			// dried up leaves on the floor
+	case MATERIAL_GREENLEAVES:		// 20			// fresh leaves still on a tree
+	case MATERIAL_FABRIC:			// 21			// Cotton sheets
+	case MATERIAL_CANVAS:			// 22			// tent material
+	case MATERIAL_MARBLE:			// 12			// marble floors
+	case MATERIAL_SNOW:				// 14			// freshly laid snow
+	case MATERIAL_MUD:				// 17			// wet soil
+	case MATERIAL_DIRT:				// 7			// hard mud
+	case MATERIAL_CONCRETE:			// 11			// hardened concrete pavement
+	case MATERIAL_RUBBER:			// 24			// hard tire like rubber
+	case MATERIAL_PLASTIC:			// 25			//
+	case MATERIAL_PLASTER:			// 28			// drywall style plaster
+	case MATERIAL_SHATTERGLASS:		// 29			// glass with the Crisis Zone style shattering
+	case MATERIAL_ARMOR:			// 30			// body armor
+	case MATERIAL_ICE:				// 15			// packed snow/solid ice
+	case MATERIAL_GLASS:			// 10			//
+	case MATERIAL_BPGLASS:			// 18			// bulletproof glass
+		return qtrue;
+		break;
+	case MATERIAL_WATER:			// 13			// light covering of water on a surface
+	case MATERIAL_FLESH:			// 16			// hung meat, corpses in the world
+	case MATERIAL_COMPUTER:			// 31			// computers/electronic equipment
+		break;
+	default:
+		return qtrue; // no material.. just accept...
+		break;
+	}
+
+	return qfalse;
+}
 
 void AIMod_AutoWaypoint_StandardMethod( void )
 {// Advanced method for multi-level maps...
 	int			i;
 	float		startx = -MAX_MAP_SIZE, starty = -MAX_MAP_SIZE, startz = -MAX_MAP_SIZE;
-#ifndef __NEW_AWP_METHOD__
-	float		orig_startx, orig_starty, orig_startz;
-#endif //__NEW_AWP_METHOD__
 	int			areas = 0, total_waypoints = 0, total_areas = 0;
 	intvec3_t	*arealist;
 	float		map_size, temp, original_waypoint_scatter_distance = waypoint_scatter_distance;
@@ -5406,6 +5448,15 @@ void AIMod_AutoWaypoint_StandardMethod( void )
 	float		waypoint_scatter_realtime_modifier_alt = 0.5f; // 0.3f;
 	int			wp_loop = 0;
 	float		remove_ratio = 1.0;
+
+	vec3_t		MAP_INFO_SIZE;
+	clock_t		previous_time = 0;
+	float		offsetY = 0.0;
+	float		yoff;
+	float		density = waypoint_scatter_distance;
+	int x;
+	float y, z;
+
 
 	trap->Cvar_Set("warzone_waypoint_render", "0");
 	trap->UpdateScreen();
@@ -5425,6 +5476,49 @@ void AIMod_AutoWaypoint_StandardMethod( void )
 
 	VectorCopy(cg.mapcoordsMins, mapMins);
 	VectorCopy(cg.mapcoordsMaxs, mapMaxs);
+
+	{
+		//
+		// Refine Z Top Point to highest ground height!
+		//
+		float highest_z_point = mapMins[2];
+		float INCRUMENT = 128.0;
+
+		startx = mapMaxs[0] - 32;
+		starty = mapMaxs[1] - 32;
+		startz = mapMaxs[2] - 32;
+		highest_z_point = mapMins[2];
+		i = 0;
+
+		while ( startx > mapMins[2] )
+		{
+			while ( starty > mapMins[1] )
+			{
+				vec3_t		org1, org2;
+				trace_t		tr;
+
+				VectorSet( org1, startx, starty, startz );
+				VectorSet( org2, startx, starty, startz );
+				org2[2] -= (MAX_MAP_SIZE*2);
+
+				CG_Trace( &tr, org1, NULL, NULL, org2, ENTITYNUM_NONE, MASK_PLAYERSOLID | MASK_WATER );
+
+				if ( tr.endpos[2] > highest_z_point )
+				{
+					highest_z_point = tr.endpos[2];
+					starty -= INCRUMENT;
+					continue;
+				}
+
+				starty -= INCRUMENT / 4.0; //64
+			}
+
+			startx -= INCRUMENT / 4.0; //64
+			starty = mapMaxs[1];
+		}
+
+		mapMaxs[2] = highest_z_point + 256;
+	}
 
 	if (mapMaxs[0] < mapMins[0])
 	{
@@ -5447,7 +5541,241 @@ void AIMod_AutoWaypoint_StandardMethod( void )
 		mapMaxs[2] = temp;
 	}
 
-#ifdef __NEW_AWP_METHOD__
+	if (DO_NEW_METHOD)
+	{
+		trap->S_Shutup(qtrue);
+
+		startx = mapMaxs[0];
+		starty = mapMaxs[1];
+		startz = mapMaxs[2];
+
+		map_size = Distance(mapMins, mapMaxs);
+
+		trap->Print( va( "^4*** ^3AUTO-FOLIAGE^4: ^5Map bounds are ^3%.2f %.2f %.2f ^5to ^3%.2f %.2f %.2f^5.\n", mapMins[0], mapMins[1], mapMins[2], mapMaxs[0], mapMaxs[1], mapMaxs[2]) );
+		strcpy( task_string1, va("^5Map bounds are ^3%.2f %.2f %.2f ^7to ^3%.2f %.2f %.2f^5.", mapMins[0], mapMins[1], mapMins[2], mapMaxs[0], mapMaxs[1], mapMaxs[2]) );
+		trap->UpdateScreen();
+
+		trap->Print( va( "^4*** ^3AUTO-FOLIAGE^4: ^5Generating waypoints. This could take a while... (Map size ^3%.2f^5)\n", map_size) );
+		strcpy( task_string2, va("^5Generating waypoints. This could take a while... (Map size ^3%.2f^5)", map_size) );
+		trap->UpdateScreen();
+
+		trap->Print( va( "^4*** ^3AUTO-FOLIAGE^4: ^5Finding waypoints...\n") );
+		strcpy( task_string3, va("^5Finding waypoints...") );
+		trap->UpdateScreen();
+
+		//
+		// Create bulk temporary nodes...
+		//
+
+		previous_time = clock();
+		aw_stage_start_time = clock();
+		aw_percent_complete = 0;
+
+		// Create the map...
+		MAP_INFO_SIZE[0] = mapMaxs[0] - mapMins[0];
+		MAP_INFO_SIZE[1] = mapMaxs[1] - mapMins[1];
+		MAP_INFO_SIZE[2] = mapMaxs[2] - mapMins[2];
+
+		yoff = density * 0.5;
+
+		//#pragma omp parallel for schedule(dynamic)
+		for (x = (int)mapMins[0]; x <= (int)mapMaxs[0]; x += density)
+		{
+			float current, complete;
+
+			if (areas >= 2048000)
+			{
+				continue;
+			}
+
+			current =  MAP_INFO_SIZE[0] - (mapMaxs[0] - (float)x);
+			complete = current / MAP_INFO_SIZE[0];
+
+			aw_percent_complete = (float)(complete * 100.0);
+
+			if (yoff == density * 0.75)
+				yoff = density * 1.25;
+			else if (yoff == density * 1.25)
+				yoff = density;
+			else
+				yoff = density * 0.75;
+
+			for (y = mapMins[1]; y <= mapMaxs[1]; y += yoff/*density*/)
+			{
+				if (areas >= 2048000)
+				{
+					break;
+				}
+
+				for (z = mapMaxs[2]; z >= mapMins[2]; z -= 48.0)
+				{
+					trace_t		tr;
+					vec3_t		pos, down, slopeangles;
+					float		pitch;
+					qboolean	FOUND = qfalse;
+
+					if (areas >= 2048000)
+					{
+						break;
+					}
+
+					if(omp_get_thread_num() == 0)
+					{// Draw a nice little progress bar ;)
+						if (clock() - previous_time > 500) // update display every 500ms...
+						{
+							previous_time = clock();
+							trap->UpdateScreen();
+						}
+					}
+
+					VectorSet(pos, x, y, z);
+					pos[2] += 8.0;
+					VectorCopy(pos, down);
+					down[2] = mapMins[2];
+
+					CG_Trace( &tr, pos, NULL, NULL, down, ENTITYNUM_NONE, MASK_PLAYERSOLID|CONTENTS_WATER );
+
+					if (tr.endpos[2] <= mapMins[2])
+					{// Went off map...
+						break;
+					}
+
+					if (tr.startsolid || tr.allsolid)
+					{
+						continue;
+					}
+
+					if ( tr.surfaceFlags & SURF_SKY )
+					{// Sky...
+						continue;
+					}
+
+					if ( tr.surfaceFlags & SURF_NODRAW )
+					{// don't generate a drawsurface at all
+						continue;
+					}
+
+					if ( tr.contents & CONTENTS_WATER )
+					{// Anything below here is underwater...
+						continue;
+					}
+
+					if ( tr.contents & CONTENTS_LAVA )
+					{// Anything below here is underwater...
+						continue;
+					}
+
+					if ( !DO_NOWATER && !DO_ULTRAFAST && !DO_TRANSLUCENT && (tr.contents & CONTENTS_TRANSLUCENT) )
+					{// Invisible surface... I'm just gonna ignore these!
+						continue;
+					}
+
+					// Check slope...
+					vectoangles( tr.plane.normal, slopeangles );
+
+					pitch = slopeangles[0];
+
+					if (pitch > 180)
+						pitch -= 360;
+
+					if (pitch < -180)
+						pitch += 360;
+
+					pitch += 90.0f;
+
+					if (pitch > 46.0f || pitch < -46.0f)
+					{// Bad slope...
+						continue;
+					}
+
+					if (WP_CheckInSolid(pos))
+					{
+						continue;
+					}
+
+					if (!CG_HaveRoofAbove(pos))
+					{
+						continue;
+					}
+
+					if (!AIMod_AutoWaypoint_Check_PlayerWidth(pos))
+					{
+						continue;
+					}
+
+					if ( tr.fraction != 1 
+						&& tr.entityNum != ENTITYNUM_NONE 
+						&& tr.entityNum < ENTITYNUM_MAX_NORMAL )
+					{
+						if (cg_entities[tr.entityNum].currentState.eType == ET_MOVER 
+							|| cg_entities[tr.entityNum].currentState.eType == ET_PUSH_TRIGGER
+							|| cg_entities[tr.entityNum].currentState.eType == ET_PORTAL
+							|| cg_entities[tr.entityNum].currentState.eType == ET_TELEPORT_TRIGGER
+							|| cg_entities[tr.entityNum].currentState.eType == ET_TEAM
+							|| cg_entities[tr.entityNum].currentState.eType == ET_TERRAIN
+							|| cg_entities[tr.entityNum].currentState.eType == ET_FX)
+						{// Hit a mover... Add waypoints at all of them!
+							aw_floor_trace_hit_mover = qtrue;
+							aw_floor_trace_hit_ent = tr.entityNum;
+#pragma omp critical (__ADD_TEMP_NODE__)
+							{
+								sprintf(last_node_added_string, "^5Adding waypoint ^3%i ^5at ^7%f %f %f^5.", areas, tr.endpos[0], tr.endpos[1], tr.endpos[2]+8);
+
+								arealist[areas][0] = tr.endpos[0];
+								arealist[areas][1] = tr.endpos[1];
+								arealist[areas][2] = tr.endpos[2]+8;
+								areas++;
+							}
+							continue;
+						}
+
+						if (NearMoverEntityLocation( tr.endpos ))
+						{
+							// Hit a mover... Add waypoints at all of them!
+							aw_floor_trace_hit_mover = qtrue;
+							aw_floor_trace_hit_ent = tr.entityNum;
+#pragma omp critical (__ADD_TEMP_NODE__)
+							{
+								sprintf(last_node_added_string, "^5Adding waypoint ^3%i ^5at ^7%f %f %f^5.", areas, tr.endpos[0], tr.endpos[1], tr.endpos[2]+8);
+
+								arealist[areas][0] = tr.endpos[0];
+								arealist[areas][1] = tr.endpos[1];
+								arealist[areas][2] = tr.endpos[2]+8;
+								areas++;
+							}
+						}
+					}
+
+					if (MaterialIsValidForWP((tr.surfaceFlags & MATERIAL_MASK)))
+					{
+						// Look around here for a different slope angle... Cull if found...
+#pragma omp critical (__ADD_TEMP_NODE__)
+						{
+							sprintf(last_node_added_string, "^5Adding waypoint ^3%i ^5at ^7%f %f %f^5.", areas, tr.endpos[0], tr.endpos[1], tr.endpos[2]+8);
+
+							arealist[areas][0] = tr.endpos[0];
+							arealist[areas][1] = tr.endpos[1];
+							arealist[areas][2] = tr.endpos[2]+8;
+							areas++;
+						}
+					}
+				}
+			}
+		}
+
+		if (areas >= 2048000)
+		{
+			trap->Print( "^1*** ^3%s^5: Too many waypoints detected... Try again with a higher density value...\n", GAME_VERSION );
+			aw_percent_complete = 0.0f;
+			trap->S_Shutup(qfalse);
+			return;
+		}
+
+		trap->S_Shutup(qfalse);
+
+		aw_percent_complete = 0.0f;
+	}
+	else
 	{
 		//int		x;
 		int		parallel_x = 0;
@@ -5730,620 +6058,6 @@ omp_set_nested(0);
 
 	trap->S_Shutup(qfalse);
 
-#else //!__NEW_AWP_METHOD__
-	map_size = VectorDistance(mapMins, mapMaxs);
-
-	// Work out the best scatter distance to use for this map size...
-	/*if (map_size > 96000)
-	{
-		waypoint_scatter_distance *= 5;
-	}
-	else if (map_size > 32768)
-	{
-		waypoint_scatter_distance *= 4;
-	}
-	else if (map_size > 24000)
-	{
-		waypoint_scatter_distance *= 3;
-	}
-	else if (map_size > 20000)
-	{
-		waypoint_scatter_distance *= 2;
-	}
-	else if (map_size > 16550)
-	{
-		waypoint_scatter_distance *= 1.5;
-	}
-	else if (map_size > 8192)
-	{
-		waypoint_scatter_distance *= 1.12;
-	}*/
-
-	orig_startx = mapMaxs[0]+2048/*-16*/;
-	orig_starty = mapMaxs[1]+2048/*-16*/;
-	orig_startz = mapMaxs[2]+2048/*-16*/;
-
-	startx = orig_startx;
-	starty = orig_starty;
-	startz = orig_startz;
-
-	while ( startx > mapMins[0]-2048 )
-	{
-		while ( starty > mapMins[1]-2048 )
-		{
-			while ( startz > mapMins[2]-2048 )
-			{
-				startz -= 70;//waypoint_scatter_distance;
-				total_tests++;
-			}
-
-			startz = orig_startz;
-			starty -= waypoint_scatter_distance;
-		}
-
-		starty = orig_starty;
-		startx -= waypoint_scatter_distance;
-	}
-
-	startx = orig_startx;
-	starty = orig_starty;
-	startz = orig_startz;
-
-	trap->Print( va( "^4*** ^3AUTO-WAYPOINTER^4: ^5Map bounds are ^3%.2f %.2f %.2f ^5to ^3%.2f %.2f %.2f^5.\n", mapMins[0], mapMins[1], mapMins[2], mapMaxs[0], mapMaxs[1], mapMaxs[2]) );
-	strcpy( task_string1, va("^5Map bounds are ^3%.2f %.2f %.2f ^7to ^3%.2f %.2f %.2f^5.", mapMins[0], mapMins[1], mapMins[2], mapMaxs[0], mapMaxs[1], mapMaxs[2]) );
-	trap->UpdateScreen();
-
-	trap->Print( va( "^4*** ^3AUTO-WAYPOINTER^4: ^5Generating AI waypoints. This could take a while... (Map size ^3%.2f^5)\n", map_size) );
-	strcpy( task_string2, va("^5Generating AI waypoints. This could take a while... (Map size ^3%.2f^5)", map_size) );
-	trap->UpdateScreen();
-
-	trap->Print( va( "^4*** ^3AUTO-WAYPOINTER^4: ^5First pass. Finding temporary waypoints...\n") );
-	strcpy( task_string3, va("^5First pass. Finding temporary waypoints...") );
-	trap->UpdateScreen();
-
-	//
-	// Create bulk temporary nodes...
-	//
-
-	aw_stage_start_time = clock();
-
-	while ( startx > mapMins[0]-2048 )
-	{
-		while ( starty > mapMins[1]-2048 )
-		{
-			vec3_t last_org, new_org;
-			float floor, current_floor = startz;
-
-			VectorSet(last_org, 0, 0, 0);
-			VectorSet(new_org, startx, starty, startz);
-
-			floor = FloorHeightAt(new_org);
-
-			if (floor == -65536.0f || floor <= mapMins[2]-2048)
-			{// Can skip this one!
-				while (startz > floor && startz > mapMins[2]-2048)
-				{// We can skip some checks, until we get to our hit position...
-					startz -= waypoint_scatter_distance;
-					final_tests++;
-
-					// Draw a nice little progress bar ;)
-					aw_percent_complete = (float)((float)((float)final_tests/(float)total_tests)*100.0f);
-
-					update_timer++;
-
-					if (update_timer >= 15000)
-					{
-						trap->UpdateScreen();
-						update_timer = 0;
-					}
-				}
-
-				// since we failed, decrease modifier...
-				//waypoint_scatter_realtime_modifier = waypoint_scatter_realtime_modifier_alt;
-				{// Distance Variation...
-					int p;
-					qboolean got_close = qfalse;
-					int startspot = areas - 100;
-
-					if (startspot < 0) startspot = 0;
-
-					for (p = startspot; p < areas-1; p++)
-					{
-						intvec3_t org2;
-						org2[0] = startx;
-						org2[1] = starty;
-						org2[2] = floor;
-
-						if (intVectorDistance(arealist[p], org2) <= waypoint_scatter_distance)
-						{
-							got_close = qtrue;
-							break;
-						}
-					}
-
-					if (got_close)
-						waypoint_scatter_realtime_modifier = 2.0f;
-					else
-						waypoint_scatter_realtime_modifier = 0.33f;
-				}
-
-				startz = orig_startz;
-				starty -= waypoint_scatter_distance * waypoint_scatter_realtime_modifier;
-				continue;
-			}
-
-			if (floor >= 65536.0f)
-			{// Marks a start-solid or on top of the sky... Skip...
-				// since we failed, decrease modifier...
-				//waypoint_scatter_realtime_modifier = waypoint_scatter_realtime_modifier_alt;
-				{// Distance Variation...
-					int p;
-					qboolean got_close = qfalse;
-					int startspot = areas - 100;
-
-					if (startspot < 0) startspot = 0;
-
-					for (p = startspot; p < areas-1; p++)
-					{
-						intvec3_t org2;
-						org2[0] = startx;
-						org2[1] = starty;
-						org2[2] = floor;
-
-						if (intVectorDistance(arealist[p], org2) <= waypoint_scatter_distance)
-						{
-							got_close = qtrue;
-							break;
-						}
-					}
-
-					if (got_close)
-						waypoint_scatter_realtime_modifier = 2.0f;
-					else
-						waypoint_scatter_realtime_modifier = 0.33f;
-				}
-
-				startz -= waypoint_scatter_distance * waypoint_scatter_realtime_modifier;
-
-				VectorSet(new_org, startx, starty, startz);
-
-				floor = FloorHeightAt(new_org);
-			}
-
-			while ( startz > mapMins[2]-2048 )
-			{
-				vec3_t org;
-				float orig_floor;
-				//				qboolean bad = qfalse;
-
-				if (current_floor == -65536.0f || current_floor <= mapMins[2]-2048)
-				{// Can skip this one!
-					while (startz > floor && startz > mapMins[2]-2048)
-					{// We can skip some checks, until we get to our hit position...
-						startz -= waypoint_scatter_distance;
-						final_tests++;
-
-						// Draw a nice little progress bar ;)
-						aw_percent_complete = (float)((float)((float)final_tests/(float)total_tests)*100.0f);
-
-						update_timer++;
-
-						if (update_timer >= 15000)
-						{
-							trap->UpdateScreen();
-							update_timer = 0;
-						}
-					}
-
-					// since we failed, decrease modifier...
-					//waypoint_scatter_realtime_modifier = waypoint_scatter_realtime_modifier_alt;
-					{// Distance Variation...
-						int p;
-						qboolean got_close = qfalse;
-						int startspot = areas - 100;
-
-						if (startspot < 0) startspot = 0;
-
-						for (p = startspot; p < areas-1; p++)
-						{
-							intvec3_t org2;
-							org2[0] = startx;
-							org2[1] = starty;
-							org2[2] = floor;
-
-							if (intVectorDistance(arealist[p], org2) <= waypoint_scatter_distance)
-							{
-								got_close = qtrue;
-								break;
-							}
-						}
-
-						if (got_close)
-							waypoint_scatter_realtime_modifier = 2.0f;
-						else
-							waypoint_scatter_realtime_modifier = 0.33f;
-					}
-
-					startz = orig_startz;
-					starty -= waypoint_scatter_distance * waypoint_scatter_realtime_modifier;
-					break;
-				}
-
-				update_timer++;
-
-				if (update_timer >= 15000)
-				{
-					trap->UpdateScreen();
-					update_timer = 0;
-				}
-
-				VectorSet(org, startx, starty, startz);
-
-				org[2]=FloorHeightAt(org);
-
-				if (org[2] <= -65536.0f)
-				{
-					while (startz > floor && startz > mapMins[2]-2048)
-					{// We can skip some checks, until we get to our hit position...
-						startz -= waypoint_scatter_distance;
-						final_tests++;
-
-						// Draw a nice little progress bar ;)
-						aw_percent_complete = (float)((float)((float)final_tests/(float)total_tests)*100.0f);
-
-						update_timer++;
-
-						if (update_timer >= 15000)
-						{
-							trap->UpdateScreen();
-							update_timer = 0;
-						}
-					}
-
-					// since we failed, decrease modifier...
-					//waypoint_scatter_realtime_modifier = waypoint_scatter_realtime_modifier_alt;
-					{// Distance Variation...
-						int p;
-						qboolean got_close = qfalse;
-						int startspot = areas - 100;
-
-						if (startspot < 0) startspot = 0;
-
-						for (p = startspot; p < areas-1; p++)
-						{
-							intvec3_t org2;
-							org2[0] = startx;
-							org2[1] = starty;
-							org2[2] = floor;
-
-							if (intVectorDistance(arealist[p], org2) <= waypoint_scatter_distance)
-							{
-								got_close = qtrue;
-								break;
-							}
-						}
-
-						if (got_close)
-							waypoint_scatter_realtime_modifier = 2.0f;
-						else
-							waypoint_scatter_realtime_modifier = 0.33f;
-					}
-
-					startz = orig_startz;
-					starty -= waypoint_scatter_distance * waypoint_scatter_realtime_modifier;
-					break;
-				}
-
-				final_tests++;
-
-				// Draw a nice little progress bar ;)
-				aw_percent_complete = (float)((float)((float)final_tests/(float)total_tests)*100.0f);
-
-				//
-				// Movers...
-				//
-				// UQ1: MOVER TEST
-#if 0
-				//if (org[2] >= -65536.0f && org[2] <= 65536.0f && (aw_floor_trace_hit_mover || NodeIsOnMover( org )))
-				if (org[2] >= -65536.0f && org[2] <= 65536.0f && (aw_floor_trace_hit_mover /*|| NodeIsOnMover( org )*/))
-				{// Need to generate waypoints to the top/bottom of the mover...
-					float temp_roof, temp_ground;
-					vec3_t temp_org, temp_org2;
-					//
-					// Well... this is fucked... Seems Warzone can only trace movers your player is standing at... WHY???
-					//
-
-					//trap->Print("Mover at %f %f %f.\n", org[0], org[1], org[2]);
-
-					VectorCopy(org, temp_org2);
-					VectorCopy(org, temp_org);
-					temp_org[2] += waypoint_scatter_distance; // Start above the lift...
-					temp_roof = RoofHeightAt(temp_org);
-
-					VectorCopy(org, temp_org);
-					temp_org[2] -= waypoint_scatter_distance*2; // Start below the lift...
-					temp_ground = GroundHeightAt(temp_org);
-
-					temp_org2[2] = temp_roof;
-					
-					if (temp_roof <= mapMaxs[2] && DistanceVertical(temp_org, temp_org2) >= 128)
-					{// Looks like it goes up!
-						int z = 0;
-
-						VectorCopy(org, temp_org);
-						temp_org[2] += waypoint_scatter_distance;
-
-						while (temp_org[2] <= temp_org2[2])
-						{// Add waypoints all the way up!
-							arealist[areas][0] = temp_org[0];
-							arealist[areas][1] = temp_org[1];
-							arealist[areas][2] = temp_org[2];
-							areas++;
-							temp_org[2] += waypoint_scatter_distance;
-						}
-					}
-
-					temp_org2[2] = temp_ground;
-
-					if (temp_roof >= mapMins[2] && DistanceVertical(temp_org, temp_org2) >= 128)
-					{// Looks like it goes down!
-						int z = 0;
-
-						VectorCopy(org, temp_org);
-						temp_org[2] -= waypoint_scatter_distance;
-
-						while (temp_org[2] >= temp_org2[2])
-						{// Add waypoints all the way up!
-							arealist[areas][0] = temp_org[0];
-							arealist[areas][1] = temp_org[1];
-							arealist[areas][2] = temp_org[2];
-							areas++;
-							temp_org[2] -= waypoint_scatter_distance;
-						}
-					}
-				}
-#endif
-
-				if (org[2] >= 65536.0f)
-				{// Marks a start-solid or on top of the sky... Skip...
-					// since we failed, decrease modifier...
-					//waypoint_scatter_realtime_modifier = waypoint_scatter_realtime_modifier_alt;
-					{// Distance Variation...
-						int p;
-						qboolean got_close = qfalse;
-						int startspot = areas - 100;
-
-						if (startspot < 0) startspot = 0;
-
-						for (p = startspot; p < areas-1; p++)
-						{
-							intvec3_t org2;
-							org2[0] = startx;
-							org2[1] = starty;
-							org2[2] = floor;
-
-							if (intVectorDistance(arealist[p], org2) <= waypoint_scatter_distance)
-							{
-								got_close = qtrue;
-								break;
-							}
-						}
-
-						if (got_close)
-							waypoint_scatter_realtime_modifier = 2.0f;
-						else
-							waypoint_scatter_realtime_modifier = 0.33f;
-					}
-
-					startz -= waypoint_scatter_distance * waypoint_scatter_realtime_modifier;
-					continue;
-				}
-
-				if (VectorDistance(org, last_org) < (waypoint_scatter_distance))
-				{
-					// since we failed, decrease modifier...
-					//waypoint_scatter_realtime_modifier = waypoint_scatter_realtime_modifier_alt;
-					{// Distance Variation...
-						int p;
-						qboolean got_close = qfalse;
-						int startspot = areas - 100;
-
-						if (startspot < 0) startspot = 0;
-
-						for (p = startspot; p < areas-1; p++)
-						{
-							intvec3_t org2;
-							org2[0] = startx;
-							org2[1] = starty;
-							org2[2] = floor;
-
-							if (intVectorDistance(arealist[p], org2) <= waypoint_scatter_distance)
-							{
-								got_close = qtrue;
-								break;
-							}
-						}
-
-						if (got_close)
-							waypoint_scatter_realtime_modifier = 2.0f;
-						else
-							waypoint_scatter_realtime_modifier = 0.33f;
-					}
-
-					startz -= waypoint_scatter_distance * waypoint_scatter_realtime_modifier;
-					continue;
-				}
-
-				if (AIMod_AutoWaypoint_Check_Slope(org))
-				{// Bad slope angles here!
-					// since we failed, decrease modifier...
-					//waypoint_scatter_realtime_modifier = waypoint_scatter_realtime_modifier_alt;
-					{// Distance Variation...
-						int p;
-						qboolean got_close = qfalse;
-						int startspot = areas - 100;
-
-						if (startspot < 0) startspot = 0;
-
-						for (p = startspot; p < areas-1; p++)
-						{
-							intvec3_t org2;
-							org2[0] = startx;
-							org2[1] = starty;
-							org2[2] = floor;
-
-							if (intVectorDistance(arealist[p], org2) <= waypoint_scatter_distance)
-							{
-								got_close = qtrue;
-								break;
-							}
-						}
-
-						if (got_close)
-							waypoint_scatter_realtime_modifier = 2.0f;
-						else
-							waypoint_scatter_realtime_modifier = 0.33f;
-					}
-
-					startz -= waypoint_scatter_distance * waypoint_scatter_realtime_modifier;
-					continue;
-				}
-
-//#if 0
-				if (!AIMod_AutoWaypoint_Check_PlayerWidth(org))
-				{// Not wide enough for a player to fit!
-					// since we failed, decrease modifier...
-					//waypoint_scatter_realtime_modifier = waypoint_scatter_realtime_modifier_alt;
-					{// Distance Variation...
-						int p;
-						qboolean got_close = qfalse;
-						int startspot = areas - 100;
-
-						if (startspot < 0) startspot = 0;
-
-						for (p = startspot; p < areas-1; p++)
-						{
-							intvec3_t org2;
-							org2[0] = startx;
-							org2[1] = starty;
-							org2[2] = floor;
-
-							if (intVectorDistance(arealist[p], org2) <= waypoint_scatter_distance)
-							{
-								got_close = qtrue;
-								break;
-							}
-						}
-
-						if (got_close)
-							waypoint_scatter_realtime_modifier = 2.0f;
-						else
-							waypoint_scatter_realtime_modifier = 0.33f;
-					}
-
-					startz -= waypoint_scatter_distance * waypoint_scatter_realtime_modifier;
-					continue;
-				}
-//#endif //0
-
-				// Raise node a little to add it...(for visibility)
-				if (org[2] >= -65536.0f && org[2] <= 65536.0f)
-				{
-					orig_floor = org[2];
-					org[2] += 8;
-
-					//trap->Print("^4*** ^3AUTO-WAYPOINTER^4: ^5Adding temp waypoint ^3%i ^7at ^7%f %f %f^5. (^3%.2f^5%% complete)\n", areas, org[0], org[1], org[2], (float)((float)((float)final_tests/(float)total_tests)*100.0f));
-					strcpy( last_node_added_string, va("^5Adding temp waypoint ^3%i ^5at ^7%f %f %f^5.", areas/*+areas2+areas3*/, org[0], org[1], org[2]) );
-
-					//VectorCopy( org, arealist[areas] );
-					arealist[areas][0] = org[0];
-					arealist[areas][1] = org[1];
-					arealist[areas][2] = org[2];
-					areas++;
-				}
-				else
-				{// Don't add this one to the temp list...
-					orig_floor = org[2];
-					org[2] += 8;
-				}
-
-				
-
-				// Lower current org a back to where it was before raising it above...
-				org[2] = orig_floor;
-
-				VectorCopy(org, last_org);
-
-				floor = org[2];
-				current_floor = floor;
-
-				// since we passed, increase modifier...
-				/*
-				if (waypoint_scatter_realtime_modifier == 1.25f)
-				waypoint_scatter_realtime_modifier = 1.0f;
-				else if (waypoint_scatter_realtime_modifier == 1.0f)
-				waypoint_scatter_realtime_modifier = 0.5f;
-				else
-				waypoint_scatter_realtime_modifier = 1.25f;
-				*/
-
-				{// Distance Variation...
-					int p;
-					qboolean got_close = qfalse;
-					int startspot = areas - 100;
-
-					if (startspot < 0) startspot = 0;
-
-					for (p = startspot; p < areas-1; p++)
-					{
-						intvec3_t org2;
-						org2[0] = org[0];
-						org2[1] = org[1];
-						org2[2] = org[2];
-
-						if (intVectorDistance(arealist[p], org2) <= waypoint_scatter_distance)
-						{
-							got_close = qtrue;
-							break;
-						}
-					}
-
-					if (got_close)
-						waypoint_scatter_realtime_modifier = 2.0f;
-					else
-						waypoint_scatter_realtime_modifier = 0.33f;
-				}
-
-
-				startz -= waypoint_scatter_distance * waypoint_scatter_realtime_modifier;
-
-				while (startz > floor && startz > mapMins[2]-2048)
-				{// We can skip some checks, until we get to our current floor height...
-					startz -= waypoint_scatter_distance * waypoint_scatter_realtime_modifier;
-					final_tests++;
-
-					// Draw a nice little progress bar ;)
-					aw_percent_complete = (float)((float)((float)final_tests/(float)total_tests)*100.0f);
-
-					update_timer++;
-
-					if (update_timer >= 15000)
-					{
-						trap->UpdateScreen();
-						update_timer = 0;
-					}
-				}
-			}
-
-			startz = orig_startz;
-			starty -= waypoint_scatter_distance;
-		}
-
-		starty = orig_starty;
-		startx -= waypoint_scatter_distance;
-	}
-#endif //__NEW_AWP_METHOD__
-
 	//
 	// Add nodes for all movers...
 	//
@@ -6582,17 +6296,8 @@ omp_set_nested(0);
 		float		use_scatter = 0;
 		int			remove_per_area = 0;
 
-#ifdef __NEW_AWP_METHOD__
-		//use_scatter = original_waypoint_scatter_distance * (remove_ratio/10.0);
-		//use_scatter = original_waypoint_scatter_distance * remove_ratio;
 		use_scatter = 512.0;//original_waypoint_scatter_distance * waypoint_distance_multiplier;
 		remove_per_area = 32 / (remove_ratio+1);
-
-		//trap->Print("Use scatter is %f.\n", use_scatter);
-
-#else //!__NEW_AWP_METHOD__
-		use_scatter = waypoint_scatter_distance;
-#endif //__NEW_AWP_METHOD__
 
 		aw_stage_start_time = clock();
 
@@ -6954,6 +6659,7 @@ AIMod_AutoWaypoint ( void )
 		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3/autowaypoint <method> <scatter_distance> ^5or ^3/awp <method> <scatter_distance>^5. Distance is optional.\n" );
 		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^5Available methods are:\n" );
 		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3\"standard\" ^5- For standard multi-level maps.\n");
+		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3\"altmethod\" ^5- For standard multi-level maps (alternative method).\n");
 		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3\"nosky\" ^5- For standard multi-level maps. Don't check for sky.\n");
 		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3\"nowater\" ^5- For standard multi-level maps.\n");
 		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3\"openspread\" ^5- This version spreads out waypoints in large open areas. May be inacurate indoors.\n");
@@ -6974,10 +6680,43 @@ AIMod_AutoWaypoint ( void )
 	DO_ULTRAFAST = qfalse;
 	DO_NOWATER = qfalse;
 	DO_OPEN_AREA_SPREAD = qfalse;
+	DO_NEW_METHOD = qfalse;
 
 	trap->Cmd_Argv( 1, str, sizeof(str) );
 	
-	if ( Q_stricmp( str, "standard") == 0 )
+	if ( Q_stricmp( str, "altmethod") == 0 )
+	{
+		DO_OPEN_AREA_SPREAD = qtrue;
+
+		if ( trap->Cmd_Argc() >= 2 )
+		{
+			// Override normal scatter distance...
+			int dist = waypoint_scatter_distance;
+
+			trap->Cmd_Argv( 2, str, sizeof(str) );
+			dist = atoi(str);
+
+			if (dist <= 4)
+			{
+				// Fallback and warning...
+				dist = original_wp_scatter_dist;
+
+				trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^7Warning: ^5Invalid scatter distance set (%i). Using default (%i)...\n", atoi(str), original_wp_scatter_dist );
+			}
+
+			waypoint_scatter_distance = dist;
+			AIMod_AutoWaypoint_StandardMethod();
+
+			waypoint_scatter_distance = original_wp_scatter_dist;
+		}
+		else
+		{
+			AIMod_AutoWaypoint_StandardMethod();
+		}
+
+		DO_OPEN_AREA_SPREAD = qfalse;
+	}
+	else if ( Q_stricmp( str, "standard") == 0 )
 	{
 		if ( trap->Cmd_Argc() >= 2 )
 		{
