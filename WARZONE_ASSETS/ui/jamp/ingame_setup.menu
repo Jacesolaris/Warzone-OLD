@@ -1479,13 +1479,17 @@
       			type				ITEM_TYPE_MULTI
 			text				@MENUS_SHADOWS
 			descText			@MENUS_SHADOWS_DESC
-			cvar				"cg_shadows"
+			//cvar				"cg_shadows"
+			cvar				"r_sss"
 			cvarFloatList		
 			{  
+				//@MENUS_NONE			0 
+				//@MENUS_SHADOWS_SIMPLE		1 
+				//@MENUS_SHADOWS_VOLUMETRIC	2
+				//"Projected"			3
 				@MENUS_NONE			0 
-				@MENUS_SHADOWS_SIMPLE		1 
-				@MENUS_SHADOWS_VOLUMETRIC	2
-				"Projected"			3
+				"Foliage Only"		1 
+				"Full"	2
 			}
 			rect				220 141 300 14
 	   		textalign			ITEM_ALIGN_RIGHT

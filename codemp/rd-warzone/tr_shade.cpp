@@ -1800,7 +1800,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 							//&& (!pStage->bundle[TB_NORMALMAP].image[0])
 							&& (!pStage->bundle[TB_NORMALMAP].image[0] || pStage->bundle[TB_NORMALMAP].image[0] == tr.whiteImage)
 							&& pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName[0] 
-						&& pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName[0] != '*'
+							&& pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName[0] != '*'
 							&& pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName[0] != '$'
 							&& pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName[0] != '_'
 							&& pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName[0] != '!'

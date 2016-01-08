@@ -84,6 +84,8 @@ extern const char *fallbackShader_hbao_vp;
 extern const char *fallbackShader_hbao_fp;
 extern const char *fallbackShader_sss_vp;
 extern const char *fallbackShader_sss_fp;
+extern const char *fallbackShader_sss2_vp;
+extern const char *fallbackShader_sss2_fp;
 extern const char *fallbackShader_rbm_vp;
 extern const char *fallbackShader_rbm_fp;
 extern const char *fallbackShader_hbaoCombine_vp;
@@ -810,6 +812,7 @@ static bool GLSL_EndLoadGPUShader (shaderProgram_t *program)
 	qglBindFragDataLocation (program->program, 0, "out_Color");
 	qglBindFragDataLocation (program->program, 1, "out_Glow");
 	qglBindFragDataLocation (program->program, 2, "out_DetailedNormal");
+	qglBindFragDataLocation (program->program, 3, "out_FoliageMap");
 	//qglBindFragDataLocation (program->program, 3, "out_Normal");
 
 	if(attribs & ATTR_POSITION)
@@ -2197,6 +2200,14 @@ int GLSL_BeginLoadGPUShaders(void)
 	if (!GLSL_BeginLoadGPUShader(&tr.sssShader, "sss", attribs, qtrue, extradefines, qfalse, NULL, fallbackShader_sss_vp, fallbackShader_sss_fp))
 	{
 		ri->Error(ERR_FATAL, "Could not load sss shader!");
+	}
+
+	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
+	extradefines[0] = '\0';
+
+	if (!GLSL_BeginLoadGPUShader(&tr.sss2Shader, "sss2", attribs, qtrue, extradefines, qfalse, NULL, fallbackShader_sss2_vp, fallbackShader_sss2_fp))
+	{
+		ri->Error(ERR_FATAL, "Could not load sss2 shader!");
 	}
 
 	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
@@ -3841,6 +3852,31 @@ void GLSL_EndLoadGPUShaders ( int startTime )
 		numEtcShaders++;
 
 
+
+
+		if (!GLSL_EndLoadGPUShader(&tr.sss2Shader))
+		{
+			ri->Error(ERR_FATAL, "Could not load sss2 shader!");
+		}
+
+		GLSL_InitUniforms(&tr.sss2Shader);
+
+		qglUseProgram(tr.sss2Shader.program);
+		GLSL_SetUniformInt(&tr.sss2Shader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
+		GLSL_SetUniformInt(&tr.sss2Shader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
+		GLSL_SetUniformInt(&tr.sss2Shader, UNIFORM_NORMALMAP, TB_NORMALMAP);
+		qglUseProgram(0);
+
+#if defined(_DEBUG)
+		GLSL_FinishGPUShader(&tr.sss2Shader);
+#endif
+
+		numEtcShaders++;
+
+
+
+
+
 		if (!GLSL_EndLoadGPUShader(&tr.rbmShader))
 		{
 			ri->Error(ERR_FATAL, "Could not load rbm shader!");
@@ -3992,6 +4028,7 @@ void GLSL_ShutdownGPUShaders(void)
 	GLSL_DeleteGPUShader(&tr.waterShader);
 	GLSL_DeleteGPUShader(&tr.grassShader);
 	GLSL_DeleteGPUShader(&tr.sssShader);
+	GLSL_DeleteGPUShader(&tr.sss2Shader);
 	GLSL_DeleteGPUShader(&tr.rbmShader);
 	GLSL_DeleteGPUShader(&tr.hbaoShader);
 	GLSL_DeleteGPUShader(&tr.hbao2Shader);

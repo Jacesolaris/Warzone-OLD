@@ -520,6 +520,7 @@ void FBO_Init(void)
 		FBO_AttachTextureImage(tr.renderImage, 0);
 		FBO_AttachTextureImage(tr.glowImage, 1);
 		FBO_AttachTextureImage(tr.normalDetailedImage, 2);
+		FBO_AttachTextureImage(tr.foliageImage, 3);
 		//FBO_AttachTextureImage(tr.normalImage, 3);
 
 		//FBO_CreateBuffer(tr.msaaResolveFbo, GL_DEPTH_COMPONENT24, 0, 0);
@@ -539,6 +540,7 @@ void FBO_Init(void)
 		FBO_AttachTextureImage(tr.renderImage, 0);
 		FBO_AttachTextureImage(tr.glowImage, 1);
 		FBO_AttachTextureImage(tr.normalDetailedImage, 2);
+		FBO_AttachTextureImage(tr.foliageImage, 3);
 		//FBO_AttachTextureImage(tr.normalImage, 3);
 
 		//FBO_CreateBuffer(tr.renderFbo, GL_DEPTH_COMPONENT24, 0, 0);

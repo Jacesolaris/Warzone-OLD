@@ -4156,7 +4156,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 		useLightVertex = qtrue;
 	}
 #ifdef __EXTRA_PRETTY__
-	else if (checkNormals && !shader.hasAlpha)
+	else if (checkNormals && (!shader.hasAlpha) /*|| ( shader.surfaceFlags & MATERIAL_MASK ) == MATERIAL_GREENLEAVES*/)
 	{// UQ1: If we marked this as a material (and it's not a portal or sky), override no light with vertex light for reflection and specular...
 		switch( shader.surfaceFlags & MATERIAL_MASK )
 		{

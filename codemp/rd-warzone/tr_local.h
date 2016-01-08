@@ -379,6 +379,8 @@ extern cvar_t  *r_textureCleanBSigma;
 extern cvar_t  *r_textureCleanMSize;
 extern cvar_t  *r_imageBasedLighting;
 extern cvar_t  *r_sss;
+extern cvar_t  *r_sssMinRange;
+extern cvar_t  *r_sssMaxRange;
 extern cvar_t  *r_rbm;
 extern cvar_t  *r_rbmStrength;
 extern cvar_t  *r_hbao;
@@ -2301,6 +2303,7 @@ typedef struct trGlobals_s {
 	image_t					*glowImage;
 	image_t					*normalImage;
 	image_t					*normalDetailedImage;
+	image_t					*foliageImage;
 #if 0
 	image_t					*glowImageScaled[4];
 #else
@@ -2420,6 +2423,7 @@ typedef struct trGlobals_s {
 	shaderProgram_t waterShader;
 	shaderProgram_t grassShader;
 	shaderProgram_t sssShader;
+	shaderProgram_t sss2Shader;
 	shaderProgram_t rbmShader;
 	shaderProgram_t hbaoShader;
 	shaderProgram_t hbao2Shader;

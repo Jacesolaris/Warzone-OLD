@@ -302,6 +302,8 @@ cvar_t  *r_textureCleanBSigma;
 cvar_t  *r_textureCleanMSize;
 cvar_t  *r_imageBasedLighting;
 cvar_t  *r_sss;
+cvar_t  *r_sssMinRange;
+cvar_t  *r_sssMaxRange;
 cvar_t  *r_rbm;
 cvar_t  *r_rbmStrength;
 cvar_t  *r_hbao;
@@ -1473,6 +1475,8 @@ void R_Register( void )
 	r_textureCleanMSize = ri->Cvar_Get( "r_textureCleanMSize", "6.0", CVAR_ARCHIVE );
 	r_imageBasedLighting = ri->Cvar_Get( "r_imageBasedLighting", "0", CVAR_ARCHIVE );
 	r_sss = ri->Cvar_Get( "r_sss", "0", CVAR_ARCHIVE );
+	r_sssMinRange = ri->Cvar_Get( "r_sssMinRange", "0.004", CVAR_ARCHIVE );
+	r_sssMaxRange = ri->Cvar_Get( "r_sssMaxRange", "0.02", CVAR_ARCHIVE );
 	r_rbm = ri->Cvar_Get( "r_rbm", "0", CVAR_ARCHIVE );
 	r_rbmStrength = ri->Cvar_Get( "r_rbmStrength", "0.22", CVAR_ARCHIVE );
 	r_hbao = ri->Cvar_Get( "r_hbao", "1", CVAR_ARCHIVE );

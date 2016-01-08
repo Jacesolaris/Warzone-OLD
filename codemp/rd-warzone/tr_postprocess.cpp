@@ -1512,15 +1512,8 @@ void RB_RBM(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 qboolean RB_SSS(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 {
 	vec4_t		color;
-#if 0
-	dlight_t	*closestdl;
-	float		closestdlRange = 99999.9f;
 
-	//ri->Printf(PRINT_WARNING, "There are %i dlights.\n", backEnd.refdef.num_dlights);
-
-	if ( backEnd.refdef.num_dlights <= 0 )
-		return qfalse;
-#endif
+	shaderProgram_t *shader = &tr.sssShader;
 
 	// bloom
 	color[0] =
@@ -1528,65 +1521,38 @@ qboolean RB_SSS(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 		color[2] = pow(2, r_cameraExposure->value);
 	color[3] = 1.0f;
 
-	GLSL_BindProgram(&tr.sssShader);
+	if (r_sss->integer > 1) shader = &tr.sss2Shader;
 
-	GLSL_SetUniformMatrix16(&tr.sssShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
-	GLSL_SetUniformMatrix16(&tr.sssShader, UNIFORM_INVPROJECTIONMATRIX, glState.invEyeProjection);
-	GLSL_SetUniformMatrix16(&tr.sssShader, UNIFORM_MODELMATRIX, backEnd.ori.transformMatrix);
+	GLSL_BindProgram(shader);
 
-	GLSL_SetUniformInt(&tr.sssShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
+	GLSL_SetUniformMatrix16(shader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
+	GLSL_SetUniformMatrix16(shader, UNIFORM_INVPROJECTIONMATRIX, glState.invEyeProjection);
+	GLSL_SetUniformMatrix16(shader, UNIFORM_MODELMATRIX, backEnd.ori.transformMatrix);
+
+	GLSL_SetUniformInt(shader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
 	GL_BindToTMU(hdrFbo->colorImage[0], TB_DIFFUSEMAP);
-	GLSL_SetUniformInt(&tr.sssShader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
+	GLSL_SetUniformInt(shader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
 	GL_BindToTMU(tr.renderDepthImage, TB_LIGHTMAP);
-	GLSL_SetUniformInt(&tr.sssShader, UNIFORM_GLOWMAP, TB_GLOWMAP);
+	GLSL_SetUniformInt(shader, UNIFORM_GLOWMAP, TB_GLOWMAP);
 	//GL_BindToTMU(tr.anamorphicRenderFBOImage[2], TB_GLOWMAP);
 	GL_BindToTMU(tr.glowImage, TB_GLOWMAP);
-	GLSL_SetUniformInt(&tr.sssShader, UNIFORM_NORMALMAP, TB_LIGHTMAP);
+	GLSL_SetUniformInt(shader, UNIFORM_NORMALMAP, TB_LIGHTMAP);
 	GL_BindToTMU(tr.renderDepthImage, TB_LIGHTMAP);
-
-#if 0
-	for ( int l = 0 ; l < backEnd.refdef.num_dlights ; l++ ) {
-		dlight_t	*dl;
-		float dist;
-
-		dl = &backEnd.refdef.dlights[l];
-
-		dist = Distance(dl->origin, backEnd.refdef.vieworg);
-
-		if (dist < closestdlRange)
-		{
-			closestdl = dl;
-			closestdlRange = dist;
-		}
-	}
-
-	//GLSL_SetUniformVec4(&tr.sssShader, UNIFORM_LIGHTORIGIN, closestdl->origin);
-
-	vec4_t vector;
-	VectorCopy(closestdl->transformed, vector);
-	vector[3] = 1.0f;
-	GLSL_SetUniformVec4(&tr.sssShader, UNIFORM_LIGHTORIGIN, vector);
-
-	//ri->Printf(PRINT_WARNING, "Use dlight at %f %f %f.\n", closestdl->origin[0], closestdl->origin[1], closestdl->origin[2]);
-
-	{
-		vec4_t viewInfo;
-
-		float zmax = backEnd.viewParms.zFar;
-		float zmin = r_znear->value;
-
-		VectorSet4(viewInfo, zmin, zmax, zmax / zmin, 0.0);
-
-		GLSL_SetUniformVec4(&tr.sssShader, UNIFORM_VIEWINFO, viewInfo);
-	}
-#endif
+	GLSL_SetUniformInt(shader, UNIFORM_RANDOMMAP, TB_RANDOMMAP);
+	GL_BindToTMU(tr.foliageImage, TB_RANDOMMAP);
 
 	{
 		vec2_t screensize;
 		screensize[0] = glConfig.vidWidth * r_superSampleMultiplier->value;
 		screensize[1] = glConfig.vidHeight * r_superSampleMultiplier->value;
 
-		GLSL_SetUniformVec2(&tr.sssShader, UNIFORM_DIMENSIONS, screensize);
+		GLSL_SetUniformVec2(shader, UNIFORM_DIMENSIONS, screensize);
+	}
+
+	{
+		vec4_t loc;
+		VectorSet4(loc, r_sssMinRange->value, r_sssMaxRange->value, 0.0, 0.0);
+		GLSL_SetUniformVec4(shader, UNIFORM_LOCAL0, loc);
 	}
 
 	{
@@ -1596,10 +1562,10 @@ qboolean RB_SSS(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 		float xmax = zmax * tan(backEnd.viewParms.fovX * M_PI / 360.0f);
 		float zmin = r_znear->value;
 		VectorSet4(viewInfo, zmin, zmax, zmax / zmin, 0.0);
-		GLSL_SetUniformVec4(&tr.sssShader, UNIFORM_VIEWINFO, viewInfo);
+		GLSL_SetUniformVec4(shader, UNIFORM_VIEWINFO, viewInfo);
 	}
 
-	FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.sssShader, color, 0);
+	FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, shader, color, 0);
 
 	return qtrue;
 }

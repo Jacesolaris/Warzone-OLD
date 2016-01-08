@@ -107,6 +107,7 @@ varying vec3   var_vertPos;
 out vec4 out_Glow;
 //out vec4 out_Normal;
 out vec4 out_DetailedNormal;
+out vec4 out_FoliageMap;
 
 #if defined(USE_PARALLAXMAP) || defined(USE_PARALLAXMAP_NONORMALS)
   #if defined(USE_PARALLAXMAP)
@@ -854,5 +855,10 @@ void main()
 		//out_Normal = vec4(NORMAL.xyz, 0.0);
 		//if (DETAILED_NORMAL.x + DETAILED_NORMAL.y + DETAILED_NORMAL.z == 3.0) DETAILED_NORMAL.xyz = vec3(0.0);
 		out_DetailedNormal = vec4(DETAILED_NORMAL.xyz, specular.a / 8.0);
+
+		if (u_Local1.a == 20) // Foliage/Plants
+			out_FoliageMap = vec4(1.0, 0.0, 0.0, 0.0);
+		else
+			out_FoliageMap = vec4(0.0, 0.0, 0.0, 0.0);
 	}
 }

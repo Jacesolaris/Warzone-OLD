@@ -1,7 +1,6 @@
 uniform sampler2D				u_DiffuseMap;
 uniform sampler2D				u_ScreenDepthMap;
 uniform sampler2D				u_GlowMap;
-uniform sampler2D				u_RandomMap; // on screen foliage image
 
 uniform mat4					u_ModelViewProjectionMatrix;
 uniform vec4					u_ViewInfo; // zmin, zmax, zmax / zmin
@@ -42,18 +41,15 @@ void main(void){
 
 	float invDepth = 1.0 - depth;
 
+	//vec2 distFromCenter = vec2((0.5 - var_ScreenTex.x) * 2.0, (1.0 - var_ScreenTex.y) * invDepth);
+	//vec2 offset = distFromCenter * 40.0;
+	//vec2 pixOffset = (offset * texel_size) * invDepth;
+	//vec2 pos = var_ScreenTex + pixOffset;
+
 	//vec2 distFromCenter = vec2((0.5 - var_ScreenTex.x), 0.5);
 	vec2 distFromCenter = vec2((0.5 - var_ScreenTex.x) * 2.0, (1.0 - var_ScreenTex.y) * 0.5);
 	vec2 pixOffset = clamp((distFromCenter * invDepth) * texel_size * 80.0, vec2(0.0), texel_size * 80.0);
 	vec2 pos = var_ScreenTex + pixOffset;
-
-	float isFoliage = texture2D(u_RandomMap, pos).r;
-
-	if (isFoliage < 1.0)
-	{
-		gl_FragColor = texture2D(u_DiffuseMap, var_ScreenTex);
-		return;
-	}
 
 	float d2 = texture2D(u_ScreenDepthMap, pos).r;
 	d2 = linearize(d2);
