@@ -44,7 +44,7 @@ extern "C" {
 #ifdef __USE_ALL_PLANTS__
 #define		NUM_PLANT_SHADERS 81
 #else //!__USE_ALL_PLANTS__
-#define		NUM_PLANT_SHADERS 182
+#define		NUM_PLANT_SHADERS 98//182
 
 static const char *GoodPlantsList[] = {
 "models/warzone/foliage/plant01.png",
@@ -118,7 +118,7 @@ static const char *GoodPlantsList[] = {
 "models/warzone/foliage/plant69.png",
 "models/warzone/foliage/plant70.png",
 // More of these because they add color
-"models/warzone/foliage/plant27.png",
+/*"models/warzone/foliage/plant27.png",
 "models/warzone/foliage/plant28.png",
 "models/warzone/foliage/plant29.png",
 "models/warzone/foliage/plant30.png",
@@ -201,7 +201,7 @@ static const char *GoodPlantsList[] = {
 "models/warzone/foliage/plant30.png",
 "models/warzone/foliage/plant31.png",
 "models/warzone/foliage/plant32.png",
-"models/warzone/foliage/plant33.png",
+"models/warzone/foliage/plant33.png",*/
 
 "models/warzone/foliage/plant60.png",
 "models/warzone/foliage/plant61.png",
@@ -592,17 +592,17 @@ extern "C" {
 				else if (dist < 384)
 				{
 					re.customShader = FOLIAGE_GRASS_BILLBOARD_SHADER[2];
-					re.hModel = FOLIAGE_GRASS_MODEL[1];
+					re.hModel = FOLIAGE_GRASS_MODEL[0];
 				}
 				else if (dist < 512)
 				{
 					re.customShader = FOLIAGE_GRASS_BILLBOARD_SHADER[2];
-					re.hModel = FOLIAGE_GRASS_MODEL[1];
+					re.hModel = FOLIAGE_GRASS_MODEL[0];
 				}
 				else if (dist < 1024)
 				{
 					re.customShader = FOLIAGE_GRASS_BILLBOARD_SHADER[3];
-					re.hModel = FOLIAGE_GRASS_MODEL[2];
+					re.hModel = FOLIAGE_GRASS_MODEL[1];
 				}
 				else
 				{
@@ -695,25 +695,13 @@ extern "C" {
 
 			re.reType = RT_MODEL;
 
-			if (dist < 128)
+			if (dist < 512)
 			{
 				re.hModel = FOLIAGE_GRASS_MODEL[0];
-			}
-			else if (dist < 256)
-			{
-				re.hModel = FOLIAGE_GRASS_MODEL[0];
-			}
-			else if (dist < 384)
-			{
-				re.hModel = FOLIAGE_GRASS_MODEL[1];
-			}
-			else if (dist < 512)
-			{
-				re.hModel = FOLIAGE_GRASS_MODEL[1];
 			}
 			else if (dist < 1024)
 			{
-				re.hModel = FOLIAGE_GRASS_MODEL[2];
+				re.hModel = FOLIAGE_GRASS_MODEL[1];
 			}
 			else
 			{
@@ -1047,121 +1035,8 @@ extern "C" {
 	//
 	// =======================================================================================================================================
 
-	float FOLIAGE_FloorHeightAt ( vec3_t org )
-	{
-		trace_t tr;
-		vec3_t org1, org2;//, slopeangles;
-		float pitch = 0;
-
-		VectorCopy(org, org1);
-
-		VectorCopy(org, org2);
-		org2[2]= -65536.0f;
-
-		CG_Trace( &tr, org1, NULL, NULL, org2, -1, MASK_PLAYERSOLID|CONTENTS_WATER );
-
-		if (tr.startsolid)
-		{
-			return 65536.0f;
-		}
-
-		if (tr.endpos[2] > cg.mapcoordsMaxs[2]+2000)
-			return 65536.0f;
-
-		if (tr.endpos[2] < -65000 || tr.endpos[2] < cg.mapcoordsMins[2]-2000)
-			return -65536.0f;
-
-		if ( tr.surfaceFlags & SURF_SKY )
-		{// Sky...
-			return 65536.0f;
-		}
-
-		if ( /*tr.contents & CONTENTS_WATER ||*/ (tr.surfaceFlags & MATERIAL_MASK) == MATERIAL_WATER )
-		{// Water... I'm just gonna ignore these!
-			return -65536.0f;
-		}
-
-//#define __SLOPE_CHECK__
-#ifdef __SLOPE_CHECK__
-		// Added -- Check slope...
-		vectoangles( tr.plane.normal, slopeangles );
-
-		pitch = slopeangles[0];
-
-		if (pitch > 180)
-			pitch -= 360;
-
-		if (pitch < -180)
-			pitch += 360;
-
-		pitch += 90.0f;
-
-		if (pitch > 46.0f || pitch < -46.0f)
-			return 65536.0f; // bad slope...
-
-		if ( tr.startsolid || tr.allsolid )
-		{
-			return 65536.0f;
-		}
-#endif //__SLOPE_CHECK__
-
-		switch( tr.surfaceFlags & MATERIAL_MASK )
-		{
-		case MATERIAL_SHORTGRASS:		// 5			// manicured lawn
-		case MATERIAL_LONGGRASS:		// 6			// long jungle grass
-			break;
-		default:
-			// Not grass...
-			return 65536.0f;
-			break;
-		}
-
-		return tr.endpos[2];
-	}
-
 	extern void AIMod_GetMapBounts ( void );
 	extern float RoofHeightAt ( vec3_t org );
-
-	qboolean FOLIAGE_CheckInSolid (vec3_t position)
-	{
-		trace_t	trace;
-		vec3_t	end, mins, maxs;
-		vec3_t pos;
-
-		int contents = CONTENTS_TRIGGER;
-		int clipmask = MASK_DEADSOLID;
-
-		VectorSet(mins, -15, -15, DEFAULT_MINS_2);
-		VectorSet(maxs, 15, 15, DEFAULT_MAXS_2);
-
-		VectorCopy(position, pos);
-		pos[2]+=28;
-		VectorCopy(pos, end);
-		end[2] += mins[2];
-		mins[2] = 0;
-
-		CG_Trace(&trace, position, mins, maxs, end, -1, clipmask);
-		if(trace.allsolid || trace.startsolid)
-		{
-			return qtrue;
-		}
-
-		if(trace.fraction < 1.0)
-		{
-			return qtrue;
-		}
-
-		return qfalse;
-	}
-
-	qboolean FOLIAGE_Check_Width ( vec3_t origin ) 
-	{
-		vec3_t		org;
-		VectorCopy(origin, org);
-		org[2]+=18;
-		if (FOLIAGE_CheckInSolid(org)) return qfalse;
-		return qtrue;
-	}
 
 	extern float aw_percent_complete;
 	extern char task_string1[255];
@@ -1170,8 +1045,22 @@ extern "C" {
 	extern char last_node_added_string[255];
 	extern clock_t	aw_stage_start_time;
 
-	typedef long int	intvec_t;
-	typedef intvec_t	intvec3_t[3];
+	qboolean MaterialIsValidForGrass(int materialType)
+	{
+		switch( materialType )
+		{
+		case MATERIAL_SHORTGRASS:		// 5					// manicured lawn
+		case MATERIAL_LONGGRASS:		// 6					// long jungle grass
+		case MATERIAL_MUD:				// 17					// wet soil
+		case MATERIAL_DIRT:				// 7					// hard mud
+			return qtrue;
+			break;
+		default:
+			break;
+		}
+
+		return qfalse;
+	}
 
 	qboolean FOLIAGE_FloorIsGrassAt ( vec3_t org )
 	{
@@ -1200,15 +1089,8 @@ extern "C" {
 			return qfalse;
 		}
 
-		switch (tr.surfaceFlags & MATERIAL_MASK)
-		{
-		case MATERIAL_SHORTGRASS:
-		case MATERIAL_LONGGRASS:
+		if (MaterialIsValidForGrass(int(tr.surfaceFlags & MATERIAL_MASK)))
 			return qtrue;
-			break;
-		default:
-			break;
-		}
 
 		return qfalse;
 	}
@@ -1216,99 +1098,125 @@ extern "C" {
 
 #define GRASS_MODEL_WIDTH cg_foliageModelWidth.value
 #define GRASS_SLOPE_MAX_DIFF cg_foliageMaxSlopeChange.value
+#define GRASS_HEIGHT_MAX_DIFF cg_foliageMaxHeightChange.value
+#define GRASS_SLOPE_UP_HEIGHT cg_foliageSlopeCheckHeight.value
 
-	qboolean CheckSlopesAround(vec3_t pos, vec3_t down, vec3_t slope)
+	qboolean FOLIAGE_CheckSlopesAround(vec3_t pos, vec3_t down, vec3_t groundpos, vec3_t slope, float scale)
 	{
 		trace_t		tr;
 		vec3_t		pos2, down2;
+		float		HEIGHT_SCALE = 1.0;
+
+		if (scale <= 0.3)
+			HEIGHT_SCALE = 0.5;
+		else if (scale <= 0.5)
+			HEIGHT_SCALE = 0.7;
+		else if (scale <= 0.7)
+			HEIGHT_SCALE = 0.9;
 
 		VectorCopy(pos, pos2);
 		VectorCopy(down, down2);
-		pos2[0] += GRASS_MODEL_WIDTH;
-		down2[0] += GRASS_MODEL_WIDTH;
+		pos2[0] += (GRASS_MODEL_WIDTH * scale);
+		down2[0] += (GRASS_MODEL_WIDTH * scale);
 
 		CG_Trace( &tr, pos2, NULL, NULL, down2, ENTITYNUM_NONE, MASK_PLAYERSOLID|CONTENTS_WATER );
 
 		// Slope too different...
+		if (!MaterialIsValidForGrass(int(tr.surfaceFlags & MATERIAL_MASK))) return qfalse;
 		if (Distance(slope, tr.plane.normal) > GRASS_SLOPE_MAX_DIFF) return qfalse;
+		if (DistanceVertical(groundpos, tr.endpos) > GRASS_HEIGHT_MAX_DIFF * HEIGHT_SCALE /*&& Distance(slope, tr.plane.normal) > 0.0*/) return qfalse;
 
 		VectorCopy(pos, pos2);
 		VectorCopy(down, down2);
-		pos2[0] -= GRASS_MODEL_WIDTH;
-		down2[0] -= GRASS_MODEL_WIDTH;
+		pos2[0] -= (GRASS_MODEL_WIDTH * scale);
+		down2[0] -= (GRASS_MODEL_WIDTH * scale);
 
 		CG_Trace( &tr, pos2, NULL, NULL, down2, ENTITYNUM_NONE, MASK_PLAYERSOLID|CONTENTS_WATER );
 
 		// Slope too different...
+		if (!MaterialIsValidForGrass(int(tr.surfaceFlags & MATERIAL_MASK))) return qfalse;
 		if (Distance(slope, tr.plane.normal) > GRASS_SLOPE_MAX_DIFF) return qfalse;
+		if (DistanceVertical(groundpos, tr.endpos) > GRASS_HEIGHT_MAX_DIFF * HEIGHT_SCALE /*&& Distance(slope, tr.plane.normal) > 0.0*/) return qfalse;
 
 		VectorCopy(pos, pos2);
 		VectorCopy(down, down2);
-		pos2[1] += GRASS_MODEL_WIDTH;
-		down2[1] += GRASS_MODEL_WIDTH;
+		pos2[1] += (GRASS_MODEL_WIDTH * scale);
+		down2[1] += (GRASS_MODEL_WIDTH * scale);
 
 		CG_Trace( &tr, pos2, NULL, NULL, down2, ENTITYNUM_NONE, MASK_PLAYERSOLID|CONTENTS_WATER );
 
 		// Slope too different...
+		if (!MaterialIsValidForGrass(int(tr.surfaceFlags & MATERIAL_MASK))) return qfalse;
 		if (Distance(slope, tr.plane.normal) > GRASS_SLOPE_MAX_DIFF) return qfalse;
+		if (DistanceVertical(groundpos, tr.endpos) > GRASS_HEIGHT_MAX_DIFF * HEIGHT_SCALE /*&& Distance(slope, tr.plane.normal) > 0.0*/) return qfalse;
 
 		VectorCopy(pos, pos2);
 		VectorCopy(down, down2);
-		pos2[1] -= GRASS_MODEL_WIDTH;
-		down2[1] -= GRASS_MODEL_WIDTH;
+		pos2[1] -= (GRASS_MODEL_WIDTH * scale);
+		down2[1] -= (GRASS_MODEL_WIDTH * scale);
 
 		CG_Trace( &tr, pos2, NULL, NULL, down2, ENTITYNUM_NONE, MASK_PLAYERSOLID|CONTENTS_WATER );
 
 		// Slope too different...
+		if (!MaterialIsValidForGrass(int(tr.surfaceFlags & MATERIAL_MASK))) return qfalse;
 		if (Distance(slope, tr.plane.normal) > GRASS_SLOPE_MAX_DIFF) return qfalse;
+		if (DistanceVertical(groundpos, tr.endpos) > GRASS_HEIGHT_MAX_DIFF * HEIGHT_SCALE /*&& Distance(slope, tr.plane.normal) > 0.0*/) return qfalse;
 
 		VectorCopy(pos, pos2);
 		VectorCopy(down, down2);
-		pos2[0] += GRASS_MODEL_WIDTH;
-		pos2[1] += GRASS_MODEL_WIDTH;
-		down2[0] += GRASS_MODEL_WIDTH;
-		down2[1] += GRASS_MODEL_WIDTH;
+		pos2[0] += (GRASS_MODEL_WIDTH * scale);
+		pos2[1] += (GRASS_MODEL_WIDTH * scale);
+		down2[0] += (GRASS_MODEL_WIDTH * scale);
+		down2[1] += (GRASS_MODEL_WIDTH * scale);
 
 		CG_Trace( &tr, pos2, NULL, NULL, down2, ENTITYNUM_NONE, MASK_PLAYERSOLID|CONTENTS_WATER );
 
 		// Slope too different...
+		if (!MaterialIsValidForGrass(int(tr.surfaceFlags & MATERIAL_MASK))) return qfalse;
 		if (Distance(slope, tr.plane.normal) > GRASS_SLOPE_MAX_DIFF) return qfalse;
+		if (DistanceVertical(groundpos, tr.endpos) > GRASS_HEIGHT_MAX_DIFF * HEIGHT_SCALE /*&& Distance(slope, tr.plane.normal) > 0.0*/) return qfalse;
 
 		VectorCopy(pos, pos2);
 		VectorCopy(down, down2);
-		pos2[0] += GRASS_MODEL_WIDTH;
-		pos2[1] -= GRASS_MODEL_WIDTH;
-		down2[0] += GRASS_MODEL_WIDTH;
-		down2[1] -= GRASS_MODEL_WIDTH;
+		pos2[0] += (GRASS_MODEL_WIDTH * scale);
+		pos2[1] -= (GRASS_MODEL_WIDTH * scale);
+		down2[0] += (GRASS_MODEL_WIDTH * scale);
+		down2[1] -= (GRASS_MODEL_WIDTH * scale);
 
 		CG_Trace( &tr, pos2, NULL, NULL, down2, ENTITYNUM_NONE, MASK_PLAYERSOLID|CONTENTS_WATER );
 
 		// Slope too different...
+		if (!MaterialIsValidForGrass(int(tr.surfaceFlags & MATERIAL_MASK))) return qfalse;
 		if (Distance(slope, tr.plane.normal) > GRASS_SLOPE_MAX_DIFF) return qfalse;
+		if (DistanceVertical(groundpos, tr.endpos) > GRASS_HEIGHT_MAX_DIFF * HEIGHT_SCALE /*&& Distance(slope, tr.plane.normal) > 0.0*/) return qfalse;
 
 		VectorCopy(pos, pos2);
 		VectorCopy(down, down2);
-		pos2[0] -= GRASS_MODEL_WIDTH;
-		pos2[1] += GRASS_MODEL_WIDTH;
-		down2[0] -= GRASS_MODEL_WIDTH;
-		down2[1] += GRASS_MODEL_WIDTH;
+		pos2[0] -= (GRASS_MODEL_WIDTH * scale);
+		pos2[1] += (GRASS_MODEL_WIDTH * scale);
+		down2[0] -= (GRASS_MODEL_WIDTH * scale);
+		down2[1] += (GRASS_MODEL_WIDTH * scale);
 
 		CG_Trace( &tr, pos2, NULL, NULL, down2, ENTITYNUM_NONE, MASK_PLAYERSOLID|CONTENTS_WATER );
 
 		// Slope too different...
+		if (!MaterialIsValidForGrass(int(tr.surfaceFlags & MATERIAL_MASK))) return qfalse;
 		if (Distance(slope, tr.plane.normal) > GRASS_SLOPE_MAX_DIFF) return qfalse;
+		if (DistanceVertical(groundpos, tr.endpos) > GRASS_HEIGHT_MAX_DIFF * HEIGHT_SCALE /*&& Distance(slope, tr.plane.normal) > 0.0*/) return qfalse;
 
 		VectorCopy(pos, pos2);
 		VectorCopy(down, down2);
-		pos2[0] -= GRASS_MODEL_WIDTH;
-		pos2[1] -= GRASS_MODEL_WIDTH;
-		down2[0] -= GRASS_MODEL_WIDTH;
-		down2[1] -= GRASS_MODEL_WIDTH;
+		pos2[0] -= (GRASS_MODEL_WIDTH * scale);
+		pos2[1] -= (GRASS_MODEL_WIDTH * scale);
+		down2[0] -= (GRASS_MODEL_WIDTH * scale);
+		down2[1] -= (GRASS_MODEL_WIDTH * scale);
 
 		CG_Trace( &tr, pos2, NULL, NULL, down2, ENTITYNUM_NONE, MASK_PLAYERSOLID|CONTENTS_WATER );
 
 		// Slope too different...
+		if (!MaterialIsValidForGrass(int(tr.surfaceFlags & MATERIAL_MASK))) return qfalse;
 		if (Distance(slope, tr.plane.normal) > GRASS_SLOPE_MAX_DIFF) return qfalse;
+		if (DistanceVertical(groundpos, tr.endpos) > GRASS_HEIGHT_MAX_DIFF * HEIGHT_SCALE /*&& Distance(slope, tr.plane.normal) > 0.0*/) return qfalse;
 
 		return qtrue;
 	}
@@ -1496,6 +1404,7 @@ float	FOLIAGE_FILE_VERSION =	1.1f;
 			float		startx = -65530, starty = -65530, startz = -65530;
 			int			grassSpotCount = 0;
 			vec3_t		*grassSpotList;
+			float		*grassSpotScale;
 			float		map_size, temp;
 			vec3_t		mapMins, mapMaxs;
 			int			total_tests = 0, final_tests = 0;
@@ -1524,6 +1433,9 @@ float	FOLIAGE_FILE_VERSION =	1.1f;
 			}
 
 			grassSpotList = (vec3_t *)malloc((sizeof(vec3_t)+1)*FOLIAGE_MAX_FOLIAGES);
+			grassSpotScale = (float *)malloc((sizeof(float)+1)*FOLIAGE_MAX_FOLIAGES);
+
+			memset(grassSpotScale, 0, (sizeof(float)+1)*FOLIAGE_MAX_FOLIAGES);
 
 			VectorCopy(cg.mapcoordsMins, mapMins);
 			VectorCopy(cg.mapcoordsMaxs, mapMaxs);
@@ -1581,190 +1493,6 @@ float	FOLIAGE_FILE_VERSION =	1.1f;
 			// Create bulk temporary nodes...
 			//
 
-//#define __ORIGINAL_FOLIAGE_METHOD__
-#ifdef __ORIGINAL_FOLIAGE_METHOD__
-			// Let's vary the scatter distances :)
-			scatter = density;
-			scatter_min = scatter * 0.33;
-			scatter_max = scatter * 2.0;
-			scatter_z = scatter_min;
-
-			scatter_avg = (scatter + scatter_min + scatter_max) / 3.0;
-			scatter_x = scatter;
-
-			parallel_x_max = ((mapMaxs[0] - mapMins[0]) / scatter_avg);
-			parallel_y_max = ((mapMaxs[1] - mapMins[1]) / scatter_avg);
-
-			total_tests = ((mapMaxs[0] - mapMins[0]) / scatter_avg);
-			total_tests *= ((mapMaxs[1] - mapMins[1]) / scatter_avg);
-			total_tests *= ((mapMaxs[2] - mapMins[2]) / scatter_min);
-
-			final_tests = 0;
-			previous_time = clock();
-
-			omp_set_nested(0);
-
-			scatter_x = scatter;
-
-			final_tests = 0;
-			previous_time = clock();
-			aw_stage_start_time = clock();
-			aw_percent_complete = 0;
-
-			for (parallel_x = 0; parallel_x < parallel_x_max; parallel_x++) // To OMP this sucker...
-			{
-				int		x;
-				int		parallel_y = 0;
-				float	scatter_y = scatter;
-				float	scatter_mult_X = 1.0;
-				vec3_t	last_org;
-
-				if (grassSpotCount >= FOLIAGE_MAX_FOLIAGES)
-				{
-					continue;
-				}
-
-				// Vary X scatter distance...
-				if (scatter_x == scatter) scatter_x = scatter_min;
-				else if (scatter_x == scatter) scatter_x = scatter_max;
-				else scatter_x = scatter;
-
-				x = startx - (parallel_x * (scatter_x * scatter_mult_X));
-
-				if (offsetY == 0.0)
-					offsetY = (scatter_y * 0.25);
-				else if (offsetY == scatter_y * 0.25)
-					offsetY = (scatter_y * 0.5);
-				else if (offsetY == scatter_y * 0.5)
-					offsetY = (scatter_y * 0.75);
-				else
-					offsetY = 0.0;
-
-				if(omp_get_thread_num() == 0)
-				{// Draw a nice little progress bar ;)
-					if (clock() - previous_time > 500) // update display every 500ms...
-					{
-						previous_time = clock();
-						trap->UpdateScreen();
-					}
-				}
-
-#pragma omp parallel for ordered schedule(dynamic)
-				for (parallel_y = 0; parallel_y < parallel_y_max; parallel_y++) // To OMP this sucker...
-				{
-					int		z, y;
-					float	current_height = mapMaxs[2]; // Init the current height to max map height...
-					float	scatter_mult_Y = 1.0;
-
-					if (grassSpotCount >= FOLIAGE_MAX_FOLIAGES)
-					{
-						continue;
-					}
-
-					aw_percent_complete = (float)((float)parallel_x / (float)parallel_x_max) * 100.0f;
-					//aw_percent_complete = (float)((float)((parallel_x+65536) / (parallel_x_max+65536)) + (float)((float)((parallel_y+65536) / (parallel_y_max+65536)) * (float)(1.0 / (parallel_x_max+65536)))) * 100.0f;
-
-					// Vary Y scatter distance...
-					if (scatter_y == scatter) scatter_y = scatter_min;
-					else if (scatter_y == scatter) scatter_y = scatter_max;
-					else scatter_y = scatter;
-
-					y = (starty + offsetY) - (parallel_y * (scatter_y * scatter_mult_Y));
-
-					if(omp_get_thread_num() == 0)
-					{// Draw a nice little progress bar ;)
-						if (clock() - previous_time > 500) // update display every 500ms...
-						{
-							previous_time = clock();
-							trap->UpdateScreen();
-						}
-					}
-
-					for (z = startz; z >= mapMins[2]; z -= scatter_min)
-					{
-						vec3_t		new_org, org;
-						float		floor = 0;
-
-						if (grassSpotCount >= FOLIAGE_MAX_FOLIAGES)
-						{
-							continue;
-						}
-
-						//aw_percent_complete = (float)((float)((parallel_x+65536) / (parallel_x_max+65536)) + (float)((float)((parallel_y+65536) / (parallel_y_max+65536)) * (float)(1.0 / (parallel_x_max+65536)))) * 100.0f;
-
-						// Update the current test number...
-						final_tests++;
-
-						if(omp_get_thread_num() == 0)
-						{// Draw a nice little progress bar ;)
-							if (clock() - previous_time > 500) // update display every 500ms...
-							{
-								previous_time = clock();
-								trap->UpdateScreen();
-							}
-						}
-
-						if (z >= current_height)
-						{// We can skip down to this position...
-							continue;
-						}
-
-						// Set this test location's origin...
-						VectorSet(new_org, x, y, z);
-
-						// Find the ground at this point...
-						floor = FOLIAGE_FloorHeightAt(new_org);
-
-						// Set the point found on the floor as the test location...
-						VectorSet(org, new_org[0], new_org[1], floor);
-
-						if (floor < mapMins[2])
-						{// Can skip this one!
-							// Mark current hit location to continue from...
-							current_height = mapMins[2]-2048; // so we still update final_tests
-							continue; // so we still update final_tests
-						}
-						else if (floor > mapMaxs[2])
-						{// Marks a start-solid or on top of the sky... Skip...
-							current_height = z - scatter_min;
-							continue;
-						}
-						/*else if (Distance(org, last_org) < density)
-						{
-							current_height = floor;
-							continue;
-						}*/
-
-						/*if (!FOLIAGE_Check_Width(org))
-						{// Not wide enough for a player to fit!
-							current_height = floor;
-							continue;
-						}*/
-
-#pragma omp critical (__ADD_TEMP_NODE__)
-						{
-							sprintf(last_node_added_string, "^5Adding foliage point ^3%i ^5at ^7%f %f %f^5.", grassSpotCount, org[0], org[1], org[2]+8);
-
-							grassSpotList[grassSpotCount][0] = org[0];
-							grassSpotList[grassSpotCount][1] = org[1];
-							grassSpotList[grassSpotCount][2] = org[2]+8;
-
-							last_org[0] = grassSpotList[grassSpotCount][0];
-							last_org[1] = grassSpotList[grassSpotCount][1];
-							last_org[2] = grassSpotList[grassSpotCount][2];
-							grassSpotCount++;
-						}
-
-						current_height = floor;
-					}
-				}
-
-				if (grassSpotCount >= FOLIAGE_MAX_FOLIAGES)
-				{
-					break;
-				}
-			}
-#else //!__ORIGINAL_FOLIAGE_METHOD__
 			final_tests = 0;
 			previous_time = clock();
 			aw_stage_start_time = clock();
@@ -1779,6 +1507,8 @@ float	FOLIAGE_FILE_VERSION =	1.1f;
 			MAP_INFO_SIZE[1] = mapMaxs[1] - mapMins[1];
 			MAP_INFO_SIZE[2] = mapMaxs[2] - mapMins[2];
 
+			float yoff = density * 0.5;
+
 //#pragma omp parallel for schedule(dynamic)
 			for (int x = (int)mapMins[0]; x <= (int)mapMaxs[0]; x += density)
 			{
@@ -1792,7 +1522,14 @@ float	FOLIAGE_FILE_VERSION =	1.1f;
 
 				aw_percent_complete = (float)(complete * 100.0);
 
-				for (float y = mapMins[1]; y <= mapMaxs[1]; y += density)
+				if (yoff == density * 0.75)
+					yoff = density * 1.25;
+				else if (yoff == density * 1.25)
+					yoff = density;
+				else
+					yoff = density * 0.75;
+
+				for (float y = mapMins[1]; y <= mapMaxs[1]; y += yoff/*density*/)
 				{
 					if (grassSpotCount >= FOLIAGE_MAX_FOLIAGES)
 					{
@@ -1846,36 +1583,36 @@ float	FOLIAGE_FILE_VERSION =	1.1f;
 							break;
 						}
 
-						int MATERIAL_TYPE = (tr.surfaceFlags & MATERIAL_MASK);
-
-						switch( MATERIAL_TYPE )
+						if (MaterialIsValidForGrass((tr.surfaceFlags & MATERIAL_MASK)))
 						{
-						case MATERIAL_SHORTGRASS:		// 5					// manicured lawn
-						case MATERIAL_LONGGRASS:		// 6					// long jungle grass
-						//case MATERIAL_MUD:				// 17					// wet soil
-						//case MATERIAL_DIRT:				// 7					// hard mud
 							// Look around here for a different slope angle... Cull if found...
-							if (CheckSlopesAround(pos, down, tr.plane.normal))
+							for (float scale = 1.00; scale >= 0.05; scale -= 0.05)
 							{
+								if (FOLIAGE_CheckSlopesAround(pos, down, tr.endpos, tr.plane.normal, scale))
+								{
 #pragma omp critical (__ADD_TEMP_NODE__)
-							{
-								sprintf(last_node_added_string, "^5Adding foliage point ^3%i ^5at ^7%f %f %f^5.", grassSpotCount, tr.endpos[0], tr.endpos[1], tr.endpos[2]+8);
+									{
+										sprintf(last_node_added_string, "^5Adding foliage point ^3%i ^5at ^7%f %f %f^5.", grassSpotCount, tr.endpos[0], tr.endpos[1], tr.endpos[2]+8);
 
-								VectorSet(grassSpotList[grassSpotCount], tr.endpos[0], tr.endpos[1], tr.endpos[2]+8);
-								grassSpotCount++;
+										if (scale == 1.0)
+											grassSpotScale[grassSpotCount] = (irand(75, 100) / 100.0);
+										else
+											grassSpotScale[grassSpotCount] = scale;
+
+										VectorSet(grassSpotList[grassSpotCount], tr.endpos[0], tr.endpos[1], tr.endpos[2]+8);
+										grassSpotCount++;
+										FOUND = qtrue;
+									}
+								}
+
+								if (FOUND) break;
 							}
-							}
-							FOUND = qtrue;
-							break;
-						default:
-							break;
+
+							if (FOUND) break;
 						}
-
-						if (FOUND) break;
 					}
 				}
 			}
-#endif //__ORIGINAL_FOLIAGE_METHOD__
 
 			if (grassSpotCount >= FOLIAGE_MAX_FOLIAGES)
 			{
@@ -1909,11 +1646,11 @@ float	FOLIAGE_FILE_VERSION =	1.1f;
 
 					FOLIAGE_GRASS_SELECTION[FOLIAGE_NUM_POSITIONS] = 0;
 					FOLIAGE_GRASS_ANGLES[FOLIAGE_NUM_POSITIONS] = 0.0f;
-					FOLIAGE_GRASS_SCALE[FOLIAGE_NUM_POSITIONS] = 0.0f;
+					FOLIAGE_GRASS_SCALE[FOLIAGE_NUM_POSITIONS] = grassSpotScale[i];
 
 					FOLIAGE_PLANT_SELECTION[FOLIAGE_NUM_POSITIONS] = 0;
 					FOLIAGE_PLANT_ANGLES[FOLIAGE_NUM_POSITIONS] = 0.0f;
-					FOLIAGE_PLANT_SCALE[FOLIAGE_NUM_POSITIONS] = 0.0f;
+					FOLIAGE_PLANT_SCALE[FOLIAGE_NUM_POSITIONS] = grassSpotScale[i];
 
 					FOLIAGE_TREE_SELECTION[FOLIAGE_NUM_POSITIONS] = 0;
 					FOLIAGE_TREE_ANGLES[FOLIAGE_NUM_POSITIONS] = 0.0f;
@@ -1924,7 +1661,9 @@ float	FOLIAGE_FILE_VERSION =	1.1f;
 
 					FOLIAGE_GRASS_SELECTION[FOLIAGE_NUM_POSITIONS] = (int)(random() * 2);
 					FOLIAGE_GRASS_ANGLES[FOLIAGE_NUM_POSITIONS] = (int)(random() * 180);
-					FOLIAGE_GRASS_SCALE[FOLIAGE_NUM_POSITIONS] = (float)((float)irand(65,125) / 100.0);
+					
+					if (FOLIAGE_GRASS_SCALE[FOLIAGE_NUM_POSITIONS] == 0)
+						FOLIAGE_GRASS_SCALE[FOLIAGE_NUM_POSITIONS] = (float)((float)irand(65,125) / 100.0);
 
 					if (density >= 64)
 					{
@@ -1938,7 +1677,9 @@ float	FOLIAGE_FILE_VERSION =	1.1f;
 						{// Add plant... 1 in every 1.25 positions...
 							FOLIAGE_PLANT_SELECTION[FOLIAGE_NUM_POSITIONS] = (int)(random() * 27);
 							FOLIAGE_PLANT_ANGLES[FOLIAGE_NUM_POSITIONS] = (int)(random() * 180);
-							FOLIAGE_PLANT_SCALE[FOLIAGE_NUM_POSITIONS] = (float)((float)irand(35,125) / 100.0);
+							
+							if (FOLIAGE_GRASS_SCALE[FOLIAGE_NUM_POSITIONS] == 0)
+								FOLIAGE_PLANT_SCALE[FOLIAGE_NUM_POSITIONS] = (float)((float)irand(35,125) / 100.0);
 						}
 					}
 					else if (density >= 48)
@@ -1953,7 +1694,9 @@ float	FOLIAGE_FILE_VERSION =	1.1f;
 						{// Add plant... 1 in every 2 positions...
 							FOLIAGE_PLANT_SELECTION[FOLIAGE_NUM_POSITIONS] = (int)(random() * 27);
 							FOLIAGE_PLANT_ANGLES[FOLIAGE_NUM_POSITIONS] = (int)(random() * 180);
-							FOLIAGE_PLANT_SCALE[FOLIAGE_NUM_POSITIONS] = (float)((float)irand(35,125) / 100.0);
+
+							if (FOLIAGE_GRASS_SCALE[FOLIAGE_NUM_POSITIONS] == 0)
+								FOLIAGE_PLANT_SCALE[FOLIAGE_NUM_POSITIONS] = (float)((float)irand(35,125) / 100.0);
 						}
 					}
 					else
@@ -1968,7 +1711,9 @@ float	FOLIAGE_FILE_VERSION =	1.1f;
 						{// Add plant... 1 in every 3 positions...
 							FOLIAGE_PLANT_SELECTION[FOLIAGE_NUM_POSITIONS] = (int)(random() * 27);
 							FOLIAGE_PLANT_ANGLES[FOLIAGE_NUM_POSITIONS] = (int)(random() * 180);
-							FOLIAGE_PLANT_SCALE[FOLIAGE_NUM_POSITIONS] = (float)((float)irand(35,125) / 100.0);
+
+							if (FOLIAGE_GRASS_SCALE[FOLIAGE_NUM_POSITIONS] == 0)
+								FOLIAGE_PLANT_SCALE[FOLIAGE_NUM_POSITIONS] = (float)((float)irand(35,125) / 100.0);
 						}
 					}
 
