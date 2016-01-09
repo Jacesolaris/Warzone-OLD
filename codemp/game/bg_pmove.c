@@ -8738,19 +8738,19 @@ void PM_AdjustAttackStates( pmove_t *pmove )
 					pmove->ps->zoomFov = 80.0f;//cg_fov.value;
 					break;
 				case WP_A280:// etc
-					pmove->ps->scopeType = SCOPE_SCOPE_A280_BLASTTECH_LONG_SHORT;
+					pmove->ps->scopeType = SCOPE_A280_BLASTTECH_LONG_SHORT;
 					pmove->ps->zoomFov = 80.0f;//cg_fov.value;
 					break;
 				case WP_DLT_19:// etc
-					pmove->ps->scopeType = SCOPE_SCOPE_DLT20A_BLASTTECH_LONG_SHORT;
+					pmove->ps->scopeType = SCOPE_DLT20A_BLASTTECH_LONG_SHORT;
 					pmove->ps->zoomFov = 80.0f;//cg_fov.value;
 					break;
 				case WP_EE3:// etc
-					pmove->ps->scopeType = SCOPE_SCOPE_EE3_BLASTTECH_SHORT;
+					pmove->ps->scopeType = SCOPE_EE3_BLASTTECH_SHORT;
 					pmove->ps->zoomFov = 80.0f;//cg_fov.value;
 					break;
 				case WP_ACP_SNIPER_RIFLE:
-					pmove->ps->scopeType = SCOPE_SCOPE_ACP_SNIPER;
+					pmove->ps->scopeType = SCOPE_ACP_SNIPER;
 					pmove->ps->zoomFov = 80.0f;//cg_fov.value;
 					break;
 				case WP_BOWCASTER_CLASSIC:
@@ -8762,7 +8762,7 @@ void PM_AdjustAttackStates( pmove_t *pmove )
 					pmove->ps->zoomFov = 80.0f;//cg_fov.value;
 					break;
 				case WP_BRYAR_RIFLE_SCOPE:// etc
-					pmove->ps->scopeType = SCOPE_SCOPE_BRYAR_RIFLE_SCOPE;
+					pmove->ps->scopeType = SCOPE_BRYAR_RIFLE_SCOPE;
 					pmove->ps->zoomFov = 80.0f;//cg_fov.value;
 					break;
 				case WP_DH_17_PISTOL:// etc

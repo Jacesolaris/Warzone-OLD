@@ -31,7 +31,7 @@ vec3_t WP_MuzzlePoint[WP_NUM_WEAPONS] =
 	{30,	4,		-6	},	// WP_T21,
 	{30,	7,		-6	},	// WP_EE3,
 	{30, 	3,		-1	},	// WP_DC_15S_CLONE_PISTOL,
-	{30,	8,		-6	},	// WP_DLT_19,
+	{30,	9,		-6	},	// WP_DLT_19,
 	{30,	9,	    -6	},	// WP_DC_15A_Rifle,
 	{30, 	3.5,  	-1	},	// WP_WESTER_PISTOL,
 	{30, 	3.5,  	-1	},	// WP_ELG_3A,
