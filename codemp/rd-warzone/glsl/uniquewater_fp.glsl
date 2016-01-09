@@ -652,7 +652,7 @@ void main()
 #endif //DISABLED_STUFF
 
 
-
+#if defined (USE_CUBEMAP)
 	// Cubemapping...
 	//NL = clamp(dot(N, L), 0.0, 1.0);
 	//NE = clamp(dot(N, E), 0.0, 1.0);
@@ -672,6 +672,7 @@ void main()
 
 	vec3 cubeLightColor = textureCubeLod(u_CubeMap, vec3(uv, R.z) * viewDir, 7.0 - specular.a * 7.0).rgb;
 	gl_FragColor.rgb = ((gl_FragColor.rgb * 19.0) + cubeLightColor) / 20.0;//(cubeLightColor * reflectance);
+#endif
 
 
 	//gl_FragColor.a = (waveheight * 0.4) + 0.5;

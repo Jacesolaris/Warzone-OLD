@@ -638,6 +638,11 @@ extern "C" {
 		{// Add the tree model...
 			re.reType = RT_MODEL;
 			re.hModel = FOLIAGE_TREE_MODEL[FOLIAGE_TREE_SELECTION[num]-1];
+			
+			//if (FOLIAGE_TREE_SELECTION[num]-1 > 1)
+			//	re.hModel = FOLIAGE_TREE_MODEL[2];
+			//else
+			//	re.hModel = FOLIAGE_TREE_MODEL[0];
 
 			//if (FOLIAGE_TREE_SELECTION[num]-1 == 0)
 				VectorSet(re.modelScale, FOLIAGE_TREE_SCALE[num]*2.5, FOLIAGE_TREE_SCALE[num]*2.5, FOLIAGE_TREE_SCALE[num]*2.5);
