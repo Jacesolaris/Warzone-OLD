@@ -2746,6 +2746,7 @@ extern cvar_t	*r_dynamicGlowHeight;
 //
 // UQ1: Added...
 //
+extern cvar_t	*r_disableGfxDirEnhancement;
 extern cvar_t	*r_glslWater;
 extern cvar_t	*r_grassLength;
 extern cvar_t	*r_grassWaveSpeed;

@@ -1805,6 +1805,10 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 							&& pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName[0] != '_'
 							&& pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName[0] != '!'
 							&& !(pStage->bundle[TB_DIFFUSEMAP].image[0]->flags & IMGFLAG_CUBEMAP)
+							// gfx dirs can be exempted I guess...
+							&& !(r_disableGfxDirEnhancement->integer && StringContainsWord(pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName, "gfx/"))
+							&& !(r_disableGfxDirEnhancement->integer && StringContainsWord(pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName, "gfx_base/"))
+
 							//&& !StringContainsWord(pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName, "menus/main_background") // never, ever!
 							/*
 							&& !StringContainsWord(pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName, "noshader") 
