@@ -2241,22 +2241,6 @@ void CG_ConcussionImpactEffect(vec3_t origin, vec3_t dir, vec3_t up)
 		cgs.effects.concussionExplosionEffectEnhancedFX), origin, dir, -1, -1, qfalse);
 }
 
-void CG_ThermalImpactEffect(qboolean altFire, vec3_t origin, vec3_t dir, vec3_t up)
-{
-	if (altFire)
-	{
-		PlayEffectID(CG_EnableEnhancedFX(cgs.effects.thermalExplosionAltEffect,
-			cgs.effects.thermalExplosionAltEffectEnhancedFX), origin, dir, -1, -1, qfalse);
-	}
-	else
-	{
-		PlayEffectID(CG_EnableEnhancedFX(cgs.effects.thermalExplosionEffect,
-			cgs.effects.thermalExplosionEffectEnhancedFX), origin, dir, -1, -1, qfalse);
-	}
-
-	PlayEffectID(CG_EnableEnhancedFX(cgs.effects.thermalShockwaveEffect,
-		cgs.effects.thermalShockwaveEffectEffectEnhancedFX), origin, dir, -1, -1, qfalse);
-}
 
 /*
 =================
@@ -2349,11 +2333,8 @@ void CG_MissileHitWall(int weapon, int clientNum, vec3_t origin, vec3_t dir, imp
 
 	case WP_FRAG_GRENADE_OLD:
 	case WP_FRAG_GRENADE:
-		FX_WeaponHitWall(origin, dir, weapon, altFire);
-		break;
-
 	case WP_THERMAL:
-		CG_ThermalImpactEffect(altFire, origin, dir, up);
+		FX_WeaponHitWall(origin, dir, weapon, altFire);
 		break;
 
 	default:
@@ -2432,11 +2413,8 @@ void CG_MissileHitPlayer(int weapon, vec3_t origin, vec3_t dir, int entityNum, q
 
 	case WP_FRAG_GRENADE_OLD:
 	case WP_FRAG_GRENADE:
-		FX_WeaponHitPlayer(origin, dir, humanoid, weapon, altFire);
-		break;
-
 	case WP_THERMAL:
-		CG_ThermalImpactEffect(altFire, origin, dir, up);
+		FX_WeaponHitPlayer(origin, dir, humanoid, weapon, altFire);
 		break;
 
 	default:
