@@ -28,7 +28,7 @@ extern "C" {
 #define			__USE_EXTRA_PLANTS__ // Use extra available plant shaders? Slower!
 //#define		__USE_SINGLE_PLANT__ // Use single plant shader/model only.. Just for testing fps difference.
 
-#define			__DISTANT_MEDIUM_PLANTLIFE__ // Draw medium and large plantlife further away?
+//#define			__DISTANT_MEDIUM_PLANTLIFE__ // Draw medium and large plantlife further away?
 #define			__DISTANT_MEDIUM_PLANTLIFE_RANGE__ 3500.0 //5000.0
 
 //#define		__NO_GRASS_AT_PLANTS__ // Don't draw grass at the same position as a plant (for FPS)... Little impact..
@@ -783,12 +783,12 @@ extern "C" {
 			VectorCopy(tr.plane.normal, FOLIAGE_NORMALS[i]);
 #endif //__PREGENERATE_NORMALS__
 		}
-		/*
-		if (FOLIAGE_NUM_POSITIONS > 100000)
+		
+		/*if (FOLIAGE_NUM_POSITIONS > 100000)
 		{
-			FOLIAGE_AREA_SIZE =				512.0;
-			FOLIAGE_VISIBLE_DISTANCE =		FOLIAGE_AREA_SIZE*2;
-			FOLIAGE_TREE_VISIBLE_DISTANCE = FOLIAGE_AREA_SIZE*5;
+			FOLIAGE_AREA_SIZE =				1024.0;
+			FOLIAGE_VISIBLE_DISTANCE =		FOLIAGE_AREA_SIZE;
+			FOLIAGE_TREE_VISIBLE_DISTANCE = FOLIAGE_AREA_SIZE*3;
 		}
 		else if (FOLIAGE_NUM_POSITIONS > 20000)
 		{
@@ -807,8 +807,7 @@ extern "C" {
 			FOLIAGE_AREA_SIZE =				1024.0;
 			FOLIAGE_VISIBLE_DISTANCE =		FOLIAGE_AREA_SIZE*2;
 			FOLIAGE_TREE_VISIBLE_DISTANCE = FOLIAGE_AREA_SIZE*5;
-		}
-		*/
+		}*/
 
 		trap->Print( "^1*** ^3%s^5: Successfully loaded %i foliage points from foliage file ^7foliage/%s.foliage^5.\n", GAME_VERSION,
 			FOLIAGE_NUM_POSITIONS, cgs.currentmapname );
@@ -1011,7 +1010,7 @@ extern "C" {
 
 			for (int spot = 0; spot < FOLIAGE_AREAS_LIST_COUNT[CURRENT_AREA_ID]; spot++)
 			{
-				/*
+				
 				// Check FOV of this foliage...
 				if (DistanceHorizontal(FOLIAGE_POSITIONS[FOLIAGE_AREAS_LIST[CURRENT_AREA_ID][spot]], viewOrg) > 256)
 				{
@@ -1026,7 +1025,7 @@ extern "C" {
 							continue;
 					}
 				}
-				*/
+				
 
 				FOLIAGE_AddToScreen( FOLIAGE_AREAS_LIST[CURRENT_AREA_ID][spot], qfalse );
 			}
@@ -1041,7 +1040,7 @@ extern "C" {
 				//if (FOLIAGE_TREE_SELECTION[FOLIAGE_AREAS_LIST[CURRENT_AREA_ID][spot]] <= 0 && FOLIAGE_PLANT_SELECTION[FOLIAGE_AREAS_LIST[CURRENT_AREA_ID][spot]] <= 0)
 				//	continue; // No point if there's no plant or tree here...
 
-				/*
+				
 				// Check FOV of this foliage...
 				if (DistanceHorizontal(FOLIAGE_POSITIONS[FOLIAGE_AREAS_LIST[CURRENT_AREA_ID][spot]], viewOrg) > 512)
 				{
@@ -1056,7 +1055,7 @@ extern "C" {
 							continue;
 					}
 				}
-				*/
+				
 
 				FOLIAGE_AddToScreen( FOLIAGE_AREAS_LIST[CURRENT_AREA_ID][spot], qtrue );
 			}

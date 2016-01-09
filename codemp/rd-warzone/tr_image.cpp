@@ -3007,6 +3007,30 @@ char previous_name_loaded[256];
 
 extern void StripCrap( const char *in, char *out, int destsize );
 
+static qboolean R_ShouldMipMap( const char *name )
+{
+	//if (!(StringContainsWord(name, "textures/") || StringContainsWord(name, "models/")))
+	//	return qfalse;
+
+	if (StringContainsWord(name, "gfx/") || StringContainsWord(name, "gfx_base/"))
+	{
+		if (StringContainsWord(name, "2d")) return qfalse;
+		if (StringContainsWord(name, "colors")) return qfalse;
+		if (StringContainsWord(name, "console")) return qfalse;
+		if (StringContainsWord(name, "hud")) return qfalse;
+		if (StringContainsWord(name, "jkg")) return qfalse;
+		if (StringContainsWord(name, "menus")) return qfalse;
+		if (StringContainsWord(name, "mp")) return qfalse;
+	}
+
+	if (StringContainsWord(name, "fonts/")) return qfalse;
+	if (StringContainsWord(name, "levelshots/")) return qfalse;
+	if (StringContainsWord(name, "menu/")) return qfalse;
+	if (StringContainsWord(name, "ui/")) return qfalse;
+
+	return qtrue;
+}
+
 image_t	*R_FindImageFile( const char *name, imgType_t type, int flags )
 {
 	image_t	*image;
@@ -3044,7 +3068,7 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, int flags )
 		return NULL;
 	}
 
-	if (!(flags & IMGFLAG_MIPMAP) && (StringContainsWord(name, "textures/") || StringContainsWord(name, "models/")))
+	if (!(flags & IMGFLAG_MIPMAP) && R_ShouldMipMap(name))
 	{// UQ: Testing mipmap all...
 		flags |= IMGFLAG_MIPMAP;
 	}
