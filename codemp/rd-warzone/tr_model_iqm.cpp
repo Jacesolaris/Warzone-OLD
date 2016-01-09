@@ -900,6 +900,9 @@ void R_AddIQMSurfaces( trRefEntity_t *ent ) {
 
 	cubemapIndex = R_CubemapForPoint(ent->e.origin);
 
+	if (Distance(tr.refdef.vieworg, tr.cubemapOrigins[cubemapIndex-1]) > r_cubemapCullRange->value * r_cubemapCullFalloffMult->value)
+		cubemapIndex = 0;
+
 	for ( i = 0 ; i < data->num_surfaces ; i++ ) {
 		if(ent->e.customShader)
 			shader = R_GetShaderByHandle( ent->e.customShader );

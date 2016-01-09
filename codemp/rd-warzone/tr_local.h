@@ -1397,6 +1397,7 @@ typedef enum
 	UNIFORM_PRIMARYLIGHTRADIUS,
 
 	UNIFORM_CUBEMAPINFO,
+	UNIFORM_CUBEMAPSTRENGTH,
 
 	UNIFORM_BONE_MATRICES,
 
@@ -2747,6 +2748,8 @@ extern cvar_t	*r_dynamicGlowHeight;
 // UQ1: Added...
 //
 extern cvar_t	*r_disableGfxDirEnhancement;
+extern cvar_t	*r_cubemapCullRange;
+extern cvar_t	*r_cubemapCullFalloffMult;
 extern cvar_t	*r_glslWater;
 extern cvar_t	*r_grassLength;
 extern cvar_t	*r_grassWaveSpeed;

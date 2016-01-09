@@ -1677,6 +1677,27 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 					vec[2] = tr.cubemapOrigins[input->cubemapIndex - 1][2] - backEnd.viewParms.ori.origin[2];
 					vec[3] = 1.0f;
 
+					float dist = Distance(tr.refdef.vieworg, tr.cubemapOrigins[input->cubemapIndex - 1]);
+					float mult = r_cubemapCullFalloffMult->value - (r_cubemapCullFalloffMult->value * 0.04);
+
+					if (dist < r_cubemapCullRange->value)
+					{// In range for full effect...
+						GLSL_SetUniformFloat(sp, UNIFORM_CUBEMAPSTRENGTH, 1.0);
+					}
+					else if (dist >= r_cubemapCullRange->value && dist < r_cubemapCullRange->value * mult)
+					{// Further scale the strength of the cubemap by the fade-out distance...
+						float extraDist =		dist - r_cubemapCullRange->value;
+						float falloffDist =		(r_cubemapCullRange->value * mult) - r_cubemapCullRange->value;
+						float strength =		(falloffDist - extraDist) / falloffDist;
+
+						strength = CLAMP(strength, 0.0, 1.0);
+						GLSL_SetUniformFloat(sp, UNIFORM_CUBEMAPSTRENGTH, strength);
+					}
+					else
+					{// Out of range completely...
+						GLSL_SetUniformFloat(sp, UNIFORM_CUBEMAPSTRENGTH, 0.0);
+					}
+					
 					VectorScale4(vec, 1.0f / 1000.0f, vec);
 
 					GLSL_SetUniformVec4(sp, UNIFORM_CUBEMAPINFO, vec);

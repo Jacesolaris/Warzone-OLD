@@ -64,6 +64,7 @@ uniform vec4      u_SpecularScale;
 #if defined(USE_LIGHT) && !defined(USE_FAST_LIGHT)
 #if defined(USE_CUBEMAP)
 uniform vec4      u_CubeMapInfo;
+uniform float     u_CubeMapStrength;
 #endif
 #endif
 
@@ -756,7 +757,7 @@ void main()
 
 		vec3 cubeLightColor = textureCubeLod(u_CubeMap, R + parallax, 7.0 - specular.a * 7.0).rgb * u_EnableTextures.w;
 
-		gl_FragColor.rgb += cubeLightColor * reflectance * (u_Local3.a * refMult);
+		gl_FragColor.rgb += (cubeLightColor * reflectance * (u_Local3.a * refMult)) * u_CubeMapStrength;
 	}
   #endif
 
