@@ -1439,7 +1439,7 @@ void R_Register( void )
 	//
 	// UQ1: Added...
 	//
-	r_disableGfxDirEnhancement = ri->Cvar_Get( "r_glslWater", "0", CVAR_ARCHIVE );
+	r_disableGfxDirEnhancement = ri->Cvar_Get( "r_disableGfxDirEnhancement", "0", CVAR_ARCHIVE );
 	r_glslWater = ri->Cvar_Get( "r_glslWater", "1", CVAR_ARCHIVE );
 	r_grassLength = ri->Cvar_Get( "r_grassLength", "0.4", CVAR_ARCHIVE );
 	r_grassWaveSpeed = ri->Cvar_Get( "r_grassWaveSpeed", "4.0", CVAR_ARCHIVE );
