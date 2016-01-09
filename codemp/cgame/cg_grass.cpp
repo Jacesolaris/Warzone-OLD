@@ -1011,6 +1011,7 @@ extern "C" {
 
 			for (int spot = 0; spot < FOLIAGE_AREAS_LIST_COUNT[CURRENT_AREA_ID]; spot++)
 			{
+				/*
 				// Check FOV of this foliage...
 				if (DistanceHorizontal(FOLIAGE_POSITIONS[FOLIAGE_AREAS_LIST[CURRENT_AREA_ID][spot]], viewOrg) > 256)
 				{
@@ -1025,6 +1026,7 @@ extern "C" {
 							continue;
 					}
 				}
+				*/
 
 				FOLIAGE_AddToScreen( FOLIAGE_AREAS_LIST[CURRENT_AREA_ID][spot], qfalse );
 			}
@@ -1039,6 +1041,7 @@ extern "C" {
 				//if (FOLIAGE_TREE_SELECTION[FOLIAGE_AREAS_LIST[CURRENT_AREA_ID][spot]] <= 0 && FOLIAGE_PLANT_SELECTION[FOLIAGE_AREAS_LIST[CURRENT_AREA_ID][spot]] <= 0)
 				//	continue; // No point if there's no plant or tree here...
 
+				/*
 				// Check FOV of this foliage...
 				if (DistanceHorizontal(FOLIAGE_POSITIONS[FOLIAGE_AREAS_LIST[CURRENT_AREA_ID][spot]], viewOrg) > 512)
 				{
@@ -1053,6 +1056,7 @@ extern "C" {
 							continue;
 					}
 				}
+				*/
 
 				FOLIAGE_AddToScreen( FOLIAGE_AREAS_LIST[CURRENT_AREA_ID][spot], qtrue );
 			}

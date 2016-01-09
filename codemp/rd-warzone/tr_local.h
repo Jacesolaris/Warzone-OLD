@@ -335,6 +335,7 @@ extern int		max_polyverts;
 //
 // UQ1: Added...
 //
+extern cvar_t	*r_compressTextures;
 extern cvar_t	*r_fog;
 extern cvar_t	*r_multithread;
 extern cvar_t	*r_multithread2;

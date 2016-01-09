@@ -2309,98 +2309,6 @@ image_t *R_CreateImage( const char *name, byte *pic, int width, int height, imgT
 	image->type = type;
 	image->flags = flags;
 
-	/*
-	if (pic)
-	{
-		// UQ1: Testing...
-		if (!(flags & IMGFLAG_NO_COMPRESSION))
-		{
-			image->flags |= IMGFLAG_NO_COMPRESSION;
-		}
-
-		// UQ1: Testing...
-		if ( glRefConfig.immutableTextures && !(flags & IMGFLAG_MUTABLE) )
-		{
-			image->flags |= IMGFLAG_MUTABLE;
-		}
-
-		// UQ1: Testing...
-		if (pic && !(flags & IMGFLAG_MIPMAP))
-		{
-			image->flags |= IMGFLAG_MIPMAP;
-		}
-
-		{// UQ1: testing high pass sharpen filter...
-#if 0
-			thisByte[0] = 0; // alpha????
-			thisByte[1] = 0; // red
-			thisByte[2] = 0; // green
-			thisByte[3] = 0; // blue
-#endif //0
-
-			#define filterWidth 5
-			#define filterHeight 5
-
-			double filter[filterWidth][filterHeight] =
-			{
-				-1, -1, -1, -1, -1,
-				-1,  2,  2,  2, -1,
-				-1,  2,  8,  2, -1,
-				-1,  2,  2,  2, -1,
-				-1, -1, -1, -1, -1,
-			};
-
-			double factor = 1.0 / 8.0;
-			double bias = 0.0;
-
-			RGBAtoYCoCgA(pic, pic, width, height);
-
-			//apply the filter 
-			for(int x = 0; x < width; x++)
-			{
-				for(int y = 0; y < height; y++) 
-				{ 
-					double red = 0.0, green = 0.0, blue = 0.0; 
-
-					byte *thisByte  = pic  + (y * width + x) * 4;
-
-					//multiply every value of the filter with corresponding image pixel 
-					for(int filterX = 0; filterX < filterWidth; filterX++) 
-					{
-						for(int filterY = 0; filterY < filterHeight; filterY++) 
-						{ 
-							//int imageX = (x - filterWidth / 2 + filterX + width) % width;
-							//int imageY = (y - filterHeight / 2 + filterY + height) % height;
-
-							//byte *inbyte  = pic  + (imageY * width + imageX) * 4;
-							int useY = y+filterY;
-							int useX = x+filterX;
-
-							if (useY < 0) useY = (useY+height);
-							if (useX < 0) useX = (useX+width);
-							if (useY >= height) useY = (useY-height);
-							if (useX >= width) useX = (useX-width);
-
-							byte *inbyte  = pic  + (useY * width + useX) * 4;
-							
-							red += inbyte[1] * filter[filterX][filterY];
-							green += inbyte[2] * filter[filterX][filterY];
-							blue += inbyte[3] * filter[filterX][filterY];
-						}
-
-						//truncate values smaller than zero and larger than 255 
-						thisByte[1] = min(max(int(factor * red + bias), 0), 255); 
-						thisByte[2] = min(max(int(factor * green + bias), 0), 255); 
-						thisByte[3] = min(max(int(factor * blue + bias), 0), 255);
-					}
-				}
-			}
-
-			YCoCgAtoRGBA(pic, pic, width, height);
-		}
-	}
-	*/
-
 	Q_strncpyz (image->imgName, name, sizeof (image->imgName));
 
 	image->width = width;
@@ -2409,6 +2317,16 @@ image_t *R_CreateImage( const char *name, byte *pic, int width, int height, imgT
 		glWrapClampMode = GL_CLAMP_TO_EDGE;
 	else
 		glWrapClampMode = GL_REPEAT;
+
+	/*if (internalFormat == GL_RGBA8 && !(image->flags & IMGFLAG_CUBEMAP))
+	{
+		internalFormat = GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT5_EXT;
+	}
+
+	if (internalFormat == GL_RGB && !(image->flags & IMGFLAG_CUBEMAP))
+	{
+		internalFormat = GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT1_EXT;
+	}*/
 
 	if (!internalFormat)
 	{
@@ -2906,12 +2824,14 @@ void R_SaveNormalMap (const char *name, image_t *dstImage)
 	free(allbuf);
 }
 
-image_t *R_CreateNormalMapGLSL ( const char *name, byte *pic, int width, int height, int flags, image_t	*srcImage )
+image_t *R_CreateNormalMapGLSL ( const char *name, byte *pic, int inwidth, int inheight, int flags, image_t	*srcImage )
 {
 	int			normalFlags;
 	vec4i_t		box;
 	FBO_t		*dstFbo = NULL;
 	image_t		*dstImage;
+	int width = inwidth/2;
+	int height = inheight/2;
 
 	if (!tr.generateNormalMapShader.program || !tr.generateNormalMapShader.uniformBuffer) return NULL; // Will get done later after init on usage...
 
@@ -2922,7 +2842,7 @@ image_t *R_CreateNormalMapGLSL ( const char *name, byte *pic, int width, int hei
 	dstFbo = R_CreateNormalMapDestinationFBO(width, height);
 	FBO_Bind (dstFbo);
 	//dstImage = R_CreateImage( name, pic, width, height, IMGTYPE_NORMAL, normalFlags, GL_RGBA8 );
-	dstImage = R_CreateImage( name, NULL, width, height, IMGTYPE_NORMAL, normalFlags, 0 );
+	dstImage = R_CreateImage( name, NULL, width, height, IMGTYPE_NORMAL, normalFlags, GL_COMPRESSED_RGBA_S3TC_DXT5_EXT/*0*/ );
 	//qglBindTexture(GL_TEXTURE_2D, dstImage->texnum);
 	FBO_AttachTextureImage(dstImage, 0);
 	FBO_SetupDrawBuffers();
@@ -2979,103 +2899,7 @@ image_t *R_CreateNormalMap ( const char *name, byte *pic, int width, int height,
 	// find normalmap in case it's there
 	normalImage = R_FindImageFile(normalName, IMGTYPE_NORMAL, normalFlags);
 
-	//if (normalImage != NULL) ri->Printf(PRINT_WARNING, "Loaded real normal map file %s.\n", normalName);
-	//else ri->Printf(PRINT_WARNING, "No real normal map file %s.\n", normalName);
-	
-	/*if (normalImage == NULL)
-	{
-		return R_CreateNormalMapGLSL( normalName, pic, width, height, flags, srcImage );
-	}*/
-
 	return normalImage;
-#if 0
-	// if not, generate it
-	if (normalImage == NULL)
-	{
-		byte *normalPic;
-		int x, y;
-		
-		normalWidth = width;
-		normalHeight = height;
-		normalPic = (byte *)Z_Malloc(width * height * 4, TAG_GENERAL);
-		RGBAtoNormal(pic, normalPic, width, height, (qboolean)(flags & IMGFLAG_CLAMPTOEDGE));
-		
-#if 1
-		// Brighten up the original image to work with the normal map
-		RGBAtoYCoCgA(pic, pic, width, height);
-		for (y = 0; y < height; y++)
-		{
-			byte *picbyte  = pic       + y * width * 4;
-			byte *normbyte = normalPic + y * width * 4;
-			for (x = 0; x < width; x++)
-			{
-				int div = MAX(normbyte[2] - 127, 16);
-				picbyte[0] = CLAMP(picbyte[0] * 128 / div, 0, 255);
-				picbyte  += 4;
-				normbyte += 4;
-			}
-		}
-		YCoCgAtoRGBA(pic, pic, width, height);
-#else
-		// Blur original image's luma to work with the normal map
-		{
-			byte *blurPic;
-			
-			RGBAtoYCoCgA(pic, pic, width, height);
-			blurPic = ri.Malloc(width * height);
-			
-			for (y = 1; y < height - 1; y++)
-			{
-				byte *picbyte  = pic     + y * width * 4;
-				byte *blurbyte = blurPic + y * width;
-				
-				picbyte += 4;
-				blurbyte += 1;
-				
-				for (x = 1; x < width - 1; x++)
-				{
-					int result;
-					
-					result = *(picbyte - (width + 1) * 4) + *(picbyte - width * 4) + *(picbyte - (width - 1) * 4) +
-					*(picbyte -          1  * 4) + *(picbyte            ) + *(picbyte +          1  * 4) +
-					*(picbyte + (width - 1) * 4) + *(picbyte + width * 4) + *(picbyte + (width + 1) * 4);
-					
-					result /= 9;
-					
-					*blurbyte = result;
-					picbyte += 4;
-					blurbyte += 1;
-				}
-			}
-			
-			// FIXME: do borders
-			
-			for (y = 1; y < height - 1; y++)
-			{
-				byte *picbyte  = pic     + y * width * 4;
-				byte *blurbyte = blurPic + y * width;
-				
-				picbyte += 4;
-				blurbyte += 1;
-				
-				for (x = 1; x < width - 1; x++)
-				{
-					picbyte[0] = *blurbyte;
-					picbyte += 4;
-					blurbyte += 1;
-				}
-			}
-			
-			ri->Free(blurPic);
-			
-			YCoCgAtoRGBA(pic, pic, width, height);
-		}
-#endif
-		
-		R_CreateImage( normalName, normalPic, normalWidth, normalHeight, IMGTYPE_NORMAL, normalFlags, 0 );
-		Z_Free( normalPic );
-	}
-#endif
 }
 
 static void R_CreateSpecularMap ( const char *name, byte *pic, int width, int height, int flags )
@@ -3136,7 +2960,7 @@ static void R_CreateOverlayMap ( const char *name, byte *pic, int width, int hei
 	image_t *SubsurfaceImage;
 	int normalFlags;
 	
-	normalFlags = (flags & ~(IMGFLAG_GENNORMALMAP | IMGFLAG_SRGB | IMGFLAG_CLAMPTOEDGE)) | IMGFLAG_NOLIGHTSCALE;
+	normalFlags = (flags & ~(IMGFLAG_GENNORMALMAP | IMGFLAG_SRGB | IMGFLAG_CLAMPTOEDGE)) | IMGFLAG_NOLIGHTSCALE | IMGFLAG_MIPMAP;
 	
 	COM_StripExtension(name, SubsurfaceName, MAX_QPATH);
 	Q_strcat(SubsurfaceName, MAX_QPATH, "_o");
@@ -3208,7 +3032,20 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, int flags )
 		return NULL;
 	}
 
-	image = R_CreateImage( name, pic, width, height, type, flags, GL_RGBA8 );
+	if (!(flags & IMGFLAG_MIPMAP) && (StringContainsWord(name, "textures/") || StringContainsWord(name, "models/")))
+	{// UQ: Testing mipmap all...
+		flags |= IMGFLAG_MIPMAP;
+	}
+
+	if ((flags & IMGFLAG_NO_COMPRESSION))
+	{// UQ: Testing compress all...
+		flags &= ~IMGFLAG_NO_COMPRESSION;
+	}
+
+	if (r_compressTextures->integer && StringContainsWord(name, "textures/") || StringContainsWord(name, "models/")) // UQ: Compress all map textures for extra VRAM
+		image = R_CreateImage( name, pic, width, height, type, flags, /*GL_COMPRESSED_RGBA_BPTC_UNORM_ARB*/GL_COMPRESSED_RGBA_S3TC_DXT5_EXT/*GL_RGBA8*/ );
+	else
+		image = R_CreateImage( name, pic, width, height, type, flags, GL_RGBA8 );
 
 	if (name[0] != '*' && name[0] != '!' && name[0] != '$' && name[0] != '_' && type != IMGTYPE_NORMAL && type != IMGTYPE_SPECULAR && type != IMGTYPE_SUBSURFACE && type != IMGTYPE_OVERLAY && !(flags & IMGFLAG_CUBEMAP))
 	{

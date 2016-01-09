@@ -250,6 +250,7 @@ cvar_t	*r_saveFontData;
 //
 // UQ1: Added...
 //
+cvar_t  *r_compressTextures;
 cvar_t	*r_glslWater;
 cvar_t  *r_grassLength;
 cvar_t  *r_grassWaveSpeed;
@@ -1420,6 +1421,7 @@ void R_Register( void )
 	//
 	// UQ1: Added...
 	//
+	r_compressTextures = ri->Cvar_Get( "r_compressTextures", "0", CVAR_ARCHIVE );
 	r_glslWater = ri->Cvar_Get( "r_glslWater", "1", CVAR_ARCHIVE );
 	r_grassLength = ri->Cvar_Get( "r_grassLength", "0.4", CVAR_ARCHIVE );
 	r_grassWaveSpeed = ri->Cvar_Get( "r_grassWaveSpeed", "4.0", CVAR_ARCHIVE );
