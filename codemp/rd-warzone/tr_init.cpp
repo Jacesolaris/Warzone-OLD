@@ -250,7 +250,6 @@ cvar_t	*r_saveFontData;
 //
 // UQ1: Added...
 //
-cvar_t  *r_compressTextures;
 cvar_t	*r_glslWater;
 cvar_t  *r_grassLength;
 cvar_t  *r_grassWaveSpeed;
@@ -454,6 +453,24 @@ static void InitOpenGL( void )
 
 		strcpy( renderer_buffer, glConfig.renderer_string );
 		Q_strlwr( renderer_buffer );
+
+		// Determine GPU IHV
+		if ( Q_stristr( glConfig.vendor_string, "ATI Technologies Inc." ) )
+		{
+			glRefConfig.hardwareVendor = IHV_AMD;
+		}
+		else if ( Q_stristr( glConfig.vendor_string, "NVIDIA" ) )
+		{
+			glRefConfig.hardwareVendor = IHV_NVIDIA;
+		}
+		else if ( Q_stristr( glConfig.vendor_string, "INTEL") )
+		{
+			glRefConfig.hardwareVendor = IHV_INTEL;
+		}
+		else
+		{
+			glRefConfig.hardwareVendor = IHV_UNKNOWN;
+		}
 
 		// OpenGL driver constants
 		qglGetIntegerv( GL_MAX_TEXTURE_SIZE, &temp );
@@ -1307,7 +1324,7 @@ void R_Register( void )
 	// latched and archived variables
 	//
 	r_allowExtensions = ri->Cvar_Get( "r_allowExtensions", "1", CVAR_ARCHIVE | CVAR_LATCH );
-	r_ext_compressed_textures = ri->Cvar_Get( "r_ext_compress_textures", "0", CVAR_ARCHIVE | CVAR_LATCH );
+	r_ext_compressed_textures = ri->Cvar_Get( "r_ext_compress_textures", "2", CVAR_ARCHIVE | CVAR_LATCH );
 	r_ext_multitexture = ri->Cvar_Get( "r_ext_multitexture", "1", CVAR_ARCHIVE | CVAR_LATCH );
 	r_ext_compiled_vertex_array = ri->Cvar_Get( "r_ext_compiled_vertex_array", "1", CVAR_ARCHIVE | CVAR_LATCH);
 	r_ext_texture_env_add = ri->Cvar_Get( "r_ext_texture_env_add", "1", CVAR_ARCHIVE | CVAR_LATCH);
@@ -1421,7 +1438,6 @@ void R_Register( void )
 	//
 	// UQ1: Added...
 	//
-	r_compressTextures = ri->Cvar_Get( "r_compressTextures", "0", CVAR_ARCHIVE );
 	r_glslWater = ri->Cvar_Get( "r_glslWater", "1", CVAR_ARCHIVE );
 	r_grassLength = ri->Cvar_Get( "r_grassLength", "0.4", CVAR_ARCHIVE );
 	r_grassWaveSpeed = ri->Cvar_Get( "r_grassWaveSpeed", "4.0", CVAR_ARCHIVE );
