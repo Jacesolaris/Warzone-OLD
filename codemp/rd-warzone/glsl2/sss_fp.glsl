@@ -37,6 +37,15 @@ void main(void){
 	float dglowStrength = clamp(length(dglow.rgb) * 3.0, 0.0, 1.0);
 
 	vec2 texel_size = vec2(1.0 / var_Dimensions);
+
+	float isFoliage = texture2D(u_RandomMap, var_ScreenTex).r;
+
+	if (isFoliage < 1.0)
+	{
+		gl_FragColor = texture2D(u_DiffuseMap, var_ScreenTex);
+		return;
+	}
+
 	float depth = texture2D(u_ScreenDepthMap, var_ScreenTex).r;
 	depth = linearize(depth);
 
@@ -47,9 +56,9 @@ void main(void){
 	vec2 pixOffset = clamp((distFromCenter * invDepth) * texel_size * 80.0, vec2(0.0), texel_size * 80.0);
 	vec2 pos = var_ScreenTex + pixOffset;
 
-	float isFoliage = texture2D(u_RandomMap, pos).r;
+	float isFoliage2 = texture2D(u_RandomMap, pos).r;
 
-	if (isFoliage < 1.0)
+	if (isFoliage2 < 1.0)
 	{
 		gl_FragColor = texture2D(u_DiffuseMap, var_ScreenTex);
 		return;

@@ -1376,3 +1376,102 @@ models/warzone/trees/mp_valenwood_tree01
   }
 }
 
+//
+// LODS
+//
+
+models/warzone/trees/anvilpalm1
+{
+  qer_editorimage	models/warzone/trees/anvilpalm1.png
+	//q3map_nolightmap
+	q3map_alphashadow
+	//q3map_onlyvertexlighting
+	q3map_material	GreenLeaves
+	
+	surfaceparm trans
+	surfaceparm	noimpact
+	surfaceparm	nomarks
+	//surfaceparm	nonopaque
+	
+	sort seethrough
+	
+	cull	twosided
+  {
+    map models/warzone/trees/anvilpalm1.png
+    blendfunc GL_ONE GL_ZERO
+    alphaFunc GE128
+    //rgbGen lightingDiffuse
+    depthWrite // writes the alpha map for other stages to use
+    rgbGen identity
+  }
+  {
+    map $lightmap
+    blendfunc GL_DST_COLOR GL_ZERO
+    rgbGen identity
+    depthFunc equal // sets the alpha to the same as the stages that wrote it
+  }
+}
+
+models/warzone/trees/fanpalm1
+{
+  qer_editorimage	models/warzone/trees/fanpalm1.png
+	//q3map_nolightmap
+	q3map_alphashadow
+	//q3map_onlyvertexlighting
+	q3map_material	GreenLeaves
+	
+	surfaceparm trans
+	surfaceparm	noimpact
+	surfaceparm	nomarks
+	//surfaceparm	nonopaque
+	
+	sort seethrough
+	
+	cull	twosided
+  {
+    map models/warzone/trees/fanpalm1.png
+    blendfunc GL_ONE GL_ZERO
+    alphaFunc GE128
+    //rgbGen lightingDiffuse
+    depthWrite // writes the alpha map for other stages to use
+    rgbGen identity
+  }
+  {
+    map $lightmap
+    blendfunc GL_DST_COLOR GL_ZERO
+    rgbGen identity
+    depthFunc equal // sets the alpha to the same as the stages that wrote it
+  }
+}
+
+models/warzone/trees/giant1
+{
+  qer_editorimage	models/warzone/trees/giant1.png
+	//q3map_nolightmap
+	q3map_alphashadow
+	//q3map_onlyvertexlighting
+	q3map_material	GreenLeaves
+	
+	surfaceparm trans
+	surfaceparm	noimpact
+	surfaceparm	nomarks
+	//surfaceparm	nonopaque
+	
+	sort seethrough
+	
+	cull	twosided
+  {
+    map models/warzone/trees/giant1.png
+    blendfunc GL_ONE GL_ZERO
+    alphaFunc GE128
+    //rgbGen lightingDiffuse
+    depthWrite // writes the alpha map for other stages to use
+    rgbGen identity
+  }
+  {
+    map $lightmap
+    blendfunc GL_DST_COLOR GL_ZERO
+    rgbGen identity
+    depthFunc equal // sets the alpha to the same as the stages that wrote it
+  }
+}

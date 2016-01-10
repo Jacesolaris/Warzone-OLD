@@ -252,9 +252,9 @@ static const char *GoodPlantsList[] = {
 	float		FOLIAGE_TREE_ANGLES[FOLIAGE_MAX_FOLIAGES];
 	float		FOLIAGE_TREE_SCALE[FOLIAGE_MAX_FOLIAGES];
 
-	float		FOLIAGE_AREA_SIZE =				1024;
-	float		FOLIAGE_VISIBLE_DISTANCE =		FOLIAGE_AREA_SIZE*2;
-	float		FOLIAGE_TREE_VISIBLE_DISTANCE = FOLIAGE_AREA_SIZE*5;
+	float		FOLIAGE_AREA_SIZE =				512;
+	float		FOLIAGE_VISIBLE_DISTANCE =		FOLIAGE_AREA_SIZE*2.5;//*2;
+	float		FOLIAGE_TREE_VISIBLE_DISTANCE = FOLIAGE_AREA_SIZE*70.0;//*76.0;
 
 	#define		FOLIAGE_AREA_MAX				65550
 	#define		FOLIAGE_AREA_MAX_FOLIAGES		256
@@ -435,6 +435,8 @@ static const char *GoodPlantsList[] = {
 	int			FOLIAGE_PLANT_SHADERNUM[FOLIAGE_MAX_FOLIAGES] = { 0 };
 	qhandle_t	FOLIAGE_PLANT_BILLBOARD_MODEL[27] = { 0 };
 	qhandle_t	FOLIAGE_TREE_MODEL[3] = { 0 };
+	qhandle_t	FOLIAGE_TREE_BILLBOARD_SHADER[3] = { 0 };
+	float		FOLIAGE_TREE_BILLBOARD_SIZE[3] = { 0 };
 	
 	qhandle_t	FOLIAGE_GRASS_SHADERS[37] = {0};
 	qhandle_t	FOLIAGE_PLANT_SHADERS[NUM_PLANT_SHADERS] = {0};
@@ -636,27 +638,46 @@ extern "C" {
 
 		if (FOLIAGE_TREE_SELECTION[num] > 0)
 		{// Add the tree model...
-			re.reType = RT_MODEL;
-			re.hModel = FOLIAGE_TREE_MODEL[FOLIAGE_TREE_SELECTION[num]-1];
-			
-			//if (FOLIAGE_TREE_SELECTION[num]-1 > 1)
-			//	re.hModel = FOLIAGE_TREE_MODEL[2];
-			//else
-			//	re.hModel = FOLIAGE_TREE_MODEL[0];
+			if (dist > FOLIAGE_AREA_SIZE*4.8)//5.5
+			{
+					//re.reType = RT_ORIENTED_QUAD;
+					re.reType = RT_SPRITE;
 
-			//if (FOLIAGE_TREE_SELECTION[num]-1 == 0)
+					re.radius = FOLIAGE_TREE_SCALE[num]*2.5*FOLIAGE_TREE_BILLBOARD_SIZE[FOLIAGE_TREE_SELECTION[num]-1];
+
+					re.customShader = FOLIAGE_TREE_BILLBOARD_SHADER[FOLIAGE_TREE_SELECTION[num]-1];
+
+					re.shaderRGBA[0] = 255;
+					re.shaderRGBA[1] = 255;
+					re.shaderRGBA[2] = 255;
+					re.shaderRGBA[3] = 255;
+
+					re.origin[2] += re.radius;
+
+					angles[PITCH] = angles[ROLL] = 0.0f;
+					angles[YAW] = FOLIAGE_GRASS_ANGLES[num];
+
+					VectorCopy(angles, re.angles);
+					AnglesToAxis(angles, re.axis);
+
+					FOLIAGE_AddFoliageEntityToScene( &re );
+			}
+			else
+			{
+				re.reType = RT_MODEL;
+				re.hModel = FOLIAGE_TREE_MODEL[FOLIAGE_TREE_SELECTION[num]-1];
+
 				VectorSet(re.modelScale, FOLIAGE_TREE_SCALE[num]*2.5, FOLIAGE_TREE_SCALE[num]*2.5, FOLIAGE_TREE_SCALE[num]*2.5);
-			//else
-			//	VectorSet(re.modelScale, FOLIAGE_TREE_SCALE[num], FOLIAGE_TREE_SCALE[num], FOLIAGE_TREE_SCALE[num]);
 
-			angles[PITCH] = angles[ROLL] = 0.0f;
-			angles[YAW] = FOLIAGE_TREE_ANGLES[num];
-			VectorCopy(angles, re.angles);
-			AnglesToAxis(angles, re.axis);
-			//if (FOLIAGE_TREE_SELECTION[num]-1 > 1) re.origin[2] += 128.0; // the tree model digs into ground too much...
-			ScaleModelAxis( &re );
+				angles[PITCH] = angles[ROLL] = 0.0f;
+				angles[YAW] = FOLIAGE_TREE_ANGLES[num];
+				VectorCopy(angles, re.angles);
+				AnglesToAxis(angles, re.axis);
 
-			FOLIAGE_AddFoliageEntityToScene( &re );
+				ScaleModelAxis( &re );
+
+				FOLIAGE_AddFoliageEntityToScene( &re );
+			}
 		}
 #ifndef __NO_PLANTS__
 		else if (FOLIAGE_PLANT_SELECTION[num] != 0 
@@ -958,12 +979,15 @@ extern "C" {
 			//FOLIAGE_TREE_MODEL[2] = trap->R_RegisterModel( "models/map_objects/yavin/tree08_b.md3" );
 
 			FOLIAGE_TREE_MODEL[0] = trap->R_RegisterModel( "models/warzone/trees/fanpalm1.md3" );
-			//FOLIAGE_TREE_MODEL[1] = FOLIAGE_TREE_MODEL[0];
 			FOLIAGE_TREE_MODEL[1] = trap->R_RegisterModel( "models/warzone/trees/giant1.md3" );
-			//FOLIAGE_TREE_MODEL[2] = FOLIAGE_TREE_MODEL[0];
-			//FOLIAGE_TREE_MODEL[1] = trap->R_RegisterModel( "models/map_objects/yavin/tree08_b.md3" );
-			//FOLIAGE_TREE_MODEL[2] = trap->R_RegisterModel( "models/map_objects/yavin/tree08_b.md3" );
 			FOLIAGE_TREE_MODEL[2] = trap->R_RegisterModel( "models/warzone/trees/anvilpalm1.md3" );
+
+			FOLIAGE_TREE_BILLBOARD_SHADER[0] = trap->R_RegisterShader("models/warzone/trees/fanpalm1");
+			FOLIAGE_TREE_BILLBOARD_SHADER[1] = trap->R_RegisterShader("models/warzone/trees/giant1");
+			FOLIAGE_TREE_BILLBOARD_SHADER[2] = trap->R_RegisterShader("models/warzone/trees/anvilpalm1");
+			FOLIAGE_TREE_BILLBOARD_SIZE[0] = 64.0;
+			FOLIAGE_TREE_BILLBOARD_SIZE[1] = 204.0;
+			FOLIAGE_TREE_BILLBOARD_SIZE[2] = 112.0;
 
 			for (int i = 1; i < 37; i++)
 			{

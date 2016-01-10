@@ -335,6 +335,7 @@ extern int		max_polyverts;
 //
 // UQ1: Added...
 //
+extern cvar_t	*r_skynum;
 extern cvar_t	*r_fog;
 extern cvar_t	*r_multithread;
 extern cvar_t	*r_multithread2;
@@ -1410,6 +1411,11 @@ typedef enum
 	UNIFORM_LOCAL3,
 	UNIFORM_LOCAL4,
 	UNIFORM_LOCAL5,
+	UNIFORM_LOCAL6,
+	UNIFORM_LOCAL7,
+	UNIFORM_LOCAL8,
+	UNIFORM_LOCAL9,
+	UNIFORM_LOCAL10,
 	UNIFORM_TEXTURE0,
 	UNIFORM_TEXTURE1,
 	UNIFORM_TEXTURE2,

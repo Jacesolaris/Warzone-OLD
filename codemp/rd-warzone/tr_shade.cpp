@@ -1726,21 +1726,27 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				/*
 				if (pStage->isWater && r_glslWater->integer)
 				{
-				if ( !skyImage ) 
-				{
-				//ri->Printf(PRINT_WARNING, "Have no skyImage!\n");
-				GLSL_SetUniformInt(sp, UNIFORM_OVERLAYMAP, TB_OVERLAYMAP);
-				GL_BindToTMU(tr.blackImage, TB_OVERLAYMAP);
+					if ( !skyImage ) 
+					{
+						//ri->Printf(PRINT_WARNING, "Have no skyImage!\n");
+						GLSL_SetUniformInt(sp, UNIFORM_OVERLAYMAP, TB_OVERLAYMAP);
+						GL_BindToTMU(tr.blackImage, TB_OVERLAYMAP);
+						//vec4_t l0;
+						//VectorSet4(l0, 0, 0, 0, 0);
+						//GLSL_SetUniformVec4(sp, UNIFORM_LOCAL10, l0);
+					}
+					else
+					{
+						//ri->Printf(PRINT_WARNING, "Have skyImage! YAY!\n");
+						GLSL_SetUniformInt(sp, UNIFORM_OVERLAYMAP, TB_OVERLAYMAP);
+						GL_BindToTMU(skyImage, TB_OVERLAYMAP);
+						
+						//vec4_t l0;
+						//VectorSet4(l0, skyImage->width, skyImage->height, 0, 0);
+						//GLSL_SetUniformVec4(sp, UNIFORM_LOCAL10, l0);
+					}
 				}
-				else
-				{
-				//ri->Printf(PRINT_WARNING, "Have skyImage! YAY!\n");
-				GLSL_SetUniformInt(sp, UNIFORM_OVERLAYMAP, TB_OVERLAYMAP);
-				GL_BindToTMU(skyImage, TB_OVERLAYMAP);
-				}
-				}
-				else
-				*/
+				else*/
 				{
 					GL_BindToTMU( tr.blackImage, TB_OVERLAYMAP );
 				}
