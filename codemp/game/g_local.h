@@ -887,6 +887,13 @@ struct gclient_s {
 
 	int			lastGenCmd;
 	int			lastGenCmdTime;
+	qboolean    pmfreeze;
+	qboolean    pmlock;
+	qboolean    pmnomove;
+	int         damageTypeTime[NUM_DAMAGE_TYPES];
+	int         damageTypeLastEffectTime[NUM_DAMAGE_TYPES];
+	gentity_t    *damageTypeOwner[NUM_DAMAGE_TYPES];
+
 
 	struct force {
 		int		regenDebounce;
@@ -1374,6 +1381,11 @@ void CalcFirstMuzzlePoint(gentity_t *ent, vec3_t forward, vec3_t right, vec3_t u
 void CalcSecondMuzzlePoint(gentity_t *ent, vec3_t forward, vec3_t right, vec3_t up, vec3_t muzzlePoint);
 void SnapVectorTowards( vec3_t v, vec3_t to );
 qboolean CheckGauntletAttack( gentity_t *ent );
+
+void JKG_InitWeapons();
+
+extern qhandle_t thermalDetDamageSettings;
+
 
 
 //

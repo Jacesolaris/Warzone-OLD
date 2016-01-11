@@ -1707,6 +1707,13 @@ static void CG_RegisterGraphics( void ) {
 	cgs.media.crateBreakSound[0]	= trap->S_RegisterSound("sound/weapons/explosions/crateBust1" );
 	cgs.media.crateBreakSound[1]	= trap->S_RegisterSound("sound/weapons/explosions/crateBust2" );
 
+	// Damage types
+	cgs.media.stunOverlay = trap->R_RegisterShader ("gfx/PlayerOverlays/stun");
+	cgs.media.iceOverlay = trap->R_RegisterShader("gfx/PlayerOverlays/ice");
+	cgs.media.carboniteOverlay = trap->R_RegisterShader("gfx/PlayerOverlays/carbonite");
+	cgs.media.playerFireEffect = trap->FX_RegisterEffect("effects/player/fire");
+
+
 #if 0
 	CG_InitNPCConversationSounds(); // UQ1: Register stormie convo sounds...
 #endif //0

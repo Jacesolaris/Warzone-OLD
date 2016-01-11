@@ -3775,6 +3775,35 @@ static void CG_RunLerpFrame( centity_t *cent, clientInfo_t *ci, lerpFrame_t *lf,
 
 		lf->animationNumber = 0;
 	}
+	// JKG: Freezing/stun
+	/*else if (JKG_DamageTypeFreezes((const damageType_t)cent->currentState.damageTypeFlags))
+	{
+	const animation_t *torsoAnimData = &bgAllAnims[cent->localAnimIndex].anims[cent->currentState.freezeTorsoAnim];
+	int torsoAnimFrame = torsoAnimData->firstFrame + torsoAnimData->numFrames;
+
+	if (!torsoOnly)
+	{
+	const animation_t *legsAnimData = &bgAllAnims[cent->localAnimIndex].anims[cent->currentState.freezeLegsAnim];
+	int legsAnimFrame = legsAnimData->firstFrame + legsAnimData->numFrames;
+	trap->G2API_SetBoneAnim(cent->ghoul2, 0, "model_root", legsAnimFrame, legsAnimFrame, BONE_ANIM_OVERRIDE_FREEZE | BONE_ANIM_BLEND, 1.0f, cg.time, -1, 150);
+	for (i = 0; i < ARMSLOT_MAX; i++)
+	{
+	if (cent->armorGhoul2[i] && trap->G2_HaveWeGhoul2Models(cent->armorGhoul2[i]))
+	{
+	trap->G2API_SetBoneAnim(cent->armorGhoul2[i], 0, "model_root", legsAnimFrame, legsAnimFrame, BONE_ANIM_OVERRIDE_FREEZE | BONE_ANIM_BLEND, 1.0f, cg.time, -1, 150);
+	}
+	}
+	}
+
+	trap->G2API_SetBoneAnim(cent->ghoul2, 0, "lower_lumbar", torsoAnimFrame, torsoAnimFrame, BONE_ANIM_OVERRIDE_FREEZE | BONE_ANIM_BLEND, 1.0f, cg.time, -1, 150);
+	for (i = 0; i < ARMSLOT_MAX; i++)
+	{
+	if (cent->armorGhoul2[i] && trap->G2_HaveWeGhoul2Models(cent->armorGhoul2[i]))
+	{
+	trap->G2API_SetBoneAnim(cent->armorGhoul2[i], 0, "lower_lumbar", torsoAnimFrame, torsoAnimFrame, BONE_ANIM_OVERRIDE_FREEZE | BONE_ANIM_BLEND, 1.0f, cg.time, -1, 150);
+	}
+	}
+	}*/
 	else
 	{
 		lf->lastForcedFrame = -1;
@@ -16571,6 +16600,81 @@ void CG_SetupGender( centity_t *cent )
 	}
 }
 
+void JKG_PlayerDebuffVisuals(centity_t *cent, refEntity_t *refEntity)
+{
+	const entityState_t *es = &cent->currentState;
+	const qboolean isLocalPlayer = (es->number == cg.predictedPlayerState.clientNum);
+
+	if (es->damageTypeFlags & (1 << DT_FIRE))
+	{
+		if ((cent->debuffVisuals.lastFireEFXTime + 100) <= cg.time)
+		{
+			int lowerLumbarBolt = trap->G2API_AddBolt(cent->ghoul2, 0, "lower_lumbar");
+			trap->FX_PlayBoltedEffectID(cgs.media.playerFireEffect, cent->lerpOrigin, cent->ghoul2, lowerLumbarBolt, es->number, 0, 0, qtrue);
+			cent->debuffVisuals.lastFireEFXTime = cg.time;
+		}
+	}
+
+	if (es->damageTypeFlags & (1 << DT_FREEZE))
+	{
+		if (cg.renderingThirdPerson || !isLocalPlayer)
+		{
+			refEntity->shaderRGBA[0] = 63;
+			refEntity->shaderRGBA[1] = 63;
+			refEntity->shaderRGBA[2] = 127;
+			refEntity->shaderRGBA[3] = 254;
+			refEntity->renderfx = 0;
+			refEntity->customShader = cgs.media.iceOverlay;
+
+			trap->R_AddRefEntityToScene(refEntity);
+		}
+	}
+
+	if (es->damageTypeFlags & (1 << DT_CARBONITE))
+	{
+		if (cg.renderingThirdPerson || !isLocalPlayer)
+		{
+			refEntity->shaderRGBA[0] = 50;
+			refEntity->shaderRGBA[1] = 50;
+			refEntity->shaderRGBA[2] = 50;
+			refEntity->shaderRGBA[3] = 254;
+			refEntity->renderfx = 0;
+			refEntity->customShader = cgs.media.carboniteOverlay;
+
+			trap->R_AddRefEntityToScene(refEntity);
+		}
+	}
+
+	if (es->damageTypeFlags & (1 << DT_STUN))
+	{
+		if (cent->debuffVisuals.stunStartTime == 0 ||
+			(cent->debuffVisuals.stunStartTime + 300) > cg.time)
+		{
+			if (cg.renderingThirdPerson || !isLocalPlayer)
+			{
+				refEntity->shaderRGBA[0] = 0;
+				refEntity->shaderRGBA[1] = 0;
+				refEntity->shaderRGBA[2] = 127;
+				refEntity->shaderRGBA[3] = 254;
+				refEntity->renderfx = 0;
+				refEntity->customShader = cgs.media.stunOverlay;
+
+				trap->R_AddRefEntityToScene(refEntity);
+			}
+
+			if (cent->debuffVisuals.stunStartTime == 0)
+			{
+				cent->debuffVisuals.stunStartTime = cg.time;
+			}
+		}
+	}
+	else
+	{
+		cent->debuffVisuals.stunStartTime = 0;
+	}
+}
+
+
 void CG_Player( centity_t *cent ) {
 	clientInfo_t	*ci;
 	refEntity_t		legs;
@@ -19469,6 +19573,10 @@ stillDoSaber:
 
 		AddRefEntityToScene( &legs );
 	}
+
+	// JKG: Damage types and debuffs.. 
+	JKG_PlayerDebuffVisuals(cent, &legs);
+
 
 	// Electricity
 	//------------------------------------------------

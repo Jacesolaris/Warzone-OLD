@@ -5,7 +5,7 @@
 #include "g_ICARUScb.h"
 #include "g_nav.h"
 #include "bg_saga.h"
-//#include "bg_class.h"
+#include "jkg_damagetypes.h"
 #include "b_local.h"
 
 level_locals_t	level;
@@ -972,6 +972,8 @@ void G_InitGame( int levelTime, int randomSeed, int restart ) {
 
 
 	G_LogWeaponInit();
+
+	JKG_InitWeapons();
 
 	G_CacheGametype();
 
@@ -3653,6 +3655,8 @@ G_RunFrame
 Advances the non-player objects in the world
 ================
 */
+
+void JKG_DamagePlayers(void);
 void ClearNPCGlobals( void );
 void AI_UpdateGroups( void );
 void ClearPlayerAlertEvents( void );
@@ -3811,6 +3815,10 @@ void G_RunFrame( int levelTime ) {
 
 	// get any cvar changes
 	G_UpdateCvars();
+
+	// Damage players
+	JKG_DamagePlayers();
+
 
 
 
@@ -4071,6 +4079,7 @@ void G_RunFrame( int levelTime ) {
 
 			if((!level.intermissiontime)&&!(ent->client->ps.pm_flags&PMF_FOLLOW) && ent->client->sess.sessionTeam != FACTION_SPECTATOR)
 			{
+				JKG_DoPlayerDamageEffects(ent);
 				WP_ForcePowersUpdate(ent, &ent->client->pers.cmd );
 				WP_SaberPositionUpdate(ent, &ent->client->pers.cmd);
 				WP_SaberStartMissileBlockCheck(ent, &ent->client->pers.cmd);
@@ -4103,6 +4112,7 @@ void G_RunFrame( int levelTime ) {
 
 		if (ent->s.eType == ET_NPC)
 		{
+			JKG_DoPlayerDamageEffects(ent);
 			WP_ForcePowersUpdate(ent, &ent->client->pers.cmd );
 			WP_SaberPositionUpdate(ent, &ent->client->pers.cmd);
 			WP_SaberStartMissileBlockCheck(ent, &ent->client->pers.cmd);

@@ -154,6 +154,9 @@ typedef enum qboolean_e { qfalse=0, qtrue } qboolean;
 	#define max(x,y) ((x)>(y)?(x):(y))
 #endif
 
+#define Q_min(x,y) ((x)<(y)?(x):(y))
+#define Q_max(x,y) ((x)>(y)?(x):(y))
+
 #if defined (_MSC_VER) && (_MSC_VER >= 1600)
 
 	#include <stdint.h>
@@ -1923,6 +1926,10 @@ typedef struct playerState_s {
 	qboolean	damageCrit;
 	int			damageValue;
 
+	int 			damageTypeFlags;
+	int 			freezeTorsoAnim;
+	int 			freezeLegsAnim;
+
 	//Keeps Trak of Block Point
 	int				blockPoints;
 	float			saberSwingSpeed;
@@ -2359,6 +2366,10 @@ typedef struct entityState_s {
 // UQ1: Added - to display damage stats on client...
 	qboolean	damageCrit;
 	int			damageValue;
+
+	int 		damageTypeFlags;
+	int 		freezeTorsoAnim;
+	int 		freezeLegsAnim;
 
 	int			playerClass;
 

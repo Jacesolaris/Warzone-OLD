@@ -2234,14 +2234,6 @@ qboolean CG_VehicleWeaponImpact( centity_t *cent )
 	return qfalse;
 }
 
-void CG_ConcussionImpactEffect(vec3_t origin, vec3_t dir, vec3_t up)
-{
-
-	PlayEffectID(CG_EnableEnhancedFX(cgs.effects.concussionExplosionEffect,
-		cgs.effects.concussionExplosionEffectEnhancedFX), origin, dir, -1, -1, qfalse);
-}
-
-
 /*
 =================
 CG_MissileHitWall
