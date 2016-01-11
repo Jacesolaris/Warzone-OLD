@@ -3282,12 +3282,6 @@ void Cmd_Load_Dungeon_F(gentity_t *ent){
 }
 //[/Create Dungeon]
 
-void Cmd_TreeBlocked_f(gentity_t *ent) {
-	ent->client->pers.cmd.forwardmove = -(int)ent->client->pers.cmd.forwardmove;
-	ent->client->pers.cmd.rightmove = 0;
-	ent->client->pers.cmd.upmove = 0;
-}
-
 //void Cmd_Troggle_Firemode_f(gentity_t *self)
 //{ //using this as a generic weapon mode switch now
 //	if (self && self->client)
@@ -3432,7 +3426,6 @@ command_t commands[] = {
 	{ "score",				Cmd_Score_f,				0 },
 	{ "setviewpos",			Cmd_SetViewpos_f,			CMD_CHEAT|CMD_NOINTERMISSION },
 	{ "siegeclass",			Cmd_SiegeClass_f,			CMD_NOINTERMISSION },
-//	{ "tb",					Cmd_TreeBlocked_f,			0 },
 	{ "team",				Cmd_Team_f,					CMD_NOINTERMISSION },
 //	{ "teamtask",			Cmd_TeamTask_f,				CMD_NOINTERMISSION },
 	{ "teamvote",			Cmd_TeamVote_f,				CMD_NOINTERMISSION },
@@ -3623,7 +3616,7 @@ void ClientCommand( int clientNum ) {
 	command = (command_t *)bsearch( cmd, commands, numCommands, sizeof( commands[0] ), cmdcmp );
 	if ( !command )
 	{
-		trap->SendServerCommand( clientNum, va( "print \"Unknown command \"%s\"\n\"", cmd ) );
+		trap->SendServerCommand( clientNum, va( "print \"SERVER: Unknown command \"%s\"\n\"", cmd ) );
 		return;
 	}
 

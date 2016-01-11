@@ -729,12 +729,7 @@ qboolean	PM_SlideMove( qboolean gravity ) {
 			&& pm_entSelf->s.number == cg.clientNum 
 			&& FOLIAGE_TreeSolidBlocking( end ))
 		{// Hit a foliage system tree solid...
-			//pm->ps->velocity[0] = 0;
-			//pm->ps->velocity[2] = 0;
 			VectorClear( pm->ps->velocity );
-			pm->cmd.forwardmove = 0-(int)pm->cmd.forwardmove;
-//			trap->SendClientCommand( "tb" );
-			//VectorCopy(pm->ps->origin, cgSendPS[pm->ps->clientNum]->origin);
 			return qfalse;
 		}
 #endif //_CGAME

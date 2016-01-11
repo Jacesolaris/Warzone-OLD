@@ -3079,12 +3079,8 @@ Called before every level change or subsystem restart
 =================
 */
 
-extern void FOLIAGE_KillUpdateThread ( void );
-
 void CG_Shutdown( void )
 {
-	FOLIAGE_KillUpdateThread();
-
 	BG_ClearAnimsets(); //free all dynamic allocations made through the engine
 
     CG_DestroyAllGhoul2();

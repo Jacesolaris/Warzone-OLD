@@ -852,6 +852,7 @@ CL_KeyMove
 Sets the usercmd_t based on key states
 ================
 */
+
 void CL_KeyMove( usercmd_t *cmd ) {
 	int		movespeed;
 	int		forward, side, up;
@@ -879,7 +880,6 @@ void CL_KeyMove( usercmd_t *cmd ) {
 
 	side += movespeed * CL_KeyState (&in_moveright);
 	side -= movespeed * CL_KeyState (&in_moveleft);
-
 
 	up += movespeed * CL_KeyState (&in_up);
 	up -= movespeed * CL_KeyState (&in_down);

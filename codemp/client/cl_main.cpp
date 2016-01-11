@@ -137,6 +137,7 @@ The given command will be transmitted to the server, and is gauranteed to
 not have future usercmd_t executed before it is executed
 ======================
 */
+
 void CL_AddReliableCommand( const char *cmd, qboolean isDisconnectCmd ) {
 	int unacknowledged = clc.reliableSequence - clc.reliableAcknowledge;
 
@@ -809,6 +810,8 @@ so when they are typed in at the console, they will need to be forwarded.
 void CL_ForwardCommandToServer( const char *string ) {
 	char	*cmd;
 
+	//Com_Printf("DEBUG: CL_ForwardCommandToServer\n");
+
 	cmd = Cmd_Argv(0);
 
 	// ignore key up commands
@@ -817,7 +820,7 @@ void CL_ForwardCommandToServer( const char *string ) {
 	}
 
 	if (clc.demoplaying || cls.state < CA_CONNECTED || cmd[0] == '+' ) {
-		Com_Printf ("Unknown command \"%s" S_COLOR_WHITE "\"\n", cmd);
+		Com_Printf ("CLIENT: Unknown command \"%s" S_COLOR_WHITE "\"\n", cmd);
 		return;
 	}
 
