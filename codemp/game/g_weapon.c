@@ -6,7 +6,7 @@
 #include "g_local.h"
 #include "botlib/be_aas.h"
 #include "bg_saga.h"
-//#include "bg_class.h"
+#include "jkg_damagetypes.h"
 
 #include "ghoul2/G2.h"
 #include "qcommon/q_shared.h"
@@ -149,6 +149,23 @@ static vec3_t muzzle;
 #define MELEE_SWING2_DAMAGE			3//12
 #define MELEE_RANGE					8
 
+// Thermal detonator
+#define TD_DAMAGE            70 //only do 70 on a direct impact
+#define TD_SPLASH_RAD        128
+#define TD_SPLASH_DAM        90
+#define TD_VELOCITY            900
+#define TD_MIN_CHARGE        0.15f
+#define TD_TIME                3000//6000
+#define TD_ALT_TIME            3000
+
+#define TD_ALT_DAMAGE        60//100
+#define TD_ALT_SPLASH_RAD    128
+#define TD_ALT_SPLASH_DAM    50//90
+#define TD_ALT_VELOCITY        600
+#define TD_ALT_MIN_CHARGE    0.15f
+#define TD_ALT_TIME            3000
+
+
 // ATST Main Gun
 //--------------
 #define ATST_MAIN_VEL				4000	//
@@ -194,6 +211,19 @@ void touch_NULL( gentity_t *ent, gentity_t *other, trace_t *trace )
 
 void laserTrapExplode( gentity_t *self );
 void RocketDie(gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int damage, int mod);
+
+qhandle_t thermalDetDamageSettings;
+void JKG_InitWeapons()
+{
+	damageSettings_t darea = { 0 };
+	darea.radial = qtrue;
+	darea.radiusParams.startRadius = TD_SPLASH_RAD;
+	darea.radiusParams.radiusFunc = RF_CONSTANT;
+	darea.lifetime = 20000; //15000 you said ? that was an example. i don't know how long your fire efx lasts for oh xD ofc lol
+	darea.damage = TD_DAMAGE;
+	darea.damageType = (1 << DT_FIRE);
+	thermalDetDamageSettings = JKG_RegisterDamageSettings(&darea);
+}
 
 //We should really organize weapon data into tables or parse from the ext data so we have accurate info for this,
 float WP_SpeedOfMissileForWeapon( int wp, qboolean alt_fire )
@@ -2230,22 +2260,6 @@ THERMAL DETONATOR
 
 ======================================================================
 */
-
-#define TD_DAMAGE			70 //only do 70 on a direct impact
-#define TD_SPLASH_RAD		128
-#define TD_SPLASH_DAM		90
-#define TD_VELOCITY			900
-#define TD_MIN_CHARGE		0.15f
-#define TD_TIME				3000//6000
-#define TD_ALT_TIME			3000
-
-#define TD_ALT_DAMAGE		60//100
-#define TD_ALT_SPLASH_RAD	128
-#define TD_ALT_SPLASH_DAM	50//90
-#define TD_ALT_VELOCITY		600
-#define TD_ALT_MIN_CHARGE	0.15f
-#define TD_ALT_TIME			3000
-
 void thermalThinkStandard(gentity_t *ent);
 
 //---------------------------------------------------------
@@ -2275,11 +2289,13 @@ void thermalDetonatorExplode( gentity_t *ent )
 		G_AddEvent( ent, EV_MISSILE_MISS, DirToByte( dir ) );
 		ent->freeAfterEvent = qtrue;
 
-		if (G_RadiusDamage( ent->r.currentOrigin, ent->parent,  ent->splashDamage, ent->splashRadius,
+		JKG_DoSplashDamage(thermalDetDamageSettings, ent->r.currentOrigin, ent->parent, ent, ent, ent->splashMethodOfDeath);
+
+		/*if (G_RadiusDamage( ent->r.currentOrigin, ent->parent,  ent->splashDamage, ent->splashRadius,
 				ent, ent, ent->splashMethodOfDeath))
 		{
 			g_entities[ent->r.ownerNum].client->accuracy_hits++;
-		}
+		}*/
 
 		trap->LinkEntity( (sharedEntity_t *)ent );
 	}

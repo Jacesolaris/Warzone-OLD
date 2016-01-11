@@ -1848,6 +1848,26 @@ extern int forcePowerDarkLight[NUM_FORCE_POWERS];
 #define	HYPERSPACE_SPEED			10000.0f//was 30000
 #define	HYPERSPACE_TURN_RATE		45.0f
 
+// Bit of damage types stuff here...
+typedef enum damageType_e
+{
+	DT_ANNIHILATION,
+	DT_CONCUSSION,
+	DT_CUT,
+	DT_DISINTEGRATE,
+	DT_ELECTRIC,
+	DT_EXPLOSION,
+	DT_FIRE,
+	DT_FREEZE,
+	DT_IMPLOSION,
+	DT_STUN,
+	DT_CARBONITE,
+
+	NUM_DAMAGE_TYPES
+} damageType_t;
+qboolean JKG_DamageTypeFreezes(const damageType_t damageType);
+
+
 extern const char *gametypeStringShort[GT_MAX_GAME_TYPE];
 const char *BG_GetGametypeString( int gametype );
 int BG_GetGametypeForString( const char *gametype );

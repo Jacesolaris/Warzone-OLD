@@ -126,6 +126,8 @@ set(MPGameGameFiles
 	"${MPDir}/game/g_team.h"
 	"${MPDir}/game/g_xcvar.h"
 	"${MPDir}/game/inv.h"
+	"${MPDir}/game/jkg_damagetypes.c"
+    "${MPDir}/game/jkg_damagetypes.h"
 	"${MPDir}/game/match.h"
 	"${MPDir}/game/say.h"
 	"${MPDir}/game/surfaceflags.h"

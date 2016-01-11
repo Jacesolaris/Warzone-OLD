@@ -3818,6 +3818,11 @@ void BG_PlayerStateToEntityState( playerState_t *ps, entityState_t *s, qboolean 
 	s->damageCrit = ps->damageCrit;
 	s->damageValue = ps->damageValue;
 
+	s->damageTypeFlags = ps->damageTypeFlags;
+	s->freezeLegsAnim = ps->freezeLegsAnim;
+	s->freezeTorsoAnim = ps->freezeTorsoAnim;
+
+
 	// UQ1: Added - Player Class...
 	s->playerClass = ps->playerClass;
 
@@ -4089,6 +4094,11 @@ void BG_PlayerStateToEntityStateExtraPolate( playerState_t *ps, entityState_t *s
 	s->damageCrit = ps->damageCrit;
 	s->damageValue = ps->damageValue;
 
+	s->damageTypeFlags = ps->damageTypeFlags;
+	s->freezeLegsAnim = ps->freezeLegsAnim;
+	s->freezeTorsoAnim = ps->freezeTorsoAnim;
+
+
 	// UQ1: Added - Player Class...
 	s->playerClass = ps->playerClass;
 
@@ -4300,6 +4310,28 @@ const char *BG_GetGametypeString( int gametype )
 		return "Unknown Gametype";
 	}
 }
+
+// JKG: Bit of damage types stuff
+qboolean JKG_DamageTypeFreezes(const damageType_t damageType)
+{
+	if (damageType & DT_STUN)
+	{
+		return qtrue;
+	}
+
+	if (damageType & DT_CARBONITE)
+	{
+		return qtrue;
+	}
+
+	if (damageType & DT_FREEZE)
+	{
+		return qtrue;
+	}
+
+	return qfalse;
+}
+
 
 int BG_GetGametypeForString( const char *gametype )
 {

@@ -3,6 +3,7 @@
 #include "g_local.h"
 #include "w_saber.h"
 #include "qcommon/q_shared.h"
+#include "jkg_damagetypes.h"
 
 // Disable stupid warnings...
 #pragma warning( disable : 4996 )
@@ -768,6 +769,12 @@ void G_MissileImpact(gentity_t *ent, trace_t *trace, qboolean HIT_TREE) {
 					if (ent->think == WP_flechette_alt_blow)
 						ent->think(ent);
 				}
+				else if (ent->s.weapon == WP_THERMAL && (ent->s.eFlags & EF_FIRING))
+				{
+					JKG_DoDamage(
+						thermalDetDamageSettings, other, ent, g_entities + ent->r.ownerNum,
+						velocity, ent->r.currentOrigin, 0, ent->methodOfDeath);
+				}
 				else
 				{
 					G_Damage(other, ent, &g_entities[ent->r.ownerNum], velocity,
@@ -879,7 +886,7 @@ killProj:
 
 	ent->takedamage = qfalse;
 	// splash damage (doesn't apply to person directly hit)
-	if (ent->splashDamage) {
+	/*if (ent->splashDamage) {
 		if (G_RadiusDamage(trace->endpos, ent->parent, ent->splashDamage, ent->splashRadius,
 			other, ent, ent->splashMethodOfDeath)) {
 			if (!hitClient
@@ -887,11 +894,16 @@ killProj:
 				g_entities[ent->r.ownerNum].client->accuracy_hits++;
 			}
 		}
-	}
+	}*/
 
 	if (ent->s.weapon == G2_MODEL_PART)
 	{
 		ent->freeAfterEvent = qfalse; //it will free itself
+	}
+
+	if (ent->splashRadius && ent->splashDamage && !ent->genericValue10)
+	{
+		G_RadiusDamage(trace->endpos, &g_entities[ent->r.ownerNum], ent->splashDamage, ent->splashRadius, NULL, ent, ent->methodOfDeath);
 	}
 
 	trap->LinkEntity((sharedEntity_t *)ent);

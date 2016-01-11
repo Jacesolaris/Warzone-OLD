@@ -23,6 +23,7 @@ extern qboolean BG_HaveWeapon ( const playerState_t *ps, int weapon );
 #ifdef _GAME
 	extern void G_CheapWeaponFire(int entNum, int ev);
 	extern qboolean TryGrapple(gentity_t *ent); //g_cmds.c
+	extern void JKG_RemoveDamageType(gentity_t *ent, damageType_t type);
 #endif // _GAME
 
 extern qboolean BG_FullBodyTauntAnim( int anim );
@@ -3161,6 +3162,11 @@ Flying out of the water
 static void PM_WaterJumpMove( void ) {
 	// waterjump has no control, but falls
 
+#ifdef _GAME
+	// moving around in water removes fire effects
+	JKG_RemoveDamageType((gentity_t *)pm_entSelf, DT_FIRE);
+#endif
+
 	PM_StepSlideMove( qtrue );
 
 	pm->ps->velocity[2] -= pm->ps->gravity * pml.frametime;
@@ -3239,6 +3245,11 @@ static void PM_WaterMove( void ) {
 		VectorNormalize(pm->ps->velocity);
 		VectorScale(pm->ps->velocity, vel, pm->ps->velocity);
 	}
+#ifdef _GAME
+	// moving around in water removes fire effects
+	JKG_RemoveDamageType((gentity_t *)pm_entSelf, DT_FIRE);
+#endif
+
 
 	PM_SlideMove( qfalse );
 }
@@ -5822,6 +5833,13 @@ static void PM_Footsteps( void ) {
 			pm->ps->viewheight = DEFAULT_VIEWHEIGHT;
 			pm->ps->pm_flags &= ~PMF_DUCKED;
 			pm->ps->pm_flags |= PMF_ROLLING;
+#ifdef _GAME
+			if (Q_irand(1, 2) == 1)
+			{
+				JKG_RemoveDamageType((gentity_t *)pm_entSelf, DT_FIRE);
+			}
+#endif
+
 		}
 	}
 	else if ((pm->ps->pm_flags & PMF_ROLLING) && !BG_InRoll(pm->ps, pm->ps->legsAnim) &&
