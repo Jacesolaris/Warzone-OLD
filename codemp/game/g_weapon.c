@@ -4217,7 +4217,7 @@ void CalcMuzzlePointOrigin(gentity_t *ent, vec3_t origin, vec3_t forward, vec3_t
 	SnapVector(muzzlePoint);
 }
 
-extern void G_MissileImpact( gentity_t *ent, trace_t *trace );
+extern void G_MissileImpact( gentity_t *ent, trace_t *trace, qboolean HIT_TREE );
 void WP_TouchVehMissile( gentity_t *ent, gentity_t *other, trace_t *trace )
 {
 	trace_t	myTrace;
@@ -4226,7 +4226,7 @@ void WP_TouchVehMissile( gentity_t *ent, gentity_t *other, trace_t *trace )
 	{
 		myTrace.entityNum = other->s.number;
 	}
-	G_MissileImpact( ent, &myTrace );
+	G_MissileImpact( ent, &myTrace, qfalse );
 }
 
 void WP_CalcVehMuzzle(gentity_t *ent, int muzzleNum)

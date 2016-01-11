@@ -355,10 +355,59 @@ G_MissileImpact
 */
 void WP_SaberBlockNonRandom(gentity_t *self, vec3_t hitloc, qboolean missileBlock);
 void WP_flechette_alt_blow(gentity_t *ent);
-void G_MissileImpact(gentity_t *ent, trace_t *trace) {
+void G_MissileImpact(gentity_t *ent, trace_t *trace, qboolean HIT_TREE) {
 	gentity_t		*other;
 	qboolean		hitClient = qfalse;
 	qboolean		isKnockedSaber = qfalse;
+
+	if (HIT_TREE)
+	{
+		// check for bounce
+		if ((ent->bounceCount > 0 || ent->bounceCount == -5) &&
+			(ent->flags & (FL_BOUNCE | FL_BOUNCE_HALF)))
+		{
+			if (ent->s.weapon == WP_DC_15S_CLONE_PISTOL 
+				|| ent->s.weapon == WP_BOWCASTER 
+				|| ent->s.weapon == WP_WOOKIE_BOWCASTER
+				|| ent->s.weapon == WP_DC_17_CLONE_PISTOL)
+			{ // hit effects on Clone Pistol and Bowcaster to bounces off floors.
+				G_BounceMissile(ent, trace);
+				return;
+			}
+			else
+			{ // grenades would be handled by this.
+				G_BounceMissile(ent, trace);
+				G_AddEvent(ent, EV_GRENADE_BOUNCE, 0);
+				return;
+			}
+		}
+		else if (ent->neverFree && ent->s.weapon == WP_SABER && (ent->flags & FL_BOUNCE_HALF))
+		{ //this is a knocked-away saber
+			if (ent->bounceCount > 0 || ent->bounceCount == -5)
+			{
+				G_BounceMissile(ent, trace);
+				G_AddEvent(ent, EV_GRENADE_BOUNCE, 0);
+				return;
+			}
+
+			isKnockedSaber = qtrue;
+		}
+
+		// I would glom onto the FL_BOUNCE code section above, but don't feel like risking breaking something else
+		if (((ent->bounceCount > 0 || ent->bounceCount == -5) && (ent->flags&(FL_BOUNCE_SHRAPNEL)))
+			|| ((trace->surfaceFlags&SURF_FORCEFIELD) && !ent->splashDamage && !ent->splashRadius && (ent->bounceCount > 0 || ent->bounceCount == -5)))
+		{
+			G_BounceMissile(ent, trace);
+
+			if (ent->bounceCount < 1)
+			{
+				ent->flags &= ~FL_BOUNCE_SHRAPNEL;
+			}
+			return;
+		}
+
+		goto killProj;
+	}
 
 	other = &g_entities[trace->entityNum];
 
@@ -419,19 +468,6 @@ void G_MissileImpact(gentity_t *ent, trace_t *trace) {
 		}
 		return;
 	}
-
-	/*
-	if ( !other->takedamage && ent->s.weapon == WP_THERMAL && !ent->alt_fire )
-	{//rolling thermal det - FIXME: make this an eFlag like bounce & stick!!!
-	//G_BounceRollMissile( ent, trace );
-	if ( ent->owner && ent->owner->s.number == 0 )
-	{
-	G_MissileAddAlerts( ent );
-	}
-	//trap->linkentity( ent );
-	return;
-	}
-	*/
 
 	if ((other->r.contents & CONTENTS_LIGHTSABER) && !isKnockedSaber)
 	{ //hit this person's saber, so..
@@ -801,14 +837,17 @@ killProj:
 	// is it cheaper in bandwidth to just remove this ent and create a new
 	// one, rather than changing the missile into the explosion?
 
-	if (other->takedamage && other->client && !isKnockedSaber) {
+	if (!HIT_TREE && other->takedamage && other->client && !isKnockedSaber) 
+	{
 		G_AddEvent(ent, EV_MISSILE_HIT, DirToByte(trace->plane.normal));
 		ent->s.otherEntityNum = other->s.number;
 	}
-	else if (trace->surfaceFlags & SURF_METALSTEPS) {
+	else if (!HIT_TREE && trace->surfaceFlags & SURF_METALSTEPS) 
+	{
 		G_AddEvent(ent, EV_MISSILE_MISS_METAL, DirToByte(trace->plane.normal));
 	}
-	else if (ent->s.weapon != G2_MODEL_PART && !isKnockedSaber) {
+	else if (ent->s.weapon != G2_MODEL_PART && !isKnockedSaber) 
+	{
 		G_AddEvent(ent, EV_MISSILE_MISS, DirToByte(trace->plane.normal));
 	}
 
@@ -854,6 +893,7 @@ void G_RunMissile(gentity_t *ent) {
 	trace_t		tr;
 	int			passent;
 	qboolean	isKnockedSaber = qfalse;
+	qboolean	HIT_TREE = qfalse;
 
 	if (ent->neverFree && ent->s.weapon == WP_SABER && (ent->flags & FL_BOUNCE_HALF))
 	{
@@ -907,7 +947,13 @@ void G_RunMissile(gentity_t *ent) {
 		trap->Trace(&tr, ent->r.currentOrigin, ent->r.mins, ent->r.maxs, origin, passent, ent->clipmask, qfalse, 0, 0);
 	}
 
-	if (tr.startsolid || tr.allsolid) {
+	HIT_TREE = FOLIAGE_TreeSolidBlocking(ent, origin);
+
+	if (HIT_TREE)
+	{
+
+	}
+	else if (tr.startsolid || tr.allsolid) {
 		// make sure the tr.entityNum is set to the entity we're stuck in
 		trap->Trace(&tr, ent->r.currentOrigin, ent->r.mins, ent->r.maxs, ent->r.currentOrigin, passent, ent->clipmask, qfalse, 0, 0);
 		tr.fraction = 0;
@@ -946,9 +992,9 @@ void G_RunMissile(gentity_t *ent) {
 		}
 	}
 
-	if (tr.fraction != 1) {
+	if (tr.fraction != 1 || HIT_TREE) {
 		// never explode or bounce on sky
-		if (tr.surfaceFlags & SURF_NOIMPACT) {
+		if (!HIT_TREE && (tr.surfaceFlags & SURF_NOIMPACT)) {
 			// If grapple, reset owner
 			if (ent->parent && ent->parent->client && ent->parent->client->hook == ent) {
 				ent->parent->client->hook = NULL;
@@ -966,44 +1012,10 @@ void G_RunMissile(gentity_t *ent) {
 			}
 		}
 
-#if 0 //will get stomped with missile impact event...
-		if (ent->s.weapon > WP_NONE && ent->s.weapon < WP_NUM_WEAPONS &&
-			(tr.entityNum < MAX_CLIENTS || g_entities[tr.entityNum].s.eType == ET_NPC))
-		{ //player or NPC, try making a mark on him
-			/*
-			gentity_t *evEnt = G_TempEntity(ent->r.currentOrigin, EV_GHOUL2_MARK);
-
-			evEnt->s.owner = tr.entityNum; //the entity the mark should be placed on
-			evEnt->s.weapon = ent->s.weapon; //the weapon used (to determine mark type)
-			VectorCopy(ent->r.currentOrigin, evEnt->s.origin); //the point of impact
-
-			//origin2 gets the predicted trajectory-based position.
-			BG_EvaluateTrajectory( &ent->s.pos, level.time, evEnt->s.origin2 );
-
-			//If they are the same, there will be problems.
-			if (VectorCompare(evEnt->s.origin, evEnt->s.origin2))
-			{
-			evEnt->s.origin2[2] += 2; //whatever, at least it won't mess up.
-			}
-			*/
-			//ok, let's try adding it to the missile ent instead (tempents bad!)
-			G_AddEvent(ent, EV_GHOUL2_MARK, 0);
-
-			//copy current pos to s.origin, and current projected traj to origin2
-			VectorCopy(ent->r.currentOrigin, ent->s.origin);
-			BG_EvaluateTrajectory( &ent->s.pos, level.time, ent->s.origin2 );
-
-			//the index for whoever we are hitting
-			ent->s.otherEntityNum = tr.entityNum;
-
-			if (VectorCompare(ent->s.origin, ent->s.origin2))
-			{
-				ent->s.origin2[2] += 2.0f; //whatever, at least it won't mess up.
-			}
-		}
-#else
-		if (ent->s.weapon > WP_NONE && ent->s.weapon < WP_NUM_WEAPONS &&
-			(tr.entityNum < MAX_CLIENTS || g_entities[tr.entityNum].s.eType == ET_NPC))
+		if (!HIT_TREE
+			&& ent->s.weapon > WP_NONE 
+			&& ent->s.weapon < WP_NUM_WEAPONS 
+			&& (tr.entityNum < MAX_CLIENTS || g_entities[tr.entityNum].s.eType == ET_NPC))
 		{ //player or NPC, try making a mark on him
 			//copy current pos to s.origin, and current projected traj to origin2
 			VectorCopy(ent->r.currentOrigin, ent->s.origin);
@@ -1014,11 +1026,10 @@ void G_RunMissile(gentity_t *ent) {
 				ent->s.origin2[2] += 2.0f; //whatever, at least it won't mess up.
 			}
 		}
-#endif
 
-		G_MissileImpact(ent, &tr);
+		G_MissileImpact(ent, &tr, HIT_TREE);
 
-		if (tr.entityNum == ent->s.otherEntityNum)
+		if (HIT_TREE || tr.entityNum == ent->s.otherEntityNum)
 		{ //if the impact event other and the trace ent match then it's ok to do the g2 mark
 			ent->s.trickedentindex = 1;
 		}

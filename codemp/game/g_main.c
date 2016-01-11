@@ -177,7 +177,7 @@ void Load_Model_Scales( void )
 	trap->FS_Read( buf, len, f );
 	trap->FS_Close( f );
 
-	trap->Print("^4*** ^3Warzone^4: ^5Loading player model scales database from file ^7%s^5.\n", "modelscale.cfg");
+	Com_Printf("*** Warzone: Loading player model scales database from file %s.\n", "modelscale.cfg");
 
 	for (t = s = buf; *t; /* */ ) 
 	{
@@ -226,7 +226,7 @@ void Load_Model_Scales( void )
 
 	num_scale_models--;
 
-	trap->Print("^4*** ^3Warzone^4: ^5There are ^7%i^5 player model scales in the current database.\n", num_scale_models);
+	Com_Printf("*** Warzone: There are %i player model scales in the current database.\n", num_scale_models);
 
 	free(buf);
 
@@ -431,7 +431,7 @@ qboolean LoadSpawnpointPositions( qboolean IsTeam )
 
 		trap->FS_Close(f);
 
-		trap->Print( "^1*** ^3%s^5: Successfully loaded %i blue and %i red spawn points from spawnpoints file ^7spawnpoints/%s.team_spawnpoints^5.\n", GAME_VERSION,
+		Com_Printf( "*** %s: Successfully loaded %i blue and %i red spawn points from spawnpoints file spawnpoints/%s.team_spawnpoints.\n", GAME_VERSION,
 			NUM_BLUE_POSITIONS, NUM_RED_POSITIONS, mapname.string );
 	}
 	else
@@ -463,7 +463,7 @@ qboolean LoadSpawnpointPositions( qboolean IsTeam )
 
 		trap->FS_Close(f);
 
-		trap->Print( "^1*** ^3%s^5: Successfully loaded %i spawn points from spawnpoints file ^7spawnpoints/%s.ffa_spawnpoints^5.\n", GAME_VERSION,
+		Com_Printf( "*** %s: Successfully loaded %i spawn points from spawnpoints file spawnpoints/%s.ffa_spawnpoints.\n", GAME_VERSION,
 			NUM_BLUE_POSITIONS, mapname.string );
 	}
 
@@ -484,7 +484,7 @@ qboolean SaveSpawnpointPositions( qboolean IsTeam, int NUM_BLUE_POSITIONS, vec3_
 
 		if ( !f )
 		{
-			trap->Print( "^1*** ^3%s^5: Failed to open spawnpoints file ^7spawnpoints/%s.team_spawnpoints^5 for save.\n", GAME_VERSION, mapname.string );
+			Com_Printf( "*** %s: Failed to open spawnpoints file spawnpoints/%s.team_spawnpoints for save.\n", GAME_VERSION, mapname.string );
 			return qfalse;
 		}
 
@@ -504,7 +504,7 @@ qboolean SaveSpawnpointPositions( qboolean IsTeam, int NUM_BLUE_POSITIONS, vec3_
 
 		trap->FS_Close(f);
 
-		trap->Print( "^1*** ^3%s^5: Successfully saved %i blue and %i red spawn points to spawnpoints file ^7spawnpoints/%s.team_spawnpoints^5.\n", GAME_VERSION,
+		Com_Printf( "*** %s: Successfully saved %i blue and %i red spawn points to spawnpoints file spawnpoints/%s.team_spawnpoints.\n", GAME_VERSION,
 			NUM_BLUE_POSITIONS, NUM_RED_POSITIONS, mapname.string );
 
 		return qtrue;
@@ -515,7 +515,7 @@ qboolean SaveSpawnpointPositions( qboolean IsTeam, int NUM_BLUE_POSITIONS, vec3_
 
 		if ( !f )
 		{
-			trap->Print( "^1*** ^3%s^5: Failed to open spawnpoints file ^7spawnpoints/%s.ffa_spawnpoints^5 for save.\n", GAME_VERSION, mapname.string );
+			Com_Printf( "*** %s: Failed to open spawnpoints file spawnpoints/%s.ffa_spawnpoints for save.\n", GAME_VERSION, mapname.string );
 			return qfalse;
 		}
 
@@ -528,7 +528,7 @@ qboolean SaveSpawnpointPositions( qboolean IsTeam, int NUM_BLUE_POSITIONS, vec3_
 
 		trap->FS_Close(f);
 
-		trap->Print( "^1*** ^3%s^5: Successfully saved %i spawn points to spawnpoints file ^7spawnpoints/%s.ffa_spawnpoints^5.\n", GAME_VERSION,
+		Com_Printf( "*** %s: Successfully saved %i spawn points to spawnpoints file spawnpoints/%s.ffa_spawnpoints.\n", GAME_VERSION,
 			NUM_BLUE_POSITIONS, mapname.string );
 
 		return qtrue;
@@ -888,6 +888,7 @@ G_InitGame
 extern void RemoveAllWP(void);
 extern void BG_ClearVehicleParseParms(void);
 extern void NPC_PrecacheWarzoneNPCs ( void );
+extern void FOLIAGE_LoadTrees( void );
 
 gentity_t *SelectRandomDeathmatchSpawnPoint( void );
 void SP_info_jedimaster_start( gentity_t *ent );
@@ -1079,6 +1080,10 @@ void G_InitGame( int levelTime, int randomSeed, int restart ) {
 	} else {
 		G_LoadArenas();
 	}
+
+	Com_Printf ("------- Tree Initialization -------\n");
+	FOLIAGE_LoadTrees();
+	Com_Printf ("-----------------------------------\n");
 
 	if ( level.gametype == GT_DUEL || level.gametype == GT_POWERDUEL )
 	{

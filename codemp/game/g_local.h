@@ -1692,3 +1692,5 @@ extern spawnGroupLists_t	spawnGroupData[MAX_SPAWNGROUP_FILES+1];
 qboolean NPC_LoadSpawnList( char *listname );
 spawnGroup_t GetSpawnGroup(char *filename, int RARITY);
 void SP_NPC_Spawner_Group( spawnGroup_t group, vec3_t position, int team );
+
+qboolean FOLIAGE_TreeSolidBlocking(gentity_t *ent, vec3_t moveOrg);

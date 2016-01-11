@@ -33,6 +33,7 @@ set(MPGameGameFiles
 	"${MPDir}/game/g_combat.c"
 	"${MPDir}/game/g_cvar.c"
 	"${MPDir}/game/g_exphysics.c"
+	"${MPDir}/game/g_foliage.cpp"
 	"${MPDir}/game/g_ICARUScb.c"
 	"${MPDir}/game/g_items.c"
 	"${MPDir}/game/g_log.c"
