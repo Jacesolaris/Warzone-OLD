@@ -265,6 +265,11 @@ static const char *GoodPlantsList[] = {
 	vec3_t		FOLIAGE_AREAS_MINS[FOLIAGE_AREA_MAX];
 	vec3_t		FOLIAGE_AREAS_MAXS[FOLIAGE_AREA_MAX];
 
+
+#define FOLIAGE_SOLID_TREES_MAX 4
+	int			FOLIAGE_SOLID_TREES[FOLIAGE_SOLID_TREES_MAX];
+	float		FOLIAGE_SOLID_TREES_DIST[FOLIAGE_SOLID_TREES_MAX];
+
 	float OLD_FOLIAGE_DENSITY = 64.0;
 
 	qboolean FOLIAGE_In_Bounds( int areaNum, int foliageNum )
@@ -435,6 +440,7 @@ static const char *GoodPlantsList[] = {
 	int			FOLIAGE_PLANT_SHADERNUM[FOLIAGE_MAX_FOLIAGES] = { 0 };
 	qhandle_t	FOLIAGE_PLANT_BILLBOARD_MODEL[27] = { 0 };
 	qhandle_t	FOLIAGE_TREE_MODEL[3] = { 0 };
+	float		FOLIAGE_TREE_RADIUS[3] = { 0 };
 	qhandle_t	FOLIAGE_TREE_BILLBOARD_SHADER[3] = { 0 };
 	float		FOLIAGE_TREE_BILLBOARD_SIZE[3] = { 0 };
 	
@@ -470,6 +476,12 @@ vec3_t		LAST_ANG = { 0 };
 
 void FOLIAGE_Calc_In_Range_Areas( void )
 {
+	for (int i = 0; i < FOLIAGE_SOLID_TREES_MAX; i++)
+	{
+		FOLIAGE_SOLID_TREES[i] = -1;
+		FOLIAGE_SOLID_TREES_DIST[i] = 65536.0;
+	}
+
 	if (Distance(cg.refdef.vieworg, LAST_ORG) > 128.0 || Distance(cg.refdef.viewangles, LAST_ANG) > 50.0)
 	{// Update in range list...
 		VectorCopy(cg.refdef.vieworg, LAST_ORG);
@@ -522,6 +534,35 @@ extern "C" {
 	void FOLIAGE_KillUpdateThread ( void )
 	{
 		FOLIAGE_ShutdownUpdateThread();
+	}
+
+	qboolean FOLIAGE_TreeSolidBlocking(vec3_t moveOrg)
+	{
+		FOLIAGE_TREE_RADIUS[0] = cg_foliageTreeWidth0.value;
+		FOLIAGE_TREE_RADIUS[1] = cg_foliageTreeWidth1.value;
+		FOLIAGE_TREE_RADIUS[2] = cg_foliageTreeWidth2.value;
+
+		for (int tree = 0; tree < FOLIAGE_SOLID_TREES_MAX; tree++)
+		{
+			if (FOLIAGE_SOLID_TREES[tree] >= 0)
+			{
+				int	  THIS_TREE_NUM = FOLIAGE_SOLID_TREES[tree];
+				int	  THIS_TREE_TYPE = FOLIAGE_TREE_SELECTION[THIS_TREE_NUM]-1;
+				float TREE_RADIUS = FOLIAGE_TREE_RADIUS[THIS_TREE_TYPE] * FOLIAGE_TREE_SCALE[THIS_TREE_NUM];
+				float DIST = DistanceHorizontal(FOLIAGE_POSITIONS[THIS_TREE_NUM], moveOrg);
+
+				if (DIST <= TREE_RADIUS)
+				{
+					trap->Print("Blocked by tree %i. Radius %f. Distance %f. Type %i.\n", tree, TREE_RADIUS, DIST, THIS_TREE_TYPE);
+					return qtrue;
+				}
+
+				//trap->Print("Not blocked by tree %i. Radius %f. Distance %f.\n", tree, TREE_RADIUS, DIST);
+			}
+		}
+
+		//trap->Print("Not blocked by any tree.\n");
+		return qfalse;
 	}
 
 	void FOLIAGE_AddFoliageEntityToScene ( refEntity_t *ent )
@@ -640,27 +681,27 @@ extern "C" {
 		{// Add the tree model...
 			if (dist > FOLIAGE_AREA_SIZE*4.8)//5.5
 			{
-					//re.reType = RT_ORIENTED_QUAD;
-					re.reType = RT_SPRITE;
+				//re.reType = RT_ORIENTED_QUAD;
+				re.reType = RT_SPRITE;
 
-					re.radius = FOLIAGE_TREE_SCALE[num]*2.5*FOLIAGE_TREE_BILLBOARD_SIZE[FOLIAGE_TREE_SELECTION[num]-1];
+				re.radius = FOLIAGE_TREE_SCALE[num]*2.5*FOLIAGE_TREE_BILLBOARD_SIZE[FOLIAGE_TREE_SELECTION[num]-1];
 
-					re.customShader = FOLIAGE_TREE_BILLBOARD_SHADER[FOLIAGE_TREE_SELECTION[num]-1];
+				re.customShader = FOLIAGE_TREE_BILLBOARD_SHADER[FOLIAGE_TREE_SELECTION[num]-1];
 
-					re.shaderRGBA[0] = 255;
-					re.shaderRGBA[1] = 255;
-					re.shaderRGBA[2] = 255;
-					re.shaderRGBA[3] = 255;
+				re.shaderRGBA[0] = 255;
+				re.shaderRGBA[1] = 255;
+				re.shaderRGBA[2] = 255;
+				re.shaderRGBA[3] = 255;
 
-					re.origin[2] += re.radius;
+				re.origin[2] += re.radius;
 
-					angles[PITCH] = angles[ROLL] = 0.0f;
-					angles[YAW] = FOLIAGE_GRASS_ANGLES[num];
+				angles[PITCH] = angles[ROLL] = 0.0f;
+				angles[YAW] = FOLIAGE_GRASS_ANGLES[num];
 
-					VectorCopy(angles, re.angles);
-					AnglesToAxis(angles, re.axis);
+				VectorCopy(angles, re.angles);
+				AnglesToAxis(angles, re.axis);
 
-					FOLIAGE_AddFoliageEntityToScene( &re );
+				FOLIAGE_AddFoliageEntityToScene( &re );
 			}
 			else
 			{
@@ -677,6 +718,37 @@ extern "C" {
 				ScaleModelAxis( &re );
 
 				FOLIAGE_AddFoliageEntityToScene( &re );
+
+				//
+				// Create a list of the closest trees for generating solids...
+				//
+
+				float	furthestDist = 0.0;
+				int		furthestNum = 0;
+
+				for (int tree = 0; tree < FOLIAGE_SOLID_TREES_MAX; tree++)
+				{
+					if (FOLIAGE_SOLID_TREES_DIST[tree] > furthestDist)
+					{
+						furthestNum = tree;
+						furthestDist = FOLIAGE_SOLID_TREES_DIST[tree];
+					}
+				}
+
+
+				float hDist = 0;
+
+				if (cg.renderingThirdPerson)
+					hDist = DistanceHorizontal(FOLIAGE_POSITIONS[num], cg_entities[cg.clientNum].lerpOrigin);
+				else
+					hDist = DistanceHorizontal(FOLIAGE_POSITIONS[num], cg.refdef.vieworg);
+
+				if (hDist < FOLIAGE_SOLID_TREES_DIST[furthestNum])
+				{
+					//trap->Print("Set solid tree %i at %f %f %f. Dist %f.\n", furthestNum, FOLIAGE_POSITIONS[num][0], FOLIAGE_POSITIONS[num][1], FOLIAGE_POSITIONS[num][2], dist);
+					FOLIAGE_SOLID_TREES[furthestNum] = num;
+					FOLIAGE_SOLID_TREES_DIST[furthestNum] = hDist;
+				}
 			}
 		}
 #ifndef __NO_PLANTS__
@@ -985,9 +1057,14 @@ extern "C" {
 			FOLIAGE_TREE_BILLBOARD_SHADER[0] = trap->R_RegisterShader("models/warzone/trees/fanpalm1");
 			FOLIAGE_TREE_BILLBOARD_SHADER[1] = trap->R_RegisterShader("models/warzone/trees/giant1");
 			FOLIAGE_TREE_BILLBOARD_SHADER[2] = trap->R_RegisterShader("models/warzone/trees/anvilpalm1");
+			
 			FOLIAGE_TREE_BILLBOARD_SIZE[0] = 64.0;
 			FOLIAGE_TREE_BILLBOARD_SIZE[1] = 204.0;
 			FOLIAGE_TREE_BILLBOARD_SIZE[2] = 112.0;
+			
+			FOLIAGE_TREE_RADIUS[0] = cg_foliageTreeWidth0.value;
+			FOLIAGE_TREE_RADIUS[1] = cg_foliageTreeWidth1.value;
+			FOLIAGE_TREE_RADIUS[2] = cg_foliageTreeWidth2.value;
 
 			for (int i = 1; i < 37; i++)
 			{

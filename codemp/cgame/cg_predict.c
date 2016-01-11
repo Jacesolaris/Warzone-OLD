@@ -7,7 +7,7 @@
 
 #include "cg_local.h"
 
-static	pmove_t		cg_pmove;
+pmove_t		cg_pmove;
 
 static	int			cg_numSolidEntities;
 static	centity_t	*cg_solidEntities[MAX_ENTITIES_IN_SNAPSHOT];
