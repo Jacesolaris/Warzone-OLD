@@ -62,6 +62,8 @@
 //
 // ==============================================================================================================================
 
+#define MAX_SLOPE 46.0
+
 //float waypoint_distance_multiplier = 2.5f;
 //float waypoint_distance_multiplier = 3.0f;
 float waypoint_distance_multiplier = 4.5f;
@@ -2420,6 +2422,8 @@ qboolean AWP_Jump( vec3_t start, vec3_t dest )
 	return qfalse;
 }
 
+extern qboolean FOLIAGE_TreeSolidBlocking_AWP_Path(vec3_t from, vec3_t to);
+
 /* */
 int
 AIMOD_MAPPING_CreateNodeLinks ( int node )
@@ -2502,19 +2506,23 @@ AIMOD_MAPPING_CreateNodeLinks ( int node )
 					{
 						if (AIMod_Check_Slope_Between(tmp, this_org))
 						{
-							nodes[node].links[linknum].targetNode = loop;
-							nodes[node].links[linknum].cost = VectorDistance(nodes[loop].origin, nodes[node].origin) + (DistanceVertical(nodes[loop].origin, nodes[node].origin)*DistanceVertical(nodes[loop].origin, nodes[node].origin));
-							nodes[node].links[linknum].flags = 0;
-
-							linknum++;
+							if (!FOLIAGE_TreeSolidBlocking_AWP_Path(this_org, tmp))
+							{
+								nodes[node].links[linknum].targetNode = loop;
+								nodes[node].links[linknum].cost = VectorDistance(nodes[loop].origin, nodes[node].origin) + (DistanceVertical(nodes[loop].origin, nodes[node].origin)*DistanceVertical(nodes[loop].origin, nodes[node].origin));
+								nodes[node].links[linknum].flags = 0;
+								linknum++;
+							}
 						}
 						else if (/*double_range &&*/ AWP_Jump( tmp, this_org ))
 						{// Can jump there!
-							nodes[node].links[linknum].targetNode = loop;
-							nodes[node].links[linknum].cost = VectorDistance(nodes[loop].origin, nodes[node].origin) + (DistanceVertical(nodes[loop].origin, nodes[node].origin)*DistanceVertical(nodes[loop].origin, nodes[node].origin));
-							nodes[node].links[linknum].flags |= NODE_JUMP;
-
-							linknum++;
+							if (!FOLIAGE_TreeSolidBlocking_AWP_Path(this_org, tmp))
+							{
+								nodes[node].links[linknum].targetNode = loop;
+								nodes[node].links[linknum].cost = VectorDistance(nodes[loop].origin, nodes[node].origin) + (DistanceVertical(nodes[loop].origin, nodes[node].origin)*DistanceVertical(nodes[loop].origin, nodes[node].origin));
+								nodes[node].links[linknum].flags |= NODE_JUMP;
+								linknum++;
+							}
 						}
 					}
 				}
@@ -3923,7 +3931,7 @@ float FloorHeightAt ( vec3_t org )
 
 	pitch += 90.0f;
 
-	if (pitch > 46.0f || pitch < -46.0f)
+	if (pitch > MAX_SLOPE || pitch < -MAX_SLOPE)
 		return 65536.0f; // bad slope...
 
 	if ( tr.startsolid || tr.allsolid )
@@ -4769,7 +4777,7 @@ qboolean AIMod_AutoWaypoint_Check_Slope ( vec3_t org ) {
 
 	pitch += 90.0f;
 
-	if (pitch > 46.0f || pitch < -46.0f)
+	if (pitch > MAX_SLOPE || pitch < -MAX_SLOPE)
 		return qtrue;
 */
 	return qfalse;
@@ -5433,6 +5441,8 @@ qboolean MaterialIsValidForWP(int materialType)
 	return qfalse;
 }
 
+extern qboolean FOLIAGE_TreeSolidBlocking_AWP(vec3_t moveOrg);
+
 void AIMod_AutoWaypoint_StandardMethod( void )
 {// Advanced method for multi-level maps...
 	int			i;
@@ -5683,7 +5693,7 @@ void AIMod_AutoWaypoint_StandardMethod( void )
 
 					pitch += 90.0f;
 
-					if (pitch > 46.0f || pitch < -46.0f)
+					if (pitch > MAX_SLOPE || pitch < -MAX_SLOPE)
 					{// Bad slope...
 						continue;
 					}
@@ -5748,6 +5758,11 @@ void AIMod_AutoWaypoint_StandardMethod( void )
 
 					if (MaterialIsValidForWP((tr.surfaceFlags & MATERIAL_MASK)))
 					{
+						if (FOLIAGE_TreeSolidBlocking_AWP(tr.endpos))
+						{// There is a tree in this position, skip it...
+							continue;
+						}
+
 						// Look around here for a different slope angle... Cull if found...
 #pragma omp critical (__ADD_TEMP_NODE__)
 						{
@@ -6027,6 +6042,12 @@ omp_set_nested(0);
 
 					if (sjc_jkg_preview && org[2]+8 < -423 && org[2]+8 > -424.0)
 					{// grrrr....
+						current_height = floor;
+						continue;
+					}
+
+					if (FOLIAGE_TreeSolidBlocking_AWP(org))
+					{// There is a tree in this position, skip it...
 						current_height = floor;
 						continue;
 					}
@@ -6492,7 +6513,7 @@ void AIMod_AutoWaypoint_Free_Memory ( void )
 
 void AIMod_AutoWaypoint_Init_Memory ( void ); // below...
 void AIMod_AutoWaypoint_Optimizer ( void ); // below...
-void AIMod_AutoWaypoint_Cleaner ( qboolean quiet, qboolean null_links_only, qboolean relink_only, qboolean multipass, qboolean initial_pass, qboolean extra, qboolean marked_locations, qboolean extra_reach, qboolean reset_reach, qboolean convert_old, qboolean pathtest );
+void AIMod_AutoWaypoint_Cleaner ( qboolean quiet, qboolean null_links_only, qboolean relink_only, qboolean multipass, qboolean initial_pass, qboolean extra, qboolean marked_locations, qboolean extra_reach, qboolean reset_reach, qboolean convert_old, qboolean pathtest, qboolean trees );
 
 void AIMod_AutoWaypoint_Clean ( void )
 {
@@ -6506,6 +6527,7 @@ void AIMod_AutoWaypoint_Clean ( void )
 		//trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3\"convert\" ^5- Convert old JKA wp file to Warzone format.\n");
 		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3\"relink\" ^5- Just do relinking.\n");
 		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3\"pathtest\" ^5- Remove waypoints with no path to server's first spawnpoint.\n");
+		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3\"trees\" ^5- Remove nodes inside trees.\n");
 		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3\"extrareach\" ^5- Remove waypoints nearby your marked locations (awc_addremovalspot & awc_addbadheight) and add extra reachability (wp link ranges).\n");
 		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3\"resetreach\" ^5- Remove waypoints with no path to server's first spawnpoint and reset max link ranges.\n");
 		trap->Print( "^4*** ^3AUTO-WAYPOINTER^4: ^3\"clean\" ^5- Do a full clean.\n");
@@ -6527,39 +6549,43 @@ void AIMod_AutoWaypoint_Clean ( void )
 	
 	if ( Q_stricmp( str, "convert") == 0 )
 	{
-		AIMod_AutoWaypoint_Cleaner(qtrue, qfalse, qtrue, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse, qtrue, qfalse);
+		AIMod_AutoWaypoint_Cleaner(qtrue, qfalse, qtrue, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse, qtrue, qfalse, qfalse);
 	}
 	else if ( Q_stricmp( str, "relink") == 0 )
 	{
-		AIMod_AutoWaypoint_Cleaner(qtrue, qfalse, qtrue, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse);
+		AIMod_AutoWaypoint_Cleaner(qtrue, qfalse, qtrue, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse);
+	}
+	else if ( Q_stricmp( str, "trees") == 0 )
+	{
+		AIMod_AutoWaypoint_Cleaner(qfalse, qfalse, qtrue, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse, qtrue);
 	}
 	else if ( Q_stricmp( str, "pathtest") == 0 )
 	{
-		AIMod_AutoWaypoint_Cleaner(qtrue, qtrue, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse, qtrue);
+		AIMod_AutoWaypoint_Cleaner(qtrue, qtrue, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse, qtrue, qfalse);
 	}
 	else if ( Q_stricmp( str, "clean") == 0 )
 	{
-		AIMod_AutoWaypoint_Cleaner(qtrue, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse);
+		AIMod_AutoWaypoint_Cleaner(qtrue, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse);
 	}
 	else if ( Q_stricmp( str, "multipass") == 0 )
 	{
-		AIMod_AutoWaypoint_Cleaner(qtrue, qfalse, qfalse, qtrue, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse);
+		AIMod_AutoWaypoint_Cleaner(qtrue, qfalse, qfalse, qtrue, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse);
 	}
 	else if ( Q_stricmp( str, "extra") == 0 )
 	{
-		AIMod_AutoWaypoint_Cleaner(qtrue, qfalse, qfalse, qtrue, qfalse, qtrue, qfalse, qfalse, qfalse, qfalse, qfalse);
+		AIMod_AutoWaypoint_Cleaner(qtrue, qfalse, qfalse, qtrue, qfalse, qtrue, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse);
 	}
 	else if ( Q_stricmp( str, "markedlocations") == 0 )
 	{
-		AIMod_AutoWaypoint_Cleaner(qtrue, qtrue, qfalse, qfalse, qfalse, qfalse, qtrue, qfalse, qfalse, qfalse, qfalse);
+		AIMod_AutoWaypoint_Cleaner(qtrue, qtrue, qfalse, qfalse, qfalse, qfalse, qtrue, qfalse, qfalse, qfalse, qfalse, qfalse);
 	}
 	else if ( Q_stricmp( str, "extrareach") == 0 )
 	{
-		AIMod_AutoWaypoint_Cleaner(qtrue, qfalse, qtrue, qfalse, qfalse, qfalse, qtrue, qtrue, qfalse, qfalse, qfalse);
+		AIMod_AutoWaypoint_Cleaner(qtrue, qfalse, qtrue, qfalse, qfalse, qfalse, qtrue, qtrue, qfalse, qfalse, qfalse, qfalse);
 	}
 	else if ( Q_stricmp( str, "resetreach") == 0 )
 	{
-		AIMod_AutoWaypoint_Cleaner(qtrue, qtrue, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse, qtrue, qfalse, qfalse);
+		AIMod_AutoWaypoint_Cleaner(qtrue, qtrue, qfalse, qfalse, qfalse, qfalse, qfalse, qfalse, qtrue, qfalse, qfalse, qfalse);
 	}
 	else if ( Q_stricmp( str, "list") == 0 )
 	{
@@ -6686,7 +6712,7 @@ AIMod_AutoWaypoint ( void )
 	
 	if ( Q_stricmp( str, "altmethod") == 0 )
 	{
-		DO_OPEN_AREA_SPREAD = qtrue;
+		DO_NEW_METHOD = qtrue;
 
 		if ( trap->Cmd_Argc() >= 2 )
 		{
@@ -6714,7 +6740,7 @@ AIMod_AutoWaypoint ( void )
 			AIMod_AutoWaypoint_StandardMethod();
 		}
 
-		DO_OPEN_AREA_SPREAD = qfalse;
+		DO_NEW_METHOD = qfalse;
 	}
 	else if ( Q_stricmp( str, "standard") == 0 )
 	{
@@ -8244,7 +8270,7 @@ qboolean Warzone_CheckRoutingFrom( int wp )
 
 /* */
 void
-AIMod_AutoWaypoint_Cleaner ( qboolean quiet, qboolean null_links_only, qboolean relink_only, qboolean multipass, qboolean initial_pass, qboolean extra, qboolean marked_locations, qboolean extra_reach, qboolean reset_reach, qboolean convert_old, qboolean pathtest )
+AIMod_AutoWaypoint_Cleaner ( qboolean quiet, qboolean null_links_only, qboolean relink_only, qboolean multipass, qboolean initial_pass, qboolean extra, qboolean marked_locations, qboolean extra_reach, qboolean reset_reach, qboolean convert_old, qboolean pathtest, qboolean remove_trees )
 {
 	int i = 0;//, j = 0;//, k = 0, l = 0;//, m = 0;
 	int	total_calculations = 0;
@@ -8262,6 +8288,7 @@ AIMod_AutoWaypoint_Cleaner ( qboolean quiet, qboolean null_links_only, qboolean 
 //	int	node_disable_ticker = 0;
 	int	num_disabled_nodes = 0;
 	int num_nolink_nodes = 0;
+	int num_tree_nodes = 0;
 	int num_noroute_nodes = 0;
 	int num_allsolid_nodes = 0;
 	int num_this_location_nodes = 0;
@@ -8572,6 +8599,7 @@ AIMod_AutoWaypoint_Cleaner ( qboolean quiet, qboolean null_links_only, qboolean 
 		calculations_complete = 0;
 		node_clean_ticker = 0;
 		num_nolink_nodes = 0;
+		num_tree_nodes = 0;
 		num_noroute_nodes = 0;
 		num_disabled_nodes = 0;
 		num_allsolid_nodes = 0;
@@ -8604,12 +8632,25 @@ AIMod_AutoWaypoint_Cleaner ( qboolean quiet, qboolean null_links_only, qboolean 
 					if (node_clean_ticker > 100)
 					{
 						//strcpy( last_node_added_string, va("^5Checking waypoint ^3%i ^5at ^7%f %f %f^5.", i, nodes[i].origin[0], nodes[i].origin[1], nodes[i].origin[2]) );
-						strcpy( last_node_added_string, va("^5Completed ^3%i ^5of ^7%i^5 waypoints.", calculations_complete, total_calculations) );
+						strcpy( last_node_added_string, va("^5Completed ^3%i ^5of ^7%i^5 waypoints. (%i removed)", calculations_complete, total_calculations, num_skiped_nodes + num_dupe_nodes + num_disabled_nodes + aw_num_bad_surfaces + num_nolink_nodes + num_tree_nodes + num_noroute_nodes + num_allsolid_nodes + num_this_location_nodes + num_marked_height_nodes) );
 						trap->UpdateScreen();
 						node_clean_ticker = 0;
 					}
 				}
 
+				if (remove_trees)
+				{
+					if (nodes[i].objectNum[0] == 1)
+						continue;
+
+					if (FOLIAGE_TreeSolidBlocking_AWP(nodes[i].origin))
+					{
+						nodes[i].objectNum[0] = 1;
+						num_tree_nodes++;
+						continue;
+					}
+				}
+				else
 				{
 					node_clean_ticker++;
 					calculations_complete++;
@@ -8633,6 +8674,13 @@ AIMod_AutoWaypoint_Cleaner ( qboolean quiet, qboolean null_links_only, qboolean 
 					{// Removes all waypoints without any route to the server's specified spawnpoint location...
 						nodes[i].objectNum[0] = 1;
 						num_allsolid_nodes++;
+						continue;
+					}
+
+					if (FOLIAGE_TreeSolidBlocking_AWP(nodes[i].origin))
+					{
+						nodes[i].objectNum[0] = 1;
+						num_tree_nodes++;
 						continue;
 					}
 
@@ -8691,6 +8739,7 @@ AIMod_AutoWaypoint_Cleaner ( qboolean quiet, qboolean null_links_only, qboolean 
 		trap->Print("^4*** ^3AUTO-WAYPOINTER^4: ^5Disabled ^3%i^5 bad surfaces.\n", aw_num_bad_surfaces);
 		trap->Print("^4*** ^3AUTO-WAYPOINTER^4: ^5Disabled ^3%i^5 waypoints in solids.\n", num_allsolid_nodes);
 		trap->Print("^4*** ^3AUTO-WAYPOINTER^4: ^5Disabled ^3%i^5 waypoints without links.\n", num_nolink_nodes);
+		trap->Print("^4*** ^3AUTO-WAYPOINTER^4: ^5Disabled ^3%i^5 waypoints inside trees.\n", num_tree_nodes);
 		trap->Print("^4*** ^3AUTO-WAYPOINTER^4: ^5Disabled ^3%i^5 waypoints without valid routes.\n", num_noroute_nodes);
 		trap->Print("^4*** ^3AUTO-WAYPOINTER^4: ^5Disabled ^3%i^5 waypoints with duplicate links to a neighbor.\n", num_dupe_nodes);
 		trap->Print("^4*** ^3AUTO-WAYPOINTER^4: ^5Disabled ^3%i^5 waypoints in over-waypointed areas.\n", num_skiped_nodes);
@@ -8813,6 +8862,7 @@ AIMod_AutoWaypoint_Cleaner ( qboolean quiet, qboolean null_links_only, qboolean 
 		calculations_complete = 0;
 		node_clean_ticker = 0;
 		num_nolink_nodes = 0;
+		num_tree_nodes = 0;
 		num_disabled_nodes = 0;
 		num_allsolid_nodes = 0;
 		num_dupe_nodes = 0;

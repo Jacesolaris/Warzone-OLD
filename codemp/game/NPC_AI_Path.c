@@ -1453,7 +1453,7 @@ qboolean NPC_FollowRoutes( void )
 		return qfalse; // next think...
 	}
 
-	if (NPC_RoutingJumpWaypoint( NPC->wpLast, NPC->wpCurrent ))
+	if (VectorLength(NPC->client->ps.velocity) < 8 && NPC_RoutingJumpWaypoint( NPC->wpLast, NPC->wpCurrent ))
 	{// We need to jump to get to this waypoint...
 		/*if (NPC_Jump(NPC, gWPArray[NPC->wpCurrent]->origin))
 		{
@@ -1465,7 +1465,7 @@ qboolean NPC_FollowRoutes( void )
 			return qtrue;
 		}
 	}
-	else
+	else if (VectorLength(NPC->client->ps.velocity) < 8)
 	{// If this is a new waypoint, we may need to jump to it...
 		NPC_NewWaypointJump();
 	}
@@ -1911,7 +1911,7 @@ qboolean NPC_FollowEnemyRoute( void )
 		return qtrue;
 	}
 
-	if (NPC_RoutingJumpWaypoint( NPC->wpLast, NPC->wpCurrent ))
+	if (VectorLength(NPC->client->ps.velocity) < 8 && NPC_RoutingJumpWaypoint( NPC->wpLast, NPC->wpCurrent ))
 	{// We need to jump to get to this waypoint...
 		/*if (NPC_Jump(NPC, gWPArray[NPC->wpCurrent]->origin))
 		{
@@ -1923,7 +1923,7 @@ qboolean NPC_FollowEnemyRoute( void )
 			return qtrue;
 		}
 	}
-	else
+	else if (VectorLength(NPC->client->ps.velocity) < 8)
 	{// If this is a new waypoint, we may need to jump to it...
 		NPC_NewWaypointJump();
 	}

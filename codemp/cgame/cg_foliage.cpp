@@ -145,7 +145,7 @@ extern qboolean InFOV( vec3_t spot, vec3_t from, vec3_t fromAngles, int hFOV, in
 	float		FOLIAGE_TREE_SCALE[FOLIAGE_MAX_FOLIAGES];
 
 	float		FOLIAGE_AREA_SIZE =				512;
-	float		FOLIAGE_VISIBLE_DISTANCE =		FOLIAGE_AREA_SIZE*2.5;
+	float		FOLIAGE_VISIBLE_DISTANCE =		FOLIAGE_AREA_SIZE*3.5;
 	float		FOLIAGE_TREE_VISIBLE_DISTANCE = FOLIAGE_AREA_SIZE*70.0;
 
 #define		FOLIAGE_AREA_MAX				65550
@@ -366,8 +366,111 @@ void FOLIAGE_Calc_In_Range_Areas( void )
 }
 
 extern "C" {
+	qboolean FOLIAGE_TreeSolidBlocking_AWP(vec3_t moveOrg)
+	{
+		int	FOLIAGE_CLOSE_AREA_LIST[8192];
+		int	FOLIAGE_CLOSE_AREA_LIST_COUNT = 0;
+
+		for (int areaNum = 0; areaNum < FOLIAGE_AREAS_COUNT; areaNum++)
+		{
+			float DIST = DistanceHorizontal(FOLIAGE_AREAS_MINS[areaNum], moveOrg);
+			float DIST2 = DistanceHorizontal(FOLIAGE_AREAS_MAXS[areaNum], moveOrg);
+
+			if (DIST < FOLIAGE_AREA_SIZE * 2.0 || DIST2 < FOLIAGE_AREA_SIZE * 2.0)
+			{
+				FOLIAGE_CLOSE_AREA_LIST[FOLIAGE_CLOSE_AREA_LIST_COUNT] = areaNum;
+				FOLIAGE_CLOSE_AREA_LIST_COUNT++;
+			}
+		}
+
+		for (int areaListPos = 0; areaListPos < FOLIAGE_CLOSE_AREA_LIST_COUNT; areaListPos++)
+		{
+			int areaNum = FOLIAGE_CLOSE_AREA_LIST[areaListPos];
+
+			for (int treeNum = 0; treeNum < FOLIAGE_AREAS_LIST_COUNT[areaNum]; treeNum++)
+			{
+				int		THIS_TREE_NUM = FOLIAGE_AREAS_LIST[areaNum][treeNum];
+				int		THIS_TREE_TYPE = FOLIAGE_TREE_SELECTION[THIS_TREE_NUM]-1;
+				float	TREE_RADIUS = FOLIAGE_TREE_RADIUS[THIS_TREE_TYPE] * FOLIAGE_TREE_SCALE[THIS_TREE_NUM];
+				float	DIST = DistanceHorizontal(FOLIAGE_POSITIONS[THIS_TREE_NUM], moveOrg);
+
+				TREE_RADIUS += 64.0; // Extra space around the tree for player body to fit as well...
+
+				if (FOLIAGE_TREE_SELECTION[THIS_TREE_NUM] > 0 && DIST <= TREE_RADIUS)
+				{
+					return qtrue;
+				}
+			}
+		}
+
+		return qfalse;
+	}
+
+	qboolean FOLIAGE_TreeSolidBlocking_AWP_Path(vec3_t from, vec3_t to)
+	{
+		int	FOLIAGE_CLOSE_AREA_LIST[8192];
+		int	FOLIAGE_CLOSE_AREA_LIST_COUNT = 0;
+
+		float fullDist = DistanceHorizontal(from, to);
+
+		for (int areaNum = 0; areaNum < FOLIAGE_AREAS_COUNT; areaNum++)
+		{
+			float DIST = DistanceHorizontal(FOLIAGE_AREAS_MINS[areaNum], to);
+			float DIST2 = DistanceHorizontal(FOLIAGE_AREAS_MAXS[areaNum], to);
+
+			if (DIST < FOLIAGE_AREA_SIZE * 2.0 || DIST2 < FOLIAGE_AREA_SIZE * 2.0)
+			{
+				FOLIAGE_CLOSE_AREA_LIST[FOLIAGE_CLOSE_AREA_LIST_COUNT] = areaNum;
+				FOLIAGE_CLOSE_AREA_LIST_COUNT++;
+			}
+		}
+
+		vec3_t dir, angles, forward;
+		VectorSubtract( to, from, dir );
+		vectoangles(dir, angles);
+		AngleVectors( angles, forward, NULL, NULL );
+
+		for (int areaListPos = 0; areaListPos < FOLIAGE_CLOSE_AREA_LIST_COUNT; areaListPos++)
+		{
+			int areaNum = FOLIAGE_CLOSE_AREA_LIST[areaListPos];
+
+			for (int treeNum = 0; treeNum < FOLIAGE_AREAS_LIST_COUNT[areaNum]; treeNum++)
+			{
+				int		THIS_TREE_NUM = FOLIAGE_AREAS_LIST[areaNum][treeNum];
+				int		THIS_TREE_TYPE = FOLIAGE_TREE_SELECTION[THIS_TREE_NUM]-1;
+				float	TREE_RADIUS = FOLIAGE_TREE_RADIUS[THIS_TREE_TYPE] * FOLIAGE_TREE_SCALE[THIS_TREE_NUM];
+				float	DIST = DistanceHorizontal(FOLIAGE_POSITIONS[THIS_TREE_NUM], from);
+
+				if (FOLIAGE_TREE_SELECTION[THIS_TREE_NUM] <= 0) continue;
+				if ( fullDist < DIST ) continue;
+
+				TREE_RADIUS += 64.0; // Extra space around the tree for player body to fit as well...
+
+				// Check at positions along this path...
+				for (int test = 8; test < DIST; test += 8)
+				{
+					vec3_t pos;
+					
+					VectorMA( from, test, forward, pos );
+
+					float DIST2 = DistanceHorizontal(FOLIAGE_POSITIONS[THIS_TREE_NUM], pos);
+
+					if (DIST2 <= TREE_RADIUS)
+					{
+						return qtrue;
+					}
+				}
+			}
+		}
+
+		return qfalse;
+	}
+
 	qboolean FOLIAGE_TreeSolidBlocking(vec3_t moveOrg)
 	{
+		if (cg.predictedPlayerState.pm_type == PM_SPECTATOR) return qfalse;
+		if (cgs.clientinfo[cg.clientNum].team == FACTION_SPECTATOR) return qfalse;
+
 		for (int tree = 0; tree < FOLIAGE_SOLID_TREES_MAX; tree++)
 		{
 			if (FOLIAGE_SOLID_TREES[tree] >= 0)
@@ -977,10 +1080,7 @@ extern "C" {
 		return qtrue;
 	}
 
-#define FOLIAGE_MOD_NAME		"aimod"
-	float	FOLIAGE_FILE_VERSION =	1.1f;
-
-	void FOLIAGE_GenerateFoliage_Real ( float density, qboolean ADD_MORE )
+	void FOLIAGE_GenerateFoliage_Real ( float density, float tree_density, int num_dense_areas, qboolean ADD_MORE )
 	{
 		int				i;
 		vec3_t			vec;
@@ -1223,6 +1323,20 @@ extern "C" {
 
 		if (grassSpotCount > 0)
 		{// Ok, we have spots, copy and set up foliage types/scales/angles, and save to file...
+			vec3_t	MAP_SCALE;
+			vec3_t	DENSE_SPOTS[1024];
+
+			MAP_SCALE[0] = mapMaxs[0] - mapMins[0];
+			MAP_SCALE[1] = mapMaxs[1] - mapMins[1];
+			MAP_SCALE[2] = 0;
+
+			for (int d = 0; d <= num_dense_areas; d++)
+			{
+				DENSE_SPOTS[d][0] = mapMins[0] + irand(0, MAP_SCALE[0]);
+				DENSE_SPOTS[d][1] = mapMins[1] + irand(0, MAP_SCALE[1]);
+				DENSE_SPOTS[d][2] = 0;
+			}
+
 			for (i = 0; i < grassSpotCount; i++)
 			{
 				vec[0] = grassSpotList[i][0];
@@ -1245,54 +1359,45 @@ extern "C" {
 				if (FOLIAGE_PLANT_SCALE[FOLIAGE_NUM_POSITIONS] == 0)
 					FOLIAGE_PLANT_SCALE[FOLIAGE_NUM_POSITIONS] = (float)((float)irand(35,125) / 100.0);
 
-				if (density >= 96)
+				qboolean IS_DENSE = qfalse;
+
+				for (int d = 0; d <= num_dense_areas; d++)
 				{
-					if (random() * 7 >= 6 && RoofHeightAt(vec) - vec[2] > 1024.0)
-					{// Add tree... 1 in every 8 positions... If there is room above for a tree...
-						FOLIAGE_TREE_SELECTION[FOLIAGE_NUM_POSITIONS] = irand(0, 3);
-						FOLIAGE_TREE_ANGLES[FOLIAGE_NUM_POSITIONS] = (int)(random() * 180);
-						FOLIAGE_TREE_SCALE[FOLIAGE_NUM_POSITIONS] = (float)((float)irand(65,150) / 100.0);
-					}
-					else if (random() * 100 >= 50)
-					{// Add plant... 1 in every 2 positions...
-						FOLIAGE_PLANT_SELECTION[FOLIAGE_NUM_POSITIONS] = irand(1,NUM_PLANT_SHADERS-1);
+					if (DistanceHorizontal(DENSE_SPOTS[d], FOLIAGE_POSITIONS[FOLIAGE_NUM_POSITIONS]) <= 1024)
+					{
+						IS_DENSE = qtrue;
+						break;
 					}
 				}
-				else if (density >= 64)
+
+				float USE_TREE_DENSITY = tree_density;
+
+				if (density >= 48)
 				{
-					if (random() * 10 >= 9 && RoofHeightAt(vec) - vec[2] > 1024.0)
-					{// Add tree... 1 in every 10 positions... If there is room above for a tree...
+					if (IS_DENSE) USE_TREE_DENSITY = tree_density / 4;
+
+					if (irand(0, USE_TREE_DENSITY) >= USE_TREE_DENSITY && RoofHeightAt(vec) - vec[2] > 1024.0)
+					{// Add tree...
 						FOLIAGE_TREE_SELECTION[FOLIAGE_NUM_POSITIONS] = irand(0, 3);
 						FOLIAGE_TREE_ANGLES[FOLIAGE_NUM_POSITIONS] = (int)(random() * 180);
 						FOLIAGE_TREE_SCALE[FOLIAGE_NUM_POSITIONS] = (float)((float)irand(65,150) / 100.0);
 					}
-					else if (random() * 100 >= 50)
-					{// Add plant... 1 in every 2 positions...
-						FOLIAGE_PLANT_SELECTION[FOLIAGE_NUM_POSITIONS] = irand(1,NUM_PLANT_SHADERS-1);
-					}
-				}
-				else if (density >= 48)
-				{
-					if (random() * 12 >= 11 && RoofHeightAt(vec) - vec[2] > 1024.0)
-					{// Add tree... 1 in every 12 positions... If there is room above for a tree...
-						FOLIAGE_TREE_SELECTION[FOLIAGE_NUM_POSITIONS] = irand(0, 3);
-						FOLIAGE_TREE_ANGLES[FOLIAGE_NUM_POSITIONS] = (int)(random() * 180);
-						FOLIAGE_TREE_SCALE[FOLIAGE_NUM_POSITIONS] = (float)((float)irand(65,150) / 100.0);
-					}
-					else if (random() * 100 >= 50)
+					else if (irand(0, 1) == 1)
 					{// Add plant... 1 in every 2 positions...
 						FOLIAGE_PLANT_SELECTION[FOLIAGE_NUM_POSITIONS] = irand(1,NUM_PLANT_SHADERS-1);
 					}
 				}
 				else
 				{
-					if (random() * 18 >= 17 && RoofHeightAt(vec) - vec[2] > 1024.0)
-					{// Add tree... 1 in every 17 positions... If there is room above for a tree...
+					if (IS_DENSE) USE_TREE_DENSITY = tree_density / 4;
+
+					if (irand(0, USE_TREE_DENSITY) >= USE_TREE_DENSITY && RoofHeightAt(vec) - vec[2] > 1024.0)
+					{// Add tree... 
 						FOLIAGE_TREE_SELECTION[FOLIAGE_NUM_POSITIONS] = irand(0, 3);
 						FOLIAGE_TREE_ANGLES[FOLIAGE_NUM_POSITIONS] = (int)(random() * 180);
 						FOLIAGE_TREE_SCALE[FOLIAGE_NUM_POSITIONS] = (float)((float)irand(65,150) / 100.0);
 					}
-					else if (random() * 100 >= 66)
+					else if (irand(0, 3) >= 1)
 					{// Add plant... 1 in every 1.33 positions...
 						FOLIAGE_PLANT_SELECTION[FOLIAGE_NUM_POSITIONS] = irand(1,NUM_PLANT_SHADERS-1);
 					}
@@ -1339,7 +1444,7 @@ extern "C" {
 		if ( trap->Cmd_Argc() < 2 )
 		{
 			trap->Print( "^4*** ^3AUTO-FOLIAGE^4: ^7Usage:\n" );
-			trap->Print( "^4*** ^3AUTO-FOLIAGE^4: ^3/genfoliage <method> <density>^5. Density is optional.\n" );
+			trap->Print( "^4*** ^3AUTO-FOLIAGE^4: ^3/genfoliage <method> <density> <tree_density> <num_tree_dense_areas>^5. Density, Tree Density, and Num Tree Dense Areas are optional.\n" );
 			trap->Print( "^4*** ^3AUTO-FOLIAGE^4: ^5Available methods are:\n" );
 			trap->Print( "^4*** ^3AUTO-FOLIAGE^4: ^3\"standard\" ^5- Standard method. Allows you to set a density.\n");
 			trap->Print( "^4*** ^3AUTO-FOLIAGE^4: ^3\"add\" ^5- Standard method. Allows you to set a density. This one adds to current list of foliages.\n");
@@ -1354,6 +1459,8 @@ extern "C" {
 			if ( trap->Cmd_Argc() >= 2 )
 			{// Override normal density...
 				int dist = 32;
+				int tree_dist = 48;
+				int num_dense_areas = 0;
 
 				trap->Cmd_Argv( 2, str, sizeof(str) );
 				dist = atoi(str);
@@ -1364,11 +1471,23 @@ extern "C" {
 					trap->Print( "^4*** ^3AUTO-FOLIAGE^4: ^7Warning: ^5Invalid density set (%i). Using default (%i)...\n", atoi(str), 32 );
 				}
 
-				FOLIAGE_GenerateFoliage_Real((float)dist, qfalse);
+				trap->Cmd_Argv( 3, str, sizeof(str) );
+				tree_dist = atoi(str);
+
+				if (tree_dist <= 8)
+				{// Fallback and warning...
+					tree_dist = 64;
+					trap->Print( "^4*** ^3AUTO-FOLIAGE^4: ^7Warning: ^5Invalid tree density set (%i). Using default (%i)...\n", atoi(str), 64 );
+				}
+
+				trap->Cmd_Argv( 4, str, sizeof(str) );
+				num_dense_areas = atoi(str);
+
+				FOLIAGE_GenerateFoliage_Real((float)dist, (float)tree_dist, num_dense_areas, qfalse);
 			}
 			else
 			{
-				FOLIAGE_GenerateFoliage_Real(32.0, qfalse);
+				FOLIAGE_GenerateFoliage_Real(32.0, 48.0, 0, qfalse);
 			}
 		}
 		else if ( Q_stricmp( str, "add") == 0 )
@@ -1376,6 +1495,8 @@ extern "C" {
 			if ( trap->Cmd_Argc() >= 2 )
 			{// Override normal density...
 				int dist = 32;
+				int tree_dist = 64;
+				int num_dense_areas = 0;
 
 				trap->Cmd_Argv( 2, str, sizeof(str) );
 				dist = atoi(str);
@@ -1386,11 +1507,23 @@ extern "C" {
 					trap->Print( "^4*** ^3AUTO-FOLIAGE^4: ^7Warning: ^5Invalid density set (%i). Using default (%i)...\n", atoi(str), 32 );
 				}
 
-				FOLIAGE_GenerateFoliage_Real((float)dist, qtrue);
+				trap->Cmd_Argv( 3, str, sizeof(str) );
+				tree_dist = atoi(str);
+
+				if (tree_dist <= 8)
+				{// Fallback and warning...
+					tree_dist = 64;
+					trap->Print( "^4*** ^3AUTO-FOLIAGE^4: ^7Warning: ^5Invalid tree density set (%i). Using default (%i)...\n", atoi(str), 64 );
+				}
+
+				trap->Cmd_Argv( 4, str, sizeof(str) );
+				num_dense_areas = atoi(str);
+
+				FOLIAGE_GenerateFoliage_Real((float)dist, (float)tree_dist, num_dense_areas, qtrue);
 			}
 			else
 			{
-				FOLIAGE_GenerateFoliage_Real(32.0, qtrue);
+				FOLIAGE_GenerateFoliage_Real(32.0, 48.0, 0, qtrue);
 			}
 		}
 	}

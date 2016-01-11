@@ -166,8 +166,6 @@ extern "C" {
 
 	void FOLIAGE_SetupClosestAreas( vec3_t moveOrg )
 	{
-		vec3_t	areaCenter;
-
 		FOLIAGE_CLOSE_AREA_LIST_COUNT = 0;
 
 		for (int areaNum = 0; areaNum < FOLIAGE_AREAS_COUNT; areaNum++)
@@ -185,6 +183,8 @@ extern "C" {
 
 	qboolean FOLIAGE_TreeSolidBlocking(gentity_t *ent, vec3_t moveOrg)
 	{
+		if (ent->client && ent->client->sess.sessionTeam == FACTION_SPECTATOR) return qfalse;
+
 		FOLIAGE_SetupClosestAreas( moveOrg );
 
 		for (int areaListPos = 0; areaListPos < FOLIAGE_CLOSE_AREA_LIST_COUNT; areaListPos++)
