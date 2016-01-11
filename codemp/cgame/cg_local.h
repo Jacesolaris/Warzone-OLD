@@ -168,6 +168,13 @@ typedef struct playerEntity_s {
 	qboolean		barrelSpinning;
 } playerEntity_t;
 
+typedef struct debuffVisualsData_s
+{
+	int lastFireEFXTime;
+	int stunStartTime;
+} debuffVisualsData_t;
+
+
 //=================================================
 
 // each client has an associated clientInfo_t
@@ -519,6 +526,9 @@ typedef struct centity_s {
 	//keeps track of everyone's weapon loadout so they are be displayed
 	int				weapons;
 	//[/VisualWeapons]
+
+	debuffVisualsData_t debuffVisuals;
+
 
 	int blastercannonBarrelRotationTime;
 	int blastercannonBarrelRotationAngle;
@@ -1575,6 +1585,13 @@ typedef struct cgMedia_s {
 	// For vehicles only now
 	sfxHandle_t	noAmmoSound;
 
+	// Damage types - There's soooooo many fields in this struct. Let's add more :D
+	qhandle_t   stunOverlay;
+	qhandle_t   carboniteOverlay;
+	qhandle_t   iceOverlay;
+	qhandle_t   playerFireEffect;
+
+
 } cgMedia_t;
 
 
@@ -2094,6 +2111,8 @@ qboolean CG_RagDoll(centity_t *cent, vec3_t forcedAngles);
 qboolean CG_G2TraceCollide(trace_t *tr, const vec3_t mins, const vec3_t maxs, const vec3_t lastValidStart, const vec3_t lastValidEnd);
 void CG_AddGhoul2Mark(int shader, float size, vec3_t start, vec3_t end, int entnum,
 					  vec3_t entposition, float entangle, void *ghoul2, vec3_t scale, int lifeTime);
+void JKG_PlayerDebuffVisuals(centity_t *cent, refEntity_t *refEntity);
+
 
 void CG_CreateNPCClient(clientInfo_t **ci);
 void CG_DestroyNPCClient(clientInfo_t **ci);

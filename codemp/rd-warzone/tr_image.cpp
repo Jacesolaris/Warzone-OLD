@@ -1964,7 +1964,41 @@ static int CalcNumMipmapLevels ( int width, int height )
 	return static_cast<int>(ceil ((double)log2 (max (width, height))) + 1);
 }
 
-void RawImage_UploadTexture( byte *data, int x, int y, int width, int height, GLenum internalFormat, imgType_t type, int flags, qboolean subtexture )
+static qboolean IsBPTCTextureFormat( GLenum internalformat )
+{
+	switch ( internalformat )
+	{
+		case GL_COMPRESSED_RGBA_BPTC_UNORM_ARB:
+		case GL_COMPRESSED_SRGB_ALPHA_BPTC_UNORM_ARB:
+		case GL_COMPRESSED_RGB_BPTC_SIGNED_FLOAT_ARB:
+		case GL_COMPRESSED_RGB_BPTC_UNSIGNED_FLOAT_ARB:
+			return qtrue;
+
+		default:
+			return qfalse;
+	}
+}
+
+static qboolean ShouldUseImmutableTextures(int imageFlags, GLenum internalformat)
+{
+	if ( glRefConfig.hardwareVendor == IHV_AMD )
+	{
+		// Corrupted texture data is seen when using BPTC + immutable textures
+		if ( IsBPTCTextureFormat( internalformat ) )
+		{
+			return qfalse;
+		}
+	}
+
+	if ( imageFlags & IMGFLAG_MUTABLE )
+	{
+		return qfalse;
+	}
+
+	return glRefConfig.immutableTextures;
+}
+
+static void RawImage_UploadTexture( byte *data, int x, int y, int width, int height, GLenum internalFormat, imgType_t type, int flags, qboolean subtexture )
 {
 	int dataFormat, dataType;
 
@@ -1997,7 +2031,7 @@ void RawImage_UploadTexture( byte *data, int x, int y, int width, int height, GL
 		{
 			qglTexImage2D (GL_TEXTURE_2D, 0, internalFormat, width, height, 0, dataFormat, dataType, data );
 		}
-		else if ( glRefConfig.immutableTextures && !(flags & IMGFLAG_MUTABLE) )
+		else if ( ShouldUseImmutableTextures( flags, internalFormat ) )
 		{
 			int numLevels = (flags & IMGFLAG_MIPMAP) ? CalcNumMipmapLevels (width, height) : 1;
 
@@ -2010,8 +2044,12 @@ void RawImage_UploadTexture( byte *data, int x, int y, int width, int height, GL
 		}
 	}
 
-	if (flags & IMGFLAG_MIPMAP)
+	if ((flags & IMGFLAG_MIPMAP) &&
+		(data != NULL || !ShouldUseImmutableTextures(flags, internalFormat) ))
 	{
+		// Don't need to generate mipmaps if we are generating an immutable texture and
+		// the data is NULL. All levels have already been allocated by glTexStorage2D.
+
 		int miplevel = 0;
 		
 		while (width > 1 || height > 1)
@@ -2058,11 +2096,7 @@ void RawImage_UploadTexture( byte *data, int x, int y, int width, int height, GL
 			}
 			else
 			{
-				if ( !data )
-				{
-					qglTexImage2D (GL_TEXTURE_2D, miplevel, internalFormat, width, height, 0, dataFormat, dataType, data );
-				}
-				else if ( glRefConfig.immutableTextures && !(flags & IMGFLAG_MUTABLE) )
+				if ( ShouldUseImmutableTextures(flags, internalFormat) )
 				{
 					qglTexSubImage2D (GL_TEXTURE_2D, miplevel, 0, 0, width, height, dataFormat, dataType, data );
 				}
@@ -2087,7 +2121,7 @@ Upload32
 ===============
 */
 extern qboolean charSet;
-void Upload32( byte *data, int width, int height, imgType_t type, int flags,
+static void Upload32( byte *data, int width, int height, imgType_t type, int flags,
 	qboolean lightMap, GLenum internalFormat, int *pUploadWidth, int *pUploadHeight)
 {
 	byte		*scaledBuffer = NULL;
@@ -2113,7 +2147,6 @@ void Upload32( byte *data, int width, int height, imgType_t type, int flags,
 	
 	if( r_greyscale->integer )
 	{
-#pragma omp parallel for schedule(dynamic) if(c >= 64)
 		for ( i = 0; i < c; i++ )
 		{
 			byte luma = LUMA(scan[i*4], scan[i*4 + 1], scan[i*4 + 2]);
@@ -2124,7 +2157,6 @@ void Upload32( byte *data, int width, int height, imgType_t type, int flags,
 	}
 	else if( r_greyscale->value )
 	{
-#pragma omp parallel for schedule(dynamic) if(c >= 32)
 		for ( i = 0; i < c; i++ )
 		{
 			float luma = LUMA(scan[i*4], scan[i*4 + 1], scan[i*4 + 2]);
@@ -2318,16 +2350,6 @@ image_t *R_CreateImage( const char *name, byte *pic, int width, int height, imgT
 	else
 		glWrapClampMode = GL_REPEAT;
 
-	/*if (internalFormat == GL_RGBA8 && !(image->flags & IMGFLAG_CUBEMAP))
-	{
-		internalFormat = GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT5_EXT;
-	}
-
-	if (internalFormat == GL_RGB && !(image->flags & IMGFLAG_CUBEMAP))
-	{
-		internalFormat = GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT1_EXT;
-	}*/
-
 	if (!internalFormat)
 	{
 		if (image->flags & IMGFLAG_CUBEMAP)
@@ -2337,18 +2359,15 @@ image_t *R_CreateImage( const char *name, byte *pic, int width, int height, imgT
 	}
 
 	image->internalFormat = internalFormat;
-		
 
 	// lightmaps are always allocated on TMU 1
-	if ( qglActiveTextureARB && isLightmap ) {
+	if ( isLightmap ) {
 		image->TMU = 1;
 	} else {
 		image->TMU = 0;
 	}
 
-	if ( qglActiveTextureARB ) {
-		GL_SelectTexture( image->TMU );
-	}
+	GL_SelectTexture( image->TMU );
 
 	if (image->flags & IMGFLAG_CUBEMAP)
 	{
@@ -2359,33 +2378,26 @@ image_t *R_CreateImage( const char *name, byte *pic, int width, int height, imgT
 
 		if (image->flags & IMGFLAG_MIPMAP)
 		{
-			qglTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 			qglTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 		}
 		else
 		{
-			qglTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 			qglTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		}
+		qglTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-		if ( !pic )
-		{
-			qglTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X, 0, internalFormat, width, height, 0, GL_BGRA, GL_UNSIGNED_BYTE, pic);
-			qglTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_X, 0, internalFormat, width, height, 0, GL_BGRA, GL_UNSIGNED_BYTE, pic);
-			qglTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Y, 0, internalFormat, width, height, 0, GL_BGRA, GL_UNSIGNED_BYTE, pic);
-			qglTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, internalFormat, width, height, 0, GL_BGRA, GL_UNSIGNED_BYTE, pic);
-			qglTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Z, 0, internalFormat, width, height, 0, GL_BGRA, GL_UNSIGNED_BYTE, pic);
-			qglTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, internalFormat, width, height, 0, GL_BGRA, GL_UNSIGNED_BYTE, pic);
-		}
-		else if (glRefConfig.immutableTextures && !(image->flags & IMGFLAG_MUTABLE))
+		if ( ShouldUseImmutableTextures( image->flags, internalFormat ) )
 		{
 			int numLevels = (image->flags & IMGFLAG_MIPMAP) ? CalcNumMipmapLevels (width, height) : 1;
 
 			qglTexStorage2D (GL_TEXTURE_CUBE_MAP, numLevels, internalFormat, width, height);
 
-			for ( int i = 0; i < 6; i++ )
+			if ( pic != NULL )
 			{
-				qglTexSubImage2D (GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, 0, 0, width, height, GL_BGRA, GL_UNSIGNED_BYTE, pic);
+				for ( int i = 0; i < 6; i++ )
+				{
+					qglTexSubImage2D (GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, 0, 0, width, height, GL_BGRA, GL_UNSIGNED_BYTE, pic);
+				}
 			}
 		}
 		else
@@ -2842,7 +2854,7 @@ image_t *R_CreateNormalMapGLSL ( const char *name, byte *pic, int inwidth, int i
 	dstFbo = R_CreateNormalMapDestinationFBO(width, height);
 	FBO_Bind (dstFbo);
 	//dstImage = R_CreateImage( name, pic, width, height, IMGTYPE_NORMAL, normalFlags, GL_RGBA8 );
-	dstImage = R_CreateImage( name, NULL, width, height, IMGTYPE_NORMAL, normalFlags, GL_COMPRESSED_RGBA_S3TC_DXT5_EXT/*0*/ );
+	dstImage = R_CreateImage( name, NULL, width, height, IMGTYPE_NORMAL, normalFlags, 0 );
 	//qglBindTexture(GL_TEXTURE_2D, dstImage->texnum);
 	FBO_AttachTextureImage(dstImage, 0);
 	FBO_SetupDrawBuffers();
@@ -2995,6 +3007,30 @@ char previous_name_loaded[256];
 
 extern void StripCrap( const char *in, char *out, int destsize );
 
+static qboolean R_ShouldMipMap( const char *name )
+{
+	//if (!(StringContainsWord(name, "textures/") || StringContainsWord(name, "models/")))
+	//	return qfalse;
+
+	if (StringContainsWord(name, "gfx/") || StringContainsWord(name, "gfx_base/"))
+	{
+		if (StringContainsWord(name, "2d")) return qfalse;
+		if (StringContainsWord(name, "colors")) return qfalse;
+		if (StringContainsWord(name, "console")) return qfalse;
+		if (StringContainsWord(name, "hud")) return qfalse;
+		if (StringContainsWord(name, "jkg")) return qfalse;
+		if (StringContainsWord(name, "menus")) return qfalse;
+		if (StringContainsWord(name, "mp")) return qfalse;
+	}
+
+	if (StringContainsWord(name, "fonts/")) return qfalse;
+	if (StringContainsWord(name, "levelshots/")) return qfalse;
+	if (StringContainsWord(name, "menu/")) return qfalse;
+	if (StringContainsWord(name, "ui/")) return qfalse;
+
+	return qtrue;
+}
+
 image_t	*R_FindImageFile( const char *name, imgType_t type, int flags )
 {
 	image_t	*image;
@@ -3032,7 +3068,7 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, int flags )
 		return NULL;
 	}
 
-	if (!(flags & IMGFLAG_MIPMAP) && (StringContainsWord(name, "textures/") || StringContainsWord(name, "models/")))
+	if (!(flags & IMGFLAG_MIPMAP) && R_ShouldMipMap(name))
 	{// UQ: Testing mipmap all...
 		flags |= IMGFLAG_MIPMAP;
 	}
@@ -3042,10 +3078,7 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, int flags )
 		flags &= ~IMGFLAG_NO_COMPRESSION;
 	}
 
-	if (r_compressTextures->integer && StringContainsWord(name, "textures/") || StringContainsWord(name, "models/")) // UQ: Compress all map textures for extra VRAM
-		image = R_CreateImage( name, pic, width, height, type, flags, /*GL_COMPRESSED_RGBA_BPTC_UNORM_ARB*/GL_COMPRESSED_RGBA_S3TC_DXT5_EXT/*GL_RGBA8*/ );
-	else
-		image = R_CreateImage( name, pic, width, height, type, flags, GL_RGBA8 );
+	image = R_CreateImage( name, pic, width, height, type, flags, 0 );
 
 	if (name[0] != '*' && name[0] != '!' && name[0] != '$' && name[0] != '_' && type != IMGTYPE_NORMAL && type != IMGTYPE_SPECULAR && type != IMGTYPE_SUBSURFACE && type != IMGTYPE_OVERLAY && !(flags & IMGFLAG_CUBEMAP))
 	{

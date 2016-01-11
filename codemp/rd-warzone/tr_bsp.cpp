@@ -3588,7 +3588,7 @@ void R_MergeLeafSurfaces(void)
 					continue;
 				}
 				else if (shader1 != shader2
-					// Cull matching shader names...
+					// Merge matching shader names...
 					&& stricmp(shader1->name, shader2->name))
 				{
 					continue;

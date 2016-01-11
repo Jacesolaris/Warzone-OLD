@@ -3,7 +3,7 @@
 #include "g_local.h"
 #include "ghoul2/G2.h"
 #include "bg_saga.h"
-//#include "bg_class.h"
+#include "jkg_damagetypes.h"
 #include "ai_dominance_main.h"
 
 extern int DOM_GetNearWP(vec3_t org, int badwp);
@@ -2429,7 +2429,7 @@ qboolean ClientUserinfoChanged( int clientNum ) {
 
 				found = qtrue;
 
-				trap->Print("^4*** ^3Warzone^4: ^5Scale set to ^7%f^5x normal for model %s.\n", model_scale_list[loop].scale/100.0f, model);
+				Com_Printf("*** Warzone: Scale set to %fx normal for model %s.\n", model_scale_list[loop].scale/100.0f, model);
 				break;
 			}
 		}
@@ -2447,7 +2447,7 @@ qboolean ClientUserinfoChanged( int clientNum ) {
 			ent->client->ps.standheight = DEFAULT_MAXS_2 * ent->modelScale[2];
 			ent->client->ps.crouchheight = CROUCH_MAXS_2 * ent->modelScale[2];
 
-			trap->Print("^4*** ^3Warzone^4: ^5Scale set to ^7%f^5x normal for model %s.\n", model_scale_list[loop].scale/100.0f, model);
+			Com_Printf("*** Warzone: Scale set to %fx normal for model %s.\n", model_scale_list[loop].scale/100.0f, model);
 		}
 	}
 
@@ -3328,6 +3328,21 @@ void G_UpdateClientAnims(gentity_t *self, float animSpeedScale)
 		trap->G2API_SetBoneAnim(self->ghoul2, 0, "Motion", self->client->ps.saberLockFrame, self->client->ps.saberLockFrame+1, BONE_ANIM_OVERRIDE_FREEZE|BONE_ANIM_BLEND, animSpeedScale, level.time, -1, 150);
 		return;
 	}
+
+	// JKG: Freezing/stun
+	//     if (JKG_DamageTypeFreezes((const damageType_t)self->client->ps.damageTypeFlags))
+	//     {
+	//         const animation_t *torsoAnimData = &bgAllAnims[self->localAnimIndex].anims[self->client->ps.freezeTorsoAnim];
+	//         const animation_t *legsAnimData = &bgAllAnims[self->localAnimIndex].anims[self->client->ps.freezeLegsAnim];
+	//         int legsAnimFrame = legsAnimData->firstFrame + legsAnimData->numFrames;
+	//         int torsoAnimFrame = torsoAnimData->firstFrame + torsoAnimData->numFrames;
+	// 
+	//         trap->G2API_SetBoneAnim(self->ghoul2, 0, "model_root", legsAnimFrame, legsAnimFrame, BONE_ANIM_OVERRIDE_FREEZE | BONE_ANIM_BLEND, animSpeedScale, level.time, -1, 150);
+	//         trap->G2API_SetBoneAnim(self->ghoul2, 0, "lower_lumbar", torsoAnimFrame, torsoAnimFrame, BONE_ANIM_OVERRIDE_FREEZE | BONE_ANIM_BLEND, animSpeedScale, level.time, -1, 150);
+	// 
+	//         return;
+	//     }
+
 
 	if (self->localAnimIndex > 1 &&
 		bgAllAnims[self->localAnimIndex].anims[legsAnim].firstFrame == 0 &&

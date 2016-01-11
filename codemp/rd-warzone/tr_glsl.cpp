@@ -324,6 +324,7 @@ static uniformInfo_t uniformsInfo[] =
 	{ "u_PrimaryLightRadius",  GLSL_FLOAT, 1 },
 
 	{ "u_CubeMapInfo", GLSL_VEC4, 1 },
+	{ "u_CubeMapStrength", GLSL_FLOAT, 1 },
 
 	{ "u_BoneMatrices",			GLSL_MAT16, 20 },
 
@@ -336,6 +337,11 @@ static uniformInfo_t uniformsInfo[] =
 	{ "u_Local3",				GLSL_VEC4, 1  },
 	{ "u_Local4",				GLSL_VEC4, 1  },
 	{ "u_Local5",				GLSL_VEC4, 1  },
+	{ "u_Local6",				GLSL_VEC4, 1  },
+	{ "u_Local7",				GLSL_VEC4, 1  },
+	{ "u_Local8",				GLSL_VEC4, 1  },
+	{ "u_Local9",				GLSL_VEC4, 1  },
+	{ "u_Local10",				GLSL_VEC4, 1  },
 	{ "u_Texture0",				GLSL_INT, 1 },
 	{ "u_Texture1",				GLSL_INT, 1 },
 	{ "u_Texture2",				GLSL_INT, 1 },

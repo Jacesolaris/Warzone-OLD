@@ -335,7 +335,7 @@ extern int		max_polyverts;
 //
 // UQ1: Added...
 //
-extern cvar_t	*r_compressTextures;
+extern cvar_t	*r_skynum;
 extern cvar_t	*r_fog;
 extern cvar_t	*r_multithread;
 extern cvar_t	*r_multithread2;
@@ -1398,6 +1398,7 @@ typedef enum
 	UNIFORM_PRIMARYLIGHTRADIUS,
 
 	UNIFORM_CUBEMAPINFO,
+	UNIFORM_CUBEMAPSTRENGTH,
 
 	UNIFORM_BONE_MATRICES,
 
@@ -1410,6 +1411,11 @@ typedef enum
 	UNIFORM_LOCAL3,
 	UNIFORM_LOCAL4,
 	UNIFORM_LOCAL5,
+	UNIFORM_LOCAL6,
+	UNIFORM_LOCAL7,
+	UNIFORM_LOCAL8,
+	UNIFORM_LOCAL9,
+	UNIFORM_LOCAL10,
 	UNIFORM_TEXTURE0,
 	UNIFORM_TEXTURE1,
 	UNIFORM_TEXTURE2,
@@ -2176,11 +2182,21 @@ typedef enum {
 	TCR_BPTC = 0x0002,
 } textureCompressionRef_t;
 
+typedef enum {
+	IHV_UNKNOWN,
+
+	IHV_NVIDIA,
+	IHV_AMD,
+	IHV_INTEL
+} gpuIhv_t;
+
 // We can't change glConfig_t without breaking DLL/vms compatibility, so
 // store extensions we have here.
 typedef struct {
 	int glslMajorVersion;
 	int glslMinorVersion;
+
+	gpuIhv_t hardwareVendor;
 
 	memInfo_t   memInfo;
 
@@ -2737,6 +2753,9 @@ extern cvar_t	*r_dynamicGlowHeight;
 //
 // UQ1: Added...
 //
+extern cvar_t	*r_disableGfxDirEnhancement;
+extern cvar_t	*r_cubemapCullRange;
+extern cvar_t	*r_cubemapCullFalloffMult;
 extern cvar_t	*r_glslWater;
 extern cvar_t	*r_grassLength;
 extern cvar_t	*r_grassWaveSpeed;

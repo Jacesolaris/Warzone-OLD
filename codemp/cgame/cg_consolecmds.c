@@ -493,6 +493,7 @@ static const char *gcmds[] = {
 	"siegeclass",
 	"stats",
 	//"stopfollow",
+//	"tb",
 	"team",
 	"teamtask",
 	"teamvote",

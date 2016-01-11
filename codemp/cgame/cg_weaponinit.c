@@ -2277,7 +2277,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->missileSound		= NULL_SOUND;
 		weaponInfo->missileDlight		= 0;
 		weaponInfo->missileHitSound		= NULL_SOUND;
-		weaponInfo->missileTrailFunc	= 0;
+		weaponInfo->missileTrailFunc = FX_ThermalProjectileThink;;
 		weaponInfo->altFlashSound[0]	= trap->S_RegisterSound( "sound/weapons/melee/swing1.mp3");
 		weaponInfo->altFlashSound[1]	= trap->S_RegisterSound("sound/weapons/melee/swing2.mp3");
 		weaponInfo->altFlashSound[2]	= trap->S_RegisterSound("sound/weapons/melee/swing3.mp3");
@@ -2289,18 +2289,25 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altMissileSound		= NULL_SOUND;
 		weaponInfo->altMissileDlight	= 0;
 		weaponInfo->altMissileHitSound	= NULL_SOUND;
-		weaponInfo->altMissileTrailFunc = 0;
+		weaponInfo->altMissileTrailFunc = FX_PulseGrenadeProjectileThink;
 
-		cgs.effects.thermalShockwaveEffect = trap->FX_RegisterEffect("orginal_weapon_efx/thermal/shockwave");
-		cgs.effects.thermalExplosionAltEffect = trap->FX_RegisterEffect("orginal_weapon_efx/thermal/explosion");
+		weaponInfo->missileWallImpactfx = trap->FX_RegisterEffect("weapons/grenaderibbon_red");
+		weaponInfo->altMissileWallImpactfx = trap->FX_RegisterEffect("weapons/grenaderibbon_red");
 
-		cgs.effects.thermalShockwaveEffectEffectEnhancedFX = trap->FX_RegisterEffect("explosives/shockwave");
-		cgs.effects.thermalExplosionEffectEnhancedFX = trap->FX_RegisterEffect("explosives/fragmedium");
-		cgs.effects.thermalExplosionAltEffectEnhancedFX = trap->FX_RegisterEffect("explosives/fragmedium");
+		weaponInfo->fleshImpactEffect = trap->FX_RegisterEffect("orginal_weapon_efx/rocket/explosion");
+		weaponInfo->altFleshImpactEffect = trap->FX_RegisterEffect("orginal_weapon_efx/rocket/explosion"); // not sure about this one
+		weaponInfo->missileWallImpactfx = trap->FX_RegisterEffect("orginal_weapon_efx/rocket/explosion");
+		weaponInfo->altMissileWallImpactfx = trap->FX_RegisterEffect("orginal_weapon_efx/rocket/explosion");
 
-		cgs.media.grenadeBounce1		= trap->S_RegisterSound( "sound/weapons/thermal/bounce1.wav" );
-		cgs.media.grenadeBounce2		= trap->S_RegisterSound( "sound/weapons/thermal/bounce2.wav" );
-		trap->S_RegisterSound( "sound/weapons/grenade_thermdetloop.wav" );
+		weaponInfo->EnhancedFX_fleshImpact = trap->FX_RegisterEffect("explosives/baradium_class-e");
+		weaponInfo->EnhancedFX_altfleshImpact = trap->FX_RegisterEffect("explosives/shockwave");
+		weaponInfo->EnhancedFX_missileWallImpactfx = trap->FX_RegisterEffect("explosives/baradium_class-e");
+		weaponInfo->EnhancedFX_altmissileWallImpactfx = trap->FX_RegisterEffect("explosives/shockwave");
+
+
+		cgs.media.grenadeBounce1 = trap->S_RegisterSound("sound/weapons/grenade_bounce1.mp3");
+		cgs.media.grenadeBounce2 = trap->S_RegisterSound("sound/weapons/grenade_bounce2.mp3");
+		trap->S_RegisterSound("sound/weapons/grenade_thermdetloop.mp3");
 		trap->S_RegisterSound( "sound/weapons/thermal/warning.wav" );
 		break;
 

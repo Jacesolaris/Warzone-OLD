@@ -541,6 +541,7 @@ R_AddWorldSurface
 */
 static void R_AddWorldSurface( msurface_t *surf, int dlightBits, int pshadowBits ) {
 	// FIXME: bmodel fog?
+	int cubemapIndex = 0;
 
 	// try to cull before dlighting or adding
 	if ( R_CullSurface( surf ) || R_FovCullSurface( surf ) ) {
@@ -559,7 +560,12 @@ static void R_AddWorldSurface( msurface_t *surf, int dlightBits, int pshadowBits
 		pshadowBits = ( pshadowBits != 0 );
 	}*/
 
-	R_AddDrawSurf( surf->data, surf->shader, surf->fogIndex, dlightBits, R_IsPostRenderEntity (tr.currentEntityNum, tr.currentEntity), surf->cubemapIndex );
+	if (Distance(tr.refdef.vieworg, tr.cubemapOrigins[surf->cubemapIndex-1]) < r_cubemapCullRange->value * r_cubemapCullFalloffMult->value)
+		cubemapIndex = surf->cubemapIndex;
+	else
+		cubemapIndex = 0;
+
+	R_AddDrawSurf( surf->data, surf->shader, surf->fogIndex, dlightBits, R_IsPostRenderEntity (tr.currentEntityNum, tr.currentEntity), cubemapIndex );
 }
 
 /*

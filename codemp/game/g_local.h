@@ -887,6 +887,13 @@ struct gclient_s {
 
 	int			lastGenCmd;
 	int			lastGenCmdTime;
+	qboolean    pmfreeze;
+	qboolean    pmlock;
+	qboolean    pmnomove;
+	int         damageTypeTime[NUM_DAMAGE_TYPES];
+	int         damageTypeLastEffectTime[NUM_DAMAGE_TYPES];
+	gentity_t    *damageTypeOwner[NUM_DAMAGE_TYPES];
+
 
 	struct force {
 		int		regenDebounce;
@@ -1375,6 +1382,11 @@ void CalcSecondMuzzlePoint(gentity_t *ent, vec3_t forward, vec3_t right, vec3_t 
 void SnapVectorTowards( vec3_t v, vec3_t to );
 qboolean CheckGauntletAttack( gentity_t *ent );
 
+void JKG_InitWeapons();
+
+extern qhandle_t thermalDetDamageSettings;
+
+
 
 //
 // g_client.c
@@ -1692,3 +1704,5 @@ extern spawnGroupLists_t	spawnGroupData[MAX_SPAWNGROUP_FILES+1];
 qboolean NPC_LoadSpawnList( char *listname );
 spawnGroup_t GetSpawnGroup(char *filename, int RARITY);
 void SP_NPC_Spawner_Group( spawnGroup_t group, vec3_t position, int team );
+
+qboolean FOLIAGE_TreeSolidBlocking(gentity_t *ent, vec3_t moveOrg);

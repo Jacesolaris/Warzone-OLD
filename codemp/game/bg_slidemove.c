@@ -627,6 +627,15 @@ PM_SlideMove
 Returns qtrue if the velocity was clipped in some way
 ==================
 */
+
+#ifdef _CGAME
+extern qboolean FOLIAGE_TreeSolidBlocking(vec3_t moveOrg);
+#endif //_CGAME
+
+#ifdef _GAME
+extern qboolean FOLIAGE_TreeSolidBlocking(gentity_t *ent, vec3_t moveOrg);
+#endif //_GAME
+
 #define	MAX_CLIP_PLANES	5
 qboolean	PM_SlideMove( qboolean gravity ) {
 	int			bumpcount, numbumps;
@@ -717,6 +726,25 @@ qboolean	PM_SlideMove( qboolean gravity ) {
 			pm->ps->velocity[2] = 0;	// don't build up falling damage, but allow sideways acceleration
 			return qtrue;
 		}
+
+#ifdef _CGAME
+		if (pm_entSelf 
+			&& pm_entSelf->s.number == cg.clientNum 
+			&& FOLIAGE_TreeSolidBlocking( end ))
+		{// Hit a foliage system tree solid...
+			VectorClear( pm->ps->velocity );
+			return qfalse;
+		}
+#endif //_CGAME
+
+#ifdef _GAME
+		if (pm_entSelf 
+			&& FOLIAGE_TreeSolidBlocking( pm_entSelf, end ))
+		{// Hit a foliage system tree solid...
+			VectorClear( pm->ps->velocity );
+			return qfalse;
+		}
+#endif //_GAME
 
 		if (trace.fraction > 0) {
 			// actually covered some distance

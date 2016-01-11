@@ -1836,7 +1836,6 @@ qboolean	R_CullEntitySurface( trRefEntity_t	*ent ) {
 		return qtrue;
 	}
 
-
 	if (!R_inPVS( tr.refdef.vieworg, ent->e.origin, tr.refdef.areamask )) {
 		// Not in PVS? Cull the bitch!
 		NUM_ENTS_PVS_CULLED++;
@@ -3352,7 +3351,7 @@ void R_RenderCubemapSide( int cubemapIndex, int cubemapSide, qboolean subscene )
 	parms.targetFbo = tr.renderCubeFbo;
 	parms.targetFboLayer = cubemapSide;
 	parms.targetFboCubemapIndex = cubemapIndex;
-
+	
 	R_RenderView(&parms);
 
 	if (subscene)

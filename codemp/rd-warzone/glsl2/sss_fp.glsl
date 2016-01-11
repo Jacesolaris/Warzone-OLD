@@ -37,6 +37,15 @@ void main(void){
 	float dglowStrength = clamp(length(dglow.rgb) * 3.0, 0.0, 1.0);
 
 	vec2 texel_size = vec2(1.0 / var_Dimensions);
+
+	float isFoliage = texture2D(u_RandomMap, var_ScreenTex).r;
+
+	if (isFoliage < 1.0)
+	{
+		gl_FragColor = texture2D(u_DiffuseMap, var_ScreenTex);
+		return;
+	}
+
 	float depth = texture2D(u_ScreenDepthMap, var_ScreenTex).r;
 	depth = linearize(depth);
 
@@ -47,9 +56,9 @@ void main(void){
 	vec2 pixOffset = clamp((distFromCenter * invDepth) * texel_size * 80.0, vec2(0.0), texel_size * 80.0);
 	vec2 pos = var_ScreenTex + pixOffset;
 
-	float isFoliage = texture2D(u_RandomMap, pos).r;
+	float isFoliage2 = texture2D(u_RandomMap, pos).r;
 
-	if (isFoliage < 1.0)
+	if (isFoliage2 < 1.0)
 	{
 		gl_FragColor = texture2D(u_DiffuseMap, var_ScreenTex);
 		return;
@@ -59,6 +68,7 @@ void main(void){
 	d2 = linearize(d2);
 
 	vec4 diffuse = texture2D(u_DiffuseMap, var_ScreenTex);
+	vec4 oDiffuse = diffuse;
 
 	float depthDiff = clamp(depth - d2, 0.0, 1.0);
 
@@ -68,6 +78,11 @@ void main(void){
 		shadow += diffuse.rgb * (0.75 * (depthDiff / u_Local0.g)); // less darkness at higher distance for blending
 		float invDglow = 1.0 - dglowStrength;
 		diffuse.rgb = (diffuse.rgb * dglowStrength) + (shadow * invDglow);
+
+		if (length(diffuse.rgb) > length(oDiffuse.rgb))
+		{// Shadow would be lighter due to blending, use original...
+			diffuse = oDiffuse;
+		}
 	}
 	else if (depthDiff < u_Local0.r)
 	{
@@ -75,6 +90,11 @@ void main(void){
 		shadow += diffuse.rgb * (0.75 * (1.0 - (depthDiff / u_Local0.r))); // less darkness at lower distance for blending
 		float invDglow = 1.0 - dglowStrength;
 		diffuse.rgb = (diffuse.rgb * dglowStrength) + (shadow * invDglow);
+
+		if (length(diffuse.rgb) > length(oDiffuse.rgb))
+		{// Shadow would be lighter due to blending, use original...
+			diffuse = oDiffuse;
+		}
 	}
 
 	gl_FragColor = diffuse;

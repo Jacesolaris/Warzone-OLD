@@ -979,7 +979,7 @@ void RB_StageIteratorSky( void ) {
 	{
 		matrix_t oldmodelview;
 
-		skyImage = tess.shader->sky.outerbox[5];
+		skyImage = tess.shader->sky.outerbox[r_skynum->integer];
 
 		/*if ( !tess.shader->sky.outerbox[0] || tess.shader->sky.outerbox[0] == tr.defaultImage ) 
 		{// UQ1: Set a default image...

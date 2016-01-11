@@ -3225,6 +3225,9 @@ void AssignMaterialType ( const char *name, const char *text )
 {
 	//ri->Printf(PRINT_WARNING, "Check material type for %s.\n", name);
 
+	if (r_disableGfxDirEnhancement->integer 
+		&& (StringContainsWord(name, "gfx/") || StringContainsWord(name, "gfx_base/"))) return;
+
 	if (!HaveSurfaceType(shader.surfaceFlags))
 	{
 		//
@@ -4296,6 +4299,11 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 					&& diffuse->bundle[TB_DIFFUSEMAP].image[0]->imgName[0] != '_'
 					&& diffuse->bundle[TB_DIFFUSEMAP].image[0]->imgName[0] != '!'
 					&& !(diffuse->bundle[TB_DIFFUSEMAP].image[0]->flags & IMGFLAG_CUBEMAP)
+
+					// gfx dirs can be exempted I guess...
+					&& !(r_disableGfxDirEnhancement->integer && StringContainsWord(diffuse->bundle[TB_DIFFUSEMAP].image[0]->imgName, "gfx/"))
+					&& !(r_disableGfxDirEnhancement->integer && StringContainsWord(diffuse->bundle[TB_DIFFUSEMAP].image[0]->imgName, "gfx_base/"))
+
 					//&& !StringContainsWord(diffuse->bundle[TB_DIFFUSEMAP].image[0]->imgName, "menus/main_background") // never, ever!
 					/*
 					&& !StringContainsWord(diffuse->bundle[TB_DIFFUSEMAP].image[0]->imgName, "renderCube") 
@@ -5884,7 +5892,7 @@ char uniqueGenericShader[] = "{\n"\
 
 qboolean R_ForceGenericShader ( const char *name, const char *text )
 {
-	if (text && StringsContainWord(name, text, "gfx"))
+	if (text && (StringsContainWord(name, text, "gfx") || StringsContainWord(name, text, "gfx_base")))
 		return qfalse;
 	else if (text && (StringsContainWord(name, text, "glow") || StringsContainWord(name, name, "icon")))
 		return qfalse;
@@ -5985,6 +5993,10 @@ shader_t *R_FindShader( const char *name, const int *lightmapIndexes, const byte
 	// attempt to define shader from an explicit parameter file
 	//
 	shaderText = FindShaderInShaderText( strippedName );
+
+	//
+	// Since this texture does not have a shader, create one for it - conditionally...
+	//
 #ifdef ___SHADER_GENERATOR___
 	if ( shaderText && !R_ForceGenericShader(name, shaderText) ) {
 #else //!___SHADER_GENERATOR___

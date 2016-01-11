@@ -44,7 +44,7 @@ set(MPCGameCgameFiles
 	"${MPDir}/cgame/cg_effects.c"
 	"${MPDir}/cgame/cg_ents.c"
 	"${MPDir}/cgame/cg_event.c"
-	"${MPDir}/cgame/cg_grass.cpp"
+	"${MPDir}/cgame/cg_foliage.cpp"
 	"${MPDir}/cgame/cg_info.c"
 	"${MPDir}/cgame/cg_light.c"
 	"${MPDir}/cgame/cg_localents.c"

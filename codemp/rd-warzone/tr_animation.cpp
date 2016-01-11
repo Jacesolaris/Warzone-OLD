@@ -253,6 +253,9 @@ void R_MDRAddAnimSurfaces( trRefEntity_t *ent ) {
 
 	cubemapIndex = R_CubemapForPoint(ent->e.origin);
 
+	if (Distance(tr.refdef.vieworg, tr.cubemapOrigins[cubemapIndex-1]) > r_cubemapCullRange->value * r_cubemapCullFalloffMult->value)
+		cubemapIndex = 0;
+
 	surface = (mdrSurface_t *)( (byte *)lod + lod->ofsSurfaces );
 
 	for ( i = 0 ; i < lod->numSurfaces ; i++ )

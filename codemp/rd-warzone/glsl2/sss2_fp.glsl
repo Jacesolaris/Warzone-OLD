@@ -55,6 +55,7 @@ void main(void){
 	d2 = linearize(d2);
 
 	vec4 diffuse = texture2D(u_DiffuseMap, var_ScreenTex);
+	vec4 oDiffuse = diffuse;
 
 	float depthDiff = clamp(depth - d2, 0.0, 1.0);
 
@@ -64,6 +65,11 @@ void main(void){
 		shadow += diffuse.rgb * (0.75 * (depthDiff / u_Local0.g)); // less darkness at higher distance for blending
 		float invDglow = 1.0 - dglowStrength;
 		diffuse.rgb = (diffuse.rgb * dglowStrength) + (shadow * invDglow);
+
+		if (length(diffuse.rgb) > length(oDiffuse.rgb))
+		{// Shadow would be lighter due to blending, use original...
+			diffuse = oDiffuse;
+		}
 	}
 	else if (depthDiff < u_Local0.r)
 	{
@@ -71,6 +77,11 @@ void main(void){
 		shadow += diffuse.rgb * (0.75 * (1.0 - (depthDiff / u_Local0.r))); // less darkness at lower distance for blending
 		float invDglow = 1.0 - dglowStrength;
 		diffuse.rgb = (diffuse.rgb * dglowStrength) + (shadow * invDglow);
+
+		if (length(diffuse.rgb) > length(oDiffuse.rgb))
+		{// Shadow would be lighter due to blending, use original...
+			diffuse = oDiffuse;
+		}
 	}
 
 	gl_FragColor = diffuse;

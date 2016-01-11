@@ -233,6 +233,7 @@ void main()
 
 
 /*
+#if defined(USE_CUBEMAP)
 	// Cubemapping...
 	NL = clamp(dot(N, L), 0.0, 1.0);
 	NE = clamp(dot(N, E), 0.0, 1.0);
@@ -241,6 +242,7 @@ void main()
 	vec3 parallax = u_CubeMapInfo.xyz + u_CubeMapInfo.w * viewDir;
 	vec3 cubeLightColor = textureCubeLod(u_CubeMap, R + parallax, 7.0 - specular.a * 7.0).rgb * u_EnableTextures.w;
 	gl_FragColor.rgb += (cubeLightColor * reflectance);
+#endif
 */
 
 		out_Glow = vec4(0.0);

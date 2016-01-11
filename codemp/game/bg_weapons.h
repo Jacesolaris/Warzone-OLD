@@ -182,13 +182,13 @@ typedef enum {
 	SCOPE_IRONSIGHT_MID,
 	SCOPE_DISRUPTOR,
 	SCOPE_BOWCASTER, // these should be renamed to some "scope company/model names"
-	SCOPE_SCOPE_EE3_BLASTTECH_SHORT, // rename this - eg: SCOPE_CLASS_BLASTECH_EE3_SHORT or whatever
-	SCOPE_SCOPE_A280_BLASTTECH_LONG_SHORT, // rename this
-	SCOPE_SCOPE_DLT20A_BLASTTECH_LONG_SHORT, // rename this
-	SCOPE_SCOPE_ACP_SNIPER, // Add anything you want. rename as you want.
+	SCOPE_EE3_BLASTTECH_SHORT, // rename this - eg: SCOPE_CLASS_BLASTECH_EE3_SHORT or whatever
+	SCOPE_A280_BLASTTECH_LONG_SHORT, // rename this
+	SCOPE_DLT20A_BLASTTECH_LONG_SHORT, // rename this
+	SCOPE_ACP_SNIPER, // Add anything you want. rename as you want.
 	SCOPE_BOWCASTER_CLASSIC,
 	SCOPE_WOOKIE_BOWCASTER,
-	SCOPE_SCOPE_BRYAR_RIFLE_SCOPE,
+	SCOPE_BRYAR_RIFLE_SCOPE,
 	SCOPE_DH_17_PISTOL,
 	SCOPE_MAX_SCOPES
 } scopeTypes_t;

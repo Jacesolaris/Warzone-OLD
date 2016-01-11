@@ -1677,6 +1677,27 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 					vec[2] = tr.cubemapOrigins[input->cubemapIndex - 1][2] - backEnd.viewParms.ori.origin[2];
 					vec[3] = 1.0f;
 
+					float dist = Distance(tr.refdef.vieworg, tr.cubemapOrigins[input->cubemapIndex - 1]);
+					float mult = r_cubemapCullFalloffMult->value - (r_cubemapCullFalloffMult->value * 0.04);
+
+					if (dist < r_cubemapCullRange->value)
+					{// In range for full effect...
+						GLSL_SetUniformFloat(sp, UNIFORM_CUBEMAPSTRENGTH, 1.0);
+					}
+					else if (dist >= r_cubemapCullRange->value && dist < r_cubemapCullRange->value * mult)
+					{// Further scale the strength of the cubemap by the fade-out distance...
+						float extraDist =		dist - r_cubemapCullRange->value;
+						float falloffDist =		(r_cubemapCullRange->value * mult) - r_cubemapCullRange->value;
+						float strength =		(falloffDist - extraDist) / falloffDist;
+
+						strength = CLAMP(strength, 0.0, 1.0);
+						GLSL_SetUniformFloat(sp, UNIFORM_CUBEMAPSTRENGTH, strength);
+					}
+					else
+					{// Out of range completely...
+						GLSL_SetUniformFloat(sp, UNIFORM_CUBEMAPSTRENGTH, 0.0);
+					}
+					
 					VectorScale4(vec, 1.0f / 1000.0f, vec);
 
 					GLSL_SetUniformVec4(sp, UNIFORM_CUBEMAPINFO, vec);
@@ -1705,21 +1726,27 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				/*
 				if (pStage->isWater && r_glslWater->integer)
 				{
-				if ( !skyImage ) 
-				{
-				//ri->Printf(PRINT_WARNING, "Have no skyImage!\n");
-				GLSL_SetUniformInt(sp, UNIFORM_OVERLAYMAP, TB_OVERLAYMAP);
-				GL_BindToTMU(tr.blackImage, TB_OVERLAYMAP);
+					if ( !skyImage ) 
+					{
+						//ri->Printf(PRINT_WARNING, "Have no skyImage!\n");
+						GLSL_SetUniformInt(sp, UNIFORM_OVERLAYMAP, TB_OVERLAYMAP);
+						GL_BindToTMU(tr.blackImage, TB_OVERLAYMAP);
+						//vec4_t l0;
+						//VectorSet4(l0, 0, 0, 0, 0);
+						//GLSL_SetUniformVec4(sp, UNIFORM_LOCAL10, l0);
+					}
+					else
+					{
+						//ri->Printf(PRINT_WARNING, "Have skyImage! YAY!\n");
+						GLSL_SetUniformInt(sp, UNIFORM_OVERLAYMAP, TB_OVERLAYMAP);
+						GL_BindToTMU(skyImage, TB_OVERLAYMAP);
+						
+						//vec4_t l0;
+						//VectorSet4(l0, skyImage->width, skyImage->height, 0, 0);
+						//GLSL_SetUniformVec4(sp, UNIFORM_LOCAL10, l0);
+					}
 				}
-				else
-				{
-				//ri->Printf(PRINT_WARNING, "Have skyImage! YAY!\n");
-				GLSL_SetUniformInt(sp, UNIFORM_OVERLAYMAP, TB_OVERLAYMAP);
-				GL_BindToTMU(skyImage, TB_OVERLAYMAP);
-				}
-				}
-				else
-				*/
+				else*/
 				{
 					GL_BindToTMU( tr.blackImage, TB_OVERLAYMAP );
 				}
@@ -1805,6 +1832,10 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 							&& pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName[0] != '_'
 							&& pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName[0] != '!'
 							&& !(pStage->bundle[TB_DIFFUSEMAP].image[0]->flags & IMGFLAG_CUBEMAP)
+							// gfx dirs can be exempted I guess...
+							&& !(r_disableGfxDirEnhancement->integer && StringContainsWord(pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName, "gfx/"))
+							&& !(r_disableGfxDirEnhancement->integer && StringContainsWord(pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName, "gfx_base/"))
+
 							//&& !StringContainsWord(pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName, "menus/main_background") // never, ever!
 							/*
 							&& !StringContainsWord(pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName, "noshader") 
