@@ -133,7 +133,7 @@ G_BounceMissile
 
 ================
 */
-void G_BounceMissile( gentity_t *ent, trace_t *trace ) {
+void G_BounceMissile( gentity_t *ent, trace_t *trace, qboolean HIT_TREE ) {
 	vec3_t	velocity;
 	float	dot;
 	int		hitTime;
@@ -141,8 +141,21 @@ void G_BounceMissile( gentity_t *ent, trace_t *trace ) {
 	// reflect the velocity on the trace plane
 	hitTime = level.previousTime + ( level.time - level.previousTime ) * trace->fraction;
 	BG_EvaluateTrajectoryDelta( &ent->s.pos, hitTime, velocity );
-	dot = DotProduct( velocity, trace->plane.normal );
-	VectorMA( velocity, -2*dot, trace->plane.normal, ent->s.pos.trDelta );
+
+	if (HIT_TREE)
+	{
+		VectorCopy(velocity, trace->plane.normal);
+		trace->plane.normal[0] += (irand(0,180) - 90);
+		trace->plane.normal[1] += (irand(0,180) - 90);
+		VectorNormalize(trace->plane.normal);
+		dot = DotProduct( velocity, trace->plane.normal );
+		VectorMA( velocity, -2*dot, trace->plane.normal, ent->s.pos.trDelta );
+	}
+	else
+	{
+		dot = DotProduct( velocity, trace->plane.normal );
+		VectorMA( velocity, -2*dot, trace->plane.normal, ent->s.pos.trDelta );
+	}
 
 
 	if ( ent->flags & FL_BOUNCE_SHRAPNEL )
@@ -191,6 +204,7 @@ void G_BounceMissile( gentity_t *ent, trace_t *trace ) {
 	}
 
 	VectorAdd( ent->r.currentOrigin, trace->plane.normal, ent->r.currentOrigin);
+
 	VectorCopy( ent->r.currentOrigin, ent->s.pos.trBase );
 	ent->s.pos.trTime = level.time;
 
@@ -371,12 +385,12 @@ void G_MissileImpact(gentity_t *ent, trace_t *trace, qboolean HIT_TREE) {
 				|| ent->s.weapon == WP_WOOKIE_BOWCASTER
 				|| ent->s.weapon == WP_DC_17_CLONE_PISTOL)
 			{ // hit effects on Clone Pistol and Bowcaster to bounces off floors.
-				G_BounceMissile(ent, trace);
+				G_BounceMissile(ent, trace, HIT_TREE);
 				return;
 			}
 			else
 			{ // grenades would be handled by this.
-				G_BounceMissile(ent, trace);
+				G_BounceMissile(ent, trace, HIT_TREE);
 				G_AddEvent(ent, EV_GRENADE_BOUNCE, 0);
 				return;
 			}
@@ -385,7 +399,7 @@ void G_MissileImpact(gentity_t *ent, trace_t *trace, qboolean HIT_TREE) {
 		{ //this is a knocked-away saber
 			if (ent->bounceCount > 0 || ent->bounceCount == -5)
 			{
-				G_BounceMissile(ent, trace);
+				G_BounceMissile(ent, trace, HIT_TREE);
 				G_AddEvent(ent, EV_GRENADE_BOUNCE, 0);
 				return;
 			}
@@ -397,7 +411,7 @@ void G_MissileImpact(gentity_t *ent, trace_t *trace, qboolean HIT_TREE) {
 		if (((ent->bounceCount > 0 || ent->bounceCount == -5) && (ent->flags&(FL_BOUNCE_SHRAPNEL)))
 			|| ((trace->surfaceFlags&SURF_FORCEFIELD) && !ent->splashDamage && !ent->splashRadius && (ent->bounceCount > 0 || ent->bounceCount == -5)))
 		{
-			G_BounceMissile(ent, trace);
+			G_BounceMissile(ent, trace, HIT_TREE);
 
 			if (ent->bounceCount < 1)
 			{
@@ -423,7 +437,7 @@ void G_MissileImpact(gentity_t *ent, trace_t *trace, qboolean HIT_TREE) {
 		{ // hit effects on Clone Pistol and Bowcaster to bounces off floors.
 			if (!(trace->surfaceFlags & SURF_FORCEFIELD))
 			{
-				G_BounceMissile(ent, trace);
+				G_BounceMissile(ent, trace, HIT_TREE);
 
 				if (trace->surfaceFlags & SURF_METALSTEPS)
 					G_AddEvent(ent, EV_CLONE_PISTOL_BOUNCE_METAL, DirToByte(trace->plane.normal));
@@ -433,14 +447,14 @@ void G_MissileImpact(gentity_t *ent, trace_t *trace, qboolean HIT_TREE) {
 			}
 			else
 			{ //hit effects on forcefields.
-				G_BounceMissile(ent, trace);
+				G_BounceMissile(ent, trace, HIT_TREE);
 				G_AddEvent(ent, EV_GRENADE_BOUNCE, 0);
 				return;
 			}
 		}
 		else
 		{ // grenades would be handled by this.
-			G_BounceMissile(ent, trace);
+			G_BounceMissile(ent, trace, HIT_TREE);
 			G_AddEvent(ent, EV_GRENADE_BOUNCE, 0);
 			return;
 		}
@@ -449,7 +463,7 @@ void G_MissileImpact(gentity_t *ent, trace_t *trace, qboolean HIT_TREE) {
 	{ //this is a knocked-away saber
 		if (ent->bounceCount > 0 || ent->bounceCount == -5)
 		{
-			G_BounceMissile(ent, trace);
+			G_BounceMissile(ent, trace, HIT_TREE);
 			G_AddEvent(ent, EV_GRENADE_BOUNCE, 0);
 			return;
 		}
@@ -460,7 +474,7 @@ void G_MissileImpact(gentity_t *ent, trace_t *trace, qboolean HIT_TREE) {
 	// I would glom onto the FL_BOUNCE code section above, but don't feel like risking breaking something else
 	if ((!other->takedamage && (ent->bounceCount > 0 || ent->bounceCount == -5) && (ent->flags&(FL_BOUNCE_SHRAPNEL))) || ((trace->surfaceFlags&SURF_FORCEFIELD) && !ent->splashDamage&&!ent->splashRadius && (ent->bounceCount > 0 || ent->bounceCount == -5)))
 	{
-		G_BounceMissile(ent, trace);
+		G_BounceMissile(ent, trace, HIT_TREE);
 
 		if (ent->bounceCount < 1)
 		{
