@@ -498,6 +498,12 @@ struct gentity_s {
 	vec3_t				prev_aposTrBase;
 	int					prev_moveDir;
 	float				prev_speed;
+
+	// UQ1: Area System.
+	int					CURRENT_AREA;
+	int					CLOSE_AREA_LIST[64];
+	int					CLOSE_AREA_LIST_COUNT;
+	vec3_t				CLOSE_AREA_PREVIOUS_ORG;
 };
 
 #define DAMAGEREDIRECT_HEAD		1

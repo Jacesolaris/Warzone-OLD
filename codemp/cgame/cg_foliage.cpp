@@ -133,17 +133,6 @@ extern qboolean InFOV( vec3_t spot, vec3_t from, vec3_t fromAngles, int hFOV, in
 		"models/warzone/foliage/plant70.png",
 	};
 
-	qboolean	FOLIAGE_LOADED = qfalse;
-	int			FOLIAGE_NUM_POSITIONS = 0;
-	vec3_t		FOLIAGE_POSITIONS[FOLIAGE_MAX_FOLIAGES];
-	vec3_t		FOLIAGE_NORMALS[FOLIAGE_MAX_FOLIAGES];
-	int			FOLIAGE_PLANT_SELECTION[FOLIAGE_MAX_FOLIAGES];
-	float		FOLIAGE_PLANT_ANGLES[FOLIAGE_MAX_FOLIAGES];
-	float		FOLIAGE_PLANT_SCALE[FOLIAGE_MAX_FOLIAGES];
-	int			FOLIAGE_TREE_SELECTION[FOLIAGE_MAX_FOLIAGES];
-	float		FOLIAGE_TREE_ANGLES[FOLIAGE_MAX_FOLIAGES];
-	float		FOLIAGE_TREE_SCALE[FOLIAGE_MAX_FOLIAGES];
-
 	float		FOLIAGE_AREA_SIZE =				512;
 	float		FOLIAGE_VISIBLE_DISTANCE =		FOLIAGE_AREA_SIZE*3.5;
 	float		FOLIAGE_TREE_VISIBLE_DISTANCE = FOLIAGE_AREA_SIZE*70.0;
@@ -157,12 +146,26 @@ extern qboolean InFOV( vec3_t spot, vec3_t from, vec3_t fromAngles, int hFOV, in
 	vec3_t		FOLIAGE_AREAS_MINS[FOLIAGE_AREA_MAX];
 	vec3_t		FOLIAGE_AREAS_MAXS[FOLIAGE_AREA_MAX];
 
+
+	qboolean	FOLIAGE_LOADED = qfalse;
+	int			FOLIAGE_NUM_POSITIONS = 0;
+	vec3_t		FOLIAGE_POSITIONS[FOLIAGE_MAX_FOLIAGES];
+	vec3_t		FOLIAGE_NORMALS[FOLIAGE_MAX_FOLIAGES];
+	int			FOLIAGE_PLANT_SELECTION[FOLIAGE_MAX_FOLIAGES];
+	float		FOLIAGE_PLANT_ANGLES[FOLIAGE_MAX_FOLIAGES];
+	float		FOLIAGE_PLANT_SCALE[FOLIAGE_MAX_FOLIAGES];
+	int			FOLIAGE_TREE_SELECTION[FOLIAGE_MAX_FOLIAGES];
+	float		FOLIAGE_TREE_ANGLES[FOLIAGE_MAX_FOLIAGES];
+	float		FOLIAGE_TREE_SCALE[FOLIAGE_MAX_FOLIAGES];
+
+
 	qhandle_t	FOLIAGE_PLANT_MODEL[3] = { 0 };
 	qhandle_t	FOLIAGE_GRASS_BILLBOARD_SHADER[5] = { 0 };
 	qhandle_t	FOLIAGE_GRASS_BILLBOARD_MODEL[3] = { 0 };
 	qhandle_t	FOLIAGE_PLANT_BILLBOARD_MODEL[27] = { 0 };
 	qhandle_t	FOLIAGE_TREE_MODEL[3] = { 0 };
 	float		FOLIAGE_TREE_RADIUS[3] = { 0 };
+	float		FOLIAGE_TREE_ZOFFSET[3] = { 0 };
 	qhandle_t	FOLIAGE_TREE_BILLBOARD_SHADER[3] = { 0 };
 	float		FOLIAGE_TREE_BILLBOARD_SIZE[3] = { 0 };
 
@@ -368,8 +371,8 @@ void FOLIAGE_Calc_In_Range_Areas( void )
 extern "C" {
 	qboolean FOLIAGE_TreeSolidBlocking_AWP(vec3_t moveOrg)
 	{
-		int	FOLIAGE_CLOSE_AREA_LIST[8192];
-		int	FOLIAGE_CLOSE_AREA_LIST_COUNT = 0;
+		int	CLOSE_AREA_LIST[8192];
+		int	CLOSE_AREA_LIST_COUNT = 0;
 
 		for (int areaNum = 0; areaNum < FOLIAGE_AREAS_COUNT; areaNum++)
 		{
@@ -378,14 +381,14 @@ extern "C" {
 
 			if (DIST < FOLIAGE_AREA_SIZE * 2.0 || DIST2 < FOLIAGE_AREA_SIZE * 2.0)
 			{
-				FOLIAGE_CLOSE_AREA_LIST[FOLIAGE_CLOSE_AREA_LIST_COUNT] = areaNum;
-				FOLIAGE_CLOSE_AREA_LIST_COUNT++;
+				CLOSE_AREA_LIST[CLOSE_AREA_LIST_COUNT] = areaNum;
+				CLOSE_AREA_LIST_COUNT++;
 			}
 		}
 
-		for (int areaListPos = 0; areaListPos < FOLIAGE_CLOSE_AREA_LIST_COUNT; areaListPos++)
+		for (int areaListPos = 0; areaListPos < CLOSE_AREA_LIST_COUNT; areaListPos++)
 		{
-			int areaNum = FOLIAGE_CLOSE_AREA_LIST[areaListPos];
+			int areaNum = CLOSE_AREA_LIST[areaListPos];
 
 			for (int treeNum = 0; treeNum < FOLIAGE_AREAS_LIST_COUNT[areaNum]; treeNum++)
 			{
@@ -408,8 +411,8 @@ extern "C" {
 
 	qboolean FOLIAGE_TreeSolidBlocking_AWP_Path(vec3_t from, vec3_t to)
 	{
-		int	FOLIAGE_CLOSE_AREA_LIST[8192];
-		int	FOLIAGE_CLOSE_AREA_LIST_COUNT = 0;
+		int	CLOSE_AREA_LIST[8192];
+		int	CLOSE_AREA_LIST_COUNT = 0;
 
 		float fullDist = DistanceHorizontal(from, to);
 
@@ -420,8 +423,8 @@ extern "C" {
 
 			if (DIST < FOLIAGE_AREA_SIZE * 2.0 || DIST2 < FOLIAGE_AREA_SIZE * 2.0)
 			{
-				FOLIAGE_CLOSE_AREA_LIST[FOLIAGE_CLOSE_AREA_LIST_COUNT] = areaNum;
-				FOLIAGE_CLOSE_AREA_LIST_COUNT++;
+				CLOSE_AREA_LIST[CLOSE_AREA_LIST_COUNT] = areaNum;
+				CLOSE_AREA_LIST_COUNT++;
 			}
 		}
 
@@ -430,9 +433,9 @@ extern "C" {
 		vectoangles(dir, angles);
 		AngleVectors( angles, forward, NULL, NULL );
 
-		for (int areaListPos = 0; areaListPos < FOLIAGE_CLOSE_AREA_LIST_COUNT; areaListPos++)
+		for (int areaListPos = 0; areaListPos < CLOSE_AREA_LIST_COUNT; areaListPos++)
 		{
-			int areaNum = FOLIAGE_CLOSE_AREA_LIST[areaListPos];
+			int areaNum = CLOSE_AREA_LIST[areaListPos];
 
 			for (int treeNum = 0; treeNum < FOLIAGE_AREAS_LIST_COUNT[areaNum]; treeNum++)
 			{
@@ -623,6 +626,7 @@ extern "C" {
 				re.shaderRGBA[3] = 255;
 
 				re.origin[2] += re.radius;
+				re.origin[2] += FOLIAGE_TREE_ZOFFSET[FOLIAGE_TREE_SELECTION[num]-1];
 
 				angles[PITCH] = angles[ROLL] = 0.0f;
 				angles[YAW] = FOLIAGE_TREE_ANGLES[num];
@@ -638,6 +642,8 @@ extern "C" {
 				re.hModel = FOLIAGE_TREE_MODEL[FOLIAGE_TREE_SELECTION[num]-1];
 
 				VectorSet(re.modelScale, FOLIAGE_TREE_SCALE[num]*2.5, FOLIAGE_TREE_SCALE[num]*2.5, FOLIAGE_TREE_SCALE[num]*2.5);
+
+				re.origin[2] += FOLIAGE_TREE_ZOFFSET[FOLIAGE_TREE_SELECTION[num]-1];
 
 				angles[PITCH] = angles[ROLL] = 0.0f;
 				angles[YAW] = FOLIAGE_TREE_ANGLES[num];
@@ -848,9 +854,13 @@ extern "C" {
 			FOLIAGE_TREE_BILLBOARD_SIZE[1] = 204.0;
 			FOLIAGE_TREE_BILLBOARD_SIZE[2] = 112.0;
 
-			FOLIAGE_TREE_RADIUS[0] = 24.0;//42.0;
-			FOLIAGE_TREE_RADIUS[1] = 72.0;//96.0;
-			FOLIAGE_TREE_RADIUS[2] = 52.0;//58.0;
+			FOLIAGE_TREE_RADIUS[0] = 24.0;
+			FOLIAGE_TREE_RADIUS[1] = 72.0;
+			FOLIAGE_TREE_RADIUS[2] = 52.0;
+
+			FOLIAGE_TREE_ZOFFSET[0] = -64.0;
+			FOLIAGE_TREE_ZOFFSET[1] = 0.0;
+			FOLIAGE_TREE_ZOFFSET[2] = 0.0;
 
 			for (int i = 1; i < NUM_PLANT_SHADERS; i++)
 			{

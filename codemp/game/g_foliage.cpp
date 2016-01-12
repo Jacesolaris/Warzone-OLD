@@ -161,35 +161,46 @@ extern "C" {
 		return qfalse;
 	}
 
-	int	FOLIAGE_CLOSE_AREA_LIST[8192];
-	int	FOLIAGE_CLOSE_AREA_LIST_COUNT = 0;
-
-	void FOLIAGE_SetupClosestAreas( vec3_t moveOrg )
+	void FOLIAGE_SetupClosestAreas( gentity_t *ent, vec3_t moveOrg )
 	{
-		FOLIAGE_CLOSE_AREA_LIST_COUNT = 0;
+		qboolean areaChanged = qfalse;
 
-		for (int areaNum = 0; areaNum < FOLIAGE_AREAS_COUNT; areaNum++)
-		{
-			float DIST = DistanceHorizontal(FOLIAGE_AREAS_MINS[areaNum], moveOrg);
-			float DIST2 = DistanceHorizontal(FOLIAGE_AREAS_MAXS[areaNum], moveOrg);
+		if (ent->CURRENT_AREA < 0 
+			|| ent->CURRENT_AREA >= FOLIAGE_AREAS_COUNT
+			|| !(FOLIAGE_AREAS_MINS[ent->CURRENT_AREA][0] < moveOrg[0] && FOLIAGE_AREAS_MINS[ent->CURRENT_AREA][1] < moveOrg[1] && FOLIAGE_AREAS_MAXS[ent->CURRENT_AREA][0] >= moveOrg[0] && FOLIAGE_AREAS_MAXS[ent->CURRENT_AREA][1] >= moveOrg[1]))
+		{// If we have no valid CURRENT_AREA, or have move outside the current one, update...
+			ent->CURRENT_AREA = FOLIAGE_AreaNumForOrg( ent->r.currentOrigin );
+			areaChanged = qtrue;
+		}
 
-			if (DIST < FOLIAGE_AREA_SIZE * 2.0 || DIST2 < FOLIAGE_AREA_SIZE * 2.0)
+		if (areaChanged || DistanceHorizontal(ent->CLOSE_AREA_PREVIOUS_ORG, ent->r.currentOrigin) > 256)
+		{// Only update when the entity is moving...
+			ent->CLOSE_AREA_LIST_COUNT = 0;
+			VectorCopy(moveOrg, ent->CLOSE_AREA_PREVIOUS_ORG);
+
+			for (int areaNum = 0; areaNum < FOLIAGE_AREAS_COUNT; areaNum++)
 			{
-				FOLIAGE_CLOSE_AREA_LIST[FOLIAGE_CLOSE_AREA_LIST_COUNT] = areaNum;
-				FOLIAGE_CLOSE_AREA_LIST_COUNT++;
+				float DIST = DistanceHorizontal(FOLIAGE_AREAS_MINS[areaNum], moveOrg);
+				float DIST2 = DistanceHorizontal(FOLIAGE_AREAS_MAXS[areaNum], moveOrg);
+
+				if (DIST < FOLIAGE_AREA_SIZE * 2.0 || DIST2 < FOLIAGE_AREA_SIZE * 2.0)
+				{
+					ent->CLOSE_AREA_LIST[ent->CLOSE_AREA_LIST_COUNT] = areaNum;
+					ent->CLOSE_AREA_LIST_COUNT++;
+				}
 			}
 		}
 	}
 
-	qboolean FOLIAGE_TreeSolidBlocking(gentity_t *ent, vec3_t moveOrg)
+	qboolean FOLIAGE_TreeSolidBlocking( gentity_t *ent, vec3_t moveOrg )
 	{
 		if (ent->client && ent->client->sess.sessionTeam == FACTION_SPECTATOR) return qfalse;
 
-		FOLIAGE_SetupClosestAreas( moveOrg );
+		FOLIAGE_SetupClosestAreas( ent, moveOrg );
 
-		for (int areaListPos = 0; areaListPos < FOLIAGE_CLOSE_AREA_LIST_COUNT; areaListPos++)
+		for (int areaListPos = 0; areaListPos < ent->CLOSE_AREA_LIST_COUNT; areaListPos++)
 		{
-			int areaNum = FOLIAGE_CLOSE_AREA_LIST[areaListPos];
+			int areaNum = ent->CLOSE_AREA_LIST[areaListPos];
 
 			for (int treeNum = 0; treeNum < FOLIAGE_AREAS_LIST_COUNT[areaNum]; treeNum++)
 			{
