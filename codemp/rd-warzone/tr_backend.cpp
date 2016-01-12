@@ -2105,16 +2105,11 @@ const void *RB_PostProcess(const void *data)
 			}
 		}
 
-		/*if (r_testshader->integer)
+		if (r_testshader->integer)
 		{
-			int pass_num = 0;
-
-			//for (pass_num = 0; pass_num < 6; pass_num++)
-			{
-				RB_TestShader(srcFbo, srcBox, tr.genericFbo, dstBox, pass_num);
-				FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_NEAREST);
-			}
-		}*/
+			RB_TestShader(srcFbo, srcBox, tr.genericFbo, dstBox, 0);
+			FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+		}
 
 		if (r_sss->integer)
 		{
