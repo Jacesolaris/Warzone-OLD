@@ -217,10 +217,13 @@ void JKG_InitWeapons()
 {
 	damageSettings_t darea = { 0 };
 	darea.radial = qtrue;
-	darea.radiusParams.startRadius = TD_SPLASH_RAD;
-	darea.radiusParams.radiusFunc = RF_CONSTANT;
+	darea.radiusParams.startRadius = 0;
+	darea.radiusParams.endRadius = 128;
+	darea.radiusParams.radiusFunc = RF_CLAMP;
+	darea.radiusParams.endRadius = RF_CONSTANT;
 	darea.lifetime = 20000; //15000 you said ? that was an example. i don't know how long your fire efx lasts for oh xD ofc lol
-	darea.damage = TD_DAMAGE;
+	darea.damage = 50;
+	darea.damageDelay = 50;
 	darea.damageType = (1 << DT_FIRE);
 	thermalDetDamageSettings = JKG_RegisterDamageSettings(&darea);
 }
