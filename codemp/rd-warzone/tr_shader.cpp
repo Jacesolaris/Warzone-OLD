@@ -5848,6 +5848,31 @@ This creates generic shaders for anything that has none to support rend2 stuff..
 */
 
 #ifdef ___SHADER_GENERATOR___
+char uniqueGenericFoliageShader[] = "{\n"\
+"qer_editorimage	%s\n"\
+"q3map_alphashadow\n"\
+"q3map_material	GreenLeaves\n"\
+"surfaceparm trans\n"\
+"surfaceparm	noimpact\n"\
+"surfaceparm	nomarks\n"\
+"sort seethrough\n"\
+"cull	twosided\n"\
+"{\n"\
+"map %s\n"\
+"blendfunc GL_ONE GL_ZERO\n"\
+"alphaFunc GE128\n"\
+"depthWrite\n"\
+"rgbGen identity\n"\
+"}\n"\
+"{\n"\
+"map $lightmap\n"\
+"blendfunc GL_DST_COLOR GL_ZERO\n"\
+"rgbGen identity\n"\
+"depthFunc equal\n"\
+"}\n"\
+"}\n"\
+"";
+
 char uniqueGenericPlayerShader[] = "{\n"\
 "qer_editorimage	%s\n"\
 "q3map_nolightmap\n"\
@@ -5892,7 +5917,11 @@ char uniqueGenericShader[] = "{\n"\
 
 qboolean R_ForceGenericShader ( const char *name, const char *text )
 {
-	if (text && (StringsContainWord(name, text, "gfx") || StringsContainWord(name, text, "gfx_base")))
+	if (text && (StringsContainWord(name, text, "warzone/foliage") || StringsContainWord(name, text, "warzone/tree")))
+		return qtrue;
+	else if (text && (StringsContainWord(name, text, "warzone\\foliage") || StringsContainWord(name, text, "warzone\\tree")))
+		return qtrue;
+	else if (text && (StringsContainWord(name, text, "gfx") || StringsContainWord(name, text, "gfx_base")))
 		return qfalse;
 	else if (text && (StringsContainWord(name, text, "glow") || StringsContainWord(name, name, "icon")))
 		return qfalse;
@@ -6034,6 +6063,10 @@ shader_t *R_FindShader( const char *name, const int *lightmapIndexes, const byte
 		// Generate the shader...
 		if (StringContainsWord(strippedName, "player"))
 			sprintf(myShader, uniqueGenericPlayerShader, strippedName, strippedName);
+		else if (StringContainsWord(strippedName, "warzone/foliage") || StringContainsWord(strippedName, "warzone/tree"))
+			sprintf(myShader, uniqueGenericFoliageShader, strippedName, strippedName);
+		else if (StringContainsWord(strippedName, "warzone\\foliage") || StringContainsWord(strippedName, "warzone\\tree"))
+			sprintf(myShader, uniqueGenericFoliageShader, strippedName, strippedName);
 		else if (StringContainsWord(strippedName, "weapon"))
 			sprintf(myShader, uniqueGenericWeaponShader, strippedName, strippedName, strippedName);
 		else
