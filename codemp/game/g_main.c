@@ -973,7 +973,10 @@ void G_InitGame( int levelTime, int randomSeed, int restart ) {
 
 	G_LogWeaponInit();
 
-	JKG_InitWeapons();
+
+	WP_Grenade_CryoBanDamage();
+
+	WP_Thermal_FireDamage();
 
 	G_CacheGametype();
 

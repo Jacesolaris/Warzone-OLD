@@ -104,6 +104,7 @@ typedef enum {
 	// Add new grenades/explosives here...
 	WP_FRAG_GRENADE,
 	WP_FRAG_GRENADE_OLD,
+	WP_CYROBAN_GRENADE,
 	WP_TRIP_MINE,
 	// START: Do not change anything between these 2 comments...
 	WP_DET_PACK,

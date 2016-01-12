@@ -600,6 +600,7 @@ static void CG_ItemPickup( int itemNum ) {
 				bg_itemlist[itemNum].giTag != WP_CW_ROCKET_LAUNCHER &&
 				bg_itemlist[itemNum].giTag != WP_FRAG_GRENADE &&
 				bg_itemlist[itemNum].giTag != WP_FRAG_GRENADE_OLD &&
+				bg_itemlist[itemNum].giTag != WP_CYROBAN_GRENADE &&
 				bg_itemlist[itemNum].giTag > cg.snap->ps.weapon &&
 				cg.snap->ps.weapon != WP_SABER)
 			{
@@ -1417,6 +1418,7 @@ void CG_G2MarkEvent(entityState_t *es)
 			pOwner->modelScale, Q_irand(10000, 20000));
 		break;
 
+	case WP_CYROBAN_GRENADE:
 	case WP_FRAG_GRENADE:
 	case WP_FRAG_GRENADE_OLD:
 	case WP_CW_ROCKET_LAUNCHER:

@@ -6691,6 +6691,7 @@ static qboolean PM_DoChargedWeapons( qboolean vehicleRocketLock, bgEntity_t *veh
 				break;
 
 				//------------------
+			case WP_CYROBAN_GRENADE:
 			case WP_FRAG_GRENADE_OLD:
 			case WP_FRAG_GRENADE:
 			case WP_THERMAL:
@@ -7307,6 +7308,7 @@ static void PM_Weapon( void )
 		&& pm->ps->weapon != WP_THERMAL//not using thermals
 		&& pm->ps->weapon != WP_FRAG_GRENADE
 		&& pm->ps->weapon != WP_FRAG_GRENADE_OLD
+		&& pm->ps->weapon != WP_CYROBAN_GRENADE
 		&& !pm->ps->m_iVehicleNum )//not a vehicle or in a vehicle
 	{ //check for exceeding max charge time if not using disruptor or rocket launcher or thermals
 		if ( pm->ps->weaponstate == WEAPON_CHARGING_ALT )
@@ -7683,6 +7685,7 @@ static void PM_Weapon( void )
 		if (pm->ps->weapon == WP_THERMAL ||
 			pm->ps->weapon == WP_FRAG_GRENADE ||
 			pm->ps->weapon == WP_FRAG_GRENADE_OLD ||
+			pm->ps->weapon == WP_CYROBAN_GRENADE ||
 			pm->ps->weapon == WP_TRIP_MINE ||
 			pm->ps->weapon == WP_DET_PACK)
 		{
@@ -7703,6 +7706,14 @@ static void PM_Weapon( void )
 				}
 			}
 			else if (pm->ps->weapon == WP_FRAG_GRENADE_OLD)
+			{
+				if ((pm->ps->torsoAnim) == WeaponAttackAnim[pm->ps->weapon] &&
+					(pm->ps->weaponTime - 200) <= 0)
+				{
+					PM_StartTorsoAnim(WeaponReadyAnim[pm->ps->weapon]);
+				}
+			}
+			else if (pm->ps->weapon == WP_CYROBAN_GRENADE)
 			{
 				if ((pm->ps->torsoAnim) == WeaponAttackAnim[pm->ps->weapon] &&
 					(pm->ps->weaponTime - 200) <= 0)
@@ -8507,6 +8518,11 @@ void PM_UpdateViewAngles( playerState_t *ps, const usercmd_t *cmd ) {
 
 	if ( ps->pm_type == PM_INTERMISSION || ps->pm_type == PM_SPINTERMISSION) {
 		return;		// no view changes at all
+	}
+
+	if (ps->pm_type == PM_LOCK || ps->pm_type == PM_NOMOVE) {
+		// No view changes
+		return;
 	}
 
 	if ( ps->pm_type != PM_SPECTATOR && ps->stats[STAT_HEALTH] <= 0 ) {
@@ -10707,7 +10723,6 @@ qboolean PM_WeaponOkOnVehicle( int weapon )
 	case WP_SABER:
 	case WP_BLASTER:
 	case WP_A280:
-	//case WP_THERMAL:
 		return qtrue;
 		break;
 	}
@@ -11735,7 +11750,7 @@ void PmoveSingle (pmove_t *pmove) {
 		}
 	}
 
-	if (pm->ps->pm_type == PM_FREEZE) {
+	if (pm->ps->pm_type == PM_FREEZE || pm->ps->pm_type == PM_LOCK) {
 		return;		// no movement at all
 	}
 
@@ -12184,6 +12199,7 @@ Can be called by either the server or the client
 */
 void Pmove (pmove_t *pmove) {
 	int			finalTime;
+	qboolean	locked = qfalse;
 
 	finalTime = pmove->cmd.serverTime;
 
@@ -12201,6 +12217,15 @@ void Pmove (pmove_t *pmove) {
 		pmove->cmd.rightmove = 0;
 		pmove->cmd.upmove = 0;
 		pmove->cmd.buttons = 0;
+	}
+
+	if (pmove->ps->pm_type == PM_NOMOVE) {
+		pmove->cmd.forwardmove = 0;
+		pmove->cmd.rightmove = 0;
+		pmove->cmd.upmove = 0;
+		pmove->cmd.buttons = 0;
+		locked = qtrue;
+		pmove->ps->pm_type = PM_NORMAL;		// Hack, i know, but this way we can still do the normal pmove stuff
 	}
 
 	pmove->ps->pmove_framecount = (pmove->ps->pmove_framecount+1) & ((1<<PS_PMOVEFRAMECOUNTBITS)-1);
@@ -12229,6 +12254,9 @@ void Pmove (pmove_t *pmove) {
 		if ( pmove->ps->pm_flags & PMF_JUMP_HELD ) {
 			pmove->cmd.upmove = 20;
 		}
+	}
+	if (locked) {
+		pmove->ps->pm_type = PM_NOMOVE;		// Restore it
 	}
 }
 

@@ -3753,6 +3753,7 @@ cg.time should be between oldFrameTime and frameTime after exit
 */
 static void CG_RunLerpFrame( centity_t *cent, clientInfo_t *ci, lerpFrame_t *lf, qboolean flipState, int newAnimation, float speedScale, qboolean torsoOnly)
 {
+	
 	// debugging tool to get no animations
 	if ( cg_animSpeed.integer == 0 ) {
 		lf->oldFrame = lf->frame = lf->backlerp = 0;
@@ -3778,31 +3779,32 @@ static void CG_RunLerpFrame( centity_t *cent, clientInfo_t *ci, lerpFrame_t *lf,
 	// JKG: Freezing/stun
 	/*else if (JKG_DamageTypeFreezes((const damageType_t)cent->currentState.damageTypeFlags))
 	{
-	const animation_t *torsoAnimData = &bgAllAnims[cent->localAnimIndex].anims[cent->currentState.freezeTorsoAnim];
-	int torsoAnimFrame = torsoAnimData->firstFrame + torsoAnimData->numFrames;
+		int i;
+		const animation_t *torsoAnimData = &bgAllAnims[cent->localAnimIndex].anims[cent->currentState.freezeTorsoAnim];
+		int torsoAnimFrame = torsoAnimData->firstFrame + torsoAnimData->numFrames;
 
-	if (!torsoOnly)
-	{
-	const animation_t *legsAnimData = &bgAllAnims[cent->localAnimIndex].anims[cent->currentState.freezeLegsAnim];
-	int legsAnimFrame = legsAnimData->firstFrame + legsAnimData->numFrames;
-	trap->G2API_SetBoneAnim(cent->ghoul2, 0, "model_root", legsAnimFrame, legsAnimFrame, BONE_ANIM_OVERRIDE_FREEZE | BONE_ANIM_BLEND, 1.0f, cg.time, -1, 150);
-	for (i = 0; i < ARMSLOT_MAX; i++)
-	{
-	if (cent->armorGhoul2[i] && trap->G2_HaveWeGhoul2Models(cent->armorGhoul2[i]))
-	{
-	trap->G2API_SetBoneAnim(cent->armorGhoul2[i], 0, "model_root", legsAnimFrame, legsAnimFrame, BONE_ANIM_OVERRIDE_FREEZE | BONE_ANIM_BLEND, 1.0f, cg.time, -1, 150);
-	}
-	}
-	}
+		if (!torsoOnly)
+		{
+			const animation_t *legsAnimData = &bgAllAnims[cent->localAnimIndex].anims[cent->currentState.freezeLegsAnim];
+			int legsAnimFrame = legsAnimData->firstFrame + legsAnimData->numFrames;
+			trap->G2API_SetBoneAnim(cent->ghoul2, 0, "model_root", legsAnimFrame, legsAnimFrame, BONE_ANIM_OVERRIDE_FREEZE | BONE_ANIM_BLEND, 1.0f, cg.time, -1, 150);
+			for (i = 0; i < FREEZEANIM_MAX; i++)
+			{
+				if (cent->freezeGhoul2[i] && trap->G2_HaveWeGhoul2Models(cent->freezeGhoul2[i]))
+				{
+					trap->G2API_SetBoneAnim(cent->freezeGhoul2[i], 0, "model_root", legsAnimFrame, legsAnimFrame, BONE_ANIM_OVERRIDE_FREEZE | BONE_ANIM_BLEND, 1.0f, cg.time, -1, 150);
+				}
+			}
+		}
 
-	trap->G2API_SetBoneAnim(cent->ghoul2, 0, "lower_lumbar", torsoAnimFrame, torsoAnimFrame, BONE_ANIM_OVERRIDE_FREEZE | BONE_ANIM_BLEND, 1.0f, cg.time, -1, 150);
-	for (i = 0; i < ARMSLOT_MAX; i++)
-	{
-	if (cent->armorGhoul2[i] && trap->G2_HaveWeGhoul2Models(cent->armorGhoul2[i]))
-	{
-	trap->G2API_SetBoneAnim(cent->armorGhoul2[i], 0, "lower_lumbar", torsoAnimFrame, torsoAnimFrame, BONE_ANIM_OVERRIDE_FREEZE | BONE_ANIM_BLEND, 1.0f, cg.time, -1, 150);
-	}
-	}
+		trap->G2API_SetBoneAnim(cent->ghoul2, 0, "lower_lumbar", torsoAnimFrame, torsoAnimFrame, BONE_ANIM_OVERRIDE_FREEZE | BONE_ANIM_BLEND, 1.0f, cg.time, -1, 150);
+		for (i = 0; i < FREEZEANIM_MAX; i++)
+		{
+			if (cent->freezeGhoul2[i] && trap->G2_HaveWeGhoul2Models(cent->freezeGhoul2[i]))
+			{
+				trap->G2API_SetBoneAnim(cent->freezeGhoul2[i], 0, "lower_lumbar", torsoAnimFrame, torsoAnimFrame, BONE_ANIM_OVERRIDE_FREEZE | BONE_ANIM_BLEND, 1.0f, cg.time, -1, 150);
+			}
+		}
 	}*/
 	else
 	{
@@ -19139,6 +19141,22 @@ stillDoSaber:
 
 		//goto endOfCall;
 		return;
+	}
+	else if (cent->currentState.eFlags & EF_FROZEN || cent->currentState.damageTypeFlags & (1 << DT_FREEZE) ||
+		cent->currentState.damageTypeFlags & (1 << DT_CARBONITE)) {
+		if (!cent->miscTime) {
+			cent->miscTime = legs.frame;
+		}
+		trap->G2API_SetBoneAnim(legs.ghoul2, 0, "model_root", cent->miscTime, cent->miscTime, BONE_ANIM_OVERRIDE_FREEZE, 1.0f, cg.time, cent->miscTime, -1);
+		if (!cent->noLumbar)
+		{
+			trap->G2API_SetBoneAnim(legs.ghoul2, 0, "lower_lumbar", cent->miscTime, cent->miscTime, BONE_ANIM_OVERRIDE_FREEZE, 1.0f, cg.time, cent->miscTime, -1);
+
+			if (cent->localAnimIndex < NUM_RESERVED_ANIMSETS)
+			{
+				trap->G2API_SetBoneAnim(legs.ghoul2, 0, "Motion", cent->miscTime, cent->miscTime, BONE_ANIM_OVERRIDE_FREEZE, 1.0f, cg.time, cent->miscTime, -1);
+			}
+		}
 	}
 	else
 	{

@@ -64,6 +64,7 @@ vec3_t WP_MuzzlePoint[WP_NUM_WEAPONS] =
 	{12,	0,		-4	},	// WP_THERMAL,
 	{12,	0,		-4	},	// WP_FRAG_GRENADE,
 	{12,	0,		-4	},	// WP_FRAG_GRENADE_OLD,
+	{12,	0,		-4	},	// WP_CYROBAN_GRENADE,
 	{12,	0,		-10	},	// WP_TRIP_MINE,
 	{12,	0,		-4	},	// WP_DET_PACK,
 
@@ -136,6 +137,7 @@ weaponData_t weaponData[WP_NUM_WEAPONS] = {
 	{ "Thermal Detonator",							800,		8192,		400,			8192,		0,				0,					0,			0,				0,			0	},
 	{ "Frag Grenade",								800,		8192,		400,			8192,		0,				0,					0,			0,				0,			0	},
 	{ "Old Frag Grenade",							800,		8192,		400,			8192,		0,				0,					0,			0,				0,			0	},
+	{ "CryoBan Grenade",							800,		8192,		400,			8192,		0,				0,					0,			0,				0,			0	},
 	{ "Trip Mine",									800,		8192,		400,			8192,		0,				0,					0,			0,				0,			0	},	
 	{ "Det Pack",									800,		8192,		400,			8192,		0,				0,					0,			0,				0,			0	},
 	{ "Emplaced Gun",								100,		8192,		100,			8192,		0,				0,					0,			0,				0,			0	},
@@ -158,6 +160,7 @@ qboolean IsRollWithPistols(int weapon)
 	case WP_THERMAL:
 	case WP_FRAG_GRENADE:
 	case WP_FRAG_GRENADE_OLD:
+	case WP_CYROBAN_GRENADE:
 	case WP_DC_17_CLONE_PISTOL:
 	case WP_SPOTING_BLASTER:
 	case WP_A200_ACP_PISTOL:

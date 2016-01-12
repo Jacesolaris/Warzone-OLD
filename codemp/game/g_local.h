@@ -1388,9 +1388,13 @@ void CalcSecondMuzzlePoint(gentity_t *ent, vec3_t forward, vec3_t right, vec3_t 
 void SnapVectorTowards( vec3_t v, vec3_t to );
 qboolean CheckGauntletAttack( gentity_t *ent );
 
-void JKG_InitWeapons();
+extern qhandle_t GrenadeCryoBanDamageSettings;
+void WP_Grenade_CryoBanDamage();
 
 extern qhandle_t thermalDetDamageSettings;
+void WP_Thermal_FireDamage();
+
+
 
 
 

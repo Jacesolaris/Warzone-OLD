@@ -2337,14 +2337,26 @@ void ClientThink_real( gentity_t *ent ) {
 			client->ps.eFlags &= ~EF_JETPACK;
 		}
 	}
-
+	if (client->pmnomove) {
+		client->ps.pm_type = PM_NOMOVE;
+	} else if (client->pmfreeze) { // JKG - Implement freeze and lock
+		ent->s.eFlags |= EF_FROZEN;
+		if (client->pmlock) {
+			client->ps.pm_type = PM_LOCK;
+		} else {
+			client->ps.pm_type = PM_FREEZE;
+		}
+	} 
+	else 
+	{
 	if ( client->noclip ) {
 		client->ps.pm_type = PM_NOCLIP;
 	} else if ( client->ps.eFlags & EF_DISINTEGRATION ) {
 		client->ps.pm_type = PM_NOCLIP;
 	} else if ( client->ps.stats[STAT_HEALTH] <= 0 ) {
 		client->ps.pm_type = PM_DEAD;
-	} else {
+	}
+	else {
 		if (client->ps.forceGripChangeMovetype)
 		{
 			client->ps.pm_type = client->ps.forceGripChangeMovetype;
@@ -2377,6 +2389,7 @@ void ClientThink_real( gentity_t *ent ) {
 				client->ps.pm_type = PM_NORMAL;
 			}
 #endif
+			}
 		}
 	}
 

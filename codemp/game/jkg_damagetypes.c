@@ -39,6 +39,7 @@ static damageArea_t damageAreas[MAX_DAMAGE_AREAS];
 
 // Weapon-specific stuff
 qhandle_t thermalDetDamageSettings;
+qhandle_t GrenadeCryoBanDamageSettings;
 
 static struct
 {

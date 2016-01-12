@@ -174,6 +174,14 @@ typedef struct debuffVisualsData_s
 	int stunStartTime;
 } debuffVisualsData_t;
 
+// typedef enum
+// {
+// 	FREEZEANIM_HEAD,
+// 	FREEZEANIM_TORSO,
+// 	FREEZEANIM_LEGS,
+// 	FREEZEANIM_MAX
+// } freezeAnim_t;
+
 
 //=================================================
 
@@ -528,7 +536,7 @@ typedef struct centity_s {
 	//[/VisualWeapons]
 
 	debuffVisualsData_t debuffVisuals;
-
+	//void	*freezeGhoul2[FREEZEANIM_MAX];// cheap way of doing this but i had to do something to make this happen.
 
 	int blastercannonBarrelRotationTime;
 	int blastercannonBarrelRotationAngle;

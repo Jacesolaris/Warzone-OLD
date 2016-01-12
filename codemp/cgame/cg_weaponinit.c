@@ -2215,6 +2215,53 @@ void CG_RegisterWeapon( int weaponNum) {
 		cgs.effects.blasterDroidImpactEffect = trap->FX_RegisterEffect("blaster/droid_impact");
 		break;
 
+	case WP_CYROBAN_GRENADE:
+		weaponInfo->selectSound = trap->S_RegisterSound("sound/weapons/thermal/select.wav");
+		weaponInfo->flashSound[0] = trap->S_RegisterSound("sound/weapons/melee/swing1.mp3");
+		weaponInfo->flashSound[1] = trap->S_RegisterSound("sound/weapons/melee/swing2.mp3");
+		weaponInfo->flashSound[2] = trap->S_RegisterSound("sound/weapons/melee/swing3.mp3");
+		weaponInfo->flashSound[3] = trap->S_RegisterSound("sound/weapons/melee/swing4.mp3");
+		weaponInfo->firingSound = NULL_SOUND;
+		weaponInfo->chargeSound = trap->S_RegisterSound("sound/weapons/thermal/charge.wav");
+		weaponInfo->muzzleEffect = NULL_FX;
+		weaponInfo->missileModel = trap->R_RegisterModel("models/weapons/Grenade_CryoBan/model_proj.md3");
+		weaponInfo->missileSound = NULL_SOUND;
+		weaponInfo->missileDlight = 0;
+		weaponInfo->missileHitSound = NULL_SOUND;
+		weaponInfo->missileTrailFunc = FX_ThermalProjectileThink;;
+		weaponInfo->altFlashSound[0] = trap->S_RegisterSound("sound/weapons/melee/swing1.mp3");
+		weaponInfo->altFlashSound[1] = trap->S_RegisterSound("sound/weapons/melee/swing2.mp3");
+		weaponInfo->altFlashSound[2] = trap->S_RegisterSound("sound/weapons/melee/swing3.mp3");
+		weaponInfo->altFlashSound[3] = trap->S_RegisterSound("sound/weapons/melee/swing4.mp3");
+		weaponInfo->altFiringSound = NULL_SOUND;
+		weaponInfo->altChargeSound = trap->S_RegisterSound("sound/weapons/grenade_cook.wav");
+		weaponInfo->altMuzzleEffect = NULL_FX;
+		weaponInfo->altMissileModel = trap->R_RegisterModel("models/weapons/Grenade_CryoBan/model_proj.md3");
+		weaponInfo->altMissileSound = NULL_SOUND;
+		weaponInfo->altMissileDlight = 0;
+		weaponInfo->altMissileHitSound = NULL_SOUND;
+		weaponInfo->altMissileTrailFunc = FX_PulseGrenadeProjectileThink;
+
+		weaponInfo->missileWallImpactfx = trap->FX_RegisterEffect("weapons/grenaderibbon_red");
+		weaponInfo->altMissileWallImpactfx = trap->FX_RegisterEffect("weapons/grenaderibbon_red");
+
+		weaponInfo->fleshImpactEffect = trap->FX_RegisterEffect("orginal_weapon_efx/rocket/explosion");
+		weaponInfo->altFleshImpactEffect = trap->FX_RegisterEffect("orginal_weapon_efx/rocket/explosion"); // not sure about this one
+		weaponInfo->missileWallImpactfx = trap->FX_RegisterEffect("orginal_weapon_efx/rocket/explosion");
+		weaponInfo->altMissileWallImpactfx = trap->FX_RegisterEffect("orginal_weapon_efx/rocket/explosion");
+
+		weaponInfo->EnhancedFX_fleshImpact = trap->FX_RegisterEffect("explosives/cryobanmedium");
+		weaponInfo->EnhancedFX_altfleshImpact = trap->FX_RegisterEffect("explosives/cryobanmedium");
+		weaponInfo->EnhancedFX_missileWallImpactfx = trap->FX_RegisterEffect("explosives/cryobanmedium");
+		weaponInfo->EnhancedFX_altmissileWallImpactfx = trap->FX_RegisterEffect("explosives/cryobanmedium");
+
+
+		cgs.media.grenadeBounce1 = trap->S_RegisterSound("sound/weapons/grenade_bounce1.mp3");
+		cgs.media.grenadeBounce2 = trap->S_RegisterSound("sound/weapons/grenade_bounce2.mp3");
+		trap->S_RegisterSound("sound/weapons/grenade_thermdetloop.mp3");
+		trap->S_RegisterSound("sound/weapons/thermal/warning.wav");
+		break;
+
 // old weapons don't add anything under here. Stoiss
 	case WP_ROCKET_LAUNCHER:
 		weaponInfo->selectSound = trap->S_RegisterSound("sound/weapons/rocket/select.wav");

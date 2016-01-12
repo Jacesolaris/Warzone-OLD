@@ -195,6 +195,10 @@ void G_BounceMissile( gentity_t *ent, trace_t *trace, qboolean HIT_TREE ) {
 	{ //slight hack for hit sound
 		G_Sound(ent, CHAN_BODY, G_SoundIndex(va("sound/weapons/thermal/bounce%i.wav", Q_irand(1, 2))));
 	}
+	else if (ent->s.weapon == WP_CYROBAN_GRENADE)
+	{ //slight hack for hit sound
+		G_Sound(ent, CHAN_BODY, G_SoundIndex(va("sound/weapons/thermal/bounce%i.wav", Q_irand(1, 2))));
+	}
 	else if (ent->s.weapon == WP_SABER)
 	{
 		G_Sound(ent, CHAN_BODY, G_SoundIndex(va("sound/weapons/saber/bounce%i.wav", Q_irand(1, 3))));
@@ -543,6 +547,7 @@ void G_MissileImpact(gentity_t *ent, trace_t *trace, qboolean HIT_TREE) {
 		ent->s.weapon != WP_CW_ROCKET_LAUNCHER &&
 		ent->s.weapon != WP_FRAG_GRENADE &&
 		ent->s.weapon != WP_FRAG_GRENADE_OLD &&
+		ent->s.weapon != WP_CYROBAN_GRENADE &&
 		ent->s.weapon != WP_THERMAL &&
 		ent->s.weapon != WP_TRIP_MINE &&
 		ent->s.weapon != WP_DET_PACK &&
@@ -578,6 +583,7 @@ void G_MissileImpact(gentity_t *ent, trace_t *trace, qboolean HIT_TREE) {
 		ent->s.weapon != WP_CW_ROCKET_LAUNCHER &&
 		ent->s.weapon != WP_FRAG_GRENADE &&
 		ent->s.weapon != WP_FRAG_GRENADE_OLD &&
+		ent->s.weapon != WP_CYROBAN_GRENADE &&
 		ent->s.weapon != WP_THERMAL &&
 		ent->s.weapon != WP_TRIP_MINE &&
 		ent->s.weapon != WP_DET_PACK &&
@@ -654,6 +660,7 @@ void G_MissileImpact(gentity_t *ent, trace_t *trace, qboolean HIT_TREE) {
 			ent->s.weapon != WP_CW_ROCKET_LAUNCHER &&
 			ent->s.weapon != WP_FRAG_GRENADE &&
 			ent->s.weapon != WP_FRAG_GRENADE_OLD &&
+			ent->s.weapon != WP_CYROBAN_GRENADE &&
 			ent->s.weapon != WP_THERMAL &&
 			ent->s.weapon != WP_TRIP_MINE &&
 			ent->s.weapon != WP_DET_PACK &&
@@ -742,7 +749,8 @@ void G_MissileImpact(gentity_t *ent, trace_t *trace, qboolean HIT_TREE) {
 			vec3_t	velocity;
 			qboolean didDmg = qfalse;
 
-			if (LogAccuracyHit(other, &g_entities[ent->r.ownerNum])) {
+			if (LogAccuracyHit(other, &g_entities[ent->r.ownerNum])) 
+			{
 				g_entities[ent->r.ownerNum].client->accuracy_hits++;
 				hitClient = qtrue;
 			}
@@ -751,6 +759,26 @@ void G_MissileImpact(gentity_t *ent, trace_t *trace, qboolean HIT_TREE) {
 				velocity[2] = 1;	// stepped on a grenade
 			}
 
+			if (ent->s.weapon == WP_THERMAL && (ent->s.eFlags & EF_FIRING))
+			{
+				JKG_DoDamage(thermalDetDamageSettings, other, ent, g_entities + ent->r.ownerNum,
+					velocity, ent->r.currentOrigin, 0, ent->methodOfDeath);
+			}
+			else
+			{
+				G_Damage(other, ent, &g_entities[ent->r.ownerNum], velocity, ent->r.currentOrigin, ent->damage, 0, ent->methodOfDeath);
+			}
+			
+			if (ent->s.weapon == WP_CYROBAN_GRENADE && (ent->s.eFlags & EF_FIRING))
+			{
+				JKG_DoDamage(GrenadeCryoBanDamageSettings, other, ent, g_entities + ent->r.ownerNum,
+					velocity, ent->r.currentOrigin, 0, ent->methodOfDeath);
+			}
+			else
+			{
+				G_Damage(other, ent, &g_entities[ent->r.ownerNum], velocity, ent->r.currentOrigin, ent->damage, 0, ent->methodOfDeath);
+			}
+		
 			if (ent->s.weapon == WP_BOWCASTER || ent->s.weapon == WP_FLECHETTE || ent->s.weapon == WP_ROCKET_LAUNCHER 
 				|| ent->s.weapon == WP_E60_ROCKET_LAUNCHER || ent->s.weapon == WP_CW_ROCKET_LAUNCHER)
 
@@ -769,12 +797,16 @@ void G_MissileImpact(gentity_t *ent, trace_t *trace, qboolean HIT_TREE) {
 					if (ent->think == WP_flechette_alt_blow)
 						ent->think(ent);
 				}
-				else if (ent->s.weapon == WP_THERMAL && (ent->s.eFlags & EF_FIRING))
+				/*else if (ent->s.weapon == WP_THERMAL && (ent->s.eFlags & EF_FIRING))
 				{
-					JKG_DoDamage(
-						thermalDetDamageSettings, other, ent, g_entities + ent->r.ownerNum,
+					JKG_DoDamage(thermalDetDamageSettings, other, ent, g_entities + ent->r.ownerNum,
 						velocity, ent->r.currentOrigin, 0, ent->methodOfDeath);
 				}
+				else if (ent->s.weapon == WP_CYROBAN_GRENADE && (ent->s.eFlags & EF_FIRING))
+				{
+					JKG_DoDamage(GrenadeCryoBanDamageSettings, other, ent, g_entities + ent->r.ownerNum,
+						velocity, ent->r.currentOrigin, 0, ent->methodOfDeath);
+				}*/
 				else
 				{
 					G_Damage(other, ent, &g_entities[ent->r.ownerNum], velocity,

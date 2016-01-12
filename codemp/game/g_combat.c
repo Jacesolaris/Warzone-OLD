@@ -516,7 +516,12 @@ void TossClientWeapon(gentity_t *self, vec3_t direction, float speed)
 	launched->count = bg_itemlist[BG_GetItemIndexByTag(weapon, IT_WEAPON)].quantity;
 
 
-	if (weapon != WP_THERMAL && weapon != WP_FRAG_GRENADE && weapon != WP_FRAG_GRENADE_OLD && weapon != WP_DET_PACK && weapon != WP_TRIP_MINE)
+	if (weapon != WP_THERMAL 
+		&& weapon != WP_FRAG_GRENADE 
+		&& weapon != WP_FRAG_GRENADE_OLD 
+		&& weapon != WP_CYROBAN_GRENADE 
+		&& weapon != WP_DET_PACK 
+		&& weapon != WP_TRIP_MINE)
 	{
 		int i = 0;
 		int weap = -1;
@@ -2239,6 +2244,10 @@ void player_die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int
 	}
 
 	self->client->ps.emplacedIndex = 0;
+
+	self->client->pmfreeze = qfalse;
+	self->client->pmlock = qfalse;
+	self->client->pmnomove = qfalse;
 
 	G_BreakArm(self, 0); //unbreak anything we have broken
 	self->client->ps.saberEntityNum = self->client->saberStoredIndex; //in case we died while our saber was knocked away.

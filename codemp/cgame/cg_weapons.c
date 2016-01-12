@@ -1784,6 +1784,7 @@ void CG_Weapon_f( void ) {
 
 		if (cg.snap->ps.weapon >= WP_THERMAL && cg.snap->ps.weapon >= WP_FRAG_GRENADE 
 			&& cg.snap->ps.weapon >= WP_FRAG_GRENADE_OLD
+			&& cg.snap->ps.weapon >= WP_CYROBAN_GRENADE
 			&& cg.snap->ps.weapon <= WP_DET_PACK)
 		{
 			// already in cycle range so start with next cycle item
@@ -1904,6 +1905,7 @@ void CG_WeaponClean_f( void ) {
 
 		if (cg.snap->ps.weapon >= WP_THERMAL && cg.snap->ps.weapon >= WP_FRAG_GRENADE 
 			&& cg.snap->ps.weapon >= WP_FRAG_GRENADE_OLD
+			&& cg.snap->ps.weapon >= WP_CYROBAN_GRENADE
 			&& cg.snap->ps.weapon <= WP_DET_PACK)
 		{
 			// already in cycle range so start with next cycle item
@@ -2323,6 +2325,7 @@ void CG_MissileHitWall(int weapon, int clientNum, vec3_t origin, vec3_t dir, imp
 		FX_RocketHitWall(origin, dir, weapon, altFire);
 		break;
 
+	case WP_CYROBAN_GRENADE:
 	case WP_FRAG_GRENADE_OLD:
 	case WP_FRAG_GRENADE:
 	case WP_THERMAL:
@@ -2403,6 +2406,7 @@ void CG_MissileHitPlayer(int weapon, vec3_t origin, vec3_t dir, int entityNum, q
 		FX_RocketHitPlayer( origin, dir, humanoid, weapon, altFire );
 		break;
 
+	case WP_CYROBAN_GRENADE:
 	case WP_FRAG_GRENADE_OLD:
 	case WP_FRAG_GRENADE:
 	case WP_THERMAL:

@@ -300,11 +300,12 @@ extern qboolean			BGPAFtextLoaded;
 extern animation_t		bgHumanoidAnimations[MAX_TOTALANIMATIONS];
 
 #ifdef __MMO__
+#define NUM_RESERVED_ANIMSETS (3)
 #define MAX_ANIM_FILES	128
 #else //!__MMO__
 #define MAX_ANIM_FILES	16
 #endif //__MMO__
-#define MAX_ANIM_EVENTS 300
+#define MAX_ANIM_EVENTS 600	// Raised from 300 to 600
 
 typedef enum
 {
@@ -413,7 +414,10 @@ typedef enum {
 	PM_DEAD,		// no acceleration or turning, but free falling
 	PM_FREEZE,		// stuck in place with no control
 	PM_INTERMISSION,	// no movement or status bar
-	PM_SPINTERMISSION	// no movement or status bar
+	PM_SPINTERMISSION,	// no movement or status bar
+
+	PM_LOCK,		// Fully stop all motion whatsoever, including turning
+	PM_NOMOVE,		// Stop movement keys, but keep pmove itself intact
 } pmtype_t;
 
 typedef enum {
@@ -641,7 +645,7 @@ typedef enum {
 #define	EF_WEAPON_CHARGE		(1<<15)		// Used for charge efx
 
 #define	EF_WEAPON_ALT_CHARGE	(1<<16)		// not used
-#define	EF_NOT_USED_3			(1<<17)		// not used
+#define	EF_FROZEN				(1<<17)		// used for freeze grenades
 #define	EF_NOT_USED_4			(1<<18)		// not used
 
 #define	EF_BODYPUSH				(1<<19)		//rww - claiming this for fullbody push effect

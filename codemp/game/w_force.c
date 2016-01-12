@@ -1949,11 +1949,13 @@ void ForceShootLightning( gentity_t *self )
 				continue;
 			if ( traceEnt == self )
 				continue;
-			if ( traceEnt->r.ownerNum == self->s.number && traceEnt->s.weapon != WP_THERMAL )//can push your own thermals
+			if ( traceEnt->r.ownerNum == self->s.number && traceEnt->s.weapon != WP_CYROBAN_GRENADE )//can push your own thermals
 				continue;
 			if (traceEnt->r.ownerNum == self->s.number && traceEnt->s.weapon != WP_FRAG_GRENADE)//can push your own thermals
 				continue;
 			if (traceEnt->r.ownerNum == self->s.number && traceEnt->s.weapon != WP_FRAG_GRENADE_OLD)//can push your own thermals
+				continue;
+			if (traceEnt->r.ownerNum == self->s.number && traceEnt->s.weapon != WP_CYROBAN_GRENADE)//can push your own thermals
 				continue;
 			if ( !traceEnt->inuse )
 				continue;
@@ -3430,9 +3432,10 @@ void ForceThrow( gentity_t *self, qboolean pull )
 				continue;
 			}
 			if (ent->s.pos.trType == TR_STATIONARY 
-				&& ent->s.weapon != WP_THERMAL 
+				&& ent->s.weapon != WP_CYROBAN_GRENADE 
 				&& ent->s.weapon != WP_FRAG_GRENADE
-				&& ent->s.weapon != WP_FRAG_GRENADE_OLD)
+				&& ent->s.weapon != WP_FRAG_GRENADE_OLD
+				&& ent->s.weapon != WP_CYROBAN_GRENADE)
 			{//only thermal detonators can be pushed once stopped
 				continue;
 			}
@@ -3743,7 +3746,8 @@ void ForceThrow( gentity_t *self, qboolean pull )
 				&& (push_list[x]->s.pos.trType != TR_INTERPOLATE 
 				|| push_list[x]->s.weapon != WP_THERMAL 
 				|| push_list[x]->s.weapon != WP_FRAG_GRENADE
-				|| push_list[x]->s.weapon != WP_FRAG_GRENADE_OLD))//rolling and stationary thermal detonators are dealt with below
+				|| push_list[x]->s.weapon != WP_FRAG_GRENADE_OLD
+				|| push_list[x]->s.weapon != WP_CYROBAN_GRENADE))//rolling and stationary thermal detonators are dealt with below
 			{
 				if ( pull )
 				{//deflect rather than reflect?

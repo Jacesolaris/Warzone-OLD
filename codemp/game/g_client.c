@@ -3330,21 +3330,20 @@ void G_UpdateClientAnims(gentity_t *self, float animSpeedScale)
 	}
 
 	// JKG: Freezing/stun
-	//     if (JKG_DamageTypeFreezes((const damageType_t)self->client->ps.damageTypeFlags))
-	//     {
-	//         const animation_t *torsoAnimData = &bgAllAnims[self->localAnimIndex].anims[self->client->ps.freezeTorsoAnim];
-	//         const animation_t *legsAnimData = &bgAllAnims[self->localAnimIndex].anims[self->client->ps.freezeLegsAnim];
-	//         int legsAnimFrame = legsAnimData->firstFrame + legsAnimData->numFrames;
-	//         int torsoAnimFrame = torsoAnimData->firstFrame + torsoAnimData->numFrames;
-	// 
-	//         trap->G2API_SetBoneAnim(self->ghoul2, 0, "model_root", legsAnimFrame, legsAnimFrame, BONE_ANIM_OVERRIDE_FREEZE | BONE_ANIM_BLEND, animSpeedScale, level.time, -1, 150);
-	//         trap->G2API_SetBoneAnim(self->ghoul2, 0, "lower_lumbar", torsoAnimFrame, torsoAnimFrame, BONE_ANIM_OVERRIDE_FREEZE | BONE_ANIM_BLEND, animSpeedScale, level.time, -1, 150);
-	// 
-	//         return;
-	//     }
+	if (JKG_DamageTypeFreezes((const damageType_t)self->client->ps.damageTypeFlags))
+	{
+		const animation_t *torsoAnimData = &bgAllAnims[self->localAnimIndex].anims[self->client->ps.freezeTorsoAnim];
+		const animation_t *legsAnimData = &bgAllAnims[self->localAnimIndex].anims[self->client->ps.freezeLegsAnim];
+		int legsAnimFrame = legsAnimData->firstFrame + legsAnimData->numFrames;
+		int torsoAnimFrame = torsoAnimData->firstFrame + torsoAnimData->numFrames;
 
+		trap->G2API_SetBoneAnim(self->ghoul2, 0, "model_root", legsAnimFrame, legsAnimFrame, BONE_ANIM_OVERRIDE_FREEZE | BONE_ANIM_BLEND, animSpeedScale, level.time, -1, 150);
+		trap->G2API_SetBoneAnim(self->ghoul2, 0, "lower_lumbar", torsoAnimFrame, torsoAnimFrame, BONE_ANIM_OVERRIDE_FREEZE | BONE_ANIM_BLEND, animSpeedScale, level.time, -1, 150);
 
-	if (self->localAnimIndex > 1 &&
+		return;
+	}
+
+	if (self->localAnimIndex >= NUM_RESERVED_ANIMSETS &&
 		bgAllAnims[self->localAnimIndex].anims[legsAnim].firstFrame == 0 &&
 		bgAllAnims[self->localAnimIndex].anims[legsAnim].numFrames == 0)
 	{ //We'll allow this for non-humanoids.

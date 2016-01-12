@@ -212,8 +212,26 @@ void touch_NULL( gentity_t *ent, gentity_t *other, trace_t *trace )
 void laserTrapExplode( gentity_t *self );
 void RocketDie(gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int damage, int mod);
 
+qhandle_t GrenadeCryoBanDamageSettings;
+void WP_Grenade_CryoBanDamage()
+{
+	damageSettings_t darea = { 0 };
+	darea.radial = qtrue;
+	darea.radiusParams.startRadius = 0;
+	darea.radiusParams.endRadius = 150;
+	darea.radiusParams.radiusFunc = RF_CONSTANT;
+	darea.radiusParams.endRadius = RF_CLAMP;
+	darea.lifetime = 20000;
+	darea.damage = 0.5;
+	darea.damageDelay = 50;
+	darea.delay = 0;
+	darea.penetrationType = 3;
+	darea.damageType = (1 << DT_FREEZE);
+	GrenadeCryoBanDamageSettings = JKG_RegisterDamageSettings(&darea);
+}
+
 qhandle_t thermalDetDamageSettings;
-void JKG_InitWeapons()
+void WP_Thermal_FireDamage()
 {
 	damageSettings_t darea = { 0 };
 	darea.radial = qtrue;
@@ -221,9 +239,10 @@ void JKG_InitWeapons()
 	darea.radiusParams.endRadius = 128;
 	darea.radiusParams.radiusFunc = RF_CLAMP;
 	darea.radiusParams.endRadius = RF_CONSTANT;
-	darea.lifetime = 20000; //15000 you said ? that was an example. i don't know how long your fire efx lasts for oh xD ofc lol
+	darea.lifetime = 20000;
 	darea.damage = 50;
 	darea.damageDelay = 50;
+	darea.delay = 500;
 	darea.damageType = (1 << DT_FIRE);
 	thermalDetDamageSettings = JKG_RegisterDamageSettings(&darea);
 }
@@ -2264,6 +2283,49 @@ THERMAL DETONATOR
 ======================================================================
 */
 void thermalThinkStandard(gentity_t *ent);
+void GrenadeCryoBanThinkStandard(gentity_t *ent);
+
+//---------------------------------------------------------
+void GrenadeCryoBanExplode(gentity_t *ent)
+//---------------------------------------------------------
+{
+	if (!ent->count)
+	{
+		G_Sound(ent, CHAN_WEAPON, G_SoundIndex("sound/weapons/thermal/warning.wav"));
+		ent->count = 1;
+		ent->genericValue5 = level.time + 500;
+		ent->think = GrenadeCryoBanThinkStandard;
+		ent->nextthink = level.time;
+		ent->r.svFlags |= SVF_BROADCAST;//so everyone hears/sees the explosion?
+	}
+	else
+	{
+		vec3_t	origin;
+		vec3_t	dir = { 0, 0, 1 };
+
+		BG_EvaluateTrajectory(&ent->s.pos, level.time, origin);
+		origin[2] += 8;
+		SnapVector(origin);
+		G_SetOrigin(ent, origin);
+
+		ent->s.eType = ET_GENERAL;
+		G_AddEvent(ent, EV_MISSILE_MISS, DirToByte(dir));
+		ent->freeAfterEvent = qtrue;
+
+
+		JKG_DoSplashDamage(GrenadeCryoBanDamageSettings, ent->r.currentOrigin, ent->parent, ent, ent, ent->splashMethodOfDeath);
+
+
+
+		/*if (G_RadiusDamage( ent->r.currentOrigin, ent->parent,  ent->splashDamage, ent->splashRadius,
+		ent, ent, ent->splashMethodOfDeath))
+		{
+		g_entities[ent->r.ownerNum].client->accuracy_hits++;
+		}*/
+
+		trap->LinkEntity((sharedEntity_t *)ent);
+	}
+}
 
 //---------------------------------------------------------
 void thermalDetonatorExplode( gentity_t *ent )
@@ -2291,8 +2353,11 @@ void thermalDetonatorExplode( gentity_t *ent )
 		ent->s.eType = ET_GENERAL;
 		G_AddEvent( ent, EV_MISSILE_MISS, DirToByte( dir ) );
 		ent->freeAfterEvent = qtrue;
-
+		
+	
 		JKG_DoSplashDamage(thermalDetDamageSettings, ent->r.currentOrigin, ent->parent, ent, ent, ent->splashMethodOfDeath);
+		
+				
 
 		/*if (G_RadiusDamage( ent->r.currentOrigin, ent->parent,  ent->splashDamage, ent->splashRadius,
 				ent, ent, ent->splashMethodOfDeath))
@@ -2302,6 +2367,19 @@ void thermalDetonatorExplode( gentity_t *ent )
 
 		trap->LinkEntity( (sharedEntity_t *)ent );
 	}
+}
+
+void GrenadeCryoBanThinkStandard(gentity_t *ent)
+{
+	if (ent->genericValue5 < level.time)
+	{
+		ent->think = GrenadeCryoBanExplode;
+		ent->nextthink = level.time;
+		return;
+	}
+
+	G_RunObject(ent);
+	ent->nextthink = level.time;
 }
 
 void thermalThinkStandard(gentity_t *ent)
@@ -2315,6 +2393,95 @@ void thermalThinkStandard(gentity_t *ent)
 
 	G_RunObject(ent);
 	ent->nextthink = level.time;
+}
+
+//---------------------------------------------------------
+gentity_t *WP_FireGrenadeCryoBan(gentity_t *ent, qboolean altFire)
+//---------------------------------------------------------
+{
+	gentity_t	*bolt;
+	vec3_t		dir, start;
+	float chargeAmount = 1.0f; // default of full charge
+
+	VectorCopy(forward, dir);
+	VectorCopy(muzzle, start);
+
+	bolt = G_Spawn();
+
+	bolt->physicsObject = qtrue;
+
+	bolt->classname = "Grenade_CryoBan";
+	bolt->think = GrenadeCryoBanThinkStandard;
+	bolt->nextthink = level.time;
+	bolt->touch = touch_NULL;
+
+	// How 'bout we give this thing a size...
+	VectorSet(bolt->r.mins, -3.0f, -3.0f, -3.0f);
+	VectorSet(bolt->r.maxs, 3.0f, 3.0f, 3.0f);
+	bolt->clipmask = MASK_SHOT;
+
+	W_TraceSetStart(ent, start, bolt->r.mins, bolt->r.maxs);//make sure our start point isn't on the other side of a wall
+
+	if (ent->client)
+	{
+		chargeAmount = level.time - ent->client->ps.weaponChargeTime;
+	}
+
+	// get charge amount
+	chargeAmount = chargeAmount / (float)TD_VELOCITY;
+
+	if (chargeAmount > 1.0f)
+	{
+		chargeAmount = 1.0f;
+	}
+	else if (chargeAmount < TD_MIN_CHARGE)
+	{
+		chargeAmount = TD_MIN_CHARGE;
+	}
+
+	// normal ones bounce, alt ones explode on impact
+	bolt->genericValue5 = level.time + TD_TIME; // How long 'til she blows
+	bolt->s.pos.trType = TR_GRAVITY;
+	bolt->parent = ent;
+	bolt->r.ownerNum = ent->s.number;
+	VectorScale(dir, TD_VELOCITY * chargeAmount, bolt->s.pos.trDelta);
+
+	if (ent->health >= 0)
+	{
+		bolt->s.pos.trDelta[2] += 120;
+	}
+
+	if (!altFire)
+	{
+		bolt->flags |= FL_BOUNCE_HALF;
+	}
+
+	bolt->s.loopSound = G_SoundIndex("sound/weapons/thermal/thermloop.wav");
+	bolt->s.loopIsSoundset = qfalse;
+
+	bolt->damage = TD_DAMAGE;
+	bolt->dflags = 0;
+	bolt->splashDamage = TD_SPLASH_DAM;
+	bolt->splashRadius = TD_SPLASH_RAD;
+
+	bolt->s.eType = ET_MISSILE;
+	bolt->r.svFlags = SVF_USE_CURRENT_ORIGIN;
+	bolt->s.weapon = ent->s.weapon;
+
+	bolt->methodOfDeath = MOD_THERMAL;
+	bolt->splashMethodOfDeath = MOD_THERMAL_SPLASH;
+
+	bolt->s.pos.trTime = level.time;		// move a bit on the very first frame
+	VectorCopy(start, bolt->s.pos.trBase);
+
+	SnapVector(bolt->s.pos.trDelta);			// save net bandwidth
+	VectorCopy(start, bolt->r.currentOrigin);
+
+	VectorCopy(start, bolt->pos2);
+
+	bolt->bounceCount = -5;
+
+	return bolt;
 }
 
 //---------------------------------------------------------
@@ -2388,7 +2555,7 @@ gentity_t *WP_FireThermalDetonator( gentity_t *ent, qboolean altFire )
 
 	bolt->s.eType = ET_MISSILE;
 	bolt->r.svFlags = SVF_USE_CURRENT_ORIGIN;
-	bolt->s.weapon = ent->s.weapon; //WP_THERMAL;
+	bolt->s.weapon = ent->s.weapon;
 
 	bolt->methodOfDeath = MOD_THERMAL;
 	bolt->splashMethodOfDeath = MOD_THERMAL_SPLASH;
@@ -2404,6 +2571,12 @@ gentity_t *WP_FireThermalDetonator( gentity_t *ent, qboolean altFire )
 	bolt->bounceCount = -5;
 
 	return bolt;
+}
+
+gentity_t *WP_DropGrenadeCryoBan(gentity_t *ent)
+{
+	AngleVectors(ent->client->ps.viewangles, forward, vright, up);
+	return (WP_FireGrenadeCryoBan(ent, qfalse));
 }
 
 gentity_t *WP_DropThermal( gentity_t *ent )
@@ -2502,6 +2675,59 @@ gentity_t *WP_FireFragGrenade(gentity_t *ent, qboolean altFire)
 }
 
 void grenadeThinkStandard(gentity_t *ent);
+void CryoBanGrenadeThinkStandard(gentity_t *ent);
+
+//---------------------------------------------------------
+void CryoBanGrenadeExplode(gentity_t *ent)
+//---------------------------------------------------------
+{
+	if (!ent->count)
+	{
+		G_Sound(ent, CHAN_WEAPON, G_SoundIndex("sound/weapons/thermal/fire.wav"));
+		ent->count = 1;
+		ent->genericValue5 = level.time + 500;
+		ent->think = CryoBanGrenadeThinkStandard;
+		ent->nextthink = level.time;
+		ent->r.svFlags |= SVF_BROADCAST;//so everyone hears/sees the explosion?
+	}
+	else
+	{
+		vec3_t	origin;
+		vec3_t	dir = { 0, 0, 1 };
+
+		BG_EvaluateTrajectory(&ent->s.pos, level.time, origin);
+		origin[2] += 8;
+		SnapVector(origin);
+		G_SetOrigin(ent, origin);
+
+		ent->s.eType = ET_GENERAL;
+		G_AddEvent(ent, EV_MISSILE_MISS, DirToByte(dir));
+		ent->freeAfterEvent = qtrue;
+
+		JKG_DoSplashDamage(GrenadeCryoBanDamageSettings, ent->r.currentOrigin, ent->parent, ent, ent, ent->splashMethodOfDeath);
+
+		/*if (G_RadiusDamage(ent->r.currentOrigin, ent->parent, ent->splashDamage, ent->splashRadius,
+			ent, ent, ent->splashMethodOfDeath))
+		{
+			g_entities[ent->r.ownerNum].client->accuracy_hits++;
+		}*/
+
+		trap->LinkEntity((sharedEntity_t *)ent);
+	}
+}
+
+void CryoBanGrenadeThinkStandard(gentity_t *ent)
+{
+	if (ent->genericValue5 < level.time)
+	{
+		ent->think = CryoBanGrenadeExplode;
+		ent->nextthink = level.time;
+		return;
+	}
+
+	G_RunObject(ent);
+	ent->nextthink = level.time;
+}
 
 //---------------------------------------------------------
 void grenadeExplode(gentity_t *ent)
@@ -2530,11 +2756,12 @@ void grenadeExplode(gentity_t *ent)
 		G_AddEvent(ent, EV_MISSILE_MISS, DirToByte(dir));
 		ent->freeAfterEvent = qtrue;
 
-		if (G_RadiusDamage(ent->r.currentOrigin, ent->parent, ent->splashDamage, ent->splashRadius,
+		JKG_DoSplashDamage(GrenadeCryoBanDamageSettings, ent->r.currentOrigin, ent->parent, ent, ent, ent->splashMethodOfDeath);
+		/*if (G_RadiusDamage(ent->r.currentOrigin, ent->parent, ent->splashDamage, ent->splashRadius,
 			ent, ent, ent->splashMethodOfDeath))
 		{
 			g_entities[ent->r.ownerNum].client->accuracy_hits++;
-		}
+		}*/
 
 		trap->LinkEntity((sharedEntity_t *)ent);
 	}
@@ -5386,18 +5613,14 @@ void FireWeapon( gentity_t *ent, qboolean altFire ) {
 			WP_FireRocket( ent, altFire );
 			break;
 
-			/*
-			case WP_SHOCK_GRENADE:
-			case WP_PLASMA_GRENADE:
-			case WP_SONIC_GRENADE:
-			case WP_THERMAL_GRENADE:
-			case WP_THERMAL_GREADE_OLD:
-			case WP_V_59_GRENADE:*/
 		case WP_FRAG_GRENADE_OLD:
 		case WP_FRAG_GRENADE:
 			WP_FireFragGrenade(ent, altFire);
 			break;
 		
+		case WP_CYROBAN_GRENADE:
+			WP_FireGrenadeCryoBan(ent, altFire);
+			break;
 		case WP_THERMAL:
 			WP_FireThermalDetonator( ent, altFire );
 			break;

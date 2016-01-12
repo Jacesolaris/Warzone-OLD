@@ -301,6 +301,7 @@ int WeaponReadyAnim[WP_NUM_WEAPONS] =
 	TORSO_WEAPONREADY10,//WP_THERMAL,
 	TORSO_WEAPONREADY10,//WP_FRAG_GRENADE,
 	TORSO_WEAPONREADY10,//WP_FRAG_GRENADE_OLD,
+	TORSO_WEAPONREADY10,//WP_CYROBAN_GRENADE,
 	TORSO_WEAPONREADY10,//TORSO_WEAPONREADY11,//WP_TRIP_MINE,
 	TORSO_WEAPONREADY10,//TORSO_WEAPONREADY12,//WP_DET_PACK,
 
@@ -458,6 +459,7 @@ int WeaponAttackAnim[WP_NUM_WEAPONS] =
 	BOTH_THERMAL_THROW,//WP_THERMAL,
 	BOTH_THERMAL_THROW,//WP_FRAG_GRENADE,
 	BOTH_THERMAL_THROW,//WP_FRAG_GRENADE_OLD,
+	BOTH_THERMAL_THROW,//WP_CYROBAN_GRENADE,
 	BOTH_ATTACK3,//BOTH_ATTACK11,//WP_TRIP_MINE,
 	BOTH_ATTACK3,//BOTH_ATTACK12,//WP_DET_PACK,
 
@@ -2221,6 +2223,24 @@ Don't place this
 	"@MENUS_THE_THERMAL_DETONATOR"					// description
 },
 
+/*QUAKED weapon_grenade_cryoban (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
+*/
+{
+	"weapon_grenade_cryoban ",
+	"sound/weapons/w_pkup.wav",
+	{ "models/weapons/Grenade_CryoBan/model.glm", "models/weapons/Grenade_CryoBan/model_proj.md3",
+	0, 0 },
+	/* view */		"models/weapons/Grenade_CryoBan/model.md3",
+	/* icon */		"models/weapons/Grenade_CryoBan/icon_default",
+	/* pickup *///	"Thermal Detonator",
+	4,
+	IT_WEAPON,
+	WP_CYROBAN_GRENADE,
+	/* precache */ "",
+	/* sounds */ "",
+	"@MENUS_THE_THERMAL_DETONATOR"					// description
+},
+
 /*QUAKED weapon_trip_mine (.3 .3 1) (-16 -16 -16) (16 16 16) suspended
 */
 	{
@@ -2955,7 +2975,12 @@ qboolean BG_CanItemBeGrabbed( int gametype, const entityState_t *ent, const play
 		}
 		
 		if (!(ent->eFlags & EF_DROPPEDWEAPON) && BG_HaveWeapon(ps, item->giTag) &&
-			item->giTag != WP_THERMAL && item->giTag != WP_FRAG_GRENADE && item->giTag != WP_FRAG_GRENADE_OLD && item->giTag != WP_TRIP_MINE && item->giTag != WP_DET_PACK)
+			item->giTag != WP_THERMAL 
+			&& item->giTag != WP_FRAG_GRENADE 
+			&& item->giTag != WP_FRAG_GRENADE_OLD 
+			&& item->giTag != WP_CYROBAN_GRENADE
+			&& item->giTag != WP_TRIP_MINE 
+			&& item->giTag != WP_DET_PACK)
 		{ //weaponstay stuff.. if this isn't dropped, and you already have it, you don't get it.
 			return qfalse;
 		}
