@@ -289,6 +289,23 @@ vec4 PS_Reflection()
 	return ColorInput;
 }
 
+vec3 ColorFilmicToneMapping(vec3 x)
+{
+	// Filmic tone mapping
+	const vec3 A = vec3(0.55f, 0.50f, 0.45f);	// Shoulder strength
+	const vec3 B = vec3(0.30f, 0.27f, 0.22f);	// Linear strength
+	const vec3 C = vec3(0.10f, 0.10f, 0.10f);	// Linear angle
+	const vec3 D = vec3(0.10f, 0.07f, 0.03f);	// Toe strength
+	const vec3 E = vec3(0.01f, 0.01f, 0.01f);	// Toe Numerator
+	const vec3 F = vec3(0.30f, 0.30f, 0.30f);	// Toe Denominator
+	const vec3 W = vec3(2.80f, 2.90f, 3.10f);	// Linear White Point Value
+	const vec3 F_linearWhite = ((W*(A*W+C*B)+D*E)/(W*(A*W+B)+D*F))-(E/F);
+	vec3 F_linearColor = ((x*(A*x+C*B)+D*E)/(x*(A*x+B)+D*F))-(E/F);
+
+    // gamma space or not?
+	return pow(saturate(F_linearColor * 1.25 / F_linearWhite),vec3(1.25));
+}
+
 void main()
 {
 	vec4 color;
@@ -317,7 +334,10 @@ void main()
 	}
 	*/
 
-	color = PS_Reflection();
+	//color = PS_Reflection();
+
+	color = texture2D(u_DiffuseMap, texCoord.xy);
+	color.rgb = ColorFilmicToneMapping(color.rgb);
 
 	gl_FragColor.rgba = color.rgba;
 	//gl_FragColor.a = 1.0;
