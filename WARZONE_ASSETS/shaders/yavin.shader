@@ -7,6 +7,7 @@ textures/yavin/ground
     }
     {
         map textures/yavin/ground
+		tcMod scale 16.0 16.0
     }
 }
 
@@ -19,6 +20,7 @@ textures/yavin/ground.jpg
     }
     {
         map textures/yavin/ground
+		tcMod scale 16.0 16.0
     }
 }
 
@@ -1228,6 +1230,7 @@ textures/yavin/ground_grasssprite
     {
         map textures/yavin/ground
         blendFunc GL_DST_COLOR GL_ZERO
+		tcMod scale 16.0 16.0
     }
 }
 
@@ -1269,6 +1272,7 @@ textures/yavin/ground
     {
         map textures/yavin/ground
         blendFunc GL_DST_COLOR GL_ZERO
+		tcMod scale 16.0 16.0
     }
 }
 
@@ -1446,6 +1450,7 @@ textures/yavin/ground_Phong_vertex
     {
         map textures/yavin/ground
         rgbGen vertex
+		tcMod scale 16.0 16.0
     }
 }
 
@@ -1465,6 +1470,7 @@ textures/yavin/ground_grasssprite_Phong_vertex
     {
         map textures/yavin/ground
         rgbGen vertex
+		tcMod scale 16.0 16.0
     }
     {
         clampmap gfx/sprites/y_grass_tall
@@ -1518,6 +1524,7 @@ textures/yavin/ground_Phong
 // rgbGen vertex
 
         map textures/yavin/ground
+		tcMod scale 16.0 16.0
         rgbGen identity
     }
     {
@@ -1547,6 +1554,7 @@ textures/yavin/ground_grasssprite_Phong
 
         map textures/yavin/ground
         rgbGen identity
+		tcMod scale 16.0 16.0
     }
     {
         map $lightmap
@@ -1659,7 +1667,7 @@ textures/yavin/ground_plants
 	q3map_nolightmap
 	q3map_alphashadow
 	q3map_onlyvertexlighting
-	
+
     {
         map textures/yavin/groundplants
         blendFunc GL_SRC_ALPHA GL_ONE_MINUS_SRC_ALPHA
