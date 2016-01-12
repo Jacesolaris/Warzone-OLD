@@ -5917,11 +5917,7 @@ char uniqueGenericShader[] = "{\n"\
 
 qboolean R_ForceGenericShader ( const char *name, const char *text )
 {
-	if (text && (StringsContainWord(name, text, "warzone/foliage") || StringsContainWord(name, text, "warzone/tree")))
-		return qtrue;
-	else if (text && (StringsContainWord(name, text, "warzone\\foliage") || StringsContainWord(name, text, "warzone\\tree")))
-		return qtrue;
-	else if (text && (StringsContainWord(name, text, "gfx") || StringsContainWord(name, text, "gfx_base")))
+	if (text && (StringsContainWord(name, text, "gfx") || StringsContainWord(name, text, "gfx_base")))
 		return qfalse;
 	else if (text && (StringsContainWord(name, text, "glow") || StringsContainWord(name, name, "icon")))
 		return qfalse;
@@ -5934,6 +5930,10 @@ qboolean R_ForceGenericShader ( const char *name, const char *text )
 	else if (StringsContainWord(name, name, "reborn") || StringsContainWord(name, name, "trooper"))
 		return qtrue;
 	else if (StringsContainWord(name, name, "boba") || StringsContainWord(name, name, "pilot"))
+		return qtrue;
+	else if (text && (StringsContainWord(name, text, "warzone/foliage") || StringsContainWord(name, text, "warzone/tree")))
+		return qtrue;
+	else if (text && (StringsContainWord(name, text, "warzone\\foliage") || StringsContainWord(name, text, "warzone\\tree")))
 		return qtrue;
 
 	return qfalse;

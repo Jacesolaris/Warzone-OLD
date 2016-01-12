@@ -3,6 +3,7 @@ extern "C" {
 #include "../cgame/cg_local.h"
 #include "../ui/ui_shared.h"
 #include "../game/surfaceflags.h"
+#include "../qcommon/inifile.h"
 
 extern qboolean InFOV( vec3_t spot, vec3_t from, vec3_t fromAngles, int hFOV, int vFOV );
 
@@ -26,9 +27,11 @@ extern qboolean InFOV( vec3_t spot, vec3_t from, vec3_t fromAngles, int hFOV, in
 	// END - FOLIAGE OPTIONS
 	//
 
+float		NUM_PLANT_SHADERS = 0;
+
 #define		PLANT_SCALE_MULTIPLIER 1.0
 
-#define		NUM_PLANT_SHADERS 98//182
+#define		MAX_PLANT_SHADERS 100
 
 	static const char *GoodPlantsList[] = {
 		"models/warzone/foliage/plant01.png",
@@ -131,6 +134,8 @@ extern qboolean InFOV( vec3_t spot, vec3_t from, vec3_t fromAngles, int hFOV, in
 		"models/warzone/foliage/plant67.png",
 		"models/warzone/foliage/plant69.png",
 		"models/warzone/foliage/plant70.png",
+		"models/warzone/foliage/plant69.png",
+		"models/warzone/foliage/plant70.png",
 	};
 
 	float		FOLIAGE_AREA_SIZE =				512;
@@ -161,7 +166,6 @@ extern qboolean InFOV( vec3_t spot, vec3_t from, vec3_t fromAngles, int hFOV, in
 
 	qhandle_t	FOLIAGE_PLANT_MODEL[3] = { 0 };
 	qhandle_t	FOLIAGE_GRASS_BILLBOARD_SHADER[5] = { 0 };
-	qhandle_t	FOLIAGE_GRASS_BILLBOARD_MODEL[3] = { 0 };
 	qhandle_t	FOLIAGE_PLANT_BILLBOARD_MODEL[27] = { 0 };
 	qhandle_t	FOLIAGE_TREE_MODEL[3] = { 0 };
 	float		FOLIAGE_TREE_RADIUS[3] = { 0 };
@@ -169,7 +173,7 @@ extern qboolean InFOV( vec3_t spot, vec3_t from, vec3_t fromAngles, int hFOV, in
 	qhandle_t	FOLIAGE_TREE_BILLBOARD_SHADER[3] = { 0 };
 	float		FOLIAGE_TREE_BILLBOARD_SIZE[3] = { 0 };
 
-	qhandle_t	FOLIAGE_PLANT_SHADERS[NUM_PLANT_SHADERS] = {0};
+	qhandle_t	FOLIAGE_PLANT_SHADERS[MAX_PLANT_SHADERS] = {0};
 
 	int IN_RANGE_AREAS_LIST_COUNT = 0;
 	int IN_RANGE_AREAS_LIST[1024];
@@ -833,7 +837,7 @@ extern "C" {
 			FOLIAGE_PLANT_MODEL[1] = trap->R_RegisterModel( "models/warzone/foliage/grass01_LOD1.md3" );
 			FOLIAGE_PLANT_MODEL[2] = trap->R_RegisterModel( "models/warzone/foliage/grass01_LOD2.md3" );
 
-			FOLIAGE_GRASS_BILLBOARD_MODEL[0] = trap->R_RegisterModel( "models/warzone/foliage/grass_cross.md3" );
+#if 1
 			FOLIAGE_GRASS_BILLBOARD_SHADER[0] = trap->R_RegisterShader( "models/warzone/foliage/maingrass1024.png" );
 			FOLIAGE_GRASS_BILLBOARD_SHADER[1] = trap->R_RegisterShader( "models/warzone/foliage/maingrass512.png" );
 			FOLIAGE_GRASS_BILLBOARD_SHADER[2] = trap->R_RegisterShader( "models/warzone/foliage/maingrass256.png" );
@@ -862,10 +866,88 @@ extern "C" {
 			FOLIAGE_TREE_ZOFFSET[1] = 0.0;
 			FOLIAGE_TREE_ZOFFSET[2] = 0.0;
 
-			for (int i = 1; i < NUM_PLANT_SHADERS; i++)
+			for (int i = 0; i < MAX_PLANT_SHADERS; i++)
 			{
 				FOLIAGE_PLANT_SHADERS[i] = trap->R_RegisterShader(GoodPlantsList[i]);
 			}
+#else
+			FOLIAGE_GRASS_BILLBOARD_SHADER[0] = trap->R_RegisterShader( IniRead(va("foliage/%s.ini", cgs.currentmapname),"GRASS","GRASS_SHADER_LOD_0","models/warzone/foliage/models/warzone/foliage/maingrass1024.png") );
+
+			if (!FOLIAGE_GRASS_BILLBOARD_SHADER[0])
+			{// Have no base grass texture... Use defaults...
+				FOLIAGE_GRASS_BILLBOARD_SHADER[0] = trap->R_RegisterShader( "models/warzone/foliage/maingrass1024.png" );
+				FOLIAGE_GRASS_BILLBOARD_SHADER[1] = trap->R_RegisterShader( "models/warzone/foliage/maingrass512.png" );
+				FOLIAGE_GRASS_BILLBOARD_SHADER[2] = trap->R_RegisterShader( "models/warzone/foliage/maingrass256.png" );
+				FOLIAGE_GRASS_BILLBOARD_SHADER[3] = trap->R_RegisterShader( "models/warzone/foliage/maingrass128.png" );
+				FOLIAGE_GRASS_BILLBOARD_SHADER[4] = trap->R_RegisterShader( "models/warzone/foliage/maingrass64.png" );
+			}
+			else
+			{// Have a grass base shader, check the rest of the LOD levels from ini. If not found, use base...
+				FOLIAGE_GRASS_BILLBOARD_SHADER[1] = trap->R_RegisterShader( IniRead(va("foliage/%s.ini", cgs.currentmapname),"GRASS","GRASS_SHADER_LOD_1","models/warzone/foliage/models/warzone/foliage/maingrass512.png") );
+				if (!FOLIAGE_GRASS_BILLBOARD_SHADER[1]) FOLIAGE_GRASS_BILLBOARD_SHADER[1] = FOLIAGE_GRASS_BILLBOARD_SHADER[0];
+
+				FOLIAGE_GRASS_BILLBOARD_SHADER[2] = trap->R_RegisterShader( IniRead(va("foliage/%s.ini", cgs.currentmapname),"GRASS","GRASS_SHADER_LOD_2","models/warzone/foliage/models/warzone/foliage/maingrass256.png") );
+				if (!FOLIAGE_GRASS_BILLBOARD_SHADER[2]) FOLIAGE_GRASS_BILLBOARD_SHADER[2] = FOLIAGE_GRASS_BILLBOARD_SHADER[0];
+
+				FOLIAGE_GRASS_BILLBOARD_SHADER[3] = trap->R_RegisterShader( IniRead(va("foliage/%s.ini", cgs.currentmapname),"GRASS","GRASS_SHADER_LOD_3","models/warzone/foliage/models/warzone/foliage/maingrass128.png") );
+				if (!FOLIAGE_GRASS_BILLBOARD_SHADER[3]) FOLIAGE_GRASS_BILLBOARD_SHADER[3] = FOLIAGE_GRASS_BILLBOARD_SHADER[0];
+
+				FOLIAGE_GRASS_BILLBOARD_SHADER[4] = trap->R_RegisterShader( IniRead(va("foliage/%s.ini", cgs.currentmapname),"GRASS","GRASS_SHADER_LOD_4","models/warzone/foliage/models/warzone/foliage/maingrass64.png") );
+				if (!FOLIAGE_GRASS_BILLBOARD_SHADER[4]) FOLIAGE_GRASS_BILLBOARD_SHADER[4] = FOLIAGE_GRASS_BILLBOARD_SHADER[0];
+			}
+
+			FOLIAGE_PLANT_SHADERS[0] = trap->R_RegisterShader( IniRead(va("foliage/%s.ini", cgs.currentmapname),"PLANTS","PLANT_SHADER_0","seemtohavenone" ));
+
+			if (!FOLIAGE_PLANT_SHADERS[0])
+			{// Have no base plant shader in ini, use default list...
+				for (int i = 0; i < MAX_PLANT_SHADERS; i++)
+				{
+					FOLIAGE_PLANT_SHADERS[i] = trap->R_RegisterShader(GoodPlantsList[i]);
+				}
+
+				NUM_PLANT_SHADERS = MAX_PLANT_SHADERS;
+			}
+			else
+			{
+				for (int i = 0; i < MAX_PLANT_SHADERS; i++)
+				{
+					FOLIAGE_PLANT_SHADERS[i] = trap->R_RegisterShader( IniRead(va("foliage/%s.ini", cgs.currentmapname),"PLANTS",va("PLANT_SHADER_%i", i),(char *)GoodPlantsList[i]) );
+					
+					if (!FOLIAGE_PLANT_SHADERS[i])
+					{// Hit the end of the ini's list... Record max and exit...
+						NUM_PLANT_SHADERS = i;
+						break;
+					}
+				}
+
+				if (NUM_PLANT_SHADERS < MAX_PLANT_SHADERS)
+				{// We need to copy from what they have...
+					int j = 0;
+
+					for (int i = NUM_PLANT_SHADERS; i < MAX_PLANT_SHADERS; i++)
+					{// Copy from begining of their list, until we hit max number...
+						FOLIAGE_PLANT_SHADERS[i] = FOLIAGE_PLANT_SHADERS[j];
+						j++;
+					}
+				}
+			}
+
+			FOLIAGE_TREE_MODEL[0] = trap->R_RegisterModel( IniRead(va("foliage/%s.ini", cgs.currentmapname),"TREES","TREE_MODEL_0","models/warzone/trees/fanpalm1.md3" ) );
+			FOLIAGE_TREE_MODEL[1] = trap->R_RegisterModel( IniRead(va("foliage/%s.ini", cgs.currentmapname),"TREES","TREE_MODEL_1","models/warzone/trees/giant1.md3" ) );
+			FOLIAGE_TREE_MODEL[2] = trap->R_RegisterModel( IniRead(va("foliage/%s.ini", cgs.currentmapname),"TREES","TREE_MODEL_2","models/warzone/trees/anvilpalm1.md3" ) );
+
+			FOLIAGE_TREE_BILLBOARD_SHADER[0] = trap->R_RegisterShader( IniRead(va("foliage/%s.ini", cgs.currentmapname),"TREES","TREE_BILLBOARD_SHADER_0","models/warzone/trees/fanpalm1") );
+			FOLIAGE_TREE_BILLBOARD_SHADER[1] = trap->R_RegisterShader( IniRead(va("foliage/%s.ini", cgs.currentmapname),"TREES","TREE_BILLBOARD_SHADER_1","models/warzone/trees/giant1") );
+			FOLIAGE_TREE_BILLBOARD_SHADER[2] = trap->R_RegisterShader( IniRead(va("foliage/%s.ini", cgs.currentmapname),"TREES","TREE_BILLBOARD_SHADER_2","models/warzone/trees/anvilpalm1") );
+
+			FOLIAGE_TREE_RADIUS[0] = atof( IniRead(va("foliage/%s.ini", cgs.currentmapname),"TREES","TREE_RADIUS_0","24.0") );
+			FOLIAGE_TREE_RADIUS[1] = atof( IniRead(va("foliage/%s.ini", cgs.currentmapname),"TREES","TREE_RADIUS_1","72.0") );
+			FOLIAGE_TREE_RADIUS[2] = atof( IniRead(va("foliage/%s.ini", cgs.currentmapname),"TREES","TREE_RADIUS_2","52.0") );
+
+			FOLIAGE_TREE_ZOFFSET[0] = atof( IniRead(va("foliage/%s.ini", cgs.currentmapname),"TREES","TREE_ZOFFSET_0","0.0") );
+			FOLIAGE_TREE_ZOFFSET[1] = atof( IniRead(va("foliage/%s.ini", cgs.currentmapname),"TREES","TREE_ZOFFSET_1","0.0") );
+			FOLIAGE_TREE_ZOFFSET[2] = atof( IniRead(va("foliage/%s.ini", cgs.currentmapname),"TREES","TREE_ZOFFSET_2","0.0") );
+#endif
 		}
 
 		FOLIAGE_Check_CVar_Change();
@@ -1394,7 +1476,7 @@ extern "C" {
 					}
 					else if (irand(0, 1) == 1)
 					{// Add plant... 1 in every 2 positions...
-						FOLIAGE_PLANT_SELECTION[FOLIAGE_NUM_POSITIONS] = irand(1,NUM_PLANT_SHADERS-1);
+						FOLIAGE_PLANT_SELECTION[FOLIAGE_NUM_POSITIONS] = irand(1,MAX_PLANT_SHADERS-1);
 					}
 				}
 				else
@@ -1409,7 +1491,7 @@ extern "C" {
 					}
 					else if (irand(0, 3) >= 1)
 					{// Add plant... 1 in every 1.33 positions...
-						FOLIAGE_PLANT_SELECTION[FOLIAGE_NUM_POSITIONS] = irand(1,NUM_PLANT_SHADERS-1);
+						FOLIAGE_PLANT_SELECTION[FOLIAGE_NUM_POSITIONS] = irand(1,MAX_PLANT_SHADERS-1);
 					}
 				}
 
