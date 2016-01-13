@@ -1002,6 +1002,7 @@ void R_LoadMapInfo ( void )
 		tr.mapImage = R_FindImageFile(va( "mapImage/%s.tga", currentMapName ), IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION);
 	}
 
+#if 0
 	if (!ri->FS_FileExists(va( "heightMapImage/%s.tga", currentMapName )))
 	{
 		R_CreateHeightMapImage();
@@ -1052,4 +1053,5 @@ void R_LoadMapInfo ( void )
 
 		tr.grassImage = R_FindImageFile("grassImage/grassImage.tga" , IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION);
 	}
+#endif
 }
