@@ -2585,7 +2585,62 @@ gentity_t *WP_DropThermal( gentity_t *ent )
 	return (WP_FireThermalDetonator( ent, qfalse ));
 }
 
+void FragGrenadeThinkStandard(gentity_t *ent);
 void grenadeThinkStandard(gentity_t *ent);
+void CryoBanGrenadeThinkStandard(gentity_t *ent);
+
+void FragGrenadeExplode(gentity_t *ent)
+//---------------------------------------------------------
+{
+	if (!ent->count)
+	{
+		G_Sound(ent, CHAN_WEAPON, G_SoundIndex("sound/weapons/thermal/fire.wav"));
+		ent->count = 1;
+		ent->genericValue5 = level.time + 500;
+		ent->think = FragGrenadeThinkStandard;
+		ent->nextthink = level.time;
+		ent->r.svFlags |= SVF_BROADCAST;//so everyone hears/sees the explosion?
+	}
+	else
+	{
+		vec3_t	origin;
+		vec3_t	dir = { 0, 0, 1 };
+
+		BG_EvaluateTrajectory(&ent->s.pos, level.time, origin);
+		origin[2] += 8;
+		SnapVector(origin);
+		G_SetOrigin(ent, origin);
+
+		ent->s.eType = ET_GENERAL;
+		G_AddEvent(ent, EV_MISSILE_MISS, DirToByte(dir));
+		ent->freeAfterEvent = qtrue;
+
+		//we don't use JKG damage stuff here as it interfear with the fire stuff.
+		//JKG_DoSplashDamage(GrenadeCryoBanDamageSettings, ent->r.currentOrigin, ent->parent, ent, ent, ent->splashMethodOfDeath);
+		if (G_RadiusDamage(ent->r.currentOrigin, ent->parent, ent->splashDamage, ent->splashRadius,
+		ent, ent, ent->splashMethodOfDeath))
+		{
+		g_entities[ent->r.ownerNum].client->accuracy_hits++;
+		}
+
+		trap->LinkEntity((sharedEntity_t *)ent);
+	}
+}
+
+void FragGrenadeThinkStandard(gentity_t *ent)
+{
+	if (ent->genericValue5 < level.time)
+	{
+		ent->think = FragGrenadeExplode;
+		ent->nextthink = level.time;
+		return;
+	}
+
+	G_RunObject(ent);
+	ent->nextthink = level.time;
+}
+
+
 gentity_t *WP_FireFragGrenade(gentity_t *ent, qboolean altFire)
 //---------------------------------------------------------
 {
@@ -2601,7 +2656,7 @@ gentity_t *WP_FireFragGrenade(gentity_t *ent, qboolean altFire)
 	bolt->physicsObject = qtrue;
 
 	bolt->classname = "Frag Grenade";
-	bolt->think = grenadeThinkStandard;
+	bolt->think = FragGrenadeThinkStandard;
 	bolt->nextthink = level.time;
 	bolt->touch = touch_NULL;
 
@@ -2674,8 +2729,11 @@ gentity_t *WP_FireFragGrenade(gentity_t *ent, qboolean altFire)
 	return bolt;
 }
 
-void grenadeThinkStandard(gentity_t *ent);
-void CryoBanGrenadeThinkStandard(gentity_t *ent);
+gentity_t *WP_DropFragGrenade(gentity_t *ent)
+{
+	AngleVectors(ent->client->ps.viewangles, forward, vright, up);
+	return (WP_FireFragGrenade(ent, qfalse));
+}
 
 //---------------------------------------------------------
 void CryoBanGrenadeExplode(gentity_t *ent)
