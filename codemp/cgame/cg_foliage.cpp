@@ -264,7 +264,7 @@ float		NUM_PLANT_SHADERS = 0;
 						{// Never remove trees...
 							for (int j = 0; j < FOLIAGE_AREAS_LIST_COUNT[areaNum]; j++)
 							{// Let's use a density setting to improve FPS...
-								if (DistanceHorizontal(FOLIAGE_POSITIONS[i], FOLIAGE_POSITIONS[FOLIAGE_AREAS_LIST[areaNum][j]]) < __FOLIAGE_DENSITY__)
+								if (DistanceHorizontal(FOLIAGE_POSITIONS[i], FOLIAGE_POSITIONS[FOLIAGE_AREAS_LIST[areaNum][j]]) < __FOLIAGE_DENSITY__ * FOLIAGE_PLANT_SCALE[i])
 								{// Adding this would go over density setting...
 									OVER_DENSITY = qtrue;
 									DENSITY_REMOVED++;
@@ -1465,7 +1465,7 @@ extern "C" {
 
 				for (int d = 0; d <= num_dense_areas; d++)
 				{
-					if (DistanceHorizontal(DENSE_SPOTS[d], FOLIAGE_POSITIONS[FOLIAGE_NUM_POSITIONS]) <= 1024)
+					if (DistanceHorizontal(DENSE_SPOTS[d], FOLIAGE_POSITIONS[FOLIAGE_NUM_POSITIONS]) <= 2048)
 					{
 						IS_DENSE = qtrue;
 						break;
@@ -1476,9 +1476,9 @@ extern "C" {
 
 				if (density >= 48)
 				{
-					if (IS_DENSE) USE_TREE_DENSITY = tree_density / 4;
+					if (IS_DENSE) USE_TREE_DENSITY = sqrt(tree_density);
 
-					if (irand(0, USE_TREE_DENSITY) >= USE_TREE_DENSITY && RoofHeightAt(vec) - vec[2] > 1024.0)
+					if (tree_density > 0 && irand(0, USE_TREE_DENSITY) >= USE_TREE_DENSITY && RoofHeightAt(vec) - vec[2] > 1024.0)
 					{// Add tree...
 						FOLIAGE_TREE_SELECTION[FOLIAGE_NUM_POSITIONS] = irand(0, 3);
 						FOLIAGE_TREE_ANGLES[FOLIAGE_NUM_POSITIONS] = (int)(random() * 180);
@@ -1491,9 +1491,9 @@ extern "C" {
 				}
 				else
 				{
-					if (IS_DENSE) USE_TREE_DENSITY = tree_density / 4;
+					if (IS_DENSE) USE_TREE_DENSITY = sqrt(tree_density);
 
-					if (irand(0, USE_TREE_DENSITY) >= USE_TREE_DENSITY && RoofHeightAt(vec) - vec[2] > 1024.0)
+					if (tree_density > 0 && irand(0, USE_TREE_DENSITY) >= USE_TREE_DENSITY && RoofHeightAt(vec) - vec[2] > 1024.0)
 					{// Add tree... 
 						FOLIAGE_TREE_SELECTION[FOLIAGE_NUM_POSITIONS] = irand(0, 3);
 						FOLIAGE_TREE_ANGLES[FOLIAGE_NUM_POSITIONS] = (int)(random() * 180);
@@ -1576,12 +1576,6 @@ extern "C" {
 				trap->Cmd_Argv( 3, str, sizeof(str) );
 				tree_dist = atoi(str);
 
-				if (tree_dist <= 8)
-				{// Fallback and warning...
-					tree_dist = 64;
-					trap->Print( "^4*** ^3AUTO-FOLIAGE^4: ^7Warning: ^5Invalid tree density set (%i). Using default (%i)...\n", atoi(str), 64 );
-				}
-
 				trap->Cmd_Argv( 4, str, sizeof(str) );
 				num_dense_areas = atoi(str);
 
@@ -1589,7 +1583,7 @@ extern "C" {
 			}
 			else
 			{
-				FOLIAGE_GenerateFoliage_Real(32.0, 48.0, 0, qfalse);
+				FOLIAGE_GenerateFoliage_Real(32.0, 256.0, 0, qfalse);
 			}
 		}
 		else if ( Q_stricmp( str, "add") == 0 )
@@ -1612,12 +1606,6 @@ extern "C" {
 				trap->Cmd_Argv( 3, str, sizeof(str) );
 				tree_dist = atoi(str);
 
-				if (tree_dist <= 8)
-				{// Fallback and warning...
-					tree_dist = 64;
-					trap->Print( "^4*** ^3AUTO-FOLIAGE^4: ^7Warning: ^5Invalid tree density set (%i). Using default (%i)...\n", atoi(str), 64 );
-				}
-
 				trap->Cmd_Argv( 4, str, sizeof(str) );
 				num_dense_areas = atoi(str);
 
@@ -1625,7 +1613,7 @@ extern "C" {
 			}
 			else
 			{
-				FOLIAGE_GenerateFoliage_Real(32.0, 48.0, 0, qtrue);
+				FOLIAGE_GenerateFoliage_Real(32.0, 256.0, 0, qtrue);
 			}
 		}
 	}
