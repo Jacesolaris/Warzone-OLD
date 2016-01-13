@@ -152,8 +152,9 @@ static uniformInfo_t uniformsInfo[] =
 	{ "u_TextureMap", GLSL_INT, 1 },
 	{ "u_LevelsMap",  GLSL_INT, 1 },
 	{ "u_CubeMap",    GLSL_INT, 1 },
-	{ "u_SubsurfaceMap",    GLSL_INT, 1 },
+	//{ "u_SubsurfaceMap",    GLSL_INT, 1 },
 	{ "u_OverlayMap",    GLSL_INT, 1 },
+	{ "u_SteepMap",  GLSL_INT, 1 },
 	{ "u_RandomMap",    GLSL_INT, 1 },
 	{ "u_GlowMap",   GLSL_INT, 1 },
 
@@ -2350,8 +2351,9 @@ void GLSL_EndLoadGPUShaders ( int startTime )
 		GLSL_SetUniformInt(&tr.lightallShader[i], UNIFORM_SPECULARMAP, TB_SPECULARMAP);
 		GLSL_SetUniformInt(&tr.lightallShader[i], UNIFORM_SHADOWMAP,   TB_SHADOWMAP);
 		GLSL_SetUniformInt(&tr.lightallShader[i], UNIFORM_CUBEMAP,     TB_CUBEMAP);
-		GLSL_SetUniformInt(&tr.lightallShader[i], UNIFORM_SUBSURFACEMAP, TB_SUBSURFACEMAP);
+		//GLSL_SetUniformInt(&tr.lightallShader[i], UNIFORM_SUBSURFACEMAP, TB_SUBSURFACEMAP);
 		GLSL_SetUniformInt(&tr.lightallShader[i], UNIFORM_OVERLAYMAP, TB_OVERLAYMAP);
+		GLSL_SetUniformInt(&tr.lightallShader[i], UNIFORM_STEEPMAP, TB_STEEPMAP);
 		qglUseProgram(0);
 
 #if defined(_DEBUG)
@@ -3748,7 +3750,7 @@ void GLSL_EndLoadGPUShaders ( int startTime )
 		GLSL_SetUniformInt(&tr.waterShader, UNIFORM_SPECULARMAP, TB_SPECULARMAP);
 		GLSL_SetUniformInt(&tr.waterShader, UNIFORM_SHADOWMAP,   TB_SHADOWMAP);
 		GLSL_SetUniformInt(&tr.waterShader, UNIFORM_CUBEMAP,     TB_CUBEMAP);
-		GLSL_SetUniformInt(&tr.waterShader, UNIFORM_SUBSURFACEMAP, TB_SUBSURFACEMAP);
+		//GLSL_SetUniformInt(&tr.waterShader, UNIFORM_SUBSURFACEMAP, TB_SUBSURFACEMAP);
 
 		{
 			vec4_t viewInfo;
@@ -3802,7 +3804,7 @@ void GLSL_EndLoadGPUShaders ( int startTime )
 		GLSL_SetUniformInt(&tr.grassShader, UNIFORM_SPECULARMAP, TB_SPECULARMAP);
 		GLSL_SetUniformInt(&tr.grassShader, UNIFORM_SHADOWMAP,   TB_SHADOWMAP);
 		GLSL_SetUniformInt(&tr.grassShader, UNIFORM_CUBEMAP,     TB_CUBEMAP);
-		GLSL_SetUniformInt(&tr.grassShader, UNIFORM_SUBSURFACEMAP, TB_SUBSURFACEMAP);
+		//GLSL_SetUniformInt(&tr.grassShader, UNIFORM_SUBSURFACEMAP, TB_SUBSURFACEMAP);
 
 		{
 			vec4_t viewInfo;

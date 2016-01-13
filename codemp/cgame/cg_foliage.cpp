@@ -104,6 +104,10 @@ float		NUM_PLANT_SHADERS = 0;
 		"models/warzone/foliage/plant68.png",
 		"models/warzone/foliage/plant69.png",
 		"models/warzone/foliage/plant70.png",
+		"models/warzone/foliage/plant71.png",
+		"models/warzone/foliage/plant72.png",
+		"models/warzone/foliage/plant73.png",
+		"models/warzone/foliage/plant74.png",
 
 		// More of these because they add color
 		"models/warzone/foliage/plant60.png",
@@ -132,10 +136,6 @@ float		NUM_PLANT_SHADERS = 0;
 		"models/warzone/foliage/plant62.png",
 		"models/warzone/foliage/plant63.png",
 		"models/warzone/foliage/plant67.png",
-		"models/warzone/foliage/plant69.png",
-		"models/warzone/foliage/plant70.png",
-		"models/warzone/foliage/plant69.png",
-		"models/warzone/foliage/plant70.png",
 	};
 
 	float		FOLIAGE_AREA_SIZE =				512;

@@ -451,8 +451,9 @@ static void DrawSkySide( struct image_s *image, const int mins[2], const int max
 		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL4, vector);
 		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL5, vector);
 
-		GL_BindToTMU( tr.whiteImage, TB_SUBSURFACEMAP );
+		//GL_BindToTMU( tr.whiteImage, TB_SUBSURFACEMAP );
 		GL_BindToTMU( tr.blackImage, TB_OVERLAYMAP );
+		GL_BindToTMU( tr.whiteImage, TB_STEEPMAP );
 
 		GL_BindToTMU( tr.whiteImage, TB_NORMALMAP );
 		GL_BindToTMU( tr.whiteImage, TB_DELUXEMAP );

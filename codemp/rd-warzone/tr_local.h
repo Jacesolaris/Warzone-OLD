@@ -335,6 +335,7 @@ extern int		max_polyverts;
 //
 // UQ1: Added...
 //
+extern cvar_t	*r_blinnPhong;
 extern cvar_t	*r_skynum;
 extern cvar_t	*r_fog;
 extern cvar_t	*r_multithread;
@@ -452,8 +453,9 @@ typedef enum
 	IMGTYPE_SPECULAR,
 	IMGTYPE_NORMALHEIGHT,
 	IMGTYPE_DELUXE, // normals are swizzled, deluxe are not
-	IMGTYPE_SUBSURFACE,
-	IMGTYPE_OVERLAY
+	//IMGTYPE_SUBSURFACE,
+	IMGTYPE_OVERLAY,
+	IMGTYPE_STEEPMAP
 } imgType_t;
 
 typedef enum
@@ -801,8 +803,9 @@ typedef struct {
 	qboolean		normalsLoaded;
 	qboolean		normalsLoaded2;
 	qboolean		specularLoaded;
-	qboolean		subsurfaceLoaded;
+	//qboolean		subsurfaceLoaded;
 	qboolean		overlayLoaded;
+	qboolean		steepMapLoaded;
 } textureBundle_t;
 
 enum
@@ -819,8 +822,9 @@ enum
 	TB_SPECULARMAP		= 4,
 	TB_SHADOWMAP		= 5,
 	TB_CUBEMAP			= 6,
-	TB_SUBSURFACEMAP    = 7,
-	TB_OVERLAYMAP		= 8,
+	//TB_SUBSURFACEMAP    = 7,
+	TB_OVERLAYMAP		= 7,
+	TB_STEEPMAP			= 8,
 	TB_RANDOMMAP		= 9,
 	TB_GLOWMAP			= 10,
 	NUM_TEXTURE_BUNDLES = 11
@@ -834,8 +838,9 @@ typedef enum
 	ST_NORMALMAP,
 	ST_NORMALPARALLAXMAP,
 	ST_SPECULARMAP,
-	ST_SUBSURFACEMAP,
+	//ST_SUBSURFACEMAP,
 	ST_OVERLAYMAP,
+	ST_STEEPMAP,
 	ST_GLOWMAP,
 	ST_GLSL
 } stageType_t;
@@ -875,8 +880,9 @@ typedef struct {
 	int				isWater;
 	bool			hasSpecular;
 	bool			hasRealNormalMap;
-	bool			hasRealSubsurfaceMap;
+	//bool			hasRealSubsurfaceMap;
 	bool			hasRealOverlayMap;
+	bool			hasRealSteepMap;
 	qboolean		glow;
 	
 	textureBundle_t	bundle[NUM_TEXTURE_BUNDLES];
@@ -904,10 +910,10 @@ typedef struct {
 
 	float			cubeMapScale;
 
-	float			subsurfaceRimScalar;
+	/*float			subsurfaceRimScalar;
 	float			subsurfaceMaterialThickness;
 	float			subsurfaceSpecularPower;
-	vec4_t			subsurfaceExtinctionCoefficient;
+	vec4_t			subsurfaceExtinctionCoefficient;*/
 
 	qboolean		isSurfaceSprite;
 
@@ -1225,8 +1231,9 @@ typedef enum
 	UNIFORM_TEXTUREMAP,
 	UNIFORM_LEVELSMAP,
 	UNIFORM_CUBEMAP,
-	UNIFORM_SUBSURFACEMAP,
+	//UNIFORM_SUBSURFACEMAP,
 	UNIFORM_OVERLAYMAP,
+	UNIFORM_STEEPMAP,
 	UNIFORM_RANDOMMAP,
 	UNIFORM_GLOWMAP,
 

@@ -1,10 +1,12 @@
 uniform sampler2D u_DiffuseMap;
+uniform sampler2D u_SteepMap;
+
 uniform vec2	u_Dimensions;
 uniform vec4	u_Local1; // parallaxScale, haveSpecular, specularScale, materialType
 uniform vec4	u_Local2; // ExtinctionCoefficient
 uniform vec4	u_Local3; // RimScalar, MaterialThickness, subSpecPower, cubemapScale
 uniform vec4	u_Local4; // haveNormalMap, isMetalic, hasRealSubsurfaceMap, sway
-uniform vec4	u_Local5; // hasRealOverlayMap, overlaySway, 0.0, 0.0
+uniform vec4	u_Local5; // hasRealOverlayMap, overlaySway, blinnPhong, hasSteepMap
 
 //#define SPHERICAL_HARMONICS
 //#define SUBSURFACE_SCATTER
@@ -36,7 +38,9 @@ uniform sampler2D u_ShadowMap;
 uniform samplerCube u_CubeMap;
 #endif
 
+#if defined (SUBSURFACE_SCATTER)
 uniform sampler2D u_SubsurfaceMap;
+#endif
 
 uniform sampler2D u_OverlayMap;
 
@@ -298,6 +302,12 @@ mat3 cotangent_frame( vec3 N, vec3 p, vec2 uv )
 	float invmax = inversesqrt( max( dot(T,T), dot(B,B) ) );
 	return mat3( T * invmax, B * invmax, N );
 }
+
+float blinnPhongSpecular(in vec3 normalVec, in vec3 lightVec, in float specPower)
+{
+    vec3 halfAngle = normalize(normalVec + lightVec);
+    return pow(clamp(0.0,1.0,dot(normalVec,halfAngle)),specPower);
+}
  
 #if defined(USE_LIGHT_VECTOR) && !defined(USE_FAST_LIGHT)
 float halfLambert(in vec3 vect1, in vec3 vect2)
@@ -306,13 +316,7 @@ float halfLambert(in vec3 vect1, in vec3 vect2)
     return product * 0.5 + 0.5;
 }
  
-float blinnPhongSpecular(in vec3 normalVec, in vec3 lightVec, in float specPower)
-{
-    vec3 halfAngle = normalize(normalVec + lightVec);
-    return pow(clamp(0.0,1.0,dot(normalVec,halfAngle)),specPower);
-}
- 
- #ifdef SUBSURFACE_SCATTER
+#ifdef SUBSURFACE_SCATTER
 // Main fake sub-surface scatter lighting function
 
 vec3 ExtinctionCoefficient = u_Local2.xyz;
@@ -516,33 +520,9 @@ void main()
 	vec3 offsetDir = normalize(E * tangentToWorld);
 	offsetDir.xy *= tex_offset * -u_Local1.x;//-4.0;//-5.0; // -3.0
 	texCoords += offsetDir.xy * RayIntersectDisplaceMap(texCoords, offsetDir.xy, u_NormalMap);
-	diffuse = texture2D(u_DiffuseMap, texCoords);
-#else
-	diffuse = texture2D(u_DiffuseMap, texCoords);
 #endif
 
-#define OVERLAY_HEIGHT 40.0
-
-	if (u_Local5.x > 0.0)
-	{// Have overlay map...
-		vec2 ovCoords = var_TexCoords.xy + vec2(u_Local5.y); // u_Local5.y == sway ammount
-		vec4 overlay = texture2D(u_OverlayMap, ovCoords);
-
-		if (overlay.a > 0.1)
-		{// Have an overlay, and it is visible here... Set it as diffuse instead...
-			diffuse = overlay;
-		}
-		else
-		{// Have an overlay, but it is not visibile at this pixel... Still need to check if we need a shadow casted on this pixel...
-			vec2 ovCoords2 = ovCoords - (tex_offset * OVERLAY_HEIGHT);
-			vec4 overlay2 = texture2D(u_OverlayMap, ovCoords2);
-
-			if (overlay2.a > 0.1)
-			{// Add shadow...
-				diffuse.rgb *= 0.25;
-			}
-		}
-	}
+	diffuse = texture2D(u_DiffuseMap, texCoords);
 
 #if defined(USE_GAMMA2_TEXTURES)
 	diffuse.rgb *= diffuse.rgb;
@@ -589,6 +569,44 @@ void main()
 
 	N = normalize(N);
 	L /= sqrt(sqrLightDist);
+
+	if (u_Local5.a > 0.0)
+	{
+		float slope = dot(normalize(N.xyz/*var_Normal.xyz*/),vec3(0.0,1.0,0.0));
+		if (slope < 0.0) slope = slope *= -1.0;
+		float slope2 = dot(normalize(N.xyz/*var_Normal.xyz*/),vec3(0.0,0.0,1.0));
+		if (slope2 < 0.0) slope2 = slope2 *= -1.0;
+		float slope3 = dot(normalize(N.xyz/*var_Normal.xyz*/),vec3(1.0,0.0,0.0));
+		if (slope3 < 0.0) slope3 = slope3 *= -1.0;
+		slope = length(slope + slope2 + slope3) / 3.0;
+		//slope = pow(slope, 0.85);
+		vec4 steepDiffuse = texture2D(u_SteepMap, texCoords);
+		diffuse.rgb = mix( diffuse.rgb, steepDiffuse.rgb, clamp(slope,0.0,1.0));
+	}
+	
+
+#define OVERLAY_HEIGHT 40.0
+
+	if (u_Local5.x > 0.0)
+	{// Have overlay map...
+		vec2 ovCoords = var_TexCoords.xy + vec2(u_Local5.y); // u_Local5.y == sway ammount
+		vec4 overlay = texture2D(u_OverlayMap, ovCoords);
+
+		if (overlay.a > 0.1)
+		{// Have an overlay, and it is visible here... Set it as diffuse instead...
+			diffuse = overlay;
+		}
+		else
+		{// Have an overlay, but it is not visibile at this pixel... Still need to check if we need a shadow casted on this pixel...
+			vec2 ovCoords2 = ovCoords - (tex_offset * OVERLAY_HEIGHT);
+			vec4 overlay2 = texture2D(u_OverlayMap, ovCoords2);
+
+			if (overlay2.a > 0.1)
+			{// Add shadow...
+				diffuse.rgb *= 0.25;
+			}
+		}
+	}
 
   #if defined(USE_SHADOWMAP) 
 	vec2 shadowTex = gl_FragCoord.xy * r_FBufScale;
@@ -732,6 +750,17 @@ void main()
 	gl_FragColor.rgb  += (((lightColor   * reflectance * (attenuation * NL)) * 2.0) + (lightColor   * (reflectance * specular.a * refMult) * (attenuation * NL))) / 3.0;
   else
 	gl_FragColor.rgb  += lightColor   * reflectance * (attenuation * NL);
+
+
+
+	if (u_Local5.b > 0.0)
+	{
+		float blinnPhong = clamp(blinnPhongSpecular(DETAILED_NORMAL, var_LightDir.xyz, specular.a), 0.0, 1.0);
+		//gl_FragColor.rgb = (gl_FragColor.rgb + (blinnPhong*gl_FragColor.rgb)) / 2.0;
+		gl_FragColor.rgb *= (blinnPhong * u_Local5.b);
+	}
+
+
 
 #if 0
 	vec3 aSpecular = EnvironmentBRDF(specular.a * refMult, NE, specular.rgb * refMult);

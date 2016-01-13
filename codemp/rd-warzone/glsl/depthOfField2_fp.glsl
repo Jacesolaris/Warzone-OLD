@@ -17,8 +17,8 @@ vec2 sampleOffset = vec2(1.0/var_Dimensions);
 #define bMatsoDOFChromaEnable			// Enables Chromatic Abberation.
 #define bMatsoDOFBokehEnable			// Enables Bokeh weighting do define bright light spots and increase bokeh shape definiton.	
 #define fMatsoDOFChromaPow		2.4//	//[0.2 to 3.0] Amount of chromatic abberation color shifting.
-#define fMatsoDOFBokehCurve		6.0//7//2.0	//[0.5 to 20.0] Bokeh curve.
-#define fMatsoDOFBokehLight		1.0//0.512 	//[0.0 to 2.0] Bokeh brightening factor.
+#define fMatsoDOFBokehCurve		12.0//6.0//7//2.0	//[0.5 to 20.0] Bokeh curve.
+#define fMatsoDOFBokehLight		1.5//1.0//0.512 	//[0.0 to 2.0] Bokeh brightening factor.
 #define iMatsoDOFBokehQuality		5	//[1 to 10] Blur quality as control value over tap count.
 #define fMatsoDOFBokehAngle		10	//[0 to 360] Rotation angle of bokeh shape.
 

@@ -964,12 +964,20 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage)
 	float	useSteepParallax = 0.0;
 	float	hasOverlay = 0.0;
 	float	doSway = 0.0;
+	float	hasSteepMap = 0.0;
 
 	if (pStage->bundle[TB_OVERLAYMAP].overlayLoaded 
 		&& pStage->hasRealOverlayMap 
-		&& pStage->bundle[TB_OVERLAYMAP].image[0] != tr.blackImage)
+		&& pStage->bundle[TB_OVERLAYMAP].image[0] != tr.whiteImage)
 	{
 		hasOverlay = 1.0;
+	}
+
+	if (pStage->bundle[TB_STEEPMAP].steepMapLoaded
+		&& pStage->hasRealSteepMap 
+		&& pStage->bundle[TB_STEEPMAP].image[0] != tr.blackImage)
+	{
+		hasSteepMap = 1.0;
 	}
 
 	if (pStage->isWater && r_glslWater->integer)
@@ -1218,12 +1226,12 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage)
 
 	VectorSet4(local1, parallaxScale, (float)pStage->hasSpecular, specularScale, materialType);
 	GLSL_SetUniformVec4(sp, UNIFORM_LOCAL1, local1);
-	GLSL_SetUniformVec4(sp, UNIFORM_LOCAL2, pStage->subsurfaceExtinctionCoefficient);
-	VectorSet4(local3, pStage->subsurfaceRimScalar, pStage->subsurfaceMaterialThickness, pStage->subsurfaceSpecularPower, cubemapScale);
+	//GLSL_SetUniformVec4(sp, UNIFORM_LOCAL2, pStage->subsurfaceExtinctionCoefficient);
+	VectorSet4(local3, 0.0/*pStage->subsurfaceRimScalar*/, 0.0/*pStage->subsurfaceMaterialThickness*/, 0.0/*pStage->subsurfaceSpecularPower*/, cubemapScale);
 	GLSL_SetUniformVec4(sp, UNIFORM_LOCAL3, local3);
-	VectorSet4(local4, (float)realNormalMap, isMetalic, (float)pStage->hasRealSubsurfaceMap, doSway);
+	VectorSet4(local4, (float)realNormalMap, isMetalic, 0.0/*(float)pStage->hasRealSubsurfaceMap*/, doSway);
 	GLSL_SetUniformVec4(sp, UNIFORM_LOCAL4, local4);
-	VectorSet4(local5, hasOverlay, overlaySway, 0.0, 0.0);
+	VectorSet4(local5, hasOverlay, overlaySway, r_blinnPhong->value, hasSteepMap);
 	GLSL_SetUniformVec4(sp, UNIFORM_LOCAL5, local5);
 
 	/*if (backEnd.viewParms.targetFbo == tr.renderCubeFbo)
@@ -1263,15 +1271,20 @@ void RB_SetStageImageDimensions(shaderProgram_t *sp, shaderStage_t *pStage)
 		dimensions[0] = pStage->bundle[TB_SPECULARMAP].image[0]->width;
 		dimensions[1] = pStage->bundle[TB_SPECULARMAP].image[0]->height;
 	}
-	else if (pStage->bundle[TB_SUBSURFACEMAP].image[0])
+	/*else if (pStage->bundle[TB_SUBSURFACEMAP].image[0])
 	{
 		dimensions[0] = pStage->bundle[TB_SUBSURFACEMAP].image[0]->width;
 		dimensions[1] = pStage->bundle[TB_SUBSURFACEMAP].image[0]->height;
-	}
+	}*/
 	else if (pStage->bundle[TB_OVERLAYMAP].image[0])
 	{
 		dimensions[0] = pStage->bundle[TB_OVERLAYMAP].image[0]->width;
 		dimensions[1] = pStage->bundle[TB_OVERLAYMAP].image[0]->height;
+	}
+	else if (pStage->bundle[TB_STEEPMAP].image[0])
+	{
+		dimensions[0] = pStage->bundle[TB_STEEPMAP].image[0]->width;
+		dimensions[1] = pStage->bundle[TB_STEEPMAP].image[0]->height;
 	}
 
 	GLSL_SetUniformVec2(sp, UNIFORM_DIMENSIONS, dimensions);
@@ -1708,14 +1721,24 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			//
 			//
 
-			if (pStage->bundle[TB_SUBSURFACEMAP].image[0])
+			if (pStage->bundle[TB_STEEPMAP].image[0])
+			{
+				//ri->Printf(PRINT_WARNING, "Image bound to steep map %i x %i.\n", pStage->bundle[TB_STEEPMAP].image[0]->width, pStage->bundle[TB_STEEPMAP].image[0]->height);
+				R_BindAnimatedImageToTMU( &pStage->bundle[TB_STEEPMAP], TB_STEEPMAP);
+			}
+			else
+			{
+				GL_BindToTMU( tr.whiteImage, TB_STEEPMAP );
+			}
+
+			/*if (pStage->bundle[TB_SUBSURFACEMAP].image[0])
 			{
 				R_BindAnimatedImageToTMU( &pStage->bundle[TB_SUBSURFACEMAP], TB_SUBSURFACEMAP);
 			}
 			else
 			{
 				GL_BindToTMU( tr.whiteImage, TB_SUBSURFACEMAP );
-			}
+			}*/
 
 			if (pStage->bundle[TB_OVERLAYMAP].image[0])
 			{
@@ -1816,7 +1839,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 					//  - disable texture sampling in glsl shader with #ifdefs, as before
 					//     -> increases the number of shaders that must be compiled
 					//
-					if ((light || (pStage->isWater && r_glslWater->integer) || pStage->hasRealNormalMap || pStage->hasSpecular || pStage->hasRealSubsurfaceMap || pStage->hasRealOverlayMap) && !fastLight)
+					if ((light || (pStage->isWater && r_glslWater->integer) || pStage->hasRealNormalMap || pStage->hasSpecular /*|| pStage->hasRealSubsurfaceMap*/ || pStage->hasRealOverlayMap || pStage->hasRealSteepMap) && !fastLight)
 					{
 						if (r_normalMapping->integer
 							&& !input->shader->isPortal
@@ -1940,6 +1963,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				GLSL_SetUniformVec4(sp, UNIFORM_LOCAL5, loc);
 			}
 
+#if 0
 			if (isGrass)
 			{
 				vec4_t loc;
@@ -1952,6 +1976,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				GLSL_SetUniformInt(sp, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
 				GL_BindToTMU(tr.grassImage, TB_DIFFUSEMAP);
 			}
+#endif
 
 			UpdateTexCoords (pStage);
 
