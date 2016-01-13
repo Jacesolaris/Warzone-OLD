@@ -216,11 +216,10 @@ XCVAR_DEF(cg_enhancedFX,						"1",					NULL, CVAR_ARCHIVE)
 XCVAR_DEF(cg_trueLightning,						"1",					NULL, CVAR_ARCHIVE)
 //[/New EFX System]
 XCVAR_DEF(cg_foliageDensity,						"64.0",				NULL, CVAR_ARCHIVE)
+XCVAR_DEF(cg_foliageGrassRangeMult,					"3.5",				NULL, CVAR_ARCHIVE)
+XCVAR_DEF(cg_foliageTreeRangeMult,					"56.0",				NULL, CVAR_ARCHIVE)
 XCVAR_DEF(cg_foliageModelWidth,						"192.0",			NULL, CVAR_ARCHIVE)
 XCVAR_DEF(cg_foliageMaxSlopeChange,					"0.3",				NULL, CVAR_ARCHIVE)
 XCVAR_DEF(cg_foliageMaxHeightChange,				"64.0",				NULL, CVAR_ARCHIVE)
 XCVAR_DEF(cg_foliageSlopeCheckHeight,				"128.0",			NULL, CVAR_ARCHIVE)
-XCVAR_DEF(cg_foliageTreeWidth0,						"32.0",				NULL, CVAR_ARCHIVE)
-XCVAR_DEF(cg_foliageTreeWidth1,						"64.0",				NULL, CVAR_ARCHIVE)
-XCVAR_DEF(cg_foliageTreeWidth2,						"96.0",				NULL, CVAR_ARCHIVE)
 #undef XCVAR_DEF

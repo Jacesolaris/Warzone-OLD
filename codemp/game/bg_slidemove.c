@@ -739,7 +739,7 @@ qboolean	PM_SlideMove( qboolean gravity ) {
 
 #ifdef _GAME
 		if (pm_entSelf 
-			&& FOLIAGE_TreeSolidBlocking( pm_entSelf, end ))
+			&& FOLIAGE_TreeSolidBlocking( (gentity_t *)pm_entSelf, end ))
 		{// Hit a foliage system tree solid...
 			VectorClear( pm->ps->velocity );
 			return qfalse;

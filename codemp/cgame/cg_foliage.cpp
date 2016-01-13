@@ -139,8 +139,8 @@ float		NUM_PLANT_SHADERS = 0;
 	};
 
 	float		FOLIAGE_AREA_SIZE =				512;
-	float		FOLIAGE_VISIBLE_DISTANCE =		FOLIAGE_AREA_SIZE*3.5;
-	float		FOLIAGE_TREE_VISIBLE_DISTANCE = FOLIAGE_AREA_SIZE*70.0;
+	float		FOLIAGE_VISIBLE_DISTANCE =		FOLIAGE_AREA_SIZE*cg_foliageGrassRangeMult.value;
+	float		FOLIAGE_TREE_VISIBLE_DISTANCE = FOLIAGE_AREA_SIZE*cg_foliageTreeRangeMult.value;
 
 #define		FOLIAGE_AREA_MAX				65550
 #define		FOLIAGE_AREA_MAX_FOLIAGES		256
@@ -335,6 +335,15 @@ void FOLIAGE_Calc_In_Range_Areas( void )
 	{
 		FOLIAGE_SOLID_TREES[i] = -1;
 		FOLIAGE_SOLID_TREES_DIST[i] = 65536.0;
+	}
+
+	FOLIAGE_VISIBLE_DISTANCE =		FOLIAGE_AREA_SIZE*cg_foliageGrassRangeMult.value;
+	FOLIAGE_TREE_VISIBLE_DISTANCE = FOLIAGE_AREA_SIZE*cg_foliageTreeRangeMult.value;
+
+	if (FOLIAGE_TREE_VISIBLE_DISTANCE < 8.0) {
+		FOLIAGE_TREE_VISIBLE_DISTANCE = FOLIAGE_AREA_SIZE*8.0;
+		trap->Cvar_Set("cg_foliageTreeRangeMult", "8.0");
+		trap->Print("WARNING: Minimum tree range multiplier is 8.0. Cvar has been changed.\n");
 	}
 
 	if (Distance(cg.refdef.vieworg, LAST_ORG) > 128.0 || Distance(cg.refdef.viewangles, LAST_ANG) > 50.0)
