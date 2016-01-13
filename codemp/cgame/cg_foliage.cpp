@@ -340,7 +340,8 @@ void FOLIAGE_Calc_In_Range_Areas( void )
 	FOLIAGE_VISIBLE_DISTANCE =		FOLIAGE_AREA_SIZE*cg_foliageGrassRangeMult.value;
 	FOLIAGE_TREE_VISIBLE_DISTANCE = FOLIAGE_AREA_SIZE*cg_foliageTreeRangeMult.value;
 
-	if (FOLIAGE_TREE_VISIBLE_DISTANCE < 8.0) {
+	if (cg_foliageTreeRangeMult.value < 8.0) 
+	{
 		FOLIAGE_TREE_VISIBLE_DISTANCE = FOLIAGE_AREA_SIZE*8.0;
 		trap->Cvar_Set("cg_foliageTreeRangeMult", "8.0");
 		trap->Print("WARNING: Minimum tree range multiplier is 8.0. Cvar has been changed.\n");
