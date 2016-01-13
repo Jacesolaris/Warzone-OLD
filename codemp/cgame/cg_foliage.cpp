@@ -1083,7 +1083,6 @@ extern "C" {
 #define GRASS_MODEL_WIDTH cg_foliageModelWidth.value
 #define GRASS_SLOPE_MAX_DIFF cg_foliageMaxSlopeChange.value
 #define GRASS_HEIGHT_MAX_DIFF cg_foliageMaxHeightChange.value
-#define GRASS_SLOPE_UP_HEIGHT cg_foliageSlopeCheckHeight.value
 
 	qboolean FOLIAGE_CheckFoliageAlready(vec3_t pos, float density)
 	{
