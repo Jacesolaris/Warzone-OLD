@@ -5434,7 +5434,7 @@ qboolean MaterialIsValidForWP(int materialType)
 	case MATERIAL_COMPUTER:			// 31			// computers/electronic equipment
 		break;
 	default:
-		return qtrue; // no material.. just accept...
+		//return qtrue; // no material.. just accept...
 		break;
 	}
 
@@ -5620,7 +5620,7 @@ void AIMod_AutoWaypoint_StandardMethod( void )
 				for (z = mapMaxs[2]; z >= mapMins[2]; z -= 48.0)
 				{
 					trace_t		tr;
-					vec3_t		pos, down, slopeangles;
+					vec3_t		pos, pos2, down, slopeangles;
 					float		pitch;
 					qboolean	FOUND = qfalse;
 
@@ -5645,7 +5645,12 @@ void AIMod_AutoWaypoint_StandardMethod( void )
 
 					CG_Trace( &tr, pos, NULL, NULL, down, ENTITYNUM_NONE, MASK_PLAYERSOLID|CONTENTS_WATER );
 
-					if (tr.endpos[2] <= mapMins[2])
+					if (tr.endpos[2] < mapMins[2])
+					{// Went off map...
+						break;
+					}
+
+					if (tr.endpos[2] > mapMaxs[2])
 					{// Went off map...
 						break;
 					}
@@ -5675,7 +5680,7 @@ void AIMod_AutoWaypoint_StandardMethod( void )
 						continue;
 					}
 
-					if ( !DO_NOWATER && !DO_ULTRAFAST && !DO_TRANSLUCENT && (tr.contents & CONTENTS_TRANSLUCENT) )
+					if ( tr.contents & CONTENTS_TRANSLUCENT )
 					{// Invisible surface... I'm just gonna ignore these!
 						continue;
 					}
@@ -5698,17 +5703,20 @@ void AIMod_AutoWaypoint_StandardMethod( void )
 						continue;
 					}
 
-					if (WP_CheckInSolid(pos))
+					VectorCopy(tr.endpos, pos2);
+					pos2[2]+=8.0;
+
+					if (WP_CheckInSolid(pos2))
 					{
 						continue;
 					}
 
-					if (!CG_HaveRoofAbove(pos))
+					if (!CG_HaveRoofAbove(pos2))
 					{
 						continue;
 					}
 
-					if (!AIMod_AutoWaypoint_Check_PlayerWidth(pos))
+					if (!AIMod_AutoWaypoint_Check_PlayerWidth(pos2))
 					{
 						continue;
 					}

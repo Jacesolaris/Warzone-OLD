@@ -453,14 +453,14 @@ qboolean NPC_CopyPathFromNearbyNPC( void )
 
 int NPC_FindGoal( gentity_t *NPC )
 {
-	int waypoint = irand(0, gWPNum-1);
+	int waypoint = irand(0, gWPNum/2)+irand(0, (gWPNum/2)-1);
 	int tries = 0;
 
 	while (gWPArray[waypoint]->inuse == qfalse || gWPArray[waypoint]->wpIsBad == qtrue)
 	{
 		if (tries > 10) return -1; // Try again next frame...
 
-		waypoint = irand(0, gWPNum-1);
+		waypoint = irand(0, gWPNum/2)+irand(0, (gWPNum/2)-1);
 		tries++;
 	}
 
@@ -1227,7 +1227,7 @@ qboolean NPC_FollowRoutes( void )
 		}
 		else
 		{// On ground...
-			wpDist = Distance(gWPArray[NPC->wpCurrent]->origin, NPC->r.currentOrigin);
+			wpDist = DistanceHorizontal(gWPArray[NPC->wpCurrent]->origin, NPC->r.currentOrigin);//Distance(gWPArray[NPC->wpCurrent]->origin, NPC->r.currentOrigin);
 		}
 
 		//if (wpDist > 512) trap->Print("To far! (%f)\n", wpDist);
@@ -1340,7 +1340,6 @@ qboolean NPC_FollowRoutes( void )
 	
 	if (Distance(gWPArray[NPC->longTermGoal]->origin, NPC->r.currentOrigin) < 48
 		|| (NPC->s.groundEntityNum != ENTITYNUM_NONE && DistanceHorizontal(gWPArray[NPC->longTermGoal]->origin, NPC->r.currentOrigin) < 48))
-
 	{// We're at out goal! Find a new goal...
 		//trap->Print("HIT GOAL!\n");
 		NPC_ClearPathData(NPC);

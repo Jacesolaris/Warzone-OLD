@@ -142,7 +142,7 @@ float		NUM_PLANT_SHADERS = 0;
 	float		FOLIAGE_VISIBLE_DISTANCE =		FOLIAGE_AREA_SIZE*cg_foliageGrassRangeMult.value;
 	float		FOLIAGE_TREE_VISIBLE_DISTANCE = FOLIAGE_AREA_SIZE*cg_foliageTreeRangeMult.value;
 
-#define		FOLIAGE_AREA_MAX				65550
+#define		FOLIAGE_AREA_MAX				65536
 #define		FOLIAGE_AREA_MAX_FOLIAGES		256
 
 	int			FOLIAGE_AREAS_COUNT = 0;
@@ -1279,8 +1279,6 @@ extern "C" {
 		clock_t		previous_time = 0;
 		float		offsetY = 0.0;
 
-		trap->UpdateScreen();
-
 		AIMod_GetMapBounts();
 
 		if (!cg.mapcoordsValid)
@@ -1328,15 +1326,12 @@ extern "C" {
 
 		trap->Print( va( "^4*** ^3AUTO-FOLIAGE^4: ^5Map bounds are ^3%.2f %.2f %.2f ^5to ^3%.2f %.2f %.2f^5.\n", mapMins[0], mapMins[1], mapMins[2], mapMaxs[0], mapMaxs[1], mapMaxs[2]) );
 		strcpy( task_string1, va("^5Map bounds are ^3%.2f %.2f %.2f ^7to ^3%.2f %.2f %.2f^5.", mapMins[0], mapMins[1], mapMins[2], mapMaxs[0], mapMaxs[1], mapMaxs[2]) );
-		trap->UpdateScreen();
 
 		trap->Print( va( "^4*** ^3AUTO-FOLIAGE^4: ^5Generating foliage points. This could take a while... (Map size ^3%.2f^5)\n", map_size) );
 		strcpy( task_string2, va("^5Generating foliage points. This could take a while... (Map size ^3%.2f^5)", map_size) );
-		trap->UpdateScreen();
 
 		trap->Print( va( "^4*** ^3AUTO-FOLIAGE^4: ^5Finding foliage points...\n") );
 		strcpy( task_string3, va("^5Finding foliage points...") );
-		trap->UpdateScreen();
 
 		//
 		// Create bulk temporary nodes...
@@ -1357,7 +1352,7 @@ extern "C" {
 
 		float yoff = density * 1.25;
 
-#pragma omp parallel for schedule(dynamic)
+//#pragma omp parallel for schedule(dynamic)
 		for (int x = (int)mapMins[0]; x <= (int)mapMaxs[0]; x += density)
 		{
 			if (grassSpotCount >= FOLIAGE_MAX_FOLIAGES)
@@ -1391,7 +1386,7 @@ extern "C" {
 						break;
 					}
 
-					if(omp_get_thread_num() == 0)
+					//if(omp_get_thread_num() == 0)
 					{// Draw a nice little progress bar ;)
 						if (clock() - previous_time > 500) // update display every 500ms...
 						{
@@ -1468,7 +1463,7 @@ extern "C" {
 
 							if (FOLIAGE_CheckSlopesAround(pos, down, tr.endpos, tr.plane.normal, scale))
 							{
-#pragma omp critical (__ADD_TEMP_NODE__)
+//#pragma omp critical (__ADD_TEMP_NODE__)
 								{
 									sprintf(last_node_added_string, "^5Adding foliage point ^3%i ^5at ^7%f %f %f^5.", grassSpotCount, tr.endpos[0], tr.endpos[1], tr.endpos[2]+8);
 
@@ -1516,17 +1511,35 @@ extern "C" {
 		if (grassSpotCount > 0)
 		{// Ok, we have spots, copy and set up foliage types/scales/angles, and save to file...
 			vec3_t	MAP_SCALE;
-			vec3_t	DENSE_SPOTS[1024];
+			vec3_t	DENSE_SPOTS[FOLIAGE_AREA_MAX/8];
 
 			MAP_SCALE[0] = mapMaxs[0] - mapMins[0];
 			MAP_SCALE[1] = mapMaxs[1] - mapMins[1];
 			MAP_SCALE[2] = 0;
 
-			for (int d = 0; d <= num_dense_areas; d++)
+			for (int d = 0; d < num_dense_areas; d++)
 			{
-				DENSE_SPOTS[d][0] = mapMins[0] + irand(0, MAP_SCALE[0]);
-				DENSE_SPOTS[d][1] = mapMins[1] + irand(0, MAP_SCALE[1]);
-				DENSE_SPOTS[d][2] = 0;
+				for (int d2 = 0; d2 < d; d2++)
+				{
+					vec3_t spot;
+
+					while (1)
+					{
+						spot[0] = mapMins[0] + (irand(0, MAP_SCALE[0]/2)+irand(0, MAP_SCALE[0]/2));
+						spot[1] = mapMins[1] + (irand(0, MAP_SCALE[1]/2)+irand(0, MAP_SCALE[1]/2));
+						spot[2] = 0;
+
+						if (DistanceHorizontal(DENSE_SPOTS[d], spot) < 4096)
+							continue;
+
+						// Ok, not in range of another one, add this spot to the list...
+						break;
+					}
+
+					DENSE_SPOTS[d][0] = spot[0];
+					DENSE_SPOTS[d][1] = spot[1];
+					DENSE_SPOTS[d][2] = 0;
+				}
 			}
 
 			for (i = 0; i < grassSpotCount; i++)
@@ -1549,26 +1562,25 @@ extern "C" {
 				FOLIAGE_PLANT_ANGLES[FOLIAGE_NUM_POSITIONS] = (int)(random() * 180);
 				
 				if (FOLIAGE_PLANT_SCALE[FOLIAGE_NUM_POSITIONS] == 0)
-					FOLIAGE_PLANT_SCALE[FOLIAGE_NUM_POSITIONS] = (float)((float)irand(35,125) / 100.0);
+					FOLIAGE_PLANT_SCALE[FOLIAGE_NUM_POSITIONS] = (float)((float)irand(75,125) / 100.0);
 
-				qboolean IS_DENSE = qfalse;
+				float USE_TREE_DENSITY = tree_density;
 
-				for (int d = 0; d <= num_dense_areas; d++)
+				for (int d = 0; d < num_dense_areas; d++)
 				{
-					if (DistanceHorizontal(DENSE_SPOTS[d], FOLIAGE_POSITIONS[FOLIAGE_NUM_POSITIONS]) <= 2048)
+					if (DistanceHorizontal(DENSE_SPOTS[d], FOLIAGE_POSITIONS[FOLIAGE_NUM_POSITIONS]) <= 4096)
 					{
-						IS_DENSE = qtrue;
+						USE_TREE_DENSITY = tree_density / 6;//sqrt(tree_density);
 						break;
 					}
 				}
 
-				float USE_TREE_DENSITY = tree_density;
-
 				if (density >= 48)
 				{
-					if (IS_DENSE) USE_TREE_DENSITY = sqrt(tree_density);
-
-					if (!ADD_SLOPES && tree_density > 0 && irand(0, USE_TREE_DENSITY) >= USE_TREE_DENSITY && RoofHeightAt(vec) - vec[2] > 1024.0)
+					if (!ADD_SLOPES 
+						&& tree_density > 0 
+						&& irand(0, (int)USE_TREE_DENSITY) >= (int)USE_TREE_DENSITY 
+						&& RoofHeightAt(vec) - vec[2] > 1024.0)
 					{// Add tree...
 						FOLIAGE_TREE_SELECTION[FOLIAGE_NUM_POSITIONS] = irand(0, 3);
 						FOLIAGE_TREE_ANGLES[FOLIAGE_NUM_POSITIONS] = (int)(random() * 180);
@@ -1581,9 +1593,10 @@ extern "C" {
 				}
 				else
 				{
-					if (IS_DENSE) USE_TREE_DENSITY = sqrt(tree_density);
-
-					if (!ADD_SLOPES && tree_density > 0 && irand(0, USE_TREE_DENSITY) >= USE_TREE_DENSITY && RoofHeightAt(vec) - vec[2] > 1024.0)
+					if (!ADD_SLOPES 
+						&& tree_density > 0 
+						&& irand(0, (int)USE_TREE_DENSITY) >= (int)USE_TREE_DENSITY 
+						&& RoofHeightAt(vec) - vec[2] > 1024.0)
 					{// Add tree... 
 						FOLIAGE_TREE_SELECTION[FOLIAGE_NUM_POSITIONS] = irand(0, 3);
 						FOLIAGE_TREE_ANGLES[FOLIAGE_NUM_POSITIONS] = (int)(random() * 180);
@@ -1785,6 +1798,12 @@ extern "C" {
 				trap->Cmd_Argv( 4, str, sizeof(str) );
 				num_dense_areas = atoi(str);
 
+				if (num_dense_areas > FOLIAGE_AREA_MAX/8)
+				{
+					trap->Print( "^4*** ^3AUTO-FOLIAGE^4: ^7Error: ^5Invalid num_dense_areas set (%i). Maximum is (%i)...\n", atoi(str), FOLIAGE_AREA_MAX/8 );
+					return;
+				}
+
 				FOLIAGE_GenerateFoliage_Real((float)dist, (float)tree_dist, num_dense_areas, qfalse, 32.0, qfalse);
 			}
 			else
@@ -1817,6 +1836,12 @@ extern "C" {
 
 				trap->Cmd_Argv( 4, str, sizeof(str) );
 				num_dense_areas = atoi(str);
+
+				if (num_dense_areas > FOLIAGE_AREA_MAX/8)
+				{
+					trap->Print( "^4*** ^3AUTO-FOLIAGE^4: ^7Error: ^5Invalid num_dense_areas set (%i). Maximum is (%i)...\n", atoi(str), FOLIAGE_AREA_MAX/8 );
+					return;
+				}
 
 				trap->Cmd_Argv( 5, str, sizeof(str) );
 				check_density = atoi(str);
@@ -1853,6 +1878,12 @@ extern "C" {
 
 				trap->Cmd_Argv( 4, str, sizeof(str) );
 				num_dense_areas = atoi(str);
+
+				if (num_dense_areas > FOLIAGE_AREA_MAX/8)
+				{
+					trap->Print( "^4*** ^3AUTO-FOLIAGE^4: ^7Error: ^5Invalid num_dense_areas set (%i). Maximum is (%i)...\n", atoi(str), FOLIAGE_AREA_MAX/8 );
+					return;
+				}
 
 				trap->Cmd_Argv( 5, str, sizeof(str) );
 				check_density = atoi(str);
