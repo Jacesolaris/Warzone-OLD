@@ -1406,7 +1406,6 @@ ValidEnemy
 
 qboolean ValidEnemy(gentity_t *ent)
 {
-
 	if ( ent == NULL )
 		return qfalse;
 
@@ -1420,7 +1419,7 @@ qboolean ValidEnemy(gentity_t *ent)
 	//if ( !NPC->client->enemyTeam )
 	//	return qfalse;
 
-	if( ent->health > 0 )
+	if( NPC_IsAlive(ent) )
 	{
 		if( !ent->client )
 		{
@@ -1440,43 +1439,10 @@ qboolean ValidEnemy(gentity_t *ent)
 		}
 		else
 		{
-			int entTeam = FACTION_FREE;
-
-#if 0
-			if ( ent->NPC && ent->client )
-			{
-				entTeam = ent->client->playerTeam;
-			}
-			else if ( ent->client )
-			{
-				if ( ent->client->sess.sessionTeam == FACTION_REBEL )
-				{
-					entTeam = NPCTEAM_PLAYER;
-				}
-				else if ( ent->client->sess.sessionTeam == FACTION_EMPIRE )
-				{
-					entTeam = NPCTEAM_ENEMY;
-				}
-				else
-				{
-					entTeam = NPCTEAM_NEUTRAL;
-				}
-			}
-			if( entTeam == NPCTEAM_FREE
-				|| NPCS.NPC->client->enemyTeam == NPCTEAM_FREE
-				|| entTeam == NPCS.NPC->client->enemyTeam )
-			{
-				if ( entTeam != NPCS.NPC->client->playerTeam )
-				{
-					return qtrue;
-				}
-			}
-#else
 			if (!OnSameTeam(ent, NPCS.NPC))
 			{
 				return qtrue;
 			}
-#endif
 		}
 	}
 

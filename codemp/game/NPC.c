@@ -107,18 +107,24 @@ qboolean NPC_IsAlive ( gentity_t *NPC )
 		return qtrue;
 	}
 
-	if ( NPC
-		&& NPC->inuse 
-		&& NPC->health > 0
-		&& NPC->client 
-		&& NPC->client->ps.stats[STAT_HEALTH] > 0 
-		&& NPC->client->ps.pm_type != PM_SPECTATOR 
-		&& (NPC->s.eType == ET_NPC || NPC->s.eType == ET_PLAYER))
+	if ( NPC->s.eType == ET_NPC || NPC->s.eType == ET_PLAYER )
 	{
-		return qtrue;
+		if (NPC->client && NPC->client->ps.pm_type == PM_SPECTATOR)
+		{
+			return qfalse;
+		}
+
+		if (NPC->health <= 0 && (NPC->client && NPC->client->ps.stats[STAT_HEALTH] <= 0))
+		{
+			return qfalse;
+		}
+	}
+	else
+	{
+		return qfalse;
 	}
 
-	return qfalse;
+	return qtrue;
 }
 
 void CorpsePhysics( gentity_t *self )

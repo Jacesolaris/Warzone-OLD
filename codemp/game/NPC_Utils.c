@@ -1121,7 +1121,7 @@ qboolean NPC_ValidEnemy( gentity_t *ent )
 		return qfalse;
 	}
 
-	if ( ent->health <= 0 )
+	if ( !NPC_IsAlive(ent) )
 	{//Must be alive
 		return qfalse;
 	}
@@ -1239,60 +1239,61 @@ qboolean NPC_ValidEnemy( gentity_t *ent )
 		}
 	}
 
-#if 0
-	if ( ent->NPC && ent->client )
+	if (g_gametype.integer < GT_TEAM)
 	{
-		if (NPCS.NPC->client->enemyTeam == FACTION_FREE)
+		if ( ent->NPC && ent->client )
 		{
-			entTeam = NPCS.NPC->client->enemyTeam;
-		}
-		else if (level.gametype < GT_TEAM)
-		{
-			entTeam = ent->client->playerTeam;
-		}
-		else
-		{
-			if ( ent->client->sess.sessionTeam == FACTION_REBEL )
+			if (NPCS.NPC->client->enemyTeam == FACTION_FREE)
 			{
-				entTeam = NPCTEAM_PLAYER;
+				entTeam = NPCS.NPC->client->enemyTeam;
 			}
-			else if ( ent->client->sess.sessionTeam == FACTION_EMPIRE )
+			else if (level.gametype < GT_TEAM)
 			{
-				entTeam = NPCTEAM_ENEMY;
+				entTeam = ent->client->playerTeam;
 			}
 			else
 			{
-				entTeam = NPCTEAM_NEUTRAL;
+				if ( ent->client->sess.sessionTeam == FACTION_REBEL )
+				{
+					entTeam = NPCTEAM_PLAYER;
+				}
+				else if ( ent->client->sess.sessionTeam == FACTION_EMPIRE )
+				{
+					entTeam = NPCTEAM_ENEMY;
+				}
+				else
+				{
+					entTeam = NPCTEAM_NEUTRAL;
+				}
 			}
 		}
-	}
-	else if ( ent->client )
-	{
-		if (NPCS.NPC->client->enemyTeam == FACTION_FREE)
+		else if ( ent->client )
 		{
-			entTeam = NPCS.NPC->client->enemyTeam;
-		}
-		else if (level.gametype < GT_TEAM)
-		{
-			entTeam = NPCTEAM_PLAYER;
-		}
-		else
-		{
-			if ( ent->client->sess.sessionTeam == FACTION_REBEL )
+			if (NPCS.NPC->client->enemyTeam == FACTION_FREE)
+			{
+				entTeam = NPCS.NPC->client->enemyTeam;
+			}
+			else if (level.gametype < GT_TEAM)
 			{
 				entTeam = NPCTEAM_PLAYER;
 			}
-			else if ( ent->client->sess.sessionTeam == FACTION_EMPIRE )
-			{
-				entTeam = NPCTEAM_ENEMY;
-			}
 			else
 			{
-				entTeam = NPCTEAM_NEUTRAL;
+				if ( ent->client->sess.sessionTeam == FACTION_REBEL )
+				{
+					entTeam = NPCTEAM_PLAYER;
+				}
+				else if ( ent->client->sess.sessionTeam == FACTION_EMPIRE )
+				{
+					entTeam = NPCTEAM_ENEMY;
+				}
+				else
+				{
+					entTeam = NPCTEAM_NEUTRAL;
+				}
 			}
 		}
 	}
-#endif
 
 	if (entTeam == NPCTEAM_FREE 
 		&& ent->client
