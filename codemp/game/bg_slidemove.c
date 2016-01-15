@@ -728,7 +728,8 @@ qboolean	PM_SlideMove( qboolean gravity ) {
 		}
 
 #ifdef _CGAME
-		if (pm_entSelf 
+		if (cg_foliageClientCollisionChecking.integer
+			&& pm_entSelf 
 			&& pm_entSelf->s.number == cg.clientNum 
 			&& FOLIAGE_TreeSolidBlocking( end ))
 		{// Hit a foliage system tree solid...
