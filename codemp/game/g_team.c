@@ -189,7 +189,7 @@ OnSameTeam
 ==============
 */
 qboolean OnSameTeam( gentity_t *ent1, gentity_t *ent2 ) {
-	if ( !ent1->client || !ent2->client ) {
+	if ( !ent1 || !ent2 || !ent1->client || !ent2->client ) {
 		return qtrue;
 	}
 

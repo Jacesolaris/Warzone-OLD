@@ -508,12 +508,12 @@ extern "C" {
 		{
 			if (FOLIAGE_SOLID_TREES[tree] >= 0)
 			{
-				int	  THIS_TREE_NUM = FOLIAGE_SOLID_TREES[tree];
-				int	  THIS_TREE_TYPE = FOLIAGE_TREE_SELECTION[THIS_TREE_NUM]-1;
-				float TREE_RADIUS = FOLIAGE_TREE_RADIUS[THIS_TREE_TYPE] * FOLIAGE_TREE_SCALE[THIS_TREE_NUM];
-				float DIST = DistanceHorizontal(FOLIAGE_POSITIONS[THIS_TREE_NUM], moveOrg);
-
-				float hDist = 0;
+				int		THIS_TREE_NUM = FOLIAGE_SOLID_TREES[tree];
+				int		THIS_TREE_TYPE = FOLIAGE_TREE_SELECTION[THIS_TREE_NUM]-1;
+				float	TREE_RADIUS = FOLIAGE_TREE_RADIUS[THIS_TREE_TYPE] * FOLIAGE_TREE_SCALE[THIS_TREE_NUM];
+				float	TREE_HEIGHT = FOLIAGE_TREE_SCALE[THIS_TREE_NUM]*2.5*FOLIAGE_TREE_BILLBOARD_SIZE[FOLIAGE_TREE_SELECTION[THIS_TREE_NUM]-1];
+				float	DIST = DistanceHorizontal(FOLIAGE_POSITIONS[THIS_TREE_NUM], moveOrg);
+				float	hDist = 0;
 
 				if (cg.renderingThirdPerson)
 					hDist = DistanceHorizontal(FOLIAGE_POSITIONS[THIS_TREE_NUM], cg_entities[cg.clientNum].lerpOrigin);
@@ -521,6 +521,7 @@ extern "C" {
 					hDist = DistanceHorizontal(FOLIAGE_POSITIONS[THIS_TREE_NUM], cg.refdef.vieworg);
 
 				if (DIST <= TREE_RADIUS 
+					&& (moveOrg[2] >= FOLIAGE_POSITIONS[THIS_TREE_NUM][2] && moveOrg[2] <= FOLIAGE_POSITIONS[THIS_TREE_NUM][2] + (TREE_HEIGHT*2.0))
 					&& DIST < hDist				// Move pos would be closer
 					&& hDist > TREE_RADIUS)		// Not already stuck in tree...
 				{
