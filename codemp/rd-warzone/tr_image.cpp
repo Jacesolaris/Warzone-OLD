@@ -3484,7 +3484,7 @@ void R_CreateBuiltinImages( void ) {
 		}
 	}
 
-	if (r_sunlightMode->integer)
+	if (r_sunlightMode->integer >= 2)
 	{
 		for ( x = 0; x < 3; x++)
 		{

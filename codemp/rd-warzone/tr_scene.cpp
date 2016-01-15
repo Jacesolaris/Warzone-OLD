@@ -571,7 +571,7 @@ void RE_RenderScene( const refdef_t *fd ) {
 #endif //__DYNAMIC_SHADOWS__
 
 	// playing with even more shadows
-	if(r_sunlightMode->integer && !( fd->rdflags & RDF_NOWORLDMODEL ) && (r_sunlightMode->integer || r_forceSun->integer || tr.sunShadows || r_dlightShadows->integer))
+	if(r_sunlightMode->integer >= 2 && !( fd->rdflags & RDF_NOWORLDMODEL ) && (r_sunlightMode->integer || r_forceSun->integer || tr.sunShadows || r_dlightShadows->integer))
 	{
 		R_RenderSunShadowMaps(fd, 0);
 		R_RenderSunShadowMaps(fd, 1);
@@ -618,7 +618,7 @@ void RE_RenderScene( const refdef_t *fd ) {
 
 	VectorCopy( fd->vieworg, parms.pvsOrigin );
 
-	if(!( fd->rdflags & RDF_NOWORLDMODEL ) && r_depthPrepass->value && (r_sunlightMode->integer || r_forceSun->integer || tr.sunShadows || r_dlightShadows->integer))
+	if(!( fd->rdflags & RDF_NOWORLDMODEL ) && r_depthPrepass->value && (r_sunlightMode->integer >= 2 || r_forceSun->integer || tr.sunShadows || r_dlightShadows->integer))
 	{
 		parms.flags = VPF_USESUNLIGHT;
 	}

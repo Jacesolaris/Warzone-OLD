@@ -1412,7 +1412,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				} 
 			}
 
-			if (r_sunlightMode->integer && (backEnd.viewParms.flags & VPF_USESUNLIGHT) && (index & LIGHTDEF_LIGHTTYPE_MASK))
+			if (r_sunlightMode->integer >= 2 && (backEnd.viewParms.flags & VPF_USESUNLIGHT) && (index & LIGHTDEF_LIGHTTYPE_MASK))
 			{
 				index |= LIGHTDEF_USE_SHADOWMAP;
 			}
