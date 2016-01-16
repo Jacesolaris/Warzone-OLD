@@ -558,9 +558,9 @@ extern "C" {
 
 		// Cull anything in the area outside of cvar specified radius...
 		if (treeOnly && dist > FOLIAGE_TREE_VISIBLE_DISTANCE) return;
-		if (!treeOnly && dist > FOLIAGE_VISIBLE_DISTANCE) return;
+		if (!treeOnly && dist > FOLIAGE_VISIBLE_DISTANCE && FOLIAGE_TREE_SELECTION[num] <= 0) return;
 
-		if (!treeOnly)
+		if (!treeOnly && dist <= FOLIAGE_VISIBLE_DISTANCE)
 		{// Graw grass...
 			if (FOLIAGE_PLANT_SELECTION[num] != 0)
 			{// Add plant model as well...
@@ -658,7 +658,7 @@ extern "C" {
 
 		if (FOLIAGE_TREE_SELECTION[num] > 0)
 		{// Add the tree model...
-			if (dist > FOLIAGE_AREA_SIZE*4.8)
+			if (dist > FOLIAGE_AREA_SIZE*4.8 || dist > FOLIAGE_TREE_VISIBLE_DISTANCE)
 			{
 				re.reType = RT_SPRITE;
 
