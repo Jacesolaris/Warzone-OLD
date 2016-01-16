@@ -228,7 +228,7 @@ qboolean OnSameTeam( gentity_t *ent1, gentity_t *ent2 ) {
 	if ( (ent1->s.eType == ET_NPC || ent1->s.eType == ET_NPC)
 		&& ent1->client->playerTeam == ent2->client->playerTeam )
 	{
-		return qfalse;
+		return qtrue;
 	}
 
 	if (level.gametype == GT_POWERDUEL)
@@ -303,7 +303,7 @@ qboolean OnSameTeam( gentity_t *ent1, gentity_t *ent2 ) {
 		}
 
 		if ( ((ent1->NPC && ent1->client) || (ent2->NPC && ent2->client)) 
-			&& ent1->client->enemyTeam != ent2->client->enemyTeam)
+			&& ent2->client->enemyTeam != ent1->client->enemyTeam)
 		{
 			return qfalse;
 		}
@@ -312,12 +312,6 @@ qboolean OnSameTeam( gentity_t *ent1, gentity_t *ent2 ) {
 			&& ent1->client->playerTeam != ent2->client->playerTeam)
 		{
 			return qfalse;
-		}
-
-		if ( ((ent1->NPC && ent1->client) || (ent2->NPC && ent2->client)) 
-			&& ent1->client->playerTeam == ent2->client->playerTeam)
-		{
-			return qtrue;
 		}
 	}
 

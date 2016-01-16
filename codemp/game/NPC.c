@@ -102,6 +102,11 @@ qboolean NPC_EntityIsBreakable ( gentity_t *self, gentity_t *ent )
 
 qboolean NPC_IsAlive ( gentity_t *NPC )
 {
+	if (!NPC)
+	{
+		return qfalse;
+	}
+
 	if (NPCS.NPC && NPCS.NPC->client && NPC_EntityIsBreakable(NPCS.NPC, NPC))
 	{
 		return qtrue;
