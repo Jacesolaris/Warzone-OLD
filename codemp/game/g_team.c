@@ -188,6 +188,99 @@ extern qboolean NPC_IsVendor(gentity_t *NPC);
 OnSameTeam
 ==============
 */
+#define __TEST_FOR_GRENADE_DAMAGE__
+#ifdef __TEST_FOR_GRENADE_DAMAGE__
+qboolean OnSameTeam(gentity_t *ent1, gentity_t *ent2) {
+	if (!ent1->client || !ent2->client) {
+		return qfalse;
+	}
+
+	if (level.gametype == GT_POWERDUEL)
+	{
+		if (ent1->client->sess.duelTeam == ent2->client->sess.duelTeam)
+		{
+			return qtrue;
+		}
+
+		return qfalse;
+	}
+
+	if (level.gametype < GT_TEAM) {
+		return qfalse;
+	}
+
+	if (ent1->s.eType == ET_NPC &&
+		ent1->s.NPC_class == CLASS_VEHICLE /*&&
+										   ent1->client &&
+										   ent1->client->sess.sessionTeam != FACTION_FREE &&
+										   ent2->client &&
+										   ent1->client->sess.sessionTeam == ent2->client->sess.sessionTeam*/)
+	{
+		return qtrue;
+	}
+	if (ent2->s.eType == ET_NPC &&
+		ent2->s.NPC_class == CLASS_VEHICLE /*&&
+										   ent2->client &&
+										   ent2->client->sess.sessionTeam != FACTION_FREE &&
+										   ent1->client &&
+										   ent2->client->sess.sessionTeam == ent1->client->sess.sessionTeam*/)
+	{
+		return qtrue;
+	}
+
+	if (ent1->s.eType == ET_NPC &&
+		ent1->client &&
+		ent1->client->NPC_class == CLASS_VEHICLE)
+	{
+		return qtrue;
+	}
+
+	if (ent2->s.eType == ET_NPC &&
+		ent2->client &&
+		ent2->client->NPC_class == CLASS_VEHICLE)
+	{
+		return qtrue;
+	}
+
+	if (ent1->s.eType == ET_NPC &&
+		ent1->m_pVehicle)
+	{
+		return qtrue;
+	}
+
+	if (ent2->s.eType == ET_NPC &&
+		ent2->m_pVehicle)
+	{
+		return qtrue;
+	}
+
+	if (ent1->client->sess.sessionTeam == FACTION_FREE &&
+		ent2->client->sess.sessionTeam == FACTION_FREE &&
+		ent1->s.eType == ET_NPC &&
+		ent2->s.eType == ET_NPC)
+	{ //NPCs don't do normal team rules
+		return qfalse;
+	}
+
+	if (g_gametype.integer < GT_TEAM)
+	{
+		if (ent1->s.eType == ET_NPC && ent2->s.eType == ET_PLAYER)
+		{
+			return qfalse;
+		}
+		else if (ent1->s.eType == ET_PLAYER && ent2->s.eType == ET_NPC)
+		{
+			return qfalse;
+		}
+	}
+
+	if (ent1->client->sess.sessionTeam == ent2->client->sess.sessionTeam) {
+		return qtrue;
+	}
+
+	return qfalse;
+}
+#else
 qboolean OnSameTeam( gentity_t *ent1, gentity_t *ent2 ) {
 	if ( !ent1 || !ent2 || !ent1->client || !ent2->client ) {
 		return qtrue;
@@ -317,7 +410,7 @@ qboolean OnSameTeam( gentity_t *ent1, gentity_t *ent2 ) {
 
 	return qfalse;
 }
-
+#endif //__TEST_FOR_GRENADE_DAMAGE__
 static char ctfFlagStatusRemap[] = { '0', '1', '*', '*', '2' };
 
 void Team_SetFlagStatus( int team, flagStatus_t status ) {

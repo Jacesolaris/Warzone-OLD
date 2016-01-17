@@ -16918,8 +16918,8 @@ void CG_Player( centity_t *cent ) {
 		}
 	}
 	
-	if (cent->currentState.eType == ET_NPC &&
-		cent->currentState.NPC_class == CLASS_VEHICLE)
+	if (cent->currentState.eType == ET_NPC /*&&
+		cent->currentState.NPC_class == CLASS_VEHICLE*/)
 	{ //add vehicles
 		CG_AddRadarEnt(cent);
 		if ( CG_InFighter() )

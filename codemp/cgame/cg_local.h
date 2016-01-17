@@ -1228,7 +1228,51 @@ typedef struct cgMedia_s {
 
 	qhandle_t	deferShader;
 
-	qhandle_t	radarShader;
+	//warzome radar
+	qhandle_t	warzone_radarShader;
+
+	qhandle_t	warzone_radar_midtpoint_glow_0;
+	qhandle_t	warzone_radar_midtpoint_glow_elevation;
+	qhandle_t	warzone_radar_tic_far[8];
+	qhandle_t	warzone_radar_tic_close[8];
+	qhandle_t	warzone_radar_tic_reallyclose[8]; // maybe we don't need this state.
+	qhandle_t	warzone_radar_tic_close_elevation[8];
+
+	//qhandle_t	warzone_radar_tic_down_0;
+	//qhandle_t	warzone_radar_tic_down_1;
+	//qhandle_t	warzone_radar_tic_down_2;
+	//qhandle_t	warzone_radar_tic_left_0;
+	//qhandle_t	warzone_radar_tic_left_1;
+	//qhandle_t	warzone_radar_tic_left_2;
+	//qhandle_t	warzone_radar_tic_left_top_0;
+	//qhandle_t	warzone_radar_tic_left_top_1;
+	//qhandle_t	warzone_radar_tic_left_top_2;
+	//qhandle_t	warzone_radar_tic_low_left_0;
+	//qhandle_t	warzone_radar_tic_low_left_1;
+	//qhandle_t	warzone_radar_tic_low_left_2;
+	//qhandle_t	warzone_radar_tic_low_right_0;
+	//qhandle_t	warzone_radar_tic_low_right_1;
+	//qhandle_t	warzone_radar_tic_low_right_2;
+	//qhandle_t	warzone_radar_tic_right_0;
+	//qhandle_t	warzone_radar_tic_right_1;
+	//qhandle_t	warzone_radar_tic_right_2;
+	//qhandle_t	warzone_radar_tic_right_top_0;
+	//qhandle_t	warzone_radar_tic_right_top_1;
+	//qhandle_t	warzone_radar_tic_right_top_2;
+	//qhandle_t	warzone_radar_tic_top_0;
+	//qhandle_t	warzone_radar_tic_top_1;
+	//qhandle_t	warzone_radar_tic_top_2;
+	//qhandle_t	warzone_rader_tic_outside_down;
+	//qhandle_t	warzone_rader_tic_outside_left;
+	//qhandle_t	warzone_rader_tic_outside_low_left;
+	//qhandle_t	warzone_rader_tic_outside_low_right;
+	//qhandle_t	warzone_rader_tic_outside_right;
+	//qhandle_t	warzone_rader_tic_outside_top;
+	//qhandle_t	warzone_rader_tic_outside_top_left;
+	//qhandle_t	warzone_rader_tic_outside_top_right;
+
+
+
 	qhandle_t	siegeItemShader;
 	qhandle_t	mAutomapPlayerIcon;
 	qhandle_t	mAutomapRocketIcon;

@@ -4787,7 +4787,7 @@ float CG_DrawRadar ( float y )
 	color[0] = color[1] = color[2] = 1.0f;
 	color[3] = 0.6f;
 	trap->R_SetColor ( color );
-	CG_DrawPic( RADAR_X + xOffset, y, RADAR_RADIUS*2, RADAR_RADIUS*2, cgs.media.radarShader );
+	CG_DrawPic(RADAR_X + xOffset, y, RADAR_RADIUS * 2, RADAR_RADIUS * 2, cgs.media.warzone_radarShader);
 
 	//Always green for your own team.
 	VectorCopy ( g_color_table[ColorIndex(COLOR_GREEN)], teamColor );
@@ -4837,6 +4837,71 @@ float CG_DrawRadar ( float y )
 		angleLook = atan2(dirLook[0],dirLook[1]);
 		angle = angleLook - anglePlayer;
 
+		{
+#define RADAR_FAR_RANGE	600				// Adjust this one to adjust when the radar picks up a target AT ALL. Will show the outside tic.
+#define RADAR_CLOSE_RANGE 300			// Adjust this for switching from the Far away indicator to the close-by one. The weak highlight, but full tic.
+#define RADAR_REALLY_CLOSE_RANGE 100	// Adjust this one for the distance to draw the strong full tic. Needs to be smaller than the one above
+#define RADAR_RIGHT_HERE 50				// Draw the center piece at this distance
+#define ELEVATION_DIFFERENCE_LIMIT 25	// Change to adjust when it starts drawing the elevation versions of the "CLOSE" ones.
+
+			// actualDist will be used to figure out which image to show. Or to skip if the enemy is too far away.
+			if (actualDist <= RADAR_FAR_RANGE) // Skip if not within radar range.
+			{
+				float degAngle = fmod((RAD2DEG(angle) + 360.0f),360.0f);
+				int directionValue = ((int)(floor((degAngle + 0.5f*45.0f) / 45.0f)*45.0f) / 45) % 8;
+				//char* debugMessage = "Far";
+
+				// Default to the farthest away list of radar images.
+				qhandle_t* angleGFXArray = cgs.media.warzone_radar_tic_far;
+
+				color[0] = color[1] = color[2] = 1.0f;
+				color[3] = 1.0f;
+				trap->R_SetColor(color);
+
+				float elevationDifference = abs((cent->lerpOrigin[2] - cg.predictedPlayerState.origin[2]));
+				if (actualDist > RADAR_RIGHT_HERE)
+				{
+					if (directionValue < 8)
+					{
+						if (elevationDifference > ELEVATION_DIFFERENCE_LIMIT && actualDist <= RADAR_CLOSE_RANGE)
+						{
+							angleGFXArray = cgs.media.warzone_radar_tic_close_elevation;
+							//debugMessage = "Elevation";
+						}
+						else if (actualDist <= RADAR_REALLY_CLOSE_RANGE)
+						{
+							angleGFXArray = cgs.media.warzone_radar_tic_reallyclose;
+							//debugMessage = "ReallyClose";
+						}
+						else if (actualDist <= RADAR_CLOSE_RANGE)
+						{
+							angleGFXArray = cgs.media.warzone_radar_tic_close;
+							//debugMessage = "Close";
+						}
+
+						CG_DrawPic(RADAR_X + xOffset, y, RADAR_RADIUS * 2, RADAR_RADIUS * 2, angleGFXArray[directionValue]);
+					}
+				}
+				else
+				{
+					// Print mid-circle piece.
+					if (elevationDifference > ELEVATION_DIFFERENCE_LIMIT)
+					{
+						CG_DrawPic(RADAR_X + xOffset, y, RADAR_RADIUS * 2, RADAR_RADIUS * 2, cgs.media.warzone_radar_midtpoint_glow_0);
+					}
+					else
+					{
+						CG_DrawPic(RADAR_X + xOffset, y, RADAR_RADIUS * 2, RADAR_RADIUS * 2, cgs.media.warzone_radar_midtpoint_glow_elevation);
+					}
+					//debugMessage = "OnTop";
+				}
+				
+				CG_Text_Paint(RADAR_X + xOffset, y + 100, 1, color, va("Distance: %f", actualDist), 0, 0, ITEM_TEXTSTYLE_SHADOWEDMORE, FONT_MEDIUM);
+				//CG_Text_Paint(RADAR_X-100, y + 200, 1, color, va("DirValue: %i: %s", directionValue, debugMessage), 0, 0, ITEM_TEXTSTYLE_SHADOWEDMORE, FONT_MEDIUM);
+			}
+		}
+//#define __DISABLE_RADAR_STUFF__	
+#ifdef __DISABLE_RADAR_STUFF__
 		switch ( cent->currentState.eType )
 		{
 			default:
@@ -5357,6 +5422,7 @@ float CG_DrawRadar ( float y )
 				break;
 			}
 		}
+#endif // __DISABLE_RADAR_STUFF__
 	}
 
 	arrowBaseScale = 16.0f;

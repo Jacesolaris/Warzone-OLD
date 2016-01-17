@@ -1475,10 +1475,50 @@ static void CG_RegisterGraphics( void ) {
 
 	cgs.media.deferShader = trap->R_RegisterShaderNoMip( "gfx/2d/defer.tga" );
 
-	cgs.media.radarShader			= trap->R_RegisterShaderNoMip ( "gfx/menus/radar/radar.png" );
-	cgs.media.siegeItemShader		= trap->R_RegisterShaderNoMip ( "gfx/menus/radar/goalitem" );
-	cgs.media.mAutomapPlayerIcon	= trap->R_RegisterShader( "gfx/menus/radar/arrow_w" );
-	cgs.media.mAutomapRocketIcon	= trap->R_RegisterShader( "gfx/menus/radar/rocket" );
+	//warzone radar
+	cgs.media.warzone_radarShader			= trap->R_RegisterShaderNoMip ( "gfx/menus/warzone_radar/radar.png" );
+	cgs.media.warzone_radar_midtpoint_glow_0 = trap->R_RegisterShaderNoMip("gfx/menus/warzone_radar/radar_midtpoint_glow_0.png");
+	cgs.media.warzone_radar_midtpoint_glow_elevation = trap->R_RegisterShaderNoMip("gfx/menus/warzone_radar/radar_midtpoint_glow_elevation.png");
+
+	cgs.media.warzone_radar_tic_far[0] = trap->R_RegisterShaderNoMip("gfx/menus/warzone_radar/rader_tic_outside_down.png");
+	cgs.media.warzone_radar_tic_far[1] = trap->R_RegisterShaderNoMip("gfx/menus/warzone_radar/rader_tic_outside_low_right.png");
+	cgs.media.warzone_radar_tic_far[2] = trap->R_RegisterShaderNoMip("gfx/menus/warzone_radar/rader_tic_outside_right.png");
+	cgs.media.warzone_radar_tic_far[3] = trap->R_RegisterShaderNoMip("gfx/menus/warzone_radar/rader_tic_outside_top_right.png");
+	cgs.media.warzone_radar_tic_far[4] = trap->R_RegisterShaderNoMip("gfx/menus/warzone_radar/rader_tic_outside_top.png");
+	cgs.media.warzone_radar_tic_far[5] = trap->R_RegisterShaderNoMip("gfx/menus/warzone_radar/rader_tic_outside_top_left.png");
+	cgs.media.warzone_radar_tic_far[6] = trap->R_RegisterShaderNoMip("gfx/menus/warzone_radar/rader_tic_outside_left.png");
+	cgs.media.warzone_radar_tic_far[7] = trap->R_RegisterShaderNoMip("gfx/menus/warzone_radar/rader_tic_outside_low_left.png");
+
+	cgs.media.warzone_radar_tic_close[0] = trap->R_RegisterShaderNoMip("gfx/menus/warzone_radar/radar_tic_down_2.png");
+	cgs.media.warzone_radar_tic_close[1] = trap->R_RegisterShaderNoMip("gfx/menus/warzone_radar/radar_tic_low_right_2.png");
+	cgs.media.warzone_radar_tic_close[2] = trap->R_RegisterShaderNoMip("gfx/menus/warzone_radar/radar_tic_right_2.png");
+	cgs.media.warzone_radar_tic_close[3] = trap->R_RegisterShaderNoMip("gfx/menus/warzone_radar/radar_tic_right_top_2.png");
+	cgs.media.warzone_radar_tic_close[4] = trap->R_RegisterShaderNoMip("gfx/menus/warzone_radar/radar_tic_top_2.png");
+	cgs.media.warzone_radar_tic_close[5] = trap->R_RegisterShaderNoMip("gfx/menus/warzone_radar/radar_tic_left_top_2.png");
+	cgs.media.warzone_radar_tic_close[6] = trap->R_RegisterShaderNoMip("gfx/menus/warzone_radar/radar_tic_left_2.png");
+	cgs.media.warzone_radar_tic_close[7] = trap->R_RegisterShaderNoMip("gfx/menus/warzone_radar/radar_tic_low_left_2.png");
+
+	cgs.media.warzone_radar_tic_reallyclose[0] = trap->R_RegisterShaderNoMip("gfx/menus/warzone_radar/radar_tic_down_0.png");
+	cgs.media.warzone_radar_tic_reallyclose[1] = trap->R_RegisterShaderNoMip("gfx/menus/warzone_radar/radar_tic_low_right_0.png");
+	cgs.media.warzone_radar_tic_reallyclose[2] = trap->R_RegisterShaderNoMip("gfx/menus/warzone_radar/radar_tic_right_0.png");
+	cgs.media.warzone_radar_tic_reallyclose[3] = trap->R_RegisterShaderNoMip("gfx/menus/warzone_radar/radar_tic_right_top_0.png");
+	cgs.media.warzone_radar_tic_reallyclose[4] = trap->R_RegisterShaderNoMip("gfx/menus/warzone_radar/radar_tic_top_0.png");
+	cgs.media.warzone_radar_tic_reallyclose[5] = trap->R_RegisterShaderNoMip("gfx/menus/warzone_radar/radar_tic_left_top_0.png");
+	cgs.media.warzone_radar_tic_reallyclose[6] = trap->R_RegisterShaderNoMip("gfx/menus/warzone_radar/radar_tic_left_0.png");
+	cgs.media.warzone_radar_tic_reallyclose[7] = trap->R_RegisterShaderNoMip("gfx/menus/warzone_radar/radar_tic_low_left_0.png");
+
+	cgs.media.warzone_radar_tic_close_elevation[0] = trap->R_RegisterShaderNoMip("gfx/menus/warzone_radar/radar_tic_down_1.png");
+	cgs.media.warzone_radar_tic_close_elevation[1] = trap->R_RegisterShaderNoMip("gfx/menus/warzone_radar/radar_tic_low_right_1.png");
+	cgs.media.warzone_radar_tic_close_elevation[2] = trap->R_RegisterShaderNoMip("gfx/menus/warzone_radar/radar_tic_right_1.png");
+	cgs.media.warzone_radar_tic_close_elevation[3] = trap->R_RegisterShaderNoMip("gfx/menus/warzone_radar/radar_tic_right_top_1.png");
+	cgs.media.warzone_radar_tic_close_elevation[4] = trap->R_RegisterShaderNoMip("gfx/menus/warzone_radar/radar_tic_top_1.png");
+	cgs.media.warzone_radar_tic_close_elevation[5] = trap->R_RegisterShaderNoMip("gfx/menus/warzone_radar/radar_tic_left_top_1.png");
+	cgs.media.warzone_radar_tic_close_elevation[6] = trap->R_RegisterShaderNoMip("gfx/menus/warzone_radar/radar_tic_left_1.png");
+	cgs.media.warzone_radar_tic_close_elevation[7] = trap->R_RegisterShaderNoMip("gfx/menus/warzone_radar/radar_tic_low_left_1.png");
+
+	cgs.media.siegeItemShader		= trap->R_RegisterShaderNoMip ( "gfx/menus/warzone_radar/goalitem" );
+	cgs.media.mAutomapPlayerIcon	= trap->R_RegisterShader( "gfx/menus/warzone_radar/arrow_w" );
+	cgs.media.mAutomapRocketIcon	= trap->R_RegisterShader( "gfx/menus/warzone_radar/rocket" );
 
 	cgs.media.wireframeAutomapFrame_left = trap->R_RegisterShader( "gfx/mp_automap/mpauto_frame_left" );
 	cgs.media.wireframeAutomapFrame_right = trap->R_RegisterShader( "gfx/mp_automap/mpauto_frame_right" );
