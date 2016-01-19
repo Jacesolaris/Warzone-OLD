@@ -4754,11 +4754,11 @@ float CG_DrawRadar ( float y )
 	vec4_t			teamColor;
 	float			arrow_w;
 	float			arrow_h;
-	clientInfo_t	*cl;
+	//clientInfo_t	*cl;
 	clientInfo_t	*local;
 	int				i;
 	float			arrowBaseScale;
-	float			zScale;
+	//float			zScale;
 	int				xOffset = 0;
 
 	if (!cg.snap)
@@ -4850,6 +4850,7 @@ float CG_DrawRadar ( float y )
 				float degAngle = fmod((RAD2DEG(angle) + 360.0f),360.0f);
 				int directionValue = ((int)(floor((degAngle + 0.5f*45.0f) / 45.0f)*45.0f) / 45) % 8;
 				//char* debugMessage = "Far";
+				float elevationDifference = 0;
 
 				// Default to the farthest away list of radar images.
 				qhandle_t* angleGFXArray = cgs.media.warzone_radar_tic_far;
@@ -4858,7 +4859,7 @@ float CG_DrawRadar ( float y )
 				color[3] = 1.0f;
 				trap->R_SetColor(color);
 
-				float elevationDifference = abs((cent->lerpOrigin[2] - cg.predictedPlayerState.origin[2]));
+				elevationDifference = abs((cent->lerpOrigin[2] - cg.predictedPlayerState.origin[2]));
 				if (actualDist > RADAR_RIGHT_HERE)
 				{
 					if (directionValue < 8)

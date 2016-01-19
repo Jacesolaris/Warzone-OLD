@@ -72,10 +72,10 @@ void main(void){
 
 	float depthDiff = clamp(depth - d2, 0.0, 1.0);
 
-	if (depthDiff > u_Local0.r && depthDiff < u_Local0.g)
+	if (depthDiff > 0.0001/*u_Local0.r*/ && depthDiff < u_Local0.g)
 	{
-		vec3 shadow = diffuse.rgb * 0.25;
-		shadow += diffuse.rgb * (0.75 * (depthDiff / u_Local0.g)); // less darkness at higher distance for blending
+		vec3 shadow = diffuse.rgb * 0.5;
+		shadow += diffuse.rgb * (0.5 * (depthDiff / u_Local0.g)); // less darkness at higher distance for blending
 		float invDglow = 1.0 - dglowStrength;
 		diffuse.rgb = (diffuse.rgb * dglowStrength) + (shadow * invDglow);
 
@@ -84,10 +84,10 @@ void main(void){
 			diffuse = oDiffuse;
 		}
 	}
-	else if (depthDiff < u_Local0.r)
+	else if (depthDiff < 0.0001/*u_Local0.r*/)
 	{
-		vec3 shadow = diffuse.rgb * 0.25;
-		shadow += diffuse.rgb * (0.75 * (1.0 - (depthDiff / u_Local0.r))); // less darkness at lower distance for blending
+		vec3 shadow = diffuse.rgb * 0.5;
+		shadow += diffuse.rgb * (0.5 * (1.0 - (depthDiff / 0.0001/*u_Local0.r*/))); // less darkness at lower distance for blending
 		float invDglow = 1.0 - dglowStrength;
 		diffuse.rgb = (diffuse.rgb * dglowStrength) + (shadow * invDglow);
 

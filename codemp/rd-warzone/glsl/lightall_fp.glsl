@@ -884,7 +884,7 @@ void main()
 	//if (DETAILED_NORMAL.x + DETAILED_NORMAL.y + DETAILED_NORMAL.z == 3.0) DETAILED_NORMAL.xyz = vec3(0.0);
 	out_DetailedNormal = vec4(DETAILED_NORMAL.xyz, specular.a / 8.0);
 
-	if (u_Local1.a == 20) // Foliage/Plants
+	if (u_Local1.a == 20 /*|| u_Local1.a == 5 || u_Local1.a == 6*/) // (Foliage/Plants), ShortGrass, LongGrass
 		out_FoliageMap = vec4(1.0, 0.0, 0.0, 0.0);
 	else
 		out_FoliageMap = vec4(0.0, 0.0, 0.0, 0.0);

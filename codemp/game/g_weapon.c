@@ -2292,6 +2292,7 @@ gentity_t *WP_FireGrenadeCryoBan(gentity_t *ent, qboolean altFire)
 	gentity_t	*bolt;
 	vec3_t		dir, start;
 	float chargeAmount = 1.0f; // default of full charge
+	damageSettings_t darea = { 0 };
 
 	VectorCopy(forward, dir);
 	VectorCopy(muzzle, start);
@@ -2354,7 +2355,6 @@ gentity_t *WP_FireGrenadeCryoBan(gentity_t *ent, qboolean altFire)
 	bolt->splashDamage = TD_SPLASH_DAM;
 	bolt->splashRadius = TD_SPLASH_RAD;*/
 
-	damageSettings_t darea = { 0 };
 	darea.radial = qtrue;
 	darea.radiusParams.startRadius = 0;
 	darea.radiusParams.endRadius = 150;
@@ -2513,6 +2513,7 @@ gentity_t *WP_FireThermalDetonator(gentity_t *ent, qboolean altFire)
 	gentity_t	*bolt;
 	vec3_t		dir, start;
 	float chargeAmount = 1.0f; // default of full charge
+	damageSettings_t darea = { 0 };
 
 	VectorCopy(forward, dir);
 	VectorCopy(muzzle, start);
@@ -2575,7 +2576,6 @@ gentity_t *WP_FireThermalDetonator(gentity_t *ent, qboolean altFire)
 	bolt->splashDamage = TD_SPLASH_DAM;
 	bolt->splashRadius = TD_SPLASH_RAD;
 
-	damageSettings_t darea = { 0 };
 	darea.radial = qtrue;
 	darea.radiusParams.startRadius = 0;
 	darea.radiusParams.endRadius = 128;
