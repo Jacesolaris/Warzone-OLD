@@ -4769,15 +4769,9 @@ float CG_DrawRadar ( float y )
 	clientInfo_t	*local;
 	int				i;
 	float			arrowBaseScale;
-	
 #ifdef __DISABLE_RADAR_STUFF__
 	float			zScale;
 #endif //__DISABLE_RADAR_STUFF__
-	//clientInfo_t	*cl;
-	clientInfo_t	*local;
-	int				i;
-	float			arrowBaseScale;
-	//float			zScale;
 	int				xOffset = 0;
 
 	if (!cg.snap)
