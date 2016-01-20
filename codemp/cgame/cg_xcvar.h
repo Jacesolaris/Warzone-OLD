@@ -132,6 +132,7 @@ XCVAR_DEF( cg_ttsPlayerVoice,					"1",					NULL,					CVAR_ARCHIVE )
 #ifndef __NEW_TRUEVIEW__
 XCVAR_DEF( cg_trueEyePosition,				    "0.0",					NULL,					CVAR_ARCHIVE)//[TrueView]
 #endif
+XCVAR_DEF( cg_turnondistenscalc,				"0",					NULL,					CVAR_ARCHIVE )
 XCVAR_DEF( cg_trueFlip,							"0",					NULL,					CVAR_ARCHIVE)//[TrueView]
 XCVAR_DEF( cg_trueFOV,							"80",					NULL,					CVAR_ARCHIVE)//[TrueView]
 XCVAR_DEF( cg_trueguns,							"1",					NULL,					CVAR_ARCHIVE)//[TrueView]

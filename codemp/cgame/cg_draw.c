@@ -4737,28 +4737,42 @@ void CG_DrawDuelistHealth ( float x, float y, float w, float h, int duelist )
 CG_DrawRadar
 =====================
 */
+
+//#define JPFUELBAR_H			100.0f
+//#define JPFUELBAR_W			20.0f
+//#define JPFUELBAR_X			(SCREEN_WIDTH-JPFUELBAR_W-8.0f)
+//#define JPFUELBAR_Y			260.0f
 float	cg_radarRange = 2500.0f;
 
-#define RADAR_RADIUS			60
-#define RADAR_X					(580 - RADAR_RADIUS)
+#define RADAR_RADIUS			40
+#define RADAR_X					(595 - RADAR_RADIUS)
+
+#define RADAR_RADIUS_DISTEN		60
+#define RADAR_DISTEN_X			(580 - RADAR_RADIUS_DISTEN)
+
 #define RADAR_CHAT_DURATION		6000
 static int radarLockSoundDebounceTime = 0;
 static int impactSoundDebounceTime = 0;
 #define	RADAR_MISSILE_RANGE					3000.0f
 #define	RADAR_ASTEROID_RANGE				10000.0f
 #define	RADAR_MIN_ASTEROID_SURF_WARN_DIST	1200.0f
-
+//#define __DISABLE_RADAR_STUFF__	
 float CG_DrawRadar ( float y )
 {
 	vec4_t			color;
 	vec4_t			teamColor;
 	float			arrow_w;
 	float			arrow_h;
+#ifdef __DISABLE_RADAR_STUFF__
 	clientInfo_t	*cl;
+#endif //__DISABLE_RADAR_STUFF__
 	clientInfo_t	*local;
 	int				i;
 	float			arrowBaseScale;
+	
+#ifdef __DISABLE_RADAR_STUFF__
 	float			zScale;
+#endif //__DISABLE_RADAR_STUFF__
 	int				xOffset = 0;
 
 	if (!cg.snap)
@@ -4838,11 +4852,11 @@ float CG_DrawRadar ( float y )
 		angle = angleLook - anglePlayer;
 
 		{
-#define RADAR_FAR_RANGE	600				// Adjust this one to adjust when the radar picks up a target AT ALL. Will show the outside tic.
-#define RADAR_CLOSE_RANGE 300			// Adjust this for switching from the Far away indicator to the close-by one. The weak highlight, but full tic.
-#define RADAR_REALLY_CLOSE_RANGE 100	// Adjust this one for the distance to draw the strong full tic. Needs to be smaller than the one above
-#define RADAR_RIGHT_HERE 50				// Draw the center piece at this distance
-#define ELEVATION_DIFFERENCE_LIMIT 25	// Change to adjust when it starts drawing the elevation versions of the "CLOSE" ones.
+#define RADAR_FAR_RANGE	800//600			// Adjust this one to adjust when the radar picks up a target AT ALL. Will show the outside tic.
+#define RADAR_CLOSE_RANGE 500//300			// Adjust this for switching from the Far away indicator to the close-by one. The weak highlight, but full tic.
+#define RADAR_REALLY_CLOSE_RANGE 150//100	// Adjust this one for the distance to draw the strong full tic. Needs to be smaller than the one above
+#define RADAR_RIGHT_HERE 50					// Draw the center piece at this distance
+#define ELEVATION_DIFFERENCE_LIMIT 25		// Change to adjust when it starts drawing the elevation versions of the "CLOSE" ones.
 
 			// actualDist will be used to figure out which image to show. Or to skip if the enemy is too far away.
 			if (actualDist <= RADAR_FAR_RANGE) // Skip if not within radar range.
@@ -4887,20 +4901,28 @@ float CG_DrawRadar ( float y )
 					// Print mid-circle piece.
 					if (elevationDifference > ELEVATION_DIFFERENCE_LIMIT)
 					{
-						CG_DrawPic(RADAR_X + xOffset, y, RADAR_RADIUS * 2, RADAR_RADIUS * 2, cgs.media.warzone_radar_midtpoint_glow_0);
+						CG_DrawPic(RADAR_X + xOffset, y, RADAR_RADIUS * 2, RADAR_RADIUS * 2, cgs.media.warzone_radar_midtpoint_glow_elevation);
 					}
 					else
 					{
-						CG_DrawPic(RADAR_X + xOffset, y, RADAR_RADIUS * 2, RADAR_RADIUS * 2, cgs.media.warzone_radar_midtpoint_glow_elevation);
+						CG_DrawPic(RADAR_X + xOffset, y, RADAR_RADIUS * 2, RADAR_RADIUS * 2, cgs.media.warzone_radar_midtpoint_glow_0);
 					}
 					//debugMessage = "OnTop";
 				}
 				
-				CG_Text_Paint(RADAR_X + xOffset, y + 100, 1, color, va("Distance: %f", actualDist), 0, 0, ITEM_TEXTSTYLE_SHADOWEDMORE, FONT_MEDIUM);
-				//CG_Text_Paint(RADAR_X-100, y + 200, 1, color, va("DirValue: %i: %s", directionValue, debugMessage), 0, 0, ITEM_TEXTSTYLE_SHADOWEDMORE, FONT_MEDIUM);
+				if (cg_turnondistenscalc.integer)
+				{
+					CG_Text_Paint(RADAR_DISTEN_X - 100, y + 200, 1, color, va("Distance: %f", actualDist), 0, 0, ITEM_TEXTSTYLE_SHADOWEDMORE, FONT_SMALL2);
+					//CG_Text_Paint(RADAR_DISTEN_X + xOffset, y + 100, 1, color, va("Distance: %f", actualDist), 0, 0, ITEM_TEXTSTYLE_SHADOWEDMORE, FONT_SMALL2);
+				}
+				/*else if (cg_turnondistenscalc.integer)
+				{
+					CG_Text_Paint(RADAR_X - 100, y + 200, 1, color, va("DirValue: %i: %s", directionValue, debugMessage), 0, 0, ITEM_TEXTSTYLE_SHADOWEDMORE, FONT_MEDIUM);
+				}*/
+				//
 			}
 		}
-//#define __DISABLE_RADAR_STUFF__	
+
 #ifdef __DISABLE_RADAR_STUFF__
 		switch ( cent->currentState.eType )
 		{
@@ -5425,7 +5447,7 @@ float CG_DrawRadar ( float y )
 #endif // __DISABLE_RADAR_STUFF__
 	}
 
-	arrowBaseScale = 16.0f;
+	arrowBaseScale = 80.0f;
 
 	arrow_w = arrowBaseScale * RADAR_RADIUS / 128;
 	arrow_h = arrowBaseScale * RADAR_RADIUS / 128;
