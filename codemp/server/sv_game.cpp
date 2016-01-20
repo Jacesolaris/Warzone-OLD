@@ -57,8 +57,10 @@ SV_inPVS
 Also checks portalareas so that doors block sight
 =================
 */
+#define __PVS__
 qboolean SV_inPVS (const vec3_t p1, const vec3_t p2)
 {
+#ifdef __PVS__
 	int		leafnum;
 	int		cluster;
 	int		area1, area2;
@@ -77,6 +79,9 @@ qboolean SV_inPVS (const vec3_t p1, const vec3_t p2)
 	if (!CM_AreasConnected (area1, area2))
 		return qfalse;		// a door blocks sight
 	return qtrue;
+#else //!__PVS__
+	return qtrue;
+#endif //__PVS__
 }
 
 //==============================================

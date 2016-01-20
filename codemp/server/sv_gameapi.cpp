@@ -497,7 +497,9 @@ static void SV_SetBrushModel( sharedEntity_t *ent, const char *name ) {
 	}
 }
 
+#define __PVS__
 static qboolean SV_inPVSIgnorePortals( const vec3_t p1, const vec3_t p2 ) {
+#ifdef __PVS__
 	int		leafnum, cluster;
 //	int		area1, area2;
 	byte	*mask;
@@ -515,6 +517,9 @@ static qboolean SV_inPVSIgnorePortals( const vec3_t p1, const vec3_t p2 ) {
 		return qfalse;
 
 	return qtrue;
+#else //!__PVS__
+	return qtrue;
+#endif //__PVS__
 }
 
 static void SV_GetServerinfo( char *buffer, int bufferSize ) {

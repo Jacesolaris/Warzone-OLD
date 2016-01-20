@@ -1528,6 +1528,8 @@ extern "C" {
 
 			for (int d = 0; d < num_dense_areas; d++)
 			{
+				int NUM_FAILS = 0;
+
 				for (int d2 = 0; d2 < d; d2++)
 				{
 					vec3_t spot;
@@ -1539,7 +1541,10 @@ extern "C" {
 						spot[2] = 0;
 
 						if (DistanceHorizontal(DENSE_SPOTS[d], spot) < 4096)
+						{
+							NUM_FAILS++;
 							continue;
+						}
 
 						// Ok, not in range of another one, add this spot to the list...
 						break;
@@ -1549,6 +1554,8 @@ extern "C" {
 					DENSE_SPOTS[d][1] = spot[1];
 					DENSE_SPOTS[d][2] = 0;
 				}
+
+				if (NUM_FAILS > 50) break; // Failed 50 times in a row, assume we filled the map...
 			}
 
 			for (i = 0; i < grassSpotCount; i++)
