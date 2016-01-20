@@ -1908,10 +1908,6 @@ static qboolean ApproximateLightmap( rawLightmap_t *lm ){
  */
 
 static qboolean TestOutLightmapStamp( rawLightmap_t *lm, int lightmapNum, outLightmap_t *olm, int x, int y ){
-	int sx, sy, ox, oy, offset;
-	float       *luxel;
-
-
 	/* bounds check */
 	if ( x < 0 || y < 0 || ( x + lm->w ) > olm->customWidth || ( y + lm->h ) > olm->customHeight ) {
 		return qfalse;
@@ -1919,7 +1915,7 @@ static qboolean TestOutLightmapStamp( rawLightmap_t *lm, int lightmapNum, outLig
 
 	/* solid lightmaps test a 1x1 stamp */
 	if ( lm->solid[ lightmapNum ] && radbump == qfalse ) {
-		offset = ( y * olm->customWidth ) + x;
+		int offset = ( y * olm->customWidth ) + x;
 		if ( olm->lightBits[ offset  ] > 0 ) {
 			return qfalse;
 		}
@@ -1927,21 +1923,27 @@ static qboolean TestOutLightmapStamp( rawLightmap_t *lm, int lightmapNum, outLig
 	}
 
 	/* test the stamp */
-	for ( sy = 0; sy < lm->h; sy++ )
 	{
-		for ( sx = 0; sx < lm->w; sx++ )
-		{
-			/* get luxel */
-			luxel = BSP_LUXEL( lightmapNum, sx, sy );
-			//if( luxel[ 0 ] < 0.0f )
-			//	continue;
+		int sx, sy;
 
-			/* get bsp lightmap coords and test */
-			ox = x + sx;
-			oy = y + sy;
-			offset = ( oy * olm->customWidth ) + ox;
-			if ( olm->lightBits[ offset  ] > 0 ) { // & (1 << (offset & 7)) )
-				return qfalse;
+		for ( sy = 0; sy < lm->h; sy++ )
+		{
+			for ( sx = 0; sx < lm->w; sx++ )
+			{
+				int ox, oy, offset;
+
+				/* get luxel */
+				float       *luxel = BSP_LUXEL( lightmapNum, sx, sy );
+				//if( luxel[ 0 ] < 0.0f )
+				//	continue;
+
+				/* get bsp lightmap coords and test */
+				ox = x + sx;
+				oy = y + sy;
+				offset = ( oy * olm->customWidth ) + ox;
+				if ( olm->lightBits[ offset  ] > 0 ) { // & (1 << (offset & 7)) )
+					return qfalse;
+				}
 			}
 		}
 	}
@@ -2011,12 +2013,8 @@ static void SetupOutLightmap( rawLightmap_t *lm, outLightmap_t *olm ){
  */
 
 static void FindOutLightmaps( rawLightmap_t *lm ){
-	int i, j,  xMax, yMax, x, y, sx, sy, ox, oy, offset, temp;
+	int i, j,  xMax, yMax, x, y, sx, sy;
 	outLightmap_t       *olm;
-	surfaceInfo_t       *info;
-	float               *luxel, *deluxel;
-	vec3_t color, direction;
-	byte                *pixel;
 	qboolean ok;
 
 
@@ -2124,9 +2122,6 @@ static void FindOutLightmaps( rawLightmap_t *lm ){
 
 		x = lm->lightmapX[ 0 ];
 		y = lm->lightmapY[ 0 ];
-
-
-
 	}
 
 
@@ -2137,10 +2132,11 @@ static void FindOutLightmaps( rawLightmap_t *lm ){
 	olm->numLightmaps++;
 
 	/* add shaders */
+#pragma omp parallel for schedule(dynamic)
 	for ( i = 0; i < lm->numLightSurfaces; i++ )
 	{
 		/* get surface info */
-		info = &surfaceInfos[ lightSurfaces[ lm->firstLightSurface + i ] ];
+		surfaceInfo_t *info = &surfaceInfos[ lightSurfaces[ lm->firstLightSurface + i ] ];
 
 		/* test for shader */
 		for ( j = 0; j < olm->numShaders; j++ )
@@ -2152,9 +2148,12 @@ static void FindOutLightmaps( rawLightmap_t *lm ){
 
 		/* if it doesn't exist, add it */
 		if ( j >= olm->numShaders && olm->numShaders < MAX_LIGHTMAP_SHADERS ) {
-			olm->shaders[ olm->numShaders ] = info->si;
-			olm->numShaders++;
-			numLightmapShaders++;
+#pragma omp critical (__SHADERS_ADD__)
+			{
+				olm->shaders[ olm->numShaders ] = info->si;
+				olm->numShaders++;
+				numLightmapShaders++;
+			}
 		}
 	}
 
@@ -2170,14 +2169,17 @@ static void FindOutLightmaps( rawLightmap_t *lm ){
 	}
 
 	/* mark the bits used */
+#pragma omp parallel for schedule(dynamic)
 	for ( y = 0; y < yMax; y++ )
 	{
 		for ( x = 0; x < xMax; x++ )
 		{
 			/* get luxel */
-			luxel = BSP_LUXEL( 0, x, y );
-			deluxel = BSP_DELUXEL( x, y );
-
+			float *luxel = BSP_LUXEL( 0, x, y );
+			float *deluxel = BSP_DELUXEL( x, y );
+			byte *pixel;
+			vec3_t color;
+			int ox, oy, offset;
 
 			//	if( luxel[ 0 ] < 0.0f && !lm->solid[ lightmapNum ])
 			//		continue;
@@ -2220,12 +2222,14 @@ static void FindOutLightmaps( rawLightmap_t *lm ){
 			/* store direction */
 			if ( deluxemap ) {
 				/* normalize average light direction */
+				vec3_t direction;
+
 				if ( VectorNormalize( deluxel, direction ) ) {
 					/* encode [-1,1] in [0,255] */
 					pixel = olm->bspDirBytes + ( ( ( oy * olm->customWidth ) + ox ) * 3 );
 					for ( i = 0; i < 3; i++ )
 					{
-						temp = ( direction[ i ] + 1.0f ) * 127.5f;
+						int temp = ( direction[ i ] + 1.0f ) * 127.5f;
 						if ( temp < 0 ) {
 							pixel[ i ] = 0;
 						}
@@ -2698,35 +2702,37 @@ void StoreSurfaceLightmaps( void ){
 	numExtLightmaps = 0;
 
 	/* find output lightmap */
+//#pragma omp parallel for schedule(dynamic)
 	for ( i = 0; i < numRawLightmaps; i++ )
 	{
-		lm = &rawLightmaps[ sortLightmaps[ i ] ];
-
 		//Sys_Printf("[%d %d]",lm->w,lm->h);
 
-		FindOutLightmaps( lm );
+		Sys_Printf("%f percent complete.\n",(float)(((float)i / (float)numRawLightmaps) * 100.0));
+
+		FindOutLightmaps( &rawLightmaps[ sortLightmaps[ i ] ] );
 	}
 
 	/* set output numbers in twinned lightmaps */
+//#pragma omp parallel for schedule(dynamic)
 	for ( i = 0; i < numRawLightmaps; i++ )
 	{
 		/* get lightmap */
-		lm = &rawLightmaps[ sortLightmaps[ i ] ];
+		rawLightmap_t *lm0 = &rawLightmaps[ sortLightmaps[ i ] ];
 
 		/* walk lightmaps */
 		for ( lightmapNum = 0; lightmapNum < MAX_LIGHTMAPS; lightmapNum++ )
 		{
 			/* get twin */
-			lm2 = lm->twins[ lightmapNum ];
+			lm2 = lm0->twins[ lightmapNum ];
 			if ( lm2 == NULL ) {
 				continue;
 			}
-			lightmapNum2 = lm->twinNums[ lightmapNum ];
+			lightmapNum2 = lm0->twinNums[ lightmapNum ];
 
 			/* find output lightmap from twin */
-			lm->outLightmapNums[ lightmapNum ] = lm2->outLightmapNums[ lightmapNum2 ];
-			lm->lightmapX[ lightmapNum ] = lm2->lightmapX[ lightmapNum2 ];
-			lm->lightmapY[ lightmapNum ] = lm2->lightmapY[ lightmapNum2 ];
+			lm0->outLightmapNums[ lightmapNum ] = lm2->outLightmapNums[ lightmapNum2 ];
+			lm0->lightmapX[ lightmapNum ] = lm2->lightmapX[ lightmapNum2 ];
+			lm0->lightmapY[ lightmapNum ] = lm2->lightmapY[ lightmapNum2 ];
 		}
 	}
 
