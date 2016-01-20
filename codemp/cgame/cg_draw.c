@@ -4738,10 +4738,6 @@ CG_DrawRadar
 =====================
 */
 
-//#define JPFUELBAR_H			100.0f
-//#define JPFUELBAR_W			20.0f
-//#define JPFUELBAR_X			(SCREEN_WIDTH-JPFUELBAR_W-8.0f)
-//#define JPFUELBAR_Y			260.0f
 float	cg_radarRange = 2500.0f;
 
 #define RADAR_RADIUS			40
