@@ -87,6 +87,7 @@
       <GenerateAlternateCodePaths>SSE2</GenerateAlternateCodePaths>
       <UseProcessorExtensions>HOST</UseProcessorExtensions>
       <VectorizerDiagnosticLevel>LoopsSuccessVectorized1</VectorizerDiagnosticLevel>
+      <OpenMP>GenerateParallelCode</OpenMP>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -124,7 +125,7 @@
       </HeaderFileName>
     </Midl>
     <ClCompile>
-      <Optimization>Disabled</Optimization>
+      <Optimization>MaxSpeed</Optimization>
       <AdditionalIncludeDirectories>$(SolutionDir)\include;$(SolutionDir)\tools\quake3\common;$(SolutionDir)\libs;$(SolutionDir)\..\gtk-2.16.6\include\glib-2.0;$(SolutionDir)\..\gtk-2.16.6\lib\glib-2.0\include;$(SolutionDir)\..\libxml2-2.7.3\include\libxml2;$(SolutionDir)\..\gtk-2.16.6\include\libpng14;$(SolutionDir)\..\gtk-2.16.6\include;$(SolutionDir)\..\jpeg-8c\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_DEBUG;WIN32;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
@@ -137,6 +138,13 @@
       <WarningLevel>Level3</WarningLevel>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <InterproceduralOptimization>SingleFile</InterproceduralOptimization>
+      <Parallelization>true</Parallelization>
+      <GenerateAlternateCodePaths>SSE2</GenerateAlternateCodePaths>
+      <UseProcessorExtensions>HOST</UseProcessorExtensions>
+      <OpenMP>GenerateParallelCode</OpenMP>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>

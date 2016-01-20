@@ -1657,6 +1657,8 @@ void BasePortalVis( int portalnum ){
 	p->nummightsee = CountBits( p->portalflood, numportals * 2 );
 //	Sys_Printf ("portal %i: %i mightsee\n", portalnum, p->nummightsee);
 	c_flood += p->nummightsee;
+
+	free(p->portalfront); // UQ1: Seems unused after this, free it ffs!!!
 }
 
 

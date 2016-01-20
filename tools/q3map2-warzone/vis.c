@@ -921,7 +921,7 @@ void LoadPortals( char *name ){
 	numBSPVisBytes = VIS_HEADER_SIZE + portalclusters * leafbytes;
 
 	if ( numBSPVisBytes > MAX_MAP_VISIBILITY ) {
-		Error( "MAX_MAP_VISIBILITY exceeded" );
+		Error( "MAX_MAP_VISIBILITY exceeded %i > %i", numBSPVisBytes, MAX_MAP_VISIBILITY );
 	}
 
 	( (int *)bspVisBytes )[0] = portalclusters;
