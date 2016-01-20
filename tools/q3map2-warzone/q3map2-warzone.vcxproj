@@ -145,6 +145,7 @@
       <GenerateAlternateCodePaths>SSE2</GenerateAlternateCodePaths>
       <UseProcessorExtensions>HOST</UseProcessorExtensions>
       <OpenMP>GenerateParallelCode</OpenMP>
+      <CompileAs>Default</CompileAs>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -328,6 +329,7 @@
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
+    <ClCompile Include="tinythread.cpp" />
     <ClCompile Include="tjunction.c">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -408,6 +410,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="fast_mutex.h" />
     <ClInclude Include="game_ef.h" />
     <ClInclude Include="game_ja.h" />
     <ClInclude Include="game_jk2.h" />
@@ -416,6 +419,7 @@
     <ClInclude Include="game_wolf.h" />
     <ClInclude Include="game_wolfet.h" />
     <ClInclude Include="q3map2.h" />
+    <ClInclude Include="tinythread.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="changelog.q3map2.txt" />

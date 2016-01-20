@@ -149,6 +149,9 @@
     <ClCompile Include="convert_map.c">
       <Filter>src\convert</Filter>
     </ClCompile>
+    <ClCompile Include="tinythread.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="game_ef.h">
@@ -174,6 +177,12 @@
     </ClInclude>
     <ClInclude Include="q3map2.h">
       <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="fast_mutex.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="tinythread.h">
+      <Filter>src</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

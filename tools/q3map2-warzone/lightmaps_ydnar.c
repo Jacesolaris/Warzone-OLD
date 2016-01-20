@@ -2011,7 +2011,7 @@ static void SetupOutLightmap( rawLightmap_t *lm, outLightmap_t *olm ){
    FindOutLightmaps()
    for a given surface lightmap, find output lightmap pages and positions for it
  */
-
+#if 1
 static void FindOutLightmaps( rawLightmap_t *lm ){
 	int i, j,  xMax, yMax, x, y, sx, sy;
 	outLightmap_t       *olm;
@@ -2132,7 +2132,7 @@ static void FindOutLightmaps( rawLightmap_t *lm ){
 	olm->numLightmaps++;
 
 	/* add shaders */
-#pragma omp parallel for schedule(dynamic)
+//#pragma omp parallel for schedule(dynamic)
 	for ( i = 0; i < lm->numLightSurfaces; i++ )
 	{
 		/* get surface info */
@@ -2169,7 +2169,7 @@ static void FindOutLightmaps( rawLightmap_t *lm ){
 	}
 
 	/* mark the bits used */
-#pragma omp parallel for schedule(dynamic)
+//#pragma omp parallel for schedule(dynamic)
 	for ( y = 0; y < yMax; y++ )
 	{
 		for ( x = 0; x < xMax; x++ )
@@ -2246,7 +2246,248 @@ static void FindOutLightmaps( rawLightmap_t *lm ){
 	}
 
 }
+#else
+static void FindOutLightmapsNew( int num  ){
+	int i, j,  xMax, yMax, x, y, sx, sy;
+	outLightmap_t       *olm = NULL;
+	qboolean ok;
+	rawLightmap_t *lm = &rawLightmaps[ sortLightmaps[ num ] ];
 
+
+	/* set default lightmap number (-3 = LIGHTMAP_BY_VERTEX) */
+	for ( j = 0; j < MAX_LIGHTMAPS; j++ )
+		lm->outLightmapNums[ j ] = -3;
+
+	/* can this lightmap be approximated with vertex color? */
+	if ( ApproximateLightmap( lm ) ) {
+		return;
+	}
+
+
+	/* don't store twinned lightmaps */
+	if ( lm->twins[ 0 ] != NULL ) {
+		return;
+	}
+
+	/* if this is a styled lightmap, try some normalized locations first */
+	ok = qfalse;
+
+	//
+	// UQ1: Mutex to allow us to multithread...
+	//
+#pragma omp critical (__OUT_LIGHTMAP_MUTEX__)
+	{
+		/* try normal placement algorithm */
+		if ( ok == qfalse ) {
+			/* reset origin */
+			x = 0;
+			y = 0;
+
+			/* walk the list of lightmap pages */
+			for ( i = 0; i < numOutLightmaps; i++ )
+			{
+				/* get the output lightmap */
+				olm = &outLightmaps[ i ];
+
+				/* simple early out test */
+				if ( olm->freeLuxels < lm->used ) {
+					continue;
+				}
+
+				/* don't store non-custom raw lightmaps on custom bsp lightmaps */
+				if ( olm->customWidth != lm->customWidth ||
+					olm->customHeight != lm->customHeight ) {
+						continue;
+				}
+
+				/* set maxs */
+				if ( lm->solid[ 0 ] ) {
+					xMax = olm->customWidth;
+					yMax = olm->customHeight;
+				}
+				else
+				{
+					xMax = ( olm->customWidth - lm->w ) + 1;
+					yMax = ( olm->customHeight - lm->h ) + 1;
+				}
+
+				/* walk the origin around the lightmap */
+				for ( y = 0; y < yMax; y++ )
+				{
+					for ( x = 0; x < xMax; x++ )
+					{
+						/* find a fine tract of lauhnd */
+						ok = TestOutLightmapStamp( lm, 0, olm, x, y );
+
+						if ( ok ) {
+							break;
+						}
+					}
+
+					if ( ok ) {
+						break;
+					}
+				}
+
+				if ( ok ) {
+					break;
+				}
+
+				/* reset x and y */
+				x = 0;
+				y = 0;
+			}
+		}
+
+		/* no match? */
+		if ( ok == qfalse ) {
+			/* allocate our new output lightmap */
+			numOutLightmaps += 1;
+			olm = safe_malloc( numOutLightmaps * sizeof( outLightmap_t ) );
+
+			//copy the data back over
+			if ( numOutLightmaps > 0 ) {
+				memcpy( olm,outLightmaps,( numOutLightmaps - 1 ) * sizeof( outLightmap_t ) );
+				free( outLightmaps );
+			}
+
+
+
+			outLightmaps = olm;
+
+			i = numOutLightmaps - 1;
+			olm = &outLightmaps[ i ];
+
+			/* initialize out lightmap */
+			SetupOutLightmap( lm, &outLightmaps[ i] );
+
+			x = lm->lightmapX[ 0 ];
+			y = lm->lightmapY[ 0 ];
+		}
+
+
+		/* add the surface lightmap to the bsp lightmap */
+		lm->outLightmapNums[ 0 ] = i;
+		lm->lightmapX[ 0 ] = x;
+		lm->lightmapY[ 0 ] = y;
+		olm->numLightmaps++;
+
+		/* add shaders */
+		for ( i = 0; i < lm->numLightSurfaces; i++ )
+		{
+			/* get surface info */
+			surfaceInfo_t *info = &surfaceInfos[ lightSurfaces[ lm->firstLightSurface + i ] ];
+
+			/* test for shader */
+			for ( j = 0; j < olm->numShaders; j++ )
+			{
+				if ( olm->shaders[ j ] == info->si ) {
+					break;
+				}
+			}
+
+			/* if it doesn't exist, add it */
+			if ( j >= olm->numShaders && olm->numShaders < MAX_LIGHTMAP_SHADERS ) {
+				olm->shaders[ olm->numShaders ] = info->si;
+				olm->numShaders++;
+				numLightmapShaders++;
+			}
+		}
+	}
+
+	//
+	// The rest can safely multithread...
+	//
+
+	/* set maxs */
+	if ( lm->solid[ 0 ] ) {
+		xMax = 1;
+		yMax = 1;
+	}
+	else
+	{
+		xMax = lm->w;
+		yMax = lm->h;
+	}
+
+	/* mark the bits used */
+	for ( y = 0; y < yMax; y++ )
+	{
+		for ( x = 0; x < xMax; x++ )
+		{
+			/* get luxel */
+			float *luxel = BSP_LUXEL( 0, x, y );
+			float *deluxel = BSP_DELUXEL( x, y );
+			byte *pixel;
+			vec3_t color;
+			int ox, oy, offset;
+
+			//	if( luxel[ 0 ] < 0.0f && !lm->solid[ lightmapNum ])
+			//		continue;
+
+			/* set minimum light */
+			if ( lm->solid[ 0 ] ) {
+				if ( debug ) {
+					VectorSet( color, 255.0f, 0.0f, 0.0f );
+				}
+				else{
+					VectorCopy( lm->solidColor[ 0 ], color );
+				}
+			}
+			else{
+				VectorCopy( luxel, color );
+			}
+
+			for ( i = 0; i < 3; i++ )
+			{
+				if ( color[ i ] < minLight[ i ] ) {
+					color[ i ] = minLight[ i ];
+				}
+			}
+
+
+			/* get bsp lightmap coords  */
+			ox = x + lm->lightmapX[ 0 ];
+			oy = y + lm->lightmapY[ 0 ];
+			offset = ( oy * olm->customWidth ) + ox;
+
+			/* flag pixel as used */
+			olm->lightBits[ offset  ] = 1;
+			olm->freeLuxels--;
+
+
+			/* store color */
+			pixel = olm->bspLightBytes + ( ( ( oy * olm->customWidth ) + ox ) * 3 );
+			ColorToBytes( color, pixel, lm->brightness );
+
+			/* store direction */
+			if ( deluxemap ) {
+				/* normalize average light direction */
+				vec3_t direction;
+
+				if ( VectorNormalize( deluxel, direction ) ) {
+					/* encode [-1,1] in [0,255] */
+					pixel = olm->bspDirBytes + ( ( ( oy * olm->customWidth ) + ox ) * 3 );
+					for ( i = 0; i < 3; i++ )
+					{
+						int temp = ( direction[ i ] + 1.0f ) * 127.5f;
+						if ( temp < 0 ) {
+							pixel[ i ] = 0;
+						}
+						else if ( temp > 255 ) {
+							pixel[ i ] = 255;
+						}
+						else{
+							pixel[ i ] = temp;
+						}
+					}
+				}
+			}
+		}
+	}
+
+}
+#endif
 
 
 /*
@@ -2702,7 +2943,8 @@ void StoreSurfaceLightmaps( void ){
 	numExtLightmaps = 0;
 
 	/* find output lightmap */
-//#pragma omp parallel for schedule(dynamic)
+
+#if 1
 	for ( i = 0; i < numRawLightmaps; i++ )
 	{
 		//Sys_Printf("[%d %d]",lm->w,lm->h);
@@ -2711,6 +2953,10 @@ void StoreSurfaceLightmaps( void ){
 
 		FindOutLightmaps( &rawLightmaps[ sortLightmaps[ i ] ] );
 	}
+#else // Experimenting with multithreading
+	Sys_Printf( "\n--- FindOutLightmaps ---\n" );
+	RunThreadsOnIndividual( numRawLightmaps, qtrue, FindOutLightmapsNew );
+#endif
 
 	/* set output numbers in twinned lightmaps */
 //#pragma omp parallel for schedule(dynamic)
