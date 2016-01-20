@@ -333,10 +333,16 @@ qboolean FOLIAGE_Box_In_FOV ( vec3_t mins, vec3_t maxs )
 	VectorSet(edge, maxs[0], mins[1], maxs[2]);
 	VectorSet(edge2, mins[0], maxs[1], maxs[2]);
 
-	if (!InFOV( mins, cg.refdef.vieworg, cg.refdef.viewangles, 100, 180 )
+	/*if (!InFOV( mins, cg.refdef.vieworg, cg.refdef.viewangles, 100, 180 )
 		&& !InFOV( maxs, cg.refdef.vieworg, cg.refdef.viewangles, 100, 180 )
 		&& !InFOV( edge, cg.refdef.vieworg, cg.refdef.viewangles, 100, 180 )
 		&& !InFOV( edge2, cg.refdef.vieworg, cg.refdef.viewangles, 100, 180 ))
+		return qfalse;*/
+
+	if (!InFOV( mins, cg.refdef.vieworg, cg.refdef.viewangles, cg.refdef.fov_x, 180 )
+		&& !InFOV( maxs, cg.refdef.vieworg, cg.refdef.viewangles, cg.refdef.fov_x, 180 )
+		&& !InFOV( edge, cg.refdef.vieworg, cg.refdef.viewangles, cg.refdef.fov_x, 180 )
+		&& !InFOV( edge2, cg.refdef.vieworg, cg.refdef.viewangles, cg.refdef.fov_x, 180 ))
 		return qfalse;
 
 	return qtrue;
@@ -363,7 +369,7 @@ void FOLIAGE_Calc_In_Range_Areas( void )
 		trap->Print("WARNING: Minimum tree range multiplier is 8.0. Cvar has been changed.\n");
 	}
 
-	if (Distance(cg.refdef.vieworg, LAST_ORG) > 128.0 || Distance(cg.refdef.viewangles, LAST_ANG) > 50.0)
+	if (Distance(cg.refdef.vieworg, LAST_ORG) > 128.0 || Distance(cg.refdef.viewangles, LAST_ANG) > 0.0)//50.0)
 	{// Update in range list...
 		VectorCopy(cg.refdef.vieworg, LAST_ORG);
 		VectorCopy(cg.refdef.viewangles, LAST_ANG);
