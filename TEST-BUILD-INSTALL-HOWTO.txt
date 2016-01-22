@@ -1,0 +1,8 @@
+1. Copy the contents of WARZONE_CURRENT_TEST_BUILD to your JKA EXE directory.
+2. Copy the contents of WARZONE_LIBRARIES_FOR_EXE_DIR to your JKA EXE directory.
+3. Copy the contents of WARZONE_ASSETS_OUTSIDE_PK3 to your Warzone directory.
+4. Compress the contents of WARZONE_ASSETS to a WARZONE_ASSETS.zip and rename it to WARZONE_ASSETS.pk3 at the end.
+5. Create a shortcut on your desktop to Warzone.x86.exe.
+6. Right click the new desktop icon and go to properties.
+7. Change the "Target" field to "<INSERT_YOUR_JKA_EXE_DIR_HERE>\Warzone.x86.exe" +set r_renderer rd-warzone +set fs_game warzone
+8. Double click the icon.
