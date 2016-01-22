@@ -173,3 +173,5 @@ pip-log.txt
 #############
 *.o
 *.so
+/WARZONE_LIBRARIES_FOR_EXE_DIR/rdsp-vanilla_x86.dll
+/WARZONE_LIBRARIES_FOR_EXE_DIR/rd-vanilla_x86.dll
