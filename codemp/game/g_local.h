@@ -440,17 +440,17 @@ struct gentity_s {
 	int                     coverpointOFCtime; // Coverpoint Out-From-Cover timer...
 	int                     coverpointHIDEtime; // Coverpoint HIDE timer...
 	int                     pathsize; // For ASTAR pathing NPCs...
-	int                     pathlist[MAX_WPARRAY_SIZE]; // For ASTAR pathing NPCs...
-	float           patrol_range;
-	qboolean        return_home;
-	vec3_t          spawn_pos;
-	vec3_t          move_vector;
+	int                     *pathlist; // For ASTAR pathing NPCs...
+	float					patrol_range;
+	qboolean				return_home;
+	vec3_t					spawn_pos;
+	vec3_t					move_vector;
 	int                     bot_strafe_left_timer;
 	int                     bot_strafe_right_timer;
 	int                     bot_strafe_crouch_timer;
 	int                     bot_strafe_jump_timer;
 	int                     bot_strafe_target_timer;
-	vec3_t          bot_strafe_target_position;
+	vec3_t					bot_strafe_target_position;
 	int                     npc_mover_start_pos;
 	int                     npc_dumb_route_time;
 	vec3_t                  npc_previous_pos;

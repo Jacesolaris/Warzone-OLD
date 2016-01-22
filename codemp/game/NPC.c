@@ -8,7 +8,6 @@
 #include "ai_dominance_main.h"
 
 #define __NPC_STRAFE__
-//#define __NPC_BBOX_ADJUST__
 
 #define WAYPOINT_NONE -1
 
@@ -2631,6 +2630,7 @@ void NPC_SelectMoveAnimation(qboolean walk)
 typedef enum
 {// Avoidance methods...
 	AVOIDANCE_NONE,
+	AVOIDANCE_BLOCKED,
 	AVOIDANCE_STRAFE_RIGHT,
 	AVOIDANCE_STRAFE_LEFT,
 	AVOIDANCE_STRAFE_CROUCH,
@@ -2910,6 +2910,7 @@ int NPC_SelectBestAvoidanceMethod ( vec3_t moveDir )
 	int			i = 0;
 	qboolean	SKIP_RIGHT = qfalse;
 	qboolean	SKIP_LEFT = qfalse;
+	qboolean	TREE_BLOCK = qfalse;
 	gentity_t	*NPC = NPCS.NPC;
 
 	if (NPC->bot_strafe_right_timer > level.time)
@@ -2923,29 +2924,29 @@ int NPC_SelectBestAvoidanceMethod ( vec3_t moveDir )
 
 	if (NPC->bot_strafe_jump_timer > level.time)
 		return AVOIDANCE_STRAFE_JUMP;
-
-	//VectorCopy(NPC->r.mins, mins);
-	//mins[0] *= 2.0;
-	//mins[1] *= 2.0;
-	//VectorCopy(NPC->r.maxs, maxs);
-	//maxs[0] *= 2.0;
-	//maxs[1] *= 2.0;
-
-	//VectorSubtract( gWPArray[NPC->wpCurrent]->origin, NPC->r.currentOrigin, NPC->movedir );
-	//VectorSubtract( NPC->r.currentOrigin, gWPArray[NPC->wpCurrent]->origin, NPC->movedir );
+	
 	vectoangles(moveDir, angles);
 	AngleVectors( angles, forward, right, up );
 
+	//AngleVectors(NPC->client->ps.viewangles, forward, right, up);
+	//flaten up/down
+	right[2] = 0;
+
 	VectorCopy(NPC->r.currentOrigin, org1);
-	org1[2] += 18;
+	org1[2] += 32;
 
 	VectorMA(NPC->r.currentOrigin, 24, forward, org2);
 	VectorCopy(org2, goalPos);
-	org2[2] += 18;
+	org2[2] += 32;
+
+	if (FOLIAGE_TreeSolidBlocking( NPC, org2 ))
+	{// Blocked by tree...
+		TREE_BLOCK = qtrue;
+	}
 
 	trap->Trace( &tr, org1, mins, maxs, org2, NPC->s.number, MASK_PLAYERSOLID, 0, 0, 0 );
 		
-	if (!tr.startsolid && !tr.allsolid && tr.fraction >= 0.9f)
+	if (!tr.startsolid && !tr.allsolid && tr.fraction >= 0.9f && !TREE_BLOCK)
 	{// It is accessable normally...
 		return AVOIDANCE_NONE;
 	}
@@ -2954,19 +2955,17 @@ int NPC_SelectBestAvoidanceMethod ( vec3_t moveDir )
 		vec3_t trypos;
 
 		VectorCopy(NPC->r.currentOrigin, trypos);
-		trypos[0] += -right[0]*18;
-		trypos[1] += -right[1]*18;
-		trypos[2] += -right[2]*18;
+		VectorMA(trypos, -18, right, trypos);
 
 		VectorCopy(trypos, org1);
-		org1[2] += 18;
+		org1[2] += 32;
 
 		VectorCopy(goalPos, org2);
-		org2[2] += 18;
+		org2[2] += 32;
 
 		trap->Trace( &tr, org1, mins, maxs, org2, NPC->s.number, MASK_PLAYERSOLID, 0, 0, 0 );
 		
-		if (!tr.startsolid && !tr.allsolid && tr.fraction >= 0.9f)
+		if (!tr.startsolid && !tr.allsolid && tr.fraction >= 0.9f && !FOLIAGE_TreeSolidBlocking( NPC, org2 ))
 		{// It is accessable normally...
 			return AVOIDANCE_STRAFE_LEFT;
 		}
@@ -2976,19 +2975,17 @@ int NPC_SelectBestAvoidanceMethod ( vec3_t moveDir )
 		vec3_t trypos;
 
 		VectorCopy(NPC->r.currentOrigin, trypos);
-		trypos[0] += right[0]*18;
-		trypos[1] += right[1]*18;
-		trypos[2] += right[2]*18;
+		VectorMA(trypos, 18, right, trypos);
 
 		VectorCopy(trypos, org1);
-		org1[2] += 18;
+		org1[2] += 32;
 
 		VectorCopy(goalPos, org2);
-		org2[2] += 18;
+		org2[2] += 32;
 
 		trap->Trace( &tr, org1, mins, maxs, org2, NPC->s.number, MASK_PLAYERSOLID, 0, 0, 0 );
 		
-		if (!tr.startsolid && !tr.allsolid && tr.fraction >= 0.9f)
+		if (!tr.startsolid && !tr.allsolid && tr.fraction >= 0.9f && !FOLIAGE_TreeSolidBlocking( NPC, org2 ))
 		{// It is accessable normally...
 			return AVOIDANCE_STRAFE_RIGHT;
 		}
@@ -2998,19 +2995,17 @@ int NPC_SelectBestAvoidanceMethod ( vec3_t moveDir )
 		vec3_t trypos;
 
 		VectorCopy(NPC->r.currentOrigin, trypos);
-		trypos[0] += -right[0]*32;
-		trypos[1] += -right[1]*32;
-		trypos[2] += -right[2]*32;
+		VectorMA(trypos, -32, right, trypos);
 
 		VectorCopy(trypos, org1);
-		org1[2] += 18;
+		org1[2] += 32;
 
 		VectorCopy(goalPos, org2);
-		org2[2] += 18;
+		org2[2] += 32;
 
 		trap->Trace( &tr, org1, mins, maxs, org2, NPC->s.number, MASK_PLAYERSOLID, 0, 0, 0 );
 		
-		if (!tr.startsolid && !tr.allsolid && tr.fraction >= 0.9f)
+		if (!tr.startsolid && !tr.allsolid && tr.fraction >= 0.9f && !FOLIAGE_TreeSolidBlocking( NPC, org2 ))
 		{// It is accessable normally...
 			return AVOIDANCE_STRAFE_LEFT;
 		}
@@ -3020,24 +3015,63 @@ int NPC_SelectBestAvoidanceMethod ( vec3_t moveDir )
 		vec3_t trypos;
 
 		VectorCopy(NPC->r.currentOrigin, trypos);
-		trypos[0] += right[0]*32;
-		trypos[1] += right[1]*32;
-		trypos[2] += right[2]*32;
+		VectorMA(trypos, 32, right, trypos);
 
 		VectorCopy(trypos, org1);
-		org1[2] += 18;
+		org1[2] += 32;
 
 		VectorCopy(goalPos, org2);
-		org2[2] += 18;
+		org2[2] += 32;
 
 		trap->Trace( &tr, org1, mins, maxs, org2, NPC->s.number, MASK_PLAYERSOLID, 0, 0, 0 );
 		
-		if (!tr.startsolid && !tr.allsolid && tr.fraction >= 0.9f)
+		if (!tr.startsolid && !tr.allsolid && tr.fraction >= 0.9f && !FOLIAGE_TreeSolidBlocking( NPC, org2 ))
 		{// It is accessable normally...
 			return AVOIDANCE_STRAFE_RIGHT;
 		}
 	}
 
+	{// Try left 3...
+		vec3_t trypos;
+
+		VectorCopy(NPC->r.currentOrigin, trypos);
+		VectorMA(trypos, -64, right, trypos);
+
+		VectorCopy(trypos, org1);
+		org1[2] += 32;
+
+		VectorCopy(goalPos, org2);
+		org2[2] += 32;
+
+		trap->Trace( &tr, org1, mins, maxs, org2, NPC->s.number, MASK_PLAYERSOLID, 0, 0, 0 );
+		
+		if (!tr.startsolid && !tr.allsolid && tr.fraction >= 0.9f && !FOLIAGE_TreeSolidBlocking( NPC, org2 ))
+		{// It is accessable normally...
+			return AVOIDANCE_STRAFE_LEFT;
+		}
+	}
+
+	{// Try right 3...
+		vec3_t trypos;
+
+		VectorCopy(NPC->r.currentOrigin, trypos);
+		VectorMA(trypos, 64, right, trypos);
+
+		VectorCopy(trypos, org1);
+		org1[2] += 32;
+
+		VectorCopy(goalPos, org2);
+		org2[2] += 32;
+
+		trap->Trace( &tr, org1, mins, maxs, org2, NPC->s.number, MASK_PLAYERSOLID, 0, 0, 0 );
+		
+		if (!tr.startsolid && !tr.allsolid && tr.fraction >= 0.9f && !FOLIAGE_TreeSolidBlocking( NPC, org2 ))
+		{// It is accessable normally...
+			return AVOIDANCE_STRAFE_RIGHT;
+		}
+	}
+
+	if (!TREE_BLOCK)
 	{// Try crouch...
 		vec3_t trypos, mins2, maxs2;
 
@@ -3048,10 +3082,10 @@ int NPC_SelectBestAvoidanceMethod ( vec3_t moveDir )
 		VectorCopy(NPC->r.currentOrigin, trypos);
 
 		VectorCopy(trypos, org1);
-		org1[2] += 18;
+		org1[2] += 32;
 
 		VectorCopy(goalPos, org2);
-		org2[2] += 18;
+		org2[2] += 32;
 
 		trap->Trace( &tr, org1, mins2, maxs2, org2, NPC->s.number, MASK_PLAYERSOLID, 0, 0, 0 );
 		
@@ -3061,16 +3095,17 @@ int NPC_SelectBestAvoidanceMethod ( vec3_t moveDir )
 		}
 	}
 
+	if (!TREE_BLOCK)
 	{// Try jump...
 		vec3_t trypos;
 
 		VectorCopy(NPC->r.currentOrigin, trypos);
 
 		VectorCopy(trypos, org1);
-		org1[2] += 48;
+		org1[2] += 32;
 
 		VectorCopy(goalPos, org2);
-		org2[2] += 48;
+		org2[2] += 32;
 
 		trap->Trace( &tr, org1, mins, maxs, org2, NPC->s.number, MASK_PLAYERSOLID, 0, 0, 0 );
 		
@@ -3080,7 +3115,7 @@ int NPC_SelectBestAvoidanceMethod ( vec3_t moveDir )
 		}
 	}
 
-	return AVOIDANCE_NONE;
+	return AVOIDANCE_BLOCKED;
 }
 
 qboolean NPC_NPCBlockingPath ( vec3_t moveDir )
@@ -3146,6 +3181,9 @@ qboolean NPC_NPCBlockingPath ( vec3_t moveDir )
 	case AVOIDANCE_STRAFE_JUMP:
 		NPC->bot_strafe_jump_timer = level.time + 100;
 		break;
+	case AVOIDANCE_BLOCKED:
+		NPC->beStillTime = level.time + 500;
+		break;
 	default:
 		break;
 	}
@@ -3156,68 +3194,22 @@ qboolean NPC_NPCBlockingPath ( vec3_t moveDir )
 //Adjusts the moveDir to account for strafing
 void NPC_AdjustforStrafe (vec3_t moveDir, qboolean walk, float walkSpeed)
 {
-#if 0
+	gentity_t	*NPC = NPCS.NPC;
 	vec3_t right, angles;
-	gentity_t	*NPC = NPCS.NPC;
-
-	if (NPC->bot_strafe_right_timer < level.time && NPC->bot_strafe_left_timer < level.time)
-		return;
-
-	if (NPC->bot_strafe_right_timer > level.time + 200)
-	{
-		// Obviously incorrect...
-		NPC->bot_strafe_right_timer = 0;
-		return;
-	}
-	else if (NPC->bot_strafe_left_timer > level.time + 200)
-	{
-		// Obviously incorrect...
-		NPC->bot_strafe_left_timer = 0;
-		return;
-	}
-
-	vectoangles(moveDir, angles);
-	AngleVectors(angles, NULL, right, NULL);
-
-	//flaten up/down
-	right[2] = 0;
-
-	if (NPC->bot_strafe_left_timer > level.time)
-	{//strafing left
-		if (walk)
-			VectorScale(right, -walkSpeed, right);
-		else
-			VectorScale(right, -64, right);
-	}
-	else if (NPC->bot_strafe_right_timer > level.time)
-	{//strafing right
-		if (walk)
-			VectorScale(right, walkSpeed, right);
-		else
-			VectorScale(right, 64, right);
-	}
-
-	//We assume that moveDir has been normalized before this function.
-	VectorAdd(moveDir, right, moveDir);
-	//VectorNormalize(moveDir);
-#else
-	gentity_t	*NPC = NPCS.NPC;
-	vec3_t right;
 
 	if (NPC->bot_strafe_right_timer < level.time && NPC->bot_strafe_left_timer < level.time)
 	{//no strafe
 		return;
 	}
 
-	AngleVectors(NPC->client->ps.viewangles, NULL, right, NULL);
-
-	//vectoangles(moveDir, angles);
-	//AngleVectors(angles, NULL, right, NULL);
+	//AngleVectors(NPC->client->ps.viewangles, NULL, right, NULL);
+	vectoangles(moveDir, angles);
+	AngleVectors( angles, NULL, right, NULL );
 
 	//flaten up/down
 	right[2] = 0;
 
-	if (NPC->bot_strafe_right_timer > level.time)
+	if (NPC->bot_strafe_left_timer >= level.time)
 	{//strafing left
 		VectorScale(right, -1, right);
 	}
@@ -3225,7 +3217,6 @@ void NPC_AdjustforStrafe (vec3_t moveDir, qboolean walk, float walkSpeed)
 	//We assume that moveDir has been normalized before this function.
 	VectorAdd(moveDir, right, moveDir);
 	VectorNormalize(moveDir);
-#endif
 }
 
 qboolean NPC_RoutingSimpleJump ( int wpLast, int wpCurrent )
@@ -3302,7 +3293,6 @@ qboolean NPC_CheckFallPositionOK (gentity_t *NPC, vec3_t position)
 	
 	testPos[2] += 48.0;
 
-	//trap->Trace( &tr, testPos, NULL/*NPC->r.mins*/, NULL/*NPC->r.maxs*/, downPos, NPC->s.number, MASK_PLAYERSOLID, 0, 0, 0 );
 	trap->Trace( &tr, testPos, mins, maxs, downPos, NPC->s.number, MASK_PLAYERSOLID, 0, 0, 0 );
 
 	if (tr.entityNum != ENTITYNUM_NONE)
@@ -3368,13 +3358,16 @@ int NPC_CheckFallJump (gentity_t *NPC, vec3_t dest, usercmd_t *cmd)
 {
 	float MAX_JUMP_DISTANCE = 256.0;
 	float dist = Distance(dest, NPC->r.currentOrigin);
-	float noheight_dist = DistanceHorizontal(dest, NPC->r.currentOrigin);
-	float height_dist = dest[2] - NPC->r.currentOrigin[2];//DistanceVertical(dest, NPC->r.currentOrigin);
 
-	if (NPC_IsJetpacking(NPC) || !TIMER_Done( NPCS.NPC, "emergencyJump" )) return qfalse;
+	if (NPC->client->ps.groundEntityNum == ENTITYNUM_NONE) 
+		return 0;
 
-	if (!NPC_CheckFallPositionOK(NPC, dest)) return qfalse;
-		
+	if (NPC_IsJetpacking(NPC) || !TIMER_Done( NPCS.NPC, "emergencyJump" )) 
+		return 0;
+
+	if (!NPC_CheckFallPositionOK(NPC, dest)) 
+		return 0;
+
 	if (NPC_IsJedi(NPC)) MAX_JUMP_DISTANCE = 512.0; // Jedi can jump further...
 
 	if (dist <= MAX_JUMP_DISTANCE && NPC_TryJump( NPC, dest ))
@@ -3545,6 +3538,7 @@ qboolean UQ1_UcmdMoveForDir ( gentity_t *self, usercmd_t *cmd, vec3_t dir, qbool
 	float		fDot, rDot;
 	qboolean	jumping = qfalse;
 	float		walkSpeed = 32;//48;//64;//32;//self->NPC->stats.walkSpeed*1.1;
+	vec3_t		faceDir, faceAngles, facePos;
 
 	if (self->NPC->conversationPartner && self->NPC->conversationPartner->NPC)
 	{
@@ -3566,83 +3560,88 @@ qboolean UQ1_UcmdMoveForDir ( gentity_t *self, usercmd_t *cmd, vec3_t dir, qbool
 	cmd->upmove = 0;
 
 #ifdef __NPC_STRAFE__
-	if (self->wpCurrent >= 0) NPC_NPCBlockingPath(dir);
-	NPC_AdjustforStrafe(dir, walk, walkSpeed);
+	if (self->s.groundEntityNum != ENTITYNUM_NONE)
+	{// Do avoidance only when not in mid air...
+		vec3_t	dir2;
 
-	/*
-	if (self->bot_strafe_left_timer > level.time)
-	{
-		vec3_t position;
-		VectorMA(self->r.currentOrigin, 24, forward, position);
-		NPC_FacePosition(position, qfalse );
+		dir[2] = 0;
 
-		if (walk)
-			cmd->rightmove += -walkSpeed;
-		else
-			cmd->rightmove += -127.0;
+		VectorCopy(dir, dir2);
+		VectorNormalize(dir2);
+		dir2[2] = 0;
 
-		cmd->forwardmove = 0;
-
-		return qtrue;
-	}
-	else if (self->bot_strafe_right_timer > level.time)
-	{
-		vec3_t position;
-		VectorMA(self->r.currentOrigin, 24, forward, position);
-		NPC_FacePosition(position, qfalse );
-
-		if (walk)
-			cmd->rightmove += walkSpeed;
-		else
-			cmd->rightmove += 127.0;
-
-		cmd->forwardmove = 0;
-
-		return qtrue;
-	}
-	*/
-
-	if (self->bot_strafe_jump_timer > level.time)
-	{
-		cmd->upmove = 127.0;
-		if (NPCS.NPC->s.eType == ET_PLAYER) trap->EA_Jump(NPCS.NPC->s.number);
-		jumping = qtrue;
-	}
-	else if (self->bot_strafe_crouch_timer > level.time)
-	{
-		cmd->upmove = -127.0;
-		if (NPCS.NPC->s.eType == ET_PLAYER) trap->EA_Crouch(NPCS.NPC->s.number);
-	}
-#endif //__NPC_STRAFE__
-
-	dir[2] = 0;
-	VectorNormalize( dir );
-
-	if (NPC_CheckFall(self, dir))
-	{
-		int JUMP_RESULT = NPC_CheckFallJump(self, dest, cmd);
-
-		if (JUMP_RESULT == 2)
-		{// We can jump there... JKA method...
-			return qfalse;
+		if (self->wpCurrent >= 0) 
+		{// Check path for avoidance needs...
+			NPC_NPCBlockingPath(dir2);
 		}
-		else if (JUMP_RESULT == 1)
-		{// We can jump there... My method...
+
+		if (self->bot_strafe_jump_timer > level.time)
+		{
+			//trap->Print("DEBUG: self->bot_strafe_jump_timer > level.time\n");
 			cmd->upmove = 127.0;
 			if (NPCS.NPC->s.eType == ET_PLAYER) trap->EA_Jump(NPCS.NPC->s.number);
 			jumping = qtrue;
 		}
-		else
-		{// Moving here would cause us to fall (or 18 forward is blocked)... Wait!
-			cmd->forwardmove = 0;
-			cmd->rightmove = 0;
-			cmd->upmove = 0;
-			return qfalse;
+		else if (self->bot_strafe_crouch_timer > level.time)
+		{
+			//trap->Print("DEBUG: self->bot_strafe_crouch_timer > level.time\n");
+			cmd->upmove = -127.0;
+			if (NPCS.NPC->s.eType == ET_PLAYER) trap->EA_Crouch(NPCS.NPC->s.number);
 		}
+
+		if (NPC_CheckFall(self, dir2))
+		{
+			int JUMP_RESULT = NPC_CheckFallJump(self, dest, cmd);
+
+			if (JUMP_RESULT == 2)
+			{// We can jump there... JKA method...
+				//trap->Print("DEBUG: JUMP_RESULT == 2\n");
+				return qfalse;
+			}
+			else if (JUMP_RESULT == 1)
+			{// We can jump there... My method...
+				//trap->Print("DEBUG: JUMP_RESULT == 1\n");
+				cmd->upmove = 127.0;
+				if (NPCS.NPC->s.eType == ET_PLAYER) trap->EA_Jump(NPCS.NPC->s.number);
+				jumping = qtrue;
+			}
+			else
+			{// Moving here would cause us to fall (or 18 forward is blocked)... Wait!
+				cmd->forwardmove = 0;
+				cmd->rightmove = 0;
+				cmd->upmove = 0;
+				return qfalse;
+			}
+		}
+
+		// If avoidance is needed, adjust our move dir...
+		NPC_AdjustforStrafe(dir, walk, walkSpeed);
+	}
+#endif //__NPC_STRAFE__
+
+	VectorNormalize(dir);
+
+	if (self->beStillTime > level.time)
+	{// Screwed...
+		cmd->upmove = 0;
+		cmd->rightmove = 0;
+		cmd->forwardmove = 0;
+		return qfalse;
 	}
 
 	//NPCs cheat and store this directly because converting movement into a ucmd loses precision
 	VectorCopy( dir, self->client->ps.moveDir );
+
+	if (!self->enemy || !NPC_ValidEnemy(self->enemy))
+	{// Always face the move position...
+		vectoangles(dir, faceAngles);
+		AngleVectors( faceAngles, faceDir, NULL, NULL );
+
+		//flaten up/down
+		faceDir[2] = 0;
+		VectorMA( self->r.currentOrigin, 18, faceDir, facePos);
+		NPC_FacePosition( facePos, qfalse );
+	}
 
 	if (walk)
 	{
@@ -3694,27 +3693,14 @@ qboolean UQ1_UcmdMoveForDir ( gentity_t *self, usercmd_t *cmd, vec3_t dir, qbool
 	cmd->forwardmove = floor(fDot);
 	cmd->rightmove = floor(rDot);
 
-	/*if (self->bot_strafe_left_timer > level.time)
-	{
-		if (walk)
-			cmd->rightmove += -walkSpeed;
-		else
-			cmd->rightmove += -127.0;
-	}
-	else if (self->bot_strafe_right_timer > level.time)
-	{
-		if (walk)
-			cmd->rightmove += walkSpeed;
-		else
-			cmd->rightmove += 127.0;
-	}*/
-
 	if (trap->PointContents( self->r.currentOrigin, self->s.number ) & CONTENTS_WATER)
 	{// Always go to surface...
 		cmd->upmove = 127.0;
 	}
 
-	if (!jumping && !UQ_MoveDirClear( cmd->forwardmove, cmd->rightmove, qfalse ))
+	if (!jumping 
+		&& self->client->ps.groundEntityNum != ENTITYNUM_NONE
+		&& !UQ_MoveDirClear( cmd->forwardmove, cmd->rightmove, qfalse ))
 	{// Dir not clear, or we would fall!
 		cmd->forwardmove = 0;
 		cmd->rightmove = 0;
@@ -3726,7 +3712,6 @@ qboolean UQ1_UcmdMoveForDir ( gentity_t *self, usercmd_t *cmd, vec3_t dir, qbool
 		if (NPCS.ucmd.buttons & BUTTON_WALKING)
 		{
 			trap->EA_Action(NPCS.NPC->s.number, 0x0080000);
-			//trap->EA_Move(NPCS.NPC->s.number, dir, 5000.0);
 			trap->EA_Move(NPCS.NPC->s.number, dir, 100);
 
 			if (self->bot_strafe_left_timer > level.time)
@@ -3741,18 +3726,124 @@ qboolean UQ1_UcmdMoveForDir ( gentity_t *self, usercmd_t *cmd, vec3_t dir, qbool
 		}
 	}
 
-#ifdef __NPC_BBOX_ADJUST__
-	// Adjust the NPC's bbox size to make it smaller and let it move around easier...
-	if (self->r.maxs[0] > 0)
-	{// UQ1: Assuming HUMANOID NPCs... Exceptions may need to be made...
-		self->r.maxs[0] = 0;
-		self->r.maxs[1] = 0;
-	
-		self->r.mins[0] = 0;
-		self->r.mins[1] = 0;
-		trap->LinkEntity((sharedEntity_t *)self);
+	return qtrue;
+}
+
+qboolean UQ1_UcmdMoveForDir_NoAvoidance ( gentity_t *self, usercmd_t *cmd, vec3_t dir, qboolean walk, vec3_t dest )
+{
+	vec3_t		forward, right;
+	float		fDot, rDot;
+	float		walkSpeed = 32;//48;//64;//32;//self->NPC->stats.walkSpeed*1.1;
+	vec3_t		faceDir, faceAngles, facePos;
+
+	if (self->NPC)
+	{
+		//walkSpeed = self->NPC->stats.walkSpeed* 0.55; // UQ1: Why are these values so fast????
+		//trap->Print("%s walk speed is %f.\n", self->NPC_type, walkSpeed);
+		walkSpeed = 55 * 1.1;
 	}
-#endif //__NPC_BBOX_ADJUST__
+
+	AngleVectors( self->r.currentAngles, forward, right, NULL );
+	
+	cmd->upmove = 0;
+
+	VectorNormalize(dir);
+
+	if (self->beStillTime > level.time)
+	{// Screwed...
+		cmd->upmove = 0;
+		cmd->rightmove = 0;
+		cmd->forwardmove = 0;
+		return qfalse;
+	}
+
+	//NPCs cheat and store this directly because converting movement into a ucmd loses precision
+	VectorCopy( dir, self->client->ps.moveDir );
+
+	if (!self->enemy || !NPC_ValidEnemy(self->enemy))
+	{// Always face the move position...
+		vectoangles(dir, faceAngles);
+		AngleVectors( faceAngles, faceDir, NULL, NULL );
+
+		//flaten up/down
+		faceDir[2] = 0;
+		VectorMA( self->r.currentOrigin, 18, faceDir, facePos);
+		NPC_FacePosition( facePos, qfalse );
+	}
+
+	if (walk)
+	{
+		fDot = DotProduct( forward, dir ) * walkSpeed;
+		rDot = DotProduct( right, dir ) * walkSpeed;
+
+		//Must clamp this because DotProduct is not guaranteed to return a number within -1 to 1, and that would be bad when we're shoving this into a signed byte
+		if ( fDot > walkSpeed )
+		{
+			fDot = walkSpeed;
+		}
+		if ( fDot < -walkSpeed )
+		{
+			fDot = -walkSpeed;
+		}
+		if ( rDot > walkSpeed )
+		{
+			rDot = walkSpeed;
+		}
+		if ( rDot < -walkSpeed )
+		{
+			rDot = -walkSpeed;
+		}
+	}
+	else
+	{
+		fDot = DotProduct( forward, dir ) * 127.0f;
+		rDot = DotProduct( right, dir ) * 127.0f;
+
+		//Must clamp this because DotProduct is not guaranteed to return a number within -1 to 1, and that would be bad when we're shoving this into a signed byte
+		if ( fDot > 127.0f )
+		{
+			fDot = 127.0f;
+		}
+		if ( fDot < -127.0f )
+		{
+			fDot = -127.0f;
+		}
+		if ( rDot > 127.0f )
+		{
+			rDot = 127.0f;
+		}
+		if ( rDot < -127.0f )
+		{
+			rDot = -127.0f;
+		}
+	}
+
+	cmd->forwardmove = floor(fDot);
+	cmd->rightmove = floor(rDot);
+
+	if (trap->PointContents( self->r.currentOrigin, self->s.number ) & CONTENTS_WATER)
+	{// Always go to surface...
+		cmd->upmove = 127.0;
+	}
+
+	if (NPCS.NPC->s.eType == ET_PLAYER)
+	{
+		if (NPCS.ucmd.buttons & BUTTON_WALKING)
+		{
+			trap->EA_Action(NPCS.NPC->s.number, 0x0080000);
+			trap->EA_Move(NPCS.NPC->s.number, dir, 100);
+
+			if (self->bot_strafe_left_timer > level.time)
+				trap->EA_MoveLeft(NPCS.NPC->s.number);
+		}
+		else
+		{
+			trap->EA_Move(NPCS.NPC->s.number, dir, 200);
+
+			if (self->bot_strafe_left_timer > level.time)
+				trap->EA_MoveLeft(NPCS.NPC->s.number);
+		}
+	}
 
 	return qtrue;
 }
@@ -3899,6 +3990,11 @@ void NPC_Think ( gentity_t *self)//, int msec )
 	vec3_t	oldMoveDir;
 	int i = 0;
 	//gentity_t *player;
+
+	if (!self->pathlist)
+	{
+		self->pathlist = (int *)malloc(MAX_WPARRAY_SIZE*sizeof(int));
+	}
 
 	self->nextthink = level.time + FRAMETIME;
 	//self->nextthink = level.time;

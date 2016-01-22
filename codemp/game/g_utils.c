@@ -932,6 +932,12 @@ Marks the entity as free
 void G_FreeEntity( gentity_t *ed ) {
 	//gentity_t *te;
 
+	if (ed->pathlist)
+	{
+		free(ed->pathlist);
+		ed->pathlist = NULL;
+	}
+
 	if (ed->isSaberEntity)
 	{
 #ifdef _DEBUG

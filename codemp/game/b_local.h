@@ -351,6 +351,7 @@ extern qboolean NPC_Jump( gentity_t *NPC, vec3_t dest );
 extern qboolean NPC_TryJump( gentity_t *NPC, vec3_t goal );
 
 extern qboolean UQ1_UcmdMoveForDir ( gentity_t *self, usercmd_t *cmd, vec3_t dir, qboolean walk, vec3_t dest );
+extern qboolean UQ1_UcmdMoveForDir_NoAvoidance ( gentity_t *self, usercmd_t *cmd, vec3_t dir, qboolean walk, vec3_t dest );
 extern int	NAV_MoveToGoal( gentity_t *self, navInfo_t *info );
 extern void NAV_GetLastMove( navInfo_t *info );
 extern qboolean NAV_AvoidCollision( gentity_t *self, gentity_t *goal, navInfo_t *info );

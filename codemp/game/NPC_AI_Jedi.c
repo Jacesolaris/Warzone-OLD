@@ -4711,10 +4711,12 @@ qboolean NPC_SimpleJump( vec3_t from, vec3_t to )
 		}
 
 		NPC_FacePosition( to, qfalse );
+		NPCS.NPC->npc_jumping = qtrue;
 
 		return qtrue;
 	}
 
+	NPCS.NPC->npc_jumping = qfalse;
 	return qfalse;
 }
 
