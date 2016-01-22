@@ -1658,19 +1658,22 @@ qboolean NPC_TargetVisible( gentity_t *ent )
 	}
 
 	//Make sure we're in a valid range
-	if ( !IS_BREAKABLE && DistanceSquared( ent->r.currentOrigin, NPCS.NPC->r.currentOrigin ) > ( NPCS.NPCInfo->stats.visrange * NPCS.NPCInfo->stats.visrange ) )
+	//if ( !IS_BREAKABLE && DistanceSquared( ent->r.currentOrigin, NPCS.NPC->r.currentOrigin ) > ( NPCS.NPCInfo->stats.visrange * NPCS.NPCInfo->stats.visrange ) )
+	if ( NPCS.NPC && !IS_BREAKABLE && Distance( ent->r.currentOrigin, NPCS.NPC->r.currentOrigin ) > 2048.0 )
 	{
 		return qfalse;
 	}
 
-	if ( IS_BREAKABLE && DistanceSquared( ent->breakableOrigin, NPCS.NPC->r.currentOrigin ) > ( NPCS.NPCInfo->stats.visrange * NPCS.NPCInfo->stats.visrange ) )
+	//if ( IS_BREAKABLE && DistanceSquared( ent->breakableOrigin, NPCS.NPC->r.currentOrigin ) > ( NPCS.NPCInfo->stats.visrange * NPCS.NPCInfo->stats.visrange ) )
+	if ( NPCS.NPC && IS_BREAKABLE && Distance( ent->breakableOrigin, NPCS.NPC->r.currentOrigin ) > 1024.0 )
 	{
 		//if (IS_BREAKABLE) trap->Print("IS_BREAKABLE failed DIST\n");
 		return qfalse;
 	}
 
 	//Check our FOV
-	if ( !InFOV( ent, NPCS.NPC, NPCS.NPCInfo->stats.hfov, NPCS.NPCInfo->stats.vfov ) )
+	//if ( !InFOV( ent, NPCS.NPC, NPCS.NPCInfo->stats.hfov, NPCS.NPCInfo->stats.vfov ) )
+	if ( NPCS.NPC && !InFOV( ent, NPCS.NPC, 120, 180 ) )
 	{
 		//if (IS_BREAKABLE) trap->Print("IS_BREAKABLE failed FOV\n");
 		return qfalse;
@@ -1735,7 +1738,7 @@ int NPC_FindNearestEnemy( gentity_t *ent )
 	int			nearestEntID = -1;
 	float		nearestDist = (float)WORLD_SIZE*(float)WORLD_SIZE;
 	float		distance;
-	int			numEnts, numChecks = 0;
+	int			numEnts = 0;
 	int			i;
 
 	//Setup the bbox to search in
@@ -1759,8 +1762,6 @@ int NPC_FindNearestEnemy( gentity_t *ent )
 		//Must be valid
 		if ( NPC_ValidEnemy( radEnt ) == qfalse )
 			continue;
-
-		numChecks++;
 
 		//Must be visible
 		if ( NPC_TargetVisible( radEnt ) == qfalse )
@@ -1790,14 +1791,14 @@ int NPC_FindNearestEnemy( gentity_t *ent )
 		}
 	}
 
-	if (nearestEntID > 0 && nearestEntID < ENTITYNUM_MAX_NORMAL)
+	/*if (nearestEntID > 0 && nearestEntID < ENTITYNUM_MAX_NORMAL)
 	{
 		if (NPC_EntityIsBreakable(ent, &g_entities[nearestEntID]))
 		{
 			radEnt = &g_entities[nearestEntID];
 			//trap->Print("Target breakable at %f %f %f.\n", radEnt->breakableOrigin[0], radEnt->breakableOrigin[1], radEnt->breakableOrigin[2]);
 		}
-	}
+	}*/
 
 	return nearestEntID;
 }
@@ -1810,17 +1811,6 @@ NPC_PickEnemyExt
 
 gentity_t *NPC_PickEnemyExt( qboolean checkAlerts )
 {
-
-	//Check for Hazard Team status and remove this check
-	/*
-	if ( NPC->client->playerTeam != TEAM_STARFLEET )
-	{
-		//If we've found the player, return it
-		if ( NPC_FindPlayer() )
-			return &g_entities[0];
-	}
-	*/
-
 	//If we've asked for the closest enemy
 	int entID = NPC_FindNearestEnemy( NPCS.NPC );
 

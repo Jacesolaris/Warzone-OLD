@@ -358,7 +358,6 @@ extern qboolean NAV_AvoidCollision( gentity_t *self, gentity_t *goal, navInfo_t 
 extern int DOM_GetNearWP(vec3_t org, int badwp);
 extern qboolean NPC_CombatMoveToGoal( qboolean tryStraight, qboolean retreat );
 extern qboolean Jedi_Jump( vec3_t dest, int goalEntNum );
-extern qboolean NPC_RoutingSimpleJump ( int wpLast, int wpCurrent );
 extern void G_AddVoiceEvent( gentity_t *self, int event, int speakDebounceTime );
 
 extern void NPC_SelectMoveAnimation(qboolean walk);

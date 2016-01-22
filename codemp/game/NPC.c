@@ -2750,14 +2750,14 @@ extern qboolean NPC_CheckFallPositionOK(gentity_t *NPC, vec3_t position);
 
 qboolean NPC_SimpleJump( gentity_t *NPC, vec3_t from, vec3_t to )
 {
-	if (Distance(from, to) < 512 && Distance(NPC->r.currentOrigin, to) > 48)
+	if (Distance(from, to) < 512 && DistanceHorizontal(NPC->r.currentOrigin, to) > 48)
 	{
 		float apexHeight = to[2];
 		float currentWpDist = DistanceHorizontal(NPC->r.currentOrigin, to);
 		float lastWpDist = DistanceHorizontal(NPC->r.currentOrigin, from);
 		float distBetweenWp = DistanceHorizontal(to, from);
 
-		VectorSubtract(to, from, NPC->movedir);
+		VectorSubtract(to, NPC->r.currentOrigin, NPC->movedir);
 
 		// TODO - Visibility Check the path from apex point!
 
@@ -2767,16 +2767,22 @@ qboolean NPC_SimpleJump( gentity_t *NPC, vec3_t from, vec3_t to )
 		if ((lastWpDist * 0.5 < currentWpDist || NPC->r.currentOrigin[2] < to[2]) 
 			&& currentWpDist > 48 && apexHeight > NPC->r.currentOrigin[2])
 		{
-			NPC->client->ps.velocity[0] = NPC->movedir[0];
-			NPC->client->ps.velocity[1] = NPC->movedir[1];
+			VectorScale(NPC->movedir, 1.5, NPC->movedir);
+
+			//NPC->client->ps.velocity[0] = NPC->movedir[0];
+			//NPC->client->ps.velocity[1] = NPC->movedir[1];
+			UQ1_UcmdMoveForDir_NoAvoidance( NPC, &NPCS.ucmd, NPC->movedir, qfalse, to );
 
 			NPCS.ucmd.upmove = 127.0;
 			if (NPC->s.eType == ET_PLAYER) trap->EA_Jump(NPC->s.number);
 		}
 		else
 		{
-			NPC->client->ps.velocity[0] = NPC->movedir[0];
-			NPC->client->ps.velocity[1] = NPC->movedir[1];
+			VectorScale(NPC->movedir, 1.1, NPC->movedir);
+
+			//NPC->client->ps.velocity[0] = NPC->movedir[0];
+			//NPC->client->ps.velocity[1] = NPC->movedir[1];
+			UQ1_UcmdMoveForDir_NoAvoidance( NPC, &NPCS.ucmd, NPC->movedir, qfalse, to );
 
 			NPCS.ucmd.upmove = 0;
 		}
@@ -2793,16 +2799,30 @@ qboolean NPC_SimpleJump( gentity_t *NPC, vec3_t from, vec3_t to )
 
 qboolean NPC_Jump( gentity_t *NPC, vec3_t dest )
 {//FIXME: if land on enemy, knock him down & jump off again
+	/*qboolean wouldFall = qfalse;
+	qboolean skipSimpleJump = qfalse;
+
 	if (!NPC->npc_jumping)
 	{
-		VectorCopy(NPC->r.currentOrigin, NPC->npc_jump_start);
-		VectorCopy(dest, NPC->npc_jump_dest);
+		vec3_t dir;
+		VectorSubtract(dest, NPC->r.currentOrigin, dir);
+		wouldFall = NPC_CheckFall(NPC, dir);
+		
+		if (wouldFall)
+		{
+			VectorCopy(NPC->r.currentOrigin, NPC->npc_jump_start);
+			VectorCopy(dest, NPC->npc_jump_dest);
+		}
+		else
+		{
+			skipSimpleJump = qtrue;
+		}
 	}
 
-	if (NPC_SimpleJump( NPC, NPC->npc_jump_start, NPC->npc_jump_dest ))
+	if (!skipSimpleJump && NPC_SimpleJump( NPC, NPC->npc_jump_start, NPC->npc_jump_dest ))
 	{
 		return qtrue;
-	}
+	}*/
 
 	return Jedi_Jump( dest, ENTITYNUM_NONE );
 }
@@ -3262,59 +3282,6 @@ void NPC_AdjustforStrafe (vec3_t moveDir, qboolean walk, float walkSpeed)
 	VectorNormalize(moveDir);
 }
 
-qboolean NPC_RoutingSimpleJump ( int wpLast, int wpCurrent )
-{
-	int			link = 0;
-	qboolean	found = qfalse;
-
-	if (wpLast < 0 || wpLast > gWPNum) return qfalse;
-
-	for (link = 0; link < gWPArray[wpLast]->neighbornum; link++)
-	{
-		if (gWPArray[wpLast]->neighbors[link].num == wpCurrent) 
-		{// found it!
-			found = qtrue;
-			break;
-		}
-	}
-
-	if (found)
-	{
-		float apexHeight = gWPArray[wpCurrent]->origin[2];
-		float currentWpDist = DistanceHorizontal(NPCS.NPC->r.currentOrigin, gWPArray[wpCurrent]->origin);
-		float lastWpDist = DistanceHorizontal(NPCS.NPC->r.currentOrigin, gWPArray[wpLast]->origin);
-		float distBetweenWp = DistanceHorizontal(gWPArray[wpCurrent]->origin, gWPArray[wpLast]->origin);
-
-		if (gWPArray[wpLast]->origin[2] > apexHeight) apexHeight = gWPArray[wpLast]->origin[2];
-		apexHeight += /*96.0*/distBetweenWp / 2.0;
-
-		if ((lastWpDist * 0.5 < currentWpDist || NPCS.NPC->r.currentOrigin[2] < gWPArray[wpCurrent]->origin[2]) 
-			&& currentWpDist > 48 && apexHeight > NPCS.NPC->r.currentOrigin[2])
-		{
-			VectorSubtract( gWPArray[NPCS.NPC->wpCurrent]->origin, NPCS.NPC->r.currentOrigin, NPCS.NPC->movedir );
-			NPCS.NPC->client->ps.velocity[0] = NPCS.NPC->movedir[0] * 2.0;
-			NPCS.NPC->client->ps.velocity[1] = NPCS.NPC->movedir[1] * 2.0;
-			//NPCS.NPC->client->ps.velocity[2] = 100.0;
-			NPCS.ucmd.upmove = 127.0;
-			if (NPCS.NPC->s.eType == ET_PLAYER) trap->EA_Jump(NPCS.NPC->s.number);
-		}
-		else
-		{
-			VectorSubtract( gWPArray[NPCS.NPC->wpCurrent]->origin, NPCS.NPC->r.currentOrigin, NPCS.NPC->movedir );
-			NPCS.NPC->client->ps.velocity[0] = NPCS.NPC->movedir[0] * 2.0;
-			NPCS.NPC->client->ps.velocity[1] = NPCS.NPC->movedir[1] * 2.0;
-			//NPCS.NPC->client->ps.velocity[2] = NPCS.NPC->movedir[2];
-			NPCS.ucmd.upmove = 0;
-		}
-
-		NPC_FacePosition( gWPArray[NPCS.NPC->wpCurrent]->origin, qfalse );
-
-		return qtrue;
-	}
-
-	return qfalse;
-}
-
 qboolean NPC_CheckFallPositionOK (gentity_t *NPC, vec3_t position)
 {
 	trace_t		tr;
@@ -3415,27 +3382,9 @@ int NPC_CheckFallJump (gentity_t *NPC, vec3_t dest, usercmd_t *cmd)
 
 	if (dist <= MAX_JUMP_DISTANCE && NPC_TryJump( NPC, dest ))
 	{// Looks like we can jump there... Let's do that instead of failing!
-		return 2; // next think...
+		if (NPC_Jump(NPC, dest))
+			return 2; // next think...
 	}
-	else if (dist <= MAX_JUMP_DISTANCE && NPC_RoutingSimpleJump( NPC->wpLast, NPC->wpCurrent ))
-	{// UQ1: Testing new jump...
-		return 2;
-	}
-	/*else if (dist <= 128.0)//MAX_JUMP_DISTANCE)
-	{
-		if (height_dist <= 0 && noheight_dist > 0 - height_dist && NPC->client->ps.groundEntityNum == ENTITYNUM_NONE)
-		{// If our height is lower then the flat distance, keep jumping...
-			return 1; // next think...
-		}
-		else if (height_dist > 0 && noheight_dist > height_dist && NPC->client->ps.groundEntityNum == ENTITYNUM_NONE)
-		{// If our height is lower then the flat distance, keep jumping...
-			return 1; // next think...
-		}
-		else if (NPC->client->ps.groundEntityNum != ENTITYNUM_NONE)
-		{// If we have not yet jumped, jump...
-			return 1; // next think...
-		}
-	}*/
 
 	return 0;
 }
@@ -3581,7 +3530,7 @@ qboolean UQ1_UcmdMoveForDir ( gentity_t *self, usercmd_t *cmd, vec3_t dir, qbool
 	float		fDot, rDot;
 	qboolean	jumping = qfalse;
 	float		walkSpeed = 32;//48;//64;//32;//self->NPC->stats.walkSpeed*1.1;
-	vec3_t		faceDir, faceAngles, facePos;
+	//vec3_t		faceDir, faceAngles, facePos;
 
 	if (self->NPC->conversationPartner && self->NPC->conversationPartner->NPC)
 	{
@@ -3602,13 +3551,12 @@ qboolean UQ1_UcmdMoveForDir ( gentity_t *self, usercmd_t *cmd, vec3_t dir, qbool
 	
 	cmd->upmove = 0;
 
+	dir[2] = 0;
+	VectorNormalize(dir);
+
 #ifdef __NPC_STRAFE__
 	if (self->s.groundEntityNum != ENTITYNUM_NONE)
 	{// Do avoidance only when not in mid air...
-		dir[2] = 0;
-
-		VectorNormalize(dir);
-
 		if (self->wpCurrent >= 0) 
 		{// Check path for avoidance needs...
 			NPC_NPCBlockingPath(dir);
@@ -4214,7 +4162,7 @@ void NPC_Think ( gentity_t *self)//, int msec )
 		NPCS.ucmd.buttons = 0; // init buttons...
 
 		//nextthink is set before this so something in here can override it
-		if (self->s.NPC_class != CLASS_VEHICLE || !self->m_pVehicle)
+		if (self->s.NPC_class != CLASS_VEHICLE && !self->m_pVehicle)
 		{ //ok, let's not do this at all for vehicles.
 			qboolean is_civilian = NPC_IsCivilian(self);
 			qboolean is_jedi = NPC_IsJedi(self);
