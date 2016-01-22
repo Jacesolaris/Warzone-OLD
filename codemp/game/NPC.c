@@ -2741,24 +2741,67 @@ qboolean NPC_ClearPathToJump( gentity_t *NPC, vec3_t dest, int impactEntNum )
 }
 
 extern qboolean Jedi_Jump( vec3_t dest, int goalEntNum );
-extern qboolean NPC_SimpleJump( vec3_t from, vec3_t to );
 
-//#define	APEX_HEIGHT		200.0f
-#define	APEX_HEIGHT		128.0f
-#define	PARA_WIDTH		128.0f
-//#define	PARA_WIDTH		(sqrt(APEX_HEIGHT)+sqrt(APEX_HEIGHT))
-//#define	JUMP_SPEED		200.0f
-#define	JUMP_SPEED		128.0f
+#define	APEX_HEIGHT		200.0f
+#define	PARA_WIDTH		(sqrt(APEX_HEIGHT)+sqrt(APEX_HEIGHT))
+#define	JUMP_SPEED		200.0f
+
+extern qboolean NPC_CheckFallPositionOK(gentity_t *NPC, vec3_t position);
+
+qboolean NPC_SimpleJump( gentity_t *NPC, vec3_t from, vec3_t to )
+{
+	if (Distance(from, to) < 512 && Distance(NPC->r.currentOrigin, to) > 48)
+	{
+		float apexHeight = to[2];
+		float currentWpDist = DistanceHorizontal(NPC->r.currentOrigin, to);
+		float lastWpDist = DistanceHorizontal(NPC->r.currentOrigin, from);
+		float distBetweenWp = DistanceHorizontal(to, from);
+
+		VectorSubtract(to, from, NPC->movedir);
+
+		// TODO - Visibility Check the path from apex point!
+
+		if (from[2] > apexHeight) apexHeight = from[2];
+		apexHeight += distBetweenWp / 2.0;
+
+		if ((lastWpDist * 0.5 < currentWpDist || NPC->r.currentOrigin[2] < to[2]) 
+			&& currentWpDist > 48 && apexHeight > NPC->r.currentOrigin[2])
+		{
+			NPC->client->ps.velocity[0] = NPC->movedir[0];
+			NPC->client->ps.velocity[1] = NPC->movedir[1];
+
+			NPCS.ucmd.upmove = 127.0;
+			if (NPC->s.eType == ET_PLAYER) trap->EA_Jump(NPC->s.number);
+		}
+		else
+		{
+			NPC->client->ps.velocity[0] = NPC->movedir[0];
+			NPC->client->ps.velocity[1] = NPC->movedir[1];
+
+			NPCS.ucmd.upmove = 0;
+		}
+
+		//NPC_FacePosition( to, qfalse );
+		NPC->npc_jumping = qtrue;
+
+		return qtrue;
+	}
+
+	NPC->npc_jumping = qfalse;
+	return qfalse;
+}
 
 qboolean NPC_Jump( gentity_t *NPC, vec3_t dest )
 {//FIXME: if land on enemy, knock him down & jump off again
-	if (NPCS.NPC->npc_jumping && NPC_SimpleJump( NPCS.NPC->npc_jump_start, NPCS.NPC->npc_jump_dest ))
+	if (!NPC->npc_jumping)
+	{
+		VectorCopy(NPC->r.currentOrigin, NPC->npc_jump_start);
+		VectorCopy(dest, NPC->npc_jump_dest);
+	}
+
+	if (NPC_SimpleJump( NPC, NPC->npc_jump_start, NPC->npc_jump_dest ))
 	{
 		return qtrue;
-	}
-	else
-	{
-		NPCS.NPC->npc_jumping = qfalse;
 	}
 
 	return Jedi_Jump( dest, ENTITYNUM_NONE );
@@ -3562,17 +3605,21 @@ qboolean UQ1_UcmdMoveForDir ( gentity_t *self, usercmd_t *cmd, vec3_t dir, qbool
 #ifdef __NPC_STRAFE__
 	if (self->s.groundEntityNum != ENTITYNUM_NONE)
 	{// Do avoidance only when not in mid air...
-		vec3_t	dir2;
-
 		dir[2] = 0;
 
-		VectorCopy(dir, dir2);
-		VectorNormalize(dir2);
-		dir2[2] = 0;
+		VectorNormalize(dir);
 
 		if (self->wpCurrent >= 0) 
 		{// Check path for avoidance needs...
-			NPC_NPCBlockingPath(dir2);
+			NPC_NPCBlockingPath(dir);
+		}
+
+		if (self->beStillTime > level.time)
+		{// Screwed...
+			cmd->upmove = 0;
+			cmd->rightmove = 0;
+			cmd->forwardmove = 0;
+			return qfalse;
 		}
 
 		if (self->bot_strafe_jump_timer > level.time)
@@ -3589,7 +3636,7 @@ qboolean UQ1_UcmdMoveForDir ( gentity_t *self, usercmd_t *cmd, vec3_t dir, qbool
 			if (NPCS.NPC->s.eType == ET_PLAYER) trap->EA_Crouch(NPCS.NPC->s.number);
 		}
 
-		if (NPC_CheckFall(self, dir2))
+		if (NPC_CheckFall(self, dir))
 		{
 			int JUMP_RESULT = NPC_CheckFallJump(self, dest, cmd);
 
@@ -3619,19 +3666,10 @@ qboolean UQ1_UcmdMoveForDir ( gentity_t *self, usercmd_t *cmd, vec3_t dir, qbool
 	}
 #endif //__NPC_STRAFE__
 
-	VectorNormalize(dir);
-
-	if (self->beStillTime > level.time)
-	{// Screwed...
-		cmd->upmove = 0;
-		cmd->rightmove = 0;
-		cmd->forwardmove = 0;
-		return qfalse;
-	}
-
 	//NPCs cheat and store this directly because converting movement into a ucmd loses precision
 	VectorCopy( dir, self->client->ps.moveDir );
-
+	
+	/*
 	if (!self->enemy || !NPC_ValidEnemy(self->enemy))
 	{// Always face the move position...
 		vectoangles(dir, faceAngles);
@@ -3642,6 +3680,7 @@ qboolean UQ1_UcmdMoveForDir ( gentity_t *self, usercmd_t *cmd, vec3_t dir, qbool
 		VectorMA( self->r.currentOrigin, 18, faceDir, facePos);
 		NPC_FacePosition( facePos, qfalse );
 	}
+	*/
 
 	if (walk)
 	{

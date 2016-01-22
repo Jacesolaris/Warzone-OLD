@@ -20,6 +20,7 @@ extern void ST_Speech( gentity_t *self, int speechType, float failChance );
 extern void ForceJump( gentity_t *self, usercmd_t *ucmd );
 extern void WP_FireMelee( gentity_t *ent, qboolean alt_fire );
 extern qboolean NPC_CombatMoveToGoal( qboolean tryStraight, qboolean retreat );
+extern qboolean NPC_CheckFallPositionOK(gentity_t *NPC, vec3_t position);
 
 #define	MAX_VIEW_DIST		2048
 #define MAX_VIEW_SPEED		100
@@ -4675,51 +4676,6 @@ static qboolean Jedi_AttackDecide( int enemy_dist )
 #define	PARA_WIDTH		(sqrt(APEX_HEIGHT)+sqrt(APEX_HEIGHT))
 #define	JUMP_SPEED		200.0f
 
-extern qboolean NPC_CheckFallPositionOK(gentity_t *NPC, vec3_t position);
-
-qboolean NPC_SimpleJump( vec3_t from, vec3_t to )
-{
-	if (Distance(from, to) < 512 && Distance(NPCS.NPC->r.currentOrigin, to) > 48)
-	{
-		float apexHeight = to[2];
-		float currentWpDist = DistanceHorizontal(NPCS.NPC->r.currentOrigin, to);
-		float lastWpDist = DistanceHorizontal(NPCS.NPC->r.currentOrigin, from);
-		float distBetweenWp = DistanceHorizontal(to, from);
-
-		// TODO - Visibility Check the path from apex point!
-
-		if (from[2] > apexHeight) apexHeight = from[2];
-		apexHeight += distBetweenWp / 2.0;
-
-		if ((lastWpDist * 0.5 < currentWpDist || NPCS.NPC->r.currentOrigin[2] < to[2]) 
-			&& currentWpDist > 48 && apexHeight > NPCS.NPC->r.currentOrigin[2])
-		{
-			VectorSubtract( to, NPCS.NPC->r.currentOrigin, NPCS.NPC->movedir );
-			NPCS.NPC->client->ps.velocity[0] = NPCS.NPC->movedir[0] * 2.0;
-			NPCS.NPC->client->ps.velocity[1] = NPCS.NPC->movedir[1] * 2.0;
-			//NPCS.NPC->client->ps.velocity[2] = 100.0;
-			NPCS.ucmd.upmove = 127.0;
-			if (NPCS.NPC->s.eType == ET_PLAYER) trap->EA_Jump(NPCS.NPC->s.number);
-		}
-		else
-		{
-			VectorSubtract( to, NPCS.NPC->r.currentOrigin, NPCS.NPC->movedir );
-			NPCS.NPC->client->ps.velocity[0] = NPCS.NPC->movedir[0] * 2.0;
-			NPCS.NPC->client->ps.velocity[1] = NPCS.NPC->movedir[1] * 2.0;
-			//NPCS.NPC->client->ps.velocity[2] = NPCS.NPC->movedir[2];
-			NPCS.ucmd.upmove = 0;
-		}
-
-		NPC_FacePosition( to, qfalse );
-		NPCS.NPC->npc_jumping = qtrue;
-
-		return qtrue;
-	}
-
-	NPCS.NPC->npc_jumping = qfalse;
-	return qfalse;
-}
-
 qboolean Jedi_Jump( vec3_t dest, int goalEntNum )
 {//FIXME: if land on enemy, knock him down & jump off again
 	//
@@ -4748,20 +4704,6 @@ qboolean Jedi_Jump( vec3_t dest, int goalEntNum )
 			{// Goal is in mid-air - Never jump there (we not end up where we want and most likely fall)...
 				return qfalse;
 			}
-		}
-	}
-
-	if (NPCS.NPC->client->ps.groundEntityNum == ENTITYNUM_NONE && TIMER_Done( NPCS.NPC, "emergencyJump" ))
-	{// UQ1: Try my jump first! Unless we are in emergency jump mode (it needs to use velocity)...
-		if (!NPCS.NPC->npc_jumping)
-		{
-			VectorCopy(NPCS.NPC->r.currentOrigin, NPCS.NPC->npc_jump_start);
-			VectorCopy(dest, NPCS.NPC->npc_jump_dest);
-		}
-
-		if (NPC_SimpleJump( NPCS.NPC->npc_jump_start, NPCS.NPC->npc_jump_dest ))
-		{
-			return qtrue;
 		}
 	}
 
@@ -5096,13 +5038,9 @@ static qboolean Jedi_TryJump( gentity_t *goal )
 	//FIXME: I need to be on ground too!
 	qboolean jumped = qfalse;
 
-	if (NPCS.NPC->npc_jumping && NPC_SimpleJump( NPCS.NPC->npc_jump_start, NPCS.NPC->npc_jump_dest ))
+	if (NPC_Jump( NPCS.NPC, goal->r.currentOrigin ))
 	{
 		return qtrue;
-	}
-	else
-	{
-		NPCS.NPC->npc_jumping = qfalse;
 	}
 
 	if (NPCS.NPC->s.weapon != WP_SABER)
@@ -5560,13 +5498,9 @@ static void Jedi_Combat( void )
 
 	if (!(NPCS.NPC->enemy && NPC_IsAlive(NPCS.NPC->enemy))) return;
 
-	if (NPCS.NPC->npc_jumping && NPC_SimpleJump( NPCS.NPC->npc_jump_start, NPCS.NPC->npc_jump_dest ))
+	if (NPC_Jump( NPCS.NPC, enemy_dest ))
 	{
 		return;
-	}
-	else
-	{
-		NPCS.NPC->npc_jumping = qfalse;
 	}
 
 	if (!(NPCS.NPC->enemy && NPC_IsAlive(NPCS.NPC->enemy))) return;
@@ -6391,13 +6325,9 @@ void NPC_BSJedi_FollowLeader( void )
 	{
 		trace_t	trace;
 
-		if (NPCS.NPC->npc_jumping && NPC_SimpleJump( NPCS.NPC->npc_jump_start, NPCS.NPC->npc_jump_dest ))
+		if (NPC_Jump( NPCS.NPC, NPCS.NPCInfo->goalEntity->r.currentOrigin ))
 		{
 			return;
-		}
-		else
-		{
-			NPCS.NPC->npc_jumping = qfalse;
 		}
 
 		if ( Jedi_Jumping( NPCS.NPCInfo->goalEntity ) )

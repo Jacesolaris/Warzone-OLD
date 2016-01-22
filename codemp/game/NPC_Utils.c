@@ -2026,7 +2026,63 @@ qboolean NPC_FacePosition( vec3_t position, qboolean doPitch )
 	//Find the desired angles
 	GetAnglesForDirection( muzzle, position, angles );
 
-	if (!doPitch) angles[PITCH] = 0; // UQ1: FFS!!!
+	NPCS.NPCInfo->desiredYaw		= AngleNormalize360( angles[YAW] );
+	NPCS.NPCInfo->desiredPitch	= AngleNormalize360( angles[PITCH] );
+
+	if ( NPCS.NPC->enemy && NPCS.NPC->enemy->client && NPCS.NPC->enemy->client->NPC_class == CLASS_ATST )
+	{
+		// FIXME: this is kind of dumb, but it was the easiest way to get it to look sort of ok
+		NPCS.NPCInfo->desiredYaw	+= flrand( -5, 5 ) + sin( level.time * 0.004f ) * 7;
+		NPCS.NPCInfo->desiredPitch += flrand( -2, 2 );
+	}
+	//Face that yaw
+	NPC_UpdateAngles( doPitch, qtrue );
+
+	//Find the delta between our goal and our current facing
+	yawDelta = AngleNormalize360( NPCS.NPCInfo->desiredYaw - ( SHORT2ANGLE( NPCS.ucmd.angles[YAW] + NPCS.client->ps.delta_angles[YAW] ) ) );
+
+	//See if we are facing properly
+	if ( fabs( yawDelta ) > VALID_ATTACK_CONE )
+		facing = qfalse;
+
+	if ( doPitch )
+	{
+		//Find the delta between our goal and our current facing
+		float currentAngles = ( SHORT2ANGLE( NPCS.ucmd.angles[PITCH] + NPCS.client->ps.delta_angles[PITCH] ) );
+		float pitchDelta = NPCS.NPCInfo->desiredPitch - currentAngles;
+
+		//See if we are facing properly
+		if ( fabs( pitchDelta ) > VALID_ATTACK_CONE )
+			facing = qfalse;
+	}
+
+	return facing;
+}
+
+qboolean NPC_FacePosition( vec3_t position, qboolean doPitch )
+{
+	vec3_t		muzzle;
+	vec3_t		angles;
+	float		yawDelta;
+	qboolean	facing = qtrue;
+
+	//Get the positions
+	if ( NPCS.NPC->client && (NPCS.NPC->client->NPC_class == CLASS_RANCOR || NPCS.NPC->client->NPC_class == CLASS_WAMPA) )// || NPC->client->NPC_class == CLASS_SAND_CREATURE) )
+	{
+		CalcEntitySpot( NPCS.NPC, SPOT_ORIGIN, muzzle );
+		muzzle[2] += NPCS.NPC->r.maxs[2] * 0.75f;
+	}
+	else if ( NPCS.NPC->client && NPCS.NPC->client->NPC_class == CLASS_GALAKMECH )
+	{
+		CalcEntitySpot( NPCS.NPC, SPOT_WEAPON, muzzle );
+	}
+	else
+	{
+		CalcEntitySpot( NPCS.NPC, SPOT_HEAD_LEAN, muzzle );//SPOT_HEAD
+	}
+
+	//Find the desired angles
+	GetAnglesForDirection( muzzle, position, angles );
 
 	NPCS.NPCInfo->desiredYaw		= AngleNormalize360( angles[YAW] );
 	NPCS.NPCInfo->desiredPitch	= AngleNormalize360( angles[PITCH] );
@@ -2038,7 +2094,7 @@ qboolean NPC_FacePosition( vec3_t position, qboolean doPitch )
 		NPCS.NPCInfo->desiredPitch += flrand( -2, 2 );
 	}
 	//Face that yaw
-	NPC_UpdateAngles( qtrue, qtrue );
+	NPC_UpdateAngles( doPitch, qtrue );
 
 	//Find the delta between our goal and our current facing
 	yawDelta = AngleNormalize360( NPCS.NPCInfo->desiredYaw - ( SHORT2ANGLE( NPCS.ucmd.angles[YAW] + NPCS.client->ps.delta_angles[YAW] ) ) );

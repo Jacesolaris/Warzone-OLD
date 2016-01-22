@@ -1070,8 +1070,6 @@ qboolean NPC_HaveValidEnemy( void )
 	return NPC_IsAlive(NPC->enemy);
 }
 
-extern qboolean NPC_SimpleJump( vec3_t from, vec3_t to );
-
 void NPC_NewWaypointJump ( void )
 {// Jumping to new waypoint...
 	vec3_t myOrg, wpOrg;
@@ -1098,21 +1096,9 @@ void NPC_NewWaypointJump ( void )
 			return; // No need to jump to this...
 	}
 
-	if (NPCS.NPC->npc_jumping && NPC_SimpleJump( NPCS.NPC->npc_jump_start, NPCS.NPC->npc_jump_dest ))
+	if (NPC_Jump( NPCS.NPC, wpOrg ))
 	{// Continue the jump...
 		return;
-	}
-	else
-	{
-		NPCS.NPC->npc_jumping = qfalse;
-	}
-
-	if (!NPCS.NPC->npc_jumping)
-	{// Start the jump...
-		VectorCopy(NPCS.NPC->r.currentOrigin, NPCS.NPC->npc_jump_start);
-		wpOrg[2] += 64.0;
-		VectorCopy(wpOrg, NPCS.NPC->npc_jump_dest);
-		NPC_SimpleJump( NPCS.NPC->npc_jump_start, NPCS.NPC->npc_jump_dest );
 	}
 }
 
@@ -1164,20 +1150,6 @@ qboolean NPC_DoLiftPathing(gentity_t *NPC)
 					{
 						VectorCopy( NPC->movedir, NPC->client->ps.moveDir );
 						return qtrue;
-					}
-					else
-					{// UQ1: Testing new jump...
-						if (!NPCS.NPC->npc_jumping)
-						{
-							VectorCopy(NPCS.NPC->r.currentOrigin, NPCS.NPC->npc_jump_start);
-							VectorCopy(gWPArray[NPC->wpCurrent]->origin, NPCS.NPC->npc_jump_dest);
-						}
-
-						if (NPC_SimpleJump( NPCS.NPC->npc_jump_start, NPCS.NPC->npc_jump_dest ))
-						{
-							VectorCopy( NPC->movedir, NPC->client->ps.moveDir );
-							return qtrue;
-						}
 					}
 				}
 
@@ -1435,15 +1407,15 @@ qboolean NPC_FollowRoutes( void )
 
 	if (VectorLength(NPC->client->ps.velocity) < 8 && NPC_RoutingJumpWaypoint( NPC->wpLast, NPC->wpCurrent ))
 	{// We need to jump to get to this waypoint...
-		/*if (NPC_Jump(NPC, gWPArray[NPC->wpCurrent]->origin))
+		if (NPC_Jump(NPC, gWPArray[NPC->wpCurrent]->origin))
 		{
 			VectorCopy( NPC->movedir, NPC->client->ps.moveDir );
 			return qtrue;
 		}
-		else*/ if (NPC_RoutingSimpleJump( NPC->wpLast, NPC->wpCurrent ))
+		/*else if (NPC_RoutingSimpleJump( NPC->wpLast, NPC->wpCurrent ))
 		{// UQ1: Testing new jump...
 			return qtrue;
-		}
+		}*/
 	}
 	else if (VectorLength(NPC->client->ps.velocity) < 8)
 	{// If this is a new waypoint, we may need to jump to it...
@@ -1827,15 +1799,15 @@ qboolean NPC_FollowEnemyRoute( void )
 
 	if (VectorLength(NPC->client->ps.velocity) < 8 && NPC_RoutingJumpWaypoint( NPC->wpLast, NPC->wpCurrent ))
 	{// We need to jump to get to this waypoint...
-		/*if (NPC_Jump(NPC, gWPArray[NPC->wpCurrent]->origin))
+		if (NPC_Jump(NPC, gWPArray[NPC->wpCurrent]->origin))
 		{
 			VectorCopy( NPC->movedir, NPC->client->ps.moveDir );
 			return qtrue;
 		}
-		else*/ if (NPC_RoutingSimpleJump( NPC->wpLast, NPC->wpCurrent ))
+		/*else if (NPC_RoutingSimpleJump( NPC->wpLast, NPC->wpCurrent ))
 		{// UQ1: Testing new jump...
 			return qtrue;
-		}
+		}*/
 	}
 	else if (VectorLength(NPC->client->ps.velocity) < 8)
 	{// If this is a new waypoint, we may need to jump to it...
