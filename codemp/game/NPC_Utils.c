@@ -2026,6 +2026,8 @@ qboolean NPC_FacePosition( vec3_t position, qboolean doPitch )
 	//Find the desired angles
 	GetAnglesForDirection( muzzle, position, angles );
 
+	if (!doPitch) angles[PITCH] = 0; // UQ1: FFS!!!
+
 	NPCS.NPCInfo->desiredYaw		= AngleNormalize360( angles[YAW] );
 	NPCS.NPCInfo->desiredPitch	= AngleNormalize360( angles[PITCH] );
 
