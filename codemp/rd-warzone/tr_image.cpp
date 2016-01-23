@@ -2553,12 +2553,6 @@ extern qboolean R_CheckFBO(const FBO_t * fbo);
 
 FBO_t *R_CreateNormalMapDestinationFBO( int width, int height )
 {
-	/*
-	if (tr.NormalMapDestinationFBO) return tr.NormalMapDestinationFBO;
-	tr.NormalMapDestinationFBO = FBO_Create("_generateImageDst", 8192, 8192);
-	return tr.NormalMapDestinationFBO;
-	*/
-
 	if (tr.NormalMapDestinationFBO) {
 		FBO_Delete(tr.NormalMapDestinationFBO);
 		tr.numFBOs--; // Assume for now we are not threading...
@@ -2836,10 +2830,34 @@ void R_SaveNormalMap (const char *name, image_t *dstImage)
 	free(allbuf);
 }
 
+static qboolean R_ShouldMipMap( const char *name )
+{
+	//if (!(StringContainsWord(name, "textures/") || StringContainsWord(name, "models/")))
+	//	return qfalse;
+
+	if (StringContainsWord(name, "gfx/") || StringContainsWord(name, "gfx_base/"))
+	{
+		if (StringContainsWord(name, "2d")) return qfalse;
+		if (StringContainsWord(name, "colors")) return qfalse;
+		if (StringContainsWord(name, "console")) return qfalse;
+		if (StringContainsWord(name, "hud")) return qfalse;
+		if (StringContainsWord(name, "jkg")) return qfalse;
+		if (StringContainsWord(name, "menus")) return qfalse;
+		if (StringContainsWord(name, "mp")) return qfalse;
+	}
+
+	if (StringContainsWord(name, "fonts/")) return qfalse;
+	if (StringContainsWord(name, "levelshots/")) return qfalse;
+	if (StringContainsWord(name, "menu/")) return qfalse;
+	if (StringContainsWord(name, "ui/")) return qfalse;
+
+	return qtrue;
+}
+
+
 image_t *R_CreateNormalMapGLSL ( const char *name, byte *pic, int inwidth, int inheight, int flags, image_t	*srcImage )
 {
-	int			normalFlags;
-	vec4i_t		box;
+	int			normalFlags = 0;
 	FBO_t		*dstFbo = NULL;
 	image_t		*dstImage;
 	int width = inwidth/2;
@@ -2847,15 +2865,20 @@ image_t *R_CreateNormalMapGLSL ( const char *name, byte *pic, int inwidth, int i
 
 	if (!tr.generateNormalMapShader.program || !tr.generateNormalMapShader.uniformBuffer) return NULL; // Will get done later after init on usage...
 
+	if ((width <= 128 && height <= 128) || width <= 64 || height <= 64) return tr.whiteImage; // Not worth the time/vram...
+	if (StringContainsWord(name, "_spec")) return NULL;
+	if (StringContainsWord(name, "_sub")) return NULL;
+	if (StringContainsWord(name, "_overlay")) return NULL;
+	//if (!R_ShouldMipMap( name )) return NULL; // UI elements and other 2D crap... Skip...
+
 	//ri->Printf(PRINT_WARNING, "Generating [%ix%i] normal map %s.\n", width, height, name);
-	
-	normalFlags = (flags & ~(IMGFLAG_GENNORMALMAP | IMGFLAG_SRGB | IMGFLAG_CLAMPTOEDGE)) | IMGFLAG_NOLIGHTSCALE /*| IMGFLAG_NO_COMPRESSION*/;
+
+	//normalFlags = (flags & ~(IMGFLAG_GENNORMALMAP | IMGFLAG_SRGB | IMGFLAG_CLAMPTOEDGE)) | IMGFLAG_NOLIGHTSCALE | IMGFLAG_NO_COMPRESSION;
+	normalFlags = IMGFLAG_NOLIGHTSCALE | IMGFLAG_NO_COMPRESSION;
 
 	dstFbo = R_CreateNormalMapDestinationFBO(width, height);
 	FBO_Bind (dstFbo);
-	//dstImage = R_CreateImage( name, pic, width, height, IMGTYPE_NORMAL, normalFlags, GL_RGBA8 );
 	dstImage = R_CreateImage( name, NULL, width, height, IMGTYPE_NORMAL, normalFlags, 0 );
-	//qglBindTexture(GL_TEXTURE_2D, dstImage->texnum);
 	FBO_AttachTextureImage(dstImage, 0);
 	FBO_SetupDrawBuffers();
 	R_CheckFBO(dstFbo);
@@ -2870,14 +2893,6 @@ image_t *R_CreateNormalMapGLSL ( const char *name, byte *pic, int inwidth, int i
 	screensize[0] = width;
 	screensize[1] = height;
 	GLSL_SetUniformVec2(&tr.generateNormalMapShader, UNIFORM_DIMENSIONS, screensize);
-	//GLSL_SetUniformMatrix16(&tr.generateNormalMapShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
-
-	box[0] = 0;
-	box[1] = 0;
-	box[2] = width;
-	box[3] = height;
-
-	//qglGetTexImage
 
 	qglViewport(0, 0, width, height);
 	qglScissor(0, 0, width, height);
@@ -2885,7 +2900,7 @@ image_t *R_CreateNormalMapGLSL ( const char *name, byte *pic, int inwidth, int i
 	vec4_t color;
 	VectorSet4(color, 0.0, 0.0, 0.0, 0.0);
 
-	FBO_BlitFromTexture(srcImage, NULL/*box*/, NULL, dstFbo, NULL/*box*/, &tr.generateNormalMapShader, color, 0);
+	FBO_BlitFromTexture(srcImage, NULL, NULL, dstFbo, NULL, &tr.generateNormalMapShader, color, 0);
 	dstImage->generatedNormalMap = true;
 	dstImage->height = height;
 	dstImage->width = width;
@@ -2899,15 +2914,13 @@ image_t *R_CreateNormalMap ( const char *name, byte *pic, int width, int height,
 {
 	char normalName[MAX_QPATH];
 	image_t *normalImage;
-	//int normalWidth, normalHeight;
 	int normalFlags;
 	
-	//normalFlags = (flags & ~(IMGFLAG_GENNORMALMAP | IMGFLAG_SRGB)) | IMGFLAG_NOLIGHTSCALE;
-	normalFlags = (flags & ~(IMGFLAG_GENNORMALMAP | IMGFLAG_SRGB | IMGFLAG_CLAMPTOEDGE)) | IMGFLAG_NOLIGHTSCALE /*| IMGFLAG_NO_COMPRESSION*/;
+	normalFlags = (flags & ~(IMGFLAG_GENNORMALMAP | IMGFLAG_SRGB | IMGFLAG_CLAMPTOEDGE /*| IMGFLAG_NO_COMPRESSION*/)) | IMGFLAG_NOLIGHTSCALE /*| IMGFLAG_MIPMAP*/;
 	
 	COM_StripExtension(name, normalName, MAX_QPATH);
 	Q_strcat(normalName, MAX_QPATH, "_n");
-	
+
 	// find normalmap in case it's there
 	normalImage = R_FindImageFile(normalName, IMGTYPE_NORMAL, normalFlags);
 
@@ -2920,7 +2933,7 @@ static void R_CreateSpecularMap ( const char *name, byte *pic, int width, int he
 	image_t *specularImage;
 	int normalFlags;
 	
-	normalFlags = (flags & ~(IMGFLAG_GENNORMALMAP | IMGFLAG_SRGB | IMGFLAG_CLAMPTOEDGE)) | IMGFLAG_NOLIGHTSCALE;
+	normalFlags = (flags & ~(IMGFLAG_GENNORMALMAP | IMGFLAG_SRGB | IMGFLAG_CLAMPTOEDGE /*| IMGFLAG_NO_COMPRESSION*/)) | IMGFLAG_NOLIGHTSCALE /*| IMGFLAG_MIPMAP*/;
 	
 	COM_StripExtension(name, specularName, MAX_QPATH);
 	Q_strcat(specularName, MAX_QPATH, "_s");
@@ -2946,7 +2959,7 @@ static void R_CreateSubsurfaceMap ( const char *name, byte *pic, int width, int 
 	image_t *SubsurfaceImage;
 	int normalFlags;
 	
-	normalFlags = (flags & ~(IMGFLAG_GENNORMALMAP | IMGFLAG_SRGB | IMGFLAG_CLAMPTOEDGE)) | IMGFLAG_NOLIGHTSCALE;
+	normalFlags = (flags & ~(IMGFLAG_GENNORMALMAP | IMGFLAG_SRGB | IMGFLAG_CLAMPTOEDGE | IMGFLAG_NO_COMPRESSION)) | IMGFLAG_NOLIGHTSCALE | IMGFLAG_MIPMAP;
 	
 	COM_StripExtension(name, SubsurfaceName, MAX_QPATH);
 	Q_strcat(SubsurfaceName, MAX_QPATH, "_sub");
@@ -2972,7 +2985,7 @@ static void R_CreateOverlayMap ( const char *name, byte *pic, int width, int hei
 	image_t *SubsurfaceImage;
 	int normalFlags;
 	
-	normalFlags = (flags & ~(IMGFLAG_GENNORMALMAP | IMGFLAG_SRGB | IMGFLAG_CLAMPTOEDGE)) | IMGFLAG_NOLIGHTSCALE | IMGFLAG_MIPMAP;
+	normalFlags = (flags & ~(IMGFLAG_GENNORMALMAP | IMGFLAG_SRGB | IMGFLAG_CLAMPTOEDGE /*| IMGFLAG_NO_COMPRESSION*/)) | IMGFLAG_NOLIGHTSCALE /*| IMGFLAG_MIPMAP*/;
 	
 	COM_StripExtension(name, SubsurfaceName, MAX_QPATH);
 	Q_strcat(SubsurfaceName, MAX_QPATH, "_o");
@@ -2998,8 +3011,8 @@ static void R_CreateSteepMap ( const char *name, byte *pic, int width, int heigh
 	image_t *SubsurfaceImage;
 	int normalFlags;
 	
-	normalFlags = (flags & ~(IMGFLAG_GENNORMALMAP | IMGFLAG_SRGB | IMGFLAG_CLAMPTOEDGE)) | IMGFLAG_NOLIGHTSCALE | IMGFLAG_MIPMAP;
-	
+	normalFlags = (flags & ~(IMGFLAG_GENNORMALMAP | IMGFLAG_SRGB | IMGFLAG_CLAMPTOEDGE /*| IMGFLAG_NO_COMPRESSION*/)) | IMGFLAG_NOLIGHTSCALE /*| IMGFLAG_MIPMAP*/;
+
 	COM_StripExtension(name, SubsurfaceName, MAX_QPATH);
 	Q_strcat(SubsurfaceName, MAX_QPATH, "_steep");
 	
@@ -3021,30 +3034,6 @@ extern qboolean R_ShaderExists( const char *name, const int *lightmapIndexes, co
 char previous_name_loaded[256];
 
 extern void StripCrap( const char *in, char *out, int destsize );
-
-static qboolean R_ShouldMipMap( const char *name )
-{
-	//if (!(StringContainsWord(name, "textures/") || StringContainsWord(name, "models/")))
-	//	return qfalse;
-
-	if (StringContainsWord(name, "gfx/") || StringContainsWord(name, "gfx_base/"))
-	{
-		if (StringContainsWord(name, "2d")) return qfalse;
-		if (StringContainsWord(name, "colors")) return qfalse;
-		if (StringContainsWord(name, "console")) return qfalse;
-		if (StringContainsWord(name, "hud")) return qfalse;
-		if (StringContainsWord(name, "jkg")) return qfalse;
-		if (StringContainsWord(name, "menus")) return qfalse;
-		if (StringContainsWord(name, "mp")) return qfalse;
-	}
-
-	if (StringContainsWord(name, "fonts/")) return qfalse;
-	if (StringContainsWord(name, "levelshots/")) return qfalse;
-	if (StringContainsWord(name, "menu/")) return qfalse;
-	if (StringContainsWord(name, "ui/")) return qfalse;
-
-	return qtrue;
-}
 
 image_t	*R_FindImageFile( const char *name, imgType_t type, int flags )
 {

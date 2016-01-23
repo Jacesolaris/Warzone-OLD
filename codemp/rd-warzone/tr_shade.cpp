@@ -1853,6 +1853,11 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 							&& pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName[0] != '_'
 							&& pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName[0] != '!'
 							&& !(pStage->bundle[TB_DIFFUSEMAP].image[0]->flags & IMGFLAG_CUBEMAP)
+							&& pStage->bundle[TB_DIFFUSEMAP].image[0]->type != IMGTYPE_NORMAL 
+							&& pStage->bundle[TB_DIFFUSEMAP].image[0]->type != IMGTYPE_SPECULAR 
+							/*&& pStage->bundle[TB_DIFFUSEMAP].image[0]->type != IMGTYPE_SUBSURFACE*/ 
+							&& pStage->bundle[TB_DIFFUSEMAP].image[0]->type != IMGTYPE_OVERLAY 
+							&& pStage->bundle[TB_DIFFUSEMAP].image[0]->type != IMGTYPE_STEEPMAP 
 							// gfx dirs can be exempted I guess...
 							&& !(r_disableGfxDirEnhancement->integer && StringContainsWord(pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName, "gfx/"))
 							&& !(r_disableGfxDirEnhancement->integer && StringContainsWord(pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName, "gfx_base/")))
@@ -1860,16 +1865,21 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 							char imgname[64];
 							ri->Printf(PRINT_WARNING, "Realtime generating normal map for %s.\n", pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName);
 							sprintf(imgname, "%s_n", pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName);
-							pStage->bundle[TB_NORMALMAP].image[0] = R_CreateNormalMapGLSL( imgname, NULL, pStage->bundle[TB_DIFFUSEMAP].image[0]->width, pStage->bundle[TB_DIFFUSEMAP].image[0]->height, GL_RGBA8, pStage->bundle[TB_DIFFUSEMAP].image[0] );
-							if (pStage->bundle[TB_NORMALMAP].image[0]) pStage->hasRealNormalMap = true;
-							RB_SetMaterialBasedProperties(sp, pStage);
-							pStage->bundle[TB_DIFFUSEMAP].normalsLoaded2 = qtrue;
-
-							if (pStage->normalScale[0] == 0 && pStage->normalScale[1] == 0 && pStage->normalScale[2] == 0)
+							pStage->bundle[TB_NORMALMAP].image[0] = R_CreateNormalMapGLSL( imgname, NULL, pStage->bundle[TB_DIFFUSEMAP].image[0]->width, pStage->bundle[TB_DIFFUSEMAP].image[0]->height, pStage->bundle[TB_DIFFUSEMAP].image[0]->flags, pStage->bundle[TB_DIFFUSEMAP].image[0] );
+							
+							if (pStage->bundle[TB_NORMALMAP].image[0]) 
 							{
-								VectorSet4(pStage->normalScale, r_baseNormalX->value, r_baseNormalY->value, 1.0f, r_baseParallax->value);
-								GLSL_SetUniformVec4(sp, UNIFORM_NORMALSCALE, pStage->normalScale);
+								pStage->hasRealNormalMap = true;
+								RB_SetMaterialBasedProperties(sp, pStage);
+
+								if (pStage->normalScale[0] == 0 && pStage->normalScale[1] == 0 && pStage->normalScale[2] == 0)
+								{
+									VectorSet4(pStage->normalScale, r_baseNormalX->value, r_baseNormalY->value, 1.0f, r_baseParallax->value);
+									GLSL_SetUniformVec4(sp, UNIFORM_NORMALSCALE, pStage->normalScale);
+								}
 							}
+
+							pStage->bundle[TB_DIFFUSEMAP].normalsLoaded2 = qtrue;
 						}
 
 						if (pStage->bundle[TB_NORMALMAP].image[0])

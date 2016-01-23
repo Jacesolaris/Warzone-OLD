@@ -4138,7 +4138,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 	qboolean hasRealSteepMap = qfalse;
 	qboolean checkNormals = qtrue;
 
-	if (shader.isPortal || shader.isSky || diffuse->glow /*|| shader.hasAlpha*/)// || shader.noTC)
+	if (shader.isPortal || shader.isSky || diffuse->glow || shader.hasAlpha)// || shader.noTC)
 		checkNormals = qfalse;
 
 	//ri->Printf(PRINT_ALL, "shader %s has diffuse %s", shader.name, diffuse->bundle[0].image[0]->imgName);
@@ -4302,12 +4302,17 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 					&& diffuse->bundle[TB_DIFFUSEMAP].image[0]->imgName[0] != '_'
 					&& diffuse->bundle[TB_DIFFUSEMAP].image[0]->imgName[0] != '!'
 					&& !(diffuse->bundle[TB_DIFFUSEMAP].image[0]->flags & IMGFLAG_CUBEMAP)
+					&& diffuse->bundle[TB_DIFFUSEMAP].image[0]->type != IMGTYPE_NORMAL 
+					&& diffuse->bundle[TB_DIFFUSEMAP].image[0]->type != IMGTYPE_SPECULAR 
+					/*&& diffuse->bundle[TB_DIFFUSEMAP].image[0]->type != IMGTYPE_SUBSURFACE*/ 
+					&& diffuse->bundle[TB_DIFFUSEMAP].image[0]->type != IMGTYPE_OVERLAY 
+					&& diffuse->bundle[TB_DIFFUSEMAP].image[0]->type != IMGTYPE_STEEPMAP 
 
 					// gfx dirs can be exempted I guess...
 					&& !(r_disableGfxDirEnhancement->integer && StringContainsWord(diffuse->bundle[TB_DIFFUSEMAP].image[0]->imgName, "gfx/"))
 					&& !(r_disableGfxDirEnhancement->integer && StringContainsWord(diffuse->bundle[TB_DIFFUSEMAP].image[0]->imgName, "gfx_base/")))
 				{
-					normalImg = R_CreateNormalMapGLSL( normalName, NULL, diffuse->bundle[TB_DIFFUSEMAP].image[0]->width, diffuse->bundle[TB_DIFFUSEMAP].image[0]->height, GL_RGBA8, diffuse->bundle[TB_DIFFUSEMAP].image[0] );
+					normalImg = R_CreateNormalMapGLSL( normalName, NULL, diffuse->bundle[TB_DIFFUSEMAP].image[0]->width, diffuse->bundle[TB_DIFFUSEMAP].image[0]->height, diffuse->bundle[TB_DIFFUSEMAP].image[0]->flags, diffuse->bundle[TB_DIFFUSEMAP].image[0] );
 
 					if (normalImg)
 					{
