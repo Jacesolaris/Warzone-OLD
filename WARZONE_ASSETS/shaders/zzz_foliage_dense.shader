@@ -7,17 +7,17 @@
 textures/yavin/foliagedense_base
 {
 	q3map_material	GreenLeaves
-
+	
 	//surfaceparm pointlight
 	surfaceparm trans
 	surfaceparm	noimpact
 	surfaceparm	nomarks
-
+	
 	// distanceCull <inner> <outer> <alpha threshold>
 	distanceCull 480 1280 0.49
 
 	sort seethrough
-
+	
 	//cull disable
 	//cull twosided
 
@@ -52,7 +52,7 @@ textures/yavin/foliagedense_base
   q3map_foliage models/warzone/foliage/plant79.md3 1.0 256 0.005 5
   q3map_foliage models/warzone/foliage/plant80.md3 1.0 256 0.005 4
   q3map_foliage models/warzone/foliage/plant81.md3 1.0 256 0.005 3
-
+	
 	q3map_foliage models/map_objects/yavin/tree08_b.md3 1.0 256 0.01 2
 	q3map_foliage models/map_objects/yavin/tree08_b.md3 0.7 256 0.01 1
 	q3map_foliage models/map_objects/yavin/tree08_b.md3 1.4 256 0.01 0
@@ -71,6 +71,5 @@ textures/yavin/groundfoliagedense
     map textures/yavin/ground
     blendFunc GL_DST_COLOR GL_ZERO
     rgbGen vertex
-	tcMod scale 16.0 16.0
   }
 }

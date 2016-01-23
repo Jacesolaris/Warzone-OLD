@@ -54,6 +54,7 @@ vjun
 wedge
 yavin
 zzz_warzone_overlays
+zzz_warzone_steepmaps
 zzz_foliage
 zzz_foliage_dense
 zzz_foliage_light
