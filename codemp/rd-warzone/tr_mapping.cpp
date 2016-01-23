@@ -992,6 +992,7 @@ void R_LoadMapInfo ( void )
 		tr.random2KImage = R_FindImageFile("gfx/random2K.tga", IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION);
 	}
 
+#if 0
 	if (!ri->FS_FileExists(va( "mapImage/%s.tga", currentMapName )))
 	{
 		R_CreateBspMapImage();
@@ -1002,7 +1003,6 @@ void R_LoadMapInfo ( void )
 		tr.mapImage = R_FindImageFile(va( "mapImage/%s.tga", currentMapName ), IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION);
 	}
 
-#if 0
 	if (!ri->FS_FileExists(va( "heightMapImage/%s.tga", currentMapName )))
 	{
 		R_CreateHeightMapImage();
