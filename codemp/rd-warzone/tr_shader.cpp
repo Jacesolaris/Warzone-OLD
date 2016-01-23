@@ -5182,11 +5182,26 @@ static void SortNewShader( void ) {
 	newShader = tr.shaders[ tr.numShaders - 1 ];
 	sort = newShader->sort;
 
+	int numStagesInNewShader = 0;
+	while ( newShader->stages[numStagesInNewShader] )
+		numStagesInNewShader++;
+
 	for ( i = tr.numShaders - 2 ; i >= 0 ; i-- ) {
-		if ( tr.sortedShaders[ i ]->sort <= sort ) {
+		shader_t *shader = tr.sortedShaders[i];
+		int numStages = 0;
+		while ( shader->stages[numStages] )
+			numStages++;
+
+		if ( shader->sort < sort ) {
 			break;
 		}
-		tr.sortedShaders[i+1] = tr.sortedShaders[i];
+
+		if ( shader->sort == sort && numStages <= numStagesInNewShader )
+		{
+			break;
+		}
+	
+		tr.sortedShaders[i+1] = shader;
 		tr.sortedShaders[i+1]->sortedIndex++;
 	}
 
