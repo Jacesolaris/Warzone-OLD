@@ -1212,13 +1212,13 @@ typedef struct cgMedia_s {
 	qhandle_t	loadBarLEDSurround;
 
 	qhandle_t	bryarFrontFlash;
-	qhandle_t	greenFrontFlash;
+	//qhandle_t	greenFrontFlash;
 	qhandle_t	lightningFlash;
-	qhandle_t	DemplightningFlash;
-	qhandle_t	redFrontFlash;
-	qhandle_t	cannonChargeFlash;
-	qhandle_t	Chargelightningbeam;
-	qhandle_t	lightningbeam;
+	//qhandle_t	DemplightningFlash;
+	//qhandle_t	redFrontFlash;
+	//qhandle_t	cannonChargeFlash;
+	//qhandle_t	Chargelightningbeam;
+	//qhandle_t	lightningbeam;
 
 	qhandle_t	itemHoloModel;
 	qhandle_t	redFlagModel;
@@ -1434,27 +1434,27 @@ typedef struct cgMedia_s {
 	qhandle_t	sightShell;
 
 	// Disruptor zoom graphics
-	qhandle_t	disruptorMask;
-	qhandle_t	disruptorInsert;
-	qhandle_t	disruptorLight;
-	qhandle_t	disruptorInsertTick;
-	qhandle_t	disruptorChargeShader;
+	//qhandle_t	disruptorMask;
+	//qhandle_t	disruptorInsert;
+	//qhandle_t	disruptorLight;
+	//qhandle_t	disruptorInsertTick;
+	//qhandle_t	disruptorChargeShader;
 
 	//New Scope calls for guns
-	qhandle_t	GunRifleMask;
-	qhandle_t	GunRifleInsert;
-	qhandle_t	GunsMasks;
-	qhandle_t	GunInsert;
-	qhandle_t	GunLight;
-	qhandle_t	GunInsertTick;
-	qhandle_t	GunChargeShader;
-	qhandle_t	GunProjMask;
-	qhandle_t	GunProjInsert;
-	qhandle_t	bowcasterMask;
-	qhandle_t	bowcasterInsert;
-	qhandle_t	arcRifleMask;
-	qhandle_t	a280Mask;
-	qhandle_t	a280Insert;
+	//qhandle_t	GunRifleMask;
+	//qhandle_t	GunRifleInsert;
+	//qhandle_t	GunsMasks;
+	//qhandle_t	GunInsert;
+	//qhandle_t	GunLight;
+	//qhandle_t	GunInsertTick;
+	//qhandle_t	GunChargeShader;
+	//qhandle_t	GunProjMask;
+	//qhandle_t	GunProjInsert;
+	//qhandle_t	bowcasterMask;
+	//qhandle_t	bowcasterInsert;
+	//qhandle_t	arcRifleMask;
+	//qhandle_t	a280Mask;
+	//qhandle_t	a280Insert;
 
 	// Binocular graphics
 	qhandle_t	binocularCircle;
@@ -1650,166 +1650,105 @@ typedef struct cgMedia_s {
 // Stored FX handles
 //--------------------
 typedef struct cgEffects_s {
-	//concussion
-	fxHandle_t	concussionShotEffect;
-	fxHandle_t	concussionAltShotEffect;
-	fxHandle_t	concussionAltImpactEffect;
-	fxHandle_t	concussionImpactEffect;
+	//
+	// UQ1: Stoiss, I checked which of these are actually used and lots have issues (or are only used as fallback anyway) 
+	// and can probably be removed completely. Some unregistered ones might be a cause of missing shaders or FPS slowdowns.
+	//
 
 	// BRYAR PISTOL
-	fxHandle_t	bryarShotEffect;
-	fxHandle_t  bryarShotEffect1;
-	fxHandle_t	bryarPowerupShotEffect;
-	fxHandle_t	bryarWallImpactEffect;
-	fxHandle_t	bryarEnhancedFX_missileWallImpactfx;
-	fxHandle_t	bryarWallImpactEffect2;
-	fxHandle_t	bryarWallImpactEffect2EnhancedFX;
-	fxHandle_t	bryarWallImpactEffect3;
-	fxHandle_t	bryarWallImpactEffect3EnhancedFX;
-	fxHandle_t	bryarFleshImpactEffect;
-	fxHandle_t	bryarDroidImpactEffect;
+	fxHandle_t	bryarShotEffect; // UQ1: FIX or REMOVE ME - used but fx file is never registered.
+	fxHandle_t	bryarPowerupShotEffect; // UQ1: FIX or REMOVE ME - used but fx file is never registered.
+	fxHandle_t	bryarWallImpactEffect; // UQ1: FIX or REMOVE ME - used but fx file is never registered.
 
 	// BLASTER
-	fxHandle_t  blasterShotEffect;
-	fxHandle_t  blasterWallImpactEffect;
-	fxHandle_t  blasterEnhancedFX_missileWallImpactfx;
-	fxHandle_t  blasterFleshImpactEffect;
+	fxHandle_t  blasterShotEffect; // UQ1: FIX or REMOVE ME - used but fx file is never registered.
+	fxHandle_t  blasterWallImpactEffect; // UQ1: FIX or REMOVE ME - used but fx file is never registered.
+	fxHandle_t  blasterEnhancedFX_missileWallImpactfx; // UQ1: FIX or REMOVE ME - used but fx file is never registered.
+	fxHandle_t  blasterFleshImpactEffect; // UQ1: FIX or REMOVE ME - used but fx file is never registered.
 	fxHandle_t  blasterDroidImpactEffect;
 
 	// DISRUPTOR
-	fxHandle_t  disruptorRingsEffect;
-	fxHandle_t  disruptorProjectileEffect;
 	fxHandle_t  disruptorWallImpactEffect;
 	fxHandle_t  disruptorEnhancedFX_missileWallImpactfx;
 	fxHandle_t  disruptorFleshImpactEffect;
 	fxHandle_t  disruptorAltMissEffect;
 	fxHandle_t  disruptorAltHitEffect;
 
-	// BOWCASTER
-	fxHandle_t	bowcasterShotEffect;
-	fxHandle_t	bowcasterImpactEffect;
-	fxHandle_t	bowcasterImpactEffectEnhancedFX;
-
 	// REPEATER
-	fxHandle_t  repeaterProjectileEffect;
-	fxHandle_t  repeaterAltProjectileEffect;
-	fxHandle_t  repeaterWallImpactEffect;
-	fxHandle_t  repeaterEnhancedFX_missileWallImpactfx;
-	fxHandle_t  repeaterFleshImpactEffect;
-	fxHandle_t  repeaterAltWallImpactEffect;
+	fxHandle_t  repeaterAltProjectileEffect; // UQ1: FIX or REMOVE ME - used but fx file is never registered.
 
 	// DEMP2
-	fxHandle_t  demp2ProjectileEffect;
-	fxHandle_t  demp2SecShotEffect;
-	fxHandle_t  demp2WallImpactEffect;
-	fxHandle_t  demp2EnhancedFX_missileWallImpactfx;
-	fxHandle_t  demp2WallBounceEffect;
-	fxHandle_t  demp2WallBounceEffectEnhancedFX;
-	fxHandle_t  demp2FleshImpactEffect;
-
-	// FLECHETTE
-	fxHandle_t	flechetteShotEffect;
-	fxHandle_t	flechetteAltShotEffect;
-	fxHandle_t	flechetteWallImpactEffect;
-	fxHandle_t	flechetteEnhancedFX_missileWallImpactfx;
-	fxHandle_t	flechetteFleshImpactEffect;
-
-	//EE-3
-	fxHandle_t	ee3ShotEffect;
-	fxHandle_t	ee3AltShotEffect;
-
+	fxHandle_t  demp2ProjectileEffect; // UQ1: FIX or REMOVE ME - used but fx file is never registered.
+	fxHandle_t  demp2WallImpactEffect; // UQ1: FIX or REMOVE ME - used but fx file is never registered.
+	fxHandle_t  demp2EnhancedFX_missileWallImpactfx; // UQ1: FIX or REMOVE ME - used but fx file is never registered.
+	fxHandle_t  demp2WallBounceEffect; // UQ1: FIX or REMOVE ME - used but fx file is never registered.
+	fxHandle_t  demp2FleshImpactEffect; // UQ1: FIX or REMOVE ME - used but fx file is never registered.
 
 	// ROCKET
-	fxHandle_t  rocketShotEffect;
-	fxHandle_t  pulserocketShotEffect;
+	fxHandle_t  rocketShotEffect; // UQ1: FIX or REMOVE ME - used but fx file is never registered.
+	fxHandle_t  pulserocketShotEffect; // UQ1: FIX or REMOVE ME - used but fx file is never registered.
 	fxHandle_t  rocketExplosionEffect;
-	fxHandle_t  rocketExplosionEffectEnhancedFX;
-	fxHandle_t	pulserocketExplosionEffect;
-	fxHandle_t	pulserocketExplosionEffectEnhancedFX;
+	fxHandle_t  rocketExplosionEffectEnhancedFX; // UQ1: FIX or REMOVE ME - used but fx file is never registered.
+	fxHandle_t	pulserocketExplosionEffect; // UQ1: FIX or REMOVE ME - used but fx file is never registered.
 
 
 	// THERMAL
-	fxHandle_t	thermalShotEffect;
-	fxHandle_t	thermalShotEffect2;
-	fxHandle_t	fireGrenadeShotEffect;
-	fxHandle_t	fireGrenadeShotEffect2;
-	fxHandle_t	sonicGrenadeShotEffect;
-	fxHandle_t	sonicGrenadeShotEffect2;
-	fxHandle_t	concussionGrenadeShotEffect;
-	fxHandle_t	concussionGrenadeShotEffect2;
-	fxHandle_t	concussionExplosionEffect;
-	fxHandle_t	concussionExplosionEffectEnhancedFX;
-	fxHandle_t	thermalRealShotEffect;
-	fxHandle_t	thermalRealShotEffect2;
-	fxHandle_t	thermalExplosionEffect;
-	fxHandle_t	thermalExplosionEffectEnhancedFX;
-	fxHandle_t	thermalExplosionAltEffect;
-	fxHandle_t	thermalExplosionAltEffectEnhancedFX;
-	fxHandle_t	thermalShockwaveEffect;
-	fxHandle_t  thermalShockwaveEffectEffectEnhancedFX;
-	fxHandle_t	thermalRealExplosion;
-	fxHandle_t	thermalRealExplosionEnhancedFX;
-	fxHandle_t	fireGrenadeFireBlob;
-	fxHandle_t	fireGrenadeExplosion;
-	fxHandle_t	fireGrenadePart;
-	fxHandle_t	fireGrenadeNapalm;
-	fxHandle_t	iceGrenadeExplosion;
-	fxHandle_t	iceGrenadeExplosionEnhancedFX;
-	fxHandle_t	iceTargetFreeze;
-	fxHandle_t	iceTargetFreezeEnhancedFX;
-	fxHandle_t	sonicGrenadeWave;
+	fxHandle_t	fireGrenadeShotEffect; // UQ1: FIX or REMOVE ME - used but fx file is never registered.
+	fxHandle_t	fireGrenadeShotEffect2; // UQ1: FIX or REMOVE ME - used but fx file is never registered.
+	fxHandle_t	concussionGrenadeShotEffect; // UQ1: FIX or REMOVE ME - used but fx file is never registered.
+	fxHandle_t	concussionGrenadeShotEffect2; // UQ1: FIX or REMOVE ME - used but fx file is never registered.
+	fxHandle_t	thermalRealShotEffect; // UQ1: FIX or REMOVE ME - used but fx file is never registered.
+	fxHandle_t	thermalRealShotEffect2; // UQ1: FIX or REMOVE ME - used but fx file is never registered.
+	fxHandle_t	iceTargetFreeze; // UQ1: FIX or REMOVE ME - used but fx file is never registered.
+	fxHandle_t	iceTargetFreezeEnhancedFX; // UQ1: FIX or REMOVE ME - used but fx file is never registered.
+	fxHandle_t	sonicGrenadeWave; // UQ1: FIX or REMOVE ME - used but fx file is never registered.
 
 	// TRIPMINE
 	fxHandle_t	tripmineLaserFX;
 	fxHandle_t	tripmineGlowFX;
-	fxHandle_t	pulseGrenadeShotEffect;
-	fxHandle_t	pulseGrenadeShotEffect2;
-	fxHandle_t	iceGrenadeShotEffect;
-	fxHandle_t	iceGrenadeShotEffect2;
-
-	// T-21
-	fxHandle_t	T21ShotEffect;
-
-	// WRIST LASER
-	fxHandle_t	wristLaserShotEffect;
+	fxHandle_t	pulseGrenadeShotEffect; // UQ1: FIX or REMOVE ME - used but fx file is never registered.
+	fxHandle_t	pulseGrenadeShotEffect2; // UQ1: FIX or REMOVE ME - used but fx file is never registered.
 
 	//FORCE
 	fxHandle_t forceLightning;
 	fxHandle_t forceLightningWide;
 
 	//New EFX
-	fxHandle_t mFlameBurnFX;
-	fxHandle_t mFlameBurnEnhancedFX;
-	fxHandle_t mPlasmaFlameBurnFX;
-	fxHandle_t mPlasmaFlameBurnEnhancedFX;
+	//fxHandle_t mFlameBurnFX; // UQ1: FIX or REMOVE ME - fx is registered but not used. - DISABLED FOR VRAM REDUCTION
+	//fxHandle_t mFlameBurnEnhancedFX; // UQ1: FIX or REMOVE ME - fx is registered but not used. - DISABLED FOR VRAM REDUCTION
+	//fxHandle_t mPlasmaFlameBurnFX; // UQ1: FIX or REMOVE ME - fx is registered but not used. - DISABLED FOR VRAM REDUCTION
+	//fxHandle_t mPlasmaFlameBurnEnhancedFX; // UQ1: FIX or REMOVE ME - fx is registered but not used. - DISABLED FOR VRAM REDUCTION
+
 	fxHandle_t mEmplacedExplodeEnhancedFX;
 	fxHandle_t mTurretExplodeEnhancedFX;
 	fxHandle_t mSparkExplosionEnhancedFX;
 	fxHandle_t mAltDetonateEnhancedFX;
 	fxHandle_t mAltDempDetonateEnhancedFX;
 	fxHandle_t mSparksEnhancedFX;
-	fxHandle_t flamedFX;
-	fxHandle_t flameThrowerFX;
-	fxHandle_t flameThrowerEnhancedFX;
-	fxHandle_t flameThrowerPlasmaFX;
-	fxHandle_t flameThrowerPlasmaEnhancedFX;
-	fxHandle_t iceThrowerFX;
-	fxHandle_t	mBoilWater;
-	fxHandle_t	mBoilLava;
-	fxHandle_t	mBoilAcid;
-	fxHandle_t	mBoilWaterBubble;
-	fxHandle_t	mBoilLavaBubble;
-	fxHandle_t	mBoilAcidBubble;
-	fxHandle_t	mTripmineExplosionEnhancedFX;
+
+	//fxHandle_t flamedFX; // UQ1: FIX or REMOVE ME - fx is registered but not used. - DISABLED FOR VRAM REDUCTION
+	//fxHandle_t flameThrowerFX; // UQ1: FIX or REMOVE ME - fx is registered but not used. - DISABLED FOR VRAM REDUCTION
+	//fxHandle_t flameThrowerEnhancedFX; // UQ1: FIX or REMOVE ME - fx is registered but not used. - DISABLED FOR VRAM REDUCTION
+	//fxHandle_t flameThrowerPlasmaFX; // UQ1: FIX or REMOVE ME - fx is registered but not used. - DISABLED FOR VRAM REDUCTION
+	//fxHandle_t flameThrowerPlasmaEnhancedFX; // UQ1: FIX or REMOVE ME - fx is registered but not used. - DISABLED FOR VRAM REDUCTION
+	//fxHandle_t iceThrowerFX; // UQ1: FIX or REMOVE ME - fx is registered but not used. - DISABLED FOR VRAM REDUCTION
+
+	fxHandle_t	mBoilWater; // UQ1: FIX or REMOVE ME - used but fx file is never registered.
+	fxHandle_t	mBoilLava; // UQ1: FIX or REMOVE ME - used but fx file is never registered.
+	fxHandle_t	mBoilAcid; // UQ1: FIX or REMOVE ME - used but fx file is never registered.
+	//fxHandle_t	mBoilWaterBubble; // UQ1: UNUSED
+	//fxHandle_t	mBoilLavaBubble; // UQ1: UNUSED
+	//fxHandle_t	mBoilAcidBubble; // UQ1: UNUSED
+	fxHandle_t	mTripmineExplosionEnhancedFX; // UQ1: FIX or REMOVE ME - used but fx file is never registered.
 
 	
 	//[NewLightningEFX]
 	fxHandle_t lightningarc;
 	fxHandle_t forcelightningAbsorb;	
-	fxHandle_t saber_lightninghit;
+	//fxHandle_t saber_lightninghit; // UQ1: FIX or REMOVE ME - fx is registered but not used. - DISABLED FOR VRAM REDUCTION
 	fxHandle_t forcelightningFlare;
-	fxHandle_t forcelightningImpact;
-	fxHandle_t Lightning_body_smoke;
+	//fxHandle_t forcelightningImpact; // UQ1: FIX or REMOVE ME - fx is registered but not used. - DISABLED FOR VRAM REDUCTION
+	//fxHandle_t Lightning_body_smoke; // UQ1: FIX or REMOVE ME - fx is registered but not used. - DISABLED FOR VRAM REDUCTION
 	//[/NewLightningEFX]
 
 	fxHandle_t forceDrain;
@@ -1817,10 +1756,14 @@ typedef struct cgEffects_s {
 	fxHandle_t forceDrained;
 
 	//TURRET
-	fxHandle_t turretShotEffect;
+	//fxHandle_t turretShotEffect; // UQ1: FIX or REMOVE ME - fx is registered but not used. - DISABLED FOR VRAM REDUCTION
 
 	//Whatever
 	fxHandle_t itemCone;
+
+	//
+	// UQ1: I stopped checking ^^^ here...
+	//
 
 	fxHandle_t	mSparks;
 	fxHandle_t	mSaberCut;
@@ -1881,8 +1824,6 @@ typedef struct cgEffects_s {
 	//WEATHER
 	fxHandle_t	saberFizz;
 	fxHandle_t	rain;
-
-	fxHandle_t AltChargeMuzzleEnhacnedFX;
 } cgEffects_t;
 
 #define MAX_STATIC_MODELS 4000

@@ -1534,12 +1534,11 @@ static void CG_RegisterGraphics( void ) {
 	cgs.media.boltShader = trap->R_RegisterShader( "gfx/misc/blueLine" );
 
 	//New EFX calls
-	cgs.effects.mFlameBurnFX = trap->FX_RegisterEffect("effects/flamethrower/flameburn.efx");
-	cgs.effects.mFlameBurnEnhancedFX = trap->FX_RegisterEffect("effects/flamethrower/flameburn_enhanced2.efx");
-	cgs.effects.mPlasmaFlameBurnFX = trap->FX_RegisterEffect("effects/flamethrower/plasmaflameburn.efx");
-	cgs.effects.mPlasmaFlameBurnEnhancedFX = trap->FX_RegisterEffect("effects/flamethrower/plasmaflameburn_enhanced2.efx");
+	//cgs.effects.mFlameBurnFX = trap->FX_RegisterEffect("effects/flamethrower/flameburn.efx");
+	//cgs.effects.mFlameBurnEnhancedFX = trap->FX_RegisterEffect("effects/flamethrower/flameburn_enhanced2.efx");
+	//cgs.effects.mPlasmaFlameBurnFX = trap->FX_RegisterEffect("effects/flamethrower/plasmaflameburn.efx");
+	//cgs.effects.mPlasmaFlameBurnEnhancedFX = trap->FX_RegisterEffect("effects/flamethrower/plasmaflameburn_enhanced2.efx");
 	cgs.effects.mEmplacedExplodeEnhancedFX = trap->FX_RegisterEffect("emplaced/explode_enhanced2.efx");
-	cgs.effects.mTurretExplodeEnhancedFX = trap->FX_RegisterEffect("turret/explode_enhanced2.efx");
 	cgs.effects.mTurretExplodeEnhancedFX = trap->FX_RegisterEffect("turret/explode_enhanced2.efx");
 	cgs.effects.mSparkExplosionEnhancedFX = trap->FX_RegisterEffect("sparks/spark_explosion_enhanced2.efx");
 	
@@ -1547,14 +1546,14 @@ static void CG_RegisterGraphics( void ) {
 	cgs.effects.mAltDetonateEnhancedFX = trap->FX_RegisterEffect("sparks/spark_explosion_enhanced2.efx"); //("demp2/altDetonate_enhanced2.efx");
 	
 	cgs.effects.mSparksEnhancedFX = trap->FX_RegisterEffect("sparks/spark_nosnd_enhanced2.efx");
-	cgs.effects.flamedFX = trap->FX_RegisterEffect("effects/flamethrower/flamed.efx");
-	cgs.effects.flameThrowerFX = trap->FX_RegisterEffect("effects/flamethrower/flamethrowerwide.efx");
-	cgs.effects.flameThrowerEnhancedFX = trap->FX_RegisterEffect("effects/flamethrower/flamethrowerwide_enhanced2.efx");
-	cgs.effects.flameThrowerPlasmaFX = trap->FX_RegisterEffect("effects/flamethrower/flamethrowerwideplasma.efx");
-	cgs.effects.flameThrowerPlasmaEnhancedFX = trap->FX_RegisterEffect("effects/flamethrower/flamethrowerwideplasma_enhanced2.efx");
-	cgs.effects.iceThrowerFX = trap->FX_RegisterEffect("effects/flamethrower/ice.efx");
+	//cgs.effects.flamedFX = trap->FX_RegisterEffect("effects/flamethrower/flamed.efx");
+	//cgs.effects.flameThrowerFX = trap->FX_RegisterEffect("effects/flamethrower/flamethrowerwide.efx");
+	//cgs.effects.flameThrowerEnhancedFX = trap->FX_RegisterEffect("effects/flamethrower/flamethrowerwide_enhanced2.efx");
+	//cgs.effects.flameThrowerPlasmaFX = trap->FX_RegisterEffect("effects/flamethrower/flamethrowerwideplasma.efx");
+	//cgs.effects.flameThrowerPlasmaEnhancedFX = trap->FX_RegisterEffect("effects/flamethrower/flamethrowerwideplasma_enhanced2.efx");
+	//cgs.effects.iceThrowerFX = trap->FX_RegisterEffect("effects/flamethrower/ice.efx");
 
-	cgs.effects.turretShotEffect = trap->FX_RegisterEffect( "effects/turret/shot" );
+	//cgs.effects.turretShotEffect = trap->FX_RegisterEffect( "effects/turret/shot" );
 	cgs.effects.mEmplacedDeadSmoke = trap->FX_RegisterEffect("effects/emplaced/dead_smoke.efx");
 	cgs.effects.mEmplacedExplode = trap->FX_RegisterEffect("effects/emplaced/explode.efx");
 	cgs.effects.mTurretExplode = trap->FX_RegisterEffect("effects/turret/explode.efx");
@@ -1600,10 +1599,10 @@ static void CG_RegisterGraphics( void ) {
 	//[NewLightningEFX]
 	cgs.effects.forcelightningAbsorb	= trap->FX_RegisterEffect("effects/force/lightning_absorb.efx");
 	cgs.effects.lightningarc		= trap->FX_RegisterEffect("effects/force/lightning_arc.efx");
-	cgs.effects.saber_lightninghit = trap->FX_RegisterEffect("effects/saber/saber_lightninghit.efx");
+	//cgs.effects.saber_lightninghit = trap->FX_RegisterEffect("effects/saber/saber_lightninghit.efx");
 	cgs.effects.forcelightningFlare	=trap->FX_RegisterEffect("effects/force/lightning_flare.efx");
-	cgs.effects.forcelightningImpact	=trap->FX_RegisterEffect("effects/force/lightning_impact.efx");
-	cgs.effects.Lightning_body_smoke = trap->FX_RegisterEffect("effects/force/Lightning_body_smoke.efx");
+	//cgs.effects.forcelightningImpact	=trap->FX_RegisterEffect("effects/force/lightning_impact.efx");
+	//cgs.effects.Lightning_body_smoke = trap->FX_RegisterEffect("effects/force/Lightning_body_smoke.efx");
 	//[/NewLightningEFX]
 	cgs.effects.forceDrain		= trap->FX_RegisterEffect("effects/mp/drain.efx" );
 	cgs.effects.forceDrainWide	= trap->FX_RegisterEffect("effects/mp/drainwide.efx" );
