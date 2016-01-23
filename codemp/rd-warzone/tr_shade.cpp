@@ -1845,9 +1845,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 							&& !input->shader->isPortal
 							&& !input->shader->isSky
 							&& !pStage->glow
-							//&& !(stage > 0)
 							&& !pStage->bundle[TB_DIFFUSEMAP].normalsLoaded2
-							//&& (!pStage->bundle[TB_NORMALMAP].image[0])
 							&& (!pStage->bundle[TB_NORMALMAP].image[0] || pStage->bundle[TB_NORMALMAP].image[0] == tr.whiteImage)
 							&& pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName[0] 
 							&& pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName[0] != '*'
@@ -1857,20 +1855,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 							&& !(pStage->bundle[TB_DIFFUSEMAP].image[0]->flags & IMGFLAG_CUBEMAP)
 							// gfx dirs can be exempted I guess...
 							&& !(r_disableGfxDirEnhancement->integer && StringContainsWord(pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName, "gfx/"))
-							&& !(r_disableGfxDirEnhancement->integer && StringContainsWord(pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName, "gfx_base/"))
-
-							//&& !StringContainsWord(pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName, "menus/main_background") // never, ever!
-							/*
-							&& !StringContainsWord(pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName, "noshader") 
-							&& !StringContainsWord(pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName, "renderCube") 
-							&& !StringContainsWord(pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName, "shadowcubemap") 
-							&& !StringContainsWord(pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName, "_env") 
-							&& !StringContainsWord(pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName, "sky") 
-							&& !StringContainsWord(pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName, "skies") 
-							&& !StringContainsWord(pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName, "cloud") 
-							&& !StringContainsWord(pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName, "glow") 
-							&& !StringContainsWord(pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName, "gfx/")
-							&& !StringContainsWord(pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName, "gfx_base/")*/)
+							&& !(r_disableGfxDirEnhancement->integer && StringContainsWord(pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName, "gfx_base/")))
 						{// How did this happen??? Oh well, generate a normal map now...
 							char imgname[64];
 							ri->Printf(PRINT_WARNING, "Realtime generating normal map for %s.\n", pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName);

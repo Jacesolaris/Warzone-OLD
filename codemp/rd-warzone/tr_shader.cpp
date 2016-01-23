@@ -4295,7 +4295,6 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 					&& !shader.isPortal
 					&& !shader.isSky
 					&& !diffuse->glow
-					//&& (!diffuse->bundle[TB_NORMALMAP].image[0])
 					&& (!diffuse->bundle[TB_NORMALMAP].image[0] || diffuse->bundle[TB_NORMALMAP].image[0] == tr.whiteImage)
 					&& diffuse->bundle[TB_DIFFUSEMAP].image[0]->imgName[0] 
 					&& diffuse->bundle[TB_DIFFUSEMAP].image[0]->imgName[0] != '*'
@@ -4306,19 +4305,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 
 					// gfx dirs can be exempted I guess...
 					&& !(r_disableGfxDirEnhancement->integer && StringContainsWord(diffuse->bundle[TB_DIFFUSEMAP].image[0]->imgName, "gfx/"))
-					&& !(r_disableGfxDirEnhancement->integer && StringContainsWord(diffuse->bundle[TB_DIFFUSEMAP].image[0]->imgName, "gfx_base/"))
-
-					//&& !StringContainsWord(diffuse->bundle[TB_DIFFUSEMAP].image[0]->imgName, "menus/main_background") // never, ever!
-					/*
-					&& !StringContainsWord(diffuse->bundle[TB_DIFFUSEMAP].image[0]->imgName, "renderCube") 
-					&& !StringContainsWord(diffuse->bundle[TB_DIFFUSEMAP].image[0]->imgName, "shadowcubemap") 
-					&& !StringContainsWord(diffuse->bundle[TB_DIFFUSEMAP].image[0]->imgName, "_env") 
-					&& !StringContainsWord(diffuse->bundle[TB_DIFFUSEMAP].image[0]->imgName, "sky") 
-					&& !StringContainsWord(diffuse->bundle[TB_DIFFUSEMAP].image[0]->imgName, "skies") 
-					&& !StringContainsWord(diffuse->bundle[TB_DIFFUSEMAP].image[0]->imgName, "cloud") 
-					&& !StringContainsWord(diffuse->bundle[TB_DIFFUSEMAP].image[0]->imgName, "glow") 
-					&& !StringContainsWord(diffuse->bundle[TB_DIFFUSEMAP].image[0]->imgName, "gfx/")
-					&& !StringContainsWord(diffuse->bundle[TB_DIFFUSEMAP].image[0]->imgName, "gfx_base/")*/)
+					&& !(r_disableGfxDirEnhancement->integer && StringContainsWord(diffuse->bundle[TB_DIFFUSEMAP].image[0]->imgName, "gfx_base/")))
 				{
 					normalImg = R_CreateNormalMapGLSL( normalName, NULL, diffuse->bundle[TB_DIFFUSEMAP].image[0]->width, diffuse->bundle[TB_DIFFUSEMAP].image[0]->height, GL_RGBA8, diffuse->bundle[TB_DIFFUSEMAP].image[0] );
 
