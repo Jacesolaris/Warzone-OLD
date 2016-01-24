@@ -2916,7 +2916,7 @@ image_t *R_CreateNormalMap ( const char *name, byte *pic, int width, int height,
 	image_t *normalImage;
 	int normalFlags;
 	
-	normalFlags = (flags & ~(IMGFLAG_GENNORMALMAP | IMGFLAG_SRGB | IMGFLAG_CLAMPTOEDGE /*| IMGFLAG_NO_COMPRESSION*/)) | IMGFLAG_NOLIGHTSCALE /*| IMGFLAG_MIPMAP*/;
+	normalFlags = (flags & ~(IMGFLAG_GENNORMALMAP | IMGFLAG_SRGB | IMGFLAG_CLAMPTOEDGE | IMGFLAG_NO_COMPRESSION)) | IMGFLAG_NOLIGHTSCALE | IMGFLAG_MIPMAP;
 	
 	COM_StripExtension(name, normalName, MAX_QPATH);
 	Q_strcat(normalName, MAX_QPATH, "_n");
@@ -2933,7 +2933,7 @@ static void R_CreateSpecularMap ( const char *name, byte *pic, int width, int he
 	image_t *specularImage;
 	int normalFlags;
 	
-	normalFlags = (flags & ~(IMGFLAG_GENNORMALMAP | IMGFLAG_SRGB | IMGFLAG_CLAMPTOEDGE /*| IMGFLAG_NO_COMPRESSION*/)) | IMGFLAG_NOLIGHTSCALE /*| IMGFLAG_MIPMAP*/;
+	normalFlags = (flags & ~(IMGFLAG_GENNORMALMAP | IMGFLAG_SRGB | IMGFLAG_CLAMPTOEDGE | IMGFLAG_NO_COMPRESSION)) | IMGFLAG_NOLIGHTSCALE | IMGFLAG_MIPMAP;
 	
 	COM_StripExtension(name, specularName, MAX_QPATH);
 	Q_strcat(specularName, MAX_QPATH, "_s");
@@ -2985,7 +2985,7 @@ static void R_CreateOverlayMap ( const char *name, byte *pic, int width, int hei
 	image_t *SubsurfaceImage;
 	int normalFlags;
 	
-	normalFlags = (flags & ~(IMGFLAG_GENNORMALMAP | IMGFLAG_SRGB | IMGFLAG_CLAMPTOEDGE /*| IMGFLAG_NO_COMPRESSION*/)) | IMGFLAG_NOLIGHTSCALE /*| IMGFLAG_MIPMAP*/;
+	normalFlags = (flags & ~(IMGFLAG_GENNORMALMAP | IMGFLAG_SRGB | IMGFLAG_CLAMPTOEDGE | IMGFLAG_NO_COMPRESSION)) | IMGFLAG_NOLIGHTSCALE | IMGFLAG_MIPMAP;
 	
 	COM_StripExtension(name, SubsurfaceName, MAX_QPATH);
 	Q_strcat(SubsurfaceName, MAX_QPATH, "_o");
@@ -3011,7 +3011,7 @@ static void R_CreateSteepMap ( const char *name, byte *pic, int width, int heigh
 	image_t *SubsurfaceImage;
 	int normalFlags;
 	
-	normalFlags = (flags & ~(IMGFLAG_GENNORMALMAP | IMGFLAG_SRGB | IMGFLAG_CLAMPTOEDGE /*| IMGFLAG_NO_COMPRESSION*/)) | IMGFLAG_NOLIGHTSCALE /*| IMGFLAG_MIPMAP*/;
+	normalFlags = (flags & ~(IMGFLAG_GENNORMALMAP | IMGFLAG_SRGB | IMGFLAG_CLAMPTOEDGE | IMGFLAG_NO_COMPRESSION)) | IMGFLAG_NOLIGHTSCALE | IMGFLAG_MIPMAP;
 
 	COM_StripExtension(name, SubsurfaceName, MAX_QPATH);
 	Q_strcat(SubsurfaceName, MAX_QPATH, "_steep");
