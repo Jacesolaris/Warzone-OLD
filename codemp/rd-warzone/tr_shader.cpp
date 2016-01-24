@@ -5930,6 +5930,12 @@ This creates generic shaders for anything that has none to support rend2 stuff..
 */
 
 #ifdef ___SHADER_GENERATOR___
+char uniqueGenericGlow[] = "{\n"\
+"map %s_glow\n"\
+"blendFunc GL_ONE GL_ONE\n"\
+"glow\n"\
+"}\n";
+
 char uniqueGenericFoliageShader[] = "{\n"\
 "qer_editorimage	%s\n"\
 "q3map_alphashadow\n"\
@@ -5944,7 +5950,17 @@ char uniqueGenericFoliageShader[] = "{\n"\
 "blendfunc GL_ONE GL_ZERO\n"\
 "alphaFunc GE128\n"\
 "depthWrite\n"\
-"rgbGen identity\n"\
+"rgbGen lightingDiffuse\n"\
+"}\n"\
+"%s"\
+"{\n"\
+"map %s\n"\
+"blendFunc GL_SRC_ALPHA GL_ONE\n"\
+"rgbGen lightingDiffuse\n"\
+"alphaGen lightingSpecular\n"\
+"alphaFunc GE128\n"\
+"depthFunc equal\n"\
+"detail\n"\
 "}\n"\
 "{\n"\
 "map $lightmap\n"\
@@ -5955,27 +5971,57 @@ char uniqueGenericFoliageShader[] = "{\n"\
 "}\n"\
 "";
 
+// "rgbGen identity\n"\   ^^^
+// "rgbGen entity\n"\
+// "rgbGen vertex\n"\
+
 char uniqueGenericPlayerShader[] = "{\n"\
 "qer_editorimage	%s\n"\
 "q3map_nolightmap\n"\
 "{\n"\
 "map %s\n"\
+"blendfunc GL_SRC_ALPHA GL_ZERO\n"\
+"alphaFunc GE128\n"\
 "rgbGen lightingDiffuse\n"\
+"depthWrite\n"\
+"}\n"\
+"%s"\
+"{\n"\
+"map %s\n"\
+"blendFunc GL_SRC_ALPHA GL_ONE\n"\
+"rgbGen lightingDiffuse\n"\
+"alphaGen lightingSpecular\n"\
+"alphaFunc GE128\n"\
+"depthFunc equal\n"\
+"detail\n"\
 "}\n"\
 "}\n"\
 "";
 
 char uniqueGenericWeaponShader[] = "{\n"\
 "qer_editorimage	%s\n"\
+"q3map_alphashadow\n"\
+"q3map_material	hollowmetal\n"\
+"surfaceparm trans\n"\
+"surfaceparm	noimpact\n"\
+"surfaceparm	nomarks\n"\
+"sort seethrough\n"\
+"cull	twosided\n"\
 "{\n"\
 "map %s\n"\
+"blendfunc GL_SRC_ALPHA GL_ZERO\n"\
+"alphaFunc GE128\n"\
+"depthWrite\n"\
 "rgbGen entity\n"\
 "}\n"\
+"%s"\
 "{\n"\
 "map %s\n"\
 "blendFunc GL_SRC_ALPHA GL_ONE\n"\
 "rgbGen lightingDiffuse\n"\
 "alphaGen lightingSpecular\n"\
+"alphaFunc GE128\n"\
+"depthFunc equal\n"\
 "detail\n"\
 "}\n"\
 "}\n"\
@@ -5985,17 +6031,31 @@ char uniqueGenericShader[] = "{\n"\
 "qer_editorimage	%s\n"\
 "{\n"\
 "map %s\n"\
+"blendfunc GL_SRC_ALPHA GL_ZERO\n"\
+"alphaFunc GE128\n"\
 "rgbGen vertex\n"\
+"depthWrite\n"\
 "}\n"\
+"%s"\
 "{\n"\
 "map %s\n"\
 "blendFunc GL_SRC_ALPHA GL_ONE\n"\
 "rgbGen lightingDiffuse\n"\
 "alphaGen lightingSpecular\n"\
+"alphaFunc GE128\n"\
+"depthFunc equal\n"\
 "detail\n"\
+"}\n"\
+"{\n"\
+"map $lightmap\n"\
+"blendfunc GL_DST_COLOR GL_ZERO\n"\
+"rgbGen lightingDiffuse\n"\
+"depthFunc equal\n"\
 "}\n"\
 "}\n"\
 "";
+
+// "rgbGen identity\n"\
 
 qboolean R_ForceGenericShader ( const char *name, const char *text )
 {
@@ -6059,7 +6119,7 @@ shader_t *R_FindShader( const char *name, const int *lightmapIndexes, const byte
 	image_t		*image;
 	shader_t	*sh;
 #ifdef ___SHADER_GENERATOR___
-	char		myShader[512] = {0};
+	char		myShader[1024] = {0};
 #endif //___SHADER_GENERATOR___
 
 	if ( name[0] == 0 ) {
@@ -6140,19 +6200,49 @@ shader_t *R_FindShader( const char *name, const int *lightmapIndexes, const byte
 #ifdef ___SHADER_GENERATOR___
 	if (R_ForceGenericShader(name, shaderText) || (!strncmp(name, "textures/", 9) || !strncmp(name, "models/", 7)) && !StringContainsWord(name, "icon")) 
 	{
+		char glowShaderAddition[256] = { 0 };
+
 		shader.defaultShader = qfalse;
+
+		// Check if this texture has a _glow component...
+		char glowName[512];
+
+		flags = IMGFLAG_NONE;
+
+		if (r_srgb->integer)
+			flags |= IMGFLAG_SRGB;
+
+		if (mipRawImage)
+		{
+			flags |= IMGFLAG_MIPMAP | IMGFLAG_PICMIP;
+
+			//if (r_genNormalMaps->integer)
+			flags |= IMGFLAG_GENNORMALMAP;
+		}
+		else
+		{
+			flags |= IMGFLAG_CLAMPTOEDGE;
+		}
+
+		sprintf(glowName, "%s_glow", strippedName);
+		image = R_FindImageFile( glowName, IMGTYPE_COLORALPHA, flags );
+
+		if (image)
+			sprintf(glowShaderAddition, uniqueGenericGlow, strippedName);
 
 		// Generate the shader...
 		if (StringContainsWord(strippedName, "player"))
-			sprintf(myShader, uniqueGenericPlayerShader, strippedName, strippedName);
+			sprintf(myShader, uniqueGenericPlayerShader, strippedName, strippedName, glowShaderAddition, strippedName);
 		else if (StringContainsWord(strippedName, "warzone/foliage") || StringContainsWord(strippedName, "warzone/tree"))
-			sprintf(myShader, uniqueGenericFoliageShader, strippedName, strippedName);
+			sprintf(myShader, uniqueGenericFoliageShader, strippedName, strippedName, glowShaderAddition, strippedName);
 		else if (StringContainsWord(strippedName, "warzone\\foliage") || StringContainsWord(strippedName, "warzone\\tree"))
-			sprintf(myShader, uniqueGenericFoliageShader, strippedName, strippedName);
+			sprintf(myShader, uniqueGenericFoliageShader, strippedName, strippedName, glowShaderAddition, strippedName);
 		else if (StringContainsWord(strippedName, "weapon"))
-			sprintf(myShader, uniqueGenericWeaponShader, strippedName, strippedName, strippedName);
+			sprintf(myShader, uniqueGenericWeaponShader, strippedName, strippedName, glowShaderAddition, strippedName);
 		else
-			sprintf(myShader, uniqueGenericShader, strippedName, strippedName, strippedName);
+			sprintf(myShader, uniqueGenericShader, strippedName, strippedName, glowShaderAddition, strippedName);
+
+		flags = IMGFLAG_NONE;
 
 		//
 		// attempt to define shader from an explicit parameter file

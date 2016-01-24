@@ -535,7 +535,7 @@ void main()
 	attenuation = 1.0;
 
   #if defined(USE_LIGHTMAP)
-	lightColor	= lightmapColor.rgb * var_Color.rgb;
+	lightColor	= lightmapColor.rgb * (var_Color.rgb * 0.66666 + 0.33333); // UQ1:  * 0.66666 + 0.33333 is because they are too dark...
   #elif defined(USE_LIGHT_VECTOR)
 	lightColor	= u_DirectedLight * var_Color.rgb;
 	ambientColor = u_AmbientLight * var_Color.rgb;
