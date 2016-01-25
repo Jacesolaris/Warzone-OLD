@@ -13,6 +13,118 @@ VERSION             "1"
 CONFIG              "W:\bin\stringed.cfg"
 FILENOTES           ""
 
+REFERENCE           JEDI_GenericFemale1
+NOTES               "For character menu"
+LANG_ENGLISH        "Female Jedi I"
+
+REFERENCE           JEDI_GenericFemale1A
+NOTES               "For character menu"
+LANG_ENGLISH        "Female Jedi II"
+
+REFERENCE           JEDI_GenericFemale2
+NOTES               "For character menu"
+LANG_ENGLISH        "Female Jedi III"
+
+REFERENCE           JEDI_GenericFemale2A
+NOTES               "For character menu"
+LANG_ENGLISH        "Female Jedi IV"
+
+REFERENCE           JEDI_GenericFemale3
+NOTES               "For character menu"
+LANG_ENGLISH        "Female Jedi V"
+
+REFERENCE           JEDI_GenericFemale3A
+NOTES               "For character menu"
+LANG_ENGLISH        "Female Jedi VI"
+
+REFERENCE           bao_dur
+NOTES               "For character menu"
+LANG_ENGLISH        "Bao Dur"
+
+REFERENCE           bastila
+NOTES               "For character menu"
+LANG_ENGLISH        "Bastila"
+
+REFERENCE           darthrevan
+NOTES               "For character menu"
+LANG_ENGLISH        "Darth Revan"
+
+REFERENCE           derrik
+NOTES               "For character menu"
+LANG_ENGLISH        "Derrik"
+
+REFERENCE           dustil
+NOTES               "For character menu"
+LANG_ENGLISH        "Dustil"
+
+REFERENCE           ithorian_jedi
+NOTES               "For character menu"
+LANG_ENGLISH        "Ithorian"
+
+REFERENCE           jedi_stkotor_afro
+NOTES               "For character menu"
+LANG_ENGLISH        "Afro jedi"
+
+REFERENCE           jedi_stkotor_aliens_1
+NOTES               "For character menu"
+LANG_ENGLISH        "Alien jedi"
+
+REFERENCE           jedi_stkotor_aliens_2
+NOTES               "For character menu"
+LANG_ENGLISH        "Alien jedi"
+
+REFERENCE           jedi_stkotor_asian
+NOTES               "For character menu"
+LANG_ENGLISH        "Asian jedi"
+
+REFERENCE           jedi_stkotor_elder
+NOTES               "For character menu"
+LANG_ENGLISH        "Elder jedi"
+
+REFERENCE           jedi_stkotor_european
+NOTES               "For character menu"
+LANG_ENGLISH        "European jedi"
+
+REFERENCE           jedi_tm
+NOTES               "For character menu"
+LANG_ENGLISH        "Twilek male"
+
+REFERENCE           jediFem1
+NOTES               "For character menu"
+LANG_ENGLISH        "Female jedi"
+
+REFERENCE           sith_warrior
+NOTES               "For character menu"
+LANG_ENGLISH        "Sith warrior"
+
+REFERENCE           TwinSuns
+NOTES               "For character menu"
+LANG_ENGLISH        "Twilek female"
+
+REFERENCE           jedi_stkotor_afro
+NOTES               "For character menu"
+LANG_ENGLISH        "Afro jedi"
+
+REFERENCE           UJP_humanSP
+NOTES               "For character menu"
+LANG_ENGLISH        "RGB human jedi"
+
+REFERENCE           UJP_quaraSP
+NOTES               "For character menu"
+LANG_ENGLISH        "RGB quara jedi"
+
+REFERENCE           UJP_quarrenSP
+NOTES               "For character menu"
+LANG_ENGLISH        "RGB quarren jedi"
+
+REFERENCE           UJP_twilekSP
+NOTES               "For character menu"
+LANG_ENGLISH        "RGB twilek jedi"
+
+REFERENCE           UJP_zabrakSP
+NOTES               "For character menu"
+LANG_ENGLISH        "RGB zabrak jedi"
+
 REFERENCE           JEDI_cul
 NOTES               "For character menu"
 LANG_ENGLISH        "cultist"
