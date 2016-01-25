@@ -8,7 +8,7 @@ varying vec3					var_ViewDir;
 
 uniform vec4					u_Local0;
 
-#define RBM
+//#define RBM
 
 #ifdef RBM
 
@@ -129,7 +129,7 @@ void main ()
 	vec3 finalNormals  = (screenNormals + bumpNormals*fReflectionReliefHeight);
 	finalNormals.y = -finalNormals.y;
 
-	vec3 bump = vec3(0.0);
+	vec3 bump = vec3(0.0, 0.0, 0.0);
 	float weight = 0.0;
 
 	for (int i=1; i<=fReflectionSamples; i++)
@@ -147,7 +147,7 @@ void main ()
 	//vec3 viewDirection = normalize(var_ViewDir);
 	float fresnel = saturate(1-dot(viewDirection,screenNormals));
 	fresnel = pow(fresnel,fReflectionFresnelCurve);
-	fresnel = lerp(1.0,fresnel, fReflectionFresnelFactor);
+	fresnel = lerp(1.0, fresnel, fReflectionFresnelFactor);
 
 	bump.xyz -= res.xyz;
 
