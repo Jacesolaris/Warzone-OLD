@@ -3229,7 +3229,7 @@ void AssignMaterialType ( const char *name, const char *text )
 	//ri->Printf(PRINT_WARNING, "Check material type for %s.\n", name);
 
 	if (r_disableGfxDirEnhancement->integer 
-		&& (StringContainsWord(name, "gfx/") || StringContainsWord(name, "gfx_base/"))) return;
+		&& (StringContainsWord(name, "gfx/"))) return;
 
 	if (!HaveSurfaceType(shader.surfaceFlags))
 	{
@@ -3383,8 +3383,7 @@ void AssignMaterialType ( const char *name, const char *text )
 			shader.surfaceFlags |= MATERIAL_TILES;
 		else
 		{
-			if (!StringsContainWord(name, name, "gfx/") 
-				&& !StringsContainWord(name, name, "gfx_base/") 
+			if (!StringsContainWord(name, name, "gfx/")  
 				&& !StringsContainWord(name, name, "hud")
 				&& !StringsContainWord(name, name, "fire")
 				&& !StringsContainWord(name, name, "force")
@@ -4309,8 +4308,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 					&& diffuse->bundle[TB_DIFFUSEMAP].image[0]->type != IMGTYPE_STEEPMAP 
 
 					// gfx dirs can be exempted I guess...
-					&& !(r_disableGfxDirEnhancement->integer && StringContainsWord(diffuse->bundle[TB_DIFFUSEMAP].image[0]->imgName, "gfx/"))
-					&& !(r_disableGfxDirEnhancement->integer && StringContainsWord(diffuse->bundle[TB_DIFFUSEMAP].image[0]->imgName, "gfx_base/")))
+					&& !(r_disableGfxDirEnhancement->integer && StringContainsWord(diffuse->bundle[TB_DIFFUSEMAP].image[0]->imgName, "gfx/")))
 				{
 					normalImg = R_CreateNormalMapGLSL( normalName, NULL, diffuse->bundle[TB_DIFFUSEMAP].image[0]->width, diffuse->bundle[TB_DIFFUSEMAP].image[0]->height, diffuse->bundle[TB_DIFFUSEMAP].image[0]->flags, diffuse->bundle[TB_DIFFUSEMAP].image[0] );
 
@@ -6059,7 +6057,7 @@ char uniqueGenericShader[] = "{\n"\
 
 qboolean R_ForceGenericShader ( const char *name, const char *text )
 {
-	if (text && (StringsContainWord(name, text, "gfx") || StringsContainWord(name, text, "gfx_base")))
+	if (text && (StringsContainWord(name, text, "gfx")))
 		return qfalse;
 	else if (text && (StringsContainWord(name, text, "glow") || StringsContainWord(name, name, "icon")))
 		return qfalse;

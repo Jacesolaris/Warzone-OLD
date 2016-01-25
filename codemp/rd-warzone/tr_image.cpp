@@ -2835,7 +2835,7 @@ static qboolean R_ShouldMipMap( const char *name )
 	//if (!(StringContainsWord(name, "textures/") || StringContainsWord(name, "models/")))
 	//	return qfalse;
 
-	if (StringContainsWord(name, "gfx/") || StringContainsWord(name, "gfx_base/"))
+	if (StringContainsWord(name, "gfx/"))
 	{
 		if (StringContainsWord(name, "2d")) return qfalse;
 		if (StringContainsWord(name, "colors")) return qfalse;
@@ -3113,7 +3113,7 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, int flags )
 		if (r_normalMapping->integer) 
 		{
 			if (image
-				&& !(StringContainsWord(name, "sky") || StringContainsWord(name, "skies") || StringContainsWord(name, "cloud") || StringContainsWord(name, "glow") || StringContainsWord(name, "gfx/") || StringContainsWord(name, "gfx_base/")))
+				&& !(StringContainsWord(name, "sky") || StringContainsWord(name, "skies") || StringContainsWord(name, "cloud") || StringContainsWord(name, "glow") || StringContainsWord(name, "gfx/")))
 			{
 				GL_Bind(image);
 				R_CreateNormalMap( name, pic, width, height, flags, image );
