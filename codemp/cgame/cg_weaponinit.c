@@ -359,7 +359,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->flashSound[3]		= trap->S_RegisterSound("sound/weapons/Blasters/disruptor1.mp3");
 		weaponInfo->firingSound			= NULL_SOUND;
 		weaponInfo->chargeSound			= NULL_SOUND;
-		weaponInfo->muzzleEffect		= trap->FX_RegisterEffect("orginal_weapon_efx/disruptor/muzzle_flash");
+		weaponInfo->muzzleEffect		= trap->FX_RegisterEffect("Blasters/muzzleflash2_Red_small");
 		weaponInfo->missileModel		= NULL_HANDLE;
 		weaponInfo->missileSound		= NULL_SOUND;
 		weaponInfo->missileDlight		= 0;
@@ -371,23 +371,21 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altFlashSound[3]	= trap->S_RegisterSound("sound/weapons/Blasters/disruptor1.mp3");
 		weaponInfo->altFiringSound		= NULL_SOUND;
 		weaponInfo->altChargeSound		= trap->S_RegisterSound("sound/weapons/disruptor/altcharge.mp3");
-		weaponInfo->altMuzzleEffect		= trap->FX_RegisterEffect("orginal_weapon_efx/disruptor/muzzle_flash");
+		weaponInfo->altMuzzleEffect		= trap->FX_RegisterEffect("Blasters/muzzleflash2_Red_small");
 		weaponInfo->altMissileModel		= NULL_HANDLE;
 		weaponInfo->altMissileSound		= NULL_SOUND;
 		weaponInfo->altMissileDlight	= 0;
 		weaponInfo->altMissileHitSound	= NULL_SOUND;
 		weaponInfo->altMissileTrailFunc = 0;
 
-		weaponInfo->Chargingfx = NULL_FX;
-		weaponInfo->Altchargingfx = trap->FX_RegisterEffect("weapons/charge_bryar");
+		weaponInfo->Chargingfx = trap->FX_RegisterEffect("weapons/charge_bryar");
+		weaponInfo->Altchargingfx = NULL_FX;
 
-		//cgs.effects.disruptorRingsEffect		= trap->FX_RegisterEffect( "orginal_weapon_efx/disruptor/rings" );
-		//cgs.effects.disruptorProjectileEffect	= trap->FX_RegisterEffect( "weapons/laser_red" );
-		cgs.effects.disruptorWallImpactEffect	= trap->FX_RegisterEffect( "orginal_weapon_efx/disruptor/wall_impact" );
-		cgs.effects.disruptorFleshImpactEffect	= trap->FX_RegisterEffect( "orginal_weapon_efx/disruptor/flesh_impact" );
-		cgs.effects.disruptorEnhancedFX_missileWallImpactfx = trap->FX_RegisterEffect("weapons/blaster_impact_red_medium_fire");
-		cgs.effects.disruptorAltMissEffect		= trap->FX_RegisterEffect( "orginal_weapon_efx/disruptor/alt_miss" );
-		cgs.effects.disruptorAltHitEffect		= trap->FX_RegisterEffect( "orginal_weapon_efx/disruptor/alt_hit" );
+		cgs.effects.disruptorWallImpactEffect 						= trap->FX_RegisterEffect("blasters/red_flesh_impact");
+		cgs.effects.disruptorFleshImpactEffect						= trap->FX_RegisterEffect("blasters/red_flesh_impact");
+		cgs.effects.disruptorEnhancedFX_missileWallImpactfx 		= trap->FX_RegisterEffect("weapons/blaster_impact_red_medium_fire");
+		cgs.effects.disruptorAltMissEffect							= trap->FX_RegisterEffect("weapons/blaster_impact_red_medium_fire");
+		cgs.effects.disruptorAltHitEffect							= trap->FX_RegisterEffect("weapons/blaster_impact_red_medium_fire");
 
 		trap->R_RegisterShader( "gfx/effects/redLine" );
 		trap->R_RegisterShader( "gfx/misc/whiteline2" );
@@ -467,7 +465,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altMissileHitSound	= NULL_SOUND;
 		weaponInfo->altMissileTrailFunc = FX_RepeaterAltProjectileThink;
 
-		weaponInfo->missileRenderfx		= trap->FX_RegisterEffect("orginal_weapon_efx/imperial_repeater/projectile");
+		weaponInfo->missileRenderfx		= trap->FX_RegisterEffect("blasters/shot_Yellow_small");
 		weaponInfo->altMissileRenderfx = trap->FX_RegisterEffect("blasters/shot_Blue_Ball_big");
 
 		weaponInfo->fleshImpactEffect					= trap->FX_RegisterEffect("blasters/yellow_flesh_impact");
@@ -542,19 +540,23 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altMissileHitSound	= NULL_SOUND;
 		weaponInfo->altMissileTrailFunc = FX_WeaponAltProjectileThink;
 
-		weaponInfo->missileRenderfx = trap->FX_RegisterEffect("orginal_weapon_efx/flechette/shot");
-		weaponInfo->altMissileRenderfx = trap->FX_RegisterEffect("orginal_weapon_efx/flechette/alt_shot");
+
+
+		weaponInfo->missileRenderfx = trap->FX_RegisterEffect("Slugthrowers/flechette_shot");
+		weaponInfo->altMissileRenderfx = trap->FX_RegisterEffect("Slugthrowers/flechette_alt_shot");
+		/*weaponInfo->missileRenderfx = trap->FX_RegisterEffect("orginal_weapon_efx/flechette_shot");
+		weaponInfo->altMissileRenderfx = trap->FX_RegisterEffect("orginal_weapon_efx/flechette_alt_shot");*/
 
 		weaponInfo->fleshImpactEffect						= trap->FX_RegisterEffect("blasters/red_flesh_impact");
-		weaponInfo->altFleshImpactEffect					= trap->FX_RegisterEffect("effects/explosives/flechettemedium");
+		weaponInfo->altFleshImpactEffect					= trap->FX_RegisterEffect("effects/explosives/flechettesmall");
 		weaponInfo->missileWallImpactfx						= trap->FX_RegisterEffect("blasters/red_flesh_impact");
-		weaponInfo->altMissileWallImpactfx					= trap->FX_RegisterEffect("effects/explosives/flechettemedium");
+		weaponInfo->altMissileWallImpactfx					= trap->FX_RegisterEffect("effects/explosives/flechettesmall");
 		
 		
 		weaponInfo->EnhancedFX_fleshImpact					= trap->FX_RegisterEffect("blasters/red_flesh_impact");
-		weaponInfo->EnhancedFX_altfleshImpact				= trap->FX_RegisterEffect("effects/explosives/flechettemedium");
+		weaponInfo->EnhancedFX_altfleshImpact				= trap->FX_RegisterEffect("effects/explosives/flechettesmall");
 		weaponInfo->EnhancedFX_missileWallImpactfx			= trap->FX_RegisterEffect("blasters/red_flesh_impact");
-		weaponInfo->EnhancedFX_altmissileWallImpactfx		= trap->FX_RegisterEffect("effects/explosives/flechettemedium");
+		weaponInfo->EnhancedFX_altmissileWallImpactfx		= trap->FX_RegisterEffect("effects/explosives/flechettesmall");
 		break;
 
 		//Add new guns here
