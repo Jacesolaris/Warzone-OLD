@@ -544,8 +544,6 @@ void CG_RegisterWeapon( int weaponNum) {
 
 		weaponInfo->missileRenderfx = trap->FX_RegisterEffect("Slugthrowers/flechette_shot");
 		weaponInfo->altMissileRenderfx = trap->FX_RegisterEffect("Slugthrowers/flechette_alt_shot");
-		/*weaponInfo->missileRenderfx = trap->FX_RegisterEffect("orginal_weapon_efx/flechette_shot");
-		weaponInfo->altMissileRenderfx = trap->FX_RegisterEffect("orginal_weapon_efx/flechette_alt_shot");*/
 
 		weaponInfo->fleshImpactEffect						= trap->FX_RegisterEffect("blasters/red_flesh_impact");
 		weaponInfo->altFleshImpactEffect					= trap->FX_RegisterEffect("effects/explosives/flechettesmall");
