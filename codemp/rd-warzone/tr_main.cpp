@@ -2196,6 +2196,7 @@ void R_RenderView (viewParms_t *parms) {
 
 void R_RenderDlightCubemaps(const refdef_t *fd)
 {
+#if 0
 	int i;
 
 	for (i = 0; i < tr.refdef.num_dlights; i++)
@@ -2270,6 +2271,7 @@ void R_RenderDlightCubemaps(const refdef_t *fd)
 			R_AddCapShadowmapCmd( i, j );
 		}
 	}
+#endif
 }
 
 

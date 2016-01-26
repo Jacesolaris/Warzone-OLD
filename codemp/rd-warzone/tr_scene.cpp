@@ -550,6 +550,7 @@ void RE_RenderScene( const refdef_t *fd ) {
 	RE_BeginScene(fd);
 
 	// SmileTheory: playing with shadow mapping
+#if 0
 	if (!( fd->rdflags & RDF_NOWORLDMODEL ) && tr.refdef.num_dlights && r_dlightMode->integer >= 2)
 	{
 		R_RenderDlightCubemaps(fd);
@@ -560,6 +561,7 @@ void RE_RenderScene( const refdef_t *fd ) {
 	{
 		R_RenderPshadowMaps(fd);
 	}
+#endif
 
 #ifdef __DYNAMIC_SHADOWS__
 	if(!( fd->rdflags & RDF_NOWORLDMODEL ))
@@ -628,11 +630,13 @@ void RE_RenderScene( const refdef_t *fd ) {
 	if(!( fd->rdflags & RDF_NOWORLDMODEL ))
 		R_AddPostProcessCmd();
 
+#if 0
 	if (r_weather->integer)
 	{
 extern void RE_RenderWorldEffects(void);
 		RE_RenderWorldEffects();
 	}
+#endif
 
 	RE_EndScene();
 
