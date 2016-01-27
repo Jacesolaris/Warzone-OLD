@@ -941,6 +941,8 @@ qboolean RB_VolumetricLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_
 		color[2] = pow(2, r_cameraExposure->value);
 	color[3] = 1.0f;
 
+	//ri->Printf(PRINT_WARNING, "%i dlights.\n", backEnd.refdef.num_dlights);
+
 	if ( !backEnd.refdef.num_dlights && !SUN_VISIBLE ) {
 		//ri->Printf(PRINT_WARNING, "0 dlights.\n");
 		return qfalse;

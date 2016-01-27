@@ -426,7 +426,7 @@ void CG_AddPlayerWeapon( refEntity_t *parent, playerState_t *ps, centity_t *cent
 
 	weaponNum = cent->currentState.weapon;
 
-	if (cent->currentState.weapon == WP_EMPLACED_GUN)
+	if (weaponNum == WP_EMPLACED_GUN)
 	{
 		return;
 	}
@@ -1054,9 +1054,12 @@ Ghoul2 Insert End
 		// add lightning bolt
 		CG_LightningBolt( nonPredictedCent, flashorigin );
 
-		if ( weapon->flashDlightColor[0] || weapon->flashDlightColor[1] || weapon->flashDlightColor[2] ) {
-			AddLightToScene( flashorigin, 300 + (rand()&31), weapon->flashDlightColor[0],
-				weapon->flashDlightColor[1], weapon->flashDlightColor[2] );
+		if (weaponNum != WP_SABER)
+		{// Saber doesn't have flash. This was causing there to be a light when it is off...
+			if ( weapon->flashDlightColor[0] || weapon->flashDlightColor[1] || weapon->flashDlightColor[2] ) {
+				AddLightToScene( flashorigin, 300 + (rand()&31), weapon->flashDlightColor[0],
+					weapon->flashDlightColor[1], weapon->flashDlightColor[2] );
+			}
 		}
 	}
 }

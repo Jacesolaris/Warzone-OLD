@@ -813,6 +813,36 @@ vec3_t		SUN_ORIGIN;
 qboolean	SUN_VISIBLE = qfalse;
 
 extern void R_WorldToLocal (const vec3_t world, vec3_t local);
+extern void TR_AxisToAngles ( const vec3_t axis[3], vec3_t angles );
+
+qboolean SUN_InFOV( vec3_t spot )
+{
+	vec3_t	from;
+	vec3_t	deltaVector, angles, deltaAngles;
+	vec3_t	fromAnglesCopy;
+	vec3_t	fromAngles;
+	int hFOV = backEnd.refdef.fov_x*1.1;
+	int vFOV = backEnd.refdef.fov_y*1.1;
+
+	VectorCopy(backEnd.refdef.vieworg, from);
+
+	TR_AxisToAngles(tr.refdef.viewaxis, fromAngles);
+
+	VectorSubtract ( spot, from, deltaVector );
+	vectoangles ( deltaVector, angles );
+	VectorCopy(fromAngles, fromAnglesCopy);
+	
+	deltaAngles[PITCH]	= AngleDelta ( fromAnglesCopy[PITCH], angles[PITCH] );
+	deltaAngles[YAW]	= AngleDelta ( fromAnglesCopy[YAW], angles[YAW] );
+
+	if ( fabs ( deltaAngles[PITCH] ) <= vFOV && fabs ( deltaAngles[YAW] ) <= hFOV ) 
+	{
+		return qtrue;
+	}
+
+	return qfalse;
+}
+
 
 /*
 ** RB_DrawSun
@@ -867,7 +897,11 @@ void RB_DrawSun( float scale, shader_t *shader ) {
 		out[1]+=(size/2.0);
 		out[2]+=(size/2.0);
 		VectorCopy(out, SUN_ORIGIN);
-		SUN_VISIBLE = qtrue;
+
+		if (SUN_InFOV( SUN_ORIGIN ))
+			SUN_VISIBLE = qtrue;
+		else
+			SUN_VISIBLE = qfalse;
 	}
 }
 
