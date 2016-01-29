@@ -1,6 +1,6 @@
 uniform sampler2D				u_DiffuseMap;
 uniform sampler2D				u_ScreenDepthMap;
-uniform sampler2D				u_GlowMap;
+uniform sampler2D				u_NormalMap;
 
 uniform mat4					u_ModelViewProjectionMatrix;
 uniform vec4					u_ViewInfo; // zmin, zmax, zmax / zmin
@@ -32,7 +32,7 @@ vec3 CalcPosition(void){
 }
 
 void main(void){
-	vec3 dglow = texture2D(u_GlowMap, var_ScreenTex).rgb;
+	vec3 dglow = texture2D(u_NormalMap, var_ScreenTex).rgb;
 	float dglowStrength = clamp(length(dglow.rgb) * 3.0, 0.0, 1.0);
 
 	vec2 texel_size = vec2(1.0 / var_Dimensions);

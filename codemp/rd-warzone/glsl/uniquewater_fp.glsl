@@ -1,7 +1,5 @@
 uniform sampler2D u_DiffuseMap;
-uniform sampler2D u_RandomMap;
-uniform sampler2D u_ScreenDepthMap;
-uniform sampler2D u_OverlayMap; // sky diffuse
+//uniform sampler2D u_OverlayMap; // sky diffuse
 
 varying vec4	var_Local1; // parallaxScale, haveSpecular, specularScale, materialType
 varying vec4	u_Local2; // ExtinctionCoefficient
@@ -78,6 +76,7 @@ varying vec3   var_vertPos;
 out vec4 out_Glow;
 //out vec4 out_Normal;
 out vec4 out_DetailedNormal;
+out vec4 out_FoliageMap;
 
 
 float CalcLightAttenuation(float point, float normDist)
@@ -193,4 +192,6 @@ void main()
 
 
 	out_DetailedNormal = vec4(N.xyz, 0.75);
+
+	out_FoliageMap = vec4(0.0, 0.0, 1.0, 0.0);
 }

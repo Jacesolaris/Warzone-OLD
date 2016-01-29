@@ -1367,8 +1367,8 @@ const void	*RB_DrawSurfs( const void *data ) {
 			GL_BindToTMU(tr.sunShadowDepthImage[1], TB_SHADOWMAP2);
 			GL_BindToTMU(tr.sunShadowDepthImage[2], TB_SHADOWMAP3);
 			
-			GLSL_SetUniformInt(&tr.shadowmaskShader, UNIFORM_RANDOMMAP, TB_RANDOMMAP);
-			GL_BindToTMU(tr.randomImage, TB_RANDOMMAP);
+			GLSL_SetUniformInt(&tr.shadowmaskShader, UNIFORM_SPECULARMAP, TB_SPECULARMAP);
+			GL_BindToTMU(tr.randomImage, TB_SPECULARMAP);
 
 			GLSL_SetUniformMatrix16(&tr.shadowmaskShader, UNIFORM_SHADOWMVP,  backEnd.refdef.sunShadowMvp[0]);
 			GLSL_SetUniformMatrix16(&tr.shadowmaskShader, UNIFORM_SHADOWMVP2, backEnd.refdef.sunShadowMvp[1]);
@@ -2118,7 +2118,14 @@ const void *RB_PostProcess(const void *data)
 				FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 			}
 		}
-		
+
+		if (r_glslWater->integer >= 2)
+		{
+			if (RB_WaterPost(srcFbo, srcBox, tr.genericFbo, dstBox))
+			{
+				FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+			}
+		}
 
 		/*
 		if (!SCREEN_BLUR && r_textureClean->integer)

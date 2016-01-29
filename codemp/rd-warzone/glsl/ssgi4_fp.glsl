@@ -1,7 +1,7 @@
 uniform sampler2D u_TextureMap;
 uniform sampler2D u_ScreenDepthMap;
 uniform sampler2D u_NormalMap;
-uniform sampler2D u_GlowMap; // actually saturation map image
+uniform sampler2D u_DeluxeMap; // actually saturation map image
 uniform sampler2D u_RandomMap;
 
 varying vec2		var_TexCoords;
@@ -158,7 +158,7 @@ void main()
 
 				//COLOR BLEEDING:
 #ifdef USE_GLOWMAP
-				vec3 dcolor2 = texture2D(u_GlowMap, var_TexCoords.st+coords*rand(var_TexCoords)).xyz;
+				vec3 dcolor2 = texture2D(u_DeluxeMap, var_TexCoords.st+coords*rand(var_TexCoords)).xyz;
 #else //USE_GLOWMAP
 				vec3 dcolor2 = texture2D(u_TextureMap, var_TexCoords.st+coords*rand(var_TexCoords)).xyz;
 				
@@ -200,7 +200,7 @@ void main()
 #endif //USE_GLOWMAP
 
 	// UQ1: Let's add some of the flare color as well... Just to boost colors/glows...
-	vec3 flare_color = clamp(texture2D(u_GlowMap, var_TexCoords.st).rgb, 0.0, 1.0);
+	vec3 flare_color = clamp(texture2D(u_DeluxeMap, var_TexCoords.st).rgb, 0.0, 1.0);
 	vec3 add_flare = CalculateFlare(flare_color, final_color);
 	final_color = clamp(((final_color * 5.0) + max(add_flare, final_color)) / 6.0, 0.0, 1.0);
 
@@ -252,8 +252,8 @@ vec2 camerarange = var_ViewInfo.xy;
    vec3 readColor(in vec2 coord)  
    {
      //return texture2D(u_TextureMap, coord).xyz;
-	 //return texture2D(u_GlowMap, coord).xyz;
-	 return texture2D(u_TextureMap, coord).xyz + (texture2D(u_GlowMap, coord).xyz * 0.333);
+	 //return texture2D(u_DeluxeMap, coord).xyz;
+	 return texture2D(u_TextureMap, coord).xyz + (texture2D(u_DeluxeMap, coord).xyz * 0.333);
    }
 
    vec3 calAO(float depth,float dw, float dh, inout float ao)  

@@ -1469,8 +1469,8 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				//waveTime += waveFreq;
 				//GLSL_SetUniformFloat(sp, UNIFORM_TIME, waveTime);
 
-				GLSL_SetUniformInt(sp, UNIFORM_RANDOMMAP, TB_RANDOMMAP);
-				GL_BindToTMU(tr.random2KImage, TB_RANDOMMAP);
+				GLSL_SetUniformInt(sp, UNIFORM_SPECULARMAP, TB_SPECULARMAP);
+				GL_BindToTMU(tr.random2KImage, TB_SPECULARMAP);
 				GLSL_SetUniformInt(sp, UNIFORM_SCREENDEPTHMAP, TB_LEVELSMAP);
 				GL_BindToTMU(tr.renderDepthImage, TB_LEVELSMAP);
 
@@ -1500,8 +1500,8 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				
 				RB_SetMaterialBasedProperties(sp, pStage);
 
-				GLSL_SetUniformInt(sp, UNIFORM_RANDOMMAP, TB_RANDOMMAP);
-				GL_BindToTMU(tr.grassMaskImage[0], TB_RANDOMMAP);
+				GLSL_SetUniformInt(sp, UNIFORM_SPECULARMAP, TB_SPECULARMAP);
+				GL_BindToTMU(tr.grassMaskImage[0], TB_SPECULARMAP);
 				GLSL_SetUniformInt(sp, UNIFORM_SCREENDEPTHMAP, TB_LEVELSMAP);
 				GL_BindToTMU(tr.renderDepthImage, TB_LEVELSMAP);
 
@@ -1972,8 +1972,8 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				VectorSet4(loc, (float)passNum, r_grassLength->value, r_grassWaveSpeed->value, r_grassWaveSize->value); // grassLength, grassLayer, wavespeed, wavesize
 				GLSL_SetUniformVec4(sp, UNIFORM_LOCAL5, loc);
 
-				GLSL_SetUniformInt(sp, UNIFORM_RANDOMMAP, TB_RANDOMMAP);
-				GL_BindToTMU(tr.grassMaskImage[passNum], TB_RANDOMMAP);
+				GLSL_SetUniformInt(sp, UNIFORM_SPECULARMAP, TB_SPECULARMAP);
+				GL_BindToTMU(tr.grassMaskImage[passNum], TB_SPECULARMAP);
 
 				GLSL_SetUniformInt(sp, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
 				GL_BindToTMU(tr.grassImage, TB_DIFFUSEMAP);

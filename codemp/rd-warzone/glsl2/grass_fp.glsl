@@ -1,26 +1,10 @@
 uniform sampler2D u_DiffuseMap;
-uniform sampler2D u_RandomMap;
+uniform sampler2D u_SpecularMap;
 uniform sampler2D u_ScreenDepthMap;
 
 varying vec2	var_Dimensions;
 
 varying float  var_Time;
-
-//#if defined(USE_NORMALMAP)
-uniform sampler2D u_NormalMap;
-//#endif
-
-#if defined(USE_DELUXEMAP)
-uniform sampler2D u_DeluxeMap;
-#endif
-
-#if defined(USE_SPECULARMAP)
-uniform sampler2D u_SpecularMap;
-#endif
-
-#if defined(USE_SHADOWMAP)
-uniform sampler2D u_ShadowMap;
-#endif
 
 #if defined(USE_CUBEMAP)
 #define textureCubeLod textureLod // UQ1: > ver 140 support
@@ -218,7 +202,7 @@ void main()
 #define m_MaskScale 256.0
 
 	vec4 color;
-	color.a = texture2D( u_RandomMap, texCoords*m_MaskScale ).g;
+	color.a = texture2D( u_SpecularMap, texCoords*m_MaskScale ).g;
 
 	if (color.a == 0.0) discard;
 

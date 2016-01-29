@@ -76,6 +76,8 @@ extern const char *fallbackShader_anaglyph_vp;
 extern const char *fallbackShader_anaglyph_fp;
 extern const char *fallbackShader_uniquesky_fp;
 extern const char *fallbackShader_uniquesky_vp;
+extern const char *fallbackShader_waterPost_fp;
+extern const char *fallbackShader_waterPost_vp;
 extern const char *fallbackShader_uniquewater_fp;
 extern const char *fallbackShader_uniquewater_vp;
 extern const char *fallbackShader_grass_fp;
@@ -152,11 +154,8 @@ static uniformInfo_t uniformsInfo[] =
 	{ "u_TextureMap", GLSL_INT, 1 },
 	{ "u_LevelsMap",  GLSL_INT, 1 },
 	{ "u_CubeMap",    GLSL_INT, 1 },
-	//{ "u_SubsurfaceMap",    GLSL_INT, 1 },
 	{ "u_OverlayMap",    GLSL_INT, 1 },
 	{ "u_SteepMap",  GLSL_INT, 1 },
-	{ "u_RandomMap",    GLSL_INT, 1 },
-	{ "u_GlowMap",   GLSL_INT, 1 },
 
 	{ "u_ScreenImageMap", GLSL_INT, 1 },
 	{ "u_ScreenDepthMap", GLSL_INT, 1 },
@@ -192,102 +191,10 @@ static uniformInfo_t uniformsInfo[] =
 	{ "u_LightUp",       GLSL_VEC3, 1 },
 	{ "u_LightRight",    GLSL_VEC3, 1 },
 	{ "u_LightOrigin",   GLSL_VEC4, 1 },
-	{ "u_LightOrigin1",   GLSL_VEC4, 1 },
-	{ "u_LightOrigin2",   GLSL_VEC4, 1 },
-	{ "u_LightOrigin3",   GLSL_VEC4, 1 },
-	{ "u_LightOrigin4",   GLSL_VEC4, 1 },
-	{ "u_LightOrigin5",   GLSL_VEC4, 1 },
-	{ "u_LightOrigin6",   GLSL_VEC4, 1 },
-	{ "u_LightOrigin7",   GLSL_VEC4, 1 },
-	{ "u_LightOrigin8",   GLSL_VEC4, 1 },
-	{ "u_LightOrigin9",   GLSL_VEC4, 1 },
-	{ "u_LightOrigin10",   GLSL_VEC4, 1 },
-	{ "u_LightOrigin11",   GLSL_VEC4, 1 },
-	{ "u_LightOrigin12",   GLSL_VEC4, 1 },
-	{ "u_LightOrigin13",   GLSL_VEC4, 1 },
-	{ "u_LightOrigin14",   GLSL_VEC4, 1 },
-	{ "u_LightOrigin15",   GLSL_VEC4, 1 },
-	{ "u_LightOrigin16",   GLSL_VEC4, 1 },
-	{ "u_LightOrigin17",   GLSL_VEC4, 1 },
-	{ "u_LightOrigin18",   GLSL_VEC4, 1 },
-	{ "u_LightOrigin19",   GLSL_VEC4, 1 },
-	{ "u_LightOrigin20",   GLSL_VEC4, 1 },
-	{ "u_LightOrigin21",   GLSL_VEC4, 1 },
-	{ "u_LightOrigin22",   GLSL_VEC4, 1 },
-	{ "u_LightOrigin23",   GLSL_VEC4, 1 },
-	{ "u_LightOrigin24",   GLSL_VEC4, 1 },
-	{ "u_LightOrigin25",   GLSL_VEC4, 1 },
-	{ "u_LightOrigin26",   GLSL_VEC4, 1 },
-	{ "u_LightOrigin27",   GLSL_VEC4, 1 },
-	{ "u_LightOrigin28",   GLSL_VEC4, 1 },
-	{ "u_LightOrigin29",   GLSL_VEC4, 1 },
-	{ "u_LightOrigin30",   GLSL_VEC4, 1 },
-	{ "u_LightOrigin31",   GLSL_VEC4, 1 },
 	{ "u_LightColor",   GLSL_VEC4, 1 },
-	{ "u_LightColor1",   GLSL_VEC4, 1 },
-	{ "u_LightColor2",   GLSL_VEC4, 1 },
-	{ "u_LightColor3",   GLSL_VEC4, 1 },
-	{ "u_LightColor4",   GLSL_VEC4, 1 },
-	{ "u_LightColor5",   GLSL_VEC4, 1 },
-	{ "u_LightColor6",   GLSL_VEC4, 1 },
-	{ "u_LightColor7",   GLSL_VEC4, 1 },
-	{ "u_LightColor8",   GLSL_VEC4, 1 },
-	{ "u_LightColor9",   GLSL_VEC4, 1 },
-	{ "u_LightColor10",   GLSL_VEC4, 1 },
-	{ "u_LightColor11",   GLSL_VEC4, 1 },
-	{ "u_LightColor12",   GLSL_VEC4, 1 },
-	{ "u_LightColor13",   GLSL_VEC4, 1 },
-	{ "u_LightColor14",   GLSL_VEC4, 1 },
-	{ "u_LightColor15",   GLSL_VEC4, 1 },
-	{ "u_LightColor16",   GLSL_VEC4, 1 },
-	{ "u_LightColor17",   GLSL_VEC4, 1 },
-	{ "u_LightColor18",   GLSL_VEC4, 1 },
-	{ "u_LightColor19",   GLSL_VEC4, 1 },
-	{ "u_LightColor20",   GLSL_VEC4, 1 },
-	{ "u_LightColor21",   GLSL_VEC4, 1 },
-	{ "u_LightColor22",   GLSL_VEC4, 1 },
-	{ "u_LightColor23",   GLSL_VEC4, 1 },
-	{ "u_LightColor24",   GLSL_VEC4, 1 },
-	{ "u_LightColor25",   GLSL_VEC4, 1 },
-	{ "u_LightColor26",   GLSL_VEC4, 1 },
-	{ "u_LightColor27",   GLSL_VEC4, 1 },
-	{ "u_LightColor28",   GLSL_VEC4, 1 },
-	{ "u_LightColor29",   GLSL_VEC4, 1 },
-	{ "u_LightColor30",   GLSL_VEC4, 1 },
-	{ "u_LightColor31",   GLSL_VEC4, 1 },
+	
 	{ "u_ModelLightDir", GLSL_VEC3, 1 },
 	{ "u_LightRadius",   GLSL_FLOAT, 1 },
-	{ "u_LightRadius1",   GLSL_FLOAT, 1 },
-	{ "u_LightRadius2",   GLSL_FLOAT, 1 },
-	{ "u_LightRadius3",   GLSL_FLOAT, 1 },
-	{ "u_LightRadius4",   GLSL_FLOAT, 1 },
-	{ "u_LightRadius5",   GLSL_FLOAT, 1 },
-	{ "u_LightRadius6",   GLSL_FLOAT, 1 },
-	{ "u_LightRadius7",   GLSL_FLOAT, 1 },
-	{ "u_LightRadius8",   GLSL_FLOAT, 1 },
-	{ "u_LightRadius9",   GLSL_FLOAT, 1 },
-	{ "u_LightRadius10",   GLSL_FLOAT, 1 },
-	{ "u_LightRadius11",   GLSL_FLOAT, 1 },
-	{ "u_LightRadius12",   GLSL_FLOAT, 1 },
-	{ "u_LightRadius13",   GLSL_FLOAT, 1 },
-	{ "u_LightRadius14",   GLSL_FLOAT, 1 },
-	{ "u_LightRadius15",   GLSL_FLOAT, 1 },
-	{ "u_LightRadius16",   GLSL_FLOAT, 1 },
-	{ "u_LightRadius17",   GLSL_FLOAT, 1 },
-	{ "u_LightRadius18",   GLSL_FLOAT, 1 },
-	{ "u_LightRadius19",   GLSL_FLOAT, 1 },
-	{ "u_LightRadius20",   GLSL_FLOAT, 1 },
-	{ "u_LightRadius21",   GLSL_FLOAT, 1 },
-	{ "u_LightRadius22",   GLSL_FLOAT, 1 },
-	{ "u_LightRadius23",   GLSL_FLOAT, 1 },
-	{ "u_LightRadius24",   GLSL_FLOAT, 1 },
-	{ "u_LightRadius25",   GLSL_FLOAT, 1 },
-	{ "u_LightRadius26",   GLSL_FLOAT, 1 },
-	{ "u_LightRadius27",   GLSL_FLOAT, 1 },
-	{ "u_LightRadius28",   GLSL_FLOAT, 1 },
-	{ "u_LightRadius29",   GLSL_FLOAT, 1 },
-	{ "u_LightRadius30",   GLSL_FLOAT, 1 },
-	{ "u_LightRadius31",   GLSL_FLOAT, 1 },
 	{ "u_AmbientLight",  GLSL_VEC3, 1 },
 	{ "u_DirectedLight", GLSL_VEC3, 1 },
 
@@ -343,10 +250,6 @@ static uniformInfo_t uniformsInfo[] =
 	{ "u_Local8",				GLSL_VEC4, 1  },
 	{ "u_Local9",				GLSL_VEC4, 1  },
 	{ "u_Local10",				GLSL_VEC4, 1  },
-	{ "u_Texture0",				GLSL_INT, 1 },
-	{ "u_Texture1",				GLSL_INT, 1 },
-	{ "u_Texture2",				GLSL_INT, 1 },
-	{ "u_Texture3",				GLSL_INT, 1 },
 
 	{ "u_lightCount",			GLSL_INT, 1 },
 	{ "u_lightPositions",		GLSL_VEC2, 16  },
@@ -1802,6 +1705,14 @@ int GLSL_BeginLoadGPUShaders(void)
 	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
 	extradefines[0] = '\0';
 
+	if (!GLSL_BeginLoadGPUShader(&tr.waterPostShader, "waterPost", attribs, qtrue, extradefines, qtrue, NULL, fallbackShader_waterPost_vp, fallbackShader_waterPost_fp))
+	{
+		ri->Error(ERR_FATAL, "Could not load waterPost shader!");
+	}
+
+	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
+	extradefines[0] = '\0';
+
 	Q_strcat(extradefines, 1024, "#define FAST_SSGI\n");
 
 	if (!GLSL_BeginLoadGPUShader(&tr.ssgi1Shader, "ssgi1", attribs, qtrue, extradefines, qtrue, NULL, fallbackShader_ssgi_vp, fallbackShader_ssgi1_fp))
@@ -3152,6 +3063,51 @@ void GLSL_EndLoadGPUShaders ( int startTime )
 	numEtcShaders++;
 
 
+
+	if (!GLSL_EndLoadGPUShader(&tr.waterPostShader))
+	{
+		ri->Error(ERR_FATAL, "Could not load waterPost shader!");
+	}
+	
+	GLSL_InitUniforms(&tr.waterPostShader);
+
+	qglUseProgram(tr.waterPostShader.program);
+
+	GLSL_SetUniformInt(&tr.waterPostShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
+	GLSL_SetUniformInt(&tr.waterPostShader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
+	GLSL_SetUniformInt(&tr.waterPostShader, UNIFORM_NORMALMAP, TB_NORMALMAP);
+	
+	{
+		vec4_t viewInfo;
+
+		float zmax = backEnd.viewParms.zFar;
+		float zmin = r_znear->value;
+
+		VectorSet4(viewInfo, zmax / zmin, zmax, 0.0, 0.0);
+		//VectorSet4(viewInfo, zmin, zmax, 0.0, 0.0);
+
+		GLSL_SetUniformVec4(&tr.waterPostShader, UNIFORM_VIEWINFO, viewInfo);
+	}
+
+	{
+		vec2_t screensize;
+		screensize[0] = glConfig.vidWidth * r_superSampleMultiplier->value;
+		screensize[1] = glConfig.vidHeight * r_superSampleMultiplier->value;
+
+		GLSL_SetUniformVec2(&tr.waterPostShader, UNIFORM_DIMENSIONS, screensize);
+
+		//ri->Printf(PRINT_WARNING, "Sent dimensions %f %f.\n", screensize[0], screensize[1]);
+	}
+
+	qglUseProgram(0);
+
+#if defined(_DEBUG)
+	GLSL_FinishGPUShader(&tr.waterPostShader);
+#endif
+	
+	numEtcShaders++;
+
+
 	if (!GLSL_EndLoadGPUShader(&tr.dofShader))
 	{
 		ri->Error(ERR_FATAL, "Could not load depthOfField shader!");
@@ -3848,9 +3804,10 @@ void GLSL_EndLoadGPUShaders ( int startTime )
 		GLSL_InitUniforms(&tr.sssShader);
 
 		qglUseProgram(tr.sssShader.program);
-		GLSL_SetUniformInt(&tr.sssShader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
 		GLSL_SetUniformInt(&tr.sssShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
+		GLSL_SetUniformInt(&tr.sssShader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
 		GLSL_SetUniformInt(&tr.sssShader, UNIFORM_NORMALMAP, TB_NORMALMAP);
+		GLSL_SetUniformInt(&tr.sssShader, UNIFORM_SPECULARMAP, TB_SPECULARMAP);
 		qglUseProgram(0);
 
 #if defined(_DEBUG)
@@ -3870,8 +3827,8 @@ void GLSL_EndLoadGPUShaders ( int startTime )
 		GLSL_InitUniforms(&tr.sss2Shader);
 
 		qglUseProgram(tr.sss2Shader.program);
-		GLSL_SetUniformInt(&tr.sss2Shader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
 		GLSL_SetUniformInt(&tr.sss2Shader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
+		GLSL_SetUniformInt(&tr.sss2Shader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
 		GLSL_SetUniformInt(&tr.sss2Shader, UNIFORM_NORMALMAP, TB_NORMALMAP);
 		qglUseProgram(0);
 
@@ -4034,6 +3991,7 @@ void GLSL_ShutdownGPUShaders(void)
 	GLSL_DeleteGPUShader(&tr.fakedepthSteepParallaxShader);
 	GLSL_DeleteGPUShader(&tr.anaglyphShader);
 	GLSL_DeleteGPUShader(&tr.waterShader);
+	GLSL_DeleteGPUShader(&tr.waterPostShader);
 	GLSL_DeleteGPUShader(&tr.grassShader);
 	GLSL_DeleteGPUShader(&tr.sssShader);
 	GLSL_DeleteGPUShader(&tr.sss2Shader);

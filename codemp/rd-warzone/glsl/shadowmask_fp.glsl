@@ -1,5 +1,5 @@
 uniform sampler2D u_ScreenDepthMap;
-uniform sampler2D u_RandomMap;
+uniform sampler2D u_SpecularMap;
 
 uniform sampler2D u_ShadowMap;
 #if defined(USE_SHADOW_CASCADE)
@@ -34,7 +34,7 @@ varying vec3   var_ViewDir;
 float random( const vec2 p )
 {
 #ifdef USE_RANDOMMAP
-	return texture2D(u_RandomMap, (p/r_shadowMapSize)*vec2(1./256.)).b;
+	return texture2D(u_SpecularMap, (p/r_shadowMapSize)*vec2(1./256.)).b;
 #else //!USE_RANDOMMAP
   // We need irrationals for pseudo randomness.
   // Most (all?) known transcendental numbers will (generally) work.
