@@ -103,6 +103,7 @@ void main()
 	//fragCoord = attr_Position.xy;
 	fragCoord = attr_TexCoord0.xy;
 
+	var_Normal    = attr_Normal * 2.0 - vec3(1.0);
 	var_ViewDir = u_ViewOrigin - object_space_pos.xyz;
 	var_Time = u_Time;
 }

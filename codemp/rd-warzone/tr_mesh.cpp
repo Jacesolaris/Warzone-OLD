@@ -274,6 +274,414 @@ int R_ComputeFogNum( mdvModel_t *model, trRefEntity_t *ent ) {
 	return 0;
 }
 
+void R_MergeMD3Surfaces(trRefEntity_t *ent, mdvModel_t *model, int fogNum, int cubemapIndex)
+{
+#define MAX_MODEL_SURFS 8192
+
+	int i, j, k;
+	int mergedSurfIndex = 0;
+	int numUnmergedSurfaces = 0;
+	int numIboIndexes = 0;
+	int startTime, endTime;
+	msurface_t *mergedSurf = NULL;
+	
+	int			numMergedSurfaces = 0;
+	msurface_t	mergedSurfaces[MAX_MODEL_SURFS];
+	int         mergedSurfacesViewCount = 0;
+
+	int         surfacesViewCount[MAX_MODEL_SURFS];
+
+	int			nummarksurfaces = 0;
+	mdvSurface_t	marksurfaces[MAX_MODEL_SURFS];
+
+
+	startTime = ri->Milliseconds();
+
+	// use viewcount to keep track of mergers
+	for (i = 0; i < model->numSurfaces; i++)
+	{
+		surfacesViewCount[i] = -1;
+	}
+
+	// mark matching surfaces
+	for (j = 0; j < model->numSurfaces; j++)
+	{
+		mdvSurface_t *surf1;
+		shader_t *shader1;
+		int surfNum1;
+
+		surfNum1 = j;
+
+		if (surfacesViewCount[surfNum1] != -1)
+			continue;
+
+		surf1 = model->surfaces + surfNum1;
+
+		if ( ent->e.customShader ) {
+			shader1 = R_GetShaderByHandle( ent->e.customShader );
+		} else if ( ent->e.customSkin > 0 && ent->e.customSkin < tr.numSkins ) {
+			skin_t *skin;
+			int		j;
+
+			skin = R_GetSkinByHandle( ent->e.customSkin );
+
+			// match the surface name to something in the skin file
+			shader1 = tr.defaultShader;
+			for ( j = 0 ; j < skin->numSurfaces ; j++ ) {
+				// the names have both been lowercased
+				if ( !strcmp( skin->surfaces[j]->name, surf1->name ) ) {
+					shader1 = (shader_t *)skin->surfaces[j]->shader;
+					break;
+				}
+			}
+		} else {
+			shader1 = tr.shaders[ surf1->shaderIndexes[ ent->e.skinNum % surf1->numShaderIndexes ] ];
+		}
+
+		if(shader1->isSky)
+			continue;
+
+		if(shader1->isPortal)
+			continue;
+
+		if(ShaderRequiresCPUDeforms(shader1))
+			continue;
+		
+		surfacesViewCount[surfNum1] = surfNum1;
+
+		for (k = j + 1; k < model->numSurfaces; k++)
+		{
+			mdvSurface_t *surf2;
+			shader_t *shader2;
+			int surfNum2;
+
+			surfNum2 = k;
+
+			if (surfacesViewCount[surfNum2] != -1)
+				continue;
+
+			surf2 = model->surfaces + surfNum2;
+
+			if ( ent->e.customShader ) {
+				shader2 = R_GetShaderByHandle( ent->e.customShader );
+			} else if ( ent->e.customSkin > 0 && ent->e.customSkin < tr.numSkins ) {
+				skin_t *skin;
+				int		j;
+
+				skin = R_GetSkinByHandle( ent->e.customSkin );
+
+				// match the surface name to something in the skin file
+				shader2 = tr.defaultShader;
+				for ( j = 0 ; j < skin->numSurfaces ; j++ ) {
+					// the names have both been lowercased
+					if ( !strcmp( skin->surfaces[j]->name, surf2->name ) ) {
+						shader2 = (shader_t *)skin->surfaces[j]->shader;
+						break;
+					}
+				}
+			} else {
+				shader2 = tr.shaders[ surf2->shaderIndexes[ ent->e.skinNum % surf2->numShaderIndexes ] ];
+			}
+
+			if (shader1 && shader2 && shader1->stages[0] && shader2->stages[0] && ( r_glslWater->integer && shader1->stages[0]->isWater && shader2->stages[0]->isWater))
+			{// UQ1: All water can be safely merged I believe...
+				surfacesViewCount[surfNum2] = surfNum1;
+				continue;
+			}
+			else if (shader1 != shader2
+				// Merge matching shader names...
+				&& stricmp(shader1->name, shader2->name))
+			{
+				continue;
+			}
+
+			surfacesViewCount[surfNum2] = surfNum1;
+		}
+	}
+
+	// don't add surfaces that don't merge to any others to the merged list
+	for (i = 0; i < model->numSurfaces; i++)
+	{
+		qboolean merges = qfalse;
+
+		if (surfacesViewCount[i] != i)
+			continue;
+
+		for (j = 0; j < model->numSurfaces; j++)
+		{
+			if (j == i)
+				continue;
+
+			if (surfacesViewCount[j] == i)
+			{
+				merges = qtrue;
+				break;
+			}
+		}
+
+		if (!merges)
+			surfacesViewCount[i] = -1;
+	}
+
+	// count merged/unmerged surfaces
+	numMergedSurfaces = 0;
+	numUnmergedSurfaces = 0;
+
+	for (i = 0; i < model->numSurfaces; i++)
+	{
+		if (surfacesViewCount[i] == i)
+		{
+			numMergedSurfaces++;
+		}
+		else if (surfacesViewCount[i] == -1)
+		{
+			numUnmergedSurfaces++;
+		}
+	}
+
+	// Allocate merged surfaces
+	//s_worldData.mergedSurfaces = (msurface_t *)ri->Hunk_Alloc(sizeof(*s_worldData.mergedSurfaces) * numMergedSurfaces, h_low);
+	//s_worldData.mergedSurfacesViewCount = (int *)ri->Hunk_Alloc(sizeof(*s_worldData.mergedSurfacesViewCount) * numMergedSurfaces, h_low);
+	//numMergedSurfaces = numMergedSurfaces;
+	
+	// view surfaces are like mark surfaces, except negative ones represent merged surfaces
+	// -1 represents 0, -2 represents 1, and so on
+	//viewSurfaces = (int *)ri->Hunk_Alloc(sizeof(*s_worldData.viewSurfaces) * s_worldData.nummarksurfaces, h_low);
+
+	int viewSurfaces[MAX_MODEL_SURFS];
+
+	// copy view surfaces into mark surfaces
+	for (i = 0; i < model->numSurfaces; i++)
+	{
+		viewSurfaces[i] = (int &)marksurfaces[i]; // UQ1: Hmmm????
+	}
+
+	// need to be synched here
+	//R_IssuePendingRenderCommands();
+
+	// actually merge surfaces
+	numIboIndexes = 0;
+	mergedSurfIndex = 0;
+	mergedSurf = mergedSurfaces;
+
+	for (i = 0; i < model->numSurfaces; i++)
+	{
+		mdvSurface_t *surf1;
+		VBO_t *vbo;
+		IBO_t *ibo = model->vboSurfaces->ibo;
+		glIndex_t *iboIndexes, *outIboIndexes;
+
+		vec3_t bounds[2];
+
+		int numSurfsToMerge;
+		int numIndexes;
+		int numVerts;
+		int firstIndex;
+
+		srfBspSurface_t *vboSurf;
+
+		if (surfacesViewCount[i] != i)
+			continue;
+
+		surf1 = model->surfaces + i;
+		
+		// retrieve vbo
+		vbo = surf1->model->vboSurfaces->vbo;//((srfBspSurface_t *)(surf1->data))->vbo;
+
+		// count verts, indexes, and surfaces
+		numSurfsToMerge = 0;
+		numIndexes = 0;
+		numVerts = 0;
+
+		for (j = i; j < model->numSurfaces; j++)
+		{
+			mdvSurface_t *surf2;
+			srfBspSurface_t *bspSurf;
+
+			if (surfacesViewCount[j] != i)
+				continue;
+
+			surf2 = model->surfaces + j;
+
+			//bspSurf = (srfBspSurface_t *) surf2->data;
+			bspSurf = (srfBspSurface_t *) surf2->model->vboSurfaces->vbo;
+			numIndexes += bspSurf->numIndexes;
+			numVerts += bspSurf->numVerts;
+			numSurfsToMerge++;
+		}
+
+		if (numVerts == 0 || numIndexes == 0 || numSurfsToMerge < 2)
+		{
+			continue;
+		}
+		
+		// create ibo
+		//ibo = tr.ibos[tr.numIBOs++] = (IBO_t*)ri->Hunk_Alloc(sizeof(*ibo), h_low);
+		memset(ibo, 0, sizeof(*ibo));
+		numIboIndexes = 0;
+		
+		// allocate indexes
+		iboIndexes = outIboIndexes = (glIndex_t*)ibo->indexesSize;//(glIndex_t*)Z_Malloc(numIndexes * sizeof(*outIboIndexes), TAG_BSP);
+
+		// Merge surfaces (indexes) and calculate bounds
+		ClearBounds(bounds[0], bounds[1]);
+		firstIndex = numIboIndexes;
+
+		for (j = i; j < model->numSurfaces; j++)
+		{
+			mdvSurface_t *surf2;
+			srfBspSurface_t *bspSurf;
+
+			if (surfacesViewCount[j] != i)
+				continue;
+
+			surf2 = model->surfaces + j;
+
+			bspSurf = (srfBspSurface_t *) surf2->model->vboSurfaces->vbo;
+
+			for (k = 0; k < bspSurf->numIndexes; k++)
+			{
+				*outIboIndexes++ = bspSurf->indexes[k] + bspSurf->firstVert;
+				numIboIndexes++;
+			}
+			break;
+		}
+
+		vboSurf = (srfBspSurface_t *)ri->Hunk_Alloc(sizeof(*vboSurf), h_low);
+		memset(vboSurf, 0, sizeof(*vboSurf));
+
+		vboSurf->surfaceType = SF_VBO_MESH;
+
+		vboSurf->vbo = vbo;
+		vboSurf->ibo = ibo;
+
+		vboSurf->numIndexes = numIndexes;
+		vboSurf->numVerts = numVerts;
+		vboSurf->firstIndex = firstIndex;
+
+		vboSurf->minIndex = *(iboIndexes + firstIndex);
+		vboSurf->maxIndex = *(iboIndexes + firstIndex);
+
+		for (j = 0; j < numIndexes; j++)
+		{
+			vboSurf->minIndex = MIN(vboSurf->minIndex, *(iboIndexes + firstIndex + j));
+			vboSurf->maxIndex = MAX(vboSurf->maxIndex, *(iboIndexes + firstIndex + j));
+		}
+
+		VectorCopy(bounds[0], vboSurf->cullBounds[0]);
+		VectorCopy(bounds[1], vboSurf->cullBounds[1]);
+
+		VectorCopy(bounds[0], mergedSurf->cullinfo.bounds[0]);
+		VectorCopy(bounds[1], mergedSurf->cullinfo.bounds[1]);
+
+		mergedSurf->cullinfo.type = CULLINFO_BOX;
+		mergedSurf->data          = (surfaceType_t *)vboSurf;
+		mergedSurf->fogIndex      = fogNum;
+		mergedSurf->cubemapIndex  = cubemapIndex;
+		//mergedSurf->shader        = surf1->shader;
+
+		if ( ent->e.customShader ) {
+			mergedSurf->shader = R_GetShaderByHandle( ent->e.customShader );
+		} else if ( ent->e.customSkin > 0 && ent->e.customSkin < tr.numSkins ) {
+			skin_t *skin;
+			int		j;
+
+			skin = R_GetSkinByHandle( ent->e.customSkin );
+
+			// match the surface name to something in the skin file
+			mergedSurf->shader = tr.defaultShader;
+			for ( j = 0 ; j < skin->numSurfaces ; j++ ) {
+				// the names have both been lowercased
+				if ( !strcmp( skin->surfaces[j]->name, surf1->name ) ) {
+					mergedSurf->shader = (shader_t *)skin->surfaces[j]->shader;
+					break;
+				}
+			}
+		} else {
+			mergedSurf->shader = tr.shaders[ surf1->shaderIndexes[ ent->e.skinNum % surf1->numShaderIndexes ] ];
+		}
+
+		// finish up the ibo
+		qglGenBuffers(1, &ibo->indexesVBO);
+
+		R_BindIBO(ibo);
+		qglBufferData(GL_ELEMENT_ARRAY_BUFFER, numIboIndexes * sizeof(*iboIndexes), iboIndexes, GL_STATIC_DRAW);
+		R_BindNullIBO();
+
+		GL_CheckErrors();
+
+   		Z_Free(iboIndexes);
+		Z_Free(vboSurf);
+
+		// redirect view surfaces to this surf
+		for (j = 0; j < model->numSurfaces; j++)
+		{
+			if (surfacesViewCount[j] != i)
+				continue;
+
+			for (k = 0; k < model->numSurfaces; k++)
+			{
+				int *mark = (int *)(marksurfaces + k);
+				int *view = viewSurfaces + k;
+
+				if (*mark == j)
+					*view = -(mergedSurfIndex + 1);
+			}
+		}
+
+		mergedSurfIndex++;
+		mergedSurf++;
+	}
+
+	endTime = ri->Milliseconds();
+
+	ri->Printf(PRINT_ALL, "Processed %d surfaces into %d merged, %d unmerged in %5.2f seconds\n", 
+		model->numSurfaces, numMergedSurfaces, numUnmergedSurfaces, (endTime - startTime) / 1000.0f);
+
+	for (j = 0; j < numMergedSurfaces; j++)
+	{
+		R_AddDrawSurf(mergedSurfaces[i].data, mergedSurfaces[i].shader, fogNum, qfalse, R_IsPostRenderEntity (tr.currentEntityNum, ent), cubemapIndex );
+	}
+
+	for (j = 0; j < model->numSurfaces; j++)
+	{
+		if (surfacesViewCount[j] == -1)
+		{
+			srfVBOMDVMesh_t *vboSurface = &model->vboSurfaces[i];
+			shader_t		*shader = NULL;
+
+			if ( ent->e.customShader ) {
+				shader = R_GetShaderByHandle( ent->e.customShader );
+			} else if ( ent->e.customSkin > 0 && ent->e.customSkin < tr.numSkins ) {
+				skin_t *skin;
+				int		j;
+
+				skin = R_GetSkinByHandle( ent->e.customSkin );
+
+				// match the surface name to something in the skin file
+				shader = tr.defaultShader;
+				for ( j = 0 ; j < skin->numSurfaces ; j++ ) {
+					// the names have both been lowercased
+					if ( !strcmp( skin->surfaces[j]->name, model->surfaces[j].name ) ) {
+						shader = (shader_t *)skin->surfaces[j]->shader;
+						break;
+					}
+				}
+				if (shader == tr.defaultShader) {
+					ri->Printf( PRINT_DEVELOPER, "WARNING: no shader for surface %s in skin %s\n", model->surfaces[j].name, skin->name);
+				}
+				else if (shader->defaultShader) {
+					ri->Printf( PRINT_DEVELOPER, "WARNING: shader %s in skin %s not found\n", model->surfaces[j].name, skin->name);
+				}
+			} else {
+				shader = tr.shaders[ model->surfaces[j].shaderIndexes[ ent->e.skinNum % model->surfaces[j].numShaderIndexes ] ];
+			}
+
+			R_AddDrawSurf((surfaceType_t *)vboSurface, shader, fogNum, qfalse, R_IsPostRenderEntity (tr.currentEntityNum, ent), cubemapIndex );
+		}
+	}
+}
+
 /*
 =================
 R_AddMD3Surfaces
@@ -294,6 +702,8 @@ void R_AddMD3Surfaces( trRefEntity_t *ent ) {
 	// don't add third_person objects if not in a portal
 	personalModel = (qboolean)((ent->e.renderfx & RF_THIRD_PERSON) && !(tr.viewParms.isPortal 
 	                 || (tr.viewParms.flags & (VPF_SHADOWMAP | VPF_DEPTHSHADOW))));
+
+	if(personalModel) return; // Seems to never draw in this code, why waste time?
 
 	if ( ent->e.renderfx & RF_WRAP_FRAMES ) {
 		ent->e.frame %= tr.currentModel->data.mdv[0]->numFrames;
@@ -350,6 +760,12 @@ void R_AddMD3Surfaces( trRefEntity_t *ent ) {
 	if (cubemapIndex-1 < 0 || Distance(tr.refdef.vieworg, tr.cubemapOrigins[cubemapIndex-1]) > r_cubemapCullRange->value * r_cubemapCullFalloffMult->value)
 		cubemapIndex = 0;
 
+//#define __MERGE_MD3_TEST__
+
+#ifdef __MERGE_MD3_TEST__
+	// This should be done at load, but, I have no idea what i'm doing... *sigh*
+	R_MergeMD3Surfaces(ent, model, fogNum, cubemapIndex);
+#else //!__MERGE_MD3_TEST__
 	//
 	// draw all surfaces
 	//
@@ -398,7 +814,7 @@ void R_AddMD3Surfaces( trRefEntity_t *ent ) {
 
 		surface++;
 	}
-
+#endif //__MERGE_MD3_TEST__
 }
 
 

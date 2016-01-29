@@ -664,7 +664,6 @@ qboolean R_LoadIQM( model_t *mod, void *buffer, int filesize, const char *mod_na
 		case IQM_BLENDINDEXES:
 			if( blendIndexesType == IQM_INT ) {
 				int *data = (int*)((byte*)header + vertexarray->offset);
-#pragma omp parallel for schedule(dynamic) if(n > 1024)
 				for ( j = 0; j < n; j++ ) {
 					iqmData->blendIndexes[j] = (byte)data[j];
 				}
@@ -725,7 +724,6 @@ qboolean R_LoadIQM( model_t *mod, void *buffer, int filesize, const char *mod_na
 		mat = iqmData->bounds;
 		bounds = (iqmBounds_t *) ((byte *) header + header->ofs_bounds);
 
-#pragma omp parallel for schedule(dynamic) if(header->num_frames > 64)
 		for(i = 0; i < header->num_frames; i++)
 		{
 			mat[0] = bounds->bbmin[0];
