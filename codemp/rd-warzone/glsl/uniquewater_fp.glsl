@@ -147,15 +147,20 @@ void main()
 	//
 	// Water
 	//
-
+	
 	vec2 cPos = -1.0 + 2.0 * texCoords.xy;
 	float cLength = length(cPos);
 
 	vec2 uv = texCoords.xy+(cPos/cLength)*cos(cLength*12.0-var_Time*4.0)*0.03;
 	vec4 diffuse = texture2D(u_DiffuseMap, uv);
 	vec4 orig_diffuse = diffuse;
-
 	gl_FragColor = vec4(diffuse.rgb,1.0);
+	/*
+	vec2 uv = texCoords.xy;
+	vec4 diffuse = texture2D(u_DiffuseMap, uv);
+	vec4 orig_diffuse = diffuse;
+	gl_FragColor = vec4(diffuse.rgb,1.0);
+	*/
 
 	/*
 	vec4 skyColor = texture2D(u_OverlayMap, uv2);
@@ -173,7 +178,7 @@ void main()
 	//
 	//
 
-
+	/*
 #if defined (USE_CUBEMAP)
 	// Cubemapping...
 	vec3 R = reflect(E, N);
@@ -181,8 +186,9 @@ void main()
 	vec3 cubeLightColor = textureCubeLod(u_CubeMap, vec3(uv, R.z) * viewDir, 7.0 - specular.a * 7.0).rgb;
 	gl_FragColor.rgb = ((gl_FragColor.rgb * 19.0) + cubeLightColor) / 20.0;
 #endif
+	*/
 
-	gl_FragColor.a = 1.0;
+	gl_FragColor.a = 0.9;//1.0;
 	out_Glow = vec4(0.0);
 
 

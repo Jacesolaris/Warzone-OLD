@@ -1295,6 +1295,9 @@ extern qboolean modelviewChanged;
 
 extern image_t *skyImage;
 
+float waveTime = 0.5;
+float waveFreq = 0.1;
+
 static void RB_IterateStagesGeneric( shaderCommands_t *input )
 {
 	vec4_t	fogDistanceVector, fogDepthVector = {0, 0, 0, 0};
@@ -1455,12 +1458,16 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				sp = &tr.waterShader;
 				pStage->glslShaderGroup = &tr.waterShader;
 				GLSL_BindProgram(sp);
-				GLSL_SetUniformFloat(sp, UNIFORM_TIME, tess.shaderTime);
 				
 				GLSL_SetUniformMatrix16(sp, UNIFORM_MODELMATRIX, backEnd.ori.transformMatrix);
 				GLSL_SetUniformMatrix16(sp, UNIFORM_INVEYEPROJECTIONMATRIX, glState.invEyeProjection);
 
 				RB_SetMaterialBasedProperties(sp, pStage);
+
+				GLSL_SetUniformFloat(sp, UNIFORM_TIME, tess.shaderTime);
+				// Update wave variable
+				//waveTime += waveFreq;
+				//GLSL_SetUniformFloat(sp, UNIFORM_TIME, waveTime);
 
 				GLSL_SetUniformInt(sp, UNIFORM_RANDOMMAP, TB_RANDOMMAP);
 				GL_BindToTMU(tr.random2KImage, TB_RANDOMMAP);
@@ -1527,7 +1534,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		while (1)
 		{
 			RB_SetMaterialBasedProperties(sp, pStage);
-
+		
 			stateBits = pStage->stateBits;
 
 			if ( backEnd.currentEntity )
@@ -1953,8 +1960,9 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			if (isWater)
 			{
 				vec4_t loc;
-				VectorSet4(loc, (float)0.4, 6.0/*(float)passNum*/, 2.0, 0.2); // grassLength, grassLayer, wavespeed, wavesize
+				VectorSet4(loc, (float)0.4, 6.0, 2.0, 0.2); // grassLength, grassLayer, wavespeed, wavesize
 				GLSL_SetUniformVec4(sp, UNIFORM_LOCAL5, loc);
+				//GLSL_SetUniformFloat(sp, UNIFORM_TIME, waveTime);
 			}
 
 #if 0

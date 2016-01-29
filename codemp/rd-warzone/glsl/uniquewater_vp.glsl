@@ -206,6 +206,7 @@ void main()
 #endif
 
 
+#if 0
 	vec3 P = attr_Position + (normal * (m_Length*m_Layer));
 
 #ifdef WAVE
@@ -234,8 +235,19 @@ void main()
     P = P + vGravity*k;
 
     gl_Position = u_ModelViewProjectionMatrix * vec4(P, 1.0);
-
 	var_TexCoords = tex;
+#else //!0
+	float time = u_Time + 0.5;
+	vec4 v = vec4(attr_Position, 1.0);
+	vec4 v2 = v;//normalize(vec4(attr_Position, 1.0));
+#define waveHeight 3.0
+#define waveWidth 0.6
+	float baseHeight = sin(waveWidth * v2.x) * cos(waveWidth * v2.y) * waveHeight;
+	v.z += baseHeight - (sin((waveWidth * v2.x) + time) * cos((waveWidth * v2.y) + time) * waveHeight);
+ 	gl_Position = u_ModelViewProjectionMatrix * v;
+	var_TexCoords = tex;
+#endif //0
+
 	var_Dimensions = u_Dimensions.st;
 	var_vertPos = gl_Position.xyz;
 	var_Time = u_Time;
