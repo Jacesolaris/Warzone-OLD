@@ -37,32 +37,23 @@ void main()
 		for (float y = var_TexCoords.y; y < 1.0 && var_TexCoords.y + ((y - var_TexCoords.y) * 2.0) < 1.0; y += ph)
 		{
 			float isWater = texture2D(u_NormalMap, vec2(var_TexCoords.x, y)).b;
+			upPos = var_TexCoords.y + ((y - var_TexCoords.y) * 2.0);
+			float landDepth = linearize(texture2D(u_ScreenDepthMap, vec2(var_TexCoords.x, upPos)).r);
 
-			if (isWater <= 0.0)
+			if (isWater <= 0.0 && 1.0 - upPos > 0.0 && waterDepth < landDepth)
 			{
-				upPos = var_TexCoords.y + ((y - var_TexCoords.y) * 2.0);
-
-				if (1.0 - upPos > 0.0)
-				{
-					float landDepth = linearize(texture2D(u_ScreenDepthMap, vec2(var_TexCoords.x, upPos)).r);
-
-					if (waterDepth < landDepth)
-					{
-						LAND_Y = y;
-						break;
-					}
-				}
+				LAND_Y = y;
+				break;
 			}
 		}
 
 		if (LAND_Y != 0.0)
 		{
 			float isWater = texture2D(u_NormalMap, vec2(var_TexCoords.x, upPos)).b;
+			vec4 landColor = texture2D(u_TextureMap, vec2(var_TexCoords.x, upPos));
 
 			if (isWater <= 0.0)
 			{
-				vec4 landColor = texture2D(u_TextureMap, vec2(var_TexCoords.x, upPos));
-
 				color.rgb = mix(color.rgb, landColor.rgb, vec3(1.0 - upPos));
 				//color.rgb += landColor.rgb + (upPos - var_TexCoords.y);
 			}

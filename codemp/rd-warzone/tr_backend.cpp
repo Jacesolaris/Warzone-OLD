@@ -2072,24 +2072,10 @@ const void *RB_PostProcess(const void *data)
 			SCREEN_BLUR = qtrue;
 		}
 
-		if (r_underwater->integer)
+		if (r_underwater->integer && (backEnd.refdef.rdflags & RDF_UNDERWATER))
 		{
-			/*
-			vec3_t vOrg, testOrg;
-			VectorCopy(backEnd.refdef.vieworg, vOrg);
-			VectorCopy(backEnd.refdef.vieworg, testOrg);
-			testOrg[2]+=16;
-
-			trace_t trace;
-			ri->CM_BoxTrace(&trace, vOrg, testOrg, NULL, NULL, 0, CONTENTS_WATER|CONTENTS_LAVA, 0);
-
-			if ((trace.contents & CONTENTS_WATER) || (trace.contents & CONTENTS_LAVA))
-			*/
-			if (backEnd.refdef.rdflags & RDF_UNDERWATER)
-			{
-				RB_Underwater(srcFbo, srcBox, tr.genericFbo, dstBox);
-				FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_NEAREST);
-			}
+			RB_Underwater(srcFbo, srcBox, tr.genericFbo, dstBox);
+			FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 		}
 
 		if (SCREEN_BLUR)
@@ -2110,30 +2096,6 @@ const void *RB_PostProcess(const void *data)
 			RB_TestShader(srcFbo, srcBox, tr.genericFbo, dstBox, 0);
 			FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 		}
-
-		if (r_sss->integer)
-		{
-			if (RB_SSS(srcFbo, srcBox, tr.genericFbo, dstBox))
-			{
-				FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_NEAREST);
-			}
-		}
-
-		if (r_glslWater->integer >= 2)
-		{
-			if (RB_WaterPost(srcFbo, srcBox, tr.genericFbo, dstBox))
-			{
-				FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_NEAREST);
-			}
-		}
-
-		/*
-		if (!SCREEN_BLUR && r_textureClean->integer)
-		{
-			RB_TextureClean(srcFbo, srcBox, tr.genericFbo, dstBox);
-			FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_NEAREST);
-		}
-		*/
 
 		if (!SCREEN_BLUR && r_rbm->integer)
 		{
@@ -2197,6 +2159,18 @@ const void *RB_PostProcess(const void *data)
 				RB_FakeDepthParallax(srcFbo, srcBox, tr.genericFbo, dstBox);
 				FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 			}
+		}
+
+		if (r_glslWater->integer >= 2)
+		{
+			RB_WaterPost(srcFbo, srcBox, tr.genericFbo, dstBox);
+			FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+		}
+
+		if (r_sss->integer)
+		{
+			RB_SSS(srcFbo, srcBox, tr.genericFbo, dstBox);
+			FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 		}
 
 		if (r_magicdetail->integer)

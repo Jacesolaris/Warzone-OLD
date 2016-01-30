@@ -23,16 +23,10 @@ float linearize(float depth)
 	//return pow(depth, 255.0);
 }
 
-vec3 CalcPosition(void){
-    float depth = texture2D(u_ScreenDepthMap, var_ScreenTex).r;
-    //float linearDepth = projAB.y / (depth - projAB.x);
-	float linearDepth = linearize(depth);
-    vec3 ray = normalize(viewRay);
-    ray = ray / ray.z;
-    return linearDepth * ray;
-}
-
 void main(void){
+	gl_FragColor = texture2D(u_SpecularMap, var_ScreenTex);
+	return;
+
 	vec3 dglow = texture2D(u_NormalMap, var_ScreenTex).rgb;
 	float dglowStrength = clamp(length(dglow.rgb) * 3.0, 0.0, 1.0);
 
@@ -40,9 +34,11 @@ void main(void){
 
 	float isFoliage = texture2D(u_SpecularMap, var_ScreenTex).g;
 
+	vec4 diffuse = texture2D(u_DiffuseMap, var_ScreenTex);
+
 	if (isFoliage < 1.0)
 	{
-		gl_FragColor = texture2D(u_DiffuseMap, var_ScreenTex);
+		gl_FragColor = diffuse;
 		return;
 	}
 
@@ -60,14 +56,13 @@ void main(void){
 
 	if (isFoliage2 < 1.0)
 	{
-		gl_FragColor = texture2D(u_DiffuseMap, var_ScreenTex);
+		gl_FragColor = diffuse;
 		return;
 	}
 
 	float d2 = texture2D(u_ScreenDepthMap, pos).r;
 	d2 = linearize(d2);
 
-	vec4 diffuse = texture2D(u_DiffuseMap, var_ScreenTex);
 	vec4 oDiffuse = diffuse;
 
 	float depthDiff = clamp(depth - d2, 0.0, 1.0);

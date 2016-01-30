@@ -2915,13 +2915,13 @@ AIMOD_NODES_LoadNodes2 ( void )
 	}
 
 	fread( &map, strlen( mp) + 1, 1, f);
-	/*if ( Q_stricmp( map, cgs.currentmapname) != 0 )
+	if ( Q_stricmp( map, cgs.currentmapname) != 0 )
 	{
 		trap->Print( "^1*** ^3WARNING^5: Reading from ^7nodes/%s.bwp^3 failed^5!!!\n", cgs.currentmapname);
 		trap->Print( "^1*** ^3       ^5  Node file is not for this map!\n" );
 		fclose(f);
 		return;
-	}*/
+	}
 
 	if (version == NOD_VERSION)
 	{
@@ -8754,7 +8754,7 @@ AIMod_AutoWaypoint_Cleaner ( qboolean quiet, qboolean null_links_only, qboolean 
 		trap->Print("^4*** ^3AUTO-WAYPOINTER^4: ^5Disabled ^3%i^5 waypoints at your marked locations (removal spots).\n", num_this_location_nodes);
 		trap->Print("^4*** ^3AUTO-WAYPOINTER^4: ^5Disabled ^3%i^5 waypoints at your given bad heights (bad height spots).\n", num_marked_height_nodes);
 
-		total_removed = num_skiped_nodes + num_dupe_nodes + num_disabled_nodes + aw_num_bad_surfaces + num_nolink_nodes + num_noroute_nodes + num_allsolid_nodes + num_this_location_nodes + num_marked_height_nodes;
+		total_removed = num_skiped_nodes + num_dupe_nodes + num_disabled_nodes + aw_num_bad_surfaces + num_nolink_nodes + num_tree_nodes + num_noroute_nodes + num_allsolid_nodes + num_this_location_nodes + num_marked_height_nodes;
 
 		trap->Print("^4*** ^3AUTO-WAYPOINTER^4: ^5Disabled ^3%i^5 total waypoints in this run.\n", total_removed);
 
@@ -8896,7 +8896,7 @@ AIMod_AutoWaypoint_Cleaner ( qboolean quiet, qboolean null_links_only, qboolean 
 	// Restore the original multiplier...
 	waypoint_distance_multiplier = original_wp_scatter_multiplier;
 
-	trap->SendConsoleCommand( "!loadnodes\n" );
+	//trap->SendConsoleCommand( "!loadnodes\n" );
 }
 
 #define NUMBER_SIZE		8

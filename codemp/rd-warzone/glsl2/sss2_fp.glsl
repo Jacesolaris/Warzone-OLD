@@ -22,15 +22,6 @@ float linearize(float depth)
 	//return pow(depth, 255.0);
 }
 
-vec3 CalcPosition(void){
-    float depth = texture2D(u_ScreenDepthMap, var_ScreenTex).r;
-    //float linearDepth = projAB.y / (depth - projAB.x);
-	float linearDepth = linearize(depth);
-    vec3 ray = normalize(viewRay);
-    ray = ray / ray.z;
-    return linearDepth * ray;
-}
-
 void main(void){
 	vec3 dglow = texture2D(u_NormalMap, var_ScreenTex).rgb;
 	float dglowStrength = clamp(length(dglow.rgb) * 3.0, 0.0, 1.0);
