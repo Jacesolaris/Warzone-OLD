@@ -755,7 +755,10 @@ void R_AddMD3Surfaces( trRefEntity_t *ent ) {
 	//
 	fogNum = R_ComputeFogNum( model, ent );
 
-	cubemapIndex = R_CubemapForPoint(ent->e.origin);
+	if (r_cubeMapping->integer >= 2)
+		cubemapIndex = R_CubemapForPoint(ent->e.origin);
+	else
+		cubemapIndex = 0;
 
 	if (cubemapIndex-1 < 0 || Distance(tr.refdef.vieworg, tr.cubemapOrigins[cubemapIndex-1]) > r_cubemapCullRange->value * r_cubemapCullFalloffMult->value)
 		cubemapIndex = 0;

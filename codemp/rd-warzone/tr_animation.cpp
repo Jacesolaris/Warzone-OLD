@@ -251,7 +251,10 @@ void R_MDRAddAnimSurfaces( trRefEntity_t *ent ) {
 	// fogNum?
 	fogNum = R_MDRComputeFogNum( header, ent );
 
-	cubemapIndex = R_CubemapForPoint(ent->e.origin);
+	if (r_cubeMapping->integer >= 2)
+		cubemapIndex = R_CubemapForPoint(ent->e.origin);
+	else
+		cubemapIndex = 0;
 
 	if (Distance(tr.refdef.vieworg, tr.cubemapOrigins[cubemapIndex-1]) > r_cubemapCullRange->value * r_cubemapCullFalloffMult->value)
 		cubemapIndex = 0;

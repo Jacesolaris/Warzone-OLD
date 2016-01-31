@@ -1723,7 +1723,21 @@ extern "C" {
 
 				FOLIAGE_PLANT_SELECTION[FOLIAGE_NUM_POSITIONS] = 0;
 				FOLIAGE_PLANT_ANGLES[FOLIAGE_NUM_POSITIONS] = 0.0f;
-				if (grassSpotScale[i] > 0)
+				if (num_clusters <= 0)
+				{
+					if (grassSpotScale[i] > 0)
+					{
+						FOLIAGE_PLANT_SCALE[FOLIAGE_NUM_POSITIONS] = grassSpotScale[i];
+
+						if (tree_density > 0 
+							&& irand(0, (int)USE_TREE_DENSITY) >= (int)USE_TREE_DENSITY 
+							&& RoofHeightAt(vec) - vec[2] > 1024.0)
+						{
+							DO_TREE = qtrue;
+						}
+					}
+				}
+				else if (grassSpotScale[i] > 0)
 				{
 					FOLIAGE_PLANT_SCALE[FOLIAGE_NUM_POSITIONS] = grassSpotScale[i];
 				}

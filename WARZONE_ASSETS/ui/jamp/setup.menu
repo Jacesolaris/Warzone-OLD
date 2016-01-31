@@ -2379,7 +2379,7 @@
 			font 				4
 			textscale 			1
 			forecolor		.615 .615 .956 1
-			cvarFloatList		{  @MENUS_OFF 0 @MENUS_ON 1 }
+			cvarFloatList		{  @MENUS_OFF 0 "Map and GLM Models" 1 "Map and all Models" 2 }
 			descText			"Enable Cube Mapping?"
 			cvar				"r_cubeMapping"
 
