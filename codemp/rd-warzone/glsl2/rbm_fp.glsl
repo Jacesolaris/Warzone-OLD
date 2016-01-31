@@ -166,7 +166,7 @@ void main ()
 
 void main ()
 {
-	gl_FragColor = texture2D(u_NormalMap, var_ScreenTex.xy);
+	gl_FragColor = texture2D(u_DiffuseMap, var_ScreenTex.xy);
 }
 
 #endif //RBM

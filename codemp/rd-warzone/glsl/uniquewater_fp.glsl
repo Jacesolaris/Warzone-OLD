@@ -187,7 +187,7 @@ void main()
 #endif
 	*/
 
-	gl_FragColor.a = 0.9;//1.0;
+	gl_FragColor.a = 0.7;//1.0;
 	out_Glow = vec4(0.0);
 
 

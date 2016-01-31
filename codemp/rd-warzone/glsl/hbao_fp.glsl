@@ -46,14 +46,19 @@ float filter(float x)
 }
 #endif //FILTER_RESULT
 
+float linearize(float depth)
+{
+	return (1.0 / mix(u_ViewInfo.z, 1.0, depth)) + 1.0 / 2.0;
+}
+
 const float depthMult = 1.0;
 
 vec2 offset1 = vec2(0.0, 1.0 / u_Dimensions.y);
 vec2 offset2 = vec2(1.0 / u_Dimensions.x, 0.0);
 
 vec3 normal_from_depth(float depth, vec2 texcoords) {
-  float depth1 = texture2D(u_ScreenDepthMap, texcoords + offset1).r * depthMult;
-  float depth2 = texture2D(u_ScreenDepthMap, texcoords + offset2).r * depthMult;
+  float depth1 = linearize(texture2D(u_ScreenDepthMap, texcoords + offset1).r) * depthMult;
+  float depth2 = linearize(texture2D(u_ScreenDepthMap, texcoords + offset2).r) * depthMult;
   
   vec3 p1 = vec3(offset1, depth1 - depth);
   vec3 p2 = vec3(offset2, depth2 - depth);
@@ -67,9 +72,9 @@ vec3 normal_from_depth(float depth, vec2 texcoords) {
 vec3 SampleNormals(sampler2D normalMap, in vec2 coord)  
 {
 #ifdef USE_NORMAL_MAP
-	 return texture2D(normalMap, coord).rgb;
+	 return (((texture2D(normalMap, coord).rgb) + 1.0) / 2.0) * 0.5 + 0.5;
 #else //!USE_NORMAL_MAP
-	 float depth = texture2D(u_ScreenDepthMap, coord).r * depthMult;
+	 float depth = linearize(texture2D(u_ScreenDepthMap, coord).r) * depthMult;
 	 return normal_from_depth(depth, coord);
 #endif //USE_NORMAL_MAP
 }
@@ -79,7 +84,7 @@ void main()
 	//gl_FragColor = vec4(texture2D(u_NormalMap, var_ScreenTex).rgb, 1.0);
 	//return;
 
-    float start_Z = texture2D(u_ScreenDepthMap, var_ScreenTex).r; // returns value (z/w+1)/2
+    float start_Z = linearize(texture2D(u_ScreenDepthMap, var_ScreenTex).r); // returns value (z/w+1)/2
     vec3 start_Pos = vec3(var_ScreenTex, start_Z);
     vec3 ndc_Pos = (2.0 * start_Pos) - 1.0; // transform to normalized device coordinates xyz/w
 
@@ -107,7 +112,7 @@ void main()
             vec2 sampleOffset = float(j+1) * SAMPLING_STEP * sampleDir;
             vec2 offTex = var_ScreenTex + sampleOffset;
 
-            float off_start_Z = texture2D(u_ScreenDepthMap, offTex.st).r;
+            float off_start_Z = linearize(texture2D(u_ScreenDepthMap, offTex.st).r);
             vec3 off_start_Pos = vec3(offTex, off_start_Z);
             vec3 off_ndc_Pos = (2.0 * off_start_Pos) - 1.0;
             vec4 off_unproject = u_invEyeProjectionMatrix * vec4(off_ndc_Pos, 1.0);
@@ -146,9 +151,18 @@ void main()
 	total = 1.0 - filter(total);
 #endif //FILTER_RESULT
 
+#ifdef FAST_HBAO
+	total = clamp(total * 1.355, 0.0, 1.0);
+	total += 0.2;
+#else //!FAST_HBAO
+	total = clamp(total * 1.055, 0.0, 1.0);
+	total += 0.15;
+#endif //FAST_HBAO
+
+	total = clamp(pow(total, 3.0), 0.0, 1.0);
     //gl_FragColor = vec4(total, total, total, 1.0);
 
-	gl_FragColor = texture2D(u_DiffuseMap, var_ScreenTex);
-	gl_FragColor.rgb = (gl_FragColor.rgb + (total * gl_FragColor.rgb)) / 2.0; // UQ1: Blending to reduce pixelation...
+	gl_FragColor.rgb = texture2D(u_DiffuseMap, var_ScreenTex).rgb * vec3(total, total, total);
+	//gl_FragColor.rgb = (gl_FragColor.rgb + (total * gl_FragColor.rgb)) / 2.0; // UQ1: Blending to reduce pixelation...
 	gl_FragColor.a = 1.0;
 }

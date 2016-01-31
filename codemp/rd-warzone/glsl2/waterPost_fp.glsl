@@ -1,64 +1,73 @@
-uniform sampler2D	u_TextureMap; // Screen Image...
+uniform sampler2D	u_DiffuseMap; // Screen Image...
 uniform sampler2D	u_ScreenDepthMap; // Depth Map...
 uniform sampler2D	u_NormalMap; // Water Map...
 
 uniform vec2		u_Dimensions;
-uniform float		u_Time;
 uniform vec4		u_ViewInfo; // zmin, zmax, zmax / zmin
 
 varying vec2		var_TexCoords;
-varying vec3		var_ViewDir;
-varying vec3		var_position;
-varying vec3		var_viewOrg;
 
-
-float pw = 1.0/ u_Dimensions.x;
-float ph = 1.0/ u_Dimensions.y;
+#define pw (1.0/u_Dimensions.x)
+#define ph (1.0/u_Dimensions.y)
 
 float linearize(float depth)
 {
-	//return -u_ViewInfo.y * u_ViewInfo.x / (depth * (u_ViewInfo.y - u_ViewInfo.x) - u_ViewInfo.y);
-	//return depth / 4.0;
 	return 1.0 / mix(u_ViewInfo.z, 1.0, depth);
-
-	//return pow(depth, 255.0);
 }
 
 void main()
 {
-	vec4 color = texture2D(u_TextureMap, var_TexCoords.xy);
-	vec3 aux = texture2D(u_NormalMap, var_TexCoords.xy).rgb;
-	float upPos = 0.0;
+	//gl_FragColor = texture2D(u_NormalMap, var_TexCoords);
+	//gl_FragColor = vec4(vec3(linearize(texture2D(u_ScreenDepthMap, var_TexCoords).r)), 1.0);
+	//return;
 
-	if (aux.b > 0.0) {
-		float LAND_Y = 0.0;
-		float waterDepth = linearize(texture2D(u_ScreenDepthMap, var_TexCoords.xy).r);
+	vec4 color = texture2D(u_DiffuseMap, var_TexCoords.xy);
+	vec4 aux = texture2D(u_NormalMap, var_TexCoords.xy);
 
-		for (float y = var_TexCoords.y; y < 1.0 && var_TexCoords.y + ((y - var_TexCoords.y) * 2.0) < 1.0; y += ph)
+	if (aux.b <= 0.0)
+	{
+		gl_FragColor = color;
+		return;
+	}
+
+	float upPos = var_TexCoords.y;
+	float LAND_Y = 0.0;
+	float waterDepth = linearize(texture2D(u_ScreenDepthMap, var_TexCoords.xy).r);
+
+	for (float y = var_TexCoords.y; y < 1.0 && var_TexCoords.y + ((y - var_TexCoords.y) * 2.0) < 1.0; y += ph)
+	{
+		float isWater = texture2D(u_NormalMap, vec2(var_TexCoords.x, y)).b;
+		upPos = var_TexCoords.y + ((y - var_TexCoords.y) * 2.0);
+		float landDepth = linearize(texture2D(u_ScreenDepthMap, vec2(var_TexCoords.x, upPos)).r);
+
+		if (isWater <= 0.0 && 1.0 - upPos > 0.0 && waterDepth < landDepth)
 		{
-			float isWater = texture2D(u_NormalMap, vec2(var_TexCoords.x, y)).b;
-			upPos = var_TexCoords.y + ((y - var_TexCoords.y) * 2.0);
-			float landDepth = linearize(texture2D(u_ScreenDepthMap, vec2(var_TexCoords.x, upPos)).r);
-
-			if (isWater <= 0.0 && 1.0 - upPos > 0.0 && waterDepth < landDepth)
-			{
-				LAND_Y = y;
-				break;
-			}
-		}
-
-		if (LAND_Y != 0.0)
-		{
-			float isWater = texture2D(u_NormalMap, vec2(var_TexCoords.x, upPos)).b;
-			vec4 landColor = texture2D(u_TextureMap, vec2(var_TexCoords.x, upPos));
-
-			if (isWater <= 0.0)
-			{
-				color.rgb = mix(color.rgb, landColor.rgb, vec3(1.0 - upPos));
-				//color.rgb += landColor.rgb + (upPos - var_TexCoords.y);
-			}
+			LAND_Y = y;
+			break;
 		}
 	}
 
-	gl_FragColor = color.rgba;
+	if (LAND_Y <= 0.0)
+	{
+		gl_FragColor = color;
+		return;
+	}
+
+	upPos = var_TexCoords.y + ((LAND_Y - var_TexCoords.y) * 2.0);
+
+	float isWater = texture2D(u_NormalMap, vec2(var_TexCoords.x, upPos)).b;
+
+	if (isWater > 0.0)
+	{
+		gl_FragColor = color;
+		return;
+	}
+
+	vec4 landColor = texture2D(u_DiffuseMap, vec2(var_TexCoords.x, upPos));
+
+	color.rgb = mix(color.rgb, landColor.rgb, vec3(1.0 - upPos));
+	//color.rgb = mix(color.rgb, landColor.rgb, vec3(1.0 - var_TexCoords.y));
+	//color.rgb += landColor.rgb + (upPos - var_TexCoords.y);
+
+	gl_FragColor = color;
 }

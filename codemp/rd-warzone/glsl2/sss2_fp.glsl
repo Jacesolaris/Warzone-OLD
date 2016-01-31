@@ -15,11 +15,7 @@ varying vec3					light_p;
 
 float linearize(float depth)
 {
-	//return -u_ViewInfo.y * u_ViewInfo.x / (depth * (u_ViewInfo.y - u_ViewInfo.x) - u_ViewInfo.y);
-	//return depth / 4.0;
 	return 1.0 / mix(u_ViewInfo.z, 1.0, depth);
-
-	//return pow(depth, 255.0);
 }
 
 void main(void){
@@ -75,5 +71,5 @@ void main(void){
 		}
 	}
 
-	gl_FragColor = diffuse;
+	gl_FragColor = vec4(diffuse.rgb, 1.0);
 }

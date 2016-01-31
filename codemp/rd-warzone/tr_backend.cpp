@@ -1958,6 +1958,13 @@ RB_PostProcess
 =============
 */
 
+void RB_SwapFBOs ( FBO_t **currentFbo, FBO_t **currentOutFbo)
+{
+	FBO_t *temp = *currentFbo;
+	*currentFbo = *currentOutFbo;
+	*currentOutFbo = temp;
+}
+
 const void *RB_PostProcess(const void *data)
 {
 	const postProcessCommand_t *cmd = (const postProcessCommand_t *)data;
@@ -2062,6 +2069,9 @@ const void *RB_PostProcess(const void *data)
 
 	if (srcFbo)
 	{
+		FBO_t *currentFbo = srcFbo;
+		FBO_t *currentOutFbo = tr.genericFbo;
+
 		//
 		// UQ1: Added...
 		//
@@ -2074,8 +2084,26 @@ const void *RB_PostProcess(const void *data)
 
 		if (r_underwater->integer && (backEnd.refdef.rdflags & RDF_UNDERWATER))
 		{
-			RB_Underwater(srcFbo, srcBox, tr.genericFbo, dstBox);
-			FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+			RB_Underwater(currentFbo, srcBox, currentOutFbo, dstBox);
+			RB_SwapFBOs( &currentFbo, &currentOutFbo);
+		}
+
+		if (r_glslWater->integer >= 2)
+		{
+			RB_WaterPost(currentFbo, srcBox, currentOutFbo, dstBox);
+			RB_SwapFBOs( &currentFbo, &currentOutFbo);
+		}
+
+		if (!SCREEN_BLUR && r_sss->integer)
+		{
+			RB_SSS(currentFbo, srcBox, currentOutFbo, dstBox);
+			RB_SwapFBOs( &currentFbo, &currentOutFbo);
+		}
+
+		if (!SCREEN_BLUR && r_magicdetail->integer)
+		{
+			RB_MagicDetail(currentFbo, srcBox, currentOutFbo, dstBox);
+			RB_SwapFBOs( &currentFbo, &currentOutFbo);
 		}
 
 		if (SCREEN_BLUR)
@@ -2086,60 +2114,61 @@ const void *RB_PostProcess(const void *data)
 
 			for ( int i = 0; i < numPasses; i++ )
 			{
-				RB_GaussianBlur(srcFbo, tr.genericFbo, srcFbo, spread);
+				RB_GaussianBlur(currentFbo, tr.genericFbo2, currentOutFbo, spread);
+				RB_SwapFBOs( &currentFbo, &currentOutFbo);
 				spread += 0.6f * 0.25f;
 			}
 		}
 
-		if (r_testshader->integer)
+		if (!SCREEN_BLUR && r_testshader->integer)
 		{
-			RB_TestShader(srcFbo, srcBox, tr.genericFbo, dstBox, 0);
-			FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+			RB_TestShader(currentFbo, srcBox, currentOutFbo, dstBox, 0);
+			RB_SwapFBOs( &currentFbo, &currentOutFbo);
 		}
 
 		if (!SCREEN_BLUR && r_rbm->integer)
 		{
-			RB_RBM(srcFbo, srcBox, tr.genericFbo, dstBox);
-			FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+			RB_RBM(currentFbo, srcBox, currentOutFbo, dstBox);
+			RB_SwapFBOs( &currentFbo, &currentOutFbo);
 		}
 
 		if (!SCREEN_BLUR && r_ssao->integer)
 		{
-			RB_SSAO(srcFbo, srcBox, tr.genericFbo, dstBox);
-			FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+			RB_SSAO(currentFbo, srcBox, currentOutFbo, dstBox);
+			RB_SwapFBOs( &currentFbo, &currentOutFbo);
 		}
 
 		if (!SCREEN_BLUR && r_hbao->integer)
 		{
-			RB_HBAO(srcFbo, srcBox, tr.genericFbo, dstBox);
-			FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+			RB_HBAO(currentFbo, srcBox, currentOutFbo, dstBox);
+			RB_SwapFBOs( &currentFbo, &currentOutFbo);
 		}
 
 		if (!SCREEN_BLUR && r_esharpening->integer)
 		{
-			RB_ESharpening(srcFbo, srcBox, tr.genericFbo, dstBox);
-			FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+			RB_ESharpening(currentFbo, srcBox, currentOutFbo, dstBox);
+			RB_SwapFBOs( &currentFbo, &currentOutFbo);
 		}
 
 		if (!SCREEN_BLUR && r_esharpening2->integer)
 		{
-			RB_ESharpening2(srcFbo, srcBox, tr.genericFbo, dstBox);
-			FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+			RB_ESharpening2(currentFbo, srcBox, currentOutFbo, dstBox);
+			RB_SwapFBOs( &currentFbo, &currentOutFbo);
 		}
 
 		if (!SCREEN_BLUR && r_darkexpand->integer)
 		{
 			for (int pass = 0; pass < 2; pass++)
 			{
-				RB_DarkExpand(srcFbo, srcBox, tr.genericFbo, dstBox);
-				FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+				RB_DarkExpand(currentFbo, srcBox, currentOutFbo, dstBox);
+				RB_SwapFBOs( &currentFbo, &currentOutFbo);
 			}
 		}
 
 		if (!SCREEN_BLUR && r_multipost->integer)
 		{
-			RB_MultiPost(srcFbo, srcBox, tr.genericFbo, dstBox);
-			FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+			RB_MultiPost(currentFbo, srcBox, currentOutFbo, dstBox);
+			RB_SwapFBOs( &currentFbo, &currentOutFbo);
 		}
 
 		if (!SCREEN_BLUR && r_depth->integer)
@@ -2147,8 +2176,8 @@ const void *RB_PostProcess(const void *data)
 			// First run, before adding parallax and blooms, etc...
 			for (int i = 0; i < r_depthPasses->integer / 2; i++)
 			{
-				RB_FakeDepth(srcFbo, srcBox, tr.genericFbo, dstBox);
-				FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+				RB_FakeDepth(currentFbo, srcBox, currentOutFbo, dstBox);
+				RB_SwapFBOs( &currentFbo, &currentOutFbo);
 			}
 		}
 
@@ -2156,39 +2185,21 @@ const void *RB_PostProcess(const void *data)
 		{
 			for (int i = 0; i < 4; i++)
 			{
-				RB_FakeDepthParallax(srcFbo, srcBox, tr.genericFbo, dstBox);
-				FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+				RB_FakeDepthParallax(currentFbo, srcBox, currentOutFbo, dstBox);
+				RB_SwapFBOs( &currentFbo, &currentOutFbo);
 			}
-		}
-
-		if (r_glslWater->integer >= 2)
-		{
-			RB_WaterPost(srcFbo, srcBox, tr.genericFbo, dstBox);
-			FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_NEAREST);
-		}
-
-		if (r_sss->integer)
-		{
-			RB_SSS(srcFbo, srcBox, tr.genericFbo, dstBox);
-			FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_NEAREST);
-		}
-
-		if (r_magicdetail->integer)
-		{
-			RB_MagicDetail(srcFbo, srcBox, tr.genericFbo, dstBox);
-			FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 		}
 
 		if (r_truehdr->integer)
 		{
-			RB_HDR(srcFbo, srcBox, tr.genericFbo, dstBox);
-			FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+			RB_HDR(currentFbo, srcBox, currentOutFbo, dstBox);
+			RB_SwapFBOs( &currentFbo, &currentOutFbo);
 		}
 
 		if (r_bloom->integer)
 		{
-			RB_Bloom(srcFbo, srcBox, tr.genericFbo, dstBox);
-			FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+			RB_Bloom(currentFbo, srcBox, currentOutFbo, dstBox);
+			RB_SwapFBOs( &currentFbo, &currentOutFbo);
 		}
 
 		if (!SCREEN_BLUR && r_dof->integer)
@@ -2196,65 +2207,65 @@ const void *RB_PostProcess(const void *data)
 			if (r_dof->integer < 3)
 			{// Old method...
 #if 0
-				RB_DOF(srcFbo, srcBox, tr.genericFbo, dstBox, 0);
-				FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_LINEAR);
-				RB_DOF(srcFbo, srcBox, tr.genericFbo, dstBox, 0);
-				FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_LINEAR);
+				RB_DOF(currentFbo, srcBox, currentOutFbo, dstBox, 0);
+				RB_SwapFBOs( &currentFbo, &currentOutFbo);
+				RB_DOF(currentFbo, srcBox, currentOutFbo, dstBox, 0);
+				RB_SwapFBOs( &currentFbo, &currentOutFbo);
 #else
-				RB_DOF(srcFbo, srcBox, tr.genericFbo, dstBox, 2);
-				FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_LINEAR);
-				RB_DOF(srcFbo, srcBox, tr.genericFbo, dstBox, 3);
-				FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_LINEAR);
-				RB_DOF(srcFbo, srcBox, tr.genericFbo, dstBox, 0);
-				FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_LINEAR);
-				RB_DOF(srcFbo, srcBox, tr.genericFbo, dstBox, 1);
-				FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_LINEAR);
+				RB_DOF(currentFbo, srcBox, currentOutFbo, dstBox, 2);
+				RB_SwapFBOs( &currentFbo, &currentOutFbo);
+				RB_DOF(currentFbo, srcBox, currentOutFbo, dstBox, 3);
+				RB_SwapFBOs( &currentFbo, &currentOutFbo);
+				RB_DOF(currentFbo, srcBox, currentOutFbo, dstBox, 0);
+				RB_SwapFBOs( &currentFbo, &currentOutFbo);
+				RB_DOF(currentFbo, srcBox, currentOutFbo, dstBox, 1);
+				RB_SwapFBOs( &currentFbo, &currentOutFbo);
 #endif
 			}
 			else
 			{// Matso method...
-				RB_DOF(srcFbo, srcBox, tr.genericFbo, dstBox, 2);
-				FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_LINEAR);
-				RB_DOF(srcFbo, srcBox, tr.genericFbo, dstBox, 3);
-				FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_LINEAR);
-				RB_DOF(srcFbo, srcBox, tr.genericFbo, dstBox, 0);
-				FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_LINEAR);
-				RB_DOF(srcFbo, srcBox, tr.genericFbo, dstBox, 1);
-				FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_LINEAR);
+				RB_DOF(currentFbo, srcBox, currentOutFbo, dstBox, 2);
+				RB_SwapFBOs( &currentFbo, &currentOutFbo);
+				RB_DOF(currentFbo, srcBox, currentOutFbo, dstBox, 3);
+				RB_SwapFBOs( &currentFbo, &currentOutFbo);
+				RB_DOF(currentFbo, srcBox, currentOutFbo, dstBox, 0);
+				RB_SwapFBOs( &currentFbo, &currentOutFbo);
+				RB_DOF(currentFbo, srcBox, currentOutFbo, dstBox, 1);
+				RB_SwapFBOs( &currentFbo, &currentOutFbo);
 
-				RB_DOF(srcFbo, srcBox, tr.genericFbo, dstBox, 2);
-				FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_LINEAR);
-				RB_DOF(srcFbo, srcBox, tr.genericFbo, dstBox, 3);
-				FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_LINEAR);
-				RB_DOF(srcFbo, srcBox, tr.genericFbo, dstBox, 0);
-				FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_LINEAR);
-				RB_DOF(srcFbo, srcBox, tr.genericFbo, dstBox, 1);
-				FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_LINEAR);
+				RB_DOF(currentFbo, srcBox, currentOutFbo, dstBox, 2);
+				RB_SwapFBOs( &currentFbo, &currentOutFbo);
+				RB_DOF(currentFbo, srcBox, currentOutFbo, dstBox, 3);
+				RB_SwapFBOs( &currentFbo, &currentOutFbo);
+				RB_DOF(currentFbo, srcBox, currentOutFbo, dstBox, 0);
+				RB_SwapFBOs( &currentFbo, &currentOutFbo);
+				RB_DOF(currentFbo, srcBox, currentOutFbo, dstBox, 1);
+				RB_SwapFBOs( &currentFbo, &currentOutFbo);
 			}
 		}
 
-		if (r_anamorphic->integer)
+		if (!SCREEN_BLUR && r_anamorphic->integer)
 		{
-			RB_Anamorphic(srcFbo, srcBox, tr.genericFbo, dstBox);
-			FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+			RB_Anamorphic(currentFbo, srcBox, currentOutFbo, dstBox);
+			RB_SwapFBOs( &currentFbo, &currentOutFbo);
 		}
 
-		if (r_ssgi->integer)
+		if (!SCREEN_BLUR && r_ssgi->integer)
 		{
-			RB_SSGI(srcFbo, srcBox, tr.genericFbo, dstBox);
-			FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+			RB_SSGI(currentFbo, srcBox, currentOutFbo, dstBox);
+			RB_SwapFBOs( &currentFbo, &currentOutFbo);
 		}
 
 		if (!SCREEN_BLUR && r_lensflare->integer)
 		{
-			RB_LensFlare(srcFbo, srcBox, tr.genericFbo, dstBox);
-			FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+			RB_LensFlare(currentFbo, srcBox, currentOutFbo, dstBox);
+			RB_SwapFBOs( &currentFbo, &currentOutFbo);
 		}
 
 		if (!SCREEN_BLUR && r_dynamiclight->integer)
 		{
-			if (RB_VolumetricLight(srcFbo, srcBox, tr.genericFbo, dstBox))
-				FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+			if (RB_VolumetricLight(currentFbo, srcBox, currentOutFbo, dstBox))
+				RB_SwapFBOs( &currentFbo, &currentOutFbo);
 		}
 
 		if (!SCREEN_BLUR && r_depth->integer)
@@ -2262,21 +2273,21 @@ const void *RB_PostProcess(const void *data)
 			// Second run, after adding parallax and blooms, etc...
 			for (int i = 0; i < r_depthPasses->integer / 2; i++)
 			{
-				RB_FakeDepth(srcFbo, srcBox, tr.genericFbo, dstBox);
-				FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+				RB_FakeDepth(currentFbo, srcBox, currentOutFbo, dstBox);
+				RB_SwapFBOs( &currentFbo, &currentOutFbo);
 			}
 		}
 
 		if (r_vibrancy->value > 0.0)
 		{
-			RB_Vibrancy(srcFbo, srcBox, tr.genericFbo, dstBox);
-			FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+			RB_Vibrancy(currentFbo, srcBox, currentOutFbo, dstBox);
+			RB_SwapFBOs( &currentFbo, &currentOutFbo);
 		}
 
 		if (r_trueAnaglyph->integer)
 		{
-			RB_Anaglyph(srcFbo, srcBox, tr.genericFbo, dstBox);
-			FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+			RB_Anaglyph(currentFbo, srcBox, currentOutFbo, dstBox);
+			RB_SwapFBOs( &currentFbo, &currentOutFbo);
 		}
 
 		if (!SCREEN_BLUR && r_fxaa->integer)
@@ -2285,9 +2296,14 @@ const void *RB_PostProcess(const void *data)
 
 			for (i = 0; i < r_fxaa->integer; i++)
 			{
-				RB_FXAA(srcFbo, srcBox, tr.genericFbo, dstBox);
-				FBO_FastBlit(tr.genericFbo, srcBox, srcFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+				RB_FXAA(currentFbo, srcBox, currentOutFbo, dstBox);
+				RB_SwapFBOs( &currentFbo, &currentOutFbo);
 			}
+		}
+
+		if (currentFbo == srcFbo)
+		{
+			FBO_FastBlit(currentOutFbo, srcBox, currentFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_LINEAR);
 		}
 
 		//
