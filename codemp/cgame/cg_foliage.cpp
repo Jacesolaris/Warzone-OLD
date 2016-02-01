@@ -27,6 +27,8 @@ extern qboolean InFOV( vec3_t spot, vec3_t from, vec3_t fromAngles, int hFOV, in
 	// END - FOLIAGE OPTIONS
 	//
 
+float		NUM_TREE_TYPES = 9;
+
 float		NUM_PLANT_SHADERS = 0;
 
 #define		PLANT_SCALE_MULTIPLIER 1.0
@@ -168,11 +170,11 @@ float		NUM_PLANT_SHADERS = 0;
 	qhandle_t	FOLIAGE_PLANT_MODEL[3] = { 0 };
 	qhandle_t	FOLIAGE_GRASS_BILLBOARD_SHADER[5] = { 0 };
 	qhandle_t	FOLIAGE_PLANT_BILLBOARD_MODEL[27] = { 0 };
-	qhandle_t	FOLIAGE_TREE_MODEL[3] = { 0 };
-	float		FOLIAGE_TREE_RADIUS[3] = { 0 };
-	float		FOLIAGE_TREE_ZOFFSET[3] = { 0 };
-	qhandle_t	FOLIAGE_TREE_BILLBOARD_SHADER[3] = { 0 };
-	float		FOLIAGE_TREE_BILLBOARD_SIZE[3] = { 0 };
+	qhandle_t	FOLIAGE_TREE_MODEL[16] = { 0 };
+	float		FOLIAGE_TREE_RADIUS[16] = { 0 };
+	float		FOLIAGE_TREE_ZOFFSET[16] = { 0 };
+	qhandle_t	FOLIAGE_TREE_BILLBOARD_SHADER[16] = { 0 };
+	float		FOLIAGE_TREE_BILLBOARD_SIZE[16] = { 0 };
 
 	qhandle_t	FOLIAGE_PLANT_SHADERS[MAX_PLANT_SHADERS] = {0};
 
@@ -752,7 +754,7 @@ extern "C" {
 				re.origin[2] += FOLIAGE_TREE_ZOFFSET[FOLIAGE_TREE_SELECTION[num]-1];
 
 				angles[PITCH] = angles[ROLL] = 0.0f;
-				angles[YAW] = FOLIAGE_TREE_ANGLES[num];
+				angles[YAW] = 270.0 - FOLIAGE_TREE_ANGLES[num];
 
 				VectorCopy(angles, re.angles);
 				AnglesToAxis(angles, re.axis);
@@ -942,25 +944,55 @@ extern "C" {
 
 			//FOLIAGE_TREE_MODEL[0] = trap->R_RegisterModel( "models/map_objects/yavin/tree08_b.md3" );
 
-			FOLIAGE_TREE_MODEL[0] = trap->R_RegisterModel( "models/warzone/trees/fanpalm1.md3" );
-			FOLIAGE_TREE_MODEL[1] = trap->R_RegisterModel( "models/warzone/trees/giant1.md3" );
-			FOLIAGE_TREE_MODEL[2] = trap->R_RegisterModel( "models/warzone/trees/anvilpalm1.md3" );
+			FOLIAGE_TREE_MODEL[0] = trap->R_RegisterModel( "models/warzone/trees/fanpalm2.md3" );
+			FOLIAGE_TREE_MODEL[1] = trap->R_RegisterModel( "models/warzone/trees/fanpalm2.md3" );
+			FOLIAGE_TREE_MODEL[2] = trap->R_RegisterModel( "models/warzone/trees/giant1.md3" );
+			FOLIAGE_TREE_MODEL[3] = trap->R_RegisterModel( "models/warzone/trees/anvilpalm1.md3" );
+			FOLIAGE_TREE_MODEL[4] = trap->R_RegisterModel( "models/warzone/trees/gkbjungletreenew27v2weeping.md3" );
+			FOLIAGE_TREE_MODEL[5] = trap->R_RegisterModel( "models/warzone/trees/gkbjungletreenew27v2weeping.md3" );
+			FOLIAGE_TREE_MODEL[6] = trap->R_RegisterModel( "models/warzone/trees/gkbjungletreenew24v2weeping.md3" );
+			FOLIAGE_TREE_MODEL[7] = trap->R_RegisterModel( "models/warzone/trees/gkbjungletreenew24v2weeping.md3" );
+			FOLIAGE_TREE_MODEL[8] = trap->R_RegisterModel( "models/warzone/trees/manfern.md3" );
+			
+			FOLIAGE_TREE_BILLBOARD_SHADER[0] = trap->R_RegisterShader("models/warzone/trees/fanpalm2");
+			FOLIAGE_TREE_BILLBOARD_SHADER[1] = trap->R_RegisterShader("models/warzone/trees/fanpalm2");
+			FOLIAGE_TREE_BILLBOARD_SHADER[2] = trap->R_RegisterShader("models/warzone/trees/giant1");
+			FOLIAGE_TREE_BILLBOARD_SHADER[3] = trap->R_RegisterShader("models/warzone/trees/anvilpalm1");
+			FOLIAGE_TREE_BILLBOARD_SHADER[4] = trap->R_RegisterShader("models/warzone/trees/gkbjungletreenew27v2weeping");
+			FOLIAGE_TREE_BILLBOARD_SHADER[5] = trap->R_RegisterShader("models/warzone/trees/gkbjungletreenew27v2weeping");
+			FOLIAGE_TREE_BILLBOARD_SHADER[6] = trap->R_RegisterShader("models/warzone/trees/gkbjungletreenew24v2weeping");
+			FOLIAGE_TREE_BILLBOARD_SHADER[7] = trap->R_RegisterShader("models/warzone/trees/gkbjungletreenew24v2weeping");
+			FOLIAGE_TREE_BILLBOARD_SHADER[8] = trap->R_RegisterShader("models/warzone/trees/manfern");
 
-			FOLIAGE_TREE_BILLBOARD_SHADER[0] = trap->R_RegisterShader("models/warzone/trees/fanpalm1");
-			FOLIAGE_TREE_BILLBOARD_SHADER[1] = trap->R_RegisterShader("models/warzone/trees/giant1");
-			FOLIAGE_TREE_BILLBOARD_SHADER[2] = trap->R_RegisterShader("models/warzone/trees/anvilpalm1");
-
-			FOLIAGE_TREE_BILLBOARD_SIZE[0] = 64.0;
-			FOLIAGE_TREE_BILLBOARD_SIZE[1] = 204.0;
-			FOLIAGE_TREE_BILLBOARD_SIZE[2] = 112.0;
+			FOLIAGE_TREE_BILLBOARD_SIZE[0] = 118.0;
+			FOLIAGE_TREE_BILLBOARD_SIZE[1] = 118.0;
+			FOLIAGE_TREE_BILLBOARD_SIZE[2] = 204.0;
+			FOLIAGE_TREE_BILLBOARD_SIZE[3] = 112.0;
+			FOLIAGE_TREE_BILLBOARD_SIZE[4] = 163.0;
+			FOLIAGE_TREE_BILLBOARD_SIZE[5] = 163.0;
+			FOLIAGE_TREE_BILLBOARD_SIZE[6] = 183.6;
+			FOLIAGE_TREE_BILLBOARD_SIZE[7] = 183.6;
+			FOLIAGE_TREE_BILLBOARD_SIZE[8] = 153.0;
 
 			FOLIAGE_TREE_RADIUS[0] = 24.0;
-			FOLIAGE_TREE_RADIUS[1] = 72.0;
-			FOLIAGE_TREE_RADIUS[2] = 52.0;
+			FOLIAGE_TREE_RADIUS[1] = 24.0;
+			FOLIAGE_TREE_RADIUS[2] = 72.0;
+			FOLIAGE_TREE_RADIUS[3] = 52.0;
+			FOLIAGE_TREE_RADIUS[4] = 52.0;
+			FOLIAGE_TREE_RADIUS[5] = 52.0;
+			FOLIAGE_TREE_RADIUS[6] = 72.0;
+			FOLIAGE_TREE_RADIUS[7] = 72.0;
+			FOLIAGE_TREE_RADIUS[8] = 72.0;
 
 			FOLIAGE_TREE_ZOFFSET[0] = -64.0;
-			FOLIAGE_TREE_ZOFFSET[1] = 0.0;
-			FOLIAGE_TREE_ZOFFSET[2] = 0.0;
+			FOLIAGE_TREE_ZOFFSET[1] = -64.0;
+			FOLIAGE_TREE_ZOFFSET[2] = -64.0;
+			FOLIAGE_TREE_ZOFFSET[3] = -64.0;
+			FOLIAGE_TREE_ZOFFSET[4] = -64.0;
+			FOLIAGE_TREE_ZOFFSET[5] = -64.0;
+			FOLIAGE_TREE_ZOFFSET[6] = -64.0;
+			FOLIAGE_TREE_ZOFFSET[7] = -64.0;
+			FOLIAGE_TREE_ZOFFSET[8] = -64.0;
 
 			for (int i = 0; i < MAX_PLANT_SHADERS; i++)
 			{
@@ -1772,7 +1804,7 @@ extern "C" {
 				{
 					if (DO_TREE)
 					{// Add tree...
-						FOLIAGE_TREE_SELECTION[FOLIAGE_NUM_POSITIONS] = irand(0, 3);
+						FOLIAGE_TREE_SELECTION[FOLIAGE_NUM_POSITIONS] = irand(1, NUM_TREE_TYPES);
 						FOLIAGE_TREE_ANGLES[FOLIAGE_NUM_POSITIONS] = (int)(random() * 180);
 						FOLIAGE_TREE_SCALE[FOLIAGE_NUM_POSITIONS] = (float)((float)irand(65,150) / 100.0);
 					}
@@ -1785,7 +1817,7 @@ extern "C" {
 				{
 					if (DO_TREE)
 					{// Add tree... 
-						FOLIAGE_TREE_SELECTION[FOLIAGE_NUM_POSITIONS] = irand(0, 3);
+						FOLIAGE_TREE_SELECTION[FOLIAGE_NUM_POSITIONS] = irand(1, NUM_TREE_TYPES);
 						FOLIAGE_TREE_ANGLES[FOLIAGE_NUM_POSITIONS] = (int)(random() * 180);
 						FOLIAGE_TREE_SCALE[FOLIAGE_NUM_POSITIONS] = (float)((float)irand(65,150) / 100.0);
 					}
@@ -1825,7 +1857,7 @@ extern "C" {
 	extern qboolean CPU_CHECKED;
 	extern int UQ_Get_CPU_Info( void );
 
-	void FOLIAGE_RescaleFoliage ( void )
+	void FOLIAGE_FoliageRescale ( void )
 	{
 		int			update_timer = 0;
 		clock_t		previous_time = 0;
@@ -1939,6 +1971,25 @@ extern "C" {
 		FOLIAGE_SaveFoliagePositions();
 	}
 
+	void FOLIAGE_FoliageRetree ( void )
+	{
+		int NUM_REPLACED = 0;
+
+		for (int i = 0; i < FOLIAGE_NUM_POSITIONS; i++)
+		{// Check current list...
+			if (FOLIAGE_TREE_SELECTION[i] > 0)
+			{// Tree here... Replace...
+				FOLIAGE_TREE_SELECTION[i] = irand(1, NUM_TREE_TYPES);
+				NUM_REPLACED++;
+			}
+		}
+
+		trap->Print( "^1*** ^3%s^5: Successfully replaced %i trees...\n", GAME_VERSION, NUM_REPLACED );
+
+		// Save the generated info to a file for next time...
+		FOLIAGE_SaveFoliagePositions();
+	}
+
 	void FOLIAGE_GenerateFoliage ( void )
 	{
 		char	str[MAX_TOKEN_CHARS];
@@ -1956,6 +2007,7 @@ extern "C" {
 			trap->Print( "^4*** ^3AUTO-FOLIAGE^4: ^3\"add\" ^5- Add more to current list of foliages. Allows <check_density> to check for another foliage before adding.\n");
 			trap->Print( "^4*** ^3AUTO-FOLIAGE^4: ^3\"addslopes\" ^5- Adds more grass/plants only (on slopes). Allows <check_density> to check for another foliage before adding.\n");
 			trap->Print( "^4*** ^3AUTO-FOLIAGE^4: ^3\"rescale\" ^5- Check and fix scale of current grasses/plants.\n");
+			trap->Print( "^4*** ^3AUTO-FOLIAGE^4: ^3\"retree\" ^5- Reselect all tree types (for updating between versions).\n");
 			trap->UpdateScreen();
 			return;
 		}
@@ -2096,7 +2148,11 @@ extern "C" {
 		}
 		else if ( Q_stricmp( str, "rescale") == 0 )
 		{
-			FOLIAGE_RescaleFoliage();
+			FOLIAGE_FoliageRescale();
+		}
+		else if ( Q_stricmp( str, "retree") == 0 )
+		{
+			FOLIAGE_FoliageRetree();
 		}
 	}
 }

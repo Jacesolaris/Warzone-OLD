@@ -5586,7 +5586,7 @@ void AIMod_AutoWaypoint_StandardMethod( void )
 		MAP_INFO_SIZE[1] = mapMaxs[1] - mapMins[1];
 		MAP_INFO_SIZE[2] = mapMaxs[2] - mapMins[2];
 
-		yoff = density * 0.5;
+		yoff = density * 0.333;
 
 		//#pragma omp parallel for schedule(dynamic)
 		for (x = (int)mapMins[0]; x <= (int)mapMaxs[0]; x += density)
@@ -5603,12 +5603,16 @@ void AIMod_AutoWaypoint_StandardMethod( void )
 
 			aw_percent_complete = (float)(complete * 100.0);
 
-			if (yoff == density * 0.75)
-				yoff = density * 1.25;
-			else if (yoff == density * 1.25)
+			if (yoff == density * 0.333)
+				yoff = density * 0.666;
+			else if (yoff == density * 0.666)
 				yoff = density;
+			else if (yoff == density)
+				yoff = density * 1.333;
+			else if (yoff == density * 1.333)
+				yoff = density * 1.666;
 			else
-				yoff = density * 0.75;
+				yoff = density * 0.333;
 
 			for (y = mapMins[1]; y <= mapMaxs[1]; y += yoff/*density*/)
 			{
@@ -6261,6 +6265,7 @@ omp_set_nested(0);
 		trap->Print("^4*** ^3AUTO-WAYPOINTER^4: ^5Generated a total of %i waypoints.\n", total_waypoints);
 
 		number_of_nodes = total_waypoints;
+		waypoint_scatter_distance *= 1.5;
 		AIMOD_NODES_SaveNodes_Autowaypointed();
 
 		trap->Print( va( "^4*** ^3AUTO-WAYPOINTER^4: ^5Waypoint database created successfully in ^3%.2f ^5seconds with ^7%i ^5waypoints.\n",
@@ -6462,6 +6467,7 @@ omp_set_nested(0);
 	trap->Print("^4*** ^3AUTO-WAYPOINTER^4: ^5Generated a total of %i waypoints.\n", total_waypoints);
 
 	number_of_nodes = total_waypoints;
+	waypoint_scatter_distance *= 1.5;
 	AIMOD_NODES_SaveNodes_Autowaypointed();
 
 #ifdef __COVER_SPOTS__

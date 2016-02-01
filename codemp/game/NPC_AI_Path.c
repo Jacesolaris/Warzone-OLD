@@ -66,11 +66,17 @@ int NPC_GetNextNode(gentity_t *NPC)
 	{
 		if (NPC->wpCurrent < 0)
 		{
-			NPC->wpCurrent = NPC->longTermGoal;
+			node = NPC->wpCurrent = NPC->longTermGoal;
+
+			NPC->wpTravelTime = level.time + 15000;
+			NPC->wpSeenTime = level.time;
 		}
 		else
 		{
 			node = NPC->longTermGoal;
+
+			NPC->wpTravelTime = level.time + 15000;
+			NPC->wpSeenTime = level.time;
 		}
 	}
 	return node;
@@ -168,6 +174,9 @@ qboolean NPC_FindNewWaypoint( void )
 		//G_Printf("NPC Waypointing Debug: NPC %i (%s) failed to find a waypoint for itself.", NPC->s.number, NPC->NPC_type);
 		return qfalse; // failed... try again after som avoidance code...
 	}
+
+	NPC->wpTravelTime = level.time + 15000;
+	NPC->wpSeenTime = level.time;
 
 	return qtrue; // all good, we have a new waypoint...
 }
@@ -398,7 +407,7 @@ void NPC_SetEnemyGoal( void )
 	// Delay before next route creation...
 	NPC->wpSeenTime = level.time + 2000;
 	// Delay before giving up on this new waypoint/route...
-	NPC->wpTravelTime = level.time + 10000;
+	NPC->wpTravelTime = level.time + 15000;
 }
 
 qboolean NPC_CopyPathFromNearbyNPC( void )
@@ -435,7 +444,7 @@ qboolean NPC_CopyPathFromNearbyNPC( void )
 		// Delay before next route creation...
 		NPC->wpSeenTime = level.time + 2000;
 		// Delay before giving up on this new waypoint/route...
-		NPC->wpTravelTime = level.time + 10000;
+		NPC->wpTravelTime = level.time + 15000;
 		
 		// Don't let me be copied for 5 seconds...
 		NPC->npc_dumb_route_time = level.time + 5000;
@@ -599,7 +608,7 @@ void NPC_SetNewGoalAndPath( void )
 			// Delay before next route creation...
 			NPC->wpSeenTime = level.time + 1000;//30000;
 			// Delay before giving up on this new waypoint/route...
-			NPC->wpTravelTime = level.time + 10000;
+			NPC->wpTravelTime = level.time + 15000;
 			return;
 		}
 	}
@@ -623,7 +632,7 @@ void NPC_SetNewGoalAndPath( void )
 			// Delay before next route creation...
 			NPC->wpSeenTime = level.time + 1000;//30000;
 			// Delay before giving up on this new waypoint/route...
-			NPC->wpTravelTime = level.time + 10000;
+			NPC->wpTravelTime = level.time + 15000;
 			return;
 		}
 		else
@@ -706,7 +715,7 @@ void NPC_SetNewWarzoneGoalAndPath()
 	// Delay before next route creation...
 	NPC->wpSeenTime = level.time + 1000;//30000;
 	// Delay before giving up on this new waypoint/route...
-	//NPC->wpTravelTime = level.time + 10000;
+	//NPC->wpTravelTime = level.time + 15000;
 }
 */
 
@@ -1119,6 +1128,8 @@ qboolean NPC_DoLiftPathing(gentity_t *NPC)
 					NPC->wpLast = NPC->wpCurrent;
 					NPC->wpCurrent = NPC->wpNext;
 					NPC->wpNext = NPC_GetNextNode(NPC);
+					
+					NPC->wpTravelTime = level.time + 15000;
 					NPC->wpSeenTime = level.time;
 
 					if (NPC->wpCurrent < 0 || NPC->wpCurrent >= gWPNum)
@@ -1342,15 +1353,15 @@ qboolean NPC_FollowRoutes( void )
 	if ( padawanPath
 		|| NPC->wpCurrent < 0 || NPC->wpCurrent >= gWPNum 
 		|| NPC->longTermGoal < 0 || NPC->longTermGoal >= gWPNum 
-		|| wpDist > MAX_LINK_DISTANCE
+		//|| (wpDist > MAX_LINK_DISTANCE && NPC->wpSeenTime < level.time - 4000)
 		|| NPC->wpSeenTime < level.time - 5000
 		|| NPC->wpTravelTime < level.time 
 		|| NPC->last_move_time < level.time - 5000 )
 	{// We hit a problem in route, or don't have one yet.. Find a new goal and path...
-		//if (wpDist > MAX_LINK_DISTANCE) trap->Print("wpCurrent too far.\n");
-		//if (NPC->wpSeenTime < level.time - 5000) trap->Print("wpSeenTime.\n");
-		//if (NPC->wpTravelTime < level.time) trap->Print("wpTravelTime.\n");
-		//if (NPC->last_move_time < level.time - 5000) trap->Print("last_move_time.\n");
+		//if (wpDist > MAX_LINK_DISTANCE) trap->Print("%i wpCurrent too far.\n", NPC->s.number);
+		//if (NPC->wpSeenTime < level.time - 5000) trap->Print("%i wpSeenTime.\n", NPC->s.number);
+		//if (NPC->wpTravelTime < level.time) trap->Print("%i wpTravelTime.\n", NPC->s.number);
+		//if (NPC->last_move_time < level.time - 5000) trap->Print("%i last_move_time.\n", NPC->s.number);
 
 		if (!padawanPath /*&& (wpDist > MAX_LINK_DISTANCE || NPC->wpTravelTime < level.time)*/ )
 		{
@@ -1408,7 +1419,7 @@ qboolean NPC_FollowRoutes( void )
 			return qfalse; // next think...
 		}
 
-		NPC->wpTravelTime = level.time + 10000;
+		NPC->wpTravelTime = level.time + 15000;
 		NPC->wpSeenTime = level.time;
 	}
 
@@ -1596,7 +1607,7 @@ void NPC_SetNewEnemyGoalAndPath( void )
 	// Delay before next route creation...
 	NPC->wpSeenTime = level.time + 1000;//30000;
 	// Delay before giving up on this new waypoint/route...
-	NPC->wpTravelTime = level.time + 10000;
+	NPC->wpTravelTime = level.time + 15000;
 }
 
 extern int jediSpeechDebounceTime[FACTION_NUM_FACTIONS];//used to stop several jedi AI from speaking all at once
@@ -1701,7 +1712,7 @@ qboolean NPC_FollowEnemyRoute( void )
 
 	if ( NPC->wpCurrent < 0 || NPC->wpCurrent >= gWPNum 
 		|| NPC->longTermGoal < 0 || NPC->longTermGoal >= gWPNum 
-		|| wpDist > MAX_LINK_DISTANCE
+		//|| wpDist > MAX_LINK_DISTANCE
 		|| NPC->wpSeenTime < level.time - 5000
 		|| NPC->wpTravelTime < level.time 
 		|| NPC->last_move_time < level.time - 5000 
@@ -1736,7 +1747,7 @@ qboolean NPC_FollowEnemyRoute( void )
 
 		if (!(NPC->wpCurrent < 0 || NPC->wpCurrent >= gWPNum || NPC->longTermGoal < 0 || NPC->longTermGoal >= gWPNum))
 		{
-			NPC->wpTravelTime = level.time + 10000;
+			NPC->wpTravelTime = level.time + 15000;
 			NPC->wpSeenTime = level.time;
 			NPC->last_move_time = level.time;
 		}
@@ -1787,7 +1798,7 @@ qboolean NPC_FollowEnemyRoute( void )
 			return qfalse; // next think...
 		}
 
-		NPC->wpTravelTime = level.time + 10000;
+		NPC->wpTravelTime = level.time + 15000;
 		NPC->wpSeenTime = level.time;
 	}
 

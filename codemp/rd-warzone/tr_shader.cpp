@@ -5948,17 +5948,7 @@ char uniqueGenericFoliageShader[] = "{\n"\
 "blendfunc GL_ONE GL_ZERO\n"\
 "alphaFunc GE128\n"\
 "depthWrite\n"\
-"rgbGen lightingDiffuse\n"\
-"}\n"\
-"%s"\
-"{\n"\
-"map %s\n"\
-"blendFunc GL_SRC_ALPHA GL_ONE\n"\
-"rgbGen lightingDiffuse\n"\
-"alphaGen lightingSpecular\n"\
-"alphaFunc GE128\n"\
-"depthFunc equal\n"\
-"detail\n"\
+"rgbGen identity\n"\
 "}\n"\
 "{\n"\
 "map $lightmap\n"\
@@ -5972,6 +5962,7 @@ char uniqueGenericFoliageShader[] = "{\n"\
 // "rgbGen identity\n"\   ^^^
 // "rgbGen entity\n"\
 // "rgbGen vertex\n"\
+// "rgbGen lightingDiffuse\n"\
 
 char uniqueGenericPlayerShader[] = "{\n"\
 "qer_editorimage	%s\n"\
@@ -6232,7 +6223,7 @@ shader_t *R_FindShader( const char *name, const int *lightmapIndexes, const byte
 		if (StringContainsWord(strippedName, "player"))
 			sprintf(myShader, uniqueGenericPlayerShader, strippedName, strippedName, glowShaderAddition, strippedName);
 		else if (StringContainsWord(strippedName, "warzone/foliage") || StringContainsWord(strippedName, "warzone/tree"))
-			sprintf(myShader, uniqueGenericFoliageShader, strippedName, strippedName, glowShaderAddition, strippedName);
+			sprintf(myShader, uniqueGenericFoliageShader, strippedName, strippedName);
 		else if (StringContainsWord(strippedName, "warzone\\foliage") || StringContainsWord(strippedName, "warzone\\tree"))
 			sprintf(myShader, uniqueGenericFoliageShader, strippedName, strippedName, glowShaderAddition, strippedName);
 		else if (StringContainsWord(strippedName, "weapon"))
