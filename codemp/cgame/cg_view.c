@@ -2019,7 +2019,6 @@ void CG_UpdateSoundTrackers()
 {
 	int num;
 
-#pragma omp parallel for num_threads(32) if(cg_multithread.integer > 0)
 	for ( num = 0 ; num < ENTITYNUM_NONE ; num++ )
 	{
 		centity_t *cent = &cg_entities[num];

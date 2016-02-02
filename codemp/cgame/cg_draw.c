@@ -7741,7 +7741,6 @@ void CG_DrawNPCNames( void )
 	// Load the list on first check...
 	Load_NPC_Names();
 
-#pragma omp parallel for num_threads(32) if(cg_multithread.integer > 0)
 	for (i = 0; i < MAX_GENTITIES; i++)
 	{// Cycle through them...
 		qboolean		skip = qfalse;
@@ -8443,14 +8442,11 @@ void CG_DrawNPCNames( void )
 
 		//CG_Printf("%i screen coords are %fx%f. (%f %f %f)\n", cent->currentState.number, x, y, origin[0], origin[1], origin[2]);
 
-#pragma omp critical
+		if (!CG_CheckClientVisibility(cent))
 		{
-			if (!CG_CheckClientVisibility(cent))
-			{
-				//CG_Printf("NPC is NOT visible.\n");
-				//continue;
-				skip = qtrue;
-			}
+			//CG_Printf("NPC is NOT visible.\n");
+			//continue;
+			skip = qtrue;
 		}
 
 		if (skip) continue;
@@ -8479,11 +8475,8 @@ void CG_DrawNPCNames( void )
 		x2 -= (w2 * 0.5f);
 		y2 = y + 10/*6*/ + CG_Text_Height(sanitized1, size*2, /*FONT_SMALL*/FONT_SMALL);
 
-#pragma omp critical
-		{
-			CG_Text_Paint( x, (y*(1-size))+((30*(1-size))*(1-size))+sqrt(sqrt((1-size)*30))+((1-multiplier)*30), size*2, tclr, sanitized1, 0, 0, ITEM_TEXTSTYLE_SHADOWED, FONT_SMALL);
-			CG_Text_Paint( x2, (y2*(1-size))+((30*(1-size))*(1-size))+sqrt(sqrt((1-size)*30))+((1-multiplier)*30), size*1.5, tclr2, sanitized2, 0, 0, ITEM_TEXTSTYLE_SHADOWED, /*FONT_SMALL3*/FONT_SMALL);
-		}
+		CG_Text_Paint( x, (y*(1-size))+((30*(1-size))*(1-size))+sqrt(sqrt((1-size)*30))+((1-multiplier)*30), size*2, tclr, sanitized1, 0, 0, ITEM_TEXTSTYLE_SHADOWED, FONT_SMALL);
+		CG_Text_Paint( x2, (y2*(1-size))+((30*(1-size))*(1-size))+sqrt(sqrt((1-size)*30))+((1-multiplier)*30), size*1.5, tclr2, sanitized2, 0, 0, ITEM_TEXTSTYLE_SHADOWED, /*FONT_SMALL3*/FONT_SMALL);
 
 		//x3 = x;
 
@@ -8503,7 +8496,6 @@ void CG_DrawDamage( void )
 {// Float damage value above their heads!
 	int				i;
 
-#pragma omp parallel for num_threads(32) if(cg_multithread.integer > 0)
 	for (i = 0; i < MAX_GENTITIES; i++)
 	{// Cycle through them...
 		qboolean		skip = qfalse;
@@ -8545,13 +8537,10 @@ void CG_DrawDamage( void )
 			continue;
 		}
 
-#pragma omp critical
+		if (!CG_CheckClientVisibility(cent))
 		{
-			if (!CG_CheckClientVisibility(cent))
-			{
-				//continue;
-				skip = qtrue;
-			}
+			//continue;
+			skip = qtrue;
 		}
 
 		if (skip) continue;
@@ -8693,15 +8682,12 @@ void CG_DrawDamage( void )
 			if (x2 < 0 || x2 > 640) continue; // now off screen...
 			if (y2 < 0 || y2 > 480) continue; // now off screen...
 
-#pragma omp critical
-			{
-				if (damage_show_value[i][j] == 0) // grey
-					CG_Text_Paint( x2, y2, size*2, colorMiss, value, 0, 0, ITEM_TEXTSTYLE_SHADOWED, FONT_SMALL2);
-				else if (damage_show_crit[i][j]) // bright yellow
-					CG_Text_Paint( x2, y2, size*2, colorCrit, value, 0, 0, ITEM_TEXTSTYLE_SHADOWED, FONT_SMALL2);
-				else // darker yellow
-					CG_Text_Paint( x2, y2, size*2, colorNormal, value, 0, 0, ITEM_TEXTSTYLE_SHADOWED, FONT_SMALL2);
-			}
+			if (damage_show_value[i][j] == 0) // grey
+				CG_Text_Paint( x2, y2, size*2, colorMiss, value, 0, 0, ITEM_TEXTSTYLE_SHADOWED, FONT_SMALL2);
+			else if (damage_show_crit[i][j]) // bright yellow
+				CG_Text_Paint( x2, y2, size*2, colorCrit, value, 0, 0, ITEM_TEXTSTYLE_SHADOWED, FONT_SMALL2);
+			else // darker yellow
+				CG_Text_Paint( x2, y2, size*2, colorNormal, value, 0, 0, ITEM_TEXTSTYLE_SHADOWED, FONT_SMALL2);
 		}
 	}
 }

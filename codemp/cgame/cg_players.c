@@ -5772,7 +5772,6 @@ int CG_LightVerts( vec3_t normal, int numVerts, polyVert_t *verts )
 
 	trap->R_LightForPoint( verts[0].xyz, ambientLight, directedLight, lightDir );
 
-#pragma omp parallel for num_threads(numVerts) if(cg_multithread.integer > 0)
 	for (i = 0; i < numVerts; i++) {
 		float incoming = DotProduct (normal, lightDir);
 		if ( incoming <= 0 ) {

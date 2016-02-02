@@ -592,26 +592,27 @@ extern "C" {
 	void FOLIAGE_AddToScreen( int num, qboolean treeOnly ) {
 		refEntity_t		re;
 		vec3_t			angles;
-		float			dist = DistanceHorizontal(FOLIAGE_POSITIONS[num], cg.refdef.vieworg);
+		float			dist = 0;
 		float			distFadeScale = 1.0;
 
-		if (cg.renderingThirdPerson) dist = DistanceHorizontal(FOLIAGE_POSITIONS[num], cg_entities[cg.clientNum].lerpOrigin);
+		if (cg.renderingThirdPerson) 
+			dist = DistanceHorizontal(FOLIAGE_POSITIONS[num], cg_entities[cg.clientNum].lerpOrigin);
+		else 
+			dist = DistanceHorizontal(FOLIAGE_POSITIONS[num], cg.refdef.vieworg);
+
+		// Cull anything in the area outside of cvar specified radius...
+		if (treeOnly && dist > FOLIAGE_TREE_VISIBLE_DISTANCE) return;
+		if (!treeOnly && dist > FOLIAGE_PLANT_VISIBLE_DISTANCE && FOLIAGE_TREE_SELECTION[num] <= 0) return;
 
 		memset( &re, 0, sizeof( re ) );
 
 		VectorCopy(FOLIAGE_POSITIONS[num], re.origin);
-
-		re.reType = RT_MODEL;
 
 		FOLIAGE_VISIBLE_DISTANCE =			FOLIAGE_AREA_SIZE*cg_foliageGrassRangeMult.value;
 		FOLIAGE_PLANT_VISIBLE_DISTANCE =	FOLIAGE_AREA_SIZE*cg_foliagePlantRangeMult.value;
 		FOLIAGE_TREE_VISIBLE_DISTANCE =		FOLIAGE_AREA_SIZE*cg_foliageTreeRangeMult.value;
 
 //#define __GRASS_ONLY__
-
-		// Cull anything in the area outside of cvar specified radius...
-		if (treeOnly && dist > FOLIAGE_TREE_VISIBLE_DISTANCE) return;
-		if (!treeOnly && dist > FOLIAGE_PLANT_VISIBLE_DISTANCE && FOLIAGE_TREE_SELECTION[num] <= 0) return;
 
 		if (dist <= FOLIAGE_PLANT_VISIBLE_DISTANCE)
 		{// Graw grass...
@@ -714,12 +715,12 @@ extern "C" {
 			}
 		}
 
-		VectorCopy(FOLIAGE_POSITIONS[num], re.origin);
-		re.customShader = 0;
-		re.renderfx = 0;
-
 		if (FOLIAGE_TREE_SELECTION[num] > 0)
 		{// Add the tree model...
+			VectorCopy(FOLIAGE_POSITIONS[num], re.origin);
+			re.customShader = 0;
+			re.renderfx = 0;
+
 			if (dist > FOLIAGE_AREA_SIZE*4.8 || dist > FOLIAGE_TREE_VISIBLE_DISTANCE)
 			{
 				re.reType = RT_SPRITE;

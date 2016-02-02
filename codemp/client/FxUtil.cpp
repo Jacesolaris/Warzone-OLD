@@ -183,7 +183,6 @@ void FX_Add( bool portal )
 
 	drawnFx = 0;
 
-//#pragma omp parallel for num_threads(16)
 	for ( i = 0; i < MAX_EFFECTS; i++)
 	{
 		SEffectList	*ef = &effectList[i];

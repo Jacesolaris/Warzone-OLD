@@ -617,9 +617,12 @@ void CreateSpawnpoints( void )
 
 					if (dist > MOST_DISTANT_DISTANCE || MOST_DISTANT_POINTS[0] == -1 || MOST_DISTANT_POINTS[1] == -1)
 					{
-						MOST_DISTANT_POINTS[0] = n;
-						MOST_DISTANT_POINTS[1] = o;
-						MOST_DISTANT_DISTANCE = dist;
+#pragma omp critical (__ADD_DIST_POINT__)
+						{
+							MOST_DISTANT_POINTS[0] = n;
+							MOST_DISTANT_POINTS[1] = o;
+							MOST_DISTANT_DISTANCE = dist;
+						}
 					}
 				}
 			}
@@ -669,14 +672,20 @@ void CreateSpawnpoints( void )
 
 				if (bdist < BLUE_CLOSEST_DIST || BLUE_CLOSEST == -1)
 				{// This one is better...
-					BLUE_CLOSEST_DIST = bdist;
-					BLUE_CLOSEST = n;
+#pragma omp critical (__SET_DIST_POINT_BLUE__)
+					{
+						BLUE_CLOSEST_DIST = bdist;
+						BLUE_CLOSEST = n;
+					}
 				}
 				
 				if (rdist < RED_CLOSEST_DIST || RED_CLOSEST == -1)
 				{// This one is better...
-					RED_CLOSEST_DIST = rdist;
-					RED_CLOSEST = n;
+#pragma omp critical (__SET_DIST_POINT_RED__)
+					{
+						RED_CLOSEST_DIST = rdist;
+						RED_CLOSEST = n;
+					}
 				}
 			}
 
@@ -753,87 +762,6 @@ void CreateSpawnpoints( void )
 		// Ok, we need more spawnpoints...
 		//
 
-#if 0
-#pragma omp parallel for schedule(dynamic)
-		for (i = 0; i < gWPNum; i++)
-		{// Find the map size from waypoints...
-			if (gWPArray[i]->origin[0] < mins[0]) mins[0] = gWPArray[i]->origin[0];
-			if (gWPArray[i]->origin[0] > maxs[0]) maxs[0] = gWPArray[i]->origin[0];
-			if (gWPArray[i]->origin[1] < mins[1]) mins[1] = gWPArray[i]->origin[1];
-			if (gWPArray[i]->origin[1] > maxs[1]) maxs[1] = gWPArray[i]->origin[1];
-			if (gWPArray[i]->origin[2] < mins[2]) mins[2] = gWPArray[i]->origin[2];
-			if (gWPArray[i]->origin[2] > maxs[2]) maxs[2] = gWPArray[i]->origin[2];
-		}
-
-		count = 0;
-
-		map_size[0] = maxs[0] - mins[0];
-		map_size[1] = maxs[1] - mins[1];
-		map_size[2] = maxs[2] - mins[2];
-
-		blue_mins[0] = mins[0];
-		blue_mins[1] = mins[1];
-		blue_mins[2] = mins[2];
-		blue_maxs[0] = mins[0] + (map_size[0] / 16.0);
-		blue_maxs[1] = maxs[1] + (map_size[1] / 16.0);
-		blue_maxs[2] = maxs[2];
-
-		red_maxs[0] = maxs[0];
-		red_maxs[1] = maxs[1];
-		red_maxs[2] = maxs[2];
-		red_mins[0] = maxs[0] - (map_size[0] / 16.0);
-		red_mins[1] = maxs[1] - (map_size[1] / 16.0);
-		red_mins[2] = mins[2];
-
-		VectorSubtract(mins, maxs, blue_angles); // Blue faces red...
-		VectorSubtract(maxs, mins, red_angles); // Red faces blue...
-		blue_angles[2] = 0;
-		red_angles[2] = 0;
-
-		// Find waypoints close to the edge of the map to make into spawnpoints...
-#pragma omp parallel for schedule(dynamic)
-		for (i = 0; i < gWPNum; i++)
-		{
-			if (gWPArray[i]->origin[0] == 0 && gWPArray[i]->origin[1] == 0) continue;
-
-			if (!CheckSpawnPosition(gWPArray[i]->origin)) continue;
-
-			if (G_PointInBounds( gWPArray[i]->origin, blue_mins, blue_maxs ))
-			{// Near a boundary...
-				if (count < 32)
-				{
-					gentity_t *spawnpoint = G_Spawn();
-					spawnpoint->classname = "info_player_deathmatch";
-					VectorCopy(gWPArray[i]->origin, spawnpoint->s.origin);
-					spawnpoint->s.origin[2]+=32.0;
-					VectorCopy(blue_angles, spawnpoint->s.angles);
-					spawnpoint->noWaypointTime = 1; // Don't send auto-generated spawnpoints to client...
-					SP_info_player_deathmatch( spawnpoint );
-					VectorCopy(spawnpoint->s.origin, SPAWNPOINTS[count]);
-					count++;
-				}
-			}
-			else if (G_PointInBounds( gWPArray[i]->origin, red_mins, red_maxs ))
-			{// Near a boundary...
-				if (count < 32)
-				{
-					gentity_t *spawnpoint = G_Spawn();
-					spawnpoint->classname = "info_player_deathmatch";
-					VectorCopy(gWPArray[i]->origin, spawnpoint->s.origin);
-					spawnpoint->s.origin[2]+=32.0;
-					VectorCopy(red_angles, spawnpoint->s.angles);
-					spawnpoint->noWaypointTime = 1; // Don't send auto-generated spawnpoints to client...
-					SP_info_player_deathmatch( spawnpoint );
-					VectorCopy(spawnpoint->s.origin, SPAWNPOINTS[count]);
-					count++;
-				}
-			}
-		}
-
-		trap->Print("^1*** ^3%s^5: Generated %i extra ffa spawnpoints.\n", GAME_VERSION, count);
-
-		SaveSpawnpointPositions( qfalse, count, SPAWNPOINTS, 0, (vec3_t*)NULL );
-#else
 		while (1)
 		{
 			int			j = 0;
@@ -875,7 +803,6 @@ void CreateSpawnpoints( void )
 		trap->Print("^1*** ^3%s^5: Generated %i extra ffa spawnpoints.\n", GAME_VERSION, count);
 
 		SaveSpawnpointPositions( qfalse, count, SPAWNPOINTS, 0, (vec3_t*)NULL );
-#endif
 	}
 }
 

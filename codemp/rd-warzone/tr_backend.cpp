@@ -608,6 +608,21 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 
 	fbo = glState.currentFBO;
 
+//#define __DEBUG_MERGE__
+	
+#ifdef __DEBUG_MERGE__
+	int NUM_TOTAL = 0;
+	int NUM_MERGED = 0;
+	int NUM_CUBE_MERGED = 0;
+	int NUM_CUBE_DELETED = 0;
+	int NUM_FAST_PATH = 0;
+	int NUM_NULL_SHADERS = 0;
+	int NUM_SHADER_FAILS = 0;
+	int NUM_POSTRENDER_FAILS = 0;
+	int NUM_CUBEMAP_FAILS = 0;
+	int NUM_MERGABLE_FAILS = 0;
+#endif //__DEBUG_MERGE__
+
 	for (i = 0 ; i < numDrawSurfs ; ++i) 
 	{
 		drawSurf_t		*drawSurf;
@@ -616,7 +631,7 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 		int64_t			entityNum;
 		int64_t			dlighted;
 		int64_t			postRender;
-		int             cubemapIndex;
+		int             cubemapIndex, newCubemapIndex;
 		int				depthRange;
 
 		if (backEnd.depthFill && shader && shader->sort != SS_OPAQUE) continue; // UQ1: No point thinking any more on this one...
@@ -625,44 +640,113 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 
 		if (!drawSurf->surface) continue;
 
-		if ( drawSurf->sort == oldSort && (!CUBEMAPPING || drawSurf->cubemapIndex == oldCubemapIndex) ) 
+#ifdef __DEBUG_MERGE__
+		NUM_TOTAL++;
+#endif //__DEBUG_MERGE__
+
+		// Don't care about these...
+		dlighted = oldDlighted = 0;
+		fogNum = oldFogNum = 0;
+
+		if (!CUBEMAPPING)
+		{
+			newCubemapIndex = 0;
+		}
+		else
+		{
+			if (r_cubeMapping->integer >= 2)
+			{
+				newCubemapIndex = drawSurf->cubemapIndex;
+			}
+			else
+			{
+				newCubemapIndex = 0;
+#ifdef __DEBUG_MERGE__
+				NUM_CUBE_DELETED++;
+#endif //__DEBUG_MERGE__
+			}
+
+			if (newCubemapIndex > 0)
+			{// Let's see if we can swap with a close cubemap and merge them...
+#ifdef __DEBUG_MERGE__
+				qboolean mrg = qfalse;
+#endif //__DEBUG_MERGE__
+
+				if (oldCubemapIndex > 0 && Distance(tr.cubemapOrigins[newCubemapIndex-1], tr.cubemapOrigins[oldCubemapIndex-1]) < 512.0)
+				{// Can merge with previous cubemap to allow merge...
+					newCubemapIndex = oldCubemapIndex;
+#ifdef __DEBUG_MERGE__
+					NUM_CUBE_MERGED++;
+					mrg = qtrue;
+#endif //__DEBUG_MERGE__
+				}
+				
+				if (Distance(tr.refdef.vieworg, tr.cubemapOrigins[newCubemapIndex-1]) > r_cubemapCullRange->value * r_cubemapCullFalloffMult->value)
+				{// Too far away to care about cubemaps... Allow merge...
+					newCubemapIndex = 0;
+#ifdef __DEBUG_MERGE__
+					NUM_CUBE_DELETED++;
+					if (mrg) NUM_CUBE_MERGED--;
+#endif //__DEBUG_MERGE__
+				}
+			}
+		}
+
+		if ( drawSurf->sort == oldSort && (!CUBEMAPPING || newCubemapIndex == oldCubemapIndex) ) 
 		{// fast path, same as previous sort
 			rb_surfaceTable[ *drawSurf->surface ]( drawSurf->surface );
+#ifdef __DEBUG_MERGE__
+			NUM_FAST_PATH++;
+#endif //__DEBUG_MERGE__
 			continue;
 		}
 
 		oldSort = drawSurf->sort;
 		R_DecomposeSort( drawSurf->sort, &entityNum, &shader, &fogNum, &dlighted, &postRender );
 
-		if (CUBEMAPPING) cubemapIndex = drawSurf->cubemapIndex;
+		cubemapIndex = newCubemapIndex;
+
+#ifdef __MERGE_MORE__
+		if ( shader != NULL && !shader->entityMergable)
+			shader->entityMergable = qtrue;
+#endif //__MERGE_MORE__
 
 		//
 		// change the tess parameters if needed
 		// a "entityMergable" shader is a shader that can have surfaces from seperate
 		// entities merged into a single batch, like smoke and blood puff sprites
 		if ( shader != NULL 
-			&& ( shader != oldShader || fogNum != oldFogNum || dlighted != oldDlighted || postRender != oldPostRender || (CUBEMAPPING && cubemapIndex != oldCubemapIndex) || ( entityNum != oldEntityNum && !shader->entityMergable ) ) ) 
+			&& ( shader != oldShader || fogNum != oldFogNum || dlighted != oldDlighted || postRender != oldPostRender || cubemapIndex != oldCubemapIndex || ( entityNum != oldEntityNum && !shader->entityMergable ) ) ) 
 		{
+#ifdef __DEBUG_MERGE__
+			if (shader != NULL)
+			{
+				if (shader != oldShader) NUM_SHADER_FAILS++;
+				if (postRender != oldPostRender) NUM_POSTRENDER_FAILS++;
+				if (cubemapIndex != oldCubemapIndex) NUM_CUBEMAP_FAILS++;
+				if (entityNum != oldEntityNum && !shader->entityMergable) NUM_MERGABLE_FAILS++;
+			}
+			else
+			{
+				NUM_NULL_SHADERS++;
+			}
+#endif //__DEBUG_MERGE__
+
 			if (oldShader != NULL) 
 			{
 				RB_EndSurface();
 			}
 
-			if (CUBEMAPPING) RB_BeginSurface( shader, fogNum, cubemapIndex );
-			else  RB_BeginSurface( shader, fogNum, 0 );
+			RB_BeginSurface( shader, fogNum, cubemapIndex );
 
 			backEnd.pc.c_surfBatches++;
 			oldShader = shader;
 			oldFogNum = fogNum;
 			oldDlighted = dlighted;
 			oldPostRender = postRender;
-			if (CUBEMAPPING) oldCubemapIndex = cubemapIndex;
+			
+			oldCubemapIndex = cubemapIndex;
 		}
-
-		// UQ1: Check if this surface should be culled, shall we???
-		//byte *mask;
-		//if ( entityNum != REFENTITYNUM_WORLD && !R_inPVS( backEnd.refdef.vieworg, backEnd.refdef.entities[entityNum].e.origin, mask ) ) continue;
-		//if ( entityNum != REFENTITYNUM_WORLD && R_GCullSurfaces(&backEnd.refdef.entities[entityNum]) == CULL_OUT ) continue;
 
 		//
 		// change the modelview matrix if needed
@@ -790,6 +874,11 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 	//qglDepthRange (0, 1);
 	// Restore depth range for subsequent rendering
 	qglDepthRange( 0.0f, 1.0f );
+
+#ifdef __DEBUG_MERGE__
+	ri->Printf(PRINT_WARNING, "TOTAL %i, NUM_MERGED %i, NUM_CUBE_MERGED %i, NUM_CUBE_DELETED %i, NUM_FAST_PATH %i, NUM_NULL_SHADERS %i, NUM_SHADER_FAILS %i, NUM_POSTRENDER_FAILS %i, NUM_CUBEMAP_FAILS %i, NUM_MERGABLE_FAILS %i.\n"
+		, NUM_TOTAL, NUM_MERGED, NUM_CUBE_MERGED, NUM_CUBE_DELETED, NUM_FAST_PATH, NUM_NULL_SHADERS, NUM_SHADER_FAILS, NUM_POSTRENDER_FAILS, NUM_CUBEMAP_FAILS, NUM_MERGABLE_FAILS);
+#endif //__DEBUG_MERGE__
 }
 
 

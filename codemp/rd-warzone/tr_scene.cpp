@@ -99,7 +99,6 @@ void R_AddPolygonSurfaces( void ) {
 
 	poly = tr.refdef.polys;
 
-//#pragma omp parallel for ordered schedule(dynamic) // UQ1: Causes issues with saber trails...
 	for ( i = 0; i < tr.refdef.numPolys; i++) 
 	{
 		if (poly)

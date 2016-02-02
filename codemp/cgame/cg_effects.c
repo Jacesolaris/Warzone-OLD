@@ -394,7 +394,6 @@ void CG_InitGlass( void )
 
 	// Build a table first, so that we can do a more unpredictable crack scheme
 	//	do it once, up front to save a bit of time.
-#pragma omp parallel for num_threads(20) if(cg_multithread.integer > 0)
 	for ( i = 0; i < 20; i++ )
 	{
 		for ( t = 0; t < 20; t++ )
@@ -752,7 +751,6 @@ void CG_MiscModelExplosion( vec3_t mins, vec3_t maxs, int size, material_t chunk
 	}
 
 	// spawn chunk roughly in the bbox of the thing..
-#pragma omp parallel for num_threads(ct) if(cg_multithread.integer > 0)
 	for ( i = 0; i < ct; i++ )
 	{
 		int j;
@@ -766,16 +764,13 @@ void CG_MiscModelExplosion( vec3_t mins, vec3_t maxs, int size, material_t chunk
 		VectorSubtract( org, mid, dir );
 		VectorNormalize( dir );
 
-#pragma omp critical
+		if ( effect2 && effect2[0] && ( rand() & 1 ))
 		{
-			if ( effect2 && effect2[0] && ( rand() & 1 ))
-			{
-				PlayEffectID( eID2, org, dir, -1, -1, qfalse );
-			}
-			else
-			{
-				PlayEffectID( eID1, org, dir, -1, -1, qfalse );
-			}
+			PlayEffectID( eID2, org, dir, -1, -1, qfalse );
+		}
+		else
+		{
+			PlayEffectID( eID1, org, dir, -1, -1, qfalse );
 		}
 	}
 }
@@ -1162,7 +1157,6 @@ void CG_SurfaceExplosion( vec3_t origin, vec3_t normal, float radius, float shak
 	VectorMA( origin, 4, normal, new_org );
 	VectorSet( velocity, 0.0f, 0.0f, 16.0f );
 
-#pragma omp parallel for num_threads(4) if(cg_multithread.integer > 0)
 	for ( i = 0; i < 4; i++ )
 	{
 		VectorSet( temp_org, new_org[0] + (crandom() * 16.0f), new_org[1] + (crandom() * 16.0f), new_org[2] + (random() * 4.0f) );
@@ -1192,14 +1186,10 @@ void CG_SurfaceExplosion( vec3_t origin, vec3_t normal, float radius, float shak
 	le->light = 150;
 	VectorSet( le->lightColor, 0.9f, 0.8f, 0.5f );
 
-#pragma omp parallel for num_threads(3) if(cg_multithread.integer > 0)
 	for ( i = 0; i < NUM_EXPLOSIONS-1; i++)
 	{
 		VectorSet( new_org, (origin[0] + (16 + (crandom() * 8))*crandom()), (origin[1] + (16 + (crandom() * 8))*crandom()), (origin[2] + (16 + (crandom() * 8))*crandom()) );
-#pragma omp critical
-		{
-			le = CG_MakeExplosion( new_org, direction, cgs.media.explosionModel, 6, cgs.media.surfaceExplosionShader, 300 + (rand() & 99), qfalse, radius * 0.05f + (crandom() *0.3f), 0);
-		}
+		le = CG_MakeExplosion( new_org, direction, cgs.media.explosionModel, 6, cgs.media.surfaceExplosionShader, 300 + (rand() & 99), qfalse, radius * 0.05f + (crandom() *0.3f), 0);
 	}
 
 	//Shake the camera

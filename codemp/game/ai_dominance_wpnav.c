@@ -518,7 +518,6 @@ int LoadPathData(const char *filename)
 
 				Com_Printf("*** Warzone: Navigation system had %i nodes. Adding warzone nodes.\n", original_count);
 
-				//#pragma omp parallel for schedule(dynamic)
 				for (i = 0; i < gWPNum; i++)
 				{
 					nav_waypoints[i] = trap->Nav_AddRawPoint(gWPArray[i]->origin, 0, 64);
@@ -530,7 +529,6 @@ int LoadPathData(const char *filename)
 				// Now hard link them as like our normal waypoint array...
 				trap->Print("* Navigation system linking %i new nodes.\n", new_count - original_count);
 
-				//#pragma omp parallel for schedule(dynamic)
 				for (j = 0; j < gWPNum; j++)
 				{
 					for (k = 0; k < gWPArray[j]->neighbornum; k++)

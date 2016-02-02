@@ -1130,7 +1130,6 @@ void NPC_PickRandomTempGoal ( void )
 		gentity_t	*bestEnt = NULL;
 		float		bestDist = 99999.9f;
 
-#pragma omp parallel for schedule(dynamic)
 		for (i = 0; i < MAX_GENTITIES; i++)
 		{
 			float dist;

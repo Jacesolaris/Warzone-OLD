@@ -1324,7 +1324,6 @@ int TeamCount( int ignoreClientNum, team_t team ) {
 	int		i;
 	int		count = 0;
 
-#pragma omp parallel for schedule(dynamic) num_threads(32) if(g_multithread.integer > 0)
 	for ( i = 0 ; i < level.maxclients ; i++ ) {
 		if ( i == ignoreClientNum ) {
 			continue;
@@ -1333,13 +1332,11 @@ int TeamCount( int ignoreClientNum, team_t team ) {
 			continue;
 		}
 		if ( level.clients[i].sess.sessionTeam == team ) {
-#pragma omp atomic
 			count++;
 		}
 		else if (level.gametype == GT_SIEGE &&
             level.clients[i].sess.siegeDesiredTeam == team)
 		{
-#pragma omp atomic
 			count++;
 		}
 	}
@@ -2924,7 +2921,6 @@ char *ClientConnect( int clientNum, qboolean firstTime, qboolean isBot ) {
 		{// patched, check for > g_maxConnPerIP connections from same IP
 			int count=0, i=0;
 
-#pragma omp parallel for schedule(dynamic) num_threads(32) if(g_multithread.integer > 0)
 			for ( i=0; i<sv_maxclients.integer; i++ )
 			{
 				#if 0
@@ -2941,7 +2937,6 @@ char *ClientConnect( int clientNum, qboolean firstTime, qboolean isBot ) {
 					}
 				#else
 					if ( CompareIPs( tmpIP, level.clients[i].sess.IP ) )
-#pragma omp atomic
 						count++;
 				#endif
 			}
@@ -4472,7 +4467,6 @@ void ClientDisconnect( int clientNum ) {
 	G_LeaveVehicle( ent, qtrue );
 
 	// stop any following clients
-#pragma omp parallel for schedule(dynamic) num_threads(32) if(g_multithread.integer > 0)
 	for ( i = 0 ; i < level.maxclients ; i++ ) {
 		if ( level.clients[i].sess.sessionTeam == FACTION_SPECTATOR
 			&& level.clients[i].sess.spectatorState == SPECTATOR_FOLLOW
