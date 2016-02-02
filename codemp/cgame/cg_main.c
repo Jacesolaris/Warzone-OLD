@@ -3571,7 +3571,7 @@ Q_EXPORT intptr_t vmMain( int command, intptr_t arg0, intptr_t arg1, intptr_t ar
 //[New EFX System]
 fxHandle_t CG_EnableEnhancedFX(fxHandle_t normal, fxHandle_t AdvanceEnhancedFX)
 {
-	if (cg_enhancedFX.integer >= 1 && AdvanceEnhancedFX)
+	if (AdvanceEnhancedFX)
 	{
 		return AdvanceEnhancedFX;
 	}
