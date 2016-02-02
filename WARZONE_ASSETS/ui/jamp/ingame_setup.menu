@@ -1699,7 +1699,7 @@
 			font 				4
 			textscale 			1
 			forecolor		.615 .615 .956 1
-			cvarFloatList		{  "No" 0 "Normal" 1 "Extended" 2 "Extended+" 3 "Insane" 4 }
+			cvarFloatList		{  "Fast" 0 "Normal" 1 "Unlimited" 2 }
 			descText			"Enable Enhanced FX?"
 			cvar				"cg_enhancedFX"
 

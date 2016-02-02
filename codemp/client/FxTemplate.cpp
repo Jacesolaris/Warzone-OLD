@@ -363,8 +363,8 @@ bool CPrimitiveTemplate::ParseLife( const char *grpName, const char *val, void *
 	{
 		cg_enhancedFX = Cvar_Get( "cg_enhancedFX", "1", CVAR_ARCHIVE );
 
-		if (cg_enhancedFX->integer == 1)
-		{// UQ1: With cg_enahancedFX == 1, cap minimum to repeatDelay/2 and maximum to repeatDelay to stop massive FPS drops...
+		if (cg_enhancedFX->integer == 0)
+		{// UQ1: With cg_enahancedFX == 0, cap minimum to repeatDelay/2 and maximum to repeatDelay to stop massive FPS drops...
 			int use_min = 200;
 			int use_max = 300;
 
@@ -382,27 +382,8 @@ bool CPrimitiveTemplate::ParseLife( const char *grpName, const char *val, void *
 				if (max > use_max) max = use_max;
 			}
 		}
-		else if (cg_enhancedFX->integer == 2)
-		{// UQ1: With cg_enahancedFX == 2, cap minimum to repeatDelay and maximum to repeatDelay*2 to stop massive FPS drops...
-			int use_min = 300;
-			int use_max = 500;
-
-			if (ef->mRepeatDelay > 0)
-			{
-				use_min = ef->mRepeatDelay;
-				use_max = ef->mRepeatDelay*2.0;
-			}
-
-			//if ( StringContainsWord(grpName, "Light" ) 
-			//	|| (StringContainsWord(grpName, "Particle" ) && (StringContainsWord(mName, "Smoke" ) || StringContainsWord(mName, "smoke" ) || StringContainsWord(mName, "Dust" ) || StringContainsWord(mName, "dust" ))) )
-			{// UQ1: Sanity for weapon FX...
-				//Com_Printf("Effect %s has had smoke/dust life reduced.\n", grpName);
-				if (min > use_min) min = use_min;
-				if (max > use_max) max = use_max;
-			}
-		}
-		else if (cg_enhancedFX->integer == 3)
-		{// UQ1: With cg_enahancedFX == 3, cap minimum to repeatDelay*2 and maximum to repeatDelay*3 to stop massive FPS drops...
+		else if (cg_enhancedFX->integer == 1)
+		{// UQ1: With cg_enahancedFX == 1, cap minimum to repeatDelay*2 and maximum to repeatDelay*3 to stop massive FPS drops...
 			int use_min = 400;
 			int use_max = 500;
 
