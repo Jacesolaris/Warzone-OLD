@@ -364,14 +364,14 @@ bool CPrimitiveTemplate::ParseLife( const char *grpName, const char *val, void *
 		cg_enhancedFX = Cvar_Get( "cg_enhancedFX", "1", CVAR_ARCHIVE );
 
 		if (cg_enhancedFX->integer == 0)
-		{// UQ1: With cg_enahancedFX == 0, cap minimum to repeatDelay/2 and maximum to repeatDelay to stop massive FPS drops...
+		{// UQ1: With cg_enahancedFX == 0, cap minimum to repeatDelay and maximum to repeatDelay*1.5 to stop massive FPS drops...
 			int use_min = 200;
 			int use_max = 300;
 
 			if (ef->mRepeatDelay > 0)
 			{
-				use_min = ef->mRepeatDelay / 2.0;
-				use_max = ef->mRepeatDelay;
+				use_min = ef->mRepeatDelay;
+				use_max = ef->mRepeatDelay*1.5;
 			}
 
 			//if ( StringContainsWord(grpName, "Light" ) 
