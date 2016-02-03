@@ -363,47 +363,73 @@ bool CPrimitiveTemplate::ParseLife( const char *grpName, const char *val, void *
 	{
 		cg_enhancedFX = Cvar_Get( "cg_enhancedFX", "1", CVAR_ARCHIVE );
 
-		if (cg_enhancedFX->integer == 0)
-		{// UQ1: With cg_enahancedFX == 0, cap minimum to repeatDelay and maximum to repeatDelay*1.5 to stop massive FPS drops...
-			int use_min = 400;
-			int use_max = 500;
-
-			if (ef->mRepeatDelay > 0)
+		if (StringContainsWord(grpName, "Light"))
+		{// Lights only... Never play more then 1 at a time...
+			if (cg_enhancedFX->integer == 0)
 			{
-				use_min = ef->mRepeatDelay*2.0;
-				use_max = ef->mRepeatDelay*3.0;
+				int use_min = 500;
+				int use_max = 500;
+
+				if (ef->mRepeatDelay <= 0)
+				{
+					ef->mRepeatDelay = use_min;
+				}
+
+				use_min = ef->mRepeatDelay;
+				use_max = ef->mRepeatDelay;
+				
+				if (min > use_min) min = use_min;
+				if (max > use_max) max = use_max;
 			}
-			if (StringContainsWord(grpName, "Light")
-			|| (StringContainsWord(grpName, "Particle" ) 
-			&& (StringContainsWord(mName, "Smoke" ) 
-			|| StringContainsWord(mName, "smoke" ) 
-			|| StringContainsWord(mName, "Dust" ) 
-			|| StringContainsWord(mName, "dust" ))))
-			{// UQ1: Sanity for weapon FX...
-				//Com_Printf("Effect %s has had smoke/dust life reduced.\n", grpName);
+			else if (cg_enhancedFX->integer == 1)
+			{
+				int use_min = 500;
+				int use_max = 800;
+
+				if (ef->mRepeatDelay <= 0)
+				{
+					ef->mRepeatDelay = use_min;
+				}
+
+				use_min = ef->mRepeatDelay;
+				use_max = ef->mRepeatDelay;
+				
 				if (min > use_min) min = use_min;
 				if (max > use_max) max = use_max;
 			}
 		}
-		else if (cg_enhancedFX->integer == 1)
-		{// UQ1: With cg_enahancedFX == 1, cap minimum to repeatDelay*2 and maximum to repeatDelay*3 to stop massive FPS drops...
-			int use_min = 400;
-			int use_max = 500;
-
-			if (ef->mRepeatDelay > 0)
+		else if (StringContainsWord(grpName, "Particle" ) 
+			&& (StringContainsWord(mName, "Smoke" ) || StringContainsWord(mName, "smoke" ) || StringContainsWord(mName, "Dust" ) || StringContainsWord(mName, "dust" )))
+		{// Volumetric particles... Less strict limits...
+			if (cg_enhancedFX->integer == 0)
 			{
-				use_min = ef->mRepeatDelay*3.0;
-				use_max = ef->mRepeatDelay*4.0;
-			}
+				int use_min = 1000;
+				int use_max = 2000;
 
-			if (StringContainsWord(grpName, "Light")
-				|| (StringContainsWord(grpName, "Particle")
-				&& (StringContainsWord(mName, "Smoke")
-				|| StringContainsWord(mName, "smoke")
-				|| StringContainsWord(mName, "Dust")
-				|| StringContainsWord(mName, "dust"))))
-			{// UQ1: Sanity for weapon FX...
-				//Com_Printf("Effect %s has had smoke/dust life reduced.\n", grpName);
+				if (ef->mRepeatDelay <= 0)
+				{
+					ef->mRepeatDelay = use_min;
+				}
+
+				use_min = ef->mRepeatDelay;
+				use_max = ef->mRepeatDelay;
+				
+				if (min > use_min) min = use_min;
+				if (max > use_max) max = use_max;
+			}
+			else if (cg_enhancedFX->integer == 1)
+			{
+				int use_min = 1000;
+				int use_max = 5000;
+
+				if (ef->mRepeatDelay <= 0)
+				{
+					ef->mRepeatDelay = use_min;
+				}
+
+				use_min = ef->mRepeatDelay;
+				use_max = ef->mRepeatDelay;
+				
 				if (min > use_min) min = use_min;
 				if (max > use_max) max = use_max;
 			}
