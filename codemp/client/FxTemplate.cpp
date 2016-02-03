@@ -373,7 +373,12 @@ bool CPrimitiveTemplate::ParseLife( const char *grpName, const char *val, void *
 				use_min = ef->mRepeatDelay*2.0;
 				use_max = ef->mRepeatDelay*3.0;
 			}
-
+			if (StringContainsWord(grpName, "Light")
+			|| (StringContainsWord(grpName, "Particle" ) 
+			&& (StringContainsWord(mName, "Smoke" ) 
+			|| StringContainsWord(mName, "smoke" ) 
+			|| StringContainsWord(mName, "Dust" ) 
+			|| StringContainsWord(mName, "dust" ))))
 			{// UQ1: Sanity for weapon FX...
 				//Com_Printf("Effect %s has had smoke/dust life reduced.\n", grpName);
 				if (min > use_min) min = use_min;
@@ -391,6 +396,12 @@ bool CPrimitiveTemplate::ParseLife( const char *grpName, const char *val, void *
 				use_max = ef->mRepeatDelay*4.0;
 			}
 
+			if (StringContainsWord(grpName, "Light")
+				|| (StringContainsWord(grpName, "Particle")
+				&& (StringContainsWord(mName, "Smoke")
+				|| StringContainsWord(mName, "smoke")
+				|| StringContainsWord(mName, "Dust")
+				|| StringContainsWord(mName, "dust"))))
 			{// UQ1: Sanity for weapon FX...
 				//Com_Printf("Effect %s has had smoke/dust life reduced.\n", grpName);
 				if (min > use_min) min = use_min;
