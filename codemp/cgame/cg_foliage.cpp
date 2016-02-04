@@ -253,6 +253,8 @@ float		NUM_PLANT_SHADERS = 0;
 		VectorSet(maxs, mapMins[0] + FOLIAGE_AREA_SIZE, mapMins[1] + FOLIAGE_AREA_SIZE, 0);
 
 		int DENSITY_REMOVED = 0;
+		int ZERO_SCALE_REMOVED = 0;
+
 		FOLIAGE_AREAS_COUNT = 0;
 
 		for (areaNum = 0; areaNum < FOLIAGE_AREA_MAX; areaNum++)
@@ -281,6 +283,12 @@ float		NUM_PLANT_SHADERS = 0;
 
 						if (FOLIAGE_TREE_SELECTION[i] <= 0)
 						{// Never remove trees...
+							if (FOLIAGE_PLANT_SCALE[i] <= 0)
+							{// Zero scale plant... Remove...
+								ZERO_SCALE_REMOVED++;
+								continue;
+							}
+
 							for (int j = 0; j < FOLIAGE_AREAS_LIST_COUNT[areaNum]; j++)
 							{// Let's use a density setting to improve FPS...
 								if (DistanceHorizontal(FOLIAGE_POSITIONS[i], FOLIAGE_POSITIONS[FOLIAGE_AREAS_LIST[areaNum][j]]) < __FOLIAGE_DENSITY__ * FOLIAGE_PLANT_SCALE[i])
@@ -317,7 +325,7 @@ float		NUM_PLANT_SHADERS = 0;
 		FOLIAGE_AREAS_COUNT = areaNum;
 		OLD_FOLIAGE_DENSITY = __FOLIAGE_DENSITY__;
 
-		trap->Print("Generated %i foliage areas. %i used of %i total foliages. %i removed by density setting.\n", FOLIAGE_AREAS_COUNT, FOLIAGE_NUM_POSITIONS - DENSITY_REMOVED, FOLIAGE_NUM_POSITIONS, DENSITY_REMOVED);
+		trap->Print("Generated %i foliage areas. %i used of %i total foliages. %i removed by density setting. %i removed due to zero scale.\n", FOLIAGE_AREAS_COUNT, FOLIAGE_NUM_POSITIONS - DENSITY_REMOVED, FOLIAGE_NUM_POSITIONS, DENSITY_REMOVED, ZERO_SCALE_REMOVED);
 	}
 
 	void FOLIAGE_Check_CVar_Change ( void )
@@ -594,6 +602,9 @@ extern "C" {
 		vec3_t			angles;
 		float			dist = 0;
 		float			distFadeScale = 1.0;
+		float			minFoliageScale = cg_foliageMinFoliageScale.value;
+
+		if (FOLIAGE_TREE_SELECTION[num] <= 0 && FOLIAGE_PLANT_SCALE[num] < minFoliageScale) return;
 
 		if (cg.renderingThirdPerson) 
 			dist = DistanceHorizontal(FOLIAGE_POSITIONS[num], cg_entities[cg.clientNum].lerpOrigin);
@@ -618,15 +629,16 @@ extern "C" {
 		{// Graw grass...
 			qboolean skipGrass = qfalse;
 			qboolean skipPlant = qfalse;
-			float massGrassScale = ((dist / FOLIAGE_PLANT_VISIBLE_DISTANCE) * 1.2) - 0.2;
+			float massGrassScale = ((dist / FOLIAGE_PLANT_VISIBLE_DISTANCE) * 0.7) + 0.3;
 
 #ifndef __GRASS_ONLY__
 			if (dist > FOLIAGE_VISIBLE_DISTANCE) skipGrass = qtrue;
 			if (FOLIAGE_PLANT_SCALE[num] <= massGrassScale && dist > FOLIAGE_VISIBLE_DISTANCE) skipPlant = qtrue;
+			if (FOLIAGE_PLANT_SCALE[num] < minFoliageScale) skipPlant = qtrue;
 
 			if (!skipPlant && FOLIAGE_PLANT_SELECTION[num] != 0)
 			{// Add plant model as well...
-				float PLANT_SCALE = FOLIAGE_PLANT_SCALE[num]*PLANT_SCALE_MULTIPLIER*distFadeScale;
+				float PLANT_SCALE = FOLIAGE_PLANT_SCALE[num]*PLANT_SCALE_MULTIPLIER*distFadeScale;//*0.55;
 
 				re.customShader = FOLIAGE_PLANT_SHADERS[FOLIAGE_PLANT_SELECTION[num]-1];
 
@@ -634,7 +646,7 @@ extern "C" {
 
 				re.origin[2] += 8.0 * (1.0 - FOLIAGE_PLANT_SCALE[num]);
 
-				if (dist < 512)
+				/*if (dist < 512)
 				{
 					re.hModel = FOLIAGE_PLANT_MODEL[0];
 				}
@@ -645,7 +657,14 @@ extern "C" {
 				else
 				{
 					re.hModel = FOLIAGE_PLANT_MODEL[2];
-				}
+				}*/
+
+				//if (dist < 768)
+					re.hModel = FOLIAGE_PLANT_MODEL[0];
+				//else if (dist < 1536)
+				//	re.hModel = FOLIAGE_PLANT_MODEL[1];
+				//else
+				//	re.hModel = FOLIAGE_PLANT_MODEL[2];
 
 				VectorSet(re.modelScale, PLANT_SCALE, PLANT_SCALE, PLANT_SCALE);
 
@@ -663,12 +682,13 @@ extern "C" {
 			else if (!skipGrass && dist <= FOLIAGE_VISIBLE_DISTANCE)
 #endif //__GRASS_ONLY__
 			{
-				float GRASS_SCALE = FOLIAGE_PLANT_SCALE[num]*PLANT_SCALE_MULTIPLIER*distFadeScale*0.75;
+				float GRASS_SCALE = FOLIAGE_PLANT_SCALE[num]*PLANT_SCALE_MULTIPLIER*distFadeScale;//*0.5;
 
 				re.reType = RT_MODEL;
 
 				re.origin[2] += 8.0 * (1.0 - FOLIAGE_PLANT_SCALE[num]);
 
+				/*
 				if (dist < 128)
 				{
 					re.customShader = FOLIAGE_GRASS_BILLBOARD_SHADER[0];
@@ -698,7 +718,17 @@ extern "C" {
 				{
 					re.customShader = FOLIAGE_GRASS_BILLBOARD_SHADER[4];
 					re.hModel = FOLIAGE_PLANT_MODEL[2];
-				}
+				}*/
+
+				re.customShader = FOLIAGE_GRASS_BILLBOARD_SHADER[0];
+				
+
+				if (dist < 1024)
+					re.hModel = FOLIAGE_PLANT_MODEL[0];
+				else if (dist < 2048)
+					re.hModel = FOLIAGE_PLANT_MODEL[1];
+				else
+					re.hModel = FOLIAGE_PLANT_MODEL[2];
 
 				VectorSet(re.modelScale, GRASS_SCALE, GRASS_SCALE, GRASS_SCALE);
 
@@ -795,6 +825,9 @@ extern "C" {
 	{
 		fileHandle_t	f;
 		int				i = 0;
+		int				numPositions = 0;
+		int				numRemovedPositions = 0;
+		float			minFoliageScale = cg_foliageMinFoliageScale.value;
 
 		trap->FS_Open( va( "foliage/%s.foliage", cgs.currentmapname), &f, FS_READ );
 
@@ -803,24 +836,37 @@ extern "C" {
 			return qfalse;
 		}
 
-		trap->FS_Read( &FOLIAGE_NUM_POSITIONS, sizeof(int), f );
+		FOLIAGE_NUM_POSITIONS = 0;
 
-		for (i = 0; i < FOLIAGE_NUM_POSITIONS; i++)
+		trap->FS_Read( &numPositions, sizeof(int), f );
+
+		for (i = 0; i < numPositions; i++)
 		{
-			trap->FS_Read( &FOLIAGE_POSITIONS[i], sizeof(vec3_t), f );
-			trap->FS_Read( &FOLIAGE_NORMALS[i], sizeof(vec3_t), f );
-			trap->FS_Read( &FOLIAGE_PLANT_SELECTION[i], sizeof(int), f );
-			trap->FS_Read( &FOLIAGE_PLANT_ANGLES[i], sizeof(float), f );
-			trap->FS_Read( &FOLIAGE_PLANT_SCALE[i], sizeof(float), f );
-			trap->FS_Read( &FOLIAGE_TREE_SELECTION[i], sizeof(int), f );
-			trap->FS_Read( &FOLIAGE_TREE_ANGLES[i], sizeof(float), f );
-			trap->FS_Read( &FOLIAGE_TREE_SCALE[i], sizeof(float), f );
+			trap->FS_Read( &FOLIAGE_POSITIONS[FOLIAGE_NUM_POSITIONS], sizeof(vec3_t), f );
+			trap->FS_Read( &FOLIAGE_NORMALS[FOLIAGE_NUM_POSITIONS], sizeof(vec3_t), f );
+			trap->FS_Read( &FOLIAGE_PLANT_SELECTION[FOLIAGE_NUM_POSITIONS], sizeof(int), f );
+			trap->FS_Read( &FOLIAGE_PLANT_ANGLES[FOLIAGE_NUM_POSITIONS], sizeof(float), f );
+			trap->FS_Read( &FOLIAGE_PLANT_SCALE[FOLIAGE_NUM_POSITIONS], sizeof(float), f );
+			trap->FS_Read( &FOLIAGE_TREE_SELECTION[FOLIAGE_NUM_POSITIONS], sizeof(int), f );
+			trap->FS_Read( &FOLIAGE_TREE_ANGLES[FOLIAGE_NUM_POSITIONS], sizeof(float), f );
+			trap->FS_Read( &FOLIAGE_TREE_SCALE[FOLIAGE_NUM_POSITIONS], sizeof(float), f );
+
+			if (FOLIAGE_TREE_SELECTION[FOLIAGE_NUM_POSITIONS] <= 0 && FOLIAGE_PLANT_SCALE[FOLIAGE_NUM_POSITIONS] < minFoliageScale)
+			{// Below our minimum size specified by cg_foliageMinFoliageScale. Remove!
+				FOLIAGE_PLANT_SELECTION[FOLIAGE_NUM_POSITIONS] = 0;
+				FOLIAGE_TREE_SELECTION[FOLIAGE_NUM_POSITIONS] = 0;
+				numRemovedPositions++;
+			}
+			else
+			{
+				FOLIAGE_NUM_POSITIONS++;
+			}
 		}
 
 		trap->FS_Close(f);
 
-		trap->Print( "^1*** ^3%s^5: Successfully loaded %i foliage points from foliage file ^7foliage/%s.foliage^5.\n", GAME_VERSION,
-			FOLIAGE_NUM_POSITIONS, cgs.currentmapname );
+		trap->Print( "^1*** ^3%s^5: Successfully loaded %i foliage points (%i removed by cg_foliageMinFoliageScale) from foliage file ^7foliage/%s.foliage^5.\n", GAME_VERSION,
+			FOLIAGE_NUM_POSITIONS, numRemovedPositions, cgs.currentmapname );
 
 		FOLIAGE_Setup_Foliage_Areas();
 
@@ -932,9 +978,12 @@ extern "C" {
 
 		if (!FOLIAGE_PLANT_MODEL[0])
 		{// Init/register all foliage models...
-			FOLIAGE_PLANT_MODEL[0] = trap->R_RegisterModel( "models/warzone/foliage/grass01_LOD0.md3" );
-			FOLIAGE_PLANT_MODEL[1] = trap->R_RegisterModel( "models/warzone/foliage/grass01_LOD1.md3" );
-			FOLIAGE_PLANT_MODEL[2] = trap->R_RegisterModel( "models/warzone/foliage/grass01_LOD2.md3" );
+			//FOLIAGE_PLANT_MODEL[0] = trap->R_RegisterModel( "models/warzone/foliage/grass01_LOD0.md3" );
+			//FOLIAGE_PLANT_MODEL[1] = trap->R_RegisterModel( "models/warzone/foliage/grass01_LOD1.md3" );
+			//FOLIAGE_PLANT_MODEL[2] = trap->R_RegisterModel( "models/warzone/foliage/grass01_LOD2.md3" );
+			FOLIAGE_PLANT_MODEL[0] = trap->R_RegisterModel( "models/warzone/foliage/uqgrass.md3" );
+			FOLIAGE_PLANT_MODEL[1] = trap->R_RegisterModel( "models/warzone/foliage/uqgrass_lod.md3" );
+			FOLIAGE_PLANT_MODEL[2] = trap->R_RegisterModel( "models/warzone/foliage/uqgrass_lod2.md3" );
 
 #if 1
 			FOLIAGE_GRASS_BILLBOARD_SHADER[0] = trap->R_RegisterShader( "models/warzone/foliage/maingrass1024.png" );
@@ -1195,15 +1244,92 @@ extern "C" {
 		return qfalse;
 	}
 
-	qboolean FOLIAGE_CheckSlopesAround(vec3_t pos, vec3_t down, vec3_t groundpos, vec3_t slope, float scale)
+#define MAX_SLOPE 46.0
+
+	qboolean FOLIAGE_CheckSlope(vec3_t normal)
+	{
+		vec3_t slopeangles;
+		vectoangles( normal, slopeangles );
+
+		float pitch = slopeangles[0];
+	
+		if (pitch > 180)
+			pitch -= 360;
+
+		if (pitch < -180)
+			pitch += 360;
+
+		pitch += 90.0f;
+
+		if (pitch > MAX_SLOPE || pitch < -MAX_SLOPE)
+			return qfalse;
+
+		return qtrue;
+	}
+	
+	qboolean FOLIAGE_CheckSlopeChange(vec3_t normal, vec3_t normal2)
+	{
+		/*
+		vec3_t slopeDiff;
+
+		slopeDiff[0] = normal[0] - normal2[0];
+		slopeDiff[1] = normal[1] - normal2[1];
+		slopeDiff[2] = normal[2] - normal2[2];
+
+		if (slopeDiff[0] > GRASS_SLOPE_MAX_DIFF) return qfalse;
+		if (slopeDiff[0] < -GRASS_SLOPE_MAX_DIFF) return qfalse;
+
+		if (slopeDiff[1] > GRASS_SLOPE_MAX_DIFF) return qfalse;
+		if (slopeDiff[1] < -GRASS_SLOPE_MAX_DIFF) return qfalse;
+
+		if (slopeDiff[2] > GRASS_SLOPE_MAX_DIFF) return qfalse;
+		if (slopeDiff[2] < -GRASS_SLOPE_MAX_DIFF) return qfalse;
+		*/
+
+		vec3_t slopeAngles1, slopeAngles2;
+
+		vectoangles( normal, slopeAngles1 );
+
+		float pitch1 = slopeAngles1[0];
+	
+		if (pitch1 > 180)
+			pitch1 -= 360;
+
+		if (pitch1 < -180)
+			pitch1 += 360;
+
+		pitch1 += 90.0f;
+
+		vectoangles( normal2, slopeAngles2 );
+
+		float pitch2 = slopeAngles2[0];
+	
+		if (pitch2 > 180)
+			pitch2 -= 360;
+
+		if (pitch2 < -180)
+			pitch2 += 360;
+
+		pitch2 += 90.0f;
+
+		if (pitch1 - pitch2 > GRASS_SLOPE_MAX_DIFF || pitch1 - pitch2 < -GRASS_SLOPE_MAX_DIFF)
+			return qfalse;
+
+		return qtrue;
+	}
+
+	qboolean FOLIAGE_CheckSlopesAround(vec3_t groundpos, vec3_t slope, float scale)
 	{
 		trace_t		tr;
+		vec3_t		pos, down;
 		vec3_t		pos2, down2;
-		float		HEIGHT_SCALE = 1.0;
 
-		HEIGHT_SCALE = 1.0;
+		VectorCopy(groundpos, pos);
+		pos[2] += 96.0;
+		VectorCopy(groundpos, down);
+		down[2] -= 96.0;
 
-		/*VectorCopy(pos, pos2);
+		VectorCopy(pos, pos2);
 		VectorCopy(down, down2);
 		pos2[0] += (GRASS_MODEL_WIDTH * scale);
 		down2[0] += (GRASS_MODEL_WIDTH * scale);
@@ -1211,16 +1337,10 @@ extern "C" {
 		CG_Trace( &tr, pos2, NULL, NULL, down2, ENTITYNUM_NONE, MASK_PLAYERSOLID|CONTENTS_WATER );
 
 		// Slope too different...
+		if (tr.fraction == 1.0) return qfalse; // Didn't hit anything... Started trace in floor???
 		if (!MaterialIsValidForGrass(int(tr.surfaceFlags & MATERIAL_MASK))) return qfalse;
-		if (Distance(slope, tr.plane.normal) > GRASS_SLOPE_MAX_DIFF) return qfalse;
-		if (ONLY_SLOPES)
-		{
-			if (!(DistanceVertical(groundpos, tr.endpos) > GRASS_HEIGHT_MAX_DIFF * HEIGHT_SCALE)) return qfalse;
-		}
-		else 
-		{
-			if (tr.endpos[2] < groundpos[0] && DistanceVertical(groundpos, tr.endpos) > GRASS_HEIGHT_MAX_DIFF * HEIGHT_SCALE) return qfalse;
-		}
+		if (!FOLIAGE_CheckSlope(tr.plane.normal)) return qfalse;
+		if (!FOLIAGE_CheckSlopeChange(slope, tr.plane.normal)) return qfalse;
 
 		VectorCopy(pos, pos2);
 		VectorCopy(down, down2);
@@ -1230,16 +1350,10 @@ extern "C" {
 		CG_Trace( &tr, pos2, NULL, NULL, down2, ENTITYNUM_NONE, MASK_PLAYERSOLID|CONTENTS_WATER );
 
 		// Slope too different...
+		if (tr.fraction == 1.0) return qfalse; // Didn't hit anything... Started trace in floor???
 		if (!MaterialIsValidForGrass(int(tr.surfaceFlags & MATERIAL_MASK))) return qfalse;
-		if (Distance(slope, tr.plane.normal) > GRASS_SLOPE_MAX_DIFF) return qfalse;
-		if (ONLY_SLOPES)
-		{
-			if (!(DistanceVertical(groundpos, tr.endpos) > GRASS_HEIGHT_MAX_DIFF * HEIGHT_SCALE)) return qfalse;
-		}
-		else 
-		{
-			if (tr.endpos[2] < groundpos[0] && DistanceVertical(groundpos, tr.endpos) > GRASS_HEIGHT_MAX_DIFF * HEIGHT_SCALE) return qfalse;
-		}
+		if (!FOLIAGE_CheckSlope(tr.plane.normal)) return qfalse;
+		if (!FOLIAGE_CheckSlopeChange(slope, tr.plane.normal)) return qfalse;
 
 		VectorCopy(pos, pos2);
 		VectorCopy(down, down2);
@@ -1249,16 +1363,10 @@ extern "C" {
 		CG_Trace( &tr, pos2, NULL, NULL, down2, ENTITYNUM_NONE, MASK_PLAYERSOLID|CONTENTS_WATER );
 
 		// Slope too different...
+		if (tr.fraction == 1.0) return qfalse; // Didn't hit anything... Started trace in floor???
 		if (!MaterialIsValidForGrass(int(tr.surfaceFlags & MATERIAL_MASK))) return qfalse;
-		if (Distance(slope, tr.plane.normal) > GRASS_SLOPE_MAX_DIFF) return qfalse;
-		if (ONLY_SLOPES)
-		{
-			if (!(DistanceVertical(groundpos, tr.endpos) > GRASS_HEIGHT_MAX_DIFF * HEIGHT_SCALE)) return qfalse;
-		}
-		else 
-		{
-			if (tr.endpos[2] < groundpos[0] && DistanceVertical(groundpos, tr.endpos) > GRASS_HEIGHT_MAX_DIFF * HEIGHT_SCALE) return qfalse;
-		}
+		if (!FOLIAGE_CheckSlope(tr.plane.normal)) return qfalse;
+		if (!FOLIAGE_CheckSlopeChange(slope, tr.plane.normal)) return qfalse;
 
 		VectorCopy(pos, pos2);
 		VectorCopy(down, down2);
@@ -1268,16 +1376,10 @@ extern "C" {
 		CG_Trace( &tr, pos2, NULL, NULL, down2, ENTITYNUM_NONE, MASK_PLAYERSOLID|CONTENTS_WATER );
 
 		// Slope too different...
+		if (tr.fraction == 1.0) return qfalse; // Didn't hit anything... Started trace in floor???
 		if (!MaterialIsValidForGrass(int(tr.surfaceFlags & MATERIAL_MASK))) return qfalse;
-		if (Distance(slope, tr.plane.normal) > GRASS_SLOPE_MAX_DIFF) return qfalse;
-		if (ONLY_SLOPES)
-		{
-			if (!(DistanceVertical(groundpos, tr.endpos) > GRASS_HEIGHT_MAX_DIFF * HEIGHT_SCALE)) return qfalse;
-		}
-		else 
-		{
-			if (tr.endpos[2] < groundpos[0] && DistanceVertical(groundpos, tr.endpos) > GRASS_HEIGHT_MAX_DIFF * HEIGHT_SCALE) return qfalse;
-		}*/
+		if (!FOLIAGE_CheckSlope(tr.plane.normal)) return qfalse;
+		if (!FOLIAGE_CheckSlopeChange(slope, tr.plane.normal)) return qfalse;
 
 		VectorCopy(pos, pos2);
 		VectorCopy(down, down2);
@@ -1289,9 +1391,10 @@ extern "C" {
 		CG_Trace( &tr, pos2, NULL, NULL, down2, ENTITYNUM_NONE, MASK_PLAYERSOLID|CONTENTS_WATER );
 
 		// Slope too different...
+		if (tr.fraction == 1.0) return qfalse; // Didn't hit anything... Started trace in floor???
 		if (!MaterialIsValidForGrass(int(tr.surfaceFlags & MATERIAL_MASK))) return qfalse;
-		if (Distance(slope, tr.plane.normal) > GRASS_SLOPE_MAX_DIFF) return qfalse;
-		if (tr.endpos[2] < groundpos[0] && DistanceVertical(groundpos, tr.endpos) > GRASS_HEIGHT_MAX_DIFF * HEIGHT_SCALE) return qfalse;
+		if (!FOLIAGE_CheckSlope(tr.plane.normal)) return qfalse;
+		if (!FOLIAGE_CheckSlopeChange(slope, tr.plane.normal)) return qfalse;
 
 		VectorCopy(pos, pos2);
 		VectorCopy(down, down2);
@@ -1303,9 +1406,10 @@ extern "C" {
 		CG_Trace( &tr, pos2, NULL, NULL, down2, ENTITYNUM_NONE, MASK_PLAYERSOLID|CONTENTS_WATER );
 
 		// Slope too different...
+		if (tr.fraction == 1.0) return qfalse; // Didn't hit anything... Started trace in floor???
 		if (!MaterialIsValidForGrass(int(tr.surfaceFlags & MATERIAL_MASK))) return qfalse;
-		if (Distance(slope, tr.plane.normal) > GRASS_SLOPE_MAX_DIFF) return qfalse;
-		if (tr.endpos[2] < groundpos[0] && DistanceVertical(groundpos, tr.endpos) > GRASS_HEIGHT_MAX_DIFF * HEIGHT_SCALE) return qfalse;
+		if (!FOLIAGE_CheckSlope(tr.plane.normal)) return qfalse;
+		if (!FOLIAGE_CheckSlopeChange(slope, tr.plane.normal)) return qfalse;
 
 		VectorCopy(pos, pos2);
 		VectorCopy(down, down2);
@@ -1317,9 +1421,10 @@ extern "C" {
 		CG_Trace( &tr, pos2, NULL, NULL, down2, ENTITYNUM_NONE, MASK_PLAYERSOLID|CONTENTS_WATER );
 
 		// Slope too different...
+		if (tr.fraction == 1.0) return qfalse; // Didn't hit anything... Started trace in floor???
 		if (!MaterialIsValidForGrass(int(tr.surfaceFlags & MATERIAL_MASK))) return qfalse;
-		if (Distance(slope, tr.plane.normal) > GRASS_SLOPE_MAX_DIFF) return qfalse;
-		if (tr.endpos[2] < groundpos[0] && DistanceVertical(groundpos, tr.endpos) > GRASS_HEIGHT_MAX_DIFF * HEIGHT_SCALE) return qfalse;
+		if (!FOLIAGE_CheckSlope(tr.plane.normal)) return qfalse;
+		if (!FOLIAGE_CheckSlopeChange(slope, tr.plane.normal)) return qfalse;
 
 		VectorCopy(pos, pos2);
 		VectorCopy(down, down2);
@@ -1331,9 +1436,10 @@ extern "C" {
 		CG_Trace( &tr, pos2, NULL, NULL, down2, ENTITYNUM_NONE, MASK_PLAYERSOLID|CONTENTS_WATER );
 
 		// Slope too different...
+		if (tr.fraction == 1.0) return qfalse; // Didn't hit anything... Started trace in floor???
 		if (!MaterialIsValidForGrass(int(tr.surfaceFlags & MATERIAL_MASK))) return qfalse;
-		if (Distance(slope, tr.plane.normal) > GRASS_SLOPE_MAX_DIFF) return qfalse;
-		if (tr.endpos[2] < groundpos[0] && DistanceVertical(groundpos, tr.endpos) > GRASS_HEIGHT_MAX_DIFF * HEIGHT_SCALE) return qfalse;
+		if (!FOLIAGE_CheckSlope(tr.plane.normal)) return qfalse;
+		if (!FOLIAGE_CheckSlopeChange(slope, tr.plane.normal)) return qfalse;
 
 		return qtrue;
 	}
@@ -1598,11 +1704,11 @@ extern "C" {
 					if (MaterialIsValidForGrass((tr.surfaceFlags & MATERIAL_MASK)))
 					{
 						// Look around here for a different slope angle... Cull if found...
-						for (float scale = 1.00; scale >= 0.05; scale -= 0.05)
+						for (float scale = 1.00; scale >= 0.05 && scale >= cg_foliageMinFoliageScale.value; scale -= 0.05)
 						{
 							if (ADD_SLOPES && scale < 1.0) break;
 
-							if (FOLIAGE_CheckSlopesAround(pos, down, tr.endpos, tr.plane.normal, scale))
+							if (FOLIAGE_CheckSlopesAround(tr.endpos, tr.plane.normal, scale))
 							{
 //#pragma omp critical (__ADD_TEMP_NODE__)
 								{
@@ -1636,13 +1742,7 @@ extern "C" {
 
 										if (THIS_CLUSTER >= 0)
 										{
-											if (scale == 1.0)
-												grassSpotScale[grassSpotCount] = (float)((float)irand(75, 100) / 100.0) * THIS_CLUSTER_SIZE_MULT;
-											else
-												grassSpotScale[grassSpotCount] = scale * THIS_CLUSTER_SIZE_MULT;
-										
-											if (grassSpotScale[grassSpotCount] < 0.1)
-												grassSpotScale[grassSpotCount] = 0.1;
+											grassSpotScale[grassSpotCount] = scale * THIS_CLUSTER_SIZE_MULT;
 										}
 										else if (irand(0,(int)(density*2.0)) == 0)
 										{
@@ -1655,10 +1755,7 @@ extern "C" {
 									}
 									else
 									{
-										if (scale == 1.0)
-											grassSpotScale[grassSpotCount] = (float)((float)irand(75, 100) / 100.0);
-										else
-											grassSpotScale[grassSpotCount] = scale;
+										grassSpotScale[grassSpotCount] = scale;
 									}
 
 									sprintf(last_node_added_string, "^5Adding foliage point ^3%i ^5at ^7%f %f %f^5.", grassSpotCount, tr.endpos[0], tr.endpos[1], tr.endpos[2]+8);
@@ -1799,33 +1896,17 @@ extern "C" {
 				FOLIAGE_PLANT_ANGLES[FOLIAGE_NUM_POSITIONS] = (int)(random() * 180);
 				
 				if (FOLIAGE_PLANT_SCALE[FOLIAGE_NUM_POSITIONS] == 0)
-					FOLIAGE_PLANT_SCALE[FOLIAGE_NUM_POSITIONS] = (float)((float)irand(75,125) / 100.0);
+					FOLIAGE_PLANT_SCALE[FOLIAGE_NUM_POSITIONS] = (float)((float)irand(100*cg_foliageMinFoliageScale.value,100) / 100.0);
 
-				if (density >= 48)
-				{
-					if (DO_TREE)
-					{// Add tree...
-						FOLIAGE_TREE_SELECTION[FOLIAGE_NUM_POSITIONS] = irand(1, NUM_TREE_TYPES);
-						FOLIAGE_TREE_ANGLES[FOLIAGE_NUM_POSITIONS] = (int)(random() * 180);
-						FOLIAGE_TREE_SCALE[FOLIAGE_NUM_POSITIONS] = (float)((float)irand(65,150) / 100.0);
-					}
-					else if (irand(0, 1) == 1)
-					{// Add plant... 1 in every 2 positions...
-						FOLIAGE_PLANT_SELECTION[FOLIAGE_NUM_POSITIONS] = irand(1,MAX_PLANT_SHADERS-1);
-					}
+				if (DO_TREE)
+				{// Add tree... 
+					FOLIAGE_TREE_SELECTION[FOLIAGE_NUM_POSITIONS] = irand(1, NUM_TREE_TYPES);
+					FOLIAGE_TREE_ANGLES[FOLIAGE_NUM_POSITIONS] = (int)(random() * 180);
+					FOLIAGE_TREE_SCALE[FOLIAGE_NUM_POSITIONS] = (float)((float)irand(65,150) / 100.0);
 				}
-				else
-				{
-					if (DO_TREE)
-					{// Add tree... 
-						FOLIAGE_TREE_SELECTION[FOLIAGE_NUM_POSITIONS] = irand(1, NUM_TREE_TYPES);
-						FOLIAGE_TREE_ANGLES[FOLIAGE_NUM_POSITIONS] = (int)(random() * 180);
-						FOLIAGE_TREE_SCALE[FOLIAGE_NUM_POSITIONS] = (float)((float)irand(65,150) / 100.0);
-					}
-					else if (irand(0, 3) >= 1)
-					{// Add plant... 1 in every 1.33 positions...
-						FOLIAGE_PLANT_SELECTION[FOLIAGE_NUM_POSITIONS] = irand(1,MAX_PLANT_SHADERS-1);
-					}
+				else if (irand(0, 255) <= 0)
+				{// Add plant... 1 in every 256 positions...
+					FOLIAGE_PLANT_SELECTION[FOLIAGE_NUM_POSITIONS] = irand(1,MAX_PLANT_SHADERS-1);
 				}
 
 				trace_t tr;
@@ -1940,22 +2021,23 @@ extern "C" {
 			CG_Trace( &tr, pos, NULL, NULL, down, ENTITYNUM_NONE, MASK_PLAYERSOLID|CONTENTS_WATER );
 
 			// Look around here for a different slope angle... Cull if found...
-			for (float scale = 1.00; scale > FOLIAGE_PLANT_SCALE[i]; scale -= 0.05)
+			for (float scale = 1.00; scale > FOLIAGE_PLANT_SCALE[i] && scale >= cg_foliageMinFoliageScale.value; scale -= 0.05)
 			{
 				qboolean	FOUND = qfalse;
 
-				if (FOLIAGE_CheckSlopesAround(pos, down, tr.endpos, tr.plane.normal, scale))
+				if (FOLIAGE_CheckSlopesAround(tr.endpos, tr.plane.normal, scale))
 				{
-					if (scale == 1.0)
-						FOLIAGE_PLANT_SCALE[i] = (float)((float)irand(75, 100) / 100.0);
-					else
-						FOLIAGE_PLANT_SCALE[i] = scale;
+					FOLIAGE_PLANT_SCALE[i] = scale;
 
 					NUM_RESCALED++;
 
 					sprintf(last_node_added_string, "^5Plant point ^3%i ^5at ^7%f %f %f^5 rescaled.", i, FOLIAGE_POSITIONS[i][0], FOLIAGE_POSITIONS[i][1], FOLIAGE_POSITIONS[i][2]);
 
 					FOUND = qtrue;
+				}
+				else
+				{
+					FOLIAGE_PLANT_SCALE[i] = 0;
 				}
 
 				if (FOUND) break;
@@ -1967,6 +2049,30 @@ extern "C" {
 		aw_percent_complete = 0.0f;
 
 		trap->Print( "^1*** ^3%s^5: Successfully rescaled %i grass points...\n", GAME_VERSION, FOLIAGE_NUM_POSITIONS );
+
+		// Save the generated info to a file for next time...
+		FOLIAGE_SaveFoliagePositions();
+	}
+
+	void FOLIAGE_FoliageReplant ( void )
+	{
+		int NUM_REPLACED = 0;
+
+		for (int i = 0; i < FOLIAGE_NUM_POSITIONS; i++)
+		{// Check current list...
+			FOLIAGE_PLANT_SELECTION[i] = 0;
+
+			if (FOLIAGE_TREE_SELECTION[i] <= 0)
+			{
+				if (irand(0,255) <= 0)
+				{// Replace...
+					FOLIAGE_PLANT_SELECTION[i] = irand(1,MAX_PLANT_SHADERS-1);
+					NUM_REPLACED++;
+				}
+			}
+		}
+
+		trap->Print( "^1*** ^3%s^5: Successfully replaced %i trees...\n", GAME_VERSION, NUM_REPLACED );
 
 		// Save the generated info to a file for next time...
 		FOLIAGE_SaveFoliagePositions();
@@ -2008,6 +2114,7 @@ extern "C" {
 			trap->Print( "^4*** ^3AUTO-FOLIAGE^4: ^3\"add\" ^5- Add more to current list of foliages. Allows <check_density> to check for another foliage before adding.\n");
 			trap->Print( "^4*** ^3AUTO-FOLIAGE^4: ^3\"addslopes\" ^5- Adds more grass/plants only (on slopes). Allows <check_density> to check for another foliage before adding.\n");
 			trap->Print( "^4*** ^3AUTO-FOLIAGE^4: ^3\"rescale\" ^5- Check and fix scale of current grasses/plants.\n");
+			trap->Print( "^4*** ^3AUTO-FOLIAGE^4: ^3\"replant\" ^5- Reselect all grasses/plants (for updating between versions).\n");
 			trap->Print( "^4*** ^3AUTO-FOLIAGE^4: ^3\"retree\" ^5- Reselect all tree types (for updating between versions).\n");
 			trap->UpdateScreen();
 			return;
@@ -2150,6 +2257,10 @@ extern "C" {
 		else if ( Q_stricmp( str, "rescale") == 0 )
 		{
 			FOLIAGE_FoliageRescale();
+		}
+		else if ( Q_stricmp( str, "replant") == 0 )
+		{
+			FOLIAGE_FoliageReplant();
 		}
 		else if ( Q_stricmp( str, "retree") == 0 )
 		{
