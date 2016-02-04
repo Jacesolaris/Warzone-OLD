@@ -2568,6 +2568,7 @@ static int cg_siegeClassIndex = -2;
 
 extern void CG_Draw2D( void );
 extern void InventoryWindow ( void );
+//extern void RenderGenericWeaponView ( void );
 
 void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demoPlayback ) {
 	int		inwater;
@@ -2840,7 +2841,10 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 	}
 
 	if (!drawingSniperScopeView)
+	{
 		CG_AddViewWeapon( &cg.predictedPlayerState );
+		//RenderGenericWeaponView();
+	}
 
 	if ( !cg.hyperspace)
 	{

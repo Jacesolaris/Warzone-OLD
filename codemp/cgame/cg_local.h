@@ -811,6 +811,7 @@ typedef struct weaponInfo_s {
 	float			wiTrailTime;
 	qboolean		isBlasterCanon;
 
+	vec3_t			gunPosition;
 } weaponInfo_t;
 
 

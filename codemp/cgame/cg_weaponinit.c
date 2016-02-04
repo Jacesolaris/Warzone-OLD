@@ -72,6 +72,9 @@ void CG_RegisterWeapon( int weaponNum) {
 	if (weaponInfo->item)
 		weaponInfo->item->classname = weaponData[weaponNum].classname;
 
+	// Clear gunPosition...
+	VectorClear(weaponInfo->gunPosition);
+
 	// load cmodel before model so filecache works
 	weaponInfo->weaponModel = trap->R_RegisterModel( item->world_model[0] );
 	// load in-view model also
