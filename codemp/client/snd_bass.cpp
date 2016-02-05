@@ -794,6 +794,8 @@ void BASS_UpdateThread(void * aArg)
 
 void BASS_UpdateSounds ( void )
 {
+	if (!BASS_INITIALIZED) return; // wait...
+
 	if (thread::hardware_concurrency() <= 1)
 	{// Only one CPU core to use. Don't thread...
 		BASS_UpdateSounds_REAL();
@@ -885,6 +887,7 @@ void BASS_StopMusic( DWORD samplechan )
 void BASS_StartMusic ( DWORD samplechan )
 {
 	if (BASS_CheckSoundDisabled()) return;
+	if (!BASS_INITIALIZED) return;
 
 	// Set new samples...
 	MUSIC_CHANNEL.originalChannel=MUSIC_CHANNEL.channel = samplechan;
@@ -912,6 +915,7 @@ DWORD BASS_LoadMusicSample ( void *memory, int length )
 	int		flags = 0;
 
 	if (BASS_CheckSoundDisabled()) return -1;
+	if (!BASS_INITIALIZED) return -1;
 
 	if (!s_allowDynamicMusic->integer)
 	{
@@ -1361,6 +1365,7 @@ void BASS_MusicUpdateThread( void * aArg )
 void BASS_UpdateDynamicMusic( void )
 {
 	if (!BASS_UPDATE_THREAD_RUNNING) return; // wait...
+	if (!BASS_INITIALIZED) return; // wait...
 
 	if ( thread::hardware_concurrency() > 1 )
 	{

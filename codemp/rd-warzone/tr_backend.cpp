@@ -2117,31 +2117,6 @@ const void *RB_PostProcess(const void *data)
 
 	if (r_dynamicGlow->integer || r_ssgi->integer || r_anamorphic->integer)
 	{
-#if 0
-		// Downscale 8x
-		FBO_BlitFromTexture (tr.glowImage, NULL, NULL, tr.glowFboScaled[0], NULL, &tr.textureColorShader, NULL, GLS_SRCBLEND_ONE | GLS_DSTBLEND_ZERO);
-		FBO_FastBlit (tr.glowFboScaled[0], NULL, tr.glowFboScaled[1], NULL, GL_COLOR_BUFFER_BIT, GL_LINEAR);
-		FBO_FastBlit (tr.glowFboScaled[1], NULL, tr.glowFboScaled[2], NULL, GL_COLOR_BUFFER_BIT, GL_LINEAR);
-
-		// Blur a few times
-		float spread = 1.0f;
-		for ( int i = 0, numPasses = r_dynamicGlowPasses->integer; i < numPasses; i++ )
-		{
-			RB_GaussianBlur (tr.glowFboScaled[2], tr.glowFboScaled[3], tr.glowFboScaled[2], spread);
-
-			spread += r_dynamicGlowDelta->value * 0.25f;
-		}
-
-		// Upscale 4x
-		qglScissor (0, 0, tr.glowFboScaled[1]->width, tr.glowFboScaled[1]->height);
-		FBO_FastBlit (tr.glowFboScaled[2], NULL, tr.glowFboScaled[1], NULL, GL_COLOR_BUFFER_BIT, GL_LINEAR);
-
-		qglScissor (0, 0, tr.glowFboScaled[0]->width, tr.glowFboScaled[0]->height);
-		FBO_FastBlit (tr.glowFboScaled[1], NULL, tr.glowFboScaled[0], NULL, GL_COLOR_BUFFER_BIT, GL_LINEAR);
-
-		// Restore scissor rect
-		qglScissor (0, 0, glConfig.vidWidth * r_superSampleMultiplier->value, glConfig.vidHeight * r_superSampleMultiplier->value);
-#else
 		RB_BloomDownscale(tr.glowImage, tr.glowFboScaled[0]);
 		int numPasses = Com_Clampi(1, ARRAY_LEN(tr.glowFboScaled), r_dynamicGlowPasses->integer);
 		for ( int i = 1; i < numPasses; i++ )
@@ -2149,7 +2124,6 @@ const void *RB_PostProcess(const void *data)
  
 		for ( int i = numPasses - 2; i >= 0; i-- )
 			RB_BloomUpscale(tr.glowFboScaled[i + 1], tr.glowFboScaled[i]);
-#endif
 	}
 	srcBox[0] = backEnd.viewParms.viewportX;
 	srcBox[1] = backEnd.viewParms.viewportY;
@@ -2195,6 +2169,8 @@ const void *RB_PostProcess(const void *data)
 			RB_SwapFBOs( &currentFbo, &currentOutFbo);
 		}
 
+//#define CRAZY_SLOW_GAUSSIAN_BLUR //  UQ1: Let's do scope background blur with a fast blur instead...
+#ifdef CRAZY_SLOW_GAUSSIAN_BLUR
 		if (SCREEN_BLUR)
 		{
 			// Blur some times
@@ -2208,10 +2184,23 @@ const void *RB_PostProcess(const void *data)
 				spread += 0.6f * 0.25f;
 			}
 		}
+#else //!CRAZY_SLOW_GAUSSIAN_BLUR
+		if (SCREEN_BLUR)
+		{
+			RB_FastBlur(currentFbo, srcBox, currentOutFbo, dstBox);
+			RB_SwapFBOs( &currentFbo, &currentOutFbo);
+		}
+#endif //CRAZY_SLOW_GAUSSIAN_BLUR
 
 		if (!SCREEN_BLUR && r_testshader->integer)
 		{
 			RB_TestShader(currentFbo, srcBox, currentOutFbo, dstBox, 0);
+			RB_SwapFBOs( &currentFbo, &currentOutFbo);
+		}
+
+		if (!SCREEN_BLUR && r_distanceBlur->integer)
+		{
+			RB_DistanceBlur(currentFbo, srcBox, currentOutFbo, dstBox);
 			RB_SwapFBOs( &currentFbo, &currentOutFbo);
 		}
 

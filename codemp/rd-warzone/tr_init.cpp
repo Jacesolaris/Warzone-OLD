@@ -325,6 +325,7 @@ cvar_t  *r_trueAnaglyphParallax;
 cvar_t  *r_vibrancy;
 cvar_t  *r_fxaa;
 cvar_t  *r_underwater;
+cvar_t  *r_distanceBlur;
 cvar_t  *r_testshader;
 cvar_t  *r_testshaderValue1;
 cvar_t  *r_testshaderValue2;
@@ -377,8 +378,6 @@ cvar_t	*r_dynamicGlowPasses;
 cvar_t	*r_dynamicGlowDelta;
 cvar_t	*r_dynamicGlowIntensity;
 cvar_t	*r_dynamicGlowSoft;
-cvar_t	*r_dynamicGlowWidth;
-cvar_t	*r_dynamicGlowHeight;
 
 extern void	RB_SetGL2D (void);
 void R_Splash()
@@ -1344,12 +1343,9 @@ void R_Register( void )
 	r_ext_texture_filter_anisotropic = ri->Cvar_Get( "r_ext_texture_filter_anisotropic", "0", CVAR_ARCHIVE );
 	
 	r_dynamicGlow						= ri->Cvar_Get( "r_dynamicGlow",			"1",		CVAR_ARCHIVE );
-	r_dynamicGlowPasses					= ri->Cvar_Get( "r_dynamicGlowPasses",		"6"/*"5"*/,		CVAR_ARCHIVE );
-	r_dynamicGlowDelta					= ri->Cvar_Get( "r_dynamicGlowDelta",		"1.2",		CVAR_ARCHIVE );
-	r_dynamicGlowIntensity				= ri->Cvar_Get( "r_dynamicGlowIntensity",	"3.0"/*"1.13"*/,		CVAR_ARCHIVE );
+	r_dynamicGlowPasses					= ri->Cvar_Get( "r_dynamicGlowPasses",		"5",		CVAR_ARCHIVE );
+	r_dynamicGlowIntensity				= ri->Cvar_Get( "r_dynamicGlowIntensity",	"1.17",		CVAR_ARCHIVE );
 	r_dynamicGlowSoft					= ri->Cvar_Get( "r_dynamicGlowSoft",		"1",		CVAR_ARCHIVE );
-	r_dynamicGlowWidth					= ri->Cvar_Get( "r_dynamicGlowWidth",		"320",		CVAR_ARCHIVE|CVAR_LATCH );
-	r_dynamicGlowHeight					= ri->Cvar_Get( "r_dynamicGlowHeight",		"240",		CVAR_ARCHIVE|CVAR_LATCH );
 
 	r_picmip = ri->Cvar_Get ("r_picmip", "0", CVAR_ARCHIVE | CVAR_LATCH );
 	ri->Cvar_CheckRange( r_picmip, 0, 16, qtrue );
@@ -1489,8 +1485,8 @@ void R_Register( void )
 	r_magicdetail = ri->Cvar_Get( "r_magicdetail", "1", CVAR_ARCHIVE );
 	r_magicdetailStrength = ri->Cvar_Get( "r_magicdetailStrength", "0.05", CVAR_ARCHIVE );
 	r_dof = ri->Cvar_Get( "r_dof", "0", CVAR_ARCHIVE );
-	r_testvalue0 = ri->Cvar_Get( "r_testvalue0", "0", 0 );
-	r_testvalue1 = ri->Cvar_Get( "r_testvalue1", "0", 0 );
+	r_testvalue0 = ri->Cvar_Get( "r_testvalue0", "0.55", 0 );
+	r_testvalue1 = ri->Cvar_Get( "r_testvalue1", "1.5", 0 );
 	r_esharpening = ri->Cvar_Get( "r_esharpening", "0", CVAR_ARCHIVE );
 	r_esharpening2 = ri->Cvar_Get( "r_esharpening2", "0", CVAR_ARCHIVE );
 	r_fxaa = ri->Cvar_Get( "r_fxaa", "1", CVAR_ARCHIVE );
@@ -1517,6 +1513,7 @@ void R_Register( void )
 	r_trueAnaglyphMaxDistance = ri->Cvar_Get( "r_trueAnaglyphMaxDistance", "1.0", CVAR_ARCHIVE );
 	r_trueAnaglyphParallax = ri->Cvar_Get( "r_trueAnaglyphParallax", "11.5", CVAR_ARCHIVE );
 	r_vibrancy = ri->Cvar_Get( "r_vibrancy", "0.4", CVAR_ARCHIVE );
+	r_distanceBlur = ri->Cvar_Get( "r_distanceBlur", "1", CVAR_ARCHIVE );
 	r_testshader = ri->Cvar_Get( "r_testshader", "0", CVAR_ARCHIVE );
 	r_testshaderValue1 = ri->Cvar_Get( "r_testshaderValue1", "1.0", CVAR_ARCHIVE );
 	r_testshaderValue2 = ri->Cvar_Get( "r_testshaderValue2", "0.0", CVAR_ARCHIVE );

@@ -751,7 +751,7 @@ extern "C" {
 			re.customShader = 0;
 			re.renderfx = 0;
 
-			if (dist > FOLIAGE_AREA_SIZE*4.8 || dist > FOLIAGE_TREE_VISIBLE_DISTANCE)
+			if (dist > FOLIAGE_AREA_SIZE*cg_foliageTreeBillboardRangeMult.value || dist > FOLIAGE_TREE_VISIBLE_DISTANCE)
 			{
 				re.reType = RT_SPRITE;
 

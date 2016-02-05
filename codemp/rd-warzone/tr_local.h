@@ -397,6 +397,7 @@ extern cvar_t  *r_trueAnaglyphMinDistance;
 extern cvar_t  *r_trueAnaglyphMaxDistance;
 extern cvar_t  *r_trueAnaglyphParallax;
 extern cvar_t  *r_vibrancy;
+extern cvar_t  *r_distanceBlur;
 extern cvar_t  *r_testshader;
 extern cvar_t  *r_testshaderValue1;
 extern cvar_t  *r_testshaderValue2;
@@ -2373,6 +2374,8 @@ typedef struct trGlobals_s {
 	shaderProgram_t volumeLightShader[3];
 	shaderProgram_t volumeLightCombineShader;
 	shaderProgram_t vibrancyShader;
+	shaderProgram_t fastBlurShader;
+	shaderProgram_t distanceBlurShader;
 	shaderProgram_t testshaderShader;
 
 	image_t        *bloomRenderFBOImage[3];
@@ -2647,11 +2650,8 @@ extern cvar_t	*r_marksOnTriangleMeshes;
 
 extern cvar_t	*r_dynamicGlow;
 extern cvar_t	*r_dynamicGlowPasses;
-extern cvar_t	*r_dynamicGlowDelta;
 extern cvar_t	*r_dynamicGlowIntensity;
 extern cvar_t	*r_dynamicGlowSoft;
-extern cvar_t	*r_dynamicGlowWidth;
-extern cvar_t	*r_dynamicGlowHeight;
 
 
 //
