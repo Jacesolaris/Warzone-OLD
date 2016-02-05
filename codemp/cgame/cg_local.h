@@ -733,7 +733,7 @@ typedef struct score_s {
 	int				team;
 } score_t;
 
-
+#define MAX_WEAPON_ANIMATIONS (16)
 // each WP_* weapon enum has an associated weaponInfo_t
 // that contains media references necessary to present the
 // weapon and its effects
@@ -746,6 +746,10 @@ typedef struct weaponInfo_s {
 	qhandle_t		viewModel;			// this is the in-view model used by the player
 	qhandle_t		barrelModel;
 	qhandle_t		flashModel;
+
+	void            *g2ViewModel;
+	qhandle_t       viewModelSkin;
+	animation_t     viewModelAnims[MAX_WEAPON_ANIMATIONS];
 
 	vec3_t			weaponMidpoint;		// so it will rotate centered instead of by tag
 

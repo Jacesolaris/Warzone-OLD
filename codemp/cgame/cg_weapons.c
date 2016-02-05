@@ -381,7 +381,7 @@ CG_AddWeaponWithPowerups
 */
 static void CG_AddWeaponWithPowerups( refEntity_t *gun, int powerups ) {
 	// add powerup effects
-	AddRefEntityToScene( gun );
+	trap->R_AddRefEntityToScene(gun);
 
 	if (cg.predictedPlayerState.electrifyTime > cg.time)
 	{ //add electrocution shell
@@ -394,7 +394,7 @@ static void CG_AddWeaponWithPowerups( refEntity_t *gun, int powerups ) {
 		{
 			gun->customShader = cgs.media.electricBody2Shader;
 		}
-		AddRefEntityToScene( gun );
+		trap->R_AddRefEntityToScene( gun );
 		gun->customShader = preShader; //set back just to be safe
 	}
 }
@@ -410,7 +410,7 @@ sound should only be done on the world model case.
 =============
 */
 void CG_AddPlayerWeapon( refEntity_t *parent, playerState_t *ps, centity_t *cent, int team, vec3_t newAngles, qboolean thirdPerson ) {
-	refEntity_t				gun;
+	refEntity_t				gun, hand;
 	refEntity_t				barrel;
 	vec3_t					angles;
 	weapon_t				weaponNum;
@@ -502,12 +502,33 @@ Ghoul2 Insert Start
 
 		if (ps)
 		{	// this player, in first person view
-			gun.hModel = weapon->viewModel;
+			if (weapon->g2ViewModel)
+			{
+				gun.ghoul2 = weapon->g2ViewModel;
+				gun.radius = 32.0f;
+				if (!gun.ghoul2)
+				{
+					return;
+				}
+			}
+			else
+			{
+				gun.hModel = weapon->viewModel;
+				if (!gun.hModel)
+				{
+					return;
+				}
+			}
 		}
 		else
 		{
 			gun.hModel = weapon->weaponModel;
+
+			if (!gun.hModel) {
+				return;
+			}
 		}
+
 		if (!gun.hModel) {
 			return;
 		}
@@ -605,6 +626,17 @@ Ghoul2 Insert Start
 				weapon->weaponModel, "tag_barrel");
 		}
 
+		// Render hands with gun
+		parent->hModel = weapon->handsModel;
+		parent->renderfx = RF_DEPTHHACK | RF_FIRST_PERSON;
+
+		if (!parent->hModel) trap->Print("Current weapon has no hands model\n");
+		gun.renderfx = parent->renderfx;
+		gun.hModel = weapon->viewModel;
+		//trap->R_AddRefEntityToScene(parent)
+		CG_AddWeaponWithPowerups(parent, cent->currentState.powerups);
+
+		CG_PositionEntityOnTag(&gun, parent, parent->hModel, "tag_weapon");
 		if (!CG_IsMindTricked(cent->currentState.trickedentindex,
 			cent->currentState.trickedentindex2,
 			cent->currentState.trickedentindex3,
@@ -1213,6 +1245,7 @@ void CG_AddViewWeapon( playerState_t *ps ) {
 		hand.oldframe = CG_MapTorsoToWeaponFrame( ci, floor( currentFrame ), ps->torsoAnim );
 		hand.backlerp = 1.0f - (currentFrame-floor(currentFrame));
 
+
 		// Handle the fringe situation where oldframe is invalid
 		if ( hand.frame == -1 )
 		{
@@ -1226,9 +1259,6 @@ void CG_AddViewWeapon( playerState_t *ps ) {
 			hand.backlerp = 0;
 		}
 	}
-
-	hand.hModel = weapon->handsModel;
-	hand.renderfx = RF_DEPTHHACK | RF_FIRST_PERSON;// | RF_MINLIGHT;
 
 	// add everything onto the hand
 	CG_AddPlayerWeapon( &hand, ps, &cg_entities[cg.predictedPlayerState.clientNum], ps->persistant[PERS_TEAM], angles, qfalse );
@@ -2603,12 +2633,22 @@ void CG_InitG2Weapons(void)
 void CG_ShutDownG2Weapons(void)
 {
 	int i;
-	for (i=0; i<WP_NUM_WEAPONS; i++)
+	for (i = 0; i < WP_NUM_WEAPONS; i++)
 	{
+		weaponInfo_t *weaponInfo = NULL;
+
 		trap->G2API_CleanGhoul2Models(&g2WeaponInstances[i]);
 		//[VisualWeapons]
 		trap->G2API_CleanGhoul2Models(&g2HolsterWeaponInstances[i]);
 		//[/VisualWeapons]
+
+		weaponInfo = &cg_weapons[i];
+
+		if (weaponInfo != NULL)
+		{
+			//trap->G2API_CleanGhoul2Models(&weaponInfo->g2WorldModel);
+			trap->G2API_CleanGhoul2Models(&weaponInfo->g2ViewModel);
+		}
 	}
 }
 

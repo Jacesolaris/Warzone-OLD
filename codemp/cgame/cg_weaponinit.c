@@ -21,6 +21,54 @@ void CG_PrecacheScopes(void)
 	}
 }
 
+static qboolean CG_IsGhoul2Model(const char *modelPath)
+{
+	size_t len = strlen(modelPath);
+	if (len <= 4)
+	{
+		return qfalse;
+	}
+
+	if (Q_stricmp(modelPath + len - 4, ".glm") == 0)
+	{
+		return qtrue;
+	}
+
+	return qfalse;
+}
+
+static void CG_LoadViewWeapon(weaponInfo_t *weapon, const char *modelPath)
+{
+	char file[MAX_QPATH];
+	char *slash;
+	//int root;
+	//int model;
+
+	Q_strncpyz(file, modelPath, sizeof(file));
+	slash = Q_strrchr(file, '/');
+
+	Q_strncpyz(slash, "/model_default.skin", sizeof(file) - (slash - file));
+	weapon->viewModelSkin = trap->R_RegisterSkin(file);
+
+	trap->G2API_InitGhoul2Model(&weapon->g2ViewModel, modelPath, 0, weapon->viewModelSkin, 0, 0, 0);
+	if (!trap->G2_HaveWeGhoul2Models(weapon->g2ViewModel))
+	{
+		return;
+	}
+
+	/*memset(weapon->viewModelAnims, 0, sizeof(weapon->viewModelAnims));
+	trap->G2API_GetGLAName(weapon->g2ViewModel, 0, file);
+	if (!file[0])
+	{
+		return;
+	}
+
+	slash = Q_strrchr(file, '/');
+
+	Q_strncpyz(slash, "/animation.cfg", sizeof(file) - (slash - file));
+	CG_LoadViewWeaponAnimations(weapon, file);*/
+}
+
 void CG_SetWeaponHandModel(weaponInfo_t    *weaponInfo, int weaponType)
 {
 	if (weaponType == WEAPONTYPE_PISTOL)
@@ -29,14 +77,6 @@ void CG_SetWeaponHandModel(weaponInfo_t    *weaponInfo, int weaponType)
 		weaponInfo->handsModel = trap->R_RegisterModel("models/weapons2/blaster_r/blaster_hand.md3");
 	else if (weaponType == WEAPONTYPE_SNIPER)
 		weaponInfo->handsModel = trap->R_RegisterModel("models/weapons2/disruptor/disruptor_hand.md3");
-void CG_SetWeaponHandModel(weaponInfo_t	*weaponInfo, int weaponType)
-{
-	if (weaponType == WEAPONTYPE_PISTOL)
-		weaponInfo->handsModel = trap->R_RegisterModel( "models/weapons2/blaster_pistol/blaster_pistol_hand.md3" );
-	else if (weaponType == WEAPONTYPE_BLASTER || weaponType == WEAPONTYPE_NONE)
-		weaponInfo->handsModel = trap->R_RegisterModel( "models/weapons2/blaster_r/blaster_hand.md3" );
-	else if (weaponType == WEAPONTYPE_SNIPER)
-		weaponInfo->handsModel = trap->R_RegisterModel( "models/weapons2/disruptor/disruptor_hand.md3" );
 }
 
 /*
@@ -93,10 +133,28 @@ void CG_RegisterWeapon( int weaponNum) {
 	// Clear gunPosition...
 	VectorClear(weaponInfo->gunPosition);
 
+	weaponInfo->viewModel = NULL_HANDLE;
+	if (weaponInfo->g2ViewModel)
+	{
+		trap->G2API_CleanGhoul2Models(&weaponInfo->g2ViewModel);
+		weaponInfo->g2ViewModel = NULL;
+	}
+
+	trap->Print("^3Loading viewModel %s.\n", item->view_model);
+	if (CG_IsGhoul2Model(item->view_model))
+	{
+		trap->Print("^2Loaded glm viewModel for %s.\n", item->view_model);
+		CG_LoadViewWeapon(weaponInfo, item->view_model);
+	}
+	else
+	{
+		// load in-view model also
+		weaponInfo->viewModel = trap->R_RegisterModel(item->view_model);
+	}
+	
 	// load cmodel before model so filecache works
-	weaponInfo->weaponModel = trap->R_RegisterModel( item->world_model[0] );
-	// load in-view model also
-	weaponInfo->viewModel = trap->R_RegisterModel(item->view_model);
+	weaponInfo->weaponModel = trap->R_RegisterModel(item->world_model[0]);
+	
 
 	// calc midpoint for rotation
 	trap->R_ModelBounds( weaponInfo->weaponModel, mins, maxs );
