@@ -19,12 +19,15 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 uniform sampler2D u_DiffuseMap;
-//uniform sampler2D u_ScreenDepthMap;
+uniform sampler2D u_ScreenDepthMap;
+
+uniform vec4		u_ViewInfo; // zmin, zmax, zmax / zmin
+uniform vec2		u_Dimensions;
+uniform vec4		u_Local0; // range, powMult, 0, 0
 
 varying vec2		var_TexCoords;
-varying vec2		var_Dimensions;
 
-varying vec4		var_Local0; // CURRENT_PASS_NUMBER, 0, 0, 0
+#if 0
 
 float				CURRENT_PASS_NUMBER = var_Local0.x;
 
@@ -305,9 +308,67 @@ vec3 ColorFilmicToneMapping(vec3 x)
     // gamma space or not?
 	return pow(saturate(F_linearColor * 1.25 / F_linearWhite),vec3(1.25));
 }
+#endif
+
+#define BLUR_DEPTH u_Local0.r
+#define BLUR_RADIUS 2.0
+
+#define px (1.0/u_Dimensions.x)
+#define py (1.0/u_Dimensions.y)
+
+#define RADIUS_X (BLUR_RADIUS * px)
+#define RADIUS_Y (BLUR_RADIUS * py)
+
+float linearize(float depth)
+{
+	return 1.0 / mix(u_ViewInfo.z, 1.0, depth);
+}
+
+vec4 DistantBlur(void)
+{
+	vec4 color = texture2D(u_DiffuseMap, var_TexCoords.xy);
+	float depth = linearize(texture2D(u_ScreenDepthMap, var_TexCoords.xy).r);
+
+	if (depth < BLUR_DEPTH)
+	{
+		return color;
+	}
+
+	float BLUR_DEPTH_MULT = (1.0 - (BLUR_DEPTH / depth)) * BLUR_RADIUS;
+
+	//BLUR_DEPTH_MULT = BLUR_DEPTH_MULT * 0.333 + 0.666;
+	BLUR_DEPTH_MULT += 0.5;
+	BLUR_DEPTH_MULT = pow(BLUR_DEPTH_MULT, u_Local0.g);
+
+	if (BLUR_DEPTH_MULT * RADIUS_X < px && BLUR_DEPTH_MULT * RADIUS_Y < py)
+	{// No point...
+		return color;
+	}
+
+	int NUM_BLUR_PIXELS = 1;
+
+	for (float x = -RADIUS_X * BLUR_DEPTH_MULT; x <= RADIUS_X * BLUR_DEPTH_MULT; x += px)
+	{
+		for (float y = -RADIUS_Y * BLUR_DEPTH_MULT; y <= RADIUS_Y * BLUR_DEPTH_MULT; y += py)
+		{
+			//if (x == 0.0 && y == 0.0) continue;
+
+			float depth2 = linearize(texture2D(u_ScreenDepthMap, vec2(var_TexCoords.x + x, var_TexCoords.y + y)).r);
+
+			if (depth < BLUR_DEPTH) continue;
+
+			color.rgb += texture2D(u_DiffuseMap, vec2(var_TexCoords.x + x, var_TexCoords.y + y)).rgb;
+			NUM_BLUR_PIXELS++;
+		}
+	}
+
+	color.rgb /= NUM_BLUR_PIXELS;
+	return color;
+}
 
 void main()
 {
+#if 0
 	vec4 color;
 	/*
 	if (CURRENT_PASS_NUMBER == 0) {
@@ -341,4 +402,7 @@ void main()
 
 	gl_FragColor.rgba = color.rgba;
 	//gl_FragColor.a = 1.0;
+#else
+	gl_FragColor = DistantBlur();
+#endif
 }

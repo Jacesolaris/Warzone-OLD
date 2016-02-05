@@ -74,11 +74,8 @@ cvar_t	*r_ext_texture_filter_anisotropic;
 
 cvar_t	*r_DynamicGlow;
 cvar_t	*r_DynamicGlowPasses;
-cvar_t	*r_DynamicGlowDelta;
 cvar_t	*r_DynamicGlowIntensity;
 cvar_t	*r_DynamicGlowSoft;
-cvar_t	*r_DynamicGlowWidth;
-cvar_t	*r_DynamicGlowHeight;
 
 cvar_t	*r_ignoreGLErrors;
 cvar_t	*r_logFile;
@@ -283,11 +280,8 @@ void R_Register( void )
 	r_ext_texture_filter_anisotropic	= ri->Cvar_Get( "r_ext_texture_filter_anisotropic",	"0",						CVAR_ARCHIVE );
 	r_DynamicGlow						= ri->Cvar_Get( "r_DynamicGlow",					"0",						CVAR_ARCHIVE );
 	r_DynamicGlowPasses					= ri->Cvar_Get( "r_DynamicGlowPasses",				"5",						CVAR_ARCHIVE );
-	r_DynamicGlowDelta					= ri->Cvar_Get( "r_DynamicGlowDelta",				"0.8f",						CVAR_ARCHIVE );
 	r_DynamicGlowIntensity				= ri->Cvar_Get( "r_DynamicGlowIntensity",			"1.13f",					CVAR_ARCHIVE );
 	r_DynamicGlowSoft					= ri->Cvar_Get( "r_DynamicGlowSoft",				"1",						CVAR_ARCHIVE );
-	r_DynamicGlowWidth					= ri->Cvar_Get( "r_DynamicGlowWidth",				"320",						CVAR_ARCHIVE|CVAR_LATCH );
-	r_DynamicGlowHeight					= ri->Cvar_Get( "r_DynamicGlowHeight",				"240",						CVAR_ARCHIVE|CVAR_LATCH );
 	r_picmip							= ri->Cvar_Get( "r_picmip",							"1",						CVAR_ARCHIVE|CVAR_LATCH );
 	ri->Cvar_CheckRange( r_picmip, 0, 16, qtrue );
 	r_colorMipLevels					= ri->Cvar_Get( "r_colorMipLevels",					"0",						CVAR_LATCH );

@@ -29,6 +29,14 @@ void CG_SetWeaponHandModel(weaponInfo_t    *weaponInfo, int weaponType)
 		weaponInfo->handsModel = trap->R_RegisterModel("models/weapons2/blaster_r/blaster_hand.md3");
 	else if (weaponType == WEAPONTYPE_SNIPER)
 		weaponInfo->handsModel = trap->R_RegisterModel("models/weapons2/disruptor/disruptor_hand.md3");
+void CG_SetWeaponHandModel(weaponInfo_t	*weaponInfo, int weaponType)
+{
+	if (weaponType == WEAPONTYPE_PISTOL)
+		weaponInfo->handsModel = trap->R_RegisterModel( "models/weapons2/blaster_pistol/blaster_pistol_hand.md3" );
+	else if (weaponType == WEAPONTYPE_BLASTER || weaponType == WEAPONTYPE_NONE)
+		weaponInfo->handsModel = trap->R_RegisterModel( "models/weapons2/blaster_r/blaster_hand.md3" );
+	else if (weaponType == WEAPONTYPE_SNIPER)
+		weaponInfo->handsModel = trap->R_RegisterModel( "models/weapons2/disruptor/disruptor_hand.md3" );
 }
 
 /*

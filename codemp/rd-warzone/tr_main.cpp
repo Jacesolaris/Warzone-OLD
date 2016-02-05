@@ -1879,6 +1879,14 @@ static void R_AddEntitySurface (int entityNum)
 
 	ent = tr.currentEntity = &tr.refdef.entities[tr.currentEntityNum];
 
+	if (backEnd.refdef.rdflags & RDF_BLUR)
+	{
+		if (Distance(ent->e.origin, tr.refdef.vieworg) > 1024)
+		{// Don't draw distant entities in scope blured background view...
+			return;
+		}
+	}
+
 	ent->needDlights = qfalse;
 
 	// preshift the value we are going to OR into the drawsurf sort
