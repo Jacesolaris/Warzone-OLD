@@ -816,6 +816,9 @@ typedef struct weaponInfo_s {
 	qboolean		isBlasterCanon;
 
 	vec3_t			gunPosition;
+
+	int				barrelCount;
+	qhandle_t		barrelModels[4];
 } weaponInfo_t;
 
 

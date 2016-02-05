@@ -92,6 +92,7 @@ void CG_RegisterWeapon( int weaponNum) {
 	char			path[MAX_QPATH];
 	vec3_t			mins, maxs;
 	int				i;
+	char			extensionlessModel[MAX_QPATH];
 
 	if (weaponNum < WP_NONE) 
 	{// Missing SP weapons...
@@ -154,6 +155,40 @@ void CG_RegisterWeapon( int weaponNum) {
 	
 	// load cmodel before model so filecache works
 	weaponInfo->weaponModel = trap->R_RegisterModel(item->world_model[0]);
+
+
+	memset (weaponInfo->barrelModels, NULL_HANDLE, sizeof (weaponInfo->barrelModels));
+    COM_StripExtension (item->view_model, extensionlessModel, sizeof(extensionlessModel));
+    
+    for ( i = 0; i < 4; i++ )
+    {
+        const char *barrelModel;
+        int len;
+        qhandle_t barrel;
+
+		if( i == 0 )
+			barrelModel = va("%s_barrel.md3", extensionlessModel);
+		else
+			barrelModel = va("%s_barrel%i.md3", extensionlessModel, i+1);
+
+		len = strlen( barrelModel );
+        
+        if ( (len + 1) > MAX_QPATH )
+        {
+			trap->Print(S_COLOR_YELLOW "Warning: barrel model path %s is too long (%d chars). Max length is 63.\n", barrelModel, len);
+            break;
+        }
+        
+        barrel = trap->R_RegisterModel (barrelModel);
+
+        if ( barrel == NULL_HANDLE )
+        {
+            break;
+        }
+        
+        weaponInfo->barrelModels[i] = barrel;
+		weaponInfo->barrelCount++;
+    }
 	
 
 	// calc midpoint for rotation

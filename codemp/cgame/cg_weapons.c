@@ -399,6 +399,12 @@ static void CG_AddWeaponWithPowerups( refEntity_t *gun, int powerups ) {
 	}
 }
 
+char *barrelTags[] = {
+	"tag_barrel",
+	"tag_barrel2",
+	"tag_barrel3",
+	"tag_barrel4"
+};
 
 /*
 =============
@@ -410,7 +416,7 @@ sound should only be done on the world model case.
 =============
 */
 void CG_AddPlayerWeapon( refEntity_t *parent, playerState_t *ps, centity_t *cent, int team, vec3_t newAngles, qboolean thirdPerson ) {
-	refEntity_t				gun, hand;
+	refEntity_t				gun;
 	refEntity_t				barrel;
 	vec3_t					angles;
 	weapon_t				weaponNum;
@@ -633,8 +639,6 @@ Ghoul2 Insert Start
 		if (!parent->hModel) trap->Print("Current weapon has no hands model\n");
 		gun.renderfx = parent->renderfx;
 		gun.hModel = weapon->viewModel;
-		//trap->R_AddRefEntityToScene(parent)
-		CG_AddWeaponWithPowerups(parent, cent->currentState.powerups);
 
 		CG_PositionEntityOnTag(&gun, parent, parent->hModel, "tag_weapon");
 		if (!CG_IsMindTricked(cent->currentState.trickedentindex,
@@ -694,8 +698,27 @@ Ghoul2 Insert Start
 		}
 		else
 		{
-			// add the spinning barrel
-			if ( weapon->barrelModel ) {
+			if ( weapon->barrelCount > 0/*weapon->barrelModels[0]*/ )
+			{// Draw barrel models if any... Includes hand models if JKG weapon model...
+				int i;
+
+				for ( i = 0; i < weapon->barrelCount/*4*/; i++ )
+				{
+					if ( weapon->barrelModels[i] == NULL_HANDLE ) break;
+
+					memset (&barrel, 0, sizeof (barrel));
+					barrel.renderfx = parent->renderfx;
+					barrel.hModel = weapon->barrelModels[i];
+
+					AnglesToAxis (vec3_origin, barrel.axis);
+					CG_PositionRotatedEntityOnTag (&barrel, parent, parent->hModel, barrelTags[i]);
+
+					CG_AddWeaponWithPowerups (&barrel, cent->currentState.powerups);
+				}
+			} 
+			else if ( weapon->barrelModel ) 
+			{// add the spinning barrel
+			
 				memset( &barrel, 0, sizeof( barrel ) );
 				VectorCopy( parent->lightingOrigin, barrel.lightingOrigin );
 				barrel.shadowPlane = parent->shadowPlane;
