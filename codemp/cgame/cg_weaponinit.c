@@ -21,6 +21,16 @@ void CG_PrecacheScopes(void)
 	}
 }
 
+void CG_SetWeaponHandModel(weaponInfo_t	*weaponInfo, int weaponType)
+{
+	if (weaponType == WEAPONTYPE_PISTOL)
+		weaponInfo->handsModel = trap->R_RegisterModel( "models/weapons2/blaster_pistol/blaster_pistol_hand.md3" );
+	else if (weaponType == WEAPONTYPE_BLASTER || weaponType == WEAPONTYPE_NONE)
+		weaponInfo->handsModel = trap->R_RegisterModel( "models/weapons2/blaster_r/blaster_hand.md3" );
+	else if (weaponType == WEAPONTYPE_SNIPER)
+		weaponInfo->handsModel = trap->R_RegisterModel( "models/weapons2/disruptor/disruptor_hand.md3" );
+}
+
 /*
 =================
 CG_RegisterWeapon
@@ -214,6 +224,8 @@ void CG_RegisterWeapon( int weaponNum) {
 		break;
 
 	case WP_BRYAR_PISTOL:
+		CG_SetWeaponHandModel(weaponInfo, WEAPONTYPE_PISTOL);
+
 		weaponInfo->selectSound = trap->S_RegisterSound("sound/weapons/select_pistol.mp3");
 		weaponInfo->flashSound[0] = trap->S_RegisterSound("sound/weapons/blasters/bryar_pistol1.mp3");
 		weaponInfo->flashSound[1] = trap->S_RegisterSound("sound/weapons/blasters/bryar_pistol2.mp3");

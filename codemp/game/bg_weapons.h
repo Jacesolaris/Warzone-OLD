@@ -176,6 +176,13 @@ extern weaponData_t weaponData[WP_NUM_WEAPONS];
 
 #define	LIGHTNING_RANGE		768
 
+typedef enum { // UQ1: Used for hands model selection... Could be used for other stuff later I guess...
+	WEAPONTYPE_NONE,
+	WEAPONTYPE_PISTOL,
+	WEAPONTYPE_BLASTER,
+	WEAPONTYPE_SNIPER,
+} weaponTypes_t;
+
 typedef enum {
 	SCOPE_NONE,
 	SCOPE_BINOCULARS,
