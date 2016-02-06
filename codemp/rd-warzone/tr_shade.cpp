@@ -1213,15 +1213,28 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage)
 		}
 	}
 
-	if (pStage->bundle[TB_DIFFUSEMAP].image[0] 
-		&& (StringContainsWord(pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName, "foliage/") || StringContainsWord(pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName, "foliages/")))
-	{
-		doSway = 0.7;
-	}
-	else if (pStage->bundle[TB_DIFFUSEMAP].image[0] 
-		&& (StringContainsWord(pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName, "yavin/tree") || StringContainsWord(pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName, "trees")))
-	{
-		doSway = 0.7;
+	switch( tess.shader->surfaceFlags & MATERIAL_MASK )
+	{// Switch to avoid doing string checks on everything else...
+		case MATERIAL_SHORTGRASS:		// 5			// manicured lawn
+		case MATERIAL_LONGGRASS:		// 6			// long jungle grass
+		case MATERIAL_SOLIDWOOD:		// 1			// freshly cut timber
+		case MATERIAL_HOLLOWWOOD:		// 2			// termite infested creaky wood
+		case MATERIAL_DRYLEAVES:		// 19			// dried up leaves on the floor
+		case MATERIAL_GREENLEAVES:		// 20			// fresh leaves still on a tree
+			if (pStage->bundle[TB_DIFFUSEMAP].image[0] 
+				&& (StringContainsWord(pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName, "foliage/") || StringContainsWord(pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName, "foliages/")))
+			{
+				doSway = 0.7;
+			}
+			else if (pStage->bundle[TB_DIFFUSEMAP].image[0] 
+				&& !StringContainsWord(pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName, "bark")
+				&& (StringContainsWord(pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName, "yavin/tree") || StringContainsWord(pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName, "trees")))
+			{
+				doSway = 0.7;
+			}
+			break;
+		default:
+			break;
 	}
 
 	VectorSet4(local1, parallaxScale, (float)pStage->hasSpecular, specularScale, materialType);

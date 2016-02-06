@@ -775,13 +775,13 @@ void BASS_UpdateThread(void * aArg)
 	{
 		while (!FS_STARTUP_COMPLETE)
 		{
-			this_thread::sleep_for(chrono::milliseconds(100));
+			this_thread::sleep_for(chrono::milliseconds(1000));
 			continue;
 		}
 
 		BASS_UpdateSounds_REAL();
 
-		this_thread::sleep_for(chrono::milliseconds(1));
+		this_thread::sleep_for(chrono::milliseconds(10));
 
 		if (BASS_CheckSoundDisabled())
 		{
@@ -1322,7 +1322,7 @@ void BASS_MusicUpdateThread( void * aArg )
 
 		if (!FS_STARTUP_COMPLETE || !s_soundStarted || !s_allowDynamicMusic->integer || MUSIC_LIST_UPDATING)
 		{// wait...
-			this_thread::sleep_for(chrono::milliseconds(100));
+			this_thread::sleep_for(chrono::milliseconds(1000));
 			continue;
 		}
 
@@ -1333,7 +1333,7 @@ void BASS_MusicUpdateThread( void * aArg )
 		// Do we need a new track yet???
 		if (BASS_ChannelIsActive(MUSIC_CHANNEL.channel) == BASS_ACTIVE_PLAYING)
 		{// Still playing a track...
-			this_thread::sleep_for(chrono::milliseconds(10));
+			this_thread::sleep_for(chrono::milliseconds(1000));
 			continue;
 		}
 
@@ -1356,7 +1356,7 @@ void BASS_MusicUpdateThread( void * aArg )
 		if (BASS_MUSIC_UPDATE_THREAD_STOP)
 			break;
 
-		this_thread::sleep_for(chrono::milliseconds(10));
+		this_thread::sleep_for(chrono::milliseconds(1000));
 	}
 
 	BASS_MUSIC_UPDATE_THREAD_RUNNING = qfalse;
