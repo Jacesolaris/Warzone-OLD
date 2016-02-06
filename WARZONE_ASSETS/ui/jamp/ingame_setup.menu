@@ -1515,42 +1515,11 @@
 		
 		itemDef 
 		{	
-			name				video_ssgi
-			group				video2
-			type				ITEM_TYPE_MULTI
-			text				"SSGI (Advanced Lighting):"
-			rect				220 161 300 14
-			textalign			ITEM_ALIGN_RIGHT
-			textalignx			174
-			textaligny			0
-			font 				4
-			textscale 			1
-			forecolor		.615 .615 .956 1
-			cvarFloatList		{  @MENUS_OFF 0 "Fast Lighting Only" 1 "Fast Light & Occlusion" 2 "Fast Light & Indirect" 3 "Fast Light, Occ & Indirect" 4 "Lighting & Occlusion" 5 "Lighting & Indirect Lighting" 6 "Lighting, Occlusion & Indirect" 7 }
-			descText			"Enable Screen Space Global Illumination? (Recommend: to disable Dynamic Light as it is not needed)"
-			cvar				"r_ssgi"
-
-			mouseenter 
-			{ 
-				show			highlight15
-			}
-			mouseexit 
-			{ 
-				hide			highlight15
-			} 
-			action 
-			{
-				play			"sound/interface/button1"
-			}
-		}
-		
-		itemDef 
-		{	
 			name				video_hbao
 			group				video2
 			type				ITEM_TYPE_MULTI
 			text				"HBAO:"
-			rect				220 181 300 14
+			rect				220 161 300 14
 			textalign			ITEM_ALIGN_RIGHT
 			textalignx			174
 			textaligny			0
@@ -1563,11 +1532,11 @@
 
 			mouseenter 
 			{ 
-				show			highlight16
+				show			highlight15
 			}
 			mouseexit 
 			{ 
-				hide			highlight16
+				hide			highlight15
 			} 
 			action 
 			{
@@ -1589,7 +1558,7 @@
 				"Standard Volumetric" 2
 				"Quality Volumetric" 3
 			}
-			rect				220 201 340 14
+			rect				220 181 340 14
 	   		textalign			ITEM_ALIGN_RIGHT
 			textalignx			174
 			textaligny			0
@@ -1599,6 +1568,43 @@
 			visible				0
 			// appearance_slot		1
 			descText			"Select prefered lighting model."
+			action 
+			{ 
+				play			"sound/interface/button1"
+			}
+
+			mouseenter 
+			{ 
+				show			highlight16
+			}
+			mouseexit 
+			{ 
+				hide			highlight16
+			} 
+		}
+
+		itemDef 
+		{			
+			name				wall_marks
+			group				video2
+      		type				ITEM_TYPE_MULTI
+			text				@MENUS_WALL_MARKS
+			cvar				"cg_marks"	
+			cvarFloatList		
+			{ 
+				@MENUS_OFF 0  
+				@MENUS_ON 1 
+			}
+			rect				220 201 300 14
+	   		textalign			ITEM_ALIGN_RIGHT
+			textalignx			174
+			textaligny			0
+			font 				4
+			textscale 			1
+			forecolor		.615 .615 .956 1
+			visible				0
+			// appearance_slot		1
+			descText			@MENUS_TOGGLE_TO_DISPLAY_SCORCH
 			action 
 			{ 
 				play			"sound/interface/button1"
@@ -1616,83 +1622,11 @@
 
 		itemDef 
 		{	
-			name				light_flares
-			group				video2
-      		type				ITEM_TYPE_MULTI
-			text				@MENUS_LIGHT_FLARES
-			cvar				r_flares
-			cvarFloatList		
-			{  
-				@MENUS_OFF 	0 
-				@MENUS_ON 	1 
-			}
-			rect				220 221 340 14
-	   		textalign			ITEM_ALIGN_RIGHT
-			textalignx			174
-			textaligny			0
-			font 				4
-			textscale 			1
-			forecolor			.615 .615 .956 1
-			visible				0
-			descText			@MENUS_TOGGLE_TO_SHOW_HALOS
-			action
-			{ 
-				play			"sound/interface/button1"
-			}
-			mouseenter 
-			{ 
-				show			highlight18
-			}
-			mouseexit 
-			{ 
-				hide			highlight18
-			} 
-		}
-
-		itemDef 
-		{			
-			name				wall_marks
-			group				video2
-      		type				ITEM_TYPE_MULTI
-			text				@MENUS_WALL_MARKS
-			cvar				"cg_marks"	
-			cvarFloatList		
-			{ 
-				@MENUS_OFF 0  
-				@MENUS_ON 1 
-			}
-			rect				220 241 300 14
-	   		textalign			ITEM_ALIGN_RIGHT
-			textalignx			174
-			textaligny			0
-			font 				4
-			textscale 			1
-			forecolor		.615 .615 .956 1
-			visible				0
-			// appearance_slot		1
-			descText			@MENUS_TOGGLE_TO_DISPLAY_SCORCH
-			action 
-			{ 
-				play			"sound/interface/button1"
-			}
-
-			mouseenter 
-			{ 
-				show			highlight19
-			}
-			mouseexit 
-			{ 
-				hide			highlight19
-			} 
-		}
-
-		itemDef 
-		{	
 			name				video_enhancedFX
 			group				video2
 			type				ITEM_TYPE_MULTI
 			text				"Enhanced FX:"
-			rect				220 261 300 14
+			rect				220 221 300 14
 			textalign			ITEM_ALIGN_RIGHT
 			textalignx			174
 			textaligny			0
@@ -1705,11 +1639,11 @@
 
 			mouseenter 
 			{ 
-				show			highlight20
+				show			highlight18
 			}
 			mouseexit 
 			{ 
-				hide			highlight20
+				hide			highlight18
 			} 
 			action 
 			{
@@ -1761,13 +1695,13 @@
 				hide			highlight1
 			} 
 		}
-		
+
 		itemDef 
 		{	
-			name				video_bloom
+			name				video_anamorphic
 			group				video_advanced
 			type				ITEM_TYPE_MULTI
-			text				"Bloom:"
+			text				"Anamorphic Lens Flares:"
 			rect				220 63 300 20
 			textalign			ITEM_ALIGN_RIGHT
 			textalignx			165
@@ -1776,8 +1710,8 @@
 			textscale 			1
 			forecolor		.615 .615 .956 1
 			cvarFloatList		{  @MENUS_OFF 0 @MENUS_ON 1 }
-			descText			"Enable bloom?"
-			cvar				"r_bloom"
+			descText			"Enable anamorphic lens flares?"
+			cvar				"r_anamorphic"
 
 			mouseenter 
 			{ 
@@ -1795,10 +1729,10 @@
 		
 		itemDef 
 		{	
-			name				video_anamorphic
+			name				video_darkxpand
 			group				video_advanced
 			type				ITEM_TYPE_MULTI
-			text				"Anamorphic Lens Flares:"
+			text				"Dark Xpand:"
 			rect				220 83 300 20
 			textalign			ITEM_ALIGN_RIGHT
 			textalignx			165
@@ -1807,8 +1741,8 @@
 			textscale 			1
 			forecolor		.615 .615 .956 1
 			cvarFloatList		{  @MENUS_OFF 0 @MENUS_ON 1 }
-			descText			"Enable anamorphic lens flares?"
-			cvar				"r_anamorphic"
+			descText			"Enable dark xpand technology?"
+			cvar				"r_darkexpand"
 
 			mouseenter 
 			{ 
@@ -1826,10 +1760,10 @@
 		
 		itemDef 
 		{	
-			name				video_darkxpand
+			name				video_truehdr
 			group				video_advanced
 			type				ITEM_TYPE_MULTI
-			text				"Dark Xpand:"
+			text				"True HDR:"
 			rect				220 103 300 20
 			textalign			ITEM_ALIGN_RIGHT
 			textalignx			165
@@ -1838,8 +1772,8 @@
 			textscale 			1
 			forecolor		.615 .615 .956 1
 			cvarFloatList		{  @MENUS_OFF 0 @MENUS_ON 1 }
-			descText			"Enable dark xpand technology?"
-			cvar				"r_darkexpand"
+			descText			"Enable True HDR technology?"
+			cvar				"r_truehdr"
 
 			mouseenter 
 			{ 
@@ -1857,10 +1791,10 @@
 		
 		itemDef 
 		{	
-			name				video_truehdr
+			name				video_esharpen
 			group				video_advanced
 			type				ITEM_TYPE_MULTI
-			text				"True HDR:"
+			text				"E-Sharpen:"
 			rect				220 123 300 20
 			textalign			ITEM_ALIGN_RIGHT
 			textalignx			165
@@ -1869,8 +1803,8 @@
 			textscale 			1
 			forecolor		.615 .615 .956 1
 			cvarFloatList		{  @MENUS_OFF 0 @MENUS_ON 1 }
-			descText			"Enable True HDR technology?"
-			cvar				"r_truehdr"
+			descText			"Enable E-Sharpen technology?"
+			cvar				"r_esharpening"
 
 			mouseenter 
 			{ 
@@ -1888,10 +1822,10 @@
 		
 		itemDef 
 		{	
-			name				video_dof
+			name				video_magicdetail
 			group				video_advanced
 			type				ITEM_TYPE_MULTI
-			text				"Depth Of Field:"
+			text				"Magic Detail:"
 			rect				220 143 300 20
 			textalign			ITEM_ALIGN_RIGHT
 			textalignx			165
@@ -1899,9 +1833,9 @@
 			font 				4
 			textscale 			1
 			forecolor		.615 .615 .956 1
-			cvarFloatList		{  @MENUS_OFF 0 "Fast Static" 1 "Fast Cinematic" 2 "Enhanced Static" 3 "Enhanced Cinematic" 4 }
-			descText			"Enable depth Of field technology?"
-			cvar				"r_dof"
+			cvarFloatList		{  @MENUS_OFF 0 @MENUS_ON 1 }
+			descText			"Enable Magic Detail?"
+			cvar				"r_magicdetail"
 
 			mouseenter 
 			{ 
@@ -1919,10 +1853,10 @@
 		
 		itemDef 
 		{	
-			name				video_esharpen
+			name				video_anaglyph
 			group				video_advanced
 			type				ITEM_TYPE_MULTI
-			text				"E-Sharpen:"
+			text				"Stereo Vision (anaglyph):"
 			rect				220 163 300 20
 			textalign			ITEM_ALIGN_RIGHT
 			textalignx			165
@@ -1930,9 +1864,9 @@
 			font 				4
 			textscale 			1
 			forecolor		.615 .615 .956 1
-			cvarFloatList		{  @MENUS_OFF 0 @MENUS_ON 1 }
-			descText			"Enable E-Sharpen technology?"
-			cvar				"r_esharpening"
+			cvarFloatList		{  @MENUS_OFF 0 "Simple 3D" 1 "Real 3D" 2 }
+			descText			"Enable Stereo Vision?"
+			cvar				"r_trueanaglyph"
 
 			mouseenter 
 			{ 
@@ -1949,106 +1883,13 @@
 		}
 		
 		itemDef 
-		{	
-			name				video_krisp
-			group				video_advanced
-			type				ITEM_TYPE_MULTI
-			text				"Krisp:"
-			rect				220 183 300 20
-			textalign			ITEM_ALIGN_RIGHT
-			textalignx			165
-			textaligny			0
-			font 				4
-			textscale 			1
-			forecolor		.615 .615 .956 1
-			cvarFloatList		{  @MENUS_OFF 0 @MENUS_ON 1 }
-			descText			"Enable Krisp technology?"
-			cvar				"r_esharpening2"
-
-			mouseenter 
-			{ 
-				show			highlight8
-			}
-			mouseexit 
-			{ 
-				hide			highlight8
-			} 
-			action 
-			{
-				play			"sound/interface/button1"
-			}
-		}
-		
-		itemDef 
-		{	
-			name				video_magicdetail
-			group				video_advanced
-			type				ITEM_TYPE_MULTI
-			text				"Magic Detail:"
-			rect				220 203 300 20
-			textalign			ITEM_ALIGN_RIGHT
-			textalignx			165
-			textaligny			0
-			font 				4
-			textscale 			1
-			forecolor		.615 .615 .956 1
-			cvarFloatList		{  @MENUS_OFF 0 @MENUS_ON 1 }
-			descText			"Enable Magic Detail?"
-			cvar				"r_magicdetail"
-
-			mouseenter 
-			{ 
-				show			highlight9
-			}
-			mouseexit 
-			{ 
-				hide			highlight9
-			} 
-			action 
-			{
-				play			"sound/interface/button1"
-			}
-		}
-		
-		itemDef 
-		{	
-			name				video_anaglyph
-			group				video_advanced
-			type				ITEM_TYPE_MULTI
-			text				"Stereo Vision (anaglyph):"
-			rect				220 223 300 20
-			textalign			ITEM_ALIGN_RIGHT
-			textalignx			165
-			textaligny			0
-			font 				4
-			textscale 			1
-			forecolor		.615 .615 .956 1
-			cvarFloatList		{  @MENUS_OFF 0 "Simple 3D" 1 "Real 3D" 2 }
-			descText			"Enable Stereo Vision?"
-			cvar				"r_trueanaglyph"
-
-			mouseenter 
-			{ 
-				show			highlight10
-			}
-			mouseexit 
-			{ 
-				hide			highlight10
-			} 
-			action 
-			{
-				play			"sound/interface/button1"
-			}
-		}
-		
-		itemDef 
 		{
 			name				video_anaglyphseparation
 			group				video_advanced
 			type				ITEM_TYPE_SLIDER
 			text				"Stereo Vision Separation:"
 			cvarfloat			"r_trueAnaglyphSeparation" 3 1 30
-			rect				220 243 300 20
+			rect				220 183 300 20
 			textalign			ITEM_ALIGN_RIGHT
 			textalignx			174
 			textaligny			0
@@ -2066,11 +1907,11 @@
 
 			mouseenter 
 			{ 
-				show			highlight11
+				show			highlight8
 			}
 			mouseexit 
 			{ 
-				hide			highlight11
+				hide			highlight8
 			} 
 		}
 		
@@ -2081,7 +1922,7 @@
 			type				ITEM_TYPE_SLIDER
 			text				"Vibrancy:"
 			cvarfloat			"r_vibrancy" .4 0 1
-			rect				220 263 300 20
+			rect				220 203 300 20
 			textalign			ITEM_ALIGN_RIGHT
 			textalignx			174
 			textaligny			0
@@ -2099,11 +1940,11 @@
 
 			mouseenter 
 			{ 
-				show			highlight12
+				show			highlight9
 			}
 			mouseexit 
 			{ 
-				hide			highlight12
+				hide			highlight9
 			} 
 		}
 		
@@ -2116,267 +1957,11 @@
 
 		itemDef 
 		{	
-			name				video_depth
-			group				video_advanced2
-			type				ITEM_TYPE_MULTI
-			text				"Depth Xpand"
-			rect				220 43 300 20
-			textalign			ITEM_ALIGN_RIGHT
-			textalignx			165
-			textaligny			0
-			font 				4
-			textscale 			1
-			forecolor		.615 .615 .956 1
-			cvarFloatList		{  @MENUS_OFF 0 @MENUS_ON 1 }
-			descText			"Enable Depth Xpand Technology?"
-			cvar				"r_depth"
-
-			mouseenter 
-			{ 
-				show			highlight1
-			}
-			mouseexit 
-			{ 
-				hide			highlight1
-			} 
-			action 
-			{
-				play			"sound/interface/button1"
-			}
-		}
-		
-		itemDef 
-		{
-			name				video_depthpasses
-			group				video_advanced2
-			type				ITEM_TYPE_SLIDER
-			text				"Depth Xpand Strength"
-			cvarfloat			"r_depthpasses" 2 2 8
-			rect				220 63 300 20
-			textalign			ITEM_ALIGN_RIGHT
-			textalignx			174
-			textaligny			0
-			font 				4
-			textscale 			1
-			forecolor		.615 .615 .956 1
-
-
-			descText			"Set the Depth Xpand Technology stength (by running more passes). Set low for more FPS, high for more depth."
-			
-			action 
-			{ 
-				play			"sound/interface/button1"
-			}
-
-			mouseenter 
-			{ 
-				show			highlight2
-			}
-			mouseexit 
-			{ 
-				hide			highlight2
-			} 
-		}
-		
-		itemDef 
-		{	
-			name				video_textureclean
-			group				video_advanced2
-			type				ITEM_TYPE_MULTI
-			text				"Texture Clean Technology"
-			rect				220 83 300 20
-			textalign			ITEM_ALIGN_RIGHT
-			textalignx			165
-			textaligny			0
-			font 				4
-			textscale 			1
-			forecolor		.615 .615 .956 1
-			cvarFloatList		{  @MENUS_OFF 0 @MENUS_ON 1 }
-			descText			"Enable Texture Cleaning Technology?"
-			cvar				"r_textureclean"
-
-			mouseenter 
-			{ 
-				show			highlight3
-			}
-			mouseexit 
-			{ 
-				hide			highlight3
-			} 
-			action 
-			{
-				play			"sound/interface/button1"
-			}
-		}
-		
-		itemDef 
-		{
-			name				video_texturecleansigmaa
-			group				video_advanced2
-			type				ITEM_TYPE_SLIDER
-			text				"Texture Clean Sigma A"
-			cvarfloat			"r_textureCleanSigma" 1.2 0.1 4.0
-			rect				220 103 300 20
-			textalign			ITEM_ALIGN_RIGHT
-			textalignx			174
-			textaligny			0
-			font 				4
-			textscale 			1
-			forecolor		.615 .615 .956 1
-
-
-			descText			"Set the Texture Cleaning Technology Sigma A."
-			
-			action 
-			{ 
-				play			"sound/interface/button1"
-			}
-
-			mouseenter 
-			{ 
-				show			highlight4
-			}
-			mouseexit 
-			{ 
-				hide			highlight4
-			} 
-		}
-		
-		itemDef 
-		{
-			name				video_texturecleansigmab
-			group				video_advanced2
-			type				ITEM_TYPE_SLIDER
-			text				"Texture Clean Sigma B"
-			cvarfloat			"r_textureCleanBSigma" 0.1 0.01 1.0
-			rect				220 123 300 20
-			textalign			ITEM_ALIGN_RIGHT
-			textalignx			174
-			textaligny			0
-			font 				4
-			textscale 			1
-			forecolor		.615 .615 .956 1
-
-
-			descText			"Set the Texture Cleaning Technology Sigma B."
-			
-			action 
-			{ 
-				play			"sound/interface/button1"
-			}
-
-			mouseenter 
-			{ 
-				show			highlight5
-			}
-			mouseexit 
-			{ 
-				hide			highlight5
-			} 
-		}
-		
-		itemDef 
-		{
-			name				video_texturecleansize
-			group				video_advanced2
-			type				ITEM_TYPE_SLIDER
-			text				"Texture Clean Sample Size"
-			cvarfloat			"r_textureCleanMSize" 6.0 1.0 12.0
-			rect				220 143 300 20
-			textalign			ITEM_ALIGN_RIGHT
-			textalignx			174
-			textaligny			0
-			font 				4
-			textscale 			1
-			forecolor		.615 .615 .956 1
-
-
-			descText			"Set the Texture Cleaning Technology Size."
-			
-			action 
-			{ 
-				play			"sound/interface/button1"
-			}
-
-			mouseenter 
-			{ 
-				show			highlight6
-			}
-			mouseexit 
-			{ 
-				hide			highlight6
-			} 
-		}
-		
-		itemDef 
-		{	
-			name				video_lensflare
-			group				video_advanced2
-			type				ITEM_TYPE_MULTI
-			text				"Lens Flares:"
-			rect				220 163 300 20
-			textalign			ITEM_ALIGN_RIGHT
-			textalignx			165
-			textaligny			0
-			font 				4
-			textscale 			1
-			forecolor		.615 .615 .956 1
-			cvarFloatList		{  @MENUS_OFF 0 @MENUS_ON 1 }
-			descText			"Enable Lens Flares?"
-			cvar				"r_lensflare"
-
-			mouseenter 
-			{ 
-				show			highlight7
-			}
-			mouseexit 
-			{ 
-				hide			highlight7
-			} 
-			action 
-			{
-				play			"sound/interface/button1"
-			}
-		}
-		
-		itemDef 
-		{	
-			name				video_rbm
-			group				video_advanced2
-			type				ITEM_TYPE_MULTI
-			text				"Reflective Bump Mapping:"
-			rect				220 183 300 20
-			textalign			ITEM_ALIGN_RIGHT
-			textalignx			165
-			textaligny			0
-			font 				4
-			textscale 			1
-			forecolor		.615 .615 .956 1
-			cvarFloatList		{  @MENUS_OFF 0 @MENUS_ON 1 }
-			descText			"Enable Reflective Bump Mapping?"
-			cvar				"r_rbm"
-
-			mouseenter 
-			{ 
-				show			highlight8
-			}
-			mouseexit 
-			{ 
-				hide			highlight8
-			} 
-			action 
-			{
-				play			"sound/interface/button1"
-			}
-		}
-		
-		itemDef 
-		{	
 			name				video_cubemapping
 			group				video_advanced2
 			type				ITEM_TYPE_MULTI
 			text				"Cube Mapping"
-			rect				220 203 300 20
+			rect				220 43 300 20
 			textalign			ITEM_ALIGN_RIGHT
 			textalignx			165
 			textaligny			0
@@ -2389,11 +1974,11 @@
 
 			mouseenter 
 			{ 
-				show			highlight9
+				show			highlight1
 			}
 			mouseexit 
 			{ 
-				hide			highlight9
+				hide			highlight1
 			} 
 			action 
 			{
@@ -2410,7 +1995,7 @@
 			group				video_advanced2
 			type				ITEM_TYPE_MULTI
 			text				"Cube Map Detail"
-			rect				220 223 300 20
+			rect				220 63 300 20
 			textalign			ITEM_ALIGN_RIGHT
 			textalignx			165
 			textaligny			0
@@ -2423,11 +2008,11 @@
 
 			mouseenter 
 			{ 
-				show			highlight10
+				show			highlight2
 			}
 			mouseexit 
 			{ 
-				hide			highlight10
+				hide			highlight2
 			} 
 			action 
 			{
@@ -2447,7 +2032,7 @@
 			cvarTest			r_ext_texture_filter_anisotropic_avail
 			disableCvar			{ 0 }     
 			cvarfloat				r_ext_texture_filter_anisotropic 1 0 16
-			rect				220 243 300 20
+			rect				220 83 300 20
 			textalign			ITEM_ALIGN_RIGHT
 			textalignx			174
 			textaligny			0
@@ -2467,11 +2052,11 @@
 
 			mouseenter 
 			{ 
-				show			highlight11
+				show			highlight3
 			}
 			mouseexit 
 			{ 
-				hide			highlight11
+				hide			highlight3
 			} 
 		}
 		
