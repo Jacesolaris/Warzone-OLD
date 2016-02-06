@@ -1948,20 +1948,13 @@
 			} 
 		}
 		
-		
-    //----------------------------------------------------------------------------------------------
-		//
-		//	ADVANCED VIDEO 2 MENU BUTTONS
-		//
-		//----------------------------------------------------------------------------------------------
-
 		itemDef 
 		{	
 			name				video_cubemapping
-			group				video_advanced2
+			group				video_advanced
 			type				ITEM_TYPE_MULTI
 			text				"Cube Mapping"
-			rect				220 43 300 20
+			rect				220 223 300 20
 			textalign			ITEM_ALIGN_RIGHT
 			textalignx			165
 			textaligny			0
@@ -1974,11 +1967,11 @@
 
 			mouseenter 
 			{ 
-				show			highlight1
+				show			highlight10
 			}
 			mouseexit 
 			{ 
-				hide			highlight1
+				hide			highlight10
 			} 
 			action 
 			{
@@ -1992,10 +1985,10 @@
 		itemDef 
 		{	
 			name				video_cubemappingsize
-			group				video_advanced2
+			group				video_advanced
 			type				ITEM_TYPE_MULTI
 			text				"Cube Map Detail"
-			rect				220 63 300 20
+			rect				220 243 300 20
 			textalign			ITEM_ALIGN_RIGHT
 			textalignx			165
 			textaligny			0
@@ -2008,11 +2001,11 @@
 
 			mouseenter 
 			{ 
-				show			highlight2
+				show			highlight11
 			}
 			mouseexit 
 			{ 
-				hide			highlight2
+				hide			highlight11
 			} 
 			action 
 			{
@@ -2023,15 +2016,85 @@
 			}
 		}
 		
+		//----------------------------------------------------------------------------------------------
+		//
+		//	ADVANCED VIDEO 2 MENU BUTTONS
+		//
+		//----------------------------------------------------------------------------------------------
+
+		
 		itemDef 
 		{	
-			name				video_anisotropic
+			name				video_foliageDensity
+			group				video_advanced2
+			type				ITEM_TYPE_MULTI
+			text				"Foliage Density"
+			cvar				"cg_foliageDensity"
+			cvarFloatList		{ "0" 0.0 "16" 16.0 "32" 32.0 "64" 64.0 "96" 96.0 "128" 128.0 "192" 192.0 "256" 256.0 "512" 512.0 }
+			rect				220 43 300 20
+			textalign			ITEM_ALIGN_RIGHT
+			textalignx			174
+			textaligny			0
+			font 				4
+			textscale 			1
+			forecolor		.615 .615 .956 1
+
+			descText			"Removes grasses and plants within this range of each other. Higher settings improve FPS, lower improves quality."
+			
+			action 
+			{ 
+				play			"sound/interface/button1"
+			}
+
+			mouseenter 
+			{ 
+				show			highlight1
+			}
+			mouseexit 
+			{ 
+				hide			highlight1
+			} 
+		}
+		
+		itemDef 
+		{	
+			name				video_foliageMinFoliageScale
 			group				video_advanced2
 			type				ITEM_TYPE_SLIDER
-			text				@MENUS_ANISOTROPIC_FILTERING
-			cvarTest			r_ext_texture_filter_anisotropic_avail
-			disableCvar			{ 0 }     
-			cvarfloat				r_ext_texture_filter_anisotropic 1 0 16
+			text				"Foliage Minimum Size"
+			cvarfloat			"cg_foliageMinFoliageScale" 0.3 0.0 1.0
+			rect				220 63 300 20
+			textalign			ITEM_ALIGN_RIGHT
+			textalignx			174
+			textaligny			0
+			font 				4
+			textscale 			1
+			forecolor		.615 .615 .956 1
+
+			descText			"Minimum size of grass and plant models to draw. Higher settings improve FPS, lower improves quality."
+			
+			action 
+			{ 
+				play			"sound/interface/button1"
+			}
+
+			mouseenter 
+			{ 
+				show			highlight2
+			}
+			mouseexit 
+			{ 
+				hide			highlight2
+			} 
+		}
+		
+		itemDef 
+		{	
+			name				video_foliageGrassRangeMult
+			group				video_advanced2
+			type				ITEM_TYPE_SLIDER
+			text				"Foliage Grass Range"
+			cvarfloat			"cg_foliageGrassRangeMult" 5.5 0 20.0
 			rect				220 83 300 20
 			textalign			ITEM_ALIGN_RIGHT
 			textalignx			174
@@ -2039,11 +2102,8 @@
 			font 				4
 			textscale 			1
 			forecolor		.615 .615 .956 1
-			visible			0
-			// appearance_slot		5
 
-			//descText			@MENUS_TOGGLE_ADVANCED_TEXTURE
-			descText			"Screen space anisotropic filter. Reduce to improve FPS at the cost of visual quality."
+			descText			"Max range at which to draw grasses and plants. Lower settings improve FPS, higher improve visible range."
 			
 			action 
 			{ 
@@ -2057,6 +2117,70 @@
 			mouseexit 
 			{ 
 				hide			highlight3
+			} 
+		}
+		
+		itemDef 
+		{	
+			name				video_foliageTreeRangeMult
+			group				video_advanced2
+			type				ITEM_TYPE_SLIDER
+			text				"Foliage Tree Range"
+			cvarfloat			"cg_foliageTreeRangeMult" 32.0 8.0 128.0
+			rect				220 103 300 20
+			textalign			ITEM_ALIGN_RIGHT
+			textalignx			174
+			textaligny			0
+			font 				4
+			textscale 			1
+			forecolor		.615 .615 .956 1
+
+			descText			"Max range at which to draw trees. Lower settings improve FPS, higher improve visible range."
+			
+			action 
+			{ 
+				play			"sound/interface/button1"
+			}
+
+			mouseenter 
+			{ 
+				show			highlight4
+			}
+			mouseexit 
+			{ 
+				hide			highlight4
+			} 
+		}
+		
+		itemDef 
+		{	
+			name				video_foliageTreeBillboardRangeMult
+			group				video_advanced2
+			type				ITEM_TYPE_SLIDER
+			text				"Foliage Tree Billboard Range"
+			cvarfloat			"cg_foliageTreeBillboardRangeMult" 6.5 4.0 16.0
+			rect				220 123 300 20
+			textalign			ITEM_ALIGN_RIGHT
+			textalignx			174
+			textaligny			0
+			font 				4
+			textscale 			1
+			forecolor		.615 .615 .956 1
+
+			descText			"Range at which to draw billboards instead of tree models. Lower settings improve FPS, higher improve quality."
+			
+			action 
+			{ 
+				play			"sound/interface/button1"
+			}
+
+			mouseenter 
+			{ 
+				show			highlight5
+			}
+			mouseexit 
+			{ 
+				hide			highlight5
 			} 
 		}
 		
