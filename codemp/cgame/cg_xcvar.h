@@ -216,6 +216,7 @@ XCVAR_DEF(warzone_waypoint_render,					"0",					NULL, CVAR_ARCHIVE)
 XCVAR_DEF(cg_enhancedFX,						"1",					NULL, CVAR_ARCHIVE)
 XCVAR_DEF(cg_trueLightning,						"1",					NULL, CVAR_ARCHIVE)
 //[/New EFX System]
+XCVAR_DEF(cg_foliageDetail,							"3",				NULL, CVAR_ARCHIVE)
 XCVAR_DEF(cg_foliageDensity,						"64.0",				NULL, CVAR_ARCHIVE)
 XCVAR_DEF(cg_foliageMinFoliageScale,				"0.3",				NULL, CVAR_ARCHIVE)
 XCVAR_DEF(cg_foliageGrassRangeMult,					"5.5",				NULL, CVAR_ARCHIVE)

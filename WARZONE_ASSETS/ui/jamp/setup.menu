@@ -2056,15 +2056,15 @@
 		//
 		//----------------------------------------------------------------------------------------------
 
-		
-		itemDef 
+
+    itemDef 
 		{	
-			name				video_foliageDensity
+			name				video_foliageDetail
 			group				video_advanced2
 			type				ITEM_TYPE_MULTI
-			text				"Foliage Density"
-			cvar				"cg_foliageDensity"
-			cvarFloatList		{ "0" 0.0 "16" 16.0 "32" 32.0 "64" 64.0 "96" 96.0 "128" 128.0 "192" 192.0 "256" 256.0 "512" 512.0 }
+			text				"Foliage Detail"
+			cvar				"cg_foliageDetail"
+			cvarFloatList		{ "Lowest Quality" 0 "Medium Quality" 1 "High Quality" 2 "Ultra-High Quality" 3 }
 			rect				220 43 300 20
 			textalign			ITEM_ALIGN_RIGHT
 			textalignx			174
@@ -2073,7 +2073,7 @@
 			textscale 			1
 			forecolor		.615 .615 .956 1
 
-			descText			"Removes grasses and plants within this range of each other. Higher settings improve FPS, lower improves quality."
+			descText			"Quality and density of grasses and plants. Lower settings improve FPS, higher improves quality."
 			
 			action 
 			{ 
@@ -2092,11 +2092,12 @@
 		
 		itemDef 
 		{	
-			name				video_foliageMinFoliageScale
+			name				video_foliageDensity
 			group				video_advanced2
-			type				ITEM_TYPE_SLIDER
-			text				"Foliage Minimum Size"
-			cvarfloat			"cg_foliageMinFoliageScale" 0.3 0.0 1.0
+			type				ITEM_TYPE_MULTI
+			text				"Foliage Density"
+			cvar				"cg_foliageDensity"
+			cvarFloatList		{ "0" 0.0 "16" 16.0 "32" 32.0 "64" 64.0 "96" 96.0 "128" 128.0 "192" 192.0 "256" 256.0 "512" 512.0 }
 			rect				220 63 300 20
 			textalign			ITEM_ALIGN_RIGHT
 			textalignx			174
@@ -2105,7 +2106,7 @@
 			textscale 			1
 			forecolor		.615 .615 .956 1
 
-			descText			"Minimum size of grass and plant models to draw. Higher settings improve FPS, lower improves quality."
+			descText			"Removes grasses and plants within this range of each other. Higher settings improve FPS, lower improves quality."
 			
 			action 
 			{ 
@@ -2124,11 +2125,11 @@
 		
 		itemDef 
 		{	
-			name				video_foliageGrassRangeMult
+			name				video_foliageMinFoliageScale
 			group				video_advanced2
 			type				ITEM_TYPE_SLIDER
-			text				"Foliage Grass Range"
-			cvarfloat			"cg_foliageGrassRangeMult" 5.5 0 20.0
+			text				"Foliage Minimum Size"
+			cvarfloat			"cg_foliageMinFoliageScale" 0.3 0.0 1.0
 			rect				220 83 300 20
 			textalign			ITEM_ALIGN_RIGHT
 			textalignx			174
@@ -2137,7 +2138,7 @@
 			textscale 			1
 			forecolor		.615 .615 .956 1
 
-			descText			"Max range at which to draw grasses and plants. Lower settings improve FPS, higher improve visible range."
+			descText			"Minimum size of grass and plant models to draw. Higher settings improve FPS, lower improves quality."
 			
 			action 
 			{ 
@@ -2156,11 +2157,11 @@
 		
 		itemDef 
 		{	
-			name				video_foliageTreeRangeMult
+			name				video_foliageGrassRangeMult
 			group				video_advanced2
 			type				ITEM_TYPE_SLIDER
-			text				"Foliage Tree Range"
-			cvarfloat			"cg_foliageTreeRangeMult" 32.0 8.0 128.0
+			text				"Foliage Grass Range"
+			cvarfloat			"cg_foliageGrassRangeMult" 5.5 0 20.0
 			rect				220 103 300 20
 			textalign			ITEM_ALIGN_RIGHT
 			textalignx			174
@@ -2169,7 +2170,7 @@
 			textscale 			1
 			forecolor		.615 .615 .956 1
 
-			descText			"Max range at which to draw trees. Lower settings improve FPS, higher improve visible range."
+			descText			"Max range at which to draw grasses and plants. Lower settings improve FPS, higher improve visible range."
 			
 			action 
 			{ 
@@ -2188,12 +2189,44 @@
 		
 		itemDef 
 		{	
+			name				video_foliageTreeRangeMult
+			group				video_advanced2
+			type				ITEM_TYPE_SLIDER
+			text				"Foliage Tree Range"
+			cvarfloat			"cg_foliageTreeRangeMult" 32.0 8.0 128.0
+			rect				220 123 300 20
+			textalign			ITEM_ALIGN_RIGHT
+			textalignx			174
+			textaligny			0
+			font 				4
+			textscale 			1
+			forecolor		.615 .615 .956 1
+
+			descText			"Max range at which to draw trees. Lower settings improve FPS, higher improve visible range."
+			
+			action 
+			{ 
+				play			"sound/interface/button1"
+			}
+
+			mouseenter 
+			{ 
+				show			highlight5
+			}
+			mouseexit 
+			{ 
+				hide			highlight5
+			} 
+		}
+		
+		itemDef 
+		{	
 			name				video_foliageTreeBillboardRangeMult
 			group				video_advanced2
 			type				ITEM_TYPE_SLIDER
 			text				"Foliage Tree Billboard Range"
 			cvarfloat			"cg_foliageTreeBillboardRangeMult" 6.5 4.0 16.0
-			rect				220 123 300 20
+			rect				220 143 300 20
 			textalign			ITEM_ALIGN_RIGHT
 			textalignx			174
 			textaligny			0
@@ -2210,11 +2243,11 @@
 
 			mouseenter 
 			{ 
-				show			highlight5
+				show			highlight6
 			}
 			mouseexit 
 			{ 
-				hide			highlight5
+				hide			highlight6
 			} 
 		}
 		

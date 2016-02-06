@@ -746,7 +746,15 @@ extern "C" {
 
 				re.origin[2] += 8.0 * (1.0 - FOLIAGE_PLANT_SCALE[num]);
 
-				re.hModel = FOLIAGE_PLANT_MODEL[0];
+				// Allow user to adjust level of foliage detail by adjusting md3 lods...
+				if (cg_foliageDetail.integer >= 3)
+					re.hModel = FOLIAGE_PLANT_MODEL[0];
+				else if (cg_foliageDetail.integer >= 2)
+					re.hModel = FOLIAGE_PLANT_MODEL[1];
+				else if (cg_foliageDetail.integer >= 1)
+					re.hModel = FOLIAGE_PLANT_MODEL[2];
+				else
+					re.hModel = FOLIAGE_PLANT_MODEL[3];
 
 				VectorSet(re.modelScale, PLANT_SCALE, PLANT_SCALE, PLANT_SCALE);
 
@@ -772,15 +780,38 @@ extern "C" {
 
 				re.customShader = FOLIAGE_GRASS_BILLBOARD_SHADER[0];
 				
-
-				if (dist < FOLIAGE_AREA_SIZE*1.5)
-					re.hModel = FOLIAGE_PLANT_MODEL[0];
-				else if (dist < FOLIAGE_AREA_SIZE*2.75)
-					re.hModel = FOLIAGE_PLANT_MODEL[1];
-				else if (dist < FOLIAGE_AREA_SIZE*3.5)
-					re.hModel = FOLIAGE_PLANT_MODEL[2];
+				// Allow user to adjust level of foliage detail by adjusting md3 lods...
+				if (cg_foliageDetail.integer >= 3)
+				{
+					if (dist < FOLIAGE_AREA_SIZE*1.5)
+						re.hModel = FOLIAGE_PLANT_MODEL[0];
+					else if (dist < FOLIAGE_AREA_SIZE*2.75)
+						re.hModel = FOLIAGE_PLANT_MODEL[1];
+					else if (dist < FOLIAGE_AREA_SIZE*3.5)
+						re.hModel = FOLIAGE_PLANT_MODEL[2];
+					else
+						re.hModel = FOLIAGE_PLANT_MODEL[3];
+				}
+				else if (cg_foliageDetail.integer >= 2)
+				{
+					if (dist < FOLIAGE_AREA_SIZE*1.5)
+						re.hModel = FOLIAGE_PLANT_MODEL[1];
+					else if (dist < FOLIAGE_AREA_SIZE*2.75)
+						re.hModel = FOLIAGE_PLANT_MODEL[2];
+					else
+						re.hModel = FOLIAGE_PLANT_MODEL[3];
+				}
+				else if (cg_foliageDetail.integer >= 1)
+				{
+					if (dist < FOLIAGE_AREA_SIZE*1.5)
+						re.hModel = FOLIAGE_PLANT_MODEL[2];
+					else
+						re.hModel = FOLIAGE_PLANT_MODEL[3];
+				}
 				else
+				{
 					re.hModel = FOLIAGE_PLANT_MODEL[3];
+				}
 
 				VectorSet(re.modelScale, GRASS_SCALE, GRASS_SCALE, GRASS_SCALE);
 
