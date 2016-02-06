@@ -52,26 +52,28 @@ void main(void){
 
 	if (isFoliage > 0.0 && isFoliage2 > 0.0)
 	{
-		if (depthDiff > 0.0001 && depthDiff < u_Local0.g)
+		if (depthDiff > u_Local0.r/*0.0001*/ && depthDiff < u_Local0.g)
 		{
-			vec3 shadow = diffuse.rgb * 0.5;
-			shadow += diffuse.rgb * (0.5 * (depthDiff / u_Local0.g)); // less darkness at higher distance for blending
+			vec3 shadow = diffuse.rgb * 0.25;
+			shadow += diffuse.rgb * (0.75 * (depthDiff / u_Local0.g)); // less darkness at higher distance for blending
 			float invDglow = 1.0 - dglowStrength;
 			diffuse.rgb = (diffuse.rgb * dglowStrength) + (shadow * invDglow);
 		}
-		else if (depthDiff < 0.0001)
+		else if (depthDiff < u_Local0.r/*0.0001*/)
 		{
-			vec3 shadow = diffuse.rgb * 0.5;
-			shadow += diffuse.rgb * (0.5 * (1.0 - (depthDiff / 0.0001))); // less darkness at lower distance for blending
+			vec3 shadow = diffuse.rgb * 0.25;
+			shadow += diffuse.rgb * (0.75 * (1.0 - (depthDiff / u_Local0.r/*0.0001*/))); // less darkness at lower distance for blending
 			float invDglow = 1.0 - dglowStrength;
 			diffuse.rgb = (diffuse.rgb * dglowStrength) + (shadow * invDglow);
 		}
 	}
 
+	/*
 	if (length(diffuse.rgb) > length(oDiffuse.rgb))
 	{// Shadow would be lighter due to blending, use original...
 		diffuse.rgb = oDiffuse.rgb;
 	}
+	*/
 
 	gl_FragColor = vec4(diffuse.rgb, 1.0);
 }

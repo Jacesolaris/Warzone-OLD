@@ -672,6 +672,7 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 				qboolean mrg = qfalse;
 #endif //__DEBUG_MERGE__
 
+				/*
 				if (oldCubemapIndex > 0 && Distance(tr.cubemapOrigins[newCubemapIndex-1], tr.cubemapOrigins[oldCubemapIndex-1]) < 512.0)
 				{// Can merge with previous cubemap to allow merge...
 					newCubemapIndex = oldCubemapIndex;
@@ -680,6 +681,7 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 					mrg = qtrue;
 #endif //__DEBUG_MERGE__
 				}
+				*/
 				
 				if (Distance(tr.refdef.vieworg, tr.cubemapOrigins[newCubemapIndex-1]) > r_cubemapCullRange->value * r_cubemapCullFalloffMult->value)
 				{// Too far away to care about cubemaps... Allow merge...

@@ -167,7 +167,7 @@ float		NUM_PLANT_SHADERS = 0;
 	float		FOLIAGE_TREE_SCALE[FOLIAGE_MAX_FOLIAGES];
 
 
-	qhandle_t	FOLIAGE_PLANT_MODEL[3] = { 0 };
+	qhandle_t	FOLIAGE_PLANT_MODEL[4] = { 0 };
 	qhandle_t	FOLIAGE_GRASS_BILLBOARD_SHADER[5] = { 0 };
 	qhandle_t	FOLIAGE_PLANT_BILLBOARD_MODEL[27] = { 0 };
 	qhandle_t	FOLIAGE_TREE_MODEL[16] = { 0 };
@@ -339,10 +339,12 @@ float		NUM_PLANT_SHADERS = 0;
 
 qboolean FOLIAGE_Box_In_FOV ( vec3_t mins, vec3_t maxs )
 {
-	vec3_t edge, edge2;
+	vec3_t mins2, maxs2, edge, edge2;
 
-	VectorSet(edge, maxs[0], mins[1], maxs[2]);
-	VectorSet(edge2, mins[0], maxs[1], maxs[2]);
+	VectorSet(mins2, mins[0], mins[1], cg.refdef.vieworg[2]);
+	VectorSet(maxs2, maxs[0], maxs[1], cg.refdef.vieworg[2]);
+	VectorSet(edge, maxs2[0], mins2[1], maxs2[2]);
+	VectorSet(edge2, mins2[0], maxs2[1], maxs2[2]);
 
 	/*if (!InFOV( mins, cg.refdef.vieworg, cg.refdef.viewangles, 100, 180 )
 		&& !InFOV( maxs, cg.refdef.vieworg, cg.refdef.viewangles, 100, 180 )
@@ -350,10 +352,10 @@ qboolean FOLIAGE_Box_In_FOV ( vec3_t mins, vec3_t maxs )
 		&& !InFOV( edge2, cg.refdef.vieworg, cg.refdef.viewangles, 100, 180 ))
 		return qfalse;*/
 
-	if (!InFOV( mins, cg.refdef.vieworg, cg.refdef.viewangles, cg.refdef.fov_x, 180 )
-		&& !InFOV( maxs, cg.refdef.vieworg, cg.refdef.viewangles, cg.refdef.fov_x, 180 )
-		&& !InFOV( edge, cg.refdef.vieworg, cg.refdef.viewangles, cg.refdef.fov_x, 180 )
-		&& !InFOV( edge2, cg.refdef.vieworg, cg.refdef.viewangles, cg.refdef.fov_x, 180 ))
+	if (!InFOV( mins2, cg.refdef.vieworg, cg.refdef.viewangles, cg.refdef.fov_x, cg.refdef.fov_y/*180*/ )
+		&& !InFOV( maxs2, cg.refdef.vieworg, cg.refdef.viewangles, cg.refdef.fov_x, cg.refdef.fov_y/*180*/ )
+		&& !InFOV( edge, cg.refdef.vieworg, cg.refdef.viewangles, cg.refdef.fov_x, cg.refdef.fov_y/*180*/ )
+		&& !InFOV( edge2, cg.refdef.vieworg, cg.refdef.viewangles, cg.refdef.fov_x, cg.refdef.fov_y/*180*/ ))
 		return qfalse;
 
 	return qtrue;
@@ -366,10 +368,10 @@ qboolean FOLIAGE_In_FOV ( vec3_t mins, vec3_t maxs )
 	VectorSet(edge, maxs[0], mins[1], maxs[2]);
 	VectorSet(edge2, mins[0], maxs[1], maxs[2]);
 
-	if (!InFOV( mins, cg.refdef.vieworg, cg.refdef.viewangles, cg.refdef.fov_x, 180 )
-		&& !InFOV( maxs, cg.refdef.vieworg, cg.refdef.viewangles, cg.refdef.fov_x, 180 )
-		&& !InFOV( edge, cg.refdef.vieworg, cg.refdef.viewangles, cg.refdef.fov_x, 180 )
-		&& !InFOV( edge2, cg.refdef.vieworg, cg.refdef.viewangles, cg.refdef.fov_x, 180 ))
+	if (!InFOV( mins, cg.refdef.vieworg, cg.refdef.viewangles, cg.refdef.fov_x, cg.refdef.fov_y/*180*/ )
+		&& !InFOV( maxs, cg.refdef.vieworg, cg.refdef.viewangles, cg.refdef.fov_x, cg.refdef.fov_y/*180*/ )
+		&& !InFOV( edge, cg.refdef.vieworg, cg.refdef.viewangles, cg.refdef.fov_x, cg.refdef.fov_y/*180*/ )
+		&& !InFOV( edge2, cg.refdef.vieworg, cg.refdef.viewangles, cg.refdef.fov_x, cg.refdef.fov_y/*180*/ ))
 		return qfalse;
 
 	return qtrue;
@@ -413,7 +415,7 @@ void FOLIAGE_Calc_In_Range_Areas( void )
 			if (minsDist < FOLIAGE_VISIBLE_DISTANCE 
 				|| maxsDist < FOLIAGE_VISIBLE_DISTANCE)
 			{
-				if (FOLIAGE_Box_In_FOV( FOLIAGE_AREAS_MINS[i], FOLIAGE_AREAS_MAXS[i] ))
+				if (minsDist <= FOLIAGE_AREA_SIZE || maxsDist <= FOLIAGE_AREA_SIZE || FOLIAGE_Box_In_FOV( FOLIAGE_AREAS_MINS[i], FOLIAGE_AREAS_MAXS[i] ))
 				{
 					IN_RANGE_AREAS_LIST[IN_RANGE_AREAS_LIST_COUNT] = i;
 					IN_RANGE_AREAS_LIST_COUNT++;
@@ -607,9 +609,9 @@ extern "C" {
 		if (FOLIAGE_TREE_SELECTION[num] <= 0 && FOLIAGE_PLANT_SCALE[num] < minFoliageScale) return;
 
 		if (cg.renderingThirdPerson) 
-			dist = DistanceHorizontal(FOLIAGE_POSITIONS[num], cg_entities[cg.clientNum].lerpOrigin);
+			dist = Distance/*Horizontal*/(FOLIAGE_POSITIONS[num], cg_entities[cg.clientNum].lerpOrigin);
 		else 
-			dist = DistanceHorizontal(FOLIAGE_POSITIONS[num], cg.refdef.vieworg);
+			dist = Distance/*Horizontal*/(FOLIAGE_POSITIONS[num], cg.refdef.vieworg);
 
 		// Cull anything in the area outside of cvar specified radius...
 		if (treeOnly && dist > FOLIAGE_TREE_VISIBLE_DISTANCE) return;
@@ -620,20 +622,20 @@ extern "C" {
 		VectorCopy(FOLIAGE_POSITIONS[num], re.origin);
 
 		FOLIAGE_VISIBLE_DISTANCE =			FOLIAGE_AREA_SIZE*cg_foliageGrassRangeMult.value;
-		FOLIAGE_PLANT_VISIBLE_DISTANCE =	FOLIAGE_AREA_SIZE*cg_foliagePlantRangeMult.value;
+		FOLIAGE_PLANT_VISIBLE_DISTANCE =	FOLIAGE_VISIBLE_DISTANCE;//FOLIAGE_AREA_SIZE*cg_foliagePlantRangeMult.value;
 		FOLIAGE_TREE_VISIBLE_DISTANCE =		FOLIAGE_AREA_SIZE*cg_foliageTreeRangeMult.value;
 
 //#define __GRASS_ONLY__
 
 		if (dist <= FOLIAGE_PLANT_VISIBLE_DISTANCE)
-		{// Graw grass...
+		{// Draw grass...
 			qboolean skipGrass = qfalse;
 			qboolean skipPlant = qfalse;
-			float massGrassScale = ((dist / FOLIAGE_PLANT_VISIBLE_DISTANCE) * 0.7) + 0.3;
+			float minGrassScale = ((dist / FOLIAGE_PLANT_VISIBLE_DISTANCE) * 0.7) + 0.3;
 
 #ifndef __GRASS_ONLY__
 			if (dist > FOLIAGE_VISIBLE_DISTANCE) skipGrass = qtrue;
-			if (FOLIAGE_PLANT_SCALE[num] <= massGrassScale && dist > FOLIAGE_VISIBLE_DISTANCE) skipPlant = qtrue;
+			if (FOLIAGE_PLANT_SCALE[num] <= minGrassScale && dist > FOLIAGE_VISIBLE_DISTANCE) skipPlant = qtrue;
 			if (FOLIAGE_PLANT_SCALE[num] < minFoliageScale) skipPlant = qtrue;
 
 			if (!skipPlant && FOLIAGE_PLANT_SELECTION[num] != 0)
@@ -646,25 +648,7 @@ extern "C" {
 
 				re.origin[2] += 8.0 * (1.0 - FOLIAGE_PLANT_SCALE[num]);
 
-				/*if (dist < 512)
-				{
-					re.hModel = FOLIAGE_PLANT_MODEL[0];
-				}
-				else if (dist < 1024)
-				{
-					re.hModel = FOLIAGE_PLANT_MODEL[1];
-				}
-				else
-				{
-					re.hModel = FOLIAGE_PLANT_MODEL[2];
-				}*/
-
-				//if (dist < 768)
-					re.hModel = FOLIAGE_PLANT_MODEL[0];
-				//else if (dist < 1536)
-				//	re.hModel = FOLIAGE_PLANT_MODEL[1];
-				//else
-				//	re.hModel = FOLIAGE_PLANT_MODEL[2];
+				re.hModel = FOLIAGE_PLANT_MODEL[0];
 
 				VectorSet(re.modelScale, PLANT_SCALE, PLANT_SCALE, PLANT_SCALE);
 
@@ -688,47 +672,17 @@ extern "C" {
 
 				re.origin[2] += 8.0 * (1.0 - FOLIAGE_PLANT_SCALE[num]);
 
-				/*
-				if (dist < 128)
-				{
-					re.customShader = FOLIAGE_GRASS_BILLBOARD_SHADER[0];
-					re.hModel = FOLIAGE_PLANT_MODEL[0];
-				}
-				else if (dist < 256)
-				{
-					re.customShader = FOLIAGE_GRASS_BILLBOARD_SHADER[1];
-					re.hModel = FOLIAGE_PLANT_MODEL[0];
-				}
-				else if (dist < 384)
-				{
-					re.customShader = FOLIAGE_GRASS_BILLBOARD_SHADER[2];
-					re.hModel = FOLIAGE_PLANT_MODEL[0];
-				}
-				else if (dist < 512)
-				{
-					re.customShader = FOLIAGE_GRASS_BILLBOARD_SHADER[2];
-					re.hModel = FOLIAGE_PLANT_MODEL[0];
-				}
-				else if (dist < 1024)
-				{
-					re.customShader = FOLIAGE_GRASS_BILLBOARD_SHADER[3];
-					re.hModel = FOLIAGE_PLANT_MODEL[1];
-				}
-				else
-				{
-					re.customShader = FOLIAGE_GRASS_BILLBOARD_SHADER[4];
-					re.hModel = FOLIAGE_PLANT_MODEL[2];
-				}*/
-
 				re.customShader = FOLIAGE_GRASS_BILLBOARD_SHADER[0];
 				
 
-				if (dist < 1024)
+				if (dist < FOLIAGE_AREA_SIZE*1.5)
 					re.hModel = FOLIAGE_PLANT_MODEL[0];
-				else if (dist < 2048)
+				else if (dist < FOLIAGE_AREA_SIZE*2.75)
 					re.hModel = FOLIAGE_PLANT_MODEL[1];
-				else
+				else if (dist < FOLIAGE_AREA_SIZE*3.5)
 					re.hModel = FOLIAGE_PLANT_MODEL[2];
+				else
+					re.hModel = FOLIAGE_PLANT_MODEL[3];
 
 				VectorSet(re.modelScale, GRASS_SCALE, GRASS_SCALE, GRASS_SCALE);
 
@@ -984,6 +938,7 @@ extern "C" {
 			FOLIAGE_PLANT_MODEL[0] = trap->R_RegisterModel( "models/warzone/foliage/uqgrass.md3" );
 			FOLIAGE_PLANT_MODEL[1] = trap->R_RegisterModel( "models/warzone/foliage/uqgrass_lod.md3" );
 			FOLIAGE_PLANT_MODEL[2] = trap->R_RegisterModel( "models/warzone/foliage/uqgrass_lod2.md3" );
+			FOLIAGE_PLANT_MODEL[3] = trap->R_RegisterModel( "models/warzone/foliage/uqgrass_lod3.md3" );
 
 #if 1
 			FOLIAGE_GRASS_BILLBOARD_SHADER[0] = trap->R_RegisterShader( "models/warzone/foliage/maingrass1024.png" );

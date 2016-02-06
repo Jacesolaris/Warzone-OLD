@@ -1173,7 +1173,8 @@ qboolean RB_VolumetricLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_
 	{
 		vec4_t viewInfo;
 
-		float zmax = backEnd.viewParms.zFar;
+		//float zmax = backEnd.viewParms.zFar;
+		float zmax = 2048.0;//backEnd.viewParms.zFar;
 		float zmin = r_znear->value;
 
 		VectorSet4(viewInfo, zmin, zmax, zmax / zmin, (float)SUN_ID);
@@ -1270,7 +1271,8 @@ void RB_MagicDetail(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox
 	{
 		vec4_t viewInfo;
 
-		float zmax = backEnd.viewParms.zFar;
+		//float zmax = backEnd.viewParms.zFar;
+		float zmax = 2048.0;//backEnd.viewParms.zFar;
 		float zmin = r_znear->value;
 
 		VectorSet4(viewInfo, zmax / zmin, zmax, zmin, zmax);
@@ -1304,7 +1306,8 @@ void RB_FakeDepth(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 	{
 		vec4_t viewInfo;
 
-		float zmax = backEnd.viewParms.zFar;
+		//float zmax = backEnd.viewParms.zFar;
+		float zmax = 2048.0;//backEnd.viewParms.zFar;
 		float zmin = r_znear->value;
 
 		VectorSet4(viewInfo, zmax / zmin, zmax, 0.0, 0.0);
@@ -1386,7 +1389,8 @@ void RB_Anaglyph(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 	{
 		vec4_t viewInfo;
 
-		float zmax = backEnd.viewParms.zFar;
+		//float zmax = backEnd.viewParms.zFar;
+		float zmax = 2048.0;//backEnd.viewParms.zFar;
 		float zmin = r_znear->value;
 
 		VectorSet4(viewInfo, zmax / zmin, zmax, 0.0, 0.0);
@@ -1441,7 +1445,8 @@ void RB_SSAO(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 	{
 		vec4_t viewInfo;
 
-		float zmax = backEnd.viewParms.zFar;
+		//float zmax = backEnd.viewParms.zFar;
+		float zmax = 2048.0;//backEnd.viewParms.zFar;
 		float zmin = r_znear->value;
 
 		VectorSet4(viewInfo, zmax / zmin, zmax, zmin, zmax);
@@ -1500,7 +1505,8 @@ void RB_RBM(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 
 	{
 		vec4_t viewInfo;
-		float zmax = backEnd.viewParms.zFar;
+		//float zmax = backEnd.viewParms.zFar;
+		float zmax = 2048.0;//backEnd.viewParms.zFar;
 		float ymax = zmax * tan(backEnd.viewParms.fovY * M_PI / 360.0f);
 		float xmax = zmax * tan(backEnd.viewParms.fovX * M_PI / 360.0f);
 		float zmin = r_znear->value;
@@ -1544,7 +1550,8 @@ void RB_WaterPost(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 
 	{
 		vec4_t viewInfo;
-		float zmax = backEnd.viewParms.zFar;
+		//float zmax = backEnd.viewParms.zFar;
+		float zmax = 2048.0;//backEnd.viewParms.zFar;
 		float ymax = zmax * tan(backEnd.viewParms.fovY * M_PI / 360.0f);
 		float xmax = zmax * tan(backEnd.viewParms.fovX * M_PI / 360.0f);
 		float zmin = r_znear->value;
@@ -1604,7 +1611,7 @@ void RB_SSS(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 
 	{
 		vec4_t viewInfo;
-		float zmax = backEnd.viewParms.zFar;
+		float zmax = 2048.0;//backEnd.viewParms.zFar;
 		float ymax = zmax * tan(backEnd.viewParms.fovY * M_PI / 360.0f);
 		float xmax = zmax * tan(backEnd.viewParms.fovX * M_PI / 360.0f);
 		float zmin = r_znear->value;
@@ -1655,7 +1662,8 @@ void RB_HBAO(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 
 	{
 		vec4_t viewInfo;
-		float zmax = backEnd.viewParms.zFar;
+		//float zmax = backEnd.viewParms.zFar;
+		float zmax = 2048.0;//backEnd.viewParms.zFar;
 		float ymax = zmax * tan(backEnd.viewParms.fovY * M_PI / 360.0f);
 		float xmax = zmax * tan(backEnd.viewParms.fovX * M_PI / 360.0f);
 		float zmin = r_znear->value;
@@ -1835,7 +1843,8 @@ void RB_DOF(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox, int di
 		{
 			vec4_t viewInfo;
 
-			float zmax = backEnd.viewParms.zFar;
+			//float zmax = backEnd.viewParms.zFar;
+			float zmax = 2048.0;//backEnd.viewParms.zFar;
 			float zmin = r_znear->value;
 
 			VectorSet4(viewInfo, zmin, zmax, zmax / zmin, 0.0);
@@ -2243,7 +2252,8 @@ void RB_SSGI(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 
 	{
 		vec4_t viewInfo;
-		float zmax = backEnd.viewParms.zFar;
+		//float zmax = backEnd.viewParms.zFar;
+		float zmax = 2048.0;//backEnd.viewParms.zFar;
 		float ymax = zmax * tan(backEnd.viewParms.fovY * M_PI / 360.0f);
 		float xmax = zmax * tan(backEnd.viewParms.fovX * M_PI / 360.0f);
 		float zmin = r_znear->value;
