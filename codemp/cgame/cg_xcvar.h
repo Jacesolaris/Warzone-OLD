@@ -226,4 +226,5 @@ XCVAR_DEF(cg_foliageModelWidth,						"88.0",				NULL, CVAR_ARCHIVE)
 XCVAR_DEF(cg_foliageMaxSlopeChange,					"10.0",				NULL, CVAR_ARCHIVE)
 XCVAR_DEF(cg_foliageMaxHeightChange,				"64.0",				NULL, CVAR_ARCHIVE)
 XCVAR_DEF(cg_foliageClientCollisionChecking,		"0",				NULL, CVAR_ARCHIVE)
+XCVAR_DEF(cg_foliageAreaSorting,					"0",				NULL, CVAR_ARCHIVE)
 #undef XCVAR_DEF

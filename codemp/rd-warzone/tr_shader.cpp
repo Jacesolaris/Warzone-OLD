@@ -5792,12 +5792,6 @@ char uniqueGenericFoliageShader[] = "{\n"\
 "depthWrite\n"\
 "rgbGen identity\n"\
 "}\n"\
-"{\n"\
-"map $lightmap\n"\
-"blendfunc GL_DST_COLOR GL_ZERO\n"\
-"rgbGen identity\n"\
-"depthFunc equal\n"\
-"}\n"\
 "}\n"\
 "";
 
@@ -5805,6 +5799,22 @@ char uniqueGenericFoliageShader[] = "{\n"\
 // "rgbGen entity\n"\
 // "rgbGen vertex\n"\
 // "rgbGen lightingDiffuse\n"\
+
+char uniqueGenericFoliageTreeShader[] = "{\n"\
+"qer_editorimage	%s\n"\
+"q3map_alphashadow\n"\
+"q3map_material	solidwood\n"\
+"surfaceparm	noimpact\n"\
+"surfaceparm	nomarks\n"\
+"{\n"\
+"map %s\n"\
+"blendfunc GL_ONE GL_ZERO\n"\
+"alphaFunc GE128\n"\
+"depthWrite\n"\
+"rgbGen identity\n"\
+"}\n"\
+"}\n"\
+"";
 
 char uniqueGenericPlayerShader[] = "{\n"\
 "qer_editorimage	%s\n"\
@@ -6063,15 +6073,31 @@ shader_t *R_FindShader( const char *name, const int *lightmapIndexes, const byte
 
 		// Generate the shader...
 		if (StringContainsWord(strippedName, "player"))
+		{
 			sprintf(myShader, uniqueGenericPlayerShader, strippedName, strippedName, glowShaderAddition, strippedName);
-		else if (StringContainsWord(strippedName, "warzone/foliage") || StringContainsWord(strippedName, "warzone/tree"))
-			sprintf(myShader, uniqueGenericFoliageShader, strippedName, strippedName);
-		else if (StringContainsWord(strippedName, "warzone\\foliage") || StringContainsWord(strippedName, "warzone\\tree"))
-			sprintf(myShader, uniqueGenericFoliageShader, strippedName, strippedName, glowShaderAddition, strippedName);
+		}
+		else if (StringContainsWord(strippedName, "warzone/foliage") || StringContainsWord(strippedName, "warzone\\foliage"))
+		{
+			if (StringContainsWord(strippedName, "bark") || StringContainsWord(strippedName, "giant_tree") || StringContainsWord(strippedName, "vine01"))
+				sprintf(myShader, uniqueGenericFoliageTreeShader, strippedName, strippedName);
+			else
+				sprintf(myShader, uniqueGenericFoliageShader, strippedName, strippedName);
+		}
+		else if (StringContainsWord(strippedName, "warzone/trees") || StringContainsWord(strippedName, "warzone\\trees"))
+		{
+			if (StringContainsWord(strippedName, "bark") || StringContainsWord(strippedName, "giant_tree") || StringContainsWord(strippedName, "vine01"))
+				sprintf(myShader, uniqueGenericFoliageTreeShader, strippedName, strippedName);
+			else
+				sprintf(myShader, uniqueGenericFoliageShader, strippedName, strippedName);
+		}
 		else if (StringContainsWord(strippedName, "weapon"))
+		{
 			sprintf(myShader, uniqueGenericWeaponShader, strippedName, strippedName, glowShaderAddition, strippedName);
+		}
 		else
+		{
 			sprintf(myShader, uniqueGenericShader, strippedName, strippedName, glowShaderAddition, strippedName);
+		}
 
 		flags = IMGFLAG_NONE;
 

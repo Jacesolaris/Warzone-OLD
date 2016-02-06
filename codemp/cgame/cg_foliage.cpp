@@ -180,8 +180,10 @@ float		NUM_PLANT_SHADERS = 0;
 
 	int IN_RANGE_AREAS_LIST_COUNT = 0;
 	int IN_RANGE_AREAS_LIST[1024];
+	float IN_RANGE_AREAS_DISTANCE[1024];
 	int IN_RANGE_TREE_AREAS_LIST_COUNT = 0;
 	int IN_RANGE_TREE_AREAS_LIST[8192];
+	float IN_RANGE_TREE_AREAS_DISTANCE[8192];
 
 #define FOLIAGE_SOLID_TREES_MAX 4
 	int			FOLIAGE_SOLID_TREES[FOLIAGE_SOLID_TREES_MAX];
@@ -380,6 +382,79 @@ qboolean FOLIAGE_In_FOV ( vec3_t mins, vec3_t maxs )
 vec3_t		LAST_ORG = { 0 };
 vec3_t		LAST_ANG = { 0 };
 
+void FOLIAGE_VisibleAreaSortGrass( void )
+{// Sorted furthest to closest...
+	int i, j, increment, temp;
+	float tempDist;
+
+	increment = 3;
+
+	while (increment > 0)
+	{
+		for (i=0; i < IN_RANGE_AREAS_LIST_COUNT; i++)
+		{
+			temp = IN_RANGE_AREAS_LIST[i];
+			tempDist = IN_RANGE_AREAS_DISTANCE[i];
+
+			j = i;
+
+			while ((j >= increment) && (IN_RANGE_AREAS_DISTANCE[j-increment] < tempDist))
+			{
+				IN_RANGE_AREAS_LIST[j] = IN_RANGE_AREAS_LIST[j - increment];
+				IN_RANGE_AREAS_DISTANCE[j] = IN_RANGE_AREAS_DISTANCE[j - increment];
+				j = j - increment;
+			}
+
+			IN_RANGE_AREAS_LIST[j] = temp;
+			IN_RANGE_AREAS_DISTANCE[j] = tempDist;
+		}
+
+		if (increment/2 != 0)
+			increment = increment/2;
+		else if (increment == 1)
+			increment = 0;
+		else
+			increment = 1;
+	}
+}
+
+void FOLIAGE_VisibleAreaSortTrees( void )
+{// Sorted closest to furthest...
+	int i, j, increment, temp;
+	float tempDist;
+
+	increment = 3;
+
+	while (increment > 0)
+	{
+		for (i=0; i < IN_RANGE_TREE_AREAS_LIST_COUNT; i++)
+		{
+			temp = IN_RANGE_TREE_AREAS_LIST[i];
+			tempDist = IN_RANGE_TREE_AREAS_DISTANCE[i];
+
+			j = i;
+
+			while ((j >= increment) && (IN_RANGE_TREE_AREAS_DISTANCE[j-increment] > tempDist))
+			{
+				IN_RANGE_TREE_AREAS_LIST[j] = IN_RANGE_TREE_AREAS_LIST[j - increment];
+				IN_RANGE_TREE_AREAS_DISTANCE[j] = IN_RANGE_TREE_AREAS_DISTANCE[j - increment];
+				j = j - increment;
+			}
+
+			IN_RANGE_TREE_AREAS_LIST[j] = temp;
+			IN_RANGE_TREE_AREAS_DISTANCE[j] = tempDist;
+		}
+
+		if (increment/2 != 0)
+			increment = increment/2;
+		else if (increment == 1)
+			increment = 0;
+		else
+			increment = 1;
+	}
+}
+
+
 void FOLIAGE_Calc_In_Range_Areas( void )
 {
 	for (int i = 0; i < FOLIAGE_SOLID_TREES_MAX; i++)
@@ -418,6 +493,12 @@ void FOLIAGE_Calc_In_Range_Areas( void )
 				if (minsDist <= FOLIAGE_AREA_SIZE || maxsDist <= FOLIAGE_AREA_SIZE || FOLIAGE_Box_In_FOV( FOLIAGE_AREAS_MINS[i], FOLIAGE_AREAS_MAXS[i] ))
 				{
 					IN_RANGE_AREAS_LIST[IN_RANGE_AREAS_LIST_COUNT] = i;
+
+					if (minsDist < maxsDist)
+						IN_RANGE_AREAS_DISTANCE[IN_RANGE_AREAS_LIST_COUNT] = minsDist;
+					else
+						IN_RANGE_AREAS_DISTANCE[IN_RANGE_AREAS_LIST_COUNT] = maxsDist;
+
 					IN_RANGE_AREAS_LIST_COUNT++;
 				}
 			}
@@ -427,9 +508,26 @@ void FOLIAGE_Calc_In_Range_Areas( void )
 				if (FOLIAGE_Box_In_FOV( FOLIAGE_AREAS_MINS[i], FOLIAGE_AREAS_MAXS[i] ))
 				{
 					IN_RANGE_TREE_AREAS_LIST[IN_RANGE_TREE_AREAS_LIST_COUNT] = i;
+
+					if (minsDist < maxsDist)
+						IN_RANGE_TREE_AREAS_DISTANCE[IN_RANGE_TREE_AREAS_LIST_COUNT] = minsDist;
+					else
+						IN_RANGE_TREE_AREAS_DISTANCE[IN_RANGE_TREE_AREAS_LIST_COUNT] = maxsDist;
+
 					IN_RANGE_TREE_AREAS_LIST_COUNT++;
 				}
 			}
+		}
+
+		if (cg_foliageAreaSorting.integer)
+		{
+			FOLIAGE_VisibleAreaSortGrass();
+			FOLIAGE_VisibleAreaSortTrees();
+
+			/*for (int i = 0; i < IN_RANGE_AREAS_LIST_COUNT; i++)
+			{
+				trap->Print("[%i] dist %f.\n", i, IN_RANGE_AREAS_DISTANCE[i]);
+			}*/
 		}
 
 		//trap->Print("There are %i foliage areas in range. %i tree areas.\n", IN_RANGE_AREAS_LIST_COUNT, IN_RANGE_TREE_AREAS_LIST_COUNT);
@@ -1092,23 +1190,35 @@ extern "C" {
 
 		FOLIAGE_Calc_In_Range_Areas();
 
-		for (int CURRENT_AREA = 0; CURRENT_AREA < IN_RANGE_AREAS_LIST_COUNT; CURRENT_AREA++)
-		{
-			int CURRENT_AREA_ID = IN_RANGE_AREAS_LIST[CURRENT_AREA];
-
-			for (int spot = 0; spot < FOLIAGE_AREAS_LIST_COUNT[CURRENT_AREA_ID]; spot++)
-			{
-				FOLIAGE_AddToScreen( FOLIAGE_AREAS_LIST[CURRENT_AREA_ID][spot], qfalse );
-			}
-		}
-
 		for (int CURRENT_AREA = 0; CURRENT_AREA < IN_RANGE_TREE_AREAS_LIST_COUNT; CURRENT_AREA++)
-		{
+		{// Draw trees first...
 			int CURRENT_AREA_ID = IN_RANGE_TREE_AREAS_LIST[CURRENT_AREA];
 
 			for (int spot = 0; spot < FOLIAGE_AREAS_LIST_COUNT[CURRENT_AREA_ID]; spot++)
 			{
 				FOLIAGE_AddToScreen( FOLIAGE_AREAS_LIST[CURRENT_AREA_ID][spot], qtrue );
+			}
+		}
+
+		for (int CURRENT_AREA = 0; CURRENT_AREA < IN_RANGE_AREAS_LIST_COUNT; CURRENT_AREA++)
+		{
+			int CURRENT_AREA_ID = IN_RANGE_AREAS_LIST[CURRENT_AREA];
+
+			for (int spot = 0; spot < FOLIAGE_AREAS_LIST_COUNT[CURRENT_AREA_ID]; spot++)
+			{// Draw close trees second...
+				if (FOLIAGE_TREE_SELECTION[FOLIAGE_AREAS_LIST[CURRENT_AREA_ID][spot]] > 0)
+					FOLIAGE_AddToScreen( FOLIAGE_AREAS_LIST[CURRENT_AREA_ID][spot], qtrue );
+			}
+		}
+
+		for (int CURRENT_AREA = 0; CURRENT_AREA < IN_RANGE_AREAS_LIST_COUNT; CURRENT_AREA++)
+		{// Draw grass and plants last...
+			int CURRENT_AREA_ID = IN_RANGE_AREAS_LIST[CURRENT_AREA];
+
+			for (int spot = 0; spot < FOLIAGE_AREAS_LIST_COUNT[CURRENT_AREA_ID]; spot++)
+			{
+				if (FOLIAGE_TREE_SELECTION[FOLIAGE_AREAS_LIST[CURRENT_AREA_ID][spot]] <= 0)
+					FOLIAGE_AddToScreen( FOLIAGE_AREAS_LIST[CURRENT_AREA_ID][spot], qfalse );
 			}
 		}
 	}
