@@ -175,7 +175,6 @@ static uniformInfo_t uniformsInfo[] =
 	{ "u_EnableTextures", GLSL_VEC4, 1 },
 	{ "u_DiffuseTexMatrix",  GLSL_VEC4, 1 },
 	{ "u_DiffuseTexOffTurb", GLSL_VEC4, 1 },
-	{ "u_Texture1Env",       GLSL_INT, 1 },
 
 	{ "u_TCGen0",        GLSL_INT, 1 },
 	{ "u_TCGen0Vector0", GLSL_VEC3, 1 },
@@ -1196,23 +1195,8 @@ int GLSL_BeginLoadGPUShaders(void)
 		if (i & GENERICDEF_USE_RGBAGEN)
 			Q_strcat(extradefines, 1024, "#define USE_RGBAGEN\n");
 
-		if (i & GENERICDEF_USE_LIGHTMAP)
-		{
-			Q_strcat(extradefines, 1024, "#define USE_LIGHTMAP\n");
-			attribs |= ATTR_TEXCOORD1;
-		}
-
 		if (i & GENERICDEF_USE_GLOW_BUFFER)
 			Q_strcat(extradefines, 1024, "#define USE_GLOW_BUFFER\n");
-
-		if (r_hdr->integer && !glRefConfig.floatLightmap)
-			Q_strcat(extradefines, 1024, "#define RGBM_LIGHTMAP\n");
-
-		if (r_parallaxMapping->integer) // Parallax without normal maps...
-			Q_strcat(extradefines, 1024, "#define USE_PARALLAXMAP_NONORMALS\n");
-
-		if (r_parallaxMapping->integer && r_parallaxMapping->integer < 2) // Fast parallax mapping...
-			Q_strcat(extradefines, 1024, "#define FAST_PARALLAX\n");
 
 		if (!GLSL_BeginLoadGPUShader(&tr.genericShader[i], "generic", attribs, qtrue, extradefines, qtrue, NULL, fallbackShader_generic_vp, fallbackShader_generic_fp))
 		{
@@ -4489,11 +4473,6 @@ shaderProgram_t *GLSL_GetGenericShaderProgram(int stage)
 	if (tess.fogNum && pStage->adjustColorsForFog)
 	{
 		shaderAttribs |= GENERICDEF_USE_FOG;
-	}
-
-	if (pStage->bundle[1].image[0] && tess.shader->multitextureEnv)
-	{
-		shaderAttribs |= GENERICDEF_USE_LIGHTMAP;
 	}
 
 	switch (pStage->rgbGen)

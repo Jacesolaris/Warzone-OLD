@@ -426,8 +426,6 @@ typedef struct shader_s {
 
 	float		portalRange;			// distance to fog out at
 
-	int			multitextureEnv;		// 0, GL_MODULATE, GL_ADD (FIXME: put in stage)
-
 	cullType_t	cullType;				// CT_FRONT_SIDED, CT_BACK_SIDED, or CT_TWO_SIDED
 	bool		polygonOffset;			// set for decals and other items that must be offset
 	bool		noMipMaps;				// for console fonts, 2D elements, etc.

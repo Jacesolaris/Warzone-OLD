@@ -12,7 +12,7 @@ attribute vec4 attr_BoneWeights;
 attribute vec4 attr_Color;
 attribute vec2 attr_TexCoord0;
 
-#if defined(USE_LIGHTMAP) || defined(USE_TCGEN)
+#if defined(USE_TCGEN)
 attribute vec2 attr_TexCoord1;
 #endif
 
@@ -64,9 +64,6 @@ uniform mat4   u_BoneMatrices[20];
 #endif
 
 varying vec2   var_DiffuseTex;
-#if defined(USE_LIGHTMAP)
-varying vec2   var_LightTex;
-#endif
 varying vec4   var_Color;
 
 attribute vec3		attr_LightDirection;
@@ -262,10 +259,6 @@ void main()
     var_DiffuseTex = tex;
 #endif
 
-#if defined(USE_LIGHTMAP)
-	var_LightTex = attr_TexCoord1.st;
-#endif
-
 #if defined(USE_RGBAGEN)
 	var_Color = CalcColor(position, normal);
 #else
@@ -275,11 +268,4 @@ void main()
 #if defined(USE_FOG)
 	var_Color *= vec4(1.0) - u_FogColorMask * sqrt(clamp(CalcFog(position), 0.0, 1.0));
 #endif
-
-	vec3 viewDir = u_ViewOrigin - position;
-	var_ViewDir = viewDir;
-
-	var_Normal = normal;
-	vec3 L = attr_LightDirection * 2.0 - vec3(1.0);
-	var_LightDir = vec4(L, 0.0);
 }
