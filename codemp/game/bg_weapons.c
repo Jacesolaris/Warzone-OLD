@@ -37,7 +37,7 @@ vec3_t WP_MuzzlePoint[WP_NUM_WEAPONS] =
 	{30, 	3.5,  	-1	},	// WP_ELG_3A,
 	{30, 	3,  	-1	},	// WP_S5_PISTOL,
 	{12,	6,	    -6	},	// WP_Z6_BLASTER_CANON,
-	{30,	7,		-6	},	// WP_WOOKIE_BOWCASTER,
+	{30,	7,		-6	},	// WP_HEAVY_BOWCASTER_SCOPE,
 	{30, 	3.5,  	-1	},	// WP_WOOKIES_PISTOL,
 	{30,	7,		-6	},	// WP_CLONE_BLASTER,
 	{30,	9.5,  	-6	},	// WP_DC15_EXT,
@@ -52,7 +52,7 @@ vec3_t WP_MuzzlePoint[WP_NUM_WEAPONS] =
 	{30,	7,		-6	},	// WP_ACP_SNIPER_RIFLE,
 	{12,	6,		-6	},	// WP_ARC_CASTER_IMPERIAL,
 	{30,	7,		-6	},	// WP_BOWCASTER_CLASSIC,
-	{30,	7,		-6	},	// WP_WOOKIE_BOWCASTER_SCOPE,
+	{30,	7,		-6	},	// WP_HEAVY_SCOPE_BOWCASTER,
 	{30,	7.5,	-6	},	// WP_BRYAR_CARBINE,
 	{30,	7.5,	-6	},	// WP_BRYAR_RIFLE,
 	{30,	7.5,	-6	},	// WP_BRYAR_RIFLE_SCOPE,
@@ -178,7 +178,7 @@ qboolean WeaponSniperCharge(int weapon)
 	{
 	case WP_DISRUPTOR:
 	case WP_DLT_19:
-	case WP_WOOKIE_BOWCASTER_SCOPE:
+	case WP_HEAVY_SCOPE_BOWCASTER:
 	case WP_BRYAR_RIFLE_SCOPE:
 	case WP_A280:
 	case WP_EE3:

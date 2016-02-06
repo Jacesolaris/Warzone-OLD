@@ -13419,7 +13419,7 @@ void CG_HolsteredWeaponRender(centity_t *cent, clientInfo_t *ci, int holsterType
 		weaponType = WP_CW_ROCKET_LAUNCHER;
 		break;
 	case HLR_WOOKIE_BOWCASTER:
-		weaponType = WP_WOOKIE_BOWCASTER;
+		weaponType = WP_HEAVY_BOWCASTER_SCOPE;
 		break;
 	case HLR_DC15:
 		weaponType = WP_DC15;
@@ -13499,7 +13499,7 @@ void CG_HolsteredWeaponRender(centity_t *cent, clientInfo_t *ci, int holsterType
 		weaponType = WP_BOWCASTER_CLASSIC;
 		break;
 	case HLR_WOOKIE_BOWCASTER_SCOPE:
-		weaponType = WP_WOOKIE_BOWCASTER_SCOPE;
+		weaponType = WP_HEAVY_SCOPE_BOWCASTER;
 		break;
 	case HLR_BRYAR_CARBINE_L:
 	case HLR_BRYAR_CARBINE_R:
@@ -15743,10 +15743,10 @@ void CG_VisualWeaponsUpdate(centity_t *cent, clientInfo_t *ci)
 
 		//Wookie Bowcaster
 		if (backInUse //back in use already
-			|| (primaryWeapon != WP_WOOKIE_BOWCASTER && secondaryWeapon != WP_WOOKIE_BOWCASTER && temporaryWeapon != WP_WOOKIE_BOWCASTER) //don't have weapon
-			|| cent->currentState.weapon == WP_WOOKIE_BOWCASTER) //currently using weapon
+			|| (primaryWeapon != WP_HEAVY_BOWCASTER_SCOPE && secondaryWeapon != WP_HEAVY_BOWCASTER_SCOPE && temporaryWeapon != WP_HEAVY_BOWCASTER_SCOPE) //don't have weapon
+			|| cent->currentState.weapon == WP_HEAVY_BOWCASTER_SCOPE) //currently using weapon
 		{//don't render weapon on back
-			if (ci->holster_launcher != -1 && ci->launcher_holstered == WP_WOOKIE_BOWCASTER)
+			if (ci->holster_launcher != -1 && ci->launcher_holstered == WP_HEAVY_BOWCASTER_SCOPE)
 			{
 				if (trap->G2API_HasGhoul2ModelOnIndex(&(cent->ghoul2), G2MODEL_LAUNCHER_HOLSTERED))
 				{
@@ -15759,7 +15759,7 @@ void CG_VisualWeaponsUpdate(centity_t *cent, clientInfo_t *ci)
 		{//render weapon on back
 			if (ci->holster_launcher != -1)
 			{//have specialized bolt
-				if (ci->launcher_holstered != WP_WOOKIE_BOWCASTER)
+				if (ci->launcher_holstered != WP_HEAVY_BOWCASTER_SCOPE)
 				{//don't already have the weapon bolted.
 					if (ci->launcher_holstered != 0)
 					{//we have something else bolted there, remove it first.
@@ -15771,10 +15771,10 @@ void CG_VisualWeaponsUpdate(centity_t *cent, clientInfo_t *ci)
 					}
 
 					//now bolt the weapon
-					trap->G2API_CopySpecificGhoul2Model(CG_G2WeaponInstance(cent, WP_WOOKIE_BOWCASTER), 0, cent->ghoul2,
+					trap->G2API_CopySpecificGhoul2Model(CG_G2WeaponInstance(cent, WP_HEAVY_BOWCASTER_SCOPE), 0, cent->ghoul2,
 						G2MODEL_LAUNCHER_HOLSTERED);
 					trap->G2API_SetBoltInfo(cent->ghoul2, G2MODEL_LAUNCHER_HOLSTERED, ci->holster_launcher);
-					ci->launcher_holstered = WP_WOOKIE_BOWCASTER;
+					ci->launcher_holstered = WP_HEAVY_BOWCASTER_SCOPE;
 				}
 			}
 			else
@@ -16420,10 +16420,10 @@ void CG_VisualWeaponsUpdate(centity_t *cent, clientInfo_t *ci)
 			backInUse = qtrue;
 		}
 		if (backInUse //back in use already
-			|| (primaryWeapon != WP_WOOKIE_BOWCASTER_SCOPE && secondaryWeapon != WP_WOOKIE_BOWCASTER_SCOPE && temporaryWeapon != WP_WOOKIE_BOWCASTER_SCOPE) //don't have weapon
-			|| cent->currentState.weapon == WP_WOOKIE_BOWCASTER_SCOPE) //currently using weapon
+			|| (primaryWeapon != WP_HEAVY_SCOPE_BOWCASTER && secondaryWeapon != WP_HEAVY_SCOPE_BOWCASTER && temporaryWeapon != WP_HEAVY_SCOPE_BOWCASTER) //don't have weapon
+			|| cent->currentState.weapon == WP_HEAVY_SCOPE_BOWCASTER) //currently using weapon
 		{//don't render weapon on back
-			if (ci->holster_launcher != -1 && ci->launcher_holstered == WP_WOOKIE_BOWCASTER_SCOPE)
+			if (ci->holster_launcher != -1 && ci->launcher_holstered == WP_HEAVY_SCOPE_BOWCASTER)
 			{
 				if (trap->G2API_HasGhoul2ModelOnIndex(&(cent->ghoul2), G2MODEL_LAUNCHER_HOLSTERED))
 				{
@@ -16436,7 +16436,7 @@ void CG_VisualWeaponsUpdate(centity_t *cent, clientInfo_t *ci)
 		{//render weapon on back
 			if (ci->holster_launcher != -1)
 			{//have specialized bolt
-				if (ci->launcher_holstered != WP_WOOKIE_BOWCASTER_SCOPE)
+				if (ci->launcher_holstered != WP_HEAVY_SCOPE_BOWCASTER)
 				{//don't already have the weapon bolted.
 					if (ci->launcher_holstered != 0)
 					{//we have something else bolted there, remove it first.
@@ -16448,10 +16448,10 @@ void CG_VisualWeaponsUpdate(centity_t *cent, clientInfo_t *ci)
 					}
 
 					//now bolt the weapon
-					trap->G2API_CopySpecificGhoul2Model(CG_G2WeaponInstance(cent, WP_WOOKIE_BOWCASTER_SCOPE), 0, cent->ghoul2,
+					trap->G2API_CopySpecificGhoul2Model(CG_G2WeaponInstance(cent, WP_HEAVY_SCOPE_BOWCASTER), 0, cent->ghoul2,
 						G2MODEL_LAUNCHER_HOLSTERED);
 					trap->G2API_SetBoltInfo(cent->ghoul2, G2MODEL_LAUNCHER_HOLSTERED, ci->holster_launcher);
-					ci->launcher_holstered = WP_WOOKIE_BOWCASTER_SCOPE;
+					ci->launcher_holstered = WP_HEAVY_SCOPE_BOWCASTER;
 				}
 			}
 			else

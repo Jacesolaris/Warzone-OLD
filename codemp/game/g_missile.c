@@ -341,7 +341,7 @@ void G_MissileBounceEffect( gentity_t *ent, vec3_t org, vec3_t dir )
 	//FIXME: have an EV_BOUNCE_MISSILE event that checks the s.weapon and does the appropriate effect
 	switch( ent->s.weapon )
 	{
-	case WP_WOOKIE_BOWCASTER:
+	case WP_HEAVY_BOWCASTER_SCOPE:
 	case WP_BOWCASTER:
 		G_PlayEffectID( G_EffectIndex("bowcaster/deflect"), ent->r.currentOrigin, dir );
 		break;
@@ -387,7 +387,7 @@ void G_MissileImpact(gentity_t *ent, trace_t *trace, qboolean HIT_TREE) {
 		{
 			if (ent->s.weapon == WP_DC_15S_CLONE_PISTOL 
 				|| ent->s.weapon == WP_BOWCASTER 
-				|| ent->s.weapon == WP_WOOKIE_BOWCASTER
+				|| ent->s.weapon == WP_HEAVY_BOWCASTER_SCOPE
 				|| ent->s.weapon == WP_DC_17_CLONE_PISTOL)
 			{ // hit effects on Clone Pistol and Bowcaster to bounces off floors.
 				G_BounceMissile(ent, trace, HIT_TREE);
@@ -437,7 +437,7 @@ void G_MissileImpact(gentity_t *ent, trace_t *trace, qboolean HIT_TREE) {
 	{
 		if (ent->s.weapon == WP_DC_15S_CLONE_PISTOL 
 			|| ent->s.weapon == WP_BOWCASTER 
-			|| ent->s.weapon == WP_WOOKIE_BOWCASTER
+			|| ent->s.weapon == WP_HEAVY_BOWCASTER_SCOPE
 			|| ent->s.weapon == WP_DC_17_CLONE_PISTOL)
 		{ // hit effects on Clone Pistol and Bowcaster to bounces off floors.
 			if (!(trace->surfaceFlags & SURF_FORCEFIELD))

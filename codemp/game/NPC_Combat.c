@@ -250,7 +250,7 @@ void G_AttackDelay( gentity_t *self, gentity_t *enemy )
 			}
 			break;
 
-		case WP_WOOKIE_BOWCASTER:
+		case WP_HEAVY_BOWCASTER_SCOPE:
 		case WP_BOWCASTER:
 			attDelay += Q_irand( 0, 500 );
 			break;

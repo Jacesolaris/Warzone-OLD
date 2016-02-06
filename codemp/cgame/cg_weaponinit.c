@@ -306,6 +306,8 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altMissileHitSound	= NULL_SOUND;
 		weaponInfo->altMissileTrailFunc = FX_WeaponAltProjectileThink;
 
+										//  X,	 ,Y	   ,Z	
+		VectorSet(weaponInfo->gunPosition, 11.0, 8.0, -5.0);
 		weaponInfo->missileRenderfx = trap->FX_RegisterEffect( "explosives/shot_concussion" );
 		weaponInfo->altMissileRenderfx = trap->FX_RegisterEffect( "explosives/shot_concussion" );
 
@@ -325,7 +327,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		break;
 
 	case WP_BRYAR_PISTOL:
-		CG_SetWeaponHandModel(weaponInfo, WEAPONTYPE_PISTOL);
+		//CG_SetWeaponHandModel(weaponInfo, WEAPONTYPE_PISTOL);
 
 		weaponInfo->selectSound = trap->S_RegisterSound("sound/weapons/select_pistol.mp3");
 		weaponInfo->flashSound[0] = trap->S_RegisterSound("sound/weapons/blasters/bryar_pistol1.mp3");
@@ -351,7 +353,8 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altMissileSound = NULL_SOUND;
 		weaponInfo->altMissileDlight = 0;
 		weaponInfo->altMissileHitSound = NULL_SOUND;
-
+										//  X,	 ,Y	   ,Z	
+		VectorSet(weaponInfo->gunPosition, 20.0, -3.0, -3.5);
 		weaponInfo->Chargingfx = NULL_FX;
 		weaponInfo->Altchargingfx = trap->FX_RegisterEffect("weapons/charge_bryar");
 
@@ -400,8 +403,8 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altMissileDlight = 0;
 		weaponInfo->altMissileHitSound = NULL_SOUND;
 		weaponInfo->altMissileTrailFunc = FX_BryarAltProjectileThink;
-
-		VectorSet(weaponInfo->gunPosition, 13.0, -3.0, -6.0);
+										//  X,	 ,Y	   ,Z	
+		VectorSet(weaponInfo->gunPosition, 13.0, - 3.0, - 6.0);
 
 		weaponInfo->Chargingfx = NULL_FX;
 		weaponInfo->Altchargingfx = trap->FX_RegisterEffect("weapons/charge_bryar");
@@ -449,8 +452,8 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altMissileDlight = 0;
 		weaponInfo->altMissileHitSound = NULL_SOUND;
 		weaponInfo->altMissileTrailFunc = FX_WeaponAltProjectileThink;
-
-		VectorSet(weaponInfo->gunPosition, 11.0, -2.2, -6.6);
+										//  X,	 ,Y	   ,Z	
+		VectorSet(weaponInfo->gunPosition, 12.0, - 2.5, - 6.0);
 
 		weaponInfo->missileRenderfx = trap->FX_RegisterEffect("blasters/shot_red_small");
 		weaponInfo->altMissileRenderfx = trap->FX_RegisterEffect("blasters/shot_red_small");
@@ -497,8 +500,8 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altMissileDlight	= 0;
 		weaponInfo->altMissileHitSound	= NULL_SOUND;
 		weaponInfo->altMissileTrailFunc = 0;
-
-		//VectorSet(weaponInfo->gunPosition, 11.0, -2.2, -6.6);
+										//  X,	 ,Y	   ,Z	
+		VectorSet(weaponInfo->gunPosition, 10.0, -3.5, -0.0);
 
 		weaponInfo->Chargingfx = trap->FX_RegisterEffect("weapons/charge_bryar");
 		weaponInfo->Altchargingfx = NULL_FX;
@@ -546,8 +549,8 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altMissileDlight		= 0;
 		weaponInfo->altMissileHitSound		= NULL_SOUND;
 		weaponInfo->altMissileTrailFunc		= FX_WeaponAltProjectileThink;
-
-		VectorSet(weaponInfo->gunPosition, 8.0, -4.0, -5.0);
+										//  X,	 ,Y	   ,Z	
+		VectorSet(weaponInfo->gunPosition, 8.0, - 4.0, - 5.0);
 
 		weaponInfo->Chargingfx = trap->FX_RegisterEffect("weapons/charge_bryar");
 		weaponInfo->Altchargingfx = NULL_FX;
@@ -588,8 +591,8 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altMissileDlight	= 0;
 		weaponInfo->altMissileHitSound	= NULL_SOUND;
 		weaponInfo->altMissileTrailFunc = FX_RepeaterAltProjectileThink;
-
-		//VectorSet(weaponInfo->gunPosition, 11.0, -2.2, -6.6);
+										//  X,	 ,Y	   ,Z	
+		VectorSet(weaponInfo->gunPosition, 11.0, 8.0, -5.0);
 
 		weaponInfo->missileRenderfx		= trap->FX_RegisterEffect("blasters/shot_Yellow_small");
 		weaponInfo->altMissileRenderfx = trap->FX_RegisterEffect("blasters/shot_Blue_Ball_big");
@@ -626,7 +629,8 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altMissileDlight	= 0;
 		weaponInfo->altMissileHitSound	= NULL_SOUND;
 		weaponInfo->altMissileTrailFunc = 0;
-
+										//  X,	 ,Y	   ,Z	
+		VectorSet(weaponInfo->gunPosition, 12.0, -3.5, -2.5);
 		weaponInfo->Chargingfx = NULL_FX;
 		weaponInfo->Altchargingfx = trap->FX_RegisterEffect("weapons/charge_arc");
 
@@ -665,8 +669,8 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altMissileDlight	= 0;
 		weaponInfo->altMissileHitSound	= NULL_SOUND;
 		weaponInfo->altMissileTrailFunc = FX_WeaponAltProjectileThink;
-
-		//VectorSet(weaponInfo->gunPosition, 11.0, -2.2, -6.6);
+										//  X,	 ,Y	   ,Z	
+		VectorSet(weaponInfo->gunPosition, 12.0, -3.5, -1.0);
 
 
 
@@ -712,8 +716,8 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altMissileDlight = 0;
 		weaponInfo->altMissileHitSound = NULL_SOUND;
 		weaponInfo->altMissileTrailFunc = FX_WeaponAltProjectileThink;
-
-		//VectorSet(weaponInfo->gunPosition, 11.0, -2.2, -6.6);
+										//  X,	 ,Y	   ,Z	
+		VectorSet(weaponInfo->gunPosition, 11.0, -2.2, -6.6);
 
 		weaponInfo->missileRenderfx = trap->FX_RegisterEffect("blasters/shot_red_small");
 		weaponInfo->altMissileRenderfx = trap->FX_RegisterEffect("blasters/shot_red_small");
@@ -760,8 +764,8 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altMissileSound = NULL_SOUND;
 		weaponInfo->altMissileDlight = 0;
 		weaponInfo->altMissileHitSound = NULL_SOUND;
-		
-		//VectorSet(weaponInfo->gunPosition, 11.0, -2.2, -6.6);
+										//  X,	 ,Y	   ,Z	
+		VectorSet(weaponInfo->gunPosition, 11.0, -2.2, -6.6);
 
 		weaponInfo->altMissileTrailFunc = FX_WeaponAltProjectileThink;
 
@@ -806,8 +810,8 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altMissileSound = NULL_SOUND;
 		weaponInfo->altMissileDlight = 0;
 		weaponInfo->altMissileHitSound = NULL_SOUND;
-
-		//VectorSet(weaponInfo->gunPosition, 11.0, -2.2, -6.6);
+										//  X,	 ,Y	   ,Z	
+		VectorSet(weaponInfo->gunPosition, 11.0, -2.2, -6.6);
 
 
 		weaponInfo->altMissileTrailFunc = FX_WeaponAltProjectileThink;
@@ -855,8 +859,8 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altMissileDlight = 0;
 		weaponInfo->altMissileHitSound = NULL_SOUND;
 		weaponInfo->altMissileTrailFunc = FX_WeaponAltProjectileThink;
-
-		VectorSet(weaponInfo->gunPosition, 7.0, -3.5, -8.0);
+										//  X,	 ,Y	   ,Z	
+		VectorSet(weaponInfo->gunPosition, 9.0, - 3.0, - 7.0);
 
 		weaponInfo->missileRenderfx = trap->FX_RegisterEffect("blasters/shot_Red_medium");
 		weaponInfo->altMissileRenderfx = trap->FX_RegisterEffect("blasters/shot_Red_big");
@@ -900,7 +904,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altMissileHitSound = NULL_SOUND;
 		weaponInfo->altMuzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash2_Red_medium");
 		weaponInfo->altMissileTrailFunc = FX_WeaponAltProjectileThink;
-
+										//  X,	 ,Y	   ,Z	
 		VectorSet(weaponInfo->gunPosition, 7.0, -3.5, -8.0);
 
 		weaponInfo->missileRenderfx = trap->FX_RegisterEffect("blasters/shot_redorange_medium");
@@ -942,11 +946,11 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altMissileDlight = 0;
 		weaponInfo->altMissileHitSound = NULL_SOUND;
 		weaponInfo->altMissileTrailFunc = 0;
-
+										//  X,	 ,Y	   ,Z	
+		VectorSet(weaponInfo->gunPosition, 13.0, -3.0, -6.0);
 		weaponInfo->Chargingfx = NULL_FX/*trap->FX_RegisterEffect("weapons/charge_samus")*/;
 		weaponInfo->Altchargingfx = trap->FX_RegisterEffect("weapons/charge_samus");
-
-		//VectorSet(weaponInfo->gunPosition, 13.0, -3.0, -6.0);
+		
 
 
 		weaponInfo->missileRenderfx = trap->FX_RegisterEffect("blasters/shot_Blue_small");
@@ -994,8 +998,8 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altMissileDlight = 0;
 		weaponInfo->altMissileHitSound = NULL_SOUND;
 		weaponInfo->altMissileTrailFunc = FX_WeaponAltProjectileThink;
-
-		VectorSet(weaponInfo->gunPosition, 6.0, -2.4, -6.6);
+										//  X,	 ,Y	   ,Z	
+		VectorSet(weaponInfo->gunPosition, 6.0, - 2.4, - 6.6);
 
 		weaponInfo->missileRenderfx = trap->FX_RegisterEffect("blasters/shot_red_small");
 		weaponInfo->altMissileRenderfx = trap->FX_RegisterEffect("blasters/shot_red_small");
@@ -1040,8 +1044,8 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altMissileDlight = 0;
 		weaponInfo->altMissileHitSound = NULL_SOUND;
 		weaponInfo->altMissileTrailFunc = FX_RepeaterAltProjectileThink;
-
-		VectorSet(weaponInfo->gunPosition, 4.0, -3.0, -6.6);
+										//  X,	 ,Y	   ,Z	
+		VectorSet(weaponInfo->gunPosition, 4.0, - 3.0, - 6.6);
 		
 		weaponInfo->missileRenderfx = trap->FX_RegisterEffect("blasters/shot_blue_small");
 		weaponInfo->altMissileRenderfx = trap->FX_RegisterEffect("blasters/shot_Blue_Ball_big");
@@ -1085,7 +1089,8 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altMissileDlight = 0;
 		weaponInfo->altMissileHitSound = NULL_SOUND;
 		weaponInfo->altMissileTrailFunc = FX_BryarAltProjectileThink;
-
+										//  X,	 ,Y	   ,Z	
+		VectorSet(weaponInfo->gunPosition, 4.0, 10.0, -6.6);
 		weaponInfo->Chargingfx = NULL_FX/*trap->FX_RegisterEffect("weapons/charge_samus")*/;
 		weaponInfo->Altchargingfx = /*NULL_FX*/ trap->FX_RegisterEffect("weapons/charge_bryar");
 
@@ -1128,11 +1133,11 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altMissileDlight = 0;
 		weaponInfo->altMissileHitSound = NULL_SOUND;
 		weaponInfo->altMissileTrailFunc = FX_BryarAltProjectileThink;
-
+										//  X,	 ,Y	   ,Z	
+		VectorSet(weaponInfo->gunPosition, 10.0, - 3.0, - 4.0);
 		weaponInfo->Chargingfx = NULL_FX/*trap->FX_RegisterEffect("weapons/charge_samus")*/;
 		weaponInfo->Altchargingfx = /*NULL_FX*/ trap->FX_RegisterEffect("weapons/charge_bowcaster_cheap");
-
-		VectorSet(weaponInfo->gunPosition, 10.0, -3.0, -4.0);
+										
 
 		weaponInfo->missileRenderfx = trap->FX_RegisterEffect("blasters/shot_greenblue_small");
 		weaponInfo->altMissileRenderfx = trap->FX_RegisterEffect("blasters/shot_greenblue_small");
@@ -1172,7 +1177,8 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altMissileDlight = 0;
 		weaponInfo->altMissileHitSound = NULL_SOUND;
 		weaponInfo->altMissileTrailFunc = FX_BryarAltProjectileThink;
-
+										//  X,	 ,Y	   ,Z	
+		VectorSet(weaponInfo->gunPosition, 11.0, 8.0, -5.0);
 		weaponInfo->Chargingfx = NULL_FX/*trap->FX_RegisterEffect("weapons/charge_samus")*/;
 		weaponInfo->Altchargingfx = /*NULL_FX*/ trap->FX_RegisterEffect("weapons/charge_bryar");
 
@@ -1215,7 +1221,8 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altMissileTrailFunc = FX_WeaponAltProjectileThink;
 		weaponInfo->spinSound = trap->S_RegisterSound("sound/weapons/z6/spinny.wav");
 		weaponInfo->spindownSound = trap->S_RegisterSound("sound/weapons/z6/chaingun_spindown.wav");
-
+										//  X,	 ,Y	   ,Z	
+		VectorSet(weaponInfo->gunPosition, 11.0, 8.0, -5.0);
 		weaponInfo->Chargingfx = NULL_FX/*trap->FX_RegisterEffect("weapons/charge_samus")*/;
 		weaponInfo->Altchargingfx = /*NULL_FX*/ trap->FX_RegisterEffect("blasters/shot_Blue_Ball_medium");
 
@@ -1236,7 +1243,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		cgs.media.lightningFlash = trap->R_RegisterShader("gfx/misc/lightningFlash");
 		break;
 
-	case WP_WOOKIE_BOWCASTER:
+	case WP_HEAVY_BOWCASTER_SCOPE:
 		weaponInfo->selectSound = trap->S_RegisterSound("sound/weapons/select_carbine.mp3");
 		weaponInfo->flashSound[0] = trap->S_RegisterSound("sound/weapons/blasters/crossbow_big1.mp3");
 		weaponInfo->flashSound[1] = trap->S_RegisterSound("sound/weapons/blasters/crossbow_big2.mp3");
@@ -1267,11 +1274,11 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altMissileDlight = 0;
 		weaponInfo->altMissileHitSound = NULL_SOUND;
 		weaponInfo->altMissileTrailFunc = FX_WeaponAltProjectileThink;
-
+										//  X,	 ,Y	   ,Z	
+		VectorSet(weaponInfo->gunPosition, 8.0, - 3.5, - 5.5);
 		weaponInfo->Chargingfx = NULL_FX/*trap->FX_RegisterEffect("weapons/charge_samus")*/;
 		weaponInfo->Altchargingfx = /*NULL_FX*/ trap->FX_RegisterEffect("weapons/charge_bowcaster_cheap");
-
-		VectorSet(weaponInfo->gunPosition, 8.0, - 3.5, - 5.5);
+										
 
 		weaponInfo->missileRenderfx = trap->FX_RegisterEffect("blasters/shot_Green_Flare_medium");
 		weaponInfo->altMissileRenderfx = trap->FX_RegisterEffect("blasters/shot_Green_Flare_medium");
@@ -1315,7 +1322,8 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altMissileDlight = 0;
 		weaponInfo->altMissileHitSound = NULL_SOUND;
 		weaponInfo->altMissileTrailFunc = FX_BryarAltProjectileThink;
-
+										//  X,	 ,Y	   ,Z	
+		VectorSet(weaponInfo->gunPosition, 8.0, 10.0, -5.5);
 		weaponInfo->Chargingfx = NULL_FX/*trap->FX_RegisterEffect("weapons/charge_samus")*/;
 		weaponInfo->Altchargingfx = /*NULL_FX*/ trap->FX_RegisterEffect("weapons/charge_bryar");
 
@@ -1366,7 +1374,8 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altMissileDlight = 0;
 		weaponInfo->altMissileHitSound = NULL_SOUND;
 		weaponInfo->altMissileTrailFunc = FX_WeaponAltProjectileThink;//FX_WeaponProjectileThink;
-
+										//  X,	 ,Y	   ,Z	
+		VectorSet(weaponInfo->gunPosition, 8.0, 10.0, -5.5);
 		weaponInfo->missileRenderfx = trap->FX_RegisterEffect("blasters/shot_Blue_medium");
 		weaponInfo->altMissileRenderfx = trap->FX_RegisterEffect("blasters/shot_Blue_medium");
 
@@ -1404,7 +1413,8 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altMissileDlight = 0;
 		weaponInfo->altMissileHitSound = NULL_SOUND;
 		weaponInfo->altMissileTrailFunc = FX_WeaponAltProjectileThink;
-
+										//  X,	 ,Y	   ,Z	
+		VectorSet(weaponInfo->gunPosition, 8.0, 10.0, -5.5);
 		weaponInfo->Chargingfx = NULL_FX/*trap->FX_RegisterEffect("weapons/charge_samus")*/;
 		weaponInfo->Altchargingfx = /*NULL_FX*/ trap->FX_RegisterEffect("blasters/shot_Blue_Ball_small");
 
@@ -1456,7 +1466,8 @@ void CG_RegisterWeapon( int weaponNum) {
 		VectorSet(weaponInfo->altMissileDlightColor, 1.0, 1.0, 0.5);
 		weaponInfo->altMissileHitSound = NULL_SOUND;
 		weaponInfo->altMissileTrailFunc = FX_PulseRocketAltProjectileThink;
-
+										//  X,	 ,Y	   ,Z	
+		VectorSet(weaponInfo->gunPosition, 2.0, -2.0, 1.0);
 		weaponInfo->missileRenderfx = trap->FX_RegisterEffect("explosives/shot_rpg");
 		weaponInfo->altMissileRenderfx = trap->FX_RegisterEffect("explosives/shot_rpg");
 
@@ -1504,7 +1515,8 @@ void CG_RegisterWeapon( int weaponNum) {
 		VectorSet(weaponInfo->altMissileDlightColor, 1.0, 1.0, 0.5);
 		weaponInfo->altMissileHitSound = NULL_SOUND;
 		weaponInfo->altMissileTrailFunc = FX_PulseRocketAltProjectileThink;
-
+										//  X,	 ,Y	   ,Z	
+		VectorSet(weaponInfo->gunPosition, 2.0, -2.0, 1.0);
 		weaponInfo->missileRenderfx = trap->FX_RegisterEffect("explosives/shot_rpg");
 		weaponInfo->altMissileRenderfx = trap->FX_RegisterEffect("explosives/shot_rpg");
 
@@ -1540,8 +1552,9 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altMissileSound = NULL_SOUND;
 		weaponInfo->altMissileDlight = 0;
 		weaponInfo->altMissileHitSound = NULL_SOUND;
-		weaponInfo->altMissileTrailFunc = FX_WeaponAltProjectileThink;//FX_WeaponProjectileThink;
-
+		weaponInfo->altMissileTrailFunc = FX_WeaponAltProjectileThink;
+										//  X,	 ,Y	   ,Z	
+		VectorSet(weaponInfo->gunPosition, 8.0, 10.0, -5.5);
 		weaponInfo->missileRenderfx = trap->FX_RegisterEffect("blasters/shot_RedPurple_small");
 		weaponInfo->altMissileRenderfx = trap->FX_RegisterEffect("blasters/shot_RedPurple_small");
 
@@ -1581,7 +1594,8 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altMissileDlight = 0;
 		weaponInfo->altMissileHitSound = NULL_SOUND;
 		weaponInfo->altMissileTrailFunc = FX_PulseGrenadeProjectileThink;
-
+										//  X,	 ,Y	   ,Z	
+		VectorSet(weaponInfo->gunPosition, 8.0, 10.0, -5.5);
 		weaponInfo->missileWallImpactfx = trap->FX_RegisterEffect("weapons/grenaderibbon_red");
 		weaponInfo->altMissileWallImpactfx = trap->FX_RegisterEffect("weapons/grenaderibbon_red");
 
@@ -1621,7 +1635,8 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altMissileDlight = 0;
 		weaponInfo->altMissileHitSound = NULL_SOUND;
 		weaponInfo->altMissileTrailFunc = FX_PulseGrenadeProjectileThink;
-
+										//  X,	 ,Y	   ,Z	
+		VectorSet(weaponInfo->gunPosition, 8.0, 10.0, -5.5);
 		weaponInfo->missileWallImpactfx = trap->FX_RegisterEffect("weapons/grenaderibbon_red");
 		weaponInfo->altMissileWallImpactfx = trap->FX_RegisterEffect("weapons/grenaderibbon_red");
 
@@ -1659,7 +1674,8 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altChargeSound = trap->S_RegisterSound("sound/weapons/demp2/altCharge.wav");
 		weaponInfo->altMuzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash2_Blue_small");
 		weaponInfo->altMissileModel = NULL_HANDLE;
-		
+										//  X,	 ,Y	   ,Z	
+		VectorSet(weaponInfo->gunPosition, 8.0, 10.0, -5.5);
 		weaponInfo->Chargingfx = NULL_FX;
 		weaponInfo->Altchargingfx = trap->FX_RegisterEffect("weapons/charge_samus");
 
@@ -1712,8 +1728,9 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altMissileSound = NULL_SOUND;
 		weaponInfo->altMissileDlight = 0;
 		weaponInfo->altMissileHitSound = NULL_SOUND;
-		weaponInfo->altMissileTrailFunc = FX_WeaponAltProjectileThink;//FX_WeaponProjectileThink;
-
+		weaponInfo->altMissileTrailFunc = FX_WeaponAltProjectileThink;
+										//  X,	 ,Y	   ,Z	
+		VectorSet(weaponInfo->gunPosition, 8.0, 10.0, -5.5);
 		weaponInfo->missileRenderfx = trap->FX_RegisterEffect("blasters/shot_red_small");
 		weaponInfo->altMissileRenderfx = trap->FX_RegisterEffect("blasters/shot_red_small");
 
@@ -1759,9 +1776,9 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altMissileSound = NULL_SOUND;
 		weaponInfo->altMissileDlight = 0;
 		weaponInfo->altMissileHitSound = NULL_SOUND;
-		weaponInfo->altMissileTrailFunc = FX_WeaponAltProjectileThink;//FX_WeaponProjectileThink;
-		
-		VectorSet(weaponInfo->gunPosition, 7.0, -3.0, -6.0);
+		weaponInfo->altMissileTrailFunc = FX_WeaponAltProjectileThink;
+										//  X,	 ,Y	   ,Z	
+		VectorSet(weaponInfo->gunPosition, 7.0, - 3.0, - 6.0);
 
 		weaponInfo->missileRenderfx = trap->FX_RegisterEffect("Slugthrowers/acp_shot_small");
 		weaponInfo->altMissileRenderfx = trap->FX_RegisterEffect("Slugthrowers/acp_shot_small");
@@ -1807,8 +1824,8 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altMissileDlight = 0;
 		weaponInfo->altMissileHitSound = NULL_SOUND;
 		weaponInfo->altMissileTrailFunc = FX_WeaponAltProjectileThink;
-
-		VectorSet(weaponInfo->gunPosition, 7.0, -3.0, -4.0);
+										//  X,	 ,Y	   ,Z	
+		VectorSet(weaponInfo->gunPosition, 7.0, - 3.0, - 4.0);
 
 		weaponInfo->missileRenderfx = trap->FX_RegisterEffect("Slugthrowers/acp_shot_medium");
 		weaponInfo->altMissileRenderfx = trap->FX_RegisterEffect("Slugthrowers/acp_shot_medium");
@@ -1853,9 +1870,9 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altMissileSound = NULL_SOUND;
 		weaponInfo->altMissileDlight = 0;
 		weaponInfo->altMissileHitSound = NULL_SOUND;
-		weaponInfo->altMissileTrailFunc = FX_WeaponAltProjectileThink;//FX_WeaponProjectileThink;
-
-		VectorSet(weaponInfo->gunPosition, 2.0, -3.0, -5.5);
+		weaponInfo->altMissileTrailFunc = FX_WeaponAltProjectileThink;
+										//  X,	 ,Y	   ,Z	
+		VectorSet(weaponInfo->gunPosition, 2.0, - 3.0, - 5.5);
 
 		weaponInfo->missileRenderfx						= trap->FX_RegisterEffect("blasters/shot_GreenBlue_Ball_small");
 		weaponInfo->altMissileRenderfx					= trap->FX_RegisterEffect("blasters/shot_GreenBlue_Ball_small");
@@ -1903,8 +1920,8 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altMissileDlight = 0;
 		weaponInfo->altMissileHitSound = NULL_SOUND;
 		weaponInfo->altMissileTrailFunc = FX_WeaponAltProjectileThink;
-
-		VectorSet(weaponInfo->gunPosition, 9.0, -3.5, -6.0);
+										//  X,	 ,Y	   ,Z	 
+		VectorSet(weaponInfo->gunPosition, 9.0, - 3.5, - 6.0);
 
 		weaponInfo->missileRenderfx = trap->FX_RegisterEffect("Slugthrowers/acp_shot_big");
 		weaponInfo->altMissileRenderfx = trap->FX_RegisterEffect("Slugthrowers/acp_shot_big");
@@ -1949,8 +1966,8 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altMissileDlight = 0;
 		weaponInfo->altMissileHitSound = NULL_SOUND;
 		weaponInfo->altMissileTrailFunc = 0;
-
-		VectorSet(weaponInfo->gunPosition, 8.0, -3.2, -7.0);
+										//  X,	 ,Y	   ,Z	
+		VectorSet(weaponInfo->gunPosition, 8.0, - 3.2, - 7.0);
 
 		weaponInfo->missileRenderfx = trap->FX_RegisterEffect("blasters/shot_electricity");
 		weaponInfo->altMissileRenderfx = trap->FX_RegisterEffect("blasters/shot_electricity");
@@ -1998,7 +2015,8 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altMissileDlight = 0;
 		weaponInfo->altMissileHitSound = NULL_SOUND;
 		weaponInfo->altMissileTrailFunc = FX_WeaponAltProjectileThink;
-		VectorSet(weaponInfo->gunPosition, 8.0, -4.0, -5.0);
+										//  X,	 ,Y	   ,Z	
+		VectorSet(weaponInfo->gunPosition, 8.0, - 4.0, - 5.0);
 
 		weaponInfo->Chargingfx = NULL_FX;
 		weaponInfo->Altchargingfx = trap->FX_RegisterEffect("weapons/charge_bowcaster_cheap");
@@ -2019,7 +2037,7 @@ void CG_RegisterWeapon( int weaponNum) {
 		trap->FX_RegisterEffect("blasters/green_deflect");
 		break;
 
-	case WP_WOOKIE_BOWCASTER_SCOPE:
+	case WP_HEAVY_SCOPE_BOWCASTER:
 		weaponInfo->selectSound = trap->S_RegisterSound("sound/weapons/bowcaster/select.wav");
 		weaponInfo->flashSound[0] = trap->S_RegisterSound("sound/weapons/blasters/crossbow_big1.mp3");
 		weaponInfo->flashSound[1] = trap->S_RegisterSound("sound/weapons/blasters/crossbow_big2.mp3");
@@ -2050,7 +2068,8 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altMissileDlight = 0;
 		weaponInfo->altMissileHitSound = NULL_SOUND;
 		weaponInfo->altMissileTrailFunc = FX_WeaponAltProjectileThink;
-		VectorSet(weaponInfo->gunPosition, 8.0, -3.5, -5.5);
+										//  X,	 ,Y	   ,Z	
+		VectorSet(weaponInfo->gunPosition, 8.0, - 4.0, - 5.0);
 
 		weaponInfo->missileRenderfx = trap->FX_RegisterEffect("blasters/shot_Green_Flare_medium");
 		weaponInfo->altMissileRenderfx = trap->FX_RegisterEffect("blasters/shot_Green_Flare_medium");
@@ -2095,8 +2114,8 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altMissileDlight = 0;
 		weaponInfo->altMissileHitSound = NULL_SOUND;
 		weaponInfo->altMissileTrailFunc = FX_WeaponAltProjectileThink;
-
-		VectorSet(weaponInfo->gunPosition, 10.0, -3.0, -5.4);
+										//  X,	 ,Y	   ,Z	
+		VectorSet(weaponInfo->gunPosition, 10.0, - 3.0, - 5.4);
 
 		weaponInfo->missileRenderfx = trap->FX_RegisterEffect("blasters/shot_redorange_medium");
 		weaponInfo->altMissileRenderfx = trap->FX_RegisterEffect("blasters/shot_redorange_medium");
@@ -2144,8 +2163,8 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altMissileHitSound = NULL_SOUND;
 		weaponInfo->altMuzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash2_Red_medium");
 		weaponInfo->altMissileTrailFunc = FX_WeaponAltProjectileThink;
-
-		VectorSet(weaponInfo->gunPosition, 10.0, -3.0, -5.4);
+										//  X,	 ,Y	   ,Z	
+		VectorSet(weaponInfo->gunPosition, 10.0, - 3.0, - 5.4);
 
 		weaponInfo->missileRenderfx = trap->FX_RegisterEffect("blasters/shot_red_small");
 		weaponInfo->altMissileRenderfx = trap->FX_RegisterEffect("blasters/shot_RedOrange_Flare_medium");
@@ -2190,8 +2209,8 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altMissileHitSound = NULL_SOUND;
 		weaponInfo->altMuzzleEffect = trap->FX_RegisterEffect("blasters/muzzleflash2_Red_medium");
 		weaponInfo->altMissileTrailFunc = FX_WeaponAltProjectileThink;
-
-		VectorSet(weaponInfo->gunPosition, 7.0, -4.0, -4.0);
+										//  X,	 ,Y	   ,Z	
+		VectorSet(weaponInfo->gunPosition, 7.0, - 4.0, - 4.0);
 
 		weaponInfo->missileRenderfx = trap->FX_RegisterEffect("blasters/shot_red_small");
 		weaponInfo->altMissileRenderfx = trap->FX_RegisterEffect("blasters/shot_RedOrange_Flare_medium");
@@ -2234,8 +2253,8 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altMissileDlight = 0;
 		weaponInfo->altMissileHitSound = NULL_SOUND;
 		weaponInfo->altMissileTrailFunc = FX_RepeaterAltProjectileThink;
-
-		VectorSet(weaponInfo->gunPosition, 7.0, -3.0, -6.0);
+										//  X,	 ,Y	   ,Z	
+		VectorSet(weaponInfo->gunPosition, 7.0, - 3.0, - 6.0);
 
 		weaponInfo->Chargingfx = NULL_FX;
 		weaponInfo->Altchargingfx = trap->FX_RegisterEffect("blasters/shot_BluePurple_Ball_medium");
@@ -2283,7 +2302,8 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altMissileDlight = 0;
 		weaponInfo->altMissileHitSound = NULL_SOUND;
 		weaponInfo->altMissileTrailFunc = FX_WeaponAltProjectileThink;
-		VectorSet(weaponInfo->gunPosition, 8.0, -2.0, -6.2);
+										//  X,	 ,Y	   ,Z	
+		VectorSet(weaponInfo->gunPosition, 8.0, - 2.0, - 6.2);
 
 		weaponInfo->missileRenderfx = trap->FX_RegisterEffect("blasters/shot_RedPurple_Ball_small");
 		weaponInfo->altMissileRenderfx = trap->FX_RegisterEffect("blasters/shot_RedPurple_Flare_medium");
@@ -2331,7 +2351,8 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altMissileDlight = 0;
 		weaponInfo->altMissileHitSound = NULL_SOUND;
 		weaponInfo->altMissileTrailFunc = FX_WeaponAltProjectileThink;
-		VectorSet(weaponInfo->gunPosition, 10.0, -2.8, -5.6);
+										//  X,	 ,Y	   ,Z	
+		VectorSet(weaponInfo->gunPosition, 10.0, - 2.8, - 5.6);
 
 		weaponInfo->missileRenderfx = trap->FX_RegisterEffect("blasters/shot_redpurple_medium");
 		weaponInfo->altMissileRenderfx = trap->FX_RegisterEffect("blasters/shot_redpurple_medium");
@@ -2378,8 +2399,8 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altMissileDlight = 0;
 		weaponInfo->altMissileHitSound = NULL_SOUND;
 		weaponInfo->altMissileTrailFunc = FX_PulseGrenadeProjectileThink;
-
-		VectorSet(weaponInfo->gunPosition, 8.0, -2.0, -3.0);
+										//  X,	 ,Y	   ,Z	
+		VectorSet(weaponInfo->gunPosition, 8.0, - 2.0, - 3.0);
 
 		weaponInfo->missileWallImpactfx = trap->FX_RegisterEffect("weapons/grenaderibbon_red");
 		weaponInfo->altMissileWallImpactfx = trap->FX_RegisterEffect("weapons/grenaderibbon_red");
@@ -2434,7 +2455,8 @@ void CG_RegisterWeapon( int weaponNum) {
 		VectorSet(weaponInfo->altMissileDlightColor, 1.0, 1.0, 0.5);
 		weaponInfo->altMissileHitSound = NULL_SOUND;
 		weaponInfo->altMissileTrailFunc = FX_PulseRocketAltProjectileThink;
-
+										//  X,	 ,Y	   ,Z	
+		VectorSet(weaponInfo->gunPosition, 8.0, -2.0, -3.0);
 		weaponInfo->missileRenderfx = trap->FX_RegisterEffect("explosives/shot_rpg");
 		weaponInfo->altMissileRenderfx = trap->FX_RegisterEffect("explosives/shot_rpg");
 		
@@ -2476,8 +2498,8 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altMissileDlight	= 0;
 		weaponInfo->altMissileHitSound	= NULL_SOUND;
 		weaponInfo->altMissileTrailFunc = FX_PulseGrenadeProjectileThink;
-
-		VectorSet(weaponInfo->gunPosition, 8.0, -3.0, -2.8);
+										//  X,	 ,Y	   ,Z	
+		VectorSet(weaponInfo->gunPosition, 8.0, - 2.0, - 3.0);
 
 		weaponInfo->missileWallImpactfx = trap->FX_RegisterEffect("weapons/grenaderibbon_red");
 		weaponInfo->altMissileWallImpactfx = trap->FX_RegisterEffect("weapons/grenaderibbon_red");
@@ -2519,7 +2541,8 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altMissileDlight	= 0;
 		weaponInfo->altMissileHitSound	= NULL_SOUND;
 		weaponInfo->altMissileTrailFunc = 0;
-		VectorSet(weaponInfo->gunPosition, 10.0, -2.0, -3.4);
+										//  X,	 ,Y	   ,Z	
+		VectorSet(weaponInfo->gunPosition, 8.0, - 2.0, - 3.0);
 
 		cgs.effects.tripmineLaserFX = trap->FX_RegisterEffect("weapons/laser_blue.efx");
 		cgs.effects.tripmineGlowFX = trap->FX_RegisterEffect("tripMine/glowbit.efx");
@@ -2549,6 +2572,8 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->altMissileDlight	= 0;
 		weaponInfo->altMissileHitSound	= NULL_SOUND;
 		weaponInfo->altMissileTrailFunc = 0;
+										//  X,	 ,Y	   ,Z	
+		VectorSet(weaponInfo->gunPosition, 10.0, -2.0, -3.4);
 		trap->R_RegisterModel( "models/weapons2/detpack/det_pack.md3" );
 		trap->S_RegisterSound( "sound/weapons/detpack/stick.wav" );
 		trap->S_RegisterSound( "sound/weapons/detpack/warning.wav" );

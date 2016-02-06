@@ -276,7 +276,7 @@ static void CG_LightningBolt( centity_t *cent, vec3_t origin ) {
 	//Must be a durational weapon that continuously generates an effect.
 	if ( cent->currentState.weapon == WP_DEMP2 && cent->currentState.eFlags & EF_ALT_FIRING )
 	if (cent->currentState.weapon == WP_DC_15S_CLONE_PISTOL && cent->currentState.eFlags & EF_ALT_FIRING)
-	if (cent->currentState.weapon == WP_WOOKIE_BOWCASTER && cent->currentState.eFlags & EF_ALT_FIRING)
+	if (cent->currentState.weapon == WP_HEAVY_BOWCASTER_SCOPE && cent->currentState.eFlags & EF_ALT_FIRING)
 	if (cent->currentState.weapon == WP_DC15_EXT && cent->currentState.eFlags & EF_ALT_FIRING)
 	if (cent->currentState.weapon == WP_PULSECANON && cent->currentState.eFlags & EF_ALT_FIRING)
 	if (cent->currentState.weapon == WP_DC_17_CLONE_PISTOL && cent->currentState.eFlags & EF_ALT_FIRING)
@@ -2145,7 +2145,7 @@ void CG_FireWeapon( centity_t *cent, qboolean altFire ) {
 			(ent->weapon == WP_DEMP2 && altFire) ||
 			(ent->weapon == WP_DC_15S_CLONE_PISTOL && altFire) ||
 			(ent->weapon == WP_ELG_3A && altFire) ||
-			//(ent->weapon == WP_WOOKIE_BOWCASTER && !altFire) ||
+			//(ent->weapon == WP_HEAVY_BOWCASTER_SCOPE && !altFire) ||
 			//(ent->weapon == WP_WOOKIES_PISTOL && !altFire) ||
 			(ent->weapon == WP_ARC_CASTER_IMPERIAL && !altFire) ||
 			(ent->weapon == WP_S5_PISTOL && altFire ||
@@ -2210,7 +2210,7 @@ void CG_FireWeapon( centity_t *cent, qboolean altFire ) {
 			{
 				CGCam_Shake(flrand(2, 3), 350);
 			}
-			else if (ent->weapon == WP_WOOKIE_BOWCASTER)
+			else if (ent->weapon == WP_HEAVY_BOWCASTER_SCOPE)
 			{
 				CGCam_Shake(flrand(2, 3), 350);
 			}
@@ -2437,7 +2437,7 @@ void CG_MissileHitPlayer(int weapon, vec3_t origin, vec3_t dir, int entityNum, q
 		break;
 
 	case WP_DC_17_CLONE_PISTOL:
-	case WP_WOOKIE_BOWCASTER:
+	case WP_HEAVY_BOWCASTER_SCOPE:
 	case WP_DC_15S_CLONE_PISTOL:
 		if (altFire)
 		{

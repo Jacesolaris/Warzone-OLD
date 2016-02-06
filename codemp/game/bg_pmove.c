@@ -6718,7 +6718,7 @@ static qboolean PM_DoChargedWeapons( qboolean vehicleRocketLock, bgEntity_t *veh
 			case WP_DC_17_CLONE_PISTOL:
 			case WP_Z6_BLASTER_CANON:
 			case WP_DC15_EXT:
-			case WP_WOOKIE_BOWCASTER:
+			case WP_HEAVY_BOWCASTER_SCOPE:
 			case WP_DC_15S_CLONE_PISTOL:
 			case WP_PULSECANON:
 				if (pm->cmd.buttons & BUTTON_ALT_ATTACK)
@@ -8791,7 +8791,7 @@ void PM_AdjustAttackStates( pmove_t *pmove )
 					pmove->ps->scopeType = SCOPE_BOWCASTER_CLASSIC;
 					pmove->ps->zoomFov = 80.0f;//cg_fov.value;
 					break;
-				case WP_WOOKIE_BOWCASTER_SCOPE:
+				case WP_HEAVY_SCOPE_BOWCASTER:
 					pmove->ps->scopeType = SCOPE_BOWCASTER_CLASSIC;
 					pmove->ps->zoomFov = 80.0f;//cg_fov.value;
 					break;
