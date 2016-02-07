@@ -595,6 +595,8 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 
 	float			depth[2];
 
+	if (backEnd.refdef.rdflags & RDF_BLUR) CUBEMAPPING = qfalse;
+
 	// draw everything
 	backEnd.currentEntity = &tr.worldEntity;
 
@@ -2117,7 +2119,7 @@ const void *RB_PostProcess(const void *data)
 	}
 	*/
 
-	if (r_dynamicGlow->integer || r_ssgi->integer || r_anamorphic->integer)
+	if (!(backEnd.refdef.rdflags & RDF_BLUR) && (r_dynamicGlow->integer || r_ssgi->integer || r_anamorphic->integer))
 	{
 		RB_BloomDownscale(tr.glowImage, tr.glowFboScaled[0]);
 		int numPasses = Com_Clampi(1, ARRAY_LEN(tr.glowFboScaled), r_dynamicGlowPasses->integer);
@@ -2153,7 +2155,7 @@ const void *RB_PostProcess(const void *data)
 			RB_SwapFBOs( &currentFbo, &currentOutFbo);
 		}
 
-		if (r_glslWater->integer >= 2)
+		if (!SCREEN_BLUR && r_glslWater->integer >= 2)
 		{
 			RB_WaterPost(currentFbo, srcBox, currentOutFbo, dstBox);
 			RB_SwapFBOs( &currentFbo, &currentOutFbo);
@@ -2276,7 +2278,7 @@ const void *RB_PostProcess(const void *data)
 			RB_SwapFBOs( &currentFbo, &currentOutFbo);
 		}
 
-		if (r_bloom->integer)
+		if (!SCREEN_BLUR && r_bloom->integer)
 		{
 			RB_Bloom(currentFbo, srcBox, currentOutFbo, dstBox);
 			RB_SwapFBOs( &currentFbo, &currentOutFbo);
@@ -2508,7 +2510,7 @@ const void *RB_PostProcess(const void *data)
 	}
 #endif //__DYNAMIC_SHADOWS__
 
-	if (r_dynamicGlow->integer != 0 || r_ssgi->integer || r_anamorphic->integer)
+	if (!(backEnd.refdef.rdflags & RDF_BLUR) && (r_dynamicGlow->integer != 0 || r_ssgi->integer || r_anamorphic->integer))
 	{
 		// Composite the glow/bloom texture
 		int blendFunc = 0;

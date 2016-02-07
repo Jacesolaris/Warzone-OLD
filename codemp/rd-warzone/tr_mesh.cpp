@@ -755,7 +755,9 @@ void R_AddMD3Surfaces( trRefEntity_t *ent ) {
 	//
 	fogNum = R_ComputeFogNum( model, ent );
 
-	if (r_cubeMapping->integer >= 2)
+	if (backEnd.refdef.rdflags & RDF_BLUR)
+		cubemapIndex = 0;
+	else if (r_cubeMapping->integer >= 2)
 		cubemapIndex = R_CubemapForPoint(ent->e.origin);
 	else
 		cubemapIndex = 0;

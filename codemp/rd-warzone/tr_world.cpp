@@ -560,7 +560,9 @@ static void R_AddWorldSurface( msurface_t *surf, int dlightBits, int pshadowBits
 		pshadowBits = ( pshadowBits != 0 );
 	}*/
 
-	if (surf->cubemapIndex >= 1 && Distance(tr.refdef.vieworg, tr.cubemapOrigins[surf->cubemapIndex-1]) < r_cubemapCullRange->value * r_cubemapCullFalloffMult->value)
+	if (backEnd.refdef.rdflags & RDF_BLUR)
+		cubemapIndex = 0;
+	else if (surf->cubemapIndex >= 1 && Distance(tr.refdef.vieworg, tr.cubemapOrigins[surf->cubemapIndex-1]) < r_cubemapCullRange->value * r_cubemapCullFalloffMult->value)
 		cubemapIndex = surf->cubemapIndex;
 	else
 		cubemapIndex = 0;
