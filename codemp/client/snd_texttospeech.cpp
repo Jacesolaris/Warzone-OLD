@@ -1,11 +1,7 @@
 #include "client.h"
 #include "snd_local.h"
 
-//#define __WIN_TTS__ // Disable this when I get acapela remote voice chat system working...
-
-//
-// TODO: NON-WINDOWS SUPPORT (threading is really all I need to do)...
-//
+//#define __TTS_DEVELOPER__
 
 #ifdef _WIN32
 #include <ole2.h>
@@ -96,6 +92,7 @@ void DoTextToSpeech (char* text, char *voice, int entityNum, vec3_t origin)
 		return;
 	}
 
+#ifdef __TTS_DEVELOPER__
 	if (IS_CHAT) 
 		sprintf(USE_VOICE, "ryan22k"); // override the voice var with "ryan22k". So we can transmit "chatvoice" to the engine and ignore saving random chat...
 	else 
@@ -170,6 +167,7 @@ void DoTextToSpeech (char* text, char *voice, int entityNum, vec3_t origin)
 	{// Stream chat - direct from the server...
 		BASS_StartStreamingSound( MP3_ADDRESS, -1, CHAN_LOCAL, NULL );
 	}
+#endif //__TTS_DEVELOPER__
 }
 
 void ShutdownTextToSpeechThread ( void )
@@ -287,6 +285,7 @@ qboolean S_DownloadVoice( const char *text, const char *voice )
 		return qtrue;
 	}
 
+#ifdef __TTS_DEVELOPER__
 	// url: acapela_tts, snd_url: '', voice: options.avoice, listen: '1', format: 'MP3', codecMP3: '1', spd: '180', vct: '100', text: '\\vct=100\\ \\spd=180\\ ' + text
 	sprintf(POST_DATA, "&voice=%s&listen=1&format=MP3&codecMP3=1&spd=180&vct=100&text=\\vct=100\\ \\spd=180\\  %s", USE_VOICE, text);
 	//Com_Printf("Filename: %s. PostData: %s.\n", filename2, POST_DATA);
@@ -324,6 +323,7 @@ qboolean S_DownloadVoice( const char *text, const char *voice )
 
 	if ( TTS_FileExists( filename ) || TTS_FileExists( filename2 ) ) 
 		return qtrue; // it worked...
+#endif //__TTS_DEVELOPER__
 
 	return qfalse; // it failed...
 }

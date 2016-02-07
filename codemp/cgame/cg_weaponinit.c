@@ -250,6 +250,9 @@ void CG_RegisterWeapon( int weaponNum) {
 		COM_StripExtension( path, path, sizeof( path ) );
 		Q_strcat( path, sizeof(path), "_hand.md3" );
 		weaponInfo->handsModel = trap->R_RegisterModel( path );
+
+		if (!weaponInfo->handsModel)
+			CG_SetWeaponHandModel(weaponInfo, WEAPONTYPE_BLASTER);
 	}
 	else
 	{
