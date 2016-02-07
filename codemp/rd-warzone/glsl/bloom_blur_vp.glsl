@@ -1,11 +1,11 @@
-attribute vec3 attr_Position;
+in vec3 attr_Position;
 
 uniform vec4 u_Local0;
 uniform vec2 u_Dimensions;
 
 uniform mat4   u_ModelViewProjectionMatrix;
 
-attribute vec4 attr_TexCoord0;
+in vec4 attr_TexCoord0;
 
 varying vec4 var_Local0;
 varying vec2 var_Dimensions;

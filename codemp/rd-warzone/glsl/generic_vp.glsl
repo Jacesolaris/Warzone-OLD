@@ -1,19 +1,19 @@
-attribute vec3 attr_Position;
-attribute vec3 attr_Normal;
+in vec3 attr_Position;
+in vec3 attr_Normal;
 
 #if defined(USE_VERTEX_ANIMATION)
-attribute vec3 attr_Position2;
-attribute vec3 attr_Normal2;
+in vec3 attr_Position2;
+in vec3 attr_Normal2;
 #elif defined(USE_SKELETAL_ANIMATION)
-attribute vec4 attr_BoneIndexes;
-attribute vec4 attr_BoneWeights;
+in vec4 attr_BoneIndexes;
+in vec4 attr_BoneWeights;
 #endif
 
-attribute vec4 attr_Color;
-attribute vec2 attr_TexCoord0;
+in vec4 attr_Color;
+in vec2 attr_TexCoord0;
 
 #if defined(USE_TCGEN)
-attribute vec2 attr_TexCoord1;
+in vec2 attr_TexCoord1;
 #endif
 
 uniform vec2	u_Dimensions;
@@ -66,7 +66,7 @@ uniform mat4   u_BoneMatrices[20];
 varying vec2   var_DiffuseTex;
 varying vec4   var_Color;
 
-attribute vec3		attr_LightDirection;
+in vec3		attr_LightDirection;
 uniform mat4		u_ModelMatrix;
 uniform vec3		u_ViewOrigin;
 

@@ -1,6 +1,6 @@
 //incoming Position attribute from our SpriteBatch
-attribute vec3 attr_Position;
-attribute vec2 attr_TexCoord0;
+in vec3 attr_Position;
+in vec2 attr_TexCoord0;
 
 uniform mat4	u_ModelViewProjectionMatrix;
 uniform vec2	u_Dimensions;

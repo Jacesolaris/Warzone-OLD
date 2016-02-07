@@ -1,10 +1,10 @@
-attribute vec3  attr_Position;
-attribute vec3  attr_Normal;
-attribute vec4  attr_TexCoord0;
+in vec3  attr_Position;
+in vec3  attr_Normal;
+in vec4  attr_TexCoord0;
 
 //#if defined(USE_VERTEX_ANIMATION)
-attribute vec3  attr_Position2;
-attribute vec3  attr_Normal2;
+in vec3  attr_Position2;
+in vec3  attr_Normal2;
 //#endif
 
 //#if defined(USE_DEFORM_VERTEXES)

@@ -2,9 +2,9 @@
 
 uniform mat4	u_ModelViewProjectionMatrix;
 uniform mat4	u_invProjectionMatrix;
-attribute vec3	attr_Position;
-attribute vec3	attr_Normal;
-attribute vec2	attr_TexCoord0;
+in vec3	attr_Position;
+in vec3	attr_Normal;
+in vec2	attr_TexCoord0;
 
 uniform vec2	u_Dimensions;
 uniform vec3	u_ViewOrigin;

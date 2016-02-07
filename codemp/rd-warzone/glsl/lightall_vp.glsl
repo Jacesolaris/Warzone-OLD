@@ -1,33 +1,33 @@
-attribute vec2 attr_TexCoord0;
+in vec2 attr_TexCoord0;
 
 uniform float	u_Time;
 
 //#define USE_LIGHT
 
 #if defined(USE_LIGHTMAP) || defined(USE_TCGEN)
-attribute vec2 attr_TexCoord1;
+in vec2 attr_TexCoord1;
 #endif
-attribute vec4 attr_Color;
+in vec4 attr_Color;
 
-attribute vec3 attr_Position;
-attribute vec3 attr_Normal;
+in vec3 attr_Position;
+in vec3 attr_Normal;
 #if defined(USE_VERT_TANGENT_SPACE)
-attribute vec4 attr_Tangent;
+in vec4 attr_Tangent;
 #endif
 
 #if defined(USE_VERTEX_ANIMATION)
-attribute vec3 attr_Position2;
-attribute vec3 attr_Normal2;
+in vec3 attr_Position2;
+in vec3 attr_Normal2;
   #if defined(USE_VERT_TANGENT_SPACE)
-attribute vec4 attr_Tangent2;
+in vec4 attr_Tangent2;
   #endif
 #elif defined(USE_SKELETAL_ANIMATION)
-attribute vec4 attr_BoneIndexes;
-attribute vec4 attr_BoneWeights;
+in vec4 attr_BoneIndexes;
+in vec4 attr_BoneWeights;
 #endif
 
 #if defined(USE_LIGHT) && !defined(USE_LIGHT_VECTOR)
-attribute vec3 attr_LightDirection;
+in vec3 attr_LightDirection;
 #endif
 
 #if defined(USE_DELUXEMAP)

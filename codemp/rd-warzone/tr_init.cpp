@@ -382,6 +382,23 @@ cvar_t	*r_dynamicGlowSoft;
 extern void	RB_SetGL2D (void);
 void R_Splash()
 {
+#if 0
+	GLSL_InitSplashScreenShader();
+
+	qglViewport( 0, 0, glConfig.vidWidth, glConfig.vidHeight );
+	qglDisable( GL_CULL_FACE );
+	qglDisable( GL_CLIP_PLANE0 );
+
+	image_t *pImage = R_FindImageFile( "menu/splash", IMGTYPE_COLORALPHA, IMGFLAG_NONE);
+	if (pImage )
+		GL_Bind( pImage );
+
+	GL_State(GLS_SRCBLEND_ONE | GLS_DSTBLEND_ZERO);
+	GLSL_BindProgram(&tr.splashScreenShader);
+	qglDrawArrays(GL_TRIANGLES, 0, 3);
+
+	ri->WIN_Present(&window); // UQ1: Assume this is SDL2 bs...
+#else
 	image_t *pImage = R_FindImageFile( "menu/splash", IMGTYPE_COLORALPHA, IMGFLAG_NONE);
 	qglViewport( 0, 0, glConfig.vidWidth, glConfig.vidHeight );
 	qglScissor( 0, 0, glConfig.vidWidth, glConfig.vidHeight );
@@ -423,6 +440,7 @@ void R_Splash()
 	qglEnd();
 
 	GLimp_EndFrame();
+#endif
 }
 
 /*

@@ -6,14 +6,14 @@
 //#define USE_TCGEN
 //#define USE_TCMOD
 
-attribute vec3 attr_Position;
-attribute vec3 attr_Normal;
+in vec3 attr_Position;
+in vec3 attr_Normal;
 
-attribute vec4 attr_Color;
-attribute vec2 attr_TexCoord0;
+in vec4 attr_Color;
+in vec2 attr_TexCoord0;
 
 #if defined(USE_LIGHTMAP) || defined(USE_TCGEN)
-attribute vec2 attr_TexCoord1;
+in vec2 attr_TexCoord1;
 #endif
 
 uniform vec4   u_DiffuseTexMatrix;
