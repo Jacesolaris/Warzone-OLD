@@ -16,16 +16,29 @@ extern qboolean InFOV( vec3_t spot, vec3_t from, vec3_t fromAngles, int hFOV, in
 
 #define			FOLIAGE_MAX_FOLIAGES 1048576
 
+	// =======================================================================================================================================
 	//
 	// BEGIN - FOLIAGE OPTIONS
 	//
+	// =======================================================================================================================================
 
-	//#define		__NO_PLANTS__ // Disable plants...
+	//#define		__NO_PLANTS__ // Disable plants and only draw grass for everything... Was just for testing FPS difference...
 
-#define			__FOLIAGE_DENSITY__ cg_foliageDensity.value
+	// =======================================================================================================================================
 	//
 	// END - FOLIAGE OPTIONS
 	//
+	// =======================================================================================================================================
+
+
+	// =======================================================================================================================================
+	//
+	// These settings below are here for future adjustment and expansion...
+	//
+	// TODO: * Load <climateType>.climate file with all grasses/plants/trees md3's and textures lists.
+	//       * Add climate selection option to the header of <mapname>.foliage
+	//
+	// =======================================================================================================================================
 
 float		NUM_TREE_TYPES = 9;
 
@@ -140,6 +153,14 @@ float		NUM_PLANT_SHADERS = 0;
 		"models/warzone/foliage/plant75.png",
 	};
 
+	// =======================================================================================================================================
+	//
+	// CVAR related defines...
+	//
+	// =======================================================================================================================================
+
+#define			__FOLIAGE_DENSITY__ cg_foliageDensity.value
+
 	float		FOLIAGE_AREA_SIZE =					512;
 	float		FOLIAGE_VISIBLE_DISTANCE =			FOLIAGE_AREA_SIZE*cg_foliageGrassRangeMult.value;
 	float		FOLIAGE_PLANT_VISIBLE_DISTANCE =	FOLIAGE_AREA_SIZE*cg_foliagePlantRangeMult.value;
@@ -147,6 +168,12 @@ float		NUM_PLANT_SHADERS = 0;
 
 #define		FOLIAGE_AREA_MAX				131072
 #define		FOLIAGE_AREA_MAX_FOLIAGES		256
+
+	// =======================================================================================================================================
+	//
+	// These maybe should have been a stuct, but many separate variables let us use static memory allocations...
+	//
+	// =======================================================================================================================================
 
 	int			FOLIAGE_AREAS_COUNT = 0;
 	int			FOLIAGE_AREAS_LIST_COUNT[FOLIAGE_AREA_MAX];
@@ -169,7 +196,6 @@ float		NUM_PLANT_SHADERS = 0;
 
 	qhandle_t	FOLIAGE_PLANT_MODEL[4] = { 0 };
 	qhandle_t	FOLIAGE_GRASS_BILLBOARD_SHADER[5] = { 0 };
-	qhandle_t	FOLIAGE_PLANT_BILLBOARD_MODEL[27] = { 0 };
 	qhandle_t	FOLIAGE_TREE_MODEL[16] = { 0 };
 	float		FOLIAGE_TREE_RADIUS[16] = { 0 };
 	float		FOLIAGE_TREE_ZOFFSET[16] = { 0 };
@@ -178,18 +204,24 @@ float		NUM_PLANT_SHADERS = 0;
 
 	qhandle_t	FOLIAGE_PLANT_SHADERS[MAX_PLANT_SHADERS] = {0};
 
-	int IN_RANGE_AREAS_LIST_COUNT = 0;
-	int IN_RANGE_AREAS_LIST[1024];
-	float IN_RANGE_AREAS_DISTANCE[1024];
-	int IN_RANGE_TREE_AREAS_LIST_COUNT = 0;
-	int IN_RANGE_TREE_AREAS_LIST[8192];
-	float IN_RANGE_TREE_AREAS_DISTANCE[8192];
+	int			IN_RANGE_AREAS_LIST_COUNT = 0;
+	int			IN_RANGE_AREAS_LIST[1024];
+	float		IN_RANGE_AREAS_DISTANCE[1024];
+	int			IN_RANGE_TREE_AREAS_LIST_COUNT = 0;
+	int			IN_RANGE_TREE_AREAS_LIST[8192];
+	float		IN_RANGE_TREE_AREAS_DISTANCE[8192];
 
 #define FOLIAGE_SOLID_TREES_MAX 4
 	int			FOLIAGE_SOLID_TREES[FOLIAGE_SOLID_TREES_MAX];
 	float		FOLIAGE_SOLID_TREES_DIST[FOLIAGE_SOLID_TREES_MAX];
 
-	float OLD_FOLIAGE_DENSITY = 64.0;
+	float		OLD_FOLIAGE_DENSITY = 64.0;
+
+	// =======================================================================================================================================
+	//
+	// Area System... This allows us to manipulate in realtime which foliages we should use...
+	//
+	// =======================================================================================================================================
 
 	int FOLIAGE_AreaNumForOrg( vec3_t moveOrg )
 	{
@@ -370,6 +402,9 @@ qboolean FOLIAGE_In_FOV ( vec3_t mins, vec3_t maxs )
 	VectorSet(edge, maxs[0], mins[1], maxs[2]);
 	VectorSet(edge2, mins[0], maxs[1], maxs[2]);
 
+	// FIXME: Go back to 180 Y axis later, if we can boost the speed of the system somewhere else. Using FOV_Y
+	//        causes some issues when looking down at an area (something about InFOV seems to not like going
+	//        under 0 and looping back to 360?)
 	if (!InFOV( mins, cg.refdef.vieworg, cg.refdef.viewangles, cg.refdef.fov_x, cg.refdef.fov_y/*180*/ )
 		&& !InFOV( maxs, cg.refdef.vieworg, cg.refdef.viewangles, cg.refdef.fov_x, cg.refdef.fov_y/*180*/ )
 		&& !InFOV( edge, cg.refdef.vieworg, cg.refdef.viewangles, cg.refdef.fov_x, cg.refdef.fov_y/*180*/ )
@@ -535,6 +570,12 @@ void FOLIAGE_Calc_In_Range_Areas( void )
 }
 
 extern "C" {
+	// =======================================================================================================================================
+	//
+	// Collision detection... Only really needed for AWP on client, but there is a CVAR to turn client side predicion on as well.
+	//
+	// =======================================================================================================================================
+
 	qboolean FOLIAGE_TreeSolidBlocking_AWP(vec3_t moveOrg)
 	{
 		int	CLOSE_AREA_LIST[8192];
@@ -670,31 +711,15 @@ extern "C" {
 		return qfalse;
 	}
 
+	// =======================================================================================================================================
+	//
+	// Actual foliage drawing code...
+	//
+	// =======================================================================================================================================
+
 	void FOLIAGE_AddFoliageEntityToScene ( refEntity_t *ent )
 	{
-#if 0
-		float radius = ent->radius;
-		vec3_t mins, maxs;
-
-		if (ent->reType == RT_MODEL)
-		{
-			VectorSet(mins, ent->origin[0]-ent->modelScale[0], ent->origin[1]-ent->modelScale[1], ent->origin[1]-ent->modelScale[2]);
-			VectorSet(maxs, ent->origin[0]+ent->modelScale[0], ent->origin[1]+ent->modelScale[1], ent->origin[1]+ent->modelScale[2]);
-
-			if (FOLIAGE_In_FOV ( mins, maxs ))
-				AddRefEntityToScene(ent);
-		}
-		else
-		{
-			VectorSet(mins, ent->origin[0]-radius, ent->origin[1]-radius, ent->origin[1]-radius);
-			VectorSet(maxs, ent->origin[0]+radius, ent->origin[1]+radius, ent->origin[1]+radius);
-
-			if (FOLIAGE_In_FOV ( mins, maxs ))
-				AddRefEntityToScene(ent);
-		}
-#else
 		AddRefEntityToScene(ent);
-#endif
 	}
 
 	void FOLIAGE_AddToScreen( int num, qboolean treeOnly ) {
