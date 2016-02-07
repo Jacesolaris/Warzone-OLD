@@ -421,7 +421,7 @@ static void GLSL_GetShaderHeader( GLenum shaderType, const GLcharARB *extra, cha
 	
 	if(shaderType == GL_VERTEX_SHADER)
 	{
-		//Q_strcat(dest, size, "#define attribute in\n");
+		Q_strcat(dest, size, "#define attribute in\n");
 		Q_strcat(dest, size, "#define varying out\n");
 	}
 	else
