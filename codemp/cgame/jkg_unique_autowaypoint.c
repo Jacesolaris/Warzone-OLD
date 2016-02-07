@@ -46,8 +46,7 @@
 
 #define MOD_DIRECTORY "warzone"
 
-//#define MAX_MAP_SIZE 16384
-#define MAX_MAP_SIZE 65536//64000
+#define MAX_MAP_SIZE 131072
 
 #define Vector4Copy(a,b)		((b)[0]=(a)[0],(b)[1]=(a)[1],(b)[2]=(a)[2],(b)[3]=(a)[3])
 
@@ -3542,7 +3541,7 @@ qboolean CG_HaveRoofAbove ( vec3_t origin )
 	VectorCopy(origin, org);
 	org[2]+=4.0;
 	VectorCopy(origin, down_org);
-	down_org[2] = +65536.0f;
+	down_org[2] = 131072.0f;
 	
 	// Do forward test...
 	CG_Trace( &tr, org, NULL, NULL, down_org, cg.clientNum, MASK_PLAYERSOLID/*|CONTENTS_TRIGGER|CONTENTS_PLAYERCLIP|CONTENTS_MONSTERCLIP|CONTENTS_BOTCLIP|CONTENTS_SHOTCLIP|CONTENTS_NODROP|CONTENTS_SHOTCLIP|CONTENTS_TRANSLUCENT*/ );
@@ -3566,7 +3565,7 @@ float GroundHeightNoSurfaceChecks ( vec3_t org )
 	org1[2]+=48;
 
 	VectorCopy(org, org2);
-	org2[2]= -65536.0f;
+	org2[2]= -131072.0f;
 
 	CG_Trace( &tr, org1, NULL, NULL, org2, -1, MASK_PLAYERSOLID);
 
@@ -3583,29 +3582,29 @@ float GroundHeightAt ( vec3_t org )
 	org1[2]+=48;
 
 	VectorCopy(org, org2);
-	org2[2]= -65536.0f;
+	org2[2]= -131072.0f;
 
 	CG_Trace( &tr, org1, NULL, NULL, org2, -1, MASK_PLAYERSOLID);
 	//CG_Trace( &tr, org1, NULL, NULL, org2, cg.clientNum, MASK_PLAYERSOLID|CONTENTS_TRIGGER|CONTENTS_PLAYERCLIP|CONTENTS_MONSTERCLIP|CONTENTS_BOTCLIP|CONTENTS_SHOTCLIP|CONTENTS_NODROP|CONTENTS_TRANSLUCENT );
 	
 	if ( tr.startsolid || tr.allsolid )
 	{
-		return -65536.0f;
+		return -131072.0f;
 	}
 
 	if ( tr.surfaceFlags & SURF_SKY )
 	{// Sky...
-		return -65536.0f;
+		return -131072.0f;
 	}
 
 	if ( tr.contents & CONTENTS_TRIGGER )
 	{// Trigger hurt???
-		return -65536.0f;
+		return -131072.0f;
 	}
 
 	if ( tr.contents & CONTENTS_WATER )
 	{// Water. Bad m'kay...
-		return -65536.0f;
+		return -131072.0f;
 	}
 
 //	if ( (tr.surfaceFlags & SURF_NODRAW) 
@@ -3613,11 +3612,11 @@ float GroundHeightAt ( vec3_t org )
 //		/*&& !Waypoint_FloorSurfaceOK(tr.surfaceFlags) 
 //		&& !HasPortalFlags(tr.surfaceFlags, tr.contents)*/ )
 //	{// Sky...
-//		return -65536.0f;
+//		return -131072.0f;
 //	}
 
-	if (tr.endpos[2] < -65000)
-		return -65536.0f;
+	if (tr.endpos[2] < -131000)
+		return -131072.0f;
 
 	// UQ1: MOVER TEST
 	if ( tr.fraction != 1 
@@ -3657,7 +3656,7 @@ float GroundHeightAt ( vec3_t org )
 //		&& !HasPortalFlags(tr.surfaceFlags, tr.contents)*/)
 //	{// Sky...
 //		//trap->Print("(tr.surfaceFlags & SURF_NODRAW) && (tr.surfaceFlags & SURF_NOMARKS)\n");
-//		return 65536.0f;
+//		return 131072.0f;
 //	}
 
 	VectorCopy(org, org1);
@@ -3665,12 +3664,12 @@ float GroundHeightAt ( vec3_t org )
 
 	if (WP_CheckInSolid(org1))
 	{
-		return 65536.0f;
+		return 131072.0f;
 	}
 
 	if (!CG_HaveRoofAbove(org1))
 	{
-		return 65536.0f;
+		return 131072.0f;
 	}
 
 	return tr.endpos[2];
@@ -3768,7 +3767,7 @@ float ShortestWallRangeFrom ( vec3_t org )
 	trace_t tr;
 	vec3_t org1, org2;
 	float dist;
-	float closestRange = 65536.0f;
+	float closestRange = 131072.0f;
 
 	if (!DO_OPEN_AREA_SPREAD) return 0.0;
 
@@ -3839,7 +3838,7 @@ float FloorHeightAt ( vec3_t org )
 	/*
 	if (AIMOD_IsWaypointHeightMarkedAsBad( org ))
 	{
-		return 65536.0f;
+		return 131072.0f;
 	}
 	*/
 
@@ -3847,14 +3846,14 @@ float FloorHeightAt ( vec3_t org )
 	org1[2]+=8;
 
 	VectorCopy(org, org2);
-	org2[2]= -65536.0f;
+	org2[2]= -131072.0f;
 
 	CG_Trace( &tr, org1, NULL, NULL, org2, -1, MASK_PLAYERSOLID|CONTENTS_WATER );
 	//CG_Trace( &tr, org1, NULL, NULL, org2, cg.clientNum, MASK_PLAYERSOLID|CONTENTS_TRIGGER|CONTENTS_PLAYERCLIP|CONTENTS_MONSTERCLIP|CONTENTS_BOTCLIP|CONTENTS_SHOTCLIP|CONTENTS_NODROP|CONTENTS_TRANSLUCENT );
 	
 	if (tr.startsolid)
 	{
-		return 65536.0f;
+		return 131072.0f;
 	}
 
 	if ( tr.fraction != 1 
@@ -3883,36 +3882,36 @@ float FloorHeightAt ( vec3_t org )
 		}
 	}
 
-	if (tr.endpos[2] < -65535.0f /*|| tr.endpos[2] < cg.mapcoordsMins[2]-2000*/)
+	if (tr.endpos[2] < -131000.0f /*|| tr.endpos[2] < cg.mapcoordsMins[2]-2000*/)
 	{
-		return -65536.0f;
+		return -131072.0f;
 	}
 
 	if ( tr.surfaceFlags & SURF_SKY )
 	{// Sky...
 		//trap->Print("SURF_SKY\n");
-		return 65536.0f;
+		return 131072.0f;
 	}
 
 	if ( tr.contents & CONTENTS_LAVA )
 	{// Lava...
 		//trap->Print("CONTENTS_LAVA\n");
-		return 65536.0f;
+		return 131072.0f;
 	}
 
 	if ( /*tr.contents & CONTENTS_WATER ||*/ (tr.surfaceFlags & MATERIAL_MASK) == MATERIAL_WATER )
 	{// Water... I'm just gonna ignore these!
 		//trap->Print("CONTENTS_WATER\n");
 		if (DO_NOWATER)
-			return -65536.0f;
+			return -131072.0f;
 		else
-			return 65536.0f;
+			return 131072.0f;
 	}
 
 	if ( !DO_NOWATER && !DO_ULTRAFAST && !DO_TRANSLUCENT && (tr.contents & CONTENTS_TRANSLUCENT) )
 	{// Invisible surface... I'm just gonna ignore these!
 		//trap->Print("CONTENTS_TRANSLUCENT\n");
-		return 65536.0f;
+		return 131072.0f;
 	}
 
 	aw_floor_trace_hit_mover = qfalse;
@@ -3932,18 +3931,18 @@ float FloorHeightAt ( vec3_t org )
 	pitch += 90.0f;
 
 	if (pitch > MAX_SLOPE || pitch < -MAX_SLOPE)
-		return 65536.0f; // bad slope...
+		return 131072.0f; // bad slope...
 
 	if ( tr.startsolid || tr.allsolid )
 	{
 		//trap->Print("ALLSOLID\n");
-		return 65536.0f;
+		return 131072.0f;
 	}
 
 	if (DO_THOROUGH && BadHeightNearby( org ))
 	{
 		//trap->Print("BAD_HEIGHT\n");
-		return 65536.0f;
+		return 131072.0f;
 	}
 
 	VectorCopy(org, org1);
@@ -3952,13 +3951,13 @@ float FloorHeightAt ( vec3_t org )
 	if (WP_CheckInSolid(org1))
 	{
 		//trap->Print("INSOLID\n");
-		return 65536.0f;
+		return 131072.0f;
 	}
 
 	if (!CG_HaveRoofAbove(org1))
 	{
 		//trap->Print("NOROOF\n");
-		return 65536.0f;
+		return 131072.0f;
 	}
 
 	return tr.endpos[2];
@@ -3974,24 +3973,24 @@ float RoofHeightAt ( vec3_t org )
 	org1[2]+=4;
 
 	VectorCopy(org, org2);
-	org2[2]= 65536.0f;
+	org2[2]= 131072.0f;
 
 	CG_Trace( &tr, org1, NULL, NULL, org2, cg.clientNum, MASK_PLAYERSOLID);
 	//CG_Trace( &tr, org1, NULL, NULL, org2, cg.clientNum, MASK_PLAYERSOLID|CONTENTS_TRIGGER|CONTENTS_PLAYERCLIP|CONTENTS_MONSTERCLIP|CONTENTS_BOTCLIP|CONTENTS_SHOTCLIP|CONTENTS_NODROP|CONTENTS_TRANSLUCENT );
 	
 	if ( tr.startsolid || tr.allsolid )
 	{
-		return -65536.0f;
+		return -131072.0f;
 	}
 
 	if (tr.surfaceFlags & SURF_SKY)
 	{
-		return -65536.f;
+		return -131072.f;
 	}
 
 	if ((tr.surfaceFlags & SURF_NOMARKS) && (tr.surfaceFlags & SURF_NODRAW) && (tr.contents & CONTENTS_SOLID) && (tr.contents & CONTENTS_OPAQUE))
 	{
-		return -65536.f;
+		return -131072.f;
 	}
 
 	return tr.endpos[2];
@@ -4177,7 +4176,7 @@ void CG_ShowSurface ( void )
 	VectorCopy(cg_entities[cg.clientNum].lerpOrigin, down_org);
 	//down_org[2]-=48;
 	//down_org[2] = -65000;
-	down_org[2] = -65536.0f;
+	down_org[2] = -131072.0f;
 	
 	// Do forward test...
 	CG_Trace( &tr, org, NULL, NULL, down_org, cg.clientNum, MASK_PLAYERSOLID|CONTENTS_TRIGGER|CONTENTS_PLAYERCLIP|CONTENTS_MONSTERCLIP|CONTENTS_BOTCLIP|CONTENTS_SHOTCLIP|CONTENTS_NODROP|CONTENTS_SHOTCLIP|CONTENTS_TRANSLUCENT );
@@ -4337,7 +4336,7 @@ void CG_ShowSkySurface ( void )
 	VectorCopy(cg_entities[cg.clientNum].lerpOrigin, down_org);
 	//down_org[2]-=48;
 	//down_org[2] = -65000;
-	down_org[2] = +65536.0f;
+	down_org[2] = +131072.0f;
 	
 	// Do forward test...
 	CG_Trace( &tr, org, NULL, NULL, down_org, cg.clientNum, MASK_PLAYERSOLID|CONTENTS_TRIGGER|CONTENTS_PLAYERCLIP|CONTENTS_MONSTERCLIP|CONTENTS_BOTCLIP|CONTENTS_SHOTCLIP|CONTENTS_NODROP|CONTENTS_SHOTCLIP|CONTENTS_TRANSLUCENT );
@@ -4879,18 +4878,18 @@ void RepairPosition ( intvec3_t org1 )
 	{// Bad waypoint. Remove it!
 		fixed_position[0] = 0.0f;
 		fixed_position[1] = 0.0f;
-		fixed_position[2] = -65536.0f;
+		fixed_position[2] = -131072.0f;
 		return;
 	}
 
 	// New floor test...
 	/*fixed_position[2]=FloorHeightAt(fixed_position)+16;
 
-	if (fixed_position[2] == -65536.0f || fixed_position[2] == 65536.0f)
+	if (fixed_position[2] == -131072.0f || fixed_position[2] == 131072.0f)
 	{// Bad waypoint. Remove it!
 		fixed_position[0] = 0.0f;
 		fixed_position[1] = 0.0f;
-		fixed_position[2] = -65536.0f;
+		fixed_position[2] = -131072.0f;
 		return;
 	}*/
 
@@ -4901,7 +4900,7 @@ void RepairPosition ( intvec3_t org1 )
 	// Prepare for forward test...
 	VectorCopy( fixed_position, newOrg );
 	VectorCopy( fixed_position, newOrg2 );
-	VectorMA(newOrg2, 65536, forward, newOrg2);
+	VectorMA(newOrg2, 131072, forward, newOrg2);
 
 	// Do forward test...
 	CG_Trace( &tr, newOrg, NULL, NULL, newOrg2, -1, CONTENTS_PLAYERCLIP | MASK_SHOT | MASK_OPAQUE | CONTENTS_LAVA | MASK_WATER );
@@ -4913,7 +4912,7 @@ void RepairPosition ( intvec3_t org1 )
 		// Prepare for back test...
 		VectorCopy( fixed_position, newOrg );
 		VectorCopy( fixed_position, newOrg2 );
-		VectorMA(newOrg2, -65536, forward, newOrg2);
+		VectorMA(newOrg2, -131072, forward, newOrg2);
 
 		// Do back test...
 		CG_Trace( &tr, newOrg, NULL, NULL, newOrg2, -1, CONTENTS_PLAYERCLIP | MASK_SHOT | MASK_OPAQUE | CONTENTS_LAVA | MASK_WATER );
@@ -4941,7 +4940,7 @@ void RepairPosition ( intvec3_t org1 )
 		// Prepare for left test...
 		VectorCopy( fixed_position, newOrg );
 		VectorCopy( fixed_position, newOrg2 );
-		VectorMA(newOrg2, -65536, right, newOrg2);
+		VectorMA(newOrg2, -131072, right, newOrg2);
 
 		// Do back test...
 		CG_Trace( &tr, newOrg, NULL, NULL, newOrg2, -1, CONTENTS_PLAYERCLIP | MASK_SHOT | MASK_OPAQUE | CONTENTS_LAVA | MASK_WATER );
@@ -6222,7 +6221,7 @@ omp_set_nested(0);
 			area_org[1] = arealist[i][1];
 			area_org[2] = arealist[i][2];
 
-			if (area_org[2] <= -65536.0f)
+			if (area_org[2] <= -131072.0f)
 			{// This is a bad height!
 				continue;
 			}
@@ -6369,7 +6368,7 @@ omp_set_nested(0);
 			area_org[1] = arealist[i][1];
 			area_org[2] = arealist[i][2];
 
-			if (area_org[2] <= -65536.0f)
+			if (area_org[2] <= -131072.0f)
 			{// This is a bad height!
 				continue;
 			}
@@ -8142,7 +8141,7 @@ qboolean Warzone_CheckBelowWaypoint( int wp )
 
 	VectorCopy(nodes[wp].origin, org);
 	VectorCopy(nodes[wp].origin, org2);
-	org2[2] = -65536.0f;//org[2] - 256;
+	org2[2] = -131072.0f;//org[2] - 256;
 
 	CG_Trace( &tr, org, NULL, NULL, org2, -1, MASK_PLAYERSOLID|CONTENTS_TRIGGER);
 	

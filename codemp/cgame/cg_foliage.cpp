@@ -145,7 +145,7 @@ float		NUM_PLANT_SHADERS = 0;
 	float		FOLIAGE_PLANT_VISIBLE_DISTANCE =	FOLIAGE_AREA_SIZE*cg_foliagePlantRangeMult.value;
 	float		FOLIAGE_TREE_VISIBLE_DISTANCE =		FOLIAGE_AREA_SIZE*cg_foliageTreeRangeMult.value;
 
-#define		FOLIAGE_AREA_MAX				65536
+#define		FOLIAGE_AREA_MAX				131072
 #define		FOLIAGE_AREA_MAX_FOLIAGES		256
 
 	int			FOLIAGE_AREAS_COUNT = 0;
@@ -460,7 +460,7 @@ void FOLIAGE_Calc_In_Range_Areas( void )
 	for (int i = 0; i < FOLIAGE_SOLID_TREES_MAX; i++)
 	{
 		FOLIAGE_SOLID_TREES[i] = -1;
-		FOLIAGE_SOLID_TREES_DIST[i] = 65536.0;
+		FOLIAGE_SOLID_TREES_DIST[i] = 131072.0;
 	}
 
 	FOLIAGE_VISIBLE_DISTANCE =		FOLIAGE_AREA_SIZE*cg_foliageGrassRangeMult.value;
@@ -1566,7 +1566,7 @@ extern "C" {
 		i = 0;
 
 
-		float		startx = -65530, starty = -65530, startz = -65530;
+		float		startx = -131072, starty = -131072, startz = -131072;
 		int			grassSpotCount = 0;
 		vec3_t		*grassSpotList;
 		float		*grassSpotScale;
