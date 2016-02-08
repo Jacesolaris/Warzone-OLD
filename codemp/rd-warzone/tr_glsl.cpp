@@ -141,18 +141,19 @@ const char fallbackShader_genericTessControl_cp[] =
 "// define the number of CPs in the output patch\n"\
 "layout (vertices = 3) out;\n"\
 "\n"\
-"uniform vec3   u_ViewOrigin;\n"\
-"#define gEyeWorldPos u_ViewOrigin.xyz\n"\
+"uniform mat4			u_ModelViewProjectionMatrix;\n"\
+"uniform vec3			u_ViewOrigin;\n"\
+"#define gEyeWorldPos	(u_ModelViewProjectionMatrix * vec4(u_ViewOrigin.xyz, 1.0)).xyz\n"\
 "\n"\
 "// attributes of the input CPs\n"\
-"in vec3 WorldPos_CS_in[];\n"\
-"in vec2 TexCoord_CS_in[];\n"\
-"in vec3 Normal_CS_in[];\n"\
+"in vec3				WorldPos_CS_in[];\n"\
+"in vec2				TexCoord_CS_in[];\n"\
+"in vec3				Normal_CS_in[];\n"\
 "\n"\
 "// attributes of the output CPs\n"\
-"out vec3 WorldPos_ES_in[];\n"\
-"out vec2 TexCoord_ES_in[];\n"\
-"out vec3 Normal_ES_in[];\n"\
+"out vec3				WorldPos_ES_in[];\n"\
+"out vec2				TexCoord_ES_in[];\n"\
+"out vec3				Normal_ES_in[];\n"\
 "\n"\
 "float GetTessLevel(float Distance0, float Distance1)\n"\
 "{\n"\
@@ -191,19 +192,20 @@ const char fallbackShader_genericTessControl_cp[] =
 const char fallbackShader_genericTessControl_ep[] = 
 "layout(triangles, equal_spacing, ccw) in;\n"\
 "\n"\
-"uniform sampler2D u_NormalMap;\n"\
-"#define gDisplacementMap u_NormalMap\n"\
+"uniform sampler2D			u_NormalMap;\n"\
+"#define gDisplacementMap	u_NormalMap\n"\
+"uniform mat4				u_ModelViewProjectionMatrix;\n"\
+"#define gVP				u_ModelViewProjectionMatrix\n"\
+"\n"\
+"in vec3					WorldPos_ES_in[];\n"\
+"in vec2					TexCoord_ES_in[];\n"\
+"in vec3					Normal_ES_in[];\n"\
+"\n"\
+"out vec3					WorldPos_FS_in;\n"\
+"out vec2					TexCoord_FS_in;\n"\
+"out vec3					Normal_FS_in;\n"\
+"\n"\
 "float gDispFactor = 1.0;\n"\
-"uniform mat4 u_ModelViewProjectionMatrix;\n"\
-"#define gVP u_ModelViewProjectionMatrix\n"\
-"\n"\
-"in vec3 WorldPos_ES_in[];\n"\
-"in vec2 TexCoord_ES_in[];\n"\
-"in vec3 Normal_ES_in[];\n"\
-"\n"\
-"out vec3 WorldPos_FS_in;\n"\
-"out vec2 TexCoord_FS_in;\n"\
-"out vec3 Normal_FS_in;\n"\
 "\n"\
 "vec2 interpolate2D(vec2 v0, vec2 v1, vec2 v2)\n"\
 "{\n"\
@@ -224,11 +226,12 @@ const char fallbackShader_genericTessControl_ep[] =
 "   	WorldPos_FS_in = interpolate3D(WorldPos_ES_in[0], WorldPos_ES_in[1], WorldPos_ES_in[2]);\n"\
 "\n"\
 "	// Displace the vertex along the normal\n"\
-"   	float Displacement = texture(gDisplacementMap, TexCoord_FS_in.xy).x;\n"\
+"   	float Displacement = 1.0 - texture(gDisplacementMap, TexCoord_FS_in.xy).x;\n"\
 "   	WorldPos_FS_in += Normal_FS_in * Displacement * gDispFactor;\n"\
 "   	gl_Position = gVP * vec4(WorldPos_FS_in, 1.0);\n"\
 "}\n";
 
+// UQ1: 1 - texture added for now to reverse our normalmap color - it seemed backward using normals instead of real dmap
 //"uniform float gDispFactor;\n"\
 //"uniform sampler2D gDisplacementMap;\n"\
 
@@ -1447,9 +1450,19 @@ int GLSL_BeginLoadGPUShaders(void)
 		if (i & GENERICDEF_USE_GLOW_BUFFER)
 			Q_strcat(extradefines, 1024, "#define USE_GLOW_BUFFER\n");
 
-		if (!GLSL_BeginLoadGPUShader(&tr.genericShader[i], "generic", attribs, qtrue, qfalse, extradefines, qtrue, NULL, fallbackShader_generic_vp, fallbackShader_generic_fp, NULL, NULL))
+		if (r_tesselation->integer)
 		{
-			ri->Error(ERR_FATAL, "Could not load generic shader!");
+			if (!GLSL_BeginLoadGPUShader(&tr.genericShader[i], "generic", attribs, qtrue, qfalse, extradefines, qtrue, NULL, fallbackShader_generic_vp, fallbackShader_generic_fp, fallbackShader_genericTessControl_cp, fallbackShader_genericTessControl_ep))
+			{
+				ri->Error(ERR_FATAL, "Could not load generic shader!");
+			}
+		}
+		else
+		{
+			if (!GLSL_BeginLoadGPUShader(&tr.genericShader[i], "generic", attribs, qtrue, qfalse, extradefines, qtrue, NULL, fallbackShader_generic_vp, fallbackShader_generic_fp, NULL, NULL))
+			{
+				ri->Error(ERR_FATAL, "Could not load generic shader!");
+			}
 		}
 	}
 

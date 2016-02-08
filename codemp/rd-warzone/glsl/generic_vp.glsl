@@ -74,6 +74,10 @@ varying vec3		var_ViewDir;
 varying vec3		var_Normal;
 varying vec4		var_LightDir;
 
+out vec3 WorldPos_CS_in;
+out vec2 TexCoord_CS_in;
+out vec3 Normal_CS_in;
+
 #if defined(USE_DEFORM_VERTEXES)
 vec3 DeformPosition(const vec3 pos, const vec3 normal, const vec2 st)
 {
@@ -268,4 +272,8 @@ void main()
 #if defined(USE_FOG)
 	var_Color *= vec4(1.0) - u_FogColorMask * sqrt(clamp(CalcFog(position), 0.0, 1.0));
 #endif
+
+	TexCoord_CS_in = var_DiffuseTex.xy;
+	Normal_CS_in = normal.xyz;
+	WorldPos_CS_in = position.xyz;
 }

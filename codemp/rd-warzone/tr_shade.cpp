@@ -41,31 +41,41 @@ R_DrawElements
 ==================
 */
 
-void R_DrawElementsVBO( int numIndexes, glIndex_t firstIndex, glIndex_t minIndex, glIndex_t maxIndex )
+void R_DrawElementsVBO( int numIndexes, glIndex_t firstIndex, glIndex_t minIndex, glIndex_t maxIndex, glIndex_t numVerts, qboolean tesselation )
 {
-	if (r_tesselation->integer)
+	if (r_tesselation->integer /*&& tesselation*/)
 	{
 		GLint MaxPatchVertices = 0;
 		qglGetIntegerv(GL_MAX_PATCH_VERTICES, &MaxPatchVertices);
 		//printf("Max supported patch vertices %d\n", MaxPatchVertices);	
-		qglPatchParameteri(GL_PATCH_VERTICES, 3);
+		qglPatchParameteri(GL_PATCH_VERTICES, 3/*numVerts*/);
 		qglDrawRangeElements(GL_PATCHES, minIndex, maxIndex, numIndexes, GL_INDEX_TYPE, BUFFER_OFFSET(firstIndex * sizeof(glIndex_t)));
 	}
 	else
 		qglDrawRangeElements(GL_TRIANGLES, minIndex, maxIndex, numIndexes, GL_INDEX_TYPE, BUFFER_OFFSET(firstIndex * sizeof(glIndex_t)));
 }
 
+void TesselatedGlMultiDrawElements( GLenum mode, GLsizei *count, GLenum type, const GLvoid **indices, GLsizei primcount )
+{// Would really suck if this is the only way... I hate opengl...
+	GLint MaxPatchVertices = 0;
+	qglGetIntegerv(GL_MAX_PATCH_VERTICES, &MaxPatchVertices);
+
+	for (int i = 0; i < primcount; i++)
+	{
+		if (count[i] > 0)
+		{
+			qglPatchParameteri(GL_PATCH_VERTICES, 3);
+			qglDrawElements(mode, count[i], type, indices[i]);
+		}
+	}
+}
 
 static void R_DrawMultiElementsVBO( int multiDrawPrimitives, glIndex_t *multiDrawMinIndex, glIndex_t *multiDrawMaxIndex, 
-	GLsizei *multiDrawNumIndexes, glIndex_t **multiDrawFirstIndex)
+	GLsizei *multiDrawNumIndexes, glIndex_t **multiDrawFirstIndex, glIndex_t numVerts, qboolean tesselation)
 {
-	if (r_tesselation->integer)
+	if (r_tesselation->integer /*&& tesselation*/)
 	{
-		GLint MaxPatchVertices = 0;
-		qglGetIntegerv(GL_MAX_PATCH_VERTICES, &MaxPatchVertices);
-		//printf("Max supported patch vertices %d\n", MaxPatchVertices);	
-		qglPatchParameteri(GL_PATCH_VERTICES, 3);
-		qglMultiDrawElements(GL_PATCHES, multiDrawNumIndexes, GL_INDEX_TYPE, (const GLvoid **)multiDrawFirstIndex, multiDrawPrimitives);
+		TesselatedGlMultiDrawElements( GL_PATCHES, multiDrawNumIndexes, GL_INDEX_TYPE, (const GLvoid **)multiDrawFirstIndex, multiDrawPrimitives );
 	}
 	else
 		qglMultiDrawElements(GL_TRIANGLES, multiDrawNumIndexes, GL_INDEX_TYPE, (const GLvoid **)multiDrawFirstIndex, multiDrawPrimitives);
@@ -166,11 +176,11 @@ static void DrawTris (shaderCommands_t *input) {
 
 		if (input->multiDrawPrimitives)
 		{
-			R_DrawMultiElementsVBO(input->multiDrawPrimitives, input->multiDrawMinIndex, input->multiDrawMaxIndex, input->multiDrawNumIndexes, input->multiDrawFirstIndex);
+			R_DrawMultiElementsVBO(input->multiDrawPrimitives, input->multiDrawMinIndex, input->multiDrawMaxIndex, input->multiDrawNumIndexes, input->multiDrawFirstIndex, input->numVertexes, qfalse);
 		}
 		else
 		{
-			R_DrawElementsVBO(input->numIndexes, input->firstIndex, input->minIndex, input->maxIndex);
+			R_DrawElementsVBO(input->numIndexes, input->firstIndex, input->minIndex, input->maxIndex, input->numVertexes, qfalse);
 		}
 	}
 
@@ -742,11 +752,11 @@ static void ProjectPshadowVBOGLSL( void ) {
 
 		if (input->multiDrawPrimitives)
 		{
-			R_DrawMultiElementsVBO(input->multiDrawPrimitives, input->multiDrawMinIndex, input->multiDrawMaxIndex, input->multiDrawNumIndexes, input->multiDrawFirstIndex);
+			R_DrawMultiElementsVBO(input->multiDrawPrimitives, input->multiDrawMinIndex, input->multiDrawMaxIndex, input->multiDrawNumIndexes, input->multiDrawFirstIndex, input->numVertexes, qfalse);
 		}
 		else
 		{
-			R_DrawElementsVBO(input->numIndexes, input->firstIndex, input->minIndex, input->maxIndex);
+			R_DrawElementsVBO(input->numIndexes, input->firstIndex, input->minIndex, input->maxIndex, input->numVertexes, qfalse);
 		}
 
 		backEnd.pc.c_totalIndexes += tess.numIndexes;
@@ -829,11 +839,11 @@ static void RB_FogPass( void ) {
 	if (tess.multiDrawPrimitives)
 	{
 		shaderCommands_t *input = &tess;
-		R_DrawMultiElementsVBO(input->multiDrawPrimitives, input->multiDrawMinIndex, input->multiDrawMaxIndex, input->multiDrawNumIndexes, input->multiDrawFirstIndex);
+		R_DrawMultiElementsVBO(input->multiDrawPrimitives, input->multiDrawMinIndex, input->multiDrawMaxIndex, input->multiDrawNumIndexes, input->multiDrawFirstIndex, input->numVertexes, qfalse);
 	}
 	else
 	{
-		R_DrawElementsVBO(tess.numIndexes, tess.firstIndex, tess.minIndex, tess.maxIndex);
+		R_DrawElementsVBO(tess.numIndexes, tess.firstIndex, tess.minIndex, tess.maxIndex, tess.numVertexes, qfalse);
 	}
 }
 
@@ -1351,6 +1361,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		colorGen_t forceRGBGen = CGEN_BAD;
 		alphaGen_t forceAlphaGen = AGEN_IDENTITY;
 		qboolean isGeneric = qtrue;
+		qboolean isLightAll = qfalse;
 		qboolean isWater = qfalse;
 		qboolean isGrass = qfalse;
 		qboolean multiPass = qtrue;
@@ -1399,6 +1410,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 				sp = &pStage->glslShaderGroup[index];
 				isGeneric = qfalse;
+				isLightAll = qtrue;
 			}
 			else
 			{
@@ -1426,6 +1438,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 				sp = &tr.genericShader[shaderAttribs];
 				isGeneric = qtrue;
+				isLightAll = qfalse;
 			}
 		}
 		else if (pStage->glslShaderGroup == tr.lightallShader)
@@ -1471,6 +1484,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 			sp = &pStage->glslShaderGroup[index];
 			isGeneric = qfalse;
+			isLightAll = qtrue;
 
 			backEnd.pc.c_lightallDraws++;
 		}
@@ -1478,6 +1492,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		{
 			sp = GLSL_GetGenericShaderProgram(stage);
 			isGeneric = qtrue;
+			isLightAll = qfalse;
 
 			backEnd.pc.c_genericDraws++;
 		}
@@ -1507,6 +1522,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				GL_BindToTMU(tr.renderDepthImage, TB_LEVELSMAP);
 
 				isGeneric = qfalse;
+				isLightAll = qfalse;
 				isWater = qtrue;
 				//multiPass = qtrue;
 				passMax = 8;
@@ -1538,6 +1554,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				GL_BindToTMU(tr.renderDepthImage, TB_LEVELSMAP);
 
 				isGeneric = qfalse;
+				isLightAll = qfalse;
 				isGrass = qtrue;
 				multiPass = qtrue;
 				passMax = 10;
@@ -1561,6 +1578,8 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			}
 
 			GLSL_BindProgram(sp);
+
+			isLightAll = qtrue;
 		}
 
 		while (1)
@@ -2000,13 +2019,17 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			//
 			// draw
 			//
+			qboolean tesselation = qfalse;
+
+			if (r_tesselation->integer && isLightAll == qtrue) tesselation = qtrue;
+
 			if (input->multiDrawPrimitives)
 			{
-				R_DrawMultiElementsVBO(input->multiDrawPrimitives, input->multiDrawMinIndex, input->multiDrawMaxIndex, input->multiDrawNumIndexes, input->multiDrawFirstIndex);
+				R_DrawMultiElementsVBO(input->multiDrawPrimitives, input->multiDrawMinIndex, input->multiDrawMaxIndex, input->multiDrawNumIndexes, input->multiDrawFirstIndex, input->numVertexes, tesselation);
 			}
 			else
 			{
-				R_DrawElementsVBO(input->numIndexes, input->firstIndex, input->minIndex, input->maxIndex);
+				R_DrawElementsVBO(input->numIndexes, input->firstIndex, input->minIndex, input->maxIndex, input->numVertexes, tesselation);
 			}
 
 
@@ -2085,11 +2108,11 @@ static void RB_RenderShadowmap( shaderCommands_t *input )
 
 			if (input->multiDrawPrimitives)
 			{
-				R_DrawMultiElementsVBO(input->multiDrawPrimitives, input->multiDrawMinIndex, input->multiDrawMaxIndex, input->multiDrawNumIndexes, input->multiDrawFirstIndex);
+				R_DrawMultiElementsVBO(input->multiDrawPrimitives, input->multiDrawMinIndex, input->multiDrawMaxIndex, input->multiDrawNumIndexes, input->multiDrawFirstIndex, input->numVertexes, qfalse);
 			}
 			else
 			{
-				R_DrawElementsVBO(input->numIndexes, input->firstIndex, input->minIndex, input->maxIndex);
+				R_DrawElementsVBO(input->numIndexes, input->firstIndex, input->minIndex, input->maxIndex, input->numVertexes, qfalse);
 			}
 		}
 	}
