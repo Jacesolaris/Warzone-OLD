@@ -1,4 +1,4 @@
-/*
+﻿/*
 ===========================================================================
 Copyright (C) 1999-2005 Id Software, Inc.
 
@@ -444,6 +444,9 @@ extern void ( APIENTRY * qglVertex4s )(GLshort x, GLshort y, GLshort z, GLshort 
 extern void ( APIENTRY * qglVertex4sv )(const GLshort *v);
 extern void ( APIENTRY * qglVertexPointer )(GLint size, GLenum type, GLsizei stride, const GLvoid *pointer);
 extern void ( APIENTRY * qglViewport )(GLint x, GLint y, GLsizei width, GLsizei height);
+
+extern void ( APIENTRY * qglPatchParameteri )(GLenum pname​, GLint value​);
+extern void ( APIENTRY * qglPatchParameterfv )(GLenum pname​, const GLfloat *values​);
 #else
 #define qglAccum glAccum
 #define qglAlphaFunc glAlphaFunc
@@ -779,6 +782,9 @@ extern void ( APIENTRY * qglViewport )(GLint x, GLint y, GLsizei width, GLsizei 
 #define qglVertex4sv glVertex4sv
 #define qglVertexPointer glVertexPointer
 #define qglViewport glViewport
+
+#define qglPatchParameteri glPatchParameteri
+#define qglPatchParameterfv glPatchParameterfv
 #endif //_WIN32
 
 // Drawing commands

@@ -43,14 +43,32 @@ R_DrawElements
 
 void R_DrawElementsVBO( int numIndexes, glIndex_t firstIndex, glIndex_t minIndex, glIndex_t maxIndex )
 {
-	qglDrawRangeElements(GL_TRIANGLES, minIndex, maxIndex, numIndexes, GL_INDEX_TYPE, BUFFER_OFFSET(firstIndex * sizeof(glIndex_t)));
+	if (r_tesselation->integer)
+	{
+		GLint MaxPatchVertices = 0;
+		qglGetIntegerv(GL_MAX_PATCH_VERTICES, &MaxPatchVertices);
+		//printf("Max supported patch vertices %d\n", MaxPatchVertices);	
+		qglPatchParameteri(GL_PATCH_VERTICES, 3);
+		qglDrawRangeElements(GL_PATCHES, minIndex, maxIndex, numIndexes, GL_INDEX_TYPE, BUFFER_OFFSET(firstIndex * sizeof(glIndex_t)));
+	}
+	else
+		qglDrawRangeElements(GL_TRIANGLES, minIndex, maxIndex, numIndexes, GL_INDEX_TYPE, BUFFER_OFFSET(firstIndex * sizeof(glIndex_t)));
 }
 
 
 static void R_DrawMultiElementsVBO( int multiDrawPrimitives, glIndex_t *multiDrawMinIndex, glIndex_t *multiDrawMaxIndex, 
 	GLsizei *multiDrawNumIndexes, glIndex_t **multiDrawFirstIndex)
 {
-	qglMultiDrawElements(GL_TRIANGLES, multiDrawNumIndexes, GL_INDEX_TYPE, (const GLvoid **)multiDrawFirstIndex, multiDrawPrimitives);
+	if (r_tesselation->integer)
+	{
+		GLint MaxPatchVertices = 0;
+		qglGetIntegerv(GL_MAX_PATCH_VERTICES, &MaxPatchVertices);
+		//printf("Max supported patch vertices %d\n", MaxPatchVertices);	
+		qglPatchParameteri(GL_PATCH_VERTICES, 3);
+		qglMultiDrawElements(GL_PATCHES, multiDrawNumIndexes, GL_INDEX_TYPE, (const GLvoid **)multiDrawFirstIndex, multiDrawPrimitives);
+	}
+	else
+		qglMultiDrawElements(GL_TRIANGLES, multiDrawNumIndexes, GL_INDEX_TYPE, (const GLvoid **)multiDrawFirstIndex, multiDrawPrimitives);
 }
 
 

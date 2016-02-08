@@ -2,6 +2,13 @@ attribute vec2 attr_TexCoord0;
 
 uniform float	u_Time;
 
+
+out vec3 WorldPos_CS_in;
+out vec2 TexCoord_CS_in;
+out vec3 Normal_CS_in;
+
+
+
 //#define USE_LIGHT
 
 #if defined(USE_LIGHTMAP) || defined(USE_TCGEN)
@@ -293,5 +300,9 @@ void main()
 
   var_vertPos = gl_Position.xyz;
   var_Time = u_Time;
+
+  TexCoord_CS_in = attr_TexCoord0.xy;
+  Normal_CS_in = var_Normal.xyz;
+  WorldPos_CS_in = position.xyz;
 #endif
 }

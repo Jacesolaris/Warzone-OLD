@@ -1,4 +1,4 @@
-/*
+﻿/*
 ** QGL_WIN.C
 **
 ** This file implements the operating system binding of GL to QGL function
@@ -375,6 +375,9 @@ void ( APIENTRY * qglVertex4s )(GLshort x, GLshort y, GLshort z, GLshort w);
 void ( APIENTRY * qglVertex4sv )(const GLshort *v);
 void ( APIENTRY * qglVertexPointer )(GLint size, GLenum type, GLsizei stride, const GLvoid *pointer);
 void ( APIENTRY * qglViewport )(GLint x, GLint y, GLsizei width, GLsizei height);
+
+void ( APIENTRY * qglPatchParameteri )(GLenum pname​, GLint value​);
+void ( APIENTRY * qglPatchParameterfv )(GLenum pname​, const GLfloat *values​);
 
 // Some from tr_init.cpp in rd-vanilla that really do belong here --eez
 void ( APIENTRY * qglMultiTexCoord2fARB )( GLenum texture, GLfloat s, GLfloat t ) = NULL;
@@ -781,6 +784,9 @@ static void ( APIENTRY * dllVertex4s )(GLshort x, GLshort y, GLshort z, GLshort 
 static void ( APIENTRY * dllVertex4sv )(const GLshort *v);
 static void ( APIENTRY * dllVertexPointer )(GLint size, GLenum type, GLsizei stride, const GLvoid *pointer);
 static void ( APIENTRY * dllViewport )(GLint x, GLint y, GLsizei width, GLsizei height);
+
+static void ( APIENTRY * dllPatchParameteri )(GLenum pname​, GLint value​);
+static void ( APIENTRY * dllPatchParameterfv )(GLenum pname​, const GLfloat *values​);
 
 static const char * BooleanToString( GLboolean b )
 {
@@ -2837,6 +2843,17 @@ static void APIENTRY logViewport(GLint x, GLint y, GLsizei width, GLsizei height
 	dllViewport( x, y, width, height );
 }
 
+static void APIENTRY logPatchParameteri(GLenum target, GLint param)
+{
+	fprintf( glw_state.log_fp, "glPatchParameteri( 0x%x, 0x%x )\n", target, param );
+	dllPatchParameteri( target, param );
+}
+static void APIENTRY logPatchParameterfv(GLenum target, const GLfloat *params)
+{
+	SIG( "glPatchParameterfv" );
+	dllPatchParameterfv( target, params );
+}
+
 /*
 ** QGL_Shutdown
 **
@@ -3191,6 +3208,9 @@ void QGL_Shutdown( void )
 	qglVertex4sv                 = NULL;
 	qglVertexPointer             = NULL;
 	qglViewport                  = NULL;
+
+	qglPatchParameteri             = NULL;
+	qglPatchParameterfv            = NULL;
 
 	qwglCopyContext              = NULL;
 	qwglCreateContext            = NULL;
@@ -3572,6 +3592,9 @@ qboolean QGL_Init( const char *dllname )
 	qglVertex4sv                 = 	dllVertex4sv                 = (void (APIENTRY *)(const short *))GPA( "glVertex4sv" );
 	qglVertexPointer             = 	dllVertexPointer             = (void (APIENTRY *)(int,unsigned int,int,const void *))GPA( "glVertexPointer" );
 	qglViewport                  = 	dllViewport                  = (void (APIENTRY *)(int,int,int,int))GPA( "glViewport" );
+
+	qglPatchParameteri             = 	dllPatchParameteri             = (void (APIENTRY *)(unsigned int,int))GPA( "glPatchParameteri" );
+	qglPatchParameterfv            = 	dllPatchParameterfv            = (void (APIENTRY *)(unsigned int,const float *))GPA( "glPatchParameterfv" );
 
 	qwglCopyContext              = (BOOL (WINAPI *)(HGLRC, HGLRC, UINT))GPA( "wglCopyContext" );
 	qwglCreateContext            = (HGLRC (WINAPI *)(HDC))GPA( "wglCreateContext" );
@@ -3978,6 +4001,9 @@ void QGL_EnableLogging( qboolean enable )
 		qglVertex4sv                 = 	logVertex4sv                 ;
 		qglVertexPointer             = 	logVertexPointer             ;
 		qglViewport                  = 	logViewport                  ;
+
+		qglPatchParameteri             = 	logPatchParameteri             ;
+		qglPatchParameterfv            = 	logPatchParameterfv            ;
 	}
 	else
 	{
@@ -4322,6 +4348,9 @@ void QGL_EnableLogging( qboolean enable )
 		qglVertex4sv                 = 	dllVertex4sv                 ;
 		qglVertexPointer             = 	dllVertexPointer             ;
 		qglViewport                  = 	dllViewport                  ;
+
+		qglPatchParameteri             = 	dllPatchParameteri             ;
+		qglPatchParameterfv            = 	dllPatchParameterfv            ;
 	}
 }
 

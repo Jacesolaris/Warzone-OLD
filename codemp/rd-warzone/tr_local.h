@@ -128,6 +128,7 @@ In JA, we define these in the tr_local.h, which is much more logical
 */
 
 extern cvar_t	*r_superSampleMultiplier;
+extern cvar_t	*r_tesselation;
 
 extern cvar_t	*r_rotatex;
 extern cvar_t	*r_rotatey;
@@ -1336,6 +1337,8 @@ typedef struct shaderProgram_s
 	GLuint     program;
 	GLuint     vertexShader;
 	GLuint     fragmentShader;
+	GLuint     tessControlShader;
+	GLuint     tessEvaluationShader;
 	uint32_t        attribs;	// vertex array attributes
 
 	// uniform parameters

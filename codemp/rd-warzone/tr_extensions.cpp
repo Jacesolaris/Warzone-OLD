@@ -381,6 +381,10 @@ void GLimp_InitExtraExtensions()
 	GetGLFunction (qglCompressedTexSubImage1D, "glCompressedTexSubImage1D", qtrue);
 	GetGLFunction (qglGetCompressedTexImage, "glGetCompressedTexImage", qtrue);
 
+	// Tesselation
+	GetGLFunction (qglPatchParameteri, "glPatchParameteri", qtrue);
+	GetGLFunction (qglPatchParameterfv, "glPatchParameterfv", qtrue);
+
 	// GLSL
 	{
 		char version[256];
