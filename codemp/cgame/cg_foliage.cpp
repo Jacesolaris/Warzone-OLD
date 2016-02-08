@@ -178,6 +178,8 @@ float		NUM_PLANT_SHADERS = 0;
 	int			FOLIAGE_AREAS_COUNT = 0;
 	int			FOLIAGE_AREAS_LIST_COUNT[FOLIAGE_AREA_MAX];
 	int			FOLIAGE_AREAS_LIST[FOLIAGE_AREA_MAX][FOLIAGE_AREA_MAX_FOLIAGES];
+	int			FOLIAGE_AREAS_TREES_LIST_COUNT[FOLIAGE_AREA_MAX];
+	int			FOLIAGE_AREAS_TREES_LIST[FOLIAGE_AREA_MAX][FOLIAGE_AREA_MAX_FOLIAGES];
 	vec3_t		FOLIAGE_AREAS_MINS[FOLIAGE_AREA_MAX];
 	vec3_t		FOLIAGE_AREAS_MAXS[FOLIAGE_AREA_MAX];
 
@@ -296,6 +298,7 @@ float		NUM_PLANT_SHADERS = 0;
 			if (mins[1] > mapMaxs[1]) break; // found our last area...
 
 			FOLIAGE_AREAS_LIST_COUNT[areaNum] = 0;
+			FOLIAGE_AREAS_TREES_LIST_COUNT[areaNum] = 0;
 
 			while (FOLIAGE_AREAS_LIST_COUNT[areaNum] == 0 && mins[1] <= mapMaxs[1])
 			{// While loop is so we can skip zero size areas for speed...
@@ -338,6 +341,12 @@ float		NUM_PLANT_SHADERS = 0;
 						{
 							FOLIAGE_AREAS_LIST[areaNum][FOLIAGE_AREAS_LIST_COUNT[areaNum]] = i;
 							FOLIAGE_AREAS_LIST_COUNT[areaNum]++;
+
+							if (FOLIAGE_TREE_SELECTION[i] > 0)
+							{// Also make a trees list for faster tree selection...
+								FOLIAGE_AREAS_TREES_LIST[areaNum][FOLIAGE_AREAS_TREES_LIST_COUNT[areaNum]] = i;
+								FOLIAGE_AREAS_TREES_LIST_COUNT[areaNum]++;
+							}
 						}
 					}
 				}
@@ -597,9 +606,9 @@ extern "C" {
 		{
 			int areaNum = CLOSE_AREA_LIST[areaListPos];
 
-			for (int treeNum = 0; treeNum < FOLIAGE_AREAS_LIST_COUNT[areaNum]; treeNum++)
+			for (int treeNum = 0; treeNum < FOLIAGE_AREAS_TREES_LIST_COUNT[areaNum]; treeNum++)
 			{
-				int		THIS_TREE_NUM = FOLIAGE_AREAS_LIST[areaNum][treeNum];
+				int		THIS_TREE_NUM = FOLIAGE_AREAS_TREES_LIST[areaNum][treeNum];
 				int		THIS_TREE_TYPE = FOLIAGE_TREE_SELECTION[THIS_TREE_NUM]-1;
 				float	TREE_RADIUS = FOLIAGE_TREE_RADIUS[THIS_TREE_TYPE] * FOLIAGE_TREE_SCALE[THIS_TREE_NUM];
 				float	DIST = DistanceHorizontal(FOLIAGE_POSITIONS[THIS_TREE_NUM], moveOrg);
@@ -644,9 +653,9 @@ extern "C" {
 		{
 			int areaNum = CLOSE_AREA_LIST[areaListPos];
 
-			for (int treeNum = 0; treeNum < FOLIAGE_AREAS_LIST_COUNT[areaNum]; treeNum++)
+			for (int treeNum = 0; treeNum < FOLIAGE_AREAS_TREES_LIST_COUNT[areaNum]; treeNum++)
 			{
-				int		THIS_TREE_NUM = FOLIAGE_AREAS_LIST[areaNum][treeNum];
+				int		THIS_TREE_NUM = FOLIAGE_AREAS_TREES_LIST[areaNum][treeNum];
 				int		THIS_TREE_TYPE = FOLIAGE_TREE_SELECTION[THIS_TREE_NUM]-1;
 				float	TREE_RADIUS = FOLIAGE_TREE_RADIUS[THIS_TREE_TYPE] * FOLIAGE_TREE_SCALE[THIS_TREE_NUM];
 				float	DIST = DistanceHorizontal(FOLIAGE_POSITIONS[THIS_TREE_NUM], from);
@@ -1250,9 +1259,9 @@ extern "C" {
 		{// Draw trees first...
 			int CURRENT_AREA_ID = IN_RANGE_TREE_AREAS_LIST[CURRENT_AREA];
 
-			for (int spot = 0; spot < FOLIAGE_AREAS_LIST_COUNT[CURRENT_AREA_ID]; spot++)
+			for (int spot = 0; spot < FOLIAGE_AREAS_TREES_LIST_COUNT[CURRENT_AREA_ID]; spot++)
 			{
-				FOLIAGE_AddToScreen( FOLIAGE_AREAS_LIST[CURRENT_AREA_ID][spot], qtrue );
+				FOLIAGE_AddToScreen( FOLIAGE_AREAS_TREES_LIST[CURRENT_AREA_ID][spot], qtrue );
 			}
 		}
 
@@ -1260,10 +1269,10 @@ extern "C" {
 		{
 			int CURRENT_AREA_ID = IN_RANGE_AREAS_LIST[CURRENT_AREA];
 
-			for (int spot = 0; spot < FOLIAGE_AREAS_LIST_COUNT[CURRENT_AREA_ID]; spot++)
+			for (int spot = 0; spot < FOLIAGE_AREAS_TREES_LIST_COUNT[CURRENT_AREA_ID]; spot++)
 			{// Draw close trees second...
-				if (FOLIAGE_TREE_SELECTION[FOLIAGE_AREAS_LIST[CURRENT_AREA_ID][spot]] > 0)
-					FOLIAGE_AddToScreen( FOLIAGE_AREAS_LIST[CURRENT_AREA_ID][spot], qtrue );
+				if (FOLIAGE_TREE_SELECTION[FOLIAGE_AREAS_TREES_LIST[CURRENT_AREA_ID][spot]] > 0)
+					FOLIAGE_AddToScreen( FOLIAGE_AREAS_TREES_LIST[CURRENT_AREA_ID][spot], qtrue );
 			}
 		}
 
