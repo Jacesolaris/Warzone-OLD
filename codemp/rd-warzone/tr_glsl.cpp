@@ -137,6 +137,7 @@ extern const char *fallbackShader_distanceBlur_fp;
 extern const char *fallbackShader_testshader_vp;
 extern const char *fallbackShader_testshader_fp;
 
+#if 1
 const char fallbackShader_genericTessControl_cp[] = 
 "// define the number of CPs in the output patch\n"\
 "layout (vertices = 3) out;\n"\
@@ -205,7 +206,7 @@ const char fallbackShader_genericTessControl_ep[] =
 "out vec2					TexCoord_FS_in;\n"\
 "out vec3					Normal_FS_in;\n"\
 "\n"\
-"float gDispFactor = 1.0;\n"\
+"float gDispFactor = 2.0;\n"\
 "\n"\
 "vec2 interpolate2D(vec2 v0, vec2 v1, vec2 v2)\n"\
 "{\n"\
@@ -225,15 +226,187 @@ const char fallbackShader_genericTessControl_ep[] =
 "   	Normal_FS_in = normalize(Normal_FS_in);\n"\
 "   	WorldPos_FS_in = interpolate3D(WorldPos_ES_in[0], WorldPos_ES_in[1], WorldPos_ES_in[2]);\n"\
 "\n"\
-"	// Displace the vertex along the normal\n"\
-"   	float Displacement = 1.0 - texture(gDisplacementMap, TexCoord_FS_in.xy).x;\n"\
+"		// Displace the vertex along the normal\n"\
+"   	float Displacement = texture(gDisplacementMap, TexCoord_FS_in.xy).a;\n"\
 "   	WorldPos_FS_in += Normal_FS_in * Displacement * gDispFactor;\n"\
 "   	gl_Position = gVP * vec4(WorldPos_FS_in, 1.0);\n"\
 "}\n";
 
-// UQ1: 1 - texture added for now to reverse our normalmap color - it seemed backward using normals instead of real dmap
+// UQ1: * 2.0 - 1.0 * -1.0 texture added for now to reverse our normalmap color - using normals instead of real dmap
 //"uniform float gDispFactor;\n"\
 //"uniform sampler2D gDisplacementMap;\n"\
+
+//"   	float Displacement = texture(gDisplacementMap, TexCoord_FS_in.xy).a;\n"\
+//"   	float Displacement = (texture(gDisplacementMap, TexCoord_FS_in.xy).a * 2.0 - 1.0) * -1.0;\n"\
+
+#else
+const char fallbackShader_genericTessControl_cp[] = 
+"// define the number of CPs in the output patch\n"\
+"layout (vertices = 1) out;\n"\
+"\n"\
+"float gTessellationLevel = 2.0;\n"\
+"\n"\
+"// attributes of the input CPs\n"\
+"in vec3 WorldPos_CS_in[];\n"\
+"in vec2 TexCoord_CS_in[];\n"\
+"in vec3 Normal_CS_in[];\n"\
+"\n"\
+"struct OutputPatch\n"\
+"{\n"\
+"    vec3 WorldPos_B030;\n"\
+"    vec3 WorldPos_B021;\n"\
+"    vec3 WorldPos_B012;\n"\
+"    vec3 WorldPos_B003;\n"\
+"    vec3 WorldPos_B102;\n"\
+"    vec3 WorldPos_B201;\n"\
+"    vec3 WorldPos_B300;\n"\
+"    vec3 WorldPos_B210;\n"\
+"    vec3 WorldPos_B120;\n"\
+"    vec3 WorldPos_B111;\n"\
+"    vec3 Normal[3];\n"\
+"    vec2 TexCoord[3];\n"\
+"};\n"\
+"\n"\
+"// attributes of the output CPs\n"\
+"out patch OutputPatch oPatch;\n"\
+"\n"\
+"vec3 ProjectToPlane(vec3 Point, vec3 PlanePoint, vec3 PlaneNormal)\n"\
+"{\n"\
+"    vec3 v = Point - PlanePoint;\n"\
+"    float Len = dot(v, PlaneNormal);\n"\
+"    vec3 d = Len * PlaneNormal;\n"\
+"    return (Point - d);\n"\
+"}\n"\
+"\n"\
+"void CalcPositions()\n"\
+"{\n"\
+"    // The original vertices stay the same\n"\
+"    oPatch.WorldPos_B030 = WorldPos_CS_in[0];\n"\
+"    oPatch.WorldPos_B003 = WorldPos_CS_in[1];\n"\
+"    oPatch.WorldPos_B300 = WorldPos_CS_in[2];\n"\
+"\n"\
+"    // Edges are names according to the opposing vertex\n"\
+"    vec3 EdgeB300 = oPatch.WorldPos_B003 - oPatch.WorldPos_B030;\n"\
+"    vec3 EdgeB030 = oPatch.WorldPos_B300 - oPatch.WorldPos_B003;\n"\
+"    vec3 EdgeB003 = oPatch.WorldPos_B030 - oPatch.WorldPos_B300;\n"\
+"\n"\
+"    // Generate two midpoints on each edge\n"\
+"    oPatch.WorldPos_B021 = oPatch.WorldPos_B030 + EdgeB300 / 3.0;\n"\
+"    oPatch.WorldPos_B012 = oPatch.WorldPos_B030 + EdgeB300 * 2.0 / 3.0;\n"\
+"    oPatch.WorldPos_B102 = oPatch.WorldPos_B003 + EdgeB030 / 3.0;\n"\
+"    oPatch.WorldPos_B201 = oPatch.WorldPos_B003 + EdgeB030 * 2.0 / 3.0;\n"\
+"    oPatch.WorldPos_B210 = oPatch.WorldPos_B300 + EdgeB003 / 3.0;\n"\
+"    oPatch.WorldPos_B120 = oPatch.WorldPos_B300 + EdgeB003 * 2.0 / 3.0;\n"\
+"\n"\
+"    // Project each midpoint on the plane defined by the nearest vertex and its normal\n"\
+"    oPatch.WorldPos_B021 = ProjectToPlane(oPatch.WorldPos_B021, oPatch.WorldPos_B030,\n"\
+"                                          oPatch.Normal[0]);\n"\
+"    oPatch.WorldPos_B012 = ProjectToPlane(oPatch.WorldPos_B012, oPatch.WorldPos_B003,\n"\
+"                                         oPatch.Normal[1]);\n"\
+"    oPatch.WorldPos_B102 = ProjectToPlane(oPatch.WorldPos_B102, oPatch.WorldPos_B003,\n"\
+"                                         oPatch.Normal[1]);\n"\
+"    oPatch.WorldPos_B201 = ProjectToPlane(oPatch.WorldPos_B201, oPatch.WorldPos_B300,\n"\
+"                                         oPatch.Normal[2]);\n"\
+"    oPatch.WorldPos_B210 = ProjectToPlane(oPatch.WorldPos_B210, oPatch.WorldPos_B300,\n"\
+"                                         oPatch.Normal[2]);\n"\
+"    oPatch.WorldPos_B120 = ProjectToPlane(oPatch.WorldPos_B120, oPatch.WorldPos_B030,\n"\
+"                                         oPatch.Normal[0]);\n"\
+"\n"\
+"    // Handle the center\n"\
+"    vec3 Center = (oPatch.WorldPos_B003 + oPatch.WorldPos_B030 + oPatch.WorldPos_B300) / 3.0;\n"\
+"    oPatch.WorldPos_B111 = (oPatch.WorldPos_B021 + oPatch.WorldPos_B012 + oPatch.WorldPos_B102 +\n"\
+"                          oPatch.WorldPos_B201 + oPatch.WorldPos_B210 + oPatch.WorldPos_B120) / 6.0;\n"\
+"    oPatch.WorldPos_B111 += (oPatch.WorldPos_B111 - Center) / 2.0;\n"\
+"}\n"\
+"\n"\
+"void main()\n"\
+"{\n"\
+"    // Set the control points of the output patch\n"\
+"    for (int i = 0 ; i < 3 ; i++) {\n"\
+"       oPatch.Normal[i] = Normal_CS_in[i];\n"\
+"       oPatch.TexCoord[i] = TexCoord_CS_in[i];\n"\
+"    }\n"\
+"\n"\
+"    CalcPositions();\n"\
+"\n"\
+"    // Calculate the tessellation levels\n"\
+"    gl_TessLevelOuter[0] = gTessellationLevel;\n"\
+"    gl_TessLevelOuter[1] = gTessellationLevel;\n"\
+"    gl_TessLevelOuter[2] = gTessellationLevel;\n"\
+"    gl_TessLevelInner[0] = gTessellationLevel;\n"\
+"}\n";
+
+// "uniform float gTessellationLevel;\n"\
+
+const char fallbackShader_genericTessControl_ep[] = 
+"layout(triangles, equal_spacing, ccw) in;\n"\
+"\n"\
+"uniform mat4				u_ModelViewProjectionMatrix;\n"\
+"#define gVP				u_ModelViewProjectionMatrix\n"\
+"\n"\
+"struct OutputPatch\n"\
+"{\n"\
+"    vec3 WorldPos_B030;\n"\
+"    vec3 WorldPos_B021;\n"\
+"    vec3 WorldPos_B012;\n"\
+"    vec3 WorldPos_B003;\n"\
+"    vec3 WorldPos_B102;\n"\
+"    vec3 WorldPos_B201;\n"\
+"    vec3 WorldPos_B300;\n"\
+"    vec3 WorldPos_B210;\n"\
+"    vec3 WorldPos_B120;\n"\
+"    vec3 WorldPos_B111;\n"\
+"    vec3 Normal[3];\n"\
+"    vec2 TexCoord[3];\n"\
+"};\n"\
+"\n"\
+"in patch OutputPatch oPatch;\n"\
+"\n"\
+"out vec3 WorldPos_FS_in;\n"\
+"out vec2 TexCoord_FS_in;\n"\
+"out vec3 Normal_FS_in;\n"\
+"\n"\
+"vec2 interpolate2D(vec2 v0, vec2 v1, vec2 v2)\n"\
+"{\n"\
+"    return vec2(gl_TessCoord.x) * v0 + vec2(gl_TessCoord.y) * v1 + vec2(gl_TessCoord.z) * v2;\n"\
+"}\n"\
+"\n"\
+"vec3 interpolate3D(vec3 v0, vec3 v1, vec3 v2)\n"\
+"{\n"\
+"    return vec3(gl_TessCoord.x) * v0 + vec3(gl_TessCoord.y) * v1 + vec3(gl_TessCoord.z) * v2;\n"\
+"}\n"\
+"\n"\
+"void main()\n"\
+"{\n"\
+"    // Interpolate the attributes of the output vertex using the barycentric coordinates\n"\
+"    TexCoord_FS_in = interpolate2D(oPatch.TexCoord[0], oPatch.TexCoord[1], oPatch.TexCoord[2]);\n"\
+"    Normal_FS_in = interpolate3D(oPatch.Normal[0], oPatch.Normal[1], oPatch.Normal[2]);\n"\
+"\n"\
+"    float u = gl_TessCoord.x;\n"\
+"    float v = gl_TessCoord.y;\n"\
+"    float w = gl_TessCoord.z;\n"\
+"\n"\
+"    float uPow3 = pow(u, 3);\n"\
+"    float vPow3 = pow(v, 3);\n"\
+"    float wPow3 = pow(w, 3);\n"\
+"    float uPow2 = pow(u, 2);\n"\
+"    float vPow2 = pow(v, 2);\n"\
+"    float wPow2 = pow(w, 2);\n"\
+"\n"\
+"    WorldPos_FS_in = oPatch.WorldPos_B300 * wPow3 +\n"\
+"                    oPatch.WorldPos_B030 * uPow3 +\n"\
+"                    oPatch.WorldPos_B003 * vPow3 +\n"\
+"                    oPatch.WorldPos_B210 * 3.0 * wPow2 * u +\n"\
+"                    oPatch.WorldPos_B120 * 3.0 * w * uPow2 +\n"\
+"                    oPatch.WorldPos_B201 * 3.0 * wPow2 * v +\n"\
+"                    oPatch.WorldPos_B021 * 3.0 * uPow2 * v +\n"\
+"                    oPatch.WorldPos_B102 * 3.0 * w * vPow2 +\n"\
+"                    oPatch.WorldPos_B012 * 3.0 * u * vPow2 +\n"\
+"                    oPatch.WorldPos_B111 * 6.0 * w * u * v;\n"\
+"\n"\
+"    gl_Position = gVP * vec4(WorldPos_FS_in, 1.0);\n"\
+"}\n";
+#endif
 
 typedef struct uniformInfo_s
 {
@@ -825,6 +998,7 @@ static int GLSL_BeginLoadGPUShader2(shaderProgram_t * program, const char *name,
 		if (!(GLSL_EnqueueCompileGPUShader(program->program, &program->tessControlShader, cpCode, strlen(cpCode), GL_TESS_CONTROL_SHADER)))
 		{
 			ri->Printf(PRINT_ALL, "GLSL_BeginLoadGPUShader2: Unable to load \"%s\" as GL_TESS_CONTROL_SHADER\n", name);
+			program->tessControlShader = 0;
 			qglDeleteProgram(program->program);
 			return 0;
 		}
@@ -833,12 +1007,17 @@ static int GLSL_BeginLoadGPUShader2(shaderProgram_t * program, const char *name,
 			ri->Printf(PRINT_ALL, "GLSL_BeginLoadGPUShader2: Load \"%s\" as GL_TESS_CONTROL_SHADER\n", name);
 		}
 	}
+	else
+	{
+		program->tessControlShader = 0;
+	}
 
 	if (epCode)
 	{
 		if (!(GLSL_EnqueueCompileGPUShader(program->program, &program->tessEvaluationShader, epCode, strlen(epCode), GL_TESS_EVALUATION_SHADER)))
 		{
 			ri->Printf(PRINT_ALL, "GLSL_BeginLoadGPUShader2: Unable to load \"%s\" as GL_TESS_EVALUATION_SHADER\n", name);
+			program->tessEvaluationShader = 0;
 			qglDeleteProgram(program->program);
 			return 0;
 		}
@@ -846,6 +1025,10 @@ static int GLSL_BeginLoadGPUShader2(shaderProgram_t * program, const char *name,
 		{
 			ri->Printf(PRINT_ALL, "GLSL_BeginLoadGPUShader2: Load \"%s\" as GL_TESS_EVALUATION_SHADER\n", name);
 		}
+	}
+	else
+	{
+		program->tessEvaluationShader = 0;
 	}
 
 	if(fpCode)
@@ -890,11 +1073,13 @@ static bool GLSL_EndLoadGPUShader (shaderProgram_t *program)
 
 	if (program->tessControlShader && !GLSL_IsGPUShaderCompiled (program->tessControlShader))
 	{
+		program->tessControlShader = 0;
 		return false;
 	}
 
 	if (program->tessEvaluationShader && !GLSL_IsGPUShaderCompiled (program->tessEvaluationShader))
 	{
+		program->tessEvaluationShader = 0;
 		return false;
 	}
 
@@ -1028,7 +1213,7 @@ static int GLSL_BeginLoadGPUShader(shaderProgram_t * program, const char *name,
 			postHeader = &cpCode[0];
 		}
 
-		//ri->Printf(PRINT_WARNING, "Begin GLSL load GL_TESS_CONTROL_SHADER for %s.\n", name);
+		ri->Printf(PRINT_WARNING, "Begin GLSL load GL_TESS_CONTROL_SHADER for %s.\n", name);
 
 		if (!GLSL_LoadGPUShaderText(name, fallback_cp, GL_TESS_CONTROL_SHADER, postHeader, size))
 		{
@@ -1050,7 +1235,7 @@ static int GLSL_BeginLoadGPUShader(shaderProgram_t * program, const char *name,
 			postHeader = &epCode[0];
 		}
 
-		//ri->Printf(PRINT_WARNING, "Begin GLSL load GL_TESS_EVALUATION_SHADER for %s.\n", name);
+		ri->Printf(PRINT_WARNING, "Begin GLSL load GL_TESS_EVALUATION_SHADER for %s.\n", name);
 
 		if (!GLSL_LoadGPUShaderText(name, fallback_ep, GL_TESS_EVALUATION_SHADER, postHeader, size))
 		{
@@ -1450,14 +1635,15 @@ int GLSL_BeginLoadGPUShaders(void)
 		if (i & GENERICDEF_USE_GLOW_BUFFER)
 			Q_strcat(extradefines, 1024, "#define USE_GLOW_BUFFER\n");
 
-		if (r_tesselation->integer)
+		
+		/*if (r_tesselation->integer)
 		{
-			if (!GLSL_BeginLoadGPUShader(&tr.genericShader[i], "generic", attribs, qtrue, qfalse, extradefines, qtrue, NULL, fallbackShader_generic_vp, fallbackShader_generic_fp, fallbackShader_genericTessControl_cp, fallbackShader_genericTessControl_ep))
+			if (!GLSL_BeginLoadGPUShader(&tr.genericShader[i], "generic", attribs, qtrue, qtrue, extradefines, qtrue, NULL, fallbackShader_generic_vp, fallbackShader_generic_fp, fallbackShader_genericTessControl_cp, fallbackShader_genericTessControl_ep))
 			{
 				ri->Error(ERR_FATAL, "Could not load generic shader!");
 			}
 		}
-		else
+		else*/
 		{
 			if (!GLSL_BeginLoadGPUShader(&tr.genericShader[i], "generic", attribs, qtrue, qfalse, extradefines, qtrue, NULL, fallbackShader_generic_vp, fallbackShader_generic_fp, NULL, NULL))
 			{
@@ -1465,6 +1651,8 @@ int GLSL_BeginLoadGPUShaders(void)
 			}
 		}
 	}
+
+	//ri->Error(ERR_DROP, "Oh noes!\n");
 
 
 	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
@@ -1670,8 +1858,10 @@ int GLSL_BeginLoadGPUShaders(void)
 		if (i & LIGHTDEF_USE_GLOW_BUFFER)
 			Q_strcat(extradefines, 1024, "#define USE_GLOW_BUFFER\n");
 
-		if (r_tesselation->integer)
+		if (r_tesselation->integer && lightType && !fastLight)
 		{
+			Q_strcat(extradefines, 1024, "#define USE_TESSELATION\n");
+
 			if (!GLSL_BeginLoadGPUShader(&tr.lightallShader[i], "lightall", attribs, qtrue, qtrue, extradefines, qtrue, NULL, fallbackShader_lightall_vp, fallbackShader_lightall_fp, fallbackShader_genericTessControl_cp, fallbackShader_genericTessControl_ep))
 			{
 				ri->Error(ERR_FATAL, "Could not load lightall shader!");
@@ -2442,6 +2632,7 @@ int GLSL_BeginLoadGPUShaders(void)
 	// UQ1: End Added...
 	//
 
+	//ri->Error(ERR_DROP, "Oh noes!\n");
 	return startTime;
 }
 

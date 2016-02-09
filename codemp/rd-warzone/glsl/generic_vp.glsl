@@ -273,7 +273,9 @@ void main()
 	var_Color *= vec4(1.0) - u_FogColorMask * sqrt(clamp(CalcFog(position), 0.0, 1.0));
 #endif
 
+#ifdef USE_TESSELATION
 	TexCoord_CS_in = var_DiffuseTex.xy;
 	Normal_CS_in = normal.xyz;
 	WorldPos_CS_in = position.xyz;
+#endif //USE_TESSELATION
 }

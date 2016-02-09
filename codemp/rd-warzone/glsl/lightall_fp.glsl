@@ -73,17 +73,19 @@ uniform float     u_CubeMapStrength;
 #endif
 
 
-varying vec4      var_TexCoords;
+varying vec2      var_TexCoords;
+varying vec2	  var_TexCoords2;
 
 varying vec4      var_Color;
 
-varying vec3   var_ViewDir;
+varying vec3      var_ViewDir;
 
 #if (defined(USE_LIGHT) && !defined(USE_FAST_LIGHT))
   #if defined(USE_VERT_TANGENT_SPACE)
 varying vec4   var_Normal;
 varying vec4   var_Tangent;
 varying vec4   var_Bitangent;
+#define var_Normal2 var_Normal.w
   #else
 varying vec3   var_Normal;
   #endif
@@ -92,6 +94,7 @@ varying vec3   var_Normal;
 varying vec4   var_Normal;
 varying vec4   var_Tangent;
 varying vec4   var_Bitangent;
+#define var_Normal2 var_Normal.w
   #else
 varying vec3   var_Normal;
   #endif
@@ -108,6 +111,27 @@ varying vec4      var_PrimaryLightDir;
 #endif
 
 varying vec3   var_vertPos;
+
+
+
+
+#ifdef USE_TESSELATION
+in vec3					WorldPos_FS_in;
+in vec2					TexCoord_FS_in;
+in vec3					Normal_FS_in;
+
+#define m_Normal Normal_FS_in
+#define m_TexCoords TexCoord_FS_in
+#define m_vertPos WorldPos_FS_in;
+#else //!USE_TESSELATION
+#define m_Normal var_Normal
+#define m_TexCoords var_TexCoords
+#define m_vertPos var_vertPos;
+#endif //USE_TESSELATION
+
+
+
+
 
 out vec4 out_Glow;
 //out vec4 out_Normal;
@@ -359,7 +383,7 @@ vec4 subScatterFS(vec4 BaseColor, vec4 SpecColor, vec3 lightVec, vec3 LightColor
 		SpecPower = 0.3;
 	}
 
-	float attenuation = 10.0 * (1.0 / distance(u_LightOrigin.xyz,var_vertPos.xyz));
+	float attenuation = 10.0 * (1.0 / distance(u_LightOrigin.xyz,m_vertPos.xyz));
     vec3 eVec = normalize(eyeVec);
     vec3 lVec = normalize(lightVec);
     vec3 wNorm = normalize(worldNormal);
@@ -470,12 +494,10 @@ void main()
 
 #if defined(USE_LIGHT) && !defined(USE_FAST_LIGHT)
   #if defined(USE_VERT_TANGENT_SPACE)
-	mat3 tangentToWorld = mat3(var_Tangent.xyz, var_Bitangent.xyz, var_Normal.xyz);
-	viewDir = vec3(var_Normal.w, var_Tangent.w, var_Bitangent.w);
-	//mat3 tangentToWorld = cotangent_frame(var_Normal.xyz, -var_ViewDir, var_TexCoords.xy);
-	//viewDir = var_ViewDir;
+	mat3 tangentToWorld = mat3(var_Tangent.xyz, var_Bitangent.xyz, m_Normal.xyz);
+	viewDir = vec3(var_Normal2, var_Tangent.w, var_Bitangent.w);
   #else
-	mat3 tangentToWorld = cotangent_frame(var_Normal.xyz, -var_ViewDir, var_TexCoords.xy);
+	mat3 tangentToWorld = cotangent_frame(m_Normal.xyz, -var_ViewDir, m_TexCoords.xy);
 	viewDir = var_ViewDir;
   #endif
 
@@ -483,32 +505,32 @@ void main()
 
 	L = var_LightDir.xyz;
   #if defined(USE_DELUXEMAP)
-	L += (texture2D(u_DeluxeMap, var_TexCoords.zw).xyz - vec3(0.5)) * u_EnableTextures.y;
+	L += (texture2D(u_DeluxeMap, var_TexCoords2.st).xyz - vec3(0.5)) * u_EnableTextures.y;
   #endif
 	float sqrLightDist = dot(L, L);
 #else
   #if defined(USE_VERT_TANGENT_SPACE)
-	mat3 tangentToWorld = mat3(var_Tangent.xyz, var_Bitangent.xyz, var_Normal.xyz);
-	viewDir = vec3(var_Normal.w, var_Tangent.w, var_Bitangent.w);
+	mat3 tangentToWorld = mat3(var_Tangent.xyz, var_Bitangent.xyz, m_Normal.xyz);
+	viewDir = vec3(var_Normal2, var_Tangent.w, var_Bitangent.w);
   #else
-	mat3 tangentToWorld = cotangent_frame(var_Normal.xyz, -var_ViewDir, var_TexCoords.xy);
+	mat3 tangentToWorld = cotangent_frame(m_Normal.xyz, -var_ViewDir, m_TexCoords.xy);
 	viewDir = var_ViewDir;
   #endif
 	E = normalize(viewDir);
 #endif
 
 #if defined(USE_LIGHTMAP)
-	vec4 lightmapColor = texture2D(u_LightMap, var_TexCoords.zw);
+	vec4 lightmapColor = texture2D(u_LightMap, var_TexCoords2.st);
   #if defined(RGBM_LIGHTMAP)
 	lightmapColor.rgb *= lightmapColor.a;
   #endif
 #endif
 
-	vec2 texCoords = var_TexCoords.xy;
+	vec2 texCoords = m_TexCoords.xy;
 
 	if (u_Local4.a > 0.0)
 	{// Sway...
-		texCoords += vec2(u_Local5.y * u_Local4.a * ((1.0 - var_TexCoords.y) + 1.0), 0.0);
+		texCoords += vec2(u_Local5.y * u_Local4.a * ((1.0 - m_TexCoords.y) + 1.0), 0.0);
 	}
 
 	vec4 diffuse;
@@ -547,13 +569,13 @@ void main()
 //#if defined(USE_PARALLAXMAP) || defined(USE_PARALLAXMAP_NONORMALS) || defined (USE_NORMALMAP)
 	vec3 norm = texture2D(u_NormalMap, texCoords).xyz;
 	
-	//DETAILED_NORMAL = var_Normal.xyz /** norm*/ * 0.5 + 0.5;
-	//DETAILED_NORMAL = normalize(((var_Normal.xyz + norm) * 0.5) * 2.0 - 1.0);
+	//DETAILED_NORMAL = m_Normal.xyz /** norm*/ * 0.5 + 0.5;
+	//DETAILED_NORMAL = normalize(((m_Normal.xyz + norm) * 0.5) * 2.0 - 1.0);
 	DETAILED_NORMAL = normalize(norm * 2.0 - 1.0);
 	//DETAILED_NORMAL = normalize(norm * 0.5 + 0.5);
 	DETAILED_NORMAL = tangentToWorld * DETAILED_NORMAL;
 
-	//NORMAL = normalize(var_Normal.xyz * 2.0 - 1.0);
+	//NORMAL = normalize(m_Normal.xyz * 2.0 - 1.0);
 	//NORMAL = tangentToWorld * NORMAL;
 
 	N = norm;
@@ -563,7 +585,7 @@ void main()
 
 	N = tangentToWorld * N;
 //#else
-//	N = var_Normal.xyz * 0.5 + 0.5;
+//	N = m_Normal.xyz * 0.5 + 0.5;
 //	NORMAL = N;
 //#endif
 
@@ -572,11 +594,11 @@ void main()
 
 	if (u_Local5.a > 0.0)
 	{
-		float slope = dot(normalize(N.xyz/*var_Normal.xyz*/),vec3(0.0,1.0,0.0));
+		float slope = dot(normalize(N.xyz/*m_Normal.xyz*/),vec3(0.0,1.0,0.0));
 		if (slope < 0.0) slope = slope *= -1.0;
-		float slope2 = dot(normalize(N.xyz/*var_Normal.xyz*/),vec3(0.0,0.0,1.0));
+		float slope2 = dot(normalize(N.xyz/*m_Normal.xyz*/),vec3(0.0,0.0,1.0));
 		if (slope2 < 0.0) slope2 = slope2 *= -1.0;
-		float slope3 = dot(normalize(N.xyz/*var_Normal.xyz*/),vec3(1.0,0.0,0.0));
+		float slope3 = dot(normalize(N.xyz/*m_Normal.xyz*/),vec3(1.0,0.0,0.0));
 		if (slope3 < 0.0) slope3 = slope3 *= -1.0;
 		slope = length(slope + slope2 + slope3) / 3.0;
 		//slope = pow(slope, 0.85);
@@ -589,7 +611,7 @@ void main()
 
 	if (u_Local5.x > 0.0)
 	{// Have overlay map...
-		vec2 ovCoords = var_TexCoords.xy + vec2(u_Local5.y); // u_Local5.y == sway ammount
+		vec2 ovCoords = m_TexCoords.xy + vec2(u_Local5.y); // u_Local5.y == sway ammount
 		vec4 overlay = texture2D(u_OverlayMap, ovCoords);
 
 		if (overlay.a > 0.1)
@@ -613,7 +635,7 @@ void main()
 	float shadowValue = texture2D(u_ShadowMap, shadowTex).r;
 
 	// surfaces not facing the light are always shadowed
-	shadowValue *= float(dot(var_Normal.xyz, var_PrimaryLightDir.xyz) > 0.0);
+	shadowValue *= float(dot(m_Normal.xyz, var_PrimaryLightDir.xyz) > 0.0);
 
     #if defined(SHADOWMAP_MODULATE)
 	//vec3 shadowColor = min(u_PrimaryLightAmbient, lightColor);
@@ -628,7 +650,7 @@ void main()
 
   #if defined(USE_LIGHTMAP) || defined(USE_LIGHT_VERTEX)
 	ambientColor = lightColor;
-	float surfNL = clamp(dot(var_Normal.xyz, L), 0.0, 1.0);
+	float surfNL = clamp(dot(m_Normal.xyz, L), 0.0, 1.0);
 	lightColor /= max(surfNL, 0.25);
 	ambientColor = clamp(ambientColor - lightColor * surfNL, 0.0, 1.0);
   #endif
@@ -856,14 +878,14 @@ void main()
 
 	vec3 norm = texture2D(u_NormalMap, texCoords).xyz;
 	
-	//DETAILED_NORMAL = var_Normal.xyz /** norm*/ * 0.5 + 0.5;
-	//DETAILED_NORMAL = normalize(((var_Normal.xyz + norm) * 0.5) * 2.0 - 1.0);
+	//DETAILED_NORMAL = m_Normal.xyz /** norm*/ * 0.5 + 0.5;
+	//DETAILED_NORMAL = normalize(((m_Normal.xyz + norm) * 0.5) * 2.0 - 1.0);
 	DETAILED_NORMAL = normalize(norm * 2.0 - 1.0);
 	//DETAILED_NORMAL = normalize(norm * 0.5 + 0.5);
 	DETAILED_NORMAL = tangentToWorld * DETAILED_NORMAL;
 	//DETAILED_NORMAL = vec3(1.0, 0.0, 0.0);
 
-	//NORMAL = normalize(var_Normal.xyz * 2.0 - 1.0);
+	//NORMAL = normalize(m_Normal.xyz * 2.0 - 1.0);
 	//NORMAL = tangentToWorld * NORMAL;
 
 	gl_FragColor = vec4 (diffuse.rgb * lightColor, diffuse.a * var_Color.a);

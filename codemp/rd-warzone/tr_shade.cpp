@@ -43,7 +43,7 @@ R_DrawElements
 
 void R_DrawElementsVBO( int numIndexes, glIndex_t firstIndex, glIndex_t minIndex, glIndex_t maxIndex, glIndex_t numVerts, qboolean tesselation )
 {
-	if (r_tesselation->integer /*&& tesselation*/)
+	if (r_tesselation->integer && tesselation)
 	{
 		GLint MaxPatchVertices = 0;
 		qglGetIntegerv(GL_MAX_PATCH_VERTICES, &MaxPatchVertices);
@@ -73,7 +73,7 @@ void TesselatedGlMultiDrawElements( GLenum mode, GLsizei *count, GLenum type, co
 static void R_DrawMultiElementsVBO( int multiDrawPrimitives, glIndex_t *multiDrawMinIndex, glIndex_t *multiDrawMaxIndex, 
 	GLsizei *multiDrawNumIndexes, glIndex_t **multiDrawFirstIndex, glIndex_t numVerts, qboolean tesselation)
 {
-	if (r_tesselation->integer /*&& tesselation*/)
+	if (r_tesselation->integer && tesselation)
 	{
 		TesselatedGlMultiDrawElements( GL_PATCHES, multiDrawNumIndexes, GL_INDEX_TYPE, (const GLvoid **)multiDrawFirstIndex, multiDrawPrimitives );
 	}
@@ -1365,6 +1365,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		qboolean isWater = qfalse;
 		qboolean isGrass = qfalse;
 		qboolean multiPass = qtrue;
+		qboolean usingLight = qfalse;
 		int passNum = 0, passMax = 0;
 
 		if ( !pStage )
@@ -1578,10 +1579,8 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			}
 
 			GLSL_BindProgram(sp);
-
-			isLightAll = qtrue;
 		}
-
+		
 		while (1)
 		{
 			RB_SetMaterialBasedProperties(sp, pStage);
@@ -1882,6 +1881,9 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 					qboolean light = (qboolean)((pStage->glslShaderIndex & LIGHTDEF_LIGHTTYPE_MASK) != 0);
 					qboolean fastLight = (qboolean)!(r_normalMapping->integer || r_specularMapping->integer);
 
+					if (light && !fastLight)
+						usingLight = qtrue;
+
 					if (pStage->bundle[TB_DIFFUSEMAP].image[0])
 						R_BindAnimatedImageToTMU( &pStage->bundle[TB_DIFFUSEMAP], TB_DIFFUSEMAP);
 
@@ -2021,7 +2023,10 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			//
 			qboolean tesselation = qfalse;
 
-			if (r_tesselation->integer && isLightAll == qtrue) tesselation = qtrue;
+			if (r_tesselation->integer && /*sp->tessControlShader && sp->tessEvaluationShader*/isLightAll == qtrue && usingLight) 
+			{
+				tesselation = qtrue;
+			}
 
 			if (input->multiDrawPrimitives)
 			{

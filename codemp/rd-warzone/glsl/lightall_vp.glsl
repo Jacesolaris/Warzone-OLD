@@ -85,7 +85,8 @@ uniform vec4  u_PrimaryLightOrigin;
 uniform float u_PrimaryLightRadius;
 #endif
 
-varying vec4   var_TexCoords;
+varying vec2   var_TexCoords;
+varying vec2   var_TexCoords2;
 
 varying vec4   var_Color;
 
@@ -99,6 +100,8 @@ varying vec4   var_Bitangent;
 varying vec3   var_Normal;
   #endif
 varying vec3   var_ViewDir;
+#else
+varying vec3   var_Normal;
 #endif
 
 #if defined(USE_LIGHT) && !defined(USE_FAST_LIGHT)
@@ -174,9 +177,12 @@ float CalcLightAttenuation(float point, float normDist)
 
 void main()
 {
+	vec3 normal = vec3(attr_Normal.xyz);
+	vec3 position = vec3(attr_Position.xyz);
+
 #if defined(USE_VERTEX_ANIMATION)
-	vec3 position  = mix(attr_Position,    attr_Position2,    u_VertexLerp);
-	vec3 normal    = mix(attr_Normal,      attr_Normal2,      u_VertexLerp);
+	position  = mix(attr_Position,    attr_Position2,    u_VertexLerp);
+	normal    = mix(attr_Normal,      attr_Normal2,      u_VertexLerp);
   #if defined(USE_VERT_TANGENT_SPACE) && defined(USE_LIGHT) && !defined(USE_FAST_LIGHT)
 	vec3 tangent   = mix(attr_Tangent.xyz, attr_Tangent2.xyz, u_VertexLerp);
   #endif
@@ -201,14 +207,14 @@ void main()
 #endif
 	}
 
-	vec3 position = position4.xyz;
-	vec3 normal = normalize (normal4.xyz);
+	position = position4.xyz;
+	normal = normalize (normal4.xyz);
 #if defined(USE_VERT_TANGENT_SPACE) && defined(USE_LIGHT) && !defined(USE_FAST_LIGHT)
 	vec3 tangent = normalize (tangent4.xyz);
 #endif
 #else
-	vec3 position  = attr_Position;
-	vec3 normal    = attr_Normal;
+	position  = attr_Position;
+	normal    = attr_Normal;
   #if defined(USE_VERT_TANGENT_SPACE) && defined(USE_LIGHT) && !defined(USE_FAST_LIGHT)
 	vec3 tangent   = attr_Tangent.xyz;
   #endif
@@ -257,7 +263,7 @@ void main()
 #endif
 
 #if defined(USE_LIGHTMAP)
-	var_TexCoords.zw = attr_TexCoord1.st;
+	var_TexCoords2 = attr_TexCoord1;
 #endif
 
 	var_Color = u_VertColor * attr_Color + u_BaseColor;
@@ -301,8 +307,26 @@ void main()
   var_vertPos = gl_Position.xyz;
   var_Time = u_Time;
 
-  TexCoord_CS_in = attr_TexCoord0.xy;
-  Normal_CS_in = var_Normal.xyz;
+#ifdef USE_TESSELATION
+  TexCoord_CS_in = var_TexCoords.xy;
+  //Normal_CS_in = var_Normal.xyz;
+  Normal_CS_in = normalize(var_Normal.xyz * 2.0 - 1.0);
   WorldPos_CS_in = position.xyz;
+  return;
+#endif //USE_TESSELATION
 #endif
+
+/*
+#ifdef USE_TESSELATION
+  var_Normal.xyz = normal.xyz;
+
+  //TexCoord_CS_in = var_TexCoords.xy;
+  //Normal_CS_in = var_Normal.xyz;
+  //WorldPos_CS_in = gl_Position.xyz;
+
+  TexCoord_CS_in = var_TexCoords.xy;
+  Normal_CS_in = normalize(normal.xyz);
+  WorldPos_CS_in = position.xyz;
+#endif //USE_TESSELATION
+*/
 }
