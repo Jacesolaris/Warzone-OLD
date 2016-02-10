@@ -137,12 +137,69 @@ extern const char *fallbackShader_distanceBlur_fp;
 extern const char *fallbackShader_testshader_vp;
 extern const char *fallbackShader_testshader_fp;
 
-#if 1
+//#define SHADER_BASIC
+#define SHADER_ONE
+////#define SHADER_TWO
+////#define SHADER_THREE
+//#define SHADER_FOUR
+
+#ifdef SHADER_BASIC
+const char fallbackShader_genericTessControl_cp[] = 
+"layout(vertices = 3) out;\n"\
+"float tessLevelOuter = 7;\n"\
+"float tessLevelInner = 7;\n"\
+"// attributes of the input CPs\n"\
+"in vec2				TexCoord_CS_in[];\n"\
+"in vec3				Normal_CS_in[];\n"\
+"\n"\
+"// attributes of the output CPs\n"\
+"out vec2				TexCoord_ES_in[3];\n"\
+"out vec3				Normal_ES_in[3];\n"\
+"void main()\n"\
+"{\n"\
+"    TexCoord_ES_in[gl_InvocationID] = TexCoord_CS_in[gl_InvocationID];\n"\
+"    Normal_ES_in[gl_InvocationID] = Normal_CS_in[gl_InvocationID];\n"\
+"	gl_TessLevelOuter[0] = tessLevelOuter;\n"\
+"	gl_TessLevelOuter[1] = tessLevelOuter;\n"\
+"	gl_TessLevelOuter[2] = tessLevelOuter;\n"\
+"	gl_TessLevelInner[0] = tessLevelInner;\n"\
+"	gl_out[gl_InvocationID].gl_Position = gl_in[gl_InvocationID].gl_Position;\n"\
+"}\n";
+
+const char fallbackShader_genericTessControl_ep[] = 
+"layout(triangles, equal_spacing, ccw) in;\n"\
+"in vec2					TexCoord_ES_in[];\n"\
+"in vec3					Normal_ES_in[];\n"\
+"\n"\
+"out vec2					TexCoord_FS_in;\n"\
+"out vec3					Normal_FS_in;\n"\
+"\n"\
+"vec2 interpolate2D(vec2 v0, vec2 v1, vec2 v2)\n"\
+"{\n"\
+"   	return vec2(gl_TessCoord.x) * v0 + vec2(gl_TessCoord.y) * v1 + vec2(gl_TessCoord.z) * v2;\n"\
+"}\n"\
+"\n"\
+"vec3 interpolate3D(vec3 v0, vec3 v1, vec3 v2)\n"\
+"{\n"\
+"   	return vec3(gl_TessCoord.x) * v0 + vec3(gl_TessCoord.y) * v1 + vec3(gl_TessCoord.z) * v2;\n"\
+"}\n"\
+"void main()\n"\
+"{\n"\
+"   	TexCoord_FS_in = interpolate2D(TexCoord_ES_in[0], TexCoord_ES_in[1], TexCoord_ES_in[2]);\n"\
+"   	Normal_FS_in = interpolate3D(Normal_ES_in[0], Normal_ES_in[1], Normal_ES_in[2]);\n"\
+"   	Normal_FS_in = normalize(Normal_FS_in);\n"\
+"	gl_Position = vec4(gl_in[0].gl_Position.x * gl_TessCoord.x, gl_in[1].gl_Position.y * gl_TessCoord.y, gl_in[2].gl_Position.z * gl_TessCoord.z, 1.0);\n"\
+"}\n";
+#endif
+
+#ifdef SHADER_ONE
 const char fallbackShader_genericTessControl_cp[] = 
 "// define the number of CPs in the output patch\n"\
 "layout (vertices = 3) out;\n"\
 "\n"\
 "uniform mat4			u_ModelViewProjectionMatrix;\n"\
+"uniform mat4			u_ViewProjectionMatrix;\n"\
+"uniform mat4			u_ModelMatrix;\n"\
 "uniform vec3			u_ViewOrigin;\n"\
 "#define gEyeWorldPos	(u_ModelViewProjectionMatrix * vec4(u_ViewOrigin.xyz, 1.0)).xyz\n"\
 "\n"\
@@ -196,6 +253,9 @@ const char fallbackShader_genericTessControl_ep[] =
 "uniform sampler2D			u_NormalMap;\n"\
 "#define gDisplacementMap	u_NormalMap\n"\
 "uniform mat4				u_ModelViewProjectionMatrix;\n"\
+"uniform mat4				u_ViewProjectionMatrix;\n"\
+"uniform mat4				u_invEyeProjectionMatrix;\n"\
+"uniform mat4				u_ModelMatrix;\n"\
 "#define gVP				u_ModelViewProjectionMatrix\n"\
 "\n"\
 "in vec3					WorldPos_ES_in[];\n"\
@@ -206,7 +266,7 @@ const char fallbackShader_genericTessControl_ep[] =
 "out vec2					TexCoord_FS_in;\n"\
 "out vec3					Normal_FS_in;\n"\
 "\n"\
-"float gDispFactor = 2.0;\n"\
+"float gDispFactor = 1.0;\n"\
 "\n"\
 "vec2 interpolate2D(vec2 v0, vec2 v1, vec2 v2)\n"\
 "{\n"\
@@ -227,7 +287,7 @@ const char fallbackShader_genericTessControl_ep[] =
 "   	WorldPos_FS_in = interpolate3D(WorldPos_ES_in[0], WorldPos_ES_in[1], WorldPos_ES_in[2]);\n"\
 "\n"\
 "		// Displace the vertex along the normal\n"\
-"   	float Displacement = texture(gDisplacementMap, TexCoord_FS_in.xy).a;\n"\
+"   	float Displacement = (texture(gDisplacementMap, TexCoord_FS_in.xy).a * 2.0 - 1.0) * -1.0;\n"\
 "   	WorldPos_FS_in += Normal_FS_in * Displacement * gDispFactor;\n"\
 "   	gl_Position = gVP * vec4(WorldPos_FS_in, 1.0);\n"\
 "}\n";
@@ -239,7 +299,9 @@ const char fallbackShader_genericTessControl_ep[] =
 //"   	float Displacement = texture(gDisplacementMap, TexCoord_FS_in.xy).a;\n"\
 //"   	float Displacement = (texture(gDisplacementMap, TexCoord_FS_in.xy).a * 2.0 - 1.0) * -1.0;\n"\
 
-#else
+#endif
+
+#ifdef SHADER_TWO
 const char fallbackShader_genericTessControl_cp[] = 
 "// define the number of CPs in the output patch\n"\
 "layout (vertices = 1) out;\n"\
@@ -278,7 +340,7 @@ const char fallbackShader_genericTessControl_cp[] =
 "    return (Point - d);\n"\
 "}\n"\
 "\n"\
-"void CalcPositions()\n"\
+"void CalcPositions ( void )\n"\
 "{\n"\
 "    // The original vertices stay the same\n"\
 "    oPatch.WorldPos_B030 = WorldPos_CS_in[0];\n"\
@@ -368,12 +430,12 @@ const char fallbackShader_genericTessControl_ep[] =
 "\n"\
 "vec2 interpolate2D(vec2 v0, vec2 v1, vec2 v2)\n"\
 "{\n"\
-"    return vec2(gl_TessCoord.x) * v0 + vec2(gl_TessCoord.y) * v1 + vec2(gl_TessCoord.z) * v2;\n"\
+"   	return vec2(gl_TessCoord.x) * v0 + vec2(gl_TessCoord.y) * v1 + vec2(gl_TessCoord.z) * v2;\n"\
 "}\n"\
 "\n"\
 "vec3 interpolate3D(vec3 v0, vec3 v1, vec3 v2)\n"\
 "{\n"\
-"    return vec3(gl_TessCoord.x) * v0 + vec3(gl_TessCoord.y) * v1 + vec3(gl_TessCoord.z) * v2;\n"\
+"   	return vec3(gl_TessCoord.x) * v0 + vec3(gl_TessCoord.y) * v1 + vec3(gl_TessCoord.z) * v2;\n"\
 "}\n"\
 "\n"\
 "void main()\n"\
@@ -407,6 +469,319 @@ const char fallbackShader_genericTessControl_ep[] =
 "    gl_Position = gVP * vec4(WorldPos_FS_in, 1.0);\n"\
 "}\n";
 #endif
+
+#ifdef SHADER_THREE
+const char fallbackShader_genericTessControl_cp[] = 
+"// PN patch data\n"\
+"struct PnPatch\n"\
+"{\n"\
+" float b210;\n"\
+" float b120;\n"\
+" float b021;\n"\
+" float b012;\n"\
+" float b102;\n"\
+" float b201;\n"\
+" float b111;\n"\
+" float n110;\n"\
+" float n011;\n"\
+" float n101;\n"\
+"};\n"\
+"\n"\
+"// tessellation levels\n"\
+"float gTessellationLevel = 3.0;\n"\
+"\n"\
+"layout(vertices=3) out;\n"\
+"\n"\
+"layout(location = 0)   in vec3 Normal_CS_in[];\n"\
+"layout(location = 1)   in vec2 TexCoord_CS_in[];\n"\
+"\n"\
+"layout(location = 0) out vec3 iNormal[3];\n"\
+"layout(location = 3) out vec2 iTexCoord[3];\n"\
+"layout(location = 6) out PnPatch iPnPatch[3];\n"\
+"\n"\
+"float wij(int i, int j)\n"\
+"{\n"\
+" return dot(gl_in[j].gl_Position.xyz - gl_in[i].gl_Position.xyz, Normal_CS_in[i]);\n"\
+"}\n"\
+"\n"\
+"float vij(int i, int j)\n"\
+"{\n"\
+" vec3 Pj_minus_Pi = gl_in[j].gl_Position.xyz\n"\
+"                  - gl_in[i].gl_Position.xyz;\n"\
+" vec3 Ni_plus_Nj  = Normal_CS_in[i]+Normal_CS_in[j];\n"\
+" return 2.0*dot(Pj_minus_Pi, Ni_plus_Nj)/dot(Pj_minus_Pi, Pj_minus_Pi);\n"\
+"}\n"\
+"\n"\
+"void main()\n"\
+"{\n"\
+" // get data\n"\
+" gl_out[gl_InvocationID].gl_Position = gl_in[gl_InvocationID].gl_Position;\n"\
+" iNormal[gl_InvocationID]            = Normal_CS_in[gl_InvocationID];\n"\
+" iTexCoord[gl_InvocationID]          = TexCoord_CS_in[gl_InvocationID];\n"\
+"\n"\
+" // set base \n"\
+" float P0 = gl_in[0].gl_Position[gl_InvocationID];\n"\
+" float P1 = gl_in[1].gl_Position[gl_InvocationID];\n"\
+" float P2 = gl_in[2].gl_Position[gl_InvocationID];\n"\
+" float N0 = Normal_CS_in[0][gl_InvocationID];\n"\
+" float N1 = Normal_CS_in[1][gl_InvocationID];\n"\
+" float N2 = Normal_CS_in[2][gl_InvocationID];\n"\
+"\n"\
+" // compute control points\n"\
+" iPnPatch[gl_InvocationID].b210 = (2.0*P0 + P1 - wij(0,1)*N0)/3.0;\n"\
+" iPnPatch[gl_InvocationID].b120 = (2.0*P1 + P0 - wij(1,0)*N1)/3.0;\n"\
+" iPnPatch[gl_InvocationID].b021 = (2.0*P1 + P2 - wij(1,2)*N1)/3.0;\n"\
+" iPnPatch[gl_InvocationID].b012 = (2.0*P2 + P1 - wij(2,1)*N2)/3.0;\n"\
+" iPnPatch[gl_InvocationID].b102 = (2.0*P2 + P0 - wij(2,0)*N2)/3.0;\n"\
+" iPnPatch[gl_InvocationID].b201 = (2.0*P0 + P2 - wij(0,2)*N0)/3.0;\n"\
+" float E = ( iPnPatch[gl_InvocationID].b210\n"\
+"           + iPnPatch[gl_InvocationID].b120\n"\
+"           + iPnPatch[gl_InvocationID].b021\n"\
+"           + iPnPatch[gl_InvocationID].b012\n"\
+"           + iPnPatch[gl_InvocationID].b102\n"\
+"           + iPnPatch[gl_InvocationID].b201 ) / 6.0;\n"\
+" float V = (P0 + P1 + P2)/3.0;\n"\
+" iPnPatch[gl_InvocationID].b111 = E + (E - V)*0.5;\n"\
+" iPnPatch[gl_InvocationID].n110 = N0+N1-vij(0,1)*(P1-P0);\n"\
+" iPnPatch[gl_InvocationID].n011 = N1+N2-vij(1,2)*(P2-P1);\n"\
+" iPnPatch[gl_InvocationID].n101 = N2+N0-vij(2,0)*(P0-P2);\n"\
+"\n"\
+" // set tess levels\n"\
+" gl_TessLevelOuter[gl_InvocationID] = gTessellationLevel;\n"\
+" gl_TessLevelInner[0] = gTessellationLevel;\n"\
+"}\n";
+
+const char fallbackShader_genericTessControl_ep[] = 
+"// PN patch data\n"\
+"struct PnPatch\n"\
+"{\n"\
+" float b210;\n"\
+" float b120;\n"\
+" float b021;\n"\
+" float b012;\n"\
+" float b102;\n"\
+" float b201;\n"\
+" float b111;\n"\
+" float n110;\n"\
+" float n011;\n"\
+" float n101;\n"\
+"};\n"\
+"\n"\
+"uniform mat4 u_ModelViewProjectionMatrix; // mvp\n"\
+"//uniform float uTessAlpha;          // controls the deformation\n"\
+"float uTessAlpha = 0.5;          // controls the deformation\n"\
+"\n"\
+"layout(triangles, fractional_odd_spacing, ccw) in;\n"\
+"\n"\
+"uniform vec3			u_ViewOrigin;\n"\
+"\n"\
+"layout(location = 0) in vec3 iNormal[];\n"\
+"layout(location = 3) in vec2 iTexCoord[];\n"\
+"layout(location = 4) in PnPatch iPnPatch[];\n"\
+"\n"\
+"layout(location = 0) out vec3 Normal_FS_in;\n"\
+"layout(location = 1) out vec2 TexCoord_FS_in;\n"\
+"layout(location = 2) out vec3 WorldPos_FS_in;\n"\
+"layout(location = 3) out vec3 ViewDir_FS_in;\n"\
+"\n"\
+"#define b300    gl_in[0].gl_Position.xyz\n"\
+"#define b030    gl_in[1].gl_Position.xyz\n"\
+"#define b003    gl_in[2].gl_Position.xyz\n"\
+"#define n200    iNormal[0]\n"\
+"#define n020    iNormal[1]\n"\
+"#define n002    iNormal[2]\n"\
+"#define uvw     gl_TessCoord\n"\
+"\n"\
+"void main()\n"\
+"{\n"\
+" vec3 uvwSquared = uvw*uvw;\n"\
+" vec3 uvwCubed   = uvwSquared*uvw;\n"\
+"\n"\
+" // extract control points\n"\
+" vec3 b210 = vec3(iPnPatch[0].b210, iPnPatch[1].b210, iPnPatch[2].b210);\n"\
+" vec3 b120 = vec3(iPnPatch[0].b120, iPnPatch[1].b120, iPnPatch[2].b120);\n"\
+" vec3 b021 = vec3(iPnPatch[0].b021, iPnPatch[1].b021, iPnPatch[2].b021);\n"\
+" vec3 b012 = vec3(iPnPatch[0].b012, iPnPatch[1].b012, iPnPatch[2].b012);\n"\
+" vec3 b102 = vec3(iPnPatch[0].b102, iPnPatch[1].b102, iPnPatch[2].b102);\n"\
+" vec3 b201 = vec3(iPnPatch[0].b201, iPnPatch[1].b201, iPnPatch[2].b201);\n"\
+" vec3 b111 = vec3(iPnPatch[0].b111, iPnPatch[1].b111, iPnPatch[2].b111);\n"\
+"\n"\
+" // extract control normals\n"\
+" vec3 n110 = normalize(vec3(iPnPatch[0].n110,\n"\
+"                            iPnPatch[1].n110,\n"\
+"                            iPnPatch[2].n110));\n"\
+" vec3 n011 = normalize(vec3(iPnPatch[0].n011,\n"\
+"                            iPnPatch[1].n011,\n"\
+"                            iPnPatch[2].n011));\n"\
+" vec3 n101 = normalize(vec3(iPnPatch[0].n101,\n"\
+"                            iPnPatch[1].n101,\n"\
+"                            iPnPatch[2].n101));\n"\
+"\n"\
+" // compute texcoords\n"\
+" TexCoord_FS_in  = gl_TessCoord[2]*iTexCoord[0]\n"\
+"            + gl_TessCoord[0]*iTexCoord[1]\n"\
+"            + gl_TessCoord[1]*iTexCoord[2];\n"\
+"\n"\
+" // normal\n"\
+" vec3 barNormal = gl_TessCoord[2]*iNormal[0]\n"\
+"                + gl_TessCoord[0]*iNormal[1]\n"\
+"                + gl_TessCoord[1]*iNormal[2];\n"\
+" vec3 pnNormal  = n200*uvwSquared[2]\n"\
+"                + n020*uvwSquared[0]\n"\
+"                + n002*uvwSquared[1]\n"\
+"                + n110*uvw[2]*uvw[0]\n"\
+"                + n011*uvw[0]*uvw[1]\n"\
+"                + n101*uvw[2]*uvw[1];\n"\
+" Normal_FS_in = uTessAlpha*pnNormal + (1.0-uTessAlpha)*barNormal;\n"\
+"\n"\
+" // compute interpolated pos\n"\
+" vec3 barPos = gl_TessCoord[2]*b300\n"\
+"             + gl_TessCoord[0]*b030\n"\
+"             + gl_TessCoord[1]*b003;\n"\
+"\n"\
+" // save some computations\n"\
+" uvwSquared *= 3.0;\n"\
+"\n"\
+" // compute PN position\n"\
+" vec3 pnPos  = b300*uvwCubed[2]\n"\
+"             + b030*uvwCubed[0]\n"\
+"             + b003*uvwCubed[1]\n"\
+"             + b210*uvwSquared[2]*uvw[0]\n"\
+"             + b120*uvwSquared[0]*uvw[2]\n"\
+"             + b201*uvwSquared[2]*uvw[1]\n"\
+"             + b021*uvwSquared[0]*uvw[1]\n"\
+"             + b102*uvwSquared[1]*uvw[2]\n"\
+"             + b012*uvwSquared[1]*uvw[0]\n"\
+"             + b111*6.0*uvw[0]*uvw[1]*uvw[2];\n"\
+"\n"\
+" // final position and normal\n"\
+" vec3 finalPos = (1.0-uTessAlpha)*barPos + uTessAlpha*pnPos;\n"\
+" gl_Position   = u_ModelViewProjectionMatrix * vec4(finalPos,1.0);\n"\
+" WorldPos_FS_in = finalPos.xyz;\n"\
+" ViewDir_FS_in = u_ViewOrigin - finalPos;\n"\
+"}\n";
+#endif
+
+#ifdef SHADER_FOUR
+const char fallbackShader_genericTessControl_cp[] = 
+"// Phong tess patch data\n"\
+"struct PhongPatch\n"\
+"{\n"\
+" float termIJ;\n"\
+" float termJK;\n"\
+" float termIK;\n"\
+"};\n"\
+"\n"\
+"float uTessLevels = 5.0;\n"\
+"\n"\
+"layout(vertices=3) out;\n"\
+"\n"\
+"layout(location = 0)   in vec3 Normal_CS_in[];\n"\
+"layout(location = 1)   in vec2 TexCoord_CS_in[];\n"\
+"\n"\
+"layout(location=0) out vec3 oNormal[3];\n"\
+"layout(location=3) out vec2 oTexCoord[3];\n"\
+"layout(location=6) out PhongPatch oPhongPatch[3];\n"\
+"\n"\
+"#define Pi  gl_in[0].gl_Position.xyz\n"\
+"#define Pj  gl_in[1].gl_Position.xyz\n"\
+"#define Pk  gl_in[2].gl_Position.xyz\n"\
+"\n"\
+"float PIi(int i, vec3 q)\n"\
+"{\n"\
+" vec3 q_minus_p = q - gl_in[i].gl_Position.xyz;\n"\
+" return q[gl_InvocationID] - dot(q_minus_p, Normal_CS_in[i])\n"\
+"                           * Normal_CS_in[i][gl_InvocationID];\n"\
+"}\n"\
+"\n"\
+"void main()\n"\
+"{\n"\
+" // get data\n"\
+" gl_out[gl_InvocationID].gl_Position = gl_in[gl_InvocationID].gl_Position;\n"\
+" oNormal[gl_InvocationID]   = Normal_CS_in[gl_InvocationID];\n"\
+" oTexCoord[gl_InvocationID] = TexCoord_CS_in[gl_InvocationID];\n"\
+"\n"\
+" // compute patch data\n"\
+" oPhongPatch[gl_InvocationID].termIJ = PIi(0,Pj) + PIi(1,Pi);\n"\
+" oPhongPatch[gl_InvocationID].termJK = PIi(1,Pk) + PIi(2,Pj);\n"\
+" oPhongPatch[gl_InvocationID].termIK = PIi(2,Pi) + PIi(0,Pk);\n"\
+"\n"\
+" // tesselate\n"\
+" gl_TessLevelOuter[gl_InvocationID] = uTessLevels;\n"\
+" gl_TessLevelInner[0] = uTessLevels;\n"\
+"}\n";
+
+const char fallbackShader_genericTessControl_ep[] = 
+"// Phong tess patch data\n"\
+"struct PhongPatch\n"\
+"{\n"\
+" float termIJ;\n"\
+" float termJK;\n"\
+" float termIK;\n"\
+"};\n"\
+"\n"\
+"float uTessAlpha = 0.5;\n"\
+"uniform mat4  u_ModelViewProjectionMatrix;\n"\
+"\n"\
+"layout(triangles, fractional_odd_spacing, ccw) in;\n"\
+"\n"\
+"layout(location=0) in vec3 iNormal[];\n"\
+"layout(location=3) in vec2 iTexCoord[];\n"\
+"layout(location=6) in PhongPatch iPhongPatch[];\n"\
+"\n"\
+"out vec3 Normal_FS_in;\n"\
+"out vec2 TexCoord_FS_in;\n"\
+"out vec3 WorldPos_FS_in;\n"\
+"\n"\
+"#define Pi  gl_in[0].gl_Position.xyz\n"\
+"#define Pj  gl_in[1].gl_Position.xyz\n"\
+"#define Pk  gl_in[2].gl_Position.xyz\n"\
+"#define tc1 gl_TessCoord\n"\
+"\n"\
+"void main()\n"\
+"{\n"\
+" // precompute squared tesscoords\n"\
+" vec3 tc2 = tc1*tc1;\n"\
+"\n"\
+" // compute texcoord and normal\n"\
+" TexCoord_FS_in = gl_TessCoord[0]*iTexCoord[0]\n"\
+"           + gl_TessCoord[1]*iTexCoord[1]\n"\
+"           + gl_TessCoord[2]*iTexCoord[2];\n"\
+" Normal_FS_in   = gl_TessCoord[0]*iNormal[0]\n"\
+"           + gl_TessCoord[1]*iNormal[1]\n"\
+"           + gl_TessCoord[2]*iNormal[2];\n"\
+"\n"\
+" // interpolated position\n"\
+" vec3 barPos = gl_TessCoord[0]*Pi\n"\
+"             + gl_TessCoord[1]*Pj\n"\
+"             + gl_TessCoord[2]*Pk;\n"\
+"\n"\
+" // build terms\n"\
+" vec3 termIJ = vec3(iPhongPatch[0].termIJ,\n"\
+"                    iPhongPatch[1].termIJ,\n"\
+"                    iPhongPatch[2].termIJ);\n"\
+" vec3 termJK = vec3(iPhongPatch[0].termJK,\n"\
+"                    iPhongPatch[1].termJK,\n"\
+"                    iPhongPatch[2].termJK);\n"\
+" vec3 termIK = vec3(iPhongPatch[0].termIK,\n"\
+"                    iPhongPatch[1].termIK,\n"\
+"                    iPhongPatch[2].termIK);\n"\
+"\n"\
+" // phong tesselated pos\n"\
+" vec3 phongPos   = tc2[0]*Pi\n"\
+"                 + tc2[1]*Pj\n"\
+"                 + tc2[2]*Pk\n"\
+"                 + tc1[0]*tc1[1]*termIJ\n"\
+"                 + tc1[1]*tc1[2]*termJK\n"\
+"                 + tc1[2]*tc1[0]*termIK;\n"\
+"\n"\
+" // final position\n"\
+" vec3 finalPos = (1.0-uTessAlpha)*barPos + uTessAlpha*phongPos;\n"\
+" gl_Position   = u_ModelViewProjectionMatrix * vec4(finalPos,1.0);\n"\
+" WorldPos_FS_in = gl_Position.xyz;\n"\
+"}\n";
+#endif
+
 
 typedef struct uniformInfo_s
 {
@@ -479,6 +854,7 @@ static uniformInfo_t uniformsInfo[] =
 	{ "u_FogColorMask", GLSL_VEC4, 1 },
 
 	{ "u_ModelMatrix",               GLSL_MAT16, 1 },
+	{ "u_ViewProjectionMatrix",      GLSL_MAT16, 1 },
 	{ "u_ModelViewProjectionMatrix", GLSL_MAT16, 1 },
 	{ "u_invProjectionMatrix", GLSL_MAT16, 1 },
 	{ "u_invEyeProjectionMatrix", GLSL_MAT16, 1 },
@@ -983,6 +1359,7 @@ static int GLSL_BeginLoadGPUShader2(shaderProgram_t * program, const char *name,
 	program->program = qglCreateProgram();
 	program->attribs = attribs;
 
+	program->tesselation = qfalse;
 	program->tessControlShader = NULL;
 	program->tessEvaluationShader = NULL;
 
@@ -1005,6 +1382,7 @@ static int GLSL_BeginLoadGPUShader2(shaderProgram_t * program, const char *name,
 		else
 		{
 			ri->Printf(PRINT_ALL, "GLSL_BeginLoadGPUShader2: Load \"%s\" as GL_TESS_CONTROL_SHADER\n", name);
+			program->tesselation = qtrue;
 		}
 	}
 	else
@@ -1024,6 +1402,7 @@ static int GLSL_BeginLoadGPUShader2(shaderProgram_t * program, const char *name,
 		else
 		{
 			ri->Printf(PRINT_ALL, "GLSL_BeginLoadGPUShader2: Load \"%s\" as GL_TESS_EVALUATION_SHADER\n", name);
+			program->tesselation = qtrue;
 		}
 	}
 	else
@@ -1579,6 +1958,9 @@ static bool GLSL_IsValidPermutationForLight (int lightType, int shaderCaps)
 	if (!lightType && (shaderCaps & LIGHTDEF_USE_SHADOWMAP))
 		return false;
 
+	if (r_tesselation->integer < 1 && (shaderCaps & LIGHTDEF_USE_TESSELLATION))
+		return qfalse;
+
 	return true;
 }
 
@@ -1711,9 +2093,6 @@ int GLSL_BeginLoadGPUShaders(void)
 		if (r_dlightMode->integer >= 2)
 			Q_strcat(extradefines, 1024, "#define USE_SHADOWMAP\n");
 
-		//if (1)
-		//	Q_strcat(extradefines, 1024, "#define SWIZZLE_NORMALMAP\n");
-
 		if (r_hdr->integer && !glRefConfig.floatLightmap)
 			Q_strcat(extradefines, 1024, "#define RGBM_LIGHTMAP\n");
 		
@@ -1728,17 +2107,6 @@ int GLSL_BeginLoadGPUShaders(void)
 			}
 
 			Q_strcat(extradefines, 1024, "#define USE_NORMALMAP\n");
-			
-			/*
-			Q_strcat(extradefines, 1024, "#define USE_PARALLAXMAP\n");
-			if (r_parallaxMapping->integer && r_parallaxMapping->integer < 2) // Fast parallax mapping...
-				Q_strcat(extradefines, 1024, "#define FAST_PARALLAX\n");
-			*/
-			
-//#ifdef USE_VERT_TANGENT_SPACE
-//			Q_strcat(extradefines, 1024, "#define USE_VERT_TANGENT_SPACE\n");
-//			attribs |= ATTR_TANGENT;
-//#endif
 		}
 
 		if (lightType)
@@ -1782,10 +2150,7 @@ int GLSL_BeginLoadGPUShaders(void)
 				attribs |= ATTR_TANGENT;
 #endif
 
-				//if ((i & LIGHTDEF_USE_PARALLAXMAP) && r_parallaxMapping->integer)
-					Q_strcat(extradefines, 1024, "#define USE_PARALLAXMAP\n");
-				//else if (r_parallaxMapping->integer) // Parallax without normal maps...
-				//	Q_strcat(extradefines, 1024, "#define USE_PARALLAXMAP_NONORMALS\n");
+				Q_strcat(extradefines, 1024, "#define USE_PARALLAXMAP\n");
 
 				if (r_parallaxMapping->integer && r_parallaxMapping->integer < 2) // Fast parallax mapping...
 					Q_strcat(extradefines, 1024, "#define FAST_PARALLAX\n");
@@ -1794,7 +2159,6 @@ int GLSL_BeginLoadGPUShaders(void)
 			{
 				Q_strcat(extradefines, 1024, "#define USE_NORMALMAP\n");
 
-				//Q_strcat(extradefines, 1024, "#define USE_PARALLAXMAP_NONORMALS\n");
 				Q_strcat(extradefines, 1024, "#define USE_PARALLAXMAP\n");
 #ifdef USE_VERT_TANGENT_SPACE
 				Q_strcat(extradefines, 1024, "#define USE_VERT_TANGENT_SPACE\n");
@@ -1858,9 +2222,11 @@ int GLSL_BeginLoadGPUShaders(void)
 		if (i & LIGHTDEF_USE_GLOW_BUFFER)
 			Q_strcat(extradefines, 1024, "#define USE_GLOW_BUFFER\n");
 
-		if (r_tesselation->integer && lightType && !fastLight)
+		if (r_tesselation->integer && (i & LIGHTDEF_USE_TESSELLATION))
 		{
-			Q_strcat(extradefines, 1024, "#define USE_TESSELATION\n");
+//#ifndef SHADER_BASIC
+			Q_strcat(extradefines, 1024, "#define USE_TESSELLATION\n");
+//#endif //SHADER_BASIC
 
 			if (!GLSL_BeginLoadGPUShader(&tr.lightallShader[i], "lightall", attribs, qtrue, qtrue, extradefines, qtrue, NULL, fallbackShader_lightall_vp, fallbackShader_lightall_fp, fallbackShader_genericTessControl_cp, fallbackShader_genericTessControl_ep))
 			{

@@ -3,11 +3,11 @@ attribute vec2 attr_TexCoord0;
 uniform float	u_Time;
 
 
-out vec3 WorldPos_CS_in;
-out vec2 TexCoord_CS_in;
+#if defined(USE_TESSELLATION)
 out vec3 Normal_CS_in;
-
-
+out vec2 TexCoord_CS_in;
+out vec3 WorldPos_CS_in;
+#endif
 
 //#define USE_LIGHT
 
@@ -58,12 +58,11 @@ uniform vec4   u_DiffuseTexOffTurb;
 #endif
 
 uniform mat4   u_ModelViewProjectionMatrix;
+uniform mat4	u_ViewProjectionMatrix;
+uniform mat4   u_ModelMatrix;
+
 uniform vec4   u_BaseColor;
 uniform vec4   u_VertColor;
-
-#if defined(USE_MODELMATRIX)
-uniform mat4   u_ModelMatrix;
-#endif
 
 #if defined(USE_VERTEX_ANIMATION)
 uniform float  u_VertexLerp;
@@ -263,7 +262,7 @@ void main()
 #endif
 
 #if defined(USE_LIGHTMAP)
-	var_TexCoords2 = attr_TexCoord1;
+	var_TexCoords2 = attr_TexCoord1.st;
 #endif
 
 	var_Color = u_VertColor * attr_Color + u_BaseColor;
@@ -306,27 +305,17 @@ void main()
 
   var_vertPos = gl_Position.xyz;
   var_Time = u_Time;
-
-#ifdef USE_TESSELATION
-  TexCoord_CS_in = var_TexCoords.xy;
-  //Normal_CS_in = var_Normal.xyz;
-  Normal_CS_in = normalize(var_Normal.xyz * 2.0 - 1.0);
-  WorldPos_CS_in = position.xyz;
-  return;
-#endif //USE_TESSELATION
 #endif
 
-/*
-#ifdef USE_TESSELATION
-  var_Normal.xyz = normal.xyz;
+#if defined(USE_TESSELLATION)
+  TexCoord_CS_in = var_TexCoords.xy;
+  Normal_CS_in = attr_Normal.xyz;//normal.xyz;
+  WorldPos_CS_in = attr_Position.xyz;//position.xyz;
+  //gl_Position.xyz = attr_Position.xyz;//position.xyz;
+  
 
   //TexCoord_CS_in = var_TexCoords.xy;
-  //Normal_CS_in = var_Normal.xyz;
+  //Normal_CS_in = normal.xyz;
   //WorldPos_CS_in = gl_Position.xyz;
-
-  TexCoord_CS_in = var_TexCoords.xy;
-  Normal_CS_in = normalize(normal.xyz);
-  WorldPos_CS_in = position.xyz;
-#endif //USE_TESSELATION
-*/
+#endif
 }

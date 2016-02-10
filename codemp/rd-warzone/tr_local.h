@@ -1199,8 +1199,9 @@ enum
 	LIGHTDEF_USE_VERTEX_ANIMATION= 0x0040,
 	LIGHTDEF_USE_SKELETAL_ANIMATION = 0x0080,
 	LIGHTDEF_USE_GLOW_BUFFER     = 0x0100,
-	LIGHTDEF_ALL                 = 0x01FF,
-	LIGHTDEF_COUNT               = 0x0200
+	LIGHTDEF_USE_TESSELLATION     = 0x0200,
+	LIGHTDEF_ALL                 = 0x03FF,
+	LIGHTDEF_COUNT               = 0x0400
 };
 
 enum
@@ -1277,6 +1278,7 @@ typedef enum
 	UNIFORM_FOGCOLORMASK,
 
 	UNIFORM_MODELMATRIX,
+	UNIFORM_VIEWPROJECTIONMATRIX,
 	UNIFORM_MODELVIEWPROJECTIONMATRIX,
 	UNIFORM_INVPROJECTIONMATRIX,
 	UNIFORM_INVEYEPROJECTIONMATRIX,
@@ -1346,6 +1348,8 @@ typedef struct shaderProgram_s
 	GLint *uniforms;
 	short *uniformBufferOffsets;
 	char  *uniformBuffer;
+
+	qboolean tesselation;
 } shaderProgram_t;
 
 // trRefdef_t holds everything that comes in refdef_t,
@@ -2070,6 +2074,7 @@ typedef struct glstate_s {
 	matrix_t        projection;
 	matrix_t		modelviewProjection;
 	matrix_t		invProjection;
+	matrix_t		viewTrans;
 	matrix_t		invEyeProjection;
 } glstate_t;
 

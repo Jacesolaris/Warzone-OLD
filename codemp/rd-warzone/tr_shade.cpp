@@ -41,15 +41,30 @@ R_DrawElements
 ==================
 */
 
+void TesselatedGlDrawElements( int numIndexes, glIndex_t firstIndex, glIndex_t minIndex, glIndex_t maxIndex )
+{// Would really suck if this is the only way... I hate opengl...
+	GLint MaxPatchVertices = 0;
+	qglGetIntegerv(GL_MAX_PATCH_VERTICES, &MaxPatchVertices);
+
+	for (int i = 0; i < maxIndex-minIndex; i++)
+	{
+		qglPatchParameteri(GL_PATCH_VERTICES, 3);
+		qglDrawElements(GL_PATCHES, 3, GL_INDEX_TYPE, BUFFER_OFFSET((firstIndex+i) * sizeof(glIndex_t)));
+	}
+}
+
 void R_DrawElementsVBO( int numIndexes, glIndex_t firstIndex, glIndex_t minIndex, glIndex_t maxIndex, glIndex_t numVerts, qboolean tesselation )
 {
 	if (r_tesselation->integer && tesselation)
 	{
+		
 		GLint MaxPatchVertices = 0;
 		qglGetIntegerv(GL_MAX_PATCH_VERTICES, &MaxPatchVertices);
 		//printf("Max supported patch vertices %d\n", MaxPatchVertices);	
-		qglPatchParameteri(GL_PATCH_VERTICES, 3/*numVerts*/);
+		qglPatchParameteri(GL_PATCH_VERTICES, 3);
 		qglDrawRangeElements(GL_PATCHES, minIndex, maxIndex, numIndexes, GL_INDEX_TYPE, BUFFER_OFFSET(firstIndex * sizeof(glIndex_t)));
+		
+		//TesselatedGlDrawElements( numIndexes, firstIndex, minIndex, maxIndex );
 	}
 	else
 		qglDrawRangeElements(GL_TRIANGLES, minIndex, maxIndex, numIndexes, GL_INDEX_TYPE, BUFFER_OFFSET(firstIndex * sizeof(glIndex_t)));
@@ -1332,8 +1347,17 @@ void RB_SetStageImageDimensions(shaderProgram_t *sp, shaderStage_t *pStage)
 	GLSL_SetUniformVec2(sp, UNIFORM_DIMENSIONS, dimensions);
 }
 
-extern qboolean modelviewProjectionChanged;
-extern qboolean modelviewChanged;
+qboolean RB_ShouldUseTesselation (int materialType )
+{
+	/*if ( materialType == MATERIAL_SHORTGRASS 
+		|| materialType == MATERIAL_LONGGRASS
+		|| materialType == MATERIAL_SAND
+		|| materialType == MATERIAL_ROCK
+		|| materialType == MATERIAL_ICE)*/
+		return qtrue;
+
+	return qfalse;
+}
 
 extern image_t *skyImage;
 
@@ -1445,6 +1469,13 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		else if (pStage->glslShaderGroup == tr.lightallShader)
 		{
 			int index = pStage->glslShaderIndex;
+
+			if (r_tesselation->integer 
+				&& RB_ShouldUseTesselation(tess.shader->surfaceFlags & MATERIAL_MASK))
+			{
+				index |= LIGHTDEF_USE_TESSELLATION;
+				pStage->glslShaderIndex |= LIGHTDEF_USE_TESSELLATION;
+			}
 
 			if (backEnd.currentEntity && backEnd.currentEntity != &tr.worldEntity)
 			{
@@ -1576,6 +1607,13 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			{
 				pStage->glslShaderGroup = tr.lightallShader;
 				sp = &pStage->glslShaderGroup[0];
+
+				if (r_tesselation->integer 
+					&& RB_ShouldUseTesselation(tess.shader->surfaceFlags & MATERIAL_MASK))
+				{
+					sp = &pStage->glslShaderGroup[LIGHTDEF_USE_TESSELLATION];
+					pStage->glslShaderIndex |= LIGHTDEF_USE_TESSELLATION;
+				}
 			}
 
 			GLSL_BindProgram(sp);
@@ -1619,14 +1657,16 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 			{// UQ1: Used by both generic and lightall...
 				RB_SetStageImageDimensions(sp, pStage);
-
+				
+				GLSL_SetUniformMatrix16(sp, UNIFORM_VIEWPROJECTIONMATRIX, backEnd.viewParms.projectionMatrix);
+				GLSL_SetUniformMatrix16(sp, UNIFORM_MODELMATRIX, backEnd.ori.transformMatrix);
 				GLSL_SetUniformMatrix16(sp, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
+				GLSL_SetUniformMatrix16(sp, UNIFORM_INVEYEPROJECTIONMATRIX, glState.invEyeProjection);
 				GLSL_SetUniformVec3(sp, UNIFORM_LOCALVIEWORIGIN, backEnd.ori.viewOrigin);
 				GLSL_SetUniformFloat(sp, UNIFORM_VERTEXLERP, glState.vertexAttribsInterpolation);
 
 				GLSL_SetUniformVec3(sp, UNIFORM_VIEWORIGIN, backEnd.viewParms.ori.origin);
-
-				GLSL_SetUniformMatrix16(sp, UNIFORM_MODELMATRIX, backEnd.ori.transformMatrix);
+				
 				GLSL_SetUniformVec4(sp, UNIFORM_NORMALSCALE, pStage->normalScale);
 				GLSL_SetUniformVec4(sp, UNIFORM_SPECULARSCALE, pStage->specularScale);
 
@@ -2023,7 +2063,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			//
 			qboolean tesselation = qfalse;
 
-			if (r_tesselation->integer && /*sp->tessControlShader && sp->tessEvaluationShader*/isLightAll == qtrue && usingLight) 
+			if (r_tesselation->integer && sp->tesselation && (pStage->glslShaderIndex & LIGHTDEF_USE_TESSELLATION)) 
 			{
 				tesselation = qtrue;
 			}

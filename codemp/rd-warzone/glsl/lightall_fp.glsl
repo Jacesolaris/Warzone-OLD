@@ -78,8 +78,6 @@ varying vec2	  var_TexCoords2;
 
 varying vec4      var_Color;
 
-varying vec3      var_ViewDir;
-
 #if (defined(USE_LIGHT) && !defined(USE_FAST_LIGHT))
   #if defined(USE_VERT_TANGENT_SPACE)
 varying vec4   var_Normal;
@@ -112,22 +110,34 @@ varying vec4      var_PrimaryLightDir;
 
 varying vec3   var_vertPos;
 
+varying vec3      var_ViewDir;
 
 
-
-#ifdef USE_TESSELATION
-in vec3					WorldPos_FS_in;
+#if defined(USE_TESSELLATION)
 in vec2					TexCoord_FS_in;
 in vec3					Normal_FS_in;
+in vec3					WorldPos_FS_in;
+in vec3					ViewDir_FS_in;
 
 #define m_Normal Normal_FS_in
+
 #define m_TexCoords TexCoord_FS_in
-#define m_vertPos WorldPos_FS_in;
-#else //!USE_TESSELATION
+//#define m_TexCoords var_TexCoords
+
+//#define m_vertPos WorldPos_FS_in
+#define m_vertPos var_vertPos
+
+//#define m_ViewDir ViewDir_FS_in
+#define m_ViewDir var_ViewDir
+
+#else //!USE_TESSELLATION
+
 #define m_Normal var_Normal
 #define m_TexCoords var_TexCoords
-#define m_vertPos var_vertPos;
-#endif //USE_TESSELATION
+#define m_vertPos var_vertPos
+#define m_ViewDir var_ViewDir
+
+#endif //USE_TESSELLATION
 
 
 
@@ -484,6 +494,11 @@ vec3 sphericalHarmonics(vec3 N)
 
 void main()
 {
+#if defined(USE_TESSELLATION)
+	gl_FragColor = vec4(0.0, 0.0, 1.0, 1.0);
+	//gl_FragColor = vec4(m_Normal.xyz, 1.0);
+	return;
+#endif //USE_TESSELLATION
 	vec3 viewDir, lightColor, ambientColor;
 	vec4 specular = vec4(0.0);
 	vec3 L, N, E, H;
@@ -497,8 +512,8 @@ void main()
 	mat3 tangentToWorld = mat3(var_Tangent.xyz, var_Bitangent.xyz, m_Normal.xyz);
 	viewDir = vec3(var_Normal2, var_Tangent.w, var_Bitangent.w);
   #else
-	mat3 tangentToWorld = cotangent_frame(m_Normal.xyz, -var_ViewDir, m_TexCoords.xy);
-	viewDir = var_ViewDir;
+	mat3 tangentToWorld = cotangent_frame(m_Normal.xyz, -m_ViewDir, m_TexCoords.xy);
+	viewDir = m_ViewDir;
   #endif
 
 	E = normalize(viewDir);
@@ -513,8 +528,8 @@ void main()
 	mat3 tangentToWorld = mat3(var_Tangent.xyz, var_Bitangent.xyz, m_Normal.xyz);
 	viewDir = vec3(var_Normal2, var_Tangent.w, var_Bitangent.w);
   #else
-	mat3 tangentToWorld = cotangent_frame(m_Normal.xyz, -var_ViewDir, m_TexCoords.xy);
-	viewDir = var_ViewDir;
+	mat3 tangentToWorld = cotangent_frame(m_Normal.xyz, -m_ViewDir, m_TexCoords.xy);
+	viewDir = m_ViewDir;
   #endif
 	E = normalize(viewDir);
 #endif
@@ -523,6 +538,9 @@ void main()
 	vec4 lightmapColor = texture2D(u_LightMap, var_TexCoords2.st);
   #if defined(RGBM_LIGHTMAP)
 	lightmapColor.rgb *= lightmapColor.a;
+  #endif
+  #if defined(USE_TESSELLATION)
+    lightmapColor = vec4(1.0);
   #endif
 #endif
 

@@ -380,12 +380,56 @@ void GL_State( uint32_t stateBits )
 	glState.glStateBits = stateBits;
 }
 
+/*
+matrix_t *InitTranslationTransform(float x, float y, float z)
+{
+	matrix_t m[16];
+    m[0][0] = 1.0f; m[0][1] = 0.0f; m[0][2] = 0.0f; m[0][3] = x;
+    m[1][0] = 0.0f; m[1][1] = 1.0f; m[1][2] = 0.0f; m[1][3] = y;
+    m[2][0] = 0.0f; m[2][1] = 0.0f; m[2][2] = 1.0f; m[2][3] = z;
+    m[3][0] = 0.0f; m[3][1] = 0.0f; m[3][2] = 0.0f; m[3][3] = 1.0f;
+	return m;
+}
+
+
+matrix_t *InitCameraTransform(const vec3_t Target, const vec3_t Up)
+{
+	matrix_t m[16];
+    vec3_t N;
+	VectorCopy(Target, N);
+    VectorNormalize(N);
+    vec3_t U;
+	VectorCopy(Up, U);
+    VectorNormalize(U);
+	CrossProduct(U, N, U);
+    vec3_t V;
+	CrossProduct(N, U, V);
+
+    m[0][0] = U[0];   m[0][1] = U[1];   m[0][2] = U[3];   m[0][3] = 0.0f;
+    m[1][0] = V[0];   m[1][1] = V[1];   m[1][2] = V[3];   m[1][3] = 0.0f;
+    m[2][0] = N[0];   m[2][1] = N[1];   m[2][2] = N[3];   m[2][3] = 0.0f;
+    m[3][0] = 0.0f;  m[3][1] = 0.0f;  m[3][2] = 0.0f;  m[3][3] = 1.0f;
+	return m;
+}
+*/
+
 void GL_SetProjectionMatrix(matrix_t matrix)
 {
 	Matrix16Copy(matrix, glState.projection);
 	Matrix16Multiply(glState.projection, glState.modelview, glState.modelviewProjection);
 	Matrix16SimpleInverse( glState.projection, glState.invProjection);
 	Matrix16SimpleInverse( glState.modelviewProjection, glState.invEyeProjection);
+
+	/*
+	matrix_t CameraTranslationTrans, CameraRotateTrans;
+
+    //InitTranslationTransform(&CameraTranslationTrans, -m_camera.Pos.x, -m_camera.Pos.y, -m_camera.Pos.z);
+	Matrix16Translation( backEnd.viewParms.ori.origin, CameraTranslationTrans );
+	Matrix16Translation( backEnd.refdef.viewaxis, CameraRotateTrans );
+    //Matrix16SimpleInverse( CameraTranslationTrans, CameraTranslationTrans);
+
+	Matrix16Multiply(CameraRotateTrans, CameraTranslationTrans, glState.viewTrans);
+	*/
 }
 
 void GL_SetModelviewMatrix(matrix_t matrix)

@@ -485,11 +485,7 @@ static void DrawSkySide( struct image_s *image, const int mins[2], const int max
 		GLSL_SetUniformVec4(sp, UNIFORM_DIFFUSETEXOFFTURB, vector);
 	}
 
-	qboolean tesselation = qfalse;
-
-	if (r_tesselation->integer) tesselation = qtrue;
-
-	R_DrawElementsVBO(tess.numIndexes - tess.firstIndex, tess.firstIndex, tess.minIndex, tess.maxIndex, tess.numVertexes, tesselation);
+	R_DrawElementsVBO(tess.numIndexes - tess.firstIndex, tess.firstIndex, tess.minIndex, tess.maxIndex, tess.numVertexes, qfalse);
 
 	//qglDrawElements(GL_TRIANGLES, tess.numIndexes - tess.firstIndex, GL_INDEX_TYPE, BUFFER_OFFSET(tess.firstIndex * sizeof(glIndex_t)));
 	
@@ -992,6 +988,11 @@ void RB_StageIteratorSky( void ) {
 	if ( r_fastsky->integer ) {
 		return;
 	}
+
+	// VOID REMOVE HACK
+	int clearBits = GL_COLOR_BUFFER_BIT;	// FIXME: only if sky shaders have been used
+	qglClearColor( 0.0f, 0.0f, 0.0f, 1.0f );	// FIXME: get color of sky
+	qglClear( clearBits );
 
 	// go through all the polygons and project them onto
 	// the sky box to see which blocks on each side need
