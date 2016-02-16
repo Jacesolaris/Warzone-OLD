@@ -252,7 +252,6 @@ extern cvar_t  *r_forceSunLightScale;
 extern cvar_t  *r_forceSunAmbientScale;
 extern cvar_t  *r_sunlightMode;
 extern cvar_t  *r_drawSunRays;
-extern cvar_t  *r_sunShadows;
 extern cvar_t  *r_shadowFilter;
 extern cvar_t  *r_shadowMapSize;
 extern cvar_t  *r_shadowCascadeZNear;
@@ -1432,7 +1431,9 @@ typedef enum {
 	VPF_USESUNLIGHT     = 0x20,
 	VPF_FARPLANEFRUSTUM = 0x40,
 	VPF_NOCUBEMAPS      = 0x80,
-	VPF_NOPOSTPROCESS	= 0x100
+	VPF_NOPOSTPROCESS	= 0x100,
+	VPF_SHADOWPASS		= 0x200,
+	VPF_SHADOWPASS0		= 0x400,
 } viewParmFlags_t;
 
 typedef struct {
@@ -1455,6 +1456,7 @@ typedef struct {
 	vec3_t		visBounds[2];
 	float		zFar;
 	float       zNear;
+	float		maxEntityRange;
 	stereoFrame_t	stereoFrame;
 } viewParms_t;
 
@@ -2628,7 +2630,6 @@ extern  cvar_t  *r_forceSunLightScale;
 extern  cvar_t  *r_forceSunAmbientScale;
 extern  cvar_t  *r_sunlightMode;
 extern  cvar_t  *r_drawSunRays;
-extern  cvar_t  *r_sunShadows;
 extern  cvar_t  *r_shadowFilter;
 extern  cvar_t  *r_shadowMapSize;
 extern  cvar_t  *r_shadowCascadeZNear;

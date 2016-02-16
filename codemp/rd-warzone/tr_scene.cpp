@@ -525,6 +525,9 @@ to handle mirrors,
 
 extern void RB_AdvanceOverlaySway ( void );
 
+int NEXT_SHADOWMAP_UPDATE = 0;
+int NEXT_SHADOWMAP_UPDATE_LOD = 0;
+
 void RE_RenderScene( const refdef_t *fd ) {
 	viewParms_t		parms;
 	int				startTime;
@@ -573,11 +576,36 @@ void RE_RenderScene( const refdef_t *fd ) {
 #endif //__DYNAMIC_SHADOWS__
 
 	// playing with even more shadows
-	if(r_sunlightMode->integer >= 2 && !( fd->rdflags & RDF_NOWORLDMODEL ) && (r_sunlightMode->integer || r_forceSun->integer || tr.sunShadows || r_dlightShadows->integer))
+	if (!( fd->rdflags & RDF_NOWORLDMODEL ) 
+		&& (r_sunlightMode->integer >= 2 || r_forceSun->integer || tr.sunShadows))
 	{
-		R_RenderSunShadowMaps(fd, 0);
-		R_RenderSunShadowMaps(fd, 1);
-		R_RenderSunShadowMaps(fd, 2);
+		if (r_sunlightMode->integer < 3)
+		{// Update distance shadows on timers...
+			int nowTime = ri->Milliseconds();
+
+			// Close shadows - fast updates...
+			if (nowTime >= NEXT_SHADOWMAP_UPDATE)
+			{
+				NEXT_SHADOWMAP_UPDATE = nowTime + 50;
+
+				R_RenderSunShadowMaps(fd, 0);
+			}
+
+			// Distant shadows - slower updates...
+			if (nowTime >= NEXT_SHADOWMAP_UPDATE_LOD)
+			{
+				NEXT_SHADOWMAP_UPDATE_LOD = nowTime + 1000;
+	
+				R_RenderSunShadowMaps(fd, 1);
+				R_RenderSunShadowMaps(fd, 2);
+			}
+		}
+		else
+		{
+			R_RenderSunShadowMaps(fd, 0);
+			R_RenderSunShadowMaps(fd, 1);
+			R_RenderSunShadowMaps(fd, 2);
+		}
 	}
 
 	// playing with cube maps
@@ -620,10 +648,14 @@ void RE_RenderScene( const refdef_t *fd ) {
 
 	VectorCopy( fd->vieworg, parms.pvsOrigin );
 
-	if(!( fd->rdflags & RDF_NOWORLDMODEL ) && r_depthPrepass->value && (r_sunlightMode->integer >= 2 || r_forceSun->integer || tr.sunShadows || r_dlightShadows->integer))
+	if(!( fd->rdflags & RDF_NOWORLDMODEL ) 
+		&& r_depthPrepass->value 
+		&& (r_sunlightMode->integer >= 2 || r_forceSun->integer || tr.sunShadows))
 	{
 		parms.flags = VPF_USESUNLIGHT;
 	}
+
+	parms.maxEntityRange = 512000;
 
 	R_RenderView( &parms );
 

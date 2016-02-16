@@ -1112,14 +1112,14 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage)
 			isMetalic = 1.0;
 			break;
 		case MATERIAL_DRYLEAVES:		// 19			// dried up leaves on the floor
-			specularScale = 0.0;
+			specularScale = 0.05;
 			cubemapScale = 0.0;
 			materialType = (float)MATERIAL_DRYLEAVES;
 			parallaxScale = 0.0;
 			//useSteepParallax = 1.0;
 			break;
 		case MATERIAL_GREENLEAVES:		// 20			// fresh leaves still on a tree
-			specularScale = 0.75;
+			specularScale = 0.05;
 			cubemapScale = 0.0;
 			materialType = (float)MATERIAL_GREENLEAVES;
 			parallaxScale = 0.0; // GreenLeaves should NEVER be parallaxed.. It's used for surfaces with an alpha channel and parallax screws it up...
@@ -1492,7 +1492,24 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				} 
 			}
 
-			if (r_sunlightMode->integer >= 2 && (backEnd.viewParms.flags & VPF_USESUNLIGHT) && (index & LIGHTDEF_LIGHTTYPE_MASK))
+			if (r_sunlightMode->integer >= 2 
+				&& (backEnd.viewParms.flags & VPF_USESUNLIGHT) 
+				&& (( tess.shader->surfaceFlags & MATERIAL_MASK ) == MATERIAL_GREENLEAVES
+					|| ( tess.shader->surfaceFlags & MATERIAL_MASK ) == MATERIAL_SHORTGRASS
+					|| ( tess.shader->surfaceFlags & MATERIAL_MASK ) == MATERIAL_LONGGRASS))
+			{
+				index |= LIGHTDEF_LIGHTTYPE_MASK;
+				index |= LIGHTDEF_USE_SHADOWMAP;
+			}
+			else if (r_sunlightMode->integer >= 2 
+				&& (backEnd.viewParms.flags & VPF_USESUNLIGHT) 
+				&& ( tess.shader->surfaceFlags & MATERIAL_MASK ) == MATERIAL_DRYLEAVES)
+			{// No shadows on dryleaves (billboards)...
+
+			}
+			else if (r_sunlightMode->integer >= 2 
+				&& (backEnd.viewParms.flags & VPF_USESUNLIGHT) 
+				&& (index & LIGHTDEF_LIGHTTYPE_MASK))
 			{
 				index |= LIGHTDEF_USE_SHADOWMAP;
 			}
@@ -1500,7 +1517,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			{
 				index |= LIGHTDEF_USE_SHADOWMAP;
 			}*/
-
+			
 			if (r_lightmap->integer && index & LIGHTDEF_USE_LIGHTMAP)
 			{
 				index = LIGHTDEF_USE_LIGHTMAP;

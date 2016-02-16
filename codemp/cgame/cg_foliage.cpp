@@ -534,7 +534,7 @@ void FOLIAGE_Calc_In_Range_Areas( void )
 			if (minsDist < FOLIAGE_VISIBLE_DISTANCE 
 				|| maxsDist < FOLIAGE_VISIBLE_DISTANCE)
 			{
-				if (minsDist <= FOLIAGE_AREA_SIZE || maxsDist <= FOLIAGE_AREA_SIZE || FOLIAGE_Box_In_FOV( FOLIAGE_AREAS_MINS[i], FOLIAGE_AREAS_MAXS[i] ))
+				if (minsDist <= FOLIAGE_AREA_SIZE * 2.0 || maxsDist <= FOLIAGE_AREA_SIZE * 2.0 || FOLIAGE_Box_In_FOV( FOLIAGE_AREAS_MINS[i], FOLIAGE_AREAS_MAXS[i] ))
 				{
 					IN_RANGE_AREAS_LIST[IN_RANGE_AREAS_LIST_COUNT] = i;
 
@@ -776,7 +776,7 @@ extern "C" {
 
 				re.customShader = FOLIAGE_PLANT_SHADERS[FOLIAGE_PLANT_SELECTION[num]-1];
 
-				re.reType = RT_MODEL;
+				re.reType = RT_PLANT;//RT_MODEL;
 
 				re.origin[2] += 8.0 * (1.0 - FOLIAGE_PLANT_SCALE[num]);
 
@@ -808,7 +808,7 @@ extern "C" {
 			{
 				float GRASS_SCALE = FOLIAGE_PLANT_SCALE[num]*PLANT_SCALE_MULTIPLIER*distFadeScale;//*0.5;
 
-				re.reType = RT_MODEL;
+				re.reType = RT_GRASS;//RT_MODEL;
 
 				re.origin[2] += 8.0 * (1.0 - FOLIAGE_PLANT_SCALE[num]);
 
@@ -1122,15 +1122,15 @@ extern "C" {
 			FOLIAGE_TREE_MODEL[7] = trap->R_RegisterModel( "models/warzone/trees/gkbjungletreenew24v2weeping.md3" );
 			FOLIAGE_TREE_MODEL[8] = trap->R_RegisterModel( "models/warzone/trees/manfern.md3" );
 			
-			FOLIAGE_TREE_BILLBOARD_SHADER[0] = trap->R_RegisterShader("models/warzone/trees/fanpalm2");
-			FOLIAGE_TREE_BILLBOARD_SHADER[1] = trap->R_RegisterShader("models/warzone/trees/fanpalm2");
-			FOLIAGE_TREE_BILLBOARD_SHADER[2] = trap->R_RegisterShader("models/warzone/trees/giant1");
-			FOLIAGE_TREE_BILLBOARD_SHADER[3] = trap->R_RegisterShader("models/warzone/trees/anvilpalm1");
-			FOLIAGE_TREE_BILLBOARD_SHADER[4] = trap->R_RegisterShader("models/warzone/trees/gkbjungletreenew27v2weeping");
-			FOLIAGE_TREE_BILLBOARD_SHADER[5] = trap->R_RegisterShader("models/warzone/trees/gkbjungletreenew27v2weeping");
-			FOLIAGE_TREE_BILLBOARD_SHADER[6] = trap->R_RegisterShader("models/warzone/trees/gkbjungletreenew24v2weeping");
-			FOLIAGE_TREE_BILLBOARD_SHADER[7] = trap->R_RegisterShader("models/warzone/trees/gkbjungletreenew24v2weeping");
-			FOLIAGE_TREE_BILLBOARD_SHADER[8] = trap->R_RegisterShader("models/warzone/trees/manfern");
+			FOLIAGE_TREE_BILLBOARD_SHADER[0] = trap->R_RegisterShader("models/warzone/billboard/fanpalm2");
+			FOLIAGE_TREE_BILLBOARD_SHADER[1] = trap->R_RegisterShader("models/warzone/billboard/fanpalm2");
+			FOLIAGE_TREE_BILLBOARD_SHADER[2] = trap->R_RegisterShader("models/warzone/billboard/giant1");
+			FOLIAGE_TREE_BILLBOARD_SHADER[3] = trap->R_RegisterShader("models/warzone/billboard/anvilpalm1");
+			FOLIAGE_TREE_BILLBOARD_SHADER[4] = trap->R_RegisterShader("models/warzone/billboard/gkbjungletreenew27v2weeping");
+			FOLIAGE_TREE_BILLBOARD_SHADER[5] = trap->R_RegisterShader("models/warzone/billboard/gkbjungletreenew27v2weeping");
+			FOLIAGE_TREE_BILLBOARD_SHADER[6] = trap->R_RegisterShader("models/warzone/billboard/gkbjungletreenew24v2weeping");
+			FOLIAGE_TREE_BILLBOARD_SHADER[7] = trap->R_RegisterShader("models/warzone/billboard/gkbjungletreenew24v2weeping");
+			FOLIAGE_TREE_BILLBOARD_SHADER[8] = trap->R_RegisterShader("models/warzone/billboard/manfern");
 
 			FOLIAGE_TREE_BILLBOARD_SIZE[0] = 118.0;
 			FOLIAGE_TREE_BILLBOARD_SIZE[1] = 118.0;

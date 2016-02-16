@@ -711,7 +711,7 @@ void R_RotateForEntity( const trRefEntity_t *ent, const viewParms_t *viewParms,
 	vec3_t	delta;
 	float	axisLength;
 	
-	if ( ent->e.reType != RT_MODEL ) {
+	if ( ent->e.reType != RT_MODEL && ent->e.reType != RT_GRASS && ent->e.reType != RT_PLANT ) {
 		*ori = viewParms->world;
 		return;
 	}
@@ -1908,6 +1908,24 @@ static void R_AddEntitySurface (int entityNum)
 		tr.defaultShader->cullType = CT_TWO_SIDED;
 #endif //__MERGE_MORE__
 
+	if (tr.viewParms.flags & VPF_SHADOWPASS)
+	{// Don't draw grass and plants on shadow pass for speed...
+		switch ( ent->e.reType ) {
+		case RT_GRASS:
+		case RT_PLANT:
+			return;
+			break;
+		default:
+			break;
+		}
+
+		//if (tr.currentModel && tr.currentModel->type == MOD_MDXM)
+		//	return; // No GLMs in shadows (so that we can use a timer to generate them isntead of every single frame) - otherwise shadows would not match player moves
+
+		if (Distance(ent->e.origin, backEnd.refdef.vieworg) > tr.viewParms.maxEntityRange)
+			return; // Too far away to bother rendering to shadowmap...
+	}
+
 	// simple generated models, like sprites and beams, are not culled
 	switch ( ent->e.reType ) {
 	case RT_PORTALSURFACE:
@@ -1920,8 +1938,6 @@ static void R_AddEntitySurface (int entityNum)
 	case RT_ORIENTEDLINE:
 	case RT_CYLINDER:
 	case RT_SABER_GLOW:
-	case RT_GRASS:
-	case RT_PLANT:
 		// self blood sprites, talk balloons, etc should not be drawn in the primary
 		// view.  We can't just do this check for all entities, because md3
 		// entities may still want to cast shadows from them
@@ -1946,6 +1962,8 @@ static void R_AddEntitySurface (int entityNum)
 		break;
 
 	case RT_MODEL:
+	case RT_GRASS:
+	case RT_PLANT:
 		// we must set up parts of tr.ori for model culling
 		R_RotateForEntity( ent, &tr.viewParms, &tr.ori );
 
@@ -2224,7 +2242,7 @@ void R_RenderDlightCubemaps(const refdef_t *fd)
 		shadowParms.fovX = 90;
 		shadowParms.fovY = 90;
 
-		shadowParms.flags = (int)(VPF_SHADOWMAP | VPF_DEPTHSHADOW | VPF_NOVIEWMODEL);
+		shadowParms.flags = (int)(VPF_SHADOWMAP | VPF_DEPTHSHADOW | VPF_NOVIEWMODEL | VPF_SHADOWPASS);
 		shadowParms.zFar = tr.refdef.dlights[i].radius;
 
 		VectorCopy( tr.refdef.dlights[i].origin, shadowParms.ori.origin );
@@ -2296,7 +2314,7 @@ void R_RenderPshadowMaps(const refdef_t *fd)
 		//if((ent->e.renderfx & RF_THIRD_PERSON))
 			//continue;
 
-		if (ent->e.reType == RT_MODEL)
+		if (ent->e.reType == RT_MODEL || ent->e.reType == RT_GRASS || ent->e.reType == RT_PLANT)
 		{
 			model_t *model = R_GetModelByHandle( ent->e.hModel );
 			pshadow_t shadow;
@@ -2516,7 +2534,7 @@ void R_RenderPshadowMaps(const refdef_t *fd)
 
 		shadowParms.targetFbo = tr.pshadowFbos[i];
 
-		shadowParms.flags = (viewParmFlags_t)( VPF_SHADOWMAP | VPF_DEPTHSHADOW | VPF_NOVIEWMODEL );
+		shadowParms.flags = (viewParmFlags_t)( VPF_SHADOWMAP | VPF_DEPTHSHADOW | VPF_NOVIEWMODEL | VPF_SHADOWPASS );
 		shadowParms.zFar = shadow->lightRadius;
 
 		VectorCopy(shadow->lightOrigin, shadowParms.ori.origin);
@@ -2915,7 +2933,7 @@ qboolean R_RenderDlightShadowMaps(const refdef_t *fd, int level)
 
 		shadowParms.targetFbo = tr.sunShadowFbo[level];
 
-		shadowParms.flags = (viewParmFlags_t)( VPF_DEPTHSHADOW | VPF_DEPTHCLAMP | VPF_ORTHOGRAPHIC | VPF_NOVIEWMODEL );
+		shadowParms.flags = (viewParmFlags_t)( VPF_DEPTHSHADOW | VPF_DEPTHCLAMP | VPF_ORTHOGRAPHIC | VPF_NOVIEWMODEL | VPF_SHADOWPASS );
 		shadowParms.zFar = lightviewBounds[1][0];
 
 		VectorCopy(lightOrigin, shadowParms.ori.origin);
@@ -2969,24 +2987,8 @@ void R_RenderSunShadowMaps(const refdef_t *fd, int level)
 	float splitZNear, splitZFar, splitBias;
 	float viewZNear, viewZFar;
 	vec3_t lightviewBounds[2];
-	qboolean lightViewIndependentOfCameraView = qfalse;
-	qboolean isDlightShadow = qfalse;
+	qboolean lightViewIndependentOfCameraView = qtrue;//qfalse;
 
-#if 0
-	if (r_dlightShadows->integer)
-	{
-		dlight_t	*closestDL = NULL;
-
-		if ( !backEnd.refdef.num_dlights ) {
-			VectorCopy4(tr.refdef.sunDir, lightDir);
-		} else {
-			if (R_RenderDlightShadowMaps(fd, level)) return;
-
-			VectorCopy4(tr.refdef.sunDir, lightDir);
-		}
-	}
-	else 
-#endif
 	if (r_forceSun->integer == 2)
 	{
 		int scale = 32768;
@@ -3208,8 +3210,10 @@ void R_RenderSunShadowMaps(const refdef_t *fd, int level)
 
 		shadowParms.targetFbo = tr.sunShadowFbo[level];
 
-		shadowParms.flags = (viewParmFlags_t)( VPF_DEPTHSHADOW | VPF_DEPTHCLAMP | VPF_ORTHOGRAPHIC | VPF_NOVIEWMODEL );
+		shadowParms.flags = (viewParmFlags_t)( VPF_DEPTHSHADOW | VPF_DEPTHCLAMP | VPF_ORTHOGRAPHIC | VPF_NOVIEWMODEL | VPF_SHADOWPASS );
 		shadowParms.zFar = lightviewBounds[1][0];
+
+		shadowParms.maxEntityRange = splitZFar + 512.0;
 
 		VectorCopy(lightOrigin, shadowParms.ori.origin);
 		
@@ -3235,10 +3239,7 @@ void R_RenderSunShadowMaps(const refdef_t *fd, int level)
 
 			R_SetupProjectionOrtho(&tr.viewParms, lightviewBounds);
 
-			if (!isDlightShadow)
-			{
-				R_AddWorldSurfaces ();
-			}
+			R_AddWorldSurfaces ();
 
 			R_AddPolygonSurfaces();
 

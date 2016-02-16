@@ -3410,7 +3410,7 @@ void AssignMaterialType ( const char *name, const char *text )
 			shader.surfaceFlags |= MATERIAL_ARMOR;
 		else if (StringsContainWord(name, name, "boba") || StringsContainWord(name, name, "pilot"))
 			shader.surfaceFlags |= MATERIAL_ARMOR;
-		else if (StringsContainWord(name, name, "grass") || StringsContainWord(name, name, "foliage") || StringsContainWord(name, name, "yavin/ground") || StringsContainWord(name, name, "mp/s_ground") || StringsContainWord(name, name, "yavinassault/terrain"))
+		else if (StringsContainWord(name, name, "grass") || (StringsContainWord(name, name, "foliage") && !StringsContainWord(name, name, "billboard")) || StringsContainWord(name, name, "yavin/ground") || StringsContainWord(name, name, "mp/s_ground") || StringsContainWord(name, name, "yavinassault/terrain"))
 			shader.surfaceFlags |= MATERIAL_SHORTGRASS;
 	}
 	
@@ -3422,6 +3422,7 @@ void AssignMaterialType ( const char *name, const char *text )
 		shader.isWater = qtrue;
 	}
 	else if (shader.hasAlpha && 
+		!StringsContainWord(name, name, "billboard") &&
 		(StringsContainWord(name, name, "grass") || StringsContainWord(name, name, "foliage") || StringsContainWord(name, name, "yavin/ground") 
 		|| StringsContainWord(name, name, "mp/s_ground") || StringsContainWord(name, name, "yavinassault/terrain")
 		|| StringsContainWord(name, name, "tree") || StringsContainWord(name, name, "plant") || StringsContainWord(name, name, "bush") 
@@ -3434,7 +3435,7 @@ void AssignMaterialType ( const char *name, const char *text )
 	}
 	else if (StringsContainWord(name, name, "plastic") || StringsContainWord(name, name, "trooper") || StringsContainWord(name, name, "medpack"))
 		if (!(shader.surfaceFlags & MATERIAL_PLASTIC)) shader.surfaceFlags |= MATERIAL_PLASTIC;
-	else if (StringsContainWord(name, name, "grass") || StringsContainWord(name, name, "foliage") || StringsContainWord(name, name, "yavin/ground") 
+	else if (StringsContainWord(name, name, "grass") || (StringsContainWord(name, name, "foliage") && !StringsContainWord(name, name, "billboard")) || StringsContainWord(name, name, "yavin/ground") 
 		|| StringsContainWord(name, name, "mp/s_ground") || StringsContainWord(name, name, "yavinassault/terrain"))
 		if (!(shader.surfaceFlags & MATERIAL_SHORTGRASS)) shader.surfaceFlags |= MATERIAL_SHORTGRASS;
 
@@ -3520,7 +3521,7 @@ static qboolean ParseShader( const char *name, const char **text )
 			float	a, b;
 			qboolean isGL2Sun = qfalse;
 
-			if (!Q_stricmp( token, "q3gl2_sun" ) && r_sunShadows->integer )
+			if (!Q_stricmp( token, "q3gl2_sun" ) && r_sunlightMode->integer >= 2 )
 			{
 				isGL2Sun = qtrue;
 				tr.sunShadows = qtrue;
@@ -4043,16 +4044,13 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 		case MATERIAL_BPGLASS:			// 18			// bulletproof glass
 			defs |= LIGHTDEF_USE_LIGHT_VECTOR; // These look nice using vector...
 			useLightVector = qtrue;
-			//defs |= LIGHTDEF_USE_LIGHT_VERTEX;
-			//useLightVertex = qtrue;
 			break;
 		case MATERIAL_GREENLEAVES:		// 20			// fresh leaves still on a tree
+		case MATERIAL_DRYLEAVES:		// 19			// dried up leaves on the floor
 		case MATERIAL_SOLIDWOOD:		// 1			// freshly cut timber
 		case MATERIAL_HOLLOWWOOD:		// 2			// termite infested creaky wood
 		case MATERIAL_SHORTGRASS:		// 5			// manicured lawn
 		case MATERIAL_LONGGRASS:		// 6			// long jungle grass
-			//defs |= LIGHTDEF_USE_LIGHT_VECTOR;
-			//useLightVector = qtrue;
 			defs |= LIGHTDEF_USE_LIGHT_VERTEX; // Vertex currently most compatible...
 			useLightVertex = qtrue;
 			break;
@@ -4064,7 +4062,6 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 		case MATERIAL_PLASTER:			// 28			// drywall style plaster
 		case MATERIAL_FLESH:			// 16			// hung meat, corpses in the world
 		case MATERIAL_RUBBER:			// 24			// hard tire like rubber
-		case MATERIAL_DRYLEAVES:		// 19			// dried up leaves on the floor
 		case MATERIAL_MUD:				// 17			// wet soil
 		case MATERIAL_DIRT:				// 7			// hard mud
 			if (!shader.noTC)
@@ -5800,6 +5797,25 @@ char uniqueGenericFoliageShader[] = "{\n"\
 // "rgbGen vertex\n"\
 // "rgbGen lightingDiffuse\n"\
 
+char uniqueGenericFoliageBillboardShader[] = "{\n"\
+"qer_editorimage	%s\n"\
+"q3map_alphashadow\n"\
+"q3map_material	DryLeaves\n"\
+"surfaceparm trans\n"\
+"surfaceparm	noimpact\n"\
+"surfaceparm	nomarks\n"\
+"sort seethrough\n"\
+"cull	twosided\n"\
+"{\n"\
+"map %s\n"\
+"blendfunc GL_ONE GL_ZERO\n"\
+"alphaFunc GE128\n"\
+"depthWrite\n"\
+"rgbGen identity\n"\
+"}\n"\
+"}\n"\
+"";
+
 char uniqueGenericFoliageTreeShader[] = "{\n"\
 "qer_editorimage	%s\n"\
 "q3map_alphashadow\n"\
@@ -5900,7 +5916,13 @@ char uniqueGenericShader[] = "{\n"\
 
 qboolean R_ForceGenericShader ( const char *name, const char *text )
 {
-	if (text && (StringsContainWord(name, text, "gfx")))
+	if (text && (StringsContainWord(name, name, "warzone/foliage") || StringsContainWord(name, name, "warzone\\foliage")))
+		return qtrue;
+	else if (text && ( StringsContainWord(name, name, "warzone/tree") || StringsContainWord(name, name, "warzone\\tree")))
+		return qtrue;
+	else if (text && ( StringsContainWord(name, name, "warzone/billboard") || StringsContainWord(name, name, "warzone\\billboard")))
+		return qtrue;
+	else if (text && (StringsContainWord(name, text, "gfx")))
 		return qfalse;
 	else if (text && (StringsContainWord(name, text, "glow") || StringsContainWord(name, name, "icon")))
 		return qfalse;
@@ -5913,10 +5935,6 @@ qboolean R_ForceGenericShader ( const char *name, const char *text )
 	else if (StringsContainWord(name, name, "reborn") || StringsContainWord(name, name, "trooper"))
 		return qtrue;
 	else if (StringsContainWord(name, name, "boba") || StringsContainWord(name, name, "pilot"))
-		return qtrue;
-	else if (text && (StringsContainWord(name, text, "warzone/foliage") || StringsContainWord(name, text, "warzone/tree")))
-		return qtrue;
-	else if (text && (StringsContainWord(name, text, "warzone\\foliage") || StringsContainWord(name, text, "warzone\\tree")))
 		return qtrue;
 
 	return qfalse;
@@ -6072,9 +6090,9 @@ shader_t *R_FindShader( const char *name, const int *lightmapIndexes, const byte
 			sprintf(glowShaderAddition, uniqueGenericGlow, strippedName);
 
 		// Generate the shader...
-		if (StringContainsWord(strippedName, "player"))
+		if (StringContainsWord(strippedName, "warzone/billboard") || StringContainsWord(strippedName, "warzone\\billboard"))
 		{
-			sprintf(myShader, uniqueGenericPlayerShader, strippedName, strippedName, glowShaderAddition, strippedName);
+			sprintf(myShader, uniqueGenericFoliageBillboardShader, strippedName, strippedName);
 		}
 		else if (StringContainsWord(strippedName, "warzone/foliage") || StringContainsWord(strippedName, "warzone\\foliage"))
 		{
@@ -6089,6 +6107,10 @@ shader_t *R_FindShader( const char *name, const int *lightmapIndexes, const byte
 				sprintf(myShader, uniqueGenericFoliageTreeShader, strippedName, strippedName);
 			else
 				sprintf(myShader, uniqueGenericFoliageShader, strippedName, strippedName);
+		}
+		else if (StringContainsWord(strippedName, "player"))
+		{
+			sprintf(myShader, uniqueGenericPlayerShader, strippedName, strippedName, glowShaderAddition, strippedName);
 		}
 		else if (StringContainsWord(strippedName, "weapon"))
 		{

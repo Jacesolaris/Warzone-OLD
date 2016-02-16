@@ -584,17 +584,10 @@ void main()
 	lightColor	= var_Color.rgb;
   #endif
 
-//#if defined(USE_PARALLAXMAP) || defined(USE_PARALLAXMAP_NONORMALS) || defined (USE_NORMALMAP)
 	vec3 norm = texture2D(u_NormalMap, texCoords).xyz;
 	
-	//DETAILED_NORMAL = m_Normal.xyz /** norm*/ * 0.5 + 0.5;
-	//DETAILED_NORMAL = normalize(((m_Normal.xyz + norm) * 0.5) * 2.0 - 1.0);
 	DETAILED_NORMAL = normalize(norm * 2.0 - 1.0);
-	//DETAILED_NORMAL = normalize(norm * 0.5 + 0.5);
 	DETAILED_NORMAL = tangentToWorld * DETAILED_NORMAL;
-
-	//NORMAL = normalize(m_Normal.xyz * 2.0 - 1.0);
-	//NORMAL = tangentToWorld * NORMAL;
 
 	N = norm;
 	N = N * 0.5 + 0.5;
@@ -602,24 +595,19 @@ void main()
 	N.z = sqrt(clamp((0.25 - N.x * N.x) - N.y * N.y, 0.0, 1.0));
 
 	N = tangentToWorld * N;
-//#else
-//	N = m_Normal.xyz * 0.5 + 0.5;
-//	NORMAL = N;
-//#endif
 
 	N = normalize(N);
 	L /= sqrt(sqrLightDist);
 
 	if (u_Local5.a > 0.0)
-	{
-		float slope = dot(normalize(N.xyz/*m_Normal.xyz*/),vec3(0.0,1.0,0.0));
+	{// Steep maps...
+		float slope = dot(normalize(N.xyz),vec3(0.0,1.0,0.0));
 		if (slope < 0.0) slope = slope *= -1.0;
-		float slope2 = dot(normalize(N.xyz/*m_Normal.xyz*/),vec3(0.0,0.0,1.0));
+		float slope2 = dot(normalize(N.xyz),vec3(0.0,0.0,1.0));
 		if (slope2 < 0.0) slope2 = slope2 *= -1.0;
-		float slope3 = dot(normalize(N.xyz/*m_Normal.xyz*/),vec3(1.0,0.0,0.0));
+		float slope3 = dot(normalize(N.xyz),vec3(1.0,0.0,0.0));
 		if (slope3 < 0.0) slope3 = slope3 *= -1.0;
 		slope = length(slope + slope2 + slope3) / 3.0;
-		//slope = pow(slope, 0.85);
 		vec4 steepDiffuse = texture2D(u_SteepMap, texCoords);
 		diffuse.rgb = mix( diffuse.rgb, steepDiffuse.rgb, clamp(slope,0.0,1.0));
 	}
@@ -846,22 +834,19 @@ void main()
 	EH2 = clamp(dot(E, H2), 0.0, 1.0);
 	NH2 = clamp(dot(N, H2), 0.0, 1.0);
 
-	reflectance  = diffuse.rgb;
+	reflectance  = gl_FragColor.rgb;//diffuse.rgb;
 	reflectance += CalcSpecular(specular.rgb * refMult, NH2, NL2, NE, EH2, specular.a * refMult, exp2(specular.a * refMult * 13.0));
 
-	lightColor = u_PrimaryLightColor * var_Color.rgb;
-
-	// enable when point lights are supported as primary lights
-	//lightColor *= CalcLightAttenuation(float(u_PrimaryLightDir.w > 0.0), u_PrimaryLightDir.w / sqrLightDist);
-
-    #if defined(USE_SHADOWMAP)
-	lightColor *= shadowValue;
-    #endif
+	lightColor = u_PrimaryLightColor * var_Color.rgb * gl_FragColor.rgb;
 
 	// enable when point lights are supported as primary lights
 	//lightColor *= CalcLightAttenuation(float(u_PrimaryLightDir.w > 0.0), u_PrimaryLightDir.w / sqrLightDist);
 
 	gl_FragColor.rgb += lightColor * reflectance * NL2;
+  #endif
+
+  #if defined(USE_SHADOWMAP)
+	gl_FragColor.rgb *= clamp(shadowValue + 0.5, 0.0, 1.0);
   #endif
 
   gl_FragColor.a = diffuse.a * var_Color.a;
@@ -926,8 +911,8 @@ void main()
 
 	//out_FoliageMap = vec4(0.0, 0.0, 0.0, 0.0);
 
-	if (u_Local1.a == 20 /*|| u_Local1.a == 5 || u_Local1.a == 6*/) 
-	{// (Foliage/Plants), ShortGrass, LongGrass
+	if (u_Local1.a == 20 || u_Local1.a == 19 /*|| u_Local1.a == 5 || u_Local1.a == 6*/) 
+	{// (Foliage/Plants), (billboard trees), ShortGrass, LongGrass
 		out_FoliageMap.r = 1.0;
 		out_FoliageMap.g = 1.0;
 	}

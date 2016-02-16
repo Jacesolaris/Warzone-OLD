@@ -2801,7 +2801,7 @@ int GLSL_BeginLoadGPUShaders(void)
 
 	if (r_sunlightMode->integer == 1)
 		Q_strcat(extradefines, 1024, "#define SHADOWMAP_MODULATE\n");
-	else if (r_sunlightMode->integer == 2)
+	else if (r_sunlightMode->integer >= 2)
 		Q_strcat(extradefines, 1024, "#define USE_PRIMARY_LIGHT\n");
 
 	//if (i & LIGHTDEF_USE_TCGEN_AND_TCMOD)
@@ -2901,7 +2901,7 @@ int GLSL_BeginLoadGPUShaders(void)
 
 	if (r_sunlightMode->integer == 1)
 		Q_strcat(extradefines, 1024, "#define SHADOWMAP_MODULATE\n");
-	else if (r_sunlightMode->integer == 2)
+	else if (r_sunlightMode->integer >= 2)
 		Q_strcat(extradefines, 1024, "#define USE_PRIMARY_LIGHT\n");
 
 	//if (i & LIGHTDEF_USE_TCGEN_AND_TCMOD)

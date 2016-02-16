@@ -639,7 +639,7 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 
 	float			depth[2];
 
-	if (backEnd.refdef.rdflags & RDF_BLUR) CUBEMAPPING = qfalse;
+	if (((backEnd.refdef.rdflags & RDF_BLUR) || (tr.viewParms.flags & VPF_SHADOWPASS))) CUBEMAPPING = qfalse;
 
 	// draw everything
 	backEnd.currentEntity = &tr.worldEntity;
@@ -1512,6 +1512,7 @@ const void	*RB_DrawSurfs( const void *data ) {
 			GLSL_SetUniformMatrix16(&tr.shadowmaskShader, UNIFORM_SHADOWMVP3, backEnd.refdef.sunShadowMvp[2]);
 			
 			GLSL_SetUniformVec3(&tr.shadowmaskShader, UNIFORM_VIEWORIGIN,  backEnd.refdef.vieworg);
+
 			{
 				vec4_t viewInfo;
 				vec3_t viewVector;
@@ -2163,7 +2164,7 @@ const void *RB_PostProcess(const void *data)
 	}
 	*/
 
-	if (!(backEnd.refdef.rdflags & RDF_BLUR) && (r_dynamicGlow->integer || r_ssgi->integer || r_anamorphic->integer))
+	if (!(((backEnd.refdef.rdflags & RDF_BLUR) || (tr.viewParms.flags & VPF_SHADOWPASS))) && (r_dynamicGlow->integer || r_ssgi->integer || r_anamorphic->integer))
 	{
 		RB_BloomDownscale(tr.glowImage, tr.glowFboScaled[0]);
 		int numPasses = Com_Clampi(1, ARRAY_LEN(tr.glowFboScaled), r_dynamicGlowPasses->integer);
