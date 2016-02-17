@@ -525,8 +525,7 @@ to handle mirrors,
 
 extern void RB_AdvanceOverlaySway ( void );
 
-int NEXT_SHADOWMAP_UPDATE = 0;
-int NEXT_SHADOWMAP_UPDATE_LOD = 0;
+int NEXT_SHADOWMAP_UPDATE[3] = { 0 };
 
 void RE_RenderScene( const refdef_t *fd ) {
 	viewParms_t		parms;
@@ -583,20 +582,19 @@ void RE_RenderScene( const refdef_t *fd ) {
 		{// Update distance shadows on timers...
 			int nowTime = ri->Milliseconds();
 
-			// Close shadows - fast updates...
-			if (nowTime >= NEXT_SHADOWMAP_UPDATE)
-			{
-				NEXT_SHADOWMAP_UPDATE = nowTime + 50;
-
+			if (nowTime >= NEXT_SHADOWMAP_UPDATE[0])
+			{// Close shadows - fast updates...
+				NEXT_SHADOWMAP_UPDATE[0] = nowTime + 50;
 				R_RenderSunShadowMaps(fd, 0);
 			}
-
-			// Distant shadows - slower updates...
-			if (nowTime >= NEXT_SHADOWMAP_UPDATE_LOD)
-			{
-				NEXT_SHADOWMAP_UPDATE_LOD = nowTime + 1000;
-	
+			else if (nowTime >= NEXT_SHADOWMAP_UPDATE[1])
+			{// Distant shadows - slower updates...
+				NEXT_SHADOWMAP_UPDATE[1] = nowTime + 750;
 				R_RenderSunShadowMaps(fd, 1);
+			}
+			else if (nowTime >= NEXT_SHADOWMAP_UPDATE[2])
+			{// Really distant shadows - slower updates...
+				NEXT_SHADOWMAP_UPDATE[2] = nowTime + 1500;
 				R_RenderSunShadowMaps(fd, 2);
 			}
 		}
