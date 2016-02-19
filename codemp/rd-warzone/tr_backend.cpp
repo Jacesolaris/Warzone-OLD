@@ -2194,6 +2194,12 @@ const void *RB_PostProcess(const void *data)
 			SCREEN_BLUR = qtrue;
 		}
 
+		if (!SCREEN_BLUR && r_fxaa->integer)
+		{
+			RB_FXAA(currentFbo, srcBox, currentOutFbo, dstBox);
+			RB_SwapFBOs( &currentFbo, &currentOutFbo);
+		}
+
 		if (r_underwater->integer && (backEnd.refdef.rdflags & RDF_UNDERWATER))
 		{
 			RB_Underwater(currentFbo, srcBox, currentOutFbo, dstBox);
@@ -2417,21 +2423,7 @@ const void *RB_PostProcess(const void *data)
 			RB_SwapFBOs( &currentFbo, &currentOutFbo);
 		}
 
-		if (!SCREEN_BLUR && r_fxaa->integer)
-		{
-			int i = 0;
-
-			for (i = 0; i < r_fxaa->integer; i++)
-			{
-				RB_FXAA(currentFbo, srcBox, currentOutFbo, dstBox);
-				RB_SwapFBOs( &currentFbo, &currentOutFbo);
-			}
-		}
-
-		if (currentFbo == srcFbo)
-		{
-			FBO_FastBlit(currentOutFbo, srcBox, currentFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_LINEAR);
-		}
+		FBO_Blit(currentFbo, srcBox, NULL, srcFbo, dstBox, NULL, NULL, 0);
 
 		//
 		// End UQ1 Added...

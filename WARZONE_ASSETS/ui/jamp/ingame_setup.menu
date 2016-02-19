@@ -1178,7 +1178,7 @@
 			font 				4
 			textscale 			1
 			forecolor		.615 .615 .956 1
-			cvarFloatList		{  @MENUS_OFF 0 "Single Pass" 1 "Dual Pass" 2 "Tripple Pass" 3 "Quadruple Pass" 4 }
+			cvarFloatList		{  @MENUS_OFF 0 @MENUS_ON 1 }
 			descText			"Enable FXAA Anti Aliasing?"
 			cvar				"r_fxaa"
 
