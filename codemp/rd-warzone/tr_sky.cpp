@@ -990,9 +990,9 @@ void RB_StageIteratorSky( void ) {
 	}
 
 	// VOID REMOVE HACK
-	int clearBits = GL_COLOR_BUFFER_BIT;	// FIXME: only if sky shaders have been used
-	qglClearColor( 0.0f, 0.0f, 0.0f, 1.0f );	// FIXME: get color of sky
-	qglClear( clearBits );
+	//int clearBits = GL_COLOR_BUFFER_BIT;	// FIXME: only if sky shaders have been used
+	//qglClearColor( 0.0f, 0.0f, 0.0f, 1.0f );	// FIXME: get color of sky
+	//qglClear( clearBits );
 
 	// go through all the polygons and project them onto
 	// the sky box to see which blocks on each side need

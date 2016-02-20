@@ -1619,6 +1619,48 @@ void RB_SSS(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 		GLSL_SetUniformVec4(shader, UNIFORM_LOCAL0, loc);
 	}
 
+	if ( SUN_VISIBLE )
+	{// Add sun...
+		//SUN_ORIGIN
+		float x, y;
+		int	xcenter, ycenter;
+		vec3_t	local, transformed;
+		vec3_t	vfwd, vright, vup, viewAngles;
+
+		TR_AxisToAngles(backEnd.refdef.viewaxis, viewAngles);
+
+		//NOTE: did it this way because most draw functions expect virtual 640x480 coords
+		//	and adjust them for current resolution
+		xcenter = 640 / 2;//gives screen coords in virtual 640x480, to be adjusted when drawn
+		ycenter = 480 / 2;//gives screen coords in virtual 640x480, to be adjusted when drawn
+
+		VectorSubtract (SUN_ORIGIN, backEnd.refdef.vieworg, local);
+
+		AngleVectors (viewAngles, vfwd, vright, vup);
+
+		transformed[0] = DotProduct(local,vright);
+		transformed[1] = DotProduct(local,vup);
+		transformed[2] = DotProduct(local,vfwd);
+
+		// Make sure Z is not negative.
+		if(transformed[2] < 0.01)
+		{
+			//return false;
+			//transformed[2] = 2.0 - transformed[2];
+		}
+
+		// Simple convert to screen coords.
+		float xzi = xcenter / transformed[2] * (90.0/backEnd.refdef.fov_x);
+		float yzi = ycenter / transformed[2] * (90.0/backEnd.refdef.fov_y);
+
+		x = (xcenter + xzi * transformed[0]);
+		y = (ycenter - yzi * transformed[1]);
+
+		vec4_t loc;
+		VectorSet4(loc, x / 640, 1.0 - (y / 480), 0.0, 0.0);
+		GLSL_SetUniformVec4(shader, UNIFORM_LOCAL1, loc);
+	}
+
 	{
 		vec4_t viewInfo;
 		float zmax = 2048.0;//backEnd.viewParms.zFar;

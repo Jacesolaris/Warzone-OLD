@@ -1,3 +1,5 @@
+precision highp float;
+
 uniform sampler2D				u_DiffuseMap;
 uniform sampler2D				u_ScreenDepthMap;
 uniform sampler2D				u_NormalMap;
@@ -6,16 +8,14 @@ uniform mat4					u_ModelViewProjectionMatrix;
 uniform vec4					u_ViewInfo; // zmin, zmax, zmax / zmin
 uniform vec4					u_LightOrigin;
 uniform vec4					u_Local0;
+uniform vec4					u_Local1; // sunx, suny
 
 varying vec2					var_ScreenTex;
 varying vec2					var_Dimensions;
-varying vec2					projAB;
-varying vec3					viewRay;
-varying vec3					light_p;
 
 float linearize(float depth)
 {
-	return 1.0 / mix(u_ViewInfo.z, 1.0, depth);
+	return clamp(1.0 / mix(u_ViewInfo.z, 1.0, depth), 0.0, 1.0);
 }
 
 void main(void){
@@ -28,15 +28,13 @@ void main(void){
 
 	float invDepth = 1.0 - depth;
 
-	//vec2 distFromCenter = vec2((0.5 - var_ScreenTex.x) * 2.0, (1.0 - var_ScreenTex.y) * invDepth);
-	//vec2 offset = distFromCenter * 40.0;
-	//vec2 pixOffset = (offset * texel_size) * invDepth;
-	//vec2 pos = var_ScreenTex + pixOffset;
-
-	//vec2 distFromCenter = vec2((0.5 - var_ScreenTex.x), 0.5);
 	vec2 distFromCenter = vec2((0.5 - var_ScreenTex.x) * 2.0, (1.0 - var_ScreenTex.y) * 0.5);
-	vec2 pixOffset = clamp((distFromCenter * invDepth) * texel_size * 80.0, vec2(0.0), texel_size * 80.0);
+	vec2 pixOffset = clamp((distFromCenter * invDepth) * texel_size * 80.0, 0.0 - (texel_size * 80.0), texel_size * 80.0);
 	vec2 pos = var_ScreenTex + pixOffset;
+
+	//vec2 distFromCenter = vec2(1.0 - (u_Local1.x - var_ScreenTex.x), 1.0 - (u_Local1.y - var_ScreenTex.y));
+	//vec2 pixOffset = clamp((distFromCenter * invDepth) * texel_size * 40.0, (texel_size * 40.0), texel_size * 40.0);
+	//vec2 pos = clamp(var_ScreenTex + pixOffset, 0.0, 1.0);
 
 	float d2 = texture2D(u_ScreenDepthMap, pos).r;
 	d2 = linearize(d2);
