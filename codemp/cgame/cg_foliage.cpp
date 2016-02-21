@@ -1041,6 +1041,7 @@ extern "C" {
 
 	qboolean FOLIAGE_IgnoreFoliageOnMap( void )
 	{
+#if 0
 		if (StringContainsWord(cgs.currentmapname, "eisley")
 			|| StringContainsWord(cgs.currentmapname, "desert")
 			|| StringContainsWord(cgs.currentmapname, "tatooine")
@@ -1068,6 +1069,7 @@ extern "C" {
 			return qtrue;
 		}
 
+#endif
 		return qfalse;
 	}
 
@@ -1304,6 +1306,8 @@ extern "C" {
 	extern char last_node_added_string[255];
 	extern clock_t	aw_stage_start_time;
 
+	int GENFOLIAGE_ALLOW_MATERIAL = -1;
+
 	qboolean MaterialIsValidForGrass(int materialType)
 	{
 		switch( materialType )
@@ -1317,6 +1321,8 @@ extern "C" {
 		default:
 			break;
 		}
+
+		if (GENFOLIAGE_ALLOW_MATERIAL >= 0 && materialType == GENFOLIAGE_ALLOW_MATERIAL) return qtrue;
 
 		return qfalse;
 	}
@@ -2184,7 +2190,7 @@ extern "C" {
 		FOLIAGE_SaveFoliagePositions();
 	}
 
-	void FOLIAGE_FoliageReplant ( void )
+	void FOLIAGE_FoliageReplant ( int plantPercentage )
 	{
 		int NUM_REPLACED = 0;
 
@@ -2194,9 +2200,14 @@ extern "C" {
 
 			if (FOLIAGE_TREE_SELECTION[i] <= 0)
 			{
-				if (irand(0,255) <= 0)
+				if (irand(0,100) <= plantPercentage)
 				{// Replace...
 					FOLIAGE_PLANT_SELECTION[i] = irand(1,MAX_PLANT_SHADERS-1);
+					NUM_REPLACED++;
+				}
+				else
+				{
+					FOLIAGE_PLANT_SELECTION[i] = 0;
 					NUM_REPLACED++;
 				}
 			}
@@ -2235,12 +2246,19 @@ extern "C" {
 		if (!CPU_CHECKED)
 			UQ_Get_CPU_Info();
 
+		GENFOLIAGE_ALLOW_MATERIAL = -1;
+
 		if ( trap->Cmd_Argc() < 2 )
 		{
 			trap->Print( "^4*** ^3AUTO-FOLIAGE^4: ^7Usage:\n" );
 			trap->Print( "^4*** ^3AUTO-FOLIAGE^4: ^3/genfoliage <method> <density> <num_clusters> <tree_density> <num_tree_dense_areas> <check_density>^5. Use num_clusters 0 for even spread.\n" );
 			trap->Print( "^4*** ^3AUTO-FOLIAGE^4: ^5Available methods are:\n" );
 			trap->Print( "^4*** ^3AUTO-FOLIAGE^4: ^3\"standard\" ^5- Create new foliage map.\n");
+			trap->Print( "^4*** ^3AUTO-FOLIAGE^4: ^3\"concrete\" ^5- Create new foliage map. Allow concrete material.\n");
+			trap->Print( "^4*** ^3AUTO-FOLIAGE^4: ^3\"sand\" ^5- Create new foliage map. Allow sand material.\n");
+			trap->Print( "^4*** ^3AUTO-FOLIAGE^4: ^3\"gravel\" ^5- Create new foliage map. Allow gravel material.\n");
+			trap->Print( "^4*** ^3AUTO-FOLIAGE^4: ^3\"rock\" ^5- Create new foliage map. Allow rock material.\n");
+			trap->Print( "^4*** ^3AUTO-FOLIAGE^4: ^3\"snow\" ^5- Create new foliage map. Allow snow material.\n");
 			trap->Print( "^4*** ^3AUTO-FOLIAGE^4: ^3\"add\" ^5- Add more to current list of foliages. Allows <check_density> to check for another foliage before adding.\n");
 			trap->Print( "^4*** ^3AUTO-FOLIAGE^4: ^3\"addslopes\" ^5- Adds more grass/plants only (on slopes). Allows <check_density> to check for another foliage before adding.\n");
 			trap->Print( "^4*** ^3AUTO-FOLIAGE^4: ^3\"rescale\" ^5- Check and fix scale of current grasses/plants.\n");
@@ -2254,6 +2272,216 @@ extern "C" {
 
 		if ( Q_stricmp( str, "standard") == 0 )
 		{
+			if ( trap->Cmd_Argc() >= 2 )
+			{// Override normal density...
+				int dist = 48;
+				int num_clusters = 0;
+				int tree_dist = 48;
+				int num_dense_areas = 0;
+
+				trap->Cmd_Argv( 2, str, sizeof(str) );
+				dist = atoi(str);
+
+				if (dist <= 4)
+				{// Fallback and warning...
+					dist = 48;
+					trap->Print( "^4*** ^3AUTO-FOLIAGE^4: ^7Warning: ^5Invalid density set (%i). Using default (%i)...\n", atoi(str), 48 );
+				}
+
+				trap->Cmd_Argv( 3, str, sizeof(str) );
+				num_clusters = atoi(str);
+
+				trap->Cmd_Argv( 4, str, sizeof(str) );
+				tree_dist = atoi(str);
+
+				trap->Cmd_Argv( 5, str, sizeof(str) );
+				num_dense_areas = atoi(str);
+
+				if (num_dense_areas > FOLIAGE_AREA_MAX/8)
+				{
+					trap->Print( "^4*** ^3AUTO-FOLIAGE^4: ^7Error: ^5Invalid num_dense_areas set (%i). Maximum is (%i)...\n", atoi(str), FOLIAGE_AREA_MAX/8 );
+					return;
+				}
+
+				FOLIAGE_GenerateFoliage_Real((float)dist, num_clusters, (float)tree_dist, num_dense_areas, qfalse, 32.0, qfalse);
+			}
+			else
+			{
+				FOLIAGE_GenerateFoliage_Real(48.0, 0, 256.0, 0, qfalse, 32.0, qfalse);
+			}
+		}
+		else if ( Q_stricmp( str, "concrete") == 0 )
+		{
+			GENFOLIAGE_ALLOW_MATERIAL = MATERIAL_CONCRETE;
+
+			if ( trap->Cmd_Argc() >= 2 )
+			{// Override normal density...
+				int dist = 48;
+				int num_clusters = 0;
+				int tree_dist = 48;
+				int num_dense_areas = 0;
+
+				trap->Cmd_Argv( 2, str, sizeof(str) );
+				dist = atoi(str);
+
+				if (dist <= 4)
+				{// Fallback and warning...
+					dist = 48;
+					trap->Print( "^4*** ^3AUTO-FOLIAGE^4: ^7Warning: ^5Invalid density set (%i). Using default (%i)...\n", atoi(str), 48 );
+				}
+
+				trap->Cmd_Argv( 3, str, sizeof(str) );
+				num_clusters = atoi(str);
+
+				trap->Cmd_Argv( 4, str, sizeof(str) );
+				tree_dist = atoi(str);
+
+				trap->Cmd_Argv( 5, str, sizeof(str) );
+				num_dense_areas = atoi(str);
+
+				if (num_dense_areas > FOLIAGE_AREA_MAX/8)
+				{
+					trap->Print( "^4*** ^3AUTO-FOLIAGE^4: ^7Error: ^5Invalid num_dense_areas set (%i). Maximum is (%i)...\n", atoi(str), FOLIAGE_AREA_MAX/8 );
+					return;
+				}
+
+				FOLIAGE_GenerateFoliage_Real((float)dist, num_clusters, (float)tree_dist, num_dense_areas, qfalse, 32.0, qfalse);
+			}
+			else
+			{
+				FOLIAGE_GenerateFoliage_Real(48.0, 0, 256.0, 0, qfalse, 32.0, qfalse);
+			}
+		}
+		else if ( Q_stricmp( str, "sand") == 0 )
+		{
+			GENFOLIAGE_ALLOW_MATERIAL = MATERIAL_SAND;
+
+			if ( trap->Cmd_Argc() >= 2 )
+			{// Override normal density...
+				int dist = 48;
+				int num_clusters = 0;
+				int tree_dist = 48;
+				int num_dense_areas = 0;
+
+				trap->Cmd_Argv( 2, str, sizeof(str) );
+				dist = atoi(str);
+
+				if (dist <= 4)
+				{// Fallback and warning...
+					dist = 48;
+					trap->Print( "^4*** ^3AUTO-FOLIAGE^4: ^7Warning: ^5Invalid density set (%i). Using default (%i)...\n", atoi(str), 48 );
+				}
+
+				trap->Cmd_Argv( 3, str, sizeof(str) );
+				num_clusters = atoi(str);
+
+				trap->Cmd_Argv( 4, str, sizeof(str) );
+				tree_dist = atoi(str);
+
+				trap->Cmd_Argv( 5, str, sizeof(str) );
+				num_dense_areas = atoi(str);
+
+				if (num_dense_areas > FOLIAGE_AREA_MAX/8)
+				{
+					trap->Print( "^4*** ^3AUTO-FOLIAGE^4: ^7Error: ^5Invalid num_dense_areas set (%i). Maximum is (%i)...\n", atoi(str), FOLIAGE_AREA_MAX/8 );
+					return;
+				}
+
+				FOLIAGE_GenerateFoliage_Real((float)dist, num_clusters, (float)tree_dist, num_dense_areas, qfalse, 32.0, qfalse);
+			}
+			else
+			{
+				FOLIAGE_GenerateFoliage_Real(48.0, 0, 256.0, 0, qfalse, 32.0, qfalse);
+			}
+		}
+		else if ( Q_stricmp( str, "rock") == 0 )
+		{
+			GENFOLIAGE_ALLOW_MATERIAL = MATERIAL_ROCK;
+
+			if ( trap->Cmd_Argc() >= 2 )
+			{// Override normal density...
+				int dist = 48;
+				int num_clusters = 0;
+				int tree_dist = 48;
+				int num_dense_areas = 0;
+
+				trap->Cmd_Argv( 2, str, sizeof(str) );
+				dist = atoi(str);
+
+				if (dist <= 4)
+				{// Fallback and warning...
+					dist = 48;
+					trap->Print( "^4*** ^3AUTO-FOLIAGE^4: ^7Warning: ^5Invalid density set (%i). Using default (%i)...\n", atoi(str), 48 );
+				}
+
+				trap->Cmd_Argv( 3, str, sizeof(str) );
+				num_clusters = atoi(str);
+
+				trap->Cmd_Argv( 4, str, sizeof(str) );
+				tree_dist = atoi(str);
+
+				trap->Cmd_Argv( 5, str, sizeof(str) );
+				num_dense_areas = atoi(str);
+
+				if (num_dense_areas > FOLIAGE_AREA_MAX/8)
+				{
+					trap->Print( "^4*** ^3AUTO-FOLIAGE^4: ^7Error: ^5Invalid num_dense_areas set (%i). Maximum is (%i)...\n", atoi(str), FOLIAGE_AREA_MAX/8 );
+					return;
+				}
+
+				FOLIAGE_GenerateFoliage_Real((float)dist, num_clusters, (float)tree_dist, num_dense_areas, qfalse, 32.0, qfalse);
+			}
+			else
+			{
+				FOLIAGE_GenerateFoliage_Real(48.0, 0, 256.0, 0, qfalse, 32.0, qfalse);
+			}
+		}
+		else if ( Q_stricmp( str, "gravel") == 0 )
+		{
+			GENFOLIAGE_ALLOW_MATERIAL = MATERIAL_GRAVEL;
+
+			if ( trap->Cmd_Argc() >= 2 )
+			{// Override normal density...
+				int dist = 48;
+				int num_clusters = 0;
+				int tree_dist = 48;
+				int num_dense_areas = 0;
+
+				trap->Cmd_Argv( 2, str, sizeof(str) );
+				dist = atoi(str);
+
+				if (dist <= 4)
+				{// Fallback and warning...
+					dist = 48;
+					trap->Print( "^4*** ^3AUTO-FOLIAGE^4: ^7Warning: ^5Invalid density set (%i). Using default (%i)...\n", atoi(str), 48 );
+				}
+
+				trap->Cmd_Argv( 3, str, sizeof(str) );
+				num_clusters = atoi(str);
+
+				trap->Cmd_Argv( 4, str, sizeof(str) );
+				tree_dist = atoi(str);
+
+				trap->Cmd_Argv( 5, str, sizeof(str) );
+				num_dense_areas = atoi(str);
+
+				if (num_dense_areas > FOLIAGE_AREA_MAX/8)
+				{
+					trap->Print( "^4*** ^3AUTO-FOLIAGE^4: ^7Error: ^5Invalid num_dense_areas set (%i). Maximum is (%i)...\n", atoi(str), FOLIAGE_AREA_MAX/8 );
+					return;
+				}
+
+				FOLIAGE_GenerateFoliage_Real((float)dist, num_clusters, (float)tree_dist, num_dense_areas, qfalse, 32.0, qfalse);
+			}
+			else
+			{
+				FOLIAGE_GenerateFoliage_Real(48.0, 0, 256.0, 0, qfalse, 32.0, qfalse);
+			}
+		}
+		else if ( Q_stricmp( str, "snow") == 0 )
+		{
+			GENFOLIAGE_ALLOW_MATERIAL = MATERIAL_SNOW;
+
 			if ( trap->Cmd_Argc() >= 2 )
 			{// Override normal density...
 				int dist = 48;
@@ -2390,7 +2618,26 @@ extern "C" {
 		}
 		else if ( Q_stricmp( str, "replant") == 0 )
 		{
-			FOLIAGE_FoliageReplant();
+			if ( trap->Cmd_Argc() >= 2 )
+			{// Override normal density...
+				int plantPercentage = 20;
+
+				trap->Cmd_Argv( 2, str, sizeof(str) );
+				plantPercentage = atoi(str);
+
+				if (plantPercentage <= 0)
+				{// Fallback and warning...
+					plantPercentage = 20;
+					trap->Print( "^4*** ^3AUTO-FOLIAGE^4: ^7Warning: ^5Invalid plant percentage set (%i). Using default (%i)...\n", atoi(str), plantPercentage );
+				}
+			
+				FOLIAGE_FoliageReplant(plantPercentage);
+			}
+			else
+			{
+				trap->Print( "^4*** ^3AUTO-FOLIAGE^4: ^7Usage:\n" );
+				trap->Print( "^4*** ^3AUTO-FOLIAGE^4: ^3/genfoliage replant <plantPercent>^5. Use plantPercent 0 for default.\n" );
+			}
 		}
 		else if ( Q_stricmp( str, "retree") == 0 )
 		{
