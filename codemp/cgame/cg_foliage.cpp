@@ -124,33 +124,31 @@ float		NUM_PLANT_SHADERS = 0;
 		"models/warzone/foliage/plant73.png",
 		"models/warzone/foliage/plant74.png",
 		"models/warzone/foliage/plant75.png",
-
-		// More of these because they add color
-		"models/warzone/foliage/plant60.png",
-		"models/warzone/foliage/plant61.png",
-		"models/warzone/foliage/plant62.png",
-		"models/warzone/foliage/plant63.png",
-		"models/warzone/foliage/plant67.png",
-		"models/warzone/foliage/plant69.png",
-		"models/warzone/foliage/plant70.png",
-		"models/warzone/foliage/plant60.png",
-		"models/warzone/foliage/plant61.png",
-		"models/warzone/foliage/plant62.png",
-		"models/warzone/foliage/plant63.png",
-		"models/warzone/foliage/plant67.png",
-		"models/warzone/foliage/plant69.png",
-		"models/warzone/foliage/plant70.png",
-		"models/warzone/foliage/plant60.png",
-		"models/warzone/foliage/plant61.png",
-		"models/warzone/foliage/plant62.png",
-		"models/warzone/foliage/plant63.png",
-		"models/warzone/foliage/plant67.png",
-		"models/warzone/foliage/plant69.png",
-		"models/warzone/foliage/plant70.png",
-		"models/warzone/foliage/plant60.png",
-		"models/warzone/foliage/plant75.png",
-		"models/warzone/foliage/plant75.png",
-		"models/warzone/foliage/plant75.png",
+		"models/warzone/foliage/plant76.png",
+		"models/warzone/foliage/plant77.png",
+		"models/warzone/foliage/plant78.png",
+		"models/warzone/foliage/plant79.png",
+		"models/warzone/foliage/plant80.png",
+		"models/warzone/foliage/plant81.png",
+		"models/warzone/foliage/plant82.png",
+		"models/warzone/foliage/plant83.png",
+		"models/warzone/foliage/plant84.png",
+		"models/warzone/foliage/plant85.png",
+		"models/warzone/foliage/plant86.png",
+		"models/warzone/foliage/plant87.png",
+		"models/warzone/foliage/plant88.png",
+		"models/warzone/foliage/plant89.png",
+		"models/warzone/foliage/plant90.png",
+		"models/warzone/foliage/plant91.png",
+		"models/warzone/foliage/plant92.png",
+		"models/warzone/foliage/plant93.png",
+		"models/warzone/foliage/plant94.png",
+		"models/warzone/foliage/plant95.png",
+		"models/warzone/foliage/plant96.png",
+		"models/warzone/foliage/plant97.png",
+		"models/warzone/foliage/plant98.png",
+		"models/warzone/foliage/plant99.png",
+		"models/warzone/foliage/plant100.png",
 	};
 
 	// =======================================================================================================================================
@@ -196,8 +194,8 @@ float		NUM_PLANT_SHADERS = 0;
 	float		FOLIAGE_TREE_SCALE[FOLIAGE_MAX_FOLIAGES];
 
 
-	qhandle_t	FOLIAGE_PLANT_MODEL[4] = { 0 };
-	qhandle_t	FOLIAGE_GRASS_BILLBOARD_SHADER[5] = { 0 };
+	qhandle_t	FOLIAGE_PLANT_MODEL[5] = { 0 };
+	qhandle_t	FOLIAGE_GRASS_BILLBOARD_SHADER = 0;
 	qhandle_t	FOLIAGE_TREE_MODEL[16] = { 0 };
 	float		FOLIAGE_TREE_RADIUS[16] = { 0 };
 	float		FOLIAGE_TREE_ZOFFSET[16] = { 0 };
@@ -778,17 +776,9 @@ extern "C" {
 
 				re.reType = RT_PLANT;//RT_MODEL;
 
-				re.origin[2] += 8.0 * (1.0 - FOLIAGE_PLANT_SCALE[num]);
+				re.origin[2] += /*8.0 **/ (1.0 - FOLIAGE_PLANT_SCALE[num]);
 
-				// Allow user to adjust level of foliage detail by adjusting md3 lods...
-				if (cg_foliageDetail.integer >= 3)
-					re.hModel = FOLIAGE_PLANT_MODEL[0];
-				else if (cg_foliageDetail.integer >= 2)
-					re.hModel = FOLIAGE_PLANT_MODEL[1];
-				else if (cg_foliageDetail.integer >= 1)
-					re.hModel = FOLIAGE_PLANT_MODEL[2];
-				else
-					re.hModel = FOLIAGE_PLANT_MODEL[3];
+				re.hModel = FOLIAGE_PLANT_MODEL[4];
 
 				VectorSet(re.modelScale, PLANT_SCALE, PLANT_SCALE, PLANT_SCALE);
 
@@ -799,20 +789,24 @@ extern "C" {
 				VectorCopy(angles, re.angles);
 				AnglesToAxis(angles, re.axis);
 
+				// Add extra rotation so it's different to grass angle...
+				//RotateAroundDirection( re.axis, FOLIAGE_PLANT_ANGLES[num]+45 );
+
 				ScaleModelAxis( &re );
 
 				FOLIAGE_AddFoliageEntityToScene( &re );
 			}
-			else if (!skipGrass && dist <= FOLIAGE_VISIBLE_DISTANCE)
+			
+			if (!skipGrass && dist <= FOLIAGE_VISIBLE_DISTANCE)
 #endif //__GRASS_ONLY__
 			{
 				float GRASS_SCALE = FOLIAGE_PLANT_SCALE[num]*PLANT_SCALE_MULTIPLIER*distFadeScale;//*0.5;
 
 				re.reType = RT_GRASS;//RT_MODEL;
 
-				re.origin[2] += 8.0 * (1.0 - FOLIAGE_PLANT_SCALE[num]);
+				re.origin[2] += /*8.0 **/ (1.0 - FOLIAGE_PLANT_SCALE[num]);
 
-				re.customShader = FOLIAGE_GRASS_BILLBOARD_SHADER[0];
+				re.customShader = FOLIAGE_GRASS_BILLBOARD_SHADER;
 				
 				// Allow user to adjust level of foliage detail by adjusting md3 lods...
 				if (cg_foliageDetail.integer >= 3)
@@ -855,6 +849,8 @@ extern "C" {
 
 				VectorCopy(angles, re.angles);
 				AnglesToAxis(angles, re.axis);
+
+				//RotateAroundDirection( re.axis, FOLIAGE_PLANT_ANGLES[num] );
 
 				ScaleModelAxis( &re );
 
@@ -1104,13 +1100,10 @@ extern "C" {
 			FOLIAGE_PLANT_MODEL[1] = trap->R_RegisterModel( "models/warzone/foliage/uqgrass_lod.md3" );
 			FOLIAGE_PLANT_MODEL[2] = trap->R_RegisterModel( "models/warzone/foliage/uqgrass_lod2.md3" );
 			FOLIAGE_PLANT_MODEL[3] = trap->R_RegisterModel( "models/warzone/foliage/uqgrass_lod3.md3" );
+			FOLIAGE_PLANT_MODEL[4] = trap->R_RegisterModel( "models/warzone/foliage/uqplant.md3" );
 
 #if 1
-			FOLIAGE_GRASS_BILLBOARD_SHADER[0] = trap->R_RegisterShader( "models/warzone/foliage/maingrass1024.png" );
-			FOLIAGE_GRASS_BILLBOARD_SHADER[1] = trap->R_RegisterShader( "models/warzone/foliage/maingrass512.png" );
-			FOLIAGE_GRASS_BILLBOARD_SHADER[2] = trap->R_RegisterShader( "models/warzone/foliage/maingrass256.png" );
-			FOLIAGE_GRASS_BILLBOARD_SHADER[3] = trap->R_RegisterShader( "models/warzone/foliage/maingrass128.png" );
-			FOLIAGE_GRASS_BILLBOARD_SHADER[4] = trap->R_RegisterShader( "models/warzone/foliage/maingrass64.png" );
+			FOLIAGE_GRASS_BILLBOARD_SHADER = trap->R_RegisterShader( "models/warzone/foliage/maingrass.png" );
 
 			//FOLIAGE_TREE_MODEL[0] = trap->R_RegisterModel( "models/map_objects/yavin/tree08_b.md3" );
 
@@ -1179,29 +1172,11 @@ extern "C" {
 				FOLIAGE_PLANT_SHADERS[i] = trap->R_RegisterShader(GoodPlantsList[i]);
 			}
 #else
-			FOLIAGE_GRASS_BILLBOARD_SHADER[0] = trap->R_RegisterShader( IniRead(va("foliage/%s.ini", cgs.currentmapname),"GRASS","GRASS_SHADER_LOD_0","models/warzone/foliage/models/warzone/foliage/maingrass1024.png") );
+			FOLIAGE_GRASS_BILLBOARD_SHADER = trap->R_RegisterShader( IniRead(va("foliage/%s.ini", cgs.currentmapname),"GRASS","GRASS_SHADER_LOD_0","models/warzone/foliage/models/warzone/foliage/maingrass.png") );
 
-			if (!FOLIAGE_GRASS_BILLBOARD_SHADER[0])
+			if (!FOLIAGE_GRASS_BILLBOARD_SHADER)
 			{// Have no base grass texture... Use defaults...
-				FOLIAGE_GRASS_BILLBOARD_SHADER[0] = trap->R_RegisterShader( "models/warzone/foliage/maingrass1024.png" );
-				FOLIAGE_GRASS_BILLBOARD_SHADER[1] = trap->R_RegisterShader( "models/warzone/foliage/maingrass512.png" );
-				FOLIAGE_GRASS_BILLBOARD_SHADER[2] = trap->R_RegisterShader( "models/warzone/foliage/maingrass256.png" );
-				FOLIAGE_GRASS_BILLBOARD_SHADER[3] = trap->R_RegisterShader( "models/warzone/foliage/maingrass128.png" );
-				FOLIAGE_GRASS_BILLBOARD_SHADER[4] = trap->R_RegisterShader( "models/warzone/foliage/maingrass64.png" );
-			}
-			else
-			{// Have a grass base shader, check the rest of the LOD levels from ini. If not found, use base...
-				FOLIAGE_GRASS_BILLBOARD_SHADER[1] = trap->R_RegisterShader( IniRead(va("foliage/%s.ini", cgs.currentmapname),"GRASS","GRASS_SHADER_LOD_1","models/warzone/foliage/models/warzone/foliage/maingrass512.png") );
-				if (!FOLIAGE_GRASS_BILLBOARD_SHADER[1]) FOLIAGE_GRASS_BILLBOARD_SHADER[1] = FOLIAGE_GRASS_BILLBOARD_SHADER[0];
-
-				FOLIAGE_GRASS_BILLBOARD_SHADER[2] = trap->R_RegisterShader( IniRead(va("foliage/%s.ini", cgs.currentmapname),"GRASS","GRASS_SHADER_LOD_2","models/warzone/foliage/models/warzone/foliage/maingrass256.png") );
-				if (!FOLIAGE_GRASS_BILLBOARD_SHADER[2]) FOLIAGE_GRASS_BILLBOARD_SHADER[2] = FOLIAGE_GRASS_BILLBOARD_SHADER[0];
-
-				FOLIAGE_GRASS_BILLBOARD_SHADER[3] = trap->R_RegisterShader( IniRead(va("foliage/%s.ini", cgs.currentmapname),"GRASS","GRASS_SHADER_LOD_3","models/warzone/foliage/models/warzone/foliage/maingrass128.png") );
-				if (!FOLIAGE_GRASS_BILLBOARD_SHADER[3]) FOLIAGE_GRASS_BILLBOARD_SHADER[3] = FOLIAGE_GRASS_BILLBOARD_SHADER[0];
-
-				FOLIAGE_GRASS_BILLBOARD_SHADER[4] = trap->R_RegisterShader( IniRead(va("foliage/%s.ini", cgs.currentmapname),"GRASS","GRASS_SHADER_LOD_4","models/warzone/foliage/models/warzone/foliage/maingrass64.png") );
-				if (!FOLIAGE_GRASS_BILLBOARD_SHADER[4]) FOLIAGE_GRASS_BILLBOARD_SHADER[4] = FOLIAGE_GRASS_BILLBOARD_SHADER[0];
+				FOLIAGE_GRASS_BILLBOARD_SHADER = trap->R_RegisterShader( "models/warzone/foliage/maingrass.png" );
 			}
 
 			FOLIAGE_PLANT_SHADERS[0] = trap->R_RegisterShader( IniRead(va("foliage/%s.ini", cgs.currentmapname),"PLANTS","PLANT_SHADER_0","seemtohavenone" ));
