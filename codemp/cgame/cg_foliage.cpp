@@ -1114,44 +1114,54 @@ extern "C" {
 
 			//FOLIAGE_TREE_MODEL[0] = trap->R_RegisterModel( "models/map_objects/yavin/tree08_b.md3" );
 
-			FOLIAGE_TREE_MODEL[0] = trap->R_RegisterModel( "models/warzone/trees/fanpalm2.md3" );
+			//FOLIAGE_TREE_MODEL[0] = trap->R_RegisterModel( "models/warzone/trees/fanpalm2.md3" );
+			FOLIAGE_TREE_MODEL[0] = trap->R_RegisterModel( "models/warzone/trees/palm1.md3" );
 			FOLIAGE_TREE_MODEL[1] = trap->R_RegisterModel( "models/warzone/trees/fanpalm2.md3" );
 			FOLIAGE_TREE_MODEL[2] = trap->R_RegisterModel( "models/warzone/trees/giant1.md3" );
 			FOLIAGE_TREE_MODEL[3] = trap->R_RegisterModel( "models/warzone/trees/anvilpalm1.md3" );
-			FOLIAGE_TREE_MODEL[4] = trap->R_RegisterModel( "models/warzone/trees/gkbjungletreenew27v2weeping.md3" );
-			FOLIAGE_TREE_MODEL[5] = trap->R_RegisterModel( "models/warzone/trees/gkbjungletreenew27v2weeping.md3" );
-			FOLIAGE_TREE_MODEL[6] = trap->R_RegisterModel( "models/warzone/trees/gkbjungletreenew24v2weeping.md3" );
-			FOLIAGE_TREE_MODEL[7] = trap->R_RegisterModel( "models/warzone/trees/gkbjungletreenew24v2weeping.md3" );
+			//FOLIAGE_TREE_MODEL[4] = trap->R_RegisterModel( "models/warzone/trees/gkbjungletreenew27v2weeping.md3" );
+			//FOLIAGE_TREE_MODEL[5] = trap->R_RegisterModel( "models/warzone/trees/gkbjungletreenew27v2weeping.md3" );
+			FOLIAGE_TREE_MODEL[4] = trap->R_RegisterModel( "models/warzone/trees/willow.md3" );
+			FOLIAGE_TREE_MODEL[5] = trap->R_RegisterModel( "models/warzone/trees/willow2.md3" );
+			//FOLIAGE_TREE_MODEL[6] = trap->R_RegisterModel( "models/warzone/trees/gkbjungletreenew24v2weeping.md3" );
+			//FOLIAGE_TREE_MODEL[7] = trap->R_RegisterModel( "models/warzone/trees/gkbjungletreenew24v2weeping.md3" );
+			FOLIAGE_TREE_MODEL[6] = trap->R_RegisterModel( "models/warzone/trees/willow3.md3" );
+			FOLIAGE_TREE_MODEL[7] = trap->R_RegisterModel( "models/warzone/trees/willow4.md3" );
 			FOLIAGE_TREE_MODEL[8] = trap->R_RegisterModel( "models/warzone/trees/manfern.md3" );
 			
-			FOLIAGE_TREE_BILLBOARD_SHADER[0] = trap->R_RegisterShader("models/warzone/billboard/fanpalm2");
+			//FOLIAGE_TREE_BILLBOARD_SHADER[0] = trap->R_RegisterShader("models/warzone/billboard/fanpalm2");
+			FOLIAGE_TREE_BILLBOARD_SHADER[0] = trap->R_RegisterShader("models/warzone/billboard/palm1");
 			FOLIAGE_TREE_BILLBOARD_SHADER[1] = trap->R_RegisterShader("models/warzone/billboard/fanpalm2");
 			FOLIAGE_TREE_BILLBOARD_SHADER[2] = trap->R_RegisterShader("models/warzone/billboard/giant1");
 			FOLIAGE_TREE_BILLBOARD_SHADER[3] = trap->R_RegisterShader("models/warzone/billboard/anvilpalm1");
-			FOLIAGE_TREE_BILLBOARD_SHADER[4] = trap->R_RegisterShader("models/warzone/billboard/gkbjungletreenew27v2weeping");
-			FOLIAGE_TREE_BILLBOARD_SHADER[5] = trap->R_RegisterShader("models/warzone/billboard/gkbjungletreenew27v2weeping");
-			FOLIAGE_TREE_BILLBOARD_SHADER[6] = trap->R_RegisterShader("models/warzone/billboard/gkbjungletreenew24v2weeping");
-			FOLIAGE_TREE_BILLBOARD_SHADER[7] = trap->R_RegisterShader("models/warzone/billboard/gkbjungletreenew24v2weeping");
+			//FOLIAGE_TREE_BILLBOARD_SHADER[4] = trap->R_RegisterShader("models/warzone/billboard/gkbjungletreenew27v2weeping");
+			//FOLIAGE_TREE_BILLBOARD_SHADER[5] = trap->R_RegisterShader("models/warzone/billboard/gkbjungletreenew27v2weeping");
+			FOLIAGE_TREE_BILLBOARD_SHADER[4] = trap->R_RegisterShader("models/warzone/billboard/willow");
+			FOLIAGE_TREE_BILLBOARD_SHADER[5] = trap->R_RegisterShader("models/warzone/billboard/willow2");
+			//FOLIAGE_TREE_BILLBOARD_SHADER[6] = trap->R_RegisterShader("models/warzone/billboard/gkbjungletreenew24v2weeping");
+			//FOLIAGE_TREE_BILLBOARD_SHADER[7] = trap->R_RegisterShader("models/warzone/billboard/gkbjungletreenew24v2weeping");
+			FOLIAGE_TREE_BILLBOARD_SHADER[6] = trap->R_RegisterShader("models/warzone/billboard/willow3");
+			FOLIAGE_TREE_BILLBOARD_SHADER[7] = trap->R_RegisterShader("models/warzone/billboard/willow4");
 			FOLIAGE_TREE_BILLBOARD_SHADER[8] = trap->R_RegisterShader("models/warzone/billboard/manfern");
 
-			FOLIAGE_TREE_BILLBOARD_SIZE[0] = 118.0;
+			FOLIAGE_TREE_BILLBOARD_SIZE[0] = 128.0;//118.0;
 			FOLIAGE_TREE_BILLBOARD_SIZE[1] = 118.0;
 			FOLIAGE_TREE_BILLBOARD_SIZE[2] = 204.0;
 			FOLIAGE_TREE_BILLBOARD_SIZE[3] = 112.0;
-			FOLIAGE_TREE_BILLBOARD_SIZE[4] = 163.0;
-			FOLIAGE_TREE_BILLBOARD_SIZE[5] = 163.0;
-			FOLIAGE_TREE_BILLBOARD_SIZE[6] = 183.6;
-			FOLIAGE_TREE_BILLBOARD_SIZE[7] = 183.6;
+			FOLIAGE_TREE_BILLBOARD_SIZE[4] = 183.0;//163.0;
+			FOLIAGE_TREE_BILLBOARD_SIZE[5] = 183.0;//163.0;
+			FOLIAGE_TREE_BILLBOARD_SIZE[6] = 203.0;//183.6;
+			FOLIAGE_TREE_BILLBOARD_SIZE[7] = 203.0;//183.6;
 			FOLIAGE_TREE_BILLBOARD_SIZE[8] = 153.0;
 
 			FOLIAGE_TREE_RADIUS[0] = 24.0;
 			FOLIAGE_TREE_RADIUS[1] = 24.0;
 			FOLIAGE_TREE_RADIUS[2] = 72.0;
 			FOLIAGE_TREE_RADIUS[3] = 52.0;
-			FOLIAGE_TREE_RADIUS[4] = 52.0;
-			FOLIAGE_TREE_RADIUS[5] = 52.0;
-			FOLIAGE_TREE_RADIUS[6] = 72.0;
-			FOLIAGE_TREE_RADIUS[7] = 72.0;
+			FOLIAGE_TREE_RADIUS[4] = 38.0;//52.0;
+			FOLIAGE_TREE_RADIUS[5] = 38.0;//52.0;
+			FOLIAGE_TREE_RADIUS[6] = 38.0;//72.0;
+			FOLIAGE_TREE_RADIUS[7] = 38.0;//72.0;
 			FOLIAGE_TREE_RADIUS[8] = 72.0;
 
 			FOLIAGE_TREE_ZOFFSET[0] = -64.0;
