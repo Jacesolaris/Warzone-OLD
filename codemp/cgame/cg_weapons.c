@@ -636,7 +636,7 @@ Ghoul2 Insert Start
 		parent->hModel = weapon->handsModel;
 		parent->renderfx = RF_DEPTHHACK | RF_FIRST_PERSON;
 
-		if (!parent->hModel) trap->Print("Current weapon has no hands model\n");
+		//if (!parent->hModel) trap->Print("Current weapon has no hands model\n");
 		gun.renderfx = parent->renderfx;
 		gun.hModel = weapon->viewModel;
 

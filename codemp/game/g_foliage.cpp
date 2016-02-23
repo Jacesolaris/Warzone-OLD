@@ -25,6 +25,8 @@ extern "C" {
 	// END - FOLIAGE OPTIONS
 	//
 
+	char		CURRENT_CLIMATE_OPTION[256] = { 0 };
+
 #define		PLANT_SCALE_MULTIPLIER 1.0
 
 	qboolean	FOLIAGE_LOADED = qfalse;
@@ -226,6 +228,57 @@ extern "C" {
 		return qfalse;
 	}
 
+	extern int BG_SiegeGetPairedValue(char *buf, char *key, char *outbuf);
+
+	qboolean FOLIAGE_LoadMapClimateInfo( void )
+	{
+		fileHandle_t	f;
+		int				fLen = 0;
+		char			fileBuffer[4096];
+		char			parseBuf[4096];
+		vmCvar_t		mapname;
+
+		trap->Cvar_Register( &mapname, "mapname", "", CVAR_ROM | CVAR_SERVERINFO );
+
+		memset(CURRENT_CLIMATE_OPTION, 0, sizeof(CURRENT_CLIMATE_OPTION));
+
+		fLen = trap->FS_Open(va("foliage/%s.climateInfo", mapname.string), &f, FS_READ);
+
+		if (!f || fLen < 0)
+		{//couldn't open file, just use the defaults
+			trap->Print( "^1*** ^3%s^5: No map climate info file ^7foliage/%s.climateInfo^5. Using default climate option.\n", GAME_VERSION, mapname.string );
+			return qfalse;
+		}
+
+		if (fLen == 0)
+		{//file was empty, just use the defaults
+			trap->FS_Close(f);
+			trap->Print( "^1*** ^3%s^5: No map climate info file ^7foliage/%s.climateInfo^5. Using default climate option.\n", GAME_VERSION, mapname.string );
+			return qfalse;
+		}
+
+		if (fLen >= 4096)
+		{
+			trap->Print("^1Error: foliage/%s.climateInfo is over the climateInfo filesize limit.^7\n", mapname.string);
+			trap->FS_Close(f);
+			trap->Print( "^1*** ^3%s^5: No map climate info file ^7foliage/%s.climateInfo^5. Using default climate option.\n", GAME_VERSION, mapname.string );
+			return qfalse;
+		}
+
+		trap->FS_Read(fileBuffer, fLen, f);
+		fileBuffer[fLen] = 0;
+		trap->FS_Close(f);
+
+		if (BG_SiegeGetPairedValue(fileBuffer, "climateSelection", parseBuf))
+		{
+			strcpy(CURRENT_CLIMATE_OPTION, parseBuf);
+		}
+
+		trap->Print( "^1*** ^3%s^5: Successfully loaded climateInfo file ^7foliage/%s.climateInfo^5. Using ^3%s^5 climate option.\n", GAME_VERSION, mapname.string, CURRENT_CLIMATE_OPTION );
+
+		return qtrue;
+	}
+
 	qboolean FOLIAGE_LoadFoliagePositions( void )
 	{
 		fileHandle_t	f;
@@ -332,6 +385,7 @@ extern "C" {
 		{
 			FOLIAGE_LoadFoliagePositions();
 			FOLIAGE_LOADED = qtrue;
+			FOLIAGE_LoadMapClimateInfo();
 		}
 
 		if (FOLIAGE_NUM_POSITIONS <= 0)
@@ -340,25 +394,94 @@ extern "C" {
 			return;
 		}
 
-		FOLIAGE_TREE_BILLBOARD_SIZE[0] = 118.0;
-		FOLIAGE_TREE_BILLBOARD_SIZE[1] = 118.0;
-		FOLIAGE_TREE_BILLBOARD_SIZE[2] = 204.0;
-		FOLIAGE_TREE_BILLBOARD_SIZE[3] = 112.0;
-		FOLIAGE_TREE_BILLBOARD_SIZE[4] = 163.0;
-		FOLIAGE_TREE_BILLBOARD_SIZE[5] = 163.0;
-		FOLIAGE_TREE_BILLBOARD_SIZE[6] = 183.6;
-		FOLIAGE_TREE_BILLBOARD_SIZE[7] = 183.6;
-		FOLIAGE_TREE_BILLBOARD_SIZE[8] = 153.0;
+		if (!strcmp(CURRENT_CLIMATE_OPTION, "springpineforest"))
+		{
+			FOLIAGE_TREE_BILLBOARD_SIZE[0] = 128.0;
+			FOLIAGE_TREE_BILLBOARD_SIZE[1] = 128.0;
+			FOLIAGE_TREE_BILLBOARD_SIZE[2] = 128.0;
+			FOLIAGE_TREE_BILLBOARD_SIZE[3] = 128.0;
+			FOLIAGE_TREE_BILLBOARD_SIZE[4] = 128.0;
+			FOLIAGE_TREE_BILLBOARD_SIZE[5] = 128.0;
+			FOLIAGE_TREE_BILLBOARD_SIZE[6] = 128.0;
+			FOLIAGE_TREE_BILLBOARD_SIZE[7] = 183.0;
+			FOLIAGE_TREE_BILLBOARD_SIZE[8] = 203.0;
 
-		FOLIAGE_TREE_RADIUS[0] = 24.0;
-		FOLIAGE_TREE_RADIUS[1] = 24.0;
-		FOLIAGE_TREE_RADIUS[2] = 72.0;
-		FOLIAGE_TREE_RADIUS[3] = 52.0;
-		FOLIAGE_TREE_RADIUS[4] = 38.0;//52.0;
-		FOLIAGE_TREE_RADIUS[5] = 38.0;//52.0;
-		FOLIAGE_TREE_RADIUS[6] = 38.0;//72.0;
-		FOLIAGE_TREE_RADIUS[7] = 38.0;//72.0;
-		FOLIAGE_TREE_RADIUS[8] = 72.0;
+			FOLIAGE_TREE_RADIUS[0] = 24.0;
+			FOLIAGE_TREE_RADIUS[1] = 24.0;
+			FOLIAGE_TREE_RADIUS[2] = 24.0;
+			FOLIAGE_TREE_RADIUS[3] = 24.0;
+			FOLIAGE_TREE_RADIUS[4] = 24.0;
+			FOLIAGE_TREE_RADIUS[5] = 24.0;
+			FOLIAGE_TREE_RADIUS[6] = 24.0;
+			FOLIAGE_TREE_RADIUS[7] = 38.0;
+			FOLIAGE_TREE_RADIUS[8] = 38.0;
+		}
+		else if (!strcmp(CURRENT_CLIMATE_OPTION, "snowpineforest"))
+		{
+			FOLIAGE_TREE_BILLBOARD_SIZE[0] = 128.0;
+			FOLIAGE_TREE_BILLBOARD_SIZE[1] = 128.0;
+			FOLIAGE_TREE_BILLBOARD_SIZE[2] = 128.0;
+			FOLIAGE_TREE_BILLBOARD_SIZE[3] = 128.0;
+			FOLIAGE_TREE_BILLBOARD_SIZE[4] = 128.0;
+			FOLIAGE_TREE_BILLBOARD_SIZE[5] = 128.0;
+			FOLIAGE_TREE_BILLBOARD_SIZE[6] = 128.0;
+			FOLIAGE_TREE_BILLBOARD_SIZE[7] = 203.0;
+			FOLIAGE_TREE_BILLBOARD_SIZE[8] = 203.0;
+
+			FOLIAGE_TREE_RADIUS[0] = 24.0;
+			FOLIAGE_TREE_RADIUS[1] = 24.0;
+			FOLIAGE_TREE_RADIUS[2] = 24.0;
+			FOLIAGE_TREE_RADIUS[3] = 24.0;
+			FOLIAGE_TREE_RADIUS[4] = 24.0;
+			FOLIAGE_TREE_RADIUS[5] = 24.0;
+			FOLIAGE_TREE_RADIUS[6] = 24.0;
+			FOLIAGE_TREE_RADIUS[7] = 38.0;
+			FOLIAGE_TREE_RADIUS[8] = 38.0;
+		}
+		else if (!strcmp(CURRENT_CLIMATE_OPTION, "tropicalold"))
+		{
+			FOLIAGE_TREE_BILLBOARD_SIZE[0] = 118.0;
+			FOLIAGE_TREE_BILLBOARD_SIZE[1] = 118.0;
+			FOLIAGE_TREE_BILLBOARD_SIZE[2] = 204.0;
+			FOLIAGE_TREE_BILLBOARD_SIZE[3] = 112.0;
+			FOLIAGE_TREE_BILLBOARD_SIZE[4] = 163.0;
+			FOLIAGE_TREE_BILLBOARD_SIZE[5] = 163.0;
+			FOLIAGE_TREE_BILLBOARD_SIZE[6] = 183.6;
+			FOLIAGE_TREE_BILLBOARD_SIZE[7] = 183.6;
+			FOLIAGE_TREE_BILLBOARD_SIZE[8] = 153.0;
+
+			FOLIAGE_TREE_RADIUS[0] = 24.0;
+			FOLIAGE_TREE_RADIUS[1] = 24.0;
+			FOLIAGE_TREE_RADIUS[2] = 72.0;
+			FOLIAGE_TREE_RADIUS[3] = 52.0;
+			FOLIAGE_TREE_RADIUS[4] = 52.0;
+			FOLIAGE_TREE_RADIUS[5] = 52.0;
+			FOLIAGE_TREE_RADIUS[6] = 72.0;
+			FOLIAGE_TREE_RADIUS[7] = 72.0;
+			FOLIAGE_TREE_RADIUS[8] = 72.0;
+		}
+		else // Default to new tropical...
+		{
+			FOLIAGE_TREE_BILLBOARD_SIZE[0] = 128.0;
+			FOLIAGE_TREE_BILLBOARD_SIZE[1] = 118.0;
+			FOLIAGE_TREE_BILLBOARD_SIZE[2] = 204.0;
+			FOLIAGE_TREE_BILLBOARD_SIZE[3] = 112.0;
+			FOLIAGE_TREE_BILLBOARD_SIZE[4] = 183.0;
+			FOLIAGE_TREE_BILLBOARD_SIZE[5] = 183.0;
+			FOLIAGE_TREE_BILLBOARD_SIZE[6] = 203.0;
+			FOLIAGE_TREE_BILLBOARD_SIZE[7] = 203.0;
+			FOLIAGE_TREE_BILLBOARD_SIZE[8] = 153.0;
+
+			FOLIAGE_TREE_RADIUS[0] = 24.0;
+			FOLIAGE_TREE_RADIUS[1] = 24.0;
+			FOLIAGE_TREE_RADIUS[2] = 72.0;
+			FOLIAGE_TREE_RADIUS[3] = 52.0;
+			FOLIAGE_TREE_RADIUS[4] = 38.0;
+			FOLIAGE_TREE_RADIUS[5] = 38.0;
+			FOLIAGE_TREE_RADIUS[6] = 38.0;
+			FOLIAGE_TREE_RADIUS[7] = 38.0;
+			FOLIAGE_TREE_RADIUS[8] = 72.0;
+		}
 	}
 }
 

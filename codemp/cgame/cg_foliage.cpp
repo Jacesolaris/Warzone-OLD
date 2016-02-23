@@ -40,6 +40,8 @@ extern qboolean InFOV( vec3_t spot, vec3_t from, vec3_t fromAngles, int hFOV, in
 	//
 	// =======================================================================================================================================
 
+char		CURRENT_CLIMATE_OPTION[256] = { 0 };
+
 float		NUM_TREE_TYPES = 9;
 
 float		NUM_PLANT_SHADERS = 0;
@@ -48,7 +50,7 @@ float		NUM_PLANT_SHADERS = 0;
 
 #define		MAX_PLANT_SHADERS 100
 
-	static const char *GoodPlantsList[] = {
+	static const char *TropicalPlantsList[] = {
 		"models/warzone/foliage/plant01.png",
 		"models/warzone/foliage/plant02.png",
 		"models/warzone/foliage/plant03.png",
@@ -149,6 +151,212 @@ float		NUM_PLANT_SHADERS = 0;
 		"models/warzone/foliage/plant98.png",
 		"models/warzone/foliage/plant99.png",
 		"models/warzone/foliage/plant100.png",
+	};
+
+	static const char *SpringPlantsList[] = {
+		"models/warzone/foliage/plant01.png",
+		"models/warzone/foliage/plant02.png",
+		"models/warzone/foliage/plant03.png",
+		"models/warzone/foliage/plant04.png",
+		"models/warzone/foliage/plant05.png",
+		"models/warzone/foliage/plant06.png",
+		"models/warzone/foliage/plant07.png",
+		"models/warzone/foliage/plant08.png",
+		"models/warzone/foliage/plant09.png",
+		"models/warzone/foliage/plant10.png",
+		"models/warzone/foliage/plant11.png",
+		"models/warzone/foliage/plant12.png",
+		"models/warzone/foliage/plant13.png",
+		"models/warzone/foliage/plant14.png",
+		"models/warzone/foliage/plant15.png",
+		"models/warzone/foliage/plant16.png",
+		"models/warzone/foliage/plant17.png",
+		"models/warzone/foliage/plant18.png",
+		"models/warzone/foliage/plant19.png",
+		"models/warzone/foliage/plant20.png",
+		"models/warzone/foliage/plant21.png",
+		"models/warzone/foliage/plant22.png",
+		"models/warzone/foliage/plant23.png",
+		"models/warzone/foliage/plant24.png",
+		"models/warzone/foliage/plant25.png",
+		"models/warzone/foliage/plant26.png",
+		"models/warzone/foliage/plant27.png",
+		"models/warzone/foliage/plant28.png",
+		"models/warzone/foliage/plant29.png",
+		"models/warzone/foliage/plant30.png",
+		"models/warzone/foliage/plant31.png",
+		"models/warzone/foliage/plant32.png",
+		"models/warzone/foliage/plant33.png",
+		"models/warzone/foliage/plant34.png",
+		"models/warzone/foliage/plant35.png",
+		"models/warzone/foliage/plant36.png",
+		"models/warzone/foliage/plant37.png",
+		"models/warzone/foliage/plant38.png",
+		"models/warzone/foliage/plant39.png",
+		"models/warzone/foliage/plant40.png",
+		"models/warzone/foliage/plant41.png",
+		"models/warzone/foliage/plant42.png",
+		"models/warzone/foliage/plant43.png",
+		"models/warzone/foliage/plant44.png",
+		"models/warzone/foliage/plant45.png",
+		"models/warzone/foliage/plant46.png",
+		"models/warzone/foliage/plant47.png",
+		"models/warzone/foliage/plant48.png",
+		"models/warzone/foliage/plant49.png",
+		"models/warzone/foliage/plant50.png",
+		"models/warzone/foliage/plant51.png",
+		"models/warzone/foliage/plant52.png",
+		"models/warzone/foliage/plant53.png",
+		"models/warzone/foliage/plant54.png",
+		"models/warzone/foliage/plant55.png",
+		"models/warzone/foliage/plant56.png",
+		"models/warzone/foliage/plant57.png",
+		"models/warzone/foliage/plant58.png",
+		"models/warzone/foliage/plant59.png",
+		"models/warzone/foliage/plant60.png",
+		"models/warzone/foliage/plant61.png",
+		"models/warzone/foliage/plant62.png",
+		"models/warzone/foliage/plant63.png",
+		"models/warzone/foliage/plant64.png",
+		"models/warzone/foliage/plant65.png",
+		"models/warzone/foliage/plant66.png",
+		"models/warzone/foliage/plant67.png",
+		"models/warzone/foliage/plant68.png",
+		"models/warzone/foliage/plant69.png",
+		"models/warzone/foliage/plant70.png",
+		"models/warzone/foliage/plant71.png",
+		"models/warzone/foliage/plant72.png",
+		"models/warzone/foliage/plant73.png",
+		"models/warzone/foliage/plant74.png",
+		"models/warzone/foliage/plant75.png",
+		"models/warzone/foliage/plant76.png",
+		"models/warzone/foliage/plant77.png",
+		"models/warzone/foliage/plant78.png",
+		"models/warzone/foliage/plant79.png",
+		"models/warzone/foliage/plant80.png",
+		"models/warzone/foliage/plant81.png",
+		"models/warzone/foliage/plant82.png",
+		"models/warzone/foliage/plant83.png",
+		"models/warzone/foliage/plant84.png",
+		"models/warzone/foliage/plant85.png",
+		"models/warzone/foliage/plant86.png",
+		"models/warzone/foliage/plant87.png",
+		"models/warzone/foliage/plant88.png",
+		"models/warzone/foliage/plant89.png",
+		"models/warzone/foliage/plant90.png",
+		"models/warzone/foliage/plant91.png",
+		"models/warzone/foliage/plant92.png",
+		"models/warzone/foliage/plant93.png",
+		"models/warzone/foliage/plant94.png",
+		"models/warzone/foliage/plant95.png",
+		"models/warzone/foliage/plant96.png",
+		"models/warzone/foliage/plant97.png",
+		"models/warzone/foliage/plant98.png",
+		"models/warzone/foliage/plant99.png",
+		"models/warzone/foliage/plant100.png",
+	};
+
+	static const char *SnowPlantsList[] = {
+		"models/warzone/foliage/plant22.png",
+		"models/warzone/foliage/plant23.png",
+		"models/warzone/foliage/plant34.png",
+		"models/warzone/foliage/plant38.png",
+		"models/warzone/foliage/plant39.png",
+		"models/warzone/foliage/plant45.png",
+		"models/warzone/foliage/plant46.png",
+		"models/warzone/foliage/plant47.png",
+		"models/warzone/foliage/plant93.png",
+		"models/warzone/foliage/plant96.png",
+		"models/warzone/foliage/plant98.png",
+		"models/warzone/foliage/plant22.png",
+		"models/warzone/foliage/plant23.png",
+		"models/warzone/foliage/plant34.png",
+		"models/warzone/foliage/plant38.png",
+		"models/warzone/foliage/plant39.png",
+		"models/warzone/foliage/plant45.png",
+		"models/warzone/foliage/plant46.png",
+		"models/warzone/foliage/plant47.png",
+		"models/warzone/foliage/plant93.png",
+		"models/warzone/foliage/plant96.png",
+		"models/warzone/foliage/plant98.png",
+		"models/warzone/foliage/plant22.png",
+		"models/warzone/foliage/plant23.png",
+		"models/warzone/foliage/plant34.png",
+		"models/warzone/foliage/plant38.png",
+		"models/warzone/foliage/plant39.png",
+		"models/warzone/foliage/plant45.png",
+		"models/warzone/foliage/plant46.png",
+		"models/warzone/foliage/plant47.png",
+		"models/warzone/foliage/plant93.png",
+		"models/warzone/foliage/plant96.png",
+		"models/warzone/foliage/plant98.png",
+		"models/warzone/foliage/plant22.png",
+		"models/warzone/foliage/plant23.png",
+		"models/warzone/foliage/plant34.png",
+		"models/warzone/foliage/plant38.png",
+		"models/warzone/foliage/plant39.png",
+		"models/warzone/foliage/plant45.png",
+		"models/warzone/foliage/plant46.png",
+		"models/warzone/foliage/plant47.png",
+		"models/warzone/foliage/plant93.png",
+		"models/warzone/foliage/plant96.png",
+		"models/warzone/foliage/plant98.png",
+		"models/warzone/foliage/plant22.png",
+		"models/warzone/foliage/plant23.png",
+		"models/warzone/foliage/plant34.png",
+		"models/warzone/foliage/plant38.png",
+		"models/warzone/foliage/plant39.png",
+		"models/warzone/foliage/plant45.png",
+		"models/warzone/foliage/plant46.png",
+		"models/warzone/foliage/plant47.png",
+		"models/warzone/foliage/plant93.png",
+		"models/warzone/foliage/plant96.png",
+		"models/warzone/foliage/plant98.png",
+		"models/warzone/foliage/plant22.png",
+		"models/warzone/foliage/plant23.png",
+		"models/warzone/foliage/plant34.png",
+		"models/warzone/foliage/plant38.png",
+		"models/warzone/foliage/plant39.png",
+		"models/warzone/foliage/plant45.png",
+		"models/warzone/foliage/plant46.png",
+		"models/warzone/foliage/plant47.png",
+		"models/warzone/foliage/plant93.png",
+		"models/warzone/foliage/plant96.png",
+		"models/warzone/foliage/plant98.png",
+		"models/warzone/foliage/plant22.png",
+		"models/warzone/foliage/plant23.png",
+		"models/warzone/foliage/plant34.png",
+		"models/warzone/foliage/plant38.png",
+		"models/warzone/foliage/plant39.png",
+		"models/warzone/foliage/plant45.png",
+		"models/warzone/foliage/plant46.png",
+		"models/warzone/foliage/plant47.png",
+		"models/warzone/foliage/plant93.png",
+		"models/warzone/foliage/plant96.png",
+		"models/warzone/foliage/plant98.png",
+		"models/warzone/foliage/plant22.png",
+		"models/warzone/foliage/plant23.png",
+		"models/warzone/foliage/plant34.png",
+		"models/warzone/foliage/plant38.png",
+		"models/warzone/foliage/plant39.png",
+		"models/warzone/foliage/plant45.png",
+		"models/warzone/foliage/plant46.png",
+		"models/warzone/foliage/plant47.png",
+		"models/warzone/foliage/plant93.png",
+		"models/warzone/foliage/plant96.png",
+		"models/warzone/foliage/plant98.png",
+		"models/warzone/foliage/plant22.png",
+		"models/warzone/foliage/plant23.png",
+		"models/warzone/foliage/plant34.png",
+		"models/warzone/foliage/plant38.png",
+		"models/warzone/foliage/plant39.png",
+		"models/warzone/foliage/plant45.png",
+		"models/warzone/foliage/plant46.png",
+		"models/warzone/foliage/plant47.png",
+		"models/warzone/foliage/plant93.png",
+		"models/warzone/foliage/plant96.png",
+		"models/warzone/foliage/plant98.png",
+		"models/warzone/foliage/plant22.png",
 	};
 
 	// =======================================================================================================================================
@@ -934,6 +1142,54 @@ extern "C" {
 		}
 	}
 
+	extern int BG_SiegeGetPairedValue(char *buf, char *key, char *outbuf);
+
+	qboolean FOLIAGE_LoadMapClimateInfo( void )
+	{
+		fileHandle_t	f;
+		int				fLen = 0;
+		char			fileBuffer[4096];
+		char			parseBuf[4096];
+
+		memset(CURRENT_CLIMATE_OPTION, 0, sizeof(CURRENT_CLIMATE_OPTION));
+
+		fLen = trap->FS_Open(va("foliage/%s.climateInfo", cgs.currentmapname), &f, FS_READ);
+
+		if (!f || fLen < 0)
+		{//couldn't open file, just use the defaults
+			trap->Print( "^1*** ^3%s^5: No map climate info file ^7foliage/%s.climateInfo^5. Using default climate option.\n", GAME_VERSION, cgs.currentmapname );
+			return qfalse;
+		}
+
+		if (fLen == 0)
+		{//file was empty, just use the defaults
+			trap->FS_Close(f);
+			trap->Print( "^1*** ^3%s^5: No map climate info file ^7foliage/%s.climateInfo^5. Using default climate option.\n", GAME_VERSION, cgs.currentmapname );
+			return qfalse;
+		}
+
+		if (fLen >= 4096)
+		{
+			trap->Print("^1Error: foliage/%s.climateInfo is over the climateInfo filesize limit.^7\n", cgs.currentmapname);
+			trap->FS_Close(f);
+			trap->Print( "^1*** ^3%s^5: No map climate info file ^7foliage/%s.climateInfo^5. Using default climate option.\n", GAME_VERSION, cgs.currentmapname );
+			return qfalse;
+		}
+
+		trap->FS_Read(fileBuffer, fLen, f);
+		fileBuffer[fLen] = 0;
+		trap->FS_Close(f);
+
+		if (BG_SiegeGetPairedValue(fileBuffer, "climateSelection", parseBuf))
+		{
+			strcpy(CURRENT_CLIMATE_OPTION, parseBuf);
+		}
+
+		trap->Print( "^1*** ^3%s^5: Successfully loaded climateInfo file ^7foliage/%s.climateInfo^5. Using ^3%s^5 climate option.\n", GAME_VERSION, cgs.currentmapname, CURRENT_CLIMATE_OPTION );
+
+		return qtrue;
+	}
+
 	qboolean FOLIAGE_LoadFoliagePositions( void )
 	{
 		fileHandle_t	f;
@@ -1084,6 +1340,7 @@ extern "C" {
 		{
 			FOLIAGE_LoadFoliagePositions();
 			FOLIAGE_LOADED = qtrue;
+			FOLIAGE_LoadMapClimateInfo();
 		}
 
 		if (FOLIAGE_NUM_POSITIONS <= 0)
@@ -1093,144 +1350,249 @@ extern "C" {
 
 		if (!FOLIAGE_PLANT_MODEL[0])
 		{// Init/register all foliage models...
-			//FOLIAGE_PLANT_MODEL[0] = trap->R_RegisterModel( "models/warzone/foliage/grass01_LOD0.md3" );
-			//FOLIAGE_PLANT_MODEL[1] = trap->R_RegisterModel( "models/warzone/foliage/grass01_LOD1.md3" );
-			//FOLIAGE_PLANT_MODEL[2] = trap->R_RegisterModel( "models/warzone/foliage/grass01_LOD2.md3" );
 			FOLIAGE_PLANT_MODEL[0] = trap->R_RegisterModel( "models/warzone/foliage/uqgrass.md3" );
 			FOLIAGE_PLANT_MODEL[1] = trap->R_RegisterModel( "models/warzone/foliage/uqgrass_lod.md3" );
 			FOLIAGE_PLANT_MODEL[2] = trap->R_RegisterModel( "models/warzone/foliage/uqgrass_lod2.md3" );
 			FOLIAGE_PLANT_MODEL[3] = trap->R_RegisterModel( "models/warzone/foliage/uqgrass_lod3.md3" );
 			FOLIAGE_PLANT_MODEL[4] = trap->R_RegisterModel( "models/warzone/foliage/uqplant.md3" );
 
-#if 1
-			FOLIAGE_GRASS_BILLBOARD_SHADER = trap->R_RegisterShader( "models/warzone/foliage/maingrass.png" );
 
-			//FOLIAGE_TREE_MODEL[0] = trap->R_RegisterModel( "models/map_objects/yavin/tree08_b.md3" );
-
-			//FOLIAGE_TREE_MODEL[0] = trap->R_RegisterModel( "models/warzone/trees/fanpalm2.md3" );
-			FOLIAGE_TREE_MODEL[0] = trap->R_RegisterModel( "models/warzone/trees/palm1.md3" );
-			FOLIAGE_TREE_MODEL[1] = trap->R_RegisterModel( "models/warzone/trees/fanpalm2.md3" );
-			FOLIAGE_TREE_MODEL[2] = trap->R_RegisterModel( "models/warzone/trees/giant1.md3" );
-			FOLIAGE_TREE_MODEL[3] = trap->R_RegisterModel( "models/warzone/trees/anvilpalm1.md3" );
-			//FOLIAGE_TREE_MODEL[4] = trap->R_RegisterModel( "models/warzone/trees/gkbjungletreenew27v2weeping.md3" );
-			//FOLIAGE_TREE_MODEL[5] = trap->R_RegisterModel( "models/warzone/trees/gkbjungletreenew27v2weeping.md3" );
-			FOLIAGE_TREE_MODEL[4] = trap->R_RegisterModel( "models/warzone/trees/willow.md3" );
-			FOLIAGE_TREE_MODEL[5] = trap->R_RegisterModel( "models/warzone/trees/willow2.md3" );
-			//FOLIAGE_TREE_MODEL[6] = trap->R_RegisterModel( "models/warzone/trees/gkbjungletreenew24v2weeping.md3" );
-			//FOLIAGE_TREE_MODEL[7] = trap->R_RegisterModel( "models/warzone/trees/gkbjungletreenew24v2weeping.md3" );
-			FOLIAGE_TREE_MODEL[6] = trap->R_RegisterModel( "models/warzone/trees/willow3.md3" );
-			FOLIAGE_TREE_MODEL[7] = trap->R_RegisterModel( "models/warzone/trees/willow4.md3" );
-			FOLIAGE_TREE_MODEL[8] = trap->R_RegisterModel( "models/warzone/trees/manfern.md3" );
-			
-			//FOLIAGE_TREE_BILLBOARD_SHADER[0] = trap->R_RegisterShader("models/warzone/billboard/fanpalm2");
-			FOLIAGE_TREE_BILLBOARD_SHADER[0] = trap->R_RegisterShader("models/warzone/billboard/palm1");
-			FOLIAGE_TREE_BILLBOARD_SHADER[1] = trap->R_RegisterShader("models/warzone/billboard/fanpalm2");
-			FOLIAGE_TREE_BILLBOARD_SHADER[2] = trap->R_RegisterShader("models/warzone/billboard/giant1");
-			FOLIAGE_TREE_BILLBOARD_SHADER[3] = trap->R_RegisterShader("models/warzone/billboard/anvilpalm1");
-			//FOLIAGE_TREE_BILLBOARD_SHADER[4] = trap->R_RegisterShader("models/warzone/billboard/gkbjungletreenew27v2weeping");
-			//FOLIAGE_TREE_BILLBOARD_SHADER[5] = trap->R_RegisterShader("models/warzone/billboard/gkbjungletreenew27v2weeping");
-			FOLIAGE_TREE_BILLBOARD_SHADER[4] = trap->R_RegisterShader("models/warzone/billboard/willow");
-			FOLIAGE_TREE_BILLBOARD_SHADER[5] = trap->R_RegisterShader("models/warzone/billboard/willow2");
-			//FOLIAGE_TREE_BILLBOARD_SHADER[6] = trap->R_RegisterShader("models/warzone/billboard/gkbjungletreenew24v2weeping");
-			//FOLIAGE_TREE_BILLBOARD_SHADER[7] = trap->R_RegisterShader("models/warzone/billboard/gkbjungletreenew24v2weeping");
-			FOLIAGE_TREE_BILLBOARD_SHADER[6] = trap->R_RegisterShader("models/warzone/billboard/willow3");
-			FOLIAGE_TREE_BILLBOARD_SHADER[7] = trap->R_RegisterShader("models/warzone/billboard/willow4");
-			FOLIAGE_TREE_BILLBOARD_SHADER[8] = trap->R_RegisterShader("models/warzone/billboard/manfern");
-
-			FOLIAGE_TREE_BILLBOARD_SIZE[0] = 128.0;//118.0;
-			FOLIAGE_TREE_BILLBOARD_SIZE[1] = 118.0;
-			FOLIAGE_TREE_BILLBOARD_SIZE[2] = 204.0;
-			FOLIAGE_TREE_BILLBOARD_SIZE[3] = 112.0;
-			FOLIAGE_TREE_BILLBOARD_SIZE[4] = 183.0;//163.0;
-			FOLIAGE_TREE_BILLBOARD_SIZE[5] = 183.0;//163.0;
-			FOLIAGE_TREE_BILLBOARD_SIZE[6] = 203.0;//183.6;
-			FOLIAGE_TREE_BILLBOARD_SIZE[7] = 203.0;//183.6;
-			FOLIAGE_TREE_BILLBOARD_SIZE[8] = 153.0;
-
-			FOLIAGE_TREE_RADIUS[0] = 24.0;
-			FOLIAGE_TREE_RADIUS[1] = 24.0;
-			FOLIAGE_TREE_RADIUS[2] = 72.0;
-			FOLIAGE_TREE_RADIUS[3] = 52.0;
-			FOLIAGE_TREE_RADIUS[4] = 38.0;//52.0;
-			FOLIAGE_TREE_RADIUS[5] = 38.0;//52.0;
-			FOLIAGE_TREE_RADIUS[6] = 38.0;//72.0;
-			FOLIAGE_TREE_RADIUS[7] = 38.0;//72.0;
-			FOLIAGE_TREE_RADIUS[8] = 72.0;
-
-			FOLIAGE_TREE_ZOFFSET[0] = -64.0;
-			FOLIAGE_TREE_ZOFFSET[1] = -64.0;
-			FOLIAGE_TREE_ZOFFSET[2] = -64.0;
-			FOLIAGE_TREE_ZOFFSET[3] = -64.0;
-			FOLIAGE_TREE_ZOFFSET[4] = -64.0;
-			FOLIAGE_TREE_ZOFFSET[5] = -64.0;
-			FOLIAGE_TREE_ZOFFSET[6] = -64.0;
-			FOLIAGE_TREE_ZOFFSET[7] = -64.0;
-			FOLIAGE_TREE_ZOFFSET[8] = -64.0;
-
-			for (int i = 0; i < MAX_PLANT_SHADERS; i++)
+			if (!strcmp(CURRENT_CLIMATE_OPTION, "springpineforest"))
 			{
-				FOLIAGE_PLANT_SHADERS[i] = trap->R_RegisterShader(GoodPlantsList[i]);
-			}
-#else
-			FOLIAGE_GRASS_BILLBOARD_SHADER = trap->R_RegisterShader( IniRead(va("foliage/%s.ini", cgs.currentmapname),"GRASS","GRASS_SHADER_LOD_0","models/warzone/foliage/models/warzone/foliage/maingrass.png") );
+				FOLIAGE_GRASS_BILLBOARD_SHADER = trap->R_RegisterShader( "models/warzone/foliage/grasspineforest" );
 
-			if (!FOLIAGE_GRASS_BILLBOARD_SHADER)
-			{// Have no base grass texture... Use defaults...
-				FOLIAGE_GRASS_BILLBOARD_SHADER = trap->R_RegisterShader( "models/warzone/foliage/maingrass.png" );
-			}
-
-			FOLIAGE_PLANT_SHADERS[0] = trap->R_RegisterShader( IniRead(va("foliage/%s.ini", cgs.currentmapname),"PLANTS","PLANT_SHADER_0","seemtohavenone" ));
-
-			if (!FOLIAGE_PLANT_SHADERS[0])
-			{// Have no base plant shader in ini, use default list...
 				for (int i = 0; i < MAX_PLANT_SHADERS; i++)
 				{
-					FOLIAGE_PLANT_SHADERS[i] = trap->R_RegisterShader(GoodPlantsList[i]);
+					FOLIAGE_PLANT_SHADERS[i] = trap->R_RegisterShader(SpringPlantsList[i]);
 				}
 
-				NUM_PLANT_SHADERS = MAX_PLANT_SHADERS;
+				FOLIAGE_TREE_MODEL[0] = trap->R_RegisterModel( "models/warzone/trees/uqconifer7.md3" );
+				FOLIAGE_TREE_MODEL[1] = trap->R_RegisterModel( "models/warzone/trees/uqconifer7.md3" );
+				FOLIAGE_TREE_MODEL[2] = trap->R_RegisterModel( "models/warzone/trees/uqconifer7.md3" );
+				FOLIAGE_TREE_MODEL[3] = trap->R_RegisterModel( "models/warzone/trees/uqconifer8.md3" );
+				FOLIAGE_TREE_MODEL[4] = trap->R_RegisterModel( "models/warzone/trees/uqconifer8.md3" );
+				FOLIAGE_TREE_MODEL[5] = trap->R_RegisterModel( "models/warzone/trees/uqconifer8.md3" );
+				FOLIAGE_TREE_MODEL[6] = trap->R_RegisterModel( "models/warzone/trees/uqconifer8.md3" );
+				FOLIAGE_TREE_MODEL[7] = trap->R_RegisterModel( "models/warzone/trees/uqbigtree1.md3" );
+				FOLIAGE_TREE_MODEL[8] = trap->R_RegisterModel( "models/warzone/trees/uqbigtree2.md3" );
+
+				FOLIAGE_TREE_BILLBOARD_SHADER[0] = trap->R_RegisterShader("models/warzone/billboard/uqconifer7");
+				FOLIAGE_TREE_BILLBOARD_SHADER[1] = trap->R_RegisterShader("models/warzone/billboard/uqconifer7");
+				FOLIAGE_TREE_BILLBOARD_SHADER[2] = trap->R_RegisterShader("models/warzone/billboard/uqconifer7");
+				FOLIAGE_TREE_BILLBOARD_SHADER[3] = trap->R_RegisterShader("models/warzone/billboard/uqconifer8");
+				FOLIAGE_TREE_BILLBOARD_SHADER[4] = trap->R_RegisterShader("models/warzone/billboard/uqconifer8");
+				FOLIAGE_TREE_BILLBOARD_SHADER[5] = trap->R_RegisterShader("models/warzone/billboard/uqconifer8");
+				FOLIAGE_TREE_BILLBOARD_SHADER[6] = trap->R_RegisterShader("models/warzone/billboard/uqconifer8");
+				FOLIAGE_TREE_BILLBOARD_SHADER[7] = trap->R_RegisterShader("models/warzone/billboard/uqbigtree1");
+				FOLIAGE_TREE_BILLBOARD_SHADER[8] = trap->R_RegisterShader("models/warzone/billboard/uqbigtree2");
+
+				FOLIAGE_TREE_BILLBOARD_SIZE[0] = 128.0;
+				FOLIAGE_TREE_BILLBOARD_SIZE[1] = 128.0;
+				FOLIAGE_TREE_BILLBOARD_SIZE[2] = 128.0;
+				FOLIAGE_TREE_BILLBOARD_SIZE[3] = 128.0;
+				FOLIAGE_TREE_BILLBOARD_SIZE[4] = 128.0;
+				FOLIAGE_TREE_BILLBOARD_SIZE[5] = 128.0;
+				FOLIAGE_TREE_BILLBOARD_SIZE[6] = 128.0;
+				FOLIAGE_TREE_BILLBOARD_SIZE[7] = 183.0;
+				FOLIAGE_TREE_BILLBOARD_SIZE[8] = 203.0;
+
+				FOLIAGE_TREE_RADIUS[0] = 24.0;
+				FOLIAGE_TREE_RADIUS[1] = 24.0;
+				FOLIAGE_TREE_RADIUS[2] = 24.0;
+				FOLIAGE_TREE_RADIUS[3] = 24.0;
+				FOLIAGE_TREE_RADIUS[4] = 24.0;
+				FOLIAGE_TREE_RADIUS[5] = 24.0;
+				FOLIAGE_TREE_RADIUS[6] = 24.0;
+				FOLIAGE_TREE_RADIUS[7] = 38.0;
+				FOLIAGE_TREE_RADIUS[8] = 38.0;
+
+				FOLIAGE_TREE_ZOFFSET[0] = -4.0;
+				FOLIAGE_TREE_ZOFFSET[1] = -4.0;
+				FOLIAGE_TREE_ZOFFSET[2] = -4.0;
+				FOLIAGE_TREE_ZOFFSET[3] = -4.0;
+				FOLIAGE_TREE_ZOFFSET[4] = -4.0;
+				FOLIAGE_TREE_ZOFFSET[5] = -4.0;
+				FOLIAGE_TREE_ZOFFSET[6] = -4.0;
+				FOLIAGE_TREE_ZOFFSET[7] = -64.0;
+				FOLIAGE_TREE_ZOFFSET[8] = -64.0;
 			}
-			else
+			else if (!strcmp(CURRENT_CLIMATE_OPTION, "snowpineforest"))
 			{
+				FOLIAGE_GRASS_BILLBOARD_SHADER = trap->R_RegisterShader( "models/warzone/foliage/grasssnowpineforest" );
+
 				for (int i = 0; i < MAX_PLANT_SHADERS; i++)
 				{
-					FOLIAGE_PLANT_SHADERS[i] = trap->R_RegisterShader( IniRead(va("foliage/%s.ini", cgs.currentmapname),"PLANTS",va("PLANT_SHADER_%i", i),(char *)GoodPlantsList[i]) );
-					
-					if (!FOLIAGE_PLANT_SHADERS[i])
-					{// Hit the end of the ini's list... Record max and exit...
-						NUM_PLANT_SHADERS = i;
-						break;
-					}
+					FOLIAGE_PLANT_SHADERS[i] = trap->R_RegisterShader(SnowPlantsList[i]);
 				}
 
-				if (NUM_PLANT_SHADERS < MAX_PLANT_SHADERS)
-				{// We need to copy from what they have...
-					int j = 0;
+				FOLIAGE_TREE_MODEL[0] = trap->R_RegisterModel( "models/warzone/trees/uqsnowpine1.md3" );
+				FOLIAGE_TREE_MODEL[1] = trap->R_RegisterModel( "models/warzone/trees/uqsnowpine2.md3" );
+				FOLIAGE_TREE_MODEL[2] = trap->R_RegisterModel( "models/warzone/trees/uqsnowpine3.md3" );
+				FOLIAGE_TREE_MODEL[3] = trap->R_RegisterModel( "models/warzone/trees/uqsnowpine6.md3" );
+				FOLIAGE_TREE_MODEL[4] = trap->R_RegisterModel( "models/warzone/trees/uqsnowpine7.md3" );
+				FOLIAGE_TREE_MODEL[5] = trap->R_RegisterModel( "models/warzone/trees/uqsnowpine8.md3" );
+				FOLIAGE_TREE_MODEL[6] = trap->R_RegisterModel( "models/warzone/trees/uqsnowpine9.md3" );
+				FOLIAGE_TREE_MODEL[7] = trap->R_RegisterModel( "models/warzone/trees/uqsnowpine4.md3" );
+				FOLIAGE_TREE_MODEL[8] = trap->R_RegisterModel( "models/warzone/trees/uqsnowpine4.md3" );
 
-					for (int i = NUM_PLANT_SHADERS; i < MAX_PLANT_SHADERS; i++)
-					{// Copy from begining of their list, until we hit max number...
-						FOLIAGE_PLANT_SHADERS[i] = FOLIAGE_PLANT_SHADERS[j];
-						j++;
-					}
-				}
+				FOLIAGE_TREE_BILLBOARD_SHADER[0] = trap->R_RegisterShader("models/warzone/billboard/uqsnowpine1");
+				FOLIAGE_TREE_BILLBOARD_SHADER[1] = trap->R_RegisterShader("models/warzone/billboard/uqsnowpine2");
+				FOLIAGE_TREE_BILLBOARD_SHADER[2] = trap->R_RegisterShader("models/warzone/billboard/uqsnowpine3");
+				FOLIAGE_TREE_BILLBOARD_SHADER[3] = trap->R_RegisterShader("models/warzone/billboard/uqsnowpine6");
+				FOLIAGE_TREE_BILLBOARD_SHADER[4] = trap->R_RegisterShader("models/warzone/billboard/uqsnowpine7");
+				FOLIAGE_TREE_BILLBOARD_SHADER[5] = trap->R_RegisterShader("models/warzone/billboard/uqsnowpine8");
+				FOLIAGE_TREE_BILLBOARD_SHADER[6] = trap->R_RegisterShader("models/warzone/billboard/uqsnowpine9");
+				FOLIAGE_TREE_BILLBOARD_SHADER[7] = trap->R_RegisterShader("models/warzone/billboard/uqsnowpine4");
+				FOLIAGE_TREE_BILLBOARD_SHADER[8] = trap->R_RegisterShader("models/warzone/billboard/uqsnowpine4");
+
+				FOLIAGE_TREE_BILLBOARD_SIZE[0] = 128.0;
+				FOLIAGE_TREE_BILLBOARD_SIZE[1] = 128.0;
+				FOLIAGE_TREE_BILLBOARD_SIZE[2] = 128.0;
+				FOLIAGE_TREE_BILLBOARD_SIZE[3] = 128.0;
+				FOLIAGE_TREE_BILLBOARD_SIZE[4] = 128.0;
+				FOLIAGE_TREE_BILLBOARD_SIZE[5] = 128.0;
+				FOLIAGE_TREE_BILLBOARD_SIZE[6] = 128.0;
+				FOLIAGE_TREE_BILLBOARD_SIZE[7] = 203.0;
+				FOLIAGE_TREE_BILLBOARD_SIZE[8] = 203.0;
+
+				FOLIAGE_TREE_RADIUS[0] = 24.0;
+				FOLIAGE_TREE_RADIUS[1] = 24.0;
+				FOLIAGE_TREE_RADIUS[2] = 24.0;
+				FOLIAGE_TREE_RADIUS[3] = 24.0;
+				FOLIAGE_TREE_RADIUS[4] = 24.0;
+				FOLIAGE_TREE_RADIUS[5] = 24.0;
+				FOLIAGE_TREE_RADIUS[6] = 24.0;
+				FOLIAGE_TREE_RADIUS[7] = 38.0;
+				FOLIAGE_TREE_RADIUS[8] = 38.0;
+
+				FOLIAGE_TREE_ZOFFSET[0] = -4.0;
+				FOLIAGE_TREE_ZOFFSET[1] = -4.0;
+				FOLIAGE_TREE_ZOFFSET[2] = -4.0;
+				FOLIAGE_TREE_ZOFFSET[3] = -4.0;
+				FOLIAGE_TREE_ZOFFSET[4] = -4.0;
+				FOLIAGE_TREE_ZOFFSET[5] = -4.0;
+				FOLIAGE_TREE_ZOFFSET[6] = -4.0;
+				FOLIAGE_TREE_ZOFFSET[7] = -64.0;
+				FOLIAGE_TREE_ZOFFSET[8] = -64.0;
 			}
+			else if (!strcmp(CURRENT_CLIMATE_OPTION, "tropicalold"))
+			{
+				FOLIAGE_GRASS_BILLBOARD_SHADER = trap->R_RegisterShader( "models/warzone/foliage/grasstropical" );
 
-			FOLIAGE_TREE_MODEL[0] = trap->R_RegisterModel( IniRead(va("foliage/%s.ini", cgs.currentmapname),"TREES","TREE_MODEL_0","models/warzone/trees/fanpalm1.md3" ) );
-			FOLIAGE_TREE_MODEL[1] = trap->R_RegisterModel( IniRead(va("foliage/%s.ini", cgs.currentmapname),"TREES","TREE_MODEL_1","models/warzone/trees/giant1.md3" ) );
-			FOLIAGE_TREE_MODEL[2] = trap->R_RegisterModel( IniRead(va("foliage/%s.ini", cgs.currentmapname),"TREES","TREE_MODEL_2","models/warzone/trees/anvilpalm1.md3" ) );
+				for (int i = 0; i < MAX_PLANT_SHADERS; i++)
+				{
+					FOLIAGE_PLANT_SHADERS[i] = trap->R_RegisterShader(TropicalPlantsList[i]);
+				}
 
-			FOLIAGE_TREE_BILLBOARD_SHADER[0] = trap->R_RegisterShader( IniRead(va("foliage/%s.ini", cgs.currentmapname),"TREES","TREE_BILLBOARD_SHADER_0","models/warzone/trees/fanpalm1") );
-			FOLIAGE_TREE_BILLBOARD_SHADER[1] = trap->R_RegisterShader( IniRead(va("foliage/%s.ini", cgs.currentmapname),"TREES","TREE_BILLBOARD_SHADER_1","models/warzone/trees/giant1") );
-			FOLIAGE_TREE_BILLBOARD_SHADER[2] = trap->R_RegisterShader( IniRead(va("foliage/%s.ini", cgs.currentmapname),"TREES","TREE_BILLBOARD_SHADER_2","models/warzone/trees/anvilpalm1") );
+				FOLIAGE_TREE_MODEL[0] = trap->R_RegisterModel( "models/warzone/trees/fanpalm2.md3" );
+				FOLIAGE_TREE_MODEL[1] = trap->R_RegisterModel( "models/warzone/trees/fanpalm2.md3" );
+				FOLIAGE_TREE_MODEL[2] = trap->R_RegisterModel( "models/warzone/trees/giant1.md3" );
+				FOLIAGE_TREE_MODEL[3] = trap->R_RegisterModel( "models/warzone/trees/anvilpalm1.md3" );
+				FOLIAGE_TREE_MODEL[4] = trap->R_RegisterModel( "models/warzone/trees/gkbjungletreenew27v2weeping.md3" );
+				FOLIAGE_TREE_MODEL[5] = trap->R_RegisterModel( "models/warzone/trees/gkbjungletreenew27v2weeping.md3" );
+				FOLIAGE_TREE_MODEL[6] = trap->R_RegisterModel( "models/warzone/trees/gkbjungletreenew24v2weeping.md3" );
+				FOLIAGE_TREE_MODEL[7] = trap->R_RegisterModel( "models/warzone/trees/gkbjungletreenew24v2weeping.md3" );
+				FOLIAGE_TREE_MODEL[8] = trap->R_RegisterModel( "models/warzone/trees/manfern.md3" );
 
-			FOLIAGE_TREE_RADIUS[0] = atof( IniRead(va("foliage/%s.ini", cgs.currentmapname),"TREES","TREE_RADIUS_0","24.0") );
-			FOLIAGE_TREE_RADIUS[1] = atof( IniRead(va("foliage/%s.ini", cgs.currentmapname),"TREES","TREE_RADIUS_1","72.0") );
-			FOLIAGE_TREE_RADIUS[2] = atof( IniRead(va("foliage/%s.ini", cgs.currentmapname),"TREES","TREE_RADIUS_2","52.0") );
+				FOLIAGE_TREE_BILLBOARD_SHADER[0] = trap->R_RegisterShader("models/warzone/billboard/fanpalm2");
+				FOLIAGE_TREE_BILLBOARD_SHADER[1] = trap->R_RegisterShader("models/warzone/billboard/fanpalm2");
+				FOLIAGE_TREE_BILLBOARD_SHADER[2] = trap->R_RegisterShader("models/warzone/billboard/giant1");
+				FOLIAGE_TREE_BILLBOARD_SHADER[3] = trap->R_RegisterShader("models/warzone/billboard/anvilpalm1");
+				FOLIAGE_TREE_BILLBOARD_SHADER[4] = trap->R_RegisterShader("models/warzone/billboard/gkbjungletreenew27v2weeping");
+				FOLIAGE_TREE_BILLBOARD_SHADER[5] = trap->R_RegisterShader("models/warzone/billboard/gkbjungletreenew27v2weeping");
+				FOLIAGE_TREE_BILLBOARD_SHADER[6] = trap->R_RegisterShader("models/warzone/billboard/gkbjungletreenew24v2weeping");
+				FOLIAGE_TREE_BILLBOARD_SHADER[7] = trap->R_RegisterShader("models/warzone/billboard/gkbjungletreenew24v2weeping");
+				FOLIAGE_TREE_BILLBOARD_SHADER[8] = trap->R_RegisterShader("models/warzone/billboard/manfern");
 
-			FOLIAGE_TREE_ZOFFSET[0] = atof( IniRead(va("foliage/%s.ini", cgs.currentmapname),"TREES","TREE_ZOFFSET_0","0.0") );
-			FOLIAGE_TREE_ZOFFSET[1] = atof( IniRead(va("foliage/%s.ini", cgs.currentmapname),"TREES","TREE_ZOFFSET_1","0.0") );
-			FOLIAGE_TREE_ZOFFSET[2] = atof( IniRead(va("foliage/%s.ini", cgs.currentmapname),"TREES","TREE_ZOFFSET_2","0.0") );
-#endif
+				FOLIAGE_TREE_BILLBOARD_SIZE[0] = 118.0;
+				FOLIAGE_TREE_BILLBOARD_SIZE[1] = 118.0;
+				FOLIAGE_TREE_BILLBOARD_SIZE[2] = 204.0;
+				FOLIAGE_TREE_BILLBOARD_SIZE[3] = 112.0;
+				FOLIAGE_TREE_BILLBOARD_SIZE[4] = 163.0;
+				FOLIAGE_TREE_BILLBOARD_SIZE[5] = 163.0;
+				FOLIAGE_TREE_BILLBOARD_SIZE[6] = 183.6;
+				FOLIAGE_TREE_BILLBOARD_SIZE[7] = 183.6;
+				FOLIAGE_TREE_BILLBOARD_SIZE[8] = 153.0;
+
+				FOLIAGE_TREE_RADIUS[0] = 24.0;
+				FOLIAGE_TREE_RADIUS[1] = 24.0;
+				FOLIAGE_TREE_RADIUS[2] = 72.0;
+				FOLIAGE_TREE_RADIUS[3] = 52.0;
+				FOLIAGE_TREE_RADIUS[4] = 52.0;
+				FOLIAGE_TREE_RADIUS[5] = 52.0;
+				FOLIAGE_TREE_RADIUS[6] = 72.0;
+				FOLIAGE_TREE_RADIUS[7] = 72.0;
+				FOLIAGE_TREE_RADIUS[8] = 72.0;
+
+				FOLIAGE_TREE_ZOFFSET[0] = -64.0;
+				FOLIAGE_TREE_ZOFFSET[1] = -64.0;
+				FOLIAGE_TREE_ZOFFSET[2] = -64.0;
+				FOLIAGE_TREE_ZOFFSET[3] = -64.0;
+				FOLIAGE_TREE_ZOFFSET[4] = -64.0;
+				FOLIAGE_TREE_ZOFFSET[5] = -64.0;
+				FOLIAGE_TREE_ZOFFSET[6] = -64.0;
+				FOLIAGE_TREE_ZOFFSET[7] = -64.0;
+				FOLIAGE_TREE_ZOFFSET[8] = -64.0;
+			}
+			else // Default to new tropical...
+			{
+				FOLIAGE_GRASS_BILLBOARD_SHADER = trap->R_RegisterShader( "models/warzone/foliage/grasstropical" );
+
+				for (int i = 0; i < MAX_PLANT_SHADERS; i++)
+				{
+					FOLIAGE_PLANT_SHADERS[i] = trap->R_RegisterShader(TropicalPlantsList[i]);
+				}
+
+				FOLIAGE_TREE_MODEL[0] = trap->R_RegisterModel( "models/warzone/trees/palm1.md3" );
+				FOLIAGE_TREE_MODEL[1] = trap->R_RegisterModel( "models/warzone/trees/fanpalm2.md3" );
+				FOLIAGE_TREE_MODEL[2] = trap->R_RegisterModel( "models/warzone/trees/giant1.md3" );
+				FOLIAGE_TREE_MODEL[3] = trap->R_RegisterModel( "models/warzone/trees/anvilpalm1.md3" );
+				FOLIAGE_TREE_MODEL[4] = trap->R_RegisterModel( "models/warzone/trees/willow.md3" );
+				FOLIAGE_TREE_MODEL[5] = trap->R_RegisterModel( "models/warzone/trees/willow2.md3" );
+				FOLIAGE_TREE_MODEL[6] = trap->R_RegisterModel( "models/warzone/trees/willow3.md3" );
+				FOLIAGE_TREE_MODEL[7] = trap->R_RegisterModel( "models/warzone/trees/willow4.md3" );
+				FOLIAGE_TREE_MODEL[8] = trap->R_RegisterModel( "models/warzone/trees/manfern.md3" );
+
+				FOLIAGE_TREE_BILLBOARD_SHADER[0] = trap->R_RegisterShader("models/warzone/billboard/palm1");
+				FOLIAGE_TREE_BILLBOARD_SHADER[1] = trap->R_RegisterShader("models/warzone/billboard/fanpalm2");
+				FOLIAGE_TREE_BILLBOARD_SHADER[2] = trap->R_RegisterShader("models/warzone/billboard/giant1");
+				FOLIAGE_TREE_BILLBOARD_SHADER[3] = trap->R_RegisterShader("models/warzone/billboard/anvilpalm1");
+				FOLIAGE_TREE_BILLBOARD_SHADER[4] = trap->R_RegisterShader("models/warzone/billboard/willow");
+				FOLIAGE_TREE_BILLBOARD_SHADER[5] = trap->R_RegisterShader("models/warzone/billboard/willow2");
+				FOLIAGE_TREE_BILLBOARD_SHADER[6] = trap->R_RegisterShader("models/warzone/billboard/willow3");
+				FOLIAGE_TREE_BILLBOARD_SHADER[7] = trap->R_RegisterShader("models/warzone/billboard/willow4");
+				FOLIAGE_TREE_BILLBOARD_SHADER[8] = trap->R_RegisterShader("models/warzone/billboard/manfern");
+
+				FOLIAGE_TREE_BILLBOARD_SIZE[0] = 128.0;
+				FOLIAGE_TREE_BILLBOARD_SIZE[1] = 118.0;
+				FOLIAGE_TREE_BILLBOARD_SIZE[2] = 204.0;
+				FOLIAGE_TREE_BILLBOARD_SIZE[3] = 112.0;
+				FOLIAGE_TREE_BILLBOARD_SIZE[4] = 183.0;
+				FOLIAGE_TREE_BILLBOARD_SIZE[5] = 183.0;
+				FOLIAGE_TREE_BILLBOARD_SIZE[6] = 203.0;
+				FOLIAGE_TREE_BILLBOARD_SIZE[7] = 203.0;
+				FOLIAGE_TREE_BILLBOARD_SIZE[8] = 153.0;
+
+				FOLIAGE_TREE_RADIUS[0] = 24.0;
+				FOLIAGE_TREE_RADIUS[1] = 24.0;
+				FOLIAGE_TREE_RADIUS[2] = 72.0;
+				FOLIAGE_TREE_RADIUS[3] = 52.0;
+				FOLIAGE_TREE_RADIUS[4] = 38.0;
+				FOLIAGE_TREE_RADIUS[5] = 38.0;
+				FOLIAGE_TREE_RADIUS[6] = 38.0;
+				FOLIAGE_TREE_RADIUS[7] = 38.0;
+				FOLIAGE_TREE_RADIUS[8] = 72.0;
+
+				FOLIAGE_TREE_ZOFFSET[0] = -64.0;
+				FOLIAGE_TREE_ZOFFSET[1] = -64.0;
+				FOLIAGE_TREE_ZOFFSET[2] = -64.0;
+				FOLIAGE_TREE_ZOFFSET[3] = -64.0;
+				FOLIAGE_TREE_ZOFFSET[4] = -64.0;
+				FOLIAGE_TREE_ZOFFSET[5] = -64.0;
+				FOLIAGE_TREE_ZOFFSET[6] = -64.0;
+				FOLIAGE_TREE_ZOFFSET[7] = -64.0;
+				FOLIAGE_TREE_ZOFFSET[8] = -64.0;
+			}
 		}
 
 		FOLIAGE_Check_CVar_Change();

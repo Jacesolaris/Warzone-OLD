@@ -141,10 +141,10 @@ void CG_RegisterWeapon( int weaponNum) {
 		weaponInfo->g2ViewModel = NULL;
 	}
 
-	trap->Print("^3Loading viewModel %s.\n", item->view_model);
+	//trap->Print("^3Loading viewModel %s.\n", item->view_model);
 	if (CG_IsGhoul2Model(item->view_model))
 	{
-		trap->Print("^2Loaded glm viewModel for %s.\n", item->view_model);
+		//trap->Print("^2Loaded glm viewModel for %s.\n", item->view_model);
 		CG_LoadViewWeapon(weaponInfo, item->view_model);
 	}
 	else
