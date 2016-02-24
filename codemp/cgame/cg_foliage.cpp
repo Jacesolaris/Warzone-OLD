@@ -258,6 +258,109 @@ float		TREE_SCALE_MULTIPLIER = 1.0;
 		"models/warzone/foliage/plant100.png",
 	};
 
+	static const char *EndorPlantsList[] = {
+		"models/warzone/foliage/fern01.png",
+		"models/warzone/foliage/fern02.png",
+		"models/warzone/foliage/fern03.png",
+		"models/warzone/foliage/fern04.png",
+		"models/warzone/foliage/fern05.png",
+		"models/warzone/foliage/fern06.png",
+		"models/warzone/foliage/fern07.png",
+		"models/warzone/foliage/fern01.png",
+		"models/warzone/foliage/fern02.png",
+		"models/warzone/foliage/fern03.png",
+		"models/warzone/foliage/fern04.png",
+		"models/warzone/foliage/fern05.png",
+		"models/warzone/foliage/fern06.png",
+		"models/warzone/foliage/fern07.png",
+		"models/warzone/foliage/plant09.png",
+		"models/warzone/foliage/plant13.png",
+		"models/warzone/foliage/plant60.png",
+		"models/warzone/foliage/plant72.png",
+		"models/warzone/foliage/plant88.png",
+		"models/warzone/foliage/fern01.png",
+		"models/warzone/foliage/fern02.png",
+		"models/warzone/foliage/fern03.png",
+		"models/warzone/foliage/fern04.png",
+		"models/warzone/foliage/fern05.png",
+		"models/warzone/foliage/fern06.png",
+		"models/warzone/foliage/fern07.png",
+		"models/warzone/foliage/fern01.png",
+		"models/warzone/foliage/fern02.png",
+		"models/warzone/foliage/fern03.png",
+		"models/warzone/foliage/fern04.png",
+		"models/warzone/foliage/fern05.png",
+		"models/warzone/foliage/fern06.png",
+		"models/warzone/foliage/fern07.png",
+		"models/warzone/foliage/plant09.png",
+		"models/warzone/foliage/plant13.png",
+		"models/warzone/foliage/plant60.png",
+		"models/warzone/foliage/plant72.png",
+		"models/warzone/foliage/plant88.png",
+		"models/warzone/foliage/fern01.png",
+		"models/warzone/foliage/fern02.png",
+		"models/warzone/foliage/fern03.png",
+		"models/warzone/foliage/fern04.png",
+		"models/warzone/foliage/fern05.png",
+		"models/warzone/foliage/fern06.png",
+		"models/warzone/foliage/fern07.png",
+		"models/warzone/foliage/fern01.png",
+		"models/warzone/foliage/fern02.png",
+		"models/warzone/foliage/fern03.png",
+		"models/warzone/foliage/fern04.png",
+		"models/warzone/foliage/fern05.png",
+		"models/warzone/foliage/fern06.png",
+		"models/warzone/foliage/fern07.png",
+		"models/warzone/foliage/plant09.png",
+		"models/warzone/foliage/plant13.png",
+		"models/warzone/foliage/plant60.png",
+		"models/warzone/foliage/plant72.png",
+		"models/warzone/foliage/plant88.png",
+		"models/warzone/foliage/fern01.png",
+		"models/warzone/foliage/fern02.png",
+		"models/warzone/foliage/fern03.png",
+		"models/warzone/foliage/fern04.png",
+		"models/warzone/foliage/fern05.png",
+		"models/warzone/foliage/fern06.png",
+		"models/warzone/foliage/fern07.png",
+		"models/warzone/foliage/fern01.png",
+		"models/warzone/foliage/fern02.png",
+		"models/warzone/foliage/fern03.png",
+		"models/warzone/foliage/fern04.png",
+		"models/warzone/foliage/fern05.png",
+		"models/warzone/foliage/fern06.png",
+		"models/warzone/foliage/fern07.png",
+		"models/warzone/foliage/plant09.png",
+		"models/warzone/foliage/plant13.png",
+		"models/warzone/foliage/plant60.png",
+		"models/warzone/foliage/plant72.png",
+		"models/warzone/foliage/plant88.png",
+		"models/warzone/foliage/fern01.png",
+		"models/warzone/foliage/fern02.png",
+		"models/warzone/foliage/fern03.png",
+		"models/warzone/foliage/fern04.png",
+		"models/warzone/foliage/fern05.png",
+		"models/warzone/foliage/fern06.png",
+		"models/warzone/foliage/fern07.png",
+		"models/warzone/foliage/fern01.png",
+		"models/warzone/foliage/fern02.png",
+		"models/warzone/foliage/fern03.png",
+		"models/warzone/foliage/fern04.png",
+		"models/warzone/foliage/fern05.png",
+		"models/warzone/foliage/fern06.png",
+		"models/warzone/foliage/fern07.png",
+		"models/warzone/foliage/plant09.png",
+		"models/warzone/foliage/plant13.png",
+		"models/warzone/foliage/plant60.png",
+		"models/warzone/foliage/plant72.png",
+		"models/warzone/foliage/plant88.png",
+		"models/warzone/foliage/fern01.png",
+		"models/warzone/foliage/fern02.png",
+		"models/warzone/foliage/fern03.png",
+		"models/warzone/foliage/fern04.png",
+		"models/warzone/foliage/fern05.png",
+	};
+
 	static const char *SnowPlantsList[] = {
 		"models/warzone/foliage/plant22.png",
 		"models/warzone/foliage/plant23.png",
@@ -376,6 +479,13 @@ float		TREE_SCALE_MULTIPLIER = 1.0;
 
 #define		FOLIAGE_AREA_MAX				131072
 #define		FOLIAGE_AREA_MAX_FOLIAGES		256
+
+typedef enum {
+	FOLIAGE_PASS_GRASS,
+	FOLIAGE_PASS_PLANT,
+	FOLIAGE_PASS_CLOSETREE,
+	FOLIAGE_PASS_TREE,
+} foliagePassTypes_t;
 
 	// =======================================================================================================================================
 	//
@@ -939,7 +1049,7 @@ extern "C" {
 		AddRefEntityToScene(ent);
 	}
 
-	void FOLIAGE_AddToScreen( int num, qboolean treeOnly ) {
+	void FOLIAGE_AddToScreen( int num, int passType ) {
 		refEntity_t		re;
 		vec3_t			angles;
 		float			dist = 0;
@@ -954,8 +1064,8 @@ extern "C" {
 			dist = Distance/*Horizontal*/(FOLIAGE_POSITIONS[num], cg.refdef.vieworg);
 
 		// Cull anything in the area outside of cvar specified radius...
-		if (treeOnly && dist > FOLIAGE_TREE_VISIBLE_DISTANCE) return;
-		if (!treeOnly && dist > FOLIAGE_PLANT_VISIBLE_DISTANCE && FOLIAGE_TREE_SELECTION[num] <= 0) return;
+		if (passType == FOLIAGE_PASS_TREE && dist > FOLIAGE_TREE_VISIBLE_DISTANCE) return;
+		if (passType != FOLIAGE_PASS_TREE && passType != FOLIAGE_PASS_CLOSETREE && dist > FOLIAGE_PLANT_VISIBLE_DISTANCE && FOLIAGE_TREE_SELECTION[num] <= 0) return;
 
 		memset( &re, 0, sizeof( re ) );
 
@@ -978,7 +1088,7 @@ extern "C" {
 			if (FOLIAGE_PLANT_SCALE[num] <= minGrassScale && dist > FOLIAGE_VISIBLE_DISTANCE) skipPlant = qtrue;
 			if (FOLIAGE_PLANT_SCALE[num] < minFoliageScale) skipPlant = qtrue;
 
-			if (!skipPlant && FOLIAGE_PLANT_SELECTION[num] != 0)
+			if (passType == FOLIAGE_PASS_PLANT && !skipPlant && FOLIAGE_PLANT_SELECTION[num] != 0)
 			{// Add plant model as well...
 				float PLANT_SCALE = FOLIAGE_PLANT_SCALE[num]*PLANT_SCALE_MULTIPLIER*distFadeScale;//*0.55;
 
@@ -1007,7 +1117,7 @@ extern "C" {
 				FOLIAGE_AddFoliageEntityToScene( &re );
 			}
 			
-			if (!skipGrass && dist <= FOLIAGE_VISIBLE_DISTANCE)
+			if ((passType == FOLIAGE_PASS_GRASS || passType == FOLIAGE_PASS_CLOSETREE) && !skipGrass && dist <= FOLIAGE_VISIBLE_DISTANCE)
 #endif //__GRASS_ONLY__
 			{
 				float GRASS_SCALE = FOLIAGE_PLANT_SCALE[num]*PLANT_SCALE_MULTIPLIER*distFadeScale;//*0.5;
@@ -1068,7 +1178,7 @@ extern "C" {
 			}
 		}
 
-		if (FOLIAGE_TREE_SELECTION[num] > 0)
+		if ((passType == FOLIAGE_PASS_CLOSETREE || FOLIAGE_PASS_TREE) && FOLIAGE_TREE_SELECTION[num] > 0)
 		{// Add the tree model...
 			VectorCopy(FOLIAGE_POSITIONS[num], re.origin);
 			re.customShader = 0;
@@ -1420,66 +1530,77 @@ extern "C" {
 				FOLIAGE_TREE_ZOFFSET[7] = -64.0;
 				FOLIAGE_TREE_ZOFFSET[8] = -64.0;
 			}
-			else if (!strcmp(CURRENT_CLIMATE_OPTION, "endorpineforest"))
+			else if (!strcmp(CURRENT_CLIMATE_OPTION, "endorredwoodforest"))
 			{
-				TREE_SCALE_MULTIPLIER = 3.0;
+				TREE_SCALE_MULTIPLIER = 1.5;
 
-				FOLIAGE_GRASS_BILLBOARD_SHADER = trap->R_RegisterShader( "models/warzone/foliage/grasspineforest" );
+				FOLIAGE_GRASS_BILLBOARD_SHADER = trap->R_RegisterShader( "models/warzone/foliage/ferngrass" );
 
 				for (int i = 0; i < MAX_PLANT_SHADERS; i++)
 				{
-					FOLIAGE_PLANT_SHADERS[i] = trap->R_RegisterShader(SpringPlantsList[i]);
+					FOLIAGE_PLANT_SHADERS[i] = trap->R_RegisterShader(EndorPlantsList[i]);
 				}
 
-				FOLIAGE_TREE_MODEL[0] = trap->R_RegisterModel( "models/warzone/trees/uqconifer7.md3" );
-				FOLIAGE_TREE_MODEL[1] = trap->R_RegisterModel( "models/warzone/trees/uqconifer7.md3" );
-				FOLIAGE_TREE_MODEL[2] = trap->R_RegisterModel( "models/warzone/trees/uqconifer7.md3" );
-				FOLIAGE_TREE_MODEL[3] = trap->R_RegisterModel( "models/warzone/trees/uqconifer8.md3" );
-				FOLIAGE_TREE_MODEL[4] = trap->R_RegisterModel( "models/warzone/trees/uqconifer8.md3" );
-				FOLIAGE_TREE_MODEL[5] = trap->R_RegisterModel( "models/warzone/trees/uqconifer8.md3" );
-				FOLIAGE_TREE_MODEL[6] = trap->R_RegisterModel( "models/warzone/trees/uqconifer8.md3" );
-				FOLIAGE_TREE_MODEL[7] = trap->R_RegisterModel( "models/warzone/trees/uqbigtree1.md3" );
-				FOLIAGE_TREE_MODEL[8] = trap->R_RegisterModel( "models/warzone/trees/uqbigtree2.md3" );
+				FOLIAGE_TREE_MODEL[0] = trap->R_RegisterModel( "models/warzone/trees/uqredwood1.md3" );
+				FOLIAGE_TREE_MODEL[1] = trap->R_RegisterModel( "models/warzone/trees/uqredwood2.md3" );
+				FOLIAGE_TREE_MODEL[2] = trap->R_RegisterModel( "models/warzone/trees/uqredwood3.md3" );
+				FOLIAGE_TREE_MODEL[3] = trap->R_RegisterModel( "models/warzone/trees/uqredwood4.md3" );
+				FOLIAGE_TREE_MODEL[4] = trap->R_RegisterModel( "models/warzone/trees/uqredwood5.md3" );
+				FOLIAGE_TREE_MODEL[5] = trap->R_RegisterModel( "models/warzone/trees/uqredwood6.md3" );
+				FOLIAGE_TREE_MODEL[6] = trap->R_RegisterModel( "models/warzone/trees/uqredwood7.md3" );
+				//FOLIAGE_TREE_MODEL[7] = trap->R_RegisterModel( "models/warzone/trees/uqgiantredwood.md3" );
+				//FOLIAGE_TREE_MODEL[8] = trap->R_RegisterModel( "models/warzone/trees/uqgiantredwood.md3" );
+				//FOLIAGE_TREE_MODEL[7] = trap->R_RegisterModel( "models/warzone/trees/uqbigtree1.md3" );
+				//FOLIAGE_TREE_MODEL[8] = trap->R_RegisterModel( "models/warzone/trees/uqbigtree2.md3" );
+				FOLIAGE_TREE_MODEL[7] = trap->R_RegisterModel( "models/warzone/trees/uqsmalltree2.md3" );
+				FOLIAGE_TREE_MODEL[8] = trap->R_RegisterModel( "models/warzone/trees/uqsmalltree2.md3" );
 
-				FOLIAGE_TREE_BILLBOARD_SHADER[0] = trap->R_RegisterShader("models/warzone/billboard/uqconifer7");
-				FOLIAGE_TREE_BILLBOARD_SHADER[1] = trap->R_RegisterShader("models/warzone/billboard/uqconifer7");
-				FOLIAGE_TREE_BILLBOARD_SHADER[2] = trap->R_RegisterShader("models/warzone/billboard/uqconifer7");
-				FOLIAGE_TREE_BILLBOARD_SHADER[3] = trap->R_RegisterShader("models/warzone/billboard/uqconifer8");
-				FOLIAGE_TREE_BILLBOARD_SHADER[4] = trap->R_RegisterShader("models/warzone/billboard/uqconifer8");
-				FOLIAGE_TREE_BILLBOARD_SHADER[5] = trap->R_RegisterShader("models/warzone/billboard/uqconifer8");
-				FOLIAGE_TREE_BILLBOARD_SHADER[6] = trap->R_RegisterShader("models/warzone/billboard/uqconifer8");
-				FOLIAGE_TREE_BILLBOARD_SHADER[7] = trap->R_RegisterShader("models/warzone/billboard/uqbigtree1");
-				FOLIAGE_TREE_BILLBOARD_SHADER[8] = trap->R_RegisterShader("models/warzone/billboard/uqbigtree2");
+				FOLIAGE_TREE_BILLBOARD_SHADER[0] = trap->R_RegisterShader("models/warzone/billboard/uqredwood1");
+				FOLIAGE_TREE_BILLBOARD_SHADER[1] = trap->R_RegisterShader("models/warzone/billboard/uqredwood2");
+				FOLIAGE_TREE_BILLBOARD_SHADER[2] = trap->R_RegisterShader("models/warzone/billboard/uqredwood3");
+				FOLIAGE_TREE_BILLBOARD_SHADER[3] = trap->R_RegisterShader("models/warzone/billboard/uqredwood4");
+				FOLIAGE_TREE_BILLBOARD_SHADER[4] = trap->R_RegisterShader("models/warzone/billboard/uqredwood5");
+				FOLIAGE_TREE_BILLBOARD_SHADER[5] = trap->R_RegisterShader("models/warzone/billboard/uqredwood6");
+				FOLIAGE_TREE_BILLBOARD_SHADER[6] = trap->R_RegisterShader("models/warzone/billboard/uqredwood7");
+				//FOLIAGE_TREE_BILLBOARD_SHADER[7] = trap->R_RegisterShader("models/warzone/billboard/uqgiantredwood");
+				//FOLIAGE_TREE_BILLBOARD_SHADER[8] = trap->R_RegisterShader("models/warzone/billboard/uqgiantredwood");
+				FOLIAGE_TREE_BILLBOARD_SHADER[7] = trap->R_RegisterShader("models/warzone/billboard/uqsmalltree2");
+				FOLIAGE_TREE_BILLBOARD_SHADER[8] = trap->R_RegisterShader("models/warzone/billboard/uqsmalltree2");
 
-				FOLIAGE_TREE_BILLBOARD_SIZE[0] = 128.0;
-				FOLIAGE_TREE_BILLBOARD_SIZE[1] = 128.0;
-				FOLIAGE_TREE_BILLBOARD_SIZE[2] = 128.0;
-				FOLIAGE_TREE_BILLBOARD_SIZE[3] = 128.0;
-				FOLIAGE_TREE_BILLBOARD_SIZE[4] = 128.0;
-				FOLIAGE_TREE_BILLBOARD_SIZE[5] = 128.0;
-				FOLIAGE_TREE_BILLBOARD_SIZE[6] = 128.0;
-				FOLIAGE_TREE_BILLBOARD_SIZE[7] = 183.0;
-				FOLIAGE_TREE_BILLBOARD_SIZE[8] = 203.0;
 
-				FOLIAGE_TREE_RADIUS[0] = 24.0;
-				FOLIAGE_TREE_RADIUS[1] = 24.0;
-				FOLIAGE_TREE_RADIUS[2] = 24.0;
-				FOLIAGE_TREE_RADIUS[3] = 24.0;
-				FOLIAGE_TREE_RADIUS[4] = 24.0;
-				FOLIAGE_TREE_RADIUS[5] = 24.0;
-				FOLIAGE_TREE_RADIUS[6] = 24.0;
-				FOLIAGE_TREE_RADIUS[7] = 38.0;
-				FOLIAGE_TREE_RADIUS[8] = 38.0;
+				FOLIAGE_TREE_BILLBOARD_SIZE[0] = 64.0;
+				FOLIAGE_TREE_BILLBOARD_SIZE[1] = 96.0;
+				FOLIAGE_TREE_BILLBOARD_SIZE[2] = 132.0;
+				FOLIAGE_TREE_BILLBOARD_SIZE[3] = 132.0;
+				FOLIAGE_TREE_BILLBOARD_SIZE[4] = 132.0;
+				FOLIAGE_TREE_BILLBOARD_SIZE[5] = 132.0;
+				FOLIAGE_TREE_BILLBOARD_SIZE[6] = 132.0;
+				//FOLIAGE_TREE_BILLBOARD_SIZE[7] = 132.0;
+				//FOLIAGE_TREE_BILLBOARD_SIZE[8] = 112.0;
+				FOLIAGE_TREE_BILLBOARD_SIZE[7] = 68.0;
+				FOLIAGE_TREE_BILLBOARD_SIZE[8] = 68.0;
 
-				FOLIAGE_TREE_ZOFFSET[0] = -4.0;
-				FOLIAGE_TREE_ZOFFSET[1] = -4.0;
-				FOLIAGE_TREE_ZOFFSET[2] = -4.0;
-				FOLIAGE_TREE_ZOFFSET[3] = -4.0;
-				FOLIAGE_TREE_ZOFFSET[4] = -4.0;
-				FOLIAGE_TREE_ZOFFSET[5] = -4.0;
-				FOLIAGE_TREE_ZOFFSET[6] = -4.0;
-				FOLIAGE_TREE_ZOFFSET[7] = -64.0;
-				FOLIAGE_TREE_ZOFFSET[8] = -64.0;
+				FOLIAGE_TREE_RADIUS[0] = 16.0;
+				FOLIAGE_TREE_RADIUS[1] = 32.0;
+				FOLIAGE_TREE_RADIUS[2] = 36.0;
+				FOLIAGE_TREE_RADIUS[3] = 36.0;
+				FOLIAGE_TREE_RADIUS[4] = 36.0;
+				FOLIAGE_TREE_RADIUS[5] = 36.0;
+				FOLIAGE_TREE_RADIUS[6] = 36.0;
+				//FOLIAGE_TREE_RADIUS[7] = 72.0;
+				//FOLIAGE_TREE_RADIUS[8] = 72.0;
+				FOLIAGE_TREE_RADIUS[7] = 22.0;
+				FOLIAGE_TREE_RADIUS[8] = 22.0;
+
+				FOLIAGE_TREE_ZOFFSET[0] = -64.0;
+				FOLIAGE_TREE_ZOFFSET[1] = -64.0;
+				FOLIAGE_TREE_ZOFFSET[2] = -64.0;
+				FOLIAGE_TREE_ZOFFSET[3] = -64.0;
+				FOLIAGE_TREE_ZOFFSET[4] = -64.0;
+				FOLIAGE_TREE_ZOFFSET[5] = -64.0;
+				FOLIAGE_TREE_ZOFFSET[6] = -64.0;
+				FOLIAGE_TREE_ZOFFSET[7] = -4.0;
+				FOLIAGE_TREE_ZOFFSET[8] = -4.0;
 			}
 			else if (!strcmp(CURRENT_CLIMATE_OPTION, "snowpineforest"))
 			{
@@ -1675,7 +1796,7 @@ extern "C" {
 
 			for (int spot = 0; spot < FOLIAGE_AREAS_TREES_LIST_COUNT[CURRENT_AREA_ID]; spot++)
 			{
-				FOLIAGE_AddToScreen( FOLIAGE_AREAS_TREES_LIST[CURRENT_AREA_ID][spot], qtrue );
+				FOLIAGE_AddToScreen( FOLIAGE_AREAS_TREES_LIST[CURRENT_AREA_ID][spot], FOLIAGE_PASS_TREE );
 			}
 		}
 
@@ -1686,18 +1807,29 @@ extern "C" {
 			for (int spot = 0; spot < FOLIAGE_AREAS_TREES_LIST_COUNT[CURRENT_AREA_ID]; spot++)
 			{// Draw close trees second...
 				if (FOLIAGE_TREE_SELECTION[FOLIAGE_AREAS_TREES_LIST[CURRENT_AREA_ID][spot]] > 0)
-					FOLIAGE_AddToScreen( FOLIAGE_AREAS_TREES_LIST[CURRENT_AREA_ID][spot], qtrue );
+					FOLIAGE_AddToScreen( FOLIAGE_AREAS_TREES_LIST[CURRENT_AREA_ID][spot], FOLIAGE_PASS_CLOSETREE );
 			}
 		}
 
 		for (int CURRENT_AREA = 0; CURRENT_AREA < IN_RANGE_AREAS_LIST_COUNT; CURRENT_AREA++)
-		{// Draw grass and plants last...
+		{// Draw grass list...
 			int CURRENT_AREA_ID = IN_RANGE_AREAS_LIST[CURRENT_AREA];
 
 			for (int spot = 0; spot < FOLIAGE_AREAS_LIST_COUNT[CURRENT_AREA_ID]; spot++)
 			{
 				if (FOLIAGE_TREE_SELECTION[FOLIAGE_AREAS_LIST[CURRENT_AREA_ID][spot]] <= 0)
-					FOLIAGE_AddToScreen( FOLIAGE_AREAS_LIST[CURRENT_AREA_ID][spot], qfalse );
+					FOLIAGE_AddToScreen( FOLIAGE_AREAS_LIST[CURRENT_AREA_ID][spot], FOLIAGE_PASS_GRASS );
+			}
+		}
+
+		for (int CURRENT_AREA = 0; CURRENT_AREA < IN_RANGE_AREAS_LIST_COUNT; CURRENT_AREA++)
+		{// Draw plants last...
+			int CURRENT_AREA_ID = IN_RANGE_AREAS_LIST[CURRENT_AREA];
+
+			for (int spot = 0; spot < FOLIAGE_AREAS_LIST_COUNT[CURRENT_AREA_ID]; spot++)
+			{
+				if (FOLIAGE_TREE_SELECTION[FOLIAGE_AREAS_LIST[CURRENT_AREA_ID][spot]] <= 0)
+					FOLIAGE_AddToScreen( FOLIAGE_AREAS_LIST[CURRENT_AREA_ID][spot], FOLIAGE_PASS_PLANT );
 			}
 		}
 	}

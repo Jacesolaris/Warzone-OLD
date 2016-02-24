@@ -1,3 +1,5 @@
+precision highp float;
+
 uniform sampler2D				u_DiffuseMap;
 uniform sampler2D				u_ScreenDepthMap;
 uniform sampler2D				u_NormalMap;
@@ -38,10 +40,13 @@ void main(void){
 
 	float invDepth = 1.0 - depth;
 
-	//vec2 distFromCenter = vec2((0.5 - var_ScreenTex.x), 0.5);
 	vec2 distFromCenter = vec2((0.5 - var_ScreenTex.x) * 2.0, (1.0 - var_ScreenTex.y) * 0.5);
-	vec2 pixOffset = clamp((distFromCenter * invDepth) * texel_size * 80.0, vec2(0.0), texel_size * 80.0);
+	vec2 pixOffset = clamp((distFromCenter * invDepth) * texel_size * 80.0, 0.0 - (texel_size * 80.0), texel_size * 80.0);
 	vec2 pos = var_ScreenTex + pixOffset;
+
+	//vec2 distFromCenter = vec2((0.5 - var_ScreenTex.x) * 2.0, (1.0 - var_ScreenTex.y) * 0.5);
+	//vec2 pixOffset = clamp((distFromCenter * invDepth) * texel_size * 80.0, vec2(0.0), texel_size * 80.0);
+	//vec2 pos = var_ScreenTex + pixOffset;
 
 	float isFoliage2 = texture2D(u_SpecularMap, pos).g;
 

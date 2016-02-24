@@ -420,9 +420,9 @@ extern "C" {
 			FOLIAGE_TREE_RADIUS[7] = 38.0;
 			FOLIAGE_TREE_RADIUS[8] = 38.0;
 		}
-		else if (!strcmp(CURRENT_CLIMATE_OPTION, "endorpineforest"))
+		else if (!strcmp(CURRENT_CLIMATE_OPTION, "endorredwoodforest"))
 		{
-			TREE_SCALE_MULTIPLIER = 4.0;
+			TREE_SCALE_MULTIPLIER = 1.5;
 
 			FOLIAGE_TREE_BILLBOARD_SIZE[0] = 128.0;
 			FOLIAGE_TREE_BILLBOARD_SIZE[1] = 128.0;
