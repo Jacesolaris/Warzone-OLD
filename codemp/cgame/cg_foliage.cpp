@@ -50,6 +50,8 @@ float		NUM_PLANT_SHADERS = 0;
 
 #define		MAX_PLANT_SHADERS 100
 
+float		TREE_SCALE_MULTIPLIER = 1.0;
+
 	static const char *TropicalPlantsList[] = {
 		"models/warzone/foliage/plant01.png",
 		"models/warzone/foliage/plant02.png",
@@ -816,7 +818,7 @@ extern "C" {
 			{
 				int		THIS_TREE_NUM = FOLIAGE_AREAS_TREES_LIST[areaNum][treeNum];
 				int		THIS_TREE_TYPE = FOLIAGE_TREE_SELECTION[THIS_TREE_NUM]-1;
-				float	TREE_RADIUS = FOLIAGE_TREE_RADIUS[THIS_TREE_TYPE] * FOLIAGE_TREE_SCALE[THIS_TREE_NUM];
+				float	TREE_RADIUS = FOLIAGE_TREE_RADIUS[THIS_TREE_TYPE] * FOLIAGE_TREE_SCALE[THIS_TREE_NUM]*TREE_SCALE_MULTIPLIER;
 				float	DIST = DistanceHorizontal(FOLIAGE_POSITIONS[THIS_TREE_NUM], moveOrg);
 
 				TREE_RADIUS += 64.0; // Extra space around the tree for player body to fit as well...
@@ -863,7 +865,7 @@ extern "C" {
 			{
 				int		THIS_TREE_NUM = FOLIAGE_AREAS_TREES_LIST[areaNum][treeNum];
 				int		THIS_TREE_TYPE = FOLIAGE_TREE_SELECTION[THIS_TREE_NUM]-1;
-				float	TREE_RADIUS = FOLIAGE_TREE_RADIUS[THIS_TREE_TYPE] * FOLIAGE_TREE_SCALE[THIS_TREE_NUM];
+				float	TREE_RADIUS = FOLIAGE_TREE_RADIUS[THIS_TREE_TYPE] * FOLIAGE_TREE_SCALE[THIS_TREE_NUM]*TREE_SCALE_MULTIPLIER;
 				float	DIST = DistanceHorizontal(FOLIAGE_POSITIONS[THIS_TREE_NUM], from);
 
 				if (FOLIAGE_TREE_SELECTION[THIS_TREE_NUM] <= 0) continue;
@@ -902,8 +904,8 @@ extern "C" {
 			{
 				int		THIS_TREE_NUM = FOLIAGE_SOLID_TREES[tree];
 				int		THIS_TREE_TYPE = FOLIAGE_TREE_SELECTION[THIS_TREE_NUM]-1;
-				float	TREE_RADIUS = FOLIAGE_TREE_RADIUS[THIS_TREE_TYPE] * FOLIAGE_TREE_SCALE[THIS_TREE_NUM];
-				float	TREE_HEIGHT = FOLIAGE_TREE_SCALE[THIS_TREE_NUM]*2.5*FOLIAGE_TREE_BILLBOARD_SIZE[FOLIAGE_TREE_SELECTION[THIS_TREE_NUM]-1];
+				float	TREE_RADIUS = FOLIAGE_TREE_RADIUS[THIS_TREE_TYPE] * FOLIAGE_TREE_SCALE[THIS_TREE_NUM]*TREE_SCALE_MULTIPLIER;
+				float	TREE_HEIGHT = FOLIAGE_TREE_SCALE[THIS_TREE_NUM]*2.5*FOLIAGE_TREE_BILLBOARD_SIZE[FOLIAGE_TREE_SELECTION[THIS_TREE_NUM]-1]*TREE_SCALE_MULTIPLIER;
 				float	DIST = DistanceHorizontal(FOLIAGE_POSITIONS[THIS_TREE_NUM], moveOrg);
 				float	hDist = 0;
 
@@ -1076,7 +1078,7 @@ extern "C" {
 			{
 				re.reType = RT_SPRITE;
 
-				re.radius = FOLIAGE_TREE_SCALE[num]*2.5*FOLIAGE_TREE_BILLBOARD_SIZE[FOLIAGE_TREE_SELECTION[num]-1];
+				re.radius = FOLIAGE_TREE_SCALE[num]*2.5*FOLIAGE_TREE_BILLBOARD_SIZE[FOLIAGE_TREE_SELECTION[num]-1]*TREE_SCALE_MULTIPLIER;
 
 				re.customShader = FOLIAGE_TREE_BILLBOARD_SHADER[FOLIAGE_TREE_SELECTION[num]-1];
 
@@ -1101,7 +1103,7 @@ extern "C" {
 				re.reType = RT_MODEL;
 				re.hModel = FOLIAGE_TREE_MODEL[FOLIAGE_TREE_SELECTION[num]-1];
 
-				VectorSet(re.modelScale, FOLIAGE_TREE_SCALE[num]*2.5, FOLIAGE_TREE_SCALE[num]*2.5, FOLIAGE_TREE_SCALE[num]*2.5);
+				VectorSet(re.modelScale, FOLIAGE_TREE_SCALE[num]*2.5*TREE_SCALE_MULTIPLIER, FOLIAGE_TREE_SCALE[num]*2.5*TREE_SCALE_MULTIPLIER, FOLIAGE_TREE_SCALE[num]*2.5*TREE_SCALE_MULTIPLIER);
 
 				re.origin[2] += FOLIAGE_TREE_ZOFFSET[FOLIAGE_TREE_SELECTION[num]-1];
 
@@ -1350,6 +1352,8 @@ extern "C" {
 
 		if (!FOLIAGE_PLANT_MODEL[0])
 		{// Init/register all foliage models...
+			TREE_SCALE_MULTIPLIER = 1.0;
+
 			FOLIAGE_PLANT_MODEL[0] = trap->R_RegisterModel( "models/warzone/foliage/uqgrass.md3" );
 			FOLIAGE_PLANT_MODEL[1] = trap->R_RegisterModel( "models/warzone/foliage/uqgrass_lod.md3" );
 			FOLIAGE_PLANT_MODEL[2] = trap->R_RegisterModel( "models/warzone/foliage/uqgrass_lod2.md3" );
@@ -1359,6 +1363,67 @@ extern "C" {
 
 			if (!strcmp(CURRENT_CLIMATE_OPTION, "springpineforest"))
 			{
+				FOLIAGE_GRASS_BILLBOARD_SHADER = trap->R_RegisterShader( "models/warzone/foliage/grasspineforest" );
+
+				for (int i = 0; i < MAX_PLANT_SHADERS; i++)
+				{
+					FOLIAGE_PLANT_SHADERS[i] = trap->R_RegisterShader(SpringPlantsList[i]);
+				}
+
+				FOLIAGE_TREE_MODEL[0] = trap->R_RegisterModel( "models/warzone/trees/uqconifer7.md3" );
+				FOLIAGE_TREE_MODEL[1] = trap->R_RegisterModel( "models/warzone/trees/uqconifer7.md3" );
+				FOLIAGE_TREE_MODEL[2] = trap->R_RegisterModel( "models/warzone/trees/uqconifer7.md3" );
+				FOLIAGE_TREE_MODEL[3] = trap->R_RegisterModel( "models/warzone/trees/uqconifer8.md3" );
+				FOLIAGE_TREE_MODEL[4] = trap->R_RegisterModel( "models/warzone/trees/uqconifer8.md3" );
+				FOLIAGE_TREE_MODEL[5] = trap->R_RegisterModel( "models/warzone/trees/uqconifer8.md3" );
+				FOLIAGE_TREE_MODEL[6] = trap->R_RegisterModel( "models/warzone/trees/uqconifer8.md3" );
+				FOLIAGE_TREE_MODEL[7] = trap->R_RegisterModel( "models/warzone/trees/uqbigtree1.md3" );
+				FOLIAGE_TREE_MODEL[8] = trap->R_RegisterModel( "models/warzone/trees/uqbigtree2.md3" );
+
+				FOLIAGE_TREE_BILLBOARD_SHADER[0] = trap->R_RegisterShader("models/warzone/billboard/uqconifer7");
+				FOLIAGE_TREE_BILLBOARD_SHADER[1] = trap->R_RegisterShader("models/warzone/billboard/uqconifer7");
+				FOLIAGE_TREE_BILLBOARD_SHADER[2] = trap->R_RegisterShader("models/warzone/billboard/uqconifer7");
+				FOLIAGE_TREE_BILLBOARD_SHADER[3] = trap->R_RegisterShader("models/warzone/billboard/uqconifer8");
+				FOLIAGE_TREE_BILLBOARD_SHADER[4] = trap->R_RegisterShader("models/warzone/billboard/uqconifer8");
+				FOLIAGE_TREE_BILLBOARD_SHADER[5] = trap->R_RegisterShader("models/warzone/billboard/uqconifer8");
+				FOLIAGE_TREE_BILLBOARD_SHADER[6] = trap->R_RegisterShader("models/warzone/billboard/uqconifer8");
+				FOLIAGE_TREE_BILLBOARD_SHADER[7] = trap->R_RegisterShader("models/warzone/billboard/uqbigtree1");
+				FOLIAGE_TREE_BILLBOARD_SHADER[8] = trap->R_RegisterShader("models/warzone/billboard/uqbigtree2");
+
+				FOLIAGE_TREE_BILLBOARD_SIZE[0] = 128.0;
+				FOLIAGE_TREE_BILLBOARD_SIZE[1] = 128.0;
+				FOLIAGE_TREE_BILLBOARD_SIZE[2] = 128.0;
+				FOLIAGE_TREE_BILLBOARD_SIZE[3] = 128.0;
+				FOLIAGE_TREE_BILLBOARD_SIZE[4] = 128.0;
+				FOLIAGE_TREE_BILLBOARD_SIZE[5] = 128.0;
+				FOLIAGE_TREE_BILLBOARD_SIZE[6] = 128.0;
+				FOLIAGE_TREE_BILLBOARD_SIZE[7] = 183.0;
+				FOLIAGE_TREE_BILLBOARD_SIZE[8] = 203.0;
+
+				FOLIAGE_TREE_RADIUS[0] = 24.0;
+				FOLIAGE_TREE_RADIUS[1] = 24.0;
+				FOLIAGE_TREE_RADIUS[2] = 24.0;
+				FOLIAGE_TREE_RADIUS[3] = 24.0;
+				FOLIAGE_TREE_RADIUS[4] = 24.0;
+				FOLIAGE_TREE_RADIUS[5] = 24.0;
+				FOLIAGE_TREE_RADIUS[6] = 24.0;
+				FOLIAGE_TREE_RADIUS[7] = 38.0;
+				FOLIAGE_TREE_RADIUS[8] = 38.0;
+
+				FOLIAGE_TREE_ZOFFSET[0] = -4.0;
+				FOLIAGE_TREE_ZOFFSET[1] = -4.0;
+				FOLIAGE_TREE_ZOFFSET[2] = -4.0;
+				FOLIAGE_TREE_ZOFFSET[3] = -4.0;
+				FOLIAGE_TREE_ZOFFSET[4] = -4.0;
+				FOLIAGE_TREE_ZOFFSET[5] = -4.0;
+				FOLIAGE_TREE_ZOFFSET[6] = -4.0;
+				FOLIAGE_TREE_ZOFFSET[7] = -64.0;
+				FOLIAGE_TREE_ZOFFSET[8] = -64.0;
+			}
+			else if (!strcmp(CURRENT_CLIMATE_OPTION, "endorpineforest"))
+			{
+				TREE_SCALE_MULTIPLIER = 3.0;
+
 				FOLIAGE_GRASS_BILLBOARD_SHADER = trap->R_RegisterShader( "models/warzone/foliage/grasspineforest" );
 
 				for (int i = 0; i < MAX_PLANT_SHADERS; i++)
@@ -2134,7 +2199,7 @@ extern "C" {
 					VectorCopy(pos, down);
 					down[2] = mapMins[2];
 
-					CG_Trace( &tr, pos, NULL, NULL, down, ENTITYNUM_NONE, MASK_PLAYERSOLID|CONTENTS_WATER );
+					CG_Trace( &tr, pos, NULL, NULL, down, ENTITYNUM_NONE, MASK_PLAYERSOLID|CONTENTS_WATER|CONTENTS_LAVA|CONTENTS_SLIME );
 
 					if (tr.endpos[2] <= mapMins[2])
 					{// Went off map...
@@ -2146,14 +2211,19 @@ extern "C" {
 						continue;
 					}
 
-					if ( tr.surfaceFlags & SURF_NODRAW )
-					{// don't generate a drawsurface at all
-						continue;
-					}
-
 					if ( tr.contents & CONTENTS_WATER )
 					{// Anything below here is underwater...
 						break;
+					}
+
+					if ( tr.contents & CONTENTS_LAVA )
+					{// Anything below here is under lava...
+						break;
+					}
+
+					if ( tr.surfaceFlags & SURF_NODRAW )
+					{// don't generate a drawsurface at all
+						continue;
 					}
 
 					if (ADD_SLOPES)
