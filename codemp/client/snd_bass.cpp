@@ -252,7 +252,7 @@ void BASS_Shutdown ( void )
 
 	while (MUSIC_LOADING)
 	{
-		Sleep(1);
+		this_thread::sleep_for(chrono::milliseconds(1));
 	}
 
 	//if (BASS_ChannelIsActive(MUSIC_CHANNEL.channel) == BASS_ACTIVE_PLAYING)
@@ -875,8 +875,15 @@ void BASS_SetDopplerFactor ( int factor )
 // Music Tracks...
 //
 
+qboolean BASS_MUSIC_STARTING = qfalse;
+
 void BASS_StopMusic( DWORD samplechan )
 {
+	while (BASS_MUSIC_STARTING)
+	{
+		Sleep(1);
+	}
+
 	// Free old samples...
 	BASS_ChannelStop(MUSIC_CHANNEL.channel);
 	BASS_SampleFree(MUSIC_CHANNEL.channel);
@@ -888,6 +895,8 @@ void BASS_StartMusic ( DWORD samplechan )
 {
 	if (BASS_CheckSoundDisabled()) return;
 	if (!BASS_INITIALIZED) return;
+
+	BASS_MUSIC_STARTING = qtrue;
 
 	// Set new samples...
 	MUSIC_CHANNEL.originalChannel=MUSIC_CHANNEL.channel = samplechan;
@@ -907,6 +916,8 @@ void BASS_StartMusic ( DWORD samplechan )
 	// Apply the 3D settings (music is always local)...
 	BASS_ChannelSet3DAttributes(MUSIC_CHANNEL.channel, SOUND_3D_METHOD, -1, -1, -1, -1, -1);
 	BASS_Apply3D();
+
+	BASS_MUSIC_STARTING = qfalse;
 }
 
 DWORD BASS_LoadMusicSample ( void *memory, int length )
