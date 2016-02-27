@@ -1552,10 +1552,10 @@ static int GLSL_BeginLoadGPUShader(shaderProgram_t * program, const char *name,
 	int attribs, qboolean fragmentShader, qboolean tesselation, const GLcharARB *extra, qboolean addHeader,
 	char *forceVersion, const char *fallback_vp, const char *fallback_fp, const char *fallback_cp, const char *fallback_ep)
 {
-	char vpCode[32000];
-	char fpCode[32000];
-	char cpCode[32000];
-	char epCode[32000];
+	char vpCode[32768];
+	char fpCode[32768];
+	char cpCode[32768];
+	char epCode[32768];
 	char *postHeader;
 	int size;
 
@@ -1958,8 +1958,10 @@ static bool GLSL_IsValidPermutationForLight (int lightType, int shaderCaps)
 	if (!lightType && (shaderCaps & LIGHTDEF_USE_SHADOWMAP))
 		return false;
 
+	/*
 	if (r_tesselation->integer < 1 && (shaderCaps & LIGHTDEF_USE_TESSELLATION))
 		return qfalse;
+	*/
 
 	return true;
 }
@@ -2174,19 +2176,36 @@ int GLSL_BeginLoadGPUShaders(void)
 				Q_strcat(extradefines, 1024, "#define USE_SPECULARMAP\n");
 			}
 
-			if (r_cubeMapping->integer)
+			if (r_cubeMapping->integer && (i & LIGHTDEF_USE_CUBEMAP))
 			{
 				Q_strcat(extradefines, 1024, "#define USE_CUBEMAP\n");
 			}
 		}
 
+		if (i & LIGHTDEF_USE_OVERLAY)
+		{
+			Q_strcat(extradefines, 1024, "#define USE_OVERLAY\n");
+		}
+
+		/*if (i & LIGHTDEF_USE_STEEPMAP)
+		{
+			Q_strcat(extradefines, 1024, "#define USE_STEEPMAP\n");
+		}
+
+		if (i & LIGHTDEF_USE_SWAY)
+		{
+			Q_strcat(extradefines, 1024, "#define USE_SWAY\n");
+		}*/
+
 		if (i & LIGHTDEF_USE_SHADOWMAP)
 		{
 			Q_strcat(extradefines, 1024, "#define USE_SHADOWMAP\n");
 
+			attribs |= ATTR_TEXCOORD1 | ATTR_LIGHTDIRECTION;
+
 			if (r_sunlightMode->integer == 1)
 				Q_strcat(extradefines, 1024, "#define SHADOWMAP_MODULATE\n");
-			else if (r_sunlightMode->integer == 2)
+			else if (r_sunlightMode->integer >= 2)
 				Q_strcat(extradefines, 1024, "#define USE_PRIMARY_LIGHT\n");
 		}
 
@@ -2222,6 +2241,14 @@ int GLSL_BeginLoadGPUShaders(void)
 		if (i & LIGHTDEF_USE_GLOW_BUFFER)
 			Q_strcat(extradefines, 1024, "#define USE_GLOW_BUFFER\n");
 
+		/*
+		if (i & LIGHTDEF_USE_FASTPASS)
+		{
+			Q_strcat(extradefines, 1024, "#define USE_FASTPASS\n");
+		}
+		*/
+
+		/*
 		if (r_tesselation->integer && (i & LIGHTDEF_USE_TESSELLATION))
 		{
 //#ifndef SHADER_BASIC
@@ -2233,7 +2260,7 @@ int GLSL_BeginLoadGPUShaders(void)
 				ri->Error(ERR_FATAL, "Could not load lightall shader!");
 			}
 		}
-		else
+		else*/
 		{
 			if (!GLSL_BeginLoadGPUShader(&tr.lightallShader[i], "lightall", attribs, qtrue, qfalse, extradefines, qtrue, NULL, fallbackShader_lightall_vp, fallbackShader_lightall_fp, NULL, NULL))
 			{

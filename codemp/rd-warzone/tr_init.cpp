@@ -150,6 +150,7 @@ cvar_t  *r_depthPrepass;
 cvar_t  *r_ssao;
 
 cvar_t  *r_normalMapping;
+cvar_t  *r_normalMapQuality;
 cvar_t  *r_specularMapping;
 cvar_t  *r_deluxeMapping;
 cvar_t  *r_parallaxMapping;
@@ -1400,6 +1401,7 @@ void R_Register( void )
 	r_ssao = ri->Cvar_Get( "r_ssao", "0", /*CVAR_LATCH |*/ CVAR_ARCHIVE );
 
 	r_normalMapping = ri->Cvar_Get( "r_normalMapping", "1", CVAR_ARCHIVE | CVAR_LATCH );
+	r_normalMapQuality = ri->Cvar_Get( "r_normalMapQuality", "1", CVAR_ARCHIVE | CVAR_LATCH );
 	r_specularMapping = ri->Cvar_Get( "r_specularMapping", "1", CVAR_ARCHIVE | CVAR_LATCH );
 	r_deluxeMapping = ri->Cvar_Get( "r_deluxeMapping", "1", CVAR_ARCHIVE | CVAR_LATCH );
 	r_parallaxMapping = ri->Cvar_Get( "r_parallaxMapping", "0", CVAR_ARCHIVE | CVAR_LATCH );

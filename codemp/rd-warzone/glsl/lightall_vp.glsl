@@ -1,3 +1,5 @@
+precision highp float;
+
 attribute vec2 attr_TexCoord0;
 
 uniform float	u_Time;
@@ -248,9 +250,11 @@ void main()
   #endif
 #endif
 
+
 #if defined(USE_VERT_TANGENT_SPACE) && defined(USE_LIGHT) && !defined(USE_FAST_LIGHT)
 	vec3 bitangent = cross(normal, tangent) * (attr_Tangent.w * 2.0 - 1.0);
 #endif
+
 
 #if defined(USE_LIGHT_VECTOR)
 	vec3 L = u_LightOrigin.xyz - (position * u_LightOrigin.w);
@@ -260,6 +264,7 @@ void main()
 	L = (u_ModelMatrix * vec4(L, 0.0)).xyz;
   #endif
 #endif
+
 
 #if defined(USE_LIGHTMAP)
 	var_TexCoords2 = attr_TexCoord1.st;
@@ -271,7 +276,6 @@ void main()
 	float sqrLightDist = dot(L, L);
 	float attenuation = CalcLightAttenuation(u_LightOrigin.w, u_LightRadius * u_LightRadius / sqrLightDist);
 	float NL = clamp(dot(normalize(normal), L) / sqrt(sqrLightDist), 0.0, 1.0);
-
 	var_Color.rgb *= u_DirectedLight * (attenuation * NL) + u_AmbientLight;
 #endif
 
@@ -289,11 +293,10 @@ void main()
   #if defined(USE_DELUXEMAP)
 	var_LightDir -= u_EnableTextures.y * var_LightDir;
   #endif
-#endif
 
-#if defined(USE_LIGHT) && !defined(USE_FAST_LIGHT)
-	vec3 viewDir = u_ViewOrigin - position;
+	vec3 viewDir = u_ViewOrigin - /*attr_Position.xyz;*/position;
 	var_ViewDir = viewDir;
+
   #if defined(USE_VERT_TANGENT_SPACE)
 	// store view direction in tangent space to save on varyings
 	var_Normal    = vec4(normal,    viewDir.x);

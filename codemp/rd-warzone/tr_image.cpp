@@ -2857,12 +2857,28 @@ image_t *R_CreateNormalMapGLSL ( const char *name, byte *pic, int inwidth, int i
 	int			normalFlags = 0;
 	FBO_t		*dstFbo = NULL;
 	image_t		*dstImage;
-	int width = inwidth/2;
-	int height = inheight/2;
+	int			width = inwidth;
+	int			height = inheight;
 
-	if (!tr.generateNormalMapShader.program || !tr.generateNormalMapShader.uniformBuffer) return NULL; // Will get done later after init on usage...
+	if (r_normalMapping->integer == 0)
+	{
+		return NULL;
+	}
 
-	if ((width <= 128 && height <= 128) || width <= 64 || height <= 64) return tr.whiteImage; // Not worth the time/vram...
+	if (r_normalMapQuality->integer < 1)
+	{
+		width /= 4;
+		height /= 4;
+	}
+	else if (r_normalMapQuality->integer < 2)
+	{
+		width /= 2;
+		height /= 2;
+	}
+
+	if (!tr.generateNormalMapShader.program || !tr.generateNormalMapShader.uniformBuffer) return tr.whiteImage; // Will get done later after init on usage...
+
+	if ((width <= 128 && height <= 128) || width <= 64 || height <= 64) return NULL;//tr.whiteImage; // Not worth the time/vram...
 	if (StringContainsWord(name, "_spec")) return NULL;
 	if (StringContainsWord(name, "_sub")) return NULL;
 	if (StringContainsWord(name, "_overlay")) return NULL;
@@ -2920,6 +2936,11 @@ image_t *R_CreateNormalMap ( const char *name, byte *pic, int width, int height,
 
 	// find normalmap in case it's there
 	normalImage = R_FindImageFile(normalName, IMGTYPE_NORMAL, normalFlags);
+
+	if (!normalImage && R_ShouldMipMap( normalName ))
+	{
+		normalImage = R_CreateNormalMapGLSL( normalName, pic, width, height, normalFlags, srcImage );
+	}
 
 	return normalImage;
 }

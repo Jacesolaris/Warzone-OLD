@@ -234,6 +234,7 @@ extern cvar_t  *r_depthPrepass;
 extern cvar_t  *r_ssao;
 
 extern cvar_t  *r_normalMapping;
+extern cvar_t  *r_normalMapQuality;
 extern cvar_t  *r_specularMapping;
 extern cvar_t  *r_deluxeMapping;
 extern cvar_t  *r_parallaxMapping;
@@ -915,6 +916,7 @@ typedef struct {
 
 	surfaceSprite_t	*ss;
 
+	bool			isFoliage;
 } shaderStage_t;
 
 struct shaderCommands_s;
@@ -1198,9 +1200,19 @@ enum
 	LIGHTDEF_USE_VERTEX_ANIMATION= 0x0040,
 	LIGHTDEF_USE_SKELETAL_ANIMATION = 0x0080,
 	LIGHTDEF_USE_GLOW_BUFFER     = 0x0100,
-	LIGHTDEF_USE_TESSELLATION     = 0x0200,
-	LIGHTDEF_ALL                 = 0x03FF,
-	LIGHTDEF_COUNT               = 0x0400
+	LIGHTDEF_USE_CUBEMAP		= 0x0200,
+	/*
+	LIGHTDEF_USE_TESSELLATION     = 0x0400,
+	LIGHTDEF_USE_SWAY			= 0x0800,
+	LIGHTDEF_USE_OVERLAY		= 0x1000,
+	LIGHTDEF_USE_STEEPMAP		= 0x2000,
+	LIGHTDEF_USE_FASTPASS		= 0x4000,
+	LIGHTDEF_ALL                 = 0x7FFF,
+	LIGHTDEF_COUNT               = 0x8000
+	*/
+	LIGHTDEF_USE_OVERLAY		= 0x0400,
+	LIGHTDEF_ALL                 = 0x07FF,
+	LIGHTDEF_COUNT               = 0x0800
 };
 
 enum
@@ -2603,6 +2615,7 @@ extern  cvar_t  *r_depthPrepass;
 extern  cvar_t  *r_ssao;
 
 extern  cvar_t  *r_normalMapping;
+extern cvar_t  *r_normalMapQuality;
 extern  cvar_t  *r_specularMapping;
 extern  cvar_t  *r_deluxeMapping;
 extern  cvar_t  *r_parallaxMapping;

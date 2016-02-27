@@ -1069,6 +1069,9 @@ extern "C" {
 
 		memset( &re, 0, sizeof( re ) );
 
+		//re.renderfx |= RF_FORCE_ENT_ALPHA;
+		//re.renderfx |= RF_ALPHA_DEPTH;
+
 		VectorCopy(FOLIAGE_POSITIONS[num], re.origin);
 
 		FOLIAGE_VISIBLE_DISTANCE =			FOLIAGE_AREA_SIZE*cg_foliageGrassRangeMult.value;
@@ -1548,10 +1551,6 @@ extern "C" {
 				FOLIAGE_TREE_MODEL[4] = trap->R_RegisterModel( "models/warzone/trees/uqredwood5.md3" );
 				FOLIAGE_TREE_MODEL[5] = trap->R_RegisterModel( "models/warzone/trees/uqredwood6.md3" );
 				FOLIAGE_TREE_MODEL[6] = trap->R_RegisterModel( "models/warzone/trees/uqredwood7.md3" );
-				//FOLIAGE_TREE_MODEL[7] = trap->R_RegisterModel( "models/warzone/trees/uqgiantredwood.md3" );
-				//FOLIAGE_TREE_MODEL[8] = trap->R_RegisterModel( "models/warzone/trees/uqgiantredwood.md3" );
-				//FOLIAGE_TREE_MODEL[7] = trap->R_RegisterModel( "models/warzone/trees/uqbigtree1.md3" );
-				//FOLIAGE_TREE_MODEL[8] = trap->R_RegisterModel( "models/warzone/trees/uqbigtree2.md3" );
 				FOLIAGE_TREE_MODEL[7] = trap->R_RegisterModel( "models/warzone/trees/uqsmalltree2.md3" );
 				FOLIAGE_TREE_MODEL[8] = trap->R_RegisterModel( "models/warzone/trees/uqsmalltree2.md3" );
 
@@ -1562,8 +1561,6 @@ extern "C" {
 				FOLIAGE_TREE_BILLBOARD_SHADER[4] = trap->R_RegisterShader("models/warzone/billboard/uqredwood5");
 				FOLIAGE_TREE_BILLBOARD_SHADER[5] = trap->R_RegisterShader("models/warzone/billboard/uqredwood6");
 				FOLIAGE_TREE_BILLBOARD_SHADER[6] = trap->R_RegisterShader("models/warzone/billboard/uqredwood7");
-				//FOLIAGE_TREE_BILLBOARD_SHADER[7] = trap->R_RegisterShader("models/warzone/billboard/uqgiantredwood");
-				//FOLIAGE_TREE_BILLBOARD_SHADER[8] = trap->R_RegisterShader("models/warzone/billboard/uqgiantredwood");
 				FOLIAGE_TREE_BILLBOARD_SHADER[7] = trap->R_RegisterShader("models/warzone/billboard/uqsmalltree2");
 				FOLIAGE_TREE_BILLBOARD_SHADER[8] = trap->R_RegisterShader("models/warzone/billboard/uqsmalltree2");
 
@@ -1575,20 +1572,16 @@ extern "C" {
 				FOLIAGE_TREE_BILLBOARD_SIZE[4] = 132.0;
 				FOLIAGE_TREE_BILLBOARD_SIZE[5] = 132.0;
 				FOLIAGE_TREE_BILLBOARD_SIZE[6] = 132.0;
-				//FOLIAGE_TREE_BILLBOARD_SIZE[7] = 132.0;
-				//FOLIAGE_TREE_BILLBOARD_SIZE[8] = 112.0;
 				FOLIAGE_TREE_BILLBOARD_SIZE[7] = 68.0;
 				FOLIAGE_TREE_BILLBOARD_SIZE[8] = 68.0;
 
-				FOLIAGE_TREE_RADIUS[0] = 16.0;
-				FOLIAGE_TREE_RADIUS[1] = 32.0;
-				FOLIAGE_TREE_RADIUS[2] = 36.0;
-				FOLIAGE_TREE_RADIUS[3] = 36.0;
-				FOLIAGE_TREE_RADIUS[4] = 36.0;
-				FOLIAGE_TREE_RADIUS[5] = 36.0;
-				FOLIAGE_TREE_RADIUS[6] = 36.0;
-				//FOLIAGE_TREE_RADIUS[7] = 72.0;
-				//FOLIAGE_TREE_RADIUS[8] = 72.0;
+				FOLIAGE_TREE_RADIUS[0] = 24.0;
+				FOLIAGE_TREE_RADIUS[1] = 24.0;
+				FOLIAGE_TREE_RADIUS[2] = 24.0;
+				FOLIAGE_TREE_RADIUS[3] = 24.0;
+				FOLIAGE_TREE_RADIUS[4] = 24.0;
+				FOLIAGE_TREE_RADIUS[5] = 24.0;
+				FOLIAGE_TREE_RADIUS[6] = 24.0;
 				FOLIAGE_TREE_RADIUS[7] = 22.0;
 				FOLIAGE_TREE_RADIUS[8] = 22.0;
 

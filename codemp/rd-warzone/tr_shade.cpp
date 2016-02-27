@@ -1040,37 +1040,37 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage)
 			parallaxScale = 2.0;
 			break;
 		case MATERIAL_SHORTGRASS:		// 5			// manicured lawn
-			specularScale = 0.53;
+			specularScale = 0.45;
 			cubemapScale = 0.0;
 			materialType = (float)MATERIAL_SHORTGRASS;
 			parallaxScale = 2.5;
 			break;
 		case MATERIAL_LONGGRASS:		// 6			// long jungle grass
-			specularScale = 0.5;
+			specularScale = 0.45;
 			cubemapScale = 0.0;
 			materialType = (float)MATERIAL_LONGGRASS;
 			parallaxScale = 3.0;
 			break;
 		case MATERIAL_SAND:				// 8			// sandy beach
-			specularScale = 0.0;
+			specularScale = 0.20;
 			cubemapScale = 0.0;
 			materialType = (float)MATERIAL_SAND;
 			parallaxScale = 2.5;
 			break;
 		case MATERIAL_CARPET:			// 27			// lush carpet
-			specularScale = 0.0;
+			specularScale = 0.1;
 			cubemapScale = 0.0;
 			materialType = (float)MATERIAL_CARPET;
 			parallaxScale = 2.5;
 			break;
 		case MATERIAL_GRAVEL:			// 9			// lots of small stones
-			specularScale = 0.0;
+			specularScale = 0.2;
 			cubemapScale = 0.0;
 			materialType = (float)MATERIAL_GRAVEL;
 			parallaxScale = 3.0;
 			break;
 		case MATERIAL_ROCK:				// 23			//
-			specularScale = 0.0;
+			specularScale = 0.2;
 			cubemapScale = 0.0;
 			materialType = (float)MATERIAL_ROCK;
 			parallaxScale = 3.0;
@@ -1084,14 +1084,14 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage)
 			useSteepParallax = 1.0;
 			break;
 		case MATERIAL_SOLIDWOOD:		// 1			// freshly cut timber
-			specularScale = 0.0;
+			specularScale = 0.35;
 			cubemapScale = 0.0;
 			materialType = (float)MATERIAL_SOLIDWOOD;
 			parallaxScale = 2.5;
 			//useSteepParallax = 1.0;
 			break;
 		case MATERIAL_HOLLOWWOOD:		// 2			// termite infested creaky wood
-			specularScale = 0.0;
+			specularScale = 0.35;
 			cubemapScale = 0.0;
 			materialType = (float)MATERIAL_HOLLOWWOOD;
 			parallaxScale = 2.5;
@@ -1112,14 +1112,14 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage)
 			isMetalic = 1.0;
 			break;
 		case MATERIAL_DRYLEAVES:		// 19			// dried up leaves on the floor
-			specularScale = 0.05;
+			specularScale = 0.25;
 			cubemapScale = 0.0;
 			materialType = (float)MATERIAL_DRYLEAVES;
 			parallaxScale = 0.0;
 			//useSteepParallax = 1.0;
 			break;
 		case MATERIAL_GREENLEAVES:		// 20			// fresh leaves still on a tree
-			specularScale = 0.05;
+			specularScale = 0.55;
 			cubemapScale = 0.0;
 			materialType = (float)MATERIAL_GREENLEAVES;
 			parallaxScale = 0.0; // GreenLeaves should NEVER be parallaxed.. It's used for surfaces with an alpha channel and parallax screws it up...
@@ -1152,14 +1152,14 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage)
 			useSteepParallax = 1.0;
 			break;
 		case MATERIAL_MUD:				// 17			// wet soil
-			specularScale = 0.0;
+			specularScale = 0.4;
 			cubemapScale = 0.0;
 			materialType = (float)MATERIAL_MUD;
 			parallaxScale = 3.0;
 			useSteepParallax = 1.0;
 			break;
 		case MATERIAL_DIRT:				// 7			// hard mud
-			specularScale = 0.0;
+			specularScale = 0.10;
 			cubemapScale = 0.0;
 			materialType = (float)MATERIAL_DIRT;
 			parallaxScale = 3.0;
@@ -1179,7 +1179,7 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage)
 			parallaxScale = 1.0;
 			break;
 		case MATERIAL_RUBBER:			// 24			// hard tire like rubber
-			specularScale = 0.0;
+			specularScale = 0.10;
 			cubemapScale = 0.0;
 			materialType = (float)MATERIAL_RUBBER;
 			parallaxScale = 1.0;
@@ -1256,29 +1256,9 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage)
 		}
 	}
 
-	switch( tess.shader->surfaceFlags & MATERIAL_MASK )
-	{// Switch to avoid doing string checks on everything else...
-		case MATERIAL_SHORTGRASS:		// 5			// manicured lawn
-		case MATERIAL_LONGGRASS:		// 6			// long jungle grass
-		//case MATERIAL_SOLIDWOOD:		// 1			// freshly cut timber
-		//case MATERIAL_HOLLOWWOOD:		// 2			// termite infested creaky wood
-		case MATERIAL_DRYLEAVES:		// 19			// dried up leaves on the floor
-		case MATERIAL_GREENLEAVES:		// 20			// fresh leaves still on a tree
-			if (pStage->bundle[TB_DIFFUSEMAP].image[0] 
-				&& (StringContainsWord(pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName, "foliage/") || StringContainsWord(pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName, "foliages/")))
-			{
-				doSway = 0.7;
-			}
-			else if (pStage->bundle[TB_DIFFUSEMAP].image[0] 
-				&& !StringContainsWord(pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName, "bark")
-				&& !StringContainsWord(pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName, "giant_tree")
-				&& (StringContainsWord(pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName, "yavin/tree") || StringContainsWord(pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName, "trees")))
-			{
-				doSway = 0.7;
-			}
-			break;
-		default:
-			break;
+	if (pStage->isFoliage)
+	{
+		doSway = 0.7;
 	}
 
 	VectorSet4(local1, parallaxScale, (float)pStage->hasSpecular, specularScale, materialType);
@@ -1301,6 +1281,44 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage)
 		VectorSet4(local5, r_imageBasedLighting->value, 0.0, 0.0, 0.0);
 		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL5, local5);
 	}*/
+
+
+	vec4_t specMult;
+
+	if (pStage->specularScale[0] + pStage->specularScale[1] + pStage->specularScale[2] + pStage->specularScale[3] != 0.0)
+	{// Shader Specified...
+		GLSL_SetUniformVec4(sp, UNIFORM_SPECULARSCALE, pStage->specularScale);
+	}
+	else // Material Defaults...
+	{
+		VectorSet4(specMult, specularScale, specularScale, specularScale, 1.0);
+
+		if (( tess.shader->surfaceFlags & MATERIAL_MASK ) == 30.0 /* ARMOR */ 
+			|| ( tess.shader->surfaceFlags & MATERIAL_MASK ) == 25.0 /* PLASTIC */
+			|| ( tess.shader->surfaceFlags & MATERIAL_MASK ) == 12.0 /* MARBLE */)
+		{// Armor, plastic, and marble should remain somewhat shiny...
+			specMult[0] = 0.333;
+			specMult[1] = 0.333;
+			specMult[2] = 0.333;
+			GLSL_SetUniformVec4(sp, UNIFORM_SPECULARSCALE, specMult);
+		}
+		else if (( tess.shader->surfaceFlags & MATERIAL_MASK ) != 0.0 /* METALS */
+			&& ( tess.shader->surfaceFlags & MATERIAL_MASK ) != 10.0 /* GLASS */ 
+			&& ( tess.shader->surfaceFlags & MATERIAL_MASK ) != 29.0 /* SHATTERGLASS */ 
+			&& ( tess.shader->surfaceFlags & MATERIAL_MASK ) != 18.0 /* BPGLASS */ 
+			&& ( tess.shader->surfaceFlags & MATERIAL_MASK ) != 31.0 /* COMPUTER */
+			&& ( tess.shader->surfaceFlags & MATERIAL_MASK ) != 15.0 /* ICE */)
+		{// Only if not metalic... Metals should remain nice and shiny...
+			specMult[0] *= 0.04;
+			specMult[1] *= 0.04;
+			specMult[2] *= 0.04;
+			GLSL_SetUniformVec4(sp, UNIFORM_SPECULARSCALE, specMult);
+		}
+		else
+		{
+			GLSL_SetUniformVec4(sp, UNIFORM_SPECULARSCALE, specMult);
+		}
+	}
 
 	//GLSL_SetUniformFloat(sp, UNIFORM_TIME, tess.shaderTime);
 	GLSL_SetUniformFloat(sp, UNIFORM_TIME, backEnd.refdef.floatTime);
@@ -1384,12 +1402,17 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		int stateBits;
 		colorGen_t forceRGBGen = CGEN_BAD;
 		alphaGen_t forceAlphaGen = AGEN_IDENTITY;
+		
 		qboolean isGeneric = qtrue;
 		qboolean isLightAll = qfalse;
 		qboolean isWater = qfalse;
 		qboolean isGrass = qfalse;
 		qboolean multiPass = qtrue;
 		qboolean usingLight = qfalse;
+
+		float cubeMapStrength = 0.0;
+		vec4_t cubeMapVec;
+
 		int passNum = 0, passMax = 0;
 
 		if ( !pStage )
@@ -1412,6 +1435,71 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			if (pStage->glslShaderGroup == tr.lightallShader)
 			{
 				int index = 0;
+
+				//
+				// testing cube map
+				//
+				if (!(tr.viewParms.flags & VPF_NOCUBEMAPS) && input->cubemapIndex && r_cubeMapping->integer)
+				{
+					cubeMapVec[0] = tr.cubemapOrigins[input->cubemapIndex - 1][0] - backEnd.viewParms.ori.origin[0];
+					cubeMapVec[1] = tr.cubemapOrigins[input->cubemapIndex - 1][1] - backEnd.viewParms.ori.origin[1];
+					cubeMapVec[2] = tr.cubemapOrigins[input->cubemapIndex - 1][2] - backEnd.viewParms.ori.origin[2];
+					cubeMapVec[3] = 1.0f;
+
+					float dist = Distance(tr.refdef.vieworg, tr.cubemapOrigins[input->cubemapIndex - 1]);
+					float mult = r_cubemapCullFalloffMult->value - (r_cubemapCullFalloffMult->value * 0.04);
+
+					if (dist < r_cubemapCullRange->value)
+					{// In range for full effect...
+						cubeMapStrength = 1.0;
+						index |= LIGHTDEF_USE_CUBEMAP;
+						pStage->glslShaderIndex |= LIGHTDEF_USE_CUBEMAP;
+					}
+					else if (dist >= r_cubemapCullRange->value && dist < r_cubemapCullRange->value * mult)
+					{// Further scale the strength of the cubemap by the fade-out distance...
+						float extraDist =		dist - r_cubemapCullRange->value;
+						float falloffDist =		(r_cubemapCullRange->value * mult) - r_cubemapCullRange->value;
+						float strength =		(falloffDist - extraDist) / falloffDist;
+
+						cubeMapStrength = strength;
+						index |= LIGHTDEF_USE_CUBEMAP;
+						pStage->glslShaderIndex |= LIGHTDEF_USE_CUBEMAP;
+					}
+					else
+					{// Out of range completely...
+						cubeMapStrength = 0.0;
+					}
+				}
+
+				/*
+				if ((tr.viewParms.flags & VPF_SHADOWPASS) || (backEnd.viewParms.flags & VPF_DEPTHSHADOW))
+				{
+					index |= LIGHTDEF_USE_FASTPASS;
+					pStage->glslShaderIndex |= LIGHTDEF_USE_FASTPASS;
+				}
+				*/
+
+				if (pStage->isFoliage)
+				{
+					//index |= LIGHTDEF_USE_SWAY;
+					//pStage->glslShaderIndex |= LIGHTDEF_USE_SWAY;
+					index |= LIGHTDEF_USE_OVERLAY;
+					pStage->glslShaderIndex |= LIGHTDEF_USE_OVERLAY;
+				}
+
+				if (pStage->bundle[TB_STEEPMAP].image[0])
+				{
+					//index |= LIGHTDEF_USE_STEEPMAP;
+					//pStage->glslShaderIndex |= LIGHTDEF_USE_STEEPMAP;
+					index |= LIGHTDEF_USE_OVERLAY;
+					pStage->glslShaderIndex |= LIGHTDEF_USE_OVERLAY;
+				}
+
+				if (pStage->bundle[TB_OVERLAYMAP].image[0])
+				{
+					index |= LIGHTDEF_USE_OVERLAY;
+					pStage->glslShaderIndex |= LIGHTDEF_USE_OVERLAY;
+				}
 
 				if (backEnd.currentEntity && backEnd.currentEntity != &tr.worldEntity)
 				{
@@ -1470,12 +1558,20 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		{
 			int index = pStage->glslShaderIndex;
 
+			/*
+			if ((tr.viewParms.flags & VPF_SHADOWPASS) || (backEnd.viewParms.flags & VPF_DEPTHSHADOW))
+			{
+				index |= LIGHTDEF_USE_FASTPASS;
+				pStage->glslShaderIndex |= LIGHTDEF_USE_FASTPASS;
+			}
+
 			if (r_tesselation->integer 
 				&& RB_ShouldUseTesselation(tess.shader->surfaceFlags & MATERIAL_MASK))
 			{
 				index |= LIGHTDEF_USE_TESSELLATION;
 				pStage->glslShaderIndex |= LIGHTDEF_USE_TESSELLATION;
 			}
+			*/
 
 			if (backEnd.currentEntity && backEnd.currentEntity != &tr.worldEntity)
 			{
@@ -1530,6 +1626,61 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				index &= ~LIGHTDEF_USE_TCGEN_AND_TCMOD;
 			}
 			*/
+
+			//
+			// testing cube map
+			//
+			if (!(tr.viewParms.flags & VPF_NOCUBEMAPS) && input->cubemapIndex && r_cubeMapping->integer)
+			{
+				cubeMapVec[0] = tr.cubemapOrigins[input->cubemapIndex - 1][0] - backEnd.viewParms.ori.origin[0];
+				cubeMapVec[1] = tr.cubemapOrigins[input->cubemapIndex - 1][1] - backEnd.viewParms.ori.origin[1];
+				cubeMapVec[2] = tr.cubemapOrigins[input->cubemapIndex - 1][2] - backEnd.viewParms.ori.origin[2];
+				cubeMapVec[3] = 1.0f;
+
+				float dist = Distance(tr.refdef.vieworg, tr.cubemapOrigins[input->cubemapIndex - 1]);
+				float mult = r_cubemapCullFalloffMult->value - (r_cubemapCullFalloffMult->value * 0.04);
+
+				if (dist < r_cubemapCullRange->value)
+				{// In range for full effect...
+					cubeMapStrength = 1.0;
+					index |= LIGHTDEF_USE_CUBEMAP;
+				}
+				else if (dist >= r_cubemapCullRange->value && dist < r_cubemapCullRange->value * mult)
+				{// Further scale the strength of the cubemap by the fade-out distance...
+					float extraDist =		dist - r_cubemapCullRange->value;
+					float falloffDist =		(r_cubemapCullRange->value * mult) - r_cubemapCullRange->value;
+					float strength =		(falloffDist - extraDist) / falloffDist;
+
+					cubeMapStrength = strength;
+					index |= LIGHTDEF_USE_CUBEMAP;
+				}
+				else
+				{// Out of range completely...
+					cubeMapStrength = 0.0;
+				}
+			}
+
+			if (pStage->isFoliage)
+			{
+				//index |= LIGHTDEF_USE_SWAY;
+				//pStage->glslShaderIndex |= LIGHTDEF_USE_SWAY;
+				index |= LIGHTDEF_USE_OVERLAY;
+				pStage->glslShaderIndex |= LIGHTDEF_USE_OVERLAY;
+			}
+
+			if (pStage->bundle[TB_STEEPMAP].image[0])
+			{
+				//index |= LIGHTDEF_USE_STEEPMAP;
+				//pStage->glslShaderIndex |= LIGHTDEF_USE_STEEPMAP;
+				index |= LIGHTDEF_USE_OVERLAY;
+				pStage->glslShaderIndex |= LIGHTDEF_USE_OVERLAY;
+			}
+
+			if (pStage->bundle[TB_OVERLAYMAP].image[0])
+			{
+				index |= LIGHTDEF_USE_OVERLAY;
+				pStage->glslShaderIndex |= LIGHTDEF_USE_OVERLAY;
+			}
 
 			sp = &pStage->glslShaderGroup[index];
 			isGeneric = qfalse;
@@ -1625,12 +1776,14 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				pStage->glslShaderGroup = tr.lightallShader;
 				sp = &pStage->glslShaderGroup[0];
 
+				/*
 				if (r_tesselation->integer 
 					&& RB_ShouldUseTesselation(tess.shader->surfaceFlags & MATERIAL_MASK))
 				{
 					sp = &pStage->glslShaderGroup[LIGHTDEF_USE_TESSELLATION];
 					pStage->glslShaderIndex |= LIGHTDEF_USE_TESSELLATION;
 				}
+				*/
 			}
 
 			GLSL_BindProgram(sp);
@@ -1685,7 +1838,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				GLSL_SetUniformVec3(sp, UNIFORM_VIEWORIGIN, backEnd.viewParms.ori.origin);
 				
 				GLSL_SetUniformVec4(sp, UNIFORM_NORMALSCALE, pStage->normalScale);
-				GLSL_SetUniformVec4(sp, UNIFORM_SPECULARSCALE, pStage->specularScale);
+				//GLSL_SetUniformVec4(sp, UNIFORM_SPECULARSCALE, pStage->specularScale);
 
 
 				if (glState.skeletalAnimation)
@@ -1793,41 +1946,12 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				//
 				// testing cube map
 				//
-				if (!(tr.viewParms.flags & VPF_NOCUBEMAPS) && input->cubemapIndex && r_cubeMapping->integer)
+				if (!(tr.viewParms.flags & VPF_NOCUBEMAPS) && input->cubemapIndex && r_cubeMapping->integer && cubeMapStrength > 0.0)
 				{
-					vec4_t vec;
-
 					GL_BindToTMU( tr.cubemaps[input->cubemapIndex - 1], TB_CUBEMAP);
-
-					vec[0] = tr.cubemapOrigins[input->cubemapIndex - 1][0] - backEnd.viewParms.ori.origin[0];
-					vec[1] = tr.cubemapOrigins[input->cubemapIndex - 1][1] - backEnd.viewParms.ori.origin[1];
-					vec[2] = tr.cubemapOrigins[input->cubemapIndex - 1][2] - backEnd.viewParms.ori.origin[2];
-					vec[3] = 1.0f;
-
-					float dist = Distance(tr.refdef.vieworg, tr.cubemapOrigins[input->cubemapIndex - 1]);
-					float mult = r_cubemapCullFalloffMult->value - (r_cubemapCullFalloffMult->value * 0.04);
-
-					if (dist < r_cubemapCullRange->value)
-					{// In range for full effect...
-						GLSL_SetUniformFloat(sp, UNIFORM_CUBEMAPSTRENGTH, 1.0);
-					}
-					else if (dist >= r_cubemapCullRange->value && dist < r_cubemapCullRange->value * mult)
-					{// Further scale the strength of the cubemap by the fade-out distance...
-						float extraDist =		dist - r_cubemapCullRange->value;
-						float falloffDist =		(r_cubemapCullRange->value * mult) - r_cubemapCullRange->value;
-						float strength =		(falloffDist - extraDist) / falloffDist;
-
-						strength = CLAMP(strength, 0.0, 1.0);
-						GLSL_SetUniformFloat(sp, UNIFORM_CUBEMAPSTRENGTH, strength);
-					}
-					else
-					{// Out of range completely...
-						GLSL_SetUniformFloat(sp, UNIFORM_CUBEMAPSTRENGTH, 0.0);
-					}
-					
-					VectorScale4(vec, 1.0f / 1000.0f, vec);
-
-					GLSL_SetUniformVec4(sp, UNIFORM_CUBEMAPINFO, vec);
+					GLSL_SetUniformFloat(sp, UNIFORM_CUBEMAPSTRENGTH, cubeMapStrength);
+					VectorScale4(cubeMapVec, 1.0f / 1000.0f, cubeMapVec);
+					GLSL_SetUniformVec4(sp, UNIFORM_CUBEMAPINFO, cubeMapVec);
 				}
 			}
 
@@ -1956,7 +2080,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 					//  - disable texture sampling in glsl shader with #ifdefs, as before
 					//     -> increases the number of shaders that must be compiled
 					//
-					if ((light || (pStage->isWater && r_glslWater->integer) || pStage->hasRealNormalMap || pStage->hasSpecular /*|| pStage->hasRealSubsurfaceMap*/ || pStage->hasRealOverlayMap || pStage->hasRealSteepMap) && !fastLight)
+					//if ((light || (pStage->isWater && r_glslWater->integer) || pStage->hasRealNormalMap || pStage->hasSpecular /*|| pStage->hasRealSubsurfaceMap*/ || pStage->hasRealOverlayMap || pStage->hasRealSteepMap) && !fastLight)
 					{
 						if (r_normalMapping->integer
 							&& !input->shader->isPortal
@@ -1983,7 +2107,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 							sprintf(imgname, "%s_n", pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName);
 							pStage->bundle[TB_NORMALMAP].image[0] = R_CreateNormalMapGLSL( imgname, NULL, pStage->bundle[TB_DIFFUSEMAP].image[0]->width, pStage->bundle[TB_DIFFUSEMAP].image[0]->height, pStage->bundle[TB_DIFFUSEMAP].image[0]->flags, pStage->bundle[TB_DIFFUSEMAP].image[0] );
 							
-							if (pStage->bundle[TB_NORMALMAP].image[0]) 
+							if (pStage->bundle[TB_NORMALMAP].image[0] && pStage->bundle[TB_NORMALMAP].image[0] != tr.whiteImage) 
 							{
 								pStage->hasRealNormalMap = true;
 								RB_SetMaterialBasedProperties(sp, pStage);
@@ -1995,7 +2119,8 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 								}
 							}
 
-							pStage->bundle[TB_DIFFUSEMAP].normalsLoaded2 = qtrue;
+							if (pStage->bundle[TB_NORMALMAP].image[0] != tr.whiteImage)
+								pStage->bundle[TB_DIFFUSEMAP].normalsLoaded2 = qtrue;
 						}
 
 						if (pStage->bundle[TB_NORMALMAP].image[0])
@@ -2080,10 +2205,10 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			//
 			qboolean tesselation = qfalse;
 
-			if (r_tesselation->integer && sp->tesselation && (pStage->glslShaderIndex & LIGHTDEF_USE_TESSELLATION)) 
+			/*if (r_tesselation->integer && sp->tesselation && (pStage->glslShaderIndex & LIGHTDEF_USE_TESSELLATION)) 
 			{
 				tesselation = qtrue;
-			}
+			}*/
 
 			if (input->multiDrawPrimitives)
 			{

@@ -1908,7 +1908,7 @@ static void R_AddEntitySurface (int entityNum)
 		tr.defaultShader->cullType = CT_TWO_SIDED;
 #endif //__MERGE_MORE__
 
-	if (tr.viewParms.flags & VPF_SHADOWPASS)
+	if (tr.viewParms.flags & VPF_SHADOWPASS || backEnd.depthFill)
 	{// Don't draw grass and plants on shadow pass for speed...
 		switch ( ent->e.reType ) {
 		case RT_GRASS:
@@ -1922,8 +1922,16 @@ static void R_AddEntitySurface (int entityNum)
 		//if (tr.currentModel && tr.currentModel->type == MOD_MDXM)
 		//	return; // No GLMs in shadows (so that we can use a timer to generate them isntead of every single frame) - otherwise shadows would not match player moves
 
-		if (Distance(ent->e.origin, backEnd.refdef.vieworg) > tr.viewParms.maxEntityRange)
-			return; // Too far away to bother rendering to shadowmap...
+		if (backEnd.depthFill)
+		{
+			if (Distance(ent->e.origin, backEnd.refdef.vieworg) > 4096.0)
+				return; // Too far away to bother rendering to shadowmap...
+		}
+		else 
+		{
+			if (Distance(ent->e.origin, backEnd.refdef.vieworg) > tr.viewParms.maxEntityRange)
+				return; // Too far away to bother rendering to shadowmap...
+		}
 	}
 
 	// simple generated models, like sprites and beams, are not culled

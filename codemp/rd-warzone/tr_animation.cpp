@@ -251,7 +251,7 @@ void R_MDRAddAnimSurfaces( trRefEntity_t *ent ) {
 	// fogNum?
 	fogNum = R_MDRComputeFogNum( header, ent );
 
-	if ((backEnd.refdef.rdflags & RDF_BLUR) || (tr.viewParms.flags & VPF_SHADOWPASS))
+	if ((backEnd.refdef.rdflags & RDF_BLUR) || (tr.viewParms.flags & VPF_SHADOWPASS) /*|| (backEnd.viewParms.flags & VPF_DEPTHSHADOW)*/)
 		cubemapIndex = 0;
 	else if (r_cubeMapping->integer >= 2)
 		cubemapIndex = R_CubemapForPoint(ent->e.origin);

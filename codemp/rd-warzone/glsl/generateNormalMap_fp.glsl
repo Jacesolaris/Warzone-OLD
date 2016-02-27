@@ -183,36 +183,65 @@ float SampleHeight(vec2 t)
 	return height;
 }
 
+#define ENHANCED_NORMALS
+//#define BUMPY_NORMALS
+//#define SAMPLEMAT_NORMALS
+
+//#define HEIGHTMAP_ADD_NORMAL_BLUE
+
 void main ( void )
 {
+	//
+	// Normal Map RGB Channels...
+	//
+
+#if defined(ENHANCED_NORMALS)
 	vec4 enhanced = generateEnhancedNormal(var_TexCoords.xy);
+#elif defined(BUMPY_NORMALS)
 	vec4 bumpy = generateBumpyNormal(var_TexCoords.xy);
-
-	//vec4 normal = enhanced;
-	//vec4 normal = bumpy;
-	//vec4 normal = (enhanced + bumpy) / 2.0;
-
-	vec4 normal = enhanced;
-
+#elif defined(SAMPLEMAT_NORMALS)
 	// Mix methods...
 	float fNormalScale = 10.0;//2.0;
 	C_Sample sample = SampleMaterial(var_TexCoords.xy, u_DiffuseMap,  u_Dimensions, fNormalScale);
 	vec3 bumpMap = sample.vNormal;
+#endif
 
+#if defined(ENHANCED_NORMALS) && defined(BUMPY_NORMALS) && defined(SAMPLEMAT_NORMALS)
+	vec4 normal = enhanced;
 	normal.rgb += bumpMap.rgb;
 	normal.rgb += bumpy.rgb;
 	normal.rgb /= 3.0;
+#elif defined(ENHANCED_NORMALS) && defined(BUMPY_NORMALS)
+	vec4 normal = enhanced;
+	normal.rgb += bumpy.rgb;
+	normal.rgb /= 2.0;
+#elif defined(ENHANCED_NORMALS) && defined(SAMPLEMAT_NORMALS)
+	vec4 normal = enhanced;
+	normal.rgb += bumpMap.rgb;
+	normal.rgb /= 2.0;
+#elif defined(BUMPY_NORMALS) && defined(SAMPLEMAT_NORMALS)
+	vec4 normal = bumpy;
+	normal.rgb += bumpMap.rgb;
+	normal.rgb /= 2.0;
+#elif defined(ENHANCED_NORMALS)
+	vec4 normal = enhanced;
+#elif defined(BUMPY_NORMALS)
+	vec4 normal = bumpy;
+#elif defined(SAMPLEMAT_NORMALS)
+	vec4 normal = vec4(0.0);
+	normal.rgb = bumpMap;
+#endif
 
-	//normal = 1.0 - normal;
+	//
+	// Height Map Alpha Channel...
+	//
 
 	normal.a = SampleHeight(var_TexCoords.xy);
-	//normal.a = ((normal.r + normal.g) / 2.0) * (1.0 - normal.a);
+#if defined(HEIGHTMAP_ADD_NORMAL_BLUE)
 	normal.a += normal.b;
 	normal.a /= 2.0;
+#endif
 	normal.a = 1.0 - normal.a;
 
 	gl_FragColor = normal;
-	//gl_FragColor = vec4(normal.a,normal.a,normal.a,1.0);
-	//gl_FragColor = vec4(var_TexCoords.x, 0.0, var_TexCoords.y, 1.0);
-	//gl_FragColor = texture2D(u_DiffuseMap, var_TexCoords.xy);
 }

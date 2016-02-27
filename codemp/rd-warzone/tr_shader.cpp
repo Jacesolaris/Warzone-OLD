@@ -1232,7 +1232,7 @@ qboolean ForceGlow ( char *shader )
 	//{
 	//	return qtrue;
 	//}
-	else if (StringContains(shader, "pulse", 0))
+	else if (StringContains(shader, "pulse", 0) && !StringContains(shader, "/pulsecannon", 0))
 	{
 		return qtrue;
 	}
@@ -4034,8 +4034,6 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 		case MATERIAL_COMPUTER:			// 31			// computers/electronic equipment
 			defs |= LIGHTDEF_USE_LIGHT_VERTEX; // Vertex currently most compatible...
 			useLightVertex = qtrue;
-			//defs |= LIGHTDEF_USE_LIGHT_VECTOR;
-			//useLightVector = qtrue;
 			break;
 		case MATERIAL_HOLLOWMETAL:		// 4			// hollow metal machines -- UQ1: Used for weapons to force lower parallax...
 		//case MATERIAL_SOLIDMETAL:		// 3			// solid girders
@@ -4045,14 +4043,25 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 			defs |= LIGHTDEF_USE_LIGHT_VECTOR; // These look nice using vector...
 			useLightVector = qtrue;
 			break;
-		case MATERIAL_GREENLEAVES:		// 20			// fresh leaves still on a tree
-		case MATERIAL_DRYLEAVES:		// 19			// dried up leaves on the floor
 		case MATERIAL_SOLIDWOOD:		// 1			// freshly cut timber
 		case MATERIAL_HOLLOWWOOD:		// 2			// termite infested creaky wood
-		case MATERIAL_SHORTGRASS:		// 5			// manicured lawn
-		case MATERIAL_LONGGRASS:		// 6			// long jungle grass
+		case MATERIAL_DRYLEAVES:		// 19			// dried up leaves on the floor
 			defs |= LIGHTDEF_USE_LIGHT_VERTEX; // Vertex currently most compatible...
 			useLightVertex = qtrue;
+			break;
+		case MATERIAL_SHORTGRASS:		// 5			// manicured lawn
+		case MATERIAL_LONGGRASS:		// 6			// long jungle grass
+		case MATERIAL_GREENLEAVES:		// 20			// fresh leaves still on a tree
+			/*if (r_sunlightMode->integer >= 2)
+			{
+				defs |= LIGHTDEF_USE_LIGHT_VECTOR; // These look nice using vector...
+				useLightVector = qtrue;
+			}
+			else*/
+			{
+				defs |= LIGHTDEF_USE_LIGHT_VERTEX; // Vertex currently most compatible...
+				useLightVertex = qtrue;
+			}
 			break;
 		case MATERIAL_SAND:				// 8			// sandy beach
 		case MATERIAL_CARPET:			// 27			// lush carpet
@@ -4076,6 +4085,30 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 	}
 #endif //__EXTRA_PRETTY__
 
+	switch( shader.surfaceFlags & MATERIAL_MASK )
+	{// Switch to avoid doing string checks on everything else...
+		case MATERIAL_SHORTGRASS:		// 5			// manicured lawn
+		case MATERIAL_LONGGRASS:		// 6			// long jungle grass
+		case MATERIAL_DRYLEAVES:		// 19			// dried up leaves on the floor
+		case MATERIAL_GREENLEAVES:		// 20			// fresh leaves still on a tree
+			if (diffuse->bundle[TB_DIFFUSEMAP].image[0] 
+				&& (StringContainsWord(diffuse->bundle[TB_DIFFUSEMAP].image[0]->imgName, "foliage/") || StringContainsWord(diffuse->bundle[TB_DIFFUSEMAP].image[0]->imgName, "foliages/")))
+			{
+				diffuse->isFoliage = true;
+			}
+			else if (diffuse->bundle[TB_DIFFUSEMAP].image[0] 
+				&& !StringContainsWord(diffuse->bundle[TB_DIFFUSEMAP].image[0]->imgName, "bark")
+				&& !StringContainsWord(diffuse->bundle[TB_DIFFUSEMAP].image[0]->imgName, "giant_tree")
+				&& (StringContainsWord(diffuse->bundle[TB_DIFFUSEMAP].image[0]->imgName, "yavin/tree") || StringContainsWord(diffuse->bundle[TB_DIFFUSEMAP].image[0]->imgName, "trees")))
+			{
+				diffuse->isFoliage = true;
+			}
+			break;
+		default:
+			diffuse->isFoliage = false;
+			break;
+	}
+
 	if (r_deluxeMapping->integer && tr.worldDeluxeMapping && lightmap)
 	{
 		//ri->Printf(PRINT_ALL, ", deluxemap");
@@ -4084,7 +4117,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 	}
 
 	// UQ1: Can't we do all this in one stage ffs???
-	if (r_normalMapping->integer && checkNormals)
+	if (r_normalMapping->integer /*&& checkNormals*/)
 	{
 		image_t *diffuseImg = diffuse->bundle[TB_DIFFUSEMAP].image[0];
 
@@ -4167,7 +4200,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 						diffuse->bundle[TB_NORMALMAP].numImageAnimations = 0;
 						diffuse->bundle[TB_NORMALMAP].image[0] = normalImg;
 
-						if (diffuse->bundle[TB_NORMALMAP].image[0]) diffuse->hasRealNormalMap = true;
+						if (diffuse->bundle[TB_NORMALMAP].image[0] && diffuse->bundle[TB_NORMALMAP].image[0] != tr.whiteImage) diffuse->hasRealNormalMap = true;
 					
 						if (diffuse->normalScale[0] == 0 && diffuse->normalScale[1] == 0 && diffuse->normalScale[2] == 0)
 							VectorSet4(diffuse->normalScale, r_baseNormalX->value, r_baseNormalY->value, 1.0f, r_baseParallax->value);
@@ -4176,10 +4209,10 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 							defs |= LIGHTDEF_USE_PARALLAXMAP;
 					}
 				}
-				diffuse->bundle[TB_DIFFUSEMAP].normalsLoaded = qtrue;
 			}
 
-			diffuse->bundle[TB_DIFFUSEMAP].normalsLoaded = qtrue;
+			if (diffuse->bundle[TB_NORMALMAP].image[0] && diffuse->bundle[TB_NORMALMAP].image[0] != tr.whiteImage)
+				diffuse->bundle[TB_DIFFUSEMAP].normalsLoaded = qtrue;
 		}
 	}
 

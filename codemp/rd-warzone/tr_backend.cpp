@@ -639,7 +639,7 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 
 	float			depth[2];
 
-	if (((backEnd.refdef.rdflags & RDF_BLUR) || (tr.viewParms.flags & VPF_SHADOWPASS))) CUBEMAPPING = qfalse;
+	if (((backEnd.refdef.rdflags & RDF_BLUR) || (tr.viewParms.flags & VPF_SHADOWPASS) /*|| (backEnd.viewParms.flags & VPF_DEPTHSHADOW)*/)) CUBEMAPPING = qfalse;
 
 	// draw everything
 	backEnd.currentEntity = &tr.worldEntity;
@@ -680,7 +680,7 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 		int             cubemapIndex, newCubemapIndex;
 		int				depthRange;
 
-		if (backEnd.depthFill && shader && shader->sort != SS_OPAQUE) continue; // UQ1: No point thinking any more on this one...
+		if (backEnd.depthFill && shader && shader->sort != SS_OPAQUE && shader->sort != SS_SEE_THROUGH) continue; // UQ1: No point thinking any more on this one...
 
 		drawSurf = &drawSurfs[i];
 
@@ -2164,7 +2164,7 @@ const void *RB_PostProcess(const void *data)
 	}
 	*/
 
-	if (!(((backEnd.refdef.rdflags & RDF_BLUR) || (tr.viewParms.flags & VPF_SHADOWPASS))) && (r_dynamicGlow->integer || r_ssgi->integer || r_anamorphic->integer))
+	if (!(((backEnd.refdef.rdflags & RDF_BLUR) || (tr.viewParms.flags & VPF_SHADOWPASS) || (backEnd.viewParms.flags & VPF_DEPTHSHADOW))) && (r_dynamicGlow->integer || r_ssgi->integer || r_anamorphic->integer))
 	{
 		RB_BloomDownscale(tr.glowImage, tr.glowFboScaled[0]);
 		int numPasses = Com_Clampi(1, ARRAY_LEN(tr.glowFboScaled), r_dynamicGlowPasses->integer);
