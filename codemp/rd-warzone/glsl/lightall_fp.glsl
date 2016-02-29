@@ -9,6 +9,7 @@ uniform vec4	u_Local2; // ExtinctionCoefficient
 uniform vec4	u_Local3; // RimScalar, MaterialThickness, subSpecPower, cubemapScale
 uniform vec4	u_Local4; // haveNormalMap, isMetalic, hasRealSubsurfaceMap, sway
 uniform vec4	u_Local5; // hasRealOverlayMap, overlaySway, blinnPhong, hasSteepMap
+uniform vec4	u_Local6; // useSunLightSpecular
 
 //#define SUBSURFACE_SCATTER
 
@@ -39,7 +40,7 @@ uniform sampler2D u_ShadowMap;
 uniform samplerCube u_CubeMap;
 #endif
 
-#if defined (SUBSURFACE_SCATTER)
+#if defined(SUBSURFACE_SCATTER)
 uniform sampler2D u_SubsurfaceMap;
 #endif
 
@@ -50,23 +51,21 @@ uniform sampler2D u_OverlayMap;
 uniform vec4      u_EnableTextures;
 //#endif
 
-#if defined(USE_LIGHT_VECTOR) && !defined(USE_FAST_LIGHT)
+#if defined(USE_LIGHT_VECTOR)
 uniform vec3      u_DirectedLight;
 uniform vec3      u_AmbientLight;
 uniform vec4		u_LightOrigin;
 #endif
 
-#if defined(USE_PRIMARY_LIGHT) || defined(USE_SHADOWMAP)
+#if defined(USE_PRIMARY_LIGHT) || defined(USE_PRIMARY_LIGHT_SPECULAR) || defined(USE_SHADOWMAP)
 uniform vec3  u_PrimaryLightColor;
 uniform vec3  u_PrimaryLightAmbient;
 #endif
 
-//#if defined(USE_LIGHT) && !defined(USE_FAST_LIGHT)
 uniform vec4      u_NormalScale;
 uniform vec4      u_SpecularScale;
-//#endif
 
-#if defined(USE_LIGHT) && !defined(USE_FAST_LIGHT)
+#if defined(USE_LIGHT)
 #if defined(USE_CUBEMAP)
 uniform vec4      u_CubeMapInfo;
 uniform float     u_CubeMapStrength;
@@ -79,33 +78,18 @@ varying vec2	  var_TexCoords2;
 
 varying vec4      var_Color;
 
-#if (defined(USE_LIGHT) && !defined(USE_FAST_LIGHT))
-  #if defined(USE_VERT_TANGENT_SPACE)
 varying vec4   var_Normal;
 varying vec4   var_Tangent;
 varying vec4   var_Bitangent;
 #define var_Normal2 var_Normal.w
-  #else
-varying vec3   var_Normal;
-  #endif
-#else
-  #if defined(USE_VERT_TANGENT_SPACE)
-varying vec4   var_Normal;
-varying vec4   var_Tangent;
-varying vec4   var_Bitangent;
-#define var_Normal2 var_Normal.w
-  #else
-varying vec3   var_Normal;
-  #endif
-#endif
 
 varying vec3 var_N;
 
-#if defined(USE_LIGHT) && !defined(USE_FAST_LIGHT)
+#if defined(USE_LIGHT)
 varying vec4      var_LightDir;
 #endif
 
-#if defined(USE_PRIMARY_LIGHT) || defined(USE_SHADOWMAP)
+#if defined(USE_PRIMARY_LIGHT) || defined(USE_PRIMARY_LIGHT_SPECULAR) || defined(USE_SHADOWMAP)
 varying vec4      var_PrimaryLightDir;
 #endif
 
@@ -149,44 +133,15 @@ out vec4 out_Glow;
 out vec4 out_DetailedNormal;
 out vec4 out_FoliageMap;
 
-#if defined(USE_PARALLAXMAP) || defined(USE_PARALLAXMAP_NONORMALS)
-  #if defined(USE_PARALLAXMAP)
-	float SampleDepth(sampler2D normalMap, vec2 t)
-	{
-		#if defined(SWIZZLE_NORMALMAP)
-			return 1.0 - texture2D(normalMap, t).r;
-		#else
-			return 1.0 - texture2D(normalMap, t).a;
-		#endif
-	}
-  #endif
-
-  #if defined(USE_PARALLAXMAP_NONORMALS)
-	float SampleDepth(sampler2D normalMap, vec2 t)
-	{// Provides enhanced parallax depths without stupid distortions... Also provides a nice backup specular map...
-		vec3 color = texture2D(u_DiffuseMap, t).rgb;
-
-#define const_1 ( 16.0 / 255.0)
-#define const_2 (255.0 / 219.0)
-		vec3 color2 = ((color - const_1) * const_2);
-#define const_3 ( 125.0 / 255.0)
-#define const_4 (255.0 / 115.0)
-		color = ((color - const_3) * const_4);
-
-		color = clamp(color * color * (color * 5.0), 0.0, 1.0); // 1st half "color * color" darkens, 2nd half "* color * 5.0" increases the mids...
-
-		vec3 orig_color = color + color2;
-
-		orig_color = clamp(orig_color * 2.5, 0.0, 1.0); // Lightens the new mixed version...
-
-		float combined_color2 = orig_color.r + orig_color.g + orig_color.b;
-		combined_color2 /= 4.0; // Darkens the whole thing a litttle...
-
-		// Returns inverse of the height. Result is mostly around 1.0 (so we don't stand on a surface far below us), with deep dark areas (cracks, edges, etc)...
-		float height = clamp(1.0 - combined_color2, 0.0, 1.0);
-		return height;
-	}
-  #endif
+#if defined(USE_PARALLAXMAP)
+float SampleDepth(sampler2D normalMap, vec2 t)
+{
+	//#if defined(SWIZZLE_NORMALMAP)
+	//	return 1.0 - texture2D(normalMap, t).r;
+	//#else
+		return 1.0 - texture2D(normalMap, t).a;
+	//#endif
+}
 
 
 float RayIntersectDisplaceMap(vec2 dp, vec2 ds, sampler2D normalMap)
@@ -319,32 +274,14 @@ float CalcLightAttenuation(float point, float normDist)
 	return attenuation;
 }
 
-mat3 cotangent_frame( vec3 N, vec3 p, vec2 uv )
-{
-	// get edge vectors of the pixel triangle
-	vec3 dp1 = dFdx( p );
-	vec3 dp2 = dFdy( p );
-	vec2 duv1 = dFdx( uv );
-	vec2 duv2 = dFdy( uv );
-
-	// solve the linear system
-	vec3 dp2perp = cross( dp2, N );
-	vec3 dp1perp = cross( N, dp1 );
-	vec3 T = dp2perp * duv1.x + dp1perp * duv2.x;
-	vec3 B = dp2perp * duv1.y + dp1perp * duv2.y;
-
-	// construct a scale-invariant frame 
-	float invmax = inversesqrt( max( dot(T,T), dot(B,B) ) );
-	return mat3( T * invmax, B * invmax, N );
-}
 
 float blinnPhongSpecular(in vec3 normalVec, in vec3 lightVec, in float specPower)
 {
     vec3 halfAngle = normalize(normalVec + lightVec);
-    return pow(clamp(0.0,1.0,dot(normalVec,halfAngle)),specPower);
+    return pow(clamp(dot(normalVec,halfAngle),0.0,1.0),specPower);
 }
  
-#if defined(USE_LIGHT_VECTOR) && !defined(USE_FAST_LIGHT)
+#if defined(USE_LIGHT_VECTOR)
 float halfLambert(in vec3 vect1, in vec3 vect2)
 {
     float product = dot(vect1,vect2);
@@ -421,236 +358,24 @@ vec4 subScatterFS(vec4 BaseColor, vec4 SpecColor, vec3 lightVec, vec3 LightColor
     return finalCol;   
 }
 #endif //SUBSURFACE_SCATTER
-#endif
+#endif //defined(USE_LIGHT_VECTOR)
 
-
-#if 0//defined(USE_FASTPASS)
 
 void main()
 {
-	// Skip all the extra stuff and just draw the diffusemap on depth and shadowmap passes...
-
-	vec4 specular = vec4(0.0);
-	vec3 viewDir;
-	vec3 L, N, E, H;
-	float NL, NH, NE, EH;
-
-	#if defined(USE_LIGHT) && !defined(USE_FAST_LIGHT)
-
-		#if defined(USE_VERT_TANGENT_SPACE)
-			mat3 tangentToWorld = mat3(var_Tangent.xyz, var_Bitangent.xyz, m_Normal.xyz);
-			viewDir = vec3(var_Normal2, var_Tangent.w, var_Bitangent.w);
-		#else //!defined(USE_VERT_TANGENT_SPACE)
-			mat3 tangentToWorld = cotangent_frame(m_Normal.xyz, -m_ViewDir, m_TexCoords.xy);
-			viewDir = m_ViewDir;
-		#endif //defined(USE_VERT_TANGENT_SPACE)
-
-		E = normalize(viewDir);
-
-		L = var_LightDir.xyz;
-		
-		#if defined(USE_DELUXEMAP)
-			L += (texture2D(u_DeluxeMap, var_TexCoords2.st).xyz - vec3(0.5)) * u_EnableTextures.y;
-		#endif //defined(USE_DELUXEMAP)
-	
-		float sqrLightDist = dot(L, L);
-
-	#else //!(defined(USE_LIGHT) || defined(USE_FAST_LIGHT))
-
-		#if defined(USE_VERT_TANGENT_SPACE)
-			mat3 tangentToWorld = mat3(var_Tangent.xyz, var_Bitangent.xyz, m_Normal.xyz);
-			viewDir = vec3(var_Normal2, var_Tangent.w, var_Bitangent.w);
-		#else //!defined(USE_VERT_TANGENT_SPACE)
-			mat3 tangentToWorld = cotangent_frame(m_Normal.xyz, -m_ViewDir, m_TexCoords.xy);
-			viewDir = m_ViewDir;
-		#endif //defined(USE_VERT_TANGENT_SPACE)
-
-		E = normalize(viewDir);
-
-	#endif //defined(USE_LIGHT) && !defined(USE_FAST_LIGHT)
-
-
-
-	#if defined(USE_LIGHTMAP)
-
-		vec4 lightmapColor = texture2D(u_LightMap, var_TexCoords2.st);
-  
-		#if defined(RGBM_LIGHTMAP)
-			lightmapColor.rgb *= lightmapColor.a;
-		#endif //defined(RGBM_LIGHTMAP)
- 
-		#if defined(USE_TESSELLATION)
-			lightmapColor = vec4(1.0);
-		#endif //defined(USE_TESSELLATION)
-
-	#endif //defined(USE_LIGHTMAP)
-
-
-
-	vec2 texCoords = m_TexCoords.xy;
-
-	if (u_Local4.a > 0.0)
-	{// Sway...
-		texCoords += vec2(u_Local5.y * u_Local4.a * ((1.0 - m_TexCoords.y) + 1.0), 0.0);
-	}
-
-	vec4 diffuse = texture2D(u_DiffuseMap, texCoords.xy);
-
-	vec3 ambientColor = vec3(0.0);
-	vec3 lightColor = vec3(0.0);
-	vec3 reflectance = diffuse.rgb;
-	float attenuation = 1.0;
-
-	#if defined(USE_LIGHTMAP)
-		lightColor	= lightmapColor.rgb * (var_Color.rgb * 0.66666 + 0.33333); // UQ1:  * 0.66666 + 0.33333 is because they are too dark...
-	#elif defined(USE_LIGHT_VECTOR)
-		lightColor	= u_DirectedLight * var_Color.rgb;
-		ambientColor = u_AmbientLight * var_Color.rgb;
-		attenuation = CalcLightAttenuation(float(var_LightDir.w > 0.0), var_LightDir.w / sqrLightDist);
-	#elif defined(USE_LIGHT_VERTEX)
-		lightColor	= var_Color.rgb;
-	#endif // defined(USE_LIGHTMAP) || defined(USE_LIGHT_VECTOR) || defined(USE_LIGHT_VERTEX)
-
-	vec4 norm = texture2D(u_NormalMap, texCoords);
-	
-	N = norm.xyz;
-	N = N * 2.0 - 1.0;
-	N.xy *= u_NormalScale.xy;
-	N.z = sqrt(clamp((0.25 - N.x * N.x) - N.y * N.y, 0.0, 1.0));
-
-	N = tangentToWorld * N;
-
-	N = normalize(N);
-
-	vec3 DETAILED_NORMAL = N;
-
-	NL = clamp(dot(N, L), 0.0, 1.0);
-
-	#if defined(USE_SPECULARMAP)
-
-		if (u_Local1.g != 0.0)
-		{// Real specMap...
-			specular = texture2D(u_SpecularMap, texCoords);
-		}
-		else
-		{// Fake it...
-			if (u_Local1.b > 0.0)
-			{
-				float fakedepth = norm.a;
-				specular = diffuse * (1.0-fakedepth);// * 0.33333;
-				specular.a = ((clamp((1.0 - fakedepth), 0.0, 1.0) * 0.5) + 0.5);
-				specular.a = clamp((specular.a * 2.0) * specular.a, 0.2, 0.9);
-#define const_1 ( 12.0 / 255.0)
-#define const_2 (255.0 / 219.0)
-				specular.rgb = ((clamp(specular.rgb - const_1, 0.0, 1.0)) * const_2); // amplify light/dark
-			}
-			else
-			{
-				specular = vec4(1.0);
-			}
-		}
-
-		#if defined(USE_GAMMA2_TEXTURES)
-			specular.rgb *= specular.rgb;
-		#endif //defined(USE_GAMMA2_TEXTURES)
-
-	#endif //defined(USE_SPECULARMAP)
-
-
-
-	if (u_Local1.b > 0.0)
-	{
-		if (u_SpecularScale.r + u_SpecularScale.g + u_SpecularScale.b + u_SpecularScale.a != 0.0)
-		{// Shader Specified...
-			specular *= u_SpecularScale;
-		}
-		else // Material Defaults...
-		{
-			specular *= u_Local1.b;
-			
-			if (u_Local1.a == 30.0 /* ARMOR */ 
-				|| u_Local1.a == 25.0 /* PLASTIC */
-				|| u_Local1.a == 12.0 /* MARBLE */)
-			{// Armor, plastic, and marble should remain somewhat shiny...
-				specular.rgb *= 0.333;
-			}
-			else if (u_Local4.b != 0.0 /* METALS */
-				&& u_Local1.a != 10.0 /* GLASS */ 
-				&& u_Local1.a != 29.0 /* SHATTERGLASS */ 
-				&& u_Local1.a != 18.0 /* BPGLASS */ 
-				&& u_Local1.a != 31.0 /* COMPUTER */
-				&& u_Local1.a != 15.0 /* ICE */)
-			{// Only if not metalic... Metals should remain nice and shiny...
-				specular.rgb *= u_SpecularScale.rgb;
-			}
-		}
-	}
-	else
-	{
-		specular *= u_SpecularScale;
-	}
-
-
-	if (u_Local4.b != 0.0)
-	{// Metalic...
-		float metallic = specular.r;
-
-		specular.rgb = (0.96 * metallic) * diffuse.rgb + vec3(0.04);
-		diffuse.rgb *= 1.0 - metallic;
-	}
-	else
-	{// Non Metalic...
-		diffuse.rgb *= vec3(1.0) - specular.rgb;
-	}
-
-
-	gl_FragColor.rgb  = lightColor   * reflectance * (attenuation * NL);
-	gl_FragColor.rgb += ambientColor * (diffuse.rgb + specular.rgb);
-	gl_FragColor.a = diffuse.a;
-
-	#if defined(USE_GLOW_BUFFER)
-		out_Glow = gl_FragColor;
-	#else
-		out_Glow = vec4(0.0);
-	#endif
-
-	out_DetailedNormal = vec4(DETAILED_NORMAL.xyz, specular.a / 8.0);
-
-	if (u_Local1.a == 20 || u_Local1.a == 19) 
-	{// (Foliage/Plants), (billboard trees), ShortGrass, LongGrass
-		out_FoliageMap.r = 1.0;
-		out_FoliageMap.g = 1.0;
-	}
-	else
-	{
-		out_FoliageMap.r = 1.0;
-		out_FoliageMap.g = 0.0;
-	}
-}
-
-#else //!defined(USE_FASTPASS)
-
-void main()
-{
-	vec3 viewDir, lightColor, ambientColor;
+	vec3 viewDir = vec3(0.0), lightColor = vec3(0.0), ambientColor = vec3(0.0);
 	vec4 specular = vec4(0.0);
 	vec3 L, N, E, H;
 	vec3 DETAILED_NORMAL = vec3(1.0);
 	float NL, NH, NE, EH, attenuation;
 	vec2 tex_offset = vec2(1.0 / u_Dimensions);
 
+	mat3 tangentToWorld = mat3(var_Tangent.xyz, var_Bitangent.xyz, m_Normal.xyz);
+	viewDir = vec3(var_Normal2, var_Tangent.w, var_Bitangent.w);
+
+	E = normalize(viewDir);
+
 	#if defined(USE_LIGHT) && !defined(USE_FAST_LIGHT)
-
-		#if defined(USE_VERT_TANGENT_SPACE)
-			mat3 tangentToWorld = mat3(var_Tangent.xyz, var_Bitangent.xyz, m_Normal.xyz);
-			viewDir = vec3(var_Normal2, var_Tangent.w, var_Bitangent.w);
-		#else //!defined(USE_VERT_TANGENT_SPACE)
-			mat3 tangentToWorld = cotangent_frame(m_Normal.xyz, -m_ViewDir, m_TexCoords.xy);
-			viewDir = m_ViewDir;
-		#endif //defined(USE_VERT_TANGENT_SPACE)
-
-		E = normalize(viewDir);
-
 		L = var_LightDir.xyz;
 		
 		#if defined(USE_DELUXEMAP)
@@ -658,19 +383,6 @@ void main()
 		#endif //defined(USE_DELUXEMAP)
 	
 		float sqrLightDist = dot(L, L);
-
-	#else //!(defined(USE_LIGHT) || defined(USE_FAST_LIGHT))
-
-		#if defined(USE_VERT_TANGENT_SPACE)
-			mat3 tangentToWorld = mat3(var_Tangent.xyz, var_Bitangent.xyz, m_Normal.xyz);
-			viewDir = vec3(var_Normal2, var_Tangent.w, var_Bitangent.w);
-		#else //!defined(USE_VERT_TANGENT_SPACE)
-			mat3 tangentToWorld = cotangent_frame(m_Normal.xyz, -m_ViewDir, m_TexCoords.xy);
-			viewDir = m_ViewDir;
-		#endif //defined(USE_VERT_TANGENT_SPACE)
-
-		E = normalize(viewDir);
-
 	#endif //defined(USE_LIGHT) && !defined(USE_FAST_LIGHT)
 
 
@@ -704,7 +416,7 @@ void main()
 
 	vec4 diffuse = vec4(0.0);
 
-	#if defined(USE_PARALLAXMAP) || defined(USE_PARALLAXMAP_NONORMALS)
+	#if defined(USE_PARALLAXMAP)
 		vec3 offsetDir = normalize(E * tangentToWorld);
 		offsetDir.xy *= tex_offset * -u_Local1.x;//-4.0;//-5.0; // -3.0
 		texCoords += offsetDir.xy * RayIntersectDisplaceMap(texCoords, offsetDir.xy, u_NormalMap);
@@ -715,6 +427,92 @@ void main()
 	#if defined(USE_GAMMA2_TEXTURES)
 		diffuse.rgb *= diffuse.rgb;
 	#endif
+
+
+	vec4 norm = texture2D(u_NormalMap, texCoords);
+
+	/*
+	gl_FragColor = vec4(norm.a, norm.a, norm.a, diffuse.a);
+	#if defined(USE_GLOW_BUFFER)
+		out_Glow = gl_FragColor;
+	#else
+		out_Glow = vec4(0.0);
+	#endif
+	return;
+	*/
+
+	N = norm.xyz * 2.0 - 1.0;
+	N.xy *= u_NormalScale.xy;
+	//N.xyz *= u_NormalScale.xyx;
+	N.z = sqrt(clamp((0.25 - N.x * N.x) - N.y * N.y, 0.0, 1.0));
+	N = tangentToWorld * N;
+	N = normalize(N);
+
+	DETAILED_NORMAL = N;
+		
+
+	//gl_FragColor.rgb = N.xyz/*DETAILED_NORMAL.xyz*/ * 0.5 + 0.5;
+	//gl_FragColor.a = diffuse.a;
+	//return;
+
+
+
+	#ifdef USE_OVERLAY//USE_STEEPMAP
+
+		//
+		// Steep Maps...
+		//
+
+		if (u_Local5.a > 0.0)
+		{// Steep maps...
+			float slope = dot(normalize(N.xyz),vec3(0.0,1.0,0.0));
+			if (slope < 0.0) slope = slope *= -1.0;
+			float slope2 = dot(normalize(N.xyz),vec3(0.0,0.0,1.0));
+			if (slope2 < 0.0) slope2 = slope2 *= -1.0;
+			float slope3 = dot(normalize(N.xyz),vec3(1.0,0.0,0.0));
+			if (slope3 < 0.0) slope3 = slope3 *= -1.0;
+			slope = length(slope + slope2 + slope3) / 3.0;
+			vec4 steepDiffuse = texture2D(u_SteepMap, texCoords);
+			diffuse.rgb = mix( diffuse.rgb, steepDiffuse.rgb, clamp(slope,0.0,1.0));
+		}
+
+	#endif //USE_OVERLAY//USE_STEEPMAP
+	
+
+	#ifdef USE_OVERLAY
+
+		//
+		// Overlay Maps...
+		//
+
+		#define OVERLAY_HEIGHT 40.0
+
+		if (u_Local5.x > 0.0)
+		{// Have overlay map...
+			vec2 ovCoords = m_TexCoords.xy + vec2(u_Local5.y); // u_Local5.y == sway ammount
+			vec4 overlay = texture2D(u_OverlayMap, ovCoords);
+
+			if (overlay.a > 0.1)
+			{// Have an overlay, and it is visible here... Set it as diffuse instead...
+				diffuse = overlay;
+			}
+			else
+			{// Have an overlay, but it is not visibile at this pixel... Still need to check if we need a shadow casted on this pixel...
+				vec2 ovCoords2 = ovCoords - (tex_offset * OVERLAY_HEIGHT);
+				vec4 overlay2 = texture2D(u_OverlayMap, ovCoords2);
+
+				if (overlay2.a > 0.1)
+				{// Add shadow...
+					diffuse.rgb *= 0.25;
+				}
+			}
+		}
+
+	#endif //USE_OVERLAY
+
+
+
+	
 
 
 
@@ -742,83 +540,8 @@ void main()
 			lightColor	= var_Color.rgb;
 		#endif // defined(USE_LIGHTMAP) || defined(USE_LIGHT_VECTOR) || defined(USE_LIGHT_VERTEX)
 
-		vec4 norm = texture2D(u_NormalMap, texCoords);
-
-		N = norm.xyz;
-		//N = N * 2.0 - 1.0;
-		//N = N - 0.5;
-		N = N * 0.5 + 0.5;
-		N.xy *= u_NormalScale.xy;
-		N.z *= u_NormalScale.x;
-		N.z = sqrt(clamp((0.25 - N.x * N.x) - N.y * N.y, 0.0, 1.0));
-
-		N = tangentToWorld * N;
-
-		N = normalize(N);
-
-		DETAILED_NORMAL = N;
-
-
-
-		//gl_FragColor.rgb = N.xyz/*DETAILED_NORMAL.xyz*/ * 0.5 + 0.5;
-		//gl_FragColor.a = diffuse.a;
-		//return;
-
 
 		L /= sqrt(sqrLightDist);
-
-		#ifdef USE_OVERLAY//USE_STEEPMAP
-
-			//
-			// Steep Maps...
-			//
-
-			if (u_Local5.a > 0.0)
-			{// Steep maps...
-				float slope = dot(normalize(N.xyz),vec3(0.0,1.0,0.0));
-				if (slope < 0.0) slope = slope *= -1.0;
-				float slope2 = dot(normalize(N.xyz),vec3(0.0,0.0,1.0));
-				if (slope2 < 0.0) slope2 = slope2 *= -1.0;
-				float slope3 = dot(normalize(N.xyz),vec3(1.0,0.0,0.0));
-				if (slope3 < 0.0) slope3 = slope3 *= -1.0;
-				slope = length(slope + slope2 + slope3) / 3.0;
-				vec4 steepDiffuse = texture2D(u_SteepMap, texCoords);
-				diffuse.rgb = mix( diffuse.rgb, steepDiffuse.rgb, clamp(slope,0.0,1.0));
-			}
-
-		#endif //USE_OVERLAY//USE_STEEPMAP
-	
-
-		#ifdef USE_OVERLAY
-
-			//
-			// Overlay Maps...
-			//
-
-			#define OVERLAY_HEIGHT 40.0
-
-			if (u_Local5.x > 0.0)
-			{// Have overlay map...
-				vec2 ovCoords = m_TexCoords.xy + vec2(u_Local5.y); // u_Local5.y == sway ammount
-				vec4 overlay = texture2D(u_OverlayMap, ovCoords);
-
-				if (overlay.a > 0.1)
-				{// Have an overlay, and it is visible here... Set it as diffuse instead...
-					diffuse = overlay;
-				}
-				else
-				{// Have an overlay, but it is not visibile at this pixel... Still need to check if we need a shadow casted on this pixel...
-					vec2 ovCoords2 = ovCoords - (tex_offset * OVERLAY_HEIGHT);
-					vec4 overlay2 = texture2D(u_OverlayMap, ovCoords2);
-
-					if (overlay2.a > 0.1)
-					{// Add shadow...
-						diffuse.rgb *= 0.25;
-					}
-				}
-			}
-
-		#endif //USE_OVERLAY
 
 
 
@@ -866,73 +589,31 @@ void main()
 
 
 
-		//#if defined(USE_SPECULARMAP)
-
-			if (u_Local1.g != 0.0)
-			{// Real specMap...
-				specular = texture2D(u_SpecularMap, texCoords);
-			}
-			else
-			{// Fake it...
-				if (u_Local1.b > 0.0)
-				{
-					float fakedepth = norm.a;
-					specular = diffuse * (1.0-fakedepth);
-					specular.a = (1.0 - norm.a) * 0.5 + 0.5;
-					specular.a = clamp((specular.a * 2.0) * specular.a, 0.2, 0.9);
-#define const_1 ( 12.0 / 255.0)
-#define const_2 (255.0 / 219.0)
-					specular.rgb = ((clamp(specular.rgb - const_1, 0.0, 1.0)) * const_2); // amplify light/dark
-
-					//specular.rgb = vec3(0.04);
-				}
-				else
-				{
-					specular = vec4(1.0);
-				}
-			}
-
-			#if defined(USE_GAMMA2_TEXTURES)
-				specular.rgb *= specular.rgb;
-			#endif //defined(USE_GAMMA2_TEXTURES)
-
-		//#endif //defined(USE_SPECULARMAP)
-
-#if 1
-		specular.rgb *= (length(specular.rgb) / 3.0) * u_SpecularScale.rgb;
-#else
-		if (u_Local1.b > 0.0)
-		{// This is faster on GPU...
-			if (u_SpecularScale.r + u_SpecularScale.g + u_SpecularScale.b + u_SpecularScale.a != 0.0)
-			{// Shader Specified...
-				specular *= u_SpecularScale;
-			}
-			else // Material Defaults...
-			{
-				specular *= u_Local1.b;
-			
-				if (u_Local1.a == 30.0 /* ARMOR */ 
-					|| u_Local1.a == 25.0 /* PLASTIC */
-					|| u_Local1.a == 12.0 /* MARBLE */)
-				{// Armor, plastic, and marble should remain somewhat shiny...
-					specular.rgb *= 0.333;
-				}
-				else if (u_Local4.b != 0.0 /* METALS */
-					&& u_Local1.a != 10.0 /* GLASS */ 
-					&& u_Local1.a != 29.0 /* SHATTERGLASS */ 
-					&& u_Local1.a != 18.0 /* BPGLASS */ 
-					&& u_Local1.a != 31.0 /* COMPUTER */
-					&& u_Local1.a != 15.0 /* ICE */)
-				{// Only if not metalic... Metals should remain nice and shiny...
-					specular.rgb *= u_SpecularScale.rgb;
-				}
-			}
+		if (u_Local1.g != 0.0)
+		{// Real specMap...
+			specular = texture2D(u_SpecularMap, texCoords);
 		}
 		else
-		{
-			specular *= u_SpecularScale;
+		{// Fake it...
+			if (u_Local1.b > 0.0)
+			{
+				specular.rgb = clamp( pow( vec3(((length(diffuse.rgb) / 3.0) * 2.0) * (1.0-norm.a)) , vec3(3.0)) , 0.0, 1.0) * 0.5;
+				specular.a = (1.0 - norm.a);
+
+				//specular.rgb = vec3(0.04);
+			}
+			else
+			{
+				specular = vec4(1.0);
+			}
 		}
-#endif
+
+		#if defined(USE_GAMMA2_TEXTURES)
+			specular.rgb *= specular.rgb;
+		#endif //defined(USE_GAMMA2_TEXTURES)
+
+
+		specular.rgb *= (length(specular.rgb) / 3.0) * u_SpecularScale.rgb;
 
 
 		if (u_Local4.b != 0.0)
@@ -949,103 +630,43 @@ void main()
 
 
 
-// Reduce brightness of really bright spots (eg: light right above a reflective surface)
-	float refMult = (specular.r + specular.g + specular.b + specular.a) / 4.0;
-	refMult = 1.0 - refMult;
-	refMult = clamp(refMult, 0.25, 0.75);
-  
-	reflectance = diffuse.rgb;
+		// Reduce brightness of really bright spots (eg: light right above a reflective surface)
+		float refMult = (specular.r + specular.g + specular.b + specular.a) / 4.0;
+		refMult = 1.0 - refMult;
+		refMult = clamp(refMult, 0.25, 0.75);
 
-  #if defined(r_deluxeSpecular) || defined(USE_LIGHT_VECTOR)
-	float adjGloss = specular.a * refMult;
-	float adjShininess = exp2(specular.a * refMult * 13.0);
 
-    #if !defined(USE_LIGHT_VECTOR)
-	adjGloss *= r_deluxeSpecular;
-	adjShininess = exp2(adjGloss * 13.0);
-    #endif
+		reflectance = diffuse.rgb;
 
-	H = normalize(L + E);
+		#if defined(r_deluxeSpecular) || defined(USE_LIGHT_VECTOR)
+			float lambertian = dot(L.xyz,N);
+			float spec = 0.0;
 
-	EH = clamp(dot(E, H), 0.0, 1.0);
-	NH = clamp(dot(N, H), 0.0, 1.0);
+			if(lambertian > 0.0)
+			{// this is blinn phong
+				vec3 halfDir = normalize(L.xyz + E);
+				float specAngle = max(dot(halfDir, N), 0.0);
+				spec = pow(specAngle, 16.0);
+				reflectance.rgb += vec3(spec * (1.0 - specular.a)) * reflectance.rgb * lightColor.rgb * u_Local5.b;
+			}
+		#endif
 
-    #if !defined(USE_LIGHT_VECTOR)
-	reflectance += CalcSpecular(specular.rgb * refMult, NH, NL, NE, EH, adjGloss, adjShininess) * r_deluxeSpecular;
-    #else
-	reflectance += CalcSpecular(specular.rgb * refMult, NH, NL, NE, EH, adjGloss, adjShininess);
-    #endif
-  #endif
 
-  if (u_Local1.b > 0.0)
-	gl_FragColor.rgb  += (((lightColor   * reflectance * (attenuation * NL)) * 2.0) + (lightColor   * (reflectance * specular.a * refMult) * (attenuation * NL))) / 3.0;
-  else
-	gl_FragColor.rgb  += lightColor   * reflectance * (attenuation * NL);
+		gl_FragColor.rgb  += lightColor   * reflectance * (attenuation/* * NL*/);
+		gl_FragColor.rgb += ambientColor * (diffuse.rgb + (specular.rgb * refMult));
 
 
 
-	if (u_Local5.b > 0.0)
-	{
-		float blinnPhong = clamp(blinnPhongSpecular(DETAILED_NORMAL, var_LightDir.xyz, specular.a), 0.0, 1.0);
-		//gl_FragColor.rgb = (gl_FragColor.rgb + (blinnPhong*gl_FragColor.rgb)) / 2.0;
-		gl_FragColor.rgb *= (blinnPhong * u_Local5.b);
-	}
-
-
-
-#if 0
-	vec3 aSpecular = EnvironmentBRDF(specular.a * refMult, NE, specular.rgb * refMult);
-	float hemiDiffuseUp    = N.z * 0.5 + 0.5;
-	float hemiDiffuseDown  = 1.0 - hemiDiffuseUp;
-	float hemiSpecularUp   = mix(hemiDiffuseUp, float(N.z >= 0.0), specular.a * refMult);
-	float hemiSpecularDown = 1.0 - hemiSpecularUp;
-	gl_FragColor.rgb += ambientColor * 0.75 * (diffuse.rgb * hemiDiffuseUp   + aSpecular * hemiSpecularUp);
-	gl_FragColor.rgb += ambientColor * 0.25 * (diffuse.rgb * hemiDiffuseDown + aSpecular * hemiSpecularDown);
-#else
-	gl_FragColor.rgb += ambientColor * (diffuse.rgb + (specular.rgb * refMult));
-#endif
-
-  #if defined(USE_CUBEMAP)
-	if (u_Local3.a > 0.0 && u_EnableTextures.w > 0.0) {
-		reflectance = EnvironmentBRDF(specular.a * refMult, NE, specular.rgb * refMult);
-
-		vec3 R = reflect(E, N);
-
-		vec3 parallax = u_CubeMapInfo.xyz + u_CubeMapInfo.w * viewDir;
-
-		vec3 cubeLightColor = textureCubeLod(u_CubeMap, R + parallax, 7.0 - specular.a * 7.0).rgb * u_EnableTextures.w;
-
-		gl_FragColor.rgb += (cubeLightColor * reflectance * (u_Local3.a * refMult)) * u_CubeMapStrength;
-	}
-  #endif
-
-  #if defined(USE_PRIMARY_LIGHT)
-	vec3 L2, H2;
-	float NL2, EH2, NH2;
-
-	L2 = var_PrimaryLightDir.xyz;
-
-	// enable when point lights are supported as primary lights
-	sqrLightDist = dot(L2, L2);
-	L2 /= sqrt(sqrLightDist);
-
-	NL2 = clamp(dot(N, L2), 0.0, 1.0);
-
-	H2 = normalize(L2 + E);
-	EH2 = clamp(dot(E, H2), 0.0, 1.0);
-	NH2 = clamp(dot(N, H2), 0.0, 1.0);
-
-	reflectance  = gl_FragColor.rgb;//diffuse.rgb;
-	reflectance += CalcSpecular(specular.rgb * refMult, NH2, NL2, NE, EH2, specular.a * refMult, exp2(specular.a * refMult * 13.0));
-
-	lightColor = u_PrimaryLightColor * var_Color.rgb * gl_FragColor.rgb;
-
-	// enable when point lights are supported as primary lights
-	lightColor *= CalcLightAttenuation(float(var_PrimaryLightDir.w > 0.0), var_PrimaryLightDir.w / sqrLightDist);
-
-	gl_FragColor.rgb += lightColor * reflectance * NL2;
-  #endif
-
+		#if defined(USE_CUBEMAP)
+			if (u_Local3.a > 0.0 && u_EnableTextures.w > 0.0) 
+			{
+				reflectance = EnvironmentBRDF(specular.a * refMult, NE, specular.rgb * refMult);
+				vec3 R = reflect(E, N);
+				vec3 parallax = u_CubeMapInfo.xyz + u_CubeMapInfo.w * viewDir;
+				vec3 cubeLightColor = textureCubeLod(u_CubeMap, R + parallax, 7.0 - specular.a * 7.0).rgb * u_EnableTextures.w;
+				gl_FragColor.rgb += (cubeLightColor * reflectance * (u_Local3.a * refMult)) * u_CubeMapStrength;
+			}
+		#endif
 
 
 		#if defined(USE_SHADOWMAP)
@@ -1056,31 +677,7 @@ void main()
 		gl_FragColor.a = diffuse.a * var_Color.a;
 
 
-		#ifdef SUBSURFACE_SCATTER
 
-			#if defined(USE_LIGHT_VECTOR) && !defined(USE_FAST_LIGHT)
-
-				// Let's add some sub-surface scatterring shall we???
-				if (MaterialThickness > 0.0 || u_Local4.z != 0.0 /*|| u_Local1.a == 5 || u_Local1.a == 6 || u_Local1.a == 12 
-					|| u_Local1.a == 14 || u_Local1.a == 15 || u_Local1.a == 16 || u_Local1.a == 17 || u_Local1.a == 19 
-					|| u_Local1.a == 20 || u_Local1.a == 21 || u_Local1.a == 22*/)
-				{
-					#if defined(USE_PRIMARY_LIGHT)
-						gl_FragColor.rgb += subScatterFS(gl_FragColor, specular, L2, lightColor.xyz, E, N, texCoords).rgb;
-					#else
-						gl_FragColor.rgb += subScatterFS(gl_FragColor, specular, L, var_Color.xyz, E, N, texCoords).rgb;
-					#endif
-
-					gl_FragColor = clamp(gl_FragColor, 0.0, 1.0);
-			}
-
-			#endif //defined(USE_LIGHT_VECTOR) && !defined(USE_FAST_LIGHT)
-
-		#endif //SUBSURFACE_SCATTER
-
-
-		//gl_FragColor.rgb = vec3(specular.a);
-		//gl_FragColor.rgb = specular.rgb;
 
 	#else //!(defined(USE_LIGHT) && !defined(USE_FAST_LIGHT))
 
@@ -1098,20 +695,61 @@ void main()
 			lightColor *= lightmapColor.rgb;
 		#endif
 
-		vec3 norm = texture2D(u_NormalMap, texCoords).xyz;
-	
-		DETAILED_NORMAL = normalize(norm * 2.0 - 1.0);
-		DETAILED_NORMAL = tangentToWorld * DETAILED_NORMAL;
 
 		gl_FragColor = vec4 (diffuse.rgb * lightColor, diffuse.a * var_Color.a);
-
-
 
 
 	#endif //defined(USE_LIGHT) && !defined(USE_FAST_LIGHT)
 
 
+	#if defined(USE_PRIMARY_LIGHT) || defined(USE_PRIMARY_LIGHT_SPECULAR)
+		if (u_Local6.r > 0.0)
+		{
+			if (u_Local1.b > 0.0)
+			{
+				specular.a = (1.0 - norm.a);
+			}
+			else
+			{
+				specular.a = 1.0;
+			}
 
+			float lambertian2 = dot(var_PrimaryLightDir.xyz,N);
+			float spec2 = 0.0;
+
+			if(lambertian2 > 0.0)
+			{// this is blinn phong
+				vec3 halfDir2 = normalize(var_PrimaryLightDir.xyz + E);
+				float specAngle = max(dot(halfDir2, N), 0.0);
+				spec2 = pow(specAngle, 16.0);
+				gl_FragColor.rgb += vec3(spec2 * (1.0 - specular.a)) * gl_FragColor.rgb * u_PrimaryLightColor.rgb * u_Local5.b;
+			}
+		}
+	#endif
+
+
+	#ifdef SUBSURFACE_SCATTER
+
+		#if defined(USE_LIGHT_VECTOR) || defined(USE_PRIMARY_LIGHT) || defined(USE_PRIMARY_LIGHT_SPECULAR)
+
+			// Let's add some sub-surface scatterring shall we???
+			//if (MaterialThickness > 0.0 || u_Local4.z != 0.0 /*|| u_Local1.a == 5 || u_Local1.a == 6 || u_Local1.a == 12 
+			//	|| u_Local1.a == 14 || u_Local1.a == 15 || u_Local1.a == 16 || u_Local1.a == 17 || u_Local1.a == 19 
+			//	|| u_Local1.a == 20 || u_Local1.a == 21 || u_Local1.a == 22*/)
+			if (u_Local1.a == 20)
+			{
+				#if defined(USE_PRIMARY_LIGHT) || defined(USE_PRIMARY_LIGHT_SPECULAR)
+					gl_FragColor.rgb += subScatterFS(gl_FragColor, gl_FragColor, var_PrimaryLightDir.xyz, u_PrimaryLightColor.xyz, E, N, texCoords).rgb;
+				#else
+					gl_FragColor.rgb += subScatterFS(gl_FragColor, gl_FragColor, L, lightColor.xyz, E, N, texCoords).rgb;
+				#endif
+
+				gl_FragColor = clamp(gl_FragColor, 0.0, 1.0);
+			}
+
+		#endif //defined(USE_LIGHT_VECTOR) || defined(USE_PRIMARY_LIGHT) || defined(USE_PRIMARY_LIGHT_SPECULAR)
+
+	#endif //SUBSURFACE_SCATTER
 
 
 
@@ -1134,5 +772,3 @@ void main()
 		out_FoliageMap.g = 0.0;
 	}
 }
-
-#endif //defined(USE_FASTPASS)

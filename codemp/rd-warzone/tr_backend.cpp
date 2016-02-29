@@ -1459,7 +1459,7 @@ const void	*RB_DrawSurfs( const void *data ) {
 			FBO_BlitFromTexture(tr.renderDepthImage, NULL, NULL, tr.hdrDepthFbo, NULL, NULL, NULL, 0);
 		}
 
-		if (r_sunlightMode->integer && backEnd.viewParms.flags & VPF_USESUNLIGHT)
+		if (r_sunlightMode->integer >= 2 && tr.screenShadowFbo && backEnd.viewParms.flags & VPF_USESUNLIGHT)
 		{
 			vec4_t quadVerts[4];
 			vec2_t texCoords[4];

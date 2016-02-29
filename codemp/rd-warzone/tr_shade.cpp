@@ -874,9 +874,7 @@ static unsigned int RB_CalcShaderVertexAttribs( const shader_t *shader )
 		if (vertexAttribs & ATTR_NORMAL)
 		{
 			vertexAttribs |= ATTR_NORMAL2;
-#ifdef USE_VERT_TANGENT_SPACE
 			vertexAttribs |= ATTR_TANGENT2;
-#endif
 		}
 	}
 
@@ -1271,17 +1269,18 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage)
 	VectorSet4(local5, hasOverlay, overlaySway, r_blinnPhong->value, hasSteepMap);
 	GLSL_SetUniformVec4(sp, UNIFORM_LOCAL5, local5);
 
-	/*if (backEnd.viewParms.targetFbo == tr.renderCubeFbo)
+	if (r_sunlightSpecular->integer)
 	{
-		VectorSet4(local5, 0.0, 0.0, 0.0, 0.0);
-		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL5, local5);
+		vec4_t local6;
+		VectorSet4(local6, 1.0, 0.0, 0.0, 0.0);
+		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL6,  local6);
 	}
 	else
 	{
-		VectorSet4(local5, r_imageBasedLighting->value, 0.0, 0.0, 0.0);
-		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL5, local5);
-	}*/
-
+		vec4_t local6;
+		VectorSet4(local6, 0.0, 0.0, 0.0, 0.0);
+		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL6,  local6);
+	}
 
 	vec4_t specMult;
 
@@ -1588,8 +1587,8 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				} 
 			}
 
-			if (r_sunlightMode->integer >= 2 
-				&& (backEnd.viewParms.flags & VPF_USESUNLIGHT) 
+			if ((r_sunlightMode->integer >= 2)
+				&& ((backEnd.viewParms.flags & VPF_USESUNLIGHT))
 				&& (( tess.shader->surfaceFlags & MATERIAL_MASK ) == MATERIAL_GREENLEAVES
 					|| ( tess.shader->surfaceFlags & MATERIAL_MASK ) == MATERIAL_SHORTGRASS
 					|| ( tess.shader->surfaceFlags & MATERIAL_MASK ) == MATERIAL_LONGGRASS))
@@ -1597,16 +1596,17 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				index |= LIGHTDEF_LIGHTTYPE_MASK;
 				index |= LIGHTDEF_USE_SHADOWMAP;
 			}
-			else if (r_sunlightMode->integer >= 2 
-				&& (backEnd.viewParms.flags & VPF_USESUNLIGHT) 
+			else if ((r_sunlightMode->integer >= 2)
+				&& ((backEnd.viewParms.flags & VPF_USESUNLIGHT))
 				&& ( tess.shader->surfaceFlags & MATERIAL_MASK ) == MATERIAL_DRYLEAVES)
 			{// No shadows on dryleaves (billboards)...
 
 			}
-			else if (r_sunlightMode->integer >= 2 
-				&& (backEnd.viewParms.flags & VPF_USESUNLIGHT) 
-				&& (index & LIGHTDEF_LIGHTTYPE_MASK))
+			else if ((r_sunlightMode->integer >= 2)
+				&& ((backEnd.viewParms.flags & VPF_USESUNLIGHT))
+				/*&& (index & LIGHTDEF_LIGHTTYPE_MASK)*/)
 			{
+				index |= LIGHTDEF_LIGHTTYPE_MASK;
 				index |= LIGHTDEF_USE_SHADOWMAP;
 			}
 			/*else if (r_dlightMode->integer >= 2 && tr.refdef.num_dlights && (index & LIGHTDEF_LIGHTTYPE_MASK))
@@ -1660,6 +1660,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				}
 			}
 
+			
 			if (pStage->isFoliage)
 			{
 				//index |= LIGHTDEF_USE_SWAY;
@@ -1837,7 +1838,17 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 				GLSL_SetUniformVec3(sp, UNIFORM_VIEWORIGIN, backEnd.viewParms.ori.origin);
 				
-				GLSL_SetUniformVec4(sp, UNIFORM_NORMALSCALE, pStage->normalScale);
+				if (pStage->normalScale[0] == 0 && pStage->normalScale[1] == 0 && pStage->normalScale[2] == 0)
+				{
+					vec4_t normalScale;
+					VectorSet4(normalScale, r_baseNormalX->value, r_baseNormalY->value, 1.0f, r_baseParallax->value);
+					GLSL_SetUniformVec4(sp, UNIFORM_NORMALSCALE, normalScale);
+				}
+				else
+				{
+					GLSL_SetUniformVec4(sp, UNIFORM_NORMALSCALE, pStage->normalScale);
+				}
+
 				//GLSL_SetUniformVec4(sp, UNIFORM_SPECULARSCALE, pStage->specularScale);
 
 
@@ -2013,6 +2024,25 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				}
 			}
 
+			if ( !backEnd.depthFill )
+			{
+				if (r_sunlightMode->integer && (r_sunlightSpecular->integer || (backEnd.viewParms.flags & VPF_USESUNLIGHT)))
+				{
+					if (backEnd.viewParms.flags & VPF_USESUNLIGHT)
+					{
+						GL_BindToTMU(tr.screenShadowImage, TB_SHADOWMAP);
+					}
+					else
+					{
+						GL_BindToTMU(tr.whiteImage, TB_SHADOWMAP);
+					}
+
+					GLSL_SetUniformVec3(sp, UNIFORM_PRIMARYLIGHTAMBIENT, backEnd.refdef.sunAmbCol);
+					GLSL_SetUniformVec3(sp, UNIFORM_PRIMARYLIGHTCOLOR,   backEnd.refdef.sunCol);
+					GLSL_SetUniformVec4(sp, UNIFORM_PRIMARYLIGHTORIGIN,  backEnd.refdef.sunDir);
+				}
+			}
+
 			//
 			// do multitexture
 			//
@@ -2027,14 +2057,6 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			{
 				int i;
 				vec4_t enableTextures;
-
-				if (r_sunlightMode->integer && (backEnd.viewParms.flags & VPF_USESUNLIGHT) /*&& (pStage->glslShaderIndex & LIGHTDEF_LIGHTTYPE_MASK)*/)
-				{
-					GL_BindToTMU(tr.screenShadowImage, TB_SHADOWMAP);
-					GLSL_SetUniformVec3(sp, UNIFORM_PRIMARYLIGHTAMBIENT, backEnd.refdef.sunAmbCol);
-					GLSL_SetUniformVec3(sp, UNIFORM_PRIMARYLIGHTCOLOR,   backEnd.refdef.sunCol);
-					GLSL_SetUniformVec4(sp, UNIFORM_PRIMARYLIGHTORIGIN,  backEnd.refdef.sunDir);
-				}
 
 				VectorSet4(enableTextures, 0, 0, 0, 0);
 				if ((r_lightmap->integer == 1 || r_lightmap->integer == 2) && pStage->bundle[TB_LIGHTMAP].image[0])

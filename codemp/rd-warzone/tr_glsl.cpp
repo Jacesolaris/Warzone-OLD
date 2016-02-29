@@ -1490,10 +1490,8 @@ static bool GLSL_EndLoadGPUShader (shaderProgram_t *program)
 	if(attribs & ATTR_TEXCOORD1)
 		qglBindAttribLocation(program->program, ATTR_INDEX_TEXCOORD1, "attr_TexCoord1");
 
-#ifdef USE_VERT_TANGENT_SPACE
 	if(attribs & ATTR_TANGENT)
 		qglBindAttribLocation(program->program, ATTR_INDEX_TANGENT, "attr_Tangent");
-#endif
 
 	if(attribs & ATTR_NORMAL)
 		qglBindAttribLocation(program->program, ATTR_INDEX_NORMAL, "attr_Normal");
@@ -1513,10 +1511,8 @@ static bool GLSL_EndLoadGPUShader (shaderProgram_t *program)
 	if(attribs & ATTR_NORMAL2)
 		qglBindAttribLocation(program->program, ATTR_INDEX_NORMAL2, "attr_Normal2");
 
-#ifdef USE_VERT_TANGENT_SPACE
 	if(attribs & ATTR_TANGENT2)
 		qglBindAttribLocation(program->program, ATTR_INDEX_TANGENT2, "attr_Tangent2");
-#endif
 
 	if(attribs & ATTR_BONE_INDEXES)
 		qglBindAttribLocation(program->program, ATTR_INDEX_BONE_INDEXES, "attr_BoneIndexes");
@@ -2082,7 +2078,7 @@ int GLSL_BeginLoadGPUShaders(void)
 			continue;
 		}
 
-		attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL;
+		attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL | ATTR_TANGENT | ATTR_TEXCOORD1 | ATTR_LIGHTDIRECTION;
 
 		extradefines[0] = '\0';
 
@@ -2097,6 +2093,8 @@ int GLSL_BeginLoadGPUShaders(void)
 
 		if (r_hdr->integer && !glRefConfig.floatLightmap)
 			Q_strcat(extradefines, 1024, "#define RGBM_LIGHTMAP\n");
+
+		Q_strcat(extradefines, 1024, "#define USE_PRIMARY_LIGHT_SPECULAR\n");
 		
 		if (!lightType)
 		{// UQ1: Meh! Force it!
@@ -2105,7 +2103,6 @@ int GLSL_BeginLoadGPUShaders(void)
 			{
 				Q_strcat(extradefines, 1024, "#define USE_LIGHT\n");
 				Q_strcat(extradefines, 1024, "#define USE_LIGHT_VERTEX\n");
-				attribs |= ATTR_LIGHTDIRECTION;
 			}
 
 			Q_strcat(extradefines, 1024, "#define USE_NORMALMAP\n");
@@ -2124,14 +2121,12 @@ int GLSL_BeginLoadGPUShaders(void)
 					Q_strcat(extradefines, 1024, "#define USE_LIGHTMAP\n");
 					if (r_deluxeMapping->integer && !fastLight)
 						Q_strcat(extradefines, 1024, "#define USE_DELUXEMAP\n");
-					attribs |= ATTR_TEXCOORD1 | ATTR_LIGHTDIRECTION;
 					break;
 				case LIGHTDEF_USE_LIGHT_VECTOR:
 					Q_strcat(extradefines, 1024, "#define USE_LIGHT_VECTOR\n");
 					break;
 				case LIGHTDEF_USE_LIGHT_VERTEX:
 					Q_strcat(extradefines, 1024, "#define USE_LIGHT_VERTEX\n");
-					attribs |= ATTR_LIGHTDIRECTION;
 					break;
 				default:
 					break;
@@ -2147,11 +2142,6 @@ int GLSL_BeginLoadGPUShaders(void)
 				if (r_normalMapping->integer == 3)
 					Q_strcat(extradefines, 1024, "#define USE_TRIACE_OREN_NAYAR\n");
 
-#ifdef USE_VERT_TANGENT_SPACE
-				Q_strcat(extradefines, 1024, "#define USE_VERT_TANGENT_SPACE\n");
-				attribs |= ATTR_TANGENT;
-#endif
-
 				Q_strcat(extradefines, 1024, "#define USE_PARALLAXMAP\n");
 
 				if (r_parallaxMapping->integer && r_parallaxMapping->integer < 2) // Fast parallax mapping...
@@ -2162,10 +2152,6 @@ int GLSL_BeginLoadGPUShaders(void)
 				Q_strcat(extradefines, 1024, "#define USE_NORMALMAP\n");
 
 				Q_strcat(extradefines, 1024, "#define USE_PARALLAXMAP\n");
-#ifdef USE_VERT_TANGENT_SPACE
-				Q_strcat(extradefines, 1024, "#define USE_VERT_TANGENT_SPACE\n");
-				attribs |= ATTR_TANGENT;
-#endif
 
 				if (r_parallaxMapping->integer && r_parallaxMapping->integer < 2) // Fast parallax mapping...
 					Q_strcat(extradefines, 1024, "#define FAST_PARALLAX\n");
@@ -2201,8 +2187,6 @@ int GLSL_BeginLoadGPUShaders(void)
 		{
 			Q_strcat(extradefines, 1024, "#define USE_SHADOWMAP\n");
 
-			attribs |= ATTR_TEXCOORD1 | ATTR_LIGHTDIRECTION;
-
 			if (r_sunlightMode->integer == 1)
 				Q_strcat(extradefines, 1024, "#define SHADOWMAP_MODULATE\n");
 			else if (r_sunlightMode->integer >= 2)
@@ -2230,12 +2214,10 @@ int GLSL_BeginLoadGPUShaders(void)
 			Q_strcat(extradefines, 1024, "#define USE_MODELMATRIX\n");
 			attribs |= ATTR_POSITION2 | ATTR_NORMAL2;
 
-#ifdef USE_VERT_TANGENT_SPACE
 			if (r_normalMapping->integer)
 			{
 				attribs |= ATTR_TANGENT2;
 			}
-#endif
 		}
 
 		if (i & LIGHTDEF_USE_GLOW_BUFFER)
@@ -2771,7 +2753,7 @@ int GLSL_BeginLoadGPUShaders(void)
 
 
 	
-	attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL;
+	attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL | ATTR_TANGENT;
 	extradefines[0] = '\0';
 
 	if (r_deluxeSpecular->value > 0.000001f)
@@ -2807,11 +2789,6 @@ int GLSL_BeginLoadGPUShaders(void)
 
 		if (r_normalMapping->integer == 3)
 			Q_strcat(extradefines, 1024, "#define USE_TRIACE_OREN_NAYAR\n");
-
-#ifdef USE_VERT_TANGENT_SPACE
-		Q_strcat(extradefines, 1024, "#define USE_VERT_TANGENT_SPACE\n");
-		attribs |= ATTR_TANGENT;
-#endif
 
 		Q_strcat(extradefines, 1024, "#define USE_PARALLAXMAP_NONORMALS\n");
 	}
@@ -2852,12 +2829,10 @@ int GLSL_BeginLoadGPUShaders(void)
 		Q_strcat(extradefines, 1024, "#define USE_MODELMATRIX\n");
 		attribs |= ATTR_POSITION2 | ATTR_NORMAL2;
 
-#ifdef USE_VERT_TANGENT_SPACE
 		if (r_normalMapping->integer)
 		{
 			attribs |= ATTR_TANGENT2;
 		}
-#endif
 	}
 
 	//if (i & LIGHTDEF_USE_GLOW_BUFFER)
@@ -2896,7 +2871,7 @@ int GLSL_BeginLoadGPUShaders(void)
 	if (r_deluxeMapping->integer)
 		Q_strcat(extradefines, 1024, "#define USE_DELUXEMAP\n");
 
-	attribs |= ATTR_TEXCOORD1 | ATTR_LIGHTDIRECTION;
+	attribs |= ATTR_TEXCOORD1 | ATTR_LIGHTDIRECTION | ATTR_TANGENT;
 
 	if (r_normalMapping->integer)
 	{
@@ -2907,11 +2882,6 @@ int GLSL_BeginLoadGPUShaders(void)
 
 		if (r_normalMapping->integer == 3)
 			Q_strcat(extradefines, 1024, "#define USE_TRIACE_OREN_NAYAR\n");
-
-#ifdef USE_VERT_TANGENT_SPACE
-		Q_strcat(extradefines, 1024, "#define USE_VERT_TANGENT_SPACE\n");
-		attribs |= ATTR_TANGENT;
-#endif
 
 		Q_strcat(extradefines, 1024, "#define USE_PARALLAXMAP_NONORMALS\n");
 	}
@@ -2952,12 +2922,10 @@ int GLSL_BeginLoadGPUShaders(void)
 		Q_strcat(extradefines, 1024, "#define USE_MODELMATRIX\n");
 		attribs |= ATTR_POSITION2 | ATTR_NORMAL2;
 
-#ifdef USE_VERT_TANGENT_SPACE
 		if (r_normalMapping->integer)
 		{
 			attribs |= ATTR_TANGENT2;
 		}
-#endif
 	}
 
 	//if (i & LIGHTDEF_USE_GLOW_BUFFER)
@@ -4857,13 +4825,9 @@ void GLSL_ShutdownGPUShaders(void)
 	qglDisableVertexAttribArray(ATTR_INDEX_POSITION);
 	qglDisableVertexAttribArray(ATTR_INDEX_POSITION2);
 	qglDisableVertexAttribArray(ATTR_INDEX_NORMAL);
-#ifdef USE_VERT_TANGENT_SPACE
 	qglDisableVertexAttribArray(ATTR_INDEX_TANGENT);
-#endif
 	qglDisableVertexAttribArray(ATTR_INDEX_NORMAL2);
-#ifdef USE_VERT_TANGENT_SPACE
 	qglDisableVertexAttribArray(ATTR_INDEX_TANGENT2);
-#endif
 	qglDisableVertexAttribArray(ATTR_INDEX_COLOR);
 	qglDisableVertexAttribArray(ATTR_INDEX_LIGHTDIRECTION);
 	qglDisableVertexAttribArray(ATTR_INDEX_BONE_INDEXES);
@@ -5057,7 +5021,6 @@ void GLSL_VertexAttribsState(uint32_t stateBits)
 		}
 	}
 
-#ifdef USE_VERT_TANGENT_SPACE
 	if(diff & ATTR_TANGENT)
 	{
 		if(stateBits & ATTR_TANGENT)
@@ -5071,7 +5034,6 @@ void GLSL_VertexAttribsState(uint32_t stateBits)
 			qglDisableVertexAttribArray(ATTR_INDEX_TANGENT);
 		}
 	}
-#endif
 
 	if(diff & ATTR_COLOR)
 	{
@@ -5129,7 +5091,6 @@ void GLSL_VertexAttribsState(uint32_t stateBits)
 		}
 	}
 
-#ifdef USE_VERT_TANGENT_SPACE
 	if(diff & ATTR_TANGENT2)
 	{
 		if(stateBits & ATTR_TANGENT2)
@@ -5143,7 +5104,6 @@ void GLSL_VertexAttribsState(uint32_t stateBits)
 			qglDisableVertexAttribArray(ATTR_INDEX_TANGENT2);
 		}
 	}
-#endif
 
 	if(diff & ATTR_BONE_INDEXES)
 	{
@@ -5250,7 +5210,6 @@ void GLSL_VertexAttribPointers(uint32_t attribBits)
 		glState.vertexAttribPointersSet |= ATTR_NORMAL;
 	}
 
-#ifdef USE_VERT_TANGENT_SPACE
 	if((attribBits & ATTR_TANGENT) && (!(glState.vertexAttribPointersSet & ATTR_TANGENT) || animated))
 	{
 		GLimp_LogComment("qglVertexAttribPointer( ATTR_INDEX_TANGENT )\n");
@@ -5258,7 +5217,6 @@ void GLSL_VertexAttribPointers(uint32_t attribBits)
 		qglVertexAttribPointer(ATTR_INDEX_TANGENT, 4, GL_UNSIGNED_INT_2_10_10_10_REV, GL_TRUE, vbo->stride_tangent, BUFFER_OFFSET(vbo->ofs_tangent + newFrame * vbo->size_normal)); // FIXME
 		glState.vertexAttribPointersSet |= ATTR_TANGENT;
 	}
-#endif
 
 	if((attribBits & ATTR_COLOR) && !(glState.vertexAttribPointersSet & ATTR_COLOR))
 	{
@@ -5292,7 +5250,6 @@ void GLSL_VertexAttribPointers(uint32_t attribBits)
 		glState.vertexAttribPointersSet |= ATTR_NORMAL2;
 	}
 
-#ifdef USE_VERT_TANGENT_SPACE
 	if((attribBits & ATTR_TANGENT2) && (!(glState.vertexAttribPointersSet & ATTR_TANGENT2) || animated))
 	{
 		GLimp_LogComment("qglVertexAttribPointer( ATTR_INDEX_TANGENT2 )\n");
@@ -5300,7 +5257,6 @@ void GLSL_VertexAttribPointers(uint32_t attribBits)
 		qglVertexAttribPointer(ATTR_INDEX_TANGENT2, 4, GL_UNSIGNED_INT_2_10_10_10_REV, GL_TRUE, vbo->stride_tangent, BUFFER_OFFSET(vbo->ofs_tangent + oldFrame * vbo->size_normal)); // FIXME
 		glState.vertexAttribPointersSet |= ATTR_TANGENT2;
 	}
-#endif
 
 	if((attribBits & ATTR_BONE_INDEXES) && !(glState.vertexAttribPointersSet & ATTR_BONE_INDEXES))
 	{

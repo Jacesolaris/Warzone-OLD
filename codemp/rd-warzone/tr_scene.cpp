@@ -648,7 +648,7 @@ void RE_RenderScene( const refdef_t *fd ) {
 
 	if(!( fd->rdflags & RDF_NOWORLDMODEL ) 
 		&& r_depthPrepass->value 
-		&& (r_sunlightMode->integer >= 2 || r_forceSun->integer || tr.sunShadows))
+		&& (r_sunlightMode->integer >= 2 /*|| r_sunlightSpecular->integer*/ || r_forceSun->integer || tr.sunShadows))
 	{
 		parms.flags = VPF_USESUNLIGHT;
 	}

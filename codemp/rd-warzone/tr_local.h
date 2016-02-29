@@ -115,8 +115,6 @@ extern int DrawAwesomium( char *URL, FBO_t *srcFbo );
 #define CUBE_MAP_MIPS      7
 #define CUBE_MAP_SIZE      (1 << CUBE_MAP_MIPS)
 
-#define USE_VERT_TANGENT_SPACE
-
 /*
 =====================================================
 
@@ -252,6 +250,7 @@ extern cvar_t  *r_forceSunMapLightScale;
 extern cvar_t  *r_forceSunLightScale;
 extern cvar_t  *r_forceSunAmbientScale;
 extern cvar_t  *r_sunlightMode;
+extern cvar_t  *r_sunlightSpecular;
 extern cvar_t  *r_drawSunRays;
 extern cvar_t  *r_shadowFilter;
 extern cvar_t  *r_shadowMapSize;
@@ -554,9 +553,7 @@ typedef struct VBO_s
 	uint32_t        ofs_st;
 	uint32_t        ofs_vertexcolor;
 	uint32_t        ofs_lightdir;
-#ifdef USE_VERT_TANGENT_SPACE
 	uint32_t        ofs_tangent;
-#endif
 	uint32_t		ofs_boneweights;
 	uint32_t		ofs_boneindexes;
 
@@ -565,9 +562,7 @@ typedef struct VBO_s
 	uint32_t        stride_st;
 	uint32_t        stride_vertexcolor;
 	uint32_t        stride_lightdir;
-#ifdef USE_VERT_TANGENT_SPACE
 	uint32_t        stride_tangent;
-#endif
 	uint32_t		stride_boneweights;
 	uint32_t		stride_boneindexes;
 
@@ -1201,15 +1196,6 @@ enum
 	LIGHTDEF_USE_SKELETAL_ANIMATION = 0x0080,
 	LIGHTDEF_USE_GLOW_BUFFER     = 0x0100,
 	LIGHTDEF_USE_CUBEMAP		= 0x0200,
-	/*
-	LIGHTDEF_USE_TESSELLATION     = 0x0400,
-	LIGHTDEF_USE_SWAY			= 0x0800,
-	LIGHTDEF_USE_OVERLAY		= 0x1000,
-	LIGHTDEF_USE_STEEPMAP		= 0x2000,
-	LIGHTDEF_USE_FASTPASS		= 0x4000,
-	LIGHTDEF_ALL                 = 0x7FFF,
-	LIGHTDEF_COUNT               = 0x8000
-	*/
 	LIGHTDEF_USE_OVERLAY		= 0x0400,
 	LIGHTDEF_ALL                 = 0x07FF,
 	LIGHTDEF_COUNT               = 0x0800
@@ -1544,9 +1530,7 @@ typedef struct
 	vec2_t          st;
 	vec2_t          lightmap[MAXLIGHTMAPS];
 	vec3_t          normal;
-//#ifdef USE_VERT_TANGENT_SPACE
 	vec4_t          tangent;
-//#endif
 	vec3_t          lightdir;
 	vec4_t			vertexColors[MAXLIGHTMAPS];
 
@@ -1862,10 +1846,8 @@ typedef struct
 {
 	vec3_t          xyz;
 	vec3_t          normal;
-#ifdef USE_VERT_TANGENT_SPACE
 	vec3_t          tangent;
 	vec3_t          bitangent;
-#endif
 } mdvVertex_t;
 
 typedef struct
@@ -2642,6 +2624,7 @@ extern  cvar_t  *r_forceSunMapLightScale;
 extern  cvar_t  *r_forceSunLightScale;
 extern  cvar_t  *r_forceSunAmbientScale;
 extern  cvar_t  *r_sunlightMode;
+extern cvar_t  *r_sunlightSpecular;
 extern  cvar_t  *r_drawSunRays;
 extern  cvar_t  *r_shadowFilter;
 extern  cvar_t  *r_shadowMapSize;
@@ -2918,9 +2901,7 @@ struct shaderCommands_s
 	glIndex_t	indexes[SHADER_MAX_INDEXES] QALIGN(16);
 	vec4_t		xyz[SHADER_MAX_VERTEXES] QALIGN(16);
 	uint32_t	normal[SHADER_MAX_VERTEXES] QALIGN(16);
-#ifdef USE_VERT_TANGENT_SPACE
 	uint32_t	tangent[SHADER_MAX_VERTEXES] QALIGN(16);
-#endif
 	vec2_t		texCoords[SHADER_MAX_VERTEXES][2] QALIGN(16);
 	vec4_t		vertexColors[SHADER_MAX_VERTEXES] QALIGN(16);
 	uint32_t    lightdir[SHADER_MAX_VERTEXES] QALIGN(16);

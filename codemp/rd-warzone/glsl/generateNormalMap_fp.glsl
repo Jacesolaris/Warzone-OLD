@@ -158,6 +158,7 @@ vec4 generateBumpyNormal( vec2 fragCoord )
 
 float SampleHeight(vec2 t)
 {// Provides enhanced parallax depths without stupid distortions... Also provides a nice backup specular map...
+#if 0
 	vec3 color = texture2D(u_DiffuseMap, t).rgb;
 #define const_1 ( 16.0 / 255.0)
 #define const_2 (255.0 / 219.0)
@@ -180,12 +181,81 @@ float SampleHeight(vec2 t)
 
 	// Returns inverse of the height. Result is mostly around 1.0 (so we don't stand on a surface far below us), with deep dark areas (cracks, edges, etc)...
 	float height = clamp(1.0 - combined_color2, 0.0, 1.0);
+
+	height = height * 0.5 + 0.5;
+	height = clamp(height, 0.5, 0.9);
+
 	return height;
+#else
+	
+	vec3 pixColor = texture2D(u_DiffuseMap, t).rgb;
+
+	// Find the average color of the texture...
+	vec3 avgColor = vec3(0.0);
+
+	for (float p = 0.1; p < 1.0; p++)
+	{// Grab an X covering the texture...
+		avgColor += texture2D(u_DiffuseMap, vec2(p, p)).rgb;
+		avgColor += texture2D(u_DiffuseMap, vec2(p, 1.0-p)).rgb;
+	}
+	
+	avgColor /= vec3(9.0);
+
+	// Find the average of pixels near this pixel's location...
+	float numAdded = 1.0;
+
+	for (float x = -8.0; x <= 8.0; x += 1.0)
+	{
+		for (float y = -8.0; y <= 8.0; y += 1.0)
+		{
+			vec2 pos = vec2(t.x + (x * tex_offset.x), t.y + (y * tex_offset.y));
+			
+			vec3 color = texture2D(u_DiffuseMap, pos).rgb;
+
+			if (pos.x >= 0.0 && pos.x <= 1.0 && pos.y >= 0.0 && pos.y <= 1.0)
+			{
+				pixColor += color;
+				numAdded += 1.0;
+			}
+		}
+	}
+
+	pixColor /= vec3(numAdded);
+
+	float aLen = length(avgColor) / 3.0;
+	float pLen = length(pixColor) / 3.0;
+
+	// Work out the difference between the color average and the close pixel average... That is height...
+#define const_1 ( 36.0 / 255.0)
+#define const_2 (255.0 / 219.0)
+
+	float diff = 1.0;
+
+	// Assumes that the average color is the average height... Any difference to the average is deeper...
+	if (aLen <= pLen)
+	{
+		diff = (pLen - aLen) * 2.0;
+		diff = 1.0 - diff;
+		diff = clamp(diff, 0.0, 1.0); // Clamp to be sure...
+		diff = ((clamp(diff - const_1, 0.0, 1.0)) * const_2); // amplify light/dark
+		diff = clamp(diff, 0.0, 1.0); // Clamp to be sure...
+	}
+	else
+	{
+		diff = (aLen - pLen) * 2.0;
+		diff = 1.0 - diff;
+		diff = clamp(diff, 0.0, 1.0); // Clamp to be sure...
+		diff = ((clamp(diff - const_1, 0.0, 1.0)) * const_2); // amplify light/dark
+		diff = clamp(diff, 0.0, 1.0); // Clamp to be sure...
+	}
+
+	return diff;
+#endif
 }
 
-#define ENHANCED_NORMALS
+//#define ENHANCED_NORMALS
 //#define BUMPY_NORMALS
-//#define SAMPLEMAT_NORMALS
+#define SAMPLEMAT_NORMALS
 
 //#define HEIGHTMAP_ADD_NORMAL_BLUE
 

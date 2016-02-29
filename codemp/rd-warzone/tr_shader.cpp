@@ -3885,22 +3885,20 @@ static void ComputeVertexAttribs(void)
 		{
 			shader.vertexAttribs |= ATTR_NORMAL;
 
-#ifdef USE_VERT_TANGENT_SPACE
-			if ((pStage->glslShaderIndex & LIGHTDEF_LIGHTTYPE_MASK) && !(r_normalMapping->integer == 0 && r_specularMapping->integer == 0))
+			//if ((pStage->glslShaderIndex & LIGHTDEF_LIGHTTYPE_MASK) && !(r_normalMapping->integer == 0 && r_specularMapping->integer == 0))
 			{
 				shader.vertexAttribs |= ATTR_TANGENT;
 			}
-#endif
 
-			switch (pStage->glslShaderIndex & LIGHTDEF_LIGHTTYPE_MASK)
-			{
-				case LIGHTDEF_USE_LIGHTMAP:
-				case LIGHTDEF_USE_LIGHT_VERTEX:
+			//switch (pStage->glslShaderIndex & LIGHTDEF_LIGHTTYPE_MASK)
+			//{
+			//	case LIGHTDEF_USE_LIGHTMAP:
+			//	case LIGHTDEF_USE_LIGHT_VERTEX:
 					shader.vertexAttribs |= ATTR_LIGHTDIRECTION;
-					break;
-				default:
-					break;
-			}
+			//		break;
+			//	default:
+			//		break;
+			//}
 		}
 
 		for (i = 0; i < NUM_TEXTURE_BUNDLES; i++)
@@ -5857,6 +5855,7 @@ char uniqueGenericFoliageTreeShader[] = "{\n"\
 "surfaceparm	nomarks\n"\
 "{\n"\
 "map %s\n"\
+"%s\n"\
 "blendfunc GL_ONE GL_ZERO\n"\
 "alphaFunc GE128\n"\
 "depthWrite\n"\
@@ -6134,7 +6133,12 @@ shader_t *R_FindShader( const char *name, const int *lightmapIndexes, const byte
 		else if (StringContainsWord(strippedName, "warzone/tree") || StringContainsWord(strippedName, "warzone\\tree"))
 		{
 			if (StringContainsWord(strippedName, "bark") || StringContainsWord(strippedName, "giant_tree") || StringContainsWord(strippedName, "vine01"))
-				sprintf(myShader, uniqueGenericFoliageTreeShader, strippedName, strippedName);
+			{
+				if (StringContainsWord(strippedName, "uqredwoodbark"))
+					sprintf(myShader, uniqueGenericFoliageTreeShader, strippedName, strippedName, "tcMod scale 2.0 2.0");
+				else
+					sprintf(myShader, uniqueGenericFoliageTreeShader, strippedName, strippedName, "");
+			}
 			else
 				sprintf(myShader, uniqueGenericFoliageShader, strippedName, strippedName);
 		}

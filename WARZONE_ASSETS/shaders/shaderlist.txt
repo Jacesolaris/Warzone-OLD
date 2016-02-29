@@ -55,11 +55,7 @@ wedge
 yavin
 zzz_warzone_overlays
 zzz_warzone_steepmaps
+zzZ_Warzone_Radar.shader
 zzz_foliage
 zzz_foliage_dense
 zzz_foliage_light
-zzz_foliage_warzone_grass
-zzz_foliage_warzone_plants
-zzz_foliage_warzone_plants2
-zzz_foliage_warzone_plants3
-zzz_foliage_warzone_trees

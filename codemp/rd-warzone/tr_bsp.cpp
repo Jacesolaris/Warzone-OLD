@@ -810,7 +810,6 @@ static void ParseFace( dsurface_t *ds, drawVert_t *verts, float *hdrVertColors, 
 
 	surf->data = (surfaceType_t *)cv;
 
-#ifdef USE_VERT_TANGENT_SPACE
 	// Calculate tangent spaces
 	{
 		srfVert_t      *dv[3];
@@ -824,7 +823,6 @@ static void ParseFace( dsurface_t *ds, drawVert_t *verts, float *hdrVertColors, 
 			R_CalcTangentVectors(dv);
 		}
 	}
-#endif
 }
 
 
@@ -1066,7 +1064,6 @@ static void ParseTriSurf( dsurface_t *ds, drawVert_t *verts, float *hdrVertColor
 		cv->numIndexes -= badTriangles * 3;
 	}
 
-#ifdef USE_VERT_TANGENT_SPACE
 	// Calculate tangent spaces
 	{
 		srfVert_t      *dv[3];
@@ -1082,7 +1079,6 @@ static void ParseTriSurf( dsurface_t *ds, drawVert_t *verts, float *hdrVertColor
 			R_CalcTangentVectors(dv);
 		}
 	}
-#endif
 }
 
 /*
@@ -1870,10 +1866,8 @@ static void CopyVert(const srfVert_t * in, srfVert_t * out)
 	for(j = 0; j < 3; j++)
 	{
 		out->xyz[j]       = in->xyz[j];
-#ifdef USE_VERT_TANGENT_SPACE
 		out->tangent[j]   = in->tangent[j];
 		//out->bitangent[j] = in->bitangent[j];
-#endif
 		out->normal[j]    = in->normal[j];
 		out->lightdir[j]  = in->lightdir[j];
 	}
@@ -1896,9 +1890,7 @@ struct packedVertex_t
 {
 	vec3_t position;
 	uint32_t normal;
-#ifdef USE_VERT_TANGENT_SPACE
 	uint32_t tangent;
-#endif
 	vec2_t texcoords[1 + MAXLIGHTMAPS];
 	vec4_t colors[MAXLIGHTMAPS];
 	uint32_t lightDirection;
@@ -2074,9 +2066,7 @@ static void R_CreateWorldVBOs(void)
 
 				VectorCopy (bspSurf->verts[i].xyz, vert.position);
 				vert.normal = R_VboPackNormal (bspSurf->verts[i].normal);
-#ifdef USE_VERT_TANGENT_SPACE
 				vert.tangent = R_VboPackTangent (bspSurf->verts[i].tangent);
-#endif
 				VectorCopy2 (bspSurf->verts[i].st, vert.texcoords[0]);
 
 				for (int j = 0; j < MAXLIGHTMAPS; j++)
@@ -2099,9 +2089,7 @@ static void R_CreateWorldVBOs(void)
 		// Setup the offsets and strides
 		vbo->ofs_xyz = offsetof (packedVertex_t, position);
 		vbo->ofs_normal = offsetof (packedVertex_t, normal);
-#ifdef USE_VERT_TANGENT_SPACE
 		vbo->ofs_tangent = offsetof (packedVertex_t, tangent);
-#endif
 		vbo->ofs_st = offsetof (packedVertex_t, texcoords);
 		vbo->ofs_vertexcolor = offsetof (packedVertex_t, colors);
 		vbo->ofs_lightdir = offsetof (packedVertex_t, lightDirection);
@@ -2109,9 +2097,7 @@ static void R_CreateWorldVBOs(void)
 		const size_t packedVertexSize = sizeof (packedVertex_t);
 		vbo->stride_xyz = packedVertexSize;
 		vbo->stride_normal = packedVertexSize;
-#ifdef USE_VERT_TANGENT_SPACE
 		vbo->stride_tangent = packedVertexSize;
-#endif
 		vbo->stride_st = packedVertexSize;
 		vbo->stride_vertexcolor = packedVertexSize;
 		vbo->stride_lightdir = packedVertexSize;

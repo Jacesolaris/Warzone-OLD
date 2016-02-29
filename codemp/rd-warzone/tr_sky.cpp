@@ -441,7 +441,7 @@ static void DrawSkySide( struct image_s *image, const int mins[2], const int max
 		shaderProgram_t *sp = &tr.lightallShader[0];
 		vec4_t vector;
 
-		GLSL_VertexAttribsState(ATTR_POSITION | ATTR_TEXCOORD0);
+		GLSL_VertexAttribsState(ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL | ATTR_TANGENT | ATTR_TEXCOORD1 | ATTR_LIGHTDIRECTION);
 		GLSL_BindProgram(sp);
 
 		VectorSet4(vector, 0.0, 0.0, 0.0, 0.0);
@@ -450,6 +450,7 @@ static void DrawSkySide( struct image_s *image, const int mins[2], const int max
 		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL3, vector);
 		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL4, vector);
 		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL5, vector);
+		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL6, vector);
 
 		//GL_BindToTMU( tr.whiteImage, TB_SUBSURFACEMAP );
 		GL_BindToTMU( tr.blackImage, TB_OVERLAYMAP );

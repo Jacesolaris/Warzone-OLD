@@ -1101,7 +1101,7 @@ textures/mp/s_ground
     {
         map textures/yavin/ground
         blendFunc GL_DST_COLOR GL_ZERO
-		tcMod scale 16.0 16.0
+		tcMod scale 12.0 12.0
     }
 }
 
