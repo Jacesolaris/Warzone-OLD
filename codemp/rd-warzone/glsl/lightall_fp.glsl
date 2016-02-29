@@ -136,11 +136,7 @@ out vec4 out_FoliageMap;
 #if defined(USE_PARALLAXMAP)
 float SampleDepth(sampler2D normalMap, vec2 t)
 {
-	//#if defined(SWIZZLE_NORMALMAP)
-	//	return 1.0 - texture2D(normalMap, t).r;
-	//#else
-		return 1.0 - texture2D(normalMap, t).a;
-	//#endif
+	return 1.0 - texture2D(normalMap, t).a;
 }
 
 
@@ -165,7 +161,6 @@ float RayIntersectDisplaceMap(vec2 dp, vec2 ds, sampler2D normalMap)
 	// best match found (starts with last position 1.0)
 	float bestDepth = MAX_SIZE;
 
-    #if 1
 	// search front to back for first point inside object
 	for(int i = 0; i < linearSearchSteps - 1; ++i)
 	{
@@ -178,9 +173,6 @@ float RayIntersectDisplaceMap(vec2 dp, vec2 ds, sampler2D normalMap)
 			if(depth >= t)
 				bestDepth = depth;	// store best depth
 	}
-    #else
-	bestDepth = MAX_SIZE;
-    #endif
 
 	depth = bestDepth;
 	
@@ -217,46 +209,6 @@ vec3 EnvironmentBRDF(float gloss, float NE, vec3 specular)
 	float a1 = t.w;
 	return clamp( a0 + specular * ( a1 - a0 ), 0.0, 1.0 );
 }
-
-float CalcGGX(float NH, float gloss)
-{
-	float a_sq = exp2(gloss * -13.0 + 1.0);
-	float d = ((NH * NH) * (a_sq - 1.0) + 1.0);
-	return a_sq / (d * d);
-}
-
-float CalcFresnel(float EH)
-{
-	return exp2(-10.0 * EH);
-}
-
-float CalcVisibility(float NH, float NL, float NE, float EH, float gloss)
-{
-	float roughness = exp2(gloss * -6.5);
-
-	float k = roughness + 1.0;
-	k *= k * 0.125;
-
-	float k2 = 1.0 - k;
-	
-	float invGeo1 = NL * k2 + k;
-	float invGeo2 = NE * k2 + k;
-
-	return 1.0 / (invGeo1 * invGeo2);
-}
-
-
-vec3 CalcSpecular(vec3 specular, float NH, float NL, float NE, float EH, float gloss, float shininess)
-{
-	float distrib = CalcGGX(NH, gloss);
-
-	vec3 fSpecular = mix(specular, vec3(1.0), CalcFresnel(EH));
-
-	float vis = CalcVisibility(NH, NL, NE, EH, gloss);
-
-	return fSpecular * (distrib * vis);
-}
-
 
 float CalcLightAttenuation(float point, float normDist)
 {
