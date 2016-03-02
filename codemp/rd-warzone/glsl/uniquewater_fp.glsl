@@ -67,6 +67,8 @@ varying vec3   var_Normal;
 
 varying vec3 var_N;
 
+varying float	var_Fresnel;
+
 #if defined(USE_PRIMARY_LIGHT) || defined(USE_SHADOWMAP)
 varying vec4      var_PrimaryLightDir;
 #endif
@@ -149,17 +151,23 @@ void main()
 	
 	vec2 cPos = -1.0 + 2.0 * texCoords.xy;
 	float cLength = length(cPos);
-
+	
 	vec2 uv = texCoords.xy+(cPos/cLength)*cos(cLength*12.0-var_Time*4.0)*0.03;
 	vec4 diffuse = texture2D(u_DiffuseMap, uv);
 	vec4 orig_diffuse = diffuse;
 	gl_FragColor = vec4(diffuse.rgb,1.0);
+	
+
+
 	/*
-	vec2 uv = texCoords.xy;
-	vec4 diffuse = texture2D(u_DiffuseMap, uv);
-	vec4 orig_diffuse = diffuse;
-	gl_FragColor = vec4(diffuse.rgb,1.0);
+	float shininess = 0.5;
+	vec3 mirrorEye = vec3(2.0) * dot(normalize(L), var_Normal.xyz) * var_Normal.xyz - normalize(L);
+	float dotSpec = clamp(dot(mirrorEye.xyz, -L), 0.0, 1.0) * 0.5 + 0.5;
+	specular.rgb = vec3(1.0 - var_Fresnel) * clamp(-L.y, 0.0, 1.0) * (pow(dotSpec, 512.0) * (shininess * 1.8 + 0.2));
+	specular.rgb += specular.rgb * 25.0 * clamp(shininess - 0.05, 0.0, 1.0);
+	gl_FragColor.rgb += specular.rgb;
 	*/
+
 
 	/*
 	vec4 skyColor = texture2D(u_OverlayMap, uv2);
@@ -186,6 +194,8 @@ void main()
 	gl_FragColor.rgb = ((gl_FragColor.rgb * 19.0) + cubeLightColor) / 20.0;
 #endif
 	*/
+
+
 
 	gl_FragColor.a = 0.7;//1.0;
 	out_Glow = vec4(0.0);

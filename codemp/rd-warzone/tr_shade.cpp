@@ -57,17 +57,18 @@ void R_DrawElementsVBO( int numIndexes, glIndex_t firstIndex, glIndex_t minIndex
 {
 	if (r_tesselation->integer && tesselation)
 	{
-		
 		GLint MaxPatchVertices = 0;
 		qglGetIntegerv(GL_MAX_PATCH_VERTICES, &MaxPatchVertices);
 		//printf("Max supported patch vertices %d\n", MaxPatchVertices);	
 		qglPatchParameteri(GL_PATCH_VERTICES, 3);
 		qglDrawRangeElements(GL_PATCHES, minIndex, maxIndex, numIndexes, GL_INDEX_TYPE, BUFFER_OFFSET(firstIndex * sizeof(glIndex_t)));
-		
+
 		//TesselatedGlDrawElements( numIndexes, firstIndex, minIndex, maxIndex );
 	}
 	else
+	{
 		qglDrawRangeElements(GL_TRIANGLES, minIndex, maxIndex, numIndexes, GL_INDEX_TYPE, BUFFER_OFFSET(firstIndex * sizeof(glIndex_t)));
+	}
 }
 
 void TesselatedGlMultiDrawElements( GLenum mode, GLsizei *count, GLenum type, const GLvoid **indices, GLsizei primcount )
@@ -93,7 +94,9 @@ static void R_DrawMultiElementsVBO( int multiDrawPrimitives, glIndex_t *multiDra
 		TesselatedGlMultiDrawElements( GL_PATCHES, multiDrawNumIndexes, GL_INDEX_TYPE, (const GLvoid **)multiDrawFirstIndex, multiDrawPrimitives );
 	}
 	else
+	{
 		qglMultiDrawElements(GL_TRIANGLES, multiDrawNumIndexes, GL_INDEX_TYPE, (const GLvoid **)multiDrawFirstIndex, multiDrawPrimitives);
+	}
 }
 
 
@@ -1376,6 +1379,15 @@ qboolean RB_ShouldUseTesselation (int materialType )
 	return qfalse;
 }
 
+qboolean RB_ShouldUseGeometryGrass (int materialType )
+{
+	if ( materialType == MATERIAL_SHORTGRASS 
+		|| materialType == MATERIAL_LONGGRASS)
+		return qtrue;
+
+	return qfalse;
+}
+
 extern image_t *skyImage;
 
 float waveTime = 0.5;
@@ -1395,7 +1407,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 	for ( int stage = 0; stage < MAX_SHADER_STAGES; stage++ )
 	{
 		shaderStage_t *pStage = input->xstages[stage];
-		shaderProgram_t *sp;
+		shaderProgram_t *sp = NULL, *sp2 = NULL;
 		vec4_t texMatrix;
 		vec4_t texOffTurb;
 		int stateBits;
@@ -1478,6 +1490,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				}
 				*/
 
+				/*
 				if (pStage->isFoliage)
 				{
 					//index |= LIGHTDEF_USE_SWAY;
@@ -1498,7 +1511,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				{
 					index |= LIGHTDEF_USE_OVERLAY;
 					pStage->glslShaderIndex |= LIGHTDEF_USE_OVERLAY;
-				}
+				}*/
 
 				if (backEnd.currentEntity && backEnd.currentEntity != &tr.worldEntity)
 				{
@@ -1571,6 +1584,12 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				pStage->glslShaderIndex |= LIGHTDEF_USE_TESSELLATION;
 			}
 			*/
+
+			if (r_foliage->integer 
+				&& RB_ShouldUseGeometryGrass(tess.shader->surfaceFlags & MATERIAL_MASK))
+			{
+				isGrass = qtrue;
+			}
 
 			if (backEnd.currentEntity && backEnd.currentEntity != &tr.worldEntity)
 			{
@@ -1661,26 +1680,29 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			}
 
 			
-			if (pStage->isFoliage)
 			{
-				//index |= LIGHTDEF_USE_SWAY;
-				//pStage->glslShaderIndex |= LIGHTDEF_USE_SWAY;
-				index |= LIGHTDEF_USE_OVERLAY;
-				pStage->glslShaderIndex |= LIGHTDEF_USE_OVERLAY;
-			}
+				/*
+				if (pStage->isFoliage)
+				{
+					//index |= LIGHTDEF_USE_SWAY;
+					//pStage->glslShaderIndex |= LIGHTDEF_USE_SWAY;
+					index |= LIGHTDEF_USE_OVERLAY;
+					pStage->glslShaderIndex |= LIGHTDEF_USE_OVERLAY;
+				}
 
-			if (pStage->bundle[TB_STEEPMAP].image[0])
-			{
-				//index |= LIGHTDEF_USE_STEEPMAP;
-				//pStage->glslShaderIndex |= LIGHTDEF_USE_STEEPMAP;
-				index |= LIGHTDEF_USE_OVERLAY;
-				pStage->glslShaderIndex |= LIGHTDEF_USE_OVERLAY;
-			}
+				if (pStage->bundle[TB_STEEPMAP].image[0])
+				{
+					//index |= LIGHTDEF_USE_STEEPMAP;
+					//pStage->glslShaderIndex |= LIGHTDEF_USE_STEEPMAP;
+					index |= LIGHTDEF_USE_OVERLAY;
+					pStage->glslShaderIndex |= LIGHTDEF_USE_OVERLAY;
+				}
 
-			if (pStage->bundle[TB_OVERLAYMAP].image[0])
-			{
-				index |= LIGHTDEF_USE_OVERLAY;
-				pStage->glslShaderIndex |= LIGHTDEF_USE_OVERLAY;
+				if (pStage->bundle[TB_OVERLAYMAP].image[0])
+				{
+					index |= LIGHTDEF_USE_OVERLAY;
+					pStage->glslShaderIndex |= LIGHTDEF_USE_OVERLAY;
+				}*/
 			}
 
 			sp = &pStage->glslShaderGroup[index];
@@ -1785,13 +1807,46 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 					pStage->glslShaderIndex |= LIGHTDEF_USE_TESSELLATION;
 				}
 				*/
+
+				if (r_foliage->integer 
+					&& RB_ShouldUseGeometryGrass(tess.shader->surfaceFlags & MATERIAL_MASK))
+				{
+					isGrass = qtrue;
+				}
 			}
 
-			GLSL_BindProgram(sp);
+			//if (!isGrass || (isGrass && !r_foliage->integer))
+				GLSL_BindProgram(sp);
+		}
+
+		if (isGrass)
+		{
+			if (r_foliage->integer == 1)
+			{
+				sp2 = &tr.grass2Shader;
+				multiPass = qtrue;
+				passMax = 1;
+			}
+			else if (r_foliage->integer >= 2)
+			{
+				sp2 = &tr.grass2Shader;
+				multiPass = qtrue;
+				passMax = 4;
+
+				GLSL_BindProgram(sp);
+			}
 		}
 		
 		while (1)
 		{
+			if (isGrass /*&& (r_foliage->integer == 1 && passNum > 0)*/ && passNum > 0 && sp2)
+			{
+				sp = sp2;
+				sp2 = NULL;
+
+				GLSL_BindProgram(sp);
+			}
+
 			RB_SetMaterialBasedProperties(sp, pStage);
 		
 			stateBits = pStage->stateBits;
@@ -1822,6 +1877,11 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				}
 			}
 
+			if (isGrass /*&& ((r_foliage->integer == 1 && passNum > 0) || r_foliage->integer >= 2)*/ && passNum > 0)
+			{
+				stateBits = GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA | GLS_DEPTHMASK_TRUE | GLS_ATEST_GE_192;
+			}
+
 			//
 			// UQ1: Split up uniforms by what is actually used...
 			//
@@ -1833,11 +1893,30 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				GLSL_SetUniformMatrix16(sp, UNIFORM_MODELMATRIX, backEnd.ori.transformMatrix);
 				GLSL_SetUniformMatrix16(sp, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
 				GLSL_SetUniformMatrix16(sp, UNIFORM_INVEYEPROJECTIONMATRIX, glState.invEyeProjection);
+				
+				{// UQ: Other *needed* stuff... Hope these are correct...
+					/*
+					GLSL_SetUniformMatrix16(sp, UNIFORM_PROJECTIONMATRIX, backEnd.viewParms.projectionMatrix);//glState.projection);
+					GLSL_SetUniformMatrix16(sp, UNIFORM_MODELVIEWMATRIX, glState.modelview);
+					GLSL_SetUniformMatrix16(sp, UNIFORM_VIEWMATRIX, glState.viewTrans);
+					*/
+
+					matrix_t trans, model, mvp;
+
+					Matrix16Translation( backEnd.viewParms.ori.origin, trans );
+					Matrix16Multiply( backEnd.viewParms.world.modelMatrix, trans, model );
+					Matrix16Multiply(backEnd.viewParms.projectionMatrix, model, mvp);
+					
+					GLSL_SetUniformMatrix16(sp, UNIFORM_PROJECTIONMATRIX, glState.projection/*backEnd.viewParms.projectionMatrix*/);
+					GLSL_SetUniformMatrix16(sp, UNIFORM_MODELVIEWMATRIX, model);//backEnd.viewParms.world.modelMatrix);
+					GLSL_SetUniformMatrix16(sp, UNIFORM_VIEWMATRIX, trans);
+				}
+
 				GLSL_SetUniformVec3(sp, UNIFORM_LOCALVIEWORIGIN, backEnd.ori.viewOrigin);
 				GLSL_SetUniformFloat(sp, UNIFORM_VERTEXLERP, glState.vertexAttribsInterpolation);
 
 				GLSL_SetUniformVec3(sp, UNIFORM_VIEWORIGIN, backEnd.viewParms.ori.origin);
-				
+
 				if (pStage->normalScale[0] == 0 && pStage->normalScale[1] == 0 && pStage->normalScale[2] == 0)
 				{
 					vec4_t normalScale;
@@ -2218,6 +2297,39 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			}
 #endif
 
+			if (isGrass /*&& ((r_foliage->integer == 1 && passNum > 0) || r_foliage->integer >= 2)*/ && passNum > 0 && r_foliage->integer == 1)
+			{
+				vec4_t l7; // Radius1
+				VectorSet4(l7, 5.0, 1.0, 0.4, 0.0);
+				GLSL_SetUniformVec4(sp, UNIFORM_LOCAL7, l7);
+
+				vec4_t l8; // Radius2
+				VectorSet4(l8, 5.0, 1.0, 0.4, 0.0);
+				GLSL_SetUniformVec4(sp, UNIFORM_LOCAL8, l8);
+				
+				vec4_t l9; // Time, windStrength, AmbientMulti, LODdist
+				VectorSet4(l9, backEnd.refdef.floatTime, 0.1, 0.4, r_foliageLodDistance->value);
+				GLSL_SetUniformVec4(sp, UNIFORM_LOCAL9, l9);
+
+				vec4_t l10; // AmbientMulti, LightMulti, Intensity
+				VectorSet4(l10, 0.4, 0.6, 0.4, 0.0);
+				GLSL_SetUniformVec4(sp, UNIFORM_LOCAL10, l10);
+
+				GL_BindToTMU( tr.grassImage, TB_OVERLAYMAP );
+				GL_BindToTMU( tr.whiteImage/*tr.random2KImage*/, TB_STEEPMAP );
+				
+				//textureBundle_t bundle1[TB_OVERLAYMAP];
+				//textureBundle_t bundle2[TB_STEEPMAP];
+				//bundle1[TB_OVERLAYMAP].image[0] = tr.grassImage;
+				//bundle2[TB_STEEPMAP].image[0] = tr.random2KImage;//tr.whiteImage;
+
+				//R_BindAnimatedImageToTMU( &tr.grassImageShader->stages[0]->bundle[0]/*bundle1[TB_OVERLAYMAP]*/, TB_OVERLAYMAP);
+				//R_BindAnimatedImageToTMU( &bundle2[TB_STEEPMAP], TB_STEEPMAP);
+
+				GLSL_SetUniformInt(sp, UNIFORM_OVERLAYMAP, TB_OVERLAYMAP);
+				GLSL_SetUniformInt(sp, UNIFORM_STEEPMAP, TB_STEEPMAP);
+			}
+
 			UpdateTexCoords (pStage);
 
 			GL_State( stateBits );
@@ -2227,10 +2339,14 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			//
 			qboolean tesselation = qfalse;
 
-			/*if (r_tesselation->integer && sp->tesselation && (pStage->glslShaderIndex & LIGHTDEF_USE_TESSELLATION)) 
+			if (r_tesselation->integer && sp->tesselation)
 			{
 				tesselation = qtrue;
-			}*/
+
+				vec4_t l10; // TesselationLevel, 0, 0, 0
+				VectorSet4(l10, r_tesselationLevel->value, 0.0, 0.0, 0.0);
+				GLSL_SetUniformVec4(sp, UNIFORM_LOCAL10, l10);
+			}
 
 			if (input->multiDrawPrimitives)
 			{

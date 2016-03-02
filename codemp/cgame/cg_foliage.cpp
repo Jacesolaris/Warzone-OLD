@@ -22,7 +22,8 @@ extern qboolean InFOV( vec3_t spot, vec3_t from, vec3_t fromAngles, int hFOV, in
 	//
 	// =======================================================================================================================================
 
-	//#define		__NO_PLANTS__ // Disable plants and only draw grass for everything... Was just for testing FPS difference...
+	//#define			__NO_GRASS__	// Disable plants... Can use this if I finish GPU based grasses...
+	//#define		__NO_PLANTS__		// Disable plants and only draw grass for everything... Was just for testing FPS difference...
 
 	// =======================================================================================================================================
 	//
@@ -564,9 +565,9 @@ typedef enum {
 		if (foliageNum >= FOLIAGE_NUM_POSITIONS) return qfalse;
 
 		if (FOLIAGE_AREAS_MINS[areaNum][0] < FOLIAGE_POSITIONS[foliageNum][0]
-		&& FOLIAGE_AREAS_MINS[areaNum][1] < FOLIAGE_POSITIONS[foliageNum][1]
-		&& FOLIAGE_AREAS_MAXS[areaNum][0] >= FOLIAGE_POSITIONS[foliageNum][0]
-		&& FOLIAGE_AREAS_MAXS[areaNum][1] >= FOLIAGE_POSITIONS[foliageNum][1])
+			&& FOLIAGE_AREAS_MINS[areaNum][1] < FOLIAGE_POSITIONS[foliageNum][1]
+			&& FOLIAGE_AREAS_MAXS[areaNum][0] >= FOLIAGE_POSITIONS[foliageNum][0]
+			&& FOLIAGE_AREAS_MAXS[areaNum][1] >= FOLIAGE_POSITIONS[foliageNum][1])
 		{
 			return qtrue;
 		}
@@ -852,16 +853,43 @@ void FOLIAGE_Calc_In_Range_Areas( void )
 			if (minsDist < FOLIAGE_VISIBLE_DISTANCE 
 				|| maxsDist < FOLIAGE_VISIBLE_DISTANCE)
 			{
-				if (minsDist <= FOLIAGE_AREA_SIZE * 2.0 || maxsDist <= FOLIAGE_AREA_SIZE * 2.0 || FOLIAGE_Box_In_FOV( FOLIAGE_AREAS_MINS[i], FOLIAGE_AREAS_MAXS[i] ))
+				qboolean inFOV = qtrue;
+				qboolean isClose = qtrue;
+
+				if (minsDist > FOLIAGE_AREA_SIZE && maxsDist > FOLIAGE_AREA_SIZE)
 				{
-					IN_RANGE_AREAS_LIST[IN_RANGE_AREAS_LIST_COUNT] = i;
+					isClose = qfalse;
+				}
 
-					if (minsDist < maxsDist)
-						IN_RANGE_AREAS_DISTANCE[IN_RANGE_AREAS_LIST_COUNT] = minsDist;
-					else
-						IN_RANGE_AREAS_DISTANCE[IN_RANGE_AREAS_LIST_COUNT] = maxsDist;
+				if (!isClose)
+				{
+					inFOV = FOLIAGE_Box_In_FOV( FOLIAGE_AREAS_MINS[i], FOLIAGE_AREAS_MAXS[i] );
+				}
 
-					IN_RANGE_AREAS_LIST_COUNT++;
+				if (isClose || inFOV || minsDist <= FOLIAGE_AREA_SIZE * 2.0 || maxsDist <= FOLIAGE_AREA_SIZE * 2.0)
+				{
+					if ( !isClose && !inFOV )
+					{// Not in our FOV, but close enough that we need the trees. Add to tree list instead, so we can skip grass/plant checking...
+						IN_RANGE_TREE_AREAS_LIST[IN_RANGE_TREE_AREAS_LIST_COUNT] = i;
+
+						if (minsDist < maxsDist)
+							IN_RANGE_TREE_AREAS_DISTANCE[IN_RANGE_TREE_AREAS_LIST_COUNT] = minsDist;
+						else
+							IN_RANGE_TREE_AREAS_DISTANCE[IN_RANGE_TREE_AREAS_LIST_COUNT] = maxsDist;
+
+						IN_RANGE_TREE_AREAS_LIST_COUNT++;
+					}
+					else if ( isClose || inFOV )
+					{// In our FOV, or really close. We need all plants and trees...
+						IN_RANGE_AREAS_LIST[IN_RANGE_AREAS_LIST_COUNT] = i;
+
+						if (minsDist < maxsDist)
+							IN_RANGE_AREAS_DISTANCE[IN_RANGE_AREAS_LIST_COUNT] = minsDist;
+						else
+							IN_RANGE_AREAS_DISTANCE[IN_RANGE_AREAS_LIST_COUNT] = maxsDist;
+
+						IN_RANGE_AREAS_LIST_COUNT++;
+					}
 				}
 			}
 			else if (minsDist < FOLIAGE_TREE_VISIBLE_DISTANCE
@@ -1123,6 +1151,7 @@ extern "C" {
 			if ((passType == FOLIAGE_PASS_GRASS || passType == FOLIAGE_PASS_CLOSETREE) && !skipGrass && dist <= FOLIAGE_VISIBLE_DISTANCE)
 #endif //__GRASS_ONLY__
 			{
+#ifndef __NO_GRASS__
 				float GRASS_SCALE = FOLIAGE_PLANT_SCALE[num]*PLANT_SCALE_MULTIPLIER*distFadeScale;//*0.5;
 
 				re.reType = RT_GRASS;//RT_MODEL;
@@ -1179,6 +1208,7 @@ extern "C" {
 
 				FOLIAGE_AddFoliageEntityToScene( &re );
 			}
+#endif //__NO_GRASS__
 		}
 
 		if ((passType == FOLIAGE_PASS_CLOSETREE || FOLIAGE_PASS_TREE) && FOLIAGE_TREE_SELECTION[num] > 0)
@@ -1803,7 +1833,8 @@ extern "C" {
 					FOLIAGE_AddToScreen( FOLIAGE_AREAS_TREES_LIST[CURRENT_AREA_ID][spot], FOLIAGE_PASS_CLOSETREE );
 			}
 		}
-
+		
+#ifndef __NO_GRASS__
 		for (int CURRENT_AREA = 0; CURRENT_AREA < IN_RANGE_AREAS_LIST_COUNT; CURRENT_AREA++)
 		{// Draw grass list...
 			int CURRENT_AREA_ID = IN_RANGE_AREAS_LIST[CURRENT_AREA];
@@ -1814,6 +1845,7 @@ extern "C" {
 					FOLIAGE_AddToScreen( FOLIAGE_AREAS_LIST[CURRENT_AREA_ID][spot], FOLIAGE_PASS_GRASS );
 			}
 		}
+#endif //__NO_GRASS__
 
 		for (int CURRENT_AREA = 0; CURRENT_AREA < IN_RANGE_AREAS_LIST_COUNT; CURRENT_AREA++)
 		{// Draw plants last...

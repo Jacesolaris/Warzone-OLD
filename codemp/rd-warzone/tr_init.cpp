@@ -38,6 +38,10 @@ static void GfxMemInfo_f( void );
 
 cvar_t	*r_superSampleMultiplier;
 cvar_t	*r_tesselation;
+cvar_t	*r_tesselationLevel;
+
+cvar_t	*r_foliage;
+cvar_t	*r_foliageLodDistance;
 
 cvar_t	*r_rotatex;
 cvar_t	*r_rotatey;
@@ -1324,8 +1328,13 @@ R_Register
 void R_Register( void ) 
 {
 	r_superSampleMultiplier = ri->Cvar_Get( "r_superSampleMultiplier", "1", CVAR_ARCHIVE | CVAR_LATCH );
-	r_tesselation = ri->Cvar_Get( "r_tesselation", "0", CVAR_ARCHIVE | CVAR_LATCH );
 	
+	r_tesselation = ri->Cvar_Get( "r_tesselation", "0", CVAR_ARCHIVE | CVAR_LATCH );
+	r_tesselationLevel = ri->Cvar_Get( "r_tesselationLevel", "1.0", CVAR_ARCHIVE );
+	
+	r_foliage = ri->Cvar_Get( "r_foliage", "0", CVAR_ARCHIVE | CVAR_LATCH );
+	r_foliageLodDistance = ri->Cvar_Get( "r_foliageLodDistance", "2048.0", CVAR_ARCHIVE );
+
 	//
 	// latched and archived variables
 	//

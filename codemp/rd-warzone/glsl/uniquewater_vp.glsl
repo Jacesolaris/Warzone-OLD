@@ -61,6 +61,7 @@ varying vec3	var_vertPos;
 varying float	var_Time;
 varying vec3	var_Normal;
 varying vec3	var_ViewDir;
+varying float	var_Fresnel;
 
 
 #if defined(USE_DEFORM_VERTEXES)
@@ -246,6 +247,8 @@ void main()
 	v.z += baseHeight - (sin((waveWidth * v2.x) + time) * cos((waveWidth * v2.y) + time) * waveHeight);
  	gl_Position = u_ModelViewProjectionMatrix * v;
 	var_TexCoords = tex;
+
+	var_Fresnel = v.z;
 #endif //0
 
 	var_Dimensions = u_Dimensions.st;

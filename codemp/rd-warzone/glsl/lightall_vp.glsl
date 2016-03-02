@@ -1,4 +1,4 @@
-precision highp float;
+//precision highp float;
 
 attribute vec2 attr_TexCoord0;
 
@@ -6,9 +6,9 @@ uniform float	u_Time;
 
 
 #if defined(USE_TESSELLATION)
-out vec3 Normal_CS_in;
+out vec4 Normal_CS_in;
 out vec2 TexCoord_CS_in;
-out vec3 WorldPos_CS_in;
+out vec4 WorldPos_CS_in;
 #endif
 
 //#define USE_LIGHT
@@ -101,6 +101,7 @@ varying vec4   var_PrimaryLightDir;
 
 varying vec3   var_vertPos;
 varying float  var_Time;
+
 
 #if defined(USE_TCGEN)
 vec2 GenTexCoords(int TCGen, vec3 position, vec3 normal, vec3 TCGenVector0, vec3 TCGenVector1)
@@ -216,6 +217,9 @@ void main()
 
 	gl_Position = u_ModelViewProjectionMatrix * vec4(position, 1.0);
 
+	vec3 preMMPos = position.xyz;
+	vec3 preMMNorm = normal.xyz;
+
 #if defined(USE_MODELMATRIX)
 	position  = (u_ModelMatrix * vec4(position, 1.0)).xyz;
 	normal    = (u_ModelMatrix * vec4(normal,   0.0)).xyz;
@@ -276,16 +280,9 @@ void main()
   var_vertPos = gl_Position.xyz;
   var_Time = u_Time;
 
-
 #if defined(USE_TESSELLATION)
   TexCoord_CS_in = var_TexCoords.xy;
-  Normal_CS_in = attr_Normal.xyz;//normal.xyz;
-  WorldPos_CS_in = attr_Position.xyz;//position.xyz;
-  //gl_Position.xyz = attr_Position.xyz;//position.xyz;
-  
-
-  //TexCoord_CS_in = var_TexCoords.xy;
-  //Normal_CS_in = normal.xyz;
-  //WorldPos_CS_in = gl_Position.xyz;
+  Normal_CS_in = vec4(preMMNorm,    viewDir.x);//var_Normal;
+  gl_Position = vec4(preMMPos, 1.0);
 #endif
 }

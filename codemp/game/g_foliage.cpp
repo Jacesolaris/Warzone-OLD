@@ -396,7 +396,7 @@ extern "C" {
 			return;
 		}
 
-		TREE_SCALE_MULTIPLIER = 3.0;
+		TREE_SCALE_MULTIPLIER = 1.0;
 
 		if (!strcmp(CURRENT_CLIMATE_OPTION, "springpineforest"))
 		{

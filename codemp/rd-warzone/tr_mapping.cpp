@@ -992,6 +992,9 @@ void R_LoadMapInfo ( void )
 		tr.random2KImage = R_FindImageFile("gfx/random2K.tga", IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION);
 	}
 
+	//tr.grassImageShader = R_FindShader( "models/warzone/foliage/grasstropical", lightmapsNone, stylesDefault, qtrue );
+	tr.grassImage = R_FindImageFile("models/warzone/foliage/grasstropical", IMGTYPE_COLORALPHA, IMGFLAG_NONE);
+	
 #if 0
 	if (!ri->FS_FileExists(va( "mapImage/%s.tga", currentMapName )))
 	{

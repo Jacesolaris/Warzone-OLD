@@ -1,4 +1,4 @@
-precision highp float;
+//precision highp float;
 
 uniform sampler2D u_DiffuseMap;
 uniform sampler2D u_SteepMap;
@@ -98,32 +98,28 @@ varying vec3   var_vertPos;
 varying vec3      var_ViewDir;
 
 
+
+
 #if defined(USE_TESSELLATION)
+
 in vec2					TexCoord_FS_in;
-in vec3					Normal_FS_in;
-in vec3					WorldPos_FS_in;
+in vec4					Normal_FS_in;
+in vec4					WorldPos_FS_in;
 in vec3					ViewDir_FS_in;
 
-#define m_Normal Normal_FS_in
+#define m_Normal		Normal_FS_in
+#define m_TexCoords		TexCoord_FS_in
+#define m_vertPos		WorldPos_FS_in.xyz
+#define m_ViewDir		var_ViewDir
 
-#define m_TexCoords TexCoord_FS_in
-//#define m_TexCoords var_TexCoords
+#else //!defined(USE_TESSELLATION)
 
-//#define m_vertPos WorldPos_FS_in
-#define m_vertPos var_vertPos
+#define m_Normal		var_Normal
+#define m_TexCoords		var_TexCoords
+#define m_vertPos		var_vertPos
+#define m_ViewDir		var_ViewDir
 
-//#define m_ViewDir ViewDir_FS_in
-#define m_ViewDir var_ViewDir
-
-#else //!USE_TESSELLATION
-
-#define m_Normal var_Normal
-#define m_TexCoords var_TexCoords
-#define m_vertPos var_vertPos
-#define m_ViewDir var_ViewDir
-
-#endif //USE_TESSELLATION
-
+#endif //defined(USE_TESSELLATION)
 
 
 
@@ -315,6 +311,32 @@ vec4 subScatterFS(vec4 BaseColor, vec4 SpecColor, vec3 lightVec, vec3 LightColor
 
 void main()
 {
+#if 0
+#if defined(USE_TESSELLATION)
+	gl_FragColor = texture2D(u_DiffuseMap, m_TexCoords);
+
+	#if defined(USE_GLOW_BUFFER)
+		out_Glow = gl_FragColor;
+	#else
+		out_Glow = vec4(0.0);
+	#endif
+
+	out_DetailedNormal = vec4(m_Normal.xyz, 0.2);
+
+	if (u_Local1.a == 20 || u_Local1.a == 19 /*|| u_Local1.a == 5 || u_Local1.a == 6*/) 
+	{// (Foliage/Plants), (billboard trees), ShortGrass, LongGrass
+		out_FoliageMap.r = 1.0;
+		out_FoliageMap.g = 1.0;
+	}
+	else
+	{
+		out_FoliageMap.r = 1.0;
+		out_FoliageMap.g = 0.0;
+	}
+	return;
+#endif //defined(USE_TESSELLATION)
+#endif
+
 	vec3 viewDir = vec3(0.0), lightColor = vec3(0.0), ambientColor = vec3(0.0);
 	vec4 specular = vec4(0.0);
 	vec3 L, N, E, H;
@@ -409,7 +431,7 @@ void main()
 
 
 
-	#ifdef USE_OVERLAY//USE_STEEPMAP
+	#if defined(USE_OVERLAY)//USE_STEEPMAP
 
 		//
 		// Steep Maps...
@@ -431,7 +453,7 @@ void main()
 	#endif //USE_OVERLAY//USE_STEEPMAP
 	
 
-	#ifdef USE_OVERLAY
+	#if defined(USE_OVERLAY)
 
 		//
 		// Overlay Maps...
@@ -461,10 +483,6 @@ void main()
 		}
 
 	#endif //USE_OVERLAY
-
-
-
-	
 
 
 

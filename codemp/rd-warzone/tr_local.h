@@ -127,6 +127,10 @@ In JA, we define these in the tr_local.h, which is much more logical
 
 extern cvar_t	*r_superSampleMultiplier;
 extern cvar_t	*r_tesselation;
+extern cvar_t	*r_tesselationLevel;
+
+extern cvar_t	*r_foliage;
+extern cvar_t	*r_foliageLodDistance;
 
 extern cvar_t	*r_rotatex;
 extern cvar_t	*r_rotatey;
@@ -1196,9 +1200,9 @@ enum
 	LIGHTDEF_USE_SKELETAL_ANIMATION = 0x0080,
 	LIGHTDEF_USE_GLOW_BUFFER     = 0x0100,
 	LIGHTDEF_USE_CUBEMAP		= 0x0200,
-	LIGHTDEF_USE_OVERLAY		= 0x0400,
-	LIGHTDEF_ALL                 = 0x07FF,
-	LIGHTDEF_COUNT               = 0x0800
+	//LIGHTDEF_USE_OVERLAY		= 0x0400,
+	LIGHTDEF_ALL                 = 0x03FF,
+	LIGHTDEF_COUNT               = 0x0400
 };
 
 enum
@@ -1279,6 +1283,9 @@ typedef enum
 	UNIFORM_MODELVIEWPROJECTIONMATRIX,
 	UNIFORM_INVPROJECTIONMATRIX,
 	UNIFORM_INVEYEPROJECTIONMATRIX,
+	UNIFORM_PROJECTIONMATRIX,
+	UNIFORM_MODELVIEWMATRIX,
+	UNIFORM_VIEWMATRIX,
 
 	UNIFORM_TIME,
 	UNIFORM_VERTEXLERP,
@@ -1338,6 +1345,7 @@ typedef struct shaderProgram_s
 	GLuint     fragmentShader;
 	GLuint     tessControlShader;
 	GLuint     tessEvaluationShader;
+	GLuint     geometryShader;
 	uint32_t        attribs;	// vertex array attributes
 
 	// uniform parameters
@@ -1347,6 +1355,7 @@ typedef struct shaderProgram_s
 	char  *uniformBuffer;
 
 	qboolean tesselation;
+	qboolean geometry;
 } shaderProgram_t;
 
 // trRefdef_t holds everything that comes in refdef_t,
@@ -2216,6 +2225,7 @@ typedef struct trGlobals_s {
 	image_t					*foliageMapImage;
 	image_t					*grassImage;
 	image_t					*grassMaskImage[10];
+	shader_t				*grassImageShader;
 
 	image_t                 *shadowCubemaps[MAX_DLIGHTS];
 	
@@ -2344,6 +2354,7 @@ typedef struct trGlobals_s {
 	shaderProgram_t waterShader;
 	shaderProgram_t waterPostShader;
 	shaderProgram_t grassShader;
+	shaderProgram_t grass2Shader;
 	shaderProgram_t sssShader;
 	shaderProgram_t sss2Shader;
 	shaderProgram_t rbmShader;
