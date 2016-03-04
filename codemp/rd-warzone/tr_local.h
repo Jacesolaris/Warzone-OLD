@@ -130,7 +130,8 @@ extern cvar_t	*r_tesselation;
 extern cvar_t	*r_tesselationLevel;
 
 extern cvar_t	*r_foliage;
-extern cvar_t	*r_foliageLodDistance;
+extern cvar_t	*r_foliageDistance;
+extern cvar_t	*r_foliageDensity;
 
 extern cvar_t	*r_rotatex;
 extern cvar_t	*r_rotatey;
@@ -406,6 +407,12 @@ extern cvar_t  *r_testshader;
 extern cvar_t  *r_testshaderValue1;
 extern cvar_t  *r_testshaderValue2;
 extern cvar_t  *r_testshaderValue3;
+extern cvar_t  *r_testshaderValue4;
+extern cvar_t  *r_testshaderValue5;
+extern cvar_t  *r_testshaderValue6;
+extern cvar_t  *r_testshaderValue7;
+extern cvar_t  *r_testshaderValue8;
+extern cvar_t  *r_testshaderValue9;
 
 //
 // UQ1: End Added...
@@ -2737,6 +2744,12 @@ extern cvar_t  *r_testshader;
 extern cvar_t  *r_testshaderValue1;
 extern cvar_t  *r_testshaderValue2;
 extern cvar_t  *r_testshaderValue3;
+extern cvar_t  *r_testshaderValue4;
+extern cvar_t  *r_testshaderValue5;
+extern cvar_t  *r_testshaderValue6;
+extern cvar_t  *r_testshaderValue7;
+extern cvar_t  *r_testshaderValue8;
+extern cvar_t  *r_testshaderValue9;
 
 //
 // UQ1: End Added...

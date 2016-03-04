@@ -1,363 +1,198 @@
-//#define USE_LIGHTING
+layout(triangles, invocations = 20) in;
+layout(triangle_strip, max_vertices = 128) out;
 
-#ifdef USE_LIGHTING
-#define MAX_VERTICES 68
-#else //!USE_LIGHTING
-#define MAX_VERTICES 80
-#endif
-
-#define LOD0_NUM_FOLIAGES MAX_VERTICES
-#define LOD1_NUM_FOLIAGES MAX_VERTICES / 2
-#define LOD2_NUM_FOLIAGES MAX_VERTICES / 4
-
-layout(triangles, invocations = 6) in;
-layout(triangle_strip, max_vertices = MAX_VERTICES) out;
-
-//------------------------------------------------------------------------------------------------------------------------
 
 uniform mat4			u_ModelViewProjectionMatrix;
 uniform mat4			u_ModelMatrix;
 uniform mat4			u_ModelViewMatrix;
-uniform mat4			u_ViewProjectionMatrix;
-uniform mat4			u_ProjectionMatrix;
-uniform mat4			u_ViewMatrix;
 
-uniform vec4			u_Local10;
+uniform vec4			u_Local10; // foliageLODdistance, foliageDensity, doSway, overlaySway
 
-#define viewProjectionMatrix u_ModelViewProjectionMatrix
-#define ModelViewMatrix u_ModelViewMatrix
+uniform float			u_Time;
 
-uniform sampler2D		u_SteepMap;
-uniform vec4			u_Local7; // Radius1
-uniform vec4			u_Local8; // Radius2
-uniform vec4			u_Local9; // Time, windStrength, AmbientMulti, LODdist
+#define screenScale		vec3(r_FBufScale.xy, 0.0)
 
-#define Radius1			u_Local7
-#define Radius2			u_Local8
-#define Time			u_Local9.r
-#define windStrength	u_Local9.g
-#define AmbientMulti	u_Local9.b
-#define LODdist			u_Local9.a
+#define MAX_RANGE		u_Local10.r
 
-//------------------------------------------------------------------------------------------------------------------------
+#define LOD0_RANGE		MAX_RANGE / 16.0
+#define LOD1_RANGE		MAX_RANGE / 8.0
+#define LOD2_RANGE		MAX_RANGE / 5.0
+#define LOD3_RANGE		MAX_RANGE / 3.0
 
-const float invo =			6.0;                    //needs to match the aboves 'invocations =' - # of instances
-const int Lights =			0;                      //number of Lights to add - if it was dynamic, it would be very expensive
-const float grassLength =	0.625;					//overall grass height, should be less than 1.0 - decreasing improves performance
-const vec2 windDirection =	vec2(-1.0,0.5);			//initial direction of the wind - changes
-const int windSamples =		3;						//sine waves to add for wind calcs - 1-4 looks good
+#define LOD0_MAX_FOLIAGES 32
+#define LOD1_MAX_FOLIAGES 24
+#define LOD2_MAX_FOLIAGES 6
+#define LOD3_MAX_FOLIAGES 1
 
-//------------------------------------------------------------------------------------------------------------------------
+smooth out vec2 vTexCoord;
+//smooth out vec3 vWorldPos;
+//smooth out vec4 vEyeSpacePos;
 
-in GroundData {
-  vec2 TexCoords;
-  vec3 Normal;
-} ground[3];
 
-out Grass {
-#ifdef USE_LIGHTING
-  vec3 LightColor;
-  vec2 ColorMulti;
-#endif //USE_LIGHTING
-  vec2 GrassTexCoords;
-  vec3 Normal;
-} grass;
-
-flat out int Tex;
-
-//------------------------------------------------------------------------------------------------------------------------
-
-mat3 zRotationMatrix(float angle)   //rotation matrix for Z-axis rotation
+mat4 rotationMatrix(vec3 axis, float angle)
 {
-  float s = sin(angle);
-  float c = cos(angle);
-  
-  mat3 rotate = mat3( c,  -s,  0.0,
-            s,   c,  0.0,
-             0.0, 0.0, 1.0);
-             
-  return rotate;
+    axis = normalize(axis);
+    float s = sin(angle);
+    float c = cos(angle);
+    float oc = 1.0 - c;
+    
+    return mat4(oc * axis.x * axis.x + c,           oc * axis.x * axis.y - axis.z * s,  oc * axis.z * axis.x + axis.y * s,  0.0,
+                oc * axis.x * axis.y + axis.z * s,  oc * axis.y * axis.y + c,           oc * axis.y * axis.z - axis.x * s,  0.0,
+                oc * axis.z * axis.x - axis.y * s,  oc * axis.y * axis.z + axis.x * s,  oc * axis.z * axis.z + c,           0.0,
+                0.0,                                0.0,                                0.0,                                1.0);
 }
 
-vec2 getWind(vec2 worldPos, float height)   //sine wave wind function
-{
-  float windTime = Time+(height*(grassLength*3.0));
-  float windDisplacement = cos(0.375*((17.5+worldPos.x)+(17.5+worldPos.y))+(windTime*1.25));
+vec3 vLocalSeed;
 
-  for (int w = 0; w < windSamples; w++)
-  {
-    float rAnd = float(w)+1.0-(float(windSamples)/2.0);
-    float rCnd = float(w)-1.0+(float(windSamples)/2.0);
-    windDisplacement += sin(0.5*((17.5+rAnd+worldPos.x)+(rAnd+worldPos.y))+(windTime*(rAnd*0.1+1.75)));
-    windDisplacement -= cos(0.5*((17.5+rCnd+worldPos.x)+(rAnd+worldPos.y))+(windTime*(rCnd*0.1+1.75)));
+// This function returns random number from zero to one
+float randZeroOne()
+{
+    uint n = floatBitsToUint(vLocalSeed.y * 214013.0 + vLocalSeed.x * 2531011.0 + vLocalSeed.z * 141251.0);
+    n = n * (n * n * 15731u + 789221u);
+    n = (n >> 9u) | 0x3F800000u;
+ 
+    float fRes =  2.0 - uintBitsToFloat(n);
+    vLocalSeed = vec3(vLocalSeed.x + 147158.0 * fRes, vLocalSeed.y*fRes  + 415161.0 * fRes, vLocalSeed.z + 324154.0*fRes);
+    return fRes;
+}
+
+int randomInt(int min, int max)
+{
+	float fRandomFloat = randZeroOne();
+	return int(float(min)+fRandomFloat*float(max-min));
+}
+
+// Produce a psuedo random point that exists on the current triangle primitive.
+vec4 randomBarycentricCoordinate() {
+  float R = randZeroOne();
+  float S = randZeroOne();
+  if (R + S >= 1) {
+    R = 1 - R;
+    S = 1 - S;
   }
-
-  vec2 Wind = windStrength*(height*grassLength)*sin((worldPos.xy*normalize(windDirection))+vec2(windTime*0.5))*windDisplacement;
-
-  return Wind;
+  return gl_in[0].gl_Position + (R * (gl_in[1].gl_Position - gl_in[0].gl_Position)) + (S * (gl_in[2].gl_Position - gl_in[0].gl_Position));
 }
 
-vec3 getPos(vec3 OPos, vec3 Pos1, vec3 Pos2, vec3 Pos3, int iter)   //evenly distributed points per face - used for normal as well
-{
-  vec3 NPos = OPos;
-  NPos = (iter == 1)? OPos*1.5+Pos1+Pos2: NPos;
-  NPos = (iter == 2)? OPos*1.5+Pos2+Pos3: NPos;
-  NPos = (iter == 3)? OPos*1.5+Pos3+Pos1: NPos;
-  NPos = (iter == 4)? (OPos*2.25)+(Pos1*1.25): NPos;
-  NPos = (iter == 5)? (OPos*2.25)+(Pos2*1.25): NPos;
-  NPos = (iter == 6)? (OPos*2.25)+(Pos3*1.25): NPos;
-  NPos = (iter == 7)? OPos+Pos1*2.0: NPos;
-  NPos = (iter == 8)? OPos+Pos2*2.0: NPos;
-  NPos = (iter == 9)? OPos+Pos3*2.0: NPos;
-  
-  if (iter != 0)
-  {
-    NPos /= (iter > 6)? 3.0: 3.5;
-  }
-
-  return NPos;
-}
-
-#ifdef USE_LIGHTING
-//directional lighting
-vec3 getDirectLighting(vec3 Normal, int i)
-{
-  float NdotL = clamp(dot(normalize(Normal), gl_LightSource[i].position.xyz),0.0,0.625);
-  vec3 Light = (NdotL > AmbientMulti)? gl_LightSource[i].diffuse.rgb * NdotL: gl_LightSource[i].diffuse.rgb * AmbientMulti;
-
-  return Light;
-}
-
-//-----------------------------------            1 / (   1     +   .1  *d +    .01   *d^2)
-//point lighting - 1 / (d/r + 1)^2  = same as =  1 / (constant + linear*d + quadratic*d^2)
-vec3 getPointLighting(vec3 Normal, int i, vec3 VertPos, float radius)
-{
-  vec3 PointLight = vec3(0.0);
-  vec3 len = (gl_LightSource[i].position.xyz - VertPos);
-  float NdotL = clamp(dot(normalize(Normal),normalize(len)), 0.0, 1.0)*0.625;    //*.625 to equalize it with directional lights that are clamped to less than 1
-
-  if (NdotL > 0.0)
-  {
-    float Dist2Light = length(len);
-    float Att = 1.0 / pow((Dist2Light/radius) + 1.0, 2.0);
-
-    PointLight = Att * NdotL * gl_LightSource[i].diffuse.rgb;
-  }
-  
-  return PointLight;
-}
-#endif //USE_LIGHTING
-
-//------------------------------------------------------------------------------------------------------------------------
 
 void main()
 {
-  //UV center -----------------------
-  vec2 TCoords1 = ground[0].TexCoords;
-  vec2 TCoords2 = ground[1].TexCoords;
-  vec2 TCoords3 = ground[2].TexCoords;
-  
-  vec2 PosCoords = (TCoords1+TCoords2+TCoords3) / 3.0;
-  //----------------------------------------------------
+	float fGrassPatchSize = 96.0;
 
-  //first cull check
-  float Height = texture2D(u_SteepMap, PosCoords).r;//*0.5+0.5;
-  if (Height >= 0.25)
-  {
-    Tex = 1;                      //used to determine texture
-    float LodF = 1.0;                                 //initial LOD fade factor - 0.0 to test LOD
-    float inst = float(gl_InvocationID)-(invo/2.0);   //used to randomize the instances
-    float instCheck = float(gl_InvocationID);
-
-    //face center------------------------
+	//face center------------------------
     vec3 Vert1 = gl_in[0].gl_Position.xyz;
     vec3 Vert2 = gl_in[1].gl_Position.xyz;
     vec3 Vert3 = gl_in[2].gl_Position.xyz;
 
-    vec3 CenterPos = (Vert1+Vert2+Vert3) / 3.0;   //Center of the triangle - copy for later
-    vec3 Pos = CenterPos;                         //Center of the triangle
+    vec3 Pos = (Vert1+Vert2+Vert3) / 3.0;   //Center of the triangle - copy for later
+	float VertSize = length(Vert1-Vert2) + length(Vert1-Vert3) + length(Vert2-Vert3);
+	int densityMax = int(VertSize / u_Local10.g);
     //-----------------------------------
 
-    //------ original face normal
-        vec3 Norm1 = ground[0].Normal;
-        vec3 Norm2 = ground[1].Normal;
-        vec3 Norm3 = ground[2].Normal;
+	float VertDist = (u_ModelViewProjectionMatrix*vec4(Pos, 1.0)).z;
 
-    vec3 NormC = (ground[0].Normal+ground[1].Normal+ground[2].Normal) / 3.0;  //copy for later
-    vec3 Norm = NormC;
+	//------ LOD - # of grass objects to spawn per-face
+    int FOLIAGE_DENSITY;
+	FOLIAGE_DENSITY = (VertDist <= LOD0_RANGE)? LOD0_MAX_FOLIAGES: LOD1_MAX_FOLIAGES;
+    FOLIAGE_DENSITY = (VertDist >= LOD1_RANGE)? LOD2_MAX_FOLIAGES: FOLIAGE_DENSITY;
+	FOLIAGE_DENSITY = (VertDist >= LOD2_RANGE)? LOD3_MAX_FOLIAGES: FOLIAGE_DENSITY;
+    FOLIAGE_DENSITY = (VertDist >= LOD3_RANGE)? 0: FOLIAGE_DENSITY;
 
-        //New UV coords array------------------------------------------------------
-        //tested - cheaper to calculate new uv coords here and store it in an array
-        //for Pos & Norm this method is more expensive
-        vec2 NCoords[10];
-      NCoords[0] = PosCoords;
-      NCoords[1] = (PosCoords*1.5+TCoords1+TCoords2)/3.5;
-      NCoords[2] = (PosCoords*1.5+TCoords2+TCoords3)/3.5;
-      NCoords[3] = (PosCoords*1.5+TCoords3+TCoords1)/3.5;
-      NCoords[4] = ((PosCoords*2.25)+(TCoords1*1.25))/3.5;
-      NCoords[5] = ((PosCoords*2.25)+(TCoords2*1.25))/3.5;
-      NCoords[6] = ((PosCoords*2.25)+(TCoords3*1.25))/3.5;
-      NCoords[7] = (TCoords1*2.0+PosCoords)/3.0;
-      NCoords[8] = (TCoords2*2.0+PosCoords)/3.0;
-      NCoords[9] = (TCoords3*2.0+PosCoords)/3.0;
-        //-------------------------------------------------------------------------
+	if ( FOLIAGE_DENSITY > densityMax) FOLIAGE_DENSITY = densityMax;
 
-    //randomize the height a little
-    float GrassMulti = (sin((cos((Pos.x+Pos.y)+sin(Pos.x*Pos.y))*0.1)+(float(gl_InvocationID)/(invo))*0.5+0.5)*0.5+0.5);
+	vLocalSeed = Pos*float(gl_InvocationID);
 
-    //LOD factores ----------------------------------------------------------------------------------
-    float LODi = LODdist;					//first LOD distance - might can make this a property later
-    float LODi2x = LODi*2.0;				//second LOD distance
-    float LODi4x = LODi*4.0;				//max LOD distance
-    float Trans = -LODi/3.0;				//distance to transition LOD levels
+	vec3 vBaseDir[4];
+	vBaseDir[0] = vec3(0.0, 0.0, 1.0);
+	vBaseDir[1] = vec3(0.0, 0.0, 1.0);
+	vBaseDir[2] = vec3(0.0, 0.0, -1.0);
+	vBaseDir[3] = vec3(0.0, 0.0, -1.0);
 
-    LODi += inst*(-Trans/(invo/2.0));		//layer LOD levels with instances to blend the line
-    LODi2x += inst*(-Trans/(invo/2.0));		//layer LOD levels with instances to blend the line
+	//vec3 vBaseDirRotated[4];
+	//vBaseDirRotated[0] = (rotationMatrix(vec3(0, 1, 0), sin(u_Time*0.7f)*0.1f)*vec4(vBaseDir[0], 1.0)).xyz;
+	//vBaseDirRotated[1] = (rotationMatrix(vec3(0, 1, 0), sin(u_Time*0.7f)*0.1f)*vec4(vBaseDir[1], 1.0)).xyz;
+	//vBaseDirRotated[2] = (rotationMatrix(vec3(0, 1, 0), sin(u_Time*0.7f)*0.1f)*vec4(vBaseDir[2], 1.0)).xyz;
+	//vBaseDirRotated[2] = (rotationMatrix(vec3(0, 1, 0), sin(u_Time*0.7f)*0.1f)*vec4(vBaseDir[3], 1.0)).xyz;
 
-    float VertDist = (viewProjectionMatrix*vec4(Pos, 1.0)).z;
-    //-----------------------------------------------------------------------------------------------
+	vec3 instanceRotAddition[4];
+	instanceRotAddition[0] = vec3(0.0, 0.0, 0.0);
+	instanceRotAddition[1] = vec3(1.0, 0.0, 0.0);
+	instanceRotAddition[2] = vec3(1.0, 0.0, 0.0);
+	instanceRotAddition[3] = vec3(0.0, 0.0, 0.0);
 
-    //------ LOD - # of grass objects to spawn per-face
-    int Density = (VertDist <= LODi)? LOD0_NUM_FOLIAGES: LOD1_NUM_FOLIAGES;
-    Density = (VertDist >= LODi2x)? LOD2_NUM_FOLIAGES: Density;
-    Density = (VertDist >= LODi4x)? 0: Density;
-    //Density = 10;   //used for testing disables LOD - need to comment out LOD transition if used
+	//float fWindStrength = 4.0;
+	
+	//vec3 vWindDirection = normalize(vec3(1.0, 0.0, 1.0));
 
-    inst *= invo;
+	for(int x = 0; x < FOLIAGE_DENSITY; x ++)
+	{
+		vec3 vGrassFieldPos = randomBarycentricCoordinate().xyz;
+		vGrassFieldPos.xyz += vec3(10.0);
+		float fGrassPatchHeight = randZeroOne() * 0.25 + 0.75;
+		vec3 scaleMult = vec3(fGrassPatchSize*fGrassPatchHeight*0.5f) * (vec3(1.0) - screenScale);
+		//int iGrassPatchType = randomInt(0, 3);
 
-    //first pass to randomize the position using face center as seed
-    float SinX = inst+sin(inst*(Pos.x/(Pos.y*0.1592)));
-    float SinY = inst+cos(inst*(Pos.y/(Pos.x*0.1592)));
-
-    int ck1 = int(invo*0.8);  //texture 2 check
-    int ck2 = int(invo*0.45);   //texture 3 check
-    int ck3 = int(invo*0.9);  //texture 3 check
-
-    vec3 LightCol = (Lights != 0)? vec3(AmbientMulti): vec3(1.0+AmbientMulti);
-
-    //getting ready to draw objects
-    for (int o = 0; o < Density; o++)
-    {
-      //prep second cull check with more finalized positions - resolution = (face/10)
-            PosCoords = NCoords[o];
-      Height = texture2D(u_SteepMap, PosCoords).r;
-
-      //determine the textures
-      Tex = (gl_InvocationID == ck1 && o == 5)? 2: Tex;
-      Tex = ((gl_InvocationID == ck2 || gl_InvocationID == ck3) && o == 6)? 3: Tex;
-
-      //get a more finalized normal using copy made earlier
-      Norm = getPos(NormC, Norm1, Norm2, Norm3, o);
-
-      float FinalGrassSize = ((Norm.z+2.0)/3.0)*grassLength*GrassMulti;
-
-//      Norm = normalize(gl_NormalMatrix * Norm);
-      Norm = normalize(Norm);
-
-      //different height for different grass types
-      if (Tex != 1)
-      {
-        FinalGrassSize *= (Tex == 2)? 1.5: 1.25;
-      }
-
-      //height map for grass
-      FinalGrassSize *= (Height*0.75+0.25);
-
-      //becomes stecil map - last cull check
-      if (FinalGrassSize >= 0.3)
-      {
-		 FinalGrassSize *= 32.0; // UQ1: Too small for Q3...
-
-        float instO = (float(o)-5.0)/10.0;
-
-        //Fading in/out the LOD levels--------------------
-        if (o >= 3 && o < 7 && VertDist >= (LODi2x+Trans))
-        {
-          LodF = clamp((VertDist-LODi2x)/Trans,0.0,1.0);     //transitioning - smooths the LOD transition
-
-        } else
-        if (o >= 7 && VertDist >= (LODi+Trans))
-        {
-          LodF = clamp((VertDist-LODi)/Trans,0.0,1.0);       //transitioning - smooths the LOD transition
-
-        }
-
-        float GrassBottom = FinalGrassSize*0.75;
-        float GrassTop = FinalGrassSize*1.125;
-        //------------------------------------------------
-
-        //finalizing the position---------------------------
-        Pos = getPos(CenterPos, Vert1, Vert2, Vert3, o);
-        Pos.xy += vec2(cos(Pos.x*SinX), sin(Pos.y*SinY)) * 32.0;       //offest by a random amount
-        //--------------------------------------------------
-
-#ifdef USE_LIGHTING
-        //randomizing the color - used in fragment shader
-        float rCol = 0.2*sin((instO+inst)*(Pos.x+Pos.y));
-        rCol += 1.0;
-
-        grass.ColorMulti = vec2((rCol), LodF);
-#endif //USE_LIGHTING
-
-        //randomizing the angle for rotation
-        float RandomAngle = sin(((Pos.x*Pos.y)/(Pos.x+Pos.y))*(inst+instO));
-
-        //add the wind
-        vec3 Wind = Pos+vec3(getWind(Pos.xy, FinalGrassSize), 0.0)+vec3(0.0,0.0,FinalGrassSize);
-
-#ifdef USE_LIGHTING
-        //------------------------------ LIGHTING ------------------------------
-
-        grass.LightColor = LightCol;
-
-        vec3 Pos4L = vec3(0.0);
-        Pos4L = (ModelViewMatrix * vec4((Wind+Pos)/2.0,1.0)).xyz;  //center of grass object
-        float lightRadius[8];
-
-        int NumOfLights = clamp(Lights, 0, 8);
-
-        for (int l = 0; l < NumOfLights; l++)
-        {
-          lightRadius[l] = (l < 4)? Radius1[l]: Radius2[l-4];
-
-          if (gl_LightSource[l].position.w == 0)
-          {
-            //Directional Light
-            grass.LightColor += getDirectLighting(Norm, l);
-
-          } else
-          {
-            //Point Light
-            grass.LightColor += getPointLighting(Norm, l, Pos4L, lightRadius[l]);
-
-          }
-        }
-
-        //------------------------------ LIGHTING ------------------------------
-#endif //USE_LIGHTING
-
-        //draw grass objects
-        for (int g = 0; g < 4; g++)
-        {
-          //prep random rotation
-          RandomAngle += (g != 0)? 2.0943951: 0.0;  //2.0943951 = radians(120) = 120 degrees
-          mat3 rotMat = zRotationMatrix(RandomAngle);
-
-          //bottom verts
-          gl_Position = viewProjectionMatrix * vec4((rotMat*vec3(GrassBottom,0.0,0.0))+Pos, 1.0);
-          grass.GrassTexCoords = vec2(float(g), 0.0);
-          grass.Normal = Norm;
-          EmitVertex();
-
-          //top verts
-          gl_Position = viewProjectionMatrix * vec4((rotMat*vec3(GrassTop,0.0,0.0))+Wind, 1.0);
-          grass.GrassTexCoords = vec2(float(g), 1.0);
-          grass.Normal = Norm;
-          EmitVertex();
-        }
+		/*
+		// Wind calculation stuff...
+		float fWindPower = 0.5f+sin(vGrassFieldPos.x/30+vGrassFieldPos.z/30+u_Time*(1.2f+fWindStrength/20.0f));
 		
-		EndPrimitive();
-      }
-    }
-  }
+		if(fWindPower < 0.0f)
+			fWindPower = fWindPower*0.2f;
+		else 
+			fWindPower = fWindPower*0.3f;
+		
+		fWindPower *= fWindStrength;
+		*/
+
+		for(int i = 0; i < 4; i++)
+		{
+			vec3 vGrassInstancePos = vGrassFieldPos;
+			vec3 rotation = (instanceRotAddition[i]*scaleMult);
+
+#if 0
+			vec3 vTL = vGrassInstancePos - vBaseDirRotated[i]*fGrassPatchSize*0.5f + vWindDirection*fWindPower;
+#else
+			
+			vec3 vTL = vGrassInstancePos - (vBaseDir[i]*scaleMult);
+			vTL -= rotation;
+			vTL.y -= scaleMult.y*2.0;
+			gl_Position = u_ModelViewProjectionMatrix*vec4(vTL, 1.0);
+			vTexCoord = vec2(0.0, 1.0);
+			vTexCoord.y *= vBaseDir[i].z;
+			//vWorldPos = vTL;
+			//vEyeSpacePos = u_ModelMatrix*vec4(vTL, 1.0);
+			EmitVertex();
+
+			vec3 vBL = vGrassInstancePos - (vBaseDir[i]*scaleMult);
+			vBL += rotation;
+			gl_Position = u_ModelViewProjectionMatrix*vec4(vBL, 1.0);
+			vTexCoord = vec2(1.0, 1.0);
+			vTexCoord.y *= vBaseDir[i].z;
+			//vWorldPos = vBL;
+			//vEyeSpacePos = u_ModelMatrix*vec4(vBL, 1.0);
+			EmitVertex();
+
+			vec3 vTR = vGrassInstancePos + (vBaseDir[i]*scaleMult);
+			vTR -= rotation;
+			vTR.y -= scaleMult.y*2.0;
+			gl_Position = u_ModelViewProjectionMatrix*vec4(vTR, 1.0);
+			vTexCoord = vec2(0.0, 0.0);
+			vTexCoord.y *= vBaseDir[i].z;
+			//vWorldPos = vTL;
+			//vEyeSpacePos = u_ModelMatrix*vec4(vTR, 1.0);
+			EmitVertex();
+
+			vec3 vBR = vGrassInstancePos + (vBaseDir[i]*scaleMult);
+			vBL += rotation;
+			gl_Position = u_ModelViewProjectionMatrix*vec4(vBR, 1.0);
+			vTexCoord = vec2(1.0, 0.0);
+			vTexCoord.y *= vBaseDir[i].z;
+			//vWorldPos = vBR;
+			//vEyeSpacePos = u_ModelMatrix*vec4(vBR, 1.0);
+			EmitVertex();
+
+			EndPrimitive();
+#endif
+		}		
+	}
 }
+

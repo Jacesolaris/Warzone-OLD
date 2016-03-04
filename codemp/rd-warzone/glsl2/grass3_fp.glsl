@@ -1,91 +1,35 @@
-//precision highp float;
-
-uniform sampler2D u_DiffuseMap;
-uniform sampler2D u_SteepMap;
-
-uniform vec2	u_Dimensions;
-uniform vec4	u_Local1; // parallaxScale, haveSpecular, specularScale, materialType
-uniform vec4	u_Local2; // ExtinctionCoefficient
-uniform vec4	u_Local3; // RimScalar, MaterialThickness, subSpecPower, cubemapScale
-uniform vec4	u_Local4; // haveNormalMap, isMetalic, hasRealSubsurfaceMap, sway
-uniform vec4	u_Local5; // hasRealOverlayMap, overlaySway, blinnPhong, hasSteepMap
+uniform sampler2D	u_DiffuseMap;
 
 //#define USE_LIGHTING
 
-varying float  var_Time;
-
-#if defined(USE_LIGHTMAP)
-uniform sampler2D u_LightMap;
-#endif
-
-//#if defined(USE_NORMALMAP)
-uniform sampler2D u_NormalMap;
-//#endif
-
-#if defined(USE_DELUXEMAP)
-uniform sampler2D u_DeluxeMap;
-#endif
-
-#if defined(USE_SPECULARMAP)
-uniform sampler2D u_SpecularMap;
-#endif
-
-#if defined(USE_SHADOWMAP)
-uniform sampler2D u_ShadowMap;
-#endif
-
-#if defined(USE_CUBEMAP)
-#define textureCubeLod textureLod // UQ1: > ver 140 support
-uniform samplerCube u_CubeMap;
-#endif
-
-#if defined(SUBSURFACE_SCATTER)
-uniform sampler2D u_SubsurfaceMap;
-#endif
-
-uniform sampler2D u_OverlayMap;
-
-uniform vec3  u_PrimaryLightColor;
-uniform vec3  u_PrimaryLightAmbient;
-
-uniform vec4      u_NormalScale;
-uniform vec4      u_SpecularScale;
+uniform vec3		u_PrimaryLightColor;
+uniform vec3		u_PrimaryLightAmbient;
+varying vec4		var_PrimaryLightDir;
+varying vec3		var_ViewDir;
 
 
-varying vec2      var_TexCoords;
+smooth in vec2 vTexCoord;
+//smooth in vec3 vWorldPos;
+//smooth in vec4 vEyeSpacePos;
 
 
-varying vec4   var_Normal;
-varying vec4   var_Tangent;
-varying vec4   var_Bitangent;
-#define var_Normal2 var_Normal.w
 
-varying vec4      var_PrimaryLightDir;
-
-varying vec3      var_ViewDir;
-
-#define m_TexCoords vec2(1.0)
+#define m_TexCoords vTexCoord
 #define m_Normal vec3(1.0)
-#define m_vertPos var_vertPos
+//#define m_vertPos vWorldPos
 #define m_ViewDir var_ViewDir
 
 
-
-
-
 out vec4 out_Glow;
-//out vec4 out_Normal;
 out vec4 out_DetailedNormal;
 out vec4 out_FoliageMap;
 
 
-
-
-in vec4 Color;
-
 void main() 
 {
-	gl_FragColor = vec4(/*Color.rgb*/0.0, 0.0, 1.0, 1.0);
+	//gl_FragColor = vec4(0.0, 0.0, 1.0, 1.0);
+	//gl_FragColor = vec4(0.0, 0.0, m_TexCoords.y, 1.0);
+	gl_FragColor = texture(u_DiffuseMap, m_TexCoords);
 
 #if 0
 #if defined(USE_PRIMARY_LIGHT) || defined(USE_PRIMARY_LIGHT_SPECULAR)

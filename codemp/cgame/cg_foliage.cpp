@@ -22,7 +22,7 @@ extern qboolean InFOV( vec3_t spot, vec3_t from, vec3_t fromAngles, int hFOV, in
 	//
 	// =======================================================================================================================================
 
-	//#define			__NO_GRASS__	// Disable plants... Can use this if I finish GPU based grasses...
+#define			__NO_GRASS__	// Disable plants... Can use this if I finish GPU based grasses...
 	//#define		__NO_PLANTS__		// Disable plants and only draw grass for everything... Was just for testing FPS difference...
 
 	// =======================================================================================================================================
@@ -1207,8 +1207,8 @@ extern "C" {
 				ScaleModelAxis( &re );
 
 				FOLIAGE_AddFoliageEntityToScene( &re );
-			}
 #endif //__NO_GRASS__
+			}
 		}
 
 		if ((passType == FOLIAGE_PASS_CLOSETREE || FOLIAGE_PASS_TREE) && FOLIAGE_TREE_SELECTION[num] > 0)
@@ -1342,6 +1342,10 @@ extern "C" {
 		int				numPositions = 0;
 		int				numRemovedPositions = 0;
 		float			minFoliageScale = cg_foliageMinFoliageScale.value;
+#ifdef __NO_GRASS__
+		int fileCount = 0;
+		int treeCount = 0;
+#endif //__NO_GRASS__
 
 		trap->FS_Open( va( "foliage/%s.foliage", cgs.currentmapname), &f, FS_READ );
 
@@ -1352,6 +1356,32 @@ extern "C" {
 
 		FOLIAGE_NUM_POSITIONS = 0;
 
+#ifdef __NO_GRASS__
+		trap->FS_Read( &fileCount, sizeof(int), f );
+
+		for (i = 0; i < fileCount; i++)
+		{
+			trap->FS_Read( &FOLIAGE_POSITIONS[treeCount], sizeof(vec3_t), f );
+			trap->FS_Read( &FOLIAGE_NORMALS[treeCount], sizeof(vec3_t), f );
+			trap->FS_Read( &FOLIAGE_PLANT_SELECTION[treeCount], sizeof(int), f );
+			trap->FS_Read( &FOLIAGE_PLANT_ANGLES[treeCount], sizeof(float), f );
+			trap->FS_Read( &FOLIAGE_PLANT_SCALE[treeCount], sizeof(float), f );
+			trap->FS_Read( &FOLIAGE_TREE_SELECTION[treeCount], sizeof(int), f );
+			trap->FS_Read( &FOLIAGE_TREE_ANGLES[treeCount], sizeof(float), f );
+			trap->FS_Read( &FOLIAGE_TREE_SCALE[treeCount], sizeof(float), f );
+
+			if (FOLIAGE_TREE_SELECTION[treeCount] > 0 || FOLIAGE_PLANT_SELECTION[treeCount] > 0 )
+			{// Only keep positions with trees or plants...
+				treeCount++;
+			}
+			else
+			{
+				numRemovedPositions++;
+			}
+		}
+
+		FOLIAGE_NUM_POSITIONS = treeCount;
+#else //!__NO_GRASS__
 		trap->FS_Read( &numPositions, sizeof(int), f );
 
 		for (i = 0; i < numPositions; i++)
@@ -1376,11 +1406,17 @@ extern "C" {
 				FOLIAGE_NUM_POSITIONS++;
 			}
 		}
+#endif //__NO_GRASS__
 
 		trap->FS_Close(f);
 
+#ifdef __NO_GRASS__
+		trap->Print( "^1*** ^3%s^5: Successfully loaded %i foliage points (%i unused grasses removed) from foliage file ^7foliage/%s.foliage^5.\n", GAME_VERSION,
+			FOLIAGE_NUM_POSITIONS, numRemovedPositions, cgs.currentmapname );
+#else //!__NO_GRASS__
 		trap->Print( "^1*** ^3%s^5: Successfully loaded %i foliage points (%i removed by cg_foliageMinFoliageScale) from foliage file ^7foliage/%s.foliage^5.\n", GAME_VERSION,
 			FOLIAGE_NUM_POSITIONS, numRemovedPositions, cgs.currentmapname );
+#endif //__NO_GRASS__
 
 		FOLIAGE_Setup_Foliage_Areas();
 

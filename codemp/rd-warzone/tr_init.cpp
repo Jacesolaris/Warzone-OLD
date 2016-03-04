@@ -41,7 +41,8 @@ cvar_t	*r_tesselation;
 cvar_t	*r_tesselationLevel;
 
 cvar_t	*r_foliage;
-cvar_t	*r_foliageLodDistance;
+cvar_t	*r_foliageDistance;
+cvar_t	*r_foliageDensity;
 
 cvar_t	*r_rotatex;
 cvar_t	*r_rotatey;
@@ -336,6 +337,12 @@ cvar_t  *r_testshader;
 cvar_t  *r_testshaderValue1;
 cvar_t  *r_testshaderValue2;
 cvar_t  *r_testshaderValue3;
+cvar_t  *r_testshaderValue4;
+cvar_t  *r_testshaderValue5;
+cvar_t  *r_testshaderValue6;
+cvar_t  *r_testshaderValue7;
+cvar_t  *r_testshaderValue8;
+cvar_t  *r_testshaderValue9;
 
 //
 // UQ1: End Added...
@@ -1332,8 +1339,9 @@ void R_Register( void )
 	r_tesselation = ri->Cvar_Get( "r_tesselation", "0", CVAR_ARCHIVE | CVAR_LATCH );
 	r_tesselationLevel = ri->Cvar_Get( "r_tesselationLevel", "1.0", CVAR_ARCHIVE );
 	
-	r_foliage = ri->Cvar_Get( "r_foliage", "0", CVAR_ARCHIVE | CVAR_LATCH );
-	r_foliageLodDistance = ri->Cvar_Get( "r_foliageLodDistance", "2048.0", CVAR_ARCHIVE );
+	r_foliage = ri->Cvar_Get( "r_foliage", "1", CVAR_ARCHIVE | CVAR_LATCH );
+	r_foliageDistance = ri->Cvar_Get( "r_foliageDistance", "8192.0", CVAR_ARCHIVE );
+	r_foliageDensity = ri->Cvar_Get( "r_foliageDensity", "192.0", CVAR_ARCHIVE );
 
 	//
 	// latched and archived variables
@@ -1531,6 +1539,12 @@ void R_Register( void )
 	r_testshaderValue1 = ri->Cvar_Get( "r_testshaderValue1", "1.0", CVAR_ARCHIVE );
 	r_testshaderValue2 = ri->Cvar_Get( "r_testshaderValue2", "0.0", CVAR_ARCHIVE );
 	r_testshaderValue3 = ri->Cvar_Get( "r_testshaderValue3", "0.0", CVAR_ARCHIVE );
+	r_testshaderValue4 = ri->Cvar_Get( "r_testshaderValue4", "1.0", CVAR_ARCHIVE );
+	r_testshaderValue5 = ri->Cvar_Get( "r_testshaderValue5", "0.0", CVAR_ARCHIVE );
+	r_testshaderValue6 = ri->Cvar_Get( "r_testshaderValue6", "0.0", CVAR_ARCHIVE );
+	r_testshaderValue7 = ri->Cvar_Get( "r_testshaderValue7", "1.0", CVAR_ARCHIVE );
+	r_testshaderValue8 = ri->Cvar_Get( "r_testshaderValue8", "0.0", CVAR_ARCHIVE );
+	r_testshaderValue9 = ri->Cvar_Get( "r_testshaderValue9", "0.0", CVAR_ARCHIVE );
 
 	//
 	// UQ1: End Added...

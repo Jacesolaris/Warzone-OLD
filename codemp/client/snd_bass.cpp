@@ -879,7 +879,7 @@ qboolean BASS_MUSIC_STARTING = qfalse;
 
 void BASS_StopMusic( DWORD samplechan )
 {
-	while (BASS_MUSIC_STARTING)
+	while (BASS_MUSIC_STARTING || MUSIC_LOADING)
 	{
 		Sleep(1);
 	}

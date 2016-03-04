@@ -1,70 +1,69 @@
-layout(triangles/*, invocations = 6*/) in;
-layout(triangle_strip, max_vertices=128) out;
+layout(triangles, invocations = 20) in;
+layout(triangle_strip, max_vertices = 170) out;
 
-uniform mat4   u_ModelViewProjectionMatrix;
 
-out vec4 Color;
+uniform mat4			u_ModelViewProjectionMatrix;
+uniform mat4			u_ModelMatrix;
+uniform mat4			u_ModelViewMatrix;
 
-#define SCALE_MULTIPLIER 1.0
+uniform vec4			u_Local10; // foliageLODdistance
 
-// Helper Function Signatures
-void initMT(uint seed, uint m1, uint m2, uint tmat);
-float random();
+uniform float			u_Time;
 
-vec4 randomBarycentricCoordinate();
-void grassBlade(vec4 center);
-void createTriangle(vec4 A, vec4 B, vec4 C);
-vec2 bladeOrientation();
+#define screenScale		vec3(r_FBufScale.xy, 0.0)
 
-void main() {
-  uint instanceFactor = uint(gl_PrimitiveID);
-  initMT(234340U ^ instanceFactor, 0xf50a1d49U, 0xffa8ffebU, 0x0bf2bfffU);
+#define MAX_RANGE		u_Local10.r
 
-  for (int i = 0; i < 20; i++) {
-    grassBlade(randomBarycentricCoordinate());
-  }
+#define LOD0_RANGE		MAX_RANGE / 8.0
+#define LOD1_RANGE		MAX_RANGE / 5.0
+#define LOD2_RANGE		MAX_RANGE / 3.0
+
+#define LOD0_MAX_FOLIAGES 42
+#define LOD1_MAX_FOLIAGES 9
+#define LOD2_MAX_FOLIAGES 2
+
+smooth out vec2 vTexCoord;
+//smooth out vec3 vWorldPos;
+//smooth out vec4 vEyeSpacePos;
+
+
+mat4 rotationMatrix(vec3 axis, float angle)
+{
+    axis = normalize(axis);
+    float s = sin(angle);
+    float c = cos(angle);
+    float oc = 1.0 - c;
+    
+    return mat4(oc * axis.x * axis.x + c,           oc * axis.x * axis.y - axis.z * s,  oc * axis.z * axis.x + axis.y * s,  0.0,
+                oc * axis.x * axis.y + axis.z * s,  oc * axis.y * axis.y + c,           oc * axis.y * axis.z - axis.x * s,  0.0,
+                oc * axis.z * axis.x - axis.y * s,  oc * axis.y * axis.z + axis.x * s,  oc * axis.z * axis.z + c,           0.0,
+                0.0,                                0.0,                                0.0,                                1.0);
 }
 
-// Generate a single blade of grass
-// center - The vector representing the point that center of the base of blade of grass should be placed
-void grassBlade(vec4 center) {
-  vec2 orient = bladeOrientation();
-  float xAngle = orient.x * 0.0015f;
-  float yAngle = orient.y * 0.0015f;
-  float heightVariance = (random() * 0.01f) + 0.02f;
-  vec4 A = center + vec4((xAngle, 0, yAngle, 0)*SCALE_MULTIPLIER);
-  vec4 B = center + vec4((-xAngle, 0, -yAngle, 0)*SCALE_MULTIPLIER);
-  vec4 C = center + vec4((xAngle, heightVariance, yAngle, 0)*SCALE_MULTIPLIER);
-  vec4 D = center + vec4((-xAngle, heightVariance, -yAngle, 0)*SCALE_MULTIPLIER);
-  vec4 E = center + vec4((0, heightVariance * 4, 0, 0)*SCALE_MULTIPLIER);
+vec3 vLocalSeed;
 
-  // Emit coordinates
-  Color = vec4(0, 0.55, 0.05, 1.0);
-  createTriangle(A, B, C);
-  createTriangle(B, D, C);
-  createTriangle(C, D, E);
+// This function returns random number from zero to one
+float randZeroOne()
+{
+    uint n = floatBitsToUint(vLocalSeed.y * 214013.0 + vLocalSeed.x * 2531011.0 + vLocalSeed.z * 141251.0);
+    n = n * (n * n * 15731u + 789221u);
+    n = (n >> 9u) | 0x3F800000u;
+ 
+    float fRes =  2.0 - uintBitsToFloat(n);
+    vLocalSeed = vec3(vLocalSeed.x + 147158.0 * fRes, vLocalSeed.y*fRes  + 415161.0 * fRes, vLocalSeed.z + 324154.0*fRes);
+    return fRes;
 }
 
-vec2 bladeOrientation() {
-  float angle = radians(random() * 360);
-  return vec2(cos(angle), sin(angle));
-}
-
-// Create a vertex with the given matrix and three vertexes
-void createTriangle(vec4 A, vec4 B, vec4 C) {
-  gl_Position = /*u_ModelViewProjectionMatrix **/ A;
-  EmitVertex();
-  gl_Position = /*u_ModelViewProjectionMatrix **/ B;
-  EmitVertex();
-  gl_Position = /*u_ModelViewProjectionMatrix **/ C;
-  EmitVertex();
-  EndPrimitive();
+int randomInt(int min, int max)
+{
+	float fRandomFloat = randZeroOne();
+	return int(float(min)+fRandomFloat*float(max-min));
 }
 
 // Produce a psuedo random point that exists on the current triangle primitive.
 vec4 randomBarycentricCoordinate() {
-  float R = random();
-  float S = random();
+  float R = randZeroOne();
+  float S = randZeroOne();
   if (R + S >= 1) {
     R = 1 - R;
     S = 1 - S;
@@ -72,80 +71,120 @@ vec4 randomBarycentricCoordinate() {
   return gl_in[0].gl_Position + (R * (gl_in[1].gl_Position - gl_in[0].gl_Position)) + (S * (gl_in[2].gl_Position - gl_in[0].gl_Position));
 }
 
-// All code Below is ported from TinyMT and as such we affix the original license:
 
-/*
-Copyright (c) 2011 Mutsuo Saito, Makoto Matsumoto, Hiroshima
-University and The University of Tokyo. All rights reserved.
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are
-met:
-    * Redistributions of source code must retain the above copyright
-      notice, this list of conditions and the following disclaimer.
-    * Redistributions in binary form must reproduce the above
-      copyright notice, this list of conditions and the following
-      disclaimer in the documentation and/or other materials provided
-      with the distribution.
-    * Neither the name of the Hiroshima University nor the names of
-      its contributors may be used to endorse or promote products
-      derived from this software without specific prior written
-      permission.
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-*/
-// Represents the Mersenne Twistter's Internal State
-struct mersenneTwister {
-  uint status[4];
-  uint m1;
-  uint m2;
-  uint tmat;
-} MT;
+void main()
+{
+	float fGrassPatchSize = 96.0;
 
-// Initialize the Mersenne Twistter.
-void initMT(uint seed, uint m1, uint m2, uint tmat) {
-  MT.status[0] = seed;
-  MT.status[1] = m1;
-  MT.status[2] = m2;
-  MT.status[3] = tmat;
-  MT.m1 = m1;
-  MT.m2 = m2;
-  MT.tmat = tmat;
+	//face center------------------------
+    vec3 Vert1 = gl_in[0].gl_Position.xyz;
+    vec3 Vert2 = gl_in[1].gl_Position.xyz;
+    vec3 Vert3 = gl_in[2].gl_Position.xyz;
 
-  for (int i = 1; i < 8; i++) {
-    MT.status[i & 3] ^= uint(i) + 1812433253U * MT.status[(i - 1) & 3] ^ (MT.status[(i - 1) & 3] >> 30);
-  }
-  for (int i = 0; i < 12; i++) {
-    random();
-  }
+    vec3 Pos = (Vert1+Vert2+Vert3) / 3.0;   //Center of the triangle - copy for later
+    //-----------------------------------
+
+	float VertDist = (u_ModelViewProjectionMatrix*vec4(Pos, 1.0)).z;
+
+	//------ LOD - # of grass objects to spawn per-face
+    int FOLIAGE_DENSITY = (VertDist <= LOD0_RANGE)? LOD0_MAX_FOLIAGES: LOD1_MAX_FOLIAGES;
+    FOLIAGE_DENSITY = (VertDist >= LOD1_RANGE)? LOD2_MAX_FOLIAGES: FOLIAGE_DENSITY;
+    FOLIAGE_DENSITY = (VertDist >= LOD2_RANGE)? 0: FOLIAGE_DENSITY;
+
+	vLocalSeed = Pos*float(gl_InvocationID);
+
+	vec3 vBaseDir[4];
+	vBaseDir[0] = vec3(0.0, 0.0, 1.0);
+	vBaseDir[1] = vec3(0.0, 0.0, 1.0);
+	vBaseDir[2] = vec3(0.0, 0.0, -1.0);
+	vBaseDir[3] = vec3(0.0, 0.0, -1.0);
+
+	//vec3 vBaseDirRotated[4];
+	//vBaseDirRotated[0] = (rotationMatrix(vec3(0, 1, 0), sin(u_Time*0.7f)*0.1f)*vec4(vBaseDir[0], 1.0)).xyz;
+	//vBaseDirRotated[1] = (rotationMatrix(vec3(0, 1, 0), sin(u_Time*0.7f)*0.1f)*vec4(vBaseDir[1], 1.0)).xyz;
+	//vBaseDirRotated[2] = (rotationMatrix(vec3(0, 1, 0), sin(u_Time*0.7f)*0.1f)*vec4(vBaseDir[2], 1.0)).xyz;
+	//vBaseDirRotated[2] = (rotationMatrix(vec3(0, 1, 0), sin(u_Time*0.7f)*0.1f)*vec4(vBaseDir[3], 1.0)).xyz;
+
+	vec3 instanceRotAddition[4];
+	instanceRotAddition[0] = vec3(0.0, 0.0, 0.0);
+	instanceRotAddition[1] = vec3(1.0, 0.0, 0.0);
+	instanceRotAddition[2] = vec3(1.0, 0.0, 0.0);
+	instanceRotAddition[3] = vec3(0.0, 0.0, 0.0);
+
+	//float fWindStrength = 4.0;
+	
+	//vec3 vWindDirection = normalize(vec3(1.0, 0.0, 1.0));
+
+	for(int x = 0; x < FOLIAGE_DENSITY; x ++)
+	{
+		vec3 vGrassFieldPos = randomBarycentricCoordinate().xyz;
+		vGrassFieldPos.xyz += vec3(10.0);
+		float fGrassPatchHeight = randZeroOne() * 0.25 + 0.75;
+		vec3 scaleMult = vec3(fGrassPatchSize*fGrassPatchHeight*0.5f) * (vec3(1.0) - screenScale);
+		//int iGrassPatchType = randomInt(0, 3);
+
+		/*
+		// Wind calculation stuff...
+		float fWindPower = 0.5f+sin(vGrassFieldPos.x/30+vGrassFieldPos.z/30+u_Time*(1.2f+fWindStrength/20.0f));
+		
+		if(fWindPower < 0.0f)
+			fWindPower = fWindPower*0.2f;
+		else 
+			fWindPower = fWindPower*0.3f;
+		
+		fWindPower *= fWindStrength;
+		*/
+
+		for(int i = 0; i < 4; i++)
+		{
+			vec3 vGrassInstancePos = vGrassFieldPos;
+			vec3 rotation = (instanceRotAddition[i]*scaleMult);
+
+#if 0
+			vec3 vTL = vGrassInstancePos - vBaseDirRotated[i]*fGrassPatchSize*0.5f + vWindDirection*fWindPower;
+#else
+			
+			vec3 vTL = vGrassInstancePos - (vBaseDir[i]*scaleMult);
+			vTL -= rotation;
+			vTL.y -= scaleMult.y*2.0;
+			gl_Position = u_ModelViewProjectionMatrix*vec4(vTL, 1.0);
+			vTexCoord = vec2(0.0, 1.0);
+			vTexCoord.y *= vBaseDir[i].z;
+			//vWorldPos = vTL;
+			//vEyeSpacePos = u_ModelMatrix*vec4(vTL, 1.0);
+			EmitVertex();
+
+			vec3 vBL = vGrassInstancePos - (vBaseDir[i]*scaleMult);
+			vBL += rotation;
+			gl_Position = u_ModelViewProjectionMatrix*vec4(vBL, 1.0);
+			vTexCoord = vec2(1.0, 1.0);
+			vTexCoord.y *= vBaseDir[i].z;
+			//vWorldPos = vBL;
+			//vEyeSpacePos = u_ModelMatrix*vec4(vBL, 1.0);
+			EmitVertex();
+
+			vec3 vTR = vGrassInstancePos + (vBaseDir[i]*scaleMult);
+			vTR -= rotation;
+			vTR.y -= scaleMult.y*2.0;
+			gl_Position = u_ModelViewProjectionMatrix*vec4(vTR, 1.0);
+			vTexCoord = vec2(0.0, 0.0);
+			vTexCoord.y *= vBaseDir[i].z;
+			//vWorldPos = vTL;
+			//vEyeSpacePos = u_ModelMatrix*vec4(vTR, 1.0);
+			EmitVertex();
+
+			vec3 vBR = vGrassInstancePos + (vBaseDir[i]*scaleMult);
+			vBL += rotation;
+			gl_Position = u_ModelViewProjectionMatrix*vec4(vBR, 1.0);
+			vTexCoord = vec2(1.0, 0.0);
+			vTexCoord.y *= vBaseDir[i].z;
+			//vWorldPos = vBR;
+			//vEyeSpacePos = u_ModelMatrix*vec4(vBR, 1.0);
+			EmitVertex();
+
+			EndPrimitive();
+#endif
+		}		
+	}
 }
 
-// Produce a psuedo-random float value on the range [0, 1]
-float random() {
-  uint x = (MT.status[0] & 0x7fffffffU) ^ MT.status[1] ^ MT.status[2];
-  uint y = MT.status[3];
-  x ^= (x << 1);
-  y ^= (y >> 1) ^ x;
-  MT.status[0] = MT.status[1];
-  MT.status[1] = MT.status[2];
-  MT.status[2] = x ^ (y << 10);
-  MT.status[3] = y;
-  MT.status[1] ^= -(y & 1U) & MT.m1;
-  MT.status[2] ^= -(y & 1U) & MT.m2;
-
-  uint t0, t1;
-  t0 = MT.status[3];
-  t1 = MT.status[0] + (MT.status[2] >> 8);
-  t0 ^= t1;
-  t0 ^= -(t1 & 1U) & MT.tmat;
-
-  return t0 * (1.0f / 4294967296.0f);
-}

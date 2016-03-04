@@ -1035,6 +1035,9 @@ static void GLSL_GetShaderHeader( GLenum shaderType, const GLcharARB *extra, cha
 	else
 		//Q_strcat(dest, size, "#version 150 core\n");
 		sprintf(dest, GLSL_GetHighestSupportedVersion());
+
+	fbufWidthScale = 1.0f / ((float)glConfig.vidWidth * r_superSampleMultiplier->value);
+	fbufHeightScale = 1.0f / ((float)glConfig.vidHeight * r_superSampleMultiplier->value);
 	
 	if(shaderType == GL_VERTEX_SHADER)
 	{
@@ -1043,6 +1046,8 @@ static void GLSL_GetShaderHeader( GLenum shaderType, const GLcharARB *extra, cha
 	}
 	else if(shaderType == GL_TESS_CONTROL_SHADER)
 	{
+		Q_strcat(dest, size, va("#ifndef r_FBufScale\n#define r_FBufScale vec2(%f, %f)\n#endif\n", fbufWidthScale, fbufHeightScale));
+
 		if (extra)
 		{
 			Q_strcat(dest, size, extra);
@@ -1055,6 +1060,8 @@ static void GLSL_GetShaderHeader( GLenum shaderType, const GLcharARB *extra, cha
 	}
 	else if(shaderType == GL_TESS_EVALUATION_SHADER)
 	{
+		Q_strcat(dest, size, va("#ifndef r_FBufScale\n#define r_FBufScale vec2(%f, %f)\n#endif\n", fbufWidthScale, fbufHeightScale));
+
 		if (extra)
 		{
 			Q_strcat(dest, size, extra);
@@ -1067,6 +1074,8 @@ static void GLSL_GetShaderHeader( GLenum shaderType, const GLcharARB *extra, cha
 	}
 	else if(shaderType == GL_GEOMETRY_SHADER)
 	{
+		Q_strcat(dest, size, va("#ifndef r_FBufScale\n#define r_FBufScale vec2(%f, %f)\n#endif\n", fbufWidthScale, fbufHeightScale));
+
 		if (extra)
 		{
 			Q_strcat(dest, size, extra);
@@ -1154,10 +1163,7 @@ static void GLSL_GetShaderHeader( GLenum shaderType, const GLcharARB *extra, cha
 								GL_ADD,
 								GL_REPLACE));
 
-	fbufWidthScale = 1.0f / ((float)glConfig.vidWidth * r_superSampleMultiplier->value);
-	fbufHeightScale = 1.0f / ((float)glConfig.vidHeight * r_superSampleMultiplier->value);
-	Q_strcat(dest, size,
-			 va("#ifndef r_FBufScale\n#define r_FBufScale vec2(%f, %f)\n#endif\n", fbufWidthScale, fbufHeightScale));
+	Q_strcat(dest, size, va("#ifndef r_FBufScale\n#define r_FBufScale vec2(%f, %f)\n#endif\n", fbufWidthScale, fbufHeightScale));
 
 	if (extra)
 	{
@@ -2275,7 +2281,7 @@ int GLSL_BeginLoadGPUShaders(void)
 
 		if (r_foliage->integer >= 2)
 		{
-			if (!GLSL_BeginLoadGPUShader(&tr.grass2Shader, "grass3", attribs, qtrue, qfalse, qtrue, extradefines, qtrue, "330", fallbackShader_grass3_vp, fallbackShader_grass3_fp, NULL, NULL, fallbackShader_grass3_gs))
+			if (!GLSL_BeginLoadGPUShader(&tr.grass2Shader, "grass3", attribs, qtrue, qfalse, qtrue, extradefines, qtrue, "400 compatibility", fallbackShader_grass3_vp, fallbackShader_grass3_fp, NULL, NULL, fallbackShader_grass3_gs))
 			{
 				ri->Error(ERR_FATAL, "Could not load grass3 shader!");
 			}

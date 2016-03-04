@@ -3231,6 +3231,14 @@ void AssignMaterialType ( const char *name, const char *text )
 	if (r_disableGfxDirEnhancement->integer 
 		&& (StringContainsWord(name, "gfx/"))) return;
 
+	if (StringContainsWord(name, "gfx/2d") 
+		|| StringContainsWord(name, "gfx/console")
+		|| StringContainsWord(name, "gfx/colors")
+		|| StringContainsWord(name, "gfx/digits")
+		|| StringContainsWord(name, "gfx/hud")
+		|| StringContainsWord(name, "gfx/jkg")
+		|| StringContainsWord(name, "gfx/menu")) return;
+
 	if (!HaveSurfaceType(shader.surfaceFlags))
 	{
 		//

@@ -978,6 +978,233 @@ void R_CreateFoliageMapImage ( void )
 	}
 }
 
+#define SIEGECHAR_TAB 9 //perhaps a bit hacky, but I don't think there's any define existing for "tab"
+
+int R_GetPairedValue(char *buf, char *key, char *outbuf)
+{
+	int i = 0;
+	int j;
+	int k;
+	char checkKey[4096];
+
+	while (buf[i])
+	{
+		if (buf[i] != ' ' && buf[i] != '{' && buf[i] != '}' && buf[i] != '\n' && buf[i] != '\r')
+		{ //we're on a valid character
+			if (buf[i] == '/' &&
+				buf[i+1] == '/')
+			{ //this is a comment, so skip over it
+				while (buf[i] && buf[i] != '\n' && buf[i] != '\r')
+				{
+					i++;
+				}
+			}
+			else
+			{ //parse to the next space/endline/eos and check this value against our key value.
+				j = 0;
+
+				while (buf[i] != ' ' && buf[i] != '\n' && buf[i] != '\r' && buf[i] != SIEGECHAR_TAB && buf[i])
+				{
+					if (buf[i] == '/' && buf[i+1] == '/')
+					{ //hit a comment, break out.
+						break;
+					}
+
+					checkKey[j] = buf[i];
+					j++;
+					i++;
+				}
+				checkKey[j] = 0;
+
+				k = i;
+
+				while (buf[k] && (buf[k] == ' ' || buf[k] == '\n' || buf[k] == '\r'))
+				{
+					k++;
+				}
+
+				if (buf[k] == '{')
+				{ //this is not the start of a value but rather of a group. We don't want to look in subgroups so skip over the whole thing.
+					int openB = 0;
+
+					while (buf[i] && (buf[i] != '}' || openB))
+					{
+						if (buf[i] == '{')
+						{
+							openB++;
+						}
+						else if (buf[i] == '}')
+						{
+							openB--;
+						}
+
+						if (openB < 0)
+						{
+							Com_Error(ERR_DROP, "Unexpected closing bracket (too many) while parsing to end of group '%s'", checkKey);
+						}
+
+						if (buf[i] == '}' && !openB)
+						{ //this is the end of the group
+							break;
+						}
+						i++;
+					}
+
+					if (buf[i] == '}')
+					{
+						i++;
+					}
+				}
+				else
+				{
+					//Is this the one we want?
+					if (buf[i] != '/' || buf[i+1] != '/')
+					{ //make sure we didn't stop on a comment, if we did then this is considered an error in the file.
+						if (!Q_stricmp(checkKey, key))
+						{ //guess so. Parse along to the next valid character, then put that into the output buffer and return 1.
+							while ((buf[i] == ' ' || buf[i] == '\n' || buf[i] == '\r' || buf[i] == SIEGECHAR_TAB) && buf[i])
+							{
+								i++;
+							}
+
+							if (buf[i])
+							{ //We're at the start of the value now.
+								qboolean parseToQuote = qfalse;
+
+								if (buf[i] == '\"')
+								{ //if the value is in quotes, then stop at the next quote instead of ' '
+									i++;
+									parseToQuote = qtrue;
+								}
+
+								j = 0;
+								while ( ((!parseToQuote && buf[i] != ' ' && buf[i] != '\n' && buf[i] != '\r') || (parseToQuote && buf[i] != '\"')) )
+								{
+									if (buf[i] == '/' &&
+										buf[i+1] == '/')
+									{ //hit a comment after the value? This isn't an ideal way to be writing things, but we'll support it anyway.
+										break;
+									}
+									outbuf[j] = buf[i];
+									j++;
+									i++;
+
+									if (!buf[i])
+									{
+										if (parseToQuote)
+										{
+											Com_Error(ERR_DROP, "Unexpected EOF while looking for endquote, error finding paired value for '%s'", key);
+										}
+										else
+										{
+											Com_Error(ERR_DROP, "Unexpected EOF while looking for space or endline, error finding paired value for '%s'", key);
+										}
+									}
+								}
+								outbuf[j] = 0;
+
+								return 1; //we got it, so return 1.
+							}
+							else
+							{
+								Com_Error(ERR_DROP, "Error parsing file, unexpected EOF while looking for valud '%s'", key);
+							}
+						}
+						else
+						{ //if that wasn't the desired key, then make sure we parse to the end of the line, so we don't mistake a value for a key
+							while (buf[i] && buf[i] != '\n')
+							{
+								i++;
+							}
+						}
+					}
+					else
+					{
+						Com_Error(ERR_DROP, "Error parsing file, found comment, expected value for '%s'", key);
+					}
+				}
+			}
+		}
+
+		if (!buf[i])
+		{
+			break;
+		}
+
+		i++;
+	}
+
+	return 0; //guess we never found it.
+}
+
+extern const char *materialNames[MATERIAL_LAST];
+extern void ParseMaterial( const char **text );
+
+char		CURRENT_CLIMATE_OPTION[256] = { 0 };
+
+qboolean FOLIAGE_LoadMapClimateInfo( void )
+{
+	fileHandle_t	f;
+	int				fLen = 0;
+	char			fileBuffer[4096];
+	char			parseBuf[4096];
+
+#define	GAME_VERSION		"Warzone"
+
+	memset(CURRENT_CLIMATE_OPTION, 0, sizeof(CURRENT_CLIMATE_OPTION));
+	
+	fLen = ri->FS_FOpenFileRead(va("foliage/%s.climateInfo", currentMapName), &f, qfalse);
+
+	if (!f || fLen < 0)
+	{//couldn't open file, just use the defaults
+		ri->Printf( PRINT_ALL, "^1*** ^3%s^5: No map climate info file ^7foliage/%s.climateInfo^5. Using default climate option.\n", GAME_VERSION, currentMapName );
+		return qfalse;
+	}
+
+	if (fLen == 0)
+	{//file was empty, just use the defaults
+		ri->FS_FCloseFile(f);
+		ri->Printf( PRINT_ALL, "^1*** ^3%s^5: No map climate info file ^7foliage/%s.climateInfo^5. Using default climate option.\n", GAME_VERSION, currentMapName );
+		return qfalse;
+	}
+
+	if (fLen >= 4096)
+	{
+		ri->Printf( PRINT_ALL, "^1Error: foliage/%s.climateInfo is over the climateInfo filesize limit.^7\n", currentMapName);
+		ri->FS_FCloseFile(f);
+		ri->Printf( PRINT_ALL, "^1*** ^3%s^5: No map climate info file ^7foliage/%s.climateInfo^5. Using default climate option.\n", GAME_VERSION, currentMapName );
+		return qfalse;
+	}
+
+	ri->FS_Read(fileBuffer, fLen, f);
+	fileBuffer[fLen] = 0;
+	ri->FS_FCloseFile(f);
+
+	if (R_GetPairedValue(fileBuffer, "climateSelection", parseBuf))
+	{
+		strcpy(CURRENT_CLIMATE_OPTION, parseBuf);
+	}
+
+	ri->Printf(PRINT_ALL, "^1*** ^3%s^5: Successfully loaded climateInfo file ^7foliage/%s.climateInfo^5. Using ^3%s^5 climate option.\n", GAME_VERSION, currentMapName, CURRENT_CLIMATE_OPTION );
+
+	return qtrue;
+}
+
+#define MAX_FOLIAGE_ALLOWED_MATERIALS 64
+
+int FOLIAGE_ALLOWED_MATERIALS_NUM = 0;
+int FOLIAGE_ALLOWED_MATERIALS[MAX_FOLIAGE_ALLOWED_MATERIALS] = { 0 };
+
+qboolean R_SurfaceIsAllowedFoliage( int materialType )
+{
+	for (int i = 0; i < FOLIAGE_ALLOWED_MATERIALS_NUM; i++)
+	{
+		if (materialType == FOLIAGE_ALLOWED_MATERIALS[i]) return qtrue;
+	}
+
+	return qfalse;
+}
+
 void R_LoadMapInfo ( void )
 {
 	R_SetupMapInfo();
@@ -992,8 +1219,46 @@ void R_LoadMapInfo ( void )
 		tr.random2KImage = R_FindImageFile("gfx/random2K.tga", IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION);
 	}
 
+	FOLIAGE_LoadMapClimateInfo();
+
+	FOLIAGE_ALLOWED_MATERIALS_NUM = 0;
+
 	//tr.grassImageShader = R_FindShader( "models/warzone/foliage/grasstropical", lightmapsNone, stylesDefault, qtrue );
-	tr.grassImage = R_FindImageFile("models/warzone/foliage/grasstropical", IMGTYPE_COLORALPHA, IMGFLAG_NONE);
+	if (!strcmp(CURRENT_CLIMATE_OPTION, "springpineforest"))
+	{
+		tr.grassImage = R_FindImageFile( "models/warzone/foliage/grasspineforest", IMGTYPE_COLORALPHA, IMGFLAG_NONE );
+		FOLIAGE_ALLOWED_MATERIALS[FOLIAGE_ALLOWED_MATERIALS_NUM] = MATERIAL_MUD; FOLIAGE_ALLOWED_MATERIALS_NUM++;
+		FOLIAGE_ALLOWED_MATERIALS[FOLIAGE_ALLOWED_MATERIALS_NUM] = MATERIAL_DIRT; FOLIAGE_ALLOWED_MATERIALS_NUM++;
+	}
+	else if (!strcmp(CURRENT_CLIMATE_OPTION, "endorredwoodforest"))
+	{
+		tr.grassImage = R_FindImageFile( "models/warzone/foliage/ferngrass", IMGTYPE_COLORALPHA, IMGFLAG_NONE );
+		FOLIAGE_ALLOWED_MATERIALS[FOLIAGE_ALLOWED_MATERIALS_NUM] = MATERIAL_MUD; FOLIAGE_ALLOWED_MATERIALS_NUM++;
+		FOLIAGE_ALLOWED_MATERIALS[FOLIAGE_ALLOWED_MATERIALS_NUM] = MATERIAL_DIRT; FOLIAGE_ALLOWED_MATERIALS_NUM++;
+	}
+	else if (!strcmp(CURRENT_CLIMATE_OPTION, "snowpineforest"))
+	{
+		tr.grassImage = R_FindImageFile( "models/warzone/foliage/grasssnowpineforest", IMGTYPE_COLORALPHA, IMGFLAG_NONE );
+		//FOLIAGE_ALLOWED_MATERIALS[FOLIAGE_ALLOWED_MATERIALS_NUM] = MATERIAL_MUD; FOLIAGE_ALLOWED_MATERIALS_NUM++;
+		//FOLIAGE_ALLOWED_MATERIALS[FOLIAGE_ALLOWED_MATERIALS_NUM] = MATERIAL_DIRT; FOLIAGE_ALLOWED_MATERIALS_NUM++;
+		//FOLIAGE_ALLOWED_MATERIALS[FOLIAGE_ALLOWED_MATERIALS_NUM] = MATERIAL_SNOW; FOLIAGE_ALLOWED_MATERIALS_NUM++;
+	}
+	else if (!strcmp(CURRENT_CLIMATE_OPTION, "tropicalold"))
+	{
+		tr.grassImage = R_FindImageFile( "models/warzone/foliage/grasstropical", IMGTYPE_COLORALPHA, IMGFLAG_NONE );
+		FOLIAGE_ALLOWED_MATERIALS[FOLIAGE_ALLOWED_MATERIALS_NUM] = MATERIAL_MUD; FOLIAGE_ALLOWED_MATERIALS_NUM++;
+		FOLIAGE_ALLOWED_MATERIALS[FOLIAGE_ALLOWED_MATERIALS_NUM] = MATERIAL_DIRT; FOLIAGE_ALLOWED_MATERIALS_NUM++;
+	}
+	else if (!strcmp(CURRENT_CLIMATE_OPTION, "tropical"))
+	{
+		tr.grassImage = R_FindImageFile( "models/warzone/foliage/grasstropical", IMGTYPE_COLORALPHA, IMGFLAG_NONE );
+		FOLIAGE_ALLOWED_MATERIALS[FOLIAGE_ALLOWED_MATERIALS_NUM] = MATERIAL_MUD; FOLIAGE_ALLOWED_MATERIALS_NUM++;
+		FOLIAGE_ALLOWED_MATERIALS[FOLIAGE_ALLOWED_MATERIALS_NUM] = MATERIAL_DIRT; FOLIAGE_ALLOWED_MATERIALS_NUM++;
+	}
+	else // Default to new tropical...
+	{
+		tr.grassImage = R_FindImageFile( "models/warzone/foliage/grasstropical", IMGTYPE_COLORALPHA, IMGFLAG_NONE );
+	}
 	
 #if 0
 	if (!ri->FS_FileExists(va( "mapImage/%s.tga", currentMapName )))

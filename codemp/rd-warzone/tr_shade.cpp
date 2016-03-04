@@ -1041,19 +1041,19 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage)
 			parallaxScale = 2.0;
 			break;
 		case MATERIAL_SHORTGRASS:		// 5			// manicured lawn
-			specularScale = 0.45;
+			specularScale = 0.25;
 			cubemapScale = 0.0;
 			materialType = (float)MATERIAL_SHORTGRASS;
 			parallaxScale = 2.5;
 			break;
 		case MATERIAL_LONGGRASS:		// 6			// long jungle grass
-			specularScale = 0.45;
+			specularScale = 0.25;
 			cubemapScale = 0.0;
 			materialType = (float)MATERIAL_LONGGRASS;
 			parallaxScale = 3.0;
 			break;
 		case MATERIAL_SAND:				// 8			// sandy beach
-			specularScale = 0.20;
+			specularScale = 0.15;
 			cubemapScale = 0.0;
 			materialType = (float)MATERIAL_SAND;
 			parallaxScale = 2.5;
@@ -1065,34 +1065,34 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage)
 			parallaxScale = 2.5;
 			break;
 		case MATERIAL_GRAVEL:			// 9			// lots of small stones
-			specularScale = 0.2;
+			specularScale = 0.15;
 			cubemapScale = 0.0;
 			materialType = (float)MATERIAL_GRAVEL;
 			parallaxScale = 3.0;
 			break;
 		case MATERIAL_ROCK:				// 23			//
-			specularScale = 0.2;
+			specularScale = 0.15;
 			cubemapScale = 0.0;
 			materialType = (float)MATERIAL_ROCK;
 			parallaxScale = 3.0;
 			useSteepParallax = 1.0;
 			break;
 		case MATERIAL_TILES:			// 26			// tiled floor
-			specularScale = 0.86;
+			specularScale = 0.56;
 			cubemapScale = 0.9;
 			materialType = (float)MATERIAL_TILES;
 			parallaxScale = 2.5;
 			useSteepParallax = 1.0;
 			break;
 		case MATERIAL_SOLIDWOOD:		// 1			// freshly cut timber
-			specularScale = 0.35;
+			specularScale = 0.15;
 			cubemapScale = 0.0;
 			materialType = (float)MATERIAL_SOLIDWOOD;
 			parallaxScale = 2.5;
 			//useSteepParallax = 1.0;
 			break;
 		case MATERIAL_HOLLOWWOOD:		// 2			// termite infested creaky wood
-			specularScale = 0.35;
+			specularScale = 0.15;
 			cubemapScale = 0.0;
 			materialType = (float)MATERIAL_HOLLOWWOOD;
 			parallaxScale = 2.5;
@@ -1113,86 +1113,86 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage)
 			isMetalic = 1.0;
 			break;
 		case MATERIAL_DRYLEAVES:		// 19			// dried up leaves on the floor
-			specularScale = 0.25;
+			specularScale = 0.1;
 			cubemapScale = 0.0;
 			materialType = (float)MATERIAL_DRYLEAVES;
 			parallaxScale = 0.0;
 			//useSteepParallax = 1.0;
 			break;
 		case MATERIAL_GREENLEAVES:		// 20			// fresh leaves still on a tree
-			specularScale = 0.55;
+			specularScale = 0.35;
 			cubemapScale = 0.0;
 			materialType = (float)MATERIAL_GREENLEAVES;
 			parallaxScale = 0.0; // GreenLeaves should NEVER be parallaxed.. It's used for surfaces with an alpha channel and parallax screws it up...
 			//useSteepParallax = 1.0;
 			break;
 		case MATERIAL_FABRIC:			// 21			// Cotton sheets
-			specularScale = 0.48;
+			specularScale = 0.15;
 			cubemapScale = 0.0;
 			materialType = (float)MATERIAL_FABRIC;
 			parallaxScale = 2.5;
 			break;
 		case MATERIAL_CANVAS:			// 22			// tent material
-			specularScale = 0.45;
+			specularScale = 0.15;
 			cubemapScale = 0.0;
 			materialType = (float)MATERIAL_CANVAS;
 			parallaxScale = 2.5;
 			break;
 		case MATERIAL_MARBLE:			// 12			// marble floors
-			specularScale = 0.86;
+			specularScale = 0.2;
 			cubemapScale = 1.0;
 			materialType = (float)MATERIAL_MARBLE;
 			parallaxScale = 2.0;
 			//useSteepParallax = 1.0;
 			break;
 		case MATERIAL_SNOW:				// 14			// freshly laid snow
-			specularScale = 0.65;
+			specularScale = 0.25;
 			cubemapScale = 0.0;
 			materialType = (float)MATERIAL_SNOW;
 			parallaxScale = 3.0;
 			useSteepParallax = 1.0;
 			break;
 		case MATERIAL_MUD:				// 17			// wet soil
-			specularScale = 0.4;
+			specularScale = 0.15;
 			cubemapScale = 0.0;
 			materialType = (float)MATERIAL_MUD;
 			parallaxScale = 3.0;
 			useSteepParallax = 1.0;
 			break;
 		case MATERIAL_DIRT:				// 7			// hard mud
-			specularScale = 0.10;
+			specularScale = 0.05;
 			cubemapScale = 0.0;
 			materialType = (float)MATERIAL_DIRT;
 			parallaxScale = 3.0;
 			useSteepParallax = 1.0;
 			break;
 		case MATERIAL_CONCRETE:			// 11			// hardened concrete pavement
-			specularScale = 0.3;
+			specularScale = 0.15;
 			cubemapScale = 0.0;
 			materialType = (float)MATERIAL_CONCRETE;
 			parallaxScale = 3.0;
 			//useSteepParallax = 1.0;
 			break;
 		case MATERIAL_FLESH:			// 16			// hung meat, corpses in the world
-			specularScale = 0.2;
+			specularScale = 0.15;
 			cubemapScale = 0.0;
 			materialType = (float)MATERIAL_FLESH;
 			parallaxScale = 1.0;
 			break;
 		case MATERIAL_RUBBER:			// 24			// hard tire like rubber
-			specularScale = 0.10;
+			specularScale = 0.05;
 			cubemapScale = 0.0;
 			materialType = (float)MATERIAL_RUBBER;
 			parallaxScale = 1.0;
 			break;
 		case MATERIAL_PLASTIC:			// 25			//
-			specularScale = 0.88;
+			specularScale = 0.58;
 			cubemapScale = 0.5;
 			materialType = (float)MATERIAL_PLASTIC;
 			parallaxScale = 1.0;
 			break;
 		case MATERIAL_PLASTER:			// 28			// drywall style plaster
-			specularScale = 0.4;
+			specularScale = 0.15;
 			cubemapScale = 0.0;
 			materialType = (float)MATERIAL_PLASTER;
 			parallaxScale = 2.0;
@@ -1211,7 +1211,7 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage)
 			isMetalic = 1.0;
 			break;
 		case MATERIAL_ICE:				// 15			// packed snow/solid ice
-			specularScale = 0.9;
+			specularScale = 0.45;
 			cubemapScale = 0.8;
 			parallaxScale = 2.0;
 			materialType = (float)MATERIAL_ICE;
@@ -1379,11 +1379,25 @@ qboolean RB_ShouldUseTesselation (int materialType )
 	return qfalse;
 }
 
+extern qboolean R_SurfaceIsAllowedFoliage( int materialType );
+
 qboolean RB_ShouldUseGeometryGrass (int materialType )
 {
+	if ( materialType <= MATERIAL_NONE )
+	{
+		return qfalse;
+	}
+	
 	if ( materialType == MATERIAL_SHORTGRASS 
-		|| materialType == MATERIAL_LONGGRASS)
+		|| materialType == MATERIAL_LONGGRASS )
+	{
 		return qtrue;
+	}
+
+	if ( R_SurfaceIsAllowedFoliage( materialType ) )
+	{// *sigh* due to surfaceFlags mixing materials with other flags, we need to do it this way...
+		return qtrue;
+	}
 
 	return qfalse;
 }
@@ -1482,37 +1496,6 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 					}
 				}
 
-				/*
-				if ((tr.viewParms.flags & VPF_SHADOWPASS) || (backEnd.viewParms.flags & VPF_DEPTHSHADOW))
-				{
-					index |= LIGHTDEF_USE_FASTPASS;
-					pStage->glslShaderIndex |= LIGHTDEF_USE_FASTPASS;
-				}
-				*/
-
-				/*
-				if (pStage->isFoliage)
-				{
-					//index |= LIGHTDEF_USE_SWAY;
-					//pStage->glslShaderIndex |= LIGHTDEF_USE_SWAY;
-					index |= LIGHTDEF_USE_OVERLAY;
-					pStage->glslShaderIndex |= LIGHTDEF_USE_OVERLAY;
-				}
-
-				if (pStage->bundle[TB_STEEPMAP].image[0])
-				{
-					//index |= LIGHTDEF_USE_STEEPMAP;
-					//pStage->glslShaderIndex |= LIGHTDEF_USE_STEEPMAP;
-					index |= LIGHTDEF_USE_OVERLAY;
-					pStage->glslShaderIndex |= LIGHTDEF_USE_OVERLAY;
-				}
-
-				if (pStage->bundle[TB_OVERLAYMAP].image[0])
-				{
-					index |= LIGHTDEF_USE_OVERLAY;
-					pStage->glslShaderIndex |= LIGHTDEF_USE_OVERLAY;
-				}*/
-
 				if (backEnd.currentEntity && backEnd.currentEntity != &tr.worldEntity)
 				{
 					index |= LIGHTDEF_ENTITY;
@@ -1570,21 +1553,6 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		{
 			int index = pStage->glslShaderIndex;
 
-			/*
-			if ((tr.viewParms.flags & VPF_SHADOWPASS) || (backEnd.viewParms.flags & VPF_DEPTHSHADOW))
-			{
-				index |= LIGHTDEF_USE_FASTPASS;
-				pStage->glslShaderIndex |= LIGHTDEF_USE_FASTPASS;
-			}
-
-			if (r_tesselation->integer 
-				&& RB_ShouldUseTesselation(tess.shader->surfaceFlags & MATERIAL_MASK))
-			{
-				index |= LIGHTDEF_USE_TESSELLATION;
-				pStage->glslShaderIndex |= LIGHTDEF_USE_TESSELLATION;
-			}
-			*/
-
 			if (r_foliage->integer 
 				&& RB_ShouldUseGeometryGrass(tess.shader->surfaceFlags & MATERIAL_MASK))
 			{
@@ -1622,29 +1590,16 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 			}
 			else if ((r_sunlightMode->integer >= 2)
-				&& ((backEnd.viewParms.flags & VPF_USESUNLIGHT))
-				/*&& (index & LIGHTDEF_LIGHTTYPE_MASK)*/)
+				&& ((backEnd.viewParms.flags & VPF_USESUNLIGHT)))
 			{
 				index |= LIGHTDEF_LIGHTTYPE_MASK;
 				index |= LIGHTDEF_USE_SHADOWMAP;
 			}
-			/*else if (r_dlightMode->integer >= 2 && tr.refdef.num_dlights && (index & LIGHTDEF_LIGHTTYPE_MASK))
-			{
-				index |= LIGHTDEF_USE_SHADOWMAP;
-			}*/
 			
 			if (r_lightmap->integer && index & LIGHTDEF_USE_LIGHTMAP)
 			{
 				index = LIGHTDEF_USE_LIGHTMAP;
 			}
-
-			/*
-			if (index & LIGHTDEF_ENTITY|LIGHTDEF_USE_TCGEN_AND_TCMOD)
-			{// Never ever use this f*cking combo...
-				//index &= ~LIGHTDEF_ENTITY;
-				index &= ~LIGHTDEF_USE_TCGEN_AND_TCMOD;
-			}
-			*/
 
 			//
 			// testing cube map
@@ -1677,32 +1632,6 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				{// Out of range completely...
 					cubeMapStrength = 0.0;
 				}
-			}
-
-			
-			{
-				/*
-				if (pStage->isFoliage)
-				{
-					//index |= LIGHTDEF_USE_SWAY;
-					//pStage->glslShaderIndex |= LIGHTDEF_USE_SWAY;
-					index |= LIGHTDEF_USE_OVERLAY;
-					pStage->glslShaderIndex |= LIGHTDEF_USE_OVERLAY;
-				}
-
-				if (pStage->bundle[TB_STEEPMAP].image[0])
-				{
-					//index |= LIGHTDEF_USE_STEEPMAP;
-					//pStage->glslShaderIndex |= LIGHTDEF_USE_STEEPMAP;
-					index |= LIGHTDEF_USE_OVERLAY;
-					pStage->glslShaderIndex |= LIGHTDEF_USE_OVERLAY;
-				}
-
-				if (pStage->bundle[TB_OVERLAYMAP].image[0])
-				{
-					index |= LIGHTDEF_USE_OVERLAY;
-					pStage->glslShaderIndex |= LIGHTDEF_USE_OVERLAY;
-				}*/
 			}
 
 			sp = &pStage->glslShaderGroup[index];
@@ -1750,10 +1679,6 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				//multiPass = qtrue;
 				passMax = 8;
 			}
-			//else
-			//{
-			//	continue;
-			//}
 		}
 //#define EXPERIMENTAL_GRASS // Need a  WorldViewMatrix - how the hell do I do that?
 #ifdef EXPERIMENTAL_GRASS
@@ -1788,25 +1713,12 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			}
 		}
 #endif //EXPERIMENTAL_GRASS
-		/*else if (( tess.shader->surfaceFlags & MATERIAL_MASK ) == MATERIAL_GREENLEAVES)
-		{
-			
-		}*/
 		else
 		{
 			if (!sp || !sp->program)
 			{
 				pStage->glslShaderGroup = tr.lightallShader;
 				sp = &pStage->glslShaderGroup[0];
-
-				/*
-				if (r_tesselation->integer 
-					&& RB_ShouldUseTesselation(tess.shader->surfaceFlags & MATERIAL_MASK))
-				{
-					sp = &pStage->glslShaderGroup[LIGHTDEF_USE_TESSELLATION];
-					pStage->glslShaderIndex |= LIGHTDEF_USE_TESSELLATION;
-				}
-				*/
 
 				if (r_foliage->integer 
 					&& RB_ShouldUseGeometryGrass(tess.shader->surfaceFlags & MATERIAL_MASK))
@@ -1815,36 +1727,29 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				}
 			}
 
-			//if (!isGrass || (isGrass && !r_foliage->integer))
-				GLSL_BindProgram(sp);
+			GLSL_BindProgram(sp);
 		}
 
 		if (isGrass)
 		{
-			if (r_foliage->integer == 1)
+			if (r_foliage->integer)
 			{
 				sp2 = &tr.grass2Shader;
 				multiPass = qtrue;
 				passMax = 1;
 			}
-			else if (r_foliage->integer >= 2)
-			{
-				sp2 = &tr.grass2Shader;
-				multiPass = qtrue;
-				passMax = 4;
-
-				GLSL_BindProgram(sp);
-			}
 		}
 		
 		while (1)
 		{
-			if (isGrass /*&& (r_foliage->integer == 1 && passNum > 0)*/ && passNum > 0 && sp2)
+			if (isGrass && passNum > 0 && sp2)
 			{
 				sp = sp2;
 				sp2 = NULL;
 
 				GLSL_BindProgram(sp);
+
+				GLSL_SetUniformFloat(sp, UNIFORM_TIME, tess.shaderTime);
 			}
 
 			RB_SetMaterialBasedProperties(sp, pStage);
@@ -1877,7 +1782,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				}
 			}
 
-			if (isGrass /*&& ((r_foliage->integer == 1 && passNum > 0) || r_foliage->integer >= 2)*/ && passNum > 0)
+			if (isGrass && passNum > 0)
 			{
 				stateBits = GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA | GLS_DEPTHMASK_TRUE | GLS_ATEST_GE_192;
 			}
@@ -1927,9 +1832,6 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				{
 					GLSL_SetUniformVec4(sp, UNIFORM_NORMALSCALE, pStage->normalScale);
 				}
-
-				//GLSL_SetUniformVec4(sp, UNIFORM_SPECULARSCALE, pStage->specularScale);
-
 
 				if (glState.skeletalAnimation)
 				{
@@ -2074,33 +1976,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			}
 			else
 			{
-				/*
-				if (pStage->isWater && r_glslWater->integer)
-				{
-					if ( !skyImage ) 
-					{
-						//ri->Printf(PRINT_WARNING, "Have no skyImage!\n");
-						GLSL_SetUniformInt(sp, UNIFORM_OVERLAYMAP, TB_OVERLAYMAP);
-						GL_BindToTMU(tr.blackImage, TB_OVERLAYMAP);
-						//vec4_t l0;
-						//VectorSet4(l0, 0, 0, 0, 0);
-						//GLSL_SetUniformVec4(sp, UNIFORM_LOCAL10, l0);
-					}
-					else
-					{
-						//ri->Printf(PRINT_WARNING, "Have skyImage! YAY!\n");
-						GLSL_SetUniformInt(sp, UNIFORM_OVERLAYMAP, TB_OVERLAYMAP);
-						GL_BindToTMU(skyImage, TB_OVERLAYMAP);
-						
-						//vec4_t l0;
-						//VectorSet4(l0, skyImage->width, skyImage->height, 0, 0);
-						//GLSL_SetUniformVec4(sp, UNIFORM_LOCAL10, l0);
-					}
-				}
-				else*/
-				{
-					GL_BindToTMU( tr.blackImage, TB_OVERLAYMAP );
-				}
+				GL_BindToTMU( tr.blackImage, TB_OVERLAYMAP );
 			}
 
 			if ( !backEnd.depthFill )
@@ -2297,37 +2173,13 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			}
 #endif
 
-			if (isGrass /*&& ((r_foliage->integer == 1 && passNum > 0) || r_foliage->integer >= 2)*/ && passNum > 0 && r_foliage->integer == 1)
+			if (isGrass && passNum > 0 && r_foliage->integer)
 			{
-				vec4_t l7; // Radius1
-				VectorSet4(l7, 5.0, 1.0, 0.4, 0.0);
-				GLSL_SetUniformVec4(sp, UNIFORM_LOCAL7, l7);
+				GL_BindToTMU( tr.grassImage, TB_DIFFUSEMAP );
 
-				vec4_t l8; // Radius2
-				VectorSet4(l8, 5.0, 1.0, 0.4, 0.0);
-				GLSL_SetUniformVec4(sp, UNIFORM_LOCAL8, l8);
-				
-				vec4_t l9; // Time, windStrength, AmbientMulti, LODdist
-				VectorSet4(l9, backEnd.refdef.floatTime, 0.1, 0.4, r_foliageLodDistance->value);
-				GLSL_SetUniformVec4(sp, UNIFORM_LOCAL9, l9);
-
-				vec4_t l10; // AmbientMulti, LightMulti, Intensity
-				VectorSet4(l10, 0.4, 0.6, 0.4, 0.0);
+				vec4_t l10;
+				VectorSet4(l10, r_foliageDistance->value, r_foliageDensity->value, 0.7, overlaySway);
 				GLSL_SetUniformVec4(sp, UNIFORM_LOCAL10, l10);
-
-				GL_BindToTMU( tr.grassImage, TB_OVERLAYMAP );
-				GL_BindToTMU( tr.whiteImage/*tr.random2KImage*/, TB_STEEPMAP );
-				
-				//textureBundle_t bundle1[TB_OVERLAYMAP];
-				//textureBundle_t bundle2[TB_STEEPMAP];
-				//bundle1[TB_OVERLAYMAP].image[0] = tr.grassImage;
-				//bundle2[TB_STEEPMAP].image[0] = tr.random2KImage;//tr.whiteImage;
-
-				//R_BindAnimatedImageToTMU( &tr.grassImageShader->stages[0]->bundle[0]/*bundle1[TB_OVERLAYMAP]*/, TB_OVERLAYMAP);
-				//R_BindAnimatedImageToTMU( &bundle2[TB_STEEPMAP], TB_STEEPMAP);
-
-				GLSL_SetUniformInt(sp, UNIFORM_OVERLAYMAP, TB_OVERLAYMAP);
-				GLSL_SetUniformInt(sp, UNIFORM_STEEPMAP, TB_STEEPMAP);
 			}
 
 			UpdateTexCoords (pStage);
