@@ -1,3 +1,6 @@
+#extension GL_ARB_gpu_shader5 : enable
+#extension GL_ARB_tessellation_shader : enable
+
 layout(triangles, invocations = 20) in;
 layout(triangle_strip, max_vertices = 128) out;
 
@@ -99,7 +102,7 @@ void main()
 
 	if ( FOLIAGE_DENSITY > densityMax) FOLIAGE_DENSITY = densityMax;
 
-	vLocalSeed = Pos*float(gl_InvocationID);
+	vLocalSeed = Pos*float(gl_PrimitiveIDIn/*gl_InvocationID*/);
 
 	vec3 vBaseDir[4];
 	vBaseDir[0] = vec3(0.0, 0.0, 1.0);

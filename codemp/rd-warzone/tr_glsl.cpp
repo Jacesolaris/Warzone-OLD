@@ -2281,14 +2281,14 @@ int GLSL_BeginLoadGPUShaders(void)
 
 		if (r_foliage->integer >= 2)
 		{
-			if (!GLSL_BeginLoadGPUShader(&tr.grass2Shader, "grass3", attribs, qtrue, qfalse, qtrue, extradefines, qtrue, "400 compatibility", fallbackShader_grass3_vp, fallbackShader_grass3_fp, NULL, NULL, fallbackShader_grass3_gs))
+			if (!GLSL_BeginLoadGPUShader(&tr.grass2Shader, "grass3", attribs, qtrue, qfalse, qtrue, extradefines, qtrue, "330 compatibility", fallbackShader_grass3_vp, fallbackShader_grass3_fp, NULL, NULL, fallbackShader_grass3_gs))
 			{
 				ri->Error(ERR_FATAL, "Could not load grass3 shader!");
 			}
 		}
 		else 
 		{
-			if (!GLSL_BeginLoadGPUShader(&tr.grass2Shader, "grass2", attribs, qtrue, qfalse, qtrue, extradefines, qtrue, "400 compatibility", fallbackShader_grass2_vp, fallbackShader_grass2_fp, NULL, NULL, fallbackShader_grass2_gs))
+			if (!GLSL_BeginLoadGPUShader(&tr.grass2Shader, "grass2", attribs, qtrue, qfalse, qtrue, extradefines, qtrue, "330 compatibility", fallbackShader_grass2_vp, fallbackShader_grass2_fp, NULL, NULL, fallbackShader_grass2_gs))
 			{
 				ri->Error(ERR_FATAL, "Could not load grass2 shader!");
 			}
