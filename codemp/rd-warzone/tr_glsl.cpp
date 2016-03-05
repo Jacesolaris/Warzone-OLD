@@ -2101,24 +2101,12 @@ int GLSL_BeginLoadGPUShaders(void)
 
 	for (i = 0; i < LIGHTDEF_COUNT; i++)
 	{
-		int lightType = i & LIGHTDEF_LIGHTTYPE_MASK;
-		qboolean fastLight = (qboolean)!(r_normalMapping->integer || r_specularMapping->integer);
-
-		// skip impossible combos
-		if (!GLSL_IsValidPermutationForLight (lightType, i))
-		{
-			continue;
-		}
-
 		attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL | ATTR_TANGENT | ATTR_TEXCOORD1 | ATTR_LIGHTDIRECTION;
 
 		extradefines[0] = '\0';
 
 		if (r_deluxeSpecular->value > 0.000001f)
 			Q_strcat(extradefines, 1024, va("#define r_deluxeSpecular %f\n", r_deluxeSpecular->value));
-
-		if (r_specularIsMetallic->value)
-			Q_strcat(extradefines, 1024, "#define SPECULAR_IS_METALLIC\n");
 
 		if (r_dlightMode->integer >= 2)
 			Q_strcat(extradefines, 1024, "#define USE_SHADOWMAP\n");
@@ -2128,61 +2116,14 @@ int GLSL_BeginLoadGPUShaders(void)
 
 		Q_strcat(extradefines, 1024, "#define USE_PRIMARY_LIGHT_SPECULAR\n");
 		
-		if (!lightType)
-		{// UQ1: Meh! Force it!
-			
-			if (!(i & LIGHTDEF_ENTITY|LIGHTDEF_USE_TCGEN_AND_TCMOD))
-			{
-				Q_strcat(extradefines, 1024, "#define USE_LIGHT\n");
-				Q_strcat(extradefines, 1024, "#define USE_LIGHT_VERTEX\n");
-			}
-
-			Q_strcat(extradefines, 1024, "#define USE_NORMALMAP\n");
-		}
-
-		if (lightType)
+		if (i & LIGHTDEF_USE_LIGHTMAP)
 		{
-			Q_strcat(extradefines, 1024, "#define USE_LIGHT\n");
+			Q_strcat(extradefines, 1024, "#define USE_LIGHTMAP\n");
+			if (r_deluxeMapping->integer)
+				Q_strcat(extradefines, 1024, "#define USE_DELUXEMAP\n");
 
-			if (fastLight)
-				Q_strcat(extradefines, 1024, "#define USE_FAST_LIGHT\n");
-
-			switch (lightType)
+			if (r_parallaxMapping->integer) // Parallax without normal maps...
 			{
-				case LIGHTDEF_USE_LIGHTMAP:
-					Q_strcat(extradefines, 1024, "#define USE_LIGHTMAP\n");
-					if (r_deluxeMapping->integer && !fastLight)
-						Q_strcat(extradefines, 1024, "#define USE_DELUXEMAP\n");
-					break;
-				case LIGHTDEF_USE_LIGHT_VECTOR:
-					Q_strcat(extradefines, 1024, "#define USE_LIGHT_VECTOR\n");
-					break;
-				case LIGHTDEF_USE_LIGHT_VERTEX:
-					Q_strcat(extradefines, 1024, "#define USE_LIGHT_VERTEX\n");
-					break;
-				default:
-					break;
-			}
-
-			if (r_normalMapping->integer)
-			{
-				Q_strcat(extradefines, 1024, "#define USE_NORMALMAP\n");
-
-				if (r_normalMapping->integer == 2)
-					Q_strcat(extradefines, 1024, "#define USE_OREN_NAYAR\n");
-
-				if (r_normalMapping->integer == 3)
-					Q_strcat(extradefines, 1024, "#define USE_TRIACE_OREN_NAYAR\n");
-
-				Q_strcat(extradefines, 1024, "#define USE_PARALLAXMAP\n");
-
-				if (r_parallaxMapping->integer && r_parallaxMapping->integer < 2) // Fast parallax mapping...
-					Q_strcat(extradefines, 1024, "#define FAST_PARALLAX\n");
-			}
-			else if (r_parallaxMapping->integer) // Parallax without normal maps...
-			{
-				Q_strcat(extradefines, 1024, "#define USE_NORMALMAP\n");
-
 				Q_strcat(extradefines, 1024, "#define USE_PARALLAXMAP\n");
 
 				if (r_parallaxMapping->integer && r_parallaxMapping->integer < 2) // Fast parallax mapping...
@@ -2200,20 +2141,7 @@ int GLSL_BeginLoadGPUShaders(void)
 			}
 		}
 
-		//if (i & LIGHTDEF_USE_OVERLAY)
-		{
-			Q_strcat(extradefines, 1024, "#define USE_OVERLAY\n");
-		}
-
-		/*if (i & LIGHTDEF_USE_STEEPMAP)
-		{
-			Q_strcat(extradefines, 1024, "#define USE_STEEPMAP\n");
-		}
-
-		if (i & LIGHTDEF_USE_SWAY)
-		{
-			Q_strcat(extradefines, 1024, "#define USE_SWAY\n");
-		}*/
+		Q_strcat(extradefines, 1024, "#define USE_OVERLAY\n");
 
 		if (i & LIGHTDEF_USE_SHADOWMAP)
 		{
@@ -2254,13 +2182,6 @@ int GLSL_BeginLoadGPUShaders(void)
 
 		if (i & LIGHTDEF_USE_GLOW_BUFFER)
 			Q_strcat(extradefines, 1024, "#define USE_GLOW_BUFFER\n");
-
-		/*
-		if (i & LIGHTDEF_USE_FASTPASS)
-		{
-			Q_strcat(extradefines, 1024, "#define USE_FASTPASS\n");
-		}
-		*/
 
 		if (r_tesselation->integer)
 		{
@@ -2837,9 +2758,6 @@ int GLSL_BeginLoadGPUShaders(void)
 	if (r_deluxeSpecular->value > 0.000001f)
 		Q_strcat(extradefines, 1024, va("#define r_deluxeSpecular %f\n", r_deluxeSpecular->value));
 
-	if (r_specularIsMetallic->value)
-		Q_strcat(extradefines, 1024, "#define SPECULAR_IS_METALLIC\n");
-
 	if (r_dlightMode->integer >= 2)
 		Q_strcat(extradefines, 1024, "#define USE_SHADOWMAP\n");
 
@@ -2858,19 +2776,6 @@ int GLSL_BeginLoadGPUShaders(void)
 
 	attribs |= ATTR_TEXCOORD1 | ATTR_LIGHTDIRECTION;
 
-	if (r_normalMapping->integer)
-	{
-		Q_strcat(extradefines, 1024, "#define USE_NORMALMAP\n");
-
-		if (r_normalMapping->integer == 2)
-			Q_strcat(extradefines, 1024, "#define USE_OREN_NAYAR\n");
-
-		if (r_normalMapping->integer == 3)
-			Q_strcat(extradefines, 1024, "#define USE_TRIACE_OREN_NAYAR\n");
-
-		Q_strcat(extradefines, 1024, "#define USE_PARALLAXMAP_NONORMALS\n");
-	}
-
 	if (r_specularMapping->integer)
 	{
 		Q_strcat(extradefines, 1024, "#define USE_SPECULARMAP\n");
@@ -2886,32 +2791,15 @@ int GLSL_BeginLoadGPUShaders(void)
 	else if (r_sunlightMode->integer >= 2)
 		Q_strcat(extradefines, 1024, "#define USE_PRIMARY_LIGHT\n");
 
-	//if (i & LIGHTDEF_USE_TCGEN_AND_TCMOD)
-	{
-		Q_strcat(extradefines, 1024, "#define USE_TCGEN\n");
-		Q_strcat(extradefines, 1024, "#define USE_TCMOD\n");
-	}
+	Q_strcat(extradefines, 1024, "#define USE_TCGEN\n");
+	Q_strcat(extradefines, 1024, "#define USE_TCMOD\n");
 
-	//if (i & LIGHTDEF_ENTITY)
-	{
-		//if (i & LIGHTDEF_USE_VERTEX_ANIMATION)
-		{
-			Q_strcat(extradefines, 1024, "#define USE_VERTEX_ANIMATION\n");
-		}
-		/*else if (i & LIGHTDEF_USE_SKELETAL_ANIMATION)
-		{
-			Q_strcat(extradefines, 1024, "#define USE_SKELETAL_ANIMATION\n");
-			attribs |= ATTR_BONE_INDEXES | ATTR_BONE_WEIGHTS;
-		}*/
+	Q_strcat(extradefines, 1024, "#define USE_VERTEX_ANIMATION\n");
 
-		Q_strcat(extradefines, 1024, "#define USE_MODELMATRIX\n");
-		attribs |= ATTR_POSITION2 | ATTR_NORMAL2;
+	Q_strcat(extradefines, 1024, "#define USE_MODELMATRIX\n");
+	attribs |= ATTR_POSITION2 | ATTR_NORMAL2;
 
-		if (r_normalMapping->integer)
-		{
-			attribs |= ATTR_TANGENT2;
-		}
-	}
+	attribs |= ATTR_TANGENT2;
 
 	//if (i & LIGHTDEF_USE_GLOW_BUFFER)
 		Q_strcat(extradefines, 1024, "#define USE_GLOW_BUFFER\n");
@@ -2929,9 +2817,6 @@ int GLSL_BeginLoadGPUShaders(void)
 
 	if (r_deluxeSpecular->value > 0.000001f)
 		Q_strcat(extradefines, 1024, va("#define r_deluxeSpecular %f\n", r_deluxeSpecular->value));
-
-	if (r_specularIsMetallic->value)
-		Q_strcat(extradefines, 1024, "#define SPECULAR_IS_METALLIC\n");
 
 	if (r_dlightMode->integer >= 2)
 		Q_strcat(extradefines, 1024, "#define USE_SHADOWMAP\n");
@@ -2951,19 +2836,6 @@ int GLSL_BeginLoadGPUShaders(void)
 
 	attribs |= ATTR_TEXCOORD1 | ATTR_LIGHTDIRECTION | ATTR_TANGENT;
 
-	if (r_normalMapping->integer)
-	{
-		Q_strcat(extradefines, 1024, "#define USE_NORMALMAP\n");
-
-		if (r_normalMapping->integer == 2)
-			Q_strcat(extradefines, 1024, "#define USE_OREN_NAYAR\n");
-
-		if (r_normalMapping->integer == 3)
-			Q_strcat(extradefines, 1024, "#define USE_TRIACE_OREN_NAYAR\n");
-
-		Q_strcat(extradefines, 1024, "#define USE_PARALLAXMAP_NONORMALS\n");
-	}
-
 	if (r_specularMapping->integer)
 	{
 		Q_strcat(extradefines, 1024, "#define USE_SPECULARMAP\n");
@@ -2979,31 +2851,17 @@ int GLSL_BeginLoadGPUShaders(void)
 	else if (r_sunlightMode->integer >= 2)
 		Q_strcat(extradefines, 1024, "#define USE_PRIMARY_LIGHT\n");
 
-	//if (i & LIGHTDEF_USE_TCGEN_AND_TCMOD)
+	Q_strcat(extradefines, 1024, "#define USE_TCGEN\n");
+	Q_strcat(extradefines, 1024, "#define USE_TCMOD\n");
+
+	Q_strcat(extradefines, 1024, "#define USE_VERTEX_ANIMATION\n");
+
+	Q_strcat(extradefines, 1024, "#define USE_MODELMATRIX\n");
+	attribs |= ATTR_POSITION2 | ATTR_NORMAL2;
+
+	if (r_normalMapping->integer)
 	{
-		Q_strcat(extradefines, 1024, "#define USE_TCGEN\n");
-		Q_strcat(extradefines, 1024, "#define USE_TCMOD\n");
-	}
-
-	//if (i & LIGHTDEF_ENTITY)
-	{
-		//if (i & LIGHTDEF_USE_VERTEX_ANIMATION)
-		{
-			Q_strcat(extradefines, 1024, "#define USE_VERTEX_ANIMATION\n");
-		}
-		/*else if (i & LIGHTDEF_USE_SKELETAL_ANIMATION)
-		{
-			Q_strcat(extradefines, 1024, "#define USE_SKELETAL_ANIMATION\n");
-			attribs |= ATTR_BONE_INDEXES | ATTR_BONE_WEIGHTS;
-		}*/
-
-		Q_strcat(extradefines, 1024, "#define USE_MODELMATRIX\n");
-		attribs |= ATTR_POSITION2 | ATTR_NORMAL2;
-
-		if (r_normalMapping->integer)
-		{
-			attribs |= ATTR_TANGENT2;
-		}
+		attribs |= ATTR_TANGENT2;
 	}
 
 	//if (i & LIGHTDEF_USE_GLOW_BUFFER)
@@ -3144,15 +3002,6 @@ void GLSL_EndLoadGPUShaders ( int startTime )
 
 	for (i = 0; i < LIGHTDEF_COUNT; i++)
 	{
-		int lightType = i & LIGHTDEF_LIGHTTYPE_MASK;
-		qboolean fastLight = (qboolean)!(r_normalMapping->integer || r_specularMapping->integer);
-
-		// skip impossible combos
-		if (!GLSL_IsValidPermutationForLight (lightType, i))
-		{
-			continue;
-		}
-
 		if (!GLSL_EndLoadGPUShader(&tr.lightallShader[i]))
 		{
 			ri->Error(ERR_FATAL, "Could not load lightall shader!");

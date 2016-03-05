@@ -1,5 +1,3 @@
-//precision highp float;
-
 uniform sampler2D u_DiffuseMap;
 uniform sampler2D u_SteepMap;
 
@@ -19,9 +17,7 @@ varying float  var_Time;
 uniform sampler2D u_LightMap;
 #endif
 
-//#if defined(USE_NORMALMAP)
 uniform sampler2D u_NormalMap;
-//#endif
 
 #if defined(USE_DELUXEMAP)
 uniform sampler2D u_DeluxeMap;
@@ -46,31 +42,16 @@ uniform sampler2D u_SubsurfaceMap;
 
 uniform sampler2D u_OverlayMap;
 
-//#if defined(USE_NORMALMAP) || defined(USE_DELUXEMAP) || defined(USE_SPECULARMAP) || defined(USE_CUBEMAP)
-// y = deluxe, w = cube
 uniform vec4      u_EnableTextures;
-//#endif
 
-#if defined(USE_LIGHT_VECTOR)
-uniform vec3      u_DirectedLight;
-uniform vec3      u_AmbientLight;
-uniform vec4		u_LightOrigin;
-#endif
-
-#if defined(USE_PRIMARY_LIGHT) || defined(USE_PRIMARY_LIGHT_SPECULAR) || defined(USE_SHADOWMAP)
 uniform vec3  u_PrimaryLightColor;
 uniform vec3  u_PrimaryLightAmbient;
-#endif
 
 uniform vec4      u_NormalScale;
 uniform vec4      u_SpecularScale;
 
-#if defined(USE_LIGHT)
-#if defined(USE_CUBEMAP)
 uniform vec4      u_CubeMapInfo;
 uniform float     u_CubeMapStrength;
-#endif
-#endif
 
 
 varying vec2      var_TexCoords;
@@ -85,13 +66,7 @@ varying vec4   var_Bitangent;
 
 varying vec3 var_N;
 
-#if defined(USE_LIGHT)
-varying vec4      var_LightDir;
-#endif
-
-#if defined(USE_PRIMARY_LIGHT) || defined(USE_PRIMARY_LIGHT_SPECULAR) || defined(USE_SHADOWMAP)
 varying vec4      var_PrimaryLightDir;
-#endif
 
 varying vec3   var_vertPos;
 
@@ -206,21 +181,6 @@ vec3 EnvironmentBRDF(float gloss, float NE, vec3 specular)
 	return clamp( a0 + specular * ( a1 - a0 ), 0.0, 1.0 );
 }
 
-float CalcLightAttenuation(float point, float normDist)
-{
-	// zero light at 1.0, approximating q3 style
-	// also don't attenuate directional light
-	float attenuation = (0.5 * normDist - 1.5) * point + 1.0;
-
-	// clamp attenuation
-	#if defined(NO_LIGHT_CLAMP)
-	attenuation = max(attenuation, 0.0);
-	#else
-	attenuation = clamp(attenuation, 0.0, 1.0);
-	#endif
-
-	return attenuation;
-}
 
 
 float blinnPhongSpecular(in vec3 normalVec, in vec3 lightVec, in float specPower)
@@ -228,13 +188,7 @@ float blinnPhongSpecular(in vec3 normalVec, in vec3 lightVec, in float specPower
     vec3 halfAngle = normalize(normalVec + lightVec);
     return pow(clamp(dot(normalVec,halfAngle),0.0,1.0),specPower);
 }
- 
-#if defined(USE_LIGHT_VECTOR)
-float halfLambert(in vec3 vect1, in vec3 vect2)
-{
-    float product = dot(vect1,vect2);
-    return product * 0.5 + 0.5;
-}
+
  
 #ifdef SUBSURFACE_SCATTER
 // Main fake sub-surface scatter lighting function
@@ -306,7 +260,6 @@ vec4 subScatterFS(vec4 BaseColor, vec4 SpecColor, vec3 lightVec, vec3 LightColor
     return finalCol;   
 }
 #endif //SUBSURFACE_SCATTER
-#endif //defined(USE_LIGHT_VECTOR)
 
 
 void main()
@@ -339,7 +292,7 @@ void main()
 
 	vec3 viewDir = vec3(0.0), lightColor = vec3(0.0), ambientColor = vec3(0.0);
 	vec4 specular = vec4(0.0);
-	vec3 L, N, E, H;
+	vec3 N, E, H;
 	vec3 DETAILED_NORMAL = vec3(1.0);
 	float NL, NH, NE, EH, attenuation;
 	vec2 tex_offset = vec2(1.0 / u_Dimensions);
@@ -348,19 +301,6 @@ void main()
 	viewDir = vec3(var_Normal2, var_Tangent.w, var_Bitangent.w);
 
 	E = normalize(viewDir);
-
-	#if defined(USE_LIGHT) && !defined(USE_FAST_LIGHT)
-		L = var_LightDir.xyz;
-		
-		#if defined(USE_DELUXEMAP)
-			L += (texture2D(u_DeluxeMap, var_TexCoords2.st).xyz - vec3(0.5)) * u_EnableTextures.y;
-		#endif //defined(USE_DELUXEMAP)
-	
-		float sqrLightDist = dot(L, L);
-	#endif //defined(USE_LIGHT) && !defined(USE_FAST_LIGHT)
-
-
-
 
 	#if defined(USE_LIGHTMAP)
 
@@ -375,8 +315,6 @@ void main()
 		#endif //defined(USE_TESSELLATION)
 
 	#endif //defined(USE_LIGHTMAP)
-
-
 
 
 	vec2 texCoords = m_TexCoords.xy;
@@ -405,30 +343,13 @@ void main()
 
 	vec4 norm = texture2D(u_NormalMap, texCoords);
 
-	/*
-	gl_FragColor = vec4(norm.a, norm.a, norm.a, diffuse.a);
-	#if defined(USE_GLOW_BUFFER)
-		out_Glow = gl_FragColor;
-	#else
-		out_Glow = vec4(0.0);
-	#endif
-	return;
-	*/
-
 	N = norm.xyz * 2.0 - 1.0;
 	N.xy *= u_NormalScale.xy;
-	//N.xyz *= u_NormalScale.xyx;
 	N.z = sqrt(clamp((0.25 - N.x * N.x) - N.y * N.y, 0.0, 1.0));
 	N = tangentToWorld * N;
 	N = normalize(N);
 
 	DETAILED_NORMAL = N;
-		
-
-	//gl_FragColor.rgb = N.xyz/*DETAILED_NORMAL.xyz*/ * 0.5 + 0.5;
-	//gl_FragColor.a = diffuse.a;
-	//return;
-
 
 
 	#if defined(USE_OVERLAY)//USE_STEEPMAP
@@ -484,183 +405,46 @@ void main()
 
 	#endif //USE_OVERLAY
 
+	ambientColor = vec3(0.0);
+	lightColor = var_Color.rgb;
+	attenuation = 1.0;
+
+	#if defined(USE_LIGHTMAP)
+		float lmBrightMult = clamp(1.0 - (length(lightmapColor.rgb) / 3.0), 0.0, 0.9);
+		lmBrightMult *= lmBrightMult;
+		lightColor	= lightmapColor.rgb * lmBrightMult * (var_Color.rgb * 0.66666 + 0.33333); // UQ1:  * 0.66666 + 0.33333 is because they are too dark...
+	#endif
+
+
+	#if defined(USE_SHADOWMAP) 
+
+		vec2 shadowTex = gl_FragCoord.xy * r_FBufScale;
+		float shadowValue = texture2D(u_ShadowMap, shadowTex).r;
+
+		// surfaces not facing the light are always shadowed
+		shadowValue *= float(dot(m_Normal.xyz, var_PrimaryLightDir.xyz) > 0.0);
+
+		#if defined(SHADOWMAP_MODULATE)
+			vec3 shadowColor = u_PrimaryLightAmbient * lightColor;
+			lightColor = mix(shadowColor, lightColor, shadowValue);
+		#endif //defined(SHADOWMAP_MODULATE)
+
+	#endif //defined(USE_SHADOWMAP) 
 
 
 
-	#if defined(USE_LIGHT) && !defined(USE_FAST_LIGHT)
+	#if defined(USE_LIGHTMAP)
 
+		ambientColor = lightColor;
+		float surfNL = clamp(dot(m_Normal.xyz, var_PrimaryLightDir.xyz), 0.0, 1.0);
+		lightColor /= max(surfNL, 0.25);
+		ambientColor = clamp(ambientColor - lightColor * surfNL, 0.0, 1.0);
 
-
-		// =========================================================================================================================================
-		// Full Lighting stuff...
-		// =========================================================================================================================================
-
-
-
-		ambientColor = vec3 (0.0);
-		attenuation = 1.0;
-
-		#if defined(USE_LIGHTMAP)
-			lightColor	= lightmapColor.rgb * (var_Color.rgb * 0.66666 + 0.33333); // UQ1:  * 0.66666 + 0.33333 is because they are too dark...
-		#elif defined(USE_LIGHT_VECTOR)
-			lightColor	= u_DirectedLight * var_Color.rgb;
-			ambientColor = u_AmbientLight * var_Color.rgb;
-			attenuation = CalcLightAttenuation(float(var_LightDir.w > 0.0), var_LightDir.w / sqrLightDist);
-		#elif defined(USE_LIGHT_VERTEX)
-			lightColor	= var_Color.rgb;
-		#endif // defined(USE_LIGHTMAP) || defined(USE_LIGHT_VECTOR) || defined(USE_LIGHT_VERTEX)
-
-
-		L /= sqrt(sqrLightDist);
-
-
-
-		#if defined(USE_SHADOWMAP) 
-
-			vec2 shadowTex = gl_FragCoord.xy * r_FBufScale;
-			float shadowValue = texture2D(u_ShadowMap, shadowTex).r;
-
-			// surfaces not facing the light are always shadowed
-			shadowValue *= float(dot(m_Normal.xyz, var_PrimaryLightDir.xyz) > 0.0);
-
-			#if defined(SHADOWMAP_MODULATE)
-
-				//vec3 shadowColor = min(u_PrimaryLightAmbient, lightColor);
-				vec3 shadowColor = u_PrimaryLightAmbient * lightColor;
-
-				#if 0
-					shadowValue = 1.0 + (shadowValue - 1.0) * clamp(dot(L, var_PrimaryLightDir.xyz), 0.0, 1.0);
-				#endif
-		
-				lightColor = mix(shadowColor, lightColor, shadowValue);
-
-			#endif //defined(SHADOWMAP_MODULATE)
-
-		#endif //defined(USE_SHADOWMAP) 
-
-
-
-		#if defined(USE_LIGHTMAP) || defined(USE_LIGHT_VERTEX)
-
-			ambientColor = lightColor;
-			float surfNL = clamp(dot(m_Normal.xyz, L), 0.0, 1.0);
-			lightColor /= max(surfNL, 0.25);
-			ambientColor = clamp(ambientColor - lightColor * surfNL, 0.0, 1.0);
-
-		#endif //defined(USE_LIGHTMAP) || defined(USE_LIGHT_VERTEX)
+	#endif //defined(USE_LIGHTMAP)
   
 
-		vec3 reflectance;
+		specular.a = (1.0 - norm.a);
 
-		NL = clamp(dot(N, L), 0.0, 1.0);
-		NE = clamp(dot(N, E), 0.0, 1.0);
-
-		gl_FragColor = vec4(0.0);
-
-
-
-		if (u_Local1.g != 0.0)
-		{// Real specMap...
-			specular = texture2D(u_SpecularMap, texCoords);
-		}
-		else
-		{// Fake it...
-			if (u_Local1.b > 0.0)
-			{
-				specular.rgb = clamp( pow( vec3(((length(diffuse.rgb) / 3.0) * 2.0) * (1.0-norm.a)) , vec3(3.0)) , 0.0, 1.0) * 0.5;
-				specular.a = (1.0 - norm.a);
-
-				//specular.rgb = vec3(0.04);
-			}
-			else
-			{
-				specular = vec4(1.0);
-			}
-		}
-
-		#if defined(USE_GAMMA2_TEXTURES)
-			specular.rgb *= specular.rgb;
-		#endif //defined(USE_GAMMA2_TEXTURES)
-
-
-		specular.rgb *= (length(specular.rgb) / 3.0) * u_SpecularScale.rgb;
-
-
-		if (u_Local4.b != 0.0)
-		{// Metalic...
-			float metallic = specular.r;
-
-			specular.rgb = (0.96 * metallic) * diffuse.rgb + vec3(0.04);
-			diffuse.rgb *= 1.0 - metallic;
-		}
-		else
-		{// Non Metalic...
-			diffuse.rgb *= vec3(1.0) - specular.rgb;
-		}
-
-
-
-		// Reduce brightness of really bright spots (eg: light right above a reflective surface)
-		float refMult = (specular.r + specular.g + specular.b + specular.a) / 4.0;
-		refMult = 1.0 - refMult;
-		refMult = clamp(refMult, 0.25, 0.75);
-
-
-		reflectance = diffuse.rgb;
-
-		#if defined(r_deluxeSpecular) || defined(USE_LIGHT_VECTOR)
-			float lambertian = dot(L.xyz,N);
-			float spec = 0.0;
-
-			if(lambertian > 0.0)
-			{// this is blinn phong
-				vec3 halfDir = normalize(L.xyz + E);
-				float specAngle = max(dot(halfDir, N), 0.0);
-				spec = pow(specAngle, 16.0);
-				reflectance.rgb += vec3(spec * (1.0 - specular.a)) * reflectance.rgb * lightColor.rgb * u_Local5.b;
-			}
-		#endif
-
-
-		gl_FragColor.rgb  += lightColor   * reflectance * (attenuation/* * NL*/);
-		gl_FragColor.rgb += ambientColor * (diffuse.rgb + (specular.rgb * refMult));
-
-
-
-		#if defined(USE_CUBEMAP)
-			if (u_Local3.a > 0.0 && u_EnableTextures.w > 0.0) 
-			{
-				reflectance = EnvironmentBRDF(specular.a * refMult, NE, specular.rgb * refMult);
-				vec3 R = reflect(E, N);
-				vec3 parallax = u_CubeMapInfo.xyz + u_CubeMapInfo.w * viewDir;
-				vec3 cubeLightColor = textureCubeLod(u_CubeMap, R + parallax, 7.0 - specular.a * 7.0).rgb * u_EnableTextures.w;
-				gl_FragColor.rgb += (cubeLightColor * reflectance * (u_Local3.a * refMult)) * u_CubeMapStrength;
-			}
-		#endif
-
-
-		#if defined(USE_SHADOWMAP)
-			gl_FragColor.rgb *= clamp(shadowValue + 0.5, 0.0, 1.0);
-		#endif //defined(USE_SHADOWMAP)
-
-
-		gl_FragColor.a = diffuse.a * var_Color.a;
-
-
-
-
-	#else //!(defined(USE_LIGHT) && !defined(USE_FAST_LIGHT))
-
-
-
-		// =========================================================================================================================================
-		// Ambient Lighting Only Stuff...
-		// =========================================================================================================================================
-
-
-
-		lightColor = var_Color.rgb;
-	
 		#if defined(USE_LIGHTMAP) 
 			lightColor *= lightmapColor.rgb;
 		#endif
@@ -669,21 +453,53 @@ void main()
 		gl_FragColor = vec4 (diffuse.rgb * lightColor, diffuse.a * var_Color.a);
 
 
-	#endif //defined(USE_LIGHT) && !defined(USE_FAST_LIGHT)
+	#if defined(USE_CUBEMAP)
+		if (u_Local3.a > 0.0 && u_EnableTextures.w > 0.0) 
+		{
+			float brightFactor = 0.0;
+			float spec = 0.0;
 
+		#if defined(USE_SPECULAR)
+			if (u_Local1.g != 0.0)
+			{// Real specMap...
+				specular = texture2D(u_SpecularMap, texCoords);
+				spec = length(specular.rgb) / 3.0;
+				brightFactor = 1.0 - spec;
+			}
+			else
+		#endif //defined(USE_SPECULAR)
+			{// Fake it...
+				spec = length(diffuse.rgb) / 3.0;
+				brightFactor = 1.0 - spec;
+
+				if (u_Local4.b == 0.0)
+				{// Non-Metalic... Greyscale...
+					specular.rgb = vec3(spec) * brightFactor;
+				}
+			}
+
+			#if defined(USE_GAMMA2_TEXTURES)
+				specular.rgb *= specular.rgb;
+			#endif //defined(USE_GAMMA2_TEXTURES)
+
+			specular.rgb *= u_SpecularScale.rgb;
+
+			vec3 reflectance = EnvironmentBRDF(specular.a, NE, specular.rgb);
+			vec3 R = reflect(E, N);
+			vec3 parallax = u_CubeMapInfo.xyz + u_CubeMapInfo.w * viewDir;
+			vec3 cubeLightColor = textureCubeLod(u_CubeMap, R + parallax, 7.0 - specular.a * 7.0).rgb * u_EnableTextures.w * 0.25; //u_Local3.a
+			gl_FragColor.rgb += (cubeLightColor * reflectance * (u_Local3.a * specular.a * brightFactor)) * u_CubeMapStrength;
+		}
+	#endif
+
+
+	#if defined(USE_SHADOWMAP)
+		gl_FragColor.rgb *= clamp(shadowValue + 0.5, 0.0, 1.0);
+	#endif //defined(USE_SHADOWMAP)
 
 	#if defined(USE_PRIMARY_LIGHT) || defined(USE_PRIMARY_LIGHT_SPECULAR)
 		if (u_Local6.r > 0.0)
 		{
-			if (u_Local1.b > 0.0)
-			{
-				specular.a = (1.0 - norm.a);
-			}
-			else
-			{
-				specular.a = 1.0;
-			}
-
 			float lambertian2 = dot(var_PrimaryLightDir.xyz,N);
 			float spec2 = 0.0;
 
@@ -700,7 +516,7 @@ void main()
 
 	#ifdef SUBSURFACE_SCATTER
 
-		#if defined(USE_LIGHT_VECTOR) || defined(USE_PRIMARY_LIGHT) || defined(USE_PRIMARY_LIGHT_SPECULAR)
+		#if defined(USE_PRIMARY_LIGHT) || defined(USE_PRIMARY_LIGHT_SPECULAR)
 
 			// Let's add some sub-surface scatterring shall we???
 			//if (MaterialThickness > 0.0 || u_Local4.z != 0.0 /*|| u_Local1.a == 5 || u_Local1.a == 6 || u_Local1.a == 12 
@@ -708,16 +524,11 @@ void main()
 			//	|| u_Local1.a == 20 || u_Local1.a == 21 || u_Local1.a == 22*/)
 			if (u_Local1.a == 20)
 			{
-				#if defined(USE_PRIMARY_LIGHT) || defined(USE_PRIMARY_LIGHT_SPECULAR)
-					gl_FragColor.rgb += subScatterFS(gl_FragColor, gl_FragColor, var_PrimaryLightDir.xyz, u_PrimaryLightColor.xyz, E, N, texCoords).rgb;
-				#else
-					gl_FragColor.rgb += subScatterFS(gl_FragColor, gl_FragColor, L, lightColor.xyz, E, N, texCoords).rgb;
-				#endif
-
+				gl_FragColor.rgb += subScatterFS(gl_FragColor, gl_FragColor, var_PrimaryLightDir.xyz, u_PrimaryLightColor.xyz, E, N, texCoords).rgb;
 				gl_FragColor = clamp(gl_FragColor, 0.0, 1.0);
 			}
 
-		#endif //defined(USE_LIGHT_VECTOR) || defined(USE_PRIMARY_LIGHT) || defined(USE_PRIMARY_LIGHT_SPECULAR)
+		#endif //defined(USE_PRIMARY_LIGHT) || defined(USE_PRIMARY_LIGHT_SPECULAR)
 
 	#endif //SUBSURFACE_SCATTER
 

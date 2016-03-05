@@ -2632,6 +2632,10 @@ extern "C" {
 					}
 				}
 
+#ifdef __NO_GRASS__
+				if (!DO_TREE) continue;
+#endif
+
 				FOLIAGE_TREE_SELECTION[FOLIAGE_NUM_POSITIONS] = 0;
 				FOLIAGE_TREE_ANGLES[FOLIAGE_NUM_POSITIONS] = 0.0f;
 				FOLIAGE_TREE_SCALE[FOLIAGE_NUM_POSITIONS] = 0.0f;

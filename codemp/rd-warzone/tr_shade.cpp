@@ -1580,7 +1580,6 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 					|| ( tess.shader->surfaceFlags & MATERIAL_MASK ) == MATERIAL_SHORTGRASS
 					|| ( tess.shader->surfaceFlags & MATERIAL_MASK ) == MATERIAL_LONGGRASS))
 			{
-				index |= LIGHTDEF_LIGHTTYPE_MASK;
 				index |= LIGHTDEF_USE_SHADOWMAP;
 			}
 			else if ((r_sunlightMode->integer >= 2)
@@ -1592,7 +1591,6 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			else if ((r_sunlightMode->integer >= 2)
 				&& ((backEnd.viewParms.flags & VPF_USESUNLIGHT)))
 			{
-				index |= LIGHTDEF_LIGHTTYPE_MASK;
 				index |= LIGHTDEF_USE_SHADOWMAP;
 			}
 			
@@ -2036,8 +2034,8 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				}
 				else
 				{
-					qboolean light = (qboolean)((pStage->glslShaderIndex & LIGHTDEF_LIGHTTYPE_MASK) != 0);
-					qboolean fastLight = (qboolean)!(r_normalMapping->integer || r_specularMapping->integer);
+					qboolean light = qtrue;
+					qboolean fastLight = qfalse;
 
 					if (light && !fastLight)
 						usingLight = qtrue;

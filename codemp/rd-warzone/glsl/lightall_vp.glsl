@@ -11,8 +11,6 @@ out vec2 TexCoord_CS_in;
 out vec4 WorldPos_CS_in;
 #endif
 
-//#define USE_LIGHT
-
 #if defined(USE_LIGHTMAP) || defined(USE_TCGEN)
 attribute vec2 attr_TexCoord1;
 #endif
@@ -29,10 +27,6 @@ attribute vec4 attr_Tangent2;
 #elif defined(USE_SKELETAL_ANIMATION)
 attribute vec4 attr_BoneIndexes;
 attribute vec4 attr_BoneWeights;
-#endif
-
-#if defined(USE_LIGHT) && !defined(USE_LIGHT_VECTOR)
-attribute vec3 attr_LightDirection;
 #endif
 
 #if defined(USE_DELUXEMAP)
@@ -66,19 +60,8 @@ uniform float  u_VertexLerp;
 uniform mat4   u_BoneMatrices[20];
 #endif
 
-#if defined(USE_LIGHT_VECTOR)
-uniform vec4   u_LightOrigin;
-uniform float  u_LightRadius;
-  #if defined(USE_FAST_LIGHT)
-uniform vec3   u_DirectedLight;
-uniform vec3   u_AmbientLight;
-  #endif
-#endif
-
-#if defined(USE_PRIMARY_LIGHT) || defined(USE_PRIMARY_LIGHT_SPECULAR) || defined(USE_SHADOWMAP)
 uniform vec4  u_PrimaryLightOrigin;
 uniform float u_PrimaryLightRadius;
-#endif
 
 varying vec2   var_TexCoords;
 varying vec2   var_TexCoords2;
@@ -91,13 +74,7 @@ varying vec4   var_Tangent;
 varying vec4   var_Bitangent;
 varying vec3   var_ViewDir;
 
-#if defined(USE_LIGHT) && !defined(USE_FAST_LIGHT)
-varying vec4   var_LightDir;
-#endif
-
-#if defined(USE_PRIMARY_LIGHT) || defined(USE_PRIMARY_LIGHT_SPECULAR) || defined(USE_SHADOWMAP)
 varying vec4   var_PrimaryLightDir;
-#endif
 
 varying vec3   var_vertPos;
 varying float  var_Time;
@@ -145,22 +122,6 @@ vec2 ModTexCoords(vec2 st, vec3 position, vec4 texMatrix, vec4 offTurb)
 }
 #endif
 
-
-float CalcLightAttenuation(float point, float normDist)
-{
-	// zero light at 1.0, approximating q3 style
-	// also don't attenuate directional light
-	float attenuation = (0.5 * normDist - 1.5) * point + 1.0;
-
-	// clamp attenuation
-	#if defined(NO_LIGHT_CLAMP)
-	attenuation = max(attenuation, 0.0);
-	#else
-	attenuation = clamp(attenuation, 0.0, 1.0);
-	#endif
-
-	return attenuation;
-}
 
 
 void main()
@@ -230,14 +191,6 @@ void main()
 	vec3 bitangent = cross(normal, tangent) * (attr_Tangent.w * 2.0 - 1.0);
 
 
-#if defined(USE_LIGHT_VECTOR)
-	vec3 L = u_LightOrigin.xyz - (position * u_LightOrigin.w);
-#elif defined(USE_LIGHT) && !defined(USE_FAST_LIGHT)
-	vec3 L = attr_LightDirection * 2.0 - vec3(1.0);
-  #if defined(USE_MODELMATRIX)
-	L = (u_ModelMatrix * vec4(L, 0.0)).xyz;
-  #endif
-#endif
 
 
 #if defined(USE_LIGHTMAP)
@@ -246,28 +199,9 @@ void main()
 
 	var_Color = u_VertColor * attr_Color + u_BaseColor;
 
-#if defined(USE_LIGHT_VECTOR) && defined(USE_FAST_LIGHT)
-	float sqrLightDist = dot(L, L);
-	float attenuation = CalcLightAttenuation(u_LightOrigin.w, u_LightRadius * u_LightRadius / sqrLightDist);
-	float NL = clamp(dot(normalize(normal), L) / sqrt(sqrLightDist), 0.0, 1.0);
-	var_Color.rgb *= u_DirectedLight * (attenuation * NL) + u_AmbientLight;
-#endif
-
-#if defined(USE_PRIMARY_LIGHT) || defined(USE_PRIMARY_LIGHT_SPECULAR) || defined(USE_SHADOWMAP)
 	var_PrimaryLightDir.xyz = u_PrimaryLightOrigin.xyz - (position * u_PrimaryLightOrigin.w);
 	var_PrimaryLightDir.w = u_PrimaryLightRadius * u_PrimaryLightRadius;
-#endif
 
-#if defined(USE_LIGHT) && !defined(USE_FAST_LIGHT)
-  #if defined(USE_LIGHT_VECTOR)
-	var_LightDir = vec4(L, u_LightRadius * u_LightRadius);
-  #else
-	var_LightDir = vec4(L, 0.0);
-  #endif
-  #if defined(USE_DELUXEMAP)
-	var_LightDir -= u_EnableTextures.y * var_LightDir;
-  #endif
-#endif
 
 	vec3 viewDir = u_ViewOrigin - position;
 	var_ViewDir = viewDir;

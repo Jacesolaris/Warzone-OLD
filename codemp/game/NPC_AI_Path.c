@@ -1356,7 +1356,7 @@ qboolean NPC_FollowRoutes( void )
 		//|| (wpDist > MAX_LINK_DISTANCE && NPC->wpSeenTime < level.time - 4000)
 		|| NPC->wpSeenTime < level.time - 5000
 		|| NPC->wpTravelTime < level.time 
-		|| NPC->last_move_time < level.time - 5000 )
+		|| NPC->last_move_time < level.time - 15000 )
 	{// We hit a problem in route, or don't have one yet.. Find a new goal and path...
 		//if (wpDist > MAX_LINK_DISTANCE) trap->Print("%i wpCurrent too far.\n", NPC->s.number);
 		//if (NPC->wpSeenTime < level.time - 5000) trap->Print("%i wpSeenTime.\n", NPC->s.number);

@@ -3892,21 +3892,8 @@ static void ComputeVertexAttribs(void)
 		if (pStage->glslShaderGroup == tr.lightallShader)
 		{
 			shader.vertexAttribs |= ATTR_NORMAL;
-
-			//if ((pStage->glslShaderIndex & LIGHTDEF_LIGHTTYPE_MASK) && !(r_normalMapping->integer == 0 && r_specularMapping->integer == 0))
-			{
-				shader.vertexAttribs |= ATTR_TANGENT;
-			}
-
-			//switch (pStage->glslShaderIndex & LIGHTDEF_LIGHTTYPE_MASK)
-			//{
-			//	case LIGHTDEF_USE_LIGHTMAP:
-			//	case LIGHTDEF_USE_LIGHT_VERTEX:
-					shader.vertexAttribs |= ATTR_LIGHTDIRECTION;
-			//		break;
-			//	default:
-			//		break;
-			//}
+			shader.vertexAttribs |= ATTR_TANGENT;
+			shader.vertexAttribs |= ATTR_LIGHTDIRECTION;
 		}
 
 		for (i = 0; i < NUM_TEXTURE_BUNDLES; i++)
@@ -3985,13 +3972,11 @@ void StripCrap( const char *in, char *out, int destsize )
 }
 
 static void CollapseStagesToLightall(shaderStage_t *diffuse, 
-	shaderStage_t *normal, shaderStage_t *specular, shaderStage_t *lightmap/*, shaderStage_t *subsurface*/, shaderStage_t *overlay, 
-	qboolean useLightVector, qboolean useLightVertex, qboolean parallax, qboolean tcgen)
+	shaderStage_t *normal, shaderStage_t *specular, shaderStage_t *lightmap/*, shaderStage_t *subsurface*/, shaderStage_t *overlay, qboolean parallax, qboolean tcgen)
 {
 	int defs = 0;
 	qboolean hasRealNormalMap = qfalse;
 	qboolean hasRealSpecularMap = qfalse;
-	//qboolean hasRealSubsurfaceMap = qfalse;
 	qboolean hasRealOverlayMap = qfalse;
 	qboolean hasRealSteepMap = qfalse;
 	qboolean checkNormals = qtrue;
@@ -4010,86 +3995,6 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 		diffuse->bundle[TB_LIGHTMAP] = lightmap->bundle[0];
 		defs |= LIGHTDEF_USE_LIGHTMAP;
 	}
-	else if (useLightVector)
-	{
-		defs |= LIGHTDEF_USE_LIGHT_VECTOR;
-		useLightVector = qtrue;
-	}
-	else if (useLightVertex)
-	{
-		defs |= LIGHTDEF_USE_LIGHT_VERTEX;
-		useLightVertex = qtrue;
-	}
-#ifdef __EXTRA_PRETTY__
-	else if (checkNormals && (!shader.hasAlpha) /*|| ( shader.surfaceFlags & MATERIAL_MASK ) == MATERIAL_GREENLEAVES*/)
-	{// UQ1: If we marked this as a material (and it's not a portal or sky), override no light with vertex light for reflection and specular...
-		switch( shader.surfaceFlags & MATERIAL_MASK )
-		{
-		case MATERIAL_WATER:			// 13			// light covering of water on a surface
-		//case MATERIAL_SHORTGRASS:		// 5			// manicured lawn
-		//case MATERIAL_LONGGRASS:		// 6			// long jungle grass
-		case MATERIAL_TILES:			// 26			// tiled floor
-		case MATERIAL_SOLIDMETAL:		// 3			// solid girders
-		case MATERIAL_FABRIC:			// 21			// Cotton sheets
-		case MATERIAL_CANVAS:			// 22			// tent material
-		case MATERIAL_MARBLE:			// 12			// marble floors
-		case MATERIAL_SNOW:				// 14			// freshly laid snow
-		case MATERIAL_PLASTIC:			// 25			//
-		case MATERIAL_ARMOR:			// 30			// body armor
-		case MATERIAL_ICE:				// 15			// packed snow/solid ice
-		case MATERIAL_COMPUTER:			// 31			// computers/electronic equipment
-			defs |= LIGHTDEF_USE_LIGHT_VERTEX; // Vertex currently most compatible...
-			useLightVertex = qtrue;
-			break;
-		case MATERIAL_HOLLOWMETAL:		// 4			// hollow metal machines -- UQ1: Used for weapons to force lower parallax...
-		//case MATERIAL_SOLIDMETAL:		// 3			// solid girders
-		case MATERIAL_SHATTERGLASS:		// 29			// glass with the Crisis Zone style shattering
-		case MATERIAL_GLASS:			// 10			//
-		case MATERIAL_BPGLASS:			// 18			// bulletproof glass
-			defs |= LIGHTDEF_USE_LIGHT_VECTOR; // These look nice using vector...
-			useLightVector = qtrue;
-			break;
-		case MATERIAL_SOLIDWOOD:		// 1			// freshly cut timber
-		case MATERIAL_HOLLOWWOOD:		// 2			// termite infested creaky wood
-		case MATERIAL_DRYLEAVES:		// 19			// dried up leaves on the floor
-			defs |= LIGHTDEF_USE_LIGHT_VERTEX; // Vertex currently most compatible...
-			useLightVertex = qtrue;
-			break;
-		case MATERIAL_SHORTGRASS:		// 5			// manicured lawn
-		case MATERIAL_LONGGRASS:		// 6			// long jungle grass
-		case MATERIAL_GREENLEAVES:		// 20			// fresh leaves still on a tree
-			/*if (r_sunlightMode->integer >= 2)
-			{
-				defs |= LIGHTDEF_USE_LIGHT_VECTOR; // These look nice using vector...
-				useLightVector = qtrue;
-			}
-			else*/
-			{
-				defs |= LIGHTDEF_USE_LIGHT_VERTEX; // Vertex currently most compatible...
-				useLightVertex = qtrue;
-			}
-			break;
-		case MATERIAL_SAND:				// 8			// sandy beach
-		case MATERIAL_CARPET:			// 27			// lush carpet
-		case MATERIAL_GRAVEL:			// 9			// lots of small stones
-		case MATERIAL_ROCK:				// 23			//
-		case MATERIAL_CONCRETE:			// 11			// hardened concrete pavement
-		case MATERIAL_PLASTER:			// 28			// drywall style plaster
-		case MATERIAL_FLESH:			// 16			// hung meat, corpses in the world
-		case MATERIAL_RUBBER:			// 24			// hard tire like rubber
-		case MATERIAL_MUD:				// 17			// wet soil
-		case MATERIAL_DIRT:				// 7			// hard mud
-			if (!shader.noTC)
-			{
-				defs |= LIGHTDEF_USE_LIGHT_VERTEX; // Vertex currently most compatible...
-				useLightVertex = qtrue;
-			}
-			break;
-		default:
-			break;
-		}
-	}
-#endif //__EXTRA_PRETTY__
 
 	switch( shader.surfaceFlags & MATERIAL_MASK )
 	{// Switch to avoid doing string checks on everything else...
@@ -4633,7 +4538,7 @@ static qboolean CollapseStagesToGLSL(void)
 		{
 			shaderStage_t *pStage = &stages[i];
 			shaderStage_t *diffuse, *normal, *specular, *lightmap/*, *subsurface*/, *overlay, *steep;
-			qboolean parallax, tcgen, diffuselit, vertexlit;
+			qboolean parallax, tcgen;
 
 			if (!pStage->active)
 				continue;
@@ -4742,20 +4647,7 @@ static qboolean CollapseStagesToGLSL(void)
 				tcgen = qtrue;
 			}
 
-			diffuselit = qfalse;
-			if (diffuse->rgbGen == CGEN_LIGHTING_DIFFUSE ||
-				diffuse->rgbGen == CGEN_LIGHTING_DIFFUSE_ENTITY)
-			{
-				diffuselit = qtrue;
-			}
-
-			vertexlit = qfalse;
-			if (diffuse->rgbGen == CGEN_VERTEX_LIT || diffuse->rgbGen == CGEN_EXACT_VERTEX_LIT)
-			{
-				vertexlit = qtrue;
-			}
-
-			CollapseStagesToLightall(diffuse, normal, specular, lightmap/*, subsurface*/, overlay, diffuselit, vertexlit, parallax, tcgen);
+			CollapseStagesToLightall(diffuse, normal, specular, lightmap/*, subsurface*/, overlay, parallax, tcgen);
 		}
 
 		// deactivate lightmap stages
@@ -4888,13 +4780,6 @@ static qboolean CollapseStagesToGLSL(void)
 					if (hasRealNormalMap) pStage->hasRealNormalMap = true;
 
 					pStage->glslShaderGroup = tr.lightallShader;
-
-					pStage->glslShaderIndex = LIGHTDEF_USE_LIGHT_VECTOR;
-				}
-				else if (!(pStage->glslShaderIndex & LIGHTDEF_USE_LIGHT_VECTOR))
-				{
-					pStage->glslShaderIndex &= ~LIGHTDEF_LIGHTTYPE_MASK;
-					pStage->glslShaderIndex |= LIGHTDEF_USE_LIGHT_VECTOR;
 				}
 
 				if (pStage->bundle[0].tcGen != TCGEN_TEXTURE || pStage->bundle[0].numTexMods != 0)
