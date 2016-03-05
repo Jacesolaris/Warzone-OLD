@@ -29,12 +29,11 @@ out vec4 out_FoliageMap;
 
 void main() 
 {
-	//gl_FragColor = vec4(0.0, 0.0, 1.0, 1.0);
-	//gl_FragColor = vec4(0.0, 0.0, m_TexCoords.y, 1.0);
-	//gl_FragColor = texture(u_DiffuseMap, m_TexCoords);
-
 	vec2 texCoords = m_TexCoords + vec2(u_Local10.b * u_Local10.a * ((1.0 - m_TexCoords.y) + 1.0), 0.0);
-	gl_FragColor = texture(u_DiffuseMap, texCoords);
+	vec4 diffuse = texture(u_DiffuseMap, texCoords);
+	if (diffuse.a > 0.5) diffuse.a = 1.0;
+	gl_FragColor = diffuse;
+	//gl_FragColor = texture(u_DiffuseMap, texCoords);
 	
 
 #if 0

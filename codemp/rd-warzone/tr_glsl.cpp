@@ -969,11 +969,15 @@ static void GLSL_PrintShaderSource(GLuint shader)
 	Z_Free(msg);
 }
 
+qboolean ALLOW_GL_400 = qfalse;
+
 char		GLSL_MAX_VERSION[24] = {0};
 
 char *GLSL_GetHighestSupportedVersion( void )
 {
 	if (GLSL_MAX_VERSION[0] == '#') return GLSL_MAX_VERSION;
+
+	ALLOW_GL_400 = qfalse;
 
 	if (r_tesselation->integer)
 	{
@@ -990,14 +994,19 @@ char *GLSL_GetHighestSupportedVersion( void )
 	{
 		// UQ1: Use the highest level of GL that is supported... Check once and record for all future glsl loading...
 		/*if (glRefConfig.glslMajorVersion >= 5)
-		sprintf(GLSL_MAX_VERSION, "#version 500 core\n");
+			sprintf(GLSL_MAX_VERSION, "#version 500 core\n");
 		else if (glRefConfig.glslMajorVersion >= 4 && glRefConfig.glslMinorVersion >= 20)
-		sprintf(GLSL_MAX_VERSION, "#version 420 core\n");
+			sprintf(GLSL_MAX_VERSION, "#version 420 core\n");
 		else if (glRefConfig.glslMajorVersion >= 4 && glRefConfig.glslMinorVersion >= 10)
-		sprintf(GLSL_MAX_VERSION, "#version 410 core\n");
+			sprintf(GLSL_MAX_VERSION, "#version 410 core\n");
 		else if (glRefConfig.glslMajorVersion >= 4)
-		sprintf(GLSL_MAX_VERSION, "#version 400 core\n");
-		else*/ if (glRefConfig.glslMajorVersion >= 3 && glRefConfig.glslMinorVersion >= 30)
+			sprintf(GLSL_MAX_VERSION, "#version 400 core\n");
+		else*/ if (glRefConfig.glslMajorVersion >= 4)
+		{
+			sprintf(GLSL_MAX_VERSION, "#version 400 compatibility\n");
+			ALLOW_GL_400 = qtrue;
+		}
+		else if (glRefConfig.glslMajorVersion >= 3 && glRefConfig.glslMinorVersion >= 30)
 			sprintf(GLSL_MAX_VERSION, "#version 330\n");
 		else if (glRefConfig.glslMajorVersion >= 3 && glRefConfig.glslMinorVersion >= 20)
 			sprintf(GLSL_MAX_VERSION, "#version 320\n");
@@ -2281,16 +2290,40 @@ int GLSL_BeginLoadGPUShaders(void)
 
 		if (r_foliage->integer >= 2)
 		{
-			if (!GLSL_BeginLoadGPUShader(&tr.grass2Shader, "grass3", attribs, qtrue, qfalse, qtrue, extradefines, qtrue, "330 compatibility", fallbackShader_grass3_vp, fallbackShader_grass3_fp, NULL, NULL, fallbackShader_grass3_gs))
+			if (ALLOW_GL_400)
 			{
-				ri->Error(ERR_FATAL, "Could not load grass3 shader!");
+				Q_strcat(extradefines, 1024, "#define USE_400\n");
+
+				if (!GLSL_BeginLoadGPUShader(&tr.grass2Shader, "grass3", attribs, qtrue, qfalse, qtrue, extradefines, qtrue, "400 compatibility", fallbackShader_grass3_vp, fallbackShader_grass3_fp, NULL, NULL, fallbackShader_grass3_gs))
+				{
+					ri->Error(ERR_FATAL, "Could not load grass3 shader!");
+				}
+			}
+			else
+			{
+				if (!GLSL_BeginLoadGPUShader(&tr.grass2Shader, "grass3", attribs, qtrue, qfalse, qtrue, extradefines, qtrue, "330 compatibility", fallbackShader_grass3_vp, fallbackShader_grass3_fp, NULL, NULL, fallbackShader_grass3_gs))
+				{
+					ri->Error(ERR_FATAL, "Could not load grass3 shader!");
+				}
 			}
 		}
 		else 
 		{
-			if (!GLSL_BeginLoadGPUShader(&tr.grass2Shader, "grass2", attribs, qtrue, qfalse, qtrue, extradefines, qtrue, "330 compatibility", fallbackShader_grass2_vp, fallbackShader_grass2_fp, NULL, NULL, fallbackShader_grass2_gs))
+			if (ALLOW_GL_400)
 			{
-				ri->Error(ERR_FATAL, "Could not load grass2 shader!");
+				Q_strcat(extradefines, 1024, "#define USE_400\n");
+
+				if (!GLSL_BeginLoadGPUShader(&tr.grass2Shader, "grass2", attribs, qtrue, qfalse, qtrue, extradefines, qtrue, "400 compatibility", fallbackShader_grass2_vp, fallbackShader_grass2_fp, NULL, NULL, fallbackShader_grass2_gs))
+				{
+					ri->Error(ERR_FATAL, "Could not load grass3 shader!");
+				}
+			}
+			else
+			{
+				if (!GLSL_BeginLoadGPUShader(&tr.grass2Shader, "grass2", attribs, qtrue, qfalse, qtrue, extradefines, qtrue, "330 compatibility", fallbackShader_grass2_vp, fallbackShader_grass2_fp, NULL, NULL, fallbackShader_grass2_gs))
+				{
+					ri->Error(ERR_FATAL, "Could not load grass2 shader!");
+				}
 			}
 		}
 	}
