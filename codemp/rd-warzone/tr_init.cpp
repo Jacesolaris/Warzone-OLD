@@ -1507,7 +1507,7 @@ void R_Register( void )
 	r_magicdetailStrength = ri->Cvar_Get( "r_magicdetailStrength", "0.05", CVAR_ARCHIVE );
 	r_dof = ri->Cvar_Get( "r_dof", "0", CVAR_ARCHIVE );
 	r_testvalue0 = ri->Cvar_Get( "r_testvalue0", "0.55", 0 );
-	r_testvalue1 = ri->Cvar_Get( "r_testvalue1", "1.5", 0 );
+	r_testvalue1 = ri->Cvar_Get( "r_testvalue1", "0.1", 0 );
 	r_esharpening = ri->Cvar_Get( "r_esharpening", "0", CVAR_ARCHIVE );
 	r_esharpening2 = ri->Cvar_Get( "r_esharpening2", "0", CVAR_ARCHIVE );
 	r_fxaa = ri->Cvar_Get( "r_fxaa", "1", CVAR_ARCHIVE );

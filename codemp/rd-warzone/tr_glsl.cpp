@@ -815,6 +815,8 @@ static uniformInfo_t uniformsInfo[] =
 	{ "u_ProjectionMatrix",               GLSL_MAT16, 1 },
 	{ "u_ModelViewMatrix",               GLSL_MAT16, 1 },
 	{ "u_ViewMatrix",               GLSL_MAT16, 1 },
+	{ "u_invViewMatrix",               GLSL_MAT16, 1 },
+	{ "u_NormalMatrix",               GLSL_MAT16, 1 },
 
 	{ "u_Time",          GLSL_FLOAT, 1 },
 	{ "u_VertexLerp" ,   GLSL_FLOAT, 1 },

@@ -1,32 +1,44 @@
 //#version 120
 
+uniform mat4	u_ModelViewMatrix;
 uniform mat4	u_ModelViewProjectionMatrix;
 uniform mat4	u_invProjectionMatrix;
+uniform mat4	u_NormalMatrix;
 attribute vec3	attr_Position;
 attribute vec3	attr_Normal;
 attribute vec2	attr_TexCoord0;
 
 uniform vec2	u_Dimensions;
 uniform vec3	u_ViewOrigin;
-uniform vec4    u_LightOrigin;
+uniform vec4    u_PrimaryLightOrigin;
 
-//uniform mat4 u_ModelViewProjectionMatrix;
-//uniform mat4 u_invEyeProjectionMatrix;
+
+
+
+#if 0
+
+
+
 
 /*
-uniform float terminator;
-uniform float avisibility;
-uniform float visibility;
-uniform float terrain_alt; 
-uniform float air_pollution;
-*/
-
 const float hazeLayerAltitude = 60000.0;
 const float terminator = 100000.0;
 const float avisibility = 100000.0;
 const float visibility = 100000.0;
 const float terrain_alt = 0.0; 
 const float air_pollution = 0.0;//15;
+*/
+
+uniform vec4    u_Local0;
+uniform vec4    u_Local1;
+
+#define hazeLayerAltitude u_Local0.r
+#define terminator u_Local0.g
+#define avisibility u_Local0.b
+#define visibility u_Local0.a
+#define terrain_alt u_Local1.r
+#define air_pollution u_Local1.g
+
 
 varying vec3 rayleigh;
 varying vec3 mie;
@@ -156,7 +168,7 @@ void main()
     float deltaLength = length(positionDelta); // Should multiply by something?
  
     //vec3 lightDirection = gl_LightSource[0].position.xyz;
-	vec3 lightDirection = vec4(u_ModelViewProjectionMatrix * vec4(u_LightOrigin.xyz, 1.0)).xyz;
+	vec3 lightDirection = vec4(u_ModelViewProjectionMatrix * vec4(u_PrimaryLightOrigin.xyz, 1.0)).xyz;
  
     // Cos theta of camera's position and sample point
     // Since camera is 0,0,z, dot product is just the z coordinate
@@ -187,7 +199,7 @@ void main()
  
       // Cosine between the angle of sample's up vector and sun
       // Since lightDirection is in eye space, we must transform sample too
-      vec3 sampleUp = gl_NormalMatrix * normalize(sample);
+      vec3 sampleUp = (u_NormalMatrix * vec4(normalize(sample), 0.0)).xyz;
       float cosTheta = dot(sampleUp, lightDirection);
  
       // Scattering from sky to sample point
@@ -218,7 +230,7 @@ void main()
     ct = cameraCosTheta1;
     rayleigh = rayleighK * color;
     mie = mieK * color;
-    eye = gl_NormalMatrix * positionDelta;
+    eye = (u_NormalMatrix * vec4(positionDelta, 0.0)).xyz;
  
 
    // We need to move the camera so that the dome appears to be centered around earth
@@ -238,7 +250,7 @@ void main()
 
     // establish coordinates relative to sun position
     vec4 ep = /*gl_ModelViewMatrixInverse*/u_invProjectionMatrix * vec4(0.0,0.0,0.0,1.0);
-    vec3 lightFull = (/*gl_ModelViewMatrixInverse*/u_invProjectionMatrix * vec4(u_LightOrigin.xyz, 1.0)).xyz;
+    vec3 lightFull = (/*gl_ModelViewMatrixInverse*/u_invProjectionMatrix * vec4(u_PrimaryLightOrigin.xyz, 1.0)).xyz;
     vec3 lightHorizon = normalize(vec3(lightFull.x,lightFull.y, 0.0) );
  
 
@@ -304,39 +316,37 @@ void main()
 
 
 
+#else
 
 
 
 
 
+//uniform vec3 sunPosition;
+//uniform vec3 playerPos;
+//uniform vec3 playerLookAtDir;
+
+#define vPosition attr_Position.xyz
+#define sunPosition u_PrimaryLightOrigin.xyz
+#define playerPos u_ViewOrigin.xyz
+#define playerLookAtDir normalize(u_ViewOrigin.xyz - vPosition.xyz)
 
 
-#if 0
-varying vec2	texCoord1;
-varying vec2	var_Dimensions;
-varying vec3	viewPos;
-varying vec3	pPos;
-varying vec3	viewAngles;
-
-uniform float	u_Time;
-varying float	time;
+out vec3 fWorldPos;
+out float playerLookingAtSun;	// the dot of the player looking at the sun - should be the same for all verts
 
 void main()
-{
-	// transform vertex position into homogenous clip-space
-	gl_Position = u_ModelViewProjectionMatrix * vec4(attr_Position.xyz, 1.0);
-	pPos = gl_Position.xyz;
-
-	// transform position into world space
-	viewPos = (u_ModelViewProjectionMatrix * vec4(u_ViewOrigin.xyz/*attr_Position.xyz*/, 1.0)).xyz;
-
-	// compute view direction in world space
-	viewAngles = normalize(u_ViewOrigin - viewPos);
-
-	texCoord1 = attr_TexCoord0.st;
-	var_Dimensions = u_Dimensions;
-
-	time = u_Time;
+{		
+	//float dotPS = max(0.0, dot(playerLookAtDir, normalize(sunPosition - playerPos)));
+	playerLookingAtSun = 0.8;
+	fWorldPos = vPosition;// + playerPos;
+	gl_Position = u_ModelViewProjectionMatrix * vec4(fWorldPos, 1.0);
 }
+
+
+
+
+
+
 #endif
 

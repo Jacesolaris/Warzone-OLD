@@ -847,6 +847,80 @@ qboolean SUN_InFOV( vec3_t spot )
 	return qfalse;
 }
 
+//#define __DAY_NIGHT__ // FIXME - or do it with GLSL...
+
+#ifdef __DAY_NIGHT__
+int DAY_NIGHT_UPDATE_TIME = 0;
+
+float DAY_NIGHT_SUN_DIRECTION = 0.0;
+float DAY_NIGHT_CURRENT_TIME = 0.0;
+float DAY_NIGHT_AMBIENT_SCALE = 0.0;
+vec4_t DAY_NIGHT_AMBIENT_COLOR_ORIGINAL;
+
+void RB_UpdateDayNightCycle()
+{
+	int nowTime = ri->Milliseconds();
+
+	if (DAY_NIGHT_UPDATE_TIME == 0)
+	{// Init stuff...
+		VectorCopy4(tr.refdef.sunAmbCol, DAY_NIGHT_AMBIENT_COLOR_ORIGINAL);
+	}
+
+	if (DAY_NIGHT_UPDATE_TIME < nowTime)
+	{
+		vec4_t sunColor;
+
+		DAY_NIGHT_CURRENT_TIME += r_testvalue1->value;
+		
+		if (DAY_NIGHT_CURRENT_TIME > 12.0)
+			DAY_NIGHT_CURRENT_TIME = -12.0;
+
+		DAY_NIGHT_SUN_DIRECTION = DAY_NIGHT_CURRENT_TIME / 12.0;
+
+		//VectorSet(tr.sunDirection, DIRECTION, DIRECTION, DIRECTION);
+
+		if (DAY_NIGHT_CURRENT_TIME < -6.0 || DAY_NIGHT_CURRENT_TIME > 7.0)
+		{// Night time...
+			DAY_NIGHT_AMBIENT_SCALE = 0.3;
+			VectorSet4(sunColor, 0.3, 0.3, 0.3, 1.0);
+			sunColor[0] *= DAY_NIGHT_AMBIENT_COLOR_ORIGINAL[0];
+			sunColor[1] *= DAY_NIGHT_AMBIENT_COLOR_ORIGINAL[1];
+			sunColor[2] *= DAY_NIGHT_AMBIENT_COLOR_ORIGINAL[2];
+		}
+		else
+		{// Day time...
+			if (DAY_NIGHT_CURRENT_TIME < -7.0)
+			{// Morning color... More red/yellow...
+				DAY_NIGHT_AMBIENT_SCALE = -7.0 - DAY_NIGHT_CURRENT_TIME;
+				VectorSet4(sunColor, 1.0, (0.5 - (DAY_NIGHT_AMBIENT_SCALE * 0.5)) + 0.5, 1.0 - DAY_NIGHT_AMBIENT_SCALE, 1.0);
+				sunColor[0] *= DAY_NIGHT_AMBIENT_COLOR_ORIGINAL[0];
+				sunColor[1] *= DAY_NIGHT_AMBIENT_COLOR_ORIGINAL[1];
+				sunColor[2] *= DAY_NIGHT_AMBIENT_COLOR_ORIGINAL[2];
+			}
+			else if (DAY_NIGHT_CURRENT_TIME > 6.0)
+			{// Evening color... More red/yellow...
+				DAY_NIGHT_AMBIENT_SCALE = DAY_NIGHT_CURRENT_TIME - 6.0;
+				VectorSet4(sunColor, 1.0, (0.5 - (DAY_NIGHT_AMBIENT_SCALE * 0.5)) + 0.5, 1.0 - DAY_NIGHT_AMBIENT_SCALE, 1.0);
+				sunColor[0] *= DAY_NIGHT_AMBIENT_COLOR_ORIGINAL[0];
+				sunColor[1] *= DAY_NIGHT_AMBIENT_COLOR_ORIGINAL[1];
+				sunColor[2] *= DAY_NIGHT_AMBIENT_COLOR_ORIGINAL[2];
+			}
+			else
+			{// Full bright - day...
+				DAY_NIGHT_AMBIENT_SCALE = 1.0;
+				VectorCopy4(DAY_NIGHT_AMBIENT_COLOR_ORIGINAL, tr.refdef.sunAmbCol);
+			}
+		}
+
+		VectorCopy4(sunColor, tr.refdef.sunAmbCol);
+
+		DAY_NIGHT_UPDATE_TIME = nowTime + 50;
+	}
+}
+
+extern void R_LocalPointToWorld (const vec3_t local, vec3_t world);
+extern void R_WorldToLocal (const vec3_t world, vec3_t local);
+#endif //__DAY_NIGHT__
 
 /*
 ** RB_DrawSun
@@ -874,7 +948,25 @@ void RB_DrawSun( float scale, shader_t *shader ) {
 	dist = 	backEnd.viewParms.zFar / 1.75;		// div sqrt(3)
 	size = dist * scale;
 
+#ifndef __DAY_NIGHT__
+	//VectorSet(tr.sunDirection, r_testshaderValue1->value, r_testshaderValue2->value, r_testshaderValue3->value);
 	VectorScale( tr.sunDirection, dist, origin );
+#else //__DAY_NIGHT__
+	RB_UpdateDayNightCycle();
+
+	tr.sunDirection[0] = cos( DAY_NIGHT_SUN_DIRECTION * M_PI ) * cos( 0.3 * M_PI );
+	tr.sunDirection[1] = sin( DAY_NIGHT_SUN_DIRECTION * M_PI ) * cos( 0.3 * M_PI );
+	tr.sunDirection[2] = sin( 0.3 * M_PI );
+	VectorNormalize( tr.sunDirection );
+	VectorScale( tr.sunDirection, dist, origin );
+
+	if (DAY_NIGHT_CURRENT_TIME < -6.0 || DAY_NIGHT_CURRENT_TIME > 7.0)
+	{// No sun at night time... TODO: Moon???
+		SUN_VISIBLE = qfalse;
+		return;
+	}
+#endif //__DAY_NIGHT__
+
 	PerpendicularVector( vec1, tr.sunDirection );
 	CrossProduct( tr.sunDirection, vec1, vec2 );
 
@@ -886,7 +978,7 @@ void RB_DrawSun( float scale, shader_t *shader ) {
 
 	RB_BeginSurface( shader, 0, 0 );
 
-	RB_AddQuadStamp(origin, vec1, vec2, colorWhite);
+	RB_AddQuadStamp(origin, vec1, vec2, tr.refdef.sunAmbCol/*colorWhite*/);
 
 	RB_EndSurface();
 
@@ -897,9 +989,9 @@ void RB_DrawSun( float scale, shader_t *shader ) {
 	{// Lets have some volumetrics with that!
 		vec3_t out;
 		VectorMA( backEnd.refdef.vieworg, dist, tr.sunDirection, out );
-		out[0]+=(size/2.0);
-		out[1]+=(size/2.0);
-		out[2]+=(size/2.0);
+		out[0]+=(size/3.0);		// Don't ask me why
+		out[1]+=(size/10.0);	// but this seems
+		out[2]+=(size/2.0);		// to be the center... WTF!!!
 		VectorCopy(out, SUN_ORIGIN);
 
 		if (SUN_InFOV( SUN_ORIGIN ))
@@ -923,15 +1015,50 @@ void DrawSkyDome ( shader_t *skyShader )
 	GLSL_BindProgram(&tr.uniqueskyShader);
 	GL_BindToTMU(skyShader->sky.outerbox[0], TB_LEVELSMAP);
 
+	/*
+	matrix_t trans, model, mvp, invTrans;
+
+	Matrix16Translation( backEnd.viewParms.ori.origin, trans );
+	Matrix16Multiply( backEnd.viewParms.world.modelMatrix, trans, model );
+	Matrix16Multiply(backEnd.viewParms.projectionMatrix, model, mvp);
+	
+	Matrix16SimpleInverse( trans, invTrans);
+					
+	GLSL_SetUniformMatrix16(&tr.uniqueskyShader, UNIFORM_PROJECTIONMATRIX, glState.projection);
+	GLSL_SetUniformMatrix16(&tr.uniqueskyShader, UNIFORM_MODELVIEWMATRIX, model);
+	GLSL_SetUniformMatrix16(&tr.uniqueskyShader, UNIFORM_VIEWMATRIX, trans);
+	GLSL_SetUniformMatrix16(&tr.uniqueskyShader, UNIFORM_INVVIEWMATRIX, invTrans);
+	*/
+
+	matrix_t trans, model, mvp, invMvp, normalMatrix;
+
+	Matrix16Translation( backEnd.viewParms.ori.origin, trans );
+	Matrix16Multiply( backEnd.viewParms.world.modelMatrix, trans, model );
+	Matrix16Multiply(backEnd.viewParms.projectionMatrix, model, mvp);
+	Matrix16SimpleInverse( mvp, invMvp);
+	Matrix16SimpleInverse( model, normalMatrix);
+	
+	//mat4 normalMatrix = transpose(inverse(modelView));
+
 	GLSL_SetUniformMatrix16(&tr.uniqueskyShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
-	GLSL_SetUniformMatrix16(&tr.uniqueskyShader, UNIFORM_INVPROJECTIONMATRIX, glState.invProjection);
+	GLSL_SetUniformMatrix16(&tr.uniqueskyShader, UNIFORM_MODELVIEWMATRIX, model);
+	GLSL_SetUniformMatrix16(&tr.uniqueskyShader, UNIFORM_INVPROJECTIONMATRIX, invMvp);
+	GLSL_SetUniformMatrix16(&tr.uniqueskyShader, UNIFORM_NORMALMATRIX, normalMatrix);
+
 	GLSL_SetUniformFloat(&tr.uniqueskyShader, UNIFORM_TIME, backEnd.refdef.floatTime);
 	GLSL_SetUniformVec3(&tr.uniqueskyShader, UNIFORM_VIEWORIGIN,  backEnd.refdef.vieworg);
 
-	vec4_t vec;
-	VectorCopy(backEnd.currentEntity->lightDir, vec);
-	vec[3] = 0.0f;
-	GLSL_SetUniformVec4(&tr.uniqueskyShader, UNIFORM_LIGHTORIGIN, vec);
+	GLSL_SetUniformVec3(&tr.uniqueskyShader, UNIFORM_PRIMARYLIGHTAMBIENT, backEnd.refdef.sunAmbCol);
+	GLSL_SetUniformVec3(&tr.uniqueskyShader, UNIFORM_PRIMARYLIGHTCOLOR,   backEnd.refdef.sunCol);
+	GLSL_SetUniformVec4(&tr.uniqueskyShader, UNIFORM_PRIMARYLIGHTORIGIN,  backEnd.refdef.sunDir);
+
+	vec4_t l0;
+	VectorSet4(l0, r_testshaderValue1->value, r_testshaderValue2->value, r_testshaderValue3->value, r_testshaderValue4->value);
+	GLSL_SetUniformVec4(&tr.uniqueskyShader, UNIFORM_LOCAL0, l0);
+
+	vec4_t l1;
+	VectorSet4(l1, r_testshaderValue5->value, r_testshaderValue6->value, r_testshaderValue7->value, r_testshaderValue8->value);
+	GLSL_SetUniformVec4(&tr.uniqueskyShader, UNIFORM_LOCAL1, l1);
 
 	if (skyShader->sky.outerbox[0])
 	{
@@ -1001,7 +1128,10 @@ void RB_StageIteratorSky( void ) {
 	// go through all the polygons and project them onto
 	// the sky box to see which blocks on each side need
 	// to be drawn
-	RB_ClipSkyPolygons( &tess );
+	if ( tess.shader->sky.outerbox[0] && tess.shader->sky.outerbox[0] != tr.defaultImage )
+	{
+		RB_ClipSkyPolygons( &tess );
+	}
 
 	// r_showsky will let all the sky blocks be drawn in
 	// front of everything to allow developers to see how
@@ -1018,22 +1148,10 @@ void RB_StageIteratorSky( void ) {
 		DrawSkyDome(tess.shader);
 	}
 	else
-	// draw the outer skybox
-	//if ( tess.shader->sky.outerbox[0] && tess.shader->sky.outerbox[0] != tr.defaultImage ) 
-	{
+	{// draw the outer skybox
 		matrix_t oldmodelview;
 
 		skyImage = tess.shader->sky.outerbox[r_skynum->integer];
-
-		/*if ( !tess.shader->sky.outerbox[0] || tess.shader->sky.outerbox[0] == tr.defaultImage ) 
-		{// UQ1: Set a default image...
-			tess.shader->sky.outerbox[0] = 
-				tess.shader->sky.outerbox[1] = 
-				tess.shader->sky.outerbox[2] = 
-				tess.shader->sky.outerbox[3] = 
-				tess.shader->sky.outerbox[4] = 
-				tess.shader->sky.outerbox[5] = tr.fogImage;
-		}*/
 		
 		GL_State( 0 );
 		//qglTranslatef (backEnd.viewParms.ori.origin[0], backEnd.viewParms.ori.origin[1], backEnd.viewParms.ori.origin[2]);
@@ -1054,13 +1172,14 @@ void RB_StageIteratorSky( void ) {
 		GL_SetModelviewMatrix( oldmodelview );
 	}
 
-	// generate the vertexes for all the clouds, which will be drawn
-	// by the generic shader routine
-	R_BuildCloudData( &tess );
 #else //___FORCED_SKYDOME___
 	DrawSkyDome(tess.shader);
 #endif //___FORCED_SKYDOME___
 
+
+	// generate the vertexes for all the clouds, which will be drawn
+	// by the generic shader routine
+	R_BuildCloudData( &tess );
 	RB_StageIteratorGeneric();
 
 	// draw the inner skybox

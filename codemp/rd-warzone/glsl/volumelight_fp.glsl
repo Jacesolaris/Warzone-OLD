@@ -62,6 +62,7 @@ void main ( void )
 		float fall = clamp((fBloomrayFalloffRange * depth * 2.0) - dist, 0.0, 1.0);
 
 		//if (i == SUN_ID) fall = 0.2;
+		if (i == SUN_ID) fall *= 3.0;
 
 		if (fall > 0.0)
 		{

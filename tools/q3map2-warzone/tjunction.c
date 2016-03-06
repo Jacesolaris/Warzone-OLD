@@ -326,7 +326,7 @@ void AddPatchEdges( mapDrawSurface_t *ds ) {
    FixSurfaceJunctions
    ====================
  */
-#define MAX_SURFACE_VERTS   256
+#define MAX_SURFACE_VERTS   512
 void FixSurfaceJunctions( mapDrawSurface_t *ds ) {
 	int i, j, k;
 	edgeLine_t  *e;

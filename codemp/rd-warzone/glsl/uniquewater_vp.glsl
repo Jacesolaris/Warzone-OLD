@@ -207,37 +207,6 @@ void main()
 #endif
 
 
-#if 0
-	vec3 P = attr_Position + (normal * (m_Length*m_Layer));
-
-#ifdef WAVE
-	//Use a noise function to choose a movement group
-    float gravGroup = noise(attr_Position);
-
-    //cycle the bend factor based on the total time
-    //THIS LINE CAUSES THE WAVING EFFECT!  Tweak this depending on your application.
-    float bendAmt = sin((u_Time + gravGroup)*m_WaveSpeed);
-
-    vec3 vGravity = vec3(0,0,0);
-	float bendValue = bendAmt * 0.1 * m_WaveSize;
-    
-    if (gravGroup < 0.3) {
-       vGravity = (vec4((-0.1)+bendValue, (-0.1)+bendValue, 0, 0)*u_ModelViewProjectionMatrix).xyz;
-    } else if (gravGroup < 0.6) {
-       vGravity = (vec4((0.1)+bendValue, (0.1)+bendValue, 0, 0)*u_ModelViewProjectionMatrix).xyz;
-    } else {
-       vGravity = (vec4(0, 0, (-0.1)+bendValue, 0)*u_ModelViewProjectionMatrix).xyz;
-    }
-#else
-	vec3 vGravity = (vec4(-0.1,0,0,0)*u_ModelMatrix).xyz;
-#endif
-
-    float k =  pow(m_Layer, 3);  // The higher the exponent is, the closer to the tip the grass will start curving
-    P = P + vGravity*k;
-
-    gl_Position = u_ModelViewProjectionMatrix * vec4(P, 1.0);
-	var_TexCoords = tex;
-#else //!0
 	float time = u_Time + 0.5;
 	vec4 v = vec4(attr_Position, 1.0);
 	vec4 v2 = v;//normalize(vec4(attr_Position, 1.0));
@@ -249,7 +218,7 @@ void main()
 	var_TexCoords = tex;
 
 	var_Fresnel = v.z;
-#endif //0
+
 
 	var_Dimensions = u_Dimensions.st;
 	var_vertPos = gl_Position.xyz;

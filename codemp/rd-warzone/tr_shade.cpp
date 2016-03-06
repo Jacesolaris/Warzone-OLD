@@ -1804,15 +1804,19 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 					GLSL_SetUniformMatrix16(sp, UNIFORM_VIEWMATRIX, glState.viewTrans);
 					*/
 
-					matrix_t trans, model, mvp;
+					matrix_t trans, model, mvp, invTrans;
 
 					Matrix16Translation( backEnd.viewParms.ori.origin, trans );
 					Matrix16Multiply( backEnd.viewParms.world.modelMatrix, trans, model );
 					Matrix16Multiply(backEnd.viewParms.projectionMatrix, model, mvp);
+
+					Matrix16SimpleInverse( trans, invTrans);
 					
 					GLSL_SetUniformMatrix16(sp, UNIFORM_PROJECTIONMATRIX, glState.projection/*backEnd.viewParms.projectionMatrix*/);
 					GLSL_SetUniformMatrix16(sp, UNIFORM_MODELVIEWMATRIX, model);//backEnd.viewParms.world.modelMatrix);
 					GLSL_SetUniformMatrix16(sp, UNIFORM_VIEWMATRIX, trans);
+					GLSL_SetUniformMatrix16(sp, UNIFORM_INVVIEWMATRIX, invTrans);
+					
 				}
 
 				GLSL_SetUniformVec3(sp, UNIFORM_LOCALVIEWORIGIN, backEnd.ori.viewOrigin);
