@@ -2,8 +2,8 @@
 #extension GL_ARB_gpu_shader5 : enable
 #endif
 
-layout(triangles, invocations = 20) in;
-layout(triangle_strip, max_vertices = 128) out;
+layout(triangles, invocations = 24) in;
+layout(triangle_strip, max_vertices = 113) out;
 
 
 uniform mat4			u_ModelViewProjectionMatrix;
@@ -14,6 +14,15 @@ uniform vec4			u_Local10; // foliageLODdistance, foliageDensity, doSway, overlay
 
 uniform float			u_Time;
 
+
+smooth out vec2			vTexCoord;
+
+#if defined(USE_PRIMARY_LIGHT) || defined(USE_PRIMARY_LIGHT_SPECULAR) || defined(USE_SHADOWMAP) 
+smooth out vec3			vWorldPos;
+#endif //defined(USE_PRIMARY_LIGHT) || defined(USE_PRIMARY_LIGHT_SPECULAR) || defined(USE_SHADOWMAP) 
+
+
+
 #define screenScale		vec3(r_FBufScale.xy, 0.0)
 
 #define MAX_RANGE		u_Local10.r
@@ -23,15 +32,10 @@ uniform float			u_Time;
 #define LOD2_RANGE		MAX_RANGE / 5.0
 #define LOD3_RANGE		MAX_RANGE / 3.0
 
-#define LOD0_MAX_FOLIAGES 32
-#define LOD1_MAX_FOLIAGES 24
-#define LOD2_MAX_FOLIAGES 6
+#define LOD0_MAX_FOLIAGES 28
+#define LOD1_MAX_FOLIAGES 20
+#define LOD2_MAX_FOLIAGES 5
 #define LOD3_MAX_FOLIAGES 1
-
-smooth out vec2 vTexCoord;
-//smooth out vec3 vWorldPos;
-//smooth out vec4 vEyeSpacePos;
-
 
 mat4 rotationMatrix(vec3 axis, float angle)
 {
@@ -166,8 +170,9 @@ void main()
 			gl_Position = u_ModelViewProjectionMatrix*vec4(vTL, 1.0);
 			vTexCoord = vec2(0.0, 1.0);
 			vTexCoord.y *= vBaseDir[i].z;
-			//vWorldPos = vTL;
-			//vEyeSpacePos = u_ModelMatrix*vec4(vTL, 1.0);
+			#if defined(USE_PRIMARY_LIGHT) || defined(USE_PRIMARY_LIGHT_SPECULAR) || defined(USE_SHADOWMAP) 
+				vWorldPos = vTL;
+			#endif //defined(USE_PRIMARY_LIGHT) || defined(USE_PRIMARY_LIGHT_SPECULAR) || defined(USE_SHADOWMAP) 
 			EmitVertex();
 
 			vec3 vBL = vGrassInstancePos - (vBaseDir[i]*scaleMult);
@@ -175,8 +180,9 @@ void main()
 			gl_Position = u_ModelViewProjectionMatrix*vec4(vBL, 1.0);
 			vTexCoord = vec2(1.0, 1.0);
 			vTexCoord.y *= vBaseDir[i].z;
-			//vWorldPos = vBL;
-			//vEyeSpacePos = u_ModelMatrix*vec4(vBL, 1.0);
+			#if defined(USE_PRIMARY_LIGHT) || defined(USE_PRIMARY_LIGHT_SPECULAR) || defined(USE_SHADOWMAP) 
+				vWorldPos = vBL;
+			#endif //defined(USE_PRIMARY_LIGHT) || defined(USE_PRIMARY_LIGHT_SPECULAR) || defined(USE_SHADOWMAP) 
 			EmitVertex();
 
 			vec3 vTR = vGrassInstancePos + (vBaseDir[i]*scaleMult);
@@ -185,8 +191,9 @@ void main()
 			gl_Position = u_ModelViewProjectionMatrix*vec4(vTR, 1.0);
 			vTexCoord = vec2(0.0, 0.0);
 			vTexCoord.y *= vBaseDir[i].z;
-			//vWorldPos = vTL;
-			//vEyeSpacePos = u_ModelMatrix*vec4(vTR, 1.0);
+			#if defined(USE_PRIMARY_LIGHT) || defined(USE_PRIMARY_LIGHT_SPECULAR) || defined(USE_SHADOWMAP) 
+				vWorldPos = vTR;
+			#endif //defined(USE_PRIMARY_LIGHT) || defined(USE_PRIMARY_LIGHT_SPECULAR) || defined(USE_SHADOWMAP) 
 			EmitVertex();
 
 			vec3 vBR = vGrassInstancePos + (vBaseDir[i]*scaleMult);
@@ -194,8 +201,9 @@ void main()
 			gl_Position = u_ModelViewProjectionMatrix*vec4(vBR, 1.0);
 			vTexCoord = vec2(1.0, 0.0);
 			vTexCoord.y *= vBaseDir[i].z;
-			//vWorldPos = vBR;
-			//vEyeSpacePos = u_ModelMatrix*vec4(vBR, 1.0);
+			#if defined(USE_PRIMARY_LIGHT) || defined(USE_PRIMARY_LIGHT_SPECULAR) || defined(USE_SHADOWMAP) 
+				vWorldPos = vBL;
+			#endif //defined(USE_PRIMARY_LIGHT) || defined(USE_PRIMARY_LIGHT_SPECULAR) || defined(USE_SHADOWMAP) 
 			EmitVertex();
 
 			EndPrimitive();

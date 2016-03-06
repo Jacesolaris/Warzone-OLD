@@ -542,7 +542,7 @@ void main()
 
 	out_DetailedNormal = vec4(DETAILED_NORMAL.xyz, specular.a / 8.0);
 
-	if (u_Local1.a == 20 || u_Local1.a == 19 /*|| u_Local1.a == 5 || u_Local1.a == 6*/) 
+	if (u_Local1.a == 20 || u_Local1.a == 19 || u_Local1.a == 5 || u_Local1.a == 6) 
 	{// (Foliage/Plants), (billboard trees), ShortGrass, LongGrass
 		out_FoliageMap.r = 1.0;
 		out_FoliageMap.g = 1.0;

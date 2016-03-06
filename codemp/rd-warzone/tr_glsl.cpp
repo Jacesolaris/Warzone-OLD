@@ -2207,7 +2207,10 @@ int GLSL_BeginLoadGPUShaders(void)
 
 		extradefines[0] = '\0';
 
-		//Q_strcat(extradefines, 1024, "#define USE_PRIMARY_LIGHT_SPECULAR\n");
+		Q_strcat(extradefines, 1024, "#define USE_PRIMARY_LIGHT_SPECULAR\n");
+
+		if (r_sunlightMode->integer >= 2)
+			Q_strcat(extradefines, 1024, "#define USE_SHADOWMAP\n");
 
 		if (r_foliage->integer >= 2)
 		{
