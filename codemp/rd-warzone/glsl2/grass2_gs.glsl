@@ -9,10 +9,14 @@ layout(triangle_strip, max_vertices = 113) out;
 uniform mat4			u_ModelViewProjectionMatrix;
 uniform mat4			u_ModelMatrix;
 uniform mat4			u_ModelViewMatrix;
+uniform mat4			u_NormalMatrix;
 
+uniform vec4			u_Local9;
 uniform vec4			u_Local10; // foliageLODdistance, foliageDensity, doSway, overlaySway
 
 uniform float			u_Time;
+
+varying vec3			var_Normal;
 
 
 smooth out vec2			vTexCoord;
@@ -81,9 +85,68 @@ vec4 randomBarycentricCoordinate() {
   return gl_in[0].gl_Position + (R * (gl_in[1].gl_Position - gl_in[0].gl_Position)) + (S * (gl_in[2].gl_Position - gl_in[0].gl_Position));
 }
 
+#define M_PI		3.14159265358979323846
+
+vec3 vectoangles( in vec3 value1 ) {
+	float	forward;
+	float	yaw, pitch;
+	vec3	angles;
+
+	if ( value1.g == 0 && value1.r == 0 ) {
+		yaw = 0;
+		if ( value1.b > 0 ) {
+			pitch = 90;
+		}
+		else {
+			pitch = 270;
+		}
+	}
+	else {
+		if ( value1.r > 0 ) {
+			yaw = ( atan ( value1.g, value1.r ) * 180 / M_PI );
+		}
+		else if ( value1.g > 0 ) {
+			yaw = 90;
+		}
+		else {
+			yaw = 270;
+		}
+		if ( yaw < 0 ) {
+			yaw += 360;
+		}
+
+		forward = sqrt ( value1.r*value1.r + value1.g*value1.g );
+		pitch = ( atan(value1.b, forward) * 180 / M_PI );
+		if ( pitch < 0 ) {
+			pitch += 360;
+		}
+	}
+
+	angles.r = -pitch;
+	angles.g = yaw;
+	angles.b = 0.0;
+
+	return angles;
+}
 
 void main()
 {
+	//vec3 normal = gl_NormalMatrix * normalize(cross(gl_in[1].gl_Position.xyz - gl_in[0].gl_Position.xyz, gl_in[2].gl_Position.xyz - gl_in[0].gl_Position.xyz)); //calculate normal for this face
+	//vec3 normal = (u_ModelViewProjectionMatrix * vec4(normalize(cross(gl_in[1].gl_Position.xyz - gl_in[0].gl_Position.xyz, gl_in[2].gl_Position.xyz - gl_in[0].gl_Position.xyz)), 0.0)).xyz; //calculate normal for this face
+	vec3 normal = (u_NormalMatrix * vec4(normalize(cross(gl_in[1].gl_Position.xyz - gl_in[0].gl_Position.xyz, gl_in[2].gl_Position.xyz - gl_in[0].gl_Position.xyz)), 0.0)).xyz; //calculate normal for this face
+	float pitch = vectoangles( normal.xyz /*var_Normal.xyz*/ ).r;
+	
+	if (pitch > 180)
+		pitch -= 360;
+
+	if (pitch < -180)
+		pitch += 360;
+
+	pitch += 90.0f;
+
+	if (pitch > 26.0/*u_Local9.r*/ || pitch < -26.0/*-u_Local9.r*/) // 26.0 to 32.0 looks about right
+		return; // This slope is too great for grass...
+
 	float fGrassPatchSize = 96.0;
 
 	//face center------------------------

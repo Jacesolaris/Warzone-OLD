@@ -4,6 +4,8 @@ uniform sampler2D	u_ScreenDepthMap;
 
 uniform int			u_lightCount;
 uniform vec2		u_lightPositions[16];
+uniform float		u_lightDistances[16];
+uniform vec3		u_lightColors[16];
 
 varying vec2		var_TexCoords;
 varying vec2		var_Dimensions;
@@ -51,6 +53,7 @@ void main ( void )
 	//return;
 
 	vec2		inRangePositions[16];
+	vec3		lightColors[16];
 	float		fallOffRanges[16];
 	float		lightDepths[16];
 	int			numInRange = 0;
@@ -58,7 +61,8 @@ void main ( void )
 	for (int i = 0; i < u_lightCount; i++)
 	{
 		float dist = length(var_TexCoords - u_lightPositions[i]);
-		float depth = 1.0 - linearize(texture2D(u_ScreenDepthMap, u_lightPositions[i]).r);
+		//float depth = 1.0 - linearize(texture2D(u_ScreenDepthMap, u_lightPositions[i]).r);
+		float depth = 1.0 - u_lightDistances[i];
 		float fall = clamp((fBloomrayFalloffRange * depth * 2.0) - dist, 0.0, 1.0);
 
 		//if (i == SUN_ID) fall = 0.2;
@@ -69,6 +73,7 @@ void main ( void )
 			inRangePositions[numInRange] = u_lightPositions[i];
 			lightDepths[numInRange] = depth;
 			fallOffRanges[numInRange] = (fall + (fall*fall)) / 2.0;
+			lightColors[numInRange] = u_lightColors[i];
 			numInRange++;
 		}
 	}
@@ -98,6 +103,7 @@ void main ( void )
 		float illuminationDecay = 1.0;
 
 		for(int g = 0; g < iBloomraySamples; g++) {
+#if 0
 			texCoord -= deltaTexCoord;
 			vec4 sample2 = texture2D(u_DiffuseMap, texCoord.xy);
 			//sample2.rgb = vec3(linearize(sample2.x));
@@ -109,6 +115,17 @@ void main ( void )
 
 			if (illuminationDecay <= 0.0)
 				break;
+#else
+			texCoord -= deltaTexCoord;
+			float sample2 = linearize(texture2D(u_ScreenDepthMap, texCoord.xy).r);
+			sample2 *= illuminationDecay * fBloomrayWeight;
+
+			lens.xyz += (sample2 * 0.5) * lightColors[i];
+			illuminationDecay *= fBloomrayDecay;
+
+			if (illuminationDecay <= 0.0)
+				break;
+#endif
 		}
 
 		totalColor += clamp((lens * lightDepth) * fallOffRanges[i], 0.0, 1.0);

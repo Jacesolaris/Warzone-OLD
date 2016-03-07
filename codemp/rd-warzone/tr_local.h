@@ -342,6 +342,7 @@ extern int		max_polyverts;
 //
 extern cvar_t	*r_blinnPhong;
 extern cvar_t	*r_skynum;
+extern cvar_t	*r_volumeLightStrength;
 extern cvar_t	*r_fog;
 extern cvar_t	*r_multithread;
 extern cvar_t	*r_multithread2;
@@ -1335,6 +1336,8 @@ typedef enum
 
 	UNIFORM_LIGHTCOUNT,
 	UNIFORM_LIGHTPOSITIONS,
+	UNIFORM_LIGHTDISTANCES,
+	UNIFORM_LIGHTCOLORS,
 
 	UNIFORM_COUNT
 } uniform_t;
@@ -3149,6 +3152,8 @@ void GLSL_SetUniformVec3(shaderProgram_t *program, int uniformNum, const vec3_t 
 void GLSL_SetUniformVec4(shaderProgram_t *program, int uniformNum, const vec4_t v);
 void GLSL_SetUniformMatrix16(shaderProgram_t *program, int uniformNum, const float *matrix, int numElements = 1);
 void GLSL_SetUniformVec2x16(shaderProgram_t *program, int uniformNum, const vec2_t *elements, int numElements);
+void GLSL_SetUniformVec3x16(shaderProgram_t *program, int uniformNum, const vec3_t *elements, int numElements);
+void GLSL_SetUniformFloatx16(shaderProgram_t *program, int uniformNum, const float *elements, int numElements);
 
 shaderProgram_t *GLSL_GetGenericShaderProgram(int stage);
 

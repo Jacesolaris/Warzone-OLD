@@ -861,6 +861,8 @@ static uniformInfo_t uniformsInfo[] =
 
 	{ "u_lightCount",			GLSL_INT, 1 },
 	{ "u_lightPositions",		GLSL_VEC2, 16  },
+	{ "u_lightDistances",		GLSL_FLOAT, 16  },
+	{ "u_lightColors",			GLSL_VEC3, 16  },
 };
 
 static void GLSL_PrintProgramInfoLog(GLuint object, qboolean developerOnly)
@@ -1876,6 +1878,34 @@ void GLSL_SetUniformVec3(shaderProgram_t *program, int uniformNum, const vec3_t 
 	qglUniform3f(uniforms[uniformNum], v[0], v[1], v[2]);
 }
 
+void GLSL_SetUniformVec3x16(shaderProgram_t *program, int uniformNum, const vec3_t *elements, int numElements)
+{
+	GLint *uniforms = program->uniforms;
+	float *compare;
+
+	if (uniforms[uniformNum] == -1)
+		return;
+
+	if (uniformsInfo[uniformNum].type != GLSL_VEC3)
+	{
+		ri->Printf( PRINT_WARNING, "GLSL_SetUniformVec3x16: wrong type for uniform %i in program %s\n", uniformNum, program->name);
+		return;
+	}
+
+	if (uniformsInfo[uniformNum].size < numElements)
+		return;
+
+	compare = (float *)(program->uniformBuffer + program->uniformBufferOffsets[uniformNum]);
+	if (memcmp (elements, compare, sizeof (vec3_t) * numElements) == 0)
+	{
+		return;
+	}
+
+	Com_Memcpy (compare, elements, sizeof (vec3_t) * numElements);
+
+	qglUniform3fv(uniforms[uniformNum], numElements, (const GLfloat *)elements);
+}
+
 void GLSL_SetUniformVec4(shaderProgram_t *program, int uniformNum, const vec4_t v)
 {
 	GLint *uniforms = program->uniforms;
@@ -1922,6 +1952,34 @@ void GLSL_SetUniformFloat5(shaderProgram_t *program, int uniformNum, const vec5_
 	VectorCopy5(v, compare);
 
 	qglUniform1fv(uniforms[uniformNum], 5, v);
+}
+
+void GLSL_SetUniformFloatx16(shaderProgram_t *program, int uniformNum, const float *elements, int numElements)
+{
+	GLint *uniforms = program->uniforms;
+	float *compare;
+
+	if (uniforms[uniformNum] == -1)
+		return;
+
+	if (uniformsInfo[uniformNum].type != GLSL_FLOAT)
+	{
+		ri->Printf( PRINT_WARNING, "GLSL_SetUniformFloatx16: wrong type for uniform %i in program %s\n", uniformNum, program->name);
+		return;
+	}
+
+	if (uniformsInfo[uniformNum].size < numElements)
+		return;
+
+	compare = (float *)(program->uniformBuffer + program->uniformBufferOffsets[uniformNum]);
+	if (memcmp (elements, compare, sizeof (float) * numElements) == 0)
+	{
+		return;
+	}
+
+	Com_Memcpy (compare, elements, sizeof (float) * numElements);
+
+	qglUniform3fv(uniforms[uniformNum], numElements, (const GLfloat *)elements);
 }
 
 void GLSL_SetUniformMatrix16(shaderProgram_t *program, int uniformNum, const float *matrix, int numElements)
@@ -2205,7 +2263,7 @@ int GLSL_BeginLoadGPUShaders(void)
 
 	if (r_foliage->integer)
 	{
-		attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL | ATTR_TANGENT | ATTR_TEXCOORD1 | ATTR_LIGHTDIRECTION;
+		attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_NORMAL | ATTR_LIGHTDIRECTION;
 
 		extradefines[0] = '\0';
 

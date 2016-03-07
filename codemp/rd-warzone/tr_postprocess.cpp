@@ -273,7 +273,7 @@ static void RB_RadialBlur(FBO_t *srcFbo, FBO_t *dstFbo, int passes, float stretc
 }
 
 
-static qboolean RB_UpdateSunFlareVis(void)
+qboolean RB_UpdateSunFlareVis(void)
 {
 	GLuint sampleCount = 0;
 
@@ -930,7 +930,10 @@ void Volumetric_RoofHeight(vec3_t from)
 	VectorSet(roof, trace.endpos[0]-8.0, trace.endpos[1], trace.endpos[2]);
 }
 
-extern vec3_t SUN_ORIGIN;
+extern void R_WorldToLocal (const vec3_t world, vec3_t local);
+extern void R_LocalPointToWorld (const vec3_t local, vec3_t world);
+
+extern vec2_t SUN_SCREEN_POSITION;
 extern qboolean SUN_VISIBLE;
 
 qboolean RB_VolumetricLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
@@ -959,6 +962,11 @@ qboolean RB_VolumetricLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_
 	int			NUM_CLOSE_LIGHTS = 0;
 	int			CLOSEST_LIGHTS[MAX_VOLUMETRIC_LIGHTS] = {0};
 	vec2_t		CLOSEST_LIGHTS_POSITIONS[MAX_VOLUMETRIC_LIGHTS] = {0};
+	float		CLOSEST_LIGHTS_DISTANCES[MAX_VOLUMETRIC_LIGHTS] = {0};
+	vec3_t		CLOSEST_LIGHTS_COLORS[MAX_VOLUMETRIC_LIGHTS] = {0};
+
+	float strengthMult = 1.0;
+	if (r_dynamiclight->integer < 3) strengthMult = 2.0; // because the lower samples result in less color...
 
 	for ( int l = 0 ; l < backEnd.refdef.num_dlights ; l++ ) 
 	{
@@ -1043,11 +1051,18 @@ qboolean RB_VolumetricLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_
 		x = (xcenter + xzi * transformed[0]);
 		y = (ycenter - yzi * transformed[1]);
 
+		float depth = (distance/2048.0);
+		if (depth > 1.0) depth = 1.0;
+
 		if (NUM_CLOSE_LIGHTS < MAX_VOLUMETRIC_LIGHTS-1)
 		{// Have free light slots for a new light...
 			CLOSEST_LIGHTS[NUM_CLOSE_LIGHTS] = l;
 			CLOSEST_LIGHTS_POSITIONS[NUM_CLOSE_LIGHTS][0] = x / 640;
 			CLOSEST_LIGHTS_POSITIONS[NUM_CLOSE_LIGHTS][1] = 1.0 - (y / 480);
+			CLOSEST_LIGHTS_DISTANCES[NUM_CLOSE_LIGHTS] = depth;
+			CLOSEST_LIGHTS_COLORS[NUM_CLOSE_LIGHTS][0] = dl->color[0]*min(r_volumeLightStrength->value*4.0*strengthMult, 1.0);
+			CLOSEST_LIGHTS_COLORS[NUM_CLOSE_LIGHTS][1] = dl->color[1]*min(r_volumeLightStrength->value*4.0*strengthMult, 1.0);
+			CLOSEST_LIGHTS_COLORS[NUM_CLOSE_LIGHTS][2] = dl->color[2]*min(r_volumeLightStrength->value*4.0*strengthMult, 1.0);
 			NUM_CLOSE_LIGHTS++;
 			continue;
 		}
@@ -1074,51 +1089,25 @@ qboolean RB_VolumetricLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_
 				CLOSEST_LIGHTS[farthest_light] = l;
 				CLOSEST_LIGHTS_POSITIONS[farthest_light][0] = x / 640;
 				CLOSEST_LIGHTS_POSITIONS[farthest_light][1] = 1.0 - (y / 480);
+				CLOSEST_LIGHTS_DISTANCES[farthest_light] = depth;
+				CLOSEST_LIGHTS_COLORS[farthest_light][0] = dl->color[0]*min(r_volumeLightStrength->value*4.0*strengthMult, 1.0);
+				CLOSEST_LIGHTS_COLORS[farthest_light][1] = dl->color[1]*min(r_volumeLightStrength->value*4.0*strengthMult, 1.0);
+				CLOSEST_LIGHTS_COLORS[farthest_light][2] = dl->color[2]*min(r_volumeLightStrength->value*4.0*strengthMult, 1.0);
 			}
 		}
 	}
 
 	if ( SUN_VISIBLE )
 	{// Add sun...
-		//SUN_ORIGIN
-		float x, y;
-		int	xcenter, ycenter;
-		vec3_t	local, transformed;
-		vec3_t	vfwd, vright, vup, viewAngles;
-
-		TR_AxisToAngles(backEnd.refdef.viewaxis, viewAngles);
-
-		//NOTE: did it this way because most draw functions expect virtual 640x480 coords
-		//	and adjust them for current resolution
-		xcenter = 640 / 2;//gives screen coords in virtual 640x480, to be adjusted when drawn
-		ycenter = 480 / 2;//gives screen coords in virtual 640x480, to be adjusted when drawn
-
-		VectorSubtract (SUN_ORIGIN, backEnd.refdef.vieworg, local);
-
-		AngleVectors (viewAngles, vfwd, vright, vup);
-
-		transformed[0] = DotProduct(local,vright);
-		transformed[1] = DotProduct(local,vup);
-		transformed[2] = DotProduct(local,vfwd);
-
-		// Make sure Z is not negative.
-		if(transformed[2] < 0.01)
-		{
-			//return false;
-			//transformed[2] = 2.0 - transformed[2];
-		}
-
-		// Simple convert to screen coords.
-		float xzi = xcenter / transformed[2] * (90.0/backEnd.refdef.fov_x);
-		float yzi = ycenter / transformed[2] * (90.0/backEnd.refdef.fov_y);
-
-		x = (xcenter + xzi * transformed[0]);
-		y = (ycenter - yzi * transformed[1]);
-
+		//SUN_SCREEN_POSITION
 		if (NUM_CLOSE_LIGHTS < MAX_VOLUMETRIC_LIGHTS-1)
 		{// Have free light slots for a new light...
-			CLOSEST_LIGHTS_POSITIONS[NUM_CLOSE_LIGHTS][0] = x / 640;
-			CLOSEST_LIGHTS_POSITIONS[NUM_CLOSE_LIGHTS][1] = 1.0 - (y / 480);
+			CLOSEST_LIGHTS_POSITIONS[NUM_CLOSE_LIGHTS][0] = SUN_SCREEN_POSITION[0];
+			CLOSEST_LIGHTS_POSITIONS[NUM_CLOSE_LIGHTS][1] = SUN_SCREEN_POSITION[1];
+			CLOSEST_LIGHTS_DISTANCES[NUM_CLOSE_LIGHTS] = 0.9;
+			CLOSEST_LIGHTS_COLORS[NUM_CLOSE_LIGHTS][0] = (tr.sunLight[0] / 255.0)*r_volumeLightStrength->value*strengthMult;
+			CLOSEST_LIGHTS_COLORS[NUM_CLOSE_LIGHTS][1] = (tr.sunLight[1] / 255.0)*r_volumeLightStrength->value*strengthMult;
+			CLOSEST_LIGHTS_COLORS[NUM_CLOSE_LIGHTS][2] = (tr.sunLight[2] / 255.0)*r_volumeLightStrength->value*strengthMult;
 			SUN_ID = NUM_CLOSE_LIGHTS;
 			NUM_CLOSE_LIGHTS++;
 		}
@@ -1140,8 +1129,12 @@ qboolean RB_VolumetricLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_
 				}
 			}
 
-			CLOSEST_LIGHTS_POSITIONS[farthest_light][0] = x / 640;
-			CLOSEST_LIGHTS_POSITIONS[farthest_light][1] = 1.0 - (y / 480);
+			CLOSEST_LIGHTS_POSITIONS[farthest_light][0] = SUN_SCREEN_POSITION[0];
+			CLOSEST_LIGHTS_POSITIONS[farthest_light][1] = SUN_SCREEN_POSITION[1];
+			CLOSEST_LIGHTS_DISTANCES[farthest_light] = 0.9;
+			CLOSEST_LIGHTS_COLORS[farthest_light][0] = (tr.sunLight[0] / 255.0)*r_volumeLightStrength->value*strengthMult;
+			CLOSEST_LIGHTS_COLORS[farthest_light][1] = (tr.sunLight[1] / 255.0)*r_volumeLightStrength->value*strengthMult;
+			CLOSEST_LIGHTS_COLORS[farthest_light][2] = (tr.sunLight[2] / 255.0)*r_volumeLightStrength->value*strengthMult;
 			SUN_ID = farthest_light;
 		}
 	}
@@ -1188,6 +1181,8 @@ qboolean RB_VolumetricLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_
 
 	GLSL_SetUniformInt(&tr.volumeLightShader[r_dynamiclight->integer - 1], UNIFORM_LIGHTCOUNT, NUM_CLOSE_LIGHTS);
 	GLSL_SetUniformVec2x16(&tr.volumeLightShader[r_dynamiclight->integer - 1], UNIFORM_LIGHTPOSITIONS, CLOSEST_LIGHTS_POSITIONS, MAX_VOLUMETRIC_LIGHTS);
+	GLSL_SetUniformVec3x16(&tr.volumeLightShader[r_dynamiclight->integer - 1], UNIFORM_LIGHTCOLORS, CLOSEST_LIGHTS_COLORS, MAX_VOLUMETRIC_LIGHTS);
+	GLSL_SetUniformFloatx16(&tr.volumeLightShader[r_dynamiclight->integer - 1], UNIFORM_LIGHTDISTANCES, CLOSEST_LIGHTS_DISTANCES, MAX_VOLUMETRIC_LIGHTS);
 
 //#define VOLUME_LIGHT_DEBUG
 //#define VOLUME_LIGHT_SINGLE_PASS
@@ -1621,43 +1616,9 @@ void RB_SSS(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 
 	if ( SUN_VISIBLE )
 	{// Add sun...
-		//SUN_ORIGIN
-		float x, y;
-		int	xcenter, ycenter;
-		vec3_t	local, transformed;
-		vec3_t	vfwd, vright, vup, viewAngles;
-
-		TR_AxisToAngles(backEnd.refdef.viewaxis, viewAngles);
-
-		//NOTE: did it this way because most draw functions expect virtual 640x480 coords
-		//	and adjust them for current resolution
-		xcenter = 640 / 2;//gives screen coords in virtual 640x480, to be adjusted when drawn
-		ycenter = 480 / 2;//gives screen coords in virtual 640x480, to be adjusted when drawn
-
-		VectorSubtract (SUN_ORIGIN, backEnd.refdef.vieworg, local);
-
-		AngleVectors (viewAngles, vfwd, vright, vup);
-
-		transformed[0] = DotProduct(local,vright);
-		transformed[1] = DotProduct(local,vup);
-		transformed[2] = DotProduct(local,vfwd);
-
-		// Make sure Z is not negative.
-		if(transformed[2] < 0.01)
-		{
-			//return false;
-			//transformed[2] = 2.0 - transformed[2];
-		}
-
-		// Simple convert to screen coords.
-		float xzi = xcenter / transformed[2] * (90.0/backEnd.refdef.fov_x);
-		float yzi = ycenter / transformed[2] * (90.0/backEnd.refdef.fov_y);
-
-		x = (xcenter + xzi * transformed[0]);
-		y = (ycenter - yzi * transformed[1]);
-
+		//SUN_SCREEN_POSITION
 		vec4_t loc;
-		VectorSet4(loc, x / 640, 1.0 - (y / 480), 0.0, 0.0);
+		VectorSet4(loc, SUN_SCREEN_POSITION[0], SUN_SCREEN_POSITION[1], 0.0, 0.0);
 		GLSL_SetUniformVec4(shader, UNIFORM_LOCAL1, loc);
 	}
 

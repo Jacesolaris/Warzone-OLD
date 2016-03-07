@@ -813,39 +813,8 @@ void R_InitSkyTexCoords( float heightCloud )
 
 //======================================================================================
 
-vec3_t		SUN_ORIGIN;
+vec2_t		SUN_SCREEN_POSITION;
 qboolean	SUN_VISIBLE = qfalse;
-
-extern void R_WorldToLocal (const vec3_t world, vec3_t local);
-extern void TR_AxisToAngles ( const vec3_t axis[3], vec3_t angles );
-
-qboolean SUN_InFOV( vec3_t spot )
-{
-	vec3_t	from;
-	vec3_t	deltaVector, angles, deltaAngles;
-	vec3_t	fromAnglesCopy;
-	vec3_t	fromAngles;
-	int hFOV = backEnd.refdef.fov_x*1.1;
-	int vFOV = backEnd.refdef.fov_y*1.1;
-
-	VectorCopy(backEnd.refdef.vieworg, from);
-
-	TR_AxisToAngles(tr.refdef.viewaxis, fromAngles);
-
-	VectorSubtract ( spot, from, deltaVector );
-	vectoangles ( deltaVector, angles );
-	VectorCopy(fromAngles, fromAnglesCopy);
-	
-	deltaAngles[PITCH]	= AngleDelta ( fromAnglesCopy[PITCH], angles[PITCH] );
-	deltaAngles[YAW]	= AngleDelta ( fromAnglesCopy[YAW], angles[YAW] );
-
-	if ( fabs ( deltaAngles[PITCH] ) <= vFOV && fabs ( deltaAngles[YAW] ) <= hFOV ) 
-	{
-		return qtrue;
-	}
-
-	return qfalse;
-}
 
 //#define __DAY_NIGHT__ // FIXME - or do it with GLSL...
 
@@ -922,6 +891,8 @@ extern void R_LocalPointToWorld (const vec3_t local, vec3_t world);
 extern void R_WorldToLocal (const vec3_t world, vec3_t local);
 #endif //__DAY_NIGHT__
 
+extern qboolean RB_UpdateSunFlareVis(void);
+
 /*
 ** RB_DrawSun
 */
@@ -987,17 +958,45 @@ void RB_DrawSun( float scale, shader_t *shader ) {
 
 	if (r_dynamiclight->integer)
 	{// Lets have some volumetrics with that!
-		vec3_t out;
-		VectorMA( backEnd.refdef.vieworg, dist, tr.sunDirection, out );
-		out[0]+=(size/3.0);		// Don't ask me why
-		out[1]+=(size/10.0);	// but this seems
-		out[2]+=(size/2.0);		// to be the center... WTF!!!
-		VectorCopy(out, SUN_ORIGIN);
-
-		if (SUN_InFOV( SUN_ORIGIN ))
-			SUN_VISIBLE = qtrue;
-		else
+		const float cutoff = 0.25f;
+		float dot = DotProduct(tr.sunDirection, backEnd.viewParms.ori.axis[0]);
+		
+		if (dot < cutoff)
+		{
 			SUN_VISIBLE = qfalse;
+			return;
+		}
+
+		if (!RB_UpdateSunFlareVis())
+		{
+			SUN_VISIBLE = qfalse;
+			return;
+		}
+
+		float dist;
+		vec4_t pos, hpos;
+		matrix_t trans, model, mvp;
+
+		Matrix16Translation( backEnd.viewParms.ori.origin, trans );
+		Matrix16Multiply( backEnd.viewParms.world.modelMatrix, trans, model );
+		Matrix16Multiply(backEnd.viewParms.projectionMatrix, model, mvp);
+
+		dist = backEnd.viewParms.zFar / 1.75;		// div sqrt(3)
+
+		VectorScale( tr.sunDirection, dist, pos );
+	
+		// project sun point
+		Matrix16Transform(mvp, pos, hpos);
+
+		// transform to UV coords
+		hpos[3] = 0.5f / hpos[3];
+
+		pos[0] = 0.5f + hpos[0] * hpos[3];
+		pos[1] = 0.5f + hpos[1] * hpos[3];
+
+		VectorCopy(pos, SUN_SCREEN_POSITION);
+
+		SUN_VISIBLE = qtrue;
 	}
 }
 

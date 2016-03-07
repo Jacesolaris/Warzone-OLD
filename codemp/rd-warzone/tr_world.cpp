@@ -626,6 +626,41 @@ void RE_SetRangedFog ( float range )
 =============================================================
 */
 
+int R_BoxOnPlaneSide(vec3_t emins, vec3_t emaxs, struct cplane_s *p)
+{
+	float	dist[2];
+	int		sides, b, i;
+
+	// fast axial cases
+	if (p->type < 3)
+	{
+		if (p->dist <= emins[p->type])
+			return 1;
+		if (p->dist >= emaxs[p->type])// && emins[p->type] != 0) // UQ1: added  && emins[p->type] != 0  to fix a Q3 missing sky bug. It obviously is not being set somewhere...
+			return 2;
+		return 3;
+	}
+
+	// general case
+	dist[0] = dist[1] = 0;
+	if (p->signbits < 8) // >= 8: default case is original code (dist[0]=dist[1]=0)
+	{
+		for (i=0 ; i<3 ; i++)
+		{
+			b = (p->signbits >> i) & 1;
+			dist[ b] += p->normal[i]*emaxs[i];
+			dist[!b] += p->normal[i]*emins[i];
+		}
+	}
+
+	sides = 0;
+	if (dist[0] >= p->dist)
+		sides = 1;
+	if (dist[1] < p->dist)// && emins[p->type] != 0) // UQ1: added  && emins[p->type] != 0  to fix a Q3 missing sky bug. It obviously is not being set somewhere...
+		sides |= 2;
+
+	return sides;
+}
 
 /*
 ================
@@ -651,7 +686,7 @@ static void R_RecursiveWorldNode( mnode_t *node, int planeBits, int dlightBits, 
 			int		r;
 
 			if ( planeBits & 1 ) {
-				r = BoxOnPlaneSide(node->mins, node->maxs, &tr.viewParms.frustum[0]);
+				r = R_BoxOnPlaneSide(node->mins, node->maxs, &tr.viewParms.frustum[0]);
 				if (r == 2) {
 					return;						// culled
 				}
@@ -661,7 +696,7 @@ static void R_RecursiveWorldNode( mnode_t *node, int planeBits, int dlightBits, 
 			}
 
 			if ( planeBits & 2 ) {
-				r = BoxOnPlaneSide(node->mins, node->maxs, &tr.viewParms.frustum[1]);
+				r = R_BoxOnPlaneSide(node->mins, node->maxs, &tr.viewParms.frustum[1]);
 				if (r == 2) {
 					return;						// culled
 				}
@@ -671,7 +706,7 @@ static void R_RecursiveWorldNode( mnode_t *node, int planeBits, int dlightBits, 
 			}
 
 			if ( planeBits & 4 ) {
-				r = BoxOnPlaneSide(node->mins, node->maxs, &tr.viewParms.frustum[2]);
+				r = R_BoxOnPlaneSide(node->mins, node->maxs, &tr.viewParms.frustum[2]);
 				if (r == 2) {
 					return;						// culled
 				}
@@ -681,7 +716,7 @@ static void R_RecursiveWorldNode( mnode_t *node, int planeBits, int dlightBits, 
 			}
 
 			if ( planeBits & 8 ) {
-				r = BoxOnPlaneSide(node->mins, node->maxs, &tr.viewParms.frustum[3]);
+				r = R_BoxOnPlaneSide(node->mins, node->maxs, &tr.viewParms.frustum[3]);
 				if (r == 2) {
 					return;						// culled
 				}
@@ -691,7 +726,7 @@ static void R_RecursiveWorldNode( mnode_t *node, int planeBits, int dlightBits, 
 			}
 
 			if ( planeBits & 16 ) {
-				r = BoxOnPlaneSide(node->mins, node->maxs, &tr.viewParms.frustum[4]);
+				r = R_BoxOnPlaneSide(node->mins, node->maxs, &tr.viewParms.frustum[4]);
 				if (r == 2) {
 					return;						// culled
 				}

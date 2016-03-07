@@ -8,6 +8,7 @@ uniform vec4	u_Local3; // RimScalar, MaterialThickness, subSpecPower, cubemapSca
 uniform vec4	u_Local4; // haveNormalMap, isMetalic, hasRealSubsurfaceMap, sway
 uniform vec4	u_Local5; // hasRealOverlayMap, overlaySway, blinnPhong, hasSteepMap
 uniform vec4	u_Local6; // useSunLightSpecular
+uniform vec4	u_Local9;
 
 //#define SUBSURFACE_SCATTER
 
@@ -71,7 +72,7 @@ varying vec4      var_PrimaryLightDir;
 varying vec3   var_vertPos;
 
 varying vec3      var_ViewDir;
-
+varying vec2   var_nonTCtexCoords; // for steep maps
 
 
 
@@ -261,6 +262,47 @@ vec4 subScatterFS(vec4 BaseColor, vec4 SpecColor, vec3 lightVec, vec3 LightColor
 }
 #endif //SUBSURFACE_SCATTER
 
+vec3 vectoangles( in vec3 value1 ) {
+	float	forward;
+	float	yaw, pitch;
+	vec3	angles;
+
+	if ( value1.g == 0 && value1.r == 0 ) {
+		yaw = 0;
+		if ( value1.b > 0 ) {
+			pitch = 90;
+		}
+		else {
+			pitch = 270;
+		}
+	}
+	else {
+		if ( value1.r > 0 ) {
+			yaw = ( atan ( value1.g, value1.r ) * 180 / M_PI );
+		}
+		else if ( value1.g > 0 ) {
+			yaw = 90;
+		}
+		else {
+			yaw = 270;
+		}
+		if ( yaw < 0 ) {
+			yaw += 360;
+		}
+
+		forward = sqrt ( value1.r*value1.r + value1.g*value1.g );
+		pitch = ( atan(value1.b, forward) * 180 / M_PI );
+		if ( pitch < 0 ) {
+			pitch += 360;
+		}
+	}
+
+	angles.r = -pitch;
+	angles.g = yaw;
+	angles.b = 0.0;
+
+	return angles;
+}
 
 void main()
 {
@@ -295,6 +337,7 @@ void main()
 	vec3 N, E, H;
 	vec3 DETAILED_NORMAL = vec3(1.0);
 	float NL, NH, NE, EH, attenuation;
+	bool usingSteepMap = false;
 	vec2 tex_offset = vec2(1.0 / u_Dimensions);
 
 	mat3 tangentToWorld = mat3(var_Tangent.xyz, var_Bitangent.xyz, m_Normal.xyz);
@@ -360,14 +403,54 @@ void main()
 
 		if (u_Local5.a > 0.0)
 		{// Steep maps...
-			float slope = dot(normalize(N.xyz),vec3(0.0,1.0,0.0));
-			if (slope < 0.0) slope = slope *= -1.0;
-			float slope2 = dot(normalize(N.xyz),vec3(0.0,0.0,1.0));
-			if (slope2 < 0.0) slope2 = slope2 *= -1.0;
-			float slope3 = dot(normalize(N.xyz),vec3(1.0,0.0,0.0));
-			if (slope3 < 0.0) slope3 = slope3 *= -1.0;
-			slope = length(slope + slope2 + slope3) / 3.0;
-			vec4 steepDiffuse = texture2D(u_SteepMap, texCoords);
+			vec3 slopeangles = vectoangles( m_Normal.xyz );
+			float pitch = slopeangles.r;
+			float slope = 0.0;
+	
+			if (pitch > 180)
+				pitch -= 360;
+
+			if (pitch < -180)
+				pitch += 360;
+
+			pitch += 90.0f;
+
+			if (pitch > 46.0 || pitch < -46.0)
+			{
+				usingSteepMap = true;
+				slope = 1.0;
+#if 0
+				float minTC = min(texCoords.x, texCoords.y);
+				float maxTC = max(texCoords.x, texCoords.y);
+
+				// Blend with original texture near edges...
+				if (minTC < 0.2)
+				{
+					slope = 1.0 - ((0.2 - minTC) * 5.0);
+				}
+				
+				if (maxTC > 0.8)
+				{
+					float slope2 = 1.0 - ((1.0 - maxTC) * 5.0);
+
+					if (slope2 > slope)
+					{
+						slope = slope2;
+					}
+				}
+#endif
+			}
+			else if (pitch > 26.0 || pitch < -26.0)
+			{// do not add to foliage map on this slope, but still do original texture
+				usingSteepMap = true;
+				slope = 0.0;
+			}
+			else
+			{
+				slope = 0.0;
+			}
+
+			vec4 steepDiffuse = texture2D(u_SteepMap, var_nonTCtexCoords/*texCoords*/);
 			diffuse.rgb = mix( diffuse.rgb, steepDiffuse.rgb, clamp(slope,0.0,1.0));
 		}
 
@@ -542,7 +625,7 @@ void main()
 
 	out_DetailedNormal = vec4(DETAILED_NORMAL.xyz, specular.a / 8.0);
 
-	if (u_Local1.a == 20 || u_Local1.a == 19 || u_Local1.a == 5 || u_Local1.a == 6) 
+	if (u_Local1.a == 20 || u_Local1.a == 19 || ((u_Local1.a == 5 || u_Local1.a == 6) && !usingSteepMap)) 
 	{// (Foliage/Plants), (billboard trees), ShortGrass, LongGrass
 		out_FoliageMap.r = 1.0;
 		out_FoliageMap.g = 1.0;

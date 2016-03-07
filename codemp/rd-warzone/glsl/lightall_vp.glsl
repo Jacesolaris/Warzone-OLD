@@ -79,6 +79,8 @@ varying vec4   var_PrimaryLightDir;
 varying vec3   var_vertPos;
 varying float  var_Time;
 
+varying vec2   var_nonTCtexCoords; // for steep maps
+
 
 #if defined(USE_TCGEN)
 vec2 GenTexCoords(int TCGen, vec3 position, vec3 normal, vec3 TCGenVector0, vec3 TCGenVector1)
@@ -213,6 +215,8 @@ void main()
 
   var_vertPos = gl_Position.xyz;
   var_Time = u_Time;
+
+  var_nonTCtexCoords = attr_TexCoord0.st;
 
 #if defined(USE_TESSELLATION)
   TexCoord_CS_in = var_TexCoords.xy;

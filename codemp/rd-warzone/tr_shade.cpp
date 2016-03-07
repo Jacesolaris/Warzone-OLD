@@ -1324,6 +1324,10 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage)
 
 	//GLSL_SetUniformFloat(sp, UNIFORM_TIME, tess.shaderTime);
 	GLSL_SetUniformFloat(sp, UNIFORM_TIME, backEnd.refdef.floatTime);
+
+	vec4_t local9;
+	VectorSet4(local9, r_testshaderValue1->value, r_testshaderValue2->value, r_testshaderValue3->value, r_testshaderValue4->value);
+	GLSL_SetUniformVec4(sp, UNIFORM_LOCAL9, local9);
 }
 
 void RB_SetStageImageDimensions(shaderProgram_t *sp, shaderStage_t *pStage)
@@ -1439,6 +1443,17 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		vec4_t cubeMapVec;
 
 		int passNum = 0, passMax = 0;
+
+
+		// UQ1: Calculate some matrixes that rend2 doesn't seem to have (or have correct)...
+		matrix_t trans, model, mvp, invTrans, normalMatrix;
+
+		Matrix16Translation( backEnd.viewParms.ori.origin, trans );
+		Matrix16Multiply( backEnd.viewParms.world.modelMatrix, trans, model );
+		Matrix16Multiply(backEnd.viewParms.projectionMatrix, model, mvp);
+
+		Matrix16SimpleInverse( trans, invTrans);
+		Matrix16SimpleInverse( backEnd.viewParms.projectionMatrix, normalMatrix);
 
 		if ( !pStage )
 		{
@@ -1797,27 +1812,12 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				GLSL_SetUniformMatrix16(sp, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
 				GLSL_SetUniformMatrix16(sp, UNIFORM_INVEYEPROJECTIONMATRIX, glState.invEyeProjection);
 				
-				{// UQ: Other *needed* stuff... Hope these are correct...
-					/*
-					GLSL_SetUniformMatrix16(sp, UNIFORM_PROJECTIONMATRIX, backEnd.viewParms.projectionMatrix);//glState.projection);
-					GLSL_SetUniformMatrix16(sp, UNIFORM_MODELVIEWMATRIX, glState.modelview);
-					GLSL_SetUniformMatrix16(sp, UNIFORM_VIEWMATRIX, glState.viewTrans);
-					*/
-
-					matrix_t trans, model, mvp, invTrans;
-
-					Matrix16Translation( backEnd.viewParms.ori.origin, trans );
-					Matrix16Multiply( backEnd.viewParms.world.modelMatrix, trans, model );
-					Matrix16Multiply(backEnd.viewParms.projectionMatrix, model, mvp);
-
-					Matrix16SimpleInverse( trans, invTrans);
-					
-					GLSL_SetUniformMatrix16(sp, UNIFORM_PROJECTIONMATRIX, glState.projection/*backEnd.viewParms.projectionMatrix*/);
-					GLSL_SetUniformMatrix16(sp, UNIFORM_MODELVIEWMATRIX, model);//backEnd.viewParms.world.modelMatrix);
-					GLSL_SetUniformMatrix16(sp, UNIFORM_VIEWMATRIX, trans);
-					GLSL_SetUniformMatrix16(sp, UNIFORM_INVVIEWMATRIX, invTrans);
-					
-				}
+				// UQ: Other *needed* stuff... Hope these are correct...
+				GLSL_SetUniformMatrix16(sp, UNIFORM_PROJECTIONMATRIX, glState.projection/*backEnd.viewParms.projectionMatrix*/);
+				GLSL_SetUniformMatrix16(sp, UNIFORM_MODELVIEWMATRIX, model);//backEnd.viewParms.world.modelMatrix);
+				GLSL_SetUniformMatrix16(sp, UNIFORM_VIEWMATRIX, trans);
+				GLSL_SetUniformMatrix16(sp, UNIFORM_INVVIEWMATRIX, invTrans);
+				GLSL_SetUniformMatrix16(sp, UNIFORM_NORMALMATRIX, normalMatrix);
 
 				GLSL_SetUniformVec3(sp, UNIFORM_LOCALVIEWORIGIN, backEnd.ori.viewOrigin);
 				GLSL_SetUniformFloat(sp, UNIFORM_VERTEXLERP, glState.vertexAttribsInterpolation);
@@ -2182,6 +2182,10 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				vec4_t l10;
 				VectorSet4(l10, r_foliageDistance->value, r_foliageDensity->value, 0.7, overlaySway);
 				GLSL_SetUniformVec4(sp, UNIFORM_LOCAL10, l10);
+
+				vec4_t l9;
+				VectorSet4(l9, r_testshaderValue1->value, r_testshaderValue2->value, r_testshaderValue3->value, r_testshaderValue4->value);
+				GLSL_SetUniformVec4(sp, UNIFORM_LOCAL9, l9);
 			}
 
 			UpdateTexCoords (pStage);
