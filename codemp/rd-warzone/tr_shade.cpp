@@ -2182,11 +2182,11 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				vec4_t l10;
 				VectorSet4(l10, r_foliageDistance->value, r_foliageDensity->value, 0.7, overlaySway);
 				GLSL_SetUniformVec4(sp, UNIFORM_LOCAL10, l10);
-
-				vec4_t l9;
-				VectorSet4(l9, r_testshaderValue1->value, r_testshaderValue2->value, r_testshaderValue3->value, r_testshaderValue4->value);
-				GLSL_SetUniformVec4(sp, UNIFORM_LOCAL9, l9);
 			}
+
+			vec4_t l9;
+			VectorSet4(l9, r_testshaderValue1->value, r_testshaderValue2->value, r_testshaderValue3->value, r_testshaderValue4->value);
+			GLSL_SetUniformVec4(sp, UNIFORM_LOCAL9, l9);
 
 			UpdateTexCoords (pStage);
 
