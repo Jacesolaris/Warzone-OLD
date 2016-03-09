@@ -3207,6 +3207,9 @@ qboolean IsKnownShinyMap2 ( const char *heystack )
 	if (StringContainsWord(heystack, "/Asjc_mygeeto/")) return qtrue;
 	if (StringContainsWord(heystack, "/ACrimeHutt/")) return qtrue;
 	if (StringContainsWord(heystack, "/ASenateBase/")) return qtrue;
+
+	// Warzone
+	if (StringContainsWord(heystack, "/custom/")) return qtrue; // Echo - please rename this dir...
 	
 	return qfalse;
 }
@@ -5837,7 +5840,8 @@ char uniqueGenericShader[] = "{\n"\
 "}\n"\
 "";
 
-// "rgbGen identity\n"\
+// "rgbGen identity\n"
+
 
 qboolean R_ForceGenericShader ( const char *name, const char *text )
 {
@@ -6011,7 +6015,7 @@ shader_t *R_FindShader( const char *name, const int *lightmapIndexes, const byte
 		sprintf(glowName, "%s_glow", strippedName);
 		image = R_FindImageFile( glowName, IMGTYPE_COLORALPHA, flags );
 
-		if (image)
+		if (image != NULL && image->width > 0 && image->height > 0)
 			sprintf(glowShaderAddition, uniqueGenericGlow, strippedName);
 
 		// Generate the shader...
