@@ -4011,6 +4011,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 				diffuse->isFoliage = true;
 			}
 			else if (diffuse->bundle[TB_DIFFUSEMAP].image[0] 
+				&& !StringContainsWord(diffuse->bundle[TB_DIFFUSEMAP].image[0]->imgName, "trunk")
 				&& !StringContainsWord(diffuse->bundle[TB_DIFFUSEMAP].image[0]->imgName, "bark")
 				&& !StringContainsWord(diffuse->bundle[TB_DIFFUSEMAP].image[0]->imgName, "giant_tree")
 				&& (StringContainsWord(diffuse->bundle[TB_DIFFUSEMAP].image[0]->imgName, "yavin/tree") || StringContainsWord(diffuse->bundle[TB_DIFFUSEMAP].image[0]->imgName, "trees")))
@@ -6029,7 +6030,7 @@ shader_t *R_FindShader( const char *name, const int *lightmapIndexes, const byte
 		}
 		else if (StringContainsWord(strippedName, "warzone/tree") || StringContainsWord(strippedName, "warzone\\tree"))
 		{
-			if (StringContainsWord(strippedName, "bark") || StringContainsWord(strippedName, "giant_tree") || StringContainsWord(strippedName, "vine01"))
+			if (StringContainsWord(strippedName, "bark") || StringContainsWord(strippedName, "trunk") || StringContainsWord(strippedName, "giant_tree") || StringContainsWord(strippedName, "vine01"))
 			{
 				if (StringContainsWord(strippedName, "uqredwoodbark"))
 					sprintf(myShader, uniqueGenericFoliageTreeShader, strippedName, strippedName, "tcMod scale 2.0 2.0");
