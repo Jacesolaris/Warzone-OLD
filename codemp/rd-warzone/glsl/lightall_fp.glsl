@@ -76,6 +76,11 @@ varying vec3      var_ViewDir;
 varying vec2   var_nonTCtexCoords; // for steep maps
 
 
+uniform int			u_lightCount;
+uniform vec3		u_lightPositions2[16];
+uniform float		u_lightDistances[16];
+uniform vec3		u_lightColors[16];
+
 
 #if defined(USE_TESSELLATION)
 
@@ -568,6 +573,26 @@ void main()
 				float specAngle = max(dot(halfDir2, N), 0.0);
 				spec2 = pow(specAngle, 16.0);
 				gl_FragColor.rgb += vec3(spec2 * (1.0 - specular.a)) * gl_FragColor.rgb * u_PrimaryLightColor.rgb * u_Local5.b;
+			}
+
+			for (int li = 0; li < u_lightCount; li++)
+			{
+				vec3 lightDir = u_lightPositions2[li] - var_vertPos.xyz;
+				float lambertian3 = dot(lightDir.xyz,N);
+				float spec3 = 0.0;
+
+				if(lambertian3 > 0.0)
+				{
+					float lightStrength = clamp(1.0 - (length(lightDir) * (1.0 / u_lightDistances[li])), 0.0, 1.0) * 0.5;
+
+					if(lightStrength > 0.0)
+					{// this is blinn phong
+						vec3 halfDir3 = normalize(lightDir.xyz + E);
+						float specAngle3 = max(dot(halfDir3, N), 0.0);
+						spec3 = pow(specAngle3, 16.0);
+						gl_FragColor.rgb += vec3(spec3 * (1.0 - specular.a)) * u_lightColors[li].rgb * lightStrength * u_Local5.b;
+					}
+				}
 			}
 		}
 	#endif

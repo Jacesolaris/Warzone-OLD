@@ -3417,12 +3417,11 @@ static void R_AssignCubemapsToWorldSurfaces(void)
 
 	w = &s_worldData;
 
-
 	for (i = 0; i < w->numsurfaces; i++)
 	{
 		msurface_t *surf = &w->surfaces[i];
 		vec3_t surfOrigin;
-
+		
 		if (!R_MaterialUsesCubemap( surf->shader->surfaceFlags ))
 		{
 			surf->cubemapIndex = 0;

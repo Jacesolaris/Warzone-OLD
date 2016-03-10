@@ -860,6 +860,7 @@ static uniformInfo_t uniformsInfo[] =
 	{ "u_Local10",				GLSL_VEC4, 1  },
 
 	{ "u_lightCount",			GLSL_INT, 1 },
+	{ "u_lightPositions2",		GLSL_VEC3, 16  },
 	{ "u_lightPositions",		GLSL_VEC2, 16  },
 	{ "u_lightDistances",		GLSL_FLOAT, 16  },
 	{ "u_lightColors",			GLSL_VEC3, 16  },
@@ -1979,7 +1980,7 @@ void GLSL_SetUniformFloatx16(shaderProgram_t *program, int uniformNum, const flo
 
 	Com_Memcpy (compare, elements, sizeof (float) * numElements);
 
-	qglUniform3fv(uniforms[uniformNum], numElements, (const GLfloat *)elements);
+	qglUniform1fv(uniforms[uniformNum], numElements, (const GLfloat *)elements);
 }
 
 void GLSL_SetUniformMatrix16(shaderProgram_t *program, int uniformNum, const float *matrix, int numElements)

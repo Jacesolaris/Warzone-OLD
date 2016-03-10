@@ -1422,6 +1422,81 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 	ComputeFogValues(fogDistanceVector, fogDepthVector, &eyeT);
 
+	const int	MAX_LIGHTALL_DLIGHTS = 16;
+	int			NUM_CLOSE_LIGHTS = 0;
+	int			CLOSEST_LIGHTS[MAX_LIGHTALL_DLIGHTS] = {0};
+	vec3_t		CLOSEST_LIGHTS_POSITIONS[MAX_LIGHTALL_DLIGHTS] = {0};
+	float		CLOSEST_LIGHTS_DISTANCES[MAX_LIGHTALL_DLIGHTS] = {0};
+	vec3_t		CLOSEST_LIGHTS_COLORS[MAX_LIGHTALL_DLIGHTS] = {0};
+
+	for ( int l = 0 ; l < backEnd.refdef.num_dlights ; l++ ) 
+	{
+		dlight_t	*dl = &backEnd.refdef.dlights[l];
+
+		float distance = Distance(backEnd.refdef.vieworg, dl->origin);
+
+		if (NUM_CLOSE_LIGHTS < MAX_LIGHTALL_DLIGHTS)
+		{// Have free light slots for a new light...
+			CLOSEST_LIGHTS[NUM_CLOSE_LIGHTS] = l;
+			VectorCopy(dl->origin, CLOSEST_LIGHTS_POSITIONS[NUM_CLOSE_LIGHTS]);
+			CLOSEST_LIGHTS_DISTANCES[NUM_CLOSE_LIGHTS] = dl->radius;
+			CLOSEST_LIGHTS_COLORS[NUM_CLOSE_LIGHTS][0] = dl->color[0];
+			CLOSEST_LIGHTS_COLORS[NUM_CLOSE_LIGHTS][1] = dl->color[1];
+			CLOSEST_LIGHTS_COLORS[NUM_CLOSE_LIGHTS][2] = dl->color[2];
+			NUM_CLOSE_LIGHTS++;
+			continue;
+		}
+		else
+		{// See if this is closer then one of our other lights...
+			int		farthest_light = 0;
+			float	farthest_distance = 0.0;
+
+			for (int i = 0; i < NUM_CLOSE_LIGHTS; i++)
+			{// Find the most distance light in our current list to replace, if this new option is closer...
+				dlight_t	*thisLight = &backEnd.refdef.dlights[CLOSEST_LIGHTS[i]];
+				float		dist = Distance(thisLight->origin, backEnd.refdef.vieworg);
+
+				if (dist > farthest_distance)
+				{// This one is further!
+					farthest_light = i;
+					farthest_distance = dist;
+					break;
+				}
+			}
+
+			if (Distance(dl->origin, backEnd.refdef.vieworg) < farthest_distance)
+			{// This light is closer. Replace this one in our array of closest lights...
+				CLOSEST_LIGHTS[farthest_light] = l;
+				VectorCopy(dl->origin, CLOSEST_LIGHTS_POSITIONS[farthest_light]);
+				CLOSEST_LIGHTS_DISTANCES[farthest_light] = dl->radius;
+				CLOSEST_LIGHTS_COLORS[farthest_light][0] = dl->color[0];
+				CLOSEST_LIGHTS_COLORS[farthest_light][1] = dl->color[1];
+				CLOSEST_LIGHTS_COLORS[farthest_light][2] = dl->color[2];
+			}
+		}
+	}
+
+	for (int i = 0; i < NUM_CLOSE_LIGHTS; i++)
+	{
+		if (CLOSEST_LIGHTS_DISTANCES[i] < 0.0) 
+		{// Remove volume light markers...
+			CLOSEST_LIGHTS_DISTANCES[i] = -CLOSEST_LIGHTS_DISTANCES[i];
+		}
+
+		// Double the range on all lights...
+		CLOSEST_LIGHTS_DISTANCES[i] *= 2.0;
+	}
+
+	// UQ1: Calculate some matrixes that rend2 doesn't seem to have (or have correct)...
+	matrix_t trans, model, mvp, invTrans, normalMatrix;
+
+	Matrix16Translation( backEnd.viewParms.ori.origin, trans );
+	Matrix16Multiply( backEnd.viewParms.world.modelMatrix, trans, model );
+	Matrix16Multiply(backEnd.viewParms.projectionMatrix, model, mvp);
+
+	Matrix16SimpleInverse( trans, invTrans);
+	Matrix16SimpleInverse( backEnd.viewParms.projectionMatrix, normalMatrix);
+
 	for ( int stage = 0; stage < MAX_SHADER_STAGES; stage++ )
 	{
 		shaderStage_t *pStage = input->xstages[stage];
@@ -1443,17 +1518,6 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		vec4_t cubeMapVec;
 
 		int passNum = 0, passMax = 0;
-
-
-		// UQ1: Calculate some matrixes that rend2 doesn't seem to have (or have correct)...
-		matrix_t trans, model, mvp, invTrans, normalMatrix;
-
-		Matrix16Translation( backEnd.viewParms.ori.origin, trans );
-		Matrix16Multiply( backEnd.viewParms.world.modelMatrix, trans, model );
-		Matrix16Multiply(backEnd.viewParms.projectionMatrix, model, mvp);
-
-		Matrix16SimpleInverse( trans, invTrans);
-		Matrix16SimpleInverse( backEnd.viewParms.projectionMatrix, normalMatrix);
 
 		if ( !pStage )
 		{
@@ -1997,6 +2061,12 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 					GLSL_SetUniformVec3(sp, UNIFORM_PRIMARYLIGHTAMBIENT, backEnd.refdef.sunAmbCol);
 					GLSL_SetUniformVec3(sp, UNIFORM_PRIMARYLIGHTCOLOR,   backEnd.refdef.sunCol);
 					GLSL_SetUniformVec4(sp, UNIFORM_PRIMARYLIGHTORIGIN,  backEnd.refdef.sunDir);
+
+
+					GLSL_SetUniformInt(sp, UNIFORM_LIGHTCOUNT, NUM_CLOSE_LIGHTS);
+					GLSL_SetUniformVec3x16(sp, UNIFORM_LIGHTPOSITIONS2, CLOSEST_LIGHTS_POSITIONS, MAX_LIGHTALL_DLIGHTS);
+					GLSL_SetUniformVec3x16(sp, UNIFORM_LIGHTCOLORS, CLOSEST_LIGHTS_COLORS, MAX_LIGHTALL_DLIGHTS);
+					GLSL_SetUniformFloatx16(sp, UNIFORM_LIGHTDISTANCES, CLOSEST_LIGHTS_DISTANCES, MAX_LIGHTALL_DLIGHTS);
 				}
 			}
 
