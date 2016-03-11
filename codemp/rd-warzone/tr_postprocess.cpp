@@ -948,10 +948,10 @@ qboolean RB_VolumetricLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_
 		color[2] = pow(2, r_cameraExposure->value);
 	color[3] = 1.0f;
 
-	//ri->Printf(PRINT_WARNING, "%i dlights.\n", backEnd.refdef.num_dlights);
+	//ri->Printf(PRINT_WARNING, "VLIGHT DEBUG: %i dlights.\n", backEnd.refdef.num_dlights);
 
 	if ( !backEnd.refdef.num_dlights && !SUN_VISIBLE ) {
-		//ri->Printf(PRINT_WARNING, "0 dlights.\n");
+		//ri->Printf(PRINT_WARNING, "VLIGHT DEBUG: 0 dlights.\n");
 		return qfalse;
 	}
 
@@ -1104,10 +1104,10 @@ qboolean RB_VolumetricLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_
 		{// Have free light slots for a new light...
 			CLOSEST_LIGHTS_POSITIONS[NUM_CLOSE_LIGHTS][0] = SUN_SCREEN_POSITION[0];
 			CLOSEST_LIGHTS_POSITIONS[NUM_CLOSE_LIGHTS][1] = SUN_SCREEN_POSITION[1];
-			CLOSEST_LIGHTS_DISTANCES[NUM_CLOSE_LIGHTS] = 0.9;
-			CLOSEST_LIGHTS_COLORS[NUM_CLOSE_LIGHTS][0] = (tr.sunLight[0] / 255.0)*r_volumeLightStrength->value*strengthMult;
-			CLOSEST_LIGHTS_COLORS[NUM_CLOSE_LIGHTS][1] = (tr.sunLight[1] / 255.0)*r_volumeLightStrength->value*strengthMult;
-			CLOSEST_LIGHTS_COLORS[NUM_CLOSE_LIGHTS][2] = (tr.sunLight[2] / 255.0)*r_volumeLightStrength->value*strengthMult;
+			CLOSEST_LIGHTS_DISTANCES[NUM_CLOSE_LIGHTS] = 0.1;
+			CLOSEST_LIGHTS_COLORS[NUM_CLOSE_LIGHTS][0] = (backEnd.refdef.sunCol[0])*r_volumeLightStrength->value*strengthMult;
+			CLOSEST_LIGHTS_COLORS[NUM_CLOSE_LIGHTS][1] = (backEnd.refdef.sunCol[1])*r_volumeLightStrength->value*strengthMult;
+			CLOSEST_LIGHTS_COLORS[NUM_CLOSE_LIGHTS][2] = (backEnd.refdef.sunCol[2])*r_volumeLightStrength->value*strengthMult;
 			SUN_ID = NUM_CLOSE_LIGHTS;
 			NUM_CLOSE_LIGHTS++;
 		}
@@ -1131,21 +1131,28 @@ qboolean RB_VolumetricLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_
 
 			CLOSEST_LIGHTS_POSITIONS[farthest_light][0] = SUN_SCREEN_POSITION[0];
 			CLOSEST_LIGHTS_POSITIONS[farthest_light][1] = SUN_SCREEN_POSITION[1];
-			CLOSEST_LIGHTS_DISTANCES[farthest_light] = 0.9;
-			CLOSEST_LIGHTS_COLORS[farthest_light][0] = (tr.sunLight[0] / 255.0)*r_volumeLightStrength->value*strengthMult;
-			CLOSEST_LIGHTS_COLORS[farthest_light][1] = (tr.sunLight[1] / 255.0)*r_volumeLightStrength->value*strengthMult;
-			CLOSEST_LIGHTS_COLORS[farthest_light][2] = (tr.sunLight[2] / 255.0)*r_volumeLightStrength->value*strengthMult;
+			CLOSEST_LIGHTS_DISTANCES[farthest_light] = 0.1;
+			CLOSEST_LIGHTS_COLORS[farthest_light][0] = (backEnd.refdef.sunCol[0])*r_volumeLightStrength->value*strengthMult;
+			CLOSEST_LIGHTS_COLORS[farthest_light][1] = (backEnd.refdef.sunCol[1])*r_volumeLightStrength->value*strengthMult;
+			CLOSEST_LIGHTS_COLORS[farthest_light][2] = (backEnd.refdef.sunCol[2])*r_volumeLightStrength->value*strengthMult;
 			SUN_ID = farthest_light;
 		}
 	}
 
-	//ri->Printf(PRINT_WARNING, "%i volume lights.\n", NUM_CLOSE_LIGHTS);
+	//ri->Printf(PRINT_WARNING, "VLIGHT DEBUG: %i volume lights.\n", NUM_CLOSE_LIGHTS);
 
 	// None to draw...
 	if (NUM_CLOSE_LIGHTS <= 0) {
 		//ri->Printf(PRINT_WARNING, "0 visible dlights. %i total dlights.\n", backEnd.refdef.num_dlights);
 		return qfalse;
 	}
+
+	/*
+	for (int i = 0; i < NUM_CLOSE_LIGHTS; i++)
+	{
+		ri->Printf(PRINT_WARNING, "VLIGHT DEBUG: [%i] %fx%f. Dist %f. Color %f %f %f.\n", i, CLOSEST_LIGHTS_POSITIONS[i][0], CLOSEST_LIGHTS_POSITIONS[i][1], CLOSEST_LIGHTS_DISTANCES[i], CLOSEST_LIGHTS_COLORS[i][0], CLOSEST_LIGHTS_COLORS[i][1], CLOSEST_LIGHTS_COLORS[i][2]);
+	}
+	*/
 
 	GLSL_BindProgram(&tr.volumeLightShader[r_dynamiclight->integer - 1]);
 

@@ -66,7 +66,7 @@ void main ( void )
 		float fall = clamp((fBloomrayFalloffRange * depth * 2.0) - dist, 0.0, 1.0);
 
 		//if (i == SUN_ID) fall = 0.2;
-		if (i == SUN_ID) fall *= 3.0;
+		if (i == SUN_ID) fall *= 4.0;
 
 		if (fall > 0.0)
 		{
@@ -103,19 +103,6 @@ void main ( void )
 		float illuminationDecay = 1.0;
 
 		for(int g = 0; g < iBloomraySamples; g++) {
-#if 0
-			texCoord -= deltaTexCoord;
-			vec4 sample2 = texture2D(u_DiffuseMap, texCoord.xy);
-			//sample2.rgb = vec3(linearize(sample2.x));
-			sample2.w = 1.0;
-			sample2 *= illuminationDecay * fBloomrayWeight;
-
-			lens.xyz += sample2.xyz*sample2.w;
-			illuminationDecay *= fBloomrayDecay;
-
-			if (illuminationDecay <= 0.0)
-				break;
-#else
 			texCoord -= deltaTexCoord;
 			float sample2 = linearize(texture2D(u_ScreenDepthMap, texCoord.xy).r);
 			sample2 *= illuminationDecay * fBloomrayWeight;
@@ -125,7 +112,6 @@ void main ( void )
 
 			if (illuminationDecay <= 0.0)
 				break;
-#endif
 		}
 
 		totalColor += clamp((lens * lightDepth) * fallOffRanges[i], 0.0, 1.0);
