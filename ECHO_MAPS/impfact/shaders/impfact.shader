@@ -1,6 +1,6 @@
-textures/custom/shadowgrate
+textures/impfact/shadowgrate
 {
-	qer_editorimage	textures/custom/shadowgrate
+	qer_editorimage	textures/impfact/shadowgrate
 	qer_trans	1
 	surfaceparm	nonopaque
 	surfaceparm	trans
@@ -14,39 +14,39 @@ textures/custom/shadowgrate
         rgbGen identity
     }
     {
-        map textures/custom/shadowgrate
+        map textures/impfact/shadowgrate
         alphaFunc GE128
         blendFunc GL_DST_COLOR GL_ZERO
         depthWrite
     }
 }
 
-textures/custom/floor01
+textures/impfact/floor01
 {
     {
-        map textures/custom/floor01
+        map textures/impfact/floor01
     }
 }
 
-textures/custom/wallpanel_b
+textures/impfact/wallpanel_b
 {
     {
         map $lightmap
     }
     {
-        map textures/custom/wallpanel_b
+        map textures/impfact/wallpanel_b
         blendFunc GL_DST_COLOR GL_ZERO
     }
     {
-        map textures/custom/wallpanel_b_glow
+        map textures/impfact/wallpanel_b_glow
         blendFunc GL_ONE GL_ONE
         glow
     }
 }
 
-textures/custom/bluefog_dense
+textures/impfact/bluefog_dense
 {
-	qer_editorimage	textures/custom/ase_blueknob
+	qer_editorimage	textures/impfact/ase_blueknob
 	qer_nocarve
 	surfaceparm	nonsolid
 	surfaceparm	nonopaque
@@ -56,7 +56,7 @@ textures/custom/bluefog_dense
 	fogparms	( 0 0.03 0.15 ) 1000.0
 }
 
-textures/custom/bluefog_thin
+textures/impfact/bluefog_thin
 {
 	qer_editorimage	textures/common/gradient
 	qer_nocarve
@@ -68,22 +68,22 @@ textures/custom/bluefog_thin
 	fogparms	( 0 0.03 0.15 ) 3000.0
 }
 
-textures/custom/codeblock
+textures/impfact/codeblock
 {
-	qer_editorimage	textures/custom/bluecode
+	qer_editorimage	textures/impfact/bluecode
 	qer_nocarve
 	surfaceparm	nonopaque
 	surfaceparm	trans
 	q3map_nolightmap
 	cull	twosided
     {
-        animMap 1 textures/custom/bluecode textures/custom/purplecode textures/custom/redcode 
+        animMap 1 textures/impfact/bluecode textures/impfact/purplecode textures/impfact/redcode 
         alphaFunc GE128
         blendFunc GL_SRC_ALPHA GL_ONE_MINUS_DST_ALPHA
     }
 }
 
-textures/custom/ramplight_yellow
+textures/impfact/ramplight_yellow
 {
 	q3map_lightimage	textures/vjun/light_vjunamber_glow
 	qer_editorimage	textures/vjun/light_vjunamber
@@ -106,7 +106,7 @@ textures/custom/ramplight_yellow
     }
 }
 
-textures/custom/ramplight_white
+textures/impfact/ramplight_white
 {
 	q3map_lightimage	textures/vjun/light_vjun_glw.tga
 	qer_editorimage	textures/vjun/light_vjun.tga
@@ -129,39 +129,39 @@ textures/custom/ramplight_white
     }
 }
 
-textures/custom/panelwall1
+textures/impfact/panelwall1
 {
     {
         map $lightmap
     }
     {
-        map textures/custom/panelwall1
+        map textures/impfact/panelwall1
         blendFunc GL_DST_COLOR GL_ZERO
     }
     {
-        map textures/custom/panelwall1_glw
+        map textures/impfact/panelwall1_glw
         blendFunc GL_ONE GL_ONE
         glow
         rgbGen wave square 0 1 0 0.5
     }
 }
 
-textures/custom/wallpanel07
+textures/impfact/wallpanel07
 {
-	q3map_lightimage	textures/custom/wallpanel07
+	q3map_lightimage	textures/impfact/wallpanel07
 	q3map_surfacelight	200
 	q3map_lightStyle 1
     {
         map $lightmap
     }
     {
-        map textures/custom/wallpanel07_glw
+        map textures/impfact/wallpanel07_glw
         blendFunc GL_ONE GL_ONE_MINUS_SRC_COLOR
         glow
         rgbGen wave noise 0.5 0.05 1 100
     }
     {
-        map textures/custom/wallpanel07
+        map textures/impfact/wallpanel07
         blendFunc GL_DST_COLOR GL_ZERO
     }
 }
