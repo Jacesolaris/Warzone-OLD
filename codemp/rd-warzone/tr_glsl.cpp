@@ -1564,7 +1564,7 @@ static bool GLSL_EndLoadGPUShader (shaderProgram_t *program)
 	return true;
 }
 
-static int GLSL_BeginLoadGPUShader(shaderProgram_t * program, const char *name,
+int GLSL_BeginLoadGPUShader(shaderProgram_t * program, const char *name,
 	int attribs, qboolean fragmentShader, qboolean tesselation, qboolean geometry, const GLcharARB *extra, qboolean addHeader,
 	char *forceVersion, const char *fallback_vp, const char *fallback_fp, const char *fallback_cp, const char *fallback_ep, const char *fallback_gs)
 {
@@ -2816,7 +2816,7 @@ int GLSL_BeginLoadGPUShaders(void)
 
 
 	
-	attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL | ATTR_TANGENT;
+	attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL | ATTR_TANGENT | ATTR_LIGHTDIRECTION;
 	extradefines[0] = '\0';
 
 	if (r_deluxeSpecular->value > 0.000001f)
@@ -2825,25 +2825,13 @@ int GLSL_BeginLoadGPUShaders(void)
 	if (r_dlightMode->integer >= 2)
 		Q_strcat(extradefines, 1024, "#define USE_SHADOWMAP\n");
 
-	if (1)
-		Q_strcat(extradefines, 1024, "#define SWIZZLE_NORMALMAP\n");
-
 	if (r_hdr->integer && !glRefConfig.floatLightmap)
 		Q_strcat(extradefines, 1024, "#define RGBM_LIGHTMAP\n");
-
-	Q_strcat(extradefines, 1024, "#define USE_LIGHT\n");
 
 	Q_strcat(extradefines, 1024, "#define USE_LIGHTMAP\n");
 
 	if (r_deluxeMapping->integer)
 		Q_strcat(extradefines, 1024, "#define USE_DELUXEMAP\n");
-
-	attribs |= ATTR_TEXCOORD1 | ATTR_LIGHTDIRECTION;
-
-	if (r_specularMapping->integer)
-	{
-		Q_strcat(extradefines, 1024, "#define USE_SPECULARMAP\n");
-	}
 
 	if (r_cubeMapping->integer)
 		Q_strcat(extradefines, 1024, "#define USE_CUBEMAP\n");
@@ -2858,15 +2846,9 @@ int GLSL_BeginLoadGPUShaders(void)
 	Q_strcat(extradefines, 1024, "#define USE_TCGEN\n");
 	Q_strcat(extradefines, 1024, "#define USE_TCMOD\n");
 
-	Q_strcat(extradefines, 1024, "#define USE_VERTEX_ANIMATION\n");
+	Q_strcat(extradefines, 1024, "#define USE_GLOW_BUFFER\n");
 
-	Q_strcat(extradefines, 1024, "#define USE_MODELMATRIX\n");
-	attribs |= ATTR_POSITION2 | ATTR_NORMAL2;
-
-	attribs |= ATTR_TANGENT2;
-
-	//if (i & LIGHTDEF_USE_GLOW_BUFFER)
-		Q_strcat(extradefines, 1024, "#define USE_GLOW_BUFFER\n");
+	Q_strcat(extradefines, 1024, "#define USE_PRIMARY_LIGHT_SPECULAR\n");
 
 	if (!GLSL_BeginLoadGPUShader(&tr.waterShader, "uniquewater", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_uniquewater_vp, fallbackShader_uniquewater_fp, NULL, NULL, NULL))
 	{

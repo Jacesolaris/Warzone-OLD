@@ -42,17 +42,18 @@ varying vec2   var_DiffuseTex;
 varying vec4   var_Color;
 
 uniform vec2	u_Dimensions;
-uniform vec3	u_ViewOrigin;
+uniform vec4	u_ViewOrigin;
 uniform float	u_Time;
-uniform vec4	u_Local5; // grassLength, grassLayer, wavespeed, wavesize
+uniform vec4	u_Local8; // grassLength, grassLayer, wavespeed, wavesize
+uniform vec4	u_Local9;
 
-#define m_Length	u_Local5.r
-#define m_Layer		u_Local5.g
+#define m_Length	u_Local8.r
+#define m_Layer		u_Local8.g
 
 #ifdef WAVE
 bool	m_Wave = true;
-float	m_WaveSpeed = u_Local5.b;
-float	m_WaveSize = u_Local5.a;
+float	m_WaveSpeed = u_Local8.b;
+float	m_WaveSize = u_Local8.a;
 #endif
 
 varying vec2	var_TexCoords;
@@ -62,6 +63,10 @@ varying float	var_Time;
 varying vec3	var_Normal;
 varying vec3	var_ViewDir;
 varying float	var_Fresnel;
+
+
+
+
 
 
 #if defined(USE_DEFORM_VERTEXES)
@@ -196,33 +201,32 @@ void main()
 	vec3 position  = attr_Position;
 	vec3 normal    = attr_Normal * 2.0 - vec3(1.0);
 
+	float time = u_Time + 0.5;
+	vec4 v = vec4(attr_Position, 1.0);
+	vec4 v2 = v;
+#define waveHeight 3.0
+#define waveWidth 0.6
+	float baseHeight = sin(waveWidth * v2.x) * cos(waveWidth * v2.y) * waveHeight;
+	float fresnel = baseHeight - (sin((waveWidth * v2.x) + time) * cos((waveWidth * v2.y) + time) * waveHeight);
+	v.z += fresnel;
+ 	gl_Position = u_ModelViewProjectionMatrix * v;
+
 #if defined(USE_DEFORM_VERTEXES)
-	position = DeformPosition(position, normal, attr_TexCoord0.st);
+	position = DeformPosition(v.xyz, normal, attr_TexCoord0.st);
 #endif
 
 #if defined(USE_TCGEN)
-	vec2 tex = GenTexCoords(u_TCGen0, position, normal, u_TCGen0Vector0, u_TCGen0Vector1);
+	vec2 tex = GenTexCoords(u_TCGen0, v.xyz, normal, u_TCGen0Vector0, u_TCGen0Vector1);
 #else
 	vec2 tex = attr_TexCoord0.st;
 #endif
 
-
-	float time = u_Time + 0.5;
-	vec4 v = vec4(attr_Position, 1.0);
-	vec4 v2 = v;//normalize(vec4(attr_Position, 1.0));
-#define waveHeight 3.0
-#define waveWidth 0.6
-	float baseHeight = sin(waveWidth * v2.x) * cos(waveWidth * v2.y) * waveHeight;
-	v.z += baseHeight - (sin((waveWidth * v2.x) + time) * cos((waveWidth * v2.y) + time) * waveHeight);
- 	gl_Position = u_ModelViewProjectionMatrix * v;
-	var_TexCoords = tex;
-
-	var_Fresnel = v.z;
-
-
 	var_Dimensions = u_Dimensions.st;
-	var_vertPos = gl_Position.xyz;
+	var_vertPos = v.xyz;
+	var_TexCoords = tex;
+	var_Fresnel = (sin((waveWidth * v2.x) + time) * cos((waveWidth * v2.y) + time) * waveHeight);//fresnel;
 	var_Time = u_Time;
 	var_Normal = normal;
-	var_ViewDir = u_ViewOrigin - position;
+	var_ViewDir = u_ViewOrigin.xyz - v.xyz;
 }
+

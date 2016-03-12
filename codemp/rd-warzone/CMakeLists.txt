@@ -46,6 +46,8 @@ set(MPWarzoneFiles
 	"${MPDir}/rd-warzone/tr_mesh.cpp"
 	"${MPDir}/rd-warzone/tr_model.cpp"
 	"${MPDir}/rd-warzone/tr_model_iqm.cpp"
+	"${MPDir}/rd-warzone/tr_ocean.cpp"
+	"${MPDir}/rd-warzone/tr_ocean.h"
 	"${MPDir}/rd-warzone/tr_postprocess.cpp"
 	"${MPDir}/rd-warzone/tr_postprocess.h"
 	"${MPDir}/rd-warzone/tr_scene.cpp"

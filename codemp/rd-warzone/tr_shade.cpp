@@ -2232,9 +2232,22 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			if (isWater)
 			{
 				vec4_t loc;
-				VectorSet4(loc, (float)0.4, 6.0, 2.0, 0.2); // grassLength, grassLayer, wavespeed, wavesize
-				GLSL_SetUniformVec4(sp, UNIFORM_LOCAL5, loc);
-				//GLSL_SetUniformFloat(sp, UNIFORM_TIME, waveTime);
+				VectorSet4(loc, (float)0.4, 6.0, 2.0, 0.2); // waveLength, waveLayer, wavespeed, wavesize
+				GLSL_SetUniformVec4(sp, UNIFORM_LOCAL8, loc);
+
+				GL_BindToTMU( tr.waterImage, TB_SPECULARMAP );
+
+				/*
+				vec3_t pos;
+				float dist = backEnd.viewParms.zFar / 1.75;		// div sqrt(3)
+				VectorScale( tr.sunDirection, dist, pos );
+				GLSL_SetUniformVec4(sp, UNIFORM_PRIMARYLIGHTORIGIN,  pos);
+				*/
+
+				vec3_t out;
+				float dist = backEnd.viewParms.zFar / 1.75;
+ 				VectorMA( backEnd.refdef.vieworg, dist, tr.sunDirection, out );
+				GLSL_SetUniformVec4(sp, UNIFORM_PRIMARYLIGHTORIGIN,  out);
 			}
 
 #if 0

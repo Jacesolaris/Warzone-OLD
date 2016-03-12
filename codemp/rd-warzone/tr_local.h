@@ -2235,6 +2235,7 @@ typedef struct trGlobals_s {
 	image_t					*grassImage;
 	image_t					*grassMaskImage[10];
 	shader_t				*grassImageShader;
+	image_t					*waterImage;
 
 	image_t                 *shadowCubemaps[MAX_DLIGHTS];
 	

@@ -1219,6 +1219,8 @@ void R_LoadMapInfo ( void )
 		tr.random2KImage = R_FindImageFile("gfx/random2K.tga", IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION);
 	}
 
+	tr.waterImage = R_FindImageFile("textures/water/save.01.jpg", IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION);
+
 	FOLIAGE_LoadMapClimateInfo();
 
 	FOLIAGE_ALLOWED_MATERIALS_NUM = 0;
