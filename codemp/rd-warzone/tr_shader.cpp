@@ -3209,7 +3209,7 @@ qboolean IsKnownShinyMap2 ( const char *heystack )
 	if (StringContainsWord(heystack, "/ASenateBase/")) return qtrue;
 
 	// Warzone
-	if (StringContainsWord(heystack, "/custom/")) return qtrue; // Echo - please rename this dir...
+	if (StringContainsWord(heystack, "/impfact/")) return qtrue;
 	
 	return qfalse;
 }
