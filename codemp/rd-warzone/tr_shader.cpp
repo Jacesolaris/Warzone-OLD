@@ -6032,9 +6032,9 @@ shader_t *R_FindShader( const char *name, const int *lightmapIndexes, const byte
 		{
 			if (StringContainsWord(strippedName, "bark") || StringContainsWord(strippedName, "trunk") || StringContainsWord(strippedName, "giant_tree") || StringContainsWord(strippedName, "vine01"))
 			{
-				if (StringContainsWord(strippedName, "uqredwoodbark"))
-					sprintf(myShader, uniqueGenericFoliageTreeShader, strippedName, strippedName, "tcMod scale 2.0 2.0");
-				else
+				//if (StringContainsWord(strippedName, "uqredwoodbark"))
+				//	sprintf(myShader, uniqueGenericFoliageTreeShader, strippedName, strippedName, "tcMod scale 2.0 2.0");
+				//else
 					sprintf(myShader, uniqueGenericFoliageTreeShader, strippedName, strippedName, "");
 			}
 			else

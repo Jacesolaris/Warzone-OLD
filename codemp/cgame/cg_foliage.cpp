@@ -14,7 +14,7 @@ extern qboolean InFOV( vec3_t spot, vec3_t from, vec3_t fromAngles, int hFOV, in
 	// =======================================================================================================================================
 
 
-#define			FOLIAGE_MAX_FOLIAGES 1048576
+#define			FOLIAGE_MAX_FOLIAGES 2097152
 
 	// =======================================================================================================================================
 	//
@@ -1119,7 +1119,7 @@ extern "C" {
 			if (FOLIAGE_PLANT_SCALE[num] <= minGrassScale && dist > FOLIAGE_VISIBLE_DISTANCE) skipPlant = qtrue;
 			if (FOLIAGE_PLANT_SCALE[num] < minFoliageScale) skipPlant = qtrue;
 
-			if (passType == FOLIAGE_PASS_PLANT && !skipPlant && FOLIAGE_PLANT_SELECTION[num] != 0)
+			if (passType == FOLIAGE_PASS_PLANT && !skipPlant && FOLIAGE_PLANT_SELECTION[num] > 0)
 			{// Add plant model as well...
 				float PLANT_SCALE = FOLIAGE_PLANT_SCALE[num]*PLANT_SCALE_MULTIPLIER*distFadeScale;//*0.55;
 
@@ -1542,6 +1542,8 @@ extern "C" {
 
 			if (!strcmp(CURRENT_CLIMATE_OPTION, "springpineforest"))
 			{
+				TREE_SCALE_MULTIPLIER = 2.5;
+
 				FOLIAGE_GRASS_BILLBOARD_SHADER = trap->R_RegisterShader( "models/warzone/foliage/grasspineforest" );
 
 				for (int i = 0; i < MAX_PLANT_SHADERS; i++)
@@ -1601,7 +1603,7 @@ extern "C" {
 			}
 			else if (!strcmp(CURRENT_CLIMATE_OPTION, "endorredwoodforest"))
 			{
-				TREE_SCALE_MULTIPLIER = 1.5;
+				TREE_SCALE_MULTIPLIER = 2.5;
 
 				FOLIAGE_GRASS_BILLBOARD_SHADER = trap->R_RegisterShader( "models/warzone/foliage/ferngrass" );
 
@@ -1663,6 +1665,8 @@ extern "C" {
 			}
 			else if (!strcmp(CURRENT_CLIMATE_OPTION, "snowpineforest"))
 			{
+				TREE_SCALE_MULTIPLIER = 2.5;
+
 				FOLIAGE_GRASS_BILLBOARD_SHADER = trap->R_RegisterShader( "models/warzone/foliage/grasssnowpineforest" );
 
 				for (int i = 0; i < MAX_PLANT_SHADERS; i++)
@@ -1722,6 +1726,8 @@ extern "C" {
 			}
 			else if (!strcmp(CURRENT_CLIMATE_OPTION, "tropicalold"))
 			{
+				TREE_SCALE_MULTIPLIER = 2.0;
+
 				FOLIAGE_GRASS_BILLBOARD_SHADER = trap->R_RegisterShader( "models/warzone/foliage/grasstropical" );
 
 				for (int i = 0; i < MAX_PLANT_SHADERS; i++)
@@ -1781,6 +1787,8 @@ extern "C" {
 			}
 			else // Default to new tropical...
 			{
+				TREE_SCALE_MULTIPLIER = 2.0;
+
 				FOLIAGE_GRASS_BILLBOARD_SHADER = trap->R_RegisterShader( "models/warzone/foliage/grasstropical" );
 
 				for (int i = 0; i < MAX_PLANT_SHADERS; i++)
@@ -1811,7 +1819,7 @@ extern "C" {
 				FOLIAGE_TREE_BILLBOARD_SIZE[0] = 128.0;
 				FOLIAGE_TREE_BILLBOARD_SIZE[1] = 128.0;
 				FOLIAGE_TREE_BILLBOARD_SIZE[2] = 204.0;
-				FOLIAGE_TREE_BILLBOARD_SIZE[3] = 112.0;
+				FOLIAGE_TREE_BILLBOARD_SIZE[3] = 168.0;
 				FOLIAGE_TREE_BILLBOARD_SIZE[4] = 183.0;
 				FOLIAGE_TREE_BILLBOARD_SIZE[5] = 183.0;
 				FOLIAGE_TREE_BILLBOARD_SIZE[6] = 203.0;
@@ -1821,7 +1829,7 @@ extern "C" {
 				FOLIAGE_TREE_RADIUS[0] = 42.0;//24.0;
 				FOLIAGE_TREE_RADIUS[1] = 52.0;//24.0;
 				FOLIAGE_TREE_RADIUS[2] = 72.0;
-				FOLIAGE_TREE_RADIUS[3] = 52.0;
+				FOLIAGE_TREE_RADIUS[3] = 75.0;
 				FOLIAGE_TREE_RADIUS[4] = 38.0;
 				FOLIAGE_TREE_RADIUS[5] = 38.0;
 				FOLIAGE_TREE_RADIUS[6] = 38.0;
@@ -1849,16 +1857,6 @@ extern "C" {
 
 		FOLIAGE_Calc_In_Range_Areas();
 
-		for (int CURRENT_AREA = 0; CURRENT_AREA < IN_RANGE_TREE_AREAS_LIST_COUNT; CURRENT_AREA++)
-		{// Draw trees first...
-			int CURRENT_AREA_ID = IN_RANGE_TREE_AREAS_LIST[CURRENT_AREA];
-
-			for (int spot = 0; spot < FOLIAGE_AREAS_TREES_LIST_COUNT[CURRENT_AREA_ID]; spot++)
-			{
-				FOLIAGE_AddToScreen( FOLIAGE_AREAS_TREES_LIST[CURRENT_AREA_ID][spot], FOLIAGE_PASS_TREE );
-			}
-		}
-
 		for (int CURRENT_AREA = 0; CURRENT_AREA < IN_RANGE_AREAS_LIST_COUNT; CURRENT_AREA++)
 		{
 			int CURRENT_AREA_ID = IN_RANGE_AREAS_LIST[CURRENT_AREA];
@@ -1869,7 +1867,17 @@ extern "C" {
 					FOLIAGE_AddToScreen( FOLIAGE_AREAS_TREES_LIST[CURRENT_AREA_ID][spot], FOLIAGE_PASS_CLOSETREE );
 			}
 		}
-		
+
+		for (int CURRENT_AREA = 0; CURRENT_AREA < IN_RANGE_TREE_AREAS_LIST_COUNT; CURRENT_AREA++)
+		{// Draw trees first...
+			int CURRENT_AREA_ID = IN_RANGE_TREE_AREAS_LIST[CURRENT_AREA];
+
+			for (int spot = 0; spot < FOLIAGE_AREAS_TREES_LIST_COUNT[CURRENT_AREA_ID]; spot++)
+			{
+				FOLIAGE_AddToScreen( FOLIAGE_AREAS_TREES_LIST[CURRENT_AREA_ID][spot], FOLIAGE_PASS_TREE );
+			}
+		}
+
 #ifndef __NO_GRASS__
 		for (int CURRENT_AREA = 0; CURRENT_AREA < IN_RANGE_AREAS_LIST_COUNT; CURRENT_AREA++)
 		{// Draw grass list...
@@ -2185,7 +2193,11 @@ extern "C" {
 		return qtrue;
 	}
 
-	void FOLIAGE_GenerateFoliage_Real ( float density, int num_clusters, float tree_density, int num_dense_areas, qboolean ADD_MORE, float check_density, qboolean ADD_SLOPES )
+#define SPOT_TYPE_TREE 1
+#define SPOT_TYPE_PLANT 2
+#define SPOT_TYPE_GRASS 3
+
+	void FOLIAGE_GenerateFoliage_Real ( float scan_density, int plant_density, int tree_density, int num_clearings, float check_density, qboolean ADD_MORE )
 	{
 		int				i;
 		vec3_t			vec;
@@ -2197,7 +2209,7 @@ extern "C" {
 			return;
 		}
 
-		if (!ADD_MORE && !ADD_SLOPES)
+		if (!ADD_MORE)
 		{
 			FOLIAGE_NUM_POSITIONS = 0;
 
@@ -2214,13 +2226,18 @@ extern "C" {
 		float		startx = -131072, starty = -131072, startz = -131072;
 		int			grassSpotCount = 0;
 		vec3_t		*grassSpotList;
+		vec3_t		*grassNormals;
 		float		*grassSpotScale;
+		int			*grassSpotType;
 		float		map_size, temp;
 		vec3_t		mapMins, mapMaxs;
 		int			start_time = trap->Milliseconds();
 		int			update_timer = 0;
 		clock_t		previous_time = 0;
 		float		offsetY = 0.0;
+
+		trap->Print( "^1*** ^3%s^5: Finding map bounds...\n", GAME_VERSION );
+		trap->UpdateScreen();
 
 		AIMod_GetMapBounts();
 
@@ -2231,9 +2248,12 @@ extern "C" {
 		}
 
 		grassSpotList = (vec3_t *)malloc((sizeof(vec3_t)+1)*FOLIAGE_MAX_FOLIAGES);
+		grassNormals = (vec3_t *)malloc((sizeof(vec3_t)+1)*FOLIAGE_MAX_FOLIAGES);
 		grassSpotScale = (float *)malloc((sizeof(float)+1)*FOLIAGE_MAX_FOLIAGES);
+		grassSpotType = (int *)malloc((sizeof(int)+1)*FOLIAGE_MAX_FOLIAGES);
 
 		memset(grassSpotScale, 0, (sizeof(float)+1)*FOLIAGE_MAX_FOLIAGES);
+		memset(grassSpotType, 0, (sizeof(int)+1)*FOLIAGE_MAX_FOLIAGES);
 
 		VectorCopy(cg.mapcoordsMins, mapMins);
 		VectorCopy(cg.mapcoordsMaxs, mapMaxs);
@@ -2276,6 +2296,8 @@ extern "C" {
 		trap->Print( va( "^4*** ^3AUTO-FOLIAGE^4: ^5Finding foliage points...\n") );
 		strcpy( task_string3, va("^5Finding foliage points...") );
 
+		trap->UpdateScreen();
+
 		//
 		// Create bulk temporary nodes...
 		//
@@ -2294,54 +2316,59 @@ extern "C" {
 		MAP_INFO_SIZE[2] = mapMaxs[2] - mapMins[2];
 
 		vec3_t	MAP_SCALE;
-		vec3_t	CLUSTER_SPOTS[FOLIAGE_AREA_MAX/8];
-		float	CLUSTER_SPOTS_SIZES[FOLIAGE_AREA_MAX/8];
 
 		MAP_SCALE[0] = mapMaxs[0] - mapMins[0];
 		MAP_SCALE[1] = mapMaxs[1] - mapMins[1];
 		MAP_SCALE[2] = 0;
 
-		if (num_clusters > 0)
+		float yoff = scan_density * 1.25;
+
+		trap->Print( "^1*** ^3%s^5: Searching for clearing positions...\n", GAME_VERSION );
+		trap->UpdateScreen();
+
+		vec3_t	CLEARING_SPOTS[FOLIAGE_AREA_MAX/8] = { 0 };
+		int		CLEARING_SPOTS_SIZES[FOLIAGE_AREA_MAX/8] = { 0 };
+		int		CLEARING_SPOTS_NUM = 0;
+
+		int NUM_FAILS = 0;
+
+		while (CLEARING_SPOTS_NUM < num_clearings && NUM_FAILS < 50)
 		{
-			for (int d = 0; d < num_clusters; d++)
+			vec3_t		spot;
+			qboolean	IS_CLEARING = qfalse;
+
+			spot[0] = mapMins[0] + (irand(0, MAP_SCALE[0]/2)+irand(0, MAP_SCALE[0]/2));
+			spot[1] = mapMins[1] + (irand(0, MAP_SCALE[1]/2)+irand(0, MAP_SCALE[1]/2));
+			spot[2] = 0;
+
+			for (int d = 0; d < CLEARING_SPOTS_NUM; d++)
 			{
-				int NUM_FAILS = 0;
-
-				CLUSTER_SPOTS_SIZES[d] = irand(128, 384);
-
-				for (int d2 = 0; d2 < d; d2++)
+				if (DistanceHorizontal(CLEARING_SPOTS[d], spot) < CLEARING_SPOTS_SIZES[d])
 				{
-					vec3_t spot;
-
-					while (1)
-					{
-						spot[0] = mapMins[0] + (irand(0, MAP_SCALE[0]/2)+irand(0, MAP_SCALE[0]/2));
-						spot[1] = mapMins[1] + (irand(0, MAP_SCALE[1]/2)+irand(0, MAP_SCALE[1]/2));
-						spot[2] = 0;
-
-						if (DistanceHorizontal(CLUSTER_SPOTS[d], spot) < CLUSTER_SPOTS_SIZES[d])
-						{
-							NUM_FAILS++;
-							continue;
-						}
-
-						// Ok, not in range of another one, add this spot to the list...
-						break;
-					}
-
-					CLUSTER_SPOTS[d][0] = spot[0];
-					CLUSTER_SPOTS[d][1] = spot[1];
-					CLUSTER_SPOTS[d][2] = 0;
+					IS_CLEARING = qtrue;
+					continue;
 				}
-
-				if (NUM_FAILS > 50) break; // Failed 50 times in a row, assume we filled the map...
 			}
+
+			if (IS_CLEARING)
+			{
+				NUM_FAILS++;
+				continue;
+			}
+
+			// Ok, not in range of another one, add this spot to the list...
+			VectorSet(CLEARING_SPOTS[CLEARING_SPOTS_NUM], spot[0], spot[1], 0.0);
+			CLEARING_SPOTS_SIZES[CLEARING_SPOTS_NUM] = irand(1024, 2048);
+			CLEARING_SPOTS_NUM++;
 		}
 
-		float yoff = density * 1.25;
+
+		trap->Print( "^1*** ^3%s^5: Generated %i clearing positions...\n", GAME_VERSION, CLEARING_SPOTS_NUM );
+		trap->UpdateScreen();
+
 
 //#pragma omp parallel for schedule(dynamic)
-		for (int x = (int)mapMins[0]; x <= (int)mapMaxs[0]; x += density)
+		for (int x = (int)mapMins[0]; x <= (int)mapMaxs[0]; x += scan_density)
 		{
 			if (grassSpotCount >= FOLIAGE_MAX_FOLIAGES)
 			{
@@ -2353,14 +2380,14 @@ extern "C" {
 
 			aw_percent_complete = (float)(complete * 100.0);
 
-			if (yoff == density * 0.75)
-				yoff = density * 1.25;
-			else if (yoff == density * 1.25)
-				yoff = density;
+			if (yoff == scan_density * 0.75)
+				yoff = scan_density * 1.25;
+			else if (yoff == scan_density * 1.25)
+				yoff = scan_density;
 			else
-				yoff = density * 0.75;
+				yoff = scan_density * 0.75;
 
-			for (float y = mapMins[1]; y <= mapMaxs[1]; y += yoff/*density*/)
+			for (float y = mapMins[1]; y <= mapMaxs[1]; y += yoff)
 			{
 				if (grassSpotCount >= FOLIAGE_MAX_FOLIAGES)
 				{
@@ -2419,94 +2446,68 @@ extern "C" {
 						continue;
 					}
 
-					if (ADD_SLOPES)
-					{
-						vec3_t	slopeangles;
-						float	pitch = 0;
-
-						vectoangles( tr.plane.normal, slopeangles );
-
-						pitch = slopeangles[0];
-
-						if (pitch > 180)
-							pitch -= 360;
-
-						if (pitch < -180)
-							pitch += 360;
-
-						pitch += 90.0f;
-
-						if (pitch < 32.0 && pitch > -32.0)
-						{// This is not enough of a slope...
-							continue;
-						}
-					}
-
-					if ((ADD_MORE || ADD_SLOPES) && check_density > 0 && FOLIAGE_CheckFoliageAlready(tr.endpos, check_density))
+					if (ADD_MORE && check_density > 0 && FOLIAGE_CheckFoliageAlready(tr.endpos, check_density))
 					{// Already a foliage here...
 						continue;
 					}
 
 					if (MaterialIsValidForGrass((tr.surfaceFlags & MATERIAL_MASK)))
 					{
+						qboolean DO_TREE = qfalse;
+						qboolean DO_PLANT = qfalse;
+						qboolean IS_CLEARING = qfalse;
+
+						if (tree_density > 0 && num_clearings > 0 && CLEARING_SPOTS_NUM > 0)
+						{
+							int variation = irand(0, 2048); /* Variation around edges */
+
+							for (int d = 0; d < CLEARING_SPOTS_NUM; d++)
+							{
+								if (DistanceHorizontal(CLEARING_SPOTS[d], tr.endpos) <= CLEARING_SPOTS_SIZES[d] + variation)
+								{
+									IS_CLEARING = qtrue;
+									break;
+								}
+							}
+						}
+
+						if (!IS_CLEARING
+							&& tree_density > 0 
+							&& irand(0, tree_density) >= tree_density 
+							&& RoofHeightAt(vec) - vec[2] > 1024.0)
+						{
+							DO_TREE = qtrue;
+						}
+						else if (irand(0, plant_density) >= plant_density)
+						{
+							DO_PLANT = qtrue;
+						}
+
+#ifdef __NO_GRASS__
+						if (!DO_TREE && !DO_PLANT) continue;
+#endif
+
+						VectorCopy(tr.plane.normal, grassNormals[grassSpotCount]);
+
 						// Look around here for a different slope angle... Cull if found...
 						for (float scale = 1.00; scale >= 0.05 && scale >= cg_foliageMinFoliageScale.value; scale -= 0.05)
 						{
-							if (ADD_SLOPES && scale < 1.0) break;
-
-							if (FOLIAGE_CheckSlopesAround(tr.endpos, tr.plane.normal, scale))
+							if (scale >= cg_foliageMinFoliageScale.value && FOLIAGE_CheckSlopesAround(tr.endpos, tr.plane.normal, scale))
 							{
 //#pragma omp critical (__ADD_TEMP_NODE__)
 								{
-									if (num_clusters > 0)
-									{
-										int		THIS_CLUSTER = -1;
-										float	THIS_CLUSTER_SIZE_MULT = 1.0;
-										float	closestDist = 99999;
-										int		closest = -1;
-
-										for (int spot = 0; spot < num_clusters; spot++)
-										{
-											float spotDist = DistanceHorizontal(CLUSTER_SPOTS[spot], pos);
-
-											if (spotDist < CLUSTER_SPOTS_SIZES[spot]+irand(0,256) /* edge randomization */ && spotDist < closestDist)
-											{
-												closestDist = spotDist;
-												closest = spot;
-											}
-										}
-
-										if (closest >= 0)
-										{
-											THIS_CLUSTER = closest;
-
-											if ((closestDist / CLUSTER_SPOTS_SIZES[THIS_CLUSTER]) > 1.0)
-												THIS_CLUSTER_SIZE_MULT = (float)irand(10,40) / 100.0; /* edge randomization */
-											else
-												THIS_CLUSTER_SIZE_MULT = 1.0 - (closestDist / CLUSTER_SPOTS_SIZES[THIS_CLUSTER]);
-										}
-
-										if (THIS_CLUSTER >= 0)
-										{
-											grassSpotScale[grassSpotCount] = scale * THIS_CLUSTER_SIZE_MULT;
-										}
-										else if (irand(0,(int)(density*2.0)) == 0)
-										{
-											grassSpotScale[grassSpotCount] = -1.0;
-										}
-										else
-										{
-											break;
-										}
-									}
+									if (DO_TREE) 
+										grassSpotType[grassSpotCount] = SPOT_TYPE_TREE;
+									else if (DO_PLANT) 
+										grassSpotType[grassSpotCount] = SPOT_TYPE_PLANT;
 									else
-									{
-										grassSpotScale[grassSpotCount] = scale;
-									}
+										grassSpotType[grassSpotCount] = SPOT_TYPE_GRASS;
 
-									sprintf(last_node_added_string, "^5Adding foliage point ^3%i ^5at ^7%f %f %f^5.", grassSpotCount, tr.endpos[0], tr.endpos[1], tr.endpos[2]+8);
-
+									grassSpotScale[grassSpotCount] = scale;
 									VectorSet(grassSpotList[grassSpotCount], tr.endpos[0], tr.endpos[1], tr.endpos[2]+8);
+
+									sprintf(last_node_added_string, "^5Adding potential foliage point ^3%i ^5at ^7%f %f %f^5.", grassSpotCount, grassSpotList[grassSpotCount][0], grassSpotList[grassSpotCount][1], grassSpotList[grassSpotCount][2]);
+									
 									grassSpotCount++;
 									FOUND = qtrue;
 								}
@@ -2531,7 +2532,7 @@ extern "C" {
 
 		aw_percent_complete = 0.0f;
 
-		if (!ADD_MORE && !ADD_SLOPES) 
+		if (!ADD_MORE) 
 		{
 			FOLIAGE_NUM_POSITIONS = 0;
 
@@ -2544,129 +2545,41 @@ extern "C" {
 
 		if (grassSpotCount > 0)
 		{// Ok, we have spots, copy and set up foliage types/scales/angles, and save to file...
-			vec3_t	DENSE_SPOTS[FOLIAGE_AREA_MAX/8];
-
-			for (int d = 0; d < num_dense_areas; d++)
-			{
-				int NUM_FAILS = 0;
-
-				for (int d2 = 0; d2 < d; d2++)
-				{
-					vec3_t spot;
-
-					while (1)
-					{
-						spot[0] = mapMins[0] + (irand(0, MAP_SCALE[0]/2)+irand(0, MAP_SCALE[0]/2));
-						spot[1] = mapMins[1] + (irand(0, MAP_SCALE[1]/2)+irand(0, MAP_SCALE[1]/2));
-						spot[2] = 0;
-
-						if (DistanceHorizontal(DENSE_SPOTS[d], spot) < 4096)
-						{
-							NUM_FAILS++;
-							continue;
-						}
-
-						// Ok, not in range of another one, add this spot to the list...
-						break;
-					}
-
-					DENSE_SPOTS[d][0] = spot[0];
-					DENSE_SPOTS[d][1] = spot[1];
-					DENSE_SPOTS[d][2] = 0;
-				}
-
-				if (NUM_FAILS > 50) break; // Failed 50 times in a row, assume we filled the map...
-			}
-
 			for (i = 0; i < grassSpotCount; i++)
 			{
 				qboolean DO_TREE = qfalse;
-
-				vec[0] = grassSpotList[i][0];
-				vec[1] = grassSpotList[i][1];
-				vec[2] = grassSpotList[i][2];
-
-				float USE_TREE_DENSITY = tree_density;
-
-				for (int d = 0; d < num_dense_areas; d++)
-				{
-					if (DistanceHorizontal(DENSE_SPOTS[d], FOLIAGE_POSITIONS[FOLIAGE_NUM_POSITIONS]) <= 4096)
-					{
-						USE_TREE_DENSITY = tree_density / 6;//sqrt(tree_density);
-						break;
-					}
-				}
+				qboolean DO_PLANT = qfalse;
 
 				FOLIAGE_PLANT_SELECTION[FOLIAGE_NUM_POSITIONS] = 0;
 				FOLIAGE_PLANT_ANGLES[FOLIAGE_NUM_POSITIONS] = 0.0f;
-				if (num_clusters <= 0)
-				{
-					if (grassSpotScale[i] > 0)
-					{
-						FOLIAGE_PLANT_SCALE[FOLIAGE_NUM_POSITIONS] = grassSpotScale[i];
-
-						if (tree_density > 0 
-							&& irand(0, (int)USE_TREE_DENSITY) >= (int)USE_TREE_DENSITY 
-							&& RoofHeightAt(vec) - vec[2] > 1024.0)
-						{
-							DO_TREE = qtrue;
-						}
-					}
-				}
-				else if (grassSpotScale[i] > 0)
-				{
-					FOLIAGE_PLANT_SCALE[FOLIAGE_NUM_POSITIONS] = grassSpotScale[i];
-				}
-				else
-				{// Only tree allowed here...
-					if (!ADD_SLOPES 
-						&& tree_density > 0 
-						&& irand(0, (int)USE_TREE_DENSITY) >= (int)USE_TREE_DENSITY 
-						&& RoofHeightAt(vec) - vec[2] > 1024.0)
-					{
-						DO_TREE = qtrue;
-					}
-					else
-					{
-						continue;
-					}
-				}
-
-#ifdef __NO_GRASS__
-				if (!DO_TREE) continue;
-#endif
 
 				FOLIAGE_TREE_SELECTION[FOLIAGE_NUM_POSITIONS] = 0;
 				FOLIAGE_TREE_ANGLES[FOLIAGE_NUM_POSITIONS] = 0.0f;
 				FOLIAGE_TREE_SCALE[FOLIAGE_NUM_POSITIONS] = 0.0f;
 
-				VectorCopy(vec, FOLIAGE_POSITIONS[FOLIAGE_NUM_POSITIONS]);
+				FOLIAGE_PLANT_SELECTION[FOLIAGE_NUM_POSITIONS] = 0;
+				FOLIAGE_PLANT_ANGLES[FOLIAGE_NUM_POSITIONS] = (int)(random() * 180);
+
+				VectorCopy(grassSpotList[i], FOLIAGE_POSITIONS[FOLIAGE_NUM_POSITIONS]);
 				FOLIAGE_POSITIONS[FOLIAGE_NUM_POSITIONS][2] -= 18.0;
 
-				FOLIAGE_PLANT_ANGLES[FOLIAGE_NUM_POSITIONS] = (int)(random() * 180);
-				
-				if (FOLIAGE_PLANT_SCALE[FOLIAGE_NUM_POSITIONS] == 0)
-					FOLIAGE_PLANT_SCALE[FOLIAGE_NUM_POSITIONS] = (float)((float)irand(100*cg_foliageMinFoliageScale.value,100) / 100.0);
+				VectorCopy(grassNormals[i], FOLIAGE_NORMALS[FOLIAGE_NUM_POSITIONS]);
 
-				if (DO_TREE)
+				if (grassSpotType[i] == SPOT_TYPE_TREE)
 				{// Add tree... 
 					FOLIAGE_TREE_SELECTION[FOLIAGE_NUM_POSITIONS] = irand(1, NUM_TREE_TYPES);
 					FOLIAGE_TREE_ANGLES[FOLIAGE_NUM_POSITIONS] = (int)(random() * 180);
 					FOLIAGE_TREE_SCALE[FOLIAGE_NUM_POSITIONS] = (float)((float)irand(65,150) / 100.0);
 				}
-				else if (irand(0, 255) <= 0)
-				{// Add plant... 1 in every 256 positions...
+				else if (grassSpotType[i] == SPOT_TYPE_PLANT)
+				{// Add plant...
 					FOLIAGE_PLANT_SELECTION[FOLIAGE_NUM_POSITIONS] = irand(1,MAX_PLANT_SHADERS-1);
+					FOLIAGE_PLANT_SCALE[FOLIAGE_NUM_POSITIONS] = grassSpotScale[i];
 				}
-
-				trace_t tr;
-				vec3_t	up, down;
-				VectorCopy(FOLIAGE_POSITIONS[FOLIAGE_NUM_POSITIONS], up);
-				up[2]+=128;
-				VectorCopy(FOLIAGE_POSITIONS[FOLIAGE_NUM_POSITIONS], down);
-				down[2]-=128;
-				CG_Trace(&tr, up, NULL, NULL, down, -1, MASK_SOLID);
-				VectorCopy(tr.plane.normal, FOLIAGE_NORMALS[FOLIAGE_NUM_POSITIONS]);
+				else
+				{
+					FOLIAGE_PLANT_SCALE[FOLIAGE_NUM_POSITIONS] = grassSpotScale[i];
+				}
 
 				FOLIAGE_NUM_POSITIONS++;
 			}
@@ -2865,7 +2778,7 @@ extern "C" {
 		if ( trap->Cmd_Argc() < 2 )
 		{
 			trap->Print( "^4*** ^3AUTO-FOLIAGE^4: ^7Usage:\n" );
-			trap->Print( "^4*** ^3AUTO-FOLIAGE^4: ^3/genfoliage <method> <density> <num_clusters> <tree_density> <num_tree_dense_areas> <check_density>^5. Use num_clusters 0 for even spread.\n" );
+			trap->Print( "^4*** ^3AUTO-FOLIAGE^4: ^3/genfoliage <method> <density> <plant_density> <tree_density> <num_clearings> <check_density>^5.\n" );
 			trap->Print( "^4*** ^3AUTO-FOLIAGE^4: ^5Available methods are:\n" );
 			trap->Print( "^4*** ^3AUTO-FOLIAGE^4: ^3\"standard\" ^5- Create new foliage map.\n");
 			trap->Print( "^4*** ^3AUTO-FOLIAGE^4: ^3\"concrete\" ^5- Create new foliage map. Allow concrete material.\n");
@@ -2874,7 +2787,11 @@ extern "C" {
 			trap->Print( "^4*** ^3AUTO-FOLIAGE^4: ^3\"rock\" ^5- Create new foliage map. Allow rock material.\n");
 			trap->Print( "^4*** ^3AUTO-FOLIAGE^4: ^3\"snow\" ^5- Create new foliage map. Allow snow material.\n");
 			trap->Print( "^4*** ^3AUTO-FOLIAGE^4: ^3\"add\" ^5- Add more to current list of foliages. Allows <check_density> to check for another foliage before adding.\n");
-			trap->Print( "^4*** ^3AUTO-FOLIAGE^4: ^3\"addslopes\" ^5- Adds more grass/plants only (on slopes). Allows <check_density> to check for another foliage before adding.\n");
+			trap->Print( "^4*** ^3AUTO-FOLIAGE^4: ^3\"addconcrete\" ^5- Add more to current list of foliages. Allows <check_density> to check for another foliage before adding.\n");
+			trap->Print( "^4*** ^3AUTO-FOLIAGE^4: ^3\"addsand\" ^5- Add more to current list of foliages. Allows <check_density> to check for another foliage before adding.\n");
+			trap->Print( "^4*** ^3AUTO-FOLIAGE^4: ^3\"addrock\" ^5- Add more to current list of foliages. Allows <check_density> to check for another foliage before adding.\n");
+			trap->Print( "^4*** ^3AUTO-FOLIAGE^4: ^3\"addgravel\" ^5- Add more to current list of foliages. Allows <check_density> to check for another foliage before adding.\n");
+			trap->Print( "^4*** ^3AUTO-FOLIAGE^4: ^3\"addsnow\" ^5- Add more to current list of foliages. Allows <check_density> to check for another foliage before adding.\n");
 			trap->Print( "^4*** ^3AUTO-FOLIAGE^4: ^3\"rescale\" ^5- Check and fix scale of current grasses/plants.\n");
 			trap->Print( "^4*** ^3AUTO-FOLIAGE^4: ^3\"replant\" ^5- Reselect all grasses/plants (for updating between versions).\n");
 			trap->Print( "^4*** ^3AUTO-FOLIAGE^4: ^3\"retree\" ^5- Reselect all tree types (for updating between versions).\n");
@@ -2884,264 +2801,76 @@ extern "C" {
 
 		trap->Cmd_Argv( 1, str, sizeof(str) );
 
-		if ( Q_stricmp( str, "standard") == 0 )
+		if ( Q_stricmp( str, "standard") == 0 
+			|| Q_stricmp( str, "concrete") == 0
+			|| Q_stricmp( str, "sand") == 0
+			|| Q_stricmp( str, "rock") == 0
+			|| Q_stricmp( str, "gravel") == 0
+			|| Q_stricmp( str, "snow") == 0)
 		{
+			if (Q_stricmp( str, "concrete") == 0) GENFOLIAGE_ALLOW_MATERIAL = MATERIAL_CONCRETE;
+			if (Q_stricmp( str, "sand") == 0) GENFOLIAGE_ALLOW_MATERIAL = MATERIAL_SAND;
+			if (Q_stricmp( str, "rock") == 0) GENFOLIAGE_ALLOW_MATERIAL = MATERIAL_ROCK;
+			if (Q_stricmp( str, "gravel") == 0) GENFOLIAGE_ALLOW_MATERIAL = MATERIAL_GRAVEL;
+			if (Q_stricmp( str, "snow") == 0) GENFOLIAGE_ALLOW_MATERIAL = MATERIAL_SNOW;
+
 			if ( trap->Cmd_Argc() >= 2 )
 			{// Override normal density...
-				int dist = 48;
-				int num_clusters = 0;
-				int tree_dist = 48;
-				int num_dense_areas = 0;
+				int dist = 256;
+				int plant_density = 512;
+				int tree_density = 1024;
+				int num_clearings = 0;
 
 				trap->Cmd_Argv( 2, str, sizeof(str) );
 				dist = atoi(str);
 
 				if (dist <= 4)
 				{// Fallback and warning...
-					dist = 48;
-					trap->Print( "^4*** ^3AUTO-FOLIAGE^4: ^7Warning: ^5Invalid density set (%i). Using default (%i)...\n", atoi(str), 48 );
+					dist = 256;
+					trap->Print( "^4*** ^3AUTO-FOLIAGE^4: ^7Warning: ^5Invalid density set (%i). Using default (%i)...\n", atoi(str), 256 );
 				}
 
 				trap->Cmd_Argv( 3, str, sizeof(str) );
-				num_clusters = atoi(str);
+				plant_density =  atoi(str);
 
 				trap->Cmd_Argv( 4, str, sizeof(str) );
-				tree_dist = atoi(str);
+				tree_density = atoi(str);
 
 				trap->Cmd_Argv( 5, str, sizeof(str) );
-				num_dense_areas = atoi(str);
+				num_clearings = atoi(str);
 
-				if (num_dense_areas > FOLIAGE_AREA_MAX/8)
+				if (num_clearings > FOLIAGE_AREA_MAX/8)
 				{
-					trap->Print( "^4*** ^3AUTO-FOLIAGE^4: ^7Error: ^5Invalid num_dense_areas set (%i). Maximum is (%i)...\n", atoi(str), FOLIAGE_AREA_MAX/8 );
+					trap->Print( "^4*** ^3AUTO-FOLIAGE^4: ^7Error: ^5Invalid num_clearings set (%i). Maximum is (%i)...\n", atoi(str), FOLIAGE_AREA_MAX/8 );
 					return;
 				}
 
-				FOLIAGE_GenerateFoliage_Real((float)dist, num_clusters, (float)tree_dist, num_dense_areas, qfalse, 32.0, qfalse);
+				FOLIAGE_GenerateFoliage_Real((float)dist, plant_density, tree_density, num_clearings, 0.0, qfalse);
 			}
 			else
 			{
-				FOLIAGE_GenerateFoliage_Real(48.0, 0, 256.0, 0, qfalse, 32.0, qfalse);
+				FOLIAGE_GenerateFoliage_Real(256.0, 512, 1024, 0, 0.0, qfalse);
 			}
 		}
-		else if ( Q_stricmp( str, "concrete") == 0 )
+		else if ( Q_stricmp( str, "add") == 0 
+			|| Q_stricmp( str, "addconcrete") == 0
+			|| Q_stricmp( str, "addsand") == 0
+			|| Q_stricmp( str, "addrock") == 0
+			|| Q_stricmp( str, "addgravel") == 0
+			|| Q_stricmp( str, "addsnow") == 0)
 		{
-			GENFOLIAGE_ALLOW_MATERIAL = MATERIAL_CONCRETE;
+			if (Q_stricmp( str, "addconcrete") == 0) GENFOLIAGE_ALLOW_MATERIAL = MATERIAL_CONCRETE;
+			if (Q_stricmp( str, "addsand") == 0) GENFOLIAGE_ALLOW_MATERIAL = MATERIAL_SAND;
+			if (Q_stricmp( str, "addrock") == 0) GENFOLIAGE_ALLOW_MATERIAL = MATERIAL_ROCK;
+			if (Q_stricmp( str, "addgravel") == 0) GENFOLIAGE_ALLOW_MATERIAL = MATERIAL_GRAVEL;
+			if (Q_stricmp( str, "addsnow") == 0) GENFOLIAGE_ALLOW_MATERIAL = MATERIAL_SNOW;
 
 			if ( trap->Cmd_Argc() >= 2 )
 			{// Override normal density...
-				int dist = 48;
-				int num_clusters = 0;
-				int tree_dist = 48;
-				int num_dense_areas = 0;
-
-				trap->Cmd_Argv( 2, str, sizeof(str) );
-				dist = atoi(str);
-
-				if (dist <= 4)
-				{// Fallback and warning...
-					dist = 48;
-					trap->Print( "^4*** ^3AUTO-FOLIAGE^4: ^7Warning: ^5Invalid density set (%i). Using default (%i)...\n", atoi(str), 48 );
-				}
-
-				trap->Cmd_Argv( 3, str, sizeof(str) );
-				num_clusters = atoi(str);
-
-				trap->Cmd_Argv( 4, str, sizeof(str) );
-				tree_dist = atoi(str);
-
-				trap->Cmd_Argv( 5, str, sizeof(str) );
-				num_dense_areas = atoi(str);
-
-				if (num_dense_areas > FOLIAGE_AREA_MAX/8)
-				{
-					trap->Print( "^4*** ^3AUTO-FOLIAGE^4: ^7Error: ^5Invalid num_dense_areas set (%i). Maximum is (%i)...\n", atoi(str), FOLIAGE_AREA_MAX/8 );
-					return;
-				}
-
-				FOLIAGE_GenerateFoliage_Real((float)dist, num_clusters, (float)tree_dist, num_dense_areas, qfalse, 32.0, qfalse);
-			}
-			else
-			{
-				FOLIAGE_GenerateFoliage_Real(48.0, 0, 256.0, 0, qfalse, 32.0, qfalse);
-			}
-		}
-		else if ( Q_stricmp( str, "sand") == 0 )
-		{
-			GENFOLIAGE_ALLOW_MATERIAL = MATERIAL_SAND;
-
-			if ( trap->Cmd_Argc() >= 2 )
-			{// Override normal density...
-				int dist = 48;
-				int num_clusters = 0;
-				int tree_dist = 48;
-				int num_dense_areas = 0;
-
-				trap->Cmd_Argv( 2, str, sizeof(str) );
-				dist = atoi(str);
-
-				if (dist <= 4)
-				{// Fallback and warning...
-					dist = 48;
-					trap->Print( "^4*** ^3AUTO-FOLIAGE^4: ^7Warning: ^5Invalid density set (%i). Using default (%i)...\n", atoi(str), 48 );
-				}
-
-				trap->Cmd_Argv( 3, str, sizeof(str) );
-				num_clusters = atoi(str);
-
-				trap->Cmd_Argv( 4, str, sizeof(str) );
-				tree_dist = atoi(str);
-
-				trap->Cmd_Argv( 5, str, sizeof(str) );
-				num_dense_areas = atoi(str);
-
-				if (num_dense_areas > FOLIAGE_AREA_MAX/8)
-				{
-					trap->Print( "^4*** ^3AUTO-FOLIAGE^4: ^7Error: ^5Invalid num_dense_areas set (%i). Maximum is (%i)...\n", atoi(str), FOLIAGE_AREA_MAX/8 );
-					return;
-				}
-
-				FOLIAGE_GenerateFoliage_Real((float)dist, num_clusters, (float)tree_dist, num_dense_areas, qfalse, 32.0, qfalse);
-			}
-			else
-			{
-				FOLIAGE_GenerateFoliage_Real(48.0, 0, 256.0, 0, qfalse, 32.0, qfalse);
-			}
-		}
-		else if ( Q_stricmp( str, "rock") == 0 )
-		{
-			GENFOLIAGE_ALLOW_MATERIAL = MATERIAL_ROCK;
-
-			if ( trap->Cmd_Argc() >= 2 )
-			{// Override normal density...
-				int dist = 48;
-				int num_clusters = 0;
-				int tree_dist = 48;
-				int num_dense_areas = 0;
-
-				trap->Cmd_Argv( 2, str, sizeof(str) );
-				dist = atoi(str);
-
-				if (dist <= 4)
-				{// Fallback and warning...
-					dist = 48;
-					trap->Print( "^4*** ^3AUTO-FOLIAGE^4: ^7Warning: ^5Invalid density set (%i). Using default (%i)...\n", atoi(str), 48 );
-				}
-
-				trap->Cmd_Argv( 3, str, sizeof(str) );
-				num_clusters = atoi(str);
-
-				trap->Cmd_Argv( 4, str, sizeof(str) );
-				tree_dist = atoi(str);
-
-				trap->Cmd_Argv( 5, str, sizeof(str) );
-				num_dense_areas = atoi(str);
-
-				if (num_dense_areas > FOLIAGE_AREA_MAX/8)
-				{
-					trap->Print( "^4*** ^3AUTO-FOLIAGE^4: ^7Error: ^5Invalid num_dense_areas set (%i). Maximum is (%i)...\n", atoi(str), FOLIAGE_AREA_MAX/8 );
-					return;
-				}
-
-				FOLIAGE_GenerateFoliage_Real((float)dist, num_clusters, (float)tree_dist, num_dense_areas, qfalse, 32.0, qfalse);
-			}
-			else
-			{
-				FOLIAGE_GenerateFoliage_Real(48.0, 0, 256.0, 0, qfalse, 32.0, qfalse);
-			}
-		}
-		else if ( Q_stricmp( str, "gravel") == 0 )
-		{
-			GENFOLIAGE_ALLOW_MATERIAL = MATERIAL_GRAVEL;
-
-			if ( trap->Cmd_Argc() >= 2 )
-			{// Override normal density...
-				int dist = 48;
-				int num_clusters = 0;
-				int tree_dist = 48;
-				int num_dense_areas = 0;
-
-				trap->Cmd_Argv( 2, str, sizeof(str) );
-				dist = atoi(str);
-
-				if (dist <= 4)
-				{// Fallback and warning...
-					dist = 48;
-					trap->Print( "^4*** ^3AUTO-FOLIAGE^4: ^7Warning: ^5Invalid density set (%i). Using default (%i)...\n", atoi(str), 48 );
-				}
-
-				trap->Cmd_Argv( 3, str, sizeof(str) );
-				num_clusters = atoi(str);
-
-				trap->Cmd_Argv( 4, str, sizeof(str) );
-				tree_dist = atoi(str);
-
-				trap->Cmd_Argv( 5, str, sizeof(str) );
-				num_dense_areas = atoi(str);
-
-				if (num_dense_areas > FOLIAGE_AREA_MAX/8)
-				{
-					trap->Print( "^4*** ^3AUTO-FOLIAGE^4: ^7Error: ^5Invalid num_dense_areas set (%i). Maximum is (%i)...\n", atoi(str), FOLIAGE_AREA_MAX/8 );
-					return;
-				}
-
-				FOLIAGE_GenerateFoliage_Real((float)dist, num_clusters, (float)tree_dist, num_dense_areas, qfalse, 32.0, qfalse);
-			}
-			else
-			{
-				FOLIAGE_GenerateFoliage_Real(48.0, 0, 256.0, 0, qfalse, 32.0, qfalse);
-			}
-		}
-		else if ( Q_stricmp( str, "snow") == 0 )
-		{
-			GENFOLIAGE_ALLOW_MATERIAL = MATERIAL_SNOW;
-
-			if ( trap->Cmd_Argc() >= 2 )
-			{// Override normal density...
-				int dist = 48;
-				int num_clusters = 0;
-				int tree_dist = 48;
-				int num_dense_areas = 0;
-
-				trap->Cmd_Argv( 2, str, sizeof(str) );
-				dist = atoi(str);
-
-				if (dist <= 4)
-				{// Fallback and warning...
-					dist = 48;
-					trap->Print( "^4*** ^3AUTO-FOLIAGE^4: ^7Warning: ^5Invalid density set (%i). Using default (%i)...\n", atoi(str), 48 );
-				}
-
-				trap->Cmd_Argv( 3, str, sizeof(str) );
-				num_clusters = atoi(str);
-
-				trap->Cmd_Argv( 4, str, sizeof(str) );
-				tree_dist = atoi(str);
-
-				trap->Cmd_Argv( 5, str, sizeof(str) );
-				num_dense_areas = atoi(str);
-
-				if (num_dense_areas > FOLIAGE_AREA_MAX/8)
-				{
-					trap->Print( "^4*** ^3AUTO-FOLIAGE^4: ^7Error: ^5Invalid num_dense_areas set (%i). Maximum is (%i)...\n", atoi(str), FOLIAGE_AREA_MAX/8 );
-					return;
-				}
-
-				FOLIAGE_GenerateFoliage_Real((float)dist, num_clusters, (float)tree_dist, num_dense_areas, qfalse, 32.0, qfalse);
-			}
-			else
-			{
-				FOLIAGE_GenerateFoliage_Real(48.0, 0, 256.0, 0, qfalse, 32.0, qfalse);
-			}
-		}
-		else if ( Q_stricmp( str, "add") == 0 )
-		{
-			if ( trap->Cmd_Argc() >= 2 )
-			{// Override normal density...
-				int dist = 48;
-				int num_clusters = 0;
-				int tree_dist = 64;
-				int num_dense_areas = 0;
+				int dist = 256;
+				int plant_density = 512;
+				int tree_density = 1024;
+				int num_clearings = 0;
 				int	check_density = dist;
 
 				trap->Cmd_Argv( 2, str, sizeof(str) );
@@ -3149,81 +2878,35 @@ extern "C" {
 
 				if (dist <= 4)
 				{// Fallback and warning...
-					dist = 48;
-					trap->Print( "^4*** ^3AUTO-FOLIAGE^4: ^7Warning: ^5Invalid density set (%i). Using default (%i)...\n", atoi(str), 48 );
+					dist = 256;
+					trap->Print( "^4*** ^3AUTO-FOLIAGE^4: ^7Warning: ^5Invalid density set (%i). Using default (%i)...\n", atoi(str), 256 );
 				}
 
 				check_density = dist;
 
 				trap->Cmd_Argv( 3, str, sizeof(str) );
-				num_clusters = atoi(str);
+				plant_density =  atoi(str);
 
 				trap->Cmd_Argv( 4, str, sizeof(str) );
-				tree_dist = atoi(str);
+				tree_density = atoi(str);
 
 				trap->Cmd_Argv( 5, str, sizeof(str) );
-				num_dense_areas = atoi(str);
-
-				if (num_dense_areas > FOLIAGE_AREA_MAX/8)
-				{
-					trap->Print( "^4*** ^3AUTO-FOLIAGE^4: ^7Error: ^5Invalid num_dense_areas set (%i). Maximum is (%i)...\n", atoi(str), FOLIAGE_AREA_MAX/8 );
-					return;
-				}
+				num_clearings = atoi(str);
 
 				trap->Cmd_Argv( 6, str, sizeof(str) );
 				check_density = atoi(str);
 
-				FOLIAGE_GenerateFoliage_Real((float)dist, num_clusters, (float)tree_dist, num_dense_areas, qtrue, check_density, qfalse);
-			}
-			else
-			{
-				FOLIAGE_GenerateFoliage_Real(48.0, 0, 256.0, 0, qtrue, 32.0, qfalse);
-			}
-		}
-		else if ( Q_stricmp( str, "addslopes") == 0 )
-		{
-			if ( trap->Cmd_Argc() >= 2 )
-			{// Override normal density...
-				int dist = 48;
-				int num_clusters = 0;
-				int tree_dist = 64;
-				int num_dense_areas = 0;
-				int	check_density = dist;
-
-				trap->Cmd_Argv( 2, str, sizeof(str) );
-				dist = atoi(str);
-
-				if (dist <= 4)
-				{// Fallback and warning...
-					dist = 32;
-					trap->Print( "^4*** ^3AUTO-FOLIAGE^4: ^7Warning: ^5Invalid density set (%i). Using default (%i)...\n", atoi(str), 48 );
-				}
-
-				check_density = dist;
-
-				trap->Cmd_Argv( 3, str, sizeof(str) );
-				num_clusters = atoi(str);
-
-				trap->Cmd_Argv( 4, str, sizeof(str) );
-				tree_dist = atoi(str);
-
-				trap->Cmd_Argv( 5, str, sizeof(str) );
-				num_dense_areas = atoi(str);
-
-				if (num_dense_areas > FOLIAGE_AREA_MAX/8)
+				if (num_clearings > FOLIAGE_AREA_MAX/8)
 				{
-					trap->Print( "^4*** ^3AUTO-FOLIAGE^4: ^7Error: ^5Invalid num_dense_areas set (%i). Maximum is (%i)...\n", atoi(str), FOLIAGE_AREA_MAX/8 );
+					trap->Print( "^4*** ^3AUTO-FOLIAGE^4: ^7Error: ^5Invalid num_clearings set (%i). Maximum is (%i)...\n", atoi(str), FOLIAGE_AREA_MAX/8 );
 					return;
 				}
 
-				trap->Cmd_Argv( 6, str, sizeof(str) );
-				check_density = atoi(str);
-
-				FOLIAGE_GenerateFoliage_Real((float)dist, num_clusters, (float)tree_dist, num_dense_areas, qfalse, check_density, qtrue);
+				FOLIAGE_GenerateFoliage_Real((float)dist, plant_density, tree_density, num_clearings, check_density, qtrue);
 			}
 			else
 			{
-				FOLIAGE_GenerateFoliage_Real(48.0, 0, 256.0, 0, qfalse, 48.0, qtrue);
+				FOLIAGE_GenerateFoliage_Real(256.0, 512, 1024, 0, 32.0, qtrue);
 			}
 		}
 		else if ( Q_stricmp( str, "rescale") == 0 )

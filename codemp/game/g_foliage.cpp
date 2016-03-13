@@ -12,7 +12,7 @@ extern "C" {
 	// =======================================================================================================================================
 
 
-#define			FOLIAGE_MAX_FOLIAGES 1048576
+#define			FOLIAGE_MAX_FOLIAGES 2097152
 
 	//
 	// BEGIN - FOLIAGE OPTIONS
@@ -400,6 +400,8 @@ extern "C" {
 
 		if (!strcmp(CURRENT_CLIMATE_OPTION, "springpineforest"))
 		{
+			TREE_SCALE_MULTIPLIER = 2.5;
+
 			FOLIAGE_TREE_BILLBOARD_SIZE[0] = 128.0;
 			FOLIAGE_TREE_BILLBOARD_SIZE[1] = 128.0;
 			FOLIAGE_TREE_BILLBOARD_SIZE[2] = 128.0;
@@ -422,7 +424,7 @@ extern "C" {
 		}
 		else if (!strcmp(CURRENT_CLIMATE_OPTION, "endorredwoodforest"))
 		{
-			TREE_SCALE_MULTIPLIER = 1.5;
+			TREE_SCALE_MULTIPLIER = 2.5;
 
 			FOLIAGE_TREE_BILLBOARD_SIZE[0] = 64.0;
 			FOLIAGE_TREE_BILLBOARD_SIZE[1] = 96.0;
@@ -446,6 +448,8 @@ extern "C" {
 		}
 		else if (!strcmp(CURRENT_CLIMATE_OPTION, "snowpineforest"))
 		{
+			TREE_SCALE_MULTIPLIER = 2.5;
+
 			FOLIAGE_TREE_BILLBOARD_SIZE[0] = 128.0;
 			FOLIAGE_TREE_BILLBOARD_SIZE[1] = 128.0;
 			FOLIAGE_TREE_BILLBOARD_SIZE[2] = 128.0;
@@ -468,6 +472,8 @@ extern "C" {
 		}
 		else if (!strcmp(CURRENT_CLIMATE_OPTION, "tropicalold"))
 		{
+			TREE_SCALE_MULTIPLIER = 2.0;
+
 			FOLIAGE_TREE_BILLBOARD_SIZE[0] = 118.0;
 			FOLIAGE_TREE_BILLBOARD_SIZE[1] = 118.0;
 			FOLIAGE_TREE_BILLBOARD_SIZE[2] = 204.0;
@@ -490,10 +496,12 @@ extern "C" {
 		}
 		else // Default to new tropical...
 		{
+			TREE_SCALE_MULTIPLIER = 2.0;
+
 			FOLIAGE_TREE_BILLBOARD_SIZE[0] = 128.0;
 			FOLIAGE_TREE_BILLBOARD_SIZE[1] = 128.0;
 			FOLIAGE_TREE_BILLBOARD_SIZE[2] = 204.0;
-			FOLIAGE_TREE_BILLBOARD_SIZE[3] = 112.0;
+			FOLIAGE_TREE_BILLBOARD_SIZE[3] = 168.0;
 			FOLIAGE_TREE_BILLBOARD_SIZE[4] = 183.0;
 			FOLIAGE_TREE_BILLBOARD_SIZE[5] = 183.0;
 			FOLIAGE_TREE_BILLBOARD_SIZE[6] = 203.0;
@@ -503,7 +511,7 @@ extern "C" {
 			FOLIAGE_TREE_RADIUS[0] = 42.0;//24.0;
 			FOLIAGE_TREE_RADIUS[1] = 52.0;//24.0;
 			FOLIAGE_TREE_RADIUS[2] = 72.0;
-			FOLIAGE_TREE_RADIUS[3] = 52.0;
+			FOLIAGE_TREE_RADIUS[3] = 75.0;
 			FOLIAGE_TREE_RADIUS[4] = 38.0;
 			FOLIAGE_TREE_RADIUS[5] = 38.0;
 			FOLIAGE_TREE_RADIUS[6] = 38.0;
