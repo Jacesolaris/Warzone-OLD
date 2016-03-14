@@ -187,7 +187,7 @@ float GetDepth(vec2 t)
 
 float RayIntersectDisplaceMap(vec2 dp, vec2 ds)
 {
-	if (u_Local1.x == 0.0 || u_Local6.a == 0.0)
+	if (u_Local1.x == 0.0)
 		return 0.0;
 	
   #if !defined(FAST_PARALLAX)
