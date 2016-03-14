@@ -1275,13 +1275,13 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage)
 	if (r_sunlightSpecular->integer)
 	{
 		vec4_t local6;
-		VectorSet4(local6, 1.0, 0.0, 0.0, 0.0);
+		VectorSet4(local6, 1.0, 0.0, 0.0, 0);
 		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL6,  local6);
 	}
 	else
 	{
 		vec4_t local6;
-		VectorSet4(local6, 0.0, 0.0, 0.0, 0.0);
+		VectorSet4(local6, 0.0, 0.0, 0.0, 0);
 		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL6,  local6);
 	}
 
@@ -1805,6 +1805,14 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			}
 
 			GLSL_BindProgram(sp);
+		}
+
+		if (tr.viewParms.flags & VPF_SHADOWPASS)
+		{
+			sp = &tr.shadowPassShader;
+			GLSL_BindProgram(sp);
+			isGrass = qfalse;
+			multiPass = qfalse;
 		}
 
 		if (isGrass)

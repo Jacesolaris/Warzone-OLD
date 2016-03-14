@@ -631,6 +631,7 @@ void FBO_Init(void)
 		}
 
 		tr.screenShadowFbo = FBO_Create("_screenshadow", tr.screenShadowImage->width, tr.screenShadowImage->height);
+		tr.screenShadowBlurFbo = FBO_Create("_screenshadowBlur", tr.screenShadowImage->width, tr.screenShadowImage->height);
 		FBO_Bind(tr.screenShadowFbo);
 		
 		FBO_AttachTextureImage(tr.screenShadowImage, 0);

@@ -38,6 +38,8 @@ extern const char *fallbackShader_generic_vp;
 extern const char *fallbackShader_generic_fp;
 extern const char *fallbackShader_lightall_vp;
 extern const char *fallbackShader_lightall_fp;
+extern const char *fallbackShader_shadowPass_vp;
+extern const char *fallbackShader_shadowPass_fp;
 extern const char *fallbackShader_pshadow_vp;
 extern const char *fallbackShader_pshadow_fp;
 extern const char *fallbackShader_shadowfill_vp;
@@ -2262,6 +2264,21 @@ int GLSL_BeginLoadGPUShaders(void)
 		}
 	}
 
+
+
+	attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL | ATTR_TANGENT | ATTR_TEXCOORD1 | ATTR_LIGHTDIRECTION;
+
+	extradefines[0] = '\0';
+
+	if (!GLSL_BeginLoadGPUShader(&tr.shadowPassShader, "shadowPass", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_shadowPass_vp, fallbackShader_shadowPass_fp, NULL, NULL, NULL))
+	{
+		ri->Error(ERR_FATAL, "Could not load shadowPass shader!");
+	}
+
+
+
+
+
 	if (r_foliage->integer)
 	{
 		attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_NORMAL | ATTR_LIGHTDIRECTION;
@@ -3075,6 +3092,23 @@ void GLSL_EndLoadGPUShaders ( int startTime )
 		numLightShaders++;
 	}
 
+	if (!GLSL_EndLoadGPUShader(&tr.shadowPassShader))
+	{
+		ri->Error(ERR_FATAL, "Could not load shadowPass shader!");
+	}
+		
+	GLSL_InitUniforms(&tr.shadowPassShader);
+
+	qglUseProgram(tr.shadowPassShader.program);
+	GLSL_SetUniformInt(&tr.shadowPassShader, UNIFORM_DIFFUSEMAP,  TB_DIFFUSEMAP);
+	qglUseProgram(0);
+
+#if defined(_DEBUG)
+	GLSL_FinishGPUShader(&tr.shadowPassShader);
+#endif
+		
+	numLightShaders++;
+	
 	
 	if (r_foliage->integer)
 	{

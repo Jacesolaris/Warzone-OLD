@@ -14,5 +14,5 @@ void main()
 	gl_Position = attr_Position;
 	vec2 screenCoords = gl_Position.xy / gl_Position.w;
 	var_DepthTex = attr_TexCoord0.xy;
-	var_ViewDir = u_ViewForward + u_ViewLeft * -screenCoords.x + u_ViewUp * screenCoords.y;
+	var_ViewDir = u_ViewForward + (u_ViewLeft * -screenCoords.x) + (u_ViewUp * screenCoords.y);
 }

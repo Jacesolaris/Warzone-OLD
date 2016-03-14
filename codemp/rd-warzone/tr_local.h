@@ -2289,6 +2289,7 @@ typedef struct trGlobals_s {
 	FBO_t					*targetLevelsFbo;
 	FBO_t					*sunShadowFbo[3];
 	FBO_t					*screenShadowFbo;
+	FBO_t					*screenShadowBlurFbo;
 #ifdef __DYNAMIC_SHADOWS__
 	FBO_t					*dlightShadowFbo[MAX_DYNAMIC_SHADOWS][3];
 //	FBO_t					*screenDlightShadowFbo;
@@ -2332,6 +2333,7 @@ typedef struct trGlobals_s {
 	shaderProgram_t fogShader[FOGDEF_COUNT];
 	shaderProgram_t dlightShader[DLIGHTDEF_COUNT];
 	shaderProgram_t lightallShader[LIGHTDEF_COUNT];
+	shaderProgram_t shadowPassShader;
 	shaderProgram_t shadowmapShader;
 	shaderProgram_t pshadowShader;
 	shaderProgram_t down4xShader;

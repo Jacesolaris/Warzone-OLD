@@ -7,7 +7,7 @@ uniform vec4	u_Local2; // ExtinctionCoefficient
 uniform vec4	u_Local3; // RimScalar, MaterialThickness, subSpecPower, cubemapScale
 uniform vec4	u_Local4; // haveNormalMap, isMetalic, hasRealSubsurfaceMap, sway
 uniform vec4	u_Local5; // hasRealOverlayMap, overlaySway, blinnPhong, hasSteepMap
-uniform vec4	u_Local6; // useSunLightSpecular
+uniform vec4	u_Local6; // useSunLightSpecular, 0, 0, 0
 uniform vec4	u_Local9;
 
 #define USE_TRI_PLANAR
@@ -187,7 +187,7 @@ float GetDepth(vec2 t)
 
 float RayIntersectDisplaceMap(vec2 dp, vec2 ds)
 {
-	if (u_Local1.x == 0.0)
+	if (u_Local1.x == 0.0 || u_Local6.a == 0.0)
 		return 0.0;
 	
   #if !defined(FAST_PARALLAX)
@@ -371,6 +371,18 @@ void main()
 	float NL, NH, NE, EH, attenuation;
 	vec2 tex_offset = vec2(1.0 / u_Dimensions);
 
+	vec2 texCoords = m_TexCoords.xy;
+
+	#ifdef USE_OVERLAY//USE_SWAY
+		if (u_Local4.a > 0.0)
+		{// Sway...
+			texCoords += vec2(u_Local5.y * u_Local4.a * ((1.0 - m_TexCoords.y) + 1.0), 0.0);
+		}
+	#endif //USE_OVERLAY//USE_SWAY
+
+
+
+
 	mat3 tangentToWorld = mat3(var_Tangent.xyz, var_Bitangent.xyz, m_Normal.xyz);
 	viewDir = vec3(var_Normal2, var_Tangent.w, var_Bitangent.w);
 
@@ -390,21 +402,14 @@ void main()
 
 	#endif //defined(USE_LIGHTMAP)
 
-
-	vec2 texCoords = m_TexCoords.xy;
-
-	#ifdef USE_OVERLAY//USE_SWAY
-		if (u_Local4.a > 0.0)
-		{// Sway...
-			texCoords += vec2(u_Local5.y * u_Local4.a * ((1.0 - m_TexCoords.y) + 1.0), 0.0);
-		}
-	#endif //USE_OVERLAY//USE_SWAY
-
 	#if defined(USE_PARALLAXMAP)
 		vec3 offsetDir = normalize(E * tangentToWorld);
 		offsetDir.xy *= tex_offset * -u_Local1.x;//-4.0;//-5.0; // -3.0
 		texCoords += offsetDir.xy * RayIntersectDisplaceMap(texCoords, offsetDir.xy);
 	#endif
+
+
+
 
 	vec4 diffuse = GetDiffuse(texCoords);
 
