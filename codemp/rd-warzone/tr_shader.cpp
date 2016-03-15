@@ -3273,10 +3273,16 @@ void AssignMaterialType ( const char *name, const char *text )
 			shader.surfaceFlags |= MATERIAL_HOLLOWMETAL; // UQ1: Using hollowmetal for weapons to force low parallax setting...
 		else if (StringsContainWord(name, name, "/weapon") || StringsContainWord(name, name, "scope") || StringsContainWord(name, name, "blaster") || StringsContainWord(name, name, "pistol") || StringsContainWord(name, name, "thermal") || StringsContainWord(name, name, "bowcaster") || StringsContainWord(name, name, "cannon") || StringsContainWord(name, name, "saber") || StringsContainWord(name, name, "rifle") || StringsContainWord(name, name, "rocket"))
 			shader.surfaceFlags |= MATERIAL_HOLLOWMETAL; // UQ1: Using hollowmetal for weapons to force low parallax setting...
-		else if (StringsContainWord(name, name, "metal") || StringsContainWord(name, name, "pipe") || StringsContainWord(name, name, "shaft") || StringsContainWord(name, name, "jetpack") || StringsContainWord(name, name, "antenna") || StringsContainWord(name, name, "xwing") || StringsContainWord(name, name, "tie_") || StringsContainWord(name, name, "raven") || StringsContainWord(name, name, "falcon") || StringsContainWord(name, name, "engine") || StringsContainWord(name, name, "elevator") || StringsContainWord(name, name, "evaporator") || StringsContainWord(name, name, "airpur") || StringsContainWord(name, name, "gonk") || StringsContainWord(name, name, "droid") || StringsContainWord(name, name, "cart") || StringsContainWord(name, name, "vent") || StringsContainWord(name, name, "tank") || StringsContainWord(name, name, "transformer") || StringsContainWord(name, name, "generator") || StringsContainWord(name, name, "grate") || StringsContainWord(name, name, "rack") || StringsContainWord(name, name, "mech") || StringsContainWord(name, name, "turbolift") || StringsContainWord(name, name, "grate") || StringsContainWord(name, name, "tube") || StringsContainWord(name, name, "coil"))
+		else if (StringsContainWord(name, name, "metal") || StringsContainWord(name, name, "pipe") || StringsContainWord(name, name, "shaft") || StringsContainWord(name, name, "jetpack") || StringsContainWord(name, name, "antenna") || StringsContainWord(name, name, "xwing") || StringsContainWord(name, name, "tie_") || StringsContainWord(name, name, "raven") || StringsContainWord(name, name, "falcon") || StringsContainWord(name, name, "engine") || StringsContainWord(name, name, "elevator") || StringsContainWord(name, name, "evaporator") || StringsContainWord(name, name, "airpur") || StringsContainWord(name, name, "gonk") || StringsContainWord(name, name, "droid") || StringsContainWord(name, name, "cart") || StringsContainWord(name, name, "vent") || StringsContainWord(name, name, "tank") || StringsContainWord(name, name, "transformer") || StringsContainWord(name, name, "generator") || StringsContainWord(name, name, "grate") || StringsContainWord(name, name, "rack") || StringsContainWord(name, name, "mech") || StringsContainWord(name, name, "turbolift") || StringsContainWord(name, name, "grate") || StringsContainWord(name, name, "tube") || StringsContainWord(name, name, "coil") || StringsContainWord(name, name, "vader_trim") || StringsContainWord(name, name, "newfloor_vjun") || StringsContainWord(name, name, "bay_beam"))
 			shader.surfaceFlags |= MATERIAL_SOLIDMETAL;
 		else if (StringsContainWord(name, name, "eye"))
 			shader.surfaceFlags |= MATERIAL_GLASS;
+		else if (StringsContainWord(name, name, "textures/byss/") && !StringsContainWord(name, name, "glow") && !StringsContainWord(name, name, "glw") && !StringsContainWord(name, name, "static") && !StringsContainWord(name, name, "isd") && !StringsContainWord(name, name, "power") && !StringsContainWord(name, name, "env_") && !StringsContainWord(name, name, "byss_switch"))
+			shader.surfaceFlags |= MATERIAL_SOLIDMETAL; // special for byss shiny
+		else if (StringsContainWord(name, name, "textures/vjun/") && !StringsContainWord(name, name, "glow") && !StringsContainWord(name, name, "glw") && !StringsContainWord(name, name, "static") && !StringsContainWord(name, name, "light") && !StringsContainWord(name, name, "env_") && !StringsContainWord(name, name, "_env") && !StringsContainWord(name, name, "switch_off") && !StringsContainWord(name, name, "switch_on") && !StringsContainWord(name, name, "screen") && !StringsContainWord(name, name, "blend") && !StringsContainWord(name, name, "o_ground") && !StringsContainWord(name, name, "_onoffg") && !StringsContainWord(name, name, "_onoffr") && !StringsContainWord(name, name, "console"))
+			shader.surfaceFlags |= MATERIAL_SOLIDMETAL; // special for vjun shiny
+		else if (StringsContainWord(name, name, "textures/mp/") && !StringsContainWord(name, name, "glow") && !StringsContainWord(name, name, "glw") && !StringsContainWord(name, name, "static") && !StringsContainWord(name, name, "light") && !StringsContainWord(name, name, "env_") && !StringsContainWord(name, name, "_env") && !StringsContainWord(name, name, "underside") && !StringsContainWord(name, name, "blend") && !StringsContainWord(name, name, "t_pit"))
+			shader.surfaceFlags |= MATERIAL_SOLIDMETAL; // special for mp shiny
 		else if (StringsContainWord(name, name, "sand"))
 			shader.surfaceFlags |= MATERIAL_SAND;
 		else if (StringsContainWord(name, name, "gravel"))
@@ -3992,20 +3998,17 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 	// reuse diffuse, mark others inactive
 	diffuse->type = ST_GLSL;
 	
-	if (lightmap)
-	{
-		//ri->Printf(PRINT_ALL, ", lightmap");
-		diffuse->bundle[TB_LIGHTMAP] = lightmap->bundle[0];
-		defs |= LIGHTDEF_USE_LIGHTMAP;
-	}
-
 	switch( shader.surfaceFlags & MATERIAL_MASK )
 	{// Switch to avoid doing string checks on everything else...
 		case MATERIAL_SHORTGRASS:		// 5			// manicured lawn
 		case MATERIAL_LONGGRASS:		// 6			// long jungle grass
 		case MATERIAL_DRYLEAVES:		// 19			// dried up leaves on the floor
 		case MATERIAL_GREENLEAVES:		// 20			// fresh leaves still on a tree
-			if (diffuse->bundle[TB_DIFFUSEMAP].image[0] 
+			if (diffuse->isFoliage)
+			{// Skip the string checks...
+
+			}
+			else if (diffuse->bundle[TB_DIFFUSEMAP].image[0] 
 				&& (StringContainsWord(diffuse->bundle[TB_DIFFUSEMAP].image[0]->imgName, "foliage/") || StringContainsWord(diffuse->bundle[TB_DIFFUSEMAP].image[0]->imgName, "foliages/")))
 			{
 				diffuse->isFoliage = true;
@@ -4022,6 +4025,19 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 		default:
 			diffuse->isFoliage = false;
 			break;
+	}
+
+	if (lightmap)
+	{
+		//ri->Printf(PRINT_ALL, ", lightmap");
+		diffuse->bundle[TB_LIGHTMAP] = lightmap->bundle[0];
+		defs |= LIGHTDEF_USE_LIGHTMAP;
+	}
+	else if (( shader.surfaceFlags & MATERIAL_MASK ) != MATERIAL_DRYLEAVES && !shader.isSky && !diffuse->glow)
+	{
+		diffuse->bundle[TB_LIGHTMAP] = diffuse->bundle[TB_DIFFUSEMAP];
+		diffuse->bundle[TB_LIGHTMAP].image[0] = tr.whiteImage;
+		defs |= LIGHTDEF_USE_LIGHTMAP;
 	}
 
 	if (r_deluxeMapping->integer && tr.worldDeluxeMapping && lightmap)

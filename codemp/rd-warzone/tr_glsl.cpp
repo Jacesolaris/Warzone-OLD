@@ -2182,6 +2182,7 @@ int GLSL_BeginLoadGPUShaders(void)
 		if (i & LIGHTDEF_USE_LIGHTMAP)
 		{
 			Q_strcat(extradefines, 1024, "#define USE_LIGHTMAP\n");
+
 			if (r_deluxeMapping->integer)
 				Q_strcat(extradefines, 1024, "#define USE_DELUXEMAP\n");
 

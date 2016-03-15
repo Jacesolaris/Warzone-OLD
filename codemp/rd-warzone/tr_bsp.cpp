@@ -3349,7 +3349,7 @@ static void R_LoadCubemapWaypoints( void )
 
 	w = &s_worldData;
 
-#pragma omp parallel for /*ordered*/ schedule(dynamic) //if (r_multithread->integer > 0)
+//#pragma omp parallel for /*ordered*/ schedule(dynamic) //if (r_multithread->integer > 0)
 	for (int i = 0; i < w->numsurfaces; i++)
 	{// Get a count of how many we need... Add them to temp list if not too close to another...
 		msurface_t *surf =	&w->surfaces[i];
@@ -3384,7 +3384,7 @@ static void R_LoadCubemapWaypoints( void )
 
 			if (bad) continue;
 
-#pragma omp critical
+//#pragma omp critical
 			{
 				VectorCopy(surfOrigin, cubeOrgs[numcubeOrgs]);
 				numcubeOrgs++;

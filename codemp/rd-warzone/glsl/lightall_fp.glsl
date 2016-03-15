@@ -15,15 +15,11 @@ uniform vec4	u_Local9;
 
 varying float  var_Time;
 
-#if defined(USE_LIGHTMAP)
 uniform sampler2D u_LightMap;
-#endif
 
 uniform sampler2D u_NormalMap;
 
-#if defined(USE_DELUXEMAP)
 uniform sampler2D u_DeluxeMap;
-#endif
 
 #if defined(USE_SPECULARMAP)
 uniform sampler2D u_SpecularMap;
@@ -480,8 +476,8 @@ void main()
 
 	#if defined(USE_LIGHTMAP)
 		float lmBrightMult = clamp(1.0 - (length(lightmapColor.rgb) / 3.0), 0.0, 0.9);
-		lmBrightMult *= lmBrightMult;
-		lightColor	= lightmapColor.rgb * lmBrightMult * (var_Color.rgb * 0.66666 + 0.33333); // UQ1:  * 0.66666 + 0.33333 is because they are too dark...
+		lmBrightMult *= lmBrightMult * 0.5 + 0.5;
+		lightColor	= lightmapColor.rgb * lmBrightMult * var_Color.rgb;
 	#endif
 
 
@@ -512,8 +508,6 @@ void main()
 	#endif //defined(USE_LIGHTMAP)
   
 
-		specular.a = (1.0 - norm.a);
-
 		#if defined(USE_LIGHTMAP) 
 			lightColor *= lightmapColor.rgb;
 		#endif
@@ -522,42 +516,40 @@ void main()
 		gl_FragColor = vec4 (diffuse.rgb * lightColor, diffuse.a * var_Color.a);
 
 
+		//specular.a = (1.0 - norm.a);
+		specular.a = ((clamp(u_Local1.g, 0.0, 1.0) + clamp(u_Local3.a, 0.0, 1.0)) / 2.0) * 1.6;
+
+		#if defined(USE_SPECULARMAP)
+		if (u_Local1.g != 0.0)
+		{// Real specMap...
+			specular = texture2D(u_SpecularMap, texCoords);
+		}
+		else
+		#endif //defined(USE_SPECULARMAP)
+		{// Fake it...
+			specular.rgb = gl_FragColor.rgb;
+		}
+
+		#if defined(USE_GAMMA2_TEXTURES)
+			specular.rgb *= specular.rgb;
+		#endif //defined(USE_GAMMA2_TEXTURES)
+
+		specular.rgb *= u_SpecularScale.rgb;
+
+
+
 	#if defined(USE_CUBEMAP)
-		if (u_Local3.a > 0.0 && u_EnableTextures.w > 0.0) 
+		if (u_Local3.a > 0.0 && u_EnableTextures.w > 0.0 && u_CubeMapStrength > 0.0) 
 		{
-			float brightFactor = 0.0;
 			float spec = 0.0;
 
-		#if defined(USE_SPECULAR)
-			if (u_Local1.g != 0.0)
-			{// Real specMap...
-				specular = texture2D(u_SpecularMap, texCoords);
-				spec = length(specular.rgb) / 3.0;
-				brightFactor = 1.0 - spec;
-			}
-			else
-		#endif //defined(USE_SPECULAR)
-			{// Fake it...
-				spec = length(diffuse.rgb) / 3.0;
-				brightFactor = 1.0 - spec;
+			NE = clamp(dot(m_Normal.xyz/*N*/, E), 0.0, 1.0);
 
-				if (u_Local4.b == 0.0)
-				{// Non-Metalic... Greyscale...
-					specular.rgb = vec3(spec) * brightFactor;
-				}
-			}
-
-			#if defined(USE_GAMMA2_TEXTURES)
-				specular.rgb *= specular.rgb;
-			#endif //defined(USE_GAMMA2_TEXTURES)
-
-			specular.rgb *= u_SpecularScale.rgb;
-
-			vec3 reflectance = EnvironmentBRDF(specular.a, NE, specular.rgb);
-			vec3 R = reflect(E, N);
+			vec3 reflectance = EnvironmentBRDF(clamp(specular.a, 0.5, 1.0) * 100.0, NE, specular.rgb);
+			vec3 R = reflect(E, m_Normal.xyz/*N*/);
 			vec3 parallax = u_CubeMapInfo.xyz + u_CubeMapInfo.w * viewDir;
 			vec3 cubeLightColor = textureCubeLod(u_CubeMap, R + parallax, 7.0 - specular.a * 7.0).rgb * u_EnableTextures.w * 0.25; //u_Local3.a
-			gl_FragColor.rgb += (cubeLightColor * reflectance * (u_Local3.a * specular.a * brightFactor)) * u_CubeMapStrength;
+			gl_FragColor.rgb += (cubeLightColor * reflectance * (u_Local3.a * specular.a)) * u_CubeMapStrength;
 		}
 	#endif
 
@@ -588,7 +580,7 @@ void main()
 
 				if(lambertian3 > 0.0)
 				{
-					float lightStrength = clamp(1.0 - (length(lightDir) * (1.0 / u_lightDistances[li])), 0.0, 1.0) * 0.5;
+					float lightStrength = clamp(1.0 - (length(lightDir) * (1.0 / u_lightDistances[li])), 0.0, 1.0) /** 0.5*/;
 
 					if(lightStrength > 0.0)
 					{// this is blinn phong

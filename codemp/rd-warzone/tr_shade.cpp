@@ -1059,13 +1059,13 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage)
 			parallaxScale = 2.5;
 			break;
 		case MATERIAL_CARPET:			// 27			// lush carpet
-			specularScale = 0.1;
+			specularScale = 0.15;
 			cubemapScale = 0.0;
 			materialType = (float)MATERIAL_CARPET;
 			parallaxScale = 2.5;
 			break;
 		case MATERIAL_GRAVEL:			// 9			// lots of small stones
-			specularScale = 0.15;
+			specularScale = 0.25;
 			cubemapScale = 0.0;
 			materialType = (float)MATERIAL_GRAVEL;
 			parallaxScale = 3.0;
@@ -1106,8 +1106,8 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage)
 			isMetalic = 1.0;
 			break;
 		case MATERIAL_HOLLOWMETAL:		// 4			// hollow metal machines -- UQ1: Used for weapons to force lower parallax and high reflection...
-			specularScale = 1.92;
-			cubemapScale = 1.92;
+			specularScale = 1.0;
+			cubemapScale = 1.0;
 			materialType = (float)MATERIAL_HOLLOWMETAL;
 			parallaxScale = 2.0;
 			isMetalic = 1.0;
@@ -1127,13 +1127,13 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage)
 			//useSteepParallax = 1.0;
 			break;
 		case MATERIAL_FABRIC:			// 21			// Cotton sheets
-			specularScale = 0.15;
+			specularScale = 0.25;
 			cubemapScale = 0.0;
 			materialType = (float)MATERIAL_FABRIC;
 			parallaxScale = 2.5;
 			break;
 		case MATERIAL_CANVAS:			// 22			// tent material
-			specularScale = 0.15;
+			specularScale = 0.25;
 			cubemapScale = 0.0;
 			materialType = (float)MATERIAL_CANVAS;
 			parallaxScale = 2.5;
@@ -1146,29 +1146,29 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage)
 			//useSteepParallax = 1.0;
 			break;
 		case MATERIAL_SNOW:				// 14			// freshly laid snow
-			specularScale = 0.25;
-			cubemapScale = 0.0;
+			specularScale = 0.3;
+			cubemapScale = 0.4;
 			materialType = (float)MATERIAL_SNOW;
 			parallaxScale = 3.0;
 			useSteepParallax = 1.0;
 			break;
 		case MATERIAL_MUD:				// 17			// wet soil
-			specularScale = 0.15;
-			cubemapScale = 0.0;
+			specularScale = 0.25;
+			cubemapScale = 0.2;
 			materialType = (float)MATERIAL_MUD;
 			parallaxScale = 3.0;
 			useSteepParallax = 1.0;
 			break;
 		case MATERIAL_DIRT:				// 7			// hard mud
-			specularScale = 0.05;
+			specularScale = 0.15;
 			cubemapScale = 0.0;
 			materialType = (float)MATERIAL_DIRT;
 			parallaxScale = 3.0;
 			useSteepParallax = 1.0;
 			break;
 		case MATERIAL_CONCRETE:			// 11			// hardened concrete pavement
-			specularScale = 0.15;
-			cubemapScale = 0.0;
+			specularScale = 0.25;
+			cubemapScale = 0.1;
 			materialType = (float)MATERIAL_CONCRETE;
 			parallaxScale = 3.0;
 			//useSteepParallax = 1.0;
@@ -1180,7 +1180,7 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage)
 			parallaxScale = 1.0;
 			break;
 		case MATERIAL_RUBBER:			// 24			// hard tire like rubber
-			specularScale = 0.05;
+			specularScale = 0.15;
 			cubemapScale = 0.0;
 			materialType = (float)MATERIAL_RUBBER;
 			parallaxScale = 1.0;
@@ -1192,8 +1192,8 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage)
 			parallaxScale = 1.0;
 			break;
 		case MATERIAL_PLASTER:			// 28			// drywall style plaster
-			specularScale = 0.15;
-			cubemapScale = 0.0;
+			specularScale = 0.3;
+			cubemapScale = 0.1;
 			materialType = (float)MATERIAL_PLASTER;
 			parallaxScale = 2.0;
 			break;
@@ -1673,7 +1673,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				index |= LIGHTDEF_USE_SHADOWMAP;
 			}
 			
-			if (r_lightmap->integer && index & LIGHTDEF_USE_LIGHTMAP)
+			if (r_lightmap->integer /*&& index & LIGHTDEF_USE_LIGHTMAP*/ && ( tess.shader->surfaceFlags & MATERIAL_MASK ) != MATERIAL_DRYLEAVES && !tess.shader->isSky && !pStage->glow)
 			{
 				index = LIGHTDEF_USE_LIGHTMAP;
 			}
