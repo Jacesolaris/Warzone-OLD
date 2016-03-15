@@ -498,6 +498,8 @@ typedef enum {
 	int			FOLIAGE_AREAS_LIST_COUNT[FOLIAGE_AREA_MAX];
 	int			FOLIAGE_AREAS_LIST[FOLIAGE_AREA_MAX][FOLIAGE_AREA_MAX_FOLIAGES];
 	int			FOLIAGE_AREAS_TREES_LIST_COUNT[FOLIAGE_AREA_MAX];
+	int			FOLIAGE_AREAS_TREES_VISCHECK_TIME[FOLIAGE_AREA_MAX];
+	qboolean	FOLIAGE_AREAS_TREES_VISCHECK_RESULT[FOLIAGE_AREA_MAX];
 	int			FOLIAGE_AREAS_TREES_LIST[FOLIAGE_AREA_MAX][FOLIAGE_AREA_MAX_FOLIAGES];
 	vec3_t		FOLIAGE_AREAS_MINS[FOLIAGE_AREA_MAX];
 	vec3_t		FOLIAGE_AREAS_MAXS[FOLIAGE_AREA_MAX];
@@ -618,6 +620,8 @@ typedef enum {
 
 			FOLIAGE_AREAS_LIST_COUNT[areaNum] = 0;
 			FOLIAGE_AREAS_TREES_LIST_COUNT[areaNum] = 0;
+			FOLIAGE_AREAS_TREES_VISCHECK_TIME[areaNum] = 0;
+			FOLIAGE_AREAS_TREES_VISCHECK_RESULT[areaNum] = qtrue;
 
 			while (FOLIAGE_AREAS_LIST_COUNT[areaNum] == 0 && mins[1] <= mapMaxs[1])
 			{// While loop is so we can skip zero size areas for speed...
@@ -699,8 +703,10 @@ typedef enum {
 	}
 }
 
-qboolean FOLIAGE_Box_In_FOV ( vec3_t mins, vec3_t maxs )
+qboolean FOLIAGE_Box_In_FOV ( vec3_t mins, vec3_t maxs, int areaNum, float minsDist, float maxsDist )
 {
+	if (!cg_foliageAreaFOVCheck.integer) return qtrue;
+
 	vec3_t mins2, maxs2, edge, edge2;
 
 	VectorSet(mins2, mins[0], mins[1], cg.refdef.vieworg[2]);
@@ -708,19 +714,51 @@ qboolean FOLIAGE_Box_In_FOV ( vec3_t mins, vec3_t maxs )
 	VectorSet(edge, maxs2[0], mins2[1], maxs2[2]);
 	VectorSet(edge2, mins2[0], maxs2[1], maxs2[2]);
 
-	/*if (!InFOV( mins, cg.refdef.vieworg, cg.refdef.viewangles, 100, 180 )
-		&& !InFOV( maxs, cg.refdef.vieworg, cg.refdef.viewangles, 100, 180 )
-		&& !InFOV( edge, cg.refdef.vieworg, cg.refdef.viewangles, 100, 180 )
-		&& !InFOV( edge2, cg.refdef.vieworg, cg.refdef.viewangles, 100, 180 ))
-		return qfalse;*/
+	if (InFOV( mins2, cg.refdef.vieworg, cg.refdef.viewangles, cg.refdef.fov_x, cg.refdef.fov_y/*180*/ )
+		|| InFOV( maxs2, cg.refdef.vieworg, cg.refdef.viewangles, cg.refdef.fov_x, cg.refdef.fov_y/*180*/ )
+		|| InFOV( edge, cg.refdef.vieworg, cg.refdef.viewangles, cg.refdef.fov_x, cg.refdef.fov_y/*180*/ )
+		|| InFOV( edge2, cg.refdef.vieworg, cg.refdef.viewangles, cg.refdef.fov_x, cg.refdef.fov_y/*180*/ ))
+	{
+		if (cg_foliageAreaVisCheck.integer 
+			&& minsDist > 8192.0 
+			&& maxsDist > 8192.0 
+			&& FOLIAGE_AREAS_TREES_VISCHECK_TIME[areaNum] + 2000 < trap->Milliseconds())
+		{// Also vis check distant trees, at 2048 above... (but allow hits of SURF_SKY in case the roof is low)
+			vec3_t visMins, visMaxs, viewPos;
+			VectorSet(visMins, mins2[0], mins2[1], mins2[2]+2048.0);
+			VectorSet(visMaxs, maxs2[0], maxs2[1], maxs2[2]+2048.0);
+			VectorSet(viewPos, cg.refdef.vieworg[0], cg.refdef.vieworg[1], cg.refdef.vieworg[2]+64.0);
 
-	if (!InFOV( mins2, cg.refdef.vieworg, cg.refdef.viewangles, cg.refdef.fov_x, cg.refdef.fov_y/*180*/ )
-		&& !InFOV( maxs2, cg.refdef.vieworg, cg.refdef.viewangles, cg.refdef.fov_x, cg.refdef.fov_y/*180*/ )
-		&& !InFOV( edge, cg.refdef.vieworg, cg.refdef.viewangles, cg.refdef.fov_x, cg.refdef.fov_y/*180*/ )
-		&& !InFOV( edge2, cg.refdef.vieworg, cg.refdef.viewangles, cg.refdef.fov_x, cg.refdef.fov_y/*180*/ ))
-		return qfalse;
+			FOLIAGE_AREAS_TREES_VISCHECK_TIME[areaNum] = trap->Milliseconds();
 
-	return qtrue;
+			trace_t tr;
+			CG_Trace(&tr, viewPos, NULL, NULL, visMins, cg.clientNum, MASK_SOLID);
+			
+			if (tr.fraction >= 1.0 || ( tr.surfaceFlags & SURF_SKY )) 
+			{
+				FOLIAGE_AREAS_TREES_VISCHECK_RESULT[areaNum] = qtrue;
+				return qtrue;
+			}
+
+			CG_Trace(&tr, viewPos, NULL, NULL, visMaxs, cg.clientNum, MASK_SOLID);
+
+			if (tr.fraction >= 1.0 || ( tr.surfaceFlags & SURF_SKY )) 
+			{
+				FOLIAGE_AREAS_TREES_VISCHECK_RESULT[areaNum] = qtrue;
+				return qtrue;
+			}
+
+			FOLIAGE_AREAS_TREES_VISCHECK_RESULT[areaNum] = qfalse;
+			return qfalse;
+		}
+		else
+		{
+			FOLIAGE_AREAS_TREES_VISCHECK_RESULT[areaNum] = qtrue;
+			return qtrue;
+		}
+	}
+
+	return qfalse;
 }
 
 qboolean FOLIAGE_In_FOV ( vec3_t mins, vec3_t maxs )
@@ -836,7 +874,7 @@ void FOLIAGE_Calc_In_Range_Areas( void )
 		trap->Print("WARNING: Minimum tree range multiplier is 8.0. Cvar has been changed.\n");
 	}
 
-	if (Distance(cg.refdef.vieworg, LAST_ORG) > 128.0 || Distance(cg.refdef.viewangles, LAST_ANG) > 0.0)//50.0)
+	if (Distance(cg.refdef.vieworg, LAST_ORG) > 128.0 || (cg_foliageAreaFOVCheck.integer && Distance(cg.refdef.viewangles, LAST_ANG) > 0.0))//50.0)
 	{// Update in range list...
 		VectorCopy(cg.refdef.vieworg, LAST_ORG);
 		VectorCopy(cg.refdef.viewangles, LAST_ANG);
@@ -856,17 +894,20 @@ void FOLIAGE_Calc_In_Range_Areas( void )
 				qboolean inFOV = qtrue;
 				qboolean isClose = qtrue;
 
-				if (minsDist > FOLIAGE_AREA_SIZE && maxsDist > FOLIAGE_AREA_SIZE)
+				if (cg_foliageAreaFOVCheck.integer)
 				{
-					isClose = qfalse;
+					if (minsDist > FOLIAGE_AREA_SIZE && maxsDist > FOLIAGE_AREA_SIZE)
+					{
+						isClose = qfalse;
+					}
+
+					if (!isClose)
+					{
+						inFOV = FOLIAGE_Box_In_FOV( FOLIAGE_AREAS_MINS[i], FOLIAGE_AREAS_MAXS[i], i, minsDist, maxsDist );
+					}
 				}
 
-				if (!isClose)
-				{
-					inFOV = FOLIAGE_Box_In_FOV( FOLIAGE_AREAS_MINS[i], FOLIAGE_AREAS_MAXS[i] );
-				}
-
-				if (isClose || inFOV || minsDist <= FOLIAGE_AREA_SIZE * 2.0 || maxsDist <= FOLIAGE_AREA_SIZE * 2.0)
+				if (isClose || inFOV || (cg_foliageAreaFOVCheck.integer && (minsDist <= FOLIAGE_AREA_SIZE * 2.0 || maxsDist <= FOLIAGE_AREA_SIZE * 2.0)))
 				{
 					if ( !isClose && !inFOV )
 					{// Not in our FOV, but close enough that we need the trees. Add to tree list instead, so we can skip grass/plant checking...
@@ -895,7 +936,7 @@ void FOLIAGE_Calc_In_Range_Areas( void )
 			else if (minsDist < FOLIAGE_TREE_VISIBLE_DISTANCE
 				|| maxsDist < FOLIAGE_TREE_VISIBLE_DISTANCE)
 			{
-				if (FOLIAGE_Box_In_FOV( FOLIAGE_AREAS_MINS[i], FOLIAGE_AREAS_MAXS[i] ))
+				if (FOLIAGE_Box_In_FOV( FOLIAGE_AREAS_MINS[i], FOLIAGE_AREAS_MAXS[i], i, minsDist, maxsDist ))
 				{
 					IN_RANGE_TREE_AREAS_LIST[IN_RANGE_TREE_AREAS_LIST_COUNT] = i;
 
@@ -1086,9 +1127,11 @@ extern "C" {
 
 		if (FOLIAGE_TREE_SELECTION[num] <= 0 && FOLIAGE_PLANT_SCALE[num] < minFoliageScale) return;
 
+#if 0
 		if (cg.renderingThirdPerson) 
 			dist = Distance/*Horizontal*/(FOLIAGE_POSITIONS[num], cg_entities[cg.clientNum].lerpOrigin);
-		else 
+		else
+#endif
 			dist = Distance/*Horizontal*/(FOLIAGE_POSITIONS[num], cg.refdef.vieworg);
 
 		// Cull anything in the area outside of cvar specified radius...

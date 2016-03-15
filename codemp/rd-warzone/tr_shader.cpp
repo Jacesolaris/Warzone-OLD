@@ -5708,7 +5708,6 @@ char uniqueGenericFoliageShader[] = "{\n"\
 "surfaceparm trans\n"\
 "surfaceparm	noimpact\n"\
 "surfaceparm	nomarks\n"\
-"sort seethrough\n"\
 "cull	twosided\n"\
 "{\n"\
 "map %s\n"\
@@ -5720,6 +5719,8 @@ char uniqueGenericFoliageShader[] = "{\n"\
 "}\n"\
 "";
 
+//"sort seethrough\n"\
+//"cull	twosided\n"\
 // "rgbGen identity\n"\   ^^^
 // "rgbGen entity\n"\
 // "rgbGen vertex\n"\
@@ -5732,8 +5733,6 @@ char uniqueGenericFoliageBillboardShader[] = "{\n"\
 "surfaceparm trans\n"\
 "surfaceparm	noimpact\n"\
 "surfaceparm	nomarks\n"\
-"sort seethrough\n"\
-"cull	twosided\n"\
 "{\n"\
 "map %s\n"\
 "blendfunc GL_ONE GL_ZERO\n"\
@@ -5743,6 +5742,9 @@ char uniqueGenericFoliageBillboardShader[] = "{\n"\
 "}\n"\
 "}\n"\
 "";
+
+//"sort seethrough\n"\
+//"cull	twosided\n"\
 
 char uniqueGenericFoliageTreeShader[] = "{\n"\
 "qer_editorimage	%s\n"\
@@ -5791,7 +5793,6 @@ char uniqueGenericWeaponShader[] = "{\n"\
 "surfaceparm trans\n"\
 "surfaceparm	noimpact\n"\
 "surfaceparm	nomarks\n"\
-"sort seethrough\n"\
 "cull	twosided\n"\
 "{\n"\
 "map %s\n"\
@@ -5813,6 +5814,9 @@ char uniqueGenericWeaponShader[] = "{\n"\
 "}\n"\
 "";
 
+//"sort seethrough\n"\
+
+#if 0
 char uniqueGenericShader[] = "{\n"\
 "qer_editorimage	%s\n"\
 "{\n"\
@@ -5842,6 +5846,26 @@ char uniqueGenericShader[] = "{\n"\
 "";
 
 // "rgbGen identity\n"
+#else
+char uniqueGenericShader[] = "{\n"\
+"qer_editorimage	%s\n"\
+"{\n"\
+"map %s\n"\
+"blendfunc GL_SRC_ALPHA GL_ZERO\n"\
+"alphaFunc GE128\n"\
+"depthWrite\n"\
+"rgbGen identity\n"\
+"}\n"\
+"%s"\
+"{\n"\
+"map $lightmap\n"\
+"blendfunc GL_DST_COLOR GL_ZERO\n"\
+"rgbGen lightingDiffuse\n"\
+"depthFunc equal\n"\
+"}\n"\
+"}\n"\
+"";
+#endif
 
 
 qboolean R_ForceGenericShader ( const char *name, const char *text )
