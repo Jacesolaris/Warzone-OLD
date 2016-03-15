@@ -478,6 +478,11 @@ void main()
 		float lmBrightMult = clamp(1.0 - (length(lightmapColor.rgb) / 3.0), 0.0, 0.9);
 		lmBrightMult *= lmBrightMult * 0.5 + 0.5;
 		lightColor	= lightmapColor.rgb * lmBrightMult * var_Color.rgb;
+
+		if (u_Local1.a == 1 || u_Local1.a == 20) // tree trunks / tree leaves
+		{
+			lightColor.rgb = clamp(lightColor.rgb, 0.2, 0.25);
+		}
 	#endif
 
 
@@ -501,7 +506,7 @@ void main()
 	#if defined(USE_LIGHTMAP)
 
 		ambientColor = lightColor;
-		float surfNL = clamp(dot(m_Normal.xyz, var_PrimaryLightDir.xyz), 0.0, 1.0);
+		float surfNL = clamp(-dot(var_PrimaryLightDir.xyz, m_Normal.xyz), 0.0, 1.0);
 		lightColor /= max(surfNL, 0.25);
 		ambientColor = clamp(ambientColor - lightColor * surfNL, 0.0, 1.0);
 
