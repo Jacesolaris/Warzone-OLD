@@ -476,17 +476,8 @@ void main()
 
 	#if defined(USE_LIGHTMAP)
 		float lmBrightMult = clamp(1.0 - (length(lightmapColor.rgb) / 3.0), 0.0, 0.9);
-		lmBrightMult *= lmBrightMult * 0.5 + 0.5;
+		lmBrightMult *= lmBrightMult * 0.7;
 		lightColor	= lightmapColor.rgb * lmBrightMult * var_Color.rgb;
-
-		if (u_Local1.a == 1 || u_Local1.a == 20) // tree trunks / tree leaves
-		{
-			lightColor.rgb = clamp(lightColor.rgb, 0.2, 0.25);
-		}
-		else
-		{
-			lightColor.rgb = clamp(lightColor.rgb, 0.1, 0.25);
-		}
 	#endif
 
 
