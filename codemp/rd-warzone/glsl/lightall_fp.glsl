@@ -483,6 +483,10 @@ void main()
 		{
 			lightColor.rgb = clamp(lightColor.rgb, 0.2, 0.25);
 		}
+		else
+		{
+			lightColor.rgb = clamp(lightColor.rgb, 0.1, 0.25);
+		}
 	#endif
 
 
@@ -585,7 +589,7 @@ void main()
 
 				if(lambertian3 > 0.0)
 				{
-					float lightStrength = clamp(1.0 - (length(lightDir) * (1.0 / u_lightDistances[li])), 0.0, 1.0) /** 0.5*/;
+					float lightStrength = clamp(1.0 - (length(lightDir) * (1.0 / u_lightDistances[li])), 0.0, 1.0) * 0.5;
 
 					if(lightStrength > 0.0)
 					{// this is blinn phong

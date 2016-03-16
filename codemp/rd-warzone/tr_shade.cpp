@@ -1079,7 +1079,7 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage)
 			break;
 		case MATERIAL_TILES:			// 26			// tiled floor
 			specularScale = 0.56;
-			cubemapScale = 0.9;
+			cubemapScale = 0.15;
 			materialType = (float)MATERIAL_TILES;
 			parallaxScale = 2.5;
 			useSteepParallax = 1.0;
@@ -1140,21 +1140,21 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage)
 			break;
 		case MATERIAL_MARBLE:			// 12			// marble floors
 			specularScale = 0.2;
-			cubemapScale = 1.0;
+			cubemapScale = 0.6;
 			materialType = (float)MATERIAL_MARBLE;
 			parallaxScale = 2.0;
 			//useSteepParallax = 1.0;
 			break;
 		case MATERIAL_SNOW:				// 14			// freshly laid snow
 			specularScale = 0.3;
-			cubemapScale = 0.4;
+			cubemapScale = 0.25;
 			materialType = (float)MATERIAL_SNOW;
 			parallaxScale = 3.0;
 			useSteepParallax = 1.0;
 			break;
 		case MATERIAL_MUD:				// 17			// wet soil
 			specularScale = 0.25;
-			cubemapScale = 0.2;
+			cubemapScale = 0.1;
 			materialType = (float)MATERIAL_MUD;
 			parallaxScale = 3.0;
 			useSteepParallax = 1.0;
@@ -1168,7 +1168,7 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage)
 			break;
 		case MATERIAL_CONCRETE:			// 11			// hardened concrete pavement
 			specularScale = 0.25;
-			cubemapScale = 0.1;
+			cubemapScale = 0.05;
 			materialType = (float)MATERIAL_CONCRETE;
 			parallaxScale = 3.0;
 			//useSteepParallax = 1.0;
@@ -1187,13 +1187,13 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage)
 			break;
 		case MATERIAL_PLASTIC:			// 25			//
 			specularScale = 0.58;
-			cubemapScale = 0.5;
+			cubemapScale = 0.3;
 			materialType = (float)MATERIAL_PLASTIC;
 			parallaxScale = 1.0;
 			break;
 		case MATERIAL_PLASTER:			// 28			// drywall style plaster
 			specularScale = 0.3;
-			cubemapScale = 0.1;
+			cubemapScale = 0.05;
 			materialType = (float)MATERIAL_PLASTER;
 			parallaxScale = 2.0;
 			break;
@@ -1205,14 +1205,14 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage)
 			break;
 		case MATERIAL_ARMOR:			// 30			// body armor
 			specularScale = 0.4;
-			cubemapScale = 2.0;
+			cubemapScale = 0.4;
 			materialType = (float)MATERIAL_ARMOR;
 			parallaxScale = 2.0;
 			isMetalic = 1.0;
 			break;
 		case MATERIAL_ICE:				// 15			// packed snow/solid ice
 			specularScale = 0.45;
-			cubemapScale = 0.8;
+			cubemapScale = 0.4;
 			parallaxScale = 2.0;
 			materialType = (float)MATERIAL_ICE;
 			useSteepParallax = 1.0;

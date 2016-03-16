@@ -3281,8 +3281,6 @@ void AssignMaterialType ( const char *name, const char *text )
 			shader.surfaceFlags |= MATERIAL_SOLIDMETAL; // special for byss shiny
 		else if (StringsContainWord(name, name, "textures/vjun/") && !StringsContainWord(name, name, "glow") && !StringsContainWord(name, name, "glw") && !StringsContainWord(name, name, "static") && !StringsContainWord(name, name, "light") && !StringsContainWord(name, name, "env_") && !StringsContainWord(name, name, "_env") && !StringsContainWord(name, name, "switch_off") && !StringsContainWord(name, name, "switch_on") && !StringsContainWord(name, name, "screen") && !StringsContainWord(name, name, "blend") && !StringsContainWord(name, name, "o_ground") && !StringsContainWord(name, name, "_onoffg") && !StringsContainWord(name, name, "_onoffr") && !StringsContainWord(name, name, "console"))
 			shader.surfaceFlags |= MATERIAL_SOLIDMETAL; // special for vjun shiny
-		else if (StringsContainWord(name, name, "textures/mp/") && !StringsContainWord(name, name, "glow") && !StringsContainWord(name, name, "glw") && !StringsContainWord(name, name, "static") && !StringsContainWord(name, name, "light") && !StringsContainWord(name, name, "env_") && !StringsContainWord(name, name, "_env") && !StringsContainWord(name, name, "underside") && !StringsContainWord(name, name, "blend") && !StringsContainWord(name, name, "t_pit"))
-			shader.surfaceFlags |= MATERIAL_SOLIDMETAL; // special for mp shiny
 		else if (StringsContainWord(name, name, "sand"))
 			shader.surfaceFlags |= MATERIAL_SAND;
 		else if (StringsContainWord(name, name, "gravel"))
@@ -3343,11 +3341,13 @@ void AssignMaterialType ( const char *name, const char *text )
 			shader.surfaceFlags |= MATERIAL_TILES;
 		else if (StringsContainWord(name, name, "floor"))
 			shader.surfaceFlags |= MATERIAL_CONCRETE;
+		else if (StringsContainWord(name, name, "textures/mp/") && !StringsContainWord(name, name, "glow") && !StringsContainWord(name, name, "glw") && !StringsContainWord(name, name, "static") && !StringsContainWord(name, name, "light") && !StringsContainWord(name, name, "env_") && !StringsContainWord(name, name, "_env") && !StringsContainWord(name, name, "underside") && !StringsContainWord(name, name, "blend") && !StringsContainWord(name, name, "t_pit") && !StringsContainWord(name, name, "desert") && !StringsContainWord(name, name, "cliff") && !StringsContainWord(name, name, "t_pit"))
+			shader.surfaceFlags |= MATERIAL_SOLIDMETAL; // special for mp shiny
 		else if (IsKnownShinyMap(name) && StringsContainWord(name, name, "frame"))
 			shader.surfaceFlags |= MATERIAL_SOLIDMETAL;
 		else if (IsKnownShinyMap(name) && StringsContainWord(name, name, "wall"))
 			shader.surfaceFlags |= MATERIAL_SOLIDMETAL;
-		else if (StringsContainWord(name, name, "wall"))
+		else if (StringsContainWord(name, name, "wall") || StringsContainWord(name, name, "underside"))
 			shader.surfaceFlags |= MATERIAL_CONCRETE;
 		else if (IsKnownShinyMap(name) && StringsContainWord(name, name, "door"))
 			shader.surfaceFlags |= MATERIAL_SOLIDMETAL;
