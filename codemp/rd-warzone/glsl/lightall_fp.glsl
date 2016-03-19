@@ -11,7 +11,7 @@ uniform vec4	u_Local6; // useSunLightSpecular, 0, 0, 0
 uniform vec4	u_Local9;
 
 #define USE_TRI_PLANAR
-//#define SUBSURFACE_SCATTER
+#define USE_SUBSURFACE_SCATTER
 
 varying float  var_Time;
 
@@ -34,7 +34,7 @@ uniform sampler2D u_ShadowMap;
 uniform samplerCube u_CubeMap;
 #endif
 
-#if defined(SUBSURFACE_SCATTER)
+#if defined(USE_SUBSURFACE_SCATTER)
 uniform sampler2D u_SubsurfaceMap;
 #endif
 
@@ -260,7 +260,13 @@ float blinnPhongSpecular(in vec3 normalVec, in vec3 lightVec, in float specPower
 }
 
  
-#ifdef SUBSURFACE_SCATTER
+#ifdef USE_SUBSURFACE_SCATTER
+float halfLambert(vec3 vect1, vec3 vect2)
+{
+	float product = dot(vect1,vect2);
+	return product * 0.5 + 0.5;
+}
+
 // Main fake sub-surface scatter lighting function
 
 vec3 ExtinctionCoefficient = u_Local2.xyz;
@@ -283,7 +289,7 @@ vec4 subScatterFS(vec4 BaseColor, vec4 SpecColor, vec3 lightVec, vec3 LightColor
 
 	if (MaterialThickness == 0.0)
 	{// Default if not specified...
-		MaterialThickness = 0.8;
+		MaterialThickness = u_Local9.r;//0.1;
 	}
 	
 	if (subsurface.a == 0.0 && MaterialThickness != 0.0)
@@ -295,7 +301,7 @@ vec4 subScatterFS(vec4 BaseColor, vec4 SpecColor, vec3 lightVec, vec3 LightColor
 
 	if (RimScalar == 0.0)
 	{// Default if not specified...
-		RimScalar = 0.5;
+		RimScalar = u_Local9.g;//0.5;
 	}
 
 	if (SpecPower == 0.0)
@@ -303,20 +309,26 @@ vec4 subScatterFS(vec4 BaseColor, vec4 SpecColor, vec3 lightVec, vec3 LightColor
 		SpecPower = 0.3;
 	}
 
-	float attenuation = 10.0 * (1.0 / distance(u_LightOrigin.xyz,m_vertPos.xyz));
-    vec3 eVec = normalize(eyeVec);
-    vec3 lVec = normalize(lightVec);
-    vec3 wNorm = normalize(worldNormal);
+	float attenuation = u_Local9.b;//1.0;//10.0 * (1.0 / distance(lightVec.xyz,m_vertPos.xyz));
+    vec3 eVec = eyeVec;
+    vec3 lVec = lightVec;
+    vec3 wNorm = worldNormal;
      
-    vec4 dotLN = vec4(halfLambert(lVec,wNorm) * attenuation);
+    //vec4 dotLN = vec4(halfLambert(lVec,wNorm) * attenuation);
+	vec3 halfDir2 = normalize(lVec + eVec);
+	float specAngle = max(dot(halfDir2, wNorm), 0.0);
+	vec4 dotLN = vec4(specAngle * attenuation);
+
     dotLN *= BaseColor;
+
+
+	vec3 halfDir3 = normalize(lVec + -eVec);
+	float specAngle2 = max(dot(halfDir3, -wNorm), 0.0);
      
-    vec3 indirectLightComponent = vec3(subsurface.a * max(0.0,dot(-wNorm,lVec)));
-    indirectLightComponent += subsurface.a * halfLambert(-eVec,lVec);
+    vec3 indirectLightComponent = vec3(subsurface.a * max(vec3(0.0),halfDir3/*dot(-wNorm,lVec)*/));
+    indirectLightComponent += subsurface.a * specAngle2;//halfLambert(-eVec,lVec);
     indirectLightComponent *= attenuation;
-    indirectLightComponent.r *= subsurface.r;
-    indirectLightComponent.g *= subsurface.g;
-    indirectLightComponent.b *= subsurface.b;
+    indirectLightComponent.rgb *= subsurface.rgb;
      
     vec3 rim = vec3(1.0 - max(0.0,dot(wNorm,eVec)));
     rim *= rim;
@@ -324,12 +336,12 @@ vec4 subScatterFS(vec4 BaseColor, vec4 SpecColor, vec3 lightVec, vec3 LightColor
      
     vec4 finalCol = dotLN + vec4(indirectLightComponent,1.0);
     finalCol.rgb += (rim * RimScalar * attenuation * finalCol.a);
-    finalCol.rgb += vec3(blinnPhongSpecular(wNorm,lVec,SpecPower) * attenuation * SpecColor * finalCol.a * 0.05);
+    //finalCol.rgb += vec3(blinnPhongSpecular(wNorm,lVec,SpecPower) * attenuation * SpecColor * finalCol.a * 0.05);
     finalCol.rgb *= LightColor.rgb;
      
     return finalCol;   
 }
-#endif //SUBSURFACE_SCATTER
+#endif //USE_SUBSURFACE_SCATTER
 
 
 void main()
@@ -558,6 +570,23 @@ void main()
 		gl_FragColor.rgb *= clamp(shadowValue + 0.5, 0.0, 1.0);
 	#endif //defined(USE_SHADOWMAP)
 
+
+	#ifdef USE_SUBSURFACE_SCATTER
+
+		#if defined(USE_PRIMARY_LIGHT) || defined(USE_PRIMARY_LIGHT_SPECULAR)
+
+			// Let's add some sub-surface scatterring shall we???
+			if (/*MaterialThickness > 0.0 ||*/ u_Local1.a == 20) // tree leaves
+			{
+				gl_FragColor.rgb += subScatterFS(gl_FragColor, diffuse, var_PrimaryLightDir.xyz, u_PrimaryLightColor.xyz, E, N, texCoords).rgb;
+				gl_FragColor = clamp(gl_FragColor, 0.0, 1.0);
+			}
+
+		#endif //defined(USE_PRIMARY_LIGHT) || defined(USE_PRIMARY_LIGHT_SPECULAR)
+
+	#endif //USE_SUBSURFACE_SCATTER
+
+
 	#if defined(USE_PRIMARY_LIGHT) || defined(USE_PRIMARY_LIGHT_SPECULAR)
 		if (u_Local6.r > 0.0)
 		{
@@ -593,25 +622,6 @@ void main()
 			}
 		}
 	#endif
-
-
-	#ifdef SUBSURFACE_SCATTER
-
-		#if defined(USE_PRIMARY_LIGHT) || defined(USE_PRIMARY_LIGHT_SPECULAR)
-
-			// Let's add some sub-surface scatterring shall we???
-			//if (MaterialThickness > 0.0 || u_Local4.z != 0.0 /*|| u_Local1.a == 5 || u_Local1.a == 6 || u_Local1.a == 12 
-			//	|| u_Local1.a == 14 || u_Local1.a == 15 || u_Local1.a == 16 || u_Local1.a == 17 || u_Local1.a == 19 
-			//	|| u_Local1.a == 20 || u_Local1.a == 21 || u_Local1.a == 22*/)
-			if (u_Local1.a == 20)
-			{
-				gl_FragColor.rgb += subScatterFS(gl_FragColor, gl_FragColor, var_PrimaryLightDir.xyz, u_PrimaryLightColor.xyz, E, N, texCoords).rgb;
-				gl_FragColor = clamp(gl_FragColor, 0.0, 1.0);
-			}
-
-		#endif //defined(USE_PRIMARY_LIGHT) || defined(USE_PRIMARY_LIGHT_SPECULAR)
-
-	#endif //SUBSURFACE_SCATTER
 
 
 
