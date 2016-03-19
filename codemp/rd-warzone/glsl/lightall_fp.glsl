@@ -289,7 +289,7 @@ vec4 subScatterFS(vec4 BaseColor, vec4 SpecColor, vec3 lightVec, vec3 LightColor
 
 	if (MaterialThickness == 0.0)
 	{// Default if not specified...
-		MaterialThickness = u_Local9.r;//0.1;
+		MaterialThickness = 0.01;
 	}
 	
 	if (subsurface.a == 0.0 && MaterialThickness != 0.0)
@@ -301,7 +301,7 @@ vec4 subScatterFS(vec4 BaseColor, vec4 SpecColor, vec3 lightVec, vec3 LightColor
 
 	if (RimScalar == 0.0)
 	{// Default if not specified...
-		RimScalar = u_Local9.g;//0.5;
+		RimScalar = 0.5;
 	}
 
 	if (SpecPower == 0.0)
@@ -309,7 +309,7 @@ vec4 subScatterFS(vec4 BaseColor, vec4 SpecColor, vec3 lightVec, vec3 LightColor
 		SpecPower = 0.3;
 	}
 
-	float attenuation = u_Local9.b;//1.0;//10.0 * (1.0 / distance(lightVec.xyz,m_vertPos.xyz));
+	float attenuation = 1.0;//10.0 * (1.0 / distance(lightVec.xyz,m_vertPos.xyz));
     vec3 eVec = eyeVec;
     vec3 lVec = lightVec;
     vec3 wNorm = worldNormal;
