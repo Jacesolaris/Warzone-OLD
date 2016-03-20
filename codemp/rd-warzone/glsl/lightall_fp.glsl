@@ -325,7 +325,7 @@ vec4 subScatterFS(vec4 BaseColor, vec4 SpecColor, vec3 lightVec, vec3 LightColor
 	vec3 halfDir3 = normalize(lVec + -eVec);
 	float specAngle2 = max(dot(halfDir3, -wNorm), 0.0);
      
-    vec3 indirectLightComponent = vec3(subsurface.a * max(vec3(0.0),halfDir3/*dot(-wNorm,lVec)*/));
+    vec3 indirectLightComponent = vec3(subsurface.a * max(vec3(0.0),length(halfDir3)/3.0/*dot(-wNorm,lVec)*/));
     indirectLightComponent += subsurface.a * specAngle2;//halfLambert(-eVec,lVec);
     indirectLightComponent *= attenuation;
     indirectLightComponent.rgb *= subsurface.rgb;
