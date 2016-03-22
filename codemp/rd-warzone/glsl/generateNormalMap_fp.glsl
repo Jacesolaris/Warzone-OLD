@@ -186,20 +186,21 @@ float SampleHeight(vec2 t)
 	height = clamp(height, 0.5, 0.9);
 
 	return height;
-#else
+#elif 1
 	
 	vec3 pixColor = texture2D(u_DiffuseMap, t).rgb;
+	float brightness = length(pixColor);
 
 	// Find the average color of the texture...
 	vec3 avgColor = vec3(0.0);
 
-	for (float p = 0.1; p < 1.0; p++)
+	for (float p = 0.1; p < 1.0; p += 0.1)
 	{// Grab an X covering the texture...
 		avgColor += texture2D(u_DiffuseMap, vec2(p, p)).rgb;
-		avgColor += texture2D(u_DiffuseMap, vec2(p, 1.0-p)).rgb;
+		avgColor += texture2D(u_DiffuseMap, vec2(1.0-p, p)).rgb;
 	}
 	
-	avgColor /= vec3(9.0);
+	avgColor /= vec3(18.0);
 
 	// Find the average of pixels near this pixel's location...
 	float numAdded = 1.0;
@@ -234,7 +235,7 @@ float SampleHeight(vec2 t)
 	// Assumes that the average color is the average height... Any difference to the average is deeper...
 	if (aLen <= pLen)
 	{
-		diff = (pLen - aLen) * 2.0;
+		diff = (pLen - aLen) * 5.0;
 		diff = 1.0 - diff;
 		diff = clamp(diff, 0.0, 1.0); // Clamp to be sure...
 		diff = ((clamp(diff - const_1, 0.0, 1.0)) * const_2); // amplify light/dark
@@ -242,14 +243,90 @@ float SampleHeight(vec2 t)
 	}
 	else
 	{
-		diff = (aLen - pLen) * 2.0;
+		diff = (aLen - pLen) * 5.0;
 		diff = 1.0 - diff;
 		diff = clamp(diff, 0.0, 1.0); // Clamp to be sure...
 		diff = ((clamp(diff - const_1, 0.0, 1.0)) * const_2); // amplify light/dark
 		diff = clamp(diff, 0.0, 1.0); // Clamp to be sure...
 	}
 
-	return diff;
+	//return clamp(diff, 0.0, 1.0);
+	//return clamp(diff * (1.5 - brightness), 0.0, 1.0);
+
+
+	float avgBrightness = length(avgColor.rgb);
+
+	bool invert = false;
+	float maxbright = clamp(avgBrightness, 0.0, 1.0);
+
+	if (avgBrightness >= 0.5)
+	{
+		invert = false;
+	}
+	else
+	{
+		invert = true;
+	}
+
+	float brightness2 = length(pixColor);
+	float height = 0.0;
+
+	if (brightness2 >= maxbright * 0.66666)
+	{
+		height = 1.0;
+	}
+	else
+	{
+		height = 0.0;
+	}
+
+	if (!invert)
+		height = 1.0 - height;
+
+
+	return (clamp(diff * (1.5 - brightness), 0.0, 1.0) + height + height) / 3.0;
+#else
+	// Find the average color of the texture...
+	vec3 avgColor = vec3(0.0);
+
+	for (float p = 0.1; p < 1.0; p += 0.1)
+	{// Grab an X covering the texture...
+		avgColor += texture2D(u_DiffuseMap, vec2(p, p)).rgb;
+		avgColor += texture2D(u_DiffuseMap, vec2(1.0-p, p)).rgb;
+	}
+	
+	avgColor /= vec3(18.0);
+	float avgBrightness = length(avgColor.rgb);
+
+	bool invert = false;
+	float maxbright = clamp(avgBrightness, 0.0, 1.0);
+
+	if (avgBrightness >= 0.5)
+	{
+		invert = false;
+	}
+	else
+	{
+		invert = true;
+	}
+
+	vec3 pixColor = texture2D(u_DiffuseMap, t).rgb;
+	float brightness = length(pixColor);
+	float height = 0.0;
+
+	if (brightness >= maxbright * 0.66666)
+	{
+		height = 1.0;
+	}
+	else
+	{
+		height = 0.0;
+	}
+
+	if (invert)
+		return height;
+	else
+		return 1.0 - height;
 #endif
 }
 

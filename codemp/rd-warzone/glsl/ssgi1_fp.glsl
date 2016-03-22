@@ -1,4 +1,4 @@
-uniform sampler2D u_TextureMap;
+uniform sampler2D u_DiffuseMap;
 uniform sampler2D u_ScreenDepthMap;
 uniform sampler2D u_NormalMap;
 uniform sampler2D u_DeluxeMap; // actually saturation map image
@@ -22,7 +22,7 @@ vec3 CalculateFlare ( vec3 flare_color, vec3 final_color )
 void main()
 {   
 	// Fast (just color bleed) mode...
-	vec3 final_color = texture2D(u_TextureMap, var_TexCoords.st).xyz;// * 1.25;
+	vec3 final_color = texture2D(u_DiffuseMap, var_TexCoords.st).xyz;// * 1.25;
 		
 	// UQ1: Let's add some of the flare color as well... Just to boost colors/glows...
 	vec3 flare_color = clamp(texture2D(u_DeluxeMap, var_TexCoords.st).rgb, 0.0, 1.0);

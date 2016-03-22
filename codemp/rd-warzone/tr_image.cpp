@@ -2878,7 +2878,7 @@ image_t *R_CreateNormalMapGLSL ( const char *name, byte *pic, int inwidth, int i
 
 	if (!tr.generateNormalMapShader.program || !tr.generateNormalMapShader.uniformBuffer) return tr.whiteImage; // Will get done later after init on usage...
 
-	if ((width <= 128 && height <= 128) || width <= 64 || height <= 64) return NULL;//tr.whiteImage; // Not worth the time/vram...
+	if (width <= 64 && height <= 64) return NULL;//tr.whiteImage; // Not worth the time/vram...
 	if (StringContainsWord(name, "_spec")) return NULL;
 	if (StringContainsWord(name, "_sub")) return NULL;
 	if (StringContainsWord(name, "_overlay")) return NULL;
@@ -3393,10 +3393,12 @@ void R_CreateBuiltinImages( void ) {
 	rgbFormat = GL_RGBA8;
 
 	tr.renderImage = R_CreateImage("_render", NULL, width, height, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, hdrFormat);
+	tr.previousRenderImage = R_CreateImage("*PreviousFrame", NULL, width, height, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, hdrFormat);
 
 	tr.normalImage = R_CreateImage("*normal", NULL, width, height, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, hdrFormat);
 	tr.normalDetailedImage = R_CreateImage("*normaldetailed", NULL, width, height, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, hdrFormat);
 	tr.foliageImage = R_CreateImage("*foliageImage", NULL, width, height, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, hdrFormat);
+	tr.positionMapImage = R_CreateImage("*positionMap", NULL, width, height, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, hdrFormat);
 
 	tr.glowImage = R_CreateImage("*glow", NULL, width, height, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, hdrFormat);
 #if 0

@@ -340,6 +340,7 @@ extern int		max_polyverts;
 //
 // UQ1: Added...
 //
+extern cvar_t	*r_parallaxScale;
 extern cvar_t	*r_blinnPhong;
 extern cvar_t	*r_skynum;
 extern cvar_t	*r_volumeLightStrength;
@@ -2227,8 +2228,11 @@ typedef struct trGlobals_s {
 	image_t					*blackImage;			// full of 0x00
 	image_t					*identityLightImage;	// full of tr.identityLightByte
 
+	image_t					*previousRenderImage;
 	image_t					*randomImage;
-	image_t					*random2KImage;
+	image_t					*random2KImage[2];
+	image_t					*waterDudvImage;
+	image_t					*waterDudvNormalImage;
 	image_t					*mapImage;
 	image_t					*heightMapImage;
 	image_t					*foliageMapImage;
@@ -2236,6 +2240,7 @@ typedef struct trGlobals_s {
 	image_t					*grassMaskImage[10];
 	shader_t				*grassImageShader;
 	image_t					*waterImage;
+	image_t					*positionMapImage;
 
 	image_t                 *shadowCubemaps[MAX_DLIGHTS];
 	
@@ -2272,6 +2277,7 @@ typedef struct trGlobals_s {
 	image_t					*textureDepthImage;
 
 	FBO_t					*renderFbo;
+	FBO_t					*previousRenderFbo;
 #if 0
 	FBO_t					*glowFboScaled[4];
 #else

@@ -257,6 +257,7 @@ cvar_t	*r_saveFontData;
 //
 // UQ1: Added...
 //
+cvar_t	*r_parallaxScale;
 cvar_t	*r_blinnPhong;
 cvar_t  *r_skynum;
 cvar_t  *r_volumeLightStrength;
@@ -1460,6 +1461,7 @@ void R_Register( void )
 	//
 	// UQ1: Added...
 	//
+	r_parallaxScale = ri->Cvar_Get( "r_parallaxScale", "0.015", CVAR_ARCHIVE );
 	r_blinnPhong = ri->Cvar_Get( "r_blinnPhong", "1.5", CVAR_ARCHIVE );
 	r_skynum = ri->Cvar_Get( "r_skynum", "0", CVAR_ARCHIVE );
 	r_volumeLightStrength = ri->Cvar_Get( "r_volumeLightStrength", "0.15", CVAR_ARCHIVE );

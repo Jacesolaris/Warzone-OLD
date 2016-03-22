@@ -1,4 +1,14 @@
 #define ORIGINAL_WATER
+//#define SECOND_WATER
+
+
+
+
+#if defined(ORIGINAL_WATER)
+
+
+
+
 
 uniform sampler2D u_DiffuseMap;
 //uniform sampler2D u_OverlayMap; // sky diffuse
@@ -51,11 +61,8 @@ varying vec3		var_vertPos;
 out vec4 out_Glow;
 //out vec4 out_Normal;
 out vec4 out_DetailedNormal;
+out vec4 out_PositionMap;
 out vec4 out_FoliageMap;
-
-
-
-#if defined(ORIGINAL_WATER)
 
 
 
@@ -186,10 +193,119 @@ void main()
 	out_Glow = vec4(0.0);
 
 
-	out_DetailedNormal = vec4(m_Normal.xyz, 0.75);
+	out_DetailedNormal = vec4(m_Normal.xyz * 0.5 + 0.5, 0.75);
+	out_PositionMap = vec4(var_vertPos, 0.0);
 
 	out_FoliageMap = vec4(0.0, 0.0, 1.0, 0.0);
 }
+
+
+
+
+
+
+
+#elif defined(SECOND_WATER)
+
+
+
+
+
+const vec4 WATER_COLOR = vec4(0.0, 0.0, 0.5, 1.0);
+const float sca = 0.005;
+const float sca2 = 0.02;
+const float tscale = 0.1;//0.25;
+const vec4 two = vec4(2.0, 2.0, 2.0, 1.0);
+const vec4 mone = vec4(-1.0, -1.0, -1.0, 1.0);
+
+const vec4 ofive = vec4(0.5,0.5,0.5,1.0);
+const float exponent = 64.0;
+
+uniform sampler2D u_NormalMap;		// normal map
+uniform sampler2D u_DiffuseMap;		// reflection
+uniform sampler2D u_DeluxeMap;		// dudvmap
+
+varying vec3 var_vertPos;
+//varying vec4 lightDir;				//lightpos
+varying vec2 waterFlow;				//moving texcoords
+varying vec2 waterRipple;			//moving texcoords
+varying vec4 projCoords;			//for projection
+//varying vec4 eyeDir;				//viewts
+
+
+out vec4 out_Glow;
+out vec4 out_DetailedNormal;
+out vec4 out_PositionMap;
+out vec4 out_FoliageMap;
+
+const vec4 tangent = vec4(1.0, 0.0, 0.0, 0.0);
+const vec4 norm = vec4(0.0, 1.0, 0.0, 0.0);
+const vec4 binormal = vec4(0.0, 0.0, 1.0, 0.0);
+
+const mat4 lightTransformation = mat4(tangent, binormal, norm, vec4(0.0));
+
+uniform vec4	u_ViewOrigin;
+uniform vec4		u_PrimaryLightOrigin;
+
+//varying vec2 UV;
+
+void main(void)
+{
+	vec4 temp = vec4(u_ViewOrigin.xyz - gl_FragCoord.xyz, 0.0);
+	vec4 eye = temp * lightTransformation;
+	vec4 viewt = normalize(eye);
+
+	//vec4 viewt = normalize(eyeDir);
+
+	temp = vec4(u_PrimaryLightOrigin.xyz - gl_FragCoord.xyz, 0.0); // Directional light from the sun
+	//temp = vec4(u_PrimaryLightOrigin.xyz - (gl_FragCoord.xyz * u_PrimaryLightOrigin.w), 0.0);
+	vec4 lightDir = temp * lightTransformation;
+
+	vec2 rippleEffect = sca2 * texture2D(u_DeluxeMap, waterRipple * tscale).xy;
+	vec4 normal = texture2D(u_NormalMap, waterFlow + rippleEffect);
+
+	// Reflection distortion
+	vec2 fdist = texture2D(u_DeluxeMap, waterFlow + rippleEffect).xy;
+	fdist = fdist * 2.0 - vec2(1.0);
+	fdist *= sca;
+
+	//load normalmap
+	vec4 vNorm = (normal-ofive) * two;
+	vNorm = normalize(-vNorm); // superfluous?
+
+	//calculate specular highlight
+	vec4 lightTS = normalize(lightDir);
+	vec4 vRef = normalize(reflect(-lightTS, vNorm));
+	float stemp = clamp(dot(viewt, vRef), 0.0, 1.0);
+	stemp = pow(stemp, exponent); 
+	vec4 specular = vec4(stemp);
+
+	//calculate fresnel and inverted fresnel 
+	float invfres = dot(vNorm, viewt);
+	float fres = 1.0 - invfres;
+
+	//get projective texcoords
+	vec2 projCoord = projCoords.xy / projCoords.w;
+	projCoord = projCoord * 0.5 + 0.5;
+	projCoord += fdist.xy;
+	
+	//load and calculate reflection
+	//vec4 refl = texture2D(u_DiffuseMap, projCoord);
+	//refl *= fres;
+
+	// Set the water color
+	vec4 waterColor = WATER_COLOR * invfres;
+
+	//add it all up for the effect
+	gl_FragColor = /*clamp(refl, 0.0, 1.0) +*/ waterColor + specular;
+	gl_FragColor.a = 0.6;
+
+	out_Glow = vec4(0.0);
+	out_DetailedNormal = vec4(vNorm.xyz * 0.5 + 0.5, 0.75);
+	out_PositionMap = vec4(gl_FragCoord.xyz, 0.0);
+	out_FoliageMap = vec4(0.0, 0.0, 1.0, 0.0);
+}
+
 
 
 
@@ -200,124 +316,160 @@ void main()
 
 
 
-uniform float	u_Time;
+
+// Source: http://trederia.blogspot.com/2014/09/water-in-opengl-and-gles-20-part-4.html
 
 
-//uniform vec3 playerPos;
-//uniform vec3 sunPosition;
-//uniform float elapsedTime;
-//uniform sampler3D noiseTexture;
 
-uniform sampler2D u_SpecularMap;
 
-#define noiseTexture u_SpecularMap
+uniform sampler2D u_DiffuseMap;		// reflection
 
-#define sunPosition u_PrimaryLightOrigin.xyz
-#define playerPos u_ViewOrigin.xyz
-#define elapsedTime u_Time
+uniform sampler2D u_NormalMap;
 
-// Vertex shader input
-in vec3 fWorldPos;
-in vec3 fNormal;
-in float fIntensity;
+#define u_refractionTexture u_DiffuseMap
+#define u_reflectionTexture u_DiffuseMap
 
-float tween(float t)
+uniform float u_Time;
+uniform vec2	u_Dimensions;
+
+uniform vec4		u_Local9; // 
+
+//////////////////////////
+// Varyings
+varying vec4 v_vertexRefractionPosition;
+varying vec4 v_vertexReflectionPosition;
+
+varying vec2 v_texCoord;
+
+varying vec3 v_eyePosition;
+
+varying vec3 var_Normal;
+
+//////////////////////////
+
+out vec4 out_Glow;
+out vec4 out_DetailedNormal;
+out vec4 out_PositionMap;
+out vec4 out_FoliageMap;
+
+
+const float distortAmount = 0.05;
+const float specularAmount = 2.5;
+const float textureRepeat = 2.0;
+
+const vec4 tangent = vec4(1.0, 0.0, 0.0, 0.0);
+const vec4 viewNormal = vec4(0.0, 1.0, 0.0, 0.0);
+const vec4 bitangent = vec4(0.0, 0.0, 1.0, 0.0);
+
+const vec4 waterColour = vec4(0.1, 0.1, 0.5,0.4);
+
+vec2 fromClipSpace(vec4 position)
 {
-	return clamp(t*t*t*(t*(t*6-15)+10),0,1);
+	return position.xy / position.w / 2.0 + 0.5;
+}
+
+vec2 fromClipSpaceFlip(vec4 position)
+{
+	return vec2(position.x, -position.y) / position.w / 2.0 + 0.5;
 }
 
 void main()
-{
-	vec3 normal = normalize(fNormal);
-	vec3 up = normalize(fWorldPos);
-	vec3 samplePos = fWorldPos;
-	float ss = 0.00005;//0.195;
-	float ns = 1.0;
-	float timescale = 0.5;
-	float s = 2;
+{	
+	//get normal
+	vec4 normal = texture2D(u_NormalMap, v_texCoord * textureRepeat + u_Time);
+	normal = normalize(normal * 2.0 - 1.0);
+		
+	//put view in tangent space
+	vec4 viewDir = normalize(vec4(v_eyePosition, 1.0));
+	vec4 viewTanSpace = normalize(vec4(dot(viewDir, tangent), dot(viewDir, bitangent), dot(viewDir, viewNormal), 1.0));	
+	vec4 viewReflection = normalize(reflect(-1.0 * viewTanSpace, normal));
+	float fresnel = dot(normal, viewReflection);
 
+	//distortion offset
+	vec4 dudv = normal * distortAmount;
+	
+	//refraction sample
+	vec2 textureCoord = fromClipSpace(v_vertexRefractionPosition) + dudv.rg;
+	//float fromCenter = textureCoord.y - textureCoordOrig.y;
+	//float textureCoordY = textureCoordOrig.y - (fromCenter*u_Local9.g);
+	//textureCoord.y += textureCoordY;
+	textureCoord = clamp(textureCoord, 0.001, 0.999);
+	vec4 refractionColour = texture2D(u_refractionTexture, textureCoord) * waterColour;
+	
+	//calc fog distance
+	//----version 1 (exponential)----//
+	//float z = gl_FragCoord.z / gl_FragCoord.w;
+	//const float fogDensity = 0.0005;
+	//float fogAmount = exp2(-fogDensity * fogDensity * z * z * 1.442695);
+	//fogAmount = clamp(fogAmount, 0.0, 0.7);
+	
+	//----version 2 (linear)----//
+	float z = (gl_FragCoord.z / gl_FragCoord.w) / 300.0; //const is max fog distance
+	const float fogDensity = 6.0;
+	float fogAmount = z * fogDensity;	
+	fogAmount = clamp(fogAmount, 0.0, 1.0);
+	
+	refractionColour = mix(refractionColour, waterColour, fogAmount);
+	
+#if 0
+	//reflection sample
+	textureCoord = fromClipSpace(v_vertexReflectionPosition) + dudv.rg;
 	/*
-	vec3 samp_yz = texture3D(noiseTexture, vec3(samplePos.yz * ss, elapsedTime*timescale)).rgb - vec3(0.5);
-	vec3 samp_xz = texture3D(noiseTexture, vec3(samplePos.xz * ss, elapsedTime*timescale)).rgb - vec3(0.5);
-	vec3 samp_xy = texture3D(noiseTexture, vec3(samplePos.xy * ss, elapsedTime*timescale)).rgb - vec3(0.5);
+	vec2 textureCoordOrig = fromClipSpaceOrig(v_vertexReflectionPosition) + dudv.rg;
+	//float fromCenter = ((gl_FragCoord.y/u_Dimensions.y) - 0.5);
+	float fromCenter = textureCoord.y - textureCoordOrig.y;
+	float textureCoordY = textureCoordOrig.y - (fromCenter*u_Local9.g);
+	textureCoord.y -= (0.5 - textureCoordY);
 	*/
-	vec3 samp_yz = texture2D(noiseTexture, vec2(samplePos.yz * ss * elapsedTime*timescale)).rgb - vec3(0.5);
-	vec3 samp_xz = texture2D(noiseTexture, vec2(samplePos.xz * ss * elapsedTime*timescale)).rgb - vec3(0.5);
-	vec3 samp_xy = texture2D(noiseTexture, vec2(samplePos.xy * ss * elapsedTime*timescale)).rgb - vec3(0.5);
 	
-	vec3 norm_xy = samp_xy.r * vec3(1, 0, 0) + samp_xy.g * vec3(0, 1, 0) + samp_xy.b * vec3(0, 0, 1);
-	vec3 norm_xz = samp_xz.r * vec3(0, 0, 1) + samp_xz.g * vec3(1, 0, 0) + samp_xz.b * vec3(0, 1, 0);
-	vec3 norm_yz = samp_yz.r * vec3(0, 1, 0) + samp_yz.g * vec3(0, 0, 1) + samp_yz.b * vec3(1, 0, 0);	
+	/*float Ypix = (gl_FragCoord.y/u_Dimensions.y);
 	
-	vec3 modNorm = norm_yz*normal.x + norm_xz*normal.y + norm_xy*normal.z;
+	if (Ypix > 0.5)
+	{
+		float fromCenter = Ypix - 0.5;
+		float invert = 0.5 - fromCenter;
+		textureCoord.y = 1.0 - invert;
+	}*/
+#else
+	vec4 reflected;
+	/*
+	if (u_Local9.a <= 0) reflected = normalize(reflect(normalize(v_vertexRefractionPosition), normalize(normal)));
+	else if (u_Local9.a <= 1) reflected = normalize(reflect(normalize(v_vertexRefractionPosition), normalize(vec4(var_Normal, 0.0))));
+	else if (u_Local9.a <= 2) reflected = reflect(normalize(v_vertexRefractionPosition), normalize(normal));
+	else if (u_Local9.a <= 3) reflected = reflect(normalize(v_vertexRefractionPosition), normalize(vec4(var_Normal, 0.0)));
+	else if (u_Local9.a <= 4) reflected = normalize(reflect(viewDir, normalize(normal)));
+	else if (u_Local9.a <= 5) reflected = normalize(reflect(viewDir, normalize(vec4(var_Normal, 0.0))));
+	else if (u_Local9.a <= 6) reflected = normalize(reflect(-viewDir, normalize(normal)));
+	else if (u_Local9.a <= 7) reflected = normalize(reflect(-viewDir, normalize(vec4(var_Normal, 0.0))));
+	else if (u_Local9.a <= 8) reflected = normalize(reflect(normalize(v_vertexRefractionPosition), normalize(vec4(u_Local9.rgb, 0.0))));
+	*/
+	if (u_Local9.a <= 0) reflected = normalize(reflect(normalize(v_vertexRefractionPosition), vec4(0.0, (viewDir.y - 0.5), 0.0, 0.0)));
+	else if (u_Local9.a <= 1) reflected = normalize(reflect(normalize(v_vertexRefractionPosition), normalize(vec4(0.0, 1.0, 0.0, 0.0) * vec4(viewDir.xyz, 0.0))));
+	else if (u_Local9.a <= 2) reflected = normalize(refract(normalize(v_vertexRefractionPosition), normalize(vec4(0.0, -1.0, 0.0, 0.0)), 1.0));
+	else if (u_Local9.a <= 3) reflected = normalize(reflect(normalize(v_vertexRefractionPosition), normalize(-v_vertexRefractionPosition)));
+	else
+	{
+		vec4 viewDir = normalize(vec4(v_eyePosition, 1.0));
+		vec4 viewTanSpace = normalize(vec4(dot(viewDir, tangent), dot(viewDir, bitangent), dot(viewDir, viewNormal), 1.0));	
+		reflected = normalize(reflect(-1.0 * viewTanSpace, normal));
+	}
 
-	normal = normalize(mix(normal, modNorm, ns));
-	
-	//normal = normalize(normal);
-	
-	int c1 = 3;
-	int c2 = 5;
-	
-	vec3 FtoP = normalize(playerPos - fWorldPos);
-	vec3 FtoS = normalize(sunPosition - fWorldPos);
-	vec3 sum = normalize(FtoP + FtoS);
-	
-	float alpha = 0.5;
-	
-	float closeToNorm = clamp(dot(FtoP, normal)*1.5,0,1);
-	vec3 hclr = mix(vec3(0.4, 0.7, 1.0), vec3(0.1, 0.1, 0.4), closeToNorm);
-	alpha = mix(0.5, 0.3, closeToNorm);
-	
-	
-	#if defined(USE_PRIMARY_LIGHT) || defined(USE_PRIMARY_LIGHT_SPECULAR)
-		if (u_Local6.r > 0.0)
-		{
-			vec3 E = normalize(-(u_ViewOrigin.xyz - fWorldPos.xyz));
+	textureCoord = fromClipSpace(reflected) + dudv.rg;
+	//textureCoord.y = 1.0 - textureCoord.y;
+#endif
 
-			vec3 PrimaryLightDir = u_PrimaryLightOrigin.xyz - fWorldPos.xyz;
-			float lambertian2 = dot(PrimaryLightDir.xyz, normal);
-
-			if(lambertian2 > 0.0)
-			{// this is blinn phong
-				vec3 halfDir2 = normalize(PrimaryLightDir.xyz + E);
-				float specAngle = max(dot(halfDir2, normal), 0.0);
-				float spec2 = pow(specAngle, 16.0);
-				hclr.rgb += vec3(spec2 * (1.0 - length(hclr.rgb) / 3.0)) * u_PrimaryLightColor.rgb * hclr * u_Local9.g * u_Local5.b;
-			}
-
-			for (int li = 0; li < u_lightCount; li++)
-			{
-				vec3 lightDir = u_lightPositions2[li] - fWorldPos.xyz;
-				float lambertian3 = dot(lightDir.xyz, normal);
-				float spec3 = 0.0;
-
-				if(lambertian3 > 0.0)
-				{
-					float lightStrength = clamp(1.0 - (length(lightDir) * (1.0 / u_lightDistances[li])), 0.0, 1.0) * 0.5;
-
-					if(lightStrength > 0.0)
-					{// this is blinn phong
-						vec3 halfDir3 = normalize(lightDir.xyz + E);
-						float specAngle3 = max(dot(halfDir3, normal), 0.0);
-						spec3 = pow(specAngle3, 16.0);
-						hclr.rgb += vec3(spec3 * (1.0 - length(hclr.rgb) / 3.0)) * u_lightColors[li].rgb * hclr * lightStrength * u_Local5.b;
-					}
-				}
-			}
-		}
-	#endif //defined(USE_PRIMARY_LIGHT) || defined(USE_PRIMARY_LIGHT_SPECULAR)
+	textureCoord = clamp(textureCoord, 0.001, 0.999);
+	vec4 reflectionColour = texture2D(u_reflectionTexture, textureCoord);
 	
-	gl_FragColor = vec4( hclr, alpha);
+	vec3 specular = vec3(clamp(pow(dot(viewTanSpace, normal), 255.0), 0.0, 1.0)) * specularAmount;
+	
+	gl_FragColor = mix(reflectionColour, refractionColour, fresnel) + vec4(specular, 1.0);
 
-	//gl_FragColor.a = 0.5;//1.0;
 	out_Glow = vec4(0.0);
-
-
-	out_DetailedNormal = vec4(normal.xyz, 0.75);
-
+	out_DetailedNormal = vec4(normal.xyz * 0.5 + 0.5, 0.75);
+	out_PositionMap = vec4(gl_FragCoord.xyz, 0.0);
 	out_FoliageMap = vec4(0.0, 0.0, 1.0, 0.0);
 }
-
 
 
 #endif //defined(ORIGINAL_WATER)

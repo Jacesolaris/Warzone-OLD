@@ -1,5 +1,8 @@
 #extension GL_EXT_gpu_shader4 : enable
 
+#define ORIGINAL_WATER
+//#define SECOND_WATER
+
 #define WAVE
 
 #define USE_DEFORM_VERTEXES
@@ -37,6 +40,7 @@ uniform float  u_DeformParams[5];
 uniform mat4	u_ModelViewProjectionMatrix;
 uniform mat4	u_ModelMatrix;
 uniform mat4	u_invEyeProjectionMatrix;
+uniform mat4	u_ModelViewMatrix;
 
 varying vec2   var_DiffuseTex;
 varying vec4   var_Color;
@@ -46,6 +50,16 @@ uniform vec4	u_ViewOrigin;
 uniform float	u_Time;
 uniform vec4	u_Local8; // grassLength, grassLayer, wavespeed, wavesize
 uniform vec4	u_Local9;
+
+
+
+
+
+#if defined(ORIGINAL_WATER)
+
+
+
+
 
 #define m_Length	u_Local8.r
 #define m_Layer		u_Local8.g
@@ -230,3 +244,133 @@ void main()
 	var_ViewDir = u_ViewOrigin.xyz - v.xyz;
 }
 
+
+
+
+
+
+#elif defined(SECOND_WATER)
+
+
+
+
+
+
+uniform vec4		u_PrimaryLightOrigin;
+uniform vec3		u_PrimaryLightColor;
+uniform vec3		u_PrimaryLightAmbient;
+uniform float		u_PrimaryLightRadius;
+
+
+const vec4 tangent = vec4(1.0, 0.0, 0.0, 0.0);
+const vec4 norm = vec4(0.0, 1.0, 0.0, 0.0);
+const vec4 binormal = vec4(0.0, 0.0, 1.0, 0.0);
+
+//attribute vec3 attr_Normal;
+attribute vec4 attr_Tangent;
+
+const mat4 lightTransformation = mat4(tangent, binormal, norm, vec4(0.0));
+
+#define time u_Time*0.2
+#define time2 u_Time*0.3
+
+varying vec3 var_vertPos;
+//varying vec4 lightDir;
+varying vec2 waterFlow;
+varying vec2 waterRipple;
+varying vec4 projCoords;
+varying vec4 eyeDir;
+//varying vec2 UV;
+
+void main(void)
+{
+	//UV = attr_TexCoord0.xy;
+
+	//vec3 viewDir = u_ViewOrigin.xyz - attr_Position.xyz;
+
+	//vec4 norm = vec4(attr_Normal.xyz * 2.0 - 1.0, viewDir.x);
+	//vec4 tangent = vec4(attr_Tangent.xyz, viewDir.y);
+	//vec4 binormal = vec4(cross(norm.xyz, tangent.xyz) * (tangent.w * 2.0 - 1.0), viewDir.z);
+	//mat3 tangentToWorld = mat3(tangent.xyz, binormal.xyz, norm.xyz);
+
+	//vec4 temp = vec4(u_ViewOrigin.xyz - attr_Position.xyz, 1.0);//(u_ModelViewMatrix * vec4(attr_Position, 1.0));
+	//eyeDir = temp * lightTransformation;
+	//eyeDir = normalize(u_ModelViewMatrix * vec4(viewDir, 0.0));
+
+	//vec4 temp = vec4(u_ViewOrigin.xyz - u_PrimaryLightOrigin.xyz, 1.0);; // Directional light from the sun
+	//lightDir = temp * lightTransformation;
+	//lightDir.xyz = u_PrimaryLightOrigin.xyz - (attr_Position.xyz * u_PrimaryLightOrigin.w);
+	//lightDir.w = u_PrimaryLightRadius * u_PrimaryLightRadius;
+
+	// texcoords for making the water flow
+	waterFlow = attr_TexCoord0.st + vec2(0.0, time);
+
+	// texcoords for making the water ripple
+	waterRipple = attr_TexCoord0.st + vec2(0.0, time2);
+
+	//gl_ClipVertex = u_ModelViewMatrix * vec4(attr_Position, 1.0);
+	gl_Position = projCoords = u_ModelViewProjectionMatrix * vec4(attr_Position, 1.0);
+
+	var_vertPos = attr_Position.xyz;
+}
+
+
+
+
+
+
+#else //!defined(ORIGINAL_WATER)
+
+
+
+// Source: http://trederia.blogspot.com/2014/09/water-in-opengl-and-gles-20-part-4.html
+
+/*
+uniform mat4	u_ModelViewProjectionMatrix;
+uniform mat4	u_ModelMatrix;
+uniform mat4	u_invEyeProjectionMatrix;
+uniform mat4	u_ModelViewMatrix;
+*/
+
+/////////////////////////////
+// Uniforms
+#define u_worldMatrix u_ModelViewMatrix
+#define u_worldViewProjectionMatrix u_ModelViewProjectionMatrix
+#define u_worldViewProjectionReflectionMatrix u_ModelViewProjectionMatrix//u_invEyeProjectionMatrix
+
+#define u_cameraPosition u_ViewOrigin.xyz
+
+/////////////////////////////
+// Varyings
+varying vec4 v_vertexRefractionPosition;
+varying vec4 v_vertexReflectionPosition;
+
+varying vec2 v_texCoord;
+
+varying vec3 v_eyePosition;
+
+varying vec3 var_Normal;
+
+/////////////////////////////
+void main()
+{
+	v_vertexRefractionPosition = u_worldViewProjectionMatrix * vec4(attr_Position, 1.0);
+	v_vertexReflectionPosition = v_vertexRefractionPosition;//u_worldViewProjectionReflectionMatrix * vec4(attr_Position, 1.0);
+	v_vertexReflectionPosition.y = -v_vertexReflectionPosition.y;
+	
+	gl_Position = v_vertexRefractionPosition;
+	
+	v_texCoord = attr_TexCoord0;
+	
+	v_eyePosition = u_cameraPosition - (u_worldMatrix * vec4(attr_Position, 1.0)).xyz;
+
+	//vec4 diff = u_worldViewProjectionMatrix * vec4(u_cameraPosition.xyz - attr_Position.xyz, 1.0);
+	//float diff = v_eyePosition.y - v_vertexRefractionPosition.y;
+	//v_vertexReflectionPosition.y = v_eyePosition.y - (diff*2.0);
+
+	var_Normal = attr_Normal * 2.0 - 1.0;
+}
+
+
+
+#endif //defined(ORIGINAL_WATER)

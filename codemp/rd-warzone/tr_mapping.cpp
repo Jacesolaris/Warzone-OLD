@@ -123,14 +123,14 @@ void R_SetupMapInfo ( void )
 	MAP_INFO_SCATTEROFFSET[1] = MAP_INFO_SIZE[1] / MAP_INFO_TRACEMAP_SIZE;
 }
 
-void R_CreateRandom2KImage ( void )
+void R_CreateRandom2KImage ( char *variation )
 {
 	// Hopefully now we have a map image... Save it...
 	byte	data;
 	int		i = 0;
 
 	// write tga
-	fileHandle_t f = ri->FS_FOpenFileWrite( "gfx/random2K.tga", qfalse);
+	fileHandle_t f = ri->FS_FOpenFileWrite( va("gfx/random2K%s.tga", variation), qfalse);
 
 	// header
 	data = 0; ri->FS_Write( &data, sizeof(data), f );	// 0
@@ -1211,12 +1211,27 @@ void R_LoadMapInfo ( void )
 
 	if (!ri->FS_FileExists(va( "gfx/random2K.tga", currentMapName )))
 	{
-		R_CreateRandom2KImage();
-		tr.random2KImage = R_FindImageFile("gfx/random2K.tga", IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION);
+		R_CreateRandom2KImage("");
+		tr.random2KImage[0] = R_FindImageFile("gfx/random2K.tga", IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION);
 	}
 	else
 	{
-		tr.random2KImage = R_FindImageFile("gfx/random2K.tga", IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION);
+		tr.random2KImage[0] = R_FindImageFile("gfx/random2K.tga", IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION);
+	}
+
+	if (!ri->FS_FileExists(va( "gfx/random2Ka.tga", currentMapName )))
+	{
+		R_CreateRandom2KImage("a");
+		tr.random2KImage[1] = R_FindImageFile("gfx/random2Ka.tga", IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION);
+	}
+	else
+	{
+		tr.random2KImage[1] = R_FindImageFile("gfx/random2Ka.tga", IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION);
+	}
+
+	{// Water DUDV and DUDV NormalMap...
+		tr.waterDudvImage = R_FindImageFile("textures/water/waterDUDV.jpg", IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION);
+		tr.waterDudvNormalImage = R_FindImageFile("textures/water/waterDUDV_n.jpg", IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION);
 	}
 
 	tr.waterImage = R_FindImageFile("textures/water/save.01.jpg", IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION);

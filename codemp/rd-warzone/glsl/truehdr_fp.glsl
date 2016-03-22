@@ -1,10 +1,7 @@
-uniform sampler2D u_TextureMap;
+uniform sampler2D	u_TextureMap;
 
 varying vec2		var_TexCoords;
 varying vec2		var_Dimensions;
-varying vec2		var_ScreenTex;
-
-uniform vec2		u_Dimensions;
 
 vec2 recipres = vec2(1.0f / var_Dimensions.x, 1.0f / var_Dimensions.y);
 
@@ -125,6 +122,6 @@ void main()
 
 #define const_1 ( 12.0 / 255.0)
 #define const_2 (255.0 / 219.0)
-	gl_FragColor.rgb = ((clamp(color.rgb - const_1, 0.0, 1.0)) * const_2);
+	gl_FragColor.rgb = clamp((clamp(color.rgb - const_1, 0.0, 1.0)) * const_2, 0.0, 1.0);
 	gl_FragColor.a = 1.0;
 }

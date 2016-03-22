@@ -1,8 +1,8 @@
-uniform sampler2D u_TextureMap;
+uniform sampler2D u_DiffuseMap;
 uniform sampler2D u_ScreenDepthMap;
 uniform sampler2D u_NormalMap;
 uniform sampler2D u_DeluxeMap; // actually saturation map image
-uniform sampler2D u_RandomMap;
+uniform sampler2D u_SpecularMap;
 
 varying vec2		var_TexCoords;
 varying vec2		var_Dimensions;
@@ -18,7 +18,6 @@ varying vec4		var_ViewInfo; // zmin, zmax, zmax / zmin
 #define PI  3.14159265
 
 #define USE_RANDOMMAP
-
 //#define USE_GLOWMAP
 #define USE_DEPTHMAP
 
@@ -60,11 +59,11 @@ vec3 SampleNormals(sampler2D normalMap, in vec2 coord)
 #ifdef USE_RANDOMMAP
 float rand2(vec2 coord)
 {
-	return texture2D(u_RandomMap, coord*vec2(var_Dimensions)*vec2(1./256.)).r;
+	return texture2D(u_SpecularMap, coord*vec2(var_Dimensions)*vec2(1./256.)).r;
 }
 
 float rand(vec2 co){
-	return texture2D(u_RandomMap, co*vec2(var_Dimensions)*vec2(1./256.)).b;
+	return texture2D(u_SpecularMap, co*vec2(var_Dimensions)*vec2(1./256.)).b;
 }
 #else //!USE_RANDOMMAP
 float rand2(vec2 coord) //generating noise/pattern texture for dithering
@@ -116,8 +115,8 @@ void main()
 	prof = zFar * zNear / (prof * (zFar - zNear) - zFar);  //linearize z sample
 
 	//obtain normal and color at current pixel:
-	vec3 norm = normalize(vec3(SampleNormals(u_TextureMap,var_TexCoords.st).xyz)*2.0-vec3(1.0));
-	vec3 dcolor1 = texture2D(u_TextureMap, var_TexCoords.st).xyz;
+	vec3 norm = normalize(vec3(SampleNormals(u_DiffuseMap,var_TexCoords.st).xyz)*2.0-vec3(1.0));
+	vec3 dcolor1 = texture2D(u_DiffuseMap, var_TexCoords.st).xyz;
 
 	float hf = samples/2.0;
 
@@ -142,7 +141,7 @@ void main()
 				prof2g = zFar * zNear / (prof2g * (zFar - zNear) - zFar);  //linearize z sample
 
 				//OCCLUSION:
-				vec3 norm2g = normalize(vec3(SampleNormals(u_TextureMap,var_TexCoords.st+coords2*rand(var_TexCoords)).xyz)*2.0-vec3(1.0)); 
+				vec3 norm2g = normalize(vec3(SampleNormals(u_DiffuseMap,var_TexCoords.st+coords2*rand(var_TexCoords)).xyz)*2.0-vec3(1.0)); 
 
 				//calculate approximate pixel distance:
 				vec3 dist2 = vec3(coords2,prof-prof2g);
@@ -160,12 +159,12 @@ void main()
 #ifdef USE_GLOWMAP
 				vec3 dcolor2 = texture2D(u_DeluxeMap, var_TexCoords.st+coords*rand(var_TexCoords)).xyz;
 #else //USE_GLOWMAP
-				vec3 dcolor2 = texture2D(u_TextureMap, var_TexCoords.st+coords*rand(var_TexCoords)).xyz;
+				vec3 dcolor2 = texture2D(u_DiffuseMap, var_TexCoords.st+coords*rand(var_TexCoords)).xyz;
 				
 				if (length(dcolor2)>0.3)//color threshold
 #endif //USE_GLOWMAP
 				{
-					vec3 norm2 = normalize(vec3(SampleNormals(u_TextureMap,var_TexCoords.st+coords*rand(var_TexCoords)).xyz)*2.0-vec3(1.0)); 
+					vec3 norm2 = normalize(vec3(SampleNormals(u_DiffuseMap,var_TexCoords.st+coords*rand(var_TexCoords)).xyz)*2.0-vec3(1.0)); 
 
 					//calculate approximate pixel distance:
 					vec3 dist = vec3(coords,abs(prof-prof2));
@@ -251,9 +250,9 @@ vec2 camerarange = var_ViewInfo.xy;
 
    vec3 readColor(in vec2 coord)  
    {
-     //return texture2D(u_TextureMap, coord).xyz;
+     //return texture2D(u_DiffuseMap, coord).xyz;
 	 //return texture2D(u_DeluxeMap, coord).xyz;
-	 return texture2D(u_TextureMap, coord).xyz + (texture2D(u_DeluxeMap, coord).xyz * 0.333);
+	 return texture2D(u_DiffuseMap, coord).xyz + (texture2D(u_DeluxeMap, coord).xyz * 0.333);
    }
 
    vec3 calAO(float depth,float dw, float dh, inout float ao)  
@@ -329,7 +328,7 @@ vec2 camerarange = var_ViewInfo.xy;
      vec3 finalAO = vec3(1.0-(ao/32.0)) * 0.25;
 	 vec3 finalGI = (gi/32)*0.6;
 
-	 vec4 color = texture2D(u_TextureMap, var_TexCoords.st);
+	 vec4 color = texture2D(u_DiffuseMap, var_TexCoords.st);
 
 	 gl_FragColor = vec4((finalAO, 1.0) * color) + vec4(finalGI*0.5, 1.0);
      //gl_FragColor = vec4((0.3+finalAO*0.7,1.0) * color) + vec4(finalGI*0.5, 1.0);

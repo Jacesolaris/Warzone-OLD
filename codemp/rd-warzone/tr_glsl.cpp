@@ -1495,6 +1495,7 @@ static bool GLSL_EndLoadGPUShader (shaderProgram_t *program)
 	qglBindFragDataLocation (program->program, 1, "out_Glow");
 	qglBindFragDataLocation (program->program, 2, "out_DetailedNormal");
 	qglBindFragDataLocation (program->program, 3, "out_FoliageMap");
+	qglBindFragDataLocation (program->program, 4, "out_PositionMap");
 	//qglBindFragDataLocation (program->program, 3, "out_Normal");
 
 	if(attribs & ATTR_POSITION)
@@ -2608,7 +2609,7 @@ int GLSL_BeginLoadGPUShaders(void)
 		ri->Error(ERR_FATAL, "Could not load magicdetail shader!");
 	}
 
-	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
+	attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_NORMAL | ATTR_TANGENT | ATTR_LIGHTDIRECTION;
 	extradefines[0] = '\0';
 
 	if (!GLSL_BeginLoadGPUShader(&tr.waterPostShader, "waterPost", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_waterPost_vp, fallbackShader_waterPost_fp, NULL, NULL, NULL))
@@ -2836,35 +2837,6 @@ int GLSL_BeginLoadGPUShaders(void)
 	
 	attribs = ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL | ATTR_TANGENT | ATTR_LIGHTDIRECTION;
 	extradefines[0] = '\0';
-
-	if (r_deluxeSpecular->value > 0.000001f)
-		Q_strcat(extradefines, 1024, va("#define r_deluxeSpecular %f\n", r_deluxeSpecular->value));
-
-	if (r_dlightMode->integer >= 2)
-		Q_strcat(extradefines, 1024, "#define USE_SHADOWMAP\n");
-
-	if (r_hdr->integer && !glRefConfig.floatLightmap)
-		Q_strcat(extradefines, 1024, "#define RGBM_LIGHTMAP\n");
-
-	Q_strcat(extradefines, 1024, "#define USE_LIGHTMAP\n");
-
-	if (r_deluxeMapping->integer)
-		Q_strcat(extradefines, 1024, "#define USE_DELUXEMAP\n");
-
-	if (r_cubeMapping->integer)
-		Q_strcat(extradefines, 1024, "#define USE_CUBEMAP\n");
-
-	Q_strcat(extradefines, 1024, "#define USE_SHADOWMAP\n");
-
-	if (r_sunlightMode->integer == 1)
-		Q_strcat(extradefines, 1024, "#define SHADOWMAP_MODULATE\n");
-	else if (r_sunlightMode->integer >= 2)
-		Q_strcat(extradefines, 1024, "#define USE_PRIMARY_LIGHT\n");
-
-	Q_strcat(extradefines, 1024, "#define USE_TCGEN\n");
-	Q_strcat(extradefines, 1024, "#define USE_TCMOD\n");
-
-	Q_strcat(extradefines, 1024, "#define USE_GLOW_BUFFER\n");
 
 	Q_strcat(extradefines, 1024, "#define USE_PRIMARY_LIGHT_SPECULAR\n");
 
@@ -3562,7 +3534,11 @@ void GLSL_EndLoadGPUShaders ( int startTime )
 
 	qglUseProgram(tr.ssgi1Shader.program);
 
-	GLSL_SetUniformInt(&tr.ssgi1Shader, UNIFORM_LEVELSMAP,  TB_LEVELSMAP);
+	GLSL_SetUniformInt(&tr.ssgi1Shader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
+	GLSL_SetUniformInt(&tr.ssgi1Shader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
+	GLSL_SetUniformInt(&tr.ssgi1Shader, UNIFORM_NORMALMAP, TB_NORMALMAP);
+	GLSL_SetUniformInt(&tr.ssgi1Shader, UNIFORM_DELUXEMAP, TB_DELUXEMAP);
+	GLSL_SetUniformInt(&tr.ssgi1Shader, UNIFORM_SPECULARMAP, TB_SPECULARMAP);
 	
 	{
 		vec2_t screensize;
@@ -3601,7 +3577,11 @@ void GLSL_EndLoadGPUShaders ( int startTime )
 
 	qglUseProgram(tr.ssgi2Shader.program);
 
-	GLSL_SetUniformInt(&tr.ssgi2Shader, UNIFORM_LEVELSMAP,  TB_LEVELSMAP);
+	GLSL_SetUniformInt(&tr.ssgi2Shader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
+	GLSL_SetUniformInt(&tr.ssgi2Shader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
+	GLSL_SetUniformInt(&tr.ssgi2Shader, UNIFORM_NORMALMAP, TB_NORMALMAP);
+	GLSL_SetUniformInt(&tr.ssgi2Shader, UNIFORM_DELUXEMAP, TB_DELUXEMAP);
+	GLSL_SetUniformInt(&tr.ssgi2Shader, UNIFORM_SPECULARMAP, TB_SPECULARMAP);
 	
 	{
 		vec2_t screensize;
@@ -3640,7 +3620,11 @@ void GLSL_EndLoadGPUShaders ( int startTime )
 
 	qglUseProgram(tr.ssgi3Shader.program);
 
-	GLSL_SetUniformInt(&tr.ssgi3Shader, UNIFORM_LEVELSMAP,  TB_LEVELSMAP);
+	GLSL_SetUniformInt(&tr.ssgi3Shader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
+	GLSL_SetUniformInt(&tr.ssgi3Shader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
+	GLSL_SetUniformInt(&tr.ssgi3Shader, UNIFORM_NORMALMAP, TB_NORMALMAP);
+	GLSL_SetUniformInt(&tr.ssgi3Shader, UNIFORM_DELUXEMAP, TB_DELUXEMAP);
+	GLSL_SetUniformInt(&tr.ssgi3Shader, UNIFORM_SPECULARMAP, TB_SPECULARMAP);
 	
 	{
 		vec2_t screensize;
@@ -3679,7 +3663,11 @@ void GLSL_EndLoadGPUShaders ( int startTime )
 
 	qglUseProgram(tr.ssgi4Shader.program);
 
-	GLSL_SetUniformInt(&tr.ssgi4Shader, UNIFORM_LEVELSMAP,  TB_LEVELSMAP);
+	GLSL_SetUniformInt(&tr.ssgi4Shader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
+	GLSL_SetUniformInt(&tr.ssgi4Shader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
+	GLSL_SetUniformInt(&tr.ssgi4Shader, UNIFORM_NORMALMAP, TB_NORMALMAP);
+	GLSL_SetUniformInt(&tr.ssgi4Shader, UNIFORM_DELUXEMAP, TB_DELUXEMAP);
+	GLSL_SetUniformInt(&tr.ssgi4Shader, UNIFORM_SPECULARMAP, TB_SPECULARMAP);
 	
 	{
 		vec2_t screensize;
@@ -3718,7 +3706,11 @@ void GLSL_EndLoadGPUShaders ( int startTime )
 
 	qglUseProgram(tr.ssgi5Shader.program);
 
-	GLSL_SetUniformInt(&tr.ssgi5Shader, UNIFORM_LEVELSMAP,  TB_LEVELSMAP);
+	GLSL_SetUniformInt(&tr.ssgi5Shader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
+	GLSL_SetUniformInt(&tr.ssgi5Shader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
+	GLSL_SetUniformInt(&tr.ssgi5Shader, UNIFORM_NORMALMAP, TB_NORMALMAP);
+	GLSL_SetUniformInt(&tr.ssgi5Shader, UNIFORM_DELUXEMAP, TB_DELUXEMAP);
+	GLSL_SetUniformInt(&tr.ssgi5Shader, UNIFORM_SPECULARMAP, TB_SPECULARMAP);
 	
 	{
 		vec2_t screensize;
@@ -3757,7 +3749,11 @@ void GLSL_EndLoadGPUShaders ( int startTime )
 
 	qglUseProgram(tr.ssgi6Shader.program);
 
-	GLSL_SetUniformInt(&tr.ssgi6Shader, UNIFORM_LEVELSMAP,  TB_LEVELSMAP);
+	GLSL_SetUniformInt(&tr.ssgi6Shader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
+	GLSL_SetUniformInt(&tr.ssgi6Shader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
+	GLSL_SetUniformInt(&tr.ssgi6Shader, UNIFORM_NORMALMAP, TB_NORMALMAP);
+	GLSL_SetUniformInt(&tr.ssgi6Shader, UNIFORM_DELUXEMAP, TB_DELUXEMAP);
+	GLSL_SetUniformInt(&tr.ssgi6Shader, UNIFORM_SPECULARMAP, TB_SPECULARMAP);
 	
 	{
 		vec2_t screensize;
@@ -3796,7 +3792,11 @@ void GLSL_EndLoadGPUShaders ( int startTime )
 
 	qglUseProgram(tr.ssgi7Shader.program);
 
-	GLSL_SetUniformInt(&tr.ssgi7Shader, UNIFORM_LEVELSMAP,  TB_LEVELSMAP);
+	GLSL_SetUniformInt(&tr.ssgi7Shader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
+	GLSL_SetUniformInt(&tr.ssgi7Shader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
+	GLSL_SetUniformInt(&tr.ssgi7Shader, UNIFORM_NORMALMAP, TB_NORMALMAP);
+	GLSL_SetUniformInt(&tr.ssgi7Shader, UNIFORM_DELUXEMAP, TB_DELUXEMAP);
+	GLSL_SetUniformInt(&tr.ssgi7Shader, UNIFORM_SPECULARMAP, TB_SPECULARMAP);
 	
 	{
 		vec2_t screensize;

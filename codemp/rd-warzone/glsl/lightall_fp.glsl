@@ -107,6 +107,7 @@ varying float	var_usingSteepMap;
 
 out vec4 out_Glow;
 //out vec4 out_Normal;
+out vec4 out_PositionMap;
 out vec4 out_DetailedNormal;
 out vec4 out_FoliageMap;
 
@@ -411,9 +412,47 @@ void main()
 	#endif //defined(USE_LIGHTMAP)
 
 	#if defined(USE_PARALLAXMAP)
+#if 0
 		vec3 offsetDir = normalize(E * tangentToWorld);
 		offsetDir.xy *= tex_offset * -u_Local1.x;//-4.0;//-5.0; // -3.0
 		texCoords += offsetDir.xy * RayIntersectDisplaceMap(texCoords, offsetDir.xy);
+#else
+		// Common for Parallax
+		//vec2 ParallaxXY = ( E ).xy/-E.z * u_Local1.x;
+		
+		vec3 offsetDir = normalize(E * tangentToWorld);
+		vec2 ParallaxXY = offsetDir.xy * u_Local1.x;
+ 
+		// Steep Parallax
+		float Step = 0.01;
+		vec2 dt = ParallaxXY * Step;
+		float Height = 0.5;
+		float oldHeight = 0.5;
+		vec2 Coord = texCoords;
+		vec2 oldCoord = Coord;
+		float HeightMap = GetDepth( Coord );
+		float oldHeightMap = HeightMap;
+ 
+		while( HeightMap < Height )
+		{
+			oldHeightMap = HeightMap;
+			oldHeight = Height;
+			oldCoord = Coord;
+ 
+			Height -= Step;
+			Coord += dt;
+		    HeightMap = GetDepth( Coord );
+	    }
+		
+		Coord = (Coord + oldCoord)*0.5;
+		if( Height < 0.0 )
+		{
+			Coord = oldCoord;
+			Height = 0.0;
+		}
+		
+		texCoords = Coord;
+#endif
 	#endif
 
 
@@ -623,7 +662,7 @@ void main()
 		}
 	#endif
 
-
+	//gl_FragColor.rgb = N.xyz * 0.5 + 0.5;
 
 	#if defined(USE_GLOW_BUFFER)
 		out_Glow = gl_FragColor;
@@ -631,7 +670,8 @@ void main()
 		out_Glow = vec4(0.0);
 	#endif
 
-	out_DetailedNormal = vec4(DETAILED_NORMAL.xyz, specular.a / 8.0);
+	out_DetailedNormal = vec4(DETAILED_NORMAL.xyz * 0.5 + 0.5, specular.a / 8.0);
+	out_PositionMap = vec4(gl_FragCoord.xyz, 0.0);
 
 	if (u_Local1.a == 20 || u_Local1.a == 19 || ((u_Local1.a == 5 || u_Local1.a == 6) && var_usingSteepMap == 0.0)) 
 	{// (Foliage/Plants), (billboard trees), ShortGrass, LongGrass
