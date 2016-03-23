@@ -2257,10 +2257,11 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
  				VectorMA( backEnd.refdef.vieworg, dist, tr.sunDirection, out );
 				GLSL_SetUniformVec4(sp, UNIFORM_PRIMARYLIGHTORIGIN,  out);
 
-
+#if 0
 				GL_BindToTMU( tr.previousRenderImage, TB_DIFFUSEMAP );
 				GL_BindToTMU( tr.waterDudvImage, TB_DELUXEMAP );
 				GL_BindToTMU( tr.waterDudvNormalImage, TB_NORMALMAP );
+#endif
 			}
 
 #if 0
