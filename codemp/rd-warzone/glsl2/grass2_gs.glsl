@@ -2,57 +2,60 @@
 #extension GL_ARB_gpu_shader5 : enable
 #endif
 
-layout(triangles, invocations = 24) in;
-layout(triangle_strip, max_vertices = 113) out;
+layout(triangles) in;
+layout(triangle_strip, max_vertices = 170) out;
 
 
-uniform mat4			u_ModelViewProjectionMatrix;
-uniform mat4			u_ModelMatrix;
-uniform mat4			u_ModelViewMatrix;
-uniform mat4			u_NormalMatrix;
+uniform mat4				u_ModelViewProjectionMatrix;
+uniform mat4				u_ModelMatrix;
+uniform mat4				u_ModelViewMatrix;
+uniform mat4				u_NormalMatrix;
 
-uniform vec4			u_Local9;
-uniform vec4			u_Local10; // foliageLODdistance, foliageDensity, doSway, overlaySway
+uniform vec4				u_Local8; // passnum, 0, 0, 0
+uniform vec4				u_Local9;
+uniform vec4				u_Local10; // foliageLODdistance, foliageDensity, MAP_WATER_LEVEL, 0.0
 
-uniform float			u_Time;
+uniform float				u_Time;
 
-varying vec3			var_Normal;
-
-
-smooth out vec2			vTexCoord;
-
-#if defined(USE_PRIMARY_LIGHT) || defined(USE_PRIMARY_LIGHT_SPECULAR) || defined(USE_SHADOWMAP) 
-smooth out vec3			vWorldPos;
-#endif //defined(USE_PRIMARY_LIGHT) || defined(USE_PRIMARY_LIGHT_SPECULAR) || defined(USE_SHADOWMAP) 
+smooth out vec2				vTexCoord;
 
 
+#define M_PI				3.14159265358979323846
+#define MAP_WATER_LEVEL		u_Local10.b
 
-#define screenScale		vec3(r_FBufScale.xy, 0.0)
+//
+// General Settings...
+//
 
-#define MAX_RANGE		u_Local10.r
+#define						FAST_METHOD
 
-#define LOD0_RANGE		MAX_RANGE / 16.0
-#define LOD1_RANGE		MAX_RANGE / 8.0
-#define LOD2_RANGE		MAX_RANGE / 5.0
-#define LOD3_RANGE		MAX_RANGE / 3.0
+const float					fGrassPatchSize = 48.0;//24.0;
+const float					fWindStrength = 12.0;
+const vec3					vWindDirection = normalize(vec3(1.0, 0.0, 1.0));
 
-#define LOD0_MAX_FOLIAGES 28
-#define LOD1_MAX_FOLIAGES 20
-#define LOD2_MAX_FOLIAGES 5
-#define LOD3_MAX_FOLIAGES 1
+//
+// LOD Range Settings...
+//
 
-mat4 rotationMatrix(vec3 axis, float angle)
-{
-    axis = normalize(axis);
-    float s = sin(angle);
-    float c = cos(angle);
-    float oc = 1.0 - c;
-    
-    return mat4(oc * axis.x * axis.x + c,           oc * axis.x * axis.y - axis.z * s,  oc * axis.z * axis.x + axis.y * s,  0.0,
-                oc * axis.x * axis.y + axis.z * s,  oc * axis.y * axis.y + c,           oc * axis.y * axis.z - axis.x * s,  0.0,
-                oc * axis.z * axis.x - axis.y * s,  oc * axis.y * axis.z + axis.x * s,  oc * axis.z * axis.z + c,           0.0,
-                0.0,                                0.0,                                0.0,                                1.0);
-}
+#define MAX_RANGE			u_Local10.r
+
+#define LOD0_RANGE			MAX_RANGE / 16.0
+#define LOD1_RANGE			MAX_RANGE / 8.0
+#define LOD2_RANGE			MAX_RANGE / 5.0
+#define LOD3_RANGE			MAX_RANGE / 3.0
+
+
+#if !defined(FAST_METHOD)
+#define LOD0_MAX_FOLIAGES	85
+#define LOD1_MAX_FOLIAGES	32
+#define LOD2_MAX_FOLIAGES	4
+#define LOD3_MAX_FOLIAGES	1
+#else //defined(FAST_METHOD)
+#define LOD0_MAX_FOLIAGES	170
+#define LOD1_MAX_FOLIAGES	85//48
+#define LOD2_MAX_FOLIAGES	32
+#define LOD3_MAX_FOLIAGES	16
+#endif //defined(FAST_METHOD)
 
 vec3 vLocalSeed;
 
@@ -78,14 +81,14 @@ int randomInt(int min, int max)
 vec4 randomBarycentricCoordinate() {
   float R = randZeroOne();
   float S = randZeroOne();
+
   if (R + S >= 1) {
     R = 1 - R;
     S = 1 - S;
   }
+
   return gl_in[0].gl_Position + (R * (gl_in[1].gl_Position - gl_in[0].gl_Position)) + (S * (gl_in[2].gl_Position - gl_in[0].gl_Position));
 }
-
-#define M_PI		3.14159265358979323846
 
 vec3 vectoangles( in vec3 value1 ) {
 	float	forward;
@@ -131,10 +134,28 @@ vec3 vectoangles( in vec3 value1 ) {
 
 void main()
 {
-	//vec3 normal = gl_NormalMatrix * normalize(cross(gl_in[1].gl_Position.xyz - gl_in[0].gl_Position.xyz, gl_in[2].gl_Position.xyz - gl_in[0].gl_Position.xyz)); //calculate normal for this face
-	//vec3 normal = (u_ModelViewProjectionMatrix * vec4(normalize(cross(gl_in[1].gl_Position.xyz - gl_in[0].gl_Position.xyz, gl_in[2].gl_Position.xyz - gl_in[0].gl_Position.xyz)), 0.0)).xyz; //calculate normal for this face
+	//face center------------------------
+    vec3 Vert1 = gl_in[0].gl_Position.xyz;
+    vec3 Vert2 = gl_in[1].gl_Position.xyz;
+    vec3 Vert3 = gl_in[2].gl_Position.xyz;
+
+    vec3 Pos = (Vert1+Vert2+Vert3) / 3.0;   //Center of the triangle - copy for later
+    //-----------------------------------
+
+	if (Pos.z < MAP_WATER_LEVEL)
+	{// Below map's water level... Early cull... (Maybe underwater plants later???)
+		return;
+	}
+
+	float VertDist = (u_ModelViewProjectionMatrix*vec4(Pos, 1.0)).z;
+
+	if (VertDist >= MAX_RANGE) 
+	{// Too far from viewer... Early cull...
+		return;
+	}
+
 	vec3 normal = (u_NormalMatrix * vec4(normalize(cross(gl_in[1].gl_Position.xyz - gl_in[0].gl_Position.xyz, gl_in[2].gl_Position.xyz - gl_in[0].gl_Position.xyz)), 0.0)).xyz; //calculate normal for this face
-	float pitch = vectoangles( normal.xyz /*var_Normal.xyz*/ ).r;
+	float pitch = vectoangles( normal.xyz ).r;
 	
 	if (pitch > 180)
 		pitch -= 360;
@@ -144,69 +165,40 @@ void main()
 
 	pitch += 90.0f;
 
-	if (pitch > 26.0/*u_Local9.r*/ || pitch < -26.0/*-u_Local9.r*/) // 26.0 to 32.0 looks about right
-		return; // This slope is too great for grass...
+	if (pitch < 0.0) pitch = -pitch;
 
-	float fGrassPatchSize = 96.0;
+	if (pitch > 12.0/*26.0*/) // 26.0 to 32.0 looks about right -- Updated: 12.0 for only grass on light slopes
+		return; // This slope is too steep for grass...
 
-	//face center------------------------
-    vec3 Vert1 = gl_in[0].gl_Position.xyz;
-    vec3 Vert2 = gl_in[1].gl_Position.xyz;
-    vec3 Vert3 = gl_in[2].gl_Position.xyz;
-
-    vec3 Pos = (Vert1+Vert2+Vert3) / 3.0;   //Center of the triangle - copy for later
+	//face info--------------------------
 	float VertSize = length(Vert1-Vert2) + length(Vert1-Vert3) + length(Vert2-Vert3);
 	int densityMax = int(VertSize / u_Local10.g);
     //-----------------------------------
 
-	float VertDist = (u_ModelViewProjectionMatrix*vec4(Pos, 1.0)).z;
-
 	//------ LOD - # of grass objects to spawn per-face
-    int FOLIAGE_DENSITY;
-	FOLIAGE_DENSITY = (VertDist <= LOD0_RANGE)? LOD0_MAX_FOLIAGES: LOD1_MAX_FOLIAGES;
-    FOLIAGE_DENSITY = (VertDist >= LOD1_RANGE)? LOD2_MAX_FOLIAGES: FOLIAGE_DENSITY;
-	FOLIAGE_DENSITY = (VertDist >= LOD2_RANGE)? LOD3_MAX_FOLIAGES: FOLIAGE_DENSITY;
-    FOLIAGE_DENSITY = (VertDist >= LOD3_RANGE)? 0: FOLIAGE_DENSITY;
+    int FOLIAGE_DENSITY = LOD0_MAX_FOLIAGES;
+	if (VertDist >= LOD3_RANGE) FOLIAGE_DENSITY = LOD3_MAX_FOLIAGES;
+	else if (VertDist >= LOD2_RANGE) FOLIAGE_DENSITY = LOD2_MAX_FOLIAGES;
+	else if (VertDist >= LOD1_RANGE) FOLIAGE_DENSITY = LOD1_MAX_FOLIAGES;
+
+	FOLIAGE_DENSITY = int(float(FOLIAGE_DENSITY) / (pitch+1.0));
 
 	if ( FOLIAGE_DENSITY > densityMax) FOLIAGE_DENSITY = densityMax;
 
-#if !defined(USE_400)
-	vLocalSeed = Pos;//*float(gl_PrimitiveIDIn/*gl_InvocationID*/);
-#else
-	vLocalSeed = Pos*float(gl_InvocationID);
-#endif
+	// No invocations support...
+	vLocalSeed = Pos*u_Local8.r;
 
-	vec3 vBaseDir[4];
-	vBaseDir[0] = vec3(0.0, 0.0, 1.0);
-	vBaseDir[1] = vec3(0.0, 0.0, 1.0);
-	vBaseDir[2] = vec3(0.0, 0.0, -1.0);
-	vBaseDir[3] = vec3(0.0, 0.0, -1.0);
-
-	//vec3 vBaseDirRotated[4];
-	//vBaseDirRotated[0] = (rotationMatrix(vec3(0, 1, 0), sin(u_Time*0.7f)*0.1f)*vec4(vBaseDir[0], 1.0)).xyz;
-	//vBaseDirRotated[1] = (rotationMatrix(vec3(0, 1, 0), sin(u_Time*0.7f)*0.1f)*vec4(vBaseDir[1], 1.0)).xyz;
-	//vBaseDirRotated[2] = (rotationMatrix(vec3(0, 1, 0), sin(u_Time*0.7f)*0.1f)*vec4(vBaseDir[2], 1.0)).xyz;
-	//vBaseDirRotated[2] = (rotationMatrix(vec3(0, 1, 0), sin(u_Time*0.7f)*0.1f)*vec4(vBaseDir[3], 1.0)).xyz;
-
-	vec3 instanceRotAddition[4];
-	instanceRotAddition[0] = vec3(0.0, 0.0, 0.0);
-	instanceRotAddition[1] = vec3(1.0, 0.0, 0.0);
-	instanceRotAddition[2] = vec3(1.0, 0.0, 0.0);
-	instanceRotAddition[3] = vec3(0.0, 0.0, 0.0);
-
-	//float fWindStrength = 4.0;
-	
-	//vec3 vWindDirection = normalize(vec3(1.0, 0.0, 1.0));
-
-	for(int x = 0; x < FOLIAGE_DENSITY; x ++)
+	for(int x = 0; x < FOLIAGE_DENSITY; x++)
 	{
 		vec3 vGrassFieldPos = randomBarycentricCoordinate().xyz;
-		vGrassFieldPos.xyz += vec3(10.0);
-		float fGrassPatchHeight = randZeroOne() * 0.25 + 0.75;
-		vec3 scaleMult = vec3(fGrassPatchSize*fGrassPatchHeight*0.5f) * (vec3(1.0) - screenScale);
-		//int iGrassPatchType = randomInt(0, 3);
 
-		/*
+		if (vGrassFieldPos.z < MAP_WATER_LEVEL)
+		{
+			continue;
+		}
+
+		float fGrassPatchHeight = randZeroOne() * 0.25 + 0.75;
+
 		// Wind calculation stuff...
 		float fWindPower = 0.5f+sin(vGrassFieldPos.x/30+vGrassFieldPos.z/30+u_Time*(1.2f+fWindStrength/20.0f));
 		
@@ -216,62 +208,135 @@ void main()
 			fWindPower = fWindPower*0.3f;
 		
 		fWindPower *= fWindStrength;
-		*/
+		
+#if !defined(FAST_METHOD)
+		if (VertDist >= MAX_RANGE / 32.0)
+		{// Distant stuff is a single billboard facing the player...
+			vec3 right = vec3(u_ModelViewMatrix[0][0], 
+                    u_ModelViewMatrix[1][0], 
+                    u_ModelViewMatrix[2][0]);
+ 
+			vec3 up = vec3(u_ModelViewMatrix[0][1], 
+					u_ModelViewMatrix[1][1], 
+					u_ModelViewMatrix[2][1]);
 
-		for(int i = 0; i < 4; i++)
-		{
-			vec3 vGrassInstancePos = vGrassFieldPos;
-			vec3 rotation = (instanceRotAddition[i]*scaleMult);
+			float size = fGrassPatchSize*fGrassPatchHeight;
+		  
+			vec3 P = vGrassFieldPos.xyz + (up * (size*0.9));
 
-#if 0
-			vec3 vTL = vGrassInstancePos - vBaseDirRotated[i]*fGrassPatchSize*0.5f + vWindDirection*fWindPower;
-#else
-			
-			vec3 vTL = vGrassInstancePos - (vBaseDir[i]*scaleMult);
-			vTL -= rotation;
-			vTL.y -= scaleMult.y*2.0;
-			gl_Position = u_ModelViewProjectionMatrix*vec4(vTL, 1.0);
+			vec3 va = P - (right + up) * size;
+			gl_Position = u_ModelViewProjectionMatrix * vec4(va, 1.0);
 			vTexCoord = vec2(0.0, 1.0);
-			vTexCoord.y *= vBaseDir[i].z;
-			#if defined(USE_PRIMARY_LIGHT) || defined(USE_PRIMARY_LIGHT_SPECULAR) || defined(USE_SHADOWMAP) 
-				vWorldPos = vTL;
-			#endif //defined(USE_PRIMARY_LIGHT) || defined(USE_PRIMARY_LIGHT_SPECULAR) || defined(USE_SHADOWMAP) 
-			EmitVertex();
-
-			vec3 vBL = vGrassInstancePos - (vBaseDir[i]*scaleMult);
-			vBL += rotation;
-			gl_Position = u_ModelViewProjectionMatrix*vec4(vBL, 1.0);
-			vTexCoord = vec2(1.0, 1.0);
-			vTexCoord.y *= vBaseDir[i].z;
-			#if defined(USE_PRIMARY_LIGHT) || defined(USE_PRIMARY_LIGHT_SPECULAR) || defined(USE_SHADOWMAP) 
-				vWorldPos = vBL;
-			#endif //defined(USE_PRIMARY_LIGHT) || defined(USE_PRIMARY_LIGHT_SPECULAR) || defined(USE_SHADOWMAP) 
-			EmitVertex();
-
-			vec3 vTR = vGrassInstancePos + (vBaseDir[i]*scaleMult);
-			vTR -= rotation;
-			vTR.y -= scaleMult.y*2.0;
-			gl_Position = u_ModelViewProjectionMatrix*vec4(vTR, 1.0);
+			EmitVertex();  
+  
+			vec3 vb = P - (right - up) * size;
+			gl_Position = u_ModelViewProjectionMatrix * vec4(vb + vWindDirection*fWindPower, 1.0);
 			vTexCoord = vec2(0.0, 0.0);
-			vTexCoord.y *= vBaseDir[i].z;
-			#if defined(USE_PRIMARY_LIGHT) || defined(USE_PRIMARY_LIGHT_SPECULAR) || defined(USE_SHADOWMAP) 
-				vWorldPos = vTR;
-			#endif //defined(USE_PRIMARY_LIGHT) || defined(USE_PRIMARY_LIGHT_SPECULAR) || defined(USE_SHADOWMAP) 
-			EmitVertex();
-
-			vec3 vBR = vGrassInstancePos + (vBaseDir[i]*scaleMult);
-			vBL += rotation;
-			gl_Position = u_ModelViewProjectionMatrix*vec4(vBR, 1.0);
+			EmitVertex();  
+ 
+			vec3 vd = P + (right - up) * size;
+			gl_Position = u_ModelViewProjectionMatrix * vec4(vd, 1.0);
+			vTexCoord = vec2(1.0, 1.0);
+			EmitVertex();  
+ 
+			vec3 vc = P + (right + up) * size;
+			gl_Position = u_ModelViewProjectionMatrix * vec4(vc + vWindDirection*fWindPower, 1.0);
 			vTexCoord = vec2(1.0, 0.0);
-			vTexCoord.y *= vBaseDir[i].z;
-			#if defined(USE_PRIMARY_LIGHT) || defined(USE_PRIMARY_LIGHT_SPECULAR) || defined(USE_SHADOWMAP) 
-				vWorldPos = vBL;
-			#endif //defined(USE_PRIMARY_LIGHT) || defined(USE_PRIMARY_LIGHT_SPECULAR) || defined(USE_SHADOWMAP) 
-			EmitVertex();
-
+			EmitVertex();  
+  
 			EndPrimitive();
-#endif
-		}		
+		}
+		else
+		{// Close stuff draws 2 boxes in an X pattern...
+			{
+				vec3 right = vec3(1.0, 0.0, 0.0);
+				vec3 up = vec3(0.0, 0.0, 1.0);
+
+				float size = fGrassPatchSize*fGrassPatchHeight;
+				vec3 P = vGrassFieldPos.xyz + (up * (size*0.9));
+
+				vec3 va = P - (right + up) * size;
+				gl_Position = u_ModelViewProjectionMatrix * vec4(va, 1.0);
+				vTexCoord = vec2(0.0, 1.0);
+				EmitVertex();  
+  
+				vec3 vb = P - (right - up) * size;
+				gl_Position = u_ModelViewProjectionMatrix * vec4(vb + vWindDirection*fWindPower, 1.0);
+				vTexCoord = vec2(0.0, 0.0);
+				EmitVertex();  
+ 
+				vec3 vd = P + (right - up) * size;
+				gl_Position = u_ModelViewProjectionMatrix * vec4(vd, 1.0);
+				vTexCoord = vec2(1.0, 1.0);
+				EmitVertex();  
+ 
+				vec3 vc = P + (right + up) * size;
+				gl_Position = u_ModelViewProjectionMatrix * vec4(vc + vWindDirection*fWindPower, 1.0);
+				vTexCoord = vec2(1.0, 0.0);
+				EmitVertex();  
+  
+				EndPrimitive();
+			}
+		
+			{
+				vec3 right = vec3(0.0, 1.0, 0.0);
+				vec3 up = vec3(0.0, 0.0, 1.0);
+
+				float size = fGrassPatchSize*fGrassPatchHeight;
+				vec3 P = vGrassFieldPos.xyz + (up * (size*0.8));
+
+				vec3 va = P - (right + up) * size;
+				gl_Position = u_ModelViewProjectionMatrix * vec4(va, 1.0);
+				vTexCoord = vec2(0.0, 1.0);
+				EmitVertex();  
+  
+				vec3 vb = P - (right - up) * size;
+				gl_Position = u_ModelViewProjectionMatrix * vec4(vb + vWindDirection*fWindPower, 1.0);
+				vTexCoord = vec2(0.0, 0.0);
+				EmitVertex();  
+ 
+				vec3 vd = P + (right - up) * size;
+				gl_Position = u_ModelViewProjectionMatrix * vec4(vd, 1.0);
+				vTexCoord = vec2(1.0, 1.0);
+				EmitVertex();  
+ 
+				vec3 vc = P + (right + up) * size;
+				gl_Position = u_ModelViewProjectionMatrix * vec4(vc + vWindDirection*fWindPower, 1.0);
+				vTexCoord = vec2(1.0, 0.0);
+				EmitVertex();  
+  
+				EndPrimitive();
+			}
+		}
+#else //defined(FAST_METHOD)
+		vec3 right = vec3(randZeroOne(), randZeroOne(), 0.0);
+		vec3 up = vec3(0.0, 0.0, 0.5);
+
+		float size = fGrassPatchSize*fGrassPatchHeight;
+		vec3 P = vGrassFieldPos.xyz + (up * (size*0.9));
+
+		vec3 va = P - (right + up) * size;
+		gl_Position = u_ModelViewProjectionMatrix * vec4(va, 1.0);
+		vTexCoord = vec2(0.0, 1.0);
+		EmitVertex();  
+  
+		vec3 vb = P - (right - up) * size;
+		gl_Position = u_ModelViewProjectionMatrix * vec4(vb + vWindDirection*fWindPower, 1.0);
+		vTexCoord = vec2(0.0, 0.0);
+		EmitVertex();  
+ 
+		vec3 vd = P + (right - up) * size;
+		gl_Position = u_ModelViewProjectionMatrix * vec4(vd, 1.0);
+		vTexCoord = vec2(1.0, 1.0);
+		EmitVertex();  
+ 
+		vec3 vc = P + (right + up) * size;
+		gl_Position = u_ModelViewProjectionMatrix * vec4(vc + vWindDirection*fWindPower, 1.0);
+		vTexCoord = vec2(1.0, 0.0);
+		EmitVertex();  
+  
+		EndPrimitive();
+#endif //defined(FAST_METHOD)
 	}
 }
 

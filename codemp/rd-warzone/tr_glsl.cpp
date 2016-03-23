@@ -753,6 +753,7 @@ static uniformInfo_t uniformsInfo[] =
 	{ "u_DiffuseMap",  GLSL_INT, 1 },
 	{ "u_LightMap",    GLSL_INT, 1 },
 	{ "u_NormalMap",   GLSL_INT, 1 },
+	{ "u_NormalMap2",   GLSL_INT, 1 },
 	{ "u_DeluxeMap",   GLSL_INT, 1 },
 	{ "u_SpecularMap", GLSL_INT, 1 },
 

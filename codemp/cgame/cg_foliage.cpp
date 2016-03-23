@@ -23,7 +23,7 @@ extern qboolean InFOV( vec3_t spot, vec3_t from, vec3_t fromAngles, int hFOV, in
 	// =======================================================================================================================================
 
 #define			__NO_GRASS__	// Disable plants... Can use this if I finish GPU based grasses...
-	//#define		__NO_PLANTS__		// Disable plants and only draw grass for everything... Was just for testing FPS difference...
+//#define			__NO_PLANTS__	// Disable plants and only draw grass for everything... Was just for testing FPS difference...
 
 	// =======================================================================================================================================
 	//
@@ -1122,7 +1122,7 @@ extern "C" {
 		refEntity_t		re;
 		vec3_t			angles;
 		float			dist = 0;
-		float			distFadeScale = 1.0;
+		float			distFadeScale = 1.5;
 		float			minFoliageScale = cg_foliageMinFoliageScale.value;
 
 		if (FOLIAGE_TREE_SELECTION[num] <= 0 && FOLIAGE_PLANT_SCALE[num] < minFoliageScale) return;
@@ -1164,7 +1164,7 @@ extern "C" {
 
 			if (passType == FOLIAGE_PASS_PLANT && !skipPlant && FOLIAGE_PLANT_SELECTION[num] > 0)
 			{// Add plant model as well...
-				float PLANT_SCALE = FOLIAGE_PLANT_SCALE[num]*PLANT_SCALE_MULTIPLIER*distFadeScale;//*0.55;
+				float PLANT_SCALE = FOLIAGE_PLANT_SCALE[num]*PLANT_SCALE_MULTIPLIER*distFadeScale;
 
 				re.customShader = FOLIAGE_PLANT_SHADERS[FOLIAGE_PLANT_SELECTION[num]-1];
 
@@ -1413,10 +1413,18 @@ extern "C" {
 			trap->FS_Read( &FOLIAGE_TREE_ANGLES[treeCount], sizeof(float), f );
 			trap->FS_Read( &FOLIAGE_TREE_SCALE[treeCount], sizeof(float), f );
 
+#ifdef __NO_PLANTS__
+			if (FOLIAGE_TREE_SELECTION[treeCount] > 0 )
+			{// Only keep positions with trees or plants...
+				FOLIAGE_PLANT_SELECTION[treeCount] = 0;
+				treeCount++;
+			}
+#else //!__NO_PLANTS__
 			if (FOLIAGE_TREE_SELECTION[treeCount] > 0 || FOLIAGE_PLANT_SELECTION[treeCount] > 0 )
 			{// Only keep positions with trees or plants...
 				treeCount++;
 			}
+#endif //__NO_PLANTS__
 			else
 			{
 				numRemovedPositions++;

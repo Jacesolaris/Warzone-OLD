@@ -3303,6 +3303,8 @@ qboolean IgnoreCubemapsOnMap( void )
 	return qfalse;
 }
 
+float MAP_WATER_LEVEL = 131072.0;
+
 static void R_LoadCubemapWaypoints( void )
 {
 	int numCubemaps = 0;
@@ -3373,6 +3375,12 @@ static void R_LoadCubemapWaypoints( void )
 				continue;
 			}
 
+			if ((surf->shader->surfaceFlags & MATERIAL_MASK) == MATERIAL_WATER)
+			{// While doing this, also find lowest water height, so that we can cull underwater grass drawing...
+				if (surfOrigin[2] < MAP_WATER_LEVEL)
+					MAP_WATER_LEVEL = surfOrigin[2];
+			}
+
 			for (int j = 0; j < numcubeOrgs; j++)
 			{
 				if (Distance(cubeOrgs[j], surfOrigin) < 256)
@@ -3390,6 +3398,11 @@ static void R_LoadCubemapWaypoints( void )
 				numcubeOrgs++;
 			}
 		}
+	}
+
+	if (MAP_WATER_LEVEL == 131072.0)
+	{// No water plane was found, set to max mins...
+		MAP_WATER_LEVEL = -131072.0;
 	}
 
 	tr.numCubemaps = numcubeOrgs;

@@ -11,13 +11,14 @@ uniform vec4	u_Local6; // useSunLightSpecular, 0, 0, 0
 uniform vec4	u_Local9;
 
 #define USE_TRI_PLANAR
-#define USE_SUBSURFACE_SCATTER
+//#define USE_SUBSURFACE_SCATTER
 
 varying float  var_Time;
 
 uniform sampler2D u_LightMap;
 
 uniform sampler2D u_NormalMap;
+uniform sampler2D u_NormalMap2;
 
 uniform sampler2D u_DeluxeMap;
 
@@ -112,15 +113,15 @@ out vec4 out_DetailedNormal;
 out vec4 out_FoliageMap;
 
 
-vec4 GetSteepMap(vec2 texCoords)
+vec4 GetSteepMap(vec2 texCoords, vec2 ParallaxOffset)
 {
 #if defined(USE_OVERLAY) || defined(USE_TRI_PLANAR)
 	if (u_Local5.a > 0.0 && var_Slope > 0)
 	{// Steep maps...
-		const float scale = 0.0005125;//u_Local9.r;
-		vec4 xaxis = texture2D( u_SteepMap, m_vertPos.yz * scale);
-		vec4 yaxis = texture2D( u_SteepMap, m_vertPos.xz * scale);
-		vec4 zaxis = texture2D( u_SteepMap, m_vertPos.xy * scale);
+		const float scale = 0.0025;
+		vec4 xaxis = texture2D( u_SteepMap, (m_vertPos.yz + ParallaxOffset.xy) * scale);
+		vec4 yaxis = texture2D( u_SteepMap, (m_vertPos.xz + ParallaxOffset.xy) * scale);
+		vec4 zaxis = texture2D( u_SteepMap, (m_vertPos.xy + ParallaxOffset.xy) * scale);
 		vec4 tex = xaxis * var_Blending.x + yaxis * var_Blending.y + zaxis * var_Blending.z;
 		return tex;
 	}
@@ -133,15 +134,15 @@ vec4 GetSteepMap(vec2 texCoords)
 #endif //defined(USE_OVERLAY) || defined(USE_TRI_PLANAR)
 }
 
-vec4 GetDiffuse(vec2 texCoords)
+vec4 GetDiffuse(vec2 texCoords, vec2 ParallaxOffset)
 {
 #if defined(USE_OVERLAY) || defined(USE_TRI_PLANAR)
 	if (u_Local5.a > 0.0)
 	{// Steep maps...
-		const float scale = 0.0005125;//u_Local9.r;
-		vec4 xaxis = texture2D( u_DiffuseMap, m_vertPos.yz * scale);
-		vec4 yaxis = texture2D( u_DiffuseMap, m_vertPos.xz * scale);
-		vec4 zaxis = texture2D( u_DiffuseMap, m_vertPos.xy * scale);
+		const float scale = 0.01;
+		vec4 xaxis = texture2D( u_DiffuseMap, (m_vertPos.yz + ParallaxOffset.xy) * scale);
+		vec4 yaxis = texture2D( u_DiffuseMap, (m_vertPos.xz + ParallaxOffset.xy) * scale);
+		vec4 zaxis = texture2D( u_DiffuseMap, (m_vertPos.xy + ParallaxOffset.xy) * scale);
 		vec4 tex = xaxis * var_Blending.x + yaxis * var_Blending.y + zaxis * var_Blending.z;
 		return tex;
 	}
@@ -154,15 +155,24 @@ vec4 GetDiffuse(vec2 texCoords)
 #endif //defined(USE_OVERLAY) || defined(USE_TRI_PLANAR)
 }
 
-vec4 GetNormal(vec2 texCoords)
+vec4 GetNormal(vec2 texCoords, vec2 ParallaxOffset)
 {
 #if defined(USE_OVERLAY) || defined(USE_TRI_PLANAR)
-	if (u_Local5.a > 0.0)
+	if (u_Local5.a > 0.0 && var_Slope > 0)
 	{// Steep maps...
-		const float scale = 0.0005125;//u_Local9.r;
-		vec4 xaxis = texture2D( u_NormalMap, m_vertPos.yz * scale);
-		vec4 yaxis = texture2D( u_NormalMap, m_vertPos.xz * scale);
-		vec4 zaxis = texture2D( u_NormalMap, m_vertPos.xy * scale);
+		const float scale = 0.0025;
+		vec4 xaxis = texture2D( u_NormalMap2, (m_vertPos.yz + ParallaxOffset.xy) * scale);
+		vec4 yaxis = texture2D( u_NormalMap2, (m_vertPos.xz + ParallaxOffset.xy) * scale);
+		vec4 zaxis = texture2D( u_NormalMap2, (m_vertPos.xy + ParallaxOffset.xy) * scale);
+		vec4 tex = xaxis * var_Blending.x + yaxis * var_Blending.y + zaxis * var_Blending.z;
+		return tex;
+	}
+	else if (u_Local5.a > 0.0)
+	{// Steep maps...
+		const float scale = 0.01;
+		vec4 xaxis = texture2D( u_NormalMap, (m_vertPos.yz + ParallaxOffset.xy) * scale);
+		vec4 yaxis = texture2D( u_NormalMap, (m_vertPos.xz + ParallaxOffset.xy) * scale);
+		vec4 zaxis = texture2D( u_NormalMap, (m_vertPos.xy + ParallaxOffset.xy) * scale);
 		vec4 tex = xaxis * var_Blending.x + yaxis * var_Blending.y + zaxis * var_Blending.z;
 		return tex;
 	}
@@ -177,69 +187,18 @@ vec4 GetNormal(vec2 texCoords)
 
 float GetDepth(vec2 t)
 {
-	return 1.0 - GetNormal(t).a;
+	return 1.0 - GetNormal(t, vec2(0.0)).a;
 }
 
 #if defined(USE_PARALLAXMAP)
 
-float RayIntersectDisplaceMap(vec2 dp, vec2 ds)
+float RayIntersectDisplaceMap(vec2 dp)
 {
 	if (u_Local1.x == 0.0)
 		return 0.0;
 	
-  #if !defined(FAST_PARALLAX)
-	float MAX_SIZE = u_Local1.x / 3.0;//1.25;//1.5;//1.0;
-	if (MAX_SIZE > 1.75) MAX_SIZE = 1.75;
-	if (MAX_SIZE < 1.0) MAX_SIZE = 1.0;
-	const int linearSearchSteps = 16;
-	const int binarySearchSteps = 6;
-
-	// current size of search window
-	float size = MAX_SIZE / float(linearSearchSteps);
-
-	// current depth position
-	float depth = 0.0;
-
-	// best match found (starts with last position 1.0)
-	float bestDepth = MAX_SIZE;
-
-	// search front to back for first point inside object
-	for(int i = 0; i < linearSearchSteps - 1; ++i)
-	{
-		depth += size;
-		
-		float t = GetDepth(dp + ds * depth) * MAX_SIZE;
-		
-		//if(bestDepth > 0.996)		// if no depth found yet
-		if(bestDepth > MAX_SIZE - (MAX_SIZE / linearSearchSteps))		// if no depth found yet
-			if(depth >= t)
-				bestDepth = depth;	// store best depth
-	}
-
-	depth = bestDepth;
-	
-	// recurse around first point (depth) for closest match
-	for(int i = 0; i < binarySearchSteps; ++i)
-	{
-		size *= 0.5;
-
-		float t = GetDepth(dp + ds * depth) * MAX_SIZE;
-		
-		if(depth >= t)
-		{
-			bestDepth = depth;
-			depth -= 2.0 * size;
-		}
-
-		depth += size;
-	}
-
-	return bestDepth * u_Local1.x;
-  #else
 	float depth = GetDepth(dp) - 1.0;
 	return depth * u_Local1.x;
-  #endif
-  
 }
 #endif
 
@@ -411,61 +370,76 @@ void main()
 
 	#endif //defined(USE_LIGHTMAP)
 
+
+	vec2 ParallaxOffset = vec2(0.0);
+
+
 	#if defined(USE_PARALLAXMAP)
-#if 0
 		vec3 offsetDir = normalize(E * tangentToWorld);
-		offsetDir.xy *= tex_offset * -u_Local1.x;//-4.0;//-5.0; // -3.0
-		texCoords += offsetDir.xy * RayIntersectDisplaceMap(texCoords, offsetDir.xy);
-#else
-		// Common for Parallax
-		//vec2 ParallaxXY = ( E ).xy/-E.z * u_Local1.x;
-		
-		vec3 offsetDir = normalize(E * tangentToWorld);
-		vec2 ParallaxXY = offsetDir.xy * u_Local1.x;
- 
-		// Steep Parallax
-		float Step = 0.01;
-		vec2 dt = ParallaxXY * Step;
-		float Height = 0.5;
-		float oldHeight = 0.5;
-		vec2 Coord = texCoords;
-		vec2 oldCoord = Coord;
-		float HeightMap = GetDepth( Coord );
-		float oldHeightMap = HeightMap;
- 
-		while( HeightMap < Height )
-		{
-			oldHeightMap = HeightMap;
-			oldHeight = Height;
-			oldCoord = Coord;
- 
-			Height -= Step;
-			Coord += dt;
-		    HeightMap = GetDepth( Coord );
-	    }
-		
-		Coord = (Coord + oldCoord)*0.5;
-		if( Height < 0.0 )
-		{
-			Coord = oldCoord;
-			Height = 0.0;
+		vec2 ParallaxXY = vec2(0.0);
+
+		if (u_Local5.a > 0.0 && var_Slope > 0)
+		{// Steep maps...
+			ParallaxXY = offsetDir.xy * 2.5; // Always rock?!?!?!?
 		}
+		else
+		{
+			ParallaxXY = offsetDir.xy * u_Local1.x;
+		}
+
+		#if defined(FAST_PARALLAX)
+
+			ParallaxOffset = ParallaxXY * RayIntersectDisplaceMap(texCoords);
+			texCoords += ParallaxOffset;
+
+		#else //!defined(FAST_PARALLAX)
+
+			// Steep Parallax
+			float Step = 0.01;
+			vec2 dt = ParallaxXY * Step;
+			float Height = 0.5;
+			float oldHeight = 0.5;
+			vec2 Coord = texCoords;
+			vec2 oldCoord = Coord;
+			float HeightMap = GetDepth( Coord );
+			float oldHeightMap = HeightMap;
+ 
+			while( HeightMap < Height )
+			{
+				oldHeightMap = HeightMap;
+				oldHeight = Height;
+				oldCoord = Coord;
+ 
+				Height -= Step;
+				Coord += dt;
+				HeightMap = GetDepth( Coord );
+			}
 		
-		texCoords = Coord;
-#endif
-	#endif
+			Coord = (Coord + oldCoord)*0.5;
+			if( Height < 0.0 )
+			{
+				Coord = oldCoord;
+				Height = 0.0;
+			}
+		
+			ParallaxOffset = Coord - texCoords;
+			texCoords = Coord;
+
+		#endif //defined(FAST_PARALLAX)
+
+	#endif //defined(USE_PARALLAXMAP)
 
 
 
 
-	vec4 diffuse = GetDiffuse(texCoords);
+	vec4 diffuse = GetDiffuse(texCoords, ParallaxOffset);
 
 	#if defined(USE_GAMMA2_TEXTURES)
 		diffuse.rgb *= diffuse.rgb;
 	#endif
 
 
-	vec4 norm = GetNormal(texCoords);
+	vec4 norm = GetNormal(texCoords, ParallaxOffset);
 
 	N = norm.xyz * 2.0 - 1.0;
 	N.xy *= u_NormalScale.xy;
@@ -484,7 +458,7 @@ void main()
 
 		if (var_Slope > 0.0)
 		{// Steep maps...
-			diffuse.rgb = mix( diffuse.rgb, GetSteepMap(var_nonTCtexCoords).rgb, clamp(var_Slope,0.0,1.0));
+			diffuse.rgb = mix( diffuse.rgb, GetSteepMap(var_nonTCtexCoords, ParallaxOffset).rgb, clamp(var_Slope,0.0,1.0));
 		}
 
 	#endif //USE_OVERLAY//USE_STEEPMAP
@@ -566,6 +540,10 @@ void main()
 
 		gl_FragColor = vec4 (diffuse.rgb * lightColor, diffuse.a * var_Color.a);
 
+		if (u_Local1.a == 19 || u_Local1.a == 20)
+		{// Tree billboards... Need to match tree colors...
+			gl_FragColor.rgb = pow(gl_FragColor.rgb, vec3(1.3));
+		}
 
 		//specular.a = (1.0 - norm.a);
 		specular.a = ((clamp(u_Local1.g, 0.0, 1.0) + clamp(u_Local3.a, 0.0, 1.0)) / 2.0) * 1.6;

@@ -3998,17 +3998,15 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 	// reuse diffuse, mark others inactive
 	diffuse->type = ST_GLSL;
 	
-	switch( shader.surfaceFlags & MATERIAL_MASK )
-	{// Switch to avoid doing string checks on everything else...
+	if (!diffuse->isFoliageChecked)
+	{// Skip the string checks...
+		switch( shader.surfaceFlags & MATERIAL_MASK )
+		{// Switch to avoid doing string checks on everything else...
 		case MATERIAL_SHORTGRASS:		// 5			// manicured lawn
 		case MATERIAL_LONGGRASS:		// 6			// long jungle grass
 		case MATERIAL_DRYLEAVES:		// 19			// dried up leaves on the floor
 		case MATERIAL_GREENLEAVES:		// 20			// fresh leaves still on a tree
-			if (diffuse->isFoliage)
-			{// Skip the string checks...
-
-			}
-			else if (diffuse->bundle[TB_DIFFUSEMAP].image[0] 
+			if (diffuse->bundle[TB_DIFFUSEMAP].image[0] 
 				&& (StringContainsWord(diffuse->bundle[TB_DIFFUSEMAP].image[0]->imgName, "foliage/") || StringContainsWord(diffuse->bundle[TB_DIFFUSEMAP].image[0]->imgName, "foliages/")))
 			{
 				diffuse->isFoliage = true;
@@ -4025,6 +4023,9 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 		default:
 			diffuse->isFoliage = false;
 			break;
+		}
+
+		diffuse->isFoliageChecked = qtrue;
 	}
 
 	if (lightmap)
@@ -4033,7 +4034,10 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 		diffuse->bundle[TB_LIGHTMAP] = lightmap->bundle[0];
 		defs |= LIGHTDEF_USE_LIGHTMAP;
 	}
-	else if (( shader.surfaceFlags & MATERIAL_MASK ) != MATERIAL_DRYLEAVES && !shader.isSky && !diffuse->glow)
+	else if (( shader.surfaceFlags & MATERIAL_MASK ) != MATERIAL_DRYLEAVES // billboards
+		&& ( shader.surfaceFlags & MATERIAL_MASK ) != MATERIAL_GREENLEAVES // tree leaves
+		&& !shader.isSky 
+		&& !diffuse->glow)
 	{
 		diffuse->bundle[TB_LIGHTMAP] = diffuse->bundle[TB_DIFFUSEMAP];
 		diffuse->bundle[TB_LIGHTMAP].image[0] = tr.whiteImage;

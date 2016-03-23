@@ -812,6 +812,8 @@ typedef struct {
 	qboolean		isVideoMap;
 	qboolean		normalsLoaded;
 	qboolean		normalsLoaded2;
+	qboolean		steepNormalsLoaded;
+	qboolean		steepNormalsLoaded2;
 	qboolean		specularLoaded;
 	//qboolean		subsurfaceLoaded;
 	qboolean		overlayLoaded;
@@ -827,13 +829,14 @@ enum
 	TB_SHADOWMAP3		= 1,
 	TB_COLORMAP2		= 1,
 	TB_NORMALMAP		= 2,
-	TB_DELUXEMAP		= 3,
-	TB_SHADOWMAP2		= 3,
-	TB_SPECULARMAP		= 4,
-	TB_SHADOWMAP		= 5,
-	TB_CUBEMAP			= 6,
-	TB_OVERLAYMAP		= 7,
-	TB_STEEPMAP			= 8,
+	TB_NORMALMAP2		= 3,
+	TB_DELUXEMAP		= 4,
+	TB_SHADOWMAP2		= 5,
+	TB_SPECULARMAP		= 6,
+	TB_SHADOWMAP		= 7,
+	TB_CUBEMAP			= 8,
+	TB_OVERLAYMAP		= 9,
+	TB_STEEPMAP			= 10,
 	NUM_TEXTURE_BUNDLES = 11
 };
 
@@ -925,6 +928,7 @@ typedef struct {
 	surfaceSprite_t	*ss;
 
 	bool			isFoliage;
+	bool			isFoliageChecked;
 } shaderStage_t;
 
 struct shaderCommands_s;
@@ -1226,6 +1230,7 @@ typedef enum
 	UNIFORM_DIFFUSEMAP = 0,
 	UNIFORM_LIGHTMAP,
 	UNIFORM_NORMALMAP,
+	UNIFORM_NORMALMAP2,
 	UNIFORM_DELUXEMAP,
 	UNIFORM_SPECULARMAP,
 

@@ -1343,7 +1343,7 @@ void R_Register( void )
 	
 	r_foliage = ri->Cvar_Get( "r_foliage", "1", CVAR_ARCHIVE | CVAR_LATCH );
 	r_foliageDistance = ri->Cvar_Get( "r_foliageDistance", "8192.0", CVAR_ARCHIVE );
-	r_foliageDensity = ri->Cvar_Get( "r_foliageDensity", "192.0", CVAR_ARCHIVE );
+	r_foliageDensity = ri->Cvar_Get( "r_foliageDensity", "40.0", CVAR_ARCHIVE );
 
 	//
 	// latched and archived variables

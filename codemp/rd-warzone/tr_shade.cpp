@@ -1324,10 +1324,6 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage)
 
 	//GLSL_SetUniformFloat(sp, UNIFORM_TIME, tess.shaderTime);
 	GLSL_SetUniformFloat(sp, UNIFORM_TIME, backEnd.refdef.floatTime);
-
-	vec4_t local9;
-	VectorSet4(local9, r_testshaderValue1->value, r_testshaderValue2->value, r_testshaderValue3->value, r_testshaderValue4->value);
-	GLSL_SetUniformVec4(sp, UNIFORM_LOCAL9, local9);
 }
 
 void RB_SetStageImageDimensions(shaderProgram_t *sp, shaderStage_t *pStage)
@@ -1405,6 +1401,8 @@ qboolean RB_ShouldUseGeometryGrass (int materialType )
 
 	return qfalse;
 }
+
+extern float MAP_WATER_LEVEL;
 
 extern image_t *skyImage;
 
@@ -1821,7 +1819,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			{
 				sp2 = &tr.grass2Shader;
 				multiPass = qtrue;
-				passMax = 1;
+				passMax = 8;//r_testshaderValue9->integer;
 			}
 		}
 		
@@ -2187,6 +2185,36 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 								pStage->bundle[TB_DIFFUSEMAP].normalsLoaded2 = qtrue;
 						}
 
+						if (r_normalMapping->integer
+							&& !input->shader->isPortal
+							&& !input->shader->isSky
+							&& !pStage->glow
+							&& !pStage->bundle[TB_STEEPMAP].steepNormalsLoaded2
+							&& pStage->bundle[TB_STEEPMAP].image[0]
+							&& pStage->bundle[TB_STEEPMAP].image[0]->imgName
+							&& (!pStage->bundle[TB_NORMALMAP2].image[0] || pStage->bundle[TB_NORMALMAP2].image[0] == tr.whiteImage)
+							&& pStage->bundle[TB_STEEPMAP].image[0]->imgName[0] 
+							&& pStage->bundle[TB_STEEPMAP].image[0]->imgName[0] != '*'
+							&& pStage->bundle[TB_STEEPMAP].image[0]->imgName[0] != '$'
+							&& pStage->bundle[TB_STEEPMAP].image[0]->imgName[0] != '_'
+							&& pStage->bundle[TB_STEEPMAP].image[0]->imgName[0] != '!'
+							&& !(pStage->bundle[TB_STEEPMAP].image[0]->flags & IMGFLAG_CUBEMAP)
+							&& pStage->bundle[TB_STEEPMAP].image[0]->type != IMGTYPE_NORMAL 
+							&& pStage->bundle[TB_STEEPMAP].image[0]->type != IMGTYPE_SPECULAR 
+							/*&& pStage->bundle[TB_STEEPMAP].image[0]->type != IMGTYPE_SUBSURFACE*/ 
+							&& pStage->bundle[TB_STEEPMAP].image[0]->type != IMGTYPE_OVERLAY 
+							// gfx dirs can be exempted I guess...
+							&& !(r_disableGfxDirEnhancement->integer && StringContainsWord(pStage->bundle[TB_STEEPMAP].image[0]->imgName, "gfx/")))
+						{// How did this happen??? Oh well, generate a normal map now...
+							char imgname[64];
+							//ri->Printf(PRINT_WARNING, "Realtime generating normal map for %s.\n", pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName);
+							sprintf(imgname, "%s_n", pStage->bundle[TB_STEEPMAP].image[0]->imgName);
+							pStage->bundle[TB_NORMALMAP2].image[0] = R_CreateNormalMapGLSL( imgname, NULL, pStage->bundle[TB_STEEPMAP].image[0]->width, pStage->bundle[TB_STEEPMAP].image[0]->height, pStage->bundle[TB_STEEPMAP].image[0]->flags, pStage->bundle[TB_STEEPMAP].image[0] );
+
+							if (pStage->bundle[TB_NORMALMAP2].image[0] != tr.whiteImage)
+								pStage->bundle[TB_STEEPMAP].steepNormalsLoaded2 = qtrue;
+						}
+
 						if (pStage->bundle[TB_NORMALMAP].image[0])
 						{
 							R_BindAnimatedImageToTMU( &pStage->bundle[TB_NORMALMAP], TB_NORMALMAP);
@@ -2195,6 +2223,15 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 						else if (r_normalMapping->integer)
 						{
 							GL_BindToTMU( tr.whiteImage, TB_NORMALMAP );
+						}
+
+						if (pStage->bundle[TB_NORMALMAP2].image[0])
+						{
+							R_BindAnimatedImageToTMU( &pStage->bundle[TB_NORMALMAP2], TB_NORMALMAP2);
+						}
+						else if (r_normalMapping->integer)
+						{
+							GL_BindToTMU( tr.whiteImage, TB_NORMALMAP2 );
 						}
 
 						if (pStage->bundle[TB_DELUXEMAP].image[0])
@@ -2283,9 +2320,19 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			{
 				GL_BindToTMU( tr.grassImage, TB_DIFFUSEMAP );
 
+				vec4_t l8;
+				VectorSet4(l8, (float)passNum, 0.0, 0.0, 0.0);
+				GLSL_SetUniformVec4(sp, UNIFORM_LOCAL8, l8);
+
 				vec4_t l10;
-				VectorSet4(l10, r_foliageDistance->value, r_foliageDensity->value, 0.7, overlaySway);
+				VectorSet4(l10, r_foliageDistance->value, r_foliageDensity->value, MAP_WATER_LEVEL, 0.0);
 				GLSL_SetUniformVec4(sp, UNIFORM_LOCAL10, l10);
+
+				GLSL_SetUniformVec3(sp, UNIFORM_PRIMARYLIGHTAMBIENT, backEnd.refdef.sunAmbCol);
+				GLSL_SetUniformVec3(sp, UNIFORM_PRIMARYLIGHTCOLOR,   backEnd.refdef.sunCol);
+				GLSL_SetUniformVec4(sp, UNIFORM_PRIMARYLIGHTORIGIN,  backEnd.refdef.sunDir);
+
+				GL_Cull( CT_TWO_SIDED );
 			}
 
 			vec4_t l9;
@@ -2319,7 +2366,6 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				R_DrawElementsVBO(input->numIndexes, input->firstIndex, input->minIndex, input->maxIndex, input->numVertexes, tesselation);
 			}
 
-
 			passNum++;
 
 			if (multiPass && passNum > passMax)
@@ -2329,6 +2375,11 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 			if (!multiPass) 
 			{
+				if (isGrass && r_foliage->integer)
+				{// Set cull type back to original... Just in case...
+					GL_Cull( input->shader->cullType );
+				}
+
 				break;
 			}
 		}
