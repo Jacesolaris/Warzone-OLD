@@ -28,6 +28,7 @@ smooth out vec2				vTexCoord;
 //
 
 #define						FAST_METHOD
+//#define					ANGLE_BASED_DENSITY
 
 const float					fGrassPatchSize = 48.0;//24.0;
 const float					fWindStrength = 12.0;
@@ -154,7 +155,7 @@ void main()
 		return;
 	}
 
-	vec3 normal = (u_NormalMatrix * vec4(normalize(cross(gl_in[1].gl_Position.xyz - gl_in[0].gl_Position.xyz, gl_in[2].gl_Position.xyz - gl_in[0].gl_Position.xyz)), 0.0)).xyz; //calculate normal for this face
+	vec3 normal = normalize(cross(gl_in[2].gl_Position.xyz - gl_in[0].gl_Position.xyz, gl_in[1].gl_Position.xyz - gl_in[0].gl_Position.xyz)); //calculate normal for this face
 	float pitch = vectoangles( normal.xyz ).r;
 	
 	if (pitch > 180)
@@ -167,8 +168,10 @@ void main()
 
 	if (pitch < 0.0) pitch = -pitch;
 
-	if (pitch > 12.0/*26.0*/) // 26.0 to 32.0 looks about right -- Updated: 12.0 for only grass on light slopes
+	if (pitch > 46.0)
+	{
 		return; // This slope is too steep for grass...
+	}
 
 	//face info--------------------------
 	float VertSize = length(Vert1-Vert2) + length(Vert1-Vert3) + length(Vert2-Vert3);
@@ -181,7 +184,9 @@ void main()
 	else if (VertDist >= LOD2_RANGE) FOLIAGE_DENSITY = LOD2_MAX_FOLIAGES;
 	else if (VertDist >= LOD1_RANGE) FOLIAGE_DENSITY = LOD1_MAX_FOLIAGES;
 
+#if defined(ANGLE_BASED_DENSITY)
 	FOLIAGE_DENSITY = int(float(FOLIAGE_DENSITY) / (pitch+1.0));
+#endif //defined(ANGLE_BASED_DENSITY)
 
 	if ( FOLIAGE_DENSITY > densityMax) FOLIAGE_DENSITY = densityMax;
 
@@ -311,26 +316,28 @@ void main()
 #else //defined(FAST_METHOD)
 		vec3 right = vec3(randZeroOne(), randZeroOne(), 0.0);
 		vec3 up = vec3(0.0, 0.0, 0.5);
+		vec3 normalOffset = (normal * vec3(right.x, right.y, 0.5));
 
 		float size = fGrassPatchSize*fGrassPatchHeight;
+
 		vec3 P = vGrassFieldPos.xyz + (up * (size*0.9));
 
-		vec3 va = P - (right + up) * size;
+		vec3 va = P - (right + normalOffset) * size;
 		gl_Position = u_ModelViewProjectionMatrix * vec4(va, 1.0);
 		vTexCoord = vec2(0.0, 1.0);
 		EmitVertex();  
   
-		vec3 vb = P - (right - up) * size;
+		vec3 vb = P - (right - normalOffset) * size;
 		gl_Position = u_ModelViewProjectionMatrix * vec4(vb + vWindDirection*fWindPower, 1.0);
 		vTexCoord = vec2(0.0, 0.0);
 		EmitVertex();  
  
-		vec3 vd = P + (right - up) * size;
+		vec3 vd = P + (right - normalOffset) * size;
 		gl_Position = u_ModelViewProjectionMatrix * vec4(vd, 1.0);
 		vTexCoord = vec2(1.0, 1.0);
 		EmitVertex();  
  
-		vec3 vc = P + (right + up) * size;
+		vec3 vc = P + (right + normalOffset) * size;
 		gl_Position = u_ModelViewProjectionMatrix * vec4(vc + vWindDirection*fWindPower, 1.0);
 		vTexCoord = vec2(1.0, 0.0);
 		EmitVertex();  
