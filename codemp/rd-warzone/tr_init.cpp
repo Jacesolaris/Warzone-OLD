@@ -39,6 +39,7 @@ static void GfxMemInfo_f( void );
 cvar_t	*r_superSampleMultiplier;
 cvar_t	*r_tesselation;
 cvar_t	*r_tesselationLevel;
+cvar_t	*r_tesselationAlpha;
 
 cvar_t	*r_foliage;
 cvar_t	*r_foliageDistance;
@@ -1339,7 +1340,8 @@ void R_Register( void )
 	r_superSampleMultiplier = ri->Cvar_Get( "r_superSampleMultiplier", "1", CVAR_ARCHIVE | CVAR_LATCH );
 	
 	r_tesselation = ri->Cvar_Get( "r_tesselation", "0", CVAR_ARCHIVE | CVAR_LATCH );
-	r_tesselationLevel = ri->Cvar_Get( "r_tesselationLevel", "1.0", CVAR_ARCHIVE );
+	r_tesselationLevel = ri->Cvar_Get( "r_tesselationLevel", "7.0", CVAR_ARCHIVE );
+	r_tesselationAlpha = ri->Cvar_Get( "r_tesselationAlpha", "1.0", CVAR_ARCHIVE );
 	
 	r_foliage = ri->Cvar_Get( "r_foliage", "1", CVAR_ARCHIVE | CVAR_LATCH );
 	r_foliageDistance = ri->Cvar_Get( "r_foliageDistance", "8192.0", CVAR_ARCHIVE );

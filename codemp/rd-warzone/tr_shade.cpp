@@ -1486,11 +1486,13 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 	}
 
 	// UQ1: Calculate some matrixes that rend2 doesn't seem to have (or have correct)...
-	matrix_t trans, model, mvp, invTrans, normalMatrix;
+	matrix_t trans, model, mvp, invTrans, normalMatrix, vp;
 
 	Matrix16Translation( backEnd.viewParms.ori.origin, trans );
 	Matrix16Multiply( backEnd.viewParms.world.modelMatrix, trans, model );
 	Matrix16Multiply(backEnd.viewParms.projectionMatrix, model, mvp);
+	//Matrix16Multiply(backEnd.viewParms.projectionMatrix, trans, vp);
+	Matrix16Multiply(backEnd.viewParms.projectionMatrix, backEnd.viewParms.world.modelMatrix, vp);
 
 	Matrix16SimpleInverse( trans, invTrans);
 	Matrix16SimpleInverse( backEnd.viewParms.projectionMatrix, normalMatrix);
@@ -1877,7 +1879,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			{// UQ1: Used by both generic and lightall...
 				RB_SetStageImageDimensions(sp, pStage);
 				
-				GLSL_SetUniformMatrix16(sp, UNIFORM_VIEWPROJECTIONMATRIX, backEnd.viewParms.projectionMatrix);
+				GLSL_SetUniformMatrix16(sp, UNIFORM_VIEWPROJECTIONMATRIX, vp/*backEnd.viewParms.projectionMatrix*/);
 				GLSL_SetUniformMatrix16(sp, UNIFORM_MODELMATRIX, backEnd.ori.transformMatrix);
 				GLSL_SetUniformMatrix16(sp, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
 				GLSL_SetUniformMatrix16(sp, UNIFORM_INVEYEPROJECTIONMATRIX, glState.invEyeProjection);
@@ -2348,12 +2350,12 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			//
 			qboolean tesselation = qfalse;
 
-			if (r_tesselation->integer && sp->tesselation)
+			if (r_tesselation->integer && sp->tesselation && !(isGrass && passNum > 0 && r_foliage->integer))
 			{
 				tesselation = qtrue;
 
-				vec4_t l10; // TesselationLevel, 0, 0, 0
-				VectorSet4(l10, r_tesselationLevel->value, 0.0, 0.0, 0.0);
+				vec4_t l10;
+				VectorSet4(l10, r_tesselationLevel->value, r_tesselationAlpha->value, 0.0, 0.0);
 				GLSL_SetUniformVec4(sp, UNIFORM_LOCAL10, l10);
 			}
 

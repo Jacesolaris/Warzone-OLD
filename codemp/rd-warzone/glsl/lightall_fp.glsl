@@ -1,109 +1,138 @@
-uniform sampler2D u_DiffuseMap;
-uniform sampler2D u_SteepMap;
+#define						USE_TRI_PLANAR
+//#define					USE_SUBSURFACE_SCATTER
 
-uniform vec2	u_Dimensions;
-uniform vec4	u_Local1; // parallaxScale, haveSpecular, specularScale, materialType
-uniform vec4	u_Local2; // ExtinctionCoefficient
-uniform vec4	u_Local3; // RimScalar, MaterialThickness, subSpecPower, cubemapScale
-uniform vec4	u_Local4; // haveNormalMap, isMetalic, hasRealSubsurfaceMap, sway
-uniform vec4	u_Local5; // hasRealOverlayMap, overlaySway, blinnPhong, hasSteepMap
-uniform vec4	u_Local6; // useSunLightSpecular, 0, 0, 0
-uniform vec4	u_Local9;
 
-#define USE_TRI_PLANAR
-//#define USE_SUBSURFACE_SCATTER
+uniform sampler2D			u_DiffuseMap;
+uniform sampler2D			u_SteepMap;
 
-varying float  var_Time;
+uniform sampler2D			u_LightMap;
 
-uniform sampler2D u_LightMap;
+uniform sampler2D			u_NormalMap;
+uniform sampler2D			u_NormalMap2;
 
-uniform sampler2D u_NormalMap;
-uniform sampler2D u_NormalMap2;
-
-uniform sampler2D u_DeluxeMap;
+uniform sampler2D			u_DeluxeMap;
 
 #if defined(USE_SPECULARMAP)
-uniform sampler2D u_SpecularMap;
+uniform sampler2D			u_SpecularMap;
 #endif
 
 #if defined(USE_SHADOWMAP)
-uniform sampler2D u_ShadowMap;
+uniform sampler2D			u_ShadowMap;
 #endif
 
 #if defined(USE_CUBEMAP)
 #define textureCubeLod textureLod // UQ1: > ver 140 support
-uniform samplerCube u_CubeMap;
+uniform samplerCube			u_CubeMap;
 #endif
 
 #if defined(USE_SUBSURFACE_SCATTER)
-uniform sampler2D u_SubsurfaceMap;
+uniform sampler2D			u_SubsurfaceMap;
 #endif
 
-uniform sampler2D u_OverlayMap;
-
-uniform vec4      u_EnableTextures;
-
-uniform vec3  u_PrimaryLightColor;
-uniform vec3  u_PrimaryLightAmbient;
-
-uniform vec4      u_NormalScale;
-uniform vec4      u_SpecularScale;
-
-uniform vec4      u_CubeMapInfo;
-uniform float     u_CubeMapStrength;
+uniform sampler2D			u_OverlayMap;
 
 
-varying vec2      var_TexCoords;
-varying vec2	  var_TexCoords2;
 
-varying vec4      var_Color;
-
-varying vec4   var_Normal;
-varying vec4   var_Tangent;
-varying vec4   var_Bitangent;
-#define var_Normal2 var_Normal.w
-
-varying vec3 var_N;
-
-varying vec4      var_PrimaryLightDir;
-
-varying vec3   var_vertPos;
-
-varying vec3      var_ViewDir;
-varying vec2   var_nonTCtexCoords; // for steep maps
+uniform vec2				u_Dimensions;
+uniform vec4				u_Local1; // parallaxScale, haveSpecular, specularScale, materialType
+uniform vec4				u_Local2; // ExtinctionCoefficient
+uniform vec4				u_Local3; // RimScalar, MaterialThickness, subSpecPower, cubemapScale
+uniform vec4				u_Local4; // haveNormalMap, isMetalic, hasRealSubsurfaceMap, sway
+uniform vec4				u_Local5; // hasRealOverlayMap, overlaySway, blinnPhong, hasSteepMap
+uniform vec4				u_Local6; // useSunLightSpecular, 0, 0, 0
+uniform vec4				u_Local9;
 
 
-uniform int			u_lightCount;
-uniform vec3		u_lightPositions2[16];
-uniform float		u_lightDistances[16];
-uniform vec3		u_lightColors[16];
+
+uniform vec4				u_EnableTextures;
+
+uniform vec3				u_PrimaryLightColor;
+uniform vec3				u_PrimaryLightAmbient;
+
+uniform vec4				u_NormalScale;
+uniform vec4				u_SpecularScale;
+
+uniform vec4				u_CubeMapInfo;
+uniform float				u_CubeMapStrength;
+
+
+uniform int					u_lightCount;
+uniform vec3				u_lightPositions2[16];
+uniform float				u_lightDistances[16];
+uniform vec3				u_lightColors[16];
 
 
 #if defined(USE_TESSELLATION)
 
-in vec2					TexCoord_FS_in;
-in vec4					Normal_FS_in;
-in vec4					WorldPos_FS_in;
-in vec3					ViewDir_FS_in;
+in vec3						Normal_FS_in;
+in vec2						TexCoord_FS_in;
+in vec3						WorldPos_FS_in;
+in vec3						ViewDir_FS_in;
+in vec4						Tangent_FS_in;
+in vec4						Bitangent_FS_in;
 
-#define m_Normal		Normal_FS_in
-#define m_TexCoords		TexCoord_FS_in
-#define m_vertPos		WorldPos_FS_in.xyz
-#define m_ViewDir		var_ViewDir
+in vec4						Color_FS_in;
+in vec4						PrimaryLightDir_FS_in;
+in vec2						TexCoord2_FS_in;
+
+in vec3						Blending_FS_in;
+in float					Slope_FS_in;
+in float					usingSteepMap_FS_in;
+
+
+#define m_Normal			normalize(-Normal_FS_in)
+#define m_TexCoords			TexCoord_FS_in
+#define m_vertPos			WorldPos_FS_in
+#define m_ViewDir			ViewDir_FS_in
+
+#define var_Normal2			ViewDir_FS_in.x
+
+#define var_Tangent			Tangent_FS_in
+#define var_Bitangent		Bitangent_FS_in
+
+#define var_nonTCtexCoords	TexCoord_FS_in
+#define var_Color			Color_FS_in
+#define	var_PrimaryLightDir PrimaryLightDir_FS_in
+#define var_TexCoords2		TexCoord2_FS_in
+
+#define var_Blending		Blending_FS_in
+#define var_Slope			Slope_FS_in
+#define var_usingSteepMap	usingSteepMap_FS_in
+
 
 #else //!defined(USE_TESSELLATION)
 
-#define m_Normal		var_Normal
-#define m_TexCoords		var_TexCoords
-#define m_vertPos		var_vertPos
-#define m_ViewDir		var_ViewDir
+varying vec2				var_TexCoords;
+varying vec2				var_TexCoords2;
+varying vec4				var_Normal;
+
+#define var_Normal2			var_Normal.w
+
+varying vec4				var_Tangent;
+varying vec4				var_Bitangent;
+varying vec4				var_Color;
+
+varying vec4				var_PrimaryLightDir;
+
+varying vec3				var_vertPos;
+
+varying vec3				var_ViewDir;
+varying vec2				var_nonTCtexCoords; // for steep maps
+
+
+varying vec3				var_Blending;
+varying float				var_Slope;
+varying float				var_usingSteepMap;
+
+
+#define m_Normal			var_Normal
+#define m_TexCoords			var_TexCoords
+#define m_vertPos			var_vertPos
+#define m_ViewDir			var_ViewDir
+
 
 #endif //defined(USE_TESSELLATION)
 
-
-varying vec3	var_Blending;
-varying float	var_Slope;
-varying float	var_usingSteepMap;
 
 
 out vec4 out_Glow;
@@ -306,55 +335,38 @@ vec4 subScatterFS(vec4 BaseColor, vec4 SpecColor, vec3 lightVec, vec3 LightColor
 
 void main()
 {
-#if 0
-#if defined(USE_TESSELLATION)
-	gl_FragColor = texture2D(u_DiffuseMap, m_TexCoords);
-
-	#if defined(USE_GLOW_BUFFER)
-		out_Glow = gl_FragColor;
-	#else
-		out_Glow = vec4(0.0);
-	#endif
-
-	out_DetailedNormal = vec4(m_Normal.xyz, 0.2);
-
-	if (u_Local1.a == 20 || u_Local1.a == 19 /*|| u_Local1.a == 5 || u_Local1.a == 6*/) 
-	{// (Foliage/Plants), (billboard trees), ShortGrass, LongGrass
-		out_FoliageMap.r = 1.0;
-		out_FoliageMap.g = 1.0;
-	}
-	else
-	{
-		out_FoliageMap.r = 1.0;
-		out_FoliageMap.g = 0.0;
-	}
-	return;
-#endif //defined(USE_TESSELLATION)
-#endif
-
 	vec3 viewDir = vec3(0.0), lightColor = vec3(0.0), ambientColor = vec3(0.0);
 	vec4 specular = vec4(0.0);
 	vec3 N, E, H;
 	vec3 DETAILED_NORMAL = vec3(1.0);
 	float NL, NH, NE, EH, attenuation;
 	vec2 tex_offset = vec2(1.0 / u_Dimensions);
-
 	vec2 texCoords = m_TexCoords.xy;
 
-	#ifdef USE_OVERLAY//USE_SWAY
+
+
+	#ifdef USE_OVERLAY
 		if (u_Local4.a > 0.0)
 		{// Sway...
 			texCoords += vec2(u_Local5.y * u_Local4.a * ((1.0 - m_TexCoords.y) + 1.0), 0.0);
 		}
-	#endif //USE_OVERLAY//USE_SWAY
+	#endif //USE_OVERLAY
 
 
 
 
 	mat3 tangentToWorld = mat3(var_Tangent.xyz, var_Bitangent.xyz, m_Normal.xyz);
-	viewDir = vec3(var_Normal2, var_Tangent.w, var_Bitangent.w);
+	
+
+	//#if !defined(USE_TESSELLATION)
+		viewDir = vec3(var_Normal2, var_Tangent.w, var_Bitangent.w);
+	//#else //defined(USE_TESSELLATION)
+	//	viewDir = m_ViewDir;
+	//#endif //defined(USE_TESSELLATION)
 
 	E = normalize(viewDir);
+
+
 
 	#if defined(USE_LIGHTMAP)
 
@@ -364,11 +376,8 @@ void main()
 			lightmapColor.rgb *= lightmapColor.a;
 		#endif //defined(RGBM_LIGHTMAP)
  
-		#if defined(USE_TESSELLATION)
-			lightmapColor = vec4(1.0);
-		#endif //defined(USE_TESSELLATION)
-
 	#endif //defined(USE_LIGHTMAP)
+
 
 
 	vec2 ParallaxOffset = vec2(0.0);
@@ -450,7 +459,7 @@ void main()
 	DETAILED_NORMAL = N;
 
 
-	#if defined(USE_OVERLAY)//USE_STEEPMAP
+	#if defined(USE_OVERLAY)
 
 		//
 		// Steep Maps...
@@ -461,7 +470,7 @@ void main()
 			diffuse.rgb = mix( diffuse.rgb, GetSteepMap(var_nonTCtexCoords, ParallaxOffset).rgb, clamp(var_Slope,0.0,1.0));
 		}
 
-	#endif //USE_OVERLAY//USE_STEEPMAP
+	#endif //USE_OVERLAY
 	
 
 	#if defined(USE_OVERLAY)
@@ -506,7 +515,7 @@ void main()
 	#endif
 
 
-	#if defined(USE_SHADOWMAP) 
+	#if defined(USE_SHADOWMAP)
 
 		vec2 shadowTex = gl_FragCoord.xy * r_FBufScale;
 		float shadowValue = texture2D(u_ShadowMap, shadowTex).r;
@@ -533,7 +542,7 @@ void main()
 	#endif //defined(USE_LIGHTMAP)
   
 
-		#if defined(USE_LIGHTMAP) 
+		#if defined(USE_LIGHTMAP)
 			lightColor *= lightmapColor.rgb;
 		#endif
 
@@ -620,7 +629,7 @@ void main()
 
 			for (int li = 0; li < u_lightCount; li++)
 			{
-				vec3 lightDir = u_lightPositions2[li] - var_vertPos.xyz;
+				vec3 lightDir = u_lightPositions2[li] - m_vertPos.xyz;
 				float lambertian3 = dot(lightDir.xyz,N);
 				float spec3 = 0.0;
 

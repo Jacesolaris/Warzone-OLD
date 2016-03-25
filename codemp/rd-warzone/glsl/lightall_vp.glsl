@@ -5,9 +5,17 @@ attribute vec2 attr_TexCoord0;
 
 
 #if defined(USE_TESSELLATION)
-out vec4 Normal_CS_in;
+out vec3 Normal_CS_in;
 out vec2 TexCoord_CS_in;
 out vec4 WorldPos_CS_in;
+out vec4 Tangent_CS_in;
+out vec4 Bitangent_CS_in;
+out vec4 Color_CS_in;
+out vec4 PrimaryLightDir_CS_in;
+out vec2 TexCoord2_CS_in;
+out vec3 Blending_CS_in;
+out float Slope_CS_in;
+out float usingSteepMap_CS_in;
 #endif
 
 #if defined(USE_LIGHTMAP) || defined(USE_TCGEN)
@@ -89,7 +97,6 @@ varying vec3   var_ViewDir;
 varying vec4   var_PrimaryLightDir;
 
 varying vec3   var_vertPos;
-varying float  var_Time;
 
 varying vec3	var_Blending;
 varying float	var_Slope;
@@ -266,6 +273,8 @@ void main()
 
 	vec3 preMMPos = position.xyz;
 	vec3 preMMNorm = normal.xyz;
+	vec4 preMMtangent = vec4(tangent, 0.0);
+	vec4 preMMbitangent = vec4(cross(normal, tangent) * (attr_Tangent.w * 2.0 - 1.0), 0.0);
 
 #if defined(USE_MODELMATRIX)
 	position  = (u_ModelMatrix * vec4(position, 1.0)).xyz;
@@ -298,8 +307,6 @@ void main()
 	var_Bitangent = vec4(bitangent, viewDir.z);
 
 	var_vertPos = position.xyz;
-
-	var_Time = u_Time;
 
 	var_nonTCtexCoords = attr_TexCoord0.st;
 
@@ -360,8 +367,18 @@ void main()
 #if defined(USE_TESSELLATION)
 
   TexCoord_CS_in = var_TexCoords.xy;
-  Normal_CS_in = vec4(preMMNorm,    viewDir.x);//var_Normal;
+  Normal_CS_in = -preMMNorm.xyz;//-var_Normal.xyz;
+  //Tangent_CS_in = preMMtangent;//var_Tangent;
+  //Bitangent_CS_in = preMMbitangent;//var_Bitangent;
+  Tangent_CS_in = var_Tangent;
+  Bitangent_CS_in = var_Bitangent;
+  Color_CS_in = var_Color;
+  PrimaryLightDir_CS_in = var_PrimaryLightDir;
+  TexCoord2_CS_in = var_TexCoords2;
+  Blending_CS_in = var_Blending;
+  Slope_CS_in = var_Slope;
+  usingSteepMap_CS_in = var_usingSteepMap;
   gl_Position = vec4(preMMPos, 1.0);
 
-#endif
+#endif //defined(USE_TESSELLATION)
 }
