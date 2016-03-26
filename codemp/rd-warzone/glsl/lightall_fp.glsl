@@ -80,7 +80,8 @@ in float					Slope_FS_in;
 in float					usingSteepMap_FS_in;
 
 
-#define m_Normal			normalize(-Normal_FS_in)
+vec3 m_Normal =				normalize(-Normal_FS_in.xyz);
+
 #define m_TexCoords			TexCoord_FS_in
 #define m_vertPos			WorldPos_FS_in
 #define m_ViewDir			ViewDir_FS_in
@@ -343,7 +344,32 @@ void main()
 	vec2 tex_offset = vec2(1.0 / u_Dimensions);
 	vec2 texCoords = m_TexCoords.xy;
 
+	/*
+	#if defined(USE_TESSELLATION)
+		gl_FragColor = vec4(m_Normal.xyz * 0.5 + 0.5, 1.0);
 
+		#if defined(USE_GLOW_BUFFER)
+			out_Glow = gl_FragColor;
+		#else
+			out_Glow = vec4(0.0);
+		#endif
+
+		out_DetailedNormal = vec4(m_Normal.xyz * 0.5 + 0.5, 0.2);
+		out_PositionMap = vec4(gl_FragCoord.xyz, 0.0);
+
+		if (u_Local1.a == 20 || u_Local1.a == 19 || ((u_Local1.a == 5 || u_Local1.a == 6) && var_usingSteepMap == 0.0)) 
+		{// (Foliage/Plants), (billboard trees), ShortGrass, LongGrass
+			out_FoliageMap.r = 1.0;
+			out_FoliageMap.g = 1.0;
+		}
+		else
+		{
+			out_FoliageMap.r = 1.0;
+			out_FoliageMap.g = 0.0;
+		}
+		return;
+	#endif //defined(USE_TESSELLATION)
+	*/
 
 	#ifdef USE_OVERLAY
 		if (u_Local4.a > 0.0)
@@ -358,11 +384,11 @@ void main()
 	mat3 tangentToWorld = mat3(var_Tangent.xyz, var_Bitangent.xyz, m_Normal.xyz);
 	
 
-	//#if !defined(USE_TESSELLATION)
+	#if !defined(USE_TESSELLATION)
 		viewDir = vec3(var_Normal2, var_Tangent.w, var_Bitangent.w);
-	//#else //defined(USE_TESSELLATION)
-	//	viewDir = m_ViewDir;
-	//#endif //defined(USE_TESSELLATION)
+	#else //defined(USE_TESSELLATION)
+		viewDir = m_ViewDir.xyz;
+	#endif //defined(USE_TESSELLATION)
 
 	E = normalize(viewDir);
 

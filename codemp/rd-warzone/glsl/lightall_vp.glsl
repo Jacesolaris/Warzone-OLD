@@ -174,7 +174,7 @@ void GetBlending(vec3 normal)
 }
 #endif //defined(USE_OVERLAY) || defined(USE_TRI_PLANAR)
 
-#if defined(USE_OVERLAY)//USE_STEEPMAP
+#if defined(USE_OVERLAY)
 vec3 vectoangles( in vec3 value1 ) {
 	float	forward;
 	float	yaw, pitch;
@@ -216,7 +216,7 @@ vec3 vectoangles( in vec3 value1 ) {
 
 	return angles;
 }
-#endif //defined(USE_OVERLAY)//USE_STEEPMAP
+#endif //defined(USE_OVERLAY)
 
 
 void main()
@@ -350,7 +350,7 @@ void main()
 			}
 		}
 
-#endif //defined(USE_OVERLAY)//USE_STEEPMAP
+#endif //defined(USE_OVERLAY)
 
 
 
@@ -368,6 +368,7 @@ void main()
 
   TexCoord_CS_in = var_TexCoords.xy;
   Normal_CS_in = -preMMNorm.xyz;//-var_Normal.xyz;
+  //Normal_CS_in = -var_Normal.xyz;
   //Tangent_CS_in = preMMtangent;//var_Tangent;
   //Bitangent_CS_in = preMMbitangent;//var_Bitangent;
   Tangent_CS_in = var_Tangent;

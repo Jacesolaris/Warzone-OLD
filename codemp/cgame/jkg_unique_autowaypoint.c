@@ -4167,6 +4167,164 @@ void DebugSurfaceType( int surfaceFlags )
 	}
 }
 
+void CG_ShowForwardSurface ( void )
+{
+	vec3_t org, down_org, forward;
+	trace_t tr;
+
+	VectorCopy(cg.refdef.vieworg, org);
+	AngleVectors( cg.refdef.viewangles, forward, NULL, NULL );
+	VectorMA( cg.refdef.vieworg, 131072.0f, forward, down_org );
+	
+	// Do forward test...
+	CG_Trace( &tr, org, NULL, NULL, down_org, cg.clientNum, MASK_PLAYERSOLID|CONTENTS_TRIGGER|CONTENTS_PLAYERCLIP|CONTENTS_MONSTERCLIP|CONTENTS_BOTCLIP|CONTENTS_SHOTCLIP|CONTENTS_NODROP|CONTENTS_SHOTCLIP|CONTENTS_TRANSLUCENT );
+
+	//
+	// Surface
+	//
+
+	trap->Print("Current surface flags (%i):\n", tr.surfaceFlags);
+
+/*
+#define	SURF_SKY				0x00002000	// lighting from environment map
+#define	SURF_SLICK				0x00004000	// affects game physics
+#define	SURF_METALSTEPS			0x00008000	// CHC needs this since we use same tools (though this flag is temp?)
+#define SURF_FORCEFIELD			0x00010000	// CHC ""			(but not temp)
+#define	SURF_NODAMAGE			0x00040000	// never give falling damage
+#define	SURF_NOIMPACT			0x00080000	// don't make missile explosions
+#define	SURF_NOMARKS			0x00100000	// don't leave missile marks
+#define	SURF_NODRAW				0x00200000	// don't generate a drawsurface at all
+#define	SURF_NOSTEPS			0x00400000	// no footstep sounds
+#define	SURF_NODLIGHT			0x00800000	// don't dlight even if solid (solid lava, skies)
+#define	SURF_NOMISCENTS			0x01000000	// no client models allowed on this surface
+*/
+
+	if (tr.surfaceFlags & SURF_NODAMAGE)
+		trap->Print("SURF_NODAMAGE ");
+
+	if (tr.surfaceFlags & SURF_SLICK)
+		trap->Print("SURF_SLICK ");
+
+	if (tr.surfaceFlags & SURF_SKY)
+		trap->Print("SURF_SKY ");
+
+	if (tr.surfaceFlags & SURF_METALSTEPS)
+		trap->Print("SURF_METALSTEPS ");
+
+	if (tr.surfaceFlags & SURF_FORCEFIELD)
+		trap->Print("SURF_FORCEFIELD ");
+
+	if (tr.surfaceFlags & SURF_NOMARKS)
+		trap->Print("SURF_NOMARKS ");
+
+	if (tr.surfaceFlags & SURF_NOIMPACT)
+		trap->Print("SURF_NOIMPACT ");
+
+	if (tr.surfaceFlags & SURF_NODRAW)
+		trap->Print("SURF_NODRAW ");
+
+	if (tr.surfaceFlags & SURF_NOSTEPS)
+		trap->Print("SURF_NOSTEPS ");
+
+	if (tr.surfaceFlags & SURF_NODLIGHT)
+		trap->Print("SURF_NODLIGHT ");
+
+	if (tr.surfaceFlags & SURF_NOSTEPS)
+		trap->Print("SURF_NOSTEPS ");
+
+	if (tr.surfaceFlags & SURF_NOMISCENTS)
+		trap->Print("SURF_NOMISCENTS ");
+
+	trap->Print("\n");
+
+	//
+	// Contents...
+	//
+
+	trap->Print("Current contents flags (%i):\n", tr.surfaceFlags);
+
+	if (tr.contents & CONTENTS_SOLID)
+		trap->Print("CONTENTS_SOLID ");
+
+	if (tr.contents & CONTENTS_LAVA)
+		trap->Print("CONTENTS_LAVA ");
+
+	if (tr.contents & CONTENTS_WATER)
+		trap->Print("CONTENTS_WATER ");
+
+	if (tr.contents & CONTENTS_FOG)
+		trap->Print("CONTENTS_FOG ");
+
+	if (tr.contents & CONTENTS_PLAYERCLIP)
+		trap->Print("CONTENTS_PLAYERCLIP ");
+
+	if (tr.contents & CONTENTS_BOTCLIP)
+		trap->Print("CONTENTS_BOTCLIP ");
+
+	if (tr.contents & CONTENTS_SHOTCLIP)
+		trap->Print("CONTENTS_SHOTCLIP ");
+
+	if (tr.contents & CONTENTS_BODY)
+		trap->Print("CONTENTS_BODY ");
+
+	if (tr.contents & CONTENTS_CORPSE)
+		trap->Print("CONTENTS_CORPSE ");
+
+	if (tr.contents & CONTENTS_TRIGGER)
+		trap->Print("CONTENTS_TRIGGER ");
+
+	if (tr.contents & CONTENTS_NODROP)
+		trap->Print("CONTENTS_NODROP ");
+
+	if (tr.contents & CONTENTS_TERRAIN)
+		trap->Print("CONTENTS_TERRAIN ");
+
+	if (tr.contents & CONTENTS_LADDER)
+		trap->Print("CONTENTS_LADDER ");
+
+	if (tr.contents & CONTENTS_ABSEIL)
+		trap->Print("CONTENTS_ABSEIL ");
+
+	if (tr.contents & CONTENTS_OPAQUE)
+		trap->Print("CONTENTS_OPAQUE ");
+
+	if (tr.contents & CONTENTS_OUTSIDE)
+		trap->Print("CONTENTS_OUTSIDE ");
+
+	if (tr.contents & CONTENTS_INSIDE)
+		trap->Print("CONTENTS_INSIDE ");
+
+	if (tr.contents & CONTENTS_SLIME)
+		trap->Print("CONTENTS_SLIME ");
+
+	if (tr.contents & CONTENTS_LIGHTSABER)
+		trap->Print("CONTENTS_LIGHTSABER ");
+
+	if (tr.contents & CONTENTS_TELEPORTER)
+		trap->Print("CONTENTS_TELEPORTER ");
+
+	if (tr.contents & CONTENTS_ITEM)
+		trap->Print("CONTENTS_ITEM ");
+
+	if (tr.contents & CONTENTS_NOSHOT)
+		trap->Print("CONTENTS_NOSHOT ");
+
+	if (tr.contents & CONTENTS_DETAIL)
+		trap->Print("CONTENTS_DETAIL ");
+
+	if (tr.contents & CONTENTS_TRANSLUCENT)
+		trap->Print("CONTENTS_TRANSLUCENT ");
+
+	trap->Print("\n");
+
+	DebugSurfaceType( tr.surfaceFlags );
+
+	// UQ1: May as well show the slope as well...
+	CG_ShowSlope();
+
+	trap->Print("ENTITY: %i - Type %i.\n", tr.entityNum, cg_entities[tr.entityNum].currentState.eType);
+}
+
 void CG_ShowSurface ( void )
 {
 	vec3_t org, down_org;

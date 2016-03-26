@@ -1340,7 +1340,7 @@ void R_Register( void )
 	r_superSampleMultiplier = ri->Cvar_Get( "r_superSampleMultiplier", "1", CVAR_ARCHIVE | CVAR_LATCH );
 	
 	r_tesselation = ri->Cvar_Get( "r_tesselation", "0", CVAR_ARCHIVE | CVAR_LATCH );
-	r_tesselationLevel = ri->Cvar_Get( "r_tesselationLevel", "7.0", CVAR_ARCHIVE );
+	r_tesselationLevel = ri->Cvar_Get( "r_tesselationLevel", "3.0", CVAR_ARCHIVE );
 	r_tesselationAlpha = ri->Cvar_Get( "r_tesselationAlpha", "1.0", CVAR_ARCHIVE );
 	
 	r_foliage = ri->Cvar_Get( "r_foliage", "1", CVAR_ARCHIVE | CVAR_LATCH );

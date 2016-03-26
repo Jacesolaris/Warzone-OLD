@@ -1367,7 +1367,7 @@ void RB_SetStageImageDimensions(shaderProgram_t *sp, shaderStage_t *pStage)
 	GLSL_SetUniformVec2(sp, UNIFORM_DIMENSIONS, dimensions);
 }
 
-qboolean RB_ShouldUseTesselation (int materialType )
+qboolean RB_ShouldUseTesselation ( int materialType )
 {
 	/*if ( materialType == MATERIAL_SHORTGRASS 
 		|| materialType == MATERIAL_LONGGRASS
@@ -1378,6 +1378,331 @@ qboolean RB_ShouldUseTesselation (int materialType )
 
 	return qfalse;
 }
+
+float RB_GetTesselationAlphaLevel ( int materialType )
+{
+	float tessAlphaLevel = 1.0;
+
+	switch( materialType )
+	{
+	case MATERIAL_WATER:			// 13			// light covering of water on a surface
+		tessAlphaLevel = r_tesselationAlpha->value;
+		break;
+	case MATERIAL_SHORTGRASS:		// 5			// manicured lawn
+		tessAlphaLevel = r_tesselationAlpha->value;
+		break;
+	case MATERIAL_LONGGRASS:		// 6			// long jungle grass
+		tessAlphaLevel = r_tesselationAlpha->value;
+		break;
+	case MATERIAL_SAND:				// 8			// sandy beach
+		tessAlphaLevel = r_tesselationAlpha->value * 0.1;
+		break;
+	case MATERIAL_CARPET:			// 27			// lush carpet
+		tessAlphaLevel = r_tesselationAlpha->value * 0.3;
+		break;
+	case MATERIAL_GRAVEL:			// 9			// lots of small stones
+		tessAlphaLevel = r_tesselationAlpha->value * 0.5;
+		break;
+	case MATERIAL_ROCK:				// 23			//
+		tessAlphaLevel = r_tesselationAlpha->value;
+		break;
+	case MATERIAL_TILES:			// 26			// tiled floor
+		tessAlphaLevel = r_tesselationAlpha->value * 0.3;
+		break;
+	case MATERIAL_SOLIDWOOD:		// 1			// freshly cut timber
+		tessAlphaLevel = r_tesselationAlpha->value;
+		break;
+	case MATERIAL_HOLLOWWOOD:		// 2			// termite infested creaky wood
+		tessAlphaLevel = r_tesselationAlpha->value;
+		break;
+	case MATERIAL_SOLIDMETAL:		// 3			// solid girders
+		tessAlphaLevel = r_tesselationAlpha->value * 0.3;
+		break;
+	case MATERIAL_HOLLOWMETAL:		// 4			// hollow metal machines -- UQ1: Used for weapons to force lower parallax and high reflection...
+		tessAlphaLevel = r_tesselationAlpha->value * 0.2;
+		break;
+	case MATERIAL_DRYLEAVES:		// 19			// dried up leaves on the floor
+		tessAlphaLevel = r_tesselationAlpha->value;
+		break;
+	case MATERIAL_GREENLEAVES:		// 20			// fresh leaves still on a tree
+		tessAlphaLevel = r_tesselationAlpha->value;
+		break;
+	case MATERIAL_FABRIC:			// 21			// Cotton sheets
+		tessAlphaLevel = r_tesselationAlpha->value;
+		break;
+	case MATERIAL_CANVAS:			// 22			// tent material
+		tessAlphaLevel = r_tesselationAlpha->value;
+		break;
+	case MATERIAL_MARBLE:			// 12			// marble floors
+		tessAlphaLevel = r_tesselationAlpha->value * 0.5;
+		break;
+	case MATERIAL_SNOW:				// 14			// freshly laid snow
+		tessAlphaLevel = r_tesselationAlpha->value;
+		break;
+	case MATERIAL_MUD:				// 17			// wet soil
+		tessAlphaLevel = r_tesselationAlpha->value;
+		break;
+	case MATERIAL_DIRT:				// 7			// hard mud
+		tessAlphaLevel = r_tesselationAlpha->value;
+		break;
+	case MATERIAL_CONCRETE:			// 11			// hardened concrete pavement
+		tessAlphaLevel = r_tesselationAlpha->value * 0.3;
+		break;
+	case MATERIAL_FLESH:			// 16			// hung meat, corpses in the world
+		tessAlphaLevel = r_tesselationAlpha->value;
+		break;
+	case MATERIAL_RUBBER:			// 24			// hard tire like rubber
+		tessAlphaLevel = r_tesselationAlpha->value;
+		break;
+	case MATERIAL_PLASTIC:			// 25			//
+		tessAlphaLevel = r_tesselationAlpha->value * 0.5;
+		break;
+	case MATERIAL_PLASTER:			// 28			// drywall style plaster
+		tessAlphaLevel = r_tesselationAlpha->value * 0.3;
+		break;
+	case MATERIAL_SHATTERGLASS:		// 29			// glass with the Crisis Zone style shattering
+		tessAlphaLevel = r_tesselationAlpha->value * 0.1;
+		break;
+	case MATERIAL_ARMOR:			// 30			// body armor
+		tessAlphaLevel = r_tesselationAlpha->value;
+		break;
+	case MATERIAL_ICE:				// 15			// packed snow/solid ice
+		tessAlphaLevel = r_tesselationAlpha->value;
+		break;
+	case MATERIAL_GLASS:			// 10			//
+		tessAlphaLevel = r_tesselationAlpha->value * 0.1;
+		break;
+	case MATERIAL_BPGLASS:			// 18			// bulletproof glass
+		tessAlphaLevel = r_tesselationAlpha->value * 0.1;
+		break;
+	case MATERIAL_COMPUTER:			// 31			// computers/electronic equipment
+		tessAlphaLevel = r_tesselationAlpha->value * 0.1;
+		break;
+	default:
+		break;
+	}
+
+	if (tessAlphaLevel < 1.0) tessAlphaLevel = 1.0;
+
+	return tessAlphaLevel;
+}
+
+float RB_GetTesselationInnerLevel ( int materialType )
+{
+	float tessInnerLevel = 1.0;
+
+	switch( materialType )
+	{
+	case MATERIAL_WATER:			// 13			// light covering of water on a surface
+		tessInnerLevel = r_tesselationLevel->value;
+		break;
+	case MATERIAL_SHORTGRASS:		// 5			// manicured lawn
+		tessInnerLevel = r_tesselationLevel->value;
+		break;
+	case MATERIAL_LONGGRASS:		// 6			// long jungle grass
+		tessInnerLevel = r_tesselationLevel->value;
+		break;
+	case MATERIAL_SAND:				// 8			// sandy beach
+		tessInnerLevel = r_tesselationLevel->value * 0.1;
+		break;
+	case MATERIAL_CARPET:			// 27			// lush carpet
+		tessInnerLevel = r_tesselationLevel->value * 0.3;
+		break;
+	case MATERIAL_GRAVEL:			// 9			// lots of small stones
+		tessInnerLevel = r_tesselationLevel->value;
+		break;
+	case MATERIAL_ROCK:				// 23			//
+		tessInnerLevel = r_tesselationLevel->value;
+		break;
+	case MATERIAL_TILES:			// 26			// tiled floor
+		tessInnerLevel = r_tesselationLevel->value * 0.3;
+		break;
+	case MATERIAL_SOLIDWOOD:		// 1			// freshly cut timber
+		tessInnerLevel = r_tesselationLevel->value;
+		break;
+	case MATERIAL_HOLLOWWOOD:		// 2			// termite infested creaky wood
+		tessInnerLevel = r_tesselationLevel->value;
+		break;
+	case MATERIAL_SOLIDMETAL:		// 3			// solid girders
+		tessInnerLevel = r_tesselationLevel->value * 0.5;
+		break;
+	case MATERIAL_HOLLOWMETAL:		// 4			// hollow metal machines -- UQ1: Used for weapons to force lower parallax and high reflection...
+		tessInnerLevel = r_tesselationLevel->value * 0.3;
+		break;
+	case MATERIAL_DRYLEAVES:		// 19			// dried up leaves on the floor
+		tessInnerLevel = r_tesselationLevel->value;
+		break;
+	case MATERIAL_GREENLEAVES:		// 20			// fresh leaves still on a tree
+		tessInnerLevel = r_tesselationLevel->value;
+		break;
+	case MATERIAL_FABRIC:			// 21			// Cotton sheets
+		tessInnerLevel = r_tesselationLevel->value;
+		break;
+	case MATERIAL_CANVAS:			// 22			// tent material
+		tessInnerLevel = r_tesselationLevel->value;
+		break;
+	case MATERIAL_MARBLE:			// 12			// marble floors
+		tessInnerLevel = r_tesselationLevel->value * 0.5;
+		break;
+	case MATERIAL_SNOW:				// 14			// freshly laid snow
+		tessInnerLevel = r_tesselationLevel->value;
+		break;
+	case MATERIAL_MUD:				// 17			// wet soil
+		tessInnerLevel = r_tesselationLevel->value;
+		break;
+	case MATERIAL_DIRT:				// 7			// hard mud
+		tessInnerLevel = r_tesselationLevel->value;
+		break;
+	case MATERIAL_CONCRETE:			// 11			// hardened concrete pavement
+		tessInnerLevel = r_tesselationLevel->value * 0.3;
+		break;
+	case MATERIAL_FLESH:			// 16			// hung meat, corpses in the world
+		tessInnerLevel = r_tesselationLevel->value;
+		break;
+	case MATERIAL_RUBBER:			// 24			// hard tire like rubber
+		tessInnerLevel = r_tesselationLevel->value;
+		break;
+	case MATERIAL_PLASTIC:			// 25			//
+		tessInnerLevel = r_tesselationLevel->value * 0.5;
+		break;
+	case MATERIAL_PLASTER:			// 28			// drywall style plaster
+		tessInnerLevel = r_tesselationLevel->value * 0.3;
+		break;
+	case MATERIAL_SHATTERGLASS:		// 29			// glass with the Crisis Zone style shattering
+		tessInnerLevel = 1.0;
+		break;
+	case MATERIAL_ARMOR:			// 30			// body armor
+		tessInnerLevel = r_tesselationLevel->value;
+		break;
+	case MATERIAL_ICE:				// 15			// packed snow/solid ice
+		tessInnerLevel = r_tesselationLevel->value;
+		break;
+	case MATERIAL_GLASS:			// 10			//
+		tessInnerLevel = 1.0;
+		break;
+	case MATERIAL_BPGLASS:			// 18			// bulletproof glass
+		tessInnerLevel = 1.0;
+		break;
+	case MATERIAL_COMPUTER:			// 31			// computers/electronic equipment
+		tessInnerLevel = 1.0;
+		break;
+	default:
+		break;
+	}
+
+	if (tessInnerLevel < 1.0) tessInnerLevel = 1.0;
+
+	return tessInnerLevel;
+}
+
+float RB_GetTesselationOuterLevel ( int materialType )
+{
+	float tessOuterLevel = 1.0;
+
+	switch( materialType )
+	{
+	case MATERIAL_WATER:			// 13			// light covering of water on a surface
+		tessOuterLevel = 1.0;
+		break;
+	case MATERIAL_SHORTGRASS:		// 5			// manicured lawn
+		tessOuterLevel = r_tesselationLevel->value;
+		break;
+	case MATERIAL_LONGGRASS:		// 6			// long jungle grass
+		tessOuterLevel = r_tesselationLevel->value;
+		break;
+	case MATERIAL_SAND:				// 8			// sandy beach
+		tessOuterLevel = r_tesselationLevel->value * 0.1;
+		break;
+	case MATERIAL_CARPET:			// 27			// lush carpet
+		tessOuterLevel = 1.0;
+		break;
+	case MATERIAL_GRAVEL:			// 9			// lots of small stones
+		tessOuterLevel = r_tesselationLevel->value;
+		break;
+	case MATERIAL_ROCK:				// 23			//
+		tessOuterLevel = r_tesselationLevel->value;
+		break;
+	case MATERIAL_TILES:			// 26			// tiled floor
+		tessOuterLevel = 1.0;
+		break;
+	case MATERIAL_SOLIDWOOD:		// 1			// freshly cut timber
+		tessOuterLevel = r_tesselationLevel->value;
+		break;
+	case MATERIAL_HOLLOWWOOD:		// 2			// termite infested creaky wood
+		tessOuterLevel = r_tesselationLevel->value;
+		break;
+	case MATERIAL_SOLIDMETAL:		// 3			// solid girders
+		tessOuterLevel = r_tesselationLevel->value * 0.5;
+		break;
+	case MATERIAL_HOLLOWMETAL:		// 4			// hollow metal machines -- UQ1: Used for weapons to force lower parallax and high reflection...
+		tessOuterLevel = 1.0;
+		break;
+	case MATERIAL_DRYLEAVES:		// 19			// dried up leaves on the floor
+		tessOuterLevel = 1.0;
+		break;
+	case MATERIAL_GREENLEAVES:		// 20			// fresh leaves still on a tree
+		tessOuterLevel = 1.0;
+		break;
+	case MATERIAL_FABRIC:			// 21			// Cotton sheets
+		tessOuterLevel = r_tesselationLevel->value;
+		break;
+	case MATERIAL_CANVAS:			// 22			// tent material
+		tessOuterLevel = r_tesselationLevel->value;
+		break;
+	case MATERIAL_MARBLE:			// 12			// marble floors
+		tessOuterLevel = 1.0;
+		break;
+	case MATERIAL_SNOW:				// 14			// freshly laid snow
+		tessOuterLevel = r_tesselationLevel->value;
+		break;
+	case MATERIAL_MUD:				// 17			// wet soil
+		tessOuterLevel = r_tesselationLevel->value;
+		break;
+	case MATERIAL_DIRT:				// 7			// hard mud
+		tessOuterLevel = r_tesselationLevel->value;
+		break;
+	case MATERIAL_CONCRETE:			// 11			// hardened concrete pavement
+		tessOuterLevel = 1.0;
+		break;
+	case MATERIAL_FLESH:			// 16			// hung meat, corpses in the world
+		tessOuterLevel = r_tesselationLevel->value;
+		break;
+	case MATERIAL_RUBBER:			// 24			// hard tire like rubber
+		tessOuterLevel = 1.0;
+		break;
+	case MATERIAL_PLASTIC:			// 25			//
+		tessOuterLevel = r_tesselationLevel->value * 0.5;
+		break;
+	case MATERIAL_PLASTER:			// 28			// drywall style plaster
+		tessOuterLevel = 1.0;
+		break;
+	case MATERIAL_SHATTERGLASS:		// 29			// glass with the Crisis Zone style shattering
+		tessOuterLevel = 1.0;
+		break;
+	case MATERIAL_ARMOR:			// 30			// body armor
+		tessOuterLevel = r_tesselationLevel->value;
+		break;
+	case MATERIAL_ICE:				// 15			// packed snow/solid ice
+		tessOuterLevel = r_tesselationLevel->value;
+		break;
+	case MATERIAL_GLASS:			// 10			//
+		tessOuterLevel = 1.0;
+		break;
+	case MATERIAL_BPGLASS:			// 18			// bulletproof glass
+		tessOuterLevel = 1.0;
+		break;
+	case MATERIAL_COMPUTER:			// 31			// computers/electronic equipment
+		tessOuterLevel = 1.0;
+		break;
+	default:
+		break;
+	}
+
+	if (tessOuterLevel < 1.0) tessOuterLevel = 1.0;
+
+	return tessOuterLevel;
+}
+
 
 extern qboolean R_SurfaceIsAllowedFoliage( int materialType );
 
@@ -2318,6 +2643,8 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			}
 #endif
 
+			qboolean tesselation = qfalse;
+
 			if (isGrass && passNum > 0 && r_foliage->integer)
 			{
 				GL_BindToTMU( tr.grassImage, TB_DIFFUSEMAP );
@@ -2336,6 +2663,18 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 				GL_Cull( CT_TWO_SIDED );
 			}
+			else if (r_tesselation->integer && sp->tesselation)
+			{
+				tesselation = qtrue;
+
+				float tessAlpha = RB_GetTesselationAlphaLevel(tess.shader->surfaceFlags & MATERIAL_MASK);
+				float tessInner = RB_GetTesselationInnerLevel(tess.shader->surfaceFlags & MATERIAL_MASK);
+				float tessOuter = RB_GetTesselationOuterLevel(tess.shader->surfaceFlags & MATERIAL_MASK);
+
+				vec4_t l10;
+				VectorSet4(l10, tessAlpha, tessInner, tessOuter, 0.0);
+				GLSL_SetUniformVec4(sp, UNIFORM_LOCAL10, l10);
+			}
 
 			vec4_t l9;
 			VectorSet4(l9, r_testshaderValue1->value, r_testshaderValue2->value, r_testshaderValue3->value, r_testshaderValue4->value);
@@ -2348,16 +2687,6 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			//
 			// draw
 			//
-			qboolean tesselation = qfalse;
-
-			if (r_tesselation->integer && sp->tesselation && !(isGrass && passNum > 0 && r_foliage->integer))
-			{
-				tesselation = qtrue;
-
-				vec4_t l10;
-				VectorSet4(l10, r_tesselationLevel->value, r_tesselationAlpha->value, 0.0, 0.0);
-				GLSL_SetUniformVec4(sp, UNIFORM_LOCAL10, l10);
-			}
 
 			if (input->multiDrawPrimitives)
 			{

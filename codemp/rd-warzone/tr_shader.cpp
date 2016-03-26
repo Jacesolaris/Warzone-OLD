@@ -3249,8 +3249,20 @@ void AssignMaterialType ( const char *name, const char *text )
 		//
 		if (StringsContainWord(name, name, "plastic") || StringsContainWord(name, name, "stormtrooper") || StringsContainWord(name, name, "snowtrooper") || StringsContainWord(name, name, "medpac") || StringsContainWord(name, name, "bacta") || StringsContainWord(name, name, "helmet") || StringsContainWord(name, name, "feather"))
 			shader.surfaceFlags |= MATERIAL_PLASTIC;
-		else if (StringsContainWord(name, name, "mp/flag") || StringsContainWord(name, name, "xwing") || StringsContainWord(name, name, "xwbody") || StringsContainWord(name, name, "tie_") || StringsContainWord(name, name, "ship") || StringsContainWord(name, name, "shuttle") || StringsContainWord(name, name, "falcon") || StringsContainWord(name, name, "freight") || StringsContainWord(name, name, "transport") || StringsContainWord(name, name, "crate") || StringsContainWord(name, name, "container") || StringsContainWord(name, name, "barrel") || StringsContainWord(name, name, "crane") || StringsContainWord(name, name, "plate") || StringsContainWord(name, name, "cargo") || StringsContainWord(name, name, "edgetech") || StringsContainWord(name, name, "brace") || StringsContainWord(name, name, "lightground"))
-			shader.surfaceFlags |= MATERIAL_SOLIDMETAL;
+		else if (StringsContainWord(name, name, "/ships/") || StringsContainWord(name, name, "engine") || StringsContainWord(name, name, "mp/flag"))
+			shader.surfaceFlags |= MATERIAL_SOLIDMETAL;//MATERIAL_PLASTIC;
+		else if (StringsContainWord(name, name, "wing") || StringsContainWord(name, name, "xwbody") || StringsContainWord(name, name, "tie_"))
+			shader.surfaceFlags |= MATERIAL_SOLIDMETAL;//MATERIAL_PLASTIC;
+		else if (StringsContainWord(name, name, "ship") || StringsContainWord(name, name, "shuttle") || StringsContainWord(name, name, "falcon"))
+			shader.surfaceFlags |= MATERIAL_SOLIDMETAL;//MATERIAL_PLASTIC;
+		else if (StringsContainWord(name, name, "freight") || StringsContainWord(name, name, "transport") || StringsContainWord(name, name, "crate"))
+			shader.surfaceFlags |= MATERIAL_SOLIDMETAL;//MATERIAL_PLASTIC;
+		else if (StringsContainWord(name, name, "container") || StringsContainWord(name, name, "barrel") || StringsContainWord(name, name, "train"))
+			shader.surfaceFlags |= MATERIAL_SOLIDMETAL;//MATERIAL_PLASTIC;
+		else if (StringsContainWord(name, name, "crane") || StringsContainWord(name, name, "plate") || StringsContainWord(name, name, "cargo"))
+			shader.surfaceFlags |= MATERIAL_SOLIDMETAL;//MATERIAL_PLASTIC;
+		else if (StringsContainWord(name, name, "ship_"))
+			shader.surfaceFlags |= MATERIAL_SOLIDMETAL;//MATERIAL_PLASTIC;
 		else if (!StringsContainWord(name, name, "trainer") && StringsContainWord(name, name, "train"))
 			shader.surfaceFlags |= MATERIAL_SOLIDMETAL;
 		else if (StringsContainWord(name, name, "reborn") || StringsContainWord(name, name, "trooper"))
@@ -3421,8 +3433,20 @@ void AssignMaterialType ( const char *name, const char *text )
 		//
 		if (StringsContainWord(name, name, "plastic") || StringsContainWord(name, name, "stormtrooper") || StringsContainWord(name, name, "snowtrooper") || StringsContainWord(name, name, "medpac") || StringsContainWord(name, name, "bacta") || StringsContainWord(name, name, "helmet"))
 			shader.surfaceFlags |= MATERIAL_PLASTIC;
-		else if (StringsContainWord(name, name, "mp/flag") || StringsContainWord(name, name, "xwing") || StringsContainWord(name, name, "xwbody") || StringsContainWord(name, name, "tie_") || StringsContainWord(name, name, "ship") || StringsContainWord(name, name, "shuttle") || StringsContainWord(name, name, "falcon") || StringsContainWord(name, name, "freight") || StringsContainWord(name, name, "transport") || StringsContainWord(name, name, "crate") || StringsContainWord(name, name, "container") || StringsContainWord(name, name, "barrel") || StringsContainWord(name, name, "train") || StringsContainWord(name, name, "crane") || StringsContainWord(name, name, "plate") || StringsContainWord(name, name, "cargo"))
-			shader.surfaceFlags |= MATERIAL_PLASTIC;//MATERIAL_SOLIDMETAL;
+		else if (StringsContainWord(name, name, "/ships/") || StringsContainWord(name, name, "engine") || StringsContainWord(name, name, "mp/flag"))
+			shader.surfaceFlags |= MATERIAL_SOLIDMETAL;//MATERIAL_PLASTIC;
+		else if (StringsContainWord(name, name, "wing") || StringsContainWord(name, name, "xwbody") || StringsContainWord(name, name, "tie_"))
+			shader.surfaceFlags |= MATERIAL_SOLIDMETAL;//MATERIAL_PLASTIC;
+		else if (StringsContainWord(name, name, "ship") || StringsContainWord(name, name, "shuttle") || StringsContainWord(name, name, "falcon"))
+			shader.surfaceFlags |= MATERIAL_SOLIDMETAL;//MATERIAL_PLASTIC;
+		else if (StringsContainWord(name, name, "freight") || StringsContainWord(name, name, "transport") || StringsContainWord(name, name, "crate"))
+			shader.surfaceFlags |= MATERIAL_SOLIDMETAL;//MATERIAL_PLASTIC;
+		else if (StringsContainWord(name, name, "container") || StringsContainWord(name, name, "barrel") || StringsContainWord(name, name, "train"))
+			shader.surfaceFlags |= MATERIAL_SOLIDMETAL;//MATERIAL_PLASTIC;
+		else if (StringsContainWord(name, name, "crane") || StringsContainWord(name, name, "plate") || StringsContainWord(name, name, "cargo"))
+			shader.surfaceFlags |= MATERIAL_SOLIDMETAL;//MATERIAL_PLASTIC;
+		else if (StringsContainWord(name, name, "ship_"))
+			shader.surfaceFlags |= MATERIAL_SOLIDMETAL;//MATERIAL_PLASTIC;
 		else if (StringsContainWord(name, name, "reborn") || StringsContainWord(name, name, "trooper"))
 			shader.surfaceFlags |= MATERIAL_ARMOR;
 		else if (StringsContainWord(name, name, "boba") || StringsContainWord(name, name, "pilot"))

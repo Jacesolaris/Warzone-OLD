@@ -271,6 +271,7 @@ extern void AIMod_AddLiftPoint ( void );
 extern void AIMod_AWC_MarkBadHeight ( void );
 extern void AIMod_AddWayPoint ( void );
 extern void CG_ShowSurface ( void );
+extern void CG_ShowForwardSurface ( void );
 extern void CG_ShowSkySurface ( void );
 extern void CG_ShowSlope ( void );
 
@@ -422,6 +423,7 @@ static consoleCommand_t	commands[] = {
 	{ "nextskin",					CG_TestModelNextSkin_f },
 	{ "prevframe",					CG_TestModelPrevFrame_f },
 	{ "prevskin",					CG_TestModelPrevSkin_f },
+	{ "showforwardsurface",			CG_ShowForwardSurface },
 	{ "showlifts",					CG_ShowLifts },
 	{ "showskysurface",				CG_ShowSkySurface },
 	{ "showslope",					CG_ShowSlope },

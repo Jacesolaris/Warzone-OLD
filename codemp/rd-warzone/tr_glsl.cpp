@@ -168,7 +168,8 @@ const char fallbackShader_genericTessControl_cp[] =
 "// tessellation levels\n"\
 "uniform vec4 u_Local10;\n"\
 "\n"\
-"#define gTessellationLevel u_Local10.r\n"\
+"#define gTessellationLevelInner u_Local10.g\n"\
+"#define gTessellationLevelOuter u_Local10.b\n"\
 "\n"\
 "layout(vertices=3) out;\n"\
 "\n"\
@@ -251,9 +252,8 @@ const char fallbackShader_genericTessControl_cp[] =
 " iPnPatch[gl_InvocationID].n101 = N2+N0-vij(2,0)*(P0-P2);\n"\
 "\n"\
 " // set tess levels\n"\
-" gl_TessLevelOuter[gl_InvocationID] = gTessellationLevel;\n"\
-"// gl_TessLevelOuter[gl_InvocationID] = 1.0;\n"\
-" gl_TessLevelInner[0] = gTessellationLevel;\n"\
+" gl_TessLevelOuter[gl_InvocationID] = gTessellationLevelOuter;\n"\
+" gl_TessLevelInner[0] = gTessellationLevelInner;\n"\
 "}\n";
 
 const char fallbackShader_genericTessControl_ep[] = 
@@ -276,7 +276,7 @@ const char fallbackShader_genericTessControl_ep[] =
 "\n"\
 "uniform vec4 u_Local10;\n"\
 "\n"\
-"#define uTessAlpha u_Local10.g\n"\
+"#define uTessAlpha u_Local10.r\n"\
 "\n"\
 "layout(triangles, fractional_odd_spacing, ccw) in;\n"\
 "\n"\
