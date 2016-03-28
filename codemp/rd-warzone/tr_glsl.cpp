@@ -200,17 +200,7 @@ const char fallbackShader_genericTessControl_cp[] =
 "\n"\
 "float GetTessLevel(float Distance0, float Distance1)\n"\
 "{\n"\
-"    float AvgDistance = (Distance0 + Distance1) / 2.0;\n"\
-"\n"\
-"    if (AvgDistance <= 2.0) {\n"\
-"        return 10.0;\n"\
-"    }\n"\
-"    else if (AvgDistance <= 5.0) {\n"\
-"        return 7.0;\n"\
-"    }\n"\
-"    else {\n"\
-"        return 3.0;\n"\
-"    }\n"\
+"	return mix(1.0, gTessellationLevelInner, clamp(((Distance0 + Distance1) / 2.0) / 6.0, 0.0, 1.0));\n"\
 "}\n"\
 "\n"\
 "float wij(int i, int j)\n"\
