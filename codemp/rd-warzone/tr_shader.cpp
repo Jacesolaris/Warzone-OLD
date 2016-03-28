@@ -3281,7 +3281,7 @@ void AssignMaterialType ( const char *name, const char *text )
 		//
 		else if (StringsContainWord(name, name, "concrete"))
 			shader.surfaceFlags |= MATERIAL_CONCRETE;
-		else if (StringsContainWord(name, name, "models/weapon") && StringsContainWord(name, name, "saber") && !StringsContainWord(name, name, "glow"))
+		else if (StringsContainWord(name, name, "models/weapon") && StringsContainWord(name, name, "saber") && !StringsContainWord(name, name, "glow") && StringsContainWord(name, name, "bespin/bench") && StringsContainWord(name, name, "bespin/light"))
 			shader.surfaceFlags |= MATERIAL_HOLLOWMETAL; // UQ1: Using hollowmetal for weapons to force low parallax setting...
 		else if (StringsContainWord(name, name, "/weapon") || StringsContainWord(name, name, "scope") || StringsContainWord(name, name, "blaster") || StringsContainWord(name, name, "pistol") || StringsContainWord(name, name, "thermal") || StringsContainWord(name, name, "bowcaster") || StringsContainWord(name, name, "cannon") || StringsContainWord(name, name, "saber") || StringsContainWord(name, name, "rifle") || StringsContainWord(name, name, "rocket"))
 			shader.surfaceFlags |= MATERIAL_HOLLOWMETAL; // UQ1: Using hollowmetal for weapons to force low parallax setting...
@@ -3447,6 +3447,8 @@ void AssignMaterialType ( const char *name, const char *text )
 			shader.surfaceFlags |= MATERIAL_SOLIDMETAL;//MATERIAL_PLASTIC;
 		else if (StringsContainWord(name, name, "ship_"))
 			shader.surfaceFlags |= MATERIAL_SOLIDMETAL;//MATERIAL_PLASTIC;
+		else if (StringsContainWord(name, name, "models/weapon") && StringsContainWord(name, name, "saber") && !StringsContainWord(name, name, "glow") && StringsContainWord(name, name, "bespin/bench") && StringsContainWord(name, name, "bespin/light"))
+			shader.surfaceFlags |= MATERIAL_HOLLOWMETAL; // UQ1: Using hollowmetal for weapons to force low parallax setting...
 		else if (StringsContainWord(name, name, "reborn") || StringsContainWord(name, name, "trooper"))
 			shader.surfaceFlags |= MATERIAL_ARMOR;
 		else if (StringsContainWord(name, name, "boba") || StringsContainWord(name, name, "pilot"))
