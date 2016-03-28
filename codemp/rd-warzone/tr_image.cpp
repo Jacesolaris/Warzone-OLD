@@ -3035,7 +3035,22 @@ static void R_CreateSteepMap ( const char *name, byte *pic, int width, int heigh
 	Q_strcat(SubsurfaceName, MAX_QPATH, "_steep");
 	
 	// find normalmap in case it's there
-	SubsurfaceImage = R_FindImageFile(SubsurfaceName, IMGTYPE_OVERLAY, normalFlags);
+	SubsurfaceImage = R_FindImageFile(SubsurfaceName, IMGTYPE_STEEPMAP, normalFlags);
+}
+
+static void R_CreateSteepMap2 ( const char *name, byte *pic, int width, int height, int flags )
+{
+	char SubsurfaceName[MAX_QPATH];
+	image_t *SubsurfaceImage;
+	int normalFlags;
+	
+	normalFlags = (flags & ~(IMGFLAG_GENNORMALMAP | IMGFLAG_SRGB | IMGFLAG_CLAMPTOEDGE | IMGFLAG_NO_COMPRESSION)) | IMGFLAG_NOLIGHTSCALE | IMGFLAG_MIPMAP;
+
+	COM_StripExtension(name, SubsurfaceName, MAX_QPATH);
+	Q_strcat(SubsurfaceName, MAX_QPATH, "_steep2");
+	
+	// find normalmap in case it's there
+	SubsurfaceImage = R_FindImageFile(SubsurfaceName, IMGTYPE_STEEPMAP2, normalFlags);
 }
 
 /*
@@ -3102,7 +3117,7 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, int flags )
 
 	image = R_CreateImage( name, pic, width, height, type, flags, 0 );
 
-	if (name[0] != '*' && name[0] != '!' && name[0] != '$' && name[0] != '_' && type != IMGTYPE_NORMAL && type != IMGTYPE_SPECULAR /*&& type != IMGTYPE_SUBSURFACE*/ && type != IMGTYPE_OVERLAY && type != IMGTYPE_STEEPMAP && !(flags & IMGFLAG_CUBEMAP))
+	if (name[0] != '*' && name[0] != '!' && name[0] != '$' && name[0] != '_' && type != IMGTYPE_NORMAL && type != IMGTYPE_SPECULAR /*&& type != IMGTYPE_SUBSURFACE*/ && type != IMGTYPE_OVERLAY && type != IMGTYPE_STEEPMAP && type != IMGTYPE_STEEPMAP2 && !(flags & IMGFLAG_CUBEMAP))
 	{
 		if (image && r_textureClean->integer)
 		{
@@ -3146,6 +3161,7 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, int flags )
 		R_CreateOverlayMap( name, pic, width, height, flags );
 
 		R_CreateSteepMap( name, pic, width, height, flags );
+		R_CreateSteepMap2( name, pic, width, height, flags );
 	}
 
 	Z_Free( pic );

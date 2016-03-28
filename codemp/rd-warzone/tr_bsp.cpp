@@ -3979,6 +3979,8 @@ void RE_LoadWorldMap( const char *name ) {
 		ri->Error( ERR_DROP, "ERROR: attempted to redundantly load world map" );
 	}
 
+	MAP_WATER_LEVEL = 131072.0;
+
 	{// Set currentMapName string...
 		string str = name;
 		string str2 = "maps/";

@@ -186,6 +186,7 @@ const char fallbackShader_genericTessControl_cp[] =
 "in float Slope_CS_in[];\n"\
 "in float usingSteepMap_CS_in[];\n"\
 "\n"\
+"out vec4 WorldPos_ES_in[3];\n"\
 "out vec3 iNormal[3];\n"\
 "out vec2 iTexCoord[3];\n"\
 "out PnPatch iPnPatch[3];\n"\
@@ -220,6 +221,7 @@ const char fallbackShader_genericTessControl_cp[] =
 "{\n"\
 " // get data\n"\
 " gl_out[gl_InvocationID].gl_Position		= gl_in[gl_InvocationID].gl_Position;\n"\
+" WorldPos_ES_in[gl_InvocationID]			= WorldPos_CS_in[gl_InvocationID];\n"\
 " iNormal[gl_InvocationID]					= Normal_CS_in[gl_InvocationID];\n"\
 " iTexCoord[gl_InvocationID]				= TexCoord_CS_in[gl_InvocationID];\n"\
 " Color_ES_in[gl_InvocationID]				= Color_CS_in[gl_InvocationID];\n"\
@@ -301,6 +303,7 @@ const char fallbackShader_genericTessControl_ep[] =
 "\n"\
 "uniform vec3			u_ViewOrigin;\n"\
 "\n"\
+"in vec4 WorldPos_ES_in[];\n"\
 "in vec3 iNormal[];\n"\
 "in vec2 iTexCoord[];\n"\
 "in PnPatch iPnPatch[];\n"\
@@ -360,6 +363,9 @@ const char fallbackShader_genericTessControl_ep[] =
 "                            iPnPatch[2].n101));\n"\
 "\n"\
 " // compute texcoords\n"\
+" WorldPos_FS_in = gl_TessCoord[2]*WorldPos_ES_in[0].xyz\n"\
+"            + gl_TessCoord[0]*WorldPos_ES_in[1].xyz\n"\
+"            + gl_TessCoord[1]*WorldPos_ES_in[2].xyz;\n"\
 " TexCoord_FS_in  = gl_TessCoord[2]*iTexCoord[0]\n"\
 "            + gl_TessCoord[0]*iTexCoord[1]\n"\
 "            + gl_TessCoord[1]*iTexCoord[2];\n"\
@@ -423,7 +429,7 @@ const char fallbackShader_genericTessControl_ep[] =
 " // final position and normal\n"\
 " vec3 finalPos = (1.0-uTessAlpha)*barPos + uTessAlpha*pnPos;\n"\
 " gl_Position   = u_ModelViewProjectionMatrix * vec4(finalPos,1.0);\n"\
-" WorldPos_FS_in = finalPos.xyz;\n"\
+"// WorldPos_FS_in = finalPos.xyz;\n"\
 " ViewDir_FS_in = u_ViewOrigin - finalPos;\n"\
 "}\n";
 #endif
@@ -564,6 +570,7 @@ static uniformInfo_t uniformsInfo[] =
 	{ "u_LightMap",    GLSL_INT, 1 },
 	{ "u_NormalMap",   GLSL_INT, 1 },
 	{ "u_NormalMap2",   GLSL_INT, 1 },
+	{ "u_NormalMap3",   GLSL_INT, 1 },
 	{ "u_DeluxeMap",   GLSL_INT, 1 },
 	{ "u_SpecularMap", GLSL_INT, 1 },
 
@@ -572,6 +579,7 @@ static uniformInfo_t uniformsInfo[] =
 	{ "u_CubeMap",    GLSL_INT, 1 },
 	{ "u_OverlayMap",    GLSL_INT, 1 },
 	{ "u_SteepMap",  GLSL_INT, 1 },
+	{ "u_SteepMap2",  GLSL_INT, 1 },
 
 	{ "u_ScreenImageMap", GLSL_INT, 1 },
 	{ "u_ScreenDepthMap", GLSL_INT, 1 },
@@ -2855,6 +2863,8 @@ void GLSL_EndLoadGPUShaders ( int startTime )
 		GLSL_SetUniformInt(&tr.lightallShader[i], UNIFORM_DIFFUSEMAP,  TB_DIFFUSEMAP);
 		GLSL_SetUniformInt(&tr.lightallShader[i], UNIFORM_LIGHTMAP,    TB_LIGHTMAP);
 		GLSL_SetUniformInt(&tr.lightallShader[i], UNIFORM_NORMALMAP,   TB_NORMALMAP);
+		GLSL_SetUniformInt(&tr.lightallShader[i], UNIFORM_NORMALMAP2,   TB_NORMALMAP2);
+		GLSL_SetUniformInt(&tr.lightallShader[i], UNIFORM_NORMALMAP3,   TB_NORMALMAP3);
 		GLSL_SetUniformInt(&tr.lightallShader[i], UNIFORM_DELUXEMAP,   TB_DELUXEMAP);
 		GLSL_SetUniformInt(&tr.lightallShader[i], UNIFORM_SPECULARMAP, TB_SPECULARMAP);
 		GLSL_SetUniformInt(&tr.lightallShader[i], UNIFORM_SHADOWMAP,   TB_SHADOWMAP);
@@ -2862,6 +2872,7 @@ void GLSL_EndLoadGPUShaders ( int startTime )
 		//GLSL_SetUniformInt(&tr.lightallShader[i], UNIFORM_SUBSURFACEMAP, TB_SUBSURFACEMAP);
 		GLSL_SetUniformInt(&tr.lightallShader[i], UNIFORM_OVERLAYMAP, TB_OVERLAYMAP);
 		GLSL_SetUniformInt(&tr.lightallShader[i], UNIFORM_STEEPMAP, TB_STEEPMAP);
+		GLSL_SetUniformInt(&tr.lightallShader[i], UNIFORM_STEEPMAP2, TB_STEEPMAP2);
 		qglUseProgram(0);
 
 #if defined(_DEBUG)
@@ -2902,6 +2913,8 @@ void GLSL_EndLoadGPUShaders ( int startTime )
 		GLSL_SetUniformInt(&tr.grass2Shader, UNIFORM_DIFFUSEMAP,  TB_DIFFUSEMAP);
 		GLSL_SetUniformInt(&tr.grass2Shader, UNIFORM_LIGHTMAP,    TB_LIGHTMAP);
 		GLSL_SetUniformInt(&tr.grass2Shader, UNIFORM_NORMALMAP,   TB_NORMALMAP);
+		GLSL_SetUniformInt(&tr.grass2Shader, UNIFORM_NORMALMAP2,   TB_NORMALMAP2);
+		GLSL_SetUniformInt(&tr.grass2Shader, UNIFORM_NORMALMAP3,   TB_NORMALMAP3);
 		GLSL_SetUniformInt(&tr.grass2Shader, UNIFORM_DELUXEMAP,   TB_DELUXEMAP);
 		GLSL_SetUniformInt(&tr.grass2Shader, UNIFORM_SPECULARMAP, TB_SPECULARMAP);
 		GLSL_SetUniformInt(&tr.grass2Shader, UNIFORM_SHADOWMAP,   TB_SHADOWMAP);
@@ -2909,6 +2922,7 @@ void GLSL_EndLoadGPUShaders ( int startTime )
 		//GLSL_SetUniformInt(&tr.grass2Shader, UNIFORM_SUBSURFACEMAP, TB_SUBSURFACEMAP);
 		GLSL_SetUniformInt(&tr.grass2Shader, UNIFORM_OVERLAYMAP, TB_OVERLAYMAP);
 		GLSL_SetUniformInt(&tr.grass2Shader, UNIFORM_STEEPMAP, TB_STEEPMAP);
+		GLSL_SetUniformInt(&tr.grass2Shader, UNIFORM_STEEPMAP2, TB_STEEPMAP2);
 		qglUseProgram(0);
 
 #if defined(_DEBUG)

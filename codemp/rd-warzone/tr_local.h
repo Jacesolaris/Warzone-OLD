@@ -470,7 +470,8 @@ typedef enum
 	IMGTYPE_DELUXE, // normals are swizzled, deluxe are not
 	//IMGTYPE_SUBSURFACE,
 	IMGTYPE_OVERLAY,
-	IMGTYPE_STEEPMAP
+	IMGTYPE_STEEPMAP,
+	IMGTYPE_STEEPMAP2,
 } imgType_t;
 
 typedef enum
@@ -819,6 +820,7 @@ typedef struct {
 	//qboolean		subsurfaceLoaded;
 	qboolean		overlayLoaded;
 	qboolean		steepMapLoaded;
+	qboolean		steepMapLoaded2;
 } textureBundle_t;
 
 enum
@@ -831,14 +833,16 @@ enum
 	TB_COLORMAP2		= 1,
 	TB_NORMALMAP		= 2,
 	TB_NORMALMAP2		= 3,
-	TB_DELUXEMAP		= 4,
-	TB_SHADOWMAP2		= 5,
-	TB_SPECULARMAP		= 6,
-	TB_SHADOWMAP		= 7,
-	TB_CUBEMAP			= 8,
-	TB_OVERLAYMAP		= 9,
-	TB_STEEPMAP			= 10,
-	NUM_TEXTURE_BUNDLES = 11
+	TB_NORMALMAP3		= 4,
+	TB_DELUXEMAP		= 5,
+	TB_SHADOWMAP2		= 6,
+	TB_SPECULARMAP		= 7,
+	TB_SHADOWMAP		= 8,
+	TB_CUBEMAP			= 9,
+	TB_OVERLAYMAP		= 10,
+	TB_STEEPMAP			= 11,
+	TB_STEEPMAP2		= 12,
+	NUM_TEXTURE_BUNDLES = 13
 };
 
 typedef enum
@@ -851,6 +855,7 @@ typedef enum
 	ST_SPECULARMAP,
 	ST_OVERLAYMAP,
 	ST_STEEPMAP,
+	ST_STEEPMAP2,
 	ST_GLSL
 } stageType_t;
 
@@ -892,6 +897,7 @@ typedef struct {
 	//bool			hasRealSubsurfaceMap;
 	bool			hasRealOverlayMap;
 	bool			hasRealSteepMap;
+	bool			hasRealSteepMap2;
 	qboolean		glow;
 	
 	textureBundle_t	bundle[NUM_TEXTURE_BUNDLES];
@@ -1232,6 +1238,7 @@ typedef enum
 	UNIFORM_LIGHTMAP,
 	UNIFORM_NORMALMAP,
 	UNIFORM_NORMALMAP2,
+	UNIFORM_NORMALMAP3,
 	UNIFORM_DELUXEMAP,
 	UNIFORM_SPECULARMAP,
 
@@ -1240,6 +1247,7 @@ typedef enum
 	UNIFORM_CUBEMAP,
 	UNIFORM_OVERLAYMAP,
 	UNIFORM_STEEPMAP,
+	UNIFORM_STEEPMAP2,
 
 	UNIFORM_SCREENIMAGEMAP,
 	UNIFORM_SCREENDEPTHMAP,
