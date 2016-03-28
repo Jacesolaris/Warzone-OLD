@@ -366,6 +366,7 @@ void main()
 
 #if defined(USE_TESSELLATION)
 
+  WorldPos_CS_in = vec4(preMMPos, 1.0);
   TexCoord_CS_in = var_TexCoords.xy;
   Normal_CS_in = -preMMNorm.xyz;//-var_Normal.xyz;
   //Normal_CS_in = -var_Normal.xyz;

@@ -1381,7 +1381,7 @@ qboolean RB_ShouldUseTesselation ( int materialType )
 
 float RB_GetTesselationAlphaLevel ( int materialType )
 {
-	float tessAlphaLevel = 1.0;
+	float tessAlphaLevel = r_tesselationAlpha->value;
 
 	switch( materialType )
 	{
@@ -1481,8 +1481,6 @@ float RB_GetTesselationAlphaLevel ( int materialType )
 	default:
 		break;
 	}
-
-	if (tessAlphaLevel < 1.0) tessAlphaLevel = 1.0;
 
 	return tessAlphaLevel;
 }
@@ -2667,9 +2665,11 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			{
 				tesselation = qtrue;
 
-				float tessAlpha = RB_GetTesselationAlphaLevel(tess.shader->surfaceFlags & MATERIAL_MASK);
 				float tessInner = RB_GetTesselationInnerLevel(tess.shader->surfaceFlags & MATERIAL_MASK);
-				float tessOuter = RB_GetTesselationOuterLevel(tess.shader->surfaceFlags & MATERIAL_MASK);
+				float tessOuter = tessInner;//RB_GetTesselationOuterLevel(tess.shader->surfaceFlags & MATERIAL_MASK);
+				float tessAlpha = RB_GetTesselationAlphaLevel(tess.shader->surfaceFlags & MATERIAL_MASK);
+
+				if (tessInner <= 1.0) tessAlpha = 0.1;
 
 				vec4_t l10;
 				VectorSet4(l10, tessAlpha, tessInner, tessOuter, 0.0);

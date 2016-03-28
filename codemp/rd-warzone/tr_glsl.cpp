@@ -166,13 +166,15 @@ const char fallbackShader_genericTessControl_cp[] =
 "};\n"\
 "\n"\
 "// tessellation levels\n"\
-"uniform vec4 u_Local10;\n"\
+"uniform vec3			u_ViewOrigin;\n"\
+"uniform vec4			u_Local10;\n"\
 "\n"\
 "#define gTessellationLevelInner u_Local10.g\n"\
 "#define gTessellationLevelOuter u_Local10.b\n"\
 "\n"\
 "layout(vertices=3) out;\n"\
 "\n"\
+"in vec4 WorldPos_CS_in[];\n"\
 "in vec3 Normal_CS_in[];\n"\
 "in vec2 TexCoord_CS_in[];\n"\
 "in vec4 Tangent_CS_in[];\n"\
@@ -195,6 +197,21 @@ const char fallbackShader_genericTessControl_cp[] =
 "out vec3 Blending_ES_in[3];\n"\
 "out float Slope_ES_in[3];\n"\
 "out float usingSteepMap_ES_in[3];\n"\
+"\n"\
+"float GetTessLevel(float Distance0, float Distance1)\n"\
+"{\n"\
+"    float AvgDistance = (Distance0 + Distance1) / 2.0;\n"\
+"\n"\
+"    if (AvgDistance <= 2.0) {\n"\
+"        return 10.0;\n"\
+"    }\n"\
+"    else if (AvgDistance <= 5.0) {\n"\
+"        return 7.0;\n"\
+"    }\n"\
+"    else {\n"\
+"        return 3.0;\n"\
+"    }\n"\
+"}\n"\
 "\n"\
 "float wij(int i, int j)\n"\
 "{\n"\
@@ -252,8 +269,19 @@ const char fallbackShader_genericTessControl_cp[] =
 " iPnPatch[gl_InvocationID].n101 = N2+N0-vij(2,0)*(P0-P2);\n"\
 "\n"\
 " // set tess levels\n"\
-" gl_TessLevelOuter[gl_InvocationID] = gTessellationLevelOuter;\n"\
-" gl_TessLevelInner[0] = gTessellationLevelInner;\n"\
+"// gl_TessLevelOuter[gl_InvocationID] = gTessellationLevelOuter;\n"\
+"// gl_TessLevelInner[0] = gTessellationLevelInner;\n"\
+"\n"\
+"	// Calculate the distance from the camera to the three control points\n"\
+"    float EyeToVertexDistance0 = distance(u_ViewOrigin.xyz, WorldPos_CS_in[0].xyz);\n"\
+"    float EyeToVertexDistance1 = distance(u_ViewOrigin.xyz, WorldPos_CS_in[1].xyz);\n"\
+"    float EyeToVertexDistance2 = distance(u_ViewOrigin.xyz, WorldPos_CS_in[2].xyz);\n"\
+"\n"\
+"    // Calculate the tessellation levels\n"\
+"    gl_TessLevelOuter[0] = GetTessLevel(EyeToVertexDistance1, EyeToVertexDistance2);\n"\
+"    gl_TessLevelOuter[1] = GetTessLevel(EyeToVertexDistance2, EyeToVertexDistance0);\n"\
+"    gl_TessLevelOuter[2] = GetTessLevel(EyeToVertexDistance0, EyeToVertexDistance1);\n"\
+"    gl_TessLevelInner[0] = gl_TessLevelOuter[2];\n"\
 "}\n";
 
 const char fallbackShader_genericTessControl_ep[] = 
