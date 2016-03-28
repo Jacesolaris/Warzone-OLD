@@ -200,7 +200,7 @@ const char fallbackShader_genericTessControl_cp[] =
 "\n"\
 "float GetTessLevel(float Distance0, float Distance1)\n"\
 "{\n"\
-"	return clamp(mix(1.0, gTessellationLevelInner, clamp(((Distance0 + Distance1) / 2.0) / 6.0, 0.0, 1.0)), 1.0, gTessellationLevelInner);\n"\
+"	return mix(1.0, gTessellationLevelInner, clamp(((Distance0 + Distance1) / 2.0) / 6.0, 0.0, 1.0));\n"\
 "}\n"\
 "\n"\
 "float wij(int i, int j)\n"\

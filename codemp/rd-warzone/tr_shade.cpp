@@ -1590,8 +1590,6 @@ float RB_GetTesselationInnerLevel ( int materialType )
 		break;
 	}
 
-	tessInnerLevel = Q_clamp(1.0, tessInnerLevel, r_tesselationLevel->value);
-
 	return tessInnerLevel;
 }
 
