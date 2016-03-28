@@ -480,8 +480,10 @@ void RE_BeginScene(const refdef_t *fd)
 	tr.refdef.numPolys = r_numpolys - r_firstScenePoly;
 	tr.refdef.polys = &backEndData->polys[r_firstScenePoly];
 
-	//tr.refdef.num_pshadows = 0;
-	//tr.refdef.pshadows = &backEndData->pshadows[0];
+#ifdef __PSHADOWS__
+	tr.refdef.num_pshadows = 0;
+	tr.refdef.pshadows = &backEndData->pshadows[0];
+#endif
 
 	// turn off dynamic lighting globally by clearing all the
 	// dlights if it needs to be disabled or if vertex lighting is enabled
@@ -557,7 +559,9 @@ void RE_RenderScene( const refdef_t *fd ) {
 	{
 		R_RenderDlightCubemaps(fd);
 	}
+#endif
 
+#ifdef __PSHADOWS__
 	/* playing with more shadows */
 	if(!( fd->rdflags & RDF_NOWORLDMODEL ) && r_shadows->integer == 4)
 	{

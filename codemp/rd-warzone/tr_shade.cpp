@@ -238,7 +238,9 @@ void RB_BeginSurface( shader_t *shader, int fogNum, int cubemapIndex ) {
 	tess.fogNum = fogNum;
 	tess.cubemapIndex = cubemapIndex;
 	//tess.dlightBits = 0;		// will be OR'd in by surface functions
-	//tess.pshadowBits = 0;       // will be OR'd in by surface functions
+#ifdef __PSHADOWS__
+	tess.pshadowBits = 0;       // will be OR'd in by surface functions
+#endif
 	tess.xstages = state->stages;
 	tess.numPasses = state->numUnfoggedPasses;
 	tess.currentStageIteratorFunc = state->optimalStageIteratorFunc;
@@ -708,7 +710,7 @@ static void ComputeFogColorMask( shaderStage_t *pStage, vec4_t fogColorMask )
 }
 
 static void ProjectPshadowVBOGLSL( void ) {
-#if 0
+#ifdef __PSHADOWS__
 	int		l;
 	vec3_t	origin;
 	float	radius;
@@ -729,9 +731,9 @@ static void ProjectPshadowVBOGLSL( void ) {
 		shaderProgram_t *sp;
 		vec4_t vector;
 
-		if ( !( tess.pshadowBits & ( 1 << l ) ) ) {
-			continue;	// this surface definately doesn't have any of this shadow
-		}
+		//if ( !( tess.pshadowBits & ( 1 << l ) ) ) {
+		//	continue;	// this surface definately doesn't have any of this shadow
+		//}
 
 		ps = &backEnd.refdef.pshadows[l];
 		VectorCopy( ps->lightOrigin, origin );
@@ -1404,7 +1406,7 @@ float RB_GetTesselationAlphaLevel ( int materialType )
 		tessAlphaLevel = r_tesselationAlpha->value * 0.5;
 		break;
 	case MATERIAL_ROCK:				// 23			//
-		tessAlphaLevel = r_tesselationAlpha->value;
+		tessAlphaLevel = r_tesselationAlpha->value * 0.5;
 		break;
 	case MATERIAL_TILES:			// 26			// tiled floor
 		tessAlphaLevel = r_tesselationAlpha->value * 0.3;
@@ -1437,13 +1439,13 @@ float RB_GetTesselationAlphaLevel ( int materialType )
 		tessAlphaLevel = r_tesselationAlpha->value * 0.5;
 		break;
 	case MATERIAL_SNOW:				// 14			// freshly laid snow
-		tessAlphaLevel = r_tesselationAlpha->value;
+		tessAlphaLevel = r_tesselationAlpha->value * 0.1;
 		break;
 	case MATERIAL_MUD:				// 17			// wet soil
-		tessAlphaLevel = r_tesselationAlpha->value;
+		tessAlphaLevel = r_tesselationAlpha->value * 0.1;
 		break;
 	case MATERIAL_DIRT:				// 7			// hard mud
-		tessAlphaLevel = r_tesselationAlpha->value;
+		tessAlphaLevel = r_tesselationAlpha->value * 0.1;
 		break;
 	case MATERIAL_CONCRETE:			// 11			// hardened concrete pavement
 		tessAlphaLevel = r_tesselationAlpha->value * 0.3;
@@ -1467,7 +1469,7 @@ float RB_GetTesselationAlphaLevel ( int materialType )
 		tessAlphaLevel = r_tesselationAlpha->value;
 		break;
 	case MATERIAL_ICE:				// 15			// packed snow/solid ice
-		tessAlphaLevel = r_tesselationAlpha->value;
+		tessAlphaLevel = r_tesselationAlpha->value * 0.3;
 		break;
 	case MATERIAL_GLASS:			// 10			//
 		tessAlphaLevel = r_tesselationAlpha->value * 0.1;
@@ -1512,7 +1514,7 @@ float RB_GetTesselationInnerLevel ( int materialType )
 		tessInnerLevel = Q_clamp(1.0, r_tesselationLevel->value, 2.25);
 		break;
 	case MATERIAL_ROCK:				// 23			//
-		tessInnerLevel = Q_clamp(1.0, r_tesselationLevel->value, r_tesselationLevel->value);
+		tessInnerLevel = Q_clamp(1.0, r_tesselationLevel->value * 0.5, 2.25);
 		break;
 	case MATERIAL_TILES:			// 26			// tiled floor
 		tessInnerLevel = Q_clamp(1.0, r_tesselationLevel->value * 0.3, 2.25);
@@ -1545,13 +1547,13 @@ float RB_GetTesselationInnerLevel ( int materialType )
 		tessInnerLevel = Q_clamp(1.0, r_tesselationLevel->value * 0.5, 2.25);
 		break;
 	case MATERIAL_SNOW:				// 14			// freshly laid snow
-		tessInnerLevel = Q_clamp(1.0, r_tesselationLevel->value, r_tesselationLevel->value);
+		tessInnerLevel = Q_clamp(1.0, r_tesselationLevel->value * 0.1, 2.25);
 		break;
 	case MATERIAL_MUD:				// 17			// wet soil
-		tessInnerLevel = Q_clamp(1.0, r_tesselationLevel->value, 2.25);
+		tessInnerLevel = Q_clamp(1.0, r_tesselationLevel->value * 0.1, 2.25);
 		break;
 	case MATERIAL_DIRT:				// 7			// hard mud
-		tessInnerLevel = Q_clamp(1.0, r_tesselationLevel->value, 2.25);
+		tessInnerLevel = Q_clamp(1.0, r_tesselationLevel->value * 0.1, 2.25);
 		break;
 	case MATERIAL_CONCRETE:			// 11			// hardened concrete pavement
 		tessInnerLevel = Q_clamp(1.0, r_tesselationLevel->value * 0.3, 2.25);
@@ -1575,7 +1577,7 @@ float RB_GetTesselationInnerLevel ( int materialType )
 		tessInnerLevel = Q_clamp(1.0, r_tesselationLevel->value, r_tesselationLevel->value);
 		break;
 	case MATERIAL_ICE:				// 15			// packed snow/solid ice
-		tessInnerLevel = Q_clamp(1.0, r_tesselationLevel->value, r_tesselationLevel->value);
+		tessInnerLevel = Q_clamp(1.0, r_tesselationLevel->value * 0.3, r_tesselationLevel->value);
 		break;
 	case MATERIAL_GLASS:			// 10			//
 		tessInnerLevel = 1.0;
@@ -2819,6 +2821,10 @@ void RB_StageIteratorGeneric( void )
 	// call shader function
 	//
 	RB_IterateStagesGeneric( input );
+
+#ifdef __PSHADOWS__
+	ProjectPshadowVBOGLSL();
+#endif
 
 	// Now check for surfacesprites.
 #if 0

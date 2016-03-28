@@ -296,7 +296,8 @@ const char fallbackShader_genericTessControl_ep[] =
 "\n"\
 "#define uTessAlpha u_Local10.r\n"\
 "\n"\
-"layout(triangles, fractional_odd_spacing, ccw) in;\n"\
+"layout(triangles, fractional_odd_spacing, ccw) in; // Does rend2 spew out clockwise or counter-clockwise verts???\n"\
+"//layout(triangles, fractional_odd_spacing, cw) in;\n"\
 "\n"\
 "uniform vec3			u_ViewOrigin;\n"\
 "\n"\

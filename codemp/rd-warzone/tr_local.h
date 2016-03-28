@@ -35,7 +35,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define ___SHADER_GENERATOR_PLAYERS_ONLY___
 //#define __SURFACESPRITES__
 #define __EXTRA_PRETTY__
-
+//#define __PSHADOWS__
 
 
 //#define __DYNAMIC_SHADOWS__
@@ -1411,8 +1411,10 @@ typedef struct {
 	struct drawSurf_s	*drawSurfs;
 
 	//unsigned int dlightMask;
-	//int         num_pshadows;
-	//struct pshadow_s *pshadows;
+#ifdef __PSHADOWS__
+	int         num_pshadows;
+	struct pshadow_s *pshadows;
+#endif
 
 #ifdef __DYNAMIC_SHADOWS__
 	float       dlightShadowMvp[MAX_DYNAMIC_SHADOWS][3][16];
@@ -1571,7 +1573,9 @@ typedef struct srfBspSurface_s
 
 	// dynamic lighting information
 	//int				dlightBits;
-	//int             pshadowBits;
+#ifdef __PSHADOWS__
+	int             pshadowBits;
+#endif
 
 	// culling information
 	vec3_t			cullBounds[2];
@@ -1805,13 +1809,17 @@ typedef struct {
 	msurface_t	*surfaces;
 	int         *surfacesViewCount;
 	//int         *surfacesDlightBits;
-	//int			*surfacesPshadowBits;
+#ifdef __PSHADOWS__
+	int			*surfacesPshadowBits;
+#endif
 
 	int			numMergedSurfaces;
 	msurface_t	*mergedSurfaces;
 	int         *mergedSurfacesViewCount;
 	//int         *mergedSurfacesDlightBits;
-	//int			*mergedSurfacesPshadowBits;
+#ifdef __PSHADOWS__
+	int			*mergedSurfacesPshadowBits;
+#endif
 
 	int			nummarksurfaces;
 	int         *marksurfaces;
@@ -2962,7 +2970,9 @@ struct shaderCommands_s
 	int         cubemapIndex;
 
 	//int			dlightBits;	// or together of all vertexDlightBits
-	//int         pshadowBits;
+#ifdef __PSHADOWS__
+	int         pshadowBits;
+#endif
 
 	int			firstIndex;
 	int			numIndexes;
@@ -3487,7 +3497,9 @@ typedef struct backEndData_s {
 	trRefEntity_t	entities[MAX_REFENTITIES];
 	srfPoly_t	*polys;//[MAX_POLYS];
 	polyVert_t	*polyVerts;//[MAX_POLYVERTS];
-	//pshadow_t pshadows[MAX_CALC_PSHADOWS];
+#ifdef __PSHADOWS__
+	pshadow_t pshadows[MAX_CALC_PSHADOWS];
+#endif
 	renderCommandList_t	commands;
 } backEndData_t;
 

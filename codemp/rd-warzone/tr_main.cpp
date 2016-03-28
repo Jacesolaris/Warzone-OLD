@@ -2305,7 +2305,7 @@ void R_RenderDlightCubemaps(const refdef_t *fd)
 
 void R_RenderPshadowMaps(const refdef_t *fd)
 {
-#if 0
+#ifdef __PSHADOWS__
 	viewParms_t		shadowParms;
 	int i;
 
@@ -2369,6 +2369,12 @@ void R_RenderPshadowMaps(const refdef_t *fd)
 					radius = 0.5f * VectorLength( diag );
 				}
 				break;
+				case MOD_MDXM:
+				{
+					//mdxmData_t *data = model->data.glm;
+					radius = ent->e.radius; // how???
+				}
+				break;
 
 				default:
 					break;
@@ -2376,7 +2382,7 @@ void R_RenderPshadowMaps(const refdef_t *fd)
 
 			if (!radius)
 				continue;
-
+			
 			// Cull entities that are behind the viewer by more than lightRadius
 			VectorSubtract(ent->e.origin, fd->vieworg, diff);
 			if (DotProduct(diff, fd->viewaxis[0]) < -r_pshadowDist->value)
