@@ -61,7 +61,7 @@ varying vec3		var_vertPos;
 out vec4 out_Glow;
 //out vec4 out_Normal;
 out vec4 out_DetailedNormal;
-out vec4 out_PositionMap;
+//out vec4 out_PositionMap;
 out vec4 out_FoliageMap;
 
 
@@ -189,12 +189,12 @@ void main()
 	#endif //defined(USE_PRIMARY_LIGHT) || defined(USE_PRIMARY_LIGHT_SPECULAR)
 
 
-	gl_FragColor.a = 0.7;//1.0;
+	gl_FragColor.a = 0.5;//1.0;
 	out_Glow = vec4(0.0);
 
 
 	out_DetailedNormal = vec4(m_Normal.xyz * 0.5 + 0.5, 0.75);
-	out_PositionMap = vec4(var_vertPos, 0.0);
+	//out_PositionMap = vec4(var_vertPos, 0.0);
 
 	out_FoliageMap = vec4(0.0, 0.0, 1.0, 0.0);
 }
@@ -235,7 +235,7 @@ varying vec4 projCoords;			//for projection
 
 out vec4 out_Glow;
 out vec4 out_DetailedNormal;
-out vec4 out_PositionMap;
+//out vec4 out_PositionMap;
 out vec4 out_FoliageMap;
 
 const vec4 tangent = vec4(1.0, 0.0, 0.0, 0.0);
@@ -302,7 +302,7 @@ void main(void)
 
 	out_Glow = vec4(0.0);
 	out_DetailedNormal = vec4(vNorm.xyz * 0.5 + 0.5, 0.75);
-	out_PositionMap = vec4(gl_FragCoord.xyz, 0.0);
+	//out_PositionMap = vec4(gl_FragCoord.xyz, 0.0);
 	out_FoliageMap = vec4(0.0, 0.0, 1.0, 0.0);
 }
 
@@ -349,7 +349,7 @@ varying vec3 var_Normal;
 
 out vec4 out_Glow;
 out vec4 out_DetailedNormal;
-out vec4 out_PositionMap;
+//out vec4 out_PositionMap;
 out vec4 out_FoliageMap;
 
 
@@ -467,7 +467,7 @@ void main()
 
 	out_Glow = vec4(0.0);
 	out_DetailedNormal = vec4(normal.xyz * 0.5 + 0.5, 0.75);
-	out_PositionMap = vec4(gl_FragCoord.xyz, 0.0);
+	//out_PositionMap = vec4(gl_FragCoord.xyz, 0.0);
 	out_FoliageMap = vec4(0.0, 0.0, 1.0, 0.0);
 }
 

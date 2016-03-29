@@ -1265,6 +1265,18 @@ static bool GLSL_IsGPUShaderCompiled (GLuint shader)
 	return qtrue;
 }
 
+extern void FBO_AttachTextureImage(image_t *img, int index);
+
+void GLSL_AttachTextures( void )
+{// Moved here for convenience...
+	FBO_AttachTextureImage(tr.renderImage, 0);
+	FBO_AttachTextureImage(tr.glowImage, 1);
+	FBO_AttachTextureImage(tr.normalDetailedImage, 2);
+	FBO_AttachTextureImage(tr.foliageImage, 3);
+	//FBO_AttachTextureImage(tr.positionMapImage, 4);
+	//FBO_AttachTextureImage(tr.normalImage, 3);
+}
+
 static bool GLSL_EndLoadGPUShader (shaderProgram_t *program)
 {
 	uint32_t attribs = program->attribs;
@@ -1314,7 +1326,7 @@ static bool GLSL_EndLoadGPUShader (shaderProgram_t *program)
 	qglBindFragDataLocation (program->program, 1, "out_Glow");
 	qglBindFragDataLocation (program->program, 2, "out_DetailedNormal");
 	qglBindFragDataLocation (program->program, 3, "out_FoliageMap");
-	qglBindFragDataLocation (program->program, 4, "out_PositionMap");
+	//qglBindFragDataLocation (program->program, 4, "out_PositionMap");
 	//qglBindFragDataLocation (program->program, 3, "out_Normal");
 
 	if(attribs & ATTR_POSITION)

@@ -2042,7 +2042,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			{
 				sp2 = &tr.grass2Shader;
 				multiPass = qtrue;
-				passMax = 8;//r_testshaderValue9->integer;
+				passMax = 9;//r_testshaderValue9->integer;
 			}
 		}
 		
@@ -2598,6 +2598,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			if (isGrass && passNum > 0 && r_foliage->integer)
 			{// Geometry grass drawing passes...
 				GL_BindToTMU( tr.grassImage, TB_DIFFUSEMAP );
+				GL_BindToTMU( tr.seaGrassImage, TB_OVERLAYMAP );
 
 				vec4_t l8;
 				VectorSet4(l8, (float)passNum, 0.0, 0.0, 0.0);

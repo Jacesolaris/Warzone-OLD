@@ -140,7 +140,7 @@ varying float				var_usingSteepMap;
 
 out vec4 out_Glow;
 //out vec4 out_Normal;
-out vec4 out_PositionMap;
+//out vec4 out_PositionMap;
 out vec4 out_DetailedNormal;
 out vec4 out_FoliageMap;
 
@@ -407,17 +407,15 @@ void main()
 		#endif
 
 		out_DetailedNormal = vec4(m_Normal.xyz * 0.5 + 0.5, 0.2);
-		out_PositionMap = vec4(gl_FragCoord.xyz, 0.0);
+		//out_PositionMap = vec4(gl_FragCoord.xyz, 0.0);
 
 		if (u_Local1.a == 20 || u_Local1.a == 19 || ((u_Local1.a == 5 || u_Local1.a == 6) && var_usingSteepMap == 0.0)) 
 		{// (Foliage/Plants), (billboard trees), ShortGrass, LongGrass
-			out_FoliageMap.r = 1.0;
-			out_FoliageMap.g = 1.0;
+			out_FoliageMap.rgba = vec4(1.0, 1.0, 0.0, 0.0);
 		}
 		else
 		{
-			out_FoliageMap.r = 1.0;
-			out_FoliageMap.g = 0.0;
+			out_FoliageMap.rgba = vec4(1.0, 0.0, 0.0, 0.0);
 		}
 		return;
 	}
@@ -738,16 +736,14 @@ void main()
 	#endif
 
 	out_DetailedNormal = vec4(DETAILED_NORMAL.xyz * 0.5 + 0.5, specular.a / 8.0);
-	out_PositionMap = vec4(gl_FragCoord.xyz, 0.0);
+	//out_PositionMap = vec4(gl_FragCoord.xyz, 0.0);
 
 	if (u_Local1.a == 20 || u_Local1.a == 19 || ((u_Local1.a == 5 || u_Local1.a == 6) && var_usingSteepMap == 0.0)) 
 	{// (Foliage/Plants), (billboard trees), ShortGrass, LongGrass
-		out_FoliageMap.r = 1.0;
-		out_FoliageMap.g = 1.0;
+		out_FoliageMap.rgba = vec4(1.0, 1.0, 0.0, 0.0);
 	}
 	else
 	{
-		out_FoliageMap.r = 1.0;
-		out_FoliageMap.g = 0.0;
+		out_FoliageMap.rgba = vec4(1.0, 0.0, 0.0, 0.0);
 	}
 }

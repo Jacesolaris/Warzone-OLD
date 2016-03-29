@@ -3,7 +3,7 @@
 #endif
 
 layout(triangles) in;
-layout(triangle_strip, max_vertices = 170) out;
+layout(triangle_strip, max_vertices = 146/*170*/) out;
 
 
 uniform mat4				u_ModelViewProjectionMatrix;
@@ -18,6 +18,7 @@ uniform vec4				u_Local10; // foliageLODdistance, foliageDensity, MAP_WATER_LEVE
 uniform float				u_Time;
 
 smooth out vec2				vTexCoord;
+flat out int				bUnderwater;
 
 
 #define M_PI				3.14159265358979323846
@@ -52,8 +53,8 @@ const vec3					vWindDirection = normalize(vec3(1.0, 0.0, 1.0));
 #define LOD2_MAX_FOLIAGES	4
 #define LOD3_MAX_FOLIAGES	1
 #else //defined(FAST_METHOD)
-#define LOD0_MAX_FOLIAGES	170
-#define LOD1_MAX_FOLIAGES	85//48
+#define LOD0_MAX_FOLIAGES	146//170
+#define LOD1_MAX_FOLIAGES	73//85//48
 #define LOD2_MAX_FOLIAGES	32
 #define LOD3_MAX_FOLIAGES	16
 #endif //defined(FAST_METHOD)
@@ -135,6 +136,8 @@ vec3 vectoangles( in vec3 value1 ) {
 
 void main()
 {
+	bUnderwater = 0;
+
 	//face center------------------------
     vec3 Vert1 = gl_in[0].gl_Position.xyz;
     vec3 Vert2 = gl_in[1].gl_Position.xyz;
@@ -143,10 +146,10 @@ void main()
     vec3 Pos = (Vert1+Vert2+Vert3) / 3.0;   //Center of the triangle - copy for later
     //-----------------------------------
 
-	if (Pos.z < MAP_WATER_LEVEL - 512.0)
-	{// Below map's water level... Early cull... (Maybe underwater plants later???)
-		return;
-	}
+	//if (Pos.z < MAP_WATER_LEVEL - 512.0)
+	//{// Below map's water level... Early cull... (Maybe underwater plants later???)
+	//	return;
+	//}
 
 	float VertDist = (u_ModelViewProjectionMatrix*vec4(Pos, 1.0)).z;
 
@@ -200,7 +203,10 @@ void main()
 
 		if (vGrassFieldPos.z < MAP_WATER_LEVEL + 64.0 + (fGrassPatchWaterEdgeMod * 96.0))
 		{
-			continue;
+			if (vGrassFieldPos.z < MAP_WATER_LEVEL - (64.0 + (fGrassPatchWaterEdgeMod * 96.0)))
+				bUnderwater = 1;
+			else
+				continue;
 		}
 
 		float VertDist2 = (u_ModelViewProjectionMatrix*vec4(vGrassFieldPos, 1.0)).z;
@@ -212,7 +218,11 @@ void main()
 
 		float heightMult = 1.0;
 
-		if (vGrassFieldPos.z < MAP_WATER_LEVEL + 160.0)
+		if (bUnderwater != 1 && vGrassFieldPos.z < MAP_WATER_LEVEL + 160.0)
+		{// When near water edge, reduce the size of the grass...
+			heightMult = fGrassPatchWaterEdgeMod * 0.5 + 0.5;
+		}
+		else if (bUnderwater == 1 && vGrassFieldPos.z > MAP_WATER_LEVEL - 160.0)
 		{// When near water edge, reduce the size of the grass...
 			heightMult = fGrassPatchWaterEdgeMod * 0.5 + 0.5;
 		}

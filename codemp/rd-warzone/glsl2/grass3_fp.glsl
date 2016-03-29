@@ -6,7 +6,7 @@ smooth in vec2		vTexCoord;
 
 out vec4			out_Glow;
 out vec4			out_DetailedNormal;
-out vec4			out_PositionMap;
+//out vec4			out_PositionMap;
 out vec4			out_FoliageMap;
 
 void main() 
@@ -21,7 +21,6 @@ void main()
 	out_Glow = vec4(0.0);
 
 	out_DetailedNormal = vec4(m_Normal.xyz, 0.1);
-	out_PositionMap = vec4(gl_FragCoord.xyz, 0.0);
-	out_FoliageMap.r = 1.0;
-	out_FoliageMap.g = 1.0;
+	//out_PositionMap = vec4(gl_FragCoord.xyz, 0.0);
+	out_FoliageMap.rgba = vec4(1.0, 1.0, 0.0, 0.0);
 }

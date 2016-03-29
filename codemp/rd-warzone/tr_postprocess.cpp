@@ -1556,16 +1556,16 @@ void RB_WaterPost(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 
 	GLSL_SetUniformInt(shader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
 	GL_BindToTMU(hdrFbo->colorImage[0], TB_DIFFUSEMAP);
-	GLSL_SetUniformInt(shader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
-	GL_BindToTMU(tr.renderDepthImage, TB_LIGHTMAP);
-	GLSL_SetUniformInt(shader, UNIFORM_NORMALMAP, TB_NORMALMAP);
-	GL_BindToTMU(tr.normalDetailedImage, TB_NORMALMAP);
+	//GLSL_SetUniformInt(shader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
+	//GL_BindToTMU(tr.renderDepthImage, TB_LIGHTMAP);
+	//GLSL_SetUniformInt(shader, UNIFORM_NORMALMAP, TB_NORMALMAP);
+	//GL_BindToTMU(tr.normalDetailedImage, TB_NORMALMAP);
 	GLSL_SetUniformInt(shader, UNIFORM_SPECULARMAP, TB_SPECULARMAP);
-	GL_BindToTMU(tr.foliageImage, TB_SPECULARMAP);
-	GLSL_SetUniformInt(shader, UNIFORM_DELUXEMAP, TB_DELUXEMAP);
-	GL_BindToTMU(tr.positionMapImage/*tr.random2KImage[0]*/, TB_DELUXEMAP);
-	GLSL_SetUniformInt(shader, UNIFORM_OVERLAYMAP, TB_OVERLAYMAP);
-	GL_BindToTMU(tr.random2KImage[1], TB_OVERLAYMAP);
+	GL_BindToTMU(tr.renderFbo->colorImage[3]/*tr.foliageImage*/, TB_SPECULARMAP);
+	//GLSL_SetUniformInt(shader, UNIFORM_DELUXEMAP, TB_DELUXEMAP);
+	//GL_BindToTMU(tr.positionMapImage/*tr.random2KImage[0]*/, TB_DELUXEMAP);
+	//GLSL_SetUniformInt(shader, UNIFORM_OVERLAYMAP, TB_OVERLAYMAP);
+	//GL_BindToTMU(tr.random2KImage[1], TB_OVERLAYMAP);
 	
 	{
 		vec2_t screensize;

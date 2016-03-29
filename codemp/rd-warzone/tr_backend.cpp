@@ -2194,9 +2194,9 @@ const void *RB_PostProcess(const void *data)
 			SCREEN_BLUR = qtrue;
 		}
 
-		if (!SCREEN_BLUR && r_fxaa->integer)
+		if (!SCREEN_BLUR && r_glslWater->integer >= 2)
 		{
-			RB_FXAA(currentFbo, srcBox, currentOutFbo, dstBox);
+			RB_WaterPost(currentFbo, srcBox, currentOutFbo, dstBox);
 			RB_SwapFBOs( &currentFbo, &currentOutFbo);
 		}
 
@@ -2206,9 +2206,9 @@ const void *RB_PostProcess(const void *data)
 			RB_SwapFBOs( &currentFbo, &currentOutFbo);
 		}
 
-		if (!SCREEN_BLUR && r_glslWater->integer >= 2)
+		if (!SCREEN_BLUR && r_fxaa->integer)
 		{
-			RB_WaterPost(currentFbo, srcBox, currentOutFbo, dstBox);
+			RB_FXAA(currentFbo, srcBox, currentOutFbo, dstBox);
 			RB_SwapFBOs( &currentFbo, &currentOutFbo);
 		}
 
@@ -2507,6 +2507,13 @@ const void *RB_PostProcess(const void *data)
 		vec4i_t dstBox;
 		VectorSet4(dstBox, 256, glConfig.vidHeight - 256, 256, 256);
 		FBO_BlitFromTexture(tr.shadowCubemaps[0], NULL, NULL, NULL, dstBox, NULL, NULL, 0);
+	}
+
+	if (0)
+	{
+		vec4i_t dstBox;
+		VectorSet4(dstBox, 256, glConfig.vidHeight - 256, 256, 256);
+		FBO_BlitFromTexture(tr.renderFbo->colorImage[3], NULL, NULL, NULL, dstBox, NULL, NULL, 0);
 	}
 
 	/*if (1)

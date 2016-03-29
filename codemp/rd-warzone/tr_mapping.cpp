@@ -1276,6 +1276,8 @@ void R_LoadMapInfo ( void )
 	{
 		tr.grassImage = R_FindImageFile( "models/warzone/foliage/grasstropical", IMGTYPE_COLORALPHA, IMGFLAG_NONE );
 	}
+
+	tr.seaGrassImage = R_FindImageFile( "models/warzone/foliage/seagrass", IMGTYPE_COLORALPHA, IMGFLAG_NONE );
 	
 #if 0
 	if (!ri->FS_FileExists(va( "mapImage/%s.tga", currentMapName )))
