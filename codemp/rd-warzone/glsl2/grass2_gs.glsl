@@ -143,14 +143,14 @@ void main()
     vec3 Pos = (Vert1+Vert2+Vert3) / 3.0;   //Center of the triangle - copy for later
     //-----------------------------------
 
-	if (Pos.z < MAP_WATER_LEVEL)
+	if (Pos.z < MAP_WATER_LEVEL - 512.0)
 	{// Below map's water level... Early cull... (Maybe underwater plants later???)
 		return;
 	}
 
 	float VertDist = (u_ModelViewProjectionMatrix*vec4(Pos, 1.0)).z;
 
-	if (VertDist >= MAX_RANGE) 
+	if (VertDist >= MAX_RANGE + 1024) 
 	{// Too far from viewer... Early cull...
 		return;
 	}
@@ -196,13 +196,28 @@ void main()
 	for(int x = 0; x < FOLIAGE_DENSITY; x++)
 	{
 		vec3 vGrassFieldPos = randomBarycentricCoordinate().xyz;
+		float fGrassPatchWaterEdgeMod = randZeroOne();
 
-		if (vGrassFieldPos.z < MAP_WATER_LEVEL)
+		if (vGrassFieldPos.z < MAP_WATER_LEVEL + 64.0 + (fGrassPatchWaterEdgeMod * 96.0))
 		{
 			continue;
 		}
 
-		float fGrassPatchHeight = randZeroOne() * 0.25 + 0.75;
+		float VertDist2 = (u_ModelViewProjectionMatrix*vec4(vGrassFieldPos, 1.0)).z;
+
+		if (VertDist2 >= MAX_RANGE) 
+		{// Too far from viewer... Cull...
+			continue;
+		}
+
+		float heightMult = 1.0;
+
+		if (vGrassFieldPos.z < MAP_WATER_LEVEL + 160.0)
+		{// When near water edge, reduce the size of the grass...
+			heightMult = fGrassPatchWaterEdgeMod * 0.5 + 0.5;
+		}
+
+		float fGrassPatchHeight = (fGrassPatchWaterEdgeMod * 0.25 + 0.75) * heightMult; // use fGrassPatchWaterEdgeMod random to save doing an extra random
 
 		// Wind calculation stuff...
 		float fWindPower = 0.5f+sin(vGrassFieldPos.x/30+vGrassFieldPos.z/30+u_Time*(1.2f+fWindStrength/20.0f));
