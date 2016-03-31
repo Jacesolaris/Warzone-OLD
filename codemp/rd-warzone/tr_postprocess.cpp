@@ -1610,6 +1610,83 @@ void RB_SSS(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 	GLSL_BindProgram(shader);
 
 	GLSL_SetUniformMatrix16(shader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
+	
+	matrix_t trans, model, mvp, invTrans, invMvp, normalMatrix, vp, invVp, invP;
+
+	Matrix16Translation( backEnd.viewParms.ori.origin, trans );
+	Matrix16Multiply( backEnd.viewParms.world.modelMatrix, trans, model );
+	Matrix16Multiply(backEnd.viewParms.projectionMatrix, model, mvp);
+	Matrix16Multiply(backEnd.viewParms.projectionMatrix, backEnd.viewParms.world.modelMatrix, vp);
+	//Matrix16SimpleInverse( mvp, invMvp);
+	Matrix16SimpleInverse( glState.modelviewProjection, invMvp);
+	Matrix16SimpleInverse( vp, invVp);
+	Matrix16SimpleInverse( model, normalMatrix);
+	//Matrix16SimpleInverse( trans, invTrans);
+	Matrix16SimpleInverse( backEnd.ori.transformMatrix, invTrans);
+	Matrix16SimpleInverse( glState.projection, invP);
+
+	GLSL_SetUniformMatrix16(shader, UNIFORM_VIEWPROJECTIONMATRIX, vp);
+	GLSL_SetUniformMatrix16(shader, UNIFORM_MODELMATRIX, backEnd.ori.transformMatrix);
+	GLSL_SetUniformMatrix16(shader, UNIFORM_INVEYEPROJECTIONMATRIX, glState.invEyeProjection);
+				
+	GLSL_SetUniformMatrix16(shader, UNIFORM_PROJECTIONMATRIX, glState.projection);
+	GLSL_SetUniformMatrix16(shader, UNIFORM_MODELVIEWMATRIX, model);
+	GLSL_SetUniformMatrix16(shader, UNIFORM_VIEWMATRIX, trans);
+	GLSL_SetUniformMatrix16(shader, UNIFORM_INVVIEWMATRIX, invTrans);
+	//GLSL_SetUniformMatrix16(shader, UNIFORM_NORMALMATRIX, invVp);//model);//normalMatrix);
+	
+	//GLSL_SetUniformMatrix16(shader, UNIFORM_NORMALMATRIX, backEnd.ori.transformMatrix);
+
+	/*
+	switch(r_sss->integer)
+	{
+	case 3:
+		GLSL_SetUniformMatrix16(shader, UNIFORM_NORMALMATRIX, backEnd.ori.transformMatrix);
+		break;
+	case 4:
+		GLSL_SetUniformMatrix16(shader, UNIFORM_NORMALMATRIX, invTrans);
+		break;
+	case 5:
+		GLSL_SetUniformMatrix16(shader, UNIFORM_NORMALMATRIX, trans);
+		break;
+	case 6:
+		GLSL_SetUniformMatrix16(shader, UNIFORM_NORMALMATRIX, model);
+		break;
+	case 7:
+		GLSL_SetUniformMatrix16(shader, UNIFORM_NORMALMATRIX, glState.projection);
+		break;
+	case 8:
+		GLSL_SetUniformMatrix16(shader, UNIFORM_NORMALMATRIX, glState.invEyeProjection);
+		break;
+	case 9:
+		GLSL_SetUniformMatrix16(shader, UNIFORM_NORMALMATRIX, vp);
+		break;
+	case 10:
+		GLSL_SetUniformMatrix16(shader, UNIFORM_NORMALMATRIX, invP);
+		break;
+	case 11:
+		GLSL_SetUniformMatrix16(shader, UNIFORM_NORMALMATRIX, invMvp);
+		break;
+	case 12:
+		GLSL_SetUniformMatrix16(shader, UNIFORM_NORMALMATRIX, invVp);
+		break;
+	case 13:
+		GLSL_SetUniformMatrix16(shader, UNIFORM_NORMALMATRIX, normalMatrix);
+		break;
+	case 14:
+		GLSL_SetUniformMatrix16(shader, UNIFORM_NORMALMATRIX, mvp);
+		break;
+	default:
+		GLSL_SetUniformMatrix16(shader, UNIFORM_NORMALMATRIX, backEnd.ori.transformMatrix);
+		break;
+	}
+	*/
+	
+	//GLSL_SetUniformMatrix16(shader, UNIFORM_NORMALMATRIX, mvp);
+	GLSL_SetUniformMatrix16(shader, UNIFORM_NORMALMATRIX, glState.projection);
+	GLSL_SetUniformMatrix16(shader, UNIFORM_INVPROJECTIONMATRIX, invP);
+
+
 
 	GLSL_SetUniformInt(shader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
 	GL_BindToTMU(hdrFbo->colorImage[0], TB_DIFFUSEMAP);
@@ -1617,6 +1694,14 @@ void RB_SSS(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 	GL_BindToTMU(tr.renderDepthImage, TB_LIGHTMAP);
 	GLSL_SetUniformInt(shader, UNIFORM_NORMALMAP, TB_NORMALMAP);
 	GL_BindToTMU(tr.glowImage, TB_NORMALMAP);
+
+	GLSL_SetUniformVec3(shader, UNIFORM_VIEWORIGIN,  backEnd.refdef.vieworg);
+
+	vec3_t out;
+	float dist = backEnd.viewParms.zFar / 1.75;
+ 	VectorMA( backEnd.refdef.vieworg, dist, /*tr.sunDirection*/backEnd.refdef.sunDir, out );
+	GLSL_SetUniformVec4(shader, UNIFORM_PRIMARYLIGHTORIGIN,  out);
+	//GLSL_SetUniformVec4(shader, UNIFORM_PRIMARYLIGHTORIGIN,  backEnd.refdef.sunDir);
 	
 	if (r_sss->integer < 2)
 	{
@@ -1642,13 +1727,13 @@ void RB_SSS(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 	{// Add sun...
 		//SUN_SCREEN_POSITION
 		vec4_t loc;
-		VectorSet4(loc, SUN_SCREEN_POSITION[0], SUN_SCREEN_POSITION[1], 0.0, 0.0);
+		VectorSet4(loc, SUN_SCREEN_POSITION[0], SUN_SCREEN_POSITION[1], r_testvalue0->value, r_testvalue1->value);
 		GLSL_SetUniformVec4(shader, UNIFORM_LOCAL1, loc);
 	}
 
 	{
 		vec4_t viewInfo;
-		float zmax = 2048.0;//backEnd.viewParms.zFar;
+		float zmax = backEnd.viewParms.zFar;//2048.0;
 		float ymax = zmax * tan(backEnd.viewParms.fovY * M_PI / 360.0f);
 		float xmax = zmax * tan(backEnd.viewParms.fovX * M_PI / 360.0f);
 		float zmin = r_znear->value;

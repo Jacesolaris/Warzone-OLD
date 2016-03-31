@@ -593,12 +593,12 @@ void RE_RenderScene( const refdef_t *fd ) {
 			}
 			else if (nowTime >= NEXT_SHADOWMAP_UPDATE[1])
 			{// Distant shadows - slower updates...
-				NEXT_SHADOWMAP_UPDATE[1] = nowTime + 1000;
+				NEXT_SHADOWMAP_UPDATE[1] = nowTime + 100;
 				R_RenderSunShadowMaps(fd, 1);
 			}
 			else if (nowTime >= NEXT_SHADOWMAP_UPDATE[2])
 			{// Distant shadows - slower updates...
-				NEXT_SHADOWMAP_UPDATE[2] = nowTime + 2000;
+				NEXT_SHADOWMAP_UPDATE[2] = nowTime + 500;
 				R_RenderSunShadowMaps(fd, 2);
 			}
 		}

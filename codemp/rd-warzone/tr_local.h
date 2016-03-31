@@ -133,6 +133,7 @@ extern cvar_t	*r_tesselationAlpha;
 extern cvar_t	*r_foliage;
 extern cvar_t	*r_foliageDistance;
 extern cvar_t	*r_foliageDensity;
+extern cvar_t	*r_foliageShadows;
 
 extern cvar_t	*r_rotatex;
 extern cvar_t	*r_rotatey;

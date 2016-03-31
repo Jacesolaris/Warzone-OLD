@@ -145,17 +145,73 @@ out vec4 out_DetailedNormal;
 out vec4 out_FoliageMap;
 
 
+vec3 vLocalSeed;
+
+// This function returns random number from zero to one
+float randZeroOne()
+{
+    uint n = floatBitsToUint(vLocalSeed.y * 214013.0 + vLocalSeed.x * 2531011.0 + vLocalSeed.z * 141251.0);
+    n = n * (n * n * 15731u + 789221u);
+    n = (n >> 9u) | 0x3F800000u;
+ 
+    float fRes =  2.0 - uintBitsToFloat(n);
+    vLocalSeed = vec3(vLocalSeed.x + 147158.0 * fRes, vLocalSeed.y*fRes  + 415161.0 * fRes, vLocalSeed.z + 324154.0*fRes);
+    return fRes;
+}
+
+vec3 splatblend(vec4 texture1, float a1, vec4 texture2, float a2)
+{
+    float depth = 0.2;
+    float ma = max(texture1.a + a1, texture2.a + a2) - depth;
+
+    float b1 = max(texture1.a + a1 - ma, 0);
+    float b2 = max(texture2.a + a2 - ma, 0);
+
+    return (texture1.rgb * b1 + texture2.rgb * b2) / (b1 + b2);
+}
+
 vec4 GetSteepMap(vec2 texCoords, vec2 ParallaxOffset)
 {
 #if defined(USE_OVERLAY) || defined(USE_TRI_PLANAR)
 	if (u_Local5.a > 0.0 && var_Slope > 0)
 	{// Steep maps (high angles)...
-		const float scale = 0.0025;
-		vec4 xaxis = texture2D( u_SteepMap, (m_vertPos.yz + ParallaxOffset.xy) * scale);
-		vec4 yaxis = texture2D( u_SteepMap, (m_vertPos.xz + ParallaxOffset.xy) * scale);
-		vec4 zaxis = texture2D( u_SteepMap, (m_vertPos.xy + ParallaxOffset.xy) * scale);
-		vec4 tex = xaxis * var_Blending.x + yaxis * var_Blending.y + zaxis * var_Blending.z;
-		return tex;
+		vec4 tex1;
+		vec4 tex2;
+		float a1;
+		float a2;
+
+		{
+			const float scale = 0.0025;
+			vec4 xaxis = texture2D( u_SteepMap, (m_vertPos.yz + ParallaxOffset.xy) * scale);
+			vec4 yaxis = texture2D( u_SteepMap, (m_vertPos.xz + ParallaxOffset.xy) * scale);
+			vec4 zaxis = texture2D( u_SteepMap, (m_vertPos.xy + ParallaxOffset.xy) * scale);
+
+			//float xaxisA = texture2D( u_NormalMap2, (m_vertPos.yz + ParallaxOffset.xy) * scale).a;
+			//float yaxisA = texture2D( u_NormalMap2, (m_vertPos.xz + ParallaxOffset.xy) * scale).a;
+			//float zaxisA = texture2D( u_NormalMap2, (m_vertPos.xy + ParallaxOffset.xy) * scale).a;
+
+			tex1 = xaxis * var_Blending.x + yaxis * var_Blending.y + zaxis * var_Blending.z;
+			//a1 = xaxisA * var_Blending.x + yaxisA * var_Blending.y + zaxisA * var_Blending.z;
+		}
+
+		/*
+		{
+			const float scale = 0.01;
+			vec4 xaxis = texture2D( u_DiffuseMap, (m_vertPos.yz + ParallaxOffset.xy) * scale);
+			vec4 yaxis = texture2D( u_DiffuseMap, (m_vertPos.xz + ParallaxOffset.xy) * scale);
+			vec4 zaxis = texture2D( u_DiffuseMap, (m_vertPos.xy + ParallaxOffset.xy) * scale);
+
+			float xaxisA = texture2D( u_NormalMap, (m_vertPos.yz + ParallaxOffset.xy) * scale).a;
+			float yaxisA = texture2D( u_NormalMap, (m_vertPos.xz + ParallaxOffset.xy) * scale).a;
+			float zaxisA = texture2D( u_NormalMap, (m_vertPos.xy + ParallaxOffset.xy) * scale).a;
+
+			tex2 = xaxis * var_Blending.x + yaxis * var_Blending.y + zaxis * var_Blending.z;
+			a2 = xaxisA * var_Blending.x + yaxisA * var_Blending.y + zaxisA * var_Blending.z;
+		}
+		*/
+
+		return tex1;
+		//return vec4(splatblend(tex1, a1, tex2, a2), 1.0);
 	}
 	else
 	{
@@ -166,34 +222,49 @@ vec4 GetSteepMap(vec2 texCoords, vec2 ParallaxOffset)
 #endif //defined(USE_OVERLAY) || defined(USE_TRI_PLANAR)
 }
 
-vec4 GetDiffuse(vec2 texCoords, vec2 ParallaxOffset)
+vec4 GetDiffuse(vec2 texCoords, vec2 ParallaxOffset, float pixRandom)
 {
 #if defined(USE_OVERLAY) || defined(USE_TRI_PLANAR)
-	if (u_Local6.g > 0.0 && m_vertPos.z <= WATER_LEVEL + 64.0)
+	if (u_Local6.g > 0.0 && m_vertPos.z <= WATER_LEVEL + 128.0 + (64.0 * pixRandom))
 	{// Steep maps (water edges)...
-		float mixVal = ((WATER_LEVEL + 64.0) - m_vertPos.z) / 64.0;
+		float mixVal = ((WATER_LEVEL + 128.0) - m_vertPos.z) / 128.0;
 		const float scale = 0.01;
 		vec4 tex1;
 		vec4 tex2;
+		float a1;
+		float a2;
 
 		{
 			vec4 xaxis = texture2D( u_SteepMap2, (m_vertPos.yz + ParallaxOffset.xy) * scale);
 			vec4 yaxis = texture2D( u_SteepMap2, (m_vertPos.xz + ParallaxOffset.xy) * scale);
 			vec4 zaxis = texture2D( u_SteepMap2, (m_vertPos.xy + ParallaxOffset.xy) * scale);
+			
+			float xaxisA = texture2D( u_NormalMap3, (m_vertPos.yz + ParallaxOffset.xy) * scale).a;
+			float yaxisA = texture2D( u_NormalMap3, (m_vertPos.xz + ParallaxOffset.xy) * scale).a;
+			float zaxisA = texture2D( u_NormalMap3, (m_vertPos.xy + ParallaxOffset.xy) * scale).a;
+
 			tex1 = xaxis * var_Blending.x + yaxis * var_Blending.y + zaxis * var_Blending.z;
+			a1 = xaxisA * var_Blending.x + yaxisA * var_Blending.y + zaxisA * var_Blending.z;
 		}
 
 		{
 			vec4 xaxis = texture2D( u_DiffuseMap, (m_vertPos.yz + ParallaxOffset.xy) * scale);
 			vec4 yaxis = texture2D( u_DiffuseMap, (m_vertPos.xz + ParallaxOffset.xy) * scale);
 			vec4 zaxis = texture2D( u_DiffuseMap, (m_vertPos.xy + ParallaxOffset.xy) * scale);
+
+			float xaxisA = texture2D( u_NormalMap, (m_vertPos.yz + ParallaxOffset.xy) * scale).a;
+			float yaxisA = texture2D( u_NormalMap, (m_vertPos.xz + ParallaxOffset.xy) * scale).a;
+			float zaxisA = texture2D( u_NormalMap, (m_vertPos.xy + ParallaxOffset.xy) * scale).a;
+
 			tex2 = xaxis * var_Blending.x + yaxis * var_Blending.y + zaxis * var_Blending.z;
+			a2 = xaxisA * var_Blending.x + yaxisA * var_Blending.y + zaxisA * var_Blending.z;
 		}
 
-		return mix(tex2, tex1, clamp(mixVal, 0.0, 1.0));
+		//return mix(tex2, tex1, clamp(mixVal, 0.0, 1.0));
+		return vec4(splatblend(tex1, a1 * (a1 * mixVal), tex2, a2 * (1.0 - (a2 * mixVal))), 1.0);
 	}
 	else if (u_Local5.a > 0.0)
-	{// Steep maps (high angles)...
+	{// Steep maps (low angles)...
 		const float scale = 0.01;
 		vec4 xaxis = texture2D( u_DiffuseMap, (m_vertPos.yz + ParallaxOffset.xy) * scale);
 		vec4 yaxis = texture2D( u_DiffuseMap, (m_vertPos.xz + ParallaxOffset.xy) * scale);
@@ -210,31 +281,46 @@ vec4 GetDiffuse(vec2 texCoords, vec2 ParallaxOffset)
 #endif //defined(USE_OVERLAY) || defined(USE_TRI_PLANAR)
 }
 
-vec4 GetNormal(vec2 texCoords, vec2 ParallaxOffset)
+vec4 GetNormal(vec2 texCoords, vec2 ParallaxOffset, float pixRandom)
 {
 #if defined(USE_OVERLAY) || defined(USE_TRI_PLANAR)
-	if (u_Local6.g > 0.0 && m_vertPos.z <= WATER_LEVEL + 64.0)
+	if (u_Local6.g > 0.0 && m_vertPos.z <= WATER_LEVEL + 128.0 + (64.0 * pixRandom))
 	{// Steep maps (water edges)...
-		float mixVal = ((WATER_LEVEL + 64.0) - m_vertPos.z) / 64.0;
+		float mixVal = ((WATER_LEVEL + 128.0) - m_vertPos.z) / 128.0;
 		const float scale = 0.01;
 		vec4 tex1;
 		vec4 tex2;
+		float a1;
+		float a2;
 
 		{
 			vec4 xaxis = texture2D( u_NormalMap3, (m_vertPos.yz + ParallaxOffset.xy) * scale);
 			vec4 yaxis = texture2D( u_NormalMap3, (m_vertPos.xz + ParallaxOffset.xy) * scale);
 			vec4 zaxis = texture2D( u_NormalMap3, (m_vertPos.xy + ParallaxOffset.xy) * scale);
+
+			float xaxisA = xaxis.a;
+			float yaxisA = yaxis.a;
+			float zaxisA = zaxis.a;
+
 			tex1 = xaxis * var_Blending.x + yaxis * var_Blending.y + zaxis * var_Blending.z;
+			a1 = xaxisA * var_Blending.x + yaxisA * var_Blending.y + zaxisA * var_Blending.z;
 		}
 
 		{
 			vec4 xaxis = texture2D( u_NormalMap, (m_vertPos.yz + ParallaxOffset.xy) * scale);
 			vec4 yaxis = texture2D( u_NormalMap, (m_vertPos.xz + ParallaxOffset.xy) * scale);
 			vec4 zaxis = texture2D( u_NormalMap, (m_vertPos.xy + ParallaxOffset.xy) * scale);
+
+			float xaxisA = xaxis.a;
+			float yaxisA = yaxis.a;
+			float zaxisA = zaxis.a;
+
 			tex2 = xaxis * var_Blending.x + yaxis * var_Blending.y + zaxis * var_Blending.z;
+			a2 = xaxisA * var_Blending.x + yaxisA * var_Blending.y + zaxisA * var_Blending.z;
 		}
 
-		return mix(tex2, tex1, clamp(mixVal, 0.0, 1.0));
+		//return mix(tex2, tex1, clamp(mixVal, 0.0, 1.0));
+		return vec4(splatblend(tex1, a1 * (a1 * mixVal), tex2, a2 * (1.0 - (a2 * mixVal))), 1.0);
 	}
 	else if (u_Local5.a > 0.0 && var_Slope > 0)
 	{// Steep maps (high angles)...
@@ -265,7 +351,7 @@ vec4 GetNormal(vec2 texCoords, vec2 ParallaxOffset)
 
 float GetDepth(vec2 t)
 {
-	return 1.0 - GetNormal(t, vec2(0.0)).a;
+	return 1.0 - GetNormal(t, vec2(0.0), 0.0).a;
 }
 
 #if defined(USE_PARALLAXMAP)
@@ -391,6 +477,12 @@ void main()
 	float NL, NH, NE, EH, attenuation;
 	vec2 tex_offset = vec2(1.0 / u_Dimensions);
 	vec2 texCoords = m_TexCoords.xy;
+
+	vLocalSeed = m_vertPos.xyz;
+
+	float pixRandom = randZeroOne();// * 0.5 + 0.5;
+	//float pixRandom = (clamp(m_TexCoords.x, 0.0, 1.0) + clamp(m_TexCoords.y, 0.0, 1.0)) / 2.0;
+	//if (pixRandom < 0.5) pixRandom = 0.5 + pixRandom;
 
 	
 	#if 0
@@ -519,14 +611,14 @@ void main()
 
 
 
-	vec4 diffuse = GetDiffuse(texCoords, ParallaxOffset);
+	vec4 diffuse = GetDiffuse(texCoords, ParallaxOffset, pixRandom);
 
 	#if defined(USE_GAMMA2_TEXTURES)
 		diffuse.rgb *= diffuse.rgb;
 	#endif
 
 
-	vec4 norm = GetNormal(texCoords, ParallaxOffset);
+	vec4 norm = GetNormal(texCoords, ParallaxOffset, pixRandom);
 
 	N = norm.xyz * 2.0 - 1.0;
 	N.xy *= u_NormalScale.xy;
@@ -599,12 +691,12 @@ void main()
 		float shadowValue = texture2D(u_ShadowMap, shadowTex).r;
 
 		// surfaces not facing the light are always shadowed
-		shadowValue *= float(dot(m_Normal.xyz, var_PrimaryLightDir.xyz) > 0.0);
+		//shadowValue *= float(dot(m_Normal.xyz, var_PrimaryLightDir.xyz) > 0.0);
 
-		#if defined(SHADOWMAP_MODULATE)
-			vec3 shadowColor = u_PrimaryLightAmbient * lightColor;
-			lightColor = mix(shadowColor, lightColor, shadowValue);
-		#endif //defined(SHADOWMAP_MODULATE)
+		//#if defined(SHADOWMAP_MODULATE)
+		//	vec3 shadowColor = u_PrimaryLightAmbient * lightColor;
+		//	lightColor = mix(shadowColor, lightColor, shadowValue);
+		//#endif //defined(SHADOWMAP_MODULATE)
 
 	#endif //defined(USE_SHADOWMAP) 
 
@@ -671,7 +763,8 @@ void main()
 
 
 	#if defined(USE_SHADOWMAP)
-		gl_FragColor.rgb *= clamp(shadowValue + 0.5, 0.0, 1.0);
+		//gl_FragColor.rgb *= clamp(shadowValue + 0.5, 0.0, 1.0);
+		gl_FragColor.rgb *= clamp(shadowValue, 0.4, 1.0);
 	#endif //defined(USE_SHADOWMAP)
 
 

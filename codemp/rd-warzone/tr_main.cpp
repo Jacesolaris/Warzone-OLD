@@ -1908,26 +1908,26 @@ static void R_AddEntitySurface (int entityNum)
 
 	if (tr.viewParms.flags & VPF_SHADOWPASS || backEnd.depthFill)
 	{// Don't draw grass and plants on shadow pass for speed...
-		switch ( ent->e.reType ) {
-		case RT_GRASS:
-		case RT_PLANT:
-			return;
-			break;
-		default:
-			break;
+		//if (!r_foliageShadows->integer)
+		{
+			switch ( ent->e.reType ) {
+			case RT_GRASS:
+			case RT_PLANT:
+				return;
+				break;
+			default:
+				break;
+			}
 		}
 
-		//if (tr.currentModel && tr.currentModel->type == MOD_MDXM)
-		//	return; // No GLMs in shadows (so that we can use a timer to generate them isntead of every single frame) - otherwise shadows would not match player moves
-
-		if (backEnd.depthFill)
+		if (tr.viewParms.flags & VPF_SHADOWPASS)
 		{
-			if (Distance(ent->e.origin, backEnd.refdef.vieworg) > 4096.0)
+			if (Distance(ent->e.origin, backEnd.refdef.vieworg) > tr.viewParms.maxEntityRange)
 				return; // Too far away to bother rendering to shadowmap...
 		}
 		else 
 		{
-			if (Distance(ent->e.origin, backEnd.refdef.vieworg) > tr.viewParms.maxEntityRange)
+			if (Distance(ent->e.origin, backEnd.refdef.vieworg) > 4096.0)
 				return; // Too far away to bother rendering to shadowmap...
 		}
 	}
@@ -2879,7 +2879,12 @@ void R_RenderSunShadowMaps(const refdef_t *fd, int level)
 		shadowParms.flags = (viewParmFlags_t)( VPF_DEPTHSHADOW | VPF_DEPTHCLAMP | VPF_ORTHOGRAPHIC | VPF_NOVIEWMODEL | VPF_SHADOWPASS );
 		shadowParms.zFar = lightviewBounds[1][0];
 
-		shadowParms.maxEntityRange = splitZFar + 512.0;
+		if (level <= 1)
+			shadowParms.maxEntityRange = 2048;
+		else if (level <= 2)
+			shadowParms.maxEntityRange = 3192;
+		else if (level <= 3)
+			shadowParms.maxEntityRange = 4096;
 
 		VectorCopy(lightOrigin, shadowParms.ori.origin);
 		
@@ -2903,8 +2908,7 @@ void R_RenderSunShadowMaps(const refdef_t *fd, int level)
 			float ORIG_RANGE = tr.viewParms.maxEntityRange;
 
 			tr.viewParms.flags |= VPF_SHADOWPASS;
-			tr.viewParms.maxEntityRange = splitZFar;
-			if (tr.viewParms.maxEntityRange < splitZFar+2048) tr.viewParms.maxEntityRange = splitZFar+2048;
+			tr.viewParms.maxEntityRange = shadowParms.maxEntityRange;
 
 			// set viewParms.world
 			R_RotateForViewer ();

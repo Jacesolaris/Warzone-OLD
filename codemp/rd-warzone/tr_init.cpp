@@ -44,6 +44,7 @@ cvar_t	*r_tesselationAlpha;
 cvar_t	*r_foliage;
 cvar_t	*r_foliageDistance;
 cvar_t	*r_foliageDensity;
+cvar_t	*r_foliageShadows;
 
 cvar_t	*r_rotatex;
 cvar_t	*r_rotatey;
@@ -1346,6 +1347,7 @@ void R_Register( void )
 	r_foliage = ri->Cvar_Get( "r_foliage", "1", CVAR_ARCHIVE | CVAR_LATCH );
 	r_foliageDistance = ri->Cvar_Get( "r_foliageDistance", "8192.0", CVAR_ARCHIVE );
 	r_foliageDensity = ri->Cvar_Get( "r_foliageDensity", "40.0", CVAR_ARCHIVE );
+	r_foliageShadows = ri->Cvar_Get( "r_foliageShadows", "1", CVAR_ARCHIVE );
 
 	//
 	// latched and archived variables
@@ -1512,8 +1514,8 @@ void R_Register( void )
 	r_magicdetail = ri->Cvar_Get( "r_magicdetail", "1", CVAR_ARCHIVE );
 	r_magicdetailStrength = ri->Cvar_Get( "r_magicdetailStrength", "0.05", CVAR_ARCHIVE );
 	r_dof = ri->Cvar_Get( "r_dof", "0", CVAR_ARCHIVE );
-	r_testvalue0 = ri->Cvar_Get( "r_testvalue0", "0.55", 0 );
-	r_testvalue1 = ri->Cvar_Get( "r_testvalue1", "0.1", 0 );
+	r_testvalue0 = ri->Cvar_Get( "r_testvalue0", "0.1", CVAR_ARCHIVE );
+	r_testvalue1 = ri->Cvar_Get( "r_testvalue1", "0.3", CVAR_ARCHIVE );
 	r_esharpening = ri->Cvar_Get( "r_esharpening", "0", CVAR_ARCHIVE );
 	r_esharpening2 = ri->Cvar_Get( "r_esharpening2", "0", CVAR_ARCHIVE );
 	r_fxaa = ri->Cvar_Get( "r_fxaa", "1", CVAR_ARCHIVE );

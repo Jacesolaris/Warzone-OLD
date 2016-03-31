@@ -1816,6 +1816,13 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 					index |= LIGHTDEF_USE_TCGEN_AND_TCMOD;
 				}
 
+				if (r_foliage->integer 
+					&& r_foliageShadows->integer
+					&& RB_ShouldUseGeometryGrass(tess.shader->surfaceFlags & MATERIAL_MASK))
+				{
+					isGrass = qtrue;
+				}
+
 				sp = &pStage->glslShaderGroup[index];
 				isGeneric = qfalse;
 				isLightAll = qtrue;
@@ -1853,7 +1860,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		{
 			int index = pStage->glslShaderIndex;
 
-			if (r_foliage->integer 
+			if (r_foliage->integer
 				&& RB_ShouldUseGeometryGrass(tess.shader->surfaceFlags & MATERIAL_MASK))
 			{
 				isGrass = qtrue;
@@ -2032,8 +2039,12 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		{
 			sp = &tr.shadowPassShader;
 			GLSL_BindProgram(sp);
-			isGrass = qfalse;
-			multiPass = qfalse;
+			
+			if (!r_foliageShadows->integer)
+			{
+				isGrass = qfalse;
+				multiPass = qfalse;
+			}
 		}
 
 		if (isGrass)
