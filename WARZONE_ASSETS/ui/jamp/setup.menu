@@ -1591,6 +1591,9 @@
 				"Fast Volumetric" 1
 				"Standard Volumetric" 2
 				"Quality Volumetric" 3
+				"Fast Volumetric & Glows" 4
+				"Standard Volumetric & Glows" 5
+				"Quality Volumetric & Glows" 6
 			}
 			rect				220 181 340 14
 	   		textalign			ITEM_ALIGN_RIGHT

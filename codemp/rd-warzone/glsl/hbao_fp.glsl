@@ -51,14 +51,12 @@ float linearize(float depth)
 	return (1.0 / mix(u_ViewInfo.z, 1.0, depth)) + 1.0 / 2.0;
 }
 
-const float depthMult = 1.0;
-
 vec2 offset1 = vec2(0.0, 1.0 / u_Dimensions.y);
 vec2 offset2 = vec2(1.0 / u_Dimensions.x, 0.0);
 
 vec3 normal_from_depth(float depth, vec2 texcoords) {
-  float depth1 = linearize(texture2D(u_ScreenDepthMap, texcoords + offset1).r) * depthMult;
-  float depth2 = linearize(texture2D(u_ScreenDepthMap, texcoords + offset2).r) * depthMult;
+  float depth1 = linearize(texture2D(u_ScreenDepthMap, texcoords + offset1).r);
+  float depth2 = linearize(texture2D(u_ScreenDepthMap, texcoords + offset2).r);
   
   vec3 p1 = vec3(offset1, depth1 - depth);
   vec3 p2 = vec3(offset2, depth2 - depth);
@@ -74,7 +72,7 @@ vec3 SampleNormals(sampler2D normalMap, in vec2 coord)
 #ifdef USE_NORMAL_MAP
 	 return (((texture2D(normalMap, coord).rgb) + 1.0) / 2.0) * 0.5 + 0.5;
 #else //!USE_NORMAL_MAP
-	 float depth = linearize(texture2D(u_ScreenDepthMap, coord).r) * depthMult;
+	 float depth = linearize(texture2D(u_ScreenDepthMap, coord).r);
 	 return normal_from_depth(depth, coord);
 #endif //USE_NORMAL_MAP
 }

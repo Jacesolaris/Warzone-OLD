@@ -3307,12 +3307,21 @@ qboolean IgnoreCubemapsOnMap( void )
 
 float MAP_WATER_LEVEL = 131072.0;
 
+#define MAX_GLOW_LOCATIONS 65536
+int		NUM_MAP_GLOW_LOCATIONS = 0;
+vec3_t	MAP_GLOW_LOCATIONS[MAX_GLOW_LOCATIONS] = { 0 };
+
+extern void R_WorldToLocal (const vec3_t world, vec3_t local);
+extern void R_LocalPointToWorld (const vec3_t local, vec3_t world);
+
 static void R_LoadCubemapWaypoints( void )
 {
 	int numCubemaps = 0;
 
 	// count cubemaps
 	numCubemaps = 0;
+
+	NUM_MAP_GLOW_LOCATIONS = 0;
 
 	if (IgnoreCubemapsOnMap()) return;
 
@@ -3360,6 +3369,17 @@ static void R_LoadCubemapWaypoints( void )
 		vec3_t				surfOrigin;
 		qboolean			bad = qfalse;
 
+		qboolean hasGlow = qfalse;
+
+		if (surf->shader)
+		{
+			for ( int stage = 0; stage < MAX_SHADER_STAGES; stage++ )
+			{
+				if (surf->shader->stages[stage] && surf->shader->stages[stage]->glow)
+					hasGlow = qtrue;
+			}
+		}
+
 		if (R_MaterialUsesCubemap( surf->shader->surfaceFlags ))
 		{// Ok, this surface is shiny... Make a cubemap here...
 			if (surf->cullinfo.type & CULLINFO_SPHERE)
@@ -3383,6 +3403,15 @@ static void R_LoadCubemapWaypoints( void )
 					MAP_WATER_LEVEL = surfOrigin[2];
 			}
 
+
+			if (hasGlow && NUM_MAP_GLOW_LOCATIONS < MAX_GLOW_LOCATIONS)
+			{
+				VectorCopy(surfOrigin, MAP_GLOW_LOCATIONS[NUM_MAP_GLOW_LOCATIONS]);
+				//R_WorldToLocal(surfOrigin, MAP_GLOW_LOCATIONS[NUM_MAP_GLOW_LOCATIONS]);
+				//R_LocalPointToWorld(surfOrigin, MAP_GLOW_LOCATIONS[NUM_MAP_GLOW_LOCATIONS]);
+				NUM_MAP_GLOW_LOCATIONS++;
+			}
+
 			for (int j = 0; j < numcubeOrgs; j++)
 			{
 				if (Distance(cubeOrgs[j], surfOrigin) < 256)
@@ -3398,6 +3427,29 @@ static void R_LoadCubemapWaypoints( void )
 			{
 				VectorCopy(surfOrigin, cubeOrgs[numcubeOrgs]);
 				numcubeOrgs++;
+			}
+		}
+		else if (hasGlow)
+		{
+			if (surf->cullinfo.type & CULLINFO_SPHERE)
+			{
+				VectorCopy(surf->cullinfo.localOrigin, surfOrigin);
+			}
+			else if (surf->cullinfo.type & CULLINFO_BOX)
+			{
+				surfOrigin[0] = (surf->cullinfo.bounds[0][0] + surf->cullinfo.bounds[1][0]) * 0.5f;
+				surfOrigin[1] = (surf->cullinfo.bounds[0][1] + surf->cullinfo.bounds[1][1]) * 0.5f;
+				surfOrigin[2] = (surf->cullinfo.bounds[0][2] + surf->cullinfo.bounds[1][2]) * 0.5f;
+			}
+			else
+			{
+				continue;
+			}
+
+			if (NUM_MAP_GLOW_LOCATIONS < MAX_GLOW_LOCATIONS)
+			{
+				VectorCopy(surfOrigin, MAP_GLOW_LOCATIONS[NUM_MAP_GLOW_LOCATIONS]);
+				NUM_MAP_GLOW_LOCATIONS++;
 			}
 		}
 	}

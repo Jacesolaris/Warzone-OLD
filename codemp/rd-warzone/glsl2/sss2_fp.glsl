@@ -1,4 +1,4 @@
-#if 1
+#if 0
 uniform sampler2D				u_DiffuseMap;
 uniform sampler2D				u_ScreenDepthMap;
 uniform sampler2D				u_NormalMap;
@@ -12,6 +12,25 @@ uniform vec4					u_Local1; // sunx, suny
 varying vec2					var_ScreenTex;
 varying vec2					var_Dimensions;
 
+#define camerarange u_ViewInfo.xy
+#define buffersize var_Dimensions
+
+
+float DepthToZPosition(in float depth) {
+	return camerarange.x / (camerarange.y - depth * (camerarange.y - camerarange.x)) * camerarange.y;
+}
+
+vec3 PositionFromDepth(vec2 texCoord)
+{
+	float depth = texture2D(u_ScreenDepthMap, texCoord).x;
+	vec3 screencoord;
+	
+	screencoord = vec3(((gl_FragCoord.x/buffersize.x)-0.5) * 2.0,((-gl_FragCoord.y/buffersize.y)+0.5) * 2.0 / (buffersize.x/buffersize.y), DepthToZPosition( depth ));
+	screencoord.x *= screencoord.z;
+	screencoord.y *= -screencoord.z;
+
+	return screencoord;
+}
 
 float linearize(float depth)
 {
@@ -19,6 +38,7 @@ float linearize(float depth)
 }
 
 void main(void){
+#if 1
 	vec3 dglow = texture2D(u_NormalMap, var_ScreenTex).rgb;
 	float dglowStrength = clamp(length(dglow.rgb) * 3.0, 0.0, 1.0);
 
@@ -67,6 +87,12 @@ void main(void){
 	*/
 
 	gl_FragColor = vec4(diffuse.rgb, 1.0);
+#else
+	//float dist = 1.0 - (length(var_ScreenTex - u_Local1.xy) / 2);
+	//gl_FragColor = vec4(dist, dist, dist, 1.0);
+
+	vec3 worldPos = PositionFromDepth(var_ScreenTex);
+#endif
 }
 
 

@@ -961,18 +961,6 @@ void RB_DrawSun( float scale, shader_t *shader ) {
 	{// Lets have some volumetrics with that!
 		const float cutoff = 0.25f;
 		float dot = DotProduct(tr.sunDirection, backEnd.viewParms.ori.axis[0]);
-		
-		if (dot < cutoff)
-		{
-			SUN_VISIBLE = qfalse;
-			return;
-		}
-
-		if (!RB_UpdateSunFlareVis())
-		{
-			SUN_VISIBLE = qfalse;
-			return;
-		}
 
 		float dist;
 		vec4_t pos, hpos;
@@ -996,6 +984,18 @@ void RB_DrawSun( float scale, shader_t *shader ) {
 		pos[1] = 0.5f + hpos[1] * hpos[3];
 
 		VectorCopy(pos, SUN_SCREEN_POSITION);
+		
+		if (dot < cutoff)
+		{
+			SUN_VISIBLE = qfalse;
+			return;
+		}
+
+		if (!RB_UpdateSunFlareVis())
+		{
+			SUN_VISIBLE = qfalse;
+			return;
+		}
 
 		SUN_VISIBLE = qtrue;
 	}

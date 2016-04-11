@@ -1,4 +1,4 @@
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////
+﻿/////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #define tex2D(tex, coord) texture2D(tex, coord)
 #define tex2Dlod(tex, coord) texture2D(tex, coord)
@@ -28,213 +28,6 @@ uniform vec4		u_Local0; // range, powMult, 0, 0
 varying vec2		var_TexCoords;
 
 #if 0
-
-float				CURRENT_PASS_NUMBER = var_Local0.x;
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-vec2 texCoord = var_TexCoords;
-vec4 ScreenSize = vec4(var_Dimensions.x, 1.0 / var_Dimensions.x, var_Dimensions.y, 1.0 / var_Dimensions.y);
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-vec4	Timer;
-float	EInteriorFactor = 1.0;
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-vec4 PS_EdgePreservingSmooth() 
-{
-	float	px 			= 1.0 / var_Dimensions.x;
-	float	py 			= 1.0f / var_Dimensions.y;
-	vec2	OFFSET		= vec2(px, py);
-  
-	vec4	ColorInput = texture2D(u_DiffuseMap, var_TexCoords.xy);
-	float	colCombined = ColorInput.r + ColorInput.g + ColorInput.b;
-	
-	float	USE_RADIUS = var_Local0.y;//1.0;
-	float	E_SMOOTH_THRESHOLD = 9.0;
-	
-	vec2 USE_OFFSET = OFFSET.xy;
-	vec4  col1 = texture2D(u_DiffuseMap, var_TexCoords.xy + vec2(USE_OFFSET.x, 0.0));
-	if (colCombined - (col1.r + col1.g + col1.b) > E_SMOOTH_THRESHOLD) return ColorInput;
-	vec4  col2 = texture2D(u_DiffuseMap, var_TexCoords.xy - vec2(USE_OFFSET.x, 0.0));
-	if (colCombined - (col2.r + col2.g + col2.b) > E_SMOOTH_THRESHOLD) return ColorInput;
-	vec4  col3 = texture2D(u_DiffuseMap, var_TexCoords.xy + vec2(0.0, USE_OFFSET.y));
-	if (colCombined - (col3.r + col3.g + col3.b) > E_SMOOTH_THRESHOLD) return ColorInput;
-	vec4  col4 = texture2D(u_DiffuseMap, var_TexCoords.xy - vec2(0.0, USE_OFFSET.y));
-	if (colCombined - (col4.r + col4.g + col4.b) > E_SMOOTH_THRESHOLD) return ColorInput;
-	vec4  col5 = texture2D(u_DiffuseMap, var_TexCoords.xy + vec2(USE_OFFSET.x, 0.0-USE_OFFSET.y) * 0.666);
-	if (colCombined - (col5.r + col5.g + col5.b) > E_SMOOTH_THRESHOLD) return ColorInput;
-	vec4  col6 = texture2D(u_DiffuseMap, var_TexCoords.xy + vec2(0.0-USE_OFFSET.x, USE_OFFSET.y) * 0.666);
-	if (colCombined - (col6.r + col6.g + col6.b) > E_SMOOTH_THRESHOLD) return ColorInput;
-  
-	// Looks like we are ok to smooth!
-	vec4	color = ((ColorInput + col1 + col2 + col3 + col4 + col5 + col6) / 7.0);
-  
-	float   num_passes = 1.0;
-	
-	if (USE_RADIUS >= 2.0)
-	{
-		for (float offset_current = 2.0; offset_current < USE_RADIUS; offset_current += 1.0)
-		{
-			USE_OFFSET = OFFSET.xy * vec2(offset_current, offset_current);
-    
-			col1 = texture2D(u_DiffuseMap, var_TexCoords.xy + vec2(USE_OFFSET.x, 0.0));
-			if (colCombined - (col1.r + col1.g + col1.b) > E_SMOOTH_THRESHOLD) { color /= num_passes; return color; }
-			col2 = texture2D(u_DiffuseMap, var_TexCoords.xy - vec2(USE_OFFSET.x, 0.0));
-			if (colCombined - (col2.r + col2.g + col2.b) > E_SMOOTH_THRESHOLD) { color /= num_passes; return color; }
-			col3 = texture2D(u_DiffuseMap, var_TexCoords.xy + vec2(0.0, USE_OFFSET.y));
-			if (colCombined - (col3.r + col3.g + col3.b) > E_SMOOTH_THRESHOLD) { color /= num_passes; return color; }
-			col4 = texture2D(u_DiffuseMap, var_TexCoords.xy - vec2(0.0, USE_OFFSET.y));
-			if (colCombined - (col4.r + col4.g + col4.b) > E_SMOOTH_THRESHOLD) { color /= num_passes; return color; }
-			col5 = texture2D(u_DiffuseMap, var_TexCoords.xy + vec2(USE_OFFSET.x, 0.0-USE_OFFSET.y) * 0.666);
-			if (colCombined - (col5.r + col5.g + col5.b) > E_SMOOTH_THRESHOLD) { color /= num_passes; return color; }
-			col6 = texture2D(u_DiffuseMap, var_TexCoords.xy + vec2(0.0-USE_OFFSET.x, USE_OFFSET.y) * 0.666);
-			if (colCombined - (col6.r + col6.g + col6.b) > E_SMOOTH_THRESHOLD) { color /= num_passes; return color; }
-    
-			// Looks like we are ok to smooth!
-			color += ((col1 + col2 + col3 + col4 + col5 + col6) / 6.0);
-			num_passes += 1.0;
-		}
-	}
-  
-	color /= num_passes;
-	return color;
-}
-
-float	AdaptationMin = 0.0;
-float	AdaptationMax = 0.1;//0.04;
-float	PaletteIntensity = 1.05;
-float	PaletteBrightness = 1.25;
-float	Gamma = 1.38;
-float	RedFilter = 1.0;
-float	GreenFilter = 1.0;
-float	BlueFilter = 1.0;
-float	DesatR = 1.0;
-float	DesatG = 0.10;
-float	DesatB = 0.60;
-float	IntensityContrast = 0.90;//1.15;//1.35;
-float	Saturation = 1.68;//1.38;//1.68;
-float	ToneMappingCurve = 2.0;
-float	ToneMappingOversaturation = 30.0;
-float	Brightness = 0.3;//0.4;
-float	BrightnessCurve = 1.3;//1.8;
-float	BrightnessMultiplier = 0.90;//0.6;
-float	BrightnessToneMappingCurve = 0.50;
-
-
-float	ECCGamma = 1.0;
-float	ECCInBlack = 0.0;
-float	ECCInWhite = 1.0;
-float	ECCOutBlack = 0.0;
-float	ECCOutWhite = 1.0;
-float	ECCBrightness = 1.0;
-float	ECCContrastGrayLevel = 0.5;
-float	ECCContrast = 1.0;
-float	ECCSaturation = 1.0;
-float	ECCDesaturateShadows = 0.0;
-vec3	ECCColorBalanceShadows = vec3(0.5, 0.5, 0.5);
-vec3	ECCColorBalanceHighlights = vec3(0.5, 0.5, 0.5);
-vec3	ECCChannelMixerR = vec3(1.0, 0.0, 0.0);
-vec3	ECCChannelMixerG = vec3(0.0, 1.0, 0.0);
-vec3	ECCChannelMixerB = vec3(0.0, 0.0, 1.0);
-
-//#define E_CC_PROCEDURAL
-
-vec4 PS_Adaptation() 
-{
-	vec4	color = texture2D(u_DiffuseMap, var_TexCoords.xy);
-
-	//adaptation in time
-	//vec4	Adaptation=texture2D(_s4, 0.5);
-	//vec4	Adaptation=vec4(1.0) - texture2D(u_DiffuseMap, vec2(0.5,0.5));
-	//float	grayadaptation=max(max(Adaptation.x, Adaptation.y), Adaptation.z);
-	float	grayadaptation=1.0;
-
-	float greyscale = dot(color.xyz, vec3(0.3, 0.59, 0.11));
-    color.r = lerp(greyscale, color.r, DesatR);
-    color.g = lerp(greyscale, color.g, DesatG);
-    color.b = lerp(greyscale, color.b, DesatB);	
-    	
-	color = pow(color, vec4(Gamma));
-	
-	color.r = pow(color.r, RedFilter);
-	color.g = pow(color.g, GreenFilter);
-	color.b = pow(color.b, BlueFilter);
-   
-	grayadaptation=max(grayadaptation, 0.0); //0.0
-	grayadaptation=min(grayadaptation, 50.0); //50.0
-	color.xyz=color.xyz/(grayadaptation*AdaptationMax+AdaptationMin);//*tempF1.x
-
-	color.xyz*=Brightness;
-	color.xyz+=0.000001;
-	vec3 xncol=normalize(color.xyz);
-	vec3 scl=color.xyz/xncol.xyz;
-	scl=pow(scl, float3(IntensityContrast));
-	xncol.xyz=pow(xncol.xyz, float3(Saturation));
-	color.xyz=scl*xncol.xyz;
-
-	float	lumamax=ToneMappingOversaturation;
-	color.xyz=(color.xyz * (1.0 + color.xyz/lumamax))/(color.xyz + ToneMappingCurve);
-	
-    float Y = dot(color.xyz, vec3(0.299, 0.587, 0.114)); //0.299 * R + 0.587 * G + 0.114 * B;
-	float U = dot(color.xyz, vec3(-0.14713, -0.28886, 0.436)); //-0.14713 * R - 0.28886 * G + 0.436 * B;
-	float V = dot(color.xyz, vec3(0.615, -0.51499, -0.10001)); //0.615 * R - 0.51499 * G - 0.10001 * B;	
-	
-	Y=pow(Y, BrightnessCurve);
-	Y=Y*BrightnessMultiplier;
-	Y=Y/(Y+BrightnessToneMappingCurve);
-	float	desaturatefact=saturate(Y*Y*Y*1.7);
-	U=lerp(U, 0.0, desaturatefact);
-	V=lerp(V, 0.0, desaturatefact);
-	color.xyz=V * vec3(1.13983, -0.58060, 0.0) + U * vec3(0.0, -0.39465, 2.03211) + Y;
-
-#ifdef E_CC_PROCEDURAL
-	float	tempgray;
-	vec4	tempvar;
-	vec3	tempcolor;
-
-	//+++ levels like in photoshop, including gamma, lightness, additive brightness
-	color=max(color-ECCInBlack, 0.0) / max(ECCInWhite-ECCInBlack, 0.0001);
-	if (ECCGamma!=1.0) color=pow(color, ECCGamma);
-	color=color*(ECCOutWhite-ECCOutBlack) + ECCOutBlack;
-
-	//+++ brightness
-	color=color*ECCBrightness;
-
-	//+++ contrast
-	color=(color-ECCContrastGrayLevel) * ECCContrast + ECCContrastGrayLevel;
-
-	//+++ saturation
-	tempgray=dot(color, 0.3333);
-	color=lerp(tempgray, color, ECCSaturation);
-
-	//+++ desaturate shadows
-	tempgray=dot(color, 0.3333);
-	tempvar.x=saturate(1.0-tempgray);
-	tempvar.x*=tempvar.x;
-	tempvar.x*=tempvar.x;
-	color=lerp(color, tempgray, ECCDesaturateShadows*tempvar.x);
-
-	//+++ color balance
-	color=saturate(color);
-	tempgray=dot(color, 0.3333);
-	float2	shadow_highlight=float2(1.0-tempgray, tempgray);
-	shadow_highlight*=shadow_highlight;
-	color.rgb+=(ECCColorBalanceHighlights*2.0-1.0)*color * shadow_highlight.x;
-	color.rgb+=(ECCColorBalanceShadows*2.0-1.0)*(1.0-color) * shadow_highlight.y;
-
-	//+++ channel mixer
-	tempcolor=color;
-	color.r=dot(tempcolor, ECCChannelMixerR);
-	color.g=dot(tempcolor, ECCChannelMixerG);
-	color.b=dot(tempcolor, ECCChannelMixerB);
-#endif //E_CC_PROCEDURAL
-
-	return color;
-}
-
 vec4 PS_Reflection()
 {
 	float	px 			= 1.0 / var_Dimensions.x;
@@ -246,20 +39,6 @@ vec4 PS_Reflection()
 
 	if (ColorInput.a <= 0.0)
 	{// Reflective...
-		/*
-		float orig_alpha = 0.0-ColorInput.a;
-		vec2 reflectCoords = var_TexCoords.xy;
-		
-		float pixelHeight = var_TexCoords.y;
-		float heightPercent = 1.0 - (pixelHeight / 1.0);
-		//float heightDiff = heightPercent;
-		float heightDiff = pow(heightPercent, pixelHeight * 2.0);
-		reflectCoords.y = heightDiff;
-
-		ColorInput = (texture2D(u_DiffuseMap, reflectCoords.xy) + OrigColor + OrigColor) / 3.0;
-		ColorInput.a = 1.0;//orig_alpha;
-		*/
-
 		vec2 reflectCoords = var_TexCoords.xy;
 
 		for (float y = var_TexCoords.y; y < 1.0; y += (py*1.0))
@@ -279,8 +58,6 @@ vec4 PS_Reflection()
 			}
 		}
 
-		//float distFromTop = 1.0 - reflectCoords.y;
-
 		// Blur???
 		//ColorInput.rgb = (texture2D(u_DiffuseMap, reflectCoords.xy).rgb + texture2D(u_DiffuseMap, reflectCoords.xy + OFFSET).rgb + texture2D(u_DiffuseMap, reflectCoords.xy - OFFSET).rgb + texture2D(u_DiffuseMap, reflectCoords.xy + vec2(px, 0.0)).rgb + texture2D(u_DiffuseMap, reflectCoords.xy + vec2(0.0, py)).rgb) / 5.0;
 		ColorInput.rgb = texture2D(u_DiffuseMap, reflectCoords.xy).rgb;// * distFromTop;
@@ -291,118 +68,84 @@ vec4 PS_Reflection()
 
 	return ColorInput;
 }
-
-vec3 ColorFilmicToneMapping(vec3 x)
-{
-	// Filmic tone mapping
-	const vec3 A = vec3(0.55f, 0.50f, 0.45f);	// Shoulder strength
-	const vec3 B = vec3(0.30f, 0.27f, 0.22f);	// Linear strength
-	const vec3 C = vec3(0.10f, 0.10f, 0.10f);	// Linear angle
-	const vec3 D = vec3(0.10f, 0.07f, 0.03f);	// Toe strength
-	const vec3 E = vec3(0.01f, 0.01f, 0.01f);	// Toe Numerator
-	const vec3 F = vec3(0.30f, 0.30f, 0.30f);	// Toe Denominator
-	const vec3 W = vec3(2.80f, 2.90f, 3.10f);	// Linear White Point Value
-	const vec3 F_linearWhite = ((W*(A*W+C*B)+D*E)/(W*(A*W+B)+D*F))-(E/F);
-	vec3 F_linearColor = ((x*(A*x+C*B)+D*E)/(x*(A*x+B)+D*F))-(E/F);
-
-    // gamma space or not?
-	return pow(saturate(F_linearColor * 1.25 / F_linearWhite),vec3(1.25));
-}
 #endif
 
-#define BLUR_DEPTH u_Local0.r
-#define BLUR_RADIUS 2.0
 
-#define px (1.0/u_Dimensions.x)
-#define py (1.0/u_Dimensions.y)
 
-#define RADIUS_X (BLUR_RADIUS * px)
-#define RADIUS_Y (BLUR_RADIUS * py)
+uniform float u_Time;
+
+vec3 up_vec = vec3(0.0, 1.0, 0.0);
 
 float linearize(float depth)
 {
 	return 1.0 / mix(u_ViewInfo.z, 1.0, depth);
 }
 
-vec4 DistantBlur(void)
+float blend ( float val, float val0, float val1, float res0, float res1 )
 {
-	vec4 color = texture2D(u_DiffuseMap, var_TexCoords.xy);
-	float depth = linearize(texture2D(u_ScreenDepthMap, var_TexCoords.xy).r);
-
-	if (depth < BLUR_DEPTH)
-	{
-		return color;
-	}
-
-	float BLUR_DEPTH_MULT = (1.0 - (BLUR_DEPTH / depth)) * BLUR_RADIUS;
-
-	//BLUR_DEPTH_MULT = BLUR_DEPTH_MULT * 0.333 + 0.666;
-	BLUR_DEPTH_MULT += 0.5;
-	BLUR_DEPTH_MULT = pow(BLUR_DEPTH_MULT, u_Local0.g);
-
-	if (BLUR_DEPTH_MULT * RADIUS_X < px && BLUR_DEPTH_MULT * RADIUS_Y < py)
-	{// No point...
-		return color;
-	}
-
-	int NUM_BLUR_PIXELS = 1;
-
-	for (float x = -RADIUS_X * BLUR_DEPTH_MULT; x <= RADIUS_X * BLUR_DEPTH_MULT; x += px)
-	{
-		for (float y = -RADIUS_Y * BLUR_DEPTH_MULT; y <= RADIUS_Y * BLUR_DEPTH_MULT; y += py)
-		{
-			//if (x == 0.0 && y == 0.0) continue;
-
-			float depth2 = linearize(texture2D(u_ScreenDepthMap, vec2(var_TexCoords.x + x, var_TexCoords.y + y)).r);
-
-			if (depth < BLUR_DEPTH) continue;
-
-			color.rgb += texture2D(u_DiffuseMap, vec2(var_TexCoords.x + x, var_TexCoords.y + y)).rgb;
-			NUM_BLUR_PIXELS++;
-		}
-	}
-
-	color.rgb /= NUM_BLUR_PIXELS;
-	return color;
+	if ( val <= val0 ) return res0;
+	if ( val >= val1 ) return res1;
+	//
+	return res0 + (val - val0) * (res1 - res0) / (val1 - val0);
 }
 
-void main()
+void main ( void )
 {
-#if 0
-	vec4 color;
-	/*
-	if (CURRENT_PASS_NUMBER == 0) {
-		//color = PS_ProcessGaussianH();
-		color = texture2D(u_DiffuseMap, texCoord.xy);
-	} else if (CURRENT_PASS_NUMBER == 1) {
-		//color = PS_ProcessGaussianV();
-		color = texture2D(u_DiffuseMap, texCoord.xy);
-	} else if (CURRENT_PASS_NUMBER == 2) {
-		//color = PS_ProcessEdges();
-		color = texture2D(u_DiffuseMap, texCoord.xy);
-	} else if (CURRENT_PASS_NUMBER == 3) {
-		//color = PS_ProcessSharpen1();
-		color = texture2D(u_DiffuseMap, texCoord.xy);
-	} else if (CURRENT_PASS_NUMBER == 4) {
-		//color = PS_ProcessSharpen2();
-		color = texture2D(u_DiffuseMap, texCoord.xy);
-	} else if (CURRENT_PASS_NUMBER == 5) {
-		//color = PS_ProcessAfterFX();
-		//color = texture2D(u_DiffuseMap, texCoord.xy);
-		//color = PS_SuperEagle();
-		//color = PS_EdgePreservingSmooth();
-		//color = PS_Adaptation();
+	vec2 dpos = var_TexCoords;
+
+    if (u_Local0.r >= 1.0)
+	{
+		dpos.y = 1.0 - dpos.y;
 	}
-	*/
 
-	//color = PS_Reflection();
+	float depth = linearize(texture2D(u_ScreenDepthMap, dpos).r);
+    vec4 backcolor = texture2D(u_DiffuseMap, var_TexCoords);
 
-	color = texture2D(u_DiffuseMap, texCoord.xy);
-	color.rgb = ColorFilmicToneMapping(color.rgb);
+    bool isGrass =true;//backcolor.g > backcolor.r + 0.01 && backcolor.g > backcolor.b + 0.01;
 
-	gl_FragColor.rgba = color.rgba;
-	//gl_FragColor.a = 1.0;
-#else
-	gl_FragColor = DistantBlur();
-#endif
+    if (isGrass) {
+        vec4 color = vec4(0.0, 0.0, 0.0, 0.0);
+        vec2 p = dpos;
+        float d = blend(depth, 0.0, 500.0, 100.0, 500.0) * u_Local0.g;
+        float dclose = blend(depth, 0.0, 20.0, 30.0, 1.0) * u_Local0.g;
+        d *= dclose;
+        p.y += p.x * 1009.0 + p.x * 1259.0 + p.x * 2713.0;
+        p.y += u_Time * 0.004;
+        // wind
+
+		float yoffset = fract(p.y * d) / d;
+
+		vec2 uvoffset, uvoffset_d;
+
+        if (u_Local0.r >= 1.0)
+		{
+			uvoffset = var_TexCoords.xy + (up_vec.xy * yoffset);
+			uvoffset_d = dpos.xy - (up_vec.xy * yoffset);
+		}
+        else
+		{
+			uvoffset = var_TexCoords.xy + (up_vec.xy * yoffset);
+			uvoffset_d = dpos.xy + (up_vec.xy * yoffset);
+        }
+
+		color = texture2D(u_DiffuseMap, uvoffset);
+        float depth2 = linearize(texture2D(u_ScreenDepthMap, uvoffset_d).r);
+        
+		if (depth2 < depth) {
+			//gl_FragColor = backcolor;
+			//gl_FragColor = vec4(0.0, 0.0, 1.0, 1.0);
+			return;
+		}
+
+        gl_FragColor = mix(backcolor, color, clamp(1.0 - yoffset * d / 3.8, 0.0, 1.0));
+		//gl_FragColor = mix(backcolor, color, clamp(yoffset * d / 3.8, 0.0, 1.0));
+		//gl_FragColor = vec4(clamp(1.0 - yoffset * d / 3.8, 0.0, 1.0), clamp(1.0 - yoffset * d / 3.8, 0.0, 1.0), clamp(1.0 - yoffset * d / 3.8, 0.0, 1.0), 1.0);
+		//gl_FragColor = vec4(0.0, 1.0, 0.0, 1.0);
+		return;
+    }
+
+
+	//
+	//gl_FragColor = backcolor;
+	gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
 }

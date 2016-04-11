@@ -1,5 +1,3 @@
-precision highp float;
-
 uniform sampler2D				u_DiffuseMap;
 uniform sampler2D				u_ScreenDepthMap;
 uniform sampler2D				u_NormalMap;
