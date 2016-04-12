@@ -3310,6 +3310,7 @@ float MAP_WATER_LEVEL = 131072.0;
 #define MAX_GLOW_LOCATIONS 65536
 int		NUM_MAP_GLOW_LOCATIONS = 0;
 vec3_t	MAP_GLOW_LOCATIONS[MAX_GLOW_LOCATIONS] = { 0 };
+vec4_t	MAP_GLOW_COLORS[MAX_GLOW_LOCATIONS] = { 0 };
 
 extern void R_WorldToLocal (const vec3_t world, vec3_t local);
 extern void R_LocalPointToWorld (const vec3_t local, vec3_t world);
@@ -3369,14 +3370,19 @@ static void R_LoadCubemapWaypoints( void )
 		vec3_t				surfOrigin;
 		qboolean			bad = qfalse;
 
-		qboolean hasGlow = qfalse;
+		qboolean	hasGlow = qfalse;
+		vec4_t		glowColor = { 0 };
 
 		if (surf->shader)
 		{
 			for ( int stage = 0; stage < MAX_SHADER_STAGES; stage++ )
 			{
 				if (surf->shader->stages[stage] && surf->shader->stages[stage]->glow)
+				{
 					hasGlow = qtrue;
+					VectorCopy4(surf->shader->stages[stage]->bundle[0].image[0]->lightColor, glowColor);
+					break;
+				}
 			}
 		}
 
@@ -3407,8 +3413,7 @@ static void R_LoadCubemapWaypoints( void )
 			if (hasGlow && NUM_MAP_GLOW_LOCATIONS < MAX_GLOW_LOCATIONS)
 			{
 				VectorCopy(surfOrigin, MAP_GLOW_LOCATIONS[NUM_MAP_GLOW_LOCATIONS]);
-				//R_WorldToLocal(surfOrigin, MAP_GLOW_LOCATIONS[NUM_MAP_GLOW_LOCATIONS]);
-				//R_LocalPointToWorld(surfOrigin, MAP_GLOW_LOCATIONS[NUM_MAP_GLOW_LOCATIONS]);
+				VectorCopy4(glowColor, MAP_GLOW_COLORS[NUM_MAP_GLOW_LOCATIONS]);
 				NUM_MAP_GLOW_LOCATIONS++;
 			}
 

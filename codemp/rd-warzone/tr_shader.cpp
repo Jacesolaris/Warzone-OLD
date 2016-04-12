@@ -1713,10 +1713,15 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 						flags |= IMGFLAG_SRGB;
 				}
 
+				if (ForceGlow(token) || stage->glow)
+				{
+					flags |= IMGFLAG_GLOW;
+				}
+
 				stage->bundle[0].image[0] = R_FindImageFile( token, type, flags );
 
 				// UQ1: Testing - Force glow to obvious glow components...
-				if (ForceGlow(stage->bundle[0].image[0]->imgName))
+				if (flags & IMGFLAG_GLOW)
 				{
 					//ri->Printf (PRINT_WARNING, "%s forcably marked as a glow shader.\n", stage->bundle[0].image[0]->imgName);
 					stage->glow = qtrue;
@@ -1772,10 +1777,15 @@ static qboolean ParseStage( shaderStage_t *stage, const char **text )
 			}
 
 
+			if (ForceGlow(token) || stage->glow)
+			{
+				flags |= IMGFLAG_GLOW;
+			}
+
 			stage->bundle[0].image[0] = R_FindImageFile( token, type, flags );
 
 			// UQ1: Testing - Force glow to obvious glow components...
-			if (ForceGlow(stage->bundle[0].image[0]->imgName))
+			if (flags & IMGFLAG_GLOW)
 			{
 				//ri->Printf (PRINT_WARNING, "%s forcably marked as a glow shader.\n", stage->bundle[0].image[0]->imgName);
 				stage->glow = qtrue;

@@ -3053,6 +3053,48 @@ static void R_CreateSteepMap2 ( const char *name, byte *pic, int width, int heig
 	SubsurfaceImage = R_FindImageFile(SubsurfaceName, IMGTYPE_STEEPMAP2, normalFlags);
 }
 
+void R_GetTextureAverageColor(const byte *in, int width, int height, vec4_t avgColor)
+{
+	int NUM_PIXELS = 0;
+	vec4_t average = { 0 };
+
+	if (!in || !in[0]) return;
+
+	for (int y = 0; y < height; y++)
+	{
+		const byte *inbyte  = in  + y * width * 4;
+
+		for (int x = 0; x < width; x++)
+		{
+			float currentR = ByteToFloat(inbyte[0]);
+			float currentG = ByteToFloat(inbyte[1]);
+			float currentB = ByteToFloat(inbyte[2]);
+			float currentA = ByteToFloat(inbyte[3]);
+
+			if (currentA > 0 && (currentR > 0 || currentG > 0 || currentB > 0))
+			{// Ignore black and zero-alpha pixels.
+				average[0] += currentR;
+				average[1] += currentG;
+				average[2] += currentB;
+				average[3] += currentA;
+				NUM_PIXELS++;
+			}
+
+			inbyte  += 4;
+		}
+	}
+
+	average[0] /= NUM_PIXELS;
+	average[1] /= NUM_PIXELS;
+	average[2] /= NUM_PIXELS;
+//	average[3] /= NUM_PIXELS;
+
+	avgColor[0] = average[0];
+	avgColor[1] = average[1];
+	avgColor[2] = average[2];
+	avgColor[3] = average[3];
+}
+
 /*
 ===============
 R_FindImageFile
@@ -3116,6 +3158,14 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, int flags )
 	}
 
 	image = R_CreateImage( name, pic, width, height, type, flags, 0 );
+
+	//if (flags & IMGFLAG_GLOW)
+	{
+		vec4_t avgColor = { 0 };
+		R_GetTextureAverageColor(pic, width, height, avgColor);
+		//ri->Printf(PRINT_WARNING, "%s average color is %f %f %f.\n", name, avgColor[0], avgColor[1], avgColor[2]);
+		VectorCopy4(avgColor, image->lightColor);
+	}
 
 	if (name[0] != '*' && name[0] != '!' && name[0] != '$' && name[0] != '_' && type != IMGTYPE_NORMAL && type != IMGTYPE_SPECULAR /*&& type != IMGTYPE_SUBSURFACE*/ && type != IMGTYPE_OVERLAY && type != IMGTYPE_STEEPMAP && type != IMGTYPE_STEEPMAP2 && !(flags & IMGFLAG_CUBEMAP))
 	{
@@ -3361,6 +3411,7 @@ void R_CreateBuiltinImages( void ) {
 	// we use a solid white image instead of disabling texturing
 	Com_Memset( data, 255, sizeof( data ) );
 	tr.whiteImage = R_CreateImage("*white", (byte *)data, 8, 8, IMGTYPE_COLORALPHA, IMGFLAG_NONE, 0);
+	VectorSet4(tr.whiteImage->lightColor, 1.0, 1.0, 1.0, 1.0);
 
 	Com_Memset( data2, 0, sizeof( data2 ) );
 	tr.blackImage = R_CreateImage("*black", (byte *)data2, 8, 8, IMGTYPE_COLORALPHA, IMGFLAG_NONE, 0);

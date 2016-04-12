@@ -14,6 +14,8 @@ uniform vec2		u_Dimensions;
 uniform vec4		u_Local0;
 uniform vec4		u_ViewInfo; // zmin, zmax, zmax / zmin, SUN_ID
 
+//#define USING_ENGINE_GLOW_LIGHTCOLORS_SEARCH // Enable when I fix it...
+
 #define VOLUMETRIC_THRESHOLD 0.15
 
 #if defined(HQ_VOLUMETRIC)
@@ -80,8 +82,14 @@ void main ( void )
 			fallOffRanges[numInRange] = (fall + (fall*fall)) / 2.0;
 			lightColors[numInRange] = u_lightColors[i];
 
-			if (lightColors[numInRange].r < 0.0 && lightColors[numInRange].g < 0.0 && lightColors[numInRange].b < 0.0)
-			{
+			if (lightColors[numInRange].r == 0.0 && lightColors[numInRange].g == 0.0 && lightColors[numInRange].b == 0.0)
+			{// When no color is set, skip adding this light... Should never happen, but just in case (for speed)...
+				continue;
+			}
+
+#ifdef USING_ENGINE_GLOW_LIGHTCOLORS_SEARCH
+			if (lightColors[numInRange].r < -1.0 && lightColors[numInRange].g < -1.0 && lightColors[numInRange].b < -1.0)
+			{// < 1.0 means no average color was found by game code. Need to fallback to glow map lookups...
 				vec3 spotColor = texture2D(u_DeluxeMap, vec2(inRangePositions[numInRange].x, 1.0 - inRangePositions[numInRange].y)).rgb;
 
 				if (length(spotColor) > VOLUMETRIC_THRESHOLD)
@@ -102,6 +110,52 @@ void main ( void )
 					continue;
 				}
 			}
+			else if (lightColors[numInRange].r < 0.0 && lightColors[numInRange].g < 0.0 && lightColors[numInRange].b < 0.0)
+			{// Game sent us a light color for this texture, use it...
+				vec3 spotColor = -lightColors[numInRange];
+
+				if (length(spotColor) > VOLUMETRIC_THRESHOLD)
+				{
+					if (length(spotColor) <= 1.0)
+					{
+						spotColor *= 4.0;
+					}
+					else if (length(spotColor) <= 2.0)
+					{
+						spotColor *= 2.5;
+					}
+
+					lightColors[numInRange] = -(spotColor + 0.5); // + 0.5 to make sure all .rgb are negative...
+				}
+				else
+				{// Not bright enough for a volumetric light...
+					continue;
+				}
+			}
+#else //!USING_ENGINE_GLOW_LIGHTCOLORS_SEARCH
+			if (lightColors[numInRange].r < 0.0 && lightColors[numInRange].g < 0.0 && lightColors[numInRange].b < 0.0)
+			{// < 1.0 means no average color was found by game code. Need to fallback to glow map lookups...
+				vec3 spotColor = texture2D(u_DeluxeMap, vec2(inRangePositions[numInRange].x, 1.0 - inRangePositions[numInRange].y)).rgb;
+
+				if (length(spotColor) > VOLUMETRIC_THRESHOLD)
+				{
+					if (length(spotColor) <= 1.0)
+					{
+						spotColor *= 4.0;
+					}
+					else if (length(spotColor) <= 2.0)
+					{
+						spotColor *= 2.5;
+					}
+
+					lightColors[numInRange] = -(spotColor + 0.5); // + 0.5 to make sure all .rgb are negative...
+				}
+				else
+				{// Not bright enough for a volumetric light...
+					continue;
+				}
+			}
+#endif //USING_ENGINE_GLOW_LIGHTCOLORS_SEARCH
 
 			if (length(lightColors[numInRange]) > VOLUMETRIC_THRESHOLD)
 			{// Only use it if it is not a dark pixel...

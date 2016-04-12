@@ -1702,6 +1702,15 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			CLOSEST_LIGHTS_DISTANCES[i] = -CLOSEST_LIGHTS_DISTANCES[i];
 		}
 
+#ifdef USING_ENGINE_GLOW_LIGHTCOLORS_SEARCH
+		if (CLOSEST_LIGHTS_COLORS[i][0] < 0.0 && CLOSEST_LIGHTS_COLORS[i][1] < 0.0 && CLOSEST_LIGHTS_COLORS[i][2] < 0.0)
+		{// Surface glow lights...
+			CLOSEST_LIGHTS_COLORS[i][0] = -CLOSEST_LIGHTS_COLORS[i][0] * 0.5;
+			CLOSEST_LIGHTS_COLORS[i][1] = -CLOSEST_LIGHTS_COLORS[i][1] * 0.5;
+			CLOSEST_LIGHTS_COLORS[i][2] = -CLOSEST_LIGHTS_COLORS[i][2] * 0.5;
+		}
+#endif //USING_ENGINE_GLOW_LIGHTCOLORS_SEARCH
+
 		// Double the range on all lights...
 		CLOSEST_LIGHTS_DISTANCES[i] *= 2.0;
 	}

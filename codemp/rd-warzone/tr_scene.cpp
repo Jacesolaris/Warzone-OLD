@@ -323,6 +323,8 @@ void RE_AddAdditiveLightToScene( const vec3_t org, float intensity, float r, flo
 	RE_AddDynamicLightToScene( org, intensity, r, g, b, qtrue );
 }
 
+extern void R_AddGlowShaderLights ( void );
+
 void RE_BeginScene(const refdef_t *fd)
 {
 	Com_Memcpy( tr.refdef.text, fd->text, sizeof( tr.refdef.text ) );
@@ -468,6 +470,10 @@ void RE_BeginScene(const refdef_t *fd)
 
 	tr.refdef.num_entities = r_numentities - r_firstSceneEntity;
 	tr.refdef.entities = &backEndData->entities[r_firstSceneEntity];
+
+#ifdef USING_ENGINE_GLOW_LIGHTCOLORS_SEARCH
+	R_AddGlowShaderLights();
+#endif //USING_ENGINE_GLOW_LIGHTCOLORS_SEARCH
 
 	tr.refdef.num_dlights = r_numdlights - r_firstSceneDlight;
 	tr.refdef.dlights = &backEndData->dlights[r_firstSceneDlight];

@@ -947,27 +947,15 @@ extern void R_LocalPointToWorld (const vec3_t local, vec3_t world);
 #define MAX_GLOW_LOCATIONS 65536
 extern int		NUM_MAP_GLOW_LOCATIONS;
 extern vec3_t	MAP_GLOW_LOCATIONS[MAX_GLOW_LOCATIONS];
+extern vec4_t	MAP_GLOW_COLORS[MAX_GLOW_LOCATIONS];
 
 extern vec2_t SUN_SCREEN_POSITION;
 extern qboolean SUN_VISIBLE;
 
 extern void RE_AddDynamicLightToScene( const vec3_t org, float intensity, float r, float g, float b, int additive );
 
-qboolean RB_VolumetricLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
+void R_AddGlowShaderLights ( void )
 {
-	vec4_t color;
-	int NUM_VISIBLE_LIGHTS = 0;
-	int SUN_ID = 17;
-
-	// bloom
-	color[0] =
-		color[1] =
-		color[2] = pow(2, r_cameraExposure->value);
-	color[3] = 1.0f;
-
-	//ri->Printf(PRINT_WARNING, "VLIGHT DEBUG: %i dlights.\n", backEnd.refdef.num_dlights);
-	//ri->Printf(PRINT_WARNING, "VLIGHT DEBUG: %i glow positions.\n", NUM_MAP_GLOW_LOCATIONS);
-
 	if (backEnd.refdef.num_dlights < MAX_DLIGHTS && r_dynamiclight->integer >= 4)
 	{// Add (close) map glows as dynamic lights as well...
 		const int	MAX_WORLD_GLOW_DLIGHTS = 15;
@@ -983,10 +971,12 @@ qboolean RB_VolumetricLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_
 
 			if (distance > 2048.0) continue;
 
+#ifndef USING_ENGINE_GLOW_LIGHTCOLORS_SEARCH
 			if (!TR_InFOV( MAP_GLOW_LOCATIONS[maplight], backEnd.refdef.vieworg ))
 			{
 				continue; // not on screen...
 			}
+#endif //USING_ENGINE_GLOW_LIGHTCOLORS_SEARCH
 
 			for (int i = 0; i < CLOSE_TOTAL; i++)
 			{
@@ -1040,10 +1030,41 @@ qboolean RB_VolumetricLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_
 
 		for (int i = 0; i < CLOSE_TOTAL && backEnd.refdef.num_dlights < MAX_DLIGHTS; i++)
 		{
-			RE_AddDynamicLightToScene( MAP_GLOW_LOCATIONS[CLOSE_LIST[i]], 1.0, -1.0, -1.0, -1.0, qfalse );
+#ifdef USING_ENGINE_GLOW_LIGHTCOLORS_SEARCH
+			vec4_t glowColor = { 0 };
+
+			VectorCopy4(MAP_GLOW_COLORS[CLOSE_LIST[i]], glowColor);
+
+			if (glowColor[0] <= 0 && glowColor[1] <= 0 && glowColor[2] <= 0)
+				VectorSet4(glowColor, 2.0, 2.0, 2.0, 2.0);
+
+			RE_AddDynamicLightToScene( MAP_GLOW_LOCATIONS[CLOSE_LIST[i]], 256.0, -glowColor[0], -glowColor[1], -glowColor[2], qfalse );
+#else //!USING_ENGINE_GLOW_LIGHTCOLORS_SEARCH
+			RE_AddDynamicLightToScene( MAP_GLOW_LOCATIONS[CLOSE_LIST[i]], 256.0, -1.0, -1.0, -1.0, qfalse );
+#endif //USING_ENGINE_GLOW_LIGHTCOLORS_SEARCH
 			backEnd.refdef.num_dlights++;
 		}
 	}
+}
+
+qboolean RB_VolumetricLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
+{
+	vec4_t color;
+	int NUM_VISIBLE_LIGHTS = 0;
+	int SUN_ID = 17;
+
+	// bloom
+	color[0] =
+		color[1] =
+		color[2] = pow(2, r_cameraExposure->value);
+	color[3] = 1.0f;
+
+	//ri->Printf(PRINT_WARNING, "VLIGHT DEBUG: %i dlights.\n", backEnd.refdef.num_dlights);
+	//ri->Printf(PRINT_WARNING, "VLIGHT DEBUG: %i glow positions.\n", NUM_MAP_GLOW_LOCATIONS);
+
+#ifndef USING_ENGINE_GLOW_LIGHTCOLORS_SEARCH
+	R_AddGlowShaderLights();
+#endif //USING_ENGINE_GLOW_LIGHTCOLORS_SEARCH
 
 	//ri->Printf(PRINT_WARNING, "VLIGHT GLOWS DEBUG: %i dlights.\n", backEnd.refdef.num_dlights);
 

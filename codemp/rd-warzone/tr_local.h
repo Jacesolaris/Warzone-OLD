@@ -36,6 +36,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 //#define __SURFACESPRITES__
 #define __EXTRA_PRETTY__
 //#define __PSHADOWS__
+//#define USING_ENGINE_GLOW_LIGHTCOLORS_SEARCH // UQ1: Doesn't detect all texture average colors yet... Also glowmap is good for culling non visible lights...
 
 
 //#define __DYNAMIC_SHADOWS__
@@ -487,6 +488,7 @@ typedef enum
 	IMGFLAG_SRGB           = 0x0080,
 	IMGFLAG_GENNORMALMAP   = 0x0100,
 	IMGFLAG_MUTABLE        = 0x0200,
+	IMGFLAG_GLOW           = 0x0400,
 } imgFlags_t;
 
 typedef enum
@@ -509,6 +511,8 @@ typedef struct image_s {
 
 	imgType_t   type;
 	int			flags;
+
+	vec4_t		lightColor;
 
 	bool		generatedNormalMap;
 
