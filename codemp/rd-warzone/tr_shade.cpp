@@ -2062,7 +2062,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			{
 				sp2 = &tr.grass2Shader;
 				multiPass = qtrue;
-				passMax = 9;//r_testshaderValue9->integer;
+				passMax = 4;//9;//r_testshaderValue9->integer;
 			}
 		}
 		

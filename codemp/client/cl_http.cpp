@@ -34,13 +34,14 @@ void CURL_Init( void )
 {
 	if (curl) return;
 
-	CURLcode	res;
-
 	/* In windows, this will init the winsock stuff */ 
 	curl_global_init(CURL_GLOBAL_ALL);
 
 	/* get a curl handle */ 
 	curl = curl_easy_init();
+
+#ifdef __TTS_DEVELOPER__
+	CURLcode	res;
 
 	// NOW REQUIRES...
 	// Content-Type: application/x-www-form-urlencoded; charset=UTF-8
@@ -91,6 +92,7 @@ void CURL_Init( void )
 			free(chunk.memory);
 		}
 	}
+#endif //__TTS_DEVELOPER__
 }
 
 void CURL_Shutdown ( void )

@@ -3,11 +3,10 @@ attribute vec4	attr_TexCoord0;
 
 uniform mat4	u_ModelViewProjectionMatrix;
 uniform vec2	u_Dimensions;
-uniform vec4	u_ViewInfo; // zfar / znear, zfar
 
 varying vec2	var_ScreenTex;
 varying vec2	var_Dimensions;
-varying vec4	var_ViewInfo; // zfar / znear, zfar, znear, zfar
+varying vec3	var_Position;
 
 void main()
 {
@@ -17,5 +16,5 @@ void main()
 	//vec2 screenCoords = gl_Position.xy / gl_Position.w;
 	//var_ScreenTex = screenCoords * 0.5 + 0.5;
 	var_Dimensions = u_Dimensions;
-	var_ViewInfo = u_ViewInfo;
+	var_Position = attr_Position;
 }

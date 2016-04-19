@@ -1,8 +1,6 @@
 #include "client.h"
 #include "snd_local.h"
 
-//#define __TTS_DEVELOPER__
-
 #ifdef _WIN32
 #include <ole2.h>
 extern size_t GetHttpPostData(char *address, char *poststr, char *recvdata);

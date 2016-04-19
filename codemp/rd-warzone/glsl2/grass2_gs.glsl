@@ -31,7 +31,7 @@ flat out int				bUnderwater;
 #define						FAST_METHOD
 //#define					ANGLE_BASED_DENSITY
 
-const float					fGrassPatchSize = 48.0;//24.0;
+const float					fGrassPatchSize = 64.0;//48.0;//24.0;
 const float					fWindStrength = 12.0;
 const vec3					vWindDirection = normalize(vec3(1.0, 0.0, 1.0));
 
