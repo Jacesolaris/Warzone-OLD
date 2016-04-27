@@ -494,6 +494,7 @@ void RB_ClearWaterPositionMap ( void )
 		qglClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 		qglClear( GL_COLOR_BUFFER_BIT );
 		FBO_Bind(NULL);
+		qglColorMask(!backEnd.colorMask[0], !backEnd.colorMask[1], !backEnd.colorMask[2], !backEnd.colorMask[3]);
 	}
 #endif //__USE_WATERMAP__
 }
@@ -579,7 +580,7 @@ void RB_BeginDrawingView (void) {
 		clearBits |= GL_COLOR_BUFFER_BIT;
 		qglClearColor( 1.0f, 1.0f, 1.0f, 1.0f );
 	}
-
+	
 	// clear to black for cube maps
 	if (tr.renderCubeFbo != NULL && backEnd.viewParms.targetFbo == tr.renderCubeFbo)
 	{

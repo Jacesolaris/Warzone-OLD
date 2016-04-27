@@ -2089,17 +2089,15 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 #ifdef __USE_WATERMAP__
 			if (isWater && r_glslWater->integer && MAP_WATER_LEVEL > -131072.0)
 			{// Attach dummy water output textures...
-				/*if ((tr.viewParms.flags & VPF_SHADOWPASS) || backEnd.depthFill)
-				{// Don't do water on depth or shadow passes...
-					break;
-				}*/
+				if (glState.currentFBO == tr.renderFbo)
+				{// Only attach textures when doing a render pass...
+					GLSL_AttachWaterTextures();
 
-				GLSL_AttachWaterTextures();
-
-				stateBits |= /*GLS_DEPTHTEST_DISABLE |*/ GLS_DEPTHMASK_TRUE; //GLS_DEPTHFUNC_LESS //GLS_DEPTHFUNC_EQUAL //GLS_DEPTHFUNC_GREATER
+					stateBits |= /*GLS_DEPTHTEST_DISABLE |*/ GLS_DEPTHMASK_TRUE; //GLS_DEPTHFUNC_LESS //GLS_DEPTHFUNC_EQUAL //GLS_DEPTHFUNC_GREATER
 				
-				//GLSL_SetUniformInt(sp, UNIFORM_POSITIONMAP, TB_POSITIONMAP);
-				//GL_BindToTMU(tr.renderPositionMapImage, TB_POSITIONMAP);
+					//GLSL_SetUniformInt(sp, UNIFORM_POSITIONMAP, TB_POSITIONMAP);
+					//GL_BindToTMU(tr.renderPositionMapImage, TB_POSITIONMAP);
+				}
 			}
 #else //!__USE_WATERMAP__
 			if (isWater && r_glslWater->integer && MAP_WATER_LEVEL > -131072.0)
@@ -2641,7 +2639,10 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 #ifdef __USE_WATERMAP__
 		if (isWater && r_glslWater->integer && MAP_WATER_LEVEL > -131072.0)
 		{// Unattach dummy water output textures...
-			GLSL_AttachTextures();
+			if (glState.currentFBO == tr.renderFbo)
+			{// Only attach textures when doing a render pass...
+				GLSL_AttachTextures();
+			}
 			break;
 		}
 #endif //__USE_WATERMAP__
