@@ -1236,6 +1236,11 @@ void R_LoadMapInfo ( void )
 
 	tr.waterImage = R_FindImageFile("textures/water/save.01.jpg", IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION);
 
+	tr.waterFoamImage = R_FindImageFile("textures/water/waterFoamGrey.jpg", IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION);
+	tr.waterHeightImage = R_FindImageFile("textures/water/waterHeightMap.jpg", IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION);
+	tr.waterNormalImage = R_FindImageFile("textures/water/waterNormalMap.jpg", IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION);
+	tr.waterCausicsImage = R_FindImageFile("textures/water/waterCausicsMap.jpg", IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION);
+
 	FOLIAGE_LoadMapClimateInfo();
 
 	FOLIAGE_ALLOWED_MATERIALS_NUM = 0;

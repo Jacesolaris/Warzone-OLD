@@ -494,7 +494,7 @@ int R_CubemapForPoint( vec3_t point )
 {
 	int cubemapIndex = -1;
 
-	if (r_cubeMapping->integer && tr.numCubemaps)
+	if (r_cubeMapping->integer && tr.numCubemaps >= 1)
 	{
 		float shortest = (float)WORLD_SIZE * (float)WORLD_SIZE;
 

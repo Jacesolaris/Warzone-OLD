@@ -3,7 +3,7 @@
 #endif
 
 layout(triangles) in;
-layout(triangle_strip, max_vertices = 146/*170*/) out;
+layout(triangle_strip, max_vertices = 102) out;
 
 
 uniform mat4				u_ModelViewProjectionMatrix;
@@ -18,6 +18,7 @@ uniform vec4				u_Local10; // foliageLODdistance, foliageDensity, MAP_WATER_LEVE
 uniform float				u_Time;
 
 smooth out vec2				vTexCoord;
+out vec3					vVertPosition;
 flat out int				bUnderwater;
 
 
@@ -196,6 +197,12 @@ void main()
 	// No invocations support...
 	vLocalSeed = Pos*u_Local8.r;
 
+	if (Pos.z <= MAP_WATER_LEVEL - 256.0)
+	{// Deep underwater plants draw at lower density, but larger...
+		float densityMult = 1.0 + clamp(((MAP_WATER_LEVEL - 256.0) - Pos.z) / 128.0, 0.0, 4.0);
+		FOLIAGE_DENSITY = int(float(FOLIAGE_DENSITY) / densityMult);
+	}
+
 	for(int x = 0; x < FOLIAGE_DENSITY; x++)
 	{
 		vec3 vGrassFieldPos = randomBarycentricCoordinate().xyz;
@@ -203,8 +210,10 @@ void main()
 
 		if (vGrassFieldPos.z < MAP_WATER_LEVEL + 64.0 + (fGrassPatchWaterEdgeMod * 96.0))
 		{
-			if (vGrassFieldPos.z < MAP_WATER_LEVEL - (64.0 + (fGrassPatchWaterEdgeMod * 96.0)))
+			if (vGrassFieldPos.z < MAP_WATER_LEVEL - (64.0 + (fGrassPatchWaterEdgeMod * 96.0)) && vGrassFieldPos.z > MAP_WATER_LEVEL - 256.0)
 				bUnderwater = 1;
+			else if (vGrassFieldPos.z <= MAP_WATER_LEVEL - 256.0)
+				bUnderwater = 2;
 			else
 				continue;
 		}
@@ -218,11 +227,21 @@ void main()
 
 		float heightMult = 1.0;
 
-		if (bUnderwater != 1 && vGrassFieldPos.z < MAP_WATER_LEVEL + 160.0)
+		if (bUnderwater < 1 && vGrassFieldPos.z < MAP_WATER_LEVEL + 160.0)
 		{// When near water edge, reduce the size of the grass...
 			heightMult = fGrassPatchWaterEdgeMod * 0.5 + 0.5;
 		}
-		else if (bUnderwater == 1 && vGrassFieldPos.z > MAP_WATER_LEVEL - 160.0)
+		/*else if (bUnderwater < 1 && vGrassFieldPos.z >= MAP_WATER_LEVEL + 160.0)
+		{// When near water edge, reduce the size of the grass...
+			float heightMultMult = 1.0 + (clamp((vGrassFieldPos.z - (MAP_WATER_LEVEL + 160.0)) / 8192.0, 0.0, 2.0) * fGrassPatchWaterEdgeMod);
+			heightMult = fGrassPatchWaterEdgeMod * heightMultMult;
+		}*/
+		else if (bUnderwater >= 2 && vGrassFieldPos.z <= MAP_WATER_LEVEL - 256.0)
+		{// Deep underwater plants draw larger but less of them...
+			float heightMultMult = 1.0 + clamp(((MAP_WATER_LEVEL - 256.0) - vGrassFieldPos.z) / 128.0, 0.0, 4.0);
+			heightMult = fGrassPatchWaterEdgeMod * heightMultMult;
+		}
+		else if (bUnderwater >= 1 && vGrassFieldPos.z > MAP_WATER_LEVEL - 160.0)
 		{// When near water edge, reduce the size of the grass...
 			heightMult = fGrassPatchWaterEdgeMod * 0.5 + 0.5;
 		}
@@ -257,21 +276,25 @@ void main()
 			vec3 va = P - (right + up) * size;
 			gl_Position = u_ModelViewProjectionMatrix * vec4(va, 1.0);
 			vTexCoord = vec2(0.0, 1.0);
+			vVertPosition = va.xyz;
 			EmitVertex();  
   
 			vec3 vb = P - (right - up) * size;
 			gl_Position = u_ModelViewProjectionMatrix * vec4(vb + vWindDirection*fWindPower, 1.0);
 			vTexCoord = vec2(0.0, 0.0);
+			vVertPosition = vb.xyz;
 			EmitVertex();  
  
 			vec3 vd = P + (right - up) * size;
 			gl_Position = u_ModelViewProjectionMatrix * vec4(vd, 1.0);
 			vTexCoord = vec2(1.0, 1.0);
+			vVertPosition = vd.xyz;
 			EmitVertex();  
  
 			vec3 vc = P + (right + up) * size;
 			gl_Position = u_ModelViewProjectionMatrix * vec4(vc + vWindDirection*fWindPower, 1.0);
 			vTexCoord = vec2(1.0, 0.0);
+			vVertPosition = vc.xyz;
 			EmitVertex();  
   
 			EndPrimitive();
@@ -288,21 +311,25 @@ void main()
 				vec3 va = P - (right + up) * size;
 				gl_Position = u_ModelViewProjectionMatrix * vec4(va, 1.0);
 				vTexCoord = vec2(0.0, 1.0);
+				vVertPosition = va.xyz;
 				EmitVertex();  
   
 				vec3 vb = P - (right - up) * size;
 				gl_Position = u_ModelViewProjectionMatrix * vec4(vb + vWindDirection*fWindPower, 1.0);
 				vTexCoord = vec2(0.0, 0.0);
+				vVertPosition = vb.xyz;
 				EmitVertex();  
  
 				vec3 vd = P + (right - up) * size;
 				gl_Position = u_ModelViewProjectionMatrix * vec4(vd, 1.0);
 				vTexCoord = vec2(1.0, 1.0);
+				vVertPosition = vd.xyz;
 				EmitVertex();  
  
 				vec3 vc = P + (right + up) * size;
 				gl_Position = u_ModelViewProjectionMatrix * vec4(vc + vWindDirection*fWindPower, 1.0);
 				vTexCoord = vec2(1.0, 0.0);
+				vVertPosition = vc.xyz;
 				EmitVertex();  
   
 				EndPrimitive();
@@ -318,21 +345,25 @@ void main()
 				vec3 va = P - (right + up) * size;
 				gl_Position = u_ModelViewProjectionMatrix * vec4(va, 1.0);
 				vTexCoord = vec2(0.0, 1.0);
+				vVertPosition = va.xyz;
 				EmitVertex();  
   
 				vec3 vb = P - (right - up) * size;
 				gl_Position = u_ModelViewProjectionMatrix * vec4(vb + vWindDirection*fWindPower, 1.0);
 				vTexCoord = vec2(0.0, 0.0);
+				vVertPosition = vb.xyz;
 				EmitVertex();  
  
 				vec3 vd = P + (right - up) * size;
 				gl_Position = u_ModelViewProjectionMatrix * vec4(vd, 1.0);
 				vTexCoord = vec2(1.0, 1.0);
+				vVertPosition = vd.xyz;
 				EmitVertex();  
  
 				vec3 vc = P + (right + up) * size;
 				gl_Position = u_ModelViewProjectionMatrix * vec4(vc + vWindDirection*fWindPower, 1.0);
 				vTexCoord = vec2(1.0, 0.0);
+				vVertPosition = vc.xyz;
 				EmitVertex();  
   
 				EndPrimitive();
@@ -350,21 +381,25 @@ void main()
 		vec3 va = P - (right + normalOffset) * size;
 		gl_Position = u_ModelViewProjectionMatrix * vec4(va, 1.0);
 		vTexCoord = vec2(0.0, 1.0);
+		vVertPosition = va.xyz;
 		EmitVertex();  
   
 		vec3 vb = P - (right - normalOffset) * size;
 		gl_Position = u_ModelViewProjectionMatrix * vec4(vb + vWindDirection*fWindPower, 1.0);
 		vTexCoord = vec2(0.0, 0.0);
+		vVertPosition = vb.xyz;
 		EmitVertex();  
  
 		vec3 vd = P + (right - normalOffset) * size;
 		gl_Position = u_ModelViewProjectionMatrix * vec4(vd, 1.0);
 		vTexCoord = vec2(1.0, 1.0);
+		vVertPosition = vd.xyz;
 		EmitVertex();  
  
 		vec3 vc = P + (right + normalOffset) * size;
 		gl_Position = u_ModelViewProjectionMatrix * vec4(vc + vWindDirection*fWindPower, 1.0);
 		vTexCoord = vec2(1.0, 0.0);
+		vVertPosition = vc.xyz;
 		EmitVertex();  
   
 		EndPrimitive();

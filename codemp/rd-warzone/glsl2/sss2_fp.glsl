@@ -2,97 +2,93 @@
 uniform sampler2D				u_DiffuseMap;
 uniform sampler2D				u_ScreenDepthMap;
 uniform sampler2D				u_NormalMap;
+uniform sampler2D				u_PositionMap;
 
 uniform mat4					u_ModelViewProjectionMatrix;
 uniform vec4					u_ViewInfo; // zmin, zmax, zmax / zmin
-uniform vec4					u_LightOrigin;
+uniform vec3					u_ViewOrigin;
+uniform vec4					u_PrimaryLightOrigin;
 uniform vec4					u_Local0;
 uniform vec4					u_Local1; // sunx, suny
 
 varying vec2					var_ScreenTex;
 varying vec2					var_Dimensions;
 
-#define camerarange u_ViewInfo.xy
-#define buffersize var_Dimensions
-
-
-float DepthToZPosition(in float depth) {
-	return camerarange.x / (camerarange.y - depth * (camerarange.y - camerarange.x)) * camerarange.y;
-}
-
-vec3 PositionFromDepth(vec2 texCoord)
-{
-	float depth = texture2D(u_ScreenDepthMap, texCoord).x;
-	vec3 screencoord;
-	
-	screencoord = vec3(((gl_FragCoord.x/buffersize.x)-0.5) * 2.0,((-gl_FragCoord.y/buffersize.y)+0.5) * 2.0 / (buffersize.x/buffersize.y), DepthToZPosition( depth ));
-	screencoord.x *= screencoord.z;
-	screencoord.y *= -screencoord.z;
-
-	return screencoord;
-}
 
 float linearize(float depth)
 {
 	return clamp(1.0 / mix(u_ViewInfo.z, 1.0, depth), 0.0, 1.0);
 }
 
+vec4 WorldSpacePositionData ( vec2 coord )
+{
+	return texture2D(u_PositionMap, coord);
+}
+
+float DepthFromPositionInfo ( vec4 positionInfo )
+{
+	return clamp(distance(positionInfo.xyz, u_ViewOrigin) / u_ViewInfo.y, 0.0, 1.0);
+}
+
+float DepthAtCoordinate ( vec2 coord )
+{
+	return clamp(distance(WorldSpacePositionData(coord).xyz, u_ViewOrigin) / u_ViewInfo.y, 0.0, 1.0);
+}
+
 void main(void){
-#if 1
 	vec3 dglow = texture2D(u_NormalMap, var_ScreenTex).rgb;
 	float dglowStrength = clamp(length(dglow.rgb) * 3.0, 0.0, 1.0);
 
 	vec2 texel_size = vec2(1.0 / var_Dimensions);
-	float depth = texture2D(u_ScreenDepthMap, var_ScreenTex).r;
-	depth = linearize(depth);
+	//float depth = texture2D(u_ScreenDepthMap, var_ScreenTex).r;
+	//depth = linearize(depth);
+	vec4 posInfo = WorldSpacePositionData(var_ScreenTex);
+	float depth = DepthFromPositionInfo(posInfo);
+
+	//gl_FragColor = vec4(vec3(depth), 1.0);
+	//return;
 
 	float invDepth = 1.0 - depth;
 
-	vec2 distFromCenter = vec2((0.5 - var_ScreenTex.x) * 2.0, (1.0 - var_ScreenTex.y) * 0.5);
+	/*vec2 distFromCenter = vec2((0.5 - var_ScreenTex.x) * 2.0, (1.0 - var_ScreenTex.y) * 0.5);
 	vec2 pixOffset = clamp((distFromCenter * invDepth) * texel_size * 80.0, 0.0 - (texel_size * 80.0), texel_size * 80.0);
-	vec2 pos = var_ScreenTex + pixOffset;
+	vec2 pos = var_ScreenTex + pixOffset;*/
+	//float distFromCenter = 0.5 - var_ScreenTex.x;
+	//vec2 pixOffset = vec2((distFromCenter*2.0) * 20.0 * texel_size.x, -(length(distFromCenter*2.0) * 20.0 * texel_size.y));
+	//vec2 pos = clamp(var_ScreenTex + pixOffset, 0.0, 1.0);
+	vec2 pixOffset = vec2(20.0 * texel_size.x, -(20.0 * texel_size.y));
+	vec2 pos = clamp(var_ScreenTex + pixOffset, 0.0, 1.0);
 
 	//vec2 distFromCenter = vec2(1.0 - (u_Local1.x - var_ScreenTex.x), 1.0 - (u_Local1.y - var_ScreenTex.y));
 	//vec2 pixOffset = clamp((distFromCenter * invDepth) * texel_size * 40.0, (texel_size * 40.0), texel_size * 40.0);
 	//vec2 pos = clamp(var_ScreenTex + pixOffset, 0.0, 1.0);
 
-	float d2 = texture2D(u_ScreenDepthMap, pos).r;
-	d2 = linearize(d2);
+	//float d2 = texture2D(u_ScreenDepthMap, pos).r;
+	//d2 = linearize(d2);
+	vec4 posInfo2 = WorldSpacePositionData(pos);
+	float d2 = DepthFromPositionInfo(posInfo2);
 
 	vec4 diffuse = texture2D(u_DiffuseMap, var_ScreenTex);
 	vec4 oDiffuse = diffuse;
 
-	float depthDiff = clamp(depth - d2, 0.0, 1.0);
+	float depthDiff = depth - d2;
 
-	if (depthDiff > u_Local0.r && depthDiff < u_Local0.g)
+	if (depthDiff < u_Local0.r || depthDiff > u_Local0.g || depth > 0.9 || d2 > 0.9)
 	{
-		vec3 shadow = diffuse.rgb * 0.25;
-		shadow += diffuse.rgb * (0.75 * (depthDiff / u_Local0.g)); // less darkness at higher distance for blending
-		float invDglow = 1.0 - dglowStrength;
-		diffuse.rgb = (diffuse.rgb * dglowStrength) + (shadow * invDglow);
-	}
-	else if (depthDiff < u_Local0.r)
-	{
-		vec3 shadow = diffuse.rgb * 0.25;
-		shadow += diffuse.rgb * (0.75 * (1.0 - (depthDiff / u_Local0.r))); // less darkness at lower distance for blending
-		float invDglow = 1.0 - dglowStrength;
-		diffuse.rgb = (diffuse.rgb * dglowStrength) + (shadow * invDglow);
+		gl_FragColor = vec4(diffuse.rgb, 1.0);
+		return;
 	}
 
-	/*
-	if (length(diffuse.rgb) > length(oDiffuse.rgb))
-	{// Shadow would be lighter due to blending, use original...
-		diffuse = oDiffuse;
-	}
-	*/
+	//vec3 shadow = diffuse.rgb * 0.25;
+	//shadow += diffuse.rgb * (0.75 * clamp(depthDiff / u_Local0.g, 0.0, 1.0)); // less darkness at higher distance for blending
+	//float invDglow = 1.0 - dglowStrength;
+	//diffuse.rgb = (diffuse.rgb * dglowStrength) + (shadow * invDglow);
+	vec3 shadow = diffuse.rgb * 0.25;//clamp(1.0 - pow((depthDiff / u_Local0.g), 4.0), 0.25, 1.0);
+	diffuse.rgb = shadow;
+
+	diffuse = min(diffuse, oDiffuse);
 
 	gl_FragColor = vec4(diffuse.rgb, 1.0);
-#else
-	//float dist = 1.0 - (length(var_ScreenTex - u_Local1.xy) / 2);
-	//gl_FragColor = vec4(dist, dist, dist, 1.0);
-
-	vec3 worldPos = PositionFromDepth(var_ScreenTex);
-#endif
 }
 
 

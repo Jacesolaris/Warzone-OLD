@@ -79,9 +79,8 @@ varying vec2	fragCoord;
 vec2      var_TexCoords = fragCoord;
 
 out vec4 out_Glow;
-out vec4 out_Water;
-//out vec4 out_Normal;
-out vec4 out_DetailedNormal;
+out vec4 out_Position;
+out vec4 out_Normal;
 
 #if 0
 
@@ -292,8 +291,8 @@ void main()
 #if 1
 	gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0);
 	out_Glow = vec4(0.0);
-	out_DetailedNormal = vec4(0.0);
-	out_Water = vec4(var_position, 1.0);
+	out_Normal = vec4(0.0);
+	out_Position = vec4(var_position, 1.0);
 #else
 	vec4 origColor = texture2D(u_DiffuseMap, var_TexCoords);
 
@@ -306,6 +305,6 @@ void main()
 	gl_FragColor.a = 1.0 - trans;
 	
 	out_Glow = vec4(0.0);
-	out_DetailedNormal = vec4(0.0);
+	out_Normal = vec4(0.0);
 #endif
 }

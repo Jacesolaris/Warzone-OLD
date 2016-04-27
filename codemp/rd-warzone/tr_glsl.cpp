@@ -145,8 +145,189 @@ extern const char *fallbackShader_distanceBlur_fp;
 extern const char *fallbackShader_testshader_vp;
 extern const char *fallbackShader_testshader_fp;
 
+//#define HEIGHTMAP_TESSELATION
 #define PN_TRIANGLES_TESSELATION
 //#define PHONG_TESSELATION
+
+#ifdef HEIGHTMAP_TESSELATION
+const char fallbackShader_genericTessControl_cp[] = 
+"// define the number of CPs in the output patch\n"\
+"layout (vertices = 3) out;\n"\
+"\n"\
+"uniform vec3   u_ViewOrigin;\n"\
+"#define gEyeWorldPos u_ViewOrigin\n"\
+"\n"\
+"// attributes of the input CPs\n"\
+"in vec4 WorldPos_CS_in[];\n"\
+"in vec3 Normal_CS_in[];\n"\
+"in vec2 TexCoord_CS_in[];\n"\
+"in vec3 ViewDir_CS_in[];\n"\
+"in vec4 Tangent_CS_in[];\n"\
+"in vec4 Bitangent_CS_in[];\n"\
+"in vec4 Color_CS_in[];\n"\
+"in vec4 PrimaryLightDir_CS_in[];\n"\
+"in vec2 TexCoord2_CS_in[];\n"\
+"in vec3 Blending_CS_in[];\n"\
+"in float Slope_CS_in[];\n"\
+"in float usingSteepMap_CS_in[];\n"\
+"\n"\
+"// attributes of the output CPs\n"\
+"out vec3 WorldPos_ES_in[3];\n"\
+"out vec3 Normal_ES_in[3];\n"\
+"out vec2 TexCoord_ES_in[3];\n"\
+"out vec3 ViewDir_ES_in[3];\n"\
+"out vec4 Tangent_ES_in[3];\n"\
+"out vec4 Bitangent_ES_in[3];\n"\
+"out vec4 Color_ES_in[3];\n"\
+"out vec4 PrimaryLightDir_ES_in[3];\n"\
+"out vec2 TexCoord2_ES_in[3];\n"\
+"out vec3 Blending_ES_in[3];\n"\
+"out float Slope_ES_in[3];\n"\
+"out float usingSteepMap_ES_in[3];\n"\
+"\n"\
+"float GetTessLevel(float Distance0, float Distance1)\n"\
+"{\n"\
+"    float AvgDistance = (Distance0 + Distance1) / 2.0;\n"\
+"\n"\
+"    if (AvgDistance <= 256.0) {\n"\
+"        return 32.0;\n"\
+"    }\n"\
+"    else if (AvgDistance <= 512.0) {\n"\
+"        return 16.0;\n"\
+"    }\n"\
+"    else {\n"\
+"        return 3.0;\n"\
+"    }\n"\
+"}\n"\
+"\n"\
+"void main()\n"\
+"{\n"\
+"    // Set the control points of the output patch\n"\
+"    TexCoord_ES_in[gl_InvocationID] = TexCoord_CS_in[gl_InvocationID];\n"\
+"    Normal_ES_in[gl_InvocationID] = Normal_CS_in[gl_InvocationID];\n"\
+"    WorldPos_ES_in[gl_InvocationID] = WorldPos_CS_in[gl_InvocationID].xyz;\n"\
+"\n"\
+"	ViewDir_ES_in[gl_InvocationID]		= ViewDir_CS_in[gl_InvocationID];\n"\
+"	Color_ES_in[gl_InvocationID]				= Color_CS_in[gl_InvocationID];\n"\
+"	Tangent_ES_in[gl_InvocationID]			= Tangent_CS_in[gl_InvocationID];\n"\
+"	Bitangent_ES_in[gl_InvocationID]			= Bitangent_CS_in[gl_InvocationID];\n"\
+"	PrimaryLightDir_ES_in[gl_InvocationID]	= PrimaryLightDir_CS_in[gl_InvocationID];\n"\
+"	TexCoord2_ES_in[gl_InvocationID]			= TexCoord2_CS_in[gl_InvocationID];\n"\
+"	Blending_ES_in[gl_InvocationID]			= Blending_CS_in[gl_InvocationID];\n"\
+"	Slope_ES_in[gl_InvocationID]				= Slope_CS_in[gl_InvocationID];\n"\
+"	usingSteepMap_ES_in[gl_InvocationID]		= usingSteepMap_CS_in[gl_InvocationID];\n"\
+"\n"\
+"    // Calculate the distance from the camera to the three control points\n"\
+"    float EyeToVertexDistance0 = distance(gEyeWorldPos, WorldPos_ES_in[0].xyz);\n"\
+"    float EyeToVertexDistance1 = distance(gEyeWorldPos, WorldPos_ES_in[1].xyz);\n"\
+"    float EyeToVertexDistance2 = distance(gEyeWorldPos, WorldPos_ES_in[2].xyz);\n"\
+"\n"\
+"    // Calculate the tessellation levels\n"\
+"    gl_TessLevelOuter[0] = GetTessLevel(EyeToVertexDistance1, EyeToVertexDistance2);\n"\
+"    gl_TessLevelOuter[1] = GetTessLevel(EyeToVertexDistance2, EyeToVertexDistance0);\n"\
+"    gl_TessLevelOuter[2] = GetTessLevel(EyeToVertexDistance0, EyeToVertexDistance1);\n"\
+"    gl_TessLevelInner[0] = gl_TessLevelOuter[2];\n"\
+"}\n";
+
+const char fallbackShader_genericTessControl_ep[] = 
+"layout(triangles, equal_spacing, ccw) in;\n"\
+"\n"\
+"uniform mat4 u_ModelViewProjectionMatrix; // mvp\n"\
+"#define gVP u_ModelViewProjectionMatrix\n"\
+"\n"\
+"uniform sampler2D u_NormalMap;\n"\
+"#define gDisplacementMap u_NormalMap\n"\
+"\n"\
+"uniform vec4 u_Local10;\n"\
+"#define gDispFactor u_Local10.r;\n"\
+"\n"\
+"uniform vec3   u_ViewOrigin;\n"\
+"\n"\
+"in vec3 WorldPos_ES_in[];\n"\
+"in vec2 TexCoord_ES_in[];\n"\
+"in vec3 Normal_ES_in[];\n"\
+"in vec3 ViewDir_ES_in[];\n"\
+"in vec4 Tangent_ES_in[];\n"\
+"in vec4 Bitangent_ES_in[];\n"\
+"in vec4 Color_ES_in[];\n"\
+"in vec4 PrimaryLightDir_ES_in[];\n"\
+"in vec2 TexCoord2_ES_in[];\n"\
+"in vec3 Blending_ES_in[];\n"\
+"in float Slope_ES_in[];\n"\
+"in float usingSteepMap_ES_in[];\n"\
+"\n"\
+"out vec3 WorldPos_FS_in;\n"\
+"out vec2 TexCoord_FS_in;\n"\
+"out vec3 Normal_FS_in;\n"\
+"out vec3 ViewDir_FS_in;\n"\
+"out vec4 Tangent_FS_in;\n"\
+"out vec4 Bitangent_FS_in;\n"\
+"out vec4 Color_FS_in;\n"\
+"out vec4 PrimaryLightDir_FS_in;\n"\
+"out vec2 TexCoord2_FS_in;\n"\
+"out vec3 Blending_FS_in;\n"\
+"out float Slope_FS_in;\n"\
+"out float usingSteepMap_FS_in;\n"\
+"\n"\
+"float interpolate1D(float v0, float v1, float v2)\n"\
+"{\n"\
+"   	return float(gl_TessCoord.x) * v0 + float(gl_TessCoord.y) * v1 + float(gl_TessCoord.z) * v2;\n"\
+"}\n"\
+"\n"\
+"vec2 interpolate2D(vec2 v0, vec2 v1, vec2 v2)\n"\
+"{\n"\
+"   	return vec2(gl_TessCoord.x) * v0 + vec2(gl_TessCoord.y) * v1 + vec2(gl_TessCoord.z) * v2;\n"\
+"}\n"\
+"\n"\
+"vec3 interpolate3D(vec3 v0, vec3 v1, vec3 v2)\n"\
+"{\n"\
+"   	return vec3(gl_TessCoord.x) * v0 + vec3(gl_TessCoord.y) * v1 + vec3(gl_TessCoord.z) * v2;\n"\
+"}\n"\
+"\n"\
+"vec4 interpolate4D(vec4 v0, vec4 v1, vec4 v2)\n"\
+"{\n"\
+"   	return vec4(gl_TessCoord.x) * v0 + vec4(gl_TessCoord.y) * v1 + vec4(gl_TessCoord.z) * v2;\n"\
+"}\n"\
+"\n"\
+"void main()\n"\
+"{\n"\
+"   	ViewDir_FS_in = interpolate3D(ViewDir_ES_in[0], ViewDir_ES_in[1], ViewDir_ES_in[2]);\n"\
+"   	Tangent_FS_in = interpolate4D(Tangent_ES_in[0], Tangent_ES_in[1], Tangent_ES_in[2]);\n"\
+"   	Bitangent_FS_in = interpolate4D(Bitangent_ES_in[0], Bitangent_ES_in[1], Bitangent_ES_in[2]);\n"\
+"   	Color_FS_in = interpolate4D(Color_ES_in[0], Color_ES_in[1], Color_ES_in[2]);\n"\
+"   	PrimaryLightDir_FS_in = interpolate4D(PrimaryLightDir_ES_in[0], PrimaryLightDir_ES_in[1], PrimaryLightDir_ES_in[2]);\n"\
+"   	TexCoord2_FS_in = interpolate2D(TexCoord2_ES_in[0], TexCoord2_ES_in[1], TexCoord2_ES_in[2]);\n"\
+"   	Blending_FS_in = interpolate3D(Blending_ES_in[0], Blending_ES_in[1], Blending_ES_in[2]);\n"\
+"		Slope_FS_in = interpolate1D(Slope_ES_in[0], Slope_ES_in[1], Slope_ES_in[2]);\n"\
+"		usingSteepMap_FS_in = interpolate1D(usingSteepMap_ES_in[0], usingSteepMap_ES_in[1], usingSteepMap_ES_in[2]);\n"\
+"\n"\
+"//   	ViewDir_FS_in = ViewDir_ES_in[0];\n"\
+"//   	Tangent_FS_in = Tangent_ES_in[0];\n"\
+"//   	Bitangent_FS_in = Bitangent_ES_in[0];\n"\
+"//   	Color_FS_in = Color_ES_in[0];\n"\
+"//   	PrimaryLightDir_FS_in = PrimaryLightDir_ES_in[0];\n"\
+"//   	TexCoord2_FS_in = interpolate2D(TexCoord2_ES_in[0], TexCoord2_ES_in[1], TexCoord2_ES_in[2]);\n"\
+"//   	Blending_FS_in = Blending_ES_in[0];\n"\
+"//		Slope_FS_in = Slope_ES_in[0];\n"\
+"//		usingSteepMap_FS_in = usingSteepMap_ES_in[0];\n"\
+"\n"\
+"   	// Interpolate the attributes of the output vertex using the barycentric coordinates\n"\
+"   	TexCoord_FS_in = interpolate2D(TexCoord_ES_in[0], TexCoord_ES_in[1], TexCoord_ES_in[2]);\n"\
+"   	Normal_FS_in = interpolate3D(Normal_ES_in[0], Normal_ES_in[1], Normal_ES_in[2]);\n"\
+"   	Normal_FS_in = normalize(Normal_FS_in);\n"\
+"   	WorldPos_FS_in = interpolate3D(WorldPos_ES_in[0], WorldPos_ES_in[1], WorldPos_ES_in[2]);\n"\
+"\n"\
+"   	// Displace the vertex along the normal\n"\
+"//   	float Displacement = texture(gDisplacementMap, TexCoord_FS_in.xy).x;\n"\
+"   	float Displacement = 1.0 - clamp(texture(gDisplacementMap, TexCoord_FS_in.xy).a, 0.0, 1.0);\n"\
+"//mat3 tangentToWorld = mat3(Tangent_FS_in.xyz, Bitangent_FS_in.xyz, Normal_FS_in.xyz);\n"\
+"//   	WorldPos_FS_in += (tangentToWorld * Normal_FS_in) * Displacement * gDispFactor;\n"\
+"   	WorldPos_FS_in += Normal_FS_in * Displacement * gDispFactor;\n"\
+"   	gl_Position = gVP * vec4(WorldPos_FS_in, 1.0);\n"\
+"//		ViewDir_FS_in = u_ViewOrigin - WorldPos_FS_in;\n"\
+"}\n";
+#endif
+
 
 #ifdef PN_TRIANGLES_TESSELATION
 const char fallbackShader_genericTessControl_cp[] = 
@@ -573,6 +754,10 @@ static uniformInfo_t uniformsInfo[] =
 	{ "u_NormalMap3",   GLSL_INT, 1 },
 	{ "u_DeluxeMap",   GLSL_INT, 1 },
 	{ "u_SpecularMap", GLSL_INT, 1 },
+	{ "u_PositionMap", GLSL_INT, 1 },
+	{ "u_WaterPositionMap", GLSL_INT, 1 },
+	{ "u_HeightMap", GLSL_INT, 1 },
+	{ "u_GlowMap", GLSL_INT, 1 },
 
 	{ "u_TextureMap", GLSL_INT, 1 },
 	{ "u_LevelsMap",  GLSL_INT, 1 },
@@ -633,6 +818,7 @@ static uniformInfo_t uniformsInfo[] =
 	{ "u_ModelViewProjectionMatrix", GLSL_MAT16, 1 },
 	{ "u_invProjectionMatrix", GLSL_MAT16, 1 },
 	{ "u_invEyeProjectionMatrix", GLSL_MAT16, 1 },
+	{ "u_invModelViewMatrix", GLSL_MAT16, 1 },
 	{ "u_ProjectionMatrix",               GLSL_MAT16, 1 },
 	{ "u_ModelViewMatrix",               GLSL_MAT16, 1 },
 	{ "u_ViewMatrix",               GLSL_MAT16, 1 },
@@ -667,7 +853,6 @@ static uniformInfo_t uniformsInfo[] =
 
 	// UQ1: Added...
 	{ "u_Dimensions",           GLSL_VEC2, 1 },
-	{ "u_HeightMap",			GLSL_INT, 1 },
 	{ "u_Local0",				GLSL_VEC4, 1  },
 	{ "u_Local1",				GLSL_VEC4, 1  },
 	{ "u_Local2",				GLSL_VEC4, 1  },
@@ -878,10 +1063,12 @@ static void GLSL_GetShaderHeader( GLenum shaderType, const GLcharARB *extra, cha
 	{
 		Q_strcat(dest, size, "#define attribute in\n");
 		Q_strcat(dest, size, "#define varying out\n");
+		Q_strcat(dest, size, va("#ifndef MATERIAL_LAST\n#define MATERIAL_LAST %f\n#endif\n", (float)MATERIAL_LAST));
 	}
 	else if(shaderType == GL_TESS_CONTROL_SHADER)
 	{
 		Q_strcat(dest, size, va("#ifndef r_FBufScale\n#define r_FBufScale vec2(%f, %f)\n#endif\n", fbufWidthScale, fbufHeightScale));
+		Q_strcat(dest, size, va("#ifndef MATERIAL_LAST\n#define MATERIAL_LAST %f\n#endif\n", (float)MATERIAL_LAST));
 
 		if (extra)
 		{
@@ -896,6 +1083,7 @@ static void GLSL_GetShaderHeader( GLenum shaderType, const GLcharARB *extra, cha
 	else if(shaderType == GL_TESS_EVALUATION_SHADER)
 	{
 		Q_strcat(dest, size, va("#ifndef r_FBufScale\n#define r_FBufScale vec2(%f, %f)\n#endif\n", fbufWidthScale, fbufHeightScale));
+		Q_strcat(dest, size, va("#ifndef MATERIAL_LAST\n#define MATERIAL_LAST %f\n#endif\n", (float)MATERIAL_LAST));
 
 		if (extra)
 		{
@@ -910,6 +1098,7 @@ static void GLSL_GetShaderHeader( GLenum shaderType, const GLcharARB *extra, cha
 	else if(shaderType == GL_GEOMETRY_SHADER)
 	{
 		Q_strcat(dest, size, va("#ifndef r_FBufScale\n#define r_FBufScale vec2(%f, %f)\n#endif\n", fbufWidthScale, fbufHeightScale));
+		Q_strcat(dest, size, va("#ifndef MATERIAL_LAST\n#define MATERIAL_LAST %f\n#endif\n", (float)MATERIAL_LAST));
 
 		if (extra)
 		{
@@ -999,6 +1188,7 @@ static void GLSL_GetShaderHeader( GLenum shaderType, const GLcharARB *extra, cha
 								GL_REPLACE));
 
 	Q_strcat(dest, size, va("#ifndef r_FBufScale\n#define r_FBufScale vec2(%f, %f)\n#endif\n", fbufWidthScale, fbufHeightScale));
+	Q_strcat(dest, size, va("#ifndef MATERIAL_LAST\n#define MATERIAL_LAST %f\n#endif\n", (float)MATERIAL_LAST));
 
 	if (extra)
 	{
@@ -1266,15 +1456,28 @@ static bool GLSL_IsGPUShaderCompiled (GLuint shader)
 }
 
 extern void FBO_AttachTextureImage(image_t *img, int index);
+extern void R_AttachFBOTextureDepth(int texId);
+extern void SetViewportAndScissor( void );
+extern void FBO_SetupDrawBuffers();
+extern qboolean R_CheckFBO(const FBO_t * fbo);
 
 void GLSL_AttachTextures( void )
 {// Moved here for convenience...
 	FBO_AttachTextureImage(tr.renderImage, 0);
 	FBO_AttachTextureImage(tr.glowImage, 1);
-	FBO_AttachTextureImage(tr.normalDetailedImage, 2);
-	FBO_AttachTextureImage(tr.foliageImage, 3);
-	//FBO_AttachTextureImage(tr.positionMapImage, 4);
-	//FBO_AttachTextureImage(tr.normalImage, 3);
+	FBO_AttachTextureImage(tr.renderNormalImage, 2);
+	FBO_AttachTextureImage(tr.renderPositionMapImage, 3);
+	//R_AttachFBOTextureDepth(tr.renderDepthImage->texnum);
+}
+
+void GLSL_AttachWaterTextures( void )
+{// To output dummy textures on waters in RB_IterateStagesGeneric...
+	FBO_AttachTextureImage(tr.genericFBOImage, 0); // dummy
+	FBO_AttachTextureImage(tr.genericFBO2Image, 1); // dummy
+	FBO_AttachTextureImage(tr.genericFBO3Image, 2); // dummy
+	FBO_AttachTextureImage(tr.waterPositionMapImage, 3); // water positions
+	//R_AttachFBOTextureDepth(tr.waterDepthImage->texnum);  // dummy
+	//R_CheckFBO(tr.renderFbo);
 }
 
 static bool GLSL_EndLoadGPUShader (shaderProgram_t *program)
@@ -1324,10 +1527,8 @@ static bool GLSL_EndLoadGPUShader (shaderProgram_t *program)
 
 	qglBindFragDataLocation (program->program, 0, "out_Color");
 	qglBindFragDataLocation (program->program, 1, "out_Glow");
-	qglBindFragDataLocation (program->program, 2, "out_DetailedNormal");
-	qglBindFragDataLocation (program->program, 3, "out_FoliageMap");
-	//qglBindFragDataLocation (program->program, 4, "out_PositionMap");
-	//qglBindFragDataLocation (program->program, 3, "out_Normal");
+	qglBindFragDataLocation (program->program, 2, "out_Normal");
+	qglBindFragDataLocation (program->program, 3, "out_Position");
 
 	if(attribs & ATTR_POSITION)
 		qglBindAttribLocation(program->program, ATTR_INDEX_POSITION, "attr_Position");
@@ -2703,7 +2904,7 @@ int GLSL_BeginLoadGPUShaders(void)
 		Q_strcat(extradefines, 1024, "#define USE_SPECULARMAP\n");
 	}
 
-	if (r_cubeMapping->integer)
+	if (r_cubeMapping->integer >= 1)
 		Q_strcat(extradefines, 1024, "#define USE_CUBEMAP\n");
 
 	Q_strcat(extradefines, 1024, "#define USE_SHADOWMAP\n");
@@ -2740,7 +2941,7 @@ int GLSL_BeginLoadGPUShaders(void)
 	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
 	extradefines[0] = '\0';
 
-	if (!GLSL_BeginLoadGPUShader(&tr.sssShader, "sss", attribs, qtrue, qfalse, qfalse, extradefines, qfalse, NULL, fallbackShader_sss_vp, fallbackShader_sss_fp, NULL, NULL, NULL))
+	if (!GLSL_BeginLoadGPUShader(&tr.sssShader, "sss", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_sss_vp, fallbackShader_sss_fp, NULL, NULL, NULL))
 	{
 		ri->Error(ERR_FATAL, "Could not load sss shader!");
 	}
@@ -2748,7 +2949,7 @@ int GLSL_BeginLoadGPUShaders(void)
 	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
 	extradefines[0] = '\0';
 
-	if (!GLSL_BeginLoadGPUShader(&tr.sss2Shader, "sss2", attribs, qtrue, qfalse, qfalse, extradefines, qfalse, NULL, fallbackShader_sss2_vp, fallbackShader_sss2_fp, NULL, NULL, NULL))
+	if (!GLSL_BeginLoadGPUShader(&tr.sss2Shader, "sss2", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_sss2_vp, fallbackShader_sss2_fp, NULL, NULL, NULL))
 	{
 		ri->Error(ERR_FATAL, "Could not load sss2 shader!");
 	}

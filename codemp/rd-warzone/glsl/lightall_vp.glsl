@@ -8,6 +8,7 @@ attribute vec2 attr_TexCoord0;
 out vec3 Normal_CS_in;
 out vec2 TexCoord_CS_in;
 out vec4 WorldPos_CS_in;
+out vec3 ViewDir_CS_in;
 out vec4 Tangent_CS_in;
 out vec4 Bitangent_CS_in;
 out vec4 Color_CS_in;
@@ -276,6 +277,8 @@ void main()
 	vec4 preMMtangent = vec4(tangent, 0.0);
 	vec4 preMMbitangent = vec4(cross(normal, tangent) * (attr_Tangent.w * 2.0 - 1.0), 0.0);
 
+	var_vertPos = position.xyz;
+
 #if defined(USE_MODELMATRIX)
 	position  = (u_ModelMatrix * vec4(position, 1.0)).xyz;
 	normal    = (u_ModelMatrix * vec4(normal,   0.0)).xyz;
@@ -305,8 +308,6 @@ void main()
 	var_Normal    = vec4(normal,    viewDir.x);
 	var_Tangent   = vec4(tangent,   viewDir.y);
 	var_Bitangent = vec4(bitangent, viewDir.z);
-
-	var_vertPos = position.xyz;
 
 	var_nonTCtexCoords = attr_TexCoord0.st;
 
@@ -369,6 +370,8 @@ void main()
   WorldPos_CS_in = vec4(preMMPos, 1.0);
   TexCoord_CS_in = var_TexCoords.xy;
   Normal_CS_in = -preMMNorm.xyz;//-var_Normal.xyz;
+  //Normal_CS_in = preMMNorm.xyz;//-preMMNorm.xyz;//-var_Normal.xyz;
+  ViewDir_CS_in = var_ViewDir;
   //Normal_CS_in = -var_Normal.xyz;
   //Tangent_CS_in = preMMtangent;//var_Tangent;
   //Bitangent_CS_in = preMMbitangent;//var_Bitangent;

@@ -482,9 +482,26 @@ to actually render the visible surfaces for this view
 =================
 */
 extern qboolean SUN_VISIBLE;
+extern float MAP_WATER_LEVEL;
+
+void RB_ClearWaterPositionMap ( void )
+{
+#ifdef __USE_WATERMAP__
+	if (r_glslWater->integer && MAP_WATER_LEVEL > -131072.0)
+	{
+		FBO_Bind(tr.waterFbo);
+		qglColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+		qglClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+		qglClear( GL_COLOR_BUFFER_BIT );
+		FBO_Bind(NULL);
+	}
+#endif //__USE_WATERMAP__
+}
 
 void RB_BeginDrawingView (void) {
 	int clearBits = 0;
+
+	RB_ClearWaterPositionMap();
 
 	// sync with gl if needed
 #ifdef __USE_QGL_FINISH__
@@ -635,9 +652,10 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 	int             oldCubemapIndex = -1;
 	int				oldDepthRange = 0;
 	uint64_t		oldSort = (uint64_t) -1;
-	qboolean		CUBEMAPPING = (qboolean)r_cubeMapping->integer;
-
+	qboolean		CUBEMAPPING = qfalse;
 	float			depth[2];
+
+	if (r_cubeMapping->integer >= 1) CUBEMAPPING = qtrue;
 
 	if (((backEnd.refdef.rdflags & RDF_BLUR) || (tr.viewParms.flags & VPF_SHADOWPASS) /*|| (backEnd.viewParms.flags & VPF_DEPTHSHADOW)*/)) CUBEMAPPING = qfalse;
 
@@ -700,7 +718,7 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 		}
 		else
 		{
-			if (r_cubeMapping->integer >= 2)
+			if (r_cubeMapping->integer >= 1)
 			{
 				newCubemapIndex = drawSurf->cubemapIndex;
 			}
@@ -2181,7 +2199,9 @@ const void *RB_PostProcess(const void *data)
 
 	if (srcFbo)
 	{
-		FBO_t *currentFbo = srcFbo;
+		FBO_FastBlit(tr.renderFbo, NULL, tr.genericFbo3, NULL, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+
+		FBO_t *currentFbo = tr.genericFbo3;
 		FBO_t *currentOutFbo = tr.genericFbo;
 
 		//
@@ -2194,17 +2214,17 @@ const void *RB_PostProcess(const void *data)
 			SCREEN_BLUR = qtrue;
 		}
 
-		if (!SCREEN_BLUR && r_glslWater->integer >= 2)
+		if (!SCREEN_BLUR && r_glslWater->integer)
 		{
 			RB_WaterPost(currentFbo, srcBox, currentOutFbo, dstBox);
 			RB_SwapFBOs( &currentFbo, &currentOutFbo);
 		}
 
-		if (r_underwater->integer && (backEnd.refdef.rdflags & RDF_UNDERWATER))
+		/*if (r_underwater->integer && (backEnd.refdef.rdflags & RDF_UNDERWATER))
 		{
 			RB_Underwater(currentFbo, srcBox, currentOutFbo, dstBox);
 			RB_SwapFBOs( &currentFbo, &currentOutFbo);
-		}
+		}*/
 
 		if (!SCREEN_BLUR && r_fxaa->integer)
 		{
@@ -2423,7 +2443,8 @@ const void *RB_PostProcess(const void *data)
 			RB_SwapFBOs( &currentFbo, &currentOutFbo);
 		}
 
-		FBO_Blit(currentFbo, srcBox, NULL, srcFbo, dstBox, NULL, NULL, 0);
+		//FBO_Blit(currentFbo, srcBox, NULL, srcFbo, dstBox, NULL, NULL, 0);
+		FBO_FastBlit(currentFbo, NULL, srcFbo, NULL, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 
 		//
 		// End UQ1 Added...
@@ -2528,7 +2549,7 @@ const void *RB_PostProcess(const void *data)
 	}*/
 
 #if 0
-	if (r_cubeMapping->integer && tr.numCubemaps)
+	if (r_cubeMapping->integer >= 1 && tr.numCubemaps)
 	{
 		vec4i_t dstBox;
 		int cubemapIndex = R_CubemapForPoint( backEnd.viewParms.ori.origin );

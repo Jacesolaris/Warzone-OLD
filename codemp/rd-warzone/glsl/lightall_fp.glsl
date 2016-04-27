@@ -46,6 +46,11 @@ uniform vec4				u_Local9;
 
 #define WATER_LEVEL			u_Local6.a
 
+uniform mat4				u_ModelViewProjectionMatrix;
+uniform mat4				u_ModelMatrix;
+uniform mat4				u_invEyeProjectionMatrix;
+uniform mat4				u_ModelViewMatrix;
+
 uniform vec4				u_EnableTextures;
 
 uniform vec3				u_PrimaryLightColor;
@@ -139,10 +144,8 @@ varying float				var_usingSteepMap;
 
 
 out vec4 out_Glow;
-//out vec4 out_Normal;
-//out vec4 out_PositionMap;
-out vec4 out_DetailedNormal;
-out vec4 out_FoliageMap;
+out vec4 out_Position;
+out vec4 out_Normal;
 
 
 vec3 vLocalSeed;
@@ -490,7 +493,7 @@ void main()
 	//if (u_Local6.g > 0.0 && m_vertPos.z <= WATER_LEVEL + 32.0)
 	{
 		//gl_FragColor = vec4(m_Normal.xyz * 0.5 + 0.5, 1.0);
-		gl_FragColor = texture2D( u_SteepMap2, texCoords);
+		gl_FragColor = vec4(vec3(texture2D( u_NormalMap, texCoords).a), 1.0);
 
 		#if defined(USE_GLOW_BUFFER)
 			out_Glow = gl_FragColor;
@@ -498,17 +501,8 @@ void main()
 			out_Glow = vec4(0.0);
 		#endif
 
-		out_DetailedNormal = vec4(m_Normal.xyz * 0.5 + 0.5, 0.2);
-		//out_PositionMap = vec4(gl_FragCoord.xyz, 0.0);
-
-		if (u_Local1.a == 20 || u_Local1.a == 19 || ((u_Local1.a == 5 || u_Local1.a == 6) && var_usingSteepMap == 0.0)) 
-		{// (Foliage/Plants), (billboard trees), ShortGrass, LongGrass
-			out_FoliageMap.rgba = vec4(1.0, 1.0, 0.0, 0.0);
-		}
-		else
-		{
-			out_FoliageMap.rgba = vec4(1.0, 0.0, 0.0, 0.0);
-		}
+		out_Normal = vec4(m_Normal.xyz * 0.5 + 0.5, 0.2);
+		out_Position = vec4(m_vertPos, u_Local1.a / MATERIAL_LAST);
 		return;
 	}
 	#endif //defined(USE_TESSELLATION)
@@ -828,15 +822,6 @@ void main()
 		out_Glow = vec4(0.0);
 	#endif
 
-	out_DetailedNormal = vec4(DETAILED_NORMAL.xyz * 0.5 + 0.5, specular.a / 8.0);
-	//out_PositionMap = vec4(gl_FragCoord.xyz, 0.0);
-
-	if (u_Local1.a == 20 || u_Local1.a == 19 || ((u_Local1.a == 5 || u_Local1.a == 6) && var_usingSteepMap == 0.0)) 
-	{// (Foliage/Plants), (billboard trees), ShortGrass, LongGrass
-		out_FoliageMap.rgba = vec4(1.0, 1.0, 0.0, 0.0);
-	}
-	else
-	{
-		out_FoliageMap.rgba = vec4(1.0, 0.0, 0.0, 0.0);
-	}
+	out_Normal = vec4(DETAILED_NORMAL.xyz * 0.5 + 0.5, specular.a / 8.0);
+	out_Position = vec4(m_vertPos, u_Local1.a / MATERIAL_LAST);
 }

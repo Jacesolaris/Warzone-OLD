@@ -1592,12 +1592,12 @@ void RB_SSAO(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 	GL_BindToTMU(tr.random2KImage[0], TB_SPECULARMAP);
 
 	GLSL_SetUniformInt(&tr.ssaoShader, UNIFORM_NORMALMAP, TB_NORMALMAP);
-	GL_BindToTMU(tr.normalDetailedImage, TB_NORMALMAP);
+	GL_BindToTMU(tr.renderNormalImage, TB_NORMALMAP);
 	
 	{
 		vec4_t viewInfo;
-		float zmax = backEnd.viewParms.zFar;
-		//float zmax = 2048.0;//backEnd.viewParms.zFar;
+		//float zmax = backEnd.viewParms.zFar;
+		float zmax = 1024.0;//backEnd.viewParms.zFar;
 		float ymax = zmax * tan(backEnd.viewParms.fovY * M_PI / 360.0f);
 		float xmax = zmax * tan(backEnd.viewParms.fovX * M_PI / 360.0f);
 		float zmin = r_znear->value;
@@ -1615,7 +1615,7 @@ void RB_SSAO(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 
 	{
 		vec4_t local0;
-		VectorSet4(local0, r_testvalue0->value, r_testvalue1->value, r_testshaderValue1->value, 0.0);
+		VectorSet4(local0, r_testvalue0->value, r_testvalue1->value, r_testvalue2->value, r_testvalue3->value);
 		GLSL_SetUniformVec4(&tr.ssaoShader, UNIFORM_LOCAL0, local0);
 	}
 
@@ -1672,7 +1672,7 @@ void RB_RBM(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 	GLSL_SetUniformInt(&tr.rbmShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
 	GL_BindToTMU(hdrFbo->colorImage[0], TB_DIFFUSEMAP);
 	GLSL_SetUniformInt(&tr.rbmShader, UNIFORM_NORMALMAP, TB_NORMALMAP);
-	GL_BindToTMU(tr.normalDetailedImage, TB_NORMALMAP);
+	GL_BindToTMU(tr.renderNormalImage, TB_NORMALMAP);
 	GLSL_SetUniformInt(&tr.rbmShader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
 	GL_BindToTMU(tr.renderDepthImage, TB_LIGHTMAP);
 	
@@ -1704,6 +1704,8 @@ void RB_RBM(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 	FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.rbmShader, color, 0);
 }
 
+extern float MAP_WATER_LEVEL;
+
 void RB_WaterPost(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 {
 	vec4_t		color;
@@ -1721,18 +1723,70 @@ void RB_WaterPost(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 	GLSL_SetUniformMatrix16(shader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
 	GLSL_SetUniformMatrix16(shader, UNIFORM_VIEWPROJECTIONMATRIX, backEnd.viewParms.projectionMatrix);
 
+	matrix_t trans, model, mvp, invMvp;
+	Matrix16Translation( backEnd.viewParms.ori.origin, trans );
+	Matrix16Multiply( backEnd.viewParms.world.modelMatrix, trans, model );
+	Matrix16Multiply(backEnd.viewParms.projectionMatrix, model, mvp);
+	Matrix16SimpleInverse( glState.modelviewProjection/*mvp*/, invMvp);
+	GLSL_SetUniformMatrix16(shader, UNIFORM_INVEYEPROJECTIONMATRIX, invMvp);
+
+	/*
+	heightMap – height-map used for waves generation as described in the section “Modifying existing geometry”
+	backBufferMap – current contents of the back buffer
+	positionMap – texture storing scene position vectors
+	normalMap – texture storing normal vectors for normal mapping as described in the section “The computation of normal vectors”
+	foamMap – texture containing foam – in my case it is a photo of foam converted to greyscale
+	reflectionMap – texture containing reflections rendered as described in the section “Reflection and refraction of light”
+
+	uniform sampler2D u_HeightMap;	  // water heightmap
+	uniform sampler2D u_DiffuseMap;   // backBufferMap
+	uniform sampler2D u_PositionMap;  // map positions
+	uniform sampler2D u_WaterPositionMap; // water positions
+	uniform sampler2D u_NormalMap;	  // water normals
+	uniform sampler2D u_OverlayMap;   // foamMap
+	uniform sampler2D u_SpecularMap;  // reflectionMap
+	*/
+
+	GLSL_SetUniformInt(shader, UNIFORM_HEIGHTMAP, TB_HEIGHTMAP);
+	GL_BindToTMU(tr.waterHeightImage, TB_HEIGHTMAP);
+	
 	GLSL_SetUniformInt(shader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
 	GL_BindToTMU(hdrFbo->colorImage[0], TB_DIFFUSEMAP);
-	//GLSL_SetUniformInt(shader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
-	//GL_BindToTMU(tr.renderDepthImage, TB_LIGHTMAP);
-	//GLSL_SetUniformInt(shader, UNIFORM_NORMALMAP, TB_NORMALMAP);
-	//GL_BindToTMU(tr.normalDetailedImage, TB_NORMALMAP);
-	GLSL_SetUniformInt(shader, UNIFORM_SPECULARMAP, TB_SPECULARMAP);
-	GL_BindToTMU(tr.renderFbo->colorImage[3]/*tr.foliageImage*/, TB_SPECULARMAP);
-	//GLSL_SetUniformInt(shader, UNIFORM_DELUXEMAP, TB_DELUXEMAP);
-	//GL_BindToTMU(tr.positionMapImage/*tr.random2KImage[0]*/, TB_DELUXEMAP);
-	//GLSL_SetUniformInt(shader, UNIFORM_OVERLAYMAP, TB_OVERLAYMAP);
-	//GL_BindToTMU(tr.random2KImage[1], TB_OVERLAYMAP);
+
+	GLSL_SetUniformInt(shader, UNIFORM_POSITIONMAP, TB_POSITIONMAP);
+	GL_BindToTMU(tr.renderPositionMapImage, TB_POSITIONMAP);
+
+	GLSL_SetUniformInt(shader, UNIFORM_WATERPOSITIONMAP, TB_WATERPOSITIONMAP);
+	GL_BindToTMU(tr.waterPositionMapImage, TB_WATERPOSITIONMAP);
+
+	GLSL_SetUniformInt(shader, UNIFORM_NORMALMAP, TB_NORMALMAP);
+	GL_BindToTMU(tr.waterNormalImage, TB_NORMALMAP);
+
+	GLSL_SetUniformInt(shader, UNIFORM_OVERLAYMAP, TB_OVERLAYMAP);
+	GL_BindToTMU(tr.waterFoamImage, TB_OVERLAYMAP);
+
+	GLSL_SetUniformVec3(shader, UNIFORM_VIEWORIGIN,  backEnd.refdef.vieworg);
+	GLSL_SetUniformFloat(shader, UNIFORM_TIME, backEnd.refdef.floatTime);
+
+	
+	vec3_t out;
+	float dist = backEnd.viewParms.zFar / 1.75;
+ 	VectorMA( backEnd.refdef.vieworg, dist, backEnd.refdef.sunDir, out );
+	GLSL_SetUniformVec4(shader, UNIFORM_PRIMARYLIGHTORIGIN,  out);
+
+	GLSL_SetUniformVec3(shader, UNIFORM_PRIMARYLIGHTCOLOR,   backEnd.refdef.sunCol);
+
+	{
+		vec4_t loc;
+		VectorSet4(loc, r_testvalue0->value, r_testvalue1->value, r_testvalue2->value, r_testvalue3->value);
+		GLSL_SetUniformVec4(shader, UNIFORM_LOCAL0, loc);
+	}
+
+	{
+		vec4_t loc;
+		VectorSet4(loc, MAP_WATER_LEVEL, 0.0, 0.0, 0.0);
+		GLSL_SetUniformVec4(shader, UNIFORM_LOCAL1, loc);
+	}
 	
 	{
 		vec2_t screensize;
@@ -1744,8 +1798,8 @@ void RB_WaterPost(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 
 	{
 		vec4_t viewInfo;
-		//float zmax = backEnd.viewParms.zFar;
-		float zmax = 2048.0;//backEnd.viewParms.zFar;
+		float zmax = backEnd.viewParms.zFar;
+		//float zmax = 2048.0;//backEnd.viewParms.zFar;
 		float ymax = zmax * tan(backEnd.viewParms.fovY * M_PI / 360.0f);
 		float xmax = zmax * tan(backEnd.viewParms.fovX * M_PI / 360.0f);
 		float zmin = r_znear->value;
@@ -1777,6 +1831,7 @@ void RB_SSS(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 	GLSL_BindProgram(shader);
 
 	GLSL_SetUniformMatrix16(shader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
+	//GLSL_SetUniformMatrix16(shader, UNIFORM_INVEYEPROJECTIONMATRIX, glState.invEyeProjection);
 	
 	matrix_t trans, model, mvp, invTrans, invMvp, normalMatrix, vp, invVp, invP;
 
@@ -1784,8 +1839,8 @@ void RB_SSS(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 	Matrix16Multiply( backEnd.viewParms.world.modelMatrix, trans, model );
 	Matrix16Multiply(backEnd.viewParms.projectionMatrix, model, mvp);
 	Matrix16Multiply(backEnd.viewParms.projectionMatrix, backEnd.viewParms.world.modelMatrix, vp);
-	//Matrix16SimpleInverse( mvp, invMvp);
-	Matrix16SimpleInverse( glState.modelviewProjection, invMvp);
+
+	Matrix16SimpleInverse( mvp, invMvp);
 	Matrix16SimpleInverse( vp, invVp);
 	Matrix16SimpleInverse( model, normalMatrix);
 	//Matrix16SimpleInverse( trans, invTrans);
@@ -1794,62 +1849,14 @@ void RB_SSS(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 
 	GLSL_SetUniformMatrix16(shader, UNIFORM_VIEWPROJECTIONMATRIX, vp);
 	GLSL_SetUniformMatrix16(shader, UNIFORM_MODELMATRIX, backEnd.ori.transformMatrix);
+	//GLSL_SetUniformMatrix16(shader, UNIFORM_INVEYEPROJECTIONMATRIX, invMvp);//glState.invEyeProjection);
 	GLSL_SetUniformMatrix16(shader, UNIFORM_INVEYEPROJECTIONMATRIX, glState.invEyeProjection);
 				
 	GLSL_SetUniformMatrix16(shader, UNIFORM_PROJECTIONMATRIX, glState.projection);
 	GLSL_SetUniformMatrix16(shader, UNIFORM_MODELVIEWMATRIX, model);
 	GLSL_SetUniformMatrix16(shader, UNIFORM_VIEWMATRIX, trans);
 	GLSL_SetUniformMatrix16(shader, UNIFORM_INVVIEWMATRIX, invTrans);
-	//GLSL_SetUniformMatrix16(shader, UNIFORM_NORMALMATRIX, invVp);//model);//normalMatrix);
-	
-	//GLSL_SetUniformMatrix16(shader, UNIFORM_NORMALMATRIX, backEnd.ori.transformMatrix);
 
-	/*
-	switch(r_sss->integer)
-	{
-	case 3:
-		GLSL_SetUniformMatrix16(shader, UNIFORM_NORMALMATRIX, backEnd.ori.transformMatrix);
-		break;
-	case 4:
-		GLSL_SetUniformMatrix16(shader, UNIFORM_NORMALMATRIX, invTrans);
-		break;
-	case 5:
-		GLSL_SetUniformMatrix16(shader, UNIFORM_NORMALMATRIX, trans);
-		break;
-	case 6:
-		GLSL_SetUniformMatrix16(shader, UNIFORM_NORMALMATRIX, model);
-		break;
-	case 7:
-		GLSL_SetUniformMatrix16(shader, UNIFORM_NORMALMATRIX, glState.projection);
-		break;
-	case 8:
-		GLSL_SetUniformMatrix16(shader, UNIFORM_NORMALMATRIX, glState.invEyeProjection);
-		break;
-	case 9:
-		GLSL_SetUniformMatrix16(shader, UNIFORM_NORMALMATRIX, vp);
-		break;
-	case 10:
-		GLSL_SetUniformMatrix16(shader, UNIFORM_NORMALMATRIX, invP);
-		break;
-	case 11:
-		GLSL_SetUniformMatrix16(shader, UNIFORM_NORMALMATRIX, invMvp);
-		break;
-	case 12:
-		GLSL_SetUniformMatrix16(shader, UNIFORM_NORMALMATRIX, invVp);
-		break;
-	case 13:
-		GLSL_SetUniformMatrix16(shader, UNIFORM_NORMALMATRIX, normalMatrix);
-		break;
-	case 14:
-		GLSL_SetUniformMatrix16(shader, UNIFORM_NORMALMATRIX, mvp);
-		break;
-	default:
-		GLSL_SetUniformMatrix16(shader, UNIFORM_NORMALMATRIX, backEnd.ori.transformMatrix);
-		break;
-	}
-	*/
-	
-	//GLSL_SetUniformMatrix16(shader, UNIFORM_NORMALMATRIX, mvp);
 	GLSL_SetUniformMatrix16(shader, UNIFORM_NORMALMATRIX, glState.projection);
 	GLSL_SetUniformMatrix16(shader, UNIFORM_INVPROJECTIONMATRIX, invP);
 
@@ -1861,20 +1868,21 @@ void RB_SSS(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 	GL_BindToTMU(tr.renderDepthImage, TB_LIGHTMAP);
 	GLSL_SetUniformInt(shader, UNIFORM_NORMALMAP, TB_NORMALMAP);
 	GL_BindToTMU(tr.glowImage, TB_NORMALMAP);
-
+	
 	GLSL_SetUniformVec3(shader, UNIFORM_VIEWORIGIN,  backEnd.refdef.vieworg);
+	//vec3_t world;
+	//R_LocalPointToWorld(backEnd.refdef.vieworg, world);
+	//GLSL_SetUniformVec3(shader, UNIFORM_VIEWORIGIN,  world);
 
 	vec3_t out;
 	float dist = backEnd.viewParms.zFar / 1.75;
  	VectorMA( backEnd.refdef.vieworg, dist, /*tr.sunDirection*/backEnd.refdef.sunDir, out );
 	GLSL_SetUniformVec4(shader, UNIFORM_PRIMARYLIGHTORIGIN,  out);
 	//GLSL_SetUniformVec4(shader, UNIFORM_PRIMARYLIGHTORIGIN,  backEnd.refdef.sunDir);
-	
-	if (r_sss->integer < 2)
-	{
-		GLSL_SetUniformInt(shader, UNIFORM_SPECULARMAP, TB_SPECULARMAP);
-		GL_BindToTMU(tr.foliageImage, TB_SPECULARMAP);
-	}
+
+
+	GLSL_SetUniformInt(shader, UNIFORM_POSITIONMAP, TB_POSITIONMAP);
+	GL_BindToTMU(tr.renderPositionMapImage, TB_POSITIONMAP);
 
 	{
 		vec2_t screensize;
@@ -1900,7 +1908,10 @@ void RB_SSS(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 
 	{
 		vec4_t viewInfo;
-		float zmax = backEnd.viewParms.zFar;//2048.0;
+		//float zmax = backEnd.viewParms.zFar;//2048.0;
+		//float zmax = 131072.0;//r_testvalue0->value;//4096.0;
+		float zmax = 16384.0;//r_testvalue0->value;
+		//float zmax = r_testvalue0->value;
 		float ymax = zmax * tan(backEnd.viewParms.fovY * M_PI / 360.0f);
 		float xmax = zmax * tan(backEnd.viewParms.fovX * M_PI / 360.0f);
 		float zmin = r_znear->value;
@@ -1937,7 +1948,7 @@ void RB_HBAO(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 	GLSL_SetUniformInt(shader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
 	GL_BindToTMU(hdrFbo->colorImage[0], TB_DIFFUSEMAP);
 	GLSL_SetUniformInt(shader, UNIFORM_NORMALMAP, TB_NORMALMAP);
-	GL_BindToTMU(tr.normalDetailedImage, TB_NORMALMAP);
+	GL_BindToTMU(tr.renderNormalImage, TB_NORMALMAP);
 	GLSL_SetUniformInt(shader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
 	GL_BindToTMU(tr.renderDepthImage, TB_LIGHTMAP);
 
@@ -2523,7 +2534,7 @@ void RB_SSGI(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 	GLSL_SetUniformInt(shader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
 	GL_BindToTMU(tr.renderDepthImage, TB_LIGHTMAP);
 	GLSL_SetUniformInt(shader, UNIFORM_NORMALMAP, TB_NORMALMAP);
-	GL_BindToTMU(tr.normalDetailedImage, TB_NORMALMAP);
+	GL_BindToTMU(tr.renderNormalImage, TB_NORMALMAP);
 	GLSL_SetUniformInt(shader, UNIFORM_DELUXEMAP, TB_DELUXEMAP);
 	GL_BindToTMU(tr.anamorphicRenderFBOImage[2], TB_DELUXEMAP);
 	GLSL_SetUniformInt(shader, UNIFORM_SPECULARMAP, TB_SPECULARMAP);

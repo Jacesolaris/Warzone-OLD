@@ -3315,6 +3315,76 @@ vec4_t	MAP_GLOW_COLORS[MAX_GLOW_LOCATIONS] = { 0 };
 extern void R_WorldToLocal (const vec3_t world, vec3_t local);
 extern void R_LocalPointToWorld (const vec3_t local, vec3_t world);
 
+static void R_SetupMapGlowsAndWaterPlane( void )
+{
+	NUM_MAP_GLOW_LOCATIONS = 0;
+
+	//
+	// How about we look at the material types and select surfaces that need cubemaps and generate them there instead? :)
+	//
+
+	world_t	*w;
+
+	w = &s_worldData;
+
+//#pragma omp parallel for /*ordered*/ schedule(dynamic) //if (r_multithread->integer > 0)
+	for (int i = 0; i < w->numsurfaces; i++)
+	{// Get a count of how many we need... Add them to temp list if not too close to another...
+		msurface_t *surf =	&w->surfaces[i];
+		vec3_t				surfOrigin;
+		qboolean			bad = qfalse;
+
+		qboolean	hasGlow = qfalse;
+		vec4_t		glowColor = { 0 };
+
+		if (surf->shader)
+		{
+			for ( int stage = 0; stage < MAX_SHADER_STAGES; stage++ )
+			{
+				if (surf->shader->stages[stage] && surf->shader->stages[stage]->glow)
+				{
+					hasGlow = qtrue;
+					VectorCopy4(surf->shader->stages[stage]->bundle[0].image[0]->lightColor, glowColor);
+					break;
+				}
+			}
+		}
+
+		if (surf->cullinfo.type & CULLINFO_SPHERE)
+		{
+			VectorCopy(surf->cullinfo.localOrigin, surfOrigin);
+		}
+		else if (surf->cullinfo.type & CULLINFO_BOX)
+		{
+			surfOrigin[0] = (surf->cullinfo.bounds[0][0] + surf->cullinfo.bounds[1][0]) * 0.5f;
+			surfOrigin[1] = (surf->cullinfo.bounds[0][1] + surf->cullinfo.bounds[1][1]) * 0.5f;
+			surfOrigin[2] = (surf->cullinfo.bounds[0][2] + surf->cullinfo.bounds[1][2]) * 0.5f;
+		}
+		else
+		{
+			continue;
+		}
+
+		if ((surf->shader->surfaceFlags & MATERIAL_MASK) == MATERIAL_WATER)
+		{// While doing this, also find lowest water height, so that we can cull underwater grass drawing...
+			if (surfOrigin[2] < MAP_WATER_LEVEL)
+				MAP_WATER_LEVEL = surfOrigin[2];
+		}
+
+		if (hasGlow && NUM_MAP_GLOW_LOCATIONS < MAX_GLOW_LOCATIONS)
+		{
+			VectorCopy(surfOrigin, MAP_GLOW_LOCATIONS[NUM_MAP_GLOW_LOCATIONS]);
+			VectorCopy4(glowColor, MAP_GLOW_COLORS[NUM_MAP_GLOW_LOCATIONS]);
+			NUM_MAP_GLOW_LOCATIONS++;
+		}
+	}
+
+	if (MAP_WATER_LEVEL >= 131072.0)
+	{// No water plane was found, set to map mins...
+		MAP_WATER_LEVEL = -131072.0;
+	}
+}
+
 static void R_LoadCubemapWaypoints( void )
 {
 	int numCubemaps = 0;
@@ -3386,7 +3456,8 @@ static void R_LoadCubemapWaypoints( void )
 			}
 		}
 
-		if (R_MaterialUsesCubemap( surf->shader->surfaceFlags ))
+		if (R_MaterialUsesCubemap( surf->shader->surfaceFlags )
+			|| (surf->shader->surfaceFlags & MATERIAL_MASK) == MATERIAL_WATER)
 		{// Ok, this surface is shiny... Make a cubemap here...
 			if (surf->cullinfo.type & CULLINFO_SPHERE)
 			{
@@ -3459,8 +3530,8 @@ static void R_LoadCubemapWaypoints( void )
 		}
 	}
 
-	if (MAP_WATER_LEVEL == 131072.0)
-	{// No water plane was found, set to max mins...
+	if (MAP_WATER_LEVEL >= 131072.0)
+	{// No water plane was found, set to map mins...
 		MAP_WATER_LEVEL = -131072.0;
 	}
 
@@ -4318,21 +4389,26 @@ void RE_LoadWorldMap( const char *name ) {
 #endif
 
 	// load cubemaps
-	if (r_cubeMapping->integer)
+	if (r_cubeMapping->integer >= 1)
 	{
 		R_LoadCubemapEntities("misc_cubemap");
+		
 		if (!tr.numCubemaps)
 		{
 			// use deathmatch spawn points as cubemaps
 			//R_LoadCubemapEntities("info_player_deathmatch");
 			// UQ1: Warzone can do better!
-			R_LoadCubemapWaypoints();
+			R_LoadCubemapWaypoints(); // NOTE: Also sets up water plane and glow postions at the same time... Can skip R_SetupMapGlowsAndWaterPlane()
 		}
 
 		if (tr.numCubemaps)
 		{
 			R_AssignCubemapsToWorldSurfaces();
 		}
+	}
+	else
+	{// Cubemaps disabled, need to set up water plane and glow postions anyway...
+		R_SetupMapGlowsAndWaterPlane();
 	}
 
 	// create static VBOS from the world
@@ -4354,7 +4430,7 @@ void RE_LoadWorldMap( const char *name ) {
 	R_LoadMapInfo();
 
 	// Render all cubemaps
-	if (r_cubeMapping->integer && tr.numCubemaps)
+	if (r_cubeMapping->integer >= 1 && tr.numCubemaps)
 	{
 		R_RenderAllCubemaps();
 	}

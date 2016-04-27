@@ -1630,6 +1630,9 @@ extern image_t *skyImage;
 float waveTime = 0.5;
 float waveFreq = 0.1;
 
+extern void GLSL_AttachTextures( void );
+extern void GLSL_AttachWaterTextures( void );
+
 static void RB_IterateStagesGeneric( shaderCommands_t *input )
 {
 	vec4_t	fogDistanceVector, fogDepthVector = {0, 0, 0, 0};
@@ -1716,7 +1719,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 	}
 
 	// UQ1: Calculate some matrixes that rend2 doesn't seem to have (or have correct)...
-	matrix_t trans, model, mvp, invTrans, normalMatrix, vp;
+	matrix_t trans, model, mvp, invTrans, normalMatrix, vp, invMv;
 
 	Matrix16Translation( backEnd.viewParms.ori.origin, trans );
 	Matrix16Multiply( backEnd.viewParms.world.modelMatrix, trans, model );
@@ -1726,6 +1729,13 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 	Matrix16SimpleInverse( trans, invTrans);
 	Matrix16SimpleInverse( backEnd.viewParms.projectionMatrix, normalMatrix);
+
+
+	//GLSL_SetUniformMatrix16(sp, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
+	//GLSL_SetUniformMatrix16(sp, UNIFORM_INVEYEPROJECTIONMATRIX, glState.invEyeProjection);
+	Matrix16SimpleInverse( glState.modelviewProjection, glState.invEyeProjection);
+	Matrix16SimpleInverse( model, invMv);
+
 
 	for ( int stage = 0; stage < MAX_SHADER_STAGES; stage++ )
 	{
@@ -1773,7 +1783,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				//
 				// testing cube map
 				//
-				if (!(tr.viewParms.flags & VPF_NOCUBEMAPS) && input->cubemapIndex && r_cubeMapping->integer)
+				if (!(tr.viewParms.flags & VPF_NOCUBEMAPS) && input->cubemapIndex && r_cubeMapping->integer >= 1)
 				{
 					cubeMapVec[0] = tr.cubemapOrigins[input->cubemapIndex - 1][0] - backEnd.viewParms.ori.origin[0];
 					cubeMapVec[1] = tr.cubemapOrigins[input->cubemapIndex - 1][1] - backEnd.viewParms.ori.origin[1];
@@ -1787,7 +1797,6 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 					{// In range for full effect...
 						cubeMapStrength = 1.0;
 						index |= LIGHTDEF_USE_CUBEMAP;
-						pStage->glslShaderIndex |= LIGHTDEF_USE_CUBEMAP;
 					}
 					else if (dist >= r_cubemapCullRange->value && dist < r_cubemapCullRange->value * mult)
 					{// Further scale the strength of the cubemap by the fade-out distance...
@@ -1797,11 +1806,11 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 						cubeMapStrength = strength;
 						index |= LIGHTDEF_USE_CUBEMAP;
-						pStage->glslShaderIndex |= LIGHTDEF_USE_CUBEMAP;
 					}
 					else
 					{// Out of range completely...
 						cubeMapStrength = 0.0;
+						index &= ~LIGHTDEF_USE_CUBEMAP;
 					}
 				}
 
@@ -1918,7 +1927,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			//
 			// testing cube map
 			//
-			if (!(tr.viewParms.flags & VPF_NOCUBEMAPS) && input->cubemapIndex && r_cubeMapping->integer)
+			if (!(tr.viewParms.flags & VPF_NOCUBEMAPS) && input->cubemapIndex && r_cubeMapping->integer >= 1)
 			{
 				cubeMapVec[0] = tr.cubemapOrigins[input->cubemapIndex - 1][0] - backEnd.viewParms.ori.origin[0];
 				cubeMapVec[1] = tr.cubemapOrigins[input->cubemapIndex - 1][1] - backEnd.viewParms.ori.origin[1];
@@ -1945,6 +1954,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				else
 				{// Out of range completely...
 					cubeMapStrength = 0.0;
+					index &= ~LIGHTDEF_USE_CUBEMAP;
 				}
 			}
 
@@ -1963,70 +1973,38 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			backEnd.pc.c_genericDraws++;
 		}
 
-		if (pStage->isWater && r_glslWater->integer)
+		if (pStage->isWater && r_glslWater->integer && MAP_WATER_LEVEL > -131072.0)
 		{
-			//if (stage <= 0) 
+#ifdef __USE_WATERMAP__
+			if (stage <= 0) 
 			//if (pStage->bundle[TB_DIFFUSEMAP].image[0])
 			{
 				sp = &tr.waterShader;
 				pStage->glslShaderGroup = &tr.waterShader;
 				GLSL_BindProgram(sp);
-				
-				GLSL_SetUniformMatrix16(sp, UNIFORM_MODELMATRIX, backEnd.ori.transformMatrix);
-				GLSL_SetUniformMatrix16(sp, UNIFORM_INVEYEPROJECTIONMATRIX, glState.invEyeProjection);
 
 				RB_SetMaterialBasedProperties(sp, pStage);
-
-				GLSL_SetUniformFloat(sp, UNIFORM_TIME, tess.shaderTime);
-				// Update wave variable
-				//waveTime += waveFreq;
-				//GLSL_SetUniformFloat(sp, UNIFORM_TIME, waveTime);
-
-				GLSL_SetUniformInt(sp, UNIFORM_SPECULARMAP, TB_SPECULARMAP);
-				GL_BindToTMU(tr.random2KImage[0], TB_SPECULARMAP);
-				GLSL_SetUniformInt(sp, UNIFORM_SCREENDEPTHMAP, TB_LEVELSMAP);
-				GL_BindToTMU(tr.renderDepthImage, TB_LEVELSMAP);
 
 				isGeneric = qfalse;
 				isLightAll = qfalse;
 				isWater = qtrue;
-				//multiPass = qtrue;
-				passMax = 8;
-			}
-		}
-//#define EXPERIMENTAL_GRASS // Need a  WorldViewMatrix - how the hell do I do that?
-#ifdef EXPERIMENTAL_GRASS
-		else if (( tess.shader->surfaceFlags & MATERIAL_MASK ) == MATERIAL_SHORTGRASS || ( tess.shader->surfaceFlags & MATERIAL_MASK ) == MATERIAL_LONGGRASS)
-		{
-			if (stage <= 0) 
-			{
-				sp = &tr.grassShader;
-				pStage->glslShaderGroup = &tr.grassShader;
-				GLSL_BindProgram(sp);
-				GLSL_SetUniformFloat(sp, UNIFORM_TIME, tess.shaderTime);
-
-				GLSL_SetUniformMatrix16(sp, UNIFORM_MODELMATRIX, backEnd.ori.transformMatrix);
-				GLSL_SetUniformMatrix16(sp, UNIFORM_INVEYEPROJECTIONMATRIX, glState.invEyeProjection);
-				
-				RB_SetMaterialBasedProperties(sp, pStage);
-
-				GLSL_SetUniformInt(sp, UNIFORM_SPECULARMAP, TB_SPECULARMAP);
-				GL_BindToTMU(tr.grassMaskImage[0], TB_SPECULARMAP);
-				GLSL_SetUniformInt(sp, UNIFORM_SCREENDEPTHMAP, TB_LEVELSMAP);
-				GL_BindToTMU(tr.renderDepthImage, TB_LEVELSMAP);
-
-				isGeneric = qfalse;
-				isLightAll = qfalse;
-				isGrass = qtrue;
-				multiPass = qtrue;
-				passMax = 10;
 			}
 			else
-			{
-				continue;
+			{// Only do one stage on GLSL water...
+				break;
 			}
+#else //!__USE_WATERMAP__
+			sp = &tr.waterShader;
+			pStage->glslShaderGroup = &tr.waterShader;
+			GLSL_BindProgram(sp);
+
+			RB_SetMaterialBasedProperties(sp, pStage);
+
+			isGeneric = qfalse;
+			isLightAll = qfalse;
+			isWater = qtrue;
+#endif //__USE_WATERMAP__
 		}
-#endif //EXPERIMENTAL_GRASS
 		else
 		{
 			if (!sp || !sp->program)
@@ -2062,10 +2040,10 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			{
 				sp2 = &tr.grass2Shader;
 				multiPass = qtrue;
-				passMax = 4;//9;//r_testshaderValue9->integer;
+				passMax = 6;//4//9;//r_testshaderValue9->integer;
 			}
 		}
-		
+
 		while (1)
 		{
 			if (isGrass && passNum > 0 && sp2)
@@ -2108,10 +2086,27 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				}
 			}
 
-			if (isGrass && passNum > 0)
-			{
-				stateBits = GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA | GLS_DEPTHMASK_TRUE | GLS_ATEST_GE_192;
+#ifdef __USE_WATERMAP__
+			if (isWater && r_glslWater->integer && MAP_WATER_LEVEL > -131072.0)
+			{// Attach dummy water output textures...
+				/*if ((tr.viewParms.flags & VPF_SHADOWPASS) || backEnd.depthFill)
+				{// Don't do water on depth or shadow passes...
+					break;
+				}*/
+
+				GLSL_AttachWaterTextures();
+
+				stateBits |= /*GLS_DEPTHTEST_DISABLE |*/ GLS_DEPTHMASK_TRUE; //GLS_DEPTHFUNC_LESS //GLS_DEPTHFUNC_EQUAL //GLS_DEPTHFUNC_GREATER
+				
+				//GLSL_SetUniformInt(sp, UNIFORM_POSITIONMAP, TB_POSITIONMAP);
+				//GL_BindToTMU(tr.renderPositionMapImage, TB_POSITIONMAP);
 			}
+#else //!__USE_WATERMAP__
+			if (isWater && r_glslWater->integer && MAP_WATER_LEVEL > -131072.0)
+			{
+				stateBits = GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA;
+			}
+#endif //__USE_WATERMAP__
 
 			//
 			// UQ1: Split up uniforms by what is actually used...
@@ -2131,6 +2126,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				GLSL_SetUniformMatrix16(sp, UNIFORM_VIEWMATRIX, trans);
 				GLSL_SetUniformMatrix16(sp, UNIFORM_INVVIEWMATRIX, invTrans);
 				GLSL_SetUniformMatrix16(sp, UNIFORM_NORMALMATRIX, normalMatrix);
+				GLSL_SetUniformMatrix16(sp, UNIFORM_INVMODELVIEWMATRIX, invMv);
 
 				GLSL_SetUniformVec3(sp, UNIFORM_LOCALVIEWORIGIN, backEnd.ori.viewOrigin);
 				GLSL_SetUniformFloat(sp, UNIFORM_VERTEXLERP, glState.vertexAttribsInterpolation);
@@ -2194,9 +2190,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 					GLSL_SetUniformVec4(sp, UNIFORM_VERTCOLOR, vertColor);
 				}
 
-				if (pStage->rgbGen == CGEN_LIGHTING_DIFFUSE ||
-					pStage->rgbGen == CGEN_LIGHTING_DIFFUSE_ENTITY ||
-					(pStage->isWater && r_glslWater->integer))
+				if (pStage->rgbGen == CGEN_LIGHTING_DIFFUSE || pStage->rgbGen == CGEN_LIGHTING_DIFFUSE_ENTITY)
 				{
 					vec4_t vec;
 
@@ -2253,7 +2247,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				//
 				// testing cube map
 				//
-				if (!(tr.viewParms.flags & VPF_NOCUBEMAPS) && input->cubemapIndex && r_cubeMapping->integer && cubeMapStrength > 0.0)
+				if (!(tr.viewParms.flags & VPF_NOCUBEMAPS) && input->cubemapIndex && r_cubeMapping->integer >= 1 && cubeMapStrength > 0.0)
 				{
 					GL_BindToTMU( tr.cubemaps[input->cubemapIndex - 1], TB_CUBEMAP);
 					GLSL_SetUniformFloat(sp, UNIFORM_CUBEMAPSTRENGTH, cubeMapStrength);
@@ -2348,7 +2342,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				else if ( pStage->bundle[TB_COLORMAP].image[0] != 0 )
 					R_BindAnimatedImageToTMU( &pStage->bundle[TB_COLORMAP], TB_COLORMAP );
 			}
-			else if ( !isGeneric && (pStage->glslShaderGroup == tr.lightallShader || (pStage->isWater && r_glslWater->integer) ) )
+			else if ( !isGeneric && (pStage->glslShaderGroup == tr.lightallShader ) )
 			{
 				int i;
 				vec4_t enableTextures;
@@ -2397,7 +2391,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 					//  - disable texture sampling in glsl shader with #ifdefs, as before
 					//     -> increases the number of shaders that must be compiled
 					//
-					//if ((light || (pStage->isWater && r_glslWater->integer) || pStage->hasRealNormalMap || pStage->hasSpecular /*|| pStage->hasRealSubsurfaceMap*/ || pStage->hasRealOverlayMap || pStage->hasRealSteepMap) && !fastLight)
+					//if ((light || pStage->hasRealNormalMap || pStage->hasSpecular /*|| pStage->hasRealSubsurfaceMap*/ || pStage->hasRealOverlayMap || pStage->hasRealSteepMap) && !fastLight)
 					{
 						if (r_normalMapping->integer
 							&& !input->shader->isPortal
@@ -2437,7 +2431,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 								}
 							}
 
-							if (pStage->bundle[TB_NORMALMAP].image[0] != tr.whiteImage)
+							//if (pStage->bundle[TB_NORMALMAP].image[0] != tr.whiteImage)
 								pStage->bundle[TB_DIFFUSEMAP].normalsLoaded2 = qtrue;
 						}
 
@@ -2552,7 +2546,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 						}
 					}
 
-					enableTextures[3] = (r_cubeMapping->integer && !(tr.viewParms.flags & VPF_NOCUBEMAPS) && input->cubemapIndex) ? 1.0f : 0.0f;
+					enableTextures[3] = (r_cubeMapping->integer >= 1 && !(tr.viewParms.flags & VPF_NOCUBEMAPS) && input->cubemapIndex) ? 1.0f : 0.0f;
 				}
 
 				GLSL_SetUniformVec4(sp, UNIFORM_ENABLETEXTURES, enableTextures);
@@ -2570,48 +2564,6 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				R_BindAnimatedImageToTMU( &pStage->bundle[0], 0 );
 			}
 
-
-			if (isWater)
-			{
-				vec4_t loc;
-				VectorSet4(loc, (float)0.4, 6.0, 2.0, 0.2); // waveLength, waveLayer, wavespeed, wavesize
-				GLSL_SetUniformVec4(sp, UNIFORM_LOCAL8, loc);
-
-				GL_BindToTMU( tr.waterImage, TB_SPECULARMAP );
-
-				/*
-				vec3_t pos;
-				float dist = backEnd.viewParms.zFar / 1.75;		// div sqrt(3)
-				VectorScale( tr.sunDirection, dist, pos );
-				GLSL_SetUniformVec4(sp, UNIFORM_PRIMARYLIGHTORIGIN,  pos);
-				*/
-
-				vec3_t out;
-				float dist = backEnd.viewParms.zFar / 1.75;
- 				VectorMA( backEnd.refdef.vieworg, dist, tr.sunDirection, out );
-				GLSL_SetUniformVec4(sp, UNIFORM_PRIMARYLIGHTORIGIN,  out);
-
-#if 0
-				GL_BindToTMU( tr.previousRenderImage, TB_DIFFUSEMAP );
-				GL_BindToTMU( tr.waterDudvImage, TB_DELUXEMAP );
-				GL_BindToTMU( tr.waterDudvNormalImage, TB_NORMALMAP );
-#endif
-			}
-
-#if 0
-			if (isGrass)
-			{
-				vec4_t loc;
-				VectorSet4(loc, (float)passNum, r_grassLength->value, r_grassWaveSpeed->value, r_grassWaveSize->value); // grassLength, grassLayer, wavespeed, wavesize
-				GLSL_SetUniformVec4(sp, UNIFORM_LOCAL5, loc);
-
-				GLSL_SetUniformInt(sp, UNIFORM_SPECULARMAP, TB_SPECULARMAP);
-				GL_BindToTMU(tr.grassMaskImage[passNum], TB_SPECULARMAP);
-
-				GLSL_SetUniformInt(sp, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
-				GL_BindToTMU(tr.grassImage, TB_DIFFUSEMAP);
-			}
-#endif
 
 			qboolean tesselation = qfalse;
 
@@ -2686,10 +2638,13 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			}
 		}
 
-		if (pStage->isWater && r_glslWater->integer)
-		{
+#ifdef __USE_WATERMAP__
+		if (isWater && r_glslWater->integer && MAP_WATER_LEVEL > -131072.0)
+		{// Unattach dummy water output textures...
+			GLSL_AttachTextures();
 			break;
 		}
+#endif //__USE_WATERMAP__
 		
 		// allow skipping out to show just lightmaps during development
 		if ( r_lightmap->integer && ( pStage->bundle[0].isLightmap || pStage->bundle[1].isLightmap ) )

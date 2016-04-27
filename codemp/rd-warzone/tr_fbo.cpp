@@ -436,6 +436,16 @@ void FBO_Init(void)
 	}
 
 	//
+	// UQ1's waterPosition FBO...
+	//
+	{
+		tr.waterFbo = FBO_Create("_waterPosition", tr.waterPositionMapImage->width, tr.waterPositionMapImage->height);
+		FBO_Bind(tr.waterFbo);
+		FBO_AttachTextureImage(tr.waterPositionMapImage, 0);
+		R_CheckFBO(tr.waterFbo);
+	}
+
+	//
 	// UQ1's Generic FBO...
 	//
 	{
@@ -453,6 +463,16 @@ void FBO_Init(void)
 		FBO_Bind(tr.genericFbo2);
 		FBO_AttachTextureImage(tr.genericFBO2Image, 0);
 		R_CheckFBO(tr.genericFbo2);
+	}
+
+	//
+	// UQ1's Generic FBO3...
+	//
+	{
+		tr.genericFbo3 = FBO_Create("_generic3", tr.genericFBO3Image->width, tr.genericFBO3Image->height);
+		FBO_Bind(tr.genericFbo3);
+		FBO_AttachTextureImage(tr.genericFBO3Image, 0);
+		R_CheckFBO(tr.genericFbo3);
 	}
 	
 
@@ -522,10 +542,8 @@ void FBO_Init(void)
 		//FBO_CreateBuffer(tr.msaaResolveFbo, hdrFormat, 0, 0);
 		FBO_AttachTextureImage(tr.renderImage, 0);
 		FBO_AttachTextureImage(tr.glowImage, 1);
-		FBO_AttachTextureImage(tr.normalDetailedImage, 2);
-		FBO_AttachTextureImage(tr.foliageImage, 3);
-		//FBO_AttachTextureImage(tr.positionMapImage, 4);
-		//FBO_AttachTextureImage(tr.normalImage, 3);
+		FBO_AttachTextureImage(tr.renderNormalImage, 2);
+		FBO_AttachTextureImage(tr.renderPositionMapImage, 3);
 
 		//FBO_CreateBuffer(tr.msaaResolveFbo, GL_DEPTH_COMPONENT24, 0, 0);
 		R_AttachFBOTextureDepth(tr.renderDepthImage->texnum);
@@ -543,7 +561,6 @@ void FBO_Init(void)
 		//FBO_CreateBuffer(tr.renderFbo, hdrFormat, 0, 0);
 		GLSL_AttachTextures();
 
-		//FBO_CreateBuffer(tr.renderFbo, GL_DEPTH_COMPONENT24, 0, 0);
 		R_AttachFBOTextureDepth(tr.renderDepthImage->texnum);
 
 		FBO_SetupDrawBuffers();
@@ -554,7 +571,7 @@ void FBO_Init(void)
 		FBO_Bind(tr.previousRenderFbo);
 		FBO_AttachTextureImage(tr.previousRenderImage, 0);
 		FBO_SetupDrawBuffers();
-		R_CheckFBO(tr.renderFbo);
+		R_CheckFBO(tr.previousRenderFbo);
 	}
 
 	// clear render buffer
@@ -564,6 +581,14 @@ void FBO_Init(void)
 		FBO_Bind(tr.renderFbo);
 		qglClearColor( 1, 0, 0.5, 1 );
 		qglClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+		FBO_Bind(NULL);
+	}
+
+	if (tr.waterFbo)
+	{
+		FBO_Bind(tr.waterFbo);
+		qglClearColor( 0, 0, 0, 0 );
+		qglClear( GL_COLOR_BUFFER_BIT );
 		FBO_Bind(NULL);
 	}
 

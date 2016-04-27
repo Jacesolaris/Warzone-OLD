@@ -30,6 +30,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 //                                                   Warzone Renderer Defines
 // -----------------------------------------------------------------------------------------------------------------------------
 #define __USE_QGL_FINISH__
+#define __USE_WATERMAP__
 //#define __RENDERER_FOLIAGE__
 #define ___SHADER_GENERATOR___
 #define ___SHADER_GENERATOR_PLAYERS_ONLY___
@@ -380,6 +381,8 @@ extern cvar_t  *r_magicdetailStrength;
 extern cvar_t  *r_dof;
 extern cvar_t  *r_testvalue0;
 extern cvar_t  *r_testvalue1;
+extern cvar_t  *r_testvalue2;
+extern cvar_t  *r_testvalue3;
 extern cvar_t  *r_esharpening;
 extern cvar_t  *r_esharpening2;
 extern cvar_t  *r_fxaa;
@@ -842,12 +845,16 @@ enum
 	TB_DELUXEMAP		= 5,
 	TB_SHADOWMAP2		= 6,
 	TB_SPECULARMAP		= 7,
-	TB_SHADOWMAP		= 8,
-	TB_CUBEMAP			= 9,
-	TB_OVERLAYMAP		= 10,
-	TB_STEEPMAP			= 11,
-	TB_STEEPMAP2		= 12,
-	NUM_TEXTURE_BUNDLES = 13
+	TB_POSITIONMAP		= 8,
+	TB_WATERPOSITIONMAP	= 9,
+	TB_HEIGHTMAP		= 10,
+	TB_GLOWMAP			= 11,
+	TB_SHADOWMAP		= 12,
+	TB_CUBEMAP			= 13,
+	TB_OVERLAYMAP		= 14,
+	TB_STEEPMAP			= 15,
+	TB_STEEPMAP2		= 16,
+	NUM_TEXTURE_BUNDLES = 17
 };
 
 typedef enum
@@ -1246,6 +1253,10 @@ typedef enum
 	UNIFORM_NORMALMAP3,
 	UNIFORM_DELUXEMAP,
 	UNIFORM_SPECULARMAP,
+	UNIFORM_POSITIONMAP,
+	UNIFORM_WATERPOSITIONMAP,
+	UNIFORM_HEIGHTMAP,
+	UNIFORM_GLOWMAP,
 
 	UNIFORM_TEXTUREMAP,
 	UNIFORM_LEVELSMAP,
@@ -1307,6 +1318,7 @@ typedef enum
 	UNIFORM_MODELVIEWPROJECTIONMATRIX,
 	UNIFORM_INVPROJECTIONMATRIX,
 	UNIFORM_INVEYEPROJECTIONMATRIX,
+	UNIFORM_INVMODELVIEWMATRIX,
 	UNIFORM_PROJECTIONMATRIX,
 	UNIFORM_MODELVIEWMATRIX,
 	UNIFORM_VIEWMATRIX,
@@ -1341,7 +1353,6 @@ typedef enum
 
 	// UQ1: Added...
 	UNIFORM_DIMENSIONS,
-	UNIFORM_HEIGHTMAP,
 	UNIFORM_LOCAL0,
 	UNIFORM_LOCAL1,
 	UNIFORM_LOCAL2,
@@ -2258,8 +2269,15 @@ typedef struct trGlobals_s {
 	image_t					*previousRenderImage;
 	image_t					*randomImage;
 	image_t					*random2KImage[2];
+	
 	image_t					*waterDudvImage;
 	image_t					*waterDudvNormalImage;
+	
+	image_t					*waterFoamImage;
+	image_t					*waterHeightImage;
+	image_t					*waterNormalImage;
+	image_t					*waterCausicsImage;
+
 	image_t					*mapImage;
 	image_t					*heightMapImage;
 	image_t					*foliageMapImage;
@@ -2268,16 +2286,15 @@ typedef struct trGlobals_s {
 	image_t					*grassMaskImage[10];
 	shader_t				*grassImageShader;
 	image_t					*waterImage;
-	image_t					*positionMapImage;
 
 	image_t                 *shadowCubemaps[MAX_DLIGHTS];
 	
 
 	image_t					*renderImage;
 	image_t					*glowImage;
-	image_t					*normalImage;
-	image_t					*normalDetailedImage;
-	image_t					*foliageImage;
+	image_t					*renderNormalImage;
+	image_t					*renderPositionMapImage;
+	image_t					*waterPositionMapImage;
 #if 0
 	image_t					*glowImageScaled[4];
 #else
@@ -2285,6 +2302,7 @@ typedef struct trGlobals_s {
 #endif
 	image_t					*sunRaysImage;
 	image_t					*renderDepthImage;
+	image_t					*waterDepthImage;
 	image_t					*pshadowMaps[MAX_DRAWN_PSHADOWS];
 	image_t					*textureScratchImage[2];
 	image_t                 *quarterImage[2];
@@ -2306,6 +2324,7 @@ typedef struct trGlobals_s {
 
 	FBO_t					*renderFbo;
 	FBO_t					*previousRenderFbo;
+	FBO_t					*waterFbo;
 #if 0
 	FBO_t					*glowFboScaled[4];
 #else
@@ -2439,11 +2458,13 @@ typedef struct trGlobals_s {
 	image_t        *anamorphicRenderFBOImage[3];
 	image_t        *genericFBOImage;
 	image_t        *genericFBO2Image;
+	image_t        *genericFBO3Image;
 
 	FBO_t          *bloomRenderFBO[3];
 	FBO_t          *anamorphicRenderFBO[3];
 	FBO_t		   *genericFbo;
 	FBO_t		   *genericFbo2;
+	FBO_t		   *genericFbo3;
 	FBO_t		   *NormalMapDestinationFBO;
 
 	//
@@ -2760,6 +2781,8 @@ extern cvar_t  *r_fOff3X;
 extern cvar_t  *r_fOff3Y;
 extern cvar_t  *r_testvalue0;
 extern cvar_t  *r_testvalue1;
+extern cvar_t  *r_testvalue2;
+extern cvar_t  *r_testvalue3;
 extern cvar_t  *r_esharpening;
 extern cvar_t  *r_esharpening2;
 extern cvar_t  *r_fxaa;
