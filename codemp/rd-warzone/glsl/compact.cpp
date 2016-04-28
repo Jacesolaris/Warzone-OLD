@@ -104,10 +104,10 @@ int main ( int argc, char *argv[] )
 		output += "const char *fallbackShader_" + shaderName + " = \"";
 		while ( std::getline (fs, line) )
 		{
-			if ( line.empty() )
+			/*if ( line.empty() )
 			{
 				continue;
-			}
+			}*/
 
 			output += escape_string (line) + "\\n\"\\\n\"";
 		}

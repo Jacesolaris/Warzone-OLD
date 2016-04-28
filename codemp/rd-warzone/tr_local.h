@@ -847,14 +847,15 @@ enum
 	TB_SPECULARMAP		= 7,
 	TB_POSITIONMAP		= 8,
 	TB_WATERPOSITIONMAP	= 9,
-	TB_HEIGHTMAP		= 10,
-	TB_GLOWMAP			= 11,
-	TB_SHADOWMAP		= 12,
-	TB_CUBEMAP			= 13,
-	TB_OVERLAYMAP		= 14,
-	TB_STEEPMAP			= 15,
-	TB_STEEPMAP2		= 16,
-	NUM_TEXTURE_BUNDLES = 17
+	TB_WATERPOSITIONMAP2= 10,
+	TB_HEIGHTMAP		= 11,
+	TB_GLOWMAP			= 12,
+	TB_SHADOWMAP		= 13,
+	TB_CUBEMAP			= 14,
+	TB_OVERLAYMAP		= 15,
+	TB_STEEPMAP			= 16,
+	TB_STEEPMAP2		= 17,
+	NUM_TEXTURE_BUNDLES = 18
 };
 
 typedef enum
@@ -1255,6 +1256,7 @@ typedef enum
 	UNIFORM_SPECULARMAP,
 	UNIFORM_POSITIONMAP,
 	UNIFORM_WATERPOSITIONMAP,
+	UNIFORM_WATERPOSITIONMAP2,
 	UNIFORM_HEIGHTMAP,
 	UNIFORM_GLOWMAP,
 
@@ -2295,6 +2297,7 @@ typedef struct trGlobals_s {
 	image_t					*renderNormalImage;
 	image_t					*renderPositionMapImage;
 	image_t					*waterPositionMapImage;
+	image_t					*waterPositionMapImage2;
 #if 0
 	image_t					*glowImageScaled[4];
 #else
@@ -2325,6 +2328,7 @@ typedef struct trGlobals_s {
 	FBO_t					*renderFbo;
 	FBO_t					*previousRenderFbo;
 	FBO_t					*waterFbo;
+	FBO_t					*waterFbo2;
 #if 0
 	FBO_t					*glowFboScaled[4];
 #else

@@ -9,10 +9,10 @@
 heightMap – height-map used for waves generation as described in the section “Modifying existing geometry”
 backBufferMap – current contents of the back buffer
 positionMap – texture storing scene position vectors (material type is alpha)
-positionMap2 – texture storing scene water position vectors (alpha is 1.0 when water is at this pixel. 0.0 if not)
+waterPositionMap – texture storing scene water position vectors (alpha is 1.0 when water is at this pixel. 0.0 if not).
+waterPositionMap2 – texture storing scene water position vectors (This one is at slightly increased height to include max wave height).
 normalMap – texture storing normal vectors for normal mapping as described in the section “The computation of normal vectors”
 foamMap – texture containing foam – in my case it is a photo of foam converted to greyscale
-reflectionMap – texture containing reflections rendered as described in the section “Reflection and refraction of light”
 */
 
 
@@ -24,6 +24,7 @@ uniform sampler2D	u_OverlayMap;   // foamMap
 
 #if defined(USE_WATERMAP)
 uniform sampler2D	u_WaterPositionMap;
+uniform sampler2D	u_WaterPositionMap2;
 #endif //defined(USE_WATERMAP)
 
 uniform vec4		u_Local0; // testvalue0, testvalue1, testvalue2, testvalue3
@@ -163,13 +164,17 @@ vec4 waterMapAtCoord ( vec2 coord )
 {
 #if defined(USE_WATERMAP)
 	return texture2D(u_WaterPositionMap, coord).xzya;
-	//vec4 wMap = texture2D(u_WaterPositionMap, coord).xzya;
-	//wMap.xyz -= vec3(524288.0);
-	//return wMap;
 #else //!defined(USE_WATERMAP)
 	return vec4(0.0, u_Local1.r, 0.0, 0.0);
 #endif //defined(USE_WATERMAP)
 }
+
+#if defined(USE_WATERMAP)
+vec4 waterMap2AtCoord ( vec2 coord )
+{
+	return texture2D(u_WaterPositionMap2, coord).xzya;
+}
+#endif //defined(USE_WATERMAP)
 
 vec4 positionMapAtCoord ( vec2 coord )
 {
@@ -191,10 +196,8 @@ vec3 AddReflection(vec2 coord, vec3 positionMap, float waterHeight, vec3 inColor
 
 	for (float y = coord.y; y < 1.0 && coord.y + ((y - coord.y) * 2.0) < 1.0; y += ph * 3.0)
 	{
-		float isWater = waterMapAtCoord(vec2(coord.x, y)).a;
-		//vec3 pos = positionMapAtCoord(vec2(coord.x, y)).xyz;
+		float isWater = waterMap2AtCoord(vec2(coord.x, y)).a;
 
-		//if (pos.y > waterHeight)
 		if (isWater <= 0.0)
 		{
 			LAND_Y = y;
@@ -216,11 +219,38 @@ vec3 AddReflection(vec2 coord, vec3 positionMap, float waterHeight, vec3 inColor
 
 void main ( void )
 {
+	bool pixelIsInWaterRange = false;
+	bool depthHacked = false;
 	vec3 color2 = texture2D(u_DiffuseMap, var_TexCoords).rgb;
 	vec3 color = color2;
 
 	vec4 waterMap = waterMapAtCoord(var_TexCoords);
+#if defined(USE_WATERMAP)
+	vec4 waterMap2 = waterMap2AtCoord(var_TexCoords);
+#endif //defined(USE_WATERMAP)
 	vec3 position = positionMapAtCoord(var_TexCoords).xyz;
+
+	if (waterMap.a > 0.0 && position.y == 0.0)
+	{// Fix for wierd water bugs.
+		position.xyz = waterMap.xyz;
+		position.xyz -= 10.0;//1.0;
+		depthHacked = true;
+	}
+	else if (waterMap.a > 0.0 && length(position.y - waterMap.y) > 10.0)
+	{// Fix for wierd water bugs.
+		position.xyz = waterMap.xyz;
+		position.xyz -= 10.0;//100.0;
+		depthHacked = true;
+	}
+
+#if defined(USE_WATERMAP)
+	if (waterMap.a > 0.0 || waterMap2.a > 0.0 || (waterMap.y != 0.0 && position.y <= waterMap.y + maxAmplitude))
+#else //!defined(USE_WATERMAP)
+	if (waterMap.a > 0.0 || (waterMap.y != 0.0 && position.y <= waterMap.y + maxAmplitude))
+#endif //defined(USE_WATERMAP)
+	{
+		pixelIsInWaterRange = true;
+	}
 
 #if defined(DEBUG_WATER_LOCATION)
 	// Debug basic "is water here" map...
@@ -229,28 +259,28 @@ void main ( void )
 		gl_FragColor = vec4(0.0, 0.0, 1.0, 1.0);
 		return;
 	}
-	else
+	else if (waterMap2.a > 0.0)
 	{
 		gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
 		return;
 	}
 #endif //defined(DEBUG_WATER_LOCATION)
 	
-#if defined(USE_WATERMAP)
-	if (waterMap.a <= 0.0 || position.y > waterMap.y + maxAmplitude)
+	if (!pixelIsInWaterRange)
 	{// No water here. Skip calculations.
 		gl_FragColor = vec4(color2, 1.0);
 		return;
 	}
-#endif //defined(USE_WATERMAP)
-	
-	//gl_FragColor = vec4(position.y / u_Local0.r, 0.0, waterMap.y / u_Local0.r, 1.0);
-	//return;
 
 	vec3 lightDir = ViewOrigin.xyz - u_PrimaryLightOrigin.xzy;
 
+#if defined(USE_WATERMAP)
+	float waterLevel = waterMap2.y;
+	float level = waterMap2.y;
+#else //!defined(USE_WATERMAP)
 	float waterLevel = waterMap.y;
 	float level = waterMap.y;
+#endif //defined(USE_WATERMAP)
 	float depth = 0.0;
 
 	// If we are underwater let's leave out complex computations
@@ -326,7 +356,7 @@ void main ( void )
 #endif //defined(USE_UNDERWATER)
 	}
 
-	if (waterMap.a > 0.0 || position.y <= level + maxAmplitude)
+	if (pixelIsInWaterRange)
 	{
 		vec3 eyeVec = position - ViewOrigin;
 		float cameraDepth = ViewOrigin.y - position.y;
@@ -353,6 +383,8 @@ void main ( void )
 			t = (level - ViewOrigin.y) / eyeVecNorm.y;
 			surfacePoint = ViewOrigin + eyeVecNorm * t;
 		}
+
+		float waveHeight = level - waterMap.y;
 		
 		depth = length(position - surfacePoint);
 		float depth2 = surfacePoint.y - position.y;
@@ -388,10 +420,26 @@ void main ( void )
 								  normal2a * normalModifier.z + normal3a * normalModifier.w);
 		
 		texCoord = var_TexCoords.xy;
-		texCoord.x += sin(timer * 0.002 + 3.0 * abs(position.y)) * (refractionScale * min(depth2, 1.0));
+
+		if (!depthHacked)
+			texCoord.x += sin(timer * 0.002 + 3.0 * abs(position.y)) * (refractionScale * min(depth2, 1.0));
+
 		vec3 refraction = texture2D(u_DiffuseMap, texCoord).rgb;
 
-		if (positionMapAtCoord(texCoord).y > level)
+		vec4 position2 = positionMapAtCoord(texCoord);
+
+		if (position2.y == 0.0)
+		{// Fix for wierd water bugs.
+			position2.xyz = waterMap.xyz;
+			position2.xyz -= 10.0;//1.0;
+		}
+		else if (length(position2.y - waterMap.y) > 10.0)
+		{// Fix for wierd water bugs.
+			position2.xyz = waterMap.xyz;
+			position2.xyz -= 10.0;//100.0;
+		}
+
+		if (position2.y > level)
 		{
 			refraction = color2;
 		}
@@ -446,7 +494,11 @@ void main ( void )
 
 		color = mix(color, color2, 1.0 - clamp(waterClarity * depth, 0.8, 1.0));
 
-		if (position.y > level && waterMap.a > 0.0)
+#if defined(USE_WATERMAP)
+		if (position.y > level && waterMap.a <= 0.0)
+#else //!defined(USE_WATERMAP)
+		if (position.y > level)
+#endif //defined(USE_WATERMAP)
 		{// Waves against shoreline. Pixel is above waterLevel + waveHeight... (but ignore anything marked as actual water - eg: not a shoreline)
 			color = color2;
 		}

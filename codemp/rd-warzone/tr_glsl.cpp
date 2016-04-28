@@ -756,6 +756,7 @@ static uniformInfo_t uniformsInfo[] =
 	{ "u_SpecularMap", GLSL_INT, 1 },
 	{ "u_PositionMap", GLSL_INT, 1 },
 	{ "u_WaterPositionMap", GLSL_INT, 1 },
+	{ "u_WaterPositionMap2", GLSL_INT, 1 },
 	{ "u_HeightMap", GLSL_INT, 1 },
 	{ "u_GlowMap", GLSL_INT, 1 },
 
@@ -1476,6 +1477,16 @@ void GLSL_AttachWaterTextures( void )
 	FBO_AttachTextureImage(tr.genericFBO2Image, 1); // dummy
 	FBO_AttachTextureImage(tr.genericFBO3Image, 2); // dummy
 	FBO_AttachTextureImage(tr.waterPositionMapImage, 3); // water positions
+	//R_AttachFBOTextureDepth(tr.waterDepthImage->texnum);  // dummy
+	//R_CheckFBO(tr.renderFbo);
+}
+
+void GLSL_AttachWaterTextures2( void )
+{// To output dummy textures on waters in RB_IterateStagesGeneric...
+	FBO_AttachTextureImage(tr.genericFBOImage, 0); // dummy
+	FBO_AttachTextureImage(tr.genericFBO2Image, 1); // dummy
+	FBO_AttachTextureImage(tr.genericFBO3Image, 2); // dummy
+	FBO_AttachTextureImage(tr.waterPositionMapImage2, 3); // water positions
 	//R_AttachFBOTextureDepth(tr.waterDepthImage->texnum);  // dummy
 	//R_CheckFBO(tr.renderFbo);
 }

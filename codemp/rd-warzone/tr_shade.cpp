@@ -1632,6 +1632,7 @@ float waveFreq = 0.1;
 
 extern void GLSL_AttachTextures( void );
 extern void GLSL_AttachWaterTextures( void );
+extern void GLSL_AttachWaterTextures2( void );
 
 static void RB_IterateStagesGeneric( shaderCommands_t *input )
 {
@@ -1976,7 +1977,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		if (pStage->isWater && r_glslWater->integer && MAP_WATER_LEVEL > -131072.0)
 		{
 #ifdef __USE_WATERMAP__
-			if (stage <= 0) 
+			if (stage <= 0 && !backEnd.depthFill) 
 			//if (pStage->bundle[TB_DIFFUSEMAP].image[0])
 			{
 				sp = &tr.waterShader;
@@ -2044,6 +2045,15 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			}
 		}
 
+		if (isWater && r_glslWater->integer && MAP_WATER_LEVEL > -131072.0)
+		{// Attach dummy water output textures...
+			if (glState.currentFBO == tr.renderFbo)
+			{
+				multiPass = qtrue;
+				passMax = 2;
+			}
+		}
+
 		while (1)
 		{
 			if (isGrass && passNum > 0 && sp2)
@@ -2091,12 +2101,20 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			{// Attach dummy water output textures...
 				if (glState.currentFBO == tr.renderFbo)
 				{// Only attach textures when doing a render pass...
-					GLSL_AttachWaterTextures();
+					stateBits = GLS_DEFAULT | GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA | GLS_DEPTHMASK_TRUE;
 
-					stateBits |= /*GLS_DEPTHTEST_DISABLE |*/ GLS_DEPTHMASK_TRUE; //GLS_DEPTHFUNC_LESS //GLS_DEPTHFUNC_EQUAL //GLS_DEPTHFUNC_GREATER
-				
-					//GLSL_SetUniformInt(sp, UNIFORM_POSITIONMAP, TB_POSITIONMAP);
-					//GL_BindToTMU(tr.renderPositionMapImage, TB_POSITIONMAP);
+					if (passNum > 0)
+					{
+						GLSL_AttachWaterTextures2();
+					}
+					else
+					{
+						GLSL_AttachWaterTextures();
+					}
+				}
+				else
+				{
+					break;
 				}
 			}
 #else //!__USE_WATERMAP__
@@ -2601,6 +2619,18 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			VectorSet4(l9, r_testshaderValue1->value, r_testshaderValue2->value, r_testshaderValue3->value, r_testshaderValue4->value);
 			GLSL_SetUniformVec4(sp, UNIFORM_LOCAL9, l9);
 
+#ifdef __USE_WATERMAP__
+			if (isWater && r_glslWater->integer && MAP_WATER_LEVEL > -131072.0)
+			{// Attach dummy water output textures...
+				if (glState.currentFBO == tr.renderFbo)
+				{// Only attach textures when doing a render pass...
+					vec4_t passInfo;
+					VectorSet4(passInfo, passNum, 0.0, 0.0, 0.0);
+					GLSL_SetUniformVec4(sp, UNIFORM_LOCAL10, passInfo);
+				}
+			}
+#endif //__USE_WATERMAP__
+
 			UpdateTexCoords (pStage);
 
 			GL_State( stateBits );
@@ -2617,6 +2647,16 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			{
 				R_DrawElementsVBO(input->numIndexes, input->firstIndex, input->minIndex, input->maxIndex, input->numVertexes, tesselation);
 			}
+
+#ifdef __USE_WATERMAP__
+			if (isWater && r_glslWater->integer && MAP_WATER_LEVEL > -131072.0)
+			{// Unattach dummy water output textures...
+				if (glState.currentFBO == tr.renderFbo)
+				{// Only attach textures when doing a render pass...
+					GLSL_AttachTextures();
+				}
+			}
+#endif //__USE_WATERMAP__
 
 			passNum++;
 
@@ -2635,18 +2675,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				break;
 			}
 		}
-
-#ifdef __USE_WATERMAP__
-		if (isWater && r_glslWater->integer && MAP_WATER_LEVEL > -131072.0)
-		{// Unattach dummy water output textures...
-			if (glState.currentFBO == tr.renderFbo)
-			{// Only attach textures when doing a render pass...
-				GLSL_AttachTextures();
-			}
-			break;
-		}
-#endif //__USE_WATERMAP__
-		
+	
 		// allow skipping out to show just lightmaps during development
 		if ( r_lightmap->integer && ( pStage->bundle[0].isLightmap || pStage->bundle[1].isLightmap ) )
 		{
