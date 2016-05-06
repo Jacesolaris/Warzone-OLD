@@ -55,9 +55,9 @@ const vec3					vWindDirection = normalize(vec3(1.0, 0.0, 1.0));
 #define LOD3_MAX_FOLIAGES	1
 #else //defined(FAST_METHOD)
 #define LOD0_MAX_FOLIAGES	146//170
-#define LOD1_MAX_FOLIAGES	73//85//48
-#define LOD2_MAX_FOLIAGES	32
-#define LOD3_MAX_FOLIAGES	16
+#define LOD1_MAX_FOLIAGES	32//73
+#define LOD2_MAX_FOLIAGES	16//32
+#define LOD3_MAX_FOLIAGES	8//16
 #endif //defined(FAST_METHOD)
 
 vec3 vLocalSeed;

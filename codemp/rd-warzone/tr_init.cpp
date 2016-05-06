@@ -42,6 +42,7 @@ cvar_t	*r_tesselationLevel;
 cvar_t	*r_tesselationAlpha;
 
 cvar_t	*r_foliage;
+cvar_t	*r_foliagePasses;
 cvar_t	*r_foliageDistance;
 cvar_t	*r_foliageDensity;
 cvar_t	*r_foliageShadows;
@@ -1347,6 +1348,7 @@ void R_Register( void )
 	r_tesselationAlpha = ri->Cvar_Get( "r_tesselationAlpha", "1.0", CVAR_ARCHIVE );
 	
 	r_foliage = ri->Cvar_Get( "r_foliage", "1", CVAR_ARCHIVE | CVAR_LATCH );
+	r_foliagePasses = ri->Cvar_Get( "r_foliagePasses", "6", CVAR_ARCHIVE );
 	r_foliageDistance = ri->Cvar_Get( "r_foliageDistance", "8192.0", CVAR_ARCHIVE );
 	r_foliageDensity = ri->Cvar_Get( "r_foliageDensity", "40.0", CVAR_ARCHIVE );
 	r_foliageShadows = ri->Cvar_Get( "r_foliageShadows", "1", CVAR_ARCHIVE );

@@ -1836,6 +1836,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				}
 
 				if (r_foliage->integer 
+					&& r_sunlightMode->integer >= 2
 					&& r_foliageShadows->integer
 					&& RB_ShouldUseGeometryGrass(tess.shader->surfaceFlags & MATERIAL_MASK))
 				{
@@ -2028,7 +2029,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			sp = &tr.shadowPassShader;
 			GLSL_BindProgram(sp);
 			
-			if (!r_foliageShadows->integer)
+			if (!r_foliageShadows->integer || r_sunlightMode->integer < 2)
 			{
 				isGrass = qfalse;
 				multiPass = qfalse;
@@ -2041,7 +2042,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			{
 				sp2 = &tr.grass2Shader;
 				multiPass = qtrue;
-				passMax = 6;//4//9;//r_testshaderValue9->integer;
+				passMax = r_foliagePasses->integer;
 			}
 		}
 
