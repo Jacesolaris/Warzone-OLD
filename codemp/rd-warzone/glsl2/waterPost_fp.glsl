@@ -577,7 +577,7 @@ void main ( void )
 			vec3 halfDir2 = normalize(-lightDir.xyz + mirrorEye);
 			float specAngle = max(dot(halfDir2, normal), 0.0);
 			spec2 = pow(specAngle, 16.0);
-			specular = vec3(1.0 - fresnel) * (vec3(spec2 * shininess)) * sunColor * specularScale * 30.0;//u_Local0.r;
+			specular = vec3(1.0 - fresnel) * (vec3(spec2 * shininess)) * sunColor * specularScale * 25.0;
 		}
 		
 
