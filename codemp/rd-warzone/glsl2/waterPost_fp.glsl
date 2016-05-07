@@ -330,7 +330,10 @@ void main ( void )
 		return;
 	}
 
-	vec3 lightDir = ViewOrigin.xyz - u_PrimaryLightOrigin.xzy;
+	//vec3 lightDir = ViewOrigin.xyz - u_PrimaryLightOrigin.xzy;
+	vec3 lightDir = waterMap2.xyz - u_PrimaryLightOrigin.xzy;
+	//lightDir.xz = (-lightDir.xz + -lightDir.xz + normalize(-lightDir.xz)) / 3.0;
+	lightDir.xz = -lightDir.xz;
 
 #if defined(USE_WATERMAP)
 	float waterLevel = waterMap2.y;
@@ -557,10 +560,34 @@ void main ( void )
 
 		vec3 specular = vec3(0.0);
 
+		/*
 		vec3 mirrorEye = (2.0 * dot(eyeVecNorm, normal) * normal - eyeVecNorm);
 		float dotSpec = clamp(dot(mirrorEye.xyz, -lightDir) * 0.5 + 0.5, 0.0, 1.0);
 		specular = vec3(1.0 - fresnel) * clamp(-lightDir.y, 0.0, 1.0) * ((pow(dotSpec, 512.0)) * (shininess * 1.8 + 0.2)) * sunColor * specularScale;
 		specular += specular * 25.0 * clamp(shininess - 0.05, 0.0, 1.0) * sunColor * specularScale;
+		*/
+
+		
+		float lambertian2 = dot(-lightDir.xyz, normal);
+		float spec2 = 0.0;
+
+		if(lambertian2 > 0.0)
+		{// this is blinn phong
+			vec3 mirrorEye = (2.0 * dot(eyeVecNorm, normal) * normal - eyeVecNorm);
+			vec3 halfDir2 = normalize(-lightDir.xyz + mirrorEye);
+			float specAngle = max(dot(halfDir2, normal), 0.0);
+			spec2 = pow(specAngle, 16.0);
+			specular = vec3(1.0 - fresnel) * (vec3(spec2 * shininess)) * sunColor * specularScale * 30.0;//u_Local0.r;
+		}
+		
+
+		/*
+		vec3 mirrorEye = (2.0 * dot(eyeVecNorm, normal) * normal - eyeVecNorm);
+		vec3 vRef = normalize(reflect(-lightDir, normal));
+		float stemp = max(0.0, dot(mirrorEye, vRef) );
+		stemp = pow(stemp, 64.0);//exponent);
+		specular = vec3(stemp) * sunColor * specularScale;
+		*/
 
 #if defined(USE_REFLECTION)
 		if (u_Local1.g >= 2.0)
