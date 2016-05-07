@@ -1768,6 +1768,12 @@ void RB_WaterPost(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 	GLSL_SetUniformInt(shader, UNIFORM_OVERLAYMAP, TB_OVERLAYMAP);
 	GL_BindToTMU(tr.waterFoamImage, TB_OVERLAYMAP);
 
+	GLSL_SetUniformInt(shader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
+	GL_BindToTMU(tr.renderDepthImage, TB_LIGHTMAP);
+
+	GLSL_SetUniformInt(shader, UNIFORM_SPECULARMAP, TB_SPECULARMAP);
+	GL_BindToTMU(tr.renderNormalImage, TB_SPECULARMAP);
+
 	GLSL_SetUniformVec3(shader, UNIFORM_VIEWORIGIN,  backEnd.refdef.vieworg);
 	GLSL_SetUniformFloat(shader, UNIFORM_TIME, backEnd.refdef.floatTime);
 
@@ -1787,8 +1793,14 @@ void RB_WaterPost(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 
 	{
 		vec4_t loc;
-		VectorSet4(loc, MAP_WATER_LEVEL, 0.0, 0.0, 0.0);
+		VectorSet4(loc, MAP_WATER_LEVEL, r_glslWater->value, 0.0, 0.0);
 		GLSL_SetUniformVec4(shader, UNIFORM_LOCAL1, loc);
+	}
+
+	{
+		vec4_t loc;
+		VectorSet4(loc, r_waterWaveHeight->value, 0.0, 0.0, 0.0);
+		GLSL_SetUniformVec4(shader, UNIFORM_LOCAL10, loc);
 	}
 	
 	{

@@ -277,13 +277,15 @@ void main()
 	vec4 preMMtangent = vec4(tangent, 0.0);
 	vec4 preMMbitangent = vec4(cross(normal, tangent) * (attr_Tangent.w * 2.0 - 1.0), 0.0);
 
-	var_vertPos = position.xyz;
 
 #if defined(USE_MODELMATRIX)
 	position  = (u_ModelMatrix * vec4(position, 1.0)).xyz;
 	normal    = (u_ModelMatrix * vec4(normal,   0.0)).xyz;
 	tangent   = (u_ModelMatrix * vec4(tangent,  0.0)).xyz;
 #endif
+
+
+	var_vertPos = position.xyz;
 
 
 	vec3 bitangent = cross(normal, tangent) * (attr_Tangent.w * 2.0 - 1.0);

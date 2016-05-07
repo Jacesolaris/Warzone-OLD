@@ -2626,7 +2626,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				if (glState.currentFBO == tr.renderFbo)
 				{// Only attach textures when doing a render pass...
 					vec4_t passInfo;
-					VectorSet4(passInfo, passNum, 0.0, 0.0, 0.0);
+					VectorSet4(passInfo, passNum, r_waterWaveHeight->value, 0.0, 0.0);
 					GLSL_SetUniformVec4(sp, UNIFORM_LOCAL10, passInfo);
 				}
 			}

@@ -2,7 +2,7 @@
 //#define SIMPLIFIED_FRESNEL		// Seems no faster... not as good?
 #define REAL_WAVES					// You probably always want this turned on.
 //#define USE_UNDERWATER			// TODO: Convert from HLSL when I can be bothered.
-//#define USE_REFLECTION				// Enable reflections on water.
+#define USE_REFLECTION				// Enable reflections on water.
 //#define DEBUG_WATER_LOCATION		// DEBUG: Simply displays where water is on the screen in blue, and non water in red.
 
 /*
@@ -28,7 +28,8 @@ uniform sampler2D	u_WaterPositionMap2;
 #endif //defined(USE_WATERMAP)
 
 uniform vec4		u_Local0; // testvalue0, testvalue1, testvalue2, testvalue3
-uniform vec4		u_Local1; // MAP_WATER_LEVEL
+uniform vec4		u_Local1; // MAP_WATER_LEVEL, USE_GLSL_REFLECTION
+uniform vec4		u_Local10; // waveHeight
 
 uniform vec2		u_Dimensions;
 uniform vec4		u_ViewInfo; // zmin, zmax, zmax / zmin
@@ -45,9 +46,15 @@ uniform vec3		u_ViewOrigin;
 // Timer
 uniform float		u_Time;
 #define timer		(u_Time * 5000.0)
+#define wfTimer		(u_Time * 0.5)
+
+
+#define WATER_DEPTH_HACK_LEVEL 10.0//8192.0
 
 // Over-all water clearness...
-const float waterClarity = 0.001;
+//const float waterClarity = 0.001;
+const float waterClarity = 0.03;
+//float waterClarity = u_Local0.r;
 
 // How fast will colours fade out. You can also think about this
 // values as how clear water is. Therefore use smaller values (eg. 0.05f)
@@ -62,7 +69,8 @@ const float normalScale = 1.0;
 const float R0 = 0.5;
 
 // Maximum waves amplitude
-const float maxAmplitude = 6.0;//4.0;
+//const float maxAmplitude = 6.0;//4.0;
+#define maxAmplitude u_Local10.r
 
 // Direction of the light
 //vec3 lightDir = vec3(0.0, 1.0, 0.0);
@@ -95,25 +103,19 @@ const vec3 foamExistence = vec3(1.5, 5.35, 2.3); //vec3(0.65, 1.35, 0.5);
 
 const float sunScale = 3.0;
 
-mat4 matReflection = mat4(
-	vec4(0.5, 0.0, 0.0, 0.5),
-	vec4(0.0, 0.5, 0.0, 0.5),
-	vec4(0.0, 0.0, 0.0, 0.5),
-	vec4(0.0, 0.0, 0.0, 1.0)
-);
-
 const float shininess = 0.7;
 const float specularScale = 0.07;
 
+
 // Colour of the water surface
 const vec3 depthColour = vec3(0.0078, 0.5176, 0.7);
-//const vec3 depthColour = vec3(0.0078, 0.2176, 0.5);
+
 // Colour of the water depth
-//const vec3 bigDepthColour = vec3(0.0039, 0.00196, 0.145);
-const vec3 bigDepthColour = vec3(0.0059, 0.3096, 0.445);
-//const vec3 extinction = vec3(7.0, 30.0, 40.0);			// Horizontal
-//vec3 extinction = vec3(u_Local0.r, u_Local0.g, u_Local0.b);			// Horizontal
-const vec3 extinction = vec3(64.0, 128.0, 256.0);			// Horizontal
+//const vec3 bigDepthColour = vec3(0.0059, 0.3096, 0.445);
+const vec3 bigDepthColour = vec3(0.0059, 0.1276, 0.18);
+//vec3 bigDepthColour = vec3(u_Local0.r, u_Local0.g, u_Local0.b);
+
+const vec3 extinction = vec3(7.0, 30.0, 40.0);			// Horizontal
 
 // Water transparency along eye vector.
 const float visibility = 32.0;
@@ -181,45 +183,95 @@ vec4 positionMapAtCoord ( vec2 coord )
 	return texture2D(u_PositionMap, coord).xzya;
 }
 
-#define pw (1.0/u_Dimensions.x)
-#define ph (1.0/u_Dimensions.y)
+float pw = (1.0/u_Dimensions.x);
+float ph = (1.0/u_Dimensions.y);
 
-vec3 AddReflection(vec2 coord, vec3 positionMap, float waterHeight, vec3 inColor)
+vec3 AddReflection(vec2 coord, vec3 positionMap, vec3 waterMap, vec3 inColor)
 {
-	if (positionMap.y > waterHeight)
+	if (positionMap.y > waterMap.y)
 	{
 		return inColor;
 	}
 
-	float upPos = coord.y;
-	float LAND_Y = coord.y + ph * 3.0;
+	// Quick scan for pixel that is not water...
+	float QLAND_Y = 0.0;
 
-	for (float y = coord.y; y < 1.0 && coord.y + ((y - coord.y) * 2.0) < 1.0; y += ph * 3.0)
+	for (float y = coord.y; y < 1.0; y += ph * 5.0)
 	{
-		float isWater = waterMap2AtCoord(vec2(coord.x, y)).a;
+		vec4 wMap = waterMapAtCoord(vec2(coord.x, y));
+		vec4 pMap = positionMapAtCoord(vec2(coord.x, y));
+		float isWater = wMap.a;
 
-		if (isWater <= 0.0)
+		if (isWater <= 0.0 && pMap.y >= waterMap.y)
+		{
+			QLAND_Y = y;
+			break;
+		}
+	}
+
+	if (QLAND_Y <= 0.0)
+	{// Found no non-water surfaces...
+		return inColor;
+	}
+	
+	QLAND_Y -= ph * 5.0;
+	
+	// Full scan from within 5 px for the real 1st pixel...
+	float upPos = coord.y;
+	float LAND_Y = 0.0;
+
+	for (float y = QLAND_Y; y < 1.0; y += ph)
+	{
+		vec4 wMap = waterMapAtCoord(vec2(coord.x, y));
+		vec4 pMap = positionMapAtCoord(vec2(coord.x, y));
+		float isWater = wMap.a;
+
+		if (isWater <= 0.0 && pMap.y >= waterMap.y)
 		{
 			LAND_Y = y;
 			break;
 		}
 	}
 
+	if (LAND_Y <= 0.0)
+	{// Found no non-water surfaces...
+		return inColor;
+	}
+
 	upPos = clamp(coord.y + ((LAND_Y - coord.y) * 2.0), 0.0, 1.0);
+
+	if (upPos > 1.0 || upPos < 0.0)
+	{// Not on screen...
+		return inColor;
+	}
+
+
+	vec4 wMap = waterMapAtCoord(vec2(coord.x, upPos));
+
+	if (wMap.a > 0.0 /*|| distance(wMap.xyz, ViewOrigin) > distance(waterMap.xyz, ViewOrigin)*/)
+	{// This position is water, or it is closer then the reflection pixel...
+		return inColor;
+	}
 
 	vec4 landColor = texture2D(u_DiffuseMap, vec2(coord.x, upPos));
 	landColor += texture2D(u_DiffuseMap, vec2(coord.x + pw, upPos));
 	landColor += texture2D(u_DiffuseMap, vec2(coord.x - pw, upPos));
 	landColor += texture2D(u_DiffuseMap, vec2(coord.x, upPos + ph));
 	landColor += texture2D(u_DiffuseMap, vec2(coord.x, upPos - ph));
-	landColor /= 5.0;
+	landColor += texture2D(u_DiffuseMap, vec2(coord.x + pw, upPos + ph));
+	landColor += texture2D(u_DiffuseMap, vec2(coord.x - pw, upPos - ph));
+	landColor += texture2D(u_DiffuseMap, vec2(coord.x + pw, upPos - ph));
+	landColor += texture2D(u_DiffuseMap, vec2(coord.x - pw, upPos + ph));
+	landColor /= 9.0;
 
-	return mix(inColor.rgb, landColor.rgb, vec3(1.0 - upPos) * 0.333);
+	return mix(inColor.rgb, landColor.rgb, vec3(1.0 - pow(upPos, 4.0)) * 0.28/*u_Local0.r*/);
 }
+
 
 void main ( void )
 {
 	bool pixelIsInWaterRange = false;
+	bool pixelIsWaterfall = false;
 	bool depthHacked = false;
 	vec3 color2 = texture2D(u_DiffuseMap, var_TexCoords).rgb;
 	vec3 color = color2;
@@ -230,17 +282,23 @@ void main ( void )
 #endif //defined(USE_WATERMAP)
 	vec3 position = positionMapAtCoord(var_TexCoords).xyz;
 
-	if (waterMap.a > 0.0 && position.y == 0.0)
+	if (waterMap.a > 0.0)
 	{// Fix for wierd water bugs.
-		position.xyz = waterMap.xyz;
-		position.xyz -= 10.0;//1.0;
-		depthHacked = true;
-	}
-	else if (waterMap.a > 0.0 && length(position.y - waterMap.y) > 10.0)
-	{// Fix for wierd water bugs.
-		position.xyz = waterMap.xyz;
-		position.xyz -= 10.0;//100.0;
-		depthHacked = true;
+		if (position.y == 0.0)
+		{
+			position.xyz = waterMap.xyz;
+			position.y -= WATER_DEPTH_HACK_LEVEL;
+			depthHacked = true;
+		}
+
+		float dist = length(position.y - waterMap.y);
+
+		if (dist == 0.0 || dist >= 10.0)
+		{
+			position.xyz = waterMap.xyz;
+			position.y -= WATER_DEPTH_HACK_LEVEL;
+			depthHacked = true;
+		}
 	}
 
 #if defined(USE_WATERMAP)
@@ -261,7 +319,7 @@ void main ( void )
 	}
 	else if (waterMap2.a > 0.0)
 	{
-		gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+		gl_FragColor = vec4(0.0, 0.0, 1.0, 1.0);
 		return;
 	}
 #endif //defined(DEBUG_WATER_LOCATION)
@@ -283,8 +341,13 @@ void main ( void )
 #endif //defined(USE_WATERMAP)
 	float depth = 0.0;
 
+	if (waterMap.a >= 2.0 || waterMap2.a >= 2.0)
+	{// Low horizontal normal, this is a waterfall...
+		pixelIsWaterfall = true;
+	}
+
 	// If we are underwater let's leave out complex computations
-	if (level >= ViewOrigin.y)
+	if (level >= ViewOrigin.y && !pixelIsWaterfall)
 	{
 #if defined(USE_UNDERWATER)
 		depth = length(position - cameraPos);
@@ -356,7 +419,17 @@ void main ( void )
 #endif //defined(USE_UNDERWATER)
 	}
 
-	if (pixelIsInWaterRange)
+	if (pixelIsWaterfall)
+	{// How???
+		vec2 texCoord = var_TexCoords.xy;
+		texCoord.x += sin(timer * 0.002 + 3.0 * abs(position.y)) * refractionScale;
+
+		vec3 refraction = texture2D(u_DiffuseMap, texCoord).rgb;
+		gl_FragColor = vec4(mix(depthColour, refraction, 0.7), 1.0);
+		return;
+	}
+
+	if (pixelIsInWaterRange || pixelIsWaterfall)
 	{
 		vec3 eyeVec = position - ViewOrigin;
 		float cameraDepth = ViewOrigin.y - position.y;
@@ -365,9 +438,10 @@ void main ( void )
 		vec3 eyeVecNorm = normalize(eyeVec);
 		float t = (level - ViewOrigin.y) / eyeVecNorm.y;
 		vec3 surfacePoint = ViewOrigin + eyeVecNorm * t;
-		
+
 		eyeVecNorm = normalize(eyeVecNorm);
-		
+
+
 		vec2 texCoord;
 
 #ifdef REAL_WAVES
@@ -380,17 +454,16 @@ void main ( void )
 	
 			bias *= 0.1;
 			level += bias * maxAmplitude;
+
 			t = (level - ViewOrigin.y) / eyeVecNorm.y;
 			surfacePoint = ViewOrigin + eyeVecNorm * t;
 		}
 
-		float waveHeight = level - waterMap.y;
-		
 		depth = length(position - surfacePoint);
 		float depth2 = surfacePoint.y - position.y;
 
 		eyeVecNorm = normalize(ViewOrigin - surfacePoint);
-		
+
 		float normal1 = texture2D(u_HeightMap, (texCoord + (vec2(-1.0, 0.0) / 256.0))).r;
 		float normal2 = texture2D(u_HeightMap, (texCoord + (vec2(1.0, 0.0) / 256.0))).r;
 		float normal3 = texture2D(u_HeightMap, (texCoord + (vec2(0.0, -1.0) / 256.0))).r;
@@ -398,8 +471,8 @@ void main ( void )
 		
 		vec3 myNormal = normalize(vec3((normal1 - normal2) * maxAmplitude,
 										   normalScale,
-										   (normal3 - normal4) * maxAmplitude));   
-		
+										   (normal3 - normal4) * maxAmplitude));
+
 		texCoord = surfacePoint.xz * 1.6 + wind * timer * 0.00016;
 		mat3 tangentFrame = compute_tangent_frame(myNormal, eyeVecNorm, texCoord);
 		vec3 normal0a = normalize(tangentFrame * (texture2D(u_NormalMap, texCoord).xyz * 2.0 - 1.0));
@@ -418,7 +491,7 @@ void main ( void )
 		
 		vec3 normal = normalize(normal0a * normalModifier.x + normal1a * normalModifier.y +
 								  normal2a * normalModifier.z + normal3a * normalModifier.w);
-		
+
 		texCoord = var_TexCoords.xy;
 
 		if (!depthHacked)
@@ -427,16 +500,23 @@ void main ( void )
 		vec3 refraction = texture2D(u_DiffuseMap, texCoord).rgb;
 
 		vec4 position2 = positionMapAtCoord(texCoord);
+		vec4 waterMap3 = waterMapAtCoord(texCoord);
 
-		if (position2.y == 0.0)
+		if (waterMap3.a > 0.0)
 		{// Fix for wierd water bugs.
-			position2.xyz = waterMap.xyz;
-			position2.xyz -= 10.0;//1.0;
-		}
-		else if (length(position2.y - waterMap.y) > 10.0)
-		{// Fix for wierd water bugs.
-			position2.xyz = waterMap.xyz;
-			position2.xyz -= 10.0;//100.0;
+			if (position.y == 0.0)
+			{
+				position2.xyz = waterMap3.xyz;
+				position2.y -= WATER_DEPTH_HACK_LEVEL;
+			}
+
+			float dist = length(position2.y - waterMap3.y);
+
+			if (dist == 0.0 || dist >= 10.0)
+			{
+				position2.xyz = waterMap3.xyz;
+				position2.y -= WATER_DEPTH_HACK_LEVEL;
+			}
 		}
 
 		if (position2.y > level)
@@ -483,8 +563,15 @@ void main ( void )
 		specular += specular * 25.0 * clamp(shininess - 0.05, 0.0, 1.0) * sunColor * specularScale;
 
 #if defined(USE_REFLECTION)
-		color = mix(refraction, bigDepthColour, fresnel);
-		color = AddReflection(var_TexCoords, position, waterMap.y, color.rgb);
+		if (u_Local1.g >= 2.0)
+		{
+			color = mix(refraction, bigDepthColour, fresnel);
+			color = AddReflection(var_TexCoords, position, vec3(waterMap3.x, level, waterMap3.z), color.rgb);
+		}
+		else
+		{
+			color = mix(refraction, bigDepthColour, fresnel);
+		}
 #else //!defined(USE_REFLECTION)
 		color = mix(refraction, bigDepthColour, fresnel);
 #endif //defined(USE_REFLECTION)

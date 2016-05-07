@@ -11,7 +11,7 @@ varying vec3	var_vertPos;
 varying vec3	var_Normal;
 
 // Maximum waves amplitude
-const float maxAmplitude = 6.0;//4.0;
+#define maxAmplitude u_Local10.g
 
 void main()
 {

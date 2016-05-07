@@ -268,6 +268,7 @@ cvar_t	*r_disableGfxDirEnhancement;
 cvar_t	*r_cubemapCullRange;
 cvar_t	*r_cubemapCullFalloffMult;
 cvar_t	*r_glslWater;
+cvar_t	*r_waterWaveHeight;
 cvar_t  *r_grassLength;
 cvar_t  *r_grassWaveSpeed;
 cvar_t  *r_grassWaveSize;
@@ -1476,7 +1477,8 @@ void R_Register( void )
 	r_disableGfxDirEnhancement = ri->Cvar_Get( "r_disableGfxDirEnhancement", "0", CVAR_ARCHIVE | CVAR_LATCH );
 	r_cubemapCullRange = ri->Cvar_Get( "r_cubemapCullRange", "768.0", CVAR_ARCHIVE );
 	r_cubemapCullFalloffMult = ri->Cvar_Get( "r_cubemapCullFalloffMult", "1.5", CVAR_ARCHIVE );
-	r_glslWater = ri->Cvar_Get( "r_glslWater", "1", CVAR_ARCHIVE );
+	r_glslWater = ri->Cvar_Get( "r_glslWater", "2", CVAR_ARCHIVE );
+	r_waterWaveHeight = ri->Cvar_Get( "r_waterWaveHeight", "8.0", CVAR_ARCHIVE );
 	r_grassLength = ri->Cvar_Get( "r_grassLength", "0.4", CVAR_ARCHIVE );
 	r_grassWaveSpeed = ri->Cvar_Get( "r_grassWaveSpeed", "4.0", CVAR_ARCHIVE );
 	r_grassWaveSize = ri->Cvar_Get( "r_grassWaveSize", "0.5", CVAR_ARCHIVE );
