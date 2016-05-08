@@ -199,8 +199,9 @@ void main()
 
 	if (Pos.z <= MAP_WATER_LEVEL - 256.0)
 	{// Deep underwater plants draw at lower density, but larger...
-		float densityMult = 1.0 + clamp(((MAP_WATER_LEVEL - 256.0) - Pos.z) / 128.0, 0.0, 4.0);
+		float densityMult = 3.0 + clamp(((MAP_WATER_LEVEL - 256.0) - Pos.z) / 64.0, 0.0, 6.0);
 		FOLIAGE_DENSITY = int(float(FOLIAGE_DENSITY) / densityMult);
+		if (FOLIAGE_DENSITY < 2.0) FOLIAGE_DENSITY = 2.0;
 	}
 
 	for(int x = 0; x < FOLIAGE_DENSITY; x++)
