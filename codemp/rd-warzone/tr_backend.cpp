@@ -2222,9 +2222,9 @@ const void *RB_PostProcess(const void *data)
 			SCREEN_BLUR = qtrue;
 		}
 
-		if (!SCREEN_BLUR && r_glslWater->integer)
+		if (!SCREEN_BLUR && r_testshader->integer)
 		{
-			RB_WaterPost(currentFbo, srcBox, currentOutFbo, dstBox);
+			RB_TestShader(currentFbo, srcBox, currentOutFbo, dstBox, 0);
 			RB_SwapFBOs( &currentFbo, &currentOutFbo);
 		}
 
@@ -2275,12 +2275,6 @@ const void *RB_PostProcess(const void *data)
 		}
 #endif //CRAZY_SLOW_GAUSSIAN_BLUR
 
-		if (!SCREEN_BLUR && r_testshader->integer)
-		{
-			RB_TestShader(currentFbo, srcBox, currentOutFbo, dstBox, 0);
-			RB_SwapFBOs( &currentFbo, &currentOutFbo);
-		}
-
 		if (!SCREEN_BLUR && r_distanceBlur->integer)
 		{
 			RB_DistanceBlur(currentFbo, srcBox, currentOutFbo, dstBox);
@@ -2302,6 +2296,12 @@ const void *RB_PostProcess(const void *data)
 		if (!SCREEN_BLUR && r_hbao->integer)
 		{
 			RB_HBAO(currentFbo, srcBox, currentOutFbo, dstBox);
+			RB_SwapFBOs( &currentFbo, &currentOutFbo);
+		}
+
+		if (!SCREEN_BLUR && r_glslWater->integer)
+		{
+			RB_WaterPost(currentFbo, srcBox, currentOutFbo, dstBox);
 			RB_SwapFBOs( &currentFbo, &currentOutFbo);
 		}
 

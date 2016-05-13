@@ -23,7 +23,7 @@ extern qboolean InFOV( vec3_t spot, vec3_t from, vec3_t fromAngles, int hFOV, in
 	// =======================================================================================================================================
 
 #define			__NO_GRASS__	// Disable plants... Can use this if I finish GPU based grasses...
-//#define			__NO_PLANTS__	// Disable plants and only draw grass for everything... Was just for testing FPS difference...
+#define			__NO_PLANTS__	// Disable plants and only draw grass for everything... Was just for testing FPS difference...
 
 	// =======================================================================================================================================
 	//
@@ -1584,23 +1584,28 @@ extern "C" {
 		{// Init/register all foliage models...
 			TREE_SCALE_MULTIPLIER = 1.0;
 
+#ifndef __NO_GRASS__
 			FOLIAGE_PLANT_MODEL[0] = trap->R_RegisterModel( "models/warzone/foliage/uqgrass.md3" );
 			FOLIAGE_PLANT_MODEL[1] = trap->R_RegisterModel( "models/warzone/foliage/uqgrass_lod.md3" );
 			FOLIAGE_PLANT_MODEL[2] = trap->R_RegisterModel( "models/warzone/foliage/uqgrass_lod2.md3" );
 			FOLIAGE_PLANT_MODEL[3] = trap->R_RegisterModel( "models/warzone/foliage/uqgrass_lod3.md3" );
 			FOLIAGE_PLANT_MODEL[4] = trap->R_RegisterModel( "models/warzone/foliage/uqplant.md3" );
-
+#endif //__NO_GRASS__
 
 			if (!strcmp(CURRENT_CLIMATE_OPTION, "springpineforest"))
 			{
 				TREE_SCALE_MULTIPLIER = 2.5;
 
+#ifndef __NO_GRASS__
 				FOLIAGE_GRASS_BILLBOARD_SHADER = trap->R_RegisterShader( "models/warzone/foliage/grasspineforest" );
+#endif //__NO_GRASS__
 
+#ifndef __NO_PLANTS__
 				for (int i = 0; i < MAX_PLANT_SHADERS; i++)
 				{
 					FOLIAGE_PLANT_SHADERS[i] = trap->R_RegisterShader(SpringPlantsList[i]);
 				}
+#endif //__NO_PLANTS__
 
 				FOLIAGE_TREE_MODEL[0] = trap->R_RegisterModel( "models/warzone/trees/uqconifer7.md3" );
 				FOLIAGE_TREE_MODEL[1] = trap->R_RegisterModel( "models/warzone/trees/uqconifer7.md3" );
@@ -1656,12 +1661,16 @@ extern "C" {
 			{
 				TREE_SCALE_MULTIPLIER = 2.5;
 
+#ifndef __NO_GRASS__
 				FOLIAGE_GRASS_BILLBOARD_SHADER = trap->R_RegisterShader( "models/warzone/foliage/ferngrass" );
+#endif //__NO_GRASS__
 
+#ifndef __NO_PLANTS__
 				for (int i = 0; i < MAX_PLANT_SHADERS; i++)
 				{
 					FOLIAGE_PLANT_SHADERS[i] = trap->R_RegisterShader(EndorPlantsList[i]);
 				}
+#endif //__NO_PLANTS__
 
 				FOLIAGE_TREE_MODEL[0] = trap->R_RegisterModel( "models/warzone/trees/uqredwood1.md3" );
 				FOLIAGE_TREE_MODEL[1] = trap->R_RegisterModel( "models/warzone/trees/uqredwood2.md3" );
@@ -1718,12 +1727,16 @@ extern "C" {
 			{
 				TREE_SCALE_MULTIPLIER = 2.5;
 
+#ifndef __NO_GRASS__
 				FOLIAGE_GRASS_BILLBOARD_SHADER = trap->R_RegisterShader( "models/warzone/foliage/grasssnowpineforest" );
+#endif //__NO_GRASS__
 
+#ifndef __NO_PLANTS__
 				for (int i = 0; i < MAX_PLANT_SHADERS; i++)
 				{
 					FOLIAGE_PLANT_SHADERS[i] = trap->R_RegisterShader(SnowPlantsList[i]);
 				}
+#endif //__NO_PLANTS__
 
 				FOLIAGE_TREE_MODEL[0] = trap->R_RegisterModel( "models/warzone/trees/uqsnowpine1.md3" );
 				FOLIAGE_TREE_MODEL[1] = trap->R_RegisterModel( "models/warzone/trees/uqsnowpine2.md3" );
@@ -1779,12 +1792,16 @@ extern "C" {
 			{
 				TREE_SCALE_MULTIPLIER = 2.0;
 
+#ifndef __NO_GRASS__
 				FOLIAGE_GRASS_BILLBOARD_SHADER = trap->R_RegisterShader( "models/warzone/foliage/grasstropical" );
+#endif //__NO_GRASS__
 
+#ifndef __NO_PLANTS__
 				for (int i = 0; i < MAX_PLANT_SHADERS; i++)
 				{
 					FOLIAGE_PLANT_SHADERS[i] = trap->R_RegisterShader(TropicalPlantsList[i]);
 				}
+#endif //__NO_PLANTS__
 
 				FOLIAGE_TREE_MODEL[0] = trap->R_RegisterModel( "models/warzone/trees/fanpalm2.md3" );
 				FOLIAGE_TREE_MODEL[1] = trap->R_RegisterModel( "models/warzone/trees/fanpalm2.md3" );
@@ -1840,12 +1857,16 @@ extern "C" {
 			{
 				TREE_SCALE_MULTIPLIER = 2.0;
 
+#ifndef __NO_GRASS__
 				FOLIAGE_GRASS_BILLBOARD_SHADER = trap->R_RegisterShader( "models/warzone/foliage/grasstropical" );
+#endif //__NO_GRASS__
 
+#ifndef __NO_PLANTS__
 				for (int i = 0; i < MAX_PLANT_SHADERS; i++)
 				{
 					FOLIAGE_PLANT_SHADERS[i] = trap->R_RegisterShader(TropicalPlantsList[i]);
 				}
+#endif //__NO_PLANTS__
 
 				FOLIAGE_TREE_MODEL[0] = trap->R_RegisterModel( "models/warzone/trees/uqpalm2.md3" );
 				FOLIAGE_TREE_MODEL[1] = trap->R_RegisterModel( "models/warzone/trees/uqpalm3.md3" );

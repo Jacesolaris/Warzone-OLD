@@ -757,6 +757,7 @@ static uniformInfo_t uniformsInfo[] =
 	{ "u_PositionMap", GLSL_INT, 1 },
 	{ "u_WaterPositionMap", GLSL_INT, 1 },
 	{ "u_WaterPositionMap2", GLSL_INT, 1 },
+	{ "u_WaterHeightMap", GLSL_INT, 1 },
 	{ "u_HeightMap", GLSL_INT, 1 },
 	{ "u_GlowMap", GLSL_INT, 1 },
 
@@ -766,6 +767,15 @@ static uniformInfo_t uniformsInfo[] =
 	{ "u_OverlayMap",    GLSL_INT, 1 },
 	{ "u_SteepMap",  GLSL_INT, 1 },
 	{ "u_SteepMap2",  GLSL_INT, 1 },
+	{ "u_SplatControlMap",  GLSL_INT, 1 },
+	{ "u_SplatMap1",  GLSL_INT, 1 },
+	{ "u_SplatMap2",  GLSL_INT, 1 },
+	{ "u_SplatMap3",  GLSL_INT, 1 },
+	{ "u_SplatMap4",  GLSL_INT, 1 },
+	{ "u_SplatNormalMap1",  GLSL_INT, 1 },
+	{ "u_SplatNormalMap2",  GLSL_INT, 1 },
+	{ "u_SplatNormalMap3",  GLSL_INT, 1 },
+	{ "u_SplatNormalMap4",  GLSL_INT, 1 },
 
 	{ "u_ScreenImageMap", GLSL_INT, 1 },
 	{ "u_ScreenDepthMap", GLSL_INT, 1 },
@@ -853,6 +863,10 @@ static uniformInfo_t uniformsInfo[] =
 	{ "u_BoneMatrices",			GLSL_MAT16, 20 },
 
 	// UQ1: Added...
+	{ "u_Mins",					GLSL_VEC4, 1  },
+	{ "u_Maxs",					GLSL_VEC4, 1  },
+	{ "u_MapInfo",				GLSL_VEC4, 1  },
+
 	{ "u_Dimensions",           GLSL_VEC2, 1 },
 	{ "u_Local0",				GLSL_VEC4, 1  },
 	{ "u_Local1",				GLSL_VEC4, 1  },
@@ -3097,6 +3111,15 @@ void GLSL_EndLoadGPUShaders ( int startTime )
 		GLSL_SetUniformInt(&tr.lightallShader[i], UNIFORM_OVERLAYMAP, TB_OVERLAYMAP);
 		GLSL_SetUniformInt(&tr.lightallShader[i], UNIFORM_STEEPMAP, TB_STEEPMAP);
 		GLSL_SetUniformInt(&tr.lightallShader[i], UNIFORM_STEEPMAP2, TB_STEEPMAP2);
+		GLSL_SetUniformInt(&tr.lightallShader[i], UNIFORM_SPLATCONTROLMAP, TB_SPLATCONTROLMAP);
+		GLSL_SetUniformInt(&tr.lightallShader[i], UNIFORM_SPLATMAP1, TB_SPLATMAP1);
+		GLSL_SetUniformInt(&tr.lightallShader[i], UNIFORM_SPLATMAP2, TB_SPLATMAP2);
+		GLSL_SetUniformInt(&tr.lightallShader[i], UNIFORM_SPLATMAP3, TB_SPLATMAP3);
+		GLSL_SetUniformInt(&tr.lightallShader[i], UNIFORM_SPLATMAP4, TB_SPLATMAP4);
+		GLSL_SetUniformInt(&tr.lightallShader[i], UNIFORM_SPLATNORMALMAP1, TB_SPLATNORMALMAP1);
+		GLSL_SetUniformInt(&tr.lightallShader[i], UNIFORM_SPLATNORMALMAP2, TB_SPLATNORMALMAP2);
+		GLSL_SetUniformInt(&tr.lightallShader[i], UNIFORM_SPLATNORMALMAP3, TB_SPLATNORMALMAP3);
+		GLSL_SetUniformInt(&tr.lightallShader[i], UNIFORM_SPLATNORMALMAP4, TB_SPLATNORMALMAP4);
 		qglUseProgram(0);
 
 #if defined(_DEBUG)
@@ -3147,6 +3170,7 @@ void GLSL_EndLoadGPUShaders ( int startTime )
 		GLSL_SetUniformInt(&tr.grass2Shader, UNIFORM_OVERLAYMAP, TB_OVERLAYMAP);
 		GLSL_SetUniformInt(&tr.grass2Shader, UNIFORM_STEEPMAP, TB_STEEPMAP);
 		GLSL_SetUniformInt(&tr.grass2Shader, UNIFORM_STEEPMAP2, TB_STEEPMAP2);
+		GLSL_SetUniformInt(&tr.grass2Shader, UNIFORM_SPLATCONTROLMAP, TB_SPLATCONTROLMAP);
 		qglUseProgram(0);
 
 #if defined(_DEBUG)
@@ -3986,6 +4010,9 @@ void GLSL_EndLoadGPUShaders ( int startTime )
 	GLSL_SetUniformInt(&tr.waterPostShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
 	GLSL_SetUniformInt(&tr.waterPostShader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
 	GLSL_SetUniformInt(&tr.waterPostShader, UNIFORM_NORMALMAP, TB_NORMALMAP);
+	GLSL_SetUniformInt(&tr.waterPostShader, UNIFORM_HEIGHTMAP, TB_HEIGHTMAP);
+	GLSL_SetUniformInt(&tr.waterPostShader, UNIFORM_POSITIONMAP, TB_POSITIONMAP);
+	GLSL_SetUniformInt(&tr.waterPostShader, UNIFORM_NORMALMAP, TB_NORMALMAP);
 	
 	{
 		vec4_t viewInfo;
@@ -4138,8 +4165,12 @@ void GLSL_EndLoadGPUShaders ( int startTime )
 
 	qglUseProgram(tr.testshaderShader.program);
 
-	GLSL_SetUniformInt(&tr.testshaderShader, UNIFORM_LEVELSMAP,  TB_LEVELSMAP);
-	
+	GLSL_SetUniformInt(&tr.testshaderShader, UNIFORM_HEIGHTMAP, TB_HEIGHTMAP);
+	GLSL_SetUniformInt(&tr.testshaderShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
+	GLSL_SetUniformInt(&tr.testshaderShader, UNIFORM_POSITIONMAP, TB_POSITIONMAP);
+	GLSL_SetUniformInt(&tr.testshaderShader, UNIFORM_NORMALMAP, TB_NORMALMAP);
+	GLSL_SetUniformInt(&tr.testshaderShader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
+
 	{
 		vec2_t screensize;
 		screensize[0] = glConfig.vidWidth * r_superSampleMultiplier->value;

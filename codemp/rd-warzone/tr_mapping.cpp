@@ -23,6 +23,7 @@ vec3_t  MAP_INFO_MAXS;
 vec3_t	MAP_INFO_SIZE;
 vec3_t	MAP_INFO_PIXELSIZE;
 vec3_t	MAP_INFO_SCATTEROFFSET;
+float	MAP_INFO_MAXSIZE;
 
 void Mapping_Trace( trace_t *results, const vec3_t start, const vec3_t mins, const vec3_t maxs, const vec3_t end, const int passEntityNum, const int contentmask )
 {
@@ -113,6 +114,7 @@ void R_SetupMapInfo ( void )
 	memset(MAP_INFO_SIZE, 0, sizeof(MAP_INFO_SIZE));
 	memset(MAP_INFO_PIXELSIZE, 0, sizeof(MAP_INFO_PIXELSIZE));
 	memset(MAP_INFO_SCATTEROFFSET, 0, sizeof(MAP_INFO_SCATTEROFFSET));
+	MAP_INFO_MAXSIZE = 0.0;
 
 	MAP_INFO_SIZE[0] = MAP_INFO_MAXS[0] - MAP_INFO_MINS[0];
 	MAP_INFO_SIZE[1] = MAP_INFO_MAXS[1] - MAP_INFO_MINS[1];
@@ -121,6 +123,9 @@ void R_SetupMapInfo ( void )
 	MAP_INFO_PIXELSIZE[1] = MAP_INFO_TRACEMAP_SIZE / MAP_INFO_SIZE[1];
 	MAP_INFO_SCATTEROFFSET[0] = MAP_INFO_SIZE[0] / MAP_INFO_TRACEMAP_SIZE;
 	MAP_INFO_SCATTEROFFSET[1] = MAP_INFO_SIZE[1] / MAP_INFO_TRACEMAP_SIZE;
+	
+	MAP_INFO_MAXSIZE = MAP_INFO_SIZE[0];
+	if (MAP_INFO_SIZE[1] > MAP_INFO_MAXSIZE) MAP_INFO_MAXSIZE = MAP_INFO_SIZE[1];
 }
 
 void R_CreateRandom2KImage ( char *variation )
@@ -130,7 +135,12 @@ void R_CreateRandom2KImage ( char *variation )
 	int		i = 0;
 
 	// write tga
-	fileHandle_t f = ri->FS_FOpenFileWrite( va("gfx/random2K%s.tga", variation), qfalse);
+	fileHandle_t f;
+
+	if (!strcmp(variation, "splatControl"))
+		f = ri->FS_FOpenFileWrite( "gfx/splatControlImage.tga", qfalse);
+	else
+		f = ri->FS_FOpenFileWrite( va("gfx/random2K%s.tga", variation), qfalse);
 
 	// header
 	data = 0; ri->FS_Write( &data, sizeof(data), f );	// 0
@@ -697,7 +707,7 @@ void R_CreateHeightMapImage ( void )
 	}
 
 	// Create the map...
-#pragma omp parallel for schedule(dynamic)
+//#pragma omp parallel for schedule(dynamic)
 	//for (int x = (int)MAP_INFO_MINS[0]; x < (int)MAP_INFO_MAXS[0]; x += MAP_INFO_SCATTEROFFSET[0])
 	for (int imageX = 0; imageX < MAP_INFO_TRACEMAP_SIZE; imageX++)
 	{
@@ -706,6 +716,8 @@ void R_CreateHeightMapImage ( void )
 		for (int imageY = 0; imageY < MAP_INFO_TRACEMAP_SIZE; imageY++)
 		{
 			int y = MAP_INFO_MINS[1] + (imageY * MAP_INFO_SCATTEROFFSET[1]);
+
+			qboolean	HIT_WATER = qfalse;
 
 			for (z = MAP_INFO_MAXS[2]; z > MAP_INFO_MINS[2]; z -= 48.0)
 			{
@@ -716,7 +728,10 @@ void R_CreateHeightMapImage ( void )
 				VectorSet(pos, x, y, z);
 				VectorSet(down, x, y, -65536);
 
-				Mapping_Trace( &tr, pos, NULL, NULL, down, ENTITYNUM_NONE, /*MASK_ALL*/MASK_PLAYERSOLID|CONTENTS_WATER/*|CONTENTS_OPAQUE*/ );
+				if (HIT_WATER)
+					Mapping_Trace( &tr, pos, NULL, NULL, down, ENTITYNUM_NONE, MASK_PLAYERSOLID );
+				else
+					Mapping_Trace( &tr, pos, NULL, NULL, down, ENTITYNUM_NONE, MASK_PLAYERSOLID|CONTENTS_WATER/*|CONTENTS_OPAQUE*/ );
 
 				if (tr.startsolid || tr.allsolid)
 				{// Try again from below this spot...
@@ -727,7 +742,7 @@ void R_CreateHeightMapImage ( void )
 					continue;
 				}
 
-				if (tr.endpos[2] <= MAP_INFO_MINS[2])
+				if (tr.endpos[2] < MAP_INFO_MINS[2]-256.0)
 				{// Went off map...
 					red[imageX][imageY] = 0;
 					green[imageX][imageY] = 0;
@@ -754,13 +769,30 @@ void R_CreateHeightMapImage ( void )
 					continue;
 				}
 
-				float DIST_FROM_ROOF = MAP_INFO_MAXS[2] - tr.endpos[2];
-				float HEIGHT_COLOR_MULT = (1.0 - (DIST_FROM_ROOF / MAP_INFO_SIZE[2]));
+				if (!HIT_WATER && tr.contents & CONTENTS_WATER)
+				{
+					HIT_WATER = qtrue;
+					continue;
+				}
 
-				red[imageX][imageY] = tr.plane.normal[0]*255;		// surface plane X
-				green[imageX][imageY] = tr.plane.normal[1]*255;		// surface plane Y
-				blue[imageX][imageY] = tr.plane.normal[2]*255;		// surface plane Z
-				alpha[imageX][imageY] = HEIGHT_COLOR_MULT*255;		// height map
+				float DIST_FROM_ROOF = MAP_INFO_MAXS[2] - tr.endpos[2];
+				float distScale = DIST_FROM_ROOF / MAP_INFO_SIZE[2];
+				if (distScale > 1.0) distScale = 1.0;
+				float HEIGHT_COLOR_MULT = (1.0 - distScale);
+
+				float isUnderWater = 0;
+
+				if (HIT_WATER)
+				{
+					isUnderWater = 1.0;
+				}
+
+				red[imageX][imageY] = HEIGHT_COLOR_MULT*255;		// height map
+				green[imageX][imageY] = HEIGHT_COLOR_MULT*255;		// height map
+				blue[imageX][imageY] = HEIGHT_COLOR_MULT*255;		// height map
+				alpha[imageX][imageY] = isUnderWater*255;			// is under water
+
+				HIT_WATER = qfalse;
 				break;
 			}
 		}
@@ -1229,23 +1261,42 @@ void R_LoadMapInfo ( void )
 		tr.random2KImage[1] = R_FindImageFile("gfx/random2Ka.tga", IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION);
 	}
 
-	{// Water DUDV and DUDV NormalMap...
-		tr.waterDudvImage = R_FindImageFile("textures/water/waterDUDV.jpg", IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION);
-		tr.waterDudvNormalImage = R_FindImageFile("textures/water/waterDUDV_n.jpg", IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION);
+	if (!ri->FS_FileExists(va( "gfx/splatControlImage.tga", currentMapName )))
+	{
+		R_CreateRandom2KImage("splatControl");
+		tr.defaultSplatControlImage = R_FindImageFile("gfx/splatControlImage.tga", IMGTYPE_SPLATCONTROLMAP, IMGFLAG_NO_COMPRESSION|IMGFLAG_NOLIGHTSCALE);
+	}
+	else
+	{
+		tr.defaultSplatControlImage = R_FindImageFile("gfx/splatControlImage.tga", IMGTYPE_SPLATCONTROLMAP, IMGFLAG_NO_COMPRESSION|IMGFLAG_NOLIGHTSCALE);
 	}
 
-	tr.waterImage = R_FindImageFile("textures/water/save.01.jpg", IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION);
+	{
+		// Grass maps... Try to load map based image first...
+		tr.defaultGrassMapImage = R_FindImageFile(va( "maps/%s_grass.tga", currentMapName ), IMGTYPE_SPLATCONTROLMAP, IMGFLAG_NO_COMPRESSION|IMGFLAG_NOLIGHTSCALE);
 
-	tr.waterFoamImage = R_FindImageFile("textures/water/waterFoamGrey.jpg", IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION);
-	tr.waterHeightImage = R_FindImageFile("textures/water/waterHeightMap.jpg", IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION);
-	tr.waterNormalImage = R_FindImageFile("textures/water/waterNormalMap.jpg", IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION);
-	tr.waterCausicsImage = R_FindImageFile("textures/water/waterCausicsMap.jpg", IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION);
+		if (!tr.defaultGrassMapImage)
+		{// No map based image? Use default...
+			tr.defaultGrassMapImage = R_FindImageFile("gfx/grassmap.tga", IMGTYPE_SPLATCONTROLMAP, IMGFLAG_NO_COMPRESSION|IMGFLAG_NOLIGHTSCALE);
+		}
+
+		if (!tr.defaultGrassMapImage)
+		{// No default image? Use white...
+			tr.defaultGrassMapImage = tr.whiteImage;
+		}
+	}
+
+	{// Water...
+		tr.waterFoamImage = R_FindImageFile("textures/water/waterFoamGrey.jpg", IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION);
+		tr.waterHeightImage = R_FindImageFile("textures/water/waterHeightMap.jpg", IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION);
+		tr.waterNormalImage = R_FindImageFile("textures/water/waterNormalMap.jpg", IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION);
+		tr.waterCausicsImage = R_FindImageFile("textures/water/waterCausicsMap.jpg", IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION);
+	}
 
 	FOLIAGE_LoadMapClimateInfo();
 
 	FOLIAGE_ALLOWED_MATERIALS_NUM = 0;
 
-	//tr.grassImageShader = R_FindShader( "models/warzone/foliage/grasstropical", lightmapsNone, stylesDefault, qtrue );
 	if (!strcmp(CURRENT_CLIMATE_OPTION, "springpineforest"))
 	{
 		tr.grassImage = R_FindImageFile( "models/warzone/foliage/grasspineforest", IMGTYPE_COLORALPHA, IMGFLAG_NONE );
@@ -1294,17 +1345,19 @@ void R_LoadMapInfo ( void )
 	{
 		tr.mapImage = R_FindImageFile(va( "mapImage/%s.tga", currentMapName ), IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION);
 	}
+#endif
 
 	if (!ri->FS_FileExists(va( "heightMapImage/%s.tga", currentMapName )))
 	{
 		R_CreateHeightMapImage();
-		tr.foliageMapImage = R_FindImageFile(va( "heightMapImage/%s.tga", currentMapName ), IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION);
+		tr.heightMapImage = R_FindImageFile(va( "heightMapImage/%s.tga", currentMapName ), IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION);
 	}
 	else
 	{
-		tr.foliageMapImage = R_FindImageFile(va( "heightMapImage/%s.tga", currentMapName ), IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION);
+		tr.heightMapImage = R_FindImageFile(va( "heightMapImage/%s.tga", currentMapName ), IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION);
 	}
 
+#if 0
 	if (!ri->FS_FileExists(va( "foliageMapImage/%s.tga", currentMapName )))
 	{
 		R_CreateFoliageMapImage();
@@ -1313,37 +1366,6 @@ void R_LoadMapInfo ( void )
 	else
 	{
 		tr.foliageMapImage = R_FindImageFile(va( "foliageMapImage/%s.tga", currentMapName ), IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION);
-	}
-
-	if (!ri->FS_FileExists("grassImage/grassMask0.tga")
-		|| !ri->FS_FileExists("grassImage/grassMask1.tga")
-		|| !ri->FS_FileExists("grassImage/grassMask2.tga")
-		|| !ri->FS_FileExists("grassImage/grassMask3.tga")
-		|| !ri->FS_FileExists("grassImage/grassMask4.tga")
-		|| !ri->FS_FileExists("grassImage/grassMask5.tga")
-		|| !ri->FS_FileExists("grassImage/grassMask6.tga")
-		|| !ri->FS_FileExists("grassImage/grassMask7.tga")
-		|| !ri->FS_FileExists("grassImage/grassMask8.tga")
-		|| !ri->FS_FileExists("grassImage/grassMask9.tga")
-		|| !ri->FS_FileExists("grassImage/grassImage.tga"))
-	{
-		R_CreateGrassImages();
-
-		for (int i = 0; i < 10; i++)
-		{
-			tr.grassMaskImage[i] = R_FindImageFile(va( "grassImage/grassMask%i.tga", i) , IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION);
-		}
-
-		tr.grassImage = R_FindImageFile("grassImage/grassImage.tga" , IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION);
-	}
-	else
-	{
-		for (int i = 0; i < 10; i++)
-		{
-			tr.grassMaskImage[i] = R_FindImageFile(va( "grassImage/grassMask%i.tga", i) , IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION);
-		}
-
-		tr.grassImage = R_FindImageFile("grassImage/grassImage.tga" , IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION);
 	}
 #endif
 }

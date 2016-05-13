@@ -1,9 +1,12 @@
+//#define GREYSCALE_FOAM			// Original foam was greyscale. It is now colored.
 #define USE_WATERMAP				// Needs to also be enabled in rend2 tr_local.h
 //#define SIMPLIFIED_FRESNEL		// Seems no faster... not as good?
 #define REAL_WAVES					// You probably always want this turned on.
 //#define USE_UNDERWATER			// TODO: Convert from HLSL when I can be bothered.
 #define USE_REFLECTION				// Enable reflections on water.
 //#define DEBUG_WATER_LOCATION		// DEBUG: Simply displays where water is on the screen in blue, and non water in red.
+//#define CANT_MAKE_THIS_WORK
+//#define USE_WATER_DIRECTION_LOOKUP	// Experimenting with this.
 
 /*
 heightMap – height-map used for waves generation as described in the section “Modifying existing geometry”
@@ -15,21 +18,31 @@ normalMap – texture storing normal vectors for normal mapping as described in th
 foamMap – texture containing foam – in my case it is a photo of foam converted to greyscale
 */
 
+#if defined(CANT_MAKE_THIS_WORK)
+uniform mat4	u_ModelViewProjectionMatrix;
+#endif //defined(CANT_MAKE_THIS_WORK)
 
-uniform sampler2D	u_HeightMap;
+uniform sampler2D	u_WaterHeightMap;
 uniform sampler2D	u_DiffuseMap;   // backBufferMap
 uniform sampler2D	u_PositionMap;
 uniform sampler2D	u_NormalMap;
 uniform sampler2D	u_OverlayMap;   // foamMap
+#if defined(CANT_MAKE_THIS_WORK)
+uniform sampler2D	u_HeightMap;	// (rough) heightmap of whole map. alpha is underwater marker.
+#endif //defined(CANT_MAKE_THIS_WORK)
 
 #if defined(USE_WATERMAP)
 uniform sampler2D	u_WaterPositionMap;
 uniform sampler2D	u_WaterPositionMap2;
 #endif //defined(USE_WATERMAP)
 
-uniform vec4		u_Local0; // testvalue0, testvalue1, testvalue2, testvalue3
-uniform vec4		u_Local1; // MAP_WATER_LEVEL, USE_GLSL_REFLECTION
-uniform vec4		u_Local10; // waveHeight
+uniform vec4		u_Mins;			// MAP_MINS[0], MAP_MINS[1], MAP_MINS[2], 0.0
+uniform vec4		u_Maxs;			// MAP_MAXS[0], MAP_MAXS[1], MAP_MAXS[2], 0.0
+uniform vec4		u_MapInfo;		// MAP_INFO_SIZE[0], MAP_INFO_SIZE[1], MAP_INFO_SIZE[2], 0.0
+
+uniform vec4		u_Local0;		// testvalue0, testvalue1, testvalue2, testvalue3
+uniform vec4		u_Local1;		// MAP_WATER_LEVEL, USE_GLSL_REFLECTION
+uniform vec4		u_Local10;		// waveHeight
 
 uniform vec2		u_Dimensions;
 uniform vec4		u_ViewInfo; // zmin, zmax, zmax / zmin
@@ -124,8 +137,10 @@ const float visibility = 32.0;
 const vec2 scale = vec2(0.002, 0.002);
 const float refractionScale = 0.005;
 
+#if !defined(USE_WATER_DIRECTION_LOOKUP)
 // Wind force in x and z axes.
 const vec2 wind = vec2(-0.3, 0.7);
+#endif //defined(USE_WATER_DIRECTION_LOOKUP)
 
 
 mat3 compute_tangent_frame(in vec3 N, in vec3 P, in vec2 UV) {
@@ -182,6 +197,46 @@ vec4 positionMapAtCoord ( vec2 coord )
 {
 	return texture2D(u_PositionMap, coord).xzya;
 }
+
+#if defined(CANT_MAKE_THIS_WORK)
+vec4 tex3D( in vec3 pos, in vec3 normal, sampler2D sampler )
+{
+	return 	texture2D( sampler, pos.yz )*abs(normal.x)+ 
+			texture2D( sampler, pos.xz )*abs(normal.y)+ 
+			texture2D( sampler, pos.xy )*abs(normal.z);
+}
+
+vec4 GetControlMap( sampler2D tex, vec3 m_vertPos, vec3 scale)
+{
+/*
+	vec4 xaxis = texture2D( tex, (m_vertPos.yz * scale.yz));// * 0.5 + 0.5);
+	vec4 yaxis = texture2D( tex, (m_vertPos.xz * scale.xz));// * 0.5 + 0.5);
+	vec4 zaxis = texture2D( tex, (m_vertPos.xy * scale.xy));// * 0.5 + 0.5);
+
+	return xaxis * 0.333 + yaxis * 0.333 + zaxis * 0.333;
+*/
+	vec4 pos = u_ModelViewProjectionMatrix * vec4(m_vertPos.xzy, 1.0);
+	vec4 viewpos = u_ModelViewProjectionMatrix * vec4(ViewOrigin.xzy, 1.0);
+	vec3 normal = normalize(pos.xzy - viewpos.xzy);
+	return tex3D( pos.xzy, normal, tex );
+}
+
+float waterHeightAtPos ( vec3 pos )
+{
+/*
+float DIST_FROM_ROOF = u_Maxs.b - tr.endpos[2];
+float distScale = DIST_FROM_ROOF / u_MapInfo.b;
+float HEIGHT_COLOR_MULT = (1.0 - distScale);
+*/
+	vec3 controlScale = (vec3(1.0) / u_MapInfo.xyz);
+	vec4 heightMap = GetControlMap( u_HeightMap, pos, controlScale);
+
+	float height = heightMap.z * u_MapInfo.z;
+	height = u_Maxs.z - height;
+
+	return height;
+}
+#endif //defined(CANT_MAKE_THIS_WORK)
 
 float pw = (1.0/u_Dimensions.x);
 float ph = (1.0/u_Dimensions.y);
@@ -282,6 +337,7 @@ void main ( void )
 #endif //defined(USE_WATERMAP)
 	vec3 position = positionMapAtCoord(var_TexCoords).xyz;
 
+#if !defined(CANT_MAKE_THIS_WORK)
 	if (waterMap.a > 0.0)
 	{// Fix for wierd water bugs.
 		if (position.y == 0.0)
@@ -300,6 +356,9 @@ void main ( void )
 			depthHacked = true;
 		}
 	}
+#else //defined(CANT_MAKE_THIS_WORK)
+	position.y = waterMap.y - waterHeightAtPos(waterMap.xzy);
+#endif //defined(CANT_MAKE_THIS_WORK)
 
 #if defined(USE_WATERMAP)
 	if (waterMap.a > 0.0 || waterMap2.a > 0.0 || (waterMap.y != 0.0 && position.y <= waterMap.y + maxAmplitude))
@@ -348,6 +407,102 @@ void main ( void )
 	{// Low horizontal normal, this is a waterfall...
 		pixelIsWaterfall = true;
 	}
+
+#if defined(USE_WATER_DIRECTION_LOOKUP)
+	// Wind force in x and z axes.
+	vec2 wind = vec2(-0.3, 0.7);
+
+	vec3 testPosition1 = positionMapAtCoord(var_TexCoords + vec2(0.0, ph * 4.0)).xyz;
+	vec3 testPosition2 = positionMapAtCoord(var_TexCoords - vec2(0.0, ph * 4.0)).xyz;
+	vec3 testPosition3 = positionMapAtCoord(var_TexCoords + vec2(pw * 4.0, 0.0)).xyz;
+	vec3 testPosition4 = positionMapAtCoord(var_TexCoords - vec2(pw * 4.0, 0.0)).xyz;
+	vec3 testPosition5 = positionMapAtCoord(var_TexCoords + vec2(ph * 4.0, pw * 4.0)).xyz;
+	vec3 testPosition6 = positionMapAtCoord(var_TexCoords + vec2(-ph * 4.0, -pw * 4.0)).xyz;
+	vec3 testPosition7 = positionMapAtCoord(var_TexCoords + vec2(ph * 4.0, -pw * 4.0)).xyz;
+	vec3 testPosition8 = positionMapAtCoord(var_TexCoords + vec2(-ph * 4.0, pw * 4.0)).xyz;
+
+	vec3 bestPositon = testPosition1;
+
+	if (testPosition2.y > bestPositon.y) bestPositon = testPosition2;
+	if (testPosition3.y > bestPositon.y) bestPositon = testPosition3;
+	if (testPosition4.y > bestPositon.y) bestPositon = testPosition4;
+	if (testPosition5.y > bestPositon.y) bestPositon = testPosition5;
+	if (testPosition6.y > bestPositon.y) bestPositon = testPosition6;
+	if (testPosition7.y > bestPositon.y) bestPositon = testPosition7;
+	if (testPosition8.y > bestPositon.y) bestPositon = testPosition8;
+
+	vec3 evn = normalize(ViewOrigin - position.xyz);
+	vec3 nm = normalize(position.xyz - bestPositon.xyz);
+	mat3 tangentFrame = compute_tangent_frame(nm, evn, var_TexCoords);
+	nm = normalize(tangentFrame * nm);
+
+	if (u_Local0.g >= 5.0)
+		wind = nm.yx * u_Local0.r;
+	else if (u_Local0.g >= 4.0)
+		wind = nm.yz * u_Local0.r;
+	else if (u_Local0.g >= 3.0)
+		wind = nm.xz * u_Local0.r;
+	else if (u_Local0.g >= 2.0)
+		wind = nm.xy * u_Local0.r;
+	else if (u_Local0.g >= 1.0)
+		wind = nm.zy * u_Local0.r;
+	else
+		wind = nm.zx * u_Local0.r;
+
+	/*
+	vec3 bestPositon = testPosition1;
+	vec2 bestDir = vec2(0.0, ph * 4.0);
+
+	if (testPosition2.y > bestPositon.y) bestPositon = testPosition2;
+	{
+		bestPositon = testPosition2;
+		bestDir = -vec2(0.0, ph * 4.0);
+	}
+
+	if (testPosition2.y > bestPositon.y) bestPositon = testPosition2;
+	{
+		bestPositon = testPosition3;
+		bestDir = vec2(pw * 4.0, 0.0);
+	}
+
+	if (testPosition2.y > bestPositon.y) bestPositon = testPosition2;
+	{
+		bestPositon = testPosition4;
+		bestDir = -vec2(pw * 4.0, 0.0);
+	}
+
+	if (testPosition2.y > bestPositon.y) bestPositon = testPosition2;
+	{
+		bestPositon = testPosition5;
+		bestDir = vec2(ph * 4.0, pw * 4.0);
+	}
+
+	if (testPosition2.y > bestPositon.y) bestPositon = testPosition2;
+	{
+		bestPositon = testPosition6;
+		bestDir = vec2(-ph * 4.0, -pw * 4.0);
+	}
+
+	if (testPosition2.y > bestPositon.y) bestPositon = testPosition2;
+	{
+		bestPositon = testPosition7;
+		bestDir = vec2(ph * 4.0, -pw * 4.0);
+	}
+
+	if (testPosition2.y > bestPositon.y) bestPositon = testPosition2;
+	{
+		bestPositon = testPosition8;
+		bestDir = vec2(-ph * 4.0, pw * 4.0);
+	}
+
+	wind = bestDir * u_Local0.r;
+
+	if (u_Local0.g >= 1.0)
+		wind = normalize(bestDir) * u_Local0.r;
+	*/
+
+	//wind = normalize(position.xz - vec2(0.0)) * u_Local0.r;
+#endif //defined(USE_WATER_DIRECTION_LOOKUP)
 
 	// If we are underwater let's leave out complex computations
 	if (level >= ViewOrigin.y && !pixelIsWaterfall)
@@ -453,7 +608,7 @@ void main ( void )
 		{
 			texCoord = (surfacePoint.xz + eyeVecNorm.xz * 0.1) * scale + timer * 0.000005 * wind;
 			
-			float bias = texture2D(u_HeightMap, texCoord).r;
+			float bias = texture2D(u_WaterHeightMap, texCoord).r;
 	
 			bias *= 0.1;
 			level += bias * maxAmplitude;
@@ -467,10 +622,10 @@ void main ( void )
 
 		eyeVecNorm = normalize(ViewOrigin - surfacePoint);
 
-		float normal1 = texture2D(u_HeightMap, (texCoord + (vec2(-1.0, 0.0) / 256.0))).r;
-		float normal2 = texture2D(u_HeightMap, (texCoord + (vec2(1.0, 0.0) / 256.0))).r;
-		float normal3 = texture2D(u_HeightMap, (texCoord + (vec2(0.0, -1.0) / 256.0))).r;
-		float normal4 = texture2D(u_HeightMap, (texCoord + (vec2(0.0, 1.0) / 256.0))).r;
+		float normal1 = texture2D(u_WaterHeightMap, (texCoord + (vec2(-1.0, 0.0) / 256.0))).r;
+		float normal2 = texture2D(u_WaterHeightMap, (texCoord + (vec2(1.0, 0.0) / 256.0))).r;
+		float normal3 = texture2D(u_WaterHeightMap, (texCoord + (vec2(0.0, -1.0) / 256.0))).r;
+		float normal4 = texture2D(u_WaterHeightMap, (texCoord + (vec2(0.0, 1.0) / 256.0))).r;
 		
 		vec3 myNormal = normalize(vec3((normal1 - normal2) * maxAmplitude,
 										   normalScale,
@@ -505,6 +660,7 @@ void main ( void )
 		vec4 position2 = positionMapAtCoord(texCoord);
 		vec4 waterMap3 = waterMapAtCoord(texCoord);
 
+#if !defined(CANT_MAKE_THIS_WORK)
 		if (waterMap3.a > 0.0)
 		{// Fix for wierd water bugs.
 			if (position.y == 0.0)
@@ -521,6 +677,9 @@ void main ( void )
 				position2.y -= WATER_DEPTH_HACK_LEVEL;
 			}
 		}
+#else //defined(CANT_MAKE_THIS_WORK)
+		position2.y = waterMap3.y - waterHeightAtPos(waterMap3.xzy);
+#endif //defined(CANT_MAKE_THIS_WORK)
 
 		if (position2.y > level)
 		{
@@ -535,7 +694,11 @@ void main ( void )
 		vec3 refraction1 = mix(refraction, depthColour * vec3(waterCol), clamp(vec3(depthN) / vec3(visibility), 0.0, 1.0));
 		refraction = mix(refraction1, bigDepthColour * vec3(waterCol), clamp(vec3(depth2) / vec3(extinction), 0.0, 1.0));
 
+#if defined(GREYSCALE_FOAM)
 		float foam = 0.0;
+#else //!defined(GREYSCALE_FOAM)
+		vec4 foam = vec4(0.0);
+#endif //defined(GREYSCALE_FOAM)
 
 		texCoord = (surfacePoint.xz + eyeVecNorm.xz * 0.1) * 0.05 + timer * 0.00001 * wind + sin(timer * 0.001 + position.x) * 0.005;
 		vec2 texCoord2 = (surfacePoint.xz + eyeVecNorm.xz * 0.1) * 0.05 + timer * 0.00002 * wind + sin(timer * 0.001 + position.z) * 0.005;
@@ -543,18 +706,32 @@ void main ( void )
 		// .r added to below lookups because the original had no swizzle... no idea if it is right...
 		if (depth2 < foamExistence.x)
 		{
+#if defined(GREYSCALE_FOAM)
 			foam = (texture2D(u_OverlayMap, texCoord).r + texture2D(u_OverlayMap, texCoord2).r) * 0.5;
+#else //!defined(GREYSCALE_FOAM)
+			foam = (texture2D(u_OverlayMap, texCoord) + texture2D(u_OverlayMap, texCoord2)) * 0.5;
+#endif //defined(GREYSCALE_FOAM)
 		}
 		else if (depth2 < foamExistence.y)
 		{
+#if defined(GREYSCALE_FOAM)
 			foam = mix((texture2D(u_OverlayMap, texCoord).r + texture2D(u_OverlayMap, texCoord2).r) * 0.5, 0.0,
 						 (depth2 - foamExistence.x) / (foamExistence.y - foamExistence.x));
+#else //!defined(GREYSCALE_FOAM)
+			foam = mix((texture2D(u_OverlayMap, texCoord) + texture2D(u_OverlayMap, texCoord2)) * 0.5, vec4(0.0),
+						 vec4((depth2 - foamExistence.x) / (foamExistence.y - foamExistence.x)));
+#endif //defined(GREYSCALE_FOAM)
 		}
 		
 		if (maxAmplitude - foamExistence.z > 0.0001)
 		{
+#if defined(GREYSCALE_FOAM)
 			foam += (texture2D(u_OverlayMap, texCoord).r + texture2D(u_OverlayMap, texCoord2).r) * 0.5 * 
 				clamp((level - (waterLevel + foamExistence.z)) / (maxAmplitude - foamExistence.z), 0.0, 1.0);
+#else //!defined(GREYSCALE_FOAM)
+			foam += (texture2D(u_OverlayMap, texCoord) + texture2D(u_OverlayMap, texCoord2)) * 0.5 * 
+				clamp((level - (waterLevel + foamExistence.z)) / (maxAmplitude - foamExistence.z), 0.0, 1.0);
+#endif //defined(GREYSCALE_FOAM)
 		}
 
 
@@ -602,7 +779,12 @@ void main ( void )
 #else //!defined(USE_REFLECTION)
 		color = mix(refraction, bigDepthColour, fresnel);
 #endif //defined(USE_REFLECTION)
+
+#if defined(GREYSCALE_FOAM)
 		color = clamp(color + max(specular, foam * sunColor), 0.0, 1.0);
+#else //!defined(GREYSCALE_FOAM)
+		color = clamp(color + max(specular, foam.rgb * sunColor), 0.0, 1.0);
+#endif //defined(GREYSCALE_FOAM)
 		
 		color = mix(refraction, color, clamp(depth * shoreHardness, 0.0, 1.0));
 

@@ -4098,7 +4098,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 	}
 
 	// UQ1: Can't we do all this in one stage ffs???
-	if (r_normalMapping->integer /*&& checkNormals*/)
+	if (r_normalMapping->integer >= 2 /*&& checkNormals*/)
 	{
 		image_t *diffuseImg = diffuse->bundle[TB_DIFFUSEMAP].image[0];
 
@@ -4393,9 +4393,12 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 				diffuse->bundle[TB_STEEPMAP].image[0] = specularImg;
 				hasRealSteepMap = qtrue;
 
-				char imgname[64];
-				sprintf(imgname, "%s_n", diffuse->bundle[TB_STEEPMAP].image[0]->imgName);
-				diffuse->bundle[TB_NORMALMAP2].image[0] = R_CreateNormalMapGLSL( imgname, NULL, diffuse->bundle[TB_STEEPMAP].image[0]->width, diffuse->bundle[TB_STEEPMAP].image[0]->height, diffuse->bundle[TB_STEEPMAP].image[0]->flags, diffuse->bundle[TB_STEEPMAP].image[0] );
+				if (r_normalMapping->integer >= 2)
+				{
+					char imgname[64];
+					sprintf(imgname, "%s_n", diffuse->bundle[TB_STEEPMAP].image[0]->imgName);
+					diffuse->bundle[TB_NORMALMAP2].image[0] = R_CreateNormalMapGLSL( imgname, NULL, diffuse->bundle[TB_STEEPMAP].image[0]->width, diffuse->bundle[TB_STEEPMAP].image[0]->height, diffuse->bundle[TB_STEEPMAP].image[0]->flags, diffuse->bundle[TB_STEEPMAP].image[0] );
+				}
 			}
 			else
 			{
@@ -4444,9 +4447,12 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 				diffuse->bundle[TB_STEEPMAP2].image[0] = specularImg;
 				hasRealSteepMap2 = qtrue;
 
-				char imgname[64];
-				sprintf(imgname, "%s_n", diffuse->bundle[TB_STEEPMAP2].image[0]->imgName);
-				diffuse->bundle[TB_NORMALMAP3].image[0] = R_CreateNormalMapGLSL( imgname, NULL, diffuse->bundle[TB_STEEPMAP2].image[0]->width, diffuse->bundle[TB_STEEPMAP2].image[0]->height, diffuse->bundle[TB_STEEPMAP2].image[0]->flags, diffuse->bundle[TB_STEEPMAP2].image[0] );
+				if (r_normalMapping->integer >= 2)
+				{
+					char imgname[64];
+					sprintf(imgname, "%s_n", diffuse->bundle[TB_STEEPMAP2].image[0]->imgName);
+					diffuse->bundle[TB_NORMALMAP3].image[0] = R_CreateNormalMapGLSL( imgname, NULL, diffuse->bundle[TB_STEEPMAP2].image[0]->width, diffuse->bundle[TB_STEEPMAP2].image[0]->height, diffuse->bundle[TB_STEEPMAP2].image[0]->flags, diffuse->bundle[TB_STEEPMAP2].image[0] );
+				}
 			}
 			else
 			{
@@ -4458,6 +4464,203 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 		else
 		{
 			hasRealSteepMap2 = qfalse;
+		}
+	}
+
+	if (1)
+	{
+		{
+			// Splat Control Map - We will allow each shader to have it's own map-wide spatter control image...
+			image_t *diffuseImg = diffuse->bundle[TB_DIFFUSEMAP].image[0];
+
+			char splatName[MAX_QPATH];
+			char splatName2[MAX_QPATH];
+			image_t *splatImg;
+			int specularFlags = (diffuseImg->flags & ~(IMGFLAG_GENNORMALMAP | IMGFLAG_SRGB | IMGFLAG_CLAMPTOEDGE)) /*| IMGFLAG_NOLIGHTSCALE*/;
+
+			COM_StripExtension( diffuseImg->imgName, splatName, sizeof( splatName ) );
+			StripCrap( splatName, splatName2, sizeof(splatName));
+			Q_strcat( splatName2, sizeof( splatName2 ), "_splat" );
+
+			splatImg = R_FindImageFile(splatName2, IMGTYPE_SPLATCONTROLMAP, specularFlags);
+
+			if (splatImg)
+			{
+				ri->Printf(PRINT_WARNING, "+++++++++++++++ Loaded splat control map %s [%i x %i].\n", splatName2, splatImg->width, splatImg->height);
+				diffuse->bundle[TB_SPLATCONTROLMAP] = diffuse->bundle[0];
+				diffuse->bundle[TB_SPLATCONTROLMAP].numImageAnimations = 0;
+				diffuse->bundle[TB_SPLATCONTROLMAP].image[0] = splatImg;
+
+				//char imgname[64];
+				//sprintf(imgname, "%s_n", diffuse->bundle[TB_SPLATCONTROLMAP].image[0]->imgName);
+				//diffuse->bundle[TB_NORMALMAP3].image[0] = R_CreateNormalMapGLSL( imgname, NULL, diffuse->bundle[TB_SPLATCONTROLMAP].image[0]->width, diffuse->bundle[TB_SPLATCONTROLMAP].image[0]->height, diffuse->bundle[TB_SPLATCONTROLMAP].image[0]->flags, diffuse->bundle[TB_SPLATCONTROLMAP].image[0] );
+			}
+			else
+			{
+				diffuse->bundle[TB_SPLATCONTROLMAP] = diffuse->bundle[0];
+				diffuse->bundle[TB_SPLATCONTROLMAP].numImageAnimations = 0;
+				diffuse->bundle[TB_SPLATCONTROLMAP].image[0] = NULL;
+			}
+		}
+
+		{
+			// Splat Map #1
+			image_t *diffuseImg = diffuse->bundle[TB_DIFFUSEMAP].image[0];
+
+			char splatName[MAX_QPATH];
+			char splatName2[MAX_QPATH];
+			image_t *splatImg;
+			int specularFlags = (diffuseImg->flags & ~(IMGFLAG_GENNORMALMAP | IMGFLAG_SRGB | IMGFLAG_CLAMPTOEDGE)) /*| IMGFLAG_NOLIGHTSCALE*/;
+
+			COM_StripExtension( diffuseImg->imgName, splatName, sizeof( splatName ) );
+			StripCrap( splatName, splatName2, sizeof(splatName));
+			Q_strcat( splatName2, sizeof( splatName2 ), "_splat1" );
+
+			splatImg = R_FindImageFile(splatName2, IMGTYPE_SPLATMAP1, specularFlags);
+
+			if (splatImg)
+			{
+				ri->Printf(PRINT_WARNING, "+++++++++++++++ Loaded splat map1 %s [%i x %i].\n", splatName2, splatImg->width, splatImg->height);
+				diffuse->bundle[TB_SPLATMAP1] = diffuse->bundle[0];
+				diffuse->bundle[TB_SPLATMAP1].numImageAnimations = 0;
+				diffuse->bundle[TB_SPLATMAP1].image[0] = splatImg;
+
+				if (r_normalMapping->integer >= 2)
+				{
+					// Generate normal and height map for it as well...
+					char imgname[64];
+					sprintf(imgname, "%s_n", diffuse->bundle[TB_SPLATMAP1].image[0]->imgName);
+					image_t *splatNormalImg = R_CreateNormalMapGLSL( imgname, NULL, splatImg->width, splatImg->height, splatImg->flags, splatImg );
+					diffuse->bundle[TB_SPLATMAP1].image[1] = splatNormalImg;
+				}
+			}
+			else
+			{
+				diffuse->bundle[TB_SPLATMAP1] = diffuse->bundle[0];
+				diffuse->bundle[TB_SPLATMAP1].numImageAnimations = 0;
+				diffuse->bundle[TB_SPLATMAP1].image[0] = NULL;
+				diffuse->bundle[TB_SPLATMAP1].image[1] = NULL;
+			}
+		}
+
+		{
+			// Splat Map #2
+			image_t *diffuseImg = diffuse->bundle[TB_DIFFUSEMAP].image[0];
+
+			char splatName[MAX_QPATH];
+			char splatName2[MAX_QPATH];
+			image_t *splatImg;
+			int specularFlags = (diffuseImg->flags & ~(IMGFLAG_GENNORMALMAP | IMGFLAG_SRGB | IMGFLAG_CLAMPTOEDGE)) /*| IMGFLAG_NOLIGHTSCALE*/;
+
+			COM_StripExtension( diffuseImg->imgName, splatName, sizeof( splatName ) );
+			StripCrap( splatName, splatName2, sizeof(splatName));
+			Q_strcat( splatName2, sizeof( splatName2 ), "_splat2" );
+
+			splatImg = R_FindImageFile(splatName2, IMGTYPE_SPLATMAP2, specularFlags);
+
+			if (splatImg)
+			{
+				ri->Printf(PRINT_WARNING, "+++++++++++++++ Loaded splat map2 %s [%i x %i].\n", splatName2, splatImg->width, splatImg->height);
+				diffuse->bundle[TB_SPLATMAP2] = diffuse->bundle[0];
+				diffuse->bundle[TB_SPLATMAP2].numImageAnimations = 0;
+				diffuse->bundle[TB_SPLATMAP2].image[0] = splatImg;
+
+				if (r_normalMapping->integer >= 2)
+				{
+					// Generate normal and height map for it as well...
+					char imgname[64];
+					sprintf(imgname, "%s_n", diffuse->bundle[TB_SPLATMAP2].image[0]->imgName);
+					image_t *splatNormalImg = R_CreateNormalMapGLSL( imgname, NULL, splatImg->width, splatImg->height, splatImg->flags, splatImg );
+					diffuse->bundle[TB_SPLATMAP2].image[1] = splatNormalImg;
+				}
+			}
+			else
+			{
+				diffuse->bundle[TB_SPLATMAP2] = diffuse->bundle[0];
+				diffuse->bundle[TB_SPLATMAP2].numImageAnimations = 0;
+				diffuse->bundle[TB_SPLATMAP2].image[0] = NULL;
+				diffuse->bundle[TB_SPLATMAP2].image[1] = NULL;
+			}
+		}
+
+		{
+			// Splat Map #3
+			image_t *diffuseImg = diffuse->bundle[TB_DIFFUSEMAP].image[0];
+
+			char splatName[MAX_QPATH];
+			char splatName2[MAX_QPATH];
+			image_t *splatImg;
+			int specularFlags = (diffuseImg->flags & ~(IMGFLAG_GENNORMALMAP | IMGFLAG_SRGB | IMGFLAG_CLAMPTOEDGE)) /*| IMGFLAG_NOLIGHTSCALE*/;
+
+			COM_StripExtension( diffuseImg->imgName, splatName, sizeof( splatName ) );
+			StripCrap( splatName, splatName2, sizeof(splatName));
+			Q_strcat( splatName2, sizeof( splatName2 ), "_splat3" );
+
+			splatImg = R_FindImageFile(splatName2, IMGTYPE_SPLATMAP3, specularFlags);
+
+			if (splatImg)
+			{
+				ri->Printf(PRINT_WARNING, "+++++++++++++++ Loaded splat map3 %s [%i x %i].\n", splatName2, splatImg->width, splatImg->height);
+				diffuse->bundle[TB_SPLATMAP3] = diffuse->bundle[0];
+				diffuse->bundle[TB_SPLATMAP3].numImageAnimations = 0;
+				diffuse->bundle[TB_SPLATMAP3].image[0] = splatImg;
+
+				if (r_normalMapping->integer >= 2)
+				{
+					// Generate normal and height map for it as well...
+					char imgname[64];
+					sprintf(imgname, "%s_n", diffuse->bundle[TB_SPLATMAP3].image[0]->imgName);
+					image_t *splatNormalImg = R_CreateNormalMapGLSL( imgname, NULL, splatImg->width, splatImg->height, splatImg->flags, splatImg );
+					diffuse->bundle[TB_SPLATMAP3].image[1] = splatNormalImg;
+				}
+			}
+			else
+			{
+				diffuse->bundle[TB_SPLATMAP3] = diffuse->bundle[0];
+				diffuse->bundle[TB_SPLATMAP3].numImageAnimations = 0;
+				diffuse->bundle[TB_SPLATMAP3].image[0] = NULL;
+				diffuse->bundle[TB_SPLATMAP3].image[1] = NULL;
+			}
+		}
+
+		{
+			// Splat Map #4
+			image_t *diffuseImg = diffuse->bundle[TB_DIFFUSEMAP].image[0];
+
+			char splatName[MAX_QPATH];
+			char splatName2[MAX_QPATH];
+			image_t *splatImg;
+			int specularFlags = (diffuseImg->flags & ~(IMGFLAG_GENNORMALMAP | IMGFLAG_SRGB | IMGFLAG_CLAMPTOEDGE)) /*| IMGFLAG_NOLIGHTSCALE*/;
+
+			COM_StripExtension( diffuseImg->imgName, splatName, sizeof( splatName ) );
+			StripCrap( splatName, splatName2, sizeof(splatName));
+			Q_strcat( splatName2, sizeof( splatName2 ), "_splat4" );
+
+			splatImg = R_FindImageFile(splatName2, IMGTYPE_SPLATMAP4, specularFlags);
+
+			if (splatImg)
+			{
+				ri->Printf(PRINT_WARNING, "+++++++++++++++ Loaded splat map4 %s [%i x %i].\n", splatName2, splatImg->width, splatImg->height);
+				diffuse->bundle[TB_SPLATMAP4] = diffuse->bundle[0];
+				diffuse->bundle[TB_SPLATMAP4].numImageAnimations = 0;
+				diffuse->bundle[TB_SPLATMAP4].image[0] = splatImg;
+
+				if (r_normalMapping->integer >= 2)
+				{
+					// Generate normal and height map for it as well...
+					char imgname[64];
+					sprintf(imgname, "%s_n", diffuse->bundle[TB_SPLATMAP4].image[0]->imgName);
+					image_t *splatNormalImg = R_CreateNormalMapGLSL( imgname, NULL, splatImg->width, splatImg->height, splatImg->flags, splatImg );
+					diffuse->bundle[TB_SPLATMAP4].image[1] = splatNormalImg;
+				}
+			}
+			else
+			{
+				diffuse->bundle[TB_SPLATMAP4] = diffuse->bundle[0];
+				diffuse->bundle[TB_SPLATMAP4].numImageAnimations = 0;
+				diffuse->bundle[TB_SPLATMAP4].image[0] = NULL;
+				diffuse->bundle[TB_SPLATMAP4].image[1] = NULL;
+			}
 		}
 	}
 

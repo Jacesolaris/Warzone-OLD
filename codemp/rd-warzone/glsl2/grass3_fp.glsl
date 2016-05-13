@@ -19,6 +19,6 @@ void main()
 
 	out_Glow = vec4(0.0);
 
-	out_Normal = vec4(m_Normal.xyz, 0.1);
+	out_Normal = vec4(m_Normal.xyz * 0.5 + 0.5, 0.1);
 	//out_Position = vec4(gl_FragCoord.xyz, 0.0);
 }

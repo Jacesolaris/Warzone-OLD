@@ -8,8 +8,22 @@ uniform sampler2D	u_DiffuseMap;
 
 vec2 tex_offset = vec2(1.0 / u_Dimensions.x, 1.0 / u_Dimensions.y);
 
+
+//#define ENHANCED_NORMALS
+//#define BUMPY_NORMALS
+#define SAMPLEMAT_NORMALS
+
+//#define HEIGHTMAP_ADD_NORMAL_BLUE
+
+
 // This makes the darker areas less bumpy but I like it
 #define USE_LINEAR_FOR_BUMPMAP
+
+//#define EXPERIMENTAL_HEIGHTMAP
+
+//
+// Normal Map Stuff...
+//
 
 struct C_Sample
 {
@@ -155,6 +169,53 @@ vec4 generateBumpyNormal( vec2 fragCoord )
 	vec4 col = vec4(N.xyz * 0.5 + 0.5,1.);
 	return col;
 }
+
+vec4 GetNormal ( vec2 coord )
+{
+#if defined(ENHANCED_NORMALS)
+	vec4 enhanced = generateEnhancedNormal(coord.xy);
+#elif defined(BUMPY_NORMALS)
+	vec4 bumpy = generateBumpyNormal(coord.xy);
+#elif defined(SAMPLEMAT_NORMALS)
+	// Mix methods...
+	float fNormalScale = 10.0;//2.0;
+	C_Sample sample = SampleMaterial(coord.xy, u_DiffuseMap,  u_Dimensions, fNormalScale);
+	vec3 bumpMap = sample.vNormal;
+#endif
+
+#if defined(ENHANCED_NORMALS) && defined(BUMPY_NORMALS) && defined(SAMPLEMAT_NORMALS)
+	normal = enhanced;
+	normal.rgb += bumpMap.rgb;
+	normal.rgb += bumpy.rgb;
+	normal.rgb /= 3.0;
+#elif defined(ENHANCED_NORMALS) && defined(BUMPY_NORMALS)
+	vec4 normal = enhanced;
+	normal.rgb += bumpy.rgb;
+	normal.rgb /= 2.0;
+#elif defined(ENHANCED_NORMALS) && defined(SAMPLEMAT_NORMALS)
+	vec4 normal = enhanced;
+	normal.rgb += bumpMap.rgb;
+	normal.rgb /= 2.0;
+#elif defined(BUMPY_NORMALS) && defined(SAMPLEMAT_NORMALS)
+	vec4 normal = bumpy;
+	normal.rgb += bumpMap.rgb;
+	normal.rgb /= 2.0;
+#elif defined(ENHANCED_NORMALS)
+	vec4 normal = enhanced;
+#elif defined(BUMPY_NORMALS)
+	vec4 normal = bumpy;
+#elif defined(SAMPLEMAT_NORMALS)
+	vec4 normal = vec4(0.0);
+	normal.rgb = bumpMap;
+#endif
+
+	return normal;
+}
+
+
+//
+// Height Map Calculation...
+//
 
 float SampleHeight(vec2 t)
 {// Provides enhanced parallax depths without stupid distortions... Also provides a nice backup specular map...
@@ -330,11 +391,6 @@ float SampleHeight(vec2 t)
 #endif
 }
 
-//#define ENHANCED_NORMALS
-//#define BUMPY_NORMALS
-#define SAMPLEMAT_NORMALS
-
-//#define HEIGHTMAP_ADD_NORMAL_BLUE
 
 void main ( void )
 {
@@ -342,52 +398,22 @@ void main ( void )
 	// Normal Map RGB Channels...
 	//
 
-#if defined(ENHANCED_NORMALS)
-	vec4 enhanced = generateEnhancedNormal(var_TexCoords.xy);
-#elif defined(BUMPY_NORMALS)
-	vec4 bumpy = generateBumpyNormal(var_TexCoords.xy);
-#elif defined(SAMPLEMAT_NORMALS)
-	// Mix methods...
-	float fNormalScale = 10.0;//2.0;
-	C_Sample sample = SampleMaterial(var_TexCoords.xy, u_DiffuseMap,  u_Dimensions, fNormalScale);
-	vec3 bumpMap = sample.vNormal;
-#endif
-
-#if defined(ENHANCED_NORMALS) && defined(BUMPY_NORMALS) && defined(SAMPLEMAT_NORMALS)
-	vec4 normal = enhanced;
-	normal.rgb += bumpMap.rgb;
-	normal.rgb += bumpy.rgb;
-	normal.rgb /= 3.0;
-#elif defined(ENHANCED_NORMALS) && defined(BUMPY_NORMALS)
-	vec4 normal = enhanced;
-	normal.rgb += bumpy.rgb;
-	normal.rgb /= 2.0;
-#elif defined(ENHANCED_NORMALS) && defined(SAMPLEMAT_NORMALS)
-	vec4 normal = enhanced;
-	normal.rgb += bumpMap.rgb;
-	normal.rgb /= 2.0;
-#elif defined(BUMPY_NORMALS) && defined(SAMPLEMAT_NORMALS)
-	vec4 normal = bumpy;
-	normal.rgb += bumpMap.rgb;
-	normal.rgb /= 2.0;
-#elif defined(ENHANCED_NORMALS)
-	vec4 normal = enhanced;
-#elif defined(BUMPY_NORMALS)
-	vec4 normal = bumpy;
-#elif defined(SAMPLEMAT_NORMALS)
-	vec4 normal = vec4(0.0);
-	normal.rgb = bumpMap;
-#endif
+	vec4 normal = GetNormal( var_TexCoords.xy );
 
 	//
 	// Height Map Alpha Channel...
 	//
 
+#if defined(EXPERIMENTAL_HEIGHTMAP)
+	normal.a = length(normal.rg) / 2.0;
+#else //!defined(EXPERIMENTAL_HEIGHTMAP)
 	normal.a = SampleHeight(var_TexCoords.xy);
 #if defined(HEIGHTMAP_ADD_NORMAL_BLUE)
 	normal.a += normal.b;
 	normal.a /= 2.0;
-#endif
+#endif //defined(HEIGHTMAP_ADD_NORMAL_BLUE)
+#endif //defined(EXPERIMENTAL_HEIGHTMAP)
+
 	normal.a = 1.0 - normal.a;
 
 	gl_FragColor = normal;

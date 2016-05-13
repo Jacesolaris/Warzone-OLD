@@ -1705,6 +1705,12 @@ void RB_RBM(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 }
 
 extern float MAP_WATER_LEVEL;
+extern vec3_t  MAP_INFO_MINS;
+extern vec3_t  MAP_INFO_MAXS;
+extern vec3_t	MAP_INFO_SIZE;
+extern vec3_t	MAP_INFO_PIXELSIZE;
+extern vec3_t	MAP_INFO_SCATTEROFFSET;
+extern float	MAP_INFO_MAXSIZE;
 
 void RB_WaterPost(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 {
@@ -1747,8 +1753,11 @@ void RB_WaterPost(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 	uniform sampler2D u_SpecularMap;  // reflectionMap
 	*/
 
+	GLSL_SetUniformInt(shader, UNIFORM_WATERHEIGHTMAP, TB_WATERHEIGHTMAP);
+	GL_BindToTMU(tr.waterHeightImage, TB_WATERHEIGHTMAP);
+
 	GLSL_SetUniformInt(shader, UNIFORM_HEIGHTMAP, TB_HEIGHTMAP);
-	GL_BindToTMU(tr.waterHeightImage, TB_HEIGHTMAP);
+	GL_BindToTMU(tr.heightMapImage, TB_HEIGHTMAP);
 	
 	GLSL_SetUniformInt(shader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
 	GL_BindToTMU(hdrFbo->colorImage[0], TB_DIFFUSEMAP);
@@ -1784,6 +1793,18 @@ void RB_WaterPost(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 	GLSL_SetUniformVec4(shader, UNIFORM_PRIMARYLIGHTORIGIN,  out);
 
 	GLSL_SetUniformVec3(shader, UNIFORM_PRIMARYLIGHTCOLOR,   backEnd.refdef.sunCol);
+
+	{
+		vec4_t loc;
+		VectorSet4(loc, MAP_INFO_MINS[0], MAP_INFO_MINS[1], MAP_INFO_MINS[2], 0.0);
+		GLSL_SetUniformVec4(shader, UNIFORM_MINS, loc);
+
+		VectorSet4(loc, MAP_INFO_MAXS[0], MAP_INFO_MAXS[1], MAP_INFO_MAXS[2], 0.0);
+		GLSL_SetUniformVec4(shader, UNIFORM_MAXS, loc);
+
+		VectorSet4(loc, MAP_INFO_SIZE[0], MAP_INFO_SIZE[1], MAP_INFO_SIZE[2], 0.0);
+		GLSL_SetUniformVec4(shader, UNIFORM_MAPINFO, loc);
+	}
 
 	{
 		vec4_t loc;
@@ -2606,21 +2627,34 @@ void RB_TestShader(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox,
 	color[3] = 1.0f;
 
 	GLSL_BindProgram(&tr.testshaderShader);
+	
+	GLSL_SetUniformInt(&tr.testshaderShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
+	GL_BindToTMU(hdrFbo->colorImage[0], TB_DIFFUSEMAP);
 
-	GLSL_SetUniformInt(&tr.testshaderShader, UNIFORM_LEVELSMAP, TB_LEVELSMAP);
-	GL_BindToTMU(hdrFbo->colorImage[0], TB_LEVELSMAP);
+	GLSL_SetUniformInt(&tr.testshaderShader, UNIFORM_POSITIONMAP, TB_POSITIONMAP);
+	GL_BindToTMU(tr.renderPositionMapImage, TB_POSITIONMAP);
+
+	GLSL_SetUniformInt(&tr.testshaderShader, UNIFORM_NORMALMAP, TB_NORMALMAP);
+	GL_BindToTMU(tr.renderNormalImage, TB_NORMALMAP);
+
 	GLSL_SetUniformInt(&tr.testshaderShader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
 	GL_BindToTMU(tr.renderDepthImage, TB_LIGHTMAP);
+
+
+	GLSL_SetUniformVec3(&tr.testshaderShader, UNIFORM_VIEWORIGIN,  backEnd.refdef.vieworg);
+	GLSL_SetUniformFloat(&tr.testshaderShader, UNIFORM_TIME, backEnd.refdef.floatTime);
+
+	
+	vec3_t out;
+	float dist = backEnd.viewParms.zFar / 1.75;
+ 	VectorMA( backEnd.refdef.vieworg, dist, backEnd.refdef.sunDir, out );
+	GLSL_SetUniformVec4(&tr.testshaderShader, UNIFORM_PRIMARYLIGHTORIGIN,  out);
+
+	GLSL_SetUniformVec3(&tr.testshaderShader, UNIFORM_PRIMARYLIGHTCOLOR,   backEnd.refdef.sunCol);
 
 	GLSL_SetUniformMatrix16(&tr.testshaderShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
 
 	GLSL_SetUniformFloat(&tr.testshaderShader, UNIFORM_TIME, backEnd.refdef.floatTime);
-
-	{
-		vec4_t local0;
-		VectorSet4(local0, r_testvalue0->value, r_testvalue1->value, 0.0, 0.0);
-		GLSL_SetUniformVec4(&tr.testshaderShader, UNIFORM_LOCAL0, local0);
-	}
 
 	{
 		vec2_t screensize;
@@ -2638,6 +2672,12 @@ void RB_TestShader(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox,
 		float zmin = r_znear->value;
 		VectorSet4(viewInfo, zmin, zmax, zmax / zmin, 0.0);
 		GLSL_SetUniformVec4(&tr.testshaderShader, UNIFORM_VIEWINFO, viewInfo);
+	}
+
+	{
+		vec4_t loc;
+		VectorSet4(loc, r_testvalue0->value, r_testvalue1->value, r_testvalue2->value, r_testvalue3->value);
+		GLSL_SetUniformVec4(&tr.testshaderShader, UNIFORM_LOCAL0, loc);
 	}
 	
 	FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.testshaderShader, color, 0);

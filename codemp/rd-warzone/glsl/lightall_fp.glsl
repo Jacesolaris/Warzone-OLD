@@ -5,6 +5,15 @@
 uniform sampler2D			u_DiffuseMap;
 uniform sampler2D			u_SteepMap;
 uniform sampler2D			u_SteepMap2;
+uniform sampler2D			u_SplatControlMap;
+uniform sampler2D			u_SplatMap1;
+uniform sampler2D			u_SplatMap2;
+uniform sampler2D			u_SplatMap3;
+uniform sampler2D			u_SplatMap4;
+uniform sampler2D			u_SplatNormalMap1;
+uniform sampler2D			u_SplatNormalMap2;
+uniform sampler2D			u_SplatNormalMap3;
+uniform sampler2D			u_SplatNormalMap4;
 
 uniform sampler2D			u_LightMap;
 
@@ -41,8 +50,9 @@ uniform vec4				u_Local2; // ExtinctionCoefficient
 uniform vec4				u_Local3; // RimScalar, MaterialThickness, subSpecPower, cubemapScale
 uniform vec4				u_Local4; // haveNormalMap, isMetalic, hasRealSubsurfaceMap, sway
 uniform vec4				u_Local5; // hasRealOverlayMap, overlaySway, blinnPhong, hasSteepMap
-uniform vec4				u_Local6; // useSunLightSpecular, hasSteepMap2, 0, WATER_LEVEL
-uniform vec4				u_Local9;
+uniform vec4				u_Local6; // useSunLightSpecular, hasSteepMap2, MAP_SIZE, WATER_LEVEL
+uniform vec4				u_Local7; // hasSplatMap1, hasSplatMap2, hasSplatMap3, hasSplatMap4
+uniform vec4				u_Local9; // testvalue0, 1, 2, 3
 
 #define WATER_LEVEL			u_Local6.a
 
@@ -148,6 +158,17 @@ out vec4 out_Position;
 out vec4 out_Normal;
 
 
+// For fake normal map lookups.
+#define FAKE_MAP_NONE 0
+#define FAKE_MAP_NORMALMAP 1
+#define FAKE_MAP_NORMALMAP2 2
+#define FAKE_MAP_NORMALMAP3 3
+#define FAKE_MAP_SPLATNORMALMAP1 4
+#define FAKE_MAP_SPLATNORMALMAP2 5
+#define FAKE_MAP_SPLATNORMALMAP3 6
+#define FAKE_MAP_SPLATNORMALMAP4 7
+
+
 vec3 vLocalSeed;
 
 // This function returns random number from zero to one
@@ -173,55 +194,218 @@ vec3 splatblend(vec4 texture1, float a1, vec4 texture2, float a2)
     return (texture1.rgb * b1 + texture2.rgb * b2) / (b1 + b2);
 }
 
-vec4 GetSteepMap(vec2 texCoords, vec2 ParallaxOffset)
+vec4 GetControlMap( sampler2D tex, float scale)
+{
+	vec4 xaxis = texture2D( tex, (m_vertPos.yz * scale) * 0.5 + 0.5);
+	vec4 yaxis = texture2D( tex, (m_vertPos.xz * scale) * 0.5 + 0.5);
+	vec4 zaxis = texture2D( tex, (m_vertPos.xy * scale) * 0.5 + 0.5);
+
+	return xaxis * var_Blending.x + yaxis * var_Blending.y + zaxis * var_Blending.z;
+}
+
+vec4 ConvertToNormals ( vec4 color )
+{
+	// This makes silly assumptions, but it adds variation to the output. Hopefully this will look ok without doing a crapload of texture lookups or
+	// wasting vram on real normals.
+	//
+	// UPDATE: In my testing, this method looks just as good as real normal maps. I am now using this as default method unless r_normalmapping >= 2
+	// for the very noticable FPS boost over texture lookups.
+
+	//N = vec3((color.r + color.b) / 2.0, (color.g + color.b) / 2.0, (color.r + color.g) / 2.0);
+	vec3 N = vec3(clamp(color.r + color.b, 0.0, 1.0), clamp(color.g + color.b, 0.0, 1.0), clamp(color.r + color.g, 0.0, 1.0));
+	N.xy = 1.0 - N.xy;
+	vec4 norm = vec4(N, 1.0 - (length(N.xyz) / 3.0));
+	return norm;
+}
+
+vec4 GetMap( in sampler2D tex, float scale, vec2 ParallaxOffset, int fakeMapType)
+{
+	bool fakeNormal = false;
+
+	if (u_Local4.r <= 0.0 && fakeMapType == FAKE_MAP_NORMALMAP)
+	{
+		tex = u_DiffuseMap;
+		fakeNormal = true;
+	}
+	else if (u_Local4.r <= 0.0 && fakeMapType == FAKE_MAP_NORMALMAP2)
+	{
+		tex = u_SteepMap;
+		fakeNormal = true;
+	}
+	else if (u_Local4.r <= 0.0 && fakeMapType == FAKE_MAP_NORMALMAP3)
+	{
+		tex = u_SteepMap2;
+		fakeNormal = true;
+	}
+	else if (u_Local4.r <= 0.0 && fakeMapType == FAKE_MAP_SPLATNORMALMAP1)
+	{
+		tex = u_SplatMap1;
+		fakeNormal = true;
+	}
+	else if (u_Local4.r <= 0.0 && fakeMapType == FAKE_MAP_SPLATNORMALMAP2)
+	{
+		tex = u_SplatMap2;
+		fakeNormal = true;
+	}
+	else if (u_Local4.r <= 0.0 && fakeMapType == FAKE_MAP_SPLATNORMALMAP3)
+	{
+		tex = u_SplatMap3;
+		fakeNormal = true;
+	}
+	else if (u_Local4.r <= 0.0 && fakeMapType == FAKE_MAP_SPLATNORMALMAP4)
+	{
+		tex = u_SplatMap4;
+		fakeNormal = true;
+	}
+
+	vec4 xaxis = texture2D( tex, (m_vertPos.yz * scale) + ParallaxOffset.xy);
+	vec4 yaxis = texture2D( tex, (m_vertPos.xz * scale) + ParallaxOffset.xy);
+	vec4 zaxis = texture2D( tex, (m_vertPos.xy * scale) + ParallaxOffset.xy);
+
+	if (fakeNormal)
+	{
+		return ConvertToNormals(xaxis * var_Blending.x + yaxis * var_Blending.y + zaxis * var_Blending.z);
+	}
+
+	return xaxis * var_Blending.x + yaxis * var_Blending.y + zaxis * var_Blending.z;
+}
+
+vec4 GetNonSplatMap( in sampler2D tex, vec2 coord, int fakeMapType )
+{
+	bool fakeNormal = false;
+
+	if (u_Local4.r <= 0.0 && fakeMapType == FAKE_MAP_NORMALMAP)
+	{
+		tex = u_DiffuseMap;
+		fakeNormal = true;
+	}
+	else if (u_Local4.r <= 0.0 && fakeMapType == FAKE_MAP_NORMALMAP2)
+	{
+		tex = u_SteepMap;
+		fakeNormal = true;
+	}
+	else if (u_Local4.r <= 0.0 && fakeMapType == FAKE_MAP_NORMALMAP3)
+	{
+		tex = u_SteepMap2;
+		fakeNormal = true;
+	}
+	else if (u_Local4.r <= 0.0 && fakeMapType == FAKE_MAP_SPLATNORMALMAP1)
+	{
+		tex = u_SplatMap1;
+		fakeNormal = true;
+	}
+	else if (u_Local4.r <= 0.0 && fakeMapType == FAKE_MAP_SPLATNORMALMAP2)
+	{
+		tex = u_SplatMap2;
+		fakeNormal = true;
+	}
+	else if (u_Local4.r <= 0.0 && fakeMapType == FAKE_MAP_SPLATNORMALMAP3)
+	{
+		tex = u_SplatMap3;
+		fakeNormal = true;
+	}
+	else if (u_Local4.r <= 0.0 && fakeMapType == FAKE_MAP_SPLATNORMALMAP4)
+	{
+		tex = u_SplatMap4;
+		fakeNormal = true;
+	}
+
+	vec4 map = texture2D( tex, coord );
+
+	if (fakeNormal)
+	{
+		return ConvertToNormals(map);
+	}
+
+	return map;
+}
+
+vec4 GetSplatMap(vec2 texCoords, vec2 ParallaxOffset, float pixRandom, vec4 inColor, float inA1)
 {
 #if defined(USE_OVERLAY) || defined(USE_TRI_PLANAR)
-	if (u_Local5.a > 0.0 && var_Slope > 0)
-	{// Steep maps (high angles)...
-		vec4 tex1;
-		vec4 tex2;
-		float a1;
-		float a2;
-
-		{
-			const float scale = 0.0025;
-			vec4 xaxis = texture2D( u_SteepMap, (m_vertPos.yz + ParallaxOffset.xy) * scale);
-			vec4 yaxis = texture2D( u_SteepMap, (m_vertPos.xz + ParallaxOffset.xy) * scale);
-			vec4 zaxis = texture2D( u_SteepMap, (m_vertPos.xy + ParallaxOffset.xy) * scale);
-
-			//float xaxisA = texture2D( u_NormalMap2, (m_vertPos.yz + ParallaxOffset.xy) * scale).a;
-			//float yaxisA = texture2D( u_NormalMap2, (m_vertPos.xz + ParallaxOffset.xy) * scale).a;
-			//float zaxisA = texture2D( u_NormalMap2, (m_vertPos.xy + ParallaxOffset.xy) * scale).a;
-
-			tex1 = xaxis * var_Blending.x + yaxis * var_Blending.y + zaxis * var_Blending.z;
-			//a1 = xaxisA * var_Blending.x + yaxisA * var_Blending.y + zaxisA * var_Blending.z;
-		}
-
-		/*
-		{
-			const float scale = 0.01;
-			vec4 xaxis = texture2D( u_DiffuseMap, (m_vertPos.yz + ParallaxOffset.xy) * scale);
-			vec4 yaxis = texture2D( u_DiffuseMap, (m_vertPos.xz + ParallaxOffset.xy) * scale);
-			vec4 zaxis = texture2D( u_DiffuseMap, (m_vertPos.xy + ParallaxOffset.xy) * scale);
-
-			float xaxisA = texture2D( u_NormalMap, (m_vertPos.yz + ParallaxOffset.xy) * scale).a;
-			float yaxisA = texture2D( u_NormalMap, (m_vertPos.xz + ParallaxOffset.xy) * scale).a;
-			float zaxisA = texture2D( u_NormalMap, (m_vertPos.xy + ParallaxOffset.xy) * scale).a;
-
-			tex2 = xaxis * var_Blending.x + yaxis * var_Blending.y + zaxis * var_Blending.z;
-			a2 = xaxisA * var_Blending.x + yaxisA * var_Blending.y + zaxisA * var_Blending.z;
-		}
-		*/
-
-		return tex1;
-		//return vec4(splatblend(tex1, a1, tex2, a2), 1.0);
-	}
-	else
+	if (u_Local7.r <= 0.0 && u_Local7.g <= 0.0 && u_Local7.b <= 0.0 && u_Local7.a <= 0.0)
 	{
-		return texture2D(u_DiffuseMap, texCoords);
+		return inColor;
 	}
+
+	if (u_Local6.g > 0.0 && m_vertPos.z <= WATER_LEVEL + 128.0 + (64.0 * pixRandom))
+	{// Steep maps (water edges)... Underwater and beach doesn't use splats for now...
+		return inColor;
+	}
+
+	float origInA1 = inA1;
+	const float scale = 0.01;
+	float controlScale = 1.0 / u_Local6.b;
+
+	// Splat blend in all the textues using the control strengths...
+
+	vec4 splatColor = inColor;
+
+	vec4 control = GetControlMap(u_SplatControlMap, controlScale);
+	control = clamp(pow(control, vec4(u_Local9.g)) * u_Local9.b, 0.0, 1.0);
+
+	if (length(control.rgba) <= 0.0)
+	{
+		return inColor;
+	}
+
+	bool foundSplat = false;
+
+	if (u_Local7.r > 0.0 && control.r > 0.0)
+		foundSplat = true;
+	
+	if (!foundSplat && u_Local7.g > 0.0 && control.g > 0.0)
+		foundSplat = true;
+
+	if (!foundSplat && u_Local7.b > 0.0 && control.b > 0.0)
+		foundSplat = true;
+
+	if (!foundSplat && u_Local7.a > 0.0 && control.a > 0.0)
+		foundSplat = true;
+
+	if (!foundSplat)
+	{// There is nothing valid to do here... Skip blending...
+		return inColor;
+	}
+
+	if (u_Local7.r > 0.0)
+	{
+		vec4 tex = GetMap(u_SplatMap1, scale, ParallaxOffset, FAKE_MAP_NONE);
+		splatColor = mix(splatColor, tex, control.r * tex.a);
+		//float a1 = smoothstep(0.0, 1.0, GetMap(u_SplatNormalMap1, scale, ParallaxOffset).a * control.r * tex.a * u_Local9.a);
+		//splatColor = vec4(splatblend(splatColor, inA1, tex, a1), 1.0);
+	}
+
+	if (u_Local7.g > 0.0)
+	{
+		vec4 tex = GetMap(u_SplatMap2, scale, ParallaxOffset, FAKE_MAP_NONE);
+		splatColor = mix(splatColor, tex, control.g * tex.a);
+		//float a1 = smoothstep(0.0, 1.0, GetMap(u_SplatNormalMap2, scale, ParallaxOffset).a * control.g * tex.a * u_Local9.a);
+		//splatColor = vec4(splatblend(splatColor, inA1, tex, a1), 1.0);
+	}
+
+	if (u_Local7.b > 0.0)
+	{
+		vec4 tex = GetMap(u_SplatMap3, scale, ParallaxOffset, FAKE_MAP_NONE);
+		splatColor = mix(splatColor, tex, control.b * tex.a);
+		//float a1 = smoothstep(0.0, 1.0, GetMap(u_SplatNormalMap3, scale, ParallaxOffset).a * control.b * tex.a * u_Local9.a);
+		//splatColor = vec4(splatblend(splatColor, inA1, tex, a1), 1.0);
+	}
+	/*
+	if (u_Local7.a > 0.0)
+	{
+		vec4 tex = GetMap(u_SplatMap4, scale, ParallaxOffset, FAKE_MAP_NONE);
+		splatColor = mix(splatColor, tex, control.a * tex.a);
+		//float a1 = smoothstep(0.0, 1.0, GetMap(u_SplatNormalMap4, scale, ParallaxOffset).a * control.a * tex.a);
+		//splatColor = vec4(splatblend(splatColor, inA1, tex, a1), 1.0);
+	}
+	*/
+
+	///splatColor = vec4(splatblend(inColor, origInA1/* * u_Local9.a*/, splatColor, 1.0 - (origInA1/* * u_Local9.a*/)), 1.0);
+	//splatColor = mix(inColor, splatColor, (length(control.rgba) / 4.0)/*splatColor.a*/);
+	return splatColor;
 #else //!defined(USE_OVERLAY) || defined(USE_TRI_PLANAR)
-	return texture2D(u_DiffuseMap, texCoords);
+	return inColor;
 #endif //defined(USE_OVERLAY) || defined(USE_TRI_PLANAR)
 }
 
@@ -232,55 +416,78 @@ vec4 GetDiffuse(vec2 texCoords, vec2 ParallaxOffset, float pixRandom)
 	{// Steep maps (water edges)...
 		float mixVal = ((WATER_LEVEL + 128.0) - m_vertPos.z) / 128.0;
 		const float scale = 0.01;
-		vec4 tex1;
-		vec4 tex2;
-		float a1;
-		float a2;
 
-		{
-			vec4 xaxis = texture2D( u_SteepMap2, (m_vertPos.yz + ParallaxOffset.xy) * scale);
-			vec4 yaxis = texture2D( u_SteepMap2, (m_vertPos.xz + ParallaxOffset.xy) * scale);
-			vec4 zaxis = texture2D( u_SteepMap2, (m_vertPos.xy + ParallaxOffset.xy) * scale);
-			
-			float xaxisA = texture2D( u_NormalMap3, (m_vertPos.yz + ParallaxOffset.xy) * scale).a;
-			float yaxisA = texture2D( u_NormalMap3, (m_vertPos.xz + ParallaxOffset.xy) * scale).a;
-			float zaxisA = texture2D( u_NormalMap3, (m_vertPos.xy + ParallaxOffset.xy) * scale).a;
+		vec4 tex1 = GetMap(u_SteepMap2, scale, ParallaxOffset, FAKE_MAP_NONE);
+		float a1 = 0.0;
+		
+		if (u_Local4.r <= 0.0) // save texture lookup
+			a1 = ConvertToNormals(tex1).a;
+		else
+			a1 = GetMap(u_NormalMap3, scale, ParallaxOffset, FAKE_MAP_NORMALMAP3).a;
 
-			tex1 = xaxis * var_Blending.x + yaxis * var_Blending.y + zaxis * var_Blending.z;
-			a1 = xaxisA * var_Blending.x + yaxisA * var_Blending.y + zaxisA * var_Blending.z;
+		vec4 tex2 = GetMap(u_DiffuseMap, scale, ParallaxOffset, FAKE_MAP_NONE);
+		float a2 = 0.0;
+
+		if (u_Local4.r <= 0.0) // save texture lookup
+			a2 = ConvertToNormals(tex2).a;
+		else
+			a2 = GetMap(u_NormalMap, scale, ParallaxOffset, FAKE_MAP_NORMALMAP).a;
+
+		if (u_Local7.r <= 0.0 && u_Local7.g <= 0.0 && u_Local7.b <= 0.0 && u_Local7.a <= 0.0)
+		{// No splat maps...
+			return vec4(splatblend(tex1, a1 * (a1 * mixVal), tex2, a2 * (1.0 - (a2 * mixVal))), 1.0);
 		}
 
-		{
-			vec4 xaxis = texture2D( u_DiffuseMap, (m_vertPos.yz + ParallaxOffset.xy) * scale);
-			vec4 yaxis = texture2D( u_DiffuseMap, (m_vertPos.xz + ParallaxOffset.xy) * scale);
-			vec4 zaxis = texture2D( u_DiffuseMap, (m_vertPos.xy + ParallaxOffset.xy) * scale);
+		// Splat mapping...
+		tex2 = GetSplatMap(texCoords, ParallaxOffset, pixRandom, tex2, a2);
 
-			float xaxisA = texture2D( u_NormalMap, (m_vertPos.yz + ParallaxOffset.xy) * scale).a;
-			float yaxisA = texture2D( u_NormalMap, (m_vertPos.xz + ParallaxOffset.xy) * scale).a;
-			float zaxisA = texture2D( u_NormalMap, (m_vertPos.xy + ParallaxOffset.xy) * scale).a;
-
-			tex2 = xaxis * var_Blending.x + yaxis * var_Blending.y + zaxis * var_Blending.z;
-			a2 = xaxisA * var_Blending.x + yaxisA * var_Blending.y + zaxisA * var_Blending.z;
-		}
-
-		//return mix(tex2, tex1, clamp(mixVal, 0.0, 1.0));
 		return vec4(splatblend(tex1, a1 * (a1 * mixVal), tex2, a2 * (1.0 - (a2 * mixVal))), 1.0);
+	}
+	else if (u_Local5.a > 0.0 && var_Slope > 0)
+	{// Steep maps (high angles)...
+		const float scale = 0.0025;
+
+		if (u_Local7.r <= 0.0 && u_Local7.g <= 0.0 && u_Local7.b <= 0.0 && u_Local7.a <= 0.0)
+		{// No splat maps...
+			return GetMap(u_SteepMap, scale, ParallaxOffset, FAKE_MAP_NONE);
+		}
+
+		vec4 tex = GetMap(u_SteepMap, scale, ParallaxOffset, FAKE_MAP_NONE);
+		float a1 = 0.0;
+		
+		if (u_Local4.r <= 0.0) // save texture lookup
+			a1 = ConvertToNormals(tex).a;
+		else
+			GetMap(u_NormalMap, scale, ParallaxOffset, FAKE_MAP_NORMALMAP2).a;//GetMap(u_NormalMap2, scale, ParallaxOffset).a;
+
+		return GetSplatMap(texCoords, ParallaxOffset, pixRandom, tex, a1);
 	}
 	else if (u_Local5.a > 0.0)
 	{// Steep maps (low angles)...
 		const float scale = 0.01;
-		vec4 xaxis = texture2D( u_DiffuseMap, (m_vertPos.yz + ParallaxOffset.xy) * scale);
-		vec4 yaxis = texture2D( u_DiffuseMap, (m_vertPos.xz + ParallaxOffset.xy) * scale);
-		vec4 zaxis = texture2D( u_DiffuseMap, (m_vertPos.xy + ParallaxOffset.xy) * scale);
-		vec4 tex = xaxis * var_Blending.x + yaxis * var_Blending.y + zaxis * var_Blending.z;
-		return tex;
+
+		if (u_Local7.r <= 0.0 && u_Local7.g <= 0.0 && u_Local7.b <= 0.0 && u_Local7.a <= 0.0)
+		{// No splat maps...
+			return GetMap(u_DiffuseMap, scale, ParallaxOffset, FAKE_MAP_NONE);
+		}
+
+		// Splat mapping...
+		vec4 tex = GetMap(u_DiffuseMap, scale, ParallaxOffset, FAKE_MAP_NONE);
+		float a1 = 0.0;
+
+		if (u_Local4.r <= 0.0) // save texture lookup
+			a1 = ConvertToNormals(tex).a;
+		else
+			a1 = GetMap(u_NormalMap, scale, ParallaxOffset, FAKE_MAP_NORMALMAP).a;
+
+		return GetSplatMap(texCoords, ParallaxOffset, pixRandom, tex, a1);
 	}
 	else
 	{
-		return texture2D(u_DiffuseMap, texCoords);
+		return GetNonSplatMap(u_DiffuseMap, texCoords, FAKE_MAP_NONE);
 	}
 #else //!defined(USE_OVERLAY) || defined(USE_TRI_PLANAR)
-	return texture2D(u_DiffuseMap, texCoords);
+	return GetNonSplatMap(u_DiffuseMap, texCoords, FAKE_MAP_NONE);
 #endif //defined(USE_OVERLAY) || defined(USE_TRI_PLANAR)
 }
 
@@ -291,64 +498,31 @@ vec4 GetNormal(vec2 texCoords, vec2 ParallaxOffset, float pixRandom)
 	{// Steep maps (water edges)...
 		float mixVal = ((WATER_LEVEL + 128.0) - m_vertPos.z) / 128.0;
 		const float scale = 0.01;
-		vec4 tex1;
-		vec4 tex2;
-		float a1;
-		float a2;
 
-		{
-			vec4 xaxis = texture2D( u_NormalMap3, (m_vertPos.yz + ParallaxOffset.xy) * scale);
-			vec4 yaxis = texture2D( u_NormalMap3, (m_vertPos.xz + ParallaxOffset.xy) * scale);
-			vec4 zaxis = texture2D( u_NormalMap3, (m_vertPos.xy + ParallaxOffset.xy) * scale);
+		vec4 tex1 = GetMap(u_NormalMap3, scale, ParallaxOffset, FAKE_MAP_NORMALMAP3);
+		float a1 = tex1.a;
 
-			float xaxisA = xaxis.a;
-			float yaxisA = yaxis.a;
-			float zaxisA = zaxis.a;
-
-			tex1 = xaxis * var_Blending.x + yaxis * var_Blending.y + zaxis * var_Blending.z;
-			a1 = xaxisA * var_Blending.x + yaxisA * var_Blending.y + zaxisA * var_Blending.z;
-		}
-
-		{
-			vec4 xaxis = texture2D( u_NormalMap, (m_vertPos.yz + ParallaxOffset.xy) * scale);
-			vec4 yaxis = texture2D( u_NormalMap, (m_vertPos.xz + ParallaxOffset.xy) * scale);
-			vec4 zaxis = texture2D( u_NormalMap, (m_vertPos.xy + ParallaxOffset.xy) * scale);
-
-			float xaxisA = xaxis.a;
-			float yaxisA = yaxis.a;
-			float zaxisA = zaxis.a;
-
-			tex2 = xaxis * var_Blending.x + yaxis * var_Blending.y + zaxis * var_Blending.z;
-			a2 = xaxisA * var_Blending.x + yaxisA * var_Blending.y + zaxisA * var_Blending.z;
-		}
-
-		//return mix(tex2, tex1, clamp(mixVal, 0.0, 1.0));
+		vec4 tex2 = GetMap(u_NormalMap, scale, ParallaxOffset, FAKE_MAP_NORMALMAP);
+		float a2 = tex2.a;
+		
 		return vec4(splatblend(tex1, a1 * (a1 * mixVal), tex2, a2 * (1.0 - (a2 * mixVal))), 1.0);
 	}
 	else if (u_Local5.a > 0.0 && var_Slope > 0)
 	{// Steep maps (high angles)...
 		const float scale = 0.0025;
-		vec4 xaxis = texture2D( u_NormalMap2, (m_vertPos.yz + ParallaxOffset.xy) * scale);
-		vec4 yaxis = texture2D( u_NormalMap2, (m_vertPos.xz + ParallaxOffset.xy) * scale);
-		vec4 zaxis = texture2D( u_NormalMap2, (m_vertPos.xy + ParallaxOffset.xy) * scale);
-		vec4 tex = xaxis * var_Blending.x + yaxis * var_Blending.y + zaxis * var_Blending.z;
-		return tex;
+		return GetMap(u_NormalMap2, scale, ParallaxOffset, FAKE_MAP_NORMALMAP2);//GetMap(u_NormalMap2, scale, ParallaxOffset);
 	}
 	else if (u_Local5.a > 0.0)
 	{// Steep maps (normal angles)...
 		const float scale = 0.01;
-		vec4 xaxis = texture2D( u_NormalMap, (m_vertPos.yz + ParallaxOffset.xy) * scale);
-		vec4 yaxis = texture2D( u_NormalMap, (m_vertPos.xz + ParallaxOffset.xy) * scale);
-		vec4 zaxis = texture2D( u_NormalMap, (m_vertPos.xy + ParallaxOffset.xy) * scale);
-		vec4 tex = xaxis * var_Blending.x + yaxis * var_Blending.y + zaxis * var_Blending.z;
-		return tex;
+		return GetMap(u_NormalMap, scale, ParallaxOffset, FAKE_MAP_NORMALMAP);
 	}
 	else
 	{
-		return texture2D(u_NormalMap, texCoords);
+		return GetNonSplatMap(u_NormalMap, texCoords, FAKE_MAP_NORMALMAP);
 	}
 #else //!defined(USE_OVERLAY) || defined(USE_TRI_PLANAR)
-	return texture2D(u_NormalMap, texCoords);
+	return GetNonSplatMap(u_NormalMap, texCoords, FAKE_MAP_NORMALMAP);
 #endif //defined(USE_OVERLAY) || defined(USE_TRI_PLANAR)
 }
 
@@ -612,8 +786,9 @@ void main()
 	#endif
 
 
-	vec4 norm = GetNormal(texCoords, ParallaxOffset, pixRandom);
+	vec4 norm = vec4(m_Normal.xyz, 0.0);
 
+	norm = GetNormal(texCoords, ParallaxOffset, pixRandom);
 	N = norm.xyz * 2.0 - 1.0;
 	N.xy *= u_NormalScale.xy;
 	N.z = sqrt(clamp((0.25 - N.x * N.x) - N.y * N.y, 0.0, 1.0));
@@ -622,19 +797,6 @@ void main()
 
 	DETAILED_NORMAL = N;
 
-
-	#if defined(USE_OVERLAY)
-
-		//
-		// Steep Maps...
-		//
-
-		if (var_Slope > 0.0)
-		{// Steep maps...
-			diffuse.rgb = mix( diffuse.rgb, GetSteepMap(var_nonTCtexCoords, ParallaxOffset).rgb, clamp(var_Slope,0.0,1.0));
-		}
-
-	#endif //USE_OVERLAY
 	
 
 	#if defined(USE_OVERLAY)
@@ -683,14 +845,6 @@ void main()
 
 		vec2 shadowTex = gl_FragCoord.xy * r_FBufScale;
 		float shadowValue = texture2D(u_ShadowMap, shadowTex).r;
-
-		// surfaces not facing the light are always shadowed
-		//shadowValue *= float(dot(m_Normal.xyz, var_PrimaryLightDir.xyz) > 0.0);
-
-		//#if defined(SHADOWMAP_MODULATE)
-		//	vec3 shadowColor = u_PrimaryLightAmbient * lightColor;
-		//	lightColor = mix(shadowColor, lightColor, shadowValue);
-		//#endif //defined(SHADOWMAP_MODULATE)
 
 	#endif //defined(USE_SHADOWMAP) 
 
@@ -783,13 +937,26 @@ void main()
 		{
 			float lambertian2 = dot(var_PrimaryLightDir.xyz,N);
 			float spec2 = 0.0;
+			bool noSunPhong = false;
+			float phongFactor = u_Local5.b;
+
+			if (phongFactor < 0.0)
+			{// Negative phong value is used to tell terrains not to use sunlight (to hide the triangle edge differences)
+				noSunPhong = true;
+				phongFactor = 0.0;
+			}
 
 			if(lambertian2 > 0.0)
 			{// this is blinn phong
 				vec3 halfDir2 = normalize(var_PrimaryLightDir.xyz + E);
 				float specAngle = max(dot(halfDir2, N), 0.0);
 				spec2 = pow(specAngle, 16.0);
-				gl_FragColor.rgb += vec3(spec2 * (1.0 - specular.a)) * gl_FragColor.rgb * u_PrimaryLightColor.rgb * u_Local5.b;
+				gl_FragColor.rgb += vec3(spec2 * (1.0 - specular.a)) * gl_FragColor.rgb * u_PrimaryLightColor.rgb * phongFactor;
+			}
+
+			if (noSunPhong)
+			{// Invert phong value so we still have non-sun lights...
+				phongFactor = -u_Local5.b;
 			}
 
 			for (int li = 0; li < u_lightCount; li++)
@@ -807,7 +974,7 @@ void main()
 						vec3 halfDir3 = normalize(lightDir.xyz + E);
 						float specAngle3 = max(dot(halfDir3, N), 0.0);
 						spec3 = pow(specAngle3, 16.0);
-						gl_FragColor.rgb += vec3(spec3 * (1.0 - specular.a)) * u_lightColors[li].rgb * lightStrength * u_Local5.b;
+						gl_FragColor.rgb += vec3(spec3 * (1.0 - specular.a)) * u_lightColors[li].rgb * lightStrength * phongFactor;
 					}
 				}
 			}

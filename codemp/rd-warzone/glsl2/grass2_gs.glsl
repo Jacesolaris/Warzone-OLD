@@ -11,8 +11,12 @@ uniform mat4				u_ModelMatrix;
 uniform mat4				u_ModelViewMatrix;
 uniform mat4				u_NormalMatrix;
 
+uniform sampler2D			u_SplatControlMap;
+
+uniform vec4				u_Local6; // useSunLightSpecular, hasSteepMap2, MAP_SIZE, WATER_LEVEL // -- only MAP_SIZE is used here
+uniform vec4				u_Local7; // hasSplatMap1, hasSplatMap2, hasSplatMap3, hasSplatMap4
 uniform vec4				u_Local8; // passnum, 0, 0, 0
-uniform vec4				u_Local9;
+uniform vec4				u_Local9; // testvalue0, 1, 2, 3
 uniform vec4				u_Local10; // foliageLODdistance, foliageDensity, MAP_WATER_LEVEL, 0.0
 
 uniform float				u_Time;
@@ -32,7 +36,7 @@ flat out int				bUnderwater;
 #define						FAST_METHOD
 //#define					ANGLE_BASED_DENSITY
 
-const float					fGrassPatchSize = 64.0;//48.0;//24.0;
+const float					fGrassPatchSize = 256.0;//u_Local9.b;//64.0;//48.0;//24.0;
 const float					fWindStrength = 12.0;
 const vec3					vWindDirection = normalize(vec3(1.0, 0.0, 1.0));
 
@@ -135,6 +139,23 @@ vec3 vectoangles( in vec3 value1 ) {
 	return angles;
 }
 
+vec4 GetControlMap( vec3 m_vertPos)
+{
+	float controlScale = 1.0 / u_Local6.b;
+
+	vec4 xaxis = texture2D( u_SplatControlMap, (m_vertPos.yz * controlScale) * 0.5 + 0.5);
+	vec4 yaxis = texture2D( u_SplatControlMap, (m_vertPos.xz * controlScale) * 0.5 + 0.5);
+	vec4 zaxis = texture2D( u_SplatControlMap, (m_vertPos.xy * controlScale) * 0.5 + 0.5);
+
+	return xaxis * 0.333 + yaxis * 0.333 + zaxis * 0.333;
+}
+
+vec4 GetGrassMap(vec3 m_vertPos)
+{
+	vec4 control = GetControlMap(m_vertPos);
+	return clamp(pow(control, vec4(0.3)) * 0.5, 0.0, 1.0);
+}
+
 void main()
 {
 	bUnderwater = 0;
@@ -201,12 +222,25 @@ void main()
 	{// Deep underwater plants draw at lower density, but larger...
 		float densityMult = 3.0 + clamp(((MAP_WATER_LEVEL - 256.0) - Pos.z) / 64.0, 0.0, 6.0);
 		FOLIAGE_DENSITY = int(float(FOLIAGE_DENSITY) / densityMult);
-		if (FOLIAGE_DENSITY < 2.0) FOLIAGE_DENSITY = 2.0;
+		if (FOLIAGE_DENSITY < 2) FOLIAGE_DENSITY = 2;
 	}
 
 	for(int x = 0; x < FOLIAGE_DENSITY; x++)
 	{
 		vec3 vGrassFieldPos = randomBarycentricCoordinate().xyz;
+
+		vec4 controlMap = GetGrassMap(vGrassFieldPos);
+		float controlMapScale = length(controlMap.rgb);
+
+		if (controlMapScale < 0.2)//u_Local9.a)
+		{// Check if this area is on the grass map. If not, there is no grass here...
+			continue;
+		}
+
+		// Fill in the smaller size grass around edges (since we just removed the smallest ones)...
+		controlMapScale *= controlMapScale;
+		controlMapScale += 0.1;
+
 		float fGrassPatchWaterEdgeMod = randZeroOne();
 
 		if (vGrassFieldPos.z < MAP_WATER_LEVEL + 64.0 + (fGrassPatchWaterEdgeMod * 96.0))
@@ -247,6 +281,8 @@ void main()
 			heightMult = fGrassPatchWaterEdgeMod * 0.5 + 0.5;
 		}
 
+		heightMult *= controlMapScale;
+
 		float fGrassPatchHeight = (fGrassPatchWaterEdgeMod * 0.25 + 0.75) * heightMult; // use fGrassPatchWaterEdgeMod random to save doing an extra random
 
 		// Wind calculation stuff...
@@ -259,118 +295,6 @@ void main()
 		
 		fWindPower *= fWindStrength;
 		
-#if !defined(FAST_METHOD)
-		if (VertDist >= MAX_RANGE / 32.0)
-		{// Distant stuff is a single billboard facing the player...
-			vec3 right = vec3(u_ModelViewMatrix[0][0], 
-                    u_ModelViewMatrix[1][0], 
-                    u_ModelViewMatrix[2][0]);
- 
-			vec3 up = vec3(u_ModelViewMatrix[0][1], 
-					u_ModelViewMatrix[1][1], 
-					u_ModelViewMatrix[2][1]);
-
-			float size = fGrassPatchSize*fGrassPatchHeight;
-		  
-			vec3 P = vGrassFieldPos.xyz + (up * (size*0.9));
-
-			vec3 va = P - (right + up) * size;
-			gl_Position = u_ModelViewProjectionMatrix * vec4(va, 1.0);
-			vTexCoord = vec2(0.0, 1.0);
-			vVertPosition = va.xyz;
-			EmitVertex();  
-  
-			vec3 vb = P - (right - up) * size;
-			gl_Position = u_ModelViewProjectionMatrix * vec4(vb + vWindDirection*fWindPower, 1.0);
-			vTexCoord = vec2(0.0, 0.0);
-			vVertPosition = vb.xyz;
-			EmitVertex();  
- 
-			vec3 vd = P + (right - up) * size;
-			gl_Position = u_ModelViewProjectionMatrix * vec4(vd, 1.0);
-			vTexCoord = vec2(1.0, 1.0);
-			vVertPosition = vd.xyz;
-			EmitVertex();  
- 
-			vec3 vc = P + (right + up) * size;
-			gl_Position = u_ModelViewProjectionMatrix * vec4(vc + vWindDirection*fWindPower, 1.0);
-			vTexCoord = vec2(1.0, 0.0);
-			vVertPosition = vc.xyz;
-			EmitVertex();  
-  
-			EndPrimitive();
-		}
-		else
-		{// Close stuff draws 2 boxes in an X pattern...
-			{
-				vec3 right = vec3(1.0, 0.0, 0.0);
-				vec3 up = vec3(0.0, 0.0, 1.0);
-
-				float size = fGrassPatchSize*fGrassPatchHeight;
-				vec3 P = vGrassFieldPos.xyz + (up * (size*0.9));
-
-				vec3 va = P - (right + up) * size;
-				gl_Position = u_ModelViewProjectionMatrix * vec4(va, 1.0);
-				vTexCoord = vec2(0.0, 1.0);
-				vVertPosition = va.xyz;
-				EmitVertex();  
-  
-				vec3 vb = P - (right - up) * size;
-				gl_Position = u_ModelViewProjectionMatrix * vec4(vb + vWindDirection*fWindPower, 1.0);
-				vTexCoord = vec2(0.0, 0.0);
-				vVertPosition = vb.xyz;
-				EmitVertex();  
- 
-				vec3 vd = P + (right - up) * size;
-				gl_Position = u_ModelViewProjectionMatrix * vec4(vd, 1.0);
-				vTexCoord = vec2(1.0, 1.0);
-				vVertPosition = vd.xyz;
-				EmitVertex();  
- 
-				vec3 vc = P + (right + up) * size;
-				gl_Position = u_ModelViewProjectionMatrix * vec4(vc + vWindDirection*fWindPower, 1.0);
-				vTexCoord = vec2(1.0, 0.0);
-				vVertPosition = vc.xyz;
-				EmitVertex();  
-  
-				EndPrimitive();
-			}
-		
-			{
-				vec3 right = vec3(0.0, 1.0, 0.0);
-				vec3 up = vec3(0.0, 0.0, 1.0);
-
-				float size = fGrassPatchSize*fGrassPatchHeight;
-				vec3 P = vGrassFieldPos.xyz + (up * (size*0.8));
-
-				vec3 va = P - (right + up) * size;
-				gl_Position = u_ModelViewProjectionMatrix * vec4(va, 1.0);
-				vTexCoord = vec2(0.0, 1.0);
-				vVertPosition = va.xyz;
-				EmitVertex();  
-  
-				vec3 vb = P - (right - up) * size;
-				gl_Position = u_ModelViewProjectionMatrix * vec4(vb + vWindDirection*fWindPower, 1.0);
-				vTexCoord = vec2(0.0, 0.0);
-				vVertPosition = vb.xyz;
-				EmitVertex();  
- 
-				vec3 vd = P + (right - up) * size;
-				gl_Position = u_ModelViewProjectionMatrix * vec4(vd, 1.0);
-				vTexCoord = vec2(1.0, 1.0);
-				vVertPosition = vd.xyz;
-				EmitVertex();  
- 
-				vec3 vc = P + (right + up) * size;
-				gl_Position = u_ModelViewProjectionMatrix * vec4(vc + vWindDirection*fWindPower, 1.0);
-				vTexCoord = vec2(1.0, 0.0);
-				vVertPosition = vc.xyz;
-				EmitVertex();  
-  
-				EndPrimitive();
-			}
-		}
-#else //defined(FAST_METHOD)
 		vec3 right = vec3(randZeroOne(), randZeroOne(), 0.0);
 		vec3 up = vec3(0.0, 0.0, 0.5);
 		vec3 normalOffset = (normal * vec3(right.x, right.y, 0.5));
@@ -404,7 +328,6 @@ void main()
 		EmitVertex();  
   
 		EndPrimitive();
-#endif //defined(FAST_METHOD)
 	}
 }
 

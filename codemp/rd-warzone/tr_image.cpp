@@ -3053,6 +3053,81 @@ static void R_CreateSteepMap2 ( const char *name, byte *pic, int width, int heig
 	SubsurfaceImage = R_FindImageFile(SubsurfaceName, IMGTYPE_STEEPMAP2, normalFlags);
 }
 
+static void R_CreateSplatControlMap ( const char *name, byte *pic, int width, int height, int flags )
+{
+	char SubsurfaceName[MAX_QPATH];
+	image_t *SubsurfaceImage;
+	int normalFlags;
+	
+	normalFlags = (flags & ~(IMGFLAG_GENNORMALMAP | IMGFLAG_SRGB | IMGFLAG_CLAMPTOEDGE | IMGFLAG_NO_COMPRESSION)) | IMGFLAG_NOLIGHTSCALE | IMGFLAG_MIPMAP;
+
+	COM_StripExtension(name, SubsurfaceName, MAX_QPATH);
+	Q_strcat(SubsurfaceName, MAX_QPATH, "_splat");
+	
+	// find normalmap in case it's there
+	SubsurfaceImage = R_FindImageFile(SubsurfaceName, IMGTYPE_SPLATCONTROLMAP, normalFlags);
+}
+
+static void R_CreateSplatMap1 ( const char *name, byte *pic, int width, int height, int flags )
+{
+	char SubsurfaceName[MAX_QPATH];
+	image_t *SubsurfaceImage;
+	int normalFlags;
+	
+	normalFlags = (flags & ~(IMGFLAG_GENNORMALMAP | IMGFLAG_SRGB | IMGFLAG_CLAMPTOEDGE | IMGFLAG_NO_COMPRESSION)) | IMGFLAG_NOLIGHTSCALE | IMGFLAG_MIPMAP;
+
+	COM_StripExtension(name, SubsurfaceName, MAX_QPATH);
+	Q_strcat(SubsurfaceName, MAX_QPATH, "_splat1");
+	
+	// find normalmap in case it's there
+	SubsurfaceImage = R_FindImageFile(SubsurfaceName, IMGTYPE_SPLATMAP1, normalFlags);
+}
+
+static void R_CreateSplatMap2 ( const char *name, byte *pic, int width, int height, int flags )
+{
+	char SubsurfaceName[MAX_QPATH];
+	image_t *SubsurfaceImage;
+	int normalFlags;
+	
+	normalFlags = (flags & ~(IMGFLAG_GENNORMALMAP | IMGFLAG_SRGB | IMGFLAG_CLAMPTOEDGE | IMGFLAG_NO_COMPRESSION)) | IMGFLAG_NOLIGHTSCALE | IMGFLAG_MIPMAP;
+
+	COM_StripExtension(name, SubsurfaceName, MAX_QPATH);
+	Q_strcat(SubsurfaceName, MAX_QPATH, "_splat2");
+	
+	// find normalmap in case it's there
+	SubsurfaceImage = R_FindImageFile(SubsurfaceName, IMGTYPE_SPLATMAP2, normalFlags);
+}
+
+static void R_CreateSplatMap3 ( const char *name, byte *pic, int width, int height, int flags )
+{
+	char SubsurfaceName[MAX_QPATH];
+	image_t *SubsurfaceImage;
+	int normalFlags;
+	
+	normalFlags = (flags & ~(IMGFLAG_GENNORMALMAP | IMGFLAG_SRGB | IMGFLAG_CLAMPTOEDGE | IMGFLAG_NO_COMPRESSION)) | IMGFLAG_NOLIGHTSCALE | IMGFLAG_MIPMAP;
+
+	COM_StripExtension(name, SubsurfaceName, MAX_QPATH);
+	Q_strcat(SubsurfaceName, MAX_QPATH, "_splat3");
+	
+	// find normalmap in case it's there
+	SubsurfaceImage = R_FindImageFile(SubsurfaceName, IMGTYPE_SPLATMAP3, normalFlags);
+}
+
+static void R_CreateSplatMap4 ( const char *name, byte *pic, int width, int height, int flags )
+{
+	char SubsurfaceName[MAX_QPATH];
+	image_t *SubsurfaceImage;
+	int normalFlags;
+	
+	normalFlags = (flags & ~(IMGFLAG_GENNORMALMAP | IMGFLAG_SRGB | IMGFLAG_CLAMPTOEDGE | IMGFLAG_NO_COMPRESSION)) | IMGFLAG_NOLIGHTSCALE | IMGFLAG_MIPMAP;
+
+	COM_StripExtension(name, SubsurfaceName, MAX_QPATH);
+	Q_strcat(SubsurfaceName, MAX_QPATH, "_splat4");
+	
+	// find normalmap in case it's there
+	SubsurfaceImage = R_FindImageFile(SubsurfaceName, IMGTYPE_SPLATMAP4, normalFlags);
+}
+
 void R_GetTextureAverageColor(const byte *in, int width, int height, vec4_t avgColor)
 {
 	int NUM_PIXELS = 0;
@@ -3147,7 +3222,7 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, int flags )
 		return NULL;
 	}
 
-	if (!(flags & IMGFLAG_MIPMAP) && R_ShouldMipMap(name))
+	if (!(flags & IMGFLAG_MIPMAP) && type != IMGTYPE_SPLATCONTROLMAP && R_ShouldMipMap(name))
 	{// UQ: Testing mipmap all...
 		flags |= IMGFLAG_MIPMAP;
 	}
@@ -3157,7 +3232,10 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, int flags )
 		flags &= ~IMGFLAG_NO_COMPRESSION;
 	}
 
-	image = R_CreateImage( name, pic, width, height, type, flags, 0 );
+	if (type != IMGTYPE_SPLATCONTROLMAP)
+		image = R_CreateImage( name, pic, width, height, type, flags, 0 );
+	else
+		image = R_CreateImage( name, pic, width, height, type, IMGFLAG_NOLIGHTSCALE | IMGFLAG_NO_COMPRESSION, GL_RGBA8 );
 
 	//if (flags & IMGFLAG_GLOW)
 	{
@@ -3167,7 +3245,11 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, int flags )
 		VectorCopy4(avgColor, image->lightColor);
 	}
 
-	if (name[0] != '*' && name[0] != '!' && name[0] != '$' && name[0] != '_' && type != IMGTYPE_NORMAL && type != IMGTYPE_SPECULAR /*&& type != IMGTYPE_SUBSURFACE*/ && type != IMGTYPE_OVERLAY && type != IMGTYPE_STEEPMAP && type != IMGTYPE_STEEPMAP2 && !(flags & IMGFLAG_CUBEMAP))
+	if (name[0] != '*' && name[0] != '!' && name[0] != '$' && name[0] != '_' 
+		&& type != IMGTYPE_NORMAL && type != IMGTYPE_SPECULAR /*&& type != IMGTYPE_SUBSURFACE*/ 
+		&& type != IMGTYPE_OVERLAY && type != IMGTYPE_STEEPMAP && type != IMGTYPE_STEEPMAP2 
+		&& type != IMGTYPE_SPLATMAP1 && type != IMGTYPE_SPLATMAP2 && type != IMGTYPE_SPLATMAP3 && type != IMGTYPE_SPLATMAP4 && type != IMGTYPE_SPLATCONTROLMAP
+		&& !(flags & IMGFLAG_CUBEMAP))
 	{
 		if (image && r_textureClean->integer)
 		{
@@ -3193,7 +3275,7 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, int flags )
 		}
 		*/
 
-		if (r_normalMapping->integer) 
+		if (r_normalMapping->integer >= 2) 
 		{
 			if (image
 				&& !(StringContainsWord(name, "sky") || StringContainsWord(name, "skies") || StringContainsWord(name, "cloud") || StringContainsWord(name, "glow") || StringContainsWord(name, "gfx/")))
@@ -3209,6 +3291,12 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, int flags )
 		//R_CreateSubsurfaceMap( name, pic, width, height, flags );
 
 		R_CreateOverlayMap( name, pic, width, height, flags );
+
+		R_CreateSplatControlMap( name, pic, width, height, flags );
+		R_CreateSplatMap1( name, pic, width, height, flags );
+		R_CreateSplatMap2( name, pic, width, height, flags );
+		R_CreateSplatMap3( name, pic, width, height, flags );
+		R_CreateSplatMap4( name, pic, width, height, flags );
 
 		R_CreateSteepMap( name, pic, width, height, flags );
 		R_CreateSteepMap2( name, pic, width, height, flags );

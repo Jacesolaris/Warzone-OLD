@@ -249,14 +249,16 @@ void main()
 	position = position4.xyz;
 	normal = normalize (normal4.xyz);
 	vec3 tangent = normalize (tangent4.xyz);
+
+	normal  = normal  * 2.0 - 1.0;
+	tangent = tangent * 2.0 - 1.0;
 #else
 	vec3 tangent   = attr_Tangent.xyz;
+
+	normal  = normal  * 2.0 - 1.0;
+	tangent = tangent * 2.0 - 1.0;
 #endif
 
-#if !defined(USE_SKELETAL_ANIMATION)
-	normal  = normal  * 2.0 - vec3(1.0);
-	tangent = tangent * 2.0 - vec3(1.0);
-#endif
 
 #if defined(USE_TCGEN)
 	vec2 texCoords = GenTexCoords(u_TCGen0, position, normal, u_TCGen0Vector0, u_TCGen0Vector1);

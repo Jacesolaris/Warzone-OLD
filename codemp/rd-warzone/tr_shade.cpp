@@ -1000,6 +1000,7 @@ void RB_AdvanceOverlaySway ( void )
 }
 
 extern float MAP_WATER_LEVEL;
+extern float MAP_INFO_MAXSIZE;
 
 void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage)
 {
@@ -1012,8 +1013,22 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage)
 	float	useSteepParallax = 0.0;
 	float	hasOverlay = 0.0;
 	float	doSway = 0.0;
+	float	phongFactor = r_blinnPhong->value;
 	float	hasSteepMap = 0.0;
 	float	hasSteepMap2 = 0.0;
+	float	hasSplatMap1 = 0;
+	float	hasSplatMap2 = 0;
+	float	hasSplatMap3 = 0;
+	float	hasSplatMap4 = 0;
+	float	hasNormalMap = 0;
+
+	if (r_normalMapping->integer >= 2 
+		&& pStage->bundle[TB_NORMALMAP].image[0] 
+		&& pStage->bundle[TB_NORMALMAP].image[0] != tr.whiteImage
+		&& pStage->bundle[TB_NORMALMAP].image[0] != tr.blackImage) 
+	{
+		hasNormalMap = 1.0;
+	}
 
 	if (pStage->bundle[TB_OVERLAYMAP].overlayLoaded 
 		&& pStage->hasRealOverlayMap 
@@ -1036,6 +1051,26 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage)
 		hasSteepMap2 = 1.0;
 	}
 
+	if ((pStage->bundle[TB_SPLATMAP1].image[0] && pStage->bundle[TB_SPLATMAP1].image[0] != tr.whiteImage))
+	{
+		hasSplatMap1 = 1;
+	}
+
+	if ((pStage->bundle[TB_SPLATMAP2].image[0] && pStage->bundle[TB_SPLATMAP2].image[0] != tr.whiteImage))
+	{
+		hasSplatMap2 = 1;
+	}
+
+	if ((pStage->bundle[TB_SPLATMAP3].image[0] && pStage->bundle[TB_SPLATMAP3].image[0] != tr.whiteImage))
+	{
+		hasSplatMap3 = 1;
+	}
+
+	if ((pStage->bundle[TB_SPLATMAP4].image[0] && pStage->bundle[TB_SPLATMAP4].image[0] != tr.whiteImage))
+	{
+		hasSplatMap4 = 1;
+	}
+
 	if (pStage->isWater && r_glslWater->integer)
 	{
 		specularScale = 1.5;
@@ -1053,16 +1088,18 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage)
 			parallaxScale = 2.0;
 			break;
 		case MATERIAL_SHORTGRASS:		// 5			// manicured lawn
-			specularScale = 0.25;
+			specularScale = 0.05;
 			cubemapScale = 0.0;
 			materialType = (float)MATERIAL_SHORTGRASS;
 			parallaxScale = 2.0;
+			phongFactor = -phongFactor; // no blinn phong on grassy terrains (to stop the joins being so obvious)
 			break;
 		case MATERIAL_LONGGRASS:		// 6			// long jungle grass
-			specularScale = 0.25;
+			specularScale = 0.05;
 			cubemapScale = 0.0;
 			materialType = (float)MATERIAL_LONGGRASS;
 			parallaxScale = 2.5;
+			phongFactor = -phongFactor; // no blinn phong on grassy terrains (to stop the joins being so obvious)
 			break;
 		case MATERIAL_SAND:				// 8			// sandy beach
 			specularScale = 0.15;
@@ -1259,16 +1296,6 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage)
 	// Shader overrides material...
 	if (pStage->cubeMapScale > 0.0) cubemapScale = pStage->cubeMapScale;
 
-	qboolean realNormalMap = qfalse;
-
-	if (pStage->bundle[TB_NORMALMAP].image[0])
-	{
-		if (!pStage->bundle[TB_NORMALMAP].image[0]->generatedNormalMap)
-		{
-			realNormalMap = qtrue;
-		}
-	}
-
 	if (pStage->isFoliage)
 	{
 		doSway = 0.7;
@@ -1279,14 +1306,18 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage)
 	//GLSL_SetUniformVec4(sp, UNIFORM_LOCAL2, pStage->subsurfaceExtinctionCoefficient);
 	VectorSet4(local3, 0.0/*pStage->subsurfaceRimScalar*/, 0.0/*pStage->subsurfaceMaterialThickness*/, 0.0/*pStage->subsurfaceSpecularPower*/, cubemapScale);
 	GLSL_SetUniformVec4(sp, UNIFORM_LOCAL3, local3);
-	VectorSet4(local4, (float)realNormalMap, isMetalic, 0.0/*(float)pStage->hasRealSubsurfaceMap*/, doSway);
+	VectorSet4(local4, hasNormalMap, isMetalic, 0.0/*(float)pStage->hasRealSubsurfaceMap*/, doSway);
 	GLSL_SetUniformVec4(sp, UNIFORM_LOCAL4, local4);
-	VectorSet4(local5, hasOverlay, overlaySway, r_blinnPhong->value, hasSteepMap);
+	VectorSet4(local5, hasOverlay, overlaySway, phongFactor, hasSteepMap);
 	GLSL_SetUniformVec4(sp, UNIFORM_LOCAL5, local5);
 
 	vec4_t local6;
-	VectorSet4(local6, r_sunlightSpecular->value, hasSteepMap2, 0.0, MAP_WATER_LEVEL);
+	VectorSet4(local6, r_sunlightSpecular->value, hasSteepMap2, MAP_INFO_MAXSIZE, MAP_WATER_LEVEL);
 	GLSL_SetUniformVec4(sp, UNIFORM_LOCAL6,  local6);
+
+	vec4_t local7;
+	VectorSet4(local7, hasSplatMap1, hasSplatMap2, hasSplatMap3, hasSplatMap4);
+	GLSL_SetUniformVec4(sp, UNIFORM_LOCAL7,  local7);
 
 	vec4_t specMult;
 
@@ -2299,6 +2330,100 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				GL_BindToTMU( tr.whiteImage, TB_STEEPMAP2 );
 			}
 
+			if (isGrass && passNum > 0)
+			{// Use grass map...
+				GL_BindToTMU( tr.defaultGrassMapImage, TB_SPLATCONTROLMAP );
+			}
+			else
+			{
+				if (pStage->bundle[TB_SPLATCONTROLMAP].image[0] && pStage->bundle[TB_SPLATCONTROLMAP].image[0] != tr.blackImage)
+				{
+					//ri->Printf(PRINT_WARNING, "Image %s bound to splat control map %i x %i.\n", pStage->bundle[TB_SPLATCONTROLMAP].image[0]->imgName, pStage->bundle[TB_SPLATCONTROLMAP].image[0]->width, pStage->bundle[TB_SPLATCONTROLMAP].image[0]->height);
+					GL_BindToTMU( pStage->bundle[TB_SPLATCONTROLMAP].image[0], TB_SPLATCONTROLMAP );
+				}
+				else
+				{
+					//GL_BindToTMU( tr.blackImage, TB_SPLATCONTROLMAP ); // bind black image so we never use any of the splat images
+					GL_BindToTMU( tr.defaultSplatControlImage, TB_SPLATCONTROLMAP ); // really need to make a blured (possibly also considering heightmap) version of this...
+				}
+			}
+
+			if (pStage->bundle[TB_SPLATMAP1].image[0] && pStage->bundle[TB_SPLATMAP1].image[0] != tr.whiteImage)
+			{
+				GL_BindToTMU( pStage->bundle[TB_SPLATMAP1].image[0], TB_SPLATMAP1 );
+				GL_BindToTMU( pStage->bundle[TB_SPLATMAP1].image[1], TB_SPLATNORMALMAP1 );
+			}
+			else
+			{
+				if (pStage->bundle[TB_DIFFUSEMAP].image[0])
+				{
+					R_BindAnimatedImageToTMU( &pStage->bundle[TB_DIFFUSEMAP], TB_SPLATMAP1);
+					GL_BindToTMU( pStage->bundle[TB_NORMALMAP].image[0], TB_SPLATNORMALMAP1 );
+				}
+				else // will never get used anyway
+				{
+					GL_BindToTMU( tr.whiteImage, TB_SPLATMAP1 );
+					GL_BindToTMU( tr.whiteImage, TB_SPLATNORMALMAP1 );
+				}
+			}
+
+			if (pStage->bundle[TB_SPLATMAP2].image[0] && pStage->bundle[TB_SPLATMAP2].image[0] != tr.whiteImage)
+			{
+				GL_BindToTMU( pStage->bundle[TB_SPLATMAP2].image[0], TB_SPLATMAP2 );
+				GL_BindToTMU( pStage->bundle[TB_SPLATMAP2].image[1], TB_SPLATNORMALMAP2 );
+			}
+			else
+			{
+				if (pStage->bundle[TB_DIFFUSEMAP].image[0])
+				{
+					R_BindAnimatedImageToTMU( &pStage->bundle[TB_DIFFUSEMAP], TB_SPLATMAP2);
+					GL_BindToTMU( pStage->bundle[TB_NORMALMAP].image[0], TB_SPLATNORMALMAP2 );
+				}
+				else // will never get used anyway
+				{
+					GL_BindToTMU( tr.whiteImage, TB_SPLATMAP2 );
+					GL_BindToTMU( tr.whiteImage, TB_SPLATNORMALMAP2 );
+				}
+			}
+
+			if (pStage->bundle[TB_SPLATMAP3].image[0] && pStage->bundle[TB_SPLATMAP3].image[0] != tr.whiteImage)
+			{
+				GL_BindToTMU( pStage->bundle[TB_SPLATMAP3].image[0], TB_SPLATMAP3 );
+				GL_BindToTMU( pStage->bundle[TB_SPLATMAP3].image[1], TB_SPLATNORMALMAP3 );
+			}
+			else
+			{
+				if (pStage->bundle[TB_DIFFUSEMAP].image[0])
+				{
+					R_BindAnimatedImageToTMU( &pStage->bundle[TB_DIFFUSEMAP], TB_SPLATMAP3);
+					GL_BindToTMU( pStage->bundle[TB_NORMALMAP].image[0], TB_SPLATNORMALMAP3 );
+				}
+				else // will never get used anyway
+				{
+					GL_BindToTMU( tr.whiteImage, TB_SPLATMAP3 );
+					GL_BindToTMU( tr.whiteImage, TB_SPLATNORMALMAP3 );
+				}
+			}
+
+			if (pStage->bundle[TB_SPLATMAP4].image[0] && pStage->bundle[TB_SPLATMAP4].image[0] != tr.whiteImage)
+			{
+				GL_BindToTMU( pStage->bundle[TB_SPLATMAP4].image[0], TB_SPLATMAP4 );
+				GL_BindToTMU( pStage->bundle[TB_SPLATMAP4].image[1], TB_SPLATNORMALMAP4 );
+			}
+			else
+			{
+				if (pStage->bundle[TB_DIFFUSEMAP].image[0])
+				{
+					R_BindAnimatedImageToTMU( &pStage->bundle[TB_DIFFUSEMAP], TB_SPLATMAP4);
+					GL_BindToTMU( pStage->bundle[TB_NORMALMAP].image[0], TB_SPLATNORMALMAP4 );
+				}
+				else // will never get used anyway
+				{
+					GL_BindToTMU( tr.whiteImage, TB_SPLATMAP4 );
+					GL_BindToTMU( tr.whiteImage, TB_SPLATNORMALMAP4 );
+				}
+			}
+
 			/*if (pStage->bundle[TB_SUBSURFACEMAP].image[0])
 			{
 				R_BindAnimatedImageToTMU( &pStage->bundle[TB_SUBSURFACEMAP], TB_SUBSURFACEMAP);
@@ -2348,6 +2473,10 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 					}
 				}
 			}
+
+			GL_BindToTMU( tr.whiteImage, TB_NORMALMAP );
+			GL_BindToTMU( tr.whiteImage, TB_NORMALMAP2 );
+			GL_BindToTMU( tr.whiteImage, TB_NORMALMAP3 );
 
 			//
 			// do multitexture
@@ -2410,7 +2539,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 					//
 					//if ((light || pStage->hasRealNormalMap || pStage->hasSpecular /*|| pStage->hasRealSubsurfaceMap*/ || pStage->hasRealOverlayMap || pStage->hasRealSteepMap) && !fastLight)
 					{
-						if (r_normalMapping->integer
+						if (r_normalMapping->integer >= 2
 							&& !input->shader->isPortal
 							&& !input->shader->isSky
 							&& !pStage->glow
@@ -2452,74 +2581,12 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 								pStage->bundle[TB_DIFFUSEMAP].normalsLoaded2 = qtrue;
 						}
 
-#if 0
-						if (r_normalMapping->integer
-							&& !input->shader->isPortal
-							&& !input->shader->isSky
-							&& !pStage->glow
-							&& !pStage->bundle[TB_STEEPMAP].steepNormalsLoaded
-							&& pStage->bundle[TB_STEEPMAP].image[0]
-							&& pStage->bundle[TB_STEEPMAP].image[0]->imgName
-							&& (!pStage->bundle[TB_NORMALMAP2].image[0] || pStage->bundle[TB_NORMALMAP2].image[0] == tr.whiteImage)
-							&& pStage->bundle[TB_STEEPMAP].image[0]->imgName[0] 
-							&& pStage->bundle[TB_STEEPMAP].image[0]->imgName[0] != '*'
-							&& pStage->bundle[TB_STEEPMAP].image[0]->imgName[0] != '$'
-							&& pStage->bundle[TB_STEEPMAP].image[0]->imgName[0] != '_'
-							&& pStage->bundle[TB_STEEPMAP].image[0]->imgName[0] != '!'
-							&& !(pStage->bundle[TB_STEEPMAP].image[0]->flags & IMGFLAG_CUBEMAP)
-							&& pStage->bundle[TB_STEEPMAP].image[0]->type != IMGTYPE_NORMAL 
-							&& pStage->bundle[TB_STEEPMAP].image[0]->type != IMGTYPE_SPECULAR 
-							/*&& pStage->bundle[TB_STEEPMAP].image[0]->type != IMGTYPE_SUBSURFACE*/ 
-							&& pStage->bundle[TB_STEEPMAP].image[0]->type != IMGTYPE_OVERLAY 
-							// gfx dirs can be exempted I guess...
-							&& !(r_disableGfxDirEnhancement->integer && StringContainsWord(pStage->bundle[TB_STEEPMAP].image[0]->imgName, "gfx/")))
-						{// How did this happen??? Oh well, generate a normal map now...
-							char imgname[64];
-							//ri->Printf(PRINT_WARNING, "Realtime generating normal map for %s.\n", pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName);
-							sprintf(imgname, "%s_n", pStage->bundle[TB_STEEPMAP].image[0]->imgName);
-							pStage->bundle[TB_NORMALMAP2].image[0] = R_CreateNormalMapGLSL( imgname, NULL, pStage->bundle[TB_STEEPMAP].image[0]->width, pStage->bundle[TB_STEEPMAP].image[0]->height, pStage->bundle[TB_STEEPMAP].image[0]->flags, pStage->bundle[TB_STEEPMAP].image[0] );
-
-							if (pStage->bundle[TB_NORMALMAP2].image[0] != tr.whiteImage)
-								pStage->bundle[TB_STEEPMAP].steepNormalsLoaded = qtrue;
-						}
-
-						if (r_normalMapping->integer
-							&& !input->shader->isPortal
-							&& !input->shader->isSky
-							&& !pStage->glow
-							&& !pStage->bundle[TB_STEEPMAP2].steepNormalsLoaded2
-							&& pStage->bundle[TB_STEEPMAP2].image[0]
-							&& pStage->bundle[TB_STEEPMAP2].image[0]->imgName
-							&& (!pStage->bundle[TB_NORMALMAP3].image[0] || pStage->bundle[TB_NORMALMAP3].image[0] == tr.whiteImage)
-							&& pStage->bundle[TB_STEEPMAP2].image[0]->imgName[0] 
-							&& pStage->bundle[TB_STEEPMAP2].image[0]->imgName[0] != '*'
-							&& pStage->bundle[TB_STEEPMAP2].image[0]->imgName[0] != '$'
-							&& pStage->bundle[TB_STEEPMAP2].image[0]->imgName[0] != '_'
-							&& pStage->bundle[TB_STEEPMAP2].image[0]->imgName[0] != '!'
-							&& !(pStage->bundle[TB_STEEPMAP2].image[0]->flags & IMGFLAG_CUBEMAP)
-							&& pStage->bundle[TB_STEEPMAP2].image[0]->type != IMGTYPE_NORMAL 
-							&& pStage->bundle[TB_STEEPMAP2].image[0]->type != IMGTYPE_SPECULAR 
-							/*&& pStage->bundle[TB_STEEPMAP2].image[0]->type != IMGTYPE_SUBSURFACE*/ 
-							&& pStage->bundle[TB_STEEPMAP2].image[0]->type != IMGTYPE_OVERLAY 
-							// gfx dirs can be exempted I guess...
-							&& !(r_disableGfxDirEnhancement->integer && StringContainsWord(pStage->bundle[TB_STEEPMAP2].image[0]->imgName, "gfx/")))
-						{// How did this happen??? Oh well, generate a normal map now...
-							char imgname[64];
-							//ri->Printf(PRINT_WARNING, "Realtime generating normal map for %s.\n", pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName);
-							sprintf(imgname, "%s_n", pStage->bundle[TB_STEEPMAP2].image[0]->imgName);
-							pStage->bundle[TB_NORMALMAP3].image[0] = R_CreateNormalMapGLSL( imgname, NULL, pStage->bundle[TB_STEEPMAP2].image[0]->width, pStage->bundle[TB_STEEPMAP2].image[0]->height, pStage->bundle[TB_STEEPMAP2].image[0]->flags, pStage->bundle[TB_STEEPMAP2].image[0] );
-
-							if (pStage->bundle[TB_NORMALMAP3].image[0] != tr.whiteImage)
-								pStage->bundle[TB_STEEPMAP2].steepNormalsLoaded2 = qtrue;
-						}
-#endif
-
 						if (pStage->bundle[TB_NORMALMAP].image[0])
 						{
 							R_BindAnimatedImageToTMU( &pStage->bundle[TB_NORMALMAP], TB_NORMALMAP);
 							enableTextures[0] = 1.0f;
 						}
-						else if (r_normalMapping->integer)
+						else if (r_normalMapping->integer >= 2)
 						{
 							GL_BindToTMU( tr.whiteImage, TB_NORMALMAP );
 						}
@@ -2528,7 +2595,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 						{
 							R_BindAnimatedImageToTMU( &pStage->bundle[TB_NORMALMAP2], TB_NORMALMAP2);
 						}
-						else if (r_normalMapping->integer)
+						else if (r_normalMapping->integer >= 2)
 						{
 							GL_BindToTMU( tr.whiteImage, TB_NORMALMAP2 );
 						}
@@ -2537,7 +2604,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 						{
 							R_BindAnimatedImageToTMU( &pStage->bundle[TB_NORMALMAP3], TB_NORMALMAP3);
 						}
-						else if (r_normalMapping->integer)
+						else if (r_normalMapping->integer >= 2)
 						{
 							GL_BindToTMU( tr.whiteImage, TB_NORMALMAP3 );
 						}

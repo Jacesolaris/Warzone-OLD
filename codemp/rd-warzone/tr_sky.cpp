@@ -456,6 +456,10 @@ static void DrawSkySide( struct image_s *image, const int mins[2], const int max
 		GL_BindToTMU( tr.blackImage, TB_OVERLAYMAP );
 		GL_BindToTMU( tr.whiteImage, TB_STEEPMAP );
 		GL_BindToTMU( tr.whiteImage, TB_STEEPMAP2 );
+		GL_BindToTMU( tr.whiteImage, TB_SPLATMAP1 );
+		GL_BindToTMU( tr.whiteImage, TB_SPLATMAP2 );
+		GL_BindToTMU( tr.whiteImage, TB_SPLATMAP3 );
+		GL_BindToTMU( tr.whiteImage, TB_SPLATMAP4 );
 
 		GL_BindToTMU( tr.whiteImage, TB_NORMALMAP );
 		GL_BindToTMU( tr.whiteImage, TB_DELUXEMAP );
