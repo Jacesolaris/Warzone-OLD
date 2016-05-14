@@ -2652,9 +2652,43 @@ void RB_TestShader(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox,
 
 	GLSL_SetUniformVec3(&tr.testshaderShader, UNIFORM_PRIMARYLIGHTCOLOR,   backEnd.refdef.sunCol);
 
+	//Matrix16Multiply(glState.projection, glState.modelview, glState.modelviewProjection);
 	GLSL_SetUniformMatrix16(&tr.testshaderShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
+	GLSL_SetUniformMatrix16(&tr.testshaderShader, UNIFORM_VIEWPROJECTIONMATRIX, glState.projection);
+	GLSL_SetUniformMatrix16(&tr.testshaderShader, UNIFORM_MODELVIEWMATRIX, glState.modelview);
 
 	GLSL_SetUniformFloat(&tr.testshaderShader, UNIFORM_TIME, backEnd.refdef.floatTime);
+
+
+	/*
+	matrix_t trans, model, mvp, invTrans, invMvp, normalMatrix, vp, invVp, invP;
+
+	Matrix16Translation( backEnd.viewParms.ori.origin, trans );
+	Matrix16Multiply( backEnd.viewParms.world.modelMatrix, trans, model );
+	Matrix16Multiply(backEnd.viewParms.projectionMatrix, model, mvp);
+	Matrix16Multiply(backEnd.viewParms.projectionMatrix, backEnd.viewParms.world.modelMatrix, vp);
+
+	Matrix16SimpleInverse( mvp, invMvp);
+	Matrix16SimpleInverse( vp, invVp);
+	Matrix16SimpleInverse( model, normalMatrix);
+	//Matrix16SimpleInverse( trans, invTrans);
+	Matrix16SimpleInverse( backEnd.ori.transformMatrix, invTrans);
+	Matrix16SimpleInverse( glState.projection, invP);
+
+	GLSL_SetUniformMatrix16(&tr.testshaderShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, mvp);
+	GLSL_SetUniformMatrix16(&tr.testshaderShader, UNIFORM_VIEWPROJECTIONMATRIX, backEnd.viewParms.projectionMatrix);//vp);
+	GLSL_SetUniformMatrix16(&tr.testshaderShader, UNIFORM_MODELMATRIX, backEnd.ori.transformMatrix);
+	//GLSL_SetUniformMatrix16(&tr.testshaderShader, UNIFORM_INVEYEPROJECTIONMATRIX, invMvp);//glState.invEyeProjection);
+	GLSL_SetUniformMatrix16(&tr.testshaderShader, UNIFORM_INVEYEPROJECTIONMATRIX, glState.invEyeProjection);
+				
+	GLSL_SetUniformMatrix16(&tr.testshaderShader, UNIFORM_PROJECTIONMATRIX, glState.projection);
+	GLSL_SetUniformMatrix16(&tr.testshaderShader, UNIFORM_MODELVIEWMATRIX, model);
+	GLSL_SetUniformMatrix16(&tr.testshaderShader, UNIFORM_VIEWMATRIX, trans);
+	GLSL_SetUniformMatrix16(&tr.testshaderShader, UNIFORM_INVVIEWMATRIX, invTrans);
+
+	GLSL_SetUniformMatrix16(&tr.testshaderShader, UNIFORM_NORMALMATRIX, glState.projection);
+	GLSL_SetUniformMatrix16(&tr.testshaderShader, UNIFORM_INVPROJECTIONMATRIX, invP);
+	*/
 
 	{
 		vec2_t screensize;
@@ -2678,6 +2712,19 @@ void RB_TestShader(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox,
 		vec4_t loc;
 		VectorSet4(loc, r_testvalue0->value, r_testvalue1->value, r_testvalue2->value, r_testvalue3->value);
 		GLSL_SetUniformVec4(&tr.testshaderShader, UNIFORM_LOCAL0, loc);
+	}
+	
+	{
+		vec4_t loc;
+		VectorSet4(loc, r_testshaderValue1->value, r_testshaderValue2->value, r_testshaderValue3->value, r_testshaderValue4->value);
+		GLSL_SetUniformVec4(&tr.testshaderShader, UNIFORM_LOCAL1, loc);
+	}
+
+
+	{
+		vec4_t loc;
+		VectorSet4(loc, MAP_INFO_SIZE[0], MAP_INFO_SIZE[1], MAP_INFO_SIZE[2], 0.0);
+		GLSL_SetUniformVec4(&tr.testshaderShader, UNIFORM_MAPINFO, loc);
 	}
 	
 	FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.testshaderShader, color, 0);

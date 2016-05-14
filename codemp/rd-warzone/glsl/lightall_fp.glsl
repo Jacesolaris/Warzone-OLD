@@ -342,7 +342,7 @@ vec4 GetSplatMap(vec2 texCoords, vec2 ParallaxOffset, float pixRandom, vec4 inCo
 	vec4 splatColor = inColor;
 
 	vec4 control = GetControlMap(u_SplatControlMap, controlScale);
-	control = clamp(pow(control, vec4(u_Local9.g)) * u_Local9.b, 0.0, 1.0);
+	control = clamp(pow(control, vec4(2.5)) * 10.0, 0.0, 1.0);
 
 	if (length(control.rgba) <= 0.0)
 	{
