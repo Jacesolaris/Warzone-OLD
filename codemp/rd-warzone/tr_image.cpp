@@ -3600,6 +3600,8 @@ void R_CreateBuiltinImages( void ) {
 	tr.anamorphicRenderFBOImage[1]  = R_CreateImage("_anamorphic1",  NULL, width/8, height/8, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, hdrFormat);
 	tr.anamorphicRenderFBOImage[2]  = R_CreateImage("_anamorphic2",  NULL, width, height, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, hdrFormat);
 
+	tr.volumetricFBOImage  = R_CreateImage("_volumetric",  NULL, width/4.0, height/4.0, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, hdrFormat);
+
 	//
 	// UQ1: End Added...
 	//

@@ -1296,6 +1296,18 @@ qboolean RB_VolumetricLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_
 
 	GLSL_SetUniformMatrix16(&tr.volumeLightShader[dlightShader], UNIFORM_MODELVIEWPROJECTIONMATRIX, backEnd.viewParms.projectionMatrix);
 
+//#define VOLUME_LIGHT_DEBUG
+//#define VOLUME_LIGHT_SINGLE_PASS
+
+#if !defined(VOLUME_LIGHT_DEBUG) && !defined(VOLUME_LIGHT_SINGLE_PASS)
+	{
+		vec2_t screensize;
+		screensize[0] = tr.volumetricFBOImage->width;
+		screensize[1] = tr.volumetricFBOImage->height;
+
+		GLSL_SetUniformVec2(&tr.volumeLightShader[dlightShader], UNIFORM_DIMENSIONS, screensize);
+	}
+#else //defined(VOLUME_LIGHT_DEBUG) || defined(VOLUME_LIGHT_SINGLE_PASS)
 	{
 		vec2_t screensize;
 		screensize[0] = glConfig.vidWidth * r_superSampleMultiplier->value;
@@ -1303,6 +1315,7 @@ qboolean RB_VolumetricLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_
 
 		GLSL_SetUniformVec2(&tr.volumeLightShader[dlightShader], UNIFORM_DIMENSIONS, screensize);
 	}
+#endif
 
 	{
 		vec4_t viewInfo;
@@ -1329,11 +1342,8 @@ qboolean RB_VolumetricLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_
 	GLSL_SetUniformVec3x16(&tr.volumeLightShader[dlightShader], UNIFORM_LIGHTCOLORS, CLOSEST_LIGHTS_COLORS, MAX_VOLUMETRIC_LIGHTS);
 	GLSL_SetUniformFloatx16(&tr.volumeLightShader[dlightShader], UNIFORM_LIGHTDISTANCES, CLOSEST_LIGHTS_DISTANCES, MAX_VOLUMETRIC_LIGHTS);
 
-//#define VOLUME_LIGHT_DEBUG
-//#define VOLUME_LIGHT_SINGLE_PASS
-
 #if !defined(VOLUME_LIGHT_DEBUG) && !defined(VOLUME_LIGHT_SINGLE_PASS)
-	FBO_Blit(hdrFbo, hdrBox, NULL, tr.genericFbo2, ldrBox, &tr.volumeLightShader[dlightShader], color, 0);
+	FBO_Blit(hdrFbo, NULL, NULL, tr.volumetricFbo, NULL, &tr.volumeLightShader[dlightShader], color, 0);
 
 	// Combine render and hbao...
 	GLSL_BindProgram(&tr.volumeLightCombineShader);
@@ -1345,14 +1355,14 @@ qboolean RB_VolumetricLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_
 
 	GLSL_SetUniformInt(&tr.volumeLightCombineShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
 	GLSL_SetUniformInt(&tr.volumeLightCombineShader, UNIFORM_NORMALMAP, TB_NORMALMAP);
-	GL_BindToTMU(tr.genericFBO2Image, TB_NORMALMAP);
+	GL_BindToTMU(tr.volumetricFBOImage, TB_NORMALMAP);
 
 	vec2_t screensize;
 	screensize[0] = glConfig.vidWidth * r_superSampleMultiplier->value;
 	screensize[1] = glConfig.vidHeight * r_superSampleMultiplier->value;
 	GLSL_SetUniformVec2(&tr.volumeLightCombineShader, UNIFORM_DIMENSIONS, screensize);
 
-	FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.volumeLightCombineShader, color, 0);
+	FBO_Blit(hdrFbo, NULL, NULL, ldrFbo, NULL, &tr.volumeLightCombineShader, color, 0);
 #else //defined(VOLUME_LIGHT_DEBUG) || defined(VOLUME_LIGHT_SINGLE_PASS)
 	FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.volumeLightShader[dlightShader], color, 0);
 #endif //defined(VOLUME_LIGHT_DEBUG) || defined(VOLUME_LIGHT_SINGLE_PASS)

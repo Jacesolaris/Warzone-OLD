@@ -524,6 +524,16 @@ void FBO_Init(void)
 		FBO_AttachTextureImage(tr.anamorphicRenderFBOImage[2], 0);
 		R_CheckFBO(tr.anamorphicRenderFBO[2]);
 	}
+
+	//
+	// UQ1's Volumetric FBO...
+	//
+	{
+		tr.volumetricFbo = FBO_Create("_volumetric", tr.volumetricFBOImage->width, tr.volumetricFBOImage->height);
+		FBO_Bind(tr.volumetricFbo);
+		FBO_AttachTextureImage(tr.volumetricFBOImage, 0);
+		R_CheckFBO(tr.volumetricFbo);
+	}
 	
 #if 0
 	// only create a render FBO if we need to resolve MSAA or do HDR

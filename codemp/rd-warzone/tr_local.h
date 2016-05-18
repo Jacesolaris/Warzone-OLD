@@ -2496,12 +2496,14 @@ typedef struct trGlobals_s {
 
 	image_t        *bloomRenderFBOImage[3];
 	image_t        *anamorphicRenderFBOImage[3];
+	image_t        *volumetricFBOImage;
 	image_t        *genericFBOImage;
 	image_t        *genericFBO2Image;
 	image_t        *genericFBO3Image;
 
 	FBO_t          *bloomRenderFBO[3];
 	FBO_t          *anamorphicRenderFBO[3];
+	FBO_t		   *volumetricFbo;
 	FBO_t		   *genericFbo;
 	FBO_t		   *genericFbo2;
 	FBO_t		   *genericFbo3;
