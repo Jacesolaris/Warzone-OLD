@@ -818,85 +818,19 @@ void R_InitSkyTexCoords( float heightCloud )
 
 //======================================================================================
 
+vec3_t		SUN_POSITION;
 vec2_t		SUN_SCREEN_POSITION;
 qboolean	SUN_VISIBLE = qfalse;
 
-//#define __DAY_NIGHT__ // FIXME - or do it with GLSL...
-
 #ifdef __DAY_NIGHT__
-int DAY_NIGHT_UPDATE_TIME = 0;
-
-float DAY_NIGHT_SUN_DIRECTION = 0.0;
-float DAY_NIGHT_CURRENT_TIME = 0.0;
-float DAY_NIGHT_AMBIENT_SCALE = 0.0;
-vec4_t DAY_NIGHT_AMBIENT_COLOR_ORIGINAL;
-
-void RB_UpdateDayNightCycle()
-{
-	int nowTime = ri->Milliseconds();
-
-	if (DAY_NIGHT_UPDATE_TIME == 0)
-	{// Init stuff...
-		VectorCopy4(tr.refdef.sunAmbCol, DAY_NIGHT_AMBIENT_COLOR_ORIGINAL);
-	}
-
-	if (DAY_NIGHT_UPDATE_TIME < nowTime)
-	{
-		vec4_t sunColor;
-
-		DAY_NIGHT_CURRENT_TIME += r_testvalue1->value;
-		
-		if (DAY_NIGHT_CURRENT_TIME > 12.0)
-			DAY_NIGHT_CURRENT_TIME = -12.0;
-
-		DAY_NIGHT_SUN_DIRECTION = DAY_NIGHT_CURRENT_TIME / 12.0;
-
-		//VectorSet(tr.sunDirection, DIRECTION, DIRECTION, DIRECTION);
-
-		if (DAY_NIGHT_CURRENT_TIME < -6.0 || DAY_NIGHT_CURRENT_TIME > 7.0)
-		{// Night time...
-			DAY_NIGHT_AMBIENT_SCALE = 0.3;
-			VectorSet4(sunColor, 0.3, 0.3, 0.3, 1.0);
-			sunColor[0] *= DAY_NIGHT_AMBIENT_COLOR_ORIGINAL[0];
-			sunColor[1] *= DAY_NIGHT_AMBIENT_COLOR_ORIGINAL[1];
-			sunColor[2] *= DAY_NIGHT_AMBIENT_COLOR_ORIGINAL[2];
-		}
-		else
-		{// Day time...
-			if (DAY_NIGHT_CURRENT_TIME < -7.0)
-			{// Morning color... More red/yellow...
-				DAY_NIGHT_AMBIENT_SCALE = -7.0 - DAY_NIGHT_CURRENT_TIME;
-				VectorSet4(sunColor, 1.0, (0.5 - (DAY_NIGHT_AMBIENT_SCALE * 0.5)) + 0.5, 1.0 - DAY_NIGHT_AMBIENT_SCALE, 1.0);
-				sunColor[0] *= DAY_NIGHT_AMBIENT_COLOR_ORIGINAL[0];
-				sunColor[1] *= DAY_NIGHT_AMBIENT_COLOR_ORIGINAL[1];
-				sunColor[2] *= DAY_NIGHT_AMBIENT_COLOR_ORIGINAL[2];
-			}
-			else if (DAY_NIGHT_CURRENT_TIME > 6.0)
-			{// Evening color... More red/yellow...
-				DAY_NIGHT_AMBIENT_SCALE = DAY_NIGHT_CURRENT_TIME - 6.0;
-				VectorSet4(sunColor, 1.0, (0.5 - (DAY_NIGHT_AMBIENT_SCALE * 0.5)) + 0.5, 1.0 - DAY_NIGHT_AMBIENT_SCALE, 1.0);
-				sunColor[0] *= DAY_NIGHT_AMBIENT_COLOR_ORIGINAL[0];
-				sunColor[1] *= DAY_NIGHT_AMBIENT_COLOR_ORIGINAL[1];
-				sunColor[2] *= DAY_NIGHT_AMBIENT_COLOR_ORIGINAL[2];
-			}
-			else
-			{// Full bright - day...
-				DAY_NIGHT_AMBIENT_SCALE = 1.0;
-				VectorCopy4(DAY_NIGHT_AMBIENT_COLOR_ORIGINAL, tr.refdef.sunAmbCol);
-			}
-		}
-
-		VectorCopy4(sunColor, tr.refdef.sunAmbCol);
-
-		DAY_NIGHT_UPDATE_TIME = nowTime + 50;
-	}
-}
-
-extern void R_LocalPointToWorld (const vec3_t local, vec3_t world);
-extern void R_WorldToLocal (const vec3_t world, vec3_t local);
+extern float DAY_NIGHT_CURRENT_TIME;
 #endif //__DAY_NIGHT__
 
+extern vec3_t VOLUMETRIC_ROOF;
+
 extern qboolean RB_UpdateSunFlareVis(void);
+extern qboolean Volumetric_Visible(vec3_t from, vec3_t to, qboolean isSun);
+extern void Volumetric_RoofHeight(vec3_t from);
 
 /*
 ** RB_DrawSun
@@ -910,6 +844,16 @@ void RB_DrawSun( float scale, shader_t *shader ) {
 		return;
 	}
 
+#ifdef __DAY_NIGHT__
+	float Time24h = DAY_NIGHT_CURRENT_TIME*24.0;
+
+	if (Time24h < 6.0 || Time24h > 20.0)
+	{
+		SUN_VISIBLE = qfalse;
+		return;
+	}
+#endif //__DAY_NIGHT__
+
 	//qglLoadMatrixf( backEnd.viewParms.world.modelMatrix );
 	//qglTranslatef (backEnd.viewParms.ori.origin[0], backEnd.viewParms.ori.origin[1], backEnd.viewParms.ori.origin[2]);
 	{
@@ -922,26 +866,11 @@ void RB_DrawSun( float scale, shader_t *shader ) {
 	}
 
 	dist = 	backEnd.viewParms.zFar / 1.75;		// div sqrt(3)
+	//dist = 32768.0;
 	size = dist * scale;
 
-#ifndef __DAY_NIGHT__
 	//VectorSet(tr.sunDirection, r_testshaderValue1->value, r_testshaderValue2->value, r_testshaderValue3->value);
 	VectorScale( tr.sunDirection, dist, origin );
-#else //__DAY_NIGHT__
-	RB_UpdateDayNightCycle();
-
-	tr.sunDirection[0] = cos( DAY_NIGHT_SUN_DIRECTION * M_PI ) * cos( 0.3 * M_PI );
-	tr.sunDirection[1] = sin( DAY_NIGHT_SUN_DIRECTION * M_PI ) * cos( 0.3 * M_PI );
-	tr.sunDirection[2] = sin( 0.3 * M_PI );
-	VectorNormalize( tr.sunDirection );
-	VectorScale( tr.sunDirection, dist, origin );
-
-	if (DAY_NIGHT_CURRENT_TIME < -6.0 || DAY_NIGHT_CURRENT_TIME > 7.0)
-	{// No sun at night time... TODO: Moon???
-		SUN_VISIBLE = qfalse;
-		return;
-	}
-#endif //__DAY_NIGHT__
 
 	PerpendicularVector( vec1, tr.sunDirection );
 	CrossProduct( tr.sunDirection, vec1, vec2 );
@@ -975,8 +904,11 @@ void RB_DrawSun( float scale, shader_t *shader ) {
 		Matrix16Multiply(backEnd.viewParms.projectionMatrix, model, mvp);
 
 		dist = backEnd.viewParms.zFar / 1.75;		// div sqrt(3)
+		//dist = 32768.0;
 
 		VectorScale( tr.sunDirection, dist, pos );
+
+		VectorCopy(pos, SUN_POSITION);
 	
 		// project sun point
 		Matrix16Transform(mvp, pos, hpos);
@@ -999,6 +931,41 @@ void RB_DrawSun( float scale, shader_t *shader ) {
 		{
 			SUN_VISIBLE = qfalse;
 			return;
+		}
+
+		if (!Volumetric_Visible(backEnd.refdef.vieworg, SUN_POSITION, qtrue))
+		{// Trace to actual position failed... Try above...
+			vec3_t tmpOrg;
+			vec3_t eyeOrg;
+			vec3_t tmpRoof;
+			vec3_t eyeRoof;
+
+			// Calculate ceiling heights at both positions...
+			//Volumetric_RoofHeight(SUN_POSITION);
+			//VectorCopy(VOLUMETRIC_ROOF, tmpRoof);
+			//Volumetric_RoofHeight(backEnd.refdef.vieworg);
+			//VectorCopy(VOLUMETRIC_ROOF, eyeRoof);
+
+			VectorSet(tmpRoof, SUN_POSITION[0], SUN_POSITION[1], SUN_POSITION[2] + 512.0);
+			VectorSet(eyeRoof, backEnd.refdef.vieworg[0], backEnd.refdef.vieworg[1], backEnd.refdef.vieworg[2] + 128.0);
+			
+			VectorSet(tmpOrg, tmpRoof[0], SUN_POSITION[1], SUN_POSITION[2]);
+			VectorSet(eyeOrg, backEnd.refdef.vieworg[0], backEnd.refdef.vieworg[1], backEnd.refdef.vieworg[2]);
+			if (!Volumetric_Visible(eyeOrg, tmpOrg, qtrue))
+			{// Trace to above position failed... Try trace from above viewer...
+				VectorSet(tmpOrg, SUN_POSITION[0], SUN_POSITION[1], SUN_POSITION[2]);
+				VectorSet(eyeOrg, eyeRoof[0], backEnd.refdef.vieworg[1], backEnd.refdef.vieworg[2]);
+				if (!Volumetric_Visible(eyeOrg, tmpOrg, qtrue))
+				{// Trace from above viewer failed... Try trace from above, to above...
+					VectorSet(tmpOrg, tmpRoof[0], SUN_POSITION[1], SUN_POSITION[2]);
+					VectorSet(eyeOrg, eyeRoof[0], backEnd.refdef.vieworg[1], backEnd.refdef.vieworg[2]);
+					if (!Volumetric_Visible(eyeOrg, tmpOrg, qtrue))
+					{// Trace from/to above viewer failed...
+						SUN_VISIBLE = qfalse;
+						return; // Can't see this...
+					}
+				}
+			}
 		}
 
 		SUN_VISIBLE = qtrue;

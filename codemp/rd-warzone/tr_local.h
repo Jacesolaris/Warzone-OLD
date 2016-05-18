@@ -38,6 +38,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define __EXTRA_PRETTY__
 //#define __PSHADOWS__
 //#define USING_ENGINE_GLOW_LIGHTCOLORS_SEARCH // UQ1: Doesn't detect all texture average colors yet... Also glowmap is good for culling non visible lights...
+#define __DAY_NIGHT__ // FIXME - or do it with GLSL...
 
 
 //#define __DYNAMIC_SHADOWS__
@@ -412,6 +413,8 @@ extern cvar_t  *r_trueAnaglyphMaxDistance;
 extern cvar_t  *r_trueAnaglyphParallax;
 extern cvar_t  *r_vibrancy;
 extern cvar_t  *r_distanceBlur;
+extern cvar_t  *r_fogPost;
+extern cvar_t  *r_dayNightCycleSpeed;
 extern cvar_t  *r_testshader;
 extern cvar_t  *r_testshaderValue1;
 extern cvar_t  *r_testshaderValue2;
@@ -2488,6 +2491,7 @@ typedef struct trGlobals_s {
 	shaderProgram_t vibrancyShader;
 	shaderProgram_t fastBlurShader;
 	shaderProgram_t distanceBlurShader;
+	shaderProgram_t fogPostShader;
 	shaderProgram_t testshaderShader;
 
 	image_t        *bloomRenderFBOImage[3];
@@ -2839,6 +2843,7 @@ extern cvar_t  *r_trueAnaglyphMinDistance;
 extern cvar_t  *r_trueAnaglyphMaxDistance;
 extern cvar_t  *r_trueAnaglyphParallax;
 extern cvar_t  *r_vibrancy;
+extern cvar_t  *r_dayNightCycleSpeed;
 extern cvar_t  *r_testshader;
 extern cvar_t  *r_testshaderValue1;
 extern cvar_t  *r_testshaderValue2;

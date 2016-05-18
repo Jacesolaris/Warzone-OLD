@@ -19,7 +19,7 @@ foamMap – texture containing foam – in my case it is a photo of foam converted t
 */
 
 #if defined(CANT_MAKE_THIS_WORK)
-uniform mat4	u_ModelViewProjectionMatrix;
+uniform mat4		u_ModelViewProjectionMatrix;
 #endif //defined(CANT_MAKE_THIS_WORK)
 
 uniform sampler2D	u_WaterHeightMap;
@@ -27,6 +27,7 @@ uniform sampler2D	u_DiffuseMap;   // backBufferMap
 uniform sampler2D	u_PositionMap;
 uniform sampler2D	u_NormalMap;
 uniform sampler2D	u_OverlayMap;   // foamMap
+uniform sampler2D	u_ScreenDepthMap;
 #if defined(CANT_MAKE_THIS_WORK)
 uniform sampler2D	u_HeightMap;	// (rough) heightmap of whole map. alpha is underwater marker.
 #endif //defined(CANT_MAKE_THIS_WORK)
@@ -38,7 +39,7 @@ uniform sampler2D	u_WaterPositionMap2;
 
 uniform vec4		u_Mins;			// MAP_MINS[0], MAP_MINS[1], MAP_MINS[2], 0.0
 uniform vec4		u_Maxs;			// MAP_MAXS[0], MAP_MAXS[1], MAP_MAXS[2], 0.0
-uniform vec4		u_MapInfo;		// MAP_INFO_SIZE[0], MAP_INFO_SIZE[1], MAP_INFO_SIZE[2], 0.0
+uniform vec4		u_MapInfo;		// MAP_INFO_SIZE[0], MAP_INFO_SIZE[1], MAP_INFO_SIZE[2], SUN_VISIBLE
 
 uniform vec4		u_Local0;		// testvalue0, testvalue1, testvalue2, testvalue3
 uniform vec4		u_Local1;		// MAP_WATER_LEVEL, USE_GLSL_REFLECTION
@@ -142,6 +143,11 @@ const float refractionScale = 0.005;
 const vec2 wind = vec2(-0.3, 0.7);
 #endif //defined(USE_WATER_DIRECTION_LOOKUP)
 
+
+float linearize(float depth)
+{
+	return clamp(1.0 / mix(u_ViewInfo.z, 1.0, depth), 0.0, 1.0);
+}
 
 mat3 compute_tangent_frame(in vec3 N, in vec3 P, in vec2 UV) {
     vec3 dp1 = dFdx(P);
@@ -322,6 +328,30 @@ vec3 AddReflection(vec2 coord, vec3 positionMap, vec3 waterMap, vec3 inColor)
 	return mix(inColor.rgb, landColor.rgb, vec3(1.0 - pow(upPos, 4.0)) * 0.28/*u_Local0.r*/);
 }
 
+vec3 applyFog2( in vec3  rgb,      // original color of the pixel
+               in float distance, // camera to point distance
+               in vec3  rayOri,   // camera position
+               in vec3  rayDir,   // camera to point vector
+               in vec3  sunDir )  // sun light direction
+{
+	const float b = 0.5;//0.7;//u_Local0.r; // the falloff of this density
+
+#if defined(HEIGHT_BASED_FOG)
+	float c = u_Local0.g; // height falloff
+
+    float fogAmount = c * exp(-rayOri.z*b) * (1.0-exp( -distance*rayDir.z*b ))/rayDir.z; // height based fog
+#else //!defined(HEIGHT_BASED_FOG)
+	float fogAmount = 1.0 - exp( -distance*b );
+#endif //defined(HEIGHT_BASED_FOG)
+
+	fogAmount = clamp(fogAmount, 0.1, 1.0/*u_Local0.a*/);
+	float sunAmount = max( clamp(dot( rayDir, sunDir )/**u_Local0.b*/, 0.0, 1.0), 0.0 );
+	if (u_MapInfo.a <= 0.0) sunAmount = 0.0;
+    vec3  fogColor  = mix( vec3(0.5,0.6,0.7), // bluish
+                           vec3(1.0,0.9,0.7), // yellowish
+                           pow(sunAmount,8.0) );
+	return mix( rgb, fogColor, fogAmount );
+}
 
 void main ( void )
 {
@@ -332,6 +362,7 @@ void main ( void )
 	vec3 color = color2;
 
 	vec4 waterMap = waterMapAtCoord(var_TexCoords);
+
 #if defined(USE_WATERMAP)
 	vec4 waterMap2 = waterMap2AtCoord(var_TexCoords);
 #endif //defined(USE_WATERMAP)
@@ -797,6 +828,11 @@ void main ( void )
 #endif //defined(USE_WATERMAP)
 		{// Waves against shoreline. Pixel is above waterLevel + waveHeight... (but ignore anything marked as actual water - eg: not a shoreline)
 			color = color2;
+		}
+		else
+		{
+			float depthMap = linearize(texture2D(u_ScreenDepthMap, var_TexCoords).r);//length(u_ViewOrigin.xyz - position.xzy);
+			color = applyFog2( color.rgb, depthMap, position.xzy, normalize(u_ViewOrigin.xyz - position.xzy), normalize(u_ViewOrigin.xyz-u_PrimaryLightOrigin.xyz) );
 		}
 	}
 

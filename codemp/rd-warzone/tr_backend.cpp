@@ -413,12 +413,249 @@ matrix_t *InitCameraTransform(const vec3_t Target, const vec3_t Up)
 }
 */
 
+void myInverseMatrix (float m[16], float src[16])
+{
+
+  float m11, m12, m13, m14, m21, m22, m23, m24; // minors of src matrix
+  float m31, m32, m33, m34, m41, m42, m43, m44; // minors of src matrix
+  float determinent;
+
+  if (m != NULL && src != NULL) {
+    // Finding minors of src matrix
+    m11 = src[5] * (src[10] * src[15] - src[11] * src[14])
+        - src[9] * (src[6] * src[15] - src[7] * src[14])
+        + src[13] * (src[6] * src[11] - src[7] * src[10]);
+    m12 = src[1] * (src[10] * src[15] - src[11] * src[14])
+        - src[9] * (src[2] * src[15] - src[3] * src[14])
+        + src[13] * (src[2] * src[11] - src[3] * src[10]);
+    m13 = src[1] * (src[6] * src[15] - src[7] * src[14])
+        - src[5] * (src[2] * src[15] - src[3] * src[14])
+        + src[13] * (src[2] * src[7] - src[3] * src[6]);
+    m14 = src[1] * (src[6] * src[11] - src[7] * src[10])
+        - src[5] * (src[2] * src[11] - src[3] * src[10])
+        + src[9] * (src[2] * src[7] - src[3] * src[6]);
+    m21 = src[4] * (src[10] * src[15] - src[11] * src[14])
+        - src[8] * (src[6] * src[15] - src[7] * src[14])
+        + src[12] * (src[6] * src[11] - src[7] * src[10]);
+    m22 = src[0] * (src[10] * src[15] - src[11] * src[14])
+        - src[8] * (src[2] * src[15] - src[3] * src[14])
+        + src[12] * (src[2] * src[11] - src[3] * src[10]);
+    m23 = src[0] * (src[6] * src[15] - src[7] * src[14])
+        - src[4] * (src[2] * src[15] - src[3] * src[14])
+        + src[12] * (src[2] * src[7] - src[3] * src[6]);
+    m24 = src[0] * (src[6] * src[11] - src[7] * src[10])
+        - src[4] * (src[2] * src[11] - src[3] * src[10])
+        + src[8] * (src[2] * src[7] - src[3] * src[6]);
+    m31 = src[4] * (src[9] * src[15] - src[11] * src[13])
+        - src[8] * (src[5] * src[15] - src[7] * src[13])
+        + src[12] * (src[5] * src[11] - src[7] * src[9]);
+    m32 = src[0] * (src[9] * src[15] - src[11] * src[13])
+        - src[8] * (src[1] * src[15] - src[3] * src[13])
+        + src[12] * (src[1] * src[11] - src[3] * src[9]);
+    m33 = src[0] * (src[5] * src[15] - src[7] * src[13])
+        - src[4] * (src[1] * src[15] - src[3] * src[13])
+        + src[12] * (src[1] * src[7] - src[3] * src[5]);
+    m34 = src[0] * (src[5] * src[11] - src[7] * src[9])
+        - src[4] * (src[1] * src[11] - src[3] * src[9])
+        + src[8] * (src[1] * src[7] - src[3] * src[5]);
+    m41 = src[4] * (src[9] * src[14] - src[10] * src[13])
+        - src[8] * (src[5] * src[14] - src[6] * src[13])
+        + src[12] * (src[5] * src[10] - src[6] * src[9]);
+    m42 = src[0] * (src[9] * src[14] - src[10] * src[13])
+        - src[8] * (src[1] * src[14] - src[2] * src[13])
+        + src[12] * (src[1] * src[10] - src[2] * src[9]);
+    m43 = src[0] * (src[5] * src[14] - src[6] * src[13])
+        - src[4] * (src[1] * src[14] - src[2] * src[13])
+        + src[12] * (src[1] * src[6] - src[2] * src[5]);
+    m44 = src[0] * (src[5] * src[10] - src[6] * src[9])
+        - src[4] * (src[1] * src[10] - src[2] * src[9])
+        + src[8] * (src[1] * src[6] - src[2] * src[5]);
+
+    // calculate the determinent
+    determinent = src[0] * m11 - src[4] * m12 + src[8] * m13 - src[12] * m14;
+    if (determinent != 0) {
+      m[0] = m11 / determinent;
+      m[1] = -m12 / determinent;
+      m[2] = m13 / determinent;
+      m[3] = -m14 / determinent;
+      m[4] = -m21 / determinent;
+      m[5] = m22 / determinent;
+      m[6] = -m23 / determinent;
+      m[7] = m24 / determinent;
+      m[8] = m31 / determinent;
+      m[9] = -m32 / determinent;
+      m[10] = m33 / determinent;
+      m[11] = -m34 / determinent;
+      m[12] = -m41 / determinent;
+      m[13] = m42 / determinent;
+      m[14] = -m43 / determinent;
+      m[15] = m44 / determinent;
+    } else {
+      fprintf (stderr, "myInverseMatrix() error: no inverse matrix "
+          "exists.\n");
+    }
+  } else {
+    fprintf (stderr, "myInverseMatrix() error: matrix pointer is null.\n");
+  }
+}
+
+void SWAP(float *A, float *B, float *c)
+{
+	c = A;
+	A = B;
+	B = c;
+}
+
+void RealTransposeMatrix(const float m[16], float invOut[16])
+{
+	float t;
+
+	memcpy(invOut, m, sizeof(float)*16);
+
+	SWAP(&invOut[1],&invOut[4],&t);
+	SWAP(&invOut[2],&invOut[8],&t);
+	SWAP(&invOut[6],&invOut[9],&t);
+	SWAP(&invOut[3],&invOut[12],&t);
+	SWAP(&invOut[7],&invOut[13],&t);
+	SWAP(&invOut[11],&invOut[14],&t);
+}
+
+bool RealInvertMatrix(const float m[16], float invOut[16])
+{
+    float inv[16], det;
+    int i;
+
+    inv[0] = m[5]  * m[10] * m[15] - 
+             m[5]  * m[11] * m[14] - 
+             m[9]  * m[6]  * m[15] + 
+             m[9]  * m[7]  * m[14] +
+             m[13] * m[6]  * m[11] - 
+             m[13] * m[7]  * m[10];
+
+    inv[4] = -m[4]  * m[10] * m[15] + 
+              m[4]  * m[11] * m[14] + 
+              m[8]  * m[6]  * m[15] - 
+              m[8]  * m[7]  * m[14] - 
+              m[12] * m[6]  * m[11] + 
+              m[12] * m[7]  * m[10];
+
+    inv[8] = m[4]  * m[9] * m[15] - 
+             m[4]  * m[11] * m[13] - 
+             m[8]  * m[5] * m[15] + 
+             m[8]  * m[7] * m[13] + 
+             m[12] * m[5] * m[11] - 
+             m[12] * m[7] * m[9];
+
+    inv[12] = -m[4]  * m[9] * m[14] + 
+               m[4]  * m[10] * m[13] +
+               m[8]  * m[5] * m[14] - 
+               m[8]  * m[6] * m[13] - 
+               m[12] * m[5] * m[10] + 
+               m[12] * m[6] * m[9];
+
+    inv[1] = -m[1]  * m[10] * m[15] + 
+              m[1]  * m[11] * m[14] + 
+              m[9]  * m[2] * m[15] - 
+              m[9]  * m[3] * m[14] - 
+              m[13] * m[2] * m[11] + 
+              m[13] * m[3] * m[10];
+
+    inv[5] = m[0]  * m[10] * m[15] - 
+             m[0]  * m[11] * m[14] - 
+             m[8]  * m[2] * m[15] + 
+             m[8]  * m[3] * m[14] + 
+             m[12] * m[2] * m[11] - 
+             m[12] * m[3] * m[10];
+
+    inv[9] = -m[0]  * m[9] * m[15] + 
+              m[0]  * m[11] * m[13] + 
+              m[8]  * m[1] * m[15] - 
+              m[8]  * m[3] * m[13] - 
+              m[12] * m[1] * m[11] + 
+              m[12] * m[3] * m[9];
+
+    inv[13] = m[0]  * m[9] * m[14] - 
+              m[0]  * m[10] * m[13] - 
+              m[8]  * m[1] * m[14] + 
+              m[8]  * m[2] * m[13] + 
+              m[12] * m[1] * m[10] - 
+              m[12] * m[2] * m[9];
+
+    inv[2] = m[1]  * m[6] * m[15] - 
+             m[1]  * m[7] * m[14] - 
+             m[5]  * m[2] * m[15] + 
+             m[5]  * m[3] * m[14] + 
+             m[13] * m[2] * m[7] - 
+             m[13] * m[3] * m[6];
+
+    inv[6] = -m[0]  * m[6] * m[15] + 
+              m[0]  * m[7] * m[14] + 
+              m[4]  * m[2] * m[15] - 
+              m[4]  * m[3] * m[14] - 
+              m[12] * m[2] * m[7] + 
+              m[12] * m[3] * m[6];
+
+    inv[10] = m[0]  * m[5] * m[15] - 
+              m[0]  * m[7] * m[13] - 
+              m[4]  * m[1] * m[15] + 
+              m[4]  * m[3] * m[13] + 
+              m[12] * m[1] * m[7] - 
+              m[12] * m[3] * m[5];
+
+    inv[14] = -m[0]  * m[5] * m[14] + 
+               m[0]  * m[6] * m[13] + 
+               m[4]  * m[1] * m[14] - 
+               m[4]  * m[2] * m[13] - 
+               m[12] * m[1] * m[6] + 
+               m[12] * m[2] * m[5];
+
+    inv[3] = -m[1] * m[6] * m[11] + 
+              m[1] * m[7] * m[10] + 
+              m[5] * m[2] * m[11] - 
+              m[5] * m[3] * m[10] - 
+              m[9] * m[2] * m[7] + 
+              m[9] * m[3] * m[6];
+
+    inv[7] = m[0] * m[6] * m[11] - 
+             m[0] * m[7] * m[10] - 
+             m[4] * m[2] * m[11] + 
+             m[4] * m[3] * m[10] + 
+             m[8] * m[2] * m[7] - 
+             m[8] * m[3] * m[6];
+
+    inv[11] = -m[0] * m[5] * m[11] + 
+               m[0] * m[7] * m[9] + 
+               m[4] * m[1] * m[11] - 
+               m[4] * m[3] * m[9] - 
+               m[8] * m[1] * m[7] + 
+               m[8] * m[3] * m[5];
+
+    inv[15] = m[0] * m[5] * m[10] - 
+              m[0] * m[6] * m[9] - 
+              m[4] * m[1] * m[10] + 
+              m[4] * m[2] * m[9] + 
+              m[8] * m[1] * m[6] - 
+              m[8] * m[2] * m[5];
+
+    det = m[0] * inv[0] + m[1] * inv[4] + m[2] * inv[8] + m[3] * inv[12];
+
+    if (det == 0)
+        return false;
+
+    det = 1.0 / det;
+
+    for (i = 0; i < 16; i++)
+        invOut[i] = inv[i] * det;
+
+    return true;
+}
+
 void GL_SetProjectionMatrix(matrix_t matrix)
 {
 	Matrix16Copy(matrix, glState.projection);
 	Matrix16Multiply(glState.projection, glState.modelview, glState.modelviewProjection);
-	Matrix16SimpleInverse( glState.projection, glState.invProjection);
-	Matrix16SimpleInverse( glState.modelviewProjection, glState.invEyeProjection);
+	RealInvertMatrix/*Matrix16SimpleInverse*/( glState.projection, glState.invProjection);
+	RealInvertMatrix/*Matrix16SimpleInverse*/( glState.modelviewProjection, glState.invEyeProjection);
 
 	/*
 	matrix_t CameraTranslationTrans, CameraRotateTrans;
@@ -436,8 +673,8 @@ void GL_SetModelviewMatrix(matrix_t matrix)
 {
 	Matrix16Copy(matrix, glState.modelview);
 	Matrix16Multiply(glState.projection, glState.modelview, glState.modelviewProjection);
-	Matrix16SimpleInverse( glState.projection, glState.invProjection);
-	Matrix16SimpleInverse( glState.modelviewProjection, glState.invEyeProjection);
+	RealInvertMatrix/*Matrix16SimpleInverse*/( glState.projection, glState.invProjection);
+	RealInvertMatrix/*Matrix16SimpleInverse*/( glState.modelviewProjection, glState.invEyeProjection);
 }
 
 
@@ -2220,6 +2457,12 @@ const void *RB_PostProcess(const void *data)
 		if (backEnd.refdef.rdflags & RDF_BLUR)
 		{// Skip most of the fancy stuff when doing a blured screen...
 			SCREEN_BLUR = qtrue;
+		}
+
+		if (!SCREEN_BLUR && r_fogPost->integer)
+		{
+			RB_FogPostShader(currentFbo, srcBox, currentOutFbo, dstBox);
+			RB_SwapFBOs( &currentFbo, &currentOutFbo);
 		}
 
 		if (!SCREEN_BLUR && r_testshader->integer)

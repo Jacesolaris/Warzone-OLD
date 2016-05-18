@@ -323,6 +323,101 @@ void RE_AddAdditiveLightToScene( const vec3_t org, float intensity, float r, flo
 	RE_AddDynamicLightToScene( org, intensity, r, g, b, qtrue );
 }
 
+#ifdef __DAY_NIGHT__
+int DAY_NIGHT_UPDATE_TIME = 0;
+
+float DAY_NIGHT_SUN_DIRECTION = 0.0;
+float DAY_NIGHT_CURRENT_TIME = 0.0;
+float DAY_NIGHT_AMBIENT_SCALE = 0.0;
+vec4_t DAY_NIGHT_AMBIENT_COLOR_ORIGINAL;
+vec4_t DAY_NIGHT_AMBIENT_COLOR_CURRENT;
+
+void RB_UpdateDayNightCycle()
+{
+	int nowTime = ri->Milliseconds();
+
+	if (DAY_NIGHT_UPDATE_TIME == 0)
+	{// Init stuff...
+		VectorCopy4(tr.refdef.sunAmbCol, DAY_NIGHT_AMBIENT_COLOR_ORIGINAL);
+	}
+
+	if (DAY_NIGHT_UPDATE_TIME < nowTime)
+	{
+		vec4_t sunColor;
+		float Time24h = DAY_NIGHT_CURRENT_TIME*24.0;
+
+		DAY_NIGHT_CURRENT_TIME += r_dayNightCycleSpeed->value;
+		
+		if (Time24h > 24.0)
+		{
+			DAY_NIGHT_CURRENT_TIME = 0.0;
+			Time24h = 0.0;
+		}
+
+		
+		// We need to match up real world 24 type time to sun direction... Offset...
+		float adjustedTime24h = Time24h + 4.0;
+		if (adjustedTime24h > 24.0) adjustedTime24h = adjustedTime24h - 24.0;
+
+		DAY_NIGHT_SUN_DIRECTION = ((adjustedTime24h / 24.0) - 0.5) * 6.283185307179586476925286766559;
+		
+
+		if (Time24h < 6.0 || Time24h > 20.0)
+		{// Night time...
+			VectorSet4(sunColor, 0.0, 0.0, 0.0, 0.0);
+			sunColor[0] *= DAY_NIGHT_AMBIENT_COLOR_ORIGINAL[0];
+			sunColor[1] *= DAY_NIGHT_AMBIENT_COLOR_ORIGINAL[1];
+			sunColor[2] *= DAY_NIGHT_AMBIENT_COLOR_ORIGINAL[2];
+			sunColor[3] = 1.0;
+		}
+		else
+		{// Day time...
+			if (Time24h < 8.0)
+			{// Morning color... More red/yellow...
+				DAY_NIGHT_AMBIENT_SCALE = 8.0 - Time24h;
+				VectorSet4(sunColor, 1.0, (0.5 - (DAY_NIGHT_AMBIENT_SCALE * 0.5)) + 0.5, 1.0 - DAY_NIGHT_AMBIENT_SCALE, 1.0);
+				sunColor[0] *= DAY_NIGHT_AMBIENT_COLOR_ORIGINAL[0];
+				sunColor[1] *= DAY_NIGHT_AMBIENT_COLOR_ORIGINAL[1];
+				sunColor[2] *= DAY_NIGHT_AMBIENT_COLOR_ORIGINAL[2];
+				sunColor[3] = 1.0;
+			}
+			else if (Time24h > 18.0)
+			{// Evening color... More red/yellow...
+				DAY_NIGHT_AMBIENT_SCALE = Time24h - 18.0;
+				VectorSet4(sunColor, 1.0, (0.5 - (DAY_NIGHT_AMBIENT_SCALE * 0.5)) + 0.5, 1.0 - DAY_NIGHT_AMBIENT_SCALE, 1.0);
+				sunColor[0] *= DAY_NIGHT_AMBIENT_COLOR_ORIGINAL[0];
+				sunColor[1] *= DAY_NIGHT_AMBIENT_COLOR_ORIGINAL[1];
+				sunColor[2] *= DAY_NIGHT_AMBIENT_COLOR_ORIGINAL[2];
+				sunColor[3] = 1.0;
+			}
+			else
+			{// Full bright - day...
+				VectorCopy4(DAY_NIGHT_AMBIENT_COLOR_ORIGINAL, sunColor);
+				sunColor[3] = 1.0;
+			}
+		}
+
+		VectorCopy4(sunColor, DAY_NIGHT_AMBIENT_COLOR_CURRENT);
+
+		//ri->Printf(PRINT_WARNING, "Day/Night timer is %f. Sun dir %f.\n", Time24h, DAY_NIGHT_SUN_DIRECTION);
+
+		DAY_NIGHT_UPDATE_TIME = nowTime + 50;
+	}
+
+	VectorCopy4(DAY_NIGHT_AMBIENT_COLOR_CURRENT, tr.refdef.sunAmbCol);
+	VectorCopy4(tr.refdef.sunAmbCol, tr.refdef.sunCol);
+
+	float a = 0.3;
+	float b = DAY_NIGHT_SUN_DIRECTION;
+	tr.sunDirection[0] = cos( a ) * cos( b );
+	tr.sunDirection[1] = sin( a ) * cos( b );
+	tr.sunDirection[2] = sin( b );
+}
+
+extern void R_LocalPointToWorld (const vec3_t local, vec3_t world);
+extern void R_WorldToLocal (const vec3_t world, vec3_t local);
+#endif //__DAY_NIGHT__
+
 extern void R_AddGlowShaderLights ( void );
 
 void RE_BeginScene(const refdef_t *fd)
@@ -368,6 +463,8 @@ void RE_BeginScene(const refdef_t *fd)
 	tr.refdef.sunCol[3] = 1.0f;
 	tr.refdef.sunAmbCol[3] = 1.0f;
 
+	VectorNormalize( tr.sunDirection );
+
 	VectorCopy(tr.sunDirection, tr.refdef.sunDir);
 
 	if ( (tr.refdef.rdflags & RDF_NOWORLDMODEL) || !(r_depthPrepass->value) ){
@@ -395,6 +492,7 @@ void RE_BeginScene(const refdef_t *fd)
 			else if (r_sunlightMode->integer >= 2)
 				ambCol = 0.75;
 
+#ifndef __DAY_NIGHT__
 			tr.refdef.sunCol[0] =
 			tr.refdef.sunCol[1] =
 			tr.refdef.sunCol[2] = 1.0f;
@@ -402,6 +500,25 @@ void RE_BeginScene(const refdef_t *fd)
 			tr.refdef.sunAmbCol[0] =
 			tr.refdef.sunAmbCol[1] =
 			tr.refdef.sunAmbCol[2] = ambCol;
+#else //__DAY_NIGHT__
+			/*
+			tr.refdef.sunAmbCol[0] *= ambCol;
+			tr.refdef.sunAmbCol[1] *= ambCol;
+			tr.refdef.sunAmbCol[2] *= ambCol;
+			*/
+
+			RB_UpdateDayNightCycle();
+			VectorNormalize( tr.sunDirection );
+			VectorCopy(tr.sunDirection, tr.refdef.sunDir);
+
+			tr.refdef.sunCol[0] =
+			tr.refdef.sunCol[1] =
+			tr.refdef.sunCol[2] = 1.0f;
+
+			tr.refdef.sunAmbCol[0] =
+			tr.refdef.sunAmbCol[1] =
+			tr.refdef.sunAmbCol[2] = ambCol;
+#endif //__DAY_NIGHT__
 		}
 		else
 		{

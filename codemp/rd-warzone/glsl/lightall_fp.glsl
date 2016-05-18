@@ -1,6 +1,6 @@
 #define						USE_TRI_PLANAR
 //#define					USE_SUBSURFACE_SCATTER
-
+//#define					EXPERIMENTAL_LIGHT
 
 uniform sampler2D			u_DiffuseMap;
 uniform sampler2D			u_SteepMap;
@@ -63,6 +63,7 @@ uniform mat4				u_ModelViewMatrix;
 
 uniform vec4				u_EnableTextures;
 
+uniform vec4				u_PrimaryLightOrigin;
 uniform vec3				u_PrimaryLightColor;
 uniform vec3				u_PrimaryLightAmbient;
 
@@ -77,6 +78,8 @@ uniform int					u_lightCount;
 uniform vec3				u_lightPositions2[16];
 uniform float				u_lightDistances[16];
 uniform vec3				u_lightColors[16];
+
+uniform vec3				u_ViewOrigin;
 
 
 #if defined(USE_TESSELLATION)
@@ -644,6 +647,62 @@ vec4 subScatterFS(vec4 BaseColor, vec4 SpecColor, vec3 lightVec, vec3 LightColor
 }
 #endif //USE_SUBSURFACE_SCATTER
 
+#if defined(EXPERIMENTAL_LIGHT)
+vec3 ExperimentalLighting(vec3 vSurfacePos, vec3 vViewPos, vec3 vLightPos, vec3 normal, vec3 lightColor, float strength, vec3 diffuse)
+{
+	vec3 vDirToView = normalize( vViewPos - vSurfacePos );
+	vec3 vDirToLight = normalize( vLightPos - vSurfacePos );
+
+	float fNDotL = clamp( dot(normal, vDirToLight), 0.0, 1.0);
+	float fDiffuse = fNDotL;
+	
+	vec3 vHalf = normalize( vDirToView + vDirToLight );
+	float fNDotH = clamp( dot(normal, vHalf), 0.0, 1.0);
+	float fSpec = pow(fNDotH, 10.0) * fNDotL * 0.5;
+	
+	vec3 vResult = ((lightColor.rgb * fDiffuse * strength) + (lightColor.rgb * strength * fSpec)) * diffuse;
+	
+	vResult = sqrt(vResult);
+	return vResult;
+}
+#endif //defined(EXPERIMENTAL_LIGHT)
+
+//---------------------------------------------------------------------------------------------
+// Normal Blending Techniques
+//---------------------------------------------------------------------------------------------
+
+// RNM
+vec3 NormalBlend_RNM(vec3 n1, vec3 n2)
+{
+    // Unpack (see article on why it's not just n*2-1)
+	n1 = n1*vec3( 2,  2, 2) + vec3(-1, -1,  0);
+    n2 = n2*vec3(-2, -2, 2) + vec3( 1,  1, -1);
+    
+    // Blend
+    return n1*dot(n1, n2)/n1.z - n2;
+}
+
+// Linear Blending
+vec3 NormalBlend_Linear(vec3 n1, vec3 n2)
+{
+    // Unpack
+	n1 = n1*2.0 - 1.0;
+    n2 = n2*2.0 - 1.0;
+    
+	return normalize(n1 + n2);    
+}
+
+#define TECHNIQUE_RNM 				 0
+#define TECHNIQUE_Linear		     1
+
+// Combine normals
+vec3 CombineNormal(vec3 n1, vec3 n2, int technique)
+{
+ 	if (technique == TECHNIQUE_RNM)
+        return NormalBlend_RNM(n1, n2);
+    else
+        return NormalBlend_Linear(n1, n2);
+}
 
 void main()
 {
@@ -790,6 +849,7 @@ void main()
 
 	norm = GetNormal(texCoords, ParallaxOffset, pixRandom);
 	N = norm.xyz * 2.0 - 1.0;
+	//N = CombineNormal(m_Normal.xyz * 0.5 + 0.5, norm.xyz, int(u_Local9.r));
 	N.xy *= u_NormalScale.xy;
 	N.z = sqrt(clamp((0.25 - N.x * N.x) - N.y * N.y, 0.0, 1.0));
 	N = tangentToWorld * N;
@@ -932,10 +992,27 @@ void main()
 	#endif //USE_SUBSURFACE_SCATTER
 
 
-	#if defined(USE_PRIMARY_LIGHT) || defined(USE_PRIMARY_LIGHT_SPECULAR)
+	#if defined(EXPERIMENTAL_LIGHT)
 		if (u_Local6.r > 0.0)
 		{
-			float lambertian2 = dot(var_PrimaryLightDir.xyz,N);
+			float lightFactor = u_Local5.b;
+
+			vec3 lightDir = u_PrimaryLightOrigin.xyz - m_vertPos.xyz;
+			float lightStrength = clamp(1.0 - (length(lightDir) * (1.0 / distance(u_PrimaryLightOrigin.xyz, m_vertPos.xyz))), 0.0, 1.0) * 0.5;
+
+			gl_FragColor.rgb += ExperimentalLighting(m_vertPos.xyz, u_ViewOrigin.xyz, u_PrimaryLightOrigin.xyz, DETAILED_NORMAL.xyz, u_PrimaryLightColor.rgb, lightStrength, gl_FragColor.rgb);
+
+			for (int li = 0; li < u_lightCount; li++)
+			{
+				lightDir = u_lightPositions2[li] - m_vertPos.xyz;
+				lightStrength = clamp(1.0 - (length(lightDir) * (1.0 / u_lightDistances[li])), 0.0, 1.0) * 0.5;
+				gl_FragColor.rgb += ExperimentalLighting(m_vertPos.xyz, u_ViewOrigin.xyz, u_lightPositions2[li].xyz, DETAILED_NORMAL.xyz, u_lightColors[li].rgb, lightStrength, gl_FragColor.rgb);
+			}
+		}
+	#elif defined(USE_PRIMARY_LIGHT) || defined(USE_PRIMARY_LIGHT_SPECULAR)
+		if (u_Local6.r > 0.0)
+		{
+			float lambertian2 = dot(var_PrimaryLightDir.xyz,DETAILED_NORMAL.xyz/*N*/);
 			float spec2 = 0.0;
 			bool noSunPhong = false;
 			float phongFactor = u_Local5.b;
@@ -949,7 +1026,7 @@ void main()
 			if(lambertian2 > 0.0)
 			{// this is blinn phong
 				vec3 halfDir2 = normalize(var_PrimaryLightDir.xyz + E);
-				float specAngle = max(dot(halfDir2, N), 0.0);
+				float specAngle = max(dot(halfDir2, DETAILED_NORMAL.xyz/*N*/), 0.0);
 				spec2 = pow(specAngle, 16.0);
 				gl_FragColor.rgb += vec3(spec2 * (1.0 - specular.a)) * gl_FragColor.rgb * u_PrimaryLightColor.rgb * phongFactor;
 			}
@@ -962,7 +1039,7 @@ void main()
 			for (int li = 0; li < u_lightCount; li++)
 			{
 				vec3 lightDir = u_lightPositions2[li] - m_vertPos.xyz;
-				float lambertian3 = dot(lightDir.xyz,N);
+				float lambertian3 = dot(lightDir.xyz,DETAILED_NORMAL.xyz/*N*/);
 				float spec3 = 0.0;
 
 				if(lambertian3 > 0.0)
@@ -972,14 +1049,14 @@ void main()
 					if(lightStrength > 0.0)
 					{// this is blinn phong
 						vec3 halfDir3 = normalize(lightDir.xyz + E);
-						float specAngle3 = max(dot(halfDir3, N), 0.0);
+						float specAngle3 = max(dot(halfDir3, DETAILED_NORMAL.xyz/*N*/), 0.0);
 						spec3 = pow(specAngle3, 16.0);
 						gl_FragColor.rgb += vec3(spec3 * (1.0 - specular.a)) * u_lightColors[li].rgb * lightStrength * phongFactor;
 					}
 				}
 			}
 		}
-	#endif
+	#endif //defined(EXPERIMENTAL_LIGHT)
 
 	//gl_FragColor.rgb = N.xyz * 0.5 + 0.5;
 

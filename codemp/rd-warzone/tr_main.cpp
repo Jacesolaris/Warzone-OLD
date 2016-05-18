@@ -2655,7 +2655,7 @@ void R_RenderSunShadowMaps(const refdef_t *fd, int level)
 	vec3_t lightviewBounds[2];
 	qboolean lightViewIndependentOfCameraView = qfalse;
 
-	if (r_forceSun->integer == 2)
+	/*if (r_forceSun->integer == 2)
 	{
 		int scale = 32768;
 		float angle = (fd->time % scale) / (float)scale * M_PI;
@@ -2683,7 +2683,7 @@ void R_RenderSunShadowMaps(const refdef_t *fd, int level)
 		VectorCopy4(lightCol, tr.refdef.sunCol);
 		VectorScale4(lightCol, 0.2f, tr.refdef.sunAmbCol);
 	}
-	else
+	else*/
 	{
 		VectorCopy4(tr.refdef.sunDir, lightDir);
 	}

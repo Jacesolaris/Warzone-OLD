@@ -913,24 +913,32 @@ void Volumetric_Trace( trace_t *results, const vec3_t start, const vec3_t mins, 
 	results->entityNum = results->fraction != 1.0 ? ENTITYNUM_WORLD : ENTITYNUM_NONE;
 }
 
-qboolean Volumetric_Visible(vec3_t from, vec3_t to)
+qboolean Volumetric_Visible(vec3_t from, vec3_t to, qboolean isSun)
 {
-#if 1
+#if 0
 	return qtrue;
 #else
 	trace_t trace;
 
 	Volumetric_Trace( &trace, from, NULL, NULL, to, -1, (CONTENTS_SOLID|CONTENTS_TERRAIN) );
 
+	if (isSun)
+	{
+		if (trace.fraction < 0.7)
+			return qfalse;
+	}
+
 	//if (trace.fraction != 1.0 && Distance(trace.endpos, to) > 64)
 	if (trace.fraction < 0.7)
+	{
 		return qfalse;
+	}
 
 	return qtrue;
 #endif
 }
 
-vec3_t roof;
+vec3_t VOLUMETRIC_ROOF;
 
 void Volumetric_RoofHeight(vec3_t from)
 {
@@ -938,7 +946,7 @@ void Volumetric_RoofHeight(vec3_t from)
 	vec3_t roofh;
 	VectorSet(roofh, from[0]+192, from[1], from[2]);
 	Volumetric_Trace( &trace, from, NULL, NULL, roofh, -1, (CONTENTS_SOLID|CONTENTS_TERRAIN) );
-	VectorSet(roof, trace.endpos[0]-8.0, trace.endpos[1], trace.endpos[2]);
+	VectorSet(VOLUMETRIC_ROOF, trace.endpos[0]-8.0, trace.endpos[1], trace.endpos[2]);
 }
 
 extern void R_WorldToLocal (const vec3_t world, vec3_t local);
@@ -949,6 +957,7 @@ extern int		NUM_MAP_GLOW_LOCATIONS;
 extern vec3_t	MAP_GLOW_LOCATIONS[MAX_GLOW_LOCATIONS];
 extern vec4_t	MAP_GLOW_COLORS[MAX_GLOW_LOCATIONS];
 
+extern vec3_t SUN_POSITION;
 extern vec2_t SUN_SCREEN_POSITION;
 extern qboolean SUN_VISIBLE;
 
@@ -1099,7 +1108,7 @@ qboolean RB_VolumetricLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_
 			continue; // not on screen...
 		}
 
-		if (!Volumetric_Visible(backEnd.refdef.vieworg, dl->origin))
+		if (!Volumetric_Visible(backEnd.refdef.vieworg, dl->origin, qfalse))
 		{// Trace to actual position failed... Try above...
 			vec3_t tmpOrg;
 			vec3_t eyeOrg;
@@ -1108,21 +1117,21 @@ qboolean RB_VolumetricLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_
 
 			// Calculate ceiling heights at both positions...
 			Volumetric_RoofHeight(dl->origin);
-			VectorCopy(roof, tmpRoof);
+			VectorCopy(VOLUMETRIC_ROOF, tmpRoof);
 			Volumetric_RoofHeight(backEnd.refdef.vieworg);
-			VectorCopy(roof, eyeRoof);
+			VectorCopy(VOLUMETRIC_ROOF, eyeRoof);
 
 			VectorSet(tmpOrg, tmpRoof[0], dl->origin[1], dl->origin[2]);
 			VectorSet(eyeOrg, backEnd.refdef.vieworg[0], backEnd.refdef.vieworg[1], backEnd.refdef.vieworg[2]);
-			if (!Volumetric_Visible(eyeOrg, tmpOrg))
+			if (!Volumetric_Visible(eyeOrg, tmpOrg, qfalse))
 			{// Trace to above position failed... Try trace from above viewer...
 				VectorSet(tmpOrg, dl->origin[0], dl->origin[1], dl->origin[2]);
 				VectorSet(eyeOrg, eyeRoof[0], backEnd.refdef.vieworg[1], backEnd.refdef.vieworg[2]);
-				if (!Volumetric_Visible(eyeOrg, tmpOrg))
+				if (!Volumetric_Visible(eyeOrg, tmpOrg, qfalse))
 				{// Trace from above viewer failed... Try trace from above, to above...
 					VectorSet(tmpOrg, tmpRoof[0], dl->origin[1], dl->origin[2]);
 					VectorSet(eyeOrg, eyeRoof[0], backEnd.refdef.vieworg[1], backEnd.refdef.vieworg[2]);
-					if (!Volumetric_Visible(eyeOrg, tmpOrg))
+					if (!Volumetric_Visible(eyeOrg, tmpOrg, qfalse))
 					{// Trace from/to above viewer failed...
 						continue; // Can't see this...
 					}
@@ -1802,7 +1811,7 @@ void RB_WaterPost(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 		VectorSet4(loc, MAP_INFO_MAXS[0], MAP_INFO_MAXS[1], MAP_INFO_MAXS[2], 0.0);
 		GLSL_SetUniformVec4(shader, UNIFORM_MAXS, loc);
 
-		VectorSet4(loc, MAP_INFO_SIZE[0], MAP_INFO_SIZE[1], MAP_INFO_SIZE[2], 0.0);
+		VectorSet4(loc, MAP_INFO_SIZE[0], MAP_INFO_SIZE[1], MAP_INFO_SIZE[2], (float)SUN_VISIBLE);
 		GLSL_SetUniformVec4(shader, UNIFORM_MAPINFO, loc);
 	}
 
@@ -1834,8 +1843,8 @@ void RB_WaterPost(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 
 	{
 		vec4_t viewInfo;
-		float zmax = backEnd.viewParms.zFar;
-		//float zmax = 2048.0;//backEnd.viewParms.zFar;
+		float zmax = 2048.0;
+		//float zmax = backEnd.viewParms.zFar;
 		float ymax = zmax * tan(backEnd.viewParms.fovY * M_PI / 360.0f);
 		float xmax = zmax * tan(backEnd.viewParms.fovX * M_PI / 360.0f);
 		float zmin = r_znear->value;
@@ -2615,6 +2624,18 @@ void RB_SSGI(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 	FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, shader, color, 0);
 }
 
+extern bool RealInvertMatrix(const float m[16], float invOut[16]);
+extern void RealTransposeMatrix(const float m[16], float invOut[16]);
+extern void myInverseMatrix (float m[16], float src[16]);
+
+void transpose(float *src, float *dst, const int N, const int M) {
+    #pragma omp parallel for
+    for(int n = 0; n<N*M; n++) {
+        int i = n/N;
+        int j = n%N;
+        dst[n] = src[M*j + i];
+    }
+}
 
 void RB_TestShader(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox, int pass_num)
 {
@@ -2649,14 +2670,46 @@ void RB_TestShader(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox,
 	float dist = backEnd.viewParms.zFar / 1.75;
  	VectorMA( backEnd.refdef.vieworg, dist, backEnd.refdef.sunDir, out );
 	GLSL_SetUniformVec4(&tr.testshaderShader, UNIFORM_PRIMARYLIGHTORIGIN,  out);
+	GLSL_SetUniformVec4(&tr.testshaderShader, UNIFORM_LOCAL2,  backEnd.refdef.sunDir);
 
 	GLSL_SetUniformVec3(&tr.testshaderShader, UNIFORM_PRIMARYLIGHTCOLOR,   backEnd.refdef.sunCol);
 
 	//Matrix16Multiply(glState.projection, glState.modelview, glState.modelviewProjection);
-	GLSL_SetUniformMatrix16(&tr.testshaderShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
-	GLSL_SetUniformMatrix16(&tr.testshaderShader, UNIFORM_VIEWPROJECTIONMATRIX, glState.projection);
-	GLSL_SetUniformMatrix16(&tr.testshaderShader, UNIFORM_MODELVIEWMATRIX, glState.modelview);
+	//GLSL_SetUniformMatrix16(&tr.testshaderShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
+	/*GLSL_SetUniformMatrix16(&tr.testshaderShader, UNIFORM_VIEWPROJECTIONMATRIX, glState.projection);
+	GLSL_SetUniformMatrix16(&tr.testshaderShader, UNIFORM_MODELVIEWMATRIX, glState.modelview);*/
+	matrix_t trans, model, mvp;
+	Matrix16Translation( backEnd.viewParms.ori.origin, trans );
+	Matrix16Multiply( backEnd.viewParms.world.modelMatrix, trans, model );
+	Matrix16Multiply(backEnd.viewParms.projectionMatrix, model, mvp);
 
+	GLSL_SetUniformMatrix16(&tr.testshaderShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, mvp);
+	GLSL_SetUniformMatrix16(&tr.testshaderShader, UNIFORM_VIEWPROJECTIONMATRIX, backEnd.viewParms.projectionMatrix); //*
+	//GLSL_SetUniformMatrix16(&tr.testshaderShader, UNIFORM_PROJECTIONMATRIX, glState.projection);
+	GLSL_SetUniformMatrix16(&tr.testshaderShader, UNIFORM_MODELVIEWMATRIX, model);
+	GLSL_SetUniformMatrix16(&tr.testshaderShader, UNIFORM_MODELMATRIX, backEnd.viewParms.world.modelMatrix/*model*/); //*
+	GLSL_SetUniformMatrix16(&tr.testshaderShader, UNIFORM_VIEWMATRIX, backEnd.viewParms.world.transformMatrix);//trans);
+
+	//GLSL_SetUniformMatrix16(&tr.testshaderShader, UNIFORM_INVEYEPROJECTIONMATRIX, glState.invProjection);
+	//GLSL_SetUniformMatrix16(&tr.testshaderShader, UNIFORM_MODELMATRIX, backEnd.ori.transformMatrix);
+	matrix_t invProj, proj;
+	//Matrix16SimpleInverse( backEnd.viewParms.projectionMatrix, invProj);
+	//RealInvertMatrix(backEnd.viewParms.projectionMatrix, invProj);
+	//RealTransposeMatrix(glState.projection, invProj);
+	//RealTransposeMatrix(invProj, proj);
+	//myInverseMatrix(invProj, backEnd.viewParms.projectionMatrix);
+	//transpose(backEnd.viewParms.projectionMatrix, invProj, 16, 16);
+	Matrix16SimpleInverse( model/*backEnd.viewParms.world.modelMatrix*//*backEnd.viewParms.projectionMatrix*/, invProj);
+	Matrix16SimpleInverse( invProj, proj);
+	GLSL_SetUniformMatrix16(&tr.testshaderShader, UNIFORM_INVEYEPROJECTIONMATRIX, invProj);
+	//GLSL_SetUniformMatrix16(&tr.testshaderShader, UNIFORM_VIEWPROJECTIONMATRIX, proj);
+
+	//Matrix16Multiply(backEnd.viewParms.projectionMatrix, backEnd.viewParms.world.modelMatrix, vp);
+
+
+
+	GLSL_SetUniformMatrix16(&tr.testshaderShader, UNIFORM_MODELMATRIX, backEnd.ori.modelMatrix);
+	
 	GLSL_SetUniformFloat(&tr.testshaderShader, UNIFORM_TIME, backEnd.refdef.floatTime);
 
 
@@ -2700,7 +2753,8 @@ void RB_TestShader(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox,
 
 	{
 		vec4_t viewInfo;
-		float zmax = 2048.0;//backEnd.viewParms.zFar;
+		float zmax = 2048.0;
+		//float zmax = backEnd.viewParms.zFar;
 		float ymax = zmax * tan(backEnd.viewParms.fovY * M_PI / 360.0f);
 		float xmax = zmax * tan(backEnd.viewParms.fovX * M_PI / 360.0f);
 		float zmin = r_znear->value;
@@ -2723,11 +2777,112 @@ void RB_TestShader(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox,
 
 	{
 		vec4_t loc;
-		VectorSet4(loc, MAP_INFO_SIZE[0], MAP_INFO_SIZE[1], MAP_INFO_SIZE[2], 0.0);
+		VectorSet4(loc, MAP_INFO_SIZE[0], MAP_INFO_SIZE[1], MAP_INFO_SIZE[2], (float)SUN_VISIBLE);
 		GLSL_SetUniformVec4(&tr.testshaderShader, UNIFORM_MAPINFO, loc);
 	}
 	
 	FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.testshaderShader, color, 0);
+}
+
+void RB_FogPostShader(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
+{
+	vec4_t color;
+
+	// bloom
+	color[0] =
+		color[1] =
+		color[2] = pow(2, r_cameraExposure->value);
+	color[3] = 1.0f;
+
+	GLSL_BindProgram(&tr.fogPostShader);
+	
+	GLSL_SetUniformInt(&tr.fogPostShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
+	GL_BindToTMU(hdrFbo->colorImage[0], TB_DIFFUSEMAP);
+
+	GLSL_SetUniformInt(&tr.fogPostShader, UNIFORM_POSITIONMAP, TB_POSITIONMAP);
+	GL_BindToTMU(tr.renderPositionMapImage, TB_POSITIONMAP);
+
+	GLSL_SetUniformInt(&tr.fogPostShader, UNIFORM_NORMALMAP, TB_NORMALMAP);
+	GL_BindToTMU(tr.renderNormalImage, TB_NORMALMAP);
+
+	GLSL_SetUniformInt(&tr.fogPostShader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
+	GL_BindToTMU(tr.renderDepthImage, TB_LIGHTMAP);
+
+
+	GLSL_SetUniformVec3(&tr.fogPostShader, UNIFORM_VIEWORIGIN,  backEnd.refdef.vieworg);
+	GLSL_SetUniformFloat(&tr.fogPostShader, UNIFORM_TIME, backEnd.refdef.floatTime);
+
+	
+	vec3_t out;
+	float dist = backEnd.viewParms.zFar / 1.75;
+ 	VectorMA( backEnd.refdef.vieworg, dist, backEnd.refdef.sunDir, out );
+	GLSL_SetUniformVec4(&tr.fogPostShader, UNIFORM_PRIMARYLIGHTORIGIN,  out);
+	GLSL_SetUniformVec4(&tr.fogPostShader, UNIFORM_LOCAL2,  backEnd.refdef.sunDir);
+
+	GLSL_SetUniformVec3(&tr.fogPostShader, UNIFORM_PRIMARYLIGHTCOLOR,   backEnd.refdef.sunCol);
+
+	matrix_t trans, model, mvp;
+	Matrix16Translation( backEnd.viewParms.ori.origin, trans );
+	Matrix16Multiply( backEnd.viewParms.world.modelMatrix, trans, model );
+	Matrix16Multiply(backEnd.viewParms.projectionMatrix, model, mvp);
+
+	GLSL_SetUniformMatrix16(&tr.fogPostShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, mvp);
+	GLSL_SetUniformMatrix16(&tr.fogPostShader, UNIFORM_VIEWPROJECTIONMATRIX, backEnd.viewParms.projectionMatrix); //*
+	//GLSL_SetUniformMatrix16(&tr.fogPostShader, UNIFORM_PROJECTIONMATRIX, glState.projection);
+	GLSL_SetUniformMatrix16(&tr.fogPostShader, UNIFORM_MODELVIEWMATRIX, model);
+	GLSL_SetUniformMatrix16(&tr.fogPostShader, UNIFORM_MODELMATRIX, backEnd.viewParms.world.modelMatrix/*model*/); //*
+	GLSL_SetUniformMatrix16(&tr.fogPostShader, UNIFORM_VIEWMATRIX, backEnd.viewParms.world.transformMatrix);//trans);
+
+	matrix_t invProj, proj;
+	Matrix16SimpleInverse( model/*backEnd.viewParms.world.modelMatrix*//*backEnd.viewParms.projectionMatrix*/, invProj);
+	Matrix16SimpleInverse( invProj, proj);
+	GLSL_SetUniformMatrix16(&tr.fogPostShader, UNIFORM_INVEYEPROJECTIONMATRIX, invProj);
+
+
+
+	GLSL_SetUniformMatrix16(&tr.fogPostShader, UNIFORM_MODELMATRIX, backEnd.ori.modelMatrix);
+	
+	GLSL_SetUniformFloat(&tr.fogPostShader, UNIFORM_TIME, backEnd.refdef.floatTime);
+
+	{
+		vec2_t screensize;
+		screensize[0] = glConfig.vidWidth * r_superSampleMultiplier->value;
+		screensize[1] = glConfig.vidHeight * r_superSampleMultiplier->value;
+
+		GLSL_SetUniformVec2(&tr.fogPostShader, UNIFORM_DIMENSIONS, screensize);
+	}
+
+	{
+		vec4_t viewInfo;
+		float zmax = 2048.0;
+		//float zmax = backEnd.viewParms.zFar;
+		float ymax = zmax * tan(backEnd.viewParms.fovY * M_PI / 360.0f);
+		float xmax = zmax * tan(backEnd.viewParms.fovX * M_PI / 360.0f);
+		float zmin = r_znear->value;
+		VectorSet4(viewInfo, zmin, zmax, zmax / zmin, 0.0);
+		GLSL_SetUniformVec4(&tr.fogPostShader, UNIFORM_VIEWINFO, viewInfo);
+	}
+
+	{
+		vec4_t loc;
+		VectorSet4(loc, r_testvalue0->value, r_testvalue1->value, r_testvalue2->value, r_testvalue3->value);
+		GLSL_SetUniformVec4(&tr.fogPostShader, UNIFORM_LOCAL0, loc);
+	}
+	
+	{
+		vec4_t loc;
+		VectorSet4(loc, r_testshaderValue1->value, r_testshaderValue2->value, r_testshaderValue3->value, r_testshaderValue4->value);
+		GLSL_SetUniformVec4(&tr.fogPostShader, UNIFORM_LOCAL1, loc);
+	}
+
+
+	{
+		vec4_t loc;
+		VectorSet4(loc, MAP_INFO_SIZE[0], MAP_INFO_SIZE[1], MAP_INFO_SIZE[2], (float)SUN_VISIBLE);
+		GLSL_SetUniformVec4(&tr.fogPostShader, UNIFORM_MAPINFO, loc);
+	}
+	
+	FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.fogPostShader, color, 0);
 }
 
 void RB_FastBlur(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)

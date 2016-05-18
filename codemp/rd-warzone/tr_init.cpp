@@ -341,6 +341,8 @@ cvar_t  *r_vibrancy;
 cvar_t  *r_fxaa;
 cvar_t  *r_underwater;
 cvar_t  *r_distanceBlur;
+cvar_t  *r_fogPost;
+cvar_t  *r_dayNightCycleSpeed;
 cvar_t  *r_testshader;
 cvar_t  *r_testshaderValue1;
 cvar_t  *r_testshaderValue2;
@@ -1551,6 +1553,8 @@ void R_Register( void )
 	r_trueAnaglyphParallax = ri->Cvar_Get( "r_trueAnaglyphParallax", "11.5", CVAR_ARCHIVE );
 	r_vibrancy = ri->Cvar_Get( "r_vibrancy", "0.4", CVAR_ARCHIVE );
 	r_distanceBlur = ri->Cvar_Get( "r_distanceBlur", "1", CVAR_ARCHIVE );
+	r_fogPost = ri->Cvar_Get( "r_fogPost", "1", CVAR_ARCHIVE );
+	r_dayNightCycleSpeed = ri->Cvar_Get( "r_dayNightCycleSpeed", "0.0001", CVAR_ARCHIVE );
 	r_testshader = ri->Cvar_Get( "r_testshader", "0", CVAR_ARCHIVE );
 	r_testshaderValue1 = ri->Cvar_Get( "r_testshaderValue1", "1.0", CVAR_ARCHIVE );
 	r_testshaderValue2 = ri->Cvar_Get( "r_testshaderValue2", "0.0", CVAR_ARCHIVE );
