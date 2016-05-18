@@ -1299,38 +1299,50 @@ void R_LoadMapInfo ( void )
 
 	if (!strcmp(CURRENT_CLIMATE_OPTION, "springpineforest"))
 	{
-		tr.grassImage = R_FindImageFile( "models/warzone/foliage/grasspineforest", IMGTYPE_COLORALPHA, IMGFLAG_NONE );
+		tr.grassImage[0] = R_FindImageFile( "models/warzone/foliage/grasspineforest", IMGTYPE_COLORALPHA, IMGFLAG_NONE );
+		tr.grassImage[1] = R_FindImageFile( "models/warzone/foliage/grasspineforest2", IMGTYPE_COLORALPHA, IMGFLAG_NONE );
+		tr.grassImage[2] = R_FindImageFile( "models/warzone/foliage/grasspineforest3", IMGTYPE_COLORALPHA, IMGFLAG_NONE );
 		FOLIAGE_ALLOWED_MATERIALS[FOLIAGE_ALLOWED_MATERIALS_NUM] = MATERIAL_MUD; FOLIAGE_ALLOWED_MATERIALS_NUM++;
 		FOLIAGE_ALLOWED_MATERIALS[FOLIAGE_ALLOWED_MATERIALS_NUM] = MATERIAL_DIRT; FOLIAGE_ALLOWED_MATERIALS_NUM++;
 	}
 	else if (!strcmp(CURRENT_CLIMATE_OPTION, "endorredwoodforest"))
 	{
-		tr.grassImage = R_FindImageFile( "models/warzone/foliage/ferngrass", IMGTYPE_COLORALPHA, IMGFLAG_NONE );
+		tr.grassImage[0] = R_FindImageFile( "models/warzone/foliage/ferngrass", IMGTYPE_COLORALPHA, IMGFLAG_NONE );
+		tr.grassImage[1] = R_FindImageFile( "models/warzone/foliage/ferngrass2", IMGTYPE_COLORALPHA, IMGFLAG_NONE );
+		tr.grassImage[2] = R_FindImageFile( "models/warzone/foliage/ferngrass3", IMGTYPE_COLORALPHA, IMGFLAG_NONE );
 		FOLIAGE_ALLOWED_MATERIALS[FOLIAGE_ALLOWED_MATERIALS_NUM] = MATERIAL_MUD; FOLIAGE_ALLOWED_MATERIALS_NUM++;
 		FOLIAGE_ALLOWED_MATERIALS[FOLIAGE_ALLOWED_MATERIALS_NUM] = MATERIAL_DIRT; FOLIAGE_ALLOWED_MATERIALS_NUM++;
 	}
 	else if (!strcmp(CURRENT_CLIMATE_OPTION, "snowpineforest"))
 	{
-		tr.grassImage = R_FindImageFile( "models/warzone/foliage/grasssnowpineforest", IMGTYPE_COLORALPHA, IMGFLAG_NONE );
+		tr.grassImage[0] = R_FindImageFile( "models/warzone/foliage/grasssnowpineforest", IMGTYPE_COLORALPHA, IMGFLAG_NONE );
+		tr.grassImage[1] = R_FindImageFile( "models/warzone/foliage/grasssnowpineforest2", IMGTYPE_COLORALPHA, IMGFLAG_NONE );
+		tr.grassImage[2] = R_FindImageFile( "models/warzone/foliage/grasssnowpineforest3", IMGTYPE_COLORALPHA, IMGFLAG_NONE );
 		//FOLIAGE_ALLOWED_MATERIALS[FOLIAGE_ALLOWED_MATERIALS_NUM] = MATERIAL_MUD; FOLIAGE_ALLOWED_MATERIALS_NUM++;
 		//FOLIAGE_ALLOWED_MATERIALS[FOLIAGE_ALLOWED_MATERIALS_NUM] = MATERIAL_DIRT; FOLIAGE_ALLOWED_MATERIALS_NUM++;
 		//FOLIAGE_ALLOWED_MATERIALS[FOLIAGE_ALLOWED_MATERIALS_NUM] = MATERIAL_SNOW; FOLIAGE_ALLOWED_MATERIALS_NUM++;
 	}
 	else if (!strcmp(CURRENT_CLIMATE_OPTION, "tropicalold"))
 	{
-		tr.grassImage = R_FindImageFile( "models/warzone/foliage/grasstropical", IMGTYPE_COLORALPHA, IMGFLAG_NONE );
+		tr.grassImage[0] = R_FindImageFile( "models/warzone/foliage/grasstropical", IMGTYPE_COLORALPHA, IMGFLAG_NONE );
+		tr.grassImage[1] = R_FindImageFile( "models/warzone/foliage/grasstropical2", IMGTYPE_COLORALPHA, IMGFLAG_NONE );
+		tr.grassImage[2] = R_FindImageFile( "models/warzone/foliage/grasstropical3", IMGTYPE_COLORALPHA, IMGFLAG_NONE );
 		FOLIAGE_ALLOWED_MATERIALS[FOLIAGE_ALLOWED_MATERIALS_NUM] = MATERIAL_MUD; FOLIAGE_ALLOWED_MATERIALS_NUM++;
 		FOLIAGE_ALLOWED_MATERIALS[FOLIAGE_ALLOWED_MATERIALS_NUM] = MATERIAL_DIRT; FOLIAGE_ALLOWED_MATERIALS_NUM++;
 	}
 	else if (!strcmp(CURRENT_CLIMATE_OPTION, "tropical"))
 	{
-		tr.grassImage = R_FindImageFile( "models/warzone/foliage/grasstropical", IMGTYPE_COLORALPHA, IMGFLAG_NONE );
+		tr.grassImage[0] = R_FindImageFile( "models/warzone/foliage/grasstropical", IMGTYPE_COLORALPHA, IMGFLAG_NONE );
+		tr.grassImage[1] = R_FindImageFile( "models/warzone/foliage/grasstropical2", IMGTYPE_COLORALPHA, IMGFLAG_NONE );
+		tr.grassImage[2] = R_FindImageFile( "models/warzone/foliage/grasstropical3", IMGTYPE_COLORALPHA, IMGFLAG_NONE );
 		FOLIAGE_ALLOWED_MATERIALS[FOLIAGE_ALLOWED_MATERIALS_NUM] = MATERIAL_MUD; FOLIAGE_ALLOWED_MATERIALS_NUM++;
 		FOLIAGE_ALLOWED_MATERIALS[FOLIAGE_ALLOWED_MATERIALS_NUM] = MATERIAL_DIRT; FOLIAGE_ALLOWED_MATERIALS_NUM++;
 	}
 	else // Default to new tropical...
 	{
-		tr.grassImage = R_FindImageFile( "models/warzone/foliage/grasstropical", IMGTYPE_COLORALPHA, IMGFLAG_NONE );
+		tr.grassImage[0] = R_FindImageFile( "models/warzone/foliage/grasstropical", IMGTYPE_COLORALPHA, IMGFLAG_NONE );
+		tr.grassImage[1] = R_FindImageFile( "models/warzone/foliage/grasstropical2", IMGTYPE_COLORALPHA, IMGFLAG_NONE );
+		tr.grassImage[2] = R_FindImageFile( "models/warzone/foliage/grasstropical3", IMGTYPE_COLORALPHA, IMGFLAG_NONE );
 	}
 
 	tr.seaGrassImage = R_FindImageFile( "models/warzone/foliage/seagrass", IMGTYPE_COLORALPHA, IMGFLAG_NONE );

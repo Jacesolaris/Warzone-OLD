@@ -23,7 +23,11 @@ uniform float				u_Time;
 
 smooth out vec2				vTexCoord;
 out vec3					vVertPosition;
-flat out int				bUnderwater;
+flat out int				iGrassType;
+
+
+#define GRASSMAP_MIN_TYPE_VALUE 0.2
+#define SECONDARY_RANDOM_CHANCE 0.7
 
 
 #define M_PI				3.14159265358979323846
@@ -158,7 +162,7 @@ vec4 GetGrassMap(vec3 m_vertPos)
 
 void main()
 {
-	bUnderwater = 0;
+	iGrassType = 0;
 
 	//face center------------------------
     vec3 Vert1 = gl_in[0].gl_Position.xyz;
@@ -246,11 +250,53 @@ void main()
 		if (vGrassFieldPos.z < MAP_WATER_LEVEL + 64.0 + (fGrassPatchWaterEdgeMod * 96.0))
 		{
 			if (vGrassFieldPos.z < MAP_WATER_LEVEL - (64.0 + (fGrassPatchWaterEdgeMod * 96.0)) && vGrassFieldPos.z > MAP_WATER_LEVEL - 256.0)
-				bUnderwater = 1;
+				iGrassType = 3;
 			else if (vGrassFieldPos.z <= MAP_WATER_LEVEL - 256.0)
-				bUnderwater = 2;
+				iGrassType = 4;
 			else
 				continue;
+		}
+		else
+		{
+			if (controlMap.r >= GRASSMAP_MIN_TYPE_VALUE && controlMap.g >= GRASSMAP_MIN_TYPE_VALUE && controlMap.b >= GRASSMAP_MIN_TYPE_VALUE)
+			{
+				iGrassType = randomInt(0, 2);
+			}
+			else if (controlMap.r >= GRASSMAP_MIN_TYPE_VALUE && controlMap.g >= GRASSMAP_MIN_TYPE_VALUE)
+			{
+				iGrassType = randomInt(0, 1);
+				if (randZeroOne() > SECONDARY_RANDOM_CHANCE) iGrassType = 2; // Mix in occasional second random selection...
+			}
+			else if (controlMap.r >= GRASSMAP_MIN_TYPE_VALUE && controlMap.b >= GRASSMAP_MIN_TYPE_VALUE)
+			{
+				iGrassType = randomInt(0, 1);
+				if (iGrassType == 1) iGrassType = 2;
+				if (randZeroOne() > SECONDARY_RANDOM_CHANCE) iGrassType = 1; // Mix in occasional second random selection...
+			}
+			else if (controlMap.g >= GRASSMAP_MIN_TYPE_VALUE && controlMap.b >= GRASSMAP_MIN_TYPE_VALUE)
+			{
+				iGrassType = randomInt(1, 2);
+				if (randZeroOne() > SECONDARY_RANDOM_CHANCE) iGrassType = 0; // Mix in occasional second random selection...
+			}
+			else if (controlMap.r >= GRASSMAP_MIN_TYPE_VALUE)
+			{
+				iGrassType = 0;
+				if (randZeroOne() > SECONDARY_RANDOM_CHANCE) iGrassType = randomInt(1, 2);
+			}
+			else if (controlMap.g >= GRASSMAP_MIN_TYPE_VALUE)
+			{
+				iGrassType = 1;
+				if (randZeroOne() > SECONDARY_RANDOM_CHANCE)  // Mix in occasional second random selection...
+				{ 
+					iGrassType = randomInt(0, 1); 
+					if (iGrassType == 1) iGrassType = 2; 
+				}
+			}
+			else if (controlMap.b >= GRASSMAP_MIN_TYPE_VALUE)
+			{
+				iGrassType = 2;
+				if (randZeroOne() > SECONDARY_RANDOM_CHANCE) iGrassType = randomInt(0, 1); // Mix in occasional second random selection...
+			}
 		}
 
 		float VertDist2 = (u_ModelViewProjectionMatrix*vec4(vGrassFieldPos, 1.0)).z;
@@ -262,21 +308,16 @@ void main()
 
 		float heightMult = 1.0;
 
-		if (bUnderwater < 1 && vGrassFieldPos.z < MAP_WATER_LEVEL + 160.0)
+		if (iGrassType < 3 && vGrassFieldPos.z < MAP_WATER_LEVEL + 160.0)
 		{// When near water edge, reduce the size of the grass...
 			heightMult = fGrassPatchWaterEdgeMod * 0.5 + 0.5;
 		}
-		/*else if (bUnderwater < 1 && vGrassFieldPos.z >= MAP_WATER_LEVEL + 160.0)
-		{// When near water edge, reduce the size of the grass...
-			float heightMultMult = 1.0 + (clamp((vGrassFieldPos.z - (MAP_WATER_LEVEL + 160.0)) / 8192.0, 0.0, 2.0) * fGrassPatchWaterEdgeMod);
-			heightMult = fGrassPatchWaterEdgeMod * heightMultMult;
-		}*/
-		else if (bUnderwater >= 2 && vGrassFieldPos.z <= MAP_WATER_LEVEL - 256.0)
+		else if (iGrassType >= 4 && vGrassFieldPos.z <= MAP_WATER_LEVEL - 256.0)
 		{// Deep underwater plants draw larger but less of them...
 			float heightMultMult = 1.0 + clamp(((MAP_WATER_LEVEL - 256.0) - vGrassFieldPos.z) / 128.0, 0.0, 4.0);
 			heightMult = fGrassPatchWaterEdgeMod * heightMultMult;
 		}
-		else if (bUnderwater >= 1 && vGrassFieldPos.z > MAP_WATER_LEVEL - 160.0)
+		else if (iGrassType >= 3 && vGrassFieldPos.z > MAP_WATER_LEVEL - 160.0)
 		{// When near water edge, reduce the size of the grass...
 			heightMult = fGrassPatchWaterEdgeMod * 0.5 + 0.5;
 		}

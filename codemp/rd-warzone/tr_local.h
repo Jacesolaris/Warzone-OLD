@@ -2320,7 +2320,7 @@ typedef struct trGlobals_s {
 	image_t					*mapImage;
 	image_t					*heightMapImage;
 	image_t					*foliageMapImage;
-	image_t					*grassImage;
+	image_t					*grassImage[3];
 	image_t					*seaGrassImage;
 	image_t					*grassMaskImage[10];
 

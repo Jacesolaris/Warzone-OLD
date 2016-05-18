@@ -1,4 +1,6 @@
 uniform sampler2D	u_DiffuseMap;
+uniform sampler2D	u_SplatMap1;
+uniform sampler2D	u_SplatMap2;
 uniform sampler2D	u_OverlayMap;
 
 #if defined(USE_SHADOWMAP)
@@ -12,7 +14,7 @@ uniform mat4		u_ModelViewMatrix;
 
 uniform vec4		u_Local9;
 
-flat in int			bUnderwater;
+flat in int			iGrassType;
 smooth in vec2		vTexCoord;
 in vec3				vVertPosition;
 
@@ -25,8 +27,12 @@ void main()
 	vec4 diffuse;
 	vec3 m_Normal = (vec3(clamp(length(1.0-diffuse.rgb) * 0.333, 0.0, 1.0)) * 2.0 - 1.0);
 
-	if (bUnderwater >= 1)
+	if (iGrassType >= 3)
 		diffuse = texture(u_OverlayMap, vTexCoord);
+	else if (iGrassType >= 2)
+		diffuse = texture(u_SplatMap2, vTexCoord);
+	else if (iGrassType >= 1)
+		diffuse = texture(u_SplatMap1, vTexCoord);
 	else
 		diffuse = texture(u_DiffuseMap, vTexCoord);
 

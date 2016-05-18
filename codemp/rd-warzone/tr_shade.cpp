@@ -2653,7 +2653,9 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 			if (isGrass && passNum > 0 && r_foliage->integer)
 			{// Geometry grass drawing passes...
-				GL_BindToTMU( tr.grassImage, TB_DIFFUSEMAP );
+				GL_BindToTMU( tr.grassImage[0], TB_DIFFUSEMAP );
+				GL_BindToTMU( tr.grassImage[1], TB_SPLATMAP1 );
+				GL_BindToTMU( tr.grassImage[2], TB_SPLATMAP2 );
 				GL_BindToTMU( tr.seaGrassImage, TB_OVERLAYMAP );
 
 				vec4_t l8;

@@ -2647,7 +2647,7 @@ static float CalcSplit(float n, float f, float i, float m)
 void R_RenderSunShadowMaps(const refdef_t *fd, int level)
 {
 	viewParms_t		shadowParms;
-	vec4_t lightDir, lightCol;
+	vec4_t lightDir;//, lightCol;
 	vec3_t lightViewAxis[3];
 	vec3_t lightOrigin;
 	float splitZNear, splitZFar;

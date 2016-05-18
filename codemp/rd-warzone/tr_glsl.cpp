@@ -3181,6 +3181,8 @@ void GLSL_EndLoadGPUShaders ( int startTime )
 		GLSL_SetUniformInt(&tr.grass2Shader, UNIFORM_STEEPMAP, TB_STEEPMAP);
 		GLSL_SetUniformInt(&tr.grass2Shader, UNIFORM_STEEPMAP2, TB_STEEPMAP2);
 		GLSL_SetUniformInt(&tr.grass2Shader, UNIFORM_SPLATCONTROLMAP, TB_SPLATCONTROLMAP);
+		GLSL_SetUniformInt(&tr.grass2Shader, UNIFORM_SPLATMAP1, TB_SPLATMAP1);
+		GLSL_SetUniformInt(&tr.grass2Shader, UNIFORM_SPLATMAP2, TB_SPLATMAP2);
 		qglUseProgram(0);
 
 #if defined(_DEBUG)
