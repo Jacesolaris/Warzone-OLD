@@ -2792,9 +2792,9 @@ const void *RB_PostProcess(const void *data)
 	{
 		vec4i_t dstBox;
 		VectorSet4(dstBox, 0, 0, 128, 128);
-		FBO_BlitFromTexture(tr.anamorphicRenderFBOImage[2], NULL, NULL, NULL, dstBox, NULL, NULL, 0);
+		FBO_BlitFromTexture(tr.ssgiRenderFBOImage[2], NULL, NULL, NULL, dstBox, NULL, NULL, 0);
 		VectorSet4(dstBox, 128, 0, 128, 128);
-		FBO_BlitFromTexture(tr.anamorphicRenderFBOImage[1], NULL, NULL, NULL, dstBox, NULL, NULL, 0);
+		FBO_BlitFromTexture(tr.ssgiRenderFBOImage[1], NULL, NULL, NULL, dstBox, NULL, NULL, 0);
 		VectorSet4(dstBox, 256, 0, 128, 128);
 		FBO_BlitFromTexture(tr.bloomRenderFBOImage[2], NULL, NULL, NULL, dstBox, NULL, NULL, 0);
 	}*/

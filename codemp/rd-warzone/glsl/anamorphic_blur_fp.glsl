@@ -1,23 +1,24 @@
 uniform sampler2D u_DiffuseMap;
 
-varying vec4	var_Local0; // scan_pixel_size_x, scan_pixel_size_y, scan_width, is_ssgi
-varying vec2	var_Dimensions;
+uniform vec2	u_Dimensions;
+uniform vec4	u_Local0; // scan_pixel_size_x, scan_pixel_size_y, scan_width, is_ssgi
+
 varying vec2	var_TexCoords;
 
 void main(void)
 {
 	float NUM_VALUES = 1.0;
-	vec2 PIXEL_OFFSET = vec2(1.0 / var_Dimensions.x, 1.0 / var_Dimensions.y);
+	vec2 PIXEL_OFFSET = vec2(1.0 / u_Dimensions.x, 1.0 / u_Dimensions.y);
 
 	vec3 col0 = texture2D(u_DiffuseMap, var_TexCoords.xy).rgb;
 	//gl_FragColor.rgb = vec3(0.0, 0.0, 0.0);
 	gl_FragColor.rgb = col0.rgb;
 
-	for (float width = 1.0; width <= var_Local0.z; width += 1.0)
+	for (float width = 1.0; width <= u_Local0.z; width += 1.0)
 	{
-		float dist_mult = clamp(1.0 - (width / var_Local0.z), 0.0, 1.0);
-		vec3 col1 = texture2D(u_DiffuseMap, var_TexCoords.xy + ((var_Local0.xy * width) * PIXEL_OFFSET)).rgb;
-		vec3 col2 = texture2D(u_DiffuseMap, var_TexCoords.xy - ((var_Local0.xy * width) * PIXEL_OFFSET)).rgb;
+		float dist_mult = clamp(1.0 - (width / u_Local0.z), 0.0, 1.0);
+		vec3 col1 = texture2D(u_DiffuseMap, var_TexCoords.xy + ((u_Local0.xy * width) * PIXEL_OFFSET)).rgb;
+		vec3 col2 = texture2D(u_DiffuseMap, var_TexCoords.xy - ((u_Local0.xy * width) * PIXEL_OFFSET)).rgb;
 		vec3 add_color = ((col0 / 2.0) + ((col1 + col2) * (dist_mult * 2.0))) / 4.0;
 
 		vec3 BLUE_SHIFT_MOD = vec3(0.333, 0.333, 3.0);
@@ -28,6 +29,6 @@ void main(void)
 		NUM_VALUES += 1.0;
 	}
 
-	gl_FragColor.rgb /= NUM_VALUES;//var_Local0.z;
+	gl_FragColor.rgb /= NUM_VALUES;//u_Local0.z;
 	gl_FragColor.a	= 1.0;
 }

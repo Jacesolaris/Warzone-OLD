@@ -3592,13 +3592,15 @@ void R_CreateBuiltinImages( void ) {
 	tr.genericFBO2Image  = R_CreateImage("_generic2",  NULL, width, height, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, hdrFormat);
 	tr.genericFBO3Image  = R_CreateImage("_generic3",  NULL, width, height, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, hdrFormat);
 
+	tr.anamorphicRenderFBOImage  = R_CreateImage("_anamorphic0",  NULL, width/16, height/8, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, hdrFormat);
+
 	tr.bloomRenderFBOImage[0]  = R_CreateImage("_bloom0",  NULL, width/2, height/2, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, hdrFormat);
 	tr.bloomRenderFBOImage[1]  = R_CreateImage("_bloom1",  NULL, width/2, height/2, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, hdrFormat);
 	tr.bloomRenderFBOImage[2]  = R_CreateImage("_bloom2",  NULL, width, height, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, hdrFormat);
 
-	tr.anamorphicRenderFBOImage[0]  = R_CreateImage("_anamorphic0",  NULL, width/8, height/8, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, hdrFormat);
-	tr.anamorphicRenderFBOImage[1]  = R_CreateImage("_anamorphic1",  NULL, width/8, height/8, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, hdrFormat);
-	tr.anamorphicRenderFBOImage[2]  = R_CreateImage("_anamorphic2",  NULL, width, height, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, hdrFormat);
+	tr.ssgiRenderFBOImage[0]  = R_CreateImage("_ssgi0",  NULL, width/8, height/8, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, hdrFormat);
+	tr.ssgiRenderFBOImage[1]  = R_CreateImage("_ssgi1",  NULL, width/8, height/8, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, hdrFormat);
+	tr.ssgiRenderFBOImage[2]  = R_CreateImage("_ssgi2",  NULL, width, height, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, hdrFormat);
 
 	tr.volumetricFBOImage  = R_CreateImage("_volumetric",  NULL, width/4.0, height/4.0, IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION | IMGFLAG_CLAMPTOEDGE, hdrFormat);
 

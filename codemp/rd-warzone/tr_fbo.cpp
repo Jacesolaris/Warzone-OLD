@@ -504,25 +504,35 @@ void FBO_Init(void)
 	}
 
 	//
-	// Anamorphic VBO's...
+	// SSGI FBO's...
 	//
 	{
-		tr.anamorphicRenderFBO[0] = FBO_Create("_anamorphic0", tr.anamorphicRenderFBOImage[0]->width, tr.anamorphicRenderFBOImage[0]->height);
-		FBO_Bind(tr.anamorphicRenderFBO[0]);
-		FBO_AttachTextureImage(tr.anamorphicRenderFBOImage[0], 0);
-		R_CheckFBO(tr.anamorphicRenderFBO[0]);
+		tr.ssgiRenderFBO[0] = FBO_Create("_ssgi0", tr.ssgiRenderFBOImage[0]->width, tr.ssgiRenderFBOImage[0]->height);
+		FBO_Bind(tr.ssgiRenderFBO[0]);
+		FBO_AttachTextureImage(tr.ssgiRenderFBOImage[0], 0);
+		R_CheckFBO(tr.ssgiRenderFBO[0]);
 
 
-		tr.anamorphicRenderFBO[1] = FBO_Create("_anamorphic1", tr.anamorphicRenderFBOImage[1]->width, tr.anamorphicRenderFBOImage[1]->height);
-		FBO_Bind(tr.anamorphicRenderFBO[1]);
-		FBO_AttachTextureImage(tr.anamorphicRenderFBOImage[1], 0);
-		R_CheckFBO(tr.anamorphicRenderFBO[1]);
+		tr.ssgiRenderFBO[1] = FBO_Create("_ssgi1", tr.ssgiRenderFBOImage[1]->width, tr.ssgiRenderFBOImage[1]->height);
+		FBO_Bind(tr.ssgiRenderFBO[1]);
+		FBO_AttachTextureImage(tr.ssgiRenderFBOImage[1], 0);
+		R_CheckFBO(tr.ssgiRenderFBO[1]);
 
 
-		tr.anamorphicRenderFBO[2] = FBO_Create("_anamorphic2", tr.anamorphicRenderFBOImage[2]->width, tr.anamorphicRenderFBOImage[2]->height);
-		FBO_Bind(tr.anamorphicRenderFBO[2]);
-		FBO_AttachTextureImage(tr.anamorphicRenderFBOImage[2], 0);
-		R_CheckFBO(tr.anamorphicRenderFBO[2]);
+		tr.ssgiRenderFBO[2] = FBO_Create("_ssgi2", tr.ssgiRenderFBOImage[2]->width, tr.ssgiRenderFBOImage[2]->height);
+		FBO_Bind(tr.ssgiRenderFBO[2]);
+		FBO_AttachTextureImage(tr.ssgiRenderFBOImage[2], 0);
+		R_CheckFBO(tr.ssgiRenderFBO[2]);
+	}
+
+	//
+	// Anamorphic FBO's...
+	//
+	{
+		tr.anamorphicRenderFBO = FBO_Create("_anamorphic", tr.anamorphicRenderFBOImage->width, tr.anamorphicRenderFBOImage->height);
+		FBO_Bind(tr.anamorphicRenderFBO);
+		FBO_AttachTextureImage(tr.anamorphicRenderFBOImage, 0);
+		R_CheckFBO(tr.anamorphicRenderFBO);
 	}
 
 	//

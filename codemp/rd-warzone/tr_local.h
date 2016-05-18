@@ -2494,15 +2494,17 @@ typedef struct trGlobals_s {
 	shaderProgram_t fogPostShader;
 	shaderProgram_t testshaderShader;
 
+	image_t        *anamorphicRenderFBOImage;
 	image_t        *bloomRenderFBOImage[3];
-	image_t        *anamorphicRenderFBOImage[3];
+	image_t        *ssgiRenderFBOImage[3];
 	image_t        *volumetricFBOImage;
 	image_t        *genericFBOImage;
 	image_t        *genericFBO2Image;
 	image_t        *genericFBO3Image;
 
+	FBO_t          *anamorphicRenderFBO;
 	FBO_t          *bloomRenderFBO[3];
-	FBO_t          *anamorphicRenderFBO[3];
+	FBO_t          *ssgiRenderFBO[3];
 	FBO_t		   *volumetricFbo;
 	FBO_t		   *genericFbo;
 	FBO_t		   *genericFbo2;

@@ -1735,6 +1735,41 @@
 				hide			highlight1
 			} 
 		}
+		
+		itemDef 
+		{	
+			name				bloom
+			group				video_advanced
+      		type				ITEM_TYPE_MULTI
+			text				"Bloom:"
+			cvar				r_bloom
+			cvarFloatList		
+			{  
+				@MENUS_OFF 	0 
+				@MENUS_ON 	1 
+			}
+			rect				220 63 300 20
+	   		textalign			ITEM_ALIGN_RIGHT
+			textalignx			165
+			textaligny			0
+			font 				4
+			textscale 			1
+			forecolor			.615 .615 .956 1
+			visible				0
+			descText			"Add even more glow to glowy objects."
+			action
+			{ 
+				play			"sound/interface/button1"
+			}
+			mouseenter 
+			{ 
+				show			highlight2
+			}
+			mouseexit 
+			{ 
+				hide			highlight2
+			} 
+		}
 
 		itemDef 
 		{	
@@ -1742,7 +1777,7 @@
 			group				video_advanced
 			type				ITEM_TYPE_MULTI
 			text				"Anamorphic Lens Flares:"
-			rect				220 63 300 20
+			rect				220 83 300 20
 			textalign			ITEM_ALIGN_RIGHT
 			textalignx			165
 			textaligny			0
@@ -1752,37 +1787,6 @@
 			cvarFloatList		{  @MENUS_OFF 0 @MENUS_ON 1 }
 			descText			"Enable anamorphic lens flares?"
 			cvar				"r_anamorphic"
-
-			mouseenter 
-			{ 
-				show			highlight2
-			}
-			mouseexit 
-			{ 
-				hide			highlight2
-			} 
-			action 
-			{
-				play			"sound/interface/button1"
-			}
-		}
-		
-		itemDef 
-		{	
-			name				video_darkxpand
-			group				video_advanced
-			type				ITEM_TYPE_MULTI
-			text				"Dark Xpand:"
-			rect				220 83 300 20
-			textalign			ITEM_ALIGN_RIGHT
-			textalignx			165
-			textaligny			0
-			font 				4
-			textscale 			1
-			forecolor		.615 .615 .956 1
-			cvarFloatList		{  @MENUS_OFF 0 @MENUS_ON 1 }
-			descText			"Enable dark xpand technology?"
-			cvar				"r_darkexpand"
 
 			mouseenter 
 			{ 
@@ -1800,10 +1804,10 @@
 		
 		itemDef 
 		{	
-			name				video_truehdr
+			name				video_darkxpand
 			group				video_advanced
 			type				ITEM_TYPE_MULTI
-			text				"True HDR:"
+			text				"Dark Xpand:"
 			rect				220 103 300 20
 			textalign			ITEM_ALIGN_RIGHT
 			textalignx			165
@@ -1812,8 +1816,8 @@
 			textscale 			1
 			forecolor		.615 .615 .956 1
 			cvarFloatList		{  @MENUS_OFF 0 @MENUS_ON 1 }
-			descText			"Enable True HDR technology?"
-			cvar				"r_truehdr"
+			descText			"Enable dark xpand technology?"
+			cvar				"r_darkexpand"
 
 			mouseenter 
 			{ 
@@ -1831,10 +1835,10 @@
 		
 		itemDef 
 		{	
-			name				video_esharpen
+			name				video_truehdr
 			group				video_advanced
 			type				ITEM_TYPE_MULTI
-			text				"E-Sharpen:"
+			text				"True HDR:"
 			rect				220 123 300 20
 			textalign			ITEM_ALIGN_RIGHT
 			textalignx			165
@@ -1843,8 +1847,8 @@
 			textscale 			1
 			forecolor		.615 .615 .956 1
 			cvarFloatList		{  @MENUS_OFF 0 @MENUS_ON 1 }
-			descText			"Enable E-Sharpen technology?"
-			cvar				"r_esharpening"
+			descText			"Enable True HDR technology?"
+			cvar				"r_truehdr"
 
 			mouseenter 
 			{ 
@@ -1862,10 +1866,10 @@
 		
 		itemDef 
 		{	
-			name				video_magicdetail
+			name				video_esharpen
 			group				video_advanced
 			type				ITEM_TYPE_MULTI
-			text				"Magic Detail:"
+			text				"E-Sharpen:"
 			rect				220 143 300 20
 			textalign			ITEM_ALIGN_RIGHT
 			textalignx			165
@@ -1874,8 +1878,8 @@
 			textscale 			1
 			forecolor		.615 .615 .956 1
 			cvarFloatList		{  @MENUS_OFF 0 @MENUS_ON 1 }
-			descText			"Enable Magic Detail?"
-			cvar				"r_magicdetail"
+			descText			"Enable E-Sharpen technology?"
+			cvar				"r_esharpening"
 
 			mouseenter 
 			{ 
@@ -1893,10 +1897,10 @@
 		
 		itemDef 
 		{	
-			name				video_anaglyph
+			name				video_magicdetail
 			group				video_advanced
 			type				ITEM_TYPE_MULTI
-			text				"Stereo Vision (anaglyph):"
+			text				"Magic Detail:"
 			rect				220 163 300 20
 			textalign			ITEM_ALIGN_RIGHT
 			textalignx			165
@@ -1904,9 +1908,9 @@
 			font 				4
 			textscale 			1
 			forecolor		.615 .615 .956 1
-			cvarFloatList		{  @MENUS_OFF 0 "Simple 3D" 1 "Real 3D" 2 }
-			descText			"Enable Stereo Vision?"
-			cvar				"r_trueanaglyph"
+			cvarFloatList		{  @MENUS_OFF 0 @MENUS_ON 1 }
+			descText			"Enable Magic Detail?"
+			cvar				"r_magicdetail"
 
 			mouseenter 
 			{ 
@@ -1923,13 +1927,44 @@
 		}
 		
 		itemDef 
+		{	
+			name				video_anaglyph
+			group				video_advanced
+			type				ITEM_TYPE_MULTI
+			text				"Stereo Vision (anaglyph):"
+			rect				220 183 300 20
+			textalign			ITEM_ALIGN_RIGHT
+			textalignx			165
+			textaligny			0
+			font 				4
+			textscale 			1
+			forecolor		.615 .615 .956 1
+			cvarFloatList		{  @MENUS_OFF 0 "Simple 3D" 1 "Real 3D" 2 }
+			descText			"Enable Stereo Vision?"
+			cvar				"r_trueanaglyph"
+
+			mouseenter 
+			{ 
+				show			highlight8
+			}
+			mouseexit 
+			{ 
+				hide			highlight8
+			} 
+			action 
+			{
+				play			"sound/interface/button1"
+			}
+		}
+		
+		itemDef 
 		{
 			name				video_anaglyphseparation
 			group				video_advanced
 			type				ITEM_TYPE_SLIDER
 			text				"Stereo Vision Separation:"
 			cvarfloat			"r_trueAnaglyphSeparation" 3 1 30
-			rect				220 183 300 20
+			rect				220 203 300 20
 			textalign			ITEM_ALIGN_RIGHT
 			textalignx			174
 			textaligny			0
@@ -1947,11 +1982,11 @@
 
 			mouseenter 
 			{ 
-				show			highlight8
+				show			highlight9
 			}
 			mouseexit 
 			{ 
-				hide			highlight8
+				hide			highlight9
 			} 
 		}
 		
@@ -1962,7 +1997,7 @@
 			type				ITEM_TYPE_SLIDER
 			text				"Vibrancy:"
 			cvarfloat			"r_vibrancy" .4 0 1
-			rect				220 203 300 20
+			rect				220 223 300 20
 			textalign			ITEM_ALIGN_RIGHT
 			textalignx			174
 			textaligny			0
@@ -1980,11 +2015,11 @@
 
 			mouseenter 
 			{ 
-				show			highlight9
+				show			highlight10
 			}
 			mouseexit 
 			{ 
-				hide			highlight9
+				hide			highlight10
 			} 
 		}
 		
@@ -1994,7 +2029,7 @@
 			group				video_advanced
 			type				ITEM_TYPE_MULTI
 			text				"Cube Mapping"
-			rect				220 223 300 20
+			rect				220 243 300 20
 			textalign			ITEM_ALIGN_RIGHT
 			textalignx			165
 			textaligny			0
@@ -2007,11 +2042,11 @@
 
 			mouseenter 
 			{ 
-				show			highlight10
+				show			highlight11
 			}
 			mouseexit 
 			{ 
-				hide			highlight10
+				hide			highlight11
 			} 
 			action 
 			{
@@ -2028,7 +2063,7 @@
 			group				video_advanced
 			type				ITEM_TYPE_MULTI
 			text				"Cube Map Detail"
-			rect				220 243 300 20
+			rect				220 263 300 20
 			textalign			ITEM_ALIGN_RIGHT
 			textalignx			165
 			textaligny			0
@@ -2041,11 +2076,11 @@
 
 			mouseenter 
 			{ 
-				show			highlight11
+				show			highlight12
 			}
 			mouseexit 
 			{ 
-				hide			highlight11
+				hide			highlight12
 			} 
 			action 
 			{
