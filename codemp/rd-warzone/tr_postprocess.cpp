@@ -939,7 +939,7 @@ void R_AddGlowShaderLights ( void )
 
 			for (int i = 0; i < CLOSE_TOTAL; i++)
 			{
-				if (Distance(CLOSE_POS[i], MAP_GLOW_LOCATIONS[maplight]) < 192.0)//r_testvalue0->value)
+				if (Distance(CLOSE_POS[i], MAP_GLOW_LOCATIONS[maplight]) < 32.0)//192.0)//r_testvalue0->value)
 				{// Too close to another light...
 					bad = qtrue;
 					break;
