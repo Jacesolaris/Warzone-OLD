@@ -1,93 +1,59 @@
-//#version 120
+uniform sampler2D	u_TextureMap;
+uniform sampler2D	u_ScreenDepthMap;
+uniform sampler2D	u_GlowMap;
 
-uniform sampler2D u_TextureMap;
-uniform sampler2D u_ScreenDepthMap;
+uniform vec2		u_Dimensions;
+uniform vec4		u_ViewInfo; // zfar / znear, zfar
+
+uniform vec4		u_Local0; // dofValue, dynamicGlowEnabled, 0, direction
+uniform vec4		u_Local1; // testvalues
+
 
 varying vec2		var_TexCoords;
-varying vec2		var_Dimensions;
-//varying vec4		var_ViewInfo; // znear, zfar, zfar / znear, 0
+varying float		var_FocalDepth;
 
-varying vec4		var_Local0; // dofValue, 0, 0, 0
 
-vec2 sampleOffset = vec2(1.0/var_Dimensions);
+vec2 sampleOffset = vec2(1.0/u_Dimensions);
 
 #define PIOVER180 0.017453292
 
 //MATSO DOF
-#define bMatsoDOFChromaEnable			// Enables Chromatic Abberation.
-#define bMatsoDOFBokehEnable			// Enables Bokeh weighting do define bright light spots and increase bokeh shape definiton.	
-#define fMatsoDOFChromaPow		2.4//	//[0.2 to 3.0] Amount of chromatic abberation color shifting.
-#define fMatsoDOFBokehCurve		12.0//6.0//7//2.0	//[0.5 to 20.0] Bokeh curve.
-#define fMatsoDOFBokehLight		1.5//1.0//0.512 	//[0.0 to 2.0] Bokeh brightening factor.
-#define iMatsoDOFBokehQuality		5	//[1 to 10] Blur quality as control value over tap count.
-#define fMatsoDOFBokehAngle		10	//[0 to 360] Rotation angle of bokeh shape.
+#define fMatsoDOFChromaPow		2.4		// [0.2 to 3.0] Amount of chromatic abberation color shifting.
+#define fMatsoDOFBokehCurve		6.0		// [0.5 to 20.0] Bokeh curve.
+#define fMatsoDOFBokehLight		4.0//0.512 	// [0.0 to 2.0] Bokeh brightening factor.
+#define fMatsoDOFBokehAngle		10		// [0 to 360] Rotation angle of bokeh shape.
 
-//#define DOF_BLURRADIUS 			10.0	//[5.0 to 50.0] Blur radius approximately in pixels. Radius, not diameter.
+#if defined(FAST_DOF)
 
-#define DOF_FOCUSPOINT	 		vec2(0.5,0.5)	//[0.0 to 1.0] Screen coordinates of focus point. First value is horizontal, second value is vertical position.
-#ifdef FAST_DOF
+#define iMatsoDOFBokehQuality	3		// [1 to 10] Blur quality as control value over tap count.
 #define DOF_BLURRADIUS 			10.0
-#else //!FAST_DOF
-#define DOF_BLURRADIUS 			5.0
-#endif //FAST_DOF
 
-//#define DOF_MANUALFOCUSDEPTH 		var_Local0.y//0.2	//[0.0 to 1.0] Manual focus depth. 0.0 means camera is focus plane, 1.0 means sky is focus plane.
-#define DOF_MANUALFOCUSDEPTH 		253.8 //253.0	//[0.0 to 1.0] Manual focus depth. 0.0 means camera is focus plane, 1.0 means sky is focus plane.
+#elif defined(MEDIUM_DOF)
 
-float GetLinearDepth(float depth)
+#define iMatsoDOFBokehQuality	6		// [1 to 10] Blur quality as control value over tap count.
+#define DOF_BLURRADIUS 			10.0
+
+#else //defined(HIGH_DOF)
+
+#define iMatsoDOFBokehQuality	8		// [1 to 10] Blur quality as control value over tap count.
+#define DOF_BLURRADIUS 			10.0
+
+#endif //defined(HIGH_DOF)
+
+const vec2 tdirs[4] = vec2[4]( vec2(-0.306, 0.739), vec2(0.306, 0.739), vec2(-0.739, 0.306), vec2(-0.739, -0.306) );
+
+float ExpandDepth(float depth)
 {
-	//return  1 / ((depth * ((var_ViewInfo.g - var_ViewInfo.r) / (-var_ViewInfo.g * var_ViewInfo.r)) + var_ViewInfo.g / (var_ViewInfo.g * var_ViewInfo.r)));
 	return depth * 255.0;
 }
 
-float GetFocalDepth(vec2 focalpoint)
-{ 
-	if (var_Local0.r == 1.0 || var_Local0.r == 3.0)
-		return DOF_MANUALFOCUSDEPTH;
-
-#if 1
- 	float depthsum = 0.0;
- 	//float fcRadius = var_Local0.y;//300.00;
-	
-#if 0
-	for(int r = 0; r < 6; r++)
-	{ 
-		highp float t = float(r);
- 		t *= 3.1415*2/6; 
- 		vec2 coord = vec2(cos(t),sin(t)); 
- 		coord.y *= sampleOffset.y * fcRadius; 
- 		//coord *= fcRadius; 
- 		float depth = GetLinearDepth(texture2D(u_ScreenDepthMap,coord+focalpoint).x) * 0.999; 
- 		depthsum+=depth; 
- 	}
-
-	depthsum = depthsum/6;
-#else
-	depthsum+=GetLinearDepth(texture2D(u_ScreenDepthMap,focalpoint).x) * 0.999;
-#ifdef BLUR_FOCUS
-	depthsum+=GetLinearDepth(texture2D(u_ScreenDepthMap,focalpoint+vec2(0.0, 0.05)).x) * 0.999;
-	depthsum+=GetLinearDepth(texture2D(u_ScreenDepthMap,focalpoint+vec2(0.0, 0.1)).x) * 0.999;
-	depthsum+=GetLinearDepth(texture2D(u_ScreenDepthMap,focalpoint+vec2(0.0, 0.15)).x) * 0.999;
-	depthsum+=GetLinearDepth(texture2D(u_ScreenDepthMap,focalpoint+vec2(0.0, 0.2)).x) * 0.999;
-	depthsum+=GetLinearDepth(texture2D(u_ScreenDepthMap,focalpoint+vec2(0.0, 0.25)).x) * 0.999;
-	depthsum+=GetLinearDepth(texture2D(u_ScreenDepthMap,focalpoint+vec2(0.0, 0.3)).x) * 0.999;
-	depthsum+=GetLinearDepth(texture2D(u_ScreenDepthMap,focalpoint+vec2(0.0, 0.35)).x) * 0.999;
-	depthsum+=GetLinearDepth(texture2D(u_ScreenDepthMap,focalpoint+vec2(0.0, 0.4)).x) * 0.999;
-	depthsum+=GetLinearDepth(texture2D(u_ScreenDepthMap,focalpoint+vec2(0.0, 0.45)).x) * 0.999;
-
-	depthsum = depthsum/10;
-#endif //BLUR_FOCUS
-#endif
-
-	return depthsum; 
-#else
-	return GetLinearDepth(texture2D(u_ScreenDepthMap,DOF_FOCUSPOINT).x) * 0.999;
-#endif
-}
-
-float CircleOfConfusion(float t)
+float GetGlowStrength(vec2 coord)
 {
-	return max(t * .04, (2.0 / var_Dimensions.y) * (1.0+t));
+	vec2 coord2 = coord;
+	coord2.y = 1.0 - coord2.y;
+	vec4 glow = texture2D(u_GlowMap, coord2.xy);
+	float glowStrength = clamp(length(glow.rgb), 0.0, 1.0);
+	return glowStrength;
 }
 
 vec4 GetMatsoDOFCA(sampler2D col, vec2 tex, float CoC)
@@ -102,38 +68,43 @@ vec4 GetMatsoDOFCA(sampler2D col, vec2 tex, float CoC)
 	vec2 tb = ((2.0 * tex - 1.0) * chroma.b) * 0.5 + 0.5;
 	
 	vec3 color = vec3(texture2D(col, tr).r, texture2D(col, tg).g, texture2D(col, tb).b) * (1.0 - CoC);
-	
+
 	return vec4(color, 1.0);
 }
 
 vec4 GetMatsoDOFBlur(int axis, vec2 coord, sampler2D SamplerHDRX)
 {
-	vec4 res;
 	vec4 tcol = texture2D(SamplerHDRX, coord.xy);
-	
-	//float origCoC = CircleOfConfusion((tcol.r + tcol.g + tcol.b) / 3.0);
-	//vec2 discRadius = origCoC.x*((GetLinearDepth(texture2D(u_ScreenDepthMap, coord.xy).x) - GetFocalDepth(coord.xy))*DOF_BLURRADIUS) * sampleOffset.xy*0.5/iMatsoDOFBokehQuality;
-	float coordDepth = GetLinearDepth(texture2D(u_ScreenDepthMap, coord.xy).x);
-	float focalDepth = GetFocalDepth(DOF_FOCUSPOINT/*coord.xy*/);
+	float focalDepth = var_FocalDepth;
+	float coordDepth = ExpandDepth(texture2D(u_ScreenDepthMap, coord.xy).x);
 	float depthDiff = (coordDepth - focalDepth);
-	vec2 discRadius = /*origCoC **/ (depthDiff * float(DOF_BLURRADIUS)) * sampleOffset.xy * 0.5 / float(iMatsoDOFBokehQuality);
-	
-	if (depthDiff < 0.0) // Close to camera pixels, blur much less so player model is not blury...
-		discRadius *= 0.003;//var_Local0.z;
-
-	//if (var_Local0.r == 2.0 || var_Local0.r == 4.0) // Manual mode. Blur less...
-		discRadius *= 0.5;//0.333;
-
-	int passnumber=1;
-
-	float sf = 0.0;
-
-	const vec2 tdirs[4] = vec2[4]( vec2(-0.306, 0.739), vec2(0.306, 0.739), vec2(-0.739, 0.306), vec2(-0.739, -0.306) );
-
-#ifdef bMatsoDOFBokehEnable
-	float wValue = (1.0 + pow(length(tcol.rgb) + 0.1, fMatsoDOFBokehCurve)) * (1.0 - fMatsoDOFBokehLight);	// special recipe from papa Matso ;)
-#else
+	vec2 discRadius = (depthDiff * float(DOF_BLURRADIUS)) * sampleOffset.xy * 0.5 / float(iMatsoDOFBokehQuality);
 	float wValue = 1.0;
+	
+	if (depthDiff < 0.0)
+	{// Close to camera pixels, blur much less so player model is not blury...
+		discRadius *= 0.003;
+	}
+
+	discRadius *= 0.5;
+
+#if !defined(FAST_DOF)
+	bool isGlow = false;
+
+	if (u_Local0.g <= 0.0)
+	{// No dynamic glow map to use. Apply bokeh as per standard matso DOF...
+		wValue = (1.0 + pow(length(tcol.rgb) + 0.1, fMatsoDOFBokehCurve)) * (1.0 - fMatsoDOFBokehLight);	// special recipe from papa Matso ;)
+	}
+	else
+	{// Have dynamic glow to use. Only apply brightening to glow areas...
+		float glowStrength = GetGlowStrength(coord);
+		isGlow = bool(glowStrength > 0.05);
+
+		if (isGlow)
+		{// Since we have a glow map for the screen, only brighten when this pixel is on the glow map... So we don't brighten non-glowing parts of the screen.
+			wValue = (1.0 + pow(length(tcol.rgb) + 0.1, fMatsoDOFBokehCurve)) * (1.0 - (fMatsoDOFBokehLight*glowStrength));	// special recipe from papa Matso ;)
+		}
+	}
 #endif
 
 	for (int i = -iMatsoDOFBokehQuality; i < iMatsoDOFBokehQuality; i++)
@@ -144,36 +115,31 @@ vec4 GetMatsoDOFBlur(int axis, vec2 coord, sampler2D SamplerHDRX)
 		taxis.y = sin(fMatsoDOFBokehAngle*PIOVER180)*taxis.x+cos(fMatsoDOFBokehAngle*PIOVER180)*taxis.y;
 		
 		float fi = float(i);
-		vec2 tdir = taxis * fi * discRadius;
-		vec2 tcoord = coord.xy + tdir.xy;
+		vec2 tcoord = coord.xy + (taxis * fi * discRadius).xy;
 
-#ifdef bMatsoDOFChromaEnable
-		vec4 ct = GetMatsoDOFCA(SamplerHDRX, tcoord.xy, discRadius.x);
-#else
-		vec4 ct = texture2D(SamplerHDRX, tcoord.xy);
+		vec4 ct;
+
+#if !defined(FAST_DOF)
+		if (isGlow || u_Local0.g <= 0.0)
+			ct = GetMatsoDOFCA(SamplerHDRX, tcoord.xy, discRadius.x);
+		else
 #endif
+			ct = texture2D(SamplerHDRX, tcoord.xy);
 
-#ifndef bMatsoDOFBokehEnable
-		float w = 1.0 + abs(offset[i]);	// weight blur for better effect
-#else	
 		// my own pseudo-bokeh weighting
 		float b = dot(length(ct.rgb),0.333) + length(ct.rgb) + 0.1;
 		float w = pow(b, fMatsoDOFBokehCurve) + abs(fi);
-#endif
+
 		tcol += ct * w;
 		wValue += w;
 	}
 
 	tcol /= wValue;
 
-	res.xyz = tcol.xyz;
-
-	res.w = 1.0;
-	return res;
+	return vec4(tcol.rgb, 1.0);
 }
 
 void main ()
 {
-	int axis = int(var_Local0.a);
-	gl_FragColor = GetMatsoDOFBlur(axis, var_TexCoords, u_TextureMap);
+	gl_FragColor = GetMatsoDOFBlur(int(u_Local0.a), var_TexCoords, u_TextureMap);
 }

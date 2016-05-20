@@ -2608,44 +2608,14 @@ const void *RB_PostProcess(const void *data)
 
 		if (!SCREEN_BLUR && r_dof->integer)
 		{
-			if (r_dof->integer < 3)
-			{// Old method...
-#if 0
-				RB_DOF(currentFbo, srcBox, currentOutFbo, dstBox, 0);
-				RB_SwapFBOs( &currentFbo, &currentOutFbo);
-				RB_DOF(currentFbo, srcBox, currentOutFbo, dstBox, 0);
-				RB_SwapFBOs( &currentFbo, &currentOutFbo);
-#else
-				RB_DOF(currentFbo, srcBox, currentOutFbo, dstBox, 2);
-				RB_SwapFBOs( &currentFbo, &currentOutFbo);
-				RB_DOF(currentFbo, srcBox, currentOutFbo, dstBox, 3);
-				RB_SwapFBOs( &currentFbo, &currentOutFbo);
-				RB_DOF(currentFbo, srcBox, currentOutFbo, dstBox, 0);
-				RB_SwapFBOs( &currentFbo, &currentOutFbo);
-				RB_DOF(currentFbo, srcBox, currentOutFbo, dstBox, 1);
-				RB_SwapFBOs( &currentFbo, &currentOutFbo);
-#endif
-			}
-			else
-			{// Matso method...
-				RB_DOF(currentFbo, srcBox, currentOutFbo, dstBox, 2);
-				RB_SwapFBOs( &currentFbo, &currentOutFbo);
-				RB_DOF(currentFbo, srcBox, currentOutFbo, dstBox, 3);
-				RB_SwapFBOs( &currentFbo, &currentOutFbo);
-				RB_DOF(currentFbo, srcBox, currentOutFbo, dstBox, 0);
-				RB_SwapFBOs( &currentFbo, &currentOutFbo);
-				RB_DOF(currentFbo, srcBox, currentOutFbo, dstBox, 1);
-				RB_SwapFBOs( &currentFbo, &currentOutFbo);
-
-				RB_DOF(currentFbo, srcBox, currentOutFbo, dstBox, 2);
-				RB_SwapFBOs( &currentFbo, &currentOutFbo);
-				RB_DOF(currentFbo, srcBox, currentOutFbo, dstBox, 3);
-				RB_SwapFBOs( &currentFbo, &currentOutFbo);
-				RB_DOF(currentFbo, srcBox, currentOutFbo, dstBox, 0);
-				RB_SwapFBOs( &currentFbo, &currentOutFbo);
-				RB_DOF(currentFbo, srcBox, currentOutFbo, dstBox, 1);
-				RB_SwapFBOs( &currentFbo, &currentOutFbo);
-			}
+			RB_DOF(currentFbo, srcBox, currentOutFbo, dstBox, 2);
+			RB_SwapFBOs( &currentFbo, &currentOutFbo);
+			RB_DOF(currentFbo, srcBox, currentOutFbo, dstBox, 3);
+			RB_SwapFBOs( &currentFbo, &currentOutFbo);
+			RB_DOF(currentFbo, srcBox, currentOutFbo, dstBox, 0);
+			RB_SwapFBOs( &currentFbo, &currentOutFbo);
+			RB_DOF(currentFbo, srcBox, currentOutFbo, dstBox, 1);
+			RB_SwapFBOs( &currentFbo, &currentOutFbo);
 		}
 
 		if (!SCREEN_BLUR && r_anamorphic->integer)

@@ -2094,117 +2094,56 @@ void RB_DOF(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox, int di
 		color[2] = pow(2, r_cameraExposure->value);
 	color[3] = 1.0f;
 
-	if (r_dof->integer >= 3)
+	shaderProgram_t *shader = &tr.dofShader[r_dof->integer-1];
+
+	GLSL_BindProgram(shader);
+
+	GLSL_SetUniformInt(shader, UNIFORM_LEVELSMAP, TB_LEVELSMAP);
+	GL_BindToTMU(tr.renderDepthImage, TB_LEVELSMAP);
+	GLSL_SetUniformInt(shader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
+	GL_BindToTMU(tr.renderDepthImage, TB_LIGHTMAP);
+	GLSL_SetUniformInt(shader, UNIFORM_GLOWMAP, TB_GLOWMAP);
+	GL_BindToTMU(tr.glowFboScaled[0]->colorImage[0], TB_GLOWMAP);
+
 	{
-		GLSL_BindProgram(&tr.dof2Shader);
+		vec2_t screensize;
+		screensize[0] = glConfig.vidWidth * r_superSampleMultiplier->value;
+		screensize[1] = glConfig.vidHeight * r_superSampleMultiplier->value;
 
-		GL_BindToTMU(hdrFbo->colorImage[0], TB_LEVELSMAP);
-
-		GLSL_SetUniformInt(&tr.dof2Shader, UNIFORM_LEVELSMAP, TB_LEVELSMAP);
-		GLSL_SetUniformInt(&tr.dof2Shader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
-		GL_BindToTMU(tr.renderDepthImage, TB_LIGHTMAP);
-
-		{
-			vec2_t screensize;
-			screensize[0] = glConfig.vidWidth * r_superSampleMultiplier->value;
-			screensize[1] = glConfig.vidHeight * r_superSampleMultiplier->value;
-
-			GLSL_SetUniformVec2(&tr.dof2Shader, UNIFORM_DIMENSIONS, screensize);
-		}
-
-		{
-			vec4_t info;
-
-			info[0] = r_dof->value;
-			info[1] = r_testvalue0->value;
-			info[2] = r_testvalue1->value;
-			info[3] = direction;
-
-			VectorSet4(info, info[0], info[1], info[2], info[3]);
-
-			GLSL_SetUniformVec4(&tr.dof2Shader, UNIFORM_LOCAL0, info);
-		}
-
-		FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.dof2Shader, color, 0);
+		GLSL_SetUniformVec2(shader, UNIFORM_DIMENSIONS, screensize);
 	}
-	else
+
 	{
-#if 0
-		GLSL_BindProgram(&tr.dofShader);
+		vec4_t info;
 
-		GL_BindToTMU(hdrFbo->colorImage[0], TB_LEVELSMAP);
+		info[0] = r_dof->value;
+		info[1] = r_dynamicGlow->value;
+		info[2] = 0.0;
+		info[3] = direction;
 
-		GLSL_SetUniformInt(&tr.dofShader, UNIFORM_LEVELSMAP, TB_LEVELSMAP);
-		GLSL_SetUniformInt(&tr.dofShader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
-		GL_BindToTMU(tr.renderDepthImage, TB_LIGHTMAP);
+		VectorSet4(info, info[0], info[1], info[2], info[3]);
 
-		{
-			vec2_t screensize;
-			screensize[0] = glConfig.vidWidth * r_superSampleMultiplier->value;
-			screensize[1] = glConfig.vidHeight * r_superSampleMultiplier->value;
-
-			GLSL_SetUniformVec2(&tr.dofShader, UNIFORM_DIMENSIONS, screensize);
-		}
-
-		{
-			vec4_t viewInfo;
-
-			//float zmax = backEnd.viewParms.zFar;
-			float zmax = 2048.0;//backEnd.viewParms.zFar;
-			float zmin = r_znear->value;
-
-			VectorSet4(viewInfo, zmin, zmax, zmax / zmin, 0.0);
-
-			GLSL_SetUniformVec4(&tr.dofShader, UNIFORM_VIEWINFO, viewInfo);
-		}
-
-		{
-			vec4_t info;
-
-			info[0] = r_dof->value;
-			info[1] = 0.0;//r_testvalue0->value;
-			info[2] = 0.0;
-			info[3] = 0.0;
-
-			VectorSet4(info, info[0], info[1], info[2], info[3]);
-
-			GLSL_SetUniformVec4(&tr.dofShader, UNIFORM_LOCAL0, info);
-		}
-
-		FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.dofShader, color, 0);
-#else
-		GLSL_BindProgram(&tr.dofShader);
-
-		GL_BindToTMU(hdrFbo->colorImage[0], TB_LEVELSMAP);
-
-		GLSL_SetUniformInt(&tr.dofShader, UNIFORM_LEVELSMAP, TB_LEVELSMAP);
-		GLSL_SetUniformInt(&tr.dofShader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
-		GL_BindToTMU(tr.renderDepthImage, TB_LIGHTMAP);
-
-		{
-			vec2_t screensize;
-			screensize[0] = glConfig.vidWidth * r_superSampleMultiplier->value;
-			screensize[1] = glConfig.vidHeight * r_superSampleMultiplier->value;
-
-			GLSL_SetUniformVec2(&tr.dofShader, UNIFORM_DIMENSIONS, screensize);
-		}
-
-		{
-			vec4_t info;
-
-			info[0] = r_dof->value;
-			info[1] = r_testvalue0->value;
-			info[2] = r_testvalue1->value;
-			info[3] = direction;
-
-			VectorSet4(info, info[0], info[1], info[2], info[3]);
-
-			GLSL_SetUniformVec4(&tr.dofShader, UNIFORM_LOCAL0, info);
-		}
-
-		FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.dofShader, color, 0);
-#endif
+		GLSL_SetUniformVec4(shader, UNIFORM_LOCAL0, info);
 	}
+
+	{
+		vec4_t loc;
+		VectorSet4(loc, r_testvalue0->value, r_testvalue1->value, r_testvalue2->value, r_testvalue3->value);
+		GLSL_SetUniformVec4(shader, UNIFORM_LOCAL1, loc);
+	}
+
+	{
+		vec4_t viewInfo;
+		//float zmax = backEnd.viewParms.zFar;
+		float zmax = 2048.0;//backEnd.viewParms.zFar;
+		float ymax = zmax * tan(backEnd.viewParms.fovY * M_PI / 360.0f);
+		float xmax = zmax * tan(backEnd.viewParms.fovX * M_PI / 360.0f);
+		float zmin = r_znear->value;
+		VectorSet4(viewInfo, zmin, zmax, zmax / zmin, 0.0);
+		GLSL_SetUniformVec4(shader, UNIFORM_VIEWINFO, viewInfo);
+	}
+
+	FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, shader, color, 0);
 }
 
 void RB_Vibrancy(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
