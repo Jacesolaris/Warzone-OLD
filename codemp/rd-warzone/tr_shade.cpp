@@ -829,6 +829,7 @@ static void RB_FogPass( void ) {
 
 	GLSL_SetUniformMatrix16(sp, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
 
+	GLSL_SetUniformMatrix16(sp, UNIFORM_BONE_MATRICES, &glState.boneMatrices[0][0], glState.numBones);
 	GLSL_SetUniformFloat(sp, UNIFORM_VERTEXLERP, glState.vertexAttribsInterpolation);
 	
 	GLSL_SetUniformInt(sp, UNIFORM_DEFORMGEN, deformGen);

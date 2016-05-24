@@ -159,6 +159,8 @@ const char fallbackShader_genericTessControl_cp[] =
 "uniform vec3   u_ViewOrigin;\n"\
 "#define gEyeWorldPos u_ViewOrigin\n"\
 "\n"\
+"uniform vec2				u_Dimensions;\n"\
+"\n"\
 "// attributes of the input CPs\n"\
 "in vec4 WorldPos_CS_in[];\n"\
 "in vec3 Normal_CS_in[];\n"\
@@ -192,13 +194,13 @@ const char fallbackShader_genericTessControl_cp[] =
 "    float AvgDistance = (Distance0 + Distance1) / 2.0;\n"\
 "\n"\
 "    if (AvgDistance <= 256.0) {\n"\
-"        return 32.0;\n"\
+"        return max(u_Dimensions.x, u_Dimensions.y);\n"\
 "    }\n"\
 "    else if (AvgDistance <= 512.0) {\n"\
-"        return 16.0;\n"\
+"        return max(u_Dimensions.x, u_Dimensions.y) / 4.0;\n"\
 "    }\n"\
 "    else {\n"\
-"        return 3.0;\n"\
+"        return max(u_Dimensions.x, u_Dimensions.y) / 16.0;\n"\
 "    }\n"\
 "}\n"\
 "\n"\
@@ -238,7 +240,9 @@ const char fallbackShader_genericTessControl_ep[] =
 "#define gVP u_ModelViewProjectionMatrix\n"\
 "\n"\
 "uniform sampler2D u_NormalMap;\n"\
-"#define gDisplacementMap u_NormalMap\n"\
+"//#define gDisplacementMap u_NormalMap\n"\
+"uniform sampler2D u_DiffuseMap;\n"\
+"#define gDisplacementMap u_DiffuseMap\n"\
 "\n"\
 "uniform vec4 u_Local10;\n"\
 "#define gDispFactor u_Local10.r;\n"\
@@ -291,6 +295,21 @@ const char fallbackShader_genericTessControl_ep[] =
 "   	return vec4(gl_TessCoord.x) * v0 + vec4(gl_TessCoord.y) * v1 + vec4(gl_TessCoord.z) * v2;\n"\
 "}\n"\
 "\n"\
+"vec4 ConvertToNormals ( vec4 color )\n"\
+"{\n"\
+"	// This makes silly assumptions, but it adds variation to the output. Hopefully this will look ok without doing a crapload of texture lookups or\n"\
+"	// wasting vram on real normals.\n"\
+"	//\n"\
+"	// UPDATE: In my testing, this method looks just as good as real normal maps. I am now using this as default method unless r_normalmapping >= 2\n"\
+"	// for the very noticable FPS boost over texture lookups.\n"\
+"\n"\
+"	vec3 N = vec3(clamp(color.r + color.b, 0.0, 1.0), clamp(color.g + color.b, 0.0, 1.0), clamp(color.r + color.g, 0.0, 1.0));\n"\
+"	N.xy = 1.0 - N.xy;\n"\
+"	vec4 norm = vec4(N, clamp(length(N.xyz), 0.0, 1.0));\n"\
+"	norm.a = float(int(norm.a * 10.0)) / 10.0;\n"\
+"	return norm;\n"\
+"}\n"\
+"\n"\
 "void main()\n"\
 "{\n"\
 "   	ViewDir_FS_in = interpolate3D(ViewDir_ES_in[0], ViewDir_ES_in[1], ViewDir_ES_in[2]);\n"\
@@ -321,7 +340,11 @@ const char fallbackShader_genericTessControl_ep[] =
 "\n"\
 "   	// Displace the vertex along the normal\n"\
 "//   	float Displacement = texture(gDisplacementMap, TexCoord_FS_in.xy).x;\n"\
-"   	float Displacement = 1.0 - clamp(texture(gDisplacementMap, TexCoord_FS_in.xy).a, 0.0, 1.0);\n"\
+"//   	float Displacement = 1.0 - clamp(texture(gDisplacementMap, TexCoord_FS_in.xy).a, 0.0, 1.0);\n"\
+"   	float Displacement0 = 1.0 - clamp(ConvertToNormals( texture(gDisplacementMap, TexCoord_ES_in[0].xy)).a, 0.0, 1.0);\n"\
+"   	float Displacement1 = 1.0 - clamp(ConvertToNormals( texture(gDisplacementMap, TexCoord_ES_in[1].xy)).a, 0.0, 1.0);\n"\
+"   	float Displacement2 = 1.0 - clamp(ConvertToNormals( texture(gDisplacementMap, TexCoord_ES_in[2].xy)).a, 0.0, 1.0);\n"\
+"		float Displacement = (Displacement0 + Displacement1 + Displacement2) / 3.0;\n"\
 "//mat3 tangentToWorld = mat3(Tangent_FS_in.xyz, Bitangent_FS_in.xyz, Normal_FS_in.xyz);\n"\
 "//   	WorldPos_FS_in += (tangentToWorld * Normal_FS_in) * Displacement * gDispFactor;\n"\
 "   	WorldPos_FS_in += Normal_FS_in * Displacement * gDispFactor;\n"\
@@ -2209,7 +2232,10 @@ int GLSL_BeginLoadGPUShaders(void)
 			Q_strcat(extradefines, 1024, "#define USE_VERTEX_ANIMATION\n");
 
 		if (i & FOGDEF_USE_SKELETAL_ANIMATION)
+		{
 			Q_strcat(extradefines, 1024, "#define USE_SKELETAL_ANIMATION\n");
+			attribs |= ATTR_BONE_INDEXES | ATTR_BONE_WEIGHTS;
+		}
 
 		if (!GLSL_BeginLoadGPUShader(&tr.fogShader[i], "fogpass", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_fogpass_vp, fallbackShader_fogpass_fp, NULL, NULL, NULL))
 		{
