@@ -1334,6 +1334,8 @@ char *GLSL_GetHighestSupportedVersion( void )
 			sprintf(GLSL_MAX_VERSION, "#version 410 core\n");
 		else
 			sprintf(GLSL_MAX_VERSION, "#version 400 core\n");
+
+		ALLOW_GL_400 = qtrue;
 	}
 	else
 	{

@@ -1,10 +1,14 @@
 #if !defined(USE_400)
 #extension GL_ARB_gpu_shader5 : enable
+//layout(triangles) in;
+//#else
+//layout(triangles, invocations = 6) in;
 #endif
 
-layout(triangles) in;
-layout(triangle_strip, max_vertices = 102) out;
+#define MAX_FOLIAGES		102
 
+layout(triangles) in;
+layout(triangle_strip, max_vertices = MAX_FOLIAGES) out;
 
 uniform mat4				u_ModelViewProjectionMatrix;
 uniform mat4				u_ModelMatrix;
@@ -22,6 +26,8 @@ uniform vec4				u_Local10; // foliageLODdistance, foliageDensity, MAP_WATER_LEVE
 uniform vec3				u_ViewOrigin;
 uniform float				u_Time;
 
+flat in	int					isSlope[];
+
 smooth out vec2				vTexCoord;
 out vec3					vVertPosition;
 flat out int				iGrassType;
@@ -30,9 +36,8 @@ flat out int				iGrassType;
 #define GRASSMAP_MIN_TYPE_VALUE 0.2
 #define SECONDARY_RANDOM_CHANCE 0.7
 
-
-#define M_PI				3.14159265358979323846
-#define MAP_WATER_LEVEL		u_Local10.b
+#define MAP_WATER_LEVEL			u_Local10.b // TODO: Use water map
+#define PASS_NUMBER				u_Local8.r
 
 //
 // General Settings...
@@ -42,22 +47,16 @@ const float					fGrassPatchSize = 256.0;//u_Local9.b;//64.0;//48.0;//24.0;
 const float					fWindStrength = 12.0;
 const vec3					vWindDirection = normalize(vec3(1.0, 0.0, 1.0));
 
+//#define					foliageDensity u_Local10.g
+const float					foliageDensity = 40.0; // Changed to constant for more speed.
+
+float						controlScale = 1.0 / u_Local6.b;
+
 //
 // LOD Range Settings...
 //
 
 #define MAX_RANGE			u_Local10.r
-
-#define LOD0_RANGE			MAX_RANGE / 16.0
-#define LOD1_RANGE			MAX_RANGE / 8.0
-#define LOD2_RANGE			MAX_RANGE / 5.0
-#define LOD3_RANGE			MAX_RANGE / 3.0
-
-
-#define LOD0_MAX_FOLIAGES	102
-#define LOD1_MAX_FOLIAGES	32
-#define LOD2_MAX_FOLIAGES	16
-#define LOD3_MAX_FOLIAGES	8
 
 vec3 vLocalSeed;
 
@@ -92,52 +91,8 @@ vec4 randomBarycentricCoordinate() {
   return gl_in[0].gl_Position + (R * (gl_in[1].gl_Position - gl_in[0].gl_Position)) + (S * (gl_in[2].gl_Position - gl_in[0].gl_Position));
 }
 
-vec3 vectoangles( in vec3 value1 ) {
-	float	forward;
-	float	yaw, pitch;
-	vec3	angles;
-
-	if ( value1.g == 0 && value1.r == 0 ) {
-		yaw = 0;
-		if ( value1.b > 0 ) {
-			pitch = 90;
-		}
-		else {
-			pitch = 270;
-		}
-	}
-	else {
-		if ( value1.r > 0 ) {
-			yaw = ( atan ( value1.g, value1.r ) * 180 / M_PI );
-		}
-		else if ( value1.g > 0 ) {
-			yaw = 90;
-		}
-		else {
-			yaw = 270;
-		}
-		if ( yaw < 0 ) {
-			yaw += 360;
-		}
-
-		forward = sqrt ( value1.r*value1.r + value1.g*value1.g );
-		pitch = ( atan(value1.b, forward) * 180 / M_PI );
-		if ( pitch < 0 ) {
-			pitch += 360;
-		}
-	}
-
-	angles.r = -pitch;
-	angles.g = yaw;
-	angles.b = 0.0;
-
-	return angles;
-}
-
 vec4 GetControlMap( vec3 m_vertPos)
 {
-	float controlScale = 1.0 / u_Local6.b;
-
 	vec4 xaxis = texture2D( u_SplatControlMap, (m_vertPos.yz * controlScale) * 0.5 + 0.5);
 	vec4 yaxis = texture2D( u_SplatControlMap, (m_vertPos.xz * controlScale) * 0.5 + 0.5);
 	vec4 zaxis = texture2D( u_SplatControlMap, (m_vertPos.xy * controlScale) * 0.5 + 0.5);
@@ -153,6 +108,11 @@ vec4 GetGrassMap(vec3 m_vertPos)
 
 void main()
 {
+	if (isSlope[0] > 0 || isSlope[1] > 0 || isSlope[2] > 0)
+	{
+		return; // This slope is too steep for grass...
+	}
+
 	iGrassType = 0;
 
 	//face center------------------------
@@ -175,40 +135,24 @@ void main()
 	{// Too far from viewer... Early cull...
 		return;
 	}
-
-	vec3 normal = normalize(cross(gl_in[2].gl_Position.xyz - gl_in[0].gl_Position.xyz, gl_in[1].gl_Position.xyz - gl_in[0].gl_Position.xyz)); //calculate normal for this face
-	float pitch = vectoangles( normal.xyz ).r;
 	
-	if (pitch > 180)
-		pitch -= 360;
-
-	if (pitch < -180)
-		pitch += 360;
-
-	pitch += 90.0f;
-
-	if (pitch < 0.0) pitch = -pitch;
-
-	if (pitch > 46.0)
-	{
-		return; // This slope is too steep for grass...
-	}
+	vec3 normal = normalize(cross(gl_in[2].gl_Position.xyz - gl_in[0].gl_Position.xyz, gl_in[1].gl_Position.xyz - gl_in[0].gl_Position.xyz)); //calculate normal for this face
 
 	//face info--------------------------
 	float VertSize = length(Vert1-Vert2) + length(Vert1-Vert3) + length(Vert2-Vert3);
-	int densityMax = int(VertSize / u_Local10.g);
+	int densityMax = int(VertSize / foliageDensity);
     //-----------------------------------
 
-	//------ LOD - # of grass objects to spawn per-face
-    int FOLIAGE_DENSITY = LOD0_MAX_FOLIAGES;
-	if (VertDist >= LOD3_RANGE) FOLIAGE_DENSITY = LOD3_MAX_FOLIAGES;
-	else if (VertDist >= LOD2_RANGE) FOLIAGE_DENSITY = LOD2_MAX_FOLIAGES;
-	else if (VertDist >= LOD1_RANGE) FOLIAGE_DENSITY = LOD1_MAX_FOLIAGES;
-
-	if ( FOLIAGE_DENSITY > densityMax) FOLIAGE_DENSITY = densityMax;
-
+//#if !defined(USE_400)
 	// No invocations support...
-	vLocalSeed = Pos*u_Local8.r;
+	vLocalSeed = Pos*PASS_NUMBER;
+//#else
+//	// invocations support...
+//	vLocalSeed = Pos*float(gl_InvocationID);
+//#endif
+	
+	float m = 1.0 - (VertDist / MAX_RANGE);
+	int FOLIAGE_DENSITY = int(pow(float(MAX_FOLIAGES), m));
 
 	if (Pos.z <= MAP_WATER_LEVEL - 256.0)
 	{// Deep underwater plants draw at lower density, but larger...
@@ -228,6 +172,9 @@ void main()
 		{// Check if this area is on the grass map. If not, there is no grass here...
 			continue;
 		}
+
+		//if (controlMap.a > 0.0) // Testing large plants patches when controlMap alpha channel is active...
+		//	controlMapScale += (controlMapScale * controlMap.a); // long grass patch
 
 		// Fill in the smaller size grass around edges (since we just removed the smallest ones)...
 		controlMapScale *= controlMapScale;
@@ -312,6 +259,9 @@ void main()
 		}
 
 		heightMult *= controlMapScale;
+
+		//if (PASS_NUMBER > 6.0)
+		//	heightMult *= 0.5;
 
 		float fGrassPatchHeight = (fGrassPatchWaterEdgeMod * 0.25 + 0.75) * heightMult; // use fGrassPatchWaterEdgeMod random to save doing an extra random
 

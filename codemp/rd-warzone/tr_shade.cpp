@@ -1671,6 +1671,8 @@ extern void GLSL_AttachTextures( void );
 extern void GLSL_AttachWaterTextures( void );
 extern void GLSL_AttachWaterTextures2( void );
 
+extern qboolean ALLOW_GL_400;
+
 static void RB_IterateStagesGeneric( shaderCommands_t *input )
 {
 	vec4_t	fogDistanceVector, fogDepthVector = {0, 0, 0, 0};
@@ -2080,6 +2082,8 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				sp2 = &tr.grass2Shader;
 				multiPass = qtrue;
 				passMax = r_foliagePasses->integer;
+
+				//if (ALLOW_GL_400) passMax = 2; // uses hardware invocations instead
 			}
 		}
 
