@@ -14,6 +14,8 @@ extern void NPC_ClearPathData ( gentity_t *NPC );
 
 extern qboolean BG_SabersOff( playerState_t *ps );
 
+extern qboolean NPC_NeedsHeal ( gentity_t *NPC );
+
 extern void CG_DrawAlert( vec3_t origin, float rating );
 extern void G_AddVoiceEvent( gentity_t *self, int event, int speakDebounceTime );
 extern void ST_Speech( gentity_t *self, int speechType, float failChance );
@@ -616,7 +618,7 @@ void Boba_FireDecide( void )
 			NPCS.NPCInfo->scriptFlags &= ~SCF_ALT_FIRE;
 			NPC_SetAnim( NPCS.NPC, SETANIM_BOTH, BOTH_MELEE2, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD ); // UQ1: Better anim?????
 			WP_FireMelee(NPCS.NPC, qfalse);
-			NPCS.NPC->next_rifle_butt_time = level.time + 1000;
+			NPCS.NPC->next_rifle_butt_time = level.time + 10000;
 			return;
 		}
 	}
@@ -635,7 +637,7 @@ void Boba_FireDecide( void )
 			NPCS.NPCInfo->scriptFlags &= ~SCF_ALT_FIRE;
 			NPC_SetAnim( NPCS.NPC, SETANIM_BOTH, BOTH_MELEE2, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD ); // UQ1: Better anim?????
 			WP_FireMelee(NPCS.NPC, qfalse);
-			NPCS.NPC->next_rifle_butt_time = level.time + 1000;
+			NPCS.NPC->next_rifle_butt_time = level.time + 10000;
 			return;
 		}
 	}
@@ -4515,6 +4517,11 @@ static void Jedi_CombatIdle( int enemy_dist )
 
 static qboolean Jedi_AttackDecide( int enemy_dist )
 {
+	if (!NPCS.NPC->enemy || !NPC_IsAlive(NPCS.NPC->enemy))
+	{
+		return qfalse;
+	}
+
 	// Begin fixed cultist_destroyer AI
 	if ( Jedi_CultistDestroyer( NPCS.NPC ) )
 	{ // destroyer
@@ -4578,10 +4585,10 @@ static qboolean Jedi_AttackDecide( int enemy_dist )
 	}
 	
 	if ( NPCS.NPC->s.eFlags & EF_FAKE_NPC_BOT ||
-		NPCS.NPC->client->NPC_class == CLASS_TAVION ||
+		/*NPCS.NPC->client->NPC_class == CLASS_TAVION ||
 		( NPCS.NPC->client->NPC_class == CLASS_REBORN && NPCS.NPCInfo->rank == RANK_LT_JG ) ||
 		( NPCS.NPC->client->NPC_class == CLASS_JEDI && NPCS.NPCInfo->rank == RANK_COMMANDER ) ||
-		( NPCS.NPC->client->NPC_class == CLASS_PADAWAN && NPCS.NPCInfo->rank == RANK_COMMANDER ) )
+		( NPCS.NPC->client->NPC_class == CLASS_PADAWAN && NPCS.NPCInfo->rank == RANK_COMMANDER )*/NPC_IsJedi(NPCS.NPC) )
 	{//tavion, fencers, jedi trainer are all good at following up a parry with an attack
 		if ( ( PM_SaberInParry( NPCS.NPC->client->ps.saberMove ) || PM_SaberInKnockaway( NPCS.NPC->client->ps.saberMove ) )
 			&& NPCS.NPC->client->ps.saberBlocked != BLOCKED_PARRY_BROKEN )
@@ -4598,7 +4605,10 @@ static qboolean Jedi_AttackDecide( int enemy_dist )
 	//try to hit them if we can
 	if ( enemy_dist >= 64 )
 	{
-		return qfalse;
+		Jedi_Advance();
+		
+		if ( enemy_dist >= 128 )
+			return qfalse;
 	}
 
 	if ( !TIMER_Done( NPCS.NPC, "parryTime" ) )
@@ -4629,16 +4639,18 @@ static qboolean Jedi_AttackDecide( int enemy_dist )
 
 	if ( NPCS.ucmd.buttons & BUTTON_ATTACK )
 	{//attacking
-		/*
-		if ( enemy_dist > 32 && NPCInfo->stats.aggression >= 4 )
+		
+		if ( enemy_dist > 32 /*&& NPCS.NPCInfo->stats.aggression >= 4*/ )
 		{//move forward if we're too far away and we're chasing him
-			ucmd.forwardmove = 127;
+			//ucmd.forwardmove = 127;
+			Jedi_Advance();
 		}
 		else if ( enemy_dist < 0 )
 		{//move back if we're too close
-			ucmd.forwardmove = -127;
+			//ucmd.forwardmove = -127;
+			Jedi_Retreat();
 		}
-		*/
+		
 		//FIXME: based on the type of parry/attack the enemy is doing and my skill,
 		//		choose an attack that is likely to get around the parry?
 		//		right now that's generic in the saber animation code, auto-picks
@@ -5496,14 +5508,13 @@ static void Jedi_Combat( void )
 	//See where enemy will be 300 ms from now
 	Jedi_SetEnemyInfo( enemy_dest, enemy_dir, &enemy_dist, enemy_movedir, &enemy_movespeed, 300 );
 
-	if (!(NPCS.NPC->enemy && NPC_IsAlive(NPCS.NPC->enemy))) return;
-
-	if (NPC_Jump( NPCS.NPC, enemy_dest ))
+	if (enemy_dist > 256)
 	{
-		return;
+		if (NPC_Jump( NPCS.NPC, enemy_dest ))
+		{
+			return;
+		}
 	}
-
-	if (!(NPCS.NPC->enemy && NPC_IsAlive(NPCS.NPC->enemy))) return;
 
 	if ( Jedi_Jumping( NPCS.NPC->enemy ) )
 	{//I'm in the middle of a jump, so just see if I should attack
@@ -5511,74 +5522,70 @@ static void Jedi_Combat( void )
 		return;
 	}
 
-	if (!(NPCS.NPC->enemy && NPC_IsAlive(NPCS.NPC->enemy))) return;
-
-	if ( !(NPCS.NPC->client->ps.fd.forcePowersActive&(1<<FP_GRIP)) || NPCS.NPC->client->ps.fd.forcePowerLevel[FP_GRIP] < FORCE_LEVEL_2 )
-	{//not gripping
-		//If we can't get straight at him
-		if ( !Jedi_ClearPathToSpot( enemy_dest, NPCS.NPC->enemy->s.number ) )
-		{//hunt him down
-			//Com_Printf( "No Clear Path\n" );
-			if ( (NPC_ClearLOS4( NPCS.NPC->enemy )||NPCS.NPCInfo->enemyLastSeenTime>level.time-500) && NPC_FaceEnemy( qtrue ) )//( NPCInfo->rank == RANK_CREWMAN || NPCInfo->rank > RANK_LT_JG ) &&
-			{
-				if ( Jedi_TryJump( NPCS.NPC->enemy ) )
-				{//FIXME: what about jumping to his enemyLastSeenLocation?
-					//trap->Print("JUMP!\n");
-					NPCS.NPC->longTermGoal = -1;
-					return;
-				}
-			}
-
-			//Check for evasion
-			if ( TIMER_Done( NPCS.NPC, "parryTime" ) )
-			{//finished parrying
-				if ( NPCS.NPC->client->ps.saberBlocked != BLOCKED_ATK_BOUNCE &&
-					NPCS.NPC->client->ps.saberBlocked != BLOCKED_PARRY_BROKEN )
-				{//wasn't blocked myself
-					NPCS.NPC->client->ps.saberBlocked = BLOCKED_NONE;
-				}
-			}
-
-			//
-			// UQ1: Screw that raven code, let's use waypointing to hunt them down...
-			//
-
-			NPCS.NPCInfo->goalEntity = NPCS.NPC->enemy;
-
-			if (NPC_FollowEnemyRoute())
-			{
-				//trap->Print("ROUTE!\n");
-
-				if ( enemy_dist < 384 && !Q_irand( 0, 10 ) && NPCS.NPCInfo->blockedSpeechDebounceTime < level.time && jediSpeechDebounceTime[NPCS.NPC->client->playerTeam] < level.time && !NPC_ClearLOS4( NPCS.NPC->enemy ) )
-				{
-					if (!NPC_IsJedi(NPCS.NPC) && !NPC_IsBountyHunter(NPCS.NPC))//NPC_IsStormtrooper(NPCS.NPC))
-						ST_Speech( NPCS.NPC, SPEECH_LOST, 0 );
-					else
-						G_AddVoiceEvent( NPCS.NPC, Q_irand( EV_JLOST1, EV_JLOST3 ), 10000 );
-
-					jediSpeechDebounceTime[NPCS.NPC->client->playerTeam] = NPCS.NPCInfo->blockedSpeechDebounceTime = level.time + 10000;
-				}
+	//If we can't get straight at him
+	if ( enemy_dist > 256 && !Jedi_ClearPathToSpot( enemy_dest, NPCS.NPC->enemy->s.number ) )
+	{//hunt him down
+		//Com_Printf( "No Clear Path\n" );
+		if ( (NPC_ClearLOS4( NPCS.NPC->enemy )||NPCS.NPCInfo->enemyLastSeenTime>level.time-500) && NPC_FaceEnemy( qtrue ) )//( NPCInfo->rank == RANK_CREWMAN || NPCInfo->rank > RANK_LT_JG ) &&
+		{
+			if ( Jedi_TryJump( NPCS.NPC->enemy ) )
+			{//FIXME: what about jumping to his enemyLastSeenLocation?
+				//trap->Print("JUMP!\n");
+				NPCS.NPC->longTermGoal = -1;
 				return;
 			}
-			else
+		}
+
+		//Check for evasion
+		if ( TIMER_Done( NPCS.NPC, "parryTime" ) )
+		{//finished parrying
+			if ( NPCS.NPC->client->ps.saberBlocked != BLOCKED_ATK_BOUNCE &&
+				NPCS.NPC->client->ps.saberBlocked != BLOCKED_PARRY_BROKEN )
+			{//wasn't blocked myself
+				NPCS.NPC->client->ps.saberBlocked = BLOCKED_NONE;
+			}
+		}
+
+		//
+		// UQ1: Screw that raven code, let's use waypointing to hunt them down...
+		//
+
+		NPCS.NPCInfo->goalEntity = NPCS.NPC->enemy;
+
+		if (NPC_FollowEnemyRoute())
+		{
+			//trap->Print("ROUTE!\n");
+
+			if ( enemy_dist < 384 && !Q_irand( 0, 10 ) && NPCS.NPCInfo->blockedSpeechDebounceTime < level.time && jediSpeechDebounceTime[NPCS.NPC->client->playerTeam] < level.time && !NPC_ClearLOS4( NPCS.NPC->enemy ) )
 			{
-				//trap->Print("FAILED ROUTE!\n");
+				if (!NPC_IsJedi(NPCS.NPC) && !NPC_IsBountyHunter(NPCS.NPC))
+					ST_Speech( NPCS.NPC, SPEECH_LOST, 0 );
+				else
+					G_AddVoiceEvent( NPCS.NPC, Q_irand( EV_JLOST1, EV_JLOST3 ), 10000 );
 
-				NPC_ClearPathData(NPCS.NPC);
+				jediSpeechDebounceTime[NPCS.NPC->client->playerTeam] = NPCS.NPCInfo->blockedSpeechDebounceTime = level.time + 10000;
+			}
 
-				if (!Jedi_Hunt()) 
-					Jedi_Track();
+			return;
+		}
+		else
+		{
+			//trap->Print("FAILED ROUTE!\n");
+
+			NPC_ClearPathData(NPCS.NPC);
+
+			if (Jedi_Track() || Jedi_Hunt()) 
+			{
+				return;
 			}
 		}
 	}
-	//else, we can see him or we can't track him at all
 
-	if (!(NPCS.NPC->enemy && NPC_IsAlive(NPCS.NPC->enemy))) return;
+
+	//else, we can see him or we can't track him at all
 
 	//every few seconds, decide if we should we advance or retreat?
 	Jedi_CombatTimersUpdate( enemy_dist );
-
-	if (!(NPCS.NPC->enemy && NPC_IsAlive(NPCS.NPC->enemy))) return;
 
 	//We call this even if lost enemy to keep him moving and to update the taunting behavior
 	//maintain a distance from enemy appropriate for our aggression level
@@ -5593,10 +5600,9 @@ static void Jedi_Combat( void )
 		{
 			VectorCopy( NPCS.NPC->enemy->r.currentOrigin, NPCS.NPCInfo->enemyLastSeenLocation );
 		}
+
 		NPCS.NPCInfo->enemyLastSeenTime = level.time;
 	}
-
-	if (!(NPCS.NPC->enemy && NPC_IsAlive(NPCS.NPC->enemy))) return;
 
 	//Turn to face the enemy
 	if ( TIMER_Done( NPCS.NPC, "noturn" ) )
@@ -5604,11 +5610,7 @@ static void Jedi_Combat( void )
 		Jedi_FaceEnemy( qtrue );
 	}
 
-	if (!(NPCS.NPC->enemy && NPC_IsAlive(NPCS.NPC->enemy))) return;
-
 	NPC_UpdateAngles( qtrue, qtrue );
-
-	if (!(NPCS.NPC->enemy && NPC_IsAlive(NPCS.NPC->enemy))) return;
 
 	//Check for evasion
 	if ( TIMER_Done( NPCS.NPC, "parryTime" ) )
@@ -5620,35 +5622,92 @@ static void Jedi_Combat( void )
 		}
 	}
 
-	if (!(NPCS.NPC->enemy && NPC_IsAlive(NPCS.NPC->enemy))) return;
-
-	/*
-	if ( NPC->enemy->s.weapon == WP_SABER )
-	{
-		Jedi_EvasionSaber( enemy_movedir, enemy_dist, enemy_dir );
-	}
-	else
-	{//do we need to do any evasion for other kinds of enemies?
-		// UQ1: Well, yes we sure do!!!! FIXME!!!
-	}
-	*/
-
 	// UQ1: Replaced by a more intensive check... This is used by most NPCs now...
 	NPC_CheckEvasion();
-
-	if (!(NPCS.NPC->enemy && NPC_IsAlive(NPCS.NPC->enemy))) return;
 
 	//apply strafing/walking timers, etc.
 	Jedi_TimersApply();
 
-	if (!(NPCS.NPC->enemy && NPC_IsAlive(NPCS.NPC->enemy))) return;
-
-	if ( !NPCS.NPC->client->ps.saberInFlight && (!(NPCS.NPC->client->ps.fd.forcePowersActive&(1<<FP_GRIP))||NPCS.NPC->client->ps.fd.forcePowerLevel[FP_GRIP] < FORCE_LEVEL_2) )
+	if ( NPCS.NPC->client->ps.weapon != WP_SABER )
+	{
+		Boba_FireDecide();
+	}
+	else if ( !NPCS.NPC->client->ps.saberInFlight )
 	{//not throwing saber or using force grip
-		//see if we can attack
-		if ( !Jedi_AttackDecide( enemy_dist ) )
-		{//we're not attacking, decide what else to do
+		qboolean attacked = qfalse;
 
+		if ( NPCS.NPC->enemy 
+			&& NPC_IsAlive(NPCS.NPC->enemy)
+			&& Distance(NPCS.NPC->enemy->r.currentOrigin, NPCS.NPC->r.currentOrigin) <= 64 
+			&& (NPCS.NPC->client->ps.weapon == WP_SABER || NPCS.NPC->client->NPC_class == CLASS_BOBAFETT)
+			&& !(NPCS.NPC->client->NPC_class == CLASS_BOBAFETT && (!TIMER_Done( NPCS.NPC, "nextAttackDelay" ) || !TIMER_Done( NPCS.NPC, "flameTime" )))
+			&& NPCS.NPC->next_kick_time <= level.time
+			&& irand(0,100) > 75)
+		{// Close range - switch to melee... KICK!
+			//G_Printf("Debug: NPC kicking...\n");
+			NPCS.NPCInfo->scriptFlags &= ~SCF_ALT_FIRE;
+			NPC_SetAnim( NPCS.NPC, SETANIM_BOTH, BOTH_A7_KICK_F, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD ); // UQ1: Better anim?????
+			WP_FireMelee( NPCS.NPC, qfalse );
+
+			if (!NPC_IsJedi(NPCS.NPC) && !NPC_IsBountyHunter(NPCS.NPC))
+				ST_Speech( NPCS.NPC, SPEECH_OUTFLANK, 0 );
+			else
+				G_AddVoiceEvent( NPCS.NPC, Q_irand( EV_TAUNT1, EV_TAUNT3 ), 10000 );
+
+			NPCS.NPC->next_rifle_butt_time = level.time + 10000;
+			NPCS.NPC->next_kick_time = level.time + 15000;
+
+			if (NPCS.NPC->enemy && NPC_IsAlive(NPCS.NPC->enemy) && irand(0, 100) <= 25)
+			{// 25% of the time, knock them over...
+				int desiredAnim = 0;
+
+				vec3_t	smackDir;
+				VectorSubtract(NPCS.NPC->enemy->r.currentOrigin, NPCS.NPC->r.currentOrigin, smackDir);
+				smackDir[2] += 30;
+				VectorNormalize(smackDir);
+
+				//hurt them
+				G_Damage(NPCS.NPC->enemy, NPCS.NPC, NPCS.NPC, smackDir, NPCS.NPC->r.currentOrigin, (g_npcspskill.integer + 1)*Q_irand(5, 10), DAMAGE_NO_ARMOR | DAMAGE_NO_KNOCKBACK, MOD_CRUSH);
+
+				//throw them
+				G_Throw(NPCS.NPC->enemy, smackDir, 64);
+
+				switch (irand(0, 16))
+				{
+				case 1: desiredAnim = BOTH_DEATH12; break;
+				case 2: desiredAnim = BOTH_DEATH14; break;
+				case 3: desiredAnim = BOTH_DEATH16; break;
+				case 4: desiredAnim = BOTH_DEATH22; break;
+				case 5: desiredAnim = BOTH_DEATH23; break;
+				case 6: desiredAnim = BOTH_DEATH24; break;
+				case 7: desiredAnim = BOTH_DEATH25; break;
+				case 8: desiredAnim = BOTH_DEATH4; break;
+				case 9: desiredAnim = BOTH_DEATH5; break;
+				case 10: desiredAnim = BOTH_DEATH8; break;
+				case 11: desiredAnim = BOTH_DEATHBACKWARD1; break;
+				case 12: desiredAnim = BOTH_DEATHBACKWARD2; break;
+				case 13: desiredAnim = BOTH_DEATHFORWARD3; break;
+				case 14: desiredAnim = BOTH_KNOCKDOWN1; break;
+				case 15: desiredAnim = BOTH_KNOCKDOWN2; break;
+				case 16: desiredAnim = BOTH_KNOCKDOWN3; break;
+				default: desiredAnim = BOTH_KNOCKDOWN1; break;
+				}
+
+				//make them backflip
+				NPC_SetAnim(NPCS.NPC->enemy, SETANIM_BOTH, desiredAnim, SETANIM_FLAG_OVERRIDE | SETANIM_FLAG_HOLD); // this will be the bad anim. not sure what to replace it with
+			}
+
+			attacked = qtrue;
+		}
+
+		if (!attacked)
+		{
+			attacked = Jedi_AttackDecide( enemy_dist );
+		}
+
+		//see if we can attack
+		if ( !attacked )
+		{//we're not attacking, decide what else to do
 			Jedi_CombatIdle( enemy_dist );
 			//FIXME: lower aggression when actually strike offensively?  Or just when do damage?
 			//Jedi_Advance();
@@ -5659,102 +5718,12 @@ static void Jedi_Combat( void )
 			TIMER_Set( NPCS.NPC, "taunting", -level.time );
 		}
 	}
-	else
-	{
-	}
-
-	if (!(NPCS.NPC->enemy && NPC_IsAlive(NPCS.NPC->enemy))) return;
-
-	if ( /*!NPC_IsJedi(NPCS.NPC)*/ NPCS.NPC->client->ps.weapon != WP_SABER )
-	{
-		Boba_FireDecide();
-	}
-
-	if (!(NPCS.NPC->enemy && NPC_IsAlive(NPCS.NPC->enemy))) return;
-
-	if ( NPCS.NPC->enemy 
-		&& NPC_IsAlive(NPCS.NPC->enemy)
-		&& Distance(NPCS.NPC->enemy->r.currentOrigin, NPCS.NPC->r.currentOrigin) <= 64 
-		&& (/*NPC_IsJedi(NPCS.NPC)*/NPCS.NPC->client->ps.weapon == WP_SABER || NPCS.NPC->client->NPC_class == CLASS_BOBAFETT)
-		&& !(NPCS.NPC->client->NPC_class == CLASS_BOBAFETT && (!TIMER_Done( NPCS.NPC, "nextAttackDelay" ) || !TIMER_Done( NPCS.NPC, "flameTime" )))
-		&& NPCS.NPC->next_kick_time <= level.time )
-	{// Close range - switch to melee... KICK!
-		//G_Printf("Debug: NPC kicking...\n");
-		NPCS.NPCInfo->scriptFlags &= ~SCF_ALT_FIRE;
-		NPC_SetAnim( NPCS.NPC, SETANIM_BOTH, BOTH_A7_KICK_F, SETANIM_FLAG_OVERRIDE|SETANIM_FLAG_HOLD ); // UQ1: Better anim?????
-		WP_FireMelee( NPCS.NPC, qfalse );
-		
-		if (!NPC_IsJedi(NPCS.NPC) && !NPC_IsBountyHunter(NPCS.NPC))//NPC_IsStormtrooper(NPCS.NPC))
-			ST_Speech( NPCS.NPC, SPEECH_OUTFLANK, 0 );
-		else
-			G_AddVoiceEvent( NPCS.NPC, Q_irand( EV_TAUNT1, EV_TAUNT3 ), 10000 );
-
-		NPCS.NPC->next_rifle_butt_time = level.time + 1000;
-		NPCS.NPC->next_kick_time = level.time + 15000;
-
-		if (NPCS.NPC->enemy && NPC_IsAlive(NPCS.NPC->enemy) && irand(0, 100) <= 25)
-		{// 25% of the time, knock them over...
-			int desiredAnim = 0;
-
-			vec3_t	smackDir;
-			VectorSubtract(NPCS.NPC->enemy->r.currentOrigin, NPCS.NPC->r.currentOrigin, smackDir);
-			smackDir[2] += 30;
-			VectorNormalize(smackDir);
-
-			//hurt them
-			G_Damage(NPCS.NPC->enemy, NPCS.NPC, NPCS.NPC, smackDir, NPCS.NPC->r.currentOrigin, (g_npcspskill.integer + 1)*Q_irand(5, 10), DAMAGE_NO_ARMOR | DAMAGE_NO_KNOCKBACK, MOD_CRUSH);
-
-			//throw them
-			G_Throw(NPCS.NPC->enemy, smackDir, 64);
-
-			switch (irand(0, 16))
-			{
-			case 1: desiredAnim = BOTH_DEATH12; break;
-			case 2: desiredAnim = BOTH_DEATH14; break;
-			case 3: desiredAnim = BOTH_DEATH16; break;
-			case 4: desiredAnim = BOTH_DEATH22; break;
-			case 5: desiredAnim = BOTH_DEATH23; break;
-			case 6: desiredAnim = BOTH_DEATH24; break;
-			case 7: desiredAnim = BOTH_DEATH25; break;
-			case 8: desiredAnim = BOTH_DEATH4; break;
-			case 9: desiredAnim = BOTH_DEATH5; break;
-			case 10: desiredAnim = BOTH_DEATH8; break;
-			case 11: desiredAnim = BOTH_DEATHBACKWARD1; break;
-			case 12: desiredAnim = BOTH_DEATHBACKWARD2; break;
-			case 13: desiredAnim = BOTH_DEATHFORWARD3; break;
-			case 14: desiredAnim = BOTH_KNOCKDOWN1; break;
-			case 15: desiredAnim = BOTH_KNOCKDOWN2; break;
-			case 16: desiredAnim = BOTH_KNOCKDOWN3; break;
-			default: desiredAnim = BOTH_KNOCKDOWN1; break;
-			}
-
-			//make them backflip
-			NPC_SetAnim(NPCS.NPC->enemy, SETANIM_BOTH, desiredAnim, SETANIM_FLAG_OVERRIDE | SETANIM_FLAG_HOLD); // this will be the bad anim. not sure what to replace it with
-		}
-
-		//return;
-	}
-	else if (NPCS.NPC->enemy
-		&& NPC_IsAlive(NPCS.NPC->enemy)
-		&& Distance(NPCS.NPC->enemy->r.currentOrigin, NPCS.NPC->r.currentOrigin) <= 64 
-		&& (/*NPC_IsJedi(NPCS.NPC)*/NPCS.NPC->client->ps.weapon == WP_SABER || NPCS.NPC->client->NPC_class == CLASS_BOBAFETT)
-		&& !(NPCS.NPC->client->NPC_class == CLASS_BOBAFETT && (!TIMER_Done( NPCS.NPC, "nextAttackDelay" ) || !TIMER_Done( NPCS.NPC, "flameTime" )))
-		&& NPCS.NPC->next_rifle_butt_time <= level.time)
-	{// Jedi still kicking.... Wait for anim to play out...
-		//return;
-	}
-
-	if (!(NPCS.NPC->enemy && NPC_IsAlive(NPCS.NPC->enemy))) return;
 
 	//Check for certain enemy special moves
 	Jedi_CheckEnemyMovement( enemy_dist );
 
-	if (!(NPCS.NPC->enemy && NPC_IsAlive(NPCS.NPC->enemy))) return;
-
 	//Make sure that we don't jump off ledges over long drops
 	Jedi_CheckJumps();
-
-	if (!(NPCS.NPC->enemy && NPC_IsAlive(NPCS.NPC->enemy))) return;
 
 	//Just make sure we don't strafe into walls or off cliffs
 	if ( !NPC_MoveDirClear( NPCS.ucmd.forwardmove, NPCS.ucmd.rightmove, qtrue ) )
@@ -7198,60 +7167,13 @@ qboolean Jedi_CheckForce ( void )
 		NPCS.NPC->client->ps.fd.forcePowerLevel[FP_SABERTHROW] = 3;
 	}
 
-	/*if ( NPCS.NPC->client->ps.fd.forcePowersActive&(1<<FP_GRIP) )
-	{//when gripping, don't move
-		return qtrue;
-	}
-
-	if ( NPCS.NPC->client->ps.fd.forcePowersActive&(1<<FP_DRAIN) )
-	{//when draining, don't move
-		return qtrue;
-	}
-
-	if ( NPCS.NPC->client->ps.fd.forcePowersActive&(1<<FP_HEAL) )
-	{//lvl 1 healing, don't move
-		return qtrue;
-	}
-
-	if ( NPCS.NPC->client->ps.fd.forcePowersActive&(1<<FP_LIGHTNING) )
-	{// don't move
-		return qtrue;
-	}*/
-
-#if 0
-	if (NPC_IsJedi(NPCS.NPC))
-	{
-		//trap->Print("%s is checking force usage.\n", NPCS.NPC->NPC_type);
-		if (NPCS.NPC->client->ps.fd.forcePowersKnown&(1<<FP_HEAL) != 0)
-			trap->Print("%s knows FP_HEAL.\n", NPCS.NPC->NPC_type);
-		if (NPCS.NPC->client->ps.fd.forcePowersKnown&(1<<FP_DRAIN) != 0)
-			trap->Print("%s knows FP_DRAIN.\n", NPCS.NPC->NPC_type);
-		if (NPCS.NPC->client->ps.fd.forcePowersKnown&(1<<FP_GRIP) != 0)
-			trap->Print("%s knows FP_GRIP.\n", NPCS.NPC->NPC_type);
-		if (NPCS.NPC->client->ps.fd.forcePowersKnown&(1<<FP_LIGHTNING) != 0)
-			trap->Print("%s knows FP_LIGHTNING.\n", NPCS.NPC->NPC_type);
-		if (NPCS.NPC->client->ps.fd.forcePowersKnown&(1<<FP_PROTECT) != 0)
-			trap->Print("%s knows FP_PROTECT.\n", NPCS.NPC->NPC_type);
-		if (NPCS.NPC->client->ps.fd.forcePowersKnown&(1<<FP_ABSORB) != 0)
-			trap->Print("%s knows FP_ABSORB.\n", NPCS.NPC->NPC_type);
-		if (NPCS.NPC->client->ps.fd.forcePowersKnown&(1<<FP_TELEPATHY) != 0)
-			trap->Print("%s knows FP_TELEPATHY.\n", NPCS.NPC->NPC_type);
-		if (NPCS.NPC->client->ps.fd.forcePowersKnown&(1<<FP_RAGE) != 0)
-			trap->Print("%s knows FP_RAGE.\n", NPCS.NPC->NPC_type);
-		if (NPCS.NPC->client->ps.fd.forcePowersKnown&(1<<FP_SPEED) != 0)
-			trap->Print("%s knows FP_SPEED.\n", NPCS.NPC->NPC_type);
-	}
-#endif //0
-
 	// UQ1: Special heals/protects/absorbs - mainly for padawans...
 	if ( TIMER_Done( NPCS.NPC, "teamheal" )
 		&& NPCS.NPC->padawan
 		&& NPC_IsAlive(NPCS.NPC->padawan)
+		&& NPCS.NPC->client->ps.fd.forcePowerLevel[FP_TEAM_HEAL] > 0
 		&& Distance(NPCS.NPC->padawan->r.currentOrigin, NPCS.NPC->r.currentOrigin) < 256
-		&& (NPCS.NPC->client->ps.fd.forcePowersKnown&(1<<FP_TEAM_HEAL)) != 0
-		&& (NPCS.NPC->client->ps.fd.forcePowersActive&(1<<FP_TEAM_HEAL)) == 0
-		&& NPCS.NPC->padawan->health < NPCS.NPC->padawan->maxHealth * 0.5
-		&& NPCS.NPC->padawan->health > 0
+		&& NPC_NeedsHeal( NPCS.NPC->padawan )
 		&& Q_irand( 0, 20 ) < 2)
 	{// Team heal our padawan???
 		NPC_FacePosition(NPCS.NPC->padawan->r.currentOrigin, qtrue);
@@ -7262,11 +7184,9 @@ qboolean Jedi_CheckForce ( void )
 	else if ( TIMER_Done( NPCS.NPC, "teamheal" )
 		&& NPCS.NPC->parent
 		&& NPC_IsAlive(NPCS.NPC->parent)
+		&& NPCS.NPC->client->ps.fd.forcePowerLevel[FP_TEAM_HEAL] > 0
 		&& Distance(NPCS.NPC->parent->r.currentOrigin, NPCS.NPC->r.currentOrigin) < 256
-		&& (NPCS.NPC->client->ps.fd.forcePowersKnown&(1<<FP_TEAM_HEAL)) != 0
-		&& (NPCS.NPC->client->ps.fd.forcePowersActive&(1<<FP_TEAM_HEAL)) == 0
-		&& NPCS.NPC->parent->health < NPCS.NPC->parent->maxHealth * 0.5
-		&& NPCS.NPC->parent->health > 0 
+		&& NPC_NeedsHeal( NPCS.NPC->parent )
 		&& Q_irand( 0, 20 ) < 2)
 	{// Team heal our jedi???
 		NPC_FacePosition(NPCS.NPC->parent->r.currentOrigin, qtrue);
@@ -7275,10 +7195,9 @@ qboolean Jedi_CheckForce ( void )
 		return qtrue;
 	}
 	else if ( TIMER_Done( NPCS.NPC, "heal" )
-		&& (NPCS.NPC->client->ps.fd.forcePowersKnown&(1<<FP_HEAL)) != 0
-		&& (NPCS.NPC->client->ps.fd.forcePowersActive&(1<<FP_HEAL)) == 0
+		&& NPCS.NPC->client->ps.fd.forcePowerLevel[FP_HEAL] > 0
 		&& (NPCS.NPC->s.NPC_class == CLASS_PADAWAN || Q_irand( 0, 5 ) <= 2)
-		&& NPCS.NPC->health < NPCS.NPC->maxHealth * 0.5
+		&& NPC_NeedsHeal( NPCS.NPC )
 		&& Q_irand( 0, 20 ) < 2)
 	{
 		//trap->Print("%s is using heal.\n", NPCS.NPC->NPC_type);
@@ -7287,10 +7206,9 @@ qboolean Jedi_CheckForce ( void )
 		return qtrue;
 	}
 	else if ( TIMER_Done( NPCS.NPC, "drain" )
-		&& (NPCS.NPC->client->ps.fd.forcePowersKnown&(1<<FP_DRAIN)) != 0
-		&& (NPCS.NPC->client->ps.fd.forcePowersActive&(1<<FP_DRAIN)) == 0
+		&& NPCS.NPC->client->ps.fd.forcePowerLevel[FP_DRAIN] > 0
 		&& NPC_Jedi_EnemyInForceRange()
-		&& NPCS.NPC->health < NPCS.NPC->maxHealth * 0.5
+		&& NPC_NeedsHeal( NPCS.NPC )
 		&& Q_irand( 0, 20 ) < 2)
 	{
 		//trap->Print("%s is using drain.\n", NPCS.NPC->NPC_type);
@@ -7300,8 +7218,7 @@ qboolean Jedi_CheckForce ( void )
 		return qtrue;
 	}
 	else if ( TIMER_Done( NPCS.NPC, "grip" )
-		&& (NPCS.NPC->client->ps.fd.forcePowersKnown&(1<<FP_GRIP)) != 0
-		&& (NPCS.NPC->client->ps.fd.forcePowersActive&(1<<FP_GRIP)) == 0
+		&& NPCS.NPC->client->ps.fd.forcePowerLevel[FP_GRIP] > 0
 		&& NPC_Jedi_EnemyInForceRange()
 		&& Q_irand( 0, 20 ) < 2 )
 	{
@@ -7312,8 +7229,7 @@ qboolean Jedi_CheckForce ( void )
 		return qtrue;
 	}
 	else if ( TIMER_Done( NPCS.NPC, "lightning" )
-		&& (NPCS.NPC->client->ps.fd.forcePowersKnown&(1<<FP_LIGHTNING)) != 0
-		&& (NPCS.NPC->client->ps.fd.forcePowersActive&(1<<FP_LIGHTNING)) == 0
+		&& NPCS.NPC->client->ps.fd.forcePowerLevel[FP_LIGHTNING] > 0
 		&& NPC_Jedi_EnemyInForceRange()
 		&& Q_irand( 0, 20 ) < 2 )
 	{
@@ -7404,7 +7320,7 @@ qboolean Jedi_CheckForce ( void )
 		return qtrue;
 	}
 	else if (NPCS.NPC->client->ps.weapon == WP_SABER //using saber
-		&& TIMER_Done( NPCS.NPC, "saberthrow" )
+		//&& TIMER_Done( NPCS.NPC, "saberthrow" )
 		&& (NPCS.NPC->client->ps.fd.forcePowersKnown&(1<<FP_SABERTHROW)) != 0
 		&& !NPC_Jedi_EnemyInForceRange()
 		&& Q_irand( 0, 20 ) < 2 )

@@ -679,7 +679,7 @@ Include velocity in case I get around to doing doppler...
 ==================
 */
 void S_AddLoopingSound( int entityNum, const vec3_t origin, const vec3_t velocity, sfxHandle_t sfxHandle ) {
-	if (sfxHandle >= MAX_SFX) return;
+	if (sfxHandle >= MAX_SFX || sfxHandle < 0) return;
 	if (s_knownSfx[ sfxHandle ].bassSampleID < 0) return;
 	
 	if (entityNum >= 0 /*&& (cl.entityBaselines[entityNum].eType == ET_NPC || cl.entityBaselines[entityNum].eType == ET_PLAYER)*/)

@@ -270,9 +270,13 @@ void CG_S_UpdateLoopingSounds(int entityNum)
 	{
 		cSound = &cent->loopingSound[i];
 
-		//trap->S_AddLoopingSound(entityNum, cSound->origin, cSound->velocity, cSound->sfx);
-		//I guess just keep using lerpOrigin for now,
-		trap->S_AddLoopingSound(entityNum, lerpOrg, cSound->velocity, cSound->sfx);
+		if (cSound)
+		{
+			//trap->S_AddLoopingSound(entityNum, cSound->origin, cSound->velocity, cSound->sfx);
+			//I guess just keep using lerpOrigin for now,
+			trap->S_AddLoopingSound(entityNum, lerpOrg, cSound->velocity, cSound->sfx);
+		}
+
 		i++;
 	}
 }

@@ -182,144 +182,25 @@ void AddTeamScore(vec3_t origin, int team, int score) {
 extern qboolean NPC_IsAlive ( gentity_t *NPC );
 extern qboolean NPC_IsCivilian(gentity_t *NPC);
 extern qboolean NPC_IsVendor(gentity_t *NPC);
+extern qboolean NPC_IsAnimalEnemyFaction ( gentity_t *self );
 
 /*
 ==============
 OnSameTeam
 ==============
 */
-#define __TEST_FOR_GRENADE_DAMAGE__
-#ifdef __TEST_FOR_GRENADE_DAMAGE__
+
 qboolean OnSameTeam(gentity_t *ent1, gentity_t *ent2) {
 	if (!ent1->client || !ent2->client) {
 		return qfalse;
 	}
 
-	if (level.gametype == GT_POWERDUEL)
-	{
-		if (ent1->client->sess.duelTeam == ent2->client->sess.duelTeam)
-		{
-			return qtrue;
-		}
-
-		return qfalse;
-	}
-
-	if (level.gametype < GT_TEAM) {
-		return qfalse;
-	}
-
-	if (ent1->s.eType == ET_NPC &&
-		ent1->s.NPC_class == CLASS_VEHICLE /*&&
-										   ent1->client &&
-										   ent1->client->sess.sessionTeam != FACTION_FREE &&
-										   ent2->client &&
-										   ent1->client->sess.sessionTeam == ent2->client->sess.sessionTeam*/)
-	{
-		return qtrue;
-	}
-	if (ent2->s.eType == ET_NPC &&
-		ent2->s.NPC_class == CLASS_VEHICLE /*&&
-										   ent2->client &&
-										   ent2->client->sess.sessionTeam != FACTION_FREE &&
-										   ent1->client &&
-										   ent2->client->sess.sessionTeam == ent1->client->sess.sessionTeam*/)
-	{
-		return qtrue;
-	}
-
-	if (ent1->s.eType == ET_NPC &&
-		ent1->client &&
-		ent1->client->NPC_class == CLASS_VEHICLE)
-	{
-		return qtrue;
-	}
-
-	if (ent2->s.eType == ET_NPC &&
-		ent2->client &&
-		ent2->client->NPC_class == CLASS_VEHICLE)
-	{
-		return qtrue;
-	}
-
-	if (ent1->s.eType == ET_NPC &&
-		ent1->m_pVehicle)
-	{
-		return qtrue;
-	}
-
-	if (ent2->s.eType == ET_NPC &&
-		ent2->m_pVehicle)
-	{
-		return qtrue;
-	}
-
-	if (ent1->client->sess.sessionTeam == FACTION_FREE &&
-		ent2->client->sess.sessionTeam == FACTION_FREE &&
-		ent1->s.eType == ET_NPC &&
-		ent2->s.eType == ET_NPC)
-	{ //NPCs don't do normal team rules
-		return qfalse;
-	}
-
-	if (g_gametype.integer < GT_TEAM)
-	{
-		if (ent1->s.eType == ET_NPC && ent2->s.eType == ET_PLAYER)
-		{
-			return qfalse;
-		}
-		else if (ent1->s.eType == ET_PLAYER && ent2->s.eType == ET_NPC)
-		{
-			return qfalse;
-		}
-	}
-
-	if (ent1->client->sess.sessionTeam == ent2->client->sess.sessionTeam) {
-		return qtrue;
-	}
-
-	return qfalse;
-}
-#else
-qboolean OnSameTeam( gentity_t *ent1, gentity_t *ent2 ) {
-	if ( !ent1 || !ent2 || !ent1->client || !ent2->client ) {
-		return qtrue;
-	}
-
-	if ( ent1->client->sess.sessionTeam == FACTION_SPECTATOR 
-		|| ent2->client->sess.sessionTeam == FACTION_SPECTATOR )
-	{
-		return qtrue;
-	}
-
-	if ( ent1->client->tempSpectate >= level.time
-		|| ent2->client->tempSpectate >= level.time)
-	{
-		return qtrue;
-	}
-
-	if (ent1->client->ps.pm_type == PM_SPECTATOR || ent2->client->ps.pm_type == PM_SPECTATOR) 
-	{
-		return qtrue;
-	}
-
-	if (!NPC_IsAlive(ent1) || !NPC_IsAlive(ent2))
-	{
-		return qtrue;
-	}
-
 	if (NPC_IsCivilian(ent1) || NPC_IsCivilian(ent2))
-	{// These guys have no enemies...
+	{
 		return qtrue;
 	}
 
 	if (NPC_IsVendor(ent1) || NPC_IsVendor(ent2))
-	{// These guys have no enemies...
-		return qtrue;
-	}
-
-	if ( (ent1->s.eType == ET_NPC || ent1->s.eType == ET_NPC)
-		&& ent1->client->playerTeam == ent2->client->playerTeam )
 	{
 		return qtrue;
 	}
@@ -333,84 +214,68 @@ qboolean OnSameTeam( gentity_t *ent1, gentity_t *ent2 ) {
 
 		return qfalse;
 	}
-	
-	if (ent1->s.eType == ET_NPC &&
-		ent1->s.NPC_class == CLASS_VEHICLE)
+
+	if (ent1->s.eType == ET_NPC && ent1->s.NPC_class == CLASS_VEHICLE )
 	{
 		return qtrue;
 	}
 
-	if (ent2->s.eType == ET_NPC &&
-		ent2->s.NPC_class == CLASS_VEHICLE)
+	if (ent2->s.eType == ET_NPC && ent2->s.NPC_class == CLASS_VEHICLE )
 	{
 		return qtrue;
 	}
 
-	if (ent1->s.eType == ET_NPC &&
-		ent1->client &&
-		ent1->client->NPC_class == CLASS_VEHICLE)
+	if (ent1->s.eType == ET_NPC && ent1->client && ent1->client->NPC_class == CLASS_VEHICLE)
 	{
 		return qtrue;
 	}
 
-	if (ent2->s.eType == ET_NPC &&
-		ent2->client &&
-		ent2->client->NPC_class == CLASS_VEHICLE)
-	{
-		return qtrue;
-	}
-	
-	if (ent1->s.eType == ET_NPC &&
-		ent1->m_pVehicle)
+	if (ent2->s.eType == ET_NPC && ent2->client && ent2->client->NPC_class == CLASS_VEHICLE)
 	{
 		return qtrue;
 	}
 
-	if (ent2->s.eType == ET_NPC &&
-		ent2->m_pVehicle)
+	if (ent1->s.eType == ET_NPC && ent1->m_pVehicle)
 	{
 		return qtrue;
 	}
 
-	if (ent1->client->sess.sessionTeam == FACTION_FREE 
-		&& ent2->client->sess.sessionTeam == FACTION_FREE 
-		&& ent1->s.eType == ET_NPC 
-		&& ent2->s.eType == ET_NPC)
+	if (ent2->s.eType == ET_NPC && ent2->m_pVehicle)
+	{
+		return qtrue;
+	}
+
+	if (NPC_IsAnimalEnemyFaction(ent1) && !NPC_IsAnimalEnemyFaction(ent2))
+	{
+		return qfalse;
+	}
+
+	if (NPC_IsAnimalEnemyFaction(ent2) && !NPC_IsAnimalEnemyFaction(ent1))
+	{
+		return qfalse;
+	}
+
+	if (ent1->s.eType == ET_NPC
+		&& ent2->s.eType == ET_NPC
+		&& ent1->client->sess.sessionTeam == FACTION_FREE
+		&& ent2->client->sess.sessionTeam == FACTION_FREE)
 	{ //NPCs don't do normal team rules
 		return qfalse;
 	}
 
-	if ( g_gametype.integer >= GT_TEAM )
+	if (level.gametype < GT_TEAM) 
 	{
-		if ( ent1->client->sess.sessionTeam == ent2->client->sess.sessionTeam )
-		{
-			return qtrue;
-		}
+		return qfalse;
 	}
-	else
+
+	if (ent1->client->sess.sessionTeam == ent2->client->sess.sessionTeam) 
 	{
-		if ( ((ent1->NPC && ent1->client) || (ent2->NPC && ent2->client)) 
-			&& ent1->client->enemyTeam == ent2->client->playerTeam)
-		{
-			return qfalse;
-		}
-
-		if ( ((ent1->NPC && ent1->client) || (ent2->NPC && ent2->client)) 
-			&& ent2->client->enemyTeam != ent1->client->enemyTeam)
-		{
-			return qfalse;
-		}
-
-		if ( ((ent1->NPC && ent1->client) || (ent2->NPC && ent2->client)) 
-			&& ent1->client->playerTeam != ent2->client->playerTeam)
-		{
-			return qfalse;
-		}
+		return qtrue;
 	}
 
 	return qfalse;
 }
-#endif //__TEST_FOR_GRENADE_DAMAGE__
+
 static char ctfFlagStatusRemap[] = { '0', '1', '*', '*', '2' };
 
 void Team_SetFlagStatus( int team, flagStatus_t status ) {

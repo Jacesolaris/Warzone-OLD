@@ -106,7 +106,7 @@ qboolean NPC_IsAlive ( gentity_t *NPC )
 		return qfalse;
 	}
 
-	if (NPCS.NPC && NPCS.NPC->client && NPC_EntityIsBreakable(NPCS.NPC, NPC))
+	if (NPCS.NPC && NPCS.NPC->client && NPC_EntityIsBreakable(NPCS.NPC, NPC) && NPC->health > 0)
 	{
 		return qtrue;
 	}
@@ -129,6 +129,51 @@ qboolean NPC_IsAlive ( gentity_t *NPC )
 	}
 
 	return qtrue;
+}
+
+qboolean NPC_NeedsHeal ( gentity_t *NPC )
+{
+	if (!NPC)
+	{
+		return qfalse;
+	}
+
+	if (NPCS.NPC && NPC_EntityIsBreakable(NPCS.NPC, NPC))
+	{
+		return qfalse;
+	}
+
+	if ( NPC->s.eType == ET_NPC || NPC->s.eType == ET_PLAYER )
+	{
+		if (NPC->client && NPC->client->ps.pm_type == PM_SPECTATOR)
+		{
+			return qfalse;
+		}
+
+		if (NPC->client)
+		{
+			int health = NPC->client->ps.stats[STAT_HEALTH];
+			int maxhealth = NPC->client->ps.stats[STAT_MAX_HEALTH];
+
+			if ((float)health / (float)maxhealth < 0.4)
+			{
+				return qtrue;
+			}
+		}
+		else if (NPC->s.eType != ET_PLAYER && NPC->health <= 0 )
+		{
+			if ((float)NPC->health / (float)NPC->maxHealth < 0.4)
+			{
+				return qtrue;
+			}
+		}
+	}
+	else
+	{
+		return qfalse;
+	}
+
+	return qfalse;
 }
 
 void CorpsePhysics( gentity_t *self )
@@ -4188,7 +4233,7 @@ void NPC_Think ( gentity_t *self)//, int msec )
 			NPC_DoPadawanStuff(); // check any padawan stuff we might need to do...
 
 			if (self->enemy 
-				&& (!NPC_ValidEnemy(self->enemy) || (!NPC_EntityIsBreakable(self, self->enemy) && Distance(self->r.currentOrigin, self->enemy->r.currentOrigin) > 2048.0)))
+				&& (!NPC_ValidEnemy(self->enemy) || (!NPC_EntityIsBreakable(self, self->enemy) && Distance(self->r.currentOrigin, self->enemy->r.currentOrigin) > 3192.0)))
 			{// If NPC Bot's enemy is invalid (eg: a dead NPC) or too far away, clear it!
 				G_ClearEnemy(self);
 			}

@@ -270,7 +270,6 @@ extern qboolean NPC_SetCombatPoint( int combatPointID );
 extern qboolean NPC_ValidEnemy( gentity_t *ent );
 extern qboolean NPC_ValidEnemy2( gentity_t *self, gentity_t *ent );
 extern qboolean NPC_CheckEnemyExt( qboolean checkAlerts ); //checkAlerts = qfalse
-extern qboolean NPC_FindPlayer( void );
 extern qboolean NPC_CheckCanAttackExt( void );
 
 extern int NPC_CheckAlertEvents( qboolean checkSight, qboolean checkSound, int ignoreAlert, qboolean mustHaveOwner, int minAlertLevel ); //ignoreAlert = -1, mustHaveOwner = qfalse, minAlertLevel = AEL_MINOR

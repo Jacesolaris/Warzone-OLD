@@ -1101,282 +1101,16 @@ NPC_ValidEnemy
 -------------------------
 */
 extern qboolean NPC_IsAlive ( gentity_t *NPC );
+extern qboolean NPC_IsAnimalEnemyFaction ( gentity_t *self );
 
-qboolean NPC_ValidEnemy( gentity_t *ent )
+qboolean NPC_ValidEnemy2( gentity_t *self, gentity_t *ent )
 {
-	int entTeam = FACTION_FREE;
-
-	if ( ent == NULL )
+	if ( !self )
 	{//Must be a valid pointer
 		return qfalse;
 	}
 
-	if ( ent == NPCS.NPC )
-	{//Must not be me
-		return qfalse;
-	}
-
-	if ( ent->inuse == qfalse )
-	{//Must not be deleted
-		return qfalse;
-	}
-
-	if ( !NPC_IsAlive(ent) )
-	{//Must be alive
-		return qfalse;
-	}
-
-	if ( ent->flags & FL_NOTARGET )
-	{//In case they're in notarget mode
-		return qfalse;
-	}
-
-	if ( NPCS.NPC && NPC_EntityIsBreakable(NPCS.NPC, ent) )
-	{// Breakables are perfectly valid targets...
-		return qtrue;
-	}
-
-	/*if (!(ent->s.eType == ET_NPC || ent->s.eType == ET_PLAYER)) 
-	{
-		return qfalse;
-	}*/
-
-	//if (ent->s.number != 0) assert(0); // UQ1: For debugging...
-
-	if ( ent->client )
-	{// Special client checks...
-		if ( ent->client->sess.sessionTeam == FACTION_SPECTATOR )
-		{//don't go after spectators
-			//trap->Print("spec1 %i\n", ent->s.number);
-			return qfalse;
-		}
-
-		if ( ent->client->tempSpectate >= level.time )
-		{//don't go after spectators
-			//trap->Print("spec2\n");
-			return qfalse;
-		}
-
-		if (ent->client->ps.stats[STAT_HEALTH] <= 0) 
-		{
-			//trap->Print("stat_health\n");
-			return qfalse;
-		}
-
-		if (ent->client->ps.pm_type == PM_SPECTATOR) 
-		{
-			//trap->Print("spec3\n");
-			return qfalse;
-		}
-
-		if (NPC_IsCivilian(ent))
-		{// These guys have no enemies...
-			//trap->Print("civilian\n");
-			return qfalse;
-		}
-
-		if (NPC_IsVendor(ent))
-		{// These guys have no enemies...
-			//trap->Print("vendor\n");
-			return qfalse;
-		}
-	}
-
-	if (NPCS.NPC && NPCS.NPC->client && NPCS.NPC->isPadawan)
-	{
-		if (ent == NPCS.NPC->parent || ent == NPCS.NPC->padawan)
-		{// A padawan and his jedi are never enemies...
-			return qfalse;
-		}
-
-		if (NPCS.NPC->parent && NPC_IsAlive(NPCS.NPC->parent))
-		{// They just copy their master's enemy instead...
-#if 0
-			if (NPCS.NPC->parent->enemy && NPC_IsAlive(NPCS.NPC->parent->enemy))
-			{
-				NPCS.NPC->enemy = NPCS.NPC->parent->enemy;
-				return qfalse;
-			}
-			else
-#endif //0
-			{
-				if (Distance(NPCS.NPC->r.currentOrigin, ent->r.currentOrigin) > 1024
-					|| Distance(NPCS.NPC->parent->r.currentOrigin, ent->r.currentOrigin) > 1024)
-				{// Too far from me or my master...
-					return qfalse;
-				}
-			}
-		}
-	}
-
-	if ( ent->s.weapon == WP_SABER 
-		&& ent->enemy 
-		&& ent->enemy != NPCS.NPC 
-		&& ent->enemy != NPCS.NPC->parent // padawans will assist their jedi... 
-		&& ent->enemy != NPCS.NPC->padawan // jedi will assist their padawans... 
-		&& ent->enemy->s.weapon == WP_SABER
-		&& ent->enemy->enemy == ent )
-	{// If their current weapon is saber (and is not me), and their enemy's current weapon is as well (and they are dueling), then let them duel...
-		//trap->Print("duel\n");
-		return qfalse;
-	}
-
-	if ( ent->client )
-	{// Special client checks...
-		if (NPCS.NPC->client->enemyTeam == NPCTEAM_FREE && ent->client->NPC_class != NPCS.NPC->client->NPC_class )
-		{//I get mad at anyone and this guy isn't the same class as me
-			return qtrue;
-		}
-
-		if (ent->client->NPC_class == CLASS_WAMPA && ent->enemy )
-		{//a rampaging wampa
-			return qtrue;
-		}
-
-		if (ent->client->NPC_class == CLASS_RANCOR && ent->enemy )
-		{//a rampaging rancor
-			return qtrue;
-		}
-	}
-
-	if (g_gametype.integer < GT_TEAM)
-	{
-		if ( ent->NPC && ent->client )
-		{
-			if (NPCS.NPC->client->enemyTeam == FACTION_FREE)
-			{
-				entTeam = NPCS.NPC->client->enemyTeam;
-			}
-			else if (level.gametype < GT_TEAM)
-			{
-				entTeam = ent->client->playerTeam;
-			}
-			else
-			{
-				if ( ent->client->sess.sessionTeam == FACTION_REBEL )
-				{
-					entTeam = NPCTEAM_PLAYER;
-				}
-				else if ( ent->client->sess.sessionTeam == FACTION_EMPIRE )
-				{
-					entTeam = NPCTEAM_ENEMY;
-				}
-				else
-				{
-					entTeam = NPCTEAM_NEUTRAL;
-				}
-			}
-		}
-		else if ( ent->client )
-		{
-			if (NPCS.NPC->client->enemyTeam == FACTION_FREE)
-			{
-				entTeam = NPCS.NPC->client->enemyTeam;
-			}
-			else if (level.gametype < GT_TEAM)
-			{
-				entTeam = NPCTEAM_PLAYER;
-			}
-			else
-			{
-				if ( ent->client->sess.sessionTeam == FACTION_REBEL )
-				{
-					entTeam = NPCTEAM_PLAYER;
-				}
-				else if ( ent->client->sess.sessionTeam == FACTION_EMPIRE )
-				{
-					entTeam = NPCTEAM_ENEMY;
-				}
-				else
-				{
-					entTeam = NPCTEAM_NEUTRAL;
-				}
-			}
-		}
-	}
-
-	if (entTeam == NPCTEAM_FREE 
-		&& ent->client
-		&& ent->client->enemyTeam == NPCTEAM_FREE 
-		&& ent->enemy 
-		&& ent->enemy->client 
-		&& (ent->enemy->client->playerTeam == NPCS.NPC->client->playerTeam || (ent->enemy->client->playerTeam != NPCTEAM_ENEMY && NPCS.NPC->client->playerTeam == NPCTEAM_PLAYER)))
-	{//enemy is a rampaging non-aligned creature who is attacking someone on our team or a non-enemy (this last condition is used only if we're a good guy - in effect, we protect the innocent)
-		return qtrue;
-	}
-	
-	if (level.gametype < GT_TEAM)
-	{// Non-Team Gametypes...
-		if (ent->s.eType == ET_PLAYER)
-		{// In non-team games all BotNPCs/Players are enemies to eachother...
-			return qtrue;
-		}
-
-		//Must be an NPC
-		if ( ent->client == NULL )
-		{
-			if (ent->s.eType != ET_NPC)
-			{//still potentially valid
-				if ( ent->alliedTeam == NPCS.NPC->client->playerTeam )
-				{
-					return qfalse;
-				}
-				else
-				{
-					return qtrue;
-				}
-			}
-			else
-			{
-				return qfalse;
-			}
-		}
-
-		//Can't be on the same team
-		if ( ent->client->playerTeam == NPCS.NPC->client->playerTeam )
-		{
-			return qfalse;
-		}
-
-		if ( entTeam == NPCS.NPC->client->enemyTeam ) //simplest case: they're on my enemy team
-		{
-			return qtrue;
-		}
-	}
-	else
-	{// Team Gametypes...
-		if ( NPCS.NPC 
-			&& NPCS.NPC->client 
-			&& ent->client) 
-		{// In team games all NPCs and BotNPCs are enemies to other team...
-			/*
-			if ( ent->client->sess.sessionTeam == FACTION_REBEL && NPCS.NPC->client->sess.sessionTeam == FACTION_EMPIRE )
-			{
-				return qtrue;
-			}
-			else if ( ent->client->sess.sessionTeam == FACTION_EMPIRE && NPCS.NPC->client->sess.sessionTeam == FACTION_REBEL )
-			{
-				return qtrue;
-			}
-			else
-			{
-				//trap->Print("team\n");
-				return qfalse;
-			}
-			*/
-			if (!OnSameTeam(ent, NPCS.NPC)) 
-				return qtrue;
-		}
-	}
-	
-	return qfalse;
-}
-
-qboolean NPC_ValidEnemy2( gentity_t *self, gentity_t *ent )
-{
-	int entTeam = FACTION_FREE;
-
-	if ( ent == NULL )
+	if ( !ent )
 	{//Must be a valid pointer
 		return qfalse;
 	}
@@ -1391,7 +1125,7 @@ qboolean NPC_ValidEnemy2( gentity_t *self, gentity_t *ent )
 		return qfalse;
 	}
 
-	if ( ent->health <= 0 )
+	if ( !NPC_IsAlive(ent) && ent->health <= 0 )
 	{//Must be alive
 		return qfalse;
 	}
@@ -1406,48 +1140,30 @@ qboolean NPC_ValidEnemy2( gentity_t *self, gentity_t *ent )
 		return qtrue;
 	}
 
-	/*if (!(ent->s.eType == ET_NPC || ent->s.eType == ET_PLAYER)) 
-	{
-		return qfalse;
-	}*/
-
-	//if (ent->s.number != 0) assert(0); // UQ1: For debugging...
-
 	if ( ent->client )
 	{// Special client checks...
 		if ( ent->client->sess.sessionTeam == FACTION_SPECTATOR )
 		{//don't go after spectators
-			//trap->Print("spec1 %i\n", ent->s.number);
 			return qfalse;
 		}
 
 		if ( ent->client->tempSpectate >= level.time )
 		{//don't go after spectators
-			//trap->Print("spec2\n");
-			return qfalse;
-		}
-
-		if (ent->client->ps.stats[STAT_HEALTH] <= 0) 
-		{
-			//trap->Print("stat_health\n");
 			return qfalse;
 		}
 
 		if (ent->client->ps.pm_type == PM_SPECTATOR) 
 		{
-			//trap->Print("spec3\n");
 			return qfalse;
 		}
 
-		if (NPC_IsCivilian(ent))
+		if (NPC_IsCivilian(self) || NPC_IsCivilian(ent))
 		{// These guys have no enemies...
-			//trap->Print("civilian\n");
 			return qfalse;
 		}
 
-		if (NPC_IsVendor(ent))
+		if (NPC_IsVendor(self) || NPC_IsVendor(ent))
 		{// These guys have no enemies...
-			//trap->Print("vendor\n");
 			return qfalse;
 		}
 	}
@@ -1461,20 +1177,10 @@ qboolean NPC_ValidEnemy2( gentity_t *self, gentity_t *ent )
 
 		if (self->parent && NPC_IsAlive(self->parent))
 		{// They just copy their master's enemy instead...
-#if 0
-			if (self->parent->enemy && NPC_IsAlive(self->parent->enemy))
-			{
-				self->enemy = self->parent->enemy;
+			if (Distance(self->r.currentOrigin, ent->r.currentOrigin) > 1024
+				|| Distance(self->parent->r.currentOrigin, ent->r.currentOrigin) > 1024)
+			{// Too far from me or my master...
 				return qfalse;
-			}
-			else
-#endif //0
-			{
-				if (Distance(self->r.currentOrigin, ent->r.currentOrigin) > 1024
-					|| Distance(self->parent->r.currentOrigin, ent->r.currentOrigin) > 1024)
-				{// Too far from me or my master...
-					return qfalse;
-				}
 			}
 		}
 	}
@@ -1485,93 +1191,17 @@ qboolean NPC_ValidEnemy2( gentity_t *self, gentity_t *ent )
 		&& ent->enemy != self->parent // padawans will assist their jedi... 
 		&& ent->enemy != self->padawan // jedi will assist their padawans... 
 		&& ent->enemy->s.weapon == WP_SABER
-		&& ent->enemy->enemy == ent )
+		&& ent->enemy->enemy == ent)
 	{// If their current weapon is saber (and is not me), and their enemy's current weapon is as well (and they are dueling), then let them duel...
-		//trap->Print("duel\n");
 		return qfalse;
 	}
 
-	if ( ent->client )
+	if ( self->client && ent->client )
 	{// Special client checks...
-		if (self->client->enemyTeam == NPCTEAM_FREE && ent->client->NPC_class != self->client->NPC_class )
-		{//I get mad at anyone and this guy isn't the same class as me
+		if ( NPC_IsAnimalEnemyFaction( self ) && !NPC_IsAnimalEnemyFaction( ent ) )
+		{//I get mad at anyone and this guy isn't the same faction as me
 			return qtrue;
 		}
-
-		if (ent->client->NPC_class == CLASS_WAMPA && ent->enemy )
-		{//a rampaging wampa
-			return qtrue;
-		}
-
-		if (ent->client->NPC_class == CLASS_RANCOR && ent->enemy )
-		{//a rampaging rancor
-			return qtrue;
-		}
-	}
-
-#if 0
-	if ( ent->NPC && ent->client )
-	{
-		if (self->client->enemyTeam == FACTION_FREE)
-		{
-			entTeam = self->client->enemyTeam;
-		}
-		else if (level.gametype < GT_TEAM)
-		{
-			entTeam = ent->client->playerTeam;
-		}
-		else
-		{
-			if ( ent->client->sess.sessionTeam == FACTION_REBEL )
-			{
-				entTeam = NPCTEAM_PLAYER;
-			}
-			else if ( ent->client->sess.sessionTeam == FACTION_EMPIRE )
-			{
-				entTeam = NPCTEAM_ENEMY;
-			}
-			else
-			{
-				entTeam = NPCTEAM_NEUTRAL;
-			}
-		}
-	}
-	else if ( ent->client )
-	{
-		if (self->client->enemyTeam == FACTION_FREE)
-		{
-			entTeam = self->client->enemyTeam;
-		}
-		else if (level.gametype < GT_TEAM)
-		{
-			entTeam = NPCTEAM_PLAYER;
-		}
-		else
-		{
-			if ( ent->client->sess.sessionTeam == FACTION_REBEL )
-			{
-				entTeam = NPCTEAM_PLAYER;
-			}
-			else if ( ent->client->sess.sessionTeam == FACTION_EMPIRE )
-			{
-				entTeam = NPCTEAM_ENEMY;
-			}
-			else
-			{
-				entTeam = NPCTEAM_NEUTRAL;
-			}
-		}
-	}
-#endif
-
-	if (entTeam == NPCTEAM_FREE 
-		&& ent->client
-		&& ent->client->enemyTeam == NPCTEAM_FREE 
-		&& ent->enemy 
-		&& ent->enemy->client 
-		&& (ent->enemy->client->playerTeam == self->client->playerTeam || (ent->enemy->client->playerTeam != NPCTEAM_ENEMY && self->client->playerTeam == NPCTEAM_PLAYER)))
-	{//enemy is a rampaging non-aligned creature who is attacking someone on our team or a non-enemy (this last condition is used only if we're a good guy - in effect, we protect the innocent)
-		return qtrue;
 	}
 	
 	if (level.gametype < GT_TEAM)
@@ -1581,8 +1211,7 @@ qboolean NPC_ValidEnemy2( gentity_t *self, gentity_t *ent )
 			return qtrue;
 		}
 
-		//Must be an NPC
-		if ( ent->client == NULL )
+		if ( !ent->client )
 		{
 			if (ent->s.eType != ET_NPC)
 			{//still potentially valid
@@ -1595,10 +1224,6 @@ qboolean NPC_ValidEnemy2( gentity_t *self, gentity_t *ent )
 					return qtrue;
 				}
 			}
-			else
-			{
-				return qfalse;
-			}
 		}
 
 		//Can't be on the same team
@@ -1607,39 +1232,24 @@ qboolean NPC_ValidEnemy2( gentity_t *self, gentity_t *ent )
 			return qfalse;
 		}
 
-		if ( entTeam == self->client->enemyTeam ) //simplest case: they're on my enemy team
+		if ( self->client->enemyTeam != FACTION_FREE ) //simplest case: they're on my enemy team
 		{
 			return qtrue;
 		}
 	}
 	else
 	{// Team Gametypes...
-		if ( self
-			&& self->client 
-			&& ent->client) 
-		{// In team games all NPCs and BotNPCs are enemies to other team...
-			/*
-			if ( ent->client->sess.sessionTeam == FACTION_REBEL && self->client->sess.sessionTeam == FACTION_EMPIRE )
-			{
-				return qtrue;
-			}
-			else if ( ent->client->sess.sessionTeam == FACTION_EMPIRE && self->client->sess.sessionTeam == FACTION_REBEL )
-			{
-				return qtrue;
-			}
-			else
-			{
-				//trap->Print("team\n");
-				return qfalse;
-			}
-			*/
-
-			if (!OnSameTeam(ent, self)) 
-				return qtrue;
-		}
+		// In team games all NPCs and BotNPCs are enemies to other team...
+		if (!OnSameTeam(ent, self)) 
+			return qtrue;
 	}
 	
 	return qfalse;
+}
+
+qboolean NPC_ValidEnemy( gentity_t *ent )
+{
+	return NPC_ValidEnemy2(NPCS.NPC, ent);
 }
 
 /*
@@ -1659,7 +1269,7 @@ qboolean NPC_TargetVisible( gentity_t *ent )
 
 	//Make sure we're in a valid range
 	//if ( !IS_BREAKABLE && DistanceSquared( ent->r.currentOrigin, NPCS.NPC->r.currentOrigin ) > ( NPCS.NPCInfo->stats.visrange * NPCS.NPCInfo->stats.visrange ) )
-	if ( NPCS.NPC && !IS_BREAKABLE && Distance( ent->r.currentOrigin, NPCS.NPC->r.currentOrigin ) > 2048.0 )
+	if ( NPCS.NPC && !IS_BREAKABLE && Distance( ent->r.currentOrigin, NPCS.NPC->r.currentOrigin ) > 3192.0 )
 	{
 		return qfalse;
 	}
@@ -1673,14 +1283,14 @@ qboolean NPC_TargetVisible( gentity_t *ent )
 
 	//Check our FOV
 	//if ( !InFOV( ent, NPCS.NPC, NPCS.NPCInfo->stats.hfov, NPCS.NPCInfo->stats.vfov ) )
-	if ( NPCS.NPC && !InFOV( ent, NPCS.NPC, 120, 180 ) )
+	/*if ( NPCS.NPC && !InFOV( ent, NPCS.NPC, 120, 180 ) )
 	{
 		//if (IS_BREAKABLE) trap->Print("IS_BREAKABLE failed FOV\n");
 		return qfalse;
-	}
+	}*/
 
 	//Check for sight
-	if ( NPC_ClearLOS4( ent ) == qfalse )
+	if ( !IS_BREAKABLE && NPC_ClearLOS4( ent ) == qfalse )
 	{
 		//if (IS_BREAKABLE) trap->Print("IS_BREAKABLE failed LOS\n");
 		return qfalse;
@@ -1728,7 +1338,6 @@ NPC_FindNearestEnemy
 */
 
 #define	MAX_RADIUS_ENTS			256	//NOTE: This can cause entities to be lost
-#define NEAR_DEFAULT_RADIUS		256
 
 int NPC_FindNearestEnemy( gentity_t *ent )
 {
@@ -1744,8 +1353,8 @@ int NPC_FindNearestEnemy( gentity_t *ent )
 	//Setup the bbox to search in
 	for ( i = 0; i < 3; i++ )
 	{
-		mins[i] = ent->r.currentOrigin[i] - NPCS.NPCInfo->stats.visrange;
-		maxs[i] = ent->r.currentOrigin[i] + NPCS.NPCInfo->stats.visrange;
+		mins[i] = ent->r.currentOrigin[i] - 3192.0;//NPCS.NPCInfo->stats.visrange;
+		maxs[i] = ent->r.currentOrigin[i] + 3192.0;//NPCS.NPCInfo->stats.visrange;
 	}
 
 	//Get a number of entities in a given space
@@ -1769,13 +1378,11 @@ int NPC_FindNearestEnemy( gentity_t *ent )
 
 		if (EntIsGlass(radEnt))
 		{
-			//trap->Print("Skip glass at %f %f %f.\n", radEnt->breakableOrigin[0], radEnt->breakableOrigin[1], radEnt->breakableOrigin[2]);
 			continue;
 		}
 
 		if (NPC_EntityIsBreakable(ent, radEnt))
 		{
-			//trap->Print("Target breakable at %f %f %f.\n", radEnt->breakableOrigin[0], radEnt->breakableOrigin[1], radEnt->breakableOrigin[2]);
 			distance = DistanceSquared( ent->r.currentOrigin, radEnt->breakableOrigin );
 		}
 		else
@@ -1790,15 +1397,6 @@ int NPC_FindNearestEnemy( gentity_t *ent )
 			nearestDist = distance;
 		}
 	}
-
-	/*if (nearestEntID > 0 && nearestEntID < ENTITYNUM_MAX_NORMAL)
-	{
-		if (NPC_EntityIsBreakable(ent, &g_entities[nearestEntID]))
-		{
-			radEnt = &g_entities[nearestEntID];
-			//trap->Print("Target breakable at %f %f %f.\n", radEnt->breakableOrigin[0], radEnt->breakableOrigin[1], radEnt->breakableOrigin[2]);
-		}
-	}*/
 
 	return nearestEntID;
 }
@@ -1851,58 +1449,6 @@ gentity_t *NPC_PickEnemyExt( qboolean checkAlerts )
 
 /*
 -------------------------
-NPC_FindPlayer
--------------------------
-*/
-
-qboolean NPC_FindPlayer( void )
-{
-	//OJKFIXME: clientnum 0
-	return NPC_TargetVisible( &g_entities[0] );
-}
-
-/*
--------------------------
-NPC_CheckPlayerDistance
--------------------------
-*/
-
-static qboolean NPC_CheckPlayerDistance( void )
-{
-	return qfalse;//MOOT in MP
-	/*
-	float distance;
-
-	//Make sure we have an enemy
-	if ( NPC->enemy == NULL )
-		return qfalse;
-
-	//Only do this for non-players
-	if ( NPC->enemy->s.number == 0 )
-		return qfalse;
-
-	//must be set up to get mad at player
-	if ( !NPC->client || NPC->client->enemyTeam != NPCTEAM_PLAYER )
-		return qfalse;
-
-	//Must be within our FOV
-	if ( InFOV( &g_entities[0], NPC, NPCInfo->stats.hfov, NPCInfo->stats.vfov ) == qfalse )
-		return qfalse;
-
-	distance = DistanceSquared( NPC->r.currentOrigin, NPC->enemy->r.currentOrigin );
-
-	if ( distance > DistanceSquared( NPC->r.currentOrigin, g_entities[0].r.currentOrigin ) )
-	{ //rwwFIXMEFIXME: care about all clients not just client 0
-		G_SetEnemy( NPC, &g_entities[0] );
-		return qtrue;
-	}
-
-	return qfalse;
-	*/
-}
-
-/*
--------------------------
 NPC_FindEnemy
 -------------------------
 */
@@ -1923,28 +1469,6 @@ qboolean NPC_FindEnemy( qboolean checkAlerts )
 	if( NPCS.NPCInfo->confusionTime > level.time )
 	{
 		return qfalse;
-	}
-
-	//Don't want a new enemy
-	//rwwFIXMEFIXME: support for locked enemy
-	//if ( ( ValidEnemy( NPC->enemy ) ) && ( NPC->svFlags & SVF_LOCKEDENEMY ) )
-	//	return qtrue;
-
-	//See if the player is closer than our current enemy
-	if ( NPC_CheckPlayerDistance() )
-	{
-		return qtrue;
-	}
-
-	//Otherwise, turn off the flag
-//	NPC->svFlags &= ~SVF_LOCKEDENEMY;
-	//See if the player is closer than our current enemy
-	if ( NPCS.NPC->client->NPC_class != CLASS_RANCOR
-		&& NPCS.NPC->client->NPC_class != CLASS_WAMPA
-		//&& NPC->client->NPC_class != CLASS_SAND_CREATURE
-		&& NPC_CheckPlayerDistance() )
-	{//rancors, wampas & sand creatures don't care if player is closer, they always go with closest
-		return qtrue;
 	}
 
 	//If we've gotten here alright, then our target it still valid
