@@ -903,7 +903,8 @@ void RB_DrawSun( float scale, shader_t *shader ) {
 		Matrix16Multiply( backEnd.viewParms.world.modelMatrix, trans, model );
 		Matrix16Multiply(backEnd.viewParms.projectionMatrix, model, mvp);
 
-		dist = backEnd.viewParms.zFar / 1.75;		// div sqrt(3)
+		//dist = backEnd.viewParms.zFar / 1.75;		// div sqrt(3)
+		dist = 4096.0;
 		//dist = 32768.0;
 
 		VectorScale( tr.sunDirection, dist, pos );

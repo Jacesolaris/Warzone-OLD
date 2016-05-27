@@ -148,8 +148,9 @@ extern const char *fallbackShader_testshader_vp;
 extern const char *fallbackShader_testshader_fp;
 
 //#define HEIGHTMAP_TESSELATION
-#define PN_TRIANGLES_TESSELATION
-//#define PHONG_TESSELATION
+//#define HEIGHTMAP_TESSELATION2
+//#define PN_TRIANGLES_TESSELATION
+#define PHONG_TESSELATION
 
 #ifdef HEIGHTMAP_TESSELATION
 const char fallbackShader_genericTessControl_cp[] = 
@@ -191,17 +192,18 @@ const char fallbackShader_genericTessControl_cp[] =
 "\n"\
 "float GetTessLevel(float Distance0, float Distance1)\n"\
 "{\n"\
-"    float AvgDistance = (Distance0 + Distance1) / 2.0;\n"\
+"	return mix(1.0, 10.0, clamp(((Distance0 + Distance1) / 2.0) / 6.0, 0.0, 1.0));\n"\
+"//    float AvgDistance = (Distance0 + Distance1) / 2.0;\n"\
 "\n"\
-"    if (AvgDistance <= 256.0) {\n"\
-"        return max(u_Dimensions.x, u_Dimensions.y);\n"\
-"    }\n"\
-"    else if (AvgDistance <= 512.0) {\n"\
-"        return max(u_Dimensions.x, u_Dimensions.y) / 4.0;\n"\
-"    }\n"\
-"    else {\n"\
-"        return max(u_Dimensions.x, u_Dimensions.y) / 16.0;\n"\
-"    }\n"\
+"//    if (AvgDistance <= 256.0) {\n"\
+"//        return max(u_Dimensions.x, u_Dimensions.y);\n"\
+"//    }\n"\
+"//    else if (AvgDistance <= 512.0) {\n"\
+"//        return max(u_Dimensions.x, u_Dimensions.y) / 4.0;\n"\
+"//    }\n"\
+"//    else {\n"\
+"//        return max(u_Dimensions.x, u_Dimensions.y) / 16.0;\n"\
+"//    }\n"\
 "}\n"\
 "\n"\
 "void main()\n"\
@@ -322,16 +324,6 @@ const char fallbackShader_genericTessControl_ep[] =
 "		Slope_FS_in = interpolate1D(Slope_ES_in[0], Slope_ES_in[1], Slope_ES_in[2]);\n"\
 "		usingSteepMap_FS_in = interpolate1D(usingSteepMap_ES_in[0], usingSteepMap_ES_in[1], usingSteepMap_ES_in[2]);\n"\
 "\n"\
-"//   	ViewDir_FS_in = ViewDir_ES_in[0];\n"\
-"//   	Tangent_FS_in = Tangent_ES_in[0];\n"\
-"//   	Bitangent_FS_in = Bitangent_ES_in[0];\n"\
-"//   	Color_FS_in = Color_ES_in[0];\n"\
-"//   	PrimaryLightDir_FS_in = PrimaryLightDir_ES_in[0];\n"\
-"//   	TexCoord2_FS_in = interpolate2D(TexCoord2_ES_in[0], TexCoord2_ES_in[1], TexCoord2_ES_in[2]);\n"\
-"//   	Blending_FS_in = Blending_ES_in[0];\n"\
-"//		Slope_FS_in = Slope_ES_in[0];\n"\
-"//		usingSteepMap_FS_in = usingSteepMap_ES_in[0];\n"\
-"\n"\
 "   	// Interpolate the attributes of the output vertex using the barycentric coordinates\n"\
 "   	TexCoord_FS_in = interpolate2D(TexCoord_ES_in[0], TexCoord_ES_in[1], TexCoord_ES_in[2]);\n"\
 "   	Normal_FS_in = interpolate3D(Normal_ES_in[0], Normal_ES_in[1], Normal_ES_in[2]);\n"\
@@ -350,6 +342,209 @@ const char fallbackShader_genericTessControl_ep[] =
 "   	WorldPos_FS_in += Normal_FS_in * Displacement * gDispFactor;\n"\
 "   	gl_Position = gVP * vec4(WorldPos_FS_in, 1.0);\n"\
 "//		ViewDir_FS_in = u_ViewOrigin - WorldPos_FS_in;\n"\
+"}\n";
+#endif
+
+#ifdef HEIGHTMAP_TESSELATION2
+const char fallbackShader_genericTessControl_cp[] = 
+"// define the number of CPs in the output patch\n"\
+"layout(vertices = 3) out;\n"\
+"\n"\
+"uniform vec4			u_Local10;\n"\
+"\n"\
+"#define gTessellationLevelInner u_Local10.g\n"\
+"#define gTessellationLevelOuter u_Local10.b\n"\
+"\n"\
+"// attributes of the input CPs\n"\
+"in vec4 WorldPos_CS_in[];\n"\
+"in vec3 Normal_CS_in[];\n"\
+"in vec2 TexCoord_CS_in[];\n"\
+"in vec3 ViewDir_CS_in[];\n"\
+"in vec4 Tangent_CS_in[];\n"\
+"in vec4 Bitangent_CS_in[];\n"\
+"in vec4 Color_CS_in[];\n"\
+"in vec4 PrimaryLightDir_CS_in[];\n"\
+"in vec2 TexCoord2_CS_in[];\n"\
+"in vec3 Blending_CS_in[];\n"\
+"in float Slope_CS_in[];\n"\
+"in float usingSteepMap_CS_in[];\n"\
+"\n"\
+"// attributes of the output CPs\n"\
+"out vec4 WorldPos_ES_in[3];\n"\
+"out vec3 Normal_ES_in[3];\n"\
+"out vec2 TexCoord_ES_in[3];\n"\
+"out vec3 ViewDir_ES_in[3];\n"\
+"out vec4 Tangent_ES_in[3];\n"\
+"out vec4 Bitangent_ES_in[3];\n"\
+"out vec4 Color_ES_in[3];\n"\
+"out vec4 PrimaryLightDir_ES_in[3];\n"\
+"out vec2 TexCoord2_ES_in[3];\n"\
+"out vec3 Blending_ES_in[3];\n"\
+"out float Slope_ES_in[3];\n"\
+"out float usingSteepMap_ES_in[3];\n"\
+"\n"\
+"void main()\n"\
+"{\n"\
+"    TexCoord_ES_in[gl_InvocationID] = TexCoord_CS_in[gl_InvocationID];\n"\
+"    Normal_ES_in[gl_InvocationID] = Normal_CS_in[gl_InvocationID];\n"\
+"    WorldPos_ES_in[gl_InvocationID] = WorldPos_CS_in[gl_InvocationID];\n"\
+"\n"\
+"	ViewDir_ES_in[gl_InvocationID]		= ViewDir_CS_in[gl_InvocationID];\n"\
+"	Color_ES_in[gl_InvocationID]				= Color_CS_in[gl_InvocationID];\n"\
+"	Tangent_ES_in[gl_InvocationID]			= Tangent_CS_in[gl_InvocationID];\n"\
+"	Bitangent_ES_in[gl_InvocationID]			= Bitangent_CS_in[gl_InvocationID];\n"\
+"	PrimaryLightDir_ES_in[gl_InvocationID]	= PrimaryLightDir_CS_in[gl_InvocationID];\n"\
+"	TexCoord2_ES_in[gl_InvocationID]			= TexCoord2_CS_in[gl_InvocationID];\n"\
+"	Blending_ES_in[gl_InvocationID]			= Blending_CS_in[gl_InvocationID];\n"\
+"	Slope_ES_in[gl_InvocationID]				= Slope_CS_in[gl_InvocationID];\n"\
+"	usingSteepMap_ES_in[gl_InvocationID]		= usingSteepMap_CS_in[gl_InvocationID];\n"\
+"\n"\
+"	if(gl_InvocationID == 0)\n"\
+"	{\n"\
+"		gl_TessLevelInner[0] = gTessellationLevelInner;\n"\
+"		gl_TessLevelOuter[0] = gTessellationLevelOuter;\n"\
+"		gl_TessLevelOuter[1] = gTessellationLevelOuter;\n"\
+"		gl_TessLevelOuter[2] = gTessellationLevelOuter;\n"\
+"	}\n"\
+"}\n";
+
+const char fallbackShader_genericTessControl_ep[] = 
+"layout(triangles, equal_spacing, ccw) in;\n"\
+"\n"\
+"uniform mat4 u_ModelViewProjectionMatrix; // mvp\n"\
+"\n"\
+"in vec4 WorldPos_ES_in[];\n"\
+"in vec2 TexCoord_ES_in[];\n"\
+"in vec3 Normal_ES_in[];\n"\
+"in vec3 ViewDir_ES_in[];\n"\
+"in vec4 Tangent_ES_in[];\n"\
+"in vec4 Bitangent_ES_in[];\n"\
+"in vec4 Color_ES_in[];\n"\
+"in vec4 PrimaryLightDir_ES_in[];\n"\
+"in vec2 TexCoord2_ES_in[];\n"\
+"in vec3 Blending_ES_in[];\n"\
+"in float Slope_ES_in[];\n"\
+"in float usingSteepMap_ES_in[];\n"\
+"\n"\
+"out vec4 WorldPos_GS_in;\n"\
+"out vec2 TexCoord_GS_in;\n"\
+"out vec3 Normal_GS_in;\n"\
+"out vec3 ViewDir_GS_in;\n"\
+"out vec4 Tangent_GS_in;\n"\
+"out vec4 Bitangent_GS_in;\n"\
+"out vec4 Color_GS_in;\n"\
+"out vec4 PrimaryLightDir_GS_in;\n"\
+"out vec2 TexCoord2_GS_in;\n"\
+"out vec3 Blending_GS_in;\n"\
+"out float Slope_GS_in;\n"\
+"out float usingSteepMap_GS_in;\n"\
+"\n"\
+"void main()\n"\
+"{\n"\
+"	 Normal_GS_in = (gl_TessCoord.x * Normal_ES_in[0] + gl_TessCoord.y * Normal_ES_in[1] + gl_TessCoord.z * Normal_ES_in[2]);\n"\
+"    TexCoord_GS_in = (gl_TessCoord.x * TexCoord_ES_in[0] + gl_TessCoord.y * TexCoord_ES_in[1] + gl_TessCoord.z * TexCoord_ES_in[2]);\n"\
+"    WorldPos_GS_in = (gl_TessCoord.x * WorldPos_ES_in[0] + gl_TessCoord.y * WorldPos_ES_in[1] + gl_TessCoord.z * WorldPos_ES_in[2]);\n"\
+"	ViewDir_GS_in = (gl_TessCoord.x * ViewDir_ES_in[0] + gl_TessCoord.y * ViewDir_ES_in[1] + gl_TessCoord.z * ViewDir_ES_in[2]);\n"\
+"	Tangent_GS_in = (gl_TessCoord.x * Tangent_ES_in[0] + gl_TessCoord.y * Tangent_ES_in[1] + gl_TessCoord.z * Tangent_ES_in[2]);\n"\
+"	Bitangent_GS_in = (gl_TessCoord.x * Bitangent_ES_in[0] + gl_TessCoord.y * Bitangent_ES_in[1] + gl_TessCoord.z * Bitangent_ES_in[2]);\n"\
+"	Color_GS_in = (gl_TessCoord.x * Color_ES_in[0] + gl_TessCoord.y * Color_ES_in[1] + gl_TessCoord.z * Color_ES_in[2]);\n"\
+"	PrimaryLightDir_GS_in = (gl_TessCoord.x * PrimaryLightDir_ES_in[0] + gl_TessCoord.y * PrimaryLightDir_ES_in[1] + gl_TessCoord.z * PrimaryLightDir_ES_in[2]);\n"\
+"	TexCoord2_GS_in = (gl_TessCoord.x * TexCoord2_ES_in[0] + gl_TessCoord.y * TexCoord2_ES_in[1] + gl_TessCoord.z * TexCoord2_ES_in[2]);\n"\
+"	Blending_GS_in = (gl_TessCoord.x * Blending_ES_in[0] + gl_TessCoord.y * Blending_ES_in[1] + gl_TessCoord.z * Blending_ES_in[2]);\n"\
+"	Slope_GS_in = (gl_TessCoord.x * Slope_ES_in[0] + gl_TessCoord.y * Slope_ES_in[1] + gl_TessCoord.z * Slope_ES_in[2]);\n"\
+"	usingSteepMap_GS_in = (gl_TessCoord.x * usingSteepMap_ES_in[0] + gl_TessCoord.y * usingSteepMap_ES_in[1] + gl_TessCoord.z * usingSteepMap_ES_in[2]);\n"\
+"\n"\
+"//   	gl_Position = u_ModelViewProjectionMatrix * vec4(WorldPos_GS_in.xyz, 1.0);\n"\
+"}\n";
+
+const char fallbackShader_genericGeometry[] = 
+"#extension GL_EXT_geometry_shader4 : enable\n"\
+"\n"\
+"layout(triangles) in;\n"\
+"layout(triangle_strip, max_vertices = 3) out;\n"\
+"\n"\
+"uniform mat4 u_ModelViewProjectionMatrix; // mvp\n"\
+"\n"\
+"uniform sampler2D u_DiffuseMap;\n"\
+"\n"\
+"uniform vec4 u_Local10;\n"\
+"#define gDispFactor u_Local10.r\n"\
+"\n"\
+"in vec4 WorldPos_GS_in[];\n"\
+"in vec2 TexCoord_GS_in[];\n"\
+"in vec3 Normal_GS_in[];\n"\
+"in vec3 ViewDir_GS_in[];\n"\
+"in vec4 Tangent_GS_in[];\n"\
+"in vec4 Bitangent_GS_in[];\n"\
+"in vec4 Color_GS_in[];\n"\
+"in vec4 PrimaryLightDir_GS_in[];\n"\
+"in vec2 TexCoord2_GS_in[];\n"\
+"in vec3 Blending_GS_in[];\n"\
+"in float Slope_GS_in[];\n"\
+"in float usingSteepMap_GS_in[];\n"\
+"\n"\
+"out vec3 WorldPos_FS_in;\n"\
+"out vec2 TexCoord_FS_in;\n"\
+"out vec3 Normal_FS_in;\n"\
+"out vec3 ViewDir_FS_in;\n"\
+"out vec4 Tangent_FS_in;\n"\
+"out vec4 Bitangent_FS_in;\n"\
+"out vec4 Color_FS_in;\n"\
+"out vec4 PrimaryLightDir_FS_in;\n"\
+"out vec2 TexCoord2_FS_in;\n"\
+"out vec3 Blending_FS_in;\n"\
+"out float Slope_FS_in;\n"\
+"out float usingSteepMap_FS_in;\n"\
+"\n"\
+"vec4 ConvertToNormals ( vec4 color )\n"\
+"{\n"\
+"	// This makes silly assumptions, but it adds variation to the output. Hopefully this will look ok without doing a crapload of texture lookups or\n"\
+"	// wasting vram on real normals.\n"\
+"	//\n"\
+"	// UPDATE: In my testing, this method looks just as good as real normal maps. I am now using this as default method unless r_normalmapping >= 2\n"\
+"	// for the very noticable FPS boost over texture lookups.\n"\
+"\n"\
+"	vec3 N = vec3(clamp(color.r + color.b, 0.0, 1.0), clamp(color.g + color.b, 0.0, 1.0), clamp(color.r + color.g, 0.0, 1.0));\n"\
+"	N.xy = 1.0 - N.xy;\n"\
+"	vec4 norm = vec4(N * 2.0 - 1.0, clamp(length(N.xyz), 0.0, 1.0));\n"\
+"//	norm.a = float(int(norm.a * 10.0)) / 10.0;\n"\
+"	norm.a = 1.0-norm.a;\n"\
+"	return norm;\n"\
+"}\n"\
+"\n"\
+"void createPt(int i)\n"\
+"{\n"\
+"	Normal_FS_in = normalize(Normal_GS_in[i]);\n"\
+"    TexCoord_FS_in = TexCoord_GS_in[i];\n"\
+"    ViewDir_FS_in = ViewDir_GS_in[i];\n"\
+"    Tangent_FS_in = Tangent_GS_in[i];\n"\
+"    Bitangent_FS_in = Bitangent_GS_in[i];\n"\
+"    Color_FS_in = Color_GS_in[i];\n"\
+"    PrimaryLightDir_FS_in = PrimaryLightDir_GS_in[i];\n"\
+"    TexCoord2_FS_in = TexCoord2_GS_in[i];\n"\
+"    Blending_FS_in = Blending_GS_in[i];\n"\
+"    Slope_FS_in = Slope_GS_in[i];\n"\
+"    usingSteepMap_FS_in = usingSteepMap_GS_in[i];\n"\
+"\n"\
+"	vec4 dispData = ConvertToNormals(texture2D(u_DiffuseMap, TexCoord_FS_in));\n"\
+"//	float height = 0.33*dispData.x + 0.33*dispData.y + 0.33*dispData.z;\n"\
+"	float height = dispData.a;\n"\
+"\n"\
+"    vec4 newPos = vec4(WorldPos_GS_in[i].xyz + Normal_FS_in * (gDispFactor * height), 1.0);\n"\
+"	 WorldPos_FS_in = newPos.xyz;\n"\
+"\n"\
+"    gl_Position = u_ModelViewProjectionMatrix * newPos;\n"\
+"}\n"\
+"\n"\
+"void main()\n"\
+"{\n"\
+"	int i;\n"\
+"	for(i=0; i<gl_VerticesIn; i++)\n"\
+"	{\n"\
+"		createPt(i);\n"\
+"		EmitVertex();\n"\
+"	}\n"\
+"	EndPrimitive();\n"\
 "}\n";
 #endif
 
@@ -476,10 +671,19 @@ const char fallbackShader_genericTessControl_cp[] =
 "    float EyeToVertexDistance2 = distance(u_ViewOrigin.xyz, WorldPos_CS_in[2].xyz);\n"\
 "\n"\
 "    // Calculate the tessellation levels\n"\
-"    gl_TessLevelOuter[0] = GetTessLevel(EyeToVertexDistance1, EyeToVertexDistance2);\n"\
-"    gl_TessLevelOuter[1] = GetTessLevel(EyeToVertexDistance2, EyeToVertexDistance0);\n"\
-"    gl_TessLevelOuter[2] = GetTessLevel(EyeToVertexDistance0, EyeToVertexDistance1);\n"\
-"    gl_TessLevelInner[0] = gl_TessLevelOuter[2];\n"\
+"//    gl_TessLevelOuter[0] = GetTessLevel(EyeToVertexDistance1, EyeToVertexDistance2);\n"\
+"//    gl_TessLevelOuter[1] = GetTessLevel(EyeToVertexDistance2, EyeToVertexDistance0);\n"\
+"//    gl_TessLevelOuter[2] = GetTessLevel(EyeToVertexDistance0, EyeToVertexDistance1);\n"\
+"//    gl_TessLevelInner[0] = gl_TessLevelOuter[2];\n"\
+"\n"\
+"		float dist = GetTessLevel(EyeToVertexDistance1, EyeToVertexDistance2) + GetTessLevel(EyeToVertexDistance2, EyeToVertexDistance0) + GetTessLevel(EyeToVertexDistance0, EyeToVertexDistance1);\n"\
+"		dist /= 3.0;\n"\
+"		gl_TessLevelInner[0] = dist;\n"\
+"		gl_TessLevelInner[1] = dist;\n"\
+"		gl_TessLevelOuter[0] = dist;\n"\
+"		gl_TessLevelOuter[1] = dist;\n"\
+"		gl_TessLevelOuter[2] = dist;\n"\
+"		gl_TessLevelOuter[3] = dist;\n"\
 "}\n";
 
 const char fallbackShader_genericTessControl_ep[] = 
@@ -650,16 +854,40 @@ const char fallbackShader_genericTessControl_cp[] =
 " float termIK;\n"\
 "};\n"\
 "\n"\
-"float uTessLevels = 5.0;\n"\
+"//float uTessLevels = 5.0;\n"\
+"\n"\
+"// tessellation levels\n"\
+"uniform vec3			u_ViewOrigin;\n"\
+"uniform vec4			u_Local10;\n"\
+"\n"\
+"#define uTessLevels u_Local10.g\n"\
 "\n"\
 "layout(vertices=3) out;\n"\
 "\n"\
-"layout(location = 0)   in vec3 Normal_CS_in[];\n"\
-"layout(location = 1)   in vec2 TexCoord_CS_in[];\n"\
+"in vec4 WorldPos_CS_in[];\n"\
+"in vec3 Normal_CS_in[];\n"\
+"in vec2 TexCoord_CS_in[];\n"\
+"in vec4 Tangent_CS_in[];\n"\
+"in vec4 Bitangent_CS_in[];\n"\
+"in vec4 Color_CS_in[];\n"\
+"in vec4 PrimaryLightDir_CS_in[];\n"\
+"in vec2 TexCoord2_CS_in[];\n"\
+"in vec3 Blending_CS_in[];\n"\
+"in float Slope_CS_in[];\n"\
+"in float usingSteepMap_CS_in[];\n"\
 "\n"\
-"layout(location=0) out vec3 oNormal[3];\n"\
-"layout(location=3) out vec2 oTexCoord[3];\n"\
-"layout(location=6) out PhongPatch oPhongPatch[3];\n"\
+"out vec4 WorldPos_ES_in[3];\n"\
+"out vec3 iNormal[3];\n"\
+"out vec2 iTexCoord[3];\n"\
+"out PhongPatch iPhongPatch[3];\n"\
+"out vec4 Tangent_ES_in[3];\n"\
+"out vec4 Bitangent_ES_in[3];\n"\
+"out vec4 Color_ES_in[3];\n"\
+"out vec4 PrimaryLightDir_ES_in[3];\n"\
+"out vec2 TexCoord2_ES_in[3];\n"\
+"out vec3 Blending_ES_in[3];\n"\
+"out float Slope_ES_in[3];\n"\
+"out float usingSteepMap_ES_in[3];\n"\
 "\n"\
 "#define Pi  gl_in[0].gl_Position.xyz\n"\
 "#define Pj  gl_in[1].gl_Position.xyz\n"\
@@ -675,14 +903,24 @@ const char fallbackShader_genericTessControl_cp[] =
 "void main()\n"\
 "{\n"\
 " // get data\n"\
-" gl_out[gl_InvocationID].gl_Position = gl_in[gl_InvocationID].gl_Position;\n"\
-" oNormal[gl_InvocationID]   = Normal_CS_in[gl_InvocationID];\n"\
-" oTexCoord[gl_InvocationID] = TexCoord_CS_in[gl_InvocationID];\n"\
+" gl_out[gl_InvocationID].gl_Position		= gl_in[gl_InvocationID].gl_Position;\n"\
+" WorldPos_ES_in[gl_InvocationID]			= WorldPos_CS_in[gl_InvocationID];\n"\
+" iNormal[gl_InvocationID]					= Normal_CS_in[gl_InvocationID];\n"\
+" iTexCoord[gl_InvocationID]				= TexCoord_CS_in[gl_InvocationID];\n"\
+"\n"\
+" Color_ES_in[gl_InvocationID]				= Color_CS_in[gl_InvocationID];\n"\
+" Tangent_ES_in[gl_InvocationID]			= Tangent_CS_in[gl_InvocationID];\n"\
+" Bitangent_ES_in[gl_InvocationID]			= Bitangent_CS_in[gl_InvocationID];\n"\
+" PrimaryLightDir_ES_in[gl_InvocationID]	= PrimaryLightDir_CS_in[gl_InvocationID];\n"\
+" TexCoord2_ES_in[gl_InvocationID]			= TexCoord2_CS_in[gl_InvocationID];\n"\
+" Blending_ES_in[gl_InvocationID]			= Blending_CS_in[gl_InvocationID];\n"\
+" Slope_ES_in[gl_InvocationID]				= Slope_CS_in[gl_InvocationID];\n"\
+" usingSteepMap_ES_in[gl_InvocationID]		= usingSteepMap_CS_in[gl_InvocationID];\n"\
 "\n"\
 " // compute patch data\n"\
-" oPhongPatch[gl_InvocationID].termIJ = PIi(0,Pj) + PIi(1,Pi);\n"\
-" oPhongPatch[gl_InvocationID].termJK = PIi(1,Pk) + PIi(2,Pj);\n"\
-" oPhongPatch[gl_InvocationID].termIK = PIi(2,Pi) + PIi(0,Pk);\n"\
+" iPhongPatch[gl_InvocationID].termIJ = PIi(0,Pj) + PIi(1,Pi);\n"\
+" iPhongPatch[gl_InvocationID].termJK = PIi(1,Pk) + PIi(2,Pj);\n"\
+" iPhongPatch[gl_InvocationID].termIK = PIi(2,Pi) + PIi(0,Pk);\n"\
 "\n"\
 " // tesselate\n"\
 " gl_TessLevelOuter[gl_InvocationID] = uTessLevels;\n"\
@@ -698,18 +936,47 @@ const char fallbackShader_genericTessControl_ep[] =
 " float termIK;\n"\
 "};\n"\
 "\n"\
-"float uTessAlpha = 0.5;\n"\
-"uniform mat4  u_ModelViewProjectionMatrix;\n"\
+"//float uTessAlpha = 0.5;\n"\
+"\n"\
+"uniform vec4			u_Local10;\n"\
+"\n"\
+"#if defined(USE_SKELETAL_ANIMATION)\n"\
+"#define uTessAlpha -u_Local10.r // UQ1: Why is this required?!?!?!?!?!!?!?!?!? Something is reversed with these...\n"\
+"#else\n"\
+"#define uTessAlpha u_Local10.r\n"\
+"#endif //defined(USE_SKELETAL_ANIMATION)\n"\
+"\n"\
+"uniform vec3			u_ViewOrigin;\n"\
+"\n"\
+"uniform mat4			u_ModelViewProjectionMatrix;\n"\
 "\n"\
 "layout(triangles, fractional_odd_spacing, ccw) in;\n"\
 "\n"\
-"layout(location=0) in vec3 iNormal[];\n"\
-"layout(location=3) in vec2 iTexCoord[];\n"\
-"layout(location=6) in PhongPatch iPhongPatch[];\n"\
+"in vec4 WorldPos_ES_in[];\n"\
+"in vec3 iNormal[];\n"\
+"in vec2 iTexCoord[];\n"\
+"in PhongPatch iPhongPatch[];\n"\
+"in vec4 Tangent_ES_in[];\n"\
+"in vec4 Bitangent_ES_in[];\n"\
+"in vec4 Color_ES_in[];\n"\
+"in vec4 PrimaryLightDir_ES_in[];\n"\
+"in vec2 TexCoord2_ES_in[];\n"\
+"in vec3 Blending_ES_in[];\n"\
+"in float Slope_ES_in[];\n"\
+"in float usingSteepMap_ES_in[];\n"\
 "\n"\
+"out vec3 WorldPos_FS_in;\n"\
 "out vec3 Normal_FS_in;\n"\
 "out vec2 TexCoord_FS_in;\n"\
-"out vec3 WorldPos_FS_in;\n"\
+"out vec3 ViewDir_FS_in;\n"\
+"out vec4 Tangent_FS_in;\n"\
+"out vec4 Bitangent_FS_in;\n"\
+"out vec4 Color_FS_in;\n"\
+"out vec4 PrimaryLightDir_FS_in;\n"\
+"out vec2 TexCoord2_FS_in;\n"\
+"out vec3 Blending_FS_in;\n"\
+"out float Slope_FS_in;\n"\
+"out float usingSteepMap_FS_in;\n"\
 "\n"\
 "#define Pi  gl_in[0].gl_Position.xyz\n"\
 "#define Pj  gl_in[1].gl_Position.xyz\n"\
@@ -729,6 +996,31 @@ const char fallbackShader_genericTessControl_ep[] =
 "           + gl_TessCoord[1]*iNormal[1]\n"\
 "           + gl_TessCoord[2]*iNormal[2];\n"\
 "\n"\
+" Tangent_FS_in = gl_TessCoord[0]*Tangent_ES_in[0]\n"\
+"            + gl_TessCoord[1]*Tangent_ES_in[1]\n"\
+"            + gl_TessCoord[2]*Tangent_ES_in[2];\n"\
+" Bitangent_FS_in = gl_TessCoord[0]*Bitangent_ES_in[0]\n"\
+"            + gl_TessCoord[1]*Bitangent_ES_in[1]\n"\
+"            + gl_TessCoord[2]*Bitangent_ES_in[2];\n"\
+" Color_FS_in = gl_TessCoord[0]*Color_ES_in[0]\n"\
+"            + gl_TessCoord[1]*Color_ES_in[1]\n"\
+"            + gl_TessCoord[2]*Color_ES_in[2];\n"\
+" PrimaryLightDir_FS_in = gl_TessCoord[0]*PrimaryLightDir_ES_in[0]\n"\
+"            + gl_TessCoord[1]*PrimaryLightDir_ES_in[1]\n"\
+"            + gl_TessCoord[2]*PrimaryLightDir_ES_in[2];\n"\
+" TexCoord2_FS_in = gl_TessCoord[0]*TexCoord2_ES_in[0]\n"\
+"            + gl_TessCoord[1]*TexCoord2_ES_in[1]\n"\
+"            + gl_TessCoord[2]*TexCoord2_ES_in[2];\n"\
+" Blending_FS_in = gl_TessCoord[0]*Blending_ES_in[0]\n"\
+"            + gl_TessCoord[1]*Blending_ES_in[1]\n"\
+"            + gl_TessCoord[2]*Blending_ES_in[2];\n"\
+" Slope_FS_in = gl_TessCoord[0]*Slope_ES_in[0]\n"\
+"            + gl_TessCoord[1]*Slope_ES_in[1]\n"\
+"            + gl_TessCoord[2]*Slope_ES_in[2];\n"\
+" usingSteepMap_FS_in = gl_TessCoord[0]*usingSteepMap_ES_in[0]\n"\
+"            + gl_TessCoord[1]*usingSteepMap_ES_in[1]\n"\
+"            + gl_TessCoord[2]*usingSteepMap_ES_in[2];\n"\
+"\n"\
 " // interpolated position\n"\
 " vec3 barPos = gl_TessCoord[0]*Pi\n"\
 "             + gl_TessCoord[1]*Pj\n"\
@@ -746,17 +1038,19 @@ const char fallbackShader_genericTessControl_ep[] =
 "                    iPhongPatch[2].termIK);\n"\
 "\n"\
 " // phong tesselated pos\n"\
+"// float vSize = length(Pi - Pj) + length(Pj - Pk) + length(Pi - Pk); // UQ1: Testing this for tessellation on large terrains\n"\
 " vec3 phongPos   = tc2[0]*Pi\n"\
 "                 + tc2[1]*Pj\n"\
 "                 + tc2[2]*Pk\n"\
-"                 + tc1[0]*tc1[1]*termIJ\n"\
-"                 + tc1[1]*tc1[2]*termJK\n"\
-"                 + tc1[2]*tc1[0]*termIK;\n"\
+"                 + tc1[0]*tc1[1]*termIJ/**vSize*/\n"\
+"                 + tc1[1]*tc1[2]*termJK/**vSize*/\n"\
+"                 + tc1[2]*tc1[0]*termIK/**vSize*/;\n"\
 "\n"\
 " // final position\n"\
 " vec3 finalPos = (1.0-uTessAlpha)*barPos + uTessAlpha*phongPos;\n"\
 " gl_Position   = u_ModelViewProjectionMatrix * vec4(finalPos,1.0);\n"\
-" WorldPos_FS_in = gl_Position.xyz;\n"\
+" WorldPos_FS_in = finalPos;\n"\
+" ViewDir_FS_in = u_ViewOrigin - finalPos;\n"\
 "}\n";
 #endif
 
@@ -1718,7 +2012,7 @@ int GLSL_BeginLoadGPUShader(shaderProgram_t * program, const char *name,
 
 		//ri->Printf(PRINT_WARNING, "Begin GLSL load GL_TESS_EVALUATION_SHADER for %s.\n", name);
 
-		if (!GLSL_LoadGPUShaderText(name, fallback_ep, GL_GEOMETRY_SHADER, postHeader, size))
+		if (!GLSL_LoadGPUShaderText(name, fallback_ep, GL_TESS_EVALUATION_SHADER, postHeader, size))
 		{
 			return 0;
 		}
@@ -1768,7 +2062,10 @@ int GLSL_BeginLoadGPUShader(shaderProgram_t * program, const char *name,
 
 	if (tesselation && cpCode && cpCode[0] && epCode && epCode[0])
 	{
-		return GLSL_BeginLoadGPUShader2(program, name, attribs, vpCode, fragmentShader ? fpCode : NULL, cpCode, epCode, NULL);
+		if (geometry && gsCode && gsCode[0])
+			return GLSL_BeginLoadGPUShader2(program, name, attribs, vpCode, fragmentShader ? fpCode : NULL, cpCode, epCode, gsCode);
+		else
+			return GLSL_BeginLoadGPUShader2(program, name, attribs, vpCode, fragmentShader ? fpCode : NULL, cpCode, epCode, NULL);
 	}
 	else if (geometry && gsCode && gsCode[0])
 	{
@@ -2332,7 +2629,11 @@ int GLSL_BeginLoadGPUShaders(void)
 		{
 			Q_strcat(extradefines, 1024, "#define USE_TESSELLATION\n");
 
+#ifdef HEIGHTMAP_TESSELATION2
+			if (!GLSL_BeginLoadGPUShader(&tr.lightallShader[i], "lightall", attribs, qtrue, qtrue, qtrue, extradefines, qtrue, NULL, fallbackShader_lightall_vp, fallbackShader_lightall_fp, fallbackShader_genericTessControl_cp, fallbackShader_genericTessControl_ep, fallbackShader_genericGeometry))
+#else
 			if (!GLSL_BeginLoadGPUShader(&tr.lightallShader[i], "lightall", attribs, qtrue, qtrue, qfalse, extradefines, qtrue, NULL, fallbackShader_lightall_vp, fallbackShader_lightall_fp, fallbackShader_genericTessControl_cp, fallbackShader_genericTessControl_ep, NULL))
+#endif
 			{
 				ri->Error(ERR_FATAL, "Could not load lightall shader!");
 			}

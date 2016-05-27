@@ -45,7 +45,7 @@ vec3 applyFog2( in vec3  rgb,      // original color of the pixel
 #endif //defined(HEIGHT_BASED_FOG)
 
 	fogAmount = clamp(fogAmount, 0.1, 1.0/*u_Local0.a*/);
-	float sunAmount = max( clamp(dot( rayDir, sunDir )/**u_Local0.b*/, 0.0, 1.0), 0.0 );
+	float sunAmount = max( clamp(dot( rayDir, sunDir )*1.1/*u_Local0.b*/, 0.0, 1.0), 0.0 );
 	if (u_MapInfo.a <= 0.0) sunAmount = 0.0;
     vec3  fogColor  = mix( vec3(0.5,0.6,0.7), // bluish
                            vec3(1.0,0.9,0.7), // yellowish

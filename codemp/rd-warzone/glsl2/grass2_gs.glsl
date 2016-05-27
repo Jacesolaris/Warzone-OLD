@@ -19,6 +19,7 @@ uniform vec4				u_Local8; // passnum, 0, 0, 0
 uniform vec4				u_Local9; // testvalue0, 1, 2, 3
 uniform vec4				u_Local10; // foliageLODdistance, foliageDensity, MAP_WATER_LEVEL, 0.0
 
+uniform vec3				u_ViewOrigin;
 uniform float				u_Time;
 
 smooth out vec2				vTexCoord;
@@ -37,9 +38,6 @@ flat out int				iGrassType;
 // General Settings...
 //
 
-#define						FAST_METHOD
-//#define					ANGLE_BASED_DENSITY
-
 const float					fGrassPatchSize = 256.0;//u_Local9.b;//64.0;//48.0;//24.0;
 const float					fWindStrength = 12.0;
 const vec3					vWindDirection = normalize(vec3(1.0, 0.0, 1.0));
@@ -56,17 +54,10 @@ const vec3					vWindDirection = normalize(vec3(1.0, 0.0, 1.0));
 #define LOD3_RANGE			MAX_RANGE / 3.0
 
 
-#if !defined(FAST_METHOD)
-#define LOD0_MAX_FOLIAGES	85
+#define LOD0_MAX_FOLIAGES	102
 #define LOD1_MAX_FOLIAGES	32
-#define LOD2_MAX_FOLIAGES	4
-#define LOD3_MAX_FOLIAGES	1
-#else //defined(FAST_METHOD)
-#define LOD0_MAX_FOLIAGES	146//170
-#define LOD1_MAX_FOLIAGES	32//73
-#define LOD2_MAX_FOLIAGES	16//32
-#define LOD3_MAX_FOLIAGES	8//16
-#endif //defined(FAST_METHOD)
+#define LOD2_MAX_FOLIAGES	16
+#define LOD3_MAX_FOLIAGES	8
 
 vec3 vLocalSeed;
 
@@ -177,7 +168,8 @@ void main()
 	//	return;
 	//}
 
-	float VertDist = (u_ModelViewProjectionMatrix*vec4(Pos, 1.0)).z;
+	// UQ1: Checked and distance is faster
+	float VertDist = distance(u_ViewOrigin, Pos);//(u_ModelViewProjectionMatrix*vec4(Pos, 1.0)).z;
 
 	if (VertDist >= MAX_RANGE + 1024) 
 	{// Too far from viewer... Early cull...
@@ -212,10 +204,6 @@ void main()
 	if (VertDist >= LOD3_RANGE) FOLIAGE_DENSITY = LOD3_MAX_FOLIAGES;
 	else if (VertDist >= LOD2_RANGE) FOLIAGE_DENSITY = LOD2_MAX_FOLIAGES;
 	else if (VertDist >= LOD1_RANGE) FOLIAGE_DENSITY = LOD1_MAX_FOLIAGES;
-
-#if defined(ANGLE_BASED_DENSITY)
-	FOLIAGE_DENSITY = int(float(FOLIAGE_DENSITY) / (pitch+1.0));
-#endif //defined(ANGLE_BASED_DENSITY)
 
 	if ( FOLIAGE_DENSITY > densityMax) FOLIAGE_DENSITY = densityMax;
 
@@ -299,7 +287,8 @@ void main()
 			}
 		}
 
-		float VertDist2 = (u_ModelViewProjectionMatrix*vec4(vGrassFieldPos, 1.0)).z;
+		// UQ1: Checked and distance is faster
+		float VertDist2 = distance(u_ViewOrigin, vGrassFieldPos);//(u_ModelViewProjectionMatrix*vec4(vGrassFieldPos, 1.0)).z;
 
 		if (VertDist2 >= MAX_RANGE) 
 		{// Too far from viewer... Cull...

@@ -327,7 +327,8 @@ void RB_SunRays(FBO_t *srcFbo, vec4i_t srcBox, FBO_t *dstFbo, vec4i_t dstBox)
 		Matrix16Multiply( backEnd.viewParms.world.modelMatrix, trans, model );
 		Matrix16Multiply(backEnd.viewParms.projectionMatrix, model, mvp);
 
-		dist = backEnd.viewParms.zFar / 1.75;		// div sqrt(3)
+		//dist = backEnd.viewParms.zFar / 1.75;		// div sqrt(3)
+		dist = 4096.0;//backEnd.viewParms.zFar / 1.75;
 
 		VectorScale( tr.sunDirection, dist, pos );
 	}
@@ -868,15 +869,18 @@ qboolean Volumetric_Visible(vec3_t from, vec3_t to, qboolean isSun)
 #if 0
 	return qtrue;
 #else
+	if (isSun)
+		return qtrue;
+
 	trace_t trace;
 
 	Volumetric_Trace( &trace, from, NULL, NULL, to, -1, (CONTENTS_SOLID|CONTENTS_TERRAIN) );
 
-	if (isSun)
+	/*if (isSun)
 	{
 		if (trace.fraction < 0.7)
 			return qfalse;
-	}
+	}*/
 
 	//if (trace.fraction != 1.0 && Distance(trace.endpos, to) > 64)
 	if (trace.fraction < 0.7)
@@ -1757,7 +1761,7 @@ void RB_WaterPost(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 
 	
 	vec3_t out;
-	float dist = backEnd.viewParms.zFar / 1.75;
+	float dist = 4096.0;//backEnd.viewParms.zFar / 1.75;
  	VectorMA( backEnd.refdef.vieworg, dist, backEnd.refdef.sunDir, out );
 	GLSL_SetUniformVec4(shader, UNIFORM_PRIMARYLIGHTORIGIN,  out);
 
@@ -1880,7 +1884,7 @@ void RB_SSS(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 	//GLSL_SetUniformVec3(shader, UNIFORM_VIEWORIGIN,  world);
 
 	vec3_t out;
-	float dist = backEnd.viewParms.zFar / 1.75;
+	float dist = 4096.0;//backEnd.viewParms.zFar / 1.75;
  	VectorMA( backEnd.refdef.vieworg, dist, /*tr.sunDirection*/backEnd.refdef.sunDir, out );
 	GLSL_SetUniformVec4(shader, UNIFORM_PRIMARYLIGHTORIGIN,  out);
 	//GLSL_SetUniformVec4(shader, UNIFORM_PRIMARYLIGHTORIGIN,  backEnd.refdef.sunDir);
@@ -2566,7 +2570,7 @@ void RB_TestShader(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox,
 
 	
 	vec3_t out;
-	float dist = backEnd.viewParms.zFar / 1.75;
+	float dist = 4096.0;//backEnd.viewParms.zFar / 1.75;
  	VectorMA( backEnd.refdef.vieworg, dist, backEnd.refdef.sunDir, out );
 	GLSL_SetUniformVec4(&tr.testshaderShader, UNIFORM_PRIMARYLIGHTORIGIN,  out);
 	GLSL_SetUniformVec4(&tr.testshaderShader, UNIFORM_LOCAL2,  backEnd.refdef.sunDir);
@@ -2713,7 +2717,7 @@ void RB_FogPostShader(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrB
 
 	
 	vec3_t out;
-	float dist = backEnd.viewParms.zFar / 1.75;
+	float dist = 4096.0;//backEnd.viewParms.zFar / 1.75;
  	VectorMA( backEnd.refdef.vieworg, dist, backEnd.refdef.sunDir, out );
 	GLSL_SetUniformVec4(&tr.fogPostShader, UNIFORM_PRIMARYLIGHTORIGIN,  out);
 	GLSL_SetUniformVec4(&tr.fogPostShader, UNIFORM_LOCAL2,  backEnd.refdef.sunDir);

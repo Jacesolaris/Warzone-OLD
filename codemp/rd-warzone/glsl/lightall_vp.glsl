@@ -46,6 +46,8 @@ uniform vec4	u_Local5; // hasRealOverlayMap, overlaySway, blinnPhong, hasSteepMa
 uniform vec4	u_Local6; // useSunLightSpecular
 uniform vec4	u_Local9;
 
+uniform sampler2D			u_DiffuseMap;
+
 uniform float	u_Time;
 
 
@@ -219,6 +221,21 @@ vec3 vectoangles( in vec3 value1 ) {
 }
 #endif //defined(USE_OVERLAY)
 
+vec4 ConvertToNormals ( vec4 color )
+{
+	// This makes silly assumptions, but it adds variation to the output. Hopefully this will look ok without doing a crapload of texture lookups or
+	// wasting vram on real normals.
+	//
+	// UPDATE: In my testing, this method looks just as good as real normal maps. I am now using this as default method unless r_normalmapping >= 2
+	// for the very noticable FPS boost over texture lookups.
+
+	//N = vec3((color.r + color.b) / 2.0, (color.g + color.b) / 2.0, (color.r + color.g) / 2.0);
+	vec3 N = vec3(clamp(color.r + color.b, 0.0, 1.0), clamp(color.g + color.b, 0.0, 1.0), clamp(color.r + color.g, 0.0, 1.0));
+	N.xy = 1.0 - N.xy;
+	N.xyz *= 0.04;
+	vec4 norm = vec4(N, 1.0 - (length(N.xyz) / 3.0));
+	return norm;
+}
 
 void main()
 {
@@ -363,22 +380,25 @@ void main()
 
 #if defined(USE_OVERLAY) || defined(USE_TRI_PLANAR)
 
-	GetBlending(attr_Normal.xyz);
+	GetBlending(normalize(attr_Normal.xyz * 2.0 - 1.0));
 
 #endif //defined(USE_OVERLAY) || defined(USE_TRI_PLANAR)
 
 
 
 #if defined(USE_TESSELLATION)
+  //mat3 tangentToWorld = mat3(var_Tangent.xyz, var_Bitangent.xyz, attr_Normal.xyz * 2.0 - 1.0);
+  //vec4 color = texture(u_DiffuseMap, var_TexCoords.xy);
+  //vec4 no = ConvertToNormals(color);
+  //vec3 nMap = normalize(tangentToWorld * ((no * 2.0 - 1.0).xyz * no.a));
+  //vec3 nMap = normalize(attr_Normal.xyz * 2.0 - 1.0);
+  //vec3 nMap = normalize(tangentToWorld * attr_Normal.xyz * 2.0 - 1.0);
+  //nMap.z = sqrt(clamp((0.25 - nMap.x * nMap.x) - nMap.y * nMap.y, 0.0, 1.0));
 
   WorldPos_CS_in = vec4(preMMPos, 1.0);
   TexCoord_CS_in = var_TexCoords.xy;
-  Normal_CS_in = -preMMNorm.xyz;//-var_Normal.xyz;
-  //Normal_CS_in = preMMNorm.xyz;//-preMMNorm.xyz;//-var_Normal.xyz;
+  Normal_CS_in = /*nMap.xyz;*/attr_Normal.xyz * 2.0 - 1.0;//-preMMNorm.xyz;//-var_Normal.xyz;
   ViewDir_CS_in = var_ViewDir;
-  //Normal_CS_in = -var_Normal.xyz;
-  //Tangent_CS_in = preMMtangent;//var_Tangent;
-  //Bitangent_CS_in = preMMbitangent;//var_Bitangent;
   Tangent_CS_in = var_Tangent;
   Bitangent_CS_in = var_Bitangent;
   Color_CS_in = var_Color;

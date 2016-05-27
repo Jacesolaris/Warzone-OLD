@@ -1,6 +1,5 @@
 #define						USE_TRI_PLANAR
 //#define					USE_SUBSURFACE_SCATTER
-//#define					EXPERIMENTAL_LIGHT
 
 uniform sampler2D			u_DiffuseMap;
 uniform sampler2D			u_SteepMap;
@@ -224,46 +223,72 @@ vec4 ConvertToNormals ( vec4 color )
 vec4 GetMap( in sampler2D tex, float scale, vec2 ParallaxOffset, int fakeMapType)
 {
 	bool fakeNormal = false;
+	vec4 xaxis;
+	vec4 yaxis;
+	vec4 zaxis;
 
 	if (u_Local4.r <= 0.0 && fakeMapType == FAKE_MAP_NORMALMAP)
 	{
-		tex = u_DiffuseMap;
 		fakeNormal = true;
+
+		xaxis = texture2D( u_DiffuseMap, (m_vertPos.yz * scale) + ParallaxOffset.xy);
+		yaxis = texture2D( u_DiffuseMap, (m_vertPos.xz * scale) + ParallaxOffset.xy);
+		zaxis = texture2D( u_DiffuseMap, (m_vertPos.xy * scale) + ParallaxOffset.xy);
 	}
 	else if (u_Local4.r <= 0.0 && fakeMapType == FAKE_MAP_NORMALMAP2)
 	{
-		tex = u_SteepMap;
 		fakeNormal = true;
+
+		xaxis = texture2D( u_SteepMap, (m_vertPos.yz * scale) + ParallaxOffset.xy);
+		yaxis = texture2D( u_SteepMap, (m_vertPos.xz * scale) + ParallaxOffset.xy);
+		zaxis = texture2D( u_SteepMap, (m_vertPos.xy * scale) + ParallaxOffset.xy);
 	}
 	else if (u_Local4.r <= 0.0 && fakeMapType == FAKE_MAP_NORMALMAP3)
 	{
-		tex = u_SteepMap2;
 		fakeNormal = true;
+
+		xaxis = texture2D( u_SteepMap2, (m_vertPos.yz * scale) + ParallaxOffset.xy);
+		yaxis = texture2D( u_SteepMap2, (m_vertPos.xz * scale) + ParallaxOffset.xy);
+		zaxis = texture2D( u_SteepMap2, (m_vertPos.xy * scale) + ParallaxOffset.xy);
 	}
 	else if (u_Local4.r <= 0.0 && fakeMapType == FAKE_MAP_SPLATNORMALMAP1)
 	{
-		tex = u_SplatMap1;
 		fakeNormal = true;
+
+		xaxis = texture2D( u_SplatMap1, (m_vertPos.yz * scale) + ParallaxOffset.xy);
+		yaxis = texture2D( u_SplatMap1, (m_vertPos.xz * scale) + ParallaxOffset.xy);
+		zaxis = texture2D( u_SplatMap1, (m_vertPos.xy * scale) + ParallaxOffset.xy);
 	}
 	else if (u_Local4.r <= 0.0 && fakeMapType == FAKE_MAP_SPLATNORMALMAP2)
 	{
-		tex = u_SplatMap2;
 		fakeNormal = true;
+
+		xaxis = texture2D( u_SplatMap2, (m_vertPos.yz * scale) + ParallaxOffset.xy);
+		yaxis = texture2D( u_SplatMap2, (m_vertPos.xz * scale) + ParallaxOffset.xy);
+		zaxis = texture2D( u_SplatMap2, (m_vertPos.xy * scale) + ParallaxOffset.xy);
 	}
 	else if (u_Local4.r <= 0.0 && fakeMapType == FAKE_MAP_SPLATNORMALMAP3)
 	{
-		tex = u_SplatMap3;
 		fakeNormal = true;
+
+		xaxis = texture2D( u_SplatMap3, (m_vertPos.yz * scale) + ParallaxOffset.xy);
+		yaxis = texture2D( u_SplatMap3, (m_vertPos.xz * scale) + ParallaxOffset.xy);
+		zaxis = texture2D( u_SplatMap3, (m_vertPos.xy * scale) + ParallaxOffset.xy);
 	}
 	else if (u_Local4.r <= 0.0 && fakeMapType == FAKE_MAP_SPLATNORMALMAP4)
 	{
-		tex = u_SplatMap4;
 		fakeNormal = true;
-	}
 
-	vec4 xaxis = texture2D( tex, (m_vertPos.yz * scale) + ParallaxOffset.xy);
-	vec4 yaxis = texture2D( tex, (m_vertPos.xz * scale) + ParallaxOffset.xy);
-	vec4 zaxis = texture2D( tex, (m_vertPos.xy * scale) + ParallaxOffset.xy);
+		xaxis = texture2D( u_SplatMap4, (m_vertPos.yz * scale) + ParallaxOffset.xy);
+		yaxis = texture2D( u_SplatMap4, (m_vertPos.xz * scale) + ParallaxOffset.xy);
+		zaxis = texture2D( u_SplatMap4, (m_vertPos.xy * scale) + ParallaxOffset.xy);
+	}
+	else
+	{
+		xaxis = texture2D( tex, (m_vertPos.yz * scale) + ParallaxOffset.xy);
+		yaxis = texture2D( tex, (m_vertPos.xz * scale) + ParallaxOffset.xy);
+		zaxis = texture2D( tex, (m_vertPos.xy * scale) + ParallaxOffset.xy);
+	}
 
 	if (fakeNormal)
 	{
@@ -276,44 +301,47 @@ vec4 GetMap( in sampler2D tex, float scale, vec2 ParallaxOffset, int fakeMapType
 vec4 GetNonSplatMap( in sampler2D tex, vec2 coord, int fakeMapType )
 {
 	bool fakeNormal = false;
+	vec4 map;
 
 	if (u_Local4.r <= 0.0 && fakeMapType == FAKE_MAP_NORMALMAP)
 	{
-		tex = u_DiffuseMap;
+		map = texture2D( u_DiffuseMap, coord );
 		fakeNormal = true;
 	}
 	else if (u_Local4.r <= 0.0 && fakeMapType == FAKE_MAP_NORMALMAP2)
 	{
-		tex = u_SteepMap;
+		map = texture2D( u_SteepMap, coord );
 		fakeNormal = true;
 	}
 	else if (u_Local4.r <= 0.0 && fakeMapType == FAKE_MAP_NORMALMAP3)
 	{
-		tex = u_SteepMap2;
+		map = texture2D( u_SteepMap2, coord );
 		fakeNormal = true;
 	}
 	else if (u_Local4.r <= 0.0 && fakeMapType == FAKE_MAP_SPLATNORMALMAP1)
 	{
-		tex = u_SplatMap1;
+		map = texture2D( u_SplatMap1, coord );
 		fakeNormal = true;
 	}
 	else if (u_Local4.r <= 0.0 && fakeMapType == FAKE_MAP_SPLATNORMALMAP2)
 	{
-		tex = u_SplatMap2;
+		map = texture2D( u_SplatMap2, coord );
 		fakeNormal = true;
 	}
 	else if (u_Local4.r <= 0.0 && fakeMapType == FAKE_MAP_SPLATNORMALMAP3)
 	{
-		tex = u_SplatMap3;
+		map = texture2D( u_SplatMap3, coord );
 		fakeNormal = true;
 	}
 	else if (u_Local4.r <= 0.0 && fakeMapType == FAKE_MAP_SPLATNORMALMAP4)
 	{
-		tex = u_SplatMap4;
+		map = texture2D( u_SplatMap4, coord );
 		fakeNormal = true;
 	}
-
-	vec4 map = texture2D( tex, coord );
+	else
+	{
+		map = texture2D( tex, coord );
+	}
 
 	if (fakeNormal)
 	{
@@ -331,10 +359,12 @@ vec4 GetSplatMap(vec2 texCoords, vec2 ParallaxOffset, float pixRandom, vec4 inCo
 		return inColor;
 	}
 
-	if (u_Local6.g > 0.0 && m_vertPos.z <= WATER_LEVEL + 128.0 + (64.0 * pixRandom))
-	{// Steep maps (water edges)... Underwater and beach doesn't use splats for now...
+	if (u_Local6.g > 0.0 && m_vertPos.z <= WATER_LEVEL)// + 128.0) + (64.0 * pixRandom))
+	{// Steep maps (water edges)... Underwater doesn't use splats for now...
 		return inColor;
 	}
+
+	//float inColorfulNess = clamp(length(inColor.r-inColor.g) + length(inColor.r-inColor.b) + length(inColor.g-inColor.b), 0.0, 1.0);
 
 	float origInA1 = inA1;
 	const float scale = 0.01;
@@ -375,37 +405,27 @@ vec4 GetSplatMap(vec2 texCoords, vec2 ParallaxOffset, float pixRandom, vec4 inCo
 	{
 		vec4 tex = GetMap(u_SplatMap1, scale, ParallaxOffset, FAKE_MAP_NONE);
 		splatColor = mix(splatColor, tex, control.r * tex.a);
-		//float a1 = smoothstep(0.0, 1.0, GetMap(u_SplatNormalMap1, scale, ParallaxOffset).a * control.r * tex.a * u_Local9.a);
-		//splatColor = vec4(splatblend(splatColor, inA1, tex, a1), 1.0);
 	}
 
 	if (u_Local7.g > 0.0)
 	{
 		vec4 tex = GetMap(u_SplatMap2, scale, ParallaxOffset, FAKE_MAP_NONE);
 		splatColor = mix(splatColor, tex, control.g * tex.a);
-		//float a1 = smoothstep(0.0, 1.0, GetMap(u_SplatNormalMap2, scale, ParallaxOffset).a * control.g * tex.a * u_Local9.a);
-		//splatColor = vec4(splatblend(splatColor, inA1, tex, a1), 1.0);
 	}
 
 	if (u_Local7.b > 0.0)
 	{
 		vec4 tex = GetMap(u_SplatMap3, scale, ParallaxOffset, FAKE_MAP_NONE);
 		splatColor = mix(splatColor, tex, control.b * tex.a);
-		//float a1 = smoothstep(0.0, 1.0, GetMap(u_SplatNormalMap3, scale, ParallaxOffset).a * control.b * tex.a * u_Local9.a);
-		//splatColor = vec4(splatblend(splatColor, inA1, tex, a1), 1.0);
 	}
 	/*
 	if (u_Local7.a > 0.0)
 	{
 		vec4 tex = GetMap(u_SplatMap4, scale, ParallaxOffset, FAKE_MAP_NONE);
 		splatColor = mix(splatColor, tex, control.a * tex.a);
-		//float a1 = smoothstep(0.0, 1.0, GetMap(u_SplatNormalMap4, scale, ParallaxOffset).a * control.a * tex.a);
-		//splatColor = vec4(splatblend(splatColor, inA1, tex, a1), 1.0);
 	}
 	*/
 
-	///splatColor = vec4(splatblend(inColor, origInA1/* * u_Local9.a*/, splatColor, 1.0 - (origInA1/* * u_Local9.a*/)), 1.0);
-	//splatColor = mix(inColor, splatColor, (length(control.rgba) / 4.0)/*splatColor.a*/);
 	return splatColor;
 #else //!defined(USE_OVERLAY) || defined(USE_TRI_PLANAR)
 	return inColor;
@@ -461,7 +481,7 @@ vec4 GetDiffuse(vec2 texCoords, vec2 ParallaxOffset, float pixRandom)
 		if (u_Local4.r <= 0.0) // save texture lookup
 			a1 = ConvertToNormals(tex).a;
 		else
-			GetMap(u_NormalMap, scale, ParallaxOffset, FAKE_MAP_NORMALMAP2).a;//GetMap(u_NormalMap2, scale, ParallaxOffset).a;
+			a1 = GetMap(u_NormalMap2, scale, ParallaxOffset, FAKE_MAP_NORMALMAP2).a;//GetMap(u_NormalMap2, scale, ParallaxOffset).a;
 
 		return GetSplatMap(texCoords, ParallaxOffset, pixRandom, tex, a1);
 	}
@@ -647,25 +667,6 @@ vec4 subScatterFS(vec4 BaseColor, vec4 SpecColor, vec3 lightVec, vec3 LightColor
 }
 #endif //USE_SUBSURFACE_SCATTER
 
-#if defined(EXPERIMENTAL_LIGHT)
-vec3 ExperimentalLighting(vec3 vSurfacePos, vec3 vViewPos, vec3 vLightPos, vec3 normal, vec3 lightColor, float strength, vec3 diffuse)
-{
-	vec3 vDirToView = normalize( vViewPos - vSurfacePos );
-	vec3 vDirToLight = normalize( vLightPos - vSurfacePos );
-
-	float fNDotL = clamp( dot(normal, vDirToLight), 0.0, 1.0);
-	float fDiffuse = fNDotL;
-	
-	vec3 vHalf = normalize( vDirToView + vDirToLight );
-	float fNDotH = clamp( dot(normal, vHalf), 0.0, 1.0);
-	float fSpec = pow(fNDotH, 10.0) * fNDotL * 0.5;
-	
-	vec3 vResult = ((lightColor.rgb * fDiffuse * strength) + (lightColor.rgb * strength * fSpec)) * diffuse;
-	
-	vResult = sqrt(vResult);
-	return vResult;
-}
-#endif //defined(EXPERIMENTAL_LIGHT)
 
 //---------------------------------------------------------------------------------------------
 // Normal Blending Techniques
@@ -720,13 +721,12 @@ void main()
 	//float pixRandom = (clamp(m_TexCoords.x, 0.0, 1.0) + clamp(m_TexCoords.y, 0.0, 1.0)) / 2.0;
 	//if (pixRandom < 0.5) pixRandom = 0.5 + pixRandom;
 
-	
 	#if 0
 	#if defined(USE_TESSELLATION)
 	//if (u_Local6.g > 0.0 && m_vertPos.z <= WATER_LEVEL + 32.0)
 	{
-		//gl_FragColor = vec4(m_Normal.xyz * 0.5 + 0.5, 1.0);
-		gl_FragColor = vec4(vec3(texture2D( u_NormalMap, texCoords).a), 1.0);
+		gl_FragColor = vec4(m_Normal.xyz * 0.5 + 0.5, 1.0);
+		//gl_FragColor = vec4(vec3(texture2D( u_NormalMap, texCoords).a), 1.0);
 
 		#if defined(USE_GLOW_BUFFER)
 			out_Glow = gl_FragColor;
@@ -782,16 +782,7 @@ void main()
 
 	#if defined(USE_PARALLAXMAP)
 		vec3 offsetDir = normalize(E * tangentToWorld);
-		vec2 ParallaxXY = vec2(0.0);
-
-		if (u_Local5.a > 0.0 && var_Slope > 0)
-		{// Steep maps...
-			ParallaxXY = offsetDir.xy * 2.5; // Always rock?!?!?!?
-		}
-		else
-		{
-			ParallaxXY = offsetDir.xy * u_Local1.x;
-		}
+		vec2 ParallaxXY = offsetDir.xy * u_Local1.x;
 
 		#if defined(FAST_PARALLAX)
 
@@ -828,7 +819,7 @@ void main()
 				Height = 0.0;
 			}
 		
-			ParallaxOffset = Coord - texCoords;
+			ParallaxOffset = texCoords - Coord;
 			texCoords = Coord;
 
 		#endif //defined(FAST_PARALLAX)
@@ -992,27 +983,10 @@ void main()
 	#endif //USE_SUBSURFACE_SCATTER
 
 
-	#if defined(EXPERIMENTAL_LIGHT)
+	#if defined(USE_PRIMARY_LIGHT) || defined(USE_PRIMARY_LIGHT_SPECULAR)
 		if (u_Local6.r > 0.0)
 		{
-			float lightFactor = u_Local5.b;
-
-			vec3 lightDir = u_PrimaryLightOrigin.xyz - m_vertPos.xyz;
-			float lightStrength = clamp(1.0 - (length(lightDir) * (1.0 / distance(u_PrimaryLightOrigin.xyz, m_vertPos.xyz))), 0.0, 1.0) * 0.5;
-
-			gl_FragColor.rgb += ExperimentalLighting(m_vertPos.xyz, u_ViewOrigin.xyz, u_PrimaryLightOrigin.xyz, DETAILED_NORMAL.xyz, u_PrimaryLightColor.rgb, lightStrength, gl_FragColor.rgb);
-
-			for (int li = 0; li < u_lightCount; li++)
-			{
-				lightDir = u_lightPositions2[li] - m_vertPos.xyz;
-				lightStrength = clamp(1.0 - (length(lightDir) * (1.0 / u_lightDistances[li])), 0.0, 1.0) * 0.5;
-				gl_FragColor.rgb += ExperimentalLighting(m_vertPos.xyz, u_ViewOrigin.xyz, u_lightPositions2[li].xyz, DETAILED_NORMAL.xyz, u_lightColors[li].rgb, lightStrength, gl_FragColor.rgb);
-			}
-		}
-	#elif defined(USE_PRIMARY_LIGHT) || defined(USE_PRIMARY_LIGHT_SPECULAR)
-		if (u_Local6.r > 0.0)
-		{
-			float lambertian2 = dot(var_PrimaryLightDir.xyz,DETAILED_NORMAL.xyz/*N*/);
+			float lambertian2 = dot(var_PrimaryLightDir.xyz,N);
 			float spec2 = 0.0;
 			bool noSunPhong = false;
 			float phongFactor = u_Local5.b;
@@ -1026,7 +1000,7 @@ void main()
 			if(lambertian2 > 0.0)
 			{// this is blinn phong
 				vec3 halfDir2 = normalize(var_PrimaryLightDir.xyz + E);
-				float specAngle = max(dot(halfDir2, DETAILED_NORMAL.xyz/*N*/), 0.0);
+				float specAngle = max(dot(halfDir2, N), 0.0);
 				spec2 = pow(specAngle, 16.0);
 				gl_FragColor.rgb += vec3(spec2 * (1.0 - specular.a)) * gl_FragColor.rgb * u_PrimaryLightColor.rgb * phongFactor;
 			}
@@ -1039,7 +1013,7 @@ void main()
 			for (int li = 0; li < u_lightCount; li++)
 			{
 				vec3 lightDir = u_lightPositions2[li] - m_vertPos.xyz;
-				float lambertian3 = dot(lightDir.xyz,DETAILED_NORMAL.xyz/*N*/);
+				float lambertian3 = dot(lightDir.xyz,N);
 				float spec3 = 0.0;
 
 				if(lambertian3 > 0.0)
@@ -1049,14 +1023,14 @@ void main()
 					if(lightStrength > 0.0)
 					{// this is blinn phong
 						vec3 halfDir3 = normalize(lightDir.xyz + E);
-						float specAngle3 = max(dot(halfDir3, DETAILED_NORMAL.xyz/*N*/), 0.0);
+						float specAngle3 = max(dot(halfDir3, N), 0.0);
 						spec3 = pow(specAngle3, 16.0);
 						gl_FragColor.rgb += vec3(spec3 * (1.0 - specular.a)) * u_lightColors[li].rgb * lightStrength * phongFactor;
 					}
 				}
 			}
 		}
-	#endif //defined(EXPERIMENTAL_LIGHT)
+	#endif //defined(USE_PRIMARY_LIGHT) || defined(USE_PRIMARY_LIGHT_SPECULAR)
 
 	//gl_FragColor.rgb = N.xyz * 0.5 + 0.5;
 

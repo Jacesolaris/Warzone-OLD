@@ -1031,43 +1031,44 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage)
 		hasNormalMap = 1.0;
 	}
 
-	if (pStage->bundle[TB_OVERLAYMAP].overlayLoaded 
-		&& pStage->hasRealOverlayMap 
+	if (pStage->bundle[TB_OVERLAYMAP].image[0]
 		&& pStage->bundle[TB_OVERLAYMAP].image[0] != tr.whiteImage)
 	{
 		hasOverlay = 1.0;
 	}
 
-	if (pStage->bundle[TB_STEEPMAP].steepMapLoaded
-		&& pStage->hasRealSteepMap 
+	if (pStage->bundle[TB_STEEPMAP].image[0]
 		&& pStage->bundle[TB_STEEPMAP].image[0] != tr.whiteImage)
 	{
 		hasSteepMap = 1.0;
 	}
 
-	if (pStage->bundle[TB_STEEPMAP2].steepMapLoaded2
-		&& pStage->hasRealSteepMap2
+	if (pStage->bundle[TB_STEEPMAP2].image[0]
 		&& pStage->bundle[TB_STEEPMAP2].image[0] != tr.whiteImage)
 	{
 		hasSteepMap2 = 1.0;
 	}
 
-	if ((pStage->bundle[TB_SPLATMAP1].image[0] && pStage->bundle[TB_SPLATMAP1].image[0] != tr.whiteImage))
+	if ((pStage->bundle[TB_SPLATMAP1].image[0] 
+		&& pStage->bundle[TB_SPLATMAP1].image[0] != tr.whiteImage))
 	{
 		hasSplatMap1 = 1;
 	}
 
-	if ((pStage->bundle[TB_SPLATMAP2].image[0] && pStage->bundle[TB_SPLATMAP2].image[0] != tr.whiteImage))
+	if ((pStage->bundle[TB_SPLATMAP2].image[0] 
+		&& pStage->bundle[TB_SPLATMAP2].image[0] != tr.whiteImage))
 	{
 		hasSplatMap2 = 1;
 	}
 
-	if ((pStage->bundle[TB_SPLATMAP3].image[0] && pStage->bundle[TB_SPLATMAP3].image[0] != tr.whiteImage))
+	if ((pStage->bundle[TB_SPLATMAP3].image[0] 
+		&& pStage->bundle[TB_SPLATMAP3].image[0] != tr.whiteImage))
 	{
 		hasSplatMap3 = 1;
 	}
 
-	if ((pStage->bundle[TB_SPLATMAP4].image[0] && pStage->bundle[TB_SPLATMAP4].image[0] != tr.whiteImage))
+	if ((pStage->bundle[TB_SPLATMAP4].image[0] 
+		&& pStage->bundle[TB_SPLATMAP4].image[0] != tr.whiteImage))
 	{
 		hasSplatMap4 = 1;
 	}
@@ -1421,6 +1422,8 @@ qboolean RB_ShouldUseTesselation ( int materialType )
 
 float RB_GetTesselationAlphaLevel ( int materialType )
 {
+	return r_tesselationAlpha->value;
+
 	float tessAlphaLevel = r_tesselationAlpha->value;
 
 	switch( materialType )
@@ -1529,6 +1532,8 @@ float RB_GetTesselationAlphaLevel ( int materialType )
 
 float RB_GetTesselationInnerLevel ( int materialType )
 {
+	return r_tesselationLevel->value;
+
 	float tessInnerLevel = Q_clamp(1.0, r_tesselationLevel->value, 2.25);
 
 	switch( materialType )
