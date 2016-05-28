@@ -43,7 +43,7 @@ void main()
 	}
 
 	hbao /= NUM_VALUES;
-	hbao = clamp(hbao, 0.5, 1.0);
+	hbao = clamp(hbao, 0.75, 1.0);
 
 	gl_FragColor = vec4((color.rgb * hbao), color.a);
 #endif //defined(DEBUG)
