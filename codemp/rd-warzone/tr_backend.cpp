@@ -2477,12 +2477,6 @@ const void *RB_PostProcess(const void *data)
 			RB_SwapFBOs( &currentFbo, &currentOutFbo);
 		}*/
 
-		if (!SCREEN_BLUR && r_fxaa->integer)
-		{
-			RB_FXAA(currentFbo, srcBox, currentOutFbo, dstBox);
-			RB_SwapFBOs( &currentFbo, &currentOutFbo);
-		}
-
 		if (!SCREEN_BLUR && r_sss->integer)
 		{
 			RB_SSS(currentFbo, srcBox, currentOutFbo, dstBox);
@@ -2518,12 +2512,6 @@ const void *RB_PostProcess(const void *data)
 		}
 #endif //CRAZY_SLOW_GAUSSIAN_BLUR
 
-		if (!SCREEN_BLUR && r_distanceBlur->integer)
-		{
-			RB_DistanceBlur(currentFbo, srcBox, currentOutFbo, dstBox);
-			RB_SwapFBOs( &currentFbo, &currentOutFbo);
-		}
-
 		if (!SCREEN_BLUR && r_rbm->integer)
 		{
 			RB_RBM(currentFbo, srcBox, currentOutFbo, dstBox);
@@ -2545,6 +2533,18 @@ const void *RB_PostProcess(const void *data)
 		if (!SCREEN_BLUR && r_glslWater->integer)
 		{
 			RB_WaterPost(currentFbo, srcBox, currentOutFbo, dstBox);
+			RB_SwapFBOs( &currentFbo, &currentOutFbo);
+		}
+
+		if (!SCREEN_BLUR && r_distanceBlur->integer)
+		{
+			RB_DistanceBlur(currentFbo, srcBox, currentOutFbo, dstBox);
+			RB_SwapFBOs( &currentFbo, &currentOutFbo);
+		}
+
+		if (!SCREEN_BLUR && r_fxaa->integer)
+		{
+			RB_FXAA(currentFbo, srcBox, currentOutFbo, dstBox);
 			RB_SwapFBOs( &currentFbo, &currentOutFbo);
 		}
 

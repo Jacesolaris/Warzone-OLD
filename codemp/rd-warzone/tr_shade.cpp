@@ -1303,6 +1303,8 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage)
 		doSway = 0.7;
 	}
 
+	if (tess.shader == tr.sunShader) materialType = 1025.0; // SPECIAL MATERIAL TYPE FOR SUN
+
 	VectorSet4(local1, parallaxScale*r_parallaxScale->value, (float)pStage->hasSpecular, specularScale, materialType);
 	GLSL_SetUniformVec4(sp, UNIFORM_LOCAL1, local1);
 	//GLSL_SetUniformVec4(sp, UNIFORM_LOCAL2, pStage->subsurfaceExtinctionCoefficient);

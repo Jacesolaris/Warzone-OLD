@@ -1244,6 +1244,8 @@ qboolean RB_VolumetricLight(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_
 	GLSL_SetUniformInt(&tr.volumeLightShader[dlightShader], UNIFORM_DELUXEMAP, TB_DELUXEMAP);
 	GL_BindToTMU(tr.renderDepthImage, TB_LIGHTMAP);
 	GLSL_SetUniformInt(&tr.volumeLightShader[dlightShader], UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
+	GLSL_SetUniformInt(&tr.volumeLightShader[dlightShader], UNIFORM_POSITIONMAP, TB_POSITIONMAP);
+	GL_BindToTMU(tr.renderPositionMapImage, TB_POSITIONMAP);
 
 	GL_SetModelviewMatrix( backEnd.viewParms.ori.modelMatrix );
 	GL_SetProjectionMatrix( backEnd.viewParms.projectionMatrix );

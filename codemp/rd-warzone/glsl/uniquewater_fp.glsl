@@ -86,6 +86,6 @@ void main()
 	out_Position = vec4(var_vertPos.xyz, isWater);
 #else //!defined(USE_WATERMAP)
 	out_Color = vec4(0.0059, 0.3096, 0.445, 0.1);
-	out_Position = vec4(var_vertPos, MATERIAL_LAST / 13.0);
+	out_Position = vec4(var_vertPos, 13.0);// 13.0 / MATERIAL_LAST);
 #endif //defined(USE_WATERMAP)
 }

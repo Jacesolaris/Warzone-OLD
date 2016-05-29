@@ -444,13 +444,18 @@ static void DrawSkySide( struct image_s *image, const int mins[2], const int max
 		GLSL_VertexAttribsState(ATTR_POSITION | ATTR_TEXCOORD0 | ATTR_COLOR | ATTR_NORMAL | ATTR_TANGENT | ATTR_TEXCOORD1 | ATTR_LIGHTDIRECTION);
 		GLSL_BindProgram(sp);
 
+		VectorSet4(vector, 0.0, 0.0, 0.0, 1024.0);
+		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL1, vector); // parallaxScale, hasSpecular, specularScale, materialType
 		VectorSet4(vector, 0.0, 0.0, 0.0, 0.0);
-		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL1, vector);
 		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL2, vector);
 		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL3, vector);
 		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL4, vector);
 		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL5, vector);
 		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL6, vector);
+		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL7, vector);
+		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL8, vector);
+		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL9, vector);
+		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL10, vector);
 
 		//GL_BindToTMU( tr.whiteImage, TB_SUBSURFACEMAP );
 		GL_BindToTMU( tr.blackImage, TB_OVERLAYMAP );
@@ -847,7 +852,7 @@ void RB_DrawSun( float scale, shader_t *shader ) {
 #ifdef __DAY_NIGHT__
 	float Time24h = DAY_NIGHT_CURRENT_TIME*24.0;
 
-	if (Time24h < 6.0 || Time24h > 20.0)
+	if (Time24h < 6.0 || Time24h > 22.0)
 	{
 		SUN_VISIBLE = qfalse;
 		return;

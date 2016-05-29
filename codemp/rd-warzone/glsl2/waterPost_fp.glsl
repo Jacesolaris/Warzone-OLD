@@ -3,7 +3,7 @@
 //#define USE_UNDERWATER			// TODO: Convert from HLSL when I can be bothered.
 #define USE_REFLECTION				// Enable reflections on water.
 //#define HEIGHT_BASED_FOG			// Height based volumetric fog. Works but has some issues I can't be bothered fixing atm.
-#define FIX_WATER_DEPTH_ISSUES		// Hack fix for missing under water geometry on some JKA maps... Screws up some things, but fixes others.
+#define FIX_WATER_DEPTH_ISSUES		// Use basic depth value for sky hits...
 
 /*
 heightMap – height-map used for waves generation as described in the section “Modifying existing geometry”
@@ -53,8 +53,6 @@ uniform float		u_Time;
 #define wfTimer		(u_Time * 0.5)
 
 
-#define WATER_DEPTH_HACK_LEVEL 10.0//8192.0
-
 // Over-all water clearness...
 //const float waterClarity = 0.001;
 const float waterClarity = 0.03;
@@ -100,7 +98,9 @@ const float displace = 1.7;
 // Describes at what depth foam starts to fade out and
 // at what it is completely invisible. The third value is at
 // what height foam for waves appear (+ waterLevel).
-const vec3 foamExistence = vec3(1.5, 5.35, 2.3); //vec3(0.65, 1.35, 0.5);
+//const vec3 foamExistence = vec3(1.5, 5.35, 2.3); //vec3(0.65, 1.35, 0.5);
+const vec3 foamExistence = vec3(1.5, 50.0, 5.0/*3.5*/);
+//vec3 foamExistence = vec3(u_Local0.r, u_Local0.g, u_Local0.b);
 
 const float sunScale = 3.0;
 
@@ -116,7 +116,9 @@ const vec3 depthColour = vec3(0.0078, 0.5176, 0.7);
 const vec3 bigDepthColour = vec3(0.0059, 0.1276, 0.18);
 //vec3 bigDepthColour = vec3(u_Local0.r, u_Local0.g, u_Local0.b);
 
-const vec3 extinction = vec3(7.0, 30.0, 40.0);			// Horizontal
+//const vec3 extinction = vec3(7.0, 30.0, 40.0);			// Horizontal
+const vec3 extinction = vec3(7.0, 96.0, 128.0);			// Horizontal
+//vec3 extinction = vec3(u_Local0.r, u_Local0.g, u_Local0.b);
 
 // Water transparency along eye vector.
 const float visibility = 32.0;
@@ -305,30 +307,17 @@ void main ( void )
 
 	bool pixelIsInWaterRange = false;
 	bool pixelIsWaterfall = false;
-	bool depthHacked = false;
 	vec3 color = color2;
 
 	vec4 waterMap = waterMapAtCoord(var_TexCoords);
-	vec3 position = positionMapAtCoord(var_TexCoords).xyz;
+	vec4 positionMap = positionMapAtCoord(var_TexCoords);
+	vec3 position = positionMap.xyz;
 
 #if defined(FIX_WATER_DEPTH_ISSUES)
-	if (waterMap.a > 0.0)
-	{// Fix for wierd water bugs.
-		if (position.y == 0.0)
-		{
-			position.xyz = waterMap.xyz;
-			position.y -= WATER_DEPTH_HACK_LEVEL;
-			depthHacked = true;
-		}
-
-		float dist = length(position.y - waterMap.y);
-
-		if (dist == 0.0 || dist >= 10.0)
-		{
-			position.xyz = waterMap.xyz;
-			position.y -= WATER_DEPTH_HACK_LEVEL;
-			depthHacked = true;
-		}
+	if (positionMap.a == 1024.0)
+	{
+		position.xyz = waterMap.xyz;
+		position.y -= 1024.0;
 	}
 #endif //defined(FIX_WATER_DEPTH_ISSUES)
 
@@ -440,8 +429,8 @@ void main ( void )
 
 	if (pixelIsInWaterRange || pixelIsWaterfall)
 	{
-		vec3 eyeVec = position - ViewOrigin;
-		float cameraDepth = ViewOrigin.y - position.y;
+		vec3 eyeVec = waterMap2.xyz/*position*/ - ViewOrigin;
+		float cameraDepth = ViewOrigin.y - waterMap2.y;//position.y;
 		
 		// Find intersection with water surface
 		vec3 eyeVecNorm = normalize(eyeVec);
@@ -471,7 +460,7 @@ void main ( void )
 		depth = length(position - surfacePoint);
 		float depth2 = surfacePoint.y - position.y;
 
-		eyeVecNorm = normalize(ViewOrigin - surfacePoint);
+		eyeVecNorm = normalize(ViewOrigin - waterMap2.xyz/*surfacePoint*/);
 
 		float normal1 = texture2D(u_WaterHeightMap, (texCoord + (vec2(-1.0, 0.0) / 256.0))).r;
 		float normal2 = texture2D(u_WaterHeightMap, (texCoord + (vec2(1.0, 0.0) / 256.0))).r;
@@ -503,8 +492,7 @@ void main ( void )
 
 		texCoord = var_TexCoords.xy;
 
-		if (!depthHacked)
-			texCoord.x += sin(timer * 0.002 + 3.0 * abs(position.y)) * (refractionScale * min(depth2, 1.0));
+		texCoord.x += sin(timer * 0.002 + 3.0 * abs(position.y)) * (refractionScale * min(depth2, 1.0));
 
 		vec3 refraction = texture2D(u_DiffuseMap, texCoord).rgb;
 
@@ -512,21 +500,10 @@ void main ( void )
 		vec4 waterMap3 = waterMapAtCoord(texCoord);
 
 #if defined(FIX_WATER_DEPTH_ISSUES)
-		if (waterMap3.a > 0.0)
-		{// Fix for wierd water bugs.
-			if (position.y == 0.0)
-			{
-				position2.xyz = waterMap3.xyz;
-				position2.y -= WATER_DEPTH_HACK_LEVEL;
-			}
-
-			float dist = length(position2.y - waterMap3.y);
-
-			if (dist == 0.0 || dist >= 10.0)
-			{
-				position2.xyz = waterMap3.xyz;
-				position2.y -= WATER_DEPTH_HACK_LEVEL;
-			}
+		if (position2.a == 1024.0)
+		{
+			position2.xyz = waterMap3.xyz;
+			position2.y -= 1024.0;
 		}
 #endif //defined(FIX_WATER_DEPTH_ISSUES)
 
@@ -567,19 +544,19 @@ void main ( void )
 
 		vec3 specular = vec3(0.0);
 
-		vec3 lightDir = waterMap2.xyz - u_PrimaryLightOrigin.xzy;
-		lightDir.xz = -lightDir.xz;
+		vec3 lightDir = normalize(ViewOrigin.xyz - u_PrimaryLightOrigin.xzy);
+		normal *= -myNormal.xyz;
 
-		float lambertian2 = dot(-lightDir.xyz, normal);
+		float lambertian2 = dot(lightDir.xyz, normal);
 		float spec2 = 0.0;
 
 		if(lambertian2 > 0.0)
 		{// this is blinn phong
 			vec3 mirrorEye = (2.0 * dot(eyeVecNorm, normal) * normal - eyeVecNorm);
-			vec3 halfDir2 = normalize(-lightDir.xyz + mirrorEye);
+			vec3 halfDir2 = normalize(lightDir.xyz + mirrorEye);
 			float specAngle = max(dot(halfDir2, normal), 0.0);
 			spec2 = pow(specAngle, 16.0);
-			specular = vec3(1.0 - fresnel) * (vec3(spec2 * shininess)) * sunColor * specularScale * 25.0;
+			specular = vec3(clamp(1.0 - fresnel, 0.4, 1.0)) * (vec3(spec2 * shininess)) * sunColor * specularScale * 25.0;
 		}
 
 #if defined(USE_REFLECTION)
@@ -609,7 +586,7 @@ void main ( void )
 		else
 		{
 			float depthMap = linearize(texture2D(u_ScreenDepthMap, var_TexCoords).r);//length(u_ViewOrigin.xyz - position.xzy);
-			color = applyFog2( color.rgb, depthMap, position.xzy, normalize(u_ViewOrigin.xyz - position.xzy), normalize(u_ViewOrigin.xyz-u_PrimaryLightOrigin.xyz) );
+			color = applyFog2( color.rgb, depthMap, u_ViewOrigin.xyz/*position.xzy*/, normalize(u_ViewOrigin.xyz - position.xzy), normalize(u_ViewOrigin.xyz - u_PrimaryLightOrigin.xyz) );
 		}
 	}
 

@@ -3830,6 +3830,8 @@ void GLSL_EndLoadGPUShaders ( int startTime )
 	qglUseProgram(tr.volumeLightShader[i].program);
 	GLSL_SetUniformInt(&tr.volumeLightShader[i], UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
 	GLSL_SetUniformInt(&tr.volumeLightShader[i], UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
+	GLSL_SetUniformInt(&tr.volumeLightShader[i], UNIFORM_DELUXEMAP, TB_DELUXEMAP);
+	GLSL_SetUniformInt(&tr.volumeLightShader[i], UNIFORM_POSITIONMAP, TB_POSITIONMAP);
 	qglUseProgram(0);
 
 #if defined(_DEBUG)

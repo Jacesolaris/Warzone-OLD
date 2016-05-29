@@ -362,7 +362,7 @@ void RB_UpdateDayNightCycle()
 		DAY_NIGHT_SUN_DIRECTION = ((adjustedTime24h / 24.0) - 0.5) * 6.283185307179586476925286766559;
 		
 
-		if (Time24h < 6.0 || Time24h > 20.0)
+		if (Time24h < 6.0 || Time24h > 22.0)
 		{// Night time...
 			VectorSet4(sunColor, 0.0, 0.0, 0.0, 0.0);
 			sunColor[0] *= DAY_NIGHT_AMBIENT_COLOR_ORIGINAL[0];

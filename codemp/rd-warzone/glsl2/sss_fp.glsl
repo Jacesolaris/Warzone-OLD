@@ -43,7 +43,7 @@ void main(void){
 
 	vec2 texel_size = vec2(1.0 / var_Dimensions);
 	
-	int material_type = int(texture2D(u_PositionMap, var_ScreenTex).a * MATERIAL_LAST);
+	int material_type = int(texture2D(u_PositionMap, var_ScreenTex).a);// * MATERIAL_LAST);
 	float isFoliage = 0.0;
 	if (material_type == 5 || material_type == 6) isFoliage = 1.0; // MATERIAL_SHORTGRASS or MATERIAL_LONGGRASS
 	//gl_FragColor = vec4(vec3(float(material_type) / MATERIAL_LAST), 1.0);
@@ -66,7 +66,7 @@ void main(void){
 	//vec2 pixOffset = clamp((distFromCenter * invDepth) * texel_size * 80.0, vec2(0.0), texel_size * 80.0);
 	//vec2 pos = var_ScreenTex + pixOffset;
 
-	int material_type2 = int(texture2D(u_PositionMap, pos).a * MATERIAL_LAST);
+	int material_type2 = int(texture2D(u_PositionMap, pos).a);// * MATERIAL_LAST);
 	float isFoliage2 = 0.0;
 	if (material_type2 == 5 || material_type2 == 6) isFoliage2 = 1.0; // MATERIAL_SHORTGRASS or MATERIAL_LONGGRASS
 

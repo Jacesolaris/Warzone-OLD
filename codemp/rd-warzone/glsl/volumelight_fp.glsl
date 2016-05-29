@@ -1,22 +1,27 @@
 uniform sampler2D	u_DiffuseMap;
 uniform sampler2D	u_DeluxeMap;
 uniform sampler2D	u_ScreenDepthMap;
+uniform sampler2D	u_PositionMap;
 
 uniform int			u_lightCount;
 uniform vec2		u_lightPositions[16];
 uniform float		u_lightDistances[16];
 uniform vec3		u_lightColors[16];
 
-varying vec2		var_TexCoords;
-varying vec2		var_Dimensions;
-
 uniform vec2		u_Dimensions;
 uniform vec4		u_Local0;
 uniform vec4		u_ViewInfo; // zmin, zmax, zmax / zmin, SUN_ID
 
+varying vec2		var_TexCoords;
+flat varying int	var_SunVisible;
+
+
 //#define USING_ENGINE_GLOW_LIGHTCOLORS_SEARCH // Enable when I fix it...
 
 #define VOLUMETRIC_THRESHOLD 0.15
+
+vec2 pixel = 1.0 / u_Dimensions;
+
 
 #if defined(HQ_VOLUMETRIC)
 const float	iBloomraySamples = 32.0;
@@ -73,7 +78,12 @@ void main ( void )
 		float depth = 1.0 - u_lightDistances[i];
 		float fall = clamp((fBloomrayFalloffRange * depth) - dist, 0.0, 1.0) * depth;
 
-		if (i == SUN_ID) fall *= 4.0;
+		if (i == SUN_ID) 
+		{
+			if (var_SunVisible <= 0) continue;
+
+			fall *= 4.0;
+		}
 
 		if (fall > 0.0)
 		{

@@ -292,7 +292,7 @@ void main()
 	gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0);
 	out_Glow = vec4(0.0);
 	out_Normal = vec4(0.0);
-	out_Position = vec4(var_position, 1.0);
+	out_Position = vec4(var_position, 13.0);
 #else
 	vec4 origColor = texture2D(u_DiffuseMap, var_TexCoords);
 

@@ -15,6 +15,8 @@ void main()
 
 	gl_FragColor = color * var_Color;
 
+	//gl_FragColor.rgb = vec3(1.0, 0.0, 0.0);
+
 	#if defined(USE_GLOW_BUFFER)
 		out_Glow = gl_FragColor;
 	#else

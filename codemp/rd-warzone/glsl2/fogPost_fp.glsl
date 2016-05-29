@@ -10,13 +10,10 @@ uniform vec2		u_Dimensions;
 uniform vec4		u_Local0;		// testvalue0, testvalue1, testvalue2, testvalue3
 uniform vec4		u_MapInfo;		// MAP_INFO_SIZE[0], MAP_INFO_SIZE[1], MAP_INFO_SIZE[2], SUN_VISIBLE
 
+uniform vec3		u_ViewOrigin;
+uniform vec4		u_PrimaryLightOrigin;
+
 varying vec2		var_TexCoords;
-varying vec3		var_vertPos;
-varying vec3		var_viewOrg;
-varying vec3		var_rayOrg;
-varying vec3		var_sunOrg;
-varying vec3		var_rayDir;
-varying vec3		var_sunDir;
 
 vec4 positionMapAtCoord ( vec2 coord )
 {
@@ -45,7 +42,7 @@ vec3 applyFog2( in vec3  rgb,      // original color of the pixel
 #endif //defined(HEIGHT_BASED_FOG)
 
 	fogAmount = clamp(fogAmount, 0.1, 1.0/*u_Local0.a*/);
-	float sunAmount = max( clamp(dot( rayDir, sunDir )*1.1/*u_Local0.b*/, 0.0, 1.0), 0.0 );
+	float sunAmount = max( clamp(dot( rayDir, sunDir )*1.1, 0.0, 1.0), 0.0 );
 	if (u_MapInfo.a <= 0.0) sunAmount = 0.0;
     vec3  fogColor  = mix( vec3(0.5,0.6,0.7), // bluish
                            vec3(1.0,0.9,0.7), // yellowish
@@ -56,9 +53,8 @@ vec3 applyFog2( in vec3  rgb,      // original color of the pixel
 void main ( void )
 {
 	vec4 pMap = positionMapAtCoord( var_TexCoords );
-
 	vec4 pixelColor = texture2D(u_DiffuseMap, var_TexCoords);
 	float depth = linearize(texture2D(u_ScreenDepthMap, var_TexCoords).r);
-	vec3 fogColor = applyFog2( pixelColor.rgb, depth, pMap.xyz, normalize(var_viewOrg.xyz - pMap.xyz), normalize(var_viewOrg.xyz-var_sunOrg.xyz) );
+	vec3 fogColor = applyFog2( pixelColor.rgb, depth, u_ViewOrigin.xyz/*pMap.xyz*/, normalize(u_ViewOrigin.xyz - pMap.xyz), normalize(u_ViewOrigin.xyz - u_PrimaryLightOrigin.xyz) );
 	gl_FragColor = vec4(fogColor, 1.0);
 }

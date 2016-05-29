@@ -189,7 +189,7 @@ void main ( void )
 	vec4 color = texture2D(u_DiffuseMap, coord);
 	vec4 positionMap = texture2D(u_PositionMap, coord);
 
-	if (positionMap.a == 0.0)
+	if (positionMap.a == 0.0 || positionMap.a == 1024.0)
 	{// No material info on this pixel, it is most likely sky or generic shader...
 		gl_FragColor = color;
 		return;

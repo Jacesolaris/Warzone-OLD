@@ -735,7 +735,7 @@ void main()
 		#endif
 
 		out_Normal = vec4(m_Normal.xyz * 0.5 + 0.5, 0.2);
-		out_Position = vec4(m_vertPos, u_Local1.a / MATERIAL_LAST);
+		out_Position = vec4(m_vertPos, u_Local1.a );/// MATERIAL_LAST);
 		return;
 	}
 	#endif //defined(USE_TESSELLATION)
@@ -880,6 +880,8 @@ void main()
 		}
 
 	#endif //USE_OVERLAY
+
+	if (diffuse.a <= 0.0) discard; // no point going further??!?!?!
 
 	ambientColor = vec3(0.0);
 	lightColor = var_Color.rgb;
@@ -1041,5 +1043,5 @@ void main()
 	#endif
 
 	out_Normal = vec4(DETAILED_NORMAL.xyz * 0.5 + 0.5, specular.a / 8.0);
-	out_Position = vec4(m_vertPos, u_Local1.a / MATERIAL_LAST);
+	out_Position = vec4(m_vertPos, u_Local1.a );/// MATERIAL_LAST);
 }

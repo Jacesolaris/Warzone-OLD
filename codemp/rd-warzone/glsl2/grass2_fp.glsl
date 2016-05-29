@@ -100,5 +100,5 @@ void main()
 
 	out_Glow = vec4(0.0);
 	out_Normal = vec4(m_Normal.xyz, 0.1);
-	out_Position = vec4(vVertPosition, 0.1875); // 6.0 / MATERIAL_LAST (0.1875) is MATERIAL_LONGGRASS
+	out_Position = vec4(vVertPosition, 6.0);//0.1875); // 6.0 / MATERIAL_LAST (0.1875) is MATERIAL_LONGGRASS
 }
