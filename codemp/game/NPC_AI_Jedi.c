@@ -138,21 +138,25 @@ void Jedi_CopyAttackCounterInfo(gentity_t *NPC)
 	if (NPC->parent && NPC_IsAlive(NPC->parent) && NPC->parent->enemy == NPC->enemy)
 	{
 		NPC->parent->npc_attack_time = NPC->npc_attack_time;
+		NPC->parent->npc_counter_time = NPC->npc_counter_time;
 	}
 
 	if (NPC->padawan && NPC_IsAlive(NPC->padawan) && NPC->padawan->enemy == NPC->enemy)
 	{
 		NPC->padawan->npc_attack_time = NPC->npc_attack_time;
+		NPC->padawan->npc_counter_time = NPC->npc_counter_time;
 	}
 
 	if (NPC->enemy->parent && NPC_IsAlive(NPC->enemy->parent) && NPC->enemy->parent->enemy == NPC->enemy->enemy)
 	{
 		NPC->enemy->parent->npc_attack_time = NPC->enemy->npc_attack_time;
+		NPC->enemy->parent->npc_counter_time = NPC->enemy->npc_counter_time;
 	}
 
 	if (NPC->enemy->padawan && NPC_IsAlive(NPC->enemy->padawan) && NPC->enemy->padawan->enemy == NPC->enemy->enemy)
 	{
 		NPC->enemy->padawan->npc_attack_time = NPC->enemy->npc_attack_time;
+		NPC->enemy->padawan->npc_counter_time = NPC->enemy->npc_counter_time;
 	}
 }
 
