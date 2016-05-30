@@ -270,7 +270,7 @@ void NPC_SetNewPadawanGoalAndPath( void )
 		return; // wait before trying to get a new waypoint...
 	}
 
-	NPC->longTermGoal = DOM_GetNearestWP(NPC->parent->r.currentOrigin, NPC->wpCurrent);
+	NPC->longTermGoal = DOM_GetNearestWP(NPCS.NPCInfo->goalEntity->r.currentOrigin, NPC->wpCurrent);
 
 	if (NPC->longTermGoal >= 0)
 	{
@@ -328,6 +328,11 @@ qboolean NPC_FollowPadawanRoute( void )
 		return qfalse;
 	}
 
+	if (!NPCS.NPCInfo->goalEntity)
+	{
+		return qfalse;
+	}
+
 	if (NPC_GetOffPlayer(NPC))
 	{// Get off of their head!
 		return qfalse;
@@ -339,13 +344,13 @@ qboolean NPC_FollowPadawanRoute( void )
 	}
 
 	if ((NPC->client->ps.weapon == WP_SABER || NPC->client->ps.weapon == WP_MELEE)
-		&& Distance(NPC->r.currentOrigin, NPC->parent->r.currentOrigin) <= 48)
+		&& Distance(NPC->r.currentOrigin, NPCS.NPCInfo->goalEntity->r.currentOrigin) <= 48)
 	{// Close enough already... Don't move...
 		//trap->Print("close!\n");
 		return qfalse;
 	}
 	else if ( !(NPC->client->ps.weapon == WP_SABER || NPC->client->ps.weapon == WP_MELEE)
-		&& NPC_ClearLOS4( NPC->parent ))
+		&& NPC_ClearLOS4( NPCS.NPCInfo->goalEntity ))
 	{// Already visible to shoot... Don't move...
 		//trap->Print("close wp!\n");
 		return qfalse;
@@ -393,7 +398,7 @@ qboolean NPC_FollowPadawanRoute( void )
 		|| NPC->wpSeenTime < level.time - 5000
 		|| NPC->wpTravelTime < level.time 
 		|| NPC->last_move_time < level.time - 5000 
-		|| Distance(gWPArray[NPC->longTermGoal]->origin, NPC->parent->r.currentOrigin) > 256.0)
+		|| Distance(gWPArray[NPC->longTermGoal]->origin, NPCS.NPCInfo->goalEntity->r.currentOrigin) > 256.0)
 	{// We hit a problem in route, or don't have one yet.. Find a new goal and path...
 
 		if (wpDist > MAX_LINK_DISTANCE || NPC->wpTravelTime < level.time )
@@ -655,6 +660,8 @@ qboolean NPC_PadawanMove( void )
 					}
 					else if (NPC_FollowPadawanRoute())
 					{// Try using waypoints...
+						NPCS.NPCInfo->goalEntity = goalEnt;
+						NPC_FacePosition( goal, qfalse );
 						return qtrue;
 					}
 				}
@@ -736,6 +743,8 @@ qboolean NPC_PadawanMove( void )
 				}
 				else if (NPC_FollowPadawanRoute())
 				{// Try using waypoints...
+					NPCS.NPCInfo->goalEntity = goalEnt;
+					NPC_FacePosition( goal, qfalse );
 					return qtrue;
 				}
 				else if (NPC->nextPadawanTeleportThink <= level.time)
