@@ -230,6 +230,26 @@ qboolean Jedi_AttackOrCounter( gentity_t *NPC )
 	}
 }
 
+qboolean NPC_Jedi_EnemyInForceRange ( void )
+{
+	if (!NPCS.NPC->enemy || !NPC_IsAlive(NPCS.NPC->enemy)) return qfalse;
+
+	if (Distance(NPCS.NPC->r.currentOrigin, NPCS.NPC->enemy->r.currentOrigin) > 256) return qfalse;
+	//if (Distance(NPCS.NPC->r.currentOrigin, NPCS.NPC->enemy->r.currentOrigin) < 48) return qfalse;
+
+	return qtrue;
+}
+
+qboolean NPC_Jedi_EntityInForceRange ( gentity_t *ent )
+{
+	if (!ent || !NPC_IsAlive(ent)) return qfalse;
+
+	if (Distance(NPCS.NPC->r.currentOrigin, ent->r.currentOrigin) > 256) return qfalse;
+	//if (Distance(NPCS.NPC->r.currentOrigin, ent->r.currentOrigin) < 48) return qfalse;
+
+	return qtrue;
+}
+
 void NPC_CultistDestroyer_Precache( void )
 {//precashe for cultist destroyer
 	G_SoundIndex( "sound/movers/objects/green_beam_lp2.wav" );
@@ -5749,7 +5769,7 @@ static void Jedi_Combat( void )
 		{
 			//trap->Print("ROUTE!\n");
 
-			if ( enemy_dist < 384 && !Q_irand( 0, 10 ) && NPCS.NPCInfo->blockedSpeechDebounceTime < level.time && jediSpeechDebounceTime[NPCS.NPC->client->playerTeam] < level.time && !NPC_ClearLOS4( NPCS.NPC->enemy ) )
+			if ( enemy_dist < 512 && !Q_irand( 0, 10 ) && NPCS.NPCInfo->blockedSpeechDebounceTime < level.time && jediSpeechDebounceTime[NPCS.NPC->client->playerTeam] < level.time && !NPC_ClearLOS4( NPCS.NPC->enemy ) )
 			{
 				if (!NPC_IsJedi(NPCS.NPC) && !NPC_IsBountyHunter(NPCS.NPC))
 					ST_Speech( NPCS.NPC, SPEECH_LOST, 0 );
@@ -6447,7 +6467,7 @@ void NPC_BSJedi_FollowLeader( void )
 
 		if ( !NAV_CheckAhead( NPCS.NPC, NPCS.NPCInfo->goalEntity->r.currentOrigin, &trace, ( NPCS.NPC->clipmask & ~CONTENTS_BODY )|CONTENTS_BOTCLIP ) )
 		{//can't get straight to him
-			if ( NPC_ClearLOS4( NPCS.NPCInfo->goalEntity ) && NPC_FaceEntity( NPCS.NPCInfo->goalEntity, qtrue ) )
+			if ( !NPC_ClearLOS4( NPCS.NPCInfo->goalEntity ) && NPC_FaceEntity( NPCS.NPCInfo->goalEntity, qtrue ) )
 			{//no line of sight
 				if (haveEnemy && NPC_FollowEnemyRoute())
 				{
@@ -7250,26 +7270,6 @@ void NPC_SelectBestWeapon( void )
 	Default_SelectBestWeapon();
 }
 
-qboolean NPC_Jedi_EnemyInForceRange ( void )
-{
-	if (!NPCS.NPC->enemy || !NPC_IsAlive(NPCS.NPC->enemy)) return qfalse;
-
-	if (Distance(NPCS.NPC->r.currentOrigin, NPCS.NPC->enemy->r.currentOrigin) > 256) return qfalse;
-	//if (Distance(NPCS.NPC->r.currentOrigin, NPCS.NPC->enemy->r.currentOrigin) < 48) return qfalse;
-
-	return qtrue;
-}
-
-qboolean NPC_Jedi_EntityInForceRange ( gentity_t *ent )
-{
-	if (!ent || !NPC_IsAlive(ent)) return qfalse;
-
-	if (Distance(NPCS.NPC->r.currentOrigin, ent->r.currentOrigin) > 256) return qfalse;
-	//if (Distance(NPCS.NPC->r.currentOrigin, ent->r.currentOrigin) < 48) return qfalse;
-
-	return qtrue;
-}
-
 qboolean Jedi_CheckForce ( void )
 {// UQ1: New code to make better use of force powers...
 	//
@@ -7603,7 +7603,7 @@ qboolean NPC_MoveIntoOptimalAttackPosition ( void )
 	{// If clear then move stright there...
 		NPC_FacePosition( NPC->enemy->r.currentOrigin, qfalse );
 
-		if (dist > 64 && NPC_FollowEnemyRoute())
+		if ((dist > 256 || (dist > 64 && !Jedi_ClearPathToSpot(NPCS.NPC->enemy->r.currentOrigin, NPCS.NPC->enemy->s.number))) && NPC_FollowEnemyRoute())
 		{
 			//JEDI_Debug(va("optimal position (too far - routing). Dist %f. Opt %f. Allow %f. Min %f. Max %f.", dist, OPTIMAL_RANGE, OPTIMAL_RANGE_ALLOWANCE, OPTIMAL_MIN_RANGE, OPTIMAL_MAX_RANGE));
 			return qtrue;
@@ -7762,11 +7762,6 @@ void NPC_BSJedi_Default( void )
 		return;
 	}
 
-	if (NPC_MoveIntoOptimalAttackPosition())
-	{// Just move into optimal range...
-		return;
-	}
-
 #if 0
 	if( !NPCS.NPC->enemy )
 	{//don't have an enemy, look for one
@@ -7819,12 +7814,22 @@ void NPC_BSJedi_Default( void )
 		{
 			if (NPCS.NPC->s.weapon != WP_SABER || NPCS.NPC->enemy->s.weapon != WP_SABER)
 			{// Normal non-jedi NPC or enemy... Use normal system...
+				if (NPC_MoveIntoOptimalAttackPosition())
+				{// Just move into optimal range...
+					//return;
+				}
+
 				Jedi_Attack();
 			}
 			else
 			{// Jedi/Sith. Use attack/counter system...
 				if (Jedi_AttackOrCounter( NPCS.NPC ))
 				{// Attack...
+					if (NPC_MoveIntoOptimalAttackPosition())
+					{// Just move into optimal range...
+						return;
+					}
+
 					Jedi_Attack();
 				}
 				else
