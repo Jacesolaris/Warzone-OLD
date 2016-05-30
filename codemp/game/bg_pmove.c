@@ -3775,9 +3775,12 @@ static void PM_WalkMove( void ) {
 #ifdef __DYNAMIC_STANCES__
 	else if (pm->ps->saberMove > LS_PUTAWAY)
 	{// UQ1: When swinging a saber we don't run. Ever!
-		if (wishspeed > pm->ps->speed * pm_saberwalkScale)
-		{
-			wishspeed = pm->ps->speed * pm_saberwalkScale;
+		//if (pm->cmd.rightmove != 0 || pm->cmd.upmove < 0)
+		{// Still running forward, but only if not moving left/right or ducking...
+			if (wishspeed > pm->ps->speed * pm_saberwalkScale)
+			{
+				wishspeed = pm->ps->speed * pm_saberwalkScale;
+			}
 		}
 	}
 #endif //__DYNAMIC_STANCES__
@@ -5890,12 +5893,12 @@ static void PM_Footsteps( void ) {
 #else
 #ifdef __DYNAMIC_STANCES__
 		else if (!(pm->cmd.buttons & BUTTON_WALKING) 
-			&& pm->ps->saberMove <= LS_PUTAWAY) // UQ1: When swinging a saber we don't run. Ever!
+			&& pm->ps->saberMove <= LS_PUTAWAY
+			/*&& !(pm->cmd.rightmove != 0 || pm->cmd.upmove < 0)*/) // UQ1: When swinging a saber we don't run. Ever!
 #else //!__DYNAMIC_STANCES__
 		else if (!(pm->cmd.buttons & BUTTON_WALKING))
 #endif //__DYNAMIC_STANCES__
 		{//running
-
 #endif
 			bobmove = 0.4f;	// faster speeds bob faster
 			if ( pm->ps->clientNum >= MAX_CLIENTS &&

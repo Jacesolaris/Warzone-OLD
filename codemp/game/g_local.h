@@ -504,6 +504,9 @@ struct gentity_s {
 	int					CLOSE_AREA_LIST[64];
 	int					CLOSE_AREA_LIST_COUNT;
 	vec3_t				CLOSE_AREA_PREVIOUS_ORG;
+
+	int					npc_attack_time;
+	int					npc_counter_time;
 };
 
 #define DAMAGEREDIRECT_HEAD		1

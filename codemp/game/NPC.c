@@ -131,23 +131,23 @@ qboolean NPC_IsAlive ( gentity_t *NPC )
 	return qtrue;
 }
 
-qboolean NPC_NeedsHeal ( gentity_t *NPC )
+int NPC_GetHealthPercent ( gentity_t *NPC )
 {
 	if (!NPC)
 	{
-		return qfalse;
+		return 0;
 	}
 
 	if (NPCS.NPC && NPC_EntityIsBreakable(NPCS.NPC, NPC))
 	{
-		return qfalse;
+		return (int)(((float)NPC->health / (float)NPC->maxHealth) * 100);
 	}
 
 	if ( NPC->s.eType == ET_NPC || NPC->s.eType == ET_PLAYER )
 	{
 		if (NPC->client && NPC->client->ps.pm_type == PM_SPECTATOR)
 		{
-			return qfalse;
+			return 0;
 		}
 
 		if (NPC->client)
@@ -155,23 +155,25 @@ qboolean NPC_NeedsHeal ( gentity_t *NPC )
 			int health = NPC->client->ps.stats[STAT_HEALTH];
 			int maxhealth = NPC->client->ps.stats[STAT_MAX_HEALTH];
 
-			if ((float)health / (float)maxhealth < 0.4)
-			{
-				return qtrue;
-			}
+			return (int)(((float)health / (float)maxhealth) * 100);
 		}
 		else if (NPC->s.eType != ET_PLAYER && NPC->health <= 0 )
 		{
-			if ((float)NPC->health / (float)NPC->maxHealth < 0.4)
-			{
-				return qtrue;
-			}
+			return (int)(((float)NPC->health / (float)NPC->maxHealth) * 100);
 		}
 	}
 	else
 	{
-		return qfalse;
+		return (int)(((float)NPC->health / (float)NPC->maxHealth) * 100);
 	}
+
+	return (int)(((float)NPC->health / (float)NPC->maxHealth) * 100);
+}
+
+qboolean NPC_NeedsHeal ( gentity_t *NPC )
+{
+	if (NPC_GetHealthPercent(NPC) < 50)
+		return qtrue;
 
 	return qfalse;
 }
@@ -4113,37 +4115,6 @@ void NPC_Think ( gentity_t *self)//, int msec )
 	// UQ1: Generic stuff for different NPC types...
 	NPC_CheckTypeStuff();
 
-	//self->nextthink = level.time + FRAMETIME/2;
-
-	// UQ1: WTF - an empty loop??!?!?!?!?!?!!?!
-/*
-	while (i < MAX_CLIENTS)
-	{
-		player = &g_entities[i];
-
-		if (player == self) continue;
-
-		if (player->inuse && player->client && player->client->sess.sessionTeam != FACTION_SPECTATOR &&
-			!(player->client->ps.pm_flags & PMF_FOLLOW))
-		{
-			//if ( player->client->ps.viewEntity == self->s.number )
-			if (0) //rwwFIXMEFIXME: Allow controlling ents
-			{//being controlled by player
-				G_DroidSounds( self );
-				//FIXME: might want to at least make sounds or something?
-				//NPC_UpdateAngles(qtrue, qtrue);
-				//Which ucmd should we send?  Does it matter, since it gets overridden anyway?
-				NPCS.NPCInfo->last_ucmd.serverTime = level.time - 50;
-				ClientThink( NPCS.NPC->s.number, &NPCS.ucmd );
-				//VectorCopy(self->s.origin, self->s.origin2 );
-				VectorCopy(self->r.currentOrigin, self->client->ps.origin);
-				return;
-			}
-		}
-		i++;
-	}
-*/
-
 	if ( self->client->NPC_class == CLASS_VEHICLE)
 	{
 		if (self->client->ps.m_iVehicleNum)
@@ -4166,12 +4137,6 @@ void NPC_Think ( gentity_t *self)//, int msec )
 	{//droid in a vehicle?
 		G_DroidSounds( self );
 	}
-	else if (self->client)
-	{// Update playerstate health values as well... cgame needs them...
-		//self->client->ps.stats[STAT_HEALTH] = self->s.health = self->health;
-		//self->client->ps.stats[STAT_MAX_HEALTH] = self->s.maxhealth = self->maxHealth;
-		//trap->Print("%s health is %i. max is %i.\n", self->NPC_type, self->health, self->maxHealth);
-	}
 
 	if ( NPCS.NPCInfo->nextBStateThink <= level.time
 		&& !NPCS.NPC->s.m_iVehicleNum )//NPCs sitting in Vehicles do NOTHING
@@ -4184,23 +4149,11 @@ void NPC_Think ( gentity_t *self)//, int msec )
 			return;
 		}
 
-		/*
-		if ( NPCS.NPC->s.weapon == WP_SABER && g_npcspskill.integer >= 2 && NPCS.NPCInfo->rank > RANK_LT_JG )
-		{//Jedi think faster on hard difficulty, except low-rank (reborn)
-			NPCS.NPCInfo->nextBStateThink = level.time + FRAMETIME/2;
-		}
-		else
-		{//Maybe even 200 ms?
-			NPCS.NPCInfo->nextBStateThink = level.time + FRAMETIME;
-		}
-		*/
-
 		// UQ1: Think more often!
 #ifndef __LOW_THINK_AI__
 		NPCS.NPCInfo->nextBStateThink = level.time + FRAMETIME/2;
 #else //__LOW_THINK_AI__
 		NPCS.NPCInfo->nextBStateThink = level.time + FRAMETIME;
-		//NPCS.NPCInfo->nextBStateThink = level.time + FRAMETIME*2;
 #endif //__LOW_THINK_AI__
 
 		memcpy( &NPCS.ucmd, &NPCS.NPCInfo->last_ucmd, sizeof( usercmd_t ) );
@@ -4232,11 +4185,11 @@ void NPC_Think ( gentity_t *self)//, int msec )
 
 			NPC_DoPadawanStuff(); // check any padawan stuff we might need to do...
 
-			if (self->enemy 
+			/*if (self->enemy 
 				&& (!NPC_ValidEnemy(self->enemy) || (!NPC_EntityIsBreakable(self, self->enemy) && Distance(self->r.currentOrigin, self->enemy->r.currentOrigin) > 3192.0)))
 			{// If NPC Bot's enemy is invalid (eg: a dead NPC) or too far away, clear it!
 				G_ClearEnemy(self);
-			}
+			}*/
 
 			if (is_civilian) 
 			{
@@ -4253,7 +4206,11 @@ void NPC_Think ( gentity_t *self)//, int msec )
 					{
 						G_AddVoiceEvent( self, Q_irand( EV_JDETECTED1, EV_JDETECTED3 ), 15000 + irand(0, 30000) );
 					}
-					else if (!NPC_IsBountyHunter(self))//NPC_IsStormtrooper(self))
+					else if (NPC_IsBountyHunter(self))
+					{
+						G_AddVoiceEvent( self, Q_irand( EV_DETECTED1, EV_DETECTED5 ), 15000 + irand(0, 30000) );
+					}
+					else
 					{
 						if (irand(0,1) == 1)
 							ST_Speech( self, SPEECH_DETECTED, 0 );
@@ -4262,10 +4219,6 @@ void NPC_Think ( gentity_t *self)//, int msec )
 						else
 							ST_Speech( self, SPEECH_SIGHT, 0 );
 					}
-					else
-					{
-						G_AddVoiceEvent( self, Q_irand( EV_DETECTED1, EV_DETECTED5 ), 15000 + irand(0, 30000) );
-					}
 
 					if (!self->enemy->enemy || (self->enemy->enemy && !NPC_IsAlive(self->enemy->enemy)))
 					{// Make me their enemy if they have none too...
@@ -4273,13 +4226,13 @@ void NPC_Think ( gentity_t *self)//, int msec )
 					}
 				}
 
-				self->next_enemy_check_time = level.time + irand(4000, 10000);
+				self->next_enemy_check_time = level.time + irand(2000, 5000);
 			}
 
-			if ( self->enemy ) 
+			/*if ( self->enemy ) 
 			{
 				NPC_FaceEnemy( qtrue );
-			}
+			}*/
 
 			if (!self->isPadawan && !self->enemy && !self->NPC->conversationPartner)
 			{// Let's look for someone to chat to, shall we???

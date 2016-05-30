@@ -1342,7 +1342,8 @@ NPC_FindNearestEnemy
 int NPC_FindNearestEnemy( gentity_t *ent )
 {
 	int			iradiusEnts[ MAX_RADIUS_ENTS ];
-	gentity_t	*radEnt;
+	gentity_t	*radEnt = NULL;
+	gentity_t	*bestJedi = NULL;
 	vec3_t		mins, maxs;
 	int			nearestEntID = -1;
 	float		nearestDist = (float)WORLD_SIZE*(float)WORLD_SIZE;
@@ -1395,7 +1396,17 @@ int NPC_FindNearestEnemy( gentity_t *ent )
 		{
 			nearestEntID = radEnt->s.number;
 			nearestDist = distance;
+
+			if (radEnt->s.weapon == WP_SABER)
+			{
+				bestJedi = radEnt;
+			}
 		}
+	}
+
+	if (ent->s.weapon == WP_SABER && bestJedi) 
+	{// Jedi prefer to fight other jedi...
+		return bestJedi->s.number;
 	}
 
 	return nearestEntID;
@@ -1495,18 +1506,19 @@ NPC_CheckEnemyExt
 
 qboolean NPC_CheckEnemyExt( qboolean checkAlerts )
 {
-	//Make sure we're ready to think again
-/*
-	if ( NPCInfo->enemyCheckDebounceTime > level.time )
+	//return NPC_FindEnemy( checkAlerts ); // UQ1: Why is a check function finding new enemies???
+
+	if (!NPCS.NPC || !NPC_IsAlive(NPCS.NPC))
+	{
 		return qfalse;
+	}
 
-	//Get our next think time
-	NPCInfo->enemyCheckDebounceTime = level.time + NPC_GetCheckDelta();
+	if (NPCS.NPC->enemy && NPC_IsAlive(NPCS.NPC->enemy) && NPC_ValidEnemy(NPCS.NPC->enemy))
+	{
+		return qtrue;
+	}
 
-	//Attempt to find an enemy
-	return NPC_FindEnemy();
-*/
-	return NPC_FindEnemy( checkAlerts );
+	return qfalse;
 }
 
 /*

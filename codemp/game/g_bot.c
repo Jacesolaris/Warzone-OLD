@@ -1342,7 +1342,11 @@ void G_CheckMinimumNpcs( void ) {
 
 			NPC_SPAWN_TEAM = LOWEST_TEAM;
 
+#ifdef __ALL_JEDI_NPCS__
+			group = GetSpawnGroup(va("%s_%s", mapname.string, factionNames[NPC_SPAWN_TEAM]), RARITY_BOSS);
+#else //!__ALL_JEDI_NPCS__
 			group = GetSpawnGroup(va("%s_%s", mapname.string, factionNames[NPC_SPAWN_TEAM]), RARITY_SPAM);
+#endif //__ALL_JEDI_NPCS__
 
 			if (!group.npcCount)
 			{// Seems we only have red/blue teams for this map...
@@ -1357,6 +1361,10 @@ void G_CheckMinimumNpcs( void ) {
 			}
 		}
 
+#ifdef __ALL_JEDI_NPCS__
+		group = GetSpawnGroup(va("%s_%s", mapname.string, factionNames[NPC_SPAWN_TEAM]), RARITY_BOSS);
+		if (!group.npcCount) group = GetSpawnGroup(va("default_%s", factionNames[NPC_SPAWN_TEAM]), RARITY_BOSS);
+#else //!__ALL_JEDI_NPCS__
 		if (random >= 16)
 		{
 			group = GetSpawnGroup(va("%s_%s", mapname.string, factionNames[NPC_SPAWN_TEAM]), RARITY_SPAM);
@@ -1387,6 +1395,7 @@ void G_CheckMinimumNpcs( void ) {
 			group = GetSpawnGroup(va("%s_%s", mapname.string, factionNames[NPC_SPAWN_TEAM]), RARITY_SPAM);
 			if (!group.npcCount) group = GetSpawnGroup(va("default_%s", factionNames[NPC_SPAWN_TEAM]), RARITY_SPAM);
 		}
+#endif //__ALL_JEDI_NPCS__
 
 		//trap->Print("Spawning %s.\n", group.npcNames[0]);
 

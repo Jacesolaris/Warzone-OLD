@@ -16,6 +16,8 @@ extern int DOM_GetNearestVisibleWP_NOBOX(vec3_t org, int ignore, int badwp);
 extern gentity_t *NPC_PickEnemyExt( qboolean checkAlerts );
 extern void ST_Speech( gentity_t *self, int speechType, float failChance );
 
+extern qboolean NPC_EnemyAboveMe( gentity_t *NPC );
+
 extern vmCvar_t npc_pathing;
 
 // Recorded in g_mover.c
@@ -1078,6 +1080,7 @@ qboolean NPC_HaveValidEnemy( void )
 void NPC_NewWaypointJump ( void )
 {// Jumping to new waypoint...
 	vec3_t myOrg, wpOrg;
+	qboolean should_jump = qtrue;
 
 	VectorCopy(NPCS.NPC->r.currentOrigin, myOrg);
 	myOrg[2]+= 8;
@@ -1101,7 +1104,12 @@ void NPC_NewWaypointJump ( void )
 			return; // No need to jump to this...
 	}
 
-	if (NPC_Jump( NPCS.NPC, wpOrg ))
+	if (NPCS.NPC->enemy && NPC_IsAlive(NPCS.NPC->enemy))
+	{// Don't jump when we are chasing an enemy, and they are not above me...
+		should_jump = NPC_EnemyAboveMe(NPCS.NPC);
+	}
+
+	if (should_jump && NPC_Jump( NPCS.NPC, wpOrg ))
 	{// Continue the jump...
 		//trap->Print("NPC JUMP DEBUG: NPC_NewWaypointJump\n");
 		return;
@@ -1565,9 +1573,7 @@ void NPC_SetNewEnemyGoalAndPath( void )
 		return; // wait before trying to get a new waypoint...
 	}
 
-	//NPC->longTermGoal = DOM_GetRandomCloseVisibleWP(NPC, NPC->enemy->r.currentOrigin, NPC->s.number, -1);
-	//NPC->longTermGoal = DOM_GetRandomCloseWP(NPCS.NPCInfo->goalEntity->r.currentOrigin, NPC->wpCurrent, -1);
-	NPC->longTermGoal = DOM_GetNearestWP(NPCS.NPCInfo->goalEntity->r.currentOrigin, NPC->wpCurrent);
+	NPC->longTermGoal = DOM_GetNearestWP(NPCS.NPC->enemy->r.currentOrigin, NPC->wpCurrent);
 
 	if (NPC->longTermGoal >= 0)
 	{
@@ -1639,13 +1645,13 @@ qboolean NPC_FollowEnemyRoute( void )
 	}
 
 	if ((NPC->client->ps.weapon == WP_SABER || NPC->client->ps.weapon == WP_MELEE)
-		&& Distance(NPC->r.currentOrigin, NPCS.NPCInfo->goalEntity->r.currentOrigin) <= 48)
+		&& Distance(NPC->r.currentOrigin, NPCS.NPC->enemy->r.currentOrigin) <= 48)
 	{// Close enough already... Don't move...
 		//trap->Print("close!\n");
 		return qfalse;
 	}
 	else if ( !(NPC->client->ps.weapon == WP_SABER || NPC->client->ps.weapon == WP_MELEE)
-		&& NPC_ClearLOS4( NPCS.NPCInfo->goalEntity ))
+		&& NPC_ClearLOS4( NPCS.NPC->enemy ))
 	{// Already visible to shoot... Don't move...
 		//trap->Print("close wp!\n");
 		return qfalse;
@@ -1817,12 +1823,12 @@ qboolean NPC_FollowEnemyRoute( void )
 		}
 	}
 
-	NPC_FacePosition( gWPArray[NPC->wpCurrent]->origin, qfalse );
+	//NPC_FacePosition( gWPArray[NPC->wpCurrent]->origin, qfalse );
 	VectorSubtract( gWPArray[NPC->wpCurrent]->origin, NPC->r.currentOrigin, NPC->movedir );
 
 	if (VectorLength(NPC->client->ps.velocity) < 8 && NPC_RoutingJumpWaypoint( NPC->wpLast, NPC->wpCurrent ))
 	{// We need to jump to get to this waypoint...
-		if (NPC_Jump(NPC, gWPArray[NPC->wpCurrent]->origin))
+		if (NPC_EnemyAboveMe(NPC) && NPC_Jump(NPC, gWPArray[NPC->wpCurrent]->origin))
 		{
 			//trap->Print("NPC JUMP DEBUG: NPC_FollowEnemyRoute\n");
 			VectorCopy( NPC->movedir, NPC->client->ps.moveDir );

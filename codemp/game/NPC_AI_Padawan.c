@@ -549,7 +549,8 @@ qboolean NPC_PadawanMove( void )
 				{// Player has looked somewhere else, start moving there instantly...
 					NPC->padawanWaitTime = 0;
 
-					NPC_FindEnemy( qtrue );
+					if (!(NPC->enemy && NPC_IsAlive(NPC->enemy)))
+						NPC_FindEnemy( qtrue );
 				}
 				else if (NPC->longTermGoal >= 0 && NPC->padawanWaitTime < level.time + 500 && NPC->padawanReturnToPlayerTime < level.time)
 				{// Head back to jedi...
@@ -561,7 +562,8 @@ qboolean NPC_PadawanMove( void )
 					ucmd->upmove = 0;
 					NPC_PickRandomIdleAnimantion(NPC);
 
-					NPC_FindEnemy( qtrue );
+					if (!(NPC->enemy && NPC_IsAlive(NPC->enemy)))
+						NPC_FindEnemy( qtrue );
 
 					return qtrue;
 				}
@@ -572,7 +574,8 @@ qboolean NPC_PadawanMove( void )
 					ucmd->upmove = 0;
 					NPC_PickRandomIdleAnimantion(NPC);
 
-					NPC_FindEnemy( qtrue );
+					if (!(NPC->enemy && NPC_IsAlive(NPC->enemy)))
+						NPC_FindEnemy( qtrue );
 
 					return qtrue;
 				}
@@ -615,15 +618,11 @@ qboolean NPC_PadawanMove( void )
 			VectorSet(angles, 0.0, 0.0, 0.0);
 			G_SetAngles( goalEnt, angles );
 
-			if (dist > 112 && dist < 1024)
+			if (dist > 112 && dist < 256)
 			{// If clear then move stright there...
 				NPC_FacePosition( goal, qfalse );
 
 				NPCS.NPCInfo->goalEntity = goalEnt;
-				//NPCS.NPCInfo->goalRadius = 96.0;
-				//NPCS.NPCInfo->greetEnt = NPC->parent;
-
-				//trap->Print("Moving to %f %f %f. I am at %f %f %f.\n", goal[0], goal[1], goal[2], NPC->r.currentOrigin[0], NPC->r.currentOrigin[1], NPC->r.currentOrigin[2]);
 
 				if ( UpdateGoal() )
 				{
@@ -637,7 +636,6 @@ qboolean NPC_PadawanMove( void )
 						TIMER_Set( NPCS.NPC, "protect", irand(15000, 30000) );
 					}
 
-					//if (walk) NPCS.ucmd.buttons |= BUTTON_WALKING;
 					if (NPC_CombatMoveToGoal( qtrue, qfalse ))
 					{// All is good in the world...
 						return qtrue;
@@ -659,10 +657,6 @@ qboolean NPC_PadawanMove( void )
 					{// Try using waypoints...
 						return qtrue;
 					}
-					/*else if (Jedi_Jump( goal, ENTITYNUM_NONE ))
-					{// Backup... Can we jump there???
-						return qtrue;
-					}*/
 				}
 				
 				if (irand(0,2) > 0)
@@ -717,8 +711,15 @@ qboolean NPC_PadawanMove( void )
 
 				return qtrue;
 			}
+			else if (NPC->enemy && NPC_IsAlive(NPC->enemy))
+			{// Continue using normal movement...
+				if (NPC_FollowEnemyRoute())
+				{// Try using waypoints...
+					return qtrue;
+				}
+			}
 			else if (NPC->parent->s.groundEntityNum != ENTITYNUM_NONE
-				&& (!NPC_IsAlive(NPC->enemy) || Distance(NPC->parent->r.currentOrigin, NPC->r.currentOrigin) > 1024))
+				&& Distance(NPC->parent->r.currentOrigin, NPC->r.currentOrigin) > 4096)
 			{// Padawan is too far from jedi. Teleport to him... Only if they are not in mid air...
 				if (NPC->parent->client->ps.groundEntityNum == ENTITYNUM_NONE)
 				{// Out master is in the air... Don't teleport!
@@ -733,8 +734,12 @@ qboolean NPC_PadawanMove( void )
 
 					return qtrue;
 				}
+				else if (NPC_FollowPadawanRoute())
+				{// Try using waypoints...
+					return qtrue;
+				}
 				else if (NPC->nextPadawanTeleportThink <= level.time)
-				{
+				{// Desperation, teleport to master...
 					int waypoint = DOM_GetNearWP(NPC->parent->r.currentOrigin, NPC->parent->wpCurrent);
 
 					NPC->nextPadawanTeleportThink = level.time + 5000;
@@ -1012,19 +1017,16 @@ void NPC_DoPadawanStuff ( void )
 
 			if ( Jdist <= 384 && Edist <= 384 )
 			{
-				me->enemy = parent->enemy;
-			}
-			else
-			{
-				//if (me->enemy && me->enemy->enemy != me)
-				//	me->enemy = NULL;
+				if (!me->enemy || !NPC_IsAlive(me->enemy))
+					me->enemy = parent->enemy;
 			}
 		}
 		else
 		{
 			if (me->enemy && NPC_IsAlive(me->enemy))
 			{// Jedi assists padawan... No range limit on jedi helping the padawan...
-				parent->enemy = me->enemy;
+				if (!parent->enemy || !NPC_IsAlive(parent->enemy))
+					parent->enemy = me->enemy;
 			}
 		}
 
@@ -1035,18 +1037,6 @@ void NPC_DoPadawanStuff ( void )
 				if (me->client->ps.saberHolstered != 2)
 				{
 					me->client->ps.saberHolstered = 2;
-
-#if 0
-					if (me->client->saber[0].soundOff)
-					{
-						G_Sound(me, CHAN_AUTO, me->client->saber[0].soundOff);
-					}
-					if (me->client->saber[1].soundOff &&
-						me->client->saber[1].model[0])
-					{
-						G_Sound(me, CHAN_AUTO, me->client->saber[1].soundOff);
-					}
-#endif
 				}
 			}
 			else
@@ -1054,18 +1044,6 @@ void NPC_DoPadawanStuff ( void )
 				if (me->client->ps.saberHolstered != 0)
 				{
 					me->client->ps.saberHolstered = 0;
-
-#if 0
-					if (me->client->saber[0].soundOn)
-					{
-						G_Sound(me, CHAN_AUTO, me->client->saber[0].soundOn);
-					}
-					if (me->client->saber[1].soundOn &&
-						me->client->saber[1].model[0])
-					{
-						G_Sound(me, CHAN_AUTO, me->client->saber[1].soundOn);
-					}
-#endif
 				}
 			}
 		}
@@ -1130,21 +1108,16 @@ void NPC_DoPadawanStuff ( void )
 
 			if ( Jdist <= 384 && Edist <= 384 )
 			{
-				me->enemy = parent->enemy;
-			}
-			else
-			{
-				if (me->enemy && me->enemy->enemy != me)
-				{
-					//me->enemy = NULL;
-				}
+				if (!me->enemy || !NPC_IsAlive(me->enemy))
+					me->enemy = parent->enemy;
 			}
 		}
 		else
 		{
 			if (me->enemy && NPC_IsAlive(me->enemy))
 			{// Jedi assists padawan... No range limit on jedi helping the padawan...
-				parent->enemy = me->enemy;
+				if (!parent->enemy || !NPC_IsAlive(parent->enemy))
+					parent->enemy = me->enemy;
 			}
 		}
 
@@ -1155,18 +1128,6 @@ void NPC_DoPadawanStuff ( void )
 				if (me->client->ps.saberHolstered != 2)
 				{
 					me->client->ps.saberHolstered = 2;
-
-#if 0
-					if (me->client->saber[0].soundOff)
-					{
-						G_Sound(me, CHAN_AUTO, me->client->saber[0].soundOff);
-					}
-					if (me->client->saber[1].soundOff &&
-						me->client->saber[1].model[0])
-					{
-						G_Sound(me, CHAN_AUTO, me->client->saber[1].soundOff);
-					}
-#endif
 				}
 			}
 			else
@@ -1174,18 +1135,6 @@ void NPC_DoPadawanStuff ( void )
 				if (me->client->ps.saberHolstered != 0)
 				{
 					me->client->ps.saberHolstered = 0;
-
-#if 0
-					if (me->client->saber[0].soundOn)
-					{
-						G_Sound(me, CHAN_AUTO, me->client->saber[0].soundOn);
-					}
-					if (me->client->saber[1].soundOn &&
-						me->client->saber[1].model[0])
-					{
-						G_Sound(me, CHAN_AUTO, me->client->saber[1].soundOn);
-					}
-#endif
 				}
 			}
 		}
