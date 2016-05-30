@@ -325,34 +325,32 @@ qboolean NPC_FollowPadawanRoute( void )
 
 	if ( !NPC->parent || !NPC_IsAlive(NPC->parent) )
 	{
+		//trap->Print("parent dead!\n");
 		return qfalse;
 	}
 
 	if (!NPCS.NPCInfo->goalEntity)
 	{
-		return qfalse;
+		//trap->Print("no goal!\n");
+		//return qfalse;
+		NPCS.NPCInfo->goalEntity = NPC->parent;
 	}
 
 	if (NPC_GetOffPlayer(NPC))
 	{// Get off of their head!
+		//trap->Print("head!\n");
 		return qfalse;
 	}
 
 	if (NPC_MoverCrushCheck(NPC))
 	{// There is a mover gonna crush us... Step back...
+		//trap->Print("mover!\n");
 		return qtrue;
 	}
 
-	if ((NPC->client->ps.weapon == WP_SABER || NPC->client->ps.weapon == WP_MELEE)
-		&& Distance(NPC->r.currentOrigin, NPCS.NPCInfo->goalEntity->r.currentOrigin) <= 48)
+	if (Distance(NPC->r.currentOrigin, NPCS.NPCInfo->goalEntity->r.currentOrigin) <= 128)
 	{// Close enough already... Don't move...
 		//trap->Print("close!\n");
-		return qfalse;
-	}
-	else if ( !(NPC->client->ps.weapon == WP_SABER || NPC->client->ps.weapon == WP_MELEE)
-		&& NPC_ClearLOS4( NPCS.NPCInfo->goalEntity ))
-	{// Already visible to shoot... Don't move...
-		//trap->Print("close wp!\n");
 		return qfalse;
 	}
 
@@ -443,6 +441,7 @@ qboolean NPC_FollowPadawanRoute( void )
 
 	if (NPC_DoLiftPathing(NPC))
 	{
+		//trap->Print("lift!\n");
 		return qtrue;
 	}
 
@@ -623,7 +622,14 @@ qboolean NPC_PadawanMove( void )
 			VectorSet(angles, 0.0, 0.0, 0.0);
 			G_SetAngles( goalEnt, angles );
 
-			if (dist > 112 && dist < 256)
+			if (NPC->enemy && NPC_IsAlive(NPC->enemy))
+			{// Continue using normal movement...
+				if (NPC_FollowEnemyRoute())
+				{// Try using waypoints...
+					return qtrue;
+				}
+			}
+			else if (dist > 112 && dist < 256)
 			{// If clear then move stright there...
 				NPC_FacePosition( goal, qfalse );
 
@@ -673,6 +679,59 @@ qboolean NPC_PadawanMove( void )
 
 				//trap->Print("dist > 96 && dist < 512 FAIL!\n");
 			}
+			else if (dist >= 256 && NPC_FollowPadawanRoute())
+			{// Try using waypoints...
+				Padawan_CheckForce();
+
+				if (dist > 512 
+					&& TIMER_Done( NPCS.NPC, "protect" )
+					&& NPCS.NPC->client->ps.fd.forcePowerLevel[FP_PROTECT] > 0)
+				{// When the master is a fair way away, use force protect to get to him safer...
+					ForceProtect( NPCS.NPC );
+					TIMER_Set( NPCS.NPC, "protect", irand(15000, 30000) );
+				}
+
+				NPCS.NPCInfo->goalEntity = goalEnt;
+				NPC_FacePosition( goal, qfalse );
+				return qtrue;
+			}
+			else if (dist >= 256)
+			{
+				NPC_FacePosition( goal, qfalse );
+
+				NPCS.NPCInfo->goalEntity = goalEnt;
+
+				if ( UpdateGoal() )
+				{
+					Padawan_CheckForce();
+
+					if (dist > 512 
+						&& TIMER_Done( NPCS.NPC, "protect" )
+						&& NPCS.NPC->client->ps.fd.forcePowerLevel[FP_PROTECT] > 0)
+					{// When the master is a fair way away, use force protect to get to him safer...
+						ForceProtect( NPCS.NPC );
+						TIMER_Set( NPCS.NPC, "protect", irand(15000, 30000) );
+					}
+
+					if (NPC_CombatMoveToGoal( qtrue, qfalse ))
+					{// All is good in the world...
+						return qtrue;
+					}
+					else if (NPC->parent->client->ps.groundEntityNum == ENTITYNUM_NONE)
+					{// Out master is in the air... Don't jump!
+						NPC_ClearGoal();
+						NPCS.NPCInfo->goalEntity = NULL;
+						NPCS.NPCInfo->tempGoal = NULL;
+
+						ucmd->forwardmove = 0;
+						ucmd->rightmove = 0;
+						ucmd->upmove = 0;
+						NPC_PickRandomIdleAnimantion(NPC);
+
+						return qtrue;
+					}
+				}
+			}
 //#if 0
 			else if (dist < 96)
 			{// If clear then move back a bit...
@@ -717,13 +776,6 @@ qboolean NPC_PadawanMove( void )
 				NPC->padawanWaitTime = level.time + 1500;
 
 				return qtrue;
-			}
-			else if (NPC->enemy && NPC_IsAlive(NPC->enemy))
-			{// Continue using normal movement...
-				if (NPC_FollowEnemyRoute())
-				{// Try using waypoints...
-					return qtrue;
-				}
 			}
 			else if (NPC->parent->s.groundEntityNum != ENTITYNUM_NONE
 				&& Distance(NPC->parent->r.currentOrigin, NPC->r.currentOrigin) > 4096)
