@@ -1261,7 +1261,6 @@ void R_LoadMapInfo ( void )
 		tr.random2KImage[1] = R_FindImageFile("gfx/random2Ka.tga", IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION);
 	}
 
-	{
 	if (!ri->FS_FileExists("gfx/splatControlImage.tga"))
 	{
 		R_CreateRandom2KImage("splatControl");
