@@ -1241,7 +1241,7 @@ void R_LoadMapInfo ( void )
 {
 	R_SetupMapInfo();
 
-	if (!ri->FS_FileExists(va( "gfx/random2K.tga", currentMapName )))
+	if (!ri->FS_FileExists("gfx/random2K.tga"))
 	{
 		R_CreateRandom2KImage("");
 		tr.random2KImage[0] = R_FindImageFile("gfx/random2K.tga", IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION);
@@ -1251,7 +1251,7 @@ void R_LoadMapInfo ( void )
 		tr.random2KImage[0] = R_FindImageFile("gfx/random2K.tga", IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION);
 	}
 
-	if (!ri->FS_FileExists(va( "gfx/random2Ka.tga", currentMapName )))
+	if (!ri->FS_FileExists("gfx/random2Ka.tga"))
 	{
 		R_CreateRandom2KImage("a");
 		tr.random2KImage[1] = R_FindImageFile("gfx/random2Ka.tga", IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION);
@@ -1261,7 +1261,8 @@ void R_LoadMapInfo ( void )
 		tr.random2KImage[1] = R_FindImageFile("gfx/random2Ka.tga", IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION);
 	}
 
-	if (!ri->FS_FileExists(va( "gfx/splatControlImage.tga", currentMapName )))
+	{
+	if (!ri->FS_FileExists("gfx/splatControlImage.tga"))
 	{
 		R_CreateRandom2KImage("splatControl");
 		tr.defaultSplatControlImage = R_FindImageFile("gfx/splatControlImage.tga", IMGTYPE_SPLATCONTROLMAP, IMGFLAG_NO_COMPRESSION|IMGFLAG_NOLIGHTSCALE);

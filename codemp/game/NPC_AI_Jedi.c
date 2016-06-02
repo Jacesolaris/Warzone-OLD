@@ -183,8 +183,8 @@ qboolean Jedi_AttackOrCounter( gentity_t *NPC )
 	// Current attacker always controls all the timers/counters...
 	//
 
-	if ((NPC->npc_attack_time >= level.time && NPC->enemy->npc_attack_time >= level.time)
-		|| (NPC->npc_counter_time >= level.time && NPC->enemy->npc_counter_time >= level.time))
+	if ((NPC->npc_attack_time < level.time && NPC->enemy->npc_attack_time < level.time)
+		|| (NPC->npc_counter_time < level.time && NPC->enemy->npc_counter_time < level.time))
 	{// Initialize...
 		NPC->npc_counter_time = 0;
 		NPC->npc_attack_time = 0;
@@ -193,7 +193,7 @@ qboolean Jedi_AttackOrCounter( gentity_t *NPC )
 		NPC->enemy->npc_attack_time = 0;
 	}
 
-	if (NPC->npc_counter_time < level.time && NPC->npc_attack_time < level.time)
+	if (NPC->npc_counter_time <= level.time && NPC->npc_attack_time <= level.time)
 	{// Pick if we should initally attack or defend...
 		if (NPC->enemy->npc_attack_time >= level.time || NPC_EnemyAttackingMeWithSaber(NPC->enemy))
 		{// Enemy is already attacking, start by defending...
