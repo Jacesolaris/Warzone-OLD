@@ -92,6 +92,9 @@ static void R_DrawMultiElementsVBO( int multiDrawPrimitives, glIndex_t *multiDra
 	if (r_tesselation->integer && tesselation)
 	{
 		//TesselatedGlMultiDrawElements( GL_PATCHES, multiDrawNumIndexes, GL_INDEX_TYPE, (const GLvoid **)multiDrawFirstIndex, multiDrawPrimitives );
+		GLint MaxPatchVertices = 0;
+		qglGetIntegerv(GL_MAX_PATCH_VERTICES, &MaxPatchVertices);
+		qglPatchParameteri(GL_PATCH_VERTICES, 3);
 		qglMultiDrawElements(GL_PATCHES, multiDrawNumIndexes, GL_INDEX_TYPE, (const GLvoid **)multiDrawFirstIndex, multiDrawPrimitives);
 	}
 	else

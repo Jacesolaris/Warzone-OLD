@@ -390,6 +390,10 @@ const char fallbackShader_genericTessControl_cp[] =
 "{\n"\
 "	return mix(1.0, gTessellationLevelInner, clamp(2048.0 / Distance, 0.0, 1.0));\n"\
 "}\n"\
+"float GetTessLevel2(float Distance0, float Distance1)\n"\
+"{\n"\
+"	return mix(1.0, gTessellationLevelInner, clamp(2048.0 / ((Distance0 + Distance1) / 2.0), 0.0, 1.0));\n"\
+"}\n"\
 "\n"\
 "void main()\n"\
 "{\n"\
@@ -411,14 +415,23 @@ const char fallbackShader_genericTessControl_cp[] =
 "	{\n"\
 "\n"\
 "    // Calculate the distance from the camera to the three control points\n"\
-"    float EyeToVertexDistance = distance(gEyeWorldPos, WorldPos_ES_in[gl_InvocationID].xyz);\n"\
+"/*    float EyeToVertexDistance = distance(gEyeWorldPos, WorldPos_ES_in[gl_InvocationID].xyz);\n"\
 "\n"\
 "		gl_TessLevelInner[0] = GetTessLevel(EyeToVertexDistance);//gTessellationLevelInner;\n"\
 "		gl_TessLevelInner[1] = GetTessLevel(EyeToVertexDistance);//gTessellationLevelInner;\n"\
 "		gl_TessLevelOuter[0] = 3.0;//GetTessLevel(EyeToVertexDistance);//gTessellationLevelOuter;\n"\
 "		gl_TessLevelOuter[1] = 3.0;//GetTessLevel(EyeToVertexDistance);//gTessellationLevelOuter;\n"\
 "		gl_TessLevelOuter[2] = 3.0;//GetTessLevel(EyeToVertexDistance);//gTessellationLevelOuter;\n"\
-"		gl_TessLevelOuter[3] = 3.0;//GetTessLevel(EyeToVertexDistance);//gTessellationLevelOuter;\n"\
+"		gl_TessLevelOuter[3] = 3.0;//GetTessLevel(EyeToVertexDistance);//gTessellationLevelOuter;*/\n"\
+// Calculate the distance from the camera to the three control points
+"		    float EyeToVertexDistance0 = distance(gEyeWorldPos, WorldPos_ES_in[0].xyz);\n"\
+"		    float EyeToVertexDistance1 = distance(gEyeWorldPos, WorldPos_ES_in[1].xyz);\n"\
+"		    float EyeToVertexDistance2 = distance(gEyeWorldPos, WorldPos_ES_in[2].xyz);\n"\
+"    gl_TessLevelOuter[0] = GetTessLevel2(EyeToVertexDistance1, EyeToVertexDistance2);\n"\
+"    gl_TessLevelOuter[1] = GetTessLevel2(EyeToVertexDistance2, EyeToVertexDistance0);\n"\
+"    gl_TessLevelOuter[2] = GetTessLevel2(EyeToVertexDistance0, EyeToVertexDistance1);\n"\
+"    gl_TessLevelInner[0] = gl_TessLevelOuter[2];\n"\
+"    gl_TessLevelInner[1] = gl_TessLevelOuter[2];\n"\
 "	}\n"\
 "}\n";
 
@@ -546,7 +559,7 @@ const char fallbackShader_genericGeometry[] =
 "//	 Normal_FS_in = normalize(Normal_GS_in[i]);\n"\
 "	 vec3 normal = cross(WorldPos_GS_in[2].xyz - WorldPos_GS_in[0].xyz, WorldPos_GS_in[1].xyz - WorldPos_GS_in[0].xyz);\n"\
 "	 Normal_FS_in = normalize(vec3(normal.xy, normal.z));\n"\
-"	 normal.z *= 65536.0; // Ummmmm.... WTF???!?!?!?! Why is this needed?!?!?!?!??\n"\
+"//	 normal.z *= 65536.0; // Ummmmm.... WTF???!?!?!?! Why is this needed?!?!?!?!??\n"\
 "	 normal = normalize(normal);\n"\
 "    TexCoord_FS_in = TexCoord_GS_in[i];\n"\
 "    ViewDir_FS_in = ViewDir_GS_in[i];\n"\
