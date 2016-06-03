@@ -396,8 +396,10 @@ void main()
   //nMap.z = sqrt(clamp((0.25 - nMap.x * nMap.x) - nMap.y * nMap.y, 0.0, 1.0));
 
   WorldPos_CS_in = vec4(preMMPos, 1.0);
+  //WorldPos_CS_in = vec4(var_vertPos.xyz, 1.0);
   TexCoord_CS_in = var_TexCoords.xy;
-  Normal_CS_in = /*nMap.xyz;*/attr_Normal.xyz * 2.0 - 1.0;//-preMMNorm.xyz;//-var_Normal.xyz;
+  //Normal_CS_in = /*nMap.xyz;*/attr_Normal.xyz * 2.0 - 1.0;//-preMMNorm.xyz;//-var_Normal.xyz;
+  Normal_CS_in = var_Normal.xyz;
   ViewDir_CS_in = var_ViewDir;
   Tangent_CS_in = var_Tangent;
   Bitangent_CS_in = var_Bitangent;
@@ -408,6 +410,7 @@ void main()
   Slope_CS_in = var_Slope;
   usingSteepMap_CS_in = var_usingSteepMap;
   gl_Position = vec4(preMMPos, 1.0);
+  //gl_Position = vec4(var_vertPos.xyz, 1.0);
 
 #endif //defined(USE_TESSELLATION)
 }

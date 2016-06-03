@@ -4104,9 +4104,6 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 
 		if (diffuse->bundle[TB_NORMALMAP].image[0] && normal->bundle[TB_NORMALMAP].image[0] != tr.whiteImage)
 		{
-			if (parallax && r_parallaxMapping->integer)
-				defs |= LIGHTDEF_USE_PARALLAXMAP;
-
 			if (diffuse->normalScale[0] == 0 && diffuse->normalScale[1] == 0 && diffuse->normalScale[2] == 0)
 				VectorSet4(diffuse->normalScale, r_baseNormalX->value, r_baseNormalY->value, 1.0f, r_baseParallax->value);
 			
@@ -4118,8 +4115,6 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 		{
 			//ri->Printf(PRINT_ALL, ", normalmap %s", normal->bundle[0].image[0]->imgName);
 			diffuse->bundle[TB_NORMALMAP] = normal->bundle[0];
-			if (parallax && r_parallaxMapping->integer)
-				defs |= LIGHTDEF_USE_PARALLAXMAP;
 
 			VectorCopy4(normal->normalScale, diffuse->normalScale);
 
@@ -4142,9 +4137,6 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 				diffuse->bundle[TB_NORMALMAP] = diffuse->bundle[0];
 				diffuse->bundle[TB_NORMALMAP].numImageAnimations = 0;
 				diffuse->bundle[TB_NORMALMAP].image[0] = normalImg;
-
-				if (parallax && r_parallaxMapping->integer)
-					defs |= LIGHTDEF_USE_PARALLAXMAP;
 
 				VectorSet4(diffuse->normalScale, r_baseNormalX->value, r_baseNormalY->value, 1.0f, r_baseParallax->value);
 
@@ -4186,9 +4178,6 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 					
 						if (diffuse->normalScale[0] == 0 && diffuse->normalScale[1] == 0 && diffuse->normalScale[2] == 0)
 							VectorSet4(diffuse->normalScale, r_baseNormalX->value, r_baseNormalY->value, 1.0f, r_baseParallax->value);
-
-						if (parallax && r_parallaxMapping->integer)
-							defs |= LIGHTDEF_USE_PARALLAXMAP;
 					}
 				}
 			}

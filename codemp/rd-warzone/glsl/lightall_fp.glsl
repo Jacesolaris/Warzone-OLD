@@ -468,6 +468,7 @@ vec4 GetDiffuse(vec2 texCoords, vec2 ParallaxOffset, float pixRandom)
 	}
 	else if (u_Local5.a > 0.0 && var_Slope > 0)
 	{// Steep maps (high angles)...
+#if 1
 		const float scale = 0.0025;
 
 		if (u_Local7.r <= 0.0 && u_Local7.g <= 0.0 && u_Local7.b <= 0.0 && u_Local7.a <= 0.0)
@@ -484,6 +485,26 @@ vec4 GetDiffuse(vec2 texCoords, vec2 ParallaxOffset, float pixRandom)
 			a1 = GetMap(u_NormalMap2, scale, ParallaxOffset, FAKE_MAP_NORMALMAP2).a;//GetMap(u_NormalMap2, scale, ParallaxOffset).a;
 
 		return GetSplatMap(texCoords, ParallaxOffset, pixRandom, tex, a1);
+#else // Procedural rock color testing
+		//const float scale = 0.0025;
+		//vec4 tex = GetMap(u_SteepMap, scale, ParallaxOffset, FAKE_MAP_NONE);
+		//float a1 = 0.0;
+		
+		//vec4 nor = ConvertToNormals(tex);
+		vec4 nor = vec4(m_Normal.xyz, 1.0 - (length(m_Normal.xyz) / 3.0));
+
+		// Base rock
+		vec3 color = mix( vec3(0.4, 0.1, 0.0), vec3(0.7, 0.6, 0.3), step(0.9, nor.y) );
+		
+		// Layer noise
+		float n = 0.5*(randZeroOne()+1.0);
+		color = mix( vec3(0.6, 0.5, 0.4), color, n*smoothstep(0.0, 0.7, 1.0-nor.y) );
+		
+        // Sand on top
+        color = mix(color, vec3(0.7, 0.6, 0.3), smoothstep(0.0, 0.2, nor.y-0.8));
+
+		return vec4(color, 1.0);
+#endif
 	}
 	else if (u_Local5.a > 0.0)
 	{// Steep maps (low angles)...
@@ -564,7 +585,7 @@ float RayIntersectDisplaceMap(vec2 dp)
 	float depth = GetDepth(dp) - 1.0;
 	return depth * u_Local1.x;
 }
-#endif
+#endif //defined(USE_PARALLAXMAP)
 
 vec3 EnvironmentBRDF(float gloss, float NE, vec3 specular)
 {
@@ -781,6 +802,8 @@ void main()
 
 
 	#if defined(USE_PARALLAXMAP)
+	if (u_Local1.x > 0.0)
+	{
 		vec3 offsetDir = normalize(E * tangentToWorld);
 		vec2 ParallaxXY = offsetDir.xy * u_Local1.x;
 
@@ -823,7 +846,7 @@ void main()
 			texCoords = Coord;
 
 		#endif //defined(FAST_PARALLAX)
-
+	}
 	#endif //defined(USE_PARALLAXMAP)
 
 
@@ -906,7 +929,11 @@ void main()
 	#if defined(USE_LIGHTMAP)
 
 		ambientColor = lightColor;
+#if defined(USE_TESSELLATION)
+		float surfNL = clamp(dot(var_PrimaryLightDir.xyz, N.xyz/*m_Normal.xyz*/), 0.0, 1.0);
+#else //!
 		float surfNL = clamp(-dot(var_PrimaryLightDir.xyz, N.xyz/*m_Normal.xyz*/), 0.0, 1.0);
+#endif //defined(USE_TESSELLATION)
 		lightColor /= max(surfNL, 0.25);
 		ambientColor = clamp(ambientColor - lightColor * surfNL, 0.0, 1.0);
 

@@ -91,7 +91,8 @@ static void R_DrawMultiElementsVBO( int multiDrawPrimitives, glIndex_t *multiDra
 {
 	if (r_tesselation->integer && tesselation)
 	{
-		TesselatedGlMultiDrawElements( GL_PATCHES, multiDrawNumIndexes, GL_INDEX_TYPE, (const GLvoid **)multiDrawFirstIndex, multiDrawPrimitives );
+		//TesselatedGlMultiDrawElements( GL_PATCHES, multiDrawNumIndexes, GL_INDEX_TYPE, (const GLvoid **)multiDrawFirstIndex, multiDrawPrimitives );
+		qglMultiDrawElements(GL_PATCHES, multiDrawNumIndexes, GL_INDEX_TYPE, (const GLvoid **)multiDrawFirstIndex, multiDrawPrimitives);
 	}
 	else
 	{
@@ -1412,11 +1413,11 @@ void RB_SetStageImageDimensions(shaderProgram_t *sp, shaderStage_t *pStage)
 
 qboolean RB_ShouldUseTesselation ( int materialType )
 {
-	/*if ( materialType == MATERIAL_SHORTGRASS 
+	if ( materialType == MATERIAL_SHORTGRASS 
 		|| materialType == MATERIAL_LONGGRASS
 		|| materialType == MATERIAL_SAND
 		|| materialType == MATERIAL_ROCK
-		|| materialType == MATERIAL_ICE)*/
+		|| materialType == MATERIAL_ICE)
 		return qtrue;
 
 	return qfalse;
@@ -1424,110 +1425,28 @@ qboolean RB_ShouldUseTesselation ( int materialType )
 
 float RB_GetTesselationAlphaLevel ( int materialType )
 {
-	return r_tesselationAlpha->value;
-
 	float tessAlphaLevel = r_tesselationAlpha->value;
 
 	switch( materialType )
 	{
-	case MATERIAL_WATER:			// 13			// light covering of water on a surface
-		tessAlphaLevel = r_tesselationAlpha->value;
+	case MATERIAL_SHORTGRASS:
+		tessAlphaLevel = 10.0 * r_tesselationAlpha->value;
 		break;
-	case MATERIAL_SHORTGRASS:		// 5			// manicured lawn
-		tessAlphaLevel = r_tesselationAlpha->value;
+	case MATERIAL_LONGGRASS:
+		tessAlphaLevel = 10.0 * r_tesselationAlpha->value;
 		break;
-	case MATERIAL_LONGGRASS:		// 6			// long jungle grass
-		tessAlphaLevel = r_tesselationAlpha->value;
+	case MATERIAL_SAND:
+		tessAlphaLevel = 10.0 * r_tesselationAlpha->value;
 		break;
-	case MATERIAL_SAND:				// 8			// sandy beach
-		tessAlphaLevel = r_tesselationAlpha->value * 0.1;
+	case MATERIAL_ROCK:
+		tessAlphaLevel = 10.0 * r_tesselationAlpha->value;
 		break;
-	case MATERIAL_CARPET:			// 27			// lush carpet
-		tessAlphaLevel = r_tesselationAlpha->value * 0.3;
-		break;
-	case MATERIAL_GRAVEL:			// 9			// lots of small stones
-		tessAlphaLevel = r_tesselationAlpha->value * 0.5;
-		break;
-	case MATERIAL_ROCK:				// 23			//
-		tessAlphaLevel = r_tesselationAlpha->value * 0.5;
-		break;
-	case MATERIAL_TILES:			// 26			// tiled floor
-		tessAlphaLevel = r_tesselationAlpha->value * 0.3;
-		break;
-	case MATERIAL_SOLIDWOOD:		// 1			// freshly cut timber
-		tessAlphaLevel = r_tesselationAlpha->value;
-		break;
-	case MATERIAL_HOLLOWWOOD:		// 2			// termite infested creaky wood
-		tessAlphaLevel = r_tesselationAlpha->value;
-		break;
-	case MATERIAL_SOLIDMETAL:		// 3			// solid girders
-		tessAlphaLevel = r_tesselationAlpha->value * 0.3;
-		break;
-	case MATERIAL_HOLLOWMETAL:		// 4			// hollow metal machines -- UQ1: Used for weapons to force lower parallax and high reflection...
-		tessAlphaLevel = r_tesselationAlpha->value * 0.2;
-		break;
-	case MATERIAL_DRYLEAVES:		// 19			// dried up leaves on the floor
-		tessAlphaLevel = r_tesselationAlpha->value;
-		break;
-	case MATERIAL_GREENLEAVES:		// 20			// fresh leaves still on a tree
-		tessAlphaLevel = r_tesselationAlpha->value;
-		break;
-	case MATERIAL_FABRIC:			// 21			// Cotton sheets
-		tessAlphaLevel = r_tesselationAlpha->value;
-		break;
-	case MATERIAL_CANVAS:			// 22			// tent material
-		tessAlphaLevel = r_tesselationAlpha->value;
-		break;
-	case MATERIAL_MARBLE:			// 12			// marble floors
-		tessAlphaLevel = r_tesselationAlpha->value * 0.5;
-		break;
-	case MATERIAL_SNOW:				// 14			// freshly laid snow
-		tessAlphaLevel = r_tesselationAlpha->value * 0.1;
-		break;
-	case MATERIAL_MUD:				// 17			// wet soil
-		tessAlphaLevel = r_tesselationAlpha->value * 0.1;
-		break;
-	case MATERIAL_DIRT:				// 7			// hard mud
-		tessAlphaLevel = r_tesselationAlpha->value * 0.1;
-		break;
-	case MATERIAL_CONCRETE:			// 11			// hardened concrete pavement
-		tessAlphaLevel = r_tesselationAlpha->value * 0.3;
-		break;
-	case MATERIAL_FLESH:			// 16			// hung meat, corpses in the world
-		tessAlphaLevel = r_tesselationAlpha->value;
-		break;
-	case MATERIAL_RUBBER:			// 24			// hard tire like rubber
-		tessAlphaLevel = r_tesselationAlpha->value;
-		break;
-	case MATERIAL_PLASTIC:			// 25			//
-		tessAlphaLevel = r_tesselationAlpha->value * 0.5;
-		break;
-	case MATERIAL_PLASTER:			// 28			// drywall style plaster
-		tessAlphaLevel = r_tesselationAlpha->value * 0.3;
-		break;
-	case MATERIAL_SHATTERGLASS:		// 29			// glass with the Crisis Zone style shattering
-		tessAlphaLevel = r_tesselationAlpha->value * 0.1;
-		break;
-	case MATERIAL_ARMOR:			// 30			// body armor
-		tessAlphaLevel = r_tesselationAlpha->value;
-		break;
-	case MATERIAL_ICE:				// 15			// packed snow/solid ice
-		tessAlphaLevel = r_tesselationAlpha->value * 0.3;
-		break;
-	case MATERIAL_GLASS:			// 10			//
-		tessAlphaLevel = r_tesselationAlpha->value * 0.1;
-		break;
-	case MATERIAL_BPGLASS:			// 18			// bulletproof glass
-		tessAlphaLevel = r_tesselationAlpha->value * 0.1;
-		break;
-	case MATERIAL_COMPUTER:			// 31			// computers/electronic equipment
-		tessAlphaLevel = r_tesselationAlpha->value * 0.1;
+	case MATERIAL_ICE:
+		tessAlphaLevel = 10.0 * r_tesselationAlpha->value;
 		break;
 	default:
 		break;
 	}
-
-	tessAlphaLevel = Q_clamp(0.1, tessAlphaLevel, r_tesselationAlpha->value);
 
 	return tessAlphaLevel;
 }
@@ -1876,6 +1795,11 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 					index |= LIGHTDEF_USE_TCGEN_AND_TCMOD;
 				}
 
+				if (r_tesselation->integer && RB_ShouldUseTesselation(tess.shader->surfaceFlags & MATERIAL_MASK))
+				{
+					index |= LIGHTDEF_USE_TESSELLATION;
+				}
+
 				if (r_foliage->integer 
 					&& r_sunlightMode->integer >= 2
 					&& r_foliageShadows->integer
@@ -1962,7 +1886,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				index |= LIGHTDEF_USE_SHADOWMAP;
 			}
 			
-			if (r_lightmap->integer /*&& index & LIGHTDEF_USE_LIGHTMAP*/ && ( tess.shader->surfaceFlags & MATERIAL_MASK ) != MATERIAL_DRYLEAVES && !tess.shader->isSky && !pStage->glow)
+			if (r_lightmap->integer && ( tess.shader->surfaceFlags & MATERIAL_MASK ) != MATERIAL_DRYLEAVES && !tess.shader->isSky && !pStage->glow)
 			{
 				index = LIGHTDEF_USE_LIGHTMAP;
 			}
@@ -1999,6 +1923,11 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 					cubeMapStrength = 0.0;
 					index &= ~LIGHTDEF_USE_CUBEMAP;
 				}
+			}
+
+			if (r_tesselation->integer && RB_ShouldUseTesselation(tess.shader->surfaceFlags & MATERIAL_MASK))
+			{
+				index |= LIGHTDEF_USE_TESSELLATION;
 			}
 
 			sp = &pStage->glslShaderGroup[index];

@@ -148,9 +148,9 @@ extern const char *fallbackShader_testshader_vp;
 extern const char *fallbackShader_testshader_fp;
 
 //#define HEIGHTMAP_TESSELATION
-//#define HEIGHTMAP_TESSELATION2
+#define HEIGHTMAP_TESSELATION2
 //#define PN_TRIANGLES_TESSELATION
-#define PHONG_TESSELATION
+//#define PHONG_TESSELATION
 
 #ifdef HEIGHTMAP_TESSELATION
 const char fallbackShader_genericTessControl_cp[] = 
@@ -355,6 +355,9 @@ const char fallbackShader_genericTessControl_cp[] =
 "#define gTessellationLevelInner u_Local10.g\n"\
 "#define gTessellationLevelOuter u_Local10.b\n"\
 "\n"\
+"uniform vec3   u_ViewOrigin;\n"\
+"#define gEyeWorldPos u_ViewOrigin\n"\
+"\n"\
 "// attributes of the input CPs\n"\
 "in vec4 WorldPos_CS_in[];\n"\
 "in vec3 Normal_CS_in[];\n"\
@@ -383,6 +386,11 @@ const char fallbackShader_genericTessControl_cp[] =
 "out float Slope_ES_in[3];\n"\
 "out float usingSteepMap_ES_in[3];\n"\
 "\n"\
+"float GetTessLevel(float Distance)\n"\
+"{\n"\
+"	return mix(1.0, gTessellationLevelInner, clamp(2048.0 / Distance, 0.0, 1.0));\n"\
+"}\n"\
+"\n"\
 "void main()\n"\
 "{\n"\
 "    TexCoord_ES_in[gl_InvocationID] = TexCoord_CS_in[gl_InvocationID];\n"\
@@ -399,19 +407,23 @@ const char fallbackShader_genericTessControl_cp[] =
 "	Slope_ES_in[gl_InvocationID]				= Slope_CS_in[gl_InvocationID];\n"\
 "	usingSteepMap_ES_in[gl_InvocationID]		= usingSteepMap_CS_in[gl_InvocationID];\n"\
 "\n"\
-"	if(gl_InvocationID == 0)\n"\
+"	//if(gl_InvocationID == 0)\n"\
 "	{\n"\
-"		gl_TessLevelInner[0] = gTessellationLevelInner;\n"\
-"		gl_TessLevelOuter[0] = gTessellationLevelOuter;\n"\
-"		gl_TessLevelOuter[1] = gTessellationLevelOuter;\n"\
-"		gl_TessLevelOuter[2] = gTessellationLevelOuter;\n"\
+"\n"\
+"    // Calculate the distance from the camera to the three control points\n"\
+"    float EyeToVertexDistance = distance(gEyeWorldPos, WorldPos_ES_in[gl_InvocationID].xyz);\n"\
+"\n"\
+"		gl_TessLevelInner[0] = GetTessLevel(EyeToVertexDistance);//gTessellationLevelInner;\n"\
+"		gl_TessLevelInner[1] = GetTessLevel(EyeToVertexDistance);//gTessellationLevelInner;\n"\
+"		gl_TessLevelOuter[0] = 3.0;//GetTessLevel(EyeToVertexDistance);//gTessellationLevelOuter;\n"\
+"		gl_TessLevelOuter[1] = 3.0;//GetTessLevel(EyeToVertexDistance);//gTessellationLevelOuter;\n"\
+"		gl_TessLevelOuter[2] = 3.0;//GetTessLevel(EyeToVertexDistance);//gTessellationLevelOuter;\n"\
+"		gl_TessLevelOuter[3] = 3.0;//GetTessLevel(EyeToVertexDistance);//gTessellationLevelOuter;\n"\
 "	}\n"\
 "}\n";
 
 const char fallbackShader_genericTessControl_ep[] = 
 "layout(triangles, equal_spacing, ccw) in;\n"\
-"\n"\
-"uniform mat4 u_ModelViewProjectionMatrix; // mvp\n"\
 "\n"\
 "in vec4 WorldPos_ES_in[];\n"\
 "in vec2 TexCoord_ES_in[];\n"\
@@ -453,8 +465,6 @@ const char fallbackShader_genericTessControl_ep[] =
 "	Blending_GS_in = (gl_TessCoord.x * Blending_ES_in[0] + gl_TessCoord.y * Blending_ES_in[1] + gl_TessCoord.z * Blending_ES_in[2]);\n"\
 "	Slope_GS_in = (gl_TessCoord.x * Slope_ES_in[0] + gl_TessCoord.y * Slope_ES_in[1] + gl_TessCoord.z * Slope_ES_in[2]);\n"\
 "	usingSteepMap_GS_in = (gl_TessCoord.x * usingSteepMap_ES_in[0] + gl_TessCoord.y * usingSteepMap_ES_in[1] + gl_TessCoord.z * usingSteepMap_ES_in[2]);\n"\
-"\n"\
-"//   	gl_Position = u_ModelViewProjectionMatrix * vec4(WorldPos_GS_in.xyz, 1.0);\n"\
 "}\n";
 
 const char fallbackShader_genericGeometry[] = 
@@ -467,8 +477,12 @@ const char fallbackShader_genericGeometry[] =
 "\n"\
 "uniform sampler2D u_DiffuseMap;\n"\
 "\n"\
+"uniform vec4 u_Local5;\n"\
+"uniform vec4 u_Local6;\n"\
+"\n"\
 "uniform vec4 u_Local10;\n"\
 "#define gDispFactor u_Local10.r\n"\
+"uniform vec4 u_Local9;\n"\
 "\n"\
 "in vec4 WorldPos_GS_in[];\n"\
 "in vec2 TexCoord_GS_in[];\n"\
@@ -496,6 +510,20 @@ const char fallbackShader_genericGeometry[] =
 "out float Slope_FS_in;\n"\
 "out float usingSteepMap_FS_in;\n"\
 "\n"\
+"vec3 vLocalSeed;\n"\
+"\n"\
+"// This function returns random number from zero to one\n"\
+"float randZeroOne()\n"\
+"{\n"\
+"    uint n = floatBitsToUint(vLocalSeed.y * 214013.0 + vLocalSeed.x * 2531011.0 + vLocalSeed.z * 141251.0);\n"\
+"    n = n * (n * n * 15731u + 789221u);\n"\
+"    n = (n >> 9u) | 0x3F800000u;\n"\
+"\n"\
+"    float fRes =  2.0 - uintBitsToFloat(n);\n"\
+"    vLocalSeed = vec3(vLocalSeed.x + 147158.0 * fRes, vLocalSeed.y*fRes  + 415161.0 * fRes, vLocalSeed.z + 324154.0*fRes);\n"\
+"    return fRes;\n"\
+"}\n"\
+"\n"\
 "vec4 ConvertToNormals ( vec4 color )\n"\
 "{\n"\
 "	// This makes silly assumptions, but it adds variation to the output. Hopefully this will look ok without doing a crapload of texture lookups or\n"\
@@ -506,7 +534,8 @@ const char fallbackShader_genericGeometry[] =
 "\n"\
 "	vec3 N = vec3(clamp(color.r + color.b, 0.0, 1.0), clamp(color.g + color.b, 0.0, 1.0), clamp(color.r + color.g, 0.0, 1.0));\n"\
 "	N.xy = 1.0 - N.xy;\n"\
-"	vec4 norm = vec4(N * 2.0 - 1.0, clamp(length(N.xyz), 0.0, 1.0));\n"\
+"	N.xyz = N.xyz * 2.0 - 1.0;\n"\
+"	vec4 norm = vec4(N, clamp(length(N.xyz), 0.0, 1.0));\n"\
 "//	norm.a = float(int(norm.a * 10.0)) / 10.0;\n"\
 "	norm.a = 1.0-norm.a;\n"\
 "	return norm;\n"\
@@ -514,7 +543,11 @@ const char fallbackShader_genericGeometry[] =
 "\n"\
 "void createPt(int i)\n"\
 "{\n"\
-"	Normal_FS_in = normalize(Normal_GS_in[i]);\n"\
+"//	 Normal_FS_in = normalize(Normal_GS_in[i]);\n"\
+"	 vec3 normal = cross(WorldPos_GS_in[2].xyz - WorldPos_GS_in[0].xyz, WorldPos_GS_in[1].xyz - WorldPos_GS_in[0].xyz);\n"\
+"	 Normal_FS_in = normalize(vec3(normal.xy, normal.z));\n"\
+"	 normal.z *= 65536.0; // Ummmmm.... WTF???!?!?!?! Why is this needed?!?!?!?!??\n"\
+"	 normal = normalize(normal);\n"\
 "    TexCoord_FS_in = TexCoord_GS_in[i];\n"\
 "    ViewDir_FS_in = ViewDir_GS_in[i];\n"\
 "    Tangent_FS_in = Tangent_GS_in[i];\n"\
@@ -526,11 +559,15 @@ const char fallbackShader_genericGeometry[] =
 "    Slope_FS_in = Slope_GS_in[i];\n"\
 "    usingSteepMap_FS_in = usingSteepMap_GS_in[i];\n"\
 "\n"\
-"	vec4 dispData = ConvertToNormals(texture2D(u_DiffuseMap, TexCoord_FS_in));\n"\
+"//	vec4 dispData = ConvertToNormals(texture2D(u_DiffuseMap, TexCoord_FS_in));\n"\
 "//	float height = 0.33*dispData.x + 0.33*dispData.y + 0.33*dispData.z;\n"\
-"	float height = dispData.a;\n"\
+"//	float height = dispData.a;\n"\
+"	 vLocalSeed = WorldPos_GS_in[i].xyz;\n"\
+"   float height = randZeroOne() * 2.0 - 1.0;\n"\
 "\n"\
-"    vec4 newPos = vec4(WorldPos_GS_in[i].xyz + Normal_FS_in * (gDispFactor * height), 1.0);\n"\
+"	 vec3 offset = normal * (-gDispFactor * height);\n"\
+"\n"\
+"    vec4 newPos = vec4(WorldPos_GS_in[i].xyz + offset.xyz, 1.0);\n"\
 "	 WorldPos_FS_in = newPos.xyz;\n"\
 "\n"\
 "    gl_Position = u_ModelViewProjectionMatrix * newPos;\n"\
@@ -538,12 +575,12 @@ const char fallbackShader_genericGeometry[] =
 "\n"\
 "void main()\n"\
 "{\n"\
-"	int i;\n"\
-"	for(i=0; i<gl_VerticesIn; i++)\n"\
+"	for(int i = 0; i < gl_VerticesIn; i++)\n"\
 "	{\n"\
 "		createPt(i);\n"\
 "		EmitVertex();\n"\
 "	}\n"\
+"\n"\
 "	EndPrimitive();\n"\
 "}\n";
 #endif
@@ -2432,12 +2469,6 @@ static bool GLSL_IsValidPermutationForFog (int shaderCaps)
 
 static bool GLSL_IsValidPermutationForLight (int lightType, int shaderCaps)
 {
-	if ((shaderCaps & LIGHTDEF_USE_PARALLAXMAP) && !r_parallaxMapping->integer)
-		return false;
-
-	if (!lightType && (shaderCaps & LIGHTDEF_USE_PARALLAXMAP))
-		return false;
-
 	if (!lightType && (shaderCaps & LIGHTDEF_USE_SHADOWMAP))
 		return false;
 
@@ -2627,7 +2658,7 @@ int GLSL_BeginLoadGPUShaders(void)
 		if (i & LIGHTDEF_USE_GLOW_BUFFER)
 			Q_strcat(extradefines, 1024, "#define USE_GLOW_BUFFER\n");
 
-		if (r_tesselation->integer)
+		if (r_tesselation->integer && (i & LIGHTDEF_USE_TESSELLATION))
 		{
 			Q_strcat(extradefines, 1024, "#define USE_TESSELLATION\n");
 
