@@ -556,11 +556,12 @@ const char fallbackShader_genericGeometry[] =
 "\n"\
 "void createPt(int i)\n"\
 "{\n"\
-"//	 Normal_FS_in = normalize(Normal_GS_in[i]);\n"\
-"	 vec3 normal = cross(WorldPos_GS_in[2].xyz - WorldPos_GS_in[0].xyz, WorldPos_GS_in[1].xyz - WorldPos_GS_in[0].xyz);\n"\
-"	 Normal_FS_in = normalize(vec3(normal.xy, normal.z));\n"\
+"	 Normal_FS_in = normalize(Normal_GS_in[i]);\n"\
+"	 vec3 normal = Normal_FS_in;\n"\
+"//	 vec3 normal = cross(WorldPos_GS_in[2].xyz - WorldPos_GS_in[0].xyz, WorldPos_GS_in[1].xyz - WorldPos_GS_in[0].xyz);\n"\
+"//	 Normal_FS_in = normalize(vec3(normal.xy, normal.z));\n"\
 "//	 normal.z *= 65536.0; // Ummmmm.... WTF???!?!?!?! Why is this needed?!?!?!?!??\n"\
-"	 normal = normalize(normal);\n"\
+"//	 normal = normalize(normal);\n"\
 "    TexCoord_FS_in = TexCoord_GS_in[i];\n"\
 "    ViewDir_FS_in = ViewDir_GS_in[i];\n"\
 "    Tangent_FS_in = Tangent_GS_in[i];\n"\
