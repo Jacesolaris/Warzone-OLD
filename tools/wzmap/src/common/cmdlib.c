@@ -123,9 +123,13 @@ void Sys_PrintHeadingVerbose( char *heading )
 
 char previousPercLabel[18] = { 0 };
 
-void DoProgress( char label[], int instep, int total, qboolean verbose )
+void DoProgress( char inlabel[], int instep, int total, qboolean verbose )
 {
 	int step = instep + 1;
+	char label[18] = { 0 };
+
+	strncpy(label, inlabel, 17);
+	label[17] = '\0';
 
     //progress width
     int pwidth = 72;
