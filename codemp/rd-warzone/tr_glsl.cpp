@@ -373,18 +373,18 @@ const char fallbackShader_genericTessControl_cp[] =
 "in float usingSteepMap_CS_in[];\n"\
 "\n"\
 "// attributes of the output CPs\n"\
-"out vec4 WorldPos_ES_in[3];\n"\
-"out vec3 Normal_ES_in[3];\n"\
-"out vec2 TexCoord_ES_in[3];\n"\
-"out vec3 ViewDir_ES_in[3];\n"\
-"out vec4 Tangent_ES_in[3];\n"\
-"out vec4 Bitangent_ES_in[3];\n"\
-"out vec4 Color_ES_in[3];\n"\
-"out vec4 PrimaryLightDir_ES_in[3];\n"\
-"out vec2 TexCoord2_ES_in[3];\n"\
-"out vec3 Blending_ES_in[3];\n"\
-"out float Slope_ES_in[3];\n"\
-"out float usingSteepMap_ES_in[3];\n"\
+"out precise vec4 WorldPos_ES_in[3];\n"\
+"out precise vec3 Normal_ES_in[3];\n"\
+"out precise vec2 TexCoord_ES_in[3];\n"\
+"out precise vec3 ViewDir_ES_in[3];\n"\
+"out precise vec4 Tangent_ES_in[3];\n"\
+"out precise vec4 Bitangent_ES_in[3];\n"\
+"out precise vec4 Color_ES_in[3];\n"\
+"out precise vec4 PrimaryLightDir_ES_in[3];\n"\
+"out precise vec2 TexCoord2_ES_in[3];\n"\
+"out precise vec3 Blending_ES_in[3];\n"\
+"out precise float Slope_ES_in[3];\n"\
+"out precise float usingSteepMap_ES_in[3];\n"\
 "\n"\
 "float GetTessLevel(float Distance)\n"\
 "{\n"\
@@ -438,18 +438,18 @@ const char fallbackShader_genericTessControl_cp[] =
 const char fallbackShader_genericTessControl_ep[] = 
 "layout(triangles, equal_spacing, ccw) in;\n"\
 "\n"\
-"in vec4 WorldPos_ES_in[];\n"\
-"in vec2 TexCoord_ES_in[];\n"\
-"in vec3 Normal_ES_in[];\n"\
-"in vec3 ViewDir_ES_in[];\n"\
-"in vec4 Tangent_ES_in[];\n"\
-"in vec4 Bitangent_ES_in[];\n"\
-"in vec4 Color_ES_in[];\n"\
-"in vec4 PrimaryLightDir_ES_in[];\n"\
-"in vec2 TexCoord2_ES_in[];\n"\
-"in vec3 Blending_ES_in[];\n"\
-"in float Slope_ES_in[];\n"\
-"in float usingSteepMap_ES_in[];\n"\
+"in precise vec4 WorldPos_ES_in[];\n"\
+"in precise vec2 TexCoord_ES_in[];\n"\
+"in precise vec3 Normal_ES_in[];\n"\
+"in precise vec3 ViewDir_ES_in[];\n"\
+"in precise vec4 Tangent_ES_in[];\n"\
+"in precise vec4 Bitangent_ES_in[];\n"\
+"in precise vec4 Color_ES_in[];\n"\
+"in precise vec4 PrimaryLightDir_ES_in[];\n"\
+"in precise vec2 TexCoord2_ES_in[];\n"\
+"in precise vec3 Blending_ES_in[];\n"\
+"in precise float Slope_ES_in[];\n"\
+"in precise float usingSteepMap_ES_in[];\n"\
 "\n"\
 "out vec4 WorldPos_GS_in;\n"\
 "out vec2 TexCoord_GS_in;\n"\
@@ -497,18 +497,18 @@ const char fallbackShader_genericGeometry[] =
 "#define gDispFactor u_Local10.r\n"\
 "uniform vec4 u_Local9;\n"\
 "\n"\
-"in vec4 WorldPos_GS_in[];\n"\
-"in vec2 TexCoord_GS_in[];\n"\
-"in vec3 Normal_GS_in[];\n"\
-"in vec3 ViewDir_GS_in[];\n"\
-"in vec4 Tangent_GS_in[];\n"\
-"in vec4 Bitangent_GS_in[];\n"\
-"in vec4 Color_GS_in[];\n"\
-"in vec4 PrimaryLightDir_GS_in[];\n"\
-"in vec2 TexCoord2_GS_in[];\n"\
-"in vec3 Blending_GS_in[];\n"\
-"in float Slope_GS_in[];\n"\
-"in float usingSteepMap_GS_in[];\n"\
+"in precise vec4 WorldPos_GS_in[];\n"\
+"in precise vec2 TexCoord_GS_in[];\n"\
+"in precise vec3 Normal_GS_in[];\n"\
+"in precise vec3 ViewDir_GS_in[];\n"\
+"in precise vec4 Tangent_GS_in[];\n"\
+"in precise vec4 Bitangent_GS_in[];\n"\
+"in precise vec4 Color_GS_in[];\n"\
+"in precise vec4 PrimaryLightDir_GS_in[];\n"\
+"in precise vec2 TexCoord2_GS_in[];\n"\
+"in precise vec3 Blending_GS_in[];\n"\
+"in precise float Slope_GS_in[];\n"\
+"in precise float usingSteepMap_GS_in[];\n"\
 "\n"\
 "out vec3 WorldPos_FS_in;\n"\
 "out vec2 TexCoord_FS_in;\n"\
@@ -579,10 +579,14 @@ const char fallbackShader_genericGeometry[] =
 "	 vLocalSeed = WorldPos_GS_in[i].xyz;\n"\
 "   float height = randZeroOne() * 2.0 - 1.0;\n"\
 "\n"\
-"	 vec3 offset = normal * (-gDispFactor * height);\n"\
+"//	 vec3 offset = normal * (-gDispFactor * height);\n"\
+"	 vec3 offset = vec3(0.0, 0.0, 1.0) * (-gDispFactor * height);\n"\
 "\n"\
 "    vec4 newPos = vec4(WorldPos_GS_in[i].xyz + offset.xyz, 1.0);\n"\
 "	 WorldPos_FS_in = newPos.xyz;\n"\
+"\n"\
+"	 // Need to re-generate normal for the displacement...\n"\
+"	 Normal_FS_in = normalize(cross((WorldPos_GS_in[2].xyz + offset.xyz) - (WorldPos_GS_in[0].xyz + offset.xyz), (WorldPos_GS_in[1].xyz + offset.xyz) - (WorldPos_GS_in[0].xyz + offset.xyz)));\n"\
 "\n"\
 "    gl_Position = u_ModelViewProjectionMatrix * newPos;\n"\
 "}\n"\

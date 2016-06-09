@@ -743,7 +743,7 @@ void main()
 	//if (pixRandom < 0.5) pixRandom = 0.5 + pixRandom;
 
 	#if 0
-	#if defined(USE_TESSELLATION)
+	//#if defined(USE_TESSELLATION)
 	//if (u_Local6.g > 0.0 && m_vertPos.z <= WATER_LEVEL + 32.0)
 	{
 		gl_FragColor = vec4(m_Normal.xyz * 0.5 + 0.5, 1.0);
@@ -759,7 +759,7 @@ void main()
 		out_Position = vec4(m_vertPos, u_Local1.a );/// MATERIAL_LAST);
 		return;
 	}
-	#endif //defined(USE_TESSELLATION)
+	//#endif //defined(USE_TESSELLATION)
 	#endif
 
 

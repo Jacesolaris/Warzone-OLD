@@ -494,6 +494,21 @@ static void CMod_LoadShaders( lump_t *l, clipMap_t &cm )
 		out->contentFlags = LittleLong( in->contentFlags );
 		out->surfaceFlags = LittleLong( in->surfaceFlags );
 		
+		if (in->shader && ( StringContainsWord(in->shader, "warzone/tree") || StringContainsWord(in->shader, "warzone\\tree")))
+		{// LOL WTF HAX!!! :)
+			if (StringContainsWord(in->shader, "bark") 
+				|| StringContainsWord(in->shader, "trunk") 
+				|| StringContainsWord(in->shader, "giant_tree") 
+				|| StringContainsWord(in->shader, "vine01"))
+			{
+				in->contentFlags |= (CONTENTS_SOLID | CONTENTS_OPAQUE);
+				//in->surfaceFlags |= CONTENTS_OPAQUE
+
+				out->contentFlags = LittleLong( in->contentFlags );
+				out->surfaceFlags = LittleLong( in->surfaceFlags );
+			}
+		}
+
 		if (!HaveSurfaceType(out->surfaceFlags))
 			out->surfaceFlags = LittleLong( GetMaterialType(in->shader, (in->surfaceFlags & MATERIAL_MASK)) );
 	}
