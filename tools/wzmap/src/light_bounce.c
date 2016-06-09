@@ -894,7 +894,7 @@ int	iterations = 0;
 void RadCreateDiffuseLights( void )
 {
 	/* startup */
-	Sys_FPrintf( SYS_VRB, "--- RadCreateDiffuseLights ---\n" );
+	Sys_PrintHeadingVerbose( "--- RadCreateDiffuseLights ---\n" );
 	numDiffuseSurfaces = 0;
 	numDiffuseLights = 0;
 	numBrushDiffuseLights = 0;

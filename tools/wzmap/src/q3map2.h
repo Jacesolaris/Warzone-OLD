@@ -323,14 +323,14 @@ abstracted bsp file
 #define	MAX_MAP_FOGS			30			//& 0x100	/* RBSP (32 - world fog - goggles) */
 #define	MAX_MAP_PLANES			0xFFFFFFF//0x200000	//%	0x20000	/* ydnar for md */ // vortex: doubled this
 //#define	MAX_MAP_NODES			0x40000
-#define	MAX_MAP_NODES			0xFFFFFF
+#define	MAX_MAP_NODES			0xFFFFFFF
 //#define	MAX_MAP_BRUSHSIDES		0x400000//0x100000	//%	0x20000	/* ydnar */
 #define	MAX_MAP_BRUSHSIDES		0xFFFFFFF
-#define	MAX_MAP_LEAFS			0x20000
-#define	MAX_MAP_LEAFFACES		0x100000	//%	0x20000	/* ydnar */
-#define	MAX_MAP_LEAFBRUSHES		0x40000
+#define	MAX_MAP_LEAFS			0xFFFFFFF//0x20000
+#define	MAX_MAP_LEAFFACES		0xFFFFFFF//0x100000	//%	0x20000	/* ydnar */
+#define	MAX_MAP_LEAFBRUSHES		0xFFFFFFF//0x40000
 #define	MAX_MAP_PORTALS			0x20000
-#define	MAX_MAP_LIGHTING		0x800000
+//#define	MAX_MAP_LIGHTING		0x800000
 //#define	MAX_MAP_LIGHTGRID		0xF000000	//%	0x800000 /* ydnar: set to points, not bytes */
 #define	MAX_MAP_LIGHTGRID		0xFFFFFFFF
 //#define	MAX_MAP_VISIBILITY		0xF000000//0x200000
@@ -2612,7 +2612,8 @@ Q_EXTERN int				bspEntDataSize Q_ASSIGN( 0 );
 Q_EXTERN char				bspEntData[ MAX_MAP_ENTSTRING ];
 
 Q_EXTERN int				numBSPLeafs Q_ASSIGN( 0 );
-Q_EXTERN bspLeaf_t			bspLeafs[ MAX_MAP_LEAFS ];
+//Q_EXTERN bspLeaf_t			bspLeafs[ MAX_MAP_LEAFS ];
+Q_EXTERN bspLeaf_t			*bspLeafs;
 
 Q_EXTERN int				numBSPPlanes Q_ASSIGN( 0 );
 //Q_EXTERN bspPlane_t			bspPlanes[ MAX_MAP_PLANES ];
@@ -2623,10 +2624,12 @@ Q_EXTERN int				numBSPNodes Q_ASSIGN( 0 );
 Q_EXTERN bspNode_t			*bspNodes;
 
 Q_EXTERN int				numBSPLeafSurfaces Q_ASSIGN( 0 );
-Q_EXTERN int				bspLeafSurfaces[ MAX_MAP_LEAFFACES ];
+//Q_EXTERN int				bspLeafSurfaces[ MAX_MAP_LEAFFACES ];
+Q_EXTERN int				*bspLeafSurfaces;
 
 Q_EXTERN int				numBSPLeafBrushes Q_ASSIGN( 0 );
-Q_EXTERN int				bspLeafBrushes[ MAX_MAP_LEAFBRUSHES ];
+//Q_EXTERN int				bspLeafBrushes[ MAX_MAP_LEAFBRUSHES ];
+Q_EXTERN int				*bspLeafBrushes;
 
 Q_EXTERN int				numBSPBrushes Q_ASSIGN( 0 );
 //Q_EXTERN bspBrush_t			bspBrushes[ MAX_MAP_BRUSHES ];

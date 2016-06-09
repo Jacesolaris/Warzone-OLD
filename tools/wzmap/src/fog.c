@@ -721,7 +721,7 @@ void CreateMapFogs( void )
 		return;
 	
 	/* note it */
-	Sys_FPrintf( SYS_VRB, "--- CreateMapFogs ---\n" );
+	Sys_PrintHeadingVerbose( "--- CreateMapFogs ---\n" );
 	
 	/* walk entities */
 	for( i = 0; i < numEntities; i++ )

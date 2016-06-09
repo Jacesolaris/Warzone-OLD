@@ -640,7 +640,7 @@ void FixTJunctions( entity_t *ent )
 	//%		return; 
 	
 	/* note it */
-	Sys_FPrintf( SYS_VRB, "--- FixTJunctions ---\n" );
+	Sys_PrintHeadingVerbose( "--- FixTJunctions ---\n" );
 	numEdgeLines = 0;
 	numOriginalEdges = 0;
 	

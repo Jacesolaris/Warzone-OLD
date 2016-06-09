@@ -120,7 +120,7 @@ void ExportLightmaps( void )
 	
 	
 	/* note it */
-	Sys_FPrintf( SYS_VRB, "--- ExportLightmaps ---\n");
+	Sys_PrintHeadingVerbose( "--- ExportLightmaps ---\n");
 	
 	/* do some path mangling */
 	strcpy( dirname, source );
@@ -168,7 +168,7 @@ int ExportLightmapsMain( int argc, char **argv )
 	DefaultExtension( source, ".bsp" );
 	
 	/* load the bsp */
-	Sys_Printf( "--- LoadBSPFile ---\n" );
+	Sys_PrintHeading ( "--- LoadBSPFile ---\n" );
 	Sys_Printf( "loading %s\n", source );
 	LoadBSPFile( source );
 	
@@ -206,12 +206,12 @@ int ImportLightmapsMain( int argc, char **argv )
 	DefaultExtension( source, ".bsp" );
 	
 	/* load the bsp */
-	Sys_Printf( "--- LoadBSPFile ---\n" );
+	Sys_PrintHeading ( "--- LoadBSPFile ---\n" );
 	Sys_Printf( "loading %s\n", source );
 	LoadBSPFile( source );
 	
 	/* note it */
-	Sys_FPrintf( SYS_VRB, "--- ImportLightmaps ---\n");
+	Sys_PrintHeadingVerbose( "--- ImportLightmaps ---\n");
 	
 	/* do some path mangling */
 	strcpy( dirname, source );
@@ -266,7 +266,7 @@ int ImportLightmapsMain( int argc, char **argv )
 	}
 	
 	/* write the bsp */
-	Sys_Printf( "--- WriteBSPFile ---\n" );
+	Sys_PrintHeading ( "--- WriteBSPFile ---\n" );
 	Sys_Printf( "writing %s\n", source );
 	WriteBSPFile( source );
 	
@@ -987,7 +987,7 @@ void SetupSurfaceLightmaps( void )
 	
 	
 	/* note it */
-	Sys_FPrintf( SYS_VRB, "--- SetupSurfaceLightmaps ---\n");
+	Sys_PrintHeadingVerbose( "--- SetupSurfaceLightmaps ---\n");
 
 	/* determine supersample amount */
 	if( superSample < 1 )
@@ -1271,7 +1271,7 @@ void AllocateSurfaceLightmaps(void)
 	int i, f, fOld, start;
 
 	/* note it */
-	Sys_FPrintf( SYS_VRB, "--- AllocateSurfaceLightmaps ---\n");
+	Sys_PrintHeadingVerbose( "--- AllocateSurfaceLightmaps ---\n");
 
 	/* init pacifier */
 	fOld = -1;
@@ -1300,7 +1300,7 @@ void AllocateSurfaceLightmaps(void)
 	Sys_FPrintf( SYS_VRB, "%9d planar patches lightmapped\n", numPlanarPatchesLightmapped );
 
 	/* vertex lit */
-	Sys_FPrintf( SYS_VRB, "--- SetupVertexLightning ---\n");
+	Sys_PrintHeadingVerbose( "--- SetupVertexLightning ---\n");
 	
 	/* allocate vertex luxel storage */
 	for( i = 0; i < MAX_LIGHTMAPS; i++ )
@@ -1674,7 +1674,7 @@ void StitchRawLightmaps( void )
 		return;
 
 	/* apply stitch */
-	Sys_Printf( "--- StitchRawLightmap ---\n");
+	Sys_PrintHeading ( "--- StitchRawLightmap ---\n");
 	start = I_FloatTime();
 	fOld = -1;
 	if (stitchLuxels != NULL)
@@ -3022,7 +3022,7 @@ void StoreSurfaceLightmaps( void )
 	   ----------------------------------------------------------------- */
 	
 	/* note it */
-	Sys_Printf( "--- SubsampleLightmaps ---\n");
+	Sys_PrintHeading ( "--- SubsampleLightmaps ---\n");
 
 	/* init pacifier */
 	fOld = -1;
@@ -3413,7 +3413,7 @@ void StoreSurfaceLightmaps( void )
 			float dist;
 
 			/* note it */
-			Sys_Printf( "--- ConvertLightmaps ---\n");
+			Sys_PrintHeading ( "--- ConvertLightmaps ---\n");
 
 			/* init pacifier */
 			fOld = -1;
@@ -3512,7 +3512,7 @@ void StoreSurfaceLightmaps( void )
 	if( noCollapse == qfalse && deluxemap == qfalse )
 	{
 		/* note it */
-		Sys_Printf( "--- CollapseLightmaps ---\n");
+		Sys_PrintHeading ( "--- CollapseLightmaps ---\n");
 
 		/* init pacifier */
 		fOld = -1;
@@ -3607,7 +3607,7 @@ void StoreSurfaceLightmaps( void )
 	   ----------------------------------------------------------------- */
 	
 	/* note it */
-	Sys_Printf( "--- AllocateLightmaps ---\n");
+	Sys_PrintHeading ( "--- AllocateLightmaps ---\n");
 
 	/* init pacifier */
 	fOld = -1;
@@ -3678,7 +3678,7 @@ void StoreSurfaceLightmaps( void )
 	----------------------------------------------------------------- */
 	
 	/* delete unused external lightmaps */
-	Sys_Printf( "--- CleanupExternalLightmaps ---\n");
+	Sys_PrintHeading ( "--- CleanupExternalLightmaps ---\n");
 
 	/* delete uncompressed lightmaps */
 	f = 0;
@@ -3719,7 +3719,7 @@ void StoreSurfaceLightmaps( void )
 		Sys_Printf( "%9d files deleted\n", f );
 
 	/* delete compressed lightmaps */
-	Sys_Printf( "--- CleanupCompressedLightmaps ---\n");
+	Sys_PrintHeading ( "--- CleanupCompressedLightmaps ---\n");
 
 	/* todo: parametrize somehow with game definitions */
 	f = 0;
@@ -3743,7 +3743,7 @@ void StoreSurfaceLightmaps( void )
 	   ----------------------------------------------------------------- */
 	
 	/* note it */
-	Sys_Printf( "--- StoreLightmaps ---\n");
+	Sys_PrintHeading ( "--- StoreLightmaps ---\n");
 
 	/* init pacifier */
 	fOld = -1;
@@ -3839,7 +3839,7 @@ void StoreSurfaceLightmaps( void )
 	   ----------------------------------------------------------------- */
 	
 	/* note it */
-	Sys_Printf( "--- ProjectLightmaps ---\n");
+	Sys_PrintHeading ( "--- ProjectLightmaps ---\n");
 
 	/* init pacifier */
 	fOld = -1;

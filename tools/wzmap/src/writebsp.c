@@ -410,7 +410,7 @@ void EndBSPFile( void )
 	WriteSurfaceExtraFile( source );
 	
 	/* write the bsp */
-	Sys_Printf( "--- WriteBSPFile ---\n" );
+	Sys_PrintHeading ( "--- WriteBSPFile ---\n" );
 	sprintf( path, "%s.bsp", source );
 	Sys_Printf( "writing %s\n", path );
 	WriteBSPFile( path );

@@ -311,7 +311,7 @@ tree_t *FaceBSP( face_t *list, qboolean quiet )
 	int	i;
 
 	if( !quiet )
-		Sys_FPrintf (SYS_VRB, "--- FaceBSP ---\n" );
+		Sys_PrintHeadingVerbose( "--- FaceBSP ---\n" );
 	
 	tree = AllocTree ();
 

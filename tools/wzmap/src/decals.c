@@ -392,7 +392,7 @@ void ProcessDecals( void )
 	
 	
 	/* note it */
-	Sys_FPrintf( SYS_VRB, "--- ProcessDecals ---\n" );
+	Sys_PrintHeadingVerbose( "--- ProcessDecals ---\n" );
 
 	/* no decals */
 	if (nodecals)
@@ -849,7 +849,7 @@ void MakeEntityDecals( entity_t *e )
 	
 	
 	/* note it */
-	Sys_FPrintf( SYS_VRB, "--- MakeEntityDecals ---\n" );
+	Sys_PrintHeadingVerbose( "--- MakeEntityDecals ---\n" );
 	
 	/* set entity origin */
 	VectorCopy( e->origin, entityOrigin );

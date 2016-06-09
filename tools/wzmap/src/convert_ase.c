@@ -540,7 +540,7 @@ int ConvertBSPToASE( char *bspName, int collapseByTexture )
 	
 	
 	/* note it */
-	Sys_Printf( "--- BSPtoASE ---\n" );
+	Sys_PrintHeading ( "--- BSPtoASE ---\n" );
 
 	/* collapsing by texture name */
 	if (collapseByTexture)

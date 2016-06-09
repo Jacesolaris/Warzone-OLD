@@ -42,10 +42,10 @@ void TidyShaders(void)
 	bspBrushSide_t *side;
 	shaderInfo_t *si;
 
-	Sys_Printf( "--- TidyShaders ---\n" );
+	Sys_PrintHeading ( "--- TidyShaders ---\n" );
 
 	/* create metashaders */
-	Sys_FPrintf(SYS_VRB, "--- CreateMetaShaders ---\n" );
+	Sys_PrintHeadingVerbose( "--- CreateMetaShaders ---\n" );
 	metaShaders = (bspShaderMeta_t *)safe_malloc(sizeof(bspShaderMeta_t) * numBSPShaders);
 	memset(metaShaders, 0, sizeof(bspShaderMeta_t) * numBSPShaders);
 	start = I_FloatTime();
@@ -90,7 +90,7 @@ void TidyShaders(void)
 	}
 
 	/* find mergable metashaders */
-	Sys_FPrintf(SYS_VRB, "--- FindMergableShaders ---\n" );
+	Sys_PrintHeadingVerbose( "--- FindMergableShaders ---\n" );
 	start = I_FloatTime();
 	fOld = -1;
 	numRemappedShaders = 0;
@@ -119,7 +119,7 @@ void TidyShaders(void)
 	Sys_Printf( "%9d shaders to be merged\n", numRemappedShaders );
 
 	/* generate new shaders */
-	Sys_FPrintf(SYS_VRB, "--- MergeShaders ---\n" );
+	Sys_PrintHeadingVerbose( "--- MergeShaders ---\n" );
 	start = I_FloatTime();
 	fOld = -1;
 	newShaders = (bspShader_t *)safe_malloc(sizeof(bspShader_t) * (numBSPShaders - numRemappedShaders));
@@ -147,7 +147,7 @@ void TidyShaders(void)
 	Sys_Printf( "%9d shaders after merging\n", numRemappedShaders );
 
 	/* update drawsurfaces */
-	Sys_FPrintf(SYS_VRB, "--- UpdateDrawsurfaces ---\n" );
+	Sys_PrintHeadingVerbose( "--- UpdateDrawsurfaces ---\n" );
 	numDrawSurfacesProcessed = 0;
 	numRemappedDrawsurfaces = 0;
 	start = I_FloatTime();
@@ -179,7 +179,7 @@ void TidyShaders(void)
 	Sys_Printf( "%9d drawsurfaces remapped\n", numRemappedDrawsurfaces );
 
 	/* update brushes */
-	Sys_FPrintf(SYS_VRB, "--- UpdateBrushes ---\n" );
+	Sys_PrintHeadingVerbose( "--- UpdateBrushes ---\n" );
 	start = I_FloatTime();
 	fOld = -1;
 	numBrushSidesProcessed = 0;
@@ -232,7 +232,7 @@ void TidyEntities(void)
 {
 	int dataSize;
 
-	Sys_Printf("--- TidyEntities ---\n");
+	Sys_PrintHeading ( "--- TidyEntities ---\n");
 	dataSize = bspEntDataSize;
 	Sys_Printf( "%9d entity data size\n", dataSize );
 	ParseEntities();
@@ -273,7 +273,7 @@ void MergeDrawSurfaces(void)
 	int *newDrawIndexes, *newLeafSurfaces, *di, *di2, firstDS, numDS;
 	vec3_t newmins, newmaxs, newsize;
 
-	Sys_Printf( "--- MergeDrawSurfaces ---\n" );
+	Sys_PrintHeading ( "--- MergeDrawSurfaces ---\n" );
 
 	/* allocate merged surfaces */
 	numMergedSurfaces = 0;
@@ -281,7 +281,7 @@ void MergeDrawSurfaces(void)
 	memset(metaSurfaces, 0, sizeof(bspDrawSurfaceMeta_t) * numBSPDrawSurfaces);
 
 	/* create metasurfaces */
-	Sys_FPrintf(SYS_VRB, "--- CreateMetaSurfaces ---\n" );
+	Sys_PrintHeadingVerbose( "--- CreateMetaSurfaces ---\n" );
 	numDrawSurfacesProcessed = 0;
 	start = I_FloatTime();
 	fOld = -1;
@@ -335,7 +335,7 @@ void MergeDrawSurfaces(void)
 	Sys_Printf( "%9d BSP draw indexes\n", numBSPDrawIndexes );
 
 	/* find out surfaces to be merged */
-	Sys_FPrintf(SYS_VRB, "--- FindMergableSurfaces ---\n" );
+	Sys_PrintHeadingVerbose( "--- FindMergableSurfaces ---\n" );
 	start = I_FloatTime();
 	fOld = -1;
 	numDrawSurfacesProcessed = 0;
@@ -450,7 +450,7 @@ void MergeDrawSurfaces(void)
 	}
 
 	/* generate new drawsurfaces */
-	Sys_FPrintf(SYS_VRB, "--- MergeDrawSurfaces ---\n" );
+	Sys_PrintHeadingVerbose( "--- MergeDrawSurfaces ---\n" );
 	start = I_FloatTime();
 	fOld = -1;
 	newDrawSurfaces = (bspDrawSurface_t *)safe_malloc(sizeof(bspDrawSurface_t) * (numBSPDrawSurfaces - numMergedSurfaces));
@@ -557,7 +557,7 @@ void MergeDrawSurfaces(void)
 
 	/* generate new leaf surfaces */
 	// todo: remove duplicate surfaces
-	Sys_FPrintf(SYS_VRB, "--- MergeLeafSurfaces ---\n" );
+	Sys_PrintHeadingVerbose( "--- MergeLeafSurfaces ---\n" );
 	newLeafSurfaces = (int *)safe_malloc(sizeof(int) * (numBSPLeafSurfaces));
 	numLeafSurfacesProcessed = 0;
 	start = I_FloatTime();
@@ -660,10 +660,10 @@ void MergeDrawVerts(void)
 	bspDrawVert_t *dv, *dv2, *newDrawVerts;
 	bspDrawVertMeta_t *metaVerts, *mv, *mv2;
 
-	Sys_Printf( "--- MergeDrawVerts ---\n" );
+	Sys_PrintHeading ( "--- MergeDrawVerts ---\n" );
 	
 	/* fill meta verts */
-	Sys_FPrintf(SYS_VRB, "--- CreateMetaVerts ---\n" );
+	Sys_PrintHeadingVerbose( "--- CreateMetaVerts ---\n" );
 	start = I_FloatTime();
 	fOld = -1;
 	metaVerts = (bspDrawVertMeta_t *)safe_malloc(sizeof(bspDrawVertMeta_t) * numBSPDrawVerts);
@@ -699,7 +699,7 @@ void MergeDrawVerts(void)
 	Sys_Printf( "%9d BSP draw indexes\n", numBSPDrawIndexes );
 
 	/* find out verts to be merged */
-	Sys_FPrintf(SYS_VRB, "--- FindMergableVerts ---\n" );
+	Sys_PrintHeadingVerbose( "--- FindMergableVerts ---\n" );
 	start = I_FloatTime();
 	fOld = -1;
 	numVertsProcessed = 0;
@@ -779,7 +779,7 @@ void MergeDrawVerts(void)
 	}
 
 	/* generate new drawverts and indexes */
-	Sys_FPrintf(SYS_VRB, "--- MergeDrawVerts ---\n" );
+	Sys_PrintHeadingVerbose( "--- MergeDrawVerts ---\n" );
 	start = I_FloatTime();
 	fOld = -1;
 	newDrawVerts = (bspDrawVert_t *)safe_malloc(sizeof(bspDrawVert_t) * numNewVerts);
@@ -1678,10 +1678,10 @@ int OptimizeBSPMain( int argc, char **argv )
 	}
 
 	/* note it */
-	Sys_Printf( "--- OptimizeBSP ---\n" );
+	Sys_PrintHeading ( "--- OptimizeBSP ---\n" );
 
 	/* process arguments */
-	Sys_Printf( "--- CommandLine ---\n" );
+	Sys_PrintHeading ( "--- CommandLine ---\n" );
 	strcpy(externalLightmapsPath, "");
 	for( i = 1; i < (argc - 1) && argv[ i ]; i++ )
 	{
@@ -1808,7 +1808,7 @@ int OptimizeBSPMain( int argc, char **argv )
 		{
 			generateforest = qtrue;
 
-			Sys_Printf( "--- Forest generation enabled ---\n" );
+			Sys_PrintHeading ( "--- Forest generation enabled ---\n" );
 			Sys_Printf( "Loaded %i tree points from foliage file.\n", FOLIAGE_NUM_POSITIONS );
 		}
 	}
@@ -1819,7 +1819,7 @@ int OptimizeBSPMain( int argc, char **argv )
 	LoadShaderInfo();
 	
 	/* load map */
-	Sys_Printf( "--- LoadBSPFile ---\n" );
+	Sys_PrintHeading ( "--- LoadBSPFile ---\n" );
 	Sys_Printf( "loading %s\n", source );
 	
 	/* load surface file */
@@ -1836,14 +1836,14 @@ int OptimizeBSPMain( int argc, char **argv )
 		TidyEntities();
 
 	/* write back */
-	Sys_Printf( "--- WriteBSPFile ---\n" );
+	Sys_PrintHeading ( "--- WriteBSPFile ---\n" );
 	Sys_Printf( "Writing %s\n", source );
 	WriteBSPFile( source );
 
 	/* transform and write a resource map */
 	if ( makeResMap )
 	{
-		Sys_Printf( "--- WriteResourceOBJFile ---\n" );
+		Sys_PrintHeading ( "--- WriteResourceOBJFile ---\n" );
 		strcpy( source, ExpandArg( argv[ i ] ) );
 		strcpy( mapname, source );
 		StripExtension( mapname );

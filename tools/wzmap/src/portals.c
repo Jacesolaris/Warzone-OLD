@@ -548,7 +548,7 @@ void MakeTreePortals (tree_t *tree, qboolean quiet)
 	c_badportals = 0;
 
 	if( !quiet )
-		Sys_FPrintf (SYS_VRB, "--- MakeTreePortals ---\n");
+		Sys_PrintHeadingVerbose( "--- MakeTreePortals ---\n");
 
 	MakeHeadnodePortals (tree);
 	MakeTreePortals_r (tree->headnode);
@@ -685,7 +685,7 @@ qboolean FloodEntities( tree_t *tree, qboolean quiet )
 	qboolean    tripped;
 	
 	if( !quiet )
-		Sys_FPrintf( SYS_VRB,"--- FloodEntities ---\n" );
+		Sys_PrintHeadingVerbose( "--- FloodEntities ---\n" );
 	inside = qfalse;
 	tree->outside_node.occupied = 0;
 	tripped = qfalse;
@@ -1032,7 +1032,7 @@ mark each leaf with an area, bounded by C_AREAPORTAL
 
 void FloodAreas( tree_t *tree )
 {
-	Sys_FPrintf( SYS_VRB,"--- FloodAreas ---\n" );
+	Sys_PrintHeadingVerbose( "--- FloodAreas ---\n" );
 	FindAreas_r( tree->headnode );
 	
 	/* ydnar: flood all skybox nodes */

@@ -493,7 +493,7 @@ void FilterDetailBrushesIntoTree( entity_t *e, tree_t *tree )
 	int					count = 0, current = 0;
 	
 	/* note it */
-	Sys_FPrintf( SYS_VRB,  "--- FilterDetailBrushesIntoTree ---\n" );
+	Sys_PrintHeadingVerbose( "--- FilterDetailBrushesIntoTree ---\n" );
 	
 	/* walk the list of brushes */
 	c_unique = 0;
@@ -547,7 +547,7 @@ void FilterStructuralBrushesIntoTree( entity_t *e, tree_t *tree, qboolean quiet 
 	int r, i;
 
 	if( !quiet )
-		Sys_FPrintf (SYS_VRB, "--- FilterStructuralBrushesIntoTree ---\n");
+		Sys_PrintHeadingVerbose( "--- FilterStructuralBrushesIntoTree ---\n");
 
 	c_unique = 0;
 	c_clusters = 0;

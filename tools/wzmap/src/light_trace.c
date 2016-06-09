@@ -1311,7 +1311,7 @@ creates a balanced bsp with axis-aligned splits for efficient raytracing
 void SetupTraceNodes( void )
 {
 	/* note it */
-	Sys_FPrintf( SYS_VRB, "--- SetupTraceNodes ---\n" );
+	Sys_PrintHeadingVerbose( "--- SetupTraceNodes ---\n" );
 	
 	/* find nodraw bit */
 	noDrawContentFlags = noDrawSurfaceFlags = noDrawCompileFlags = 0;

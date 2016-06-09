@@ -1873,7 +1873,7 @@ void SetupDirt( void )
 	}
 
 	/* note it */
-	Sys_FPrintf( SYS_VRB, "--- SetupDirt ---\n" );
+	Sys_PrintHeadingVerbose( "--- SetupDirt ---\n" );
 
 	/* setup global dirt */
 	if (dirty)
@@ -3345,7 +3345,7 @@ void WriteRawLightmapsFile( const char *outFile )
 	FILE *ase;
 
 	/* note it */
-	Sys_Printf( "--- DebugRawLightmap ---\n" );
+	Sys_PrintHeading ( "--- DebugRawLightmap ---\n" );
 
 	/* open it */
 	ase = fopen( outFile, "wb" );
@@ -3974,7 +3974,7 @@ void SetupBrushes( void )
 	
 	
 	/* note it */
-	Sys_FPrintf( SYS_VRB, "--- SetupBrushes ---\n" );
+	Sys_PrintHeadingVerbose( "--- SetupBrushes ---\n" );
 	
 	/* allocate */
 	if( opaqueBrushes == NULL )
@@ -4354,14 +4354,15 @@ void SetupEnvelopes( qboolean forGrid, qboolean fastFlag )
 	vec3_t		origin, dir, mins, maxs;
 	float		radius, intensity;
 	light_t		*buckets[ 256 ];
-	
-	
+	char		headingString[256] = { 0 };
+
 	/* early out for weird cases where there are no lights */
 	if( lights == NULL )
 		return;
 	
 	/* note it */
-	Sys_Printf( "--- SetupEnvelopes%s%s ---\n", forGrid ? " (lightgrid)" : " (lightmaps)", fastFlag ? " (fast)" : "" );
+	sprintf(headingString, "--- SetupEnvelopes%s%s ---\n", forGrid ? " (lightgrid)" : " (lightmaps)", fastFlag ? " (fast)" : "" );
+	Sys_PrintHeading ( headingString );
 	
 	/* count lights */
 	numLights = 0;
@@ -4863,7 +4864,7 @@ void SetupFloodLight( void )
 	double v1,v2,v3,v4,v5;
 	
 	/* note it */
-	Sys_FPrintf( SYS_VRB, "--- SetupFloodLight ---\n" );
+	Sys_PrintHeadingVerbose( "--- SetupFloodLight ---\n" );
 	
 	/* calculate angular steps */
 	angleStep = DEG2RAD( 360.0f / FLOODLIGHT_NUM_ANGLE_STEPS );
@@ -5212,7 +5213,7 @@ does the job
 
 void FloodlightRawLightmaps(void)
 {
-	Sys_Printf( "--- FloodlightRawLightmap ---\n" );
+	Sys_PrintHeading ( "--- FloodlightRawLightmap ---\n" );
 	numSurfacesFloodlighten = 0;
 	RunThreadsOnIndividual( numRawLightmaps, qtrue, FloodLightRawLightmap );
 	Sys_Printf( "%9d custom lightmaps floodlighted\n", numSurfacesFloodlighten );

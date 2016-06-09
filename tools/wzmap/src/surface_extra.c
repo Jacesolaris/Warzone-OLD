@@ -304,7 +304,7 @@ void WriteSurfaceExtraFile( const char *path )
 		return;
 	
 	/* note it */
-	Sys_Printf( "--- WriteSurfaceExtraFile ---\n" );
+	Sys_PrintHeading ( "--- WriteSurfaceExtraFile ---\n" );
 	
 	/* open the file */
 	strcpy( srfPath, path );

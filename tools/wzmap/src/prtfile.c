@@ -251,7 +251,7 @@ void NumberClusters(tree_t *tree) {
 	num_visportals = 0;
 	num_solidfaces = 0;
 
-	Sys_FPrintf (SYS_VRB,"--- NumberClusters ---\n");
+	Sys_PrintHeadingVerbose( "--- NumberClusters ---\n");
 	
 	// set the cluster field in every leaf and count the total number of portals
 	NumberLeafs_r (tree->headnode);
@@ -270,7 +270,7 @@ void WritePortalFile (tree_t *tree)
 {
 	char	filename[MAX_OS_PATH];
 
-	Sys_FPrintf (SYS_VRB,"--- WritePortalFile ---\n");
+	Sys_PrintHeadingVerbose( "--- WritePortalFile ---\n");
 	
 	// write the file
 	sprintf (filename, "%s.prt", source);

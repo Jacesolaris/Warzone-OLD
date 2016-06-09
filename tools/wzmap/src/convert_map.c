@@ -371,7 +371,7 @@ int ConvertBSPToMap( char *bspName, int collapseByTexture )
 	
 	
 	/* note it */
-	Sys_Printf( "--- Convert BSP to MAP ---\n" );
+	Sys_PrintHeading ( "--- Convert BSP to MAP ---\n" );
 
 	/* -collapsebytexture does not make sence */
 	if (collapseByTexture)

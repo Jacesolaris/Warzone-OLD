@@ -560,7 +560,7 @@ void WriteMapShaderFile( void )
 		return;
 	
 	/* note it */
-	Sys_FPrintf( SYS_VRB, "--- WriteMapShaderFile ---\n");
+	Sys_PrintHeadingVerbose( "--- WriteMapShaderFile ---\n");
 	Sys_FPrintf( SYS_VRB, "Writing %s", mapShaderFile );
 	
 	/* open shader file */
@@ -2797,7 +2797,7 @@ void LoadShaderInfo( void )
 	char			filename[ MAX_OS_PATH ];
 	char			*shaderFiles[ MAX_SHADER_FILES ];
 	
-	Sys_Printf( "--- LoadShaderFiles ---\n");
+	Sys_PrintHeading ( "--- LoadShaderFiles ---\n");
 
 	/* rr2do2: parse custom infoparms first */
 	if( useCustomInfoParms )

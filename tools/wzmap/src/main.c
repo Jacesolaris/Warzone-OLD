@@ -124,10 +124,10 @@ int FixAAS( int argc, char **argv )
 	DefaultExtension( source, ".bsp" );
 	
 	/* note it */
-	Sys_Printf( "--- FixAAS ---\n" );
+	Sys_PrintHeading ( "--- FixAAS ---\n" );
 	
 	/* load the bsp */
-	Sys_Printf( "--- LoadBSPFile ---\n" );
+	Sys_PrintHeading ( "--- LoadBSPFile ---\n" );
 	Sys_Printf( "loading %s\n", source );
 	length = LoadFile( source, &buffer );
 	
@@ -230,7 +230,7 @@ int AnalyzeBSP( int argc, char **argv )
 	}
 	
 	/* clean up map name */
-	Sys_Printf( "--- LoadBSPFile ---\n" );
+	Sys_PrintHeading ( "--- LoadBSPFile ---\n" );
 	strcpy( source, ExpandArg( argv[ i ] ) );
 	Sys_Printf( "loading %s\n", source );
 	
@@ -424,13 +424,13 @@ int ScaleBSPMain( int argc, char **argv )
 	DefaultExtension( source, ".bsp" );
 	
 	/* load the bsp */
-	Sys_Printf( "--- LoadBSPFile ---\n" );
+	Sys_PrintHeading ( "--- LoadBSPFile ---\n" );
 	Sys_Printf( "loading %s\n", source );
 	LoadBSPFile( source );
 	ParseEntities();
 	
 	/* note it */
-	Sys_Printf( "--- ScaleBSP ---\n" );
+	Sys_PrintHeading ( "--- ScaleBSP ---\n" );
 	Sys_FPrintf( SYS_VRB, "%9d entities\n", numEntities );
 	
 	/* scale entity keys */
@@ -493,7 +493,7 @@ int ScaleBSPMain( int argc, char **argv )
 	SetKeyValue( &entities[ 0 ], "gridsize", str );
 	
 	/* write the bsp */
-	Sys_Printf( "--- WriteBSPFile ---\n" );
+	Sys_PrintHeading ( "--- WriteBSPFile ---\n" );
 	UnparseEntities(qfalse);
 	StripExtension( source );
 	DefaultExtension( source, "_s.bsp" );
@@ -519,7 +519,7 @@ int ConvertBSPMain( int argc, char **argv )
 	int		convertCollapseByTexture;
 
 	/* note it */
-	Sys_Printf( "--- ConvertBSP ---\n" );
+	Sys_PrintHeading ( "--- ConvertBSP ---\n" );
 	
 	/* set default */
 	convertFunc = ConvertBSPToASE;
@@ -534,7 +534,7 @@ int ConvertBSPMain( int argc, char **argv )
 	}
 	
 	/* process arguments */
-	Sys_Printf( "--- CommandLine ---\n" );
+	Sys_PrintHeading ( "--- CommandLine ---\n" );
 	for( i = 1; i < (argc - 1) && argv[ i ]; i++ )
 	{
 		/* -entitysaveid */
@@ -573,7 +573,7 @@ int ConvertBSPMain( int argc, char **argv )
 	
 	LoadShaderInfo();
 	
-	Sys_Printf( "--- LoadBSPFile ---\n" );
+	Sys_PrintHeading ( "--- LoadBSPFile ---\n" );
 	Sys_Printf( "loading %s\n", source );
 	
 	/* ydnar: load surface file */
@@ -591,7 +591,7 @@ int ConvertBSPMain( int argc, char **argv )
 		game = convertGame;
 		
 		/* write bsp */
-		Sys_Printf( "--- WriteBSPFile ---\n" );
+		Sys_PrintHeading ( "--- WriteBSPFile ---\n" );
 		StripExtension( source );
 		DefaultExtension( source, "_c.bsp" );
 		Sys_Printf( "Writing %s\n", source );
@@ -722,30 +722,31 @@ int main( int argc, char **argv )
 	}
 
 	mapplanes = (plane_t*)malloc(sizeof(plane_t)*MAX_MAP_PLANES);
+	bspLeafs = (bspLeaf_t*)malloc(sizeof(bspLeaf_t)*MAX_MAP_LEAFS);
 	bspPlanes = (bspPlane_t*)malloc(sizeof(bspPlane_t)*MAX_MAP_PLANES);
 	bspBrushes = (bspBrush_t*)malloc(sizeof(bspBrush_t)*MAX_MAP_BRUSHES);
 	bspBrushSides = (bspBrushSide_t*)malloc(sizeof(bspBrushSide_t)*MAX_MAP_BRUSHSIDES);
 	bspNodes = (bspNode_t*)malloc(sizeof(bspNode_t)*MAX_MAP_NODES);
 	bspVisBytes = (byte*)malloc(sizeof(byte)*MAX_MAP_VISIBILITY);
+	bspLeafSurfaces = (int*)malloc(sizeof(int)*MAX_MAP_LEAFFACES);
+	bspLeafBrushes = (int*)malloc(sizeof(int)*MAX_MAP_LEAFBRUSHES);
+
 
 	/* we print out two versions, q3map's main version (since it evolves a bit out of GtkRadiant)
 	   and we put the GtkRadiant version to make it easy to track with what version of Radiant it was built with */
 	
-#if defined(WIN32) || defined(WIN64)
-    //set green text color, only on Windows
-    SetConsoleTextAttribute(  GetStdHandle( STD_OUTPUT_HANDLE ), FOREGROUND_BLUE );
-#endif
+	setcolor(blue, black);
 	Sys_Printf("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
-#if defined(WIN32) || defined(WIN64)
-    //set green text color, only on Windows
-    SetConsoleTextAttribute(  GetStdHandle( STD_OUTPUT_HANDLE ), FOREGROUND_INTENSITY );
-#endif
+	setcolor(magenta, black);
 	Sys_Printf(" Q3Map         - v1.0r (c) 1999 Id Software Inc.\n" );
 	Sys_Printf(" Q3Map (ydnar) - v2.5.16 FS20g\n" );
 	Sys_Printf(" GtkRadiant    - v1.5.0\n" );
 	Sys_Printf(" BloodMap      - v1.5.3 - (c) Pavel [VorteX] Timofeyev\n" );
+	setcolor(yellow, black);
 	Sys_Printf(" WzMap         - v" WZMAP_VERSION " - " __DATE__ " " __TIME__ " - by UniqueOne\n" );
+	setcolor(white, black);
 	Sys_Printf(" %s\n", WZMAP_MOTD );
+	setcolor(red, black);
 	if( useBuildCfg )
 		Sys_Printf( " Enabled usage of .build config file\n" );
 	if( useCustomInfoParms )
@@ -753,16 +754,12 @@ int main( int argc, char **argv )
 #if MAX_LIGHTMAPS == 1
 	Sys_Printf( " Light styles are disabled in this build\n" );
 #endif
+	setcolor(cyan, black);
 	ThreadStats();
-#if defined(WIN32) || defined(WIN64)
-    //set green text color, only on Windows
-    SetConsoleTextAttribute(  GetStdHandle( STD_OUTPUT_HANDLE ), FOREGROUND_BLUE );
-#endif
+	setcolor(blue, black);
 	Sys_Printf("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
 
-#if defined(WIN32) || defined(WIN64)
-	SetConsoleTextAttribute(  GetStdHandle( STD_OUTPUT_HANDLE ), 0x08 );
-#endif
+	setcolor(gray, black);
 
 	/* ydnar: new path initialization */
 	InitPaths( &argc, argv );
@@ -773,7 +770,10 @@ int main( int argc, char **argv )
 	
 	/* check if we have enough options left to attempt something */
 	if( argc < 2 )
+	{
+		setcolor(white, black);
 		Error( "Usage: %s [general options] [options] mapfile", argv[ 0 ] );
+	}
 
 	/* fixaas */
 	if( !strcmp( argv[ 1 ], "-fixaas" ) )
@@ -840,11 +840,14 @@ int main( int argc, char **argv )
 		safe_malloc_logend();
 
 	free(mapplanes);
+	free(bspLeafs);
 	free(bspPlanes);
 	free(bspBrushes);
 	free(bspBrushSides);
 	free(bspNodes);
 	free(bspVisBytes);
+	free(bspLeafSurfaces);
+	free(bspLeafBrushes);
 	
 	/* shut down connection */
 	Broadcast_Shutdown();

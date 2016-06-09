@@ -426,7 +426,7 @@ void PatchMapDrawSurfs( entity_t *e )
 	
 	
 	/* note it */
-	Sys_FPrintf( SYS_VRB, "--- PatchMapDrawSurfs ---\n" );
+	Sys_PrintHeadingVerbose( "--- PatchMapDrawSurfs ---\n" );
 
 	/* fetch patches from the entity */
 	patchCount = 0;

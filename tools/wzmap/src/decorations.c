@@ -569,7 +569,7 @@ void LoadDecorationScript( void )
 		return;
 
 	/* note */
-	Sys_FPrintf( SYS_VRB, "--- LoadDecorations ---\n" );
+	Sys_PrintHeadingVerbose( "--- LoadDecorations ---\n" );
 
 	/* create the array */
 	decoreGroups = (decoreGroup_t *)safe_malloc(sizeof(decoreGroup_t) * MAX_DECORE_GROUPS);
@@ -892,7 +892,7 @@ void LoadFoliage( char *source )
 	int i;
 
 	/* note it */
-	Sys_FPrintf(SYS_VRB, "--- LoadFoliage ---\n" );
+	Sys_PrintHeadingVerbose( "--- LoadFoliage ---\n" );
 
 	/* import */
 	startEntities = numEntities;
@@ -932,7 +932,7 @@ void LoadRtlights( void )
 	SetKeyValue( &entities[ 0 ], "_keepLights", "1" );
 
 	/* note it */
-	Sys_FPrintf(SYS_VRB, "--- LoadRtlights ---\n" );
+	Sys_PrintHeadingVerbose( "--- LoadRtlights ---\n" );
 
 	/* open file */
 	strcpy( filename, source );
@@ -1377,7 +1377,7 @@ void ProcessDecorations( void )
 		return;
 
 	/* find all map entities */
-	Sys_FPrintf (SYS_VRB, "--- FindDecorationGroups ---\n" );
+	Sys_PrintHeadingVerbose( "--- FindDecorationGroups ---\n" );
 	numDecoreEntities = 0;
 	RunThreadsOnIndividual(numEntities, verbose ? qtrue : qfalse, EntityPopulateDecorationGroups);
 	for (i = 0; i < numDecoreGroups; i++)
@@ -1397,7 +1397,7 @@ void ProcessDecorations( void )
 		numDecoreTestNodes = MAX_DECORE_TESTNODES;
 
 	/* walk all groups and entities */
-	Sys_Printf ( "--- ProcessDecorations ---\n" );
+	Sys_PrintHeading ( "--- ProcessDecorations ---\n" );
 	start = I_FloatTime();
 	fOld = -1;
 	for ( i = 0; i < numDecoreGroups; i++ )

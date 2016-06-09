@@ -293,7 +293,7 @@ void TidyEntitySurfaces( entity_t *e )
 	
 	
 	/* note it */
-	Sys_FPrintf( SYS_VRB, "--- TidyEntitySurfaces ---\n" );
+	Sys_PrintHeadingVerbose( "--- TidyEntitySurfaces ---\n" );
 	
 	/* walk the surface list */
 	deleted = 0;
@@ -1457,7 +1457,7 @@ void SubdivideFaceSurfaces( entity_t *e, tree_t *tree )
 	
 	
 	/* note it */
-	Sys_FPrintf( SYS_VRB, "--- SubdivideFaceSurfaces ---\n" );
+	Sys_PrintHeadingVerbose( "--- SubdivideFaceSurfaces ---\n" );
 	
 	/* walk the list of surfaces */
 	numBaseDrawSurfs = numMapDrawSurfs;
@@ -1819,7 +1819,7 @@ void ClipSidesIntoTree( entity_t *e, tree_t *tree, qboolean quiet )
 
 	/* note it */
 	if( !quiet )
-		Sys_FPrintf( SYS_VRB, "--- ClipSidesIntoTree ---\n" );
+		Sys_PrintHeadingVerbose( "--- ClipSidesIntoTree ---\n" );
 
 	/* ydnar: cull brush sides */
 	CullSides( e );
@@ -2981,7 +2981,7 @@ void MakeDebugPortalSurfs( tree_t *tree )
 	
 	
 	/* note it */
-	Sys_FPrintf( SYS_VRB, "--- MakeDebugPortalSurfs ---\n" );
+	Sys_PrintHeadingVerbose( "--- MakeDebugPortalSurfs ---\n" );
 	
 	/* get portal debug shader */
 	si = ShaderInfoForShader( "debugportals" );
@@ -3018,7 +3018,7 @@ void MakeFogHullSurfs( entity_t *e, tree_t *tree, char *shader )
 		return;
 	
 	/* note it */
-	Sys_FPrintf( SYS_VRB, "--- MakeFogHullSurfs ---\n" );
+	Sys_PrintHeadingVerbose( "--- MakeFogHullSurfs ---\n" );
 	
 	/* get hull bounds */
 	VectorCopy( mapMins, fogMins );
@@ -3410,7 +3410,7 @@ void AddEntitySurfaceModels( entity_t *e )
 	
 	
 	/* note it */
-	Sys_FPrintf( SYS_VRB, "--- AddEntitySurfaceModels ---\n" );
+	Sys_PrintHeadingVerbose( "--- AddEntitySurfaceModels ---\n" );
 	
 	/* walk the surface list */
 	for( i = e->firstDrawSurf; i < numMapDrawSurfs; i++ )
@@ -3663,7 +3663,7 @@ void FixVertexAlpha(entity_t *e, qboolean showpacifier)
 
 	/* note it */
 	if( showpacifier == qtrue )
-		Sys_FPrintf( SYS_VRB, "--- FixVertexAlpha ---\n" );
+		Sys_PrintHeadingVerbose( "--- FixVertexAlpha ---\n" );
 
 	numSurfs = numMapDrawSurfs - e->firstDrawSurf;
 
@@ -3712,7 +3712,7 @@ void ApplyVertexMods(entity_t *e, qboolean showpacifier)
 
 	/* note it */
 	if( showpacifier == qtrue )
-		Sys_FPrintf( SYS_VRB, "--- ApplyVertexMods ---\n" );
+		Sys_PrintHeadingVerbose( "--- ApplyVertexMods ---\n" );
 
 	/* init pacifier */
 	start = I_FloatTime();
@@ -3962,7 +3962,7 @@ void FilterDrawsurfsIntoTree( entity_t *e, tree_t *tree, qboolean showpacifier )
 
 	/* note it */
 	if( showpacifier == qtrue )
-		Sys_Printf( "--- FilterDrawsurfsIntoTree ---\n" );
+		Sys_PrintHeading ( "--- FilterDrawsurfsIntoTree ---\n" );
 
 	/* init pacifier */
 	start = I_FloatTime();

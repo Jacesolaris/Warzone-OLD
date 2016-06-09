@@ -1695,7 +1695,7 @@ void LoadMapFile( char *filename, qboolean onlyLights, qboolean onlyLightgridBru
 
 	/* note it */
 	if( onlyFoliage == qfalse )
-		Sys_Printf( "--- LoadMapFile ---\n" );
+		Sys_PrintHeading ( "--- LoadMapFile ---\n" );
 
 	/* hack */
 	file = SafeOpenRead( filename );

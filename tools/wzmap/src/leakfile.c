@@ -71,7 +71,7 @@ xmlNodePtr LeakFile (tree_t *tree)
 	if (!tree->outside_node.occupied)
 		return NULL;
 
-	Sys_FPrintf (SYS_VRB,"--- LeakFile ---\n");
+	Sys_PrintHeadingVerbose( "--- LeakFile ---\n");
 
 	//
 	// write the points to the file

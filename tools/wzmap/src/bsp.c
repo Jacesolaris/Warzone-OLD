@@ -204,7 +204,7 @@ static void FixBrushFaces( entity_t *e )
 #endif
 
 	/* note it */
-	Sys_FPrintf( SYS_VRB, "--- FixBrushFaces ---\n" );
+	Sys_PrintHeadingVerbose( "--- FixBrushFaces ---\n" );
 
 	/* loop drawsurfaces */
 	for ( i = e->firstDrawSurf ; i < numMapDrawSurfs ; i++ )
@@ -372,7 +372,7 @@ void ProcessWorldModel( void )
 	const char	*value;
 
 	/* note it */
-	Sys_Printf ( "--- ProcessWorld ---\n" );
+	Sys_PrintHeading ( "--- ProcessWorld ---\n" );
 	
 	/* sets integer blockSize from worldspawn "_blocksize" key if it exists */
 	value = ValueForKey( &entities[ 0 ], "_blocksize" );
@@ -425,7 +425,7 @@ void ProcessWorldModel( void )
 
 	/* note BSP phase (non-verbose-mode) */
 	if( !verbose )
-		Sys_Printf ( "--- BuildBSP ---\n" );
+		Sys_PrintHeading ( "--- BuildBSP ---\n" );
 	
 	/* see if the bsp is completely enclosed */
 	filled = ignoreLeaks;
@@ -435,7 +435,7 @@ void ProcessWorldModel( void )
 		filled = FloodEntities( tree, qfalse );
 	if( filled )
 	{
-		Sys_FPrintf( SYS_VRB, "--- RebuildBSP ---\n" );
+		Sys_PrintHeadingVerbose( "--- RebuildBSP ---\n" );
 
 		/* rebuild a better bsp tree using only the sides that are visible from the inside */
 		FillOutside( tree->headnode );
@@ -498,7 +498,7 @@ void ProcessWorldModel( void )
 	/* note BSP phase (non-verbose-mode) */
 	if( !verbose )
 	{
-		Sys_Printf( "--- CreateMapDrawsurfs ---\n" );
+		Sys_PrintHeading ( "--- CreateMapDrawsurfs ---\n" );
 		start = I_FloatTime();
 	}
 	
@@ -750,7 +750,7 @@ void ProcessModels( void )
 	start = I_FloatTime();
 	fOld = -1;
 
-	Sys_Printf ( "--- ProcessModels ---\n" );
+	Sys_PrintHeading ( "--- ProcessModels ---\n" );
 
 	/* count */
 	for( submodels = 0, mapEntityNum = 1; mapEntityNum < numEntities; mapEntityNum++ )
@@ -810,7 +810,7 @@ void RegionScissor( void )
 		return;
 
 	/* note it */
-	Sys_Printf( "--- RegionScissor ---\n" );
+	Sys_PrintHeading ( "--- RegionScissor ---\n" );
 
 	/* scissor world brushes */
 	e = &entities[ 0 ];
@@ -1094,7 +1094,7 @@ int BSPMain( int argc, char **argv )
 	char		path[ MAX_OS_PATH ], tempSource[ MAX_OS_PATH ];
 
 	/* note it */
-	Sys_Printf( "--- BSP ---\n" );
+	Sys_PrintHeading ( "--- BSP ---\n" );
 	
 	SetDrawSurfacesBuffer();
 	mapDrawSurfs = (mapDrawSurface_t *)safe_malloc( sizeof( mapDrawSurface_t ) * MAX_MAP_DRAW_SURFS );
@@ -1110,7 +1110,7 @@ int BSPMain( int argc, char **argv )
 	emitFlares = game->emitFlares;
 	colorsRGB = game->colorsRGB;
 	texturesRGB = game->texturesRGB;
-	Sys_Printf( "--- GameSpecific ---\n" );
+	Sys_PrintHeading ( "--- GameSpecific ---\n" );
 	Sys_Printf( " max surface verts: %i\n" , game->maxSurfaceVerts);
 	Sys_Printf( " max lightmapped surface verts: %i\n" , game->maxLMSurfaceVerts);
 	Sys_Printf( " max surface indexes: %i\n" , game->maxSurfaceIndexes);
@@ -1122,11 +1122,11 @@ int BSPMain( int argc, char **argv )
 		unsigned int n, numCycles, f, fOld, start;
 		vec3_t testVec;
 		numCycles = 4000000000;
-		Sys_Printf( "--- Test Speeds ---\n" );
+		Sys_PrintHeading ( "--- Test Speeds ---\n" );
 		Sys_Printf(  "%9i cycles\n", numCycles );
 
 		/* pass 1 */
-		Sys_Printf( "--- Pass 1 ---\n" );
+		Sys_PrintHeading ( "--- Pass 1 ---\n" );
 		start = I_FloatTime();
 		fOld = -1;
 		VectorSet(testVec, 5.0f, 5.0f, 5.0f);
@@ -1146,7 +1146,7 @@ int BSPMain( int argc, char **argv )
 		Sys_FPrintf(SYS_VRB, " (%d)\n", (int) (I_FloatTime() - start) );
 
 		/* pass 2 */
-		Sys_Printf( "--- Pass 2 ---\n" );
+		Sys_PrintHeading ( "--- Pass 2 ---\n" );
 		start = I_FloatTime();
 		fOld = -1;
 		VectorSet(testVec, 5.0f, 5.0f, 5.0f);
@@ -1169,7 +1169,7 @@ int BSPMain( int argc, char **argv )
 #endif
 
 
-	Sys_Printf( "--- CommandLine ---\n" );
+	Sys_PrintHeading ( "--- CommandLine ---\n" );
 	
 	/* process arguments */
 	for( i = 1; i < (argc - 1) && argv[ i ]; i++ )
@@ -1460,7 +1460,7 @@ int BSPMain( int argc, char **argv )
 		{
 			generateforest = qtrue;
 
-			Sys_Printf( "--- Forest generation enabled ---\n" );
+			Sys_PrintHeading ( "--- Forest generation enabled ---\n" );
 			Sys_Printf( "Loaded %i tree points from foliage file.\n", FOLIAGE_NUM_POSITIONS );
 		}
 	}

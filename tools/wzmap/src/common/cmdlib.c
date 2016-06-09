@@ -52,24 +52,80 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 qboolean generateforest;
 
+
+#if defined(WIN32) || defined(WIN64)
+bool textcolorprotect=true;
+/*doesn't let textcolor be the same as backgroung color if true*/
+
+inline void setcolor(concol textcolor,concol backcolor);
+inline void setcolor(int textcolor,int backcolor);
+int textcolor();/*returns current text color*/
+int backcolor();/*returns current background color*/
+
+#define std_con_out GetStdHandle(STD_OUTPUT_HANDLE)
+
+//-----------------------------------------------------------------------------
+
+int textcolor()
+{
+	CONSOLE_SCREEN_BUFFER_INFO csbi;
+	GetConsoleScreenBufferInfo(std_con_out,&csbi);
+	int a=csbi.wAttributes;
+	return a%16;
+}
+
+int backcolor()
+{
+	CONSOLE_SCREEN_BUFFER_INFO csbi;
+	GetConsoleScreenBufferInfo(std_con_out,&csbi);
+	int a=csbi.wAttributes;
+	return (a/16)%16;
+}
+
+inline void setcolor(concol textcol,concol backcol)
+{
+	setcolor(int(textcol),int(backcol));
+}
+
+inline void setcolor(int textcol,int backcol)
+{
+	if(textcolorprotect)
+	{if((textcol%16)==(backcol%16))textcol++;}
+	textcol%=16;backcol%=16;
+	unsigned short wAttributes= ((unsigned)backcol<<4)|(unsigned)textcol;
+	SetConsoleTextAttribute(std_con_out, wAttributes);
+}
+#else //!defined(WIN32) || defined(WIN64)
+inline void setcolor(concol textcol,concol backcol)
+{
+
+}
+
+inline void setcolor(int textcol,int backcol)
+{
+
+}
+#endif //defined(WIN32) || defined(WIN64)
+
+void Sys_PrintHeading( char *heading )
+{
+	setcolor(white, black);
+	Sys_Printf(heading);
+	setcolor(gray, black);
+}
+
+void Sys_PrintHeadingVerbose( char *heading )
+{
+	setcolor(white, black);
+	Sys_FPrintf(SYS_VRB, heading);
+	setcolor(gray, black);
+}
+
 char previousPercLabel[18] = { 0 };
 
-void DoProgress( char inlabel[], int instep, int total, qboolean verbose )
+void DoProgress( char label[], int instep, int total, qboolean verbose )
 {
-	char label[18] = { 0 };
 	int step = instep + 1;
-
-	int labelLen = strlen(inlabel);
-
-	if (labelLen > 18) labelLen = 18;
-	
-	// First, make sure label is always exactly 18 characters, pad with spaces as necessary...
-	strncpy(label, inlabel, labelLen);
-
-	for (; labelLen <= 18; labelLen++)
-	{// Padding...
-		label[labelLen] = ' ';
-	}
 
     //progress width
     int pwidth = 72;
@@ -96,15 +152,28 @@ void DoProgress( char inlabel[], int instep, int total, qboolean verbose )
 
     int percent = ( step * 100 ) / total;
 
-#if defined(WIN32) || defined(WIN64)
-    //set green text color, only on Windows
-    SetConsoleTextAttribute(  GetStdHandle( STD_OUTPUT_HANDLE ), FOREGROUND_GREEN );
-#endif
+	setcolor(white, black);
 
 	if (verbose)
-		Sys_FPrintf( SYS_VRB, "%.24s[", label );
+	{
+		Sys_FPrintf( SYS_VRB, "%-18s", label );
+	}
 	else
-		Sys_Printf( "%.24s[", label );
+	{
+		Sys_Printf( "%-18s", label );
+	}
+
+	setcolor(dark_green, black);
+
+	if (verbose)
+	{
+		Sys_FPrintf( SYS_VRB, "[", label );
+	}
+	else
+	{
+		Sys_Printf( "[", label );
+	}
+
 
     //fill progress bar with =
     for ( int i = 0; i < pos; i++ )  printf( "%c", '=' );
@@ -113,18 +182,17 @@ void DoProgress( char inlabel[], int instep, int total, qboolean verbose )
 	if (verbose)
 	{
 		Sys_FPrintf( SYS_VRB, "% *c", width - pos + 1, ']' );
-		Sys_FPrintf( SYS_VRB, " %3d\r", percent );
+		setcolor(yellow, black);
+		Sys_FPrintf( SYS_VRB, " %-3d\r", percent );
 	}
 	else
 	{
 		Sys_Printf( "% *c", width - pos + 1, ']' );
-		Sys_Printf( " %3d\r", percent );
+		setcolor(yellow, black);
+		Sys_Printf( " %-3d\r", percent );
 	}
 
-#if defined(WIN32) || defined(WIN64)
-    //reset text color, only on Windows
-    SetConsoleTextAttribute(  GetStdHandle( STD_OUTPUT_HANDLE ), 0x08 );
-#endif
+	setcolor(gray, black);
 
 	if (percent >= 100.0 && strcmp(previousPercLabel, label))
 	{

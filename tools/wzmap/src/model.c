@@ -703,7 +703,7 @@ void LoadTriangleModels( void )
 	numLoadedModels = 0;
 
 	/* note it */
-	Sys_Printf( "--- LoadTriangleModels ---\n" );
+	Sys_PrintHeading ( "--- LoadTriangleModels ---\n" );
 
 	/* load */
 	start = I_FloatTime();
@@ -781,7 +781,7 @@ void AddTriangleModels( int entityNum )
 	char			*split;
 	
 	/* note it */
-	Sys_FPrintf( SYS_VRB, "--- AddTriangleModels ---\n" );
+	Sys_PrintHeadingVerbose( "--- AddTriangleModels ---\n" );
 	
 	/* get current brush entity targetname */
 	e = &entities[ entityNum ];

@@ -253,10 +253,10 @@ void CalcPassageVis(void)
 	RunThreadsOnIndividual (numportals*2, qfalse, PassageFlow);
 	_printf("\n");
 #else
-	Sys_Printf( "--- CreatePassages ---\n" );
+	Sys_PrintHeading ( "--- CreatePassages ---\n" );
 	RunThreadsOnIndividual( numportals*2, qtrue, CreatePassages );
 	
-	Sys_Printf( "--- PassageFlow ---\n" );
+	Sys_PrintHeading ( "--- PassageFlow ---\n" );
 	RunThreadsOnIndividual( numportals * 2, qtrue, PassageFlow );
 #endif
 }
@@ -278,10 +278,10 @@ void CalcPassagePortalVis(void)
 	RunThreadsOnIndividual (numportals*2, qfalse, PassagePortalFlow);
 	Sys_Printf("\n");
 #else
-	Sys_Printf( "--- CreatePassages ---\n" );
+	Sys_PrintHeading ( "--- CreatePassages ---\n" );
 	RunThreadsOnIndividual( numportals * 2, qtrue, CreatePassages);
 	
-	Sys_Printf( "--- PassagePortalFlow  ---\n" );
+	Sys_PrintHeading ( "--- PassagePortalFlow  ---\n" );
 	RunThreadsOnIndividual( numportals * 2, qtrue, PassagePortalFlow );
 #endif
 }
@@ -330,7 +330,7 @@ void CalcVis (void)
 	}
 	
 	/* base portal vis */
-	Sys_Printf( "--- BasePortalVis ---\n" );
+	Sys_PrintHeading ( "--- BasePortalVis ---\n" );
 	RunThreadsOnIndividual( numportals * 2, qtrue, BasePortalVis );
 
 	/* fast/passage vis */
@@ -345,7 +345,7 @@ void CalcVis (void)
 		CalcPassagePortalVis();
 
 	/* assemble the leaf vis lists by oring and compressing the portal lists */
-	Sys_Printf( "--- CreateLeafVis ---\n" );
+	Sys_PrintHeading ( "--- CreateLeafVis ---\n" );
 	for( i = 0; i < portalclusters; i++ )
 		ClusterMerge( i );
 
@@ -1029,10 +1029,10 @@ int VisMain (int argc, char **argv)
 	
 	
 	/* note it */
-	Sys_Printf( "--- Vis ---\n" );
+	Sys_PrintHeading ( "--- Vis ---\n" );
 	
 	/* process arguments */
-	Sys_Printf( "--- CommandLine ---\n" );
+	Sys_PrintHeading ( "--- CommandLine ---\n" );
 	for (i=1 ; i < (argc - 1) && argv[ i ]; i++)
 	{
 		if (!strcmp(argv[i], "-fast")) 
@@ -1097,7 +1097,7 @@ int VisMain (int argc, char **argv)
 	
 
 	/* load the bsp */
-	Sys_Printf( "--- LoadBSPFile ---\n" );
+	Sys_PrintHeading ( "--- LoadBSPFile ---\n" );
 	sprintf( source, "%s%s", inbase, ExpandArg( argv[ i ] ) );
 	StripExtension( source );
 	strcat( source, ".bsp" );
@@ -1137,7 +1137,7 @@ int VisMain (int argc, char **argv)
 		remove( portalfile );
 
 	/* write the bsp file */
-	Sys_Printf( "--- WriteBSPFile ---\n" );
+	Sys_PrintHeading ( "--- WriteBSPFile ---\n" );
 	Sys_Printf( "Writing %s\n", source );
 	WriteBSPFile( source );
 

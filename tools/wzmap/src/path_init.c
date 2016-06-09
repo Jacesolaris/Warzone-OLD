@@ -315,7 +315,7 @@ void InitPaths( int *argc, char **argv )
 	
 	
 	/* note it */
-	Sys_Printf( "--- InitPaths ---\n" );
+	Sys_PrintHeading ( "--- InitPaths ---\n" );
 	
 	/* get the install path for backup */
 	LokiInitPaths( argv[ 0 ] );

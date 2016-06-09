@@ -52,6 +52,9 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #endif
 
+void Sys_PrintHeading( char *heading );
+void Sys_PrintHeadingVerbose( char *heading );
+
 void DoProgress( char label[], int step, int total, qboolean verbose );
 void printLabelledProgress (char *label, double current, double max);
 void printLabelledProgressVerbose (char *label, double current, double max);
@@ -171,5 +174,28 @@ typedef struct
 	int		count, width, height;
 } cblock_t;
 
+
+enum concol
+{
+	black=0,
+	dark_blue=1,
+	dark_green=2,
+	dark_aqua,dark_cyan=3,
+	dark_red=4,
+	dark_purple=5,dark_pink=5,dark_magenta=5,
+	dark_yellow=6,
+	dark_white=7,
+	gray=8,grey=8,
+	blue=9,
+	green=10,
+	aqua=11,cyan=11,
+	red=12,
+	purple=13,pink=13,magenta=13,
+	yellow=14,
+	white=15
+};
+
+extern inline void setcolor(concol textcol,concol backcol);
+extern inline void setcolor(int textcol,int backcol);
 
 #endif

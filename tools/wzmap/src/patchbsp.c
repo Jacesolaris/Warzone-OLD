@@ -73,7 +73,7 @@ void PatchEntities(void)
 	numEntities = 1; /* keep worldspawn */
 
 	/* copy out submodels */
-	Sys_Printf("--- PatchEntities ---\n");
+	Sys_PrintHeading ( "--- PatchEntities ---\n");
 	numents = 0;
 	numentsext = 0;
 	for (i = 1; i < patch_numBspEntities; i++)
@@ -183,7 +183,7 @@ int PatchBSPMain( int argc, char **argv )
 	}
 
 	/* note it */
-	Sys_Printf( "--- PatchBSP ---\n" );
+	Sys_PrintHeading ( "--- PatchBSP ---\n" );
 
 	/* copy source name */
 	i = argc - 1;
@@ -200,7 +200,7 @@ int PatchBSPMain( int argc, char **argv )
 	}
 
 	/* process arguments */
-	Sys_Printf( "--- CommandLine ---\n" );
+	Sys_PrintHeading ( "--- CommandLine ---\n" );
 	patchentities = qtrue;
 	verbose = qfalse;
 	strcpy(uniqueEntityKey, "");
@@ -246,7 +246,7 @@ int PatchBSPMain( int argc, char **argv )
 	LoadShaderInfo();
 
 	/* load MAP file */
-	Sys_Printf( "--- LoadMapFile ---\n" );
+	Sys_PrintHeading ( "--- LoadMapFile ---\n" );
 	LoadMapFile( name, qfalse, qfalse, qfalse, qfalse );
 	Sys_Printf( "%9d entities\n", numEntities );
 
@@ -254,7 +254,7 @@ int PatchBSPMain( int argc, char **argv )
 	CheckMapForErrors();
 
 	/* preprocess map */
-	Sys_Printf( "--- CompileEntities ---\n" );
+	Sys_PrintHeading ( "--- CompileEntities ---\n" );
 	LoadDecorations( source );
 	RegionScissor();
 	ProcessDecorations();
@@ -270,7 +270,7 @@ int PatchBSPMain( int argc, char **argv )
 	Sys_Printf( "%9d entities\n", patch_numMapEntities );
 
 	/* load BSP file */
-	Sys_Printf( "--- LoadBSPFile ---\n" );
+	Sys_PrintHeading ( "--- LoadBSPFile ---\n" );
 	Sys_Printf( "loading %s\n", out );
 	LoadBSPFile( out );
 	ParseEntities();

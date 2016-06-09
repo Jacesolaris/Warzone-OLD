@@ -596,7 +596,7 @@ vortex: prints meta statistics in general output
 
 void EmitMetaStats()
 {
-	Sys_Printf( "--- MetaStats ---\n" );
+	Sys_PrintHeading ( "--- MetaStats ---\n" );
 	Sys_Printf( "%9d total meta surfaces\n", numMetaSurfaces );
 	Sys_Printf( "%9d stripped surfaces\n", numStripSurfaces );
 	Sys_Printf( "%9d fanned surfaces\n", numFanSurfaces );
@@ -619,7 +619,7 @@ void MakeEntityMetaTriangles( entity_t *e )
 	
 	
 	/* note it */
-	Sys_FPrintf( SYS_VRB, "--- MakeEntityMetaTriangles ---\n" );
+	Sys_PrintHeadingVerbose( "--- MakeEntityMetaTriangles ---\n" );
 	
 	/* init pacifier */
 	fOld = -1;
@@ -802,7 +802,7 @@ void FixMetaTJunctions( void )
 	return;
 	
 	/* note it */
-	Sys_FPrintf( SYS_VRB, "--- FixMetaTJunctions ---\n" );
+	Sys_PrintHeadingVerbose( "--- FixMetaTJunctions ---\n" );
 	
 	/* init pacifier */
 	fOld = -1;
@@ -1117,7 +1117,7 @@ void SmoothMetaTriangles( void )
 	int	indexes[ SMOOTH_MAX_SAMPLES ];
 
 	/* note it */
-	Sys_FPrintf( SYS_VRB, "--- SmoothMetaTriangles ---\n" );
+	Sys_PrintHeadingVerbose( "--- SmoothMetaTriangles ---\n" );
 
 	/* init pacifier */
 	start = I_FloatTime();
@@ -1797,7 +1797,7 @@ void GroupMetaTriangles( void )
 	int	i, j, f, fOld, start;
 
 	/* note it */
-	Sys_FPrintf( SYS_VRB, "--- GroupMetaTriangles ---\n" );
+	Sys_PrintHeadingVerbose( "--- GroupMetaTriangles ---\n" );
 
 	/* init pacifier */
 	fOld = -1;
@@ -1927,7 +1927,7 @@ void MergeMetaTriangles( void )
 	GroupMetaTriangles();
 
 	/* note it */
-	Sys_FPrintf( SYS_VRB, "--- MergeMetaTriangles ---\n" );
+	Sys_PrintHeadingVerbose( "--- MergeMetaTriangles ---\n" );
 
 	/* run threaded */
 	/* vortex: real threaded implemetation is still crashy */

@@ -1945,7 +1945,7 @@ void IlluminateGrid( void )
 	SetupEnvelopes( qtrue, fastgrid );
 	
 	/* note it */
-	Sys_Printf( "--- IlluminateGrid ---\n" );
+	Sys_PrintHeading ( "--- IlluminateGrid ---\n" );
 
 	/* trace */
 	gridPointsIlluminated = 0;
@@ -1975,7 +1975,7 @@ void IlluminateGridByLightmap( void )
 	SetupEnvelopes( qtrue, fastgrid );
 	
 	/* note it */
-	Sys_Printf( "--- IlluminateGridByLightmap ---\n" );
+	Sys_PrintHeading ( "--- IlluminateGridByLightmap ---\n" );
 
 	/* trace */
 	gridPointsIlluminated = 0;
@@ -2218,7 +2218,7 @@ void LightWorld( char *mapSource )
 	float f;
 
 	/* note it */
-	Sys_Printf( "--- LightWorld ---\n" );
+	Sys_PrintHeading ( "--- LightWorld ---\n" );
 	
 	/* get color/_color (used for minlight/minvertexlight/ambient */
 	GetEntityMinlightAmbientColor( &entities[ 0 ], color, NULL, NULL, NULL, NULL, qtrue );
@@ -2363,7 +2363,7 @@ minGridLight[ 2 ] ) )
 
 	/* create world lights (note in verbose mode) */
 	if( verbose )
-		Sys_Printf( "--- CreateLights ---\n" );
+		Sys_PrintHeading ( "--- CreateLights ---\n" );
 	CreateEntityLights();
 	CreateSurfaceLights();
 	if( numPointLights || verbose )
@@ -2378,12 +2378,12 @@ minGridLight[ 2 ] ) )
 	/* smooth normals */
 	if( shade )
 	{
-		Sys_Printf( "--- SmoothNormals ---\n" );
+		Sys_PrintHeading ( "--- SmoothNormals ---\n" );
 		SmoothNormals();
 	}
 	
 	/* setup grid */
-	Sys_Printf( "--- SetupGrid ---\n" );
+	Sys_PrintHeading ( "--- SetupGrid ---\n" );
 	SetupGrid();
 	
 	/* illuminate lightgrid */
@@ -2394,7 +2394,7 @@ minGridLight[ 2 ] ) )
 	subdivideThreshold *= subdivideThreshold;
 	
 	/* map the world luxels */
-	Sys_Printf( "--- MapRawLightmap ---\n" );
+	Sys_PrintHeading ( "--- MapRawLightmap ---\n" );
 	RunThreadsOnIndividual( numRawLightmaps, qtrue, MapRawLightmap );
 	Sys_Printf( "%9d luxels\n", numLuxels );
 	Sys_Printf( "%9d luxels mapped\n", numLuxelsMapped );
@@ -2405,7 +2405,7 @@ minGridLight[ 2 ] ) )
 	/* dirty them up */
 	if( !gridOnly && dirty )
 	{
-		Sys_Printf( "--- DirtyRawLightmap ---\n" );
+		Sys_PrintHeading ( "--- DirtyRawLightmap ---\n" );
 		RunThreadsOnIndividual( numRawLightmaps, qtrue, DirtyRawLightmap );
 	}
 
@@ -2427,12 +2427,12 @@ minGridLight[ 2 ] ) )
 	lightsClusterCulled = 0;
 
 	/* illuminate lightmaps */
-	Sys_Printf( "--- IlluminateRawLightmap ---\n" );
+	Sys_PrintHeading ( "--- IlluminateRawLightmap ---\n" );
 	RunThreadsOnIndividual( numRawLightmaps, qtrue, IlluminateRawLightmap );
 	Sys_Printf( "%9d luxels illuminated\n", numLuxelsIlluminated );
 	
 	/* filter lightmaps */
-	Sys_Printf( "--- FilterRawLightmap ---\n" );
+	Sys_PrintHeading ( "--- FilterRawLightmap ---\n" );
 	ThreadMutexInit(&LightmapGrowStitchMutex);
 	RunThreadsOnIndividual( numRawLightmaps, qtrue, FilterRawLightmap );
 	if( numLuxelsStitched || verbose )
@@ -2451,7 +2451,7 @@ minGridLight[ 2 ] ) )
 	}
 
 	/* illuminate vertexes */
-	Sys_Printf( "--- IlluminateVertexes ---\n" );
+	Sys_PrintHeading ( "--- IlluminateVertexes ---\n" );
 	RunThreadsOnIndividual( numBSPDrawSurfaces, qtrue, IlluminateVertexes );
 	Sys_Printf( "%9d vertexes illuminated\n", numVertsIlluminated );
 
@@ -2494,7 +2494,7 @@ minGridLight[ 2 ] ) )
 		/* add to lightgrid */
 		if( bouncegrid )
 		{
-			Sys_Printf( "--- BounceGrid ---\n" );
+			Sys_PrintHeading ( "--- BounceGrid ---\n" );
 #ifdef GRID_BLOCK_OPTIMIZATION
 	RunThreadsOnIndividual( numGridBlocks, qtrue, IlluminateGridBlock );
 #else
@@ -2509,13 +2509,13 @@ minGridLight[ 2 ] ) )
 		lightsClusterCulled = 0;
 
 		/* illuminate lightmaps */
-		Sys_Printf( "--- IlluminateRawLightmap ---\n" );
+		Sys_PrintHeading ( "--- IlluminateRawLightmap ---\n" );
 		numLuxelsIlluminated = 0;
 		RunThreadsOnIndividual( numRawLightmaps, qtrue, IlluminateRawLightmap );
 		Sys_Printf( "%9d luxels illuminated\n", numLuxelsIlluminated );
 
 		/* filter lightmaps */
-		Sys_Printf( "--- FilterRawLightmap ---\n" );
+		Sys_PrintHeading ( "--- FilterRawLightmap ---\n" );
 		ThreadMutexInit(&LightmapGrowStitchMutex);
 		RunThreadsOnIndividual( numRawLightmaps, qtrue, FilterRawLightmap );
 		if( numLuxelsStitched || verbose )
@@ -2526,7 +2526,7 @@ minGridLight[ 2 ] ) )
 		StitchRawLightmaps();
 
 		/* illuminate vertexes */
-		Sys_Printf( "--- IlluminateVertexes ---\n" );
+		Sys_PrintHeading ( "--- IlluminateVertexes ---\n" );
 		RunThreadsOnIndividual( numBSPDrawSurfaces, qtrue, IlluminateVertexes );
 		Sys_Printf( "%9d vertexes illuminated\n", numVertsIlluminated );
 
@@ -2551,7 +2551,7 @@ minGridLight[ 2 ] ) )
 		/* sample lightmap from lightgrid */
 		if ( debugGrid )
 		{
-			Sys_Printf( "--- LightGridRawLightmap ---\n" );
+			Sys_PrintHeading ( "--- LightGridRawLightmap ---\n" );
 			numLuxelsIlluminated = 0;
 			RunThreadsOnIndividual( numRawLightmaps, qtrue, LightGridRawLightmap );
 			Sys_Printf( "%9d luxels illuminated\n", numLuxelsIlluminated );
@@ -2573,8 +2573,8 @@ int LightMain( int argc, char **argv )
 	char		mapSource[ MAX_OS_PATH ];
 
 	/* note it */
-	Sys_Printf( "--- Light ---\n" );
-	Sys_Printf( "--- GameSpecific ---\n" );
+	Sys_PrintHeading ( "--- Light ---\n" );
+	Sys_PrintHeading ( "--- GameSpecific ---\n" );
 
 	/* set standard game flags */
 	wolfLight = game->wolfLight;
@@ -2607,7 +2607,7 @@ int LightMain( int argc, char **argv )
 	if( lightAngleHL )
 		Sys_Printf( " half lambert light angle attenuation enabled \n" );
 
-	Sys_Printf( "--- CommandLine ---\n" );
+	Sys_PrintHeading ( "--- CommandLine ---\n" );
 	
 	/* process commandline arguments */
 	strcpy(externalLightmapsPath, "");
@@ -3503,7 +3503,7 @@ int LightMain( int argc, char **argv )
 	LoadShaderInfo();
 	
 	/* note loading */
-	Sys_Printf( "--- LoadBSPFile ---\n" );
+	Sys_PrintHeading ( "--- LoadBSPFile ---\n" );
 	Sys_Printf( "loading %s\n", source );
 	
 	/* ydnar: load surface file */
@@ -3548,7 +3548,7 @@ int LightMain( int argc, char **argv )
 		SetKeyValue(&entities[0], "lightmapsRGB", "0");
 
 	/* write out the bsp */
-	Sys_Printf( "--- WriteBSPFile ---\n" );
+	Sys_PrintHeading ( "--- WriteBSPFile ---\n" );
 	UnparseEntities(qfalse);
 	Sys_Printf( "Writing %s\n", source );
 	WriteBSPFile( source );
