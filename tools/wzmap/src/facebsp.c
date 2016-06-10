@@ -418,11 +418,17 @@ face_t *MakeVisibleBSPFaceList( brush_t *list )
 	side_t		*s;
 	winding_t	*w;
 	face_t		*f, *flist;
+	int			count = 0, current = 0;
 	
-	
+	for( b = list; b != NULL; b = b->next )
+		count++;
+
 	flist = NULL;
 	for( b = list; b != NULL; b = b->next )
 	{
+		printLabelledProgress("MakeVisibleBSPFaceList", current, count);
+		current++;
+
 		if( b->detail )
 			continue;
 		

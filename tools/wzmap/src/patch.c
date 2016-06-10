@@ -420,10 +420,15 @@ void PatchMapDrawSurfs( entity_t *e )
 	byte					*bordering;
 	
 	/* ydnar: mac os x fails with these if not static */
+	/*
 	MAC_STATIC parseMesh_t	*meshes[ MAX_MAP_DRAW_SURFS ];
 	MAC_STATIC qboolean		grouped[ MAX_MAP_DRAW_SURFS ];
 	MAC_STATIC byte			group[ MAX_MAP_DRAW_SURFS ];
-	
+	*/
+	parseMesh_t **meshes = (parseMesh_t**)malloc(sizeof(parseMesh_t*)*MAX_MAP_DRAW_SURFS);
+	qboolean *grouped = (qboolean*)malloc(sizeof(qboolean)*MAX_MAP_DRAW_SURFS);
+	byte *group = (byte*)malloc(sizeof(byte)*MAX_MAP_DRAW_SURFS);
+
 	
 	/* note it */
 	Sys_PrintHeadingVerbose( "--- PatchMapDrawSurfs ---\n" );
@@ -437,7 +442,12 @@ void PatchMapDrawSurfs( entity_t *e )
 	}
 
 	if ( !patchCount ) 
+	{
+		free(meshes);
+		free(grouped);
+		free(group);
 		return;
+	}
 
 	bordering = (byte *)safe_malloc( patchCount * patchCount );
 	memset( bordering, 0, patchCount * patchCount );
@@ -525,6 +535,10 @@ void PatchMapDrawSurfs( entity_t *e )
 		VectorCopy( bounds[ 0 ], ds->bounds[ 0 ] );
 		VectorCopy( bounds[ 1 ], ds->bounds[ 1 ] );
 	}
+
+	free(meshes);
+	free(grouped);
+	free(group);
 	
 	/* emit some statistics */
 	Sys_FPrintf( SYS_VRB, "%9d patches\n", patchCount );

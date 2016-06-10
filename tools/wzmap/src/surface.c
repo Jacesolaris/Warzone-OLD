@@ -1816,6 +1816,7 @@ void ClipSidesIntoTree( entity_t *e, tree_t *tree, qboolean quiet )
 	winding_t *w;
 	side_t *side, *newSide;
 	shaderInfo_t *si;
+	int count = 0, current = 0;
 
 	/* note it */
 	if( !quiet )
@@ -1826,8 +1827,15 @@ void ClipSidesIntoTree( entity_t *e, tree_t *tree, qboolean quiet )
 	
 	/* walk the brush list */
 	ClipVertexesInCache = 0;
+
+	for( b = e->brushes; b; b = b->next )
+		count++;
+
 	for( b = e->brushes; b; b = b->next )
 	{
+		printLabelledProgress("ClipSidesIntoTree", current, count);
+		current++;
+
 		/* walk the brush sides */
 		for( i = 0; i < b->numsides; i++ )
 		{

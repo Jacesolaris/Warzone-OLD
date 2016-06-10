@@ -545,14 +545,21 @@ void FilterStructuralBrushesIntoTree( entity_t *e, tree_t *tree, qboolean quiet 
 {
 	brush_t *b, *newb;
 	int r, i;
+	int count = 0, current = 0;
 
 	if( !quiet )
 		Sys_PrintHeadingVerbose( "--- FilterStructuralBrushesIntoTree ---\n");
+
+	for ( b = e->brushes ; b ; b = b->next )
+		count++;
 
 	c_unique = 0;
 	c_clusters = 0;
 	for ( b = e->brushes ; b ; b = b->next )
 	{
+		printLabelledProgress("FilterStructuralBrushesIntoTree", current, count);
+		current++;
+
 		if ( b->detail == qtrue || b->nonsolid == qtrue)
 			continue;
 		c_unique++;

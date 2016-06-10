@@ -314,31 +314,31 @@ abstracted bsp file
 /* ok to increase these at the expense of more memory */
 #define	MAX_MAP_MODELS			0x1000		// vortex: was 0x400
 //#define	MAX_MAP_BRUSHES			0x40000//0x10000		// vortex: was 0x8000
-#define	MAX_MAP_BRUSHES			0xFFFFFFF
+#define	MAX_MAP_BRUSHES			0xE000000
 #define	MAX_MAP_ENTITIES		0x80000		//%	0x800	/* ydnar */ // vortex: was 0x8000
 #define	MAX_MAP_ENTSTRING		0x80000	    //%	0x40000	/* ydnar */ // vortex: was 0x80000
 #define	MAX_MAP_SHADERS			0x800		//%	0x400	/* ydnar */
 
 #define	MAX_MAP_AREAS			0x100		/* MAX_MAP_AREA_BYTES in q_shared must match! */
 #define	MAX_MAP_FOGS			30			//& 0x100	/* RBSP (32 - world fog - goggles) */
-#define	MAX_MAP_PLANES			0xFFFFFFF//0x200000	//%	0x20000	/* ydnar for md */ // vortex: doubled this
+#define	MAX_MAP_PLANES			0xE000000//0x200000	//%	0x20000	/* ydnar for md */ // vortex: doubled this
 //#define	MAX_MAP_NODES			0x40000
-#define	MAX_MAP_NODES			0xFFFFFFF
+#define	MAX_MAP_NODES			0xE000000
 //#define	MAX_MAP_BRUSHSIDES		0x400000//0x100000	//%	0x20000	/* ydnar */
-#define	MAX_MAP_BRUSHSIDES		0xFFFFFFF
-#define	MAX_MAP_LEAFS			0xFFFFFFF//0x20000
-#define	MAX_MAP_LEAFFACES		0xFFFFFFF//0x100000	//%	0x20000	/* ydnar */
-#define	MAX_MAP_LEAFBRUSHES		0xFFFFFFF//0x40000
+#define	MAX_MAP_BRUSHSIDES		0xE000000
+#define	MAX_MAP_LEAFS			0xE000000//0x20000
+#define	MAX_MAP_LEAFFACES		0xE000000//0x100000	//%	0x20000	/* ydnar */
+#define	MAX_MAP_LEAFBRUSHES		0xE000000//0x40000
 #define	MAX_MAP_PORTALS			0x20000
 //#define	MAX_MAP_LIGHTING		0x800000
 //#define	MAX_MAP_LIGHTGRID		0xF000000	//%	0x800000 /* ydnar: set to points, not bytes */
-#define	MAX_MAP_LIGHTGRID		0xFFFFFFFF
+#define	MAX_MAP_LIGHTGRID		0xE000000
 //#define	MAX_MAP_VISIBILITY		0xF000000//0x200000
-#define	MAX_MAP_VISIBILITY		0xFFFFFFFF//0x200000
+#define	MAX_MAP_VISIBILITY		0xFFFFFFF//0x200000
 
-#define	MAX_MAP_DRAW_SURFS		0x40000 // vortex: was 0x20000
-#define	MAX_MAP_DRAW_VERTS		0x800000 // vortex: was 0x80000
-#define	MAX_MAP_DRAW_INDEXES	0x800000  // vortex: was 0x80000
+#define	MAX_MAP_DRAW_SURFS		0x400000//0x40000 // vortex: was 0x20000
+#define	MAX_MAP_DRAW_VERTS		0x8000000//0x800000 // vortex: was 0x80000
+#define	MAX_MAP_DRAW_INDEXES	0x8000000//0x800000  // vortex: was 0x80000
 
 
 /* key / value pair sizes in the entities lump */

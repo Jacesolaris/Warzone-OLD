@@ -1454,7 +1454,7 @@ int BSPMain( int argc, char **argv )
 		
 		if (!FOLIAGE_LoadFoliagePositions( filename ))
 		{
-			Sys_Printf( "Failed to load foliage file %s. No forests will be added...\n", argv[ i ] );
+			Sys_Printf( "Failed to load foliage file. No forests will be added...\n" );
 		}
 		else
 		{

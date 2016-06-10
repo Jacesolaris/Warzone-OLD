@@ -693,6 +693,8 @@ qboolean FloodEntities( tree_t *tree, qboolean quiet )
 	c_floodedleafs = 0;
 	for( i = 1; i < numEntities; i++ )
 	{
+		printLabelledProgress("FloodEntities", i, numEntities);
+
 		/* get entity */
 		e = &entities[ i ];
 		classname = ValueForKey( e, "classname" );

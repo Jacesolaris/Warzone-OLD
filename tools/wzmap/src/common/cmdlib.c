@@ -121,40 +121,63 @@ void Sys_PrintHeadingVerbose( char *heading )
 	setcolor(gray, black);
 }
 
+
+//time_t	CONSOLE_UPDATE_TIME = 0;
+int		CONSOLE_WIDTH_CURRENT = 0;
+
+int GetConsoleWidth( void )
+{
+	int columns;//, rows;
+
+	if (CONSOLE_WIDTH_CURRENT == 0 /*|| time(NULL) >= CONSOLE_UPDATE_TIME*/)
+	{// Only update once a second to stop is spazzing out with constant requests...
+#if defined(WIN32) || defined(WIN64)
+		CONSOLE_SCREEN_BUFFER_INFO csbi;
+
+		GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi);
+		columns = csbi.srWindow.Right - csbi.srWindow.Left + 1;
+		//rows = csbi.srWindow.Bottom - csbi.srWindow.Top + 1;
+#else // LINUX
+		struct winsize max;
+		ioctl(0, TIOCGWINSZ , &max);
+		columns = max.ws_col;
+		//rows = max.ws_row;
+#endif
+
+		CONSOLE_WIDTH_CURRENT = columns;
+		//CONSOLE_UPDATE_TIME = time(NULL) + 1000;
+	}
+
+	return CONSOLE_WIDTH_CURRENT;
+}
+
+int previousPerc = -1;
 char previousPercLabel[18] = { 0 };
 
 void DoProgress( char inlabel[], int instep, int total, qboolean verbose )
 {
 	int step = instep + 1;
 	char label[18] = { 0 };
+	int width, pos;
+
+	//progress width
+    int pwidth = 72;
+
+    int percent = ( step * 100 ) / total;
+
+	if (percent == previousPerc)
+	{// Don't waste CPU time...
+		return;
+	}
 
 	strncpy(label, inlabel, 17);
 	label[17] = '\0';
 
-    //progress width
-    int pwidth = 72;
-
-#if defined(WIN32) || defined(WIN64)
-	CONSOLE_SCREEN_BUFFER_INFO csbi;
-    int columns, rows;
-
-    GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi);
-    columns = csbi.srWindow.Right - csbi.srWindow.Left + 1;
-    rows = csbi.srWindow.Bottom - csbi.srWindow.Top + 1;
-	pwidth = columns - 8; // Set actual console width ( -8 because we want % done on the end)
-#else // LINUX
-	struct winsize max;
-    ioctl(0, TIOCGWINSZ , &max);
-    columns = max.ws_col;
-	rows = max.ws_row;
-	pwidth = columns - 8; // Set actual console width ( -8 because we want % done on the end)
-#endif
+	pwidth = GetConsoleWidth() - 8;
 
     //minus label len
-    int width = pwidth - strlen( label );
-    int pos = ( step * width ) / total ;
-
-    int percent = ( step * 100 ) / total;
+    width = pwidth - 18;//strlen( label );
+    pos = ( step * width ) / total ;
 
 	setcolor(white, black);
 
@@ -207,6 +230,8 @@ void DoProgress( char inlabel[], int instep, int total, qboolean verbose )
 		else
 			Sys_Printf( "\n" );
 	}
+
+	previousPerc = percent;
 }
 
 void printLabelledProgress (char *label, double current, double max)

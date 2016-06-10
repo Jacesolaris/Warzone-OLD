@@ -158,9 +158,10 @@ void EmitLeaf( node_t *node )
 	{
 		/* something is corrupting brushes */
 		if( (int) b < 256 )
-		{
-			Sys_Warning( "Node brush list corrupted (0x%08X)\n", b );
-			break;
+		{// UQ1: Why exactly is < 256 invalid????!?!?!?!?!????
+			//Sys_Warning( "Node brush list corrupted (0x%08X)\n", b );
+			//break;
+			Sys_Printf( "Node brush list corrupted (0x%08X)\n", b );
 		}
 		//%	if( b->guard != 0xDEADBEEF )
 		//%		Sys_Printf( "Brush %6d: 0x%08X Guard: 0x%08X Next: 0x%08X Original: 0x%08X Sides: %d\n", b->brushNum, b, b, b->next, b->original, b->numsides );
