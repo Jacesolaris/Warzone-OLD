@@ -351,14 +351,18 @@ static void FixBrushFaces( entity_t *e )
 	}
 
 	/* emit some statistics */
-	Sys_FPrintf( SYS_VRB, "%9d verts stitched\n", numVertsStitched );
-	Sys_FPrintf( SYS_VRB, "%9d surfaces stitched\n", numSurfacesStitched );
+	Sys_Printf( "%9d verts stitched\n", numVertsStitched );
+	Sys_Printf( "%9d surfaces stitched\n", numSurfacesStitched );
 }
 
 /*
 ProcessWorldModel()
 creates a full bsp + surfaces for the worldspawn entity
 */
+
+extern vec3_t        mergeBlock;
+void MergeDrawSurfaces( void );
+void MergeDrawVerts( void );
 
 void ProcessWorldModel( void )
 {
@@ -506,7 +510,7 @@ void ProcessWorldModel( void )
 	FloodAreas( tree );
 	
 	/* create drawsurfs for triangle models */
-	AddTriangleModels( 0 );
+	AddTriangleModels( 0, qfalse, qfalse );
 	
 	/* create drawsurfs for surface models */
 	AddEntitySurfaceModels( e );
@@ -614,7 +618,7 @@ void ProcessWorldModel( void )
 	}
 	if ( !verbose )
 	{
-		Sys_Printf( " (%d)\n", (int) (I_FloatTime() - start) );
+		//Sys_Printf( " (%d)\n", (int) (I_FloatTime() - start) );
 		Sys_Printf( "%9d drawsurfs\n", numMapDrawSurfs );
 	}
 
@@ -624,6 +628,12 @@ void ProcessWorldModel( void )
 		EmitDrawsurfsSimpleStats();
 	else
 		EmitDrawsurfsStats();
+
+	/* UQ1: merge test */
+	//VectorSet(mergeBlock, 1024.0f, 1024.0f, 1024.0f);
+	//MergeDrawSurfaces();
+	//MergeDrawVerts();
+	/* UQ1: merge test */
 
 	/* match drawsurfaces back to original brushsides (sof2) */
 	FixBrushSides( e );
@@ -670,7 +680,7 @@ void ProcessSubModel( void )
 	ClipSidesIntoTree( e, tree, qtrue );
 	
 	/* ydnar: create drawsurfs for triangle models */
-	AddTriangleModels( entityNum );
+	AddTriangleModels( entityNum, qfalse, qfalse );
 	
 	/* create drawsurfs for surface models */
 	AddEntitySurfaceModels( e );
@@ -770,8 +780,8 @@ void ProcessModels( void )
 	}
 
 	/* print overall time */
-	if ( submodels > 10 )
-		Sys_Printf (" (%d)\n", (int) (I_FloatTime() - start) );
+	//if ( submodels > 10 )
+	//	Sys_Printf (" (%d)\n", (int) (I_FloatTime() - start) );
 
 	/* restore -v setting */
 	verbose = oldVerbose;

@@ -116,9 +116,12 @@ void Sys_PrintHeading( char *heading )
 
 void Sys_PrintHeadingVerbose( char *heading )
 {
+	Sys_PrintHeading(heading );
+	/*
 	setcolor(white, black);
 	Sys_FPrintf(SYS_VRB, heading);
 	setcolor(gray, black);
+	*/
 }
 
 
@@ -164,6 +167,8 @@ void DoProgress( char inlabel[], int instep, int total, qboolean verbose )
     int pwidth = 72;
 
     int percent = ( step * 100 ) / total;
+
+	if (percent > 100) percent = 100; // Just in case...
 
 	if (percent == previousPerc)
 	{// Don't waste CPU time...

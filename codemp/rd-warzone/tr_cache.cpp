@@ -285,7 +285,7 @@ qboolean CModelCacheManager::LevelLoadEnd( qboolean bDeleteEverythingNotUsedThis
 
 qboolean CImageCacheManager::LevelLoadEnd( qboolean bDeleteEverythingNotUsedThisLevel /* unused */ )
 {
-	return qtrue;
+	return qfalse;
 }
 
 /*

@@ -214,7 +214,7 @@ void ClusterMerge (int leafnum)
 
 	totalvis += numvis;
 
-	Sys_FPrintf (SYS_VRB,"cluster %4i : %4i visible\n", leafnum, numvis);
+	Sys_Printf ("cluster %4i : %4i visible\n", leafnum, numvis);
 
 	memcpy (bspVisBytes + VIS_HEADER_SIZE + leafnum*leafbytes, uncompressed, leafbytes);
 }
@@ -229,9 +229,9 @@ void CalcPortalVis (void)
 #ifdef MREDEBUG
 	Sys_Printf("%6d portals out of %d", 0, numportals*2);
 	//get rid of the counter
-	RunThreadsOnIndividual (numportals*2, qfalse, PortalFlow);
+	RunThreadsOnIndividual ("CalcPortalVis", numportals*2, qfalse, PortalFlow);
 #else
-	RunThreadsOnIndividual (numportals*2, qtrue, PortalFlow);
+	RunThreadsOnIndividual ("CalcPortalVis", numportals*2, qtrue, PortalFlow);
 #endif
 
 }
@@ -246,18 +246,18 @@ void CalcPassageVis(void)
 	PassageMemory();
 
 #ifdef MREDEBUG
-	_printf("%6d portals out of %d", 0, numportals*2);
-	RunThreadsOnIndividual (numportals*2, qfalse, CreatePassages);
-	_printf("\n");
-	_printf("%6d portals out of %d", 0, numportals*2);
-	RunThreadsOnIndividual (numportals*2, qfalse, PassageFlow);
-	_printf("\n");
+	Sys_Printf("%6d portals out of %d", 0, numportals*2);
+	RunThreadsOnIndividual ("CreatePassages", numportals*2, qfalse, CreatePassages);
+	Sys_Printf("\n");
+	Sys_Printf("%6d portals out of %d", 0, numportals*2);
+	RunThreadsOnIndividual ("PassageFlow", numportals*2, qfalse, PassageFlow);
+	Sys_Printf("\n");
 #else
 	Sys_PrintHeading ( "--- CreatePassages ---\n" );
-	RunThreadsOnIndividual( numportals*2, qtrue, CreatePassages );
+	RunThreadsOnIndividual( "CreatePassages", numportals*2, qtrue, CreatePassages );
 	
 	Sys_PrintHeading ( "--- PassageFlow ---\n" );
-	RunThreadsOnIndividual( numportals * 2, qtrue, PassageFlow );
+	RunThreadsOnIndividual( "PassageFlow", numportals * 2, qtrue, PassageFlow );
 #endif
 }
 
@@ -272,17 +272,17 @@ void CalcPassagePortalVis(void)
 
 #ifdef MREDEBUG
 	Sys_Printf("%6d portals out of %d", 0, numportals*2);
-	RunThreadsOnIndividual (numportals*2, qfalse, CreatePassages);
+	RunThreadsOnIndividual ("CreatePassages", numportals*2, qfalse, CreatePassages);
 	Sys_Printf("\n");
 	Sys_Printf("%6d portals out of %d", 0, numportals*2);
-	RunThreadsOnIndividual (numportals*2, qfalse, PassagePortalFlow);
+	RunThreadsOnIndividual ("PassagePortalFlow", numportals*2, qfalse, PassagePortalFlow);
 	Sys_Printf("\n");
 #else
 	Sys_PrintHeading ( "--- CreatePassages ---\n" );
-	RunThreadsOnIndividual( numportals * 2, qtrue, CreatePassages);
+	RunThreadsOnIndividual( "CreatePassages", numportals * 2, qtrue, CreatePassages);
 	
 	Sys_PrintHeading ( "--- PassagePortalFlow  ---\n" );
-	RunThreadsOnIndividual( numportals * 2, qtrue, PassagePortalFlow );
+	RunThreadsOnIndividual( "PassagePortalFlow", numportals * 2, qtrue, PassagePortalFlow );
 #endif
 }
 
@@ -331,7 +331,7 @@ void CalcVis (void)
 	
 	/* base portal vis */
 	Sys_PrintHeading ( "--- BasePortalVis ---\n" );
-	RunThreadsOnIndividual( numportals * 2, qtrue, BasePortalVis );
+	RunThreadsOnIndividual( "BasePortalVis", numportals * 2, qtrue, BasePortalVis );
 
 	/* fast/passage vis */
 	SortPortals ();
@@ -456,6 +456,7 @@ int TryMergeLeaves(int l1num, int l2num)
 			}
 		}
 	}
+	
 	for (k = 0; k < 2; k++)
 	{
 		if (k)
@@ -483,11 +484,18 @@ int TryMergeLeaves(int l1num, int l2num)
 		for (j = 0; j < l2->numportals; j++)
 		{
 			p2 = l2->portals[j];
+
 			if (p2->leaf == l1num)
 			{
 				p2->removed = qtrue;
 				continue;
 			}
+
+			if (numportals +1 > MAX_PORTALS_ON_LEAF) 
+			{
+				Error("Portal %i > MAX_PORTALS_ON_LEAF\n", numportals+1); 
+			}
+
 			portals[numportals++] = p2;
 		}
 		for (i = 0; i < numportals; i++)
@@ -497,6 +505,7 @@ int TryMergeLeaves(int l1num, int l2num)
 		l2->numportals = numportals;
 		l1->merged = l2num;
 	}
+	
 	return qtrue;
 }
 
@@ -534,9 +543,11 @@ void MergeLeaves(void)
 	vportal_t *p;
 
 	totalnummerges = 0;
+
 	do
 	{
 		nummerges = 0;
+
 		for (i = 0; i < portalclusters; i++)
 		{
 			leaf = &leafs[i];
@@ -546,16 +557,19 @@ void MergeLeaves(void)
 			if( leaf->merged >= 0 && hint == qfalse )
 				continue;
 
+			//Sys_Printf("Leaf %i. numportals %i.\n", i, leaf->numportals);
 
 			for (j = 0; j < leaf->numportals; j++)
 			{
 				p = leaf->portals[j];
-				//
+				
 				if (p->removed)
 					continue;
+
 				//never merge through hint portals
 				if (p->hint)
 					continue;
+
 				if (TryMergeLeaves(i, p->leaf))
 				{
 					UpdatePortals();
@@ -564,8 +578,10 @@ void MergeLeaves(void)
 				}
 			}
 		}
+
 		totalnummerges += nummerges;
 	} while (nummerges);
+
 	Sys_Printf("%6d leaves merged\n", totalnummerges);
 }
 
@@ -1105,6 +1121,7 @@ int VisMain (int argc, char **argv)
 	LoadBSPFile( source );
 	
 	/* load the portal file */
+	Sys_PrintHeading ( "--- LoadPRTFile ---\n" );
 	sprintf( portalfile, "%s%s", inbase, ExpandArg( argv[ i ] ) );
 	StripExtension( portalfile );
 	strcat( portalfile, ".prt" );
@@ -1133,7 +1150,7 @@ int VisMain (int argc, char **argv)
 	CalcVis();
 	
 	/* delete the prt file */
-	if( !saveprt )
+	if( !saveprt && portalfile && portalfile[0] )
 		remove( portalfile );
 
 	/* write the bsp file */

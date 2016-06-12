@@ -527,8 +527,8 @@ void FilterDetailBrushesIntoTree( entity_t *e, tree_t *tree )
 	}
 	
 	/* emit some statistics */
-	Sys_FPrintf( SYS_VRB, "%9d detail brushes\n", c_unique );
-	Sys_FPrintf( SYS_VRB, "%9d cluster references\n", c_clusters );
+	Sys_Printf( "%9d detail brushes\n", c_unique );
+	Sys_Printf( "%9d cluster references\n", c_clusters );
 }
 
 /*
@@ -584,8 +584,8 @@ void FilterStructuralBrushesIntoTree( entity_t *e, tree_t *tree, qboolean quiet 
 
 void FilterStructuralBrushesIntoTreeStats( void ) 
 {
-	Sys_FPrintf( SYS_VRB, "%9d structural brushes\n", c_unique );
-	Sys_FPrintf( SYS_VRB, "%9d cluster references\n", c_clusters );
+	Sys_Printf( "%9d structural brushes\n", c_unique );
+	Sys_Printf( "%9d cluster references\n", c_clusters );
 }
 
 
@@ -833,7 +833,7 @@ void SplitBrush( brush_t *brush, int planenum, brush_t **front, brush_t **back )
 		if (b[i]->numsides < 3 || !BoundBrush (b[i]))
 		{
 			if (b[i]->numsides >= 3)
-				Sys_FPrintf (SYS_VRB,"bogus brush after clip\n");
+				Sys_Printf (SYS_VRB,"bogus brush after clip\n");
 			FreeBrush (b[i]);
 			b[i] = NULL;
 		}

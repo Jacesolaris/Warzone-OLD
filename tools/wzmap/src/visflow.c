@@ -141,14 +141,21 @@ fixedWinding_t	*VisChopWinding (fixedWinding_t *in, pstack_t *stack, visPlane_t 
 	vec3_t	mid;
 	fixedWinding_t	*neww;
 
+	if (!in || !stack || !split) return NULL;
+
 	counts[0] = counts[1] = counts[2] = 0;
 
 	// determine sides for each point
 	for (i=0 ; i<in->numpoints ; i++)
 	{
+		if (i >= 24) continue;
+
 		dot = DotProduct (in->points[i], split->normal);
 		dot -= split->dist;
 		dists[i] = dot;
+
+		if (i >= 128) continue;
+
 		if (dot > ON_EPSILON)
 			sides[i] = SIDE_FRONT;
 		else if (dot < -ON_EPSILON)
@@ -157,6 +164,7 @@ fixedWinding_t	*VisChopWinding (fixedWinding_t *in, pstack_t *stack, visPlane_t 
 		{
 			sides[i] = SIDE_ON;
 		}
+
 		counts[sides[i]]++;
 	}
 
@@ -674,7 +682,7 @@ void PortalFlow (int portalnum)
 
 	c_can = CountBits (p->portalvis, numportals*2);
 
-	Sys_FPrintf (SYS_VRB,"portal:%4i  mightsee:%4i  cansee:%4i (%i chains)\n", 
+	Sys_Printf ("portal:%4i  mightsee:%4i  cansee:%4i (%i chains)\n", 
 		(int)(p - portals),	c_might, c_can, data.c_chains);
 }
 

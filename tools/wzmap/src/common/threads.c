@@ -32,6 +32,8 @@ int	oldf;
 qboolean pacifier;
 qboolean threaded;
 
+char CURRENT_TASK_LABEL[256] = { 0 };
+
 // get a new work for thread
 int	GetThreadWork ( void )
 {
@@ -46,7 +48,8 @@ int	GetThreadWork ( void )
 	}
 	if (pacifier == qtrue)
 	{
-		printDetailedProgress(dispatch / workcount);
+		//printDetailedProgress(dispatch / workcount);
+		printLabelledProgress(CURRENT_TASK_LABEL, dispatch, workcount);
 	}
 	r = dispatch;
 	dispatch++;
@@ -69,7 +72,7 @@ void RunThreadsOnIndividualThread(int threadnum)
 }
 
 // run threads on individual numbers
-void RunThreadsOnIndividual(int workcnt, qboolean showpacifier, void(*func)(int))
+void RunThreadsOnIndividual(char *label, int workcnt, qboolean showpacifier, void(*func)(int))
 {
 	if( numthreads <= 0 )
 		ThreadSetDefault();
@@ -77,12 +80,15 @@ void RunThreadsOnIndividual(int workcnt, qboolean showpacifier, void(*func)(int)
 		Error("RunThreadsOnIndividual: recursively entered!");
 
 	workfunction = func;
-	RunThreadsOn(workcnt, showpacifier, RunThreadsOnIndividualThread);
+
+	memset(CURRENT_TASK_LABEL, 0, sizeof(CURRENT_TASK_LABEL));
+	sprintf(CURRENT_TASK_LABEL, label);
+	RunThreadsOn(label, workcnt, showpacifier, RunThreadsOnIndividualThread);
 }
 
 // run thread functions
-void _RunThreadsOn(int workcnt, qboolean showpacifier, void(*threadfunc)(int));
-void RunThreadsOn(int workcnt, qboolean showpacifier, void(*threadfunc)(int))
+void _RunThreadsOn(char *label, int workcnt, qboolean showpacifier, void(*threadfunc)(int));
+void RunThreadsOn(char *label, int workcnt, qboolean showpacifier, void(*threadfunc)(int))
 {
 	if( numthreads <= 0 )
 		ThreadSetDefault();
@@ -90,12 +96,14 @@ void RunThreadsOn(int workcnt, qboolean showpacifier, void(*threadfunc)(int))
 		Error("RunThreadsOn: recursively entered!");
 
 	threaded = qtrue;
-	_RunThreadsOn(workcnt, showpacifier, threadfunc);
+	memset(CURRENT_TASK_LABEL, 0, sizeof(CURRENT_TASK_LABEL));
+	sprintf(CURRENT_TASK_LABEL, label);
+	_RunThreadsOn(label, workcnt, showpacifier, threadfunc);
 	threaded = qfalse;
 }
 
 // run thread function in same thread
-void RunSameThreadOn(int workcnt, qboolean showpacifier, void(*threadfunc)(int))
+void RunSameThreadOn(char *label, int workcnt, qboolean showpacifier, void(*threadfunc)(int))
 {
 	int	start, end;
 
@@ -113,12 +121,15 @@ void RunSameThreadOn(int workcnt, qboolean showpacifier, void(*threadfunc)(int))
 	end = I_FloatTime ();
 	if (pacifier == qtrue)
 	{
-		printDetailedProgress(dispatch / workcount);
+		//printDetailedProgress(dispatch / workcount);
+		memset(CURRENT_TASK_LABEL, 0, sizeof(CURRENT_TASK_LABEL));
+		sprintf(CURRENT_TASK_LABEL, label);
+		printLabelledProgress(label, dispatch, workcount);
 	}
 }
 
 // run individual numbers function in same thread
-void RunSameThreadOnIndividual(int workcnt, qboolean showpacifier, void(*func)(int))
+void RunSameThreadOnIndividual(char *label, int workcnt, qboolean showpacifier, void(*func)(int))
 {
 	int	start, end;
 
@@ -137,7 +148,10 @@ void RunSameThreadOnIndividual(int workcnt, qboolean showpacifier, void(*func)(i
 	end = I_FloatTime ();
 	if (pacifier == qtrue)
 	{
-		printDetailedProgress(dispatch / workcount);
+		//printDetailedProgress(dispatch / workcount);
+		memset(CURRENT_TASK_LABEL, 0, sizeof(CURRENT_TASK_LABEL));
+		sprintf(CURRENT_TASK_LABEL, label);
+		printLabelledProgress(label, dispatch, workcount);
 	}
 }
 
@@ -207,7 +221,7 @@ void ThreadUnlock (void)
 	LeaveCriticalSection (&crit);
 }
 
-void _RunThreadsOn(int workcnt, qboolean showpacifier, void(*func)(int))
+void _RunThreadsOn(char *label, int workcnt, qboolean showpacifier, void(*func)(int))
 {
 	int		threadid[MAX_THREADS];
 	HANDLE	threadhandle[MAX_THREADS];
@@ -249,12 +263,10 @@ void _RunThreadsOn(int workcnt, qboolean showpacifier, void(*func)(int))
 	end = I_FloatTime ();
 	if (pacifier == qtrue)
 	{
-		while (oldf < 9)
-		{
-			oldf++;
-			Sys_Printf ("%i...", oldf);
-		}
-		Sys_Printf (" (%i)\n", end-start);
+		//printDetailedProgress(dispatch / workcount);
+		memset(CURRENT_TASK_LABEL, 0, sizeof(CURRENT_TASK_LABEL));
+		sprintf(CURRENT_TASK_LABEL, label);
+		printLabelledProgress(label, dispatch, workcount);
 	}
 }
 

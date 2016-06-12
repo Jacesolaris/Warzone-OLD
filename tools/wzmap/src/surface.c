@@ -327,7 +327,7 @@ void TidyEntitySurfaces( entity_t *e )
 	numMapDrawSurfs = i;
 	
 	/* emit some stats */
-	Sys_FPrintf( SYS_VRB, "%9d empty or malformed surfaces deleted\n", deleted );
+	Sys_Printf( "%9d empty or malformed surfaces deleted\n", deleted );
 }
 
 
@@ -1641,13 +1641,20 @@ void CullSides( entity_t *e )
 	winding_t	*w1, *w2;
 	brush_t	*b1, *b2;
 	side_t		*side1, *side2;
+	int			current = 0, count = 0;
 	
 	g_numHiddenFaces = 0;
 	g_numCoinFaces = 0;
+
+	for( b1 = e->brushes; b1; b1 = b1->next )
+		count++;
 	
 	/* brush interator 1 */
 	for( b1 = e->brushes; b1; b1 = b1->next )
 	{
+		printLabelledProgress("CullSides", current, count);
+		current++;
+
 		/* sides check */
 		if( b1->numsides < 1 )
 			continue;
@@ -1790,8 +1797,8 @@ void CullSides( entity_t *e )
 
 void CullSidesStats( void )
 {
-	Sys_FPrintf( SYS_VRB, "%9d hidden faces culled\n", g_numHiddenFaces );
-	Sys_FPrintf( SYS_VRB, "%9d coincident faces culled\n", g_numCoinFaces );
+	Sys_Printf( "%9d hidden faces culled\n", g_numHiddenFaces );
+	Sys_Printf( "%9d coincident faces culled\n", g_numCoinFaces );
 }
 
 
@@ -3216,7 +3223,7 @@ int AddSurfaceModelsToTriangle_r( mapDrawSurface_t *ds, surfaceModel_t *model, b
 			}
 			
 			/* insert the model */
-			InsertModel( (char *) model->model, 0, 0, transform, 1.0, NULL, ds->celShader, ds->entityNum, ds->mapEntityNum, ds->castShadows, ds->recvShadows, 0, ds->lightmapScale, ds->minlight, ds->minvertexlight, ds->ambient, ds->colormod, NULL, 0, ds->smoothNormals, ds->vertTexProj, ds->noAlphaFix, 0, ds->skybox, NULL, NULL, NULL, NULL );
+			InsertModel( (char *) model->model, 0, 0, transform, 1.0, NULL, ds->celShader, ds->entityNum, ds->mapEntityNum, ds->castShadows, ds->recvShadows, 0, ds->lightmapScale, ds->minlight, ds->minvertexlight, ds->ambient, ds->colormod, NULL, 0, ds->smoothNormals, ds->vertTexProj, ds->noAlphaFix, 0, ds->skybox, NULL, NULL, NULL, NULL, qfalse );
 			
 			/* return to sender */
 			return 1;
@@ -3687,7 +3694,7 @@ void FixVertexAlpha(entity_t *e, qboolean showpacifier)
 		/* iterate crossing drawsurfaces */
 		alphaFixEntity = e;
 		numAlphaFixedVerts = 0;
-		RunThreadsOnIndividual(numSurfs, ((showpacifier == qtrue) && (verbose == qtrue)) ? qtrue : qfalse, FixDrawsurfVertexAlpha);
+		RunThreadsOnIndividual("FixVertexAlpha", numSurfs, ((showpacifier == qtrue) && (verbose == qtrue)) ? qtrue : qfalse, FixDrawsurfVertexAlpha);
 
 		/* delete mutexes */
 		for( i = 0; i < numSurfs; i++)
@@ -3699,11 +3706,11 @@ void FixVertexAlpha(entity_t *e, qboolean showpacifier)
 		/* entities are single threaded (cos it spends more time creating threads) */
 		alphaFixEntity = e;
 		numAlphaFixedVerts = 0;
-		RunSameThreadOnIndividual(numSurfs, showpacifier, FixDrawsurfVertexAlpha);
+		RunSameThreadOnIndividual("FixDrawsurfVertexAlpha", numSurfs, showpacifier, FixDrawsurfVertexAlpha);
 	}
 
 	/* emit stats */
-	Sys_FPrintf( SYS_VRB, "%9d vertexes fixed\n", numAlphaFixedVerts );
+	Sys_Printf( "%9d vertexes fixed\n", numAlphaFixedVerts );
 }
 
 /*
@@ -3768,182 +3775,10 @@ void ApplyVertexMods(entity_t *e, qboolean showpacifier)
 	}
 
 	/* print time */
-	if( showpacifier == qtrue )
-		Sys_FPrintf( SYS_VRB, " (%d)\n", (int) (I_FloatTime() - start) );
+	//if( showpacifier == qtrue )
+	//	Sys_FPrintf( SYS_VRB, " (%d)\n", (int) (I_FloatTime() - start) );
 }
 
-//#define THREADED
-
-entity_t *SHARED_ENTITY = NULL;
-tree_t *SHARED_TREE = NULL;
-
-#ifdef THREADED
-void FilterDrawsurfsIntoTree_Threaded( int instanceNum )
-{
-	int i = instanceNum;
-	entity_t *e = SHARED_ENTITY;
-	tree_t *tree = SHARED_TREE;
-
-	int	f, fOld, start;
-	mapDrawSurface_t *ds;
-	shaderInfo_t *si;
-	vec3_t origin, mins, maxs;
-	int refs;
-	int	numSurfs, numRefs, numSkyboxSurfaces;
-	qboolean forceMeta;
-
-	/* get surface and try to early out */
-	ds = &mapDrawSurfs[ i ];
-	if( ds->numVerts == 0 && ds->type != SURFACE_FLARE && ds->type != SURFACE_SHADER )
-		return;
-
-	/* vortex: patchMeta with noBSP flag doesn't require patch surface to be emitted */
-	GetEntityPatchMeta( e, &forceMeta, NULL, NULL, ds->patchQuality, ds->patchSubdivisions);
-	if( patchMeta || forceMeta || ds->patchMeta )
-		if ( ds->noClip || ds->shaderInfo->noBSP )
-			return;
-
-	/* get shader */
-	si = ds->shaderInfo;
-
-	/* ydnar: skybox surfaces are special */
-	if( ds->skybox )
-	{
-		refs = AddReferenceToTree_r( ds, tree->headnode, qtrue );
-		ds->skybox = qfalse;
-	}
-	else
-	{
-		/* refs initially zero */
-		refs = 0;
-
-		/* ydnar: don't emit nodraw surfaces (like nodraw fog) */
-		if( si != NULL && (si->compileFlags & C_NODRAW) && ds->type != SURFACE_PATCH )
-			return;
-
-		/* ydnar: bias the surface textures */
-		BiasSurfaceTextures( ds );
-
-		/* ydnar: globalizing of fog volume handling (eek a hack) */
-		if( e != entities && si->noFog == qfalse )
-		{
-			/* find surface origin and offset by entity origin */
-			VectorAdd( ds->mins, ds->maxs, origin );
-			VectorScale( origin, 0.5f, origin );
-			VectorAdd( origin, e->origin, origin );
-
-			VectorAdd( ds->mins, e->origin, mins );
-			VectorAdd( ds->maxs, e->origin, maxs );
-
-			/* set the fog number for this surface */
-			ds->fogNum = FogForBounds( mins, maxs, 1.0f );	//%	FogForPoint( origin, 0.0f );
-		}
-	}
-
-	/* ydnar: remap shader */
-	if( ds->shaderInfo->remapShader && ds->shaderInfo->remapShader[ 0 ] )
-		ds->shaderInfo = ShaderInfoForShader( ds->shaderInfo->remapShader );
-
-	/* ydnar: gs mods: handle the various types of surfaces */
-	switch( ds->type )
-	{
-		/* handle brush faces */
-	case SURFACE_FACE:
-	case SURFACE_DECAL:
-		if( refs == 0 )
-			refs = FilterFaceIntoTree( ds, tree );
-		if( refs > 0 )
-			EmitFaceSurface( ds );
-		break;
-
-		/* handle patches */
-	case SURFACE_PATCH:
-		if( refs == 0 )
-			refs = FilterPatchIntoTree( ds, tree );
-		if( refs > 0 )
-			EmitPatchSurface( e, ds );
-		break;
-
-		/* handle triangle surfaces */
-	case SURFACE_TRIANGLES:
-	case SURFACE_FORCED_META:
-	case SURFACE_META:
-		//%	Sys_FPrintf( SYS_VRB, "Surface %4d: [%1d] %4d verts %s\n", numSurfs, ds->planar, ds->numVerts, si->shader );
-		if( refs == 0 )
-			refs = FilterTrianglesIntoTree( ds, tree );
-		if( refs > 0 )
-			EmitTriangleSurface( ds );
-		break;
-
-		/* handle foliage surfaces (splash damage/wolf et) */
-	case SURFACE_FOLIAGE:
-		//%	Sys_FPrintf( SYS_VRB, "Surface %4d: [%d] %4d verts %s\n", numSurfs, ds->numFoliageInstances, ds->numVerts, si->shader );
-		if( refs == 0 )
-			refs = FilterFoliageIntoTree( ds, tree );
-		if( refs > 0 )
-			EmitTriangleSurface( ds );
-		break;
-
-		/* handle foghull surfaces */
-	case SURFACE_FOGHULL:
-		if( refs == 0 )
-			refs = AddReferenceToTree_r( ds, tree->headnode, qfalse );
-		if( refs > 0 )
-			EmitTriangleSurface( ds );
-		break;
-
-		/* handle flares */
-	case SURFACE_FLARE:
-		if( refs == 0 )
-			refs = FilterFlareSurfIntoTree( ds, tree );
-		if( refs > 0 )
-			EmitFlareSurface( ds );
-		break;
-
-		/* handle shader-only surfaces */
-	case SURFACE_SHADER:
-		refs = 1;
-		EmitFlareSurface( ds );
-		break;
-
-		/* no references */
-	default:
-		refs = 0;
-		break;
-	}
-
-	/* tot up the references */
-	if( refs > 0 )
-	{
-		/* tot up counts */
-		numSurfs++;
-		numRefs += refs;
-
-		/* emit extra surface data */
-		SetSurfaceExtra( ds, numBSPDrawSurfaces - 1 );
-		//%	Sys_FPrintf( SYS_VRB, "%d verts %d indexes\n", ds->numVerts, ds->numIndexes );
-
-		/* one last sanity check */
-		{
-			bspDrawSurface_t	*out;
-			out = &bspDrawSurfaces[ numBSPDrawSurfaces - 1 ];
-			if( out->numVerts == 3 && out->numIndexes > 3 )
-			{
-				Sys_Printf( "\nWARNING: Potentially bad %s surface (%d: %d, %d)\n     %s\n",
-					surfaceTypes[ ds->type ],
-					numBSPDrawSurfaces - 1, out->numVerts, out->numIndexes, si->shader );
-			}
-		}
-
-		/* ydnar: handle skybox surfaces */
-		if( ds->skybox )
-		{
-			MakeSkyboxSurface( ds );
-			numSkyboxSurfaces++;
-		}
-	}
-}
-#endif //THREADED
 
 /*
 FilterDrawsurfsIntoTree()
@@ -3981,7 +3816,6 @@ void FilterDrawsurfsIntoTree( entity_t *e, tree_t *tree, qboolean showpacifier )
 	numRefs = 0;
 	numSkyboxSurfaces = 0;
 
-#ifndef THREADED
 	for( i = e->firstDrawSurf; i < numMapDrawSurfs; i++ )
 	{
 		printLabelledProgress("FilterDrawsurfsIntoTree", i-e->firstDrawSurf, numMapDrawSurfs-e->firstDrawSurf);
@@ -4137,20 +3971,15 @@ void FilterDrawsurfsIntoTree( entity_t *e, tree_t *tree, qboolean showpacifier )
 			}
 		}
 	}
-#else
-	SHARED_ENTITY = e;
-	SHARED_TREE = tree;
-	RunThreadsOnIndividual( numMapDrawSurfs - e->firstDrawSurf, showpacifier, FilterDrawsurfsIntoTree_Threaded );
-#endif
 
 	/* print time */
-	if( showpacifier == qtrue )
-		Sys_Printf( " (%d)\n", (int) (I_FloatTime() - start) );
+	//if( showpacifier == qtrue )
+	//	Sys_Printf( " (%d)\n", (int) (I_FloatTime() - start) );
 
 	/* emit some statistics */
-	Sys_FPrintf( SYS_VRB, "%9d references\n", numRefs );
-	Sys_FPrintf( SYS_VRB, "%9d surfaces\n", numSurfs );
-	Sys_FPrintf( SYS_VRB, "%9d skybox surfaces generated\n", numSkyboxSurfaces );
+	Sys_Printf( "%9d references\n", numRefs );
+	Sys_Printf( "%9d surfaces\n", numSurfs );
+	Sys_Printf( "%9d skybox surfaces generated\n", numSkyboxSurfaces );
 }
 
 void EmitDrawsurfsSimpleStats( void )
@@ -4158,9 +3987,9 @@ void EmitDrawsurfsSimpleStats( void )
 	int i;
 
 	Sys_Printf( "%9d emitted drawsurfs\n", numBSPDrawSurfaces );
-	Sys_FPrintf( SYS_VRB, "%9d stripped face surfaces\n", numStripSurfaces );
-	Sys_FPrintf( SYS_VRB, "%9d fanned face surfaces\n", numFanSurfaces );
-	Sys_FPrintf( SYS_VRB, "%9d surface models generated\n", numSurfaceModels );
+	Sys_Printf( "%9d stripped face surfaces\n", numStripSurfaces );
+	Sys_Printf( "%9d fanned face surfaces\n", numFanSurfaces );
+	Sys_Printf( "%9d surface models generated\n", numSurfaceModels );
 	for( i = 0; i < NUM_SURFACE_TYPES; i++ )
 		if ( numSurfacesByType[ i ] )
 			Sys_Printf( "%9d %s surfaces\n", numSurfacesByType[ i ], surfaceTypes[ i ] );
@@ -4170,7 +3999,7 @@ void EmitDrawsurfsStats( void )
 {
 	if( verbose )
 		EmitDrawsurfsSimpleStats();
-	Sys_FPrintf( SYS_VRB, "%9d redundant indexes supressed, saving %d Kbytes\n", numRedundantIndexes, (numRedundantIndexes * 4 / 1024) );
+	Sys_Printf( "%9d redundant indexes supressed, saving %d Kbytes\n", numRedundantIndexes, (numRedundantIndexes * 4 / 1024) );
 }
 
 

@@ -541,7 +541,7 @@ void PatchMapDrawSurfs( entity_t *e )
 	free(group);
 	
 	/* emit some statistics */
-	Sys_FPrintf( SYS_VRB, "%9d patches\n", patchCount );
-	Sys_FPrintf( SYS_VRB, "%9d patch LOD groups\n", groupCount );
+	Sys_Printf( "%9d patches\n", patchCount );
+	Sys_Printf( "%9d patch LOD groups\n", groupCount );
 }
 

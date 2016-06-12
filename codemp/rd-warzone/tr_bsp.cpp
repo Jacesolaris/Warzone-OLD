@@ -2691,7 +2691,7 @@ void R_LoadLightGrid( lump_t *l ) {
 
 		size = ri->FS_ReadFile(filename, (void **)&hdrLightGrid);
 
-		if (hdrLightGrid)
+		if (hdrLightGrid && size)
 		{
 			float lightScale = pow(2.0f, r_mapOverBrightBits->integer - tr.overbrightBits);
 
@@ -2715,7 +2715,7 @@ void R_LoadLightGrid( lump_t *l ) {
 			}
 		}
 
-		if (hdrLightGrid)
+		if (hdrLightGrid && size)
 			ri->FS_FreeFile(hdrLightGrid);
 	}
 }

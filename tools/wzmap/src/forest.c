@@ -77,15 +77,22 @@ const char *TROPICAL_TREES[] =
 "models/warzone/trees/manfern.md3",
 };
 
+//#define __ADD_TREES_EARLY__ // Add trees to map's brush list instanty...
+
+extern void MoveBrushesToWorld( entity_t *ent );
+
+
 void GenerateMapForest ( void )
 {
 	if (generateforest)
 	{
 		int i;
 
+#if defined(__ADD_TREES_EARLY__)
 		Sys_Printf( "Adding %i trees to bsp.\n", FOLIAGE_NUM_POSITIONS );
+#endif
 		
-		for (i = 0; i < FOLIAGE_NUM_POSITIONS /*&& i < 16*/; i++)
+		for (i = 0; i < FOLIAGE_NUM_POSITIONS; i++)
 		{
 			printLabelledProgress("GenerateMapForest", i, FOLIAGE_NUM_POSITIONS);
 
@@ -110,9 +117,10 @@ void GenerateMapForest ( void )
 			numEntities++;
 			memset( mapEnt, 0, sizeof( *mapEnt ) );
 			
-			mapEnt->mapEntityNum = 0;//numMapEntities;
+			mapEnt->mapEntityNum = 0;
+			//mapEnt->mapEntityNum = numMapEntities;
 			//numMapEntities++;
-
+			
 			//mapEnt->forceSubmodel = qtrue;
 
 			VectorCopy(FOLIAGE_POSITIONS[i], mapEnt->origin);
@@ -277,8 +285,18 @@ void GenerateMapForest ( void )
 			GetVectorForKey( mapEnt, "origin", mapEnt->origin );
 			if ( mapEnt->originbrush_origin[ 0 ] || mapEnt->originbrush_origin[ 1 ] || mapEnt->originbrush_origin[ 2 ] )
 				AdjustBrushesForOrigin( mapEnt );
+
+
+#if defined(__ADD_TREES_EARLY__)
+			AddTriangleModels( 0, qtrue, qtrue );
+			EmitBrushes( mapEnt->brushes, &mapEnt->firstBrush, &mapEnt->numBrushes );
+			//MoveBrushesToWorld( mapEnt );
+			numEntities--;
+#endif
 		}
 
+#if defined(__ADD_TREES_EARLY__)
 		Sys_Printf( "Finished adding trees.\n" );
+#endif
 	}
 }

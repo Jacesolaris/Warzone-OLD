@@ -551,7 +551,7 @@ void ProcessDecals( void )
 	}
 	
 	/* emit some stats */
-	Sys_FPrintf( SYS_VRB, "%9d decal projectors\n", numProjectors );
+	Sys_Printf( "%9d decal projectors\n", numProjectors );
 }
 
 
@@ -913,9 +913,9 @@ void MakeEntityDecals( entity_t *e )
 	}
 	
 	/* print time */
-	if( numProjectors > 10 )
-		Sys_FPrintf( SYS_VRB, " (%d)\n", (int) (I_FloatTime() - start) );
+	//if( numProjectors > 10 )
+	//	Sys_FPrintf( SYS_VRB, " (%d)\n", (int) (I_FloatTime() - start) );
 	
 	/* emit some stats */
-	Sys_FPrintf( SYS_VRB, "%9d decal surfaces\n", numDecalSurfaces );
+	Sys_Printf( "%9d decal surfaces\n", numDecalSurfaces );
 }

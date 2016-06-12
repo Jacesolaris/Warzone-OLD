@@ -435,14 +435,14 @@ void PrintBSPFileSizes( void )
 	Sys_Printf( "          visibility    %9d\n",
 		numBSPVisBytes );
 
-	Sys_PrintHeadingVerbose( "--- BSP models ---\n" );
-	Sys_FPrintf( SYS_VRB, "modelno : brushes  drawsurfs  firstshader\n" );
+	Sys_PrintHeading( "--- BSP models ---\n" );
+	Sys_Printf( "modelno : brushes  drawsurfs  firstshader\n" );
 	for (i = 0; i < numBSPModels; i++)
 	{
 		m = &bspModels[i];
 		s = &bspDrawSurfaces[m->firstBSPSurface];
 		sh = &bspShaders[s->shaderNum];
-		Sys_FPrintf( SYS_VRB, "*%4i  : %4i   %4i   %s \n", i, m->numBSPBrushes, m->numBSPSurfaces, sh->shader);
+		Sys_Printf( "*%4i  : %4i   %4i   %s \n", i, m->numBSPBrushes, m->numBSPSurfaces, sh->shader);
 	}
 }
 

@@ -256,9 +256,9 @@ void NumberClusters(tree_t *tree) {
 	// set the cluster field in every leaf and count the total number of portals
 	NumberLeafs_r (tree->headnode);
 
-	Sys_FPrintf( SYS_VRB, "%9d visclusters\n", num_visclusters );
-	Sys_FPrintf( SYS_VRB, "%9d visportals\n", num_visportals );
-	Sys_FPrintf( SYS_VRB, "%9d solidfaces\n", num_solidfaces );
+	Sys_Printf( "%9d visclusters\n", num_visclusters );
+	Sys_Printf( "%9d visportals\n", num_visportals );
+	Sys_Printf( "%9d solidfaces\n", num_solidfaces );
 }
 
 /*

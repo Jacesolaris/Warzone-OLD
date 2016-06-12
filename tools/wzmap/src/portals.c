@@ -555,15 +555,15 @@ void MakeTreePortals (tree_t *tree, qboolean quiet)
 
 	if( !quiet )
 	{
-		Sys_FPrintf( SYS_VRB, "%9d tiny portals\n", c_tinyportals );
-		Sys_FPrintf( SYS_VRB, "%9d bad portals\n", c_badportals );
+		Sys_Printf( "%9d tiny portals\n", c_tinyportals );
+		Sys_Printf( "%9d bad portals\n", c_badportals );
 	}
 }
 
 void MakeTreePortalsStats( void )
 {
-	Sys_FPrintf( SYS_VRB, "%9d tiny portals\n", c_tinyportals );
-	Sys_FPrintf( SYS_VRB, "%9d bad portals\n", c_badportals );
+	Sys_Printf( "%9d tiny portals\n", c_tinyportals );
+	Sys_Printf( "%9d bad portals\n", c_badportals );
 }
 
 /*
@@ -849,7 +849,7 @@ qboolean FloodEntities( tree_t *tree, qboolean quiet )
 	
 	if( !quiet )
 	{
-		Sys_FPrintf( SYS_VRB, "%9d flooded leafs\n", c_floodedleafs );
+		Sys_Printf( "%9d flooded leafs\n", c_floodedleafs );
 		if( !inside )
 			Sys_FPrintf( SYS_VRB, "FloodEntities: no entities in open -- no filling\n" );
 		else if( tree->outside_node.occupied )
@@ -861,7 +861,7 @@ qboolean FloodEntities( tree_t *tree, qboolean quiet )
 
 void FloodEntitiesStats( void )
 {
-	Sys_FPrintf( SYS_VRB, "%9d flooded leafs\n", c_floodedleafs );
+	Sys_Printf( "%9d flooded leafs\n", c_floodedleafs );
 }
 
 /*
@@ -1044,7 +1044,7 @@ void FloodAreas( tree_t *tree )
 	/* ydnar: fix this rather than just silence the warnings */
 	//%	CheckAreas_r( tree->headnode );
 
-	Sys_FPrintf( SYS_VRB, "%9d areas\n", c_areas );
+	Sys_Printf( "%9d areas\n", c_areas );
 }
 
 
@@ -1097,9 +1097,9 @@ void FillOutside (node_t *headnode)
 
 void FillOutsideStats (void)
 {
-	Sys_FPrintf( SYS_VRB, "%9d solid leafs\n", c_solid );
+	Sys_Printf( "%9d solid leafs\n", c_solid );
 	Sys_Printf( "%9d leafs filled\n", c_outside );
-	Sys_FPrintf( SYS_VRB, "%9d inside leafs\n", c_inside );
+	Sys_Printf( "%9d inside leafs\n", c_inside );
 }
 
 //==============================================================

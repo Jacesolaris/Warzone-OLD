@@ -903,7 +903,7 @@ void RadCreateDiffuseLights( void )
 	numAreaLights = 0;
 	
 	/* hit every surface (threaded) */
-	RunThreadsOnIndividual( numBSPDrawSurfaces, qtrue, RadLight );
+	RunThreadsOnIndividual( "RadLight", numBSPDrawSurfaces, qtrue, RadLight );
 	
 	/* dump the lights generated to a file */
 	if( dump )
@@ -949,10 +949,10 @@ void RadCreateDiffuseLights( void )
 	
 	/* print counts */
 	Sys_Printf( "%8d diffuse surfaces\n", numDiffuseSurfaces );
-	Sys_FPrintf( SYS_VRB, "%8d total diffuse lights\n", numDiffuseLights );
-	Sys_FPrintf( SYS_VRB, "%8d brush diffuse lights\n", numBrushDiffuseLights );
-	Sys_FPrintf( SYS_VRB, "%8d patch diffuse lights\n", numPatchDiffuseLights );
-	Sys_FPrintf( SYS_VRB, "%8d triangle diffuse lights\n", numTriangleDiffuseLights );
+	Sys_Printf( "%8d total diffuse lights\n", numDiffuseLights );
+	Sys_Printf( "%8d brush diffuse lights\n", numBrushDiffuseLights );
+	Sys_Printf( "%8d patch diffuse lights\n", numPatchDiffuseLights );
+	Sys_Printf( "%8d triangle diffuse lights\n", numTriangleDiffuseLights );
 }
 
 

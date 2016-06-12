@@ -328,7 +328,7 @@ typedef struct {
 //=============================================================================
 
 typedef struct lump_s {
-	int		fileofs, filelen;
+	uint32_t/*int*/		fileofs, filelen;
 } lump_t;
 
 #define	LUMP_ENTITIES		0

@@ -117,7 +117,7 @@ xmlNodePtr LeakFile (tree_t *tree)
 	fprintf (linefile, "%f %f %f\n", mid[0], mid[1], mid[2]);
 	point = xml_NodeForVec(mid);
 	xmlAddChild(xml_node, point);
-	Sys_FPrintf( SYS_VRB, "%9d point linefile\n", count+1);
+	Sys_Printf( "%9d point linefile\n", count+1);
 
 	fclose (linefile);
 	

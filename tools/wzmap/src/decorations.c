@@ -757,7 +757,7 @@ void LoadDecorationScript( void )
 	}
 
 	/* emit some stats */
-	Sys_FPrintf( SYS_VRB, "%9i decoration groups\n", numDecoreGroups );
+	Sys_Printf( "%9i decoration groups\n", numDecoreGroups );
 }
 
 
@@ -907,7 +907,7 @@ void LoadFoliage( char *source )
 	}
 
 	/* emit some stats */
-	Sys_FPrintf(SYS_VRB, "%9d entities imported\n", numEntities - startEntities );
+	Sys_Printf("%9d entities imported\n", numEntities - startEntities );
 }
 
 /*
@@ -1069,7 +1069,7 @@ void LoadRtlights( void )
 	free(lightsstring);
 
 	/* emit some stats */
-	Sys_FPrintf(SYS_VRB, "%9d lights imported\n", numimported );
+	Sys_Printf("%9d lights imported\n", numimported );
 	
 	// flags for rtlight rendering
 	#undef DARKPLACES_LIGHTFLAG_NORMALMODE
@@ -1379,12 +1379,12 @@ void ProcessDecorations( void )
 	/* find all map entities */
 	Sys_PrintHeadingVerbose( "--- FindDecorationGroups ---\n" );
 	numDecoreEntities = 0;
-	RunThreadsOnIndividual(numEntities, verbose ? qtrue : qfalse, EntityPopulateDecorationGroups);
+	RunThreadsOnIndividual("FindDecorationGroups", numEntities, verbose ? qtrue : qfalse, EntityPopulateDecorationGroups);
 	for (i = 0; i < numDecoreGroups; i++)
 	{
 		group = &decoreGroups[ i ];
 		if ( group->entities.numEntities )
-			Sys_FPrintf( SYS_VRB, "%9i entities in '%s'\n", group->entities.numEntities, group->name);
+			Sys_Printf( "%9i entities in '%s'\n", group->entities.numEntities, group->name);
 	}
 	
 	/* get number of test nodes */
@@ -1407,20 +1407,20 @@ void ProcessDecorations( void )
 		/* process */
 		ProcessDecorationGroup( i );
 	}
-	Sys_Printf( " (%d)\n", (int) (I_FloatTime() - start) );
-	Sys_FPrintf( SYS_VRB, "%9i tests performed\n", numDecoreTestNodes );
+	//Sys_Printf( " (%d)\n", (int) (I_FloatTime() - start) );
+	Sys_Printf( "%9i tests performed\n", numDecoreTestNodes );
 
 	/* emit stats */
 	for ( i = 0; i < numDecoreGroups; i++ )
 	{
 		group = &decoreGroups[ i ];
 		if ( group->mergeModels )
-			Sys_FPrintf( SYS_VRB, "%9i models merged to %i in '%s'\n", group->entities.numEntities, group->mergeModels, group->name );
+			Sys_Printf( "%9i models merged to %i in '%s'\n", group->entities.numEntities, group->mergeModels, group->name );
 
 		// free group-allocated stuff
 		FreeDecoreGroup ( group );
 	}
 	free( decoreGroups );
 	numDecoreGroups = 0;
-	Sys_FPrintf( SYS_VRB, "%9i large models pushed to worldspawn\n", numDecoreEntitiesPushedToWorldspawn );
+	Sys_Printf( "%9i large models pushed to worldspawn\n", numDecoreEntitiesPushedToWorldspawn );
 }

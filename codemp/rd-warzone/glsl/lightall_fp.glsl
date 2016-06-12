@@ -438,7 +438,8 @@ vec4 GetDiffuse(vec2 texCoords, vec2 ParallaxOffset, float pixRandom)
 	if (u_Local6.g > 0.0 && m_vertPos.z <= WATER_LEVEL + 128.0 + (64.0 * pixRandom))
 	{// Steep maps (water edges)...
 		float mixVal = ((WATER_LEVEL + 128.0) - m_vertPos.z) / 128.0;
-		const float scale = 0.01;
+		//const float scale = 0.01;
+		const float scale = 0.0075;
 
 		vec4 tex1 = GetMap(u_SteepMap2, scale, ParallaxOffset, FAKE_MAP_NONE);
 		float a1 = 0.0;
@@ -468,9 +469,11 @@ vec4 GetDiffuse(vec2 texCoords, vec2 ParallaxOffset, float pixRandom)
 	}
 	else if (u_Local5.a > 0.0 && var_Slope > 0)
 	{// Steep maps (high angles)...
-#if 1
 		const float scale = 0.0025;
 
+#if 1
+		return GetMap(u_SteepMap, scale, ParallaxOffset, FAKE_MAP_NONE);
+#else // TODO: Add more _steep's and rename beach _steep to _beach
 		if (u_Local7.r <= 0.0 && u_Local7.g <= 0.0 && u_Local7.b <= 0.0 && u_Local7.a <= 0.0)
 		{// No splat maps...
 			return GetMap(u_SteepMap, scale, ParallaxOffset, FAKE_MAP_NONE);
@@ -485,30 +488,12 @@ vec4 GetDiffuse(vec2 texCoords, vec2 ParallaxOffset, float pixRandom)
 			a1 = GetMap(u_NormalMap2, scale, ParallaxOffset, FAKE_MAP_NORMALMAP2).a;//GetMap(u_NormalMap2, scale, ParallaxOffset).a;
 
 		return GetSplatMap(texCoords, ParallaxOffset, pixRandom, tex, a1);
-#else // Procedural rock color testing
-		//const float scale = 0.0025;
-		//vec4 tex = GetMap(u_SteepMap, scale, ParallaxOffset, FAKE_MAP_NONE);
-		//float a1 = 0.0;
-		
-		//vec4 nor = ConvertToNormals(tex);
-		vec4 nor = vec4(m_Normal.xyz, 1.0 - (length(m_Normal.xyz) / 3.0));
-
-		// Base rock
-		vec3 color = mix( vec3(0.4, 0.1, 0.0), vec3(0.7, 0.6, 0.3), step(0.9, nor.y) );
-		
-		// Layer noise
-		float n = 0.5*(randZeroOne()+1.0);
-		color = mix( vec3(0.6, 0.5, 0.4), color, n*smoothstep(0.0, 0.7, 1.0-nor.y) );
-		
-        // Sand on top
-        color = mix(color, vec3(0.7, 0.6, 0.3), smoothstep(0.0, 0.2, nor.y-0.8));
-
-		return vec4(color, 1.0);
 #endif
 	}
 	else if (u_Local5.a > 0.0)
 	{// Steep maps (low angles)...
-		const float scale = 0.01;
+		//const float scale = 0.01;
+		const float scale = 0.0075;
 
 		if (u_Local7.r <= 0.0 && u_Local7.g <= 0.0 && u_Local7.b <= 0.0 && u_Local7.a <= 0.0)
 		{// No splat maps...
@@ -541,7 +526,8 @@ vec4 GetNormal(vec2 texCoords, vec2 ParallaxOffset, float pixRandom)
 	if (u_Local6.g > 0.0 && m_vertPos.z <= WATER_LEVEL + 128.0 + (64.0 * pixRandom))
 	{// Steep maps (water edges)...
 		float mixVal = ((WATER_LEVEL + 128.0) - m_vertPos.z) / 128.0;
-		const float scale = 0.01;
+		//const float scale = 0.01;
+		const float scale = 0.0075;
 
 		vec4 tex1 = GetMap(u_NormalMap3, scale, ParallaxOffset, FAKE_MAP_NORMALMAP3);
 		float a1 = tex1.a;
@@ -554,11 +540,12 @@ vec4 GetNormal(vec2 texCoords, vec2 ParallaxOffset, float pixRandom)
 	else if (u_Local5.a > 0.0 && var_Slope > 0)
 	{// Steep maps (high angles)...
 		const float scale = 0.0025;
-		return GetMap(u_NormalMap2, scale, ParallaxOffset, FAKE_MAP_NORMALMAP2);//GetMap(u_NormalMap2, scale, ParallaxOffset);
+		return GetMap(u_NormalMap2, scale, ParallaxOffset, FAKE_MAP_NORMALMAP2);
 	}
 	else if (u_Local5.a > 0.0)
 	{// Steep maps (normal angles)...
-		const float scale = 0.01;
+		const float scale = 0.0075;
+		//const float scale = 0.01;
 		return GetMap(u_NormalMap, scale, ParallaxOffset, FAKE_MAP_NORMALMAP);
 	}
 	else
@@ -764,7 +751,7 @@ void main()
 
 
 	#ifdef USE_OVERLAY
-		if (u_Local4.a > 0.0)
+		if (u_Local4.a > 0.0 && !(u_Local5.a > 0.0 && var_Slope > 0) && !(u_Local6.g > 0.0 && m_vertPos.z <= WATER_LEVEL + 128.0 + (64.0 * pixRandom)))
 		{// Sway...
 			texCoords += vec2(u_Local5.y * u_Local4.a * ((1.0 - m_TexCoords.y) + 1.0), 0.0);
 		}
@@ -879,9 +866,9 @@ void main()
 		// Overlay Maps...
 		//
 
-		#define OVERLAY_HEIGHT 40.0
+		#define OVERLAY_HEIGHT 5.0
 
-		if (u_Local5.x > 0.0)
+		if (u_Local5.x > 0.0 && !(u_Local5.a > 0.0 && var_Slope > 0) && !(u_Local6.g > 0.0 && m_vertPos.z <= WATER_LEVEL + 128.0 + (64.0 * pixRandom)))
 		{// Have overlay map...
 			vec2 ovCoords = m_TexCoords.xy + vec2(u_Local5.y); // u_Local5.y == sway ammount
 			vec4 overlay = texture2D(u_OverlayMap, ovCoords);
@@ -936,16 +923,10 @@ void main()
 #endif //defined(USE_TESSELLATION)
 		lightColor /= max(surfNL, 0.25);
 		ambientColor = clamp(ambientColor - lightColor * surfNL, 0.0, 1.0);
-
+		lightColor *= lightmapColor.rgb;
 	#endif //defined(USE_LIGHTMAP)
   
-
-		#if defined(USE_LIGHTMAP)
-			lightColor *= lightmapColor.rgb;
-		#endif
-
-
-		gl_FragColor = vec4 (diffuse.rgb * lightColor, diffuse.a * var_Color.a);
+		gl_FragColor = vec4 ((diffuse.rgb * lightColor) + (diffuse.rgb * ambientColor), diffuse.a * var_Color.a);
 
 		if (u_Local1.a == 19 || u_Local1.a == 20)
 		{// Tree billboards... Need to match tree colors...

@@ -1409,6 +1409,7 @@ static void ParseShaderFile( const char *filename )
 			{
 				si->compileFlags |= (C_SOLID /*| C_STRUCTURAL*/);
 				//Sys_Printf("Setting %s as solid.\n", si->shader);
+				si->isTreeSolid = qtrue;
 			}
 
 #ifdef ___SHADER_GENERATOR___

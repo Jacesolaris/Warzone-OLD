@@ -240,6 +240,8 @@ void SmoothNormals( void )
 	   and set per-vertex smoothing angle */
 	for( i = 0; i < numBSPDrawSurfaces; i++ )
 	{
+		printLabelledProgress("NonLightmapFlags", i, numBSPDrawSurfaces);
+
 		/* get drawsurf */
 		ds = &bspDrawSurfaces[ i ];
 		si = surfaceInfos[ i ].si;
@@ -287,14 +289,8 @@ void SmoothNormals( void )
 	/* go through the list of vertexes */
 	for( i = 0; i < numBSPDrawVerts; i++ )
 	{
-		/* print pacifier */
-		f = 10 * i / numBSPDrawVerts;
-		if( f != fOld )
-		{
-			fOld = f;
-			Sys_Printf( "%i...", f );
-		}
-		
+		printLabelledProgress("SmoothNormals", i, numBSPDrawSurfaces);
+
 		/* already smoothed? */
 		if( smoothed[ i >> 3 ] & (1 << (i & 7)) )
 			continue;
@@ -376,7 +372,7 @@ void SmoothNormals( void )
 	free( smoothed );
 	
 	/* print time */
-	Sys_Printf( " (%i)\n", (int) (I_FloatTime() - start) );
+	//Sys_Printf( " (%i)\n", (int) (I_FloatTime() - start) );
 }
 
 
@@ -1896,17 +1892,17 @@ void SetupDirt( void )
 	/* emit some statistics */
 	if (dirtSettings[0].enabled)
 	{
-		Sys_FPrintf( SYS_VRB, "World mode = %s\n", DirtModeName(&dirtSettings[0].mode) );
-		Sys_FPrintf( SYS_VRB, "Filter mode = %s\n", DirtFilterName(&dirtSettings[0].filter) );
-		Sys_FPrintf( SYS_VRB, "Gain mask = ( %1.1f %1.1f %1.1f )\n", dirtSettings[0].gainMask[0], dirtSettings[0].gainMask[1], dirtSettings[0].gainMask[2] );
-		Sys_FPrintf( SYS_VRB, "Scale mask = %1.1f %1.1f %1.1f )\n", dirtSettings[0].scaleMask[0], dirtSettings[0].scaleMask[1], dirtSettings[0].scaleMask[2] );
-		Sys_FPrintf( SYS_VRB, "%9d vectors\n", dirtSettings[0].numVectors );
-		Sys_FPrintf( SYS_VRB, "%9.1f depth\n", dirtSettings[0].depth );
-		Sys_FPrintf( SYS_VRB, "%9.1f depth exponent\n", dirtSettings[0].depthExponent );
-		Sys_FPrintf( SYS_VRB, "%9.2f gain\n", dirtSettings[0].gain );
-		Sys_FPrintf( SYS_VRB, "%9.2f scale\n", dirtSettings[0].scale );
+		Sys_Printf( "World mode = %s\n", DirtModeName(&dirtSettings[0].mode) );
+		Sys_Printf( "Filter mode = %s\n", DirtFilterName(&dirtSettings[0].filter) );
+		Sys_Printf( "Gain mask = ( %1.1f %1.1f %1.1f )\n", dirtSettings[0].gainMask[0], dirtSettings[0].gainMask[1], dirtSettings[0].gainMask[2] );
+		Sys_Printf( "Scale mask = %1.1f %1.1f %1.1f )\n", dirtSettings[0].scaleMask[0], dirtSettings[0].scaleMask[1], dirtSettings[0].scaleMask[2] );
+		Sys_Printf( "%9d vectors\n", dirtSettings[0].numVectors );
+		Sys_Printf( "%9.1f depth\n", dirtSettings[0].depth );
+		Sys_Printf( "%9.1f depth exponent\n", dirtSettings[0].depthExponent );
+		Sys_Printf( "%9.2f gain\n", dirtSettings[0].gain );
+		Sys_Printf( "%9.2f scale\n", dirtSettings[0].scale );
 	}
-	Sys_FPrintf( SYS_VRB, "%9i entities with custom dirtmapping\n", numDirtEntities );
+	Sys_Printf( "%9i entities with custom dirtmapping\n", numDirtEntities );
 }
 
 
@@ -3540,12 +3536,12 @@ void WriteRawLightmapsFile( const char *outFile )
 	}
 
 	/* print time */
-	Sys_Printf (" (%d)\n", (int) (I_FloatTime() - start) );
+	//Sys_Printf (" (%d)\n", (int) (I_FloatTime() - start) );
 
 	/* emit some statistics */
-	Sys_FPrintf( SYS_VRB, "%9d objects\n", addedDrawSurfaces );
-	Sys_FPrintf( SYS_VRB, "%9d triangles\n", addedDrawTriangles );
-	Sys_FPrintf( SYS_VRB, "%9d verts\n", addedDrawVerts );
+	Sys_Printf( "%9d objects\n", addedDrawSurfaces );
+	Sys_Printf( "%9d triangles\n", addedDrawTriangles );
+	Sys_Printf( "%9d verts\n", addedDrawVerts );
 
 	/* close the file and return */
 	fclose( ase );
@@ -3987,6 +3983,8 @@ void SetupBrushes( void )
 	/* walk the list of worldspawn brushes */
 	for( i = 0; i < bspModels[ 0 ].numBSPBrushes; i++ )
 	{
+		printLabelledProgress("SetupBrushes", i, bspModels[ 0 ].numBSPBrushes);
+
 		/* get brush */
 		b = bspModels[ 0 ].firstBSPBrush + i;
 		brush = &bspBrushes[ b ];
@@ -4019,7 +4017,7 @@ void SetupBrushes( void )
 	}
 	
 	/* emit some statistics */
-	Sys_FPrintf( SYS_VRB, "%9d opaque brushes\n", numOpaqueBrushes );
+	Sys_Printf( "%9d opaque brushes\n", numOpaqueBrushes );
 }
 
 
@@ -4885,7 +4883,7 @@ void SetupFloodLight( void )
 	}
 	
 	/* emit some statistics */
-	Sys_FPrintf( SYS_VRB, "%9d numFloodVectors\n", numFloodVectors );
+	Sys_Printf( "%9d numFloodVectors\n", numFloodVectors );
 
     /* floodlight */
 	value = ValueForKey( &entities[ 0 ], "_floodlight" );
@@ -5215,6 +5213,6 @@ void FloodlightRawLightmaps(void)
 {
 	Sys_PrintHeading ( "--- FloodlightRawLightmap ---\n" );
 	numSurfacesFloodlighten = 0;
-	RunThreadsOnIndividual( numRawLightmaps, qtrue, FloodLightRawLightmap );
+	RunThreadsOnIndividual( "FloodLightRawLightmap", numRawLightmaps, qtrue, FloodLightRawLightmap );
 	Sys_Printf( "%9d custom lightmaps floodlighted\n", numSurfacesFloodlighten );
 }

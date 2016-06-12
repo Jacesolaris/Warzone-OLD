@@ -689,9 +689,9 @@ void FixTJunctions( entity_t *ent )
 		e->dv[ 0 ]->lightmap[ 0 ][ 0 ] = AddEdge( e->dv[ 0 ]->xyz, e->dv[ 1 ]->xyz, qtrue );
 	}
 
-	Sys_FPrintf( SYS_VRB, "%9d axial edge lines\n", axialEdgeLines );
-	Sys_FPrintf( SYS_VRB, "%9d non-axial edge lines\n", numEdgeLines - axialEdgeLines );
-	Sys_FPrintf( SYS_VRB, "%9d degenerate edges\n", c_degenerateEdges );
+	Sys_Printf( "%9d axial edge lines\n", axialEdgeLines );
+	Sys_Printf( "%9d non-axial edge lines\n", numEdgeLines - axialEdgeLines );
+	Sys_Printf( "%9d degenerate edges\n", c_degenerateEdges );
 
 	// insert any needed vertexes
 	for( i = ent->firstDrawSurf; i < numMapDrawSurfs ; i++ )
@@ -722,10 +722,10 @@ void FixTJunctions( entity_t *ent )
 	}
 	
 	/* emit some statistics */
-	Sys_FPrintf( SYS_VRB, "%9d verts added for T-junctions\n", c_addedVerts );
-	Sys_FPrintf( SYS_VRB, "%9d total verts\n", c_totalVerts );
-	Sys_FPrintf( SYS_VRB, "%9d naturally ordered\n", c_natural );
-	Sys_FPrintf( SYS_VRB, "%9d rotated orders\n", c_rotate );
-	Sys_FPrintf( SYS_VRB, "%9d can't order\n", c_cant );
-	Sys_FPrintf( SYS_VRB, "%9d broken (degenerate) surfaces removed\n", c_broken );
+	Sys_Printf( "%9d verts added for T-junctions\n", c_addedVerts );
+	Sys_Printf( "%9d total verts\n", c_totalVerts );
+	Sys_Printf( "%9d naturally ordered\n", c_natural );
+	Sys_Printf( "%9d rotated orders\n", c_rotate );
+	Sys_Printf( "%9d can't order\n", c_cant );
+	Sys_Printf( "%9d broken (degenerate) surfaces removed\n", c_broken );
 }

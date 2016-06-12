@@ -26,10 +26,10 @@ extern int numthreads;
 void ThreadSetDefault (void);
 void ThreadStats (void);
 int	 GetThreadWork (void);
-void RunThreadsOnIndividual (int workcnt, qboolean showpacifier, void(*func)(int));
-void RunThreadsOn (int workcnt, qboolean showpacifier, void(*func)(int));
-void RunSameThreadOn(int workcnt, qboolean showpacifier, void(*threadfunc)(int));
-void RunSameThreadOnIndividual(int workcnt, qboolean showpacifier, void(*threadfunc)(int));
+void RunThreadsOnIndividual (char *label, int workcnt, qboolean showpacifier, void(*func)(int));
+void RunThreadsOn (char *label, int workcnt, qboolean showpacifier, void(*func)(int));
+void RunSameThreadOn(char *label, int workcnt, qboolean showpacifier, void(*threadfunc)(int));
+void RunSameThreadOnIndividual(char *label, int workcnt, qboolean showpacifier, void(*threadfunc)(int));
 void ThreadLock (void);
 void ThreadUnlock (void);
 

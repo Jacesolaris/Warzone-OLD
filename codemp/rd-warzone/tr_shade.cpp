@@ -1889,7 +1889,10 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				index |= LIGHTDEF_USE_SHADOWMAP;
 			}
 			
-			if (r_lightmap->integer && ( tess.shader->surfaceFlags & MATERIAL_MASK ) != MATERIAL_DRYLEAVES && !tess.shader->isSky && !pStage->glow)
+			if (r_lightmap->integer 
+				&& ( tess.shader->surfaceFlags & MATERIAL_MASK ) != MATERIAL_DRYLEAVES 
+				&& ( tess.shader->surfaceFlags & MATERIAL_MASK ) != MATERIAL_GREENLEAVES 
+				&& !tess.shader->isSky && !pStage->glow)
 			{
 				index = LIGHTDEF_USE_LIGHTMAP;
 			}
@@ -2471,6 +2474,8 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 					if (pStage->bundle[TB_LIGHTMAP].image[0])
 						R_BindAnimatedImageToTMU( &pStage->bundle[TB_LIGHTMAP], TB_LIGHTMAP);
+					else
+						GL_BindToTMU( tr.whiteImage, TB_LIGHTMAP );
 
 					// bind textures that are sampled and used in the glsl shader, and
 					// bind whiteImage to textures that are sampled but zeroed in the glsl shader

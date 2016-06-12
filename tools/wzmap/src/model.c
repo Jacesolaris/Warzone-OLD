@@ -222,9 +222,16 @@ InsertModel() - ydnar
 adds a picomodel into the bsp
 */
 
+float Distance(vec3_t pos1, vec3_t pos2)
+{
+	vec3_t vLen;
+	VectorSubtract( pos1, pos2, vLen );
+	return VectorLength( vLen );
+}
+
 extern void LoadShaderImages( shaderInfo_t *si );
 
-void InsertModel( char *name, int frame, int skin, m4x4_t transform, float uvScale, remap_t *remap, shaderInfo_t *celShader, int entityNum, int mapEntityNum, char castShadows, char recvShadows, int spawnFlags, float lightmapScale, vec3_t lightmapAxis, vec3_t minlight, vec3_t minvertexlight, vec3_t ambient, vec3_t colormod, float lightmapSampleSize, int shadeAngle, int vertTexProj, qboolean noAlphaFix, float pushVertexes, qboolean skybox, int *added_surfaces, int *added_verts, int *added_triangles, int *added_brushes )
+void InsertModel( char *name, int frame, int skin, m4x4_t transform, float uvScale, remap_t *remap, shaderInfo_t *celShader, int entityNum, int mapEntityNum, char castShadows, char recvShadows, int spawnFlags, float lightmapScale, vec3_t lightmapAxis, vec3_t minlight, vec3_t minvertexlight, vec3_t ambient, vec3_t colormod, float lightmapSampleSize, int shadeAngle, int vertTexProj, qboolean noAlphaFix, float pushVertexes, qboolean skybox, int *added_surfaces, int *added_verts, int *added_triangles, int *added_brushes, qboolean cullSmallSolids )
 {
 	int					i, j, k, s, numSurfaces;
 	m4x4_t				identity, nTransform;
@@ -242,6 +249,7 @@ void InsertModel( char *name, int frame, int skin, m4x4_t transform, float uvSca
 	double				normalEpsilon_save;
 	double				distanceEpsilon_save;
 	vec3_t				forceVecs[ 2 ];
+	float				top = -99999, bottom = 99999;
 	
 	/* get model */
 	model = LoadModel( name, frame );
@@ -268,6 +276,34 @@ void InsertModel( char *name, int frame, int skin, m4x4_t transform, float uvSca
 
 	/* each surface on the model will become a new map drawsurface */
 	numSurfaces = PicoGetModelNumSurfaces( model );
+
+	for( s = 0; s < numSurfaces; s++ )
+	{
+		/* get surface */
+		surface = PicoGetModelSurface( model, s );
+
+		if( surface == NULL )
+			continue;
+
+		/* only handle triangle surfaces initially (fixme: support patches) */
+		if( PicoGetSurfaceType( surface ) != PICO_TRIANGLES )
+			continue;
+		
+		/* copy vertexes */
+		for( i = 0; i < PicoGetSurfaceNumVertexes( surface ); i++ )
+		{
+			vec3_t xyz2;
+			/* xyz and normal */
+			xyz = PicoGetSurfaceXYZ( surface, i );
+			VectorCopy( xyz, xyz2 );
+			m4x4_transform_point( transform, xyz2 );
+
+			if (top < xyz2[2]) top = xyz2[2];
+			if (bottom > xyz2[2]) bottom = xyz2[2];
+		}
+	}
+
+	//Sys_Printf("top: %f. bottom: %f.\n", top, bottom);
 
 	//Sys_Printf( "Model %s has %d surfaces\n", name, numSurfaces );
 
@@ -424,7 +460,7 @@ void InsertModel( char *name, int frame, int skin, m4x4_t transform, float uvSca
 			xyz = PicoGetSurfaceXYZ( surface, i );
 			VectorCopy( xyz, dv->xyz );
 			m4x4_transform_point( transform, dv->xyz );
-			
+
 			normal = PicoGetSurfaceNormal( surface, i );
 			VectorCopy( normal, dv->normal );
 			m4x4_transform_normal( nTransform, dv->normal );
@@ -498,6 +534,22 @@ void InsertModel( char *name, int frame, int skin, m4x4_t transform, float uvSca
 		
 		/* set cel shader */
 		ds->celShader = celShader;
+
+		/* walk triangle list */
+		for( i = 0; i < ds->numIndexes; i += 3 )
+		{
+			vec3_t points[ 4 ];
+
+			/* make points and back points */
+			for( j = 0; j < 3; j++ )
+			{
+				/* get vertex */
+				dv = &ds->verts[ ds->indexes[ i + j ] ];
+
+				/* copy xyz */
+				VectorCopy( dv->xyz, points[ j ] );
+			}
+		}
 
 		/* ydnar: giant hack land: generate clipping brushes for model triangles */
 		if( ( si->clipModel || (spawnFlags & 2)) && !noclipmodel )	/* 2nd bit */
@@ -603,7 +655,7 @@ void InsertModel( char *name, int frame, int skin, m4x4_t transform, float uvSca
 					}
 
 					/* build a brush */
-					buildBrush = AllocBrush( 48 );
+					buildBrush = AllocBrush( 24/*48*/ ); // UQ1: 48 seems to be more then is used... Wasting memory...
 					buildBrush->entityNum = mapEntityNum;
 					buildBrush->mapEntityNum = mapEntityNum;
 					buildBrush->original = buildBrush;
@@ -646,12 +698,60 @@ void InsertModel( char *name, int frame, int skin, m4x4_t transform, float uvSca
 							PlaneFromPoints( pb, points[ 1 ], points[ 0 ], backs[ 0 ] ) &&
 							PlaneFromPoints( pc, points[ 0 ], points[ 2 ], backs[ 2 ] ) )
 					{
+						//Sys_Printf("top: %f. bottom: %f.\n", top, bottom);
+
+						if (cullSmallSolids || si->isTreeSolid)
+						{
+							vec3_t mins, maxs;
+							vec3_t size;
+							float sz;
+							int z;
+							
+							VectorSet(mins, 99999, 99999, 99999);
+							VectorSet(maxs, -99999, -99999, -99999);
+
+							for (z = 0; z < 4; z++)
+							{
+								if (points[z][0] < mins[0]) mins[0] = points[z][0];
+								if (points[z][1] < mins[1]) mins[1] = points[z][1];
+								if (points[z][2] < mins[2]) mins[2] = points[z][2];
+
+								if (points[z][0] > maxs[0]) maxs[0] = points[z][0];
+								if (points[z][1] > maxs[1]) maxs[1] = points[z][1];
+								if (points[z][2] > maxs[2]) maxs[2] = points[z][2];
+							}
+
+
+							if (top != -99999 && bottom != -99999)
+							{
+								float s = top - bottom;
+								float newtop = bottom + (s / 2.0);
+
+								//Sys_Printf("newtop: %f. top: %f. bottom: %f. mins: %f. maxs: %f.\n", newtop, top, bottom, mins[2], maxs[2]);
+
+								if (mins[2] > newtop)
+								{
+									//Sys_Printf("CULLED: %f > %f.\n", maxs[2], newtop);
+									continue;
+								}
+							}
+
+							VectorSubtract(maxs, mins, size);
+							sz = VectorLength(size);
+
+							if (sz < 32)
+							{
+								free(buildBrush);
+								continue;
+							}
+						}
+
 						/* set up brush sides */
 						buildBrush->numsides = 5;
 						buildBrush->sides[ 0 ].shaderInfo = si;
 						for( j = 1; j < buildBrush->numsides; j++ )
 							buildBrush->sides[ j ].shaderInfo = NULL; // don't emit these faces as draw surfaces, should make smaller BSPs; hope this works
-
+						
 						buildBrush->sides[ 0 ].planenum = FindFloatPlane( plane, plane[ 3 ], 3, points );
 						buildBrush->sides[ 1 ].planenum = FindFloatPlane( pa, pa[ 3 ], 2, &points[ 1 ] ); // pa contains points[1] and points[2]
 						buildBrush->sides[ 2 ].planenum = FindFloatPlane( pb, pb[ 3 ], 2, &points[ 0 ] ); // pb contains points[0] and points[1]
@@ -761,9 +861,11 @@ AddTriangleModels()
 adds misc_model surfaces to the bsp
 */
 
-void AddTriangleModels( int entityNum )
+void AddTriangleModels( int entityNum, qboolean quiet, qboolean cullSmallSolids )
 {
-	int				num, frame, skin, spawnFlags, added_surfaces = 0, added_triangles = 0, added_verts = 0, added_brushes = 0;
+	int				added_surfaces = 0, added_triangles = 0, added_verts = 0, added_brushes = 0;
+	int				total_added_surfaces = 0, total_added_triangles = 0, total_added_verts = 0, total_added_brushes = 0;
+	int				num, frame, skin, spawnFlags;
 	char			castShadows, recvShadows;
 	entity_t		*e, *e2;
 	const char		*targetName;
@@ -781,7 +883,7 @@ void AddTriangleModels( int entityNum )
 	char			*split;
 	
 	/* note it */
-	Sys_PrintHeadingVerbose( "--- AddTriangleModels ---\n" );
+	if (!quiet) Sys_PrintHeadingVerbose( "--- AddTriangleModels ---\n" );
 	
 	/* get current brush entity targetname */
 	e = &entities[ entityNum ];
@@ -821,7 +923,7 @@ void AddTriangleModels( int entityNum )
 	/* walk the entity list */
 	for( num = 1; num < numEntities; num++ )
 	{
-		printLabelledProgress("AddTriangleModels", num, numEntities);
+		if (!quiet) printLabelledProgress("AddTriangleModels", num, numEntities);
 
 		/* get e2 */
 		e2 = &entities[ num ];
@@ -992,9 +1094,16 @@ void AddTriangleModels( int entityNum )
 		pushVertexes += FloatForKey( e2, "_pv2" ); // vortex: set by decorator
 
 		/* insert the model */
-		InsertModel( (char*) model, frame, skin, transform, uvScale, remap, celShader, entityNum, e2->mapEntityNum, castShadows, recvShadows, spawnFlags, lightmapScale, lightmapAxis, minlight, minvertexlight, ambient, colormod, 0, smoothNormals, vertTexProj, noAlphaFix, pushVertexes, skybox, &added_surfaces, &added_triangles, &added_verts, &added_brushes );
+		InsertModel( (char*) model, frame, skin, transform, uvScale, remap, celShader, entityNum, e2->mapEntityNum, castShadows, recvShadows, spawnFlags, lightmapScale, lightmapAxis, minlight, minvertexlight, ambient, colormod, 0, smoothNormals, vertTexProj, noAlphaFix, pushVertexes, skybox, &added_surfaces, &added_triangles, &added_verts, &added_brushes, cullSmallSolids );
 
 		//Sys_Printf( "insert model: %s. added_surfaces: %i. added_triangles: %i. added_verts: %i. added_brushes: %i.\n", model, added_surfaces, added_triangles, added_verts, added_brushes );
+
+		total_added_surfaces += added_surfaces;
+		total_added_triangles += added_triangles;
+		total_added_verts += added_verts;
+		total_added_brushes += added_brushes;
+
+		added_surfaces = added_triangles = added_verts = added_brushes = 0;
 		
 		/* free shader remappings */
 		while( remap != NULL )
@@ -1005,9 +1114,12 @@ void AddTriangleModels( int entityNum )
 		}
 	}
 
-	/* emit some stats */
-	Sys_FPrintf( SYS_VRB, "%9d surfaces added\n", added_surfaces );
-	Sys_FPrintf( SYS_VRB, "%9d triangles added\n", added_triangles );
-	Sys_FPrintf( SYS_VRB, "%9d vertexes added\n", added_verts );
-	Sys_FPrintf( SYS_VRB, "%9d brushes added\n", added_brushes );
+	if (!quiet) 
+	{
+		/* emit some stats */
+		Sys_Printf( "%9d surfaces added\n", total_added_surfaces );
+		Sys_Printf( "%9d triangles added\n", total_added_triangles );
+		Sys_Printf( "%9d vertexes added\n", total_added_verts );
+		Sys_Printf( "%9d brushes added\n", total_added_brushes );
+	}
 }

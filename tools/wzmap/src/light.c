@@ -1919,7 +1919,7 @@ void FinishIlluminateGrid( void )
 	for (i = 0; i < numFloodPasses; i++)
 	{
 		gridPointsFlooded = 0;
-		RunThreadsOnIndividual( numRawGridPoints, qfalse, FloodGridPoint );
+		RunThreadsOnIndividual( "FinishIlluminateGrid", numRawGridPoints, qfalse, FloodGridPoint );
 		totalFlooded += gridPointsFlooded;
 
 		/* early out (all points was flooded) */
@@ -1928,10 +1928,10 @@ void FinishIlluminateGrid( void )
 	}
 	
 	/* print stats */
-	Sys_FPrintf( SYS_VRB, "%9d flood passes\n", i );
-	Sys_FPrintf( SYS_VRB, "%9d points illuminated\n", gridPointsIlluminated );
-	Sys_FPrintf( SYS_VRB, "%9d points occluded\n", gridPointsOccluded );
-	Sys_FPrintf( SYS_VRB, "%9d points flooded\n", totalFlooded );
+	Sys_Printf( "%9d flood passes\n", i );
+	Sys_Printf( "%9d points illuminated\n", gridPointsIlluminated );
+	Sys_Printf( "%9d points occluded\n", gridPointsOccluded );
+	Sys_Printf( "%9d points flooded\n", totalFlooded );
 }
 
 /*
@@ -1953,9 +1953,9 @@ void IlluminateGrid( void )
 	gridPointsFlooded = 0;
 	gridSampleLightmap = qfalse;
 #ifdef GRID_BLOCK_OPTIMIZATION
-	RunThreadsOnIndividual( numGridBlocks, qtrue, IlluminateGridBlock );
+	RunThreadsOnIndividual( "IlluminateGrid", numGridBlocks, qtrue, IlluminateGridBlock );
 #else
-	RunThreadsOnIndividual( numRawGridPoints, qtrue, IlluminateGridPointOld );
+	RunThreadsOnIndividual( "IlluminateGrid", numRawGridPoints, qtrue, IlluminateGridPointOld );
 #endif
 
 	/* postprocess */
@@ -1983,9 +1983,9 @@ void IlluminateGridByLightmap( void )
 	gridPointsFlooded = 0;
 	gridSampleLightmap = true;
 #ifdef GRID_BLOCK_OPTIMIZATION
-	RunThreadsOnIndividual( numGridBlocks, qtrue, IlluminateGridBlock );
+	RunThreadsOnIndividual( "IlluminateGridByLightmap", numGridBlocks, qtrue, IlluminateGridBlock );
 #else
-	RunThreadsOnIndividual( numRawGridPoints, qtrue, IlluminateGridPointOld );
+	RunThreadsOnIndividual( "IlluminateGridByLightmap", numRawGridPoints, qtrue, IlluminateGridPointOld );
 #endif
 
 	/* postprocess */
@@ -2053,8 +2053,8 @@ void SetupGrid( void )
 	
 	/* print stats */
 	Sys_Printf( "Grid point size = { %1.0f, %1.0f, %1.0f }\n", gridSize[ 0 ], gridSize[ 1 ], gridSize[ 2 ] );
-	Sys_FPrintf( SYS_VRB, "Grid dimensions = %ix%ix%i\n", gridBounds[ 0 ], gridBounds[ 1 ], gridBounds[ 2 ] );
-	Sys_FPrintf( SYS_VRB, "Grid block = %ix%ix%i (total %ix%ix%i, %i points per block)\n", gridBlockSize[ 0 ], gridBlockSize[ 1 ], gridBlockSize[ 2 ], gridBlocks[ 0 ], gridBlocks[ 1 
+	Sys_Printf( "Grid dimensions = %ix%ix%i\n", gridBounds[ 0 ], gridBounds[ 1 ], gridBounds[ 2 ] );
+	Sys_Printf( "Grid block = %ix%ix%i (total %ix%ix%i, %i points per block)\n", gridBlockSize[ 0 ], gridBlockSize[ 1 ], gridBlockSize[ 2 ], gridBlocks[ 0 ], gridBlocks[ 1 
 
 ], gridBlocks[ 2 ], gridBlockSize[ 0 ] * gridBlockSize[ 1 ] * gridBlockSize[ 2 ] );
 
@@ -2093,6 +2093,8 @@ void SetupGrid( void )
 	gridPointsMapped = 0;
 	for( i = 0; i < numRawGridPoints; i++ )
 	{
+		printLabelledProgress("SetupGrid", i, numRawGridPoints);
+
 		/* set ambient color */
 		VectorCopy( ambientColor, rawGridPoints[ i ].ambient[ j ] );
 		rawGridPoints[ i ].styles[ 0 ] = LS_NORMAL;
@@ -2138,9 +2140,9 @@ void SetupGrid( void )
 	}
 	
 	/* note it */
-	Sys_FPrintf( SYS_VRB, "%9d grid areas\n", numGridAreas );
-	Sys_FPrintf( SYS_VRB, "%9d grid blocks\n", numGridBlocks );
-	Sys_FPrintf( SYS_VRB, "%9d grid points\n", numRawGridPoints );
+	Sys_Printf( "%9d grid areas\n", numGridAreas );
+	Sys_Printf( "%9d grid blocks\n", numGridBlocks );
+	Sys_Printf( "%9d grid points\n", numRawGridPoints );
 	Sys_Printf( "%9d grid points mapped (%.2f percent)\n", gridPointsMapped, ((float)gridPointsMapped / numRawGridPoints) * 100 );
 	if( gridSuperSample >= 2 )
 		Sys_Printf( "%9d grid points sampled\n", gridPointsMapped * gridSuperSample * gridSuperSample * gridSuperSample );
@@ -2395,7 +2397,7 @@ minGridLight[ 2 ] ) )
 	
 	/* map the world luxels */
 	Sys_PrintHeading ( "--- MapRawLightmap ---\n" );
-	RunThreadsOnIndividual( numRawLightmaps, qtrue, MapRawLightmap );
+	RunThreadsOnIndividual( "MapRawLightmap", numRawLightmaps, qtrue, MapRawLightmap );
 	Sys_Printf( "%9d luxels\n", numLuxels );
 	Sys_Printf( "%9d luxels mapped\n", numLuxelsMapped );
 	Sys_Printf( "%9d luxels remapped\n", numLuxelsRemapped );
@@ -2406,7 +2408,7 @@ minGridLight[ 2 ] ) )
 	if( !gridOnly && dirty )
 	{
 		Sys_PrintHeading ( "--- DirtyRawLightmap ---\n" );
-		RunThreadsOnIndividual( numRawLightmaps, qtrue, DirtyRawLightmap );
+		RunThreadsOnIndividual( "DirtyRawLightmap", numRawLightmaps, qtrue, DirtyRawLightmap );
 	}
 
 	/* floodlight pass */
@@ -2428,13 +2430,13 @@ minGridLight[ 2 ] ) )
 
 	/* illuminate lightmaps */
 	Sys_PrintHeading ( "--- IlluminateRawLightmap ---\n" );
-	RunThreadsOnIndividual( numRawLightmaps, qtrue, IlluminateRawLightmap );
+	RunThreadsOnIndividual( "IlluminateRawLightmap", numRawLightmaps, qtrue, IlluminateRawLightmap );
 	Sys_Printf( "%9d luxels illuminated\n", numLuxelsIlluminated );
 	
 	/* filter lightmaps */
 	Sys_PrintHeading ( "--- FilterRawLightmap ---\n" );
 	ThreadMutexInit(&LightmapGrowStitchMutex);
-	RunThreadsOnIndividual( numRawLightmaps, qtrue, FilterRawLightmap );
+	RunThreadsOnIndividual( "FilterRawLightmap", numRawLightmaps, qtrue, FilterRawLightmap );
 	if( numLuxelsStitched || verbose )
 		Sys_Printf( "%9d luxels marked for stitching\n", numLuxelsStitched );
 	ThreadMutexDelete(&LightmapGrowStitchMutex);
@@ -2452,14 +2454,14 @@ minGridLight[ 2 ] ) )
 
 	/* illuminate vertexes */
 	Sys_PrintHeading ( "--- IlluminateVertexes ---\n" );
-	RunThreadsOnIndividual( numBSPDrawSurfaces, qtrue, IlluminateVertexes );
+	RunThreadsOnIndividual( "IlluminateVertexes", numBSPDrawSurfaces, qtrue, IlluminateVertexes );
 	Sys_Printf( "%9d vertexes illuminated\n", numVertsIlluminated );
 
 	/* ydnar: emit statistics on light culling */
-	Sys_FPrintf( SYS_VRB, "%9d lights plane culled\n", lightsPlaneCulled );
-	Sys_FPrintf( SYS_VRB, "%9d lights envelope culled\n", lightsEnvelopeCulled );
-	Sys_FPrintf( SYS_VRB, "%9d lights bounds culled\n", lightsBoundsCulled );
-	Sys_FPrintf( SYS_VRB, "%9d lights cluster culled\n", lightsClusterCulled );
+	Sys_Printf( "%9d lights plane culled\n", lightsPlaneCulled );
+	Sys_Printf( "%9d lights envelope culled\n", lightsEnvelopeCulled );
+	Sys_Printf( "%9d lights bounds culled\n", lightsBoundsCulled );
+	Sys_Printf( "%9d lights cluster culled\n", lightsClusterCulled );
 
 	/* radiosity */
 	b = 1;
@@ -2496,9 +2498,9 @@ minGridLight[ 2 ] ) )
 		{
 			Sys_PrintHeading ( "--- BounceGrid ---\n" );
 #ifdef GRID_BLOCK_OPTIMIZATION
-	RunThreadsOnIndividual( numGridBlocks, qtrue, IlluminateGridBlock );
+	RunThreadsOnIndividual( "BounceGrid", numGridBlocks, qtrue, IlluminateGridBlock );
 #else
-	RunThreadsOnIndividual( numRawGridPoints, qtrue, IlluminateGridPointOld );
+	RunThreadsOnIndividual( "BounceGrid", numRawGridPoints, qtrue, IlluminateGridPointOld );
 #endif
 		}
 		
@@ -2511,13 +2513,13 @@ minGridLight[ 2 ] ) )
 		/* illuminate lightmaps */
 		Sys_PrintHeading ( "--- IlluminateRawLightmap ---\n" );
 		numLuxelsIlluminated = 0;
-		RunThreadsOnIndividual( numRawLightmaps, qtrue, IlluminateRawLightmap );
+		RunThreadsOnIndividual( "IlluminateRawLightmap", numRawLightmaps, qtrue, IlluminateRawLightmap );
 		Sys_Printf( "%9d luxels illuminated\n", numLuxelsIlluminated );
 
 		/* filter lightmaps */
 		Sys_PrintHeading ( "--- FilterRawLightmap ---\n" );
 		ThreadMutexInit(&LightmapGrowStitchMutex);
-		RunThreadsOnIndividual( numRawLightmaps, qtrue, FilterRawLightmap );
+		RunThreadsOnIndividual( "FilterRawLightmap", numRawLightmaps, qtrue, FilterRawLightmap );
 		if( numLuxelsStitched || verbose )
 			Sys_Printf( "%9d luxels marked for stitching\n", numLuxelsStitched );
 		ThreadMutexDelete(&LightmapGrowStitchMutex);
@@ -2527,14 +2529,14 @@ minGridLight[ 2 ] ) )
 
 		/* illuminate vertexes */
 		Sys_PrintHeading ( "--- IlluminateVertexes ---\n" );
-		RunThreadsOnIndividual( numBSPDrawSurfaces, qtrue, IlluminateVertexes );
+		RunThreadsOnIndividual( "IlluminateVertexes", numBSPDrawSurfaces, qtrue, IlluminateVertexes );
 		Sys_Printf( "%9d vertexes illuminated\n", numVertsIlluminated );
 
 		/* ydnar: emit statistics on light culling */
-		Sys_FPrintf( SYS_VRB, "%9d lights plane culled\n", lightsPlaneCulled );
-		Sys_FPrintf( SYS_VRB, "%9d lights envelope culled\n", lightsEnvelopeCulled );
-		Sys_FPrintf( SYS_VRB, "%9d lights bounds culled\n", lightsBoundsCulled );
-		Sys_FPrintf( SYS_VRB, "%9d lights cluster culled\n", lightsClusterCulled );
+		Sys_Printf( "%9d lights plane culled\n", lightsPlaneCulled );
+		Sys_Printf( "%9d lights envelope culled\n", lightsEnvelopeCulled );
+		Sys_Printf( "%9d lights bounds culled\n", lightsBoundsCulled );
+		Sys_Printf( "%9d lights cluster culled\n", lightsClusterCulled );
 		
 		/* interate */
 		bounce--;
@@ -2553,7 +2555,7 @@ minGridLight[ 2 ] ) )
 		{
 			Sys_PrintHeading ( "--- LightGridRawLightmap ---\n" );
 			numLuxelsIlluminated = 0;
-			RunThreadsOnIndividual( numRawLightmaps, qtrue, LightGridRawLightmap );
+			RunThreadsOnIndividual( "LightGridRawLightmap", numRawLightmaps, qtrue, LightGridRawLightmap );
 			Sys_Printf( "%9d luxels illuminated\n", numLuxelsIlluminated );
 		}	
 	}

@@ -1180,6 +1180,8 @@ static void PopulateTraceNodes( void )
 	/* walk each entity list */
 	for( i = 1; i < numEntities; i++ )
 	{
+		printLabelledProgress("PopulateTraceNodes", i, numEntities);
+
 		/* get entity */
 		e = &entities[ i ];
 		
@@ -1345,8 +1347,8 @@ void SetupTraceNodes( void )
 	Sys_Printf( "%9d trace nodes (%.2fMB)\n", numTraceNodes, (float) (numTraceNodes * sizeof( *traceNodes )) / (1024.0f * 1024.0f) );
 	Sys_Printf( "%9d leaf nodes (%.2fMB)\n", numTraceLeafNodes, (float) (numTraceLeafNodes * sizeof( *traceNodes )) / (1024.0f * 1024.0f) );
 	//%	Sys_FPrintf( SYS_VRB, "%9d average triangles per leaf node\n", numTraceTriangles / numTraceLeafNodes );
-	Sys_FPrintf( SYS_VRB, "%9d average windings per leaf node\n", numTraceWindings / (numTraceLeafNodes + 1) );
-	Sys_FPrintf( SYS_VRB, "%9d max trace depth\n", maxTraceDepth );
+	Sys_Printf( "%9d average windings per leaf node\n", numTraceWindings / (numTraceLeafNodes + 1) );
+	Sys_Printf( "%9d max trace depth\n", maxTraceDepth );
 	
 	/* free trace windings */
 	free( traceWindings );

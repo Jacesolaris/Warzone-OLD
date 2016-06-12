@@ -431,7 +431,7 @@ int ScaleBSPMain( int argc, char **argv )
 	
 	/* note it */
 	Sys_PrintHeading ( "--- ScaleBSP ---\n" );
-	Sys_FPrintf( SYS_VRB, "%9d entities\n", numEntities );
+	Sys_Printf( "%9d entities\n", numEntities );
 	
 	/* scale entity keys */
 	for( i = 0; i < numBSPEntities && i < numEntities; i++ )
@@ -721,17 +721,16 @@ int main( int argc, char **argv )
 		//%	Sys_Printf( "Jitter %4d: %f\n", i, jitters[ i ] );
 	}
 
-	mapplanes = (plane_t*)malloc(sizeof(plane_t)*MAX_MAP_PLANES);
+	
 	bspLeafs = (bspLeaf_t*)malloc(sizeof(bspLeaf_t)*MAX_MAP_LEAFS);
 	bspPlanes = (bspPlane_t*)malloc(sizeof(bspPlane_t)*MAX_MAP_PLANES);
 	bspBrushes = (bspBrush_t*)malloc(sizeof(bspBrush_t)*MAX_MAP_BRUSHES);
 	bspBrushSides = (bspBrushSide_t*)malloc(sizeof(bspBrushSide_t)*MAX_MAP_BRUSHSIDES);
 	bspNodes = (bspNode_t*)malloc(sizeof(bspNode_t)*MAX_MAP_NODES);
-	bspVisBytes = (byte*)malloc(sizeof(byte)*MAX_MAP_VISIBILITY);
 	bspLeafSurfaces = (int*)malloc(sizeof(int)*MAX_MAP_LEAFFACES);
 	bspLeafBrushes = (int*)malloc(sizeof(int)*MAX_MAP_LEAFBRUSHES);
-
-
+	bspVisBytes = (byte*)malloc(sizeof(byte)*MAX_MAP_VISIBILITY);
+	
 	/* we print out two versions, q3map's main version (since it evolves a bit out of GtkRadiant)
 	   and we put the GtkRadiant version to make it easy to track with what version of Radiant it was built with */
 	
@@ -751,6 +750,9 @@ int main( int argc, char **argv )
 		Sys_Printf( " Enabled usage of .build config file\n" );
 	if( useCustomInfoParms )
 		Sys_Printf( " Custom info parms enabled\n" );
+#if defined(__HIGH_MEMORY__)
+		Sys_Printf( " High memory enabled (only for computers with *more* than 16 GB of RAM!!!).\n" );
+#endif
 #if MAX_LIGHTMAPS == 1
 	Sys_Printf( " Light styles are disabled in this build\n" );
 #endif
@@ -760,6 +762,17 @@ int main( int argc, char **argv )
 	Sys_Printf("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
 
 	setcolor(gray, black);
+
+	Sys_PrintHeading ( "--- Memory Usage ---\n" );
+	Sys_Printf("mapplanes: %i MB.\n", sizeof(plane_t)*MAX_MAP_PLANES / (1024 * 1024));
+	Sys_Printf("bspLeafs: %i MB.\n", sizeof(bspLeaf_t)*MAX_MAP_LEAFS / (1024 * 1024));
+	Sys_Printf("bspPlanes: %i MB.\n", sizeof(bspPlane_t)*MAX_MAP_PLANES / (1024 * 1024));
+	Sys_Printf("bspBrushes: %i MB.\n", sizeof(bspBrush_t)*MAX_MAP_BRUSHES / (1024 * 1024));
+	Sys_Printf("bspBrushSides: %i MB.\n", sizeof(bspBrushSide_t)*MAX_MAP_BRUSHSIDES / (1024 * 1024));
+	Sys_Printf("bspNodes: %i MB.\n", sizeof(bspNode_t)*MAX_MAP_NODES / (1024 * 1024));
+	Sys_Printf("bspLeafSurfaces: %i MB.\n", sizeof(int)*MAX_MAP_LEAFFACES / (1024 * 1024));
+	Sys_Printf("bspLeafBrushes: %i MB.\n", sizeof(int)*MAX_MAP_LEAFBRUSHES / (1024 * 1024));
+	Sys_Printf("bspVisBytes: %i MB.\n", sizeof(byte)*MAX_MAP_VISIBILITY / (1024 * 1024));
 
 	/* ydnar: new path initialization */
 	InitPaths( &argc, argv );
@@ -789,15 +802,27 @@ int main( int argc, char **argv )
 	
 	/* vis */
 	else if( !strcmp( argv[ 1 ], "-vis" ) )
+	{
+		portals = (vportal_t*)malloc(sizeof(vportal_t)*MAX_PORTALS_ON_LEAF);
+		*sorted_portals = (vportal_t*)malloc(sizeof(vportal_t*)*MAX_MAP_PORTALS * 2);
 		r = VisMain( argc - 1, argv + 1 );
+	}
 	
 	/* light */
 	else if( !strcmp( argv[ 1 ], "-light" ) )
+	{
+		mapplanes = (plane_t*)malloc(sizeof(plane_t)*MAX_MAP_PLANES);
+		//portals = (vportal_t*)malloc(sizeof(vportal_t)*MAX_PORTALS_ON_LEAF);
+		//*sorted_portals = (vportal_t*)malloc(sizeof(vportal_t*)*MAX_MAP_PORTALS * 2);
 		r = LightMain( argc - 1, argv + 1 );
+	}
 	
 	/* vlight */
 	else if( !strcmp( argv[ 1 ], "-vlight" ) )
 	{
+		mapplanes = (plane_t*)malloc(sizeof(plane_t)*MAX_MAP_PLANES);
+		//portals = (vportal_t*)malloc(sizeof(vportal_t)*MAX_PORTALS_ON_LEAF);
+		//*sorted_portals = (vportal_t*)malloc(sizeof(vportal_t*)*MAX_MAP_PORTALS * 2);
 		Sys_Warning( "VLight is no longer supported, defaulting to -light -fast instead" );
 		argv[ 1 ] = "-fast";	/* eek a hack */
 		r = LightMain( argc, argv );
@@ -821,7 +846,12 @@ int main( int argc, char **argv )
 
 	/* vortex: bsp optimisation */
 	else if( !strcmp( argv[ 1 ], "-optimize" ) )
+	{
+		mapplanes = (plane_t*)malloc(sizeof(plane_t)*MAX_MAP_PLANES);
+		//portals = (vportal_t*)malloc(sizeof(vportal_t)*MAX_PORTALS_ON_LEAF);
+		//*sorted_portals = (vportal_t*)malloc(sizeof(vportal_t*)*MAX_MAP_PORTALS * 2);
 		r = OptimizeBSPMain( argc - 1, argv + 1 );
+	}
 
 	/* vortex: entity compile */
 	else if( !strcmp( argv[ 1 ], "-patch" ) )
@@ -829,7 +859,10 @@ int main( int argc, char **argv )
 	
 	/* ydnar: otherwise create a bsp */
 	else
+	{
+		mapplanes = (plane_t*)malloc(sizeof(plane_t)*MAX_MAP_PLANES);
 		r = BSPMain( argc, argv );
+	}
 
 	/* emit time */
 	end = I_FloatTime();
@@ -839,16 +872,18 @@ int main( int argc, char **argv )
 	if (memlog)
 		safe_malloc_logend();
 
-	free(mapplanes);
-	free(bspLeafs);
-	free(bspPlanes);
-	free(bspBrushes);
-	free(bspBrushSides);
-	free(bspNodes);
-	free(bspVisBytes);
-	free(bspLeafSurfaces);
-	free(bspLeafBrushes);
-	
+	if (mapplanes) free(mapplanes);
+	if (bspLeafs) free(bspLeafs);
+	if (bspPlanes) free(bspPlanes);
+	if (bspBrushes) free(bspBrushes);
+	if (bspBrushSides) free(bspBrushSides);
+	if (bspNodes) free(bspNodes);
+	if (bspVisBytes) free(bspVisBytes);
+	if (bspLeafSurfaces) free(bspLeafSurfaces);
+	if (bspLeafBrushes) free(bspLeafBrushes);
+	//if (portals) free(portals);
+	//if (*sorted_portals) free(*sorted_portals);
+
 	/* shut down connection */
 	Broadcast_Shutdown();
 	

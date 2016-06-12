@@ -670,16 +670,16 @@ void MakeEntityMetaTriangles( entity_t *e )
 	}
 	
 	/* print time */
-	if( (numMapDrawSurfs - e->firstDrawSurf) )
-		Sys_FPrintf( SYS_VRB, " (%d)\n", (int) (I_FloatTime() - start) );
+	//if( (numMapDrawSurfs - e->firstDrawSurf) )
+	//	Sys_FPrintf( SYS_VRB, " (%d)\n", (int) (I_FloatTime() - start) );
 	
 	/* emit some stats */
-	Sys_FPrintf( SYS_VRB, "%9d total meta surfaces\n", numMetaSurfaces );
-	Sys_FPrintf( SYS_VRB, "%9d stripped surfaces\n", numStripSurfaces );
-	Sys_FPrintf( SYS_VRB, "%9d fanned surfaces\n", numFanSurfaces );
-	Sys_FPrintf( SYS_VRB, "%9d patch meta surfaces\n", numPatchMetaSurfaces );
-	Sys_FPrintf( SYS_VRB, "%9d meta verts\n", numMetaVerts );
-	Sys_FPrintf( SYS_VRB, "%9d meta triangles\n", numMetaTriangles );
+	Sys_Printf( "%9d total meta surfaces\n", numMetaSurfaces );
+	Sys_Printf( "%9d stripped surfaces\n", numStripSurfaces );
+	Sys_Printf( "%9d fanned surfaces\n", numFanSurfaces );
+	Sys_Printf( "%9d patch meta surfaces\n", numPatchMetaSurfaces );
+	Sys_Printf( "%9d meta verts\n", numMetaVerts );
+	Sys_Printf( "%9d meta triangles\n", numMetaTriangles );
 	
 	/* tidy things up */
 	TidyEntitySurfaces( e );
@@ -945,10 +945,10 @@ void FixMetaTJunctions( void )
 	}
 	
 	/* print time */
-	Sys_FPrintf( SYS_VRB, " (%d)\n", (int) (I_FloatTime() - start) );
+	//Sys_FPrintf( SYS_VRB, " (%d)\n", (int) (I_FloatTime() - start) );
 	
 	/* emit some stats */
-	Sys_FPrintf( SYS_VRB, "%9d T-junctions added\n", numTJuncs );
+	Sys_Printf( "%9d T-junctions added\n", numTJuncs );
 }
 
 /*
@@ -1140,7 +1140,7 @@ void SmoothMetaTriangles( void )
 	/* find triangle area weights, build optimized smooth verts table */
 	numSmoothVerts = 0;
 	smoothVerts = (smoothVert_t *)safe_malloc( numMetaVerts * sizeof( smoothVert_t ) );
-	RunThreadsOnIndividual( numMetaTriangles, qfalse, MetaTriangleFindAreaWeight );
+	RunThreadsOnIndividual( "SmoothMetaTriangles", numMetaTriangles, qfalse, MetaTriangleFindAreaWeight );
 	free( metaTrianglePlaneTriangles );
 	for( i = 0; i < numMetaTriangles; i++ )
 	{
@@ -1249,12 +1249,13 @@ void SmoothMetaTriangles( void )
 	free( smoothVerts );
 	
 	/* print time */
-	Sys_FPrintf( SYS_VRB, " (%d)\n", (int) (I_FloatTime() - start) );
+	//Sys_FPrintf( SYS_VRB, " (%d)\n", (int) (I_FloatTime() - start) );
 
 	/* emit some stats */
-	Sys_FPrintf( SYS_VRB, "%9d smooth vertexes\n", numSmoothVerts );
-	Sys_FPrintf( SYS_VRB, "%9d smooth points\n", numSmoothed );
-	Sys_FPrintf( SYS_VRB, "%7.2f average vertexes per point\n", numSmoothVerts / (float) numSmoothed );
+	Sys_Printf( "%9d smooth vertexes\n", numSmoothVerts );
+	Sys_Printf( "%9d smooth points\n", numSmoothed );
+	if (numSmoothed > 0 && numSmoothVerts > 0)
+		Sys_Printf( "%7.2f average vertexes per point\n", (float) numSmoothVerts / (float) numSmoothed );
 }
 
 /*
@@ -1839,9 +1840,11 @@ void GroupMetaTriangles( void )
 		maxMetaTrianglesInGroup = max(maxMetaTrianglesInGroup, (j - i));
 	}
 
+	printLabelledProgress("GroupMetaTriangles", 100, 100); // Make sure it always finishes the bar... due to the i = j thing...
+
 	/* emit some stats */
-	Sys_FPrintf( SYS_VRB, "%9d groups\n", numMetaTriangleGroups );
-	Sys_FPrintf( SYS_VRB, "%9d max triangles in group\n", maxMetaTrianglesInGroup );
+	Sys_Printf( "%9d groups\n", numMetaTriangleGroups );
+	Sys_Printf( "%9d max triangles in group\n", maxMetaTrianglesInGroup );
 
 	/* print out large groups (helps to optimize shaders) */
 	for( i = 0; i < numMetaTriangleGroups; i++)
@@ -1932,7 +1935,7 @@ void MergeMetaTriangles( void )
 	/* run threaded */
 	/* vortex: real threaded implemetation is still crashy */
 	if( numMetaTriangleGroups )
-		RunSameThreadOn(numMetaTriangleGroups, verbose, MergeMetaTrianglesThread);
+		RunSameThreadOn("MergeMetaTrianglesThread", numMetaTriangleGroups, verbose, MergeMetaTrianglesThread);
 
 	/* clear meta triangle list */
 	numTriangles = numMetaTriangles;
@@ -1941,7 +1944,7 @@ void MergeMetaTriangles( void )
 	metaTriangleGroups = NULL;
 
 	/* emit some stats */
-	Sys_FPrintf( SYS_VRB, "%9d drawsurfaces\n", numMergedSurfaces );
-	Sys_FPrintf( SYS_VRB, "%9d drawverts\n", numMergedVerts );
-	Sys_FPrintf( SYS_VRB, "%9d triangles processed\n", numTriangles );
+	Sys_Printf( "%9d drawsurfaces\n", numMergedSurfaces );
+	Sys_Printf( "%9d drawverts\n", numMergedVerts );
+	Sys_Printf( "%9d triangles processed\n", numTriangles );
 }

@@ -78,7 +78,7 @@ void TidyShaders(void)
 			numRemappedShaders++;
 		}
 	}
-	Sys_FPrintf(SYS_VRB, " (%d)\n", (int) (I_FloatTime() - start) );
+	//Sys_FPrintf(SYS_VRB, " (%d)\n", (int) (I_FloatTime() - start) );
 	Sys_Printf( "%9d BSP shaders\n", numBSPShaders );
 	Sys_Printf( "%9d remapped shaders\n", numRemappedShaders );
 
@@ -115,7 +115,7 @@ void TidyShaders(void)
 			}
 		}
 	}
-	Sys_FPrintf(SYS_VRB, " (%d)\n", (int) (I_FloatTime() - start) );
+	//Sys_FPrintf(SYS_VRB, " (%d)\n", (int) (I_FloatTime() - start) );
 	Sys_Printf( "%9d shaders to be merged\n", numRemappedShaders );
 
 	/* generate new shaders */
@@ -143,7 +143,7 @@ void TidyShaders(void)
 	memcpy(bspShaders, newShaders, sizeof(bspShader_t) * numRemappedShaders);
 	numBSPShaders = numRemappedShaders;
 	free(newShaders);
-	Sys_FPrintf(SYS_VRB, " (%d)\n", (int) (I_FloatTime() - start) );
+	//Sys_FPrintf(SYS_VRB, " (%d)\n", (int) (I_FloatTime() - start) );
 	Sys_Printf( "%9d shaders after merging\n", numRemappedShaders );
 
 	/* update drawsurfaces */
@@ -175,7 +175,7 @@ void TidyShaders(void)
 				ds->shaderNum = msh->newIndex;
 		}
 	}
-	Sys_FPrintf(SYS_VRB, " (%d)\n", (int) (I_FloatTime() - start) );
+	//Sys_FPrintf(SYS_VRB, " (%d)\n", (int) (I_FloatTime() - start) );
 	Sys_Printf( "%9d drawsurfaces remapped\n", numRemappedDrawsurfaces );
 
 	/* update brushes */
@@ -329,7 +329,7 @@ void MergeDrawSurfaces(void)
 			}
 		}
 	}
-	Sys_FPrintf(SYS_VRB, " (%d)\n", (int) (I_FloatTime() - start) );
+	//Sys_FPrintf(SYS_VRB, " (%d)\n", (int) (I_FloatTime() - start) );
 	Sys_Printf( "%9d BSP draw surfaces\n", numBSPDrawSurfaces );
 	Sys_Printf( "%9d BSP draw verts\n", numBSPDrawVerts );
 	Sys_Printf( "%9d BSP draw indexes\n", numBSPDrawIndexes );
@@ -433,7 +433,7 @@ void MergeDrawSurfaces(void)
 			}
 		}
 	}
-	Sys_FPrintf(SYS_VRB, " (%d)\n", (int) (I_FloatTime() - start) );
+	//Sys_FPrintf(SYS_VRB, " (%d)\n", (int) (I_FloatTime() - start) );
 
 	/* print some stats */
 	Sys_Printf( "%9d unique surfaces\n", numDrawSurfacesProcessed );
@@ -553,7 +553,7 @@ void MergeDrawSurfaces(void)
 	memcpy(bspDrawIndexes, newDrawIndexes, sizeof(int) * numDrawIndexesProcessed);
 	numBSPDrawIndexes = numDrawIndexesProcessed;
 	free(newDrawIndexes);
-	Sys_FPrintf(SYS_VRB, " (%d)\n", (int) (I_FloatTime() - start) );
+	//Sys_FPrintf(SYS_VRB, " (%d)\n", (int) (I_FloatTime() - start) );
 
 	/* generate new leaf surfaces */
 	// todo: remove duplicate surfaces
@@ -581,7 +581,7 @@ void MergeDrawSurfaces(void)
 				bspLeafSurfaces[ leaf->firstBSPLeafSurface + leafsurfacenum ] = ms->newIndex;
 		}
 	}
-	Sys_FPrintf(SYS_VRB, " (%d)\n", (int) (I_FloatTime() - start) );
+	//Sys_FPrintf(SYS_VRB, " (%d)\n", (int) (I_FloatTime() - start) );
 	Sys_Printf( "%9d surfaces after merging\n", numBSPDrawSurfaces );
 	free(newLeafSurfaces);
 	free(metaSurfaces);
@@ -693,7 +693,7 @@ void MergeDrawVerts(void)
 			}
 		}
 	}
-	Sys_FPrintf(SYS_VRB, " (%d)\n", (int) (I_FloatTime() - start) );
+	//Sys_FPrintf(SYS_VRB, " (%d)\n", (int) (I_FloatTime() - start) );
 	Sys_Printf( "%9d BSP draw surfaces\n", numBSPDrawSurfaces );
 	Sys_Printf( "%9d BSP draw verts\n", numBSPDrawVerts );
 	Sys_Printf( "%9d BSP draw indexes\n", numBSPDrawIndexes );
@@ -768,7 +768,7 @@ void MergeDrawVerts(void)
 			}
 		}
 	}
-	Sys_FPrintf(SYS_VRB, " (%d)\n", (int) (I_FloatTime() - start) );
+	//Sys_FPrintf(SYS_VRB, " (%d)\n", (int) (I_FloatTime() - start) );
 	Sys_Printf( "%9d verts to be merged\n", numVertsToMerge );
 
 	/* if there are no verts to merge, bail */
@@ -847,7 +847,7 @@ void MergeDrawVerts(void)
 			ds->numIndexes = numNewIndexes - ds->firstIndex;
 		}
 	}
-	Sys_FPrintf(SYS_VRB, " (%d)\n", (int) (I_FloatTime() - start) );
+	//Sys_FPrintf(SYS_VRB, " (%d)\n", (int) (I_FloatTime() - start) );
 	memcpy(bspDrawVerts, newDrawVerts, sizeof(bspDrawVert_t) * numNewVerts);
 	numBSPDrawVerts = numNewVerts;
 	free(newDrawVerts);

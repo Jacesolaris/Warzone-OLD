@@ -121,7 +121,7 @@ void EmitPlanes( void )
 	}
 	
 	/* emit some statistics */
-	Sys_FPrintf( SYS_VRB, "%9d BSP planes\n", numBSPPlanes );
+	Sys_Printf( "%9d BSP planes\n", numBSPPlanes );
 }
 
 
@@ -157,11 +157,12 @@ void EmitLeaf( node_t *node )
 	for( b = node->brushlist; b; b = b->next )
 	{
 		/* something is corrupting brushes */
-		if( (int) b < 256 )
+		if( /*(int)*/(uintptr_t) b < 256 )
 		{// UQ1: Why exactly is < 256 invalid????!?!?!?!?!????
 			//Sys_Warning( "Node brush list corrupted (0x%08X)\n", b );
 			//break;
-			Sys_Printf( "Node brush list corrupted (0x%08X)\n", b );
+			//Sys_Printf( "Node brush list corrupted (0x%08X)\n", b );
+			Sys_Printf( "Node brush list corrupted (0x%16X)\n", b );
 		}
 		//%	if( b->guard != 0xDEADBEEF )
 		//%		Sys_Printf( "Brush %6d: 0x%08X Guard: 0x%08X Next: 0x%08X Original: 0x%08X Sides: %d\n", b->brushNum, b, b, b->next, b->original, b->numsides );
@@ -357,7 +358,7 @@ void SetLightStyles( void )
 	}
 	
 	/* emit some statistics */
-	Sys_FPrintf( SYS_VRB, "%9d light entities stripped\n", numStrippedLights );
+	Sys_Printf( "%9d light entities stripped\n", numStrippedLights );
 }
 
 
@@ -615,8 +616,8 @@ void BeginModel( void )
 	}
 
 	/* note size */
-	Sys_FPrintf( SYS_VRB, "BSP bounds: { %.0f %.0f %.0f } { %.0f %.0f %.0f }\n", mins[ 0 ], mins[ 1 ], mins[ 2 ], maxs[ 0 ], maxs[ 1 ], maxs[ 2 ] );
-	Sys_FPrintf( SYS_VRB, "Lightgrid bounds: { %.0f %.0f %.0f } { %.0f %.0f %.0f }\n", lgMins[ 0 ], lgMins[ 1 ], lgMins[ 2 ], lgMaxs[ 0 ], lgMaxs[ 1 ], lgMaxs[ 2 ] );
+	Sys_Printf( "BSP bounds: { %.0f %.0f %.0f } { %.0f %.0f %.0f }\n", mins[ 0 ], mins[ 1 ], mins[ 2 ], maxs[ 0 ], maxs[ 1 ], maxs[ 2 ] );
+	Sys_Printf( "Lightgrid bounds: { %.0f %.0f %.0f } { %.0f %.0f %.0f }\n", lgMins[ 0 ], lgMins[ 1 ], lgMins[ 2 ], lgMaxs[ 0 ], lgMaxs[ 1 ], lgMaxs[ 2 ] );
 	
 	/* set firsts */
 	mod->firstBSPSurface = numBSPDrawSurfaces;

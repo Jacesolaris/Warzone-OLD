@@ -566,9 +566,9 @@ void FogDrawSurfaces( entity_t *e )
 	}
 	
 	/* emit some statistics */
-	Sys_FPrintf( SYS_VRB, "%9d fog polygon fragments\n", numFogFragments );
-	Sys_FPrintf( SYS_VRB, "%9d fog patch fragments\n", numFogPatchFragments );
-	Sys_FPrintf( SYS_VRB, "%9d fogged drawsurfs\n", numFogged );
+	Sys_Printf( "%9d fog polygon fragments\n", numFogFragments );
+	Sys_Printf( "%9d fog patch fragments\n", numFogPatchFragments );
+	Sys_Printf( "%9d fogged drawsurfs\n", numFogged );
 }
 
 
@@ -796,6 +796,6 @@ void CreateMapFogs( void )
 	}
 	
 	/* emit some stats */
-	Sys_FPrintf( SYS_VRB, "%9d fogs\n", numMapFogs );
+	Sys_Printf( "%9d fogs\n", numMapFogs );
 }
 

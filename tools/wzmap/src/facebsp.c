@@ -326,7 +326,7 @@ tree_t *FaceBSP( face_t *list, qboolean quiet )
 	}
 
 	if( !quiet )
-		Sys_FPrintf( SYS_VRB, "%9d faces\n", c_faces );
+		Sys_Printf( "%9d faces\n", c_faces );
 
 	tree->headnode = AllocNode();
 	VectorCopy( tree->mins, tree->headnode->mins );
@@ -336,15 +336,15 @@ tree_t *FaceBSP( face_t *list, qboolean quiet )
 	BuildFaceTree_r ( tree->headnode, list );
 
 	if( !quiet )
-		Sys_FPrintf( SYS_VRB, "%9d leafs\n", c_faceLeafs );
+		Sys_Printf( "%9d leafs\n", c_faceLeafs );
 
 	return tree;
 }
 
 void FaceBSPStats( void ) 
 {
-	Sys_FPrintf( SYS_VRB, "%9d faces\n", c_faces );
-	Sys_FPrintf( SYS_VRB, "%9d leafs\n", c_faceLeafs );
+	Sys_Printf( "%9d faces\n", c_faces );
+	Sys_Printf( "%9d leafs\n", c_faceLeafs );
 }
 
 

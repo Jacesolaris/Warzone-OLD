@@ -1259,7 +1259,7 @@ void SetupSurfaceLightmaps( void )
 	}
 
 	/* print time */
-	Sys_FPrintf( SYS_VRB, " (%d)\n", (int) (I_FloatTime() - start) );
+	//Sys_FPrintf( SYS_VRB, " (%d)\n", (int) (I_FloatTime() - start) );
 }
 
 /*
@@ -1287,17 +1287,17 @@ void AllocateSurfaceLightmaps(void)
 	}
 
 	/* print time */
-	if( numRawLightmaps >= 10 )
-		Sys_FPrintf( SYS_VRB, " (%d)\n", (int) (I_FloatTime() - start) );
+	//if( numRawLightmaps >= 10 )
+	//	Sys_FPrintf( SYS_VRB, " (%d)\n", (int) (I_FloatTime() - start) );
 
 	/* emit some stats */
 	Sys_Printf( "%9d surfaces\n", numBSPDrawSurfaces );
 	Sys_Printf( "%9d raw lightmaps\n", numRawLightmaps );
 	Sys_Printf( "%9d surfaces lightmapped\n", numSurfsLightmapped );
-	Sys_FPrintf( SYS_VRB, "%9d planar surfaces lightmapped\n", numPlanarsLightmapped );
-	Sys_FPrintf( SYS_VRB, "%9d non-planar surfaces lightmapped\n", numNonPlanarsLightmapped );
-	Sys_FPrintf( SYS_VRB, "%9d patches lightmapped\n", numPatchesLightmapped );
-	Sys_FPrintf( SYS_VRB, "%9d planar patches lightmapped\n", numPlanarPatchesLightmapped );
+	Sys_Printf( "%9d planar surfaces lightmapped\n", numPlanarsLightmapped );
+	Sys_Printf( "%9d non-planar surfaces lightmapped\n", numNonPlanarsLightmapped );
+	Sys_Printf( "%9d patches lightmapped\n", numPatchesLightmapped );
+	Sys_Printf( "%9d planar patches lightmapped\n", numPlanarPatchesLightmapped );
 
 	/* vertex lit */
 	Sys_PrintHeadingVerbose( "--- SetupVertexLightning ---\n");
@@ -1312,7 +1312,7 @@ void AllocateSurfaceLightmaps(void)
 	}
 
 	/* emit some stats */
-	Sys_FPrintf( SYS_VRB, "%9d vertexes\n", numBSPDrawVerts );
+	Sys_Printf( "%9d vertexes\n", numBSPDrawVerts );
 	Sys_Printf( "%9d surfaces vertex lit\n", numSurfsVertexLit );
 }
 
@@ -1827,7 +1827,7 @@ void StitchRawLightmaps( void )
 		maxStitchLuxels = 0;
 		stitchLuxels = NULL;
 	}
-	Sys_FPrintf(SYS_VRB, " (%d)\n", (int) (I_FloatTime() - start) );
+	//Sys_FPrintf(SYS_VRB, " (%d)\n", (int) (I_FloatTime() - start) );
 
 	/* emit statistics */
 	Sys_Printf( "%9d stitches\n", numStitches );
@@ -3395,8 +3395,8 @@ void StoreSurfaceLightmaps( void )
 	}
 
 	/* print time */
-	if (numRawLightmaps > 10)
-		Sys_Printf( " (%d)\n", (int) (I_FloatTime() - start) );
+	//if (numRawLightmaps > 10)
+	//	Sys_Printf( " (%d)\n", (int) (I_FloatTime() - start) );
 
 	/* emit some stats */
 	Sys_Printf( "%9d solid surface lightmaps\n", numSolidLightmaps );
@@ -3500,8 +3500,8 @@ void StoreSurfaceLightmaps( void )
 			}
 
 			/* print time */
-			if (numRawLightmaps > 10)
-				Sys_Printf( " (%d)\n", (int) (I_FloatTime() - start) );
+			//if (numRawLightmaps > 10)
+			//	Sys_Printf( " (%d)\n", (int) (I_FloatTime() - start) );
 		}
 	}
 
@@ -3582,8 +3582,8 @@ void StoreSurfaceLightmaps( void )
 		}
 
 		/* print time */
-		if (numRawLightmaps > 10)
-			Sys_Printf( " (%d)\n", (int) (I_FloatTime() - start) );
+		//if (numRawLightmaps > 10)
+		//	Sys_Printf( " (%d)\n", (int) (I_FloatTime() - start) );
 
 		/* emit some stats */
 		Sys_Printf( "%9d identical surface lightmaps, using %d luxels\n", numTwins, numTwinLuxels );
@@ -3663,8 +3663,8 @@ void StoreSurfaceLightmaps( void )
 	}
 
 	/* print time */
-	if (numRawLightmaps > 10)
-		Sys_Printf( " (%d)\n", (int) (I_FloatTime() - start) );
+	//if (numRawLightmaps > 10)
+	//	Sys_Printf( " (%d)\n", (int) (I_FloatTime() - start) );
 
 	/* emit some stats */
 	if( numSurfsVertexForced || verbose )
@@ -3831,8 +3831,8 @@ void StoreSurfaceLightmaps( void )
 	}
 
 	/* print time */
-	if (numOutLightmaps > 10)
-		Sys_Printf( " (%d)\n", (int) (I_FloatTime() - start) );
+	//if (numOutLightmaps > 10)
+	//	Sys_Printf( " (%d)\n", (int) (I_FloatTime() - start) );
 
 	/* -----------------------------------------------------------------
 	   project the lightmaps onto the bsp surfaces
@@ -4129,8 +4129,8 @@ void StoreSurfaceLightmaps( void )
 	}
 	
 	/* print time */
-	if (numBSPDrawSurfaces > 10)
-		Sys_Printf( " (%d)\n", (int) (I_FloatTime() - start) );
+	//if (numBSPDrawSurfaces > 10)
+	//	Sys_Printf( " (%d)\n", (int) (I_FloatTime() - start) );
 	
 	/* calc num stored */
 	numStored = numBSPLightBytes / 3;

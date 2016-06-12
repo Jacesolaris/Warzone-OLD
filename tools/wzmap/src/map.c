@@ -1728,7 +1728,7 @@ void LoadMapFile( char *filename, qboolean onlyLights, qboolean onlyLightgridBru
 	if ( onlyFoliage )
 	{
 		/* emit some statistics */
-		Sys_FPrintf( SYS_VRB, "%9d foliage models\n", numEntities - oldNumEntities );
+		Sys_Printf( "%9d foliage models\n", numEntities - oldNumEntities );
 	}
 	else if( onlyLights )
 	{
@@ -1800,18 +1800,18 @@ void LoadMapFile( char *filename, qboolean onlyLights, qboolean onlyLightgridBru
 		numMapBrushes = CountBrushList( entities[ 0 ].brushes );
 		Sys_Printf(  "%9d total world brushes with trees added\n", numMapBrushes );
 
-		Sys_FPrintf( SYS_VRB, "%9d detail brushes\n", c_detail );
-		Sys_FPrintf( SYS_VRB, "%9d patches\n", numMapPatches);
-		Sys_FPrintf( SYS_VRB, "%9d boxbevels\n", c_boxbevels);
-		Sys_FPrintf( SYS_VRB, "%9d edgebevels\n", c_edgebevels);
+		Sys_Printf( "%9d detail brushes\n", c_detail );
+		Sys_Printf( "%9d patches\n", numMapPatches);
+		Sys_Printf( "%9d boxbevels\n", c_boxbevels);
+		Sys_Printf( "%9d edgebevels\n", c_edgebevels);
 		Sys_Printf( "%9d entities\n", numEntities );
-		Sys_FPrintf( SYS_VRB, "%9d planes\n", nummapplanes);
-		Sys_FPrintf( SYS_VRB, "%9d areaportals\n", c_areaportals);
-		Sys_FPrintf( SYS_VRB, "Size: { %.0f %.0f %.0f } { %.0f %.0f %.0f }\n", mapMins[ 0 ], mapMins[ 1 ], mapMins[ 2 ], mapMaxs[ 0 ], mapMaxs[ 1 ], mapMaxs[ 2 ]);
+		Sys_Printf( "%9d planes\n", nummapplanes);
+		Sys_Printf( "%9d areaportals\n", c_areaportals);
+		Sys_Printf( "Size: { %.0f %.0f %.0f } { %.0f %.0f %.0f }\n", mapMins[ 0 ], mapMins[ 1 ], mapMins[ 2 ], mapMaxs[ 0 ], mapMaxs[ 1 ], mapMaxs[ 2 ]);
 		
 		/* region stats */
 		if ( mapRegion == qtrue )
-			Sys_FPrintf( SYS_VRB, "Region: { %.0f %.0f %.0f } { %.0f %.0f %.0f }\n", mapRegionMins[ 0 ], mapRegionMins[ 1 ], mapRegionMins[ 2 ], mapRegionMaxs[ 0 ], mapRegionMaxs[ 1 ], mapRegionMaxs[ 2 ]);
+			Sys_Printf( "Region: { %.0f %.0f %.0f } { %.0f %.0f %.0f }\n", mapRegionMins[ 0 ], mapRegionMins[ 1 ], mapRegionMins[ 2 ], mapRegionMaxs[ 0 ], mapRegionMaxs[ 1 ], mapRegionMaxs[ 2 ]);
 
 		/* write bogus map */
 		if( fakemap )

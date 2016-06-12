@@ -32,6 +32,9 @@ several games based on the Quake III Arena engine, in the form of "Q3Map2."
 #ifndef Q3MAP2_H
 #define Q3MAP2_H
 
+//#define MREDEBUG // UQ1: For vis debugging info...
+//#define __HIGH_MEMORY__ // UQ1: Only use if you have more than 16 GB (probably want even more than this for lighting) of ram!!!
+
 /* -------------------------------------------------------------------------------
 
 dependencies
@@ -212,7 +215,7 @@ constants
 #define	MAX_PORTALS				32768
 #define MAX_SEPERATORS			MAX_POINTS_ON_WINDING
 #define	MAX_POINTS_ON_FIXED_WINDING	24	/* ydnar: increased this from 12 at the expense of more memory */
-#define	MAX_PORTALS_ON_LEAF		128
+#define	MAX_PORTALS_ON_LEAF		32768//128
 
 
 /* light */
@@ -311,35 +314,76 @@ abstracted bsp file
 
 #define MAX_LIGHTMAP_SHADERS	256//8192 /* vortex: was 256 */
 
+#if 0
 /* ok to increase these at the expense of more memory */
 #define	MAX_MAP_MODELS			0x1000		// vortex: was 0x400
-//#define	MAX_MAP_BRUSHES			0x40000//0x10000		// vortex: was 0x8000
-#define	MAX_MAP_BRUSHES			0xE000000
+#define	MAX_MAP_BRUSHES			0x400000
 #define	MAX_MAP_ENTITIES		0x80000		//%	0x800	/* ydnar */ // vortex: was 0x8000
 #define	MAX_MAP_ENTSTRING		0x80000	    //%	0x40000	/* ydnar */ // vortex: was 0x80000
 #define	MAX_MAP_SHADERS			0x800		//%	0x400	/* ydnar */
 
 #define	MAX_MAP_AREAS			0x100		/* MAX_MAP_AREA_BYTES in q_shared must match! */
 #define	MAX_MAP_FOGS			30			//& 0x100	/* RBSP (32 - world fog - goggles) */
-#define	MAX_MAP_PLANES			0xE000000//0x200000	//%	0x20000	/* ydnar for md */ // vortex: doubled this
-//#define	MAX_MAP_NODES			0x40000
-#define	MAX_MAP_NODES			0xE000000
-//#define	MAX_MAP_BRUSHSIDES		0x400000//0x100000	//%	0x20000	/* ydnar */
-#define	MAX_MAP_BRUSHSIDES		0xE000000
-#define	MAX_MAP_LEAFS			0xE000000//0x20000
-#define	MAX_MAP_LEAFFACES		0xE000000//0x100000	//%	0x20000	/* ydnar */
-#define	MAX_MAP_LEAFBRUSHES		0xE000000//0x40000
-#define	MAX_MAP_PORTALS			0x20000
-//#define	MAX_MAP_LIGHTING		0x800000
-//#define	MAX_MAP_LIGHTGRID		0xF000000	//%	0x800000 /* ydnar: set to points, not bytes */
-#define	MAX_MAP_LIGHTGRID		0xE000000
-//#define	MAX_MAP_VISIBILITY		0xF000000//0x200000
+#define	MAX_MAP_PLANES			0x7000000//0x200000	//%	0x20000	/* ydnar for md */ // vortex: doubled this
+#define	MAX_MAP_NODES			0xA00000//0x40000
+#define	MAX_MAP_BRUSHSIDES		0xF00000//0x100000	//%	0x20000	/* ydnar */
+#define	MAX_MAP_LEAFS			0xA00000//0x20000
+#define	MAX_MAP_LEAFFACES		0xA00000//0x100000	//%	0x20000	/* ydnar */
+#define	MAX_MAP_LEAFBRUSHES		0xA00000//0x40000
+#define	MAX_MAP_PORTALS			0xA00000//0x20000
+#define	MAX_MAP_LIGHTGRID		0xE000000	//%	0x800000 /* ydnar: set to points, not bytes */
 #define	MAX_MAP_VISIBILITY		0xFFFFFFF//0x200000
 
 #define	MAX_MAP_DRAW_SURFS		0x400000//0x40000 // vortex: was 0x20000
 #define	MAX_MAP_DRAW_VERTS		0x8000000//0x800000 // vortex: was 0x80000
 #define	MAX_MAP_DRAW_INDEXES	0x8000000//0x800000  // vortex: was 0x80000
+#elif defined(__HIGH_MEMORY__)
+/* ok to increase these at the expense of more memory */
+#define	MAX_MAP_MODELS			0x1000
+#define	MAX_MAP_BRUSHES			0x400000
+#define	MAX_MAP_ENTITIES		0x80000
+#define	MAX_MAP_ENTSTRING		0x80000
+#define	MAX_MAP_SHADERS			0x800
 
+#define	MAX_MAP_AREAS			0x100		/* MAX_MAP_AREA_BYTES in q_shared must match! */
+#define	MAX_MAP_FOGS			30
+#define	MAX_MAP_PLANES			0x7000000
+#define	MAX_MAP_NODES			0xA00000
+#define	MAX_MAP_BRUSHSIDES		0xF00000
+#define	MAX_MAP_LEAFS			0xA00000
+#define	MAX_MAP_LEAFFACES		0xA00000
+#define	MAX_MAP_LEAFBRUSHES		0xA00000
+#define	MAX_MAP_PORTALS			0xA00000
+#define	MAX_MAP_LIGHTGRID		0xF00000
+#define	MAX_MAP_VISIBILITY		0xFFFFFFF
+
+#define	MAX_MAP_DRAW_SURFS		0x400000
+#define	MAX_MAP_DRAW_VERTS		0x8000000
+#define	MAX_MAP_DRAW_INDEXES	0x8000000
+#else
+/* ok to increase these at the expense of more memory */
+#define	MAX_MAP_MODELS			0x1000
+#define	MAX_MAP_BRUSHES			0x100000//0x400000
+#define	MAX_MAP_ENTITIES		0x80000
+#define	MAX_MAP_ENTSTRING		0x80000
+#define	MAX_MAP_SHADERS			0x800
+
+#define	MAX_MAP_AREAS			0x100		/* MAX_MAP_AREA_BYTES in q_shared must match! */
+#define	MAX_MAP_FOGS			30
+#define	MAX_MAP_PLANES			0x4000000//0x7000000
+#define	MAX_MAP_NODES			0x800000//0xA00000
+#define	MAX_MAP_BRUSHSIDES		0x800000//0xF00000
+#define	MAX_MAP_LEAFS			0x800000//0xA00000
+#define	MAX_MAP_LEAFFACES		0x800000//0xA00000
+#define	MAX_MAP_LEAFBRUSHES		0x800000//0xA00000
+#define	MAX_MAP_PORTALS			0x800000//0xA00000
+#define	MAX_MAP_LIGHTGRID		0x800000//0xF00000
+#define	MAX_MAP_VISIBILITY		0xFFFFFFF
+
+#define	MAX_MAP_DRAW_SURFS		0x200000
+#define	MAX_MAP_DRAW_VERTS		0x4000000
+#define	MAX_MAP_DRAW_INDEXES	0x4000000
+#endif
 
 /* key / value pair sizes in the entities lump */
 #define	MAX_KEY					32
@@ -820,6 +864,7 @@ typedef struct shaderInfo_s
 	float				stFlat[ 2 ];
 	vec3_t				fogDir;							/* ydnar */
 	char				*shaderText;					/* ydnar */
+	qboolean			isTreeSolid;
 }
 shaderInfo_t;
 
@@ -1733,8 +1778,8 @@ void						PicoPrintFunc( int level, const char *str );
 void						PicoLoadFileFunc( char *name, byte **buffer, int *bufSize );
 picoModel_t					*FindModel( const char *name, int frame );
 picoModel_t					*LoadModel( const char *name, int frame );
-void						InsertModel( char *name, int frame, int skin, m4x4_t transform, float uvScale, remap_t *remap, shaderInfo_t *celShader, int entityNum, int mapEntityNum, char castShadows, char recvShadows, int spawnFlags, float lightmapScale, vec3_t lightmapAxis, vec3_t minlight, vec3_t minvertexlight, vec3_t ambient, vec3_t colormod, float lightmapSampleSize, int shadeAngle, int vertTexProj, qboolean noAlphaFix, float pushVertexes, qboolean skybox, int *added_surfaces, int *added_verts, int *added_triangles, int *added_brushes );
-void						AddTriangleModels( int entityNum );
+void						InsertModel( char *name, int frame, int skin, m4x4_t transform, float uvScale, remap_t *remap, shaderInfo_t *celShader, int entityNum, int mapEntityNum, char castShadows, char recvShadows, int spawnFlags, float lightmapScale, vec3_t lightmapAxis, vec3_t minlight, vec3_t minvertexlight, vec3_t ambient, vec3_t colormod, float lightmapSampleSize, int shadeAngle, int vertTexProj, qboolean noAlphaFix, float pushVertexes, qboolean skybox, int *added_surfaces, int *added_verts, int *added_triangles, int *added_brushes, qboolean cullSmallSolids );
+void						AddTriangleModels( int entityNum, qboolean quiet, qboolean cullSmallSolids );
 
 
 /* surface.c */
