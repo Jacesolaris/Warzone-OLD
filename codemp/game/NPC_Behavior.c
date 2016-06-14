@@ -1128,7 +1128,7 @@ void NPC_PickRandomTempGoal ( void )
 	{// Pick a random enemy as a temp goal...
 		int i;
 		gentity_t	*bestEnt = NULL;
-		float		bestDist = 99999.9f;
+		float		bestDist = 999999.9f;
 
 		for (i = 0; i < MAX_GENTITIES; i++)
 		{

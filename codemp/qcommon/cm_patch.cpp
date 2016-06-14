@@ -1232,11 +1232,11 @@ static inline void CM_TracePointThroughPatchCollide( traceWork_t *tw, trace_t &t
 			frontFacing[i] = qtrue;
 		}
 		if ( d1 == d2 ) {
-			intersection[i] = 99999;
+			intersection[i] = 999999;
 		} else {
 			intersection[i] = d1 / ( d1 - d2 );
 			if ( intersection[i] <= 0 ) {
-				intersection[i] = 99999;
+				intersection[i] = 999999;
 			}
 		}
 	}

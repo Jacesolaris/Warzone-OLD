@@ -342,8 +342,8 @@ void CG_AddMarks( void ) {
 
 #define MAX_ATMOSPHERIC_PARTICLES  	  	3000  	// maximum # of particles
 #define MAX_ATMOSPHERIC_DISTANCE  	  	2000  	// maximum distance from refdef origin that particles are visible
-#define MAX_ATMOSPHERIC_HEIGHT  	  	65536//8096  	// maximum world height (FIXME: since 1.27 this should be 65536)
-#define MIN_ATMOSPHERIC_HEIGHT  	  	-65536//-8096  	// minimum world height (FIXME: since 1.27 this should be -65536)
+#define MAX_ATMOSPHERIC_HEIGHT  	  	524288//65536//8096  	// maximum world height (FIXME: since 1.27 this should be 65536)
+#define MIN_ATMOSPHERIC_HEIGHT  	  	-524288//-65536//-8096  	// minimum world height (FIXME: since 1.27 this should be -65536)
 #define MAX_ATMOSPHERIC_EFFECTSHADERS  	6  	  	// maximum different effectshaders for an atmospheric effect
 #define ATMOSPHERIC_RAIN_DROPDELAY  	10//30
 #define ATMOSPHERIC_SNOW_DROPDELAY  	1//30

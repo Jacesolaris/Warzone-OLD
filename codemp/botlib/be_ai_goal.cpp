@@ -1467,7 +1467,7 @@ int BotChooseNBGItem(int goalstate, vec3_t origin, int *inventory, int travelfla
 		return qfalse;
 	//
 	if (ltg) ltg_time = AAS_AreaTravelTimeToGoalArea(areanum, origin, ltg->areanum, travelflags);
-	else ltg_time = 99999;
+	else ltg_time = 999999;
 	//the item configuration
 	ic = itemconfig;
 	if (!itemconfig)

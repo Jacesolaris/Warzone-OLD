@@ -234,33 +234,43 @@ void LoadRBSPFile( const char *filename )
 	numBSPModels = CopyLump( (bspHeader_t*) header, LUMP_MODELS, bspModels, sizeof( bspModel_t ) );
 	
 	numBSPPlanes = CopyLump( (bspHeader_t*) header, LUMP_PLANES, bspPlanes, sizeof( bspPlane_t ) );
-	
+	bspPlanes = (bspPlane_t*)realloc(bspPlanes, numBSPPlanes * sizeof( bspPlane_t ));
+
 	numBSPLeafs = CopyLump( (bspHeader_t*) header, LUMP_LEAFS, bspLeafs, sizeof( bspLeaf_t ) );
-	
+	bspLeafs = (bspLeaf_t*)realloc(bspLeafs, numBSPLeafs * sizeof( bspLeaf_t ));
+
 	numBSPNodes = CopyLump( (bspHeader_t*) header, LUMP_NODES, bspNodes, sizeof( bspNode_t ) );
-	
+	bspNodes = (bspNode_t*)realloc(bspNodes, numBSPNodes * sizeof( bspNode_t ));
+
 	numBSPLeafSurfaces = CopyLump( (bspHeader_t*) header, LUMP_LEAFSURFACES, bspLeafSurfaces, sizeof( bspLeafSurfaces[ 0 ] ) );
-	
+	bspLeafSurfaces = (int*)realloc(bspLeafSurfaces, numBSPLeafSurfaces * sizeof( bspLeafSurfaces[ 0 ] ));
+
 	numBSPLeafBrushes = CopyLump( (bspHeader_t*) header, LUMP_LEAFBRUSHES, bspLeafBrushes, sizeof( bspLeafBrushes[ 0 ] ) );
+	bspLeafBrushes = (int*)realloc(bspLeafBrushes, numBSPLeafBrushes * sizeof( bspLeafBrushes[ 0 ] ));
 	
 	numBSPBrushes = CopyLump( (bspHeader_t*) header, LUMP_BRUSHES, bspBrushes, sizeof( bspBrush_t ) );
-	
+	bspBrushes = (bspBrush_t*)realloc(bspBrushes, numBSPBrushes * sizeof( bspBrush_t ));
+
 	numBSPBrushSides = CopyLump( (bspHeader_t*) header, LUMP_BRUSHSIDES, bspBrushSides, sizeof( bspBrushSide_t ) );
+	bspBrushSides = (bspBrushSide_t*)realloc(bspBrushSides, numBSPBrushSides * sizeof( bspBrushSide_t ));
 	
 	numBSPDrawVerts = GetLumpElements( (bspHeader_t*) header, LUMP_DRAWVERTS, sizeof( bspDrawVerts[ 0 ] ) );
 		SetDrawVerts( numBSPDrawVerts );
 		CopyLump( (bspHeader_t*) header, LUMP_DRAWVERTS, bspDrawVerts, sizeof( bspDrawVerts[ 0 ] ) );
+	bspDrawVerts = (bspDrawVert_t*)realloc(bspDrawVerts, numBSPDrawVerts * sizeof( bspDrawVerts[ 0 ] ));
 	
 	numBSPDrawSurfaces = GetLumpElements( (bspHeader_t*) header, LUMP_SURFACES, sizeof( bspDrawSurfaces[ 0 ] ) );
 		SetDrawSurfaces( numBSPDrawSurfaces );
 		CopyLump( (bspHeader_t*) header, LUMP_SURFACES, bspDrawSurfaces, sizeof( bspDrawSurfaces[ 0 ] ) );
+	bspDrawSurfaces = (bspDrawSurface_t*)realloc(bspDrawSurfaces, numBSPDrawSurfaces * sizeof( bspDrawSurfaces[ 0 ] ));
 	
 	numBSPFogs = CopyLump( (bspHeader_t*) header, LUMP_FOGS, bspFogs, sizeof( bspFogs[ 0 ] ) );
 	
 	numBSPDrawIndexes = CopyLump( (bspHeader_t*) header, LUMP_DRAWINDEXES, bspDrawIndexes, sizeof( bspDrawIndexes[ 0 ] ) );
 	
 	numBSPVisBytes = CopyLump( (bspHeader_t*) header, LUMP_VISIBILITY, bspVisBytes, 1 );
-	
+	bspVisBytes = (byte*)realloc(bspVisBytes, numBSPVisBytes * sizeof( byte ));
+
 	numBSPLightBytes = GetLumpElements( (bspHeader_t*) header, LUMP_LIGHTMAPS, 1 );
 		bspLightBytes = (byte *)safe_malloc( numBSPLightBytes );
 		CopyLump( (bspHeader_t*) header, LUMP_LIGHTMAPS, bspLightBytes, 1 );

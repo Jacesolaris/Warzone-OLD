@@ -37,6 +37,8 @@ several games based on the Quake III Arena engine, in the form of "Q3Map2."
 #include "q3map2.h"
 
 
+int c_huge_windings = 0;
+
 
 /* -------------------------------------------------------------------------------
 
@@ -498,6 +500,7 @@ void FilterDetailBrushesIntoTree( entity_t *e, tree_t *tree )
 	/* walk the list of brushes */
 	c_unique = 0;
 	c_clusters = 0;
+	c_huge_windings = 0;
 	
 	for( b = e->brushes; b; b = b->next )
 		count++;
@@ -527,6 +530,7 @@ void FilterDetailBrushesIntoTree( entity_t *e, tree_t *tree )
 	}
 	
 	/* emit some statistics */
+	Sys_Printf( "%9d huge windings created (with WzMap double precision)\n", c_huge_windings );
 	Sys_Printf( "%9d detail brushes\n", c_unique );
 	Sys_Printf( "%9d cluster references\n", c_clusters );
 }
@@ -555,6 +559,8 @@ void FilterStructuralBrushesIntoTree( entity_t *e, tree_t *tree, qboolean quiet 
 
 	c_unique = 0;
 	c_clusters = 0;
+	c_huge_windings = 0;
+
 	for ( b = e->brushes ; b ; b = b->next )
 	{
 		printLabelledProgress("FilterStructuralBrushesIntoTree", current, count);
@@ -584,6 +590,7 @@ void FilterStructuralBrushesIntoTree( entity_t *e, tree_t *tree, qboolean quiet 
 
 void FilterStructuralBrushesIntoTreeStats( void ) 
 {
+	Sys_Printf( "%9d huge windings created (with WzMap double precision)\n", c_huge_windings );
 	Sys_Printf( "%9d structural brushes\n", c_unique );
 	Sys_Printf( "%9d cluster references\n", c_clusters );
 }
@@ -790,7 +797,8 @@ void SplitBrush( brush_t *brush, int planenum, brush_t **front, brush_t **back )
 	}
 
 	if( WindingIsHuge( w ) )
-		Sys_Warning( w, "Huge winding" );
+		//Sys_Warning( w, "Huge winding" );
+		c_huge_windings++;
 
 	midwinding = w;
 
@@ -833,7 +841,7 @@ void SplitBrush( brush_t *brush, int planenum, brush_t **front, brush_t **back )
 		if (b[i]->numsides < 3 || !BoundBrush (b[i]))
 		{
 			if (b[i]->numsides >= 3)
-				Sys_Printf (SYS_VRB,"bogus brush after clip\n");
+				Sys_FPrintf (SYS_VRB,"bogus brush after clip\n");
 			FreeBrush (b[i]);
 			b[i] = NULL;
 		}

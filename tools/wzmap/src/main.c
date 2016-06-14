@@ -803,8 +803,10 @@ int main( int argc, char **argv )
 	/* vis */
 	else if( !strcmp( argv[ 1 ], "-vis" ) )
 	{
-		portals = (vportal_t*)malloc(sizeof(vportal_t)*MAX_PORTALS_ON_LEAF);
-		*sorted_portals = (vportal_t*)malloc(sizeof(vportal_t*)*MAX_MAP_PORTALS * 2);
+		//portals = (vportal_t*)malloc(sizeof(vportal_t)*MAX_PORTALS_ON_LEAF*2);
+		//sorted_portals = (vportal_t*)malloc(sizeof(vportal_t*)*MAX_MAP_PORTALS * 2);
+		//sorted_portals = (vportal_t*)malloc(sizeof(vportal_t*)*MAX_MAP_PORTALS * 2);
+		//memset(sorted_portals, 0, (sizeof(vportal_t*)*MAX_MAP_PORTALS * 2));
 		r = VisMain( argc - 1, argv + 1 );
 	}
 	

@@ -249,7 +249,7 @@ void InsertModel( char *name, int frame, int skin, m4x4_t transform, float uvSca
 	double				normalEpsilon_save;
 	double				distanceEpsilon_save;
 	vec3_t				forceVecs[ 2 ];
-	float				top = -99999, bottom = 99999;
+	float				top = -999999, bottom = 999999;
 	
 	/* get model */
 	model = LoadModel( name, frame );
@@ -707,8 +707,8 @@ void InsertModel( char *name, int frame, int skin, m4x4_t transform, float uvSca
 							float sz;
 							int z;
 							
-							VectorSet(mins, 99999, 99999, 99999);
-							VectorSet(maxs, -99999, -99999, -99999);
+							VectorSet(mins, 999999, 999999, 999999);
+							VectorSet(maxs, -999999, -999999, -999999);
 
 							for (z = 0; z < 4; z++)
 							{
@@ -722,7 +722,7 @@ void InsertModel( char *name, int frame, int skin, m4x4_t transform, float uvSca
 							}
 
 
-							if (top != -99999 && bottom != -99999)
+							if (top != -999999 && bottom != -999999)
 							{
 								float s = top - bottom;
 								float newtop = bottom + (s / 2.0);

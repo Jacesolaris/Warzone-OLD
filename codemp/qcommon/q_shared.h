@@ -42,8 +42,8 @@
 
 #include "game/teams.h" //npc team stuff
 
-#define MAX_WORLD_COORD		( 64 * 1024 )
-#define MIN_WORLD_COORD		( -64 * 1024 )
+#define MAX_WORLD_COORD		(524288)//( 64 * 1024 )
+#define MIN_WORLD_COORD		-(524288)//( -64 * 1024 )
 #define WORLD_SIZE			( MAX_WORLD_COORD - MIN_WORLD_COORD )
 
 //Pointer safety utilities

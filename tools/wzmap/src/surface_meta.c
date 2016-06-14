@@ -1140,7 +1140,7 @@ void SmoothMetaTriangles( void )
 	/* find triangle area weights, build optimized smooth verts table */
 	numSmoothVerts = 0;
 	smoothVerts = (smoothVert_t *)safe_malloc( numMetaVerts * sizeof( smoothVert_t ) );
-	RunThreadsOnIndividual( "SmoothMetaTriangles", numMetaTriangles, qfalse, MetaTriangleFindAreaWeight );
+	RunThreadsOnIndividual( "SmoothMetaTriangles", numMetaTriangles, qtrue, MetaTriangleFindAreaWeight );
 	free( metaTrianglePlaneTriangles );
 	for( i = 0; i < numMetaTriangles; i++ )
 	{
@@ -1935,7 +1935,7 @@ void MergeMetaTriangles( void )
 	/* run threaded */
 	/* vortex: real threaded implemetation is still crashy */
 	if( numMetaTriangleGroups )
-		RunSameThreadOn("MergeMetaTrianglesThread", numMetaTriangleGroups, verbose, MergeMetaTrianglesThread);
+		RunSameThreadOn("MergeMetaTrianglesThread", numMetaTriangleGroups, qtrue, MergeMetaTrianglesThread);
 
 	/* clear meta triangle list */
 	numTriangles = numMetaTriangles;

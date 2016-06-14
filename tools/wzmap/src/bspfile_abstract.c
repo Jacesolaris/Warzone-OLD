@@ -174,28 +174,36 @@ void SwapBSPFile( void )
 
 	/* planes */
 	SwapBlock( (int*) bspPlanes, numBSPPlanes * sizeof( bspPlanes[ 0 ] ) );
+	bspPlanes = (bspPlane_t*)realloc(bspPlanes, numBSPPlanes * sizeof( bspPlanes[ 0 ] ));
 	
 	/* nodes */
 	SwapBlock( (int*) bspNodes, numBSPNodes * sizeof( bspNodes[ 0 ] ) );
+	bspNodes = (bspNode_t*)realloc(bspNodes, numBSPNodes * sizeof( bspNodes[ 0 ] ));
 
 	/* leafs */
 	SwapBlock( (int*) bspLeafs, numBSPLeafs * sizeof( bspLeafs[ 0 ] ) );
+	bspLeafs = (bspLeaf_t*)realloc(bspLeafs, numBSPLeafs * sizeof( bspLeafs[ 0 ] ));
 
 	/* leaffaces */
 	SwapBlock( (int*) bspLeafSurfaces, numBSPLeafSurfaces * sizeof( bspLeafSurfaces[ 0 ] ) );
+	bspLeafSurfaces = (int*)realloc(bspLeafSurfaces, numBSPLeafSurfaces * sizeof( bspLeafSurfaces[ 0 ] ));
 
 	/* leafbrushes */
 	SwapBlock( (int*) bspLeafBrushes, numBSPLeafBrushes * sizeof( bspLeafBrushes[ 0 ] ) );
+	bspLeafBrushes = (int*)realloc(bspLeafBrushes, numBSPLeafBrushes * sizeof( bspLeafBrushes[ 0 ] ));
 
 	// brushes
 	SwapBlock( (int*) bspBrushes, numBSPBrushes * sizeof( bspBrushes[ 0 ] ) );
+	bspBrushes = (bspBrush_t*)realloc(bspBrushes, numBSPBrushes * sizeof( bspBrushes[ 0 ] ));
 
 	// brushsides
 	SwapBlock( (int*) bspBrushSides, numBSPBrushSides * sizeof( bspBrushSides[ 0 ] ) );
+	bspBrushSides = (bspBrushSide_t*)realloc(bspBrushSides, numBSPBrushSides * sizeof( bspBrushSides[ 0 ] ));
 
 	// vis
 	((int*) &bspVisBytes)[ 0 ] = LittleLong( ((int*) &bspVisBytes)[ 0 ] );
 	((int*) &bspVisBytes)[ 1 ] = LittleLong( ((int*) &bspVisBytes)[ 1 ] );
+	bspVisBytes = (byte*)realloc(bspVisBytes, numBSPVisBytes * sizeof( byte ));
 
 	/* drawverts (don't swap colors) */
 	for( i = 0; i < numBSPDrawVerts; i++ )
@@ -214,6 +222,7 @@ void SwapBSPFile( void )
 			bspDrawVerts[ i ].lightmap[ j ][ 1 ] = LittleFloat( bspDrawVerts[ i ].lightmap[ j ][ 1 ] );
 		}
 	}
+	bspDrawVerts = (bspDrawVert_t*)realloc(bspDrawVerts, numBSPDrawVerts * sizeof( bspDrawVerts[ 0 ] ));
 	
 	/* drawindexes */
 	SwapBlock( (int*) bspDrawIndexes, numBSPDrawIndexes * sizeof( bspDrawIndexes[0] ) );
@@ -221,6 +230,7 @@ void SwapBSPFile( void )
 	/* drawsurfs */
 	/* note: rbsp files (and hence q3map2 abstract bsp) have byte lightstyles index arrays, this follows sof2map convention */
 	SwapBlock( (int*) bspDrawSurfaces, numBSPDrawSurfaces * sizeof( bspDrawSurfaces[ 0 ] ) );
+	bspDrawSurfaces = (bspDrawSurface_t*)realloc(bspDrawSurfaces, numBSPDrawSurfaces * sizeof( bspDrawSurfaces[ 0 ] ));
 
 	/* fogs */
 	for( i = 0; i < numBSPFogs; i++ )

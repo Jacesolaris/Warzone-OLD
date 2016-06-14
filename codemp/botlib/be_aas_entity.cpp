@@ -367,7 +367,7 @@ int AAS_NearestEntity(vec3_t origin, int modelindex)
 	vec3_t dir;
 
 	bestentnum = 0;
-	bestdist = 99999;
+	bestdist = 999999;
 	for (i = 0; i < aasworld.maxentities; i++)
 	{
 		ent = &aasworld.entities[i];

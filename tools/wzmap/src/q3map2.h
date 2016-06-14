@@ -88,6 +88,24 @@ dependencies
 	#define Q_ASSIGN_VEC3( a, b, c )	
 #endif
 
+#if (_MSC_VER < 1300)
+   typedef signed char       int8_t;
+   typedef signed short      int16_t;
+   typedef signed int        int32_t;
+   typedef unsigned char     uint8_t;
+   typedef unsigned short    uint16_t;
+   typedef unsigned int      uint32_t;
+#else
+   typedef signed __int8     int8_t;
+   typedef signed __int16    int16_t;
+   typedef signed __int32    int32_t;
+   typedef unsigned __int8   uint8_t;
+   typedef unsigned __int16  uint16_t;
+   typedef unsigned __int32  uint32_t;
+#endif
+typedef signed __int64       int64_t;
+typedef unsigned __int64     uint64_t;
+
 /* -------------------------------------------------------------------------------
 
 port-related hacks
@@ -215,7 +233,7 @@ constants
 #define	MAX_PORTALS				32768
 #define MAX_SEPERATORS			MAX_POINTS_ON_WINDING
 #define	MAX_POINTS_ON_FIXED_WINDING	24	/* ydnar: increased this from 12 at the expense of more memory */
-#define	MAX_PORTALS_ON_LEAF		32768//128
+#define	MAX_PORTALS_ON_LEAF		32768//4096//128
 
 
 /* light */
@@ -396,8 +414,8 @@ abstracted bsp file
 #define	LIGHTMAP_WIDTH			128
 #define	LIGHTMAP_HEIGHT			128
 
-#define MIN_WORLD_COORD			(-65536)
-#define	MAX_WORLD_COORD			(65536)
+#define MIN_WORLD_COORD			(-524288)//(-65536)
+#define	MAX_WORLD_COORD			(524288)//(65536)
 #define WORLD_SIZE				(MAX_WORLD_COORD - MIN_WORLD_COORD)
 
 
@@ -1293,7 +1311,7 @@ visPlane_t;
 
 typedef struct
 {
-	int					numpoints;
+	uint32_t/*int*/					numpoints;
 	vec3_t				points[	MAX_POINTS_ON_FIXED_WINDING	];		/* variable sized */
 } 
 fixedWinding_t;
@@ -2256,7 +2274,6 @@ Q_EXTERN int				skyboxArea Q_ASSIGN( -1 );
 Q_EXTERN m4x4_t				skyboxTransform;
 
 
-
 /* -------------------------------------------------------------------------------
 
 vis global variables
@@ -2274,12 +2291,12 @@ Q_EXTERN qboolean			hint;	/* ydnar */
 Q_EXTERN char				inbase[ MAX_QPATH ];
 
 /* other bits */
-Q_EXTERN int				totalvis;
+Q_EXTERN uint32_t/*int*/				totalvis;
 
 Q_EXTERN float				farPlaneDist;	/* rr2do2, rf, mre, ydnar all contributed to this one... */
 
-Q_EXTERN int				numportals;
-Q_EXTERN int				portalclusters;
+Q_EXTERN uint32_t/*int*/				numportals;
+Q_EXTERN uint32_t/*int*/				portalclusters;
 
 Q_EXTERN vportal_t			*portals;
 Q_EXTERN leaf_t				*leafs;
@@ -2287,21 +2304,21 @@ Q_EXTERN leaf_t				*leafs;
 Q_EXTERN vportal_t			*faces;
 Q_EXTERN leaf_t				*faceleafs;
 
-Q_EXTERN int				numfaces;
+Q_EXTERN uint32_t/*int*/				numfaces;
 
-Q_EXTERN int				c_portaltest, c_portalpass, c_portalcheck;
-Q_EXTERN int				c_portalskip, c_leafskip;
-Q_EXTERN int				c_vistest, c_mighttest;
-Q_EXTERN int				c_chains;
+Q_EXTERN uint32_t/*int*/				c_portaltest, c_portalpass, c_portalcheck;
+Q_EXTERN uint32_t/*int*/				c_portalskip, c_leafskip;
+Q_EXTERN uint32_t/*int*/				c_vistest, c_mighttest;
+Q_EXTERN uint32_t/*int*/				c_chains;
 
 Q_EXTERN byte				*vismap, *vismap_p, *vismap_end;
 
-Q_EXTERN int				testlevel;
+Q_EXTERN uint32_t/*int*/				testlevel;
 
 Q_EXTERN byte				*uncompressed;
 
-Q_EXTERN int				leafbytes, leaflongs;
-Q_EXTERN int				portalbytes, portallongs;
+Q_EXTERN uint32_t/*int*/				leafbytes, leaflongs;
+Q_EXTERN uint32_t/*int*/				portalbytes, portallongs;
 
 Q_EXTERN vportal_t			*sorted_portals[ MAX_MAP_PORTALS * 2 ];
 

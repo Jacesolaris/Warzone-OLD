@@ -115,7 +115,7 @@ static void SelectSplitPlaneNum( node_t *node, face_t *list, int *splitPlaneNum,
 	}
 	
 	/* pick one of the face planes */
-	bestValue = -99999;
+	bestValue = -999999;
 	bestSplit = list;
 	
 	for( split = list; split; split = split->next )
@@ -159,7 +159,7 @@ static void SelectSplitPlaneNum( node_t *node, face_t *list, int *splitPlaneNum,
 	}
 	
 	/* nothing, we have a leaf */
-	if( bestValue == -99999 )
+	if( bestValue == -999999 )
 		return;
 	
 	/* set best split data */

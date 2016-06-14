@@ -541,7 +541,7 @@ void RB_RenderFlares (void) {
 	GL_SetModelviewMatrix(matrix);
 	Matrix16Ortho( backEnd.viewParms.viewportX, backEnd.viewParms.viewportX + backEnd.viewParms.viewportWidth,
 	               backEnd.viewParms.viewportY, backEnd.viewParms.viewportY + backEnd.viewParms.viewportHeight,
-	               -99999, 99999, matrix );
+	               -999999, 999999, matrix );
 	GL_SetProjectionMatrix(matrix);
 
 	for ( f = r_activeFlares ; f ; f = f->next ) {

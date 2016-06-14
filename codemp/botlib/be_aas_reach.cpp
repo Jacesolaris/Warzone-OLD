@@ -918,7 +918,7 @@ int AAS_Reachability_EqualFloorHeight(int area1num, int area2num)
 	VectorCopy(gravitydirection, invgravity);
 	VectorInverse(invgravity);
 	//
-	bestheight = 99999;
+	bestheight = 999999;
 	bestlength = 0;
 	foundreach = qfalse;
 	Com_Memset(&lr, 0, sizeof(aas_lreachability_t)); //make the compiler happy
@@ -1076,12 +1076,12 @@ int AAS_Reachability_Step_Barrier_WaterJump_WalkOffLedge(int area1num, int area2
 	} //end for
 	//
 	ground_foundreach = qfalse;
-	ground_bestdist = 99999;
+	ground_bestdist = 999999;
 	ground_bestlength = 0;
 	ground_bestarea2groundedgenum = 0;
 	//
 	water_foundreach = qfalse;
-	water_bestdist = 99999;
+	water_bestdist = 999999;
 	water_bestlength = 0;
 	water_bestarea2groundedgenum = 0;
 	//
@@ -2534,7 +2534,7 @@ int AAS_Reachability_Ladder(int area1num, int area2num)
 		if (ladderface1vertical)
 		{
 			//find lowest edge of the ladder face
-			lowestpoint[2] = 99999;
+			lowestpoint[2] = 999999;
 			for (i = 0; i < ladderface1->numedges; i++)
 			{
 				edge1num = abs(aasworld.edgeindex[ladderface1->firstedge + i]);

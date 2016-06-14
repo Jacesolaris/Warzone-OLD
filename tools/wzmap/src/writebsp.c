@@ -602,7 +602,7 @@ void BeginModel( void )
 	}
 
 	/* ydnar: lightgrid mins/maxs */
-	if( lgMins[ 0 ] < 99999 )
+	if( lgMins[ 0 ] < 999999 )
 	{
 		/* use lightgrid bounds */
 		VectorCopy( lgMins, mod->mins );

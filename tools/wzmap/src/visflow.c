@@ -148,13 +148,12 @@ fixedWinding_t	*VisChopWinding (fixedWinding_t *in, pstack_t *stack, visPlane_t 
 	// determine sides for each point
 	for (i=0 ; i<in->numpoints ; i++)
 	{
-		if (i >= 24) continue;
+		if (i >= 128) break;
+		if (!in || !stack || !split) continue;
 
 		dot = DotProduct (in->points[i], split->normal);
 		dot -= split->dist;
 		dists[i] = dot;
-
-		if (i >= 128) continue;
 
 		if (dot > ON_EPSILON)
 			sides[i] = SIDE_FRONT;
@@ -1051,7 +1050,7 @@ void PassagePortalFlow (int portalnum)
 		p->status = stat_done;
 		return;
 	}
-
+	
 	p->status = stat_working;
 
 //	c_might = CountBits (p->portalflood, numportals*2);

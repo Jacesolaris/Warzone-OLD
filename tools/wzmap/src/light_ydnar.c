@@ -508,7 +508,7 @@ static int MapSingleLuxel( rawLightmap_t *lm, surfaceInfo_t *info, bspDrawVert_t
 						{  0.0f,  0.0f,  4.0f }, /* top 4x */
 						{  0.0f,  0.0f, -1.0f }, /* bottom 1x */
 						{  0.0f,  0.0f, -2.0f }, /* bottom 2x */
-						{ -99999.0f, -99999.0f }
+						{ -999999.0f, -999999.0f }
 					};
 
 	/* find luxel xy coords (fixme: subtract 0.5?) */
@@ -685,7 +685,7 @@ static int MapSingleLuxel( rawLightmap_t *lm, surfaceInfo_t *info, bspDrawVert_t
 	{
 		/* nudge the the location around */
 		nudge = nudges[ 0 ];
-		while( nudge[ 0 ] > -99999.0f )
+		while( nudge[ 0 ] > -999999.0f )
 		{
 			/* vortex: try 4 distances (0.25, 0.5, 0.75, 1.0) */
 			for( e = 0.25f; e <= 1.0f; e += 0.25f )

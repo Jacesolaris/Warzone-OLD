@@ -214,7 +214,7 @@ void ClusterMerge (int leafnum)
 
 	totalvis += numvis;
 
-	Sys_Printf ("cluster %4i : %4i visible\n", leafnum, numvis);
+	//Sys_Printf ("cluster %4i : %4i visible\n", leafnum, numvis);
 
 	memcpy (bspVisBytes + VIS_HEADER_SIZE + leafnum*leafbytes, uncompressed, leafbytes);
 }
@@ -255,7 +255,7 @@ void CalcPassageVis(void)
 #else
 	Sys_PrintHeading ( "--- CreatePassages ---\n" );
 	RunThreadsOnIndividual( "CreatePassages", numportals*2, qtrue, CreatePassages );
-	
+
 	Sys_PrintHeading ( "--- PassageFlow ---\n" );
 	RunThreadsOnIndividual( "PassageFlow", numportals * 2, qtrue, PassageFlow );
 #endif
@@ -266,6 +266,7 @@ void CalcPassageVis(void)
 CalcPassagePortalVis
 ==================
 */
+
 void CalcPassagePortalVis(void)
 {
 	PassageMemory();
@@ -333,8 +334,12 @@ void CalcVis (void)
 	Sys_PrintHeading ( "--- BasePortalVis ---\n" );
 	RunThreadsOnIndividual( "BasePortalVis", numportals * 2, qtrue, BasePortalVis );
 
+	portals = (vportal_t*)realloc(portals, sizeof(vportal_t)*numportals * 2);
+	//sorted_portals = (vportal_t*)realloc(sorted_portals, sizeof(vportal_t)*numportals*2);
+
 	/* fast/passage vis */
 	SortPortals ();
+
 	if (fastvis)
 		CalcFastVis();
 	else if ( noPassageVis )
@@ -893,8 +898,11 @@ void LoadPortals (char *name)
 	portals = (vportal_t *)safe_malloc(2*numportals*sizeof(vportal_t));
 	memset (portals, 0, 2*numportals*sizeof(vportal_t));
 	
-	leafs = (leaf_t *)safe_malloc(portalclusters*sizeof(leaf_t));
+	leafs = (leaf_t *)safe_malloc(2*portalclusters*sizeof(leaf_t));
 	memset (leafs, 0, portalclusters*sizeof(leaf_t));
+
+	//Sys_Printf("portals: %i MB.\n", (2*numportals*sizeof(vportal_t)) / (1024 * 1024));
+	//Sys_Printf("leafs: %i MB.\n", (2*portalclusters*sizeof(leaf_t)) / (1024 * 1024));
 
 	for (i = 0; i < portalclusters; i++)
 		leafs[i].merged = -1;
@@ -982,8 +990,11 @@ void LoadPortals (char *name)
 	faces = (vportal_t *)safe_malloc(2*numfaces*sizeof(vportal_t));
 	memset (faces, 0, 2*numfaces*sizeof(vportal_t));
 
-	faceleafs = (leaf_t *)safe_malloc(portalclusters*sizeof(leaf_t));
+	faceleafs = (leaf_t *)safe_malloc(2*portalclusters*sizeof(leaf_t));
 	memset(faceleafs, 0, portalclusters*sizeof(leaf_t));
+
+	//Sys_Printf("faces: %i MB.\n", (2*numfaces*sizeof(vportal_t)) / (1024 * 1024));
+	//Sys_Printf("faceleafs: %i MB.\n", (2*portalclusters*sizeof(leaf_t)) / (1024 * 1024));
 
 	for (i = 0, p = faces; i < numfaces; i++)
 	{
@@ -1029,6 +1040,8 @@ void LoadPortals (char *name)
 	}
 	
 	fclose (f);
+
+	mapplanes = (plane_t*)realloc(mapplanes, sizeof(plane_t)*nummapplanes);
 }
 
 
@@ -1119,7 +1132,7 @@ int VisMain (int argc, char **argv)
 	strcat( source, ".bsp" );
 	Sys_Printf( "loading %s\n", source );
 	LoadBSPFile( source );
-	
+
 	/* load the portal file */
 	Sys_PrintHeading ( "--- LoadPRTFile ---\n" );
 	sprintf( portalfile, "%s%s", inbase, ExpandArg( argv[ i ] ) );
@@ -1127,6 +1140,7 @@ int VisMain (int argc, char **argv)
 	strcat( portalfile, ".prt" );
 	Sys_Printf( "loading %s\n", portalfile );
 	LoadPortals( portalfile );
+
 	
 	/* ydnar: exit if no portals, hence no vis */
 	if( numportals == 0 )
@@ -1134,6 +1148,19 @@ int VisMain (int argc, char **argv)
 		Sys_Printf( "No portals means no vis, exiting.\n" );
 		return 0;
 	}
+
+	/* UQ1: Realloc all memory usage so we only use what this map needs... */
+	mapplanes = (plane_t*)realloc(mapplanes, sizeof(plane_t)*nummapplanes);
+	bspPlanes = (bspPlane_t*)realloc(bspPlanes, numBSPPlanes * sizeof( bspPlane_t ));
+	bspLeafs = (bspLeaf_t*)realloc(bspLeafs, numBSPLeafs * sizeof( bspLeaf_t ));
+	bspNodes = (bspNode_t*)realloc(bspNodes, numBSPNodes * sizeof( bspNode_t ));
+	bspLeafSurfaces = (int*)realloc(bspLeafSurfaces, numBSPLeafSurfaces * sizeof( bspLeafSurfaces[ 0 ] ));
+	bspLeafBrushes = (int*)realloc(bspLeafBrushes, numBSPLeafBrushes * sizeof( bspLeafBrushes[ 0 ] ));
+	bspBrushes = (bspBrush_t*)realloc(bspBrushes, numBSPBrushes * sizeof( bspBrush_t ));
+	bspBrushSides = (bspBrushSide_t*)realloc(bspBrushSides, numBSPBrushSides * sizeof( bspBrushSide_t ));
+	bspDrawVerts = (bspDrawVert_t*)realloc(bspDrawVerts, numBSPDrawVerts * sizeof( bspDrawVerts[ 0 ] ));
+	bspDrawSurfaces = (bspDrawSurface_t*)realloc(bspDrawSurfaces, numBSPDrawSurfaces * sizeof( bspDrawSurfaces[ 0 ] ));
+	bspVisBytes = (byte*)realloc(bspVisBytes, numBSPVisBytes * sizeof( byte ));
 	
 	/* ydnar: for getting far plane */
 	ParseEntities();
@@ -1142,6 +1169,11 @@ int VisMain (int argc, char **argv)
 	{
 		MergeLeaves();
 		MergeLeafPortals();
+	}
+
+	if (!mergevis)
+	{
+		fastvis = qtrue;
 	}
 	
 	CountActivePortals();

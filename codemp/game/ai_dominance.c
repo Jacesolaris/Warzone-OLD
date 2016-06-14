@@ -469,7 +469,7 @@ int DOM_GetNearestWP(vec3_t org, int badwp)
 	else*/
 	{
 		//We're not doing traces!
-		bestdist = 99999;
+		bestdist = 999999;
 	}
 	bestindex = -1;
 
@@ -512,7 +512,7 @@ int DOM_GetNearWP(vec3_t org, int badwp)
 	else*/
 	{
 		//We're not doing traces!
-		bestdist = 99999;
+		bestdist = 999999;
 	}
 	bestindex = -1;
 

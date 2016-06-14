@@ -1029,7 +1029,7 @@ void NPC_DoPadawanStuff ( void )
 	int			i = 0;
 	gentity_t	*me = NPCS.NPC;
 	gentity_t	*parent = me->parent;
-	int			best_parent_dist = 99999;
+	int			best_parent_dist = 999999;
 	gentity_t	*best_parent = NULL;
 
 	if (!(g_gametype.integer == GT_WARZONE || g_gametype.integer == GT_INSTANCE) )

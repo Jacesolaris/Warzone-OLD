@@ -652,8 +652,8 @@ float RadiusFromBounds( const vec3_t mins, const vec3_t maxs ) {
 
 
 void ClearBounds( vec3_t mins, vec3_t maxs ) {
-	mins[0] = mins[1] = mins[2] = 99999;
-	maxs[0] = maxs[1] = maxs[2] = -99999;
+	mins[0] = mins[1] = mins[2] = 999999;
+	maxs[0] = maxs[1] = maxs[2] = -999999;
 }
 
 float DistanceVertical( const vec3_t p1, const vec3_t p2 ) {
