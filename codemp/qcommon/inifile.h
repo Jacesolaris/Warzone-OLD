@@ -1,3 +1,9 @@
+#pragma once
+
+#define MAX_LINE_LENGTH    80
+
+int get_private_profile_string(char *, char *, char *, char *, int, char *);
+int write_private_profile_string(char *, char *, char *, char *);
 
 const char *IniRead(char *aFilespec, char *aSection, char *aKey, char *aDefault);
-bool IniWrite(char *aFilespec, char *aSection, char *aKey, char *aValue);
+void IniWrite(char *aFilespec, char *aSection, char *aKey, char *aValue);

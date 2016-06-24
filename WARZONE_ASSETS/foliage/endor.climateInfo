@@ -1,4 +1,2 @@
-//climateSelection "tropical"
-//climateSelection "springpineforest"
-climateSelection "endorredwoodforest"
-//climateSelection "snowpineforest"
+[CLIMATE]
+CLIMATE_TYPE=endorredwoodforest

@@ -2,6 +2,7 @@
 
 #include <omp.h>
 #include "../game/bg_weapons.h"
+#include "../qcommon/inifile.h"
 
 // Copyright (C) 1999-2000 Id Software, Inc.
 //

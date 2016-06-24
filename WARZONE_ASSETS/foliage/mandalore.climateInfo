@@ -1,1 +1,2 @@
-climateSelection "tropical"
+[CLIMATE]
+CLIMATE_TYPE=tropical

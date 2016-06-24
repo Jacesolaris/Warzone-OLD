@@ -3,6 +3,7 @@
 // qcommon.h -- definitions common between client and server, but not game.or ref modules
 
 #include "qcommon/q_shared.h"
+#include "qcommon/inifile.h"
 
 //#define __NET_ZLIB__
 

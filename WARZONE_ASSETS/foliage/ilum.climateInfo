@@ -1,1 +1,2 @@
-climateSelection "snowpineforest"
+[CLIMATE]
+CLIMATE_TYPE=snowpineforest

@@ -12,7 +12,7 @@ endif(WIN32)
 set(MPCGameDefines ${MPSharedDefines} "_CGAME" )
 set(MPCGameGameFiles
 	"${MPDir}/game/NPC_AI_Animal.c"
-  "${MPDir}/game/NPC_AI_Fighter.c"
+	"${MPDir}/game/NPC_AI_Fighter.c"
 	"${MPDir}/game/NPC_AI_Speeder.c"
 	"${MPDir}/game/NPC_AI_Walker.c"
 	"${MPDir}/game/bg_g2_utils.c"
@@ -44,7 +44,7 @@ set(MPCGameCgameFiles
 	"${MPDir}/cgame/cg_effects.c"
 	"${MPDir}/cgame/cg_ents.c"
 	"${MPDir}/cgame/cg_event.c"
-	"${MPDir}/cgame/cg_foliage.cpp"
+	"${MPDir}/cgame/cg_foliage.c"
 	"${MPDir}/cgame/cg_info.c"
 	"${MPDir}/cgame/cg_light.c"
 	"${MPDir}/cgame/cg_localents.c"
@@ -69,7 +69,7 @@ set(MPCGameCgameFiles
 	"${MPDir}/cgame/cg_holster.h"
 	"${MPDir}/cgame/cg_weapons.c"
 	"${MPDir}/cgame/fx_force.c"
-  "${MPDir}/cgame/fx_weapons.c"
+	"${MPDir}/cgame/fx_weapons.c"
 	"${MPDir}/cgame/fx_weapons_demp2.c"
 	"${MPDir}/cgame/fx_weapons_disruptor.c"
 	"${MPDir}/cgame/fx_weapons_heavyrepeater.c"
@@ -91,8 +91,8 @@ source_group("cgame" FILES ${MPCGameCgameFiles})
 set(MPCGameFiles ${MPCGameFiles} ${MPCGameCgameFiles})
 
 set(MPCGameCommonFiles
-  "${MPDir}/qcommon/inifile.cpp"
-  "${MPDir}/qcommon/inifile.h"
+	"${MPDir}/qcommon/inifile.cpp"
+	"${MPDir}/qcommon/inifile.h"
 	"${MPDir}/qcommon/q_math.c"
 	"${MPDir}/qcommon/q_shared.c"
 	"${MPDir}/qcommon/disablewarnings.h"

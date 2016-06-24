@@ -12,6 +12,7 @@
 #include "bg_public.h"
 #include "bg_vehicles.h"
 #include "g_public.h"
+#include "../qcommon/inifile.h"
 
 typedef struct gentity_s gentity_t;
 typedef struct gclient_s gclient_t;

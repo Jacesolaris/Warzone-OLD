@@ -12,6 +12,8 @@ set(MPWarzoneFiles
   "${MPDir}/client/fast_mutex.h"
 	"${MPDir}/client/tinythread.cpp"
 	"${MPDir}/client/tinythread.h"
+	"${MPDir}/qcommon/inifile.h"
+	"${MPDir}/qcommon/inifile.cpp"
 	"${MPDir}/rd-warzone/iqm.h"
 	"${MPDir}/rd-warzone/qgl.h"
 	"${MPDir}/rd-warzone/G2_API.cpp"

@@ -33,7 +33,7 @@ set(MPGameGameFiles
 	"${MPDir}/game/g_combat.c"
 	"${MPDir}/game/g_cvar.c"
 	"${MPDir}/game/g_exphysics.c"
-	"${MPDir}/game/g_foliage.cpp"
+	"${MPDir}/game/g_foliage.c"
 	"${MPDir}/game/g_ICARUScb.c"
 	"${MPDir}/game/g_items.c"
 	"${MPDir}/game/g_log.c"
@@ -143,8 +143,8 @@ source_group("game" FILES ${MPGameGameFiles})
 set(MPGameFiles ${MPGameFiles} ${MPGameGameFiles})
 
 set(MPGameCommonFiles
-  "${MPDir}/qcommon/inifile.cpp"
-  "${MPDir}/qcommon/inifile.h"
+	"${MPDir}/qcommon/inifile.cpp"
+	"${MPDir}/qcommon/inifile.h"
 	"${MPDir}/qcommon/q_math.c"
 	"${MPDir}/qcommon/q_shared.c"
 	"${MPDir}/qcommon/disablewarnings.h"

@@ -74,6 +74,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include <map>
 #include <unordered_map>
 #include <string>
+#include "../qcommon/inifile.h"
 
 #ifdef _WIN32
 #include "win32\win_local.h"
