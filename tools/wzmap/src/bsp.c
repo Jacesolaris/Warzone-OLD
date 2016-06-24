@@ -1096,6 +1096,7 @@ handles creation of a bsp from a map file
 */
 
 extern int FOLIAGE_NUM_POSITIONS;
+extern void FOLIAGE_LoadClimateData( char *filename );
 extern qboolean FOLIAGE_LoadFoliagePositions( char *filename );
 
 int BSPMain( int argc, char **argv )
@@ -1468,10 +1469,15 @@ int BSPMain( int argc, char **argv )
 		}
 		else
 		{
+			char filename2[1024] = { 0 };
+
 			generateforest = qtrue;
 
 			Sys_PrintHeading ( "--- Forest generation enabled ---\n" );
 			Sys_Printf( "Loaded %i tree points from foliage file.\n", FOLIAGE_NUM_POSITIONS );
+
+			sprintf(filename2, "%s.climate", source);
+			FOLIAGE_LoadClimateData(filename2);
 		}
 	}
 

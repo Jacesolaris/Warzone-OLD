@@ -63,6 +63,8 @@ void printProgressVerbose (double percentage);
 void printDetailedProgress (double percentage);
 void printDetailedProgressVerbose (double percentage);
 
+char *va( const char *format, ... );
+
 #define	MAX_OS_PATH		1024
 #define MEM_BLOCKSIZE 4096
 

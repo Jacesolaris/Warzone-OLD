@@ -201,6 +201,9 @@
     <ClCompile Include="..\src\forest.c">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\inifile.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\games\darkplaces.h">
@@ -304,6 +307,9 @@
     </ClInclude>
     <ClInclude Include="..\src\libs\picomodel.h">
       <Filter>include\libs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\inifile.h">
+      <Filter>src</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

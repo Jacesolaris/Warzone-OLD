@@ -390,6 +390,24 @@ void *safe_malloc_info( size_t size, char* info )
 }
 #endif
 
+#define	MAX_VA_STRING	32000
+#define MAX_VA_BUFFERS 4
+
+char *va( const char *format, ... )
+{
+	va_list		argptr;
+	static char	string[MAX_VA_BUFFERS][MAX_VA_STRING];	// in case va is called by nested functions
+	static int	index = 0;
+	char		*buf;
+
+	va_start( argptr, format );
+	buf = (char *)&string[index++ & 3];
+	vsnprintf( buf, sizeof(*string), format, argptr );
+	va_end( argptr );
+
+	return buf;
+}
+
 // set these before calling CheckParm
 int myargc;
 char **myargv;

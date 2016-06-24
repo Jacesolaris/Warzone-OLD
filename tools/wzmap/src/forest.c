@@ -5,12 +5,33 @@
 
 /* dependencies */
 #include "q3map2.h"
-
+#include "inifile.h"
 
 extern void SetEntityBounds( entity_t *e );
 extern void LoadEntityIndexMap( entity_t *e );
 extern void AdjustBrushesForOrigin( entity_t *ent );
 
+float			TREE_SCALE_MULTIPLIER = 2.5;
+char			TREE_MODELS[16][128] = { 0 };
+float			TREE_OFFSETS[16] = { -4.0 };
+
+void FOLIAGE_LoadClimateData( char *filename )
+{
+	int i = 0;
+
+	// Read all the tree info from the new .climate ini files...
+	TREE_SCALE_MULTIPLIER = atof(IniRead(filename, "TREES", "treeScaleMultiplier", "1.0"));
+
+	Sys_Printf("Tree scale for this climate is %f.\n", TREE_SCALE_MULTIPLIER);
+
+	for (i = 0; i < 9; i++)
+	{
+		strcpy(TREE_MODELS[i], IniRead(filename, "TREES", va("treeModel%i", i), ""));
+		TREE_OFFSETS[i] = atof(IniRead(filename, "TREES", va("treeZoffset%i", i), "-4.0"));
+
+		Sys_Printf("Tree %i - Model %s - Offset %f.\n", i, TREE_MODELS[i], TREE_OFFSETS[i]);
+	}
+}
 
 #define			FOLIAGE_MAX_FOLIAGES 2097152
 
@@ -64,23 +85,10 @@ qboolean FOLIAGE_LoadFoliagePositions( char *filename )
 	return qtrue;
 }
 
-const char *TROPICAL_TREES[] =
-{
-"models/warzone/trees/uqpalm2.md3",
-"models/warzone/trees/uqpalm3.md3",
-"models/warzone/trees/giant1.md3",
-"models/warzone/trees/anvilpalm1.md3",
-"models/warzone/trees/willow.md3",
-"models/warzone/trees/willow2.md3",
-"models/warzone/trees/willow3.md3",
-"models/warzone/trees/willow4.md3",
-"models/warzone/trees/manfern.md3",
-};
 
 //#define __ADD_TREES_EARLY__ // Add trees to map's brush list instanty...
 
 extern void MoveBrushesToWorld( entity_t *ent );
-
 
 void GenerateMapForest ( void )
 {
@@ -124,7 +132,7 @@ void GenerateMapForest ( void )
 			//mapEnt->forceSubmodel = qtrue;
 
 			VectorCopy(FOLIAGE_POSITIONS[i], mapEnt->origin);
-			mapEnt->origin[2] -= 64.0;
+			mapEnt->origin[2] += TREE_OFFSETS[FOLIAGE_TREE_SELECTION[i]-1];
 
 			{
 				char str[32];
@@ -134,7 +142,7 @@ void GenerateMapForest ( void )
 
 			{
 				char str[32];
-				sprintf( str, "%f", FOLIAGE_TREE_SCALE[i]*2.0*2.5 );
+				sprintf( str, "%f", FOLIAGE_TREE_SCALE[i]*2.0*TREE_SCALE_MULTIPLIER );
 				SetKeyValue( mapEnt, "modelscale", str );
 			}
 
@@ -157,7 +165,7 @@ void GenerateMapForest ( void )
 			SetKeyValue( mapEnt, "classname", "misc_model");
 			classname = ValueForKey( mapEnt, "classname" );
 			
-			SetKeyValue( mapEnt, "model", TROPICAL_TREES[FOLIAGE_TREE_SELECTION[i]-1]); // test tree
+			SetKeyValue( mapEnt, "model", TREE_MODELS[FOLIAGE_TREE_SELECTION[i]-1]); // test tree
 
 			//Sys_Printf( "Generated tree at %f %f %f. Model %s.\n", mapEnt->origin[0], mapEnt->origin[1], mapEnt->origin[2], TROPICAL_TREES[FOLIAGE_TREE_SELECTION[i]-1] );
 
