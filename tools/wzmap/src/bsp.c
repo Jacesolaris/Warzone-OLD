@@ -535,7 +535,7 @@ void ProcessWorldModel( void )
 
 	ShowDetailedStats();
 
-	mapplanes = (plane_t*)realloc(mapplanes, sizeof(plane_t)*nummapplanes); // UQ1: Test realloc here
+	//mapplanes = (plane_t*)realloc(mapplanes, sizeof(plane_t)*nummapplanes); // UQ1: Test realloc here
 	
 	/* generate bsp brushes from map brushes */
 	EmitBrushes( e->brushes, &e->firstBrush, &e->numBrushes );
