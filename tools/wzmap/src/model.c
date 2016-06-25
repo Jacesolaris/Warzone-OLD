@@ -231,6 +231,8 @@ float Distance(vec3_t pos1, vec3_t pos2)
 
 extern void LoadShaderImages( shaderInfo_t *si );
 
+int numSolidSurfs = 0, numHeightCulledSurfs = 0, numSizeCulledSurfs = 0;
+
 void InsertModel( char *name, int frame, int skin, m4x4_t transform, float uvScale, remap_t *remap, shaderInfo_t *celShader, int entityNum, int mapEntityNum, char castShadows, char recvShadows, int spawnFlags, float lightmapScale, vec3_t lightmapAxis, vec3_t minlight, vec3_t minvertexlight, vec3_t ambient, vec3_t colormod, float lightmapSampleSize, int shadeAngle, int vertTexProj, qboolean noAlphaFix, float pushVertexes, qboolean skybox, int *added_surfaces, int *added_verts, int *added_triangles, int *added_brushes, qboolean cullSmallSolids )
 {
 	int					i, j, k, s, numSurfaces;
@@ -706,6 +708,8 @@ void InsertModel( char *name, int frame, int skin, m4x4_t transform, float uvSca
 							vec3_t size;
 							float sz;
 							int z;
+
+							numSolidSurfs++;
 							
 							VectorSet(mins, 999999, 999999, 999999);
 							VectorSet(maxs, -999999, -999999, -999999);
@@ -721,7 +725,6 @@ void InsertModel( char *name, int frame, int skin, m4x4_t transform, float uvSca
 								if (points[z][2] > maxs[2]) maxs[2] = points[z][2];
 							}
 
-
 							if (top != -999999 && bottom != -999999)
 							{
 								float s = top - bottom;
@@ -732,25 +735,38 @@ void InsertModel( char *name, int frame, int skin, m4x4_t transform, float uvSca
 								if (mins[2] > newtop)
 								{
 									//Sys_Printf("CULLED: %f > %f.\n", maxs[2], newtop);
+									free(buildBrush);
+									numHeightCulledSurfs++;
 									continue;
 								}
 							}
 
 							VectorSubtract(maxs, mins, size);
-							sz = VectorLength(size);
+							//sz = VectorLength(size);
+							sz = maxs[0] - mins[0];
+							if (maxs[1] - mins[1] > sz) sz = maxs[1] - mins[1];
+							if (maxs[2] - mins[2] > sz) sz = maxs[2] - mins[2];
 
-							if (sz < 32)
+							if (sz < 36)
 							{
+								//Sys_Printf("CULLED: %f < 30. (%f %f %f)\n", sz, maxs[0] - mins[0], maxs[1] - mins[1], maxs[2] - mins[2]);
+								numSizeCulledSurfs++;
 								free(buildBrush);
 								continue;
 							}
 						}
 
+						//if (meta) si->forceMeta = qtrue; // much slower...
+
 						/* set up brush sides */
 						buildBrush->numsides = 5;
 						buildBrush->sides[ 0 ].shaderInfo = si;
+						
 						for( j = 1; j < buildBrush->numsides; j++ )
+						{
 							buildBrush->sides[ j ].shaderInfo = NULL; // don't emit these faces as draw surfaces, should make smaller BSPs; hope this works
+							buildBrush->sides[ j ].culled = qtrue;
+						}
 						
 						buildBrush->sides[ 0 ].planenum = FindFloatPlane( plane, plane[ 3 ], 3, points );
 						buildBrush->sides[ 1 ].planenum = FindFloatPlane( pa, pa[ 3 ], 2, &points[ 1 ] ); // pa contains points[1] and points[2]
@@ -1121,5 +1137,8 @@ void AddTriangleModels( int entityNum, qboolean quiet, qboolean cullSmallSolids 
 		Sys_Printf( "%9d triangles added\n", total_added_triangles );
 		Sys_Printf( "%9d vertexes added\n", total_added_verts );
 		Sys_Printf( "%9d brushes added\n", total_added_brushes );
+		Sys_Printf("%9i of %i solid surfaces culled for height (%i percent).\n", numHeightCulledSurfs, numSolidSurfs, (int)(((float)numHeightCulledSurfs / (float)numSolidSurfs) * 100.0));
+		Sys_Printf("%9i of %i solid surfaces culled for tiny size (%i percent).\n", numSizeCulledSurfs, numSolidSurfs, (int)(((float)numSizeCulledSurfs / (float)numSolidSurfs) * 100.0));
+		Sys_Printf("%9i of %i total solid surfaces culled (%i percent).\n", numHeightCulledSurfs + numSizeCulledSurfs, numSolidSurfs, (int)((((float)numHeightCulledSurfs + (float)numSizeCulledSurfs) / (float)numSolidSurfs) * 100.0));
 	}
 }

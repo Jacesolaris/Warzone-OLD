@@ -355,6 +355,24 @@ static void FixBrushFaces( entity_t *e )
 	Sys_Printf( "%9d surfaces stitched\n", numSurfacesStitched );
 }
 
+extern int						c_detail;
+extern int						c_boxbevels;
+extern int						c_edgebevels;
+extern int						c_areaportals;
+
+void ShowDetailedStats ( void )
+{
+	Sys_Printf(  "%9d total world brushes\n", CountBrushList( entities[ 0 ].brushes ) );
+
+	Sys_Printf( "%9d detail brushes\n", c_detail );
+	Sys_Printf( "%9d patches\n", numMapPatches);
+	Sys_Printf( "%9d boxbevels\n", c_boxbevels);
+	Sys_Printf( "%9d edgebevels\n", c_edgebevels);
+	Sys_Printf( "%9d entities\n", numEntities );
+	Sys_Printf( "%9d planes\n", nummapplanes);
+	Sys_Printf( "%9d areaportals\n", c_areaportals);
+}
+
 /*
 ProcessWorldModel()
 creates a full bsp + surfaces for the worldspawn entity
@@ -514,13 +532,17 @@ void ProcessWorldModel( void )
 	
 	/* create drawsurfs for surface models */
 	AddEntitySurfaceModels( e );
+
+	ShowDetailedStats();
+
+	mapplanes = (plane_t*)realloc(mapplanes, sizeof(plane_t)*nummapplanes); // UQ1: Test realloc here
 	
 	/* generate bsp brushes from map brushes */
 	EmitBrushes( e->brushes, &e->firstBrush, &e->numBrushes );
 	
 	/* add references to the detail brushes */
 	FilterDetailBrushesIntoTree( e, tree );
-	
+
 	/* drawsurfs that cross fog boundaries will need to be split along the fog boundary */
 	if( !nofog )
 		FogDrawSurfaces( e );
@@ -624,16 +646,11 @@ void ProcessWorldModel( void )
 
 	/* add references to the final drawsurfs in the apropriate clusters */
 	FilterDrawsurfsIntoTree( e, tree, qtrue );
+
 	if( !verbose )
 		EmitDrawsurfsSimpleStats();
 	else
 		EmitDrawsurfsStats();
-
-	/* UQ1: merge test */
-	//VectorSet(mergeBlock, 1024.0f, 1024.0f, 1024.0f);
-	//MergeDrawSurfaces();
-	//MergeDrawVerts();
-	/* UQ1: merge test */
 
 	/* match drawsurfaces back to original brushsides (sof2) */
 	FixBrushSides( e );
@@ -641,6 +658,12 @@ void ProcessWorldModel( void )
 	/* finish */
 	EndModel( e, tree->headnode );
 	FreeTree( tree );
+
+	/* UQ1: merge test */
+	//VectorSet(mergeBlock, 1024.0f, 1024.0f, 1024.0f);
+	//MergeDrawSurfaces();
+	//MergeDrawVerts();
+	/* UQ1: merge test */
 }
 
 

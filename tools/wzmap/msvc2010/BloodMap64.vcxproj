@@ -85,6 +85,8 @@
     <CodeAnalysisRuleSet Condition="'$(Configuration)|$(Platform)'=='Release|x64'">AllRules.ruleset</CodeAnalysisRuleSet>
     <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='Release|x64'" />
     <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Release|x64'" />
+    <IncludePath Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(VCInstallDir)include;$(VCInstallDir)atlmfc\include;$(WindowsSdkDir)include;$(FrameworkSDKDir)\include;D:\! Programming !\Warzone\tools\wzmap\src\include;</IncludePath>
+    <LibraryPath Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(VCInstallDir)lib\amd64;$(VCInstallDir)atlmfc\lib\amd64;$(WindowsSdkDir)lib\x64;D:\! Programming !\Warzone\tools\wzmap\dependencies\x64;</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <BuildLog>
@@ -127,7 +129,7 @@
     <Link>
       <PerUserRedirection>true</PerUserRedirection>
       <AdditionalOptions>/NODEFAULTLIB:LIBCMT %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalDependencies>glib-2.0.lib;wsock32.lib;libxml2.lib;libpng.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>OpenCL64.lib;glib-2.0.lib;wsock32.lib;libxml2.lib;libpng.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>.\..\win64\WzMap.exe</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <AdditionalLibraryDirectories>.\..\dependencies\x64\libxml\lib;.\..\dependencies\x64\gtk2\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
@@ -231,6 +233,7 @@
     <ClCompile Include="..\src\optimize.c" />
     <ClCompile Include="..\src\patchbsp.c" />
     <ClCompile Include="..\src\path_init.c" />
+    <ClCompile Include="..\src\q3map3_cl.c" />
     <ClCompile Include="..\src\shaders.c" />
     <ClCompile Include="..\src\brush.c" />
     <ClCompile Include="..\src\brush_primit.c" />
@@ -289,6 +292,7 @@
     <ClInclude Include="..\src\games\wolfet.h" />
     <ClInclude Include="..\src\inifile.h" />
     <ClInclude Include="..\src\q3map2.h" />
+    <ClInclude Include="..\src\q3map3_cl.h" />
     <ClInclude Include="..\src\stream_version.h" />
     <ClInclude Include="..\src\version.h" />
     <ClInclude Include="..\src\common\cmdlib.h" />
@@ -313,6 +317,9 @@
     <None Include="..\src\bloodmap.ico" />
     <None Include="..\changelog.q3map2.txt" />
     <None Include="..\changelog.q3map2_fs.txt" />
+    <None Include="..\src\radiosity_kernel.cl" />
+    <None Include="..\src\trace_kernel.cl" />
+    <None Include="..\src\vector_math.cl" />
     <None Include="compile_notes.txt" />
     <None Include="..\README" />
   </ItemGroup>

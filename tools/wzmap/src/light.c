@@ -31,6 +31,22 @@ several games based on the Quake III Arena engine, in the form of "Q3Map2."
 
 /* dependencies */
 #include "q3map2.h"
+#include "include/CL/cl.h"
+#include "include/CL/cl_platform.h"
+
+extern size_t local_ws;
+extern size_t global_ws;
+extern size_t awesome; 
+#define MEM_SIZE (sizeof(cl_float4)*MAGIC_SIZE) /*4 * 4096 bytes of memory per argument... max size of 4096 for float arrays*/
+/*host memory*/
+extern cl_float4 src_a_h[16384]; 
+extern cl_float4 src_b_h[16384]; 
+extern cl_float4 res_h[16384]; 
+/* device memory*/
+extern cl_mem src_a; 
+extern cl_mem src_b; 
+extern cl_mem res; 
+extern cl_kernel magic; 
 
 /*
 ================================================================================
@@ -2358,7 +2374,12 @@ minGridLight[ 2 ] ) )
 	SetupSurfaceLightmaps();
 	
 	/* initialize the surface facet tracing */
-	SetupTraceNodes();
+	if(gpu == qtrue) { 
+		SetupTraceNodes_GPU();  /* attempt to initialize surface facet tracing on the gpu */ 
+	} else {
+		/* light the world */
+		SetupTraceNodes();      /* Initialize surface facet tracing regularly (cpu) */ 
+	}
 
 	/* allocate raw lightmaps */
 	AllocateSurfaceLightmaps();
@@ -2562,6 +2583,10 @@ minGridLight[ 2 ] ) )
 }
 
 
+void LightWorld_GPU( void ) 
+{
+
+}
 
 /*
 LightMain()
@@ -2609,10 +2634,30 @@ int LightMain( int argc, char **argv )
 	if( lightAngleHL )
 		Sys_Printf( " half lambert light angle attenuation enabled \n" );
 
+	if(gpu == qtrue) {
+		/*load the source code for the ocl kernels used in the lighting phase of compilation*/
+		LoadProgramSource("radiosity_kernel.cl"); 
+		LoadProgramSource("trace_kernel.cl"); 
+		//LoadProgramSource("vector_math.cl"); 
+		BuildAllProgramSource(); 
+		for(i = 0; i < 16384; i++){
+			cl_float4 j = {i, i, i, i};
+			//j.s[0] = j.s[1] = j.s[2] = j.s[3] = i; 
+			src_a_h[i] = src_b_h[i] = j; 
+		}
+		if(gpu){
+			do_stuff(); 
+		}else{
+			Sys_Printf("something failed along the way\n"); 
+		}
+		
+	}
+
 	Sys_PrintHeading ( "--- CommandLine ---\n" );
 	
 	/* process commandline arguments */
 	strcpy(externalLightmapsPath, "");
+
 	for( i = 1; i < (argc - 1) && argv[ i ]; i++ )
 	{
 		/* point lightsource scaling */
@@ -3526,8 +3571,18 @@ int LightMain( int argc, char **argv )
 	/* ydnar: set up optimization */
 	SetupBrushes();
 
-	/* light the world */
-	LightWorld( mapSource );
+#if 0
+	if(gpu == qtrue) { 
+		SetupTraceNodes_GPU();  /* attempt to initialize surface facet tracing on the gpu */ 
+		LightWorld_GPU();       /* attempt to light the world with the gpu */ 
+	} else {
+		/* light the world */
+		SetupTraceNodes();      /* Initialize surface facet tracing regularly (cpu) */ 
+	    LightWorld( mapSource );           /* attempt to light the world regularly (cpu) */ 
+	}
+#else
+	LightWorld( mapSource );           /* attempt to light the world regularly (cpu) */ 
+#endif
 
 	/* ydnar: store off lightmaps */
 	StoreSurfaceLightmaps();

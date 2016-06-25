@@ -1816,6 +1816,9 @@ void LoadMapFile( char *filename, qboolean onlyLights, qboolean onlyLightgridBru
 		/* write bogus map */
 		if( fakemap )
 			WriteBSPBrushMap( "fakemap.map", entities[ 0 ].brushes );
+
+		//mapplanes = (plane_t*)realloc(mapplanes, sizeof(plane_t)*nummapplanes); // UQ1: Doh, can't do this here... the generation process needs an unknown number of free slots, and dynamic alloc would be slow and highly fragmented for this many instances
+
 	}
 }
 

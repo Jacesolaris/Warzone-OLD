@@ -390,7 +390,7 @@ abstracted bsp file
 #define	MAX_MAP_FOGS			30
 #define	MAX_MAP_PLANES			0x4000000//0x7000000
 #define	MAX_MAP_NODES			0x800000//0xA00000
-#define	MAX_MAP_BRUSHSIDES		0x800000//0xF00000
+#define	MAX_MAP_BRUSHSIDES		0xF00000//0xF00000
 #define	MAX_MAP_LEAFS			0x800000//0xA00000
 #define	MAX_MAP_LEAFFACES		0x800000//0xA00000
 #define	MAX_MAP_LEAFBRUSHES		0x800000//0xA00000
@@ -1914,6 +1914,7 @@ int							LightMain( int argc, char **argv );
 
 /* light_trace.c */
 void						SetupTraceNodes( void );
+void                        SetupTraceNodes_GPU(void); 
 void						TraceLine( trace_t *trace );
 float						SetupTrace( trace_t *trace );
 
@@ -2147,6 +2148,7 @@ Q_EXTERN float				jitters[ MAX_JITTERS ];
 
 /* commandline arguments */
 Q_EXTERN qboolean			verbose;
+Q_EXTERN qboolean			gpu;
 Q_EXTERN qboolean			verboseEntities Q_ASSIGN( qfalse );
 Q_EXTERN qboolean			useBuildCfg Q_ASSIGN( qfalse );
 Q_EXTERN qboolean			force Q_ASSIGN( qfalse );
@@ -2726,6 +2728,24 @@ Q_EXTERN bspFog_t			bspFogs[ MAX_MAP_FOGS ];
 // sRGB colorspace
 #define linear_to_srgb(c) (((c) < 0.0031308) ? (c) * 12.92 : 1.055 * pow((c), 1.0/2.4) - 0.055)
 #define srgb_to_linear(c) (((c) <= 0.04045) ? (c) * (1.0 / 12.92) : pow(((c) + 0.055f)*(1.0/1.055), 2.4))
+
+
+
+
+/*OpenCL Helper Functions to keep the clutter out of q3map2's source*/ 
+qboolean InitOpenCL( void ); 
+qboolean GetDevice( void ); 
+qboolean CreateContext( void ); 
+qboolean CreateCommandQueue( void ); 
+
+void CleanOpenCL( void ); /*clean up memory and release ocl objects*/ 
+
+qboolean LoadProgramSource(char *filename); /*Load a .cl file to a single string. Return value stored in kernels[]*/ 
+void BuildAllProgramSource( void ); /*builds all loaded .cl files in to executable code*/
+
+void PushKernel(char *kernel, unsigned int *length); /*push a kernel on to the array*/ 
+void do_stuff(); 
+
 
 /* end marker */
 #endif

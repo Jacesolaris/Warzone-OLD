@@ -1389,6 +1389,56 @@ void SetupTraceNodes( void )
 	#endif
 }
 
+void SetupTraceNodes_GPU( void ){
+	Sys_FPrintf(SYS_VRB, "--- SetupTraceNodes_GPU ---"); 
+	
+	/* find nodraw bit */ 
+    noDrawContentFlags = noDrawSurfaceFlags = noDrawCompileFlags = 0;
+    ApplySurfaceParm( "nodraw", &noDrawContentFlags, &noDrawSurfaceFlags, &noDrawCompileFlags );
+
+	/* create the baseline raytracing tree from the bsp tree */
+	headNodeNum = SetupTraceNodes_r( 0 );
+	/*headNodeNum = SetupTraceNodes_r_GPU(0); */
+
+	/* create outside node for skybox surfaces */
+	skyboxNodeNum = AllocTraceNode();
+
+	/* populate the tree with triangles from the world and shadow casting entities */
+	PopulateTraceNodes();
+
+	/* create the raytracing bsp */
+	if( loMem == qfalse )
+	{
+		/* Not sure if this would benefit from being moved to the GPU... 
+		   I will keep an eye on this - (SM) */ 
+		SubdivideTraceNode_r( headNodeNum, 0 );
+		SubdivideTraceNode_r( skyboxNodeNum, 0 );
+	}
+	
+	/* create triangles from the trace windings */
+	/* _r for.... recursive?? Guess what, OpenCL doesn't dig on recursion */
+	/*TriangulateTraceNode_r_GPU( headNodeNum );
+	TriangulateTraceNode_r_GPU( skyboxNodeNum );*/
+	TriangulateTraceNode_r(headNodeNum); 
+	TriangulateTraceNode_r(skyboxNodeNum); 
+	
+	/* emit some stats */
+	//%	Sys_FPrintf( SYS_VRB, "%9d original triangles\n", numOriginalTriangles );
+	Sys_FPrintf( SYS_VRB, "%9d trace windings (%.2fMB)\n", numTraceWindings, (float) (numTraceWindings * sizeof( *traceWindings )) / (1024.0f * 1024.0f) );
+	Sys_FPrintf( SYS_VRB, "%9d trace triangles (%.2fMB)\n", numTraceTriangles, (float) (numTraceTriangles * sizeof( *traceTriangles )) / (1024.0f * 1024.0f) );
+	Sys_FPrintf( SYS_VRB, "%9d trace nodes (%.2fMB)\n", numTraceNodes, (float) (numTraceNodes * sizeof( *traceNodes )) / (1024.0f * 1024.0f) );
+	Sys_FPrintf( SYS_VRB, "%9d leaf nodes (%.2fMB)\n", numTraceLeafNodes, (float) (numTraceLeafNodes * sizeof( *traceNodes )) / (1024.0f * 1024.0f) );
+	//%	Sys_FPrintf( SYS_VRB, "%9d average triangles per leaf node\n", numTraceTriangles / numTraceLeafNodes );
+	Sys_FPrintf( SYS_VRB, "%9d average windings per leaf node\n", numTraceWindings / (numTraceLeafNodes + 1) );
+	Sys_FPrintf( SYS_VRB, "%9d max trace depth\n", maxTraceDepth );
+	
+	/* free trace windings */
+	/* hmm... keep an eye on this - (SM)*/
+	free( traceWindings );
+	numTraceWindings = 0;
+	maxTraceWindings = 0;
+	deadWinding = -1;
+}
 
 
 /* -------------------------------------------------------------------------------

@@ -1412,6 +1412,12 @@ static void ParseShaderFile( const char *filename )
 				si->isTreeSolid = qtrue;
 			}
 
+			/*if (StringContainsWord(si->shader, "yavin/ground"))
+			{
+				//si->subdivisions = 0.7;
+				//si->legacyTerrain = qtrue;
+				si->compileFlags |= (C_SOLID | C_DETAIL);
+			}*/
 #ifdef ___SHADER_GENERATOR___
 			if (shaderText[ 0 ] == '\0' || R_ForceGenericShader(si->shader))
 			{// If we found no shader, then use a warzone generic one for compile :)

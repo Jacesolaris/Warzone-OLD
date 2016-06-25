@@ -37,7 +37,6 @@ several games based on the Quake III Arena engine, in the form of "Q3Map2."
 #include "q3map2.h"
 
 
-
 /*
 Random()
 returns a pseudorandom number between 0 and 1
@@ -626,6 +625,8 @@ int main( int argc, char **argv )
 	/* set exit call */
 	atexit( ExitQ3Map );
 
+	gpu = qfalse;
+
 	/* read general options first */
 	for( i = 1; i < argc && argv[ i ]; i++ )
 	{
@@ -684,6 +685,12 @@ int main( int argc, char **argv )
 			i++;
 			numthreads = atoi( argv[ i ] );
 			argv[ i ] = NULL;
+		}
+
+		else if( !strcmp( argv[i], "-gpu")){
+			//gpu = qtrue;
+
+			argv[i] = NULL; 
 		}
 
 		/* memlog (write a memlog.txt) */
@@ -788,6 +795,17 @@ int main( int argc, char **argv )
 		Error( "Usage: %s [general options] [options] mapfile", argv[ 0 ] );
 	}
 
+	/* Delayed warning message for enabling gpu usage so program information can be sent to console beforehand */
+	if(gpu){
+		Sys_Printf("\nWARNING: GPU will now attempt to use your videocard to accelerate compilation. This is highly experimental and can break!\n\n"); 
+		
+		/*Identify ocl platforms and devices then set up the context and command queue
+		  for compilation and execution of the ocl kernels*/ 
+		if(!InitOpenCL()){
+			gpu = qfalse; /*fall back to cpu if opencl fails to start for some reason*/ 
+		}
+	}
+
 	/* fixaas */
 	if( !strcmp( argv[ 1 ], "-fixaas" ) )
 		r = FixAAS( argc - 1, argv + 1 );
@@ -873,6 +891,11 @@ int main( int argc, char **argv )
 	/* end memlog */
 	if (memlog)
 		safe_malloc_logend();
+
+	/*Clean up after OpenCL*/ 
+	if(gpu){
+	    CleanOpenCL();
+	}
 
 	if (mapplanes) free(mapplanes);
 	if (bspLeafs) free(bspLeafs);

@@ -204,6 +204,9 @@
     <ClCompile Include="..\src\inifile.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\q3map3_cl.c">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\games\darkplaces.h">
@@ -311,6 +314,9 @@
     <ClInclude Include="..\src\inifile.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\q3map3_cl.h">
+      <Filter>include</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\src\bloodmap.ico">
@@ -328,6 +334,9 @@
     <None Include="..\README">
       <Filter>doc</Filter>
     </None>
+    <None Include="..\src\radiosity_kernel.cl" />
+    <None Include="..\src\trace_kernel.cl" />
+    <None Include="..\src\vector_math.cl" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\src\bloodmap.rc">

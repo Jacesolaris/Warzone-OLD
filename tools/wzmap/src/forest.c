@@ -100,9 +100,9 @@ void GenerateMapForest ( void )
 		Sys_Printf( "Adding %i trees to bsp.\n", FOLIAGE_NUM_POSITIONS );
 #endif
 		
-		for (i = 0; i < FOLIAGE_NUM_POSITIONS; i++)
+		for (i = 0; i < 32/*FOLIAGE_NUM_POSITIONS*/; i++)
 		{
-			printLabelledProgress("GenerateMapForest", i, FOLIAGE_NUM_POSITIONS);
+			printLabelledProgress("GenerateMapForest", i, 32/*FOLIAGE_NUM_POSITIONS*/);
 
 			const char		*classname, *value;
 			float			lightmapScale;
@@ -126,8 +126,11 @@ void GenerateMapForest ( void )
 			memset( mapEnt, 0, sizeof( *mapEnt ) );
 			
 			mapEnt->mapEntityNum = 0;
+
 			//mapEnt->mapEntityNum = numMapEntities;
 			//numMapEntities++;
+
+			//mapEnt->mapEntityNum = 0 - numMapEntities;
 			
 			//mapEnt->forceSubmodel = qtrue;
 
