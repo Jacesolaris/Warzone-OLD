@@ -14,6 +14,7 @@ extern void AdjustBrushesForOrigin( entity_t *ent );
 float			TREE_SCALE_MULTIPLIER = 2.5;
 char			TREE_MODELS[16][128] = { 0 };
 float			TREE_OFFSETS[16] = { -4.0 };
+float			TREE_SCALES[16] = { 1.0 };
 
 void FOLIAGE_LoadClimateData( char *filename )
 {
@@ -28,8 +29,9 @@ void FOLIAGE_LoadClimateData( char *filename )
 	{
 		strcpy(TREE_MODELS[i], IniRead(filename, "TREES", va("treeModel%i", i), ""));
 		TREE_OFFSETS[i] = atof(IniRead(filename, "TREES", va("treeZoffset%i", i), "-4.0"));
+		TREE_SCALES[i] = atof(IniRead(filename, "TREES", va("treeScale%i", i), "1.0"));
 
-		Sys_Printf("Tree %i - Model %s - Offset %f.\n", i, TREE_MODELS[i], TREE_OFFSETS[i]);
+		Sys_Printf("Tree %i - Model %s - Offset %f - Scale %f.\n", i, TREE_MODELS[i], TREE_OFFSETS[i], TREE_SCALES[i]);
 	}
 }
 
@@ -89,6 +91,7 @@ qboolean FOLIAGE_LoadFoliagePositions( char *filename )
 //#define __ADD_TREES_EARLY__ // Add trees to map's brush list instanty...
 
 extern void MoveBrushesToWorld( entity_t *ent );
+extern qboolean StringContainsWord(const char *haystack, const char *needle);
 
 void GenerateMapForest ( void )
 {
@@ -145,7 +148,7 @@ void GenerateMapForest ( void )
 
 			{
 				char str[32];
-				sprintf( str, "%f", FOLIAGE_TREE_SCALE[i]*2.0*TREE_SCALE_MULTIPLIER );
+				sprintf( str, "%f", FOLIAGE_TREE_SCALE[i]*2.0*TREE_SCALE_MULTIPLIER*TREE_SCALES[FOLIAGE_TREE_SELECTION[i]-1] );
 				SetKeyValue( mapEnt, "modelscale", str );
 			}
 

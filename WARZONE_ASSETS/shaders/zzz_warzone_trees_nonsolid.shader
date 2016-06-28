@@ -891,6 +891,25 @@ models/warzone/trees/palmtree02
   }
 }
 
+models/warzone/trees/palmsleaf01
+{
+  qer_editorimage	models/warzone/trees/palmsleaf01
+  q3map_alphashadow
+  q3map_material	GreenLeaves
+  surfaceparm trans
+  surfaceparm	noimpact
+  surfaceparm	nomarks
+  surfaceparm	nonsolid
+  cull	twosided
+  {
+    map models/warzone/trees/palmsleaf01
+    blendfunc GL_ONE GL_ZERO
+    alphaFunc GE128
+    depthWrite
+    rgbGen identity
+  }
+}
+
 models/warzone/trees/pumpkin
 {
   qer_editorimage	models/warzone/trees/pumpkin
@@ -1663,6 +1682,25 @@ models/warzone/trees/willowleaves
   cull	twosided
   {
     map models/warzone/trees/willowleaves
+    blendfunc GL_ONE GL_ZERO
+    alphaFunc GE128
+    depthWrite
+    rgbGen identity
+  }
+}
+
+models/warzone/trees/DB2X2_M01
+{
+  qer_editorimage	models/warzone/trees/DB2X2_M01
+  q3map_alphashadow
+  q3map_material	GreenLeaves
+  surfaceparm trans
+  surfaceparm	noimpact
+  surfaceparm	nomarks
+  surfaceparm	nonsolid
+  cull	twosided
+  {
+    map models/warzone/trees/DB2X2_M01
     blendfunc GL_ONE GL_ZERO
     alphaFunc GE128
     depthWrite

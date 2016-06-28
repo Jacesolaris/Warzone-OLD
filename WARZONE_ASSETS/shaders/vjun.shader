@@ -828,6 +828,18 @@ models/map_objects/vjun/lamp
     }
 }
 
+models/map_objects/vjun/vj4
+{
+	qer_editorimage	models/map_objects/vjun/vj4
+	q3map_nolightmap
+	q3map_onlyvertexlighting
+    {
+        map models/map_objects/vjun/vj4
+        rgbGen lightingDiffuse
+        tcMod scale 4 4
+    }
+}
+
 models/map_objects/vjun/vj4_b
 {
 	qer_editorimage	models/map_objects/vjun/vj4

@@ -502,8 +502,6 @@ static void CMod_LoadShaders( lump_t *l, clipMap_t &cm )
 				|| StringContainsWord(in->shader, "vine01"))
 			{
 				in->contentFlags |= (CONTENTS_SOLID | CONTENTS_OPAQUE);
-				//in->surfaceFlags |= CONTENTS_OPAQUE
-
 				out->contentFlags = LittleLong( in->contentFlags );
 				out->surfaceFlags = LittleLong( in->surfaceFlags );
 			}
@@ -511,6 +509,15 @@ static void CMod_LoadShaders( lump_t *l, clipMap_t &cm )
 
 		if (!HaveSurfaceType(out->surfaceFlags))
 			out->surfaceFlags = LittleLong( GetMaterialType(in->shader, (in->surfaceFlags & MATERIAL_MASK)) );
+
+		if (in->shader && ( StringContainsWord(in->shader, "skies/") || StringContainsWord(in->shader, "sky")))
+		{// LOL WTF HAX!!! :)
+			in->contentFlags |= (CONTENTS_SOLID | CONTENTS_OPAQUE);
+			in->surfaceFlags |= SURF_SKY;
+			out->contentFlags = LittleLong( in->contentFlags );
+			out->surfaceFlags = LittleLong( in->surfaceFlags );
+			Com_Printf("Set SURF_SKY for %s.\n", in->shader);
+		}
 	}
 }
 

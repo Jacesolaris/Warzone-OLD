@@ -306,6 +306,7 @@ static int _obj_mtl_load( picoModel_t *model )
 		/* diffuse map name */
 		else if (!_pico_stricmp(p->token,"map_kd"))
 		{
+			picoShader_t *shader;
 			char *mapName;
 
 			/* pointer to current shader must be valid */
@@ -321,6 +322,11 @@ static int _obj_mtl_load( picoModel_t *model )
 				_pico_printf( PICO_ERROR,"Missing material map name in MTL, line %d.",p->curLine);
 				_obj_mtl_error_return;
 			}
+
+			/* create a new pico shader */
+			shader = PicoNewShader( model );
+			if (shader == NULL)
+				_obj_mtl_error_return;
 			/* set shader map name */
 			PicoSetShaderMapName( shader,mapName );
 		}

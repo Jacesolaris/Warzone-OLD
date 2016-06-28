@@ -2704,7 +2704,54 @@ static void ParseShaderFile( const char *filename )
 			
 			/* ignore all other tokens on the line */
 			while( TokenAvailable() && GetTokenAppend( shaderText, qfalse ) );
-		}	
+		}
+
+		if (!si->isTreeSolid 
+			/*&& !(si->compileFlags & C_SOLID) */
+			&& !(si->compileFlags & C_TRANSLUCENT)
+			//&& !(si->compileFlags & C_DETAIL)
+			&& !(si->compileFlags & C_NODRAW)
+			&& !(si->compileFlags & C_LIQUID)
+			&& !(si->compileFlags & C_FOG)
+			&& !(si->compileFlags & C_SKY)
+			//&& !(si->compileFlags & C_SKIP)*/
+			)
+		{
+			if (StringContainsWord(si->shader, "map_objects") && StringContainsWord(si->shader, "yavin/"))
+			{
+				if (StringContainsWord(si->shader, "tree"))
+				{
+					si->skipSolidCull = qtrue;
+					si->compileFlags |= C_SOLID;
+					si->clipModel = qtrue;
+					si->isTreeSolid = qtrue;
+					//Sys_Printf("%s set as solid.\n", si->shader);
+				}
+				else if (StringContainsWord(si->shader, "ymix") || StringContainsWord(si->shader, "ypboxill"))
+				{
+					si->skipSolidCull = qtrue;
+					si->compileFlags |= C_SOLID;
+					si->clipModel = qtrue;
+					si->isMapObjectSolid = qtrue;
+					//Sys_Printf("%s set as solid.\n", si->shader);
+				}
+			}
+			else if (StringContainsWord(si->shader, "map_objects")
+				&& !StringContainsWord(si->shader, "leaf")
+				&& !StringContainsWord(si->shader, "leaves"))
+			{
+				si->skipSolidCull = qtrue;
+				si->compileFlags |= C_SOLID;
+				si->clipModel = qtrue;
+				si->isMapObjectSolid = qtrue;
+				
+				//Sys_Printf("%s set as solid.\n", si->shader);
+			}
+			else
+			{
+				//Sys_Printf("%s NOT set as solid.\n", si->shader);
+			}
+		}
 
 		/* finish shader */
 		if( minVertexLightUsed == qfalse )

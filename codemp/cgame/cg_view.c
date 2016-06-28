@@ -2802,7 +2802,11 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 	inwater = CG_CalcViewValues();
 	CG_SetupFrustum();
 
-	if (cg_linearFogOverride)
+	if (CG_CheckRangedFog())
+	{
+		cg_rangedFogging = qtrue;
+	}
+	else if (cg_linearFogOverride)
 	{
 		trap->R_SetRangedFog(-cg_linearFogOverride);
 	}

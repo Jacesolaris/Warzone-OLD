@@ -763,6 +763,7 @@ typedef struct shaderInfo_s
 	int					surfaceFlags;
 	int					contentFlags;
 	int					compileFlags;
+	qboolean			skipSolidCull;
 	float				value;							/* light value */
 	
 	char				*flareShader;					/* for light flares */
@@ -883,6 +884,7 @@ typedef struct shaderInfo_s
 	vec3_t				fogDir;							/* ydnar */
 	char				*shaderText;					/* ydnar */
 	qboolean			isTreeSolid;
+	qboolean			isMapObjectSolid;
 }
 shaderInfo_t;
 

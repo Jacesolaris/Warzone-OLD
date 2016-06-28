@@ -702,15 +702,15 @@ void InsertModel( char *name, int frame, int skin, m4x4_t transform, float uvSca
 					{
 						//Sys_Printf("top: %f. bottom: %f.\n", top, bottom);
 
-						if (cullSmallSolids || si->isTreeSolid)
+						numSolidSurfs++;
+
+						if ((cullSmallSolids || si->isTreeSolid) && !(si->skipSolidCull || si->isMapObjectSolid))
 						{
 							vec3_t mins, maxs;
 							vec3_t size;
 							float sz;
 							int z;
 
-							numSolidSurfs++;
-							
 							VectorSet(mins, 999999, 999999, 999999);
 							VectorSet(maxs, -999999, -999999, -999999);
 

@@ -2415,6 +2415,7 @@ extern char *CG_GetTextToSpeechVoiceForEntity(centity_t *ent);
 // cg_marks.c (atmospherics/weather)
 void CG_EffectParse( const char *effectstr );
 void CG_AddAtmosphericEffects();
+qboolean CG_CheckRangedFog( void );
 qboolean CG_AtmosphericKludge();
 
 /*

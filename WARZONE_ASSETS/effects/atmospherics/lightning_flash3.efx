@@ -4,11 +4,11 @@ Electricity
 
 	spawnFlags			org2fromTrace
 
-	count				1 2
+	count				1 20
 
-	life				100 150
+	life				200 250
 
-	bounce				5 8
+	bounce				5 18
 
 	alpha
 	{
@@ -17,61 +17,29 @@ Electricity
 
 	size
 	{
-		start			25 30
-		end				4
+		start			75 10
+		end				10 3
 		parm			40
 		flags			nonlinear
 	}
 
 	shaders
 	[
-		gfx/misc/whitelightning
+		textures/flares/light_white
 	]
 }
 
-Particle
+Light
 {
-	count	40
-//life	100	150
-	delay	0 100
-
-	origin	10 -10 -10		30 10 10
-
+  life				250
+  
 	size
 	{
-		start	80.0
-		end 	45.0
-		flags	linear
+		start 	8192	8192
 	}
 
 	rgb
 	{
-		start	0.5 0.6 1.0
+		start  0.25 0.25 0.25
 	}
-
-	alpha
-	{
-		start 0.2
-		end	0.0
-		parms	50
-		flags	linear nonlinear
-	}
-
-	shaders
-	[
-		gfx/misc/lightningFlash
-	]
-}
-
-Sound
-{
-	name				Boom
-	spawnflags		lessAttenuation
-
-	sounds
-	[
-		sound/atmospherics/thunder0.wav
-		sound/atmospherics/thunder1.wav
-		sound/atmospherics/thunder2.wav
-	]
 }

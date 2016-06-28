@@ -4178,7 +4178,7 @@ void CG_ShowForwardSurface ( void )
 	VectorMA( cg.refdef.vieworg, 131072.0f, forward, down_org );
 	
 	// Do forward test...
-	CG_Trace( &tr, org, NULL, NULL, down_org, cg.clientNum, MASK_PLAYERSOLID|CONTENTS_TRIGGER|CONTENTS_PLAYERCLIP|CONTENTS_MONSTERCLIP|CONTENTS_BOTCLIP|CONTENTS_SHOTCLIP|CONTENTS_NODROP|CONTENTS_SHOTCLIP|CONTENTS_TRANSLUCENT );
+	CG_Trace( &tr, org, NULL, NULL, down_org, cg.clientNum, MASK_ALL);//MASK_PLAYERSOLID|CONTENTS_TRIGGER|CONTENTS_PLAYERCLIP|CONTENTS_MONSTERCLIP|CONTENTS_BOTCLIP|CONTENTS_SHOTCLIP|CONTENTS_NODROP|CONTENTS_SHOTCLIP|CONTENTS_TRANSLUCENT );
 
 	//
 	// Surface
@@ -4338,7 +4338,7 @@ void CG_ShowSurface ( void )
 	down_org[2] = -131072.0f;
 	
 	// Do forward test...
-	CG_Trace( &tr, org, NULL, NULL, down_org, cg.clientNum, MASK_PLAYERSOLID|CONTENTS_TRIGGER|CONTENTS_PLAYERCLIP|CONTENTS_MONSTERCLIP|CONTENTS_BOTCLIP|CONTENTS_SHOTCLIP|CONTENTS_NODROP|CONTENTS_SHOTCLIP|CONTENTS_TRANSLUCENT );
+	CG_Trace( &tr, org, NULL, NULL, down_org, cg.clientNum, MASK_ALL);//MASK_PLAYERSOLID|CONTENTS_TRIGGER|CONTENTS_PLAYERCLIP|CONTENTS_MONSTERCLIP|CONTENTS_BOTCLIP|CONTENTS_SHOTCLIP|CONTENTS_NODROP|CONTENTS_SHOTCLIP|CONTENTS_TRANSLUCENT );
 
 	//
 	// Surface
@@ -5288,8 +5288,25 @@ AIMod_GetMapBounts ( void )
 	vec3_t	org2;
 	vec3_t	mapMins, mapMaxs;
 
+	aw_percent_complete = 0;
+
+	trap->Print( va( "^4*** ^3AUTO-FOLIAGE^4: ^Searching for map bounds.\n" ) );
+	strcpy( task_string1, va( "^4*** ^3AUTO-FOLIAGE^4: ^Searching for map bounds.\n" ) );
+	trap->UpdateScreen();
+
+	strcpy( task_string2, va("") );
+	trap->UpdateScreen();
+
+	strcpy( task_string3, va("") );
+	trap->UpdateScreen();
+
+	trap->UpdateScreen();
+
 	VectorSet(mapMins, MAX_MAP_SIZE, MAX_MAP_SIZE, MAX_MAP_SIZE);
 	VectorSet(mapMaxs, -MAX_MAP_SIZE, -MAX_MAP_SIZE, -MAX_MAP_SIZE);
+
+	aw_percent_complete = 1.0;
+	trap->UpdateScreen();
 
 	//
 	// Z
@@ -5317,6 +5334,9 @@ AIMod_GetMapBounts ( void )
 		startx += INCRUMENT;
 		starty = -MAX_MAP_SIZE;
 	}
+
+	aw_percent_complete = 100.0 / 6.0;
+	trap->UpdateScreen();
 
 	//Com_Printf("Stage 1 completed.\n");
 
@@ -5346,6 +5366,9 @@ AIMod_GetMapBounts ( void )
 		startx -= INCRUMENT;
 		starty = MAX_MAP_SIZE;
 	}
+
+	aw_percent_complete = (100.0 / 6.0) * 2.0;
+	trap->UpdateScreen();
 
 	//Com_Printf("Stage 2 completed.\n");
 
@@ -5380,6 +5403,9 @@ AIMod_GetMapBounts ( void )
 		starty = -MAX_MAP_SIZE;
 	}
 
+	aw_percent_complete = (100.0 / 6.0) * 3.0;
+	trap->UpdateScreen();
+
 	//Com_Printf("Stage 3 completed.\n");
 
 	mapMins[0] += 16;
@@ -5408,6 +5434,9 @@ AIMod_GetMapBounts ( void )
 		startz -= INCRUMENT;
 		starty = MAX_MAP_SIZE;
 	}
+
+	aw_percent_complete = (100.0 / 6.0) * 4.0;
+	trap->UpdateScreen();
 
 	//Com_Printf("Stage 4 completed.\n");
 
@@ -5442,6 +5471,9 @@ AIMod_GetMapBounts ( void )
 		startx = -MAX_MAP_SIZE;
 	}
 
+	aw_percent_complete = (100.0 / 6.0) * 5.0;
+	trap->UpdateScreen();
+
 	//Com_Printf("Stage 5 completed.\n");
 
 	mapMins[1] += 16;
@@ -5471,42 +5503,12 @@ AIMod_GetMapBounts ( void )
 		startx = MAX_MAP_SIZE;
 	}
 
+	aw_percent_complete = 100.0;
+	trap->UpdateScreen();
+
 	//Com_Printf("Stage 6 completed.\n");
 
 	mapMaxs[1] -= 16;
-
-	//
-	// Refine Z Top Point to highest ground height!
-	//
-	/*
-	startx = mapMaxs[0] - 32;
-	starty = mapMaxs[1] - 32;
-	startz = mapMaxs[2] - 32;
-	highest_z_point = mapMins[2];
-	i = 0;
-	while ( startx > mapMins[2] )
-	{
-		while ( starty > mapMins[1] )
-		{
-			VectorSet( org1, startx, starty, startz );
-			VectorSet( org2, startx, starty, startz );
-			org2[2] -= (MAX_MAP_SIZE*2);
-			CG_Trace( &tr, org1, NULL, NULL, org2, ENTITYNUM_NONE, MASK_PLAYERSOLID | MASK_WATER );
-
-			if ( tr.endpos[2] > highest_z_point )
-			{
-				highest_z_point = tr.endpos[2];
-				starty -= INCRUMENT;
-				continue;
-			}
-
-			starty -= INCRUMENT / 4.0; //64
-		}
-
-		startx -= INCRUMENT / 4.0; //64
-		starty = mapMaxs[1];
-	}
-	*/
 
 	highest_z_point = mapMaxs[2];
 
@@ -5551,6 +5553,9 @@ AIMod_GetMapBounts ( void )
 	VectorCopy(mapMins, cg.mapcoordsMins);
 	VectorCopy(mapMaxs, cg.mapcoordsMaxs);
 	cg.mapcoordsValid = qtrue;
+
+	aw_percent_complete = 0.0;
+	trap->UpdateScreen();
 }
 
 qboolean MaterialIsValidForWP(int materialType)

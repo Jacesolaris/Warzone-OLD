@@ -369,6 +369,7 @@ textures/skies/hevil
 
 textures/skies/cloudlayer2
 {
+  surfaceparm	sky
 	surfaceparm	noimpact
 	surfaceparm	nomarks
 	notc
@@ -490,6 +491,7 @@ textures/skies/hevil_2
 textures/skies/cloudlayer_test
 {
 	qer_editorimage	textures/skies/cloudlayer2
+	surfaceparm	sky
 	surfaceparm	noimpact
 	surfaceparm	nomarks
 	notc
@@ -608,6 +610,7 @@ textures/skies/korr2
 textures/skies/cloudlayer_yavin
 {
 	qer_editorimage	textures/skies/cloudlayer2
+	surfaceparm	sky
 	surfaceparm	noimpact
 	surfaceparm	nomarks
 	notc
@@ -726,6 +729,7 @@ textures/skies/byss_mp
 textures/skies/cloudlayer_surprise
 {
 	qer_editorimage	textures/skies/cloudlayer_t1_surprise
+	surfaceparm	sky
 	surfaceparm	noimpact
 	surfaceparm	nomarks
 	notc
