@@ -44,6 +44,7 @@ uniform vec4	u_Local3; // RimScalar, MaterialThickness, subSpecPower, cubemapSca
 uniform vec4	u_Local4; // haveNormalMap, isMetalic, hasRealSubsurfaceMap, sway
 uniform vec4	u_Local5; // hasRealOverlayMap, overlaySway, blinnPhong, hasSteepMap
 uniform vec4	u_Local6; // useSunLightSpecular
+uniform vec4	u_Local7; // hasSplatMap1, hasSplatMap2, hasSplatMap3, hasSplatMap4
 uniform vec4	u_Local9;
 
 uniform sampler2D			u_DiffuseMap;

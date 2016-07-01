@@ -2307,7 +2307,7 @@ typedef struct trGlobals_s {
 	image_t					*blackImage;			// full of 0x00
 	image_t					*identityLightImage;	// full of tr.identityLightByte
 
-	image_t					*previousRenderImage;
+	//image_t					*previousRenderImage;
 	image_t					*randomImage;
 	image_t					*random2KImage[2];
 	image_t					*defaultSplatControlImage;
@@ -2362,7 +2362,7 @@ typedef struct trGlobals_s {
 	image_t					*textureDepthImage;
 
 	FBO_t					*renderFbo;
-	FBO_t					*previousRenderFbo;
+	//FBO_t					*previousRenderFbo;
 	FBO_t					*waterFbo;
 	FBO_t					*waterFbo2;
 #if 0

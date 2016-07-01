@@ -58,10 +58,10 @@ returns a new fixed winding
 ydnar: altered this a bit to reconcile multiply-defined winding_t
 */
 
-fixedWinding_t *NewFixedWinding( int points )
+fixedWinding_t *NewFixedWinding( uint32_t points )
 {
 	fixedWinding_t	*w;
-	int			size;
+	uint32_t			size;
 	
 	if (points > MAX_POINTS_ON_WINDING)
 		Error ("NewWinding: %i points", points);
@@ -77,7 +77,7 @@ fixedWinding_t *NewFixedWinding( int points )
 
 void prl(leaf_t *l)
 {
-	int			i;
+	uint32_t			i;
 	vportal_t	*p;
 	visPlane_t	pl;
 	
@@ -110,7 +110,7 @@ int PComp (const void *a, const void *b)
 }
 void SortPortals (void)
 {
-	int		i;
+	uint32_t		i;
 	
 	for (i=0 ; i<numportals*2 ; i++)
 		sorted_portals[i] = &portals[i];
@@ -128,9 +128,9 @@ LeafVectorFromPortalVector
 */
 int LeafVectorFromPortalVector (byte *portalbits, byte *leafbits)
 {
-	int			i, j, leafnum;
+	uint32_t			i, j, leafnum;
 	vportal_t	*p;
-	int			c_leafs;
+	uint32_t			c_leafs;
 
 
 	for (i=0 ; i<numportals*2 ; i++)
@@ -167,15 +167,15 @@ ClusterMerge
 Merges the portal visibility for a leaf
 ===============
 */
-void ClusterMerge (int leafnum)
+void ClusterMerge (uint32_t leafnum)
 {
 	leaf_t		*leaf;
 	byte		portalvector[MAX_PORTALS/8];
 	byte		uncompressed[MAX_MAP_LEAFS/8];
-	int			i, j;
-	int			numvis, mergedleafnum;
+	uint32_t			i, j;
+	uint32_t			numvis, mergedleafnum;
 	vportal_t	*p;
-	int			pnum;
+	uint32_t			pnum;
 
 	// OR together all the portalvis bits
 
@@ -294,7 +294,7 @@ CalcFastVis
 */
 void CalcFastVis(void)
 {
-	int		i;
+	uint32_t		i;
 
 	// fastvis just uses mightsee for a very loose bound
 	for (i=0 ; i<numportals*2 ; i++)
@@ -311,7 +311,7 @@ CalcVis
 */
 void CalcVis (void)
 {
-	int			i;
+	uint32_t			i;
 	const char	*value;
 	
 	/* ydnar: rr2do2's farplane code */
@@ -367,7 +367,7 @@ SetPortalSphere
 */
 void SetPortalSphere (vportal_t *p)
 {
-	int		i;
+	uint32_t		i;
 	vec3_t	total, dist;
 	fixedWinding_t	*w;
 	float	r, bestr;
@@ -405,7 +405,7 @@ int Winding_PlanesConcave(fixedWinding_t *w1, fixedWinding_t *w2,
 							 vec3_t normal1, vec3_t normal2,
 							 float dist1, float dist2)
 {
-	int i;
+	uint32_t i;
 
 	if (!w1 || !w2) return qfalse;
 
@@ -428,9 +428,9 @@ int Winding_PlanesConcave(fixedWinding_t *w1, fixedWinding_t *w2,
 TryMergeLeaves
 ============
 */
-int TryMergeLeaves(int l1num, int l2num)
+int TryMergeLeaves(uint32_t l1num, uint32_t l2num)
 {
-	int i, j, k, n, numportals;
+	uint32_t i, j, k, n, numportals;
 	visPlane_t plane1, plane2;
 	leaf_t *l1, *l2;
 	vportal_t *p1, *p2;
@@ -521,7 +521,7 @@ UpdatePortals
 */
 void UpdatePortals(void)
 {
-	int i;
+	uint32_t i;
 	vportal_t *p;
 
 	for (i = 0; i < numportals * 2; i++)
@@ -543,7 +543,7 @@ try to merge leaves but don't merge through hint splitters
 */
 void MergeLeaves(void)
 {
-	int i, j, nummerges, totalnummerges;
+	uint32_t i, j, nummerges, totalnummerges;
 	leaf_t *leaf;
 	vportal_t *p;
 
@@ -601,7 +601,7 @@ fixedWinding_t *TryMergeWinding (fixedWinding_t *f1, fixedWinding_t *f2, vec3_t 
 {
 	vec_t		*p1, *p2, *p3, *p4, *back;
 	fixedWinding_t	*newf;
-	int			i, j, k, l;
+	uint32_t			i, j, k, l;
 	vec3_t		normal, delta;
 	vec_t		dot;
 	qboolean	keep1, keep2;
@@ -700,7 +700,7 @@ MergeLeafPortals
 */
 void MergeLeafPortals(void)
 {
-	int i, j, k, nummerges, hintsmerged;
+	uint32_t i, j, k, nummerges, hintsmerged;
 	leaf_t *leaf;
 	vportal_t *p1, *p2;
 	fixedWinding_t *w;
@@ -756,7 +756,7 @@ WritePortals
 */
 int CountActivePortals(void)
 {
-	int num, hints, j;
+	uint32_t num, hints, j;
 	vportal_t *p;
 
 	num = 0;
@@ -784,7 +784,7 @@ void WriteFloat (FILE *f, vec_t v);
 
 void WritePortals(char *filename)
 {
-	int i, j, num;
+	uint32_t i, j, num;
 	FILE *pf;
 	vportal_t *p;
 	fixedWinding_t *w;
@@ -859,14 +859,14 @@ LoadPortals
 */
 void LoadPortals (char *name)
 {
-	int			i, j, hint;
+	uint32_t	i, j, hint;
 	vportal_t	*p;
 	leaf_t		*l;
 	char		magic[80];
 	FILE		*f;
-	int			numpoints;
+	uint32_t	numpoints;
 	fixedWinding_t	*w;
-	int			leafnums[2];
+	uint32_t	leafnums[2];
 	visPlane_t	plane;
 	
 	if (!strcmp(name,"-"))
@@ -886,6 +886,21 @@ void LoadPortals (char *name)
 	Sys_Printf ("%9d portalclusters\n", portalclusters);
 	Sys_Printf ("%9d numportals\n", numportals);
 	Sys_Printf ("%9d numfaces\n", numfaces);
+
+#if 0
+	{
+		Sys_Printf("Freeing memory.\n");
+		//if (mapplanes) { free(mapplanes); mapplanes = NULL; }
+		if (bspLeafs) { free(bspLeafs); bspLeafs = NULL; }
+		if (bspPlanes) { free(bspPlanes); bspPlanes = NULL; }
+		if (bspBrushes) { free(bspBrushes); bspBrushes = NULL; }
+		if (bspBrushSides) { free(bspBrushSides); bspBrushSides = NULL; }
+		if (bspNodes) { free(bspNodes); bspNodes = NULL; }
+		if (bspLeafSurfaces) { free(bspLeafSurfaces); bspLeafSurfaces = NULL; }
+		if (bspLeafBrushes) { free(bspLeafBrushes); bspLeafBrushes = NULL; }
+	}
+#endif
+	
 	
 	// these counts should take advantage of 64 bit systems automatically
 	leafbytes = ((portalclusters+63)&~63)>>3;
@@ -897,11 +912,18 @@ void LoadPortals (char *name)
 	// each file portal is split into two memory portals
 	portals = (vportal_t *)safe_malloc(2*numportals*sizeof(vportal_t));
 	memset (portals, 0, 2*numportals*sizeof(vportal_t));
-	
-	leafs = (leaf_t *)safe_malloc(2*portalclusters*sizeof(leaf_t));
-	memset (leafs, 0, portalclusters*sizeof(leaf_t));
 
 	//Sys_Printf("portals: %i MB.\n", (2*numportals*sizeof(vportal_t)) / (1024 * 1024));
+
+#define UQ1_TESTING
+#ifdef UQ1_TESTING
+	leafs = (leaf_t *)safe_malloc(2*portalclusters*sizeof(leaf_t));
+	memset (leafs, 0, portalclusters*sizeof(leaf_t));
+#else
+	leafs = (leaf_t *)safe_malloc(2*portalclusters*sizeof(leaf_t));
+	memset (leafs, 0, 2*portalclusters*sizeof(leaf_t));
+#endif
+
 	//Sys_Printf("leafs: %i MB.\n", (2*portalclusters*sizeof(leaf_t)) / (1024 * 1024));
 
 	for (i = 0; i < portalclusters; i++)

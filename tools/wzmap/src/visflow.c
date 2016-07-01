@@ -58,9 +58,9 @@ several games based on the Quake III Arena engine, in the form of "Q3Map2."
   void CalcMightSee (leaf_t *leaf, 
 */
 
-int CountBits (byte *bits, int numbits)
+int CountBits (byte *bits, uint32_t numbits)
 {
-	int		i;
+	uint32_t	i;
 	int		c;
 
 	c = 0;
@@ -94,7 +94,7 @@ void CheckStack (leaf_t *leaf, threaddata_t *thread)
 
 fixedWinding_t *AllocStackWinding (pstack_t *stack)
 {
-	int		i;
+	uint32_t	i;
 
 	for (i=0 ; i<3 ; i++)
 	{
@@ -112,7 +112,7 @@ fixedWinding_t *AllocStackWinding (pstack_t *stack)
 
 void FreeStackWinding (fixedWinding_t *w, pstack_t *stack)
 {
-	int		i;
+	uint32_t	i;
 
 	i = w - stack->windings;
 
@@ -133,10 +133,10 @@ VisChopWinding
 fixedWinding_t	*VisChopWinding (fixedWinding_t *in, pstack_t *stack, visPlane_t *split)
 {
 	vec_t	dists[128];
-	int		sides[128];
-	int		counts[3];
+	uint32_t sides[128];
+	uint32_t counts[3];
 	vec_t	dot;
-	int		i, j;
+	uint32_t i, j;
 	vec_t	*p1, *p2;
 	vec3_t	mid;
 	fixedWinding_t	*neww;
@@ -257,12 +257,12 @@ flipclip should be set.
 */
 fixedWinding_t	*ClipToSeperators (fixedWinding_t *source, fixedWinding_t *pass, fixedWinding_t *target, qboolean flipclip, pstack_t *stack)
 {
-	int			i, j, k, l;
-	visPlane_t		plane;
+	uint32_t	i, j, k, l;
+	visPlane_t	plane;
 	vec3_t		v1, v2;
 	float		d;
 	vec_t		length;
-	int			counts[3];
+	uint32_t	counts[3];
 	qboolean		fliptest;
 
 	// check all combinations	
@@ -414,15 +414,15 @@ Flood fill through the leafs
 If src_portal is NULL, this is the originating leaf
 ==================
 */
-void RecursiveLeafFlow (int leafnum, threaddata_t *thread, pstack_t *prevstack)
+void RecursiveLeafFlow (uint32_t leafnum, threaddata_t *thread, pstack_t *prevstack)
 {
 	pstack_t	stack;
 	vportal_t	*p;
-	visPlane_t		backplane;
+	visPlane_t	backplane;
 	leaf_t 		*leaf;
-	int			i, j, n;
+	uint32_t	i, j, n;
 	long		*test, *might, *prevmight, *vis, more;
-	int			pnum;
+	uint32_t	pnum;
 
 	thread->c_chains++;
 
@@ -642,12 +642,13 @@ PortalFlow
 generates the portalvis bit vector
 ===============
 */
-void PortalFlow (int portalnum)
+void PortalFlow (int pnum)
 {
+	uint32_t portalnum = (uint32_t)pnum;
 	threaddata_t	data;
-	int				i;
+	uint32_t		i;
 	vportal_t		*p;
-	int				c_might, c_can;
+	uint32_t		c_might, c_can;
 
 #ifdef MREDEBUG
 	Sys_Printf("\r%6d", portalnum);
@@ -696,9 +697,9 @@ void RecursivePassageFlow (vportal_t *portal, threaddata_t *thread, pstack_t *pr
 	vportal_t	*p;
 	leaf_t 		*leaf;
 	passage_t	*passage, *nextpassage;
-	int			i, j;
+	uint32_t	i, j;
 	long		*might, *vis, *prevmight, *cansee, *portalvis, more;
-	int			pnum;
+	uint32_t	pnum;
 
 	leaf = &leafs[portal->leaf];
 
@@ -769,10 +770,11 @@ void RecursivePassageFlow (vportal_t *portal, threaddata_t *thread, pstack_t *pr
 PassageFlow
 ===============
 */
-void PassageFlow (int portalnum)
+void PassageFlow (int pnum)
 {
+	uint32_t portalnum = (uint32_t)pnum;
 	threaddata_t	data;
-	int				i;
+	uint32_t		i;
 	vportal_t		*p;
 //	int				c_might, c_can;
 
@@ -824,11 +826,11 @@ void RecursivePassagePortalFlow (vportal_t *portal, threaddata_t *thread, pstack
 	pstack_t	stack;
 	vportal_t	*p;
 	leaf_t 		*leaf;
-	visPlane_t		backplane;
+	visPlane_t	backplane;
 	passage_t	*passage, *nextpassage;
-	int			i, j, n;
+	uint32_t	i, j, n;
 	long		*might, *vis, *prevmight, *cansee, *portalvis, more;
-	int			pnum;
+	uint32_t	pnum;
 
 //	thread->c_chains++;
 
@@ -1032,10 +1034,11 @@ void RecursivePassagePortalFlow (vportal_t *portal, threaddata_t *thread, pstack
 PassagePortalFlow
 ===============
 */
-void PassagePortalFlow (int portalnum)
+void PassagePortalFlow (int pnum)
 {
+	uint32_t portalnum = (uint32_t)pnum;
 	threaddata_t	data;
-	int				i;
+	uint32_t		i;
 	vportal_t		*p;
 //	int				c_might, c_can;
 
@@ -1080,10 +1083,10 @@ void PassagePortalFlow (int portalnum)
 fixedWinding_t *PassageChopWinding (fixedWinding_t *in, fixedWinding_t *out, visPlane_t *split)
 {
 	vec_t	dists[128];
-	int		sides[128];
-	int		counts[3];
+	uint32_t		sides[128];
+	uint32_t		counts[3];
 	vec_t	dot;
-	int		i, j;
+	uint32_t	i, j;
 	vec_t	*p1, *p2;
 	vec3_t	mid;
 	fixedWinding_t	*neww;
@@ -1178,14 +1181,14 @@ fixedWinding_t *PassageChopWinding (fixedWinding_t *in, fixedWinding_t *out, vis
 AddSeperators
 ===============
 */
-int AddSeperators (fixedWinding_t *source, fixedWinding_t *pass, qboolean flipclip, visPlane_t *seperators, int maxseperators)
+int AddSeperators (fixedWinding_t *source, fixedWinding_t *pass, qboolean flipclip, visPlane_t *seperators, uint32_t maxseperators)
 {
-	int			i, j, k, l;
+	uint32_t	i, j, k, l;
 	visPlane_t		plane;
 	vec3_t		v1, v2;
 	float		d;
 	vec_t		length;
-	int			counts[3], numseperators;
+	uint32_t	counts[3], numseperators;
 	qboolean	fliptest;
 
 	numseperators = 0;
@@ -1321,9 +1324,10 @@ MrE: create passages from one portal to all the portals in the leaf the portal l
 	 seen through the passage
 ===============
 */
-void CreatePassages(int portalnum)
+void CreatePassages(int pnum)
 {
-	int				i, j, k, n, numseperators, numsee;
+	uint32_t		portalnum = pnum;
+	uint32_t		i, j, k, n, numseperators, numsee;
 	float			d;
 	vportal_t		*portal, *p, *target;
 	leaf_t			*leaf;
@@ -1436,7 +1440,7 @@ void CreatePassages(int portalnum)
 
 void PassageMemory(void)
 {
-	int i, j, totalmem, totalportals;
+	uint32_t i, j, totalmem, totalportals;
 	vportal_t *portal, *target;
 	leaf_t *leaf;
 
@@ -1503,7 +1507,7 @@ all seperating planes, and both portals must be behind the new portal
 ===============================================================================
 */
 
-int		c_flood, c_vis;
+uint32_t	c_flood, c_vis;
 
 
 /*
@@ -1512,12 +1516,12 @@ SimpleFlood
 
 ==================
 */
-void SimpleFlood (vportal_t *srcportal, int leafnum)
+void SimpleFlood (vportal_t *srcportal, uint32_t leafnum)
 {
-	int		i;
+	uint32_t	i;
 	leaf_t	*leaf;
 	vportal_t	*p;
-	int		pnum;
+	uint32_t	pnum;
 
 	leaf = &leafs[leafnum];
 	
@@ -1544,9 +1548,10 @@ void SimpleFlood (vportal_t *srcportal, int leafnum)
 BasePortalVis
 ==============
 */
-void BasePortalVis( int portalnum )
+void BasePortalVis( int pnum )
 {
-	int			j, k;
+	uint32_t portalnum = (uint32_t)pnum;
+	uint32_t		j, k;
 	vportal_t	*tp, *p;
 	float		d;
 	fixedWinding_t	*w;
@@ -1648,13 +1653,13 @@ RecursiveLeafBitFlow
 
 ==================
 */
-void RecursiveLeafBitFlow (int leafnum, byte *mightsee, byte *cansee)
+void RecursiveLeafBitFlow (uint32_t leafnum, byte *mightsee, byte *cansee)
 {
 	vportal_t	*p;
 	leaf_t 		*leaf;
-	int			i, j;
+	uint32_t	i, j;
 	long		more;
-	int			pnum;
+	uint32_t	pnum;
 	byte		newmight[MAX_PORTALS/8];
 
 	leaf = &leafs[leafnum];
@@ -1694,8 +1699,9 @@ void RecursiveLeafBitFlow (int leafnum, byte *mightsee, byte *cansee)
 BetterPortalVis
 ==============
 */
-void BetterPortalVis (int portalnum)
+void BetterPortalVis (int pnum)
 {
+	uint32_t portalnum = (uint32_t)pnum;
 	vportal_t	*p;
 
 	p = portals+portalnum;

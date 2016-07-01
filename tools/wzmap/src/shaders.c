@@ -1407,17 +1407,11 @@ static void ParseShaderFile( const char *filename )
 				|| StringContainsWord(si->shader, "giant_tree") 
 				|| StringContainsWord(si->shader, "vine01"))
 			{
-				si->compileFlags |= (C_SOLID /*| C_STRUCTURAL*/);
+				si->compileFlags |= (C_SOLID | C_DETAIL /*| C_STRUCTURAL*/);
 				//Sys_Printf("Setting %s as solid.\n", si->shader);
 				si->isTreeSolid = qtrue;
 			}
 
-			/*if (StringContainsWord(si->shader, "yavin/ground"))
-			{
-				//si->subdivisions = 0.7;
-				//si->legacyTerrain = qtrue;
-				si->compileFlags |= (C_SOLID | C_DETAIL);
-			}*/
 #ifdef ___SHADER_GENERATOR___
 			if (shaderText[ 0 ] == '\0' || R_ForceGenericShader(si->shader))
 			{// If we found no shader, then use a warzone generic one for compile :)
@@ -2722,7 +2716,7 @@ static void ParseShaderFile( const char *filename )
 				if (StringContainsWord(si->shader, "tree"))
 				{
 					si->skipSolidCull = qtrue;
-					si->compileFlags |= C_SOLID;
+					si->compileFlags |= (C_SOLID | C_DETAIL /*| C_STRUCTURAL*/);
 					si->clipModel = qtrue;
 					si->isTreeSolid = qtrue;
 					//Sys_Printf("%s set as solid.\n", si->shader);
@@ -2730,7 +2724,7 @@ static void ParseShaderFile( const char *filename )
 				else if (StringContainsWord(si->shader, "ymix") || StringContainsWord(si->shader, "ypboxill"))
 				{
 					si->skipSolidCull = qtrue;
-					si->compileFlags |= C_SOLID;
+					si->compileFlags |= (C_SOLID | C_DETAIL /*| C_STRUCTURAL*/);
 					si->clipModel = qtrue;
 					si->isMapObjectSolid = qtrue;
 					//Sys_Printf("%s set as solid.\n", si->shader);
@@ -2741,7 +2735,7 @@ static void ParseShaderFile( const char *filename )
 				&& !StringContainsWord(si->shader, "leaves"))
 			{
 				si->skipSolidCull = qtrue;
-				si->compileFlags |= C_SOLID;
+				si->compileFlags |= (C_SOLID | C_DETAIL /*| C_STRUCTURAL*/);
 				si->clipModel = qtrue;
 				si->isMapObjectSolid = qtrue;
 				

@@ -140,14 +140,19 @@ matches brushsides back to their appropriate drawsurface and shader
 static void FixBrushSides( entity_t *e )
 {
 	int					i;
-	mapDrawSurface_t	*ds;
-	sideRef_t			*sideRef;
-	bspBrushSide_t		*side;
 	
 	/* walk list of drawsurfaces */
+#pragma omp parallel for ordered num_threads(numthreads)
 	for( i = e->firstDrawSurf; i < numMapDrawSurfs; i++ )
 	{
-		printLabelledProgress("FixBrushSides", i-e->firstDrawSurf, numMapDrawSurfs-e->firstDrawSurf);
+		mapDrawSurface_t	*ds;
+		sideRef_t			*sideRef;
+		bspBrushSide_t		*side;
+
+#pragma omp ordered
+		{
+			printLabelledProgress("FixBrushSides", i-e->firstDrawSurf, numMapDrawSurfs-e->firstDrawSurf);
+		}
 
 		/* get surface and try to early out */
 		ds = &mapDrawSurfs[ i ];
@@ -174,6 +179,8 @@ static void FixBrushSides( entity_t *e )
 			}
 		}
 	}
+
+	printLabelledProgress("FixBrushSides", numMapDrawSurfs-e->firstDrawSurf, numMapDrawSurfs-e->firstDrawSurf); // finish bar...
 }
 
 /*
@@ -188,28 +195,33 @@ performs a bugfixing of brush faces
 
 static void FixBrushFaces( entity_t *e )
 {
-	mapDrawSurface_t *ds, *ds2;
-	shaderInfo_t *si;
-	bspDrawVert_t *dv, *dv2;
-	vec3_t mins, maxs, sub;
-	int i, j, k, m, best;
+	int i;
 	int numVertsStitched = 0, numSurfacesStitched = 0;
-	double dist, bestdist;
-	qboolean stitched, trystitch;
-
-#ifdef STITCH_USE_TRIANGLE_NORMAL_CHECK
-	qboolean stripped, n;
-	vec3_t normal, normals[STITCH_MAX_TRIANGLES];
-	int t, numTriangles, indexes[STITCH_MAX_TRIANGLES][3];
-#endif
 
 	/* note it */
 	Sys_PrintHeadingVerbose( "--- FixBrushFaces ---\n" );
 
 	/* loop drawsurfaces */
+#pragma omp parallel for ordered num_threads(numthreads)
 	for ( i = e->firstDrawSurf ; i < numMapDrawSurfs ; i++ )
 	{
-		printLabelledProgress("FixBrushFaces", i-e->firstDrawSurf, numMapDrawSurfs-e->firstDrawSurf);
+		mapDrawSurface_t *ds, *ds2;
+		shaderInfo_t *si;
+		bspDrawVert_t *dv, *dv2;
+		vec3_t mins, maxs, sub;
+		int j, k, m, best;
+		double dist, bestdist;
+		qboolean stitched, trystitch;
+
+#ifdef STITCH_USE_TRIANGLE_NORMAL_CHECK
+		qboolean stripped, n;
+		vec3_t normal, normals[STITCH_MAX_TRIANGLES];
+		int t, numTriangles, indexes[STITCH_MAX_TRIANGLES][3];
+#endif
+#pragma omp ordered
+		{
+			printLabelledProgress("FixBrushFaces", i-e->firstDrawSurf, numMapDrawSurfs-e->firstDrawSurf);
+		}
 
 		/* get surface and early out if possible */
 		ds = &mapDrawSurfs[ i ];
@@ -349,6 +361,8 @@ static void FixBrushFaces( entity_t *e )
 		if( stitched )
 			numSurfacesStitched++;
 	}
+
+	printLabelledProgress("FixBrushFaces", numMapDrawSurfs-e->firstDrawSurf, numMapDrawSurfs-e->firstDrawSurf); // finish bar...
 
 	/* emit some statistics */
 	Sys_Printf( "%9d verts stitched\n", numVertsStitched );

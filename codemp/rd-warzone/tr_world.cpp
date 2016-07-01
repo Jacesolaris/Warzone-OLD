@@ -76,7 +76,7 @@ static qboolean	R_FovCullSurface( msurface_t *surf )
 	{
 #if 1
 		vec3_t bounds[2];
-
+		
 		bounds[0][0] = surf->cullinfo.bounds[0][0];
 		bounds[0][1] = surf->cullinfo.bounds[1][1];
 		bounds[0][2] = surf->cullinfo.bounds[0][2];
@@ -93,22 +93,23 @@ static qboolean	R_FovCullSurface( msurface_t *surf )
 			return qfalse;
 		}
 
-		if (!R_CULL_InFOV(surf->cullinfo.bounds[0], tr.refdef.vieworg)
+		/*if (!R_CULL_InFOV(surf->cullinfo.bounds[0], tr.refdef.vieworg)
 			&& !R_CULL_InFOV(surf->cullinfo.bounds[1], tr.refdef.vieworg)
 			&& !R_CULL_InFOV(bounds[0], tr.refdef.vieworg)
 			&& !R_CULL_InFOV(bounds[1], tr.refdef.vieworg)) 
 		{// No corner of this surface is on screen...
 			NUM_WORLD_FOV_CULLS++;
 			return qtrue;
-		}
+		}*/
 
-		/*if (!R_CULL_InFOV(surf->cullinfo.bounds[0], backEnd.refdef.vieworg)
+		if (!R_CULL_InFOV(surf->cullinfo.bounds[0], backEnd.refdef.vieworg)
 			&& !R_CULL_InFOV(surf->cullinfo.bounds[1], backEnd.refdef.vieworg)
 			&& !R_CULL_InFOV(bounds[0], backEnd.refdef.vieworg)
-			&& !R_CULL_InFOV(bounds[1], backEnd.refdef.vieworg)) {
-				NUM_WORLD_FOV_CULLS++;
-				return qtrue;
-		}*/
+			&& !R_CULL_InFOV(bounds[1], backEnd.refdef.vieworg)) 
+		{
+			NUM_WORLD_FOV_CULLS++;
+			return qtrue;
+		}
 
 		/*if (!R_inPVS( tr.refdef.vieworg, surf->cullinfo.bounds[0], tr.refdef.areamask )
 			&& !R_inPVS( tr.refdef.vieworg, surf->cullinfo.bounds[1], tr.refdef.areamask )

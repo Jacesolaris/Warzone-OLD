@@ -216,7 +216,9 @@ vec4 ConvertToNormals ( vec4 color )
 	//N = vec3((color.r + color.b) / 2.0, (color.g + color.b) / 2.0, (color.r + color.g) / 2.0);
 	vec3 N = vec3(clamp(color.r + color.b, 0.0, 1.0), clamp(color.g + color.b, 0.0, 1.0), clamp(color.r + color.g, 0.0, 1.0));
 	N.xy = 1.0 - N.xy;
-	vec4 norm = vec4(N, 1.0 - (length(N.xyz) / 3.0));
+	//vec4 norm = vec4(N, 1.0 - (length(N.xyz) / 3.0));
+	//vec4 norm = vec4(N, 1.0 - (N.x * N.y * N.z));
+	vec4 norm = vec4(N, ((1.0 - (N.x * N.y * N.z)) + (1.0 - (length(N.xyz) / 3.0))) / 2.0);
 	return norm;
 }
 
@@ -791,15 +793,17 @@ void main()
 	#if defined(USE_PARALLAXMAP)
 	if (u_Local1.x > 0.0)
 	{
-		vec3 offsetDir = normalize(E * tangentToWorld);
-		vec2 ParallaxXY = offsetDir.xy * u_Local1.x;
-
 		#if defined(FAST_PARALLAX)
+
+			vec3 offsetDir = normalize(E * tangentToWorld);
+			vec2 ParallaxXY = offsetDir.xy * u_Local1.x;
 
 			ParallaxOffset = ParallaxXY * RayIntersectDisplaceMap(texCoords);
 			texCoords += ParallaxOffset;
 
 		#else //!defined(FAST_PARALLAX)
+			vec3 offsetDir = normalize(E * tangentToWorld);
+			vec2 ParallaxXY = offsetDir.xy * u_Local1.x;
 
 			// Steep Parallax
 			float Step = 0.01;
@@ -822,7 +826,7 @@ void main()
 				HeightMap = GetDepth( Coord );
 			}
 		
-			Coord = (Coord + oldCoord)*0.5;
+			//Coord = (Coord + oldCoord)*0.5;
 			if( Height < 0.0 )
 			{
 				Coord = oldCoord;

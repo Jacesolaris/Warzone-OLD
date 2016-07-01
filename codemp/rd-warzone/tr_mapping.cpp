@@ -1186,7 +1186,7 @@ qboolean FOLIAGE_LoadMapClimateInfo( void )
 	if (strlen(CURRENT_CLIMATE_OPTION) == 0)
 	{
 		ri->Printf(PRINT_ALL, "^1*** ^3%s^5: No map climate info file ^7foliage/%s.climateInfo^5. Using default climate option.\n", "Warzone", currentMapName );
-		strncpy(CURRENT_CLIMATE_OPTION, "tropical", strlen("tropical"));
+		//strncpy(CURRENT_CLIMATE_OPTION, "tropical", strlen("tropical"));
 		return qfalse;
 	}
 
@@ -1273,74 +1273,56 @@ void R_LoadMapInfo ( void )
 	// UQ1: Might add these materials to the climate definition ini files later... meh...
 	if (!strcmp(CURRENT_CLIMATE_OPTION, "springpineforest"))
 	{
-#if 0
-		tr.grassImage[0] = R_FindImageFile( "models/warzone/foliage/grasspineforest", IMGTYPE_COLORALPHA, IMGFLAG_NONE );
-		tr.grassImage[1] = R_FindImageFile( "models/warzone/foliage/grasspineforest2", IMGTYPE_COLORALPHA, IMGFLAG_NONE );
-		tr.grassImage[2] = R_FindImageFile( "models/warzone/foliage/grasspineforest3", IMGTYPE_COLORALPHA, IMGFLAG_NONE );
-#endif
 		FOLIAGE_ALLOWED_MATERIALS[FOLIAGE_ALLOWED_MATERIALS_NUM] = MATERIAL_MUD; FOLIAGE_ALLOWED_MATERIALS_NUM++;
 		FOLIAGE_ALLOWED_MATERIALS[FOLIAGE_ALLOWED_MATERIALS_NUM] = MATERIAL_DIRT; FOLIAGE_ALLOWED_MATERIALS_NUM++;
 	}
 	else if (!strcmp(CURRENT_CLIMATE_OPTION, "endorredwoodforest"))
 	{
-#if 0
-		tr.grassImage[0] = R_FindImageFile( "models/warzone/foliage/ferngrass", IMGTYPE_COLORALPHA, IMGFLAG_NONE );
-		tr.grassImage[1] = R_FindImageFile( "models/warzone/foliage/ferngrass2", IMGTYPE_COLORALPHA, IMGFLAG_NONE );
-		tr.grassImage[2] = R_FindImageFile( "models/warzone/foliage/ferngrass3", IMGTYPE_COLORALPHA, IMGFLAG_NONE );
-#endif
 		FOLIAGE_ALLOWED_MATERIALS[FOLIAGE_ALLOWED_MATERIALS_NUM] = MATERIAL_MUD; FOLIAGE_ALLOWED_MATERIALS_NUM++;
 		FOLIAGE_ALLOWED_MATERIALS[FOLIAGE_ALLOWED_MATERIALS_NUM] = MATERIAL_DIRT; FOLIAGE_ALLOWED_MATERIALS_NUM++;
 	}
 	else if (!strcmp(CURRENT_CLIMATE_OPTION, "snowpineforest"))
 	{
-#if 0
-		tr.grassImage[0] = R_FindImageFile( "models/warzone/foliage/grasssnowpineforest", IMGTYPE_COLORALPHA, IMGFLAG_NONE );
-		tr.grassImage[1] = R_FindImageFile( "models/warzone/foliage/grasssnowpineforest2", IMGTYPE_COLORALPHA, IMGFLAG_NONE );
-		tr.grassImage[2] = R_FindImageFile( "models/warzone/foliage/grasssnowpineforest3", IMGTYPE_COLORALPHA, IMGFLAG_NONE );
-#endif
 		//FOLIAGE_ALLOWED_MATERIALS[FOLIAGE_ALLOWED_MATERIALS_NUM] = MATERIAL_MUD; FOLIAGE_ALLOWED_MATERIALS_NUM++;
 		//FOLIAGE_ALLOWED_MATERIALS[FOLIAGE_ALLOWED_MATERIALS_NUM] = MATERIAL_DIRT; FOLIAGE_ALLOWED_MATERIALS_NUM++;
 		//FOLIAGE_ALLOWED_MATERIALS[FOLIAGE_ALLOWED_MATERIALS_NUM] = MATERIAL_SNOW; FOLIAGE_ALLOWED_MATERIALS_NUM++;
 	}
 	else if (!strcmp(CURRENT_CLIMATE_OPTION, "tropicalold"))
 	{
-#if 0
-		tr.grassImage[0] = R_FindImageFile( "models/warzone/foliage/grasstropical", IMGTYPE_COLORALPHA, IMGFLAG_NONE );
-		tr.grassImage[1] = R_FindImageFile( "models/warzone/foliage/grasstropical2", IMGTYPE_COLORALPHA, IMGFLAG_NONE );
-		tr.grassImage[2] = R_FindImageFile( "models/warzone/foliage/grasstropical3", IMGTYPE_COLORALPHA, IMGFLAG_NONE );
-#endif
 		FOLIAGE_ALLOWED_MATERIALS[FOLIAGE_ALLOWED_MATERIALS_NUM] = MATERIAL_MUD; FOLIAGE_ALLOWED_MATERIALS_NUM++;
 		FOLIAGE_ALLOWED_MATERIALS[FOLIAGE_ALLOWED_MATERIALS_NUM] = MATERIAL_DIRT; FOLIAGE_ALLOWED_MATERIALS_NUM++;
 	}
 	else if (!strcmp(CURRENT_CLIMATE_OPTION, "tropical"))
 	{
-#if 0
-		tr.grassImage[0] = R_FindImageFile( "models/warzone/foliage/grasstropical", IMGTYPE_COLORALPHA, IMGFLAG_NONE );
-		tr.grassImage[1] = R_FindImageFile( "models/warzone/foliage/grasstropical2", IMGTYPE_COLORALPHA, IMGFLAG_NONE );
-		tr.grassImage[2] = R_FindImageFile( "models/warzone/foliage/grasstropical3", IMGTYPE_COLORALPHA, IMGFLAG_NONE );
-#endif
 		FOLIAGE_ALLOWED_MATERIALS[FOLIAGE_ALLOWED_MATERIALS_NUM] = MATERIAL_MUD; FOLIAGE_ALLOWED_MATERIALS_NUM++;
 		FOLIAGE_ALLOWED_MATERIALS[FOLIAGE_ALLOWED_MATERIALS_NUM] = MATERIAL_DIRT; FOLIAGE_ALLOWED_MATERIALS_NUM++;
 	}
 	else // Default to new tropical...
 	{
-#if 0
-		tr.grassImage[0] = R_FindImageFile( "models/warzone/foliage/grasstropical", IMGTYPE_COLORALPHA, IMGFLAG_NONE );
-		tr.grassImage[1] = R_FindImageFile( "models/warzone/foliage/grasstropical2", IMGTYPE_COLORALPHA, IMGFLAG_NONE );
-		tr.grassImage[2] = R_FindImageFile( "models/warzone/foliage/grasstropical3", IMGTYPE_COLORALPHA, IMGFLAG_NONE );
-#endif
+
 	}
 
-#if 0
-	tr.seaGrassImage = R_FindImageFile( "models/warzone/foliage/seagrass", IMGTYPE_COLORALPHA, IMGFLAG_NONE );
-#else
-	for (int i = 0; i < 3; i++)
-	{
-		tr.grassImage[i] = R_FindImageFile( IniRead(va("climates/%s.climate", CURRENT_CLIMATE_OPTION), "GRASS", va("grassImage%i", i), "models/warzone/foliage/maingrass"), IMGTYPE_COLORALPHA, IMGFLAG_NONE );
-	}
+	// Check if we have a climate file in climates/ for this map...
+	float TREE_SCALE_MULTIPLIER = atof(IniRead(va("climates/%s.climate", CURRENT_CLIMATE_OPTION), "TREES", "treeScaleMultiplier", "0.0"));
 
-	tr.seaGrassImage = R_FindImageFile( IniRead(va("climates/%s.climate", CURRENT_CLIMATE_OPTION), "GRASS", "seaGrassImage", "models/warzone/foliage/seagrass"), IMGTYPE_COLORALPHA, IMGFLAG_NONE );
-#endif
+	if (TREE_SCALE_MULTIPLIER <= 0.0)
+	{// Seems we have no climate file in climates/ for the map... Check maps/
+		for (int i = 0; i < 3; i++)
+		{
+			tr.grassImage[i] = R_FindImageFile( IniRead(va("maps/%s.climate", currentMapName), "GRASS", va("grassImage%i", i), "models/warzone/foliage/maingrass"), IMGTYPE_COLORALPHA, IMGFLAG_NONE );
+		}
+
+		tr.seaGrassImage = R_FindImageFile( IniRead(va("maps/%s.climate", currentMapName), "GRASS", "seaGrassImage", "models/warzone/foliage/seagrass"), IMGTYPE_COLORALPHA, IMGFLAG_NONE );
+	}
+	else
+	{// Have a climate file in climates/
+		for (int i = 0; i < 3; i++)
+		{
+			tr.grassImage[i] = R_FindImageFile( IniRead(va("climates/%s.climate", CURRENT_CLIMATE_OPTION), "GRASS", va("grassImage%i", i), "models/warzone/foliage/maingrass"), IMGTYPE_COLORALPHA, IMGFLAG_NONE );
+		}
+
+		tr.seaGrassImage = R_FindImageFile( IniRead(va("climates/%s.climate", CURRENT_CLIMATE_OPTION), "GRASS", "seaGrassImage", "models/warzone/foliage/seagrass"), IMGTYPE_COLORALPHA, IMGFLAG_NONE );
+	}
 	
 #if 0
 	if (!ri->FS_FileExists(va( "mapImage/%s.tga", currentMapName )))

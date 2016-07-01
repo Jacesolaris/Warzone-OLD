@@ -1895,7 +1895,7 @@ fixedWinding_t				*NewFixedWinding( int points );
 int							VisMain( int argc, char **argv );
 
 /* visflow.c */
-int							CountBits( byte *bits, int numbits );
+int							CountBits( byte *bits, uint32_t numbits );
 void						PassageFlow( int portalnum );
 void						CreatePassages( int portalnum );
 void						PassageMemory( void );

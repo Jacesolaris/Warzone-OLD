@@ -315,7 +315,8 @@ typedef unsigned int cl_GLenum;
 #endif
 
 #if defined( __AVX__ )
-    #include <gmmintrin.h> 
+    //#include <gmmintrin.h> 
+	#include <immintrin.h>
     #if defined( __GNUC__ )
         typedef cl_float    __cl_float8     __attribute__((vector_size(32)));
         typedef cl_double   __cl_double4    __attribute__((vector_size(32)));

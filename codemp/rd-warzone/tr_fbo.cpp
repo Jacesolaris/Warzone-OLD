@@ -592,11 +592,11 @@ void FBO_Init(void)
 
 		R_CheckFBO(tr.renderFbo);
 
-		tr.previousRenderFbo = FBO_Create("_previousRenderFBO", tr.renderDepthImage->width, tr.renderDepthImage->height);
+		/*tr.previousRenderFbo = FBO_Create("_previousRenderFBO", tr.renderDepthImage->width, tr.renderDepthImage->height);
 		FBO_Bind(tr.previousRenderFbo);
 		FBO_AttachTextureImage(tr.previousRenderImage, 0);
 		FBO_SetupDrawBuffers();
-		R_CheckFBO(tr.previousRenderFbo);
+		R_CheckFBO(tr.previousRenderFbo);*/
 	}
 
 	// clear render buffer

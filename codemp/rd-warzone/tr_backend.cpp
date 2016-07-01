@@ -2709,13 +2709,10 @@ const void *RB_PostProcess(const void *data)
 	}
 #endif //___WARZONE_AWESOMIUM___
 
-	if (srcFbo)
+	/*if (srcFbo)
 	{
 		FBO_FastBlit(srcFbo, srcBox, tr.previousRenderFbo, dstBox, GL_COLOR_BUFFER_BIT, GL_LINEAR);
-		//vec4i_t dstBox;
-		//VectorSet4(dstBox, 0, 0, 128, 128);
-		//FBO_BlitFromTexture(tr.previousRenderImage, NULL, NULL, NULL, dstBox, NULL, NULL, 0);
-	}
+	}*/
 
 	if (0 && r_sunlightMode->integer)
 	{

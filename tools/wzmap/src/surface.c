@@ -3789,13 +3789,8 @@ will have valid final indexes
 
 void FilterDrawsurfsIntoTree( entity_t *e, tree_t *tree, qboolean showpacifier )
 {
-	int	i, f, fOld, start;
-	mapDrawSurface_t *ds;
-	shaderInfo_t *si;
-	vec3_t origin, mins, maxs;
-	int refs;
-	int	numSurfs, numRefs, numSkyboxSurfaces;
-	qboolean forceMeta;
+	int	i, fOld, start;
+	int	numSurfs, numRefs, numSkyboxSurfaces, numPotentialBad;
 	
 	/* apply mods */
 	ApplyVertexMods( e, showpacifier );
@@ -3815,10 +3810,21 @@ void FilterDrawsurfsIntoTree( entity_t *e, tree_t *tree, qboolean showpacifier )
 	numSurfs = 0;
 	numRefs = 0;
 	numSkyboxSurfaces = 0;
+	numPotentialBad = 0;
 
+#pragma omp parallel for ordered num_threads(numthreads)
 	for( i = e->firstDrawSurf; i < numMapDrawSurfs; i++ )
 	{
-		printLabelledProgress("FilterDrawsurfsIntoTree", i-e->firstDrawSurf, numMapDrawSurfs-e->firstDrawSurf);
+		qboolean forceMeta;
+		mapDrawSurface_t *ds;
+		shaderInfo_t *si;
+		vec3_t origin, mins, maxs;
+		int refs;
+
+#pragma omp ordered
+		{
+			printLabelledProgress("FilterDrawsurfsIntoTree", i-e->firstDrawSurf, numMapDrawSurfs-e->firstDrawSurf);
+		}
 
 		/* get surface and try to early out */
 		ds = &mapDrawSurfs[ i ];
@@ -3957,9 +3963,10 @@ void FilterDrawsurfsIntoTree( entity_t *e, tree_t *tree, qboolean showpacifier )
 				out = &bspDrawSurfaces[ numBSPDrawSurfaces - 1 ];
 				if( out->numVerts == 3 && out->numIndexes > 3 )
 				{
-					Sys_Printf( "\nWARNING: Potentially bad %s surface (%d: %d, %d)\n     %s\n",
+					/*Sys_Printf( "\nWARNING: Potentially bad %s surface (%d: %d, %d)\n     %s\n",
 						surfaceTypes[ ds->type ],
-						numBSPDrawSurfaces - 1, out->numVerts, out->numIndexes, si->shader );
+						numBSPDrawSurfaces - 1, out->numVerts, out->numIndexes, si->shader );*/
+					numPotentialBad++;
 				}
 			}
 			
@@ -3972,6 +3979,8 @@ void FilterDrawsurfsIntoTree( entity_t *e, tree_t *tree, qboolean showpacifier )
 		}
 	}
 
+	printLabelledProgress("FilterDrawsurfsIntoTree", numMapDrawSurfs-e->firstDrawSurf, numMapDrawSurfs-e->firstDrawSurf);
+
 	/* print time */
 	//if( showpacifier == qtrue )
 	//	Sys_Printf( " (%d)\n", (int) (I_FloatTime() - start) );
@@ -3980,6 +3989,7 @@ void FilterDrawsurfsIntoTree( entity_t *e, tree_t *tree, qboolean showpacifier )
 	Sys_Printf( "%9d references\n", numRefs );
 	Sys_Printf( "%9d surfaces\n", numSurfs );
 	Sys_Printf( "%9d skybox surfaces generated\n", numSkyboxSurfaces );
+	Sys_Printf( "%9d potentially bad surfaces\n", numPotentialBad );
 }
 
 void EmitDrawsurfsSimpleStats( void )
