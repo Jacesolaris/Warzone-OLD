@@ -1,9 +1,7 @@
 Particle
 {
-	//flags				usePhysics impactKills impactFx useAlpha
-	//flags				ghoul2Collision impactKills impactFx useAlpha
-	flags				usePhysics expensivePhysics impactKills useAlpha
-	//flags				useAlpha
+	//flags				usePhysics expensivePhysics impactKills useAlpha
+	flags				useAlpha
 
   spawnFlags			cheapOrgCalc
 

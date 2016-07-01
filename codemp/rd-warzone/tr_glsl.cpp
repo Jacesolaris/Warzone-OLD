@@ -148,7 +148,7 @@ extern const char *fallbackShader_testshader_vp;
 extern const char *fallbackShader_testshader_fp;
 
 //#define HEIGHTMAP_TESSELATION
-#define HEIGHTMAP_TESSELATION2
+#define HEIGHTMAP_TESSELATION2 // NEW
 //#define PN_TRIANGLES_TESSELATION
 //#define PHONG_TESSELATION
 
@@ -953,6 +953,9 @@ const char fallbackShader_genericTessControl_cp[] =
 " vec3 q_minus_p = q - gl_in[i].gl_Position.xyz;\n"\
 " return q[gl_InvocationID] - dot(q_minus_p, Normal_CS_in[i])\n"\
 "                           * Normal_CS_in[i][gl_InvocationID];\n"\
+"// vec3 normal = normalize(cross(gl_in[2].gl_Position.xyz - gl_in[0].gl_Position.xyz, gl_in[1].gl_Position.xyz - gl_in[0].gl_Position.xyz));\n"\
+"// return q[gl_InvocationID] - dot(q_minus_p, normal)\n"\
+"//                           * normal[gl_InvocationID];\n"\
 "}\n"\
 "\n"\
 "void main()\n"\
@@ -961,6 +964,7 @@ const char fallbackShader_genericTessControl_cp[] =
 " gl_out[gl_InvocationID].gl_Position		= gl_in[gl_InvocationID].gl_Position;\n"\
 " WorldPos_ES_in[gl_InvocationID]			= WorldPos_CS_in[gl_InvocationID];\n"\
 " iNormal[gl_InvocationID]					= Normal_CS_in[gl_InvocationID];\n"\
+"//	 iNormal[gl_InvocationID] = normalize(cross(WorldPos_CS_in[2].xyz - WorldPos_CS_in[0].xyz, WorldPos_CS_in[1].xyz - WorldPos_CS_in[0].xyz));\n"\
 " iTexCoord[gl_InvocationID]				= TexCoord_CS_in[gl_InvocationID];\n"\
 "\n"\
 " Color_ES_in[gl_InvocationID]				= Color_CS_in[gl_InvocationID];\n"\
@@ -1093,13 +1097,12 @@ const char fallbackShader_genericTessControl_ep[] =
 "                    iPhongPatch[2].termIK);\n"\
 "\n"\
 " // phong tesselated pos\n"\
-"// float vSize = length(Pi - Pj) + length(Pj - Pk) + length(Pi - Pk); // UQ1: Testing this for tessellation on large terrains\n"\
 " vec3 phongPos   = tc2[0]*Pi\n"\
 "                 + tc2[1]*Pj\n"\
 "                 + tc2[2]*Pk\n"\
-"                 + tc1[0]*tc1[1]*termIJ/**vSize*/\n"\
-"                 + tc1[1]*tc1[2]*termJK/**vSize*/\n"\
-"                 + tc1[2]*tc1[0]*termIK/**vSize*/;\n"\
+"                 + tc1[0]*tc1[1]*termIJ\n"\
+"                 + tc1[1]*tc1[2]*termJK\n"\
+"                 + tc1[2]*tc1[0]*termIK;\n"\
 "\n"\
 " // final position\n"\
 " vec3 finalPos = (1.0-uTessAlpha)*barPos + uTessAlpha*phongPos;\n"\
