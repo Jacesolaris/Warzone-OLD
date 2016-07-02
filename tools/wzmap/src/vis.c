@@ -1193,10 +1193,10 @@ int VisMain (int argc, char **argv)
 		MergeLeafPortals();
 	}
 
-	if (!mergevis)
+	/*if (!mergevis)
 	{
 		fastvis = qtrue;
-	}
+	}*/
 	
 	CountActivePortals();
 	/* WritePortals( "maps/hints.prs" );*/
