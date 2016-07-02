@@ -166,6 +166,7 @@ int irand(int min, int max)
 void ReassignModels ( void )
 {
 	int				i;
+	int				NUM_PLACED[MAX_FOREST_MODELS] = { 0 };
 	float			*BUFFER_RANGES;
 	float			*SAME_RANGES;
 	int				POSSIBLES[MAX_FOREST_MODELS] = { 0 };
@@ -204,6 +205,12 @@ void ReassignModels ( void )
 		POSSIBLES_SAME_RANGES[NUM_POSSIBLES] = TREE_FORCED_DISTANCE_FROM_SAME[i];
 		POSSIBLES_MAX_ANGLE[NUM_POSSIBLES] = TREE_FORCED_MAX_ANGLE[i];
 		NUM_POSSIBLES++;
+	}
+
+	Sys_Printf("Restricted angle possibles:\n");
+	for (i = 0; i < NUM_POSSIBLES; i++)
+	{
+		Sys_Printf("%i - %s.\n", i, TREE_MODELS[POSSIBLES[i]]);
 	}
 
 	//Sys_Printf("Assign angles models from %i possibles.\n", NUM_POSSIBLES);
@@ -281,6 +288,7 @@ void ReassignModels ( void )
 			BUFFER_RANGES[i] = POSSIBLES_BUFFERS[selected];
 			SAME_RANGES[i] = POSSIBLES_SAME_RANGES[selected];
 			FOLIAGE_ASSIGNED[i] = qtrue;
+			NUM_PLACED[POSSIBLES[selected]]++;
 		}
 	}
 
@@ -308,6 +316,12 @@ void ReassignModels ( void )
 	}
 
 	//Sys_Printf("Assign other models from %i possibles.\n", NUM_POSSIBLES);
+
+	Sys_Printf("Non restricted angle possibles:\n");
+	for (i = 0; i < NUM_POSSIBLES; i++)
+	{
+		Sys_Printf("%i - %s.\n", i, TREE_MODELS[POSSIBLES[i]]);
+	}
 
 	// Now add other options...
 	if (NUM_POSSIBLES > 0)
@@ -369,6 +383,7 @@ void ReassignModels ( void )
 			BUFFER_RANGES[i] = POSSIBLES_BUFFERS[selected];
 			SAME_RANGES[i] = POSSIBLES_SAME_RANGES[selected];
 			FOLIAGE_ASSIGNED[i] = qtrue;
+			NUM_PLACED[POSSIBLES[selected]]++;
 		}
 	}
 
@@ -391,6 +406,16 @@ void ReassignModels ( void )
 	}
 
 	Sys_Printf("%9d of %i positions successfully reassigned to new models.\n", count, FOLIAGE_NUM_POSITIONS-1);
+
+	for (i = 0; i < MAX_FOREST_MODELS; i++)
+	{
+		if (!strcmp(TREE_MODELS[i], ""))
+		{
+			continue;
+		}
+
+		Sys_Printf("%9d placements of model %s.\n", NUM_PLACED[i], TREE_MODELS[i]);
+	}
 }
 
 //#define __ADD_TREES_EARLY__ // Add trees to map's brush list instanty...

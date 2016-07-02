@@ -2701,6 +2701,7 @@ static void ParseShaderFile( const char *filename )
 		}
 
 		if (!si->isTreeSolid 
+			&& !si->isMapObjectSolid
 			/*&& !(si->compileFlags & C_SOLID) */
 			&& !(si->compileFlags & C_TRANSLUCENT)
 			//&& !(si->compileFlags & C_DETAIL)
@@ -2739,13 +2740,39 @@ static void ParseShaderFile( const char *filename )
 				si->clipModel = qtrue;
 				si->isMapObjectSolid = qtrue;
 				
-				//Sys_Printf("%s set as solid.\n", si->shader);
+				//if (StringContainsWord(si->shader, "ship") || StringContainsWord(si->shader, "imp_"))
+				//	Sys_Printf("%s set as solid.\n", si->shader);
 			}
 			else
 			{
 				//Sys_Printf("%s NOT set as solid.\n", si->shader);
 			}
 		}
+		/*else if (si->compileFlags & C_TRANSLUCENT)
+		{
+			if (StringContainsWord(si->shader, "ship"))
+				Sys_Printf("%s NOT set as solid. - C_TRANSLUCENT\n", si->shader);
+		}
+		else if (si->compileFlags & C_NODRAW)
+		{
+			if (StringContainsWord(si->shader, "ship"))
+				Sys_Printf("%s NOT set as solid. - C_NODRAW\n", si->shader);
+		}
+		else if (si->compileFlags & C_LIQUID)
+		{
+			if (StringContainsWord(si->shader, "ship"))
+				Sys_Printf("%s NOT set as solid. - C_LIQUID\n", si->shader);
+		}
+		else if (si->compileFlags & C_SKY)
+		{
+			if (StringContainsWord(si->shader, "ship"))
+				Sys_Printf("%s NOT set as solid. - C_SKY\n", si->shader);
+		}
+		else if (si->compileFlags & C_FOG)
+		{
+			if (StringContainsWord(si->shader, "ship"))
+				Sys_Printf("%s NOT set as solid. - C_FOG\n", si->shader);
+		}*/
 
 		/* finish shader */
 		if( minVertexLightUsed == qfalse )
