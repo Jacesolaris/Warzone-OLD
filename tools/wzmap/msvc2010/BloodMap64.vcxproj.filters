@@ -46,6 +46,12 @@
       <UniqueIdentifier>{a1519fe6-3108-4d85-85c4-b99fdf647186}</UniqueIdentifier>
       <Extensions>*.txt</Extensions>
     </Filter>
+    <Filter Include="src\meshdecimate">
+      <UniqueIdentifier>{285deb42-676a-4af4-912c-73d803bacfa9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\meshsimplify">
+      <UniqueIdentifier>{dae86a04-ddd7-48fa-b39d-e285b8a1a5f8}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\bspfile_abstract.c">
@@ -207,6 +213,12 @@
     <ClCompile Include="..\src\q3map3_cl.c">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\meshdecimation\mdMeshDecimator.cpp">
+      <Filter>src\meshdecimate</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\meshdecimation\decimateMain.cpp">
+      <Filter>src\meshdecimate</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\games\darkplaces.h">
@@ -317,6 +329,18 @@
     <ClInclude Include="..\src\q3map3_cl.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\meshdecimation\mdMeshDecimator.h">
+      <Filter>src\meshdecimate</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\meshdecimation\mdSArray.h">
+      <Filter>src\meshdecimate</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\meshdecimation\mdVector.h">
+      <Filter>src\meshdecimate</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\meshsimplification\simplify.h">
+      <Filter>src\meshsimplify</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\src\bloodmap.ico">
@@ -337,6 +361,9 @@
     <None Include="..\src\radiosity_kernel.cl" />
     <None Include="..\src\trace_kernel.cl" />
     <None Include="..\src\vector_math.cl" />
+    <None Include="..\src\meshdecimation\mdVector.inl">
+      <Filter>src\meshdecimate</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\src\bloodmap.rc">

@@ -1336,6 +1336,7 @@ void R_LoadMapInfo ( void )
 	}
 #endif
 
+#if 0
 	if (!ri->FS_FileExists(va( "heightMapImage/%s.tga", currentMapName )))
 	{
 		R_CreateHeightMapImage();
@@ -1345,6 +1346,7 @@ void R_LoadMapInfo ( void )
 	{
 		tr.heightMapImage = R_FindImageFile(va( "heightMapImage/%s.tga", currentMapName ), IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION);
 	}
+#endif
 
 #if 0
 	if (!ri->FS_FileExists(va( "foliageMapImage/%s.tga", currentMapName )))

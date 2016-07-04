@@ -469,6 +469,7 @@ void AddBrushBevels( void )
 	// test the non-axial plane edges
 	for ( i = 6; i < buildBrush->numsides; i++ ) {
 		s = buildBrush->sides + i;
+		if (s->culled || !s->shaderInfo) continue;
 		w = s->winding;
 		if ( !w ) {
 			continue;
@@ -962,7 +963,7 @@ qboolean RemoveDuplicateBrushPlanes( brush_t *b )
 		// check for a degenerate plane
 		if ( sides[i].planenum == -1) 
 		{
-			Sys_Warning( b->entityNum, b->brushNum, "Degenerate plane" );
+			//Sys_Warning( b->entityNum, b->brushNum, "Degenerate plane" );
 			// remove it
 			for ( k = i + 1 ; k < b->numsides ; k++ ) {
 				sides[k-1] = sides[k];
@@ -977,7 +978,7 @@ qboolean RemoveDuplicateBrushPlanes( brush_t *b )
 		{
 			if ( sides[i].planenum == sides[j].planenum ) 
 			{
-				Sys_Warning( b->entityNum, b->brushNum, "Duplicate plane" );
+				//Sys_Warning( b->entityNum, b->brushNum, "Duplicate plane" );
 				// remove the second duplicate
 				for ( k = i + 1 ; k < b->numsides ; k++ ) {
 					sides[k-1] = sides[k];
@@ -990,7 +991,7 @@ qboolean RemoveDuplicateBrushPlanes( brush_t *b )
 			if ( sides[i].planenum == (sides[j].planenum ^ 1) )
 			{
 				// mirror plane, brush is invalid
-				Sys_Warning( b->entityNum, b->brushNum, "Mirrored plane" );
+				//Sys_Warning( b->entityNum, b->brushNum, "Mirrored plane" );
 				return qfalse;
 			}
 		}

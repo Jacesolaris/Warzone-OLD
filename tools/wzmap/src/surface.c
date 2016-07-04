@@ -1579,7 +1579,7 @@ void ClipSideIntoTree_r( winding_t *w, side_t *side, node_t *node )
 
 
 
-static int g_numHiddenFaces, g_numCoinFaces;
+int g_numHiddenFaces, g_numCoinFaces;
 
 #define CULL_EPSILON 0.1f
 
@@ -1679,12 +1679,15 @@ void CullSides( entity_t *e )
 				continue;
 
 			/* cull inside sides */
+//#pragma omp parallel for ordered num_threads(numthreads)
 			for( i = 0; i < b1->numsides; i++ )
 				SideInBrush( &b1->sides[ i ], b2 );
+//#pragma omp parallel for ordered num_threads(numthreads)
 			for( i = 0; i < b2->numsides; i++ )
 				SideInBrush( &b2->sides[ i ], b1 );
 			
 			/* side iterator 1 */
+//#pragma omp parallel for ordered num_threads(numthreads)
 			for( i = 0; i < b1->numsides; i++ )
 			{
 				/* winding check */
@@ -1792,6 +1795,9 @@ void CullSides( entity_t *e )
 				}
 			}
 		}
+
+		//Sys_Printf( "%9d hidden faces culled\n", g_numHiddenFaces );
+		//Sys_Printf( "%9d coincident faces culled\n", g_numCoinFaces );
 	}
 }
 

@@ -127,6 +127,8 @@
       <UseProcessorExtensions>HOST</UseProcessorExtensions>
       <OpenMP>GenerateParallelCode</OpenMP>
       <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <OpenMPSupport>true</OpenMPSupport>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -236,6 +238,8 @@
     <ClCompile Include="..\src\inifile.cpp" />
     <ClCompile Include="..\src\main.c" />
     <ClCompile Include="..\src\mesh.c" />
+    <ClCompile Include="..\src\meshdecimation\decimateMain.cpp" />
+    <ClCompile Include="..\src\meshdecimation\mdMeshDecimator.cpp" />
     <ClCompile Include="..\src\model.c" />
     <ClCompile Include="..\src\optimize.c" />
     <ClCompile Include="..\src\patchbsp.c" />
@@ -298,6 +302,10 @@
     <ClInclude Include="..\src\games\wolf.h" />
     <ClInclude Include="..\src\games\wolfet.h" />
     <ClInclude Include="..\src\inifile.h" />
+    <ClInclude Include="..\src\meshdecimation\mdMeshDecimator.h" />
+    <ClInclude Include="..\src\meshdecimation\mdSArray.h" />
+    <ClInclude Include="..\src\meshdecimation\mdVector.h" />
+    <ClInclude Include="..\src\meshsimplification\simplify.h" />
     <ClInclude Include="..\src\q3map2.h" />
     <ClInclude Include="..\src\q3map3_cl.h" />
     <ClInclude Include="..\src\stream_version.h" />
@@ -324,6 +332,7 @@
     <None Include="..\src\bloodmap.ico" />
     <None Include="..\changelog.q3map2.txt" />
     <None Include="..\changelog.q3map2_fs.txt" />
+    <None Include="..\src\meshdecimation\mdVector.inl" />
     <None Include="..\src\radiosity_kernel.cl" />
     <None Include="..\src\trace_kernel.cl" />
     <None Include="..\src\vector_math.cl" />

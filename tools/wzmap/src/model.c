@@ -38,6 +38,11 @@ several games based on the Quake III Arena engine, in the form of "Q3Map2."
 
 
 extern qboolean StringContainsWord(const char *haystack, const char *needle);
+extern qboolean RemoveDuplicateBrushPlanes( brush_t *b );
+extern void CullSides( entity_t *e );
+extern void CullSidesStats( void );
+
+extern int g_numHiddenFaces, g_numCoinFaces;
 
 /* 
 PicoPrintFunc()
@@ -230,6 +235,7 @@ float Distance(vec3_t pos1, vec3_t pos2)
 }
 
 extern void LoadShaderImages( shaderInfo_t *si );
+extern void Decimate ( picoModel_t *model );
 
 int numSolidSurfs = 0, numHeightCulledSurfs = 0, numSizeCulledSurfs = 0;
 
@@ -583,8 +589,14 @@ void InsertModel( char *name, int frame, int skin, m4x4_t transform, float uvSca
 			vec3_t points[ 4 ], backs[ 3 ];
 			vec4_t plane, reverse, pa, pb, pc;
 			
+			if ((si->compileFlags & C_TRANSLUCENT) || (si->compileFlags & C_SKIP) || (si->compileFlags & C_FOG) || (si->compileFlags & C_NODRAW) || (si->compileFlags & C_HINT))
+			{
+				continue;
+			}
+
 			/* temp hack */
-			if( !si->clipModel && ((si->compileFlags & C_TRANSLUCENT) || !(si->compileFlags & C_SOLID)) )
+			if( !si->clipModel 
+				&& ((si->compileFlags & C_TRANSLUCENT) || !(si->compileFlags & C_SOLID)) )
 			{
 				continue;
 			}
@@ -825,13 +837,28 @@ void InsertModel( char *name, int frame, int skin, m4x4_t transform, float uvSca
 								/* add to entity */
 								if( CreateBrushWindings( buildBrush ) )
 								{
+									int numsides;
+
 									AddBrushBevels();
 									//%	EmitBrushes( buildBrush, NULL, NULL );
-									buildBrush->next = entities[ mapEntityNum ].brushes;
-									entities[ mapEntityNum ].brushes = buildBrush;
-									entities[ mapEntityNum ].numBrushes++;
-									if (added_brushes != NULL)
-										*added_brushes += 1;
+
+									numsides = buildBrush->numsides;
+									
+									if (!RemoveDuplicateBrushPlanes( buildBrush ))
+									{// UQ1: Testing - This would create a mirrored plane... free it...
+										free(buildBrush);
+										//Sys_Printf("Removed a mirrored plane\n");
+									}
+									else
+									{
+										//if (buildBrush->numsides < numsides) Sys_Printf("numsides reduced from %i to %i.\n", numsides, buildBrush->numsides);
+
+										buildBrush->next = entities[ mapEntityNum ].brushes;
+										entities[ mapEntityNum ].brushes = buildBrush;
+										entities[ mapEntityNum ].numBrushes++;
+										if (added_brushes != NULL)
+											*added_brushes += 1;
+									}
 								}
 								else
 								{
@@ -876,7 +903,7 @@ void LoadTriangleModels( void )
 	start = I_FloatTime();
 	for( num = 1; num < numEntities; num++ )
 	{
-		printLabelledProgress("LoadTriangleModels", num, numEntities);
+		//printLabelledProgress("LoadTriangleModels", num, numEntities);
 
 		/* get ent */
 		e = &entities[ num ];
@@ -914,6 +941,32 @@ void LoadTriangleModels( void )
 		/* debug */
 		//if( loaded && picoModel && picoModel->numSurfaces != 0  )
 		//	Sys_Printf("loaded %s: %i vertexes %i triangles\n", PicoGetModelFileName( picoModel ), PicoGetModelTotalVertexes( picoModel ), PicoGetModelTotalIndexes( picoModel ) / 3 );
+
+#ifdef __MODEL_SIMPLIFICATION__
+		{// UQ1: Testing... Mesh decimation for collision planes...
+			char fileNameOut[128] = { 0 };
+			char tempfileNameOut[128] = { 0 };
+
+			strcpy(tempfileNameOut, model);
+			StripExtension( tempfileNameOut );
+			sprintf(fileNameOut, "%s_lod.obj", tempfileNameOut);
+
+			loaded = PreloadModel( (char*) fileNameOut, 0 );
+			picoModel = FindModel( (char*) fileNameOut, frame );
+
+			if( !picoModel || picoModel->numSurfaces == 0 )
+			{
+				Decimate( picoModel );
+
+				loaded = PreloadModel( (char*) fileNameOut, 0 );
+				picoModel = FindModel( (char*) fileNameOut, frame );
+			}
+			else
+			{
+				Sys_Printf("Already have lod %s for model %s.\n", fileNameOut, model);
+			}
+		}
+#endif //__MODEL_SIMPLIFICATION__
 	}
 
 	/* print overall time */
@@ -1188,8 +1241,13 @@ void AddTriangleModels( int entityNum, qboolean quiet, qboolean cullSmallSolids 
 		Sys_Printf( "%9d triangles added\n", total_added_triangles );
 		Sys_Printf( "%9d vertexes added\n", total_added_verts );
 		Sys_Printf( "%9d brushes added\n", total_added_brushes );
-		Sys_Printf("%9i of %i solid surfaces culled for height (%i percent).\n", numHeightCulledSurfs, numSolidSurfs, (int)(((float)numHeightCulledSurfs / (float)numSolidSurfs) * 100.0));
-		Sys_Printf("%9i of %i solid surfaces culled for tiny size (%i percent).\n", numSizeCulledSurfs, numSolidSurfs, (int)(((float)numSizeCulledSurfs / (float)numSolidSurfs) * 100.0));
-		Sys_Printf("%9i of %i total solid surfaces culled (%i percent).\n", numHeightCulledSurfs + numSizeCulledSurfs, numSolidSurfs, (int)((((float)numHeightCulledSurfs + (float)numSizeCulledSurfs) / (float)numSolidSurfs) * 100.0));
+		Sys_Printf( "%9i of %i solid surfaces culled for height (%i percent).\n", numHeightCulledSurfs, numSolidSurfs, (int)(((float)numHeightCulledSurfs / (float)numSolidSurfs) * 100.0) );
+		Sys_Printf( "%9i of %i solid surfaces culled for tiny size (%i percent).\n", numSizeCulledSurfs, numSolidSurfs, (int)(((float)numSizeCulledSurfs / (float)numSolidSurfs) * 100.0) );
+		Sys_Printf( "%9i of %i total solid surfaces culled (%i percent).\n", numHeightCulledSurfs + numSizeCulledSurfs, numSolidSurfs, (int)((((float)numHeightCulledSurfs + (float)numSizeCulledSurfs) / (float)numSolidSurfs) * 100.0) );
 	}
+
+	//g_numHiddenFaces = 0;
+	//g_numCoinFaces = 0;
+	//CullSides( &entities[ mapEntityNum ] );
+	//CullSidesStats();
 }
