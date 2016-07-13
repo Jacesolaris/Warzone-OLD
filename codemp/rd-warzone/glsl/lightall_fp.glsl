@@ -752,7 +752,7 @@ void main()
 	#endif
 
 
-	#ifdef USE_OVERLAY
+	#if defined(USE_OVERLAY) && !defined(USE_GLOW_BUFFER)
 		if (u_Local4.a > 0.0 && !(u_Local5.a > 0.0 && var_Slope > 0) && !(u_Local6.g > 0.0 && m_vertPos.z <= WATER_LEVEL + 128.0 + (64.0 * pixRandom)))
 		{// Sway...
 			texCoords += vec2(u_Local5.y * u_Local4.a * ((1.0 - m_TexCoords.y) + 1.0), 0.0);
@@ -775,7 +775,7 @@ void main()
 
 
 
-	#if defined(USE_LIGHTMAP)
+	#if defined(USE_LIGHTMAP) && !defined(USE_GLOW_BUFFER)
 
 		vec4 lightmapColor = texture2D(u_LightMap, var_TexCoords2.st);
   
@@ -790,7 +790,7 @@ void main()
 	vec2 ParallaxOffset = vec2(0.0);
 
 
-	#if defined(USE_PARALLAXMAP)
+	#if defined(USE_PARALLAXMAP) && !defined(USE_GLOW_BUFFER)
 	if (u_Local1.x > 0.0)
 	{
 		#if defined(FAST_PARALLAX)
@@ -864,7 +864,7 @@ void main()
 
 	
 
-	#if defined(USE_OVERLAY)
+	#if defined(USE_OVERLAY) && !defined(USE_GLOW_BUFFER)
 
 		//
 		// Overlay Maps...
@@ -901,14 +901,14 @@ void main()
 	lightColor = var_Color.rgb;
 	attenuation = 1.0;
 
-	#if defined(USE_LIGHTMAP)
+	#if defined(USE_LIGHTMAP) && !defined(USE_GLOW_BUFFER)
 		float lmBrightMult = clamp(1.0 - (length(lightmapColor.rgb) / 3.0), 0.0, 0.9);
 		lmBrightMult *= lmBrightMult * 0.7;
 		lightColor	= lightmapColor.rgb * lmBrightMult * var_Color.rgb;
 	#endif
 
 
-	#if defined(USE_SHADOWMAP)
+	#if defined(USE_SHADOWMAP) && !defined(USE_GLOW_BUFFER)
 
 		vec2 shadowTex = gl_FragCoord.xy * r_FBufScale;
 		float shadowValue = texture2D(u_ShadowMap, shadowTex).r;
@@ -917,7 +917,7 @@ void main()
 
 
 
-	#if defined(USE_LIGHTMAP)
+	#if defined(USE_LIGHTMAP) && !defined(USE_GLOW_BUFFER)
 
 		ambientColor = lightColor;
 #if defined(USE_TESSELLATION)
@@ -959,7 +959,7 @@ void main()
 
 
 
-	#if defined(USE_CUBEMAP)
+	#if defined(USE_CUBEMAP) && !defined(USE_GLOW_BUFFER)
 		if (u_Local3.a > 0.0 && u_EnableTextures.w > 0.0 && u_CubeMapStrength > 0.0) 
 		{
 			float spec = 0.0;
@@ -975,13 +975,13 @@ void main()
 	#endif
 
 
-	#if defined(USE_SHADOWMAP)
+	#if defined(USE_SHADOWMAP) && !defined(USE_GLOW_BUFFER)
 		//gl_FragColor.rgb *= clamp(shadowValue + 0.5, 0.0, 1.0);
 		gl_FragColor.rgb *= clamp(shadowValue, 0.4, 1.0);
 	#endif //defined(USE_SHADOWMAP)
 
 
-	#ifdef USE_SUBSURFACE_SCATTER
+	#if defined(USE_SUBSURFACE_SCATTER) && !defined(USE_GLOW_BUFFER)
 
 		#if defined(USE_PRIMARY_LIGHT) || defined(USE_PRIMARY_LIGHT_SPECULAR)
 
@@ -997,7 +997,7 @@ void main()
 	#endif //USE_SUBSURFACE_SCATTER
 
 
-	#if defined(USE_PRIMARY_LIGHT) || defined(USE_PRIMARY_LIGHT_SPECULAR)
+	#if (defined(USE_PRIMARY_LIGHT) || defined(USE_PRIMARY_LIGHT_SPECULAR)) && !defined(USE_GLOW_BUFFER)
 		if (u_Local6.r > 0.0)
 		{
 			float lambertian2 = dot(var_PrimaryLightDir.xyz,N);

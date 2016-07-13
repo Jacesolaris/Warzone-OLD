@@ -2839,7 +2839,14 @@ int GLSL_BeginLoadGPUShaders(void)
 	if (r_shadowFilter->integer >= 2)
 		Q_strcat(extradefines, 1024, "#define USE_SHADOW_FILTER2\n");
 
-	Q_strcat(extradefines, 1024, "#define USE_SHADOW_CASCADE\n");
+	if (r_sunlightMode->integer == 3)
+	{
+		Q_strcat(extradefines, 1024, "#define USE_SHADOW_CASCADE2\n");
+	}
+	else
+	{
+		Q_strcat(extradefines, 1024, "#define USE_SHADOW_CASCADE\n");
+	}
 
 	Q_strcat(extradefines, 1024, va("#define r_shadowMapSize %d\n", r_shadowMapSize->integer));
 	Q_strcat(extradefines, 1024, va("#define r_shadowCascadeZFar %f\n", r_shadowCascadeZFar->value));

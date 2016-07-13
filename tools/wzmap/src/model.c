@@ -32,6 +32,8 @@ several games based on the Quake III Arena engine, in the form of "Q3Map2."
 #define MODEL_C
 
 
+//#define __MODEL_SIMPLIFICATION__
+
 
 /* dependencies */
 #include "q3map2.h"
@@ -43,6 +45,7 @@ extern void CullSides( entity_t *e );
 extern void CullSidesStats( void );
 
 extern int g_numHiddenFaces, g_numCoinFaces;
+
 
 /* 
 PicoPrintFunc()
@@ -235,7 +238,7 @@ float Distance(vec3_t pos1, vec3_t pos2)
 }
 
 extern void LoadShaderImages( shaderInfo_t *si );
-extern void Decimate ( picoModel_t *model );
+extern void Decimate ( picoModel_t *model, char *fileNameOut );
 
 int numSolidSurfs = 0, numHeightCulledSurfs = 0, numSizeCulledSurfs = 0;
 
@@ -251,6 +254,24 @@ void InsertModel( char *name, int frame, int skin, m4x4_t transform, float uvSca
 
 	if( model == NULL )
 		return;
+
+	qboolean haveLodModel = qfalse;
+
+#ifdef __MODEL_SIMPLIFICATION__
+	picoModel_t *lodModel = NULL;
+	char fileNameIn[128] = { 0 };
+	char tempfileNameOut[128] = { 0 };
+
+	strcpy(tempfileNameOut, model->fileName);
+	StripExtension( tempfileNameOut );
+	sprintf(fileNameIn, "%s_lod.obj", tempfileNameOut);
+	lodModel = FindModel( name, frame );
+		
+	if (lodModel)
+	{
+		haveLodModel = qtrue;
+	}
+#endif //__MODEL_SIMPLIFICATION__
 
 	/* handle null matrix */
 	if( transform == NULL )
@@ -307,7 +328,7 @@ void InsertModel( char *name, int frame, int skin, m4x4_t transform, float uvSca
 
 	//Sys_Printf( "Model %s has %d surfaces\n", name, numSurfaces );
 
-#pragma omp parallel for ordered /*private(buildBrush)*/ num_threads((numSurfaces < numthreads) ? numSurfaces : numthreads)
+#pragma omp parallel for ordered num_threads((numSurfaces < numthreads) ? numSurfaces : numthreads)
 	for( s = 0; s < numSurfaces; s++ )
 	{
 		int					i;
@@ -584,7 +605,7 @@ void InsertModel( char *name, int frame, int skin, m4x4_t transform, float uvSca
 		}
 		
 		/* ydnar: giant hack land: generate clipping brushes for model triangles */
-		if( ( si->clipModel || (spawnFlags & 2)) && !noclipmodel )	/* 2nd bit */
+		if( !haveLodModel && ( si->clipModel || (spawnFlags & 2)) && !noclipmodel )	/* 2nd bit */
 		{
 			vec3_t points[ 4 ], backs[ 3 ];
 			vec4_t plane, reverse, pa, pb, pc;
@@ -878,6 +899,594 @@ void InsertModel( char *name, int frame, int skin, m4x4_t transform, float uvSca
 			}
 		}
 	}
+
+#ifdef __MODEL_SIMPLIFICATION__
+	if (haveLodModel)
+	{
+		model = lodModel;
+
+		/* hack: Stable-1_2 and trunk have differing row/column major matrix order
+		this transpose is necessary with Stable-1_2
+		uncomment the following line with old m4x4_t (non 1.3/spog_branch) code */
+		//%	m4x4_transpose( transform );
+
+		/* create transform matrix for normals */
+		memcpy( nTransform, transform, sizeof( m4x4_t ) );
+		if( m4x4_invert( nTransform ) )
+			Sys_Warning( mapEntityNum, "Can't invert model transform matrix, using transpose instead" );
+		m4x4_transpose( nTransform );
+
+		/* each surface on the model will become a new map drawsurface */
+		numSurfaces = PicoGetModelNumSurfaces( model );
+
+#pragma omp parallel for ordered num_threads((numSurfaces < numthreads) ? numSurfaces : numthreads)
+		for( s = 0; s < numSurfaces; s++ )
+		{
+			int					i;
+			char				*picoShaderName;
+			char				shaderName[ MAX_QPATH ];
+			remap_t				*rm, *glob;
+			shaderInfo_t		*si;
+			mapDrawSurface_t	*ds;
+			picoSurface_t		*surface;
+			picoIndex_t			*indexes;
+
+			/* get surface */
+			surface = PicoGetModelSurface( model, s );
+			if( surface == NULL )
+				continue;
+
+			/* only handle triangle surfaces initially (fixme: support patches) */
+			if( PicoGetSurfaceType( surface ) != PICO_TRIANGLES )
+				continue;
+
+#pragma omp critical
+			{
+				/* allocate a surface (ydnar: gs mods) */
+				ds = AllocDrawSurface( SURFACE_TRIANGLES );
+			}
+			ds->entityNum = entityNum;
+			ds->mapEntityNum = mapEntityNum;
+			ds->castShadows = castShadows;
+			ds->recvShadows = recvShadows;
+			ds->noAlphaFix = noAlphaFix;
+			ds->skybox = skybox;
+			if (added_surfaces != NULL)
+				*added_surfaces += 1;
+
+			/* get shader name */
+			/* vortex: support .skin files */
+			picoShaderName = PicoGetSurfaceShaderNameForSkin( surface, skin );
+
+			/* handle shader remapping */
+			glob = NULL;
+			for( rm = remap; rm != NULL; rm = rm->next )
+			{
+				if( rm->from[ 0 ] == '*' && rm->from[ 1 ] == '\0' )
+					glob = rm;
+				else if( !Q_stricmp( picoShaderName, rm->from ) )
+				{
+					Sys_FPrintf( SYS_VRB, "Remapping %s to %s\n", picoShaderName, rm->to );
+					picoShaderName = rm->to;
+					glob = NULL;
+					break;
+				}
+			}
+
+			if( glob != NULL )
+			{
+				Sys_FPrintf( SYS_VRB, "Globbing %s to %s\n", picoShaderName, glob->to );
+				picoShaderName = glob->to;
+			}
+
+			/* shader renaming for sof2 */
+			if( renameModelShaders )
+			{
+				strcpy( shaderName, picoShaderName );
+				StripExtension( shaderName );
+				if( spawnFlags & 1 )
+					strcat( shaderName, "_RMG_BSP" );
+				else
+					strcat( shaderName, "_BSP" );
+				si = ShaderInfoForShader( shaderName );
+			}
+			else
+				si = ShaderInfoForShader( picoShaderName );
+
+			LoadShaderImages( si );
+			if (si)
+			{
+				si->clipModel = qtrue;
+				si->isMapObjectSolid = qtrue;
+				si->skipSolidCull = qtrue;
+				si->compileFlags |= C_NODRAW;
+			}
+
+			/* warn for missing shader */
+			if( si->warnNoShaderImage == qtrue )
+			{
+				if( mapEntityNum >= 0 )
+					Sys_Warning( mapEntityNum, "Failed to load shader image '%s'", si->shader );
+				else
+				{
+					/* external entity, just show single warning */
+					Sys_Warning( "Failed to load shader image '%s' for model '%s'", si->shader, PicoGetModelFileName( model ) );
+					si->warnNoShaderImage = qfalse;
+				}
+			}
+
+			/* set shader */
+			ds->shaderInfo = si;
+
+			/* set shading angle */
+			ds->smoothNormals = shadeAngle;
+
+			/* force to meta? */
+			if( (si != NULL && si->forceMeta) || (spawnFlags & 4) )	/* 3rd bit */
+				ds->type = SURFACE_FORCED_META;
+
+			/* fix the surface's normals (jal: conditioned by shader info) */
+			if( !(spawnFlags & 64) && ( shadeAngle <= 0.0f || ds->type != SURFACE_FORCED_META ) )
+				PicoFixSurfaceNormals( surface );
+
+			/* set sample size */
+			if( lightmapSampleSize > 0.0f )
+				ds->sampleSize = lightmapSampleSize;
+
+			/* set lightmap scale */
+			if( lightmapScale > 0.0f )
+				ds->lightmapScale = lightmapScale;
+
+			/* set lightmap axis */
+			if (lightmapAxis != NULL)
+				VectorCopy( lightmapAxis, ds->lightmapAxis );
+
+			/* set minlight/ambient/colormod */
+			if (minlight != NULL)
+			{
+				VectorCopy( minlight, ds->minlight );
+				VectorCopy( minlight, ds->minvertexlight );
+			}
+			if (minvertexlight != NULL)
+				VectorCopy( minvertexlight, ds->minvertexlight );
+			if (ambient != NULL)
+				VectorCopy( ambient, ds->ambient );
+			if (colormod != NULL)
+				VectorCopy( colormod, ds->colormod );
+
+			/* set vertical texture projection */
+			if ( vertTexProj > 0 )
+				ds->vertTexProj = vertTexProj;
+
+			/* set particulars */
+			ds->numVerts = PicoGetSurfaceNumVertexes( surface );
+#pragma omp critical
+			{
+				ds->verts = (bspDrawVert_t *)safe_malloc( ds->numVerts * sizeof( ds->verts[ 0 ] ) );
+				memset( ds->verts, 0, ds->numVerts * sizeof( ds->verts[ 0 ] ) );
+			}
+
+			if (added_verts != NULL)
+				*added_verts += ds->numVerts;
+
+			ds->numIndexes = PicoGetSurfaceNumIndexes( surface );
+#pragma omp critical
+			{
+				ds->indexes = (int *)safe_malloc( ds->numIndexes * sizeof( ds->indexes[ 0 ] ) );
+				memset( ds->indexes, 0, ds->numIndexes * sizeof( ds->indexes[ 0 ] ) );
+			}
+
+			if (added_triangles != NULL)
+				*added_triangles += (ds->numIndexes / 3);
+
+			/* copy vertexes */
+			for( i = 0; i < ds->numVerts; i++ )
+			{
+				int					j;
+				bspDrawVert_t		*dv;
+				vec3_t				forceVecs[ 2 ];
+				picoVec_t			*xyz, *normal, *st;
+				picoByte_t			*color;
+
+				/* get vertex */
+				dv = &ds->verts[ i ];
+
+				/* vortex: create forced tcGen vecs for vertical texture projection */
+				if (ds->vertTexProj > 0)
+				{
+					forceVecs[ 0 ][ 0 ] = 1.0 / ds->vertTexProj;
+					forceVecs[ 0 ][ 1 ] = 0.0;
+					forceVecs[ 0 ][ 2 ] = 0.0;
+					forceVecs[ 1 ][ 0 ] = 0.0;
+					forceVecs[ 1 ][ 1 ] = 1.0 / ds->vertTexProj;
+					forceVecs[ 1 ][ 2 ] = 0.0;
+				}
+
+				/* xyz and normal */
+				xyz = PicoGetSurfaceXYZ( surface, i );
+				VectorCopy( xyz, dv->xyz );
+				m4x4_transform_point( transform, dv->xyz );
+
+				normal = PicoGetSurfaceNormal( surface, i );
+				VectorCopy( normal, dv->normal );
+				m4x4_transform_normal( nTransform, dv->normal );
+				VectorNormalize( dv->normal, dv->normal );
+
+				/* ydnar: tek-fu celshading support for flat shaded shit */
+				if( flat )
+				{
+					dv->st[ 0 ] = si->stFlat[ 0 ];
+					dv->st[ 1 ] = si->stFlat[ 1 ];
+				}
+
+				/* vortex: entity-set _vp/_vtcproj will force drawsurface to "tcGen ivector ( value 0 0 ) ( 0 value 0 )"  */
+				else if( ds->vertTexProj > 0 )
+				{
+					/* project the texture */
+					dv->st[ 0 ] = DotProduct( forceVecs[ 0 ], dv->xyz );
+					dv->st[ 1 ] = DotProduct( forceVecs[ 1 ], dv->xyz );
+				}
+
+				/* ydnar: gs mods: added support for explicit shader texcoord generation */
+				else if( si->tcGen )
+				{
+					/* project the texture */
+					dv->st[ 0 ] = DotProduct( si->vecs[ 0 ], dv->xyz );
+					dv->st[ 1 ] = DotProduct( si->vecs[ 1 ], dv->xyz );
+				}
+
+				/* normal texture coordinates */
+				else
+				{
+					st = PicoGetSurfaceST( surface, 0, i );
+					dv->st[ 0 ] = st[ 0 ];
+					dv->st[ 1 ] = st[ 1 ];
+				}
+
+				/* scale UV by external key */
+				dv->st[ 0 ] *= uvScale;
+				dv->st[ 1 ] *= uvScale;
+
+				/* set lightmap/color bits */
+				color = PicoGetSurfaceColor( surface, 0, i );
+
+				for( j = 0; j < MAX_LIGHTMAPS; j++ )
+				{
+					dv->lightmap[ j ][ 0 ] = 0.0f;
+					dv->lightmap[ j ][ 1 ] = 0.0f;
+					if(spawnFlags & 32) // spawnflag 32: model color -> alpha hack
+					{
+						dv->color[ j ][ 0 ] = 255.0f;
+						dv->color[ j ][ 1 ] = 255.0f;
+						dv->color[ j ][ 2 ] = 255.0f;
+						dv->color[ j ][ 3 ] = color[ 0 ] * 0.3f + color[ 1 ] * 0.59f + color[ 2 ] * 0.11f;
+					}
+					else
+					{
+						dv->color[ j ][ 0 ] = color[ 0 ];
+						dv->color[ j ][ 1 ] = color[ 1 ];
+						dv->color[ j ][ 2 ] = color[ 2 ];
+						dv->color[ j ][ 3 ] = color[ 3 ];
+					}
+				}
+			}
+
+			/* copy indexes */
+			indexes = PicoGetSurfaceIndexes( surface, 0 );
+
+			for( i = 0; i < ds->numIndexes; i++ )
+				ds->indexes[ i ] = indexes[ i ];
+
+			/* deform vertexes */
+			DeformVertexes( ds, pushVertexes);
+
+			/* set cel shader */
+			ds->celShader = celShader;
+
+			/* walk triangle list */
+			for( i = 0; i < ds->numIndexes; i += 3 )
+			{
+				bspDrawVert_t		*dv;
+				int					j;
+
+				vec3_t points[ 4 ];
+
+				/* make points and back points */
+				for( j = 0; j < 3; j++ )
+				{
+					/* get vertex */
+					dv = &ds->verts[ ds->indexes[ i + j ] ];
+
+					/* copy xyz */
+					VectorCopy( dv->xyz, points[ j ] );
+				}
+			}
+
+			/* ydnar: giant hack land: generate clipping brushes for model triangles */
+			if( !noclipmodel )	/* 2nd bit */
+			{
+				vec3_t points[ 4 ], backs[ 3 ];
+				vec4_t plane, reverse, pa, pb, pc;
+
+				/* overflow check */
+				if( (nummapplanes + 64) >= (MAX_MAP_PLANES >> 1) )
+				{
+					continue;
+				}
+
+				/* walk triangle list */
+				for( i = 0; i < ds->numIndexes; i += 3 )
+				{
+					int					j;
+
+					/* overflow hack */
+					if( (nummapplanes + 64) >= (MAX_MAP_PLANES >> 1) )
+					{
+						Sys_Warning( mapEntityNum, "MAX_MAP_PLANES (%d) hit generating clip brushes for model %s.", MAX_MAP_PLANES, name );
+						break;
+					}
+
+					/* make points and back points */
+					for( j = 0; j < 3; j++ )
+					{
+						bspDrawVert_t		*dv;
+						int					k;
+
+						/* get vertex */
+						dv = &ds->verts[ ds->indexes[ i + j ] ];
+
+						/* copy xyz */
+						VectorCopy( dv->xyz, points[ j ] );
+						VectorCopy( dv->xyz, backs[ j ] );
+
+						/* find nearest axial to normal and push back points opposite */
+						/* note: this doesn't work as well as simply using the plane of the triangle, below */
+						for( k = 0; k < 3; k++ )
+						{
+							if( fabs( dv->normal[ k ] ) >= fabs( dv->normal[ (k + 1) % 3 ] ) &&
+								fabs( dv->normal[ k ] ) >= fabs( dv->normal[ (k + 2) % 3 ] ) )
+							{
+								backs[ j ][ k ] += dv->normal[ k ] < 0.0f ? 64.0f : -64.0f;
+								break;
+							}
+						}
+					}
+
+					VectorCopy( points[0], points[3] ); // for cyclic usage
+
+					/* make plane for triangle */
+					// div0: add some extra spawnflags:
+					//   0: snap normals to axial planes for extrusion
+					//   8: extrude with the original normals
+					//  16: extrude only with up/down normals (ideal for terrain)
+					//  24: extrude by distance zero (may need engine changes)
+					if( PlaneFromPoints( plane, points[ 0 ], points[ 1 ], points[ 2 ] ) )
+					{
+						double				normalEpsilon_save;
+						double				distanceEpsilon_save;
+
+						vec3_t bestNormal;
+						float backPlaneDistance = 2;
+
+						if(spawnFlags & 8) // use a DOWN normal
+						{
+							if(spawnFlags & 16)
+							{
+								// 24: normal as is, and zero width (broken)
+								VectorCopy(plane, bestNormal);
+							}
+							else
+							{
+								// 8: normal as is
+								VectorCopy(plane, bestNormal);
+							}
+						}
+						else
+						{
+							if(spawnFlags & 16)
+							{
+								// 16: UP/DOWN normal
+								VectorSet(bestNormal, 0, 0, (plane[2] >= 0 ? 1 : -1));
+							}
+							else
+							{
+								// 0: axial normal
+								if(fabs(plane[0]) > fabs(plane[1])) // x>y
+									if(fabs(plane[1]) > fabs(plane[2])) // x>y, y>z
+										VectorSet(bestNormal, (plane[0] >= 0 ? 1 : -1), 0, 0);
+									else // x>y, z>=y
+										if(fabs(plane[0]) > fabs(plane[2])) // x>z, z>=y
+											VectorSet(bestNormal, (plane[0] >= 0 ? 1 : -1), 0, 0);
+										else // z>=x, x>y
+											VectorSet(bestNormal, 0, 0, (plane[2] >= 0 ? 1 : -1));
+								else // y>=x
+									if(fabs(plane[1]) > fabs(plane[2])) // y>z, y>=x
+										VectorSet(bestNormal, 0, (plane[1] >= 0 ? 1 : -1), 0);
+									else // z>=y, y>=x
+										VectorSet(bestNormal, 0, 0, (plane[2] >= 0 ? 1 : -1));
+							}
+						}
+
+						/* regenerate back points */
+						for( j = 0; j < 3; j++ )
+						{
+							bspDrawVert_t		*dv;
+
+							/* get vertex */
+							dv = &ds->verts[ ds->indexes[ i + j ] ];
+
+							// shift by some units
+							VectorMA(dv->xyz, -64.0f, bestNormal, backs[j]); // 64 prevents roundoff errors a bit
+						}
+
+						/* make back plane */
+						VectorScale( plane, -1.0f, reverse );
+						reverse[ 3 ] = -plane[ 3 ];
+						if((spawnFlags & 24) != 24)
+							reverse[3] += DotProduct(bestNormal, plane) * backPlaneDistance;
+						// that's at least sqrt(1/3) backPlaneDistance, unless in DOWN mode; in DOWN mode, we are screwed anyway if we encounter a plane that's perpendicular to the xy plane)
+
+						normalEpsilon_save = normalEpsilon;
+						distanceEpsilon_save = distanceEpsilon;
+
+						if( PlaneFromPoints( pa, points[ 2 ], points[ 1 ], backs[ 1 ] ) &&
+							PlaneFromPoints( pb, points[ 1 ], points[ 0 ], backs[ 0 ] ) &&
+							PlaneFromPoints( pc, points[ 0 ], points[ 2 ], backs[ 2 ] ) )
+						{
+							//Sys_Printf("top: %f. bottom: %f.\n", top, bottom);
+
+							numSolidSurfs++;
+
+							if ((cullSmallSolids || si->isTreeSolid) && !(si->skipSolidCull || si->isMapObjectSolid))
+							{
+								vec3_t mins, maxs;
+								vec3_t size;
+								float sz;
+								int z;
+
+								VectorSet(mins, 999999, 999999, 999999);
+								VectorSet(maxs, -999999, -999999, -999999);
+
+								for (z = 0; z < 4; z++)
+								{
+									if (points[z][0] < mins[0]) mins[0] = points[z][0];
+									if (points[z][1] < mins[1]) mins[1] = points[z][1];
+									if (points[z][2] < mins[2]) mins[2] = points[z][2];
+
+									if (points[z][0] > maxs[0]) maxs[0] = points[z][0];
+									if (points[z][1] > maxs[1]) maxs[1] = points[z][1];
+									if (points[z][2] > maxs[2]) maxs[2] = points[z][2];
+								}
+
+								if (top != -999999 && bottom != -999999)
+								{
+									float s = top - bottom;
+									float newtop = bottom + (s / 2.0);
+
+									//Sys_Printf("newtop: %f. top: %f. bottom: %f. mins: %f. maxs: %f.\n", newtop, top, bottom, mins[2], maxs[2]);
+
+									if (mins[2] > newtop)
+									{
+										//Sys_Printf("CULLED: %f > %f.\n", maxs[2], newtop);
+										numHeightCulledSurfs++;
+										continue;
+									}
+								}
+
+								VectorSubtract(maxs, mins, size);
+								//sz = VectorLength(size);
+								sz = maxs[0] - mins[0];
+								if (maxs[1] - mins[1] > sz) sz = maxs[1] - mins[1];
+								if (maxs[2] - mins[2] > sz) sz = maxs[2] - mins[2];
+
+								if (sz < 36)
+								{
+									//Sys_Printf("CULLED: %f < 30. (%f %f %f)\n", sz, maxs[0] - mins[0], maxs[1] - mins[1], maxs[2] - mins[2]);
+									numSizeCulledSurfs++;
+									continue;
+								}
+							}
+
+							//#define __FORCE_TREE_META__
+#if defined(__FORCE_TREE_META__)
+							if (meta) si->forceMeta = qtrue; // much slower...
+#endif
+
+#pragma omp ordered
+							{
+#pragma omp critical
+								{
+
+									/* build a brush */ // -- UQ1: Moved - Why allocate when its not needed...
+									buildBrush = AllocBrush( 24/*48*/ ); // UQ1: 48 seems to be more then is used... Wasting memory...
+									buildBrush->entityNum = mapEntityNum;
+									buildBrush->mapEntityNum = mapEntityNum;
+									buildBrush->original = buildBrush;
+									buildBrush->contentShader = si;
+									buildBrush->compileFlags = si->compileFlags;
+									buildBrush->contentFlags = si->contentFlags;
+
+									if (si->isTreeSolid || si->isMapObjectSolid || (si->compileFlags & C_DETAIL))
+									{
+										buildBrush->detail = qtrue;
+									}
+									else if (si->compileFlags & C_STRUCTURAL) // allow forced structural brushes here
+									{
+										buildBrush->detail = qfalse;
+
+										// only allow EXACT matches when snapping for these (this is mostly for caulk brushes inside a model)
+										if(normalEpsilon > 0)
+											normalEpsilon = 0;
+										if(distanceEpsilon > 0)
+											distanceEpsilon = 0;
+									}
+									else
+									{
+										buildBrush->detail = qtrue;
+									}
+
+									/* set up brush sides */
+									buildBrush->numsides = 5;
+									buildBrush->sides[ 0 ].shaderInfo = si;
+
+									for( j = 1; j < buildBrush->numsides; j++ )
+									{
+										buildBrush->sides[ j ].shaderInfo = NULL; // don't emit these faces as draw surfaces, should make smaller BSPs; hope this works
+										buildBrush->sides[ j ].culled = qtrue;
+									}
+
+									buildBrush->sides[ 0 ].planenum = FindFloatPlane( plane, plane[ 3 ], 3, points );
+									buildBrush->sides[ 1 ].planenum = FindFloatPlane( pa, pa[ 3 ], 2, &points[ 1 ] ); // pa contains points[1] and points[2]
+									buildBrush->sides[ 2 ].planenum = FindFloatPlane( pb, pb[ 3 ], 2, &points[ 0 ] ); // pb contains points[0] and points[1]
+									buildBrush->sides[ 3 ].planenum = FindFloatPlane( pc, pc[ 3 ], 2, &points[ 2 ] ); // pc contains points[2] and points[0] (copied to points[3]
+									buildBrush->sides[ 4 ].planenum = FindFloatPlane( reverse, reverse[ 3 ], 3, backs );
+
+									/* add to entity */
+									if( CreateBrushWindings( buildBrush ) )
+									{
+										int numsides;
+
+										AddBrushBevels();
+										//%	EmitBrushes( buildBrush, NULL, NULL );
+
+										numsides = buildBrush->numsides;
+
+										if (!RemoveDuplicateBrushPlanes( buildBrush ))
+										{// UQ1: Testing - This would create a mirrored plane... free it...
+											free(buildBrush);
+											//Sys_Printf("Removed a mirrored plane\n");
+										}
+										else
+										{
+											//if (buildBrush->numsides < numsides) Sys_Printf("numsides reduced from %i to %i.\n", numsides, buildBrush->numsides);
+
+											buildBrush->next = entities[ mapEntityNum ].brushes;
+											entities[ mapEntityNum ].brushes = buildBrush;
+											entities[ mapEntityNum ].numBrushes++;
+											if (added_brushes != NULL)
+												*added_brushes += 1;
+										}
+									}
+									else
+									{
+										free(buildBrush);
+									}
+								} // #pragma omp critical
+							} // #pragma omp ordered
+						}
+						else
+						{
+							continue;
+						}
+
+						normalEpsilon = normalEpsilon_save;
+						distanceEpsilon = distanceEpsilon_save;
+					}
+				}
+			}
+		}
+	}
+#endif //__MODEL_SIMPLIFICATION__
 }
 
 
@@ -942,29 +1551,106 @@ void LoadTriangleModels( void )
 		//if( loaded && picoModel && picoModel->numSurfaces != 0  )
 		//	Sys_Printf("loaded %s: %i vertexes %i triangles\n", PicoGetModelFileName( picoModel ), PicoGetModelTotalVertexes( picoModel ), PicoGetModelTotalIndexes( picoModel ) / 3 );
 
+
 #ifdef __MODEL_SIMPLIFICATION__
+		//
+		// Count the verts... Skip lod for anything too big for memory...
+		//
+
+		int	numVerts = 0;
+		int numIndexes = 0;
+		int numSurfaces = PicoGetModelNumSurfaces( picoModel );
+
+		for( int s = 0; s < numSurfaces; s++ )
+		{
+			int					i;
+			picoVec_t			*xyz;
+			picoSurface_t		*surface;
+
+			/* get surface */
+			surface = PicoGetModelSurface( picoModel, s );
+
+			if( surface == NULL )
+				continue;
+
+			/* only handle triangle surfaces initially (fixme: support patches) */
+			if( PicoGetSurfaceType( surface ) != PICO_TRIANGLES )
+				continue;
+
+			char				*picoShaderName = PicoGetSurfaceShaderNameForSkin( surface, 0 );
+
+			shaderInfo_t		*si = ShaderInfoForShader( picoShaderName );
+
+			LoadShaderImages( si );
+
+			if(!si->clipModel)
+			{
+				continue;
+			}
+
+			if ((si->compileFlags & C_TRANSLUCENT) || (si->compileFlags & C_SKIP) || (si->compileFlags & C_FOG) || (si->compileFlags & C_NODRAW) || (si->compileFlags & C_HINT))
+			{
+				continue;
+			}
+
+			if( !si->clipModel 
+				&& ((si->compileFlags & C_TRANSLUCENT) || !(si->compileFlags & C_SOLID)) )
+			{
+				continue;
+			}
+
+			numVerts += PicoGetSurfaceNumVertexes( surface );
+			numIndexes += PicoGetSurfaceNumIndexes( surface );
+		}
+
+		// if (FindModel( name, frame ))
+
+		if( picoModel && picoModel->numSurfaces > 0 /*&& numVerts < 50000*/ )
 		{// UQ1: Testing... Mesh decimation for collision planes...
+			picoModel_t *picoModel2 = NULL;
+			qboolean loaded2 = qfalse;
+			char fileNameIn[128] = { 0 };
 			char fileNameOut[128] = { 0 };
 			char tempfileNameOut[128] = { 0 };
 
 			strcpy(tempfileNameOut, model);
 			StripExtension( tempfileNameOut );
-			sprintf(fileNameOut, "%s_lod.obj", tempfileNameOut);
+			sprintf(fileNameOut, "%s/base/%s_lod.obj", basePaths[ 0 ], tempfileNameOut);
+			sprintf(fileNameIn, "%s_lod.obj", tempfileNameOut);
 
-			loaded = PreloadModel( (char*) fileNameOut, 0 );
-			picoModel = FindModel( (char*) fileNameOut, frame );
+			//Sys_Printf("File path is %s.\n", fileNameOut);
 
-			if( !picoModel || picoModel->numSurfaces == 0 )
-			{
-				Decimate( picoModel );
+			if (FileExists(fileNameOut))
+			{// Try to load _lod version...
+				//Sys_Printf("Exists: %s.\n", fileNameOut);
 
-				loaded = PreloadModel( (char*) fileNameOut, 0 );
-				picoModel = FindModel( (char*) fileNameOut, frame );
+				loaded2 = PreloadModel( (char*) fileNameIn, 0 );
+				if ( loaded2 )
+					numLoadedModels++;
+
+				picoModel2 = FindModel( (char*) fileNameIn, 0 );
+			}
+
+			if( !picoModel2 || picoModel2->numSurfaces == 0 )
+			{// No _lod version found to load, or it failed to load... Generate a new one...
+				Sys_Printf("Simplifying model %s. %i surfaces. %i verts. %i indexes.\n", model, PicoGetModelNumSurfaces( picoModel ), numVerts, numIndexes);
+
+				Decimate( picoModel, fileNameOut );
+
+				loaded2 = PreloadModel( (char*) fileNameIn, 0 );
+				if (loaded2) {
+					//Sys_Printf("Loaded model %s.\n", fileNameOut);
+					numLoadedModels++;
+				}
+
+				picoModel2 = FindModel( (char*) fileNameIn, 0 );
+				//if (picoModel2) Sys_Printf("Found model %s.\n", fileNameOut);
 			}
 			else
-			{
-				Sys_Printf("Already have lod %s for model %s.\n", fileNameOut, model);
+			{// All good... _lod loaded and is OK!
+				//Sys_Printf("Already have lod %s for model %s.\n", fileNameIn, model);
 			}
+
 		}
 #endif //__MODEL_SIMPLIFICATION__
 	}

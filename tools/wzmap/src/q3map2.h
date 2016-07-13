@@ -424,7 +424,7 @@ typedef void					(*bspFunc)( const char * );
 
 typedef struct
 {
-	int			offset, length;
+	uint32_t			offset, length;
 }
 bspLump_t;
 

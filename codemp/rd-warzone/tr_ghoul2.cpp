@@ -4248,6 +4248,16 @@ Bone  52:   "face_always_":
 qboolean R_LoadNIF( model_t *mod, void *buffer, const char *mod_name, qboolean &bAlreadyCached ) {
 	using namespace Niflib;
 
+	//mdxmHeader_t		*pinmodel, *mdxm;
+
+	mod->type	   = MOD_MDXM;
+	//mod->dataSize += size;	
+	
+	qboolean bAlreadyFound = qfalse;
+	//mdxm = (mdxmHeader_t*)CModelCache->Allocate(size, buffer, mod_name, &bAlreadyFound, TAG_MODEL_GLM);
+	mod->data.glm = (mdxmData_t *)ri->Hunk_Alloc (sizeof (mdxmData_t), h_low);
+	mod->data.glm->header = NULL;//mdxm;
+	//mod->data.glm->vboModels->vboMeshes->ibo->indexesVBO
 	try {
 		NiObjectRef root = ReadNifTree( mod_name );
 		NiNodeRef node = DynamicCast<NiNode>( root );
@@ -4256,16 +4266,16 @@ qboolean R_LoadNIF( model_t *mod, void *buffer, const char *mod_name, qboolean &
 			if ( niObj->IsDerivedType( NiGeometry::TYPE ) ) {
 				NiGeometryRef niGeom = DynamicCast<NiGeometry>(niObj);
 				Ref<NiGeometryData> niGeomData = DynamicCast<NiGeometryData>( niGeom->GetData() );
-				//niGeomData->GetVertices()
+				niGeomData->GetVertices().begin();
 			}
 		}
 	}
 	catch( exception & e ) {
-		cout << "Error: " << e.what() << endl;
+		ri->Printf(PRINT_WARNING, "NIF Error: %s.\n", e.what());
 		return qfalse;
 	}
 	catch( ... ) {
-		cout << "Unknown Exception." << endl;
+		ri->Printf(PRINT_WARNING, "NIF Error: Unknown Exception.\n");
 		return qfalse;
 	}
 

@@ -82,7 +82,7 @@ void CallBack(const char * msg)
 
 extern void LoadShaderImages( shaderInfo_t *si );
 
-void Decimate ( picoModel_t *model )
+void Decimate ( picoModel_t *model, char *fileNameOut )
 {
 #ifdef __DECIMATE_METHOD__
 	vector< Vec3<Float> > points;
@@ -251,28 +251,29 @@ void Decimate ( picoModel_t *model )
 	if ((Simplify::triangles.size() < 3) || (Simplify::vertices.size() < 3))
 		return;
 
-	int target_count =  Simplify::triangles.size() >> 1;
-    double agressiveness = 7.0;
+	//int target_count =  Simplify::triangles.size() >> 1;
+	int target_count =  Simplify::triangles.size() * 0.3;
+    double agressiveness = 3.0;
 
 	clock_t start = clock();
 
-	Sys_Printf("Input: %s. vertices: %i. triangles %i. reduction target %i.\n", model->fileName, (int)Simplify::vertices.size(), (int)Simplify::triangles.size(), target_count);
+	Sys_Printf("Input: vertices: %i. triangles %i. reduction target %i.\n", (int)Simplify::vertices.size(), (int)Simplify::triangles.size(), target_count);
 
-	int startSize = Simplify::triangles.size();
+	int startSize = (int)Simplify::triangles.size();
 
-	Simplify::simplify_mesh(target_count, agressiveness, false/*true*/);
-	//Simplify::simplify_mesh_lossless( false );
+	
+	//Simplify::simplify_mesh(target_count, agressiveness, false);
+	Simplify::simplify_mesh_lossless( false );
 
 	if ( Simplify::triangles.size() >= startSize) {
 		printf("Unable to reduce mesh.\n");
     	return;
 	}
+	
 
-
-	char fileNameOut[128] = { 0 };
 	char tempfileNameOut[128] = { 0 };
 
-	strcpy(tempfileNameOut, model->fileName);
+	strcpy(tempfileNameOut, fileNameOut);
 	StripFilename(tempfileNameOut);
 	StripFilename(tempfileNameOut);
 	StripFilename(tempfileNameOut);
@@ -282,7 +283,7 @@ void Decimate ( picoModel_t *model )
 		Q_mkdir( tempfileNameOut );
 	}
 
-	strcpy(tempfileNameOut, model->fileName);
+	strcpy(tempfileNameOut, fileNameOut);
 	StripFilename(tempfileNameOut);
 	StripFilename(tempfileNameOut);
 	if (strlen(tempfileNameOut) > 0)
@@ -291,21 +292,17 @@ void Decimate ( picoModel_t *model )
 		Q_mkdir( tempfileNameOut );
 	}
 
-	strcpy(tempfileNameOut, model->fileName);
+	strcpy(tempfileNameOut, fileNameOut);
 	StripFilename(tempfileNameOut);
 	if (strlen(tempfileNameOut) > 0)
 	{
 		//Sys_Printf("Create %s.\n", tempfileNameOut);
 		Q_mkdir( tempfileNameOut );
 	}
-
-	strcpy(tempfileNameOut, model->fileName);
-	StripExtension( tempfileNameOut );
-	sprintf(fileNameOut, "%s_lod.obj", tempfileNameOut);
 
 	Simplify::write_obj(fileNameOut);
 
-	Sys_Printf("Output: %s. vertices: %i. triangles %i. (%f reduction; %i sec)\n", fileNameOut, (int)Simplify::vertices.size(), (int)Simplify::triangles.size()
+	Sys_Printf("Output: vertices: %i. triangles %i. (%f reduction; %i sec)\n", (int)Simplify::vertices.size(), (int)Simplify::triangles.size()
 		, (float)((float)Simplify::triangles.size()/ (float)startSize)*100.0  , ((int)(clock()-start))/CLOCKS_PER_SEC );
 #endif //__DECIMATE_METHOD__
 }

@@ -2692,8 +2692,27 @@ void R_RenderSunShadowMaps(const refdef_t *fd, int level)
 	viewZFar = r_shadowCascadeZFar->value;
 	float splitBias = r_shadowCascadeZBias->value;
 
-	switch(level)
+	if (r_sunlightMode->integer == 3)
 	{
+		lightViewIndependentOfCameraView = qtrue;
+
+		switch(level)
+		{
+		case 0:
+		default:
+			splitZNear = r_znear->value;
+			splitZFar  = 4096;//2048;
+			break;
+		case 1:
+			splitZNear = 4096;//2048;
+			splitZFar  = 65536;
+			break;
+		}
+	}
+	else
+	{
+		switch(level)
+		{
 		case 0:
 		default:
 			//splitZNear = r_znear->value;
@@ -2713,6 +2732,7 @@ void R_RenderSunShadowMaps(const refdef_t *fd, int level)
 			//splitZNear = 896;
 			//splitZFar  = 3072;
 			break;
+		}
 	}
 			
 	VectorCopy(fd->vieworg, lightOrigin);

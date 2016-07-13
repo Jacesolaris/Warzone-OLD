@@ -315,8 +315,7 @@ namespace Simplify
 
 		// main iteration loop
 		int deleted_triangles=0;
-		std::vector<int> deleted0,deleted1;
-		int triangle_count=triangles.size();
+		int triangle_count=(int)triangles.size();
 		//int iteration = 0;
 		//loop(iteration,0,100)
 		for (int iteration = 0; iteration < 100; iteration ++)
@@ -348,10 +347,10 @@ namespace Simplify
 			}
 
 			// remove vertices & mark deleted triangles
-			//loopi(0,triangles.size())
-#pragma omp parallel for ordered num_threads(numthreads)
-			for (int i = 0; i < triangles.size(); i++)
+			loopi(0,triangles.size())
 			{
+				std::vector<int> deleted0,deleted1;
+
 				if(triangle_count-deleted_triangles<=target_count) continue;
 
 				Triangle &t=triangles[i];
@@ -369,11 +368,9 @@ namespace Simplify
 					// Compute vertex to collapse to
 					vec3f p;
 					calculate_error(i0,i1,p);
-#pragma omp critical
-					{
-						deleted0.resize(v0.tcount); // normals temporarily
-						deleted1.resize(v1.tcount); // normals temporarily
-					}
+
+					deleted0.resize(v0.tcount); // normals temporarily
+					deleted1.resize(v1.tcount); // normals temporarily
 
 					// dont remove if flipped
 					if( flipped(p,i0,i1,v0,v1,deleted0) ) continue;
@@ -384,12 +381,12 @@ namespace Simplify
 					// not flipped, so remove edge
 					v0.p=p;
 					v0.q=v1.q+v0.q;
-					int tstart=refs.size();
+					int tstart=(int)refs.size();
 
 					update_triangles(i0,v0,deleted0,deleted_triangles);
 					update_triangles(i0,v1,deleted1,deleted_triangles);
 
-					int tcount=refs.size()-tstart;
+					int tcount=(int)refs.size()-tstart;
 
 					if(tcount<=v0.tcount)
 					{
@@ -422,7 +419,7 @@ namespace Simplify
 		// main iteration loop
 		int deleted_triangles=0;
 		std::vector<int> deleted0,deleted1;
-		int triangle_count=triangles.size();
+		int triangle_count=(int)triangles.size();
 		//int iteration = 0;
 		//loop(iteration,0,100)
 		for (int iteration = 0; iteration < 9999; iteration ++)
@@ -445,8 +442,7 @@ namespace Simplify
 			}
 
 			// remove vertices & mark deleted triangles
-#pragma omp parallel for ordered num_threads(numthreads)
-			for (int i = 0; i < triangles.size(); i++)
+			loopi(0,triangles.size())
 			{
 				Triangle &t=triangles[i];
 				if(t.err[3]>threshold) continue;
@@ -465,11 +461,8 @@ namespace Simplify
 					vec3f p;
 					calculate_error(i0,i1,p);
 
-#pragma omp critical
-					{
-						deleted0.resize(v0.tcount); // normals temporarily
-						deleted1.resize(v1.tcount); // normals temporarily
-					}
+					deleted0.resize(v0.tcount); // normals temporarily
+					deleted1.resize(v1.tcount); // normals temporarily
 
 					// dont remove if flipped
 					if( flipped(p,i0,i1,v0,v1,deleted0) ) continue;
@@ -478,12 +471,12 @@ namespace Simplify
 					// not flipped, so remove edge
 					v0.p=p;
 					v0.q=v1.q+v0.q;
-					int tstart=refs.size();
+					int tstart=(int)refs.size();
 
 					update_triangles(i0,v0,deleted0,deleted_triangles);
 					update_triangles(i0,v1,deleted1,deleted_triangles);
 
-					int tcount=refs.size()-tstart;
+					int tcount=(int)refs.size()-tstart;
 
 					if(tcount<=v0.tcount)
 					{
@@ -735,7 +728,12 @@ namespace Simplify
 		// compute interpolated vertex
 
 		SymetricMatrix q = vertices[id_v1].q + vertices[id_v2].q;
-		bool   border = vertices[id_v1].border & vertices[id_v2].border;
+		
+		bool   border =  false;
+
+		if (vertices[id_v1].border & vertices[id_v2].border)
+			border = true;
+
 		double error=0;
 		double det = q.det(0, 1, 2, 1, 4, 5, 2, 5, 7);
 		if ( det != 0 && !border )
@@ -857,6 +855,9 @@ namespace Simplify
 			printf("write_obj: can't write data file \"%s\".\n", filename);
 			exit(0);
 		}
+
+		fprintf(file, "g defaultSolid\n\n");
+
 		loopi(0,vertices.size())
 		{
 			//fprintf(file, "v %lf %lf %lf\n", vertices[i].p.x,vertices[i].p.y,vertices[i].p.z);
@@ -864,53 +865,58 @@ namespace Simplify
 		}
 		loopi(0,triangles.size()) if(!triangles[i].deleted)
 		{
-			fprintf(file, "f %d %d %d\n", triangles[i].v[0]+1, triangles[i].v[1]+1, triangles[i].v[2]+1);
+			//fprintf(file, "f %d %d %d\n", triangles[i].v[0]+1, triangles[i].v[1]+1, triangles[i].v[2]+1);
 			//fprintf(file, "f %d// %d// %d//\n", triangles[i].v[0]+1, triangles[i].v[1]+1, triangles[i].v[2]+1); //more compact: remove trailing zeros
+
+			fprintf(file, "f %d %d %d\n", triangles[i].v[0]+1, triangles[i].v[1]+1, triangles[i].v[2]+1);
 		}
 		fclose(file);
 	}
 
 	void UsePicoModel ( picoModel_t *model )
 	{
+		if( model == NULL )
+			return;
+
 		vertices.clear();
 		triangles.clear();
 
 		int vertex_cnt = 0;
-		
-		int					s, numSurfaces;
-
 		int skin = 0;
 
-		if( model == NULL )
-			return;
-
 		/* each surface on the model will become a new map drawsurface */
-		numSurfaces = PicoGetModelNumSurfaces( model );
+		int numSurfaces = PicoGetModelNumSurfaces( model );
 
-		for( s = 0; s < numSurfaces; s++ )
+		for( int s = 0; s < model->numSurfaces; s++ )
 		{
-			int					i;
-			picoVec_t			*xyz;
-			picoSurface_t		*surface;
-
-			/* get surface */
-			surface = PicoGetModelSurface( model, s );
+			picoSurface_t		*surface = PicoGetModelSurface( model, s );
 
 			if( surface == NULL )
+			{
+				setcolor(red, black);
+				Sys_Printf("Warning: Found a NULL surface!\n");
+				setcolor(gray, black);
 				continue;
+			}
 
 			/* only handle triangle surfaces initially (fixme: support patches) */
 			if( PicoGetSurfaceType( surface ) != PICO_TRIANGLES )
+			{
+				setcolor(red, black);
+				Sys_Printf("Warning: Found a non triangle surface!\n");
+				setcolor(gray, black);
 				continue;
+			}
 
-			char				*picoShaderName;
-			picoShaderName = PicoGetSurfaceShaderNameForSkin( surface, skin );
-
+			char				*picoShaderName = PicoGetSurfaceShaderNameForSkin( surface, skin );
 			shaderInfo_t		*si = ShaderInfoForShader( picoShaderName );
 
 			LoadShaderImages( si );
 
-			if(!si->clipModel) continue;
+			if(!si->clipModel)
+			{
+				continue;
+			}
 
 			if ((si->compileFlags & C_TRANSLUCENT) || (si->compileFlags & C_SKIP) || (si->compileFlags & C_FOG) || (si->compileFlags & C_NODRAW) || (si->compileFlags & C_HINT))
 			{
@@ -922,55 +928,30 @@ namespace Simplify
 			{
 				continue;
 			}
+			
+			int numVerts = PicoGetSurfaceNumVertexes( surface );
 
-			/* copy vertexes */
-			for( i = 0; i < PicoGetSurfaceNumVertexes( surface ); i++ )
+			for( int i = 0; i < numVerts; i++ )
 			{
-				vec3_t xyz2;
-				/* xyz and normal */
-				xyz = PicoGetSurfaceXYZ( surface, i );
-				VectorCopy( xyz, xyz2 );
-				//m4x4_transform_point( transform, xyz2 );
+				picoVec_t *xyz = PicoGetSurfaceXYZ( surface, i );
 
 				Vertex v;
 				v.p.x = xyz[0];
 				v.p.y = xyz[1];
 				v.p.z = xyz[2];
 				vertices.push_back(v);
+			}
 
-
-
-				picoSurface_t		*surface;
-				picoIndex_t			*indexes;
-
-				/* get surface */
-				surface = PicoGetModelSurface( model, s );
-				if( surface == NULL )
-					continue;
-
-				/* only handle triangle surfaces initially (fixme: support patches) */
-				if( PicoGetSurfaceType( surface ) != PICO_TRIANGLES )
-					continue;
-
-				int numIndexes = PicoGetSurfaceNumIndexes( surface );
-
-				indexes = PicoGetSurfaceIndexes( surface, 0 );
-
-				/* walk triangle list */
-				for( int k = 0; k < numIndexes; k += 3 )
-				{
-					Triangle t;
-					int					j;
-
-					/* make points and back points */
-					for( j = 0; j < 3; j++ )
-					{
-						/* get vertex */
-						t.v[j] = indexes[ k + j ];
-					}
-
-					triangles.push_back(t);
-				}
+			int numIndexes = PicoGetSurfaceNumIndexes( surface );
+			picoIndex_t	*indexes = PicoGetSurfaceIndexes( surface, 0 );
+			
+			for( int i = 0; i < numIndexes; i += 3 )
+			{
+				Triangle t;
+				t.v[0] = indexes[i];
+				t.v[1] = indexes[i+1];
+				t.v[2] = indexes[i+2];
+				triangles.push_back(t);
 			}
 		}
 

@@ -725,6 +725,39 @@ void RE_RenderScene( const refdef_t *fd ) {
 				R_RenderSunShadowMaps(fd, 2);
 			}
 		}
+		else if (r_sunlightMode->integer < 4)
+		{// Update distance shadows on timers...
+			/*int nowTime = ri->Milliseconds();
+
+			if (nowTime >= NEXT_SHADOWMAP_UPDATE[0])
+			{// Close shadows - fast updates...
+				NEXT_SHADOWMAP_UPDATE[0] = nowTime + 50;
+				R_RenderSunShadowMaps(fd, 0);
+			}
+			else if (nowTime >= NEXT_SHADOWMAP_UPDATE[1])
+			{// Distant shadows - slower updates...
+				NEXT_SHADOWMAP_UPDATE[1] = nowTime + 5000;//500;
+				R_RenderSunShadowMaps(fd, 1);
+			}*/
+
+			/*
+			R_RenderSunShadowMaps(fd, 0);
+			R_RenderSunShadowMaps(fd, 1);
+			*/
+
+			int nowTime = ri->Milliseconds();
+			
+			if (nowTime >= NEXT_SHADOWMAP_UPDATE[0])
+			{// Close shadows - fast updates...
+				NEXT_SHADOWMAP_UPDATE[0] = nowTime + 10;
+				R_RenderSunShadowMaps(fd, 0);
+			}
+			else if (nowTime >= NEXT_SHADOWMAP_UPDATE[1])
+			{// Distant shadows - slower updates...
+				NEXT_SHADOWMAP_UPDATE[1] = nowTime + 2000;//500;
+				R_RenderSunShadowMaps(fd, 1);
+			}
+		}
 		else
 		{
 			R_RenderSunShadowMaps(fd, 0);
