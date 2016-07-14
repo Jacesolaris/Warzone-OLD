@@ -1027,309 +1027,362 @@ void RB_SetMaterialBasedProperties(shaderProgram_t *sp, shaderStage_t *pStage)
 	float	hasSplatMap4 = 0;
 	float	hasNormalMap = 0;
 
-	if (r_normalMapping->integer >= 2 
-		&& pStage->bundle[TB_NORMALMAP].image[0] 
-		&& pStage->bundle[TB_NORMALMAP].image[0] != tr.whiteImage
-		&& pStage->bundle[TB_NORMALMAP].image[0] != tr.blackImage) 
+	if (!backEnd.depthFill && !(tr.viewParms.flags & VPF_SHADOWPASS))
 	{
-		hasNormalMap = 1.0;
-	}
-
-	if (pStage->bundle[TB_OVERLAYMAP].image[0]
-		&& pStage->bundle[TB_OVERLAYMAP].image[0] != tr.whiteImage)
-	{
-		hasOverlay = 1.0;
-	}
-
-	if (pStage->bundle[TB_STEEPMAP].image[0]
-		&& pStage->bundle[TB_STEEPMAP].image[0] != tr.whiteImage)
-	{
-		hasSteepMap = 1.0;
-	}
-
-	if (pStage->bundle[TB_STEEPMAP2].image[0]
-		&& pStage->bundle[TB_STEEPMAP2].image[0] != tr.whiteImage)
-	{
-		hasSteepMap2 = 1.0;
-	}
-
-	if ((pStage->bundle[TB_SPLATMAP1].image[0] 
-		&& pStage->bundle[TB_SPLATMAP1].image[0] != tr.whiteImage))
-	{
-		hasSplatMap1 = 1;
-	}
-
-	if ((pStage->bundle[TB_SPLATMAP2].image[0] 
-		&& pStage->bundle[TB_SPLATMAP2].image[0] != tr.whiteImage))
-	{
-		hasSplatMap2 = 1;
-	}
-
-	if ((pStage->bundle[TB_SPLATMAP3].image[0] 
-		&& pStage->bundle[TB_SPLATMAP3].image[0] != tr.whiteImage))
-	{
-		hasSplatMap3 = 1;
-	}
-
-	if ((pStage->bundle[TB_SPLATMAP4].image[0] 
-		&& pStage->bundle[TB_SPLATMAP4].image[0] != tr.whiteImage))
-	{
-		hasSplatMap4 = 1;
-	}
-
-	if (pStage->isWater && r_glslWater->integer)
-	{
-		specularScale = 1.5;
-		materialType = (float)MATERIAL_WATER;
-		parallaxScale = 2.0;
-	}
-	else
-	{
-		switch( tess.shader->surfaceFlags & MATERIAL_MASK )
+		if (r_normalMapping->integer >= 2 
+			&& pStage->bundle[TB_NORMALMAP].image[0] 
+			&& pStage->bundle[TB_NORMALMAP].image[0] != tr.whiteImage
+			&& pStage->bundle[TB_NORMALMAP].image[0] != tr.blackImage) 
 		{
-		case MATERIAL_WATER:			// 13			// light covering of water on a surface
-			specularScale = 1.0;
-			cubemapScale = 1.5;
+			hasNormalMap = 1.0;
+		}
+
+		if (pStage->bundle[TB_OVERLAYMAP].image[0]
+			&& pStage->bundle[TB_OVERLAYMAP].image[0] != tr.whiteImage)
+		{
+			hasOverlay = 1.0;
+		}
+
+		if (pStage->bundle[TB_STEEPMAP].image[0]
+			&& pStage->bundle[TB_STEEPMAP].image[0] != tr.whiteImage)
+		{
+			hasSteepMap = 1.0;
+		}
+
+		if (pStage->bundle[TB_STEEPMAP2].image[0]
+			&& pStage->bundle[TB_STEEPMAP2].image[0] != tr.whiteImage)
+		{
+			hasSteepMap2 = 1.0;
+		}
+
+		if ((pStage->bundle[TB_SPLATMAP1].image[0] 
+			&& pStage->bundle[TB_SPLATMAP1].image[0] != tr.whiteImage))
+		{
+			hasSplatMap1 = 1;
+		}
+
+		if ((pStage->bundle[TB_SPLATMAP2].image[0] 
+			&& pStage->bundle[TB_SPLATMAP2].image[0] != tr.whiteImage))
+		{
+			hasSplatMap2 = 1;
+		}
+
+		if ((pStage->bundle[TB_SPLATMAP3].image[0] 
+			&& pStage->bundle[TB_SPLATMAP3].image[0] != tr.whiteImage))
+		{
+			hasSplatMap3 = 1;
+		}
+
+		if ((pStage->bundle[TB_SPLATMAP4].image[0] 
+			&& pStage->bundle[TB_SPLATMAP4].image[0] != tr.whiteImage))
+		{
+			hasSplatMap4 = 1;
+		}
+
+		if (pStage->isWater && r_glslWater->integer)
+		{
+			specularScale = 1.5;
 			materialType = (float)MATERIAL_WATER;
 			parallaxScale = 2.0;
-			break;
-		case MATERIAL_SHORTGRASS:		// 5			// manicured lawn
-			specularScale = 0.05;
-			cubemapScale = 0.0;
-			materialType = (float)MATERIAL_SHORTGRASS;
-			parallaxScale = 2.0;
-			phongFactor = -phongFactor; // no blinn phong on grassy terrains (to stop the joins being so obvious)
-			break;
-		case MATERIAL_LONGGRASS:		// 6			// long jungle grass
-			specularScale = 0.05;
-			cubemapScale = 0.0;
-			materialType = (float)MATERIAL_LONGGRASS;
-			parallaxScale = 2.5;
-			phongFactor = -phongFactor; // no blinn phong on grassy terrains (to stop the joins being so obvious)
-			break;
-		case MATERIAL_SAND:				// 8			// sandy beach
-			specularScale = 0.15;
-			cubemapScale = 0.0;
-			materialType = (float)MATERIAL_SAND;
-			parallaxScale = 1.5;
-			break;
-		case MATERIAL_CARPET:			// 27			// lush carpet
-			specularScale = 0.15;
-			cubemapScale = 0.0;
-			materialType = (float)MATERIAL_CARPET;
-			parallaxScale = 1.5;
-			break;
-		case MATERIAL_GRAVEL:			// 9			// lots of small stones
-			specularScale = 0.25;
-			cubemapScale = 0.0;
-			materialType = (float)MATERIAL_GRAVEL;
-			parallaxScale = 1.5;
-			break;
-		case MATERIAL_ROCK:				// 23			//
-			specularScale = 0.15;
-			cubemapScale = 0.0;
-			materialType = (float)MATERIAL_ROCK;
-			parallaxScale = 2.5;
-			useSteepParallax = 1.0;
-			break;
-		case MATERIAL_TILES:			// 26			// tiled floor
-			specularScale = 0.56;
-			cubemapScale = 0.15;
-			materialType = (float)MATERIAL_TILES;
-			parallaxScale = 2.5;
-			useSteepParallax = 1.0;
-			break;
-		case MATERIAL_SOLIDWOOD:		// 1			// freshly cut timber
-			specularScale = 0.15;
-			cubemapScale = 0.0;
-			materialType = (float)MATERIAL_SOLIDWOOD;
-			parallaxScale = 2.5;
-			//useSteepParallax = 1.0;
-			break;
-		case MATERIAL_HOLLOWWOOD:		// 2			// termite infested creaky wood
-			specularScale = 0.15;
-			cubemapScale = 0.0;
-			materialType = (float)MATERIAL_HOLLOWWOOD;
-			parallaxScale = 2.5;
-			//useSteepParallax = 1.0;
-			break;
-		case MATERIAL_SOLIDMETAL:		// 3			// solid girders
-			specularScale = 0.98;
-			cubemapScale = 0.98;
-			materialType = (float)MATERIAL_SOLIDMETAL;
-			parallaxScale = 2.5;
-			isMetalic = 1.0;
-			break;
-		case MATERIAL_HOLLOWMETAL:		// 4			// hollow metal machines -- UQ1: Used for weapons to force lower parallax and high reflection...
-			specularScale = 1.0;
-			cubemapScale = 1.0;
-			materialType = (float)MATERIAL_HOLLOWMETAL;
-			parallaxScale = 2.0;
-			isMetalic = 1.0;
-			break;
-		case MATERIAL_DRYLEAVES:		// 19			// dried up leaves on the floor
-			specularScale = 0.1;
-			cubemapScale = 0.0;
-			materialType = (float)MATERIAL_DRYLEAVES;
-			parallaxScale = 0.0;
-			//useSteepParallax = 1.0;
-			break;
-		case MATERIAL_GREENLEAVES:		// 20			// fresh leaves still on a tree
-			specularScale = 0.35;
-			cubemapScale = 0.0;
-			materialType = (float)MATERIAL_GREENLEAVES;
-			parallaxScale = 0.0; // GreenLeaves should NEVER be parallaxed.. It's used for surfaces with an alpha channel and parallax screws it up...
-			//useSteepParallax = 1.0;
-			break;
-		case MATERIAL_FABRIC:			// 21			// Cotton sheets
-			specularScale = 0.25;
-			cubemapScale = 0.0;
-			materialType = (float)MATERIAL_FABRIC;
-			parallaxScale = 2.0;
-			break;
-		case MATERIAL_CANVAS:			// 22			// tent material
-			specularScale = 0.25;
-			cubemapScale = 0.0;
-			materialType = (float)MATERIAL_CANVAS;
-			parallaxScale = 2.0;
-			break;
-		case MATERIAL_MARBLE:			// 12			// marble floors
-			specularScale = 0.2;
-			cubemapScale = 0.6;
-			materialType = (float)MATERIAL_MARBLE;
-			parallaxScale = 2.0;
-			//useSteepParallax = 1.0;
-			break;
-		case MATERIAL_SNOW:				// 14			// freshly laid snow
-			specularScale = 0.3;
-			cubemapScale = 0.25;
-			materialType = (float)MATERIAL_SNOW;
-			parallaxScale = 3.0;
-			useSteepParallax = 1.0;
-			break;
-		case MATERIAL_MUD:				// 17			// wet soil
-			specularScale = 0.25;
-			cubemapScale = 0.1;
-			materialType = (float)MATERIAL_MUD;
-			parallaxScale = 1.5;
-			useSteepParallax = 1.0;
-			break;
-		case MATERIAL_DIRT:				// 7			// hard mud
-			specularScale = 0.15;
-			cubemapScale = 0.0;
-			materialType = (float)MATERIAL_DIRT;
-			parallaxScale = 1.5;
-			useSteepParallax = 1.0;
-			break;
-		case MATERIAL_CONCRETE:			// 11			// hardened concrete pavement
-			specularScale = 0.25;
-			cubemapScale = 0.05;
-			materialType = (float)MATERIAL_CONCRETE;
-			parallaxScale = 2.5;
-			//useSteepParallax = 1.0;
-			break;
-		case MATERIAL_FLESH:			// 16			// hung meat, corpses in the world
-			specularScale = 0.15;
-			cubemapScale = 0.0;
-			materialType = (float)MATERIAL_FLESH;
-			parallaxScale = 1.5;
-			break;
-		case MATERIAL_RUBBER:			// 24			// hard tire like rubber
-			specularScale = 0.15;
-			cubemapScale = 0.0;
-			materialType = (float)MATERIAL_RUBBER;
-			parallaxScale = 1.5;
-			break;
-		case MATERIAL_PLASTIC:			// 25			//
-			specularScale = 0.58;
-			cubemapScale = 0.3;
-			materialType = (float)MATERIAL_PLASTIC;
-			parallaxScale = 1.5;
-			break;
-		case MATERIAL_PLASTER:			// 28			// drywall style plaster
-			specularScale = 0.3;
-			cubemapScale = 0.05;
-			materialType = (float)MATERIAL_PLASTER;
-			parallaxScale = 2.0;
-			break;
-		case MATERIAL_SHATTERGLASS:		// 29			// glass with the Crisis Zone style shattering
-			specularScale = 0.88;
-			cubemapScale = 1.0;
-			materialType = (float)MATERIAL_SHATTERGLASS;
-			parallaxScale = 1.0;
-			break;
-		case MATERIAL_ARMOR:			// 30			// body armor
-			specularScale = 0.4;
-			cubemapScale = 0.4;
-			materialType = (float)MATERIAL_ARMOR;
-			parallaxScale = 2.0;
-			isMetalic = 1.0;
-			break;
-		case MATERIAL_ICE:				// 15			// packed snow/solid ice
-			specularScale = 0.45;
-			cubemapScale = 0.4;
-			materialType = (float)MATERIAL_ICE;
-			parallaxScale = 2.0;
-			useSteepParallax = 1.5;
-			break;
-		case MATERIAL_GLASS:			// 10			//
-			specularScale = 0.95;
-			cubemapScale = 1.0;
-			materialType = (float)MATERIAL_GLASS;
-			parallaxScale = 1.0;
-			break;
-		case MATERIAL_BPGLASS:			// 18			// bulletproof glass
-			specularScale = 0.93;
-			cubemapScale = 0.93;
-			materialType = (float)MATERIAL_BPGLASS;
-			parallaxScale = 1.0;
-			break;
-		case MATERIAL_COMPUTER:			// 31			// computers/electronic equipment
-			specularScale = 0.92;
-			cubemapScale = 0.92;
-			materialType = (float)MATERIAL_COMPUTER;
-			parallaxScale = 2.0;
-			break;
-		default:
-			specularScale = 0.0;
-			cubemapScale = 0.0;
-			materialType = (float)0.0;
-			parallaxScale = 1.0;
-			break;
 		}
+		else
+		{
+			switch( tess.shader->surfaceFlags & MATERIAL_MASK )
+			{
+			case MATERIAL_WATER:			// 13			// light covering of water on a surface
+				specularScale = 1.0;
+				cubemapScale = 1.5;
+				materialType = (float)MATERIAL_WATER;
+				parallaxScale = 2.0;
+				break;
+			case MATERIAL_SHORTGRASS:		// 5			// manicured lawn
+				specularScale = 0.05;
+				cubemapScale = 0.0;
+				materialType = (float)MATERIAL_SHORTGRASS;
+				parallaxScale = 2.0;
+				phongFactor = -phongFactor; // no blinn phong on grassy terrains (to stop the joins being so obvious)
+				break;
+			case MATERIAL_LONGGRASS:		// 6			// long jungle grass
+				specularScale = 0.05;
+				cubemapScale = 0.0;
+				materialType = (float)MATERIAL_LONGGRASS;
+				parallaxScale = 2.5;
+				phongFactor = -phongFactor; // no blinn phong on grassy terrains (to stop the joins being so obvious)
+				break;
+			case MATERIAL_SAND:				// 8			// sandy beach
+				specularScale = 0.15;
+				cubemapScale = 0.0;
+				materialType = (float)MATERIAL_SAND;
+				parallaxScale = 1.5;
+				break;
+			case MATERIAL_CARPET:			// 27			// lush carpet
+				specularScale = 0.15;
+				cubemapScale = 0.0;
+				materialType = (float)MATERIAL_CARPET;
+				parallaxScale = 1.5;
+				break;
+			case MATERIAL_GRAVEL:			// 9			// lots of small stones
+				specularScale = 0.25;
+				cubemapScale = 0.0;
+				materialType = (float)MATERIAL_GRAVEL;
+				parallaxScale = 1.5;
+				break;
+			case MATERIAL_ROCK:				// 23			//
+				specularScale = 0.15;
+				cubemapScale = 0.0;
+				materialType = (float)MATERIAL_ROCK;
+				parallaxScale = 2.5;
+				useSteepParallax = 1.0;
+				break;
+			case MATERIAL_TILES:			// 26			// tiled floor
+				specularScale = 0.56;
+				cubemapScale = 0.15;
+				materialType = (float)MATERIAL_TILES;
+				parallaxScale = 2.5;
+				useSteepParallax = 1.0;
+				break;
+			case MATERIAL_SOLIDWOOD:		// 1			// freshly cut timber
+				specularScale = 0.15;
+				cubemapScale = 0.0;
+				materialType = (float)MATERIAL_SOLIDWOOD;
+				parallaxScale = 2.5;
+				//useSteepParallax = 1.0;
+				break;
+			case MATERIAL_HOLLOWWOOD:		// 2			// termite infested creaky wood
+				specularScale = 0.15;
+				cubemapScale = 0.0;
+				materialType = (float)MATERIAL_HOLLOWWOOD;
+				parallaxScale = 2.5;
+				//useSteepParallax = 1.0;
+				break;
+			case MATERIAL_SOLIDMETAL:		// 3			// solid girders
+				specularScale = 0.98;
+				cubemapScale = 0.98;
+				materialType = (float)MATERIAL_SOLIDMETAL;
+				parallaxScale = 2.5;
+				isMetalic = 1.0;
+				break;
+			case MATERIAL_HOLLOWMETAL:		// 4			// hollow metal machines -- UQ1: Used for weapons to force lower parallax and high reflection...
+				specularScale = 1.0;
+				cubemapScale = 1.0;
+				materialType = (float)MATERIAL_HOLLOWMETAL;
+				parallaxScale = 2.0;
+				isMetalic = 1.0;
+				break;
+			case MATERIAL_DRYLEAVES:		// 19			// dried up leaves on the floor
+				specularScale = 0.1;
+				cubemapScale = 0.0;
+				materialType = (float)MATERIAL_DRYLEAVES;
+				parallaxScale = 0.0;
+				//useSteepParallax = 1.0;
+				break;
+			case MATERIAL_GREENLEAVES:		// 20			// fresh leaves still on a tree
+				specularScale = 0.35;
+				cubemapScale = 0.0;
+				materialType = (float)MATERIAL_GREENLEAVES;
+				parallaxScale = 0.0; // GreenLeaves should NEVER be parallaxed.. It's used for surfaces with an alpha channel and parallax screws it up...
+				//useSteepParallax = 1.0;
+				break;
+			case MATERIAL_FABRIC:			// 21			// Cotton sheets
+				specularScale = 0.25;
+				cubemapScale = 0.0;
+				materialType = (float)MATERIAL_FABRIC;
+				parallaxScale = 2.0;
+				break;
+			case MATERIAL_CANVAS:			// 22			// tent material
+				specularScale = 0.25;
+				cubemapScale = 0.0;
+				materialType = (float)MATERIAL_CANVAS;
+				parallaxScale = 2.0;
+				break;
+			case MATERIAL_MARBLE:			// 12			// marble floors
+				specularScale = 0.2;
+				cubemapScale = 0.6;
+				materialType = (float)MATERIAL_MARBLE;
+				parallaxScale = 2.0;
+				//useSteepParallax = 1.0;
+				break;
+			case MATERIAL_SNOW:				// 14			// freshly laid snow
+				specularScale = 0.3;
+				cubemapScale = 0.25;
+				materialType = (float)MATERIAL_SNOW;
+				parallaxScale = 3.0;
+				useSteepParallax = 1.0;
+				break;
+			case MATERIAL_MUD:				// 17			// wet soil
+				specularScale = 0.25;
+				cubemapScale = 0.1;
+				materialType = (float)MATERIAL_MUD;
+				parallaxScale = 1.5;
+				useSteepParallax = 1.0;
+				break;
+			case MATERIAL_DIRT:				// 7			// hard mud
+				specularScale = 0.15;
+				cubemapScale = 0.0;
+				materialType = (float)MATERIAL_DIRT;
+				parallaxScale = 1.5;
+				useSteepParallax = 1.0;
+				break;
+			case MATERIAL_CONCRETE:			// 11			// hardened concrete pavement
+				specularScale = 0.25;
+				cubemapScale = 0.05;
+				materialType = (float)MATERIAL_CONCRETE;
+				parallaxScale = 2.5;
+				//useSteepParallax = 1.0;
+				break;
+			case MATERIAL_FLESH:			// 16			// hung meat, corpses in the world
+				specularScale = 0.15;
+				cubemapScale = 0.0;
+				materialType = (float)MATERIAL_FLESH;
+				parallaxScale = 1.5;
+				break;
+			case MATERIAL_RUBBER:			// 24			// hard tire like rubber
+				specularScale = 0.15;
+				cubemapScale = 0.0;
+				materialType = (float)MATERIAL_RUBBER;
+				parallaxScale = 1.5;
+				break;
+			case MATERIAL_PLASTIC:			// 25			//
+				specularScale = 0.58;
+				cubemapScale = 0.3;
+				materialType = (float)MATERIAL_PLASTIC;
+				parallaxScale = 1.5;
+				break;
+			case MATERIAL_PLASTER:			// 28			// drywall style plaster
+				specularScale = 0.3;
+				cubemapScale = 0.05;
+				materialType = (float)MATERIAL_PLASTER;
+				parallaxScale = 2.0;
+				break;
+			case MATERIAL_SHATTERGLASS:		// 29			// glass with the Crisis Zone style shattering
+				specularScale = 0.88;
+				cubemapScale = 1.0;
+				materialType = (float)MATERIAL_SHATTERGLASS;
+				parallaxScale = 1.0;
+				break;
+			case MATERIAL_ARMOR:			// 30			// body armor
+				specularScale = 0.4;
+				cubemapScale = 0.4;
+				materialType = (float)MATERIAL_ARMOR;
+				parallaxScale = 2.0;
+				isMetalic = 1.0;
+				break;
+			case MATERIAL_ICE:				// 15			// packed snow/solid ice
+				specularScale = 0.45;
+				cubemapScale = 0.4;
+				materialType = (float)MATERIAL_ICE;
+				parallaxScale = 2.0;
+				useSteepParallax = 1.5;
+				break;
+			case MATERIAL_GLASS:			// 10			//
+				specularScale = 0.95;
+				cubemapScale = 1.0;
+				materialType = (float)MATERIAL_GLASS;
+				parallaxScale = 1.0;
+				break;
+			case MATERIAL_BPGLASS:			// 18			// bulletproof glass
+				specularScale = 0.93;
+				cubemapScale = 0.93;
+				materialType = (float)MATERIAL_BPGLASS;
+				parallaxScale = 1.0;
+				break;
+			case MATERIAL_COMPUTER:			// 31			// computers/electronic equipment
+				specularScale = 0.92;
+				cubemapScale = 0.92;
+				materialType = (float)MATERIAL_COMPUTER;
+				parallaxScale = 2.0;
+				break;
+			default:
+				specularScale = 0.0;
+				cubemapScale = 0.0;
+				materialType = (float)0.0;
+				parallaxScale = 1.0;
+				break;
+			}
+		}
+
+		// Shader overrides material...
+		if (pStage->cubeMapScale > 0.0) 
+		{
+			cubemapScale = pStage->cubeMapScale;
+		}
+
+		if (pStage->isFoliage)
+		{
+			doSway = 0.7;
+		}
+
+		if (tess.shader == tr.sunShader) 
+		{// SPECIAL MATERIAL TYPE FOR SUN
+			materialType = 1025.0;
+		}
+
+		VectorSet4(local1, parallaxScale*r_parallaxScale->value, (float)pStage->hasSpecular, specularScale, materialType);
+		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL1, local1);
+		//GLSL_SetUniformVec4(sp, UNIFORM_LOCAL2, pStage->subsurfaceExtinctionCoefficient);
+		VectorSet4(local3, 0.0/*pStage->subsurfaceRimScalar*/, 0.0/*pStage->subsurfaceMaterialThickness*/, 0.0/*pStage->subsurfaceSpecularPower*/, cubemapScale);
+		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL3, local3);
+		VectorSet4(local4, hasNormalMap, isMetalic, 0.0/*(float)pStage->hasRealSubsurfaceMap*/, doSway);
+		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL4, local4);
+		VectorSet4(local5, hasOverlay, overlaySway, phongFactor, hasSteepMap);
+		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL5, local5);
+
+		vec4_t local6;
+		VectorSet4(local6, r_sunlightSpecular->value, hasSteepMap2, MAP_INFO_MAXSIZE, MAP_WATER_LEVEL);
+		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL6,  local6);
+
+		vec4_t local7;
+		VectorSet4(local7, hasSplatMap1, hasSplatMap2, hasSplatMap3, hasSplatMap4);
+		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL7,  local7);
 	}
+	else
+	{// Don't waste time on unneeded stuff... Absolute minimum shader complexity...
+		specularScale = 0.0;
+		cubemapScale = 0.0;
+		materialType = (float)0.0;
+		parallaxScale = 0.0;
 
-	// Shader overrides material...
-	if (pStage->cubeMapScale > 0.0) cubemapScale = pStage->cubeMapScale;
+		if (tess.shader == tr.sunShader) 
+		{// SPECIAL MATERIAL TYPE FOR SUN
+			materialType = 1025.0;
+		}
+		else
+		{
+			materialType = ( tess.shader->surfaceFlags & MATERIAL_MASK );
+		}
 
-	if (pStage->isFoliage)
-	{
-		doSway = 0.7;
+		if (pStage->isFoliage)
+		{
+			doSway = 0.7;
+		}
+
+		VectorSet4(local1, 0.0, 0.0, 0.0, materialType);
+		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL1, local1);
+		//GLSL_SetUniformVec4(sp, UNIFORM_LOCAL2, pStage->subsurfaceExtinctionCoefficient);
+		VectorSet4(local3, 0.0, 0.0, 0.0, 0.0);
+		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL3, local3);
+		VectorSet4(local4, 0.0, 0.0, 0.0, doSway);
+		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL4, local4);
+		VectorSet4(local5, 0.0, overlaySway, 0.0, 0.0);
+		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL5, local5);
+
+		vec4_t local6;
+		VectorSet4(local6, 0.0, 0.0, MAP_INFO_MAXSIZE, MAP_WATER_LEVEL);
+		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL6,  local6);
+
+		vec4_t local7;
+		VectorSet4(local7, 0.0, 0.0, 0.0, 0.0);
+		GLSL_SetUniformVec4(sp, UNIFORM_LOCAL7,  local7);
 	}
-
-	if (tess.shader == tr.sunShader) materialType = 1025.0; // SPECIAL MATERIAL TYPE FOR SUN
-
-	VectorSet4(local1, parallaxScale*r_parallaxScale->value, (float)pStage->hasSpecular, specularScale, materialType);
-	GLSL_SetUniformVec4(sp, UNIFORM_LOCAL1, local1);
-	//GLSL_SetUniformVec4(sp, UNIFORM_LOCAL2, pStage->subsurfaceExtinctionCoefficient);
-	VectorSet4(local3, 0.0/*pStage->subsurfaceRimScalar*/, 0.0/*pStage->subsurfaceMaterialThickness*/, 0.0/*pStage->subsurfaceSpecularPower*/, cubemapScale);
-	GLSL_SetUniformVec4(sp, UNIFORM_LOCAL3, local3);
-	VectorSet4(local4, hasNormalMap, isMetalic, 0.0/*(float)pStage->hasRealSubsurfaceMap*/, doSway);
-	GLSL_SetUniformVec4(sp, UNIFORM_LOCAL4, local4);
-	VectorSet4(local5, hasOverlay, overlaySway, phongFactor, hasSteepMap);
-	GLSL_SetUniformVec4(sp, UNIFORM_LOCAL5, local5);
-
-	vec4_t local6;
-	VectorSet4(local6, r_sunlightSpecular->value, hasSteepMap2, MAP_INFO_MAXSIZE, MAP_WATER_LEVEL);
-	GLSL_SetUniformVec4(sp, UNIFORM_LOCAL6,  local6);
-
-	vec4_t local7;
-	VectorSet4(local7, hasSplatMap1, hasSplatMap2, hasSplatMap3, hasSplatMap4);
-	GLSL_SetUniformVec4(sp, UNIFORM_LOCAL7,  local7);
 
 	vec4_t specMult;
 
-	if (pStage->specularScale[0] + pStage->specularScale[1] + pStage->specularScale[2] + pStage->specularScale[3] != 0.0)
+	if (backEnd.depthFill || (tr.viewParms.flags & VPF_SHADOWPASS))
+	{// Don't waste time on speculars...
+		VectorSet4(specMult, 0.0, 0.0, 0.0, 0.0);
+		GLSL_SetUniformVec4(sp, UNIFORM_SPECULARSCALE, specMult);
+	}
+	else if (pStage->specularScale[0] + pStage->specularScale[1] + pStage->specularScale[2] + pStage->specularScale[3] != 0.0)
 	{// Shader Specified...
 		GLSL_SetUniformVec4(sp, UNIFORM_SPECULARSCALE, pStage->specularScale);
 	}
@@ -1738,7 +1791,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			}
 		}
 
-		if (backEnd.depthFill)
+		if (backEnd.depthFill || (tr.viewParms.flags & VPF_SHADOWPASS))
 		{
 			if (pStage->glslShaderGroup == tr.lightallShader)
 			{
@@ -1747,6 +1800,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				//
 				// testing cube map
 				//
+#if 0
 				if (!(tr.viewParms.flags & VPF_NOCUBEMAPS) && input->cubemapIndex && r_cubeMapping->integer >= 1)
 				{
 					cubeMapVec[0] = tr.cubemapOrigins[input->cubemapIndex - 1][0] - backEnd.viewParms.ori.origin[0];
@@ -1777,6 +1831,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 						index &= ~LIGHTDEF_USE_CUBEMAP;
 					}
 				}
+#endif
 
 				if (backEnd.currentEntity && backEnd.currentEntity != &tr.worldEntity)
 				{
@@ -1954,7 +2009,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		if (pStage->isWater && r_glslWater->integer && MAP_WATER_LEVEL > -131072.0)
 		{
 #ifdef __USE_WATERMAP__
-			if (stage <= 0 && !backEnd.depthFill) 
+			if (stage <= 0 && !backEnd.depthFill && !(tr.viewParms.flags & VPF_SHADOWPASS)) 
 			//if (pStage->bundle[TB_DIFFUSEMAP].image[0])
 			{
 				sp = &tr.waterShader;
@@ -2255,138 +2310,152 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			//
 			//
 
-			if (pStage->bundle[TB_STEEPMAP].image[0])
+			if (backEnd.depthFill || (tr.viewParms.flags & VPF_SHADOWPASS))
 			{
-				//ri->Printf(PRINT_WARNING, "Image bound to steep map %i x %i.\n", pStage->bundle[TB_STEEPMAP].image[0]->width, pStage->bundle[TB_STEEPMAP].image[0]->height);
-				//R_BindAnimatedImageToTMU( &pStage->bundle[TB_STEEPMAP], TB_STEEPMAP);
-				GL_BindToTMU( pStage->bundle[TB_STEEPMAP].image[0], TB_STEEPMAP );
-			}
-			else
-			{
-				GL_BindToTMU( tr.whiteImage, TB_STEEPMAP );
-			}
-
-			if (pStage->bundle[TB_STEEPMAP2].image[0])
-			{
-				//ri->Printf(PRINT_WARNING, "Image %s bound to steep map %i x %i.\n", pStage->bundle[TB_STEEPMAP2].image[0]->imgName, pStage->bundle[TB_STEEPMAP2].image[0]->width, pStage->bundle[TB_STEEPMAP2].image[0]->height);
-				//R_BindAnimatedImageToTMU( &pStage->bundle[TB_STEEPMAP2], TB_STEEPMAP2);
-				GL_BindToTMU( pStage->bundle[TB_STEEPMAP2].image[0], TB_STEEPMAP2 );
-			}
-			else
-			{
-				GL_BindToTMU( tr.whiteImage, TB_STEEPMAP2 );
-			}
-
-			if (isGrass && passNum > 0)
-			{// Use grass map...
-				GL_BindToTMU( tr.defaultGrassMapImage, TB_SPLATCONTROLMAP );
-			}
-			else
-			{
-				if (pStage->bundle[TB_SPLATCONTROLMAP].image[0] && pStage->bundle[TB_SPLATCONTROLMAP].image[0] != tr.blackImage)
-				{
-					//ri->Printf(PRINT_WARNING, "Image %s bound to splat control map %i x %i.\n", pStage->bundle[TB_SPLATCONTROLMAP].image[0]->imgName, pStage->bundle[TB_SPLATCONTROLMAP].image[0]->width, pStage->bundle[TB_SPLATCONTROLMAP].image[0]->height);
-					GL_BindToTMU( pStage->bundle[TB_SPLATCONTROLMAP].image[0], TB_SPLATCONTROLMAP );
+				if (isGrass && passNum > 0)
+				{// Use grass map...
+					GL_BindToTMU( tr.defaultGrassMapImage, TB_SPLATCONTROLMAP );
 				}
 				else
 				{
-					//GL_BindToTMU( tr.blackImage, TB_SPLATCONTROLMAP ); // bind black image so we never use any of the splat images
-					GL_BindToTMU( tr.defaultSplatControlImage, TB_SPLATCONTROLMAP ); // really need to make a blured (possibly also considering heightmap) version of this...
+					
 				}
-			}
-
-			if (pStage->bundle[TB_SPLATMAP1].image[0] && pStage->bundle[TB_SPLATMAP1].image[0] != tr.whiteImage)
-			{
-				GL_BindToTMU( pStage->bundle[TB_SPLATMAP1].image[0], TB_SPLATMAP1 );
-				GL_BindToTMU( pStage->bundle[TB_SPLATMAP1].image[1], TB_SPLATNORMALMAP1 );
 			}
 			else
 			{
-				if (pStage->bundle[TB_DIFFUSEMAP].image[0])
+				if (pStage->bundle[TB_STEEPMAP].image[0])
 				{
-					R_BindAnimatedImageToTMU( &pStage->bundle[TB_DIFFUSEMAP], TB_SPLATMAP1);
-					GL_BindToTMU( pStage->bundle[TB_NORMALMAP].image[0], TB_SPLATNORMALMAP1 );
+					//ri->Printf(PRINT_WARNING, "Image bound to steep map %i x %i.\n", pStage->bundle[TB_STEEPMAP].image[0]->width, pStage->bundle[TB_STEEPMAP].image[0]->height);
+					//R_BindAnimatedImageToTMU( &pStage->bundle[TB_STEEPMAP], TB_STEEPMAP);
+					GL_BindToTMU( pStage->bundle[TB_STEEPMAP].image[0], TB_STEEPMAP );
 				}
-				else // will never get used anyway
+				else
 				{
-					GL_BindToTMU( tr.whiteImage, TB_SPLATMAP1 );
-					GL_BindToTMU( tr.whiteImage, TB_SPLATNORMALMAP1 );
+					GL_BindToTMU( tr.whiteImage, TB_STEEPMAP );
 				}
-			}
 
-			if (pStage->bundle[TB_SPLATMAP2].image[0] && pStage->bundle[TB_SPLATMAP2].image[0] != tr.whiteImage)
-			{
-				GL_BindToTMU( pStage->bundle[TB_SPLATMAP2].image[0], TB_SPLATMAP2 );
-				GL_BindToTMU( pStage->bundle[TB_SPLATMAP2].image[1], TB_SPLATNORMALMAP2 );
-			}
-			else
-			{
-				if (pStage->bundle[TB_DIFFUSEMAP].image[0])
+				if (pStage->bundle[TB_STEEPMAP2].image[0])
 				{
-					R_BindAnimatedImageToTMU( &pStage->bundle[TB_DIFFUSEMAP], TB_SPLATMAP2);
-					GL_BindToTMU( pStage->bundle[TB_NORMALMAP].image[0], TB_SPLATNORMALMAP2 );
+					//ri->Printf(PRINT_WARNING, "Image %s bound to steep map %i x %i.\n", pStage->bundle[TB_STEEPMAP2].image[0]->imgName, pStage->bundle[TB_STEEPMAP2].image[0]->width, pStage->bundle[TB_STEEPMAP2].image[0]->height);
+					//R_BindAnimatedImageToTMU( &pStage->bundle[TB_STEEPMAP2], TB_STEEPMAP2);
+					GL_BindToTMU( pStage->bundle[TB_STEEPMAP2].image[0], TB_STEEPMAP2 );
 				}
-				else // will never get used anyway
+				else
 				{
-					GL_BindToTMU( tr.whiteImage, TB_SPLATMAP2 );
-					GL_BindToTMU( tr.whiteImage, TB_SPLATNORMALMAP2 );
+					GL_BindToTMU( tr.whiteImage, TB_STEEPMAP2 );
 				}
-			}
 
-			if (pStage->bundle[TB_SPLATMAP3].image[0] && pStage->bundle[TB_SPLATMAP3].image[0] != tr.whiteImage)
-			{
-				GL_BindToTMU( pStage->bundle[TB_SPLATMAP3].image[0], TB_SPLATMAP3 );
-				GL_BindToTMU( pStage->bundle[TB_SPLATMAP3].image[1], TB_SPLATNORMALMAP3 );
-			}
-			else
-			{
-				if (pStage->bundle[TB_DIFFUSEMAP].image[0])
-				{
-					R_BindAnimatedImageToTMU( &pStage->bundle[TB_DIFFUSEMAP], TB_SPLATMAP3);
-					GL_BindToTMU( pStage->bundle[TB_NORMALMAP].image[0], TB_SPLATNORMALMAP3 );
+				if (isGrass && passNum > 0)
+				{// Use grass map...
+					GL_BindToTMU( tr.defaultGrassMapImage, TB_SPLATCONTROLMAP );
 				}
-				else // will never get used anyway
+				else
 				{
-					GL_BindToTMU( tr.whiteImage, TB_SPLATMAP3 );
-					GL_BindToTMU( tr.whiteImage, TB_SPLATNORMALMAP3 );
+					if (pStage->bundle[TB_SPLATCONTROLMAP].image[0] && pStage->bundle[TB_SPLATCONTROLMAP].image[0] != tr.blackImage)
+					{
+						//ri->Printf(PRINT_WARNING, "Image %s bound to splat control map %i x %i.\n", pStage->bundle[TB_SPLATCONTROLMAP].image[0]->imgName, pStage->bundle[TB_SPLATCONTROLMAP].image[0]->width, pStage->bundle[TB_SPLATCONTROLMAP].image[0]->height);
+						GL_BindToTMU( pStage->bundle[TB_SPLATCONTROLMAP].image[0], TB_SPLATCONTROLMAP );
+					}
+					else
+					{
+						//GL_BindToTMU( tr.blackImage, TB_SPLATCONTROLMAP ); // bind black image so we never use any of the splat images
+						GL_BindToTMU( tr.defaultSplatControlImage, TB_SPLATCONTROLMAP ); // really need to make a blured (possibly also considering heightmap) version of this...
+					}
 				}
-			}
 
-			if (pStage->bundle[TB_SPLATMAP4].image[0] && pStage->bundle[TB_SPLATMAP4].image[0] != tr.whiteImage)
-			{
-				GL_BindToTMU( pStage->bundle[TB_SPLATMAP4].image[0], TB_SPLATMAP4 );
-				GL_BindToTMU( pStage->bundle[TB_SPLATMAP4].image[1], TB_SPLATNORMALMAP4 );
-			}
-			else
-			{
-				if (pStage->bundle[TB_DIFFUSEMAP].image[0])
+				if (pStage->bundle[TB_SPLATMAP1].image[0] && pStage->bundle[TB_SPLATMAP1].image[0] != tr.whiteImage)
 				{
-					R_BindAnimatedImageToTMU( &pStage->bundle[TB_DIFFUSEMAP], TB_SPLATMAP4);
-					GL_BindToTMU( pStage->bundle[TB_NORMALMAP].image[0], TB_SPLATNORMALMAP4 );
+					GL_BindToTMU( pStage->bundle[TB_SPLATMAP1].image[0], TB_SPLATMAP1 );
+					GL_BindToTMU( pStage->bundle[TB_SPLATMAP1].image[1], TB_SPLATNORMALMAP1 );
 				}
-				else // will never get used anyway
+				else
 				{
-					GL_BindToTMU( tr.whiteImage, TB_SPLATMAP4 );
-					GL_BindToTMU( tr.whiteImage, TB_SPLATNORMALMAP4 );
+					if (pStage->bundle[TB_DIFFUSEMAP].image[0])
+					{
+						R_BindAnimatedImageToTMU( &pStage->bundle[TB_DIFFUSEMAP], TB_SPLATMAP1);
+						GL_BindToTMU( pStage->bundle[TB_NORMALMAP].image[0], TB_SPLATNORMALMAP1 );
+					}
+					else // will never get used anyway
+					{
+						GL_BindToTMU( tr.whiteImage, TB_SPLATMAP1 );
+						GL_BindToTMU( tr.whiteImage, TB_SPLATNORMALMAP1 );
+					}
 				}
-			}
 
-			/*if (pStage->bundle[TB_SUBSURFACEMAP].image[0])
-			{
+				if (pStage->bundle[TB_SPLATMAP2].image[0] && pStage->bundle[TB_SPLATMAP2].image[0] != tr.whiteImage)
+				{
+					GL_BindToTMU( pStage->bundle[TB_SPLATMAP2].image[0], TB_SPLATMAP2 );
+					GL_BindToTMU( pStage->bundle[TB_SPLATMAP2].image[1], TB_SPLATNORMALMAP2 );
+				}
+				else
+				{
+					if (pStage->bundle[TB_DIFFUSEMAP].image[0])
+					{
+						R_BindAnimatedImageToTMU( &pStage->bundle[TB_DIFFUSEMAP], TB_SPLATMAP2);
+						GL_BindToTMU( pStage->bundle[TB_NORMALMAP].image[0], TB_SPLATNORMALMAP2 );
+					}
+					else // will never get used anyway
+					{
+						GL_BindToTMU( tr.whiteImage, TB_SPLATMAP2 );
+						GL_BindToTMU( tr.whiteImage, TB_SPLATNORMALMAP2 );
+					}
+				}
+
+				if (pStage->bundle[TB_SPLATMAP3].image[0] && pStage->bundle[TB_SPLATMAP3].image[0] != tr.whiteImage)
+				{
+					GL_BindToTMU( pStage->bundle[TB_SPLATMAP3].image[0], TB_SPLATMAP3 );
+					GL_BindToTMU( pStage->bundle[TB_SPLATMAP3].image[1], TB_SPLATNORMALMAP3 );
+				}
+				else
+				{
+					if (pStage->bundle[TB_DIFFUSEMAP].image[0])
+					{
+						R_BindAnimatedImageToTMU( &pStage->bundle[TB_DIFFUSEMAP], TB_SPLATMAP3);
+						GL_BindToTMU( pStage->bundle[TB_NORMALMAP].image[0], TB_SPLATNORMALMAP3 );
+					}
+					else // will never get used anyway
+					{
+						GL_BindToTMU( tr.whiteImage, TB_SPLATMAP3 );
+						GL_BindToTMU( tr.whiteImage, TB_SPLATNORMALMAP3 );
+					}
+				}
+
+				if (pStage->bundle[TB_SPLATMAP4].image[0] && pStage->bundle[TB_SPLATMAP4].image[0] != tr.whiteImage)
+				{
+					GL_BindToTMU( pStage->bundle[TB_SPLATMAP4].image[0], TB_SPLATMAP4 );
+					GL_BindToTMU( pStage->bundle[TB_SPLATMAP4].image[1], TB_SPLATNORMALMAP4 );
+				}
+				else
+				{
+					if (pStage->bundle[TB_DIFFUSEMAP].image[0])
+					{
+						R_BindAnimatedImageToTMU( &pStage->bundle[TB_DIFFUSEMAP], TB_SPLATMAP4);
+						GL_BindToTMU( pStage->bundle[TB_NORMALMAP].image[0], TB_SPLATNORMALMAP4 );
+					}
+					else // will never get used anyway
+					{
+						GL_BindToTMU( tr.whiteImage, TB_SPLATMAP4 );
+						GL_BindToTMU( tr.whiteImage, TB_SPLATNORMALMAP4 );
+					}
+				}
+
+				/*if (pStage->bundle[TB_SUBSURFACEMAP].image[0])
+				{
 				R_BindAnimatedImageToTMU( &pStage->bundle[TB_SUBSURFACEMAP], TB_SUBSURFACEMAP);
-			}
-			else
-			{
+				}
+				else
+				{
 				GL_BindToTMU( tr.whiteImage, TB_SUBSURFACEMAP );
-			}*/
+				}*/
 
-			if (pStage->bundle[TB_OVERLAYMAP].image[0])
-			{
-				R_BindAnimatedImageToTMU( &pStage->bundle[TB_OVERLAYMAP], TB_OVERLAYMAP);
-			}
-			else
-			{
-				GL_BindToTMU( tr.blackImage, TB_OVERLAYMAP );
+				if (pStage->bundle[TB_OVERLAYMAP].image[0])
+				{
+					R_BindAnimatedImageToTMU( &pStage->bundle[TB_OVERLAYMAP], TB_OVERLAYMAP);
+				}
+				else
+				{
+					GL_BindToTMU( tr.blackImage, TB_OVERLAYMAP );
+				}
 			}
 
 			if ( !backEnd.depthFill )
@@ -2422,8 +2491,12 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			}
 
 			GL_BindToTMU( tr.whiteImage, TB_NORMALMAP );
-			GL_BindToTMU( tr.whiteImage, TB_NORMALMAP2 );
-			GL_BindToTMU( tr.whiteImage, TB_NORMALMAP3 );
+
+			if (!backEnd.depthFill)
+			{
+				GL_BindToTMU( tr.whiteImage, TB_NORMALMAP2 );
+				GL_BindToTMU( tr.whiteImage, TB_NORMALMAP3 );
+			}
 
 			//
 			// do multitexture
