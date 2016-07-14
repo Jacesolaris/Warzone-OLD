@@ -171,6 +171,7 @@ out vec4 out_Normal;
 #define FAKE_MAP_SPLATNORMALMAP4 7
 
 
+#if defined(USE_OVERLAY) || defined(USE_TRI_PLANAR)
 vec3 vLocalSeed;
 
 // This function returns random number from zero to one
@@ -184,6 +185,7 @@ float randZeroOne()
     vLocalSeed = vec3(vLocalSeed.x + 147158.0 * fRes, vLocalSeed.y*fRes  + 415161.0 * fRes, vLocalSeed.z + 324154.0*fRes);
     return fRes;
 }
+#endif //defined(USE_OVERLAY) || defined(USE_TRI_PLANAR)
 
 vec3 splatblend(vec4 texture1, float a1, vec4 texture2, float a2)
 {
@@ -725,11 +727,6 @@ void main()
 	vec2 tex_offset = vec2(1.0 / u_Dimensions);
 	vec2 texCoords = m_TexCoords.xy;
 
-	vLocalSeed = m_vertPos.xyz;
-
-	float pixRandom = randZeroOne();// * 0.5 + 0.5;
-	//float pixRandom = (clamp(m_TexCoords.x, 0.0, 1.0) + clamp(m_TexCoords.y, 0.0, 1.0)) / 2.0;
-	//if (pixRandom < 0.5) pixRandom = 0.5 + pixRandom;
 
 	#if 0
 	//#if defined(USE_TESSELLATION)
@@ -752,13 +749,21 @@ void main()
 	#endif
 
 
+#if defined(USE_OVERLAY) || defined(USE_TRI_PLANAR)
+	vLocalSeed = m_vertPos.xyz;
+	float pixRandom = randZeroOne();
+#else //!(defined(USE_OVERLAY) || defined(USE_TRI_PLANAR))
+	float pixRandom = 0.0; // Don't use it anyway...
+#endif //defined(USE_OVERLAY) || defined(USE_TRI_PLANAR)
+
+
+
 	#if defined(USE_OVERLAY) && !defined(USE_GLOW_BUFFER)
 		if (u_Local4.a > 0.0 && !(u_Local5.a > 0.0 && var_Slope > 0) && !(u_Local6.g > 0.0 && m_vertPos.z <= WATER_LEVEL + 128.0 + (64.0 * pixRandom)))
 		{// Sway...
 			texCoords += vec2(u_Local5.y * u_Local4.a * ((1.0 - m_TexCoords.y) + 1.0), 0.0);
 		}
 	#endif //USE_OVERLAY
-
 
 
 
@@ -928,6 +933,7 @@ void main()
 		lightColor /= max(surfNL, 0.25);
 		ambientColor = clamp(ambientColor - lightColor * surfNL, 0.0, 1.0);
 		lightColor *= lightmapColor.rgb;
+
 	#endif //defined(USE_LIGHTMAP)
   
 		gl_FragColor = vec4 ((diffuse.rgb * lightColor) + (diffuse.rgb * ambientColor), diffuse.a * var_Color.a);
@@ -940,7 +946,7 @@ void main()
 		//specular.a = (1.0 - norm.a);
 		specular.a = ((clamp(u_Local1.g, 0.0, 1.0) + clamp(u_Local3.a, 0.0, 1.0)) / 2.0) * 1.6;
 
-		#if defined(USE_SPECULARMAP)
+		#if defined(USE_SPECULARMAP) && !defined(USE_GLOW_BUFFER)
 		if (u_Local1.g != 0.0)
 		{// Real specMap...
 			specular = texture2D(u_SpecularMap, texCoords);

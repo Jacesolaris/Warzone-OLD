@@ -1781,13 +1781,10 @@ const void	*RB_DrawSurfs( const void *data ) {
 				vec3_t viewVector;
 
 				float zmax = backEnd.viewParms.zFar;
-				//float zmax = 2048.0;
 				float ymax = zmax * tan(backEnd.viewParms.fovY * M_PI / 360.0f);
 				float xmax = zmax * tan(backEnd.viewParms.fovX * M_PI / 360.0f);
 
 				float zmin = r_znear->value;
-
-				//GLSL_SetUniformVec3(&tr.shadowmaskShader, UNIFORM_VIEWORIGIN,  backEnd.refdef.vieworg);
 
 				VectorScale(backEnd.refdef.viewaxis[0], zmax, viewVector);
 				GLSL_SetUniformVec3(&tr.shadowmaskShader, UNIFORM_VIEWFORWARD, viewVector);

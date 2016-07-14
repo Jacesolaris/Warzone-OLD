@@ -1797,42 +1797,6 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			{
 				int index = 0;
 
-				//
-				// testing cube map
-				//
-#if 0
-				if (!(tr.viewParms.flags & VPF_NOCUBEMAPS) && input->cubemapIndex && r_cubeMapping->integer >= 1)
-				{
-					cubeMapVec[0] = tr.cubemapOrigins[input->cubemapIndex - 1][0] - backEnd.viewParms.ori.origin[0];
-					cubeMapVec[1] = tr.cubemapOrigins[input->cubemapIndex - 1][1] - backEnd.viewParms.ori.origin[1];
-					cubeMapVec[2] = tr.cubemapOrigins[input->cubemapIndex - 1][2] - backEnd.viewParms.ori.origin[2];
-					cubeMapVec[3] = 1.0f;
-
-					float dist = Distance(tr.refdef.vieworg, tr.cubemapOrigins[input->cubemapIndex - 1]);
-					float mult = r_cubemapCullFalloffMult->value - (r_cubemapCullFalloffMult->value * 0.04);
-
-					if (dist < r_cubemapCullRange->value)
-					{// In range for full effect...
-						cubeMapStrength = 1.0;
-						index |= LIGHTDEF_USE_CUBEMAP;
-					}
-					else if (dist >= r_cubemapCullRange->value && dist < r_cubemapCullRange->value * mult)
-					{// Further scale the strength of the cubemap by the fade-out distance...
-						float extraDist =		dist - r_cubemapCullRange->value;
-						float falloffDist =		(r_cubemapCullRange->value * mult) - r_cubemapCullRange->value;
-						float strength =		(falloffDist - extraDist) / falloffDist;
-
-						cubeMapStrength = strength;
-						index |= LIGHTDEF_USE_CUBEMAP;
-					}
-					else
-					{// Out of range completely...
-						cubeMapStrength = 0.0;
-						index &= ~LIGHTDEF_USE_CUBEMAP;
-					}
-				}
-#endif
-
 				if (backEnd.currentEntity && backEnd.currentEntity != &tr.worldEntity)
 				{
 					index |= LIGHTDEF_ENTITY;
