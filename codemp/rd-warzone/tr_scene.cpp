@@ -706,51 +706,23 @@ void RE_RenderScene( const refdef_t *fd ) {
 		&& (r_sunlightMode->integer >= 2 || r_forceSun->integer || tr.sunShadows)
 		&& !backEnd.depthFill)
 	{
-		if (r_sunlightMode->integer < 3)
+		if (r_sunlightMode->integer == 2)
 		{// Update distance shadows on timers...
-			int nowTime = ri->Milliseconds();
-
-			if (nowTime >= NEXT_SHADOWMAP_UPDATE[0])
-			{// Close shadows - fast updates...
-				NEXT_SHADOWMAP_UPDATE[0] = nowTime + 50;
-				R_RenderSunShadowMaps(fd, 0);
-			}
-			else if (nowTime >= NEXT_SHADOWMAP_UPDATE[1])
-			{// Distant shadows - slower updates...
-				NEXT_SHADOWMAP_UPDATE[1] = nowTime + 100;
-				R_RenderSunShadowMaps(fd, 1);
-			}
-			else if (nowTime >= NEXT_SHADOWMAP_UPDATE[2])
-			{// Distant shadows - slower updates...
-				NEXT_SHADOWMAP_UPDATE[2] = nowTime + 500;
-				R_RenderSunShadowMaps(fd, 2);
-			}
-		}
-		else if (r_sunlightMode->integer < 4)
-		{// Update distance shadows on timers...
-			/*int nowTime = ri->Milliseconds();
-
-			if (nowTime >= NEXT_SHADOWMAP_UPDATE[0])
-			{// Close shadows - fast updates...
-				NEXT_SHADOWMAP_UPDATE[0] = nowTime + 50;
-				R_RenderSunShadowMaps(fd, 0);
-			}
-			else if (nowTime >= NEXT_SHADOWMAP_UPDATE[1])
-			{// Distant shadows - slower updates...
-				NEXT_SHADOWMAP_UPDATE[1] = nowTime + 5000;//500;
-				R_RenderSunShadowMaps(fd, 1);
-			}*/
-
-			/*
-			R_RenderSunShadowMaps(fd, 0);
-			R_RenderSunShadowMaps(fd, 1);
-			*/
-
 			int nowTime = ri->Milliseconds();
 			
 			if (nowTime >= NEXT_SHADOWMAP_UPDATE[0])
 			{// Close shadows - fast updates...
-				NEXT_SHADOWMAP_UPDATE[0] = nowTime + 10;
+				NEXT_SHADOWMAP_UPDATE[0] = nowTime + 20;
+				R_RenderSunShadowMaps(fd, 0);
+			}
+		}
+		else if (r_sunlightMode->integer == 3)
+		{// Update distance shadows on timers...
+			int nowTime = ri->Milliseconds();
+			
+			if (nowTime >= NEXT_SHADOWMAP_UPDATE[0])
+			{// Close shadows - fast updates...
+				NEXT_SHADOWMAP_UPDATE[0] = nowTime + 20;
 				R_RenderSunShadowMaps(fd, 0);
 			}
 			else if (nowTime >= NEXT_SHADOWMAP_UPDATE[1])

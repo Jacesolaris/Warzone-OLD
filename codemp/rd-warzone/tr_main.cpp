@@ -2692,7 +2692,14 @@ void R_RenderSunShadowMaps(const refdef_t *fd, int level)
 	viewZFar = r_shadowCascadeZFar->value;
 	float splitBias = r_shadowCascadeZBias->value;
 
-	if (r_sunlightMode->integer == 3)
+	if (r_sunlightMode->integer == 2)
+	{
+		lightViewIndependentOfCameraView = qtrue;
+
+		splitZNear = r_znear->value;
+		splitZFar  = 4096;
+	}
+	else if (r_sunlightMode->integer == 3)
 	{
 		lightViewIndependentOfCameraView = qtrue;
 

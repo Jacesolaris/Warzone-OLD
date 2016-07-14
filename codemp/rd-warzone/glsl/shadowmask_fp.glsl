@@ -1,18 +1,18 @@
 uniform sampler2D u_ScreenDepthMap;
 
 uniform sampler2D u_ShadowMap;
-#if defined(USE_SHADOW_CASCADE)
+#if defined(USE_SHADOW_CASCADE2)
 uniform sampler2D u_ShadowMap2;
 uniform sampler2D u_ShadowMap3;
-#elif defined(USE_SHADOW_CASCADE2)
+#elif defined(USE_SHADOW_CASCADE)
 uniform sampler2D u_ShadowMap2;
 #endif
 
 uniform mat4      u_ShadowMvp;
-#if defined(USE_SHADOW_CASCADE)
+#if defined(USE_SHADOW_CASCADE2)
 uniform mat4      u_ShadowMvp2;
 uniform mat4      u_ShadowMvp3;
-#elif defined(USE_SHADOW_CASCADE2)
+#elif defined(USE_SHADOW_CASCADE)
 uniform mat4      u_ShadowMvp2;
 #endif
 
@@ -83,7 +83,7 @@ float getLinearDepth(sampler2D depthMap, vec2 tex, float zFarDivZNear)
 	return 1.0 / mix(zFarDivZNear, 1.0, sampleZDivW);
 }
 
-#if defined(USE_SHADOW_CASCADE2)
+#if defined(USE_SHADOW_CASCADE) || defined(USE_FAST_SHADOW)
 const float blendRange1 = 1024.0;
 const float blendRange2 = 4096.0;
 const float blendRange3 = 65536.0;
@@ -100,11 +100,8 @@ void main()
 	
 	vec4 shadowpos = u_ShadowMvp * biasPos;
 	
-#if defined(USE_SHADOW_CASCADE)
+#if defined(USE_SHADOW_CASCADE) || defined(USE_SHADOW_CASCADE2) || defined(USE_FAST_SHADOW)
 	const float fadeTo = 1.0;
-	result = fadeTo;
-#elif defined(USE_SHADOW_CASCADE2)
-	const float fadeTo = 1.0; // this is shit...
 	result = fadeTo;
 #else
 	result = 0.0;
@@ -115,7 +112,35 @@ void main()
 		shadowpos.xyz = shadowpos.xyz / shadowpos.w * 0.5 + 0.5;
 		result = PCF(u_ShadowMap, shadowpos.xy, shadowpos.z);
 	}
-#if defined(USE_SHADOW_CASCADE)
+#if defined(USE_FAST_SHADOW)
+	if (sampleZ / blendRange1 >= 1.0)
+	{// In blend range...
+		float fade = clamp((sampleZ-blendRange1) / blendRange2, 0.0, 1.0);
+		result = mix(result, fadeTo, fade);
+	}
+#elif defined(USE_SHADOW_CASCADE)
+	// Better looking blend... Only 2 levels to improve FPS...
+	float result2 = fadeTo;
+
+	shadowpos = u_ShadowMvp2 * biasPos;
+
+	shadowpos.xyz = shadowpos.xyz / shadowpos.w * 0.5 + 0.5;
+	result2 = PCF(u_ShadowMap2, shadowpos.xy, shadowpos.z);
+
+	if (sampleZ / blendRange1 >= 1.0)
+	{// In blend range...
+		if (sampleZ / blendRange2 < 1.0)
+		{
+			float fade = clamp((sampleZ-blendRange1) / blendRange2, 0.0, 1.0);
+			result = mix(result, result2, fade);
+		}
+		else
+		{
+			float fade = clamp((sampleZ-blendRange2) / blendRange3, 0.0, 1.0);
+			result = mix(result2, fadeTo, fade);
+		}
+	}
+#elif defined(USE_SHADOW_CASCADE2)
 	else
 	{
 		shadowpos = u_ShadowMvp2 * biasPos;
@@ -137,28 +162,6 @@ void main()
 				float fade = clamp(sampleZ / r_shadowCascadeZFar * 10.0 - 9.0, 0.0, 1.0);
 				result = mix(result, fadeTo, fade);
 			}
-		}
-	}
-#elif defined(USE_SHADOW_CASCADE2)
-	// Better looking blend... Only 2 levels to improve FPS...
-	float result2 = fadeTo;
-
-	shadowpos = u_ShadowMvp2 * biasPos;
-
-	shadowpos.xyz = shadowpos.xyz / shadowpos.w * 0.5 + 0.5;
-	result2 = PCF(u_ShadowMap2, shadowpos.xy, shadowpos.z);
-
-	if (sampleZ / blendRange1 >= 1.0)
-	{// In blend range...
-		if (sampleZ / blendRange2 < 1.0)
-		{
-			float fade = clamp((sampleZ-blendRange1) / blendRange2, 0.0, 1.0);
-			result = mix(result, result2, fade);
-		}
-		else
-		{
-			float fade = clamp((sampleZ-blendRange2) / blendRange3, 0.0, 1.0);
-			result = mix(result2, fadeTo, fade);
 		}
 	}
 #endif

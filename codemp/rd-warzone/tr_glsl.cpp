@@ -2839,13 +2839,17 @@ int GLSL_BeginLoadGPUShaders(void)
 	if (r_shadowFilter->integer >= 2)
 		Q_strcat(extradefines, 1024, "#define USE_SHADOW_FILTER2\n");
 
-	if (r_sunlightMode->integer == 3)
-	{
-		Q_strcat(extradefines, 1024, "#define USE_SHADOW_CASCADE2\n");
+	if (r_sunlightMode->integer == 2)
+	{// Fast shadows... no cascade...
+		Q_strcat(extradefines, 1024, "#define USE_FAST_SHADOW\n");
+	}
+	else if (r_sunlightMode->integer == 3)
+	{// Regular shadows... 2 levels of cascade...
+		Q_strcat(extradefines, 1024, "#define USE_SHADOW_CASCADE\n");
 	}
 	else
-	{
-		Q_strcat(extradefines, 1024, "#define USE_SHADOW_CASCADE\n");
+	{// Old stupid rend2 shadows, 3 levels of wasteful, FPS killing stupidity...
+		Q_strcat(extradefines, 1024, "#define USE_SHADOW_CASCADE2\n");
 	}
 
 	Q_strcat(extradefines, 1024, va("#define r_shadowMapSize %d\n", r_shadowMapSize->integer));

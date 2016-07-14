@@ -35,6 +35,12 @@ static float	s_flipMatrix[16] = {
 	0, 0, 0, 1
 };
 
+void RB_SwapFBOs ( FBO_t **currentFbo, FBO_t **currentOutFbo)
+{
+	FBO_t *temp = *currentFbo;
+	*currentFbo = *currentOutFbo;
+	*currentOutFbo = temp;
+}
 
 /*
 ** GL_Bind
@@ -1764,15 +1770,22 @@ const void	*RB_DrawSurfs( const void *data ) {
 
 			GL_BindToTMU(tr.renderDepthImage, TB_COLORMAP);
 			GL_BindToTMU(tr.sunShadowDepthImage[0], TB_SHADOWMAP);
-			GL_BindToTMU(tr.sunShadowDepthImage[1], TB_SHADOWMAP2);
-			GL_BindToTMU(tr.sunShadowDepthImage[2], TB_SHADOWMAP3);
+			GLSL_SetUniformMatrix16(&tr.shadowmaskShader, UNIFORM_SHADOWMVP,  backEnd.refdef.sunShadowMvp[0]);
+			
+			if (r_sunlightMode->integer >= 3)
+			{
+				GL_BindToTMU(tr.sunShadowDepthImage[1], TB_SHADOWMAP2);
+				GLSL_SetUniformMatrix16(&tr.shadowmaskShader, UNIFORM_SHADOWMVP2, backEnd.refdef.sunShadowMvp[1]);
+				
+				if (r_sunlightMode->integer >= 4)
+				{
+					GL_BindToTMU(tr.sunShadowDepthImage[2], TB_SHADOWMAP3);
+					GLSL_SetUniformMatrix16(&tr.shadowmaskShader, UNIFORM_SHADOWMVP3, backEnd.refdef.sunShadowMvp[2]);
+				}
+			}
 			
 			GLSL_SetUniformInt(&tr.shadowmaskShader, UNIFORM_SPECULARMAP, TB_SPECULARMAP);
 			GL_BindToTMU(tr.randomImage, TB_SPECULARMAP);
-
-			GLSL_SetUniformMatrix16(&tr.shadowmaskShader, UNIFORM_SHADOWMVP,  backEnd.refdef.sunShadowMvp[0]);
-			GLSL_SetUniformMatrix16(&tr.shadowmaskShader, UNIFORM_SHADOWMVP2, backEnd.refdef.sunShadowMvp[1]);
-			GLSL_SetUniformMatrix16(&tr.shadowmaskShader, UNIFORM_SHADOWMVP3, backEnd.refdef.sunShadowMvp[2]);
 			
 			GLSL_SetUniformVec3(&tr.shadowmaskShader, UNIFORM_VIEWORIGIN,  backEnd.refdef.vieworg);
 
@@ -1800,6 +1813,28 @@ const void	*RB_DrawSurfs( const void *data ) {
 
 
 			RB_InstantQuad2(quadVerts, texCoords); //, color, shaderProgram, invTexRes);
+
+			{
+				FBO_t *currentFbo = tr.genericFbo3;
+				FBO_t *currentOutFbo = tr.genericFbo;
+
+				FBO_FastBlit(tr.screenShadowFbo, NULL, currentFbo, NULL, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+				
+				// Blur some times
+				float	spread = 1.0f;
+
+				for ( int i = 0; i < r_shadowBlurPasses->integer; i++ )
+				{
+					//RB_GaussianBlur(currentFbo, tr.genericFbo2, currentOutFbo, spread);
+					//RB_BokehBlur(currentFbo, NULL, currentOutFbo, NULL, backEnd.refdef.blurFactor);
+					RB_FastBlur(currentFbo, NULL, currentOutFbo, NULL);
+					RB_SwapFBOs( &currentFbo, &currentOutFbo);
+					//spread += 0.6f * 0.25f;
+				}
+
+				FBO_FastBlit(currentFbo, NULL, tr.screenShadowFbo, NULL, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+			}
+			//RB_BokehBlur(NULL, srcBox, NULL, dstBox, backEnd.refdef.blurFactor);
 		}
 
 #ifdef __DYNAMIC_SHADOWS__
@@ -2358,13 +2393,6 @@ RB_PostProcess
 
 =============
 */
-
-void RB_SwapFBOs ( FBO_t **currentFbo, FBO_t **currentOutFbo)
-{
-	FBO_t *temp = *currentFbo;
-	*currentFbo = *currentOutFbo;
-	*currentOutFbo = temp;
-}
 
 const void *RB_PostProcess(const void *data)
 {

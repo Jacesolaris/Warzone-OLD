@@ -186,6 +186,7 @@ cvar_t  *r_forceSunAmbientScale;
 cvar_t  *r_sunlightMode;
 cvar_t  *r_sunlightSpecular;
 cvar_t  *r_drawSunRays;
+cvar_t  *r_shadowBlurPasses;
 cvar_t  *r_shadowFilter;
 cvar_t  *r_shadowMapSize;
 cvar_t  *r_shadowCascadeZNear;
@@ -1462,6 +1463,7 @@ void R_Register( void )
 	r_sunlightMode = ri->Cvar_Get( "r_sunlightMode", "1", CVAR_ARCHIVE | CVAR_LATCH );
 	r_sunlightSpecular = ri->Cvar_Get( "r_sunlightSpecular", "1", CVAR_ARCHIVE );
 
+	r_shadowBlurPasses = ri->Cvar_Get( "r_shadowBlurPasses", "4", CVAR_ARCHIVE );
 	r_shadowFilter = ri->Cvar_Get( "r_shadowFilter", "1", CVAR_ARCHIVE | CVAR_LATCH );
 	r_shadowMapSize = ri->Cvar_Get( "r_shadowMapSize", "2048", CVAR_ARCHIVE | CVAR_LATCH );
 	r_shadowCascadeZNear = ri->Cvar_Get( "r_shadowCascadeZNear", "4", CVAR_ARCHIVE );
