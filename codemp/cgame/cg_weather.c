@@ -182,21 +182,30 @@ float CG_GetSkyHeight ( trace_t *tr )
 
 	if (ATMOSPHERIC_MAX_MAP_HEIGHT <= -MAX_ATMOSPHERIC_HEIGHT)
 	{// Find map's highest point... Once...
-		for (x = -MAX_ATMOSPHERIC_HEIGHT; x < MAX_ATMOSPHERIC_HEIGHT; x += 256)
+		// Try to load pre-created info from our map's .mapInfo file...
+		ATMOSPHERIC_MAX_MAP_HEIGHT = atof(IniRead(va("maps/%s.mapInfo", cgs.currentmapname), "MAPINFO", "SKY_HEIGHT", "-999999.0"));
+
+		if (ATMOSPHERIC_MAX_MAP_HEIGHT <= -999999.0)
 		{
-			for (y = -MAX_ATMOSPHERIC_HEIGHT; y < MAX_ATMOSPHERIC_HEIGHT; y += 256)
+			for (x = -MAX_ATMOSPHERIC_HEIGHT; x < MAX_ATMOSPHERIC_HEIGHT; x += 256)
 			{
-				vec3_t testpoint, testend;
-				testpoint[0] = testend[0] = x;
-				testpoint[1] = testend[1] = y;
-				testpoint[2] = MAX_ATMOSPHERIC_HEIGHT;
-				testend[2] = -MAX_ATMOSPHERIC_HEIGHT;
+				for (y = -MAX_ATMOSPHERIC_HEIGHT; y < MAX_ATMOSPHERIC_HEIGHT; y += 256)
+				{
+					vec3_t testpoint, testend;
+					testpoint[0] = testend[0] = x;
+					testpoint[1] = testend[1] = y;
+					testpoint[2] = MAX_ATMOSPHERIC_HEIGHT;
+					testend[2] = -MAX_ATMOSPHERIC_HEIGHT;
 
-				CG_Trace( tr, testpoint, NULL, NULL, testend, ENTITYNUM_NONE, MASK_ALL );
+					CG_Trace( tr, testpoint, NULL, NULL, testend, ENTITYNUM_NONE, MASK_ALL );
 
-				if (tr->endpos[2] > ATMOSPHERIC_MAX_MAP_HEIGHT) 
-					ATMOSPHERIC_MAX_MAP_HEIGHT = tr->endpos[2];
+					if (tr->endpos[2] > ATMOSPHERIC_MAX_MAP_HEIGHT) 
+						ATMOSPHERIC_MAX_MAP_HEIGHT = tr->endpos[2];
+				}
 			}
+
+			// Write newly created info to our map's .mapInfo file for future map loads...
+			IniWrite(va("maps/%s.mapInfo", cgs.currentmapname), "MAPINFO", "SKY_HEIGHT", va("%f", ATMOSPHERIC_MAX_MAP_HEIGHT));
 		}
 
 		//trap->Print("^3Atmospheric height is at %f.\n", ATMOSPHERIC_MAX_MAP_HEIGHT);

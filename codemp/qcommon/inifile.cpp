@@ -181,7 +181,7 @@ int write_private_profile_string(char *section, char *entry, char *buffer, char 
 
 		wfpLen = FS_FOpenFileByMode(file_name, &wfp, FS_WRITE); /*  then make one */
 
-		if( !wfp || !wfpLen ) 
+		if( !wfp /*|| !wfpLen*/ ) 
         {   
 			return(0);   
 		}
@@ -198,7 +198,7 @@ int write_private_profile_string(char *section, char *entry, char *buffer, char 
 
 	wfpLen = FS_FOpenFileByMode(tmp_name, &wfp, FS_WRITE);
 
-    if( !wfp || !wfpLen )
+    if( !wfp /*|| !wfpLen*/ )
     {   
 		FS_FCloseFile(rfp);
         return(0);
@@ -345,6 +345,8 @@ const char *IniRead(char *aFilespec, char *aSection, char *aKey, char *aDefault)
 /*#ifdef _GAME
 	trap->Print("[file] %s [section] %s [key] %s [value] %s\n", aFilespec, aSection, aKey, value);
 #endif*/
+	if (!strcmp(value, "")) return aDefault;
+
 	return value;
 }
 
@@ -361,6 +363,8 @@ extern "C"
 /*#ifdef _GAME
 		trap->Print("[file] %s [section] %s [key] %s [value] %s\n", aFilespec, aSection, aKey, value);
 #endif*/
+		if (!strcmp(value, "")) return aDefault;
+
 		return value;
 	}
 

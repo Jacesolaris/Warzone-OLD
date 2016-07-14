@@ -3237,6 +3237,7 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, int flags )
 	else
 		image = R_CreateImage( name, pic, width, height, type, IMGFLAG_NOLIGHTSCALE | IMGFLAG_NO_COMPRESSION, GL_RGBA8 );
 
+#ifdef USING_ENGINE_GLOW_LIGHTCOLORS_SEARCH
 	//if (flags & IMGFLAG_GLOW)
 	{
 		vec4_t avgColor = { 0 };
@@ -3244,6 +3245,7 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, int flags )
 		//ri->Printf(PRINT_WARNING, "%s average color is %f %f %f.\n", name, avgColor[0], avgColor[1], avgColor[2]);
 		VectorCopy4(avgColor, image->lightColor);
 	}
+#endif //USING_ENGINE_GLOW_LIGHTCOLORS_SEARCH
 
 	if (name[0] != '*' && name[0] != '!' && name[0] != '$' && name[0] != '_' 
 		&& type != IMGTYPE_NORMAL && type != IMGTYPE_SPECULAR /*&& type != IMGTYPE_SUBSURFACE*/ 
@@ -3256,24 +3258,6 @@ image_t	*R_FindImageFile( const char *name, imgType_t type, int flags )
 			GL_Bind(image);
 			image = R_TextureCleanGLSL( name, pic, width, height, flags, image );
 		}
-
-		/*
-		if (image && r_esharpening->integer)
-		{
-			GL_Bind(image);
-			image = R_TextureESharpenGLSL( name, pic, width, height, flags, image );
-		}
-		if (image && r_esharpening2->integer)
-		{
-			GL_Bind(image);
-			image = R_TextureESharpen2GLSL( name, pic, width, height, flags, image );
-		}
-		if (image && r_darkexpand->integer)
-		{
-			GL_Bind(image);
-			image = R_TextureDarkExpandGLSL( name, pic, width, height, flags, image );
-		}
-		*/
 
 		if (r_normalMapping->integer >= 2) 
 		{

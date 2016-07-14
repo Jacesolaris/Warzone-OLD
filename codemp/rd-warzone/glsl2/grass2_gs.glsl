@@ -139,8 +139,8 @@ void main()
 	vec3 normal = normalize(cross(gl_in[2].gl_Position.xyz - gl_in[0].gl_Position.xyz, gl_in[1].gl_Position.xyz - gl_in[0].gl_Position.xyz)); //calculate normal for this face
 
 	//face info--------------------------
-	float VertSize = length(Vert1-Vert2) + length(Vert1-Vert3) + length(Vert2-Vert3);
-	int densityMax = int(VertSize / foliageDensity);
+	//float VertSize = length(Vert1-Vert2) + length(Vert1-Vert3) + length(Vert2-Vert3);
+	//int densityMax = int(VertSize / foliageDensity);
     //-----------------------------------
 
 //#if !defined(USE_400)

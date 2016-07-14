@@ -5288,6 +5288,34 @@ AIMod_GetMapBounts ( void )
 	vec3_t	org2;
 	vec3_t	mapMins, mapMaxs;
 
+
+	//
+	// Try to load previously stored bounds from .mapInfo file...
+	//
+
+	mapMins[0] = atof(IniRead(va("maps/%s.mapInfo", cgs.currentmapname), "BOUNDS", "MINS0", "999999.0"));
+	mapMins[1] = atof(IniRead(va("maps/%s.mapInfo", cgs.currentmapname), "BOUNDS", "MINS1", "999999.0"));
+	mapMins[2] = atof(IniRead(va("maps/%s.mapInfo", cgs.currentmapname), "BOUNDS", "MINS2", "999999.0"));
+
+	mapMaxs[0] = atof(IniRead(va("maps/%s.mapInfo", cgs.currentmapname), "BOUNDS", "MAXS0", "-999999.0"));
+	mapMaxs[1] = atof(IniRead(va("maps/%s.mapInfo", cgs.currentmapname), "BOUNDS", "MAXS1", "-999999.0"));
+	mapMaxs[2] = atof(IniRead(va("maps/%s.mapInfo", cgs.currentmapname), "BOUNDS", "MAXS2", "-999999.0"));
+
+	if (mapMins[0] < 999999.0 && mapMins[1] < 999999.0 && mapMins[2] < 999999.0
+		&& mapMaxs[0] > -999999.0 && mapMaxs[1] > -999999.0 && mapMaxs[2] > -999999.0)
+	{
+		VectorSet(mapMins, MAX_MAP_SIZE, MAX_MAP_SIZE, MAX_MAP_SIZE);
+		VectorSet(mapMaxs, -MAX_MAP_SIZE, -MAX_MAP_SIZE, -MAX_MAP_SIZE);
+		VectorCopy(mapMins, cg.mapcoordsMins);
+		VectorCopy(mapMaxs, cg.mapcoordsMaxs);
+		cg.mapcoordsValid = qtrue;
+		return;
+	}
+
+	//
+	// No map bounds info available in the .mapInfo file? OK, calculate and save for next time...
+	//
+
 	aw_percent_complete = 0;
 
 	trap->Print( va( "^4*** ^3AUTO-FOLIAGE^4: ^Searching for map bounds.\n" ) );
@@ -5556,6 +5584,18 @@ AIMod_GetMapBounts ( void )
 
 	aw_percent_complete = 0.0;
 	trap->UpdateScreen();
+
+	//
+	// Write newly created info to our map's .mapInfo file for future usage...
+	//
+
+	IniWrite(va("maps/%s.mapInfo", cgs.currentmapname), "BOUNDS", "MINS0", va("%f", mapMins[0]));
+	IniWrite(va("maps/%s.mapInfo", cgs.currentmapname), "BOUNDS", "MINS1", va("%f", mapMins[1]));
+	IniWrite(va("maps/%s.mapInfo", cgs.currentmapname), "BOUNDS", "MINS2", va("%f", mapMins[2]));
+
+	IniWrite(va("maps/%s.mapInfo", cgs.currentmapname), "BOUNDS", "MAXS0", va("%f", mapMaxs[0]));
+	IniWrite(va("maps/%s.mapInfo", cgs.currentmapname), "BOUNDS", "MAXS1", va("%f", mapMaxs[1]));
+	IniWrite(va("maps/%s.mapInfo", cgs.currentmapname), "BOUNDS", "MAXS2", va("%f", mapMaxs[2]));
 }
 
 qboolean MaterialIsValidForWP(int materialType)
