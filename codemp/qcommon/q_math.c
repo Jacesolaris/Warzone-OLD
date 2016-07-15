@@ -1132,6 +1132,46 @@ float Q_flrand(float min, float max)
 	return flrand(min,max);
 }
 
+//
+uint32_t randomInRange(uint32_t a,uint32_t b) 
+{
+    uint32_t v;
+    uint32_t range;
+    uint32_t upper;
+    uint32_t lower;
+    uint32_t mask;
+
+    if(a == b) {
+        return a;
+    }
+
+    if(a > b) {
+        upper = a;
+        lower = b;
+    } else {
+        upper = b;
+        lower = a; 
+    }
+
+    range = upper - lower;
+
+    mask = 0;
+    //XXX calculate range with log and mask? nah, too lazy :).
+    while(1) {
+        if(mask >= range) {
+            break;
+        }
+        mask = (mask << 1) | 1;
+    }
+
+    while(1) {
+        v = rand() & mask;
+        if(v <= range) {
+            return lower + v;
+        }
+    }
+}
+
 // Returns an integer min <= x <= max (ie inclusive)
 
 int irand(int min, int max)

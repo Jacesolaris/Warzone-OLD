@@ -1581,6 +1581,20 @@ qboolean NPC_FacePosition( vec3_t position, qboolean doPitch )
 		if ( fabs( pitchDelta ) > VALID_ATTACK_CONE )
 			facing = qfalse;
 	}
+	else
+	{// UQ1: Force pitch always to go back to 0...
+		NPCS.NPCInfo->desiredPitch = 0;
+
+		{
+			//Find the delta between our goal and our current facing
+			float currentAngles = ( SHORT2ANGLE( NPCS.ucmd.angles[PITCH] + NPCS.client->ps.delta_angles[PITCH] ) );
+			float pitchDelta = NPCS.NPCInfo->desiredPitch - currentAngles;
+
+			//See if we are facing properly
+			if ( fabs( pitchDelta ) > VALID_ATTACK_CONE )
+				facing = qfalse;
+		}
+	}
 
 	return facing;
 }

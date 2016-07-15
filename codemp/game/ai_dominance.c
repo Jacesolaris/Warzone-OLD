@@ -229,54 +229,7 @@ qboolean BotPVSCheck( const vec3_t p1, const vec3_t p2 )
 	return trap->InPVS(p1, p2);
 }
 
-//get the index to the nearest visible waypoint in the global trail
-int GetNearestVisibleWP(vec3_t org, int ignore)
-{
-	int i;
-	float bestdist;
-	float flLen;
-	int bestindex;
-	vec3_t a, mins, maxs;
-
-	i = 0;
-	if (RMG.integer)
-	{
-		bestdist = 300;
-	}
-	else
-	{
-		bestdist = 800;//99999;
-				   //don't trace over 800 units away to avoid GIANT HORRIBLE SPEED HITS ^_^
-	}
-	bestindex = -1;
-
-	mins[0] = -15;
-	mins[1] = -15;
-	mins[2] = -1;
-	maxs[0] = 15;
-	maxs[1] = 15;
-	maxs[2] = 1;
-
-	while (i < gWPNum)
-	{
-		if (gWPArray[i] && gWPArray[i]->inuse)
-		{
-			VectorSubtract(org, gWPArray[i]->origin, a);
-			flLen = VectorLength(a);
-
-			if (flLen < bestdist && (RMG.integer || BotPVSCheck(org, gWPArray[i]->origin)) && OrgVisibleBox(org, mins, maxs, gWPArray[i]->origin, ignore))
-			{
-				bestdist = flLen;
-				bestindex = i;
-			}
-		}
-
-		i++;
-	}
-
-	return bestindex;
-}
-
+#if 0
 // UQ1: Added for fast random nearby waypoints...
 int DOM_GetRandomCloseWP(vec3_t org, int badwp, int unused)
 {
@@ -452,7 +405,7 @@ int DOM_GetRandomCloseVisibleWP(gentity_t *ent, vec3_t org, int ignoreEnt, int b
 
 	return GOOD_LIST[irand(0, NUM_GOOD - 1)];
 }
-
+#endif
 
 //just like GetNearestVisibleWP except without visiblity checks
 int DOM_GetNearestWP(vec3_t org, int badwp)
@@ -473,6 +426,7 @@ int DOM_GetNearestWP(vec3_t org, int badwp)
 	}
 	bestindex = -1;
 
+//#pragma omp parallel for ordered
 	for (i = 0; i < gWPNum; i++)
 	{
 		if (gWPArray[i] && gWPArray[i]->inuse && i != badwp)
@@ -488,8 +442,14 @@ int DOM_GetNearestWP(vec3_t org, int badwp)
 
 			if (flLen < bestdist)
 			{
-				bestdist = flLen;
-				bestindex = i;
+//#pragma omp critical
+				{
+//					if (flLen < bestdist)
+					{// Check it is still better, because of the critical section lock...
+						bestdist = flLen;
+						bestindex = i;
+					}
+				}
 			}
 		}
 	}
@@ -516,6 +476,7 @@ int DOM_GetNearWP(vec3_t org, int badwp)
 	}
 	bestindex = -1;
 
+//#pragma omp parallel for ordered
 	for (i = 0; i < gWPNum; i++)
 	{
 		if (gWPArray[i] && gWPArray[i]->inuse && i != badwp)
@@ -531,69 +492,16 @@ int DOM_GetNearWP(vec3_t org, int badwp)
 
 			if (flLen < bestdist && flLen >= 64)
 			{
-				bestdist = flLen;
-				bestindex = i;
+//#pragma omp critical
+				{
+//					if (flLen < bestdist)
+					{// Check it is still better, because of the critical section lock...
+						bestdist = flLen;
+						bestindex = i;
+					}
+				}
 			}
 		}
-	}
-
-	return bestindex;
-}
-
-int DOM_GetNearestVisibleWP_Goal(vec3_t org, int ignore, int badwp)
-{
-	int i;
-	float bestdist;
-	float flLen;
-	int bestindex;
-	vec3_t a, mins, maxs;
-
-	i = 0;
-	if (RMG.integer)
-	{
-		bestdist = 300;
-	}
-	else
-	{
-		//bestdist = 800;//99999;
-		bestdist = 128;//99999;
-		//don't trace over 800 units away to avoid GIANT HORRIBLE SPEED HITS ^_^
-	}
-	bestindex = -1;
-
-	mins[0] = -15;
-	mins[1] = -15;
-	mins[2] = -1;
-	maxs[0] = 15;
-	maxs[1] = 15;
-	maxs[2] = 1;
-
-	while (i < gWPNum)
-	{
-		if (gWPArray[i] && gWPArray[i]->inuse && i != badwp)
-		{
-			VectorSubtract(org, gWPArray[i]->origin, a);
-			flLen = VectorLength(a);
-
-			if (gWPArray[i]->flags & WPFLAG_WAITFORFUNC
-				|| (gWPArray[i]->flags & WPFLAG_NOMOVEFUNC)
-				|| (gWPArray[i]->flags & WPFLAG_DESTROY_FUNCBREAK)
-				|| (gWPArray[i]->flags & WPFLAG_FORCEPUSH)
-				|| (gWPArray[i]->flags & WPFLAG_FORCEPULL))
-			{//boost the distance for these waypoints so that we will try to avoid using them
-				//if at all possible
-				flLen = +500;
-			}
-
-			if (flLen < bestdist /*&& (g_RMG.integer || BotPVSCheck(org, gWPArray[i]->origin))*/ && OrgVisibleBox(org, mins, maxs, gWPArray[i]->origin, ignore))
-			{
-				bestdist = flLen;
-				bestindex = i;
-			}
-		}
-
-		//i++;
-		i += Q_irand(1, 3);
 	}
 
 	return bestindex;
@@ -605,7 +513,6 @@ int DOM_GetNearestVisibleWP(vec3_t org, int ignore, int badwp)
 {
 	int i;
 	float bestdist;
-	float flLen;
 	int bestindex;
 	vec3_t a, mins, maxs;
 
@@ -629,10 +536,13 @@ int DOM_GetNearestVisibleWP(vec3_t org, int ignore, int badwp)
 	maxs[1] = 15;
 	maxs[2] = 1;
 
-	while (i < gWPNum)
+#pragma omp parallel for ordered
+	for (i = 0; i < gWPNum; i++)
 	{
 		if (gWPArray[i] && gWPArray[i]->inuse && i != badwp)
 		{
+			float flLen;
+
 			VectorSubtract(org, gWPArray[i]->origin, a);
 			flLen = VectorLength(a);
 
@@ -646,14 +556,18 @@ int DOM_GetNearestVisibleWP(vec3_t org, int ignore, int badwp)
 				flLen = +500;
 			}
 
-			if (flLen < bestdist /*&& (g_RMG.integer || BotPVSCheck(org, gWPArray[i]->origin))*/ && OrgVisibleBox(org, mins, maxs, gWPArray[i]->origin, ignore))
+			if (flLen < bestdist && OrgVisibleBox(org, mins, maxs, gWPArray[i]->origin, ignore))
 			{
-				bestdist = flLen;
-				bestindex = i;
+#pragma omp critical
+				{
+					if (flLen < bestdist)
+					{// Check it is still better, because of the critical section lock...
+						bestdist = flLen;
+						bestindex = i;
+					}
+				}
 			}
 		}
-
-		i++;
 	}
 
 	return bestindex;
@@ -663,7 +577,6 @@ int DOM_GetNearestVisibleWP_NOBOX(vec3_t org, int ignore, int badwp)
 {
 	int i;
 	float bestdist;
-	float flLen;
 	int bestindex;
 	vec3_t a, mins, maxs;
 
@@ -687,10 +600,12 @@ int DOM_GetNearestVisibleWP_NOBOX(vec3_t org, int ignore, int badwp)
 	maxs[1] = 15;
 	maxs[2] = 1;
 
-	while (i < gWPNum)
+#pragma omp parallel for ordered
+	for (i = 0; i < gWPNum; i++)
 	{
 		if (gWPArray[i] && gWPArray[i]->inuse && i != badwp)
 		{
+			float flLen;
 			vec3_t wpOrg, fromOrg;
 
 			VectorSubtract(org, gWPArray[i]->origin, a);
@@ -711,14 +626,18 @@ int DOM_GetNearestVisibleWP_NOBOX(vec3_t org, int ignore, int badwp)
 			VectorCopy(org, fromOrg);
 			fromOrg[2] += 18;
 
-			if (flLen < bestdist /*&& (g_RMG.integer || BotPVSCheck(org, gWPArray[i]->origin))*/ && OrgVisible(fromOrg, wpOrg, ignore))
+			if (flLen < bestdist && OrgVisible(fromOrg, wpOrg, ignore))
 			{
-				bestdist = flLen;
-				bestindex = i;
+#pragma omp critical
+				{
+					if (flLen < bestdist)
+					{// Check it is still better, because of the critical section lock...
+						bestdist = flLen;
+						bestindex = i;
+					}
+				}
 			}
 		}
-
-		i++;
 	}
 
 	return bestindex;

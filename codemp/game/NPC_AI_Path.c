@@ -2,6 +2,9 @@
 #include "g_nav.h"
 #include "anims.h"
 
+//#define ___AI_PATHING_DEBUG___
+#define ___PATH_SHORTEN___
+
 extern int gWPNum;
 extern wpobject_t *gWPArray[MAX_WPARRAY_SIZE];
 
@@ -37,7 +40,7 @@ right now it's being developed, feel free to experiment
 
 int NPC_GetNextNode(gentity_t *NPC)
 {
-	short int node = WAYPOINT_NONE;
+	int node = WAYPOINT_NONE;
 
 	//we should never call this in BOTSTATE_MOVE with no goal
 	//setup the goal/path in HandleIdleState
@@ -62,6 +65,21 @@ int NPC_GetNextNode(gentity_t *NPC)
 	}
 
 	node = NPC->pathlist[NPC->pathsize-1];	//pathlist is in reverse order
+	
+#ifdef ___AI_PATHING_DEBUG___
+	//if (node < -1) { gentity_t *N = NULL; N->alt_fire = qtrue; } // force crash for pathlist debugging in relwithdebuginfo mode
+	/*if (node < -1) 
+	{// Debug output the pathlist...
+		int i;
+		trap->Print("Pathsize is [%i]. Path [", NPC->pathsize);
+		for (i = 0; i < NPC->pathsize; i++)
+		{
+			trap->Print(" %i", NPC->pathlist[i]);
+		}
+		trap->Print(" ]\n");
+	}*/
+#endif //___AI_PATHING_DEBUG___
+	
 	NPC->pathsize--;	//mark that we've moved another node
 
 	if (NPC->pathsize <= 0)
@@ -72,6 +90,7 @@ int NPC_GetNextNode(gentity_t *NPC)
 
 			NPC->wpTravelTime = level.time + 15000;
 			NPC->wpSeenTime = level.time;
+			NPC->last_move_time = level.time;
 		}
 		else
 		{
@@ -79,6 +98,7 @@ int NPC_GetNextNode(gentity_t *NPC)
 
 			NPC->wpTravelTime = level.time + 15000;
 			NPC->wpSeenTime = level.time;
+			NPC->last_move_time = level.time;
 		}
 	}
 	return node;
@@ -105,9 +125,12 @@ qboolean NPC_ShortenJump(gentity_t *NPC, int node)
 
 void NPC_ShortenPath(gentity_t *NPC)
 {
+#ifdef ___PATH_SHORTEN___
 	qboolean	found = qfalse;
 	int			position = -1;
 	int			x = 0;
+
+	if (NPC->wpCurrent < 0 || NPC->wpCurrent > gWPNum) return;
 
 	for (x = 0; x < gWPArray[NPC->wpCurrent]->neighbornum; x++)
 	{
@@ -143,6 +166,7 @@ void NPC_ShortenPath(gentity_t *NPC)
 
 		if (found) break;
 	}
+#endif //___PATH_SHORTEN___
 }
 
 qboolean NPC_FindNewWaypoint( void )
@@ -158,6 +182,7 @@ qboolean NPC_FindNewWaypoint( void )
 	{// Current one looks fine...
 		NPC->wpTravelTime = level.time + 15000;
 		NPC->wpSeenTime = level.time;
+		NPC->last_move_time = level.time;
 		return qtrue;
 	}
 
@@ -172,6 +197,7 @@ qboolean NPC_FindNewWaypoint( void )
 
 	NPC->wpTravelTime = level.time + 15000;
 	NPC->wpSeenTime = level.time;
+	NPC->last_move_time = level.time;
 
 	return qtrue; // all good, we have a new waypoint...
 }
@@ -201,7 +227,6 @@ void NPC_SetEnemyGoal( void )
 	{// Should we find a cover point???
 		if (NPC->enemy->wpCurrent <= 0 || NPC->enemy->wpCurrent < gWPNum)
 		{// Find a new waypoint for them...
-			//NPC->enemy->wpCurrent = DOM_GetRandomCloseVisibleWP(NPC->enemy, NPC->enemy->r.currentOrigin, NPC->enemy->s.number, -1);
 			NPC->enemy->wpCurrent = DOM_GetNearestWP(NPC->enemy->r.currentOrigin, NPC->enemy->s.number);
 		}
 
@@ -274,19 +299,16 @@ void NPC_SetEnemyGoal( void )
 
 			if (NPC->longTermGoal <= 0)
 			{// Fallback...
-				//NPC->longTermGoal = DOM_GetRandomCloseVisibleWP(NPC->enemy, NPC->enemy->r.currentOrigin, NPC->enemy->s.number, -1);
 				NPC->longTermGoal = DOM_GetNearestWP(NPC->enemy->r.currentOrigin, NPC->enemy->s.number);
 			}
 		}
 		else
 		{// Just head toward them....
-			//NPC->longTermGoal = DOM_GetRandomCloseVisibleWP(NPC->enemy, NPC->enemy->r.currentOrigin, NPC->enemy->s.number, -1);
 			NPC->longTermGoal = DOM_GetNearestWP(NPC->enemy->r.currentOrigin, NPC->enemy->s.number);
 		}
 	}
 	else
 	{
-		//NPC->longTermGoal = DOM_GetRandomCloseVisibleWP(NPC->enemy, NPC->enemy->r.currentOrigin, NPC->enemy->s.number, -1);
 		NPC->longTermGoal = DOM_GetNearestWP(NPC->enemy->r.currentOrigin, NPC->enemy->s.number);
 	}
 
@@ -384,6 +406,7 @@ void NPC_SetEnemyGoal( void )
 			NPC->longTermGoal = NPC->coverpointOFC = NPC->coverpointGoal = -1;
 			// Delay before next route creation...
 			NPC->wpSeenTime = level.time + 2000;
+			NPC->last_move_time = level.time;
 			return;
 		}
 	}
@@ -396,11 +419,13 @@ void NPC_SetEnemyGoal( void )
 
 		// Delay before next route creation...
 		NPC->wpSeenTime = level.time + 2000;
+		NPC->last_move_time = level.time;
 		return;
 	}
 
 	// Delay before next route creation...
 	NPC->wpSeenTime = level.time + 2000;
+	NPC->last_move_time = level.time;
 	// Delay before giving up on this new waypoint/route...
 	NPC->wpTravelTime = level.time + 15000;
 }
@@ -440,10 +465,11 @@ qboolean NPC_CopyPathFromNearbyNPC( void )
 		NPC->wpSeenTime = level.time + 2000;
 		// Delay before giving up on this new waypoint/route...
 		NPC->wpTravelTime = level.time + 15000;
+		NPC->last_move_time = level.time;
 		
 		// Don't let me be copied for 5 seconds...
 		NPC->npc_dumb_route_time = level.time + 5000;
-
+		
 		//G_Printf("NPC Waypointing Debug: NPC %i (%s) copied a %i waypoint path between waypoints %i and %i from %i (%s).", NPC->s.number, NPC->NPC_type, NPC->pathsize, NPC->wpCurrent, NPC->longTermGoal, test->s.number, test->NPC_type);
 		return qtrue;
 	}
@@ -453,14 +479,14 @@ qboolean NPC_CopyPathFromNearbyNPC( void )
 
 int NPC_FindGoal( gentity_t *NPC )
 {
-	int waypoint = irand(0, gWPNum/2)+irand(0, (gWPNum/2)-1);
+	int waypoint = irand(0, gWPNum);//irand(0, gWPNum/2)+irand(0, (gWPNum/2)-1);
 	int tries = 0;
 
 	while (gWPArray[waypoint]->inuse == qfalse || gWPArray[waypoint]->wpIsBad == qtrue)
 	{
 		if (tries > 10) return -1; // Try again next frame...
 
-		waypoint = irand(0, gWPNum/2)+irand(0, (gWPNum/2)-1);
+		waypoint = irand(0, gWPNum);//irand(0, gWPNum/2)+irand(0, (gWPNum/2)-1);
 		tries++;
 	}
 
@@ -487,7 +513,6 @@ int NPC_FindTeamGoal( gentity_t *NPC )
 			if (ent->wpCurrent < 0 || ent->wpCurrent >= gWPNum
 				|| Distance(ent->r.currentOrigin, gWPArray[ent->wpCurrent]->origin) > 128.0)
 			{// Their current waypoint is invalid. Find one for them...
-				//ent->wpCurrent = DOM_GetRandomCloseVisibleWP(ent, ent->r.currentOrigin, ent->s.number, -1);
 				ent->wpCurrent = DOM_GetNearestWP(ent->r.currentOrigin, ent->wpCurrent);
 			}
 		}
@@ -567,7 +592,6 @@ void NPC_SetNewGoalAndPath( void )
 
 	if (NPC->return_home)
 	{// Returning home...
-		//NPC->longTermGoal = DOM_GetRandomCloseVisibleWP(NPC, NPC->spawn_pos, NPC->s.number, -1);
 		NPC->longTermGoal = DOM_GetNearestWP(NPC->spawn_pos, NPC->wpCurrent);
 	}
 	else
@@ -589,30 +613,10 @@ void NPC_SetNewGoalAndPath( void )
 		}
 	}
 
-	if (NPC->longTermGoal >= 0)
+	if (NPC->longTermGoal < 0)
 	{
-		memset(NPC->pathlist, WAYPOINT_NONE, sizeof(int)*MAX_WPARRAY_SIZE);
-		NPC->pathsize = ASTAR_FindPathFast(NPC->wpCurrent, NPC->longTermGoal, NPC->pathlist, (qboolean)irand(0,1));
-
-		if (NPC->pathsize > 0)
-		{
-			//trap->Print("NPC Waypointing Debug: NPC %i created a %i waypoint path for a random goal between waypoints %i and %i.\n", NPC->s.number, NPC->pathsize, NPC->wpCurrent, NPC->longTermGoal);
-			NPC->wpLast = -1;
-			NPC->wpNext = NPC_GetNextNode(NPC);		//move to this node first, since it's where our path starts from
-
-			// Delay before next route creation...
-			NPC->wpSeenTime = level.time + 1000;//30000;
-			// Delay before giving up on this new waypoint/route...
-			NPC->wpTravelTime = level.time + 15000;
-			return;
-		}
+		NPC->longTermGoal = NPC_FindGoal( NPC );
 	}
-
-	//
-	// We failed - Pick a random goal to reduce calls to this function...
-	//
-
-	NPC->longTermGoal = NPC_FindGoal( NPC );
 
 	if (NPC->longTermGoal >= 0)
 	{
@@ -621,31 +625,19 @@ void NPC_SetNewGoalAndPath( void )
 
 		if (NPC->pathsize > 0)
 		{
-			//trap->Print("NPC Waypointing Debug: NPC %i created a %i waypoint path for a random goal between waypoints %i and %i.\n", NPC->s.number, NPC->pathsize, NPC->wpCurrent, NPC->longTermGoal);
+#ifdef ___AI_PATHING_DEBUG___
+			trap->Print("NPC Waypointing Debug: NPC %i created a %i waypoint path for a random goal between waypoints %i and %i.\n", NPC->s.number, NPC->pathsize, NPC->wpCurrent, NPC->longTermGoal);
+#endif //___AI_PATHING_DEBUG___
 			NPC->wpLast = -1;
 			NPC->wpNext = NPC_GetNextNode(NPC);		//move to this node first, since it's where our path starts from
+
 			// Delay before next route creation...
 			NPC->wpSeenTime = level.time + 1000;//30000;
 			// Delay before giving up on this new waypoint/route...
 			NPC->wpTravelTime = level.time + 15000;
+			NPC->last_move_time = level.time;
 			return;
 		}
-		else
-		{
-			//trap->Print("NPC Waypointing Debug: NPC %i failed to create a route between waypoints %i and %i.\n", NPC->s.number, NPC->wpCurrent, NPC->longTermGoal);
-			// Delay before next route creation...
-			NPC->wpSeenTime = level.time + 1000;//30000;
-			NPC_PickRandomIdleAnimantion(NPC);
-			return;
-		}
-	}
-	else
-	{
-		//trap->Print("NPC Waypointing Debug: NPC %i failed to create a route between waypoints %i and %i.\n", NPC->s.number, NPC->wpCurrent, NPC->longTermGoal);
-		// Delay before next route creation...
-		NPC->wpSeenTime = level.time + 1000;//30000;
-		NPC_PickRandomIdleAnimantion(NPC);
-		return;
 	}
 }
 
@@ -1226,39 +1218,6 @@ qboolean NPC_FollowRoutes( void )
 			// These guys have no enemies...
 			break;
 		default:
-#if 0
-			if ( NPC->client->enemyTeam != NPCTEAM_NEUTRAL )
-			{
-				NPC->enemy = NPC_PickEnemyExt( qtrue );
-
-				if (NPC_HaveValidEnemy())
-				{
-					if (NPC_IsJedi(NPC))
-					{
-						G_AddVoiceEvent( NPC, Q_irand( EV_JDETECTED1, EV_JDETECTED3 ), 15000 + irand(0, 30000) );
-					}
-					else
-					{
-						if (!NPC_IsJedi(NPC) && !NPC_IsBountyHunter(NPC))//NPC_IsStormtrooper(NPC))
-						{
-							if (irand(0,1) == 1)
-								ST_Speech( NPC, SPEECH_DETECTED, 0 );
-							else if (irand(0,1) == 1)
-								ST_Speech( NPC, SPEECH_CHASE, 0 );
-							else
-								ST_Speech( NPC, SPEECH_SIGHT, 0 );
-						}
-						else
-						{
-							G_AddVoiceEvent( NPC, Q_irand( EV_DETECTED1, EV_DETECTED5 ), 15000 + irand(0, 30000) );
-						}
-					}
-
-					//trap->Print("Found enemy!\n");
-					return qfalse;
-				}
-			}
-#endif
 			break;
 		}
 	}
@@ -1273,6 +1232,80 @@ qboolean NPC_FollowRoutes( void )
 	if (NPC_MoverCrushCheck(NPC))
 	{// There is a mover gonna crush us... Step back...
 		return qtrue;
+	}
+
+	if (NPC->isPadawan)
+	{
+		if (NPC->nextPadawanWaypointThink < level.time)
+		{
+			if (NPC->parent
+				&& (NPC->wpCurrent < 0 || NPC->wpCurrent >= gWPNum 
+				|| NPC->longTermGoal < 0 || NPC->longTermGoal >= gWPNum
+				|| Distance(NPC->parent->r.currentOrigin, gWPArray[NPC->longTermGoal]->origin) > 128))
+			{// Need a new path to our master...
+				padawanPath = qtrue;
+			}
+			else if (NPC->parent 
+				&& NPC->parent->wpCurrent >= 0 && NPC->parent->wpCurrent < gWPNum 
+				&& Distance(NPC->parent->r.currentOrigin, gWPArray[NPC->parent->wpCurrent]->origin) > 128)
+			{// Need a new path to our master...
+				padawanPath = qtrue;
+			}
+
+			NPC->nextPadawanWaypointThink = level.time + 5000; // only look for a new route every 5 seconds..
+		}
+	}
+
+	if ( padawanPath
+		|| NPC->wpCurrent < 0 || NPC->wpCurrent >= gWPNum 
+		|| NPC->longTermGoal < 0 || NPC->longTermGoal >= gWPNum 
+		|| NPC->wpSeenTime < level.time - 5000
+		|| NPC->wpTravelTime < level.time 
+		|| NPC->last_move_time < level.time - 15000 )
+	{// We hit a problem in route, or don't have one yet.. Find a new goal and path...
+#ifdef ___AI_PATHING_DEBUG___
+		if (NPC->wpSeenTime < level.time - 5000) trap->Print("PATHING DEBUG: %i wpSeenTime.\n", NPC->s.number);
+		if (NPC->wpTravelTime < level.time) trap->Print("PATHING DEBUG: %i wpTravelTime.\n", NPC->s.number);
+		if (NPC->last_move_time < level.time - 5000) trap->Print("PATHING DEBUG: %i last_move_time.\n", NPC->s.number);
+		if ((NPC->longTermGoal < 0 || NPC->longTermGoal >= gWPNum) && (NPC->wpCurrent < 0 || NPC->wpCurrent >= gWPNum)) trap->Print("PATHING DEBUG: %i wpCurrent & longTermGoal.\n", NPC->s.number);
+		else if (NPC->longTermGoal < 0 || NPC->longTermGoal >= gWPNum) trap->Print("PATHING DEBUG: %i longTermGoal.\n", NPC->s.number);
+		else if (NPC->wpCurrent < 0 || NPC->wpCurrent >= gWPNum) trap->Print("PATHING DEBUG: %i wpCurrent.\n", NPC->s.number);
+#endif //___AI_PATHING_DEBUG___
+
+		if (!padawanPath)
+		{
+			NPC_RoutingIncreaseCost( NPC->wpLast, NPC->wpCurrent );
+		}
+
+		NPC_ClearPathData(NPC);
+		NPC_SetNewGoalAndPath();
+	}
+
+	if (NPC->wpCurrent < 0 || NPC->wpCurrent >= gWPNum || NPC->longTermGoal < 0 || NPC->longTermGoal >= gWPNum)
+	{// FIXME: Try to roam out of problems...
+#ifdef ___AI_PATHING_DEBUG___
+		trap->Print("PATHING DEBUG: NO PATH!\n");
+#endif //___AI_PATHING_DEBUG___
+		NPC_ClearPathData(NPC);
+		ucmd.forwardmove = 0;
+		ucmd.rightmove = 0;
+		ucmd.upmove = 0;
+		NPC_PickRandomIdleAnimantion(NPC);
+		return qfalse; // next think...
+	}
+	
+	if (Distance(gWPArray[NPC->longTermGoal]->origin, NPC->r.currentOrigin) < 48
+		|| (NPC->s.groundEntityNum != ENTITYNUM_NONE && DistanceHorizontal(gWPArray[NPC->longTermGoal]->origin, NPC->r.currentOrigin) < 48))
+	{// We're at our goal! Find a new goal...
+#ifdef ___AI_PATHING_DEBUG___
+		trap->Print("PATHING DEBUG: HIT GOAL!\n");
+#endif //___AI_PATHING_DEBUG___
+		NPC_ClearPathData(NPC);
+		ucmd.forwardmove = 0;
+		ucmd.rightmove = 0;
+		ucmd.upmove = 0;
+		NPC_PickRandomIdleAnimantion(NPC);
+		return qfalse; // next think...
 	}
 
 	if (DistanceHorizontal(NPC->r.currentOrigin, NPC->npc_previous_pos) > 3)
@@ -1312,96 +1345,6 @@ qboolean NPC_FollowRoutes( void )
 		//if (wpDist > 512) trap->Print("To far! (%f)\n", wpDist);
 	}
 
-#if 0
-	if ( (NPC->wpCurrent >= 0 && NPC->wpCurrent < gWPNum && NPC->longTermGoal >= 0 && NPC->longTermGoal < gWPNum && wpDist <= MAX_LINK_DISTANCE)
-		&& (NPC->wpSeenTime < level.time - 1000 || NPC->wpTravelTime < level.time || NPC->last_move_time < level.time - 1000) )
-	{// Try this for 2 seconds before giving up...
-		float MAX_JUMP_DISTANCE = 192.0;
-		
-		if (NPC_IsJedi(NPC)) MAX_JUMP_DISTANCE = 512.0; // Jedi can jump further...
-
-		if (Distance(gWPArray[NPC->wpCurrent]->origin, NPC->r.currentOrigin) <= MAX_JUMP_DISTANCE
-			&& NPC_TryJump( NPC, gWPArray[NPC->wpCurrent]->origin ))
-		{// Looks like we can jump there... Let's do that instead of failing!
-			//trap->Print("%s is jumping to waypoint.\n", NPC->client->pers.netname);
-			return qtrue; // next think...
-		}
-	}
-#endif
-
-	if (NPC->isPadawan)
-	{
-		if (NPC->nextPadawanWaypointThink < level.time)
-		{
-			if (NPC->parent
-				&& (NPC->wpCurrent < 0 || NPC->wpCurrent >= gWPNum 
-				|| NPC->longTermGoal < 0 || NPC->longTermGoal >= gWPNum
-				|| Distance(NPC->parent->r.currentOrigin, gWPArray[NPC->longTermGoal]->origin) > 128))
-			{// Need a new path to our master...
-				padawanPath = qtrue;
-			}
-			else if (NPC->parent 
-				&& NPC->parent->wpCurrent >= 0 && NPC->parent->wpCurrent < gWPNum 
-				&& Distance(NPC->parent->r.currentOrigin, gWPArray[NPC->parent->wpCurrent]->origin) > 128)
-			{// Need a new path to our master...
-				padawanPath = qtrue;
-			}
-
-			NPC->nextPadawanWaypointThink = level.time + 5000; // only look for a new route every 5 seconds..
-		}
-	}
-
-	if ( padawanPath
-		|| NPC->wpCurrent < 0 || NPC->wpCurrent >= gWPNum 
-		|| NPC->longTermGoal < 0 || NPC->longTermGoal >= gWPNum 
-		//|| (wpDist > MAX_LINK_DISTANCE && NPC->wpSeenTime < level.time - 4000)
-		|| NPC->wpSeenTime < level.time - 5000
-		|| NPC->wpTravelTime < level.time 
-		|| NPC->last_move_time < level.time - 15000 )
-	{// We hit a problem in route, or don't have one yet.. Find a new goal and path...
-		//if (wpDist > MAX_LINK_DISTANCE) trap->Print("%i wpCurrent too far.\n", NPC->s.number);
-		//if (NPC->wpSeenTime < level.time - 5000) trap->Print("%i wpSeenTime.\n", NPC->s.number);
-		//if (NPC->wpTravelTime < level.time) trap->Print("%i wpTravelTime.\n", NPC->s.number);
-		//if (NPC->last_move_time < level.time - 5000) trap->Print("%i last_move_time.\n", NPC->s.number);
-
-		if (!padawanPath /*&& (wpDist > MAX_LINK_DISTANCE || NPC->wpTravelTime < level.time)*/ )
-		{
-			NPC_RoutingIncreaseCost( NPC->wpLast, NPC->wpCurrent );
-		}
-
-		NPC_ClearPathData(NPC);
-		NPC_SetNewGoalAndPath();
-
-		if (!(NPC->wpCurrent < 0 || NPC->wpCurrent >= gWPNum || NPC->longTermGoal < 0 || NPC->longTermGoal >= gWPNum))
-		{
-			NPC->wpTravelTime = level.time + 15000;
-			NPC->wpSeenTime = level.time;
-			NPC->last_move_time = level.time;
-		}
-	}
-
-	if (NPC->wpCurrent < 0 || NPC->wpCurrent >= gWPNum || NPC->longTermGoal < 0 || NPC->longTermGoal >= gWPNum)
-	{// FIXME: Try to roam out of problems...
-		NPC_ClearPathData(NPC);
-		ucmd.forwardmove = 0;
-		ucmd.rightmove = 0;
-		ucmd.upmove = 0;
-		NPC_PickRandomIdleAnimantion(NPC);
-		return qfalse; // next think...
-	}
-	
-	if (Distance(gWPArray[NPC->longTermGoal]->origin, NPC->r.currentOrigin) < 48
-		|| (NPC->s.groundEntityNum != ENTITYNUM_NONE && DistanceHorizontal(gWPArray[NPC->longTermGoal]->origin, NPC->r.currentOrigin) < 48))
-	{// We're at out goal! Find a new goal...
-		//trap->Print("HIT GOAL!\n");
-		NPC_ClearPathData(NPC);
-		ucmd.forwardmove = 0;
-		ucmd.rightmove = 0;
-		ucmd.upmove = 0;
-		NPC_PickRandomIdleAnimantion(NPC);
-		return qfalse; // next think...
-	}
-
 	if (wpDist < 48)
 	{// At current node.. Pick next in the list...
 		//trap->Print("HIT WP %i. Next WP is %i.\n", NPC->wpCurrent, NPC->wpNext);
@@ -1412,6 +1355,9 @@ qboolean NPC_FollowRoutes( void )
 
 		if (NPC->wpCurrent < 0 || NPC->wpCurrent >= gWPNum || NPC->longTermGoal < 0 || NPC->longTermGoal >= gWPNum)
 		{// FIXME: Try to roam out of problems...
+#ifdef ___AI_PATHING_DEBUG___
+			trap->Print("PATHING DEBUG: HIT ROUTE END!\n");
+#endif //___AI_PATHING_DEBUG___
 			NPC_ClearPathData(NPC);
 			ucmd.forwardmove = 0;
 			ucmd.rightmove = 0;
@@ -1425,6 +1371,7 @@ qboolean NPC_FollowRoutes( void )
 	}
 
 	NPC_FacePosition( gWPArray[NPC->wpCurrent]->origin, qfalse );
+	//NPC->s.angles[PITCH] = NPC->client->ps.viewangles[PITCH] = 0; // Init view PITCH angle so we always look forward, not down or up...
 	VectorSubtract( gWPArray[NPC->wpCurrent]->origin, NPC->r.currentOrigin, NPC->movedir );
 	
 	if (NPC_DoLiftPathing(NPC))
