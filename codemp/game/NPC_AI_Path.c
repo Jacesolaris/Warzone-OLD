@@ -1371,7 +1371,7 @@ qboolean NPC_FollowRoutes( void )
 	}
 
 	NPC_FacePosition( gWPArray[NPC->wpCurrent]->origin, qfalse );
-	//NPC->s.angles[PITCH] = NPC->client->ps.viewangles[PITCH] = 0; // Init view PITCH angle so we always look forward, not down or up...
+	NPC->s.angles[PITCH] = NPC->client->ps.viewangles[PITCH] = 0; // Init view PITCH angle so we always look forward, not down or up...
 	VectorSubtract( gWPArray[NPC->wpCurrent]->origin, NPC->r.currentOrigin, NPC->movedir );
 	
 	if (NPC_DoLiftPathing(NPC))
