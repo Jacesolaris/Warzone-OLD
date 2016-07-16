@@ -257,6 +257,10 @@ void main()
 		{// When near water edge, reduce the size of the grass...
 			heightMult = fGrassPatchWaterEdgeMod * 0.5 + 0.5;
 		}
+		else
+		{
+			controlMapScale *= 1.25;
+		}
 
 		heightMult *= controlMapScale;
 

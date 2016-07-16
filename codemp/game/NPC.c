@@ -249,6 +249,10 @@ Determines when it's ok to ditch the corpse
 
 void NPC_RemoveBody( gentity_t *self )
 {
+	// Remove NPC name...
+	self->s.NPC_NAME_ID = 0;
+	memset(self->client->pers.netname, 0, sizeof(char)*36);
+
 	CorpsePhysics( self );
 
 	self->nextthink = level.time + FRAMETIME;
@@ -609,6 +613,10 @@ DeadThink
 static void DeadThink ( void )
 {
 	trace_t	trace;
+
+	// Remove NPC name...
+	NPCS.NPC->s.NPC_NAME_ID = 0;
+	memset(NPCS.NPC->client->pers.netname, 0, sizeof(char)*36);
 
 	//HACKHACKHACKHACKHACK
 	//We should really have a seperate G2 bounding box (seperate from the physics bbox) for G2 collisions only

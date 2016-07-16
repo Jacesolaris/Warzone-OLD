@@ -339,6 +339,7 @@ void RB_UpdateDayNightCycle()
 	if (DAY_NIGHT_UPDATE_TIME == 0)
 	{// Init stuff...
 		VectorCopy4(tr.refdef.sunAmbCol, DAY_NIGHT_AMBIENT_COLOR_ORIGINAL);
+		DAY_NIGHT_CURRENT_TIME = 9.0 / 24.0; // Start at 9am...
 	}
 
 	if (DAY_NIGHT_UPDATE_TIME < nowTime)

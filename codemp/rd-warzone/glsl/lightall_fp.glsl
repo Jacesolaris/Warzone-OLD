@@ -855,20 +855,6 @@ void main()
 	#endif
 
 
-	vec4 norm = vec4(m_Normal.xyz, 0.0);
-
-	norm = GetNormal(texCoords, ParallaxOffset, pixRandom);
-	N = norm.xyz * 2.0 - 1.0;
-	//N = CombineNormal(m_Normal.xyz * 0.5 + 0.5, norm.xyz, int(u_Local9.r));
-	N.xy *= u_NormalScale.xy;
-	N.z = sqrt(clamp((0.25 - N.x * N.x) - N.y * N.y, 0.0, 1.0));
-	N = tangentToWorld * N;
-	N = normalize(N);
-
-	DETAILED_NORMAL = N;
-
-	
-
 	#if defined(USE_OVERLAY) && !defined(USE_GLOW_BUFFER)
 
 		//
@@ -919,6 +905,19 @@ void main()
 		float shadowValue = texture2D(u_ShadowMap, shadowTex).r;
 
 	#endif //defined(USE_SHADOWMAP) 
+
+
+
+	//vec4 norm = vec4(m_Normal.xyz, 0.0);
+	vec4 norm = GetNormal(texCoords, ParallaxOffset, pixRandom);
+	N = norm.xyz * 2.0 - 1.0;
+	//N = CombineNormal(m_Normal.xyz * 0.5 + 0.5, norm.xyz, int(u_Local9.r));
+	N.xy *= u_NormalScale.xy;
+	N.z = sqrt(clamp((0.25 - N.x * N.x) - N.y * N.y, 0.0, 1.0));
+	N = tangentToWorld * N;
+	N = normalize(N);
+
+	DETAILED_NORMAL = N;
 
 
 

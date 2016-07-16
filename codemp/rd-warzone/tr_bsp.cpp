@@ -3704,6 +3704,11 @@ void R_MergeLeafSurfaces(void)
 
 				shader2 = surf2->shader;
 
+				/*if (Distance(surf1->cullinfo.bounds[0], surf2->cullinfo.bounds[0]) > 1024)
+				{
+					continue;
+				}*/
+
 #ifdef __MERGE_SAME_SHADER_NAMES__
 				if (shader1 && shader2 && shader1->stages[0] && shader2->stages[0] && ( r_glslWater->integer && shader1->stages[0]->isWater && shader2->stages[0]->isWater))
 				{// UQ1: All water can be safely merged I believe...

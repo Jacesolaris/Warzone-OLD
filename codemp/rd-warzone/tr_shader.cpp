@@ -4083,7 +4083,7 @@ void StripCrap( const char *in, char *out, int destsize )
 }
 
 static void CollapseStagesToLightall(shaderStage_t *diffuse, 
-	shaderStage_t *normal, shaderStage_t *specular, shaderStage_t *lightmap/*, shaderStage_t *subsurface*/, shaderStage_t *overlay, shaderStage_t *steepmap, shaderStage_t *steepmap2, qboolean parallax, qboolean tcgen)
+	shaderStage_t *normal, shaderStage_t *specular, shaderStage_t *lightmap/*, shaderStage_t *subsurface*/, shaderStage_t *overlay, shaderStage_t *steepmap, shaderStage_t *steepmap2, shaderStage_t *splatControlMap, shaderStage_t *splat1, shaderStage_t *splat2, shaderStage_t *splat3, shaderStage_t *splat4, qboolean parallax, qboolean tcgen)
 {
 	int defs = 0;
 	qboolean hasRealNormalMap = qfalse;
@@ -4515,6 +4515,11 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 
 	if (1)
 	{
+		if (splatControlMap && splatControlMap->bundle[0].image[0] && splatControlMap->bundle[0].image[0] != tr.whiteImage)
+		{// Got one...
+			diffuse->bundle[TB_SPLATCONTROLMAP] = splatControlMap->bundle[0];
+		}
+		else
 		{
 			// Splat Control Map - We will allow each shader to have it's own map-wide spatter control image...
 			image_t *diffuseImg = diffuse->bundle[TB_DIFFUSEMAP].image[0];
@@ -4532,7 +4537,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 
 			if (splatImg)
 			{
-				ri->Printf(PRINT_WARNING, "+++++++++++++++ Loaded splat control map %s [%i x %i].\n", splatName2, splatImg->width, splatImg->height);
+				//ri->Printf(PRINT_WARNING, "+++++++++++++++ Loaded splat control map %s [%i x %i].\n", splatName2, splatImg->width, splatImg->height);
 				diffuse->bundle[TB_SPLATCONTROLMAP] = diffuse->bundle[0];
 				diffuse->bundle[TB_SPLATCONTROLMAP].numImageAnimations = 0;
 				diffuse->bundle[TB_SPLATCONTROLMAP].image[0] = splatImg;
@@ -4549,6 +4554,11 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 			}
 		}
 
+		if (splat1 && splat1->bundle[0].image[0] && splat1->bundle[0].image[0] != tr.whiteImage)
+		{// Got one...
+			diffuse->bundle[TB_SPLATMAP1] = splat1->bundle[0];
+		}
+		else
 		{
 			// Splat Map #1
 			image_t *diffuseImg = diffuse->bundle[TB_DIFFUSEMAP].image[0];
@@ -4566,7 +4576,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 
 			if (splatImg)
 			{
-				ri->Printf(PRINT_WARNING, "+++++++++++++++ Loaded splat map1 %s [%i x %i].\n", splatName2, splatImg->width, splatImg->height);
+				//ri->Printf(PRINT_WARNING, "+++++++++++++++ Loaded splat map1 %s [%i x %i].\n", splatName2, splatImg->width, splatImg->height);
 				diffuse->bundle[TB_SPLATMAP1] = diffuse->bundle[0];
 				diffuse->bundle[TB_SPLATMAP1].numImageAnimations = 0;
 				diffuse->bundle[TB_SPLATMAP1].image[0] = splatImg;
@@ -4589,6 +4599,11 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 			}
 		}
 
+		if (splat2 && splat2->bundle[0].image[0] && splat2->bundle[0].image[0] != tr.whiteImage)
+		{// Got one...
+			diffuse->bundle[TB_SPLATMAP2] = splat2->bundle[0];
+		}
+		else
 		{
 			// Splat Map #2
 			image_t *diffuseImg = diffuse->bundle[TB_DIFFUSEMAP].image[0];
@@ -4606,7 +4621,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 
 			if (splatImg)
 			{
-				ri->Printf(PRINT_WARNING, "+++++++++++++++ Loaded splat map2 %s [%i x %i].\n", splatName2, splatImg->width, splatImg->height);
+				//ri->Printf(PRINT_WARNING, "+++++++++++++++ Loaded splat map2 %s [%i x %i].\n", splatName2, splatImg->width, splatImg->height);
 				diffuse->bundle[TB_SPLATMAP2] = diffuse->bundle[0];
 				diffuse->bundle[TB_SPLATMAP2].numImageAnimations = 0;
 				diffuse->bundle[TB_SPLATMAP2].image[0] = splatImg;
@@ -4629,6 +4644,11 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 			}
 		}
 
+		if (splat3 && splat3->bundle[0].image[0] && splat3->bundle[0].image[0] != tr.whiteImage)
+		{// Got one...
+			diffuse->bundle[TB_SPLATMAP3] = splat3->bundle[0];
+		}
+		else
 		{
 			// Splat Map #3
 			image_t *diffuseImg = diffuse->bundle[TB_DIFFUSEMAP].image[0];
@@ -4646,7 +4666,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 
 			if (splatImg)
 			{
-				ri->Printf(PRINT_WARNING, "+++++++++++++++ Loaded splat map3 %s [%i x %i].\n", splatName2, splatImg->width, splatImg->height);
+				//ri->Printf(PRINT_WARNING, "+++++++++++++++ Loaded splat map3 %s [%i x %i].\n", splatName2, splatImg->width, splatImg->height);
 				diffuse->bundle[TB_SPLATMAP3] = diffuse->bundle[0];
 				diffuse->bundle[TB_SPLATMAP3].numImageAnimations = 0;
 				diffuse->bundle[TB_SPLATMAP3].image[0] = splatImg;
@@ -4669,6 +4689,11 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 			}
 		}
 
+		if (splat4 && splat4->bundle[0].image[0] && splat4->bundle[0].image[0] != tr.whiteImage)
+		{// Got one...
+			diffuse->bundle[TB_SPLATMAP4] = splat4->bundle[0];
+		}
+		else
 		{
 			// Splat Map #4
 			image_t *diffuseImg = diffuse->bundle[TB_DIFFUSEMAP].image[0];
@@ -4686,7 +4711,7 @@ static void CollapseStagesToLightall(shaderStage_t *diffuse,
 
 			if (splatImg)
 			{
-				ri->Printf(PRINT_WARNING, "+++++++++++++++ Loaded splat map4 %s [%i x %i].\n", splatName2, splatImg->width, splatImg->height);
+				//ri->Printf(PRINT_WARNING, "+++++++++++++++ Loaded splat map4 %s [%i x %i].\n", splatName2, splatImg->width, splatImg->height);
 				diffuse->bundle[TB_SPLATMAP4] = diffuse->bundle[0];
 				diffuse->bundle[TB_SPLATMAP4].numImageAnimations = 0;
 				diffuse->bundle[TB_SPLATMAP4].image[0] = splatImg;
@@ -4789,16 +4814,16 @@ static qboolean CollapseStagesToGLSL(void)
 	qboolean hasRealSteepMap = qfalse;
 	qboolean hasRealSteepMap2 = qfalse;
 
-	ri->Printf (PRINT_DEVELOPER, "Collapsing stages for shader '%s'\n", shader.name);
+	//ri->Printf (PRINT_DEVELOPER, "Collapsing stages for shader '%s'\n", shader.name);
 
 	// skip shaders with deforms
 	if (shader.numDeforms != 0)
 	{
 		skip = qtrue;
-		ri->Printf (PRINT_DEVELOPER, "> Shader has vertex deformations. Aborting stage collapsing\n");
+		//ri->Printf (PRINT_DEVELOPER, "> Shader has vertex deformations. Aborting stage collapsing\n");
 	}
 
-	ri->Printf (PRINT_DEVELOPER, "> Original shader stage order:\n");
+	//ri->Printf (PRINT_DEVELOPER, "> Original shader stage order:\n");
 
 /*
 	for ( int i = 0; i < MAX_SHADER_STAGES; i++ )
@@ -4926,7 +4951,7 @@ static qboolean CollapseStagesToGLSL(void)
 		for (i = 0; i < MAX_SHADER_STAGES; i++)
 		{
 			shaderStage_t *pStage = &stages[i];
-			shaderStage_t *diffuse, *normal, *specular, *lightmap/*, *subsurface*/, *overlay, *steep, *steep2;
+			shaderStage_t *diffuse, *normal, *specular, *lightmap/*, *subsurface*/, *overlay, *steep, *steep2, *splatControl, *splat1, *splat2, *splat3, *splat4;
 			qboolean parallax, tcgen;
 
 			if (!pStage->active)
@@ -4949,6 +4974,11 @@ static qboolean CollapseStagesToGLSL(void)
 			overlay = NULL;
 			steep = NULL;
 			steep2 = NULL;
+			splatControl = NULL;
+			splat1 = NULL;
+			splat2 = NULL;
+			splat3 = NULL;
+			splat4 = NULL;
 
 
 			// we have a diffuse map, find matching normal, specular, and lightmap
@@ -5021,6 +5051,31 @@ static qboolean CollapseStagesToGLSL(void)
 						}
 						break;
 
+					case ST_SPLATCONTROLMAP:
+						{
+							splatControl = pStage2;
+						}
+
+					case ST_SPLATMAP1:
+						{
+							splat1 = pStage2;
+						}
+
+					case ST_SPLATMAP2:
+						{
+							splat2 = pStage2;
+						}
+
+					case ST_SPLATMAP3:
+						{
+							splat3 = pStage2;
+						}
+
+					case ST_SPLATMAP4:
+						{
+							splat4 = pStage2;
+						}
+
 					case ST_COLORMAP:
 						if (pStage2->bundle[0].tcGen >= TCGEN_LIGHTMAP &&
 							pStage2->bundle[0].tcGen <= TCGEN_LIGHTMAP3 &&
@@ -5045,7 +5100,7 @@ static qboolean CollapseStagesToGLSL(void)
 				tcgen = qtrue;
 			}
 
-			CollapseStagesToLightall(diffuse, normal, specular, lightmap/*, subsurface*/, overlay, steep, steep2, parallax, tcgen);
+			CollapseStagesToLightall(diffuse, normal, specular, lightmap/*, subsurface*/, overlay, steep, steep2, splatControl, splat1, splat2, splat3, splat4, parallax, tcgen);
 		}
 
 		// deactivate lightmap stages
@@ -5112,6 +5167,31 @@ static qboolean CollapseStagesToGLSL(void)
 		if (pStage->type == ST_STEEPMAP2)
 		{
 			hasRealSteepMap2 = qfalse;
+			pStage->active = qfalse;
+		}
+
+		if (pStage->type == ST_SPLATCONTROLMAP)
+		{
+			pStage->active = qfalse;
+		}
+
+		if (pStage->type == ST_SPLATMAP1)
+		{
+			pStage->active = qfalse;
+		}
+
+		if (pStage->type == ST_SPLATMAP2)
+		{
+			pStage->active = qfalse;
+		}
+
+		if (pStage->type == ST_SPLATMAP3)
+		{
+			pStage->active = qfalse;
+		}
+
+		if (pStage->type == ST_SPLATMAP4)
+		{
 			pStage->active = qfalse;
 		}
 	}
@@ -5192,7 +5272,7 @@ static qboolean CollapseStagesToGLSL(void)
 		}
 	}
 
-	ri->Printf (PRINT_DEVELOPER, "> New shader stage order:\n");
+	//ri->Printf (PRINT_DEVELOPER, "> New shader stage order:\n");
 
 	for ( int i = 0; i < MAX_SHADER_STAGES; i++ )
 	{
@@ -5234,6 +5314,72 @@ static qboolean CollapseStagesToGLSL(void)
 		}
 
 		//ri->Printf (PRINT_DEVELOPER, "-> %s\n", stage->bundle[0].image[0]->imgName);
+	}
+
+	if (numStages > 1)
+	{
+		ri->Printf(PRINT_WARNING, "Shader %s has %i stages.\n", shader.name, numStages);
+
+		for (i = 0; i < MAX_SHADER_STAGES; i++)
+		{
+			shaderStage_t *pStage = &stages[i];
+
+			if (!pStage->active)
+				continue;
+
+			if (pStage->type == ST_NORMALMAP)
+			{
+				ri->Printf(PRINT_WARNING, "     Stage %i is NormalMap.\n", i);
+			}
+			else if (pStage->type == ST_NORMALPARALLAXMAP)
+			{
+				ri->Printf(PRINT_WARNING, "     Stage %i is NormalParallaxMap.\n", i);
+			}
+			else if (pStage->type == ST_SPECULARMAP)
+			{
+				ri->Printf(PRINT_WARNING, "     Stage %i is SpecularMap.\n", i);
+			}
+			/*else if (pStage->type == ST_SUBSURFACEMAP)
+			{
+				ri->Printf(PRINT_WARNING, "     Stage %i is SubsurfaceMap.\n", i);
+			}*/
+			else if (pStage->type == ST_OVERLAYMAP)
+			{
+				ri->Printf(PRINT_WARNING, "     Stage %i is OverlayMap.\n", i);
+			}
+			else if (pStage->type == ST_STEEPMAP)
+			{
+				ri->Printf(PRINT_WARNING, "     Stage %i is SteepMap.\n", i);
+			}
+			else if (pStage->type == ST_STEEPMAP2)
+			{
+				ri->Printf(PRINT_WARNING, "     Stage %i is SteepMap2.\n", i);
+			}
+			else if (pStage->type == ST_SPLATCONTROLMAP)
+			{
+				ri->Printf(PRINT_WARNING, "     Stage %i is SplatControlMap.\n", i);
+			}
+			else if (pStage->type == ST_SPLATMAP1)
+			{
+				ri->Printf(PRINT_WARNING, "     Stage %i is SplatMap1.\n", i);
+			}
+			else if (pStage->type == ST_SPLATMAP2)
+			{
+				ri->Printf(PRINT_WARNING, "     Stage %i is SplatMap2.\n", i);
+			}
+			else if (pStage->type == ST_SPLATMAP3)
+			{
+				ri->Printf(PRINT_WARNING, "     Stage %i is SplatMap3.\n", i);
+			}
+			else if (pStage->type == ST_SPLATMAP4)
+			{
+				ri->Printf(PRINT_WARNING, "     Stage %i is SplatMap4.\n", i);
+			}
+			else
+			{
+				ri->Printf(PRINT_WARNING, "     Stage %i is %i.\n", i, pStage->type);
+			}
+		}
 	}
 
 	return (qboolean)numStages;
@@ -5832,6 +5978,62 @@ static shader_t *FinishShader( void ) {
 				}
 				break;
 			}
+
+			case ST_SPLATCONTROLMAP:
+			{
+				if(!pStage->bundle[0].image[0])
+				{
+					ri->Printf(PRINT_WARNING, "Shader %s has a splatcontrolmap stage with no image\n", shader.name);
+					pStage->active = qfalse;
+					stage++;
+					continue;
+				}
+				break;
+			}
+			case ST_SPLATMAP1:
+			{
+				if(!pStage->bundle[0].image[0])
+				{
+					ri->Printf(PRINT_WARNING, "Shader %s has a splatmap1 stage with no image\n", shader.name);
+					pStage->active = qfalse;
+					stage++;
+					continue;
+				}
+				break;
+			}
+			case ST_SPLATMAP2:
+			{
+				if(!pStage->bundle[0].image[0])
+				{
+					ri->Printf(PRINT_WARNING, "Shader %s has a splatmap2 stage with no image\n", shader.name);
+					pStage->active = qfalse;
+					stage++;
+					continue;
+				}
+				break;
+			}
+			case ST_SPLATMAP3:
+			{
+				if(!pStage->bundle[0].image[0])
+				{
+					ri->Printf(PRINT_WARNING, "Shader %s has a splatmap3 stage with no image\n", shader.name);
+					pStage->active = qfalse;
+					stage++;
+					continue;
+				}
+				break;
+			}
+			case ST_SPLATMAP4:
+			{
+				if(!pStage->bundle[0].image[0])
+				{
+					ri->Printf(PRINT_WARNING, "Shader %s has a splatmap4 stage with no image\n", shader.name);
+					pStage->active = qfalse;
+					stage++;
+					continue;
+				}
+				break;
+			}
 		}
 
 		//
@@ -6223,12 +6425,12 @@ char uniqueGenericPlayerShader[] = "{\n"\
 "depthFunc equal\n"\
 "detail\n"\
 "}\n"\
-"{\n"\
-"map $lightmap\n"\
-"blendfunc GL_DST_COLOR GL_ZERO\n"\
-"rgbGen lightingDiffuse\n"\
-"depthFunc equal\n"\
-"}\n"\
+"//{\n"\
+"//map $lightmap\n"\
+"//blendfunc GL_DST_COLOR GL_ZERO\n"\
+"//rgbGen lightingDiffuse\n"\
+"//depthFunc equal\n"\
+"//}\n"\
 "}\n"\
 "";
 
@@ -6258,12 +6460,12 @@ char uniqueGenericArmorShader[] = "{\n"\
 "depthFunc equal\n"\
 "detail\n"\
 "}\n"\
-"{\n"\
-"map $lightmap\n"\
-"blendfunc GL_DST_COLOR GL_ZERO\n"\
-"rgbGen lightingDiffuse\n"\
-"depthFunc equal\n"\
-"}\n"\
+"//{\n"\
+"//map $lightmap\n"\
+"//blendfunc GL_DST_COLOR GL_ZERO\n"\
+"//rgbGen lightingDiffuse\n"\
+"//depthFunc equal\n"\
+"//}\n"\
 "}\n"\
 "";
 

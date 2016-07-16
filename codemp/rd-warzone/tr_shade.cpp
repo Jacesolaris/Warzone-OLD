@@ -250,6 +250,9 @@ void RB_BeginSurface( shader_t *shader, int fogNum, int cubemapIndex ) {
 	tess.currentStageIteratorFunc = state->optimalStageIteratorFunc;
 	tess.useInternalVBO = qtrue;
 
+	if (backEnd.depthFill || (tr.viewParms.flags & VPF_SHADOWPASS))
+		tess.cubemapIndex = cubemapIndex = 0;
+
 	tess.shaderTime = backEnd.refdef.floatTime - tess.shader->timeOffset;
 	if (tess.shader->clampTime && tess.shaderTime >= tess.shader->clampTime) {
 		tess.shaderTime = tess.shader->clampTime;
@@ -1781,6 +1784,11 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			break;
 		}
 
+		if ( !pStage->active )
+		{// Shouldn't this be here, just in case???
+			continue;
+		}
+
 		if ( pStage->isSurfaceSprite )
 		{
 #ifdef __SURFACESPRITES__
@@ -2261,7 +2269,14 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				//
 				// testing cube map
 				//
-				if (!(tr.viewParms.flags & VPF_NOCUBEMAPS) && input->cubemapIndex && r_cubeMapping->integer >= 1 && cubeMapStrength > 0.0)
+				if (backEnd.depthFill || (tr.viewParms.flags & VPF_SHADOWPASS))
+				{
+					GL_BindToTMU( tr.blackImage, TB_CUBEMAP);
+					GLSL_SetUniformFloat(sp, UNIFORM_CUBEMAPSTRENGTH, 0.0);
+					VectorSet4(cubeMapVec, 0.0, 0.0, 0.0, 0.0);
+					GLSL_SetUniformVec4(sp, UNIFORM_CUBEMAPINFO, cubeMapVec);
+				}
+				else if (!(tr.viewParms.flags & VPF_NOCUBEMAPS) && input->cubemapIndex && r_cubeMapping->integer >= 1 && cubeMapStrength > 0.0)
 				{
 					GL_BindToTMU( tr.cubemaps[input->cubemapIndex - 1], TB_CUBEMAP);
 					GLSL_SetUniformFloat(sp, UNIFORM_CUBEMAPSTRENGTH, cubeMapStrength);
@@ -2616,7 +2631,14 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 						}
 					}
 
-					enableTextures[3] = (r_cubeMapping->integer >= 1 && !(tr.viewParms.flags & VPF_NOCUBEMAPS) && input->cubemapIndex) ? 1.0f : 0.0f;
+					if (backEnd.depthFill || (tr.viewParms.flags & VPF_SHADOWPASS))
+					{
+						enableTextures[3] = 0.0f;
+					}
+					else
+					{
+						enableTextures[3] = (r_cubeMapping->integer >= 1 && !(tr.viewParms.flags & VPF_NOCUBEMAPS) && input->cubemapIndex) ? 1.0f : 0.0f;
+					}
 				}
 
 				GLSL_SetUniformVec4(sp, UNIFORM_ENABLETEXTURES, enableTextures);
