@@ -212,12 +212,16 @@ extern cvar_t	*r_ext_compiled_vertex_array;
 extern cvar_t	*r_ext_texture_env_add;
 extern cvar_t	*r_ext_texture_filter_anisotropic;
 
+extern cvar_t  *r_occlusion;
 extern cvar_t  *r_ext_draw_range_elements;
 extern cvar_t  *r_ext_multi_draw_arrays;
 extern cvar_t  *r_ext_texture_float;
 extern cvar_t  *r_arb_half_float_pixel;
 extern cvar_t  *r_ext_framebuffer_multisample;
 extern cvar_t  *r_arb_seamless_cube_map;
+
+extern cvar_t  *r_lazyFrustum;
+extern cvar_t  *r_cacheVisibleSurfaces;
 
 extern cvar_t  *r_mergeMultidraws;
 extern cvar_t  *r_mergeLeafSurfaces;
@@ -1833,6 +1837,9 @@ typedef struct mnode_s {
 
 	int         firstmarksurface;
 	int			nummarksurfaces;
+
+	// Occlusion culling...
+	qboolean    occluded[2];
 } mnode_t;
 
 typedef struct {
@@ -1915,6 +1922,13 @@ typedef struct {
 
 	char		*entityString;
 	char		*entityParsePoint;
+
+	// Occlusion culling...
+	int numVisibleLeafs[2];
+	mnode_t **visibleLeafs[2];
+
+	int numVisibleSurfaces[2];
+	msurface_t *visibleSurfaces[2][0x10000 /*MAX_DRAWSURFS*/];
 } world_t;
 
 
@@ -2540,6 +2554,13 @@ typedef struct trGlobals_s {
 	frontEndCounters_t		pc;
 	int						frontEndMsec;		// not in pc due to clearing issue
 
+	// Occlusion culling...
+	int						previousVisIndex[2];
+	cplane_t                previousFrustum[2][4];
+	vec3_t                  previousVisBounds[2][2];
+	qboolean                updateVisibleSurfaces[2];
+	int						updateOcclusion[2];
+
 	//
 	// put large tables at the end, so most elements will be
 	// within the +/32K indexed range on risc processors
@@ -2590,6 +2611,7 @@ typedef struct trGlobals_s {
 	// Specific to Jedi Academy
 	int						numBSPModels;
 	int						currentLevel;
+
 } trGlobals_t;
 
 struct glconfigExt_t
@@ -2649,6 +2671,7 @@ extern	cvar_t	*r_showcluster;
 
 extern cvar_t	*r_gamma;
 
+extern  cvar_t  *r_occlusion;
 extern  cvar_t  *r_ext_draw_range_elements;
 extern  cvar_t  *r_ext_multi_draw_arrays;
 extern  cvar_t  *r_ext_framebuffer_object;
@@ -2657,6 +2680,9 @@ extern  cvar_t  *r_arb_half_float_pixel;
 extern  cvar_t  *r_ext_framebuffer_multisample;
 extern  cvar_t  *r_arb_seamless_cube_map;
 extern  cvar_t  *r_arb_vertex_type_2_10_10_10_rev;
+
+extern cvar_t  *r_lazyFrustum;
+extern cvar_t  *r_cacheVisibleSurfaces;
 
 extern	cvar_t	*r_nobind;						// turns off binding to appropriate textures
 extern	cvar_t	*r_singleShader;				// make most world faces use default shader
@@ -3544,6 +3570,12 @@ typedef struct postProcessCommand_s {
 	viewParms_t	viewParms;
 } postProcessCommand_t;
 
+typedef struct {
+	int		commandId;
+	trRefdef_t	refdef;
+	viewParms_t	viewParms;
+} drawOcclusionCommand_t;
+
 typedef enum {
 	RC_END_OF_LIST,
 	RC_SET_COLOR,
@@ -3553,6 +3585,7 @@ typedef enum {
 	RC_DRAW_SURFS,
 	RC_DRAW_BUFFER,
 	RC_SWAP_BUFFERS,
+	RC_DRAW_OCCLUSION,
 	RC_SCREENSHOT,
 	RC_VIDEOFRAME,
 	RC_COLORMASK,
@@ -3748,5 +3781,18 @@ void C_LevelLoadEnd( void );
 void RB_SurfaceGhoul( CRenderableSurface *surf );
 
 image_t *R_CreateNormalMapGLSL ( const char *name, byte *pic, int width, int height, int flags, image_t	*srcImage );
+
+
+/*
+============================================================
+
+OCCLUSION QUERY
+
+============================================================
+*/
+void OQ_InitOcclusionQuery();
+void OQ_ShutdownOcclusionQuery();
+const void *RB_DrawOcclusion( const void *data );
+void R_AddDrawOcclusionCmd( viewParms_t *parms );
 
 #endif //TR_LOCAL_H

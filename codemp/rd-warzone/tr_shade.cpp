@@ -86,7 +86,7 @@ void TesselatedGlMultiDrawElements( GLenum mode, GLsizei *count, GLenum type, co
 	}
 }
 
-static void R_DrawMultiElementsVBO( int multiDrawPrimitives, glIndex_t *multiDrawMinIndex, glIndex_t *multiDrawMaxIndex, 
+void R_DrawMultiElementsVBO( int multiDrawPrimitives, glIndex_t *multiDrawMinIndex, glIndex_t *multiDrawMaxIndex, 
 	GLsizei *multiDrawNumIndexes, glIndex_t **multiDrawFirstIndex, glIndex_t numVerts, qboolean tesselation)
 {
 	if (r_tesselation->integer && tesselation)

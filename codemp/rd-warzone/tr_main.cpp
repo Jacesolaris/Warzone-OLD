@@ -1004,10 +1004,45 @@ void R_SetupProjection(viewParms_t *dest, float zProj, float zFar, qboolean comp
 	dest->projectionMatrix[7] = 0;
 	dest->projectionMatrix[11] = -1;
 	dest->projectionMatrix[15] = 0;
-	
-	// Now that we have all the data for the projection matrix we can also setup the view frustum.
-	if(computeFrustum)
-		R_SetupFrustum(dest, xmin, xmax, ymax, zProj, zFar, stereoSep);
+
+	if (!r_occlusion->integer)
+	{
+		// Now that we have all the data for the projection matrix we can also setup the view frustum.
+		if(computeFrustum)
+			R_SetupFrustum(dest, xmin, xmax, ymax, zProj, zFar, stereoSep);
+	}
+	else
+	{
+		// Now that we have all the data for the projection matrix we can also setup the view frustum.
+		if(computeFrustum)
+		{
+			if (r_lazyFrustum->integer == 2)
+			{
+				float fovx, fovy;
+				// stretch the fov slightly, so turning doesn't exit the previous fov as quickly
+				// this slows down running framerate, but increases staying still and aiming framerate
+
+				fovx = dest->fovX * 1.25f;
+				if (fovx > 179.0f)
+					fovx = 179.0f;
+
+				fovy = dest->fovY * 1.25f;
+				if (fovy > 179.0f)
+					fovy = 179.0f;
+
+				ymax = zProj * tan(fovy * M_PI / 360.0f);
+				ymin = -ymax;
+
+				xmax = zProj * tan(fovx * M_PI / 360.0f);
+				xmin = -xmax;
+
+				width = xmax - xmin;
+				height = ymax - ymin;
+			}
+
+			R_SetupFrustum(dest, xmin, xmax, ymax, zProj, zFar, stereoSep);
+		}
+	}
 }
 
 /*
@@ -2216,6 +2251,10 @@ void R_RenderView (viewParms_t *parms) {
 	R_GenerateDrawSurfs();
 
 	R_SortDrawSurfs( tr.refdef.drawSurfs + firstDrawSurf, tr.refdef.numDrawSurfs - firstDrawSurf );
+
+	if (tr.frameSceneNum == 1 && !tr.viewParms.isPortal && r_occlusion->integer) {
+		R_AddDrawOcclusionCmd(&tr.viewParms);
+	}
 
 	// draw main system development information (surface outlines, etc)
 	R_DebugGraphics();

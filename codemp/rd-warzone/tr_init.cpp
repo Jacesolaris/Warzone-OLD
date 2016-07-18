@@ -124,6 +124,7 @@ cvar_t	*r_ext_texture_env_add;
 cvar_t	*r_ext_texture_filter_anisotropic;
 cvar_t	*r_ext_preferred_tc_method;
 
+cvar_t  *r_occlusion;
 cvar_t  *r_ext_draw_range_elements;
 cvar_t  *r_ext_multi_draw_arrays;
 cvar_t  *r_ext_texture_float;
@@ -131,6 +132,9 @@ cvar_t  *r_arb_half_float_pixel;
 cvar_t  *r_ext_framebuffer_multisample;
 cvar_t  *r_arb_seamless_cube_map;
 cvar_t  *r_arb_vertex_type_2_10_10_10_rev;
+
+cvar_t  *r_lazyFrustum;
+cvar_t  *r_cacheVisibleSurfaces;
 
 cvar_t  *r_mergeMultidraws;
 cvar_t  *r_mergeLeafSurfaces;
@@ -1367,6 +1371,7 @@ void R_Register( void )
 	r_ext_texture_env_add = ri->Cvar_Get( "r_ext_texture_env_add", "1", CVAR_ARCHIVE | CVAR_LATCH);
 	r_ext_preferred_tc_method = ri->Cvar_Get( "r_ext_preferred_tc_method", "0", CVAR_ARCHIVE | CVAR_LATCH );
 
+	r_occlusion = ri->Cvar_Get( "r_occlusion", "0", CVAR_ARCHIVE);
 	r_ext_draw_range_elements = ri->Cvar_Get( "r_ext_draw_range_elements", "1", CVAR_ARCHIVE | CVAR_LATCH);
 	r_ext_multi_draw_arrays = ri->Cvar_Get( "r_ext_multi_draw_arrays", "1", CVAR_ARCHIVE | CVAR_LATCH);
 	r_ext_texture_float = ri->Cvar_Get( "r_ext_texture_float", "1", CVAR_ARCHIVE | CVAR_LATCH);
@@ -1375,6 +1380,9 @@ void R_Register( void )
 	r_arb_seamless_cube_map = ri->Cvar_Get( "r_arb_seamless_cube_map", "0", CVAR_ARCHIVE | CVAR_LATCH);
 	r_arb_vertex_type_2_10_10_10_rev = ri->Cvar_Get( "r_arb_vertex_type_2_10_10_10_rev", "1", CVAR_ARCHIVE | CVAR_LATCH);
 	r_ext_texture_filter_anisotropic = ri->Cvar_Get( "r_ext_texture_filter_anisotropic", "0", CVAR_ARCHIVE );
+
+	r_lazyFrustum = ri->Cvar_Get("r_lazyFrustum", "0", CVAR_ARCHIVE);
+	r_cacheVisibleSurfaces = ri->Cvar_Get("r_cacheVisibleSurfaces", "0", CVAR_ARCHIVE);
 	
 	r_dynamicGlow						= ri->Cvar_Get( "r_dynamicGlow",			"1",		CVAR_ARCHIVE );
 	r_dynamicGlowPasses					= ri->Cvar_Get( "r_dynamicGlowPasses",		"5",		CVAR_ARCHIVE );
@@ -1830,6 +1838,11 @@ void R_Init( void ) {
 
 	int shadersStartTime = GLSL_BeginLoadGPUShaders();
 
+	//if (r_occlusion->integer)
+	{
+		OQ_InitOcclusionQuery();
+	}
+
 	R_InitVBOs();
 
 	R_InitShaders (qfalse);
@@ -1898,6 +1911,11 @@ void RE_Shutdown( qboolean destroyWindow, qboolean restarting ) {
 		R_DeleteTextures();
 		R_ShutdownVBOs();
 		GLSL_ShutdownGPUShaders();
+
+		//if (r_occlusion->integer)
+		{
+			OQ_ShutdownOcclusionQuery();
+		}
 
 		if ( restarting )
 		{

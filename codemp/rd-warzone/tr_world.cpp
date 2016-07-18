@@ -37,7 +37,7 @@ qboolean R_CULL_InFOV( vec3_t spot, vec3_t from )
 	int hFOV = 100;//backEnd.refdef.fov_x + 5.0;//100;
 	int vFOV = 140;//backEnd.refdef.fov_y + 5.0;//100;
 	
-	TR_AxisToAngles(tr.refdef.viewaxis, fromAngles);
+	TR_AxisToAngles(backEnd.refdef.viewaxis/*tr.refdef.viewaxis*/, fromAngles);
 
 	VectorSubtract ( spot, from, deltaVector );
 	vectoangles ( deltaVector, angles );
@@ -72,7 +72,7 @@ qboolean R_Box_In_FOV ( vec3_t mins, vec3_t maxs )
 
 static qboolean	R_FovCullSurface( msurface_t *surf ) 
 {
-	if (r_fovCull->integer && backEnd.viewParms.targetFbo != tr.renderCubeFbo)
+	if (r_fovCull->integer && backEnd.viewParms.targetFbo != tr.renderCubeFbo /*&& backEnd.depthFill*/)
 	{
 #if 1
 		vec3_t bounds[2];
@@ -540,7 +540,7 @@ static int R_PshadowSurface( msurface_t *surf, int pshadowBits ) {
 R_AddWorldSurface
 ======================
 */
-static void R_AddWorldSurface( msurface_t *surf, int dlightBits, int pshadowBits ) {
+static void R_AddWorldSurface( msurface_t *surf, int dlightBits, int pshadowBits, qboolean dontCache ) {
 	// FIXME: bmodel fog?
 	int cubemapIndex = 0;
 
@@ -563,14 +563,35 @@ static void R_AddWorldSurface( msurface_t *surf, int dlightBits, int pshadowBits
 	}
 #endif
 
-	if ((backEnd.refdef.rdflags & RDF_BLUR) || (tr.viewParms.flags & VPF_SHADOWPASS) /*|| (backEnd.viewParms.flags & VPF_DEPTHSHADOW)*/)
+	if ((backEnd.refdef.rdflags & RDF_BLUR) || (tr.viewParms.flags & VPF_SHADOWPASS) || backEnd.depthFill /*|| (backEnd.viewParms.flags & VPF_DEPTHSHADOW)*/)
 		cubemapIndex = 0;
 	else if (surf->cubemapIndex >= 1 && Distance(tr.refdef.vieworg, tr.cubemapOrigins[surf->cubemapIndex-1]) < r_cubemapCullRange->value * r_cubemapCullFalloffMult->value)
 		cubemapIndex = surf->cubemapIndex;
 	else
 		cubemapIndex = 0;
 
-	R_AddDrawSurf( surf->data, surf->shader, surf->fogIndex, dlightBits, R_IsPostRenderEntity (tr.currentEntityNum, tr.currentEntity), cubemapIndex );
+	if (!r_occlusion->integer)
+	{
+		R_AddDrawSurf( surf->data, surf->shader, surf->fogIndex, dlightBits, R_IsPostRenderEntity (tr.currentEntityNum, tr.currentEntity), cubemapIndex );
+	}
+	else
+	{
+		if (dontCache)
+		{
+			R_AddDrawSurf( surf->data, surf->shader, surf->fogIndex, dlightBits, R_IsPostRenderEntity (tr.currentEntityNum, tr.currentEntity), cubemapIndex );
+		}
+		else
+		{
+			int scene = tr.viewParms.isPortal ? 1 : 0;
+
+			if (tr.world->numVisibleSurfaces[scene] == MAX_DRAWSURFS)
+			{
+				ri->Printf(PRINT_ALL, "R_AddWorldSurface(): MAX_DRAWSURFS hit\n");
+				return;
+			}
+			tr.world->visibleSurfaces[scene][tr.world->numVisibleSurfaces[scene]++] = surf;
+		}
+	}
 }
 
 /*
@@ -610,7 +631,7 @@ void R_AddBrushModelSurfaces ( trRefEntity_t *ent ) {
 		if (tr.world->surfacesViewCount[surf] != tr.viewCount)
 		{
 			tr.world->surfacesViewCount[surf] = tr.viewCount;
-			R_AddWorldSurface( tr.world->surfaces + surf, tr.currentEntity->needDlights, 0 );
+			R_AddWorldSurface( tr.world->surfaces + surf, tr.currentEntity->needDlights, 0, qtrue );
 		}
 	}
 }
@@ -840,6 +861,13 @@ static void R_RecursiveWorldNode( mnode_t *node, int planeBits, int dlightBits, 
 			tr.viewParms.visBounds[1][2] = node->maxs[2];
 		}
 
+		if (r_occlusion->integer)
+		{// Occlusion culling...
+			int scene = tr.viewParms.isPortal ? 1 : 0;
+			tr.world->visibleLeafs[scene][tr.world->numVisibleLeafs[scene]++] = node;
+			node->occluded[scene] = qfalse;
+		}
+
 		// add merged and unmerged surfaces
 		if (tr.world->viewSurfaces && !r_nocurves->integer)
 			view = tr.world->viewSurfaces + node->firstmarksurface;
@@ -991,16 +1019,77 @@ static void R_MarkLeaves (void) {
 
 	// if the cluster is the same and the area visibility matrix
 	// hasn't changed, we don't need to mark everything again
-
-	for(i = 0; i < MAX_VISCOUNTS; i++)
+	if (!r_occlusion->integer)
 	{
-		// if the areamask or r_showcluster was modified, invalidate all visclusters
-		// this caused doors to open into undrawn areas
-		if (tr.refdef.areamaskModified || r_showcluster->modified)
+		for(i = 0; i < MAX_VISCOUNTS; i++)
 		{
-			tr.visClusters[i] = -2;
+			// if the areamask or r_showcluster was modified, invalidate all visclusters
+			// this caused doors to open into undrawn areas
+			if (tr.refdef.areamaskModified || r_showcluster->modified)
+			{
+				tr.visClusters[i] = -2;
+			}
+			else if(tr.visClusters[i] == cluster)
+			{
+				if(tr.visClusters[i] != tr.visClusters[tr.visIndex] && r_showcluster->integer)
+				{
+					ri->Printf(PRINT_ALL, "found cluster:%i  area:%i  index:%i\n", cluster, leaf->area, i);
+				}
+				tr.visIndex = i;
+				return;
+			}
 		}
-		else if(tr.visClusters[i] == cluster)
+
+		tr.visIndex = (tr.visIndex + 1) % MAX_VISCOUNTS;
+		tr.visCounts[tr.visIndex]++;
+		tr.visClusters[tr.visIndex] = cluster;
+
+		if ( r_showcluster->modified || r_showcluster->integer ) {
+			r_showcluster->modified = qfalse;
+			if ( r_showcluster->integer ) {
+				ri->Printf( PRINT_ALL, "cluster:%i  area:%i\n", cluster, leaf->area );
+			}
+		}
+
+		vis = R_ClusterPVS(tr.visClusters[tr.visIndex]);
+
+		for (i=0,leaf=tr.world->nodes ; i<tr.world->numnodes ; i++, leaf++) {
+			cluster = leaf->cluster;
+			if ( cluster < 0 || cluster >= tr.world->numClusters ) {
+				continue;
+			}
+
+			// check general pvs
+			if ( vis && !(vis[cluster>>3] & (1<<(cluster&7))) ) {
+				continue;
+			}
+
+			// check for door connection
+			if ( (tr.refdef.areamask[leaf->area>>3] & (1<<(leaf->area&7)) ) ) {
+				continue;		// not visible
+			}
+
+			parent = leaf;
+			do {
+				if(parent->visCounts[tr.visIndex] == tr.visCounts[tr.visIndex])
+					break;
+				parent->visCounts[tr.visIndex] = tr.visCounts[tr.visIndex];
+				parent = parent->parent;
+			} while (parent);
+		}
+	}
+	else
+	{
+		for(i = 0; i < MAX_VISCOUNTS; i++)
+		{
+			if(tr.visClusters[i] == cluster)
+			{
+				//tr.visIndex = i;
+				break;
+			}
+		}
+
+		if(i != MAX_VISCOUNTS && !tr.refdef.areamaskModified && !r_showcluster->modified)// && !r_dynamicBspOcclusionCulling->modified)
 		{
 			if(tr.visClusters[i] != tr.visClusters[tr.visIndex] && r_showcluster->integer)
 			{
@@ -1009,44 +1098,66 @@ static void R_MarkLeaves (void) {
 			tr.visIndex = i;
 			return;
 		}
-	}
 
-	tr.visIndex = (tr.visIndex + 1) % MAX_VISCOUNTS;
-	tr.visCounts[tr.visIndex]++;
-	tr.visClusters[tr.visIndex] = cluster;
-
-	if ( r_showcluster->modified || r_showcluster->integer ) {
-		r_showcluster->modified = qfalse;
-		if ( r_showcluster->integer ) {
-			ri->Printf( PRINT_ALL, "cluster:%i  area:%i\n", cluster, leaf->area );
+		// if we don't reuse visIndex i, we'll have two cached visclusters with the same cluster number
+		// this caused doors to open into undrawn areas
+		if (i != MAX_VISCOUNTS)
+		{
+			tr.visIndex = i;
 		}
-	}
-
-	vis = R_ClusterPVS(tr.visClusters[tr.visIndex]);
-	
-	for (i=0,leaf=tr.world->nodes ; i<tr.world->numnodes ; i++, leaf++) {
-		cluster = leaf->cluster;
-		if ( cluster < 0 || cluster >= tr.world->numClusters ) {
-			continue;
+		else
+		{
+			tr.visIndex = (tr.visIndex + 1) % MAX_VISCOUNTS;
 		}
 
-		// check general pvs
-		if ( vis && !(vis[cluster>>3] & (1<<(cluster&7))) ) {
-			continue;
+		tr.visCounts[tr.visIndex]++;
+		tr.visClusters[tr.visIndex] = cluster;
+
+		if ( r_showcluster->modified || r_showcluster->integer ) {
+			r_showcluster->modified = qfalse;
+			if ( r_showcluster->integer ) {
+				ri->Printf( PRINT_ALL, "cluster:%i  area:%i\n", cluster, leaf->area );
+			}
 		}
 
-		// check for door connection
-		if ( (tr.refdef.areamask[leaf->area>>3] & (1<<(leaf->area&7)) ) ) {
-			continue;		// not visible
+		// set all nodes to visible if there is no vis
+		// this caused some levels to simply not render
+		if (r_novis->integer || !tr.world->vis || tr.visClusters[tr.visIndex] == -1) {
+			for (i=0 ; i<tr.world->numnodes ; i++) {
+				if (tr.world->nodes[i].contents != CONTENTS_SOLID) {
+					tr.world->nodes[i].visCounts[tr.visIndex] = tr.visCounts[tr.visIndex];
+				}
+			}
+			return;
 		}
 
-		parent = leaf;
-		do {
-			if(parent->visCounts[tr.visIndex] == tr.visCounts[tr.visIndex])
-				break;
-			parent->visCounts[tr.visIndex] = tr.visCounts[tr.visIndex];
-			parent = parent->parent;
-		} while (parent);
+		vis = R_ClusterPVS(tr.visClusters[tr.visIndex]);
+
+		for (i=0,leaf=tr.world->nodes ; i<tr.world->numnodes ; i++, leaf++) {
+			cluster = leaf->cluster;
+
+			if ( cluster < 0 || cluster >= tr.world->numClusters ) {
+				continue;
+			}
+
+			// check general pvs
+			if ( vis && !(vis[cluster>>3] & (1<<(cluster&7))) ) {
+				continue;
+			}
+
+			// check for door connection
+			if ( (tr.refdef.areamask[leaf->area>>3] & (1<<(leaf->area&7)) ) ) {
+				continue;		// not visible
+			}
+
+			parent = leaf;
+			do {
+				if(parent->visCounts[tr.visIndex] == tr.visCounts[tr.visIndex])
+					break;
+				parent->visCounts[tr.visIndex] = tr.visCounts[tr.visIndex];
+				parent = parent->parent;
+			} while (parent);
+		}
 	}
 }
 
@@ -1397,6 +1508,8 @@ void R_AddWorldSurfaces (void) {
 #ifdef __PSHADOWS__
 	int pshadowBits;//, dlightBits;
 #endif
+	int changeFrustum;
+	int scene;
 
 	if ( !r_drawworld->integer ) {
 		return;
@@ -1417,12 +1530,102 @@ void R_AddWorldSurfaces (void) {
 	tr.currentEntityNum = REFENTITYNUM_WORLD;
 	tr.shiftedEntityNum = tr.currentEntityNum << QSORT_REFENTITYNUM_SHIFT;
 
+	scene = tr.viewParms.isPortal ? 1 : 0;
+
 	// determine which leaves are in the PVS / areamask
 	if (!(tr.viewParms.flags & VPF_DEPTHSHADOW))
 		R_MarkLeaves ();
 
-	// clear out the visible min/max
-	ClearBounds( tr.viewParms.visBounds[0], tr.viewParms.visBounds[1] );
+	if (!r_occlusion->integer)
+	{
+		// clear out the visible min/max
+		ClearBounds( tr.viewParms.visBounds[0], tr.viewParms.visBounds[1] );
+	}
+	else
+	{
+		if (!r_lazyFrustum->integer)
+		{
+			changeFrustum = 1;
+		}
+		else
+		{
+			changeFrustum = 0;
+			if (tr.visIndex != tr.previousVisIndex[scene] || tr.refdef.areamaskModified)
+			{
+				tr.previousVisIndex[scene] = tr.visIndex;
+				changeFrustum = 1;
+			}
+
+			// force a frustum change every 300 frames 
+			//if (tr.framesSincePreviousFrustum > 300)
+			//{
+			//changeFrustum = 1;
+			//}
+		}
+
+		if (!changeFrustum)
+		{
+			//clip new view frustum against old one
+			vec3_t frustumpoints[5];
+			vec3_t vec;
+			float ymax, ymin, xmax, xmin, zProj;
+			int i, j;
+
+			// this next bit of code is from R_SetupProjection() in tr_main.c
+			zProj = 2048; // make this extra large
+
+			ymax = zProj * tan(tr.viewParms.fovY * M_PI / 360.0f);
+			ymin = -ymax;
+
+			xmax = zProj * tan(tr.viewParms.fovX * M_PI / 360.0f);
+			xmin = -xmax;
+
+			// create five points which represent the view pyramid
+			VectorCopy(tr.viewParms.ori.origin, frustumpoints[0]);
+
+			VectorMA(frustumpoints[0], zProj, tr.viewParms.ori.axis[0], frustumpoints[1]);
+			VectorCopy(frustumpoints[1], frustumpoints[2]);
+			VectorCopy(frustumpoints[1], frustumpoints[3]);
+			VectorCopy(frustumpoints[1], frustumpoints[4]);
+
+			VectorScale(tr.viewParms.ori.axis[1], xmin, vec);
+			VectorAdd(vec, frustumpoints[1], frustumpoints[1]);
+			VectorAdd(vec, frustumpoints[3], frustumpoints[3]);
+
+			VectorScale(tr.viewParms.ori.axis[1], xmax, vec);
+			VectorAdd(vec, frustumpoints[2], frustumpoints[2]);
+			VectorAdd(vec, frustumpoints[4], frustumpoints[4]);
+
+			VectorScale(tr.viewParms.ori.axis[2], ymin, vec);
+			VectorAdd(vec, frustumpoints[1], frustumpoints[1]);
+			VectorAdd(vec, frustumpoints[2], frustumpoints[2]);
+
+			VectorScale(tr.viewParms.ori.axis[2], ymax, vec);
+			VectorAdd(vec, frustumpoints[3], frustumpoints[3]);
+			VectorAdd(vec, frustumpoints[4], frustumpoints[4]);
+
+			for(i = 0; i < 5; i++)
+			{
+				for(j = 0; j < 4 /*FRUSTUM_PLANES*/; j++)
+				{
+					cplane_t *frust = &tr.previousFrustum[scene][j];
+					float dot;
+
+					dot = DotProduct(frustumpoints[i], frust->normal);
+
+					if (dot < frust->dist - 0.001f)
+					{
+						// completely outside frustum
+						changeFrustum = 1;
+						break;
+					}
+				}
+
+				if (changeFrustum)
+					break;
+			}
+		}
+	}
 
 	// perform frustum culling and flag all the potentially visible surfaces
 	tr.refdef.num_dlights = min (tr.refdef.num_dlights, 32) ;
@@ -1454,14 +1657,92 @@ void R_AddWorldSurfaces (void) {
 #endif
 	}
 
+	if (!r_occlusion->integer)
+	{
 #ifdef __PSHADOWS__
-	R_RecursiveWorldNode( tr.world->nodes, planeBits, 0/*dlightBits*/, pshadowBits);
+		R_RecursiveWorldNode( tr.world->nodes, planeBits, 0/*dlightBits*/, pshadowBits);
 #else //!__PSHADOWS__
-	R_RecursiveWorldNode( tr.world->nodes, planeBits, 0/*dlightBits*/, 0/*pshadowBits*/);
+		R_RecursiveWorldNode( tr.world->nodes, planeBits, 0/*dlightBits*/, 0/*pshadowBits*/);
 #endif //__PSHADOWS__
+	}
+	else
+	{
+		if (changeFrustum)
+		{
+			int i;
+
+			// clear out the visible min/max
+			ClearBounds( tr.viewParms.visBounds[0], tr.viewParms.visBounds[1] );
+
+			tr.world->numVisibleLeafs[scene] = 0;
+			//R_RecursiveWorldNode( tr.world->nodes, 15, ( 1 << tr.refdef.num_dlights ) - 1 );
+			R_RecursiveWorldNode( tr.world->nodes, /*15*/planeBits, 0, 0 );
+
+			VectorCopy( tr.viewParms.visBounds[0], tr.previousVisBounds[scene][0]);
+			VectorCopy( tr.viewParms.visBounds[1], tr.previousVisBounds[scene][1]);
+			for (i = 0; i < 4; i++)
+			{
+				VectorCopy(tr.viewParms.frustum[i].normal, tr.previousFrustum[scene][i].normal);
+				tr.previousFrustum[scene][i].dist = tr.viewParms.frustum[i].dist;
+				tr.previousFrustum[scene][i].type = tr.viewParms.frustum[i].type;
+				tr.previousFrustum[scene][i].signbits = tr.viewParms.frustum[i].signbits;
+			}
+			//tr.previousFrustumTime = ri.Milliseconds();
+			//tr.framesSincePreviousFrustum = 0;
+			tr.updateVisibleSurfaces[scene] = qtrue;
+			tr.updateOcclusion[scene] = qtrue;
+		}
+		else
+		{
+			VectorCopy( tr.previousVisBounds[scene][0], tr.viewParms.visBounds[0]);
+			VectorCopy( tr.previousVisBounds[scene][1], tr.viewParms.visBounds[1]);
+		}
+
+		if (!r_cacheVisibleSurfaces->integer || tr.updateVisibleSurfaces[scene])
+		{
+			int i;
+
+			tr.world->numVisibleSurfaces[scene] = 0;
+
+			for (i = 0; i < tr.world->numVisibleLeafs[scene]; i++)
+			{
+				mnode_t *leaf = tr.world->visibleLeafs[scene][i];
+				int c;
+
+				if (leaf->occluded[scene])
+					continue;
+
+				// add the individual surfaces
+				c = leaf->nummarksurfaces;
+				while (c--) {
+					// the surface may have already been added if it
+					// spans multiple leafs
+					int *mark = (tr.world->marksurfaces + leaf->firstmarksurface + c);
+					msurface_t *surf = tr.world->surfaces + *mark;
+					R_AddWorldSurface( surf, 0 /*dlightBits*/, 0, r_cacheVisibleSurfaces->integer ? qfalse : qtrue);
+				}
+			}
+
+			tr.updateVisibleSurfaces[scene] = qfalse;
+		}
+		//ri.Printf(PRINT_ALL, "Change Frustum: %d\n", changeFrustum);
+
+		if (r_cacheVisibleSurfaces->integer)
+		{
+			int i;
+
+			for (i = 0; i < tr.world->numVisibleSurfaces[scene]; i++)
+			{
+				msurface_t *surf = tr.world->visibleSurfaces[scene][i];
+				//R_AddDrawSurf( surf->data, surf->shader, surf->fogIndex, 0 /*dlightBits*/, 0, 0 );
+				R_AddWorldSurface( surf, 0 /*dlightBits*/, 0, qtrue);
+			}
+		}
+	}
 
 	// now add all the potentially visible surfaces
 	// also mask invisible dlights for next frame
+	if (!r_occlusion->integer)
 	{
 		int i;
 
@@ -1473,9 +1754,9 @@ void R_AddWorldSurfaces (void) {
 				continue;
 
 #ifdef __PSHADOWS__
-			R_AddWorldSurface( tr.world->surfaces + i, 0/*tr.world->surfacesDlightBits[i]*/, tr.world->surfacesPshadowBits[i] );
+			R_AddWorldSurface( tr.world->surfaces + i, 0/*tr.world->surfacesDlightBits[i]*/, tr.world->surfacesPshadowBits[i], qtrue );
 #else //!__PSHADOWS__
-			R_AddWorldSurface( tr.world->surfaces + i, 0/*tr.world->surfacesDlightBits[i]*/, 0/*tr.world->surfacesPshadowBits[i]*/ );
+			R_AddWorldSurface( tr.world->surfaces + i, 0/*tr.world->surfacesDlightBits[i]*/, 0/*tr.world->surfacesPshadowBits[i]*/, qtrue );
 #endif //__PSHADOWS__
 			//tr.refdef.dlightMask |= tr.world->surfacesDlightBits[i];
 
@@ -1490,9 +1771,9 @@ void R_AddWorldSurfaces (void) {
 				continue;
 
 #ifdef __PSHADOWS__
-			R_AddWorldSurface( tr.world->mergedSurfaces + i, 0/*tr.world->mergedSurfacesDlightBits[i]*/, tr.world->mergedSurfacesPshadowBits[i] );
+			R_AddWorldSurface( tr.world->mergedSurfaces + i, 0/*tr.world->mergedSurfacesDlightBits[i]*/, tr.world->mergedSurfacesPshadowBits[i], qtrue );
 #else //!__PSHADOWS__
-			R_AddWorldSurface( tr.world->mergedSurfaces + i, 0/*tr.world->mergedSurfacesDlightBits[i]*/, 0/*tr.world->mergedSurfacesPshadowBits[i]*/ );
+			R_AddWorldSurface( tr.world->mergedSurfaces + i, 0/*tr.world->mergedSurfacesDlightBits[i]*/, 0/*tr.world->mergedSurfacesPshadowBits[i]*/, qtrue );
 #endif //__PSHADOWS__
 			//tr.refdef.dlightMask |= tr.world->mergedSurfacesDlightBits[i];
 

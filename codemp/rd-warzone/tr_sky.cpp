@@ -517,6 +517,15 @@ static void DrawSkyBox( shader_t *shader )
 {
 	int		i;
 
+	if (r_occlusion->integer)
+	{
+		tess.numIndexes = 0;
+		tess.numVertexes = 0;
+		tess.firstIndex = 0;
+		tess.minIndex = 0;
+		tess.maxIndex = 0;
+	}
+
 	sky_min = 0;
 	sky_max = 1;
 

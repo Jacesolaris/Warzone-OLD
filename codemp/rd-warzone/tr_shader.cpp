@@ -5462,6 +5462,12 @@ static void FixRenderCommandList( int newShader ) {
 					curCmd = (const void *)(sb_cmd + 1);
 					break;
 					}
+				case RC_DRAW_OCCLUSION:
+					{
+					const drawOcclusionCommand_t *do_cmd = (const drawOcclusionCommand_t *)curCmd;
+					curCmd = (const void *)(do_cmd + 1);
+					break;
+					}
 				case RC_END_OF_LIST:
 				default:
 					return;
@@ -6322,7 +6328,7 @@ char uniqueGenericGlow[] = "{\n"\
 
 char uniqueGenericFoliageShader[] = "{\n"\
 "qer_editorimage	%s\n"\
-"q3map_alphashadow\n"\
+"//q3map_alphashadow\n"\
 "q3map_material	GreenLeaves\n"\
 "surfaceparm	trans\n"\
 "surfaceparm	noimpact\n"\
@@ -6353,7 +6359,7 @@ char uniqueGenericFoliageShader[] = "{\n"\
 
 char uniqueGenericFoliageBillboardShader[] = "{\n"\
 "qer_editorimage	%s\n"\
-"q3map_alphashadow\n"\
+"//q3map_alphashadow\n"\
 "q3map_material	DryLeaves\n"\
 "surfaceparm	trans\n"\
 "surfaceparm	noimpact\n"\
@@ -6379,7 +6385,7 @@ char uniqueGenericFoliageBillboardShader[] = "{\n"\
 
 char uniqueGenericFoliageTreeShader[] = "{\n"\
 "qer_editorimage	%s\n"\
-"q3map_alphashadow\n"\
+"//q3map_alphashadow\n"\
 "q3map_material	solidwood\n"\
 "surfaceparm	noimpact\n"\
 "surfaceparm	nomarks\n"\
@@ -6403,7 +6409,7 @@ char uniqueGenericFoliageTreeShader[] = "{\n"\
 char uniqueGenericPlayerShader[] = "{\n"\
 "qer_editorimage	%s\n"\
 "//q3map_nolightmap\n"\
-"q3map_alphashadow\n"\
+"//q3map_alphashadow\n"\
 "surfaceparm	trans\n"\
 "surfaceparm	noimpact\n"\
 "surfaceparm	nomarks\n"\
@@ -6425,18 +6431,18 @@ char uniqueGenericPlayerShader[] = "{\n"\
 "depthFunc equal\n"\
 "detail\n"\
 "}\n"\
-"//{\n"\
-"//map $lightmap\n"\
-"//blendfunc GL_DST_COLOR GL_ZERO\n"\
-"//rgbGen lightingDiffuse\n"\
-"//depthFunc equal\n"\
-"//}\n"\
+"{\n"\
+"map $lightmap\n"\
+"blendfunc GL_DST_COLOR GL_ZERO\n"\
+"rgbGen lightingDiffuse\n"\
+"depthFunc equal\n"\
+"}\n"\
 "}\n"\
 "";
 
 char uniqueGenericArmorShader[] = "{\n"\
 "qer_editorimage	%s\n"\
-"q3map_alphashadow\n"\
+"//q3map_alphashadow\n"\
 "q3map_material	armor\n"\
 "surfaceparm trans\n"\
 "surfaceparm	noimpact\n"\
@@ -6460,19 +6466,19 @@ char uniqueGenericArmorShader[] = "{\n"\
 "depthFunc equal\n"\
 "detail\n"\
 "}\n"\
-"//{\n"\
-"//map $lightmap\n"\
-"//blendfunc GL_DST_COLOR GL_ZERO\n"\
-"//rgbGen lightingDiffuse\n"\
-"//depthFunc equal\n"\
-"//}\n"\
+"{\n"\
+"map $lightmap\n"\
+"blendfunc GL_DST_COLOR GL_ZERO\n"\
+"rgbGen lightingDiffuse\n"\
+"depthFunc equal\n"\
+"}\n"\
 "}\n"\
 "";
 
 char uniqueGenericMetalShader[] = "{\n"\
 "qer_editorimage	%s\n"\
 "q3map_material	hollowmetal\n"\
-"q3map_alphashadow\n"\
+"//q3map_alphashadow\n"\
 "surfaceparm	trans\n"\
 "surfaceparm	noimpact\n"\
 "surfaceparm	nomarks\n"\
@@ -6507,7 +6513,7 @@ char uniqueGenericMetalShader[] = "{\n"\
 char uniqueGenericMetalShader_OLD[] = "{\n"\
 "qer_editorimage	%s\n"\
 "q3map_material	hollowmetal\n"\
-"q3map_alphashadow\n"\
+"//q3map_alphashadow\n"\
 "surfaceparm	trans\n"\
 "surfaceparm	noimpact\n"\
 "surfaceparm	nomarks\n"\

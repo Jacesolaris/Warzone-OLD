@@ -2415,6 +2415,11 @@ static	void R_LoadNodesAndLeafs (lump_t *nodeLump, lump_t *leafLump) {
 
 	// chain decendants
 	R_SetParent (s_worldData.nodes, NULL);
+
+	s_worldData.visibleLeafs[0] = (mnode_t **)ri->Hunk_Alloc( numLeafs * sizeof(mnode_t *), h_low);	
+	s_worldData.visibleLeafs[1] = (mnode_t **)ri->Hunk_Alloc( numLeafs * sizeof(mnode_t *), h_low);	
+	s_worldData.numVisibleLeafs[0] = 0;
+	s_worldData.numVisibleLeafs[1] = 0;
 }
 
 //=============================================================================
@@ -3710,7 +3715,10 @@ void R_MergeLeafSurfaces(void)
 				}*/
 
 #ifdef __MERGE_SAME_SHADER_NAMES__
-				if (shader1 && shader2 && shader1->stages[0] && shader2->stages[0] && ( r_glslWater->integer && shader1->stages[0]->isWater && shader2->stages[0]->isWater))
+				if (shader1 && shader2 
+					&& shader1->stages[0] 
+					&& shader2->stages[0] 
+					&& ( r_glslWater->integer && shader1->stages[0]->isWater && shader2->stages[0]->isWater))
 				{// UQ1: All water can be safely merged I believe...
 					s_worldData.surfacesViewCount[surfNum2] = surfNum1;
 					continue;
@@ -3844,7 +3852,7 @@ void R_MergeLeafSurfaces(void)
 
 		if (!merges)
 			s_worldData.surfacesViewCount[i] = -1;
-	}	
+	}
 
 	// count merged/unmerged surfaces
 	numMergedSurfaces = 0;

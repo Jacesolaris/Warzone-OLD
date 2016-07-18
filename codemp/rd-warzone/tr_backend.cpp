@@ -908,7 +908,7 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 
 	if (r_cubeMapping->integer >= 1) CUBEMAPPING = qtrue;
 
-	if (((backEnd.refdef.rdflags & RDF_BLUR) || (tr.viewParms.flags & VPF_SHADOWPASS) /*|| (backEnd.viewParms.flags & VPF_DEPTHSHADOW)*/)) CUBEMAPPING = qfalse;
+	if (((backEnd.refdef.rdflags & RDF_BLUR) || (tr.viewParms.flags & VPF_SHADOWPASS) || backEnd.depthFill /*|| (backEnd.viewParms.flags & VPF_DEPTHSHADOW)*/)) CUBEMAPPING = qfalse;
 
 	// draw everything
 	backEnd.currentEntity = &tr.worldEntity;
@@ -2455,7 +2455,7 @@ const void *RB_PostProcess(const void *data)
 	}
 	*/
 
-	if (!(((backEnd.refdef.rdflags & RDF_BLUR) || (tr.viewParms.flags & VPF_SHADOWPASS) || (backEnd.viewParms.flags & VPF_DEPTHSHADOW))) && (r_dynamicGlow->integer || r_ssgi->integer || r_anamorphic->integer))
+	if (!(((backEnd.refdef.rdflags & RDF_BLUR) || (tr.viewParms.flags & VPF_SHADOWPASS) || backEnd.depthFill || (backEnd.viewParms.flags & VPF_DEPTHSHADOW))) && (r_dynamicGlow->integer || r_ssgi->integer || r_anamorphic->integer))
 	{
 		RB_BloomDownscale(tr.glowImage, tr.glowFboScaled[0]);
 		int numPasses = Com_Clampi(1, ARRAY_LEN(tr.glowFboScaled), r_dynamicGlowPasses->integer);
@@ -2925,6 +2925,9 @@ void RB_ExecuteRenderCommands( const void *data ) {
 			data = RB_WorldEffects( data );
 			break;
 #endif //__SURFACESPRITES__
+		case RC_DRAW_OCCLUSION:
+			data = RB_DrawOcclusion(data);
+			break;
 		case RC_END_OF_LIST:
 		default:
 			// finish any 2D drawing if needed
