@@ -5,7 +5,8 @@
 //layout(triangles, invocations = 6) in;
 #endif
 
-#define MAX_FOLIAGES		102
+#define MAX_FOLIAGES			100
+#define MAX_FOLIAGES_LOOP		64
 
 layout(triangles) in;
 layout(triangle_strip, max_vertices = MAX_FOLIAGES) out;
@@ -151,19 +152,24 @@ void main()
 //	vLocalSeed = Pos*float(gl_InvocationID);
 //#endif
 	
-	float m = 1.0 - (VertDist / MAX_RANGE);
-	int FOLIAGE_DENSITY = int(pow(float(MAX_FOLIAGES), m*m*m));
+	float m = 1.0 - clamp((VertDist-1024.0) / MAX_RANGE, 0.0, 1.0);
 
-	if (Pos.z <= MAP_WATER_LEVEL - 256.0)
-	{// Deep underwater plants draw at lower density, but larger...
-		float densityMult = 3.0 + clamp(((MAP_WATER_LEVEL - 256.0) - Pos.z) / 64.0, 0.0, 6.0);
-		FOLIAGE_DENSITY = int(float(FOLIAGE_DENSITY) / densityMult);
-		if (FOLIAGE_DENSITY < 2) FOLIAGE_DENSITY = 2;
-	}
+	float USE_DENSITY = pow(m, 8.0);//m*m*m;
 
-	for(int x = 0; x < FOLIAGE_DENSITY; x++)
+	int numAddedVerts = 0;
+
+	for(int x = 0; x < MAX_FOLIAGES_LOOP; x++)
 	{
+		if (float(numAddedVerts) >= float(MAX_FOLIAGES)*USE_DENSITY) break;
+
 		vec3 vGrassFieldPos = randomBarycentricCoordinate().xyz;
+
+		float VertDist2 = distance(u_ViewOrigin, vGrassFieldPos);
+
+		if (VertDist2 >= MAX_RANGE) 
+		{// Too far from viewer... Cull...
+			continue;
+		}
 
 		vec4 controlMap = GetGrassMap(vGrassFieldPos);
 		float controlMapScale = length(controlMap.rgb);
@@ -234,14 +240,6 @@ void main()
 			}
 		}
 
-		// UQ1: Checked and distance is faster
-		float VertDist2 = distance(u_ViewOrigin, vGrassFieldPos);//(u_ModelViewProjectionMatrix*vec4(vGrassFieldPos, 1.0)).z;
-
-		if (VertDist2 >= MAX_RANGE) 
-		{// Too far from viewer... Cull...
-			continue;
-		}
-
 		float heightMult = 1.0;
 
 		if (iGrassType < 3 && vGrassFieldPos.z < MAP_WATER_LEVEL + 160.0)
@@ -259,7 +257,7 @@ void main()
 		}
 		else
 		{
-			controlMapScale *= 1.25;
+			heightMult *= 1.25;
 		}
 
 		heightMult *= controlMapScale;
@@ -312,6 +310,8 @@ void main()
 		EmitVertex();  
   
 		EndPrimitive();
+
+		numAddedVerts+=4;
 	}
 }
 

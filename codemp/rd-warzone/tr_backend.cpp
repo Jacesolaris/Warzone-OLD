@@ -2566,8 +2566,22 @@ const void *RB_PostProcess(const void *data)
 
 		if (!SCREEN_BLUR && r_distanceBlur->integer)
 		{
-			RB_DistanceBlur(currentFbo, srcBox, currentOutFbo, dstBox);
-			RB_SwapFBOs( &currentFbo, &currentOutFbo);
+			if (r_distanceBlur->integer >= 2)
+			{// New HQ matso blur versions...
+				RB_DistanceBlur(currentFbo, srcBox, currentOutFbo, dstBox, 2);
+				RB_SwapFBOs( &currentFbo, &currentOutFbo);
+				RB_DistanceBlur(currentFbo, srcBox, currentOutFbo, dstBox, 3);
+				RB_SwapFBOs( &currentFbo, &currentOutFbo);
+				RB_DistanceBlur(currentFbo, srcBox, currentOutFbo, dstBox, 0);
+				RB_SwapFBOs( &currentFbo, &currentOutFbo);
+				RB_DistanceBlur(currentFbo, srcBox, currentOutFbo, dstBox, 1);
+				RB_SwapFBOs( &currentFbo, &currentOutFbo);
+			}
+			else
+			{
+				RB_DistanceBlur(currentFbo, srcBox, currentOutFbo, dstBox, -1);
+				RB_SwapFBOs( &currentFbo, &currentOutFbo);
+			}
 		}
 
 		if (!SCREEN_BLUR && r_fxaa->integer)
@@ -2724,8 +2738,8 @@ const void *RB_PostProcess(const void *data)
 	if (r_drawSunRays->integer)
 		RB_SunRays(NULL, srcBox, NULL, dstBox);
 
-	if (1)
-		RB_BokehBlur(NULL, srcBox, NULL, dstBox, backEnd.refdef.blurFactor);
+	//if (backEnd.refdef.blurFactor > 0.0)
+	//	RB_BokehBlur(NULL, srcBox, NULL, dstBox, backEnd.refdef.blurFactor);
 
 #ifdef ___WARZONE_AWESOMIUM___
 	if (srcFbo)

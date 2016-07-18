@@ -2060,45 +2060,612 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			}
 		}
 
+		//
+		// UQ1: Split up uniforms by what is actually used...
+		//
+
+		RB_SetMaterialBasedProperties(sp, pStage);
+		
+		stateBits = pStage->stateBits;
+
+		if ( backEnd.currentEntity )
+		{
+			assert(backEnd.currentEntity->e.renderfx >= 0);
+
+			if ( backEnd.currentEntity->e.renderfx & RF_DISINTEGRATE1 )
+			{
+				// we want to be able to rip a hole in the thing being disintegrated, and by doing the depth-testing it avoids some kinds of artefacts, but will probably introduce others?
+				stateBits = GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA | GLS_DEPTHMASK_TRUE | GLS_ATEST_GE_192;
+			}
+
+			if ( backEnd.currentEntity->e.renderfx & RF_RGB_TINT )
+			{//want to use RGBGen from ent
+				forceRGBGen = CGEN_ENTITY;
+			}
+
+			if ( backEnd.currentEntity->e.renderfx & RF_FORCE_ENT_ALPHA )
+			{
+				stateBits = GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA;
+				if ( backEnd.currentEntity->e.renderfx & RF_ALPHA_DEPTH )
+				{ //depth write, so faces through the model will be stomped over by nearer ones. this works because
+					//we draw RF_FORCE_ENT_ALPHA stuff after everything else, including standard alpha surfs.
+					stateBits |= GLS_DEPTHMASK_TRUE;
+				}
+			}
+		}
+
+		{// UQ1: Used by both generic and lightall...
+			RB_SetStageImageDimensions(sp, pStage);
+
+			GLSL_SetUniformMatrix16(sp, UNIFORM_VIEWPROJECTIONMATRIX, vp/*backEnd.viewParms.projectionMatrix*/);
+			GLSL_SetUniformMatrix16(sp, UNIFORM_MODELMATRIX, backEnd.ori.transformMatrix);
+			GLSL_SetUniformMatrix16(sp, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
+			GLSL_SetUniformMatrix16(sp, UNIFORM_INVEYEPROJECTIONMATRIX, glState.invEyeProjection);
+
+			// UQ: Other *needed* stuff... Hope these are correct...
+			GLSL_SetUniformMatrix16(sp, UNIFORM_PROJECTIONMATRIX, glState.projection/*backEnd.viewParms.projectionMatrix*/);
+			GLSL_SetUniformMatrix16(sp, UNIFORM_MODELVIEWMATRIX, model);//backEnd.viewParms.world.modelMatrix);
+			GLSL_SetUniformMatrix16(sp, UNIFORM_VIEWMATRIX, trans);
+			GLSL_SetUniformMatrix16(sp, UNIFORM_INVVIEWMATRIX, invTrans);
+			GLSL_SetUniformMatrix16(sp, UNIFORM_NORMALMATRIX, normalMatrix);
+			GLSL_SetUniformMatrix16(sp, UNIFORM_INVMODELVIEWMATRIX, invMv);
+
+			GLSL_SetUniformVec3(sp, UNIFORM_LOCALVIEWORIGIN, backEnd.ori.viewOrigin);
+			GLSL_SetUniformFloat(sp, UNIFORM_VERTEXLERP, glState.vertexAttribsInterpolation);
+
+			GLSL_SetUniformVec3(sp, UNIFORM_VIEWORIGIN, backEnd.viewParms.ori.origin);
+
+			if (pStage->normalScale[0] == 0 && pStage->normalScale[1] == 0 && pStage->normalScale[2] == 0)
+			{
+				vec4_t normalScale;
+				VectorSet4(normalScale, r_baseNormalX->value, r_baseNormalY->value, 1.0f, r_baseParallax->value);
+				GLSL_SetUniformVec4(sp, UNIFORM_NORMALSCALE, normalScale);
+			}
+			else
+			{
+				GLSL_SetUniformVec4(sp, UNIFORM_NORMALSCALE, pStage->normalScale);
+			}
+
+			if (glState.skeletalAnimation)
+			{
+				GLSL_SetUniformMatrix16(sp, UNIFORM_BONE_MATRICES, &glState.boneMatrices[0][0], glState.numBones);
+			}
+
+			GLSL_SetUniformInt(sp, UNIFORM_DEFORMGEN, deformGen);
+			if (deformGen != DGEN_NONE)
+			{
+				GLSL_SetUniformFloat5(sp, UNIFORM_DEFORMPARAMS, deformParams);
+				GLSL_SetUniformFloat(sp, UNIFORM_TIME, tess.shaderTime);
+			}
+
+			GLSL_SetUniformInt(sp, UNIFORM_TCGEN0, pStage->bundle[0].tcGen);
+			if (pStage->bundle[0].tcGen == TCGEN_VECTOR)
+			{
+				vec3_t vec;
+
+				VectorCopy(pStage->bundle[0].tcGenVectors[0], vec);
+				GLSL_SetUniformVec3(sp, UNIFORM_TCGEN0VECTOR0, vec);
+				VectorCopy(pStage->bundle[0].tcGenVectors[1], vec);
+				GLSL_SetUniformVec3(sp, UNIFORM_TCGEN0VECTOR1, vec);
+			}
+
+			{
+				vec4_t baseColor;
+				vec4_t vertColor;
+
+				ComputeShaderColors(pStage, baseColor, vertColor, stateBits, &forceRGBGen, &forceAlphaGen);
+
+				if ((backEnd.refdef.colorScale != 1.0f) && !(backEnd.refdef.rdflags & RDF_NOWORLDMODEL))
+				{
+					// use VectorScale to only scale first three values, not alpha
+					VectorScale(baseColor, backEnd.refdef.colorScale, baseColor);
+					VectorScale(vertColor, backEnd.refdef.colorScale, vertColor);
+				}
+
+				if ( backEnd.currentEntity != NULL &&
+					(backEnd.currentEntity->e.renderfx & RF_FORCE_ENT_ALPHA) )
+				{
+					vertColor[3] = backEnd.currentEntity->e.shaderRGBA[3] / 255.0f;
+				}
+
+				GLSL_SetUniformVec4(sp, UNIFORM_BASECOLOR, baseColor);
+				GLSL_SetUniformVec4(sp, UNIFORM_VERTCOLOR, vertColor);
+			}
+
+			if (pStage->rgbGen == CGEN_LIGHTING_DIFFUSE || pStage->rgbGen == CGEN_LIGHTING_DIFFUSE_ENTITY)
+			{
+				vec4_t vec;
+
+				VectorScale(backEnd.currentEntity->ambientLight, 1.0f / 255.0f, vec);
+				GLSL_SetUniformVec3(sp, UNIFORM_AMBIENTLIGHT, vec);
+
+				VectorScale(backEnd.currentEntity->directedLight, 1.0f / 255.0f, vec);
+				GLSL_SetUniformVec3(sp, UNIFORM_DIRECTEDLIGHT, vec);
+
+				VectorCopy(backEnd.currentEntity->lightDir, vec);
+				vec[3] = 0.0f;
+				GLSL_SetUniformVec4(sp, UNIFORM_LIGHTORIGIN, vec);
+				GLSL_SetUniformVec3(sp, UNIFORM_MODELLIGHTDIR, backEnd.currentEntity->modelLightDir);
+
+				if (!isGeneric)
+				{
+					GLSL_SetUniformFloat(sp, UNIFORM_LIGHTRADIUS, 0.0f);
+				}
+			}
+
+			ComputeTexMods( pStage, TB_DIFFUSEMAP, texMatrix, texOffTurb );
+			GLSL_SetUniformVec4(sp, UNIFORM_DIFFUSETEXMATRIX, texMatrix);
+			GLSL_SetUniformVec4(sp, UNIFORM_DIFFUSETEXOFFTURB, texOffTurb);
+		}
+
+		if (isGeneric)
+		{// UQ1: Only generic uses these...
+			if (pStage->alphaGen == AGEN_PORTAL)
+			{
+				GLSL_SetUniformFloat(sp, UNIFORM_PORTALRANGE, tess.shader->portalRange);
+			}
+
+			if (r_fog->integer)
+			{
+				if ( input->fogNum )
+				{
+					vec4_t fogColorMask;
+					GLSL_SetUniformVec4(sp, UNIFORM_FOGDISTANCE, fogDistanceVector);
+					GLSL_SetUniformVec4(sp, UNIFORM_FOGDEPTH, fogDepthVector);
+					GLSL_SetUniformFloat(sp, UNIFORM_FOGEYET, eyeT);
+
+					ComputeFogColorMask(pStage, fogColorMask);
+					GLSL_SetUniformVec4(sp, UNIFORM_FOGCOLORMASK, fogColorMask);
+				}
+			}
+
+			GLSL_SetUniformInt(sp, UNIFORM_COLORGEN, forceRGBGen);
+			GLSL_SetUniformInt(sp, UNIFORM_ALPHAGEN, forceAlphaGen);
+		}
+		else
+		{// UQ1: Only lightall uses these...
+			//GLSL_SetUniformFloat(sp, UNIFORM_MAPLIGHTSCALE, backEnd.refdef.mapLightScale);
+
+			//
+			// testing cube map
+			//
+			if (backEnd.depthFill || (tr.viewParms.flags & VPF_SHADOWPASS))
+			{
+				GL_BindToTMU( tr.blackImage, TB_CUBEMAP);
+				GLSL_SetUniformFloat(sp, UNIFORM_CUBEMAPSTRENGTH, 0.0);
+				VectorSet4(cubeMapVec, 0.0, 0.0, 0.0, 0.0);
+				GLSL_SetUniformVec4(sp, UNIFORM_CUBEMAPINFO, cubeMapVec);
+			}
+			else if (!(tr.viewParms.flags & VPF_NOCUBEMAPS) && input->cubemapIndex && r_cubeMapping->integer >= 1 && cubeMapStrength > 0.0)
+			{
+				GL_BindToTMU( tr.cubemaps[input->cubemapIndex - 1], TB_CUBEMAP);
+				GLSL_SetUniformFloat(sp, UNIFORM_CUBEMAPSTRENGTH, cubeMapStrength);
+				VectorScale4(cubeMapVec, 1.0f / 1000.0f, cubeMapVec);
+				GLSL_SetUniformVec4(sp, UNIFORM_CUBEMAPINFO, cubeMapVec);
+			}
+		}
+
+		//
+		//
+		//
+
+		if (backEnd.depthFill || (tr.viewParms.flags & VPF_SHADOWPASS))
+		{
+
+		}
+		else
+		{
+			if (pStage->bundle[TB_STEEPMAP].image[0])
+			{
+				//ri->Printf(PRINT_WARNING, "Image bound to steep map %i x %i.\n", pStage->bundle[TB_STEEPMAP].image[0]->width, pStage->bundle[TB_STEEPMAP].image[0]->height);
+				//R_BindAnimatedImageToTMU( &pStage->bundle[TB_STEEPMAP], TB_STEEPMAP);
+				GL_BindToTMU( pStage->bundle[TB_STEEPMAP].image[0], TB_STEEPMAP );
+			}
+			else
+			{
+				GL_BindToTMU( tr.whiteImage, TB_STEEPMAP );
+			}
+
+			if (pStage->bundle[TB_STEEPMAP2].image[0])
+			{
+				//ri->Printf(PRINT_WARNING, "Image %s bound to steep map %i x %i.\n", pStage->bundle[TB_STEEPMAP2].image[0]->imgName, pStage->bundle[TB_STEEPMAP2].image[0]->width, pStage->bundle[TB_STEEPMAP2].image[0]->height);
+				//R_BindAnimatedImageToTMU( &pStage->bundle[TB_STEEPMAP2], TB_STEEPMAP2);
+				GL_BindToTMU( pStage->bundle[TB_STEEPMAP2].image[0], TB_STEEPMAP2 );
+			}
+			else
+			{
+				GL_BindToTMU( tr.whiteImage, TB_STEEPMAP2 );
+			}
+
+			if (pStage->bundle[TB_SPLATMAP1].image[0] && pStage->bundle[TB_SPLATMAP1].image[0] != tr.whiteImage)
+			{
+				GL_BindToTMU( pStage->bundle[TB_SPLATMAP1].image[0], TB_SPLATMAP1 );
+				GL_BindToTMU( pStage->bundle[TB_SPLATMAP1].image[1], TB_SPLATNORMALMAP1 );
+			}
+			else
+			{
+				if (pStage->bundle[TB_DIFFUSEMAP].image[0])
+				{
+					R_BindAnimatedImageToTMU( &pStage->bundle[TB_DIFFUSEMAP], TB_SPLATMAP1);
+					GL_BindToTMU( pStage->bundle[TB_NORMALMAP].image[0], TB_SPLATNORMALMAP1 );
+				}
+				else // will never get used anyway
+				{
+					GL_BindToTMU( tr.whiteImage, TB_SPLATMAP1 );
+					GL_BindToTMU( tr.whiteImage, TB_SPLATNORMALMAP1 );
+				}
+			}
+
+			if (pStage->bundle[TB_SPLATMAP2].image[0] && pStage->bundle[TB_SPLATMAP2].image[0] != tr.whiteImage)
+			{
+				GL_BindToTMU( pStage->bundle[TB_SPLATMAP2].image[0], TB_SPLATMAP2 );
+				GL_BindToTMU( pStage->bundle[TB_SPLATMAP2].image[1], TB_SPLATNORMALMAP2 );
+			}
+			else
+			{
+				if (pStage->bundle[TB_DIFFUSEMAP].image[0])
+				{
+					R_BindAnimatedImageToTMU( &pStage->bundle[TB_DIFFUSEMAP], TB_SPLATMAP2);
+					GL_BindToTMU( pStage->bundle[TB_NORMALMAP].image[0], TB_SPLATNORMALMAP2 );
+				}
+				else // will never get used anyway
+				{
+					GL_BindToTMU( tr.whiteImage, TB_SPLATMAP2 );
+					GL_BindToTMU( tr.whiteImage, TB_SPLATNORMALMAP2 );
+				}
+			}
+
+			if (pStage->bundle[TB_SPLATMAP3].image[0] && pStage->bundle[TB_SPLATMAP3].image[0] != tr.whiteImage)
+			{
+				GL_BindToTMU( pStage->bundle[TB_SPLATMAP3].image[0], TB_SPLATMAP3 );
+				GL_BindToTMU( pStage->bundle[TB_SPLATMAP3].image[1], TB_SPLATNORMALMAP3 );
+			}
+			else
+			{
+				if (pStage->bundle[TB_DIFFUSEMAP].image[0])
+				{
+					R_BindAnimatedImageToTMU( &pStage->bundle[TB_DIFFUSEMAP], TB_SPLATMAP3);
+					GL_BindToTMU( pStage->bundle[TB_NORMALMAP].image[0], TB_SPLATNORMALMAP3 );
+				}
+				else // will never get used anyway
+				{
+					GL_BindToTMU( tr.whiteImage, TB_SPLATMAP3 );
+					GL_BindToTMU( tr.whiteImage, TB_SPLATNORMALMAP3 );
+				}
+			}
+
+			if (pStage->bundle[TB_SPLATMAP4].image[0] && pStage->bundle[TB_SPLATMAP4].image[0] != tr.whiteImage)
+			{
+				GL_BindToTMU( pStage->bundle[TB_SPLATMAP4].image[0], TB_SPLATMAP4 );
+				GL_BindToTMU( pStage->bundle[TB_SPLATMAP4].image[1], TB_SPLATNORMALMAP4 );
+			}
+			else
+			{
+				if (pStage->bundle[TB_DIFFUSEMAP].image[0])
+				{
+					R_BindAnimatedImageToTMU( &pStage->bundle[TB_DIFFUSEMAP], TB_SPLATMAP4);
+					GL_BindToTMU( pStage->bundle[TB_NORMALMAP].image[0], TB_SPLATNORMALMAP4 );
+				}
+				else // will never get used anyway
+				{
+					GL_BindToTMU( tr.whiteImage, TB_SPLATMAP4 );
+					GL_BindToTMU( tr.whiteImage, TB_SPLATNORMALMAP4 );
+				}
+			}
+
+			/*if (pStage->bundle[TB_SUBSURFACEMAP].image[0])
+			{
+			R_BindAnimatedImageToTMU( &pStage->bundle[TB_SUBSURFACEMAP], TB_SUBSURFACEMAP);
+			}
+			else
+			{
+			GL_BindToTMU( tr.whiteImage, TB_SUBSURFACEMAP );
+			}*/
+
+			if (pStage->bundle[TB_OVERLAYMAP].image[0])
+			{
+				R_BindAnimatedImageToTMU( &pStage->bundle[TB_OVERLAYMAP], TB_OVERLAYMAP);
+			}
+			else
+			{
+				GL_BindToTMU( tr.blackImage, TB_OVERLAYMAP );
+			}
+		}
+
+		if ( !backEnd.depthFill )
+		{
+			if (r_sunlightMode->integer && (r_sunlightSpecular->integer || (backEnd.viewParms.flags & VPF_USESUNLIGHT)))
+			{
+				if (backEnd.viewParms.flags & VPF_USESUNLIGHT)
+				{
+					GL_BindToTMU(tr.screenShadowImage, TB_SHADOWMAP);
+				}
+				else
+				{
+					GL_BindToTMU(tr.whiteImage, TB_SHADOWMAP);
+				}
+
+				GLSL_SetUniformVec3(sp, UNIFORM_PRIMARYLIGHTAMBIENT, backEnd.refdef.sunAmbCol);
+				GLSL_SetUniformVec3(sp, UNIFORM_PRIMARYLIGHTCOLOR,   backEnd.refdef.sunCol);
+				GLSL_SetUniformVec4(sp, UNIFORM_PRIMARYLIGHTORIGIN,  backEnd.refdef.sunDir);
+
+
+				if (pStage->glow)
+				{// No light added to glow stages...
+					GLSL_SetUniformInt(sp, UNIFORM_LIGHTCOUNT, 0);
+				}
+				else
+				{
+					GLSL_SetUniformInt(sp, UNIFORM_LIGHTCOUNT, NUM_CLOSE_LIGHTS);
+					GLSL_SetUniformVec3x16(sp, UNIFORM_LIGHTPOSITIONS2, CLOSEST_LIGHTS_POSITIONS, MAX_LIGHTALL_DLIGHTS);
+					GLSL_SetUniformVec3x16(sp, UNIFORM_LIGHTCOLORS, CLOSEST_LIGHTS_COLORS, MAX_LIGHTALL_DLIGHTS);
+					GLSL_SetUniformFloatx16(sp, UNIFORM_LIGHTDISTANCES, CLOSEST_LIGHTS_DISTANCES, MAX_LIGHTALL_DLIGHTS);
+				}
+			}
+		}
+
+		GL_BindToTMU( tr.whiteImage, TB_NORMALMAP );
+
+		if (!backEnd.depthFill)
+		{
+			GL_BindToTMU( tr.whiteImage, TB_NORMALMAP2 );
+			GL_BindToTMU( tr.whiteImage, TB_NORMALMAP3 );
+		}
+
+		//
+		// do multitexture
+		//
+		if ( backEnd.depthFill )
+		{
+			if (!(pStage->stateBits & GLS_ATEST_BITS))
+				GL_BindToTMU( tr.whiteImage, 0 );
+			else if ( pStage->bundle[TB_COLORMAP].image[0] != 0 )
+				R_BindAnimatedImageToTMU( &pStage->bundle[TB_COLORMAP], TB_COLORMAP );
+		}
+		else if ( !isGeneric && (pStage->glslShaderGroup == tr.lightallShader ) )
+		{
+			int i;
+			vec4_t enableTextures;
+
+			VectorSet4(enableTextures, 0, 0, 0, 0);
+			if ((r_lightmap->integer == 1 || r_lightmap->integer == 2) && pStage->bundle[TB_LIGHTMAP].image[0])
+			{
+				for (i = 0; i < NUM_TEXTURE_BUNDLES; i++)
+				{
+					if (i == TB_LIGHTMAP)
+						R_BindAnimatedImageToTMU( &pStage->bundle[TB_LIGHTMAP], i);
+					else
+						GL_BindToTMU( tr.whiteImage, i );
+				}
+			}
+			else if (r_lightmap->integer == 3 && pStage->bundle[TB_DELUXEMAP].image[0])
+			{
+				for (i = 0; i < NUM_TEXTURE_BUNDLES; i++)
+				{
+					if (i == TB_LIGHTMAP)
+						R_BindAnimatedImageToTMU( &pStage->bundle[TB_DELUXEMAP], i);
+					else
+						GL_BindToTMU( tr.whiteImage, i );
+				}
+			}
+			else
+			{
+				qboolean light = qtrue;
+				qboolean fastLight = qfalse;
+
+				if (light && !fastLight)
+					usingLight = qtrue;
+
+				if (pStage->bundle[TB_DIFFUSEMAP].image[0])
+					R_BindAnimatedImageToTMU( &pStage->bundle[TB_DIFFUSEMAP], TB_DIFFUSEMAP);
+
+				if (pStage->bundle[TB_LIGHTMAP].image[0])
+					R_BindAnimatedImageToTMU( &pStage->bundle[TB_LIGHTMAP], TB_LIGHTMAP);
+				else
+					GL_BindToTMU( tr.whiteImage, TB_LIGHTMAP );
+
+				// bind textures that are sampled and used in the glsl shader, and
+				// bind whiteImage to textures that are sampled but zeroed in the glsl shader
+				//
+				// alternatives:
+				//  - use the last bound texture
+				//     -> costs more to sample a higher res texture then throw out the result
+				//  - disable texture sampling in glsl shader with #ifdefs, as before
+				//     -> increases the number of shaders that must be compiled
+				//
+				//if ((light || pStage->hasRealNormalMap || pStage->hasSpecular /*|| pStage->hasRealSubsurfaceMap*/ || pStage->hasRealOverlayMap || pStage->hasRealSteepMap) && !fastLight)
+				{
+					if (r_normalMapping->integer >= 2
+						&& !input->shader->isPortal
+						&& !input->shader->isSky
+						&& !pStage->glow
+						&& !pStage->bundle[TB_DIFFUSEMAP].normalsLoaded2
+						&& (!pStage->bundle[TB_NORMALMAP].image[0] || pStage->bundle[TB_NORMALMAP].image[0] == tr.whiteImage)
+						&& pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName[0] 
+					&& pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName[0] != '*'
+						&& pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName[0] != '$'
+						&& pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName[0] != '_'
+						&& pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName[0] != '!'
+						&& !(pStage->bundle[TB_DIFFUSEMAP].image[0]->flags & IMGFLAG_CUBEMAP)
+						&& pStage->bundle[TB_DIFFUSEMAP].image[0]->type != IMGTYPE_NORMAL 
+						&& pStage->bundle[TB_DIFFUSEMAP].image[0]->type != IMGTYPE_SPECULAR 
+						/*&& pStage->bundle[TB_DIFFUSEMAP].image[0]->type != IMGTYPE_SUBSURFACE*/ 
+						&& pStage->bundle[TB_DIFFUSEMAP].image[0]->type != IMGTYPE_OVERLAY 
+						&& pStage->bundle[TB_DIFFUSEMAP].image[0]->type != IMGTYPE_STEEPMAP 
+						&& pStage->bundle[TB_DIFFUSEMAP].image[0]->type != IMGTYPE_STEEPMAP2 
+						// gfx dirs can be exempted I guess...
+						&& !(r_disableGfxDirEnhancement->integer && StringContainsWord(pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName, "gfx/")))
+					{// How did this happen??? Oh well, generate a normal map now...
+						char imgname[64];
+						//ri->Printf(PRINT_WARNING, "Realtime generating normal map for %s.\n", pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName);
+						sprintf(imgname, "%s_n", pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName);
+						pStage->bundle[TB_NORMALMAP].image[0] = R_CreateNormalMapGLSL( imgname, NULL, pStage->bundle[TB_DIFFUSEMAP].image[0]->width, pStage->bundle[TB_DIFFUSEMAP].image[0]->height, pStage->bundle[TB_DIFFUSEMAP].image[0]->flags, pStage->bundle[TB_DIFFUSEMAP].image[0] );
+
+						if (pStage->bundle[TB_NORMALMAP].image[0] && pStage->bundle[TB_NORMALMAP].image[0] != tr.whiteImage) 
+						{
+							pStage->hasRealNormalMap = true;
+							RB_SetMaterialBasedProperties(sp, pStage);
+
+							if (pStage->normalScale[0] == 0 && pStage->normalScale[1] == 0 && pStage->normalScale[2] == 0)
+							{
+								VectorSet4(pStage->normalScale, r_baseNormalX->value, r_baseNormalY->value, 1.0f, r_baseParallax->value);
+								GLSL_SetUniformVec4(sp, UNIFORM_NORMALSCALE, pStage->normalScale);
+							}
+						}
+
+						//if (pStage->bundle[TB_NORMALMAP].image[0] != tr.whiteImage)
+						pStage->bundle[TB_DIFFUSEMAP].normalsLoaded2 = qtrue;
+					}
+
+					if (pStage->bundle[TB_NORMALMAP].image[0])
+					{
+						R_BindAnimatedImageToTMU( &pStage->bundle[TB_NORMALMAP], TB_NORMALMAP);
+						enableTextures[0] = 1.0f;
+					}
+					else if (r_normalMapping->integer >= 2)
+					{
+						GL_BindToTMU( tr.whiteImage, TB_NORMALMAP );
+					}
+
+					if (pStage->bundle[TB_NORMALMAP2].image[0])
+					{
+						R_BindAnimatedImageToTMU( &pStage->bundle[TB_NORMALMAP2], TB_NORMALMAP2);
+					}
+					else if (r_normalMapping->integer >= 2)
+					{
+						GL_BindToTMU( tr.whiteImage, TB_NORMALMAP2 );
+					}
+
+					if (pStage->bundle[TB_NORMALMAP3].image[0])
+					{
+						R_BindAnimatedImageToTMU( &pStage->bundle[TB_NORMALMAP3], TB_NORMALMAP3);
+					}
+					else if (r_normalMapping->integer >= 2)
+					{
+						GL_BindToTMU( tr.whiteImage, TB_NORMALMAP3 );
+					}
+
+					if (pStage->bundle[TB_DELUXEMAP].image[0])
+					{
+						R_BindAnimatedImageToTMU( &pStage->bundle[TB_DELUXEMAP], TB_DELUXEMAP);
+						enableTextures[1] = 1.0f;
+					}
+					else if (r_deluxeMapping->integer)
+					{
+						GL_BindToTMU( tr.whiteImage, TB_DELUXEMAP );
+					}
+
+					if (pStage->bundle[TB_SPECULARMAP].image[0])
+					{
+						R_BindAnimatedImageToTMU( &pStage->bundle[TB_SPECULARMAP], TB_SPECULARMAP);
+						enableTextures[2] = 1.0f;
+					}
+					else if (r_specularMapping->integer)
+					{
+						GL_BindToTMU( tr.whiteImage, TB_SPECULARMAP );
+					}
+				}
+
+				if (backEnd.depthFill || (tr.viewParms.flags & VPF_SHADOWPASS))
+				{
+					enableTextures[3] = 0.0f;
+				}
+				else
+				{
+					enableTextures[3] = (r_cubeMapping->integer >= 1 && !(tr.viewParms.flags & VPF_NOCUBEMAPS) && input->cubemapIndex) ? 1.0f : 0.0f;
+				}
+			}
+
+			GLSL_SetUniformVec4(sp, UNIFORM_ENABLETEXTURES, enableTextures);
+		}
+		else if ( pStage->bundle[1].image[0] != 0 )
+		{
+			R_BindAnimatedImageToTMU( &pStage->bundle[0], 0 );
+			R_BindAnimatedImageToTMU( &pStage->bundle[1], 1 );
+		}
+		else 
+		{
+			//
+			// set state
+			//
+			R_BindAnimatedImageToTMU( &pStage->bundle[0], 0 );
+		}
+
+
 		while (1)
 		{
-			if (isGrass && passNum > 0 && sp2)
-			{
+			if (isGrass && passNum == 1 && sp2)
+			{// Switch to grass geometry shader, once... Repeats will reuse it...
 				sp = sp2;
 				sp2 = NULL;
 
 				GLSL_BindProgram(sp);
 
+				RB_SetMaterialBasedProperties(sp, pStage);
+
 				GLSL_SetUniformFloat(sp, UNIFORM_TIME, tess.shaderTime);
+
+				GLSL_SetUniformMatrix16(sp, UNIFORM_VIEWPROJECTIONMATRIX, vp/*backEnd.viewParms.projectionMatrix*/);
+				GLSL_SetUniformMatrix16(sp, UNIFORM_MODELMATRIX, backEnd.ori.transformMatrix);
+				GLSL_SetUniformMatrix16(sp, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
+				GLSL_SetUniformMatrix16(sp, UNIFORM_INVEYEPROJECTIONMATRIX, glState.invEyeProjection);
+
+				// UQ: Other *needed* stuff... Hope these are correct...
+				GLSL_SetUniformMatrix16(sp, UNIFORM_PROJECTIONMATRIX, glState.projection/*backEnd.viewParms.projectionMatrix*/);
+				GLSL_SetUniformMatrix16(sp, UNIFORM_MODELVIEWMATRIX, model);//backEnd.viewParms.world.modelMatrix);
+				GLSL_SetUniformMatrix16(sp, UNIFORM_VIEWMATRIX, trans);
+				GLSL_SetUniformMatrix16(sp, UNIFORM_INVVIEWMATRIX, invTrans);
+				GLSL_SetUniformMatrix16(sp, UNIFORM_NORMALMATRIX, normalMatrix);
+				GLSL_SetUniformMatrix16(sp, UNIFORM_INVMODELVIEWMATRIX, invMv);
+
+				GLSL_SetUniformVec3(sp, UNIFORM_LOCALVIEWORIGIN, backEnd.ori.viewOrigin);
+				GLSL_SetUniformFloat(sp, UNIFORM_VERTEXLERP, glState.vertexAttribsInterpolation);
+
+				GLSL_SetUniformVec3(sp, UNIFORM_VIEWORIGIN, backEnd.viewParms.ori.origin);
+
+				GL_BindToTMU( tr.grassImage[0], TB_DIFFUSEMAP );
+				GL_BindToTMU( tr.grassImage[1], TB_SPLATMAP1 );
+				GL_BindToTMU( tr.grassImage[2], TB_SPLATMAP2 );
+				GL_BindToTMU( tr.seaGrassImage, TB_OVERLAYMAP );
+
+				vec4_t l10;
+				VectorSet4(l10, r_foliageDistance->value, r_foliageDensity->value, MAP_WATER_LEVEL, 0.0);
+				GLSL_SetUniformVec4(sp, UNIFORM_LOCAL10, l10);
+
+				GLSL_SetUniformVec3(sp, UNIFORM_PRIMARYLIGHTAMBIENT, backEnd.refdef.sunAmbCol);
+				GLSL_SetUniformVec3(sp, UNIFORM_PRIMARYLIGHTCOLOR,   backEnd.refdef.sunCol);
+				GLSL_SetUniformVec4(sp, UNIFORM_PRIMARYLIGHTORIGIN,  backEnd.refdef.sunDir);
+
+				GL_BindToTMU( tr.defaultGrassMapImage, TB_SPLATCONTROLMAP );
+
+				if (r_sunlightMode->integer && (r_sunlightSpecular->integer || (backEnd.viewParms.flags & VPF_USESUNLIGHT)))
+				{
+					if (backEnd.viewParms.flags & VPF_USESUNLIGHT)
+					{
+						GL_BindToTMU(tr.screenShadowImage, TB_SHADOWMAP);
+					}
+					else
+					{
+						GL_BindToTMU(tr.whiteImage, TB_SHADOWMAP);
+					}
+				}
 			}
 
-			RB_SetMaterialBasedProperties(sp, pStage);
-		
-			stateBits = pStage->stateBits;
-
-			if ( backEnd.currentEntity )
+			if (isGrass && passNum > 0)
+			{// Use grass map...
+				
+			}
+			else
 			{
-				assert(backEnd.currentEntity->e.renderfx >= 0);
-
-				if ( backEnd.currentEntity->e.renderfx & RF_DISINTEGRATE1 )
+				if (pStage->bundle[TB_SPLATCONTROLMAP].image[0] && pStage->bundle[TB_SPLATCONTROLMAP].image[0] != tr.blackImage)
 				{
-					// we want to be able to rip a hole in the thing being disintegrated, and by doing the depth-testing it avoids some kinds of artefacts, but will probably introduce others?
-					stateBits = GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA | GLS_DEPTHMASK_TRUE | GLS_ATEST_GE_192;
+					//ri->Printf(PRINT_WARNING, "Image %s bound to splat control map %i x %i.\n", pStage->bundle[TB_SPLATCONTROLMAP].image[0]->imgName, pStage->bundle[TB_SPLATCONTROLMAP].image[0]->width, pStage->bundle[TB_SPLATCONTROLMAP].image[0]->height);
+					GL_BindToTMU( pStage->bundle[TB_SPLATCONTROLMAP].image[0], TB_SPLATCONTROLMAP );
 				}
-
-				if ( backEnd.currentEntity->e.renderfx & RF_RGB_TINT )
-				{//want to use RGBGen from ent
-					forceRGBGen = CGEN_ENTITY;
-				}
-
-				if ( backEnd.currentEntity->e.renderfx & RF_FORCE_ENT_ALPHA )
+				else
 				{
-					stateBits = GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA;
-					if ( backEnd.currentEntity->e.renderfx & RF_ALPHA_DEPTH )
-					{ //depth write, so faces through the model will be stomped over by nearer ones. this works because
-						//we draw RF_FORCE_ENT_ALPHA stuff after everything else, including standard alpha surfs.
-						stateBits |= GLS_DEPTHMASK_TRUE;
-					}
+					//GL_BindToTMU( tr.blackImage, TB_SPLATCONTROLMAP ); // bind black image so we never use any of the splat images
+					GL_BindToTMU( tr.defaultSplatControlImage, TB_SPLATCONTROLMAP ); // really need to make a blured (possibly also considering heightmap) version of this...
 				}
 			}
 
@@ -2130,553 +2697,13 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			}
 #endif //__USE_WATERMAP__
 
-			//
-			// UQ1: Split up uniforms by what is actually used...
-			//
-
-			{// UQ1: Used by both generic and lightall...
-				RB_SetStageImageDimensions(sp, pStage);
-				
-				GLSL_SetUniformMatrix16(sp, UNIFORM_VIEWPROJECTIONMATRIX, vp/*backEnd.viewParms.projectionMatrix*/);
-				GLSL_SetUniformMatrix16(sp, UNIFORM_MODELMATRIX, backEnd.ori.transformMatrix);
-				GLSL_SetUniformMatrix16(sp, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
-				GLSL_SetUniformMatrix16(sp, UNIFORM_INVEYEPROJECTIONMATRIX, glState.invEyeProjection);
-				
-				// UQ: Other *needed* stuff... Hope these are correct...
-				GLSL_SetUniformMatrix16(sp, UNIFORM_PROJECTIONMATRIX, glState.projection/*backEnd.viewParms.projectionMatrix*/);
-				GLSL_SetUniformMatrix16(sp, UNIFORM_MODELVIEWMATRIX, model);//backEnd.viewParms.world.modelMatrix);
-				GLSL_SetUniformMatrix16(sp, UNIFORM_VIEWMATRIX, trans);
-				GLSL_SetUniformMatrix16(sp, UNIFORM_INVVIEWMATRIX, invTrans);
-				GLSL_SetUniformMatrix16(sp, UNIFORM_NORMALMATRIX, normalMatrix);
-				GLSL_SetUniformMatrix16(sp, UNIFORM_INVMODELVIEWMATRIX, invMv);
-
-				GLSL_SetUniformVec3(sp, UNIFORM_LOCALVIEWORIGIN, backEnd.ori.viewOrigin);
-				GLSL_SetUniformFloat(sp, UNIFORM_VERTEXLERP, glState.vertexAttribsInterpolation);
-
-				GLSL_SetUniformVec3(sp, UNIFORM_VIEWORIGIN, backEnd.viewParms.ori.origin);
-
-				if (pStage->normalScale[0] == 0 && pStage->normalScale[1] == 0 && pStage->normalScale[2] == 0)
-				{
-					vec4_t normalScale;
-					VectorSet4(normalScale, r_baseNormalX->value, r_baseNormalY->value, 1.0f, r_baseParallax->value);
-					GLSL_SetUniformVec4(sp, UNIFORM_NORMALSCALE, normalScale);
-				}
-				else
-				{
-					GLSL_SetUniformVec4(sp, UNIFORM_NORMALSCALE, pStage->normalScale);
-				}
-
-				if (glState.skeletalAnimation)
-				{
-					GLSL_SetUniformMatrix16(sp, UNIFORM_BONE_MATRICES, &glState.boneMatrices[0][0], glState.numBones);
-				}
-
-				GLSL_SetUniformInt(sp, UNIFORM_DEFORMGEN, deformGen);
-				if (deformGen != DGEN_NONE)
-				{
-					GLSL_SetUniformFloat5(sp, UNIFORM_DEFORMPARAMS, deformParams);
-					GLSL_SetUniformFloat(sp, UNIFORM_TIME, tess.shaderTime);
-				}
-
-				GLSL_SetUniformInt(sp, UNIFORM_TCGEN0, pStage->bundle[0].tcGen);
-				if (pStage->bundle[0].tcGen == TCGEN_VECTOR)
-				{
-					vec3_t vec;
-
-					VectorCopy(pStage->bundle[0].tcGenVectors[0], vec);
-					GLSL_SetUniformVec3(sp, UNIFORM_TCGEN0VECTOR0, vec);
-					VectorCopy(pStage->bundle[0].tcGenVectors[1], vec);
-					GLSL_SetUniformVec3(sp, UNIFORM_TCGEN0VECTOR1, vec);
-				}
-
-				{
-					vec4_t baseColor;
-					vec4_t vertColor;
-
-					ComputeShaderColors(pStage, baseColor, vertColor, stateBits, &forceRGBGen, &forceAlphaGen);
-
-					if ((backEnd.refdef.colorScale != 1.0f) && !(backEnd.refdef.rdflags & RDF_NOWORLDMODEL))
-					{
-						// use VectorScale to only scale first three values, not alpha
-						VectorScale(baseColor, backEnd.refdef.colorScale, baseColor);
-						VectorScale(vertColor, backEnd.refdef.colorScale, vertColor);
-					}
-
-					if ( backEnd.currentEntity != NULL &&
-						(backEnd.currentEntity->e.renderfx & RF_FORCE_ENT_ALPHA) )
-					{
-						vertColor[3] = backEnd.currentEntity->e.shaderRGBA[3] / 255.0f;
-					}
-
-					GLSL_SetUniformVec4(sp, UNIFORM_BASECOLOR, baseColor);
-					GLSL_SetUniformVec4(sp, UNIFORM_VERTCOLOR, vertColor);
-				}
-
-				if (pStage->rgbGen == CGEN_LIGHTING_DIFFUSE || pStage->rgbGen == CGEN_LIGHTING_DIFFUSE_ENTITY)
-				{
-					vec4_t vec;
-
-					VectorScale(backEnd.currentEntity->ambientLight, 1.0f / 255.0f, vec);
-					GLSL_SetUniformVec3(sp, UNIFORM_AMBIENTLIGHT, vec);
-
-					VectorScale(backEnd.currentEntity->directedLight, 1.0f / 255.0f, vec);
-					GLSL_SetUniformVec3(sp, UNIFORM_DIRECTEDLIGHT, vec);
-
-					VectorCopy(backEnd.currentEntity->lightDir, vec);
-					vec[3] = 0.0f;
-					GLSL_SetUniformVec4(sp, UNIFORM_LIGHTORIGIN, vec);
-					GLSL_SetUniformVec3(sp, UNIFORM_MODELLIGHTDIR, backEnd.currentEntity->modelLightDir);
-
-					if (!isGeneric)
-					{
-						GLSL_SetUniformFloat(sp, UNIFORM_LIGHTRADIUS, 0.0f);
-					}
-				}
-
-				ComputeTexMods( pStage, TB_DIFFUSEMAP, texMatrix, texOffTurb );
-				GLSL_SetUniformVec4(sp, UNIFORM_DIFFUSETEXMATRIX, texMatrix);
-				GLSL_SetUniformVec4(sp, UNIFORM_DIFFUSETEXOFFTURB, texOffTurb);
-			}
-
-			if (isGeneric)
-			{// UQ1: Only generic uses these...
-				if (pStage->alphaGen == AGEN_PORTAL)
-				{
-					GLSL_SetUniformFloat(sp, UNIFORM_PORTALRANGE, tess.shader->portalRange);
-				}
-
-				if (r_fog->integer)
-				{
-					if ( input->fogNum )
-					{
-						vec4_t fogColorMask;
-						GLSL_SetUniformVec4(sp, UNIFORM_FOGDISTANCE, fogDistanceVector);
-						GLSL_SetUniformVec4(sp, UNIFORM_FOGDEPTH, fogDepthVector);
-						GLSL_SetUniformFloat(sp, UNIFORM_FOGEYET, eyeT);
-
-						ComputeFogColorMask(pStage, fogColorMask);
-						GLSL_SetUniformVec4(sp, UNIFORM_FOGCOLORMASK, fogColorMask);
-					}
-				}
-
-				GLSL_SetUniformInt(sp, UNIFORM_COLORGEN, forceRGBGen);
-				GLSL_SetUniformInt(sp, UNIFORM_ALPHAGEN, forceAlphaGen);
-			}
-			else
-			{// UQ1: Only lightall uses these...
-				//GLSL_SetUniformFloat(sp, UNIFORM_MAPLIGHTSCALE, backEnd.refdef.mapLightScale);
-
-				//
-				// testing cube map
-				//
-				if (backEnd.depthFill || (tr.viewParms.flags & VPF_SHADOWPASS))
-				{
-					GL_BindToTMU( tr.blackImage, TB_CUBEMAP);
-					GLSL_SetUniformFloat(sp, UNIFORM_CUBEMAPSTRENGTH, 0.0);
-					VectorSet4(cubeMapVec, 0.0, 0.0, 0.0, 0.0);
-					GLSL_SetUniformVec4(sp, UNIFORM_CUBEMAPINFO, cubeMapVec);
-				}
-				else if (!(tr.viewParms.flags & VPF_NOCUBEMAPS) && input->cubemapIndex && r_cubeMapping->integer >= 1 && cubeMapStrength > 0.0)
-				{
-					GL_BindToTMU( tr.cubemaps[input->cubemapIndex - 1], TB_CUBEMAP);
-					GLSL_SetUniformFloat(sp, UNIFORM_CUBEMAPSTRENGTH, cubeMapStrength);
-					VectorScale4(cubeMapVec, 1.0f / 1000.0f, cubeMapVec);
-					GLSL_SetUniformVec4(sp, UNIFORM_CUBEMAPINFO, cubeMapVec);
-				}
-			}
-
-			//
-			//
-			//
-
-			if (backEnd.depthFill || (tr.viewParms.flags & VPF_SHADOWPASS))
-			{
-				if (isGrass && passNum > 0)
-				{// Use grass map...
-					GL_BindToTMU( tr.defaultGrassMapImage, TB_SPLATCONTROLMAP );
-				}
-				else
-				{
-					
-				}
-			}
-			else
-			{
-				if (pStage->bundle[TB_STEEPMAP].image[0])
-				{
-					//ri->Printf(PRINT_WARNING, "Image bound to steep map %i x %i.\n", pStage->bundle[TB_STEEPMAP].image[0]->width, pStage->bundle[TB_STEEPMAP].image[0]->height);
-					//R_BindAnimatedImageToTMU( &pStage->bundle[TB_STEEPMAP], TB_STEEPMAP);
-					GL_BindToTMU( pStage->bundle[TB_STEEPMAP].image[0], TB_STEEPMAP );
-				}
-				else
-				{
-					GL_BindToTMU( tr.whiteImage, TB_STEEPMAP );
-				}
-
-				if (pStage->bundle[TB_STEEPMAP2].image[0])
-				{
-					//ri->Printf(PRINT_WARNING, "Image %s bound to steep map %i x %i.\n", pStage->bundle[TB_STEEPMAP2].image[0]->imgName, pStage->bundle[TB_STEEPMAP2].image[0]->width, pStage->bundle[TB_STEEPMAP2].image[0]->height);
-					//R_BindAnimatedImageToTMU( &pStage->bundle[TB_STEEPMAP2], TB_STEEPMAP2);
-					GL_BindToTMU( pStage->bundle[TB_STEEPMAP2].image[0], TB_STEEPMAP2 );
-				}
-				else
-				{
-					GL_BindToTMU( tr.whiteImage, TB_STEEPMAP2 );
-				}
-
-				if (isGrass && passNum > 0)
-				{// Use grass map...
-					GL_BindToTMU( tr.defaultGrassMapImage, TB_SPLATCONTROLMAP );
-				}
-				else
-				{
-					if (pStage->bundle[TB_SPLATCONTROLMAP].image[0] && pStage->bundle[TB_SPLATCONTROLMAP].image[0] != tr.blackImage)
-					{
-						//ri->Printf(PRINT_WARNING, "Image %s bound to splat control map %i x %i.\n", pStage->bundle[TB_SPLATCONTROLMAP].image[0]->imgName, pStage->bundle[TB_SPLATCONTROLMAP].image[0]->width, pStage->bundle[TB_SPLATCONTROLMAP].image[0]->height);
-						GL_BindToTMU( pStage->bundle[TB_SPLATCONTROLMAP].image[0], TB_SPLATCONTROLMAP );
-					}
-					else
-					{
-						//GL_BindToTMU( tr.blackImage, TB_SPLATCONTROLMAP ); // bind black image so we never use any of the splat images
-						GL_BindToTMU( tr.defaultSplatControlImage, TB_SPLATCONTROLMAP ); // really need to make a blured (possibly also considering heightmap) version of this...
-					}
-				}
-
-				if (pStage->bundle[TB_SPLATMAP1].image[0] && pStage->bundle[TB_SPLATMAP1].image[0] != tr.whiteImage)
-				{
-					GL_BindToTMU( pStage->bundle[TB_SPLATMAP1].image[0], TB_SPLATMAP1 );
-					GL_BindToTMU( pStage->bundle[TB_SPLATMAP1].image[1], TB_SPLATNORMALMAP1 );
-				}
-				else
-				{
-					if (pStage->bundle[TB_DIFFUSEMAP].image[0])
-					{
-						R_BindAnimatedImageToTMU( &pStage->bundle[TB_DIFFUSEMAP], TB_SPLATMAP1);
-						GL_BindToTMU( pStage->bundle[TB_NORMALMAP].image[0], TB_SPLATNORMALMAP1 );
-					}
-					else // will never get used anyway
-					{
-						GL_BindToTMU( tr.whiteImage, TB_SPLATMAP1 );
-						GL_BindToTMU( tr.whiteImage, TB_SPLATNORMALMAP1 );
-					}
-				}
-
-				if (pStage->bundle[TB_SPLATMAP2].image[0] && pStage->bundle[TB_SPLATMAP2].image[0] != tr.whiteImage)
-				{
-					GL_BindToTMU( pStage->bundle[TB_SPLATMAP2].image[0], TB_SPLATMAP2 );
-					GL_BindToTMU( pStage->bundle[TB_SPLATMAP2].image[1], TB_SPLATNORMALMAP2 );
-				}
-				else
-				{
-					if (pStage->bundle[TB_DIFFUSEMAP].image[0])
-					{
-						R_BindAnimatedImageToTMU( &pStage->bundle[TB_DIFFUSEMAP], TB_SPLATMAP2);
-						GL_BindToTMU( pStage->bundle[TB_NORMALMAP].image[0], TB_SPLATNORMALMAP2 );
-					}
-					else // will never get used anyway
-					{
-						GL_BindToTMU( tr.whiteImage, TB_SPLATMAP2 );
-						GL_BindToTMU( tr.whiteImage, TB_SPLATNORMALMAP2 );
-					}
-				}
-
-				if (pStage->bundle[TB_SPLATMAP3].image[0] && pStage->bundle[TB_SPLATMAP3].image[0] != tr.whiteImage)
-				{
-					GL_BindToTMU( pStage->bundle[TB_SPLATMAP3].image[0], TB_SPLATMAP3 );
-					GL_BindToTMU( pStage->bundle[TB_SPLATMAP3].image[1], TB_SPLATNORMALMAP3 );
-				}
-				else
-				{
-					if (pStage->bundle[TB_DIFFUSEMAP].image[0])
-					{
-						R_BindAnimatedImageToTMU( &pStage->bundle[TB_DIFFUSEMAP], TB_SPLATMAP3);
-						GL_BindToTMU( pStage->bundle[TB_NORMALMAP].image[0], TB_SPLATNORMALMAP3 );
-					}
-					else // will never get used anyway
-					{
-						GL_BindToTMU( tr.whiteImage, TB_SPLATMAP3 );
-						GL_BindToTMU( tr.whiteImage, TB_SPLATNORMALMAP3 );
-					}
-				}
-
-				if (pStage->bundle[TB_SPLATMAP4].image[0] && pStage->bundle[TB_SPLATMAP4].image[0] != tr.whiteImage)
-				{
-					GL_BindToTMU( pStage->bundle[TB_SPLATMAP4].image[0], TB_SPLATMAP4 );
-					GL_BindToTMU( pStage->bundle[TB_SPLATMAP4].image[1], TB_SPLATNORMALMAP4 );
-				}
-				else
-				{
-					if (pStage->bundle[TB_DIFFUSEMAP].image[0])
-					{
-						R_BindAnimatedImageToTMU( &pStage->bundle[TB_DIFFUSEMAP], TB_SPLATMAP4);
-						GL_BindToTMU( pStage->bundle[TB_NORMALMAP].image[0], TB_SPLATNORMALMAP4 );
-					}
-					else // will never get used anyway
-					{
-						GL_BindToTMU( tr.whiteImage, TB_SPLATMAP4 );
-						GL_BindToTMU( tr.whiteImage, TB_SPLATNORMALMAP4 );
-					}
-				}
-
-				/*if (pStage->bundle[TB_SUBSURFACEMAP].image[0])
-				{
-				R_BindAnimatedImageToTMU( &pStage->bundle[TB_SUBSURFACEMAP], TB_SUBSURFACEMAP);
-				}
-				else
-				{
-				GL_BindToTMU( tr.whiteImage, TB_SUBSURFACEMAP );
-				}*/
-
-				if (pStage->bundle[TB_OVERLAYMAP].image[0])
-				{
-					R_BindAnimatedImageToTMU( &pStage->bundle[TB_OVERLAYMAP], TB_OVERLAYMAP);
-				}
-				else
-				{
-					GL_BindToTMU( tr.blackImage, TB_OVERLAYMAP );
-				}
-			}
-
-			if ( !backEnd.depthFill )
-			{
-				if (r_sunlightMode->integer && (r_sunlightSpecular->integer || (backEnd.viewParms.flags & VPF_USESUNLIGHT)))
-				{
-					if (backEnd.viewParms.flags & VPF_USESUNLIGHT)
-					{
-						GL_BindToTMU(tr.screenShadowImage, TB_SHADOWMAP);
-					}
-					else
-					{
-						GL_BindToTMU(tr.whiteImage, TB_SHADOWMAP);
-					}
-
-					GLSL_SetUniformVec3(sp, UNIFORM_PRIMARYLIGHTAMBIENT, backEnd.refdef.sunAmbCol);
-					GLSL_SetUniformVec3(sp, UNIFORM_PRIMARYLIGHTCOLOR,   backEnd.refdef.sunCol);
-					GLSL_SetUniformVec4(sp, UNIFORM_PRIMARYLIGHTORIGIN,  backEnd.refdef.sunDir);
-
-
-					if (pStage->glow)
-					{// No light added to glow stages...
-						GLSL_SetUniformInt(sp, UNIFORM_LIGHTCOUNT, 0);
-					}
-					else
-					{
-						GLSL_SetUniformInt(sp, UNIFORM_LIGHTCOUNT, NUM_CLOSE_LIGHTS);
-						GLSL_SetUniformVec3x16(sp, UNIFORM_LIGHTPOSITIONS2, CLOSEST_LIGHTS_POSITIONS, MAX_LIGHTALL_DLIGHTS);
-						GLSL_SetUniformVec3x16(sp, UNIFORM_LIGHTCOLORS, CLOSEST_LIGHTS_COLORS, MAX_LIGHTALL_DLIGHTS);
-						GLSL_SetUniformFloatx16(sp, UNIFORM_LIGHTDISTANCES, CLOSEST_LIGHTS_DISTANCES, MAX_LIGHTALL_DLIGHTS);
-					}
-				}
-			}
-
-			GL_BindToTMU( tr.whiteImage, TB_NORMALMAP );
-
-			if (!backEnd.depthFill)
-			{
-				GL_BindToTMU( tr.whiteImage, TB_NORMALMAP2 );
-				GL_BindToTMU( tr.whiteImage, TB_NORMALMAP3 );
-			}
-
-			//
-			// do multitexture
-			//
-			if ( backEnd.depthFill )
-			{
-				if (!(pStage->stateBits & GLS_ATEST_BITS))
-					GL_BindToTMU( tr.whiteImage, 0 );
-				else if ( pStage->bundle[TB_COLORMAP].image[0] != 0 )
-					R_BindAnimatedImageToTMU( &pStage->bundle[TB_COLORMAP], TB_COLORMAP );
-			}
-			else if ( !isGeneric && (pStage->glslShaderGroup == tr.lightallShader ) )
-			{
-				int i;
-				vec4_t enableTextures;
-
-				VectorSet4(enableTextures, 0, 0, 0, 0);
-				if ((r_lightmap->integer == 1 || r_lightmap->integer == 2) && pStage->bundle[TB_LIGHTMAP].image[0])
-				{
-					for (i = 0; i < NUM_TEXTURE_BUNDLES; i++)
-					{
-						if (i == TB_LIGHTMAP)
-							R_BindAnimatedImageToTMU( &pStage->bundle[TB_LIGHTMAP], i);
-						else
-							GL_BindToTMU( tr.whiteImage, i );
-					}
-				}
-				else if (r_lightmap->integer == 3 && pStage->bundle[TB_DELUXEMAP].image[0])
-				{
-					for (i = 0; i < NUM_TEXTURE_BUNDLES; i++)
-					{
-						if (i == TB_LIGHTMAP)
-							R_BindAnimatedImageToTMU( &pStage->bundle[TB_DELUXEMAP], i);
-						else
-							GL_BindToTMU( tr.whiteImage, i );
-					}
-				}
-				else
-				{
-					qboolean light = qtrue;
-					qboolean fastLight = qfalse;
-
-					if (light && !fastLight)
-						usingLight = qtrue;
-
-					if (pStage->bundle[TB_DIFFUSEMAP].image[0])
-						R_BindAnimatedImageToTMU( &pStage->bundle[TB_DIFFUSEMAP], TB_DIFFUSEMAP);
-
-					if (pStage->bundle[TB_LIGHTMAP].image[0])
-						R_BindAnimatedImageToTMU( &pStage->bundle[TB_LIGHTMAP], TB_LIGHTMAP);
-					else
-						GL_BindToTMU( tr.whiteImage, TB_LIGHTMAP );
-
-					// bind textures that are sampled and used in the glsl shader, and
-					// bind whiteImage to textures that are sampled but zeroed in the glsl shader
-					//
-					// alternatives:
-					//  - use the last bound texture
-					//     -> costs more to sample a higher res texture then throw out the result
-					//  - disable texture sampling in glsl shader with #ifdefs, as before
-					//     -> increases the number of shaders that must be compiled
-					//
-					//if ((light || pStage->hasRealNormalMap || pStage->hasSpecular /*|| pStage->hasRealSubsurfaceMap*/ || pStage->hasRealOverlayMap || pStage->hasRealSteepMap) && !fastLight)
-					{
-						if (r_normalMapping->integer >= 2
-							&& !input->shader->isPortal
-							&& !input->shader->isSky
-							&& !pStage->glow
-							&& !pStage->bundle[TB_DIFFUSEMAP].normalsLoaded2
-							&& (!pStage->bundle[TB_NORMALMAP].image[0] || pStage->bundle[TB_NORMALMAP].image[0] == tr.whiteImage)
-							&& pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName[0] 
-							&& pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName[0] != '*'
-							&& pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName[0] != '$'
-							&& pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName[0] != '_'
-							&& pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName[0] != '!'
-							&& !(pStage->bundle[TB_DIFFUSEMAP].image[0]->flags & IMGFLAG_CUBEMAP)
-							&& pStage->bundle[TB_DIFFUSEMAP].image[0]->type != IMGTYPE_NORMAL 
-							&& pStage->bundle[TB_DIFFUSEMAP].image[0]->type != IMGTYPE_SPECULAR 
-							/*&& pStage->bundle[TB_DIFFUSEMAP].image[0]->type != IMGTYPE_SUBSURFACE*/ 
-							&& pStage->bundle[TB_DIFFUSEMAP].image[0]->type != IMGTYPE_OVERLAY 
-							&& pStage->bundle[TB_DIFFUSEMAP].image[0]->type != IMGTYPE_STEEPMAP 
-							&& pStage->bundle[TB_DIFFUSEMAP].image[0]->type != IMGTYPE_STEEPMAP2 
-							// gfx dirs can be exempted I guess...
-							&& !(r_disableGfxDirEnhancement->integer && StringContainsWord(pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName, "gfx/")))
-						{// How did this happen??? Oh well, generate a normal map now...
-							char imgname[64];
-							//ri->Printf(PRINT_WARNING, "Realtime generating normal map for %s.\n", pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName);
-							sprintf(imgname, "%s_n", pStage->bundle[TB_DIFFUSEMAP].image[0]->imgName);
-							pStage->bundle[TB_NORMALMAP].image[0] = R_CreateNormalMapGLSL( imgname, NULL, pStage->bundle[TB_DIFFUSEMAP].image[0]->width, pStage->bundle[TB_DIFFUSEMAP].image[0]->height, pStage->bundle[TB_DIFFUSEMAP].image[0]->flags, pStage->bundle[TB_DIFFUSEMAP].image[0] );
-							
-							if (pStage->bundle[TB_NORMALMAP].image[0] && pStage->bundle[TB_NORMALMAP].image[0] != tr.whiteImage) 
-							{
-								pStage->hasRealNormalMap = true;
-								RB_SetMaterialBasedProperties(sp, pStage);
-
-								if (pStage->normalScale[0] == 0 && pStage->normalScale[1] == 0 && pStage->normalScale[2] == 0)
-								{
-									VectorSet4(pStage->normalScale, r_baseNormalX->value, r_baseNormalY->value, 1.0f, r_baseParallax->value);
-									GLSL_SetUniformVec4(sp, UNIFORM_NORMALSCALE, pStage->normalScale);
-								}
-							}
-
-							//if (pStage->bundle[TB_NORMALMAP].image[0] != tr.whiteImage)
-								pStage->bundle[TB_DIFFUSEMAP].normalsLoaded2 = qtrue;
-						}
-
-						if (pStage->bundle[TB_NORMALMAP].image[0])
-						{
-							R_BindAnimatedImageToTMU( &pStage->bundle[TB_NORMALMAP], TB_NORMALMAP);
-							enableTextures[0] = 1.0f;
-						}
-						else if (r_normalMapping->integer >= 2)
-						{
-							GL_BindToTMU( tr.whiteImage, TB_NORMALMAP );
-						}
-
-						if (pStage->bundle[TB_NORMALMAP2].image[0])
-						{
-							R_BindAnimatedImageToTMU( &pStage->bundle[TB_NORMALMAP2], TB_NORMALMAP2);
-						}
-						else if (r_normalMapping->integer >= 2)
-						{
-							GL_BindToTMU( tr.whiteImage, TB_NORMALMAP2 );
-						}
-
-						if (pStage->bundle[TB_NORMALMAP3].image[0])
-						{
-							R_BindAnimatedImageToTMU( &pStage->bundle[TB_NORMALMAP3], TB_NORMALMAP3);
-						}
-						else if (r_normalMapping->integer >= 2)
-						{
-							GL_BindToTMU( tr.whiteImage, TB_NORMALMAP3 );
-						}
-
-						if (pStage->bundle[TB_DELUXEMAP].image[0])
-						{
-							R_BindAnimatedImageToTMU( &pStage->bundle[TB_DELUXEMAP], TB_DELUXEMAP);
-							enableTextures[1] = 1.0f;
-						}
-						else if (r_deluxeMapping->integer)
-						{
-							GL_BindToTMU( tr.whiteImage, TB_DELUXEMAP );
-						}
-
-						if (pStage->bundle[TB_SPECULARMAP].image[0])
-						{
-							R_BindAnimatedImageToTMU( &pStage->bundle[TB_SPECULARMAP], TB_SPECULARMAP);
-							enableTextures[2] = 1.0f;
-						}
-						else if (r_specularMapping->integer)
-						{
-							GL_BindToTMU( tr.whiteImage, TB_SPECULARMAP );
-						}
-					}
-
-					if (backEnd.depthFill || (tr.viewParms.flags & VPF_SHADOWPASS))
-					{
-						enableTextures[3] = 0.0f;
-					}
-					else
-					{
-						enableTextures[3] = (r_cubeMapping->integer >= 1 && !(tr.viewParms.flags & VPF_NOCUBEMAPS) && input->cubemapIndex) ? 1.0f : 0.0f;
-					}
-				}
-
-				GLSL_SetUniformVec4(sp, UNIFORM_ENABLETEXTURES, enableTextures);
-			}
-			else if ( pStage->bundle[1].image[0] != 0 )
-			{
-				R_BindAnimatedImageToTMU( &pStage->bundle[0], 0 );
-				R_BindAnimatedImageToTMU( &pStage->bundle[1], 1 );
-			}
-			else 
-			{
-				//
-				// set state
-				//
-				R_BindAnimatedImageToTMU( &pStage->bundle[0], 0 );
-			}
-
-
 			qboolean tesselation = qfalse;
 
 			if (isGrass && passNum > 0 && r_foliage->integer)
 			{// Geometry grass drawing passes...
-				GL_BindToTMU( tr.grassImage[0], TB_DIFFUSEMAP );
-				GL_BindToTMU( tr.grassImage[1], TB_SPLATMAP1 );
-				GL_BindToTMU( tr.grassImage[2], TB_SPLATMAP2 );
-				GL_BindToTMU( tr.seaGrassImage, TB_OVERLAYMAP );
-
 				vec4_t l8;
 				VectorSet4(l8, (float)passNum, 0.0, 0.0, 0.0);
 				GLSL_SetUniformVec4(sp, UNIFORM_LOCAL8, l8);
-
-				vec4_t l10;
-				VectorSet4(l10, r_foliageDistance->value, r_foliageDensity->value, MAP_WATER_LEVEL, 0.0);
-				GLSL_SetUniformVec4(sp, UNIFORM_LOCAL10, l10);
-
-				GLSL_SetUniformVec3(sp, UNIFORM_PRIMARYLIGHTAMBIENT, backEnd.refdef.sunAmbCol);
-				GLSL_SetUniformVec3(sp, UNIFORM_PRIMARYLIGHTCOLOR,   backEnd.refdef.sunCol);
-				GLSL_SetUniformVec4(sp, UNIFORM_PRIMARYLIGHTORIGIN,  backEnd.refdef.sunDir);
 
 				GL_Cull( CT_TWO_SIDED );
 			}

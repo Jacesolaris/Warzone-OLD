@@ -3143,13 +3143,49 @@ int GLSL_BeginLoadGPUShaders(void)
 		ri->Error(ERR_FATAL, "Could not load fastBlur shader!");
 	}
 
+
+
 	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
 	extradefines[0] = '\0';
 
-	if (!GLSL_BeginLoadGPUShader(&tr.distanceBlurShader, "distanceBlur", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_distanceBlur_vp, fallbackShader_distanceBlur_fp, NULL, NULL, NULL))
+	Q_strcat(extradefines, 1024, "#define OLD_BLUR\n");
+
+	if (!GLSL_BeginLoadGPUShader(&tr.distanceBlurShader[0], "distanceBlur", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_distanceBlur_vp, fallbackShader_distanceBlur_fp, NULL, NULL, NULL))
 	{
-		ri->Error(ERR_FATAL, "Could not load distanceBlur shader!");
+		ri->Error(ERR_FATAL, "Could not load distanceBlur0 shader!");
 	}
+
+	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
+	extradefines[0] = '\0';
+
+	Q_strcat(extradefines, 1024, "#define FAST_BLUR\n");
+
+	if (!GLSL_BeginLoadGPUShader(&tr.distanceBlurShader[1], "distanceBlur", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_distanceBlur_vp, fallbackShader_distanceBlur_fp, NULL, NULL, NULL))
+	{
+		ri->Error(ERR_FATAL, "Could not load distanceBlur1 shader!");
+	}
+
+	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
+	extradefines[0] = '\0';
+
+	Q_strcat(extradefines, 1024, "#define MEDIUM_BLUR\n");
+
+	if (!GLSL_BeginLoadGPUShader(&tr.distanceBlurShader[2], "distanceBlur", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_distanceBlur_vp, fallbackShader_distanceBlur_fp, NULL, NULL, NULL))
+	{
+		ri->Error(ERR_FATAL, "Could not load distanceBlur2 shader!");
+	}
+
+	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
+	extradefines[0] = '\0';
+
+	Q_strcat(extradefines, 1024, "#define HIGH_BLUR\n");
+
+	if (!GLSL_BeginLoadGPUShader(&tr.distanceBlurShader[3], "distanceBlur", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_distanceBlur_vp, fallbackShader_distanceBlur_fp, NULL, NULL, NULL))
+	{
+		ri->Error(ERR_FATAL, "Could not load distanceBlur3 shader!");
+	}
+
+
 
 	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
 	extradefines[0] = '\0';
@@ -4603,32 +4639,66 @@ void GLSL_EndLoadGPUShaders ( int startTime )
 	numEtcShaders++;
 
 
-	if (!GLSL_EndLoadGPUShader(&tr.distanceBlurShader))
+	for (i = 0; i < 4; i++)
 	{
-		ri->Error(ERR_FATAL, "Could not load distanceBlur shader!");
-	}
-	
-	GLSL_InitUniforms(&tr.distanceBlurShader);
+		if (!GLSL_EndLoadGPUShader(&tr.distanceBlurShader[i]))
+		{
+			ri->Error(ERR_FATAL, "Could not load distanceBlur%i shader!", i);
+		}
 
-	qglUseProgram(tr.distanceBlurShader.program);
+		GLSL_InitUniforms(&tr.distanceBlurShader[i]);
 
-	GLSL_SetUniformInt(&tr.distanceBlurShader, UNIFORM_LEVELSMAP,  TB_LEVELSMAP);
-	
-	{
-		vec2_t screensize;
-		screensize[0] = glConfig.vidWidth * r_superSampleMultiplier->value;
-		screensize[1] = glConfig.vidHeight * r_superSampleMultiplier->value;
+		qglUseProgram(tr.distanceBlurShader[i].program);
 
-		GLSL_SetUniformVec2(&tr.distanceBlurShader, UNIFORM_DIMENSIONS, screensize);
-	}
+		GLSL_SetUniformInt(&tr.distanceBlurShader[i], UNIFORM_LEVELSMAP,  TB_LEVELSMAP);
+		GLSL_SetUniformInt(&tr.distanceBlurShader[i], UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
+		GLSL_SetUniformInt(&tr.distanceBlurShader[i], UNIFORM_GLOWMAP, TB_GLOWMAP);
 
-	qglUseProgram(0);
+		{
+			vec2_t screensize;
+			screensize[0] = glConfig.vidWidth * r_superSampleMultiplier->value;
+			screensize[1] = glConfig.vidHeight * r_superSampleMultiplier->value;
+
+			GLSL_SetUniformVec2(&tr.distanceBlurShader[i], UNIFORM_DIMENSIONS, screensize);
+		}
+
+		{
+			vec4_t info;
+
+			info[0] = r_distanceBlur->value;
+			info[1] = r_dynamicGlow->value;
+			info[2] = 0.0;
+			info[3] = 0;
+
+			VectorSet4(info, info[0], info[1], info[2], info[3]);
+
+			GLSL_SetUniformVec4(&tr.distanceBlurShader[i], UNIFORM_LOCAL0, info);
+		}
+
+		{
+			vec4_t loc;
+			VectorSet4(loc, r_testvalue0->value, r_testvalue1->value, r_testvalue2->value, r_testvalue3->value);
+			GLSL_SetUniformVec4(&tr.distanceBlurShader[i], UNIFORM_LOCAL1, loc);
+		}
+
+		{
+			vec4_t viewInfo;
+			float zmax = 2048.0;//3072.0;//backEnd.viewParms.zFar;
+			float ymax = zmax * tan(backEnd.viewParms.fovY * M_PI / 360.0f);
+			float xmax = zmax * tan(backEnd.viewParms.fovX * M_PI / 360.0f);
+			float zmin = r_znear->value;
+			VectorSet4(viewInfo, zmin, zmax, zmax / zmin, 0.0);
+			GLSL_SetUniformVec4(&tr.distanceBlurShader[i], UNIFORM_VIEWINFO, viewInfo);
+		}
+
+		qglUseProgram(0);
 
 #if defined(_DEBUG)
-	GLSL_FinishGPUShader(&tr.distanceBlurShader);
+		GLSL_FinishGPUShader(&tr.distanceBlurShader[i]);
 #endif
-	
-	numEtcShaders++;
+
+		numEtcShaders++;
+	}
 
 
 	//esharpeningShader
@@ -5406,7 +5476,10 @@ void GLSL_ShutdownGPUShaders(void)
 	GLSL_DeleteGPUShader(&tr.volumeLightCombineShader);
 	GLSL_DeleteGPUShader(&tr.vibrancyShader);
 	GLSL_DeleteGPUShader(&tr.fastBlurShader);
-	GLSL_DeleteGPUShader(&tr.distanceBlurShader);
+	GLSL_DeleteGPUShader(&tr.distanceBlurShader[0]);
+	GLSL_DeleteGPUShader(&tr.distanceBlurShader[1]);
+	GLSL_DeleteGPUShader(&tr.distanceBlurShader[2]);
+	GLSL_DeleteGPUShader(&tr.distanceBlurShader[3]);
 	GLSL_DeleteGPUShader(&tr.fogPostShader);
 	GLSL_DeleteGPUShader(&tr.testshaderShader);
 	GLSL_DeleteGPUShader(&tr.uniqueskyShader);

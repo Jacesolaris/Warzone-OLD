@@ -2830,44 +2830,108 @@ void RB_FastBlur(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 	FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.fastBlurShader, color, 0);
 }
 
-void RB_DistanceBlur(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
+void RB_DistanceBlur(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox, int direction)
 {
-	vec4_t color;
+	if (r_distanceBlur->integer < 2 || r_distanceBlur->integer >= 5)
+	{// Fast blur (original)
+		vec4_t color;
 
-	// bloom
-	color[0] =
-		color[1] =
-		color[2] = pow(2, r_cameraExposure->value);
-	color[3] = 1.0f;
+		// bloom
+		color[0] =
+			color[1] =
+			color[2] = pow(2, r_cameraExposure->value);
+		color[3] = 1.0f;
 
-	GLSL_BindProgram(&tr.distanceBlurShader);
+		GLSL_BindProgram(&tr.distanceBlurShader[0]);
 
-	GLSL_SetUniformInt(&tr.distanceBlurShader, UNIFORM_LEVELSMAP, TB_LEVELSMAP);
-	GL_BindToTMU(hdrFbo->colorImage[0], TB_LEVELSMAP);
-	GLSL_SetUniformInt(&tr.distanceBlurShader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
-	GL_BindToTMU(tr.renderDepthImage, TB_LIGHTMAP);
+		GLSL_SetUniformInt(&tr.distanceBlurShader[0], UNIFORM_LEVELSMAP, TB_LEVELSMAP);
+		GL_BindToTMU(hdrFbo->colorImage[0], TB_LEVELSMAP);
+		GLSL_SetUniformInt(&tr.distanceBlurShader[0], UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
+		GL_BindToTMU(tr.renderDepthImage, TB_LIGHTMAP);
 
-	GLSL_SetUniformMatrix16(&tr.distanceBlurShader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
+		GLSL_SetUniformMatrix16(&tr.distanceBlurShader[0], UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
 
-	{
-		vec2_t screensize;
-		screensize[0] = glConfig.vidWidth * r_superSampleMultiplier->value;
-		screensize[1] = glConfig.vidHeight * r_superSampleMultiplier->value;
+		{
+			vec2_t screensize;
+			screensize[0] = glConfig.vidWidth * r_superSampleMultiplier->value;
+			screensize[1] = glConfig.vidHeight * r_superSampleMultiplier->value;
 
-		GLSL_SetUniformVec2(&tr.distanceBlurShader, UNIFORM_DIMENSIONS, screensize);
+			GLSL_SetUniformVec2(&tr.distanceBlurShader[0], UNIFORM_DIMENSIONS, screensize);
+		}
+
+		{
+			vec4_t viewInfo;
+			float zmax = 2048.0;//3072.0;//backEnd.viewParms.zFar;
+			float ymax = zmax * tan(backEnd.viewParms.fovY * M_PI / 360.0f);
+			float xmax = zmax * tan(backEnd.viewParms.fovX * M_PI / 360.0f);
+			float zmin = r_znear->value;
+			VectorSet4(viewInfo, zmin, zmax, zmax / zmin, 0.0);
+			GLSL_SetUniformVec4(&tr.distanceBlurShader[0], UNIFORM_VIEWINFO, viewInfo);
+		}
+
+		FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.distanceBlurShader[0], color, 0);
 	}
+	else
+	{// New matso style blur...
+		shaderProgram_t *shader = &tr.distanceBlurShader[r_distanceBlur->integer-1];
+		vec4_t color;
 
-	{
-		vec4_t viewInfo;
-		float zmax = 2048.0;//3072.0;//backEnd.viewParms.zFar;
-		float ymax = zmax * tan(backEnd.viewParms.fovY * M_PI / 360.0f);
-		float xmax = zmax * tan(backEnd.viewParms.fovX * M_PI / 360.0f);
-		float zmin = r_znear->value;
-		VectorSet4(viewInfo, zmin, zmax, zmax / zmin, 0.0);
-		GLSL_SetUniformVec4(&tr.distanceBlurShader, UNIFORM_VIEWINFO, viewInfo);
+		// bloom
+		color[0] =
+			color[1] =
+			color[2] = pow(2, r_cameraExposure->value);
+		color[3] = 1.0f;
+
+		GLSL_BindProgram(shader);
+
+		GLSL_SetUniformInt(shader, UNIFORM_LEVELSMAP, TB_LEVELSMAP);
+		GL_BindToTMU(hdrFbo->colorImage[0], TB_LEVELSMAP);
+		GLSL_SetUniformInt(shader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
+		GL_BindToTMU(tr.renderDepthImage, TB_LIGHTMAP);
+		GLSL_SetUniformInt(shader, UNIFORM_GLOWMAP, TB_GLOWMAP);
+		GL_BindToTMU(tr.glowFboScaled[0]->colorImage[0], TB_GLOWMAP);
+
+		GLSL_SetUniformMatrix16(shader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
+
+		{
+			vec2_t screensize;
+			screensize[0] = glConfig.vidWidth * r_superSampleMultiplier->value;
+			screensize[1] = glConfig.vidHeight * r_superSampleMultiplier->value;
+
+			GLSL_SetUniformVec2(shader, UNIFORM_DIMENSIONS, screensize);
+		}
+
+		{
+			vec4_t info;
+
+			info[0] = r_distanceBlur->value;
+			info[1] = r_dynamicGlow->value;
+			info[2] = 0.0;
+			info[3] = direction;
+
+			VectorSet4(info, info[0], info[1], info[2], info[3]);
+
+			GLSL_SetUniformVec4(shader, UNIFORM_LOCAL0, info);
+		}
+
+		{
+			vec4_t loc;
+			VectorSet4(loc, r_testvalue0->value, r_testvalue1->value, r_testvalue2->value, r_testvalue3->value);
+			GLSL_SetUniformVec4(shader, UNIFORM_LOCAL1, loc);
+		}
+
+		{
+			vec4_t viewInfo;
+			float zmax = 2048.0;//3072.0;//backEnd.viewParms.zFar;
+			float ymax = zmax * tan(backEnd.viewParms.fovY * M_PI / 360.0f);
+			float xmax = zmax * tan(backEnd.viewParms.fovX * M_PI / 360.0f);
+			float zmin = r_znear->value;
+			VectorSet4(viewInfo, zmin, zmax, zmax / zmin, 0.0);
+			GLSL_SetUniformVec4(shader, UNIFORM_VIEWINFO, viewInfo);
+		}
+
+		FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, shader, color, 0);
 	}
-	
-	FBO_Blit(hdrFbo, hdrBox, NULL, ldrFbo, ldrBox, &tr.distanceBlurShader, color, 0);
 }
 
 void RB_Underwater(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)

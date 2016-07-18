@@ -356,19 +356,19 @@ void CG_AddAtmosphericEffects()
 		MAX_FRAME_PARTICLES = 32;
 		break;
 	case WEATHER_HEAVY_RAIN:
-		MAX_FRAME_PARTICLES = 128;
+		MAX_FRAME_PARTICLES = 64;//128; // reduced for more FPS
 		break;
 	case WEATHER_RAIN_STORM:
-		MAX_FRAME_PARTICLES = 128;
+		MAX_FRAME_PARTICLES = 64;//128; // reduced for more FPS
 		break;
 	case WEATHER_SNOW:
 		MAX_FRAME_PARTICLES = 32;
 		break;
 	case WEATHER_HEAVY_SNOW:
-		MAX_FRAME_PARTICLES = 128;
+		MAX_FRAME_PARTICLES = 64;//128; // reduced for more FPS
 		break;
 	case WEATHER_SNOW_STORM:
-		MAX_FRAME_PARTICLES = 128;
+		MAX_FRAME_PARTICLES = 64;//128; // reduced for more FPS
 		break;
 	default:
 		MAX_FRAME_PARTICLES = 32;

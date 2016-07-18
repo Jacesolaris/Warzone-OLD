@@ -2505,7 +2505,7 @@ typedef struct trGlobals_s {
 	shaderProgram_t volumeLightCombineShader;
 	shaderProgram_t vibrancyShader;
 	shaderProgram_t fastBlurShader;
-	shaderProgram_t distanceBlurShader;
+	shaderProgram_t distanceBlurShader[4];
 	shaderProgram_t fogPostShader;
 	shaderProgram_t testshaderShader;
 
