@@ -2513,7 +2513,14 @@ qboolean CG_CalcMuzzlePoint( int entityNum, vec3_t muzzle ) {
 		vec3_t weaponMuzzle;
 		centity_t *pEnt = &cg_entities[cg.predictedPlayerState.clientNum];
 
-		VectorCopy(WP_MuzzlePoint[weapontype], weaponMuzzle);
+		if (cg_muzzleX.value != 0.0 || cg_muzzleY.value != 0.0 || cg_muzzleZ.value != 0.0)
+		{
+			VectorSet(weaponMuzzle, cg_muzzleX.value != 0.0, cg_muzzleY.value, cg_muzzleZ.value);
+		}
+		else
+		{
+			VectorCopy(WP_MuzzlePoint[weapontype], weaponMuzzle);
+		}
 
 		if (cg.renderingThirdPerson)
 		{
