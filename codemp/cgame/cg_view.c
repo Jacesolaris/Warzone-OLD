@@ -1141,6 +1141,20 @@ void CG_AdjustZoomVal(float val, int type)
 {
 	cg.zoomval += val;
 
+	if (cg_scopeZoomMin.value != 0.0 || cg_scopeZoomMax.value != 0.0)
+	{// Cvar overrides for debugging...
+		if (cg.zoomval > cg_scopeZoomMax.value)
+		{
+			cg.zoomval = cg_scopeZoomMax.value;
+		}
+
+		if (cg.zoomval < cg_scopeZoomMin.value)
+		{
+			cg.zoomval = cg_scopeZoomMin.value;
+		}
+		return;
+	}
+
 	if (cg.zoomval > scopeData[type].scopeZoomMax)
 	{
 		cg.zoomval = scopeData[type].scopeZoomMax;
@@ -1193,6 +1207,24 @@ void CG_Zoom( void )
 		cg.predictedPlayerState.eFlags = cg.snap->ps.eFlags;
 		cg.predictedPlayerState.weapon = cg.snap->ps.weapon;
 		cg.predictedPlayerState.scopeType = cg.snap->ps.scopeType;
+	}
+
+	if (cg_scopeZoomMin.value != 0.0 || cg_scopeZoomMax.value != 0.0)
+	{// Cvar overrides for debugging...
+		if( cg.predictedPlayerState.scopeType >= SCOPE_BINOCULARS ) {
+			if (cg.zoomval < cg_scopeZoomMin.value)
+			{
+				cg.zoomval = cg_scopeZoomMin.value;
+			}
+
+			if (cg.zoomval > cg_scopeZoomMax.value)
+			{
+				cg.zoomval = cg_scopeZoomMax.value;
+			}
+		} else {
+			cg.zoomval = 0;
+		}
+		return;
 	}
 
 	if( cg.predictedPlayerState.scopeType >= SCOPE_BINOCULARS ) {
@@ -1277,12 +1309,25 @@ static int CG_CalcFov( void ) {
 
 			zoomFov = cg.zoomval;	// (SA) use user scrolled amount
 
-			if ( zoomFov < scopeData[cg.predictedPlayerState.scopeType].scopeZoomMin ) {
-				zoomFov = scopeData[cg.predictedPlayerState.scopeType].scopeZoomMin;
-			} 
-			
-			if ( zoomFov > scopeData[cg.predictedPlayerState.scopeType].scopeZoomMax ) {
-				zoomFov = scopeData[cg.predictedPlayerState.scopeType].scopeZoomMax;
+			if (cg_scopeZoomMin.value != 0.0 || cg_scopeZoomMax.value != 0.0)
+			{// Cvar overrides for debugging...
+				if ( zoomFov < cg_scopeZoomMin.value ) {
+					zoomFov = cg_scopeZoomMin.value;
+				} 
+
+				if ( zoomFov > cg_scopeZoomMax.value ) {
+					zoomFov = cg_scopeZoomMax.value;
+				}
+			}
+			else
+			{
+				if ( zoomFov < scopeData[cg.predictedPlayerState.scopeType].scopeZoomMin ) {
+					zoomFov = scopeData[cg.predictedPlayerState.scopeType].scopeZoomMin;
+				} 
+
+				if ( zoomFov > scopeData[cg.predictedPlayerState.scopeType].scopeZoomMax ) {
+					zoomFov = scopeData[cg.predictedPlayerState.scopeType].scopeZoomMax;
+				}
 			}
 
 			fov_x = fov_x / zoomFov;
@@ -1291,7 +1336,15 @@ static int CG_CalcFov( void ) {
 		} else {
 			// Nothing set yet, so set to minimum zoom for this scope...
 			fov_x = lastfov;
-			zoomFov = fov_x * scopeData[cg.predictedPlayerState.scopeType].scopeZoomMin;
+
+			if (cg_scopeZoomMin.value != 0.0 || cg_scopeZoomMax.value != 0.0)
+			{// Cvar overrides for debugging...
+				zoomFov = fov_x * cg_scopeZoomMin.value;
+			}
+			else
+			{
+				zoomFov = fov_x * scopeData[cg.predictedPlayerState.scopeType].scopeZoomMin;
+			}
 		}
 	}
 
