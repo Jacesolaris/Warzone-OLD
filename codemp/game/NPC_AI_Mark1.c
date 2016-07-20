@@ -13,7 +13,7 @@
 #define RIGHT_ARM_HEALTH			40
 #define AMMO_POD_HEALTH				40
 
-#define	BOWCASTER_VELOCITY			1300
+#define	BOWCASTER_SHOOT_SPEED			1300
 #define	BOWCASTER_NPC_DAMAGE_EASY	12
 #define	BOWCASTER_NPC_DAMAGE_NORMAL	24
 #define	BOWCASTER_NPC_DAMAGE_HARD	36
@@ -139,7 +139,7 @@ void Mark1Dead_FireRocket (void)
 
 	G_Sound( NPCS.NPC, CHAN_AUTO, G_SoundIndex("sound/chars/mark1/misc/mark1_fire"));
 
-	missile = CreateMissile( muzzle1, muzzle_dir, BOWCASTER_VELOCITY, 10000, NPCS.NPC, qfalse );
+	missile = CreateMissile( muzzle1, muzzle_dir, BOWCASTER_SHOOT_SPEED, 10000, NPCS.NPC, qfalse );
 
 	missile->classname = "bowcaster_proj";
 	missile->s.weapon = WP_BOWCASTER;
@@ -576,7 +576,7 @@ void Mark1_FireRocket(void)
 
 	G_Sound( NPCS.NPC, CHAN_AUTO, G_SoundIndex("sound/chars/mark1/misc/mark1_fire" ));
 
-	missile = CreateMissile( muzzle1, forward, BOWCASTER_VELOCITY, 10000, NPCS.NPC, qfalse );
+	missile = CreateMissile( muzzle1, forward, BOWCASTER_SHOOT_SPEED, 10000, NPCS.NPC, qfalse );
 
 	missile->classname = "bowcaster_proj";
 	missile->s.weapon = WP_BOWCASTER;

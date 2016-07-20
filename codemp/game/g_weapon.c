@@ -16,7 +16,7 @@ static vec3_t muzzle;
 
 // Bryar Pistol
 //--------
-#define BRYAR_PISTOL_VEL			1600
+#define BRYAR_PISTOL_SHOOT_SPEED			1600
 #define BRYAR_PISTOL_DAMAGE			5//10
 #define BRYAR_CHARGE_UNIT			200.0f	// bryar charging gives us one more unit every 200ms--if you change this, you'll have to do the same in bg_pmove
 #define BRYAR_ALT_SIZE				1.0f
@@ -24,7 +24,7 @@ static vec3_t muzzle;
 // E11 Blaster
 //---------
 #define BLASTER_SPREAD				1.6f//1.2f
-#define BLASTER_VELOCITY			2300
+#define BLASTER_SHOOT_SPEED			2300
 #define BLASTER_DAMAGE				10//20
 #define BLASTER_CANON_DAMAGE		5
 #define RIFLE_SNIPER_DAMAGE			85
@@ -36,7 +36,7 @@ static vec3_t muzzle;
 #define DOUBLEBARREL_SHOTS			2
 #define DOUBLEBARREL_SPREAD			1.0f
 #define DOUBLEBARREL_DAMAGE			11//15
-#define DOUBLEBARREL_VEL				3500
+#define DOUBLEBARREL_SHOOT_SPEED				3500
 #define DOUBLEBARREL_SIZE				1
 #define DOUBLEBARREL_MINE_RADIUS_CHECK	256
 #define DOUBLEBARREL_ALT_DAMAGE		13//25
@@ -44,7 +44,7 @@ static vec3_t muzzle;
 #define LIGHTNING_BEAM_SHOTS			8//2 // UQ1: If it's only going to fire every 1.5 secs, we need more power to each shot
 #define LIGHTNING_BEAM_SPREAD			0.4f
 #define LIGHTNING_BEAM_DAMAGE			10//12//15
-#define LIGHTNING_BEAM_VEL				7000
+#define LIGHTNING_BEAM_SHOOT_SPEED				7000
 #define LIGHTNING_BEAM_SIZE				1
 #define LIGHTNING_BEAM_MINE_RADIUS_CHECK	256
 #define LIGHTNING_BEAM_ALT_DAMAGE		15//60
@@ -65,7 +65,7 @@ static vec3_t muzzle;
 // Wookiee Bowcaster
 //----------
 #define	BOWCASTER_DAMAGE			10//30
-#define	BOWCASTER_VELOCITY			1300
+#define	BOWCASTER_SHOOT_SPEED			1300
 #define BOWCASTER_SPLASH_DAMAGE		0
 #define BOWCASTER_SPLASH_RADIUS		0
 #define BOWCASTER_SIZE				2
@@ -78,7 +78,7 @@ static vec3_t muzzle;
 //----------
 #define REPEATER_SPREAD				1.4f
 #define	REPEATER_DAMAGE				10//14
-#define	REPEATER_VELOCITY			1600
+#define	REPEATER_SHOOT_SPEED			1600
 
 #define REPEATER_ALT_SIZE				3	// half of bbox size
 #define	REPEATER_ALT_DAMAGE				15//60
@@ -90,7 +90,7 @@ static vec3_t muzzle;
 // DEMP2
 //----------
 #define	DEMP2_DAMAGE				10//35
-#define	DEMP2_VELOCITY				1800
+#define	DEMP2_SHOOT_SPEED				1800
 #define	DEMP2_SIZE					2		// half of bbox size
 
 #define DEMP2_ALT_DAMAGE			8 //12		// does 12, 36, 84 at each of the 3 charge levels.
@@ -103,7 +103,7 @@ static vec3_t muzzle;
 #define FLECHETTE_SHOTS				5
 #define FLECHETTE_SPREAD			4.0f
 #define FLECHETTE_DAMAGE			10//12//15
-#define FLECHETTE_VEL				3500
+#define FLECHETTE_SHOOT_SPEED				3500
 #define FLECHETTE_SIZE				1
 #define FLECHETTE_MINE_RADIUS_CHECK	256
 #define FLECHETTE_ALT_DAMAGE		15//60
@@ -112,7 +112,7 @@ static vec3_t muzzle;
 
 // Personal Rocket Launcher
 //---------
-#define	ROCKET_VELOCITY				900
+#define	ROCKET_SHOOT_SPEED				1100//900
 #define	ROCKET_DAMAGE				60//100
 #define	ROCKET_SPLASH_DAMAGE		65//100
 #define	ROCKET_SPLASH_RADIUS		160
@@ -124,7 +124,7 @@ static vec3_t muzzle;
 //primary
 //man, this thing is too absurdly powerful. having to
 //slash the values way down from sp.
-#define	CONC_VELOCITY				3000
+#define	CONC_SHOOT_SPEED				3000
 #define	CONC_DAMAGE					75 //150
 #define	CONC_NPC_DAMAGE_EASY		40
 #define	CONC_NPC_DAMAGE_NORMAL		80
@@ -153,7 +153,7 @@ static vec3_t muzzle;
 #define TD_DAMAGE            70 //only do 70 on a direct impact
 #define TD_SPLASH_RAD        128
 #define TD_SPLASH_DAM        90
-#define TD_VELOCITY            900
+#define TD_THROW_SPEED            900
 #define TD_MIN_CHARGE        0.15f
 #define TD_TIME                3000//6000
 #define TD_ALT_TIME            3000
@@ -161,7 +161,7 @@ static vec3_t muzzle;
 #define TD_ALT_DAMAGE        60//100
 #define TD_ALT_SPLASH_RAD    128
 #define TD_ALT_SPLASH_DAM    50//90
-#define TD_ALT_VELOCITY        600
+#define TD_ALT_THROW_SPEED        600
 #define TD_ALT_MIN_CHARGE    0.15f
 #define TD_ALT_TIME            3000
 
@@ -175,7 +175,7 @@ static vec3_t muzzle;
 // ATST Side Gun
 //---------------
 #define ATST_SIDE_MAIN_DAMAGE				75
-#define ATST_SIDE_MAIN_VELOCITY				1300
+#define ATST_SIDE_MAIN_SHOOT_SPEED				1300
 #define ATST_SIDE_MAIN_NPC_DAMAGE_EASY		30
 #define ATST_SIDE_MAIN_NPC_DAMAGE_NORMAL	40
 #define ATST_SIDE_MAIN_NPC_DAMAGE_HARD		50
@@ -183,8 +183,8 @@ static vec3_t muzzle;
 #define ATST_SIDE_MAIN_SPLASH_DAMAGE		10	// yeah, pretty small, either zero out or make it worth having?
 #define ATST_SIDE_MAIN_SPLASH_RADIUS		16	// yeah, pretty small, either zero out or make it worth having?
 
-#define ATST_SIDE_ALT_VELOCITY				1100
-#define ATST_SIDE_ALT_NPC_VELOCITY			600
+#define ATST_SIDE_ALT_SHOOT_SPEED				1100
+#define ATST_SIDE_ALT_NPC_SHOOT_SPEED			600
 #define ATST_SIDE_ALT_DAMAGE				130
 
 #define ATST_SIDE_ROCKET_NPC_DAMAGE_EASY	30
@@ -372,7 +372,7 @@ static void WP_FireBryarPistol(gentity_t *ent, qboolean altFire)
 	int damage = BRYAR_PISTOL_DAMAGE;
 	int count;
 
-	gentity_t	*missile = CreateMissile(muzzle, forward, BRYAR_PISTOL_VEL, 10000, ent, altFire);
+	gentity_t	*missile = CreateMissile(muzzle, forward, BRYAR_PISTOL_SHOOT_SPEED, 10000, ent, altFire);
 
 	missile->classname = "bryar_proj";
 	missile->s.weapon = ent->s.weapon;//WP_BRYAR_PISTOL;
@@ -606,7 +606,7 @@ void WP_FireTurboLaserMissile(gentity_t *ent, vec3_t start, vec3_t dir)
 void WP_FireEmplacedMissile(gentity_t *ent, vec3_t start, vec3_t dir, qboolean altFire, gentity_t *ignore)
 //---------------------------------------------------------
 {
-	int velocity = BLASTER_VELOCITY;
+	int velocity = BLASTER_SHOOT_SPEED;
 	int	damage = BLASTER_DAMAGE;
 	gentity_t *missile;
 
@@ -683,7 +683,7 @@ static void WP_MainLightningBeamFire(gentity_t *ent)
 
 		AngleVectors(angs, fwd, NULL, NULL);
 
-		missile = CreateMissile(muzzle, fwd, BLASTER_VELOCITY, 10000, ent, qfalse);
+		missile = CreateMissile(muzzle, fwd, BLASTER_SHOOT_SPEED, 10000, ent, qfalse);
 
 		missile->classname = "blaster_proj";
 		missile->s.weapon = ent->s.weapon;
@@ -1229,7 +1229,7 @@ static void WP_BowcasterAltFire(gentity_t *ent)
 {
 	int	damage = BOWCASTER_DAMAGE;
 
-	gentity_t *missile = CreateMissile(muzzle, forward, BOWCASTER_VELOCITY, 10000, ent, qfalse);
+	gentity_t *missile = CreateMissile(muzzle, forward, BOWCASTER_SHOOT_SPEED, 10000, ent, qfalse);
 
 	missile->classname = "bowcaster_proj";
 	missile->s.weapon = ent->s.weapon;//WP_BOWCASTER;
@@ -1328,7 +1328,7 @@ static void WP_BowcasterMainFire(gentity_t *ent)
 	for (i = 0; i < count; i++)
 	{
 		// create a range of different velocities
-		vel = BOWCASTER_VELOCITY * (crandom() * BOWCASTER_VEL_RANGE + 1.0f);
+		vel = BOWCASTER_SHOOT_SPEED * (crandom() * BOWCASTER_VEL_RANGE + 1.0f);
 
 		vectoangles(forward, angs);
 
@@ -1387,7 +1387,7 @@ static void WP_RepeaterMainFire(gentity_t *ent, vec3_t dir)
 {
 	int	damage = REPEATER_DAMAGE;
 
-	gentity_t *missile = CreateMissile(muzzle, dir, REPEATER_VELOCITY, 10000, ent, qfalse);
+	gentity_t *missile = CreateMissile(muzzle, dir, REPEATER_SHOOT_SPEED, 10000, ent, qfalse);
 
 	missile->classname = "repeater_proj";
 	missile->s.weapon = ent->s.weapon;// WP_REPEATER;
@@ -1472,7 +1472,7 @@ static void WP_DEMP2_MainFire(gentity_t *ent)
 {
 	int	damage = DEMP2_DAMAGE;
 
-	gentity_t *missile = CreateMissile(muzzle, forward, DEMP2_VELOCITY, 10000, ent, qfalse);
+	gentity_t *missile = CreateMissile(muzzle, forward, DEMP2_SHOOT_SPEED, 10000, ent, qfalse);
 
 	missile->classname = "demp2_proj";
 	missile->s.weapon = ent->s.weapon;//WP_DEMP2;
@@ -1766,7 +1766,7 @@ static void WP_DoubleBarrel_Guns_MainFire(gentity_t *ent, qboolean altFire, int 
 
 		AngleVectors(angs, fwd, NULL, NULL);
 
-		missile = CreateMissile(muzzle, fwd, DOUBLEBARREL_VEL, 10000, ent, qfalse);
+		missile = CreateMissile(muzzle, fwd, DOUBLEBARREL_SHOOT_SPEED, 10000, ent, qfalse);
 
 		missile->classname = "flech_proj";
 		missile->s.weapon = ent->s.weapon;
@@ -1814,7 +1814,7 @@ static void WP_FlechetteMainFire(gentity_t *ent)
 
 		AngleVectors(angs, fwd, NULL, NULL);
 
-		missile = CreateMissile(muzzle, fwd, FLECHETTE_VEL, 10000, ent, qfalse);
+		missile = CreateMissile(muzzle, fwd, FLECHETTE_SHOOT_SPEED, 10000, ent, qfalse);
 
 		missile->classname = "flech_proj";
 		missile->s.weapon = ent->s.weapon;//WP_FLECHETTE;
@@ -2024,7 +2024,7 @@ void rocketThink(gentity_t *ent)
 	vec3_t	org;
 	float dot, dot2, dis;
 	int i;
-	float vel = (ent->spawnflags & 1) ? ent->speed : ROCKET_VELOCITY;
+	float vel = (ent->spawnflags & 1) ? ent->speed : ROCKET_SHOOT_SPEED;
 
 	if (ent->genericValue1 && ent->genericValue1 < level.time)
 	{//time's up, we're done, remove us
@@ -2195,7 +2195,7 @@ static void WP_FireRocket(gentity_t *ent, qboolean altFire)
 //---------------------------------------------------------
 {
 	int	damage = ROCKET_DAMAGE;
-	int	vel = ROCKET_VELOCITY;
+	int	vel = ROCKET_SHOOT_SPEED;
 	int dif = 0;
 	float rTime;
 	gentity_t *missile;
@@ -2319,7 +2319,7 @@ gentity_t *WP_FireGrenadeCryoBan(gentity_t *ent, qboolean altFire)
 	}
 
 	// get charge amount
-	chargeAmount = chargeAmount / (float)TD_VELOCITY;
+	chargeAmount = chargeAmount / (float)TD_THROW_SPEED;
 
 	if (chargeAmount > 1.0f)
 	{
@@ -2335,7 +2335,7 @@ gentity_t *WP_FireGrenadeCryoBan(gentity_t *ent, qboolean altFire)
 	bolt->s.pos.trType = TR_GRAVITY;
 	bolt->parent = ent;
 	bolt->r.ownerNum = ent->s.number;
-	VectorScale(dir, TD_VELOCITY * chargeAmount, bolt->s.pos.trDelta);
+	VectorScale(dir, TD_THROW_SPEED * chargeAmount, bolt->s.pos.trDelta);
 
 	if (ent->health >= 0)
 	{
@@ -2540,7 +2540,7 @@ gentity_t *WP_FireThermalDetonator(gentity_t *ent, qboolean altFire)
 	}
 
 	// get charge amount
-	chargeAmount = chargeAmount / (float)TD_VELOCITY;
+	chargeAmount = chargeAmount / (float)TD_THROW_SPEED;
 
 	if (chargeAmount > 1.0f)
 	{
@@ -2556,7 +2556,7 @@ gentity_t *WP_FireThermalDetonator(gentity_t *ent, qboolean altFire)
 	bolt->s.pos.trType = TR_GRAVITY;
 	bolt->parent = ent;
 	bolt->r.ownerNum = ent->s.number;
-	VectorScale(dir, TD_VELOCITY * chargeAmount, bolt->s.pos.trDelta);
+	VectorScale(dir, TD_THROW_SPEED * chargeAmount, bolt->s.pos.trDelta);
 
 	if (ent->health >= 0)
 	{
@@ -2703,7 +2703,7 @@ gentity_t *WP_FireFragGrenade(gentity_t *ent, qboolean altFire)
 	}
 
 	// get charge amount
-	chargeAmount = chargeAmount / (float)TD_VELOCITY;
+	chargeAmount = chargeAmount / (float)TD_THROW_SPEED;
 
 	if (chargeAmount > 1.0f)
 	{
@@ -2719,7 +2719,7 @@ gentity_t *WP_FireFragGrenade(gentity_t *ent, qboolean altFire)
 	bolt->s.pos.trType = TR_GRAVITY;
 	bolt->parent = ent;
 	bolt->r.ownerNum = ent->s.number;
-	VectorScale(dir, TD_VELOCITY * chargeAmount, bolt->s.pos.trDelta);
+	VectorScale(dir, TD_THROW_SPEED * chargeAmount, bolt->s.pos.trDelta);
 
 	if (ent->health >= 0)
 	{
@@ -4009,7 +4009,7 @@ static void WP_FireBlobGrenade(gentity_t *ent)
 {//a fast rocket-like projectile
 	vec3_t	start;
 	int		damage = 60;
-	float	vel = CONC_VELOCITY;
+	float	vel = CONC_SHOOT_SPEED;
 	gentity_t *missile;
 	int		ChargeGrenadeBlobs = 0;
 
@@ -4087,7 +4087,7 @@ static void WP_FireConcussion(gentity_t *ent)
 {//a fast rocket-like projectile
 	vec3_t	start;
 	int		damage = CONC_DAMAGE;
-	float	vel = CONC_VELOCITY;
+	float	vel = CONC_SHOOT_SPEED;
 	gentity_t *missile;
 
 	//hold us still for a bit
@@ -5486,9 +5486,9 @@ void FireWeapon(gentity_t *ent, qboolean altFire) {
 		case WP_A200_ACP_PISTOL:
 		case WP_SPOTING_BLASTER:
 			if (altFire)
-				WP_FireBlaster(ent, altFire, BLASTER_VELOCITY * 3, BLASTER_DAMAGE, 0.0, ent->s.weapon);
+				WP_FireBlaster(ent, altFire, BLASTER_SHOOT_SPEED * 3, BLASTER_DAMAGE, 0.0, ent->s.weapon);
 			else
-				WP_FireBlaster(ent, altFire, BLASTER_VELOCITY, BLASTER_DAMAGE, 0.0, ent->s.weapon);
+				WP_FireBlaster(ent, altFire, BLASTER_SHOOT_SPEED, BLASTER_DAMAGE, 0.0, ent->s.weapon);
 			CalcFirstMuzzlePoint(ent, forward, vright, up, muzzle);
 			CalcSecondMuzzlePoint(ent, forward, vright, up, secondmuzzle);
 			break;
@@ -5497,10 +5497,10 @@ void FireWeapon(gentity_t *ent, qboolean altFire) {
 
 			if (altFire)
 			{
-				WP_DoubleBarrel_Guns_MainFire(ent, altFire, DOUBLEBARREL_VEL, DOUBLEBARREL_ALT_DAMAGE, DOUBLEBARREL_SPREAD, ent->s.weapon);
+				WP_DoubleBarrel_Guns_MainFire(ent, altFire, DOUBLEBARREL_SHOOT_SPEED, DOUBLEBARREL_ALT_DAMAGE, DOUBLEBARREL_SPREAD, ent->s.weapon);
 			}
 			else
-				WP_DoubleBarrel_Guns_MainFire(ent, altFire, DOUBLEBARREL_VEL, DOUBLEBARREL_DAMAGE, DOUBLEBARREL_SPREAD, ent->s.weapon);
+				WP_DoubleBarrel_Guns_MainFire(ent, altFire, DOUBLEBARREL_SHOOT_SPEED, DOUBLEBARREL_DAMAGE, DOUBLEBARREL_SPREAD, ent->s.weapon);
 			break;
 
 		case WP_DH_17_PISTOL:
@@ -5510,53 +5510,53 @@ void FireWeapon(gentity_t *ent, qboolean altFire) {
 		case WP_CLONE_BLASTER:
 		case WP_BLASTER:
 			if (altFire)
-				WP_FireBlaster(ent, altFire, BLASTER_VELOCITY, BLASTER_DAMAGE, BLASTER_SPREAD, ent->s.weapon);
+				WP_FireBlaster(ent, altFire, BLASTER_SHOOT_SPEED, BLASTER_DAMAGE, BLASTER_SPREAD, ent->s.weapon);
 			else
-				WP_FireBlaster(ent, altFire, BLASTER_VELOCITY, BLASTER_DAMAGE, 0.5, ent->s.weapon);
+				WP_FireBlaster(ent, altFire, BLASTER_SHOOT_SPEED, BLASTER_DAMAGE, 0.5, ent->s.weapon);
 			break;
 
 		case WP_A280: // UQ1: Example. Should have it's own code...
 			if (altFire)
-				WP_FireBlaster(ent, altFire, BLASTER_VELOCITY * 3, RIFLE_SNIPER_DAMAGE* 1.5, 0.0, ent->s.weapon);
+				WP_FireBlaster(ent, altFire, BLASTER_SHOOT_SPEED * 3, RIFLE_SNIPER_DAMAGE* 1.5, 0.0, ent->s.weapon);
 			else
-				WP_FireBlaster(ent, altFire, BLASTER_VELOCITY, BLASTER_DAMAGE, BLASTER_SPREAD, ent->s.weapon);
+				WP_FireBlaster(ent, altFire, BLASTER_SHOOT_SPEED, BLASTER_DAMAGE, BLASTER_SPREAD, ent->s.weapon);
 			break;
 
 		case WP_DC15:
 			if (altFire)
 				WP_RepeaterAltFire(ent);
 			else
-				WP_FireBlaster(ent, altFire, BLASTER_VELOCITY, REPEATER_DAMAGE, 0.0, ent->s.weapon);
+				WP_FireBlaster(ent, altFire, BLASTER_SHOOT_SPEED, REPEATER_DAMAGE, 0.0, ent->s.weapon);
 			break;
 
 		case WP_WESTARM5:
 			if (altFire)
 				WP_RepeaterAltFire(ent);
 			else
-				WP_FireBlaster(ent, altFire, BLASTER_VELOCITY, REPEATER_DAMAGE, 0.0, ent->s.weapon);
+				WP_FireBlaster(ent, altFire, BLASTER_SHOOT_SPEED, REPEATER_DAMAGE, 0.0, ent->s.weapon);
 			break;
 
 		case WP_T21:
 			if (altFire)
-				WP_FireBlaster(ent, altFire, BLASTER_VELOCITY, BLASTER_ALT_DAMAGE, 0.0, ent->s.weapon);
+				WP_FireBlaster(ent, altFire, BLASTER_SHOOT_SPEED, BLASTER_ALT_DAMAGE, 0.0, ent->s.weapon);
 			else
-				WP_FireBlaster(ent, altFire, BLASTER_VELOCITY, BLASTER_DAMAGE, 0.0, ent->s.weapon);
+				WP_FireBlaster(ent, altFire, BLASTER_SHOOT_SPEED, BLASTER_DAMAGE, 0.0, ent->s.weapon);
 			break;
 
 		case WP_BRYAR_RIFLE:
 			if (altFire)
-				WP_FireBlaster(ent, altFire, BLASTER_VELOCITY*2.5, RIFLE_SNIPER_NON_SCOPE, 0.0, ent->s.weapon);
+				WP_FireBlaster(ent, altFire, BLASTER_SHOOT_SPEED*2.5, RIFLE_SNIPER_NON_SCOPE, 0.0, ent->s.weapon);
 			else
-				WP_FireBlaster(ent, altFire, BLASTER_VELOCITY, BLASTER_DAMAGE, BLASTER_SPREAD, ent->s.weapon);
+				WP_FireBlaster(ent, altFire, BLASTER_SHOOT_SPEED, BLASTER_DAMAGE, BLASTER_SPREAD, ent->s.weapon);
 			break;
 
 
 		case WP_ACP_SNIPER_RIFLE:
 		case WP_EE3:
 			if (altFire)
-				WP_FireBlaster(ent, altFire, BLASTER_VELOCITY*2.5, RIFLE_SNIPER_DAMAGE, 0.0, ent->s.weapon);
+				WP_FireBlaster(ent, altFire, BLASTER_SHOOT_SPEED*2.5, RIFLE_SNIPER_DAMAGE, 0.0, ent->s.weapon);
 			else
-				WP_FireBlaster(ent, altFire, BLASTER_VELOCITY, BLASTER_DAMAGE, BLASTER_SPREAD, ent->s.weapon);
+				WP_FireBlaster(ent, altFire, BLASTER_SHOOT_SPEED, BLASTER_DAMAGE, BLASTER_SPREAD, ent->s.weapon);
 			break;
 
 		case WP_DC_17_CLONE_PISTOL:
@@ -5564,16 +5564,16 @@ void FireWeapon(gentity_t *ent, qboolean altFire) {
 			if (altFire)
 				WP_FireBowcaster(ent, altFire);
 			else
-				WP_FireBlaster(ent, altFire, BLASTER_VELOCITY, BLASTER_DAMAGE, BLASTER_SPREAD, ent->s.weapon);
+				WP_FireBlaster(ent, altFire, BLASTER_SHOOT_SPEED, BLASTER_DAMAGE, BLASTER_SPREAD, ent->s.weapon);
 			break;
 
 		case WP_BRYAR_RIFLE_SCOPE:
 		case WP_DLT_19:
 			if (altFire)
-				WP_FireChargedShot(ent, altFire, BLASTER_VELOCITY*2.5, 0.0);
-			//WP_FireBlaster(ent, altFire, BLASTER_VELOCITY*2.5, RIFLE_SNIPER_DAMAGE, 0.0, ent->s.weapon);
+				WP_FireChargedShot(ent, altFire, BLASTER_SHOOT_SPEED*2.5, 0.0);
+			//WP_FireBlaster(ent, altFire, BLASTER_SHOOT_SPEED*2.5, RIFLE_SNIPER_DAMAGE, 0.0, ent->s.weapon);
 			else
-				WP_FireBlaster(ent, altFire, BLASTER_VELOCITY, BLASTER_DAMAGE, BLASTER_SPREAD, ent->s.weapon);
+				WP_FireBlaster(ent, altFire, BLASTER_SHOOT_SPEED, BLASTER_DAMAGE, BLASTER_SPREAD, ent->s.weapon);
 			break;
 
 
@@ -5581,43 +5581,43 @@ void FireWeapon(gentity_t *ent, qboolean altFire) {
 			if (altFire)
 				WP_RepeaterAltFire(ent);
 			else
-				WP_FireBlaster(ent, altFire, BLASTER_VELOCITY, REPEATER_DAMAGE, 0.0, ent->s.weapon);
+				WP_FireBlaster(ent, altFire, BLASTER_SHOOT_SPEED, REPEATER_DAMAGE, 0.0, ent->s.weapon);
 			break;
 
 		case WP_PULSECANON:
 			if (altFire)
 				WP_RepeaterAltFire(ent);
 			else
-				WP_FireBlaster(ent, altFire, BLASTER_VELOCITY, REPEATER_DAMAGE, 0.0, ent->s.weapon);
+				WP_FireBlaster(ent, altFire, BLASTER_SHOOT_SPEED, REPEATER_DAMAGE, 0.0, ent->s.weapon);
 			break;
 
 		case WP_Z6_BLASTER_CANON:
 			if (altFire)
 				WP_FireBlobGrenade(ent);
 			else
-				WP_FireBlaster(ent, altFire, BLASTER_VELOCITY, BLASTER_CANON_DAMAGE, BLASTER_SPREAD, ent->s.weapon);
+				WP_FireBlaster(ent, altFire, BLASTER_SHOOT_SPEED, BLASTER_CANON_DAMAGE, BLASTER_SPREAD, ent->s.weapon);
 			break;
 
 		case WP_HEAVY_BOWCASTER_SCOPE:
 			if (altFire)
 				WP_FireBowcaster(ent, altFire);
 			else
-				WP_FireBlaster(ent, altFire, BLASTER_VELOCITY, BLASTER_DAMAGE, BLASTER_SPREAD, ent->s.weapon);
+				WP_FireBlaster(ent, altFire, BLASTER_SHOOT_SPEED, BLASTER_DAMAGE, BLASTER_SPREAD, ent->s.weapon);
 			break;
 
 		case WP_DC15_EXT:
 			if (altFire)
 				WP_FireBlobGrenade(ent);
 			else
-				WP_FireBlaster(ent, altFire, BLASTER_VELOCITY, REPEATER_DAMAGE, 0.0, ent->s.weapon);
+				WP_FireBlaster(ent, altFire, BLASTER_SHOOT_SPEED, REPEATER_DAMAGE, 0.0, ent->s.weapon);
 			break;
 
 		case WP_HEAVY_SCOPE_BOWCASTER:
 		case WP_BOWCASTER_CLASSIC:
 			if (altFire)
-				WP_FireBlaster(ent, altFire, BLASTER_VELOCITY, BOWCASTER_ALT_DAMAGE, 0.0, ent->s.weapon);
+				WP_FireBlaster(ent, altFire, BLASTER_SHOOT_SPEED, BOWCASTER_ALT_DAMAGE, 0.0, ent->s.weapon);
 			else
-				WP_FireBlaster(ent, altFire, BLASTER_VELOCITY, BOWCASTER_DAMAGE, BLASTER_SPREAD, ent->s.weapon);
+				WP_FireBlaster(ent, altFire, BLASTER_SHOOT_SPEED, BOWCASTER_DAMAGE, BLASTER_SPREAD, ent->s.weapon);
 			break;
 
 		case WP_ARC_CASTER_IMPERIAL://NOTE needs it own function to handle the lightning stuff to charge up with
