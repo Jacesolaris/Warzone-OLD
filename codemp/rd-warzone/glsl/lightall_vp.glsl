@@ -4,7 +4,7 @@ attribute vec2 attr_TexCoord0;
 #define USE_TRI_PLANAR
 
 
-#if defined(USE_TESSELLATION)
+#if defined(USE_TESSELLATION) || defined(USE_ICR_CULLING)
 out vec3 Normal_CS_in;
 out vec2 TexCoord_CS_in;
 out vec4 WorldPos_CS_in;
@@ -387,7 +387,7 @@ void main()
 
 
 
-#if defined(USE_TESSELLATION)
+#if defined(USE_TESSELLATION) || defined(USE_ICR_CULLING)
   //mat3 tangentToWorld = mat3(var_Tangent.xyz, var_Bitangent.xyz, attr_Normal.xyz * 2.0 - 1.0);
   //vec4 color = texture(u_DiffuseMap, var_TexCoords.xy);
   //vec4 no = ConvertToNormals(color);
@@ -412,6 +412,10 @@ void main()
   usingSteepMap_CS_in = var_usingSteepMap;
   gl_Position = vec4(preMMPos, 1.0);
   //gl_Position = vec4(var_vertPos.xyz, 1.0);
+
+#else
+
+	var_vertPos = preMMPos.xyz;
 
 #endif //defined(USE_TESSELLATION)
 }

@@ -37,6 +37,7 @@ static void GfxInfo_f( void );
 static void GfxMemInfo_f( void );
 
 cvar_t	*r_superSampleMultiplier;
+cvar_t	*r_instanceCloudReductionCulling;
 cvar_t	*r_tesselation;
 cvar_t	*r_tesselationLevel;
 cvar_t	*r_tesselationAlpha;
@@ -1351,13 +1352,15 @@ void R_Register( void )
 {
 	r_superSampleMultiplier = ri->Cvar_Get( "r_superSampleMultiplier", "1", CVAR_ARCHIVE | CVAR_LATCH );
 	
+	r_instanceCloudReductionCulling = ri->Cvar_Get( "r_instanceCloudReductionCulling", "1", CVAR_ARCHIVE | CVAR_LATCH );
+
 	r_tesselation = ri->Cvar_Get( "r_tesselation", "0", CVAR_ARCHIVE | CVAR_LATCH );
-	r_tesselationLevel = ri->Cvar_Get( "r_tesselationLevel", "7.0", CVAR_ARCHIVE );
-	r_tesselationAlpha = ri->Cvar_Get( "r_tesselationAlpha", "1.0", CVAR_ARCHIVE );
+	r_tesselationLevel = ri->Cvar_Get( "r_tesselationLevel", "3.0", CVAR_ARCHIVE );
+	r_tesselationAlpha = ri->Cvar_Get( "r_tesselationAlpha", "1.5", CVAR_ARCHIVE );
 	
 	r_foliage = ri->Cvar_Get( "r_foliage", "1", CVAR_ARCHIVE | CVAR_LATCH );
-	r_foliagePasses = ri->Cvar_Get( "r_foliagePasses", "6", CVAR_ARCHIVE );
-	r_foliageDistance = ri->Cvar_Get( "r_foliageDistance", "8192.0", CVAR_ARCHIVE );
+	r_foliagePasses = ri->Cvar_Get( "r_foliagePasses", "4", CVAR_ARCHIVE );
+	r_foliageDistance = ri->Cvar_Get( "r_foliageDistance", "16384.0"/*"8192.0"*/, CVAR_ARCHIVE );
 	r_foliageDensity = ri->Cvar_Get( "r_foliageDensity", "40.0", CVAR_ARCHIVE );
 	r_foliageShadows = ri->Cvar_Get( "r_foliageShadows", "1", CVAR_ARCHIVE );
 

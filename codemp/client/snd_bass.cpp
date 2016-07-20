@@ -415,7 +415,8 @@ qboolean BASS_Initialize ( void )
 	BASS_SetConfig(BASS_CONFIG_GVOL_SAMPLE, (DWORD)(float)(s_volume->value*10000.0));
 	BASS_SetConfig(BASS_CONFIG_GVOL_STREAM, (DWORD)(float)(s_volume->value*10000.0));
 
-	BASS_SetConfig(BASS_CONFIG_UPDATETHREADS, (DWORD)16);
+	//BASS_SetConfig(BASS_CONFIG_UPDATETHREADS, (DWORD)16);
+	BASS_SetConfig(BASS_CONFIG_UPDATETHREADS, (DWORD)1);
 	//BASS_SetConfig(BASS_CONFIG_BUFFER, (DWORD)100); // set the buffer length
 
 	//Com_Printf("Volume %f. Sample Volume %i. Stream Volume %i.\n", BASS_GetVolume(), (int)BASS_GetConfig(BASS_CONFIG_GVOL_SAMPLE), (int)BASS_GetConfig(BASS_CONFIG_GVOL_STREAM));

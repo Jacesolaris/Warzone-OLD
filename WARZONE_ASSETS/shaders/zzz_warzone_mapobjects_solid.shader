@@ -1,3 +1,16 @@
+defaultSolid
+{
+  qer_editorimage	models/map_objects/warzone/3td_Stone_24
+  q3map_material	concrete
+  q3map_clipModel
+  {
+    map models/map_objects/warzone/3td_Stone_24
+    blendfunc GL_ONE GL_ZERO
+    depthWrite
+    rgbGen identity
+  }
+}
+
 //
 // Rocky ruins...
 //
@@ -5,10 +18,67 @@
 models/map_objects/warzone/3td_Stone_24
 {
   qer_editorimage	models/map_objects/warzone/3td_Stone_24
-  q3map_material	rock
+  q3map_material	concrete
   q3map_clipModel
   {
     map models/map_objects/warzone/3td_Stone_24
+    blendfunc GL_ONE GL_ZERO
+    depthWrite
+    rgbGen identity
+  }
+}
+
+
+//
+// Tropical City...
+//
+
+models/map_objects/warzone/default
+{
+  qer_editorimage	models/map_objects/warzone/default
+  q3map_material	concrete
+  q3map_clipModel
+  {
+    map models/map_objects/warzone/default
+    blendfunc GL_ONE GL_ZERO
+    depthWrite
+    rgbGen identity
+  }
+}
+
+models/map_objects/warzone/default_bldgs2
+{
+  qer_editorimage	models/map_objects/warzone/default_bldgs2
+  q3map_material	solidmetal
+  q3map_clipModel
+  {
+    map models/map_objects/warzone/default_bldgs2
+    blendfunc GL_ONE GL_ZERO
+    depthWrite
+    rgbGen identity
+  }
+}
+
+models/map_objects/warzone/material_1_mountain
+{
+  qer_editorimage	models/map_objects/warzone/material_1_mountain
+  q3map_material	shortgrass
+  q3map_clipModel
+  {
+    map models/map_objects/warzone/material_1_mountain
+    blendfunc GL_ONE GL_ZERO
+    depthWrite
+    rgbGen identity
+  }
+}
+
+models/map_objects/warzone/material_1
+{
+  qer_editorimage	models/map_objects/warzone/material_1
+  q3map_material	sand
+  q3map_clipModel
+  {
+    map models/map_objects/warzone/material_1
     blendfunc GL_ONE GL_ZERO
     depthWrite
     rgbGen identity

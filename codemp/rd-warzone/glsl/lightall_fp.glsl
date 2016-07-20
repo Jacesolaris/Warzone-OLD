@@ -81,25 +81,26 @@ uniform vec3				u_lightColors[16];
 uniform vec3				u_ViewOrigin;
 
 
-#if defined(USE_TESSELLATION)
+#if defined(USE_TESSELLATION) || defined(USE_ICR_CULLING)
 
-in vec3						Normal_FS_in;
-in vec2						TexCoord_FS_in;
-in vec3						WorldPos_FS_in;
-in vec3						ViewDir_FS_in;
-in vec4						Tangent_FS_in;
-in vec4						Bitangent_FS_in;
+in precise vec3				Normal_FS_in;
+in precise vec2				TexCoord_FS_in;
+in precise vec3				WorldPos_FS_in;
+in precise vec3				ViewDir_FS_in;
+in precise vec4				Tangent_FS_in;
+in precise vec4				Bitangent_FS_in;
 
-in vec4						Color_FS_in;
-in vec4						PrimaryLightDir_FS_in;
-in vec2						TexCoord2_FS_in;
+in precise vec4				Color_FS_in;
+in precise vec4				PrimaryLightDir_FS_in;
+in precise vec2				TexCoord2_FS_in;
 
-in vec3						Blending_FS_in;
-in float					Slope_FS_in;
-in float					usingSteepMap_FS_in;
+in precise vec3				Blending_FS_in;
+flat in float				Slope_FS_in;
+flat in float				usingSteepMap_FS_in;
 
 
-vec3 m_Normal =				normalize(-Normal_FS_in.xyz);
+//vec3 m_Normal =				normalize(-Normal_FS_in.xyz);
+#define m_Normal 			normalize(-Normal_FS_in.xyz)
 
 #define m_TexCoords			TexCoord_FS_in
 #define m_vertPos			WorldPos_FS_in
@@ -120,7 +121,7 @@ vec3 m_Normal =				normalize(-Normal_FS_in.xyz);
 #define var_usingSteepMap	usingSteepMap_FS_in
 
 
-#else //!defined(USE_TESSELLATION)
+#else //!defined(USE_TESSELLATION) && !defined(USE_ICR_CULLING)
 
 varying vec2				var_TexCoords;
 varying vec2				var_TexCoords2;
@@ -151,7 +152,7 @@ varying float				var_usingSteepMap;
 #define m_ViewDir			var_ViewDir
 
 
-#endif //defined(USE_TESSELLATION)
+#endif //defined(USE_TESSELLATION) || defined(USE_ICR_CULLING)
 
 
 
@@ -474,25 +475,7 @@ vec4 GetDiffuse(vec2 texCoords, vec2 ParallaxOffset, float pixRandom)
 	else if (u_Local5.a > 0.0 && var_Slope > 0)
 	{// Steep maps (high angles)...
 		const float scale = 0.0025;
-
-#if 1
 		return GetMap(u_SteepMap, scale, ParallaxOffset, FAKE_MAP_NONE);
-#else // TODO: Add more _steep's and rename beach _steep to _beach
-		if (u_Local7.r <= 0.0 && u_Local7.g <= 0.0 && u_Local7.b <= 0.0 && u_Local7.a <= 0.0)
-		{// No splat maps...
-			return GetMap(u_SteepMap, scale, ParallaxOffset, FAKE_MAP_NONE);
-		}
-
-		vec4 tex = GetMap(u_SteepMap, scale, ParallaxOffset, FAKE_MAP_NONE);
-		float a1 = 0.0;
-		
-		if (u_Local4.r <= 0.0) // save texture lookup
-			a1 = ConvertToNormals(tex).a;
-		else
-			a1 = GetMap(u_NormalMap2, scale, ParallaxOffset, FAKE_MAP_NORMALMAP2).a;//GetMap(u_NormalMap2, scale, ParallaxOffset).a;
-
-		return GetSplatMap(texCoords, ParallaxOffset, pixRandom, tex, a1);
-#endif
 	}
 	else if (u_Local5.a > 0.0)
 	{// Steep maps (low angles)...
@@ -770,14 +753,13 @@ void main()
 	mat3 tangentToWorld = mat3(var_Tangent.xyz, var_Bitangent.xyz, m_Normal.xyz);
 	
 
-	#if !defined(USE_TESSELLATION)
+	#if !defined(USE_TESSELLATION) && !defined(USE_ICR_CULLING)
 		viewDir = vec3(var_Normal2, var_Tangent.w, var_Bitangent.w);
-	#else //defined(USE_TESSELLATION)
+	#else //defined(USE_TESSELLATION) || defined(USE_ICR_CULLING)
 		viewDir = m_ViewDir.xyz;
-	#endif //defined(USE_TESSELLATION)
+	#endif //defined(USE_TESSELLATION) || defined(USE_ICR_CULLING)
 
 	E = normalize(viewDir);
-
 
 
 	#if defined(USE_LIGHTMAP) && !defined(USE_GLOW_BUFFER)
@@ -924,11 +906,11 @@ void main()
 	#if defined(USE_LIGHTMAP) && !defined(USE_GLOW_BUFFER)
 
 		ambientColor = lightColor;
-#if defined(USE_TESSELLATION)
+#if defined(USE_TESSELLATION) || defined(USE_ICR_CULLING)
 		float surfNL = clamp(dot(var_PrimaryLightDir.xyz, N.xyz/*m_Normal.xyz*/), 0.0, 1.0);
 #else //!
 		float surfNL = clamp(-dot(var_PrimaryLightDir.xyz, N.xyz/*m_Normal.xyz*/), 0.0, 1.0);
-#endif //defined(USE_TESSELLATION)
+#endif //defined(USE_TESSELLATION) || defined(USE_ICR_CULLING)
 		lightColor /= max(surfNL, 0.25);
 		ambientColor = clamp(ambientColor - lightColor * surfNL, 0.0, 1.0);
 		lightColor *= lightmapColor.rgb;
@@ -962,20 +944,21 @@ void main()
 
 		specular.rgb *= u_SpecularScale.rgb;
 
-
-
 	#if defined(USE_CUBEMAP) && !defined(USE_GLOW_BUFFER)
 		if (u_Local3.a > 0.0 && u_EnableTextures.w > 0.0 && u_CubeMapStrength > 0.0) 
 		{
 			float spec = 0.0;
 
-			NE = clamp(dot(m_Normal.xyz/*N*/, E), 0.0, 1.0);
-
-			vec3 reflectance = EnvironmentBRDF(clamp(specular.a, 0.5, 1.0) * 100.0, NE, specular.rgb);
+			#if defined(USE_TESSELLATION) || defined(USE_ICR_CULLING)
+				NE = clamp(dot(m_Normal.xyz/*N*/, -E), 0.0, 1.0);
+			#else
+				NE = clamp(dot(m_Normal.xyz/*N*/, E), 0.0, 1.0);
+			#endif
 			vec3 R = reflect(E, m_Normal.xyz/*N*/);
+			vec3 reflectance = EnvironmentBRDF(clamp(specular.a, 0.5, 1.0) * 100.0, NE, specular.rgb);
 			vec3 parallax = u_CubeMapInfo.xyz + u_CubeMapInfo.w * viewDir;
 			vec3 cubeLightColor = textureCubeLod(u_CubeMap, R + parallax, 7.0 - specular.a * 7.0).rgb * u_EnableTextures.w * 0.25; //u_Local3.a
-			gl_FragColor.rgb += (cubeLightColor * reflectance * (u_Local3.a * specular.a)) * u_CubeMapStrength;
+			gl_FragColor.rgb += (cubeLightColor * reflectance * (u_Local3.a * specular.a)) * u_CubeMapStrength * 0.5;
 		}
 	#endif
 
@@ -1031,7 +1014,11 @@ void main()
 
 			for (int li = 0; li < u_lightCount; li++)
 			{
-				vec3 lightDir = u_lightPositions2[li] - m_vertPos.xyz;
+				#if defined(USE_TESSELLATION) || defined(USE_ICR_CULLING)
+					vec3 lightDir = m_vertPos.xyz - u_lightPositions2[li];
+				#else
+					vec3 lightDir = u_lightPositions2[li] - m_vertPos.xyz;
+				#endif
 				float lambertian3 = dot(lightDir.xyz,N);
 				float spec3 = 0.0;
 

@@ -44,7 +44,7 @@ flat out int				iGrassType;
 // General Settings...
 //
 
-const float					fGrassPatchSize = 256.0;//u_Local9.b;//64.0;//48.0;//24.0;
+const float					fGrassPatchSize = 192.0;//256.0;//u_Local9.b;//64.0;//48.0;//24.0;
 const float					fWindStrength = 12.0;
 const vec3					vWindDirection = normalize(vec3(1.0, 0.0, 1.0));
 
@@ -107,6 +107,59 @@ vec4 GetGrassMap(vec3 m_vertPos)
 	return clamp(pow(control, vec4(0.3)) * 0.5, 0.0, 1.0);
 }
 
+vec3 VectorMA( vec3 vec1, vec3 scale, vec3 vec2 ) 
+{
+	vec3 vecOut;
+	vecOut.x = vec1.x + scale.x*vec2.x;
+	vecOut.y = vec1.y + scale.y*vec2.y;
+	vecOut.z = vec1.z + scale.z*vec2.z;
+	return vecOut;
+}
+
+bool InstanceCloudReductionCulling(vec4 InstancePosition, vec3 ObjectExtent) 
+{
+   /* create the bounding box of the object */
+   vec4 BoundingBox[8];
+   BoundingBox[0] = u_ModelViewProjectionMatrix * ( InstancePosition + vec4( ObjectExtent.x, ObjectExtent.y, ObjectExtent.z, 1.0) );
+   BoundingBox[1] = u_ModelViewProjectionMatrix * ( InstancePosition + vec4(-ObjectExtent.x, ObjectExtent.y, ObjectExtent.z, 1.0) );
+   BoundingBox[2] = u_ModelViewProjectionMatrix * ( InstancePosition + vec4( ObjectExtent.x,-ObjectExtent.y, ObjectExtent.z, 1.0) );
+   BoundingBox[3] = u_ModelViewProjectionMatrix * ( InstancePosition + vec4(-ObjectExtent.x,-ObjectExtent.y, ObjectExtent.z, 1.0) );
+   BoundingBox[4] = u_ModelViewProjectionMatrix * ( InstancePosition + vec4( ObjectExtent.x, ObjectExtent.y,-ObjectExtent.z, 1.0) );
+   BoundingBox[5] = u_ModelViewProjectionMatrix * ( InstancePosition + vec4(-ObjectExtent.x, ObjectExtent.y,-ObjectExtent.z, 1.0) );
+   BoundingBox[6] = u_ModelViewProjectionMatrix * ( InstancePosition + vec4( ObjectExtent.x,-ObjectExtent.y,-ObjectExtent.z, 1.0) );
+   BoundingBox[7] = u_ModelViewProjectionMatrix * ( InstancePosition + vec4(-ObjectExtent.x,-ObjectExtent.y,-ObjectExtent.z, 1.0) );
+   
+   /* check how the bounding box resides regarding to the view frustum */   
+   int outOfBound[6];// = int[6]( 0, 0, 0, 0, 0, 0 );
+
+   for (int i=0; i<6; i++)
+	   outOfBound[i] = 0;
+
+   for (int i=0; i<8; i++)
+   {
+      if ( BoundingBox[i].x >  BoundingBox[i].w ) outOfBound[0]++;
+      if ( BoundingBox[i].x < -BoundingBox[i].w ) outOfBound[1]++;
+      if ( BoundingBox[i].y >  BoundingBox[i].w ) outOfBound[2]++;
+      if ( BoundingBox[i].y < -BoundingBox[i].w ) outOfBound[3]++;
+      if ( BoundingBox[i].z >  BoundingBox[i].w ) outOfBound[4]++;
+      if ( BoundingBox[i].z < -BoundingBox[i].w ) outOfBound[5]++;
+   }
+
+   bool inFrustum = true;
+   
+   for (int i=0; i<6; i++)
+   {
+      if ( outOfBound[i] == 8 ) 
+	  {
+         inFrustum = false;
+		 break;
+      }
+   }
+
+   return !inFrustum;
+}
+
+
 void main()
 {
 	if (isSlope[0] > 0 || isSlope[1] > 0 || isSlope[2] > 0)
@@ -137,6 +190,16 @@ void main()
 		return;
 	}
 	
+	// Do some ICR culling on the base surfaces... Save us looping through extra surfaces...
+	vec3 maxs;
+	maxs = max(gl_in[0].gl_Position.xyz - Pos, gl_in[1].gl_Position.xyz - Pos);
+	maxs = max(maxs, gl_in[2].gl_Position.xyz - Pos);
+
+	if (InstanceCloudReductionCulling(vec4(Pos, 0.0), maxs))
+	{
+		return;
+	}
+
 	vec3 normal = normalize(cross(gl_in[2].gl_Position.xyz - gl_in[0].gl_Position.xyz, gl_in[1].gl_Position.xyz - gl_in[0].gl_Position.xyz)); //calculate normal for this face
 
 	//face info--------------------------
@@ -154,21 +217,23 @@ void main()
 	
 	float m = 1.0 - clamp((VertDist-1024.0) / MAX_RANGE, 0.0, 1.0);
 
-	float USE_DENSITY = pow(m, 8.0);//m*m*m;
+	float USE_DENSITY = pow(m, 3.0/*8.0*/);//m*m*m;
 
 	int numAddedVerts = 0;
+	int maxAddedVerts = int(float(MAX_FOLIAGES)*USE_DENSITY);
 
 	for(int x = 0; x < MAX_FOLIAGES_LOOP; x++)
 	{
-		if (float(numAddedVerts) >= float(MAX_FOLIAGES)*USE_DENSITY) break;
+		if (float(numAddedVerts) >= maxAddedVerts)
+		{
+			break;
+		}
 
 		vec3 vGrassFieldPos = randomBarycentricCoordinate().xyz;
 
-		float VertDist2 = distance(u_ViewOrigin, vGrassFieldPos);
-
-		if (VertDist2 >= MAX_RANGE) 
-		{// Too far from viewer... Cull...
-			continue;
+		if (vGrassFieldPos.z < MAP_WATER_LEVEL && float(numAddedVerts) >= float(maxAddedVerts) * 0.025)
+		{
+			break;
 		}
 
 		vec4 controlMap = GetGrassMap(vGrassFieldPos);
@@ -176,6 +241,13 @@ void main()
 
 		if (controlMapScale < 0.2)//u_Local9.a)
 		{// Check if this area is on the grass map. If not, there is no grass here...
+			continue;
+		}
+
+		float VertDist2 = distance(u_ViewOrigin, vGrassFieldPos);
+
+		if (VertDist2 >= MAX_RANGE) 
+		{// Too far from viewer... Cull...
 			continue;
 		}
 
@@ -277,33 +349,34 @@ void main()
 		
 		fWindPower *= fWindStrength;
 		
-		vec3 right = vec3(randZeroOne(), randZeroOne(), 0.0);
-		vec3 up = vec3(0.0, 0.0, 0.5);
-		vec3 normalOffset = (normal * vec3(right.x, right.y, 0.5));
-
 		float size = fGrassPatchSize*fGrassPatchHeight;
+		vec3 doublesize = vec3(size * 2.0, size * 2.0, size);
 
-		vec3 P = vGrassFieldPos.xyz + (up * (size*0.9));
+		vec3 direction = vec3(randZeroOne(), randZeroOne(), 0.0);
+		vec3 up = vec3(0.0, 0.0, 1.0/*0.5*/);
+		vec3 normalOffset = (normal * vec3(direction.x, direction.y, 1.0));
 
-		vec3 va = P - (right + normalOffset) * size;
+		vec3 P = vGrassFieldPos.xyz + (up * (size*0.45));
+
+		vec3 va = P - ((direction + normalOffset) * doublesize);
 		gl_Position = u_ModelViewProjectionMatrix * vec4(va, 1.0);
 		vTexCoord = vec2(0.0, 1.0);
 		vVertPosition = va.xyz;
 		EmitVertex();  
   
-		vec3 vb = P - (right - normalOffset) * size;
+		vec3 vb = P - ((direction - normalOffset) * doublesize);
 		gl_Position = u_ModelViewProjectionMatrix * vec4(vb + vWindDirection*fWindPower, 1.0);
 		vTexCoord = vec2(0.0, 0.0);
 		vVertPosition = vb.xyz;
 		EmitVertex();  
  
-		vec3 vd = P + (right - normalOffset) * size;
+		vec3 vd = P + ((direction - normalOffset) * doublesize);
 		gl_Position = u_ModelViewProjectionMatrix * vec4(vd, 1.0);
 		vTexCoord = vec2(1.0, 1.0);
 		vVertPosition = vd.xyz;
 		EmitVertex();  
  
-		vec3 vc = P + (right + normalOffset) * size;
+		vec3 vc = P + ((direction + normalOffset) * doublesize);
 		gl_Position = u_ModelViewProjectionMatrix * vec4(vc + vWindDirection*fWindPower, 1.0);
 		vTexCoord = vec2(1.0, 0.0);
 		vVertPosition = vc.xyz;

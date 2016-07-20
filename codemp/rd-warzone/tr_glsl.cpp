@@ -37,6 +37,7 @@ extern const char *fallbackShader_fogpass_fp;
 extern const char *fallbackShader_generic_vp;
 extern const char *fallbackShader_generic_fp;
 extern const char *fallbackShader_lightall_vp;
+extern const char *fallbackShader_lightall_gs;
 extern const char *fallbackShader_lightall_fp;
 extern const char *fallbackShader_shadowPass_vp;
 extern const char *fallbackShader_shadowPass_fp;
@@ -350,6 +351,8 @@ const char fallbackShader_genericTessControl_cp[] =
 "// define the number of CPs in the output patch\n"\
 "layout(vertices = 3) out;\n"\
 "\n"\
+"uniform mat4 u_ModelViewProjectionMatrix; // mvp\n"\
+"\n"\
 "uniform vec4			u_Local10;\n"\
 "\n"\
 "#define gTessellationLevelInner u_Local10.g\n"\
@@ -383,8 +386,51 @@ const char fallbackShader_genericTessControl_cp[] =
 "out precise vec4 PrimaryLightDir_ES_in[3];\n"\
 "out precise vec2 TexCoord2_ES_in[3];\n"\
 "out precise vec3 Blending_ES_in[3];\n"\
-"out precise float Slope_ES_in[3];\n"\
-"out precise float usingSteepMap_ES_in[3];\n"\
+"out float Slope_ES_in[3];\n"\
+"out float usingSteepMap_ES_in[3];\n"\
+"\n"\
+"bool InstanceCloudReductionCulling(vec4 InstancePosition, vec3 ObjectExtent) \n"\
+"{\n"\
+"	/* create the bounding box of the object */\n"\
+"	vec4 BoundingBox[8];\n"\
+"	BoundingBox[0] = u_ModelViewProjectionMatrix * ( InstancePosition + vec4( ObjectExtent.x, ObjectExtent.y, ObjectExtent.z, 1.0) );\n"\
+"	BoundingBox[1] = u_ModelViewProjectionMatrix * ( InstancePosition + vec4(-ObjectExtent.x, ObjectExtent.y, ObjectExtent.z, 1.0) );\n"\
+"	BoundingBox[2] = u_ModelViewProjectionMatrix * ( InstancePosition + vec4( ObjectExtent.x,-ObjectExtent.y, ObjectExtent.z, 1.0) );\n"\
+"	BoundingBox[3] = u_ModelViewProjectionMatrix * ( InstancePosition + vec4(-ObjectExtent.x,-ObjectExtent.y, ObjectExtent.z, 1.0) );\n"\
+"	BoundingBox[4] = u_ModelViewProjectionMatrix * ( InstancePosition + vec4( ObjectExtent.x, ObjectExtent.y,-ObjectExtent.z, 1.0) );\n"\
+"	BoundingBox[5] = u_ModelViewProjectionMatrix * ( InstancePosition + vec4(-ObjectExtent.x, ObjectExtent.y,-ObjectExtent.z, 1.0) );\n"\
+"	BoundingBox[6] = u_ModelViewProjectionMatrix * ( InstancePosition + vec4( ObjectExtent.x,-ObjectExtent.y,-ObjectExtent.z, 1.0) );\n"\
+"	BoundingBox[7] = u_ModelViewProjectionMatrix * ( InstancePosition + vec4(-ObjectExtent.x,-ObjectExtent.y,-ObjectExtent.z, 1.0) );\n"\
+"\n"\
+"	/* check how the bounding box resides regarding to the view frustum */ \n"\
+"	int outOfBound[6];// = int[6]( 0, 0, 0, 0, 0, 0 );\n"\
+"\n"\
+"	for (int i=0; i<6; i++)\n"\
+"		outOfBound[i] = 0;\n"\
+"\n"\
+"	for (int i=0; i<8; i++)\n"\
+"	{\n"\
+"		if ( BoundingBox[i].x >  BoundingBox[i].w ) outOfBound[0]++;\n"\
+"		if ( BoundingBox[i].x < -BoundingBox[i].w ) outOfBound[1]++;\n"\
+"		if ( BoundingBox[i].y >  BoundingBox[i].w ) outOfBound[2]++;\n"\
+"		if ( BoundingBox[i].y < -BoundingBox[i].w ) outOfBound[3]++;\n"\
+"		if ( BoundingBox[i].z >  BoundingBox[i].w ) outOfBound[4]++;\n"\
+"		if ( BoundingBox[i].z < -BoundingBox[i].w ) outOfBound[5]++;\n"\
+"	}\n"\
+"\n"\
+"	bool inFrustum = true;\n"\
+"\n"\
+"	for (int i=0; i<6; i++)\n"\
+"	{\n"\
+"		if ( outOfBound[i] == 8 ) \n"\
+"		{\n"\
+"			inFrustum = false;\n"\
+"			break;\n"\
+"		}\n"\
+"	}\n"\
+"\n"\
+"	return !inFrustum;\n"\
+"}\n"\
 "\n"\
 "float GetTessLevel(float Distance)\n"\
 "{\n"\
@@ -414,24 +460,63 @@ const char fallbackShader_genericTessControl_cp[] =
 "	//if(gl_InvocationID == 0)\n"\
 "	{\n"\
 "\n"\
-"    // Calculate the distance from the camera to the three control points\n"\
+"  // METHOD 1: Calculate the distance from the camera to the three control points\n"\
 "/*    float EyeToVertexDistance = distance(gEyeWorldPos, WorldPos_ES_in[gl_InvocationID].xyz);\n"\
+"	 gl_TessLevelInner[0] = GetTessLevel(EyeToVertexDistance);//gTessellationLevelInner;\n"\
+"	 gl_TessLevelInner[1] = GetTessLevel(EyeToVertexDistance);//gTessellationLevelInner;\n"\
+"	 gl_TessLevelOuter[0] = 3.0;//GetTessLevel(EyeToVertexDistance);//gTessellationLevelOuter;\n"\
+"	 gl_TessLevelOuter[1] = 3.0;//GetTessLevel(EyeToVertexDistance);//gTessellationLevelOuter;\n"\
+"	 gl_TessLevelOuter[2] = 3.0;//GetTessLevel(EyeToVertexDistance);//gTessellationLevelOuter;\n"\
+"	 gl_TessLevelOuter[3] = 3.0;//GetTessLevel(EyeToVertexDistance);//gTessellationLevelOuter;*/\n"\
 "\n"\
-"		gl_TessLevelInner[0] = GetTessLevel(EyeToVertexDistance);//gTessellationLevelInner;\n"\
-"		gl_TessLevelInner[1] = GetTessLevel(EyeToVertexDistance);//gTessellationLevelInner;\n"\
-"		gl_TessLevelOuter[0] = 3.0;//GetTessLevel(EyeToVertexDistance);//gTessellationLevelOuter;\n"\
-"		gl_TessLevelOuter[1] = 3.0;//GetTessLevel(EyeToVertexDistance);//gTessellationLevelOuter;\n"\
-"		gl_TessLevelOuter[2] = 3.0;//GetTessLevel(EyeToVertexDistance);//gTessellationLevelOuter;\n"\
-"		gl_TessLevelOuter[3] = 3.0;//GetTessLevel(EyeToVertexDistance);//gTessellationLevelOuter;*/\n"\
-// Calculate the distance from the camera to the three control points
-"		    float EyeToVertexDistance0 = distance(gEyeWorldPos, WorldPos_ES_in[0].xyz);\n"\
-"		    float EyeToVertexDistance1 = distance(gEyeWorldPos, WorldPos_ES_in[1].xyz);\n"\
-"		    float EyeToVertexDistance2 = distance(gEyeWorldPos, WorldPos_ES_in[2].xyz);\n"\
+"	 // METHOD 2: Calculate the distance from the camera to the three control points\n"\
+"	 /*float EyeToVertexDistance0 = distance(gEyeWorldPos, WorldPos_ES_in[0].xyz);\n"\
+"	 float EyeToVertexDistance1 = distance(gEyeWorldPos, WorldPos_ES_in[1].xyz);\n"\
+"	 float EyeToVertexDistance2 = distance(gEyeWorldPos, WorldPos_ES_in[2].xyz);\n"\
 "    gl_TessLevelOuter[0] = GetTessLevel2(EyeToVertexDistance1, EyeToVertexDistance2);\n"\
 "    gl_TessLevelOuter[1] = GetTessLevel2(EyeToVertexDistance2, EyeToVertexDistance0);\n"\
 "    gl_TessLevelOuter[2] = GetTessLevel2(EyeToVertexDistance0, EyeToVertexDistance1);\n"\
 "    gl_TessLevelInner[0] = gl_TessLevelOuter[2];\n"\
+"    gl_TessLevelInner[1] = gl_TessLevelOuter[2];*/\n"\
+"\n"\
+"	 // METHOD 3: Let's just use static, but low value... Nice and fast, but no popping in/out or edge errors...\n"\
+"    gl_TessLevelOuter[0] = gTessellationLevelInner;\n"\
+"    gl_TessLevelOuter[1] = gTessellationLevelInner;\n"\
+"    gl_TessLevelOuter[2] = gTessellationLevelInner;\n"\
+"    gl_TessLevelInner[0] = gl_TessLevelOuter[2];\n"\
 "    gl_TessLevelInner[1] = gl_TessLevelOuter[2];\n"\
+"	}\n"\
+"\n"\
+"#if defined(USE_ICR_CULLING)\n"\
+"	//face center------------------------\n"\
+"	vec3 Vert1 = WorldPos_ES_in[0].xyz;\n"\
+"	vec3 Vert2 = WorldPos_ES_in[1].xyz;\n"\
+"	vec3 Vert3 = WorldPos_ES_in[2].xyz;\n"\
+"\n"\
+"	vec3 Pos = (Vert1+Vert2+Vert3) / 3.0;   //Center of the triangle - copy for later\n"\
+"\n"\
+"	// Do some ICR culling on the base surfaces... Save us looping through extra surfaces...\n"\
+"	vec3 maxs;\n"\
+"	maxs = max(WorldPos_ES_in[0].xyz - Pos, WorldPos_ES_in[1].xyz - Pos);\n"\
+"	maxs = max(maxs, WorldPos_ES_in[2].xyz - Pos);\n"\
+"\n"\
+"	if (InstanceCloudReductionCulling(vec4(Pos, 0.0), maxs*2.0))\n"\
+"	{\n"\
+"		gl_TessLevelOuter[0] = 0.0;\n"\
+"		gl_TessLevelOuter[1] = 0.0;\n"\
+"		gl_TessLevelOuter[2] = 0.0;\n"\
+"		gl_TessLevelInner[0] = 0.0;\n"\
+"		gl_TessLevelInner[1] = 0.0;\n"\
+"	}\n"\
+"#endif\n"\
+"\n"\
+"	if (distance(gEyeWorldPos, WorldPos_ES_in[0].xyz) > 16384.0)\n"\
+"	{// Let's simply not tessellate anything this far away...\n"\
+"		gl_TessLevelOuter[0] = 1.0;\n"\
+"		gl_TessLevelOuter[1] = 1.0;\n"\
+"		gl_TessLevelOuter[2] = 1.0;\n"\
+"		gl_TessLevelInner[0] = 1.0;\n"\
+"		gl_TessLevelInner[1] = 1.0;\n"\
 "	}\n"\
 "}\n";
 
@@ -448,19 +533,19 @@ const char fallbackShader_genericTessControl_ep[] =
 "in precise vec4 PrimaryLightDir_ES_in[];\n"\
 "in precise vec2 TexCoord2_ES_in[];\n"\
 "in precise vec3 Blending_ES_in[];\n"\
-"in precise float Slope_ES_in[];\n"\
-"in precise float usingSteepMap_ES_in[];\n"\
+"in float Slope_ES_in[];\n"\
+"in float usingSteepMap_ES_in[];\n"\
 "\n"\
-"out vec4 WorldPos_GS_in;\n"\
-"out vec2 TexCoord_GS_in;\n"\
-"out vec3 Normal_GS_in;\n"\
-"out vec3 ViewDir_GS_in;\n"\
-"out vec4 Tangent_GS_in;\n"\
-"out vec4 Bitangent_GS_in;\n"\
-"out vec4 Color_GS_in;\n"\
-"out vec4 PrimaryLightDir_GS_in;\n"\
-"out vec2 TexCoord2_GS_in;\n"\
-"out vec3 Blending_GS_in;\n"\
+"out precise vec4 WorldPos_GS_in;\n"\
+"out precise vec2 TexCoord_GS_in;\n"\
+"out precise vec3 Normal_GS_in;\n"\
+"out precise vec3 ViewDir_GS_in;\n"\
+"out precise vec4 Tangent_GS_in;\n"\
+"out precise vec4 Bitangent_GS_in;\n"\
+"out precise vec4 Color_GS_in;\n"\
+"out precise vec4 PrimaryLightDir_GS_in;\n"\
+"out precise vec2 TexCoord2_GS_in;\n"\
+"out precise vec3 Blending_GS_in;\n"\
 "out float Slope_GS_in;\n"\
 "out float usingSteepMap_GS_in;\n"\
 "\n"\
@@ -507,21 +592,21 @@ const char fallbackShader_genericGeometry[] =
 "in precise vec4 PrimaryLightDir_GS_in[];\n"\
 "in precise vec2 TexCoord2_GS_in[];\n"\
 "in precise vec3 Blending_GS_in[];\n"\
-"in precise float Slope_GS_in[];\n"\
-"in precise float usingSteepMap_GS_in[];\n"\
+"in float Slope_GS_in[];\n"\
+"in float usingSteepMap_GS_in[];\n"\
 "\n"\
-"out vec3 WorldPos_FS_in;\n"\
-"out vec2 TexCoord_FS_in;\n"\
-"out vec3 Normal_FS_in;\n"\
-"out vec3 ViewDir_FS_in;\n"\
-"out vec4 Tangent_FS_in;\n"\
-"out vec4 Bitangent_FS_in;\n"\
-"out vec4 Color_FS_in;\n"\
-"out vec4 PrimaryLightDir_FS_in;\n"\
-"out vec2 TexCoord2_FS_in;\n"\
-"out vec3 Blending_FS_in;\n"\
-"out float Slope_FS_in;\n"\
-"out float usingSteepMap_FS_in;\n"\
+"out precise vec3 WorldPos_FS_in;\n"\
+"out precise vec2 TexCoord_FS_in;\n"\
+"out precise vec3 Normal_FS_in;\n"\
+"out precise vec3 ViewDir_FS_in;\n"\
+"out precise vec4 Tangent_FS_in;\n"\
+"out precise vec4 Bitangent_FS_in;\n"\
+"out precise vec4 Color_FS_in;\n"\
+"out precise vec4 PrimaryLightDir_FS_in;\n"\
+"out precise vec2 TexCoord2_FS_in;\n"\
+"out precise vec3 Blending_FS_in;\n"\
+"flat out float Slope_FS_in;\n"\
+"flat out float usingSteepMap_FS_in;\n"\
 "\n"\
 "vec3 vLocalSeed;\n"\
 "\n"\
@@ -554,11 +639,8 @@ const char fallbackShader_genericGeometry[] =
 "	return norm;\n"\
 "}\n"\
 "\n"\
-"void createPt(int i)\n"\
+"void createPt(int i, vec3 normal)\n"\
 "{\n"\
-"	 Normal_FS_in = normalize(Normal_GS_in[i]);\n"\
-"	 vec3 normal = Normal_FS_in;\n"\
-"//	 vec3 normal = cross(WorldPos_GS_in[2].xyz - WorldPos_GS_in[0].xyz, WorldPos_GS_in[1].xyz - WorldPos_GS_in[0].xyz);\n"\
 "//	 Normal_FS_in = normalize(vec3(normal.xy, normal.z));\n"\
 "//	 normal.z *= 65536.0; // Ummmmm.... WTF???!?!?!?! Why is this needed?!?!?!?!??\n"\
 "//	 normal = normalize(normal);\n"\
@@ -576,13 +658,17 @@ const char fallbackShader_genericGeometry[] =
 "//	vec4 dispData = ConvertToNormals(texture2D(u_DiffuseMap, TexCoord_FS_in));\n"\
 "//	float height = 0.33*dispData.x + 0.33*dispData.y + 0.33*dispData.z;\n"\
 "//	float height = dispData.a;\n"\
-"	 vLocalSeed = WorldPos_GS_in[i].xyz;\n"\
-"   float height = randZeroOne() * 2.0 - 1.0;\n"\
+"//	 vLocalSeed = WorldPos_GS_in[i].xyz;\n"\
+"	 vLocalSeed = WorldPos_GS_in[i].xyx;\n"\
+"//    vec3 height = vec3(randZeroOne() * 2.0 - 1.0, randZeroOne() * 2.0 - 1.0, randZeroOne() * 2.0 - 1.0);\n"\
+"    vec3 height = vec3(randZeroOne() * 2.0 - 1.0);\n"\
 "\n"\
 "//	 vec3 offset = normal * (-gDispFactor * height);\n"\
-"	 vec3 offset = vec3(0.0, 0.0, 1.0) * (-gDispFactor * height);\n"\
+"//	 vec3 offset = vec3(0.0, 0.0, 1.0) * (-gDispFactor * height);\n"\
+"	 vec3 offset = height * -gDispFactor; // screw normals, in rend2 they are fucked up...\n"\
 "\n"\
 "    vec4 newPos = vec4(WorldPos_GS_in[i].xyz + offset.xyz, 1.0);\n"\
+"	 newPos.z -= 8.0; // Lower the surfaces all down so that the player's legs don't sink in...\n"\
 "	 WorldPos_FS_in = newPos.xyz;\n"\
 "\n"\
 "	 // Need to re-generate normal for the displacement...\n"\
@@ -593,9 +679,14 @@ const char fallbackShader_genericGeometry[] =
 "\n"\
 "void main()\n"\
 "{\n"\
+"	vec3 normal = cross(WorldPos_GS_in[2].xyz - WorldPos_GS_in[0].xyz, WorldPos_GS_in[1].xyz - WorldPos_GS_in[0].xyz);\n"\
+"\n"\
 "	for(int i = 0; i < gl_VerticesIn; i++)\n"\
 "	{\n"\
-"		createPt(i);\n"\
+"		Normal_FS_in = normal;\n"\
+"//		Normal_FS_in = normalize(Normal_GS_in[i]);\n"\
+"//		vec3 normal = Normal_FS_in;\n"\
+"		createPt(i, normal);\n"\
 "		EmitVertex();\n"\
 "	}\n"\
 "\n"\
@@ -2688,6 +2779,15 @@ int GLSL_BeginLoadGPUShaders(void)
 #else
 			if (!GLSL_BeginLoadGPUShader(&tr.lightallShader[i], "lightall", attribs, qtrue, qtrue, qfalse, extradefines, qtrue, NULL, fallbackShader_lightall_vp, fallbackShader_lightall_fp, fallbackShader_genericTessControl_cp, fallbackShader_genericTessControl_ep, NULL))
 #endif
+			{
+				ri->Error(ERR_FATAL, "Could not load lightall shader!");
+			}
+		}
+		else if (r_instanceCloudReductionCulling->integer)
+		{
+			Q_strcat(extradefines, 1024, "#define USE_ICR_CULLING\n");
+
+			if (!GLSL_BeginLoadGPUShader(&tr.lightallShader[i], "lightall", attribs, qtrue, qfalse, qtrue, extradefines, qtrue, NULL, fallbackShader_lightall_vp, fallbackShader_lightall_fp, NULL, NULL, fallbackShader_lightall_gs))
 			{
 				ri->Error(ERR_FATAL, "Could not load lightall shader!");
 			}
