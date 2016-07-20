@@ -2460,7 +2460,7 @@ typedef enum {
 #define SAY_TEAM	1
 #define SAY_TELL	2
 
-#define QRAND_MAX 1048576//32768
+#define QRAND_MAX 32768 // didnt work out as it should 1048576//
 
 void Rand_Init(int seed);
 float flrand(float min, float max);

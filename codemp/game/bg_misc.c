@@ -1557,9 +1557,9 @@ NOTENOTE This weapon is not yet complete.  Don't place it.
 {
 	"weapon_ee3_Blaster",
 	"sound/weapons/w_pkup.wav",
-	{ "models/weapons/EE3_Rifle/model.glm",
+	{ "models/weapons/ee-3_rifle/model.glm",
 	0, 0, 0 },
-	/* view */		"models/weapons/EE3_Rifle/model.glm",
+	/* view */		"models/weapons/ee-3_rifle/viewmodel.md3",
 	/* icon */		"gfx/hud/w_icon_ee-3",
 	/* pickup *///	"t-21",
 	100,
