@@ -2460,12 +2460,13 @@ typedef enum {
 #define SAY_TEAM	1
 #define SAY_TELL	2
 
-#define QRAND_MAX 32768 // didnt work out as it should 1048576//
+#define QRAND_MAX 32768 // UQ1: added irand_big() for big numbers
 
 void Rand_Init(int seed);
 float flrand(float min, float max);
 int irand(int min, int max);
 int Q_irand(int value1, int value2);
+uint32_t irand_big(uint32_t a, uint32_t b);
 
 /*
 Ghoul2 Insert Start

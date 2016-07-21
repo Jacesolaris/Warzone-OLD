@@ -1133,7 +1133,7 @@ float Q_flrand(float min, float max)
 }
 
 //
-uint32_t randomInRange(uint32_t a,uint32_t b) 
+uint32_t irand_big(uint32_t min, uint32_t max) 
 {
     uint32_t v;
     uint32_t range;
@@ -1141,16 +1141,16 @@ uint32_t randomInRange(uint32_t a,uint32_t b)
     uint32_t lower;
     uint32_t mask;
 
-    if(a == b) {
-        return a;
+    if(min == max) {
+        return min;
     }
 
-    if(a > b) {
-        upper = a;
-        lower = b;
+    if(min > max) {
+        upper = min;
+        lower = max;
     } else {
-        upper = b;
-        lower = a; 
+        upper = max;
+        lower = min; 
     }
 
     range = upper - lower;

@@ -479,14 +479,14 @@ qboolean NPC_CopyPathFromNearbyNPC( void )
 
 int NPC_FindGoal( gentity_t *NPC )
 {
-	int waypoint = irand(0, gWPNum);//irand(0, gWPNum/2)+irand(0, (gWPNum/2)-1);
+	int waypoint = irand_big(0, gWPNum);
 	int tries = 0;
 
 	while (gWPArray[waypoint]->inuse == qfalse || gWPArray[waypoint]->wpIsBad == qtrue)
 	{
 		if (tries > 10) return -1; // Try again next frame...
 
-		waypoint = irand(0, gWPNum);//irand(0, gWPNum/2)+irand(0, (gWPNum/2)-1);
+		waypoint = irand_big(0, gWPNum);
 		tries++;
 	}
 
