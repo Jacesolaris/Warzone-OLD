@@ -4753,7 +4753,7 @@ static int impactSoundDebounceTime = 0;
 #define	RADAR_ASTEROID_RANGE				10000.0f
 #define	RADAR_MIN_ASTEROID_SURF_WARN_DIST	1200.0f
 //#define __DISABLE_RADAR_STUFF__	
-float CG_DrawRadar ( float y )
+float CG_DrawRadar(float y)
 {
 	vec4_t			color;
 	vec4_t			teamColor;
@@ -4769,6 +4769,9 @@ float CG_DrawRadar ( float y )
 	float			zScale;
 #endif //__DISABLE_RADAR_STUFF__
 	int				xOffset = 0;
+	qhandle_t		directionImages[9] = { 0 };
+	int				directionImagesPriority[9] = { 0 };
+
 
 	if (!cg.snap)
 	{
@@ -4792,6 +4795,7 @@ float CG_DrawRadar ( float y )
 		return y;
 	}
 
+
 	// Draw the radar background image
 	color[0] = color[1] = color[2] = 1.0f;
 	color[3] = 0.6f;
@@ -4814,6 +4818,12 @@ float CG_DrawRadar ( float y )
 		centity_t*	cent;
 
 		cent = &cg_entities[cg.radarEntities[i]];
+
+		// Don't show friendly targets.
+		if (cent->currentState.teamowner == cgs.clientinfo[cg.clientNum].team)
+		{
+			continue;
+		}
 
 		// Get the distances first
 		VectorSubtract ( cg.predictedPlayerState.origin, cent->lerpOrigin, dirPlayer );
@@ -4873,37 +4883,57 @@ float CG_DrawRadar ( float y )
 				{
 					if (directionValue < 8)
 					{
+						int directionPriority = 0;
 						if (elevationDifference > ELEVATION_DIFFERENCE_LIMIT && actualDist <= RADAR_CLOSE_RANGE)
 						{
 							angleGFXArray = cgs.media.warzone_radar_tic_close_elevation;
 							//debugMessage = "Elevation";
+							directionPriority = 1;
 						}
 						else if (actualDist <= RADAR_REALLY_CLOSE_RANGE)
 						{
 							angleGFXArray = cgs.media.warzone_radar_tic_reallyclose;
 							//debugMessage = "ReallyClose";
+							directionPriority = 3;
 						}
 						else if (actualDist <= RADAR_CLOSE_RANGE)
 						{
 							angleGFXArray = cgs.media.warzone_radar_tic_close;
 							//debugMessage = "Close";
+							directionPriority = 2;
 						}
 
-						CG_DrawPic(RADAR_X + xOffset, y, RADAR_RADIUS * 2, RADAR_RADIUS * 2, angleGFXArray[directionValue]);
+						if (directionImagesPriority[directionValue] < directionPriority)
+						{
+							directionImagesPriority[directionValue] = directionPriority;
+							directionImages[directionValue] = angleGFXArray[directionValue];
+						}
 					}
 				}
 				else
 				{
+					int directionPriority = 0;
+					qhandle_t radar_gfx;
 					// Print mid-circle piece.
 					if (elevationDifference > ELEVATION_DIFFERENCE_LIMIT)
 					{
-						CG_DrawPic(RADAR_X + xOffset, y, RADAR_RADIUS * 2, RADAR_RADIUS * 2, cgs.media.warzone_radar_midtpoint_glow_elevation);
+						directionPriority = 1;
+						//CG_DrawPic(RADAR_X + xOffset, y, RADAR_RADIUS * 2, RADAR_RADIUS * 2, cgs.media.warzone_radar_midtpoint_glow_elevation);
+						radar_gfx = cgs.media.warzone_radar_midtpoint_glow_elevation;
 					}
 					else
 					{
-						CG_DrawPic(RADAR_X + xOffset, y, RADAR_RADIUS * 2, RADAR_RADIUS * 2, cgs.media.warzone_radar_midtpoint_glow_0);
+						directionPriority = 2;
+						//CG_DrawPic(RADAR_X + xOffset, y, RADAR_RADIUS * 2, RADAR_RADIUS * 2, cgs.media.warzone_radar_midtpoint_glow_0);
+						radar_gfx = cgs.media.warzone_radar_midtpoint_glow_0;
 					}
 					//debugMessage = "OnTop";
+
+					if (directionImagesPriority[8] < directionPriority)
+					{
+						directionImagesPriority[8] = directionPriority;
+						directionImages[8] = radar_gfx;
+					}
 				}
 				
 				if (cg_turnondistenscalc.integer)
@@ -5441,6 +5471,15 @@ float CG_DrawRadar ( float y )
 			}
 		}
 #endif // __DISABLE_RADAR_STUFF__
+	}
+
+	// After having resolved the highest priority distances above, we can now draw the correct images
+	for (i = 0; i < 9; ++i)
+	{
+		if (directionImagesPriority[i] != 0)
+		{
+			CG_DrawPic(RADAR_X + xOffset, y, RADAR_RADIUS * 2, RADAR_RADIUS * 2, directionImages[i]);
+		}
 	}
 
 	arrowBaseScale = 80.0f;
