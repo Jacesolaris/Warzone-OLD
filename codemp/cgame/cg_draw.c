@@ -4771,6 +4771,7 @@ float CG_DrawRadar(float y)
 	int				xOffset = 0;
 	qhandle_t		directionImages[9] = { 0 };
 	int				directionImagesPriority[9] = { 0 };
+	int				distancePrintCounter = 0;
 
 
 	if (!cg.snap)
@@ -4870,9 +4871,11 @@ float CG_DrawRadar(float y)
 				int directionValue = ((int)(floor((degAngle + 0.5f*45.0f) / 45.0f)*45.0f) / 45) % 8;
 				//char* debugMessage = "Far";
 				float elevationDifference = 0;
+				int directionPriority = 1;
+				int directionPriorityIndex = directionValue;
 
 				// Default to the farthest away list of radar images.
-				qhandle_t* angleGFXArray = cgs.media.warzone_radar_tic_far;
+				qhandle_t angleGFXHandle = cgs.media.warzone_radar_tic_far[directionValue];
 
 				color[0] = color[1] = color[2] = 1.0f;
 				color[3] = 1.0f;
@@ -4883,69 +4886,54 @@ float CG_DrawRadar(float y)
 				{
 					if (directionValue < 8)
 					{
-						int directionPriority = 0;
 						if (elevationDifference > ELEVATION_DIFFERENCE_LIMIT && actualDist <= RADAR_CLOSE_RANGE)
 						{
-							angleGFXArray = cgs.media.warzone_radar_tic_close_elevation;
+							angleGFXHandle = cgs.media.warzone_radar_tic_close_elevation[directionValue];
 							//debugMessage = "Elevation";
-							directionPriority = 1;
+							directionPriority = 2;
 						}
 						else if (actualDist <= RADAR_REALLY_CLOSE_RANGE)
 						{
-							angleGFXArray = cgs.media.warzone_radar_tic_reallyclose;
+							angleGFXHandle = cgs.media.warzone_radar_tic_reallyclose[directionValue];
 							//debugMessage = "ReallyClose";
-							directionPriority = 3;
+							directionPriority = 4;
 						}
 						else if (actualDist <= RADAR_CLOSE_RANGE)
 						{
-							angleGFXArray = cgs.media.warzone_radar_tic_close;
+							angleGFXHandle = cgs.media.warzone_radar_tic_close[directionValue];
 							//debugMessage = "Close";
-							directionPriority = 2;
-						}
-
-						if (directionImagesPriority[directionValue] < directionPriority)
-						{
-							directionImagesPriority[directionValue] = directionPriority;
-							directionImages[directionValue] = angleGFXArray[directionValue];
+							directionPriority = 3;
 						}
 					}
 				}
 				else
 				{
-					int directionPriority = 0;
-					qhandle_t radar_gfx;
 					// Print mid-circle piece.
 					if (elevationDifference > ELEVATION_DIFFERENCE_LIMIT)
 					{
 						directionPriority = 1;
-						//CG_DrawPic(RADAR_X + xOffset, y, RADAR_RADIUS * 2, RADAR_RADIUS * 2, cgs.media.warzone_radar_midtpoint_glow_elevation);
-						radar_gfx = cgs.media.warzone_radar_midtpoint_glow_elevation;
+						angleGFXHandle = cgs.media.warzone_radar_midtpoint_glow_elevation;
 					}
 					else
 					{
 						directionPriority = 2;
-						//CG_DrawPic(RADAR_X + xOffset, y, RADAR_RADIUS * 2, RADAR_RADIUS * 2, cgs.media.warzone_radar_midtpoint_glow_0);
-						radar_gfx = cgs.media.warzone_radar_midtpoint_glow_0;
+						angleGFXHandle = cgs.media.warzone_radar_midtpoint_glow_0;
 					}
+					directionPriorityIndex = 8;
 					//debugMessage = "OnTop";
+				}
 
-					if (directionImagesPriority[8] < directionPriority)
-					{
-						directionImagesPriority[8] = directionPriority;
-						directionImages[8] = radar_gfx;
-					}
+				if (directionImagesPriority[directionPriorityIndex] < directionPriority)
+				{
+					directionImagesPriority[directionPriorityIndex] = directionPriority;
+					directionImages[directionPriorityIndex] = angleGFXHandle;
 				}
 				
 				if (cg_turnondistenscalc.integer)
 				{
-					CG_Text_Paint(RADAR_DISTEN_X - 100, y + 200, 1, color, va("Distance: %f", actualDist), 0, 0, ITEM_TEXTSTYLE_SHADOWEDMORE, FONT_SMALL2);
-					//CG_Text_Paint(RADAR_DISTEN_X + xOffset, y + 100, 1, color, va("Distance: %f", actualDist), 0, 0, ITEM_TEXTSTYLE_SHADOWEDMORE, FONT_SMALL2);
+					CG_Text_Paint(RADAR_DISTEN_X, y + 100 + (distancePrintCounter*12.5f), 1, color, va("#%d Distance: %f", distancePrintCounter, actualDist), 0, 0, ITEM_TEXTSTYLE_SHADOWEDMORE, FONT_SMALL2);
+					distancePrintCounter++;
 				}
-				/*else if (cg_turnondistenscalc.integer)
-				{
-					CG_Text_Paint(RADAR_X - 100, y + 200, 1, color, va("DirValue: %i: %s", directionValue, debugMessage), 0, 0, ITEM_TEXTSTYLE_SHADOWEDMORE, FONT_MEDIUM);
-				}*/
-				//
 			}
 		}
 
