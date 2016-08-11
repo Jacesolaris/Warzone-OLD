@@ -27,6 +27,11 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 #include "ghoul2/g2_local.h"
 
+extern qboolean MATRIX_UPDATE;
+extern qboolean CLOSE_LIGHTS_UPDATE;
+
+extern void RB_UpdateMatrixes ( void );
+
 trGlobals_t		tr;
 
 static float	s_flipMatrix[16] = {
@@ -3059,6 +3064,8 @@ void R_RenderCubemapSide( int cubemapIndex, int cubemapSide, qboolean subscene )
 
 	if (!subscene)
 	{
+		MATRIX_UPDATE = qtrue;
+		CLOSE_LIGHTS_UPDATE = qtrue;
 		RE_BeginScene(&refdef);
 
 		// FIXME: sun shadows aren't rendered correctly in cubemaps

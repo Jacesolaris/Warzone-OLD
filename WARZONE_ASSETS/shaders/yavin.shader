@@ -1239,7 +1239,7 @@ textures/yavin/tree1
 
 textures/yavin/ground
 {
-	q3map_material	ShortGrass
+	/*q3map_material	ShortGrass
     {
         map $lightmap
     }
@@ -1247,7 +1247,17 @@ textures/yavin/ground
         map textures/yavin/ground
         blendFunc GL_DST_COLOR GL_ZERO
 		tcMod scale 2.0 2.0
-    }
+    }*/
+    
+    qer_editorimage	textures/yavin/ground
+  q3map_material	ShortGrass
+  q3map_clipModel
+  {
+    map textures/yavin/ground
+    blendfunc GL_ONE GL_ZERO
+    depthWrite
+    rgbGen identity
+  }
 }
 
 textures/yavin/groundplants

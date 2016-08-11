@@ -3,6 +3,8 @@ layout(triangle_strip, max_vertices = 3) out;
 
 uniform mat4				u_ModelViewProjectionMatrix;
 
+uniform vec3				u_ViewOrigin;
+
 in vec4 WorldPos_CS_in[];
 in vec3 Normal_CS_in[];
 in vec2 TexCoord_CS_in[];
@@ -84,6 +86,11 @@ void main (void)
 
 	vec3 Pos = (Vert1+Vert2+Vert3) / 3.0;   //Center of the triangle - copy for later
 
+	/*if (distance(Pos.xyz, u_ViewOrigin.xyz) > 17384.0)
+	{
+		return;
+	}*/
+
 	// Do some ICR culling on the base surfaces... Save us looping through extra surfaces...
 	vec3 maxs;
 	maxs = max(gl_in[0].gl_Position.xyz - Pos, gl_in[1].gl_Position.xyz - Pos);
@@ -95,14 +102,15 @@ void main (void)
 	}
 
 	// May as well create a real normal for the surface, since BSP sucks dog balls...
-	vec3 normal = normalize(cross(gl_in[2].gl_Position.xyz - gl_in[0].gl_Position.xyz, gl_in[1].gl_Position.xyz - gl_in[0].gl_Position.xyz));
+	//vec3 normal = normalize(cross(gl_in[2].gl_Position.xyz - gl_in[0].gl_Position.xyz, gl_in[1].gl_Position.xyz - gl_in[0].gl_Position.xyz));
 
 	for(int i = 0; i < 3; i++) 
 	{
 		gl_Position				= u_ModelViewProjectionMatrix * gl_in[i].gl_Position;
 		
 		TexCoord_FS_in			= TexCoord_CS_in[i];
-		Normal_FS_in			= normal*Normal_CS_in[i];//(normal + Normal_CS_in[i]) / 2.0;//normal;//Normal_CS_in[i];
+		//Normal_FS_in			= normal;//*Normal_CS_in[i];//(normal + Normal_CS_in[i]) / 2.0;//normal;//Normal_CS_in[i];
+		Normal_FS_in			= Normal_CS_in[i];
 		WorldPos_FS_in			= gl_in[i].gl_Position.xyz;//WorldPos_CS_in[i].xyz;
 
 		ViewDir_FS_in			= ViewDir_CS_in[i];

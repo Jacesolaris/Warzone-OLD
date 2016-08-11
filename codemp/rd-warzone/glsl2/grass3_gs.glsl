@@ -107,6 +107,8 @@ vec4 GetGrassMap(vec3 m_vertPos)
 	return clamp(pow(control, vec4(0.3)) * 0.5, 0.0, 1.0);
 }
 
+#define M_PI		3.14159265358979323846
+
 vec3 VectorMA( vec3 vec1, vec3 scale, vec3 vec2 ) 
 {
 	vec3 vecOut;
@@ -114,6 +116,63 @@ vec3 VectorMA( vec3 vec1, vec3 scale, vec3 vec2 )
 	vecOut.y = vec1.y + scale.y*vec2.y;
 	vecOut.z = vec1.z + scale.z*vec2.z;
 	return vecOut;
+}
+
+#define DEG2RAD( deg ) ( ((deg)*M_PI) / 180.0f )
+
+vec3 VectorRotate( vec3 invec, mat3x3 matrix )
+{
+	vec3 outvec;
+	outvec[0] = dot( invec, matrix[0] );
+	outvec[1] = dot( invec, matrix[1] );
+	outvec[2] = dot( invec, matrix[2] );
+	return outvec;
+}
+
+vec3 RotatePointAroundVector( vec3 dir, vec3 point, float degrees )
+{
+	vec3 dst;
+	mat3x3  m;
+	float   c, s, t;
+
+	degrees = DEG2RAD( degrees );
+	s = sin( degrees );
+	c = cos( degrees );
+	t = 1 - c;
+
+	m[0][0] = t*dir[0]*dir[0] + c;
+	m[0][1] = t*dir[0]*dir[1] + s*dir[2];
+	m[0][2] = t*dir[0]*dir[2] - s*dir[1];
+
+	m[1][0] = t*dir[0]*dir[1] - s*dir[2];
+	m[1][1] = t*dir[1]*dir[1] + c;
+	m[1][2] = t*dir[1]*dir[2] + s*dir[0];
+
+	m[2][0] = t*dir[0]*dir[2] + s*dir[1];
+	m[2][1] = t*dir[1]*dir[2] - s*dir[0];
+	m[2][2] = t*dir[2]*dir[2] + c;
+	dst = VectorRotate( point, m );
+	return dst;
+}
+
+vec3 rotate_point(vec3 pivotPoint, float angle, vec3 point)
+{
+	vec3 p = point;
+	float s = sin(angle);
+	float c = cos(angle);
+
+	// translate point back to origin:
+	p.x -= pivotPoint.x;
+	p.y -= pivotPoint.y;
+
+	// rotate point
+	float xnew = p.x * c - p.y * s;
+	float ynew = p.x * s + p.y * c;
+
+	// translate point back:
+	p.x = xnew + pivotPoint.x;
+	p.y = ynew + pivotPoint.y;
+	return p;
 }
 
 bool InstanceCloudReductionCulling(vec4 InstancePosition, vec3 ObjectExtent) 
@@ -386,7 +445,75 @@ void main()
 		EndPrimitive();
 
 		numAddedVerts+=4;
+#elif 1
+		//vec3 rotate_point(vec3 pivotPoint, float angle, vec3 point)
+
+		float size = fGrassPatchSize*fGrassPatchHeight;
+		vec3 doublesize = vec3(size * 2.0, size * 2.0, size);
+
+		vec3 direction = vec3(randZeroOne(), randZeroOne(), 0.0);
+		vec3 up = vec3(0.0, 0.0, 1.0/*0.5*/);
+		vec3 normalOffset = (normal * vec3(direction.x, direction.y, 1.0));
+
+		vec3 P = vGrassFieldPos.xyz + (up * (size*0.45));
+
+		vec3 va = P - ((direction + normalOffset) * doublesize);
+		gl_Position = u_ModelViewProjectionMatrix * vec4(va, 1.0);
+		vTexCoord = vec2(0.0, 1.0);
+		vVertPosition = va.xyz;
+		EmitVertex();  
+  
+		vec3 vb = P - ((direction - normalOffset) * doublesize);
+		gl_Position = u_ModelViewProjectionMatrix * vec4(vb + vWindDirection*fWindPower, 1.0);
+		vTexCoord = vec2(0.0, 0.0);
+		vVertPosition = vb.xyz;
+		EmitVertex();  
+ 
+		vec3 vd = P + ((direction - normalOffset) * doublesize);
+		gl_Position = u_ModelViewProjectionMatrix * vec4(vd, 1.0);
+		vTexCoord = vec2(1.0, 1.0);
+		vVertPosition = vd.xyz;
+		EmitVertex();  
+ 
+		vec3 vc = P + ((direction + normalOffset) * doublesize);
+		gl_Position = u_ModelViewProjectionMatrix * vec4(vc + vWindDirection*fWindPower, 1.0);
+		vTexCoord = vec2(1.0, 0.0);
+		vVertPosition = vc.xyz;
+		EmitVertex();  
+  
+		EndPrimitive();
+
+		numAddedVerts+=4;
+
+		va = rotate_point(P, 3.1, P - ((direction + normalOffset) * doublesize));
+		gl_Position = u_ModelViewProjectionMatrix * vec4(va, 1.0);
+		vTexCoord = vec2(0.0, 1.0);
+		vVertPosition = va.xyz;
+		EmitVertex();  
+  
+		vb = rotate_point(P, 3.1, P - ((direction - normalOffset) * doublesize));
+		gl_Position = u_ModelViewProjectionMatrix * vec4(vb + vWindDirection*fWindPower, 1.0);
+		vTexCoord = vec2(0.0, 0.0);
+		vVertPosition = vb.xyz;
+		EmitVertex();  
+ 
+		vd = rotate_point(P, 3.1, P + ((direction - normalOffset) * doublesize));
+		gl_Position = u_ModelViewProjectionMatrix * vec4(vd, 1.0);
+		vTexCoord = vec2(1.0, 1.0);
+		vVertPosition = vd.xyz;
+		EmitVertex();  
+ 
+		vc = rotate_point(P, 3.1, P + ((direction + normalOffset) * doublesize));
+		gl_Position = u_ModelViewProjectionMatrix * vec4(vc + vWindDirection*fWindPower, 1.0);
+		vTexCoord = vec2(1.0, 0.0);
+		vVertPosition = vc.xyz;
+		EmitVertex();  
+  
+		EndPrimitive();
+
+		numAddedVerts+=4;
 #else
+		
 		float size = fGrassPatchSize*fGrassPatchHeight;
 		vec3 doublesize = vec3(size * 2.0, size * 2.0, size);
 

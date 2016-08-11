@@ -5327,7 +5327,11 @@ static qboolean CollapseStagesToGLSL(void)
 			if (!pStage->active)
 				continue;
 
-			if (pStage->type == ST_NORMALMAP)
+			if (pStage->type == ST_DIFFUSEMAP)
+			{
+				ri->Printf(PRINT_WARNING, "     Stage %i is DiffuseMap.\n", i);
+			}
+			else if (pStage->type == ST_NORMALMAP)
 			{
 				ri->Printf(PRINT_WARNING, "     Stage %i is NormalMap.\n", i);
 			}

@@ -12,8 +12,11 @@ out vec4 out_Glow;
 void main()
 {
 	vec4 color = texture2D(u_DiffuseMap, var_DiffuseTex);
+	color = texture2D(u_DiffuseMap, var_DiffuseTex) * var_Color;
+	
+	if (color.a <= 0.0) discard;
 
-	gl_FragColor = color * var_Color;
+	gl_FragColor = color;
 
 	//gl_FragColor.rgb = vec3(1.0, 0.0, 0.0);
 

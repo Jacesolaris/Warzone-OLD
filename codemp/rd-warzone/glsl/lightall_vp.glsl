@@ -1,9 +1,6 @@
 attribute vec2 attr_TexCoord0;
 
 
-#define USE_TRI_PLANAR
-
-
 #if defined(USE_TESSELLATION) || defined(USE_ICR_CULLING)
 out vec3 Normal_CS_in;
 out vec2 TexCoord_CS_in;
@@ -152,7 +149,7 @@ vec2 ModTexCoords(vec2 st, vec3 position, vec4 texMatrix, vec4 offTurb)
 #endif //defined(USE_TCMOD)
 
 
-#if defined(USE_OVERLAY) || defined(USE_TRI_PLANAR)
+#if defined(USE_TRI_PLANAR)
 void GetBlending(vec3 normal)
 {
 	if (u_Local5.a > 0.0)
@@ -176,9 +173,9 @@ void GetBlending(vec3 normal)
 		var_Blending = blend_weights;
 	}
 }
-#endif //defined(USE_OVERLAY) || defined(USE_TRI_PLANAR)
+#endif //defined(USE_TRI_PLANAR)
 
-#if defined(USE_OVERLAY)
+#if defined(USE_TRI_PLANAR)
 vec3 vectoangles( in vec3 value1 ) {
 	float	forward;
 	float	yaw, pitch;
@@ -220,7 +217,7 @@ vec3 vectoangles( in vec3 value1 ) {
 
 	return angles;
 }
-#endif //defined(USE_OVERLAY)
+#endif //defined(USE_TRI_PLANAR)
 
 vec4 ConvertToNormals ( vec4 color )
 {
@@ -338,7 +335,7 @@ void main()
 	var_usingSteepMap = 0.0;
 	var_Slope = 0.0;
 
-#if defined(USE_OVERLAY)//USE_STEEPMAP
+#if defined(USE_TRI_PLANAR)
 
 		//
 		// Steep Maps...
@@ -373,17 +370,17 @@ void main()
 			}
 		}
 
-#endif //defined(USE_OVERLAY)
+#endif //defined(USE_TRI_PLANAR)
 
 
 
 	var_Blending = vec3(0.0);
 
-#if defined(USE_OVERLAY) || defined(USE_TRI_PLANAR)
+#if defined(USE_TRI_PLANAR)
 
 	GetBlending(normalize(attr_Normal.xyz * 2.0 - 1.0));
 
-#endif //defined(USE_OVERLAY) || defined(USE_TRI_PLANAR)
+#endif //defined(USE_TRI_PLANAR)
 
 
 

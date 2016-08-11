@@ -2708,27 +2708,31 @@ int GLSL_BeginLoadGPUShaders(void)
 
 			if (r_deluxeMapping->integer)
 				Q_strcat(extradefines, 1024, "#define USE_DELUXEMAP\n");
-
-			if (r_parallaxMapping->integer) // Parallax without normal maps...
-			{
-				Q_strcat(extradefines, 1024, "#define USE_PARALLAXMAP\n");
-
-				if (r_parallaxMapping->integer && r_parallaxMapping->integer < 2) // Fast parallax mapping...
-					Q_strcat(extradefines, 1024, "#define FAST_PARALLAX\n");
-			}
-
-			if (r_specularMapping->integer)
-			{
-				Q_strcat(extradefines, 1024, "#define USE_SPECULARMAP\n");
-			}
-
-			if (r_cubeMapping->integer && (i & LIGHTDEF_USE_CUBEMAP))
-			{
-				Q_strcat(extradefines, 1024, "#define USE_CUBEMAP\n");
-			}
 		}
 
-		Q_strcat(extradefines, 1024, "#define USE_OVERLAY\n");
+		if (r_specularMapping->integer)
+		{
+			Q_strcat(extradefines, 1024, "#define USE_SPECULARMAP\n");
+		}
+
+		if (r_cubeMapping->integer && (i & LIGHTDEF_USE_CUBEMAP))
+		{
+			Q_strcat(extradefines, 1024, "#define USE_CUBEMAP\n");
+		}
+
+		if (r_parallaxMapping->integer) // Parallax without normal maps...
+		{
+			Q_strcat(extradefines, 1024, "#define USE_PARALLAXMAP\n");
+
+			if (r_parallaxMapping->integer && r_parallaxMapping->integer < 2) // Fast parallax mapping...
+				Q_strcat(extradefines, 1024, "#define FAST_PARALLAX\n");
+		}
+
+		//Q_strcat(extradefines, 1024, "#define USE_OVERLAY\n");
+		if (i & LIGHTDEF_USE_TRIPLANAR)
+		{
+			Q_strcat(extradefines, 1024, "#define USE_TRI_PLANAR\n");
+		}
 
 		if (i & LIGHTDEF_USE_SHADOWMAP)
 		{

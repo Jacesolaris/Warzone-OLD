@@ -30,6 +30,9 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
   This file deals with applying shaders to surface data in the tess struct.
 */
 
+qboolean MATRIX_UPDATE = qtrue;
+qboolean CLOSE_LIGHTS_UPDATE = qtrue;
+
 color4ub_t	styleColors[MAX_LIGHT_STYLES];
 
 extern void RB_DrawSurfaceSprites( shaderStage_t *stage, shaderCommands_t *input);
@@ -1642,34 +1645,50 @@ qboolean RB_ShouldUseGeometryGrass (int materialType )
 	return qfalse;
 }
 
-extern image_t *skyImage;
+matrix_t MATRIX_TRANS, MATRIX_MODEL, MATRIX_MVP, MATRIX_INVTRANS, MATRIX_NORMAL, MATRIX_VP, MATRIX_INVMV;
 
-float waveTime = 0.5;
-float waveFreq = 0.1;
-
-extern void GLSL_AttachTextures( void );
-extern void GLSL_AttachWaterTextures( void );
-extern void GLSL_AttachWaterTextures2( void );
-
-extern qboolean ALLOW_GL_400;
-
-static void RB_IterateStagesGeneric( shaderCommands_t *input )
+void RB_UpdateMatrixes ( void )
 {
-	vec4_t	fogDistanceVector, fogDepthVector = {0, 0, 0, 0};
-	float	eyeT = 0;
-	int		deformGen;
-	vec5_t	deformParams;
+	if (!MATRIX_UPDATE) return;
 
-	ComputeDeformValues(&deformGen, deformParams);
+	// UQ1: Calculate some matrixes that rend2 doesn't seem to have (or have correct)...
+	Matrix16Translation( backEnd.viewParms.ori.origin, MATRIX_TRANS );
+	Matrix16Multiply( backEnd.viewParms.world.modelMatrix, MATRIX_TRANS, MATRIX_MODEL );
+	Matrix16Multiply(backEnd.viewParms.projectionMatrix, MATRIX_MODEL, MATRIX_MVP);
+	Matrix16Multiply(backEnd.viewParms.projectionMatrix, backEnd.viewParms.world.modelMatrix, MATRIX_VP);
 
-	ComputeFogValues(fogDistanceVector, fogDepthVector, &eyeT);
+	Matrix16SimpleInverse( MATRIX_TRANS, MATRIX_INVTRANS);
+	Matrix16SimpleInverse( backEnd.viewParms.projectionMatrix, MATRIX_NORMAL);
 
-	const int	MAX_LIGHTALL_DLIGHTS = 16;
-	int			NUM_CLOSE_LIGHTS = 0;
-	int			CLOSEST_LIGHTS[MAX_LIGHTALL_DLIGHTS] = {0};
-	vec3_t		CLOSEST_LIGHTS_POSITIONS[MAX_LIGHTALL_DLIGHTS] = {0};
-	float		CLOSEST_LIGHTS_DISTANCES[MAX_LIGHTALL_DLIGHTS] = {0};
-	vec3_t		CLOSEST_LIGHTS_COLORS[MAX_LIGHTALL_DLIGHTS] = {0};
+
+	//GLSL_SetUniformMatrix16(sp, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
+	//GLSL_SetUniformMatrix16(sp, UNIFORM_INVEYEPROJECTIONMATRIX, glState.invEyeProjection);
+	Matrix16SimpleInverse( glState.modelviewProjection, glState.invEyeProjection);
+	Matrix16SimpleInverse( MATRIX_MODEL, MATRIX_INVMV);
+
+	MATRIX_UPDATE = qfalse;
+}
+
+const int	MAX_LIGHTALL_DLIGHTS = 16;
+int			NUM_CLOSE_LIGHTS = 0;
+int			CLOSEST_LIGHTS[MAX_LIGHTALL_DLIGHTS] = {0};
+vec3_t		CLOSEST_LIGHTS_POSITIONS[MAX_LIGHTALL_DLIGHTS] = {0};
+float		CLOSEST_LIGHTS_DISTANCES[MAX_LIGHTALL_DLIGHTS] = {0};
+vec3_t		CLOSEST_LIGHTS_COLORS[MAX_LIGHTALL_DLIGHTS] = {0};
+
+void RB_UpdateCloseLights ( void )
+{
+	if (!CLOSE_LIGHTS_UPDATE) return; // Already done for this frame...
+
+	/*for ( int l = 0; l < MAX_LIGHTALL_DLIGHTS; l++ )
+	{// Init...
+		CLOSEST_LIGHTS[l] = 0;
+		VectorClear(CLOSEST_LIGHTS_POSITIONS[l]);
+		CLOSEST_LIGHTS_DISTANCES[l] = 0.0;
+		VectorClear(CLOSEST_LIGHTS_COLORS[l]);
+	}*/
+	
+	NUM_CLOSE_LIGHTS = 0;
 
 	for ( int l = 0 ; l < backEnd.refdef.num_dlights ; l++ ) 
 	{
@@ -1738,24 +1757,33 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		CLOSEST_LIGHTS_DISTANCES[i] *= 2.0;
 	}
 
-	// UQ1: Calculate some matrixes that rend2 doesn't seem to have (or have correct)...
-	matrix_t trans, model, mvp, invTrans, normalMatrix, vp, invMv;
+	CLOSE_LIGHTS_UPDATE = qfalse;
+}
 
-	Matrix16Translation( backEnd.viewParms.ori.origin, trans );
-	Matrix16Multiply( backEnd.viewParms.world.modelMatrix, trans, model );
-	Matrix16Multiply(backEnd.viewParms.projectionMatrix, model, mvp);
-	//Matrix16Multiply(backEnd.viewParms.projectionMatrix, trans, vp);
-	Matrix16Multiply(backEnd.viewParms.projectionMatrix, backEnd.viewParms.world.modelMatrix, vp);
+extern image_t *skyImage;
 
-	Matrix16SimpleInverse( trans, invTrans);
-	Matrix16SimpleInverse( backEnd.viewParms.projectionMatrix, normalMatrix);
+float waveTime = 0.5;
+float waveFreq = 0.1;
 
+extern void GLSL_AttachTextures( void );
+extern void GLSL_AttachWaterTextures( void );
+extern void GLSL_AttachWaterTextures2( void );
 
-	//GLSL_SetUniformMatrix16(sp, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
-	//GLSL_SetUniformMatrix16(sp, UNIFORM_INVEYEPROJECTIONMATRIX, glState.invEyeProjection);
-	Matrix16SimpleInverse( glState.modelviewProjection, glState.invEyeProjection);
-	Matrix16SimpleInverse( model, invMv);
+extern qboolean ALLOW_GL_400;
 
+static void RB_IterateStagesGeneric( shaderCommands_t *input )
+{
+	vec4_t	fogDistanceVector, fogDepthVector = {0, 0, 0, 0};
+	float	eyeT = 0;
+	int		deformGen;
+	vec5_t	deformParams;
+
+	ComputeDeformValues(&deformGen, deformParams);
+
+	ComputeFogValues(fogDistanceVector, fogDepthVector, &eyeT);
+
+	RB_UpdateMatrixes();
+	RB_UpdateCloseLights();
 
 	for ( int stage = 0; stage < MAX_SHADER_STAGES; stage++ )
 	{
@@ -1963,6 +1991,16 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 				index |= LIGHTDEF_USE_TESSELLATION;
 			}
 
+			if (pStage->bundle[TB_STEEPMAP].image[0] 
+				|| pStage->bundle[TB_STEEPMAP2].image[0]
+				|| pStage->bundle[TB_SPLATMAP1].image[0]
+				|| pStage->bundle[TB_SPLATMAP2].image[0]
+				|| pStage->bundle[TB_SPLATMAP3].image[0]
+				|| pStage->bundle[TB_SPLATMAP4].image[0])
+			{
+				index |= LIGHTDEF_USE_TRIPLANAR;
+			}
+
 			sp = &pStage->glslShaderGroup[index];
 			isGeneric = qfalse;
 			isLightAll = qtrue;
@@ -2068,6 +2106,17 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		
 		stateBits = pStage->stateBits;
 
+		/*if (backEnd.depthFill || (tr.viewParms.flags & VPF_SHADOWPASS))
+		{
+			stateBits = GLS_DEPTHMASK_TRUE | GLS_DEPTHFUNC_LESS;
+		}
+		else
+		{
+			//stateBits &= ~GLS_DEPTHMASK_TRUE;
+			//stateBits |= GLS_DEPTHFUNC_LESS;
+			stateBits = GLS_DEPTHMASK_TRUE | GLS_DEPTHFUNC_LESS;
+		}*/
+
 		if ( backEnd.currentEntity )
 		{
 			assert(backEnd.currentEntity->e.renderfx >= 0);
@@ -2097,18 +2146,18 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 		{// UQ1: Used by both generic and lightall...
 			RB_SetStageImageDimensions(sp, pStage);
 
-			GLSL_SetUniformMatrix16(sp, UNIFORM_VIEWPROJECTIONMATRIX, vp/*backEnd.viewParms.projectionMatrix*/);
+			GLSL_SetUniformMatrix16(sp, UNIFORM_VIEWPROJECTIONMATRIX, MATRIX_VP);
 			GLSL_SetUniformMatrix16(sp, UNIFORM_MODELMATRIX, backEnd.ori.transformMatrix);
 			GLSL_SetUniformMatrix16(sp, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
 			GLSL_SetUniformMatrix16(sp, UNIFORM_INVEYEPROJECTIONMATRIX, glState.invEyeProjection);
 
 			// UQ: Other *needed* stuff... Hope these are correct...
-			GLSL_SetUniformMatrix16(sp, UNIFORM_PROJECTIONMATRIX, glState.projection/*backEnd.viewParms.projectionMatrix*/);
-			GLSL_SetUniformMatrix16(sp, UNIFORM_MODELVIEWMATRIX, model);//backEnd.viewParms.world.modelMatrix);
-			GLSL_SetUniformMatrix16(sp, UNIFORM_VIEWMATRIX, trans);
-			GLSL_SetUniformMatrix16(sp, UNIFORM_INVVIEWMATRIX, invTrans);
-			GLSL_SetUniformMatrix16(sp, UNIFORM_NORMALMATRIX, normalMatrix);
-			GLSL_SetUniformMatrix16(sp, UNIFORM_INVMODELVIEWMATRIX, invMv);
+			GLSL_SetUniformMatrix16(sp, UNIFORM_PROJECTIONMATRIX, glState.projection);
+			GLSL_SetUniformMatrix16(sp, UNIFORM_MODELVIEWMATRIX, MATRIX_MODEL);
+			GLSL_SetUniformMatrix16(sp, UNIFORM_VIEWMATRIX, MATRIX_TRANS);
+			GLSL_SetUniformMatrix16(sp, UNIFORM_INVVIEWMATRIX, MATRIX_INVTRANS);
+			GLSL_SetUniformMatrix16(sp, UNIFORM_NORMALMATRIX, MATRIX_NORMAL);
+			GLSL_SetUniformMatrix16(sp, UNIFORM_INVMODELVIEWMATRIX, MATRIX_INVMV);
 
 			GLSL_SetUniformVec3(sp, UNIFORM_LOCALVIEWORIGIN, backEnd.ori.viewOrigin);
 			GLSL_SetUniformFloat(sp, UNIFORM_VERTEXLERP, glState.vertexAttribsInterpolation);
@@ -2601,22 +2650,24 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 
 				GLSL_BindProgram(sp);
 
+				stateBits = GLS_DEPTHMASK_TRUE;
+
 				RB_SetMaterialBasedProperties(sp, pStage);
 
 				GLSL_SetUniformFloat(sp, UNIFORM_TIME, tess.shaderTime);
 
-				GLSL_SetUniformMatrix16(sp, UNIFORM_VIEWPROJECTIONMATRIX, vp/*backEnd.viewParms.projectionMatrix*/);
+				GLSL_SetUniformMatrix16(sp, UNIFORM_VIEWPROJECTIONMATRIX, MATRIX_VP);
 				GLSL_SetUniformMatrix16(sp, UNIFORM_MODELMATRIX, backEnd.ori.transformMatrix);
 				GLSL_SetUniformMatrix16(sp, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
 				GLSL_SetUniformMatrix16(sp, UNIFORM_INVEYEPROJECTIONMATRIX, glState.invEyeProjection);
 
 				// UQ: Other *needed* stuff... Hope these are correct...
-				GLSL_SetUniformMatrix16(sp, UNIFORM_PROJECTIONMATRIX, glState.projection/*backEnd.viewParms.projectionMatrix*/);
-				GLSL_SetUniformMatrix16(sp, UNIFORM_MODELVIEWMATRIX, model);//backEnd.viewParms.world.modelMatrix);
-				GLSL_SetUniformMatrix16(sp, UNIFORM_VIEWMATRIX, trans);
-				GLSL_SetUniformMatrix16(sp, UNIFORM_INVVIEWMATRIX, invTrans);
-				GLSL_SetUniformMatrix16(sp, UNIFORM_NORMALMATRIX, normalMatrix);
-				GLSL_SetUniformMatrix16(sp, UNIFORM_INVMODELVIEWMATRIX, invMv);
+				GLSL_SetUniformMatrix16(sp, UNIFORM_PROJECTIONMATRIX, glState.projection);
+				GLSL_SetUniformMatrix16(sp, UNIFORM_MODELVIEWMATRIX, MATRIX_MODEL);
+				GLSL_SetUniformMatrix16(sp, UNIFORM_VIEWMATRIX, MATRIX_TRANS);
+				GLSL_SetUniformMatrix16(sp, UNIFORM_INVVIEWMATRIX, MATRIX_INVTRANS);
+				GLSL_SetUniformMatrix16(sp, UNIFORM_NORMALMATRIX, MATRIX_NORMAL);
+				GLSL_SetUniformMatrix16(sp, UNIFORM_INVMODELVIEWMATRIX, MATRIX_INVMV);
 
 				GLSL_SetUniformVec3(sp, UNIFORM_LOCALVIEWORIGIN, backEnd.ori.viewOrigin);
 				GLSL_SetUniformFloat(sp, UNIFORM_VERTEXLERP, glState.vertexAttribsInterpolation);
