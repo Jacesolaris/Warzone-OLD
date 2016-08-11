@@ -4753,7 +4753,7 @@ static int impactSoundDebounceTime = 0;
 #define	RADAR_ASTEROID_RANGE				10000.0f
 #define	RADAR_MIN_ASTEROID_SURF_WARN_DIST	1200.0f
 //#define __DISABLE_RADAR_STUFF__	
-float CG_DrawRadar ( float y )
+float CG_DrawRadar(float y)
 {
 	vec4_t			color;
 	vec4_t			teamColor;
@@ -4769,6 +4769,10 @@ float CG_DrawRadar ( float y )
 	float			zScale;
 #endif //__DISABLE_RADAR_STUFF__
 	int				xOffset = 0;
+	qhandle_t		directionImages[9] = { 0 };
+	int				directionImagesPriority[9] = { 0 };
+	int				distancePrintCounter = 0;
+
 
 	if (!cg.snap)
 	{
@@ -4792,6 +4796,7 @@ float CG_DrawRadar ( float y )
 		return y;
 	}
 
+
 	// Draw the radar background image
 	color[0] = color[1] = color[2] = 1.0f;
 	color[3] = 0.6f;
@@ -4814,6 +4819,12 @@ float CG_DrawRadar ( float y )
 		centity_t*	cent;
 
 		cent = &cg_entities[cg.radarEntities[i]];
+
+		// Don't show friendly targets.
+		if (cent->currentState.teamowner == cgs.clientinfo[cg.clientNum].team)
+		{
+			continue;
+		}
 
 		// Get the distances first
 		VectorSubtract ( cg.predictedPlayerState.origin, cent->lerpOrigin, dirPlayer );
@@ -4860,9 +4871,11 @@ float CG_DrawRadar ( float y )
 				int directionValue = ((int)(floor((degAngle + 0.5f*45.0f) / 45.0f)*45.0f) / 45) % 8;
 				//char* debugMessage = "Far";
 				float elevationDifference = 0;
+				int directionPriority = 1;
+				int directionPriorityIndex = directionValue;
 
 				// Default to the farthest away list of radar images.
-				qhandle_t* angleGFXArray = cgs.media.warzone_radar_tic_far;
+				qhandle_t angleGFXHandle = cgs.media.warzone_radar_tic_far[directionValue];
 
 				color[0] = color[1] = color[2] = 1.0f;
 				color[3] = 1.0f;
@@ -4875,21 +4888,22 @@ float CG_DrawRadar ( float y )
 					{
 						if (elevationDifference > ELEVATION_DIFFERENCE_LIMIT && actualDist <= RADAR_CLOSE_RANGE)
 						{
-							angleGFXArray = cgs.media.warzone_radar_tic_close_elevation;
+							angleGFXHandle = cgs.media.warzone_radar_tic_close_elevation[directionValue];
 							//debugMessage = "Elevation";
+							directionPriority = 2;
 						}
 						else if (actualDist <= RADAR_REALLY_CLOSE_RANGE)
 						{
-							angleGFXArray = cgs.media.warzone_radar_tic_reallyclose;
+							angleGFXHandle = cgs.media.warzone_radar_tic_reallyclose[directionValue];
 							//debugMessage = "ReallyClose";
+							directionPriority = 4;
 						}
 						else if (actualDist <= RADAR_CLOSE_RANGE)
 						{
-							angleGFXArray = cgs.media.warzone_radar_tic_close;
+							angleGFXHandle = cgs.media.warzone_radar_tic_close[directionValue];
 							//debugMessage = "Close";
+							directionPriority = 3;
 						}
-
-						CG_DrawPic(RADAR_X + xOffset, y, RADAR_RADIUS * 2, RADAR_RADIUS * 2, angleGFXArray[directionValue]);
 					}
 				}
 				else
@@ -4897,25 +4911,29 @@ float CG_DrawRadar ( float y )
 					// Print mid-circle piece.
 					if (elevationDifference > ELEVATION_DIFFERENCE_LIMIT)
 					{
-						CG_DrawPic(RADAR_X + xOffset, y, RADAR_RADIUS * 2, RADAR_RADIUS * 2, cgs.media.warzone_radar_midtpoint_glow_elevation);
+						directionPriority = 1;
+						angleGFXHandle = cgs.media.warzone_radar_midtpoint_glow_elevation;
 					}
 					else
 					{
-						CG_DrawPic(RADAR_X + xOffset, y, RADAR_RADIUS * 2, RADAR_RADIUS * 2, cgs.media.warzone_radar_midtpoint_glow_0);
+						directionPriority = 2;
+						angleGFXHandle = cgs.media.warzone_radar_midtpoint_glow_0;
 					}
+					directionPriorityIndex = 8;
 					//debugMessage = "OnTop";
+				}
+
+				if (directionImagesPriority[directionPriorityIndex] < directionPriority)
+				{
+					directionImagesPriority[directionPriorityIndex] = directionPriority;
+					directionImages[directionPriorityIndex] = angleGFXHandle;
 				}
 				
 				if (cg_turnondistenscalc.integer)
 				{
-					CG_Text_Paint(RADAR_DISTEN_X - 100, y + 200, 1, color, va("Distance: %f", actualDist), 0, 0, ITEM_TEXTSTYLE_SHADOWEDMORE, FONT_SMALL2);
-					//CG_Text_Paint(RADAR_DISTEN_X + xOffset, y + 100, 1, color, va("Distance: %f", actualDist), 0, 0, ITEM_TEXTSTYLE_SHADOWEDMORE, FONT_SMALL2);
+					CG_Text_Paint(RADAR_DISTEN_X, y + 100 + (distancePrintCounter*12.5f), 1, color, va("#%d Distance: %f", distancePrintCounter, actualDist), 0, 0, ITEM_TEXTSTYLE_SHADOWEDMORE, FONT_SMALL2);
+					distancePrintCounter++;
 				}
-				/*else if (cg_turnondistenscalc.integer)
-				{
-					CG_Text_Paint(RADAR_X - 100, y + 200, 1, color, va("DirValue: %i: %s", directionValue, debugMessage), 0, 0, ITEM_TEXTSTYLE_SHADOWEDMORE, FONT_MEDIUM);
-				}*/
-				//
 			}
 		}
 
@@ -5441,6 +5459,15 @@ float CG_DrawRadar ( float y )
 			}
 		}
 #endif // __DISABLE_RADAR_STUFF__
+	}
+
+	// After having resolved the highest priority distances above, we can now draw the correct images
+	for (i = 0; i < 9; ++i)
+	{
+		if (directionImagesPriority[i] != 0)
+		{
+			CG_DrawPic(RADAR_X + xOffset, y, RADAR_RADIUS * 2, RADAR_RADIUS * 2, directionImages[i]);
+		}
 	}
 
 	arrowBaseScale = 80.0f;
