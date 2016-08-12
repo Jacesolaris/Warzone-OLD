@@ -797,6 +797,8 @@ void RE_RenderScene( const refdef_t *fd ) {
 
 	parms.maxEntityRange = 512000;
 
+	MATRIX_UPDATE = qtrue;
+	CLOSE_LIGHTS_UPDATE = qtrue;
 	R_RenderView( &parms );
 
 	if(!( fd->rdflags & RDF_NOWORLDMODEL ))

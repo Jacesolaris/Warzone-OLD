@@ -1599,6 +1599,8 @@ qboolean R_MirrorViewBySurface(drawSurf_t *drawSurf, int64_t entityNum) {
 	// OPTIMIZE: restrict the viewport on the mirrored view
 
 	// render the mirror view
+	MATRIX_UPDATE = qtrue;
+	CLOSE_LIGHTS_UPDATE = qtrue;
 	R_RenderView (&newParms);
 
 	tr.viewParms = oldParms;
@@ -2271,6 +2273,8 @@ void R_RenderDlightCubemaps(const refdef_t *fd)
 #if 0
 	int i;
 
+	MATRIX_UPDATE = qtrue;
+
 	for (i = 0; i < tr.refdef.num_dlights; i++)
 	{
 		viewParms_t		shadowParms;
@@ -2339,6 +2343,7 @@ void R_RenderDlightCubemaps(const refdef_t *fd)
 					break;
 			}
 
+			MATRIX_UPDATE = qtrue;
 			R_RenderView(&shadowParms);
 			R_AddCapShadowmapCmd( i, j );
 		}
@@ -2352,6 +2357,8 @@ void R_RenderPshadowMaps(const refdef_t *fd)
 #ifdef __PSHADOWS__
 	viewParms_t		shadowParms;
 	int i;
+
+	MATRIX_UPDATE = qtrue;
 
 	// first, make a list of shadows
 	for ( i = 0; i < tr.refdef.num_entities; i++)
@@ -2698,6 +2705,8 @@ void R_RenderSunShadowMaps(const refdef_t *fd, int level)
 	float viewZNear, viewZFar;
 	vec3_t lightviewBounds[2];
 	qboolean lightViewIndependentOfCameraView = qfalse;
+
+	MATRIX_UPDATE = qtrue;
 
 	/*if (r_forceSun->integer == 2)
 	{
@@ -3064,8 +3073,6 @@ void R_RenderCubemapSide( int cubemapIndex, int cubemapSide, qboolean subscene )
 
 	if (!subscene)
 	{
-		MATRIX_UPDATE = qtrue;
-		CLOSE_LIGHTS_UPDATE = qtrue;
 		RE_BeginScene(&refdef);
 
 		// FIXME: sun shadows aren't rendered correctly in cubemaps
@@ -3111,6 +3118,8 @@ void R_RenderCubemapSide( int cubemapIndex, int cubemapSide, qboolean subscene )
 	parms.targetFboLayer = cubemapSide;
 	parms.targetFboCubemapIndex = cubemapIndex;
 	
+	MATRIX_UPDATE = qtrue;
+	CLOSE_LIGHTS_UPDATE = qtrue;
 	R_RenderView(&parms);
 
 	if (subscene)

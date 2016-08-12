@@ -687,6 +687,7 @@ const char fallbackShader_genericGeometry[] =
 "//		Normal_FS_in = normalize(Normal_GS_in[i]);\n"\
 "//		vec3 normal = Normal_FS_in;\n"\
 "		createPt(i, normal);\n"\
+"		Normal_FS_in = normal;\n"\
 "		EmitVertex();\n"\
 "	}\n"\
 "\n"\
