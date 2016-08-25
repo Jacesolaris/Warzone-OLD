@@ -228,7 +228,7 @@ int ASTAR_FindPathFast(int from, int to, int *pathlist, qboolean altPath)
 
 		while (1)
 		{
-			int choice = irand_big(0, gWPNum);
+			int choice = irand_big(0, gWPNum-1);
 
 			if (tries > 5)
 			{// Reduce range check so that we never hit an endless loop...

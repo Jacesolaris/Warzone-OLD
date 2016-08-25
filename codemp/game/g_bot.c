@@ -943,7 +943,7 @@ void G_CheckVendorNPCs( void )
 	if (botplayers < minplayers)
 	{
 		gentity_t	*npc = NULL;
-		int			waypoint = irand_big(0, gWPNum);
+		int			waypoint = irand_big(0, gWPNum-1);
 		int			random = irand(0,36);
 		int			tries = 0;
 
@@ -961,7 +961,7 @@ void G_CheckVendorNPCs( void )
 			}
 
 			// Find a new one... This is probably a bad waypoint...
-			waypoint = irand_big(0, gWPNum);
+			waypoint = irand_big(0, gWPNum-1);
 			tries++;
 		}
 
@@ -1023,7 +1023,7 @@ void G_CheckCivilianNPCs( void )
 	if (botplayers < minplayers)
 	{
 		gentity_t	*npc = NULL;
-		int			waypoint = irand_big(0, gWPNum);
+		int			waypoint = irand_big(0, gWPNum-1);
 		int			random = irand(0,36);
 		int			tries = 0;
 
@@ -1041,7 +1041,7 @@ void G_CheckCivilianNPCs( void )
 			}
 
 			// Find a new one... This is probably a bad waypoint...
-			waypoint = irand_big(0, gWPNum);
+			waypoint = irand_big(0, gWPNum-1);
 			tries++;
 		}
 
@@ -1272,7 +1272,7 @@ void G_CheckMinimumNpcs( void ) {
 	if (botplayers < minplayers)
 	{
 		vmCvar_t	mapname;
-		int			waypoint = irand_big(0, gWPNum);
+		int			waypoint = irand_big(0, gWPNum-1);
 		int			random = irand(0,22);
 		int			tries = 0;
 		vec3_t		position;
@@ -1426,7 +1426,7 @@ void G_CheckMinimumNpcs( void ) {
 					}
 
 					// Find a new one... This is probably a bad waypoint...
-					waypoint = irand_big(0, gWPNum);
+					waypoint = irand_big(0, gWPNum-1);
 					tries++;
 				}
 
