@@ -28,6 +28,8 @@ uniform sampler2D	u_DiffuseMap;
 uniform sampler2D	u_ScreenDepthMap;
 uniform sampler2D	u_PositionMap;
 uniform sampler2D	u_NormalMap;
+uniform sampler2D	u_DeluxeMap;
+uniform sampler2D	u_GlowMap;
 
 uniform vec4		u_ViewInfo; // zmin, zmax, zmax / zmin
 uniform vec2		u_Dimensions;
@@ -289,6 +291,40 @@ vec3 diffuse = mix(mix(vec3(0.3, 0.25, 0.2) * color.rgb, vec3(0.45, 0.5, 0.5) * 
   gl_FragColor.rgb = ambient +
     diffuse * max(0.0, cosAngle) +
     specular * pow(max(0.0, cosAngle), shininess);
+}
+
+#elif 1
+
+void main (void)
+{
+	vec4 color = texture2D(u_DiffuseMap, var_TexCoords);
+
+#define E_CC_PALETTE
+
+#ifdef E_CC_PALETTE
+	//adaptation in time
+	color.rgb = clamp(color.rgb, 0.0, 1.0);
+
+	vec3	brightness = texture2D(u_GlowMap, vec2(0.5)).rgb;//adaptation luminance
+	brightness = (brightness/(brightness+1.0));//new version
+	brightness = vec3(max(brightness.x, max(brightness.y, brightness.z)));//new version
+
+	vec3	palette;
+	vec2	uvsrc=vec2(0.0);
+
+	uvsrc.y=brightness.r;
+	uvsrc.x=color.r;
+	palette.r=texture(u_DeluxeMap, uvsrc).r;
+	uvsrc.x=color.g;
+	uvsrc.y=brightness.g;
+	palette.g=texture2D(u_DeluxeMap, uvsrc).g;
+	uvsrc.x=color.b;
+	uvsrc.y=brightness.b;
+	palette.b=texture2D(u_DeluxeMap, uvsrc).b;
+	color.rgb=palette.rgb;
+#endif //E_CC_PALETTE
+
+	gl_FragColor = color;
 }
 
 #else // NO TEST SHADER DEFINED

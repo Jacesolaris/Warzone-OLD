@@ -1245,6 +1245,21 @@ void R_LoadMapInfo ( void )
 	}
 
 	{
+		// Color Palette... Try to load map based image first...
+		tr.paletteImage = R_FindImageFile(va( "maps/%s_palette.png", currentMapName ), IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION|IMGFLAG_NOLIGHTSCALE);
+
+		if (!tr.paletteImage)
+		{// No map based image? Use default...
+			tr.paletteImage = R_FindImageFile("gfx/palette.png", IMGTYPE_COLORALPHA, IMGFLAG_NO_COMPRESSION|IMGFLAG_NOLIGHTSCALE);
+		}
+
+		if (!tr.paletteImage)
+		{// No default image? Use white...
+			tr.paletteImage = tr.whiteImage;
+		}
+	}
+
+	{
 		// Grass maps... Try to load map based image first...
 		tr.defaultGrassMapImage = R_FindImageFile(va( "maps/%s_grass.tga", currentMapName ), IMGTYPE_SPLATCONTROLMAP, IMGFLAG_NO_COMPRESSION|IMGFLAG_NOLIGHTSCALE);
 

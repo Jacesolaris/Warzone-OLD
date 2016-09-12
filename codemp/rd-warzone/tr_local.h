@@ -408,6 +408,7 @@ extern cvar_t  *r_sssMaxRange;
 extern cvar_t  *r_rbm;
 extern cvar_t  *r_rbmStrength;
 extern cvar_t  *r_hbao;
+extern cvar_t  *r_colorCorrection;
 extern cvar_t  *r_steepParallax;
 extern cvar_t  *r_trueAnaglyph;
 extern cvar_t  *r_trueAnaglyphSeparation;
@@ -2340,6 +2341,7 @@ typedef struct trGlobals_s {
 	image_t					*grassImage[3];
 	image_t					*seaGrassImage;
 	image_t					*grassMaskImage[10];
+	image_t					*paletteImage;
 
 	image_t                 *shadowCubemaps[MAX_DLIGHTS];
 	
@@ -2508,6 +2510,7 @@ typedef struct trGlobals_s {
 	shaderProgram_t fastBlurShader;
 	shaderProgram_t distanceBlurShader[4];
 	shaderProgram_t fogPostShader;
+	shaderProgram_t colorCorrectionShader;
 	shaderProgram_t testshaderShader;
 
 	image_t        *anamorphicRenderFBOImage;

@@ -2499,6 +2499,12 @@ const void *RB_PostProcess(const void *data)
 			RB_SwapFBOs( &currentFbo, &currentOutFbo);
 		}
 
+		if (r_colorCorrection->integer)
+		{
+			RB_ColorCorrection(currentFbo, srcBox, currentOutFbo, dstBox);
+			RB_SwapFBOs( &currentFbo, &currentOutFbo);
+		}
+
 		/*if (r_underwater->integer && (backEnd.refdef.rdflags & RDF_UNDERWATER))
 		{
 			RB_Underwater(currentFbo, srcBox, currentOutFbo, dstBox);

@@ -144,6 +144,8 @@ extern const char *fallbackShader_distanceBlur_vp;
 extern const char *fallbackShader_distanceBlur_fp;
 extern const char *fallbackShader_fogPost_vp;
 extern const char *fallbackShader_fogPost_fp;
+extern const char *fallbackShader_colorCorrection_vp;
+extern const char *fallbackShader_colorCorrection_fp;
 
 extern const char *fallbackShader_testshader_vp;
 extern const char *fallbackShader_testshader_fp;
@@ -3303,6 +3305,14 @@ int GLSL_BeginLoadGPUShaders(void)
 	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
 	extradefines[0] = '\0';
 
+	if (!GLSL_BeginLoadGPUShader(&tr.colorCorrectionShader, "colorCorrection", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, "330", fallbackShader_colorCorrection_vp, fallbackShader_colorCorrection_fp, NULL, NULL, NULL))
+	{
+		ri->Error(ERR_FATAL, "Could not load colorCorrection shader!");
+	}
+
+	attribs = ATTR_POSITION | ATTR_TEXCOORD0;
+	extradefines[0] = '\0';
+
 	if (!GLSL_BeginLoadGPUShader(&tr.fogPostShader, "fogPost", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, "330", fallbackShader_fogPost_vp, fallbackShader_fogPost_fp, NULL, NULL, NULL))
 	{
 		ri->Error(ERR_FATAL, "Could not load fogPost shader!");
@@ -4666,6 +4676,8 @@ void GLSL_EndLoadGPUShaders ( int startTime )
 	GLSL_SetUniformInt(&tr.testshaderShader, UNIFORM_POSITIONMAP, TB_POSITIONMAP);
 	GLSL_SetUniformInt(&tr.testshaderShader, UNIFORM_NORMALMAP, TB_NORMALMAP);
 	GLSL_SetUniformInt(&tr.testshaderShader, UNIFORM_SCREENDEPTHMAP, TB_LIGHTMAP);
+	GLSL_SetUniformInt(&tr.testshaderShader, UNIFORM_DELUXEMAP, TB_DELUXEMAP);
+	GLSL_SetUniformInt(&tr.testshaderShader, UNIFORM_GLOWMAP, TB_GLOWMAP);
 
 	{
 		vec2_t screensize;
@@ -4679,6 +4691,29 @@ void GLSL_EndLoadGPUShaders ( int startTime )
 
 #if defined(_DEBUG)
 	GLSL_FinishGPUShader(&tr.testshaderShader);
+#endif
+	
+	numEtcShaders++;
+
+
+
+	if (!GLSL_EndLoadGPUShader(&tr.colorCorrectionShader))
+	{
+		ri->Error(ERR_FATAL, "Could not load colorCorrection shader!");
+	}
+	
+	GLSL_InitUniforms(&tr.colorCorrectionShader);
+
+	qglUseProgram(tr.colorCorrectionShader.program);
+
+	GLSL_SetUniformInt(&tr.colorCorrectionShader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
+	GLSL_SetUniformInt(&tr.colorCorrectionShader, UNIFORM_DELUXEMAP, TB_DELUXEMAP);
+	GLSL_SetUniformInt(&tr.colorCorrectionShader, UNIFORM_GLOWMAP, TB_GLOWMAP);
+
+	qglUseProgram(0);
+
+#if defined(_DEBUG)
+	GLSL_FinishGPUShader(&tr.colorCorrectionShader);
 #endif
 	
 	numEtcShaders++;
@@ -5586,6 +5621,7 @@ void GLSL_ShutdownGPUShaders(void)
 	GLSL_DeleteGPUShader(&tr.distanceBlurShader[2]);
 	GLSL_DeleteGPUShader(&tr.distanceBlurShader[3]);
 	GLSL_DeleteGPUShader(&tr.fogPostShader);
+	GLSL_DeleteGPUShader(&tr.colorCorrectionShader);
 	GLSL_DeleteGPUShader(&tr.testshaderShader);
 	GLSL_DeleteGPUShader(&tr.uniqueskyShader);
 	GLSL_DeleteGPUShader(&tr.generateNormalMapShader);
