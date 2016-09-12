@@ -829,7 +829,7 @@ void main()
 	#if (defined(USE_PRIMARY_LIGHT) || defined(USE_PRIMARY_LIGHT_SPECULAR)) && !defined(USE_GLOW_BUFFER)
 		if (u_Local6.r > 0.0)
 		{
-			float lambertian2 = dot(var_PrimaryLightDir.xyz,N);
+			float lambertian2 = dot(-var_PrimaryLightDir.xyz,N);
 			float spec2 = 0.0;
 			bool noSunPhong = false;
 			float phongFactor = u_Local5.b;
@@ -842,7 +842,7 @@ void main()
 
 			if(lambertian2 > 0.0)
 			{// this is blinn phong
-				vec3 halfDir2 = normalize(var_PrimaryLightDir.xyz + E);
+				vec3 halfDir2 = normalize(-var_PrimaryLightDir.xyz + E);
 				float specAngle = max(dot(halfDir2, N), 0.0);
 				spec2 = pow(specAngle, 16.0);
 				gl_FragColor.rgb += vec3(spec2 * (1.0 - specular.a)) * gl_FragColor.rgb * u_PrimaryLightColor.rgb * phongFactor;

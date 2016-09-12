@@ -312,6 +312,8 @@ void main()
 
 #if defined(USE_LIGHTMAP)
 	var_TexCoords2 = attr_TexCoord1.st;
+#else
+	var_TexCoords2 = vec2(0.0);
 #endif
 
 	var_Color = u_VertColor * attr_Color + u_BaseColor;

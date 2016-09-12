@@ -51,12 +51,6 @@ uniform mat4   u_BoneMatrices[20];
 
 varying vec2   var_TexCoords;
 
-#if defined(USE_TESSELLATION) || defined(USE_ICR_CULLING)
-out vec3 Normal_CS_in;
-out vec2 TexCoord_CS_in;
-out vec4 WorldPos_CS_in;
-#endif
-
 #if defined(USE_TCGEN)
 vec2 GenTexCoords(int TCGen, vec3 position, vec3 normal, vec3 TCGenVector0, vec3 TCGenVector1)
 {
@@ -147,13 +141,6 @@ void main()
 	var_TexCoords.xy = ModTexCoords(texCoords, position, u_DiffuseTexMatrix, u_DiffuseTexOffTurb);
 #else
 	var_TexCoords.xy = texCoords;
-#endif
-
-#if defined(USE_TESSELLATION) || defined(USE_ICR_CULLING)
-	WorldPos_CS_in = vec4(position, 1.0);
-	TexCoord_CS_in = texCoords.xy;
-	Normal_CS_in = normal.xyz;
-	gl_Position = vec4(position, 1.0);
 #endif
 
 	gl_Position = u_ModelViewProjectionMatrix * vec4(position, 1.0);
