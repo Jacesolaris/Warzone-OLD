@@ -2,165 +2,296 @@ uniform sampler2D	u_DiffuseMap;
 uniform sampler2D	u_NormalMap;
 uniform sampler2D	u_ScreenDepthMap;
 
-uniform mat4		u_invEyeProjectionMatrix;
+//uniform mat4		u_invEyeProjectionMatrix;
 uniform vec4		u_ViewInfo; // zmin, zmax, zmax / zmin
+uniform vec2		u_Dimensions;
+uniform vec4		u_Local0;
 
 varying vec2		var_ScreenTex;
-varying vec2		u_Dimensions;
 
-#define HBAO_PI		3.14159265358979323846f
+#define		fvTexelSize (vec2(1.0) / u_Dimensions.xy)
+#define		tex_offset fvTexelSize
 
 // Sampling radius is in view space...
-#define SAMPLING_RADIUS 0.5
 #ifdef FAST_HBAO
 #define NUM_SAMPLING_DIRECTIONS 4
-#else //!FAST_HBAO
-#define NUM_SAMPLING_DIRECTIONS 8
-#endif //FAST_HBAO
-
-// sampling step is in texture space
-#define SAMPLING_STEP 0.004
-
-#ifdef FAST_HBAO
 #define NUM_SAMPLING_STEPS 2
 #else //!FAST_HBAO
+#define NUM_SAMPLING_DIRECTIONS 8
 #define NUM_SAMPLING_STEPS 4
 #endif //FAST_HBAO
 
-#define TANGENT_BIAS 0.2
+// sampling step is in texture space
+//#define	SAMPLING_STEP 0.004
+#define		SAMPLING_STEP 0.001
+
+#define		SAMPLING_RADIUS 0.5
+#define		TANGENT_BIAS 0.2
 
 // Select a method...
 //#define ATTENUATION_METHOD_1
-#define ATTENUATION_METHOD_2
+#define		ATTENUATION_METHOD_2
 
-// Use real screen normal map? Otherwise calculate from depth...
-#define USE_NORMAL_MAP
+#define		C_HBAO_STRENGTH 0.7
+#define		C_HBAO_ZNEAR 0.0509804
+#define		C_HBAO_ZFAR 2048.0//u_Local0.b//100.0
 
-// Filter result?
-//#define FILTER_RESULT
+// Bumpize normal map...
+//#define	C_HBAO_BUMPIZE1
+//#define	C_HBAO_BUMPIZE2
+#define		C_HBAO_BUMPIZE3
 
-#if defined(FILTER_RESULT)
-float filter(float x)
+#define		C_HBAO_BUMPIZE_STRENGTH 0.02
+
+// Debugging stuff...
+//#define C_HBAO_DISPLAY_DEPTH
+//#define C_HBAO_DISPLAY_NORMALS
+
+float hbao_linearizeDepth ( float depth )
 {
-    return max(0, 1.0 - x*x);
-}
-#endif //FILTER_RESULT
-
-float linearize(float depth)
-{
-	return (1.0 / mix(u_ViewInfo.z, 1.0, depth)) + 1.0 / 2.0;
+	float d = depth;
+	d /= C_HBAO_ZFAR - depth * C_HBAO_ZFAR + depth;
+	return clamp(d, 0.0, 1.0);
 }
 
-vec2 offset1 = vec2(0.0, 1.0 / u_Dimensions.y);
-vec2 offset2 = vec2(1.0 / u_Dimensions.x, 0.0);
+vec3 generateEnhancedNormal( vec2 fragCoord )
+{// Generates a normal map with enhanced edges... Not so good for parallax...
+	const float threshold = 0.085;
+
+	vec3 rgb = texture2D(u_DiffuseMap, fragCoord).rgb;
+	vec3 bw = vec3(1.0, 1.0, 1.0);
+	vec3 bw2 = vec3(1.0, 1.0, 1.0);
+
+	vec3 rgbUp = texture2D(u_DiffuseMap, vec2(fragCoord.x,fragCoord.y+tex_offset.y)).rgb;
+	vec3 rgbDown = texture2D(u_DiffuseMap, vec2(fragCoord.x,fragCoord.y-tex_offset.y)).rgb;
+	vec3 rgbLeft = texture2D(u_DiffuseMap, vec2(fragCoord.x+tex_offset.x,fragCoord.y)).rgb;
+	vec3 rgbRight = texture2D(u_DiffuseMap, vec2(fragCoord.x-tex_offset.x,fragCoord.y)).rgb;
+
+	float rgbAvr = (rgb.r + rgb.g + rgb.b) / 3.;
+	float rgbUpAvr = (rgbUp.r + rgbUp.g + rgbUp.b) / 3.;
+	float rgbDownAvr = (rgbDown.r + rgbDown.g + rgbDown.b) / 3.;
+	float rgbLeftAvr = (rgbLeft.r + rgbLeft.g + rgbLeft.b) / 3.;
+	float rgbRightAvr = (rgbRight.r + rgbRight.g + rgbRight.b) / 3.;
+
+	float dx = abs(rgbRightAvr - rgbLeftAvr);
+	float dy = abs(rgbUpAvr - rgbDownAvr);
+
+	if (dx > threshold)
+		bw = vec3(1.0, 1.0, 1.0);
+	else if (dy > threshold)
+		bw = vec3(1.0, 1.0, 1.0);
+	else
+		bw = vec3(0.0, 0.0, 0.0);
+
+	// o.5 + 0.5 * acts as a remapping function
+	bw = 0.5 + 0.5*normalize( vec3(rgbRightAvr - rgbLeftAvr, 100.0*tex_offset.x, rgbUpAvr - rgbDownAvr) ).xzy;
+	//bw = 0.5 + 0.5*normalize( vec3(rgbRightAvr - rgbLeftAvr, 100.0*tex_offset.x, rgbUpAvr - rgbDownAvr) ).xyz;
+
+	//bw.g = 1.0-bw.g; // UQ1: Invert green on these...
+
+	return bw * 2.0 - 1.0;
+}
+
+vec3 generateBumpyNormal( vec2 fragCoord )
+{// Generates an extra bumpy normal map...
+	const float x=1.0;
+	const float y=1.0;
+
+	float M =abs(length(texture2D(u_DiffuseMap, fragCoord + vec2(0., 0.)*tex_offset).rgb) / 3.0);
+	float L =abs(length(texture2D(u_DiffuseMap, fragCoord + vec2(x, 0.)*tex_offset).rgb) / 3.0);
+	float R =abs(length(texture2D(u_DiffuseMap, fragCoord + vec2(-x, 0.)*tex_offset).rgb) / 3.0);	
+	float U =abs(length(texture2D(u_DiffuseMap, fragCoord + vec2(0., y)*tex_offset).rgb) / 3.0);;
+	float D =abs(length(texture2D(u_DiffuseMap, fragCoord + vec2(0., -y)*tex_offset).rgb) / 3.0);
+	float X = ((R-M)+(M-L))*0.5;
+	float Y = ((D-M)+(M-U))*0.5;
+
+	//const float strength = 0.01;
+	const float strength = C_HBAO_BUMPIZE_STRENGTH;
+	vec4 N = vec4(normalize(vec3(X, Y, strength)), 1.0);
+	//vec4 N = vec4(normalize(vec3(X, Y, strength)).xzy, 1.0);
+
+	N.g = 1.0-N.g; // UQ1: Invert green on these...
+
+	return N.xyz;
+}
 
 vec3 normal_from_depth(float depth, vec2 texcoords) {
-  float depth1 = linearize(texture2D(u_ScreenDepthMap, texcoords + offset1).r);
-  float depth2 = linearize(texture2D(u_ScreenDepthMap, texcoords + offset2).r);
-  
-  vec3 p1 = vec3(offset1, depth1 - depth);
-  vec3 p2 = vec3(offset2, depth2 - depth);
-  
-  vec3 normal = cross(p1, p2);
-  normal.z = -normal.z;
-  
-  return normalize(normal);
+	vec2 offset1 = vec2(0.0, fvTexelSize.y);
+	vec2 offset2 = vec2(fvTexelSize.x, 0.0);
+
+	float depth1 = texture2D(u_ScreenDepthMap, texcoords + offset1).r;
+	float depth2 = texture2D(u_ScreenDepthMap, texcoords + offset2).r;
+
+	depth1 = hbao_linearizeDepth(depth1);
+	depth2 = hbao_linearizeDepth(depth2);
+
+	vec3 p1 = vec3(offset1, depth1 - depth);
+	vec3 p2 = vec3(offset2, depth2 - depth);
+
+	vec3 normal = cross(p1, p2);
+	normal.y = -normal.y;
+	normal.z = -normal.z;
+
+#if defined (C_HBAO_BUMPIZE3)
+	vec3 norm2 = ((generateEnhancedNormal(texcoords) + generateBumpyNormal(texcoords)) / 2.0);
+	normal *= norm2;
+#elif defined (C_HBAO_BUMPIZE2)
+	vec3 norm2 = generateEnhancedNormal(texcoords);
+	normal *= norm2;
+#elif defined (C_HBAO_BUMPIZE1)
+	vec3 norm2 = generateBumpyNormal(texcoords);
+	normal *= norm2;
+#endif
+
+	return normalize(normal);
 }
 
-vec3 SampleNormals(sampler2D normalMap, in vec2 coord)  
+vec3 SampleNormals(vec2 coord)  
 {
-#ifdef USE_NORMAL_MAP
-	 return (((texture2D(normalMap, coord).rgb) + 1.0) / 2.0) * 0.5 + 0.5;
-#else //!USE_NORMAL_MAP
-	 float depth = linearize(texture2D(u_ScreenDepthMap, coord).r);
-	 return normal_from_depth(depth, coord);
-#endif //USE_NORMAL_MAP
+	float depth = texture2D(u_ScreenDepthMap, coord).r;
+
+	depth = hbao_linearizeDepth(depth);
+
+	return normal_from_depth(depth, coord);
 }
 
-void main()
+mat4 CreateMatrixFromRows(vec4 r0, vec4 r1, vec4 r2, vec4 r3) {
+	return mat4(r0, r1, r2, r3);
+}
+
+mat4 CreateMatrixFromCols(vec4 c0, vec4 c1, vec4 c2, vec4 c3) {
+	return mat4(c0.x, c1.x, c2.x, c3.x,
+		c0.y, c1.y, c2.y, c3.y,
+		c0.z, c1.z, c2.z, c3.z,
+		c0.w, c1.w, c2.w, c3.w);
+}
+
+#define M_PI		3.14159265358979323846
+
+vec4 GetHBAO ( void )
 {
-	//gl_FragColor = vec4(texture2D(u_NormalMap, var_ScreenTex).rgb, 1.0);
-	//return;
+#if defined (C_HBAO_DISPLAY_DEPTH)
+//	if (u_Local0.a >= 2.0)
+	{
+		float depth = hbao_linearizeDepth(texture2D(u_ScreenDepthMap, var_ScreenTex.xy).r);
+		return vec4(depth, depth, depth, 1.0);
+	}
+#elif defined (C_HBAO_DISPLAY_NORMALS)
+//	else if (u_Local0.a >= 1.0)
+	{
+	return vec4(SampleNormals(var_ScreenTex.xy).xyz * 0.5 + 0.5, 1.0);
+	}
+#else
+//#if 1
+	vec4 origColor = texture2D(u_DiffuseMap, var_ScreenTex.xy);
 
-    float start_Z = linearize(texture2D(u_ScreenDepthMap, var_ScreenTex).r); // returns value (z/w+1)/2
-    vec3 start_Pos = vec3(var_ScreenTex, start_Z);
-    vec3 ndc_Pos = (2.0 * start_Pos) - 1.0; // transform to normalized device coordinates xyz/w
+	float start_Z = texture2D(u_ScreenDepthMap, var_ScreenTex.xy).r; // returns value (z/w+1)/2
 
-    // reconstruct view space position
-    vec4 unproject = u_invEyeProjectionMatrix * vec4(ndc_Pos, 1.0);
-    vec3 viewPos = unproject.xyz / unproject.w; // 3d view space position P
-    vec3 viewNorm = SampleNormals(u_NormalMap, var_ScreenTex).xyz; // 3d view space normal N
+	start_Z = hbao_linearizeDepth(start_Z);
 
-    float total = 0.0;
-    float sample_direction_increment = 2.0 * HBAO_PI / float(NUM_SAMPLING_DIRECTIONS);
+	if (start_Z > 0.999)// || start_Z <= 0.0)
+	{// Ignore sky and loading/menu screens...
+		return origColor;
+	}
 
-    for (int i = 0; i < NUM_SAMPLING_DIRECTIONS; i++) {
-        // no jittering or randomization of sampling direction just yet
-        float sampling_angle = float(i) * sample_direction_increment; // azimuth angle theta in the paper
-        vec2 sampleDir = vec2(cos(sampling_angle), sin(sampling_angle));
+	float blend = ( ( clamp(start_Z, 0.0, 1.0) + (clamp(start_Z * start_Z, 0.0, 1.0) * 4.0)) / 5.0 );
+	float HbaoMult = clamp(1.1 - blend, 0.0, 1.0);
+	float invHbaoMult = 1.0 - HbaoMult;
 
-        // we will now march along sampleDir and calculate the horizon
-        // horizon starts with the tangent plane to the surface, whose angle we can get from the normal
-        float tangentAngle = acos(dot(vec3(sampleDir, 0), viewNorm)) - (0.5 * HBAO_PI) + TANGENT_BIAS;
-        float horizonAngle = tangentAngle;
-        vec3 lastDiff = vec3(0);
+	vec3 start_Pos = vec3(var_ScreenTex.xy, start_Z);
+	vec3 ndc_Pos = (2.0 * start_Pos) - 1.0; // transform to normalized device coordinates xyz/w
 
-        for (int j = 0; j < NUM_SAMPLING_STEPS; j++) {
-            // march along the sampling direction and see what the horizon is
-            vec2 sampleOffset = float(j+1) * SAMPLING_STEP * sampleDir;
-            vec2 offTex = var_ScreenTex + sampleOffset;
+//#define MIVP u_invEyeProjectionMatrix
 
-            float off_start_Z = linearize(texture2D(u_ScreenDepthMap, offTex.st).r);
-            vec3 off_start_Pos = vec3(offTex, off_start_Z);
-            vec3 off_ndc_Pos = (2.0 * off_start_Pos) - 1.0;
-            vec4 off_unproject = u_invEyeProjectionMatrix * vec4(off_ndc_Pos, 1.0);
-            vec3 off_viewPos = off_unproject.xyz / off_unproject.w;
+	/*mat4 MIVP = CreateMatrixFromRows(vec4(0.0, 0.0, 0.0, 0.0), 
+	vec4(1.0, 1.0, 1.0, 1.0), 
+	vec4(0.5, 0.5, 0.5, 1.0), 
+	vec4(-0.5, -0.5, 0.2, -1.2));*/
 
-            // we now have the view space position of the offset point
-            vec3 diff = off_viewPos.xyz - viewPos.xyz;
+	mat4 MIVP = CreateMatrixFromCols(vec4(0.0, 0.0, 0.0, 0.0), 
+		vec4(1.0, 1.0, 1.0, 1.0), 
+		vec4(0.5, 0.5, 0.5, 1.0), 
+		vec4(-0.5, -0.5, 0.2, -1.2));
 
-            if (length(diff) < SAMPLING_RADIUS) {
-                // skip samples which are outside of our local sampling radius
-                lastDiff = diff;
-                float elevationAngle = atan(diff.z / length(diff.xy));
-                horizonAngle = max(horizonAngle, elevationAngle);
-            }
-        }
+	// reconstruct view space position
+	vec4 unproject = MIVP * vec4(ndc_Pos, 1.0);
+	vec3 viewPos = unproject.xyz / unproject.w; // 3d view space position P
+	vec3 viewNorm = SampleNormals(var_ScreenTex.xy).xyz; // 3d view space normal N
 
-        // the paper uses this attenuation but I like the other way better
+	float total = 0.0;
+	float sample_direction_increment = 2 * M_PI / NUM_SAMPLING_DIRECTIONS;
+
+	for (int i = 0; i < NUM_SAMPLING_DIRECTIONS; i++) {
+		// no jittering or randomization of sampling direction just yet
+		float sampling_angle = i * sample_direction_increment; // azimuth angle theta in the paper
+		vec2 sampleDir = vec2(cos(sampling_angle), sin(sampling_angle));
+
+		// we will now march along sampleDir and calculate the horizon
+		// horizon starts with the tangent plane to the surface, whose angle we can get from the normal
+		float tangentAngle = acos(dot(vec3(sampleDir, 0), viewNorm)) - (0.5 * M_PI) + TANGENT_BIAS;
+		float horizonAngle = tangentAngle;
+		vec3 lastDiff = vec3(0.0, 0.0, 0.0);
+
+		for (int j = 0; j < NUM_SAMPLING_STEPS; j++) 
+		{// march along the sampling direction and see what the horizon is
+			vec2 sampleOffset = float(j+1) * SAMPLING_STEP * sampleDir;
+			vec2 offTex = var_ScreenTex.xy + sampleOffset;
+
+			float off_start_Z = texture2D(u_ScreenDepthMap, offTex.xy).r;
+
+			off_start_Z = hbao_linearizeDepth(off_start_Z);
+
+			vec3 off_start_Pos = vec3(offTex, off_start_Z);
+			vec3 off_ndc_Pos = (2.0 * off_start_Pos) - 1.0;
+			vec4 off_unproject = MIVP * vec4(off_ndc_Pos, 1.0);
+			vec3 off_viewPos = off_unproject.xyz / off_unproject.w;
+
+			// we now have the view space position of the offset point
+			vec3 diff = off_viewPos.xyz - viewPos.xyz;
+
+			if (length(diff) < SAMPLING_RADIUS) {
+				// skip samples which are outside of our local sampling radius
+				lastDiff = diff;
+				float elevationAngle = atan(diff.z / length(diff.xy));
+				horizonAngle = max(horizonAngle, elevationAngle);
+			}
+		}
+
+		// the paper uses this attenuation but I like the other way better
 #if defined(ATTENUATION_METHOD_1)
-        float normDiff = length(lastDiff) / SAMPLING_RADIUS;
-        float attenuation = 1.0 - normDiff*normDiff;
+		float normDiff = length(lastDiff) / SAMPLING_RADIUS;
+		float attenuation = 1.0 - normDiff*normDiff;
 #elif defined(ATTENUATION_METHOD_2)
-        float attenuation = 1.0 / (1.0 + length(lastDiff));
+		float attenuation = 1.0 / (1 + length(lastDiff));
 #else // Just in case someone doesn't define a method...
 		float normDiff = length(lastDiff) / SAMPLING_RADIUS;
-        float attenuation = 1.0 - normDiff*normDiff;
+		float attenuation = 1.0 - normDiff*normDiff;
 #endif //ATTENUATION_METHODS
 
-        // now compare horizon angle to tangent angle to get ambient occlusion
-        float occlusion = clamp(attenuation * (sin(horizonAngle) - sin(tangentAngle)), 0.0, 1.0);
-        total += 1.0 - occlusion;
-    }
+		// now compare horizon angle to tangent angle to get ambient occlusion
+		float occlusion = clamp(attenuation * (sin(horizonAngle) - sin(tangentAngle)), 0.0, 1.0);
+		total += 1.0 - occlusion;
+	}
 
-    total /= float(NUM_SAMPLING_DIRECTIONS);
+	total /= NUM_SAMPLING_DIRECTIONS;
 
-#if defined(FILTER_RESULT)
-	total = 1.0 - filter(total);
-#endif //FILTER_RESULT
+	total = pow(total, C_HBAO_STRENGTH);
 
-#ifdef FAST_HBAO
-	total = clamp(total * 1.355, 0.0, 1.0);
-	total += 0.2;
-#else //!FAST_HBAO
-	total = clamp(total * 1.055, 0.0, 1.0);
-	total += 0.15;
-#endif //FAST_HBAO
+	vec4 color = origColor;
+	vec4 hbao = vec4(total, total, total, 1.0);
 
-	total = clamp(pow(total, 3.0), 0.0, 1.0);
-    //gl_FragColor = vec4(total, total, total, 1.0);
+	//return hbao;
 
-	gl_FragColor.rgb = texture2D(u_DiffuseMap, var_ScreenTex).rgb * vec3(total, total, total);
-	//gl_FragColor.rgb = (gl_FragColor.rgb + (total * gl_FragColor.rgb)) / 2.0; // UQ1: Blending to reduce pixelation...
-	gl_FragColor.a = 1.0;
+	// Based on depth...
+	vec3 col1 = color.rgb;
+	vec3 col2 = hbao.rgb * color.rgb;
+	color.rgb = (col1 * invHbaoMult) + (col2 * HbaoMult);
+
+	return color;
+#endif
+}
+
+void main (void)
+{
+	gl_FragColor = GetHBAO();
 }

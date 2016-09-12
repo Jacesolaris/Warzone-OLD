@@ -1,4 +1,6 @@
 
+#if 0
+
 #include "tr_ocean.h"
 
 Vector2::Vector2() : x(0.0), y(0.0)
@@ -1114,3 +1116,4 @@ void cOcean::render(float t, vector3 light_pos, Matrix4 Projection, Matrix4 View
     }
 }
 
+#endif

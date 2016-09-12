@@ -1960,9 +1960,8 @@ void RB_HBAO(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 	GLSL_BindProgram(shader);
 
 	GLSL_SetUniformMatrix16(shader, UNIFORM_MODELVIEWPROJECTIONMATRIX, glState.modelviewProjection);
-	//GLSL_SetUniformMatrix16(shader, UNIFORM_INVEYEPROJECTIONMATRIX, glState.invEyeProjection);
-	GLSL_SetUniformMatrix16(shader, UNIFORM_INVEYEPROJECTIONMATRIX, glState.invProjection);
-	GLSL_SetUniformMatrix16(shader, UNIFORM_MODELMATRIX, backEnd.ori.transformMatrix);
+	//GLSL_SetUniformMatrix16(shader, UNIFORM_INVEYEPROJECTIONMATRIX, glState.invProjection);
+	//GLSL_SetUniformMatrix16(shader, UNIFORM_MODELMATRIX, backEnd.ori.transformMatrix);
 
 	GLSL_SetUniformInt(shader, UNIFORM_DIFFUSEMAP, TB_DIFFUSEMAP);
 	GL_BindToTMU(hdrFbo->colorImage[0], TB_DIFFUSEMAP);
@@ -1977,6 +1976,12 @@ void RB_HBAO(FBO_t *hdrFbo, vec4i_t hdrBox, FBO_t *ldrFbo, vec4i_t ldrBox)
 		screensize[1] = glConfig.vidHeight * r_superSampleMultiplier->value;
 
 		GLSL_SetUniformVec2(shader, UNIFORM_DIMENSIONS, screensize);
+	}
+
+	{
+		vec4_t local0;
+		VectorSet4(local0, r_testshaderValue1->value, r_testshaderValue2->value, r_testshaderValue3->value, r_testshaderValue4->value);
+		GLSL_SetUniformVec4(shader, UNIFORM_LOCAL0, local0);
 	}
 
 	{

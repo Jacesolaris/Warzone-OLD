@@ -1,3 +1,5 @@
+#if 0
+
 #include "tr_local.h"
 #include <ostream>
 
@@ -292,3 +294,5 @@ class cOcean {
     void evaluateWavesFFT(float t);
     void render(float t, vector3 light_pos, Matrix4 Projection, Matrix4 View, Matrix4 Model, bool use_fft);
 };
+
+#endif

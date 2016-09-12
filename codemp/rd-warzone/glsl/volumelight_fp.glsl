@@ -206,8 +206,9 @@ void main ( void )
 			texCoord -= deltaTexCoord;
 
 			float linDepth = linearize(texture2D(u_ScreenDepthMap, texCoord.xy).r);
-			if (linDepth < lightDepths[i]) linDepth = 0.0;
-			else linDepth = 1.0;
+			//if (linDepth < lightDepths[i]) linDepth = 0.0;
+			//else linDepth = 1.0;
+			if (linDepth >= lightDepths[i]) linDepth = 1.0;
 			float sample2 = linDepth * illuminationDecay * fBloomrayWeight;
 
 			if (lightColors[i].r < 0.0 && lightColors[i].g < 0.0 && lightColors[i].b < 0.0)
