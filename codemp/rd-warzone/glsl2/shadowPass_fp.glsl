@@ -13,11 +13,15 @@ uniform vec4	u_Local9;
 varying vec2      var_TexCoords;
 
 
-#define m_Normal		var_Normal
-#define m_TexCoords		var_TexCoords
-#define m_vertPos		var_vertPos
-#define m_ViewDir		var_ViewDir
+#if defined(USE_TESSELLATION) || defined(USE_ICR_CULLING)
 
+in precise vec2				TexCoord_FS_in;
+
+#define m_TexCoords			TexCoord_FS_in
+
+#else //!defined(USE_TESSELLATION) && !defined(USE_ICR_CULLING)
+#define m_TexCoords			var_TexCoords
+#endif
 
 void main()
 {

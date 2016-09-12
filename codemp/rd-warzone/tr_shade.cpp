@@ -2065,7 +2065,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			GLSL_BindProgram(sp);
 		}
 
-		if (tr.viewParms.flags & VPF_SHADOWPASS)
+		if (!sp->tesselation && (tr.viewParms.flags & VPF_SHADOWPASS))
 		{
 			sp = &tr.shadowPassShader;
 			GLSL_BindProgram(sp);

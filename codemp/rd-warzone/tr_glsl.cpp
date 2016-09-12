@@ -2812,11 +2812,42 @@ int GLSL_BeginLoadGPUShaders(void)
 
 	extradefines[0] = '\0';
 
+#if 1
 	if (!GLSL_BeginLoadGPUShader(&tr.shadowPassShader, "shadowPass", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_shadowPass_vp, fallbackShader_shadowPass_fp, NULL, NULL, NULL))
 	{
 		ri->Error(ERR_FATAL, "Could not load shadowPass shader!");
 	}
+#else
+	if (r_tesselation->integer && (i & LIGHTDEF_USE_TESSELLATION))
+	{
+		Q_strcat(extradefines, 1024, "#define USE_TESSELLATION\n");
 
+#ifdef HEIGHTMAP_TESSELATION2
+		if (!GLSL_BeginLoadGPUShader(&tr.shadowPassShader, "shadowPass", attribs, qtrue, qtrue, qtrue, extradefines, qtrue, NULL, fallbackShader_shadowPass_vp, fallbackShader_shadowPass_fp, fallbackShader_genericTessControl_cp, fallbackShader_genericTessControl_ep, fallbackShader_genericGeometry))
+#else
+		if (!GLSL_BeginLoadGPUShader(&tr.shadowPassShader, "shadowPass", attribs, qtrue, qtrue, qfalse, extradefines, qtrue, NULL, fallbackShader_shadowPass_vp, fallbackShader_shadowPass_fp, fallbackShader_genericTessControl_cp, fallbackShader_genericTessControl_ep, NULL))
+#endif
+		{
+			ri->Error(ERR_FATAL, "Could not load shadowPass shader!");
+		}
+	}
+	else if (r_instanceCloudReductionCulling->integer)
+	{
+		Q_strcat(extradefines, 1024, "#define USE_ICR_CULLING\n");
+
+		if (!GLSL_BeginLoadGPUShader(&tr.shadowPassShader, "shadowPass", attribs, qtrue, qfalse, qtrue, extradefines, qtrue, NULL, fallbackShader_shadowPass_vp, fallbackShader_shadowPass_fp, NULL, NULL, fallbackShader_lightall_gs))
+		{
+			ri->Error(ERR_FATAL, "Could not load shadowPass shader!");
+		}
+	}
+	else
+	{
+		if (!GLSL_BeginLoadGPUShader(&tr.shadowPassShader, "shadowPass", attribs, qtrue, qfalse, qfalse, extradefines, qtrue, NULL, fallbackShader_shadowPass_vp, fallbackShader_shadowPass_fp, NULL, NULL, NULL))
+		{
+			ri->Error(ERR_FATAL, "Could not load shadowPass shader!");
+		}
+	}
+#endif
 
 
 
